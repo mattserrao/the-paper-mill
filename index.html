@@ -12,7 +12,7 @@
   --bg:#e8ebe9; --panel:#f7f8f6; --ink:#1b2321; --muted:#5a6762; --line:#c3cbc7;
   --kraft:#a26c33; --stock:#3f7686; --machine:#3a4744; --paperc:#fbfaf6;
   --ok:#2b8549; --warn:#b97c0b; --bad:#bf3c28; --chip:#dfe4e1;
-  --g-sky:#e4eae6; --g-ground:#b4c2b6; --g-slab:#c9cfca; --g-asphalt:#7c8582; --g-wall:#e2e0d8; --g-lane:#eeede6; --g-metal:#8e9a97;
+  --g-sky:#e4eae6; --g-ground:#b4c2b6; --g-slab:#c9cfca; --g-asphalt:#7c8582; --g-wall:#e2e0d8; --g-lane:#eeede6; --g-metal:#8e9a97; --g-felt:#5f6f64;
   --fire:#e8641b; --fire2:#f2b632; --water:#3a86c8; --smoke:#7f8784; --slime:#6f9223; --beaver:#7a4b25;
   --f-display:"Barlow Condensed","Arial Narrow",Arial,sans-serif;
   --f-body:"IBM Plex Sans",system-ui,-apple-system,"Segoe UI",sans-serif;
@@ -22,13 +22,13 @@
   --bg:#131918; --panel:#1b2322; --ink:#e2e8e5; --muted:#8e9b96; --line:#2e3a37;
   --kraft:#d29a56; --stock:#6ea8b7; --machine:#a3b1ad; --paperc:#e9e6dc;
   --ok:#52bf77; --warn:#e3aa3c; --bad:#e6684f; --chip:#25302e;
-  --g-sky:#121918; --g-ground:#1c2523; --g-slab:#2b3533; --g-asphalt:#121716; --g-wall:#46524f; --g-lane:#5d6965; --g-metal:#71807c;
+  --g-sky:#121918; --g-ground:#1c2523; --g-slab:#2b3533; --g-asphalt:#121716; --g-wall:#46524f; --g-lane:#5d6965; --g-metal:#71807c; --g-felt:#4f5f55;
   --fire:#ff7d33; --fire2:#ffd257; --water:#5aa8e6; --smoke:#6f7774; --slime:#9cc23f; --beaver:#a8693a; color-scheme:dark}}
 :root[data-theme="dark"]{
   --bg:#131918; --panel:#1b2322; --ink:#e2e8e5; --muted:#8e9b96; --line:#2e3a37;
   --kraft:#d29a56; --stock:#6ea8b7; --machine:#a3b1ad; --paperc:#e9e6dc;
   --ok:#52bf77; --warn:#e3aa3c; --bad:#e6684f; --chip:#25302e;
-  --g-sky:#121918; --g-ground:#1c2523; --g-slab:#2b3533; --g-asphalt:#121716; --g-wall:#46524f; --g-lane:#5d6965; --g-metal:#71807c;
+  --g-sky:#121918; --g-ground:#1c2523; --g-slab:#2b3533; --g-asphalt:#121716; --g-wall:#46524f; --g-lane:#5d6965; --g-metal:#71807c; --g-felt:#4f5f55;
   --fire:#ff7d33; --fire2:#ffd257; --water:#5aa8e6; --smoke:#6f7774; --slime:#9cc23f; --beaver:#a8693a; color-scheme:dark}
 *{box-sizing:border-box}
 body{background:var(--bg);color:var(--ink);font-family:var(--f-body);font-size:14px;line-height:1.45}
@@ -269,7 +269,7 @@ body{margin:0}
     <div class="card"><h2><span class="n">5</span><span>Paper machine <span id="pm-title">PM1</span></span><span class="pill" id="p-pm">–</span></h2>
       <div class="row"><label for="grade">Grade</label><span class="val"><select id="grade"></select></span></div>
       <div class="row" data-key="pmSp"><label for="s-pmSp">Max reel speed</label><span class="val"></span><div class="ctl"><input id="s-pmSp" type="range" min="1200" max="3300" step="10"><button class="auto" aria-pressed="true">AUTO</button></div></div>
-      <div class="row" data-key="rollW"><label for="s-rollW">Finished roll weight</label><span class="val"></span><div class="ctl"><input id="s-rollW" type="range" min="0.8" max="3" step="0.1"></div></div>
+      <div class="row"><label>Customer rolls per reel</label><span class="val">8 × 3.1 t</span></div>
       <label class="check"><input type="checkbox" id="breaks"> Random sheet breaks (calibration data: 14% of time)</label>
       <div class="read" id="r-pm">–</div></div>
 
@@ -284,7 +284,7 @@ body{margin:0}
       <div class="read" id="r-ship">–</div></div>
   </section>
 
-  <p class="foot">Auto keeps each area matched to the paper machine: pulper feed tracks machine demand plus a correction toward the chest level target, truck arrivals and crews follow from that. Drag any slider to take that area to manual; press its AUTO chip or "Balance all" to hand it back. Production is speed × basis weight, scaled so 23m at 2,736 fpm and 24.55 lb gives 34.8 t/h, the calibration median. The winder cuts each jumbo reel into rolls; only three reels can wait for it, so a slow or hayed-out winder eventually stops the machine. Hayouts send the set in progress to broke. During a sheet break every employee runs to the machine to help rethread, so receiving and shipping pause. Chaos events change the same flows: a machine incident stops the reel, stock prep incidents stop the pulper or cut yield, warehouse incidents cut crews, docks or trucks. The plant view is 3D by default (drag to rotate, scroll or pinch to zoom) and drops shadows and resolution on its own if a device struggles; switch to 2D any time. Money: rolls are paid for when an outbound truck leaves (grade price × tons). OCC is paid for when it is unloaded, energy and chemicals per ton made, wages per crew member per hour, plus $4,000/h mill overhead and a repair bill for each disaster. Below −$1.5M the mill goes bankrupt. Assumptions: 22 t OCC per inbound truck, 88% pulper yield, 300 t chest, 30 t/h per forklift driver, 25 rolls/h per loader, 20 rolls per outbound truck.</p>
+  <p class="foot">Auto keeps each area matched to the paper machine: pulper feed tracks machine demand plus a correction toward the chest level target, truck arrivals and crews follow from that. Drag any slider to take that area to manual; press its AUTO chip or "Balance all" to hand it back. Production is speed × basis weight, scaled so 23m at 2,736 fpm and 24.55 lb gives 34.8 t/h, the calibration median. The winder cuts each jumbo reel into rolls; each reel makes 8 customer rolls and up to four reels can wait in storage, so a slow or hayed-out winder eventually stops the machine. Hayouts send the set in progress to broke. During a sheet break every employee runs to the machine to help rethread, so receiving and shipping pause. Chaos events change the same flows: a machine incident stops the reel, stock prep incidents stop the pulper or cut yield, warehouse incidents cut crews, docks or trucks. The plant view is 3D by default (drag to rotate, scroll or pinch to zoom) and drops shadows and resolution on its own if a device struggles; switch to 2D any time. Money: rolls are paid for when an outbound truck leaves (grade price × tons). OCC is paid for when it is unloaded, energy and chemicals per ton made, wages per crew member per hour, plus $4,000/h mill overhead and a repair bill for each disaster. Below −$1.5M the mill goes bankrupt. Assumptions: 22 t OCC per inbound truck, 88% pulper yield, 300 t chest, 30 t/h per forklift driver, 25 rolls/h per loader, 20 rolls per outbound truck.</p>
 </div>
 
 <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
@@ -292,7 +292,7 @@ body{margin:0}
 (()=>{
 const GRADES={ "23m":{sp:2736,bw:24.55}, "26m":{sp:2433,bw:26.06}, "30m":{sp:2222,bw:30.05}, "33HT":{sp:2084,bw:33.08} };
 const P={truckLoad:22,doors:3,driverRate:30,doorRate:45,yieldF:0.88,tankCap:300,yardCap:2000,yardTarget:800,
-  fgCap:1500,fgTarget:300,jumbo:25,maxReels:3,loaderRate:25,truckRolls:20,doorRolls:45,shipDoors:3,
+  fgCap:900,fgTarget:160,jumbo:25,storeReels:4,rollsPerReel:8,loaderRate:25,truckRolls:8,doorRolls:45,shipDoors:3,
   K:34.8/(2736*24.55),minSpeed:1200,ramp:150,pmLoss:0.98,maxQueue:8};
 const UNITS={inRate:v=>v.toFixed(1)+" trucks/h",drivers:v=>Math.round(v)+" drivers",pulper:v=>v.toFixed(1)+" t/h",
   lvlTarget:v=>Math.round(v)+" %",lowLevel:v=>Math.round(v)+" %",pmSp:v=>Math.round(v).toLocaleString()+" fpm",
@@ -319,7 +319,7 @@ const UPS=[
  {id:"forklift",g:"yard",name:"Electric forklift fleet",lv:[350e3,750e3],desc:"+25% tons per driver-hour per level. Red-tag outages rarer."},
  {id:"docks",g:"yard",name:"Extra dock doors",lv:[250e3,600e3],desc:"+1 receiving and +1 shipping door per level."},
  {id:"agv",g:"yard",name:"Robotic roll handling",lv:[800e3,1.6e6,3e6],desc:"+2 robot loaders per level. $15/h each, never call off."},
- {id:"wh",g:"yard",name:"Warehouse extension",lv:[500e3,1.1e6],desc:"+750 rolls of storage per level."},
+ {id:"wh",g:"yard",name:"Warehouse extension",lv:[500e3,1.1e6],desc:"+450 rolls of storage per level."},
  {id:"safety",g:"yard",name:"Safety & HR program",lv:[200e3],desc:"Dock fights and call-offs half as often."},
  {id:"apc",g:"mgmt",name:"Advanced process control",lv:[700e3,1.5e6],desc:"+2% tons and 8% less energy per level."},
  {id:"contract",g:"mgmt",name:"Long-term OCC contract",lv:[400e3,900e3],desc:"OCC costs $20/t less per level."},
@@ -334,7 +334,7 @@ function applyUpgrades(){
   P.energyMul=(1-0.12*LV("shoe"))*(1-0.08*LV("apc"));
   P.pulperMax=70+25*LV("pulper"); P.yieldF=BASE.yieldF+0.03*LV("clean"); P.tankCap=BASE.tankCap+150*LV("chest");
   P.driverRate=BASE.driverRate*(1+0.25*LV("forklift")); P.doors=3+LV("docks"); P.shipDoors=3+LV("docks");
-  P.robots=2*LV("agv"); P.fgCap=BASE.fgCap+750*LV("wh"); P.autoFeed=LV("feedconv")>0;
+  P.robots=2*LV("agv"); P.fgCap=BASE.fgCap+450*LV("wh"); P.autoFeed=LV("feedconv")>0;
   P.occPrice=160-20*LV("contract"); P.priceAdd=25*LV("sales"); P.repairMul=LV("insure")?0.4:1; P.premium=LV("insure")?1500:0;
   P.breakBase=Math.pow(0.7,LV("monitor"));
   P.winderMax=90+30*LV("winder");P.hayBase=Math.pow(0.6,LV("winder"));const wr=document.getElementById("s-wdr");if(wr)wr.max=P.winderMax;
@@ -422,17 +422,17 @@ function hayout(){S.wd="hayout";S.hayLeft=20+Math.random()*25;
   log(`Winder hayout: ${loss.toFixed(1)} t of paper to broke`,"bad");}
 function initCtrl(){
   C={inRate:{v:1.8,auto:true},drivers:{v:3,auto:true},pulper:{v:40,auto:true},lvlTarget:{v:69},lowLevel:{v:30},
-     pmSp:{v:2736,auto:true},rollW:{v:1.8},loaders:{v:2,auto:true},outRate:{v:1,auto:true},grade:"23m",breaks:false,hays:true,wdr:{v:45,auto:true},simSpeed:30};
+     pmSp:{v:2736,auto:true},rollW:{v:25/8},loaders:{v:2,auto:true},outRate:{v:1,auto:true},grade:"23m",breaks:false,hays:true,wdr:{v:45,auto:true},simSpeed:30};
 }
 function initState(){
-  S={t:0,yard:700,tank:0.69*P.tankCap,fg:300,pmSpeed:C.pmSp.v,pm:"run",breakLeft:0,reel:8,winderBuf:0,winderAcc:0,
+  S={t:0,yard:700,tank:0.69*P.tankCap,fg:160,pmSpeed:C.pmSp.v,pm:"run",breakLeft:0,reel:8,winderBuf:0,winderAcc:0,
      inPhase:0.6,inJit:1,outPhase:0.3,outJit:1,inQ:[],inDock:[null,null,null],outQ:[],outDock:[null,null,null],leaving:[],
      rates:{feed:0,unload:0,fiberIn:0,prod:0,fiberUse:0,load:0,rolls:0,cut:0},
      tot:{inTrucks:0,inTons:0,turned:0,prodT:0,rolls:0,shipped:0,outTrucks:0,breaks:0,breakMin:0,turnups:0,pot:0,incidents:0,hayouts:0,hayMin:0,broke:0},wd:"run",hayLeft:0,
      trend:[],trendAcc:0,rollsVis:[],inc:[],lastInc:0,feed:[],M:baseMods(),effDrv:C.drivers.v,effLd:C.loaders.v,effHum:C.loaders.v};
   S.up={};S.cash=ECON.start;S.ledger={rev:0,occ:0,energy:0,labor:0,overhead:0,repairs:0,premium:0,upgrades:0};S.profitRate=0;S.over=null;S.won=false;S.shipT=0;
   Object.assign(P,BASE);applyUpgrades();
-  const g=GRADES[C.grade]; C.pmSp.v=g.sp+P.spBonus; C.wdr.v=Math.min(P.winderMax,P.K*C.pmSp.v*g.bw*1.25);
+  C.rollW.v=P.jumbo/P.rollsPerReel;const g=GRADES[C.grade]; C.pmSp.v=g.sp+P.spBonus; C.wdr.v=Math.min(P.winderMax,P.K*C.pmSp.v*g.bw*1.25);
   const demand=P.K*g.sp*g.bw/P.pmLoss; C.pulper.v=demand/P.yieldF;
   C.inRate.v=C.pulper.v/P.truckLoad; C.drivers.v=Math.ceil(2*C.pulper.v/P.driverRate+0.15);
   const rph=P.K*g.sp*g.bw/C.rollW.v; C.loaders.v=Math.ceil(rph*1.15/P.loaderRate); C.outRate.v=rph/P.truckRolls;
@@ -512,7 +512,7 @@ function step(dt){
   if(S.pm==="break"){S.breakLeft-=dt;S.tot.breakMin+=dt;if(S.breakLeft<=0&&level>8){S.pm="run";S.pmSpeed=Math.min(C.pmSp.v,P.minSpeed+300);}}
   else if(S.pm==="down"){if(level>=Math.max(20,low*0.8)){S.pm="run";S.pmSpeed=P.minSpeed;}}
   else if(S.pm==="full"){if(S.fg<P.fgCap*0.95){S.pm="run";S.pmSpeed=P.minSpeed;}}
-  else if(S.pm==="spools"){if(S.winderBuf<=(P.maxReels-1)*P.jumbo+1e-6){S.pm="run";S.pmSpeed=P.minSpeed;}}
+  else if(S.pm==="spools"){if(S.winderBuf<=P.storeReels*P.jumbo+1e-6){S.pm="run";S.pmSpeed=P.minSpeed;}}
   let prod=0;
   if(S.pm==="run"){
     let tgt=C.pmSp.v*M.speedCap;
@@ -523,7 +523,7 @@ function step(dt){
     const r=P.ramp*dt; S.pmSpeed+=clamp(tgt-S.pmSpeed,-r*2,r);
     if(level<5){S.pm="down";}
     else if(S.fg>=P.fgCap){S.pm="full";}
-    else if(S.reel>=P.jumbo&&S.winderBuf>(P.maxReels-1)*P.jumbo+1e-6){S.pm="spools";}
+    else if(S.reel>=P.jumbo&&S.winderBuf>P.storeReels*P.jumbo+1e-6){S.pm="spools";}
     else if(Math.random()<dt/154*P.breakBase*((C.breaks?1:0)+(M.breakMul-1))){S.pm="break";S.breakLeft=8+Math.random()*34;S.tot.breaks++;}
     if(S.pm==="run"){
       prod=P.K*S.pmSpeed*g.bw*dt/60;
@@ -534,7 +534,7 @@ function step(dt){
   }
   if(S.pm!=="run") S.pmSpeed=ease(S.pmSpeed,0,dt,3);
   S.reel+=prod; S.tot.prodT+=prod; spend(prod*(ECON.energy*P.energyMul+ECON.chem),"energy"); S.tot.pot+=P.K*C.pmSp.v*g.bw*dt/60;
-  if(S.reel>=P.jumbo&&S.winderBuf<=(P.maxReels-1)*P.jumbo+1e-6){S.winderBuf+=S.reel;S.reel=0;S.tot.turnups++;}
+  if(S.reel>=P.jumbo&&S.winderBuf<=P.storeReels*P.jumbo+1e-6){S.winderBuf+=S.reel;S.reel=0;S.tot.turnups++;}
   // 6 winder
   if(S.wd==="hayout"){S.hayLeft-=dt;S.tot.hayMin+=dt;if(S.hayLeft<=0){S.wd="run";log("Winder cleaned up and running again","ok");}}
   const cut=S.wd==="hayout"?0:Math.min(S.winderBuf,C.wdr.v*dt/60); S.winderBuf-=cut; S.winderAcc+=cut;
@@ -706,9 +706,9 @@ function updateText(){
   pill("p-pm",pmTxt,S.pm==="run"?(pmTxt==="at max speed"?"ok":"warn"):"bad");
   const eff=S.t>0?100*(1-S.tot.breakMin/S.t):100;
   $("r-pm").textContent=`${f1(R.prod/C.rollW.v)} rolls/h · ${S.tot.turnups} reels turned up · ${S.tot.breaks} breaks · ${f0(eff)}% sheet time`;
-  const reelsW=Math.ceil(S.winderBuf/P.jumbo-1e-6);
-  pill("p-wd",S.wd==="hayout"?"hayout: crew cleaning":reelsW>=P.maxReels?"backed up":R.cut>0.5?"winding":"waiting for reel",S.wd==="hayout"?"bad":reelsW>=P.maxReels?"warn":R.cut>0.5?"ok":"");
-  $("r-wd").textContent=`${reelsW}/${P.maxReels} reels waiting · cutting ${f1(R.cut)} t/h · ${S.tot.hayouts} hayouts · ${f1(S.tot.broke)} t broke`;
+  const reelsW=Math.max(0,Math.ceil(S.winderBuf/P.jumbo-1e-6)-1);
+  pill("p-wd",S.wd==="hayout"?"hayout: crew cleaning":reelsW>=P.storeReels?"storage full":R.cut>0.5?"winding":"waiting for reel",S.wd==="hayout"?"bad":reelsW>=P.storeReels?"warn":R.cut>0.5?"ok":"");
+  $("r-wd").textContent=`${reelsW}/${P.storeReels} reels in storage · cutting ${f1(R.cut)} t/h · ${S.tot.hayouts} hayouts · ${f1(S.tot.broke)} t broke`;
   const shipCap=S.effLd*P.loaderRate*S.M.clampMul;
   pill("p-ship",S.M.crewAtPM?"crew at the PM":S.fg>=P.fgCap-1?"warehouse full":S.outQ.length>2?`${S.outQ.length} trucks waiting`:S.fg<5&&S.outDock.some(Boolean)?"no rolls":"ok",S.M.crewAtPM?"warn":S.fg>=P.fgCap-1?"bad":S.outQ.length>2||(S.fg<5&&S.outDock.some(Boolean))?"warn":"ok");
   $("r-ship").textContent=`${S.effLd<C.loaders.v?`Only ${S.effLd} of ${C.loaders.v} loaders · `:""}Loading ${f1(R.load)}/${f0(shipCap)} rolls/h · ${S.outDock.filter(Boolean).length}/${P.shipDoors} doors · ${S.tot.shipped/P.truckRolls} trucks out`;
@@ -826,8 +826,14 @@ function draw(rdt){
   ctx.strokeStyle=col.machine;ctx.lineWidth=3;ctx.beginPath();ctx.moveTo(960,425);ctx.lineTo(1095,425);ctx.stroke();
   [960,1095].forEach(x=>{ctx.beginPath();ctx.arc(x,431,6,0,7);ctx.stroke();});label("forming",1028,450,11,col.muted,"center");
   // press
-  ctx.fillStyle=LV("shoe")?col.stock:col.machine;[[925,412],[925,438]].forEach(([x,y])=>{ctx.beginPath();ctx.arc(x,y,LV("shoe")?14:12,0,7);ctx.fill();});
-  label(LV("shoe")?"shoe press":"press",925,470,11,col.muted,"center");
+  // twin press: top felts as loops, one tandem bottom felt under both nips
+  ctx.strokeStyle=col.muted;ctx.lineWidth=2;
+  ctx.beginPath();ctx.moveTo(935,410);ctx.lineTo(935,392);ctx.lineTo(956,392);ctx.lineTo(956,410);ctx.stroke();
+  ctx.beginPath();ctx.moveTo(903,408);ctx.lineTo(903,388);ctx.lineTo(927,388);ctx.lineTo(927,408);ctx.stroke();
+  ctx.beginPath();ctx.moveTo(962,428);ctx.lineTo(898,428);ctx.lineTo(894,452);ctx.lineTo(962,452);ctx.lineTo(962,428);ctx.stroke();
+  ctx.fillStyle=col.machine;[[945,413],[945,437]].forEach(([x,y])=>{ctx.beginPath();ctx.arc(x,y,10,0,7);ctx.fill();});
+  [[915,411],[915,439]].forEach(([x,y],i)=>{ctx.fillStyle=LV("shoe")&&i===1?col.stock:col.machine;ctx.beginPath();ctx.arc(x,y,12,0,7);ctx.fill();});
+  label(LV("shoe")?"twin press · shoe":"twin press",930,470,11,col.muted,"center");
   // dryers
   V.cans+=rdt*S.pmSpeed/700;
   const top=[],bot=[];for(let i=0;i<10;i++){top.push(872-i*32);bot.push(856-i*32);}
@@ -835,7 +841,7 @@ function draw(rdt){
   top.forEach(x=>can(x,395));bot.forEach(x=>can(x,447));
   label("dryer section",720,483,11,col.muted,"center");
   // sheet path
-  const path=[[1095,422],[960,422],[937,425],[905,425]];
+  const path=[[1095,422],[960,422],[945,425],[915,425],[892,425]];
   for(let i=0;i<10;i++){path.push([top[i],381]);path.push([bot[i],461]);}
   path.push([530,420]);
   ctx.strokeStyle=pmRun?col.paperc:col.bad;ctx.lineWidth=pmRun?3:1.5;
@@ -921,7 +927,7 @@ function drawChaos(){
       case "dryerfire":{for(let k=0;k<10;k++)flame(560+k*32,(k%2?447:395)-6,22+8*flick(k));smoke(640,340,now);smoke(800,340,now+700);hazard(515,362,640,128);break;}
       case "fabric":{ctx.strokeStyle=col.bad;ctx.lineWidth=3;ctx.beginPath();ctx.moveTo(960,425);ctx.quadraticCurveTo(1028,505+6*flick(1),1095,425);ctx.stroke();
         ctx.beginPath();ctx.moveTo(1050,460);ctx.lineTo(1062,500+5*flick(2));ctx.stroke();hazard(950,375,205,140);tag("FABRIC OFF",960,368,"left");break;}
-      case "felt":{ctx.strokeStyle=col.bad;ctx.lineWidth=3;[[925,412],[925,438]].forEach(([x,y])=>{ctx.beginPath();ctx.arc(x,y,15,0,7);ctx.stroke();});tag("FELT",905,492,"left");break;}
+      case "felt":{ctx.strokeStyle=col.bad;ctx.lineWidth=3;[[945,413],[945,437],[915,411],[915,439]].forEach(([x,y])=>{ctx.beginPath();ctx.arc(x,y,14,0,7);ctx.stroke();});tag("FELT",905,492,"left");break;}
       case "slime":{ctx.fillStyle=col.beaver;for(let k=0;k<20;k++){const x=545+k*17,y=k%2?461:381;ctx.globalAlpha=0.85;ctx.beginPath();ctx.arc(x,y,4+2*flick(k),0,7);ctx.fill();}
         ctx.globalAlpha=1;tag("SCABS: SPEED CAPPED, HAYOUT RISK",525,368,"left");break;}
       case "ragger":{ctx.strokeStyle=col.bad;ctx.lineWidth=4;ctx.beginPath();ctx.moveTo(735,170);ctx.lineTo(785,220);ctx.moveTo(785,170);ctx.lineTo(735,220);ctx.stroke();
@@ -1059,7 +1065,7 @@ const G3={on:false,ok:false};
   slab(-46,-34.4,-24.5,-2.4,M.asphalt,0.03);        // receiving apron
   slab(-95,-49,11.2,13.8,M.asphalt);                // outbound road
   slab(-60,-49,11.2,33,M.asphalt,0.03);             // shipping apron
-  slab(-25,60,3,16,M.slab,0.03);                    // machine hall floor
+  slab(-25,64,3,16,M.slab,0.03);                    // machine hall floor
   slab(4,44,-25,-2,M.slab,0.03);                    // stock prep pad
   for(let x=-92;x<-36;x+=5)box(2.4,0.02,0.18,M.lane,x,0.05,-3.8,scene,false);
   for(let x=-92;x<-50;x+=5)box(2.4,0.02,0.18,M.lane,x,0.05,12.5,scene,false);
@@ -1104,19 +1110,38 @@ const G3={on:false,ok:false};
   ringT.rotation.x=ringL.rotation.x=Math.PI/2;chest.add(ringT,ringL);
   let chestR=0;
   pipe([[20.2,1,-11.5],[30,1,-11.5]],0.35,M.stock);
-  pipe([[38.5,1,-11],[52,1,-11],[52,1,6.5],[52,2.4,6.5]],0.35,M.stock);
+  pipe([[38.5,1,-11],[57,1,-11],[57,1,6.5],[57,2.4,6.5]],0.35,M.stock);
 
   // paper machine
   const zc=9.1,CD=6.4;
-  box(5.5,3,CD,M.steel,52.3,1.5+0.6,zc);                                  // headbox
-  box(14,0.25,CD,M.steel,42.8,2.4,zc);                                     // forming table
-  const wireRolls=[cylZ(0.5,CD+0.4,M.metal,36,2.4,zc),cylZ(0.5,CD+0.4,M.metal,49.5,2.4,zc)];
-  const press=[cylZ(1.1,CD+0.4,M.metal,32.5,4.6,zc,16),cylZ(1.1,CD+0.4,M.metal,32.5,2.4,zc,16)];
+  box(5.5,3,CD,M.steel,57.3,1.5+0.6,zc);                                  // headbox
+  box(14,0.25,CD,M.steel,47.8,2.4,zc);                                     // forming table
+  const wireRolls=[cylZ(0.5,CD+0.4,M.metal,41,2.4,zc),cylZ(0.5,CD+0.4,M.metal,54.5,2.4,zc)];
+  // twin press: 1st press nip at x 37, 2nd press nip at x 32, each with its own top felt and one tandem bottom felt
+  const press=[cylZ(1.05,CD+0.4,M.metal,37,4.45,zc,18),cylZ(1.05,CD+0.4,M.metal,37,2.35,zc,18),cylZ(1.2,CD+0.4,M.metal,32,4.6,zc,18),cylZ(1.2,CD+0.4,M.metal,32,2.2,zc,18)];
+  M.felt=mat("g-felt",{roughness:1});
+  const fc=document.createElement("canvas");fc.width=64;fc.height=4;const fx2=fc.getContext("2d");fx2.fillStyle="#fff";fx2.fillRect(0,0,64,4);fx2.fillStyle="#9a9a9a";fx2.fillRect(0,0,10,4);
+  const feltTex=new THREE.CanvasTexture(fc);feltTex.wrapS=THREE.RepeatWrapping;
+  const feltMat=mat("g-felt",{map:feltTex,side:THREE.DoubleSide,flatShading:false,roughness:1});
+  function feltLoop(pts){const P2=[...pts,pts[0]],pos=[],uv=[],idx=[];let acc=0;
+    P2.forEach((p,i)=>{if(i)acc+=Math.hypot(p[0]-P2[i-1][0],p[1]-P2[i-1][1]);pos.push(p[0],p[1],zc-CD/2+0.1,p[0],p[1],zc+CD/2-0.1);uv.push(acc/2.5,0,acc/2.5,1);if(i){const b=(i-1)*2;idx.push(b,b+1,b+2,b+1,b+3,b+2);}});
+    const g=new THREE.BufferGeometry();g.setAttribute("position",new THREE.Float32BufferAttribute(pos,3));g.setAttribute("uv",new THREE.Float32BufferAttribute(uv,2));g.setIndex(idx);g.computeVertexNormals();
+    const m=new THREE.Mesh(g,feltMat);m.castShadow=true;m.receiveShadow=true;scene.add(m);return m;}
+  const feltGuides=[];
+  function guide(x,y){feltGuides.push(cylZ(0.28,CD+0.2,M.steel,x,y,zc,10));}
+  // 1st press top felt
+  feltLoop([[35.6,3.47],[38.4,3.47],[39.4,5.6],[39.2,7.1],[35.2,7.1],[34.9,5.6]]);[[39.4,5.6],[39.2,7.1],[35.2,7.1],[34.9,5.6]].forEach(p=>guide(...p));
+  // 2nd press top felt
+  feltLoop([[30.5,3.47],[33.5,3.47],[34.2,6.1],[33.8,7.6],[30.3,7.6],[29.8,6.1]]);[[34.2,6.1],[33.8,7.6],[30.3,7.6],[29.8,6.1]].forEach(p=>guide(...p));
+  // tandem bottom felt: picks the sheet up off the wire and carries it through both nips
+  feltLoop([[41.2,2.95],[38,3.32],[30.6,3.32],[29.6,2.4],[29.6,0.55],[40.6,0.55],[41.6,1.7]]);[[29.6,2.4],[29.6,0.55],[40.6,0.55],[41.6,1.7]].forEach(p=>guide(...p));
+  // press frames make the section stand out
+  [zc-CD/2-0.55,zc+CD/2+0.55].forEach(z=>{box(1.1,6.2,0.5,M.steel,37,3.1,z);box(1.3,6.6,0.5,M.steel,32,3.3,z);box(6.5,0.5,0.5,M.steel,34.5,7.9,z);});
   const shoeMat=M.stock;
   const cansTop=[],cansBot=[];
   for(let i=0;i<10;i++){cansTop.push(cylZ(1.3,CD,M.metal,(872-i*32-600)/10,5.4,zc,12));cansBot.push(cylZ(1.3,CD,M.metal,(856-i*32-600)/10,2.4,zc,12));}
   // machine frame rails + dryer hood frame
-  [zc-CD/2-0.6,zc+CD/2+0.6].forEach(z=>{box(68,0.5,0.4,M.steel,23,0.25,z);for(let x=-6;x<=30;x+=6)box(0.35,7.4,0.35,M.steel,x,3.7,z);box(37,0.35,0.35,M.steel,12,7.4,z);});
+  [zc-CD/2-0.6,zc+CD/2+0.6].forEach(z=>{box(74,0.5,0.4,M.steel,26,0.25,z);for(let x=-6;x<=30;x+=6)box(0.35,7.4,0.35,M.steel,x,3.7,z);box(37,0.35,0.35,M.steel,12,7.4,z);});
   // reel + stand, winder, roll conveyor
   [zc-CD/2-0.5,zc+CD/2+0.5].forEach(z=>box(0.6,4.2,0.6,M.steel,-10,2.1,z));
   const reelCore=cylZ(0.25,CD+1.4,M.steel,-10,4.2,zc,8);
@@ -1129,7 +1154,7 @@ const G3={on:false,ok:false};
   const tc=document.createElement("canvas");tc.width=64;tc.height=4;const tx=tc.getContext("2d");tx.fillStyle="#fff";tx.fillRect(0,0,64,4);tx.fillStyle="#c8c8c8";tx.fillRect(0,0,6,4);
   const sheetTex=new THREE.CanvasTexture(tc);sheetTex.wrapS=THREE.RepeatWrapping;
   const sheetMat=mat("paperc",{map:sheetTex,side:THREE.DoubleSide,flatShading:false,roughness:1});
-  const sheetPts=[[52.3,3.4],[49.5,2.95],[36,2.95],[32.5,3.5]];
+  const sheetPts=[[57.3,3.4],[54.5,2.95],[41,3.0],[37,3.4],[32,3.4],[29,3.6]];
   for(let i=0;i<10;i++){sheetPts.push([(872-i*32-600)/10,6.75]);sheetPts.push([(856-i*32-600)/10,1.05]);}
   let sheetMesh=null;
   function buildSheet(reelR){if(sheetMesh){scene.remove(sheetMesh);sheetMesh.geometry.dispose();}
@@ -1171,9 +1196,10 @@ const G3={on:false,ok:false};
     {p:[-21,2.8,-24],t:()=>["2 Receiving",f0(S.yard)+" t bales"]},
     {p:[16,4.5,-18.5],t:()=>["3 Pulper",f1(S.rates.feed)+" t/h"]},
     {p:[34.5,11.2,-15],t:()=>["4 Stock chest",f0(S.tank/P.tankCap*100)+" %"]},
-    {p:[23,8.4,zc],t:()=>["5 "+NAME+(S.pm==="run"?"":" · "+({break:"sheet break: all hands rethreading",down:"no stock",full:"warehouse full",spools:"winder backed up",incident:S.M.pmDown||"down"}[S.pm]||"")),f0(S.pmSpeed)+" fpm · "+f1(S.rates.prod)+" t/h"],cls:()=>S.pm==="run"?"":"bad"},
-    {p:[-10,7.6,zc],t:()=>["Reel",f1(S.reel)+" / "+P.jumbo+" t"]},
-    {p:[-18.7,5.2,zc-1],t:()=>["6 Winder"+(S.wd==="hayout"?" · HAYOUT!":""),S.wd==="hayout"?"crew cleaning up":Math.ceil(S.winderBuf/P.jumbo-1e-6)+"/"+P.maxReels+" reels · "+f1(S.rates.cut)+" t/h"],cls:()=>S.wd==="hayout"},
+    {p:[34.5,9.6,zc-1.5],t:()=>["Twin press",LV("shoe")?"shoe in 2nd press":"tandem bottom felt"]},
+    {p:[10,8.4,zc],t:()=>["5 "+NAME+(S.pm==="run"?"":" · "+({break:"sheet break: all hands rethreading",down:"no stock",full:"warehouse full",spools:"winder backed up",incident:S.M.pmDown||"down"}[S.pm]||"")),f0(S.pmSpeed)+" fpm · "+f1(S.rates.prod)+" t/h"],cls:()=>S.pm==="run"?"":"bad"},
+    {p:[-10,9.2,zc],t:()=>["Reel",f1(S.reel)+" / "+P.jumbo+" t"]},
+    {p:[-20,1.5,zc+4],t:()=>["6 Winder"+(S.wd==="hayout"?" · HAYOUT!":""),S.wd==="hayout"?"crew cleaning up":Math.max(0,Math.ceil(S.winderBuf/P.jumbo-1e-6)-1)+"/"+P.storeReels+" reels stored · "+f1(S.rates.cut)+" t/h"],cls:()=>S.wd==="hayout"},
     {p:[-36.4,3.2,14.8],t:()=>["7 Roll warehouse",f0(S.fg)+" rolls"]},
   ];
   LABELS.forEach(L=>{L.el=document.createElement("div");L.el.className="lbl";L.b=document.createElement("b");L.s=document.createElement("span");L.el.append(L.b,L.s);labelHost.appendChild(L.el);L.v=new THREE.Vector3(...L.p);});
@@ -1258,13 +1284,13 @@ const G3={on:false,ok:false};
     const arm=new THREE.Mesh(cubeG,m);arm.scale.set(0.9,0.14,0.14);arm.position.set(0.4,1.2,0);p.add(b,h,arm);p.position.set(x,0,z);group.add(p);return p;}
   const FX={};
   const FXDEF={
-    shaft:g=>{const hz=hazardBox(g,-12,58,8.4,4.6,13.6);const motor=box(2.2,1.8,1.8,M.steel,12,0.9,14.8,g);
+    shaft:g=>{const hz=hazardBox(g,-12,63,8.4,4.6,13.6);const motor=box(2.2,1.8,1.8,M.steel,12,0.9,14.8,g);
       return (now,rdt)=>{hz(now);for(let k=0;k<3;k++)emit(FM.spark,12,1.6,14,(Math.random()-0.5)*8,4+Math.random()*5,(Math.random()-0.2)*6,0.6,0.16);motor.rotation.y=Math.sin(now/40)*0.06;};},
-    dryerfire:g=>{const spots=[];for(let i=0;i<10;i++)spots.push([(872-i*32-600)/10,6.6,zc+(i%2?1.4:-1.4)]);const fl=flames(g,spots);const hz=hazardBox(g,-12,58,8.4,4.6,13.6);
+    dryerfire:g=>{const spots=[];for(let i=0;i<10;i++)spots.push([(872-i*32-600)/10,6.6,zc+(i%2?1.4:-1.4)]);const fl=flames(g,spots);const hz=hazardBox(g,-12,63,8.4,4.6,13.6);
       return (now,rdt)=>{fl(now);hz(now);if(Math.random()<rdt*14)emit(FM.smoke,-3+Math.random()*30,8.5,zc+(Math.random()-0.5)*4,0.6,2.5,0,4,1.2);};},
-    fabric:g=>{const hz=hazardBox(g,34,51,4,4.6,13.6);const rag=new THREE.Mesh(new THREE.TorusKnotGeometry(1.4,0.25,40,6,2,3),M.bad);rag.position.set(43,1.4,zc);g.add(rag);
+    fabric:g=>{const hz=hazardBox(g,39,56,4,4.6,13.6);const rag=new THREE.Mesh(new THREE.TorusKnotGeometry(1.4,0.25,40,6,2,3),M.bad);rag.position.set(48,1.4,zc);g.add(rag);
       return now=>{hz(now);rag.rotation.y=now/900;};},
-    felt:g=>{const r=new THREE.Mesh(new THREE.TorusGeometry(2.6,0.18,8,28),M.bad);r.position.set(32.5,3.5,zc+3.6);g.add(r);const r2=r.clone();r2.position.z=zc-3.6;g.add(r2);
+    felt:g=>{const r=new THREE.Mesh(new THREE.TorusGeometry(3.6,0.18,8,28),M.bad);r.position.set(34.5,3.5,zc+3.6);g.add(r);const r2=r.clone();r2.position.z=zc-3.6;g.add(r2);
       return now=>{const s=1+0.08*Math.sin(now/120);r.scale.setScalar(s);r2.scale.setScalar(s);};},
     slime:g=>{const blobs=[];for(let k=0;k<26;k++){const b=new THREE.Mesh(sphereG,FM.beaver);const i=k%10,top=k%2;b.position.set((top?872:856)/10-60-i*3.2+(Math.random()-0.5),top?6.8:1.0,zc+(Math.random()-0.5)*5.5);b.userData.s=0.25+Math.random()*0.35;g.add(b);blobs.push(b);}
       return now=>blobs.forEach((b,k)=>b.scale.setScalar(b.userData.s*(1+0.25*Math.sin(now/300+k))));},
@@ -1320,15 +1346,15 @@ const G3={on:false,ok:false};
 
   /* ---- winder, waiting reels, roof trusses ---- */
   const paperDS=basic("paperc",{side:THREE.DoubleSide});
-  slab(-25,-6,-1.5,3,M.slab,0.03);
+  slab(-29,-6,-2.5,3,M.slab,0.03);
   const wd=new THREE.Group();wd.position.set(-18.7,0,zc);scene.add(wd);
   [-2.7,2.7].forEach(z=>{box(0.5,3.8,0.5,M.steel,-2.6,1.9,z,wd);box(0.5,3.8,0.5,M.steel,3.4,1.9,z,wd);box(6.5,0.4,0.5,M.steel,0.4,3.9,z,wd);});
   const unwind=cylZ(1,4.8,M.paper,2.6,2.4,0,22,wd);cylZ(0.22,5.8,M.steel,2.6,2.4,0,8,wd);
   const drums=[cylZ(0.5,5,M.metal,-1.3,0.75,0,12,wd),cylZ(0.5,5,M.metal,-2.4,0.75,0,12,wd)];
-  const setRolls=[-1.65,0,1.65].map(z=>cylZ(1,1.5,M.paper,-1.85,1.75,z,16,wd));
+  const setRolls=[-1.8,-0.6,0.6,1.8].map(z=>cylZ(1,1.12,M.paper,-1.85,1.75,z,16,wd));
   const web=new THREE.Mesh(new THREE.PlaneGeometry(4.6,4.6),paperDS);web.rotation.x=-Math.PI/2;web.position.set(0.4,2.2,0);wd.add(web);
   box(1.2,1.2,0.8,M.steel,0,0.6,4.3,wd);box(1.1,0.5,0.1,M.robot,0,1.25,3.95,wd,false);
-  const parked=[0,1,2].map(k=>{const g=new THREE.Group();g.position.set(-11.6-k*4.7,0,0.7);scene.add(g);
+  const parked=[0,1,2,3].map(k=>{const g=new THREE.Group();g.position.set(-11.5-k*4.4,0,-0.2);scene.add(g);
     box(0.35,1.1,4.6,M.steel,-1.3,0.55,0,g);box(0.35,1.1,4.6,M.steel,1.3,0.55,0,g);cylZ(2,5.2,M.paper,0,2.15,0,22,g);cylZ(0.22,6.2,M.steel,0,2.15,0,8,g);return g;});
   {const t=new THREE.Group();scene.add(t);
     for(let x=-24;x<=56;x+=16)box(0.2,0.25,13.4,M.metal,x,13,9.3,t,false);
@@ -1357,7 +1383,7 @@ const G3={on:false,ok:false};
   function moveP(p,tx,tz,speed,rdt){const dx=tx-p.position.x,dz=tz-p.position.z,d=Math.hypot(dx,dz);
     if(d<0.15)return true;const s=Math.min(d,speed*rdt);p.position.x+=dx/d*s;p.position.z+=dz/d*s;p.rotation.y=lerpAng(p.rotation.y,Math.atan2(-dz,dx),Math.min(1,rdt*12));return false;}
   function face(p,x,z,rdt){p.rotation.y=lerpAng(p.rotation.y,Math.atan2(-(z-p.position.z),x-p.position.x),Math.min(1,rdt*8));}
-  const HOME=[[52,14.2],[42,14.2],[32.5,14.2],[20,14.2],[6,14.2],[-10,14.2],[-18.7,14.4]];
+  const HOME=[[57,14.2],[47,14.2],[34.5,14.2],[20,14.2],[6,14.2],[-10,14.2],[-18.7,14.4]];
   const HAY=[[-23.6,14],[-14,13.6],[-24.2,7.5],[-13.2,8.5],[-22.5,4.2],[-15.5,4.2],[-19.5,15.4]];
   const RT=[[27,14.2],[23,14.2],[19,14.2],[15,14.2],[11,14.2],[25,4.1],[17,4.1]];
   const RTY=[];for(let k=0;k<24;k++)RTY.push([29-(k%12)*2.6,k<12?15.4:3.2]);
@@ -1378,7 +1404,7 @@ const G3={on:false,ok:false};
     s.on=true;s.landed=false;s.m.visible=true;s.m.position.set(-18.7+(Math.random()-0.5)*2,3.8,zc+(Math.random()-0.5)*4);
     s.v=[(Math.random()-0.5)*16,13+Math.random()*16,(Math.random()-0.5)*16];s.spin=[Math.random()*8,Math.random()*8,Math.random()*8];s.k=Math.random()*6;}
   let shake=0;
-  function hayFx(rdt,now){const ep=EP.hay,on=ep&&now<ep.until,age=on?(now-ep.t0)/1000:99,left=on?(ep.until-now)/1000:0;
+  function hayFx(rdt,now){const ep=EP.hay,on=!!(ep&&now<ep.until),age=on?(now-ep.t0)/1000:99,left=on?(ep.until-now)/1000:0;
     // fountain: twisting ribbon of paper climbing to the roof trusses
     if(on&&!ep.burst){ep.burst=true;for(let k=0;k<90;k++)launchSheet();}
     fountain.visible=on&&age<5;
@@ -1499,8 +1525,8 @@ const G3={on:false,ok:false};
     // machine
     const pmRun=S.pm==="run";
     cansTop.concat(cansBot).forEach((c,i)=>c.rotation.z=(i<10?-1:1)*V.cans);
-    press[0].rotation.z=-V.cans*1.2;press[1].rotation.z=V.cans*1.2;wireRolls.forEach(w=>w.rotation.z=V.cans*2.5);
-    press.forEach(p=>{p.material=LV("shoe")?shoeMat:M.metal;});
+    press[0].rotation.z=-V.cans*1.3;press[1].rotation.z=V.cans*1.3;press[2].rotation.z=-V.cans*1.15;press[3].rotation.z=V.cans*1.15;feltTex.offset.x=-V.cans*0.35;feltGuides.forEach(g=>g.rotation.z=-V.cans*4);wireRolls.forEach(w=>w.rotation.z=V.cans*2.5);
+    press.forEach((p,i)=>{p.material=LV("shoe")&&i===3?shoeMat:M.metal;});
     const rr=0.4+2.6*Math.sqrt(S.reel/P.jumbo);reel.scale.set(rr,rr,1);reel.rotation.z=V.cans*0.8;
     if(Math.abs(rr-sheetR)>0.08){sheetR=rr;buildSheet(rr);}
     sheetMesh.visible=pmRun;sheetTex.offset.x=-V.sheet/24*1.0;
