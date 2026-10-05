@@ -11,7 +11,7 @@
 :root{
   --bg:#eef0f6; --panel:#ffffff; --ink:#1c2233; --muted:#687087; --line:#e1e4ee; --chip:#f1f3f8;
   --brand:#2f5bea;
-  --kraft:#b07a43; --stock:#3b7fa8; --machine:#4b5568; --paperc:#b98d61; --g-skin:#f0cfb2; --g-tech:#ef7d22; --g-tile:#eef1f5;
+  --kraft:#b07a43; --stock:#3b7fa8; --pulp:#74522f; --machine:#4b5568; --paperc:#b98d61; --g-skin:#f0cfb2; --g-tech:#ef7d22; --g-tile:#eef1f5;
   --ok:#1f9254; --warn:#c27a00; --bad:#d6382c;
   --g-sky:#b3bbcb; --g-ground:#b3bbcb; --g-slab:#f4f5f9; --g-asphalt:#8c94a6; --g-wall:#ffffff; --g-lane:#f2b51d; --g-metal:#98a2b4; --g-felt:#6c7891;
   --g-frame:#646f86; --g-fork:#f5b70f; --g-glass:#2b3346;
@@ -206,6 +206,10 @@ button:focus-visible,input:focus-visible,select:focus-visible{outline-color:var(
 .brand h1{font:800 26px var(--f-body);letter-spacing:-.02em;margin:0;line-height:1.1}
 .brand h1 small{font:500 13px var(--f-body);color:var(--muted);margin-top:4px}
 .brand .eyebrow{display:block;font:700 11px var(--f-body);letter-spacing:.08em;text-transform:uppercase;color:var(--brand);margin-bottom:2px}
+.mnwrap{display:inline-flex;align-items:center;gap:6px}
+#millName[contenteditable=true]{outline:2px solid var(--brand);outline-offset:2px;border-radius:4px;padding:0 4px;background:var(--panel)}
+.pencil{font-size:14px;line-height:1;padding:3px 6px;border-radius:6px;color:var(--muted)}
+.hud .hbtns button.danger{color:#fff}
 .reroll{font-size:12px;padding:5px 10px;align-self:center;white-space:nowrap}
 /* fullscreen */
 .hud{display:none;z-index:5}
@@ -226,13 +230,13 @@ body.fs .banner3d{top:calc(84px + env(safe-area-inset-top,0px))}
 [hidden]{display:none!important}
 body{margin:0}
 </style>
-
 </head>
 <body>
+
 <div class="wrap">
   <header>
     <div class="brand"><span class="logo" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linejoin="round"><circle cx="8.5" cy="12" r="5.5"/><circle cx="8.5" cy="12" r="1.6" fill="currentColor"/><path d="M8.5 6.5H20v11H8.5"/></svg></span>
-      <h1><span class="eyebrow">The Paper Mill</span><span id="millName">Paper Co.</span><small>Run <span id="h-name">PM1</span> from OCC truck to roll truck. Make money, survive the chaos, buy upgrades. Reach $25M to win.</small></h1>
+      <h1><span class="eyebrow">The Paper Mill</span><span class="mnwrap"><span id="millName" spellcheck="false">Paper Co.</span><button id="millEdit" class="pencil" title="Rename your mill" aria-label="Rename mill">&#9998;</button></span><small>Run <span id="h-name">PM1</span> from OCC truck to roll truck. Make money, survive the chaos, buy upgrades. Reach $25M to win.</small></h1>
       <button id="reroll" class="reroll" title="Pick a new mill name and brand colors">New name &amp; colors</button></div>
     <div class="transport">
       <label class="namefield" for="pmname">Machine</label><input id="pmname" maxlength="14" value="PM1" spellcheck="false" autocomplete="off" style="font:600 14px var(--f-mono);width:10ch;color:var(--ink);background:var(--panel);border:1px solid var(--line);border-radius:6px;padding:6px 8px">
@@ -267,7 +271,7 @@ body{margin:0}
     <div class="hk"><span>Production</span><b id="hud-prod">–</b></div>
     <div class="hk opt"><span>Stock chest</span><b id="hud-tank">–</b></div>
     <div class="hk opt"><span>Profit</span><b id="hud-profit">–</b></div>
-    <div class="hbtns"><button id="hud-play">Pause</button><button id="hud-slow" aria-label="Slower">−</button><span id="hud-speed">30 min/s</span><button id="hud-fast" aria-label="Faster">+</button><button id="hud-sound">Sound</button><button id="hud-lbl">Labels: Auto</button><button id="hud-exit">Exit</button></div></div><canvas id="gl" tabindex="0" aria-label="3D view of the mill. Arrow keys move, Q and E rotate, plus and minus zoom."></canvas><div class="pad" id="pad" aria-label="Move the view"><button data-p="0,-1" aria-label="Move up">▲</button><button data-p="-1,0" aria-label="Move left">◀</button><button data-p="1,0" aria-label="Move right">▶</button><button data-p="0,1" aria-label="Move down">▼</button></div><div id="labels3d"></div><div class="banner3d" id="banner3d" hidden><span></span><b></b></div><div class="chips3d" id="chips3d"></div><div class="flash3d" id="flash3d"></div><div class="blackout3d" id="blackout3d" hidden><div><b>Power outage</b><span>Lightning hit the substation. Backup generators starting…</span></div></div></div>
+    <div class="hbtns"><button id="hud-play">Pause</button><button id="hud-slow" aria-label="Slower">−</button><span id="hud-speed">30 min/s</span><button id="hud-fast" aria-label="Faster">+</button><button id="hud-sound">Sound</button><button id="hud-lbl">Labels: Auto</button><button id="hud-dis" class="danger" title="Unleash a random disaster">Disaster</button><button id="hud-exit">Exit</button></div></div><canvas id="gl" tabindex="0" aria-label="3D view of the mill. Arrow keys move, Q and E rotate, plus and minus zoom."></canvas><div class="pad" id="pad" aria-label="Move the view"><button data-p="0,-1" aria-label="Move up">▲</button><button data-p="-1,0" aria-label="Move left">◀</button><button data-p="1,0" aria-label="Move right">▶</button><button data-p="0,1" aria-label="Move down">▼</button></div><div id="labels3d"></div><div class="banner3d" id="banner3d" hidden><span></span><b></b></div><div class="chips3d" id="chips3d"></div><div class="flash3d" id="flash3d"></div><div class="blackout3d" id="blackout3d" hidden><div><b>Power outage</b><span>Lightning hit the substation. Backup generators starting…</span></div></div></div>
   <div class="scroller" id="plantwrap"><canvas id="plant" width="1200" height="660" aria-label="Animated mill schematic"></canvas></div>
 
   <section class="chaos" aria-label="Chaos">
@@ -368,6 +372,15 @@ function rollMill(){let b;do{b=BRANDS[Math.floor(Math.random()*BRANDS.length)];}
 }
 rollMill();
 document.getElementById("reroll").addEventListener("click",rollMill);
+(function(){const el=document.getElementById("millName"),btn=document.getElementById("millEdit");let old="";
+  function done(save){if(el.contentEditable!=="true")return;el.contentEditable="false";const v=el.textContent.replace(/\s+/g," ").trim().slice(0,32);
+    MILL.name=save&&v?v:old;el.textContent=MILL.name;const hm=document.getElementById("hud-mill");if(hm)hm.textContent=MILL.name;
+    try{if(G3.rebrand)G3.rebrand();}catch(e){}btn.textContent="\u270E";btn.title="Rename your mill";}
+  btn.addEventListener("click",()=>{if(el.contentEditable==="true"){done(true);return;}old=MILL.name;el.contentEditable="true";el.focus();
+    const r=document.createRange();r.selectNodeContents(el);const sel=getSelection();sel.removeAllRanges();sel.addRange(r);btn.textContent="\u2713";btn.title="Save name";});
+  btn.addEventListener("mousedown",e=>e.preventDefault());
+  el.addEventListener("keydown",e=>{if(e.key==="Enter"){e.preventDefault();done(true);}else if(e.key==="Escape"){e.preventDefault();done(false);}e.stopPropagation();});
+  el.addEventListener("blur",()=>done(true));})();
 /* ---- generative music and sound effects (Web Audio, no files) ---- */
 const AUDIO=(()=>{
   let ctx=null,master,comp,musicBus,sfxBus,chillG,intG,crackleG,noiseBuf,timer=null,on=false,vol=0.7,target="chill",calmSince=0,switchedAt=0;
@@ -455,7 +468,7 @@ const AUDIO=(()=>{
     win:t=>{[60,64,67,72,76,79,84].forEach((m,k)=>tone(t+k*0.11,sfxBus,"triangle",mtof(m),0.5,0.14));},
     lose:t=>{[[55,0.5],[54,0.5],[53,0.5],[52,1.4]].reduce((tt,[m,d])=>{const o=tone(tt,sfxBus,"sawtooth",mtof(m),d,0.08,0.02);if(d>1)o.o.frequency.linearRampToValueAtTime(mtof(m)*0.97,tt+d);return tt+d;},t);},
   };
-  const EVSFX={shaft:"clunk",fabric:"clunk",felt:"clunk",ragger:"clunk",dryerfire:"fire",balefire:"fire",overflow:"water",roof:"water",fight:"siren",highway:"siren",lightning:"thunder",tornado:"wind",beaver:"chomp"};
+  const EVSFX={shaft:"clunk",fabric:"clunk",felt:"clunk",ragger:"clunk",dryerfire:"fire",balefire:"fire",overflow:"water",chestover:"water",roof:"water",fight:"siren",highway:"siren",lightning:"thunder",tornado:"wind",beaver:"chomp"};
   function sfx(name,gap=1200){if(!ctx||!on||!FX[name])return;const now=performance.now();if(now-(last[name]||0)<gap)return;last[name]=now;FX[name](ctx.currentTime+0.02);}
   return {setOn,setVol,update,sfx,event:id=>sfx(EVSFX[id]||"alarm"),get on(){return on;}};
 })();
@@ -472,7 +485,7 @@ const AUTOKEYS=["inRate","drivers","pulper","pmSp","wdr","loaders","outRate"];
 let C,S;
 const BASE={...P};
 const ECON={price:{"23m":680,"26m":700,"30m":720,"33HT":780},energy:95,chem:25,wage:45,robot:15,overhead:4000,start:2e6,bankrupt:-1.5e6,goal:25e6};
-const REPAIR={shaft:250e3,dryerfire:400e3,fabric:90e3,felt:45e3,slime:30e3,ragger:15e3,overflow:120e3,badocc:0,balefire:150e3,fleet:40e3,calloff:10e3,fight:5e3,roof:80e3,highway:0,lightning:200e3,tornado:500e3,beaver:25e3};
+const REPAIR={shaft:250e3,dryerfire:400e3,fabric:90e3,felt:45e3,slime:30e3,ragger:15e3,overflow:120e3,chestover:60e3,badocc:0,balefire:150e3,fleet:40e3,calloff:10e3,fight:5e3,roof:80e3,highway:0,lightning:200e3,tornado:500e3,beaver:25e3};
 const UGROUPS=[["machine","Paper machine"],["stock","Stock prep"],["yard","Warehouse & logistics"],["maint","Maintenance"],["mgmt","Management"]];
 const MAINT=["shaft","fabric","felt","ragger","overflow","fleet","roof","lightning"];
 const UPS=[
@@ -545,6 +558,8 @@ const EVENTS=[
  {id:"ragger",g:"stock",name:"Ragger rope snaps",head:"Ragger rope snaps. Pulper stopped to fish it out.",dur:[90,180],mtbf:140,mods:{pulperDown:1},fx:"ragger"},
  {id:"overflow",g:"stock",name:"Pulper overflows",head:"Pulper overflows and floods the bale yard!",dur:[240,360],mtbf:220,mods:{pulperDown:1,recvMul:0.5},fx:"flood",
    start:i=>{const l=S.yard*0.15;S.yard-=l;i.note=`${Math.round(l)} t of bales soaked`;}},
+ {id:"chestover",g:"stock",name:"Stock chest overflows",head:"Stock chest overflows! A brown river runs across the floor.",dur:[120,240],mtbf:260,mods:{pulperDown:1},fx:"chestover",
+   start:i=>{const l=Math.min(S.tank,P.tankCap*0.12);S.tank-=l;i.note=`${Math.round(l)} t of stock on the floor`;}},
  {id:"badocc",g:"stock",name:"Junk OCC delivered",head:"Junk OCC: wax, plastic and wet bales. Yield and runnability drop.",dur:[600,900],mtbf:160,mods:{yieldMul:0.8,breakMul:2},fx:"badocc"},
  {id:"balefire",g:"stock",name:"Bale yard fire",head:"Bale yard fire! Receiving evacuated.",dur:[180,300],mtbf:320,mods:{recvMul:0},fx:"balefire",
    start:i=>{const l=S.yard*0.3;S.yard-=l;i.note=`${Math.round(l)} t of OCC burned`;}},
@@ -591,6 +606,7 @@ function chaosTick(dt){
   for(const i of S.inc)i.left-=dt;
   for(const i of S.inc)if(i.left<=0)log(`${EV[i.id].name}: cleared, back to normal`,"ok");
   S.inc=S.inc.filter(i=>i.left>0);
+  if(CH.on&&CH.en.chestover&&!active("chestover")&&S.tank>=P.tankCap*0.995&&Math.random()<dt/60/25)trigger("chestover");
   if(CH.on)for(const e of EVENTS)if(CH.en[e.id]&&!active(e.id)&&Math.random()<dt/60/e.mtbf*CH.lvl*freqMul(e.id))trigger(e.id);
 }
 const HAYLINES=["HAYOUT! Paper is shooting to the roof!","Winder hayout! Every PM hand to the dry end!","Hayout! It's snowing paper in the winder aisle.","Hayout! The set exploded off the drums."];
@@ -914,7 +930,7 @@ function updateText(){
 const cv=$("plant"),ctx=cv.getContext("2d"),tc=$("trend"),tctx=tc.getContext("2d");
 let col={};
 function readColors(){const cs=getComputedStyle(document.documentElement);
-  ["bg","panel","ink","muted","line","kraft","stock","machine","paperc","ok","warn","bad","chip","fire","fire2","water","smoke","slime","beaver"].forEach(k=>col[k]=cs.getPropertyValue("--"+k).trim());}
+  ["bg","panel","ink","muted","line","kraft","stock","pulp","machine","paperc","ok","warn","bad","chip","fire","fire2","water","smoke","slime","beaver"].forEach(k=>col[k]=cs.getPropertyValue("--"+k).trim());}
 readColors(); setInterval(readColors,800);
 const DPR=()=>Math.min(2,window.devicePixelRatio||1);
 function sizeCanvas(){const d=DPR();cv.width=1200*d;cv.height=660*d;
@@ -989,7 +1005,7 @@ function draw(rdt){
 
   // pulper
   ctx.fillStyle=col.panel;ctx.strokeStyle=col.machine;ctx.lineWidth=2;ctx.beginPath();ctx.arc(760,195,52,0,7);ctx.fill();ctx.stroke();
-  ctx.fillStyle=col.stock;ctx.globalAlpha=0.25;ctx.beginPath();ctx.arc(760,195,46,0,7);ctx.fill();ctx.globalAlpha=1;
+  ctx.fillStyle=col.pulp;ctx.globalAlpha=0.45;ctx.beginPath();ctx.arc(760,195,46,0,7);ctx.fill();ctx.globalAlpha=1;
   if(!S.M.pulperDown)V.swirl+=rdt*(0.4+R.feed*0.06);
   ctx.strokeStyle=col.stock;ctx.lineWidth=2;
   for(let i=0;i<3;i++){ctx.beginPath();ctx.arc(760,195,14+i*11,V.swirl*(1+i*0.3)+i,V.swirl*(1+i*0.3)+i+2.2);ctx.stroke();}
@@ -999,10 +1015,13 @@ function draw(rdt){
   // pipe pulper → chest
   ctx.strokeStyle=col.stock;ctx.lineWidth=6;ctx.beginPath();ctx.moveTo(812,215);ctx.lineTo(900,215);ctx.stroke();
   flowDots(812,215,900,215,R.fiberIn,rdt,"p1");
+  {ctx.fillStyle=col.panel;ctx.strokeStyle=col.machine;ctx.lineWidth=2;rr(832,196,48,30,5);ctx.fill();ctx.stroke();ctx.fillStyle=col.pulp;ctx.globalAlpha=0.6;rr(835,212,42,11,3);ctx.fill();ctx.globalAlpha=1;
+    if(!S.M.pulperDown)V.disk=(V.disk||0)+rdt*1.5;ctx.strokeStyle=col.machine;ctx.lineWidth=1.5;for(let k=0;k<6;k++){const x=838+k*7;ctx.beginPath();ctx.moveTo(x,201+2*Math.sin(V.disk||0));ctx.lineTo(x,221);ctx.stroke();}
+    label("thickener",856,240,10,col.muted,"center");}
 
   // chest
   ctx.fillStyle=col.panel;ctx.strokeStyle=col.machine;ctx.lineWidth=2;rr(900,70,90,220,6);ctx.fill();ctx.stroke();
-  const fh=212*level;ctx.fillStyle=level*100<C.lowLevel.v?col.bad:col.stock;ctx.globalAlpha=0.75;rr(904,286-fh,82,fh,3);ctx.fill();ctx.globalAlpha=1;
+  const fh=212*level;ctx.fillStyle=level*100<C.lowLevel.v?col.bad:col.pulp;ctx.globalAlpha=0.8;rr(904,286-fh,82,fh,3);ctx.fill();ctx.globalAlpha=1;
   const yT=286-212*C.lvlTarget.v/100,yL=286-212*C.lowLevel.v/100;
   ctx.setLineDash([4,3]);ctx.lineWidth=1.2;
   ctx.strokeStyle=col.ok;ctx.beginPath();ctx.moveTo(896,yT);ctx.lineTo(994,yT);ctx.stroke();
@@ -1128,9 +1147,12 @@ function drawChaos(){
         ctx.globalAlpha=1;tag("SCABS: SPEED CAPPED, HAYOUT RISK",525,368,"left");break;}
       case "ragger":{ctx.strokeStyle=col.bad;ctx.lineWidth=4;ctx.beginPath();ctx.moveTo(735,170);ctx.lineTo(785,220);ctx.moveTo(785,170);ctx.lineTo(735,220);ctx.stroke();
         ctx.strokeStyle=col.machine;ctx.lineWidth=2;ctx.beginPath();ctx.moveTo(800,160);for(let k=0;k<8;k++)ctx.lineTo(810+k*6,150-k*5+4*Math.sin(k+now/300));ctx.stroke();tag("RAGGER STOPPED",818,180,"left");break;}
-      case "flood":{ctx.globalAlpha=0.38;ctx.fillStyle=col.water;ctx.beginPath();ctx.moveTo(712,232);ctx.quadraticCurveTo(620,250,520,262);ctx.lineTo(520,298);ctx.lineTo(258,298);ctx.lineTo(258,236);
+      case "chestover":{ctx.globalAlpha=0.8;ctx.fillStyle=col.pulp;rr(898,64,94,8,3);ctx.fill();
+          for(const x of [898,986])for(let k=0;k<3;k++){ctx.fillRect(x+k*2,68,3,224+3*Math.sin(now/120+k+x));}
+          ctx.globalAlpha=0.55;ctx.beginPath();ctx.ellipse(945,296,78+4*Math.sin(now/400),9,0,0,7);ctx.fill();ctx.globalAlpha=1;tag("CHEST OVERFLOW",900,30);break;}
+      case "flood":{ctx.globalAlpha=0.45;ctx.fillStyle=col.pulp;ctx.beginPath();ctx.moveTo(712,232);ctx.quadraticCurveTo(620,250,520,262);ctx.lineTo(520,298);ctx.lineTo(258,298);ctx.lineTo(258,236);
         for(let x=258;x<=520;x+=12)ctx.lineTo(x,232+4*Math.sin(x/18+now/300));ctx.lineTo(712,250);ctx.closePath();ctx.fill();ctx.globalAlpha=1;
-        ctx.strokeStyle=col.water;ctx.lineWidth=2;ctx.beginPath();for(let x=258;x<=520;x+=6)ctx.lineTo(x,232+4*Math.sin(x/18+now/300));ctx.stroke();recvTags.push("FLOODED");break;}
+        ctx.strokeStyle=col.pulp;ctx.lineWidth=2;ctx.beginPath();for(let x=258;x<=520;x+=6)ctx.lineTo(x,232+4*Math.sin(x/18+now/300));ctx.stroke();recvTags.push("FLOODED");break;}
       case "badocc":{for(let k=0;k<40;k++){const x=302+((k*53)%200),y=170+((k*37)%118);ctx.fillStyle=k%3?col.slime:col.water;ctx.fillRect(x,y,4,3);}
         tag("JUNK OCC",818,262,"left");break;}
       case "balefire":{for(let k=0;k<8;k++)flame(310+k*26,288-(k%3)*18,28+10*flick(k));smoke(380,170,now);smoke(460,170,now+500);recvTags.push("YARD FIRE");break;}
@@ -1273,7 +1295,7 @@ const G3={on:false,ok:false};
   const M={ground:mat("g-ground"),slab:mat("g-slab"),asphalt:mat("g-asphalt"),wall:mat("g-wall"),steel:mat("machine",{metalness:0.3,roughness:0.6}),metal:mat("g-metal",{metalness:0.35,roughness:0.5}),
     kraft:mat("kraft"),stock:mat("stock"),paper:mat("paperc",{roughness:0.95}),ink:mat("ink"),warn:mat("warn"),ok:mat("ok"),bad:mat("bad"),
     lane:mat("g-lane"),glass:mat("g-wall",{transparent:true,opacity:0.3,depthWrite:false,side:THREE.DoubleSide,roughness:0.2}),robot:mat("stock",{roughness:0.4}),off:mat("smoke")};
-  M.liquid=mat("stock",{roughness:0.75});M.efork=mat("stock");
+  M.liquid=mat("pulp",{roughness:0.75});M.pulp=mat("pulp",{roughness:0.3});M.efork=mat("stock");
   M.steel=mat("g-frame",{metalness:0.25,roughness:0.55});M.brand=mat("brand",{roughness:0.55});M.fork=mat("g-fork",{roughness:0.5});M.wind=mat("g-glass",{roughness:0.2,metalness:0.3});
   M.robot=mat("brand",{roughness:0.4});
   // ribbed cladding for building walls
@@ -1367,7 +1389,7 @@ const G3={on:false,ok:false};
   const pulper=new THREE.Group();pulper.position.set(16,0,-13.5);scene.add(pulper);blob(16,-13.5,6.4);blob(34.5,-15,6.6);
   {const v=new THREE.Mesh(new THREE.CylinderGeometry(4.2,4.4,3.4,24,1,true),mat("g-wall",{side:THREE.DoubleSide}));v.position.y=1.7;v.castShadow=true;v.receiveShadow=true;pulper.add(v);
     const rim=new THREE.Mesh(new THREE.TorusGeometry(4.2,0.15,6,28),M.steel);rim.rotation.x=Math.PI/2;rim.position.y=3.4;pulper.add(rim);
-    const s=new THREE.Mesh(new THREE.CylinderGeometry(4.05,4.05,0.2,24),M.stock);s.position.y=2.9;pulper.add(s);}
+    const s=new THREE.Mesh(new THREE.CylinderGeometry(4.05,4.05,0.2,24),M.pulp);s.position.y=2.9;pulper.add(s);}
   const rotor=new THREE.Group();rotor.position.y=3.05;pulper.add(rotor);
   box(6,0.18,0.5,M.steel,0,0,0,rotor,false);box(0.5,0.18,6,M.steel,0,0,0,rotor,false);
   const pulpStock=pulper.children[2];
@@ -1390,7 +1412,7 @@ const G3={on:false,ok:false};
   const swC=document.createElement("canvas");swC.width=swC.height=128;{const x=swC.getContext("2d");x.fillStyle="#ffffff";x.fillRect(0,0,128,128);x.strokeStyle="rgba(0,0,0,.12)";x.lineWidth=3;
     for(let k=0;k<5;k++){x.beginPath();for(let a=0;a<12;a+=0.1){const r=6+a*4.2;x.lineTo(64+Math.cos(a+k*1.26)*r,64+Math.sin(a+k*1.26)*r);}x.stroke();}}
   const swTex=new THREE.CanvasTexture(swC);swTex.encoding=THREE.sRGBEncoding;
-  const surfMat=mat("stock",{map:swTex,roughness:0.35}),surfLow=mat("bad",{map:swTex,roughness:0.35});
+  const surfMat=mat("pulp",{map:swTex,roughness:0.35}),surfLow=mat("bad",{map:swTex,roughness:0.35});
   const liquid=new THREE.Mesh(new THREE.CircleGeometry(0.94,40),surfMat);liquid.rotation.x=-Math.PI/2;chest.add(liquid);
   // agitator bridge across the top
   const bridge=new THREE.Group();chest.add(bridge);
@@ -1406,7 +1428,49 @@ const G3={on:false,ok:false};
   [0.15,10.05].forEach(y=>{const c=new THREE.Mesh(new THREE.BoxGeometry(0.5,0.3,0.5),M.steel);c.position.set(0.25,y,0.18);gauge.add(c);});
   const ringT=tickT,ringL=tickL;
   let chestR=0;
-  pipe([[20.2,1,-11.5],[30,1,-11.5]],0.35,M.stock);
+  // disk thickener between pulper and chest (visual only): vat, rotating sectored disks, showers, chute, filtrate drop legs to seal tanks
+  const thk=new THREE.Group();scene.add(thk);const TY=2.6,TZ=-4.5;blob(26,TZ,5.2);
+  {const vm=mat("g-wall",{side:THREE.DoubleSide,roughness:0.55});
+    const vg=new THREE.CylinderGeometry(1.95,1.95,6,32,1,true,Math.PI/2,Math.PI);vg.rotateZ(Math.PI/2);const vat=new THREE.Mesh(vg,vm);vat.position.set(26,TY,TZ);vat.castShadow=true;vat.receiveShadow=true;thk.add(vat);
+    [23,29].forEach(x=>{const eg=new THREE.CircleGeometry(1.95,32,Math.PI,Math.PI);eg.rotateY(Math.PI/2);const e=new THREE.Mesh(eg,vm);e.position.set(x,TY,TZ);e.castShadow=true;thk.add(e);});
+    [-1,1].forEach(sd=>{box(6.2,0.14,0.14,M.steel,26,TY+0.03,TZ+sd*1.97,thk,false);});
+    box(5.4,1.0,2.6,M.steel,26,0.5,TZ,thk);[23.3,28.7].forEach(x=>box(0.3,TY-0.4,3.4,M.steel,x,(TY-0.4)/2,TZ,thk));
+    const sl=new THREE.Mesh(new THREE.PlaneGeometry(5.96,3.7),M.pulp);sl.rotation.x=-Math.PI/2;sl.position.set(26,TY-0.35,TZ);thk.add(sl);}
+  const dC=document.createElement("canvas");dC.width=dC.height=128;{const x=dC.getContext("2d");x.fillStyle="#b7bec8";x.fillRect(0,0,128,128);
+    x.fillStyle="#9a7a58";x.beginPath();x.arc(64,64,62,0,7);x.arc(64,64,40,0,7,true);x.fill();x.strokeStyle="#4a5260";x.lineWidth=2.5;
+    for(let k=0;k<16;k++){const a=k/16*Math.PI*2;x.beginPath();x.moveTo(64+Math.cos(a)*18,64+Math.sin(a)*18);x.lineTo(64+Math.cos(a)*63,64+Math.sin(a)*63);x.stroke();}
+    x.beginPath();x.arc(64,64,62,0,7);x.stroke();x.fillStyle="#5d6672";x.beginPath();x.arc(64,64,18,0,7);x.fill();}
+  const dTex=new THREE.CanvasTexture(dC);dTex.encoding=THREE.sRGBEncoding;
+  const dFace=new THREE.MeshStandardMaterial({map:dTex,roughness:0.6,metalness:0.15});
+  const disks=new THREE.Group();disks.position.set(26,TY,TZ);thk.add(disks);
+  {const sh=new THREE.CylinderGeometry(0.22,0.22,7.6,12);sh.rotateZ(Math.PI/2);const s=new THREE.Mesh(sh,M.metal);s.position.set(0.3,0,0);disks.add(s);
+    const dg=new THREE.CylinderGeometry(1.7,1.7,0.12,28);dg.rotateZ(Math.PI/2);
+    for(let k=0;k<11;k++){const d=new THREE.Mesh(dg,[M.steel,dFace,dFace]);d.position.x=-2.5+k*0.5;d.castShadow=true;disks.add(d);}}
+  // drive: gearbox + motor on the far end, filtrate valve on the near end
+  box(0.9,1.3,1.2,M.steel,29.7,TY-0.1,TZ,thk);box(0.9,TY-0.75,1.2,M.steel,29.7,(TY-0.75)/2,TZ,thk);
+  {const mg=new THREE.CylinderGeometry(0.5,0.5,1.4,16);mg.rotateZ(Math.PI/2);const mo=new THREE.Mesh(mg,M.brand);mo.position.set(30.9,TY-0.4,TZ);mo.castShadow=true;thk.add(mo);}
+  {const vg2=new THREE.CylinderGeometry(0.62,0.62,0.5,16);vg2.rotateZ(Math.PI/2);const v=new THREE.Mesh(vg2,M.steel);v.position.set(22.65,TY,TZ);v.castShadow=true;thk.add(v);}
+  // knock-off shower headers above the disks
+  pipe([[22.8,TY+2.05,TZ+0.55],[29.2,TY+2.05,TZ+0.55]],0.09,M.metal,thk);pipe([[22.8,TY+2.05,TZ-0.55],[29.2,TY+2.05,TZ-0.55]],0.09,M.metal,thk);
+  pipe([[22.8,TY+2.05,TZ-0.55],[22.4,TY+2.05,TZ-0.55],[22.4,TY+2.05,TZ+0.55],[22.8,TY+2.05,TZ+0.55]],0.09,M.metal,thk);
+  pipe([[22.4,TY+2.05,TZ],[21.6,TY+2.05,TZ],[21.6,0,TZ]],0.09,M.metal,thk);
+  // discharge chute down to the repulper and stock pump
+  {const ch=box(6.0,0.12,1.8,M.steel,26,TY+0.5,TZ+2.6,thk,false);ch.rotation.x=-0.55;
+    box(6.2,0.9,1.0,M.steel,26,1.25,TZ+3.55,thk);box(1.2,1.6,1.2,M.steel,29.9,0.8,TZ+3.55,thk);
+    const pc=new THREE.Mesh(new THREE.CylinderGeometry(0.45,0.5,0.8,14),M.brand);pc.position.set(31.3,0.45,TZ+3.55);pc.castShadow=true;thk.add(pc);}
+  // filtrate drop legs from the valve to the cloudy and clear seal tanks
+  const sealT=(x,z,col,txt)=>{const t=new THREE.Mesh(new THREE.CylinderGeometry(0.75,0.75,1.4,20,1,true),mat("g-wall",{side:THREE.DoubleSide}));t.position.set(x,0.7,z);t.castShadow=true;thk.add(t);
+    const rim=new THREE.Mesh(new THREE.TorusGeometry(0.75,0.06,6,24),M.steel);rim.rotation.x=Math.PI/2;rim.position.set(x,1.4,z);thk.add(rim);
+    const w=new THREE.Mesh(new THREE.CircleGeometry(0.72,24),new THREE.MeshStandardMaterial({color:lin0(col),roughness:0.15,metalness:0.1}));w.rotation.x=-Math.PI/2;w.position.set(x,1.22,z);thk.add(w);
+    const sc=document.createElement("canvas");sc.width=128;sc.height=40;const c=sc.getContext("2d");c.fillStyle="#ffffff";c.fillRect(0,0,128,40);c.fillStyle=col;c.fillRect(0,0,12,40);c.fillStyle="#1c2233";c.font="800 24px system-ui,sans-serif";c.textAlign="center";c.fillText(txt,70,29);
+    const st=new THREE.CanvasTexture(sc);st.encoding=THREE.sRGBEncoding;const sg=new THREE.Mesh(new THREE.PlaneGeometry(2.2,0.69),new THREE.MeshBasicMaterial({map:st,toneMapped:false}));sg.position.set(x,2.45,z+0.02);thk.add(sg);
+    pipe([[x,1.4,z],[x,2.1,z]],0.05,M.steel,thk);return w;};
+  sealT(19.4,-5.3,"#b8986e","CLOUDY");sealT(19.4,-3.5,"#8fcbe8","CLEAR");
+  pipe([[22.4,TY-0.25,TZ-0.3],[21.0,TY-0.25,TZ-0.3],[21.0,TY-0.25,-5.3],[19.4,TY-0.25,-5.3],[19.4,0.9,-5.3]],0.14,M.metal,thk);
+  pipe([[22.4,TY+0.25,TZ+0.3],[20.6,TY+0.25,TZ+0.3],[20.6,TY+0.25,-3.5],[19.4,TY+0.25,-3.5],[19.4,0.9,-3.5]],0.14,M.steel,thk);
+  // stock lines: pulper -> thickener vat, repulper pump -> chest
+  pipe([[20.2,1,-11.5],[24.5,1,-11.5],[24.5,1,-7.0],[24.5,TY+0.5,-7.0],[24.5,TY+0.5,-5.9],[24.5,TY-0.1,-5.9]],0.3,M.stock);
+  pipe([[31.75,0.45,TZ+3.55],[33,0.45,TZ+3.55],[33,0.8,TZ+3.55],[33,0.8,-10.6]],0.3,M.stock);
   pipe([[38.5,1,-11],[57,1,-11],[57,1,6.5],[57,2.4,6.5]],0.35,M.stock);
 
   // paper machine
@@ -1500,6 +1564,7 @@ const G3={on:false,ok:false};
     {p:[-70,0,-8],t:()=>["1 Inbound OCC",S.inQ.length?S.inQ.length+" trucks waiting":"road clear"]},
     {p:[-21,2.8,-24],t:()=>["2 Receiving",f0(S.yard)+" t bales"]},
     {p:[16,4.5,-18.5],t:()=>["3 Pulper",f1(S.rates.feed)+" t/h"]},
+    {p:[26,6.2,-4.5],t:()=>["Disk thickener",S.M.pulperDown?"stopped":"cloudy · clear filtrate"]},
     {p:[34.5,11.2,-15],t:()=>["4 Stock chest",f0(S.tank/P.tankCap*100)+" %"]},
     {p:[34.5,9.6,zc-1.5],t:()=>["Twin press",LV("shoe")?"shoe in 2nd press":"tandem bottom felt"]},
     {p:[10,8.4,zc],t:()=>["5 "+NAME+(S.pm==="run"?"":" · "+({break:"sheet break: all hands rethreading",down:"no stock",full:"warehouse full",spools:"winder backed up",incident:S.M.pmDown||"down"}[S.pm]||"")),f0(S.pmSpeed)+" fpm · "+f1(S.rates.prod)+" t/h"],cls:()=>S.pm==="run"?"":"bad"},
@@ -1545,7 +1610,7 @@ const G3={on:false,ok:false};
     b.addEventListener("pointerdown",e=>{e.preventDefault();b.setPointerCapture(e.pointerId);padDir=[px,py];});
     ["pointerup","pointercancel","pointerleave"].forEach(t=>b.addEventListener(t,()=>padDir=null));});
   G3.padTick=rdt=>{if(padDir)panBy(-padDir[0]*500*rdt,-padDir[1]*500*rdt);};
-  const JUMPS={trucks:[-62,2,118],recv:[-21,-13,100],pulp:[25,-14,100],pm:[22,9,130],wd:[-17,7,72],wh:[-37,24,105]};
+  const JUMPS={trucks:[-62,2,118],recv:[-21,-13,100],pulp:[25,-10,100],pm:[22,9,130],wd:[-17,7,72],wh:[-37,24,105]};
   // section labels: Auto fades them out after a few idle seconds, On keeps them, Off hides them
   let lblMode="auto";try{lblMode=localStorage.getItem("paper-mill-labels")||"auto";}catch(e){}
   G3.lastMove=performance.now();
@@ -1581,7 +1646,7 @@ const G3={on:false,ok:false};
 
   /* ---- step 3 (restyled): chaos effects in the clean isometric look ---- */
   function basic(token,opts={}){const m=new THREE.MeshBasicMaterial(opts);m.userData.token=token;MATS.push(m);return m;}
-  const FM={slime:mat("slime",{roughness:0.3}),beaver:mat("beaver",{roughness:0.8}),white:mat("panel"),water:mat("water",{transparent:true,opacity:0.55,roughness:0.08,metalness:0.2,depthWrite:false}),
+  const FM={slime:mat("slime",{roughness:0.3}),beaver:mat("beaver",{roughness:0.8}),white:mat("panel"),water:mat("water",{transparent:true,opacity:0.55,roughness:0.08,metalness:0.2,depthWrite:false}),pulp:mat("pulp",{transparent:true,opacity:0.82,roughness:0.2,metalness:0.05,depthWrite:false}),
     rain:basic("water",{transparent:true,opacity:0.55}),fabric:mat("water",{roughness:0.5}),scab:mat("beaver",{roughness:0.9}),cone:mat("fire",{roughness:0.5}),belly:mat("kraft",{roughness:0.85})};
   const sphereG=new THREE.SphereGeometry(1,20,14),coneG=new THREE.ConeGeometry(0.6,1.8,7),cubeG=new THREE.BoxGeometry(1,1,1);
   const lin=c=>new THREE.Color(c).convertSRGBToLinear();
@@ -1641,7 +1706,7 @@ const G3={on:false,ok:false};
     const sm=new THREE.MeshBasicMaterial({color:lin(tok("bad")),transparent:true,opacity:0.5});const stem=new THREE.Mesh(new THREE.CylinderGeometry(0.05,0.05,1,6),sm);g.add(stem);
     const o={p,ring,stem,x,y,z,move(nx,nz){this.x=nx;this.z=nz;},update(now){const b=Math.sin(now/320)*0.35;p.position.set(this.x,this.y+b,this.z);p.rotation.y=now/1500;
       const ph=(now/1600)%1;ring.position.set(this.x,0.13,this.z);ring.scale.setScalar(1+ph*5);rm.opacity=0.85*(1-ph);stem.position.set(this.x,(this.y+b)/2,this.z);stem.scale.y=this.y+b;}};return o;}
-  const PINS={shaft:[12,10,15.6,"!"],dryerfire:[12,13,zc,"fire"],fabric:[48,9,zc,"!"],felt:[34.5,11,zc,"!"],slime:[4,11,zc,"!"],ragger:[16,9,-13.5,"!"],overflow:[-21,10,-13,"water"],
+  const PINS={shaft:[12,10,15.6,"!"],dryerfire:[12,13,zc,"fire"],fabric:[48,9,zc,"!"],felt:[34.5,11,zc,"!"],slime:[4,11,zc,"!"],ragger:[16,9,-13.5,"!"],overflow:[-21,10,-13,"water"],chestover:[34.5,15,-15,"water"],
     badocc:[-17,10,-11,"!"],balefire:[-25,11,-12,"fire"],fleet:[-29,10,-16,"!"],calloff:[-36,10,23,"!"],fight:[-38,7,-21,"!"],roof:[-32,10,24,"water"],highway:[-72,7,4,"!"],
     lightning:[34.5,16,-15,"bolt"],tornado:[0,26,0,"!"],beaver:[-24,12,-12.5,"!"]};
   function person(group,m,x,z){const w=worker(m,M.warn);w.position.set(x,0,z);group.add(w);return w;}
@@ -1660,15 +1725,21 @@ const G3={on:false,ok:false};
     slime:g=>{const blobs=[];for(let k=0;k<34;k++){const b=new THREE.Mesh(sphereG,FM.scab);const i=k%10,top=k%2;b.position.set((top?872:856)/10-60-i*3.2+R(),top?6.75:1.05,zc+R()*5.5);
         b.userData.s=0.18+Math.random()*0.3;b.scale.set(b.userData.s*1.4,b.userData.s*0.45,b.userData.s);g.add(b);blobs.push(b);}
       return now=>blobs.forEach((b,k)=>{const f=1+0.18*Math.sin(now/300+k);b.scale.set(b.userData.s*1.4*f,b.userData.s*0.45,b.userData.s*f);});},
-    ragger:g=>{const curve=new THREE.CatmullRomCurve3([new THREE.Vector3(16,2.5,-13.5),new THREE.Vector3(18,5.5,-12),new THREE.Vector3(21,6.5,-9),new THREE.Vector3(23,2,-7),new THREE.Vector3(24,0.2,-6)]);
+    ragger:g=>{const curve=new THREE.CatmullRomCurve3([new THREE.Vector3(16,2.5,-13.5),new THREE.Vector3(18,5.5,-12),new THREE.Vector3(21,5.5,-9.5),new THREE.Vector3(22.3,2,-8.4),new THREE.Vector3(22.6,0.2,-8.6)]);
       const rope=new THREE.Mesh(new THREE.TubeGeometry(curve,60,0.2,8,false),M.ink);rope.castShadow=true;g.add(rope);
       const rm=new THREE.MeshBasicMaterial({color:lin(tok("bad")),transparent:true,toneMapped:false,side:THREE.DoubleSide});const ring=new THREE.Mesh(new THREE.RingGeometry(5,5.6,48),rm);ring.rotation.x=-Math.PI/2;ring.position.set(16,0.12,-13.5);g.add(ring);
       return now=>{rope.rotation.z=Math.sin(now/500)*0.03;rm.opacity=0.45+0.4*Math.sin(now/250);};},
-    overflow:g=>{const w1=new THREE.Mesh(new THREE.PlaneGeometry(26.4,20.5,24,18),FM.water);w1.rotation.x=-Math.PI/2;w1.position.set(-21.2,0.35,-13.25);
-      const w2=new THREE.Mesh(new THREE.PlaneGeometry(22,9,16,8),FM.water);w2.rotation.x=-Math.PI/2;w2.position.set(3,0.2,-12.5);g.add(w1,w2);
+    overflow:g=>{const w1=new THREE.Mesh(new THREE.PlaneGeometry(26.4,20.5,24,18),FM.pulp);w1.rotation.x=-Math.PI/2;w1.position.set(-21.2,0.35,-13.25);
+      const w2=new THREE.Mesh(new THREE.PlaneGeometry(22,9,16,8),FM.pulp);w2.rotation.x=-Math.PI/2;w2.position.set(3,0.2,-12.5);g.add(w1,w2);
       const rp=ripples(g,10,-33,-9,-22,-4,0.42),rp2=ripples(g,4,-7,13,-16,-9,0.27);
       return (now,rdt)=>{[w1,w2].forEach(w=>{const pa=w.geometry.attributes.position;for(let i=0;i<pa.count;i++)pa.setZ(i,0.1*Math.sin(pa.getX(i)*0.8+now/300)+0.06*Math.cos(pa.getY(i)*0.9+now/410));pa.needsUpdate=true;});
-        rp(now);rp2(now);for(let k=0;k<3;k++)if(Math.random()<rdt*20)emit("drop",16+R()*7,3.6,-9.6+R()*2,R()*3,3+Math.random()*2,2+Math.random()*2,0.9,0.32,"#3d8fd6",0.9);};},
+        rp(now);rp2(now);for(let k=0;k<3;k++)if(Math.random()<rdt*20)emit("drop",16+R()*7,3.6,-9.6+R()*2,R()*3,3+Math.random()*2,2+Math.random()*2,0.9,0.32,"#7a5636",0.9);};},
+    chestover:g=>{const cr=chestR,cx=34.5,cz=-15;const pud=new THREE.Mesh(new THREE.RingGeometry(cr*0.98,cr+6.5,48,6),FM.pulp);pud.rotation.x=-Math.PI/2;pud.position.set(cx,0.1,cz);g.add(pud);
+      const top=new THREE.Mesh(new THREE.CircleGeometry(cr*0.95,40),FM.pulp);top.rotation.x=-Math.PI/2;top.position.set(cx,10.08,cz);g.add(top);
+      const sheet=new THREE.Mesh(new THREE.CylinderGeometry(cr*1.03,cr*1.06,9.9,40,1,true,Math.PI*0.15,Math.PI*0.9),FM.pulp);sheet.position.set(cx,5.05,cz);g.add(sheet);
+      const rp=ripples(g,7,cx-cr-5,cx+cr+5,cz+cr*0.3,cz+cr+5,0.14);
+      return (now,rdt,inc)=>{rp(now);pud.scale.setScalar(0.55+0.45*Math.min(1,(1-inc.left/inc.total)*5));for(let k=0;k<4;k++)if(Math.random()<rdt*25){const a=Math.PI*(0.15+Math.random()*0.9)+Math.PI/2;
+        emit("drop",cx+Math.sin(a)*cr*1.05,10.1,cz+Math.cos(a)*cr*1.05,Math.sin(a)*1.4,0.6,Math.cos(a)*1.4,1.2,0.34,"#7a5636",0.95);}};},
     badocc:g=>{const m4=new THREE.Matrix4(),add=(geo,mt,n,sx,sy,sz)=>{const im=new THREE.InstancedMesh(geo,mt,n);for(let k=0;k<n;k++){const q=new THREE.Quaternion().setFromEuler(new THREE.Euler(Math.random()*3,Math.random()*3,Math.random()*3));
         m4.compose(new THREE.Vector3(-30+Math.random()*19,1.1+Math.random()*2.4,-17+Math.random()*10),q,new THREE.Vector3(sx,sy,sz));im.setMatrixAt(k,m4);}im.castShadow=true;g.add(im);};
       add(new THREE.CylinderGeometry(0.13,0.13,0.5,10),mat("water",{roughness:0.2}),24,1,1,1);add(rboxGeo(0.5,0.25,0.4),FM.white,18,1,1,1);add(sphereG,FM.slime,16,0.22,0.12,0.2);
@@ -1917,7 +1988,7 @@ const G3={on:false,ok:false};
     cylZ(0.3,0.16,M.ink,0.78,0.3,0,16,g);cylZ(0.3,0.16,M.ink,-0.55,0.3,-0.45,16,g);cylZ(0.3,0.16,M.ink,-0.55,0.3,0.45,16,g);
     box(0.04,1.4,0.04,M.ink,-0.82,1.5,0.25,g,false);const flag=new THREE.Mesh(new THREE.PlaneGeometry(0.42,0.26),new THREE.MeshBasicMaterial({color:lin(tok("fire")),side:THREE.DoubleSide}));flag.position.set(-0.6,2.08,0.25);g.add(flag);
     scene.add(g);return g;}
-  const MAINT_SPOT={shaft:[12,16.4],fabric:[48,14.6],felt:[34.5,14.6],ragger:[21.5,-9.5],overflow:[-5,-10.5],fleet:[-6.3,-14],roof:[-21.6,24],lightning:[40,-8]};
+  const MAINT_SPOT={shaft:[12,16.4],fabric:[48,14.6],felt:[34.5,14.6],ragger:[21.5,-9.5],overflow:[-5,-10.5],chestover:[29.5,-9.6],fleet:[-6.3,-14],roof:[-21.6,24],lightning:[40,-8]};
   function lane(p){return p[1]>2.4?"F":"C";}
   function route(from,to){const pts=[],lf=lane(from),lt=lane(to);
     pts.push(lf==="F"?[from[0],17.6]:[Math.max(from[0],-5.5),-0.6]);
@@ -1998,6 +2069,7 @@ const G3={on:false,ok:false};
     let nb=0;if(R.feed>0.3){const L=Math.hypot(180,75);for(let s=V.belt;s<L&&nb<12;s+=30){v3.copy(cA).lerp(cB,s/L);v3.y+=0.55;m4.makeTranslation(v3.x,v3.y,v3.z);beltBales.setMatrixAt(nb++,m4);}}
     beltBales.count=nb;beltBales.instanceMatrix.needsUpdate=true;
     rotor.rotation.y=-V.swirl;pulpStock.visible=R.feed>0.3||S.tank>0;
+    if(!S.M.pulperDown){disks.rotation.x-=rdt*0.35;if(Math.random()<rdt*5)emit("steam",23+Math.random()*6,TY+1.9,TZ+(Math.random()<0.5?0.55:-0.55),0,-0.6,0,0.9,0.7,"#ffffff",0.45);}
     // chest
     const cr=4.2*Math.sqrt(P.tankCap/300);if(cr!==chestR){chestR=cr;shell.scale.set(cr,1,cr);shellIn.scale.set(cr,1,cr);shellRim.scale.set(cr,cr,1);baseRing.scale.set(cr,1,cr);bands.forEach(b=>b.scale.set(cr,1,cr));liquid.scale.set(cr,cr,1);
       tileOut.repeat.set(Math.round(14*cr/4.2),5);tileIn.repeat.set(Math.round(14*cr/4.2),5);
@@ -2063,6 +2135,7 @@ function setFS(on){document.body.classList.toggle("fs",on);$("viewFS").textConte
   else if(document.fullscreenElement)document.exitFullscreen().catch(()=>{});}
 $("viewFS").addEventListener("click",()=>setFS(!document.body.classList.contains("fs")));
 $("hud-exit").addEventListener("click",()=>setFS(false));
+$("hud-dis").addEventListener("click",()=>$("chaosRandom").click());
 document.addEventListener("fullscreenchange",()=>{if(!document.fullscreenElement&&document.body.classList.contains("fs"))setFS(false);});
 document.addEventListener("keydown",e=>{if(e.key==="Escape"&&document.body.classList.contains("fs"))setFS(false);});
 $("hud-play").addEventListener("click",()=>$("play").click());
