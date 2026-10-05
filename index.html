@@ -210,7 +210,7 @@ button:focus-visible,input:focus-visible,select:focus-visible{outline-color:var(
 #millName[contenteditable=true]{outline:2px solid var(--brand);outline-offset:2px;border-radius:4px;padding:0 4px;background:var(--panel)}
 .pencil{font-size:14px;line-height:1;padding:3px 6px;border-radius:6px;color:var(--muted)}
 .hud .hbtns button.danger{color:#fff}
-.ver{position:fixed;top:6px;right:10px;z-index:50;font:600 11px var(--f-mono,monospace);color:var(--muted);opacity:.8;pointer-events:none}
+.ver{position:absolute;top:6px;right:10px;z-index:50;font:600 11px var(--f-mono,monospace);color:var(--muted);opacity:.8;pointer-events:none}
 body.fs .ver{display:none}
 .knobbar{display:flex;align-items:center;gap:12px;margin:4px 0 10px;font-size:13px;color:var(--muted)}.knobbar button{white-space:nowrap}
 body.noknobs #cards{display:none}
@@ -223,6 +223,18 @@ body.noknobs #cards{display:none}
 .ugrp .usum b{color:var(--ok);font-weight:700}.ugrp.closed .up{display:none}
 .shop.collapsed .ugroups{grid-template-columns:1fr;gap:6px}.shop.collapsed .ugrp{border-bottom:1px solid var(--line);padding-bottom:6px}
 .shop.collapsed .ugrp:not(.closed){display:grid;grid-template-columns:repeat(auto-fill,minmax(230px,1fr));gap:10px}.shop.collapsed .ugrp>h3{grid-column:1/-1;margin-bottom:0}
+.hint-m{display:none}
+@media (max-width:640px){
+  .viewbar{display:grid;grid-template-columns:auto 1fr;gap:8px;margin-bottom:0}
+  .view3dctl{display:contents}
+  #viewToggle{grid-column:1}#viewFS{grid-column:2;justify-self:end}
+  .view3dctl .check{grid-column:1;grid-row:2;font-size:13px}#viewReset{grid-column:2;grid-row:2;justify-self:end}
+  .lblseg{grid-column:1/-1;grid-row:3;justify-self:stretch;display:flex}.lblseg button{flex:1}
+  .hint{grid-column:1/-1;grid-row:4;font-size:11.5px}.hint-d{display:none}.hint-m{display:inline}
+  .viewbar button,.lblseg button{padding:6px 12px;font-size:13.5px}
+  .jumps{flex-wrap:nowrap;overflow-x:auto;scrollbar-width:none;-webkit-overflow-scrolling:touch;padding-bottom:2px;margin:0 -16px 0;padding-left:16px;padding-right:16px;mask-image:linear-gradient(90deg,#000 85%,transparent)}
+  .jumps::-webkit-scrollbar{display:none}.jumps button{flex:0 0 auto;font-size:13px;padding:5px 11px}.jumps span{flex:0 0 auto}
+  .ver{top:2px;right:6px;font-size:10px}}
 .reroll{font-size:12px;padding:5px 10px;align-self:center;white-space:nowrap}
 /* fullscreen */
 .hud{display:none;z-index:5}
@@ -257,7 +269,7 @@ body{margin:0}
 </head>
 <body>
 
-<div class="ver" id="appVersion" aria-label="Version">v1.1.3</div>
+<div class="ver" id="appVersion" aria-label="Version">v1.1.4</div>
 <div class="wrap">
   <header>
     <div class="brand"><span class="logo" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linejoin="round"><circle cx="8.5" cy="12" r="5.5"/><circle cx="8.5" cy="12" r="1.6" fill="currentColor"/><path d="M8.5 6.5H20v11H8.5"/></svg></span>
@@ -286,7 +298,7 @@ body{margin:0}
 
   <div class="viewbar">
     <div class="seg" id="viewToggle" role="group" aria-label="Plant view"><button id="vb3" aria-pressed="true">3D</button><button id="vb2" aria-pressed="false">2D</button></div>
-    <div class="view3dctl" id="view3dctl"><label class="check"><input type="checkbox" id="viewShadows" checked> Shadows</label><button id="viewReset">Whole mill</button><button id="viewFS">Fullscreen</button><div class="seg lblseg" id="lblMode" role="group" aria-label="Section labels"><span>Labels</span><button data-m="auto" aria-pressed="true" title="Labels fade out when you stop moving the view">Auto</button><button data-m="on" aria-pressed="false">On</button><button data-m="off" aria-pressed="false">Off</button></div><span class="hint">Drag to rotate · two-finger drag, right-drag or arrow keys to move · pinch or scroll to zoom</span></div>
+    <div class="view3dctl" id="view3dctl"><label class="check"><input type="checkbox" id="viewShadows" checked> Shadows</label><button id="viewReset">Whole mill</button><button id="viewFS">Fullscreen</button><div class="seg lblseg" id="lblMode" role="group" aria-label="Section labels"><span>Labels</span><button data-m="auto" aria-pressed="true" title="Labels fade out when you stop moving the view">Auto</button><button data-m="on" aria-pressed="false">On</button><button data-m="off" aria-pressed="false">Off</button></div><span class="hint"><span class="hint-d">Drag to rotate · two-finger drag, right-drag or arrow keys to move · pinch or scroll to zoom</span><span class="hint-m">Drag to rotate · two fingers to move · pinch to zoom</span></span></div>
   </div>
   <div class="jumps" id="jumps" role="group" aria-label="Go to area"><span>Go to</span><button data-j="trucks">Trucks</button><button data-j="recv">Receiving</button><button data-j="pulp">Pulper &amp; chest</button><button data-j="pm">Paper machine</button><button data-j="wd">Winder</button><button data-j="wh">Warehouse</button><button data-j="shop">Maintenance</button>
   </div>
