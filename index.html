@@ -464,11 +464,12 @@ const AUDIO=(()=>{
     thunder:t=>{nz(t,0.12,sfxBus,0.7,"highpass",1500);const r=nz(t+0.05,3.2,sfxBus,0.8,"lowpass",900,0.5,0.03);r.fl.frequency.exponentialRampToValueAtTime(80,t+3.2);tone(t+0.05,sfxBus,"sine",55,2.0,0.5,0.01,30);},
     wind:t=>{const w=nz(t,4.5,sfxBus,0.4,"bandpass",350,3,0.8);for(let k=0;k<6;k++)w.fl.frequency.linearRampToValueAtTime(k%2?900:300,t+0.7*(k+1));},
     chomp:t=>{for(let k=0;k<4;k++){tone(t+k*0.22,sfxBus,"sine",140,0.12,0.4,0.002,60);nz(t+k*0.22,0.1,sfxBus,0.25,"bandpass",1800,1.5);}},
+    whistle:t=>{for(let k=0;k<2;k++)for(let j=0;j<(k?14:7);j++)tone(t+k*0.42+j*0.036,sfxBus,"sine",j%2?2750:3080,0.045,0.11);nz(t,0.9,sfxBus,0.05,"bandpass",3000,2);},
     cash:t=>{tone(t,sfxBus,"sine",1318,0.35,0.15);tone(t+0.08,sfxBus,"sine",1760,0.5,0.15);nz(t,0.06,sfxBus,0.15,"highpass",5000);},
     win:t=>{[60,64,67,72,76,79,84].forEach((m,k)=>tone(t+k*0.11,sfxBus,"triangle",mtof(m),0.5,0.14));},
     lose:t=>{[[55,0.5],[54,0.5],[53,0.5],[52,1.4]].reduce((tt,[m,d])=>{const o=tone(tt,sfxBus,"sawtooth",mtof(m),d,0.08,0.02);if(d>1)o.o.frequency.linearRampToValueAtTime(mtof(m)*0.97,tt+d);return tt+d;},t);},
   };
-  const EVSFX={shaft:"clunk",fabric:"clunk",felt:"clunk",ragger:"clunk",dryerfire:"fire",balefire:"fire",overflow:"water",chestover:"water",roof:"water",fight:"siren",highway:"siren",lightning:"thunder",tornado:"wind",beaver:"chomp"};
+  const EVSFX={shaft:"clunk",fabric:"clunk",felt:"clunk",ragger:"clunk",dryerfire:"fire",balefire:"fire",overflow:"water",chestover:"water",roof:"water",fight:"siren",highway:"siren",lightning:"thunder",tornado:"wind",beaver:"chomp",runner:"whistle"};
   function sfx(name,gap=1200){if(!ctx||!on||!FX[name])return;const now=performance.now();if(now-(last[name]||0)<gap)return;last[name]=now;FX[name](ctx.currentTime+0.02);}
   return {setOn,setVol,update,sfx,event:id=>sfx(EVSFX[id]||"alarm"),get on(){return on;}};
 })();
@@ -485,7 +486,7 @@ const AUTOKEYS=["inRate","drivers","pulper","pmSp","wdr","loaders","outRate"];
 let C,S;
 const BASE={...P};
 const ECON={price:{"23m":680,"26m":700,"30m":720,"33HT":780},energy:95,chem:25,wage:45,robot:15,overhead:4000,start:2e6,bankrupt:-1.5e6,goal:25e6};
-const REPAIR={shaft:250e3,dryerfire:400e3,fabric:90e3,felt:45e3,slime:30e3,ragger:15e3,overflow:120e3,chestover:60e3,badocc:0,balefire:150e3,fleet:40e3,calloff:10e3,fight:5e3,roof:80e3,highway:0,lightning:200e3,tornado:500e3,beaver:25e3};
+const REPAIR={shaft:250e3,dryerfire:400e3,fabric:90e3,felt:45e3,slime:30e3,ragger:15e3,overflow:120e3,chestover:60e3,runner:0,badocc:0,balefire:150e3,fleet:40e3,calloff:10e3,fight:5e3,roof:80e3,highway:0,lightning:200e3,tornado:500e3,beaver:25e3};
 const UGROUPS=[["machine","Paper machine"],["stock","Stock prep"],["yard","Warehouse & logistics"],["maint","Maintenance"],["mgmt","Management"]];
 const MAINT=["shaft","fabric","felt","ragger","overflow","fleet","roof","lightning"];
 const UPS=[
@@ -558,6 +559,7 @@ const EVENTS=[
  {id:"ragger",g:"stock",name:"Ragger rope snaps",head:"Ragger rope snaps. Pulper stopped to fish it out.",dur:[90,180],mtbf:140,mods:{pulperDown:1},fx:"ragger"},
  {id:"overflow",g:"stock",name:"Pulper overflows",head:"Pulper overflows and floods the bale yard!",dur:[240,360],mtbf:220,mods:{pulperDown:1,recvMul:0.5},fx:"flood",
    start:i=>{const l=S.yard*0.15;S.yard-=l;i.note=`${Math.round(l)} t of bales soaked`;}},
+ {id:"runner",g:"machine",name:"Runner in the hall",head:"A town resident is sprinting through the machine hall! The crew gives chase.",dur:[40,60],mtbf:420,mods:{},fx:"runner"},
  {id:"chestover",g:"stock",name:"Stock chest overflows",head:"Stock chest overflows! A brown river runs across the floor.",dur:[120,240],mtbf:260,mods:{pulperDown:1},fx:"chestover",
    start:i=>{const l=Math.min(S.tank,P.tankCap*0.12);S.tank-=l;i.note=`${Math.round(l)} t of stock on the floor`;}},
  {id:"badocc",g:"stock",name:"Junk OCC delivered",head:"Junk OCC: wax, plastic and wet bales. Yield and runnability drop.",dur:[600,900],mtbf:160,mods:{yieldMul:0.8,breakMul:2},fx:"badocc"},
@@ -1147,6 +1149,9 @@ function drawChaos(){
         ctx.globalAlpha=1;tag("SCABS: SPEED CAPPED, HAYOUT RISK",525,368,"left");break;}
       case "ragger":{ctx.strokeStyle=col.bad;ctx.lineWidth=4;ctx.beginPath();ctx.moveTo(735,170);ctx.lineTo(785,220);ctx.moveTo(785,170);ctx.lineTo(735,220);ctx.stroke();
         ctx.strokeStyle=col.machine;ctx.lineWidth=2;ctx.beginPath();ctx.moveTo(800,160);for(let k=0;k<8;k++)ctx.lineTo(810+k*6,150-k*5+4*Math.sin(k+now/300));ctx.stroke();tag("RAGGER STOPPED",818,180,"left");break;}
+      case "runner":{const ph=((now/1000)%8)/8,x=1150-ph*700,y=470+6*Math.sin(now/90);ctx.fillStyle=col.bad;ctx.beginPath();ctx.arc(x,y-14,4,0,7);ctx.fill();
+          ctx.strokeStyle=col.bad;ctx.lineWidth=2.5;ctx.beginPath();ctx.moveTo(x,y-10);ctx.lineTo(x,y);ctx.moveTo(x,y);ctx.lineTo(x-5,y+8);ctx.moveTo(x,y);ctx.lineTo(x+5,y+7+2*Math.sin(now/60));ctx.moveTo(x-6,y-6);ctx.lineTo(x+6,y-8);ctx.stroke();
+          tag("RUNNER IN THE HALL",x+10,y-18);break;}
       case "chestover":{ctx.globalAlpha=0.8;ctx.fillStyle=col.pulp;rr(898,64,94,8,3);ctx.fill();
           for(const x of [898,986])for(let k=0;k<3;k++){ctx.fillRect(x+k*2,68,3,224+3*Math.sin(now/120+k+x));}
           ctx.globalAlpha=0.55;ctx.beginPath();ctx.ellipse(945,296,78+4*Math.sin(now/400),9,0,0,7);ctx.fill();ctx.globalAlpha=1;tag("CHEST OVERFLOW",900,30);break;}
@@ -1749,6 +1754,7 @@ const G3={on:false,ok:false};
       const rp=ripples(g,10,-33,-9,-22,-4,0.42),rp2=ripples(g,4,-7,13,-16,-9,0.27);
       return (now,rdt)=>{[w1,w2].forEach(w=>{const pa=w.geometry.attributes.position;for(let i=0;i<pa.count;i++)pa.setZ(i,0.1*Math.sin(pa.getX(i)*0.8+now/300)+0.06*Math.cos(pa.getY(i)*0.9+now/410));pa.needsUpdate=true;});
         rp(now);rp2(now);for(let k=0;k<3;k++)if(Math.random()<rdt*20)emit("drop",16+R()*7,3.6,-9.6+R()*2,R()*3,3+Math.random()*2,2+Math.random()*2,0.9,0.32,"#7a5636",0.9);};},
+    runner:g=>()=>{if(FX.runner&&RUN.on)FX.runner.pinPos=[RUN.x,RUN.z];},
     chestover:g=>{const cr=chestR,cx=34.5,cz=-15;const pud=new THREE.Mesh(new THREE.RingGeometry(cr*0.98,cr+6.5,48,6),FM.pulp);pud.rotation.x=-Math.PI/2;pud.position.set(cx,0.1,cz);g.add(pud);
       const top=new THREE.Mesh(new THREE.CircleGeometry(cr*0.95,40),FM.pulp);top.rotation.x=-Math.PI/2;top.position.set(cx,10.08,cz);g.add(top);
       const sheet=new THREE.Mesh(new THREE.CylinderGeometry(cr*1.03,cr*1.06,9.9,40,1,true,Math.PI*0.15,Math.PI*0.9),FM.pulp);sheet.position.set(cx,5.05,cz);g.add(sheet);
@@ -1859,6 +1865,9 @@ const G3={on:false,ok:false};
     else if(mode==="hose"){arm=[-1.5+0.05*Math.sin(t*20),-1.4];lean=-0.18;leg=0.35;u.noz.visible=true;}
     else if(mode==="ext"){arm=[-1.35+0.08*Math.sin(t*9),-0.5];lean=-0.12;leg=0.25;u.ext.visible=true;}
     else if(mode==="fix"){const s=Math.sin(t*13);lean=-0.85;arm=[-1.1+0.55*s,-0.8];leg=0.5;u.tool.visible=true;}
+    else if(mode==="walk"){const s=Math.sin(t*7.5);leg=0.42*s;arm=[-0.4*s,0.4*s];lean=-0.04;bob=Math.abs(s)*0.04;}
+    else if(mode==="inspect"){arm=[-1.55+0.1*Math.sin(t*2),0.05];lean=-0.22;}
+    else if(mode==="flail"){const s=Math.sin(t*17);leg=0.95*s;arm=[-2.6+0.9*s,-2.6-0.9*s];lean=-0.3;bob=Math.abs(s)*0.2;}
     else if(mode==="ride"){arm=[-1.15,-1.15];lean=-0.08;legB=-1.25;}
     else{arm=[0.08*Math.sin(t*1.7),-0.08*Math.sin(t*1.7)];}
     u.legs[0].rotation.z=legB??leg;u.legs[1].rotation.z=legB??-leg;u.arms[0].rotation.z=arm[0];u.arms[1].rotation.z=arm[1];u.torso.rotation.z=lean;p.position.y=bob;}
@@ -1870,6 +1879,9 @@ const G3={on:false,ok:false};
   const RT=[[27,14.2],[23,14.2],[19,14.2],[15,14.2],[11,14.2],[25,4.1],[17,4.1]];
   const RTY=[];for(let k=0;k<24;k++)RTY.push([29-(k%12)*2.6,k<12?15.4:3.2]);
   const crew=HOME.map(([x,z])=>{const w=worker(M.stock,M.warn);w.position.set(x,0,z);return w;});
+  // a town resident who sprints down the front aisle, jukes at the winder and runs back out
+  const runnerW=worker(new THREE.MeshStandardMaterial({color:lin0("#e2508f"),roughness:0.7}),new THREE.MeshStandardMaterial({color:lin0("#3a2a1e"),roughness:0.9}));runnerW.visible=false;
+  const RUN={on:false,x:0,z:0,dir:-1,t0:0,until:0,seen:null};const RX0=72,RX1=-20,RSP=9;
   const helpers=[];
   const EP={hay:null,brk:null};let seenHay=-1,seenBrk=-1;
   G3.yardFrozen=false;
@@ -1918,6 +1930,10 @@ const G3={on:false,ok:false};
     if(S.tot.breaks>seenBrk){seenBrk=S.tot.breaks;const until=now+Math.max(7500,S.breakLeft/sp*1000);
       if(EP.brk&&now<EP.brk.until)EP.brk.until=Math.max(EP.brk.until,until);else EP.brk={t0:now,until,launched:false};}
     const hayOn=EP.hay&&now<EP.hay.until,brkOn=EP.brk&&now<EP.brk.until;
+    {const ri=S.inc.find(x=>x.id==="runner");if(ri&&ri.real!==RUN.seen){RUN.seen=ri.real;RUN.t0=now;RUN.until=now+2*(RX0-RX1)/RSP*1000;crew.forEach(w=>w.userData.chase=false);}
+      RUN.on=now<RUN.until;runnerW.visible=RUN.on;
+      if(RUN.on){const d=(now-RUN.t0)/1000*RSP,L=RX0-RX1,out=d<L;RUN.dir=out?-1:1;RUN.x=out?RX0-d:RX1+(d-L);RUN.z=16.1+1.1*Math.sin(d/3.2)+(out?0:0.6);
+        runnerW.position.set(RUN.x,0,RUN.z);runnerW.rotation.y=out?Math.PI:0;pose(runnerW,"flail",now);}}
     // machine crew
     const dryOn=S.inc.some(x=>x.id==="dryerfire");if(!dryOn)crewHose.forEach(m=>m.visible=false);
     crew.forEach((w,i)=>{let tx,tz,act,fx=null;
@@ -1929,7 +1945,15 @@ const G3={on:false,ok:false};
         const arrived=act==="look"||moveP(w,tx,tz,10,rdt);
         if(arrived&&fx)face(w,fx[0],fx[1],rdt);pose(w,arrived?act:(shuttle&&act==="dump"?"carry":"run"),now);return;}
       if(brkOn){[tx,tz]=RT[i];const arrived=moveP(w,tx,tz,10,rdt);if(arrived)face(w,tx,zc,rdt);pose(w,arrived?"rethread":"run",now);return;}
-      [tx,tz]=HOME[i];const arrived=moveP(w,tx,tz,7,rdt);if(arrived)face(w,tx,zc,rdt);pose(w,arrived?"idle":"run",now);});
+      const u=w.userData;
+      if(RUN.on){if(!u.chase&&Math.abs(RUN.x-w.position.x)<11)u.chase=true;
+        if(u.chase){const back=2.4+(i%3)*1.3;moveP(w,RUN.x-RUN.dir*back,RUN.z+(i%2?0.9:-0.9),8.4,rdt);pose(w,"run",now);return;}}
+      else u.chase=false;
+      // idle: drift around their own patch of the aisle, stop to watch the machine or point something out
+      [tx,tz]=HOME[i];
+      if(Math.hypot(tx-w.position.x,tz-w.position.z)>6.5){u.wt=0;moveP(w,tx,tz,7,rdt);pose(w,"run",now);return;}
+      if(!u.wt||now>u.wt){u.wt=now+3500+Math.random()*6500;u.wx=tx+(Math.random()*2-1)*3.6;u.wz=13.4+Math.random()*2.3;u.act=Math.random()<0.35?"inspect":"idle";}
+      const arrived=moveP(w,u.wx,u.wz,1.6,rdt);if(arrived)face(w,u.wx,zc,rdt);pose(w,arrived?u.act:"walk",now);});
     // yard crews jump off their trucks and run to the machine on a sheet break
     if(brkOn&&!EP.brk.launched){EP.brk.launched=true;let k=0;
       const spots=[];lifts.forEach((g,i)=>{if(g.visible&&i<Math.floor(S.effDrv+1e-9))spots.push([g.position.x,g.position.z]);});
@@ -2020,7 +2044,13 @@ const G3={on:false,ok:false};
     const MI=S.inc.filter(i=>MAINT_SPOT[i.id]);
     techs.forEach((T,k)=>{const want=MI.length&&k<P.techs?MI[k%MI.length]:null,active=T.inc&&S.inc.some(i=>i.id===T.inc);
       switch(T.state){
-        case "home":if(want){T.inc=want.id;T.state="mount";T.w.visible=true;T.w.position.set(SHOP.door[0],0,SHOP.door[1]);}break;
+        case "home":if(want){T.inc=want.id;T.state="mount";T.w.visible=true;T.w.position.set(SHOP.door[0],0,SHOP.door[1]);}
+          else if(RUN.on&&k<2&&k<P.techs&&T.ran!==RUN.t0){T.ran=RUN.t0;T.state="cmount";T.w.visible=true;T.w.position.set(SHOP.door[0],0,SHOP.door[1]);}break;
+        case "cmount":if(moveP(T.w,T.slot[0]+0.2,T.slot[1]+0.7,7,rdt)){T.state="chase";T.path=route(T.slot,[60,17.6]);}else pose(T.w,"run",now);break;
+        case "chase":pose(T.w,"ride",now);T.w.position.y=0.12;
+          if(!RUN.on){T.state="home2";T.path=route([T.t.position.x,T.t.position.z],T.slot);break;}
+          if(T.path.length<=1&&T.t.position.z>15)T.path=[[clamp(RUN.x-RUN.dir*(3.5+k*2.6),-22,66),17.6]];
+          if(T.path.length)drive(T,rdt);break;
         case "mount":if(moveP(T.w,T.slot[0]+0.2,T.slot[1]+0.7,6,rdt)){T.state="out";T.path=route(T.slot,(()=>{const s=MAINT_SPOT[T.inc];return [s[0]+((k%3)-1)*1.6,s[1]+(k>2?1.4:0)];})());}else pose(T.w,"run",now);break;
         case "out":pose(T.w,"ride",now);T.w.position.y=0.12;if(drive(T,rdt)){T.state="walk";T.onSite=now;}break;
         case "walk":{const s=MAINT_SPOT[T.inc],fx=s[0]+((k%3)-1)*1.1,fz=s[1]+(lane(s)==="F"?-1.6:1.4)*(k%2?1:-1)*0.6-(lane(s)==="F"?1.0:0);
