@@ -210,6 +210,8 @@ button:focus-visible,input:focus-visible,select:focus-visible{outline-color:var(
 #millName[contenteditable=true]{outline:2px solid var(--brand);outline-offset:2px;border-radius:4px;padding:0 4px;background:var(--panel)}
 .pencil{font-size:14px;line-height:1;padding:3px 6px;border-radius:6px;color:var(--muted)}
 .hud .hbtns button.danger{color:#fff}
+.ver{position:fixed;top:6px;right:10px;z-index:50;font:600 11px var(--f-mono,monospace);color:var(--muted);opacity:.8;pointer-events:none}
+body.fs .ver{display:none}
 .reroll{font-size:12px;padding:5px 10px;align-self:center;white-space:nowrap}
 /* fullscreen */
 .hud{display:none;z-index:5}
@@ -233,6 +235,7 @@ body{margin:0}
 </head>
 <body>
 
+<div class="ver" id="appVersion" aria-label="Version">v1.0.0</div>
 <div class="wrap">
   <header>
     <div class="brand"><span class="logo" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linejoin="round"><circle cx="8.5" cy="12" r="5.5"/><circle cx="8.5" cy="12" r="1.6" fill="currentColor"/><path d="M8.5 6.5H20v11H8.5"/></svg></span>
