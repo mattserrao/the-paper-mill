@@ -263,7 +263,7 @@ body{margin:0}
     <div class="seg" id="viewToggle" role="group" aria-label="Plant view"><button id="vb3" aria-pressed="true">3D</button><button id="vb2" aria-pressed="false">2D</button></div>
     <div class="view3dctl" id="view3dctl"><label class="check"><input type="checkbox" id="viewShadows" checked> Shadows</label><button id="viewReset">Whole mill</button><button id="viewFS">Fullscreen</button><div class="seg lblseg" id="lblMode" role="group" aria-label="Section labels"><span>Labels</span><button data-m="auto" aria-pressed="true" title="Labels fade out when you stop moving the view">Auto</button><button data-m="on" aria-pressed="false">On</button><button data-m="off" aria-pressed="false">Off</button></div><span class="hint">Drag to rotate · two-finger drag, right-drag or arrow keys to move · pinch or scroll to zoom</span></div>
   </div>
-  <div class="jumps" id="jumps" role="group" aria-label="Go to area"><span>Go to</span><button data-j="trucks">Trucks</button><button data-j="recv">Receiving</button><button data-j="pulp">Pulper &amp; chest</button><button data-j="pm">Paper machine</button><button data-j="wd">Winder</button><button data-j="wh">Warehouse</button>
+  <div class="jumps" id="jumps" role="group" aria-label="Go to area"><span>Go to</span><button data-j="trucks">Trucks</button><button data-j="recv">Receiving</button><button data-j="pulp">Pulper &amp; chest</button><button data-j="pm">Paper machine</button><button data-j="wd">Winder</button><button data-j="wh">Warehouse</button><button data-j="shop">Maintenance</button>
   </div>
   <div class="view3d" id="view3d" hidden><div class="hud" id="hud">
     <div class="hk brandk"><i></i><div><span id="hud-mill">Mill</span><b id="hud-clock">–</b></div></div>
@@ -1292,6 +1292,16 @@ const G3={on:false,ok:false};
   function box2(x0,x1,z0,z1,w=1.8){skirt(x0,z0-w/2,x1,z0-w/2,w);skirt(x0,z1+w/2,x1,z1+w/2,w);skirt(x0-w/2,z0,x0-w/2,z1,w);skirt(x1+w/2,z0,x1+w/2,z1,w);}
   function blob(x,z,r){const p=new THREE.Mesh(new THREE.PlaneGeometry(r*2,r*2),aoRMat);p.rotation.x=-Math.PI/2;p.position.set(x,0.04,z);scene.add(p);return p;}
   function slab(x0,x1,z0,z1,m,y=0.02){const o=new THREE.Mesh(new THREE.PlaneGeometry(x1-x0,z1-z0),m);o.rotation.x=-Math.PI/2;o.position.set((x0+x1)/2,y,(z0+z1)/2);o.receiveShadow=true;scene.add(o);if(x1-x0<300)edges(o,edgeSoft,1);return o;}
+  // end-suction centrifugal pump on a skid: volute, bearing frame, coupling guard, motor
+  function pumpModel(parent=scene){const g=new THREE.Group();parent.add(g);
+    box(2.5,0.2,1.0,M.steel,0.15,0.1,0,g);
+    const vg=new THREE.CylinderGeometry(0.55,0.55,0.5,20);vg.rotateZ(Math.PI/2);const v=new THREE.Mesh(vg,M.metal);v.position.set(-0.7,0.75,0);v.castShadow=true;g.add(v);
+    const ng=new THREE.CylinderGeometry(0.2,0.2,0.5,12);const dn=new THREE.Mesh(ng,M.metal);dn.position.set(-0.7,1.35,0);g.add(dn);
+    box(0.5,0.55,0.45,M.steel,-0.15,0.6,0,g);box(0.45,0.4,0.42,M.warn,0.3,0.68,0,g,false);
+    const mg=new THREE.CylinderGeometry(0.42,0.42,1.0,18);mg.rotateZ(Math.PI/2);const mo=new THREE.Mesh(mg,M.stock);mo.position.set(1.0,0.75,0);mo.castShadow=true;g.add(mo);
+    const fg=new THREE.CylinderGeometry(0.38,0.38,0.18,18);fg.rotateZ(Math.PI/2);const fan=new THREE.Mesh(fg,M.ink);fan.position.set(1.58,0.75,0);g.add(fan);
+    box(0.3,0.25,0.3,M.ink,1.0,1.25,0,g,false);return g;}
+  function fieldPump(x,y,z,rot){const g=pumpModel();g.rotation.y=rot;g.position.set(x+0.7*Math.cos(rot),y-0.75,z-0.7*Math.sin(rot));blob(x+0.4*Math.sin(-rot),z,1.6);return g;}
   function pipe(pts,r,m,parent=scene){const up=new THREE.Vector3(0,1,0);
     for(let i=0;i<pts.length-1;i++){const a=new THREE.Vector3(...pts[i]),b=new THREE.Vector3(...pts[i+1]),d=b.clone().sub(a),L=d.length();
       const o=new THREE.Mesh(new THREE.CylinderGeometry(r,r,L,10),m);o.position.copy(a).add(b).multiplyScalar(0.5);o.quaternion.setFromUnitVectors(up,d.normalize());o.castShadow=true;parent.add(o);}
@@ -1358,7 +1368,7 @@ const G3={on:false,ok:false};
   ribWall(25.2,WH,0.3,-36.4,WH/2,14.8);ribWall(25.2,WH,0.3,-36.4,WH/2,32.2);ribWall(0.3,WH,17.4,-23.8,WH/2,23.5);
   // machine hall: a cutaway shell, back and end walls only, so the machine stays in view
   ribWall(66,5.2,0.3,31,2.6,2.4);ribWall(0.3,5.2,13.8,64,2.6,9.3);
-  {const s=new THREE.Mesh(new THREE.PlaneGeometry(26,3.25),signMat);s.position.set(31,3.1,2.57);scene.add(s);
+  {const s=new THREE.Mesh(new THREE.PlaneGeometry(26,3.25),signMat);s.position.set(51,3.1,2.57);scene.add(s);
    const s2=new THREE.Mesh(new THREE.PlaneGeometry(13,1.62),signMat);s2.position.set(-21.2,2.55,-2.83);scene.add(s2);}
   // sawtooth roofs in the brand color; they fade away as you zoom in
   const roofs=[];
@@ -1490,7 +1500,8 @@ const G3={on:false,ok:false};
   pipe([[22.4,TE+TY+0.25,TZ+0.3],[20.6,TE+TY+0.25,TZ+0.3],[20.6,TE+TY+0.25,-3.5],[19.4,TE+TY+0.25,-3.5],[19.4,0.9,-3.5]],0.14,M.steel);
   // stock lines: pulper -> thickener vat, repulper pump -> chest
   pipe([[20.2,1,-11.5],[23.6,1,-11.5],[23.6,1,-7.9],[23.6,TE+TY+0.5,-7.9],[24.5,TE+TY+0.5,-7.9],[24.5,TE+TY+0.5,-5.9],[24.5,TE+TY-0.1,-5.9]],0.3,M.stock);
-  pipe([[29.9,TE-0.6,TZ+3.55],[29.9,TE-1.2,TZ+3.55],[33,TE-1.6,TZ+3.55],[33,TE-2.6,-9.6],[33,TE-2.7,-10.6]],0.3,M.stock);
+  pipe([[29.9,TE-0.6,TZ+3.55],[29.9,TE-1.2,TZ+3.55],[33,TE-1.6,TZ+3.55],[33,1,TZ+3.55],[33,1,-10.6]],0.3,M.stock);
+  fieldPump(21.9,1,-11.5,-Math.PI/2);fieldPump(33,1,-5.6,0);fieldPump(45,1,-11,-Math.PI/2);
   pipe([[38.5,1,-11],[57,1,-11],[57,1,6.5],[57,2.4,6.5]],0.35,M.stock);
 
   // paper machine
@@ -1634,7 +1645,7 @@ const G3={on:false,ok:false};
     b.addEventListener("pointerdown",e=>{e.preventDefault();b.setPointerCapture(e.pointerId);padDir=[px,py];});
     ["pointerup","pointercancel","pointerleave"].forEach(t=>b.addEventListener(t,()=>padDir=null));});
   G3.padTick=rdt=>{if(padDir)panBy(-padDir[0]*500*rdt,-padDir[1]*500*rdt);};
-  const JUMPS={trucks:[-62,2,118],recv:[-21,-13,100],pulp:[25,-10,100],pm:[22,9,130],wd:[-17,7,72],wh:[-37,24,105]};
+  const JUMPS={trucks:[-62,2,118],recv:[-21,-13,100],pulp:[25,-10,100],pm:[22,9,130],wd:[-17,7,72],wh:[-37,24,105],shop:[57,-21,48]};
   // section labels: Auto fades them out after a few idle seconds, On keeps them, Off hides them
   let lblMode="auto";try{lblMode=localStorage.getItem("paper-mill-labels")||"auto";}catch(e){}
   G3.lastMove=performance.now();
@@ -2059,11 +2070,23 @@ const G3={on:false,ok:false};
   slab(49,65,-27,-14.5,M.slab,0.03);box2(SHOP.x0,SHOP.x1,SHOP.z0,SHOP.z1,1.4);
   ribWall(SHOP.x1-SHOP.x0,3.3,0.3,(SHOP.x0+SHOP.x1)/2,1.65,SHOP.z1);ribWall(SHOP.x1-SHOP.x0,3.3,0.3,(SHOP.x0+SHOP.x1)/2,1.65,SHOP.z0);
   ribWall(0.3,3.3,SHOP.z1-SHOP.z0,SHOP.x0,1.65,(SHOP.z0+SHOP.z1)/2);ribWall(0.3,3.3,SHOP.z1-SHOP.z0,SHOP.x1,1.65,(SHOP.z0+SHOP.z1)/2);
-  {const roof=new THREE.Mesh(new THREE.BoxGeometry(SHOP.x1-SHOP.x0+0.6,0.35,SHOP.z1-SHOP.z0+0.6),M.brand);roof.position.set((SHOP.x0+SHOP.x1)/2,3.45,(SHOP.z0+SHOP.z1)/2);roof.castShadow=true;scene.add(roof);edges(roof);
+  {const rm=mat("brand",{transparent:true,roughness:0.55}),rg=new THREE.Group();scene.add(rg);
+   const roof=new THREE.Mesh(new THREE.BoxGeometry(SHOP.x1-SHOP.x0+0.6,0.35,SHOP.z1-SHOP.z0+0.6),rm);roof.position.set((SHOP.x0+SHOP.x1)/2,3.45,(SHOP.z0+SHOP.z1)/2);roof.castShadow=true;rg.add(roof);
+   rg.userData.mats=[rm];roofs.push(rg);
    box(1.6,2.3,0.14,M.ink,SHOP.door[0],1.15,SHOP.z1+0.12,scene,false);box(6.5,0.9,0.1,M.wind,(SHOP.x0+SHOP.x1)/2+2.2,2.1,SHOP.z1+0.17,scene,false);
    const mc=document.createElement("canvas");mc.width=512;mc.height=96;const mx=mc.getContext("2d");mx.fillStyle="#1c2233";mx.font='800 52px "Plus Jakarta Sans",system-ui,sans-serif';mx.textBaseline="middle";mx.fillText("MAINTENANCE",14,50);
    const mt=new THREE.CanvasTexture(mc);mt.encoding=THREE.sRGBEncoding;const sign=new THREE.Mesh(new THREE.PlaneGeometry(6.4,1.2),new THREE.MeshBasicMaterial({map:mt,transparent:true}));sign.position.set((SHOP.x0+SHOP.x1)/2-0.8,2.85,SHOP.z1+0.18);scene.add(sign);}
   const SLOTS=[51.5,52.9,54.3,55.7,58.5,59.9,61.3,62.7].map(x=>[x,-16.6]);
+  // shop floor: workbenches with pumps on them along the back wall, rebuild stands, parts racks, a break table
+  const BENCH=[];
+  {const wood=M.kraft;[52.1,54.9,57.7,60.5].forEach(x=>{box(2.3,0.12,1.0,wood,x,0.95,-24.2,scene,false);[-1,1].forEach(sx=>box(0.1,0.9,0.9,M.steel,x+sx*1.05,0.45,-24.2,scene,false));
+      box(2.2,1.3,0.06,M.steel,x,2.0,-24.8,scene,false);for(let k=0;k<5;k++)box(0.07,0.32,0.05,k%2?M.bad:M.ink,x-0.8+k*0.4,2.0,-24.74,scene,false);
+      const pm=pumpModel();pm.scale.setScalar(0.42);pm.position.set(x,1.01,-24.15);pm.rotation.y=0.3;BENCH.push({p:[x,-23.25],l:[x,-24.4]});});
+    [[52.3,-20.6],[61.3,-20.6]].forEach(([x,z],k)=>{box(1.4,0.5,0.9,M.steel,x,0.25,z,scene);const pm=pumpModel();pm.scale.setScalar(0.5);pm.position.set(x,0.5,z);pm.rotation.y=k?Math.PI:0;
+      BENCH.push({p:[x+(k?-1.25:1.25),z],l:[x,z]});BENCH.push({p:[x,z+0.95],l:[x,z]});});
+    box(0.5,2.4,4.6,M.steel,50.95,1.2,-22.1,scene);for(let k=0;k<4;k++)box(0.48,0.06,4.5,M.ink,50.95,0.4+k*0.6,-22.1,scene,false);
+    for(let k=0;k<6;k++)box(0.3,0.3,0.4,k%2?M.stock:M.warn,50.95,0.6+(k%3)*0.6,-23.8+k*0.7,scene,false);
+    box(1.0,0.08,0.8,M.panel,58.4,0.78,-20.7,scene,false);box(0.12,0.74,0.12,M.steel,58.4,0.37,-20.7,scene,false);}
   const techM=mat("g-tech");
   function trike(){const g=new THREE.Group();
     box(1.3,0.42,0.7,M.fork,0,0.55,0,g);box(0.5,0.5,0.62,M.fork,-0.62,0.86,0,g);box(0.42,0.12,0.5,M.ink,-0.15,0.85,0,g,false);
@@ -2079,7 +2102,8 @@ const G3={on:false,ok:false};
     pts.push(lt==="F"?[to[0],17.6]:[Math.max(to[0],-5.5),-0.6]);pts.push(to);return pts;}
   const techs=[];
   function ensureTechs(){while(techs.length<Math.min(8,P.techs)){const k=techs.length,s=SLOTS[k],w=worker(techM,M.panelWhite||(M.panelWhite=mat("panel"))),t=trike();
-      t.position.set(s[0],0,s[1]);t.rotation.y=Math.PI/2;w.visible=false;techs.push({w,t,k,slot:s,state:"home",path:null,inc:null,onSite:0});}}
+      t.position.set(s[0],0,s[1]);t.rotation.y=Math.PI/2;const b=BENCH[k];w.position.set(b.p[0],0,b.p[1]);techs.push({w,t,k,slot:s,bench:b,state:"home",path:null,inc:null,onSite:0,walk:null});}}
+  function walkTo(T,pts,speed,rdt,now){while(T.walk&&T.walk.length){if(moveP(T.w,T.walk[0][0],T.walk[0][1],speed,rdt))T.walk.shift();else{pose(T.w,"run",now);return false;}}return true;}
   function drive(T,rdt){const p=T.path[0],dx=p[0]-T.t.position.x,dz=p[1]-T.t.position.z,d=Math.hypot(dx,dz),s=Math.min(d,22*rdt);
     if(d>0.05){T.t.position.x+=dx/d*s;T.t.position.z+=dz/d*s;T.t.rotation.y=lerpAng(T.t.rotation.y,Math.atan2(-dz,dx),Math.min(1,rdt*10));}
     if(d<0.25)T.path.shift();
@@ -2088,8 +2112,13 @@ const G3={on:false,ok:false};
     const MI=S.inc.filter(i=>MAINT_SPOT[i.id]);
     techs.forEach((T,k)=>{const want=MI.length&&k<P.techs?MI[k%MI.length]:null,active=T.inc&&S.inc.some(i=>i.id===T.inc);
       switch(T.state){
-        case "home":if(want){T.inc=want.id;T.state="mount";T.w.visible=true;T.w.position.set(SHOP.door[0],0,SHOP.door[1]);}
-          else if(RUN.on&&k<2&&k<P.techs&&T.ran!==RUN.t0){T.ran=RUN.t0;T.state="cmount";T.w.visible=true;T.w.position.set(SHOP.door[0],0,SHOP.door[1]);}break;
+        case "home":{T.w.visible=k<P.techs;const b=T.bench;
+          if(want){T.inc=want.id;T.state="exit";T.next="mount";T.walk=[[SHOP.door[0],-20.1],[SHOP.door[0],-18.1]];break;}
+          if(RUN.on&&k<2&&k<P.techs&&T.ran!==RUN.t0){T.ran=RUN.t0;T.state="exit";T.next="cmount";T.walk=[[SHOP.door[0],-20.1],[SHOP.door[0],-18.1]];break;}
+          if(moveP(T.w,b.p[0],b.p[1],3,rdt)){face(T.w,b.l[0],b.l[1],rdt);pose(T.w,"fix",now);T.w.userData.armful.visible=false;
+            if(Math.random()<rdt*1.2){const [nx,,nz]=nozzlePos(T.w);for(let j=0;j<2;j++)emit("spark",nx,1.1,nz,R()*2,1.5+Math.random()*2,R()*2,0.3,0.18,"#ff8a1f",1);}}
+          else pose(T.w,"walk",now);break;}
+        case "exit":if(walkTo(T,null,5,rdt,now))T.state=T.next;break;
         case "cmount":if(moveP(T.w,T.slot[0]+0.2,T.slot[1]+0.7,7,rdt)){T.state="chase";T.path=route(T.slot,[60,17.6]);}else pose(T.w,"run",now);break;
         case "chase":pose(T.w,"ride",now);T.w.position.y=0.12;
           if(!RUN.on){T.state="home2";T.path=route([T.t.position.x,T.t.position.z],T.slot);break;}
@@ -2104,7 +2133,7 @@ const G3={on:false,ok:false};
           else pose(T.w,"run",now);break;}
         case "back":{const a=T.t.rotation.y;if(moveP(T.w,T.t.position.x-Math.cos(a)*0.15,T.t.position.z+Math.sin(a)*0.15,5,rdt)){T.state="home2";T.path=route([T.t.position.x,T.t.position.z],T.slot);}else pose(T.w,"run",now);break;}
         case "home2":pose(T.w,"ride",now);T.w.position.y=0.12;if(drive(T,rdt)){T.t.rotation.y=Math.PI/2;T.state="inside";}break;
-        case "inside":if(moveP(T.w,SHOP.door[0],SHOP.door[1],5,rdt)){T.w.visible=false;T.state="home";T.inc=null;}else pose(T.w,"run",now);break;
+        case "inside":if(!T.walk)T.walk=[[SHOP.door[0],-18.1],[SHOP.door[0],-20.1],T.bench.p];if(walkTo(T,null,5,rdt,now)){T.walk=null;T.state="home";T.inc=null;}break;
       }
       T.t.visible=k<P.techs;});}
 
