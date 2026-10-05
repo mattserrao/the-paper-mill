@@ -12,6 +12,7 @@
   --bg:#e8ebe9; --panel:#f7f8f6; --ink:#1b2321; --muted:#5a6762; --line:#c3cbc7;
   --kraft:#a26c33; --stock:#3f7686; --machine:#3a4744; --paperc:#fbfaf6;
   --ok:#2b8549; --warn:#b97c0b; --bad:#bf3c28; --chip:#dfe4e1;
+  --g-sky:#e4eae6; --g-ground:#b4c2b6; --g-slab:#c9cfca; --g-asphalt:#7c8582; --g-wall:#e2e0d8; --g-lane:#eeede6; --g-metal:#8e9a97; --g-felt:#5f6f64;
   --fire:#e8641b; --fire2:#f2b632; --water:#3a86c8; --smoke:#7f8784; --slime:#6f9223; --beaver:#7a4b25;
   --f-display:"Barlow Condensed","Arial Narrow",Arial,sans-serif;
   --f-body:"IBM Plex Sans",system-ui,-apple-system,"Segoe UI",sans-serif;
@@ -21,11 +22,13 @@
   --bg:#131918; --panel:#1b2322; --ink:#e2e8e5; --muted:#8e9b96; --line:#2e3a37;
   --kraft:#d29a56; --stock:#6ea8b7; --machine:#a3b1ad; --paperc:#e9e6dc;
   --ok:#52bf77; --warn:#e3aa3c; --bad:#e6684f; --chip:#25302e;
+  --g-sky:#121918; --g-ground:#1c2523; --g-slab:#2b3533; --g-asphalt:#121716; --g-wall:#46524f; --g-lane:#5d6965; --g-metal:#71807c; --g-felt:#4f5f55;
   --fire:#ff7d33; --fire2:#ffd257; --water:#5aa8e6; --smoke:#6f7774; --slime:#9cc23f; --beaver:#a8693a; color-scheme:dark}}
 :root[data-theme="dark"]{
   --bg:#131918; --panel:#1b2322; --ink:#e2e8e5; --muted:#8e9b96; --line:#2e3a37;
   --kraft:#d29a56; --stock:#6ea8b7; --machine:#a3b1ad; --paperc:#e9e6dc;
   --ok:#52bf77; --warn:#e3aa3c; --bad:#e6684f; --chip:#25302e;
+  --g-sky:#121918; --g-ground:#1c2523; --g-slab:#2b3533; --g-asphalt:#121716; --g-wall:#46524f; --g-lane:#5d6965; --g-metal:#71807c; --g-felt:#4f5f55;
   --fire:#ff7d33; --fire2:#ffd257; --water:#5aa8e6; --smoke:#6f7774; --slime:#9cc23f; --beaver:#a8693a; color-scheme:dark}
 *{box-sizing:border-box}
 body{background:var(--bg);color:var(--ink);font-family:var(--f-body);font-size:14px;line-height:1.45}
@@ -47,6 +50,38 @@ button.primary{background:var(--stock);border-color:var(--stock);color:var(--pan
 .kpi .s{font-size:11.5px;color:var(--muted);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .scroller{overflow-x:auto;border:1px solid var(--line);border-radius:8px;background:var(--panel)}
 #plant{display:block;width:100%;min-width:760px;height:auto}
+.viewbar{display:flex;flex-wrap:wrap;gap:8px 14px;align-items:center;margin-bottom:-6px}
+.seg{display:inline-flex;border:1px solid var(--line);border-radius:6px;overflow:hidden}
+.seg button{border:0;border-radius:0;padding:6px 14px}
+.seg button[aria-pressed="true"]{background:var(--ink);color:var(--panel)}
+.view3dctl{display:flex;gap:10px;align-items:center;flex-wrap:wrap}
+.hint{font-size:12px;color:var(--muted)}
+.jumps{display:flex;flex-wrap:wrap;gap:6px;align-items:center;margin-bottom:-6px}
+.jumps span{font-size:12px;color:var(--muted);margin-right:2px}
+.jumps button{padding:4px 10px;font-size:12.5px;font-weight:500;border-radius:999px}
+.jumps[hidden]{display:none}
+.pad{position:absolute;right:10px;bottom:10px;display:grid;grid-template-columns:repeat(3,34px);grid-template-rows:repeat(3,34px);gap:2px}
+.pad button{padding:0;font-size:13px;line-height:1;background:color-mix(in srgb,var(--panel) 88%,transparent);touch-action:none;user-select:none;-webkit-user-select:none}
+.pad button[data-p="0,-1"]{grid-column:2;grid-row:1}.pad button[data-p="-1,0"]{grid-column:1;grid-row:2}.pad button[data-p="1,0"]{grid-column:3;grid-row:2}.pad button[data-p="0,1"]{grid-column:2;grid-row:3}
+.view3d{position:relative;border:1px solid var(--line);border-radius:8px;overflow:hidden;aspect-ratio:1200/660;min-height:320px;max-height:78vh;width:100%;background:var(--g-sky)}
+#gl{display:block;width:100%;height:100%;touch-action:pan-y;cursor:grab}
+#gl:active{cursor:grabbing}
+#labels3d{position:absolute;inset:0;pointer-events:none;overflow:hidden}
+.view3d.compact .lbl{font-size:10px;padding:1px 5px}
+.view3d.compact .lbl b{font-size:10.5px}
+.view3d.compact .lbl span{display:none}
+.lbl{position:absolute;left:0;top:0;background:color-mix(in srgb,var(--panel) 90%,transparent);border:1px solid var(--line);border-radius:5px;padding:2px 7px;font:500 11.5px var(--f-mono);white-space:nowrap;font-variant-numeric:tabular-nums;color:var(--ink);line-height:1.3}
+.lbl b{display:block;font:700 12px var(--f-display);letter-spacing:.06em;text-transform:uppercase}
+.lbl.bad{border-color:var(--bad)} .lbl.bad b{color:var(--bad)}
+.banner3d{position:absolute;top:10px;left:50%;transform:translateX(-50%);display:flex;align-items:center;gap:10px;background:var(--panel);border:2px solid var(--bad);border-radius:6px;padding:4px 12px 4px 4px;width:max-content;max-width:calc(100% - 20px)}
+.banner3d span{background:var(--bad);color:var(--panel);font:700 13px var(--f-display);padding:3px 8px;border-radius:4px;letter-spacing:.08em;flex:none}
+.banner3d b{font:700 16px var(--f-display);color:var(--ink);min-width:0}
+.banner3d[hidden],.lbl[hidden]{display:none}
+.banner3d.good{border-color:var(--ok)} .banner3d.good span{background:var(--ok)}
+.blackout3d{position:absolute;inset:0;display:grid;place-items:center;pointer-events:none;font:700 clamp(28px,7vw,64px) var(--f-display);letter-spacing:.12em;text-transform:uppercase;color:var(--fire2);text-shadow:0 2px 12px #000}
+.blackout3d[hidden]{display:none}
+.chips3d{position:absolute;left:10px;bottom:10px;display:flex;flex-wrap:wrap;gap:4px;max-width:75%;pointer-events:none}
+.chips3d span{background:var(--bad);color:var(--panel);font:700 11px var(--f-display);letter-spacing:.06em;text-transform:uppercase;padding:2px 8px;border-radius:999px}
 .trendbox{border:1px solid var(--line);border-radius:8px;background:var(--panel);padding:10px 12px}
 .trendhead{display:flex;flex-wrap:wrap;gap:6px 16px;align-items:center;font-size:12px;color:var(--muted)}
 .trendhead b{font:600 12px var(--f-display);letter-spacing:.08em;text-transform:uppercase;color:var(--ink);margin-right:auto}
@@ -161,7 +196,14 @@ body{margin:0}
     <div class="kpi"><div class="k">Roll warehouse</div><div class="v" id="k-fg">–</div><div class="s" id="k-fg-s">&nbsp;</div></div>
   </section>
 
-  <div class="scroller"><canvas id="plant" width="1200" height="660" aria-label="Animated mill schematic"></canvas></div>
+  <div class="viewbar">
+    <div class="seg" id="viewToggle" role="group" aria-label="Plant view"><button id="vb3" aria-pressed="true">3D</button><button id="vb2" aria-pressed="false">2D</button></div>
+    <div class="view3dctl" id="view3dctl"><label class="check"><input type="checkbox" id="viewShadows" checked> Shadows</label><button id="viewReset">Whole mill</button><span class="hint">Drag to rotate · two-finger drag, right-drag or arrow keys to move · pinch or scroll to zoom</span></div>
+  </div>
+  <div class="jumps" id="jumps" role="group" aria-label="Go to area"><span>Go to</span><button data-j="trucks">Trucks</button><button data-j="recv">Receiving</button><button data-j="pulp">Pulper &amp; chest</button><button data-j="pm">Paper machine</button><button data-j="wd">Winder</button><button data-j="wh">Warehouse</button>
+  </div>
+  <div class="view3d" id="view3d" hidden><canvas id="gl" tabindex="0" aria-label="3D view of the mill. Arrow keys move, Q and E rotate, plus and minus zoom."></canvas><div class="pad" id="pad" aria-label="Move the view"><button data-p="0,-1" aria-label="Move up">▲</button><button data-p="-1,0" aria-label="Move left">◀</button><button data-p="1,0" aria-label="Move right">▶</button><button data-p="0,1" aria-label="Move down">▼</button></div><div id="labels3d"></div><div class="banner3d" id="banner3d" hidden><span></span><b></b></div><div class="chips3d" id="chips3d"></div><div class="blackout3d" id="blackout3d" hidden>Blackout</div></div>
+  <div class="scroller" id="plantwrap"><canvas id="plant" width="1200" height="660" aria-label="Animated mill schematic"></canvas></div>
 
   <section class="chaos" aria-label="Chaos">
     <div class="chaoshead">
@@ -227,29 +269,35 @@ body{margin:0}
     <div class="card"><h2><span class="n">5</span><span>Paper machine <span id="pm-title">PM1</span></span><span class="pill" id="p-pm">–</span></h2>
       <div class="row"><label for="grade">Grade</label><span class="val"><select id="grade"></select></span></div>
       <div class="row" data-key="pmSp"><label for="s-pmSp">Max reel speed</label><span class="val"></span><div class="ctl"><input id="s-pmSp" type="range" min="1200" max="3300" step="10"><button class="auto" aria-pressed="true">AUTO</button></div></div>
-      <div class="row" data-key="rollW"><label for="s-rollW">Finished roll weight</label><span class="val"></span><div class="ctl"><input id="s-rollW" type="range" min="0.8" max="3" step="0.1"></div></div>
+      <div class="row"><label>Customer rolls per reel</label><span class="val">8 × 3.1 t</span></div>
       <label class="check"><input type="checkbox" id="breaks"> Random sheet breaks (calibration data: 14% of time)</label>
       <div class="read" id="r-pm">–</div></div>
 
-    <div class="card"><h2><span class="n">6</span>Warehouse &amp; shipping<span class="pill" id="p-ship">–</span></h2>
+    <div class="card"><h2><span class="n">6</span>Winder<span class="pill" id="p-wd">–</span></h2>
+      <div class="row" data-key="wdr"><label for="s-wdr">Winder speed</label><span class="val"></span><div class="ctl"><input id="s-wdr" type="range" min="0" max="150" step="1"><button class="auto" aria-pressed="true">AUTO</button></div></div>
+      <label class="check"><input type="checkbox" id="hays" checked> Random hayouts (scabs make them far more likely)</label>
+      <div class="read" id="r-wd">–</div></div>
+
+    <div class="card"><h2><span class="n">7</span>Warehouse &amp; shipping<span class="pill" id="p-ship">–</span></h2>
       <div class="row" data-key="loaders"><label for="s-loaders">Clamp-truck loaders on shift</label><span class="val"></span><div class="ctl"><input id="s-loaders" type="range" min="0" max="10" step="1"><button class="auto" aria-pressed="true">AUTO</button></div></div>
       <div class="row" data-key="outRate"><label for="s-outRate">Outbound truck arrivals</label><span class="val"></span><div class="ctl"><input id="s-outRate" type="range" min="0" max="10" step="0.1"><button class="auto" aria-pressed="true">AUTO</button></div></div>
       <div class="read" id="r-ship">–</div></div>
   </section>
 
-  <p class="foot">Auto keeps each area matched to the paper machine: pulper feed tracks machine demand plus a correction toward the chest level target, truck arrivals and crews follow from that. Drag any slider to take that area to manual; press its AUTO chip or "Balance all" to hand it back. Production is speed × basis weight, scaled so 23m at 2,736 fpm and 24.55 lb gives 34.8 t/h, the calibration median. Chaos events change the same flows: a machine incident stops the reel, stock prep incidents stop the pulper or cut yield, warehouse incidents cut crews, docks or trucks. Money: rolls are paid for when an outbound truck leaves (grade price × tons). OCC is paid for when it is unloaded, energy and chemicals per ton made, wages per crew member per hour, plus $4,000/h mill overhead and a repair bill for each disaster. Below −$1.5M the mill goes bankrupt. Assumptions: 22 t OCC per inbound truck, 88% pulper yield, 300 t chest, 30 t/h per forklift driver, 25 rolls/h per loader, 20 rolls per outbound truck.</p>
+  <p class="foot">Auto keeps each area matched to the paper machine: pulper feed tracks machine demand plus a correction toward the chest level target, truck arrivals and crews follow from that. Drag any slider to take that area to manual; press its AUTO chip or "Balance all" to hand it back. Production is speed × basis weight, scaled so 23m at 2,736 fpm and 24.55 lb gives 34.8 t/h, the calibration median. The winder cuts each jumbo reel into rolls; each reel makes 8 customer rolls and up to four reels can wait in storage, so a slow or hayed-out winder eventually stops the machine. Hayouts send the set in progress to broke. During a sheet break every employee runs to the machine to help rethread, so receiving and shipping pause. Chaos events change the same flows: a machine incident stops the reel, stock prep incidents stop the pulper or cut yield, warehouse incidents cut crews, docks or trucks. The plant view is 3D by default (drag to rotate, scroll or pinch to zoom) and drops shadows and resolution on its own if a device struggles; switch to 2D any time. Money: rolls are paid for when an outbound truck leaves (grade price × tons). OCC is paid for when it is unloaded, energy and chemicals per ton made, wages per crew member per hour, plus $4,000/h mill overhead and a repair bill for each disaster. Below −$1.5M the mill goes bankrupt. Assumptions: 22 t OCC per inbound truck, 88% pulper yield, 300 t chest, 30 t/h per forklift driver, 25 rolls/h per loader, 20 rolls per outbound truck.</p>
 </div>
 
+<script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
 <script>
 (()=>{
 const GRADES={ "23m":{sp:2736,bw:24.55}, "26m":{sp:2433,bw:26.06}, "30m":{sp:2222,bw:30.05}, "33HT":{sp:2084,bw:33.08} };
 const P={truckLoad:22,doors:3,driverRate:30,doorRate:45,yieldF:0.88,tankCap:300,yardCap:2000,yardTarget:800,
-  fgCap:1500,fgTarget:300,jumbo:25,winderRate:60,loaderRate:25,truckRolls:20,doorRolls:45,shipDoors:3,
+  fgCap:900,fgTarget:160,jumbo:25,storeReels:4,rollsPerReel:8,loaderRate:25,truckRolls:8,doorRolls:45,shipDoors:3,
   K:34.8/(2736*24.55),minSpeed:1200,ramp:150,pmLoss:0.98,maxQueue:8};
 const UNITS={inRate:v=>v.toFixed(1)+" trucks/h",drivers:v=>Math.round(v)+" drivers",pulper:v=>v.toFixed(1)+" t/h",
   lvlTarget:v=>Math.round(v)+" %",lowLevel:v=>Math.round(v)+" %",pmSp:v=>Math.round(v).toLocaleString()+" fpm",
-  rollW:v=>v.toFixed(1)+" t",loaders:v=>Math.round(v)+" loaders",outRate:v=>v.toFixed(1)+" trucks/h"};
-const AUTOKEYS=["inRate","drivers","pulper","pmSp","loaders","outRate"];
+  rollW:v=>v.toFixed(1)+" t",wdr:v=>Math.round(v)+" t/h",loaders:v=>Math.round(v)+" loaders",outRate:v=>v.toFixed(1)+" trucks/h"};
+const AUTOKEYS=["inRate","drivers","pulper","pmSp","wdr","loaders","outRate"];
 
 let C,S;
 const BASE={...P};
@@ -260,6 +308,7 @@ const UPS=[
  {id:"drive",g:"machine",name:"Drive & gearbox rebuild",lv:[400e3,900e3,1.8e6],desc:"+150 fpm max speed per level."},
  {id:"deckle",g:"machine",name:"Wider trim (deckle)",lv:[1.2e6,2.5e6],desc:"+6% tons at the same speed per level."},
  {id:"shoe",g:"machine",name:"Shoe press",lv:[3e6],desc:"+100 fpm and 12% less energy per ton."},
+ {id:"winder",g:"machine",name:"Winder rebuild",lv:[450e3,1e6],desc:"+30 t/h winder speed and 40% fewer hayouts per level."},
  {id:"monitor",g:"machine",name:"Fabric & felt monitoring",lv:[350e3,800e3],desc:"Machine failures 40% rarer and fewer sheet breaks, per level."},
  {id:"fire",g:"machine",name:"Fire suppression",lv:[500e3],desc:"Dryer and bale yard fires 60% rarer and half as long."},
  {id:"pulper",g:"stock",name:"Pulper rotor upgrade",lv:[600e3,1.4e6],desc:"+25 t/h pulper capacity per level."},
@@ -270,7 +319,7 @@ const UPS=[
  {id:"forklift",g:"yard",name:"Electric forklift fleet",lv:[350e3,750e3],desc:"+25% tons per driver-hour per level. Red-tag outages rarer."},
  {id:"docks",g:"yard",name:"Extra dock doors",lv:[250e3,600e3],desc:"+1 receiving and +1 shipping door per level."},
  {id:"agv",g:"yard",name:"Robotic roll handling",lv:[800e3,1.6e6,3e6],desc:"+2 robot loaders per level. $15/h each, never call off."},
- {id:"wh",g:"yard",name:"Warehouse extension",lv:[500e3,1.1e6],desc:"+750 rolls of storage per level."},
+ {id:"wh",g:"yard",name:"Warehouse extension",lv:[500e3,1.1e6],desc:"+450 rolls of storage per level."},
  {id:"safety",g:"yard",name:"Safety & HR program",lv:[200e3],desc:"Dock fights and call-offs half as often."},
  {id:"apc",g:"mgmt",name:"Advanced process control",lv:[700e3,1.5e6],desc:"+2% tons and 8% less energy per level."},
  {id:"contract",g:"mgmt",name:"Long-term OCC contract",lv:[400e3,900e3],desc:"OCC costs $20/t less per level."},
@@ -285,9 +334,10 @@ function applyUpgrades(){
   P.energyMul=(1-0.12*LV("shoe"))*(1-0.08*LV("apc"));
   P.pulperMax=70+25*LV("pulper"); P.yieldF=BASE.yieldF+0.03*LV("clean"); P.tankCap=BASE.tankCap+150*LV("chest");
   P.driverRate=BASE.driverRate*(1+0.25*LV("forklift")); P.doors=3+LV("docks"); P.shipDoors=3+LV("docks");
-  P.robots=2*LV("agv"); P.fgCap=BASE.fgCap+750*LV("wh"); P.autoFeed=LV("feedconv")>0;
+  P.robots=2*LV("agv"); P.fgCap=BASE.fgCap+450*LV("wh"); P.autoFeed=LV("feedconv")>0;
   P.occPrice=160-20*LV("contract"); P.priceAdd=25*LV("sales"); P.repairMul=LV("insure")?0.4:1; P.premium=LV("insure")?1500:0;
   P.breakBase=Math.pow(0.7,LV("monitor"));
+  P.winderMax=90+30*LV("winder");P.hayBase=Math.pow(0.6,LV("winder"));const wr=document.getElementById("s-wdr");if(wr)wr.max=P.winderMax;
   const sp=document.getElementById("s-pmSp"),pu=document.getElementById("s-pulper");
   if(sp)sp.max=3300+P.spBonus; if(pu)pu.max=P.pulperMax;
 }
@@ -313,7 +363,7 @@ const EVENTS=[
  {id:"dryerfire",g:"machine",name:"Fire in the dryers",head:"Fire in the dryer hood! Deluge on, sheet off.",dur:[180,360],mtbf:260,mods:{pmDown:"dryer fire"},fx:"dryerfire"},
  {id:"fabric",g:"machine",name:"Fabric runs off",head:"Forming fabric tracked off the rolls and folded up.",dur:[150,300],mtbf:180,mods:{pmDown:"fabric change"},fx:"fabric"},
  {id:"felt",g:"machine",name:"Press felt blows",head:"Press felt blown. Crew pulling a new felt.",dur:[90,180],mtbf:140,mods:{pmDown:"felt change"},fx:"felt"},
- {id:"slime",g:"machine",name:"Slime outbreak",head:"Slime outbreak in the wet end. Holes everywhere, speed cut to 70%.",dur:[300,600],mtbf:150,mods:{speedCap:0.7,breakMul:3},fx:"slime"},
+ {id:"slime",g:"machine",name:"Scabs",head:"Scabs in the sheet! Speed cut to 70% and the winder is hayout city.",dur:[300,600],mtbf:150,mods:{speedCap:0.7,breakMul:3,hayMul:20},fx:"slime"},
  {id:"ragger",g:"stock",name:"Ragger rope snaps",head:"Ragger rope snaps. Pulper stopped to fish it out.",dur:[90,180],mtbf:140,mods:{pulperDown:1},fx:"ragger"},
  {id:"overflow",g:"stock",name:"Pulper overflows",head:"Pulper overflows and floods the bale yard!",dur:[240,360],mtbf:220,mods:{pulperDown:1,recvMul:0.5},fx:"flood",
    start:i=>{const l=S.yard*0.15;S.yard-=l;i.note=`${Math.round(l)} t of bales soaked`;}},
@@ -337,13 +387,14 @@ const EVENTS=[
 const EV=Object.fromEntries(EVENTS.map(e=>[e.id,e]));
 EVENTS.forEach(e=>CH.en[e.id]=true);
 function active(id){return S.inc.some(i=>i.id===id);}
-function baseMods(){return {pmDown:null,pulperDown:false,speedCap:1,breakMul:1,yieldMul:1,recvMul:1,clampMul:1,drvCap:99,ldrCap:99,docksClosed:false,noIn:false,noOut:false,yardEat:0};}
+function baseMods(){return {pmDown:null,pulperDown:false,speedCap:1,breakMul:1,yieldMul:1,recvMul:1,clampMul:1,drvCap:99,ldrCap:99,docksClosed:false,noIn:false,noOut:false,yardEat:0,hayMul:1,crewAtPM:false};}
 function mods(){const m=baseMods();
   for(const i of S.inc){const e=EV[i.id].mods||{};
     if(e.pmDown)m.pmDown=e.pmDown; if(e.pulperDown)m.pulperDown=true; if(e.docksClosed)m.docksClosed=true; if(e.noIn)m.noIn=true; if(e.noOut)m.noOut=true;
-    if(e.speedCap)m.speedCap=Math.min(m.speedCap,e.speedCap); if(e.breakMul)m.breakMul*=e.breakMul; if(e.yieldMul)m.yieldMul*=(i.id==="badocc"&&LV("detrash"))?0.9:e.yieldMul;
+    if(e.hayMul)m.hayMul*=e.hayMul; if(e.speedCap)m.speedCap=Math.min(m.speedCap,e.speedCap); if(e.breakMul)m.breakMul*=e.breakMul; if(e.yieldMul)m.yieldMul*=(i.id==="badocc"&&LV("detrash"))?0.9:e.yieldMul;
     if(e.recvMul!==undefined)m.recvMul*=e.recvMul; if(e.clampMul!==undefined)m.clampMul*=e.clampMul; if(e.yardEat)m.yardEat+=e.yardEat;
     if(i.drvCap!==undefined)m.drvCap=Math.min(m.drvCap,i.drvCap); if(i.ldrCap!==undefined)m.ldrCap=Math.min(m.ldrCap,i.ldrCap);}
+  if(S.pm==="break"){m.recvMul=0;m.clampMul=0;m.crewAtPM=true;}
   return m;}
 function log(text,cls){S.feed.unshift({t:S.t,text,cls});if(S.feed.length>40)S.feed.pop();}
 function trigger(id,quiet){
@@ -364,19 +415,24 @@ function chaosTick(dt){
   S.inc=S.inc.filter(i=>i.left>0);
   if(CH.on)for(const e of EVENTS)if(CH.en[e.id]&&!active(e.id)&&Math.random()<dt/60/e.mtbf*CH.lvl*freqMul(e.id))trigger(e.id);
 }
+const HAYLINES=["HAYOUT! Paper is shooting to the roof!","Winder hayout! Every PM hand to the dry end!","Hayout! It's snowing paper in the winder aisle.","Hayout! The set exploded off the drums."];
+function hayout(){S.wd="hayout";S.hayLeft=20+Math.random()*25;
+  const extra=Math.min(S.winderBuf,2+Math.random()*4),loss=extra+S.winderAcc;S.winderBuf-=extra;S.winderAcc=0;S.tot.broke+=loss;S.tot.hayouts++;
+  BANNERS.push({text:HAYLINES[Math.floor(Math.random()*HAYLINES.length)],t:null});while(BANNERS.length>3)BANNERS.splice(1,1);
+  log(`Winder hayout: ${loss.toFixed(1)} t of paper to broke`,"bad");}
 function initCtrl(){
   C={inRate:{v:1.8,auto:true},drivers:{v:3,auto:true},pulper:{v:40,auto:true},lvlTarget:{v:69},lowLevel:{v:30},
-     pmSp:{v:2736,auto:true},rollW:{v:1.8},loaders:{v:2,auto:true},outRate:{v:1,auto:true},grade:"23m",breaks:false,simSpeed:30};
+     pmSp:{v:2736,auto:true},rollW:{v:25/8},loaders:{v:2,auto:true},outRate:{v:1,auto:true},grade:"23m",breaks:false,hays:true,wdr:{v:45,auto:true},simSpeed:30};
 }
 function initState(){
-  S={t:0,yard:700,tank:0.69*P.tankCap,fg:300,pmSpeed:C.pmSp.v,pm:"run",breakLeft:0,reel:8,winderBuf:0,winderAcc:0,
+  S={t:0,yard:700,tank:0.69*P.tankCap,fg:160,pmSpeed:C.pmSp.v,pm:"run",breakLeft:0,reel:8,winderBuf:0,winderAcc:0,
      inPhase:0.6,inJit:1,outPhase:0.3,outJit:1,inQ:[],inDock:[null,null,null],outQ:[],outDock:[null,null,null],leaving:[],
-     rates:{feed:0,unload:0,fiberIn:0,prod:0,fiberUse:0,load:0,rolls:0},
-     tot:{inTrucks:0,inTons:0,turned:0,prodT:0,rolls:0,shipped:0,outTrucks:0,breaks:0,breakMin:0,turnups:0,pot:0,incidents:0},
+     rates:{feed:0,unload:0,fiberIn:0,prod:0,fiberUse:0,load:0,rolls:0,cut:0},
+     tot:{inTrucks:0,inTons:0,turned:0,prodT:0,rolls:0,shipped:0,outTrucks:0,breaks:0,breakMin:0,turnups:0,pot:0,incidents:0,hayouts:0,hayMin:0,broke:0},wd:"run",hayLeft:0,
      trend:[],trendAcc:0,rollsVis:[],inc:[],lastInc:0,feed:[],M:baseMods(),effDrv:C.drivers.v,effLd:C.loaders.v,effHum:C.loaders.v};
   S.up={};S.cash=ECON.start;S.ledger={rev:0,occ:0,energy:0,labor:0,overhead:0,repairs:0,premium:0,upgrades:0};S.profitRate=0;S.over=null;S.won=false;S.shipT=0;
   Object.assign(P,BASE);applyUpgrades();
-  const g=GRADES[C.grade]; C.pmSp.v=g.sp+P.spBonus;
+  C.rollW.v=P.jumbo/P.rollsPerReel;const g=GRADES[C.grade]; C.pmSp.v=g.sp+P.spBonus; C.wdr.v=Math.min(P.winderMax,P.K*C.pmSp.v*g.bw*1.25);
   const demand=P.K*g.sp*g.bw/P.pmLoss; C.pulper.v=demand/P.yieldF;
   C.inRate.v=C.pulper.v/P.truckLoad; C.drivers.v=Math.ceil(2*C.pulper.v/P.driverRate+0.15);
   const rph=P.K*g.sp*g.bw/C.rollW.v; C.loaders.v=Math.ceil(rph*1.15/P.loaderRate); C.outRate.v=rph/P.truckRolls;
@@ -390,7 +446,7 @@ const ease=(cur,tgt,dt,tau)=>cur+(tgt-cur)*Math.min(1,dt/tau);
 function autoControl(dt){
   const g=GRADES[C.grade], level=S.tank/P.tankCap*100;
   if(C.pmSp.auto) C.pmSp.v=g.sp+P.spBonus;
-  const pmWants = (S.pm==="full"||S.pm==="incident")?0:P.K*C.pmSp.v*g.bw/P.pmLoss;
+  const pmWants = (S.pm==="full"||S.pm==="incident"||S.pm==="spools")?0:P.K*C.pmSp.v*g.bw/P.pmLoss;
   if(C.pulper.auto){
     const fiber=pmWants+(C.lvlTarget.v-level)/100*P.tankCap/1.5;
     C.pulper.v=ease(C.pulper.v,clamp(fiber/P.yieldF,0,P.pulperMax),dt,4);
@@ -410,6 +466,7 @@ function autoControl(dt){
     const r=rph/P.truckRolls+(S.fg-P.fgTarget)/(P.truckRolls*8)-S.outQ.length*0.1;
     C.outRate.v=ease(C.outRate.v,clamp(r,0,10),dt,10);
   }
+  if(C.wdr.auto){const pot=P.K*C.pmSp.v*g.bw,tgt=S.winderBuf>P.jumbo*1.05?P.winderMax:pot*1.25;C.wdr.v=ease(C.wdr.v,clamp(tgt,0,P.winderMax),dt,5);}
   if(C.loaders.auto){
     const need=(C.outRate.v*P.truckRolls*1.1)/P.loaderRate-P.robots;
     if(need>C.loaders.v-0.1) C.loaders.v=Math.min(10,Math.ceil(need+0.1));
@@ -455,6 +512,7 @@ function step(dt){
   if(S.pm==="break"){S.breakLeft-=dt;S.tot.breakMin+=dt;if(S.breakLeft<=0&&level>8){S.pm="run";S.pmSpeed=Math.min(C.pmSp.v,P.minSpeed+300);}}
   else if(S.pm==="down"){if(level>=Math.max(20,low*0.8)){S.pm="run";S.pmSpeed=P.minSpeed;}}
   else if(S.pm==="full"){if(S.fg<P.fgCap*0.95){S.pm="run";S.pmSpeed=P.minSpeed;}}
+  else if(S.pm==="spools"){if(S.winderBuf<=P.storeReels*P.jumbo+1e-6){S.pm="run";S.pmSpeed=P.minSpeed;}}
   let prod=0;
   if(S.pm==="run"){
     let tgt=C.pmSp.v*M.speedCap;
@@ -465,6 +523,7 @@ function step(dt){
     const r=P.ramp*dt; S.pmSpeed+=clamp(tgt-S.pmSpeed,-r*2,r);
     if(level<5){S.pm="down";}
     else if(S.fg>=P.fgCap){S.pm="full";}
+    else if(S.reel>=P.jumbo&&S.winderBuf>P.storeReels*P.jumbo+1e-6){S.pm="spools";}
     else if(Math.random()<dt/154*P.breakBase*((C.breaks?1:0)+(M.breakMul-1))){S.pm="break";S.breakLeft=8+Math.random()*34;S.tot.breaks++;}
     if(S.pm==="run"){
       prod=P.K*S.pmSpeed*g.bw*dt/60;
@@ -475,8 +534,11 @@ function step(dt){
   }
   if(S.pm!=="run") S.pmSpeed=ease(S.pmSpeed,0,dt,3);
   S.reel+=prod; S.tot.prodT+=prod; spend(prod*(ECON.energy*P.energyMul+ECON.chem),"energy"); S.tot.pot+=P.K*C.pmSp.v*g.bw*dt/60;
-  if(S.reel>=P.jumbo){S.winderBuf+=S.reel;S.reel=0;S.tot.turnups++;}
-  const cut=Math.min(S.winderBuf,P.winderRate*C.rollW.v*dt/60); S.winderBuf-=cut; S.winderAcc+=cut;
+  if(S.reel>=P.jumbo&&S.winderBuf<=P.storeReels*P.jumbo+1e-6){S.winderBuf+=S.reel;S.reel=0;S.tot.turnups++;}
+  // 6 winder
+  if(S.wd==="hayout"){S.hayLeft-=dt;S.tot.hayMin+=dt;if(S.hayLeft<=0){S.wd="run";log("Winder cleaned up and running again","ok");}}
+  const cut=S.wd==="hayout"?0:Math.min(S.winderBuf,C.wdr.v*dt/60); S.winderBuf-=cut; S.winderAcc+=cut;
+  if(cut>0&&Math.random()<dt/720*P.hayBase*((C.hays?1:0)+(M.hayMul-1)))hayout();
   let rollsMade=0;
   while(S.winderAcc>=C.rollW.v){S.winderAcc-=C.rollW.v;S.fg+=1;rollsMade++;S.tot.rolls++;
     if(S.rollsVis.length<14) S.rollsVis.push({p:0});}
@@ -500,7 +562,7 @@ function step(dt){
   // smoothed rates (per hour)
   const R=S.rates,k=v=>v*60/dt;
   R.feed=ease(R.feed,k(feed),dt,6);R.unload=ease(R.unload,k(unloaded),dt,6);R.fiberIn=ease(R.fiberIn,k(fiberIn),dt,6);
-  R.prod=ease(R.prod,k(prod),dt,6);R.fiberUse=ease(R.fiberUse,k(prod/P.pmLoss),dt,6);R.load=ease(R.load,k(loaded),dt,6);R.rolls=ease(R.rolls,k(rollsMade),dt,10);
+  R.prod=ease(R.prod,k(prod),dt,6);R.fiberUse=ease(R.fiberUse,k(prod/P.pmLoss),dt,6);R.load=ease(R.load,k(loaded),dt,6);R.rolls=ease(R.rolls,k(rollsMade),dt,10);R.cut=ease(R.cut,k(cut),dt,6);
   // trend every 10 sim min
   S.trendAcc+=dt;
   if(S.trendAcc>=10){S.trendAcc-=10;S.trend.push([S.tank/P.tankCap,S.pmSpeed/3300,S.yard/P.yardCap,S.fg/P.fgCap]);if(S.trend.length>144)S.trend.shift();}
@@ -528,9 +590,10 @@ function syncControls(){
     r.querySelector(".val").textContent=UNITS[key](C[key].v);
     if(btn){btn.setAttribute("aria-pressed",C[key].auto?"true":"false");btn.textContent=C[key].auto?"AUTO":"MANUAL";}
   });
-  gradeSel.value=C.grade; $("breaks").checked=C.breaks;
+  gradeSel.value=C.grade; $("breaks").checked=C.breaks; $("hays").checked=C.hays;
 }
 $("breaks").addEventListener("change",e=>C.breaks=e.target.checked);
+$("hays").addEventListener("change",e=>C.hays=e.target.checked);
 $("balance").addEventListener("click",()=>{AUTOKEYS.forEach(k=>C[k].auto=true);});
 $("reset").addEventListener("click",()=>newGame());
 let running=true;
@@ -632,19 +695,22 @@ function updateText(){
   pill("p-in",S.tot.turned?`${S.tot.turned} turned away`:S.inQ.length>2?`${S.inQ.length} waiting`:"flowing",S.tot.turned?"bad":S.inQ.length>2?"warn":"ok");
   $("r-in").textContent=`${S.tot.inTrucks} trucks · ${f0(S.tot.inTons)} t received · queue ${S.inQ.length} · at doors ${S.inDock.filter(Boolean).length}/${P.doors}`;
   const recCap=S.effDrv*P.driverRate*S.M.recvMul, recUse=(P.autoFeed?0:R.feed)+R.unload;
-  pill("p-rec",S.yard<1?"yard empty":recUse>recCap*0.95?"crew maxed":S.yard>=P.yardCap-1?"yard full":"ok",S.yard<1?"bad":recUse>recCap*0.95||S.yard>=P.yardCap-1?"warn":"ok");
+  pill("p-rec",S.M.crewAtPM?"crew at the PM":S.yard<1?"yard empty":recUse>recCap*0.95?"crew maxed":S.yard>=P.yardCap-1?"yard full":"ok",S.M.crewAtPM?"warn":S.yard<1?"bad":recUse>recCap*0.95||S.yard>=P.yardCap-1?"warn":"ok");
   $("r-rec").textContent=`${S.effDrv<C.drivers.v?`Only ${S.effDrv} of ${C.drivers.v} working · `:""}Crew ${f0(recUse)}/${f0(recCap)} t/h busy · feeding ${f1(R.feed)} · unloading ${f1(R.unload)} t/h`;
   const pulHold=level>97, pulStarve=R.feed<C.pulper.v*0.9&&C.pulper.v>1&&!pulHold;
   pill("p-pul",S.M.pulperDown?"down: incident":pulHold?"hold: chest full":pulStarve?"short of bales":C.pulper.v<0.5?"off":"running",S.M.pulperDown?"bad":pulHold||pulStarve?"warn":C.pulper.v<0.5?"":"ok");
   $("r-pul").textContent=`Fed ${f1(R.feed)} t/h OCC → ${f1(R.fiberIn)} t/h fiber (88% yield)`;
   pill("p-tank",level<5?"empty":level<C.lowLevel.v?"low":level>95?"full":"ok",level<C.lowLevel.v?"bad":level>95?"warn":"ok");
   $("r-tank").textContent=`${f0(S.tank)} of ${P.tankCap} t · in ${f1(R.fiberIn)} · out ${f1(R.fiberUse)} t/h`;
-  const pmTxt={run:S.pmSpeed<C.pmSp.v-40&&level<C.lowLevel.v?"slowed: low stock":S.pmSpeed<C.pmSp.v-40?"ramping":"at max speed",break:"sheet break",down:"down: no stock",full:"down: warehouse full",incident:"down: "+(S.M.pmDown||"incident")}[S.pm];
+  const pmTxt={run:S.pmSpeed<C.pmSp.v-40&&level<C.lowLevel.v?"slowed: low stock":S.pmSpeed<C.pmSp.v-40?"ramping":"at max speed",break:"sheet break",down:"down: no stock",full:"down: warehouse full",spools:"down: winder backed up",incident:"down: "+(S.M.pmDown||"incident")}[S.pm];
   pill("p-pm",pmTxt,S.pm==="run"?(pmTxt==="at max speed"?"ok":"warn"):"bad");
   const eff=S.t>0?100*(1-S.tot.breakMin/S.t):100;
   $("r-pm").textContent=`${f1(R.prod/C.rollW.v)} rolls/h · ${S.tot.turnups} reels turned up · ${S.tot.breaks} breaks · ${f0(eff)}% sheet time`;
+  const reelsW=Math.max(0,Math.ceil(S.winderBuf/P.jumbo-1e-6)-1);
+  pill("p-wd",S.wd==="hayout"?"hayout: crew cleaning":reelsW>=P.storeReels?"storage full":R.cut>0.5?"winding":"waiting for reel",S.wd==="hayout"?"bad":reelsW>=P.storeReels?"warn":R.cut>0.5?"ok":"");
+  $("r-wd").textContent=`${reelsW}/${P.storeReels} reels in storage · cutting ${f1(R.cut)} t/h · ${S.tot.hayouts} hayouts · ${f1(S.tot.broke)} t broke`;
   const shipCap=S.effLd*P.loaderRate*S.M.clampMul;
-  pill("p-ship",S.fg>=P.fgCap-1?"warehouse full":S.outQ.length>2?`${S.outQ.length} trucks waiting`:S.fg<5&&S.outDock.some(Boolean)?"no rolls":"ok",S.fg>=P.fgCap-1?"bad":S.outQ.length>2||(S.fg<5&&S.outDock.some(Boolean))?"warn":"ok");
+  pill("p-ship",S.M.crewAtPM?"crew at the PM":S.fg>=P.fgCap-1?"warehouse full":S.outQ.length>2?`${S.outQ.length} trucks waiting`:S.fg<5&&S.outDock.some(Boolean)?"no rolls":"ok",S.M.crewAtPM?"warn":S.fg>=P.fgCap-1?"bad":S.outQ.length>2||(S.fg<5&&S.outDock.some(Boolean))?"warn":"ok");
   $("r-ship").textContent=`${S.effLd<C.loaders.v?`Only ${S.effLd} of ${C.loaders.v} loaders · `:""}Loading ${f1(R.load)}/${f0(shipCap)} rolls/h · ${S.outDock.filter(Boolean).length}/${P.shipDoors} doors · ${S.tot.shipped/P.truckRolls} trucks out`;
 }
 
@@ -760,8 +826,14 @@ function draw(rdt){
   ctx.strokeStyle=col.machine;ctx.lineWidth=3;ctx.beginPath();ctx.moveTo(960,425);ctx.lineTo(1095,425);ctx.stroke();
   [960,1095].forEach(x=>{ctx.beginPath();ctx.arc(x,431,6,0,7);ctx.stroke();});label("forming",1028,450,11,col.muted,"center");
   // press
-  ctx.fillStyle=LV("shoe")?col.stock:col.machine;[[925,412],[925,438]].forEach(([x,y])=>{ctx.beginPath();ctx.arc(x,y,LV("shoe")?14:12,0,7);ctx.fill();});
-  label(LV("shoe")?"shoe press":"press",925,470,11,col.muted,"center");
+  // twin press: top felts as loops, one tandem bottom felt under both nips
+  ctx.strokeStyle=col.muted;ctx.lineWidth=2;
+  ctx.beginPath();ctx.moveTo(935,410);ctx.lineTo(935,392);ctx.lineTo(956,392);ctx.lineTo(956,410);ctx.stroke();
+  ctx.beginPath();ctx.moveTo(903,408);ctx.lineTo(903,388);ctx.lineTo(927,388);ctx.lineTo(927,408);ctx.stroke();
+  ctx.beginPath();ctx.moveTo(962,428);ctx.lineTo(898,428);ctx.lineTo(894,452);ctx.lineTo(962,452);ctx.lineTo(962,428);ctx.stroke();
+  ctx.fillStyle=col.machine;[[945,413],[945,437]].forEach(([x,y])=>{ctx.beginPath();ctx.arc(x,y,10,0,7);ctx.fill();});
+  [[915,411],[915,439]].forEach(([x,y],i)=>{ctx.fillStyle=LV("shoe")&&i===1?col.stock:col.machine;ctx.beginPath();ctx.arc(x,y,12,0,7);ctx.fill();});
+  label(LV("shoe")?"twin press · shoe":"twin press",930,470,11,col.muted,"center");
   // dryers
   V.cans+=rdt*S.pmSpeed/700;
   const top=[],bot=[];for(let i=0;i<10;i++){top.push(872-i*32);bot.push(856-i*32);}
@@ -769,7 +841,7 @@ function draw(rdt){
   top.forEach(x=>can(x,395));bot.forEach(x=>can(x,447));
   label("dryer section",720,483,11,col.muted,"center");
   // sheet path
-  const path=[[1095,422],[960,422],[937,425],[905,425]];
+  const path=[[1095,422],[960,422],[945,425],[915,425],[892,425]];
   for(let i=0;i<10;i++){path.push([top[i],381]);path.push([bot[i],461]);}
   path.push([530,420]);
   ctx.strokeStyle=pmRun?col.paperc:col.bad;ctx.lineWidth=pmRun?3:1.5;
@@ -779,7 +851,7 @@ function draw(rdt){
     ctx.beginPath();path.forEach(([x,y],i)=>i?ctx.lineTo(x,y):ctx.moveTo(x,y));ctx.stroke();}
   ctx.setLineDash([]);ctx.lineDashOffset=0;
   if(S.pm!=="run"){const blink=(performance.now()/500|0)%2;ctx.fillStyle=col.bad;ctx.globalAlpha=blink?1:0.5;
-    label({break:"SHEET BREAK",down:"NO STOCK: MACHINE DOWN",full:"WAREHOUSE FULL: MACHINE DOWN",incident:(S.M.pmDown||"").toUpperCase()+": MACHINE DOWN"}[S.pm],720,342,16,col.bad,"center",700);ctx.globalAlpha=1;}
+    label({break:"SHEET BREAK",down:"NO STOCK: MACHINE DOWN",full:"WAREHOUSE FULL: MACHINE DOWN",spools:"NO EMPTY SPOOLS: MACHINE DOWN",incident:(S.M.pmDown||"").toUpperCase()+": MACHINE DOWN"}[S.pm],720,342,16,col.bad,"center",700);ctx.globalAlpha=1;}
   mono(`${f0(S.pmSpeed)} fpm · ${f1(R.prod)} t/h`,720,515,13,col.ink,"center");
 
   // reel
@@ -788,7 +860,14 @@ function draw(rdt){
   ctx.fillStyle=col.machine;ctx.beginPath();ctx.arc(500,420,4,0,7);ctx.fill();
   label("reel",500,475,11,col.muted,"center");mono(`${f1(S.reel)}/${P.jumbo} t`,500,370,11,col.muted,"center");
   // winder
-  ctx.fillStyle=col.machine;rr(395,402,36,36,3);ctx.fill();label("winder",413,395,11,col.muted,"center");
+  ctx.fillStyle=col.machine;rr(395,402,36,36,3);ctx.fill();label("6  WINDER",388,428,13,col.ink,"right",700);
+  {const nw=Math.ceil(S.winderBuf/P.jumbo-1e-6);
+    for(let k=0;k<nw;k++){ctx.fillStyle=col.paperc;ctx.strokeStyle=col.machine;ctx.lineWidth=1;ctx.beginPath();ctx.arc(447,454+k*15,6,0,7);ctx.fill();ctx.stroke();}}
+  if(S.wd==="hayout"){for(let k=0;k<7;k++){ctx.strokeStyle=col.paperc;ctx.lineWidth=5;ctx.beginPath();const ox=395+k*6;ctx.moveTo(ox,402);
+      for(let y=402;y>300;y-=8)ctx.lineTo(ox+Math.sin(y/14+performance.now()/90+k)*10,y);ctx.stroke();ctx.strokeStyle=col.machine;ctx.lineWidth=0.6;ctx.stroke();}
+    for(let k=0;k<14;k++){const ph=(performance.now()/900+k/14)%1;ctx.fillStyle=col.paperc;ctx.save();ctx.translate(370+((k*47)%90),310+ph*120);ctx.rotate(ph*9+k);ctx.fillRect(-5,-3,10,6);ctx.strokeStyle=col.muted;ctx.strokeRect(-5,-3,10,6);ctx.restore();}
+    tag("HAYOUT! CREW CLEANING UP",360,300,"left");}
+  if(S.pm==="break")tag("ALL HANDS: RETHREADING",720,535,"left");
 
   // roll conveyor
   ctx.strokeStyle=col.machine;ctx.lineWidth=5;ctx.beginPath();ctx.moveTo(413,440);ctx.lineTo(413,520);ctx.lineTo(362,520);ctx.stroke();
@@ -799,7 +878,7 @@ function draw(rdt){
 
   // warehouse
   ctx.fillStyle=col.panel;ctx.strokeStyle=col.machine;ctx.lineWidth=1.5;rr(110,478,252,174,4);ctx.fill();ctx.stroke();
-  label("6  ROLL WAREHOUSE & SHIPPING",116,474,15,col.ink,"left",700);
+  label("7  ROLL WAREHOUSE & SHIPPING",116,474,15,col.ink,"left",700);
   const filled=Math.min(84,Math.ceil(S.fg/(P.fgCap/84)));
   for(let i=0;i<84;i++){const cx=150+(i%12)*17.5,cy=636-Math.floor(i/12)*17.5;
     ctx.beginPath();ctx.arc(cx,cy,7,0,7);
@@ -848,9 +927,9 @@ function drawChaos(){
       case "dryerfire":{for(let k=0;k<10;k++)flame(560+k*32,(k%2?447:395)-6,22+8*flick(k));smoke(640,340,now);smoke(800,340,now+700);hazard(515,362,640,128);break;}
       case "fabric":{ctx.strokeStyle=col.bad;ctx.lineWidth=3;ctx.beginPath();ctx.moveTo(960,425);ctx.quadraticCurveTo(1028,505+6*flick(1),1095,425);ctx.stroke();
         ctx.beginPath();ctx.moveTo(1050,460);ctx.lineTo(1062,500+5*flick(2));ctx.stroke();hazard(950,375,205,140);tag("FABRIC OFF",960,368,"left");break;}
-      case "felt":{ctx.strokeStyle=col.bad;ctx.lineWidth=3;[[925,412],[925,438]].forEach(([x,y])=>{ctx.beginPath();ctx.arc(x,y,15,0,7);ctx.stroke();});tag("FELT",905,492,"left");break;}
-      case "slime":{ctx.fillStyle=col.slime;for(let k=0;k<20;k++){const x=545+k*17,y=k%2?461:381;ctx.globalAlpha=0.85;ctx.beginPath();ctx.arc(x,y,4+2*flick(k),0,7);ctx.fill();}
-        ctx.globalAlpha=1;tag("SLIME: SPEED CAPPED",525,368,"left");break;}
+      case "felt":{ctx.strokeStyle=col.bad;ctx.lineWidth=3;[[945,413],[945,437],[915,411],[915,439]].forEach(([x,y])=>{ctx.beginPath();ctx.arc(x,y,14,0,7);ctx.stroke();});tag("FELT",905,492,"left");break;}
+      case "slime":{ctx.fillStyle=col.beaver;for(let k=0;k<20;k++){const x=545+k*17,y=k%2?461:381;ctx.globalAlpha=0.85;ctx.beginPath();ctx.arc(x,y,4+2*flick(k),0,7);ctx.fill();}
+        ctx.globalAlpha=1;tag("SCABS: SPEED CAPPED, HAYOUT RISK",525,368,"left");break;}
       case "ragger":{ctx.strokeStyle=col.bad;ctx.lineWidth=4;ctx.beginPath();ctx.moveTo(735,170);ctx.lineTo(785,220);ctx.moveTo(785,170);ctx.lineTo(735,220);ctx.stroke();
         ctx.strokeStyle=col.machine;ctx.lineWidth=2;ctx.beginPath();ctx.moveTo(800,160);for(let k=0;k<8;k++)ctx.lineTo(810+k*6,150-k*5+4*Math.sin(k+now/300));ctx.stroke();tag("RAGGER STOPPED",818,180,"left");break;}
       case "flood":{ctx.globalAlpha=0.38;ctx.fillStyle=col.water;ctx.beginPath();ctx.moveTo(712,232);ctx.quadraticCurveTo(620,250,520,262);ctx.lineTo(520,298);ctx.lineTo(258,298);ctx.lineTo(258,236);
@@ -925,11 +1004,583 @@ function drawTrend(){
   });
 }
 
+/* ---------- 3D view (Three.js r128) ---------- */
+const G3={on:false,ok:false};
+(function init3D(){
+  const host=$("view3d"),glc=$("gl"),toggle=$("viewToggle");
+  if(typeof THREE==="undefined"){toggle.hidden=true;return;}
+  let renderer;
+  try{renderer=new THREE.WebGLRenderer({canvas:glc,antialias:true,powerPreference:"high-performance"});}
+  catch(e){toggle.hidden=true;return;}
+  if(!renderer.getContext()){toggle.hidden=true;return;}
+  G3.ok=true;
+  const mobile=matchMedia("(pointer: coarse)").matches;
+  renderer.setPixelRatio(Math.min(mobile?1.5:2,window.devicePixelRatio||1));
+  renderer.shadowMap.enabled=true;renderer.shadowMap.type=THREE.PCFSoftShadowMap;
+  const scene=new THREE.Scene();
+  const camera=new THREE.PerspectiveCamera(30,16/9,1,800);
+
+  /* palette: every material is bound to a CSS token so theme switches recolor the scene */
+  const MATS=[];
+  function tok(name){return getComputedStyle(document.documentElement).getPropertyValue("--"+name).trim()||"#888";}
+  function mat(token,opts={}){const m=new THREE.MeshStandardMaterial(Object.assign({roughness:0.85,metalness:0.05,flatShading:true},opts));m.userData.token=token;MATS.push(m);return m;}
+  let paletteKey="";
+  function applyPalette(){
+    const key=["g-sky","g-ground","bg","ink"].map(tok).join();
+    if(key===paletteKey)return;paletteKey=key;
+    MATS.forEach(m=>m.color.set(tok(m.userData.token)));
+    scene.background=new THREE.Color(tok("g-sky"));
+    const dark=new THREE.Color(tok("bg")).getHSL({}).l<0.3;
+    hemi.color.set(dark?"#9fb3b0":"#ffffff");hemi.groundColor.set(tok("g-ground"));
+    baseHemi=dark?0.55:0.62;baseSun=dark?0.6:0.72;
+  }
+
+  /* lights */
+  const hemi=new THREE.HemisphereLight(0xffffff,0x888888,0.85);scene.add(hemi);
+  const sun=new THREE.DirectionalLight(0xffffff,0.9);sun.position.set(-40,90,60);
+  sun.castShadow=true;const sz=mobile?1024:2048;sun.shadow.mapSize.set(sz,sz);
+  Object.assign(sun.shadow.camera,{left:-90,right:90,top:60,bottom:-60,near:10,far:250});sun.shadow.bias=-0.0008;
+  sun.target.position.set(-5,0,5);scene.add(sun,sun.target);
+  let baseHemi=0.85,baseSun=0.9;
+
+  /* helpers */
+  const W=(x,y)=>[(x-600)/10,(y-330)/10];
+  const machH=y=>2.2+(447-y)*3/52;
+  function box(w,h,d,m,x,y,z,parent=scene,shadow=true){const o=new THREE.Mesh(new THREE.BoxGeometry(w,h,d),m);o.position.set(x,y,z);o.castShadow=shadow;o.receiveShadow=true;parent.add(o);return o;}
+  function cylZ(r,len,m,x,y,z,seg=14,parent=scene){const g=new THREE.CylinderGeometry(r,r,len,seg);g.rotateX(Math.PI/2);const o=new THREE.Mesh(g,m);o.position.set(x,y,z);o.castShadow=true;o.receiveShadow=true;parent.add(o);return o;}
+  function slab(x0,x1,z0,z1,m,y=0.02){const o=new THREE.Mesh(new THREE.PlaneGeometry(x1-x0,z1-z0),m);o.rotation.x=-Math.PI/2;o.position.set((x0+x1)/2,y,(z0+z1)/2);o.receiveShadow=true;scene.add(o);return o;}
+  function pipe(pts,r,m,parent=scene){const up=new THREE.Vector3(0,1,0);
+    for(let i=0;i<pts.length-1;i++){const a=new THREE.Vector3(...pts[i]),b=new THREE.Vector3(...pts[i+1]),d=b.clone().sub(a),L=d.length();
+      const o=new THREE.Mesh(new THREE.CylinderGeometry(r,r,L,10),m);o.position.copy(a).add(b).multiplyScalar(0.5);o.quaternion.setFromUnitVectors(up,d.normalize());o.castShadow=true;parent.add(o);}
+    pts.slice(1,-1).forEach(p=>{const s=new THREE.Mesh(new THREE.SphereGeometry(r*1.15,10,8),m);s.position.set(...p);parent.add(s);});}
+
+  const M={ground:mat("g-ground"),slab:mat("g-slab"),asphalt:mat("g-asphalt"),wall:mat("g-wall"),steel:mat("machine",{metalness:0.3,roughness:0.6}),metal:mat("g-metal",{metalness:0.35,roughness:0.5}),
+    kraft:mat("kraft"),stock:mat("stock"),paper:mat("paperc",{roughness:0.95}),ink:mat("ink"),warn:mat("warn"),ok:mat("ok"),bad:mat("bad"),
+    lane:mat("g-lane"),glass:mat("stock",{transparent:true,opacity:0.16,depthWrite:false,side:THREE.DoubleSide}),robot:mat("stock",{roughness:0.4}),off:mat("smoke")};
+  M.liquid=mat("stock",{roughness:0.3});M.efork=mat("stock");
+
+  /* ---- step 1: static plant ---- */
+  slab(-95,75,-45,48,M.ground,0);
+  slab(-95,-34.4,-5.2,-2.4,M.asphalt);              // inbound road
+  slab(-46,-34.4,-24.5,-2.4,M.asphalt,0.03);        // receiving apron
+  slab(-95,-49,11.2,13.8,M.asphalt);                // outbound road
+  slab(-60,-49,11.2,33,M.asphalt,0.03);             // shipping apron
+  slab(-25,64,3,16,M.slab,0.03);                    // machine hall floor
+  slab(4,44,-25,-2,M.slab,0.03);                    // stock prep pad
+  for(let x=-92;x<-36;x+=5)box(2.4,0.02,0.18,M.lane,x,0.05,-3.8,scene,false);
+  for(let x=-92;x<-50;x+=5)box(2.4,0.02,0.18,M.lane,x,0.05,12.5,scene,false);
+
+  // receiving shed: floor, three walls, door wall rebuilt when docks change
+  slab(-34.4,-8,-23.5,-3,M.slab,0.04);
+  box(26.4,2.2,0.3,M.wall,-21.2,1.1,-23.5);box(26.4,2.2,0.3,M.wall,-21.2,1.1,-3);box(0.3,2.2,20.5,M.wall,-8,1.1,-13.25);
+  // warehouse: floor + walls
+  slab(-49,-23.8,14.8,32.2,M.slab,0.04);
+  box(25.2,2.6,0.3,M.wall,-36.4,1.3,14.8);box(25.2,2.6,0.3,M.wall,-36.4,1.3,32.2);box(0.3,2.6,17.4,M.wall,-23.8,1.3,23.5);
+  const doorWalls={in:new THREE.Group(),out:new THREE.Group()};scene.add(doorWalls.in,doorWalls.out);let doorKey="";
+  function buildDoorWall(group,x,z0,z1,doorsZ,h){group.clear();const gap=2.6,edges=[z0,...doorsZ.flatMap(z=>[z-gap/2,z+gap/2]),z1];
+    for(let i=0;i<edges.length;i+=2){const a=edges[i],b=edges[i+1];if(b-a>0.05)box(0.3,h,b-a,M.wall,x,h/2,(a+b)/2,group);}
+    doorsZ.forEach(z=>{box(0.5,0.25,gap,M.warn,x,h-0.1,z,group,false);});}
+  function rebuildDoors(){const k=P.doors+"|"+P.shipDoors;if(k===doorKey)return;doorKey=k;
+    buildDoorWall(doorWalls.in,-34.4,-23.5,-3,Array.from({length:P.doors},(_,d)=>W(0,inY(d))[1]),2.2);
+    buildDoorWall(doorWalls.out,-49,14.8,32.2,Array.from({length:P.shipDoors},(_,d)=>W(0,outY(d))[1]),2.6);}
+
+  // conveyor to pulper
+  const cA=new THREE.Vector3(-8,0.4,-11.5),cB=new THREE.Vector3(11,3.9,-16.6),cDir=cB.clone().sub(cA),cLen=cDir.length();
+  const belt=new THREE.Mesh(new THREE.BoxGeometry(cLen,0.3,1.6),M.steel);{const o=belt;o.position.copy(cA).add(cB).multiplyScalar(0.5);
+    o.quaternion.setFromUnitVectors(new THREE.Vector3(1,0,0),cDir.clone().normalize());o.castShadow=true;scene.add(o);
+    [0.25,0.55,0.85].forEach(f=>{const p=cA.clone().lerp(cB,f);box(0.3,p.y,0.3,M.steel,p.x,p.y/2,p.z-0.6);box(0.3,p.y,0.3,M.steel,p.x,p.y/2,p.z+0.6);});}
+  const beltBales=new THREE.InstancedMesh(new THREE.BoxGeometry(1,0.8,1),M.kraft,12);beltBales.castShadow=true;scene.add(beltBales);
+
+  // pulper vat with rotor
+  const pulper=new THREE.Group();pulper.position.set(16,0,-13.5);scene.add(pulper);
+  {const v=new THREE.Mesh(new THREE.CylinderGeometry(4.2,4.4,3.4,24,1,true),mat("g-wall",{side:THREE.DoubleSide}));v.position.y=1.7;v.castShadow=true;v.receiveShadow=true;pulper.add(v);
+    const rim=new THREE.Mesh(new THREE.TorusGeometry(4.2,0.15,6,28),M.steel);rim.rotation.x=Math.PI/2;rim.position.y=3.4;pulper.add(rim);
+    const s=new THREE.Mesh(new THREE.CylinderGeometry(4.05,4.05,0.2,24),M.stock);s.position.y=2.9;pulper.add(s);}
+  const rotor=new THREE.Group();rotor.position.y=3.05;pulper.add(rotor);
+  box(6,0.18,0.5,M.steel,0,0,0,rotor,false);box(0.5,0.18,6,M.steel,0,0,0,rotor,false);
+  const pulpStock=pulper.children[2];
+
+  // chest tank: glass shell + liquid + target/low rings
+  const chest=new THREE.Group();chest.position.set(34.5,0,-15);scene.add(chest);
+  const shell=new THREE.Mesh(new THREE.CylinderGeometry(1,1,10,28,1,true),M.glass);shell.position.y=5;chest.add(shell);
+  const shellRim=new THREE.Mesh(new THREE.TorusGeometry(1,0.04,6,32),M.steel);shellRim.rotation.x=Math.PI/2;shellRim.position.y=10;chest.add(shellRim);
+  const baseRing=new THREE.Mesh(new THREE.CylinderGeometry(1.03,1.03,0.4,28),M.steel);baseRing.position.y=0.2;chest.add(baseRing);
+  const liquid=new THREE.Mesh(new THREE.CylinderGeometry(0.96,0.96,1,28),M.liquid);liquid.castShadow=true;chest.add(liquid);
+  const ringT=new THREE.Mesh(new THREE.TorusGeometry(1.06,0.05,6,32),M.ok),ringL=new THREE.Mesh(new THREE.TorusGeometry(1.06,0.05,6,32),M.bad);
+  ringT.rotation.x=ringL.rotation.x=Math.PI/2;chest.add(ringT,ringL);
+  let chestR=0;
+  pipe([[20.2,1,-11.5],[30,1,-11.5]],0.35,M.stock);
+  pipe([[38.5,1,-11],[57,1,-11],[57,1,6.5],[57,2.4,6.5]],0.35,M.stock);
+
+  // paper machine
+  const zc=9.1,CD=6.4;
+  box(5.5,3,CD,M.steel,57.3,1.5+0.6,zc);                                  // headbox
+  box(14,0.25,CD,M.steel,47.8,2.4,zc);                                     // forming table
+  const wireRolls=[cylZ(0.5,CD+0.4,M.metal,41,2.4,zc),cylZ(0.5,CD+0.4,M.metal,54.5,2.4,zc)];
+  // twin press: 1st press nip at x 37, 2nd press nip at x 32, each with its own top felt and one tandem bottom felt
+  const press=[cylZ(1.05,CD+0.4,M.metal,37,4.45,zc,18),cylZ(1.05,CD+0.4,M.metal,37,2.35,zc,18),cylZ(1.2,CD+0.4,M.metal,32,4.6,zc,18),cylZ(1.2,CD+0.4,M.metal,32,2.2,zc,18)];
+  M.felt=mat("g-felt",{roughness:1});
+  const fc=document.createElement("canvas");fc.width=64;fc.height=4;const fx2=fc.getContext("2d");fx2.fillStyle="#fff";fx2.fillRect(0,0,64,4);fx2.fillStyle="#9a9a9a";fx2.fillRect(0,0,10,4);
+  const feltTex=new THREE.CanvasTexture(fc);feltTex.wrapS=THREE.RepeatWrapping;
+  const feltMat=mat("g-felt",{map:feltTex,side:THREE.DoubleSide,flatShading:false,roughness:1});
+  function feltLoop(pts){const P2=[...pts,pts[0]],pos=[],uv=[],idx=[];let acc=0;
+    P2.forEach((p,i)=>{if(i)acc+=Math.hypot(p[0]-P2[i-1][0],p[1]-P2[i-1][1]);pos.push(p[0],p[1],zc-CD/2+0.1,p[0],p[1],zc+CD/2-0.1);uv.push(acc/2.5,0,acc/2.5,1);if(i){const b=(i-1)*2;idx.push(b,b+1,b+2,b+1,b+3,b+2);}});
+    const g=new THREE.BufferGeometry();g.setAttribute("position",new THREE.Float32BufferAttribute(pos,3));g.setAttribute("uv",new THREE.Float32BufferAttribute(uv,2));g.setIndex(idx);g.computeVertexNormals();
+    const m=new THREE.Mesh(g,feltMat);m.castShadow=true;m.receiveShadow=true;scene.add(m);return m;}
+  const feltGuides=[];
+  function guide(x,y){feltGuides.push(cylZ(0.28,CD+0.2,M.steel,x,y,zc,10));}
+  // 1st press top felt
+  feltLoop([[35.6,3.47],[38.4,3.47],[39.4,5.6],[39.2,7.1],[35.2,7.1],[34.9,5.6]]);[[39.4,5.6],[39.2,7.1],[35.2,7.1],[34.9,5.6]].forEach(p=>guide(...p));
+  // 2nd press top felt
+  feltLoop([[30.5,3.47],[33.5,3.47],[34.2,6.1],[33.8,7.6],[30.3,7.6],[29.8,6.1]]);[[34.2,6.1],[33.8,7.6],[30.3,7.6],[29.8,6.1]].forEach(p=>guide(...p));
+  // tandem bottom felt: picks the sheet up off the wire and carries it through both nips
+  feltLoop([[41.2,2.95],[38,3.32],[30.6,3.32],[29.6,2.4],[29.6,0.55],[40.6,0.55],[41.6,1.7]]);[[29.6,2.4],[29.6,0.55],[40.6,0.55],[41.6,1.7]].forEach(p=>guide(...p));
+  // press frames make the section stand out
+  [zc-CD/2-0.55,zc+CD/2+0.55].forEach(z=>{box(1.1,6.2,0.5,M.steel,37,3.1,z);box(1.3,6.6,0.5,M.steel,32,3.3,z);box(6.5,0.5,0.5,M.steel,34.5,7.9,z);});
+  const shoeMat=M.stock;
+  const cansTop=[],cansBot=[];
+  for(let i=0;i<10;i++){cansTop.push(cylZ(1.3,CD,M.metal,(872-i*32-600)/10,5.4,zc,12));cansBot.push(cylZ(1.3,CD,M.metal,(856-i*32-600)/10,2.4,zc,12));}
+  // machine frame rails + dryer hood frame
+  [zc-CD/2-0.6,zc+CD/2+0.6].forEach(z=>{box(74,0.5,0.4,M.steel,26,0.25,z);for(let x=-6;x<=30;x+=6)box(0.35,7.4,0.35,M.steel,x,3.7,z);box(37,0.35,0.35,M.steel,12,7.4,z);});
+  // reel + stand, winder, roll conveyor
+  [zc-CD/2-0.5,zc+CD/2+0.5].forEach(z=>box(0.6,4.2,0.6,M.steel,-10,2.1,z));
+  const reelCore=cylZ(0.25,CD+1.4,M.steel,-10,4.2,zc,8);
+  const reel=cylZ(1,CD,M.paper,-10,4.2,zc,24);
+  box(1.4,0.5,9,M.steel,-18.7,0.25,15.5);box(6,0.5,1.4,M.steel,-21.5,0.25,19.4);
+  const rollGeo=new THREE.CylinderGeometry(0.62,0.62,1.4,16);
+  const beltRolls=new THREE.InstancedMesh(rollGeo,M.paper,16);beltRolls.castShadow=true;scene.add(beltRolls);
+
+  // sheet ribbon along the machine
+  const tc=document.createElement("canvas");tc.width=64;tc.height=4;const tx=tc.getContext("2d");tx.fillStyle="#fff";tx.fillRect(0,0,64,4);tx.fillStyle="#c8c8c8";tx.fillRect(0,0,6,4);
+  const sheetTex=new THREE.CanvasTexture(tc);sheetTex.wrapS=THREE.RepeatWrapping;
+  const sheetMat=mat("paperc",{map:sheetTex,side:THREE.DoubleSide,flatShading:false,roughness:1});
+  const sheetPts=[[57.3,3.4],[54.5,2.95],[41,3.0],[37,3.4],[32,3.4],[29,3.6]];
+  for(let i=0;i<10;i++){sheetPts.push([(872-i*32-600)/10,6.75]);sheetPts.push([(856-i*32-600)/10,1.05]);}
+  let sheetMesh=null;
+  function buildSheet(reelR){if(sheetMesh){scene.remove(sheetMesh);sheetMesh.geometry.dispose();}
+    const pts=[...sheetPts,[-10,4.2+reelR]],pos=[],uv=[],idx=[];let acc=0;
+    pts.forEach((p,i)=>{if(i)acc+=Math.hypot(p[0]-pts[i-1][0],p[1]-pts[i-1][1]);
+      pos.push(p[0],p[1],zc-CD/2+0.2,p[0],p[1],zc+CD/2-0.2);uv.push(acc/3,0,acc/3,1);
+      if(i){const b=(i-1)*2;idx.push(b,b+1,b+2,b+1,b+3,b+2);}});
+    const g=new THREE.BufferGeometry();g.setAttribute("position",new THREE.Float32BufferAttribute(pos,3));g.setAttribute("uv",new THREE.Float32BufferAttribute(uv,2));g.setIndex(idx);g.computeVertexNormals();
+    sheetMesh=new THREE.Mesh(g,sheetMat);sheetMesh.receiveShadow=true;scene.add(sheetMesh);}
+  buildSheet(1);let sheetR=1;
+
+  // inventory: bale stacks and roll stacks
+  const bales=new THREE.InstancedMesh(new THREE.BoxGeometry(1.2,0.9,1.2),M.kraft,168);bales.castShadow=true;bales.receiveShadow=true;scene.add(bales);
+  {const m4=new THREE.Matrix4();for(let i=0;i<168;i++){const layer=i%3,col=Math.floor(i/3)%14,row=Math.floor(i/42);
+    m4.makeTranslation(-30+col*1.45,0.5+layer*0.92,-7+(-row)*3.2);bales.setMatrixAt(i,m4);}}
+  const rolls=new THREE.InstancedMesh(rollGeo,M.paper,84);rolls.castShadow=true;rolls.receiveShadow=true;scene.add(rolls);
+  {const m4=new THREE.Matrix4();for(let i=0;i<84;i++){m4.makeTranslation(-45+(i%12)*1.75,0.74,30.6-Math.floor(i/12)*1.75);rolls.setMatrixAt(i,m4);}}
+
+  /* ---- vehicles ---- */
+  function makeTruck(kind){const g=new THREE.Group();
+    box(4.1,0.35,1.7,M.steel,-0.35,0.75,0,g);box(1.2,1.6,1.7,kind==="in"?M.kraft:M.stock,1.85,1.35,0,g);box(0.15,0.6,1.5,M.ink,2.46,1.65,0,g,false);
+    [-1.8,-0.9,1.7].forEach(x=>[-0.8,0.8].forEach(z=>{const w=cylZ(0.38,0.3,M.ink,x,0.38,z,10,g);w.castShadow=false;}));
+    const cargo=[];for(let k=0;k<8;k++){const c=kind==="in"?box(0.85,0.75,0.75,M.kraft,-2+(k%4)*0.95,1.35+Math.floor(k/4)*0.0,(Math.floor(k/4)?0.42:-0.42),g)
+      :(()=>{const r=new THREE.Mesh(new THREE.CylinderGeometry(0.4,0.4,0.9,12),M.paper);r.position.set(-2+(k%4)*0.95,1.38,Math.floor(k/4)?0.42:-0.42);r.castShadow=true;g.add(r);return r;})();cargo.push(c);}
+    g.userData={cargo,kind,heading:0};scene.add(g);return g;}
+  const truckPool={in:[],out:[]},truckMap=new Map();
+  function forklift(m){const g=new THREE.Group();box(1.1,0.7,0.8,m,0,0.55,0,g);box(0.12,1.6,0.7,M.steel,0.6,0.9,0,g);box(0.7,0.08,0.6,M.steel,0.95,0.25,0,g,false);
+    const load=box(0.7,0.6,0.7,M.kraft,1.0,0.6,0,g);g.userData.load=load;scene.add(g);return g;}
+  function clamp3(m){const g=new THREE.Group();box(1.1,0.7,0.8,m,0,0.55,0,g);box(0.12,1.8,0.7,M.steel,0.6,1,0,g);box(0.5,0.6,0.1,M.steel,0.9,0.9,-0.45,g,false);box(0.5,0.6,0.1,M.steel,0.9,0.9,0.45,g,false);
+    const r=new THREE.Mesh(new THREE.CylinderGeometry(0.4,0.4,0.9,12),M.paper);r.position.set(0.95,0.95,0);g.add(r);g.userData.load=r;scene.add(g);return g;}
+  function robot(){const g=new THREE.Group();box(1.1,0.35,1.1,M.robot,0,0.3,0,g);const l=box(0.3,0.08,0.3,M.ok,0,0.52,0,g,false);g.userData.light=l;scene.add(g);return g;}
+  const lifts=[],loaders=[],robots=[];
+  function ensure(arr,n,make){while(arr.length<n)arr.push(make());arr.forEach((o,i)=>o.visible=i<n);}
+
+  /* ---- labels (HTML over the canvas) ---- */
+  const labelHost=$("labels3d");
+  const LABELS=[
+    {p:[-70,0,-8],t:()=>["1 Inbound OCC",S.inQ.length?S.inQ.length+" trucks waiting":"road clear"]},
+    {p:[-21,2.8,-24],t:()=>["2 Receiving",f0(S.yard)+" t bales"]},
+    {p:[16,4.5,-18.5],t:()=>["3 Pulper",f1(S.rates.feed)+" t/h"]},
+    {p:[34.5,11.2,-15],t:()=>["4 Stock chest",f0(S.tank/P.tankCap*100)+" %"]},
+    {p:[34.5,9.6,zc-1.5],t:()=>["Twin press",LV("shoe")?"shoe in 2nd press":"tandem bottom felt"]},
+    {p:[10,8.4,zc],t:()=>["5 "+NAME+(S.pm==="run"?"":" · "+({break:"sheet break: all hands rethreading",down:"no stock",full:"warehouse full",spools:"winder backed up",incident:S.M.pmDown||"down"}[S.pm]||"")),f0(S.pmSpeed)+" fpm · "+f1(S.rates.prod)+" t/h"],cls:()=>S.pm==="run"?"":"bad"},
+    {p:[-10,9.2,zc],t:()=>["Reel",f1(S.reel)+" / "+P.jumbo+" t"]},
+    {p:[-20,1.5,zc+4],t:()=>["6 Winder"+(S.wd==="hayout"?" · HAYOUT!":""),S.wd==="hayout"?"crew cleaning up":Math.max(0,Math.ceil(S.winderBuf/P.jumbo-1e-6)-1)+"/"+P.storeReels+" reels stored · "+f1(S.rates.cut)+" t/h"],cls:()=>S.wd==="hayout"},
+    {p:[-36.4,3.2,14.8],t:()=>["7 Roll warehouse",f0(S.fg)+" rolls"]},
+  ];
+  LABELS.forEach(L=>{L.el=document.createElement("div");L.el.className="lbl";L.b=document.createElement("b");L.s=document.createElement("span");L.el.append(L.b,L.s);labelHost.appendChild(L.el);L.v=new THREE.Vector3(...L.p);});
+  const banner=$("banner3d"),chips=$("chips3d");
+
+  /* ---- camera controls: drag to orbit, wheel/pinch to zoom ---- */
+  const target=new THREE.Vector3(-8,0,4);const DEF={th:-0.18,ph:0.92,r:150};const cam={...DEF};
+  let placeCam=function(){const rr=cam.r*(host.clientWidth<600?1.35:1);
+    camera.position.set(target.x+rr*Math.sin(cam.ph)*Math.sin(cam.th),target.y+rr*Math.cos(cam.ph),target.z+rr*Math.sin(cam.ph)*Math.cos(cam.th));camera.lookAt(target);};
+  const DEFT=target.clone();let goal=null;
+  // move the look-at point across the ground, in screen directions
+  function panBy(dx,dy){goal=null;const s=cam.r*(host.clientWidth<600?1.35:1)*0.0016;
+    const rx=Math.cos(cam.th),rz=-Math.sin(cam.th),fx=-Math.sin(cam.th),fz=-Math.cos(cam.th);
+    target.x=clamp(target.x-(rx*dx-fx*dy)*s,-85,70);target.z=clamp(target.z-(rz*dx-fz*dy)*s,-40,48);}
+  const _place=placeCam;
+  placeCam=function(){if(goal){target.lerp(goal.t,0.12);cam.r+=(goal.r-cam.r)*0.12;cam.th=lerpAng(cam.th,goal.th,0.12);cam.ph+=(goal.ph-cam.ph)*0.12;
+      if(target.distanceTo(goal.t)<0.2&&Math.abs(goal.r-cam.r)<0.5)goal=null;}_place();};
+  const ptrs=new Map();let pinch0=0,r0=0,mid0=null,panBtn=false;
+  const mid=()=>{const [a,b]=[...ptrs.values()];return {x:(a.x+b.x)/2,y:(a.y+b.y)/2,d:Math.hypot(a.x-b.x,a.y-b.y)};};
+  glc.addEventListener("contextmenu",e=>e.preventDefault());
+  glc.addEventListener("pointerdown",e=>{glc.setPointerCapture(e.pointerId);ptrs.set(e.pointerId,{x:e.clientX,y:e.clientY});goal=null;
+    panBtn=e.button===2||e.button===1||e.shiftKey;
+    if(ptrs.size===2){const m=mid();pinch0=m.d;r0=cam.r;mid0=m;}});
+  glc.addEventListener("pointermove",e=>{const p=ptrs.get(e.pointerId);if(!p)return;const dx=e.clientX-p.x,dy=e.clientY-p.y;
+    if(ptrs.size===1){if(panBtn)panBy(dx,dy);else{cam.th-=dx*0.006;if(e.pointerType!=="touch")cam.ph=clamp(cam.ph-dy*0.005,0.25,1.35);}}
+    p.x=e.clientX;p.y=e.clientY;
+    if(ptrs.size===2){const m=mid();if(pinch0>0)cam.r=clamp(r0*pinch0/m.d,30,240);if(mid0)panBy(m.x-mid0.x,m.y-mid0.y);mid0=m;}});
+  const up=e=>{ptrs.delete(e.pointerId);pinch0=0;mid0=null;};glc.addEventListener("pointerup",up);glc.addEventListener("pointercancel",up);
+  glc.addEventListener("wheel",e=>{e.preventDefault();goal=null;if(e.shiftKey||Math.abs(e.deltaX)>Math.abs(e.deltaY)&&!e.ctrlKey)panBy(-e.deltaX||-e.deltaY,0);else cam.r=clamp(cam.r*Math.exp(e.deltaY*(e.ctrlKey?0.01:0.001)),30,240);},{passive:false});
+  // keyboard: arrows/WASD move, Q/E rotate, +/- zoom
+  glc.addEventListener("keydown",e=>{const k=e.key.toLowerCase(),st=24;let used=true;
+    if(k==="arrowleft"||k==="a")panBy(st,0);else if(k==="arrowright"||k==="d")panBy(-st,0);else if(k==="arrowup"||k==="w")panBy(0,st);else if(k==="arrowdown"||k==="s")panBy(0,-st);
+    else if(k==="q")cam.th+=0.08;else if(k==="e")cam.th-=0.08;else if(k==="+"||k==="=")cam.r=clamp(cam.r*0.9,30,240);else if(k==="-")cam.r=clamp(cam.r*1.1,30,240);else used=false;
+    if(used){e.preventDefault();goal=null;}});
+  // on-screen pad: press and hold to move
+  let padDir=null;
+  $("pad").querySelectorAll("button").forEach(b=>{const [px,py]=b.dataset.p.split(",").map(Number);
+    b.addEventListener("pointerdown",e=>{e.preventDefault();b.setPointerCapture(e.pointerId);padDir=[px,py];});
+    ["pointerup","pointercancel","pointerleave"].forEach(t=>b.addEventListener(t,()=>padDir=null));});
+  G3.padTick=rdt=>{if(padDir)panBy(-padDir[0]*500*rdt,-padDir[1]*500*rdt);};
+  const JUMPS={trucks:[-62,2,70],recv:[-21,-13,58],pulp:[25,-14,60],pm:[22,9,78],wd:[-17,7,42],wh:[-37,24,62]};
+  document.querySelectorAll("#jumps button").forEach(b=>b.addEventListener("click",()=>{const [x,z,r]=JUMPS[b.dataset.j];goal={t:new THREE.Vector3(x,0,z),r,th:DEF.th,ph:0.85};}));
+  $("viewReset").addEventListener("click",()=>{goal={t:DEFT.clone(),r:DEF.r,th:DEF.th,ph:DEF.ph};});
+  $("viewShadows").addEventListener("change",e=>{renderer.shadowMap.enabled=e.target.checked;MATS.forEach(m=>m.needsUpdate=true);});
+  if(mobile){$("viewShadows").checked=false;renderer.shadowMap.enabled=false;}
+
+  function resize(){const w=host.clientWidth,h=host.clientHeight;host.classList.toggle("compact",w<640);if(!w||!h)return;renderer.setSize(w,h,false);camera.aspect=w/h;camera.updateProjectionMatrix();}
+  new ResizeObserver(resize).observe(host);
+
+  /* ---- per-frame update from sim state ---- */
+  const m4=new THREE.Matrix4(),q=new THREE.Quaternion(),v3=new THREE.Vector3(),one=new THREE.Vector3(1,1,1),tmp=new THREE.Vector3();
+  function lerpAng(a,b,t){let d=b-a;while(d>Math.PI)d-=2*Math.PI;while(d<-Math.PI)d+=2*Math.PI;return a+d*t;}
+  function placeTruck(t,role,rdt){let g=truckMap.get(t);
+    if(!g){const pool=truckPool[t.kind||role.kind];g=pool.find(o=>!o.userData.busy)||(()=>{const o=makeTruck(t.kind||role.kind);pool.push(o);return o;})();
+      g.userData.busy=true;truckMap.set(t,g);const [x,z]=W(t.x+23,t.y);g.position.set(x,0,z);g.userData.heading=role.leaving?Math.PI:0;}
+    g.userData.seen=true;g.visible=true;const [x,z]=W(t.x+23,t.y);g.position.set(x,0,z);
+    g.userData.heading=lerpAng(g.userData.heading,role.leaving?Math.PI:0,Math.min(1,rdt*4));g.rotation.y=g.userData.heading;
+    const frac=g.userData.kind==="in"?t.load/P.truckLoad:t.load/P.truckRolls,n=Math.round(clamp(frac,0,1)*8);
+    g.userData.cargo.forEach((c,k)=>c.visible=k<n);}
+  let lastLabel=0;
+
+  /* ---- step 3: chaos effects in 3D ---- */
+  function basic(token,opts={}){const m=new THREE.MeshBasicMaterial(opts);m.userData.token=token;MATS.push(m);return m;}
+  const FM={fire:basic("fire"),fire2:basic("fire2"),spark:basic("fire2"),smoke:mat("smoke",{transparent:true,opacity:0.45,depthWrite:false}),
+    water:mat("water",{transparent:true,opacity:0.55,roughness:0.15,metalness:0.1,depthWrite:false}),rain:basic("water"),slime:mat("slime",{roughness:0.3}),
+    beaver:mat("beaver"),white:mat("paperc"),siren1:basic("bad"),siren2:basic("water"),hazard:new THREE.LineBasicMaterial({color:0xff0000})};
+  FM.hazard.userData.token="bad";MATS.push(FM.hazard);
+  const sphereG=new THREE.SphereGeometry(1,8,6),coneG=new THREE.ConeGeometry(0.6,1.8,7),cubeG=new THREE.BoxGeometry(1,1,1);
+  // pooled particles: sparks and smoke puffs
+  const parts=[];
+  function emit(m,x,y,z,vx,vy,vz,life,size){let p=parts.find(o=>!o.alive);
+    if(!p){p={mesh:new THREE.Mesh(sphereG,m)};scene.add(p.mesh);parts.push(p);}
+    p.mesh.material=m;p.alive=true;p.mesh.visible=true;p.mesh.position.set(x,y,z);p.v=[vx,vy,vz];p.life=p.max=life;p.size=size;p.grow=m===FM.smoke;}
+  function stepParts(rdt){parts.forEach(p=>{if(!p.alive)return;p.life-=rdt;if(p.life<=0){p.alive=false;p.mesh.visible=false;return;}
+    p.mesh.position.x+=p.v[0]*rdt;p.mesh.position.y+=p.v[1]*rdt;p.mesh.position.z+=p.v[2]*rdt;if(!p.grow)p.v[1]-=9*rdt;
+    const f=p.life/p.max,s=p.grow?p.size*(1.6-f):p.size*f;p.mesh.scale.setScalar(Math.max(0.01,s));});}
+  function flames(group,spots){const list=spots.map(([x,y,z])=>{const o=new THREE.Mesh(coneG,FM.fire),i=new THREE.Mesh(coneG,FM.fire2);i.scale.set(0.5,0.55,0.5);i.position.y=-0.25;o.add(i);o.position.set(x,y+0.9,z);group.add(o);return o;});
+    return now=>list.forEach((o,k)=>{const f=1+0.35*Math.sin(now/90+k*1.9);o.scale.set(1,f,1);});}
+  function hazardBox(group,x0,x1,y1,z0,z1){const g=new THREE.EdgesGeometry(new THREE.BoxGeometry(x1-x0,y1,z1-z0));const l=new THREE.LineSegments(g,FM.hazard);l.position.set((x0+x1)/2,y1/2,(z0+z1)/2);group.add(l);
+    return now=>{l.visible=((now/350)|0)%2===0;};}
+  function person(group,m,x,z){const p=new THREE.Group();const b=new THREE.Mesh(new THREE.CylinderGeometry(0.28,0.32,1.2,8),m);b.position.y=0.9;const h=new THREE.Mesh(sphereG,m);h.scale.setScalar(0.28);h.position.y=1.75;
+    const arm=new THREE.Mesh(cubeG,m);arm.scale.set(0.9,0.14,0.14);arm.position.set(0.4,1.2,0);p.add(b,h,arm);p.position.set(x,0,z);group.add(p);return p;}
+  const FX={};
+  const FXDEF={
+    shaft:g=>{const hz=hazardBox(g,-12,63,8.4,4.6,13.6);const motor=box(2.2,1.8,1.8,M.steel,12,0.9,14.8,g);
+      return (now,rdt)=>{hz(now);for(let k=0;k<3;k++)emit(FM.spark,12,1.6,14,(Math.random()-0.5)*8,4+Math.random()*5,(Math.random()-0.2)*6,0.6,0.16);motor.rotation.y=Math.sin(now/40)*0.06;};},
+    dryerfire:g=>{const spots=[];for(let i=0;i<10;i++)spots.push([(872-i*32-600)/10,6.6,zc+(i%2?1.4:-1.4)]);const fl=flames(g,spots);const hz=hazardBox(g,-12,63,8.4,4.6,13.6);
+      return (now,rdt)=>{fl(now);hz(now);if(Math.random()<rdt*14)emit(FM.smoke,-3+Math.random()*30,8.5,zc+(Math.random()-0.5)*4,0.6,2.5,0,4,1.2);};},
+    fabric:g=>{const hz=hazardBox(g,39,56,4,4.6,13.6);const rag=new THREE.Mesh(new THREE.TorusKnotGeometry(1.4,0.25,40,6,2,3),M.bad);rag.position.set(48,1.4,zc);g.add(rag);
+      return now=>{hz(now);rag.rotation.y=now/900;};},
+    felt:g=>{const r=new THREE.Mesh(new THREE.TorusGeometry(3.6,0.18,8,28),M.bad);r.position.set(34.5,3.5,zc+3.6);g.add(r);const r2=r.clone();r2.position.z=zc-3.6;g.add(r2);
+      return now=>{const s=1+0.08*Math.sin(now/120);r.scale.setScalar(s);r2.scale.setScalar(s);};},
+    slime:g=>{const blobs=[];for(let k=0;k<26;k++){const b=new THREE.Mesh(sphereG,FM.beaver);const i=k%10,top=k%2;b.position.set((top?872:856)/10-60-i*3.2+(Math.random()-0.5),top?6.8:1.0,zc+(Math.random()-0.5)*5.5);b.userData.s=0.25+Math.random()*0.35;g.add(b);blobs.push(b);}
+      return now=>blobs.forEach((b,k)=>b.scale.setScalar(b.userData.s*(1+0.25*Math.sin(now/300+k))));},
+    ragger:g=>{const curve=new THREE.CatmullRomCurve3([new THREE.Vector3(16,2.5,-13.5),new THREE.Vector3(18,5.5,-12),new THREE.Vector3(21,6.5,-9),new THREE.Vector3(23,2,-7),new THREE.Vector3(24,0.2,-6)]);
+      const rope=new THREE.Mesh(new THREE.TubeGeometry(curve,40,0.18,6,false),M.ink);g.add(rope);const ring=new THREE.Mesh(new THREE.TorusGeometry(4.6,0.18,6,32),M.bad);ring.rotation.x=Math.PI/2;ring.position.set(16,3.6,-13.5);g.add(ring);
+      return now=>{rope.rotation.z=Math.sin(now/500)*0.03;ring.visible=((now/350)|0)%2===0;};},
+    overflow:g=>{const w1=new THREE.Mesh(new THREE.PlaneGeometry(26.4,20.5,24,18),FM.water);w1.rotation.x=-Math.PI/2;w1.position.set(-21.2,0.35,-13.25);
+      const w2=new THREE.Mesh(new THREE.PlaneGeometry(22,9,16,8),FM.water);w2.rotation.x=-Math.PI/2;w2.position.set(3,0.2,-12.5);g.add(w1,w2);
+      return (now,rdt)=>{[w1,w2].forEach(w=>{const pa=w.geometry.attributes.position;for(let i=0;i<pa.count;i++)pa.setZ(i,0.12*Math.sin(pa.getX(i)*0.8+now/300)+0.08*Math.cos(pa.getY(i)*0.9+now/410));pa.needsUpdate=true;});
+        if(Math.random()<rdt*10)emit(FM.water,16+(Math.random()-0.5)*6,3.5,-9.5,(Math.random()-0.5)*3,3,3,0.8,0.35);};},
+    badocc:g=>{const n=40,im=new THREE.InstancedMesh(cubeG,FM.slime,n),m=new THREE.Matrix4();for(let k=0;k<n;k++){m.makeScale(0.35,0.15,0.3);m.setPosition(-30+Math.random()*19,1.2+Math.random()*2.2,-17+Math.random()*10);im.setMatrixAt(k,m);}g.add(im);
+      const im2=new THREE.InstancedMesh(cubeG,FM.rain,20);for(let k=0;k<20;k++){m.makeScale(0.5,0.08,0.4);m.setPosition(-30+Math.random()*19,1.3+Math.random()*2,-17+Math.random()*10);im2.setMatrixAt(k,m);}g.add(im2);return ()=>{};},
+    balefire:g=>{const spots=[];for(let k=0;k<9;k++)spots.push([-29+k*2.2,1.8+(k%3)*0.9,-8-(k%4)*3]);const fl=flames(g,spots);
+      return (now,rdt)=>{fl(now);if(Math.random()<rdt*12)emit(FM.smoke,-28+Math.random()*16,4,-9-Math.random()*7,0.8,2.6,0,4,1.4);};},
+    fight:g=>{const a=person(g,M.ink,-38.6,-21),b=person(g,M.steel,-37.2,-21);a.rotation.y=0;b.rotation.y=Math.PI;
+      const car=new THREE.Group();box(3.2,0.8,1.6,M.ink,0,0.6,0,car);box(1.6,0.6,1.4,M.wall,-0.2,1.3,0,car);const s1=box(0.3,0.25,0.6,FM.siren1,-0.2,1.72,-0.35,car,false),s2=box(0.3,0.25,0.6,FM.siren2,-0.2,1.72,0.35,car,false);
+      car.position.set(-43,0,-15.5);car.rotation.y=0.6;g.add(car);
+      return now=>{const j=Math.sin(now/70)*0.25;a.position.x=-38.6+j;b.position.x=-37.2-j;a.position.y=Math.abs(Math.sin(now/110))*0.3;b.position.y=Math.abs(Math.cos(now/110))*0.3;
+        const on=((now/250)|0)%2;s1.material=on?FM.siren1:M.ink;s2.material=on?M.ink:FM.siren2;};},
+    roof:g=>{const drops=[];for(let k=0;k<70;k++){const d=new THREE.Mesh(cubeG,FM.rain);d.scale.set(0.05,0.6,0.05);d.position.set(-48+Math.random()*24,Math.random()*7,15.5+Math.random()*16);g.add(d);drops.push(d);}
+      const pud=new THREE.Mesh(new THREE.CircleGeometry(5,24),FM.water);pud.rotation.x=-Math.PI/2;pud.position.set(-36,0.07,23);g.add(pud);
+      return (now,rdt)=>drops.forEach(d=>{d.position.y-=rdt*14;if(d.position.y<0)d.position.y+=7;});},
+    highway:g=>{[[-72,-3.8],[-72,12.5]].forEach(([x,z])=>{for(let k=0;k<5;k++)box(0.6,1,0.55,k%2?M.wall:M.bad,x,0.5,z-1.2+k*0.6,g);box(0.3,1.6,0.3,M.warn,x,0.8,z-1.6,g);box(0.3,1.6,0.3,M.warn,x,0.8,z+1.6,g);});
+      const tanker=new THREE.Group();box(5,1.8,1.8,M.wall,0,1.2,0,tanker);box(1.3,1.6,1.8,M.bad,3.2,1.1,0,tanker);tanker.position.set(-82,0,4);tanker.rotation.y=0.9;tanker.rotation.z=0.25;g.add(tanker);
+      return ()=>{};},
+    lightning:g=>{const pts=[[40,34,-13],[36,28,-16],[39,23,-14],[34,18,-15],[37,14,-15],[34.5,10.5,-15]].map(p=>new THREE.Vector3(...p));
+      const bolt=new THREE.Mesh(new THREE.TubeGeometry(new THREE.CatmullRomCurve3(pts,false,"catmullrom",0),30,0.35,5,false),FM.fire2);g.add(bolt);
+      return (now,rdt,inc)=>{const age=(now-inc.real)/1000;bolt.visible=age<1.4?((now/80)|0)%2===0:(now%2500)<120;};},
+    tornado:g=>{const fun=new THREE.Group();const rings=[];for(let k=0;k<14;k++){const r=new THREE.Mesh(new THREE.TorusGeometry(1.2+k*0.9,0.35,6,24),FM.smoke);r.rotation.x=Math.PI/2;r.position.y=k*2.2;fun.add(r);rings.push(r);}
+      const deb=[];for(let k=0;k<14;k++){const d=new THREE.Mesh(cubeG,k%3?M.kraft:FM.white);d.scale.setScalar(0.7);fun.add(d);deb.push(d);}g.add(fun);
+      return (now,rdt,inc)=>{const age=(now-inc.real)/1000;fun.visible=age<12;fun.position.set(-95+age/12*170,0,-6+Math.sin(age*0.9)*10);
+        rings.forEach((r,k)=>{r.position.x=Math.sin(now/220+k*0.6)*(0.4+k*0.18);r.position.z=Math.cos(now/260+k*0.5)*(0.3+k*0.12);});
+        deb.forEach((d,k)=>{const a=now/180+k,rad=3+k*0.9;d.position.set(Math.cos(a)*rad,2+k*1.6,Math.sin(a)*rad);d.rotation.set(a,a*1.3,0);});};},
+    beaver:g=>{const bv=new THREE.Group();const body=new THREE.Mesh(sphereG,FM.beaver);body.scale.set(4.2,3.2,3.4);body.position.y=3;
+      const head=new THREE.Mesh(sphereG,FM.beaver);head.scale.set(2.2,2,2);head.position.set(4.4,4.6,0);
+      const ear1=new THREE.Mesh(sphereG,FM.beaver);ear1.scale.setScalar(0.6);ear1.position.set(3.8,6.5,-1.2);const ear2=ear1.clone();ear2.position.z=1.2;
+      const eye1=new THREE.Mesh(sphereG,M.ink);eye1.scale.setScalar(0.3);eye1.position.set(6.1,5.3,-0.8);const eye2=eye1.clone();eye2.position.z=0.8;
+      const nose=new THREE.Mesh(sphereG,M.ink);nose.scale.setScalar(0.45);nose.position.set(6.6,4.7,0);
+      const teeth=new THREE.Group();box(0.25,0.9,0.4,FM.white,0,0,-0.24,teeth,false);box(0.25,0.9,0.4,FM.white,0,0,0.24,teeth,false);teeth.position.set(6.3,3.6,0);
+      const tail=new THREE.Mesh(sphereG,M.steel);tail.scale.set(3,0.35,1.7);tail.position.set(-5.4,0.9,0);tail.rotation.z=0.25;
+      bv.add(body,head,ear1,ear2,eye1,eye2,nose,teeth,tail);bv.position.set(-24,0,-12.5);bv.rotation.y=-0.4;g.add(bv);
+      return (now,rdt)=>{bv.position.y=Math.abs(Math.sin(now/400))*0.4;teeth.position.y=3.6-Math.abs(Math.sin(now/120))*0.3;tail.rotation.z=0.25+Math.sin(now/200)*0.3;
+        if(Math.random()<rdt*8)emit(M.kraft,-20,4,-11.5,1+Math.random()*3,4+Math.random()*3,(Math.random()-0.5)*4,1.1,0.35);};},
+  };
+  const blackEl=$("blackout3d");
+  function fxUpdate(rdt,now){
+    for(const id in FX)FX[id].g.visible=false;
+    S.inc.forEach(inc=>{const def=FXDEF[inc.id];if(!def)return;let f=FX[inc.id];if(!f){const g=new THREE.Group();scene.add(g);f=FX[inc.id]={g,up:def(g)};}
+      f.g.visible=true;f.up(now,rdt,inc);});
+    stepParts(rdt);
+    blackEl.hidden=!S.inc.some(i=>i.id==="lightning");
+  }
+
+  /* ---- winder, waiting reels, roof trusses ---- */
+  const paperDS=basic("paperc",{side:THREE.DoubleSide});
+  slab(-29,-6,-2.5,3,M.slab,0.03);
+  const wd=new THREE.Group();wd.position.set(-18.7,0,zc);scene.add(wd);
+  [-2.7,2.7].forEach(z=>{box(0.5,3.8,0.5,M.steel,-2.6,1.9,z,wd);box(0.5,3.8,0.5,M.steel,3.4,1.9,z,wd);box(6.5,0.4,0.5,M.steel,0.4,3.9,z,wd);});
+  const unwind=cylZ(1,4.8,M.paper,2.6,2.4,0,22,wd);cylZ(0.22,5.8,M.steel,2.6,2.4,0,8,wd);
+  const drums=[cylZ(0.5,5,M.metal,-1.3,0.75,0,12,wd),cylZ(0.5,5,M.metal,-2.4,0.75,0,12,wd)];
+  const setRolls=[-1.8,-0.6,0.6,1.8].map(z=>cylZ(1,1.12,M.paper,-1.85,1.75,z,16,wd));
+  const web=new THREE.Mesh(new THREE.PlaneGeometry(4.6,4.6),paperDS);web.rotation.x=-Math.PI/2;web.position.set(0.4,2.2,0);wd.add(web);
+  box(1.2,1.2,0.8,M.steel,0,0.6,4.3,wd);box(1.1,0.5,0.1,M.robot,0,1.25,3.95,wd,false);
+  const parked=[0,1,2,3].map(k=>{const g=new THREE.Group();g.position.set(-11.5-k*4.4,0,-0.2);scene.add(g);
+    box(0.35,1.1,4.6,M.steel,-1.3,0.55,0,g);box(0.35,1.1,4.6,M.steel,1.3,0.55,0,g);cylZ(2,5.2,M.paper,0,2.15,0,22,g);cylZ(0.22,6.2,M.steel,0,2.15,0,8,g);return g;});
+  {const t=new THREE.Group();scene.add(t);
+    for(let x=-24;x<=56;x+=16)box(0.2,0.25,13.4,M.metal,x,13,9.3,t,false);
+    [2.6,16].forEach(z=>{box(80.4,0.25,0.2,M.metal,16,13,z,t,false);for(let x=-24;x<=56;x+=16)box(0.22,13,0.22,M.metal,x,6.5,z,t,false);});}
+  box(2.2,0.06,2.2,M.ink,-12,0.06,15.6,scene,false);   // broke hole by the winder
+
+  /* ---- people ---- */
+  const skin=mat("paperc");
+  function worker(suit,hatM){const p=new THREE.Group();const hip=new THREE.Group();hip.position.y=0.9;p.add(hip);
+    const legs=[-0.15,0.15].map(z=>{const l=new THREE.Group();l.position.z=z;const m=new THREE.Mesh(cubeG,M.ink);m.scale.set(0.22,0.9,0.22);m.position.y=-0.45;m.castShadow=true;l.add(m);hip.add(l);return l;});
+    const torso=new THREE.Group();hip.add(torso);
+    const body=new THREE.Mesh(cubeG,suit);body.scale.set(0.42,0.85,0.6);body.position.y=0.42;body.castShadow=true;torso.add(body);
+    const head=new THREE.Mesh(sphereG,skin);head.scale.setScalar(0.23);head.position.y=1.07;torso.add(head);
+    const hat=new THREE.Mesh(new THREE.SphereGeometry(1,10,5,0,Math.PI*2,0,Math.PI/2),hatM);hat.scale.set(0.29,0.24,0.29);hat.position.y=1.13;torso.add(hat);
+    const arms=[-0.39,0.39].map(z=>{const a=new THREE.Group();a.position.set(0,0.78,z);const m=new THREE.Mesh(cubeG,suit);m.scale.set(0.17,0.72,0.17);m.position.y=-0.36;a.add(m);torso.add(a);return a;});
+    const armful=new THREE.Mesh(cubeG,paperDS);armful.scale.set(0.7,0.45,0.75);armful.position.set(0.5,0.45,0);armful.visible=false;torso.add(armful);
+    p.userData={legs,arms,torso,armful,ph:Math.random()*6,head:0};scene.add(p);return p;}
+  function pose(p,mode,now){const u=p.userData,t=now/1000+u.ph;let leg=0,arm=[0,0],lean=0,bob=0;u.armful.visible=false;
+    if(mode==="run"||mode==="carry"){const s=Math.sin(t*15);leg=0.8*s;arm=mode==="carry"?[-1.3,-1.3]:[-0.9*s,0.9*s];lean=-0.22;bob=Math.abs(s)*0.14;u.armful.visible=mode==="carry";}
+    else if(mode==="clean"){lean=-1.0;const s=Math.sin(t*9);arm=[-1.2+0.7*s,-1.2-0.7*s];leg=0.15*s;}
+    else if(mode==="dump"){lean=-0.5;arm=[-2,-2];u.armful.visible=Math.sin(t*6)>0;}
+    else if(mode==="rethread"){const s=Math.sin(t*7);arm=[-2.7+0.5*s,-2.4-0.5*s];bob=Math.max(0,s)*0.18;}
+    else if(mode==="look"){lean=0.45;arm=[-2.9,-2.9];bob=Math.abs(Math.sin(t*12))*0.1;}
+    else{arm=[0.08*Math.sin(t*1.7),-0.08*Math.sin(t*1.7)];}
+    u.legs[0].rotation.z=leg;u.legs[1].rotation.z=-leg;u.arms[0].rotation.z=arm[0];u.arms[1].rotation.z=arm[1];u.torso.rotation.z=lean;p.position.y=bob;}
+  function moveP(p,tx,tz,speed,rdt){const dx=tx-p.position.x,dz=tz-p.position.z,d=Math.hypot(dx,dz);
+    if(d<0.15)return true;const s=Math.min(d,speed*rdt);p.position.x+=dx/d*s;p.position.z+=dz/d*s;p.rotation.y=lerpAng(p.rotation.y,Math.atan2(-dz,dx),Math.min(1,rdt*12));return false;}
+  function face(p,x,z,rdt){p.rotation.y=lerpAng(p.rotation.y,Math.atan2(-(z-p.position.z),x-p.position.x),Math.min(1,rdt*8));}
+  const HOME=[[57,14.2],[47,14.2],[34.5,14.2],[20,14.2],[6,14.2],[-10,14.2],[-18.7,14.4]];
+  const HAY=[[-23.6,14],[-14,13.6],[-24.2,7.5],[-13.2,8.5],[-22.5,4.2],[-15.5,4.2],[-19.5,15.4]];
+  const RT=[[27,14.2],[23,14.2],[19,14.2],[15,14.2],[11,14.2],[25,4.1],[17,4.1]];
+  const RTY=[];for(let k=0;k<24;k++)RTY.push([29-(k%12)*2.6,k<12?15.4:3.2]);
+  const crew=HOME.map(([x,z])=>{const w=worker(M.stock,M.warn);w.position.set(x,0,z);return w;});
+  const helpers=[];
+  const EP={hay:null,brk:null};let seenHay=-1,seenBrk=-1;
+  G3.yardFrozen=false;
+
+  /* ---- hayout: paper fountain, drapes over the trusses, flying sheets ---- */
+  const FN=36,fGeo=new THREE.BufferGeometry(),fPos=new Float32Array((FN+1)*6),fIdx=[];
+  for(let i=0;i<FN;i++){const b=i*2;fIdx.push(b,b+1,b+2,b+1,b+3,b+2);}
+  fGeo.setAttribute("position",new THREE.BufferAttribute(fPos,3));fGeo.setIndex(fIdx);
+  const fountain=new THREE.Mesh(fGeo,paperDS);fountain.frustumCulled=false;fountain.visible=false;scene.add(fountain);
+  const drapes=[];for(let k=0;k<18;k++){const g=new THREE.PlaneGeometry(2.2,1);g.translate(0,-0.5,0);const d=new THREE.Mesh(g,paperDS);
+    d.position.set(-24+Math.floor(k/2)*1.6+(k%2)*0.7,12.85,3.5+((k*7)%12));d.userData.len=4+Math.random()*8;d.visible=false;scene.add(d);drapes.push(d);}
+  const sheetG=new THREE.BoxGeometry(1.5,0.04,1.1),flyers=[];
+  function launchSheet(){let s=flyers.find(o=>!o.on);if(!s){if(flyers.length>=280)return;s={m:new THREE.Mesh(sheetG,paperDS)};scene.add(s.m);flyers.push(s);}
+    s.on=true;s.landed=false;s.m.visible=true;s.m.position.set(-18.7+(Math.random()-0.5)*2,3.8,zc+(Math.random()-0.5)*4);
+    s.v=[(Math.random()-0.5)*16,13+Math.random()*16,(Math.random()-0.5)*16];s.spin=[Math.random()*8,Math.random()*8,Math.random()*8];s.k=Math.random()*6;}
+  let shake=0;
+  function hayFx(rdt,now){const ep=EP.hay,on=!!(ep&&now<ep.until),age=on?(now-ep.t0)/1000:99,left=on?(ep.until-now)/1000:0;
+    // fountain: twisting ribbon of paper climbing to the roof trusses
+    if(on&&!ep.burst){ep.burst=true;for(let k=0;k<90;k++)launchSheet();}
+    fountain.visible=on&&age<5;
+    if(fountain.visible){const H=3.6+Math.min(1,age/0.5)*9.2,t=now/1000;
+      for(let i=0;i<=FN;i++){const s=i/FN,y=3.6+s*(H-3.6),cx=-18.7+Math.sin(s*7+t*9)*1.4*s,cz=zc+Math.cos(s*6+t*8)*1.2*s,a=s*10+t*6,w=1.3+s*1.6;
+        fPos.set([cx-Math.cos(a)*w,y,cz-Math.sin(a)*w,cx+Math.cos(a)*w,y,cz+Math.sin(a)*w],i*6);}
+      fGeo.attributes.position.needsUpdate=true;
+      for(let k=0;k<Math.ceil(rdt*70);k++)launchSheet();}
+    // drapes hang from the trusses, then get pulled down during cleanup
+    drapes.forEach((d,k)=>{d.visible=on&&age>0.4;if(!d.visible)return;const grow=Math.min(1,(age-0.4)/1.6),shrink=Math.min(1,left/2.5);
+      d.scale.y=Math.max(0.01,d.userData.len*grow*shrink);d.rotation.x=Math.sin(now/600+k)*0.18;d.rotation.z=Math.cos(now/700+k*1.3)*0.12;});
+    // flying sheets flutter down and pile up; the crew clears the pile before the episode ends
+    const landed=flyers.filter(s=>s.on&&s.landed);
+    if(on&&age>5&&landed.length){const want=Math.floor(landed.length*Math.max(0,left-1)/Math.max(1,(ep.until-ep.t0)/1000-6));for(let k=want;k<landed.length;k++){landed[k].on=false;landed[k].m.visible=false;}}
+    if(!on)flyers.forEach(s=>{if(s.on&&s.landed){s.on=false;s.m.visible=false;}});
+    flyers.forEach(s=>{if(!s.on||s.landed)return;const p=s.m.position;s.v[1]-=7*rdt;s.v[0]*=1-0.9*rdt;s.v[2]*=1-0.9*rdt;if(s.v[1]<-3)s.v[1]=-3;
+      p.x+=(s.v[0]+Math.sin(now/220+s.k)*2)*rdt;p.y+=s.v[1]*rdt;p.z+=(s.v[2]+Math.cos(now/260+s.k)*2)*rdt;
+      s.m.rotation.x+=s.spin[0]*rdt;s.m.rotation.y+=s.spin[1]*rdt;s.m.rotation.z+=s.spin[2]*rdt;
+      if(p.y>12.6&&s.v[1]>0){s.v[1]=-1;}
+      if(p.y<=0.06){p.y=0.06+Math.random()*0.05;s.landed=true;s.m.rotation.set(0,Math.random()*3,0);}});
+    shake=on&&age<1?(1-age)*1.8:0;
+  }
+
+  function crewUpdate(rdt,now){
+    if(seenHay<0||S.tot.hayouts<seenHay)seenHay=S.tot.hayouts;
+    if(seenBrk<0||S.tot.breaks<seenBrk)seenBrk=S.tot.breaks;
+    const sp=Math.max(1,C.simSpeed);
+    if(S.tot.hayouts>seenHay){seenHay=S.tot.hayouts;EP.hay={t0:now,until:now+Math.max(10000,S.hayLeft/sp*1000)};}
+    if(S.tot.breaks>seenBrk){seenBrk=S.tot.breaks;const until=now+Math.max(7500,S.breakLeft/sp*1000);
+      if(EP.brk&&now<EP.brk.until)EP.brk.until=Math.max(EP.brk.until,until);else EP.brk={t0:now,until,launched:false};}
+    const hayOn=EP.hay&&now<EP.hay.until,brkOn=EP.brk&&now<EP.brk.until;
+    // machine crew
+    crew.forEach((w,i)=>{let tx,tz,act,fx=null;
+      if(hayOn){const age=now-EP.hay.t0,shuttle=i%2===1,ph=((age/1800)+i*0.37)%2,s=HAY[i];
+        if(age<1100){tx=w.position.x;tz=w.position.z;act="look";fx=[-18.7,zc];}
+        else if(shuttle&&ph>1){tx=-12;tz=15.6;act="dump";}
+        else{tx=s[0];tz=s[1];act="clean";fx=[-18.7,zc];}
+        const arrived=act==="look"||moveP(w,tx,tz,10,rdt);
+        if(arrived&&fx)face(w,fx[0],fx[1],rdt);pose(w,arrived?act:(shuttle&&act==="dump"?"carry":"run"),now);return;}
+      if(brkOn){[tx,tz]=RT[i];const arrived=moveP(w,tx,tz,10,rdt);if(arrived)face(w,tx,zc,rdt);pose(w,arrived?"rethread":"run",now);return;}
+      [tx,tz]=HOME[i];const arrived=moveP(w,tx,tz,7,rdt);if(arrived)face(w,tx,zc,rdt);pose(w,arrived?"idle":"run",now);});
+    // yard crews jump off their trucks and run to the machine on a sheet break
+    if(brkOn&&!EP.brk.launched){EP.brk.launched=true;let k=0;
+      const spots=[];lifts.forEach((g,i)=>{if(g.visible&&i<Math.floor(S.effDrv+1e-9))spots.push([g.position.x,g.position.z]);});
+      loaders.forEach((g,i)=>{if(g.visible&&i<Math.floor(S.effHum+1e-9))spots.push([g.position.x,g.position.z]);});
+      spots.forEach(([x,z])=>{let h=helpers[k];if(!h){h=worker(M.warn,skin);helpers.push(h);}h.visible=true;h.position.set(x,0,z);h.userData.from=[x,z];h.userData.out=true;k++;});
+      for(;k<helpers.length;k++){helpers[k].visible=false;helpers[k].userData.out=false;}}
+    let away=false;
+    helpers.forEach((h,k)=>{if(!h.userData.out)return;away=true;
+      if(brkOn){const [tx,tz]=RTY[k%RTY.length];const a=moveP(h,tx,tz,11,rdt);if(a)face(h,tx,zc,rdt);pose(h,a?"rethread":"run",now);}
+      else{const [fx2,fz]=h.userData.from;if(moveP(h,fx2,fz,11,rdt)){h.visible=false;h.userData.out=false;}else pose(h,"run",now);}});
+    if(!brkOn&&EP.brk)EP.brk.launched=false;
+    G3.yardFrozen=away;
+    // winder machinery
+    const cutting=S.rates.cut>0.5&&S.wd!=="hayout";
+    const ur=0.35+1.65*Math.sqrt(Math.min(S.winderBuf,P.jumbo)/P.jumbo);unwind.scale.set(ur,ur,1);unwind.visible=S.winderBuf>0.2;
+    const sr=0.3+0.7*Math.min(1,S.winderAcc/C.rollW.v);setRolls.forEach(r=>{r.scale.set(sr,sr,1);r.visible=S.wd!=="hayout";if(cutting)r.rotation.z-=rdt*10;});
+    if(cutting){unwind.rotation.z+=rdt*6;drums.forEach(d=>d.rotation.z+=rdt*12);}
+    web.visible=cutting&&unwind.visible;
+    const nPark=Math.max(0,Math.ceil(S.winderBuf/P.jumbo-1e-6)-1);parked.forEach((g,k)=>g.children[2].visible=g.children[3].visible=k<nPark);
+    hayFx(rdt,now);
+  }
+
+  /* ---- step 4: upgrades you can see ---- */
+  const UPV={};
+  function upg(id,build){const g=new THREE.Group();scene.add(g);build(g);UPV[id]=g;return g;}
+  const motors=upg("drive",g=>{for(let k=0;k<3;k++){const m=new THREE.Group();box(1.6,1.4,1.4,M.stock,0,0.7,0,m);cylZ(0.25,1.2,M.metal,0,0.7,-1,8,m);m.position.set(2+k*9,0,zc-CD/2-2.2);g.add(m);}});
+  const beacons=upg("monitor",g=>{for(let k=0;k<6;k++){const b=new THREE.Mesh(new THREE.CylinderGeometry(0.22,0.22,0.5,8),M.robot);b.position.set(-4+k*7,7.85,zc+CD/2+0.6);g.add(b);}});
+  const sprink=upg("fire",g=>{pipe([[-6,8.6,zc],[30,8.6,zc]],0.18,M.bad,g);for(let x=-4;x<=28;x+=4)box(0.12,0.5,0.12,M.bad,x,8.3,zc,g,false);});
+  const cleaners=upg("clean",g=>{for(let k=0;k<4;k++){const c=new THREE.Mesh(new THREE.ConeGeometry(0.6,3.2,10),M.metal);c.rotation.x=Math.PI;c.position.set(26.5+(k%2)*1.6,2.4,-21+Math.floor(k/2)*1.6);c.castShadow=true;g.add(c);}
+    box(4,0.3,4,M.steel,27.3,4.1,-20.2,g);});
+  const detrash=upg("detrash",g=>{box(3,2.6,2.4,M.stock,22.5,1.3,-19.5,g);cylZ(0.4,2.8,M.metal,22.5,2.9,-19.5,8,g);});
+  const annexes=[1,2].map(n=>upg("wh"+n,g=>{const z0=32.2+(n-1)*8,z1=z0+8;
+    const f=new THREE.Mesh(new THREE.PlaneGeometry(25.2,8),M.slab);f.rotation.x=-Math.PI/2;f.position.set(-36.4,0.045,(z0+z1)/2);f.receiveShadow=true;g.add(f);
+    box(0.3,2.6,8,M.wall,-49,1.3,(z0+z1)/2,g);box(0.3,2.6,8,M.wall,-23.8,1.3,(z0+z1)/2,g);box(25.2,2.6,0.3,M.wall,-36.4,1.3,z1,g);
+    const im=new THREE.InstancedMesh(rollGeo,M.paper,36),m=new THREE.Matrix4();for(let k=0;k<36;k++){m.makeTranslation(-45+(k%12)*1.75,0.74,z0+1.5+Math.floor(k/12)*2.2);im.setMatrixAt(k,m);}im.castShadow=true;g.add(im);g.userData.rolls=im;}));
+  const walk=upg("safety",g=>{    [[-21.2,-2.6,26.4,0.5],[-36.4,14.4,25.2,0.5],[23,3.4,68,0.5],[23,15.6,68,0.5]].forEach(([x,z,w,d])=>box(w,0.03,d,M.warn,x,0.07,z,g,false));});
+  const ctrl=upg("apc",g=>{box(6,3.2,4,M.wall,46,1.6,-6,g);box(5.4,1.1,0.1,M.robot,46,2.2,-3.95,g,false);box(6.4,0.3,4.4,M.steel,46,3.35,-6,g);});
+  function upUpdate(now){
+    motors.visible=LV("drive")>0;motors.children.forEach((m,k)=>m.visible=k<LV("drive"));
+    beacons.visible=LV("monitor")>0;beacons.children.forEach((b,k)=>{b.visible=k<3*LV("monitor");b.material=((now/500+k)|0)%3===0?M.ok:M.robot;});
+    sprink.visible=LV("fire")>0;cleaners.visible=LV("clean")>0;cleaners.children.forEach((c,k)=>c.visible=k===4||k<2*LV("clean"));
+    detrash.visible=LV("detrash")>0;walk.visible=LV("safety")>0;ctrl.visible=LV("apc")>0;
+    annexes.forEach((a,k)=>{a.visible=LV("wh")>k;});
+    // rolls fill main bay first, then annexes
+    const total=Math.ceil(S.fg/(P.fgCap/(84+36*LV("wh"))));rolls.count=Math.min(84,total);rolls.instanceMatrix.needsUpdate=true;
+    annexes.forEach((a,k)=>{const n=clamp(total-84-36*k,0,36);a.userData.rolls.count=n;a.userData.rolls.instanceMatrix.needsUpdate=true;});
+    const ps=1+0.15*LV("pulper");pulper.scale.set(ps,1,ps);
+    belt.material=P.autoFeed?M.robot:M.steel;
+    lifts.forEach(l=>{if(l.children[0].material===M.warn&&LV("forklift"))l.children[0].material=M.efork;});
+  }
+
+  let fpsAcc=0,fpsN=0,fpsT=0,quality=2;
+  G3.frame=function(rdt){
+    if(rdt>0){fpsT+=rdt;fpsN++;if(fpsT>3){const fps=fpsN/fpsT;fpsT=0;fpsN=0;
+      if(fps<28&&quality===2&&renderer.shadowMap.enabled){quality=1;renderer.shadowMap.enabled=false;MATS.forEach(m=>m.needsUpdate=true);$("viewShadows").checked=false;}
+      else if(fps<24&&quality>=1){quality=0;renderer.setPixelRatio(1);resize();}}}
+    applyPalette();rebuildDoors();
+    const R=S.rates,now=performance.now();
+    crewUpdate(rdt,now);
+    // trucks
+    truckMap.forEach(g=>g.userData.seen=false);
+    S.inQ.forEach(t=>placeTruck(t,{kind:"in"},rdt));S.inDock.forEach(t=>t&&placeTruck(t,{kind:"in"},rdt));
+    S.outQ.forEach(t=>placeTruck(t,{kind:"out"},rdt));S.outDock.forEach(t=>t&&placeTruck(t,{kind:"out"},rdt));
+    S.leaving.forEach(t=>placeTruck(t,{kind:t.kind,leaving:true},rdt));
+    truckMap.forEach((g,t)=>{if(!g.userData.seen){g.visible=false;g.userData.busy=false;truckMap.delete(t);}});
+    // stock
+    bales.count=Math.min(168,Math.ceil(S.yard/12));bales.instanceMatrix.needsUpdate=true;
+    rolls.count=Math.min(84,Math.ceil(S.fg/(P.fgCap/84)));rolls.instanceMatrix.needsUpdate=true;
+    // conveyor bales
+    let nb=0;if(R.feed>0.3){const L=Math.hypot(180,75);for(let s=V.belt;s<L&&nb<12;s+=30){v3.copy(cA).lerp(cB,s/L);v3.y+=0.55;m4.makeTranslation(v3.x,v3.y,v3.z);beltBales.setMatrixAt(nb++,m4);}}
+    beltBales.count=nb;beltBales.instanceMatrix.needsUpdate=true;
+    rotor.rotation.y=-V.swirl;pulpStock.visible=R.feed>0.3||S.tank>0;
+    // chest
+    const cr=4.2*Math.sqrt(P.tankCap/300);if(cr!==chestR){chestR=cr;shell.scale.set(cr,1,cr);shellRim.scale.set(cr,cr,1);baseRing.scale.set(cr,1,cr);liquid.scale.x=liquid.scale.z=cr;ringT.scale.set(cr,cr,1);ringL.scale.set(cr,cr,1);}
+    const lvl=S.tank/P.tankCap,h=Math.max(0.02,lvl*9.8);liquid.scale.y=h;liquid.position.y=h/2+0.05;
+    liquid.material=lvl*100<C.lowLevel.v?M.bad:M.liquid;ringT.position.y=C.lvlTarget.v/100*9.8;ringL.position.y=C.lowLevel.v/100*9.8;
+    // machine
+    const pmRun=S.pm==="run";
+    cansTop.concat(cansBot).forEach((c,i)=>c.rotation.z=(i<10?-1:1)*V.cans);
+    press[0].rotation.z=-V.cans*1.3;press[1].rotation.z=V.cans*1.3;press[2].rotation.z=-V.cans*1.15;press[3].rotation.z=V.cans*1.15;feltTex.offset.x=-V.cans*0.35;feltGuides.forEach(g=>g.rotation.z=-V.cans*4);wireRolls.forEach(w=>w.rotation.z=V.cans*2.5);
+    press.forEach((p,i)=>{p.material=LV("shoe")&&i===3?shoeMat:M.metal;});
+    const rr=0.4+2.6*Math.sqrt(S.reel/P.jumbo);reel.scale.set(rr,rr,1);reel.rotation.z=V.cans*0.8;
+    if(Math.abs(rr-sheetR)>0.08){sheetR=rr;buildSheet(rr);}
+    sheetMesh.visible=pmRun;sheetTex.offset.x=-V.sheet/24*1.0;
+    // roll conveyor
+    let nr=0;S.rollsVis.forEach(r=>{if(nr>=16)return;const s=r.p*131;let x,z;if(s<80){x=-18.7;z=11.6+s/80*7.8;}else{x=-18.7-(s-80)/51*5;z=19.4;}m4.makeTranslation(x,1.2,z);beltRolls.setMatrixAt(nr++,m4);});
+    beltRolls.count=nr;beltRolls.instanceMatrix.needsUpdate=true;
+    // forklifts (same paths as the 2D view)
+    ensure(lifts,V.lifts.length,()=>forklift(M.warn));
+    V.lifts.forEach((L,i)=>{const g=lifts[i];
+      if(i>=Math.floor(S.effDrv+1e-9)){const [x,z]=W(272+i*15,316);g.position.set(x,0,z);g.rotation.y=0;g.children[0].material=M.off;g.userData.load.visible=false;return;}
+      g.children[0].material=M.warn;g.visible=S.M.recvMul!==0||G3.yardFrozen;if(G3.yardFrozen){g.userData.load.visible=false;return;}
+      const dy=inY(L.door%P.doors),pts=[[272,dy],[300+((i*37)%180),150+((i*53)%120)],[512,212],[300+((i*61)%180),150+((i*29)%120)]];
+      const a=Math.floor(L.p),t=L.p-a,A=pts[a],B=pts[(a+1)%4];const [x,z]=W(A[0]+(B[0]-A[0])*t,A[1]+(B[1]-A[1])*t),[bx,bz]=W(B[0],B[1]);
+      g.position.set(x,0,z);g.rotation.y=Math.atan2(-(bz-z),bx-x);g.userData.load.visible=(a===0||a===2);});
+    // clamp trucks + robots
+    const nLo=Math.round(C.loaders.v);ensure(loaders,nLo,()=>clamp3(M.ok));
+    for(let i=0;i<nLo;i++){const g=loaders[i];
+      if(i>=Math.floor(S.effHum+1e-9)){const [x,z]=W(374+i*15,642);g.position.set(x,0,z);g.children[0].material=M.off;g.userData.load.visible=false;g.visible=true;continue;}
+      g.children[0].material=M.ok;g.visible=S.M.clampMul!==0||G3.yardFrozen;if(G3.yardFrozen){g.userData.load.visible=false;continue;}
+      const ph=(V.rollsAnim*0.6+i*0.37)%2,t=ph<1?ph:2-ph,[x,z]=W(126+t*60+20,outY(i%P.shipDoors));
+      g.position.set(x,0,z);g.rotation.y=ph<1?Math.PI:0;g.userData.load.visible=ph<1;}
+    ensure(robots,P.robots,robot);
+    robots.forEach((g,r)=>{if(r>=P.robots)return;const ph=S.M.clampMul===0?0.3:(V.rollsAnim*0.45+r*0.29)%2,t=ph<1?ph:2-ph,[x,z]=W(130+t*200,outY(r%P.shipDoors)+(r%2?6:-6));
+      g.position.set(x,0,z);g.userData.light.material=((now/400+r)|0)%2?M.ok:M.stock;});
+    // blackout dims the plant
+    const out=S.inc.some(i=>i.id==="lightning");hemi.intensity=out?0.18:baseHemi;sun.intensity=out?0.12:baseSun;
+    if(out!==G3.wasOut){G3.wasOut=out;scene.background=new THREE.Color(out?"#0b0f0e":tok("g-sky"));}
+    // camera + render
+    G3.padTick(rdt);upUpdate(now);fxUpdate(rdt,now);
+    placeCam();if(shake>0){camera.position.x+=(Math.random()-0.5)*shake;camera.position.y+=(Math.random()-0.5)*shake;camera.position.z+=(Math.random()-0.5)*shake;}
+    renderer.render(scene,camera);
+    // labels follow the 3D anchors
+    const w=host.clientWidth,hh=host.clientHeight,doText=now-lastLabel>200;if(doText)lastLabel=now;
+    LABELS.forEach(L=>{tmp.copy(L.v).project(camera);const vis=tmp.z<1&&Math.abs(tmp.x)<1.05&&Math.abs(tmp.y)<1.05;L.el.hidden=!vis;
+      if(!vis)return;L.el.style.transform=`translate(${(tmp.x+1)/2*w}px,${(1-tmp.y)/2*hh}px) translate(-50%,-100%)`;
+      if(doText){const [a,b]=L.t();L.b.textContent=a;L.s.textContent=b;L.el.classList.toggle("bad",!!(L.cls&&L.cls()));}});
+    // headline + active incidents
+    if(doText){const b=BANNERS[0];banner.hidden=!b;if(b){banner.className="banner3d "+(b.kind==="good"?"good":"");banner.querySelector("span").textContent=b.kind==="good"?"INSTALLED":"BREAKING";banner.querySelector("b").textContent=b.text;}
+      chips.replaceChildren(...S.inc.map(i=>{const c=document.createElement("span");c.textContent=EV[i.id].name;return c;}));}
+  };
+  applyPalette();rebuildDoors();
+})();
+function setView(three){G3.on=three&&G3.ok;$("view3d").hidden=!G3.on;$("plantwrap").hidden=G3.on;
+  $("vb3").setAttribute("aria-pressed",G3.on);$("vb2").setAttribute("aria-pressed",!G3.on);$("view3dctl").hidden=!G3.on;$("jumps").hidden=!G3.on;
+  try{localStorage.setItem("paper-mill-view",G3.on?"3d":"2d");}catch(e){}}
+$("vb3").addEventListener("click",()=>setView(true));$("vb2").addEventListener("click",()=>setView(false));
+{let pref="3d";try{pref=localStorage.getItem("paper-mill-view")||"3d";}catch(e){}setView(pref==="3d");}
+
 let last=performance.now(),uiAcc=0;
 function frame(now){
   const rdt=Math.min(0.1,(now-last)/1000);last=now;
   if(running){let simDt=rdt*C.simSpeed;while(simDt>0){const h=Math.min(0.5,simDt);step(h);simDt-=h;}}
   draw(running?rdt:0);
+  if(G3.on&&G3.frame)G3.frame(running?rdt:0);
   uiAcc+=rdt;if(uiAcc>0.2){uiAcc=0;syncControls();updateText();updateChaos();updateShop();drawTrend();}
   requestAnimationFrame(frame);
 }
