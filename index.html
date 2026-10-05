@@ -223,7 +223,14 @@ body.noknobs #cards{display:none}
 .ugrp .usum b{color:var(--ok);font-weight:700}.ugrp.closed .up{display:none}
 .shop.collapsed .ugroups{grid-template-columns:1fr;gap:6px}.shop.collapsed .ugrp{border-bottom:1px solid var(--line);padding-bottom:6px}
 .shop.collapsed .ugrp:not(.closed){display:grid;grid-template-columns:repeat(auto-fill,minmax(230px,1fr));gap:10px}.shop.collapsed .ugrp>h3{grid-column:1/-1;margin-bottom:0}
-.hint-m{display:none}
+.hint-m{display:none}.dm{display:none}
+@media (max-width:640px){
+  .dl{display:none}.chaoshead h2 span.dm{display:inline;margin-left:8px;font-size:12.5px;white-space:nowrap}
+  .chaoshead h2{white-space:nowrap;overflow:hidden;text-overflow:ellipsis;flex:1 1 100%;font-size:20px}
+  .chaoshead{gap:8px 10px}.chaoshead .check{flex:1 1 100%}
+  #chaosRandom{flex:1}#chaosMore,#shopMore{margin-left:0}
+  .shop .chaoshead .wallet{flex:1}
+  .trendhead .dm{display:inline}.trendhead .sw{width:10px;margin-right:3px}.trendhead{flex-wrap:nowrap;gap:9px;font-size:11px;white-space:nowrap;overflow:hidden}.trendhead b{margin-right:auto}}
 @media (max-width:640px){
   header{display:block}
   .brand{align-items:flex-start;gap:10px}.logo{width:36px;height:36px;border-radius:10px;margin-top:2px}.logo svg{width:20px;height:20px}
@@ -283,7 +290,7 @@ body{margin:0}
 </head>
 <body>
 
-<div class="ver" id="appVersion" aria-label="Version">v1.1.5</div>
+<div class="ver" id="appVersion" aria-label="Version">v1.1.6</div>
 <div class="wrap">
   <header>
     <div class="brand"><span class="logo" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linejoin="round"><circle cx="8.5" cy="12" r="5.5"/><circle cx="8.5" cy="12" r="1.6" fill="currentColor"/><path d="M8.5 6.5H20v11H8.5"/></svg></span>
@@ -327,7 +334,7 @@ body{margin:0}
 
   <section class="chaos collapsed" id="chaosSec" aria-label="Chaos">
     <div class="chaoshead">
-      <h2>Chaos<span>Trigger a disaster, or let them happen on their own.</span></h2>
+      <h2>Chaos<span class="dl">Trigger a disaster, or let them happen on their own.</span><span class="dm">Trigger one or let them happen.</span></h2>
       <label class="check"><input type="checkbox" id="chaosOn" checked> Random disasters on</label>
       <div class="simspeed"><label for="chaosLvl">Frequency</label><input id="chaosLvl" type="range" min="0.25" max="5" step="0.25" value="1"><span id="chaosLvlv" class="val">1×</span></div>
       <button id="chaosRandom" class="danger">Unleash random disaster</button>
@@ -348,7 +355,7 @@ body{margin:0}
   </section>
 
   <section class="shop collapsed" id="shopSec" aria-label="Upgrades">
-    <div class="chaoshead"><h2>Upgrades<span>Spend cash on throughput, speed, lower costs and automation.</span></h2>
+    <div class="chaoshead"><h2>Upgrades<span class="dl">Spend cash on throughput, speed, lower costs and automation.</span><span class="dm">Run faster and cheaper.</span></h2>
       <div class="wallet"><small>Cash on hand</small><span id="u-cash">–</span></div><button id="shopMore" class="more" aria-expanded="false" aria-controls="ugrid">Show more</button></div>
     <div class="shopbody">
       <div class="ledger" id="ledger"><h3>Books since start</h3></div>
@@ -360,11 +367,11 @@ body{margin:0}
     <h2 id="ov-h"></h2><p id="ov-p"></p><div class="btns"><button id="ov-a" class="primary"></button><button id="ov-b"></button></div></div></div>
 
   <section class="trendbox">
-    <div class="trendhead"><b>Last 24 h</b>
-      <span><i class="sw" style="background:var(--stock)"></i>Chest level %</span>
-      <span><i class="sw" style="background:var(--machine)"></i>Reel speed % of 3,300 fpm</span>
-      <span><i class="sw" style="background:var(--kraft)"></i>Bale yard % full</span>
-      <span><i class="sw" style="background:var(--ok)"></i>Roll warehouse % full</span>
+    <div class="trendhead"><b>Last 24<span class="dl"> </span>h</b>
+      <span><i class="sw" style="background:var(--stock)"></i>Chest<span class="dl"> level %</span></span>
+      <span><i class="sw" style="background:var(--machine)"></i>Reel speed<span class="dl"> % of 3,300 fpm</span></span>
+      <span><i class="sw" style="background:var(--kraft)"></i>Bale yard<span class="dl"> % full</span></span>
+      <span><i class="sw" style="background:var(--ok)"></i><span class="dm">Rolls</span><span class="dl">Roll warehouse % full</span></span>
     </div>
     <canvas id="trend" width="1200" height="150"></canvas>
   </section>
