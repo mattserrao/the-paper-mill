@@ -13,7 +13,7 @@
   --brand:#2f5bea;
   --kraft:#b07a43; --stock:#3b7fa8; --pulp:#74522f; --machine:#4b5568; --paperc:#b98d61; --g-skin:#f0cfb2; --g-tech:#ef7d22; --g-tile:#eef1f5;
   --ok:#1f9254; --warn:#c27a00; --bad:#d6382c;
-  --g-sky:#b3bbcb; --g-ground:#b3bbcb; --g-slab:#f4f5f9; --g-asphalt:#8c94a6; --g-wall:#ffffff; --g-lane:#f2b51d; --g-metal:#98a2b4; --g-felt:#6c7891;
+  --g-sky:#b3bbcb; --g-ground:#b3bbcb; --g-slab:#f4f5f9; --g-asphalt:#8c94a6; --g-wall:#ffffff; --g-lane:#f2b51d; --g-metal:#98a2b4; --g-felt:#6c7891; --g-wire:#3d8f9c;
   --g-frame:#646f86; --g-fork:#f5b70f; --g-glass:#2b3346;
   --fire:#f0661c; --fire2:#f6bf34; --water:#3d8fd6; --smoke:#8d93a0; --slime:#6f9223; --beaver:#7a4b25;
   --shadow:0 1px 2px rgba(28,34,51,.05),0 8px 24px rgba(28,34,51,.07);
@@ -1504,18 +1504,22 @@ const G3={on:false,ok:false};
   const fc=document.createElement("canvas");fc.width=64;fc.height=4;const fx2=fc.getContext("2d");fx2.fillStyle="#fff";fx2.fillRect(0,0,64,4);fx2.fillStyle="#9a9a9a";fx2.fillRect(0,0,10,4);
   const feltTex=new THREE.CanvasTexture(fc);feltTex.wrapS=THREE.RepeatWrapping;feltTex.encoding=THREE.sRGBEncoding;
   const feltMat=mat("g-felt",{map:feltTex,side:THREE.DoubleSide,flatShading:false,roughness:1});
-  function feltLoop(pts){const P2=[...pts,pts[0]],pos=[],uv=[],idx=[];let acc=0;
-    P2.forEach((p,i)=>{if(i)acc+=Math.hypot(p[0]-P2[i-1][0],p[1]-P2[i-1][1]);pos.push(p[0],p[1],zc-CD/2+0.1,p[0],p[1],zc+CD/2-0.1);uv.push(acc/2.5,0,acc/2.5,1);if(i){const b=(i-1)*2;idx.push(b,b+1,b+2,b+1,b+3,b+2);}});
+  function feltLoop(pts,lm=feltMat){const P2=[...pts,pts[0]],pos=[],uv=[],idx=[];let acc=0;
+    P2.forEach((p,i)=>{if(i)acc+=Math.hypot(p[0]-P2[i-1][0],p[1]-P2[i-1][1]);pos.push(p[0],p[1],-(CD-0.2),p[0],p[1],0);uv.push(acc/2.5,0,acc/2.5,1);if(i){const b=(i-1)*2;idx.push(b,b+1,b+2,b+1,b+3,b+2);}});
     const g=new THREE.BufferGeometry();g.setAttribute("position",new THREE.Float32BufferAttribute(pos,3));g.setAttribute("uv",new THREE.Float32BufferAttribute(uv,2));g.setIndex(idx);g.computeVertexNormals();
-    const m=new THREE.Mesh(g,feltMat);m.castShadow=true;m.receiveShadow=true;scene.add(m);return m;}
+    const m=new THREE.Mesh(g,lm);m.position.z=zc+CD/2-0.1;m.castShadow=true;m.receiveShadow=true;scene.add(m);return m;}
+  // forming fabric (wire) loop over the table and around the breast and couch rolls
+  const wireMat=mat("g-wire",{map:feltTex,side:THREE.DoubleSide,roughness:0.55});
+  const wireLoop=feltLoop([[40.9,2.93],[54.6,2.93],[55.05,2.4],[54.6,1.87],[40.9,1.87],[40.45,2.4]],wireMat);
+  const feltMeshes=[];
   const feltGuides=[];
   function guide(x,y){feltGuides.push(cylZ(0.28,CD+0.2,M.steel,x,y,zc,10));}
   // 1st press top felt
-  feltLoop([[35.6,3.47],[38.4,3.47],[39.4,5.6],[39.2,7.1],[35.2,7.1],[34.9,5.6]]);[[39.4,5.6],[39.2,7.1],[35.2,7.1],[34.9,5.6]].forEach(p=>guide(...p));
+  feltMeshes.push(feltLoop([[35.6,3.47],[38.4,3.47],[39.4,5.6],[39.2,7.1],[35.2,7.1],[34.9,5.6]]));[[39.4,5.6],[39.2,7.1],[35.2,7.1],[34.9,5.6]].forEach(p=>guide(...p));
   // 2nd press top felt
-  feltLoop([[30.5,3.47],[33.5,3.47],[34.2,6.1],[33.8,7.6],[30.3,7.6],[29.8,6.1]]);[[34.2,6.1],[33.8,7.6],[30.3,7.6],[29.8,6.1]].forEach(p=>guide(...p));
+  feltMeshes.push(feltLoop([[30.5,3.47],[33.5,3.47],[34.2,6.1],[33.8,7.6],[30.3,7.6],[29.8,6.1]]));[[34.2,6.1],[33.8,7.6],[30.3,7.6],[29.8,6.1]].forEach(p=>guide(...p));
   // tandem bottom felt: picks the sheet up off the wire and carries it through both nips
-  feltLoop([[41.2,2.95],[38,3.32],[30.6,3.32],[29.6,2.4],[29.6,0.55],[40.6,0.55],[41.6,1.7]]);[[29.6,2.4],[29.6,0.55],[40.6,0.55],[41.6,1.7]].forEach(p=>guide(...p));
+  feltMeshes.push(feltLoop([[41.2,2.95],[38,3.32],[30.6,3.32],[29.6,2.4],[29.6,0.55],[40.6,0.55],[41.6,1.7]]));[[29.6,2.4],[29.6,0.55],[40.6,0.55],[41.6,1.7]].forEach(p=>guide(...p));
   // press frames make the section stand out
   [zc-CD/2-0.55,zc+CD/2+0.55].forEach(z=>{box(1.1,6.2,0.5,M.steel,37,3.1,z);box(1.3,6.6,0.5,M.steel,32,3.3,z);box(6.5,0.5,0.5,M.steel,34.5,7.9,z);});
   const shoeMat=M.stock;
@@ -1731,6 +1735,36 @@ const G3={on:false,ok:false};
     lightning:[34.5,16,-15,"bolt"],tornado:[0,26,0,"!"],beaver:[-24,12,-12.5,"!"]};
   function person(group,m,x,z){const w=worker(m,M.warn);w.position.set(x,0,z);group.add(w);return w;}
   const FX={};
+  // wire / felt run-off: the loop runs off the tending side into a heap in the aisle, the section sits bare,
+  // the crew carry a new one out in its long shipping crate and pull it on from the front, and the heap is cleared
+  const JOBS={},CLOTH_TUBE=new THREE.MeshStandardMaterial({color:lin0("#d8c49b"),roughness:0.85});
+  function heapGeo(){const g=new THREE.SphereGeometry(1,32,14,0,Math.PI*2,0,Math.PI/2),pa=g.attributes.position,a=Math.random()*6;
+    for(let i=0;i<pa.count;i++){const x=pa.getX(i),y=pa.getY(i),z=pa.getZ(i),n=1+0.16*Math.sin(x*5+a)*Math.cos(z*6-a)+0.1*Math.sin((x+z)*11+y*7)+0.22*Math.sin(Math.atan2(z,x)*5+a)*(1-y);
+      pa.setXYZ(i,x*n,y*(0.8+0.3*n),z*n);}g.computeVertexNormals();return g;}
+  function clothJob(g,id,x,loops,hm){const HZ=14.1;
+    const heap=new THREE.Group();heap.position.set(x,0,HZ);g.add(heap);
+    [[0,0,2.7,1.25,1.25],[-1.9,0.3,1.3,0.7,0.9],[1.8,-0.2,1.5,0.8,1.0],[0.6,0.5,1.0,0.55,0.8]].forEach(([dx,dz,sx,sy,sz])=>{const m=new THREE.Mesh(heapGeo(),hm);m.scale.set(sx,sy,sz);m.position.set(dx,0,dz);m.rotation.y=Math.random()*3;m.castShadow=true;m.receiveShadow=true;heap.add(m);});
+    for(let k=0;k<4;k++){const f=new THREE.Mesh(new THREE.TorusGeometry(0.7+k*0.2,0.12,6,18,Math.PI*1.3),hm);f.position.set(-1.5+k,0.8+0.15*(k%2),R()*0.6);f.rotation.set(Math.PI/2+R()*0.5,R(),Math.random()*3);heap.add(f);}
+    const tube=new THREE.Group();g.add(tube);const TL=CD+1.2;
+    {const tg=new THREE.CylinderGeometry(0.42,0.42,TL-0.4,18);tg.rotateZ(Math.PI/2);const tb=new THREE.Mesh(tg,CLOTH_TUBE);tb.castShadow=true;tube.add(tb);tube.userData.roll=tb;
+      [-TL/2+0.12,TL/2-0.12].forEach(px=>{box(0.22,1.05,1.05,M.kraft,px,0,0,tube);});
+      [-0.42,0.42].forEach(pz=>box(TL,0.16,0.16,M.kraft,0,-0.47,pz,tube,false));[-TL/4,0,TL/4].forEach(px=>box(0.12,1.0,1.0,M.kraft,px,0,0,tube,false));}
+    return (now,rdt,f)=>{const J=JOBS[id]||(JOBS[id]={});J.t=now;J.x=x;J.hz=HZ;
+      const ss=v=>v*v*(3-2*v);let cov=0,hs=1;tube.visible=f>=0.44;
+      if(f<0.16){const k=f/0.16;cov=1-ss(k);hs=Math.max(0.02,ss(k));J.ph="run";if(Math.random()<rdt*14)emit("chip",x+R()*5,2+Math.random()*2,zc+CD/2+0.4,R(),1+Math.random(),2+Math.random()*2,0.8,0.22,"#ffffff",0.8);}
+      else if(f<0.44){J.ph="bare";}
+      else if(f<0.64){const k=ss((f-0.44)/0.2);J.ph="carry";J.tube=[x+20-20*k,16.2];tube.position.set(J.tube[0],1.55,J.tube[1]);tube.userData.roll.scale.set(1,1,1);}
+      else{const k=Math.min(1,(f-0.67)/0.27);J.ph=f<0.67?"set":"install";J.tube=[x,16.2];tube.position.set(x,0.6,16.2);cov=ss(Math.max(0,k));
+        tube.userData.roll.scale.set(1,1-0.65*cov,1-0.65*cov);if(f>0.86)hs=Math.max(0.02,1-(f-0.86)/0.12);}
+      heap.scale.setScalar(hs);heap.visible=hs>0.03;
+      loops.forEach(m=>{m.scale.z=Math.max(0.002,cov);m.visible=cov>0.004;});};}
+  // the cloth change plays on its own clock (at least ~16 s) so it reads at any sim speed
+  const CLOTH={fabric:{g:new THREE.Group(),ep:null},felt:{g:new THREE.Group(),ep:null}};
+  CLOTH.fabric.up=clothJob(CLOTH.fabric.g,"fabric",47.7,[wireLoop],mat("g-wire",{roughness:0.6}));CLOTH.felt.up=clothJob(CLOTH.felt.g,"felt",34.8,feltMeshes,M.felt);
+  for(const id in CLOTH){CLOTH[id].g.visible=false;scene.add(CLOTH[id].g);}
+  function clothTick(now,rdt){for(const id in CLOTH){const c=CLOTH[id],inc=S.inc.find(i=>i.id===id);
+      if(inc&&(!c.ep||c.ep.inc!==inc.real)){if(c.ep)c.ep.inc=inc.real;else c.ep={inc:inc.real,t0:now,dur:Math.max(16000,inc.left/Math.max(1,C.simSpeed)*1000)};}
+      if(!c.ep)continue;const f=(now-c.ep.t0)/c.ep.dur;if(f>=1){c.ep=null;c.g.visible=false;continue;}c.g.visible=true;c.up(now,rdt,f);}}
   const FXDEF={
     shaft:g=>{const z=zone(g,4,20,12.9,16.6);const motor=box(2.2,1.8,1.8,M.steel,12,0.9,14.8,g);
       const s1=cylZ(0.22,2.6,M.metal,10.6,1.0,14.0,12,g),s2=cylZ(0.22,2.6,M.metal,13.4,0.6,14.2,12,g);s1.rotation.y=0.5;s2.rotation.y=-0.7;s2.rotation.x=0.4;
@@ -1738,10 +1772,8 @@ const G3={on:false,ok:false};
         if(Math.random()<rdt*3)emit("smoke",12,2,14.5,R(),1.6,0.4,2.4,1.8,"#a0a6b2",0.5);};},
     dryerfire:g=>{const spots=[];for(let i=0;i<10;i++)spots.push([(872-i*32-600)/10,6.4,zc+(i%2?1.2:-1.2)]);const fire=fireAt(spots,12,2.0),smoke=smokeCol(-3,27,8,zc-2,zc+2,16,"#a3a9b5",0.55,4);const z=zone(g,-6,30,4.4,13.8);
       return (now,rdt,inc)=>{const k0=Math.max(0.2,Math.min(1,inc.left/inc.total*1.4));fire(rdt,k0);smoke(rdt);z(now);for(let k=0;k<3;k++)if(Math.random()<rdt*30)emit("drop",-4+Math.random()*32,12.6,zc+R()*6,0,-6,0,0.9,0.28,"#3d8fd6",0.85);};},
-    fabric:g=>{const z=zone(g,39,56,5,13.2);const rag=new THREE.Mesh(new THREE.TorusKnotGeometry(1.4,0.28,90,10,2,3),FM.fabric);rag.position.set(48,1.6,zc);rag.castShadow=true;g.add(rag);
-      return now=>{z(now);rag.rotation.y=now/900;rag.position.y=1.6+Math.sin(now/300)*0.15;};},
-    felt:g=>{const z=zone(g,29,40.5,5,13.2);const r=new THREE.Mesh(new THREE.TorusGeometry(3.6,0.16,10,40),pinMat);r.position.set(34.5,3.5,zc+3.6);g.add(r);const r2=r.clone();r2.position.z=zc-3.6;g.add(r2);
-      return (now,rdt)=>{z(now);const s=1+0.08*Math.sin(now/120);r.scale.setScalar(s);r2.scale.setScalar(s);if(Math.random()<rdt*6)emit("steam",32+Math.random()*5,4,zc+R()*5,R(),1.8,0,2.2,1.6,"#ffffff",0.7);};},
+    fabric:g=>{const z=zone(g,39,56,5,13.2);return now=>z(now);},
+    felt:g=>{const z=zone(g,29,40.5,5,13.2);return now=>z(now);},
     slime:g=>{const blobs=[];for(let k=0;k<34;k++){const b=new THREE.Mesh(sphereG,FM.scab);const i=k%10,top=k%2;b.position.set((top?872:856)/10-60-i*3.2+R(),top?6.75:1.05,zc+R()*5.5);
         b.userData.s=0.18+Math.random()*0.3;b.scale.set(b.userData.s*1.4,b.userData.s*0.45,b.userData.s);g.add(b);blobs.push(b);}
       return now=>blobs.forEach((b,k)=>{const f=1+0.18*Math.sin(now/300+k);b.scale.set(b.userData.s*1.4*f,b.userData.s*0.45,b.userData.s*f);});},
@@ -1813,6 +1845,7 @@ const G3={on:false,ok:false};
   const blackEl=$("blackout3d"),incHost=$("labels3d");let lastIncTxt=0;
   function fxUpdate(rdt,now){
     for(const id in FX){FX[id].g.visible=false;FX[id].el.hidden=true;}
+    [wireLoop,...feltMeshes].forEach(m=>{m.scale.z=1;m.visible=true;});clothTick(now,rdt);
     const doTxt=now-lastIncTxt>200;if(doTxt)lastIncTxt=now;const w=host.clientWidth,hh=host.clientHeight;
     S.inc.forEach((inc,i)=>{const def=FXDEF[inc.id];let f=FX[inc.id];
       if(!f){const g=new THREE.Group();scene.add(g);const pp=PINS[inc.id]||[0,10,0,"!"];f=FX[inc.id]={g,up:null,pin:pinAt(g,pp[0],pp[1],pp[2],pp[3]),el:document.createElement("div")};
@@ -1865,6 +1898,7 @@ const G3={on:false,ok:false};
     else if(mode==="hose"){arm=[-1.5+0.05*Math.sin(t*20),-1.4];lean=-0.18;leg=0.35;u.noz.visible=true;}
     else if(mode==="ext"){arm=[-1.35+0.08*Math.sin(t*9),-0.5];lean=-0.12;leg=0.25;u.ext.visible=true;}
     else if(mode==="fix"){const s=Math.sin(t*13);lean=-0.85;arm=[-1.1+0.55*s,-0.8];leg=0.5;u.tool.visible=true;}
+    else if(mode==="haul"){const s=Math.sin(t*8);leg=0.4*s;arm=[-2.85,-2.85];bob=Math.abs(s)*0.04;}
     else if(mode==="walk"){const s=Math.sin(t*7.5);leg=0.42*s;arm=[-0.4*s,0.4*s];lean=-0.04;bob=Math.abs(s)*0.04;}
     else if(mode==="inspect"){arm=[-1.55+0.1*Math.sin(t*2),0.05];lean=-0.22;}
     else if(mode==="flail"){const s=Math.sin(t*17);leg=0.95*s;arm=[-2.6+0.9*s,-2.6-0.9*s];lean=-0.3;bob=Math.abs(s)*0.2;}
@@ -1945,6 +1979,16 @@ const G3={on:false,ok:false};
         const arrived=act==="look"||moveP(w,tx,tz,10,rdt);
         if(arrived&&fx)face(w,fx[0],fx[1],rdt);pose(w,arrived?act:(shuttle&&act==="dump"?"carry":"run"),now);return;}
       if(brkOn){[tx,tz]=RT[i];const arrived=moveP(w,tx,tz,10,rdt);if(arrived)face(w,tx,zc,rdt);pose(w,arrived?"rethread":"run",now);return;}
+      const job=["felt","fabric"].map(id=>JOBS[id]).find(J=>J&&now-J.t<300);
+      if(job){const order=HOME.map((h,j)=>[Math.abs(h[0]-job.x),j]).sort((a,b)=>a[0]-b[0]).map(a=>a[1]),r=order.indexOf(i);
+        if(r<4){let gx,gz,act,lx,lz;
+          if(job.ph==="run"||job.ph==="bare"){gx=job.x-3.6+r*2.4;gz=job.hz+(r%2?1.9:-1.2);act=job.ph==="run"?"look":"clean";lx=job.x;lz=job.hz;}
+          else if(job.ph==="carry"){gx=job.tube[0]-2.4+r*1.6;gz=job.tube[1]+(r%2?0.75:-0.75);act="haul";}
+          else if(job.ph==="set"){gx=job.tube[0]-2.4+r*1.6;gz=job.tube[1]+(r%2?0.9:-0.9);act="clean";lx=job.x;lz=job.tube[1];}
+          else{gx=job.x-2.7+r*1.8;gz=13.25;act="rethread";lx=gx;lz=zc;}
+          const arrived=moveP(w,gx,gz,job.ph==="carry"?12:9,rdt);
+          if(job.ph==="carry"){if(arrived)w.rotation.y=Math.PI;pose(w,arrived?"haul":"run",now);}
+          else{if(arrived&&lx!==undefined)face(w,lx,lz,rdt);pose(w,arrived?act:"run",now);}return;}}
       const u=w.userData;
       if(RUN.on){if(!u.chase&&Math.abs(RUN.x-w.position.x)<11)u.chase=true;
         if(u.chase){const back=2.4+(i%3)*1.3;moveP(w,RUN.x-RUN.dir*back,RUN.z+(i%2?0.9:-0.9),8.4,rdt);pose(w,"run",now);return;}}
@@ -2027,7 +2071,7 @@ const G3={on:false,ok:false};
     cylZ(0.3,0.16,M.ink,0.78,0.3,0,16,g);cylZ(0.3,0.16,M.ink,-0.55,0.3,-0.45,16,g);cylZ(0.3,0.16,M.ink,-0.55,0.3,0.45,16,g);
     box(0.04,1.4,0.04,M.ink,-0.82,1.5,0.25,g,false);const flag=new THREE.Mesh(new THREE.PlaneGeometry(0.42,0.26),new THREE.MeshBasicMaterial({color:lin(tok("fire")),side:THREE.DoubleSide}));flag.position.set(-0.6,2.08,0.25);g.add(flag);
     scene.add(g);return g;}
-  const MAINT_SPOT={shaft:[12,16.4],fabric:[48,14.6],felt:[34.5,14.6],ragger:[21.5,-9.5],overflow:[-5,-10.5],chestover:[29.5,-9.6],fleet:[-6.3,-14],roof:[-21.6,24],lightning:[40,-8]};
+  const MAINT_SPOT={shaft:[12,16.4],fabric:[53.5,14.6],felt:[40.5,14.6],ragger:[21.5,-9.5],overflow:[-5,-10.5],chestover:[29.5,-9.6],fleet:[-6.3,-14],roof:[-21.6,24],lightning:[40,-8]};
   function lane(p){return p[1]>2.4?"F":"C";}
   function route(from,to){const pts=[],lf=lane(from),lt=lane(to);
     pts.push(lf==="F"?[from[0],17.6]:[Math.max(from[0],-5.5),-0.6]);
@@ -2129,7 +2173,7 @@ const G3={on:false,ok:false};
     press.forEach((p,i)=>{p.material=LV("shoe")&&i===3?shoeMat:M.metal;});
     const rr=0.4+2.6*Math.sqrt(S.reel/P.jumbo);reel.scale.set(rr,rr,1);reel.rotation.z=V.cans*0.8;
     if(Math.abs(rr-sheetR)>0.08){sheetR=rr;buildSheet(rr);}
-    sheetMesh.visible=pmRun;sheetTex.offset.x=-V.sheet/24*1.0;
+    sheetMesh.visible=pmRun&&!CLOTH.fabric.ep&&!CLOTH.felt.ep;sheetTex.offset.x=-V.sheet/24*1.0;
     // roll conveyor
     let nr=0;S.rollsVis.forEach(r=>{if(nr>=16)return;const s=r.p*131;let x,z;if(s<80){x=-18.7;z=11.6+s/80*7.8;}else{x=-18.7-(s-80)/51*5;z=19.4;}m4.makeTranslation(x,1.2,z);beltRolls.setMatrixAt(nr++,m4);});
     beltRolls.count=nr;beltRolls.instanceMatrix.needsUpdate=true;
