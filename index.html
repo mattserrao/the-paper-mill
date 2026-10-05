@@ -1,0 +1,942 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>The Paper Mill</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@500;600;700&family=IBM+Plex+Sans:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500&display=swap">
+<style>
+/* Layout: control-room HMI — KPI strip, live process schematic (serpentine, two rows), trend, then one control card per area in flow order */
+:root{
+  --bg:#e8ebe9; --panel:#f7f8f6; --ink:#1b2321; --muted:#5a6762; --line:#c3cbc7;
+  --kraft:#a26c33; --stock:#3f7686; --machine:#3a4744; --paperc:#fbfaf6;
+  --ok:#2b8549; --warn:#b97c0b; --bad:#bf3c28; --chip:#dfe4e1;
+  --fire:#e8641b; --fire2:#f2b632; --water:#3a86c8; --smoke:#7f8784; --slime:#6f9223; --beaver:#7a4b25;
+  --f-display:"Barlow Condensed","Arial Narrow",Arial,sans-serif;
+  --f-body:"IBM Plex Sans",system-ui,-apple-system,"Segoe UI",sans-serif;
+  --f-mono:"IBM Plex Mono",ui-monospace,Menlo,Consolas,monospace;
+}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]){
+  --bg:#131918; --panel:#1b2322; --ink:#e2e8e5; --muted:#8e9b96; --line:#2e3a37;
+  --kraft:#d29a56; --stock:#6ea8b7; --machine:#a3b1ad; --paperc:#e9e6dc;
+  --ok:#52bf77; --warn:#e3aa3c; --bad:#e6684f; --chip:#25302e;
+  --fire:#ff7d33; --fire2:#ffd257; --water:#5aa8e6; --smoke:#6f7774; --slime:#9cc23f; --beaver:#a8693a; color-scheme:dark}}
+:root[data-theme="dark"]{
+  --bg:#131918; --panel:#1b2322; --ink:#e2e8e5; --muted:#8e9b96; --line:#2e3a37;
+  --kraft:#d29a56; --stock:#6ea8b7; --machine:#a3b1ad; --paperc:#e9e6dc;
+  --ok:#52bf77; --warn:#e3aa3c; --bad:#e6684f; --chip:#25302e;
+  --fire:#ff7d33; --fire2:#ffd257; --water:#5aa8e6; --smoke:#6f7774; --slime:#9cc23f; --beaver:#a8693a; color-scheme:dark}
+*{box-sizing:border-box}
+body{background:var(--bg);color:var(--ink);font-family:var(--f-body);font-size:14px;line-height:1.45}
+.wrap{max-width:1240px;margin:0 auto;padding:20px 16px 40px;display:flex;flex-direction:column;gap:16px}
+header{display:flex;flex-wrap:wrap;gap:12px 24px;align-items:flex-end;justify-content:space-between}
+h1{font-family:var(--f-display);font-weight:700;font-size:30px;letter-spacing:.02em;margin:0;line-height:1;text-wrap:balance}
+h1 small{display:block;font-family:var(--f-body);font-weight:400;font-size:13px;color:var(--muted);letter-spacing:0;margin-top:6px}
+.transport{display:flex;flex-wrap:wrap;gap:8px;align-items:center}
+button{font:600 13px var(--f-body);color:var(--ink);background:var(--panel);border:1px solid var(--line);border-radius:6px;padding:7px 12px;cursor:pointer}
+button:hover{border-color:var(--muted)}
+button:focus-visible,input:focus-visible,select:focus-visible{outline:2px solid var(--stock);outline-offset:2px}
+button.primary{background:var(--stock);border-color:var(--stock);color:var(--panel)}
+.simspeed{display:flex;align-items:center;gap:8px;font-size:12px;color:var(--muted)}
+.simspeed input{width:120px}
+.kpis{display:grid;grid-template-columns:repeat(auto-fit,minmax(130px,1fr));gap:1px;background:var(--line);border:1px solid var(--line);border-radius:8px;overflow:hidden}
+.kpi{background:var(--panel);padding:10px 12px;min-width:0}
+.kpi .k{font:600 11px var(--f-display);letter-spacing:.08em;text-transform:uppercase;color:var(--muted)}
+.kpi .v{font:500 20px var(--f-mono);font-variant-numeric:tabular-nums;white-space:nowrap}
+.kpi .s{font-size:11.5px;color:var(--muted);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.scroller{overflow-x:auto;border:1px solid var(--line);border-radius:8px;background:var(--panel)}
+#plant{display:block;width:100%;min-width:760px;height:auto}
+.trendbox{border:1px solid var(--line);border-radius:8px;background:var(--panel);padding:10px 12px}
+.trendhead{display:flex;flex-wrap:wrap;gap:6px 16px;align-items:center;font-size:12px;color:var(--muted)}
+.trendhead b{font:600 12px var(--f-display);letter-spacing:.08em;text-transform:uppercase;color:var(--ink);margin-right:auto}
+.sw{display:inline-block;width:14px;height:3px;border-radius:2px;vertical-align:middle;margin-right:5px}
+#trend{display:block;width:100%;height:150px}
+.cards{display:grid;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));gap:12px}
+.card{background:var(--panel);border:1px solid var(--line);border-radius:8px;padding:12px 14px;display:flex;flex-direction:column;gap:10px;min-width:0}
+.card h2{margin:0;font:700 17px var(--f-display);letter-spacing:.03em;display:flex;align-items:center;gap:8px}
+.card h2 .n{font:500 11px var(--f-mono);color:var(--muted);border:1px solid var(--line);border-radius:4px;padding:1px 5px}
+.pill{margin-left:auto;font:600 11px var(--f-display);letter-spacing:.06em;text-transform:uppercase;padding:2px 8px;border-radius:999px;background:var(--chip);color:var(--muted);white-space:nowrap}
+.pill.ok{color:var(--ok)} .pill.warn{color:var(--warn)} .pill.bad{color:var(--bad)}
+.row{display:grid;grid-template-columns:1fr auto;gap:2px 10px;align-items:center}
+.row label{font-size:12.5px;color:var(--muted)}
+.row .val{font:500 13px var(--f-mono);font-variant-numeric:tabular-nums;text-align:right}
+.row .ctl{grid-column:1/-1;display:flex;gap:8px;align-items:center}
+.row input[type=range]{flex:1;min-width:0;accent-color:var(--stock)}
+.auto{font:600 11px var(--f-display);letter-spacing:.06em;padding:3px 8px;border-radius:4px;background:var(--chip);color:var(--muted);border:1px solid transparent}
+.auto[aria-pressed="true"]{color:var(--ok);border-color:var(--ok)}
+.read{font:12px var(--f-mono);color:var(--muted);font-variant-numeric:tabular-nums;border-top:1px dashed var(--line);padding-top:8px}
+select{font:13px var(--f-body);color:var(--ink);background:var(--panel);border:1px solid var(--line);border-radius:6px;padding:4px 6px}
+.check{display:flex;gap:8px;align-items:center;font-size:12.5px;color:var(--muted)}
+.foot{font-size:12px;color:var(--muted);max-width:75ch}
+.shop{background:var(--panel);border:1px solid var(--line);border-radius:8px;padding:12px 14px;display:flex;flex-direction:column;gap:14px}
+.wallet{font:500 22px var(--f-mono);font-variant-numeric:tabular-nums}
+.wallet small{display:block;font:11px var(--f-display);letter-spacing:.1em;text-transform:uppercase;color:var(--muted)}
+.shopbody{display:grid;grid-template-columns:minmax(0,260px) minmax(0,1fr);gap:18px}
+@media (max-width:780px){.shopbody{grid-template-columns:1fr}}
+.ledger{display:flex;flex-direction:column;gap:4px}
+.ledger h3,.ugrp h3{margin:0 0 6px;font:700 13px var(--f-display);letter-spacing:.1em;text-transform:uppercase;color:var(--muted)}
+.ledger .net{border-top:1px solid var(--line);padding-top:6px;margin-top:2px}
+.ledger .pos b{color:var(--ok)} .ledger .neg b{color:var(--bad)}
+.ugroups{display:grid;grid-template-columns:repeat(auto-fit,minmax(230px,1fr));gap:14px;align-content:start}
+.ugrp{display:flex;flex-direction:column;gap:8px;min-width:0}
+.up{border:1px solid var(--line);border-radius:6px;padding:8px 10px;display:flex;flex-direction:column;gap:6px;min-width:0}
+.up.max{border-style:dashed}
+.up .uh{display:flex;justify-content:space-between;gap:8px;align-items:baseline}
+.up .uh b{font:600 13.5px var(--f-body)}
+.pips{display:flex;gap:3px;flex:none}
+.pips i{width:9px;height:9px;border-radius:2px;background:var(--chip);border:1px solid var(--line)}
+.pips i.on{background:var(--stock);border-color:var(--stock)}
+.up p{margin:0;font-size:12px;color:var(--muted)}
+.up .buy{align-self:flex-start;font:500 12.5px var(--f-mono);padding:5px 10px}
+.up .buy:not(:disabled){background:var(--stock);border-color:var(--stock);color:var(--panel)}
+.up .buy:disabled{cursor:not-allowed;color:var(--muted)}
+.overlay{position:fixed;inset:0;z-index:20;display:grid;place-items:center;padding:16px;background:color-mix(in srgb,var(--bg) 78%,transparent)}
+.overlay[hidden]{display:none}
+.modal{background:var(--panel);border:2px solid var(--ink);border-radius:10px;padding:20px 22px;max-width:440px;display:flex;flex-direction:column;gap:10px}
+.modal h2{margin:0;font:700 30px var(--f-display);letter-spacing:.02em}
+.modal p{margin:0;color:var(--muted)}
+.modal .btns{display:flex;gap:8px;flex-wrap:wrap}
+.kpi.money .v{color:var(--ok)} .kpi.money.neg .v{color:var(--bad)}
+.namefield{display:flex;align-items:center;gap:6px;font-size:12px;color:var(--muted)}
+.namefield input{font:600 14px var(--f-mono);width:10ch;color:var(--ink);background:var(--panel);border:1px solid var(--line);border-radius:6px;padding:6px 8px}
+.chaos{background:var(--panel);border:1px solid var(--line);border-radius:8px;padding:12px 14px;display:flex;flex-direction:column;gap:14px}
+.chaoshead{display:flex;flex-wrap:wrap;gap:8px 16px;align-items:center}
+.chaoshead h2{margin:0 auto 0 0;font:700 24px var(--f-display);letter-spacing:.05em;text-transform:uppercase}
+.chaoshead h2 span{font:400 13px var(--f-body);letter-spacing:0;text-transform:none;color:var(--muted);margin-left:8px}
+button.danger{background:var(--bad);border-color:var(--bad);color:var(--panel)}
+.chaosbody{display:grid;grid-template-columns:minmax(0,290px) minmax(0,1fr);gap:18px}
+@media (max-width:780px){.chaosbody{grid-template-columns:1fr}}
+.board{display:flex;flex-direction:column;gap:10px;min-width:0}
+.sign{border:3px double var(--ink);border-radius:6px;padding:8px 10px;text-align:center;font:700 13px var(--f-display);letter-spacing:.1em;text-transform:uppercase}
+.sign big{display:block;font:500 40px var(--f-mono);line-height:1.1;color:var(--ok);letter-spacing:0}
+.sign.hot big{color:var(--bad)}
+.stat{display:flex;justify-content:space-between;align-items:baseline;gap:8px;font-size:12.5px;color:var(--muted)}
+.stat b{font:500 13px var(--f-mono);color:var(--ink);font-variant-numeric:tabular-nums;text-align:right}
+.rating{display:flex;gap:10px;align-items:center;border:1px solid var(--line);border-radius:6px;padding:8px 10px}
+.rating .g{font:700 34px var(--f-display);line-height:1;width:1.2em;text-align:center}
+.rating .g.A,.rating .g.B{color:var(--ok)} .rating .g.C{color:var(--warn)} .rating .g.D,.rating .g.F{color:var(--bad)}
+.rating div{font-size:12.5px;color:var(--muted);min-width:0}
+.rating div b{display:block;color:var(--ink);font-weight:600}
+.active{display:flex;flex-direction:column;gap:4px;font-size:12.5px}
+.active .none{color:var(--muted)}
+.active .it{border-left:3px solid var(--bad);padding:2px 0 2px 8px}
+.active .it small{display:block;font:11.5px var(--f-mono);color:var(--muted)}
+.feed{font:11.5px var(--f-mono);max-height:170px;overflow:auto;border-top:1px dashed var(--line);padding-top:8px;display:flex;flex-direction:column;gap:3px}
+.feed .bad{color:var(--bad)} .feed .ok{color:var(--ok)} .feed span{color:var(--muted)}
+.groups{display:grid;grid-template-columns:repeat(auto-fit,minmax(215px,1fr));gap:14px;align-content:start}
+.grp h3{margin:0 0 8px;font:700 13px var(--f-display);letter-spacing:.1em;text-transform:uppercase;color:var(--muted)}
+.ev{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:8px;align-items:center;margin-bottom:6px}
+.ev .trig{text-align:left;font-weight:500;padding:6px 10px;display:flex;justify-content:space-between;gap:6px;min-width:0}
+.ev .trig[aria-pressed="true"]{background:var(--bad);border-color:var(--bad);color:var(--panel)}
+.ev .trig small{font:11px var(--f-mono);white-space:nowrap}
+.ev label{font-size:11.5px;color:var(--muted);display:flex;gap:4px;align-items:center;white-space:nowrap}
+@media (prefers-reduced-motion: reduce){*{scroll-behavior:auto}}
+[hidden]{display:none!important}
+body{margin:0}
+</style>
+
+</head>
+<body>
+<div class="wrap">
+  <header>
+    <h1>The Paper Mill<small>Run <span id="h-name">PM1</span> from OCC truck to roll truck. Make money, survive the chaos, buy upgrades. Reach $25M to win.</small></h1>
+    <div class="transport">
+      <label class="namefield" for="pmname">Machine</label><input id="pmname" maxlength="14" value="PM1" spellcheck="false" autocomplete="off" style="font:600 14px var(--f-mono);width:10ch;color:var(--ink);background:var(--panel);border:1px solid var(--line);border-radius:6px;padding:6px 8px">
+      <button id="play" class="primary" aria-pressed="true">Pause</button>
+      <button id="balance">Balance all</button>
+      <button id="reset">Reset</button>
+      <div class="simspeed"><label for="simspeed">Sim speed</label><input id="simspeed" type="range" min="1" max="120" step="1" value="30"><span id="simspeedv" class="val">30 min/s</span></div>
+    </div>
+  </header>
+
+  <section class="kpis" aria-label="Key figures">
+    <div class="kpi money" id="k-cash-box"><div class="k">Cash</div><div class="v" id="k-cash">–</div><div class="s" id="k-cash-s">&nbsp;</div></div>
+    <div class="kpi"><div class="k">Profit</div><div class="v" id="k-profit">–</div><div class="s" id="k-profit-s">&nbsp;</div></div>
+    <div class="kpi"><div class="k">Sim clock</div><div class="v" id="k-clock">Day 1 00:00</div><div class="s" id="k-clock-s">&nbsp;</div></div>
+    <div class="kpi"><div class="k">Reel speed</div><div class="v" id="k-speed">–</div><div class="s" id="k-speed-s">&nbsp;</div></div>
+    <div class="kpi"><div class="k">Production</div><div class="v" id="k-prod">–</div><div class="s" id="k-prod-s">&nbsp;</div></div>
+    <div class="kpi"><div class="k">Stock chest</div><div class="v" id="k-tank">–</div><div class="s" id="k-tank-s">&nbsp;</div></div>
+    <div class="kpi"><div class="k">OCC bale yard</div><div class="v" id="k-yard">–</div><div class="s" id="k-yard-s">&nbsp;</div></div>
+    <div class="kpi"><div class="k">Roll warehouse</div><div class="v" id="k-fg">–</div><div class="s" id="k-fg-s">&nbsp;</div></div>
+  </section>
+
+  <div class="scroller"><canvas id="plant" width="1200" height="660" aria-label="Animated mill schematic"></canvas></div>
+
+  <section class="chaos" aria-label="Chaos">
+    <div class="chaoshead">
+      <h2>Chaos<span>Trigger a disaster, or let them happen on their own.</span></h2>
+      <label class="check"><input type="checkbox" id="chaosOn" checked> Random disasters on</label>
+      <div class="simspeed"><label for="chaosLvl">Frequency</label><input id="chaosLvl" type="range" min="0.25" max="5" step="0.25" value="1"><span id="chaosLvlv" class="val">1×</span></div>
+      <button id="chaosRandom" class="danger">Unleash random disaster</button>
+      <button id="chaosClear">Clear all incidents</button>
+    </div>
+    <div class="chaosbody">
+      <div class="board">
+        <div class="sign" id="c-sign">This mill has worked<big id="c-days">0.0</big>days without an incident</div>
+        <div class="rating"><span class="g A" id="c-grade">A</span><div><b id="c-grade-t">Bonus secured</b><span id="c-grade-s">–</span></div></div>
+        <div class="stat"><span>Production lost vs. max speed</span><b id="c-lost">0 t</b></div>
+        <div class="stat"><span>Incidents so far</span><b id="c-count">0</b></div>
+        <div class="active" id="c-active"><span class="none">No active incidents.</span></div>
+        <div class="feed" id="c-feed" aria-live="polite"></div>
+      </div>
+      <div class="groups" id="chaosgrid"></div>
+    </div>
+  </section>
+
+  <section class="shop" aria-label="Upgrades">
+    <div class="chaoshead"><h2>Upgrades<span>Spend cash on throughput, speed, lower costs and automation.</span></h2>
+      <div class="wallet"><small>Cash on hand</small><span id="u-cash">–</span></div></div>
+    <div class="shopbody">
+      <div class="ledger" id="ledger"><h3>Books since start</h3></div>
+      <div class="ugroups" id="ugrid"></div>
+    </div>
+  </section>
+
+  <div class="overlay" id="overlay" hidden><div class="modal" role="dialog" aria-modal="true" aria-labelledby="ov-h">
+    <h2 id="ov-h"></h2><p id="ov-p"></p><div class="btns"><button id="ov-a" class="primary"></button><button id="ov-b"></button></div></div></div>
+
+  <section class="trendbox">
+    <div class="trendhead"><b>Last 24 h</b>
+      <span><i class="sw" style="background:var(--stock)"></i>Chest level %</span>
+      <span><i class="sw" style="background:var(--machine)"></i>Reel speed % of 3,300 fpm</span>
+      <span><i class="sw" style="background:var(--kraft)"></i>Bale yard % full</span>
+      <span><i class="sw" style="background:var(--ok)"></i>Roll warehouse % full</span>
+    </div>
+    <canvas id="trend" width="1200" height="150"></canvas>
+  </section>
+
+  <section class="cards" id="cards">
+    <div class="card"><h2><span class="n">1</span>Inbound OCC trucks<span class="pill" id="p-in">–</span></h2>
+      <div class="row" data-key="inRate"><label for="s-inRate">Truck arrivals</label><span class="val"></span><div class="ctl"><input id="s-inRate" type="range" min="0" max="8" step="0.1"><button class="auto" aria-pressed="true">AUTO</button></div></div>
+      <div class="read" id="r-in">–</div></div>
+
+    <div class="card"><h2><span class="n">2</span>Receiving &amp; pulper feed<span class="pill" id="p-rec">–</span></h2>
+      <div class="row" data-key="drivers"><label for="s-drivers">Forklift drivers on shift</label><span class="val"></span><div class="ctl"><input id="s-drivers" type="range" min="0" max="10" step="1"><button class="auto" aria-pressed="true">AUTO</button></div></div>
+      <div class="read" id="r-rec">–</div></div>
+
+    <div class="card"><h2><span class="n">3</span>Pulper<span class="pill" id="p-pul">–</span></h2>
+      <div class="row" data-key="pulper"><label for="s-pulper">OCC feed rate</label><span class="val"></span><div class="ctl"><input id="s-pulper" type="range" min="0" max="70" step="0.5"><button class="auto" aria-pressed="true">AUTO</button></div></div>
+      <div class="read" id="r-pul">–</div></div>
+
+    <div class="card"><h2><span class="n">4</span>Stock storage chest<span class="pill" id="p-tank">–</span></h2>
+      <div class="row" data-key="lvlTarget"><label for="s-lvlTarget">Level target (auto pulper aims here)</label><span class="val"></span><div class="ctl"><input id="s-lvlTarget" type="range" min="20" max="95" step="1"></div></div>
+      <div class="row" data-key="lowLevel"><label for="s-lowLevel">PM slows below</label><span class="val"></span><div class="ctl"><input id="s-lowLevel" type="range" min="10" max="60" step="1"></div></div>
+      <div class="read" id="r-tank">–</div></div>
+
+    <div class="card"><h2><span class="n">5</span><span>Paper machine <span id="pm-title">PM1</span></span><span class="pill" id="p-pm">–</span></h2>
+      <div class="row"><label for="grade">Grade</label><span class="val"><select id="grade"></select></span></div>
+      <div class="row" data-key="pmSp"><label for="s-pmSp">Max reel speed</label><span class="val"></span><div class="ctl"><input id="s-pmSp" type="range" min="1200" max="3300" step="10"><button class="auto" aria-pressed="true">AUTO</button></div></div>
+      <div class="row" data-key="rollW"><label for="s-rollW">Finished roll weight</label><span class="val"></span><div class="ctl"><input id="s-rollW" type="range" min="0.8" max="3" step="0.1"></div></div>
+      <label class="check"><input type="checkbox" id="breaks"> Random sheet breaks (calibration data: 14% of time)</label>
+      <div class="read" id="r-pm">–</div></div>
+
+    <div class="card"><h2><span class="n">6</span>Warehouse &amp; shipping<span class="pill" id="p-ship">–</span></h2>
+      <div class="row" data-key="loaders"><label for="s-loaders">Clamp-truck loaders on shift</label><span class="val"></span><div class="ctl"><input id="s-loaders" type="range" min="0" max="10" step="1"><button class="auto" aria-pressed="true">AUTO</button></div></div>
+      <div class="row" data-key="outRate"><label for="s-outRate">Outbound truck arrivals</label><span class="val"></span><div class="ctl"><input id="s-outRate" type="range" min="0" max="10" step="0.1"><button class="auto" aria-pressed="true">AUTO</button></div></div>
+      <div class="read" id="r-ship">–</div></div>
+  </section>
+
+  <p class="foot">Auto keeps each area matched to the paper machine: pulper feed tracks machine demand plus a correction toward the chest level target, truck arrivals and crews follow from that. Drag any slider to take that area to manual; press its AUTO chip or "Balance all" to hand it back. Production is speed × basis weight, scaled so 23m at 2,736 fpm and 24.55 lb gives 34.8 t/h, the calibration median. Chaos events change the same flows: a machine incident stops the reel, stock prep incidents stop the pulper or cut yield, warehouse incidents cut crews, docks or trucks. Money: rolls are paid for when an outbound truck leaves (grade price × tons). OCC is paid for when it is unloaded, energy and chemicals per ton made, wages per crew member per hour, plus $4,000/h mill overhead and a repair bill for each disaster. Below −$1.5M the mill goes bankrupt. Assumptions: 22 t OCC per inbound truck, 88% pulper yield, 300 t chest, 30 t/h per forklift driver, 25 rolls/h per loader, 20 rolls per outbound truck.</p>
+</div>
+
+<script>
+(()=>{
+const GRADES={ "23m":{sp:2736,bw:24.55}, "26m":{sp:2433,bw:26.06}, "30m":{sp:2222,bw:30.05}, "33HT":{sp:2084,bw:33.08} };
+const P={truckLoad:22,doors:3,driverRate:30,doorRate:45,yieldF:0.88,tankCap:300,yardCap:2000,yardTarget:800,
+  fgCap:1500,fgTarget:300,jumbo:25,winderRate:60,loaderRate:25,truckRolls:20,doorRolls:45,shipDoors:3,
+  K:34.8/(2736*24.55),minSpeed:1200,ramp:150,pmLoss:0.98,maxQueue:8};
+const UNITS={inRate:v=>v.toFixed(1)+" trucks/h",drivers:v=>Math.round(v)+" drivers",pulper:v=>v.toFixed(1)+" t/h",
+  lvlTarget:v=>Math.round(v)+" %",lowLevel:v=>Math.round(v)+" %",pmSp:v=>Math.round(v).toLocaleString()+" fpm",
+  rollW:v=>v.toFixed(1)+" t",loaders:v=>Math.round(v)+" loaders",outRate:v=>v.toFixed(1)+" trucks/h"};
+const AUTOKEYS=["inRate","drivers","pulper","pmSp","loaders","outRate"];
+
+let C,S;
+const BASE={...P};
+const ECON={price:{"23m":680,"26m":700,"30m":720,"33HT":780},energy:95,chem:25,wage:45,robot:15,overhead:4000,start:2e6,bankrupt:-1.5e6,goal:25e6};
+const REPAIR={shaft:250e3,dryerfire:400e3,fabric:90e3,felt:45e3,slime:30e3,ragger:15e3,overflow:120e3,badocc:0,balefire:150e3,fleet:40e3,calloff:10e3,fight:5e3,roof:80e3,highway:0,lightning:200e3,tornado:500e3,beaver:25e3};
+const UGROUPS=[["machine","Paper machine"],["stock","Stock prep"],["yard","Warehouse & logistics"],["mgmt","Management"]];
+const UPS=[
+ {id:"drive",g:"machine",name:"Drive & gearbox rebuild",lv:[400e3,900e3,1.8e6],desc:"+150 fpm max speed per level."},
+ {id:"deckle",g:"machine",name:"Wider trim (deckle)",lv:[1.2e6,2.5e6],desc:"+6% tons at the same speed per level."},
+ {id:"shoe",g:"machine",name:"Shoe press",lv:[3e6],desc:"+100 fpm and 12% less energy per ton."},
+ {id:"monitor",g:"machine",name:"Fabric & felt monitoring",lv:[350e3,800e3],desc:"Machine failures 40% rarer and fewer sheet breaks, per level."},
+ {id:"fire",g:"machine",name:"Fire suppression",lv:[500e3],desc:"Dryer and bale yard fires 60% rarer and half as long."},
+ {id:"pulper",g:"stock",name:"Pulper rotor upgrade",lv:[600e3,1.4e6],desc:"+25 t/h pulper capacity per level."},
+ {id:"clean",g:"stock",name:"Screens & cleaners",lv:[450e3,1e6],desc:"+3 points of pulper yield per level."},
+ {id:"chest",g:"stock",name:"Bigger stock chest",lv:[300e3,700e3],desc:"+150 t of chest storage per level."},
+ {id:"detrash",g:"stock",name:"Detrashing automation",lv:[400e3],desc:"Ragger and overflow incidents 60% rarer. Junk OCC hurts half as much."},
+ {id:"feedconv",g:"stock",name:"Automatic bale feed",lv:[900e3],desc:"The conveyor feeds itself. Drivers only unload trucks."},
+ {id:"forklift",g:"yard",name:"Electric forklift fleet",lv:[350e3,750e3],desc:"+25% tons per driver-hour per level. Red-tag outages rarer."},
+ {id:"docks",g:"yard",name:"Extra dock doors",lv:[250e3,600e3],desc:"+1 receiving and +1 shipping door per level."},
+ {id:"agv",g:"yard",name:"Robotic roll handling",lv:[800e3,1.6e6,3e6],desc:"+2 robot loaders per level. $15/h each, never call off."},
+ {id:"wh",g:"yard",name:"Warehouse extension",lv:[500e3,1.1e6],desc:"+750 rolls of storage per level."},
+ {id:"safety",g:"yard",name:"Safety & HR program",lv:[200e3],desc:"Dock fights and call-offs half as often."},
+ {id:"apc",g:"mgmt",name:"Advanced process control",lv:[700e3,1.5e6],desc:"+2% tons and 8% less energy per level."},
+ {id:"contract",g:"mgmt",name:"Long-term OCC contract",lv:[400e3,900e3],desc:"OCC costs $20/t less per level."},
+ {id:"sales",g:"mgmt",name:"Sales team",lv:[500e3,1.2e6],desc:"Paper sells for $25/t more per level."},
+ {id:"insure",g:"mgmt",name:"Insurance policy",lv:[150e3],desc:"Repair bills cut 60%. Premium $1,500/h."},
+];
+const UP=Object.fromEntries(UPS.map(u=>[u.id,u]));
+const LV=id=>(S&&S.up&&S.up[id])||0;
+function applyUpgrades(){
+  P.K=BASE.K*Math.pow(1.06,LV("deckle"))*(1+0.02*LV("apc"));
+  P.spBonus=150*LV("drive")+100*LV("shoe");
+  P.energyMul=(1-0.12*LV("shoe"))*(1-0.08*LV("apc"));
+  P.pulperMax=70+25*LV("pulper"); P.yieldF=BASE.yieldF+0.03*LV("clean"); P.tankCap=BASE.tankCap+150*LV("chest");
+  P.driverRate=BASE.driverRate*(1+0.25*LV("forklift")); P.doors=3+LV("docks"); P.shipDoors=3+LV("docks");
+  P.robots=2*LV("agv"); P.fgCap=BASE.fgCap+750*LV("wh"); P.autoFeed=LV("feedconv")>0;
+  P.occPrice=160-20*LV("contract"); P.priceAdd=25*LV("sales"); P.repairMul=LV("insure")?0.4:1; P.premium=LV("insure")?1500:0;
+  P.breakBase=Math.pow(0.7,LV("monitor"));
+  const sp=document.getElementById("s-pmSp"),pu=document.getElementById("s-pulper");
+  if(sp)sp.max=3300+P.spBonus; if(pu)pu.max=P.pulperMax;
+}
+function freqMul(id){let m=1;
+  if(["shaft","fabric","felt","dryerfire","slime"].includes(id))m*=Math.pow(0.6,LV("monitor"));
+  if(id==="dryerfire"||id==="balefire")m*=LV("fire")?0.4:1;
+  if(id==="ragger"||id==="overflow")m*=LV("detrash")?0.4:1;
+  if(id==="fleet")m*=Math.pow(0.6,LV("forklift"));
+  if(id==="fight"||id==="calloff")m*=LV("safety")?0.5:1;
+  return m;}
+function durMul(id){return (id==="dryerfire"||id==="balefire")&&LV("fire")?0.5:1;}
+function spend(v,k){S.cash-=v;S.ledger[k]+=v;}
+function earn(v){S.cash+=v;S.ledger.rev+=v;}
+function money(v){const a=Math.abs(v),sg=v<0?"−":"";return a>=1e6?`${sg}$${(a/1e6).toFixed(2)}M`:a>=1e4?`${sg}$${Math.round(a/1e3)}k`:`${sg}$${Math.round(a).toLocaleString()}`;}
+function inY(d){const n=P.doors;return n<=3?[130,185,240][d]:118+d*150/(n-1);}
+function outY(d){const n=P.shipDoors;return n<=3?[500,555,610][d]:495+d*120/(n-1);}
+const CH={on:true,lvl:1,en:{}};
+let NAME="PM1"; try{NAME=localStorage.getItem("mill-twin-name")||"PM1";}catch(e){}
+const BANNERS=[];
+const GROUPS=[["machine","Paper machine"],["stock","Stock prep"],["yard","Warehouse & trucks"],["god","Acts of nature"]];
+const EVENTS=[
+ {id:"shaft",g:"machine",name:"Driveshaft snaps",head:"Dryer driveshaft snaps. Millwrights called in.",dur:[240,480],mtbf:160,mods:{pmDown:"driveshaft"},fx:"shaft"},
+ {id:"dryerfire",g:"machine",name:"Fire in the dryers",head:"Fire in the dryer hood! Deluge on, sheet off.",dur:[180,360],mtbf:260,mods:{pmDown:"dryer fire"},fx:"dryerfire"},
+ {id:"fabric",g:"machine",name:"Fabric runs off",head:"Forming fabric tracked off the rolls and folded up.",dur:[150,300],mtbf:180,mods:{pmDown:"fabric change"},fx:"fabric"},
+ {id:"felt",g:"machine",name:"Press felt blows",head:"Press felt blown. Crew pulling a new felt.",dur:[90,180],mtbf:140,mods:{pmDown:"felt change"},fx:"felt"},
+ {id:"slime",g:"machine",name:"Slime outbreak",head:"Slime outbreak in the wet end. Holes everywhere, speed cut to 70%.",dur:[300,600],mtbf:150,mods:{speedCap:0.7,breakMul:3},fx:"slime"},
+ {id:"ragger",g:"stock",name:"Ragger rope snaps",head:"Ragger rope snaps. Pulper stopped to fish it out.",dur:[90,180],mtbf:140,mods:{pulperDown:1},fx:"ragger"},
+ {id:"overflow",g:"stock",name:"Pulper overflows",head:"Pulper overflows and floods the bale yard!",dur:[240,360],mtbf:220,mods:{pulperDown:1,recvMul:0.5},fx:"flood",
+   start:i=>{const l=S.yard*0.15;S.yard-=l;i.note=`${Math.round(l)} t of bales soaked`;}},
+ {id:"badocc",g:"stock",name:"Junk OCC delivered",head:"Junk OCC: wax, plastic and wet bales. Yield and runnability drop.",dur:[600,900],mtbf:160,mods:{yieldMul:0.8,breakMul:2},fx:"badocc"},
+ {id:"balefire",g:"stock",name:"Bale yard fire",head:"Bale yard fire! Receiving evacuated.",dur:[180,300],mtbf:320,mods:{recvMul:0},fx:"balefire",
+   start:i=>{const l=S.yard*0.3;S.yard-=l;i.note=`${Math.round(l)} t of OCC burned`;}},
+ {id:"fleet",g:"yard",name:"Forklifts red-tagged",head:"Half the forklift fleet fails inspection. Short trucks for the 12 h shift.",dur:[720,720],mtbf:200,fx:"fleet",
+   start:i=>{i.drvCap=Math.max(1,Math.floor(C.drivers.v/2));i.ldrCap=Math.max(1,Math.floor(C.loaders.v/2));i.note=`${i.drvCap} forklifts, ${i.ldrCap} clamp trucks working`;}},
+ {id:"calloff",g:"yard",name:"Drivers call off",head:"Drivers call off. The shift runs short.",dur:[720,720],mtbf:150,fx:"calloff",
+   start:i=>{const n=1+Math.floor(Math.random()*3);i.drvCap=Math.max(0,Math.round(C.drivers.v)-n);i.ldrCap=Math.max(1,Math.round(C.loaders.v)-1);i.note=`${n} drivers and 1 loader out`;}},
+ {id:"fight",g:"yard",name:"Brawl at the dock",head:"Two truck drivers brawl over a dock door. Police close receiving.",dur:[120,240],mtbf:240,mods:{docksClosed:1},fx:"fight"},
+ {id:"roof",g:"yard",name:"Warehouse roof leak",head:"Roof leak over the roll warehouse. Wet rolls culled.",dur:[240,480],mtbf:260,mods:{clampMul:0.6},fx:"roof",
+   start:i=>{const l=Math.round(S.fg*0.08);S.fg-=l;i.note=`${l} rolls scrapped`;}},
+ {id:"highway",g:"yard",name:"Highway closed",head:"Jack-knifed tanker closes the highway. No trucks in or out.",dur:[360,600],mtbf:300,mods:{noIn:1,noOut:1},fx:"highway"},
+ {id:"lightning",g:"god",name:"Lightning strike",head:"Lightning hits the substation. Mill-wide blackout!",dur:[60,180],mtbf:400,mods:{pmDown:"power outage",pulperDown:1,recvMul:0,clampMul:0},fx:"outage"},
+ {id:"tornado",g:"god",name:"Tornado",head:"Tornado touches down on the mill site!",dur:[60,120],mtbf:600,fx:"tornado",
+   start:i=>{const pool=EVENTS.filter(e=>e.g!=="god"&&!active(e.id));for(let k=0;k<2&&pool.length;k++){const e=pool.splice(Math.floor(Math.random()*pool.length),1)[0];trigger(e.id,true);}
+     const l=Math.round(S.fg*0.05);S.fg-=l;i.note=`${l} rolls blown away`;}},
+ {id:"beaver",g:"god",name:"Giant beaver",head:"A giant beaver crawls out of the river and starts eating the bale yard!",dur:[120,240],mtbf:700,mods:{yardEat:120,recvMul:0.3},fx:"beaver"},
+];
+const EV=Object.fromEntries(EVENTS.map(e=>[e.id,e]));
+EVENTS.forEach(e=>CH.en[e.id]=true);
+function active(id){return S.inc.some(i=>i.id===id);}
+function baseMods(){return {pmDown:null,pulperDown:false,speedCap:1,breakMul:1,yieldMul:1,recvMul:1,clampMul:1,drvCap:99,ldrCap:99,docksClosed:false,noIn:false,noOut:false,yardEat:0};}
+function mods(){const m=baseMods();
+  for(const i of S.inc){const e=EV[i.id].mods||{};
+    if(e.pmDown)m.pmDown=e.pmDown; if(e.pulperDown)m.pulperDown=true; if(e.docksClosed)m.docksClosed=true; if(e.noIn)m.noIn=true; if(e.noOut)m.noOut=true;
+    if(e.speedCap)m.speedCap=Math.min(m.speedCap,e.speedCap); if(e.breakMul)m.breakMul*=e.breakMul; if(e.yieldMul)m.yieldMul*=(i.id==="badocc"&&LV("detrash"))?0.9:e.yieldMul;
+    if(e.recvMul!==undefined)m.recvMul*=e.recvMul; if(e.clampMul!==undefined)m.clampMul*=e.clampMul; if(e.yardEat)m.yardEat+=e.yardEat;
+    if(i.drvCap!==undefined)m.drvCap=Math.min(m.drvCap,i.drvCap); if(i.ldrCap!==undefined)m.ldrCap=Math.min(m.ldrCap,i.ldrCap);}
+  return m;}
+function log(text,cls){S.feed.unshift({t:S.t,text,cls});if(S.feed.length>40)S.feed.pop();}
+function trigger(id,quiet){
+  if(active(id))return;
+  const e=EV[id],dur=(e.dur[0]+Math.random()*(e.dur[1]-e.dur[0]))*durMul(id);
+  const inc={id,left:dur,total:dur,real:performance.now(),note:""};
+  S.inc.push(inc);S.lastInc=S.t;S.tot.incidents++;
+  if(!quiet){BANNERS.push({text:e.head,t:null});while(BANNERS.length>3)BANNERS.splice(1,1);}
+  if(e.start)e.start(inc);
+  const bill=(REPAIR[id]||0)*P.repairMul; if(bill>0){spend(bill,"repairs");inc.note=(inc.note?inc.note+" · ":"")+`repair bill ${money(bill)}`;}
+  log(e.head+(inc.note?` (${inc.note})`:""),"bad");
+  S.M=mods();
+}
+function clearIncident(id){const i=S.inc.find(x=>x.id===id);if(i)i.left=0;}
+function chaosTick(dt){
+  for(const i of S.inc)i.left-=dt;
+  for(const i of S.inc)if(i.left<=0)log(`${EV[i.id].name}: cleared, back to normal`,"ok");
+  S.inc=S.inc.filter(i=>i.left>0);
+  if(CH.on)for(const e of EVENTS)if(CH.en[e.id]&&!active(e.id)&&Math.random()<dt/60/e.mtbf*CH.lvl*freqMul(e.id))trigger(e.id);
+}
+function initCtrl(){
+  C={inRate:{v:1.8,auto:true},drivers:{v:3,auto:true},pulper:{v:40,auto:true},lvlTarget:{v:69},lowLevel:{v:30},
+     pmSp:{v:2736,auto:true},rollW:{v:1.8},loaders:{v:2,auto:true},outRate:{v:1,auto:true},grade:"23m",breaks:false,simSpeed:30};
+}
+function initState(){
+  S={t:0,yard:700,tank:0.69*P.tankCap,fg:300,pmSpeed:C.pmSp.v,pm:"run",breakLeft:0,reel:8,winderBuf:0,winderAcc:0,
+     inPhase:0.6,inJit:1,outPhase:0.3,outJit:1,inQ:[],inDock:[null,null,null],outQ:[],outDock:[null,null,null],leaving:[],
+     rates:{feed:0,unload:0,fiberIn:0,prod:0,fiberUse:0,load:0,rolls:0},
+     tot:{inTrucks:0,inTons:0,turned:0,prodT:0,rolls:0,shipped:0,outTrucks:0,breaks:0,breakMin:0,turnups:0,pot:0,incidents:0},
+     trend:[],trendAcc:0,rollsVis:[],inc:[],lastInc:0,feed:[],M:baseMods(),effDrv:C.drivers.v,effLd:C.loaders.v,effHum:C.loaders.v};
+  S.up={};S.cash=ECON.start;S.ledger={rev:0,occ:0,energy:0,labor:0,overhead:0,repairs:0,premium:0,upgrades:0};S.profitRate=0;S.over=null;S.won=false;S.shipT=0;
+  Object.assign(P,BASE);applyUpgrades();
+  const g=GRADES[C.grade]; C.pmSp.v=g.sp+P.spBonus;
+  const demand=P.K*g.sp*g.bw/P.pmLoss; C.pulper.v=demand/P.yieldF;
+  C.inRate.v=C.pulper.v/P.truckLoad; C.drivers.v=Math.ceil(2*C.pulper.v/P.driverRate+0.15);
+  const rph=P.K*g.sp*g.bw/C.rollW.v; C.loaders.v=Math.ceil(rph*1.15/P.loaderRate); C.outRate.v=rph/P.truckRolls;
+  S.rates.fiberIn=demand; S.rates.prod=demand*P.pmLoss; S.rates.feed=C.pulper.v;
+}
+initCtrl(); initState();
+
+const clamp=(x,a,b)=>Math.max(a,Math.min(b,x));
+const ease=(cur,tgt,dt,tau)=>cur+(tgt-cur)*Math.min(1,dt/tau);
+
+function autoControl(dt){
+  const g=GRADES[C.grade], level=S.tank/P.tankCap*100;
+  if(C.pmSp.auto) C.pmSp.v=g.sp+P.spBonus;
+  const pmWants = (S.pm==="full"||S.pm==="incident")?0:P.K*C.pmSp.v*g.bw/P.pmLoss;
+  if(C.pulper.auto){
+    const fiber=pmWants+(C.lvlTarget.v-level)/100*P.tankCap/1.5;
+    C.pulper.v=ease(C.pulper.v,clamp(fiber/P.yieldF,0,P.pulperMax),dt,4);
+  }
+  if(C.inRate.auto){
+    const queuePenalty=S.inQ.length*0.15;
+    const r=C.pulper.v/P.truckLoad+(P.yardTarget-S.yard)/(P.truckLoad*10)-queuePenalty;
+    C.inRate.v=ease(C.inRate.v,clamp(r,0,8),dt,10);
+  }
+  if(C.drivers.auto){
+    const need=((P.autoFeed?0:C.pulper.v)+C.inRate.v*P.truckLoad)/P.driverRate;
+    if(need>C.drivers.v-0.1) C.drivers.v=Math.min(10,Math.ceil(need+0.1));
+    else if(need<C.drivers.v-1.3) C.drivers.v=Math.max(1,C.drivers.v-1);
+  }
+  const rph=Math.max(S.rates.prod, S.pm==="run"?P.K*C.pmSp.v*g.bw*0.9:0)/C.rollW.v;
+  if(C.outRate.auto){
+    const r=rph/P.truckRolls+(S.fg-P.fgTarget)/(P.truckRolls*8)-S.outQ.length*0.1;
+    C.outRate.v=ease(C.outRate.v,clamp(r,0,10),dt,10);
+  }
+  if(C.loaders.auto){
+    const need=(C.outRate.v*P.truckRolls*1.1)/P.loaderRate-P.robots;
+    if(need>C.loaders.v-0.1) C.loaders.v=Math.min(10,Math.ceil(need+0.1));
+    else if(need<C.loaders.v-1.3) C.loaders.v=Math.max(P.robots>0?0:1,C.loaders.v-1);
+  }
+}
+
+function newTruck(kind){return kind==="in"?{load:P.truckLoad,x:-70,y:292,wait:0}:{load:0,x:-70,y:455,wait:0};}
+
+function step(dt){
+  S.t+=dt;
+  const cash0=S.cash;
+  chaosTick(dt);
+  const M=S.M=mods();
+  autoControl(dt);
+  const g=GRADES[C.grade];
+  // 1 inbound arrivals
+  if(!M.noIn) S.inPhase+=dt*C.inRate.v/60*S.inJit;
+  while(S.inPhase>=1){S.inPhase-=1;S.inJit=0.6+Math.random()*0.8;
+    if(S.inQ.length<P.maxQueue){S.inQ.push(newTruck("in"));S.tot.inTrucks++;} else S.tot.turned++;}
+  S.inQ.forEach(t=>t.wait+=dt);
+  if(!M.docksClosed) for(let d=0;d<P.doors;d++) if(!S.inDock[d]&&S.inQ.length) S.inDock[d]=S.inQ.shift();
+  // 2 receiving: drivers split between pulper feed and unloading
+  const level0=S.tank/P.tankCap;
+  let want=M.pulperDown?0:C.pulper.v;
+  if(level0>0.97) want=Math.min(want,S.rates.fiberUse/P.yieldF);
+  const effDrv=Math.min(C.drivers.v,M.drvCap); S.effDrv=effDrv;
+  let cap=effDrv*P.driverRate*dt/60*M.recvMul;
+  const feedRes=P.autoFeed?(M.recvMul>0?want*dt/60:0):Math.min(want*dt/60,cap); if(!P.autoFeed)cap-=feedRes;
+  let unloaded=0;
+  for(let d=0;d<P.doors;d++){const tr=S.inDock[d]; if(!tr||M.docksClosed)continue;
+    const u=Math.min(tr.load,P.doorRate*dt/60,cap,Math.max(0,P.yardCap-S.yard));
+    tr.load-=u;cap-=u;S.yard+=u;unloaded+=u;S.tot.inTons+=u;spend(u*P.occPrice,"occ");
+    if(tr.load<=0.001){S.leaving.push({...tr,ty:inY(d),kind:"in"});S.inDock[d]=null;}}
+  const feed=Math.min(feedRes,S.yard); S.yard-=feed;
+  // 3 pulper → chest
+  if(M.yardEat) S.yard=Math.max(0,S.yard-M.yardEat*dt/60);
+  const fiberIn=feed*P.yieldF*M.yieldMul; S.tank=Math.min(P.tankCap,S.tank+fiberIn);
+  // 5 paper machine
+  const level=S.tank/P.tankCap*100, low=C.lowLevel.v;
+  if(M.pmDown){ if(S.pm!=="incident") S.pm="incident"; }
+  else if(S.pm==="incident"){ S.pm=level>8?"run":"down"; S.pmSpeed=Math.min(S.pmSpeed,P.minSpeed); }
+  if(S.pm==="break"){S.breakLeft-=dt;S.tot.breakMin+=dt;if(S.breakLeft<=0&&level>8){S.pm="run";S.pmSpeed=Math.min(C.pmSp.v,P.minSpeed+300);}}
+  else if(S.pm==="down"){if(level>=Math.max(20,low*0.8)){S.pm="run";S.pmSpeed=P.minSpeed;}}
+  else if(S.pm==="full"){if(S.fg<P.fgCap*0.95){S.pm="run";S.pmSpeed=P.minSpeed;}}
+  let prod=0;
+  if(S.pm==="run"){
+    let tgt=C.pmSp.v*M.speedCap;
+    if(level<low){const f=clamp((level-5)/(low-5),0,1);
+      const supply=(S.rates.fiberIn*P.pmLoss)/(P.K*g.bw);
+      tgt=Math.min(C.pmSp.v,Math.max(supply,C.pmSp.v*f));}
+    tgt=Math.max(Math.min(tgt,C.pmSp.v*M.speedCap),P.minSpeed);
+    const r=P.ramp*dt; S.pmSpeed+=clamp(tgt-S.pmSpeed,-r*2,r);
+    if(level<5){S.pm="down";}
+    else if(S.fg>=P.fgCap){S.pm="full";}
+    else if(Math.random()<dt/154*P.breakBase*((C.breaks?1:0)+(M.breakMul-1))){S.pm="break";S.breakLeft=8+Math.random()*34;S.tot.breaks++;}
+    if(S.pm==="run"){
+      prod=P.K*S.pmSpeed*g.bw*dt/60;
+      const use=prod/P.pmLoss;
+      if(use>S.tank){prod=S.tank*P.pmLoss;}
+      S.tank-=prod/P.pmLoss;
+    }
+  }
+  if(S.pm!=="run") S.pmSpeed=ease(S.pmSpeed,0,dt,3);
+  S.reel+=prod; S.tot.prodT+=prod; spend(prod*(ECON.energy*P.energyMul+ECON.chem),"energy"); S.tot.pot+=P.K*C.pmSp.v*g.bw*dt/60;
+  if(S.reel>=P.jumbo){S.winderBuf+=S.reel;S.reel=0;S.tot.turnups++;}
+  const cut=Math.min(S.winderBuf,P.winderRate*C.rollW.v*dt/60); S.winderBuf-=cut; S.winderAcc+=cut;
+  let rollsMade=0;
+  while(S.winderAcc>=C.rollW.v){S.winderAcc-=C.rollW.v;S.fg+=1;rollsMade++;S.tot.rolls++;
+    if(S.rollsVis.length<14) S.rollsVis.push({p:0});}
+  // 6 outbound
+  if(!M.noOut) S.outPhase+=dt*C.outRate.v/60*S.outJit;
+  while(S.outPhase>=1){S.outPhase-=1;S.outJit=0.6+Math.random()*0.8;
+    if(S.outQ.length<P.maxQueue){S.outQ.push(newTruck("out"));S.tot.outTrucks++;}}
+  S.outQ.forEach(t=>t.wait+=dt);
+  for(let d=0;d<P.shipDoors;d++) if(!S.outDock[d]&&S.outQ.length) S.outDock[d]=S.outQ.shift();
+  const effHum=Math.min(C.loaders.v,M.ldrCap); S.effHum=effHum; const effLd=effHum+P.robots; S.effLd=effLd;
+  let lcap=effLd*P.loaderRate*dt/60*M.clampMul, loaded=0;
+  for(let d=0;d<P.shipDoors;d++){const tr=S.outDock[d]; if(!tr)continue;
+    const l=Math.min(P.truckRolls-tr.load,P.doorRolls*dt/60,lcap,S.fg);
+    tr.load+=l;lcap-=l;S.fg-=l;loaded+=l;
+    if(tr.load>=P.truckRolls-1e-6){S.leaving.push({...tr,ty:outY(d),kind:"out"});S.outDock[d]=null;S.tot.shipped+=P.truckRolls;const tons=P.truckRolls*C.rollW.v;S.shipT+=tons;earn(tons*(ECON.price[C.grade]+P.priceAdd));}}
+  spend(((C.drivers.v+C.loaders.v)*ECON.wage+P.robots*ECON.robot)*dt/60,"labor");
+  spend(ECON.overhead*dt/60,"overhead"); if(P.premium)spend(P.premium*dt/60,"premium");
+  S.profitRate=ease(S.profitRate,(S.cash-cash0)*60/dt*24,dt,480);
+  if(!S.over&&S.cash<ECON.bankrupt){S.over="bankrupt";showOverlay("bankrupt");}
+  if(!S.won&&S.cash>=ECON.goal){S.won=true;showOverlay("win");}
+  // smoothed rates (per hour)
+  const R=S.rates,k=v=>v*60/dt;
+  R.feed=ease(R.feed,k(feed),dt,6);R.unload=ease(R.unload,k(unloaded),dt,6);R.fiberIn=ease(R.fiberIn,k(fiberIn),dt,6);
+  R.prod=ease(R.prod,k(prod),dt,6);R.fiberUse=ease(R.fiberUse,k(prod/P.pmLoss),dt,6);R.load=ease(R.load,k(loaded),dt,6);R.rolls=ease(R.rolls,k(rollsMade),dt,10);
+  // trend every 10 sim min
+  S.trendAcc+=dt;
+  if(S.trendAcc>=10){S.trendAcc-=10;S.trend.push([S.tank/P.tankCap,S.pmSpeed/3300,S.yard/P.yardCap,S.fg/P.fgCap]);if(S.trend.length>144)S.trend.shift();}
+}
+
+/* ---------- UI wiring ---------- */
+const $=id=>document.getElementById(id);
+const gradeSel=$("grade");
+Object.keys(GRADES).forEach(k=>{const o=document.createElement("option");o.value=k;o.textContent=`${k} · ${GRADES[k].bw} lb · $${ECON.price[k]}/t`;gradeSel.appendChild(o);});
+gradeSel.addEventListener("change",()=>{C.grade=gradeSel.value;});
+const rows=[...document.querySelectorAll(".row[data-key]")];
+let dragging=null;
+rows.forEach(r=>{
+  const key=r.dataset.key, inp=r.querySelector("input"), btn=r.querySelector(".auto");
+  inp.addEventListener("pointerdown",()=>dragging=key);
+  inp.addEventListener("pointerup",()=>dragging=null);
+  inp.addEventListener("blur",()=>dragging=null);
+  inp.addEventListener("input",()=>{C[key].v=parseFloat(inp.value); if(btn){C[key].auto=false;}});
+  if(btn) btn.addEventListener("click",()=>{C[key].auto=!C[key].auto;});
+});
+function syncControls(){
+  rows.forEach(r=>{const key=r.dataset.key, inp=r.querySelector("input"), btn=r.querySelector(".auto");
+    if(dragging!==key && document.activeElement!==inp) inp.value=C[key].v;
+    else if(C[key].auto) inp.value=C[key].v;
+    r.querySelector(".val").textContent=UNITS[key](C[key].v);
+    if(btn){btn.setAttribute("aria-pressed",C[key].auto?"true":"false");btn.textContent=C[key].auto?"AUTO":"MANUAL";}
+  });
+  gradeSel.value=C.grade; $("breaks").checked=C.breaks;
+}
+$("breaks").addEventListener("change",e=>C.breaks=e.target.checked);
+$("balance").addEventListener("click",()=>{AUTOKEYS.forEach(k=>C[k].auto=true);});
+$("reset").addEventListener("click",()=>newGame());
+let running=true;
+$("play").addEventListener("click",e=>{running=!running;e.target.textContent=running?"Pause":"Run";e.target.setAttribute("aria-pressed",running);});
+$("simspeed").addEventListener("input",e=>{C.simSpeed=+e.target.value;$("simspeedv").textContent=C.simSpeed+" min/s";});
+
+const cgrid=$("chaosgrid");
+GROUPS.forEach(([g,lab])=>{const d=document.createElement("div");d.className="grp";const h=document.createElement("h3");h.textContent=lab;d.appendChild(h);
+  EVENTS.filter(e=>e.g===g).forEach(e=>{const r=document.createElement("div");r.className="ev";
+    r.innerHTML=`<button class="trig" id="ev-${e.id}" aria-pressed="false"><span>${e.name}</span><small></small></button><label><input type="checkbox" id="en-${e.id}" checked> random</label>`;
+    d.appendChild(r);
+    r.querySelector("button").addEventListener("click",()=>{active(e.id)?clearIncident(e.id):trigger(e.id);updateChaos();});
+    r.querySelector("input").addEventListener("change",ev=>{CH.en[e.id]=ev.target.checked;});});
+  cgrid.appendChild(d);});
+$("chaosOn").addEventListener("change",e=>CH.on=e.target.checked);
+$("chaosLvl").addEventListener("input",e=>{CH.lvl=+e.target.value;$("chaosLvlv").textContent=CH.lvl+"×";});
+$("chaosRandom").addEventListener("click",()=>{const pool=EVENTS.filter(e=>!active(e.id));if(pool.length)trigger(pool[Math.floor(Math.random()*pool.length)].id);updateChaos();});
+$("chaosClear").addEventListener("click",()=>{S.inc.forEach(i=>i.left=0);});
+function applyName(){$("h-name").textContent=NAME;$("pm-title").textContent=NAME;$("pmname").value=NAME;}
+$("pmname").addEventListener("input",e=>{NAME=e.target.value.trim()||"PM";$("h-name").textContent=NAME;$("pm-title").textContent=NAME;try{localStorage.setItem("mill-twin-name",NAME);}catch(err){}});
+applyName();
+const ugrid=$("ugrid");
+UGROUPS.forEach(([g,lab])=>{const d=document.createElement("div");d.className="ugrp";const h=document.createElement("h3");h.textContent=lab;d.appendChild(h);
+  UPS.filter(u=>u.g===g).forEach(u=>{const el=document.createElement("div");el.className="up";el.id="up-"+u.id;
+    el.innerHTML=`<div class="uh"><b>${u.name}</b><span class="pips">${u.lv.map(()=>"<i></i>").join("")}</span></div><p>${u.desc}</p><button class="buy" id="buy-${u.id}"></button>`;
+    el.querySelector("button").addEventListener("click",()=>buy(u.id));d.appendChild(el);});
+  ugrid.appendChild(d);});
+function buy(id){const u=UP[id],l=LV(id);if(l>=u.lv.length)return;const cost=u.lv[l];if(S.cash<cost)return;
+  spend(cost,"upgrades");S.up[id]=l+1;applyUpgrades();
+  BANNERS.push({text:`${u.name}${u.lv.length>1?" level "+(l+1):""} is online.`,t:null,kind:"good"});while(BANNERS.length>3)BANNERS.splice(1,1);
+  log(`Installed ${u.name}${u.lv.length>1?" level "+(l+1):""} (${money(cost)})`,"ok");updateShop();}
+const LEDGER=[["rev","Paper sales",1],["occ","OCC purchases",-1],["energy","Energy & chemicals",-1],["labor","Wages & robots",-1],["overhead","Mill overhead",-1],["repairs","Disaster repairs",-1],["premium","Insurance premium",-1],["upgrades","Upgrades bought",-1]];
+function updateShop(){
+  $("u-cash").textContent=money(S.cash);
+  UPS.forEach(u=>{const l=LV(u.id),el=$("up-"+u.id),b=$("buy-"+u.id),max=l>=u.lv.length;
+    el.classList.toggle("max",max);el.querySelectorAll(".pips i").forEach((p,k)=>p.classList.toggle("on",k<l));
+    if(max){b.disabled=true;b.textContent="Maxed";}
+    else{const c=u.lv[l];b.disabled=S.cash<c;b.textContent=S.cash<c?`Need ${money(c)}`:`Buy ${money(c)}`;}});
+  const lg=$("ledger");lg.replaceChildren();const h=document.createElement("h3");h.textContent="Books since start";lg.appendChild(h);
+  let net=0;LEDGER.forEach(([k,lab,sg])=>{const v=S.ledger[k]*sg;net+=v;if((k==="premium"||k==="repairs")&&!S.ledger[k])return;
+    const d=document.createElement("div");d.className="stat "+(v>=0?"pos":"neg");d.innerHTML=`<span>${lab}</span><b>${money(v)}</b>`;lg.appendChild(d);});
+  const n=document.createElement("div");n.className="stat net "+(net>=0?"pos":"neg");n.innerHTML=`<span>Net</span><b>${money(net)}</b>`;lg.appendChild(n);
+  const m=document.createElement("div");m.className="stat";const t=S.shipT||0;
+  m.innerHTML=`<span>Operating margin per ton shipped</span><b>${t>0?money(net/t+S.ledger.upgrades/t):"–"}</b>`;lg.appendChild(m);
+}
+function showOverlay(kind){running=false;$("play").textContent="Run";$("play").setAttribute("aria-pressed","false");
+  const ov=$("overlay");ov.hidden=false;
+  if(kind==="bankrupt"){$("ov-h").textContent="Chapter 11";$("ov-p").textContent=`${NAME} ran out of money on ${hhmm(S.t)}. The mill has been sold to a private equity firm, which is already "exploring strategic options".`;
+    $("ov-a").textContent="New game";$("ov-b").hidden=true;}
+  else{$("ov-h").textContent="Mill of the Year";$("ov-p").textContent=`${NAME} reached $25M cash on ${hhmm(S.t)}, having made ${f0(S.tot.prodT)} t of paper and survived ${S.tot.incidents} disasters.`;
+    $("ov-a").textContent="Keep playing";$("ov-b").textContent="New game";$("ov-b").hidden=false;}
+  $("ov-a").focus();}
+$("ov-a").addEventListener("click",()=>{$("overlay").hidden=true;if(S.over){newGame();}else{running=true;$("play").textContent="Pause";$("play").setAttribute("aria-pressed","true");}});
+$("ov-b").addEventListener("click",()=>{$("overlay").hidden=true;newGame();});
+function newGame(){const sp=C.simSpeed;initCtrl();C.simSpeed=sp;initState();BANNERS.length=0;running=true;$("play").textContent="Pause";$("play").setAttribute("aria-pressed","true");}
+const RATINGS=[[0.95,"A","Bonus secured"],[0.85,"B","Solid shift"],[0.75,"C","Corporate is asking questions"],[0.6,"D","Mandatory 6 a.m. meeting"],[0,"F","Your parking spot has been reassigned"]];
+let feedKey="";
+function updateChaos(){
+  const days=(S.t-S.lastInc)/1440;$("c-days").textContent=days.toFixed(1);$("c-sign").classList.toggle("hot",S.inc.length>0);
+  const eff=S.tot.pot>0?S.tot.prodT/S.tot.pot:1,r=RATINGS.find(x=>eff>=x[0]);
+  const g=$("c-grade");g.textContent=r[1];g.className="g "+r[1];$("c-grade-t").textContent=r[2];$("c-grade-s").textContent=`${(eff*100).toFixed(1)}% of max-speed tons made`;
+  $("c-lost").textContent=f0(Math.max(0,S.tot.pot-S.tot.prodT))+" t";$("c-count").textContent=S.tot.incidents;
+  const act=$("c-active");act.replaceChildren();
+  if(!S.inc.length){const s=document.createElement("span");s.className="none";s.textContent="No active incidents.";act.appendChild(s);}
+  S.inc.forEach(i=>{const d=document.createElement("div");d.className="it";d.textContent=EV[i.id].name;const sm=document.createElement("small");
+    sm.textContent=`${(i.left/60).toFixed(1)} h left${i.note?" · "+i.note:""}`;d.appendChild(sm);act.appendChild(d);});
+  EVENTS.forEach(e=>{const b=$("ev-"+e.id),i=S.inc.find(x=>x.id===e.id);b.setAttribute("aria-pressed",i?"true":"false");
+    b.querySelector("small").textContent=i?`${(i.left/60).toFixed(1)} h`:"";b.title=i?"Click to clear this incident":"Click to trigger now";});
+  const k=S.feed.length+"|"+(S.feed[0]?S.feed[0].t:"");
+  if(k!==feedKey){feedKey=k;const fd=$("c-feed");fd.replaceChildren();
+    if(!S.feed.length){const s=document.createElement("span");s.textContent="Incident log is empty.";fd.appendChild(s);}
+    S.feed.forEach(x=>{const d=document.createElement("div");d.className=x.cls;const t=document.createElement("span");t.textContent=hhmm(x.t)+"  ";d.appendChild(t);d.append(x.text);fd.appendChild(d);});}
+}
+function pill(id,text,cls){const el=$(id);el.textContent=text;el.className="pill "+(cls||"");}
+const f0=v=>Math.round(v).toLocaleString(), f1=v=>v.toFixed(1);
+function hhmm(t){const d=Math.floor(t/1440)+1,m=Math.floor(t%1440);return `Day ${d} ${String(Math.floor(m/60)).padStart(2,"0")}:${String(m%60).padStart(2,"0")}`;}
+
+function updateText(){
+  const R=S.rates,g=GRADES[C.grade],level=S.tank/P.tankCap*100,days=Math.max(S.t/1440,1/1440);
+  $("k-clock").textContent=hhmm(S.t);
+  $("k-clock-s").textContent=`${C.simSpeed} sim min per second`;
+  $("k-speed").textContent=f0(S.pmSpeed)+" fpm";
+  $("k-speed-s").textContent=`max ${f0(C.pmSp.v)} · ${C.grade}`;
+  $("k-prod").textContent=f1(R.prod)+" t/h";
+  $("k-prod-s").textContent=`${f0(S.tot.prodT)} t made · ${f0(S.tot.prodT/days)} t/day`;
+  $("k-cash").textContent=money(S.cash);$("k-cash-box").classList.toggle("neg",S.cash<0);
+  $("k-cash-s").textContent=S.cash<0?`bankrupt at ${money(ECON.bankrupt)}`:`${(100*Math.max(0,S.cash)/ECON.goal).toFixed(1)}% of the $25M goal`;
+  $("k-profit").textContent=money(S.profitRate)+"/day";
+  $("k-profit-s").textContent=`${money(ECON.price[C.grade]+P.priceAdd)}/t selling price`;
+  $("k-tank").textContent=f0(level)+" %";
+  const net=R.fiberIn-R.fiberUse;
+  $("k-tank-s").textContent=`${net>=0?"+":"−"}${f1(Math.abs(net))} t/h ${Math.abs(net)<0.5?"balanced":net>0?"building":"draining"}`;
+  $("k-yard").textContent=f0(S.yard)+" t";
+  $("k-yard-s").textContent=R.feed>0.5?`${f1(S.yard/R.feed)} h of pulper feed`:"pulper not feeding";
+  $("k-fg").textContent=f0(S.fg)+" rolls";
+  $("k-fg-s").textContent=`${f0(S.tot.shipped)} shipped`;
+
+  // pills + readouts
+  pill("p-in",S.tot.turned?`${S.tot.turned} turned away`:S.inQ.length>2?`${S.inQ.length} waiting`:"flowing",S.tot.turned?"bad":S.inQ.length>2?"warn":"ok");
+  $("r-in").textContent=`${S.tot.inTrucks} trucks · ${f0(S.tot.inTons)} t received · queue ${S.inQ.length} · at doors ${S.inDock.filter(Boolean).length}/${P.doors}`;
+  const recCap=S.effDrv*P.driverRate*S.M.recvMul, recUse=(P.autoFeed?0:R.feed)+R.unload;
+  pill("p-rec",S.yard<1?"yard empty":recUse>recCap*0.95?"crew maxed":S.yard>=P.yardCap-1?"yard full":"ok",S.yard<1?"bad":recUse>recCap*0.95||S.yard>=P.yardCap-1?"warn":"ok");
+  $("r-rec").textContent=`${S.effDrv<C.drivers.v?`Only ${S.effDrv} of ${C.drivers.v} working · `:""}Crew ${f0(recUse)}/${f0(recCap)} t/h busy · feeding ${f1(R.feed)} · unloading ${f1(R.unload)} t/h`;
+  const pulHold=level>97, pulStarve=R.feed<C.pulper.v*0.9&&C.pulper.v>1&&!pulHold;
+  pill("p-pul",S.M.pulperDown?"down: incident":pulHold?"hold: chest full":pulStarve?"short of bales":C.pulper.v<0.5?"off":"running",S.M.pulperDown?"bad":pulHold||pulStarve?"warn":C.pulper.v<0.5?"":"ok");
+  $("r-pul").textContent=`Fed ${f1(R.feed)} t/h OCC → ${f1(R.fiberIn)} t/h fiber (88% yield)`;
+  pill("p-tank",level<5?"empty":level<C.lowLevel.v?"low":level>95?"full":"ok",level<C.lowLevel.v?"bad":level>95?"warn":"ok");
+  $("r-tank").textContent=`${f0(S.tank)} of ${P.tankCap} t · in ${f1(R.fiberIn)} · out ${f1(R.fiberUse)} t/h`;
+  const pmTxt={run:S.pmSpeed<C.pmSp.v-40&&level<C.lowLevel.v?"slowed: low stock":S.pmSpeed<C.pmSp.v-40?"ramping":"at max speed",break:"sheet break",down:"down: no stock",full:"down: warehouse full",incident:"down: "+(S.M.pmDown||"incident")}[S.pm];
+  pill("p-pm",pmTxt,S.pm==="run"?(pmTxt==="at max speed"?"ok":"warn"):"bad");
+  const eff=S.t>0?100*(1-S.tot.breakMin/S.t):100;
+  $("r-pm").textContent=`${f1(R.prod/C.rollW.v)} rolls/h · ${S.tot.turnups} reels turned up · ${S.tot.breaks} breaks · ${f0(eff)}% sheet time`;
+  const shipCap=S.effLd*P.loaderRate*S.M.clampMul;
+  pill("p-ship",S.fg>=P.fgCap-1?"warehouse full":S.outQ.length>2?`${S.outQ.length} trucks waiting`:S.fg<5&&S.outDock.some(Boolean)?"no rolls":"ok",S.fg>=P.fgCap-1?"bad":S.outQ.length>2||(S.fg<5&&S.outDock.some(Boolean))?"warn":"ok");
+  $("r-ship").textContent=`${S.effLd<C.loaders.v?`Only ${S.effLd} of ${C.loaders.v} loaders · `:""}Loading ${f1(R.load)}/${f0(shipCap)} rolls/h · ${S.outDock.filter(Boolean).length}/${P.shipDoors} doors · ${S.tot.shipped/P.truckRolls} trucks out`;
+}
+
+/* ---------- Drawing ---------- */
+const cv=$("plant"),ctx=cv.getContext("2d"),tc=$("trend"),tctx=tc.getContext("2d");
+let col={};
+function readColors(){const cs=getComputedStyle(document.documentElement);
+  ["bg","panel","ink","muted","line","kraft","stock","machine","paperc","ok","warn","bad","chip","fire","fire2","water","smoke","slime","beaver"].forEach(k=>col[k]=cs.getPropertyValue("--"+k).trim());}
+readColors(); setInterval(readColors,800);
+const DPR=()=>Math.min(2,window.devicePixelRatio||1);
+function sizeCanvas(){const d=DPR();cv.width=1200*d;cv.height=660*d;
+  const w=tc.clientWidth||1000;tc.width=w*d;tc.height=150*d;}
+sizeCanvas(); window.addEventListener("resize",sizeCanvas);
+
+const V={belt:0,swirl:0,sheet:0,cans:0,lifts:[],rollsAnim:0};
+function label(t,x,y,size=13,c=col.muted,align="left",weight=600){ctx.font=`${weight} ${size}px "Barlow Condensed","Arial Narrow",sans-serif`;ctx.fillStyle=c;ctx.textAlign=align;ctx.fillText(t,x,y);}
+function mono(t,x,y,size=12,c=col.ink,align="left"){ctx.font=`500 ${size}px "IBM Plex Mono",monospace`;ctx.fillStyle=c;ctx.textAlign=align;ctx.fillText(t,x,y);}
+function rr(x,y,w,h,r){ctx.beginPath();ctx.roundRect(x,y,w,h,r);}
+function truck(x,y,frac,cargo){
+  ctx.fillStyle=col.panel;ctx.strokeStyle=col.machine;ctx.lineWidth=1.2;
+  rr(x,y-9,34,18,2);ctx.fill();ctx.stroke();
+  if(frac>0.01){ctx.fillStyle=cargo;ctx.fillRect(x+2,y-7,30*Math.min(1,frac),14);}
+  ctx.fillStyle=col.machine;rr(x+36,y-5,10,12,2);ctx.fill();
+  ctx.fillStyle=col.ink;[x+6,x+26,x+41].forEach(cx=>{ctx.beginPath();ctx.arc(cx,y+10,2.4,0,7);ctx.fill();});
+}
+function moveTo(o,tx,ty,dt){const dx=tx-o.x,dy=ty-o.y,d=Math.hypot(dx,dy),s=Math.max(160,d*3)*dt;if(d<=s){o.x=tx;o.y=ty;return true;}o.x+=dx/d*s;o.y+=dy/d*s;return false;}
+
+function draw(rdt){
+  const d=DPR();ctx.setTransform(d,0,0,d,0,0);ctx.clearRect(0,0,1200,660);
+  const R=S.rates,g=GRADES[C.grade],level=S.tank/P.tankCap,pmRun=S.pm==="run";
+  ctx.lineCap="round";ctx.lineJoin="round";
+
+  // roads
+  ctx.fillStyle=col.chip;ctx.fillRect(0,278,256,28);ctx.fillRect(0,442,110,26);
+  ctx.setLineDash([10,10]);ctx.strokeStyle=col.line;ctx.lineWidth=1.5;
+  ctx.beginPath();ctx.moveTo(0,306);ctx.lineTo(256,306);ctx.stroke();ctx.setLineDash([]);
+  label("1  INBOUND OCC",10,30,15,col.ink,"left",700);
+  label("trucks queue here",10,272,12);
+
+  // receiving building
+  ctx.fillStyle=col.panel;ctx.strokeStyle=col.machine;ctx.lineWidth=1.5;rr(256,95,264,205,4);ctx.fill();ctx.stroke();
+  label("2  RECEIVING & BALE YARD",262,88,15,col.ink,"left",700);
+  Array.from({length:P.doors},(_,d)=>inY(d)).forEach(y=>{ctx.fillStyle=col.chip;ctx.fillRect(252,y-12,8,24);});
+  // bale grid
+  const cells=Math.min(168,Math.ceil(S.yard/12));
+  for(let i=0;i<168;i++){const cx=300+(i%14)*14.6,cy=276-Math.floor(i/14)*13.6;
+    ctx.fillStyle=i<cells?col.kraft:col.chip;ctx.globalAlpha=i<cells?0.9:0.6;ctx.fillRect(cx,cy,12,11);}
+  ctx.globalAlpha=1;
+  mono(`${f0(S.yard)} t`,505,112,12,col.ink,"right");
+
+  // forklifts
+  const nL=Math.round(C.drivers.v);
+  while(V.lifts.length<nL)V.lifts.push({p:Math.random()*4,door:V.lifts.length%3});
+  V.lifts.length=nL;
+  const busy=clamp((R.feed+R.unload)/Math.max(1,C.drivers.v*P.driverRate),0,1);
+  V.lifts.forEach((L,i)=>{L.p=(L.p+rdt*(0.25+busy*0.9))%4;
+    const dy=inY(L.door%P.doors);
+    const pts=[[272,dy],[300+((i*37)%180),150+((i*53)%120)],[512,212],[300+((i*61)%180),150+((i*29)%120)]];
+    const a=Math.floor(L.p),t=L.p-a,A=pts[a],B=pts[(a+1)%4];
+    if(i>=Math.floor(S.effDrv+1e-9)){const px=272+i*15,py=316;ctx.fillStyle=col.smoke;rr(px-6,py-4,12,8,2);ctx.fill();
+      ctx.strokeStyle=col.bad;ctx.lineWidth=1.5;ctx.beginPath();ctx.moveTo(px-4,py-4);ctx.lineTo(px+4,py+4);ctx.moveTo(px+4,py-4);ctx.lineTo(px-4,py+4);ctx.stroke();return;}
+    if(S.M.recvMul===0)return;
+    const x=A[0]+(B[0]-A[0])*t,y=A[1]+(B[1]-A[1])*t;
+    ctx.fillStyle=col.warn;rr(x-6,y-4,12,8,2);ctx.fill();
+    if(a===0||a===2){ctx.fillStyle=col.kraft;ctx.fillRect(x+6,y-3,5,6);}
+  });
+
+  // inbound trucks
+  S.inQ.forEach((t,k)=>{moveTo(t,170-k*54,292,rdt);if(t.x>-50)truck(t.x,t.y,t.load/P.truckLoad,col.kraft);});
+  if(S.inQ.length>3)mono(`+${S.inQ.length-3} more`,10,262,11,col.bad);
+  S.inDock.forEach((t,d)=>{if(!t)return;moveTo(t,204,inY(d),rdt);truck(t.x,t.y,t.load/P.truckLoad,col.kraft);});
+
+  // conveyor
+  ctx.strokeStyle=col.machine;ctx.lineWidth=7;ctx.beginPath();ctx.moveTo(520,215);ctx.lineTo(700,140);ctx.stroke();
+  ctx.strokeStyle=col.chip;ctx.lineWidth=4;ctx.beginPath();ctx.moveTo(520,215);ctx.lineTo(700,140);ctx.stroke();
+  V.belt=(V.belt+rdt*R.feed*1.4)%30;
+  const len=Math.hypot(180,75),ux=180/len,uy=-75/len;
+  if(R.feed>0.3)for(let s=V.belt;s<len;s+=30){ctx.fillStyle=col.kraft;ctx.save();ctx.translate(520+ux*s,215+uy*s-6);ctx.rotate(Math.atan2(uy,ux));ctx.fillRect(-6,-5,12,9);ctx.restore();}
+  label(P.autoFeed?"auto bale feed":"conveyor",590,200,12,P.autoFeed?col.stock:col.muted);
+
+  // pulper
+  ctx.fillStyle=col.panel;ctx.strokeStyle=col.machine;ctx.lineWidth=2;ctx.beginPath();ctx.arc(760,195,52,0,7);ctx.fill();ctx.stroke();
+  ctx.fillStyle=col.stock;ctx.globalAlpha=0.25;ctx.beginPath();ctx.arc(760,195,46,0,7);ctx.fill();ctx.globalAlpha=1;
+  if(!S.M.pulperDown)V.swirl+=rdt*(0.4+R.feed*0.06);
+  ctx.strokeStyle=col.stock;ctx.lineWidth=2;
+  for(let i=0;i<3;i++){ctx.beginPath();ctx.arc(760,195,14+i*11,V.swirl*(1+i*0.3)+i,V.swirl*(1+i*0.3)+i+2.2);ctx.stroke();}
+  label("3  PULPER",718,130,15,col.ink,"left",700);
+  mono(`${f1(R.feed)} t/h`,760,268,12,col.ink,"center");
+
+  // pipe pulper → chest
+  ctx.strokeStyle=col.stock;ctx.lineWidth=6;ctx.beginPath();ctx.moveTo(812,215);ctx.lineTo(900,215);ctx.stroke();
+  flowDots(812,215,900,215,R.fiberIn,rdt,"p1");
+
+  // chest
+  ctx.fillStyle=col.panel;ctx.strokeStyle=col.machine;ctx.lineWidth=2;rr(900,70,90,220,6);ctx.fill();ctx.stroke();
+  const fh=212*level;ctx.fillStyle=level*100<C.lowLevel.v?col.bad:col.stock;ctx.globalAlpha=0.75;rr(904,286-fh,82,fh,3);ctx.fill();ctx.globalAlpha=1;
+  const yT=286-212*C.lvlTarget.v/100,yL=286-212*C.lowLevel.v/100;
+  ctx.setLineDash([4,3]);ctx.lineWidth=1.2;
+  ctx.strokeStyle=col.ok;ctx.beginPath();ctx.moveTo(896,yT);ctx.lineTo(994,yT);ctx.stroke();
+  ctx.strokeStyle=col.bad;ctx.beginPath();ctx.moveTo(896,yL);ctx.lineTo(994,yL);ctx.stroke();ctx.setLineDash([]);
+  label("target",998,yT+4,11,col.ok);label("slow",998,yL+4,11,col.bad);
+  label("4  STOCK CHEST",900,58,15,col.ink,"left",700);
+  mono(`${f0(level*100)}%`,945,180,16,col.ink,"center");
+
+  // pipe chest → headbox
+  ctx.strokeStyle=col.stock;ctx.lineWidth=6;ctx.beginPath();ctx.moveTo(990,276);ctx.lineTo(1120,276);ctx.lineTo(1120,388);ctx.stroke();
+  flowDots(990,276,1120,276,R.fiberUse,rdt,"p2");flowDots(1120,276,1120,388,R.fiberUse,rdt,"p3");
+
+  // PM frame
+  label("5  PAPER MACHINE "+NAME.toUpperCase(),1100,350,15,col.ink,"right",700);
+  ctx.fillStyle=col.machine;rr(1095,388,55,34,3);ctx.fill();label("headbox",1122,438,11,col.muted,"center");
+  // wire
+  ctx.strokeStyle=col.machine;ctx.lineWidth=3;ctx.beginPath();ctx.moveTo(960,425);ctx.lineTo(1095,425);ctx.stroke();
+  [960,1095].forEach(x=>{ctx.beginPath();ctx.arc(x,431,6,0,7);ctx.stroke();});label("forming",1028,450,11,col.muted,"center");
+  // press
+  ctx.fillStyle=LV("shoe")?col.stock:col.machine;[[925,412],[925,438]].forEach(([x,y])=>{ctx.beginPath();ctx.arc(x,y,LV("shoe")?14:12,0,7);ctx.fill();});
+  label(LV("shoe")?"shoe press":"press",925,470,11,col.muted,"center");
+  // dryers
+  V.cans+=rdt*S.pmSpeed/700;
+  const top=[],bot=[];for(let i=0;i<10;i++){top.push(872-i*32);bot.push(856-i*32);}
+  ctx.lineWidth=2;
+  top.forEach(x=>can(x,395));bot.forEach(x=>can(x,447));
+  label("dryer section",720,483,11,col.muted,"center");
+  // sheet path
+  const path=[[1095,422],[960,422],[937,425],[905,425]];
+  for(let i=0;i<10;i++){path.push([top[i],381]);path.push([bot[i],461]);}
+  path.push([530,420]);
+  ctx.strokeStyle=pmRun?col.paperc:col.bad;ctx.lineWidth=pmRun?3:1.5;
+  if(!pmRun)ctx.setLineDash([3,6]);
+  ctx.beginPath();path.forEach(([x,y],i)=>i?ctx.lineTo(x,y):ctx.moveTo(x,y));ctx.stroke();
+  if(pmRun){V.sheet=(V.sheet+rdt*S.pmSpeed/40)%24;ctx.setLineDash([2,22]);ctx.lineDashOffset=V.sheet;ctx.strokeStyle=col.muted;ctx.lineWidth=3;
+    ctx.beginPath();path.forEach(([x,y],i)=>i?ctx.lineTo(x,y):ctx.moveTo(x,y));ctx.stroke();}
+  ctx.setLineDash([]);ctx.lineDashOffset=0;
+  if(S.pm!=="run"){const blink=(performance.now()/500|0)%2;ctx.fillStyle=col.bad;ctx.globalAlpha=blink?1:0.5;
+    label({break:"SHEET BREAK",down:"NO STOCK: MACHINE DOWN",full:"WAREHOUSE FULL: MACHINE DOWN",incident:(S.M.pmDown||"").toUpperCase()+": MACHINE DOWN"}[S.pm],720,342,16,col.bad,"center",700);ctx.globalAlpha=1;}
+  mono(`${f0(S.pmSpeed)} fpm · ${f1(R.prod)} t/h`,720,515,13,col.ink,"center");
+
+  // reel
+  const rr2=10+28*Math.sqrt(S.reel/P.jumbo);
+  ctx.fillStyle=col.paperc;ctx.strokeStyle=col.machine;ctx.lineWidth=1.5;ctx.beginPath();ctx.arc(500,420,rr2,0,7);ctx.fill();ctx.stroke();
+  ctx.fillStyle=col.machine;ctx.beginPath();ctx.arc(500,420,4,0,7);ctx.fill();
+  label("reel",500,475,11,col.muted,"center");mono(`${f1(S.reel)}/${P.jumbo} t`,500,370,11,col.muted,"center");
+  // winder
+  ctx.fillStyle=col.machine;rr(395,402,36,36,3);ctx.fill();label("winder",413,395,11,col.muted,"center");
+
+  // roll conveyor
+  ctx.strokeStyle=col.machine;ctx.lineWidth=5;ctx.beginPath();ctx.moveTo(413,440);ctx.lineTo(413,520);ctx.lineTo(362,520);ctx.stroke();
+  S.rollsVis.forEach(r=>{r.p+=rdt*0.9;});
+  S.rollsVis=S.rollsVis.filter(r=>r.p<1);
+  S.rollsVis.forEach(r=>{const s=r.p*131;let x,y;if(s<80){x=413;y=440+s;}else{x=413-(s-80);y=520;}
+    ctx.fillStyle=col.paperc;ctx.strokeStyle=col.machine;ctx.lineWidth=1;ctx.beginPath();ctx.arc(x,y-7,6,0,7);ctx.fill();ctx.stroke();});
+
+  // warehouse
+  ctx.fillStyle=col.panel;ctx.strokeStyle=col.machine;ctx.lineWidth=1.5;rr(110,478,252,174,4);ctx.fill();ctx.stroke();
+  label("6  ROLL WAREHOUSE & SHIPPING",116,474,15,col.ink,"left",700);
+  const filled=Math.min(84,Math.ceil(S.fg/(P.fgCap/84)));
+  for(let i=0;i<84;i++){const cx=150+(i%12)*17.5,cy=636-Math.floor(i/12)*17.5;
+    ctx.beginPath();ctx.arc(cx,cy,7,0,7);
+    if(i<filled){ctx.fillStyle=col.paperc;ctx.fill();ctx.strokeStyle=col.machine;ctx.lineWidth=1;ctx.stroke();}
+    else{ctx.fillStyle=col.chip;ctx.fill();}}
+  mono(`${f0(S.fg)} rolls`,356,496,12,col.ink,"right");
+  Array.from({length:P.shipDoors},(_,d)=>outY(d)).forEach(y=>{ctx.fillStyle=col.chip;ctx.fillRect(106,y-12,8,24);});
+  // loaders
+  const nLo=Math.round(C.loaders.v),lb=clamp(R.load/Math.max(1,C.loaders.v*P.loaderRate),0,1);
+  V.rollsAnim+=rdt*(0.2+lb);
+  for(let i=0;i<nLo;i++){
+    if(i>=Math.floor(S.effHum+1e-9)){const px=374+i*15,py=642;ctx.fillStyle=col.smoke;rr(px-6,py-4,12,8,2);ctx.fill();
+      ctx.strokeStyle=col.bad;ctx.lineWidth=1.5;ctx.beginPath();ctx.moveTo(px-4,py-4);ctx.lineTo(px+4,py+4);ctx.moveTo(px+4,py-4);ctx.lineTo(px-4,py+4);ctx.stroke();continue;}
+    if(S.M.clampMul===0)continue;
+    const ph=(V.rollsAnim*0.6+i*0.37)%2,t=ph<1?ph:2-ph,y=outY(i%P.shipDoors);
+    const x=126+t*60;ctx.fillStyle=col.ok;rr(x-6,y-4,12,8,2);ctx.fill();}
+
+  for(let r=0;r<P.robots;r++){const ph=S.M.clampMul===0?0.3:(V.rollsAnim*0.45+r*0.29)%2,t=ph<1?ph:2-ph,y=outY(r%P.shipDoors)+(r%2?6:-6),x=130+t*200;
+    ctx.fillStyle=col.stock;rr(x-6,y-6,12,12,3);ctx.fill();ctx.fillStyle=col.panel;ctx.beginPath();ctx.arc(x,y,2.2,0,7);ctx.fill();}
+  // outbound trucks
+  S.outQ.forEach((t,k)=>{moveTo(t,56-k*54,455,rdt);if(t.x>-50)truck(t.x,t.y,t.load/P.truckRolls,col.paperc);});
+  if(S.outQ.length>1)mono(`+${S.outQ.length-1} queued`,4,438,11,col.bad);
+  S.outDock.forEach((t,d)=>{if(!t)return;moveTo(t,58,outY(d),rdt);truck(t.x,t.y,t.load/P.truckRolls,col.paperc);});
+
+  // leaving trucks
+  S.leaving.forEach(t=>{t.x-=rdt*220;t.y+=(t.ty-t.y)*Math.min(1,rdt*6);
+    truck(t.x,t.y,t.kind==="out"?1:0,col.paperc);});
+  S.leaving=S.leaving.filter(t=>t.x>-60);
+  drawChaos();
+}
+function hazard(x,y,w,h){ctx.save();ctx.setLineDash([9,6]);ctx.strokeStyle=col.bad;ctx.lineWidth=2.5;rr(x,y,w,h,6);ctx.stroke();ctx.restore();}
+function flame(x,y,h){ctx.fillStyle=col.fire;ctx.beginPath();ctx.moveTo(x-8,y);ctx.quadraticCurveTo(x-10,y-h*0.6,x,y-h);ctx.quadraticCurveTo(x+10,y-h*0.6,x+8,y);ctx.closePath();ctx.fill();
+  ctx.fillStyle=col.fire2;ctx.beginPath();ctx.moveTo(x-4,y);ctx.quadraticCurveTo(x-5,y-h*0.4,x,y-h*0.6);ctx.quadraticCurveTo(x+5,y-h*0.4,x+4,y);ctx.closePath();ctx.fill();}
+function smoke(x,y,now){for(let k=0;k<7;k++){const ph=(now/1000*0.35+k/7)%1;ctx.globalAlpha=0.4*(1-ph);ctx.fillStyle=col.smoke;
+  ctx.beginPath();ctx.arc(x+Math.sin(ph*6+k)*12+k*5,y-ph*90,7+ph*16,0,7);ctx.fill();}ctx.globalAlpha=1;}
+function tag(text,x,y,align){ctx.font='700 12px "Barlow Condensed","Arial Narrow",sans-serif';const w=ctx.measureText(text).width+12;const bx=align==="right"?x-w:x;
+  ctx.fillStyle=col.bad;rr(bx,y-11,w,16,3);ctx.fill();ctx.fillStyle=col.panel;ctx.textAlign="left";ctx.fillText(text,bx+6,y+1);}
+function drawChaos(){
+  const now=performance.now(),flick=k=>Math.sin(now/110+k*1.7);
+  let outage=null,recvTags=[],whTags=[];
+  for(const i of S.inc){const fx=EV[i.id].fx,age=(now-i.real)/1000;
+    switch(fx){
+      case "shaft":{hazard(515,362,640,128);for(let k=0;k<14;k++){const a=Math.random()*6.28,r=6+Math.random()*16;ctx.strokeStyle=k%2?col.fire2:col.fire;ctx.lineWidth=1.5;
+        ctx.beginPath();ctx.moveTo(705,372);ctx.lineTo(705+Math.cos(a)*r,372+Math.sin(a)*r);ctx.stroke();}
+        tag("DRIVESHAFT",525,505,"left");break;}
+      case "dryerfire":{for(let k=0;k<10;k++)flame(560+k*32,(k%2?447:395)-6,22+8*flick(k));smoke(640,340,now);smoke(800,340,now+700);hazard(515,362,640,128);break;}
+      case "fabric":{ctx.strokeStyle=col.bad;ctx.lineWidth=3;ctx.beginPath();ctx.moveTo(960,425);ctx.quadraticCurveTo(1028,505+6*flick(1),1095,425);ctx.stroke();
+        ctx.beginPath();ctx.moveTo(1050,460);ctx.lineTo(1062,500+5*flick(2));ctx.stroke();hazard(950,375,205,140);tag("FABRIC OFF",960,368,"left");break;}
+      case "felt":{ctx.strokeStyle=col.bad;ctx.lineWidth=3;[[925,412],[925,438]].forEach(([x,y])=>{ctx.beginPath();ctx.arc(x,y,15,0,7);ctx.stroke();});tag("FELT",905,492,"left");break;}
+      case "slime":{ctx.fillStyle=col.slime;for(let k=0;k<20;k++){const x=545+k*17,y=k%2?461:381;ctx.globalAlpha=0.85;ctx.beginPath();ctx.arc(x,y,4+2*flick(k),0,7);ctx.fill();}
+        ctx.globalAlpha=1;tag("SLIME: SPEED CAPPED",525,368,"left");break;}
+      case "ragger":{ctx.strokeStyle=col.bad;ctx.lineWidth=4;ctx.beginPath();ctx.moveTo(735,170);ctx.lineTo(785,220);ctx.moveTo(785,170);ctx.lineTo(735,220);ctx.stroke();
+        ctx.strokeStyle=col.machine;ctx.lineWidth=2;ctx.beginPath();ctx.moveTo(800,160);for(let k=0;k<8;k++)ctx.lineTo(810+k*6,150-k*5+4*Math.sin(k+now/300));ctx.stroke();tag("RAGGER STOPPED",818,180,"left");break;}
+      case "flood":{ctx.globalAlpha=0.38;ctx.fillStyle=col.water;ctx.beginPath();ctx.moveTo(712,232);ctx.quadraticCurveTo(620,250,520,262);ctx.lineTo(520,298);ctx.lineTo(258,298);ctx.lineTo(258,236);
+        for(let x=258;x<=520;x+=12)ctx.lineTo(x,232+4*Math.sin(x/18+now/300));ctx.lineTo(712,250);ctx.closePath();ctx.fill();ctx.globalAlpha=1;
+        ctx.strokeStyle=col.water;ctx.lineWidth=2;ctx.beginPath();for(let x=258;x<=520;x+=6)ctx.lineTo(x,232+4*Math.sin(x/18+now/300));ctx.stroke();recvTags.push("FLOODED");break;}
+      case "badocc":{for(let k=0;k<40;k++){const x=302+((k*53)%200),y=170+((k*37)%118);ctx.fillStyle=k%3?col.slime:col.water;ctx.fillRect(x,y,4,3);}
+        tag("JUNK OCC",818,262,"left");break;}
+      case "balefire":{for(let k=0;k<8;k++)flame(310+k*26,288-(k%3)*18,28+10*flick(k));smoke(380,170,now);smoke(460,170,now+500);recvTags.push("YARD FIRE");break;}
+      case "fleet":{recvTags.push("FORKLIFTS RED-TAGGED");whTags.push("CLAMP TRUCKS DOWN");break;}
+      case "calloff":{recvTags.push("SHORT-STAFFED");whTags.push("SHORT-STAFFED");break;}
+      case "fight":{const j=Math.sin(now/60)*3;ctx.strokeStyle=col.ink;ctx.lineWidth=2;
+        [[226+j,150],[244-j,150]].forEach(([x,y],n)=>{ctx.beginPath();ctx.arc(x,y-14,4,0,7);ctx.moveTo(x,y-10);ctx.lineTo(x,y);ctx.moveTo(x,y);ctx.lineTo(x-4,y+8);ctx.moveTo(x,y);ctx.lineTo(x+4,y+8);
+          ctx.moveTo(x,y-7);ctx.lineTo(x+(n?-8:8),y-11+j);ctx.stroke();});
+        label("!!",235,128,16,col.bad,"center",700);
+        ctx.fillStyle=col.ink;rr(150,96,40,16,3);ctx.fill();ctx.fillStyle=(now/250|0)%2?col.bad:col.water;ctx.fillRect(162,90,8,6);ctx.fillStyle=(now/250|0)%2?col.water:col.bad;ctx.fillRect(172,90,8,6);
+        recvTags.push("DOCKS CLOSED");break;}
+      case "roof":{ctx.strokeStyle=col.water;ctx.lineWidth=1.2;for(let k=0;k<30;k++){const x=120+((k*41)%235),y=482+((k*29+now/8)%160);ctx.beginPath();ctx.moveTo(x,y);ctx.lineTo(x-2,y+7);ctx.stroke();}
+        whTags.push("ROOF LEAK");break;}
+      case "highway":{[[4,292],[4,455]].forEach(([x,y])=>{for(let k=0;k<4;k++){ctx.fillStyle=k%2?col.panel:col.bad;ctx.fillRect(x+k*7,y-12,7,24);}ctx.strokeStyle=col.bad;ctx.lineWidth=1;ctx.strokeRect(x,y-12,28,24);});
+        tag("HIGHWAY CLOSED",36,250,"left");break;}
+      case "outage":{outage=i;break;}
+      case "tornado":{if(age<10){const x=-80+age/10*1360,y0=90;ctx.strokeStyle=col.smoke;ctx.lineWidth=2.5;
+          for(let k=0;k<13;k++){const w=70-k*5,y=y0+k*30,ox=Math.sin(now/200+k*0.6)*(6+k*1.5);ctx.beginPath();ctx.ellipse(x+ox,y,w,7,0,0,7);ctx.stroke();}
+          ctx.fillStyle=col.kraft;for(let k=0;k<10;k++){const a=now/150+k,r=40+k*6;ctx.fillRect(x+Math.cos(a)*r,260+Math.sin(a)*r*0.4-k*12,6,5);}}
+        break;}
+      case "beaver":{const bx=455+Math.sin(now/400)*14,by=210,ch=Math.abs(Math.sin(now/120))*4;
+        ctx.fillStyle=col.machine;ctx.beginPath();ctx.ellipse(bx+56,by+18,28,11,-0.3,0,7);ctx.fill();
+        ctx.fillStyle=col.beaver;ctx.beginPath();ctx.ellipse(bx,by,48,32,0,0,7);ctx.fill();ctx.beginPath();ctx.arc(bx-44,by-14,22,0,7);ctx.fill();
+        ctx.beginPath();ctx.arc(bx-36,by-34,6,0,7);ctx.fill();
+        ctx.fillStyle=col.ink;ctx.beginPath();ctx.arc(bx-50,by-20,3,0,7);ctx.fill();ctx.beginPath();ctx.arc(bx-64,by-12,4,0,7);ctx.fill();
+        ctx.fillStyle=col.paperc;ctx.strokeStyle=col.ink;ctx.lineWidth=1;ctx.fillRect(bx-62,by-2+ch,5,10);ctx.strokeRect(bx-62,by-2+ch,5,10);ctx.fillRect(bx-56,by-2+ch,5,10);ctx.strokeRect(bx-56,by-2+ch,5,10);
+        ctx.fillStyle=col.kraft;for(let k=0;k<5;k++){const p=((now/600)+k/5)%1;ctx.fillRect(bx-70-p*40,by+4-p*30+Math.sin(k)*10,5,4);}
+        recvTags.push("GIANT BEAVER");break;}
+    }
+  }
+  if(recvTags.length)tag(recvTags.join(" · "),262,112,"left");
+  if(whTags.length)tag(whTags.join(" · "),116,500,"left");
+  if(outage){const age=(now-outage.real)/1000;ctx.fillStyle="rgba(0,0,0,0.5)";ctx.fillRect(0,0,1200,660);
+    if(age<1.4||(now/2500|0)%3===0&&(now%2500)<120){ctx.strokeStyle=col.fire2;ctx.lineWidth=4;ctx.beginPath();ctx.moveTo(1030,0);ctx.lineTo(1005,40);ctx.lineTo(1022,44);ctx.lineTo(995,95);ctx.lineTo(1012,98);ctx.lineTo(985,150);ctx.stroke();}
+    label("BLACKOUT",600,330,40,col.fire2,"center",700);}
+  // headline banner
+  if(BANNERS.length){const b=BANNERS[0];if(b.t===null)b.t=now;const age=(now-b.t)/1000;
+    if(age>5){BANNERS.shift();}else{
+      ctx.globalAlpha=age<0.3?age/0.3:age>4.5?(5-age)/0.5:1;
+      ctx.font='700 20px "Barlow Condensed","Arial Narrow",sans-serif';const w=Math.min(1100,ctx.measureText(b.text).width+130);
+      const x=600-w/2,bc=b.kind==="good"?col.ok:col.bad;ctx.fillStyle=col.panel;rr(x,10,w,40,6);ctx.fill();ctx.strokeStyle=bc;ctx.lineWidth=2;ctx.stroke();
+      ctx.fillStyle=bc;rr(x+6,16,92,28,4);ctx.fill();label(b.kind==="good"?"INSTALLED":"BREAKING",x+52,36,16,col.panel,"center",700);
+      label(b.text,x+110,37,20,col.ink,"left",700);ctx.globalAlpha=1;}}
+}
+const dots={};
+function flowDots(x1,y1,x2,y2,rate,rdt,key){
+  dots[key]=((dots[key]||0)+rdt*rate*2)%18;
+  if(rate<0.2)return;
+  const L=Math.hypot(x2-x1,y2-y1);ctx.fillStyle=col.panel;
+  for(let s=dots[key];s<L;s+=18){ctx.beginPath();ctx.arc(x1+(x2-x1)*s/L,y1+(y2-y1)*s/L,1.6,0,7);ctx.fill();}
+}
+function can(x,y){ctx.fillStyle=col.chip;ctx.strokeStyle=col.machine;ctx.beginPath();ctx.arc(x,y,13,0,7);ctx.fill();ctx.stroke();
+  const a=V.cans;ctx.beginPath();ctx.moveTo(x,y);ctx.lineTo(x+Math.cos(a)*11,y+Math.sin(a)*11);ctx.stroke();}
+
+function drawTrend(){
+  const d=DPR(),W=tc.width/d,H=150;tctx.setTransform(d,0,0,d,0,0);tctx.clearRect(0,0,W,H);
+  const l=34,r=W-8,t=8,b=H-20;
+  tctx.font='11px "IBM Plex Mono",monospace';tctx.fillStyle=col.muted;tctx.strokeStyle=col.line;tctx.lineWidth=1;tctx.textAlign="right";
+  [0,50,100].forEach(v=>{const y=b-(b-t)*v/100;tctx.beginPath();tctx.moveTo(l,y);tctx.lineTo(r,y);tctx.stroke();tctx.fillText(v+"%",l-4,y+4);});
+  tctx.textAlign="center";[-24,-18,-12,-6,0].forEach(h=>{const x=l+(r-l)*(h+24)/24;tctx.fillText(h===0?"now":h+"h",x,H-5);});
+  const n=S.trend.length;if(n<2)return;
+  [[0,col.stock],[1,col.machine],[2,col.kraft],[3,col.ok]].forEach(([i,c])=>{
+    tctx.strokeStyle=c;tctx.lineWidth=i===0?2.4:1.6;tctx.beginPath();
+    S.trend.forEach((p,j)=>{const x=l+(r-l)*(j+144-n)/143,y=b-(b-t)*clamp(p[i],0,1);j?tctx.lineTo(x,y):tctx.moveTo(x,y);});
+    tctx.stroke();
+    const p=S.trend[n-1];tctx.fillStyle=c;tctx.beginPath();tctx.arc(r,b-(b-t)*clamp(p[i],0,1),3,0,7);tctx.fill();
+  });
+}
+
+let last=performance.now(),uiAcc=0;
+function frame(now){
+  const rdt=Math.min(0.1,(now-last)/1000);last=now;
+  if(running){let simDt=rdt*C.simSpeed;while(simDt>0){const h=Math.min(0.5,simDt);step(h);simDt-=h;}}
+  draw(running?rdt:0);
+  uiAcc+=rdt;if(uiAcc>0.2){uiAcc=0;syncControls();updateText();updateChaos();updateShop();drawTrend();}
+  requestAnimationFrame(frame);
+}
+syncControls();updateText();updateChaos();updateShop();
+requestAnimationFrame(frame);
+})();
+</script>
+
+</body>
+</html>
