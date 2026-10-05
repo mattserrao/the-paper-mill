@@ -1768,7 +1768,7 @@ const G3={on:false,ok:false};
       else{const k=Math.min(1,(f-0.67)/0.27);J.ph=f<0.67?"set":"install";J.tube=[x,16.2];tube.position.set(x,0.6,16.2);cov=ss(Math.max(0,k));
         tube.userData.roll.scale.set(1,1-0.65*cov,1-0.65*cov);if(f>0.86)hs=Math.max(0.02,1-(f-0.86)/0.12);}
       heap.scale.setScalar(hs);heap.visible=hs>0.03;
-      loops.forEach(m=>{m.scale.z=Math.max(0.002,cov);m.visible=cov>0.004;});};}
+      J.id=id;J.cov=cov;loops.forEach(m=>{m.scale.z=Math.max(0.002,cov);m.visible=cov>0.004;});};}
   // the cloth change plays on its own clock (at least ~16 s) so it reads at any sim speed
   const CLOTH={fabric:{g:new THREE.Group(),ep:null},felt:{g:new THREE.Group(),ep:null}};
   CLOTH.fabric.up=clothJob(CLOTH.fabric.g,"fabric",47.7,[wireLoop],mat("g-wire",{roughness:0.6}));CLOTH.felt.up=clothJob(CLOTH.felt.g,"felt",34.8,feltMeshes,M.felt);
@@ -1910,6 +1910,7 @@ const G3={on:false,ok:false};
     else if(mode==="ext"){arm=[-1.35+0.08*Math.sin(t*9),-0.5];lean=-0.12;leg=0.25;u.ext.visible=true;}
     else if(mode==="fix"){const s=Math.sin(t*13);lean=-0.85;arm=[-1.1+0.55*s,-0.8];leg=0.5;u.tool.visible=true;}
     else if(mode==="type"){const s=Math.sin(t*14);arm=[-1.05+0.08*s,-1.05-0.08*s];lean=-0.12;}
+    else if(mode==="pull"){const s=Math.sin(t*5);arm=[-1.45+0.2*s,-1.45+0.2*s];lean=0.38+0.12*s;leg=0.45;}
     else if(mode==="haul"){const s=Math.sin(t*8);leg=0.4*s;arm=[-2.85,-2.85];bob=Math.abs(s)*0.04;}
     else if(mode==="walk"){const s=Math.sin(t*7.5);leg=0.42*s;arm=[-0.4*s,0.4*s];lean=-0.04;bob=Math.abs(s)*0.04;}
     else if(mode==="inspect"){arm=[-1.55+0.1*Math.sin(t*2),0.05];lean=-0.22;}
@@ -1934,6 +1935,17 @@ const G3={on:false,ok:false};
   // [station spot, zone x0, zone x1]; the winder operator stays clear of the roll conveyor
   const OPS=[[[57.4,14.3],46,62],[[58.6,14.3],40,56],[[26.6,14.3],29,41],[[25.4,14.3],12,28],[[-4.4,14.3],-1,14],[[-5.6,14.3],-9,3],[[-15.6,14.0],-17.1,-13.2]];
   const HOME=OPS.map(o=>o[0]);
+  // lead ropes for pulling a new forming fabric on from the drive side
+  const ropes=[0,1,2,3,4,5,6,7].map(()=>{const m=new THREE.Mesh(new THREE.CylinderGeometry(0.05,0.05,1,6),M.ink);m.visible=false;scene.add(m);return m;});
+  const _ra=new THREE.Vector3(),_rb=new THREE.Vector3(),_rup=new THREE.Vector3(0,1,0);
+  function rope(m,ax,ay,az,bx,by,bz){_ra.set(ax,ay,az);_rb.set(bx,by,bz);const d=_rb.clone().sub(_ra),L=d.length();m.position.copy(_ra).add(_rb).multiplyScalar(0.5);m.quaternion.setFromUnitVectors(_rup,d.normalize());m.scale.set(1,L,1);m.visible=true;}
+  // walk around the headbox end to reach the drive side (and back again) instead of through the machine
+  const AROUND=62.5,BACKZ=4.3;
+  function goSide(w,gx,gz,sp,rdt){const u=w.userData,tb=gz<6.2,ib=w.position.z<6.2;
+    if(u.wp&&u.wpTo!==tb)u.wp=null;
+    if(!u.wp&&tb!==ib){u.wpTo=tb;const onLine=Math.abs(w.position.x-AROUND)<0.3;u.wp=tb?[[AROUND,onLine?w.position.z:Math.max(13.8,w.position.z)],[AROUND,BACKZ]]:[[AROUND,onLine?w.position.z:BACKZ],[AROUND,14.8]];}
+    while(u.wp&&u.wp.length){if(moveP(w,u.wp[0][0],u.wp[0][1],sp,rdt))u.wp.shift();else return false;}
+    u.wp=null;return moveP(w,gx,gz,sp,rdt);}
   const HAY=[[-23.6,14],[-14,13.6],[-24.2,7.5],[-13.2,8.5],[-22.5,4.2],[-15.5,4.2],[-19.5,15.4]];
   const RT=[[27,14.2],[23,14.2],[19,14.2],[15,14.2],[11,14.2],[25,4.1],[17,4.1]];
   const RTY=[];for(let k=0;k<24;k++)RTY.push([29-(k%12)*2.6,k<12?15.4:3.2]);
@@ -1995,6 +2007,7 @@ const G3={on:false,ok:false};
         runnerW.position.set(RUN.x,0,RUN.z);runnerW.rotation.y=out?Math.PI:0;pose(runnerW,"flail",now);}}
     // machine crew
     const dryOn=S.inc.some(x=>x.id==="dryerfire");if(!dryOn)crewHose.forEach(m=>m.visible=false);
+    ropes.forEach(m=>m.visible=false);
     crew.forEach((w,i)=>{let tx,tz,act,fx=null;
       if(dryOn){fireCrew(w,i,rdt,now);return;}
       if(hayOn){const age=now-EP.hay.t0,shuttle=i%2===1,ph=((age/1800)+i*0.37)%2,s=HAY[i];
@@ -2004,10 +2017,18 @@ const G3={on:false,ok:false};
         const arrived=act==="look"||moveP(w,tx,tz,10,rdt);
         if(arrived&&fx)face(w,fx[0],fx[1],rdt);pose(w,arrived?act:(shuttle&&act==="dump"?"carry":"run"),now);return;}
       if(brkOn){[tx,tz]=RT[i];const arrived=moveP(w,tx,tz,10,rdt);if(arrived)face(w,tx,zc,rdt);pose(w,arrived?"rethread":"run",now);return;}
-      const job=["felt","fabric"].map(id=>JOBS[id]).find(J=>J&&now-J.t<300);
+      const job=["felt","fabric"].filter(id=>JOBS[id]&&CLOTH[id].ep&&now-JOBS[id].t<1500).map(id=>JOBS[id])[0];
       if(job){const order=HOME.map((h,j)=>[Math.abs(h[0]-job.x),j]).sort((a,b)=>a[0]-b[0]).map(a=>a[1]),r=order.indexOf(i);
         if(r<4){let gx,gz,act,lx,lz;
+          // fabric: two operators head round to the drive side while two carry the crate; then everyone pulls it on with ropes
+          if(job.id==="fabric"&&(job.ph==="install"||job.ph==="set"||(job.ph==="carry"&&r>=2))){w.userData.side="back";
+            gx=job.x-2.7+r*1.8;gz=BACKZ;const arrived=goSide(w,gx,gz,11,rdt);
+            if(arrived){face(w,gx,zc,rdt);const a=w.rotation.y;
+              if(job.ph==="install"&&job.cov<0.995){pose(w,"pull",now);const lz2=zc+CD/2-0.1-job.cov*(CD-0.2),ez=zc-CD/2+0.05;rope(ropes[r],w.position.x+Math.cos(a)*0.65,1.3,w.position.z-Math.sin(a)*0.65,gx,3.0,ez);if(lz2>ez+0.05)rope(ropes[r+4],gx,3.0,ez,gx,2.98,lz2);}
+              else pose(w,"idle",now);}
+            else pose(w,"run",now);return;}
           if(job.ph==="run"||job.ph==="bare"){gx=job.x-3.6+r*2.4;gz=job.hz+(r%2?1.9:-1.2);act=job.ph==="run"?"look":"clean";lx=job.x;lz=job.hz;}
+          else if(job.ph==="carry"&&job.id==="fabric"){gx=job.tube[0]+(r?2.7:-2.7);gz=job.tube[1]+(r?0.75:-0.75);act="haul";}
           else if(job.ph==="carry"){gx=job.tube[0]-2.4+r*1.6;gz=job.tube[1]+(r%2?0.75:-0.75);act="haul";}
           else if(job.ph==="set"){gx=job.tube[0]-2.4+r*1.6;gz=job.tube[1]+(r%2?0.9:-0.9);act="clean";lx=job.x;lz=job.tube[1];}
           else{gx=job.x-2.7+r*1.8;gz=13.25;act="rethread";lx=gx;lz=zc;}
@@ -2015,6 +2036,7 @@ const G3={on:false,ok:false};
           if(job.ph==="carry"){if(arrived)w.rotation.y=Math.PI;pose(w,arrived?"haul":"run",now);}
           else{if(arrived&&lx!==undefined)face(w,lx,lz,rdt);pose(w,arrived?act:"run",now);}return;}}
       const u=w.userData;
+      if(u.side==="back"){if(goSide(w,AROUND,14.8,9,rdt))u.side=null;else{pose(w,"run",now);return;}}
       if(RUN.on){if(!u.chase&&Math.abs(RUN.x-w.position.x)<11)u.chase=true;
         if(u.chase){const back=2.4+(i%3)*1.3;moveP(w,RUN.x-RUN.dir*back,RUN.z+(i%2?0.9:-0.9),8.4,rdt);pose(w,"run",now);return;}}
       else u.chase=false;
