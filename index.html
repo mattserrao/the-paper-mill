@@ -71,6 +71,8 @@ button.primary{background:var(--stock);border-color:var(--stock);color:var(--pan
 .banner3d b{font:700 16px var(--f-display);color:var(--ink);min-width:0}
 .banner3d[hidden],.lbl[hidden]{display:none}
 .banner3d.good{border-color:var(--ok)} .banner3d.good span{background:var(--ok)}
+.blackout3d{position:absolute;inset:0;display:grid;place-items:center;pointer-events:none;font:700 clamp(28px,7vw,64px) var(--f-display);letter-spacing:.12em;text-transform:uppercase;color:var(--fire2);text-shadow:0 2px 12px #000}
+.blackout3d[hidden]{display:none}
 .chips3d{position:absolute;left:10px;bottom:10px;display:flex;flex-wrap:wrap;gap:4px;max-width:75%;pointer-events:none}
 .chips3d span{background:var(--bad);color:var(--panel);font:700 11px var(--f-display);letter-spacing:.06em;text-transform:uppercase;padding:2px 8px;border-radius:999px}
 .trendbox{border:1px solid var(--line);border-radius:8px;background:var(--panel);padding:10px 12px}
@@ -191,7 +193,7 @@ body{margin:0}
     <div class="seg" id="viewToggle" role="group" aria-label="Plant view"><button id="vb3" aria-pressed="true">3D</button><button id="vb2" aria-pressed="false">2D</button></div>
     <div class="view3dctl" id="view3dctl"><label class="check"><input type="checkbox" id="viewShadows" checked> Shadows</label><button id="viewReset">Reset view</button><span class="hint">Drag to rotate · scroll or pinch to zoom</span></div>
   </div>
-  <div class="view3d" id="view3d" hidden><canvas id="gl" aria-label="3D view of the mill"></canvas><div id="labels3d"></div><div class="banner3d" id="banner3d" hidden><span></span><b></b></div><div class="chips3d" id="chips3d"></div></div>
+  <div class="view3d" id="view3d" hidden><canvas id="gl" aria-label="3D view of the mill"></canvas><div id="labels3d"></div><div class="banner3d" id="banner3d" hidden><span></span><b></b></div><div class="chips3d" id="chips3d"></div><div class="blackout3d" id="blackout3d" hidden>Blackout</div></div>
   <div class="scroller" id="plantwrap"><canvas id="plant" width="1200" height="660" aria-label="Animated mill schematic"></canvas></div>
 
   <section class="chaos" aria-label="Chaos">
@@ -268,7 +270,7 @@ body{margin:0}
       <div class="read" id="r-ship">–</div></div>
   </section>
 
-  <p class="foot">Auto keeps each area matched to the paper machine: pulper feed tracks machine demand plus a correction toward the chest level target, truck arrivals and crews follow from that. Drag any slider to take that area to manual; press its AUTO chip or "Balance all" to hand it back. Production is speed × basis weight, scaled so 23m at 2,736 fpm and 24.55 lb gives 34.8 t/h, the calibration median. Chaos events change the same flows: a machine incident stops the reel, stock prep incidents stop the pulper or cut yield, warehouse incidents cut crews, docks or trucks. Money: rolls are paid for when an outbound truck leaves (grade price × tons). OCC is paid for when it is unloaded, energy and chemicals per ton made, wages per crew member per hour, plus $4,000/h mill overhead and a repair bill for each disaster. Below −$1.5M the mill goes bankrupt. Assumptions: 22 t OCC per inbound truck, 88% pulper yield, 300 t chest, 30 t/h per forklift driver, 25 rolls/h per loader, 20 rolls per outbound truck.</p>
+  <p class="foot">Auto keeps each area matched to the paper machine: pulper feed tracks machine demand plus a correction toward the chest level target, truck arrivals and crews follow from that. Drag any slider to take that area to manual; press its AUTO chip or "Balance all" to hand it back. Production is speed × basis weight, scaled so 23m at 2,736 fpm and 24.55 lb gives 34.8 t/h, the calibration median. Chaos events change the same flows: a machine incident stops the reel, stock prep incidents stop the pulper or cut yield, warehouse incidents cut crews, docks or trucks. The plant view is 3D by default (drag to rotate, scroll or pinch to zoom) and drops shadows and resolution on its own if a device struggles; switch to 2D any time. Money: rolls are paid for when an outbound truck leaves (grade price × tons). OCC is paid for when it is unloaded, energy and chemicals per ton made, wages per crew member per hour, plus $4,000/h mill overhead and a repair bill for each disaster. Below −$1.5M the mill goes bankrupt. Assumptions: 22 t OCC per inbound truck, 88% pulper yield, 300 t chest, 30 t/h per forklift driver, 25 rolls/h per loader, 20 rolls per outbound truck.</p>
 </div>
 
 <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
@@ -1002,15 +1004,15 @@ const G3={on:false,ok:false};
   function box(w,h,d,m,x,y,z,parent=scene,shadow=true){const o=new THREE.Mesh(new THREE.BoxGeometry(w,h,d),m);o.position.set(x,y,z);o.castShadow=shadow;o.receiveShadow=true;parent.add(o);return o;}
   function cylZ(r,len,m,x,y,z,seg=14,parent=scene){const g=new THREE.CylinderGeometry(r,r,len,seg);g.rotateX(Math.PI/2);const o=new THREE.Mesh(g,m);o.position.set(x,y,z);o.castShadow=true;o.receiveShadow=true;parent.add(o);return o;}
   function slab(x0,x1,z0,z1,m,y=0.02){const o=new THREE.Mesh(new THREE.PlaneGeometry(x1-x0,z1-z0),m);o.rotation.x=-Math.PI/2;o.position.set((x0+x1)/2,y,(z0+z1)/2);o.receiveShadow=true;scene.add(o);return o;}
-  function pipe(pts,r,m){const up=new THREE.Vector3(0,1,0);
+  function pipe(pts,r,m,parent=scene){const up=new THREE.Vector3(0,1,0);
     for(let i=0;i<pts.length-1;i++){const a=new THREE.Vector3(...pts[i]),b=new THREE.Vector3(...pts[i+1]),d=b.clone().sub(a),L=d.length();
-      const o=new THREE.Mesh(new THREE.CylinderGeometry(r,r,L,10),m);o.position.copy(a).add(b).multiplyScalar(0.5);o.quaternion.setFromUnitVectors(up,d.normalize());o.castShadow=true;scene.add(o);}
-    pts.slice(1,-1).forEach(p=>{const s=new THREE.Mesh(new THREE.SphereGeometry(r*1.15,10,8),m);s.position.set(...p);scene.add(s);});}
+      const o=new THREE.Mesh(new THREE.CylinderGeometry(r,r,L,10),m);o.position.copy(a).add(b).multiplyScalar(0.5);o.quaternion.setFromUnitVectors(up,d.normalize());o.castShadow=true;parent.add(o);}
+    pts.slice(1,-1).forEach(p=>{const s=new THREE.Mesh(new THREE.SphereGeometry(r*1.15,10,8),m);s.position.set(...p);parent.add(s);});}
 
   const M={ground:mat("g-ground"),slab:mat("g-slab"),asphalt:mat("g-asphalt"),wall:mat("g-wall"),steel:mat("machine",{metalness:0.3,roughness:0.6}),metal:mat("g-metal",{metalness:0.35,roughness:0.5}),
     kraft:mat("kraft"),stock:mat("stock"),paper:mat("paperc",{roughness:0.95}),ink:mat("ink"),warn:mat("warn"),ok:mat("ok"),bad:mat("bad"),
     lane:mat("g-lane"),glass:mat("stock",{transparent:true,opacity:0.16,depthWrite:false,side:THREE.DoubleSide}),robot:mat("stock",{roughness:0.4}),off:mat("smoke")};
-  M.liquid=mat("stock",{roughness:0.3});
+  M.liquid=mat("stock",{roughness:0.3});M.efork=mat("stock");
 
   /* ---- step 1: static plant ---- */
   slab(-95,75,-45,48,M.ground,0);
@@ -1039,7 +1041,7 @@ const G3={on:false,ok:false};
 
   // conveyor to pulper
   const cA=new THREE.Vector3(-8,0.4,-11.5),cB=new THREE.Vector3(11,3.9,-16.6),cDir=cB.clone().sub(cA),cLen=cDir.length();
-  {const o=new THREE.Mesh(new THREE.BoxGeometry(cLen,0.3,1.6),M.steel);o.position.copy(cA).add(cB).multiplyScalar(0.5);
+  const belt=new THREE.Mesh(new THREE.BoxGeometry(cLen,0.3,1.6),M.steel);{const o=belt;o.position.copy(cA).add(cB).multiplyScalar(0.5);
     o.quaternion.setFromUnitVectors(new THREE.Vector3(1,0,0),cDir.clone().normalize());o.castShadow=true;scene.add(o);
     [0.25,0.55,0.85].forEach(f=>{const p=cA.clone().lerp(cB,f);box(0.3,p.y,0.3,M.steel,p.x,p.y/2,p.z-0.6);box(0.3,p.y,0.3,M.steel,p.x,p.y/2,p.z+0.6);});}
   const beltBales=new THREE.InstancedMesh(new THREE.BoxGeometry(1,0.8,1),M.kraft,12);beltBales.castShadow=true;scene.add(beltBales);
@@ -1170,7 +1172,123 @@ const G3={on:false,ok:false};
     g.userData.cargo.forEach((c,k)=>c.visible=k<n);}
   let lastLabel=0;
 
+  /* ---- step 3: chaos effects in 3D ---- */
+  function basic(token,opts={}){const m=new THREE.MeshBasicMaterial(opts);m.userData.token=token;MATS.push(m);return m;}
+  const FM={fire:basic("fire"),fire2:basic("fire2"),spark:basic("fire2"),smoke:mat("smoke",{transparent:true,opacity:0.45,depthWrite:false}),
+    water:mat("water",{transparent:true,opacity:0.55,roughness:0.15,metalness:0.1,depthWrite:false}),rain:basic("water"),slime:mat("slime",{roughness:0.3}),
+    beaver:mat("beaver"),white:mat("paperc"),siren1:basic("bad"),siren2:basic("water"),hazard:new THREE.LineBasicMaterial({color:0xff0000})};
+  FM.hazard.userData.token="bad";MATS.push(FM.hazard);
+  const sphereG=new THREE.SphereGeometry(1,8,6),coneG=new THREE.ConeGeometry(0.6,1.8,7),cubeG=new THREE.BoxGeometry(1,1,1);
+  // pooled particles: sparks and smoke puffs
+  const parts=[];
+  function emit(m,x,y,z,vx,vy,vz,life,size){let p=parts.find(o=>!o.alive);
+    if(!p){p={mesh:new THREE.Mesh(sphereG,m)};scene.add(p.mesh);parts.push(p);}
+    p.mesh.material=m;p.alive=true;p.mesh.visible=true;p.mesh.position.set(x,y,z);p.v=[vx,vy,vz];p.life=p.max=life;p.size=size;p.grow=m===FM.smoke;}
+  function stepParts(rdt){parts.forEach(p=>{if(!p.alive)return;p.life-=rdt;if(p.life<=0){p.alive=false;p.mesh.visible=false;return;}
+    p.mesh.position.x+=p.v[0]*rdt;p.mesh.position.y+=p.v[1]*rdt;p.mesh.position.z+=p.v[2]*rdt;if(!p.grow)p.v[1]-=9*rdt;
+    const f=p.life/p.max,s=p.grow?p.size*(1.6-f):p.size*f;p.mesh.scale.setScalar(Math.max(0.01,s));});}
+  function flames(group,spots){const list=spots.map(([x,y,z])=>{const o=new THREE.Mesh(coneG,FM.fire),i=new THREE.Mesh(coneG,FM.fire2);i.scale.set(0.5,0.55,0.5);i.position.y=-0.25;o.add(i);o.position.set(x,y+0.9,z);group.add(o);return o;});
+    return now=>list.forEach((o,k)=>{const f=1+0.35*Math.sin(now/90+k*1.9);o.scale.set(1,f,1);});}
+  function hazardBox(group,x0,x1,y1,z0,z1){const g=new THREE.EdgesGeometry(new THREE.BoxGeometry(x1-x0,y1,z1-z0));const l=new THREE.LineSegments(g,FM.hazard);l.position.set((x0+x1)/2,y1/2,(z0+z1)/2);group.add(l);
+    return now=>{l.visible=((now/350)|0)%2===0;};}
+  function person(group,m,x,z){const p=new THREE.Group();const b=new THREE.Mesh(new THREE.CylinderGeometry(0.28,0.32,1.2,8),m);b.position.y=0.9;const h=new THREE.Mesh(sphereG,m);h.scale.setScalar(0.28);h.position.y=1.75;
+    const arm=new THREE.Mesh(cubeG,m);arm.scale.set(0.9,0.14,0.14);arm.position.set(0.4,1.2,0);p.add(b,h,arm);p.position.set(x,0,z);group.add(p);return p;}
+  const FX={};
+  const FXDEF={
+    shaft:g=>{const hz=hazardBox(g,-12,58,8.4,4.6,13.6);const motor=box(2.2,1.8,1.8,M.steel,12,0.9,14.8,g);
+      return (now,rdt)=>{hz(now);for(let k=0;k<3;k++)emit(FM.spark,12,1.6,14,(Math.random()-0.5)*8,4+Math.random()*5,(Math.random()-0.2)*6,0.6,0.16);motor.rotation.y=Math.sin(now/40)*0.06;};},
+    dryerfire:g=>{const spots=[];for(let i=0;i<10;i++)spots.push([(872-i*32-600)/10,6.6,zc+(i%2?1.4:-1.4)]);const fl=flames(g,spots);const hz=hazardBox(g,-12,58,8.4,4.6,13.6);
+      return (now,rdt)=>{fl(now);hz(now);if(Math.random()<rdt*14)emit(FM.smoke,-3+Math.random()*30,8.5,zc+(Math.random()-0.5)*4,0.6,2.5,0,4,1.2);};},
+    fabric:g=>{const hz=hazardBox(g,34,51,4,4.6,13.6);const rag=new THREE.Mesh(new THREE.TorusKnotGeometry(1.4,0.25,40,6,2,3),M.bad);rag.position.set(43,1.4,zc);g.add(rag);
+      return now=>{hz(now);rag.rotation.y=now/900;};},
+    felt:g=>{const r=new THREE.Mesh(new THREE.TorusGeometry(2.6,0.18,8,28),M.bad);r.position.set(32.5,3.5,zc+3.6);g.add(r);const r2=r.clone();r2.position.z=zc-3.6;g.add(r2);
+      return now=>{const s=1+0.08*Math.sin(now/120);r.scale.setScalar(s);r2.scale.setScalar(s);};},
+    slime:g=>{const blobs=[];for(let k=0;k<26;k++){const b=new THREE.Mesh(sphereG,FM.slime);const i=k%10,top=k%2;b.position.set((top?872:856)/10-60-i*3.2+(Math.random()-0.5),top?6.8:1.0,zc+(Math.random()-0.5)*5.5);b.userData.s=0.25+Math.random()*0.35;g.add(b);blobs.push(b);}
+      return now=>blobs.forEach((b,k)=>b.scale.setScalar(b.userData.s*(1+0.25*Math.sin(now/300+k))));},
+    ragger:g=>{const curve=new THREE.CatmullRomCurve3([new THREE.Vector3(16,2.5,-13.5),new THREE.Vector3(18,5.5,-12),new THREE.Vector3(21,6.5,-9),new THREE.Vector3(23,2,-7),new THREE.Vector3(24,0.2,-6)]);
+      const rope=new THREE.Mesh(new THREE.TubeGeometry(curve,40,0.18,6,false),M.ink);g.add(rope);const ring=new THREE.Mesh(new THREE.TorusGeometry(4.6,0.18,6,32),M.bad);ring.rotation.x=Math.PI/2;ring.position.set(16,3.6,-13.5);g.add(ring);
+      return now=>{rope.rotation.z=Math.sin(now/500)*0.03;ring.visible=((now/350)|0)%2===0;};},
+    overflow:g=>{const w1=new THREE.Mesh(new THREE.PlaneGeometry(26.4,20.5,24,18),FM.water);w1.rotation.x=-Math.PI/2;w1.position.set(-21.2,0.35,-13.25);
+      const w2=new THREE.Mesh(new THREE.PlaneGeometry(22,9,16,8),FM.water);w2.rotation.x=-Math.PI/2;w2.position.set(3,0.2,-12.5);g.add(w1,w2);
+      return (now,rdt)=>{[w1,w2].forEach(w=>{const pa=w.geometry.attributes.position;for(let i=0;i<pa.count;i++)pa.setZ(i,0.12*Math.sin(pa.getX(i)*0.8+now/300)+0.08*Math.cos(pa.getY(i)*0.9+now/410));pa.needsUpdate=true;});
+        if(Math.random()<rdt*10)emit(FM.water,16+(Math.random()-0.5)*6,3.5,-9.5,(Math.random()-0.5)*3,3,3,0.8,0.35);};},
+    badocc:g=>{const n=40,im=new THREE.InstancedMesh(cubeG,FM.slime,n),m=new THREE.Matrix4();for(let k=0;k<n;k++){m.makeScale(0.35,0.15,0.3);m.setPosition(-30+Math.random()*19,1.2+Math.random()*2.2,-17+Math.random()*10);im.setMatrixAt(k,m);}g.add(im);
+      const im2=new THREE.InstancedMesh(cubeG,FM.rain,20);for(let k=0;k<20;k++){m.makeScale(0.5,0.08,0.4);m.setPosition(-30+Math.random()*19,1.3+Math.random()*2,-17+Math.random()*10);im2.setMatrixAt(k,m);}g.add(im2);return ()=>{};},
+    balefire:g=>{const spots=[];for(let k=0;k<9;k++)spots.push([-29+k*2.2,1.8+(k%3)*0.9,-8-(k%4)*3]);const fl=flames(g,spots);
+      return (now,rdt)=>{fl(now);if(Math.random()<rdt*12)emit(FM.smoke,-28+Math.random()*16,4,-9-Math.random()*7,0.8,2.6,0,4,1.4);};},
+    fight:g=>{const a=person(g,M.ink,-38.6,-21),b=person(g,M.steel,-37.2,-21);a.rotation.y=0;b.rotation.y=Math.PI;
+      const car=new THREE.Group();box(3.2,0.8,1.6,M.ink,0,0.6,0,car);box(1.6,0.6,1.4,M.wall,-0.2,1.3,0,car);const s1=box(0.3,0.25,0.6,FM.siren1,-0.2,1.72,-0.35,car,false),s2=box(0.3,0.25,0.6,FM.siren2,-0.2,1.72,0.35,car,false);
+      car.position.set(-43,0,-15.5);car.rotation.y=0.6;g.add(car);
+      return now=>{const j=Math.sin(now/70)*0.25;a.position.x=-38.6+j;b.position.x=-37.2-j;a.position.y=Math.abs(Math.sin(now/110))*0.3;b.position.y=Math.abs(Math.cos(now/110))*0.3;
+        const on=((now/250)|0)%2;s1.material=on?FM.siren1:M.ink;s2.material=on?M.ink:FM.siren2;};},
+    roof:g=>{const drops=[];for(let k=0;k<70;k++){const d=new THREE.Mesh(cubeG,FM.rain);d.scale.set(0.05,0.6,0.05);d.position.set(-48+Math.random()*24,Math.random()*7,15.5+Math.random()*16);g.add(d);drops.push(d);}
+      const pud=new THREE.Mesh(new THREE.CircleGeometry(5,24),FM.water);pud.rotation.x=-Math.PI/2;pud.position.set(-36,0.07,23);g.add(pud);
+      return (now,rdt)=>drops.forEach(d=>{d.position.y-=rdt*14;if(d.position.y<0)d.position.y+=7;});},
+    highway:g=>{[[-72,-3.8],[-72,12.5]].forEach(([x,z])=>{for(let k=0;k<5;k++)box(0.6,1,0.55,k%2?M.wall:M.bad,x,0.5,z-1.2+k*0.6,g);box(0.3,1.6,0.3,M.warn,x,0.8,z-1.6,g);box(0.3,1.6,0.3,M.warn,x,0.8,z+1.6,g);});
+      const tanker=new THREE.Group();box(5,1.8,1.8,M.wall,0,1.2,0,tanker);box(1.3,1.6,1.8,M.bad,3.2,1.1,0,tanker);tanker.position.set(-82,0,4);tanker.rotation.y=0.9;tanker.rotation.z=0.25;g.add(tanker);
+      return ()=>{};},
+    lightning:g=>{const pts=[[40,34,-13],[36,28,-16],[39,23,-14],[34,18,-15],[37,14,-15],[34.5,10.5,-15]].map(p=>new THREE.Vector3(...p));
+      const bolt=new THREE.Mesh(new THREE.TubeGeometry(new THREE.CatmullRomCurve3(pts,false,"catmullrom",0),30,0.35,5,false),FM.fire2);g.add(bolt);
+      return (now,rdt,inc)=>{const age=(now-inc.real)/1000;bolt.visible=age<1.4?((now/80)|0)%2===0:(now%2500)<120;};},
+    tornado:g=>{const fun=new THREE.Group();const rings=[];for(let k=0;k<14;k++){const r=new THREE.Mesh(new THREE.TorusGeometry(1.2+k*0.9,0.35,6,24),FM.smoke);r.rotation.x=Math.PI/2;r.position.y=k*2.2;fun.add(r);rings.push(r);}
+      const deb=[];for(let k=0;k<14;k++){const d=new THREE.Mesh(cubeG,k%3?M.kraft:FM.white);d.scale.setScalar(0.7);fun.add(d);deb.push(d);}g.add(fun);
+      return (now,rdt,inc)=>{const age=(now-inc.real)/1000;fun.visible=age<12;fun.position.set(-95+age/12*170,0,-6+Math.sin(age*0.9)*10);
+        rings.forEach((r,k)=>{r.position.x=Math.sin(now/220+k*0.6)*(0.4+k*0.18);r.position.z=Math.cos(now/260+k*0.5)*(0.3+k*0.12);});
+        deb.forEach((d,k)=>{const a=now/180+k,rad=3+k*0.9;d.position.set(Math.cos(a)*rad,2+k*1.6,Math.sin(a)*rad);d.rotation.set(a,a*1.3,0);});};},
+    beaver:g=>{const bv=new THREE.Group();const body=new THREE.Mesh(sphereG,FM.beaver);body.scale.set(4.2,3.2,3.4);body.position.y=3;
+      const head=new THREE.Mesh(sphereG,FM.beaver);head.scale.set(2.2,2,2);head.position.set(4.4,4.6,0);
+      const ear1=new THREE.Mesh(sphereG,FM.beaver);ear1.scale.setScalar(0.6);ear1.position.set(3.8,6.5,-1.2);const ear2=ear1.clone();ear2.position.z=1.2;
+      const eye1=new THREE.Mesh(sphereG,M.ink);eye1.scale.setScalar(0.3);eye1.position.set(6.1,5.3,-0.8);const eye2=eye1.clone();eye2.position.z=0.8;
+      const nose=new THREE.Mesh(sphereG,M.ink);nose.scale.setScalar(0.45);nose.position.set(6.6,4.7,0);
+      const teeth=new THREE.Group();box(0.25,0.9,0.4,FM.white,0,0,-0.24,teeth,false);box(0.25,0.9,0.4,FM.white,0,0,0.24,teeth,false);teeth.position.set(6.3,3.6,0);
+      const tail=new THREE.Mesh(sphereG,M.steel);tail.scale.set(3,0.35,1.7);tail.position.set(-5.4,0.9,0);tail.rotation.z=0.25;
+      bv.add(body,head,ear1,ear2,eye1,eye2,nose,teeth,tail);bv.position.set(-24,0,-12.5);bv.rotation.y=-0.4;g.add(bv);
+      return (now,rdt)=>{bv.position.y=Math.abs(Math.sin(now/400))*0.4;teeth.position.y=3.6-Math.abs(Math.sin(now/120))*0.3;tail.rotation.z=0.25+Math.sin(now/200)*0.3;
+        if(Math.random()<rdt*8)emit(M.kraft,-20,4,-11.5,1+Math.random()*3,4+Math.random()*3,(Math.random()-0.5)*4,1.1,0.35);};},
+  };
+  const blackEl=$("blackout3d");
+  function fxUpdate(rdt,now){
+    for(const id in FX)FX[id].g.visible=false;
+    S.inc.forEach(inc=>{const def=FXDEF[inc.id];if(!def)return;let f=FX[inc.id];if(!f){const g=new THREE.Group();scene.add(g);f=FX[inc.id]={g,up:def(g)};}
+      f.g.visible=true;f.up(now,rdt,inc);});
+    stepParts(rdt);
+    blackEl.hidden=!S.inc.some(i=>i.id==="lightning");
+  }
+
+  /* ---- step 4: upgrades you can see ---- */
+  const UPV={};
+  function upg(id,build){const g=new THREE.Group();scene.add(g);build(g);UPV[id]=g;return g;}
+  const motors=upg("drive",g=>{for(let k=0;k<3;k++){const m=new THREE.Group();box(1.6,1.4,1.4,M.stock,0,0.7,0,m);cylZ(0.25,1.2,M.metal,0,0.7,-1,8,m);m.position.set(2+k*9,0,zc-CD/2-2.2);g.add(m);}});
+  const beacons=upg("monitor",g=>{for(let k=0;k<6;k++){const b=new THREE.Mesh(new THREE.CylinderGeometry(0.22,0.22,0.5,8),M.robot);b.position.set(-4+k*7,7.85,zc+CD/2+0.6);g.add(b);}});
+  const sprink=upg("fire",g=>{pipe([[-6,8.6,zc],[30,8.6,zc]],0.18,M.bad,g);for(let x=-4;x<=28;x+=4)box(0.12,0.5,0.12,M.bad,x,8.3,zc,g,false);});
+  const cleaners=upg("clean",g=>{for(let k=0;k<4;k++){const c=new THREE.Mesh(new THREE.ConeGeometry(0.6,3.2,10),M.metal);c.rotation.x=Math.PI;c.position.set(26.5+(k%2)*1.6,2.4,-21+Math.floor(k/2)*1.6);c.castShadow=true;g.add(c);}
+    box(4,0.3,4,M.steel,27.3,4.1,-20.2,g);});
+  const detrash=upg("detrash",g=>{box(3,2.6,2.4,M.stock,22.5,1.3,-19.5,g);cylZ(0.4,2.8,M.metal,22.5,2.9,-19.5,8,g);});
+  const annexes=[1,2].map(n=>upg("wh"+n,g=>{const z0=32.2+(n-1)*8,z1=z0+8;
+    const f=new THREE.Mesh(new THREE.PlaneGeometry(25.2,8),M.slab);f.rotation.x=-Math.PI/2;f.position.set(-36.4,0.045,(z0+z1)/2);f.receiveShadow=true;g.add(f);
+    box(0.3,2.6,8,M.wall,-49,1.3,(z0+z1)/2,g);box(0.3,2.6,8,M.wall,-23.8,1.3,(z0+z1)/2,g);box(25.2,2.6,0.3,M.wall,-36.4,1.3,z1,g);
+    const im=new THREE.InstancedMesh(rollGeo,M.paper,36),m=new THREE.Matrix4();for(let k=0;k<36;k++){m.makeTranslation(-45+(k%12)*1.75,0.74,z0+1.5+Math.floor(k/12)*2.2);im.setMatrixAt(k,m);}im.castShadow=true;g.add(im);g.userData.rolls=im;}));
+  const walk=upg("safety",g=>{    [[-21.2,-2.6,26.4,0.5],[-36.4,14.4,25.2,0.5],[23,3.4,68,0.5],[23,15.6,68,0.5]].forEach(([x,z,w,d])=>box(w,0.03,d,M.warn,x,0.07,z,g,false));});
+  const ctrl=upg("apc",g=>{box(6,3.2,4,M.wall,46,1.6,-6,g);box(5.4,1.1,0.1,M.robot,46,2.2,-3.95,g,false);box(6.4,0.3,4.4,M.steel,46,3.35,-6,g);});
+  function upUpdate(now){
+    motors.visible=LV("drive")>0;motors.children.forEach((m,k)=>m.visible=k<LV("drive"));
+    beacons.visible=LV("monitor")>0;beacons.children.forEach((b,k)=>{b.visible=k<3*LV("monitor");b.material=((now/500+k)|0)%3===0?M.ok:M.robot;});
+    sprink.visible=LV("fire")>0;cleaners.visible=LV("clean")>0;cleaners.children.forEach((c,k)=>c.visible=k===4||k<2*LV("clean"));
+    detrash.visible=LV("detrash")>0;walk.visible=LV("safety")>0;ctrl.visible=LV("apc")>0;
+    annexes.forEach((a,k)=>{a.visible=LV("wh")>k;});
+    // rolls fill main bay first, then annexes
+    const total=Math.ceil(S.fg/(P.fgCap/(84+36*LV("wh"))));rolls.count=Math.min(84,total);rolls.instanceMatrix.needsUpdate=true;
+    annexes.forEach((a,k)=>{const n=clamp(total-84-36*k,0,36);a.userData.rolls.count=n;a.userData.rolls.instanceMatrix.needsUpdate=true;});
+    const ps=1+0.15*LV("pulper");pulper.scale.set(ps,1,ps);
+    belt.material=P.autoFeed?M.robot:M.steel;
+    lifts.forEach(l=>{if(l.children[0].material===M.warn&&LV("forklift"))l.children[0].material=M.efork;});
+  }
+
+  let fpsAcc=0,fpsN=0,fpsT=0,quality=2;
   G3.frame=function(rdt){
+    if(rdt>0){fpsT+=rdt;fpsN++;if(fpsT>3){const fps=fpsN/fpsT;fpsT=0;fpsN=0;
+      if(fps<28&&quality===2&&renderer.shadowMap.enabled){quality=1;renderer.shadowMap.enabled=false;MATS.forEach(m=>m.needsUpdate=true);$("viewShadows").checked=false;}
+      else if(fps<24&&quality>=1){quality=0;renderer.setPixelRatio(1);resize();}}}
     applyPalette();rebuildDoors();
     const R=S.rates,now=performance.now();
     // trucks
@@ -1221,7 +1339,9 @@ const G3={on:false,ok:false};
       g.position.set(x,0,z);g.userData.light.material=((now/400+r)|0)%2?M.ok:M.stock;});
     // blackout dims the plant
     const out=S.inc.some(i=>i.id==="lightning");hemi.intensity=out?0.18:baseHemi;sun.intensity=out?0.12:baseSun;
+    if(out!==G3.wasOut){G3.wasOut=out;scene.background=new THREE.Color(out?"#0b0f0e":tok("g-sky"));}
     // camera + render
+    upUpdate(now);fxUpdate(rdt,now);
     placeCam();renderer.render(scene,camera);
     // labels follow the 3D anchors
     const w=host.clientWidth,hh=host.clientHeight,doText=now-lastLabel>200;if(doText)lastLabel=now;
