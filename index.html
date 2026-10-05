@@ -227,6 +227,9 @@ body.fs .hud{display:flex;position:absolute;left:12px;top:calc(12px + env(safe-a
 .hud .hbtns button{padding:6px 10px}
 .hud .hbtns span{font:600 12px var(--f-body);min-width:52px;text-align:center;font-variant-numeric:tabular-nums}
 body.fs .banner3d{top:calc(84px + env(safe-area-inset-top,0px))}
+@media (max-width:640px){body.fs .hud .hbtns{margin-left:0;width:100%;flex-wrap:wrap;justify-content:center;gap:4px}
+  body.fs .hud .hbtns button{padding:5px 8px;font-size:12px}body.fs .hud .hk{min-width:0;padding:6px 9px}body.fs .hud .hk b{font-size:14px}
+  body.fs .banner3d{top:calc(150px + env(safe-area-inset-top,0px))}html:has(body.fs){overflow:hidden}}
 @media (max-width:640px){.hud .hk{min-width:0;padding:5px 8px}.hud .hk b{font-size:13.5px}.hud .hk.opt{display:none}}
 @media (prefers-reduced-motion: reduce){*{scroll-behavior:auto}}
 [hidden]{display:none!important}
@@ -235,7 +238,7 @@ body{margin:0}
 </head>
 <body>
 
-<div class="ver" id="appVersion" aria-label="Version">v1.0.0</div>
+<div class="ver" id="appVersion" aria-label="Version">v1.0.1</div>
 <div class="wrap">
   <header>
     <div class="brand"><span class="logo" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linejoin="round"><circle cx="8.5" cy="12" r="5.5"/><circle cx="8.5" cy="12" r="1.6" fill="currentColor"/><path d="M8.5 6.5H20v11H8.5"/></svg></span>
@@ -2504,9 +2507,10 @@ $("hud-exit").addEventListener("click",()=>setFS(false));
 $("hud-dis").addEventListener("click",()=>$("chaosRandom").click());
 document.addEventListener("fullscreenchange",()=>{if(!document.fullscreenElement&&document.body.classList.contains("fs"))setFS(false);});
 document.addEventListener("keydown",e=>{if(e.key==="Escape"&&document.body.classList.contains("fs"))setFS(false);});
-$("hud-play").addEventListener("click",()=>$("play").click());
+function hudSync(){$("hud-speed").textContent=C.simSpeed+" min/s";$("hud-play").textContent=running?"Pause":"Run";}
+$("hud-play").addEventListener("click",()=>{$("play").click();hudSync();});
 const SPEEDS=[1,2,5,10,20,30,60,120];
-function nudgeSpeed(d){const i=SPEEDS.findIndex(v=>v>=C.simSpeed);const n=SPEEDS[clamp((i<0?SPEEDS.length-1:i)+d,0,SPEEDS.length-1)];const el=$("simspeed");el.value=n;el.dispatchEvent(new Event("input"));}
+function nudgeSpeed(d){const i=SPEEDS.findIndex(v=>v>=C.simSpeed);const n=SPEEDS[clamp((i<0?SPEEDS.length-1:i)+d,0,SPEEDS.length-1)];const el=$("simspeed");el.value=n;el.dispatchEvent(new Event("input"));hudSync();}
 $("hud-slow").addEventListener("click",()=>nudgeSpeed(-1));$("hud-fast").addEventListener("click",()=>nudgeSpeed(1));
 $("vb3").addEventListener("click",()=>setView(true));$("vb2").addEventListener("click",()=>setView(false));
 {let pref="3d";try{pref=localStorage.getItem("paper-mill-view")||"3d";}catch(e){}setView(pref==="3d");}
