@@ -1429,7 +1429,22 @@ const G3={on:false,ok:false};
   const ringT=tickT,ringL=tickL;
   let chestR=0;
   // disk thickener between pulper and chest (visual only): vat, rotating sectored disks, showers, chute, filtrate drop legs to seal tanks
-  const thk=new THREE.Group();scene.add(thk);const TY=2.6,TZ=-4.5;blob(26,TZ,5.2);
+  const TE=5,thk=new THREE.Group();thk.position.y=TE;scene.add(thk);const TY=2.6,TZ=-4.5;blob(26.6,-3.7,6);
+  // elevated steel platform: grated deck, columns, handrails and a stair, so thickened stock drops by gravity to the chest
+  {const gC=document.createElement("canvas");gC.width=gC.height=64;const x=gC.getContext("2d");x.fillStyle="#8d96a3";x.fillRect(0,0,64,64);x.fillStyle="#5d6672";for(let i=0;i<64;i+=8){x.fillRect(i,0,2,64);x.fillRect(0,i,64,1);}
+    const gT=new THREE.CanvasTexture(gC);gT.encoding=THREE.sRGBEncoding;gT.wrapS=gT.wrapT=THREE.RepeatWrapping;gT.repeat.set(10,7);
+    const deck=new THREE.Mesh(new THREE.BoxGeometry(10.4,0.3,7.2),[M.steel,M.steel,new THREE.MeshStandardMaterial({map:gT,roughness:0.7,metalness:0.3}),M.steel,M.steel,M.steel]);
+    deck.position.set(26.8,TE-0.15,-3.8);deck.castShadow=true;deck.receiveShadow=true;scene.add(deck);
+    for(const cx of [21.9,26.8,31.7])for(const cz of [-7.1,-0.5]){box(0.35,TE-0.3,0.35,M.brand,cx,(TE-0.3)/2,cz);}
+    box(10.4,0.4,0.25,M.brand,26.8,TE-0.5,-7.3,scene,false);box(10.4,0.4,0.25,M.brand,26.8,TE-0.5,-0.3,scene,false);
+    const rails=[[[21.7,-0.3],[31.9,-0.3]],[[21.7,-7.3],[25.6,-7.3]],[[21.7,-0.3],[21.7,-7.3]],[[31.9,-0.3],[31.9,-7.3]]];
+    rails.forEach(([a,b])=>{pipe([[a[0],TE+1.1,a[1]],[b[0],TE+1.1,b[1]]],0.05,M.warn);pipe([[a[0],TE+0.55,a[1]],[b[0],TE+0.55,b[1]]],0.04,M.warn);
+      const n=Math.max(1,Math.round(Math.hypot(b[0]-a[0],b[1]-a[1])/1.7));for(let k=0;k<=n;k++){const t=k/n;pipe([[a[0]+(b[0]-a[0])*t,TE,a[1]+(b[1]-a[1])*t],[a[0]+(b[0]-a[0])*t,TE+1.1,a[1]+(b[1]-a[1])*t]],0.04,M.warn);}});
+    // stair down along the back edge
+    const st=new THREE.Group();st.position.set(25.6,0,-7.95);scene.add(st);const run=6,steps=12;
+    for(let k=0;k<steps;k++){const y=TE-(k+1)*TE/steps;box(run/steps+0.05,0.08,1.1,M.steel,(k+0.5)*run/steps,y+0.04,0,st,false);}
+    [-0.6,0.6].forEach(z=>{const L=Math.hypot(run,TE);const sg=new THREE.Mesh(new THREE.BoxGeometry(L,0.3,0.08),M.brand);sg.position.set(run/2,TE/2-0.15,z);sg.rotation.z=-Math.atan2(TE,run);sg.castShadow=true;st.add(sg);});
+    pipe([[25.6,TE+1.1,-8.55],[31.6,1.1,-8.55]],0.04,M.warn);}
   {const vm=mat("g-wall",{side:THREE.DoubleSide,roughness:0.55});
     const vg=new THREE.CylinderGeometry(1.95,1.95,6,32,1,true,Math.PI/2,Math.PI);vg.rotateZ(Math.PI/2);const vat=new THREE.Mesh(vg,vm);vat.position.set(26,TY,TZ);vat.castShadow=true;vat.receiveShadow=true;thk.add(vat);
     [23,29].forEach(x=>{const eg=new THREE.CircleGeometry(1.95,32,Math.PI,Math.PI);eg.rotateY(Math.PI/2);const e=new THREE.Mesh(eg,vm);e.position.set(x,TY,TZ);e.castShadow=true;thk.add(e);});
@@ -1453,24 +1468,24 @@ const G3={on:false,ok:false};
   // knock-off shower headers above the disks
   pipe([[22.8,TY+2.05,TZ+0.55],[29.2,TY+2.05,TZ+0.55]],0.09,M.metal,thk);pipe([[22.8,TY+2.05,TZ-0.55],[29.2,TY+2.05,TZ-0.55]],0.09,M.metal,thk);
   pipe([[22.8,TY+2.05,TZ-0.55],[22.4,TY+2.05,TZ-0.55],[22.4,TY+2.05,TZ+0.55],[22.8,TY+2.05,TZ+0.55]],0.09,M.metal,thk);
-  pipe([[22.4,TY+2.05,TZ],[21.6,TY+2.05,TZ],[21.6,0,TZ]],0.09,M.metal,thk);
+  pipe([[22.4,TY+2.05,TZ],[21.6,TY+2.05,TZ],[21.6,-TE,TZ]],0.09,M.metal,thk);
   // discharge chute down to the repulper and stock pump
   {const ch=box(6.0,0.12,1.8,M.steel,26,TY+0.5,TZ+2.6,thk,false);ch.rotation.x=-0.55;
     box(6.2,0.9,1.0,M.steel,26,1.25,TZ+3.55,thk);box(1.2,1.6,1.2,M.steel,29.9,0.8,TZ+3.55,thk);
-    const pc=new THREE.Mesh(new THREE.CylinderGeometry(0.45,0.5,0.8,14),M.brand);pc.position.set(31.3,0.45,TZ+3.55);pc.castShadow=true;thk.add(pc);}
+    const hp=new THREE.Mesh(new THREE.CylinderGeometry(0.55,0.3,0.9,14),M.steel);hp.position.set(29.9,-0.15,TZ+3.55);hp.castShadow=true;thk.add(hp);}
   // filtrate drop legs from the valve to the cloudy and clear seal tanks
-  const sealT=(x,z,col,txt)=>{const t=new THREE.Mesh(new THREE.CylinderGeometry(0.75,0.75,1.4,20,1,true),mat("g-wall",{side:THREE.DoubleSide}));t.position.set(x,0.7,z);t.castShadow=true;thk.add(t);
-    const rim=new THREE.Mesh(new THREE.TorusGeometry(0.75,0.06,6,24),M.steel);rim.rotation.x=Math.PI/2;rim.position.set(x,1.4,z);thk.add(rim);
-    const w=new THREE.Mesh(new THREE.CircleGeometry(0.72,24),new THREE.MeshStandardMaterial({color:lin0(col),roughness:0.15,metalness:0.1}));w.rotation.x=-Math.PI/2;w.position.set(x,1.22,z);thk.add(w);
+  const sealT=(x,z,col,txt)=>{const t=new THREE.Mesh(new THREE.CylinderGeometry(0.75,0.75,1.4,20,1,true),mat("g-wall",{side:THREE.DoubleSide}));t.position.set(x,0.7,z);t.castShadow=true;scene.add(t);
+    const rim=new THREE.Mesh(new THREE.TorusGeometry(0.75,0.06,6,24),M.steel);rim.rotation.x=Math.PI/2;rim.position.set(x,1.4,z);scene.add(rim);
+    const w=new THREE.Mesh(new THREE.CircleGeometry(0.72,24),new THREE.MeshStandardMaterial({color:lin0(col),roughness:0.15,metalness:0.1}));w.rotation.x=-Math.PI/2;w.position.set(x,1.22,z);scene.add(w);
     const sc=document.createElement("canvas");sc.width=128;sc.height=40;const c=sc.getContext("2d");c.fillStyle="#ffffff";c.fillRect(0,0,128,40);c.fillStyle=col;c.fillRect(0,0,12,40);c.fillStyle="#1c2233";c.font="800 24px system-ui,sans-serif";c.textAlign="center";c.fillText(txt,70,29);
-    const st=new THREE.CanvasTexture(sc);st.encoding=THREE.sRGBEncoding;const sg=new THREE.Mesh(new THREE.PlaneGeometry(2.2,0.69),new THREE.MeshBasicMaterial({map:st,toneMapped:false}));sg.position.set(x,2.45,z+0.02);thk.add(sg);
-    pipe([[x,1.4,z],[x,2.1,z]],0.05,M.steel,thk);return w;};
+    const st=new THREE.CanvasTexture(sc);st.encoding=THREE.sRGBEncoding;const sg=new THREE.Mesh(new THREE.PlaneGeometry(2.2,0.69),new THREE.MeshBasicMaterial({map:st,toneMapped:false}));sg.position.set(x,2.45,z+0.02);scene.add(sg);
+    pipe([[x,1.4,z],[x,2.1,z]],0.05,M.steel);return w;};
   sealT(19.4,-5.3,"#b8986e","CLOUDY");sealT(19.4,-3.5,"#8fcbe8","CLEAR");
-  pipe([[22.4,TY-0.25,TZ-0.3],[21.0,TY-0.25,TZ-0.3],[21.0,TY-0.25,-5.3],[19.4,TY-0.25,-5.3],[19.4,0.9,-5.3]],0.14,M.metal,thk);
-  pipe([[22.4,TY+0.25,TZ+0.3],[20.6,TY+0.25,TZ+0.3],[20.6,TY+0.25,-3.5],[19.4,TY+0.25,-3.5],[19.4,0.9,-3.5]],0.14,M.steel,thk);
+  pipe([[22.4,TE+TY-0.25,TZ-0.3],[21.0,TE+TY-0.25,TZ-0.3],[21.0,TE+TY-0.25,-5.3],[19.4,TE+TY-0.25,-5.3],[19.4,0.9,-5.3]],0.14,M.metal);
+  pipe([[22.4,TE+TY+0.25,TZ+0.3],[20.6,TE+TY+0.25,TZ+0.3],[20.6,TE+TY+0.25,-3.5],[19.4,TE+TY+0.25,-3.5],[19.4,0.9,-3.5]],0.14,M.steel);
   // stock lines: pulper -> thickener vat, repulper pump -> chest
-  pipe([[20.2,1,-11.5],[24.5,1,-11.5],[24.5,1,-7.0],[24.5,TY+0.5,-7.0],[24.5,TY+0.5,-5.9],[24.5,TY-0.1,-5.9]],0.3,M.stock);
-  pipe([[31.75,0.45,TZ+3.55],[33,0.45,TZ+3.55],[33,0.8,TZ+3.55],[33,0.8,-10.6]],0.3,M.stock);
+  pipe([[20.2,1,-11.5],[23.6,1,-11.5],[23.6,1,-7.9],[23.6,TE+TY+0.5,-7.9],[24.5,TE+TY+0.5,-7.9],[24.5,TE+TY+0.5,-5.9],[24.5,TE+TY-0.1,-5.9]],0.3,M.stock);
+  pipe([[29.9,TE-0.6,TZ+3.55],[29.9,TE-1.2,TZ+3.55],[33,TE-1.6,TZ+3.55],[33,TE-2.6,-9.6],[33,TE-2.7,-10.6]],0.3,M.stock);
   pipe([[38.5,1,-11],[57,1,-11],[57,1,6.5],[57,2.4,6.5]],0.35,M.stock);
 
   // paper machine
@@ -1564,7 +1579,7 @@ const G3={on:false,ok:false};
     {p:[-70,0,-8],t:()=>["1 Inbound OCC",S.inQ.length?S.inQ.length+" trucks waiting":"road clear"]},
     {p:[-21,2.8,-24],t:()=>["2 Receiving",f0(S.yard)+" t bales"]},
     {p:[16,4.5,-18.5],t:()=>["3 Pulper",f1(S.rates.feed)+" t/h"]},
-    {p:[26,6.2,-4.5],t:()=>["Disk thickener",S.M.pulperDown?"stopped":"cloudy · clear filtrate"]},
+    {p:[26,11.2,-4.5],t:()=>["Disk thickener",S.M.pulperDown?"stopped":"cloudy · clear filtrate"]},
     {p:[34.5,11.2,-15],t:()=>["4 Stock chest",f0(S.tank/P.tankCap*100)+" %"]},
     {p:[34.5,9.6,zc-1.5],t:()=>["Twin press",LV("shoe")?"shoe in 2nd press":"tandem bottom felt"]},
     {p:[10,8.4,zc],t:()=>["5 "+NAME+(S.pm==="run"?"":" · "+({break:"sheet break: all hands rethreading",down:"no stock",full:"warehouse full",spools:"winder backed up",incident:S.M.pmDown||"down"}[S.pm]||"")),f0(S.pmSpeed)+" fpm · "+f1(S.rates.prod)+" t/h"],cls:()=>S.pm==="run"?"":"bad"},
@@ -2069,7 +2084,7 @@ const G3={on:false,ok:false};
     let nb=0;if(R.feed>0.3){const L=Math.hypot(180,75);for(let s=V.belt;s<L&&nb<12;s+=30){v3.copy(cA).lerp(cB,s/L);v3.y+=0.55;m4.makeTranslation(v3.x,v3.y,v3.z);beltBales.setMatrixAt(nb++,m4);}}
     beltBales.count=nb;beltBales.instanceMatrix.needsUpdate=true;
     rotor.rotation.y=-V.swirl;pulpStock.visible=R.feed>0.3||S.tank>0;
-    if(!S.M.pulperDown){disks.rotation.x-=rdt*0.35;if(Math.random()<rdt*5)emit("steam",23+Math.random()*6,TY+1.9,TZ+(Math.random()<0.5?0.55:-0.55),0,-0.6,0,0.9,0.7,"#ffffff",0.45);}
+    if(!S.M.pulperDown){disks.rotation.x-=rdt*0.35;if(Math.random()<rdt*5)emit("steam",23+Math.random()*6,TE+TY+1.9,TZ+(Math.random()<0.5?0.55:-0.55),0,-0.6,0,0.9,0.7,"#ffffff",0.45);}
     // chest
     const cr=4.2*Math.sqrt(P.tankCap/300);if(cr!==chestR){chestR=cr;shell.scale.set(cr,1,cr);shellIn.scale.set(cr,1,cr);shellRim.scale.set(cr,cr,1);baseRing.scale.set(cr,1,cr);bands.forEach(b=>b.scale.set(cr,1,cr));liquid.scale.set(cr,cr,1);
       tileOut.repeat.set(Math.round(14*cr/4.2),5);tileIn.repeat.set(Math.round(14*cr/4.2),5);
