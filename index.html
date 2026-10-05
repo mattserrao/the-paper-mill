@@ -264,13 +264,18 @@ body{margin:0}
       <label class="check"><input type="checkbox" id="breaks"> Random sheet breaks (calibration data: 14% of time)</label>
       <div class="read" id="r-pm">–</div></div>
 
-    <div class="card"><h2><span class="n">6</span>Warehouse &amp; shipping<span class="pill" id="p-ship">–</span></h2>
+    <div class="card"><h2><span class="n">6</span>Winder<span class="pill" id="p-wd">–</span></h2>
+      <div class="row" data-key="wdr"><label for="s-wdr">Winder speed</label><span class="val"></span><div class="ctl"><input id="s-wdr" type="range" min="0" max="150" step="1"><button class="auto" aria-pressed="true">AUTO</button></div></div>
+      <label class="check"><input type="checkbox" id="hays" checked> Random hayouts (scabs make them far more likely)</label>
+      <div class="read" id="r-wd">–</div></div>
+
+    <div class="card"><h2><span class="n">7</span>Warehouse &amp; shipping<span class="pill" id="p-ship">–</span></h2>
       <div class="row" data-key="loaders"><label for="s-loaders">Clamp-truck loaders on shift</label><span class="val"></span><div class="ctl"><input id="s-loaders" type="range" min="0" max="10" step="1"><button class="auto" aria-pressed="true">AUTO</button></div></div>
       <div class="row" data-key="outRate"><label for="s-outRate">Outbound truck arrivals</label><span class="val"></span><div class="ctl"><input id="s-outRate" type="range" min="0" max="10" step="0.1"><button class="auto" aria-pressed="true">AUTO</button></div></div>
       <div class="read" id="r-ship">–</div></div>
   </section>
 
-  <p class="foot">Auto keeps each area matched to the paper machine: pulper feed tracks machine demand plus a correction toward the chest level target, truck arrivals and crews follow from that. Drag any slider to take that area to manual; press its AUTO chip or "Balance all" to hand it back. Production is speed × basis weight, scaled so 23m at 2,736 fpm and 24.55 lb gives 34.8 t/h, the calibration median. Chaos events change the same flows: a machine incident stops the reel, stock prep incidents stop the pulper or cut yield, warehouse incidents cut crews, docks or trucks. The plant view is 3D by default (drag to rotate, scroll or pinch to zoom) and drops shadows and resolution on its own if a device struggles; switch to 2D any time. Money: rolls are paid for when an outbound truck leaves (grade price × tons). OCC is paid for when it is unloaded, energy and chemicals per ton made, wages per crew member per hour, plus $4,000/h mill overhead and a repair bill for each disaster. Below −$1.5M the mill goes bankrupt. Assumptions: 22 t OCC per inbound truck, 88% pulper yield, 300 t chest, 30 t/h per forklift driver, 25 rolls/h per loader, 20 rolls per outbound truck.</p>
+  <p class="foot">Auto keeps each area matched to the paper machine: pulper feed tracks machine demand plus a correction toward the chest level target, truck arrivals and crews follow from that. Drag any slider to take that area to manual; press its AUTO chip or "Balance all" to hand it back. Production is speed × basis weight, scaled so 23m at 2,736 fpm and 24.55 lb gives 34.8 t/h, the calibration median. The winder cuts each jumbo reel into rolls; only three reels can wait for it, so a slow or hayed-out winder eventually stops the machine. Hayouts send the set in progress to broke. During a sheet break every employee runs to the machine to help rethread, so receiving and shipping pause. Chaos events change the same flows: a machine incident stops the reel, stock prep incidents stop the pulper or cut yield, warehouse incidents cut crews, docks or trucks. The plant view is 3D by default (drag to rotate, scroll or pinch to zoom) and drops shadows and resolution on its own if a device struggles; switch to 2D any time. Money: rolls are paid for when an outbound truck leaves (grade price × tons). OCC is paid for when it is unloaded, energy and chemicals per ton made, wages per crew member per hour, plus $4,000/h mill overhead and a repair bill for each disaster. Below −$1.5M the mill goes bankrupt. Assumptions: 22 t OCC per inbound truck, 88% pulper yield, 300 t chest, 30 t/h per forklift driver, 25 rolls/h per loader, 20 rolls per outbound truck.</p>
 </div>
 
 <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
@@ -278,12 +283,12 @@ body{margin:0}
 (()=>{
 const GRADES={ "23m":{sp:2736,bw:24.55}, "26m":{sp:2433,bw:26.06}, "30m":{sp:2222,bw:30.05}, "33HT":{sp:2084,bw:33.08} };
 const P={truckLoad:22,doors:3,driverRate:30,doorRate:45,yieldF:0.88,tankCap:300,yardCap:2000,yardTarget:800,
-  fgCap:1500,fgTarget:300,jumbo:25,winderRate:60,loaderRate:25,truckRolls:20,doorRolls:45,shipDoors:3,
+  fgCap:1500,fgTarget:300,jumbo:25,maxReels:3,loaderRate:25,truckRolls:20,doorRolls:45,shipDoors:3,
   K:34.8/(2736*24.55),minSpeed:1200,ramp:150,pmLoss:0.98,maxQueue:8};
 const UNITS={inRate:v=>v.toFixed(1)+" trucks/h",drivers:v=>Math.round(v)+" drivers",pulper:v=>v.toFixed(1)+" t/h",
   lvlTarget:v=>Math.round(v)+" %",lowLevel:v=>Math.round(v)+" %",pmSp:v=>Math.round(v).toLocaleString()+" fpm",
-  rollW:v=>v.toFixed(1)+" t",loaders:v=>Math.round(v)+" loaders",outRate:v=>v.toFixed(1)+" trucks/h"};
-const AUTOKEYS=["inRate","drivers","pulper","pmSp","loaders","outRate"];
+  rollW:v=>v.toFixed(1)+" t",wdr:v=>Math.round(v)+" t/h",loaders:v=>Math.round(v)+" loaders",outRate:v=>v.toFixed(1)+" trucks/h"};
+const AUTOKEYS=["inRate","drivers","pulper","pmSp","wdr","loaders","outRate"];
 
 let C,S;
 const BASE={...P};
@@ -294,6 +299,7 @@ const UPS=[
  {id:"drive",g:"machine",name:"Drive & gearbox rebuild",lv:[400e3,900e3,1.8e6],desc:"+150 fpm max speed per level."},
  {id:"deckle",g:"machine",name:"Wider trim (deckle)",lv:[1.2e6,2.5e6],desc:"+6% tons at the same speed per level."},
  {id:"shoe",g:"machine",name:"Shoe press",lv:[3e6],desc:"+100 fpm and 12% less energy per ton."},
+ {id:"winder",g:"machine",name:"Winder rebuild",lv:[450e3,1e6],desc:"+30 t/h winder speed and 40% fewer hayouts per level."},
  {id:"monitor",g:"machine",name:"Fabric & felt monitoring",lv:[350e3,800e3],desc:"Machine failures 40% rarer and fewer sheet breaks, per level."},
  {id:"fire",g:"machine",name:"Fire suppression",lv:[500e3],desc:"Dryer and bale yard fires 60% rarer and half as long."},
  {id:"pulper",g:"stock",name:"Pulper rotor upgrade",lv:[600e3,1.4e6],desc:"+25 t/h pulper capacity per level."},
@@ -322,6 +328,7 @@ function applyUpgrades(){
   P.robots=2*LV("agv"); P.fgCap=BASE.fgCap+750*LV("wh"); P.autoFeed=LV("feedconv")>0;
   P.occPrice=160-20*LV("contract"); P.priceAdd=25*LV("sales"); P.repairMul=LV("insure")?0.4:1; P.premium=LV("insure")?1500:0;
   P.breakBase=Math.pow(0.7,LV("monitor"));
+  P.winderMax=90+30*LV("winder");P.hayBase=Math.pow(0.6,LV("winder"));const wr=document.getElementById("s-wdr");if(wr)wr.max=P.winderMax;
   const sp=document.getElementById("s-pmSp"),pu=document.getElementById("s-pulper");
   if(sp)sp.max=3300+P.spBonus; if(pu)pu.max=P.pulperMax;
 }
@@ -347,7 +354,7 @@ const EVENTS=[
  {id:"dryerfire",g:"machine",name:"Fire in the dryers",head:"Fire in the dryer hood! Deluge on, sheet off.",dur:[180,360],mtbf:260,mods:{pmDown:"dryer fire"},fx:"dryerfire"},
  {id:"fabric",g:"machine",name:"Fabric runs off",head:"Forming fabric tracked off the rolls and folded up.",dur:[150,300],mtbf:180,mods:{pmDown:"fabric change"},fx:"fabric"},
  {id:"felt",g:"machine",name:"Press felt blows",head:"Press felt blown. Crew pulling a new felt.",dur:[90,180],mtbf:140,mods:{pmDown:"felt change"},fx:"felt"},
- {id:"slime",g:"machine",name:"Slime outbreak",head:"Slime outbreak in the wet end. Holes everywhere, speed cut to 70%.",dur:[300,600],mtbf:150,mods:{speedCap:0.7,breakMul:3},fx:"slime"},
+ {id:"slime",g:"machine",name:"Scabs",head:"Scabs in the sheet! Speed cut to 70% and the winder is hayout city.",dur:[300,600],mtbf:150,mods:{speedCap:0.7,breakMul:3,hayMul:20},fx:"slime"},
  {id:"ragger",g:"stock",name:"Ragger rope snaps",head:"Ragger rope snaps. Pulper stopped to fish it out.",dur:[90,180],mtbf:140,mods:{pulperDown:1},fx:"ragger"},
  {id:"overflow",g:"stock",name:"Pulper overflows",head:"Pulper overflows and floods the bale yard!",dur:[240,360],mtbf:220,mods:{pulperDown:1,recvMul:0.5},fx:"flood",
    start:i=>{const l=S.yard*0.15;S.yard-=l;i.note=`${Math.round(l)} t of bales soaked`;}},
@@ -371,13 +378,14 @@ const EVENTS=[
 const EV=Object.fromEntries(EVENTS.map(e=>[e.id,e]));
 EVENTS.forEach(e=>CH.en[e.id]=true);
 function active(id){return S.inc.some(i=>i.id===id);}
-function baseMods(){return {pmDown:null,pulperDown:false,speedCap:1,breakMul:1,yieldMul:1,recvMul:1,clampMul:1,drvCap:99,ldrCap:99,docksClosed:false,noIn:false,noOut:false,yardEat:0};}
+function baseMods(){return {pmDown:null,pulperDown:false,speedCap:1,breakMul:1,yieldMul:1,recvMul:1,clampMul:1,drvCap:99,ldrCap:99,docksClosed:false,noIn:false,noOut:false,yardEat:0,hayMul:1,crewAtPM:false};}
 function mods(){const m=baseMods();
   for(const i of S.inc){const e=EV[i.id].mods||{};
     if(e.pmDown)m.pmDown=e.pmDown; if(e.pulperDown)m.pulperDown=true; if(e.docksClosed)m.docksClosed=true; if(e.noIn)m.noIn=true; if(e.noOut)m.noOut=true;
-    if(e.speedCap)m.speedCap=Math.min(m.speedCap,e.speedCap); if(e.breakMul)m.breakMul*=e.breakMul; if(e.yieldMul)m.yieldMul*=(i.id==="badocc"&&LV("detrash"))?0.9:e.yieldMul;
+    if(e.hayMul)m.hayMul*=e.hayMul; if(e.speedCap)m.speedCap=Math.min(m.speedCap,e.speedCap); if(e.breakMul)m.breakMul*=e.breakMul; if(e.yieldMul)m.yieldMul*=(i.id==="badocc"&&LV("detrash"))?0.9:e.yieldMul;
     if(e.recvMul!==undefined)m.recvMul*=e.recvMul; if(e.clampMul!==undefined)m.clampMul*=e.clampMul; if(e.yardEat)m.yardEat+=e.yardEat;
     if(i.drvCap!==undefined)m.drvCap=Math.min(m.drvCap,i.drvCap); if(i.ldrCap!==undefined)m.ldrCap=Math.min(m.ldrCap,i.ldrCap);}
+  if(S.pm==="break"){m.recvMul=0;m.clampMul=0;m.crewAtPM=true;}
   return m;}
 function log(text,cls){S.feed.unshift({t:S.t,text,cls});if(S.feed.length>40)S.feed.pop();}
 function trigger(id,quiet){
@@ -398,19 +406,24 @@ function chaosTick(dt){
   S.inc=S.inc.filter(i=>i.left>0);
   if(CH.on)for(const e of EVENTS)if(CH.en[e.id]&&!active(e.id)&&Math.random()<dt/60/e.mtbf*CH.lvl*freqMul(e.id))trigger(e.id);
 }
+const HAYLINES=["HAYOUT! Paper is shooting to the roof!","Winder hayout! Every PM hand to the dry end!","Hayout! It's snowing paper in the winder aisle.","Hayout! The set exploded off the drums."];
+function hayout(){S.wd="hayout";S.hayLeft=20+Math.random()*25;
+  const extra=Math.min(S.winderBuf,2+Math.random()*4),loss=extra+S.winderAcc;S.winderBuf-=extra;S.winderAcc=0;S.tot.broke+=loss;S.tot.hayouts++;
+  BANNERS.push({text:HAYLINES[Math.floor(Math.random()*HAYLINES.length)],t:null});while(BANNERS.length>3)BANNERS.splice(1,1);
+  log(`Winder hayout: ${loss.toFixed(1)} t of paper to broke`,"bad");}
 function initCtrl(){
   C={inRate:{v:1.8,auto:true},drivers:{v:3,auto:true},pulper:{v:40,auto:true},lvlTarget:{v:69},lowLevel:{v:30},
-     pmSp:{v:2736,auto:true},rollW:{v:1.8},loaders:{v:2,auto:true},outRate:{v:1,auto:true},grade:"23m",breaks:false,simSpeed:30};
+     pmSp:{v:2736,auto:true},rollW:{v:1.8},loaders:{v:2,auto:true},outRate:{v:1,auto:true},grade:"23m",breaks:false,hays:true,wdr:{v:45,auto:true},simSpeed:30};
 }
 function initState(){
   S={t:0,yard:700,tank:0.69*P.tankCap,fg:300,pmSpeed:C.pmSp.v,pm:"run",breakLeft:0,reel:8,winderBuf:0,winderAcc:0,
      inPhase:0.6,inJit:1,outPhase:0.3,outJit:1,inQ:[],inDock:[null,null,null],outQ:[],outDock:[null,null,null],leaving:[],
-     rates:{feed:0,unload:0,fiberIn:0,prod:0,fiberUse:0,load:0,rolls:0},
-     tot:{inTrucks:0,inTons:0,turned:0,prodT:0,rolls:0,shipped:0,outTrucks:0,breaks:0,breakMin:0,turnups:0,pot:0,incidents:0},
+     rates:{feed:0,unload:0,fiberIn:0,prod:0,fiberUse:0,load:0,rolls:0,cut:0},
+     tot:{inTrucks:0,inTons:0,turned:0,prodT:0,rolls:0,shipped:0,outTrucks:0,breaks:0,breakMin:0,turnups:0,pot:0,incidents:0,hayouts:0,hayMin:0,broke:0},wd:"run",hayLeft:0,
      trend:[],trendAcc:0,rollsVis:[],inc:[],lastInc:0,feed:[],M:baseMods(),effDrv:C.drivers.v,effLd:C.loaders.v,effHum:C.loaders.v};
   S.up={};S.cash=ECON.start;S.ledger={rev:0,occ:0,energy:0,labor:0,overhead:0,repairs:0,premium:0,upgrades:0};S.profitRate=0;S.over=null;S.won=false;S.shipT=0;
   Object.assign(P,BASE);applyUpgrades();
-  const g=GRADES[C.grade]; C.pmSp.v=g.sp+P.spBonus;
+  const g=GRADES[C.grade]; C.pmSp.v=g.sp+P.spBonus; C.wdr.v=Math.min(P.winderMax,P.K*C.pmSp.v*g.bw*1.25);
   const demand=P.K*g.sp*g.bw/P.pmLoss; C.pulper.v=demand/P.yieldF;
   C.inRate.v=C.pulper.v/P.truckLoad; C.drivers.v=Math.ceil(2*C.pulper.v/P.driverRate+0.15);
   const rph=P.K*g.sp*g.bw/C.rollW.v; C.loaders.v=Math.ceil(rph*1.15/P.loaderRate); C.outRate.v=rph/P.truckRolls;
@@ -424,7 +437,7 @@ const ease=(cur,tgt,dt,tau)=>cur+(tgt-cur)*Math.min(1,dt/tau);
 function autoControl(dt){
   const g=GRADES[C.grade], level=S.tank/P.tankCap*100;
   if(C.pmSp.auto) C.pmSp.v=g.sp+P.spBonus;
-  const pmWants = (S.pm==="full"||S.pm==="incident")?0:P.K*C.pmSp.v*g.bw/P.pmLoss;
+  const pmWants = (S.pm==="full"||S.pm==="incident"||S.pm==="spools")?0:P.K*C.pmSp.v*g.bw/P.pmLoss;
   if(C.pulper.auto){
     const fiber=pmWants+(C.lvlTarget.v-level)/100*P.tankCap/1.5;
     C.pulper.v=ease(C.pulper.v,clamp(fiber/P.yieldF,0,P.pulperMax),dt,4);
@@ -444,6 +457,7 @@ function autoControl(dt){
     const r=rph/P.truckRolls+(S.fg-P.fgTarget)/(P.truckRolls*8)-S.outQ.length*0.1;
     C.outRate.v=ease(C.outRate.v,clamp(r,0,10),dt,10);
   }
+  if(C.wdr.auto){const pot=P.K*C.pmSp.v*g.bw,tgt=S.winderBuf>P.jumbo*1.05?P.winderMax:pot*1.25;C.wdr.v=ease(C.wdr.v,clamp(tgt,0,P.winderMax),dt,5);}
   if(C.loaders.auto){
     const need=(C.outRate.v*P.truckRolls*1.1)/P.loaderRate-P.robots;
     if(need>C.loaders.v-0.1) C.loaders.v=Math.min(10,Math.ceil(need+0.1));
@@ -489,6 +503,7 @@ function step(dt){
   if(S.pm==="break"){S.breakLeft-=dt;S.tot.breakMin+=dt;if(S.breakLeft<=0&&level>8){S.pm="run";S.pmSpeed=Math.min(C.pmSp.v,P.minSpeed+300);}}
   else if(S.pm==="down"){if(level>=Math.max(20,low*0.8)){S.pm="run";S.pmSpeed=P.minSpeed;}}
   else if(S.pm==="full"){if(S.fg<P.fgCap*0.95){S.pm="run";S.pmSpeed=P.minSpeed;}}
+  else if(S.pm==="spools"){if(S.winderBuf<=(P.maxReels-1)*P.jumbo+1e-6){S.pm="run";S.pmSpeed=P.minSpeed;}}
   let prod=0;
   if(S.pm==="run"){
     let tgt=C.pmSp.v*M.speedCap;
@@ -499,6 +514,7 @@ function step(dt){
     const r=P.ramp*dt; S.pmSpeed+=clamp(tgt-S.pmSpeed,-r*2,r);
     if(level<5){S.pm="down";}
     else if(S.fg>=P.fgCap){S.pm="full";}
+    else if(S.reel>=P.jumbo&&S.winderBuf>(P.maxReels-1)*P.jumbo+1e-6){S.pm="spools";}
     else if(Math.random()<dt/154*P.breakBase*((C.breaks?1:0)+(M.breakMul-1))){S.pm="break";S.breakLeft=8+Math.random()*34;S.tot.breaks++;}
     if(S.pm==="run"){
       prod=P.K*S.pmSpeed*g.bw*dt/60;
@@ -509,8 +525,11 @@ function step(dt){
   }
   if(S.pm!=="run") S.pmSpeed=ease(S.pmSpeed,0,dt,3);
   S.reel+=prod; S.tot.prodT+=prod; spend(prod*(ECON.energy*P.energyMul+ECON.chem),"energy"); S.tot.pot+=P.K*C.pmSp.v*g.bw*dt/60;
-  if(S.reel>=P.jumbo){S.winderBuf+=S.reel;S.reel=0;S.tot.turnups++;}
-  const cut=Math.min(S.winderBuf,P.winderRate*C.rollW.v*dt/60); S.winderBuf-=cut; S.winderAcc+=cut;
+  if(S.reel>=P.jumbo&&S.winderBuf<=(P.maxReels-1)*P.jumbo+1e-6){S.winderBuf+=S.reel;S.reel=0;S.tot.turnups++;}
+  // 6 winder
+  if(S.wd==="hayout"){S.hayLeft-=dt;S.tot.hayMin+=dt;if(S.hayLeft<=0){S.wd="run";log("Winder cleaned up and running again","ok");}}
+  const cut=S.wd==="hayout"?0:Math.min(S.winderBuf,C.wdr.v*dt/60); S.winderBuf-=cut; S.winderAcc+=cut;
+  if(cut>0&&Math.random()<dt/720*P.hayBase*((C.hays?1:0)+(M.hayMul-1)))hayout();
   let rollsMade=0;
   while(S.winderAcc>=C.rollW.v){S.winderAcc-=C.rollW.v;S.fg+=1;rollsMade++;S.tot.rolls++;
     if(S.rollsVis.length<14) S.rollsVis.push({p:0});}
@@ -534,7 +553,7 @@ function step(dt){
   // smoothed rates (per hour)
   const R=S.rates,k=v=>v*60/dt;
   R.feed=ease(R.feed,k(feed),dt,6);R.unload=ease(R.unload,k(unloaded),dt,6);R.fiberIn=ease(R.fiberIn,k(fiberIn),dt,6);
-  R.prod=ease(R.prod,k(prod),dt,6);R.fiberUse=ease(R.fiberUse,k(prod/P.pmLoss),dt,6);R.load=ease(R.load,k(loaded),dt,6);R.rolls=ease(R.rolls,k(rollsMade),dt,10);
+  R.prod=ease(R.prod,k(prod),dt,6);R.fiberUse=ease(R.fiberUse,k(prod/P.pmLoss),dt,6);R.load=ease(R.load,k(loaded),dt,6);R.rolls=ease(R.rolls,k(rollsMade),dt,10);R.cut=ease(R.cut,k(cut),dt,6);
   // trend every 10 sim min
   S.trendAcc+=dt;
   if(S.trendAcc>=10){S.trendAcc-=10;S.trend.push([S.tank/P.tankCap,S.pmSpeed/3300,S.yard/P.yardCap,S.fg/P.fgCap]);if(S.trend.length>144)S.trend.shift();}
@@ -562,9 +581,10 @@ function syncControls(){
     r.querySelector(".val").textContent=UNITS[key](C[key].v);
     if(btn){btn.setAttribute("aria-pressed",C[key].auto?"true":"false");btn.textContent=C[key].auto?"AUTO":"MANUAL";}
   });
-  gradeSel.value=C.grade; $("breaks").checked=C.breaks;
+  gradeSel.value=C.grade; $("breaks").checked=C.breaks; $("hays").checked=C.hays;
 }
 $("breaks").addEventListener("change",e=>C.breaks=e.target.checked);
+$("hays").addEventListener("change",e=>C.hays=e.target.checked);
 $("balance").addEventListener("click",()=>{AUTOKEYS.forEach(k=>C[k].auto=true);});
 $("reset").addEventListener("click",()=>newGame());
 let running=true;
@@ -666,19 +686,22 @@ function updateText(){
   pill("p-in",S.tot.turned?`${S.tot.turned} turned away`:S.inQ.length>2?`${S.inQ.length} waiting`:"flowing",S.tot.turned?"bad":S.inQ.length>2?"warn":"ok");
   $("r-in").textContent=`${S.tot.inTrucks} trucks · ${f0(S.tot.inTons)} t received · queue ${S.inQ.length} · at doors ${S.inDock.filter(Boolean).length}/${P.doors}`;
   const recCap=S.effDrv*P.driverRate*S.M.recvMul, recUse=(P.autoFeed?0:R.feed)+R.unload;
-  pill("p-rec",S.yard<1?"yard empty":recUse>recCap*0.95?"crew maxed":S.yard>=P.yardCap-1?"yard full":"ok",S.yard<1?"bad":recUse>recCap*0.95||S.yard>=P.yardCap-1?"warn":"ok");
+  pill("p-rec",S.M.crewAtPM?"crew at the PM":S.yard<1?"yard empty":recUse>recCap*0.95?"crew maxed":S.yard>=P.yardCap-1?"yard full":"ok",S.M.crewAtPM?"warn":S.yard<1?"bad":recUse>recCap*0.95||S.yard>=P.yardCap-1?"warn":"ok");
   $("r-rec").textContent=`${S.effDrv<C.drivers.v?`Only ${S.effDrv} of ${C.drivers.v} working · `:""}Crew ${f0(recUse)}/${f0(recCap)} t/h busy · feeding ${f1(R.feed)} · unloading ${f1(R.unload)} t/h`;
   const pulHold=level>97, pulStarve=R.feed<C.pulper.v*0.9&&C.pulper.v>1&&!pulHold;
   pill("p-pul",S.M.pulperDown?"down: incident":pulHold?"hold: chest full":pulStarve?"short of bales":C.pulper.v<0.5?"off":"running",S.M.pulperDown?"bad":pulHold||pulStarve?"warn":C.pulper.v<0.5?"":"ok");
   $("r-pul").textContent=`Fed ${f1(R.feed)} t/h OCC → ${f1(R.fiberIn)} t/h fiber (88% yield)`;
   pill("p-tank",level<5?"empty":level<C.lowLevel.v?"low":level>95?"full":"ok",level<C.lowLevel.v?"bad":level>95?"warn":"ok");
   $("r-tank").textContent=`${f0(S.tank)} of ${P.tankCap} t · in ${f1(R.fiberIn)} · out ${f1(R.fiberUse)} t/h`;
-  const pmTxt={run:S.pmSpeed<C.pmSp.v-40&&level<C.lowLevel.v?"slowed: low stock":S.pmSpeed<C.pmSp.v-40?"ramping":"at max speed",break:"sheet break",down:"down: no stock",full:"down: warehouse full",incident:"down: "+(S.M.pmDown||"incident")}[S.pm];
+  const pmTxt={run:S.pmSpeed<C.pmSp.v-40&&level<C.lowLevel.v?"slowed: low stock":S.pmSpeed<C.pmSp.v-40?"ramping":"at max speed",break:"sheet break",down:"down: no stock",full:"down: warehouse full",spools:"down: winder backed up",incident:"down: "+(S.M.pmDown||"incident")}[S.pm];
   pill("p-pm",pmTxt,S.pm==="run"?(pmTxt==="at max speed"?"ok":"warn"):"bad");
   const eff=S.t>0?100*(1-S.tot.breakMin/S.t):100;
   $("r-pm").textContent=`${f1(R.prod/C.rollW.v)} rolls/h · ${S.tot.turnups} reels turned up · ${S.tot.breaks} breaks · ${f0(eff)}% sheet time`;
+  const reelsW=Math.ceil(S.winderBuf/P.jumbo-1e-6);
+  pill("p-wd",S.wd==="hayout"?"hayout: crew cleaning":reelsW>=P.maxReels?"backed up":R.cut>0.5?"winding":"waiting for reel",S.wd==="hayout"?"bad":reelsW>=P.maxReels?"warn":R.cut>0.5?"ok":"");
+  $("r-wd").textContent=`${reelsW}/${P.maxReels} reels waiting · cutting ${f1(R.cut)} t/h · ${S.tot.hayouts} hayouts · ${f1(S.tot.broke)} t broke`;
   const shipCap=S.effLd*P.loaderRate*S.M.clampMul;
-  pill("p-ship",S.fg>=P.fgCap-1?"warehouse full":S.outQ.length>2?`${S.outQ.length} trucks waiting`:S.fg<5&&S.outDock.some(Boolean)?"no rolls":"ok",S.fg>=P.fgCap-1?"bad":S.outQ.length>2||(S.fg<5&&S.outDock.some(Boolean))?"warn":"ok");
+  pill("p-ship",S.M.crewAtPM?"crew at the PM":S.fg>=P.fgCap-1?"warehouse full":S.outQ.length>2?`${S.outQ.length} trucks waiting`:S.fg<5&&S.outDock.some(Boolean)?"no rolls":"ok",S.M.crewAtPM?"warn":S.fg>=P.fgCap-1?"bad":S.outQ.length>2||(S.fg<5&&S.outDock.some(Boolean))?"warn":"ok");
   $("r-ship").textContent=`${S.effLd<C.loaders.v?`Only ${S.effLd} of ${C.loaders.v} loaders · `:""}Loading ${f1(R.load)}/${f0(shipCap)} rolls/h · ${S.outDock.filter(Boolean).length}/${P.shipDoors} doors · ${S.tot.shipped/P.truckRolls} trucks out`;
 }
 
@@ -813,7 +836,7 @@ function draw(rdt){
     ctx.beginPath();path.forEach(([x,y],i)=>i?ctx.lineTo(x,y):ctx.moveTo(x,y));ctx.stroke();}
   ctx.setLineDash([]);ctx.lineDashOffset=0;
   if(S.pm!=="run"){const blink=(performance.now()/500|0)%2;ctx.fillStyle=col.bad;ctx.globalAlpha=blink?1:0.5;
-    label({break:"SHEET BREAK",down:"NO STOCK: MACHINE DOWN",full:"WAREHOUSE FULL: MACHINE DOWN",incident:(S.M.pmDown||"").toUpperCase()+": MACHINE DOWN"}[S.pm],720,342,16,col.bad,"center",700);ctx.globalAlpha=1;}
+    label({break:"SHEET BREAK",down:"NO STOCK: MACHINE DOWN",full:"WAREHOUSE FULL: MACHINE DOWN",spools:"NO EMPTY SPOOLS: MACHINE DOWN",incident:(S.M.pmDown||"").toUpperCase()+": MACHINE DOWN"}[S.pm],720,342,16,col.bad,"center",700);ctx.globalAlpha=1;}
   mono(`${f0(S.pmSpeed)} fpm · ${f1(R.prod)} t/h`,720,515,13,col.ink,"center");
 
   // reel
@@ -822,7 +845,14 @@ function draw(rdt){
   ctx.fillStyle=col.machine;ctx.beginPath();ctx.arc(500,420,4,0,7);ctx.fill();
   label("reel",500,475,11,col.muted,"center");mono(`${f1(S.reel)}/${P.jumbo} t`,500,370,11,col.muted,"center");
   // winder
-  ctx.fillStyle=col.machine;rr(395,402,36,36,3);ctx.fill();label("winder",413,395,11,col.muted,"center");
+  ctx.fillStyle=col.machine;rr(395,402,36,36,3);ctx.fill();label("6  WINDER",388,428,13,col.ink,"right",700);
+  {const nw=Math.ceil(S.winderBuf/P.jumbo-1e-6);
+    for(let k=0;k<nw;k++){ctx.fillStyle=col.paperc;ctx.strokeStyle=col.machine;ctx.lineWidth=1;ctx.beginPath();ctx.arc(447,454+k*15,6,0,7);ctx.fill();ctx.stroke();}}
+  if(S.wd==="hayout"){for(let k=0;k<7;k++){ctx.strokeStyle=col.paperc;ctx.lineWidth=5;ctx.beginPath();const ox=395+k*6;ctx.moveTo(ox,402);
+      for(let y=402;y>300;y-=8)ctx.lineTo(ox+Math.sin(y/14+performance.now()/90+k)*10,y);ctx.stroke();ctx.strokeStyle=col.machine;ctx.lineWidth=0.6;ctx.stroke();}
+    for(let k=0;k<14;k++){const ph=(performance.now()/900+k/14)%1;ctx.fillStyle=col.paperc;ctx.save();ctx.translate(370+((k*47)%90),310+ph*120);ctx.rotate(ph*9+k);ctx.fillRect(-5,-3,10,6);ctx.strokeStyle=col.muted;ctx.strokeRect(-5,-3,10,6);ctx.restore();}
+    tag("HAYOUT! CREW CLEANING UP",360,300,"left");}
+  if(S.pm==="break")tag("ALL HANDS: RETHREADING",720,535,"left");
 
   // roll conveyor
   ctx.strokeStyle=col.machine;ctx.lineWidth=5;ctx.beginPath();ctx.moveTo(413,440);ctx.lineTo(413,520);ctx.lineTo(362,520);ctx.stroke();
@@ -833,7 +863,7 @@ function draw(rdt){
 
   // warehouse
   ctx.fillStyle=col.panel;ctx.strokeStyle=col.machine;ctx.lineWidth=1.5;rr(110,478,252,174,4);ctx.fill();ctx.stroke();
-  label("6  ROLL WAREHOUSE & SHIPPING",116,474,15,col.ink,"left",700);
+  label("7  ROLL WAREHOUSE & SHIPPING",116,474,15,col.ink,"left",700);
   const filled=Math.min(84,Math.ceil(S.fg/(P.fgCap/84)));
   for(let i=0;i<84;i++){const cx=150+(i%12)*17.5,cy=636-Math.floor(i/12)*17.5;
     ctx.beginPath();ctx.arc(cx,cy,7,0,7);
@@ -883,8 +913,8 @@ function drawChaos(){
       case "fabric":{ctx.strokeStyle=col.bad;ctx.lineWidth=3;ctx.beginPath();ctx.moveTo(960,425);ctx.quadraticCurveTo(1028,505+6*flick(1),1095,425);ctx.stroke();
         ctx.beginPath();ctx.moveTo(1050,460);ctx.lineTo(1062,500+5*flick(2));ctx.stroke();hazard(950,375,205,140);tag("FABRIC OFF",960,368,"left");break;}
       case "felt":{ctx.strokeStyle=col.bad;ctx.lineWidth=3;[[925,412],[925,438]].forEach(([x,y])=>{ctx.beginPath();ctx.arc(x,y,15,0,7);ctx.stroke();});tag("FELT",905,492,"left");break;}
-      case "slime":{ctx.fillStyle=col.slime;for(let k=0;k<20;k++){const x=545+k*17,y=k%2?461:381;ctx.globalAlpha=0.85;ctx.beginPath();ctx.arc(x,y,4+2*flick(k),0,7);ctx.fill();}
-        ctx.globalAlpha=1;tag("SLIME: SPEED CAPPED",525,368,"left");break;}
+      case "slime":{ctx.fillStyle=col.beaver;for(let k=0;k<20;k++){const x=545+k*17,y=k%2?461:381;ctx.globalAlpha=0.85;ctx.beginPath();ctx.arc(x,y,4+2*flick(k),0,7);ctx.fill();}
+        ctx.globalAlpha=1;tag("SCABS: SPEED CAPPED, HAYOUT RISK",525,368,"left");break;}
       case "ragger":{ctx.strokeStyle=col.bad;ctx.lineWidth=4;ctx.beginPath();ctx.moveTo(735,170);ctx.lineTo(785,220);ctx.moveTo(785,170);ctx.lineTo(735,220);ctx.stroke();
         ctx.strokeStyle=col.machine;ctx.lineWidth=2;ctx.beginPath();ctx.moveTo(800,160);for(let k=0;k<8;k++)ctx.lineTo(810+k*6,150-k*5+4*Math.sin(k+now/300));ctx.stroke();tag("RAGGER STOPPED",818,180,"left");break;}
       case "flood":{ctx.globalAlpha=0.38;ctx.fillStyle=col.water;ctx.beginPath();ctx.moveTo(712,232);ctx.quadraticCurveTo(620,250,520,262);ctx.lineTo(520,298);ctx.lineTo(258,298);ctx.lineTo(258,236);
@@ -1082,7 +1112,6 @@ const G3={on:false,ok:false};
   [zc-CD/2-0.5,zc+CD/2+0.5].forEach(z=>box(0.6,4.2,0.6,M.steel,-10,2.1,z));
   const reelCore=cylZ(0.25,CD+1.4,M.steel,-10,4.2,zc,8);
   const reel=cylZ(1,CD,M.paper,-10,4.2,zc,24);
-  box(3.6,3,4.4,M.steel,-18.7,1.5,zc);
   box(1.4,0.5,9,M.steel,-18.7,0.25,15.5);box(6,0.5,1.4,M.steel,-21.5,0.25,19.4);
   const rollGeo=new THREE.CylinderGeometry(0.62,0.62,1.4,16);
   const beltRolls=new THREE.InstancedMesh(rollGeo,M.paper,16);beltRolls.castShadow=true;scene.add(beltRolls);
@@ -1133,9 +1162,10 @@ const G3={on:false,ok:false};
     {p:[-21,2.8,-24],t:()=>["2 Receiving",f0(S.yard)+" t bales"]},
     {p:[16,4.5,-18.5],t:()=>["3 Pulper",f1(S.rates.feed)+" t/h"]},
     {p:[34.5,11.2,-15],t:()=>["4 Stock chest",f0(S.tank/P.tankCap*100)+" %"]},
-    {p:[23,8.4,zc],t:()=>["5 "+NAME+(S.pm==="run"?"":" · "+({break:"sheet break",down:"no stock",full:"warehouse full",incident:S.M.pmDown||"down"}[S.pm]||"")),f0(S.pmSpeed)+" fpm · "+f1(S.rates.prod)+" t/h"],cls:()=>S.pm==="run"?"":"bad"},
+    {p:[23,8.4,zc],t:()=>["5 "+NAME+(S.pm==="run"?"":" · "+({break:"sheet break: all hands rethreading",down:"no stock",full:"warehouse full",spools:"winder backed up",incident:S.M.pmDown||"down"}[S.pm]||"")),f0(S.pmSpeed)+" fpm · "+f1(S.rates.prod)+" t/h"],cls:()=>S.pm==="run"?"":"bad"},
     {p:[-10,7.6,zc],t:()=>["Reel",f1(S.reel)+" / "+P.jumbo+" t"]},
-    {p:[-36.4,3.2,14.8],t:()=>["6 Roll warehouse",f0(S.fg)+" rolls"]},
+    {p:[-18.7,5.2,zc-1],t:()=>["6 Winder"+(S.wd==="hayout"?" · HAYOUT!":""),S.wd==="hayout"?"crew cleaning up":Math.ceil(S.winderBuf/P.jumbo-1e-6)+"/"+P.maxReels+" reels · "+f1(S.rates.cut)+" t/h"],cls:()=>S.wd==="hayout"},
+    {p:[-36.4,3.2,14.8],t:()=>["7 Roll warehouse",f0(S.fg)+" rolls"]},
   ];
   LABELS.forEach(L=>{L.el=document.createElement("div");L.el.className="lbl";L.b=document.createElement("b");L.s=document.createElement("span");L.el.append(L.b,L.s);labelHost.appendChild(L.el);L.v=new THREE.Vector3(...L.p);});
   const banner=$("banner3d"),chips=$("chips3d");
@@ -1203,7 +1233,7 @@ const G3={on:false,ok:false};
       return now=>{hz(now);rag.rotation.y=now/900;};},
     felt:g=>{const r=new THREE.Mesh(new THREE.TorusGeometry(2.6,0.18,8,28),M.bad);r.position.set(32.5,3.5,zc+3.6);g.add(r);const r2=r.clone();r2.position.z=zc-3.6;g.add(r2);
       return now=>{const s=1+0.08*Math.sin(now/120);r.scale.setScalar(s);r2.scale.setScalar(s);};},
-    slime:g=>{const blobs=[];for(let k=0;k<26;k++){const b=new THREE.Mesh(sphereG,FM.slime);const i=k%10,top=k%2;b.position.set((top?872:856)/10-60-i*3.2+(Math.random()-0.5),top?6.8:1.0,zc+(Math.random()-0.5)*5.5);b.userData.s=0.25+Math.random()*0.35;g.add(b);blobs.push(b);}
+    slime:g=>{const blobs=[];for(let k=0;k<26;k++){const b=new THREE.Mesh(sphereG,FM.beaver);const i=k%10,top=k%2;b.position.set((top?872:856)/10-60-i*3.2+(Math.random()-0.5),top?6.8:1.0,zc+(Math.random()-0.5)*5.5);b.userData.s=0.25+Math.random()*0.35;g.add(b);blobs.push(b);}
       return now=>blobs.forEach((b,k)=>b.scale.setScalar(b.userData.s*(1+0.25*Math.sin(now/300+k))));},
     ragger:g=>{const curve=new THREE.CatmullRomCurve3([new THREE.Vector3(16,2.5,-13.5),new THREE.Vector3(18,5.5,-12),new THREE.Vector3(21,6.5,-9),new THREE.Vector3(23,2,-7),new THREE.Vector3(24,0.2,-6)]);
       const rope=new THREE.Mesh(new THREE.TubeGeometry(curve,40,0.18,6,false),M.ink);g.add(rope);const ring=new THREE.Mesh(new THREE.TorusGeometry(4.6,0.18,6,32),M.bad);ring.rotation.x=Math.PI/2;ring.position.set(16,3.6,-13.5);g.add(ring);
@@ -1255,6 +1285,130 @@ const G3={on:false,ok:false};
     blackEl.hidden=!S.inc.some(i=>i.id==="lightning");
   }
 
+  /* ---- winder, waiting reels, roof trusses ---- */
+  const paperDS=basic("paperc",{side:THREE.DoubleSide});
+  slab(-25,-6,-1.5,3,M.slab,0.03);
+  const wd=new THREE.Group();wd.position.set(-18.7,0,zc);scene.add(wd);
+  [-2.7,2.7].forEach(z=>{box(0.5,3.8,0.5,M.steel,-2.6,1.9,z,wd);box(0.5,3.8,0.5,M.steel,3.4,1.9,z,wd);box(6.5,0.4,0.5,M.steel,0.4,3.9,z,wd);});
+  const unwind=cylZ(1,4.8,M.paper,2.6,2.4,0,22,wd);cylZ(0.22,5.8,M.steel,2.6,2.4,0,8,wd);
+  const drums=[cylZ(0.5,5,M.metal,-1.3,0.75,0,12,wd),cylZ(0.5,5,M.metal,-2.4,0.75,0,12,wd)];
+  const setRolls=[-1.65,0,1.65].map(z=>cylZ(1,1.5,M.paper,-1.85,1.75,z,16,wd));
+  const web=new THREE.Mesh(new THREE.PlaneGeometry(4.6,4.6),paperDS);web.rotation.x=-Math.PI/2;web.position.set(0.4,2.2,0);wd.add(web);
+  box(1.2,1.2,0.8,M.steel,0,0.6,4.3,wd);box(1.1,0.5,0.1,M.robot,0,1.25,3.95,wd,false);
+  const parked=[0,1,2].map(k=>{const g=new THREE.Group();g.position.set(-11.6-k*4.7,0,0.7);scene.add(g);
+    box(0.35,1.1,4.6,M.steel,-1.3,0.55,0,g);box(0.35,1.1,4.6,M.steel,1.3,0.55,0,g);cylZ(2,5.2,M.paper,0,2.15,0,22,g);cylZ(0.22,6.2,M.steel,0,2.15,0,8,g);return g;});
+  {const t=new THREE.Group();scene.add(t);
+    for(let x=-24;x<=56;x+=16)box(0.2,0.25,13.4,M.metal,x,13,9.3,t,false);
+    [2.6,16].forEach(z=>{box(80.4,0.25,0.2,M.metal,16,13,z,t,false);for(let x=-24;x<=56;x+=16)box(0.22,13,0.22,M.metal,x,6.5,z,t,false);});}
+  box(2.2,0.06,2.2,M.ink,-12,0.06,15.6,scene,false);   // broke hole by the winder
+
+  /* ---- people ---- */
+  const skin=mat("paperc");
+  function worker(suit,hatM){const p=new THREE.Group();const hip=new THREE.Group();hip.position.y=0.9;p.add(hip);
+    const legs=[-0.15,0.15].map(z=>{const l=new THREE.Group();l.position.z=z;const m=new THREE.Mesh(cubeG,M.ink);m.scale.set(0.22,0.9,0.22);m.position.y=-0.45;m.castShadow=true;l.add(m);hip.add(l);return l;});
+    const torso=new THREE.Group();hip.add(torso);
+    const body=new THREE.Mesh(cubeG,suit);body.scale.set(0.42,0.85,0.6);body.position.y=0.42;body.castShadow=true;torso.add(body);
+    const head=new THREE.Mesh(sphereG,skin);head.scale.setScalar(0.23);head.position.y=1.07;torso.add(head);
+    const hat=new THREE.Mesh(new THREE.SphereGeometry(1,10,5,0,Math.PI*2,0,Math.PI/2),hatM);hat.scale.set(0.29,0.24,0.29);hat.position.y=1.13;torso.add(hat);
+    const arms=[-0.39,0.39].map(z=>{const a=new THREE.Group();a.position.set(0,0.78,z);const m=new THREE.Mesh(cubeG,suit);m.scale.set(0.17,0.72,0.17);m.position.y=-0.36;a.add(m);torso.add(a);return a;});
+    const armful=new THREE.Mesh(cubeG,paperDS);armful.scale.set(0.7,0.45,0.75);armful.position.set(0.5,0.45,0);armful.visible=false;torso.add(armful);
+    p.userData={legs,arms,torso,armful,ph:Math.random()*6,head:0};scene.add(p);return p;}
+  function pose(p,mode,now){const u=p.userData,t=now/1000+u.ph;let leg=0,arm=[0,0],lean=0,bob=0;u.armful.visible=false;
+    if(mode==="run"||mode==="carry"){const s=Math.sin(t*15);leg=0.8*s;arm=mode==="carry"?[-1.3,-1.3]:[-0.9*s,0.9*s];lean=-0.22;bob=Math.abs(s)*0.14;u.armful.visible=mode==="carry";}
+    else if(mode==="clean"){lean=-1.0;const s=Math.sin(t*9);arm=[-1.2+0.7*s,-1.2-0.7*s];leg=0.15*s;}
+    else if(mode==="dump"){lean=-0.5;arm=[-2,-2];u.armful.visible=Math.sin(t*6)>0;}
+    else if(mode==="rethread"){const s=Math.sin(t*7);arm=[-2.7+0.5*s,-2.4-0.5*s];bob=Math.max(0,s)*0.18;}
+    else if(mode==="look"){lean=0.45;arm=[-2.9,-2.9];bob=Math.abs(Math.sin(t*12))*0.1;}
+    else{arm=[0.08*Math.sin(t*1.7),-0.08*Math.sin(t*1.7)];}
+    u.legs[0].rotation.z=leg;u.legs[1].rotation.z=-leg;u.arms[0].rotation.z=arm[0];u.arms[1].rotation.z=arm[1];u.torso.rotation.z=lean;p.position.y=bob;}
+  function moveP(p,tx,tz,speed,rdt){const dx=tx-p.position.x,dz=tz-p.position.z,d=Math.hypot(dx,dz);
+    if(d<0.15)return true;const s=Math.min(d,speed*rdt);p.position.x+=dx/d*s;p.position.z+=dz/d*s;p.rotation.y=lerpAng(p.rotation.y,Math.atan2(-dz,dx),Math.min(1,rdt*12));return false;}
+  function face(p,x,z,rdt){p.rotation.y=lerpAng(p.rotation.y,Math.atan2(-(z-p.position.z),x-p.position.x),Math.min(1,rdt*8));}
+  const HOME=[[52,14.2],[42,14.2],[32.5,14.2],[20,14.2],[6,14.2],[-10,14.2],[-18.7,14.4]];
+  const HAY=[[-23.6,14],[-14,13.6],[-24.2,7.5],[-13.2,8.5],[-22.5,4.2],[-15.5,4.2],[-19.5,15.4]];
+  const RT=[[27,14.2],[23,14.2],[19,14.2],[15,14.2],[11,14.2],[25,4.1],[17,4.1]];
+  const RTY=[];for(let k=0;k<24;k++)RTY.push([29-(k%12)*2.6,k<12?15.4:3.2]);
+  const crew=HOME.map(([x,z])=>{const w=worker(M.stock,M.warn);w.position.set(x,0,z);return w;});
+  const helpers=[];
+  const EP={hay:null,brk:null};let seenHay=-1,seenBrk=-1;
+  G3.yardFrozen=false;
+
+  /* ---- hayout: paper fountain, drapes over the trusses, flying sheets ---- */
+  const FN=36,fGeo=new THREE.BufferGeometry(),fPos=new Float32Array((FN+1)*6),fIdx=[];
+  for(let i=0;i<FN;i++){const b=i*2;fIdx.push(b,b+1,b+2,b+1,b+3,b+2);}
+  fGeo.setAttribute("position",new THREE.BufferAttribute(fPos,3));fGeo.setIndex(fIdx);
+  const fountain=new THREE.Mesh(fGeo,paperDS);fountain.frustumCulled=false;fountain.visible=false;scene.add(fountain);
+  const drapes=[];for(let k=0;k<18;k++){const g=new THREE.PlaneGeometry(2.2,1);g.translate(0,-0.5,0);const d=new THREE.Mesh(g,paperDS);
+    d.position.set(-24+Math.floor(k/2)*1.6+(k%2)*0.7,12.85,3.5+((k*7)%12));d.userData.len=4+Math.random()*8;d.visible=false;scene.add(d);drapes.push(d);}
+  const sheetG=new THREE.BoxGeometry(1.5,0.04,1.1),flyers=[];
+  function launchSheet(){let s=flyers.find(o=>!o.on);if(!s){if(flyers.length>=280)return;s={m:new THREE.Mesh(sheetG,paperDS)};scene.add(s.m);flyers.push(s);}
+    s.on=true;s.landed=false;s.m.visible=true;s.m.position.set(-18.7+(Math.random()-0.5)*2,3.8,zc+(Math.random()-0.5)*4);
+    s.v=[(Math.random()-0.5)*16,13+Math.random()*16,(Math.random()-0.5)*16];s.spin=[Math.random()*8,Math.random()*8,Math.random()*8];s.k=Math.random()*6;}
+  let shake=0;
+  function hayFx(rdt,now){const ep=EP.hay,on=ep&&now<ep.until,age=on?(now-ep.t0)/1000:99,left=on?(ep.until-now)/1000:0;
+    // fountain: twisting ribbon of paper climbing to the roof trusses
+    if(on&&!ep.burst){ep.burst=true;for(let k=0;k<90;k++)launchSheet();}
+    fountain.visible=on&&age<5;
+    if(fountain.visible){const H=3.6+Math.min(1,age/0.5)*9.2,t=now/1000;
+      for(let i=0;i<=FN;i++){const s=i/FN,y=3.6+s*(H-3.6),cx=-18.7+Math.sin(s*7+t*9)*1.4*s,cz=zc+Math.cos(s*6+t*8)*1.2*s,a=s*10+t*6,w=1.3+s*1.6;
+        fPos.set([cx-Math.cos(a)*w,y,cz-Math.sin(a)*w,cx+Math.cos(a)*w,y,cz+Math.sin(a)*w],i*6);}
+      fGeo.attributes.position.needsUpdate=true;
+      for(let k=0;k<Math.ceil(rdt*70);k++)launchSheet();}
+    // drapes hang from the trusses, then get pulled down during cleanup
+    drapes.forEach((d,k)=>{d.visible=on&&age>0.4;if(!d.visible)return;const grow=Math.min(1,(age-0.4)/1.6),shrink=Math.min(1,left/2.5);
+      d.scale.y=Math.max(0.01,d.userData.len*grow*shrink);d.rotation.x=Math.sin(now/600+k)*0.18;d.rotation.z=Math.cos(now/700+k*1.3)*0.12;});
+    // flying sheets flutter down and pile up; the crew clears the pile before the episode ends
+    const landed=flyers.filter(s=>s.on&&s.landed);
+    if(on&&age>5&&landed.length){const want=Math.floor(landed.length*Math.max(0,left-1)/Math.max(1,(ep.until-ep.t0)/1000-6));for(let k=want;k<landed.length;k++){landed[k].on=false;landed[k].m.visible=false;}}
+    if(!on)flyers.forEach(s=>{if(s.on&&s.landed){s.on=false;s.m.visible=false;}});
+    flyers.forEach(s=>{if(!s.on||s.landed)return;const p=s.m.position;s.v[1]-=7*rdt;s.v[0]*=1-0.9*rdt;s.v[2]*=1-0.9*rdt;if(s.v[1]<-3)s.v[1]=-3;
+      p.x+=(s.v[0]+Math.sin(now/220+s.k)*2)*rdt;p.y+=s.v[1]*rdt;p.z+=(s.v[2]+Math.cos(now/260+s.k)*2)*rdt;
+      s.m.rotation.x+=s.spin[0]*rdt;s.m.rotation.y+=s.spin[1]*rdt;s.m.rotation.z+=s.spin[2]*rdt;
+      if(p.y>12.6&&s.v[1]>0){s.v[1]=-1;}
+      if(p.y<=0.06){p.y=0.06+Math.random()*0.05;s.landed=true;s.m.rotation.set(0,Math.random()*3,0);}});
+    shake=on&&age<1?(1-age)*1.8:0;
+  }
+
+  function crewUpdate(rdt,now){
+    if(seenHay<0||S.tot.hayouts<seenHay)seenHay=S.tot.hayouts;
+    if(seenBrk<0||S.tot.breaks<seenBrk)seenBrk=S.tot.breaks;
+    const sp=Math.max(1,C.simSpeed);
+    if(S.tot.hayouts>seenHay){seenHay=S.tot.hayouts;EP.hay={t0:now,until:now+Math.max(10000,S.hayLeft/sp*1000)};}
+    if(S.tot.breaks>seenBrk){seenBrk=S.tot.breaks;const until=now+Math.max(7500,S.breakLeft/sp*1000);
+      if(EP.brk&&now<EP.brk.until)EP.brk.until=Math.max(EP.brk.until,until);else EP.brk={t0:now,until,launched:false};}
+    const hayOn=EP.hay&&now<EP.hay.until,brkOn=EP.brk&&now<EP.brk.until;
+    // machine crew
+    crew.forEach((w,i)=>{let tx,tz,act,fx=null;
+      if(hayOn){const age=now-EP.hay.t0,shuttle=i%2===1,ph=((age/1800)+i*0.37)%2,s=HAY[i];
+        if(age<1100){tx=w.position.x;tz=w.position.z;act="look";fx=[-18.7,zc];}
+        else if(shuttle&&ph>1){tx=-12;tz=15.6;act="dump";}
+        else{tx=s[0];tz=s[1];act="clean";fx=[-18.7,zc];}
+        const arrived=act==="look"||moveP(w,tx,tz,10,rdt);
+        if(arrived&&fx)face(w,fx[0],fx[1],rdt);pose(w,arrived?act:(shuttle&&act==="dump"?"carry":"run"),now);return;}
+      if(brkOn){[tx,tz]=RT[i];const arrived=moveP(w,tx,tz,10,rdt);if(arrived)face(w,tx,zc,rdt);pose(w,arrived?"rethread":"run",now);return;}
+      [tx,tz]=HOME[i];const arrived=moveP(w,tx,tz,7,rdt);if(arrived)face(w,tx,zc,rdt);pose(w,arrived?"idle":"run",now);});
+    // yard crews jump off their trucks and run to the machine on a sheet break
+    if(brkOn&&!EP.brk.launched){EP.brk.launched=true;let k=0;
+      const spots=[];lifts.forEach((g,i)=>{if(g.visible&&i<Math.floor(S.effDrv+1e-9))spots.push([g.position.x,g.position.z]);});
+      loaders.forEach((g,i)=>{if(g.visible&&i<Math.floor(S.effHum+1e-9))spots.push([g.position.x,g.position.z]);});
+      spots.forEach(([x,z])=>{let h=helpers[k];if(!h){h=worker(M.warn,skin);helpers.push(h);}h.visible=true;h.position.set(x,0,z);h.userData.from=[x,z];h.userData.out=true;k++;});
+      for(;k<helpers.length;k++){helpers[k].visible=false;helpers[k].userData.out=false;}}
+    let away=false;
+    helpers.forEach((h,k)=>{if(!h.userData.out)return;away=true;
+      if(brkOn){const [tx,tz]=RTY[k%RTY.length];const a=moveP(h,tx,tz,11,rdt);if(a)face(h,tx,zc,rdt);pose(h,a?"rethread":"run",now);}
+      else{const [fx2,fz]=h.userData.from;if(moveP(h,fx2,fz,11,rdt)){h.visible=false;h.userData.out=false;}else pose(h,"run",now);}});
+    if(!brkOn&&EP.brk)EP.brk.launched=false;
+    G3.yardFrozen=away;
+    // winder machinery
+    const cutting=S.rates.cut>0.5&&S.wd!=="hayout";
+    const ur=0.35+1.65*Math.sqrt(Math.min(S.winderBuf,P.jumbo)/P.jumbo);unwind.scale.set(ur,ur,1);unwind.visible=S.winderBuf>0.2;
+    const sr=0.3+0.7*Math.min(1,S.winderAcc/C.rollW.v);setRolls.forEach(r=>{r.scale.set(sr,sr,1);r.visible=S.wd!=="hayout";if(cutting)r.rotation.z-=rdt*10;});
+    if(cutting){unwind.rotation.z+=rdt*6;drums.forEach(d=>d.rotation.z+=rdt*12);}
+    web.visible=cutting&&unwind.visible;
+    const nPark=Math.max(0,Math.ceil(S.winderBuf/P.jumbo-1e-6)-1);parked.forEach((g,k)=>g.children[2].visible=g.children[3].visible=k<nPark);
+    hayFx(rdt,now);
+  }
+
   /* ---- step 4: upgrades you can see ---- */
   const UPV={};
   function upg(id,build){const g=new THREE.Group();scene.add(g);build(g);UPV[id]=g;return g;}
@@ -1291,6 +1445,7 @@ const G3={on:false,ok:false};
       else if(fps<24&&quality>=1){quality=0;renderer.setPixelRatio(1);resize();}}}
     applyPalette();rebuildDoors();
     const R=S.rates,now=performance.now();
+    crewUpdate(rdt,now);
     // trucks
     truckMap.forEach(g=>g.userData.seen=false);
     S.inQ.forEach(t=>placeTruck(t,{kind:"in"},rdt));S.inDock.forEach(t=>t&&placeTruck(t,{kind:"in"},rdt));
@@ -1323,7 +1478,7 @@ const G3={on:false,ok:false};
     ensure(lifts,V.lifts.length,()=>forklift(M.warn));
     V.lifts.forEach((L,i)=>{const g=lifts[i];
       if(i>=Math.floor(S.effDrv+1e-9)){const [x,z]=W(272+i*15,316);g.position.set(x,0,z);g.rotation.y=0;g.children[0].material=M.off;g.userData.load.visible=false;return;}
-      g.children[0].material=M.warn;g.visible=S.M.recvMul!==0;
+      g.children[0].material=M.warn;g.visible=S.M.recvMul!==0||G3.yardFrozen;if(G3.yardFrozen){g.userData.load.visible=false;return;}
       const dy=inY(L.door%P.doors),pts=[[272,dy],[300+((i*37)%180),150+((i*53)%120)],[512,212],[300+((i*61)%180),150+((i*29)%120)]];
       const a=Math.floor(L.p),t=L.p-a,A=pts[a],B=pts[(a+1)%4];const [x,z]=W(A[0]+(B[0]-A[0])*t,A[1]+(B[1]-A[1])*t),[bx,bz]=W(B[0],B[1]);
       g.position.set(x,0,z);g.rotation.y=Math.atan2(-(bz-z),bx-x);g.userData.load.visible=(a===0||a===2);});
@@ -1331,7 +1486,7 @@ const G3={on:false,ok:false};
     const nLo=Math.round(C.loaders.v);ensure(loaders,nLo,()=>clamp3(M.ok));
     for(let i=0;i<nLo;i++){const g=loaders[i];
       if(i>=Math.floor(S.effHum+1e-9)){const [x,z]=W(374+i*15,642);g.position.set(x,0,z);g.children[0].material=M.off;g.userData.load.visible=false;g.visible=true;continue;}
-      g.children[0].material=M.ok;g.visible=S.M.clampMul!==0;
+      g.children[0].material=M.ok;g.visible=S.M.clampMul!==0||G3.yardFrozen;if(G3.yardFrozen){g.userData.load.visible=false;continue;}
       const ph=(V.rollsAnim*0.6+i*0.37)%2,t=ph<1?ph:2-ph,[x,z]=W(126+t*60+20,outY(i%P.shipDoors));
       g.position.set(x,0,z);g.rotation.y=ph<1?Math.PI:0;g.userData.load.visible=ph<1;}
     ensure(robots,P.robots,robot);
@@ -1342,7 +1497,8 @@ const G3={on:false,ok:false};
     if(out!==G3.wasOut){G3.wasOut=out;scene.background=new THREE.Color(out?"#0b0f0e":tok("g-sky"));}
     // camera + render
     upUpdate(now);fxUpdate(rdt,now);
-    placeCam();renderer.render(scene,camera);
+    placeCam();if(shake>0){camera.position.x+=(Math.random()-0.5)*shake;camera.position.y+=(Math.random()-0.5)*shake;camera.position.z+=(Math.random()-0.5)*shake;}
+    renderer.render(scene,camera);
     // labels follow the 3D anchors
     const w=host.clientWidth,hh=host.clientHeight,doText=now-lastLabel>200;if(doText)lastLabel=now;
     LABELS.forEach(L=>{tmp.copy(L.v).project(camera);const vis=tmp.z<1&&Math.abs(tmp.x)<1.05&&Math.abs(tmp.y)<1.05;L.el.hidden=!vis;
