@@ -214,6 +214,15 @@ button:focus-visible,input:focus-visible,select:focus-visible{outline-color:var(
 body.fs .ver{display:none}
 .knobbar{display:flex;align-items:center;gap:12px;margin:4px 0 10px;font-size:13px;color:var(--muted)}.knobbar button{white-space:nowrap}
 body.noknobs #cards{display:none}
+.more{margin-left:auto;font-size:12.5px}
+.chaos.collapsed .groups,.chaos.collapsed .chaoshead .simspeed,.chaos.collapsed #chaosClear,.chaos.collapsed .board .stat,.chaos.collapsed .board .rating,.chaos.collapsed .feed{display:none}
+.chaos.collapsed .chaosbody{grid-template-columns:1fr}
+.shop.collapsed .ledger{display:none}.shop.collapsed .shopbody{grid-template-columns:1fr}
+.ugrp>h3{cursor:pointer;display:flex;align-items:baseline;gap:8px;user-select:none}.ugrp>h3::before{content:"\25BE";font-size:11px;color:var(--muted);transition:transform .15s}
+.ugrp.closed>h3::before{transform:rotate(-90deg)}.ugrp .usum{margin-left:auto;font:500 12px var(--f-body);color:var(--muted);text-transform:none;letter-spacing:0}
+.ugrp .usum b{color:var(--ok);font-weight:700}.ugrp.closed .up{display:none}
+.shop.collapsed .ugroups{grid-template-columns:1fr;gap:6px}.shop.collapsed .ugrp{border-bottom:1px solid var(--line);padding-bottom:6px}
+.shop.collapsed .ugrp:not(.closed){display:grid;grid-template-columns:repeat(auto-fill,minmax(230px,1fr));gap:10px}.shop.collapsed .ugrp>h3{grid-column:1/-1;margin-bottom:0}
 .reroll{font-size:12px;padding:5px 10px;align-self:center;white-space:nowrap}
 /* fullscreen */
 .hud{display:none;z-index:5}
@@ -229,10 +238,18 @@ body.fs .hud{display:flex;position:absolute;left:12px;top:calc(12px + env(safe-a
 .hud .hbtns button{padding:6px 10px}
 .hud .hbtns span{font:600 12px var(--f-body);min-width:52px;text-align:center;font-variant-numeric:tabular-nums}
 body.fs .banner3d{top:calc(84px + env(safe-area-inset-top,0px))}
-@media (max-width:640px){body.fs .hud .hbtns{margin-left:0;width:100%;flex-wrap:wrap;justify-content:center;gap:4px}
-  body.fs .hud .hbtns button{padding:5px 8px;font-size:12px}body.fs .hud .hk{min-width:0;padding:6px 9px}body.fs .hud .hk b{font-size:14px}
-  body.fs .banner3d{top:calc(150px + env(safe-area-inset-top,0px))}html:has(body.fs){overflow:hidden}}
-@media (max-width:640px){.hud .hk{min-width:0;padding:5px 8px}.hud .hk b{font-size:13.5px}.hud .hk.opt{display:none}}
+@media (max-width:640px){html:has(body.fs){overflow:hidden}}
+.hud .sm{display:none}
+@media (max-width:640px){.hud .hk{min-width:0;padding:5px 8px}.hud .hk b{font-size:13.5px}.hud .hk.opt{display:none}
+  body.fs .hud{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:6px;left:10px;right:10px;top:calc(10px + env(safe-area-inset-top,0px))}
+  body.fs .hud .hk{padding:6px 10px;border-radius:12px}body.fs .hud .hk span{font-size:10.5px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}body.fs .hud .hk b{font-size:15px}
+  body.fs .hud .hk.brandk{grid-column:1/-1;padding:6px 10px}body.fs .hud .hk.brandk i{width:18px;height:18px;border-radius:5px}
+  body.fs .hud .hk.brandk>div{display:flex;align-items:baseline;justify-content:space-between;gap:10px;flex:1;min-width:0}
+  body.fs .hud .hk.brandk span{font-size:13px;font-weight:700;color:var(--ink);flex:1;min-width:0}body.fs .hud .hk.brandk b{font-size:13px;color:var(--muted)}
+  body.fs .hud .hbtns{grid-column:1/-1;margin:0;width:auto;flex-wrap:nowrap;justify-content:space-between;gap:3px;padding:4px}
+  body.fs .hud .hbtns button{padding:6px 7px;font-size:12.5px;min-width:30px;white-space:nowrap;flex:0 0 auto}body.fs .hud .hbtns span#hud-speed{min-width:38px;font-size:12px}
+  body.fs .hud .lg{display:none}body.fs .hud .sm{display:inline}
+  body.fs .banner3d{top:calc(160px + env(safe-area-inset-top,0px))}}
 @media (prefers-reduced-motion: reduce){*{scroll-behavior:auto}}
 [hidden]{display:none!important}
 body{margin:0}
@@ -240,7 +257,7 @@ body{margin:0}
 </head>
 <body>
 
-<div class="ver" id="appVersion" aria-label="Version">v1.1.1</div>
+<div class="ver" id="appVersion" aria-label="Version">v1.1.2</div>
 <div class="wrap">
   <header>
     <div class="brand"><span class="logo" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linejoin="round"><circle cx="8.5" cy="12" r="5.5"/><circle cx="8.5" cy="12" r="1.6" fill="currentColor"/><path d="M8.5 6.5H20v11H8.5"/></svg></span>
@@ -278,17 +295,18 @@ body{margin:0}
     <div class="hk"><span>Cash</span><b id="hud-cash">–</b></div>
     <div class="hk"><span>Production</span><b id="hud-prod">–</b></div>
     <div class="hk opt"><span>Stock chest</span><b id="hud-tank">–</b></div>
-    <div class="hk opt"><span>Profit</span><b id="hud-profit">–</b></div>
-    <div class="hbtns"><button id="hud-play">Pause</button><button id="hud-slow" aria-label="Slower">−</button><span id="hud-speed">30 min/s</span><button id="hud-fast" aria-label="Faster">+</button><button id="hud-sound">Sound</button><button id="hud-lbl">Labels: Auto</button><button id="hud-dis" class="danger" title="Unleash a random disaster">Disaster</button><button id="hud-exit">Exit</button></div></div><canvas id="gl" tabindex="0" aria-label="3D view of the mill. Arrow keys move, Q and E rotate, plus and minus zoom."></canvas><div class="pad" id="pad" aria-label="Move the view"><button data-p="0,-1" aria-label="Move up">▲</button><button data-p="-1,0" aria-label="Move left">◀</button><button data-p="1,0" aria-label="Move right">▶</button><button data-p="0,1" aria-label="Move down">▼</button></div><div id="labels3d"></div><div class="banner3d" id="banner3d" hidden><span></span><b></b></div><div class="chips3d" id="chips3d"></div><div class="flash3d" id="flash3d"></div><div class="blackout3d" id="blackout3d" hidden><div><b>Power outage</b><span>Lightning hit the substation. Backup generators starting…</span></div></div></div>
+    <div class="hk opt2"><span>Profit</span><b id="hud-profit">–</b></div>
+    <div class="hbtns"><button id="hud-play">Pause</button><button id="hud-slow" aria-label="Slower">−</button><span id="hud-speed">30 min/s</span><button id="hud-fast" aria-label="Faster">+</button><button id="hud-sound">Sound</button><button id="hud-lbl">Labels: Auto</button><button id="hud-dis" class="danger" title="Unleash a random disaster">Disaster</button><button id="hud-exit" aria-label="Exit fullscreen"><span class="lg">Exit</span><span class="sm" aria-hidden="true">✕</span></button></div></div><canvas id="gl" tabindex="0" aria-label="3D view of the mill. Arrow keys move, Q and E rotate, plus and minus zoom."></canvas><div class="pad" id="pad" aria-label="Move the view"><button data-p="0,-1" aria-label="Move up">▲</button><button data-p="-1,0" aria-label="Move left">◀</button><button data-p="1,0" aria-label="Move right">▶</button><button data-p="0,1" aria-label="Move down">▼</button></div><div id="labels3d"></div><div class="banner3d" id="banner3d" hidden><span></span><b></b></div><div class="chips3d" id="chips3d"></div><div class="flash3d" id="flash3d"></div><div class="blackout3d" id="blackout3d" hidden><div><b>Power outage</b><span>Lightning hit the substation. Backup generators starting…</span></div></div></div>
   <div class="scroller" id="plantwrap"><canvas id="plant" width="1200" height="660" aria-label="Animated mill schematic"></canvas></div>
 
-  <section class="chaos" aria-label="Chaos">
+  <section class="chaos collapsed" id="chaosSec" aria-label="Chaos">
     <div class="chaoshead">
       <h2>Chaos<span>Trigger a disaster, or let them happen on their own.</span></h2>
       <label class="check"><input type="checkbox" id="chaosOn" checked> Random disasters on</label>
       <div class="simspeed"><label for="chaosLvl">Frequency</label><input id="chaosLvl" type="range" min="0.25" max="5" step="0.25" value="1"><span id="chaosLvlv" class="val">1×</span></div>
       <button id="chaosRandom" class="danger">Unleash random disaster</button>
       <button id="chaosClear">Clear all incidents</button>
+      <button id="chaosMore" class="more" aria-expanded="false" aria-controls="chaosgrid">Show more</button>
     </div>
     <div class="chaosbody">
       <div class="board">
@@ -303,9 +321,9 @@ body{margin:0}
     </div>
   </section>
 
-  <section class="shop" aria-label="Upgrades">
+  <section class="shop collapsed" id="shopSec" aria-label="Upgrades">
     <div class="chaoshead"><h2>Upgrades<span>Spend cash on throughput, speed, lower costs and automation.</span></h2>
-      <div class="wallet"><small>Cash on hand</small><span id="u-cash">–</span></div></div>
+      <div class="wallet"><small>Cash on hand</small><span id="u-cash">–</span></div><button id="shopMore" class="more" aria-expanded="false" aria-controls="ugrid">Show more</button></div>
     <div class="shopbody">
       <div class="ledger" id="ledger"><h3>Books since start</h3></div>
       <div class="ugroups" id="ugrid"></div>
@@ -835,7 +853,7 @@ $("breaks").addEventListener("change",e=>C.breaks=e.target.checked);
 $("hays").addEventListener("change",e=>C.hays=e.target.checked);
 // sound: on by default, but browsers only allow audio after the first tap or click
 let soundPref="on";try{soundPref=localStorage.getItem("paper-mill-sound")||"on";}catch(e){}
-function paintSound(){const s=AUDIO.on;$("sound").textContent=s?"Sound on":"Sound off";$("sound").setAttribute("aria-pressed",String(s));$("hud-sound").textContent=s?"Sound on":"Sound off";}
+function paintSound(){const s=AUDIO.on;$("sound").textContent=s?"Sound on":"Sound off";$("sound").setAttribute("aria-pressed",String(s));$("hud-sound").innerHTML=`<span class="lg">Sound </span><span class="sm" aria-hidden="true">♪ </span>${s?"on":"off"}`;}
 function setSound(v){AUDIO.setOn(v);soundPref=v?"on":"off";try{localStorage.setItem("paper-mill-sound",soundPref);}catch(e){}paintSound();}
 $("sound").addEventListener("click",e=>{e.stopPropagation();setSound(!AUDIO.on);});
 $("hud-sound").addEventListener("click",e=>{e.stopPropagation();setSound(!AUDIO.on);});
@@ -865,6 +883,10 @@ GROUPS.forEach(([g,lab])=>{const d=document.createElement("div");d.className="gr
     r.querySelector("input").addEventListener("change",ev=>{CH.en[e.id]=ev.target.checked;});});
   cgrid.appendChild(d);});
 $("chaosOn").addEventListener("change",e=>CH.on=e.target.checked);
+// collapsed by default: simple view first, "Show more" for fine control
+function moreToggle(sec,btn,key,onSet){let open=false;try{open=localStorage.getItem(key)==="1";}catch(e){}
+  const set=v=>{open=v;$(sec).classList.toggle("collapsed",!v);$(btn).textContent=v?"Show less":"Show more";$(btn).setAttribute("aria-expanded",v);if(onSet)onSet(v);try{localStorage.setItem(key,v?"1":"0");}catch(e){}};
+  $(btn).addEventListener("click",()=>set(!open));return set;}
 $("chaosLvl").addEventListener("input",e=>{CH.lvl=+e.target.value;$("chaosLvlv").textContent=CH.lvl+"×";});
 $("chaosRandom").addEventListener("click",()=>{const pool=EVENTS.filter(e=>!active(e.id));if(pool.length)trigger(pool[Math.floor(Math.random()*pool.length)].id);updateChaos();});
 $("chaosClear").addEventListener("click",()=>{S.inc.forEach(i=>i.left=0);});
@@ -872,11 +894,15 @@ function applyName(){$("h-name").textContent=NAME;$("pm-title").textContent=NAME
 $("pmname").addEventListener("input",e=>{NAME=e.target.value.trim()||"PM";$("h-name").textContent=NAME;$("pm-title").textContent=NAME;try{localStorage.setItem("mill-twin-name",NAME);}catch(err){}});
 applyName();
 const ugrid=$("ugrid");
-UGROUPS.forEach(([g,lab])=>{const d=document.createElement("div");d.className="ugrp";const h=document.createElement("h3");h.textContent=lab;d.appendChild(h);
+UGROUPS.forEach(([g,lab])=>{const d=document.createElement("div");d.className="ugrp closed";d.dataset.g=g;const h=document.createElement("h3");h.textContent=lab;
+  const sm=document.createElement("span");sm.className="usum";sm.id="usum-"+g;h.appendChild(sm);h.setAttribute("role","button");h.tabIndex=0;h.setAttribute("aria-expanded","false");
+  const tog=()=>{d.classList.toggle("closed");h.setAttribute("aria-expanded",!d.classList.contains("closed"));};h.addEventListener("click",tog);h.addEventListener("keydown",e=>{if(e.key==="Enter"||e.key===" "){e.preventDefault();tog();}});d.appendChild(h);
   UPS.filter(u=>u.g===g).forEach(u=>{const el=document.createElement("div");el.className="up";el.id="up-"+u.id;
     el.innerHTML=`<div class="uh"><b>${u.name}</b><span class="pips">${u.lv.map(()=>"<i></i>").join("")}</span></div><p>${u.desc}</p><button class="buy" id="buy-${u.id}"></button>`;
     el.querySelector("button").addEventListener("click",()=>buy(u.id));d.appendChild(el);});
   ugrid.appendChild(d);});
+moreToggle("chaosSec","chaosMore","paper-mill-chaos-more")(false||(()=>{try{return localStorage.getItem("paper-mill-chaos-more")==="1";}catch(e){return false;}})());
+moreToggle("shopSec","shopMore","paper-mill-shop-more",v=>document.querySelectorAll(".ugrp").forEach(d=>{d.classList.toggle("closed",!v);d.querySelector("h3").setAttribute("aria-expanded",v);}))((()=>{try{return localStorage.getItem("paper-mill-shop-more")==="1";}catch(e){return false;}})());
 function buy(id){const u=UP[id],l=LV(id);if(l>=u.lv.length)return;const cost=u.lv[l];if(S.cash<cost)return;
   spend(cost,"upgrades");AUDIO.sfx("cash",150);S.up[id]=l+1;applyUpgrades();
   BANNERS.push({text:`${u.name}${u.lv.length>1?" level "+(l+1):""} is online.`,t:null,kind:"good"});while(BANNERS.length>3)BANNERS.splice(1,1);
@@ -884,6 +910,8 @@ function buy(id){const u=UP[id],l=LV(id);if(l>=u.lv.length)return;const cost=u.l
 const LEDGER=[["rev","Paper sales",1],["occ","OCC purchases",-1],["energy","Energy & chemicals",-1],["labor","Wages & robots",-1],["overhead","Mill overhead",-1],["repairs","Disaster repairs",-1],["premium","Insurance premium",-1],["upgrades","Upgrades bought",-1]];
 function updateShop(){
   $("u-cash").textContent=money(S.cash);
+  UGROUPS.forEach(([g])=>{const us=UPS.filter(u=>u.g===g),own=us.reduce((a,u)=>a+LV(u.id),0),tot=us.reduce((a,u)=>a+u.lv.length,0),can=us.filter(u=>LV(u.id)<u.lv.length&&S.cash>=u.lv[LV(u.id)]).length;
+    const el=$("usum-"+g);if(el)el.innerHTML=`${own}/${tot} bought${can?` · <b>${can} affordable</b>`:""}`;});
   UPS.forEach(u=>{const l=LV(u.id),el=$("up-"+u.id),b=$("buy-"+u.id),max=l>=u.lv.length;
     el.classList.toggle("max",max);el.querySelectorAll(".pips i").forEach((p,k)=>p.classList.toggle("on",k<l));
     if(max){b.disabled=true;b.textContent="Maxed";}
@@ -938,8 +966,7 @@ function updateText(){
   $("k-prod-s").textContent=`${f0(S.tot.prodT)} t made · ${f0(S.tot.prodT/days)} t/day`;
   $("k-cash").textContent=money(S.cash);$("k-cash-box").classList.toggle("neg",S.cash<0);
   $("k-cash-s").textContent=S.cash<0?`bankrupt at ${money(ECON.bankrupt)}`:`${(100*Math.max(0,S.cash)/ECON.goal).toFixed(1)}% of the $25M goal`;
-  $("k-profit").textContent=money(S.profitRate)+"/day";$("k-profit").style.color=S.profitRate<0?"var(--bad)":"var(--ink)";
-  {const hp=$("hud-profit");if(hp)hp.style.color=S.profitRate<0?"var(--bad)":"var(--ink)";}
+  {const t=money(S.profitRate)+"/day";$("k-profit").textContent=t;$("k-profit").style.color=/^[−-]/.test(t)?"var(--bad)":"var(--ink)";}
   $("k-profit-s").textContent=`${money(ECON.price[C.grade]+P.priceAdd)}/t selling price`;
   $("k-tank").textContent=f0(level)+" %";
   const net=R.fiberIn-R.fiberUse;
@@ -1823,7 +1850,7 @@ const G3={on:false,ok:false};
   let lblMode="auto";try{lblMode=localStorage.getItem("paper-mill-labels")||"auto";}catch(e){}
   G3.lastMove=performance.now();
   function setLbl(m){lblMode=m;document.querySelectorAll("#lblMode button").forEach(b=>b.setAttribute("aria-pressed",String(b.dataset.m===m)));
-    $("hud-lbl").textContent="Labels: "+{auto:"Auto",on:"On",off:"Off"}[m];labelHost.classList.toggle("lbl-off",m==="off");G3.lastMove=performance.now();
+    $("hud-lbl").innerHTML=`<span class="lg">Labels: </span><span class="sm" aria-hidden="true">Aa </span>`+{auto:"Auto",on:"On",off:"Off"}[m];labelHost.classList.toggle("lbl-off",m==="off");G3.lastMove=performance.now();
     try{localStorage.setItem("paper-mill-labels",m);}catch(e){}}
   document.querySelectorAll("#lblMode button").forEach(b=>b.addEventListener("click",()=>setLbl(b.dataset.m)));
   $("hud-lbl").addEventListener("click",()=>setLbl({auto:"on",on:"off",off:"auto"}[lblMode]));
@@ -2714,8 +2741,8 @@ const G3={on:false,ok:false};
       if(!vis)return;L.el.style.transform=`translate(${(tmp.x+1)/2*w}px,${(1-tmp.y)/2*hh}px) translate(-50%,-100%)`;
       if(doText){const [a,b]=L.t();L.b.textContent=a;L.s.textContent=b;L.el.classList.toggle("bad",!!(L.cls&&L.cls()));}});
     // headline + active incidents
-    if(doText&&document.body.classList.contains("fs")){[["hud-cash","k-cash"],["hud-prod","k-prod"],["hud-tank","k-tank"],["hud-profit","k-profit"],["hud-clock","k-clock"]].forEach(([a,b])=>$(a).textContent=$(b).textContent);
-      $("hud-speed").textContent=C.simSpeed+" min/s";$("hud-play").textContent=running?"Pause":"Run";}
+    if(doText&&document.body.classList.contains("fs")){[["hud-cash","k-cash"],["hud-prod","k-prod"],["hud-tank","k-tank"],["hud-profit","k-profit"],["hud-clock","k-clock"]].forEach(([a,b])=>$(a).textContent=$(b).textContent);{const hp=$("hud-profit");hp.style.color=/^[−-]/.test(hp.textContent)?"var(--bad)":"var(--ink)";}
+      hudSync();}
     if(doText){const b=BANNERS[0];banner.hidden=!b;if(b){banner.className="banner3d "+(b.kind==="good"?"good":"");banner.querySelector("span").textContent=b.kind==="good"?"INSTALLED":"BREAKING";banner.querySelector("b").textContent=b.text;}
       chips.replaceChildren(...S.inc.map(i=>{const c=document.createElement("span");c.textContent=EV[i.id].name;return c;}));}
   };
@@ -2732,7 +2759,8 @@ $("hud-exit").addEventListener("click",()=>setFS(false));
 $("hud-dis").addEventListener("click",()=>$("chaosRandom").click());
 document.addEventListener("fullscreenchange",()=>{if(!document.fullscreenElement&&document.body.classList.contains("fs"))setFS(false);});
 document.addEventListener("keydown",e=>{if(e.key==="Escape"&&document.body.classList.contains("fs"))setFS(false);});
-function hudSync(){$("hud-speed").textContent=C.simSpeed+" min/s";$("hud-play").textContent=running?"Pause":"Run";}
+function hudSync(){const sp=C.simSpeed+'<span class="lg"> min/s</span><span class="sm">m/s</span>',pl=running?'<span class="lg">Pause</span><span class="sm" aria-hidden="true">❚❚</span>':'<span class="lg">Run</span><span class="sm" aria-hidden="true">▶</span>';
+  const a=$("hud-speed"),b=$("hud-play");if(a.innerHTML!==sp)a.innerHTML=sp;if(b.innerHTML!==pl){b.innerHTML=pl;b.setAttribute("aria-label",running?"Pause":"Run");}}
 {let show=false;try{show=localStorage.getItem("paper-mill-knobs")==="1";}catch(e){}
   const setK=v=>{show=v;document.body.classList.toggle("noknobs",!v);$("knobsBtn").textContent=v?"Hide knobs":"Show knobs";$("knobsBtn").setAttribute("aria-expanded",v);try{localStorage.setItem("paper-mill-knobs",v?"1":"0");}catch(e){}};
   setK(show);$("knobsBtn").addEventListener("click",()=>setK(!show));}
