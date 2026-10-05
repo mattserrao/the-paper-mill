@@ -212,6 +212,8 @@ button:focus-visible,input:focus-visible,select:focus-visible{outline-color:var(
 .hud .hbtns button.danger{color:#fff}
 .ver{position:fixed;top:6px;right:10px;z-index:50;font:600 11px var(--f-mono,monospace);color:var(--muted);opacity:.8;pointer-events:none}
 body.fs .ver{display:none}
+.knobbar{display:flex;align-items:center;gap:12px;margin:4px 0 10px;font-size:13px;color:var(--muted)}.knobbar button{white-space:nowrap}
+body.noknobs #cards{display:none}
 .reroll{font-size:12px;padding:5px 10px;align-self:center;white-space:nowrap}
 /* fullscreen */
 .hud{display:none;z-index:5}
@@ -238,7 +240,7 @@ body{margin:0}
 </head>
 <body>
 
-<div class="ver" id="appVersion" aria-label="Version">v1.1.0</div>
+<div class="ver" id="appVersion" aria-label="Version">v1.1.1</div>
 <div class="wrap">
   <header>
     <div class="brand"><span class="logo" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linejoin="round"><circle cx="8.5" cy="12" r="5.5"/><circle cx="8.5" cy="12" r="1.6" fill="currentColor"/><path d="M8.5 6.5H20v11H8.5"/></svg></span>
@@ -323,6 +325,7 @@ body{margin:0}
     <canvas id="trend" width="1200" height="150"></canvas>
   </section>
 
+  <div class="knobbar"><button id="knobsBtn" aria-expanded="false" aria-controls="cards">Show knobs</button><span>Sliders for every area: trucks, crews, pulper, chest, machine speed, winder and shipping. Auto-balance runs them for you, so you can leave them hidden.</span></div>
   <section class="cards" id="cards">
     <div class="card"><h2><span class="n">1</span>Inbound OCC trucks<span class="pill" id="p-in">–</span></h2>
       <div class="row" data-key="inRate"><label for="s-inRate">Truck arrivals</label><span class="val"></span><div class="ctl"><input id="s-inRate" type="range" min="0" max="8" step="0.1"><button class="auto" aria-pressed="true">AUTO</button></div></div>
@@ -935,7 +938,8 @@ function updateText(){
   $("k-prod-s").textContent=`${f0(S.tot.prodT)} t made · ${f0(S.tot.prodT/days)} t/day`;
   $("k-cash").textContent=money(S.cash);$("k-cash-box").classList.toggle("neg",S.cash<0);
   $("k-cash-s").textContent=S.cash<0?`bankrupt at ${money(ECON.bankrupt)}`:`${(100*Math.max(0,S.cash)/ECON.goal).toFixed(1)}% of the $25M goal`;
-  $("k-profit").textContent=money(S.profitRate)+"/day";
+  $("k-profit").textContent=money(S.profitRate)+"/day";$("k-profit").style.color=S.profitRate<0?"var(--bad)":"var(--ink)";
+  {const hp=$("hud-profit");if(hp)hp.style.color=S.profitRate<0?"var(--bad)":"var(--ink)";}
   $("k-profit-s").textContent=`${money(ECON.price[C.grade]+P.priceAdd)}/t selling price`;
   $("k-tank").textContent=f0(level)+" %";
   const net=R.fiberIn-R.fiberUse;
@@ -2447,17 +2451,17 @@ const G3={on:false,ok:false};
     const p=new THREE.Points(g,m);p.frustumCulled=false;p.visible=false;scene.add(p);
     const rg=new THREE.BufferGeometry(),rp=new Float32Array(n*6);rg.setAttribute("position",new THREE.BufferAttribute(rp,3));
     const rm=new THREE.LineBasicMaterial({color:lin0("#d6e2ee"),transparent:true,opacity:0.6,depthWrite:false});const rl=new THREE.LineSegments(rg,rm);rl.frustumCulled=false;rl.visible=false;scene.add(rl);
-    return {p,g,pos,m,n,rg,rp,rm,rl};})();
+    g.setDrawRange(0,1000);rg.setDrawRange(0,2000);return {p,g,pos,m,n,rg,rp,rm,rl};})();
   scene.fog=new THREE.Fog(0xb3bbcb,600,3000);
   const SKY_DAY=new THREE.Color(),SKY_NIGHT=lin0("#232b44"),SKY_RAIN=lin0("#8c94a2"),SKY_FOG=lin0("#c9ced6"),tmpC=new THREE.Color();let fogK=0,wxK=0,envAcc=0;
   function envUpdate(rdt,now){const out=S.inc.some(i=>i.id==="lightning");
     const hr=((S.t+360)/60)%24,ss=v=>v*v*(3-2*v),day=hr<12?ss(clamp((hr-5.2)/1.6,0,1)):ss(clamp((20.2-hr)/1.6,0,1));
-    const wx=S.wx||"clear";fogK+=((wx==="fog"?1:wx==="snow"?0.35:wx==="rain"?0.25:0)-fogK)*Math.min(1,rdt*0.8+0.01);
+    const wx=S.wx||"clear";fogK+=((wx==="fog"?0.45:wx==="snow"?0.12:wx==="rain"?0.06:0)-fogK)*Math.min(1,rdt*0.8+0.01);
     wxK+=((wx==="rain"||wx==="snow"?1:0)-wxK)*Math.min(1,rdt*0.6+0.01);
-    if(!out){hemi.intensity=baseHemi*(0.3+0.7*day)*(1-0.15*wxK);sun.intensity=baseSun*(0.1+0.9*day)*(1-0.45*Math.max(wxK,fogK));
-      SKY_DAY.set(tok("g-sky")).convertSRGBToLinear();tmpC.copy(SKY_DAY).lerp(wx==="fog"?SKY_FOG:SKY_RAIN,Math.max(wxK*0.6,fogK*0.8)).lerp(SKY_NIGHT,1-day);
+    if(!out){hemi.intensity=baseHemi*(0.3+0.7*day)*(1-0.05*wxK);sun.intensity=baseSun*(0.1+0.9*day)*(1-0.18*Math.max(wxK,fogK));
+      SKY_DAY.set(tok("g-sky")).convertSRGBToLinear();tmpC.copy(SKY_DAY).lerp(wx==="fog"?SKY_FOG:SKY_RAIN,Math.max(wxK*0.25,fogK*0.5)).lerp(SKY_NIGHT,1-day);
       scene.background=tmpC.clone();scene.fog.color.copy(tmpC);}
-    {const d=camera.position.distanceTo(target);scene.fog.near=d*(0.2+4*(1-fogK));scene.fog.far=d*(1.6+8*(1-fogK));}
+    {const d=camera.position.distanceTo(target);scene.fog.near=d*(0.9+4*(1-fogK));scene.fog.far=d*(3.4+8*(1-fogK));}
     const night=1-day;M.wind.emissive=M.wind.emissive||new THREE.Color();M.wind.emissive.copy(lin0("#ffcf7a")).multiplyScalar(0.85*night);
     ENV.lampHead.color.copy(lin0("#9aa3b2")).lerp(lin0("#fff2c4"),night);ENV.lampPool.opacity=0.32*night;
     ENV.pudM.opacity=0.55*(S.wet||0);ENV.riverTex.offset.x-=rdt*0.02;
@@ -2481,7 +2485,7 @@ const G3={on:false,ok:false};
     // weather particles
     const P2=WXP,snow=wx==="snow",rain=wx==="rain"||(!snow&&wxK>0.05&&P2.rl.visible);
     P2.p.visible=wxK>0.05&&snow;P2.rl.visible=wxK>0.05&&wx==="rain";
-    if((P2.p.visible||P2.rl.visible)&&rdt>0){P2.m.opacity=0.85*wxK;P2.rm.opacity=0.6*wxK;P2.p.position.set(target.x,0,target.z);P2.rl.position.set(target.x,0,target.z);
+    if((P2.p.visible||P2.rl.visible)&&rdt>0){P2.m.opacity=0.45*wxK;P2.rm.opacity=0.25*wxK;P2.p.position.set(target.x,0,target.z);P2.rl.position.set(target.x,0,target.z);
       const a=P2.pos,r=P2.rp;for(let i=0;i<P2.n;i++){const j=i*3;if(snow){a[j+1]-=rdt*(2.5+(i%5)*0.3);a[j]+=Math.sin(now/900+i)*rdt*0.8;}else{a[j+1]-=rdt*34;a[j]+=rdt*4;}
         if(a[j+1]<0){a[j+1]+=40;a[j]=R()*80;a[j+2]=R()*80;}if(a[j]>40)a[j]-=80;
         if(P2.rl.visible){const k=i*6;r[k]=a[j];r[k+1]=a[j+1];r[k+2]=a[j+2];r[k+3]=a[j]-0.14;r[k+4]=a[j+1]+1.3;r[k+5]=a[j+2];}}
@@ -2729,6 +2733,9 @@ $("hud-dis").addEventListener("click",()=>$("chaosRandom").click());
 document.addEventListener("fullscreenchange",()=>{if(!document.fullscreenElement&&document.body.classList.contains("fs"))setFS(false);});
 document.addEventListener("keydown",e=>{if(e.key==="Escape"&&document.body.classList.contains("fs"))setFS(false);});
 function hudSync(){$("hud-speed").textContent=C.simSpeed+" min/s";$("hud-play").textContent=running?"Pause":"Run";}
+{let show=false;try{show=localStorage.getItem("paper-mill-knobs")==="1";}catch(e){}
+  const setK=v=>{show=v;document.body.classList.toggle("noknobs",!v);$("knobsBtn").textContent=v?"Hide knobs":"Show knobs";$("knobsBtn").setAttribute("aria-expanded",v);try{localStorage.setItem("paper-mill-knobs",v?"1":"0");}catch(e){}};
+  setK(show);$("knobsBtn").addEventListener("click",()=>setK(!show));}
 $("hud-play").addEventListener("click",()=>{$("play").click();hudSync();});
 const SPEEDS=[1,2,5,10,20,30,60,120];
 function nudgeSpeed(d){const i=SPEEDS.findIndex(v=>v>=C.simSpeed);const n=SPEEDS[clamp((i<0?SPEEDS.length-1:i)+d,0,SPEEDS.length-1)];const el=$("simspeed");el.value=n;el.dispatchEvent(new Event("input"));hudSync();}
