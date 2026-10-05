@@ -225,6 +225,20 @@ body.noknobs #cards{display:none}
 .shop.collapsed .ugrp:not(.closed){display:grid;grid-template-columns:repeat(auto-fill,minmax(230px,1fr));gap:10px}.shop.collapsed .ugrp>h3{grid-column:1/-1;margin-bottom:0}
 .hint-m{display:none}
 @media (max-width:640px){
+  header{display:block}
+  .brand{align-items:flex-start;gap:10px}.logo{width:36px;height:36px;border-radius:10px;margin-top:2px}.logo svg{width:20px;height:20px}
+  .reroll{display:none}
+  .brand h1{font-size:23px;line-height:1.15}.brand .eyebrow{font-size:10px;margin-bottom:1px}
+  .mnwrap{display:inline;}#millName{display:inline}.pencil{display:inline-block;vertical-align:middle;margin-left:4px;font-size:12px;padding:2px 6px}
+  .brand h1 small{font-size:12.5px;margin-top:4px;line-height:1.35}
+  .transport{display:grid;grid-template-columns:1.3fr 1fr 1fr;gap:8px;margin-top:12px}
+  .transport .namefield,.transport #pmname{display:none}
+  .transport button{width:100%;padding:8px 6px;font-size:13.5px}
+  .sndgrp{grid-column:1/-1;display:flex;align-items:center;gap:10px}.sndgrp button{width:auto;flex:0 0 auto;padding:8px 12px}.sndgrp #vol{flex:1;width:auto!important}
+  .transport .simspeed{grid-column:1/-1;display:flex;gap:10px}.transport .simspeed input{flex:1;width:auto}
+  .kpis{grid-template-columns:1fr 1fr;margin-top:12px}.kpi{padding:9px 12px}.kpi .v{font-size:18px}.kpi .k{font-size:11px}.kpi .s{font-size:11px}
+  .kpi:nth-child(odd){border-right:1px solid var(--line)}.kpi:nth-child(even){border-right:0}.kpi{border-bottom:1px solid var(--line)}}
+@media (max-width:640px){
   .viewbar{display:grid;grid-template-columns:auto 1fr;gap:8px;margin-bottom:0}
   .view3dctl{display:contents}
   #viewToggle{grid-column:1}#viewFS{grid-column:2;justify-self:end}
@@ -269,7 +283,7 @@ body{margin:0}
 </head>
 <body>
 
-<div class="ver" id="appVersion" aria-label="Version">v1.1.4</div>
+<div class="ver" id="appVersion" aria-label="Version">v1.1.5</div>
 <div class="wrap">
   <header>
     <div class="brand"><span class="logo" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linejoin="round"><circle cx="8.5" cy="12" r="5.5"/><circle cx="8.5" cy="12" r="1.6" fill="currentColor"/><path d="M8.5 6.5H20v11H8.5"/></svg></span>
@@ -280,7 +294,7 @@ body{margin:0}
       <button id="play" class="primary" aria-pressed="true">Pause</button>
       <button id="balance">Balance all</button>
       <button id="reset">Reset</button>
-      <button id="sound" aria-pressed="false" title="Lofi music, incident music and sound effects">Sound off</button><input id="vol" type="range" min="0" max="100" value="70" aria-label="Volume" style="width:80px;accent-color:var(--brand)">
+      <span class="sndgrp"><button id="sound" aria-pressed="false" title="Lofi music, incident music and sound effects">Sound off</button><input id="vol" type="range" min="0" max="100" value="70" aria-label="Volume" style="width:80px;accent-color:var(--brand)"></span>
       <div class="simspeed"><label for="simspeed">Sim speed</label><input id="simspeed" type="range" min="1" max="120" step="1" value="30"><span id="simspeedv" class="val">30 min/s</span></div>
     </div>
   </header>
