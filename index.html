@@ -56,6 +56,13 @@ button.primary{background:var(--stock);border-color:var(--stock);color:var(--pan
 .seg button[aria-pressed="true"]{background:var(--ink);color:var(--panel)}
 .view3dctl{display:flex;gap:10px;align-items:center;flex-wrap:wrap}
 .hint{font-size:12px;color:var(--muted)}
+.jumps{display:flex;flex-wrap:wrap;gap:6px;align-items:center;margin-bottom:-6px}
+.jumps span{font-size:12px;color:var(--muted);margin-right:2px}
+.jumps button{padding:4px 10px;font-size:12.5px;font-weight:500;border-radius:999px}
+.jumps[hidden]{display:none}
+.pad{position:absolute;right:10px;bottom:10px;display:grid;grid-template-columns:repeat(3,34px);grid-template-rows:repeat(3,34px);gap:2px}
+.pad button{padding:0;font-size:13px;line-height:1;background:color-mix(in srgb,var(--panel) 88%,transparent);touch-action:none;user-select:none;-webkit-user-select:none}
+.pad button[data-p="0,-1"]{grid-column:2;grid-row:1}.pad button[data-p="-1,0"]{grid-column:1;grid-row:2}.pad button[data-p="1,0"]{grid-column:3;grid-row:2}.pad button[data-p="0,1"]{grid-column:2;grid-row:3}
 .view3d{position:relative;border:1px solid var(--line);border-radius:8px;overflow:hidden;aspect-ratio:1200/660;min-height:320px;max-height:78vh;width:100%;background:var(--g-sky)}
 #gl{display:block;width:100%;height:100%;touch-action:pan-y;cursor:grab}
 #gl:active{cursor:grabbing}
@@ -191,9 +198,11 @@ body{margin:0}
 
   <div class="viewbar">
     <div class="seg" id="viewToggle" role="group" aria-label="Plant view"><button id="vb3" aria-pressed="true">3D</button><button id="vb2" aria-pressed="false">2D</button></div>
-    <div class="view3dctl" id="view3dctl"><label class="check"><input type="checkbox" id="viewShadows" checked> Shadows</label><button id="viewReset">Reset view</button><span class="hint">Drag to rotate · scroll or pinch to zoom</span></div>
+    <div class="view3dctl" id="view3dctl"><label class="check"><input type="checkbox" id="viewShadows" checked> Shadows</label><button id="viewReset">Whole mill</button><span class="hint">Drag to rotate · two-finger drag, right-drag or arrow keys to move · pinch or scroll to zoom</span></div>
   </div>
-  <div class="view3d" id="view3d" hidden><canvas id="gl" aria-label="3D view of the mill"></canvas><div id="labels3d"></div><div class="banner3d" id="banner3d" hidden><span></span><b></b></div><div class="chips3d" id="chips3d"></div><div class="blackout3d" id="blackout3d" hidden>Blackout</div></div>
+  <div class="jumps" id="jumps" role="group" aria-label="Go to area"><span>Go to</span><button data-j="trucks">Trucks</button><button data-j="recv">Receiving</button><button data-j="pulp">Pulper &amp; chest</button><button data-j="pm">Paper machine</button><button data-j="wd">Winder</button><button data-j="wh">Warehouse</button>
+  </div>
+  <div class="view3d" id="view3d" hidden><canvas id="gl" tabindex="0" aria-label="3D view of the mill. Arrow keys move, Q and E rotate, plus and minus zoom."></canvas><div class="pad" id="pad" aria-label="Move the view"><button data-p="0,-1" aria-label="Move up">▲</button><button data-p="-1,0" aria-label="Move left">◀</button><button data-p="1,0" aria-label="Move right">▶</button><button data-p="0,1" aria-label="Move down">▼</button></div><div id="labels3d"></div><div class="banner3d" id="banner3d" hidden><span></span><b></b></div><div class="chips3d" id="chips3d"></div><div class="blackout3d" id="blackout3d" hidden>Blackout</div></div>
   <div class="scroller" id="plantwrap"><canvas id="plant" width="1200" height="660" aria-label="Animated mill schematic"></canvas></div>
 
   <section class="chaos" aria-label="Chaos">
@@ -1172,18 +1181,42 @@ const G3={on:false,ok:false};
 
   /* ---- camera controls: drag to orbit, wheel/pinch to zoom ---- */
   const target=new THREE.Vector3(-8,0,4);const DEF={th:-0.18,ph:0.92,r:150};const cam={...DEF};
-  function placeCam(){const rr=cam.r*(host.clientWidth<600?1.35:1);
-    camera.position.set(target.x+rr*Math.sin(cam.ph)*Math.sin(cam.th),target.y+rr*Math.cos(cam.ph),target.z+rr*Math.sin(cam.ph)*Math.cos(cam.th));camera.lookAt(target);}
-  const ptrs=new Map();let pinch0=0,r0=0;
-  glc.addEventListener("pointerdown",e=>{glc.setPointerCapture(e.pointerId);ptrs.set(e.pointerId,{x:e.clientX,y:e.clientY});
-    if(ptrs.size===2){const [a,b]=[...ptrs.values()];pinch0=Math.hypot(a.x-b.x,a.y-b.y);r0=cam.r;}});
-  glc.addEventListener("pointermove",e=>{const p=ptrs.get(e.pointerId);if(!p)return;
-    if(ptrs.size===1){cam.th-=(e.clientX-p.x)*0.006;if(e.pointerType!=="touch")cam.ph=clamp(cam.ph-(e.clientY-p.y)*0.005,0.25,1.35);}
+  let placeCam=function(){const rr=cam.r*(host.clientWidth<600?1.35:1);
+    camera.position.set(target.x+rr*Math.sin(cam.ph)*Math.sin(cam.th),target.y+rr*Math.cos(cam.ph),target.z+rr*Math.sin(cam.ph)*Math.cos(cam.th));camera.lookAt(target);};
+  const DEFT=target.clone();let goal=null;
+  // move the look-at point across the ground, in screen directions
+  function panBy(dx,dy){goal=null;const s=cam.r*(host.clientWidth<600?1.35:1)*0.0016;
+    const rx=Math.cos(cam.th),rz=-Math.sin(cam.th),fx=-Math.sin(cam.th),fz=-Math.cos(cam.th);
+    target.x=clamp(target.x-(rx*dx-fx*dy)*s,-85,70);target.z=clamp(target.z-(rz*dx-fz*dy)*s,-40,48);}
+  const _place=placeCam;
+  placeCam=function(){if(goal){target.lerp(goal.t,0.12);cam.r+=(goal.r-cam.r)*0.12;cam.th=lerpAng(cam.th,goal.th,0.12);cam.ph+=(goal.ph-cam.ph)*0.12;
+      if(target.distanceTo(goal.t)<0.2&&Math.abs(goal.r-cam.r)<0.5)goal=null;}_place();};
+  const ptrs=new Map();let pinch0=0,r0=0,mid0=null,panBtn=false;
+  const mid=()=>{const [a,b]=[...ptrs.values()];return {x:(a.x+b.x)/2,y:(a.y+b.y)/2,d:Math.hypot(a.x-b.x,a.y-b.y)};};
+  glc.addEventListener("contextmenu",e=>e.preventDefault());
+  glc.addEventListener("pointerdown",e=>{glc.setPointerCapture(e.pointerId);ptrs.set(e.pointerId,{x:e.clientX,y:e.clientY});goal=null;
+    panBtn=e.button===2||e.button===1||e.shiftKey;
+    if(ptrs.size===2){const m=mid();pinch0=m.d;r0=cam.r;mid0=m;}});
+  glc.addEventListener("pointermove",e=>{const p=ptrs.get(e.pointerId);if(!p)return;const dx=e.clientX-p.x,dy=e.clientY-p.y;
+    if(ptrs.size===1){if(panBtn)panBy(dx,dy);else{cam.th-=dx*0.006;if(e.pointerType!=="touch")cam.ph=clamp(cam.ph-dy*0.005,0.25,1.35);}}
     p.x=e.clientX;p.y=e.clientY;
-    if(ptrs.size===2){const [a,b]=[...ptrs.values()];const d=Math.hypot(a.x-b.x,a.y-b.y);if(pinch0>0)cam.r=clamp(r0*pinch0/d,45,240);}});
-  const up=e=>{ptrs.delete(e.pointerId);pinch0=0;};glc.addEventListener("pointerup",up);glc.addEventListener("pointercancel",up);
-  glc.addEventListener("wheel",e=>{e.preventDefault();cam.r=clamp(cam.r*Math.exp(e.deltaY*0.001),45,240);},{passive:false});
-  $("viewReset").addEventListener("click",()=>Object.assign(cam,DEF));
+    if(ptrs.size===2){const m=mid();if(pinch0>0)cam.r=clamp(r0*pinch0/m.d,30,240);if(mid0)panBy(m.x-mid0.x,m.y-mid0.y);mid0=m;}});
+  const up=e=>{ptrs.delete(e.pointerId);pinch0=0;mid0=null;};glc.addEventListener("pointerup",up);glc.addEventListener("pointercancel",up);
+  glc.addEventListener("wheel",e=>{e.preventDefault();goal=null;if(e.shiftKey||Math.abs(e.deltaX)>Math.abs(e.deltaY)&&!e.ctrlKey)panBy(-e.deltaX||-e.deltaY,0);else cam.r=clamp(cam.r*Math.exp(e.deltaY*(e.ctrlKey?0.01:0.001)),30,240);},{passive:false});
+  // keyboard: arrows/WASD move, Q/E rotate, +/- zoom
+  glc.addEventListener("keydown",e=>{const k=e.key.toLowerCase(),st=24;let used=true;
+    if(k==="arrowleft"||k==="a")panBy(st,0);else if(k==="arrowright"||k==="d")panBy(-st,0);else if(k==="arrowup"||k==="w")panBy(0,st);else if(k==="arrowdown"||k==="s")panBy(0,-st);
+    else if(k==="q")cam.th+=0.08;else if(k==="e")cam.th-=0.08;else if(k==="+"||k==="=")cam.r=clamp(cam.r*0.9,30,240);else if(k==="-")cam.r=clamp(cam.r*1.1,30,240);else used=false;
+    if(used){e.preventDefault();goal=null;}});
+  // on-screen pad: press and hold to move
+  let padDir=null;
+  $("pad").querySelectorAll("button").forEach(b=>{const [px,py]=b.dataset.p.split(",").map(Number);
+    b.addEventListener("pointerdown",e=>{e.preventDefault();b.setPointerCapture(e.pointerId);padDir=[px,py];});
+    ["pointerup","pointercancel","pointerleave"].forEach(t=>b.addEventListener(t,()=>padDir=null));});
+  G3.padTick=rdt=>{if(padDir)panBy(-padDir[0]*500*rdt,-padDir[1]*500*rdt);};
+  const JUMPS={trucks:[-62,2,70],recv:[-21,-13,58],pulp:[25,-14,60],pm:[22,9,78],wd:[-17,7,42],wh:[-37,24,62]};
+  document.querySelectorAll("#jumps button").forEach(b=>b.addEventListener("click",()=>{const [x,z,r]=JUMPS[b.dataset.j];goal={t:new THREE.Vector3(x,0,z),r,th:DEF.th,ph:0.85};}));
+  $("viewReset").addEventListener("click",()=>{goal={t:DEFT.clone(),r:DEF.r,th:DEF.th,ph:DEF.ph};});
   $("viewShadows").addEventListener("change",e=>{renderer.shadowMap.enabled=e.target.checked;MATS.forEach(m=>m.needsUpdate=true);});
   if(mobile){$("viewShadows").checked=false;renderer.shadowMap.enabled=false;}
 
@@ -1496,7 +1529,7 @@ const G3={on:false,ok:false};
     const out=S.inc.some(i=>i.id==="lightning");hemi.intensity=out?0.18:baseHemi;sun.intensity=out?0.12:baseSun;
     if(out!==G3.wasOut){G3.wasOut=out;scene.background=new THREE.Color(out?"#0b0f0e":tok("g-sky"));}
     // camera + render
-    upUpdate(now);fxUpdate(rdt,now);
+    G3.padTick(rdt);upUpdate(now);fxUpdate(rdt,now);
     placeCam();if(shake>0){camera.position.x+=(Math.random()-0.5)*shake;camera.position.y+=(Math.random()-0.5)*shake;camera.position.z+=(Math.random()-0.5)*shake;}
     renderer.render(scene,camera);
     // labels follow the 3D anchors
@@ -1511,7 +1544,7 @@ const G3={on:false,ok:false};
   applyPalette();rebuildDoors();
 })();
 function setView(three){G3.on=three&&G3.ok;$("view3d").hidden=!G3.on;$("plantwrap").hidden=G3.on;
-  $("vb3").setAttribute("aria-pressed",G3.on);$("vb2").setAttribute("aria-pressed",!G3.on);$("view3dctl").hidden=!G3.on;
+  $("vb3").setAttribute("aria-pressed",G3.on);$("vb2").setAttribute("aria-pressed",!G3.on);$("view3dctl").hidden=!G3.on;$("jumps").hidden=!G3.on;
   try{localStorage.setItem("paper-mill-view",G3.on?"3d":"2d");}catch(e){}}
 $("vb3").addEventListener("click",()=>setView(true));$("vb2").addEventListener("click",()=>setView(false));
 {let pref="3d";try{pref=localStorage.getItem("paper-mill-view")||"3d";}catch(e){}setView(pref==="3d");}
