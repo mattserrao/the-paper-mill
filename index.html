@@ -3,6 +3,9 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="theme-color" content="#ffffff">
 <title>The Paper Mill</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=IBM+Plex+Mono:wght@400;500&display=swap">
@@ -333,13 +336,119 @@ body.fs .banner3d{top:calc(84px + env(safe-area-inset-top,0px))}
   body.fs .hud .lg{display:none}body.fs .hud .sm{display:inline}
   body.fs .banner3d{top:calc(160px + env(safe-area-inset-top,0px))}}
 @media (prefers-reduced-motion: reduce){*{scroll-behavior:auto}}
+
+/* =========================== v2 app shell (fullscreen first) =========================== */
+body.app{overflow:hidden;height:100dvh}
+html:has(body.app){overflow:hidden;height:100%}
+body.app .wrap>header,body.app .viewbar,body.app .knobbar,body.app #hud,body.app .ver,body.app #plantwrap{display:none!important}
+body.app .view3d{position:fixed!important;inset:0;z-index:1;border-radius:0;border:0;max-height:none;min-height:0;aspect-ratio:auto;width:100%;height:100%;margin:0}
+body.app .overlay{z-index:140}body.app .overlay.top{z-index:150}
+.v2top{position:fixed;z-index:70;left:max(10px,env(safe-area-inset-left,0px));right:max(10px,env(safe-area-inset-right,0px));top:calc(8px + env(safe-area-inset-top,0px));display:flex;gap:8px;align-items:stretch;pointer-events:none}
+.v2top>*{pointer-events:auto}
+.v2card{background:rgba(255,255,255,.94);-webkit-backdrop-filter:blur(10px);backdrop-filter:blur(10px);border:1px solid rgba(225,228,238,.95);border-radius:14px;box-shadow:0 6px 20px rgba(28,34,51,.10)}
+.v2ibtn{width:44px;min-width:44px;height:44px;padding:0;display:grid;place-items:center;font-size:16px;border-radius:14px}
+.v2stats{flex:1;min-width:0;display:flex;align-items:center;gap:0;padding:0 2px 0 10px;height:44px;cursor:pointer;text-align:left;font:inherit;color:inherit}
+.v2stats .st{display:flex;flex-direction:column;justify-content:center;min-width:0;flex:1 1 auto;padding:0 6px 0 0;margin-right:7px;border-right:1px solid var(--line)}
+.v2stats .st:last-of-type{border-right:0;margin-right:0}
+.v2stats .st small{font:600 10px var(--f-body);color:var(--muted);letter-spacing:.02em;white-space:nowrap}
+.v2stats .st b{font:700 14px var(--f-body);letter-spacing:-.01em;font-variant-numeric:tabular-nums;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.v2stats .chev{margin-left:auto;flex:none;width:18px;height:28px;display:grid;place-items:center;color:var(--muted);transition:transform .2s}
+.v2top.open .chev{transform:rotate(180deg)}
+.v2stats .mn{display:none}
+.v2lbl{height:44px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:1px;padding:0 8px;min-width:52px;border-radius:14px;font:600 10px var(--f-body);color:var(--muted)}
+.v2lbl[aria-pressed=true]{color:var(--brand);background:color-mix(in srgb,var(--brand) 12%,white)}
+.v2lbl[aria-pressed=false] svg{opacity:.45}
+@media (max-width:600px){.v2lbl{min-width:44px;width:44px;padding:0}.v2lbl span{display:none}}
+.v2more{position:fixed;z-index:69;left:max(10px,env(safe-area-inset-left,0px));right:max(10px,env(safe-area-inset-right,0px));top:calc(58px + env(safe-area-inset-top,0px));padding:12px;display:none;flex-direction:column;gap:12px;max-height:calc(100dvh - 220px);overflow:auto}
+.v2top.open+.v2more{display:flex}
+.v2grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px}
+.v2grid div{background:var(--bg);border-radius:10px;padding:7px 10px;min-width:0}
+.v2grid small{display:block;font:600 10.5px var(--f-body);color:var(--muted)}
+.v2grid b{display:block;font:700 15px var(--f-body);font-variant-numeric:tabular-nums;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.v2grid em{display:block;font:500 11px var(--f-body);color:var(--muted);font-style:normal;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.v2row{display:flex;flex-wrap:wrap;gap:8px;align-items:center}
+.v2row .v2speed{display:flex;align-items:center;gap:4px;background:var(--bg);border-radius:10px;padding:3px}
+.v2row .v2speed button{width:36px;height:34px;padding:0}.v2row .v2speed span{min-width:64px;text-align:center;font:600 13px var(--f-body);font-variant-numeric:tabular-nums}
+.v2chk{display:flex;align-items:center;gap:6px;font:600 13px var(--f-body);padding:6px 10px;background:var(--bg);border-radius:10px;cursor:pointer}
+.v2chk input{width:18px;height:18px;accent-color:var(--brand)}
+body.app .banner3d{top:calc(62px + env(safe-area-inset-top,0px));cursor:pointer}
+body.app .spider{top:calc(62px + env(safe-area-inset-top,0px))}
+/* bottom dock: go-to row + tab bar */
+.v2dock{position:fixed;z-index:82;left:0;right:0;bottom:0;padding:0 max(10px,env(safe-area-inset-right,0px)) calc(8px + env(safe-area-inset-bottom,0px)) max(10px,env(safe-area-inset-left,0px));display:flex;flex-direction:column;gap:6px;pointer-events:none}
+.v2dock>*{pointer-events:auto}
+body.app #jumps{margin:0;flex-wrap:nowrap;overflow-x:auto;scrollbar-width:none;padding:2px 2px;gap:6px;-webkit-overflow-scrolling:touch;mask-image:linear-gradient(90deg,#000 88%,transparent)}
+body.app #jumps::-webkit-scrollbar{display:none}
+body.app #jumps>span{font:600 11px var(--f-body);color:var(--ink);background:rgba(255,255,255,.85);border-radius:999px;padding:6px 10px;flex:none}
+body.app #jumps button{flex:0 0 auto;background:rgba(255,255,255,.94);-webkit-backdrop-filter:blur(8px);backdrop-filter:blur(8px);box-shadow:0 2px 8px rgba(28,34,51,.10);font-size:13px;padding:7px 12px}
+.v2tabs{display:grid;grid-template-columns:repeat(4,1fr);padding:4px;gap:4px}
+.v2tabs button{border:0;background:transparent;box-shadow:none;display:flex;flex-direction:column;align-items:center;gap:2px;padding:6px 2px;border-radius:10px;font:600 11.5px var(--f-body);color:var(--muted);position:relative;min-height:46px}
+.v2tabs button svg{width:20px;height:20px}
+.v2tabs button[aria-pressed=true]{background:color-mix(in srgb,var(--brand) 12%,white);color:var(--brand)}
+.v2tabs .bdg{position:absolute;top:3px;right:calc(50% - 22px);min-width:17px;height:17px;border-radius:9px;background:var(--bad);color:#fff;font:700 10px/17px var(--f-body);padding:0 4px}
+.v2tabs .bdg[hidden]{display:none}
+body.app .chips3d{bottom:calc(124px + env(safe-area-inset-bottom,0px));left:12px}
+body.app .pad{display:none!important}
+body.app.sheet-open .pad,body.app.sheet-open #jumps,body.app.sheet-open .chips3d{display:none!important}
+/* sheets */
+.v2sheet{position:fixed;z-index:80;left:6px;right:6px;bottom:calc(66px + env(safe-area-inset-bottom,0px));height:min(74dvh,calc(100dvh - 150px));background:var(--panel);border-radius:20px;box-shadow:0 -12px 40px rgba(28,34,51,.22);transform:translateY(calc(100% + 90px));transition:transform .28s cubic-bezier(.2,.8,.2,1);display:flex;flex-direction:column}
+.v2sheet.open{transform:none}
+.v2sheet header{display:flex;align-items:center;gap:10px;padding:8px 14px 8px 18px;border-bottom:1px solid var(--line);position:relative}
+.v2sheet header::before{content:"";position:absolute;left:50%;top:5px;width:38px;height:4px;border-radius:2px;background:var(--line);transform:translateX(-50%)}
+.v2sheet header h2{font:700 18px var(--f-display);margin:8px 0 0;flex:1}
+.v2sheet header button{margin-top:6px}
+.v2body{overflow:auto;-webkit-overflow-scrolling:touch;padding:12px 14px 24px;flex:1;overscroll-behavior:contain}
+.v2pane{display:none}.v2pane.on{display:block}
+.v2pane>section{margin:0!important;border:0!important;box-shadow:none!important;padding:0!important;background:transparent!important}
+.v2pane .chaoshead h2 .dl,.v2pane .chaoshead h2 .dm,.v2pane #chaosMore,.v2pane #shopMore,.v2pane .chaoshead>h2{display:none}
+.v2pane .kpis{grid-template-columns:repeat(2,minmax(0,1fr))!important}
+.v2pane .cards{grid-template-columns:1fr!important}
+.v2pane .chaosbody,.v2pane .shopbody{grid-template-columns:1fr!important;display:grid;gap:14px}
+.v2pane .groups{grid-template-columns:repeat(auto-fill,minmax(150px,1fr))!important}
+.v2pane .chaoshead{display:flex;flex-wrap:wrap;gap:8px;align-items:center}
+.v2scrim{position:fixed;inset:0;z-index:72;background:rgba(15,18,30,.25);opacity:0;pointer-events:none;transition:opacity .25s}
+body.sheet-open .v2scrim{opacity:1;pointer-events:auto}
+.v2sub{font:700 12px var(--f-body);text-transform:uppercase;letter-spacing:.06em;color:var(--muted);margin:16px 0 8px}
+.v2sub:first-child{margin-top:0}
+/* menu */
+.v2menu{position:fixed;inset:0;z-index:120;display:grid;place-items:center;padding:16px;background:radial-gradient(ellipse at 50% 30%,rgba(255,255,255,.55),rgba(240,242,248,.82));-webkit-backdrop-filter:blur(6px);backdrop-filter:blur(6px)}
+.v2menu[hidden]{display:none}
+.v2menu .card{width:min(460px,100%);max-height:calc(100dvh - 32px);overflow:auto;padding:22px 20px 18px;border-radius:22px;background:var(--panel);box-shadow:0 24px 60px rgba(28,34,51,.25)}
+.v2menu .ttl{display:flex;align-items:center;gap:12px}
+.v2menu .ttl i{width:42px;height:42px;border-radius:12px;background:var(--brand);flex:none;display:grid;place-items:center;color:#fff;font-style:normal;font-size:22px}
+.v2menu .ttl small{display:block;font:700 11px var(--f-body);letter-spacing:.08em;text-transform:uppercase;color:var(--muted)}
+.v2menu .ttl b{display:block;font:800 21px/1.15 var(--f-display)}
+.v2menu .name[hidden]{display:none}
+.v2menu .name{display:flex;gap:6px;align-items:center;margin:14px 0 4px}
+.v2menu .name input{flex:1;min-width:0;font:700 16px var(--f-body);padding:9px 12px;border:1px solid var(--line);border-radius:10px;background:var(--bg);color:var(--ink)}
+.v2menu p{font:400 14px/1.5 var(--f-body);color:var(--muted);margin:10px 0 14px}
+.v2menu .go{width:100%;font-size:17px;padding:14px;border-radius:14px;margin-bottom:10px}
+.v2menu .opts{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px}
+.v2menu .opts button{padding:11px 8px;border-radius:12px;font-size:14px;display:flex;flex-direction:column;align-items:center;gap:2px}
+.v2menu .opts button small{font:500 11px var(--f-body);color:var(--muted)}
+.v2menu .opts .warn{border-color:color-mix(in srgb,var(--bad) 40%,white);color:var(--bad)}
+.v2menu .foot{display:flex;justify-content:space-between;margin-top:12px;font:500 11.5px var(--f-body);color:var(--muted)}
+.v2menu .state{font:600 12px var(--f-body);color:var(--muted);margin-top:4px}
+@media (min-width:900px){
+  .v2top{right:auto;width:min(620px,calc(100% - 20px))}
+  .v2more{right:auto;width:min(620px,calc(100% - 20px))}
+  .v2grid{grid-template-columns:repeat(3,minmax(0,1fr))}
+  .v2stats .mn{display:flex}
+  .v2sheet{left:auto;right:12px;top:calc(12px + env(safe-area-inset-top,0px));bottom:12px;height:auto;width:440px;border-radius:20px;transform:translateX(calc(100% + 24px))}
+  .v2sheet.open{transform:none}
+  .v2sheet header::before{display:none}
+  .v2dock{left:12px;right:auto;width:min(620px,calc(100% - 24px))}
+  body.app .chips3d{bottom:calc(128px + env(safe-area-inset-bottom,0px))}
+  body.sheet-open .v2scrim{opacity:0;pointer-events:none}
+  body.sheet-open .spider{right:470px}
+}
+body.app.zen .v2top,body.app.zen .v2more,body.app.zen .v2dock,body.app.zen .v2sheet,body.app.zen .v2scrim{display:none!important}
 [hidden]{display:none!important}
 body{margin:0}
 </style>
 </head>
 <body>
 
-<div class="ver" id="appVersion" aria-label="Version">v1.18.2</div>
+<div class="ver" id="appVersion" aria-label="Version">v2.0.0</div>
 <div class="wrap">
   <header>
     <div class="brand"><span class="logo" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linejoin="round"><circle cx="8.5" cy="12" r="5.5"/><circle cx="8.5" cy="12" r="1.6" fill="currentColor"/><path d="M8.5 6.5H20v11H8.5"/></svg></span>
@@ -3778,6 +3887,88 @@ function nudgeSpeed(d){const i=SPEEDS.findIndex(v=>v>=C.simSpeed);const n=SPEEDS
 $("hud-slow").addEventListener("click",()=>nudgeSpeed(-1));$("hud-fast").addEventListener("click",()=>nudgeSpeed(1));
 $("vb3").addEventListener("click",()=>setView(true));$("vb2").addEventListener("click",()=>setView(false));
 setView(true);   // 3D only; the 2D schematic remains only as a fallback when WebGL is unavailable
+
+const HTML_V2='<div class="v2top" id="v2top">\n  <button class="v2card v2ibtn" id="v2pause" aria-label="Pause and open the menu"><svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor"><rect x="5" y="4" width="5" height="16" rx="1.5"/><rect x="14" y="4" width="5" height="16" rx="1.5"/></svg></button>\n  <button class="v2card v2stats" id="v2stats" aria-expanded="false" aria-controls="v2more">\n    <span class="st mn"><small>Mill</small><b id="v2mill">–</b></span>\n    <span class="st"><small>Cash</small><b id="v2cash">–</b></span>\n    <span class="st"><small>Profit</small><b id="v2profit">–</b></span>\n    <span class="st"><small id="v2clockL">Time</small><b id="v2clock">–</b></span>\n    <span class="chev" aria-hidden="true"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"><path d="M6 9l6 6 6-6"/></svg></span>\n  </button>\n  <button class="v2card v2lbl" id="v2lblBtn" aria-pressed="true" title="Show or hide equipment labels"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 12V4h8l10 10-8 8L3 12z"/><circle cx="7.5" cy="8.5" r="1.4" fill="currentColor"/></svg><span>Labels</span></button>\n</div>\n<div class="v2card v2more" id="v2more">\n  <div class="v2grid">\n    <div><small>Production</small><b data-m="k-prod">–</b><em data-m="k-prod-s"></em></div>\n    <div><small>Reel speed</small><b data-m="k-speed">–</b><em data-m="k-speed-s"></em></div>\n    <div><small>Stock chest</small><b data-m="k-tank">–</b><em data-m="k-tank-s"></em></div>\n    <div><small>OCC bale yard</small><b data-m="k-yard">–</b><em data-m="k-yard-s"></em></div>\n    <div><small>Roll warehouse</small><b data-m="k-fg">–</b><em data-m="k-fg-s"></em></div>\n    <div><small>Cash detail</small><b data-m="k-cash">–</b><em data-m="k-cash-s"></em></div>\n  </div>\n  <div class="v2row">\n    <div class="v2speed"><button id="v2slow" aria-label="Slower">−</button><span id="v2speed">30 min/s</span><button id="v2fast" aria-label="Faster">+</button></div>\n    <label class="v2chk"><input type="checkbox" id="v2labels"> Labels</label>\n    <button id="v2sound">Sound off</button>\n    <button id="v2dis" class="danger">Disaster</button>\n  </div>\n</div>\n<div class="v2dock" id="v2dock">\n  <div id="v2jumpslot"></div>\n  <nav class="v2card v2tabs" aria-label="Panels">\n    <button data-tab="shop" aria-pressed="false"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 19V5M5 12l7-7 7 7"/></svg>Upgrades</button>\n    <button data-tab="chaos" aria-pressed="false"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3l9 16H3z"/><path d="M12 10v4M12 17v.5"/></svg>Chaos<span class="bdg" id="v2bdg" hidden>0</span></button>\n    <button data-tab="ctl" aria-pressed="false"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M4 7h10M18 7h2M4 17h4M12 17h8"/><circle cx="16" cy="7" r="2"/><circle cx="10" cy="17" r="2"/></svg>Controls</button>\n    <button data-tab="stats" aria-pressed="false"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 19h16M7 16V9M12 16V5M17 16v-4"/></svg>Stats</button>\n  </nav>\n</div>\n<div class="v2scrim" id="v2scrim"></div>\n<aside class="v2sheet" id="v2sheet" aria-hidden="true"><header><h2 id="v2sheetT">Upgrades</h2><button id="v2close" aria-label="Close panel">Close</button></header>\n  <div class="v2body">\n    <div class="v2pane" data-pane="shop"></div>\n    <div class="v2pane" data-pane="chaos"></div>\n    <div class="v2pane" data-pane="ctl"><div class="v2sub">Run the mill</div><div class="v2row" id="v2ctlrow"></div><div class="v2sub">Area controls</div></div>\n    <div class="v2pane" data-pane="stats"><div class="v2sub">Right now</div></div>\n  </div></aside>\n<div class="v2menu" id="v2menu"><div class="card" role="dialog" aria-modal="true" aria-labelledby="v2mt">\n  <div class="ttl"><i>⚙</i><div><small>The Paper Mill</small><b id="v2mt">Mill</b><div class="state" id="v2state"></div></div></div>\n  <p>Run a recycled paperboard mill from truck to warehouse. Old corrugated boxes arrive by the truckload, get pulped, cleaned and thickened, and your paper machine turns them into giant reels that the winder cuts into rolls for customers. Keep everything flowing, spend your profit on upgrades, and ride out the chaos: breakdowns, fires, storms and the occasional pigeon.</p>\n  <button class="primary go" id="v2go">Play</button>\n  <div class="opts">\n    <button id="v2season">Start season<small>30 days · leaderboard</small></button>\n    <button id="v2free">Free play<small>free upgrades</small></button>\n    <button id="v2board">Leaderboard<small>top seasons</small></button>\n    <button id="v2zen">Zen mode<small>sit back and watch</small></button>\n    <button id="v2colors">New colors<small>new name &amp; brand</small></button>\n    <button id="v2rename">Rename mill<small>make it yours</small></button>\n    <button id="v2reset" class="warn" hidden>Reset mill<small>start over</small></button>\n    <button id="v2fs">Fullscreen<small>hide the browser</small></button>\n  </div>\n  <div class="name" id="v2nameRow" hidden><input id="v2name" maxlength="32" autocomplete="off" spellcheck="false" aria-label="Mill name"><button class="primary" id="v2nameOk">Save</button></div>\n  <div class="foot"><span id="v2ver"></span><span>Sound, labels and speed are in the top bar</span></div>\n</div></div>\n';
+
+/* =========================== v2 app shell wiring =========================== */
+(function(){
+  document.body.classList.add("app");
+  document.body.insertAdjacentHTML("beforeend",HTML_V2);
+  const $$=id=>document.getElementById(id);
+  // move existing pieces into the new shell
+  $$("v2jumpslot").replaceWith($$("jumps"));
+  const pane=k=>document.querySelector('.v2pane[data-pane="'+k+'"]');
+  const shop=$$("shopSec"),chaos=$$("chaosSec");shop.classList.remove("collapsed");chaos.classList.remove("collapsed");
+  pane("shop").appendChild(shop);pane("chaos").appendChild(chaos);
+  document.body.classList.remove("noknobs");
+  ["balance","pmname"].forEach(id=>$$("v2ctlrow").appendChild($$(id)));
+  const sh=$$("viewShadows").closest("label");$$("v2ctlrow").appendChild(sh);$$("v2ctlrow").appendChild($$("viewReset"));
+  pane("ctl").appendChild($$("cards"));
+  pane("stats").appendChild(document.querySelector(".kpis"));
+  const tsub=document.createElement("div");tsub.className="v2sub";tsub.textContent="Last 24 hours";pane("stats").appendChild(tsub);
+  pane("stats").appendChild(document.querySelector(".trendbox"));
+  // sheets
+  const sheet=$$("v2sheet"),tabs=[...document.querySelectorAll(".v2tabs button")],TITLES={shop:"Upgrades",chaos:"Chaos",ctl:"Controls",stats:"Stats"};let cur=null;
+  function openTab(k){cur=k;tabs.forEach(b=>b.setAttribute("aria-pressed",String(b.dataset.tab===k)));document.querySelectorAll(".v2pane").forEach(p=>p.classList.toggle("on",p.dataset.pane===k));
+    $$("v2sheetT").textContent=TITLES[k];sheet.classList.add("open");sheet.setAttribute("aria-hidden","false");document.body.classList.add("sheet-open");closeMore();}
+  function closeSheet(){cur=null;tabs.forEach(b=>b.setAttribute("aria-pressed","false"));sheet.classList.remove("open");sheet.setAttribute("aria-hidden","true");document.body.classList.remove("sheet-open");}
+  tabs.forEach(b=>b.addEventListener("click",()=>cur===b.dataset.tab?closeSheet():openTab(b.dataset.tab)));
+  $$("v2close").addEventListener("click",closeSheet);$$("v2scrim").addEventListener("click",closeSheet);
+  // swipe the sheet down to close (mobile)
+  {let y0=null;sheet.querySelector("header").addEventListener("touchstart",e=>{y0=e.touches[0].clientY;},{passive:true});
+    sheet.querySelector("header").addEventListener("touchend",e=>{if(y0!==null&&e.changedTouches[0].clientY-y0>50)closeSheet();y0=null;});}
+  // top bar: compact numbers, tap to expand the rest
+  const top=$$("v2top"),stats=$$("v2stats");
+  function closeMore(){top.classList.remove("open");stats.setAttribute("aria-expanded","false");}
+  stats.addEventListener("click",()=>{const o=!top.classList.contains("open");top.classList.toggle("open",o);stats.setAttribute("aria-expanded",String(o));});
+  $$("v2slow").addEventListener("click",()=>$$("hud-slow").click());$$("v2fast").addEventListener("click",()=>$$("hud-fast").click());
+  $$("v2sound").addEventListener("click",()=>$$("sound").click());
+  $$("v2dis").addEventListener("click",()=>$$("chaosRandom").click());
+  // equipment labels: one toggle in the top bar (and the same checkbox in the expanded panel)
+  const setLabels=v=>{const b=document.querySelector('#lblMode button[data-m="'+(v?"on":"off")+'"]');if(b)b.click();$$("v2labels").checked=v;$$("v2lblBtn").setAttribute("aria-pressed",String(v));$$("v2lblBtn").lastChild.textContent=v?"Labels":"Labels off";};
+  $$("v2labels").addEventListener("change",e=>setLabels(e.target.checked));$$("v2lblBtn").addEventListener("click",()=>setLabels($$("v2lblBtn").getAttribute("aria-pressed")!=="true"));
+  {const on=document.querySelector('#lblMode button[aria-pressed="true"]');setLabels(!on||on.dataset.m!=="off");}
+  const copy=(a,b)=>{const s=$$(b),d=typeof a==="string"?$$(a):a;if(s&&d&&d.textContent!==s.textContent)d.textContent=s.textContent;};
+  const short=t=>{const m=t.replace(/,/g,"").match(/^([−-]?)\$?([\d.]+)\s*([kKMB]?)/);if(!m)return t;let v=parseFloat(m[2])*({k:1e3,K:1e3,M:1e6,B:1e9}[m[3]]||1);
+    const f=v>=1e6?(v/1e6).toFixed(v>=1e7?1:2)+"M":v>=1e3?(v/1e3).toFixed(v>=1e5?0:1).replace(/\.0$/,"")+"k":Math.round(v)+"";return m[1]+"$"+f;};
+  const set=(id,v)=>{const e=$$(id);if(e.textContent!==v)e.textContent=v;};
+  function sync(){copy("v2mill","millName");set("v2cash",short($$("k-cash").textContent));
+    const pt=$$("k-profit").textContent;set("v2profit",short(pt)+(/day/.test(pt)?"/d":""));
+    const pf=$$("v2profit");pf.style.color=/^[−-]/.test(pf.textContent)?"var(--bad)":"var(--ink)";
+    {const h=((S.t+360)/60)%24,d=new Date(S.date0||Date.now());d.setMinutes(d.getMinutes()+S.t+360);const hh=Math.floor(h),ap=hh<12?"AM":"PM",h12=hh%12||12;
+     set("v2clock",d.toLocaleDateString("en-US",{weekday:"short"})+" "+h12+" "+ap);}
+    document.querySelectorAll("#v2more [data-m]").forEach(el=>copy(el,el.dataset.m));
+    const sp=C.simSpeed+" min/s";if($$("v2speed").textContent!==sp)$$("v2speed").textContent=sp;
+    const so=$$("sound").textContent;if($$("v2sound").textContent!==so)$$("v2sound").textContent=so;
+    const n=S.inc.length,bd=$$("v2bdg");bd.hidden=!n;if(bd.textContent!==String(n))bd.textContent=n;
+    if($$("v2mt").textContent!==$$("millName").textContent)$$("v2mt").textContent=$$("millName").textContent;}
+  setInterval(sync,300);sync();
+  // ---- menu: shown on load and whenever the game is paused ----
+  const menu=$$("v2menu");let first=true;
+  function showMenu(){running=false;$$("play").textContent="Run";$$("play").setAttribute("aria-pressed","false");closeSheet();closeMore();
+    $$("v2go").textContent=first?"Play":"Resume";$$("v2reset").hidden=first;$$("v2nameRow").hidden=true;
+    $$("v2state").textContent=S.season&&S.season.on?`Season · day ${Math.min(30,Math.floor(S.t/1440)+1)} of 30`:S.free?"Free play":first?"":"Paused";
+    $$("v2free").firstChild.textContent=S.free?"Free play: on":"Free play";$$("v2ver").textContent=$$("appVersion").textContent;menu.hidden=false;}
+  function play(){menu.hidden=true;first=false;running=true;$$("play").textContent="Pause";$$("play").setAttribute("aria-pressed","true");}
+  G3.showMenu=showMenu;
+  $$("v2pause").addEventListener("click",showMenu);
+  $$("v2go").addEventListener("click",play);
+  $$("v2season").addEventListener("click",()=>{$$("seasonBtn").click();play();});
+  $$("v2free").addEventListener("click",()=>{$$("freeBtn").click();play();});
+  $$("v2board").addEventListener("click",()=>$$("scoresBtn").click());
+  $$("v2zen").addEventListener("click",()=>{menu.hidden=true;first=false;$$("zenBtn").click();});
+  $$("v2colors").addEventListener("click",()=>{$$("reroll").click();});
+  $$("v2rename").addEventListener("click",()=>{$$("v2nameRow").hidden=false;const i=$$("v2name");i.value=$$("millName").textContent;i.focus();i.select();});
+  const saveName=()=>{const v=$$("v2name").value.replace(/\s+/g," ").trim();if(v){const el=$$("millName");$$("millEdit").click();el.textContent=v;$$("millEdit").click();}$$("v2nameRow").hidden=true;};
+  $$("v2nameOk").addEventListener("click",saveName);$$("v2name").addEventListener("keydown",e=>{if(e.key==="Enter")saveName();if(e.key==="Escape")$$("v2nameRow").hidden=true;});
+  {let arm=0;$$("v2reset").addEventListener("click",()=>{const b=$$("v2reset");if(Date.now()-arm<3000){$$("reset").click();arm=0;b.firstChild.textContent="Reset mill";play();return;}arm=Date.now();b.firstChild.textContent="Tap again to reset";setTimeout(()=>{b.firstChild.textContent="Reset mill";},3000);});}
+  const fsEl=document.documentElement;
+  $$("v2fs").addEventListener("click",()=>{if(document.fullscreenElement)document.exitFullscreen().catch(()=>{});else if(fsEl.requestFullscreen)fsEl.requestFullscreen().catch(()=>{});else alert("On iPhone: tap Share, then Add to Home Screen to play fullscreen.");});
+  if(!fsEl.requestFullscreen&&!fsEl.webkitRequestFullscreen)$$("v2fs").lastChild.textContent="Add to Home Screen";
+  // leaving zen returns to the menu; the old fullscreen exit path is not used in the app shell
+  document.addEventListener("keydown",e=>{if(e.key==="Escape"&&!ZEN){if(cur)closeSheet();else if(top.classList.contains("open"))closeMore();}});
+  showMenu();
+})();
 
 let last=performance.now(),uiAcc=0;
 function frame(now){
