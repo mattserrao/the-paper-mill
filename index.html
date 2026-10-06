@@ -290,7 +290,7 @@ body{margin:0}
 </head>
 <body>
 
-<div class="ver" id="appVersion" aria-label="Version">v1.2.1</div>
+<div class="ver" id="appVersion" aria-label="Version">v1.2.2</div>
 <div class="wrap">
   <header>
     <div class="brand"><span class="logo" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linejoin="round"><circle cx="8.5" cy="12" r="5.5"/><circle cx="8.5" cy="12" r="1.6" fill="currentColor"/><path d="M8.5 6.5H20v11H8.5"/></svg></span>
@@ -1601,7 +1601,7 @@ const G3={on:false,ok:false};
 
   // receiving shed: floor, three walls, door wall rebuilt when docks change
   slab(-34.4,-8,-23.5,-3,M.slab,0.04);
-  const WH=4.6;ribWall(26.4,WH,0.3,-21.2,WH/2,-23.5);ribWall(26.4,WH,0.3,-21.2,WH/2,-3);ribWall(0.3,WH,20.5,-8,WH/2,-13.25);
+  const WH=4.6;ribWall(26.4,WH,0.3,-21.2,WH/2,-23.5);ribWall(26.4,WH,0.3,-21.2,WH/2,-3);ribWall(0.3,WH,10.8,-8,WH/2,-18.1);ribWall(0.3,WH,7.3,-8,WH/2,-6.65);ribWall(0.3,WH-2.3,2.4,-8,2.3+(WH-2.3)/2,-11.5);
   // warehouse: floor + walls
   slab(-49,-23.8,14.8,32.2,M.slab,0.04);
   ribWall(25.2,WH,0.3,-36.4,WH/2,14.8);ribWall(25.2,WH,0.3,-36.4,WH/2,32.2);ribWall(0.3,WH,17.4,-23.8,WH/2,23.5);
@@ -1633,11 +1633,27 @@ const G3={on:false,ok:false};
     buildDoorWall(doorWalls.out,-49,14.8,32.2,Array.from({length:P.shipDoors},(_,d)=>W(0,outY(d))[1]),WH,-1);}
 
   // conveyor to pulper
-  const cA=new THREE.Vector3(-8,0.4,-11.5),cB=new THREE.Vector3(11,3.9,-16.6),cDir=cB.clone().sub(cA),cLen=cDir.length();
+  // walking-floor conveyor inside receiving: forklifts drop bales on the tail end, it carries them out through the wall
+  const WF0=-18.5,WF1=-6.4,WFZ=-11.5,CUTX=-5.2;
+  {const deck=box(WF1-WF0,0.5,2.2,M.steel,(WF0+WF1)/2,0.25,WFZ);const slatTex=(()=>{const c=document.createElement("canvas");c.width=64;c.height=8;const x=c.getContext("2d");x.fillStyle="#6b7383";x.fillRect(0,0,64,8);x.fillStyle="#3e4552";for(let i=0;i<64;i+=8)x.fillRect(i,0,2,8);const t=new THREE.CanvasTexture(c);t.wrapS=THREE.RepeatWrapping;t.repeat.set((WF1-WF0)/1.2,1);return t;})();
+    const slats=new THREE.Mesh(new THREE.PlaneGeometry(WF1-WF0,1.9),new THREE.MeshStandardMaterial({map:slatTex,roughness:0.7}));slats.rotation.x=-Math.PI/2;slats.position.set((WF0+WF1)/2,0.51,WFZ);scene.add(slats);G3.slats=slatTex;
+    [-1.12,1.12].forEach(dz=>box(WF1-WF0,0.6,0.1,M.warn,(WF0+WF1)/2,0.8,WFZ+dz,scene,false));box(0.3,0.9,2.4,M.warn,WF0-0.15,0.45,WFZ,scene,false);}
+  // guillotine wire cutter straddling the line just outside the wall
+  const cutter=new THREE.Group();cutter.position.set(CUTX,0,WFZ);scene.add(cutter);
+  {[-1.35,1.35].forEach(dz=>box(0.45,4.4,0.45,M.brand,0,2.2,dz,cutter));box(0.7,0.7,3.2,M.brand,0,4.6,0,cutter);box(0.9,0.9,0.9,M.ink,0,5.35,0,cutter);
+    box(2.2,0.5,2.4,M.steel,0,0.25,0,cutter);box(0.9,0.2,0.9,M.bad,0.8,0.62,1.5,cutter,false);}
+  const blade=new THREE.Group();cutter.add(blade);box(0.18,0.9,2.5,M.metal,0,0,0,blade);box(0.06,0.12,2.5,new THREE.MeshStandardMaterial({color:0xe8ecf2,metalness:0.9,roughness:0.2}),0,-0.5,0,blade,false);
+  const rod=new THREE.Mesh(new THREE.CylinderGeometry(0.1,0.1,1,8),M.metal);cutter.add(rod);
+  const wireBin=box(1.4,0.8,1.2,M.ink,CUTX+0.3,0.4,WFZ+2.2);
+  const cA=new THREE.Vector3(-4,0.4,-11.5),cB=new THREE.Vector3(11,3.9,-16.6),cDir=cB.clone().sub(cA),cLen=cDir.length();
   const belt=new THREE.Mesh(new THREE.BoxGeometry(cLen,0.3,1.6),M.steel);{const o=belt;o.position.copy(cA).add(cB).multiplyScalar(0.5);
     o.quaternion.setFromUnitVectors(new THREE.Vector3(1,0,0),cDir.clone().normalize());o.castShadow=true;scene.add(o);
     [0.25,0.55,0.85].forEach(f=>{const p=cA.clone().lerp(cB,f);box(0.3,p.y,0.3,M.steel,p.x,p.y/2,p.z-0.6);box(0.3,p.y,0.3,M.steel,p.x,p.y/2,p.z+0.6);});}
-  const beltBales=new THREE.InstancedMesh(new THREE.BoxGeometry(1,0.8,1),M.kraft,12);beltBales.castShadow=true;scene.add(beltBales);
+  const beltBales=new THREE.InstancedMesh(new THREE.BoxGeometry(1.15,0.85,1.15),M.bale||M.kraft,24);beltBales.castShadow=true;scene.add(beltBales);
+  const baleWires=new THREE.InstancedMesh(new THREE.BoxGeometry(0.04,0.88,1.18),M.ink,72);scene.add(baleWires);
+  const PATH=[[WF0+0.7,0.95,WFZ],[CUTX,0.95,WFZ],[cA.x,cA.y+0.55,cA.z],[cB.x,cB.y+0.55,cB.z]],PLEN=[0];for(let i=1;i<PATH.length;i++)PLEN.push(PLEN[i-1]+Math.hypot(PATH[i][0]-PATH[i-1][0],PATH[i][1]-PATH[i-1][1],PATH[i][2]-PATH[i-1][2]));
+  function pathAt(d,out){for(let i=1;i<PATH.length;i++)if(d<=PLEN[i]){const f=(d-PLEN[i-1])/(PLEN[i]-PLEN[i-1]),a=PATH[i-1],b=PATH[i];out.set(a[0]+(b[0]-a[0])*f,a[1]+(b[1]-a[1])*f,a[2]+(b[2]-a[2])*f);return true;}return false;}
+  let wfOff=0,chop=0;
 
   // pulper vat with rotor
   const pulper=new THREE.Group();pulper.position.set(16,0,-13.5);scene.add(pulper);blob(16,-13.5,6.4);blob(34.5,-15,6.6);
@@ -2755,8 +2771,14 @@ const G3={on:false,ok:false};
     bales.count=Math.min(168,Math.ceil(S.yard/12));bales.instanceMatrix.needsUpdate=true;
     rolls.count=Math.min(84,Math.ceil(S.fg/(P.fgCap/84)));rolls.instanceMatrix.needsUpdate=true;
     // conveyor bales
-    let nb=0;if(R.feed>0.3){const L=Math.hypot(180,75);for(let s=V.belt;s<L&&nb<12;s+=30){v3.copy(cA).lerp(cB,s/L);v3.y+=0.55;m4.makeTranslation(v3.x,v3.y,v3.z);beltBales.setMatrixAt(nb++,m4);}}
-    beltBales.count=nb;beltBales.instanceMatrix.needsUpdate=true;
+    // bales ride the walking floor, lose their wires under the guillotine, then climb to the pulper
+    const run=R.feed>0.3,GAP=2.6;if(run)wfOff=(wfOff+rdt*Math.min(2.2,0.35+R.feed*0.03))%GAP;if(run&&G3.slats)G3.slats.offset.x-=rdt*Math.min(2.2,0.35+R.feed*0.03)/1.2;
+    let nb=0,nw=0,under=false;if(run||S.yard>0){for(let d=wfOff;d<PLEN[PLEN.length-1]&&nb<24;d+=GAP){if(!pathAt(d,v3))break;m4.makeTranslation(v3.x,v3.y,v3.z);
+        if(!run&&d>PLEN[1])continue;beltBales.setMatrixAt(nb++,m4);if(Math.abs(v3.x-CUTX)<0.55&&d<PLEN[2])under=true;
+        if(d<PLEN[1]-0.3)for(const dx of [-0.35,0,0.35]){m4.makeTranslation(v3.x+dx,v3.y,v3.z);baleWires.setMatrixAt(nw++,m4);}}}
+    beltBales.count=nb;beltBales.instanceMatrix.needsUpdate=true;baleWires.count=nw;baleWires.instanceMatrix.needsUpdate=true;
+    if(under&&run&&chop<=0)chop=1;if(chop>0){chop=Math.max(0,chop-rdt*2.2);if(chop>0.55&&chop-rdt*2.2<=0.55)for(let k=0;k<8;k++)emit("spark",CUTX,1.2,WFZ+(Math.random()-0.5)*1.6,(Math.random()-0.5)*3,2+Math.random()*2,(Math.random()-0.5)*3,0.5,0.2,"#e8ecf2",1);}
+    const by=chop>0?1.55+2.2*(Math.abs(chop-0.55)/0.55):3.75;blade.position.y=by;rod.position.y=(by+4.3)/2;rod.scale.y=Math.max(0.1,4.3-by);
     rotor.rotation.y=-V.swirl;pulpStock.visible=R.feed>0.3||S.tank>0;
     if(!S.M.pulperDown){disks.rotation.x-=rdt*0.35;if(Math.random()<rdt*5)emitA("steam",23+Math.random()*6,TE+TY+1.9,TZ+(Math.random()<0.5?0.55:-0.55),0,-0.6,0,0.9,0.7,"#ffffff",0.45);}
     // chest
@@ -2794,7 +2816,7 @@ const G3={on:false,ok:false};
     V.lifts.forEach((L,i)=>{const g=lifts[i];
       if(i>=Math.floor(S.effDrv+1e-9)){const [x,z]=W(272+i*15,316);g.position.set(x,0,z);g.rotation.y=0;g.children[0].material=M.off;g.userData.load.visible=false;return;}
       g.children[0].material=M.fork;g.visible=S.M.recvMul!==0||G3.yardFrozen;if(G3.yardFrozen){g.userData.load.visible=false;return;}
-      const dy=inY(L.door%P.doors),pts=[[272,dy],[300+((i*37)%180),150+((i*53)%120)],[512,212],[300+((i*61)%180),150+((i*29)%120)]];
+      const dy=inY(L.door%P.doors),pts=[[272,dy],[300+((i*37)%150),150+((i*53)%120)],[406,215+(i%2?-8:8)],[300+((i*61)%150),150+((i*29)%120)]];
       const a=Math.floor(L.p),t=L.p-a,A=pts[a],B=pts[(a+1)%4];const [x,z]=W(A[0]+(B[0]-A[0])*t,A[1]+(B[1]-A[1])*t),[bx,bz]=W(B[0],B[1]);
       g.position.set(x,0,z);g.rotation.y=Math.atan2(-(bz-z),bx-x);g.userData.load.visible=(a===0||a===2);});
     // clamp trucks + robots
