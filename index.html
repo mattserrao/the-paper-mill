@@ -1013,6 +1013,7 @@ function newGame(){const sp=C.simSpeed;initCtrl();C.simSpeed=sp;initState();BANN
 const LB={url:"",key:""};              // paste the Supabase project URL and anon key here
 const SEASON_DAYS=30,APP_VER=(document.getElementById("appVersion")||{}).textContent||"";
 const lbOn=()=>!!(LB.url&&LB.key);
+const lbHdr=(x={})=>Object.assign({apikey:LB.key},LB.key.startsWith("eyJ")?{Authorization:"Bearer "+LB.key}:{},x);
 function seasonLocks(on){["chaosOn","chaosLvl","chaosClear"].forEach(id=>{const el=$(id);if(el)el.disabled=on;});
   document.querySelectorAll('#chaosgrid input[type=checkbox]').forEach(el=>el.disabled=on);
   $("seasonBtn").textContent=on?"Restart season":"Start season";$("seasonChip").hidden=!on;}
@@ -1043,13 +1044,13 @@ async function submitScore(){const r=S.season&&S.season.result;if(!r)return;cons
   if(!S.season.saved){S.season.saved=1;saveLocal(r,name);}
   if(!lbOn()){setMsg("Saved on this device. The online leaderboard isn't connected yet.","ok");$("so-submit").disabled=true;return;}
   $("so-submit").disabled=true;setMsg("Submitting…");
-  try{const res=await fetch(LB.url.replace(/\/$/,"")+"/rest/v1/scores",{method:"POST",headers:{apikey:LB.key,Authorization:"Bearer "+LB.key,"Content-Type":"application/json",Prefer:"return=minimal"},body:JSON.stringify({...r,name})});
+  try{const res=await fetch(LB.url.replace(/\/$/,"")+"/rest/v1/scores",{method:"POST",headers:lbHdr({"Content-Type":"application/json",Prefer:"return=minimal"}),body:JSON.stringify({...r,name})});
     if(!res.ok){let msg="Couldn't submit ("+res.status+")";try{const j=await res.json();if(j&&j.message)msg=j.message;}catch(e){}throw new Error(msg);}
     setMsg("Submitted! You're on the board.","ok");S.season.submitted=name;openBoard();}
   catch(e){setMsg(String(e.message||e),"bad");$("so-submit").disabled=false;}}
 async function openBoard(){$("lbOv").hidden=false;const L=$("lb-list");L.replaceChildren(Object.assign(document.createElement("div"),{className:"lbempty",textContent:"Loading…"}));
   let rows=[],note="";
-  if(lbOn()){try{const res=await fetch(LB.url.replace(/\/$/,"")+"/rest/v1/scores?select=name,score,tons,incidents,mill,created_at&order=score.desc,tons.desc&limit=100",{headers:{apikey:LB.key,Authorization:"Bearer "+LB.key}});
+  if(lbOn()){try{const res=await fetch(LB.url.replace(/\/$/,"")+"/rest/v1/scores?select=name,score,tons,incidents,mill,created_at&order=score.desc,tons.desc&limit=100",{headers:lbHdr()});
       if(!res.ok)throw new Error(res.status);rows=await res.json();}catch(e){note="Couldn't reach the leaderboard. Showing scores saved on this device.";}}
   else note="Online leaderboard not connected yet. Showing scores saved on this device.";
   if(note){try{rows=JSON.parse(localStorage.getItem("paper-mill-local-scores")||"[]");}catch(e){rows=[];}}
