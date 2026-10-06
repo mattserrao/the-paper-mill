@@ -339,7 +339,7 @@ body{margin:0}
 </head>
 <body>
 
-<div class="ver" id="appVersion" aria-label="Version">v1.18.0</div>
+<div class="ver" id="appVersion" aria-label="Version">v1.18.1</div>
 <div class="wrap">
   <header>
     <div class="brand"><span class="logo" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linejoin="round"><circle cx="8.5" cy="12" r="5.5"/><circle cx="8.5" cy="12" r="1.6" fill="currentColor"/><path d="M8.5 6.5H20v11H8.5"/></svg></span>
@@ -1596,6 +1596,9 @@ const G3={on:false,ok:false};
   const host=$("view3d"),glc=$("gl"),toggle=$("viewToggle");
   if(typeof THREE==="undefined"){toggle.hidden=true;return;}
   let renderer;
+  // if the phone/GPU drops the WebGL context (memory pressure), ask the browser to give it back instead of leaving a frozen picture
+  glc.addEventListener("webglcontextlost",e=>{e.preventDefault();G3.lost=true;console.warn("WebGL context lost; waiting for restore");},false);
+  glc.addEventListener("webglcontextrestored",()=>{G3.lost=false;console.warn("WebGL context restored");},false);
   try{renderer=new THREE.WebGLRenderer({canvas:glc,antialias:true,powerPreference:"high-performance"});}
   catch(e){toggle.hidden=true;return;}
   if(!renderer.getContext()){toggle.hidden=true;return;}
@@ -2476,7 +2479,7 @@ const G3={on:false,ok:false};
       const hb=new THREE.Mesh(hubG,chromeM);hb.position.set(x,0.4,z);g.add(hb);wheels.push(w);}));
     const cargo=[];for(let k=0;k<(kind==="chem"?0:8);k++){const c=kind==="in"?box(0.8,0.72,0.78,M.bale,-2.5+(k%4)*0.9,1.32,(Math.floor(k/4)?0.42:-0.42),g)
       :(()=>{const r=new THREE.Mesh(new THREE.CylinderGeometry(0.4,0.4,0.9,18),ROLLM);r.position.set(-2.5+(k%4)*0.9,1.4,Math.floor(k/4)?0.42:-0.42);r.castShadow=true;g.add(r);return r;})();cargo.push(c);}
-    g.userData={cargo,kind,heading:0,wheels,doorL,doorR,stack:[1.85,2.95,0.85]};scene.add(g);return g;}
+    Object.assign(g.userData,{cargo,kind,heading:0,wheels,doorL,doorR,stack:[1.85,2.95,0.85]});scene.add(g);return g;}   // merge: the chem tanker stores its hose here first
   // OCC trailer yard west of receiving: dropped trailers waiting to be pulled to a door
   slab(-92,-56,-26.4,-7.6,M.asphalt,0.022);slab(-60,-56,-7.6,-5.0,M.asphalt,0.022);
   for(let x=-90;x<=-58;x+=2.7){box(0.12,0.02,4.6,M.lane,x-1.35,0.05,-23.6,scene,false);box(0.12,0.02,4.6,M.lane,x-1.35,0.05,-10.4,scene,false);}
@@ -2505,7 +2508,9 @@ const G3={on:false,ok:false};
   const TSC=()=>clamp(C.simSpeed/10,1,6);   // trucks keep pace with the sim clock at higher game speeds
   // one truck manoeuvres on each apron at a time; the others hold at the apron entrance or on their dock
   function stepRoute(g,L,rdt){const R2=g.userData.route,w=R2[0];if(!w)return;
-    if(w.lock){if(L.lock&&L.lock!==g&&L.lock.visible&&L.lock.userData.route.some(v=>v.lock))return;L.lock=g;}
+    if(w.lock){if(L.lock&&L.lock!==g&&L.lock.visible&&L.lock.userData.route.some(v=>v.lock))return;
+      if(L===LANE.in&&CHEM.want&&CHEM.g!==g&&L.lock!==g)return;   // a waiting chemical tanker goes next, so OCC trucks can't starve it
+      L.lock=g;}
     if(driveTo(g,w,(w.rev?3.2:w.fast?16:7)*TSC(),rdt)){if(w.end)g.userData.done=true;R2.shift();if(L.lock===g&&!R2.some(v=>v.lock))L.lock=null;}}
   function driveTo(g,wp,speed,rdt){const dx=wp.x-g.position.x,dz=wp.z-g.position.z,d=Math.hypot(dx,dz);if(d<0.25)return true;
     const s=Math.min(d,speed*rdt);g.position.x+=dx/d*s;g.position.z+=dz/d*s;let h=Math.atan2(-dz,dx);if(wp.rev)h+=Math.PI;
@@ -2518,11 +2523,11 @@ const G3={on:false,ok:false};
       if(S.inQ.length||!free.length){CHEM.t=4;return;}
       CHEM.d=free[Math.floor(Math.random()*free.length)];CHEM.dz=W(0,inY(CHEM.d))[1];g.visible=true;g.position.set(-150,0,L.inZ);u.heading=0;g.rotation.y=0;u.phase=null;u.route=[];u.done=false;
       u.route=routeFor(g,"in","dock",null,CHEM.dz);u.phase="dock";CHEM.st="in";log("Chemical delivery truck arriving at receiving","");}
-    else if(CHEM.st==="in"){if(u.route.length)stepRoute(g,L,rdt);else{CHEM.st="unload";CHEM.t=9;}}
+    else if(CHEM.st==="in"){CHEM.want=u.route.length&&u.route[0].lock&&L.lock!==g;if(u.route.length)stepRoute(g,L,rdt);else{CHEM.want=false;CHEM.st="unload";CHEM.t=9;}}
     else if(CHEM.st==="unload"){CHEM.t-=rdt;u.heading=lerpAng(u.heading,Math.PI,Math.min(1,rdt*3));g.rotation.y=u.heading;
       g.updateMatrixWorld();_ha.set(-1.05,0.95,0.78);g.localToWorld(_ha);_hb.set(-34.6,1.1,CHEM.dz-1.55);const h=u.hose,dd=_hb.clone().sub(_ha),len=dd.length();
       h.visible=CHEM.t<8.4&&CHEM.t>0.6;h.position.copy(_ha).add(_hb).multiplyScalar(0.5);h.quaternion.setFromUnitVectors(_hup,dd.normalize());h.scale.set(1,len,1);
-      if(CHEM.t<=0||S.inDock[CHEM.d]){h.visible=false;u.route=routeFor(g,"in","leave",null,CHEM.dz);u.phase="leave";CHEM.st="out";}}
+      if(CHEM.t<=0||S.inDock[CHEM.d]){h.visible=false;CHEM.want=false;u.route=routeFor(g,"in","leave",null,CHEM.dz);u.phase="leave";CHEM.st="out";}}
     else if(CHEM.st==="out"){if(u.route.length)stepRoute(g,L,rdt);if(u.done||!u.route.length){g.visible=false;CHEM.st="away";CHEM.t=120+Math.random()*120;}}
     u.wheels.forEach(w=>w.rotation.z=-(u.spin||0));
     if((CHEM.st==="in"||CHEM.st==="out")&&Math.random()<rdt*3){const st=u.stack,a=g.rotation.y,c=Math.cos(a),sn=Math.sin(a);emit("smoke",g.position.x+st[0]*c+st[2]*sn,st[1],g.position.z-st[0]*sn+st[2]*c,0.3,1.4,0,1.4,0.7,"#8c919b",0.45);}}
@@ -3581,7 +3586,8 @@ const G3={on:false,ok:false};
   }
 
   let fpsAcc=0,fpsN=0,fpsT=0,quality=2;
-  G3.frame=function(rdt){
+  G3.frame=function(rdt){try{G3.frameBody(rdt);}catch(e){G3.fErr=(G3.fErr||0)+1;if(G3.fErr<6)console.error('3D frame error',e);try{renderer.render(scene,camera);}catch(_){}}};
+  G3.frameBody=function(rdt){
     if(rdt>0){fpsT+=rdt;fpsN++;if(fpsT>3){const fps=fpsN/fpsT;fpsT=0;fpsN=0;
       if(fps<28&&quality===2&&renderer.shadowMap.enabled){quality=1;renderer.shadowMap.enabled=false;MATS.forEach(m=>m.needsUpdate=true);$("viewShadows").checked=false;}
       else if(fps<24&&quality>=1){quality=0;renderer.setPixelRatio(1);resize();}}}
