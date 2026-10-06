@@ -313,7 +313,7 @@ body{margin:0}
 </head>
 <body>
 
-<div class="ver" id="appVersion" aria-label="Version">v1.10.0</div>
+<div class="ver" id="appVersion" aria-label="Version">v1.11.0</div>
 <div class="wrap">
   <header>
     <div class="brand"><span class="logo" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linejoin="round"><circle cx="8.5" cy="12" r="5.5"/><circle cx="8.5" cy="12" r="1.6" fill="currentColor"/><path d="M8.5 6.5H20v11H8.5"/></svg></span>
@@ -1665,7 +1665,7 @@ const G3={on:false,ok:false};
       pipe([[ax,H2,az],[bx,H2,bz]],0.05,M.metal);for(let k=0;k<=Math.ceil(L/4);k++){const f=k/Math.ceil(L/4);posts.push([ax+(bx-ax)*f,az+(bz-az)*f]);}}
     const W0=SITE.x0,W1=SITE.x1,Z0=SITE.z0,Z1=SITE.z1;
     run(W0,Z0,W1,Z0);run(W0,Z1,W1,Z1);
-    [[Z0,-31],[-27,-6],[-1.6,10.4],[14.6,Z1]].forEach(([a,b])=>run(W0,a,W0,b));
+    [[Z0,-37.4],[-33.6,-31],[-27,-6],[-1.6,10.4],[14.6,Z1]].forEach(([a,b])=>run(W0,a,W0,b));
     [[Z0,30.5],[34.5,Z1]].forEach(([a,b])=>run(W1,a,W1,b));
     const pg=new THREE.CylinderGeometry(0.08,0.08,2.6,6),pm=new THREE.InstancedMesh(pg,M.metal,posts.length),m4=new THREE.Matrix4();
     posts.forEach((p,k)=>{m4.makeTranslation(p[0],1.3,p[1]);pm.setMatrixAt(k,m4);});scene.add(pm);}
@@ -1760,7 +1760,7 @@ const G3={on:false,ok:false};
     [-1.6,1.6].forEach(dx=>box(0.14,1.2,0.14,M.ink,44+dx,0.6,21.5,scene,false));ENV.board={ctx:sc.getContext("2d"),tex:st,last:""};}
   // trees: dense outside the fence, scattered on the lawns inside, kept off every road and building
   {const KEEP=[[-145,-33,-6.5,-1],[-145,-48,10,15],[-55,-6,-26,-1.5],[-69,-22,9,50],[-27,67,1,20],[2,46,-27,-1],[47,67,-29,-13],[47,63,21,32],[18,96,29,36],[64,90,36,58],[68,85,-19,-2],[0,48,-50,-29],
-      [-145,-6,-32,-26],[64,69,-2,20],[-33,-27,-58,-29],[-6,6,-33,-24],[24,42,36,42],[63,70,19,25],[42,46,19,23],[-110,-90,-1,10],[-44,-38,-2,1.5],[30,34,-62,-44],[-405,405,-78,-54]];
+      [-145,-6,-32,-26],[64,69,-2,20],[-33,-27,-58,-29],[-6,6,-33,-24],[24,42,36,42],[63,70,19,25],[42,46,19,23],[-110,-90,-1,10],[-165,-30,-50,-32.6],[-44,-38,-2,1.5],[30,34,-62,-44],[-405,405,-78,-54]];
     const ok=(x,z)=>!KEEP.some(([a,b,c,d])=>x>a-2&&x<b+2&&z>c-2&&z<d+2);
     const pts=[];let guard=0;
     while(pts.length<300&&guard<6000){guard++;const inside=Math.random()<0.35,x=inside?SITE.x0+Math.random()*(SITE.x1-SITE.x0):-200+Math.random()*400,z=inside?SITE.z0+Math.random()*(SITE.z1-SITE.z0):-130+Math.random()*270;
@@ -1828,6 +1828,60 @@ const G3={on:false,ok:false};
       const gp=new THREE.Mesh(new THREE.PlaneGeometry(dz-0.3,1.6),gl);gp.rotation.y=Math.PI/2;gp.position.set(xs+tw+0.02,HH+1.0,(z0+Z1)/2);g.add(gp);}
     g.userData.mats=[wm,gl,em,bm];g.userData.fade=[255,40];scene.add(g);roofs.push(g);}
   G3.roofFade=r=>{roofs.forEach(g=>{const f=g.userData.fade||[170,70],a=clamp((r-f[0])/f[1],0,1);g.visible=a>0.02;g.userData.mats.forEach((m,i)=>m.opacity=i===1?a*0.75:i===2?a*0.35:a);g.children.forEach(c=>c.castShadow=a>0.6);});};
+  // ---- rejects handling: compactor shed by the rail spur, two compactors with roll-off cans swapped by a green hauler once a day ----
+  const CMP={bays:[-44.5,-38.5],dockX:-50.7,canX:-42.6,canY:1.25};
+  slab(-160,-100,-37.2,-33.8,M.asphalt);slab(-100,-47.6,-48.6,-33.2,M.asphalt,0.03);slab(-47.6,-33.6,-48.2,-35,M.slab,0.04);
+  for(let x=-156;x<-102;x+=4)box(2,0.02,0.16,M.lane,x,0.05,-35.5,scene,false);
+  {const g=new THREE.Group(),rm=mat("brand",{transparent:true,roughness:0.6,side:THREE.DoubleSide});
+    ribWall(0.3,5,13.2,-33.7,2.5,-41.6);ribWall(14,5,0.3,-40.6,2.5,-48.1);ribWall(10,1.2,0.25,-40.6,0.6,-41.5);    // back, north and a low divider
+    [[-47.4,-35.1],[-47.4,-48],[-40.6,-35.1]].forEach(([x,z])=>box(0.3,5,0.3,M.steel,x,2.5,z));
+    const roof=new THREE.Mesh(new THREE.BoxGeometry(14.6,0.25,13.8),rm);roof.position.set(-40.6,5.25,-41.6);roof.rotation.x=0.05;roof.castShadow=true;g.add(roof);
+    g.userData.mats=[rm];g.userData.fade=[150,60];scene.add(g);roofs.push(g);
+    // two stationary compactors (ram housing, hopper, power pack) with a rejects chute coming in through the back wall
+    CMP.bays.forEach((bz,k)=>{box(3.8,1.6,2.4,M.brand,-37.6,0.8,bz);box(2.2,1.5,2.8,M.steel,-37.4,2.35,bz);box(2.4,0.12,3.0,M.ink,-37.4,3.1,bz,scene,false);
+      box(1.1,1.0,1.0,M.ink,-35.2,0.5,bz+1.6);box(0.5,0.6,0.15,M.ok,-35.8,1.5,bz+1.25,scene,false);
+      const ch=box(4.6,0.5,0.9,M.steel,-35.4,4.0,bz,scene);ch.rotation.z=-0.32;
+      const c=document.createElement("canvas");c.width=96;c.height=48;const x=c.getContext("2d");x.fillStyle="#f5f2e8";x.fillRect(0,0,96,48);x.fillStyle="#1c2233";x.font="800 30px system-ui,sans-serif";x.textAlign="center";x.fillText("C"+(k+1),48,36);
+      const t=new THREE.CanvasTexture(c);t.encoding=THREE.sRGBEncoding;const pl=new THREE.Mesh(new THREE.PlaneGeometry(1.2,0.6),new THREE.MeshBasicMaterial({map:t}));pl.position.set(-37.6,1.0,bz+1.22);scene.add(pl);});}
+  // roll-off compactor cans (hook end faces west, toward the truck)
+  function compCan(k){const g=new THREE.Group(),cm=new THREE.MeshStandardMaterial({color:lin0(["#2f5f73","#3b6b4f"][k]),roughness:0.6,metalness:0.2});
+    box(6,1.9,2.4,cm,0,0.15,0,g);const lid=new THREE.Mesh(new THREE.CylinderGeometry(1.2,1.2,6,16,1,false,0,Math.PI),cm);lid.rotation.z=Math.PI/2;lid.rotation.x=-Math.PI/2;lid.scale.set(1,1,0.35);lid.position.y=1.1;g.add(lid);
+    for(let x=-2.4;x<=2.4;x+=1.2)box(0.12,1.9,2.5,M.ink,x,0.15,0,g,false);
+    box(0.3,0.3,1.2,M.warn,-3.1,0.5,0,g,false);box(0.2,1.0,0.2,M.warn,-3.05,0.2,0,g,false);[-0.9,0.9].forEach(z=>box(6,0.2,0.2,M.ink,0,-0.85,z,g,false));
+    g.castShadow=true;g.traverse(o=>{if(o.isMesh)o.castShadow=true;});scene.add(g);return g;}
+  CMP.cans=[0,1].map(k=>{const c=compCan(k);c.position.set(CMP.canX,CMP.canY,CMP.bays[k]);return c;});
+  // the green roll-off truck (local +x is forward)
+  const wTruck=new THREE.Group();wTruck.visible=false;scene.add(wTruck);
+  {const gm=new THREE.MeshStandardMaterial({color:lin0("#2e8b57"),roughness:0.45,metalness:0.2});
+    box(9.2,0.4,1.0,M.ink,-0.4,1.0,0,wTruck);box(2.3,2.4,2.4,gm,3.45,2.1,0,wTruck);box(0.1,0.95,2.1,M.wind,4.62,2.65,0,wTruck,false);box(0.3,0.16,1.7,M.warn,3.4,3.38,0,wTruck,false);
+    box(0.4,0.5,2.5,M.metal,4.7,0.95,0,wTruck,false);box(0.9,0.9,0.5,M.metal,2.0,1.3,-0.95,wTruck,false);
+    [-0.62,0.62].forEach(z=>box(6.4,0.24,0.22,gm,-1.3,1.33,z,wTruck,false));
+    const c=document.createElement("canvas");c.width=256;c.height=64;const x=c.getContext("2d");x.fillStyle="#2e8b57";x.fillRect(0,0,256,64);x.fillStyle="#ffffff";x.font="800 26px system-ui,sans-serif";x.textAlign="center";x.fillText("WASTE SERVICES",128,42);
+    const t=new THREE.CanvasTexture(c);t.encoding=THREE.sRGBEncoding;[1,-1].forEach(sd=>{const pl=new THREE.Mesh(new THREE.PlaneGeometry(2.0,0.5),new THREE.MeshBasicMaterial({map:t}));pl.position.set(3.45,1.6,sd*1.21);if(sd<0)pl.rotation.y=Math.PI;wTruck.add(pl);});
+    CMP.wheels=[];[3.4,-1.6,-2.9].forEach(ax=>[-1.12,1.12].forEach(z=>{const w=cylZ(0.55,0.42,M.ink,ax,0.55,z,14,wTruck);CMP.wheels.push(w);}));}
+  const hookArm=new THREE.Group();hookArm.position.set(1.9,1.4,0);wTruck.add(hookArm);box(0.35,2.2,0.35,new THREE.MeshStandardMaterial({color:lin0("#2e8b57")}),0,1.1,0,hookArm,false);box(0.8,0.3,0.3,M.warn,-0.35,2.15,0,hookArm,false);
+  // path legs: polylines walked at a set speed; rev = backing up (truck faces against the direction of travel)
+  const arcP=(cx,cz,r,a0,a1,n=10)=>Array.from({length:n+1},(_,k)=>{const a=(a0+(a1-a0)*k/n)*Math.PI/180;return [cx+r*Math.cos(a),cz+r*Math.sin(a)];});
+  const sCurve=(x0,z0,x1,z1,n=10)=>Array.from({length:n+1},(_,k)=>{const f=k/n,e=f*f*(3-2*f);return [x0+(x1-x0)*f,z0+(z1-z0)*e];});
+  function legsIn(bz){return [{v:9,pts:[[-128,-35.5],[-100,-35.5],...sCurve(-100,-35.5,-80,bz).slice(1),[-64,bz]]},{v:3,pts:arcP(-64,bz-4,4,90,0)},{v:2.2,rev:true,pts:[...arcP(-56,bz-4,4,180,90),[CMP.dockX,bz]]}];}
+  function legsOut(bz){return [{v:8,pts:[[CMP.dockX,bz],[-80,bz],...sCurve(-80,bz,-100,-35.5).slice(1),[-128,-35.5]]}];}
+  const WT={state:"idle",legs:null,li:0,d:0,t:0,bay:0,lastDay:null,carry:null};G3.WT=WT;
+  function legLen(L){if(L.len)return L.len;let a=0;L.cum=[0];for(let i=1;i<L.pts.length;i++){a+=Math.hypot(L.pts[i][0]-L.pts[i-1][0],L.pts[i][1]-L.pts[i-1][1]);L.cum.push(a);}L.len=a;return a;}
+  function legAt(L,d){for(let i=1;i<L.pts.length;i++)if(d<=L.cum[i]||i===L.pts.length-1){const a=L.pts[i-1],b=L.pts[i],f=clamp((d-L.cum[i-1])/Math.max(1e-6,L.cum[i]-L.cum[i-1]),0,1);return [a[0]+(b[0]-a[0])*f,a[1]+(b[1]-a[1])*f,Math.atan2(-(b[1]-a[1]),b[0]-a[0])];}}
+  function runLegs(dt){const L=WT.legs[WT.li];legLen(L);WT.d=Math.min(L.len,WT.d+L.v*dt);const [x,z,h]=legAt(L,WT.d);wTruck.position.set(x,0,z);
+    const ry=L.rev?h+Math.PI:h;let dr=ry-wTruck.rotation.y;dr=Math.atan2(Math.sin(dr),Math.cos(dr));wTruck.rotation.y+=dr*Math.min(1,dt*10);CMP.wheels.forEach(w=>w.rotation.z-=(L.rev?-1:1)*L.v*dt/0.55);
+    if(WT.d>=L.len-1e-3){WT.li++;WT.d=0;if(WT.li>=WT.legs.length)return true;}return false;}
+  const bedPos=()=>wTruck.localToWorld(new THREE.Vector3(-1.6,2.45,0));
+  G3.wasteFrame=rdt=>{if(rdt<=0)return;const dt=rdt*clamp(C.simSpeed/30,1,4),day=Math.floor((S.t+360-600)/1440),bz=CMP.bays[WT.bay],can=CMP.cans[WT.bay];
+    if(WT.lastDay===null)WT.lastDay=day;
+    if(WT.state==="idle"){if(day!==WT.lastDay){WT.lastDay=day;WT.bay=day%2===0?0:1;WT.state="in1";WT.legs=legsIn(CMP.bays[WT.bay]);WT.li=0;WT.d=0;wTruck.visible=true;wTruck.rotation.y=0;
+        log(`Waste hauler is swapping compactor C${WT.bay+1}`,"");}return;}
+    if(WT.state==="in1"||WT.state==="in2"){if(runLegs(dt)){WT.state=WT.state==="in1"?"load":"unload";WT.t=0;if(WT.state==="unload")scene.attach(can);}return;}
+    if(WT.state==="load"||WT.state==="unload"){WT.t+=dt/4.5;const k=clamp(WT.t,0,1),u=WT.state==="load"?k:1-k,b=bedPos();
+      can.position.set(CMP.canX+(b.x-CMP.canX)*u,CMP.canY+(b.y-CMP.canY)*u+Math.sin(Math.PI*u)*0.9,bz);can.rotation.set(0,0,-Math.sin(Math.PI*u)*0.32);hookArm.rotation.z=Math.sin(Math.PI*u)*0.9;
+      if(WT.t>=1){hookArm.rotation.z=0;if(WT.state==="load"){wTruck.attach(can);WT.state="out1";}else{can.position.set(CMP.canX,CMP.canY,bz);can.rotation.set(0,0,0);WT.state="out2";}WT.legs=legsOut(bz);WT.li=0;WT.d=0;}return;}
+    if(WT.state==="out1"||WT.state==="out2"){if(runLegs(dt)){if(WT.state==="out1"){WT.state="away";WT.t=0;wTruck.visible=false;}else{WT.state="idle";wTruck.visible=false;}}return;}
+    if(WT.state==="away"){WT.t+=dt;if(WT.t>6){WT.state="in2";WT.legs=legsIn(bz);WT.li=0;WT.d=0;wTruck.visible=true;wTruck.rotation.y=0;}}};
   const doorWalls={in:new THREE.Group(),out:new THREE.Group()};scene.add(doorWalls.in,doorWalls.out);let doorKey="";
   function buildDoorWall(group,x,z0,z1,doorsZ,h,bayDir){group.clear();const gap=2.6,dh=3.1,edges=[z0,...doorsZ.flatMap(z=>[z-gap/2,z+gap/2]),z1];
     for(let i=0;i<edges.length;i+=2){const a=edges[i],b=edges[i+1];if(b-a>0.05)ribWall(0.3,h,b-a,x,h/2,(a+b)/2,group);}
@@ -2102,7 +2156,7 @@ const G3={on:false,ok:false};
     SPD.acc+=dtm;if(SPD.acc>=2){SPD.acc=0;SPD.hist.push([SPD.tc,SPD.tl,SPD.qc,SPD.ql]);if(SPD.hist.length>180)SPD.hist.shift();}}
   const cClear=lin0("#9fd2ec"),cDirty=lin0("#7a5636"),cTmp=new THREE.Color();
   G3.spiderFrame=(rdt)=>{if(rdt>0)spiderStep(rdt*C.simSpeed);
-    [[SPD.lc,SPD.tc],[SPD.ll,SPD.tl]].forEach(([l,t],i)=>{const w=sealW[i];w.position.y=0.3+2.2*Math.min(1,l);w.material.color.copy(cClear).lerp(cDirty,clamp(Math.sqrt(t/1500),0,1));
+    [[SPD.lc,SPD.tc],[SPD.ll,SPD.tl]].forEach(([l,t],i)=>{const w=sealW[i];w.position.y=0.3+2.2*Math.min(1,l);{const q=clamp((t-45)/200,0,1);w.material.color.copy(cClear).lerp(cDirty,q*q*(3-2*q));}
       const sp=sealSpill[i],k=SPD.spill[i];sp.visible=k>0.02;sp.scale.set(0.8+2.6*k,0.8+2.2*k,1);sp.material.color.copy(w.material.color);
       if(l>=1&&rdt>0&&Math.random()<rdt*12){const a=Math.random()*6.28;emit("drop",26.4+Math.cos(a)*1.5,2.8,(i?-13.9:-17.6)+Math.sin(a)*1.5,Math.cos(a)*1.2,0.5,Math.sin(a)*1.2,0.7,0.26,"#"+w.material.color.clone().convertLinearToSRGB().getHexString(),0.9);}});
     if(G3.spiderWheel)G3.spiderWheel.rotation.x=SPD.v*12;};
@@ -3116,6 +3170,7 @@ const G3={on:false,ok:false};
       const door=tr.state==="wait"?Math.min(1,(35-tr.t)/3)*(tr.t>3?1:tr.t/3):0;ENV.trainCars.forEach(c=>{if(c.userData.door)c.userData.door.position.x=-2.7*door;});
       if(tr.state!=="away"&&Math.random()<rdt*(sp!==0?10:2.5))emit("smoke",tr.g.position.x+ENV.locoStack[0],ENV.locoStack[1],-29,R()*0.5-sp*0.2,2+Math.abs(sp)*0.2,R()*0.5,2.2,1.2+Math.abs(sp)*0.12,"#7d828c",0.5);}
     tr.g.visible=tr.state!=="away";
+    G3.wasteFrame&&G3.wasteFrame(rdt);
     // weather particles
     const P2=WXP,snow=wx==="snow",rain=wx==="rain"||(!snow&&wxK>0.05&&P2.rl.visible);
     P2.p.visible=wxK>0.05&&snow;P2.rl.visible=wxK>0.05&&wx==="rain";
