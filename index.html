@@ -315,7 +315,7 @@ body{margin:0}
 </head>
 <body>
 
-<div class="ver" id="appVersion" aria-label="Version">v1.13.1</div>
+<div class="ver" id="appVersion" aria-label="Version">v1.13.2</div>
 <div class="wrap">
   <header>
     <div class="brand"><span class="logo" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linejoin="round"><circle cx="8.5" cy="12" r="5.5"/><circle cx="8.5" cy="12" r="1.6" fill="currentColor"/><path d="M8.5 6.5H20v11H8.5"/></svg></span>
@@ -1266,7 +1266,7 @@ function draw(rdt){
   while(V.lifts.length<nL)V.lifts.push({p:Math.random()*4,door:V.lifts.length%3});
   V.lifts.length=nL;
   const busy=clamp((R.feed+R.unload)/Math.max(1,C.drivers.v*P.driverRate),0,1);
-  V.lifts.forEach((L,i)=>{L.p=(L.p+rdt*(0.25+busy*0.9))%4;
+  V.lifts.forEach((L,i)=>{L.p=(L.p+rdt*(0.125+busy*0.45))%4;
     const dy=inY(L.door%P.doors);
     const pts=[[272,dy],[300+((i*37)%180),150+((i*53)%120)],[512,212],[300+((i*61)%180),150+((i*29)%120)]];
     const a=Math.floor(L.p),t=L.p-a,A=pts[a],B=pts[(a+1)%4];
@@ -1392,7 +1392,7 @@ function draw(rdt){
   Array.from({length:P.shipDoors},(_,d)=>outY(d)).forEach(y=>{ctx.fillStyle=col.chip;ctx.fillRect(106,y-12,8,24);});
   // loaders
   const nLo=Math.round(C.loaders.v),lb=clamp(R.load/Math.max(1,C.loaders.v*P.loaderRate),0,1);
-  V.rollsAnim+=rdt*(0.2+lb);
+  V.rollsAnim+=rdt*(0.2+lb)*0.5;
   for(let i=0;i<nLo;i++){
     if(i>=Math.floor(S.effHum+1e-9)){const px=374+i*15,py=642;ctx.fillStyle=col.smoke;rr(px-6,py-4,12,8,2);ctx.fill();
       ctx.strokeStyle=col.bad;ctx.lineWidth=1.5;ctx.beginPath();ctx.moveTo(px-4,py-4);ctx.lineTo(px+4,py+4);ctx.moveTo(px+4,py-4);ctx.lineTo(px-4,py+4);ctx.stroke();continue;}
