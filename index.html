@@ -315,7 +315,7 @@ body{margin:0}
 </head>
 <body>
 
-<div class="ver" id="appVersion" aria-label="Version">v1.13.2</div>
+<div class="ver" id="appVersion" aria-label="Version">v1.14.0</div>
 <div class="wrap">
   <header>
     <div class="brand"><span class="logo" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linejoin="round"><circle cx="8.5" cy="12" r="5.5"/><circle cx="8.5" cy="12" r="1.6" fill="currentColor"/><path d="M8.5 6.5H20v11H8.5"/></svg></span>
@@ -344,7 +344,7 @@ body{margin:0}
   </section>
 
   <div class="viewbar">
-    <div class="seg" id="viewToggle" role="group" aria-label="Plant view"><button id="vb3" aria-pressed="true">3D</button><button id="vb2" aria-pressed="false">2D</button></div>
+    <div class="seg" id="viewToggle" role="group" aria-label="Plant view" hidden><button id="vb3" aria-pressed="true">3D</button><button id="vb2" aria-pressed="false">2D</button></div>
     <div class="view3dctl" id="view3dctl"><label class="check"><input type="checkbox" id="viewShadows" checked> Shadows</label><button id="viewReset">Whole mill</button><button id="viewFS">Fullscreen</button><div class="seg lblseg" id="lblMode" role="group" aria-label="Section labels"><span>Labels</span><button data-m="auto" aria-pressed="true" title="Labels fade out when you stop moving the view">Auto</button><button data-m="on" aria-pressed="false">On</button><button data-m="off" aria-pressed="false">Off</button></div><span class="hint"><span class="hint-d">Drag to rotate · two-finger drag, right-drag or arrow keys to move · pinch or scroll to zoom</span><span class="hint-m">Drag to rotate · two fingers to move · pinch to zoom</span></span></div>
   </div>
   <div class="jumps" id="jumps" role="group" aria-label="Go to area"><span>Go to</span><button data-j="trucks">Trucks</button><button data-j="recv">Receiving</button><button data-j="pulp">Stock Prep</button><button data-j="pm">Paper machine</button><button data-j="wd">Winder</button><button data-j="wh">Warehouse</button><button data-j="shop">Maintenance</button>
@@ -1136,7 +1136,7 @@ function setZen(on){if(on===!!ZEN)return;
     if(soundPref==="on"&&!AUDIO.on)setSound(true);running=true;$("play").textContent="Pause";zenPoke();}
   else{const z=ZEN;ZEN=null;S.zen=false;G3.zen=false;document.body.classList.remove("zen");
     CH.on=z.chaos;$("chaosOn").checked=z.chaos;C.hays=z.hays;C.breaks=z.breaks;const el=$("simspeed");el.value=z.speed;el.dispatchEvent(new Event("input"));
-    setFS(false);if(!z.view)setView(false);}
+    setFS(false);}
   $("zenBtn").setAttribute("aria-pressed",String(on));}
 let zenT=0;function zenPoke(){const b=$("zenExit");b.hidden=false;b.classList.add("show");clearTimeout(zenT);zenT=setTimeout(()=>b.classList.remove("show"),2500);}
 $("zenBtn").addEventListener("click",()=>setZen(true));$("hud-zen").addEventListener("click",()=>setZen(true));
@@ -3551,7 +3551,7 @@ const SPEEDS=[1,2,5,10,20,30,60,120];
 function nudgeSpeed(d){const i=SPEEDS.findIndex(v=>v>=C.simSpeed);const n=SPEEDS[clamp((i<0?SPEEDS.length-1:i)+d,0,SPEEDS.length-1)];const el=$("simspeed");el.value=n;el.dispatchEvent(new Event("input"));hudSync();}
 $("hud-slow").addEventListener("click",()=>nudgeSpeed(-1));$("hud-fast").addEventListener("click",()=>nudgeSpeed(1));
 $("vb3").addEventListener("click",()=>setView(true));$("vb2").addEventListener("click",()=>setView(false));
-{let pref="3d";try{pref=localStorage.getItem("paper-mill-view")||"3d";}catch(e){}setView(pref==="3d");}
+setView(true);   // 3D only; the 2D schematic remains only as a fallback when WebGL is unavailable
 
 let last=performance.now(),uiAcc=0;
 function frame(now){
