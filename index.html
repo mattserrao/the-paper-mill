@@ -304,7 +304,7 @@ body{margin:0}
 </head>
 <body>
 
-<div class="ver" id="appVersion" aria-label="Version">v1.4.1</div>
+<div class="ver" id="appVersion" aria-label="Version">v1.5.0</div>
 <div class="wrap">
   <header>
     <div class="brand"><span class="logo" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linejoin="round"><circle cx="8.5" cy="12" r="5.5"/><circle cx="8.5" cy="12" r="1.6" fill="currentColor"/><path d="M8.5 6.5H20v11H8.5"/></svg></span>
@@ -795,7 +795,8 @@ function autoControl(dt){
   }
 }
 
-function newTruck(kind){return kind==="in"?{load:P.truckLoad,x:-70,y:292,wait:0}:{load:0,x:-70,y:455,wait:0};}
+let TRUCKID=0;
+function newTruck(kind){return kind==="in"?{id:++TRUCKID,load:P.truckLoad,x:-70,y:292,wait:0}:{id:++TRUCKID,load:0,x:-70,y:455,wait:0};}
 
 function step(dt){
   S.t+=dt;
@@ -1564,9 +1565,9 @@ const G3={on:false,ok:false};
   slab(-400,400,-300,300,grassM,0);
   slab(-140,-95,-5.2,-2.4,M.asphalt);slab(-140,-95,11.2,13.8,M.asphalt);
   slab(-95,-34.4,-5.2,-2.4,M.asphalt);              // inbound road
-  slab(-46,-34.4,-24.5,-2.4,M.asphalt,0.03);        // receiving apron
+  slab(-53,-34.4,-24.5,-2.4,M.asphalt,0.03);        // receiving apron
   slab(-95,-49,11.2,13.8,M.asphalt);                // outbound road
-  slab(-60,-49,11.2,33,M.asphalt,0.03);             // shipping apron
+  slab(-67,-49,11.2,33,M.asphalt,0.03);             // shipping apron
   slab(-25,64,3,16,M.slab,0.03);                    // machine hall floor
   slab(4,44,-25,-2,M.slab,0.03);                    // stock prep pad
   for(let x=-92;x<-36;x+=4)box(2,0.02,0.16,M.lane,x,0.05,-3.8,scene,false);
@@ -1634,9 +1635,33 @@ const G3={on:false,ok:false};
   // rail spur along the back of receiving, with a train that drops off boxcars
   {const tie=new THREE.InstancedMesh(new THREE.BoxGeometry(0.35,0.14,2.6),wood,170),m4=new THREE.Matrix4();let n=0;for(let x=-139;x<-9&&n<170;x+=0.8){m4.makeTranslation(x,0.07,-29);tie.setMatrixAt(n++,m4);}tie.count=n;scene.add(tie);
     [-29.7,-28.3].forEach(z=>box(131,0.16,0.12,M.metal,-74.5,0.2,z,scene,false));box(0.6,1.1,2.6,M.bad,-9,0.55,-29,scene,false);
-    const T=new THREE.Group();scene.add(T);const car=cloth0b("#9b3d2a");
-    const loco=new THREE.Group();T.add(loco);box(11,2.8,2.7,M.brand,0,2.0,0,loco);box(3,1.2,2.6,M.wind,-3.6,3.6,0,loco,false);box(11.2,0.3,2.8,M.ink,0,0.7,0,loco,false);
-    for(let k=0;k<3;k++){const c=new THREE.Group();c.position.x=-12.5-k*12.5;T.add(c);box(11.5,3.4,2.8,car,0,2.3,0,c);box(2.4,2.6,0.08,M.ink,0,2.1,1.42,c,false);box(11.6,0.3,2.9,M.ink,0,0.55,0,c,false);}
+    const T=new THREE.Group();scene.add(T);const TW=[];
+    const wG=new THREE.CylinderGeometry(0.42,0.42,0.16,14);wG.rotateX(Math.PI/2);
+    function bogie(parent,x){const b=new THREE.Group();b.position.x=x;parent.add(b);box(2.4,0.35,2.2,M.ink,0,0.62,0,b,false);
+      [-0.7,0.7].forEach(ax=>[-0.7,0.7].forEach(z=>{const w=new THREE.Mesh(wG,M.metal);w.position.set(ax,0.42,z);b.add(w);TW.push(w);}));}
+    function coupler(parent,x){box(0.8,0.22,0.3,M.ink,x,0.95,0,parent,false);}
+    // GP-style road switcher: long hood, cab, short hood, walkways with handrails, headlights, horn, exhaust stack
+    const loco=new THREE.Group();T.add(loco);box(13,0.35,3.0,M.ink,0,1.05,0,loco);
+    box(8.0,2.4,2.2,M.brand,-1.6,2.4,0,loco);box(2.4,3.0,2.9,M.brand,3.6,2.75,0,loco);box(2.2,1.6,2.0,M.brand,5.9,2.0,0,loco);
+    box(0.06,0.85,2.4,M.wind,4.82,3.55,0,loco,false);[-1.47,1.47].forEach(z=>box(1.6,0.8,0.05,M.wind,3.6,3.55,z,loco,false));
+    box(2.6,0.12,3.0,M.ink,3.6,4.3,0,loco,false);box(8.2,0.08,0.06,M.warn,-1.5,1.9,1.45,loco,false);box(8.2,0.08,0.06,M.warn,-1.5,1.9,-1.45,loco,false);
+    for(let x=-5.4;x<=2.2;x+=1.9)[-1.45,1.45].forEach(z=>box(0.06,0.85,0.06,M.warn,x,1.5,z,loco,false));
+    [-3.4,-1.2].forEach(x=>{const f=new THREE.Mesh(new THREE.CylinderGeometry(0.55,0.55,0.12,16),M.ink);f.position.set(x,3.62,0);loco.add(f);});
+    const ls=new THREE.Mesh(new THREE.CylinderGeometry(0.16,0.2,0.5,10),M.ink);ls.position.set(1.2,3.8,0);loco.add(ls);
+    [6.95,-5.6].forEach(x=>{const hl=new THREE.Mesh(new THREE.BoxGeometry(0.06,0.18,0.5),new THREE.MeshBasicMaterial({color:0xfff6d6}));hl.position.set(x,2.55,0);loco.add(hl);});
+    box(0.4,0.4,2.8,M.warn,6.6,0.95,0,loco,false);bogie(loco,-4.2);bogie(loco,3.9);coupler(loco,6.8);coupler(loco,-6.8);
+    // consist: two boxcars of finished rolls (doors open while spotted) and a bulkhead flat of OCC bales
+    const cars=[];
+    [["#9b3d2a","box"],["#3d5f8c","box"],["#5b6270","flat"]].forEach(([hex,kind],k)=>{const c=new THREE.Group();c.position.x=-14-k*13;T.add(c);cars.push(c);const cm=cloth0b(hex);
+      box(12.2,0.3,2.9,M.ink,0,1.0,0,c);bogie(c,-4.4);bogie(c,4.4);coupler(c,6.3);coupler(c,-6.3);
+      if(kind==="box"){box(12,3.3,2.8,cm,0,2.8,0,c);for(let x=-5.5;x<=5.5;x+=1.1)[-1.42,1.42].forEach(z=>box(0.06,3.2,0.04,cm,x,2.8,z,c,false));
+        box(12,0.1,0.6,M.ink,0,4.48,0,c,false);[-5.8,5.8].forEach(x=>box(0.08,2.6,0.4,M.ink,x,2.6,1.45,c,false));
+        const dr=box(2.6,2.7,0.08,cloth0b("#5a2318"),0,2.6,1.47,c);c.userData.door=dr;
+        const sg=new THREE.Mesh(new THREE.PlaneGeometry(4,0.5),new THREE.MeshBasicMaterial({map:(()=>{const cc=document.createElement("canvas");cc.width=256;cc.height=32;const x=cc.getContext("2d");x.fillStyle="#ffffff";x.font='800 22px "IBM Plex Mono",monospace';x.fillText(k?"PMRX 220418":"PMRX 104772",8,24);const t=new THREE.CanvasTexture(cc);t.encoding=THREE.sRGBEncoding;return t;})(),transparent:true}));sg.position.set(-3.4,3.9,1.43);c.add(sg);}
+      else{box(12,0.4,2.8,cm,0,1.35,0,c);[-5.8,5.8].forEach(x=>box(0.3,2.8,2.8,cm,x,2.9,0,c));
+        const b2=new THREE.InstancedMesh(new THREE.BoxGeometry(1.3,0.95,1.3),M.bale,24),m4b=new THREE.Matrix4();let n2=0;
+        for(let i=0;i<8;i++)for(let l=0;l<3;l++){m4b.makeTranslation(-4.9+i*1.4,2.05+l*0.97,(l%2?0.35:-0.35));b2.setMatrixAt(n2++,m4b);}b2.castShadow=true;c.add(b2);}});
+    ENV.trainWheels=TW;ENV.trainCars=cars;ENV.locoStack=[1.2,4.1];
     T.position.set(-180,0,-29);ENV.train={g:T,state:"away",t:60};}
   // employee parking lot, cars come and go with the shifts
   {slab(66,88,38,56,M.asphalt,0.02);for(let r=0;r<3;r++)for(let k=0;k<=8;k++)box(0.12,0.02,4.4,M.panelW0||(M.panelW0=mat("panel")),67+k*2.6,0.05,40.6+r*6.2,scene,false);
@@ -1655,7 +1680,7 @@ const G3={on:false,ok:false};
     const bd=new THREE.Mesh(new THREE.PlaneGeometry(3.6,1.8),new THREE.MeshBasicMaterial({map:st,toneMapped:false}));bd.position.set(44,2.1,21.6);scene.add(bd);box(3.8,2,0.12,M.ink,44,2.1,21.5,scene,false);
     [-1.6,1.6].forEach(dx=>box(0.14,1.2,0.14,M.ink,44+dx,0.6,21.5,scene,false));ENV.board={ctx:sc.getContext("2d"),tex:st,last:""};}
   // trees: dense outside the fence, scattered on the lawns inside, kept off every road and building
-  {const KEEP=[[-145,-33,-6.5,-1],[-145,-48,10,15],[-48,-6,-26,-1.5],[-62,-22,9,50],[-27,67,1,20],[2,46,-27,-1],[47,67,-29,-13],[47,63,21,32],[18,96,29,36],[64,90,36,58],[68,85,-19,-2],[0,48,-50,-29],
+  {const KEEP=[[-145,-33,-6.5,-1],[-145,-48,10,15],[-55,-6,-26,-1.5],[-69,-22,9,50],[-27,67,1,20],[2,46,-27,-1],[47,67,-29,-13],[47,63,21,32],[18,96,29,36],[64,90,36,58],[68,85,-19,-2],[0,48,-50,-29],
       [-145,-6,-32,-26],[64,69,-2,20],[-33,-27,-58,-29],[-6,6,-33,-24],[24,42,36,42],[63,70,19,25],[42,46,19,23],[-110,-90,-1,10],[-44,-38,-2,1.5],[30,34,-62,-44],[-405,405,-78,-54]];
     const ok=(x,z)=>!KEEP.some(([a,b,c,d])=>x>a-2&&x<b+2&&z>c-2&&z<d+2);
     const pts=[];let guard=0;
@@ -1669,7 +1694,7 @@ const G3={on:false,ok:false};
       crown.setColorAt(k,c.set(greens[k%greens.length]).convertSRGBToLinear());});
     trunk.castShadow=crown.castShadow=true;scene.add(trunk,crown);}
   // street lamps along the roads, the front of the hall and the parking lot
-  {const L=[];for(let x=-130;x<-40;x+=16){L.push([x,-6.2]);L.push([x,15]);}for(let x=-20;x<=60;x+=16)L.push([x,19.6]);for(let x=68;x<=88;x+=10)L.push([x,57.4]);L.push([60,36]);L.push([46,30]);
+  {const L=[];for(let x=-130;x<-68;x+=16){L.push([x,-6.2]);L.push([x,15]);}for(let x=-20;x<=60;x+=16)L.push([x,19.6]);for(let x=68;x<=88;x+=10)L.push([x,57.4]);L.push([60,36]);L.push([46,30]);
     const pole=new THREE.InstancedMesh(new THREE.CylinderGeometry(0.08,0.1,6,6),M.metal,L.length),head=new THREE.InstancedMesh(new THREE.BoxGeometry(0.9,0.2,0.4),new THREE.MeshBasicMaterial({color:0xffffff}),L.length);
     const poolM=new THREE.MeshBasicMaterial({color:lin0("#ffd98a"),transparent:true,opacity:0,depthWrite:false}),pools=new THREE.InstancedMesh(new THREE.CircleGeometry(4,20),poolM,L.length);
     const m4=new THREE.Matrix4(),rx=new THREE.Matrix4().makeRotationX(-Math.PI/2);
@@ -1917,16 +1942,57 @@ const G3={on:false,ok:false};
   {const m4=new THREE.Matrix4();for(let i=0;i<84;i++){m4.makeTranslation(-45+(i%12)*1.75,0.74,31.2-Math.floor(i/12)*1.7);rolls.setMatrixAt(i,m4);}}
 
   /* ---- vehicles ---- */
-  function makeTruck(kind){const g=new THREE.Group();
-    box(4.6,0.28,1.5,M.steel,-0.3,0.6,0,g);
-    box(1.25,1.75,1.8,M.brand,1.95,1.42,0,g);box(0.08,0.62,1.5,M.wind,2.58,1.82,0,g,false);box(0.5,0.1,1.7,M.brand,1.55,2.33,0,g,false);
-    box(3.6,0.14,1.86,M.wall,-0.95,0.86,0,g,false);
-    [-0.92,0.92].forEach(z=>{const s=new THREE.Mesh(new THREE.BoxGeometry(3.6,1.12,0.06),[M.wall,M.wall,M.wall,M.wall,M.trailer,M.trailer]);s.position.set(-0.95,1.47,z);s.castShadow=true;g.add(s);});
-    box(0.06,1.12,1.86,M.wall,0.83,1.47,0,g,false);box(0.06,1.12,1.86,M.wall,-2.73,1.47,0,g,false);
-    [-2.15,-1.35,1.95].forEach(x=>[-0.82,0.82].forEach(z=>{const w=cylZ(0.4,0.32,M.ink,x,0.4,z,16,g);w.castShadow=false;}));
-    const cargo=[];for(let k=0;k<8;k++){const c=kind==="in"?box(0.8,0.72,0.78,M.bale,-2.3+(k%4)*0.9,1.32,(Math.floor(k/4)?0.42:-0.42),g)
-      :(()=>{const r=new THREE.Mesh(new THREE.CylinderGeometry(0.4,0.4,0.9,18),ROLLM);r.position.set(-2.3+(k%4)*0.9,1.4,Math.floor(k/4)?0.42:-0.42);r.castShadow=true;g.add(r);return r;})();cargo.push(c);}
-    g.userData={cargo,kind,heading:0};scene.add(g);return g;}
+  // tractor-trailer: cab-over-axle tractor with sleeper, grille, lights, mirrors, tanks, stack; 53' style box trailer
+  const chromeM=new THREE.MeshStandardMaterial({color:0xdfe4ea,metalness:0.85,roughness:0.25}),tailM=new THREE.MeshBasicMaterial({color:lin0("#ff3b30")}),headM=new THREE.MeshBasicMaterial({color:lin0("#fff6d6")});
+  const wheelG=new THREE.CylinderGeometry(0.4,0.4,0.3,18);wheelG.rotateX(Math.PI/2);const hubG=new THREE.CylinderGeometry(0.2,0.2,0.32,12);hubG.rotateX(Math.PI/2);
+  function makeTruck(kind){const g=new THREE.Group(),wheels=[];
+    // tractor
+    box(2.1,0.22,1.1,M.ink,1.75,0.62,0,g,false);                                   // frame rails
+    box(1.0,1.55,1.84,M.brand,2.35,1.55,0,g);                                      // cab
+    box(0.6,1.25,1.8,M.brand,1.55,1.42,0,g);                                       // sleeper
+    box(0.7,0.28,1.8,M.brand,1.6,2.17,0,g,false);                                  // fairing
+    box(0.06,0.6,1.55,M.wind,2.86,1.86,0,g,false);                                 // windshield
+    [-0.93,0.93].forEach(z=>box(0.5,0.45,0.05,M.wind,2.45,1.9,z,g,false));          // side windows
+    box(0.12,0.78,1.4,chromeM,2.9,1.02,0,g,false);                                 // grille
+    box(0.18,0.2,1.95,chromeM,2.93,0.55,0,g,false);                                // bumper
+    [-0.7,0.7].forEach(z=>{const h=new THREE.Mesh(new THREE.BoxGeometry(0.05,0.14,0.26),headM);h.position.set(2.97,0.82,z);g.add(h);
+      box(0.06,0.42,0.1,M.ink,2.75,1.95,z*1.45,g,false);});                         // headlights + mirrors
+    [-0.95,0.95].forEach(z=>{const t=new THREE.Mesh(new THREE.CylinderGeometry(0.24,0.24,0.75,14),chromeM);t.rotation.z=Math.PI/2;t.position.set(1.6,0.7,z);g.add(t);}); // fuel tanks
+    const stack=new THREE.Mesh(new THREE.CylinderGeometry(0.07,0.07,1.5,10),chromeM);stack.position.set(1.85,2.15,0.85);g.add(stack);g.userData.stack=[1.85,2.95,0.85];
+    box(0.5,0.08,0.7,M.ink,1.15,0.8,0,g,false);                                    // fifth wheel
+    // trailer
+    box(4.0,0.16,1.8,M.ink,-1.05,0.84,0,g,false);
+    [-0.92,0.92].forEach(z=>{const sd=new THREE.Mesh(new THREE.BoxGeometry(4.0,1.32,0.06),[M.wall,M.wall,M.wall,M.wall,M.trailer,M.trailer]);sd.position.set(-1.05,1.6,z);sd.castShadow=true;g.add(sd);});
+    box(4.0,0.06,1.86,M.wall,-1.05,2.27,0,g,false);box(0.06,1.32,1.86,M.wall,0.95,1.6,0,g,false);
+    const doorL=box(0.05,1.3,0.92,M.wall,-3.07,1.6,-0.46,g,false),doorR=box(0.05,1.3,0.92,M.wall,-3.07,1.6,0.46,g,false);
+    box(0.06,1.3,0.03,M.ink,-3.1,1.6,0,g,false);[-0.82,0.82].forEach(z=>{const t=new THREE.Mesh(new THREE.BoxGeometry(0.05,0.12,0.18),tailM);t.position.set(-3.1,0.98,z);g.add(t);});
+    box(0.12,0.12,1.8,M.ink,-3.0,0.6,0,g,false);                                   // ICC bumper
+    [-0.75,0.75].forEach(z=>{box(0.08,0.55,0.08,M.ink,0.2,0.48,z,g,false);box(0.25,0.06,0.25,M.ink,0.2,0.2,z,g,false);}); // landing gear
+    [-2.95,-2.95].forEach((x,k)=>box(0.04,0.5,0.4,M.ink,-2.2,0.45,k?0.9:-0.9,g,false));   // mud flaps
+    // wheels: steer, tandem drive, tandem trailer
+    [2.35,1.25,0.6,-2.0,-2.75].forEach(x=>[-0.82,0.82].forEach(z=>{const w=new THREE.Mesh(wheelG,M.ink);w.position.set(x,0.4,z);g.add(w);
+      const hb=new THREE.Mesh(hubG,chromeM);hb.position.set(x,0.4,z);g.add(hb);wheels.push(w);}));
+    const cargo=[];for(let k=0;k<8;k++){const c=kind==="in"?box(0.8,0.72,0.78,M.bale,-2.5+(k%4)*0.9,1.32,(Math.floor(k/4)?0.42:-0.42),g)
+      :(()=>{const r=new THREE.Mesh(new THREE.CylinderGeometry(0.4,0.4,0.9,18),ROLLM);r.position.set(-2.5+(k%4)*0.9,1.4,Math.floor(k/4)?0.42:-0.42);r.castShadow=true;g.add(r);return r;})();cargo.push(c);}
+    g.userData={cargo,kind,heading:0,wheels,doorL,doorR,stack:[1.85,2.95,0.85]};scene.add(g);return g;}
+  // trucks drive their own 3D routes on the roads and aprons and back into the docks (the sim only says queue / dock / leave)
+  const LANE={in:{inZ:-3.1,outZ:-4.5,apronX:[-53,-34.4],dockX:-37.45,turnX:-46,qMax:-41.5},out:{inZ:12.9,outZ:12.0,apronX:[-60,-49],dockX:-52.05,turnX:-57.5,qMax:-53.2}};
+  function routeFor(g,kind,phase,t,dz){const L=LANE[kind],x=g.position.x;
+    if(phase==="q")return [];
+    const s=dz>L.inZ?1:-1,lane=x<L.qMax-0.5?[{x:L.qMax,z:L.inZ,fast:true}]:[];
+    const dock=[...lane,{x:Math.max(x,L.qMax)+1.2,z:L.inZ+s*2.2,lock:1},{x:L.turnX+3,z:dz-s*3.2,lock:1},{x:L.turnX,z:dz-s*0.4,lock:1},{x:L.dockX,z:dz,rev:true,lock:1}];
+    if(phase==="dock")return dock;
+    const leave=[{x:L.turnX-1,z:dz,lock:1},{x:L.turnX-1.5,z:L.outZ+(dz>L.outZ?1.5:-1.5),lock:1},{x:L.turnX-4,z:L.outZ,lock:1},{x:-150,z:L.outZ,end:true,fast:true}];
+    // a truck that never made it onto its dock finishes backing in before pulling out again
+    return (g.userData.phase==="dock"&&g.userData.route.length?g.userData.route.slice():g.userData.phase==="q"||!g.userData.phase?dock:[]).concat(leave);}
+  const TSC=()=>clamp(C.simSpeed/10,1,6);   // trucks keep pace with the sim clock at higher game speeds
+  // one truck manoeuvres on each apron at a time; the others hold at the apron entrance or on their dock
+  function stepRoute(g,L,rdt){const R2=g.userData.route,w=R2[0];if(!w)return;
+    if(w.lock){if(L.lock&&L.lock!==g&&L.lock.visible&&L.lock.userData.route.some(v=>v.lock))return;L.lock=g;}
+    if(driveTo(g,w,(w.rev?3.2:w.fast?16:7)*TSC(),rdt)){if(w.end)g.userData.done=true;R2.shift();if(L.lock===g&&!R2.some(v=>v.lock))L.lock=null;}}
+  function driveTo(g,wp,speed,rdt){const dx=wp.x-g.position.x,dz=wp.z-g.position.z,d=Math.hypot(dx,dz);if(d<0.25)return true;
+    const s=Math.min(d,speed*rdt);g.position.x+=dx/d*s;g.position.z+=dz/d*s;let h=Math.atan2(-dz,dx);if(wp.rev)h+=Math.PI;
+    g.userData.heading=lerpAng(g.userData.heading,h,Math.min(1,rdt*(wp.rev?3:5)));g.rotation.y=g.userData.heading;g.userData.spin=(g.userData.spin||0)+(wp.rev?-1:1)*s/0.4;return false;}
   const truckPool={in:[],out:[]},truckMap=new Map();
   function cage(g){[[-0.45,-0.36],[-0.45,0.36],[0.3,-0.36],[0.3,0.36]].forEach(([x,z])=>box(0.07,1.0,0.07,M.ink,x,1.4,z,g,false));box(0.85,0.07,0.8,M.ink,-0.07,1.92,0,g,false);
     box(0.32,0.32,0.32,M.ink,-0.15,1.05,0,g,false);[[-0.35,-0.42],[-0.35,0.42],[0.35,-0.42],[0.35,0.42]].forEach(([x,z])=>cylZ(0.2,0.16,M.ink,x,0.2,z,12,g));}
@@ -2018,11 +2084,19 @@ const G3={on:false,ok:false};
   /* ---- per-frame update from sim state ---- */
   const m4=new THREE.Matrix4(),q=new THREE.Quaternion(),v3=new THREE.Vector3(),one=new THREE.Vector3(1,1,1),tmp=new THREE.Vector3();
   function lerpAng(a,b,t){let d=b-a;while(d>Math.PI)d-=2*Math.PI;while(d<-Math.PI)d+=2*Math.PI;return a+d*t;}
-  function placeTruck(t,role,rdt){let g=truckMap.get(t);
-    if(!g){const pool=truckPool[t.kind||role.kind];g=pool.find(o=>!o.userData.busy)||(()=>{const o=makeTruck(t.kind||role.kind);pool.push(o);return o;})();
-      g.userData.busy=true;truckMap.set(t,g);const [x,z]=W(t.x+23,t.y);g.position.set(x,0,z);g.userData.heading=role.leaving?Math.PI:0;}
-    g.userData.seen=true;g.visible=true;const [x,z]=W(t.x+23,t.y);g.position.set(x,0,z);
-    g.userData.heading=lerpAng(g.userData.heading,role.leaving?Math.PI:0,Math.min(1,rdt*4));g.rotation.y=g.userData.heading;
+  function placeTruck(t,role,rdt){const key=t.id??t;let g=truckMap.get(key);const kind=t.kind||role.kind,L=LANE[kind];
+    if(!g){const pool=truckPool[kind];g=pool.find(o=>!o.userData.busy)||(()=>{const o=makeTruck(kind);pool.push(o);return o;})();
+      g.userData.busy=true;truckMap.set(key,g);g.position.set(-110,0,L.inZ);g.userData.heading=0;g.userData.phase=null;g.userData.route=[];g.userData.done=false;}
+    g.userData.seen=true;g.visible=true;
+    const phase=role.leaving?"leave":role.docked?"dock":"q",dz=role.leaving?W(0,t.ty)[1]:role.docked?W(0,kind==="in"?inY(role.d):outY(role.d))[1]:0;
+    if(phase!==g.userData.phase){g.userData.route=routeFor(g,kind,phase,t,dz);g.userData.phase=phase;}
+    const R2=g.userData.route;
+    if(phase==="q"){const qx=L.qMax-(role.k||0)*7;driveTo(g,{x:qx,z:L.inZ},Math.min(16,Math.max(3,Math.abs(qx-g.position.x)*1.2))*TSC(),rdt);}
+    else if(R2.length)stepRoute(g,L,rdt);
+    else if(phase==="dock"){g.userData.heading=lerpAng(g.userData.heading,Math.PI,Math.min(1,rdt*3));g.rotation.y=g.userData.heading;}
+    g.userData.wheels.forEach(w=>w.rotation.z=-(g.userData.spin||0));
+    const open=phase==="dock"&&!R2.length;g.userData.doorL.rotation.y=open?-1.4:0;g.userData.doorR.rotation.y=open?1.4:0;
+    if(R2.length&&Math.random()<rdt*3){const st=g.userData.stack,a=g.rotation.y,c=Math.cos(a),sn=Math.sin(a);emit("smoke",g.position.x+st[0]*c+st[2]*sn,st[1],g.position.z-st[0]*sn+st[2]*c,0.3,1.4,0,1.4,0.7,"#8c919b",0.45);}
     const frac=g.userData.kind==="in"?t.load/P.truckLoad:t.load/P.truckRolls,n=Math.round(clamp(frac,0,1)*8);
     g.userData.cargo.forEach((c,k)=>c.visible=k<n);}
   let lastLabel=0;
@@ -2342,7 +2416,9 @@ const G3={on:false,ok:false};
     else if(mode==="fix"){const s=Math.sin(t*13);lean=-0.85;arm=[-1.1+0.55*s,-0.8];leg=0.5;u.tool.visible=true;}
     else if(mode==="type"){const s=Math.sin(t*14);arm=[-1.05+0.08*s,-1.05-0.08*s];lean=-0.12;}
     else if(mode==="pull"){const s=Math.sin(t*5);arm=[-1.45+0.2*s,-1.45+0.2*s];lean=0.38+0.12*s;leg=0.45;}
-    else if(mode==="phone"){const s=Math.sin(t*7.5);leg=0.42*s;arm=[-0.4*s,-2.75];lean=-0.04;bob=Math.abs(s)*0.04;}
+    else if(mode==="phone"||mode==="phoneS"){const walkk=mode==="phone",s=walkk?Math.sin(t*7.5):0,texting=((t/5)|0)%2===1;leg=0.42*s;lean=texting?0.12:-0.04;bob=Math.abs(s)*0.04;
+      arm=texting?[-1.25+0.04*Math.sin(t*18),-1.25-0.04*Math.sin(t*16)]:[-0.4*s,-2.75];
+      if(u.phoneM){if(texting){u.phoneM.position.set(0.5,0.5,0);u.phoneM.rotation.set(0,0,-1.1);}else{u.phoneM.position.set(0.05,1.0,0.36);u.phoneM.rotation.set(0,0,0);}}}
     else if(mode==="point"){arm=[-2.1+0.15*Math.sin(t*3),0.05];lean=0.05;}
     else if(mode==="spear"){const s=Math.sin(t*5.7);arm=[-2.05+0.25*s,-1.85+0.25*s];lean=-0.15-0.15*s;leg=0.45;}
     else if(mode==="air"){arm=[-1.45+0.06*Math.sin(t*22),-1.25];lean=-0.12;leg=0.3;u.noz.visible=true;}
@@ -2606,7 +2682,7 @@ const G3={on:false,ok:false};
   function cloth0(h){return new THREE.MeshStandardMaterial({color:lin0(h),roughness:0.6});}
   const pool=[];
   function person(suit,hat,phone){let w=pool.find(p=>!p.visible&&!p.userData.busy&&p.userData.suit===suit);
-    if(!w){w=worker(suit,hat);w.userData.suit=suit;pool.push(w);if(phone){const ph=new THREE.Mesh(new THREE.BoxGeometry(0.07,0.2,0.11),M.ink);ph.position.set(0.05,1.0,0.36);w.userData.torso.add(ph);}}
+    if(!w){w=worker(suit,hat);w.userData.suit=suit;pool.push(w);if(phone){const ph=new THREE.Mesh(new THREE.BoxGeometry(0.07,0.2,0.11),M.ink);ph.position.set(0.05,1.0,0.36);w.userData.torso.add(ph);w.userData.phoneM=ph;}}
     w.userData.busy=true;w.visible=true;w.position.set(OFF.door[0],0,OFF.door[1]);return w;}
   function free(w){w.visible=false;w.userData.busy=false;}
   const AIS=16.5,parties=[];let ambT={tour:25,mgr:45,office:8,birds:15,food:35};
@@ -2625,14 +2701,14 @@ const G3={on:false,ok:false};
     let stopped=false;
     if(moveP(L,pt[0],pt[1],P2.kind==="mgr"?1.9:1.7,rdt)){if(P2.wait<(pt[2]||0)){P2.wait+=rdt;stopped=true;}else{P2.i++;P2.wait=0;}}
     const a=L.rotation.y,fx=Math.cos(a),fz=-Math.sin(a);
-    if(stopped){face(L,L.position.x,zc,rdt);pose(L,pt[3]||"idle",now);}else pose(L,P2.walk,now);
+    if(stopped){face(L,L.position.x,zc,rdt);pose(L,pt[3]==="phone"?"phoneS":(pt[3]||"idle"),now);}else pose(L,P2.walk,now);
     P2.members.slice(1).forEach((m,k)=>{let tx,tz;
       if(P2.kind==="mgr"){tx=L.position.x-fz*1.0;tz=L.position.z+fx*1.0;}
       else if(stopped){const ang=(k/(P2.members.length-2||1)-0.5)*2.2;tx=L.position.x+Math.sin(ang)*2.1;tz=L.position.z+0.9+Math.cos(ang)*0.9;}
       else{const row=Math.floor(k/2)+1,side=k%2?0.55:-0.55;tx=L.position.x-fx*row*1.0-fz*side;tz=L.position.z-fz*row*1.0+fx*side;}
       const arr=moveP(m,tx,tz,P2.kind==="mgr"?2.2:2.6,rdt);
-      if(arr&&stopped){face(m,L.position.x+(P2.kind==="tour"?0:0),zc,rdt);pose(m,P2.kind==="mgr"?"phone":(k%3===0?"inspect":"idle"),now);}
-      else if(arr&&P2.kind==="mgr"){m.rotation.y=L.rotation.y;pose(m,"phone",now);}else pose(m,P2.walk==="phone"?"phone":"walk",now);});
+      if(arr&&stopped){face(m,L.position.x+(P2.kind==="tour"?0:0),zc,rdt);pose(m,P2.kind==="mgr"?"phoneS":(k%3===0?"inspect":"idle"),now);}
+      else if(arr&&P2.kind==="mgr"){m.rotation.y=L.rotation.y;pose(m,"phoneS",now);}else pose(m,P2.walk==="phone"?"phone":"walk",now);});
     return true;}
   // birds: a little flock crossing the hall under the roof
   const BIRDS=[];let flock=null;const birdM=new THREE.MeshStandardMaterial({color:lin0("#3b3f4a"),roughness:0.8,side:THREE.DoubleSide});
@@ -2683,11 +2759,15 @@ const G3={on:false,ok:false};
     const occ=hr<5?0.3:hr<7.5?0.3+0.65*ss((hr-5)/2.5):hr<17?0.95:hr<19.5?0.95-0.55*ss((hr-17)/2.5):0.4;
     const nC=Math.round(occ*ENV.cars.length);ENV.cars.forEach((c,k)=>c.g.visible=k<nC);
     // the train: arrives, sits while the cars are unloaded, then leaves
-    const tr=ENV.train;if(rdt>0){tr.t-=rdt;
-      if(tr.state==="away"&&tr.t<=0){tr.state="in";tr.g.position.x=-180;}
-      else if(tr.state==="in"){tr.g.position.x=Math.min(-15.5,tr.g.position.x+9*rdt);if(tr.g.position.x>=-15.5){tr.state="wait";tr.t=35;}}
+    // the train eases in, spots its cars at the mill, opens the boxcar doors, then pulls back out
+    const tr=ENV.train;if(rdt>0){tr.t-=rdt;tr.v=tr.v||0;const STOP=-17,AW=-200;
+      if(tr.state==="away"&&tr.t<=0){tr.state="in";tr.g.position.x=AW;tr.v=8;}
+      else if(tr.state==="in"){const d=STOP-tr.g.position.x;tr.v=Math.min(8,Math.sqrt(Math.max(0,2*1.1*d))+0.15);tr.g.position.x=Math.min(STOP,tr.g.position.x+tr.v*rdt);if(d<0.02){tr.state="wait";tr.t=35;tr.v=0;}}
       else if(tr.state==="wait"&&tr.t<=0)tr.state="outb";
-      else if(tr.state==="outb"){tr.g.position.x-=9*rdt;if(tr.g.position.x<-185){tr.state="away";tr.t=80+Math.random()*80;}}}
+      else if(tr.state==="outb"){tr.v=Math.min(8,tr.v+1.2*rdt);tr.g.position.x-=tr.v*rdt;if(tr.g.position.x<AW-5){tr.state="away";tr.t=80+Math.random()*80;}}
+      const sp=tr.state==="outb"?-tr.v:tr.state==="in"?tr.v:0;ENV.trainWheels.forEach(w=>w.rotation.z-=sp*rdt/0.42);
+      const door=tr.state==="wait"?Math.min(1,(35-tr.t)/3)*(tr.t>3?1:tr.t/3):0;ENV.trainCars.forEach(c=>{if(c.userData.door)c.userData.door.position.x=-2.7*door;});
+      if(tr.state!=="away"&&Math.random()<rdt*(sp!==0?10:2.5))emit("smoke",tr.g.position.x+ENV.locoStack[0],ENV.locoStack[1],-29,R()*0.5-sp*0.2,2+Math.abs(sp)*0.2,R()*0.5,2.2,1.2+Math.abs(sp)*0.12,"#7d828c",0.5);}
     tr.g.visible=tr.state!=="away";
     // weather particles
     const P2=WXP,snow=wx==="snow",rain=wx==="rain"||(!snow&&wxK>0.05&&P2.rl.visible);
@@ -2847,10 +2927,12 @@ const G3={on:false,ok:false};
     crewUpdate(rdt,now);
     // trucks
     truckMap.forEach(g=>g.userData.seen=false);
-    S.inQ.forEach(t=>placeTruck(t,{kind:"in"},rdt));S.inDock.forEach(t=>t&&placeTruck(t,{kind:"in"},rdt));
-    S.outQ.forEach(t=>placeTruck(t,{kind:"out"},rdt));S.outDock.forEach(t=>t&&placeTruck(t,{kind:"out"},rdt));
+    S.inQ.forEach((t,k)=>placeTruck(t,{kind:"in",k},rdt));S.inDock.forEach((t,d)=>t&&placeTruck(t,{kind:"in",docked:true,d},rdt));
+    S.outQ.forEach((t,k)=>placeTruck(t,{kind:"out",k},rdt));S.outDock.forEach((t,d)=>t&&placeTruck(t,{kind:"out",docked:true,d},rdt));
     S.leaving.forEach(t=>placeTruck(t,{kind:t.kind,leaving:true},rdt));
-    truckMap.forEach((g,t)=>{if(!g.userData.seen){g.visible=false;g.userData.busy=false;truckMap.delete(t);}});
+    truckMap.forEach((g,t)=>{if(g.userData.seen)return;
+      if(g.userData.phase==="leave"&&!g.userData.done&&g.userData.route.length){stepRoute(g,LANE[g.userData.kind],rdt);g.userData.wheels.forEach(w=>w.rotation.z=-(g.userData.spin||0));return;}
+      g.visible=false;g.userData.busy=false;truckMap.delete(t);});
     // stock
     bales.count=Math.min(168,Math.ceil(S.yard/12));bales.instanceMatrix.needsUpdate=true;
     rolls.count=Math.min(84,Math.ceil(S.fg/(P.fgCap/84)));rolls.instanceMatrix.needsUpdate=true;
