@@ -313,7 +313,7 @@ body{margin:0}
 </head>
 <body>
 
-<div class="ver" id="appVersion" aria-label="Version">v1.12.0</div>
+<div class="ver" id="appVersion" aria-label="Version">v1.12.1</div>
 <div class="wrap">
   <header>
     <div class="brand"><span class="logo" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linejoin="round"><circle cx="8.5" cy="12" r="5.5"/><circle cx="8.5" cy="12" r="1.6" fill="currentColor"/><path d="M8.5 6.5H20v11H8.5"/></svg></span>
@@ -1804,7 +1804,7 @@ const G3={on:false,ok:false};
   function sawRoof(x0,x1,z0,z1,y){const g=new THREE.Group(),n=Math.max(3,Math.round((x1-x0)/4.2)),tw=(x1-x0)/n,m=mat("brand",{transparent:true,roughness:0.55,side:THREE.DoubleSide}),gl=mat("g-glass",{transparent:true,roughness:0.15,metalness:0.4}),em=new THREE.LineBasicMaterial({color:lin0("#1c2233"),transparent:true,opacity:0.35});
     for(let i=0;i<n;i++){const s=new THREE.Shape();s.moveTo(0,0);s.lineTo(tw,0);s.lineTo(tw,1.7);s.lineTo(0,0);
       const geo=new THREE.ExtrudeGeometry(s,{depth:z1-z0,bevelEnabled:false});const o=new THREE.Mesh(geo,m);o.position.set(x0+i*tw,y,z0);o.castShadow=true;g.add(o);edges(o,em,20);
-      const glass=new THREE.Mesh(new THREE.PlaneGeometry(z1-z0-0.2,1.3),gl);glass.rotation.y=Math.PI/2;glass.position.set(x0+(i+1)*tw+0.02,y+0.8,(z0+z1)/2);g.add(glass);}
+      const glass=new THREE.Mesh(new THREE.PlaneGeometry(z1-z0-0.2,1.3),gl);glass.rotation.y=Math.PI/2;glass.position.set(x0+(i+1)*tw+0.07,y+0.8,(z0+z1)/2);g.add(glass);}
     g.userData.mats=[m,gl,em];scene.add(g);roofs.push(g);return g;}
   box2(-34.4,-8,-23.5,-3);box2(-49,-23.8,14.8,32.2);skirt(-2,1.2,64,1.2,2.4);skirt(65.2,2.4,65.2,16.2,2.4);
   sawRoof(-34.6,-7.85,-23.65,-2.85,WH);sawRoof(-49.15,-23.65,14.65,32.35,WH);
@@ -1827,9 +1827,16 @@ const G3={on:false,ok:false};
     for(let i=0;i<nA+nB;i++){const bay=i<nA,tw=bay?(XA-X0)/nA:(X1-XA)/nB,xs=bay?X0+i*tw:XA+(i-nA)*tw,z0=bay?ZA:Z0,dz=Z1-z0;
       const sh=new THREE.Shape();sh.moveTo(0,0);sh.lineTo(tw,0);sh.lineTo(tw,2.1);sh.lineTo(0,0);
       const o=new THREE.Mesh(new THREE.ExtrudeGeometry(sh,{depth:dz,bevelEnabled:false}),bm);o.position.set(xs,HH,z0);add(o,true);
-      const gp=new THREE.Mesh(new THREE.PlaneGeometry(dz-0.3,1.6),gl);gp.rotation.y=Math.PI/2;gp.position.set(xs+tw+0.02,HH+1.0,(z0+Z1)/2);g.add(gp);}
+      const gp=new THREE.Mesh(new THREE.PlaneGeometry(dz-0.3,1.6),gl);gp.rotation.y=Math.PI/2;gp.position.set(xs+tw+0.07,HH+1.0,(z0+Z1)/2);g.add(gp);}
     g.userData.mats=[wm,gl,em,bm];g.userData.fade=[255,40];scene.add(g);roofs.push(g);}
-  G3.roofFade=r=>{roofs.forEach(g=>{const f=g.userData.fade||[170,70],a=clamp((r-f[0])/f[1],0,1);g.visible=a>0.02;g.userData.mats.forEach((m,i)=>m.opacity=i===1?a*0.75:i===2?a*0.35:a);g.children.forEach(c=>c.castShadow=a>0.6);});};
+  // roofs and the hall shell fade out as you zoom in. Fully shown, they render opaque (no transparency sorting); while fading they
+  // stop writing depth, so overlapping roof panels can't hide each other in a draw-order-dependent way (that made them flicker
+  // when the camera moves, which zen mode does all the time)
+  G3.roofFade=r=>{roofs.forEach(g=>{const f=g.userData.fade||[170,70],a=clamp((r-f[0])/f[1],0,1),solid=a>0.995;g.visible=a>0.02;
+    if(g.userData.a!==undefined&&Math.abs(g.userData.a-a)<0.002)return;g.userData.a=a;
+    g.userData.mats.forEach((m,i)=>{const glassy=i===1||i===2,tr=glassy||!solid;if(m.transparent!==tr){m.transparent=tr;m.needsUpdate=true;}m.depthWrite=solid&&!glassy;
+      m.opacity=i===1?a*0.75:i===2?a*0.35:a;});
+    const sh=a>0.6;if(g.userData.sh!==sh){g.userData.sh=sh;g.children.forEach(c=>c.castShadow=sh);}});};
   // ---- rejects handling: compactor shed by the rail spur, two compactors with roll-off cans swapped by a green hauler once a day ----
   const CMP={bays:[-44.5,-38.5],dockX:-50.7,canX:-42.6,canY:1.25};
   slab(-160,-100,-37.2,-33.8,M.asphalt);slab(-100,-47.6,-48.6,-33.2,M.asphalt,0.03);slab(-47.6,-33.6,-48.2,-35,M.slab,0.04);
