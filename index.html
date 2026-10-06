@@ -313,7 +313,7 @@ body{margin:0}
 </head>
 <body>
 
-<div class="ver" id="appVersion" aria-label="Version">v1.11.0</div>
+<div class="ver" id="appVersion" aria-label="Version">v1.12.0</div>
 <div class="wrap">
   <header>
     <div class="brand"><span class="logo" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linejoin="round"><circle cx="8.5" cy="12" r="5.5"/><circle cx="8.5" cy="12" r="1.6" fill="currentColor"/><path d="M8.5 6.5H20v11H8.5"/></svg></span>
@@ -596,6 +596,8 @@ const AUDIO=(()=>{
       const lfo=ctx.createOscillator(),lg=ctx.createGain();lfo.frequency.value=26;lg.gain.value=0.25;lfo.connect(lg);lg.connect(f.g.gain);lfo.start(t);lfo.stop(t+1.8);
       nz(t+0.05,0.25,sfxBus,0.35,"highpass",1800);for(let k=0;k<14;k++)nz(t+0.3+Math.random()*1.4,0.05,sfxBus,0.08,"bandpass",2500+Math.random()*2000,3);},
     water:t=>{nz(t,0.9,sfxBus,0.35,"bandpass",1100,0.7,0.02);for(let k=0;k<10;k++){const s=t+0.1+Math.random()*0.8,f=300+Math.random()*500;tone(s,sfxBus,"sine",f,0.08,0.06,0.003,f*1.8);}},
+    steam:t=>{nz(t,0.25,sfxBus,0.4,"highpass",1200);const a=nz(t+0.05,4.2,sfxBus,0.55,"bandpass",2600,0.45,0.08);a.fl.frequency.setValueAtTime(2600,t+2.5);a.fl.frequency.exponentialRampToValueAtTime(1300,t+4.2);
+      const b=nz(t+0.05,4.0,sfxBus,0.3,"lowpass",500,0.6,0.1);tone(t,sfxBus,"sine",70,0.6,0.4,0.004,40);},
     siren:t=>{const o=ctx.createOscillator(),g=ctx.createGain();o.type="sine";for(let k=0;k<4;k++){o.frequency.setValueAtTime(650,t+k*0.6);o.frequency.linearRampToValueAtTime(1250,t+k*0.6+0.3);o.frequency.linearRampToValueAtTime(650,t+k*0.6+0.6);}
       g.gain.setValueAtTime(0.0001,t);g.gain.exponentialRampToValueAtTime(0.09,t+0.05);g.gain.setValueAtTime(0.09,t+2.2);g.gain.exponentialRampToValueAtTime(0.0001,t+2.5);o.connect(g);g.connect(sfxBus);o.start(t);o.stop(t+2.6);},
     thunder:t=>{nz(t,0.12,sfxBus,0.7,"highpass",1500);const r=nz(t+0.05,3.2,sfxBus,0.8,"lowpass",900,0.5,0.03);r.fl.frequency.exponentialRampToValueAtTime(80,t+3.2);tone(t+0.05,sfxBus,"sine",55,2.0,0.5,0.01,30);},
@@ -606,7 +608,7 @@ const AUDIO=(()=>{
     win:t=>{[60,64,67,72,76,79,84].forEach((m,k)=>tone(t+k*0.11,sfxBus,"triangle",mtof(m),0.5,0.14));},
     lose:t=>{[[55,0.5],[54,0.5],[53,0.5],[52,1.4]].reduce((tt,[m,d])=>{const o=tone(tt,sfxBus,"sawtooth",mtof(m),d,0.08,0.02);if(d>1)o.o.frequency.linearRampToValueAtTime(mtof(m)*0.97,tt+d);return tt+d;},t);},
   };
-  const EVSFX={shaft:"clunk",fabric:"clunk",felt:"clunk",winderdown:"clunk",lwplug:"clunk",cscreen:"clunk",fscreen:"clunk",lcplug:"water",hdblow:"water",boiler:"clunk",permit:"alarm",thkblow:"water",wrap:"snap",flares:"fire",ragger:"clunk",dryerfire:"fire",balefire:"fire",overflow:"water",chestover:"water",roof:"water",fight:"siren",highway:"siren",lightning:"thunder",tornado:"wind",beaver:"chomp",runner:"whistle"};
+  const EVSFX={shaft:"clunk",fabric:"clunk",felt:"clunk",winderdown:"clunk",lwplug:"clunk",cscreen:"clunk",fscreen:"clunk",lcplug:"water",hdblow:"water",boiler:"steam",permit:"alarm",thkblow:"water",wrap:"snap",flares:"fire",ragger:"clunk",dryerfire:"fire",balefire:"fire",overflow:"water",chestover:"water",roof:"water",fight:"siren",highway:"siren",lightning:"thunder",tornado:"wind",beaver:"chomp",runner:"whistle"};
   function sfx(name,gap=1200){if(!ctx||!on||!FX[name])return;const now=performance.now();if(now-(last[name]||0)<gap)return;last[name]=now;FX[name](ctx.currentTime+0.02);}
   return {setOn,setVol,update,sfx,event:id=>sfx(EVSFX[id]||"alarm"),get on(){return on;}};
 })();
@@ -1710,7 +1712,7 @@ const G3={on:false,ok:false};
     const st=new THREE.Mesh(new THREE.CylinderGeometry(1.2,1.6,34,20),conc);st.position.set(79,17,-6.5);st.castShadow=true;scene.add(st);
     [30.5,32.5].forEach(y=>{const bd=new THREE.Mesh(new THREE.CylinderGeometry(1.24,1.24,1,20),M.bad);bd.position.set(79,y,-6.5);scene.add(bd);});
     const drum=cylZ(1.1,5,M.steel,74,10.2,-10,16);drum.rotation.y=Math.PI/2;
-    pipe([[70,7,-8],[67.6,7,-8],[67.6,7,4],[65.6,7,4]],0.32,mat("g-wall",{roughness:0.5}));ENV.stack=[79,34.2,-6.5];}
+    ENV.stack=[79,34.2,-6.5];}
   // rail spur along the back of receiving, with a train that drops off boxcars
   {const tie=new THREE.InstancedMesh(new THREE.BoxGeometry(0.35,0.14,2.6),wood,170),m4=new THREE.Matrix4();let n=0;for(let x=-139;x<-9&&n<170;x+=0.8){m4.makeTranslation(x,0.07,-29);tie.setMatrixAt(n++,m4);}tie.count=n;scene.add(tie);
     [-29.7,-28.3].forEach(z=>box(131,0.16,0.12,M.metal,-74.5,0.2,z,scene,false));box(0.6,1.1,2.6,M.bad,-9,0.55,-29,scene,false);
@@ -1975,6 +1977,31 @@ const G3={on:false,ok:false};
   function flange(p,q,r,m){_fl.set(q[0]-p[0],q[1]-p[1],q[2]-p[2]).normalize();const f=new THREE.Mesh(new THREE.CylinderGeometry(r*1.55,r*1.55,0.14,16),m);
     f.position.set(p[0]+_fl.x*0.07,p[1]+_fl.y*0.07,p[2]+_fl.z*0.07);f.quaternion.setFromUnitVectors(_fu,_fl);scene.add(f);}
   function spool(pts,r,m){pipe(pts,r,m);flange(pts[0],pts[1],r,M.steel);const n=pts.length;flange(pts[n-1],pts[n-2],r,M.steel);}
+  // ---- steam: elevated pipe rack from the power house to a header along the drive side of the dryers ----
+  {const ins=new THREE.MeshStandardMaterial({color:lin0("#cfd4dc"),metalness:0.55,roughness:0.35}),Y=10.6,ZH=4.9,ZC=4.25;
+    const S1=[[70,8,-7],[68.6,8,-7],[68.6,Y,-7],[68.6,Y,-0.35],[46,Y,-0.35],[46,Y+2.6,-0.35],[42,Y+2.6,-0.35],[42,Y,-0.35],[27.3,Y,-0.35],[27.3,Y,ZH],[-4.5,Y,ZH]];
+    pipe(S1,0.32,ins);for(let i=1;i<S1.length-1;i++){const p=S1[i];const b=new THREE.Mesh(new THREE.SphereGeometry(0.34,12,8),ins);b.position.set(p[0],p[1],p[2]);scene.add(b);}   // insulated elbows
+    flange(S1[0],S1[1],0.32,M.steel);
+    // condensate return alongside
+    pipe([[70,6.5,-5],[69.3,6.5,-5],[69.3,Y,-5],[69.3,Y,0.35],[27.95,Y,0.35],[27.95,Y,ZC],[-4.5,Y,ZC]],0.14,M.steel);
+    // rack bents outside, hangers inside
+    [66,59,52,38,31].forEach(x=>{box(0.3,Y-0.35,0.3,M.steel,x,(Y-0.35)/2,0,scene);box(0.26,0.26,2.0,M.steel,x,Y-0.45,0,scene,false);});
+    box(0.3,Y-0.35,0.3,M.steel,69,(Y-0.35)/2,-3.5,scene);box(1.8,0.26,0.26,M.steel,69,Y-0.45,-3.5,scene,false);
+    box(0.3,Y+2.25,0.3,M.steel,44,(Y+2.25)/2,0,scene);box(0.26,0.26,2.0,M.steel,44,Y+2.15,0,scene,false);box(0.26,0.26,2.0,M.steel,44,Y-0.45,0,scene,false);
+    for(let x=22;x>=-4;x-=6.5){box(0.06,13.4-Y,0.06,M.ink,x,(13.4+Y)/2,ZH,scene,false);box(0.06,13.4-Y,0.06,M.ink,x,(13.4+Y)/2,ZC,scene,false);box(0.12,0.12,1.0,M.ink,x,Y-0.38,(ZH+ZC)/2,scene,false);}
+    // a drop and rotary joint to the drive-side journal of every dryer can
+    for(let i=0;i<10;i++)[[(872-i*32-600)/10,5.4],[(856-i*32-600)/10,2.4]].forEach(([x,y])=>{pipe([[x,Y,ZH],[x,y,ZH],[x,y,5.62]],0.07,ins);
+      const j=cylZ(0.17,0.32,M.brand,x,y,5.72,10);});}
+  // boiler safety (pop-off) valve on the power house roof, with a vent stack and silencer; it lifts and roars during a boiler trip
+  const POP={x:72,z:-7,lever:null};
+  {pipe([[POP.x,9.2,POP.z],[POP.x,10.1,POP.z]],0.2,M.steel);const vb=new THREE.Mesh(new THREE.CylinderGeometry(0.34,0.38,0.7,14),M.bad);vb.position.set(POP.x,10.45,POP.z);vb.castShadow=true;scene.add(vb);
+    const bon=new THREE.Mesh(new THREE.CylinderGeometry(0.16,0.2,0.9,10),M.bad);bon.position.set(POP.x,11.2,POP.z);scene.add(bon);
+    const cap=new THREE.Mesh(new THREE.CylinderGeometry(0.1,0.1,0.25,8),M.ink);cap.position.set(POP.x,11.75,POP.z);scene.add(cap);
+    POP.lever=new THREE.Group();POP.lever.position.set(POP.x,11.6,POP.z);scene.add(POP.lever);box(0.9,0.06,0.06,M.ink,-0.4,0,0,POP.lever,false);
+    pipe([[POP.x,10.45,POP.z],[POP.x+0.75,10.45,POP.z],[POP.x+0.75,15.2,POP.z]],0.24,M.steel);
+    const sil=new THREE.Mesh(new THREE.CylinderGeometry(0.55,0.55,1.5,16,1,true),M.steel);sil.position.set(POP.x+0.75,15.8,POP.z);sil.castShadow=true;scene.add(sil);
+    const lip=new THREE.Mesh(new THREE.TorusGeometry(0.55,0.06,6,18),M.ink);lip.rotation.x=Math.PI/2;lip.position.set(POP.x+0.75,16.55,POP.z);scene.add(lip);}
+  G3.POP=POP;
   // grated catwalks with handrails, and stair flights between two points
   const gratM=(()=>{const c=document.createElement("canvas");c.width=c.height=32;const x=c.getContext("2d");x.fillStyle="#8d96a3";x.fillRect(0,0,32,32);x.fillStyle="#5d6672";for(let i=0;i<32;i+=6){x.fillRect(i,0,1.5,32);x.fillRect(0,i,32,1);}
     const t=new THREE.CanvasTexture(c);t.encoding=THREE.sRGBEncoding;t.wrapS=t.wrapT=THREE.RepeatWrapping;t.repeat.set(4,4);return new THREE.MeshStandardMaterial({map:t,roughness:0.7,metalness:0.3});})();
@@ -2590,7 +2617,11 @@ const G3={on:false,ok:false};
       return (now,rdt,inc)=>{rp(now);const k=Math.min(1,(1-inc.left/inc.total)*6);pud.scale.setScalar(5+7*k);
         for(let j=0;j<6;j++)if(Math.random()<rdt*40)emit("drop",34.5+R()*2.5,PH+2.8,-15+R()*1.5,R()*14,4+Math.random()*9,R()*14,1.8,0.42,"#7a5636",0.95);
         if(Math.random()<rdt*8)emit("steam",34.5+R()*2,PH+3.2,-15+R(),R()*2,2,R()*2,1.8,2.2,"#a4805c",0.45);};},
-    boiler:g=>{const z=zone(g,68,84,-18,-2);return now=>z(now);},
+    boiler:g=>{const z=zone(g,68,84,-18,-2),P=G3.POP;
+      return (now,rdt,inc)=>{z(now);const k=inc&&inc.total?inc.left/inc.total:1,lift=k>0.35?1:k/0.35,flick=0.75+0.25*Math.sin(now/37)*Math.sin(now/91);
+        P.lever.rotation.z=0.35*lift;if(lift<0.05)return;
+        for(let q=0;q<3;q++)if(Math.random()<rdt*60*lift)emit("steam",P.x+0.75+R()*0.3,16.7,P.z+R()*0.3,R()*1.6,(5.5+Math.random()*3.5)*lift*flick,R()*1.6,2.6,2.6+Math.random()*2.0,"#ffffff",0.9);
+        if(Math.random()<rdt*8*lift)emitA("steam",P.x+0.5,10.5,P.z,R()*2,1+Math.random(),R()*2,0.8,0.5,"#ffffff",0.5);};},
     permit:g=>{const z=zone(g,1,46,-49,-31);return (now,rdt)=>{z(now);if(Math.random()<rdt*10)emit("smoke",22+Math.random()*20,1.2,-46+Math.random()*12,R(),0.6,R(),2.2,1.6,"#e9e2cf",0.7);};},
     winderdown:g=>{const z=zone(g,-24.5,-13,4.6,13.6);return now=>z(now);},
     runner:g=>()=>{if(FX.runner&&RUN.on)FX.runner.pinPos=[RUN.x,RUN.z];},
@@ -3151,7 +3182,7 @@ const G3={on:false,ok:false};
     ENV.pudM.opacity=0.55*(S.wet||0);ENV.riverTex.offset.x-=rdt*0.02;
     ENV.bridge.rotation.y-=rdt*0.12;
     // steam plume grows with production and dies when the boiler trips
-    const boil=S.inc.some(i=>i.id==="boiler"),pr=clamp((S.rates.prod||0)/35,0,1.4);
+    const boil=S.inc.some(i=>i.id==="boiler"),pr=clamp((S.rates.prod||0)/35,0,1.4);if(!boil&&G3.POP)G3.POP.lever.rotation.z=0;
     if(!boil&&rdt>0&&Math.random()<rdt*(2+10*pr))emitA("steam",ENV.stack[0]+R()*0.6,ENV.stack[1],ENV.stack[2]+R()*0.6,1.2+R(),2.5+Math.random()*1.5,R()*0.6,4+3*pr,3+4*pr,"#ffffff",0.55);
     if(rdt>0){for(const [x,z] of ENV.aer)if(Math.random()<rdt*6)emitA("steam",x+R()*0.6,1.4,z+R()*0.6,R()*1.5,1.5,R()*1.5,0.8,0.8,"#ffffff",0.6);
       if(Math.random()<rdt*8)emitA("drop",ENV.outfall[0]+R()*0.3,ENV.outfall[1]+0.5,ENV.outfall[2],R(),1.5,-1.5,0.6,0.28,"#9ec3d6",0.8);}
