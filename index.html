@@ -283,7 +283,7 @@ body.zen .zenfx{display:block;position:absolute;inset:0;pointer-events:none;z-in
 body.zen .zenfx b{position:absolute;inset:0;background:linear-gradient(180deg,rgba(255,150,70,.42) 0%,rgba(255,120,80,.12) 40%,rgba(30,60,120,.35) 100%);mix-blend-mode:soft-light}
 body.zen .zenfx::before,body.zen .zenfx::after{content:"";position:absolute;left:0;right:0;height:6.5vh;background:#07080c}
 body.zen .zenfx::before{top:0}body.zen .zenfx::after{bottom:0}
-body.zen .zenfx i{position:absolute;inset:-50%;background-image:var(--grain);opacity:.11;mix-blend-mode:overlay;animation:zgrain .9s steps(6) infinite}
+body.zen .zenfx i{position:absolute;inset:-50%;background-image:var(--grain);opacity:.04;mix-blend-mode:overlay;animation:zgrain .9s steps(6) infinite}
 @keyframes zgrain{0%{transform:translate(0,0)}20%{transform:translate(-3%,2%)}40%{transform:translate(2%,-3%)}60%{transform:translate(-2%,-1%)}80%{transform:translate(3%,3%)}100%{transform:translate(0,0)}}
 @media (prefers-reduced-motion:reduce){body.zen .zenfx i{animation:none}}
 .zenexit{z-index:5}
@@ -330,7 +330,7 @@ body{margin:0}
 </head>
 <body>
 
-<div class="ver" id="appVersion" aria-label="Version">v1.16.0</div>
+<div class="ver" id="appVersion" aria-label="Version">v1.16.1</div>
 <div class="wrap">
   <header>
     <div class="brand"><span class="logo" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linejoin="round"><circle cx="8.5" cy="12" r="5.5"/><circle cx="8.5" cy="12" r="1.6" fill="currentColor"/><path d="M8.5 6.5H20v11H8.5"/></svg></span>
@@ -3034,7 +3034,7 @@ const G3={on:false,ok:false};
   const SITES={shaft:{c:[12,zc],a:"fix",p:[[10,14.4],[12,14.4],[14,14.4],[11,15.4]]},slime:{c:[10,zc],a:"clean",p:[[2,14.2],[8,14.2],[14,14.2],[20,14.2]]},
     winderdown:{c:[-18.7,9.4],a:"fix",p:[[-16.6,12.4],[-16.4,10.4],[-20.9,12.4],[-21,10.4]]}};
   const RTY=[];for(let k=0;k<24;k++)RTY.push([29-(k%12)*2.6,k<12?15.4:3.2]);
-  const crew=HOME.map(([x,z])=>{const w=worker(M.stock,M.warn);w.position.set(x,0,z);return w;});
+  const crew=HOME.map(([x,z])=>{const w=worker(M.stock,M.warn);w.position.set(x,0,z);return w;});G3.followable=()=>crew.concat(spOps||[]);
   const BRK={walk:false,smoke:new Set(),pic:new Set()};
   // follow a 3D route [x,y,z,pauseSeconds,pose]; height is interpolated along each leg, so stairs read as climbing
   function walkRoute(w,R2,st,rdt,now){const u=w.userData;if(!R2||!R2.length)return true;const p=R2[st.ri];if(!p)return true;
@@ -3648,8 +3648,11 @@ const G3={on:false,ok:false};
     // camera + render
     if(G3.zen){const Z=G3.zenS||(G3.zenS={i:0,t:99,tg:new THREE.Vector3(),r:300,th:-0.2});Z.t+=rdt;
       const POI=[[-14,5,300,-0.2],[20,9,120,-0.5],[24,-10,95,0.4],[-20,14,80,-1.2],[-25,-18,110,0.9],[20,-40,120,2.6],[70,-10,110,-2.2],[-60,10,130,0.1],[10,9,170,2.9]];
-      if(Z.t>20){Z.t=0;Z.i=(Z.i+1+Math.floor(Math.random()*2))%POI.length;const q=POI[Z.i];Z.tg.set(q[0],0,q[1]);Z.r=q[2];Z.th=q[3];}
-      const k=Math.min(1,rdt*0.12);goal=null;target.lerp(Z.tg,k);cam.r+=(Z.r-cam.r)*k;cam.th=lerpAng(cam.th,Z.th+Math.sin(now/26000)*0.6,k*0.8)+rdt*0.02;cam.ph+=(0.8+0.12*Math.sin(now/31000)-cam.ph)*k;}
+      if(Z.t>(Z.who?16:20)){Z.t=0;const ops=G3.followable?G3.followable().filter(w=>w.visible):[];
+        if(!Z.who&&ops.length&&Math.random()<0.45){Z.who=ops[Math.floor(Math.random()*ops.length)];Z.r=34+Math.random()*14;Z.th=cam.th+(Math.random()-0.5)*0.8;}
+        else{Z.who=null;Z.i=(Z.i+1+Math.floor(Math.random()*2))%POI.length;const q=POI[Z.i];Z.tg.set(q[0],0,q[1]);Z.r=q[2];Z.th=q[3];}}
+      if(Z.who){const p=Z.who.position;Z.tg.set(p.x,0,p.z);}
+      const k=Math.min(1,rdt*(Z.who?0.6:0.12));goal=null;target.lerp(Z.tg,k);cam.r+=(Z.r-cam.r)*k;cam.th=lerpAng(cam.th,Z.th+Math.sin(now/26000)*0.6,k*0.8)+rdt*0.02;cam.ph+=(0.8+0.12*Math.sin(now/31000)-cam.ph)*k;}
     G3.padTick(rdt);G3.labelIdle(now);upUpdate(now);fxUpdate(rdt,now);
     G3.roofFade(cam.r*(host.clientWidth<600?1.35:1)/(host.clientWidth<600?1.35:1));
     placeCam();if(shake>0){camera.position.x+=(Math.random()-0.5)*shake;camera.position.y+=(Math.random()-0.5)*shake;camera.position.z+=(Math.random()-0.5)*shake;}
