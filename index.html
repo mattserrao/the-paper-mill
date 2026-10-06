@@ -256,6 +256,20 @@ body.noknobs #cards{display:none}
   .jumps{flex-wrap:nowrap;overflow-x:auto;scrollbar-width:none;-webkit-overflow-scrolling:touch;padding-bottom:2px;margin:0 -16px 0;padding-left:16px;padding-right:16px;mask-image:linear-gradient(90deg,#000 85%,transparent)}
   .jumps::-webkit-scrollbar{display:none}.jumps button{flex:0 0 auto;font-size:13px;padding:5px 11px}.jumps span{flex:0 0 auto}
   .ver{top:2px;right:6px;font-size:10px}}
+.overlay.top{z-index:120}
+.modal.wide{max-width:560px;width:100%}.modal .muted{color:var(--muted);margin:0}
+.sostats{display:grid;grid-template-columns:repeat(2,1fr);gap:8px}.sostats div{border:1px solid var(--line);border-radius:10px;padding:8px 10px}
+.sostats span{display:block;font-size:11.5px;color:var(--muted)}.sostats b{font-size:18px;font-variant-numeric:tabular-nums}.sostats .big{grid-column:1/-1}.sostats .big b{font-size:26px}
+.soname{display:flex;flex-direction:column;gap:4px;font-size:12px;color:var(--muted)}.soname input{font:600 15px var(--f-body);padding:8px 10px;border:1px solid var(--line);border-radius:8px;color:var(--ink);background:var(--panel)}
+.btns{display:flex;flex-wrap:wrap;gap:8px}.somsg{margin:0;font-size:13px;min-height:1.2em}.somsg.bad{color:var(--bad)}.somsg.ok{color:var(--ok)}
+.lbhead{display:flex;align-items:center;justify-content:space-between}.lbhead h2{margin:0}
+.lblist{max-height:62vh;overflow:auto;border:1px solid var(--line);border-radius:10px}
+.lbrow{display:grid;grid-template-columns:2.2em 1fr auto;gap:2px 10px;padding:8px 12px;border-bottom:1px solid var(--line);align-items:baseline}.lbrow:last-child{border-bottom:0}
+.lbrow .r{font-weight:800;color:var(--muted)}.lbrow .n{font-weight:700;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}.lbrow .sc{font-weight:800;font-variant-numeric:tabular-nums;text-align:right}
+.lbrow .m{grid-column:2/-1;font-size:11.5px;color:var(--muted);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.lbrow.me{background:color-mix(in srgb,var(--brand) 10%,transparent)}
+.lbrow:nth-child(1) .r{color:#c99a06}.lbrow:nth-child(2) .r{color:#8e9aa8}.lbrow:nth-child(3) .r{color:#b0703a}.lbempty{padding:18px;color:var(--muted);text-align:center}
+.seasongrp{display:inline-flex;gap:8px;align-items:center}.schip{font:700 12px var(--f-body);color:var(--panel);background:var(--brand);border-radius:999px;padding:4px 10px;white-space:nowrap}
+@media (max-width:640px){.seasongrp{grid-column:1/-1;display:grid;grid-template-columns:1fr 1fr;gap:8px}.seasongrp .schip{grid-column:1/-1;justify-self:start}.lbrow{padding:8px 10px}}
 .reroll{font-size:12px;padding:5px 10px;align-self:center;white-space:nowrap}
 /* fullscreen */
 .hud{display:none;z-index:5}
@@ -290,7 +304,7 @@ body{margin:0}
 </head>
 <body>
 
-<div class="ver" id="appVersion" aria-label="Version">v1.3.0</div>
+<div class="ver" id="appVersion" aria-label="Version">v1.4.0</div>
 <div class="wrap">
   <header>
     <div class="brand"><span class="logo" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linejoin="round"><circle cx="8.5" cy="12" r="5.5"/><circle cx="8.5" cy="12" r="1.6" fill="currentColor"/><path d="M8.5 6.5H20v11H8.5"/></svg></span>
@@ -301,6 +315,7 @@ body{margin:0}
       <button id="play" class="primary" aria-pressed="true">Pause</button>
       <button id="balance">Balance all</button>
       <button id="reset">Reset</button>
+      <span class="seasongrp"><button id="seasonBtn" title="30-day season with standard chaos. Your net profit goes on the leaderboard.">Start season</button><button id="scoresBtn">Leaderboard</button><span class="schip" id="seasonChip" hidden></span></span>
       <span class="sndgrp"><button id="sound" aria-pressed="false" title="Lofi music, incident music and sound effects">Sound off</button><input id="vol" type="range" min="0" max="100" value="70" aria-label="Volume" style="width:80px;accent-color:var(--brand)"></span>
       <div class="simspeed"><label for="simspeed">Sim speed</label><input id="simspeed" type="range" min="1" max="120" step="1" value="30"><span id="simspeedv" class="val">30 min/s</span></div>
     </div>
@@ -363,6 +378,16 @@ body{margin:0}
     </div>
   </section>
 
+  <div class="overlay top" id="seasonOv" hidden><div class="modal wide" role="dialog" aria-modal="true" aria-labelledby="so-h">
+    <h2 id="so-h">Season complete</h2><p id="so-p" class="muted"></p>
+    <div class="sostats" id="so-stats"></div>
+    <label class="soname">Name for the leaderboard<input id="so-name" maxlength="16" autocomplete="nickname" spellcheck="false" placeholder="2–16 letters or numbers"></label>
+    <div class="btns"><button id="so-submit" class="primary">Submit score</button><button id="so-board">View leaderboard</button><button id="so-new">New season</button></div>
+    <p id="so-msg" class="somsg" aria-live="polite"></p></div></div>
+  <div class="overlay top" id="lbOv" hidden><div class="modal wide" role="dialog" aria-modal="true" aria-labelledby="lb-h">
+    <div class="lbhead"><h2 id="lb-h">Leaderboard</h2><button id="lb-close" aria-label="Close leaderboard">Close</button></div>
+    <p class="muted" id="lb-sub">Top 100 · 30-day seasons · ranked by net profit</p>
+    <div id="lb-list" class="lblist"></div></div></div>
   <div class="overlay" id="overlay" hidden><div class="modal" role="dialog" aria-modal="true" aria-labelledby="ov-h">
     <h2 id="ov-h"></h2><p id="ov-p"></p><div class="btns"><button id="ov-a" class="primary"></button><button id="ov-b"></button></div></div></div>
 
@@ -863,8 +888,9 @@ function step(dt){
   spend(((C.drivers.v+C.loaders.v+P.techs)*ECON.wage+P.robots*ECON.robot+P.pmCost)*dt/60,"labor");
   spend(ECON.overhead*dt/60,"overhead"); if(P.premium)spend(P.premium*dt/60,"premium");
   S.profitRate=ease(S.profitRate,(S.cash-cash0)*60/dt*24,dt,480);
-  if(!S.over&&S.cash<ECON.bankrupt){S.over="bankrupt";showOverlay("bankrupt");}
-  if(!S.won&&S.cash>=ECON.goal){S.won=true;showOverlay("win");}
+  if(!S.over&&S.cash<ECON.bankrupt&&!(S.season&&S.season.on)){S.over="bankrupt";showOverlay("bankrupt");}
+  if(!S.won&&S.cash>=ECON.goal){S.won=true;if(!(S.season&&S.season.on))showOverlay("win");}
+  seasonTick();
   // smoothed rates (per hour)
   const R=S.rates,k=v=>v*60/dt;
   R.feed=ease(R.feed,k(feed),dt,6);R.unload=ease(R.unload,k(unloaded),dt,6);R.fiberIn=ease(R.fiberIn,k(fiberIn),dt,6);
@@ -928,7 +954,7 @@ GROUPS.forEach(([g,lab])=>{const d=document.createElement("div");d.className="gr
   EVENTS.filter(e=>e.g===g).forEach(e=>{const r=document.createElement("div");r.className="ev";
     r.innerHTML=`<button class="trig" id="ev-${e.id}" aria-pressed="false"><span>${e.name}</span><small></small></button><label><input type="checkbox" id="en-${e.id}" checked> random</label>`;
     d.appendChild(r);
-    r.querySelector("button").addEventListener("click",()=>{active(e.id)?clearIncident(e.id):trigger(e.id);updateChaos();});
+    r.querySelector("button").addEventListener("click",()=>{if(active(e.id)){if(!(S.season&&S.season.on))clearIncident(e.id);}else trigger(e.id);updateChaos();});
     r.querySelector("input").addEventListener("change",ev=>{CH.en[e.id]=ev.target.checked;});});
   cgrid.appendChild(d);});
 $("chaosOn").addEventListener("change",e=>CH.on=e.target.checked);
@@ -938,7 +964,7 @@ function moreToggle(sec,btn,key,onSet){let open=false;try{open=localStorage.getI
   $(btn).addEventListener("click",()=>set(!open));return set;}
 $("chaosLvl").addEventListener("input",e=>{CH.lvl=+e.target.value;$("chaosLvlv").textContent=CH.lvl+"×";});
 $("chaosRandom").addEventListener("click",()=>{const pool=EVENTS.filter(e=>!active(e.id));if(pool.length)trigger(pool[Math.floor(Math.random()*pool.length)].id);updateChaos();});
-$("chaosClear").addEventListener("click",()=>{S.inc.forEach(i=>i.left=0);});
+$("chaosClear").addEventListener("click",()=>{if(S.season&&S.season.on)return;S.inc.forEach(i=>i.left=0);});
 function applyName(){$("h-name").textContent=NAME;$("pm-title").textContent=NAME;$("pmname").value=NAME;}
 $("pmname").addEventListener("input",e=>{NAME=e.target.value.trim()||"PM";$("h-name").textContent=NAME;$("pm-title").textContent=NAME;try{localStorage.setItem("mill-twin-name",NAME);}catch(err){}});
 applyName();
@@ -982,7 +1008,63 @@ function showOverlay(kind){running=false;$("play").textContent="Run";$("play").s
   $("ov-a").focus();}
 $("ov-a").addEventListener("click",()=>{$("overlay").hidden=true;if(S.over){newGame();}else{running=true;$("play").textContent="Pause";$("play").setAttribute("aria-pressed","true");}});
 $("ov-b").addEventListener("click",()=>{$("overlay").hidden=true;newGame();});
-function newGame(){const sp=C.simSpeed;initCtrl();C.simSpeed=sp;initState();BANNERS.length=0;running=true;$("play").textContent="Pause";$("play").setAttribute("aria-pressed","true");}
+function newGame(){const sp=C.simSpeed;initCtrl();C.simSpeed=sp;initState();BANNERS.length=0;running=true;$("play").textContent="Pause";$("play").setAttribute("aria-pressed","true");seasonLocks(false);}
+/* ---------- season mode + leaderboard (Supabase) ---------- */
+const LB={url:"",key:""};              // paste the Supabase project URL and anon key here
+const SEASON_DAYS=30,APP_VER=(document.getElementById("appVersion")||{}).textContent||"";
+const lbOn=()=>!!(LB.url&&LB.key);
+function seasonLocks(on){["chaosOn","chaosLvl","chaosClear"].forEach(id=>{const el=$(id);if(el)el.disabled=on;});
+  document.querySelectorAll('#chaosgrid input[type=checkbox]').forEach(el=>el.disabled=on);
+  $("seasonBtn").textContent=on?"Restart season":"Start season";$("seasonChip").hidden=!on;}
+function startSeason(){newGame();S.season={on:true,end:SEASON_DAYS*1440,done:false};
+  CH.on=true;$("chaosOn").checked=true;CH.lvl=1;$("chaosLvl").value=1;$("chaosLvlv").textContent="1×";
+  EVENTS.forEach(e=>{CH.en[e.id]=true;const c=$("en-"+e.id);if(c)c.checked=true;});seasonLocks(true);
+  BANNERS.push({text:`Season started: ${SEASON_DAYS} days. Make as much profit as you can.`,t:null,kind:"good"});}
+function seasonTick(){const se=S.season;if(!se||!se.on||se.done)return;
+  $("seasonChip").textContent=`Season · day ${Math.min(SEASON_DAYS,Math.floor(S.t/1440)+1)} of ${SEASON_DAYS}`;
+  if(S.t>=se.end||S.cash<ECON.bankrupt)endSeason(S.cash<ECON.bankrupt);}
+function seasonResult(){return {score:Math.round(S.cash-ECON.start),tons:Math.round(S.shipT||0),incidents:S.tot.incidents,mill:MILL.name.slice(0,40),version:APP_VER.slice(0,12),days:SEASON_DAYS};}
+function endSeason(bust){const se=S.season;se.done=true;se.on=false;running=false;$("play").textContent="Run";$("play").setAttribute("aria-pressed","false");
+  if(document.body.classList.contains("fs"))setFS(false);seasonLocks(false);$("seasonChip").hidden=false;$("seasonChip").textContent="Season over";
+  const r=seasonResult();se.result=r;AUDIO.sfx(r.score>0?"win":"lose",100);
+  $("so-h").textContent=bust?"Season over: bankrupt":"Season complete";
+  $("so-p").textContent=bust?`${MILL.name} ran out of money before day ${SEASON_DAYS}.`:`${SEASON_DAYS} days at ${MILL.name}.`;
+  const eff=S.tot.pot>0?S.tot.prodT/S.tot.pot:1,g=RATINGS.find(x=>eff>=x[0]);
+  const st=[["Net profit",money(r.score),"big"],["Tons shipped",f0(r.tons)+" t"],["Disasters survived",String(r.incidents)],["Rolls made",String(S.tot.rolls)],["Grade",g[1]+" · "+g[2]]];
+  $("so-stats").replaceChildren(...st.map(([k,v,c])=>{const d=document.createElement("div");if(c)d.className=c;const a=document.createElement("span");a.textContent=k;const b=document.createElement("b");b.textContent=v;d.append(a,b);return d;}));
+  let nm="";try{nm=localStorage.getItem("paper-mill-player")||"";}catch(e){}$("so-name").value=nm;
+  $("so-submit").disabled=false;$("so-submit").textContent=lbOn()?"Submit score":"Save score";setMsg("");$("seasonOv").hidden=false;$("so-name").focus();}
+function setMsg(t,c){const m=$("so-msg");m.textContent=t;m.className="somsg"+(c?" "+c:"");}
+function saveLocal(r,name){try{const L=JSON.parse(localStorage.getItem("paper-mill-local-scores")||"[]");L.push({...r,name,created_at:new Date().toISOString(),local:1});
+  L.sort((a,b)=>b.score-a.score||b.tons-a.tons);localStorage.setItem("paper-mill-local-scores",JSON.stringify(L.slice(0,20)));}catch(e){}}
+async function submitScore(){const r=S.season&&S.season.result;if(!r)return;const name=$("so-name").value.replace(/\s+/g," ").trim();
+  if(!/^[A-Za-z0-9 ._'-]{2,16}$/.test(name)){setMsg("Use 2–16 letters, numbers, spaces or . _ ' -","bad");return;}
+  try{localStorage.setItem("paper-mill-player",name);}catch(e){}
+  if(!S.season.saved){S.season.saved=1;saveLocal(r,name);}
+  if(!lbOn()){setMsg("Saved on this device. The online leaderboard isn't connected yet.","ok");$("so-submit").disabled=true;return;}
+  $("so-submit").disabled=true;setMsg("Submitting…");
+  try{const res=await fetch(LB.url.replace(/\/$/,"")+"/rest/v1/scores",{method:"POST",headers:{apikey:LB.key,Authorization:"Bearer "+LB.key,"Content-Type":"application/json",Prefer:"return=minimal"},body:JSON.stringify({...r,name})});
+    if(!res.ok){let msg="Couldn't submit ("+res.status+")";try{const j=await res.json();if(j&&j.message)msg=j.message;}catch(e){}throw new Error(msg);}
+    setMsg("Submitted! You're on the board.","ok");S.season.submitted=name;openBoard();}
+  catch(e){setMsg(String(e.message||e),"bad");$("so-submit").disabled=false;}}
+async function openBoard(){$("lbOv").hidden=false;const L=$("lb-list");L.replaceChildren(Object.assign(document.createElement("div"),{className:"lbempty",textContent:"Loading…"}));
+  let rows=[],note="";
+  if(lbOn()){try{const res=await fetch(LB.url.replace(/\/$/,"")+"/rest/v1/scores?select=name,score,tons,incidents,mill,created_at&order=score.desc,tons.desc&limit=100",{headers:{apikey:LB.key,Authorization:"Bearer "+LB.key}});
+      if(!res.ok)throw new Error(res.status);rows=await res.json();}catch(e){note="Couldn't reach the leaderboard. Showing scores saved on this device.";}}
+  else note="Online leaderboard not connected yet. Showing scores saved on this device.";
+  if(note){try{rows=JSON.parse(localStorage.getItem("paper-mill-local-scores")||"[]");}catch(e){rows=[];}}
+  $("lb-sub").textContent=note||"Top 100 · 30-day seasons · ranked by net profit";
+  if(!rows.length){L.replaceChildren(Object.assign(document.createElement("div"),{className:"lbempty",textContent:"No scores yet. Start a season and set the bar."}));return;}
+  let me="";try{me=localStorage.getItem("paper-mill-player")||"";}catch(e){}
+  L.replaceChildren(...rows.map((r,i)=>{const d=document.createElement("div");d.className="lbrow"+(me&&r.name===me?" me":"");
+    const mk=(c,t)=>Object.assign(document.createElement("span"),{className:c,textContent:t});
+    const dt=r.created_at?new Date(r.created_at).toLocaleDateString(undefined,{month:"short",day:"numeric"}):"";
+    d.append(mk("r",i+1),mk("n",r.name),mk("sc",money(r.score)),mk("m",[r.mill,f0(r.tons)+" t shipped",(r.incidents??"")+" disasters",dt].filter(Boolean).join(" · ")));return d;}));}
+$("seasonBtn").addEventListener("click",startSeason);$("scoresBtn").addEventListener("click",openBoard);
+$("so-submit").addEventListener("click",submitScore);$("so-name").addEventListener("keydown",e=>{if(e.key==="Enter")submitScore();e.stopPropagation();});
+$("so-board").addEventListener("click",openBoard);$("so-new").addEventListener("click",()=>{$("seasonOv").hidden=true;startSeason();});
+$("lb-close").addEventListener("click",()=>$("lbOv").hidden=true);
+document.addEventListener("keydown",e=>{if(e.key==="Escape"&&!$("lbOv").hidden)$("lbOv").hidden=true;});
 const RATINGS=[[0.95,"A","Bonus secured"],[0.85,"B","Solid shift"],[0.75,"C","Corporate is asking questions"],[0.6,"D","Mandatory 6 a.m. meeting"],[0,"F","Your parking spot has been reassigned"]];
 let feedKey="";
 function updateChaos(){
