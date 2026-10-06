@@ -448,7 +448,7 @@ body{margin:0}
 </head>
 <body>
 
-<div class="ver" id="appVersion" aria-label="Version">v2.0.0</div>
+<div class="ver" id="appVersion" aria-label="Version">v2.0.1</div>
 <div class="wrap">
   <header>
     <div class="brand"><span class="logo" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linejoin="round"><circle cx="8.5" cy="12" r="5.5"/><circle cx="8.5" cy="12" r="1.6" fill="currentColor"/><path d="M8.5 6.5H20v11H8.5"/></svg></span>
@@ -3113,7 +3113,7 @@ const G3={on:false,ok:false};
     else if(mode==="flail"){const s=Math.sin(t*17);leg=0.95*s;arm=[-2.6+0.9*s,-2.6-0.9*s];lean=-0.3;bob=Math.abs(s)*0.2;}
     else if(mode==="ride"){arm=[-1.15,-1.15];lean=-0.08;legB=-1.25;}
     else{arm=[0.08*Math.sin(t*1.7),-0.08*Math.sin(t*1.7)];}
-    u.legs[0].rotation.z=legB??leg;u.legs[1].rotation.z=legB??-leg;u.arms[0].rotation.z=-arm[0];u.arms[1].rotation.z=-arm[1];
+    u.legs[0].rotation.z=legB!=null?-legB:leg;u.legs[1].rotation.z=legB!=null?-legB:-leg;u.arms[0].rotation.z=-arm[0];u.arms[1].rotation.z=-arm[1];
     // phone to the ear: fold the arm (shortened, swung in toward the head)
     {const c=!!u.call;u.call=false;const L=c?0.33:0.72;u.arms[1].rotation.x=c?2.69:0;u.armM[1].scale.y=L;u.armM[1].position.y=-L/2;u.hands[1].position.y=-L-0.05;}u.torso.rotation.z=lean;p.position.y=bob+(u.ry||0);}
   // walkers steer round the food truck instead of through it: aim for the nearest clear corner first
@@ -3461,8 +3461,8 @@ const G3={on:false,ok:false};
   function startTour(){const lead=person(M.brand,whiteHat),n=5+Math.floor(Math.random()*2),st=[];
     for(let k=0;k<n;k++)st.push(person(STUDENT[k%STUDENT.length],whiteHat));
     party("tour",[lead,...st],[[OFF.door[0],AIS,0],[48,AIS,4,"point"],[34.5,AIS,4,"point"],[18,AIS,4,"point"],[-6,AIS,4,"point"],[-14,AIS,3,"point"],[20,AIS+0.6,0],[OFF.door[0],AIS+0.6,0],[OFF.door[0],OFF.door[1],0]],"walk");}
-  function startMgr(){const a=person(SUIT,whiteHat,true),b=person(SUIT,whiteHat,true);
-    party("mgr",[a,b],[[OFF.door[0],AIS-0.3,0],[30,AIS-0.3,2.5,"phone"],[-8,AIS-0.3,2,"phone"],[OFF.door[0],AIS+0.3,0],[OFF.door[0],OFF.door[1],0]],"phone");}
+  function startMgr(){const a=person(SUIT,whiteHat),b=person(SUIT,whiteHat);
+    party("mgr",[a,b],[[OFF.door[0],AIS-0.3,0],[30,AIS-0.3,3,"point"],[-8,AIS-0.3,2.5,"inspect"],[OFF.door[0],AIS+0.3,0],[OFF.door[0],OFF.door[1],0]],"walk");}
   function startOffice(){const c=CONSOLES[Math.floor(Math.random()*CONSOLES.length)],w=person(OFFICE[Math.floor(Math.random()*3)],whiteHat);
     party("office",[w],[[OFF.door[0],AIS,0],[c+(Math.random()<0.5?-1.6:1.6),14.6,3.5,"inspect"],[OFF.door[0],AIS,0],[OFF.door[0],OFF.door[1],0]],"walk");}
   function partyUpdate(P2,rdt,now){const L=P2.members[0],pt=P2.path[P2.i];
@@ -3676,12 +3676,22 @@ const G3={on:false,ok:false};
     ribWall(0.3,4.6,8,-49,2.3,(z0+z1)/2,g);ribWall(0.3,4.6,8,-23.8,2.3,(z0+z1)/2,g);ribWall(25.2,4.6,0.3,-36.4,2.3,z1,g);
     const im=new THREE.InstancedMesh(rollGeo,ROLLM,36),m=new THREE.Matrix4();for(let k=0;k<36;k++){m.makeTranslation(-45+(k%12)*1.75,0.74,z0+1.5+Math.floor(k/12)*2.2);im.setMatrixAt(k,m);}im.castShadow=true;g.add(im);g.userData.rolls=im;}));
   const walk=upg("safety",g=>{    [[-21.2,-2.6,26.4,0.5],[-36.4,14.4,25.2,0.5],[23,3.4,68,0.5],[23,15.6,68,0.5]].forEach(([x,z,w,d])=>box(w,0.03,d,M.warn,x,0.07,z,g,false));});
-  const refiner=upg("refiner",g=>{box(3.6,0.3,2.2,M.steel,51,0.15,-10.2,g);
-    const hg=new THREE.CylinderGeometry(0.95,0.95,1.0,24);hg.rotateX(Math.PI/2);const h=new THREE.Mesh(hg,M.brand);h.position.set(51,1.25,-11);h.castShadow=true;g.add(h);
-    const cg=new THREE.CylinderGeometry(0.55,0.55,0.4,18);cg.rotateX(Math.PI/2);const c2=new THREE.Mesh(cg,M.steel);c2.position.set(51,1.25,-11.65);g.add(c2);
-    box(0.7,0.6,0.6,M.warn,51,1.15,-10.15,g,false);
-    const mg=new THREE.CylinderGeometry(0.75,0.75,2.0,20);mg.rotateX(Math.PI/2);const mo=new THREE.Mesh(mg,M.stock);mo.position.set(51,1.15,-8.85);mo.castShadow=true;g.add(mo);
-    const fg=new THREE.CylinderGeometry(0.7,0.7,0.2,20);fg.rotateX(Math.PI/2);const fn=new THREE.Mesh(fg,M.ink);fn.position.set(51,1.15,-7.75);g.add(fn);blob(51,-10,2.4);});
+  // refiner upgrade: two large double-disc refiners in parallel off the chest-to-headbox stock line, each with its own motor
+  const refiner=upg("refiner",g=>{const X=60.6,ZS=[-14,-8];
+    ZS.forEach(z=>{box(7.2,0.45,3.4,M.steel,X+1.6,0.22,z,g);                                                              // skid
+      const hg=new THREE.CylinderGeometry(1.55,1.55,1.7,28);hg.rotateZ(Math.PI/2);const h=new THREE.Mesh(hg,M.brand);h.position.set(X,2.0,z);h.castShadow=true;g.add(h);   // disc housing
+      [-0.95,0.95].forEach(dx=>{const fg=new THREE.CylinderGeometry(1.7,1.7,0.18,28);fg.rotateZ(Math.PI/2);const f=new THREE.Mesh(fg,M.steel);f.position.set(X+dx,2.0,z);g.add(f);});
+      for(let k=0;k<10;k++){const a=k/10*Math.PI*2;box(0.3,0.12,0.12,M.ink,X+0.98,2.0+Math.cos(a)*1.68,z+Math.sin(a)*1.68,g,false);}   // flange bolts
+      box(1.4,1.3,1.6,M.steel,X-1.6,1.3,z,g);const ad=new THREE.Mesh(new THREE.CylinderGeometry(0.28,0.28,1.0,12),M.ink);ad.position.set(X-1.6,2.4,z);g.add(ad);   // gap adjuster
+      const sg=new THREE.CylinderGeometry(0.22,0.22,1.6,12);sg.rotateZ(Math.PI/2);const sh=new THREE.Mesh(sg,M.metal);sh.position.set(X+1.75,2.0,z);g.add(sh);   // shaft + coupling
+      const cg=new THREE.CylinderGeometry(0.45,0.45,0.35,16);cg.rotateZ(Math.PI/2);const cp=new THREE.Mesh(cg,M.warn);cp.position.set(X+2.2,2.0,z);g.add(cp);
+      const mg=new THREE.CylinderGeometry(1.0,1.0,2.8,24);mg.rotateZ(Math.PI/2);const mo=new THREE.Mesh(mg,M.stock);mo.position.set(X+3.8,1.6,z);mo.castShadow=true;g.add(mo);   // motor
+      for(let k=0;k<8;k++){const a=k/8*Math.PI*2;box(2.6,0.08,0.08,M.ink,X+3.8,1.6+Math.cos(a)*1.02,z+Math.sin(a)*1.02,g,false);}   // cooling fins
+      box(0.7,0.6,0.7,M.ink,X+3.8,2.85,z,g,false);blob(X+1.5,z,3.6);});
+    const P=0.24;   // inlet header from the stock line, over and down into each housing; outlets back to the line
+    spool([[57,1,-11],[57.9,1,-11],[57.9,4.6,-11]],P,M.stock);spool([[57.9,4.6,-14],[57.9,4.6,-8]],P,M.stock);
+    ZS.forEach(z=>{spool([[57.9,4.6,z],[X,4.6,z],[X,3.55,z]],P,M.stock);spool([[X,0.7,z+(z<-11?1.55:-1.55)],[X,0.7,-11],[57.3,0.7,-11]],0.2,M.stock);});
+    });
   const ctrl=upg("apc",g=>{box(6,3.2,4,M.wall,46,1.6,-6,g);box(5.4,1.1,0.1,M.robot,46,2.2,-3.95,g,false);box(6.4,0.3,4.4,M.steel,46,3.35,-6,g);});
   function upUpdate(now){
     motors.visible=LV("drive")>0;motors.children.forEach((m,k)=>m.visible=k<LV("drive"));
