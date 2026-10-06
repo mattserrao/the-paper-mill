@@ -330,7 +330,7 @@ body{margin:0}
 </head>
 <body>
 
-<div class="ver" id="appVersion" aria-label="Version">v1.15.1</div>
+<div class="ver" id="appVersion" aria-label="Version">v1.16.0</div>
 <div class="wrap">
   <header>
     <div class="brand"><span class="logo" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linejoin="round"><circle cx="8.5" cy="12" r="5.5"/><circle cx="8.5" cy="12" r="1.6" fill="currentColor"/><path d="M8.5 6.5H20v11H8.5"/></svg></span>
@@ -626,7 +626,7 @@ const AUDIO=(()=>{
     win:t=>{[60,64,67,72,76,79,84].forEach((m,k)=>tone(t+k*0.11,sfxBus,"triangle",mtof(m),0.5,0.14));},
     lose:t=>{[[55,0.5],[54,0.5],[53,0.5],[52,1.4]].reduce((tt,[m,d])=>{const o=tone(tt,sfxBus,"sawtooth",mtof(m),d,0.08,0.02);if(d>1)o.o.frequency.linearRampToValueAtTime(mtof(m)*0.97,tt+d);return tt+d;},t);},
   };
-  const EVSFX={shaft:"clunk",fabric:"clunk",felt:"clunk",winderdown:"clunk",lwplug:"clunk",cscreen:"clunk",fscreen:"clunk",lcplug:"water",hdblow:"water",boiler:"steam",permit:"alarm",thkblow:"water",wrap:"snap",flares:"fire",ragger:"clunk",dryerfire:"fire",balefire:"fire",overflow:"water",chestover:"water",roof:"water",fight:"siren",highway:"siren",lightning:"thunder",tornado:"wind",beaver:"chomp",runner:"whistle"};
+  const EVSFX={fogfan:"clunk",shaft:"clunk",fabric:"clunk",felt:"clunk",winderdown:"clunk",lwplug:"clunk",cscreen:"clunk",fscreen:"clunk",lcplug:"water",hdblow:"water",boiler:"steam",permit:"alarm",thkblow:"water",wrap:"snap",flares:"fire",ragger:"clunk",dryerfire:"fire",balefire:"fire",overflow:"water",chestover:"water",roof:"water",fight:"siren",highway:"siren",lightning:"thunder",tornado:"wind",beaver:"chomp",runner:"whistle"};
   // plant PA: a two-tone chime, then a muffled voice (formant-filtered babble through a band-limited, slightly overdriven horn speaker with a hall echo)
   const VOW=[[730,1090],[270,2290],[530,1840],[570,840],[440,1020],[300,870],[660,1720],[490,1350]];
   function paAnnounce(t){const out=ctx.createGain();out.gain.value=0.55;const hp=ctx.createBiquadFilter();hp.type="highpass";hp.frequency.value=450;const lp=ctx.createBiquadFilter();lp.type="lowpass";lp.frequency.value=1900;lp.Q.value=1.2;
@@ -663,9 +663,9 @@ const AUTOKEYS=["inRate","drivers","pulper","pmSp","wdr","loaders","outRate"];
 let C,S;
 const BASE={...P};
 const ECON={price:{"23m":680,"26m":700,"30m":720,"33HT":780},energy:95,chem:25,wage:45,robot:15,overhead:4000,start:2e6,bankrupt:-1.5e6,goal:25e6};
-const REPAIR={shaft:250e3,dryerfire:400e3,fabric:90e3,felt:45e3,slime:30e3,ragger:15e3,overflow:120e3,chestover:60e3,lwplug:25e3,cscreen:45e3,fscreen:60e3,lcplug:30e3,hdblow:55e3,boiler:60e3,permit:120e3,thkblow:70e3,birdhay:0,wrap:15e3,dye:20e3,flares:0,winderdown:40e3,runner:0,badocc:0,balefire:150e3,fleet:40e3,calloff:10e3,fight:5e3,roof:80e3,highway:0,lightning:200e3,tornado:500e3,beaver:25e3};
+const REPAIR={fogfan:35e3,shaft:250e3,dryerfire:400e3,fabric:90e3,felt:45e3,slime:30e3,ragger:15e3,overflow:120e3,chestover:60e3,lwplug:25e3,cscreen:45e3,fscreen:60e3,lcplug:30e3,hdblow:55e3,boiler:60e3,permit:120e3,thkblow:70e3,birdhay:0,wrap:15e3,dye:20e3,flares:0,winderdown:40e3,runner:0,badocc:0,balefire:150e3,fleet:40e3,calloff:10e3,fight:5e3,roof:80e3,highway:0,lightning:200e3,tornado:500e3,beaver:25e3};
 const UGROUPS=[["machine","Paper machine"],["stock","Stock prep"],["yard","Warehouse & logistics"],["maint","Maintenance"],["mgmt","Management"]];
-const MAINT=["shaft","fabric","felt","winderdown","hdblow","lwplug","cscreen","fscreen","lcplug","boiler","thkblow","ragger","overflow","fleet","roof","lightning"];
+const MAINT=["fogfan","shaft","fabric","felt","winderdown","hdblow","lwplug","cscreen","fscreen","lcplug","boiler","thkblow","ragger","overflow","fleet","roof","lightning"];
 const UPS=[
  {id:"drive",g:"machine",name:"Drive & gearbox rebuild",lv:[400e3,900e3,1.8e6],desc:"+150 fpm max speed per level."},
  {id:"deckle",g:"machine",name:"Wider trim (deckle)",lv:[1.2e6,2.5e6],desc:"+6% tons at the same speed per level."},
@@ -747,6 +747,7 @@ const EVENTS=[
  {id:"cscreen",g:"stock",name:"Coarse screen down",head:"The coarse screen rotor seized. Stock prep is stopped; the chest is draining.",dur:[120,240],mtbf:300,mods:{pulperDown:1},fx:"cscreen"},
  {id:"fscreen",g:"stock",name:"Fine screen basket failure",head:"A fine screen basket cracked. Stock prep is stopped until it's replaced.",dur:[150,270],mtbf:320,mods:{pulperDown:1},fx:"fscreen"},
  {id:"lcplug",g:"stock",name:"LC cleaners plugged",head:"Sand plugged the LC cleaner rejects. Stock prep is stopped; the chest is draining.",dur:[90,180],mtbf:300,mods:{pulperDown:1},fx:"lcplug"},
+ {id:"fogfan",g:"machine",name:"Fog fan down",head:"The fog remediation fan tripped! The machine keeps running, but the machine room is filling with wet-end fog.",dur:[150,300],mtbf:300,mods:{},fx:"fogfan"},
  {id:"thkblow",g:"stock",name:"Thickener blowout",head:"The disk thickener blew out! Stock is spraying all over stock prep. Nothing reaches the chest until it's fixed.",dur:[120,240],mtbf:280,mods:{pulperDown:1},fx:"thkblow"},
  {id:"birdhay",g:"machine",name:"Bird in the winder",head:"A pigeon flew straight into the winder!",dur:[15,25],mtbf:420,mods:{},fx:"birdhay",end:()=>{if(S.wd!=="hayout")hayout();}},
  {id:"boiler",g:"machine",name:"Boiler trip",head:"The boiler tripped! No steam for the dryers. Machine down.",dur:[90,180],mtbf:260,mods:{pmDown:"no steam"},fx:"boiler"},
@@ -776,7 +777,7 @@ EVENTS.forEach(e=>CH.en[e.id]=true);
 const WXN={clear:"Clear",rain:"Rain",fog:"Fog",snow:"Snow"};
 function active(id){return S.inc.some(i=>i.id===id);}
 // machine and winder upsets go to the crew one at a time, in the order they happen; nothing gets fixed until a crew is there
-const QINC=id=>!!(EV[id]&&((EV[id].g==="machine"&&id!=="runner"&&id!=="birdhay"&&id!=="boiler")||id==="ragger"));
+const QINC=id=>!!(EV[id]&&((EV[id].g==="machine"&&id!=="runner"&&id!=="birdhay"&&id!=="boiler"&&id!=="fogfan")||id==="ragger"));
 const RESP={ragger:6,wrap:4,hay:4,brk:2,dryerfire:3,shaft:8,fabric:6,felt:6,slime:5,winderdown:6};
 function enqueue(k){if(!S.crewQ)S.crewQ=[];if(S.crewQ.some(q=>q.k===k))return;S.crewQ.push({k,resp:RESP[k]||6,since:0,here:false,go:false});}
 function crewTick(dt){if(!S.crewQ)S.crewQ=[];
@@ -787,7 +788,7 @@ function crewTick(dt){if(!S.crewQ)S.crewQ=[];
   if(!(G3.on&&G3.ok)||now-h.since>(h.k==="ragger"?25000:6000))h.here=true;
   if(h.resp<=0&&h.here)h.go=true;}
 // maintenance: techs work in pairs, oldest job first; a job's repair clock only runs once its pair is on site
-const MJOBS=["shaft","fabric","felt","winderdown","hdblow","lwplug","cscreen","fscreen","lcplug","boiler","thkblow","overflow","chestover","fleet","roof","lightning"];
+const MJOBS=["fogfan","shaft","fabric","felt","winderdown","hdblow","lwplug","cscreen","fscreen","lcplug","boiler","thkblow","overflow","chestover","fleet","roof","lightning"];
 const MNEED=id=>MJOBS.includes(id);
 function maintTick(dt){const crews=Math.max(1,Math.floor(P.techs/2)),list=S.inc.filter(i=>MNEED(i.id)),now=performance.now();
   list.forEach((i,k)=>{i.mSlot=k<crews?k:-1;i.mQ=k-crews+1;if(i.mSlot<0)return;if(!i.mSince){i.mSince=now;i.mResp=8;}
@@ -1475,6 +1476,7 @@ function drawChaos(){
       case "thkblow":{ctx.fillStyle=col.pulp;for(let k=0;k<16;k++){const a=k*0.4+now/300,r=10+((now/40+k*7)%30);ctx.globalAlpha=0.7;ctx.beginPath();ctx.arc(856+Math.cos(a)*r,211+Math.sin(a)*r*0.6,3,0,7);ctx.fill();}ctx.globalAlpha=1;tag("THICKENER BLOWOUT",820,250);break;}
       case "birdhay":{tag("BIRD IN THE WINDER",330,390);break;}
       case "boiler":{tag("BOILER TRIP · NO STEAM",560,350);break;}
+      case "fogfan":{tag("FOG FAN DOWN",900,330);break;}
       case "permit":{tag("PERMIT EXCEEDED",700,40);break;}
       case "wrap":{tag("DRYER WRAP",560,350);break;}
       case "dye":{tag("DYE TROUBLE · ALL BEATER",560,500);break;}
@@ -1918,11 +1920,7 @@ const G3={on:false,ok:false};
       const o=new THREE.Mesh(new THREE.ExtrudeGeometry(sh,{depth:dz,bevelEnabled:false}),bm);o.position.set(xs,HH+0.07,z0);add(o,true);
       const gp=new THREE.Mesh(new THREE.PlaneGeometry(dz-0.3,1.6),gl);gp.rotation.y=Math.PI/2;gp.position.set(xs+tw+0.07,HH+1.07,(z0+Z1)/2);g.add(gp);}
     // dryer hood exhaust stacks through the roof (vapour plumes in envUpdate)
-    // dryer hood exhaust: ducts rise from the hood through the roof to capped stacks (always shown; vapour plumes in envUpdate)
-    G3.exh=[[4,8],[12,8],[20,8]].map(([x,z])=>{const ex=M.steel,L=HH+5.4-7.6;const st=new THREE.Mesh(new THREE.CylinderGeometry(0.6,0.6,L,16),ex);st.position.set(x,7.6+L/2,z);st.castShadow=true;scene.add(st);
-      const cap=new THREE.Mesh(new THREE.CylinderGeometry(0.95,0.95,0.12,16),M.ink);cap.position.set(x,HH+5.9,z);scene.add(cap);
-      [-0.55,0.55].forEach(dx=>box(0.08,0.55,0.08,M.ink,x+dx,HH+5.6,z,scene,false));
-      const fan=new THREE.Mesh(new THREE.CylinderGeometry(0.95,0.95,0.8,16),M.brand);fan.position.set(x,8.2,z);scene.add(fan);return [x,HH+5.5,z];});
+
     g.userData.mats=[wm,gl,em,bm];g.userData.fade=[255,40];scene.add(g);roofs.push(g);}
   // roofs and the hall shell fade out as you zoom in. Fully shown, they render opaque (no transparency sorting); while fading they
   // stop writing depth, so overlapping roof panels can't hide each other in a draw-order-dependent way (that made them flicker
@@ -2271,6 +2269,19 @@ const G3={on:false,ok:false};
     const sc=document.createElement("canvas");sc.width=128;sc.height=40;const c=sc.getContext("2d");c.fillStyle="#ffffff";c.fillRect(0,0,128,40);c.fillStyle=col;c.fillRect(0,0,12,40);c.fillStyle="#1c2233";c.font="800 24px system-ui,sans-serif";c.textAlign="center";c.fillText(txt,70,29);
     const st=new THREE.CanvasTexture(sc);st.encoding=THREE.sRGBEncoding;const sg=new THREE.Mesh(new THREE.PlaneGeometry(2.4,0.75),new THREE.MeshBasicMaterial({map:st,toneMapped:false}));sg.position.set(x,1.4,z+R2+0.06);scene.add(sg);
     return w;};
+  // ---- fog remediation fan: pulls wet-end vapour out of the machine room through a duct in the back (drive-side) wall
+  {const X=49.5,Z=-4.2,HH=13.4,stk=mat("g-wall",{roughness:0.55});
+    const base=box(3.6,3.2,3.0,M.steel,X,1.6,Z);box(3.8,0.25,3.2,M.brand,X,3.3,Z,scene,false);[-1,1].forEach(d=>box(0.08,2.2,2.2,gratM,X+d*1.81,1.5,Z,scene,false));   // fan housing, louvres
+    box(1.1,0.9,0.9,M.ink,X+2.3,0.45,Z+0.6,scene);box(0.6,0.5,0.15,M.ok,X+2.3,1.2,Z+1.06,scene,false);   // motor + starter
+    const st=new THREE.Mesh(new THREE.CylinderGeometry(0.95,1.05,HH+6-3.3,20),stk);st.position.set(X,3.3+(HH+6-3.3)/2,Z);st.castShadow=true;scene.add(st);
+    [7,12,17].forEach(y=>{const b=new THREE.Mesh(new THREE.CylinderGeometry(1.06,1.06,0.2,20),M.steel);b.position.set(X,y,Z);scene.add(b);});
+    const cap=new THREE.Mesh(new THREE.CylinderGeometry(1.4,1.4,0.15,20),M.ink);cap.position.set(X,HH+6.6,Z);scene.add(cap);[-0.8,0.8].forEach(dx=>box(0.1,0.6,0.1,M.ink,X+dx,HH+6.3,Z,scene,false));
+    // duct from the hall's back wall down into the fan housing
+    box(2.2,2.2,6.4,stk,X,5.9,Z+3.9,scene);box(2.2,4.6-3.3+1.1,2.2,stk,X,(3.3+5.9)/2,Z+0.9,scene);
+    const rot=new THREE.Group();rot.position.set(X,HH+6.05,Z);scene.add(rot);[0,1,2,3].forEach(k=>{const bl=box(1.5,0.05,0.3,M.steel,0,0,0,rot,false);bl.rotation.y=k*Math.PI/4;bl.rotation.x=0.4;});
+    const c=document.createElement("canvas");c.width=256;c.height=96;const x=c.getContext("2d");x.fillStyle="#ffffff";x.fillRect(0,0,256,96);x.fillStyle="#1c2233";x.font="800 26px system-ui,sans-serif";x.textAlign="center";x.fillText("FOG REMEDIATION",128,40);x.fillText("FAN",128,74);
+    const t=new THREE.CanvasTexture(c);t.encoding=THREE.sRGBEncoding;const pl=new THREE.Mesh(new THREE.PlaneGeometry(2.0,0.75),new THREE.MeshBasicMaterial({map:t}));pl.position.set(X,2.2,Z-1.52);pl.rotation.y=Math.PI;scene.add(pl);
+    G3.fogFan={rot,spin:1,top:[X,HH+6.8,Z]};}
   // switchback stair tower beside the chest, with a bridge onto the thickener deck
   {const XA=42.3,XB=43.9,Z0=-19.6,Z1=-13.6,R=PH/4;
     for(let f=0;f<4;f++){const up=f%2===0,x=up?XA:XB;flight([x,f*R,up?Z0:Z1],[x,(f+1)*R,up?Z1:Z0],1.2);}
@@ -2686,7 +2697,7 @@ const G3={on:false,ok:false};
     const sm=new THREE.MeshBasicMaterial({color:lin(tok("bad")),transparent:true,opacity:0.5});const stem=new THREE.Mesh(new THREE.CylinderGeometry(0.05,0.05,1,6),sm);g.add(stem);
     const o={p,ring,stem,x,y,z,move(nx,nz){this.x=nx;this.z=nz;},update(now){const b=Math.sin(now/320)*0.35;p.position.set(this.x,this.y+b,this.z);p.rotation.y=now/1500;
       const ph=(now/1600)%1;ring.position.set(this.x,0.13,this.z);ring.scale.setScalar(1+ph*5);rm.opacity=0.85*(1-ph);stem.position.set(this.x,(this.y+b)/2,this.z);stem.scale.y=this.y+b;}};return o;}
-  const PINS={shaft:[12,10,15.6,"!"],dryerfire:[12,13,zc,"fire"],fabric:[48,9,zc,"!"],felt:[34.5,11,zc,"!"],slime:[4,11,zc,"!"],ragger:[16,9,-13.5,"!"],overflow:[-21,10,-13,"water"],chestover:[34.5,21,-15,"water"],lwplug:[11.2,9,ZL,"!"],cscreen:[15.2,8,ZL,"!"],fscreen:[19.2,9,ZL,"!"],lcplug:[26.6,8,ZL,"water"],hdblow:[25.8,13,-10.6,"water"],boiler:[76,14,-10,"!"],permit:[22,10,-40,"water"],thkblow:[34.5,22,-15,"water"],birdhay:[-18.7,9,zc,"!"],wrap:[12,12,zc,"!"],flares:[16,10,-13.5,"fire"],dye:[24,11,zc,"!"],winderdown:[-18.7,9,zc,"!"],
+  const PINS={fogfan:[49.5,22,-4.2,"!"],shaft:[12,10,15.6,"!"],dryerfire:[12,13,zc,"fire"],fabric:[48,9,zc,"!"],felt:[34.5,11,zc,"!"],slime:[4,11,zc,"!"],ragger:[16,9,-13.5,"!"],overflow:[-21,10,-13,"water"],chestover:[34.5,21,-15,"water"],lwplug:[11.2,9,ZL,"!"],cscreen:[15.2,8,ZL,"!"],fscreen:[19.2,9,ZL,"!"],lcplug:[26.6,8,ZL,"water"],hdblow:[25.8,13,-10.6,"water"],boiler:[76,14,-10,"!"],permit:[22,10,-40,"water"],thkblow:[34.5,22,-15,"water"],birdhay:[-18.7,9,zc,"!"],wrap:[12,12,zc,"!"],flares:[16,10,-13.5,"fire"],dye:[24,11,zc,"!"],winderdown:[-18.7,9,zc,"!"],
     badocc:[-17,10,-11,"!"],balefire:[-25,11,-12,"fire"],fleet:[-29,10,-16,"!"],calloff:[-36,10,23,"!"],fight:[-38,7,-21,"!"],roof:[-32,10,24,"water"],highway:[-72,7,4,"!"],
     lightning:[34.5,16,-15,"bolt"],tornado:[0,26,0,"!"],beaver:[-24,12,-12.5,"!"]};
   function person(group,m,x,z){const w=worker(m,M.warn);w.position.set(x,0,z);group.add(w);return w;}
@@ -2774,6 +2785,10 @@ const G3={on:false,ok:false};
         const w0=crew[0];if(k>0.12){const a=w0.rotation.y;stretch(hose,4,0.3,-1.8,w0.position.x+Math.cos(a)*0.3,0.9,w0.position.z-Math.sin(a)*0.3);
           if(Math.random()<rdt*14){const [nx,,nz]=nozzlePos(w0);emit("drop",nx,1.2,nz,Math.cos(a)*7,0.6,-Math.sin(a)*7,0.6,0.26,"#bfe0f0",0.9);}}else hose.visible=false;};},
     lwplug:g=>spFx(g,11.2,ZL,3.6,6),cscreen:g=>spFx(g,15.2,ZL,2.4,4),fscreen:g=>spFx(g,19.2,ZL,3.0,5),lcplug:g=>spFx(g,26.6,ZL,2.0,8),
+    fogfan:g=>{const z=zone(g,47.5,51.5,-6,-2.4);const sheets=[];const fm=new THREE.MeshBasicMaterial({color:lin0("#e9edf1"),transparent:true,opacity:0,depthWrite:false,side:THREE.DoubleSide});
+      for(let k=0;k<5;k++){const m=new THREE.Mesh(new THREE.BoxGeometry(84,1,13),fm);m.position.set(19,1.2+k*2.2,9.5);m.scale.y=2.2;g.add(m);sheets.push(m);}
+      return (now,rdt,inc)=>{z(now);const p=inc&&inc.total?1-inc.left/inc.total:0,k=Math.min(1,p*6)*(p>0.85?(1-p)/0.15:1);fm.opacity=0.11*k;
+        for(let q=0;q<5;q++)if(Math.random()<rdt*45*k)emitA("steam",-6+Math.random()*64,1+Math.random()*9,3.2+Math.random()*12.5,R()*0.6,0.25+Math.random()*0.4,R()*0.6,5,4.5+Math.random()*4,"#eef1f4",0.5);};},
     thkblow:g=>{const pud=new THREE.Mesh(new THREE.CircleGeometry(1,40),FM.pulp);pud.rotation.x=-Math.PI/2;pud.position.set(34.5,0.09,-15);g.add(pud);
       const rp=ripples(g,6,27,42,-22,-8,0.12);
       return (now,rdt,inc)=>{rp(now);const k=Math.min(1,(1-inc.left/inc.total)*6);pud.scale.setScalar(5+7*k);
@@ -3340,7 +3355,8 @@ const G3={on:false,ok:false};
     const night=1-day;if(!G3.nightL){G3.nightL=[[-10,11,9.1],[12,11,9.1],[34,11,9.1],[56,11,9.1],[31.2,PH+4.25,-17.5],[39,PH+4.25,-12.5],[16,9,-18],[-21,7,-13],[-36,7,23],[57,5,-22]].map(([x,y,z])=>{const l=new THREE.PointLight(0xffe2b0,0,38,1.4);l.position.set(x,y,z);scene.add(l);
         const f=new THREE.Mesh(new THREE.CylinderGeometry(0.5,0.7,0.3,12),new THREE.MeshBasicMaterial({color:0xfff1cf}));f.position.set(x,y+0.2,z);f.visible=false;scene.add(f);l.userData.f=f;return l;});}
     G3.nightL.forEach((l,i)=>{l.intensity=(i===4||i===5?0.55:0.22)*night;l.userData.f.visible=night>0.2;});
-    if(G3.exh&&rdt>0){const run=S.pm==="run",k=run?1:0.25;G3.exh.forEach(([x,y,z])=>{if(Math.random()<rdt*7*k)emitA("steam",x+R()*0.3,y,z+R()*0.3,R()*0.6+0.6,2.2+Math.random()*1.4,R()*0.6,3.2,1.6+Math.random()*1.4,"#f4f6f8",0.55);});}G3.spiderFrame&&G3.spiderFrame(rdt);M.wind.emissive=M.wind.emissive||new THREE.Color();M.wind.emissive.copy(lin0("#ffcf7a")).multiplyScalar(0.85*night);
+    if(G3.fogFan&&rdt>0){const F=G3.fogFan,down=S.inc.some(i=>i.id==="fogfan"),k=down?0:(S.pm==="run"?1:0.35);F.spin+=(k-F.spin)*Math.min(1,rdt*0.8);F.rot.rotation.y+=rdt*F.spin*14;
+      if(Math.random()<rdt*9*k)emitA("steam",F.top[0]+R()*0.5,F.top[1],F.top[2]+R()*0.5,R()*0.7+0.5,3.0+Math.random()*1.8,R()*0.7,3.4,2.0+Math.random()*1.6,"#f4f6f8",0.6);}G3.spiderFrame&&G3.spiderFrame(rdt);M.wind.emissive=M.wind.emissive||new THREE.Color();M.wind.emissive.copy(lin0("#ffcf7a")).multiplyScalar(0.85*night);
     ENV.lampHead.color.copy(lin0("#9aa3b2")).lerp(lin0("#fff2c4"),night);ENV.lampPool.opacity=0.32*night;
     ENV.pudM.opacity=0.55*(S.wet||0);ENV.riverTex.offset.x-=rdt*0.02;
     ENV.bridge.rotation.y-=rdt*0.12;
@@ -3441,7 +3457,7 @@ const G3={on:false,ok:false};
     cylZ(0.3,0.16,M.ink,0.78,0.3,0,16,g);cylZ(0.3,0.16,M.ink,-0.55,0.3,-0.45,16,g);cylZ(0.3,0.16,M.ink,-0.55,0.3,0.45,16,g);
     box(0.04,1.4,0.04,M.ink,-0.82,1.5,0.25,g,false);const flag=new THREE.Mesh(new THREE.PlaneGeometry(0.42,0.26),new THREE.MeshBasicMaterial({color:lin(tok("fire")),side:THREE.DoubleSide}));flag.position.set(-0.6,2.08,0.25);g.add(flag);
     scene.add(g);return g;}
-  const MAINT_SPOT={shaft:[12,16.4],fabric:[53.5,14.6],felt:[40.5,14.6],overflow:[-5,-10.5],chestover:[29.5,-9.6],hdblow:[24.2,-9.4],boiler:[68.6,-10],thkblow:[41.6,-10.4],lwplug:[11.2,-20.3],cscreen:[15.2,-20.6],fscreen:[19.2,-20.4],lcplug:[26.6,-20.7],winderdown:[-14.6,14.6],fleet:[-6.3,-14],roof:[-21.6,24],lightning:[40,-8]};
+  const MAINT_SPOT={fogfan:[47.2,-5.4],shaft:[12,16.4],fabric:[53.5,14.6],felt:[40.5,14.6],overflow:[-5,-10.5],chestover:[29.5,-9.6],hdblow:[24.2,-9.4],boiler:[68.6,-10],thkblow:[41.6,-10.4],lwplug:[11.2,-20.3],cscreen:[15.2,-20.6],fscreen:[19.2,-20.4],lcplug:[26.6,-20.7],winderdown:[-14.6,14.6],fleet:[-6.3,-14],roof:[-21.6,24],lightning:[40,-8]};
   function lane(p){return p[1]>2.4?"F":"C";}
   function route(from,to){const pts=[],lf=lane(from),lt=lane(to);
     pts.push(lf==="F"?[from[0],17.6]:[Math.max(from[0],-5.5),-0.6]);
