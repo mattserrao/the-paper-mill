@@ -268,6 +268,7 @@ body.noknobs #cards{display:none}
 .lbrow .r{font-weight:800;color:var(--muted)}.lbrow .n{font-weight:700;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}.lbrow .sc{font-weight:800;font-variant-numeric:tabular-nums;text-align:right}
 .lbrow .m{grid-column:2/-1;font-size:11.5px;color:var(--muted);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.lbrow.me{background:color-mix(in srgb,var(--brand) 10%,transparent)}
 .lbrow:nth-child(1) .r{color:#c99a06}.lbrow:nth-child(2) .r{color:#8e9aa8}.lbrow:nth-child(3) .r{color:#b0703a}.lbempty{padding:18px;color:var(--muted);text-align:center}
+#freeBtn[aria-pressed=true]{background:var(--ok);border-color:var(--ok);color:#fff}
 .seasongrp{display:inline-flex;gap:8px;align-items:center}.schip{font:700 12px var(--f-body);color:var(--panel);background:var(--brand);border-radius:999px;padding:4px 10px;white-space:nowrap}
 @media (max-width:640px){.seasongrp{grid-column:1/-1;display:grid;grid-template-columns:1fr 1fr;gap:8px}.seasongrp .schip{grid-column:1/-1;justify-self:start}.lbrow{padding:8px 10px}}
 .reroll{font-size:12px;padding:5px 10px;align-self:center;white-space:nowrap}
@@ -304,7 +305,7 @@ body{margin:0}
 </head>
 <body>
 
-<div class="ver" id="appVersion" aria-label="Version">v1.5.0</div>
+<div class="ver" id="appVersion" aria-label="Version">v1.5.1</div>
 <div class="wrap">
   <header>
     <div class="brand"><span class="logo" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linejoin="round"><circle cx="8.5" cy="12" r="5.5"/><circle cx="8.5" cy="12" r="1.6" fill="currentColor"/><path d="M8.5 6.5H20v11H8.5"/></svg></span>
@@ -315,7 +316,7 @@ body{margin:0}
       <button id="play" class="primary" aria-pressed="true">Pause</button>
       <button id="balance">Balance all</button>
       <button id="reset">Reset</button>
-      <span class="seasongrp"><button id="seasonBtn" title="30-day season with standard chaos. Your net profit goes on the leaderboard.">Start season</button><button id="scoresBtn">Leaderboard</button><span class="schip" id="seasonChip" hidden></span></span>
+      <span class="seasongrp"><button id="seasonBtn" title="30-day season with standard chaos. Your net profit goes on the leaderboard.">Start season</button><button id="scoresBtn">Leaderboard</button><button id="freeBtn" aria-pressed="false" title="Upgrades are free and you can't go bankrupt. Free play games can't go on the leaderboard.">Free play</button><span class="schip" id="seasonChip" hidden></span></span>
       <span class="sndgrp"><button id="sound" aria-pressed="false" title="Lofi music, incident music and sound effects">Sound off</button><input id="vol" type="range" min="0" max="100" value="70" aria-label="Volume" style="width:80px;accent-color:var(--brand)"></span>
       <div class="simspeed"><label for="simspeed">Sim speed</label><input id="simspeed" type="range" min="1" max="120" step="1" value="30"><span id="simspeedv" class="val">30 min/s</span></div>
     </div>
@@ -382,7 +383,7 @@ body{margin:0}
     <h2 id="so-h">Season complete</h2><p id="so-p" class="muted"></p>
     <div class="sostats" id="so-stats"></div>
     <label class="soname">Name for the leaderboard<input id="so-name" maxlength="16" autocomplete="nickname" spellcheck="false" placeholder="2–16 letters or numbers"></label>
-    <div class="btns"><button id="so-submit" class="primary">Submit score</button><button id="so-board">View leaderboard</button><button id="so-new">New season</button></div>
+    <div class="btns"><button id="so-submit" class="primary">Submit score</button><button id="so-board">View leaderboard</button><button id="so-more">One more turn</button><button id="so-new">New season</button></div>
     <p id="so-msg" class="somsg" aria-live="polite"></p></div></div>
   <div class="overlay top" id="lbOv" hidden><div class="modal wide" role="dialog" aria-modal="true" aria-labelledby="lb-h">
     <div class="lbhead"><h2 id="lb-h">Leaderboard</h2><button id="lb-close" aria-label="Close leaderboard">Close</button></div>
@@ -631,7 +632,7 @@ function freqMul(id){let m=1;
   if(id==="fight"||id==="calloff")m*=LV("safety")?0.5:1;
   return m;}
 function durMul(id){let d=(id==="dryerfire"||id==="balefire")&&LV("fire")?0.5:1;if(MAINT.includes(id))d*=Math.pow(0.8,LV("maintcrew"))*(LV("stores")?0.75:1);return d;}
-function spend(v,k){S.cash-=v;S.ledger[k]+=v;}
+function spend(v,k){if(S.free&&k==="upgrades"){S.ledger[k]+=0;return;}S.cash-=v;S.ledger[k]+=v;}
 function earn(v){S.cash+=v;S.ledger.rev+=v;}
 function money(v){const a=Math.abs(v),sg=v<0?"−":"";return a>=1e6?`${sg}$${(a/1e6).toFixed(2)}M`:a>=1e4?`${sg}$${Math.round(a/1e3)}k`:`${sg}$${Math.round(a).toLocaleString()}`;}
 function inY(d){const n=P.doors;return n<=3?[130,185,240][d]:118+d*150/(n-1);}
@@ -889,8 +890,8 @@ function step(dt){
   spend(((C.drivers.v+C.loaders.v+P.techs)*ECON.wage+P.robots*ECON.robot+P.pmCost)*dt/60,"labor");
   spend(ECON.overhead*dt/60,"overhead"); if(P.premium)spend(P.premium*dt/60,"premium");
   S.profitRate=ease(S.profitRate,(S.cash-cash0)*60/dt*24,dt,480);
-  if(!S.over&&S.cash<ECON.bankrupt&&!(S.season&&S.season.on)){S.over="bankrupt";showOverlay("bankrupt");}
-  if(!S.won&&S.cash>=ECON.goal){S.won=true;if(!(S.season&&S.season.on))showOverlay("win");}
+  if(!S.over&&!S.free&&S.cash<ECON.bankrupt&&!(S.season&&S.season.on)){S.over="bankrupt";showOverlay("bankrupt");}
+  if(!S.won&&!S.free&&S.cash>=ECON.goal){S.won=true;if(!(S.season&&S.season.on))showOverlay("win");}
   seasonTick();
   // smoothed rates (per hour)
   const R=S.rates,k=v=>v*60/dt;
@@ -979,19 +980,19 @@ UGROUPS.forEach(([g,lab])=>{const d=document.createElement("div");d.className="u
   ugrid.appendChild(d);});
 moreToggle("chaosSec","chaosMore","paper-mill-chaos-more")(false||(()=>{try{return localStorage.getItem("paper-mill-chaos-more")==="1";}catch(e){return false;}})());
 moreToggle("shopSec","shopMore","paper-mill-shop-more",v=>document.querySelectorAll(".ugrp").forEach(d=>{d.classList.toggle("closed",!v);d.querySelector("h3").setAttribute("aria-expanded",v);}))((()=>{try{return localStorage.getItem("paper-mill-shop-more")==="1";}catch(e){return false;}})());
-function buy(id){const u=UP[id],l=LV(id);if(l>=u.lv.length)return;const cost=u.lv[l];if(S.cash<cost)return;
+function buy(id){const u=UP[id],l=LV(id);if(l>=u.lv.length)return;const cost=u.lv[l];if(!S.free&&S.cash<cost)return;
   spend(cost,"upgrades");AUDIO.sfx("cash",150);S.up[id]=l+1;applyUpgrades();
   BANNERS.push({text:`${u.name}${u.lv.length>1?" level "+(l+1):""} is online.`,t:null,kind:"good"});while(BANNERS.length>3)BANNERS.splice(1,1);
   log(`Installed ${u.name}${u.lv.length>1?" level "+(l+1):""} (${money(cost)})`,"ok");updateShop();}
 const LEDGER=[["rev","Paper sales",1],["occ","OCC purchases",-1],["energy","Energy & chemicals",-1],["labor","Wages & robots",-1],["overhead","Mill overhead",-1],["repairs","Disaster repairs",-1],["premium","Insurance premium",-1],["upgrades","Upgrades bought",-1]];
 function updateShop(){
   $("u-cash").textContent=money(S.cash);
-  UGROUPS.forEach(([g])=>{const us=UPS.filter(u=>u.g===g),own=us.reduce((a,u)=>a+LV(u.id),0),tot=us.reduce((a,u)=>a+u.lv.length,0),can=us.filter(u=>LV(u.id)<u.lv.length&&S.cash>=u.lv[LV(u.id)]).length;
+  UGROUPS.forEach(([g])=>{const us=UPS.filter(u=>u.g===g),own=us.reduce((a,u)=>a+LV(u.id),0),tot=us.reduce((a,u)=>a+u.lv.length,0),can=us.filter(u=>LV(u.id)<u.lv.length&&(S.free||S.cash>=u.lv[LV(u.id)])).length;
     const el=$("usum-"+g);if(el)el.innerHTML=`${own}/${tot} bought${can?` · <b>${can} affordable</b>`:""}`;});
   UPS.forEach(u=>{const l=LV(u.id),el=$("up-"+u.id),b=$("buy-"+u.id),max=l>=u.lv.length;
     el.classList.toggle("max",max);el.querySelectorAll(".pips i").forEach((p,k)=>p.classList.toggle("on",k<l));
     if(max){b.disabled=true;b.textContent="Maxed";}
-    else{const c=u.lv[l];b.disabled=S.cash<c;b.textContent=S.cash<c?`Need ${money(c)}`:`Buy ${money(c)}`;}});
+    else{const c=u.lv[l];b.disabled=!S.free&&S.cash<c;b.textContent=S.free?"Add (free play)":S.cash<c?`Need ${money(c)}`:`Buy ${money(c)}`;}});
   const lg=$("ledger");lg.replaceChildren();const h=document.createElement("h3");h.textContent="Books since start";lg.appendChild(h);
   let net=0;LEDGER.forEach(([k,lab,sg])=>{const v=S.ledger[k]*sg;net+=v;if((k==="premium"||k==="repairs")&&!S.ledger[k])return;
     const d=document.createElement("div");d.className="stat "+(v>=0?"pos":"neg");d.innerHTML=`<span>${lab}</span><b>${money(v)}</b>`;lg.appendChild(d);});
@@ -1005,11 +1006,11 @@ function showOverlay(kind){running=false;$("play").textContent="Run";$("play").s
   if(kind==="bankrupt"){$("ov-h").textContent="Chapter 11";$("ov-p").textContent=`${NAME} ran out of money on ${hhmm(S.t)}. The mill has been sold to a private equity firm, which is already "exploring strategic options".`;
     $("ov-a").textContent="New game";$("ov-b").hidden=true;}
   else{$("ov-h").textContent="Mill of the Year";$("ov-p").textContent=`${NAME} reached $25M cash on ${hhmm(S.t)}, having made ${f0(S.tot.prodT)} t of paper and survived ${S.tot.incidents} disasters.`;
-    $("ov-a").textContent="Keep playing";$("ov-b").textContent="New game";$("ov-b").hidden=false;}
+    $("ov-a").textContent="One more turn";$("ov-b").textContent="New game";$("ov-b").hidden=false;}
   $("ov-a").focus();}
 $("ov-a").addEventListener("click",()=>{$("overlay").hidden=true;if(S.over){newGame();}else{running=true;$("play").textContent="Pause";$("play").setAttribute("aria-pressed","true");}});
 $("ov-b").addEventListener("click",()=>{$("overlay").hidden=true;newGame();});
-function newGame(){const sp=C.simSpeed;initCtrl();C.simSpeed=sp;initState();BANNERS.length=0;running=true;$("play").textContent="Pause";$("play").setAttribute("aria-pressed","true");seasonLocks(false);}
+function newGame(){const sp=C.simSpeed;initCtrl();C.simSpeed=sp;initState();BANNERS.length=0;running=true;$("play").textContent="Pause";$("play").setAttribute("aria-pressed","true");seasonLocks(false);const fb=$("freeBtn");if(fb){fb.setAttribute("aria-pressed","false");fb.textContent="Free play";}}
 /* ---------- season mode + leaderboard (Supabase) ---------- */
 const LB={url:"https://htlsrhdvloptctzwzbau.supabase.co",key:"sb_publishable_BSp3JNLLDR4dYPJf-EgPJg_g5t6VMa6"};   // public: the database only allows read + insert
 const SEASON_DAYS=30,APP_VER=(document.getElementById("appVersion")||{}).textContent||"";
@@ -1018,7 +1019,7 @@ const lbHdr=(x={})=>Object.assign({apikey:LB.key},LB.key.startsWith("eyJ")?{Auth
 function seasonLocks(on){["chaosOn","chaosLvl","chaosClear"].forEach(id=>{const el=$(id);if(el)el.disabled=on;});
   document.querySelectorAll('#chaosgrid input[type=checkbox]').forEach(el=>el.disabled=on);
   $("seasonBtn").textContent=on?"Restart season":"Start season";$("seasonChip").hidden=!on;}
-function startSeason(){newGame();S.season={on:true,end:SEASON_DAYS*1440,done:false};
+function startSeason(){newGame();$("freeBtn").setAttribute("aria-pressed","false");$("freeBtn").textContent="Free play";S.season={on:true,end:SEASON_DAYS*1440,done:false};
   CH.on=true;$("chaosOn").checked=true;CH.lvl=1;$("chaosLvl").value=1;$("chaosLvlv").textContent="1×";
   EVENTS.forEach(e=>{CH.en[e.id]=true;const c=$("en-"+e.id);if(c)c.checked=true;});seasonLocks(true);
   BANNERS.push({text:`Season started: ${SEASON_DAYS} days. Make as much profit as you can.`,t:null,kind:"good"});}
@@ -1039,7 +1040,7 @@ function endSeason(bust){const se=S.season;se.done=true;se.on=false;running=fals
 function setMsg(t,c){const m=$("so-msg");m.textContent=t;m.className="somsg"+(c?" "+c:"");}
 function saveLocal(r,name){try{const L=JSON.parse(localStorage.getItem("paper-mill-local-scores")||"[]");L.push({...r,name,created_at:new Date().toISOString(),local:1});
   L.sort((a,b)=>b.score-a.score||b.tons-a.tons);localStorage.setItem("paper-mill-local-scores",JSON.stringify(L.slice(0,20)));}catch(e){}}
-async function submitScore(){const r=S.season&&S.season.result;if(!r)return;const name=$("so-name").value.replace(/\s+/g," ").trim();
+async function submitScore(){const r=S.season&&S.season.result;if(!r||S.free)return;const name=$("so-name").value.replace(/\s+/g," ").trim();
   if(!/^[A-Za-z0-9 ._'-]{2,16}$/.test(name)){setMsg("Use 2–16 letters, numbers, spaces or . _ ' -","bad");return;}
   try{localStorage.setItem("paper-mill-player",name);}catch(e){}
   if(!S.season.saved){S.season.saved=1;saveLocal(r,name);}
@@ -1062,6 +1063,12 @@ async function openBoard(){$("lbOv").hidden=false;const L=$("lb-list");L.replace
     const mk=(c,t)=>Object.assign(document.createElement("span"),{className:c,textContent:t});
     const dt=r.created_at?new Date(r.created_at).toLocaleDateString(undefined,{month:"short",day:"numeric"}):"";
     d.append(mk("r",i+1),mk("n",r.name),mk("sc",money(r.score)),mk("m",[r.mill,f0(r.tons)+" t shipped",(r.incidents??"")+" disasters",dt].filter(Boolean).join(" · ")));return d;}));}
+function setFree(on){S.free=on;$("freeBtn").setAttribute("aria-pressed",String(on));$("freeBtn").textContent=on?"Free play: on":"Free play";
+  if(on&&S.season&&S.season.on){S.season=null;seasonLocks(false);BANNERS.push({text:"Season abandoned: free play scores can't go on the leaderboard.",t:null});}
+  if(on)BANNERS.push({text:"Free play: upgrades are free and you can't go bankrupt. No leaderboard.",t:null,kind:"good"});
+  $("seasonChip").hidden=!on&&!(S.season&&(S.season.on||S.season.done));if(on)$("seasonChip").textContent="Free play";updateShop();}
+$("freeBtn").addEventListener("click",()=>setFree(!S.free));
+$("so-more").addEventListener("click",()=>{$("seasonOv").hidden=true;running=true;$("play").textContent="Pause";$("play").setAttribute("aria-pressed","true");$("seasonChip").textContent="Season over · one more turn";});
 $("seasonBtn").addEventListener("click",startSeason);$("scoresBtn").addEventListener("click",openBoard);
 $("so-submit").addEventListener("click",submitScore);$("so-name").addEventListener("keydown",e=>{if(e.key==="Enter")submitScore();e.stopPropagation();});
 $("so-board").addEventListener("click",openBoard);$("so-new").addEventListener("click",()=>{$("seasonOv").hidden=true;startSeason();});
