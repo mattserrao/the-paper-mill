@@ -339,7 +339,7 @@ body{margin:0}
 </head>
 <body>
 
-<div class="ver" id="appVersion" aria-label="Version">v1.18.1</div>
+<div class="ver" id="appVersion" aria-label="Version">v1.18.2</div>
 <div class="wrap">
   <header>
     <div class="brand"><span class="logo" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linejoin="round"><circle cx="8.5" cy="12" r="5.5"/><circle cx="8.5" cy="12" r="1.6" fill="currentColor"/><path d="M8.5 6.5H20v11H8.5"/></svg></span>
@@ -2331,6 +2331,9 @@ const G3={on:false,ok:false};
     const capC=0.45*F,capL=0.8*F,VOL=60;let rem=Math.min(dtm,30);while(rem>0){const h=Math.min(0.4,rem);rem-=h;
       SPD.lc=clamp(SPD.lc+h*(SPD.qc-capC*Math.sqrt(Math.max(0,SPD.lc)))/VOL,0,1.05);SPD.ll=clamp(SPD.ll+h*(SPD.ql-capL*Math.sqrt(Math.max(0,SPD.ll)))/VOL,0,1.05);}
     [SPD.lc,SPD.ll].forEach((l,i)=>{SPD.spill[i]=l>=1?Math.min(1,SPD.spill[i]+dtm/40):Math.max(0,SPD.spill[i]-dtm/300);});
+    // contaminated clear filtrate (fines carrying over) loads up the disks: they start to labour and, if it goes on, the thickener blows out
+    if(!S.inc.some(i=>i.id==="thkblow")){const over=SPD.tl-150;SPD.strain=clamp((SPD.strain||0)+(over>0?dtm*(1+over/300)/240:-dtm/120),0,1);
+      if(SPD.strain>=1&&!S.zen){SPD.strain=0;trigger("thkblow");SPD.v=0.35;SPD.reset=true;log("Contaminated clear filtrate overloaded the disk thickener. Operators reset the spider valve.","bad");}}
     SPD.acc+=dtm;if(SPD.acc>=2){SPD.acc=0;SPD.hist.push([SPD.tc,SPD.tl,SPD.qc,SPD.ql]);if(SPD.hist.length>180)SPD.hist.shift();}}
   const cClear=lin0("#9fd2ec"),cDirty=lin0("#7a5636"),cTmp=new THREE.Color();
   G3.spiderFrame=(rdt)=>{if(rdt>0)spiderStep(rdt*C.simSpeed);
@@ -3629,6 +3632,10 @@ const G3={on:false,ok:false};
     if(under&&run&&chop<=0)chop=1;if(chop>0){chop=Math.max(0,chop-rdt*2.2);if(chop>0.55&&chop-rdt*2.2<=0.55)for(let k=0;k<8;k++)emit("spark",CUTX,1.2,WFZ+(Math.random()-0.5)*1.6,(Math.random()-0.5)*3,2+Math.random()*2,(Math.random()-0.5)*3,0.5,0.2,"#e8ecf2",1);}
     const by=chop>0?1.55+2.2*(Math.abs(chop-0.55)/0.55):3.75;blade.position.y=by;rod.position.y=(by+4.3)/2;rod.scale.y=Math.max(0.1,4.3-by);
     rotor.rotation.y=-V.swirl;pulpStock.visible=R.feed>0.3||S.tank>0;G3.ragFrame(rdt,now,R.feed>0.3);
+    {const st=G3.SPD?G3.SPD.strain||0:0,k=clamp((st-0.2)/0.8,0,1);   // labouring disks: shudder, surging speed, brown spray and knocking
+      disks.position.set(26+(Math.random()-0.5)*0.12*k,TY+(Math.random()-0.5)*0.1*k,TZ+(Math.random()-0.5)*0.12*k);
+      if(k>0&&rdt>0){disks.rotation.x+=rdt*0.6*k*Math.sin(now/180);if(Math.random()<rdt*14*k)emitA("drop",31.5+Math.random()*6,PH+TY+1.6,-15+(Math.random()<0.5?0.7:-0.7),(Math.random()-0.5)*2,1.5+Math.random()*2,(Math.random()-0.5)*3,0.9,0.3,"#7a5636",0.95);
+        if(Math.random()<rdt*0.5*k)AUDIO.sfx("clunk",2500);}}
     if(!S.M.pulperDown){disks.rotation.x-=rdt*0.35;if(Math.random()<rdt*5)emitA("steam",31.5+Math.random()*6,PH+TY+1.9,-15+(Math.random()<0.5?0.55:-0.55),0,-0.6,0,0.9,0.7,"#ffffff",0.45);}
     // chest
     const cr=4.2*Math.sqrt(P.tankCap/300);if(cr!==chestR){chestR=cr;shell.scale.set(cr,1,cr);shellIn.scale.set(cr,1,cr);shellRim.scale.set(cr,cr,1);baseRing.scale.set(cr,1,cr);bands.forEach(b=>b.scale.set(cr,1,cr));liquid.scale.set(cr,cr,1);
@@ -3756,8 +3763,9 @@ $("spiClose").addEventListener("click",()=>$("spider").hidden=true);
 $("spiV").addEventListener("input",e=>{G3.SPD.v=+e.target.value/100;drawSpider();});
 function drawSpider(){const D=G3.SPD;if(!D||$("spider").hidden)return;
   $("spiTc").textContent=f0(D.tc)+" mg/L";$("spiTl").textContent=f0(D.tl)+" mg/L";$("spiQc").textContent=f0(D.qc)+" L/s · "+f0(Math.min(100,D.lc*100))+"% full";$("spiQl").textContent=f0(D.ql)+" L/s · "+f0(Math.min(100,D.ll*100))+"% full";
-  const n=$("spiNote");n.className="spin"+(D.lc>=1||D.ll>=1||D.tl>200?" bad":"");
-  n.textContent=D.lc>=1?"Cloudy seal chest is overflowing.":D.ll>=1?"Clear seal chest is overflowing.":D.tl>200?"Fines are carrying over into the clear filtrate.":D.v>0.5?"Clear filtrate is very clean, but the cloudy chest is filling.":"Split looks healthy.";
+  const n=$("spiNote"),st=D.strain||0;n.className="spin"+(D.lc>=1||D.ll>=1||D.tl>150||st>0.05?" bad":"");
+  if(D.reset){D.reset=false;$("spiV").value=Math.round(D.v*100);}
+  n.textContent=st>0.05?`Dirty clear filtrate is loading up the disks: thickener struggling (${f0(st*100)}%). Send more filtrate to the cloudy side (slide right)!`:D.lc>=1?"Cloudy seal chest is overflowing.":D.ll>=1?"Clear seal chest is overflowing.":D.tl>200?"Fines are carrying over into the clear filtrate.":D.v>0.5?"Clear filtrate is very clean, but the cloudy chest is filling.":"Split looks healthy.";
   const c=$("spiT"),x=c.getContext("2d"),W=c.width,Hh=c.height,h=D.hist;x.clearRect(0,0,W,Hh);x.fillStyle="#fff";x.fillRect(0,0,W,Hh);
   x.strokeStyle="#e3e6ee";x.lineWidth=1;for(let k=1;k<4;k++){x.beginPath();x.moveTo(0,Hh*k/4);x.lineTo(W,Hh*k/4);x.stroke();}
   x.fillStyle="#7a8191";x.font="20px system-ui,sans-serif";x.fillText("TSS (log)",8,22);x.textAlign="right";x.fillText("flow (dashed)",W-8,22);x.textAlign="left";
