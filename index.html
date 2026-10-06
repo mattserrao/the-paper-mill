@@ -290,7 +290,7 @@ body{margin:0}
 </head>
 <body>
 
-<div class="ver" id="appVersion" aria-label="Version">v1.2.2</div>
+<div class="ver" id="appVersion" aria-label="Version">v1.3.0</div>
 <div class="wrap">
   <header>
     <div class="brand"><span class="logo" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linejoin="round"><circle cx="8.5" cy="12" r="5.5"/><circle cx="8.5" cy="12" r="1.6" fill="currentColor"/><path d="M8.5 6.5H20v11H8.5"/></svg></span>
@@ -540,7 +540,7 @@ const AUDIO=(()=>{
 
 const GRADES={ "23m":{sp:2736,bw:24.55}, "26m":{sp:2433,bw:26.06}, "30m":{sp:2222,bw:30.05}, "33HT":{sp:2084,bw:33.08} };
 const P={truckLoad:22,doors:3,driverRate:30,doorRate:45,yieldF:0.88,tankCap:300,yardCap:2000,yardTarget:800,
-  fgCap:900,fgTarget:160,jumbo:25,storeReels:4,rollsPerReel:8,loaderRate:25,truckRolls:8,doorRolls:45,shipDoors:3,
+  fgCap:900,fgTarget:160,convCap:12,jumbo:25,storeReels:4,rollsPerReel:8,loaderRate:25,truckRolls:8,doorRolls:45,shipDoors:3,
   K:34.8/(2736*24.55),minSpeed:1200,ramp:150,pmLoss:0.98,maxQueue:8};
 const UNITS={inRate:v=>v.toFixed(1)+" trucks/h",drivers:v=>Math.round(v)+" drivers",pulper:v=>v.toFixed(1)+" t/h",
   lvlTarget:v=>Math.round(v)+" %",lowLevel:v=>Math.round(v)+" %",pmSp:v=>Math.round(v).toLocaleString()+" fpm",
@@ -725,7 +725,7 @@ function initState(){
      inPhase:0.6,inJit:1,outPhase:0.3,outJit:1,inQ:[],inDock:[null,null,null],outQ:[],outDock:[null,null,null],leaving:[],
      rates:{feed:0,unload:0,fiberIn:0,prod:0,fiberUse:0,load:0,rolls:0,cut:0},
      tot:{inTrucks:0,inTons:0,turned:0,prodT:0,rolls:0,shipped:0,outTrucks:0,breaks:0,breakMin:0,turnups:0,pot:0,incidents:0,hayouts:0,hayMin:0,broke:0},wd:"run",hayLeft:0,
-     trend:[],trendAcc:0,rollsVis:[],inc:[],lastInc:0,feed:[],M:baseMods(),effDrv:C.drivers.v,effLd:C.loaders.v,effHum:C.loaders.v};
+     trend:[],trendAcc:0,rollsVis:[],conv:0,inc:[],lastInc:0,feed:[],M:baseMods(),effDrv:C.drivers.v,effLd:C.loaders.v,effHum:C.loaders.v};
   S.up={};S.cash=ECON.start;S.ledger={rev:0,occ:0,energy:0,labor:0,overhead:0,repairs:0,premium:0,upgrades:0};S.profitRate=0;S.over=null;S.won=false;S.shipT=0;
   Object.assign(P,BASE);applyUpgrades();
   C.rollW.v=P.jumbo/P.rollsPerReel;const g=GRADES[C.grade]; C.pmSp.v=g.sp+P.spBonus; C.wdr.v=Math.min(P.winderMax,P.K*C.pmSp.v*g.bw*1.25);
@@ -764,7 +764,7 @@ function autoControl(dt){
   }
   if(C.wdr.auto){const pot=P.K*C.pmSp.v*g.bw,tgt=S.winderBuf>P.jumbo*1.05?P.winderMax:pot*1.25;C.wdr.v=ease(C.wdr.v,clamp(tgt,0,P.winderMax),dt,5);}
   if(C.loaders.auto){
-    const need=(C.outRate.v*P.truckRolls*1.1)/P.loaderRate-P.robots;
+    const need=(C.outRate.v*P.truckRolls*1.1+(S.rates.rolls||11)*1.15)/P.loaderRate-P.robots;
     if(need>C.loaders.v-0.1) C.loaders.v=Math.min(10,Math.ceil(need+0.1));
     else if(need<C.loaders.v-1.3) C.loaders.v=Math.max(P.robots>0?0:1,C.loaders.v-1);
   }
@@ -823,7 +823,6 @@ function step(dt){
     tgt=Math.max(Math.min(tgt,C.pmSp.v*M.speedCap),P.minSpeed);
     const r=P.ramp*dt; S.pmSpeed+=clamp(tgt-S.pmSpeed,-r*2,r);
     if(level<5){S.pm="down";}
-    else if(S.fg>=P.fgCap){S.pm="full";}
     else if(S.reel>=P.jumbo&&S.winderBuf>P.storeReels*P.jumbo+1e-6){S.pm="spools";}
     else if(Math.random()<dt/154*0.75*P.breakBase*((C.breaks?1:0)+(M.breakMul-1))){S.pm="break";const r=Math.random();S.brkType=r<0.45?"reel":r<0.8?"dryer":"press";
       S.breakLeft=S.brkType==="reel"?4+Math.random()*6:S.brkType==="dryer"?12+Math.random()*14:26+Math.random()*20;S.breakTotal=S.breakLeft;S.tot.breaks++;enqueue("brk");AUDIO.sfx("snap",2500);
@@ -841,11 +840,11 @@ function step(dt){
   if(S.reel>=P.jumbo&&S.winderBuf<=P.storeReels*P.jumbo+1e-6){S.winderBuf+=S.reel;S.reel=0;S.tot.turnups++;}
   // 6 winder
   if(S.wd==="hayout"){if(working("hay"))S.hayLeft-=dt;S.tot.hayMin+=dt;if(S.hayLeft<=0){S.wd="run";log("Winder cleaned up and running again","ok");}}
-  const cut=S.wd==="hayout"||M.winderDown?0:Math.min(S.winderBuf,C.wdr.v*dt/60); S.winderBuf-=cut; S.winderAcc+=cut;
+  if(S.conv===undefined)S.conv=0;const convFull=S.conv>=P.convCap-1e-6;S.wdBlocked=convFull;
+  const cut=S.wd==="hayout"||M.winderDown||convFull?0:Math.min(S.winderBuf,C.wdr.v*dt/60); S.winderBuf-=cut; S.winderAcc+=cut;
   if(cut>0&&Math.random()<dt/720*0.75*P.hayBase*((C.hays?1:0)+(M.hayMul-1)))hayout();
   let rollsMade=0;
-  while(S.winderAcc>=C.rollW.v){S.winderAcc-=C.rollW.v;S.fg+=1;rollsMade++;S.tot.rolls++;
-    if(S.rollsVis.length<14) S.rollsVis.push({p:0});}
+  while(S.winderAcc>=C.rollW.v){S.winderAcc-=C.rollW.v;S.conv+=1;rollsMade++;S.tot.rolls++;}
   // 6 outbound
   if(!M.noOut) S.outPhase+=dt*C.outRate.v/60*S.outJit*wxTruck;
   while(S.outPhase>=1){S.outPhase-=1;S.outJit=0.6+Math.random()*0.8;
@@ -854,6 +853,9 @@ function step(dt){
   for(let d=0;d<P.shipDoors;d++) if(!S.outDock[d]&&S.outQ.length) S.outDock[d]=S.outQ.shift();
   const effHum=Math.min(C.loaders.v,M.ldrCap); S.effHum=effHum; const effLd=effHum+P.robots; S.effLd=effLd;
   let lcap=effLd*P.loaderRate*dt/60*M.clampMul, loaded=0;
+  // clamp trucks first clear the roll conveyor into the warehouse (more urgently as it fills), then load trucks
+  {const u=S.conv/P.convCap,docked=S.outDock.some(Boolean),share=docked?(u>0.6?0.9:0.5):1;
+    const put=Math.max(0,Math.min(S.conv,P.fgCap-S.fg,lcap*share));S.conv-=put;S.fg+=put;lcap-=put;S.rates.put=ease(S.rates.put||0,put*60/dt,dt,6);}
   for(let d=0;d<P.shipDoors;d++){const tr=S.outDock[d]; if(!tr)continue;
     const l=Math.min(P.truckRolls-tr.load,P.doorRolls*dt/60,lcap,S.fg);
     tr.load+=l;lcap-=l;S.fg-=l;loaded+=l;
@@ -1039,11 +1041,11 @@ function updateText(){
   const eff=S.t>0?100*(1-S.tot.breakMin/S.t):100;
   $("r-pm").textContent=`${f1(R.prod/C.rollW.v)} rolls/h · ${S.tot.turnups} reels turned up · ${S.tot.breaks} breaks · ${f0(eff)}% sheet time`;
   const reelsW=Math.max(0,Math.ceil(S.winderBuf/P.jumbo-1e-6)-1);
-  pill("p-wd",S.wd==="hayout"?"hayout: "+(working("hay")?"crew cleaning":crewState("hay")||"crew cleaning"):S.M.winderDown?"winder down":reelsW>=P.storeReels?"storage full":R.cut>0.5?"winding":"waiting for reel",S.wd==="hayout"||S.M.winderDown?"bad":reelsW>=P.storeReels?"warn":R.cut>0.5?"ok":"");
-  $("r-wd").textContent=`${reelsW}/${P.storeReels} reels in storage · cutting ${f1(R.cut)} t/h · ${S.tot.hayouts} hayouts · ${f1(S.tot.broke)} t broke`;
+  pill("p-wd",S.wd==="hayout"?"hayout: "+(working("hay")?"crew cleaning":crewState("hay")||"crew cleaning"):S.M.winderDown?"winder down":S.wdBlocked?"roll conveyor full":reelsW>=P.storeReels?"storage full":R.cut>0.5?"winding":"waiting for reel",S.wd==="hayout"||S.M.winderDown||S.wdBlocked?"bad":reelsW>=P.storeReels?"warn":R.cut>0.5?"ok":"");
+  $("r-wd").textContent=`${reelsW}/${P.storeReels} reels in storage · ${Math.floor(S.conv||0)}/${P.convCap} rolls on the conveyor · cutting ${f1(R.cut)} t/h · ${S.tot.hayouts} hayouts · ${f1(S.tot.broke)} t broke`;
   const shipCap=S.effLd*P.loaderRate*S.M.clampMul;
-  pill("p-ship",S.M.crewAtPM?"crew at the PM":S.fg>=P.fgCap-1?"warehouse full":S.outQ.length>2?`${S.outQ.length} trucks waiting`:S.fg<5&&S.outDock.some(Boolean)?"no rolls":"ok",S.M.crewAtPM?"warn":S.fg>=P.fgCap-1?"bad":S.outQ.length>2||(S.fg<5&&S.outDock.some(Boolean))?"warn":"ok");
-  $("r-ship").textContent=`${S.effLd<C.loaders.v?`Only ${S.effLd} of ${C.loaders.v} loaders · `:""}Loading ${f1(R.load)}/${f0(shipCap)} rolls/h · ${S.outDock.filter(Boolean).length}/${P.shipDoors} doors · ${S.tot.shipped/P.truckRolls} trucks out`;
+  pill("p-ship",S.M.crewAtPM?"crew at the PM":S.fg>=P.fgCap-1?"warehouse full":S.conv>P.convCap*0.7?"rolls waiting for clamps":S.outQ.length>2?`${S.outQ.length} trucks waiting`:S.fg<5&&S.outDock.some(Boolean)?"no rolls":"ok",S.M.crewAtPM?"warn":S.fg>=P.fgCap-1?"bad":S.outQ.length>2||(S.fg<5&&S.outDock.some(Boolean))?"warn":"ok");
+  $("r-ship").textContent=`${S.effLd<C.loaders.v?`Only ${S.effLd} of ${C.loaders.v} loaders · `:""}Putting away ${f1(R.put||0)} rolls/h · loading ${f1(R.load)} of ${f0(shipCap)} rolls/h · ${S.outDock.filter(Boolean).length}/${P.shipDoors} doors · ${S.tot.shipped/P.truckRolls} trucks out`;
 }
 
 /* ---------- Drawing ---------- */
@@ -1208,10 +1210,9 @@ function draw(rdt){
 
   // roll conveyor
   ctx.strokeStyle=col.machine;ctx.lineWidth=5;ctx.beginPath();ctx.moveTo(413,440);ctx.lineTo(413,520);ctx.lineTo(362,520);ctx.stroke();
-  S.rollsVis.forEach(r=>{r.p+=rdt*0.9;});
-  S.rollsVis=S.rollsVis.filter(r=>r.p<1);
-  S.rollsVis.forEach(r=>{const s=r.p*131;let x,y;if(s<80){x=413;y=440+s;}else{x=413-(s-80);y=520;}
-    ctx.fillStyle=col.paperc;ctx.strokeStyle=col.machine;ctx.lineWidth=1;ctx.beginPath();ctx.arc(x,y-7,6,0,7);ctx.fill();ctx.stroke();});
+  {const n=Math.min(P.convCap,Math.floor(S.conv||0));for(let k=0;k<n;k++){const s=k*11;let x,y;if(s<51){x=362+s;y=520;}else{x=413;y=520-(s-51);}
+    ctx.fillStyle=col.paperc;ctx.strokeStyle=col.machine;ctx.lineWidth=1;ctx.beginPath();ctx.arc(x,y-7,5.5,0,7);ctx.fill();ctx.stroke();}
+    if(S.wdBlocked)tag("CONVEYOR FULL · NEED CLAMPS",420,560,"left");}
 
   // warehouse
   ctx.fillStyle=col.panel;ctx.strokeStyle=col.machine;ctx.lineWidth=1.5;rr(110,478,252,174,4);ctx.fill();ctx.stroke();
@@ -1604,7 +1605,7 @@ const G3={on:false,ok:false};
   const WH=4.6;ribWall(26.4,WH,0.3,-21.2,WH/2,-23.5);ribWall(26.4,WH,0.3,-21.2,WH/2,-3);ribWall(0.3,WH,10.8,-8,WH/2,-18.1);ribWall(0.3,WH,7.3,-8,WH/2,-6.65);ribWall(0.3,WH-2.3,2.4,-8,2.3+(WH-2.3)/2,-11.5);
   // warehouse: floor + walls
   slab(-49,-23.8,14.8,32.2,M.slab,0.04);
-  ribWall(25.2,WH,0.3,-36.4,WH/2,14.8);ribWall(25.2,WH,0.3,-36.4,WH/2,32.2);ribWall(0.3,WH,17.4,-23.8,WH/2,23.5);
+  ribWall(25.2,WH,0.3,-36.4,WH/2,14.8);ribWall(25.2,WH,0.3,-36.4,WH/2,32.2);ribWall(0.3,WH,3.3,-23.8,WH/2,16.45);ribWall(0.3,WH,11.5,-23.8,WH/2,26.45);ribWall(0.3,WH-2.5,2.6,-23.8,2.5+(WH-2.5)/2,19.4);
   // machine hall: a cutaway shell, back and end walls only, so the machine stays in view
   ribWall(66,5.2,0.3,31,2.6,2.4);ribWall(0.3,5.2,13.8,64,2.6,9.3);
   {const s=new THREE.Mesh(new THREE.PlaneGeometry(26,3.25),signMat);s.position.set(51,3.1,2.57);scene.add(s);
@@ -1805,7 +1806,7 @@ const G3={on:false,ok:false};
   [zc-CD/2-0.5,zc+CD/2+0.5].forEach(z=>box(0.6,4.2,0.6,M.steel,-10,2.1,z));
   const reelCore=cylZ(0.25,CD+1.4,M.steel,-10,4.2,zc,8);
   const reel=cylZ(1,CD,M.paper,-10,4.2,zc,24);
-  box(1.4,0.5,9,M.steel,-18.7,0.25,15.5);box(6,0.5,1.4,M.steel,-21.5,0.25,19.4);
+  box(1.4,0.5,9,M.steel,-18.7,0.25,15.5);box(11.4,0.5,1.4,M.steel,-24.4,0.25,19.4);[-24,-27.5].forEach(x=>box(0.12,0.4,1.5,M.warn,x,0.55,19.4,scene,false));box(0.3,0.9,1.6,M.bad,-30.2,0.45,19.4,scene,false);
   const rollGeo=new THREE.CylinderGeometry(0.62,0.62,1.4,24);
   const beltRolls=new THREE.InstancedMesh(rollGeo,ROLLM,16);beltRolls.castShadow=true;scene.add(beltRolls);
 
@@ -1830,7 +1831,7 @@ const G3={on:false,ok:false};
   {const m4=new THREE.Matrix4();for(let i=0;i<168;i++){const layer=i%3,col=Math.floor(i/3)%14,row=Math.floor(i/42);
     m4.makeTranslation(-30+col*1.45,0.5+layer*0.92,-7+(-row)*3.2);bales.setMatrixAt(i,m4);}}
   const rolls=new THREE.InstancedMesh(rollGeo,ROLLM,84);rolls.castShadow=true;rolls.receiveShadow=true;scene.add(rolls);
-  {const m4=new THREE.Matrix4();for(let i=0;i<84;i++){m4.makeTranslation(-45+(i%12)*1.75,0.74,30.6-Math.floor(i/12)*1.75);rolls.setMatrixAt(i,m4);}}
+  {const m4=new THREE.Matrix4();for(let i=0;i<84;i++){m4.makeTranslation(-45+(i%12)*1.75,0.74,31.2-Math.floor(i/12)*1.7);rolls.setMatrixAt(i,m4);}}
 
   /* ---- vehicles ---- */
   function makeTruck(kind){const g=new THREE.Group();
@@ -2809,7 +2810,10 @@ const G3={on:false,ok:false};
       sheetMesh.material=dyeOn?dyeSheet:sheetMat;reel.material=dyeOn?dyeReel:M.paper;
       sheetMesh.visible=show;sheetMesh.geometry.setDrawRange(0,segs*6);}sheetTex.offset.x=-V.sheet/24*1.0;
     // roll conveyor
-    let nr=0;S.rollsVis.forEach(r=>{if(nr>=16)return;const s=r.p*131;let x,z;if(s<80){x=-18.7;z=11.6+s/80*7.8;}else{x=-18.7-(s-80)/51*5;z=19.4;}m4.makeTranslation(x,1.2,z);beltRolls.setMatrixAt(nr++,m4);});
+    // rolls queue on the conveyor from the warehouse end back toward the winder
+    {const want=Math.min(14,Math.floor(S.conv||0)),CV=G3.convVis||(G3.convVis=[]);while(CV.length<want)CV.push(20.5);while(CV.length>want)CV.shift();
+      CV.sort((a,b)=>a-b);CV.forEach((d,k)=>{const t=k*1.45;CV[k]=d>t?Math.max(t,d-rdt*4):t;});}
+    let nr=0;G3.convVis.forEach(d=>{if(nr>=16)return;let x,z;if(d<11.2){x=-29.9+d;z=19.4;}else{x=-18.7;z=19.4-(d-11.2);}m4.makeTranslation(x,1.12,z);beltRolls.setMatrixAt(nr++,m4);});
     beltRolls.count=nr;beltRolls.instanceMatrix.needsUpdate=true;
     // forklifts (same paths as the 2D view)
     ensure(lifts,V.lifts.length,()=>forklift(M.warn));
@@ -2824,6 +2828,7 @@ const G3={on:false,ok:false};
     for(let i=0;i<nLo;i++){const g=loaders[i];
       if(i>=Math.floor(S.effHum+1e-9)){const [x,z]=W(374+i*15,642);g.position.set(x,0,z);g.children[0].material=M.off;g.userData.load.visible=false;g.visible=true;continue;}
       g.children[0].material=M.fork;g.visible=S.M.clampMul!==0||G3.yardFrozen;if(G3.yardFrozen){g.userData.load.visible=false;continue;}
+      if(i===0&&(S.conv||0)>=1){const ph=(V.rollsAnim*0.5)%2,t=ph<1?ph:2-ph,x=-31.4-t*9,z=19.4+t*5;g.position.set(x,0,z);g.rotation.y=Math.atan2(-5,-9)+(ph<1?0:Math.PI);g.userData.load.visible=ph<1;continue;}
       const ph=(V.rollsAnim*0.6+i*0.37)%2,t=ph<1?ph:2-ph,[x,z]=W(126+t*60+20,outY(i%P.shipDoors));
       g.position.set(x,0,z);g.rotation.y=ph<1?Math.PI:0;g.userData.load.visible=ph<1;}
     ensure(robots,P.robots,robot);
