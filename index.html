@@ -79,7 +79,9 @@ button.primary{background:var(--stock);border-color:var(--stock);color:var(--pan
 .lbl.inc b{color:var(--bad)}
 .blackout3d[hidden]{display:none}
 .chips3d{position:absolute;left:10px;bottom:10px;display:flex;flex-wrap:wrap;gap:4px;max-width:75%;pointer-events:none}
-.chips3d span{background:var(--bad);color:var(--panel);font:700 11px var(--f-display);letter-spacing:.06em;text-transform:uppercase;padding:2px 8px;border-radius:999px}
+.chips3d span,.chips3d button{background:var(--bad);color:var(--panel);font:700 11px var(--f-display);letter-spacing:.06em;text-transform:uppercase;padding:2px 8px;border-radius:999px;border:0}
+.chips3d button{pointer-events:auto;cursor:pointer}.chips3d button:hover,.chips3d button:focus-visible{filter:brightness(1.12);outline:2px solid var(--ink);outline-offset:1px}
+.banner3d.go{cursor:pointer}.lbl.inc{pointer-events:auto;cursor:pointer}
 .trendbox{border:1px solid var(--line);border-radius:8px;background:var(--panel);padding:10px 12px}
 .trendhead{display:flex;flex-wrap:wrap;gap:6px 16px;align-items:center;font-size:12px;color:var(--muted)}
 .trendhead b{font:600 12px var(--f-display);letter-spacing:.08em;text-transform:uppercase;color:var(--ink);margin-right:auto}
@@ -197,7 +199,7 @@ button:focus-visible,input:focus-visible,select:focus-visible{outline-color:var(
 .banner3d{border-radius:12px;border-width:1px;box-shadow:0 8px 24px rgba(28,34,51,.14)}
 .banner3d span{font:700 11.5px var(--f-body);letter-spacing:.04em;border-radius:8px}
 .banner3d b{font:700 15px var(--f-body)}
-.chips3d span{font:600 11px var(--f-body);letter-spacing:0;text-transform:none}
+.chips3d span,.chips3d button{font:600 11px var(--f-body);letter-spacing:0;text-transform:none}
 .pad button{border-radius:10px;box-shadow:0 2px 8px rgba(28,34,51,.10)}
 /* header brand */
 .brand{display:flex;align-items:center;gap:12px;min-width:0}
@@ -313,7 +315,7 @@ body{margin:0}
 </head>
 <body>
 
-<div class="ver" id="appVersion" aria-label="Version">v1.13.0</div>
+<div class="ver" id="appVersion" aria-label="Version">v1.13.1</div>
 <div class="wrap">
   <header>
     <div class="brand"><span class="logo" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linejoin="round"><circle cx="8.5" cy="12" r="5.5"/><circle cx="8.5" cy="12" r="1.6" fill="currentColor"/><path d="M8.5 6.5H20v11H8.5"/></svg></span>
@@ -774,7 +776,7 @@ function trigger(id,quiet){
   const e=EV[id],dur=(e.dur[0]+Math.random()*(e.dur[1]-e.dur[0]))*durMul(id);
   const inc={id,left:dur,total:dur,real:performance.now(),note:""};
   S.inc.push(inc);if(QINC(id))enqueue(id);S.lastInc=S.t;S.tot.incidents++;AUDIO.event(id);
-  if(!quiet){BANNERS.push({text:e.head,t:null});while(BANNERS.length>3)BANNERS.splice(1,1);}
+  if(!quiet){BANNERS.push({text:e.head,t:null,id:e.id});while(BANNERS.length>3)BANNERS.splice(1,1);}
   if(e.start)e.start(inc);
   const bill=(REPAIR[id]||0)*P.repairMul; if(bill>0){spend(bill,"repairs");inc.note=(inc.note?inc.note+" · ":"")+`repair bill ${money(bill)}`;}
   log(e.head+(inc.note?` (${inc.note})`:""),"bad");
@@ -794,7 +796,7 @@ function chaosTick(dt){
 const HAYLINES=["HAYOUT! Paper is shooting to the roof!","Winder hayout! Every PM hand to the dry end!","Hayout! It's snowing paper in the winder aisle.","Hayout! The set exploded off the drums."];
 function hayout(){AUDIO.sfx("hayout",600);S.wd="hayout";S.hayLeft=40+Math.random()*40;S.hayTotal=S.hayLeft;enqueue("hay");
   const extra=Math.min(S.winderBuf,2+Math.random()*4),loss=extra+S.winderAcc;S.winderBuf-=extra;S.winderAcc=0;S.tot.broke+=loss;S.tot.hayouts++;
-  BANNERS.push({text:HAYLINES[Math.floor(Math.random()*HAYLINES.length)],t:null});while(BANNERS.length>3)BANNERS.splice(1,1);
+  BANNERS.push({text:HAYLINES[Math.floor(Math.random()*HAYLINES.length)],t:null,id:"hay"});while(BANNERS.length>3)BANNERS.splice(1,1);
   log(`Winder hayout: ${loss.toFixed(1)} t of paper to broke`,"bad");}
 function initCtrl(){
   C={inRate:{v:1.8,auto:true},drivers:{v:3,auto:true},pulper:{v:40,auto:true},lvlTarget:{v:69},lowLevel:{v:30},
@@ -2389,6 +2391,11 @@ const G3={on:false,ok:false};
   ];
   LABELS.forEach(L=>{L.el=document.createElement("div");L.el.className="lbl sec";L.b=document.createElement("b");L.s=document.createElement("span");L.el.append(L.b,L.s);labelHost.appendChild(L.el);L.v=new THREE.Vector3(...L.p);});
   const banner=$("banner3d"),chips=$("chips3d");
+  // click a disaster (chip, breaking banner or its floating label) to fly the camera there
+  G3.spotOf=id=>id==="hay"?[-17,7]:id==="brk"?[12,9]:PINS[id]?[PINS[id][0],PINS[id][2]]:null;
+  G3.flyTo=id=>{const sp=G3.spotOf(id);if(!sp)return;goal={t:new THREE.Vector3(sp[0],0,sp[1]),r:62,th:DEF.th,ph:0.88};};
+  chips.addEventListener("click",e=>{const b=e.target.closest("button");if(b)G3.flyTo(b.dataset.id);});
+  banner.addEventListener("click",()=>{const b=BANNERS[0];if(b&&b.id)G3.flyTo(b.id);});
 
   /* ---- camera controls: drag to orbit, wheel/pinch to zoom ---- */
   const target=new THREE.Vector3(-14,0,5);const DEF={th:-0.2,ph:0.96,r:305};const cam={...DEF};
@@ -2711,7 +2718,7 @@ const G3={on:false,ok:false};
     const doTxt=now-lastIncTxt>200;if(doTxt)lastIncTxt=now;const w=host.clientWidth,hh=host.clientHeight;
     S.inc.forEach((inc,i)=>{const def=FXDEF[inc.id];let f=FX[inc.id];
       if(!f){const g=new THREE.Group();scene.add(g);const pp=PINS[inc.id]||[0,10,0,"!"];f=FX[inc.id]={g,up:null,pin:pinAt(g,pp[0],pp[1],pp[2],pp[3]),el:document.createElement("div")};
-        f.up=def?def(g):()=>{};f.el.className="lbl inc bad";f.el.append(document.createElement("b"),document.createElement("span"));incHost.appendChild(f.el);}
+        f.up=def?def(g):()=>{};f.el.className="lbl inc bad";f.el.addEventListener("click",()=>G3.flyTo(inc.id));f.el.append(document.createElement("b"),document.createElement("span"));incHost.appendChild(f.el);}
       f.g.visible=true;f.up(now,rdt,inc);if(f.pinPos)f.pin.move(f.pinPos[0],f.pinPos[1]);f.pin.update(now);
       tmp.set(f.pin.x,f.pin.p.position.y+3.4,f.pin.z).project(camera);const vis=tmp.z<1&&Math.abs(tmp.x)<1.1&&Math.abs(tmp.y)<1.1;f.el.hidden=!vis;
       if(vis){f.el.style.transform=`translate(${(tmp.x+1)/2*w}px,${(1-tmp.y)/2*hh}px) translate(-50%,-100%)`;
@@ -3505,7 +3512,8 @@ const G3={on:false,ok:false};
     if(doText&&document.body.classList.contains("fs")){[["hud-cash","k-cash"],["hud-prod","k-prod"],["hud-tank","k-tank"],["hud-profit","k-profit"],["hud-clock","k-clock"]].forEach(([a,b])=>$(a).textContent=$(b).textContent);{const hp=$("hud-profit");hp.style.color=/^[−-]/.test(hp.textContent)?"var(--bad)":"var(--ink)";}
       hudSync();}
     if(doText){const b=BANNERS[0];banner.hidden=!b;if(b){banner.className="banner3d "+(b.kind==="good"?"good":"");banner.querySelector("span").textContent=b.kind==="good"?"INSTALLED":"BREAKING";banner.querySelector("b").textContent=b.text;}
-      chips.replaceChildren(...S.inc.map(i=>{const c=document.createElement("span");c.textContent=EV[i.id].name;return c;}));}
+      const ck=S.inc.map(i=>i.id).join("|");if(ck!==chips.dataset.k){chips.dataset.k=ck;chips.replaceChildren(...S.inc.map(i=>{const c=document.createElement("button");c.type="button";c.dataset.id=i.id;c.textContent=EV[i.id].name;c.title="Show "+EV[i.id].name;return c;}));}
+      banner.classList.toggle("go",!!(b&&b.id&&G3.spotOf(b.id)));}
   };
   applyPalette();rebuildDoors();
 })();
