@@ -290,7 +290,7 @@ body{margin:0}
 </head>
 <body>
 
-<div class="ver" id="appVersion" aria-label="Version">v1.2.0</div>
+<div class="ver" id="appVersion" aria-label="Version">v1.2.1</div>
 <div class="wrap">
   <header>
     <div class="brand"><span class="logo" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linejoin="round"><circle cx="8.5" cy="12" r="5.5"/><circle cx="8.5" cy="12" r="1.6" fill="currentColor"/><path d="M8.5 6.5H20v11H8.5"/></svg></span>
@@ -668,6 +668,14 @@ function crewTick(dt){if(!S.crewQ)S.crewQ=[];
   // in the 3D view the job starts when the crew actually gets there (with a safety timeout)
   if(!(G3.on&&G3.ok)||now-h.since>6000)h.here=true;
   if(h.resp<=0&&h.here)h.go=true;}
+// maintenance: techs work in pairs, oldest job first; a job's repair clock only runs once its pair is on site
+const MJOBS=["shaft","fabric","felt","winderdown","hdblow","boiler","thkblow","overflow","chestover","fleet","roof","lightning"];
+const MNEED=id=>MJOBS.includes(id);
+function maintTick(dt){const crews=Math.max(1,Math.floor(P.techs/2)),list=S.inc.filter(i=>MNEED(i.id)),now=performance.now();
+  list.forEach((i,k)=>{i.mSlot=k<crews?k:-1;i.mQ=k-crews+1;if(i.mSlot<0)return;if(!i.mSince){i.mSince=now;i.mResp=8;}
+    if(i.mResp>0)i.mResp-=dt;if(!(G3.on&&G3.ok)||now-i.mSince>9000)i.mHere=true;if(i.mResp<=0&&i.mHere)i.mGo=true;});}
+function maintState(i){if(!MNEED(i.id))return "";if(i.mGo)return "maintenance working";if(i.mSlot>=0)return "maintenance on the way";return `waiting for maintenance (${i.mQ} ahead)`;}
+function incState(i){const a=QINC(i.id)&&!working(i.id)?crewState(i.id):"",b=MNEED(i.id)&&!i.mGo?maintState(i):"";return [a,b].filter(Boolean).join(" · ");}
 function working(k){const h=S.crewQ&&S.crewQ[0];return !!(h&&h.k===k&&h.go);}
 function crewState(k){const q=S.crewQ||[],i=q.findIndex(x=>x.k===k);if(i<0)return "";if(i>0)return `waiting for crew (${i} ahead)`;return q[0].go?"crew working":"crew on the way";}
 function baseMods(){return {pmDown:null,pulperDown:false,speedCap:1,breakMul:1,yieldMul:1,recvMul:1,clampMul:1,drvCap:99,ldrCap:99,docksClosed:false,noIn:false,noOut:false,yardEat:0,hayMul:1,crewAtPM:false,winderDown:false,offSpec:false,feedMul:1};}
@@ -695,7 +703,8 @@ function trigger(id,quiet){
 function clearIncident(id){const i=S.inc.find(x=>x.id===id);if(i)i.left=0;}
 function chaosTick(dt){
   crewTick(dt);
-  for(const i of S.inc){if(QINC(i.id)&&!working(i.id))continue;if(QINC(i.id))i.go=true;i.left-=dt;}
+  maintTick(dt);
+  for(const i of S.inc){if(QINC(i.id)&&!working(i.id))continue;if(MNEED(i.id)&&!i.mGo)continue;if(QINC(i.id)||MNEED(i.id))i.go=true;i.left-=dt;}
   for(const i of S.inc)if(i.left<=0&&EV[i.id].end)EV[i.id].end(i);
   for(const i of S.inc)if(i.left<=0)log(`${EV[i.id].name}: cleared, back to normal`,"ok");
   S.inc=S.inc.filter(i=>i.left>0);
@@ -982,7 +991,7 @@ function updateChaos(){
   const act=$("c-active");act.replaceChildren();
   if(!S.inc.length){const s=document.createElement("span");s.className="none";s.textContent="No active incidents.";act.appendChild(s);}
   S.inc.forEach(i=>{const d=document.createElement("div");d.className="it";d.textContent=EV[i.id].name;const sm=document.createElement("small");
-    const cs=QINC(i.id)?crewState(i.id):"";sm.textContent=`${(i.left/60).toFixed(1)} h left${cs?" · "+cs:""}${i.note?" · "+i.note:""}`;d.appendChild(sm);act.appendChild(d);});
+    const cs=incState(i)||(MNEED(i.id)?"maintenance working":QINC(i.id)?crewState(i.id):"");sm.textContent=`${(i.left/60).toFixed(1)} h left${cs?" · "+cs:""}${i.note?" · "+i.note:""}`;d.appendChild(sm);act.appendChild(d);});
   EVENTS.forEach(e=>{const b=$("ev-"+e.id),i=S.inc.find(x=>x.id===e.id);b.setAttribute("aria-pressed",i?"true":"false");
     b.querySelector("small").textContent=i?`${(i.left/60).toFixed(1)} h`:"";b.title=i?"Click to clear this incident":"Click to trigger now";});
   const k=S.feed.length+"|"+(S.feed[0]?S.feed[0].t:"");
@@ -2152,7 +2161,7 @@ const G3={on:false,ok:false};
       f.g.visible=true;f.up(now,rdt,inc);if(f.pinPos)f.pin.move(f.pinPos[0],f.pinPos[1]);f.pin.update(now);
       tmp.set(f.pin.x,f.pin.p.position.y+3.4,f.pin.z).project(camera);const vis=tmp.z<1&&Math.abs(tmp.x)<1.1&&Math.abs(tmp.y)<1.1;f.el.hidden=!vis;
       if(vis){f.el.style.transform=`translate(${(tmp.x+1)/2*w}px,${(1-tmp.y)/2*hh}px) translate(-50%,-100%)`;
-        if(doTxt){f.el.firstChild.textContent=EV[inc.id].name;f.el.lastChild.textContent=`${QINC(inc.id)&&!working(inc.id)?crewState(inc.id)+" · ":""}${(inc.left/60).toFixed(1)} h left${inc.note?" · "+inc.note.split(" · ")[0]:""}`;}}});
+        if(doTxt){f.el.firstChild.textContent=EV[inc.id].name;f.el.lastChild.textContent=`${incState(inc)?incState(inc)+" · ":""}${(inc.left/60).toFixed(1)} h left${inc.note?" · "+inc.note.split(" · ")[0]:""}`;}}});
     stepParts(rdt);fireLight.position.copy(fireLpos);fireLight.intensity=fireL>0?fireL*(2.6+0.9*Math.sin(performance.now()/60)+0.6*Math.sin(performance.now()/23)):0;fireL=0;
     const out=S.inc.some(i=>i.id==="lightning");blackEl.hidden=!out;if(!out)$("flash3d").style.opacity=0;
   }
@@ -2665,8 +2674,8 @@ const G3={on:false,ok:false};
     if(d<0.25)T.path.shift();
     const a=T.t.rotation.y;T.w.position.set(T.t.position.x-Math.cos(a)*0.15,0,T.t.position.z+Math.sin(a)*0.15);T.w.rotation.y=a;return T.path.length===0;}
   function techUpdate(rdt,now){ensureTechs();
-    const MI=S.inc.filter(i=>MAINT_SPOT[i.id]);
-    techs.forEach((T,k)=>{const want=MI.length&&k<P.techs?MI[k%MI.length]:null,active=T.inc&&S.inc.some(i=>i.id===T.inc);
+    const MI=S.inc.filter(i=>MAINT_SPOT[i.id]&&i.mSlot>=0).sort((a,b)=>a.mSlot-b.mSlot);
+    techs.forEach((T,k)=>{const want=k<P.techs&&MI[Math.floor(k/2)]?MI[Math.floor(k/2)]:null,active=T.inc&&S.inc.some(i=>i.id===T.inc);
       switch(T.state){
         case "home":{T.w.visible=k<P.techs;const b=T.bench;
           if(want){T.inc=want.id;T.state="exit";T.next="mount";T.walk=[[SHOP.door[0],-20.1],[SHOP.door[0],-18.1]];break;}
@@ -2684,7 +2693,7 @@ const G3={on:false,ok:false};
         case "out":pose(T.w,"ride",now);T.w.position.y=0.12;if(drive(T,rdt)){T.state="walk";T.onSite=now;}break;
         case "walk":{const s=MAINT_SPOT[T.inc],fx=s[0]+((k%3)-1)*1.1,fz=s[1]+(lane(s)==="F"?-1.6:1.4)*(k%2?1:-1)*0.6-(lane(s)==="F"?1.0:0);
           if(!active&&now-T.onSite>2500){T.state="back";break;}
-          if(moveP(T.w,fx,fz,5,rdt)){face(T.w,s[0],lane(s)==="F"?zc:s[1]-3,rdt);pose(T.w,"fix",now);
+          if(moveP(T.w,fx,fz,5,rdt)){face(T.w,s[0],lane(s)==="F"?zc:s[1]-3,rdt);pose(T.w,"fix",now);{const ii=S.inc.find(x=>x.id===T.inc);if(ii)ii.mHere=true;}
             if(Math.random()<rdt*6){const [nx,,nz]=nozzlePos(T.w);for(let j=0;j<3;j++)emit("spark",nx,0.9,nz,R()*4,2+Math.random()*3,R()*4,0.4,0.22,"#ff8a1f",1);}}
           else pose(T.w,"run",now);break;}
         case "back":{const a=T.t.rotation.y;if(moveP(T.w,T.t.position.x-Math.cos(a)*0.15,T.t.position.z+Math.sin(a)*0.15,5,rdt)){T.state="home2";T.path=route([T.t.position.x,T.t.position.z],T.slot);}else pose(T.w,"run",now);break;}
