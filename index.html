@@ -305,7 +305,7 @@ body{margin:0}
 </head>
 <body>
 
-<div class="ver" id="appVersion" aria-label="Version">v1.5.1</div>
+<div class="ver" id="appVersion" aria-label="Version">v1.5.2</div>
 <div class="wrap">
   <header>
     <div class="brand"><span class="logo" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linejoin="round"><circle cx="8.5" cy="12" r="5.5"/><circle cx="8.5" cy="12" r="1.6" fill="currentColor"/><path d="M8.5 6.5H20v11H8.5"/></svg></span>
@@ -747,7 +747,7 @@ function initCtrl(){
      pmSp:{v:2736,auto:true},rollW:{v:25/8},loaders:{v:2,auto:true},outRate:{v:1,auto:true},grade:"23m",breaks:false,hays:true,wdr:{v:45,auto:true},simSpeed:30};
 }
 function initState(){
-  S={wx:"clear",wxLeft:360,wet:0,crewQ:[],brkType:"dryer",breakTotal:1,hayTotal:1,t:0,yard:700,tank:0.69*P.tankCap,fg:160,pmSpeed:C.pmSp.v,pm:"run",breakLeft:0,reel:8,winderBuf:0,winderAcc:0,
+  S={date0:new Date().setHours(0,0,0,0),wx:"clear",wxLeft:360,wet:0,crewQ:[],brkType:"dryer",breakTotal:1,hayTotal:1,t:0,yard:700,tank:0.69*P.tankCap,fg:160,pmSpeed:C.pmSp.v,pm:"run",breakLeft:0,reel:8,winderBuf:0,winderAcc:0,
      inPhase:0.6,inJit:1,outPhase:0.3,outJit:1,inQ:[],inDock:[null,null,null],outQ:[],outDock:[null,null,null],leaving:[],
      rates:{feed:0,unload:0,fiberIn:0,prod:0,fiberUse:0,load:0,rolls:0,cut:0},
      tot:{inTrucks:0,inTons:0,turned:0,prodT:0,rolls:0,shipped:0,outTrucks:0,breaks:0,breakMin:0,turnups:0,pot:0,incidents:0,hayouts:0,hayMin:0,broke:0},wd:"run",hayLeft:0,
@@ -1094,7 +1094,8 @@ function updateChaos(){
 }
 function pill(id,text,cls){const el=$(id);el.textContent=text;el.className="pill "+(cls||"");}
 const f0=v=>Math.round(v).toLocaleString(), f1=v=>v.toFixed(1);
-function hhmm(t){t+=360;const d=Math.floor(t/1440)+1,m=Math.floor(t%1440);return `Day ${d} ${String(Math.floor(m/60)).padStart(2,"0")}:${String(m%60).padStart(2,"0")}`;}
+function hhmm(t){t+=360;const day=Math.floor(t/1440),h=Math.floor((t%1440)/60),base=(S&&S.date0)||new Date().setHours(0,0,0,0);
+  const d=new Date(base+day*864e5),h12=h%12||12;return `${d.toLocaleDateString(undefined,{weekday:"short",month:"short",day:"numeric"})} · ${h12} ${h<12?"AM":"PM"}`;}
 
 function updateText(){
   const R=S.rates,g=GRADES[C.grade],level=S.tank/P.tankCap*100,days=Math.max(S.t/1440,1/1440);
@@ -1734,7 +1735,24 @@ const G3={on:false,ok:false};
     g.userData.mats=[m,gl,em];scene.add(g);roofs.push(g);return g;}
   box2(-34.4,-8,-23.5,-3);box2(-49,-23.8,14.8,32.2);skirt(-2,1.2,64,1.2,2.4);skirt(65.2,2.4,65.2,16.2,2.4);
   sawRoof(-34.6,-7.85,-23.65,-2.85,WH);sawRoof(-49.15,-23.65,14.65,32.35,WH);
-  G3.roofFade=r=>{const a=clamp((r-170)/70,0,1);roofs.forEach(g=>{g.visible=a>0.02;g.userData.mats.forEach((m,i)=>m.opacity=i===1?a*0.75:i===2?a*0.35:a);g.children.forEach(c=>c.castShadow=a>0.6);});};
+  // paper machine hall: full building seen from the air (walls, window bands, sawtooth roof), gone as soon as you zoom in
+  {const g=new THREE.Group(),HH=13.4,X0=-25.3,X1=64.3,Z0=2.25,Z1=16.75,cx=(X0+X1)/2,L=X1-X0,Dz=Z1-Z0;
+    const wm=mat("g-wall",{transparent:true,roughness:0.7}),gl=mat("g-glass",{transparent:true,roughness:0.12,metalness:0.45}),em=new THREE.LineBasicMaterial({color:lin0("#1c2233"),transparent:true,opacity:0.35}),bm=mat("brand",{transparent:true,roughness:0.55,side:THREE.DoubleSide});
+    const add=(o,e)=>{o.castShadow=true;o.receiveShadow=true;g.add(o);if(e)edges(o,em,20);return o;};
+    const wall=(w,h,d,x,y,z)=>{const o=new THREE.Mesh(new THREE.BoxGeometry(w,h,d),wm);o.position.set(x,y,z);return add(o,true);};
+    wall(L,HH,0.3,cx,HH/2,Z1);                                   // front (tending side)
+    wall(L,HH-5.3,0.3,cx,5.3+(HH-5.3)/2,Z0);wall(23.3,5.3,0.3,-13.65,2.65,Z0);   // back, above and beside the existing low wall
+    wall(0.3,HH,Dz,X0,HH/2,(Z0+Z1)/2);wall(0.3,HH-5.3,Dz,X1,5.3+(HH-5.3)/2,(Z0+Z1)/2);
+    const band=(y,h,w,pitch,z,dir)=>{for(let x=X0+2.2;x+w<X1-1;x+=pitch){const p=new THREE.Mesh(new THREE.BoxGeometry(w,h,0.08),gl);p.position.set(x+w/2,y,z+dir*0.17);g.add(p);}};
+    band(9.6,2.6,3.8,4.6,Z1,1);band(3.2,1.4,2.2,4.6,Z1,1);band(9.6,2.6,3.8,4.6,Z0,-1);
+    for(const zz of [Z0,Z1]){const f=new THREE.Mesh(new THREE.BoxGeometry(L+0.4,0.5,0.4),bm);f.position.set(cx,HH-0.1,zz);g.add(f);}
+    [[X0,-1],[X1,1]].forEach(([x,dir])=>{for(let z=Z0+2;z<Z1-2.5;z+=3.4){const p=new THREE.Mesh(new THREE.BoxGeometry(0.08,2.6,2.4),gl);p.position.set(x+dir*0.17,9.6,z+1.2);g.add(p);}});
+    const n=Math.round(L/4.4),tw=L/n;
+    for(let i=0;i<n;i++){const sh=new THREE.Shape();sh.moveTo(0,0);sh.lineTo(tw,0);sh.lineTo(tw,2.1);sh.lineTo(0,0);
+      const o=new THREE.Mesh(new THREE.ExtrudeGeometry(sh,{depth:Dz,bevelEnabled:false}),bm);o.position.set(X0+i*tw,HH,Z0);add(o,true);
+      const gp=new THREE.Mesh(new THREE.PlaneGeometry(Dz-0.3,1.6),gl);gp.rotation.y=Math.PI/2;gp.position.set(X0+(i+1)*tw+0.02,HH+1.0,(Z0+Z1)/2);g.add(gp);}
+    g.userData.mats=[wm,gl,em,bm];g.userData.fade=[255,40];scene.add(g);roofs.push(g);}
+  G3.roofFade=r=>{roofs.forEach(g=>{const f=g.userData.fade||[170,70],a=clamp((r-f[0])/f[1],0,1);g.visible=a>0.02;g.userData.mats.forEach((m,i)=>m.opacity=i===1?a*0.75:i===2?a*0.35:a);g.children.forEach(c=>c.castShadow=a>0.6);});};
   const doorWalls={in:new THREE.Group(),out:new THREE.Group()};scene.add(doorWalls.in,doorWalls.out);let doorKey="";
   function buildDoorWall(group,x,z0,z1,doorsZ,h,bayDir){group.clear();const gap=2.6,dh=3.1,edges=[z0,...doorsZ.flatMap(z=>[z-gap/2,z+gap/2]),z1];
     for(let i=0;i<edges.length;i+=2){const a=edges[i],b=edges[i+1];if(b-a>0.05)ribWall(0.3,h,b-a,x,h/2,(a+b)/2,group);}
