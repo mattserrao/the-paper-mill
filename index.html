@@ -273,6 +273,17 @@ body.noknobs #cards{display:none}
 #freeBtn[aria-pressed=true]{background:var(--ok);border-color:var(--ok);color:#fff}
 .seasongrp{display:inline-flex;gap:8px;align-items:center}.schip{font:700 12px var(--f-body);color:var(--panel);background:var(--brand);border-radius:999px;padding:4px 10px;white-space:nowrap}
 @media (max-width:640px){.seasongrp{grid-column:1/-1;display:grid;grid-template-columns:1fr 1fr;gap:8px}.seasongrp .schip{grid-column:1/-1;justify-self:start}.lbrow{padding:8px 10px}}
+/* zen mood: graded colour, haze, vignette, film grain and letterbox bars */
+.zenfx{display:none}
+body.zen .zenfx{display:block;position:absolute;inset:0;pointer-events:none;z-index:2;overflow:hidden;background:radial-gradient(ellipse 78% 72% at 50% 46%,transparent 48%,rgba(8,8,18,.62) 100%)}
+body.zen .zenfx b{position:absolute;inset:0;background:linear-gradient(180deg,rgba(255,150,70,.42) 0%,rgba(255,120,80,.12) 40%,rgba(30,60,120,.35) 100%);mix-blend-mode:soft-light}
+body.zen .zenfx::before,body.zen .zenfx::after{content:"";position:absolute;left:0;right:0;height:6.5vh;background:#07080c}
+body.zen .zenfx::before{top:0}body.zen .zenfx::after{bottom:0}
+body.zen .zenfx i{position:absolute;inset:-50%;background-image:var(--grain);opacity:.11;mix-blend-mode:overlay;animation:zgrain .9s steps(6) infinite}
+@keyframes zgrain{0%{transform:translate(0,0)}20%{transform:translate(-3%,2%)}40%{transform:translate(2%,-3%)}60%{transform:translate(-2%,-1%)}80%{transform:translate(3%,3%)}100%{transform:translate(0,0)}}
+@media (prefers-reduced-motion:reduce){body.zen .zenfx i{animation:none}}
+.zenexit{z-index:5}
+body.zen #gl{filter:saturate(.88) contrast(1.16) brightness(.88) sepia(.05)}
 body.zen .hud,body.zen .pad,body.zen #labels3d,body.zen .banner3d,body.zen .chips3d,body.zen .ver{display:none!important}
 .zenexit{position:absolute;right:16px;bottom:calc(16px + env(safe-area-inset-bottom,0px));z-index:8;opacity:0;transition:opacity .6s;background:rgba(255,255,255,.85);backdrop-filter:blur(6px)}
 body.zen .zenexit.show{opacity:1}
@@ -315,7 +326,7 @@ body{margin:0}
 </head>
 <body>
 
-<div class="ver" id="appVersion" aria-label="Version">v1.14.1</div>
+<div class="ver" id="appVersion" aria-label="Version">v1.15.0</div>
 <div class="wrap">
   <header>
     <div class="brand"><span class="logo" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linejoin="round"><circle cx="8.5" cy="12" r="5.5"/><circle cx="8.5" cy="12" r="1.6" fill="currentColor"/><path d="M8.5 6.5H20v11H8.5"/></svg></span>
@@ -349,7 +360,7 @@ body{margin:0}
   </div>
   <div class="jumps" id="jumps" role="group" aria-label="Go to area"><span>Go to</span><button data-j="trucks">Trucks</button><button data-j="recv">Receiving</button><button data-j="pulp">Stock Prep</button><button data-j="pm">Paper machine</button><button data-j="wd">Winder</button><button data-j="wh">Warehouse</button><button data-j="shop">Maintenance</button>
   </div>
-  <div class="view3d" id="view3d" hidden><button id="zenExit" class="zenexit" hidden>Leave zen mode</button><div class="hud" id="hud">
+  <div class="view3d" id="view3d" hidden><div class="zenfx" id="zenFx" aria-hidden="true"><b></b><i></i></div><button id="zenExit" class="zenexit" hidden>Leave zen mode</button><div class="hud" id="hud">
     <div class="hk brandk"><i></i><div><span id="hud-mill">Mill</span><b id="hud-clock">–</b></div></div>
     <div class="hk"><span>Cash</span><b id="hud-cash">–</b></div>
     <div class="hk"><span>Production</span><b id="hud-prod">–</b></div>
@@ -558,6 +569,7 @@ const AUDIO=(()=>{
     if(bar%4===3&&st>=12)tom(t,bus,[180,150,120,95][st-12],0.35);}
   const seqs={chill:{bpm:76,next:0,step:0,play:playRot},intense:{bpm:138,next:0,step:0,play:playIntense}};
   function tick(){const now=ctx.currentTime,ahead=now+0.15;
+    if(!paNext)paNext=now+35+Math.random()*40;else if(now>paNext){paNext=now+100+Math.random()*120;paAnnounce(now+0.05);}
     for(const k in seqs){const s=seqs[k],live=target===k||now-switchedAt<4;if(s.next<now-0.25)s.next=now+0.05;
       while(s.next<ahead){if(live)s.play(s.step,s.next,s);s.next+=60/s.bpm/4;s.step++;}}}
   function startCrackle(){const s=ctx.createBufferSource();s.buffer=noiseBuf;s.loop=true;const lp=ctx.createBiquadFilter();lp.type="bandpass";lp.frequency.value=2400;lp.Q.value=0.4;
@@ -611,6 +623,26 @@ const AUDIO=(()=>{
     lose:t=>{[[55,0.5],[54,0.5],[53,0.5],[52,1.4]].reduce((tt,[m,d])=>{const o=tone(tt,sfxBus,"sawtooth",mtof(m),d,0.08,0.02);if(d>1)o.o.frequency.linearRampToValueAtTime(mtof(m)*0.97,tt+d);return tt+d;},t);},
   };
   const EVSFX={shaft:"clunk",fabric:"clunk",felt:"clunk",winderdown:"clunk",lwplug:"clunk",cscreen:"clunk",fscreen:"clunk",lcplug:"water",hdblow:"water",boiler:"steam",permit:"alarm",thkblow:"water",wrap:"snap",flares:"fire",ragger:"clunk",dryerfire:"fire",balefire:"fire",overflow:"water",chestover:"water",roof:"water",fight:"siren",highway:"siren",lightning:"thunder",tornado:"wind",beaver:"chomp",runner:"whistle"};
+  // plant PA: a two-tone chime, then a muffled voice (formant-filtered babble through a band-limited, slightly overdriven horn speaker with a hall echo)
+  const VOW=[[730,1090],[270,2290],[530,1840],[570,840],[440,1020],[300,870],[660,1720],[490,1350]];
+  function paAnnounce(t){const out=ctx.createGain();out.gain.value=0.55;const hp=ctx.createBiquadFilter();hp.type="highpass";hp.frequency.value=450;const lp=ctx.createBiquadFilter();lp.type="lowpass";lp.frequency.value=1900;lp.Q.value=1.2;
+    const ws=ctx.createWaveShaper(),cv=new Float32Array(256);for(let i=0;i<256;i++){const x=i/128-1;cv[i]=Math.tanh(2.6*x);}ws.curve=cv;
+    const dl=ctx.createDelay(1),fb=ctx.createGain(),wet=ctx.createGain();dl.delayTime.value=0.21;fb.gain.value=0.36;wet.gain.value=0.5;
+    out.connect(hp);hp.connect(ws);ws.connect(lp);lp.connect(sfxBus);lp.connect(dl);dl.connect(fb);fb.connect(dl);dl.connect(wet);wet.connect(sfxBus);
+    const chime=(tt,f)=>{tone(tt,lp,"sine",f,1.3,0.22,0.01);tone(tt,lp,"sine",f*2,0.6,0.05,0.01);};chime(t,784);chime(t+0.5,622);
+    let tt=t+1.7;const phrases=1+Math.floor(Math.random()*2);
+    for(let ph=0;ph<phrases;ph++){const words=4+Math.floor(Math.random()*5);let f0=150+Math.random()*30;
+      for(let w=0;w<words;w++){const syl=1+Math.floor(Math.random()*3);
+        for(let k=0;k<syl;k++){const d=0.09+Math.random()*0.12,v=VOW[Math.floor(Math.random()*VOW.length)],f=f0*(1+(Math.random()-0.5)*0.08)*(k===0&&w%3===0?1.08:1);
+          const o=ctx.createOscillator();o.type="sawtooth";o.frequency.setValueAtTime(f,tt);o.frequency.linearRampToValueAtTime(f*0.94,tt+d);
+          const g=ctx.createGain();g.gain.setValueAtTime(0.0001,tt);g.gain.exponentialRampToValueAtTime(0.5,tt+0.02);g.gain.setValueAtTime(0.5,tt+d*0.7);g.gain.exponentialRampToValueAtTime(0.0001,tt+d+0.04);
+          v.forEach((F,j)=>{const b=ctx.createBiquadFilter();b.type="bandpass";b.frequency.value=F*(0.95+Math.random()*0.1);b.Q.value=j?9:6;const bg=ctx.createGain();bg.gain.value=j?0.6:1;o.connect(b);b.connect(bg);bg.connect(g);});
+          g.connect(out);o.start(tt);o.stop(tt+d+0.06);
+          if(Math.random()<0.45)nz(tt-0.03,0.05,out,0.18,"bandpass",2800+Math.random()*1500,1.2,0.005);
+          tt+=d+0.015;}
+        tt+=0.05+Math.random()*0.09;f0*=0.985;}
+      tt+=0.35;}}
+  FX.pa=paAnnounce;let paNext=0;
   function sfx(name,gap=1200){if(!ctx||!on||!FX[name])return;const now=performance.now();if(now-(last[name]||0)<gap)return;last[name]=now;FX[name](ctx.currentTime+0.02);}
   return {setOn,setVol,update,sfx,event:id=>sfx(EVSFX[id]||"alarm"),get on(){return on;}};
 })();
@@ -1126,6 +1158,8 @@ function setFree(on){S.free=on;$("freeBtn").setAttribute("aria-pressed",String(o
 $("freeBtn").addEventListener("click",()=>setFree(!S.free));
 // zen mode: endless, calm screensaver of the mill
 let ZEN=null;
+{const c=document.createElement("canvas");c.width=c.height=128;const x=c.getContext("2d"),im=x.createImageData(128,128);for(let i=0;i<im.data.length;i+=4){const v=Math.random()*255|0;im.data[i]=im.data[i+1]=im.data[i+2]=v;im.data[i+3]=255;}
+  x.putImageData(im,0,0);document.documentElement.style.setProperty("--grain",`url(${c.toDataURL()})`);}
 function setZen(on){if(on===!!ZEN)return;
   if(on){if(S.season&&S.season.on){S.season=null;seasonLocks(false);}
     ZEN={speed:C.simSpeed,chaos:CH.on,hays:C.hays,breaks:C.breaks,view:G3.on};
@@ -1622,6 +1656,22 @@ const G3={on:false,ok:false};
     x.fillStyle="#f4efe6";x.fillRect(16,0,3,64);x.fillRect(44,0,3,64);}
   const baleTex=new THREE.CanvasTexture(baleC);baleTex.encoding=THREE.sRGBEncoding;
   M.bale=mat("panel",{map:baleTex,roughness:0.95});
+  // OCC bale grades: A is clean brown corrugated; B carries mixed paper; C is low grade with plastics, coated board and trash (more rejects)
+  function gradeTex(g){const c=document.createElement("canvas");c.width=c.height=64;const x=c.getContext("2d");x.fillStyle=g===2?"#8f6a45":g===1?"#a7784a":"#b07a43";x.fillRect(0,0,64,64);
+    for(let i=0;i<220;i++){x.fillStyle=Math.random()<0.5?"rgba(90,55,25,.2)":"rgba(255,235,200,.15)";x.fillRect(Math.random()*64,Math.random()*64,6+Math.random()*10,1.5);}
+    const bits=g===1?[["#e9e6df",14],["#c9c4ba",8],["#d23b3b",2],["#3a6fc9",2]]:[["#f2f0ea",22],["#cfd8e3",10],["#3a6fc9",8],["#f2c230",6],["#2a2a2a",6],["#d23b3b",5],["#9be0f0",8]];
+    if(g)bits.forEach(([col,n])=>{for(let k=0;k<n;k++){x.fillStyle=col;x.globalAlpha=0.75+Math.random()*0.25;const w=3+Math.random()*(g===2?9:7),h=2+Math.random()*5;x.fillRect(Math.random()*64,Math.random()*64,w,h);}});x.globalAlpha=1;
+    if(g===2){x.strokeStyle="rgba(220,235,245,.7)";x.lineWidth=1;for(let k=0;k<6;k++){x.beginPath();x.moveTo(Math.random()*64,Math.random()*64);x.quadraticCurveTo(Math.random()*64,Math.random()*64,Math.random()*64,Math.random()*64);x.stroke();}}
+    x.fillStyle="#f4efe6";x.fillRect(16,0,3,64);x.fillRect(44,0,3,64);
+    x.fillStyle="rgba(28,34,51,.85)";x.fillRect(50,50,12,12);x.fillStyle="#ffffff";x.font="bold 11px system-ui,sans-serif";x.fillText("ABC"[g],52.5,60);
+    const t=new THREE.CanvasTexture(c);t.encoding=THREE.sRGBEncoding;return t;}
+  M.baleG=[0,1,2].map(g=>mat("panel",{map:g?gradeTex(g):(()=>{const t=gradeTex(0);return t;})(),roughness:0.95}));
+  // three instanced meshes, one per grade, filled each frame through put(); counts follow automatically
+  function graded(geo,n,opts={}){const ms=M.baleG.map(m=>{const o=new THREE.InstancedMesh(geo,m,n);o.castShadow=true;if(opts.recv)o.receiveShadow=true;o.count=0;scene.add(o);return o;});
+    const k=[0,0,0];return {reset(){k[0]=k[1]=k[2]=0;},put(g,m4){if(k[g]<n)ms[g].setMatrixAt(k[g]++,m4);},done(){ms.forEach((o,i)=>{o.count=k[i];o.instanceMatrix.needsUpdate=true;});}};}
+  const hsh2=n=>{const x=Math.sin(n*91.7+3.1)*43758.5453;return x-Math.floor(x);};
+  // grade mix: mostly A and B; junk OCC deliveries swing it heavily toward C
+  const gradeOf=(id,junk)=>{const r=hsh2(id);return junk?(r<0.2?0:r<0.5?1:2):(r<0.5?0:r<0.85?1:2);};
   const capC=document.createElement("canvas");capC.width=128;capC.height=128;
   function drawCap(){const x=capC.getContext("2d");x.fillStyle=tok("paperc");x.fillRect(0,0,128,128);
     x.strokeStyle="rgba(60,45,30,.22)";for(let r=18;r<62;r+=5){x.beginPath();x.arc(64,64,r,0,7);x.stroke();}x.fillStyle="#8c6a45";x.beginPath();x.arc(64,64,14,0,7);x.fill();x.fillStyle="#4e3a24";x.beginPath();x.arc(64,64,8,0,7);x.fill();}
@@ -1797,7 +1847,7 @@ const G3={on:false,ok:false};
     [-1.6,1.6].forEach(dx=>box(0.14,1.2,0.14,M.ink,44+dx,0.6,21.5,scene,false));ENV.board={ctx:sc.getContext("2d"),tex:st,last:""};}
   // trees: dense outside the fence, scattered on the lawns inside, kept off every road and building
   {const KEEP=[[-145,-33,-6.5,-1],[-145,-48,10,15],[-55,-6,-26,-1.5],[-69,-22,9,50],[-27,67,1,20],[2,46,-27,-1],[47,67,-29,-13],[47,63,21,32],[18,96,29,36],[64,90,36,58],[68,85,-19,-2],[0,48,-50,-29],
-      [-145,-6,-32,-26],[64,69,-2,20],[-33,-27,-58,-29],[-6,6,-33,-24],[24,42,36,42],[63,70,19,25],[42,46,19,23],[-110,-90,-1,10],[-165,-30,-50,-32.6],[-44,-38,-2,1.5],[30,34,-62,-44],[-405,405,-78,-54]];
+      [-145,-6,-32,-26],[64,69,-2,20],[-33,-27,-58,-29],[-6,6,-33,-24],[24,42,36,42],[63,70,19,25],[42,46,19,23],[-110,-90,-1,10],[-165,-30,-50,-32.6],[-96,-52,-28,-6],[-44,-38,-2,1.5],[30,34,-62,-44],[-405,405,-78,-54]];
     const ok=(x,z)=>!KEEP.some(([a,b,c,d])=>x>a-2&&x<b+2&&z>c-2&&z<d+2);
     const pts=[];let guard=0;
     while(pts.length<300&&guard<6000){guard++;const inside=Math.random()<0.35,x=inside?SITE.x0+Math.random()*(SITE.x1-SITE.x0):-200+Math.random()*400,z=inside?SITE.z0+Math.random()*(SITE.z1-SITE.z0):-130+Math.random()*270;
@@ -1863,6 +1913,12 @@ const G3={on:false,ok:false};
       const sh=new THREE.Shape();sh.moveTo(0,0);sh.lineTo(tw,0);sh.lineTo(tw,2.1);sh.lineTo(0,0);
       const o=new THREE.Mesh(new THREE.ExtrudeGeometry(sh,{depth:dz,bevelEnabled:false}),bm);o.position.set(xs,HH+0.07,z0);add(o,true);
       const gp=new THREE.Mesh(new THREE.PlaneGeometry(dz-0.3,1.6),gl);gp.rotation.y=Math.PI/2;gp.position.set(xs+tw+0.07,HH+1.07,(z0+Z1)/2);g.add(gp);}
+    // dryer hood exhaust stacks through the roof (vapour plumes in envUpdate)
+    // dryer hood exhaust: ducts rise from the hood through the roof to capped stacks (always shown; vapour plumes in envUpdate)
+    G3.exh=[[4,8],[12,8],[20,8]].map(([x,z])=>{const ex=M.steel,L=HH+5.4-7.6;const st=new THREE.Mesh(new THREE.CylinderGeometry(0.6,0.6,L,16),ex);st.position.set(x,7.6+L/2,z);st.castShadow=true;scene.add(st);
+      const cap=new THREE.Mesh(new THREE.CylinderGeometry(0.95,0.95,0.12,16),M.ink);cap.position.set(x,HH+5.9,z);scene.add(cap);
+      [-0.55,0.55].forEach(dx=>box(0.08,0.55,0.08,M.ink,x+dx,HH+5.6,z,scene,false));
+      const fan=new THREE.Mesh(new THREE.CylinderGeometry(0.95,0.95,0.8,16),M.brand);fan.position.set(x,8.2,z);scene.add(fan);return [x,HH+5.5,z];});
     g.userData.mats=[wm,gl,em,bm];g.userData.fade=[255,40];scene.add(g);roofs.push(g);}
   // roofs and the hall shell fade out as you zoom in. Fully shown, they render opaque (no transparency sorting); while fading they
   // stop writing depth, so overlapping roof panels can't hide each other in a draw-order-dependent way (that made them flicker
@@ -1956,19 +2012,26 @@ const G3={on:false,ok:false};
   const belt=new THREE.Mesh(new THREE.BoxGeometry(cLen,0.3,1.6),M.steel);{const o=belt;o.position.copy(cA).add(cB).multiplyScalar(0.5);
     o.quaternion.setFromUnitVectors(new THREE.Vector3(1,0,0),cDir.clone().normalize());o.castShadow=true;scene.add(o);
     [0.25,0.55,0.85].forEach(f=>{const p=cA.clone().lerp(cB,f);box(0.3,p.y,0.3,M.steel,p.x,p.y/2,p.z-0.6);box(0.3,p.y,0.3,M.steel,p.x,p.y/2,p.z+0.6);});}
-  const beltBales=new THREE.InstancedMesh(new THREE.BoxGeometry(1.15,0.85,1.15),M.bale||M.kraft,24);beltBales.castShadow=true;scene.add(beltBales);
+  const beltBales=graded(new THREE.BoxGeometry(1.15,0.85,1.15),24);
   const baleWires=new THREE.InstancedMesh(new THREE.BoxGeometry(0.04,0.88,1.18),M.ink,72);scene.add(baleWires);
   const PATH=[[WF0+0.7,0.95,WFZ],[CUTX,0.95,WFZ],[cA.x,cA.y+0.55,cA.z],[cB.x,cB.y+0.55,cB.z]],PLEN=[0];for(let i=1;i<PATH.length;i++)PLEN.push(PLEN[i-1]+Math.hypot(PATH[i][0]-PATH[i-1][0],PATH[i][1]-PATH[i-1][1],PATH[i][2]-PATH[i-1][2]));
   function pathAt(d,out){for(let i=1;i<PATH.length;i++)if(d<=PLEN[i]){const f=(d-PLEN[i-1])/(PLEN[i]-PLEN[i-1]),a=PATH[i-1],b=PATH[i];out.set(a[0]+(b[0]-a[0])*f,a[1]+(b[1]-a[1])*f,a[2]+(b[2]-a[2])*f);return true;}return false;}
   let wfOff=0,chop=0,baleCyc=0;
   // once the wires are cut the bale falls apart into slabs that spread out up the incline and tumble off the head pulley into the tub
-  const baleChunks=new THREE.InstancedMesh(new THREE.BoxGeometry(0.56,0.28,1.1),M.bale||M.kraft,150);baleChunks.castShadow=true;scene.add(baleChunks);
+  const baleChunks=graded(new THREE.BoxGeometry(0.56,0.28,1.1),150);
   const beltQ=belt.quaternion.clone(),cH=new THREE.Vector3(cDir.x,0,cDir.z).normalize(),hsh=n=>{const x=Math.sin(n*127.1+11.7)*43758.5453;return x-Math.floor(x);};
   const splashed=new Set(),splashRings=[];
   for(let k=0;k<8;k++){const m=new THREE.Mesh(new THREE.RingGeometry(0.7,0.95,28),new THREE.MeshBasicMaterial({color:lin0("#d9c3a0"),transparent:true,opacity:0,depthWrite:false}));m.rotation.x=-Math.PI/2;m.visible=false;scene.add(m);splashRings.push({m,t:9});}
-  function splashAt(x,z){const r=splashRings.find(o=>o.t>1)||splashRings[0];r.t=0;r.m.position.set(x,3.02,z);r.m.visible=true;
+  const REJ=["#3a6fc9","#f2f0ea","#f2c230","#2a2a2a","#9be0f0","#d23b3b"];
+  function splashAt(x,z,gr=0){G3.rejBump(gr);const r=splashRings.find(o=>o.t>1)||splashRings[0];r.t=0;r.m.position.set(x,3.02,z);r.m.visible=true;
+    for(let k=0;k<(gr===2?6:gr===1?2:0);k++){const a=Math.random()*6.28;emitA("chip",x,3.1,z,Math.cos(a)*1.4,1.6+Math.random()*1.6,Math.sin(a)*1.4,1.6,0.22+Math.random()*0.14,REJ[Math.floor(Math.random()*REJ.length)],1);}
     for(let k=0;k<7;k++){const a=Math.random()*6.28,sp=0.8+Math.random()*1.6;emitA("drop",x,3.05,z,Math.cos(a)*sp,2.4+Math.random()*2.2,Math.sin(a)*sp,0.8,0.22+Math.random()*0.12,"#8a6440",0.95);}}
-  function splashTick(rdt){splashRings.forEach(o=>{if(o.t>1)return;o.t+=rdt/0.9;const k=Math.min(1,o.t);o.m.scale.setScalar(0.4+1.6*k);o.m.material.opacity=0.75*(1-k);if(o.t>1)o.m.visible=false;});}
+  // floating trash on the stock: builds up as low-grade bales go in, slowly pulled out by the ragger and the cleaners
+  const flot=[];let rejLvl=0.1;for(let k=0;k<16;k++){const m=new THREE.Mesh(new THREE.BoxGeometry(0.36+Math.random()*0.3,0.04,0.22+Math.random()*0.2),new THREE.MeshStandardMaterial({color:lin0(REJ[k%REJ.length]),roughness:0.5}));
+    m.userData={r:1.2+Math.random()*2.5,a:Math.random()*6.28,sp:0.6+Math.random()*0.5,th:k/16};m.visible=false;scene.add(m);flot.push(m);}
+  G3.rejBump=gr=>{rejLvl=Math.min(1,rejLvl+(gr===2?0.08:gr===1?0.025:0));};
+  function splashTick(rdt){rejLvl=Math.max(0.05,rejLvl-rdt*0.01);flot.forEach(m=>{const u=m.userData;m.visible=u.th<rejLvl&&pulpStock.visible;if(!m.visible)return;u.a+=rdt*u.sp*0.6;
+      m.position.set(16+Math.cos(u.a)*u.r,2.98,-13.5+Math.sin(u.a)*u.r);m.rotation.y=-u.a*1.3;});splashRings.forEach(o=>{if(o.t>1)return;o.t+=rdt/0.9;const k=Math.min(1,o.t);o.m.scale.setScalar(0.4+1.6*k);o.m.material.opacity=0.75*(1-k);if(o.t>1)o.m.visible=false;});}
 
   // pulper vat with rotor
   const pulper=new THREE.Group();pulper.position.set(16,0,-13.5);scene.add(pulper);blob(16,-13.5,6.4);blob(34.5,-15,6.6);
@@ -2100,6 +2163,8 @@ const G3={on:false,ok:false};
     else{ragLoose.visible=ragStub.visible=false;ragTail.visible=true;ragTail.geometry.setDrawRange(0,Infinity);
       if(feeding){ragWheel.rotation.x-=rdt*0.35;ropeTex.offset.x-=rdt*0.0035;}}};
   const PH=12.4,ZL=-23,TY=2.6,TZ=-4.5;            // platform deck height; screening line row
+  // flood light poles on the disk thickener deck (they light up at night with the mill lights)
+  [[31.2,-17.5],[39,-12.5]].forEach(([x,z])=>{box(0.14,4.6,0.14,M.steel,x,PH+2.3,z,scene,false);box(0.9,0.22,0.5,M.ink,x,PH+4.65,z,scene,false);});
   slab(8,33,-26.5,-19.6,M.slab,0.035);blob(21,ZL,9);
   // HD cleaner between the pulper and the screening line: tangential inlet at the top, accepts out the top, junk trap at the bottom
   {const hx=25.8,hz=-10.6,hc=new THREE.Group();hc.position.set(hx,0,hz);scene.add(hc);blob(hx,hz,1.8);
@@ -2315,9 +2380,10 @@ const G3={on:false,ok:false};
   function fkLeg(A,B){const P=[A];if(Math.abs(A[1]-B[1])>0.05){P.push([FKLANE,A[1]],[FKLANE,B[1]]);}P.push(B);
     let L=0;const seg=[];for(let i=1;i<P.length;i++){const d=Math.hypot(P[i][0]-P[i-1][0],P[i][1]-P[i-1][1]);seg.push(d);L+=d;}return {P,seg,L};}
   function fkAt(leg,t){let d=t*leg.L;for(let i=0;i<leg.seg.length;i++){const a=leg.P[i],b=leg.P[i+1];if(d<=leg.seg[i]||i===leg.seg.length-1){const k=leg.seg[i]>0?Math.min(1,d/leg.seg[i]):0;return [a[0]+(b[0]-a[0])*k,a[1]+(b[1]-a[1])*k,Math.atan2(-(b[1]-a[1]),b[0]-a[0]||1e-6)];}d-=leg.seg[i];}const e=leg.P[leg.P.length-1];return [e[0],e[1],0];}
-  const bales=new THREE.InstancedMesh(new THREE.BoxGeometry(1.2,0.9,1.2),M.bale,168);bales.castShadow=true;bales.receiveShadow=true;scene.add(bales);
+  const bales=graded(new THREE.BoxGeometry(1.2,0.9,1.2),168,{recv:true}),baleM=[];
   {const m4=new THREE.Matrix4();for(let i=0;i<168;i++){const layer=i%3,col=Math.floor(i/3)%14,row=Math.floor(i/42);
-    m4.makeTranslation(-30+col*1.45,0.5+layer*0.92,BALEROWS[row]);bales.setMatrixAt(i,m4);}}
+    m4.makeTranslation(-30+col*1.45,0.5+layer*0.92,BALEROWS[row]);baleM.push(m4.clone());}}
+  let baleShown=-1;
   const rolls=new THREE.InstancedMesh(rollGeo,ROLLM,84);rolls.castShadow=true;rolls.receiveShadow=true;scene.add(rolls);
   {const m4=new THREE.Matrix4();for(let i=0;i<84;i++){m4.makeTranslation(-45+(i%12)*1.75,0.74,31.2-Math.floor(i/12)*1.7);rolls.setMatrixAt(i,m4);}}
 
@@ -2340,21 +2406,51 @@ const G3={on:false,ok:false};
     [-0.95,0.95].forEach(z=>{const t=new THREE.Mesh(new THREE.CylinderGeometry(0.24,0.24,0.75,14),chromeM);t.rotation.z=Math.PI/2;t.position.set(1.6,0.7,z);g.add(t);}); // fuel tanks
     const stack=new THREE.Mesh(new THREE.CylinderGeometry(0.07,0.07,1.5,10),chromeM);stack.position.set(1.85,2.15,0.85);g.add(stack);g.userData.stack=[1.85,2.95,0.85];
     box(0.5,0.08,0.7,M.ink,1.15,0.8,0,g,false);                                    // fifth wheel
+    let doorL,doorR;
+    if(kind==="chem"){   // stainless chemical tank trailer with a hazard placard, walkway and hose cabinet
+      const tm=new THREE.MeshStandardMaterial({color:0xd9dee5,metalness:0.75,roughness:0.28});box(4.0,0.16,1.2,M.ink,-1.05,0.72,0,g,false);
+      const tk=new THREE.Mesh(new THREE.CylinderGeometry(0.82,0.82,3.9,20),tm);tk.rotation.z=Math.PI/2;tk.position.set(-1.05,1.62,0);tk.castShadow=true;g.add(tk);
+      [-3.0,0.9].forEach(x=>{const e=new THREE.Mesh(new THREE.SphereGeometry(0.82,16,10),tm);e.scale.set(0.25,1,1);e.position.set(x,1.62,0);g.add(e);});
+      [-2.1,-1.05,0].forEach(x=>{const r=new THREE.Mesh(new THREE.CylinderGeometry(0.85,0.85,0.08,20,1,true),M.steel);r.rotation.z=Math.PI/2;r.position.set(x,1.62,0);g.add(r);});
+      box(2.4,0.05,0.4,gratM,-1.05,2.47,0,g,false);box(0.3,0.25,0.3,M.ink,-1.05,2.55,0,g,false);
+      const pc=document.createElement("canvas");pc.width=pc.height=64;const px=pc.getContext("2d");px.translate(32,32);px.rotate(Math.PI/4);px.fillStyle="#f5f5f0";px.fillRect(-20,-20,40,40);px.strokeStyle="#1c2233";px.lineWidth=3;px.strokeRect(-17,-17,34,34);
+      px.rotate(-Math.PI/4);px.fillStyle="#1c2233";px.font="bold 14px system-ui,sans-serif";px.textAlign="center";px.fillText("8",0,12);const ptx=new THREE.CanvasTexture(pc);
+      [1,-1].forEach(sd=>{const pl=new THREE.Mesh(new THREE.PlaneGeometry(0.55,0.55),new THREE.MeshBasicMaterial({map:ptx,transparent:true}));pl.position.set(-1.05,1.62,sd*0.84);if(sd<0)pl.rotation.y=Math.PI;g.add(pl);});
+      box(0.5,0.45,0.35,M.ink,-1.05,0.95,0.78,g,false);
+      const hose=new THREE.Mesh(new THREE.CylinderGeometry(0.07,0.07,1,8),M.ink);hose.visible=false;scene.add(hose);g.userData.hose=hose;
+      doorL=new THREE.Object3D();doorR=new THREE.Object3D();g.add(doorL,doorR);}
+    else{
     // trailer
     box(4.0,0.16,1.8,M.ink,-1.05,0.84,0,g,false);
     [-0.92,0.92].forEach(z=>{const sd=new THREE.Mesh(new THREE.BoxGeometry(4.0,1.32,0.06),[M.wall,M.wall,M.wall,M.wall,M.trailer,M.trailer]);sd.position.set(-1.05,1.6,z);sd.castShadow=true;g.add(sd);});
     box(4.0,0.06,1.86,M.wall,-1.05,2.27,0,g,false);box(0.06,1.32,1.86,M.wall,0.95,1.6,0,g,false);
-    const doorL=box(0.05,1.3,0.92,M.wall,-3.07,1.6,-0.46,g,false),doorR=box(0.05,1.3,0.92,M.wall,-3.07,1.6,0.46,g,false);
+    doorL=box(0.05,1.3,0.92,M.wall,-3.07,1.6,-0.46,g,false);doorR=box(0.05,1.3,0.92,M.wall,-3.07,1.6,0.46,g,false);
     box(0.06,1.3,0.03,M.ink,-3.1,1.6,0,g,false);[-0.82,0.82].forEach(z=>{const t=new THREE.Mesh(new THREE.BoxGeometry(0.05,0.12,0.18),tailM);t.position.set(-3.1,0.98,z);g.add(t);});
     box(0.12,0.12,1.8,M.ink,-3.0,0.6,0,g,false);                                   // ICC bumper
     [-0.75,0.75].forEach(z=>{box(0.08,0.55,0.08,M.ink,0.2,0.48,z,g,false);box(0.25,0.06,0.25,M.ink,0.2,0.2,z,g,false);}); // landing gear
     [-2.95,-2.95].forEach((x,k)=>box(0.04,0.5,0.4,M.ink,-2.2,0.45,k?0.9:-0.9,g,false));   // mud flaps
+    }
     // wheels: steer, tandem drive, tandem trailer
     [2.35,1.25,0.6,-2.0,-2.75].forEach(x=>[-0.82,0.82].forEach(z=>{const w=new THREE.Mesh(wheelG,M.ink);w.position.set(x,0.4,z);g.add(w);
       const hb=new THREE.Mesh(hubG,chromeM);hb.position.set(x,0.4,z);g.add(hb);wheels.push(w);}));
-    const cargo=[];for(let k=0;k<8;k++){const c=kind==="in"?box(0.8,0.72,0.78,M.bale,-2.5+(k%4)*0.9,1.32,(Math.floor(k/4)?0.42:-0.42),g)
+    const cargo=[];for(let k=0;k<(kind==="chem"?0:8);k++){const c=kind==="in"?box(0.8,0.72,0.78,M.bale,-2.5+(k%4)*0.9,1.32,(Math.floor(k/4)?0.42:-0.42),g)
       :(()=>{const r=new THREE.Mesh(new THREE.CylinderGeometry(0.4,0.4,0.9,18),ROLLM);r.position.set(-2.5+(k%4)*0.9,1.4,Math.floor(k/4)?0.42:-0.42);r.castShadow=true;g.add(r);return r;})();cargo.push(c);}
     g.userData={cargo,kind,heading:0,wheels,doorL,doorR,stack:[1.85,2.95,0.85]};scene.add(g);return g;}
+  // OCC trailer yard west of receiving: dropped trailers waiting to be pulled to a door
+  slab(-92,-56,-26.4,-7.6,M.asphalt,0.022);slab(-60,-56,-7.6,-5.0,M.asphalt,0.022);
+  for(let x=-90;x<=-58;x+=2.7){box(0.12,0.02,4.6,M.lane,x-1.35,0.05,-23.6,scene,false);box(0.12,0.02,4.6,M.lane,x-1.35,0.05,-10.4,scene,false);}
+  box(2.0,2.2,1.6,mat("g-wall"),-58.6,1.1,-17,scene);box(2.2,0.18,1.8,M.brand,-58.6,2.29,-17,scene,false);box(0.9,0.7,0.05,M.wind,-58.6,1.4,-16.18,scene,false);   // yard booth
+  const yardTr=[];
+  function dropTrailer(x,z,face,open){const g=new THREE.Group();g.position.set(x,0,z);g.rotation.y=face;scene.add(g);
+    box(4.0,0.16,1.8,M.ink,0,0.84,0,g,false);[-0.92,0.92].forEach(zz=>{const sd=new THREE.Mesh(new THREE.BoxGeometry(4.0,1.32,0.06),[M.wall,M.wall,M.wall,M.wall,M.trailer,M.trailer]);sd.position.set(0,1.6,zz);sd.castShadow=true;g.add(sd);});
+    box(4.0,0.06,1.86,M.wall,0,2.27,0,g,false);box(0.06,1.32,1.86,M.wall,2.0,1.6,0,g,false);
+    if(open){[-0.42,0.42].forEach(zz=>box(0.8,0.72,0.78,M.baleG[Math.floor(Math.random()*3)],-1.5,1.32,zz,g));const d=box(0.05,1.3,0.92,M.wall,-2.05,1.6,-1.32,g,false);d.rotation.y=-1.4;}
+    else box(0.06,1.32,1.86,M.wall,-2.02,1.6,0,g,false);
+    [-0.75,0.75].forEach(zz=>{box(0.08,0.62,0.08,M.ink,1.25,0.48,zz,g,false);box(0.25,0.06,0.25,M.ink,1.25,0.18,zz,g,false);});
+    [-1.0,-1.75].forEach(xx=>[-0.82,0.82].forEach(zz=>{const w=new THREE.Mesh(wheelG,M.ink);w.position.set(xx,0.4,zz);g.add(w);}));
+    yardTr.push(g);return g;}
+  for(let k=0;k<12;k++){const x=-88.65+k*2.7;dropTrailer(x,-23.6,-Math.PI/2,k%5===2);dropTrailer(x,-10.4,Math.PI/2,k%4===1);}
+  yardTr.sort(()=>Math.random()-0.5);G3.yardTr=yardTr;
   // trucks drive their own 3D routes on the roads and aprons and back into the docks (the sim only says queue / dock / leave)
   const LANE={in:{inZ:-3.1,outZ:-4.5,apronX:[-53,-34.4],dockX:-37.45,turnX:-46,qMax:-41.5},out:{inZ:12.9,outZ:12.0,apronX:[-60,-49],dockX:-52.05,turnX:-57.5,qMax:-53.2}};
   function routeFor(g,kind,phase,t,dz){const L=LANE[kind],x=g.position.x;
@@ -2374,6 +2470,21 @@ const G3={on:false,ok:false};
     const s=Math.min(d,speed*rdt);g.position.x+=dx/d*s;g.position.z+=dz/d*s;let h=Math.atan2(-dz,dx);if(wp.rev)h+=Math.PI;
     g.userData.heading=lerpAng(g.userData.heading,h,Math.min(1,rdt*(wp.rev?3:5)));g.rotation.y=g.userData.heading;g.userData.spin=(g.userData.spin||0)+(wp.rev?-1:1)*s/0.4;return false;}
   const truckPool={in:[],out:[]},truckMap=new Map();
+  // chemical tanker: every so often it backs onto a free receiving door, hooks up a hose, unloads and leaves (visual only)
+  const CHEM={g:null,st:"away",t:25,d:-1,dz:0},_ha=new THREE.Vector3(),_hb=new THREE.Vector3(),_hup=new THREE.Vector3(0,1,0);
+  function chemUpdate(rdt){if(!CHEM.g){CHEM.g=makeTruck("chem");CHEM.g.visible=false;}const g=CHEM.g,L=LANE.in,u=g.userData;if(rdt<=0)return;
+    if(CHEM.st==="away"){CHEM.t-=rdt*TSC()/3;if(CHEM.t>0)return;const free=[...Array(P.doors).keys()].filter(d=>!S.inDock[d]);
+      if(S.inQ.length||!free.length){CHEM.t=4;return;}
+      CHEM.d=free[Math.floor(Math.random()*free.length)];CHEM.dz=W(0,inY(CHEM.d))[1];g.visible=true;g.position.set(-150,0,L.inZ);u.heading=0;g.rotation.y=0;u.phase=null;u.route=[];u.done=false;
+      u.route=routeFor(g,"in","dock",null,CHEM.dz);u.phase="dock";CHEM.st="in";log("Chemical delivery truck arriving at receiving","");}
+    else if(CHEM.st==="in"){if(u.route.length)stepRoute(g,L,rdt);else{CHEM.st="unload";CHEM.t=9;}}
+    else if(CHEM.st==="unload"){CHEM.t-=rdt;u.heading=lerpAng(u.heading,Math.PI,Math.min(1,rdt*3));g.rotation.y=u.heading;
+      g.updateMatrixWorld();_ha.set(-1.05,0.95,0.78);g.localToWorld(_ha);_hb.set(-34.6,1.1,CHEM.dz-1.55);const h=u.hose,dd=_hb.clone().sub(_ha),len=dd.length();
+      h.visible=CHEM.t<8.4&&CHEM.t>0.6;h.position.copy(_ha).add(_hb).multiplyScalar(0.5);h.quaternion.setFromUnitVectors(_hup,dd.normalize());h.scale.set(1,len,1);
+      if(CHEM.t<=0||S.inDock[CHEM.d]){h.visible=false;u.route=routeFor(g,"in","leave",null,CHEM.dz);u.phase="leave";CHEM.st="out";}}
+    else if(CHEM.st==="out"){if(u.route.length)stepRoute(g,L,rdt);if(u.done||!u.route.length){g.visible=false;CHEM.st="away";CHEM.t=120+Math.random()*120;}}
+    u.wheels.forEach(w=>w.rotation.z=-(u.spin||0));
+    if((CHEM.st==="in"||CHEM.st==="out")&&Math.random()<rdt*3){const st=u.stack,a=g.rotation.y,c=Math.cos(a),sn=Math.sin(a);emit("smoke",g.position.x+st[0]*c+st[2]*sn,st[1],g.position.z-st[0]*sn+st[2]*c,0.3,1.4,0,1.4,0.7,"#8c919b",0.45);}}
   function cage(g){[[-0.45,-0.36],[-0.45,0.36],[0.3,-0.36],[0.3,0.36]].forEach(([x,z])=>box(0.07,1.0,0.07,M.ink,x,1.4,z,g,false));box(0.85,0.07,0.8,M.ink,-0.07,1.92,0,g,false);
     box(0.32,0.32,0.32,M.ink,-0.15,1.05,0,g,false);[[-0.35,-0.42],[-0.35,0.42],[0.35,-0.42],[0.35,0.42]].forEach(([x,z])=>cylZ(0.2,0.16,M.ink,x,0.2,z,12,g));}
   function forklift(m){const g=new THREE.Group();box(1.15,0.62,0.85,M.fork,0,0.55,0,g);box(0.3,0.55,0.82,M.ink,-0.62,0.62,0,g);cage(g);
@@ -3221,10 +3332,11 @@ const G3={on:false,ok:false};
     if(!out){hemi.intensity=baseHemi*(0.3+0.7*day)*(1-0.05*wxK);sun.intensity=baseSun*(0.1+0.9*day)*(1-0.18*Math.max(wxK,fogK));
       SKY_DAY.set(tok("g-sky")).convertSRGBToLinear();tmpC.copy(SKY_DAY).lerp(wx==="fog"?SKY_FOG:SKY_RAIN,Math.max(wxK*0.25,fogK*0.5)).lerp(SKY_NIGHT,1-day);
       scene.background=tmpC.clone();scene.fog.color.copy(tmpC);}
-    {const d=camera.position.distanceTo(target);scene.fog.near=d*(0.9+4*(1-fogK));scene.fog.far=d*(3.4+8*(1-fogK));}
-    const night=1-day;if(!G3.nightL){G3.nightL=[[-10,11,9.1],[12,11,9.1],[34,11,9.1],[56,11,9.1],[30,15,-15],[16,9,-18],[-21,7,-13],[-36,7,23],[57,5,-22]].map(([x,y,z])=>{const l=new THREE.PointLight(0xffe2b0,0,38,1.4);l.position.set(x,y,z);scene.add(l);
+    {const d=camera.position.distanceTo(target);scene.fog.near=d*(0.9+4*(1-fogK));scene.fog.far=d*(3.4+8*(1-fogK));if(G3.zen){scene.fog.near*=0.45;scene.fog.far*=0.55;}}
+    const night=1-day;if(!G3.nightL){G3.nightL=[[-10,11,9.1],[12,11,9.1],[34,11,9.1],[56,11,9.1],[31.2,PH+4.25,-17.5],[39,PH+4.25,-12.5],[16,9,-18],[-21,7,-13],[-36,7,23],[57,5,-22]].map(([x,y,z])=>{const l=new THREE.PointLight(0xffe2b0,0,38,1.4);l.position.set(x,y,z);scene.add(l);
         const f=new THREE.Mesh(new THREE.CylinderGeometry(0.5,0.7,0.3,12),new THREE.MeshBasicMaterial({color:0xfff1cf}));f.position.set(x,y+0.2,z);f.visible=false;scene.add(f);l.userData.f=f;return l;});}
-    G3.nightL.forEach(l=>{l.intensity=1.6*night;l.userData.f.visible=night>0.2;});G3.spiderFrame&&G3.spiderFrame(rdt);M.wind.emissive=M.wind.emissive||new THREE.Color();M.wind.emissive.copy(lin0("#ffcf7a")).multiplyScalar(0.85*night);
+    G3.nightL.forEach((l,i)=>{l.intensity=(i===4||i===5?0.55:0.22)*night;l.userData.f.visible=night>0.2;});
+    if(G3.exh&&rdt>0){const run=S.pm==="run",k=run?1:0.25;G3.exh.forEach(([x,y,z])=>{if(Math.random()<rdt*7*k)emitA("steam",x+R()*0.3,y,z+R()*0.3,R()*0.6+0.6,2.2+Math.random()*1.4,R()*0.6,3.2,1.6+Math.random()*1.4,"#f4f6f8",0.55);});}G3.spiderFrame&&G3.spiderFrame(rdt);M.wind.emissive=M.wind.emissive||new THREE.Color();M.wind.emissive.copy(lin0("#ffcf7a")).multiplyScalar(0.85*night);
     ENV.lampHead.color.copy(lin0("#9aa3b2")).lerp(lin0("#fff2c4"),night);ENV.lampPool.opacity=0.32*night;
     ENV.pudM.opacity=0.55*(S.wet||0);ENV.riverTex.offset.x-=rdt*0.02;
     ENV.bridge.rotation.y-=rdt*0.12;
@@ -3419,15 +3531,18 @@ const G3={on:false,ok:false};
     truckMap.forEach((g,t)=>{if(g.userData.seen)return;
       if(g.userData.phase==="leave"&&!g.userData.done&&g.userData.route.length){stepRoute(g,LANE[g.userData.kind],rdt);g.userData.wheels.forEach(w=>w.rotation.z=-(g.userData.spin||0));return;}
       g.visible=false;g.userData.busy=false;truckMap.delete(t);});
+    chemUpdate(rdt);
+    {const n=clamp(9+S.inQ.length*3+Math.floor(S.yard/250),5,24);G3.yardTr.forEach((g,i)=>g.visible=i<n);}
     // stock
-    bales.count=Math.min(168,Math.ceil(S.yard/12));bales.instanceMatrix.needsUpdate=true;
+    {const nB=Math.min(168,Math.ceil(S.yard/12));if(nB!==baleShown){baleShown=nB;bales.reset();for(let i=0;i<nB;i++)bales.put(gradeOf(i*7+1,false),baleM[i]);bales.done();}}
     rolls.count=Math.min(84,Math.ceil(S.fg/(P.fgCap/84)));rolls.instanceMatrix.needsUpdate=true;
     // conveyor bales
     // bales ride the walking floor, lose their wires under the guillotine, then climb to the pulper
     const run=R.feed>0.3,GAP=2.6;if(run){const o=wfOff;wfOff=(wfOff+rdt*Math.min(2.2,0.35+R.feed*0.03))%GAP;if(wfOff<o)baleCyc++;}if(run&&G3.slats)G3.slats.offset.x-=rdt*Math.min(2.2,0.35+R.feed*0.03)/1.2;
-    const LEND=PLEN[PLEN.length-1];let nb=0,nw=0,nc=0,under=false;
+    const LEND=PLEN[PLEN.length-1];let nb=0,nw=0,nc=0,under=false;beltBales.reset();baleChunks.reset();const junk=S.inc.some(i=>i.id==="badocc");
     if(run||S.yard>0){let k=0;for(let d=wfOff;d<LEND+1.7&&nb<24;d+=GAP,k++){const id=baleCyc-k,cut=d-PLEN[1];if(!run&&cut>0)continue;
-        if(cut<0.35){if(!pathAt(d,v3))break;m4.makeTranslation(v3.x,v3.y,v3.z);beltBales.setMatrixAt(nb++,m4);if(Math.abs(v3.x-CUTX)<0.55&&d<PLEN[2])under=true;
+        const gr=gradeOf(id,junk);
+        if(cut<0.35){if(!pathAt(d,v3))break;m4.makeTranslation(v3.x,v3.y,v3.z);beltBales.put(gr,m4);nb++;if(Math.abs(v3.x-CUTX)<0.55&&d<PLEN[2])under=true;
           if(d<PLEN[1]-0.3)for(const dx of [-0.35,0,0.35]){m4.makeTranslation(v3.x+dx,v3.y,v3.z);baleWires.setMatrixAt(nw++,m4);}continue;}
         const f=Math.pow(clamp((cut-0.35)/(LEND-PLEN[1]),0,1),0.65);
         for(let j=0;j<6&&nc<150;j++){const h1=hsh(id*7+j),h2=hsh(id*13+j*3),h3=hsh(id*29+j*5),lay=Math.floor(j/2);
@@ -3435,11 +3550,11 @@ const G3={on:false,ok:false};
           const yaw=(h3-0.5)*1.4*f,hl=0.14+lay*0.28+((0.14+0.05*lay)-(0.14+lay*0.28))*Math.min(1,f*1.7);
           if(dd<LEND){pathAt(dd,v3);qB.setFromAxisAngle(_yAx,yaw);if(dd>PLEN[2])qB.premultiply(beltQ);v3.y+=-0.425+hl;v3.z+=across;}
           else{const e=dd-LEND,key=id*8+j;v3.set(cB.x+cH.x*e*0.95,cB.y+0.15+hl+0.05-1.7*e*e,cB.z+cH.z*e*0.95+across);
-            if(v3.y<3.0){if(run&&!splashed.has(key)){splashed.add(key);if(splashed.size>60)splashed.delete(splashed.values().next().value);splashAt(v3.x,v3.z);}continue;}
+            if(v3.y<3.0){if(run&&!splashed.has(key)){splashed.add(key);if(splashed.size>60)splashed.delete(splashed.values().next().value);splashAt(v3.x,v3.z,gr);}continue;}
             qB.setFromEuler(_eu.set(0,yaw,-e*2.6-(h1-0.5)));qB.premultiply(beltQ);}
-          m4.compose(v3,qB,_sc.set(0.85+0.3*h3,1,0.8+0.3*h2));baleChunks.setMatrixAt(nc++,m4);}}}
+          m4.compose(v3,qB,_sc.set(0.85+0.3*h3,1,0.8+0.3*h2));baleChunks.put(gr,m4);nc++;}}}
     splashTick(rdt);
-    beltBales.count=nb;beltBales.instanceMatrix.needsUpdate=true;baleWires.count=nw;baleWires.instanceMatrix.needsUpdate=true;baleChunks.count=nc;baleChunks.instanceMatrix.needsUpdate=true;
+    beltBales.done();baleWires.count=nw;baleWires.instanceMatrix.needsUpdate=true;baleChunks.done();
     if(under&&run&&chop<=0)chop=1;if(chop>0){chop=Math.max(0,chop-rdt*2.2);if(chop>0.55&&chop-rdt*2.2<=0.55)for(let k=0;k<8;k++)emit("spark",CUTX,1.2,WFZ+(Math.random()-0.5)*1.6,(Math.random()-0.5)*3,2+Math.random()*2,(Math.random()-0.5)*3,0.5,0.2,"#e8ecf2",1);}
     const by=chop>0?1.55+2.2*(Math.abs(chop-0.55)/0.55):3.75;blade.position.y=by;rod.position.y=(by+4.3)/2;rod.scale.y=Math.max(0.1,4.3-by);
     rotor.rotation.y=-V.swirl;pulpStock.visible=R.feed>0.3||S.tank>0;G3.ragFrame(rdt,now,R.feed>0.3);
