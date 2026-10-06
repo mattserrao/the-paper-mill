@@ -308,7 +308,7 @@ body{margin:0}
 </head>
 <body>
 
-<div class="ver" id="appVersion" aria-label="Version">v1.7.0</div>
+<div class="ver" id="appVersion" aria-label="Version">v1.8.0</div>
 <div class="wrap">
   <header>
     <div class="brand"><span class="logo" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linejoin="round"><circle cx="8.5" cy="12" r="5.5"/><circle cx="8.5" cy="12" r="1.6" fill="currentColor"/><path d="M8.5 6.5H20v11H8.5"/></svg></span>
@@ -1604,7 +1604,7 @@ const G3={on:false,ok:false};
   slab(-95,-49,11.2,13.8,M.asphalt);                // outbound road
   slab(-67,-49,11.2,33,M.asphalt,0.03);             // shipping apron
   slab(-25,64,3,16,M.slab,0.03);                    // machine hall floor
-  slab(4,44,-25,-2,M.slab,0.03);                    // stock prep pad
+  slab(4,47,-25,-2,M.slab,0.03);                    // stock prep pad
   for(let x=-92;x<-36;x+=4)box(2,0.02,0.16,M.lane,x,0.05,-3.8,scene,false);
   for(let x=-92;x<-50;x+=4)box(2,0.02,0.16,M.lane,x,0.05,12.5,scene,false);
   for(let x=-138;x<-94;x+=4){box(2,0.02,0.16,M.lane,x,0.05,-3.8,scene,false);box(2,0.02,0.16,M.lane,x,0.05,12.5,scene,false);}
@@ -1865,6 +1865,19 @@ const G3={on:false,ok:false};
   function flange(p,q,r,m){_fl.set(q[0]-p[0],q[1]-p[1],q[2]-p[2]).normalize();const f=new THREE.Mesh(new THREE.CylinderGeometry(r*1.55,r*1.55,0.14,16),m);
     f.position.set(p[0]+_fl.x*0.07,p[1]+_fl.y*0.07,p[2]+_fl.z*0.07);f.quaternion.setFromUnitVectors(_fu,_fl);scene.add(f);}
   function spool(pts,r,m){pipe(pts,r,m);flange(pts[0],pts[1],r,M.steel);const n=pts.length;flange(pts[n-1],pts[n-2],r,M.steel);}
+  // grated catwalks with handrails, and stair flights between two points
+  const gratM=(()=>{const c=document.createElement("canvas");c.width=c.height=32;const x=c.getContext("2d");x.fillStyle="#8d96a3";x.fillRect(0,0,32,32);x.fillStyle="#5d6672";for(let i=0;i<32;i+=6){x.fillRect(i,0,1.5,32);x.fillRect(0,i,32,1);}
+    const t=new THREE.CanvasTexture(c);t.encoding=THREE.sRGBEncoding;t.wrapS=t.wrapT=THREE.RepeatWrapping;t.repeat.set(4,4);return new THREE.MeshStandardMaterial({map:t,roughness:0.7,metalness:0.3});})();
+  function rail(a,b){pipe([[a[0],a[1]+1.05,a[2]],[b[0],b[1]+1.05,b[2]]],0.045,M.warn);pipe([[a[0],a[1]+0.55,a[2]],[b[0],b[1]+0.55,b[2]]],0.035,M.warn);
+    const n=Math.max(1,Math.round(Math.hypot(b[0]-a[0],b[2]-a[2])/1.8));for(let k=0;k<=n;k++){const t=k/n,x=a[0]+(b[0]-a[0])*t,y=a[1]+(b[1]-a[1])*t,z=a[2]+(b[2]-a[2])*t;pipe([[x,y,z],[x,y+1.05,z]],0.035,M.warn);}}
+  function walkway(x0,z0,x1,z1,y,w,sides=[1,1],posts=true){const L=Math.hypot(x1-x0,z1-z0),ax=x1!==x0,cx=(x0+x1)/2,cz=(z0+z1)/2;
+    const d=new THREE.Mesh(new THREE.BoxGeometry(ax?L:w,0.16,ax?w:L),[M.steel,M.steel,gratM,M.steel,M.steel,M.steel]);d.position.set(cx,y-0.08,cz);d.castShadow=true;d.receiveShadow=true;scene.add(d);
+    const ox=ax?0:w/2,oz=ax?w/2:0;if(sides[0])rail([x0-ox,y,z0-oz],[x1-ox,y,z1-oz]);if(sides[1])rail([x0+ox,y,z0+oz],[x1+ox,y,z1+oz]);
+    if(posts){const n=Math.max(1,Math.round(L/6));for(let k=0;k<=n;k++){const t=k/n;[-1,1].forEach(sd=>box(0.16,y-0.16,0.16,M.steel,x0+(x1-x0)*t+sd*ox,(y-0.16)/2,z0+(z1-z0)*t+sd*oz,scene,false));}}}
+  function flight(a,b,w){const dx=b[0]-a[0],dy=b[1]-a[1],dz=b[2]-a[2],L=Math.hypot(dx,dz),yaw=Math.atan2(-dz,dx),n=Math.max(4,Math.round(dy/0.24));
+    for(let k=0;k<n;k++){const t=(k+0.5)/n,g=new THREE.Mesh(new THREE.BoxGeometry(L/n+0.04,0.06,w),M.steel);g.position.set(a[0]+dx*t,a[1]+dy*(k+1)/n-0.03,a[2]+dz*t);g.rotation.y=yaw;scene.add(g);}
+    const px=-Math.sin(yaw)*w/2*0,ox=Math.sin(yaw)*w/2,oz=Math.cos(yaw)*w/2;
+    [-1,1].forEach(sd=>{pipe([[a[0]+sd*ox,a[1]-0.05,a[2]+sd*oz],[b[0]+sd*ox,b[1]-0.05,b[2]+sd*oz]],0.07,M.brand);rail([a[0]+sd*ox,a[1],a[2]+sd*oz],[b[0]+sd*ox,b[1],b[2]+sd*oz]);});}
   function post(x,z,h){box(0.22,h,0.22,M.steel,x,h/2,z,scene,false);box(1.0,0.14,0.5,M.steel,x,h-0.07,z,scene,false);}
   const PH=12.4,ZL=-23,TY=2.6,TZ=-4.5;            // platform deck height; screening line row
   slab(8,33,-26.5,-19.6,M.slab,0.035);blob(21,ZL,9);
@@ -1964,6 +1977,14 @@ const G3={on:false,ok:false};
     const sc=document.createElement("canvas");sc.width=128;sc.height=40;const c=sc.getContext("2d");c.fillStyle="#ffffff";c.fillRect(0,0,128,40);c.fillStyle=col;c.fillRect(0,0,12,40);c.fillStyle="#1c2233";c.font="800 24px system-ui,sans-serif";c.textAlign="center";c.fillText(txt,70,29);
     const st=new THREE.CanvasTexture(sc);st.encoding=THREE.sRGBEncoding;const sg=new THREE.Mesh(new THREE.PlaneGeometry(2.4,0.75),new THREE.MeshBasicMaterial({map:st,toneMapped:false}));sg.position.set(x,1.4,z+R2+0.06);scene.add(sg);
     return w;};
+  // switchback stair tower beside the chest, with a bridge onto the thickener deck
+  {const XA=42.3,XB=43.9,Z0=-19.6,Z1=-13.6,R=PH/4;
+    for(let f=0;f<4;f++){const up=f%2===0,x=up?XA:XB;flight([x,f*R,up?Z0:Z1],[x,(f+1)*R,up?Z1:Z0],1.2);}
+    for(let f=1;f<4;f++){const zz=f%2?Z1+0.75:Z0-0.75;walkway(XA-0.6,zz,XB+0.6,zz,f*R,1.5,[0,0],false);}
+    walkway(XA-0.6,Z0-0.75,XB+0.6,Z0-0.75,PH,1.5,[1,0],false);walkway(XA-0.6,-17.2,XA-0.6,Z0-0.0,PH,1.0,[0,0],false);
+    walkway(DX1,-16.4,XA-0.6,-16.4,PH,1.2,[1,1],false);
+    [[XA-0.75,Z0-1.5],[XB+0.75,Z0-1.5],[XA-0.75,Z1+1.5],[XB+0.75,Z1+1.5]].forEach(([x,z])=>box(0.22,PH+1.1,0.22,M.brand,x,(PH+1.1)/2,z,scene));
+    G3.thkRoute=[[24,0,-21.4],[38,0,-21.6],[XA,0,Z0-0.2],[XA,R,Z1],[XB,R,Z1+0.4],[XB,2*R,Z0],[XA,2*R,Z0-0.4],[XA,3*R,Z1],[XB,3*R,Z1+0.4],[XB,PH,Z0],[XA-0.3,PH,Z0-0.4],[XA-0.3,PH,-16.4],[DX1-0.6,PH,-16.4],[33.0,PH,-17.6,4,"inspect"],[38.0,PH,-12.4,3,"inspect"],[DX1-0.6,PH,-16.4],[XA-0.3,PH,-16.4],[XA-0.3,PH,Z0-0.4],[XB,PH,Z0],[XB,3*R,Z1+0.4],[XA,3*R,Z1],[XA,2*R,Z0-0.4],[XB,2*R,Z0],[XB,R,Z1+0.4],[XA,R,Z1],[XA,0,Z0-0.2],[38,0,-21.6],[24,0,-21.4]];}
   sealT(26.4,-17.6,"#b8986e","CLOUDY");sealT(26.4,-13.9,"#8fcbe8","CLEAR");
   spool([[31.0,PH+2.35,-15.3],[26.4,PH+2.35,-15.3],[26.4,PH+2.35,-17.6],[26.4,3.0,-17.6]],0.16,M.metal);
   spool([[31.0,PH+2.85,-14.7],[26.4,PH+2.85,-14.7],[26.4,PH+2.85,-13.9],[26.4,3.0,-13.9]],0.16,M.steel);
@@ -2519,6 +2540,9 @@ const G3={on:false,ok:false};
     else if(mode==="hose"){arm=[-1.5+0.05*Math.sin(t*20),-1.4];lean=-0.18;leg=0.35;u.noz.visible=true;}
     else if(mode==="ext"){arm=[-1.35+0.08*Math.sin(t*9),-0.5];lean=-0.12;leg=0.25;u.ext.visible=true;}
     else if(mode==="fix"){const s=Math.sin(t*13);lean=-0.85;arm=[-1.1+0.55*s,-0.8];leg=0.5;u.tool.visible=true;}
+    else if(mode==="relax"){arm=[-2.7,-2.7];lean=0.5;legB=-1.85;bob=-0.36;}
+    else if(mode==="sit"){arm=[-0.9+0.1*Math.sin(t*2),-0.6];lean=0.05;legB=-1.5;bob=-0.36;}
+    else if(mode==="smoke"){const s=Math.sin(t*0.9);arm=[s>0.3?-2.5:-0.5,0.05];lean=0.04;}
     else if(mode==="type"){const s=Math.sin(t*14);arm=[-1.05+0.08*s,-1.05-0.08*s];lean=-0.12;}
     else if(mode==="pull"){const s=Math.sin(t*5);arm=[-1.45+0.2*s,-1.45+0.2*s];lean=0.38+0.12*s;leg=0.45;}
     else if(mode==="phone"||mode==="phoneS"){const walkk=mode==="phone",s=walkk?Math.sin(t*7.5):0,texting=((t/5)|0)%2===1;leg=0.42*s;lean=texting?0.12:-0.04;bob=Math.abs(s)*0.04;
@@ -2534,7 +2558,7 @@ const G3={on:false,ok:false};
     else if(mode==="flail"){const s=Math.sin(t*17);leg=0.95*s;arm=[-2.6+0.9*s,-2.6-0.9*s];lean=-0.3;bob=Math.abs(s)*0.2;}
     else if(mode==="ride"){arm=[-1.15,-1.15];lean=-0.08;legB=-1.25;}
     else{arm=[0.08*Math.sin(t*1.7),-0.08*Math.sin(t*1.7)];}
-    u.legs[0].rotation.z=legB??leg;u.legs[1].rotation.z=legB??-leg;u.arms[0].rotation.z=arm[0];u.arms[1].rotation.z=arm[1];u.torso.rotation.z=lean;p.position.y=bob;}
+    u.legs[0].rotation.z=legB??leg;u.legs[1].rotation.z=legB??-leg;u.arms[0].rotation.z=arm[0];u.arms[1].rotation.z=arm[1];u.torso.rotation.z=lean;p.position.y=bob+(u.ry||0);}
   function moveP(p,tx,tz,speed,rdt){const dx=tx-p.position.x,dz=tz-p.position.z,d=Math.hypot(dx,dz);
     if(d<0.15)return true;const s=Math.min(d,speed*rdt);p.position.x+=dx/d*s;p.position.z+=dz/d*s;p.rotation.y=lerpAng(p.rotation.y,Math.atan2(-dz,dx),Math.min(1,rdt*12));return false;}
   function face(p,x,z,rdt){p.rotation.y=lerpAng(p.rotation.y,Math.atan2(-(z-p.position.z),x-p.position.x),Math.min(1,rdt*8));}
@@ -2552,6 +2576,14 @@ const G3={on:false,ok:false};
   // [station spot, zone x0, zone x1]; the winder operator stays clear of the roll conveyor
   const OPS=[[[57.4,14.3],46,62],[[58.6,14.3],40,56],[[26.6,14.3],29,41],[[25.4,14.3],12,28],[[-4.4,14.3],-1,14],[[-5.6,14.3],-9,3],[[-15.6,14.0],-17.1,-13.2]];
   const HOME=OPS.map(o=>o[0]);
+  // paper machine catwalks: tending-side walkway along the dryers with a stair, a crossover bridge, and a headbox platform on the back side
+  {const CY=4.2,CZ=13.3;walkway(-3,CZ,28.5,CZ,CY,1.1,[1,1],true);flight([33.6,0,CZ],[28.5,CY,CZ],1.1);
+    walkway(14,4.0,14,CZ-0.55,8.8,1.0,[1,1],false);[[13.5,4.0],[14.5,4.0],[13.5,12.8],[14.5,12.8]].forEach(([x,z])=>box(0.16,8.6,0.16,M.steel,x,4.3,z,scene,false));
+    [-0.25,0.25].forEach(dx=>box(0.07,4.7,0.07,M.warn,14+dx,CY+2.35,CZ-0.3,scene,false));for(let y=CY+0.3;y<8.8;y+=0.45)box(0.56,0.05,0.06,M.warn,14,y,CZ-0.3,scene,false);
+    walkway(53.8,4.9,60.8,4.9,2.4,1.2,[1,0],true);flight([62.6,0,4.9],[60.8,2.4,4.9],1.0);
+    G3.pmRoute=[[34.2,0,14.2],[33.6,0,CZ],[28.5,CY,CZ],[20,CY,CZ,3,"inspect"],[8,CY,CZ,3,"inspect"],[-1.5,CY,CZ,2,"look"],[28.5,CY,CZ],[33.6,0,CZ],[34.2,0,14.4]];}
+  // chairs at each console; operators kick back when the mill is running sweet
+  CONSOLES.forEach(cx=>[-0.6,0.6].forEach(dx=>{const g=new THREE.Group();g.position.set(cx+dx,0,14.75);scene.add(g);box(0.55,0.08,0.55,M.ink,0,0.5,0,g,false);box(0.55,0.6,0.08,M.ink,0,0.85,0.26,g,false);box(0.08,0.5,0.08,M.steel,0,0.25,0,g,false);}));
   // lead ropes for pulling a new forming fabric on from the drive side
   const ropes=[0,1,2,3,4,5,6,7].map(()=>{const m=new THREE.Mesh(new THREE.CylinderGeometry(0.05,0.05,1,6),M.ink);m.visible=false;scene.add(m);return m;});
   const _ra=new THREE.Vector3(),_rb=new THREE.Vector3(),_rup=new THREE.Vector3(0,1,0);
@@ -2578,6 +2610,17 @@ const G3={on:false,ok:false};
     winderdown:{c:[-18.7,9.4],a:"fix",p:[[-16.6,12.4],[-16.4,10.4],[-20.9,12.4],[-21,10.4]]}};
   const RTY=[];for(let k=0;k<24;k++)RTY.push([29-(k%12)*2.6,k<12?15.4:3.2]);
   const crew=HOME.map(([x,z])=>{const w=worker(M.stock,M.warn);w.position.set(x,0,z);return w;});
+  const BRK={walk:false,smoke:new Set(),pic:new Set()};
+  // follow a 3D route [x,y,z,pauseSeconds,pose]; height is interpolated along each leg, so stairs read as climbing
+  function walkRoute(w,R2,st,rdt,now){const u=w.userData;if(!R2||!R2.length)return true;const p=R2[st.ri];if(!p)return true;
+    if(st.from===undefined)st.from=[w.position.x,u.ry||0,w.position.z];
+    if(st.pt>0){st.pt-=rdt;face(w,p[0],p[2]+(p[4]==="inspect"?-3:0),rdt);pose(w,p[4]||"idle",now);if(st.pt<=0){st.ri++;st.from=[w.position.x,u.ry||0,w.position.z];}return st.ri>=R2.length;}
+    const f=st.from,L=Math.hypot(p[0]-f[0],p[2]-f[2])||1e-6,a=moveP(w,p[0],p[2],2.2,rdt),d=Math.hypot(p[0]-w.position.x,p[2]-w.position.z);
+    u.ry=a?p[1]:f[1]+(p[1]-f[1])*clamp(1-d/L,0,1);pose(w,"walk",now);
+    if(a){if(p[3]){st.pt=p[3];}else{st.ri++;st.from=[p[0],p[1],p[2]];}}return st.ri>=R2.length;}
+  const spOps=[0,1].map(k=>{const w=worker(cloth0b("#3f8f62"),M.warn);w.position.set(20+k*3,0,-19.8);return w;});
+  const SPGROUND=[[12.5,0,-20.6,3,"inspect"],[15.2,0,-20.8,3,"inspect"],[19.2,0,-20.6,3,"inspect"],[26.6,0,-20.8,4,"inspect"],[24,0,-9.4,3,"look"],[20,0,-19.8]];
+  const SPJOB={lwplug:[11.2,-21],cscreen:[15.2,-21],fscreen:[19.2,-21],lcplug:[26.6,-21],hdblow:[23.4,-9.6],thkblow:[42,-21],ragger:[22.4,-15.5],overflow:[20,-17],chestover:[29,-21]};
   // a town resident who sprints down the front aisle, jukes at the winder and runs back out
   const runnerW=worker(new THREE.MeshStandardMaterial({color:lin0("#e2508f"),roughness:0.7}),new THREE.MeshStandardMaterial({color:lin0("#3a2a1e"),roughness:0.9}));runnerW.visible=false;
   const RUN={on:false,x:0,z:0,dir:-1,t0:0,until:0,seen:null};const RX0=72,RX1=-20,RSP=9;
@@ -2636,7 +2679,8 @@ const G3={on:false,ok:false};
       if(RUN.on){const d=(now-RUN.t0)/1000*RSP,L=RX0-RX1,out=d<L;RUN.dir=out?-1:1;RUN.x=out?RX0-d:RX1+(d-L);RUN.z=16.1+1.1*Math.sin(d/3.2)+(out?0:0.6);
         runnerW.position.set(RUN.x,0,RUN.z);runnerW.rotation.y=out?Math.PI:0;pose(runnerW,"flail",now);}}
     // machine crew
-    const dryOn=hk==="dryerfire";if(!dryOn)crewHose.forEach(m=>m.visible=false);
+    const dryOn=hk==="dryerfire";
+    crew.forEach(w=>{if(w.userData.ry&&!w.userData.brk)w.userData.ry=0;});if(!dryOn)crewHose.forEach(m=>m.visible=false);
     airLines.forEach(m=>m.visible=false);
     // celebrate when the tail gets on the reel: a quick round of high fives
     if(G3.prevPm==="break"&&S.pm!=="break"&&hiWho.size){EP.hi5={until:now+2600,who:[...hiWho]};}
@@ -2703,13 +2747,31 @@ const G3={on:false,ok:false};
       if(FOOD.open&&u.ate!==FOOD.id&&!u.lunch&&Math.random()<rdt*0.12){u.lunch=true;u.lt=0;}
       if(u.lunch){if(!FOOD.open){u.lunch=false;}else{const q=FOOD.spot(i),a=moveP(w,q[0],q[1],4.2,rdt);
         if(a){face(w,FOOD.x,FOOD.z,rdt);u.lt+=rdt;pose(w,u.lt>2.5?"inspect":"idle",now);if(u.lt>6){u.lunch=false;u.ate=FOOD.id;u.wt=0;}}else pose(w,"walk",now);return;}}
+      // when the mill is running sweet: catwalk rounds, feet up at the console, smoke breaks and picnic tables
+      const calm=!S.inc.length&&S.pm==="run"&&S.wd!=="hayout"&&!S.wdBlocked&&!RUN.on;
+      if(!calm&&u.brk){u.brk=null;u.ry=0;BRK.smoke.delete(i);BRK.pic.delete(i);}
+      if(calm&&!u.brk&&!u.lunch&&!u.vend&&Math.random()<rdt*0.01){const r=Math.random();
+        if(r<0.3&&(i===2||i===3)&&!BRK.walk){u.brk={k:"walk",ri:0,pt:0};BRK.walk=true;}
+        else if(r<0.6&&BRK.smoke.size<2){u.brk={k:"smoke",t:0,s:[65.6+BRK.smoke.size*1.2,21.2]};BRK.smoke.add(i);}
+        else if(BRK.pic.size<3){const tb=[28,33,38][Math.floor(Math.random()*3)];u.brk={k:"pic",t:0,s:[tb+(Math.random()<0.5?-0.5:0.5),40-0.75]};BRK.pic.add(i);}}
+      if(u.brk){const b=u.brk;
+        if(b.k==="walk"){if(walkRoute(w,G3.pmRoute,b,rdt,now)){u.brk=null;BRK.walk=false;u.ry=0;}return;}
+        const [sx,sz]=b.s,a=moveP(w,sx,sz,4,rdt);
+        if(a){b.t+=rdt;if(b.k==="smoke"){face(w,66.5,22.6,rdt);pose(w,"smoke",now);if(Math.sin(now/1000*0.9+w.userData.ph)>0.3&&Math.random()<rdt*5){const [nx,,nz]=nozzlePos(w);emit("smoke",nx-0.4,1.85,nz,0.1,0.5,0,1.6,0.35,"#d8dbe0",0.5);}}
+          else{face(w,sx,40,rdt);pose(w,"sit",now);}
+          if(b.t>(b.k==="smoke"?14:18)){u.brk=null;BRK.smoke.delete(i);BRK.pic.delete(i);u.wt=0;}}
+        else pose(w,"walk",now);return;}
       // idle: check in at their console, then wander their stretch of the machine and watch it run
       const op=OPS[i],hasC=i<6;
       if(!u.wt||now>u.wt){const atC=hasC&&(u.act!=="type")&&Math.random()<0.45;
-        if(atC){u.wx=op[0][0];u.wz=op[0][1];u.act="type";u.wt=now+4000+Math.random()*4000;}
+        if(atC){const chill=calm&&Math.random()<0.45;u.wx=op[0][0];u.wz=chill?14.55:op[0][1];u.act=chill?"relax":"type";u.wt=now+(chill?9000:4000)+Math.random()*4000;}
         else{u.wx=op[1]+Math.random()*(op[2]-op[1]);u.wz=14.0+Math.random()*1.6;u.act=Math.random()<0.4?"inspect":"idle";u.wt=now+3500+Math.random()*6000;}}
       const far=Math.hypot(u.wx-w.position.x,u.wz-w.position.z)>7,arrived=moveP(w,u.wx,u.wz,far?7:1.6,rdt);
-      if(arrived)face(w,u.wx,u.act==="type"?13.2:zc,rdt);pose(w,arrived?u.act:(far?"run":"walk"),now);});
+      if(arrived)face(w,u.wx,u.act==="type"||u.act==="relax"?13.2:zc,rdt);pose(w,arrived?(u.act==="relax"&&!calm?"type":u.act):(far?"run":"walk"),now);});
+    // stock prep operators walk their rounds: along the screening line, up the stair tower onto the thickener deck, and back
+    spOps.forEach((w,k)=>{const u=w.userData,inc=S.inc.find(x=>SPJOB[x.id]);
+      if(inc){u.ry=0;u.sr=null;const sp=SPJOB[inc.id],a=moveP(w,sp[0]+k*1.4,sp[1]+1.2,6,rdt);if(a)face(w,sp[0],sp[1]-2,rdt);pose(w,a?(k?"look":"clean"):"run",now);return;}
+      if(!u.sr)u.sr={ri:0,pt:0,which:k};const R2=k===0?G3.thkRoute:SPGROUND;if(walkRoute(w,R2,u.sr,rdt,now))u.sr=null;});
     // yard crews jump off their trucks and run to the machine on a sheet break
     if(head&&here)head.here=true;
     if(yardBrk&&EP.brk&&!EP.brk.launched){EP.brk.launched=true;let k=0;
