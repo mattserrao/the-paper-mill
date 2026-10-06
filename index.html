@@ -274,6 +274,11 @@ body.noknobs #cards{display:none}
 body.zen .hud,body.zen .pad,body.zen #labels3d,body.zen .banner3d,body.zen .chips3d,body.zen .ver{display:none!important}
 .zenexit{position:absolute;right:16px;bottom:calc(16px + env(safe-area-inset-bottom,0px));z-index:8;opacity:0;transition:opacity .6s;background:rgba(255,255,255,.85);backdrop-filter:blur(6px)}
 body.zen .zenexit.show{opacity:1}
+.spider{position:absolute;right:12px;top:12px;z-index:9;width:min(330px,calc(100% - 24px));background:rgba(255,255,255,.97);border:1px solid var(--line);border-radius:14px;box-shadow:var(--shadow);padding:10px 12px;display:flex;flex-direction:column;gap:6px;font-size:12px}
+.spider[hidden]{display:none}.spih{display:flex;align-items:baseline;gap:8px}.spih b{font-size:14px}.spih span{color:var(--muted);flex:1}.spih button{padding:2px 8px}
+.spis{display:flex;align-items:center;gap:8px;color:var(--muted)}.spis input{flex:1;accent-color:var(--brand)}
+.spir{display:grid;grid-template-columns:1fr 1fr;gap:6px}.spir div{border:1px solid var(--line);border-radius:8px;padding:5px 7px}.spir i{display:inline-block;width:9px;height:9px;border-radius:3px;margin-right:5px}
+.spir b{display:block;font-size:14px;font-variant-numeric:tabular-nums}.spir small{color:var(--muted)}#spiT{width:100%;height:auto;border:1px solid var(--line);border-radius:8px}.spin{margin:0;color:var(--muted);min-height:1.2em}.spin.bad{color:var(--bad)}
 .reroll{font-size:12px;padding:5px 10px;align-self:center;white-space:nowrap}
 /* fullscreen */
 .hud{display:none;z-index:5}
@@ -308,7 +313,7 @@ body{margin:0}
 </head>
 <body>
 
-<div class="ver" id="appVersion" aria-label="Version">v1.8.0</div>
+<div class="ver" id="appVersion" aria-label="Version">v1.9.0</div>
 <div class="wrap">
   <header>
     <div class="brand"><span class="logo" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linejoin="round"><circle cx="8.5" cy="12" r="5.5"/><circle cx="8.5" cy="12" r="1.6" fill="currentColor"/><path d="M8.5 6.5H20v11H8.5"/></svg></span>
@@ -340,7 +345,7 @@ body{margin:0}
     <div class="seg" id="viewToggle" role="group" aria-label="Plant view"><button id="vb3" aria-pressed="true">3D</button><button id="vb2" aria-pressed="false">2D</button></div>
     <div class="view3dctl" id="view3dctl"><label class="check"><input type="checkbox" id="viewShadows" checked> Shadows</label><button id="viewReset">Whole mill</button><button id="viewFS">Fullscreen</button><div class="seg lblseg" id="lblMode" role="group" aria-label="Section labels"><span>Labels</span><button data-m="auto" aria-pressed="true" title="Labels fade out when you stop moving the view">Auto</button><button data-m="on" aria-pressed="false">On</button><button data-m="off" aria-pressed="false">Off</button></div><span class="hint"><span class="hint-d">Drag to rotate · two-finger drag, right-drag or arrow keys to move · pinch or scroll to zoom</span><span class="hint-m">Drag to rotate · two fingers to move · pinch to zoom</span></span></div>
   </div>
-  <div class="jumps" id="jumps" role="group" aria-label="Go to area"><span>Go to</span><button data-j="trucks">Trucks</button><button data-j="recv">Receiving</button><button data-j="pulp">Pulper &amp; chest</button><button data-j="pm">Paper machine</button><button data-j="wd">Winder</button><button data-j="wh">Warehouse</button><button data-j="shop">Maintenance</button>
+  <div class="jumps" id="jumps" role="group" aria-label="Go to area"><span>Go to</span><button data-j="trucks">Trucks</button><button data-j="recv">Receiving</button><button data-j="pulp">Stock Prep</button><button data-j="pm">Paper machine</button><button data-j="wd">Winder</button><button data-j="wh">Warehouse</button><button data-j="shop">Maintenance</button>
   </div>
   <div class="view3d" id="view3d" hidden><button id="zenExit" class="zenexit" hidden>Leave zen mode</button><div class="hud" id="hud">
     <div class="hk brandk"><i></i><div><span id="hud-mill">Mill</span><b id="hud-clock">–</b></div></div>
@@ -348,7 +353,10 @@ body{margin:0}
     <div class="hk"><span>Production</span><b id="hud-prod">–</b></div>
     <div class="hk opt"><span>Stock chest</span><b id="hud-tank">–</b></div>
     <div class="hk opt2"><span>Profit</span><b id="hud-profit">–</b></div>
-    <div class="hbtns"><button id="hud-play">Pause</button><button id="hud-slow" aria-label="Slower">−</button><span id="hud-speed">30 min/s</span><button id="hud-fast" aria-label="Faster">+</button><button id="hud-sound">Sound</button><button id="hud-lbl">Labels: Auto</button><button id="hud-zen" title="Zen mode">Zen</button><button id="hud-dis" class="danger" title="Unleash a random disaster">Disaster</button><button id="hud-exit" aria-label="Exit fullscreen"><span class="lg">Exit</span><span class="sm" aria-hidden="true">✕</span></button></div></div><canvas id="gl" tabindex="0" aria-label="3D view of the mill. Arrow keys move, Q and E rotate, plus and minus zoom."></canvas><div class="pad" id="pad" aria-label="Move the view"><button data-p="0,-1" aria-label="Move up">▲</button><button data-p="-1,0" aria-label="Move left">◀</button><button data-p="1,0" aria-label="Move right">▶</button><button data-p="0,1" aria-label="Move down">▼</button></div><div id="labels3d"></div><div class="banner3d" id="banner3d" hidden><span></span><b></b></div><div class="chips3d" id="chips3d"></div><div class="flash3d" id="flash3d"></div><div class="blackout3d" id="blackout3d" hidden><div><b>Power outage</b><span>Lightning hit the substation. Backup generators starting…</span></div></div></div>
+    <div class="hbtns"><button id="hud-play">Pause</button><button id="hud-slow" aria-label="Slower">−</button><span id="hud-speed">30 min/s</span><button id="hud-fast" aria-label="Faster">+</button><button id="hud-sound">Sound</button><button id="hud-lbl">Labels: Auto</button><button id="hud-zen" title="Zen mode">Zen</button><button id="hud-dis" class="danger" title="Unleash a random disaster">Disaster</button><button id="hud-exit" aria-label="Exit fullscreen"><span class="lg">Exit</span><span class="sm" aria-hidden="true">✕</span></button></div></div><canvas id="gl" tabindex="0" aria-label="3D view of the mill. Arrow keys move, Q and E rotate, plus and minus zoom."></canvas><div class="pad" id="pad" aria-label="Move the view"><button data-p="0,-1" aria-label="Move up">▲</button><button data-p="-1,0" aria-label="Move left">◀</button><button data-p="1,0" aria-label="Move right">▶</button><button data-p="0,1" aria-label="Move down">▼</button></div><div id="labels3d"></div><div class="banner3d" id="banner3d" hidden><span></span><b></b></div><div class="chips3d" id="chips3d"></div><div class="flash3d" id="flash3d"></div><div class="spider" id="spider" hidden role="dialog" aria-labelledby="spi-h"><div class="spih"><b id="spi-h">Spider valve</b><span>disk thickener filtrate split</span><button id="spiClose" aria-label="Close">✕</button></div>
+      <label class="spis"><span>Clear</span><input id="spiV" type="range" min="10" max="70" value="35"><span>Cloudy</span></label>
+      <div class="spir"><div><i style="background:#8a6644"></i>Cloudy <b id="spiTc">–</b><small id="spiQc"></small></div><div><i style="background:#3fa0d0"></i>Clear <b id="spiTl">–</b><small id="spiQl"></small></div></div>
+      <canvas id="spiT" width="560" height="220"></canvas><p id="spiNote" class="spin"></p></div><div class="blackout3d" id="blackout3d" hidden><div><b>Power outage</b><span>Lightning hit the substation. Backup generators starting…</span></div></div></div>
   <div class="scroller" id="plantwrap"><canvas id="plant" width="1200" height="660" aria-label="Animated mill schematic"></canvas></div>
 
   <section class="chaos collapsed" id="chaosSec" aria-label="Chaos">
@@ -1603,7 +1611,7 @@ const G3={on:false,ok:false};
   slab(-53,-34.4,-24.5,-2.4,M.asphalt,0.03);        // receiving apron
   slab(-95,-49,11.2,13.8,M.asphalt);                // outbound road
   slab(-67,-49,11.2,33,M.asphalt,0.03);             // shipping apron
-  slab(-25,64,3,16,M.slab,0.03);                    // machine hall floor
+  slab(-27.2,64,3,14.8,M.slab,0.03);slab(-23.8,64,14.8,16,M.slab,0.03);slab(-27.2,-2.9,-2.9,3,M.slab,0.031); // machine hall floor + reel bay along the back
   slab(4,47,-25,-2,M.slab,0.03);                    // stock prep pad
   for(let x=-92;x<-36;x+=4)box(2,0.02,0.16,M.lane,x,0.05,-3.8,scene,false);
   for(let x=-92;x<-50;x+=4)box(2,0.02,0.16,M.lane,x,0.05,12.5,scene,false);
@@ -1763,21 +1771,25 @@ const G3={on:false,ok:false};
   box2(-34.4,-8,-23.5,-3);box2(-49,-23.8,14.8,32.2);skirt(-2,1.2,64,1.2,2.4);skirt(65.2,2.4,65.2,16.2,2.4);
   sawRoof(-34.6,-7.85,-23.65,-2.85,WH);sawRoof(-49.15,-23.65,14.65,32.35,WH);
   // paper machine hall: full building seen from the air (walls, window bands, sawtooth roof), gone as soon as you zoom in
-  {const g=new THREE.Group(),HH=13.4,X0=-25.3,X1=64.3,Z0=2.25,Z1=16.75,cx=(X0+X1)/2,L=X1-X0,Dz=Z1-Z0;
+  {const g=new THREE.Group(),HH=13.4,X0=-27.2,X1=64.3,Z0=2.25,Z1=16.75,cx=(X0+X1)/2,L=X1-X0,Dz=Z1-Z0,ZA=-2.85,XA=-2.9;
     const wm=mat("g-wall",{transparent:true,roughness:0.7}),gl=mat("g-glass",{transparent:true,roughness:0.12,metalness:0.45}),em=new THREE.LineBasicMaterial({color:lin0("#1c2233"),transparent:true,opacity:0.35}),bm=mat("brand",{transparent:true,roughness:0.55,side:THREE.DoubleSide});
     const add=(o,e)=>{o.castShadow=true;o.receiveShadow=true;g.add(o);if(e)edges(o,em,20);return o;};
     const wall=(w,h,d,x,y,z)=>{const o=new THREE.Mesh(new THREE.BoxGeometry(w,h,d),wm);o.position.set(x,y,z);return add(o,true);};
     wall(L,HH,0.3,cx,HH/2,Z1);                                   // front (tending side)
-    wall(L,HH-5.3,0.3,cx,5.3+(HH-5.3)/2,Z0);wall(23.3,5.3,0.3,-13.65,2.65,Z0);   // back, above and beside the existing low wall
-    wall(0.3,HH,Dz,X0,HH/2,(Z0+Z1)/2);wall(0.3,HH-5.3,Dz,X1,5.3+(HH-5.3)/2,(Z0+Z1)/2);
-    const band=(y,h,w,pitch,z,dir)=>{for(let x=X0+2.2;x+w<X1-1;x+=pitch){const p=new THREE.Mesh(new THREE.BoxGeometry(w,h,0.08),gl);p.position.set(x+w/2,y,z+dir*0.17);g.add(p);}};
-    band(9.6,2.6,3.8,4.6,Z1,1);band(3.2,1.4,2.2,4.6,Z1,1);band(9.6,2.6,3.8,4.6,Z0,-1);
-    for(const zz of [Z0,Z1]){const f=new THREE.Mesh(new THREE.BoxGeometry(L+0.4,0.5,0.4),bm);f.position.set(cx,HH-0.1,zz);g.add(f);}
-    [[X0,-1],[X1,1]].forEach(([x,dir])=>{for(let z=Z0+2;z<Z1-2.5;z+=3.4){const p=new THREE.Mesh(new THREE.BoxGeometry(0.08,2.6,2.4),gl);p.position.set(x+dir*0.17,9.6,z+1.2);g.add(p);}});
-    const n=Math.round(L/4.4),tw=L/n;
-    for(let i=0;i<n;i++){const sh=new THREE.Shape();sh.moveTo(0,0);sh.lineTo(tw,0);sh.lineTo(tw,2.1);sh.lineTo(0,0);
-      const o=new THREE.Mesh(new THREE.ExtrudeGeometry(sh,{depth:Dz,bevelEnabled:false}),bm);o.position.set(X0+i*tw,HH,Z0);add(o,true);
-      const gp=new THREE.Mesh(new THREE.PlaneGeometry(Dz-0.3,1.6),gl);gp.rotation.y=Math.PI/2;gp.position.set(X0+(i+1)*tw+0.02,HH+1.0,(Z0+Z1)/2);g.add(gp);}
+    // back wall: wider reel bay at the dry end (out to ZA) so the overhead crane and parked reels stay indoors
+    wall(X1-XA,HH-5.3,0.3,(XA+X1)/2,5.3+(HH-5.3)/2,Z0);wall(XA-X0,HH,0.3,(X0+XA)/2,HH/2,ZA);wall(0.3,HH,Z0-ZA,XA,HH/2,(ZA+Z0)/2);
+    wall(0.3,HH,Z1-ZA,X0,HH/2,(ZA+Z1)/2);wall(0.3,HH-5.3,Dz,X1,5.3+(HH-5.3)/2,(Z0+Z1)/2);
+    const band=(y,h,w,pitch,z,dir,xa=X0,xb=X1)=>{for(let x=xa+2.2;x+w<xb-1;x+=pitch){const p=new THREE.Mesh(new THREE.BoxGeometry(w,h,0.08),gl);p.position.set(x+w/2,y,z+dir*0.17);g.add(p);}};
+    band(9.6,2.6,3.8,4.6,Z1,1);band(3.2,1.4,2.2,4.6,Z1,1);band(9.6,2.6,3.8,4.6,Z0,-1,XA,X1);band(9.6,2.6,3.8,4.6,ZA,-1,X0,XA);
+    {const f=new THREE.Mesh(new THREE.BoxGeometry(L+0.4,0.5,0.4),bm);f.position.set(cx,HH-0.1,Z1);g.add(f);
+     const f2=new THREE.Mesh(new THREE.BoxGeometry(X1-XA+0.2,0.5,0.4),bm);f2.position.set((XA+X1)/2,HH-0.1,Z0);g.add(f2);
+     const f3=new THREE.Mesh(new THREE.BoxGeometry(XA-X0+0.4,0.5,0.4),bm);f3.position.set((X0+XA)/2,HH-0.1,ZA);g.add(f3);}
+    [[X0,-1],[X1,1]].forEach(([x,dir])=>{for(let z=(x===X0?ZA:Z0)+2;z<Z1-2.5;z+=3.4){const p=new THREE.Mesh(new THREE.BoxGeometry(0.08,2.6,2.4),gl);p.position.set(x+dir*0.17,9.6,z+1.2);g.add(p);}});
+    const nA=Math.round((XA-X0)/4.4),nB=Math.round((X1-XA)/4.4);
+    for(let i=0;i<nA+nB;i++){const bay=i<nA,tw=bay?(XA-X0)/nA:(X1-XA)/nB,xs=bay?X0+i*tw:XA+(i-nA)*tw,z0=bay?ZA:Z0,dz=Z1-z0;
+      const sh=new THREE.Shape();sh.moveTo(0,0);sh.lineTo(tw,0);sh.lineTo(tw,2.1);sh.lineTo(0,0);
+      const o=new THREE.Mesh(new THREE.ExtrudeGeometry(sh,{depth:dz,bevelEnabled:false}),bm);o.position.set(xs,HH,z0);add(o,true);
+      const gp=new THREE.Mesh(new THREE.PlaneGeometry(dz-0.3,1.6),gl);gp.rotation.y=Math.PI/2;gp.position.set(xs+tw+0.02,HH+1.0,(z0+Z1)/2);g.add(gp);}
     g.userData.mats=[wm,gl,em,bm];g.userData.fade=[255,40];scene.add(g);roofs.push(g);}
   G3.roofFade=r=>{roofs.forEach(g=>{const f=g.userData.fade||[170,70],a=clamp((r-f[0])/f[1],0,1);g.visible=a>0.02;g.userData.mats.forEach((m,i)=>m.opacity=i===1?a*0.75:i===2?a*0.35:a);g.children.forEach(c=>c.castShadow=a>0.6);});};
   const doorWalls={in:new THREE.Group(),out:new THREE.Group()};scene.add(doorWalls.in,doorWalls.out);let doorKey="";
@@ -1960,7 +1972,12 @@ const G3={on:false,ok:false};
   // drive: gearbox + motor on the far end, filtrate valve on the near end
   box(0.9,1.3,1.2,M.steel,29.7,TY-0.1,TZ,thk);box(0.9,TY-0.75,1.2,M.steel,29.7,(TY-0.75)/2,TZ,thk);
   {const mg=new THREE.CylinderGeometry(0.5,0.5,1.4,16);mg.rotateZ(Math.PI/2);const mo=new THREE.Mesh(mg,M.brand);mo.position.set(30.9,TY-0.4,TZ);mo.castShadow=true;thk.add(mo);}
-  {const vg2=new THREE.CylinderGeometry(0.62,0.62,0.5,16);vg2.rotateZ(Math.PI/2);const v=new THREE.Mesh(vg2,M.steel);v.position.set(22.65,TY,TZ);v.castShadow=true;thk.add(v);}
+  // spider (filtrate) valve: splits the disk filtrate between the cloudy and clear seal chests. Click it to adjust (easter egg)
+  {const vg2=new THREE.CylinderGeometry(0.62,0.62,0.5,16);vg2.rotateZ(Math.PI/2);const v=new THREE.Mesh(vg2,M.steel);v.position.set(22.65,TY,TZ);v.castShadow=true;thk.add(v);
+    const hw=new THREE.Mesh(new THREE.TorusGeometry(0.42,0.06,6,18),M.bad);hw.rotation.y=Math.PI/2;hw.position.set(22.25,TY+0.2,TZ);thk.add(hw);
+    const sp=new THREE.Mesh(new THREE.BoxGeometry(0.06,0.8,0.08),M.bad);sp.position.set(22.25,TY+0.2,TZ);thk.add(sp);const sp2=sp.clone();sp2.rotation.x=Math.PI/2;thk.add(sp2);
+    const hb=new THREE.Mesh(new THREE.SphereGeometry(1.5,8,6),new THREE.MeshBasicMaterial());hb.visible=false;hb.position.set(22.45,TY+0.1,TZ);thk.add(hb);
+    G3.spiderHit=[hb,v,hw,sp,sp2];G3.spiderWheel=hw;}
   // knock-off shower headers above the disks
   pipe([[22.8,TY+2.05,TZ+0.55],[29.2,TY+2.05,TZ+0.55]],0.09,M.metal,thk);pipe([[22.8,TY+2.05,TZ-0.55],[29.2,TY+2.05,TZ-0.55]],0.09,M.metal,thk);
   pipe([[22.8,TY+2.05,TZ-0.55],[22.4,TY+2.05,TZ-0.55],[22.4,TY+2.05,TZ+0.55],[22.8,TY+2.05,TZ+0.55]],0.09,M.metal,thk);
@@ -1985,7 +2002,25 @@ const G3={on:false,ok:false};
     walkway(DX1,-16.4,XA-0.6,-16.4,PH,1.2,[1,1],false);
     [[XA-0.75,Z0-1.5],[XB+0.75,Z0-1.5],[XA-0.75,Z1+1.5],[XB+0.75,Z1+1.5]].forEach(([x,z])=>box(0.22,PH+1.1,0.22,M.brand,x,(PH+1.1)/2,z,scene));
     G3.thkRoute=[[24,0,-21.4],[38,0,-21.6],[XA,0,Z0-0.2],[XA,R,Z1],[XB,R,Z1+0.4],[XB,2*R,Z0],[XA,2*R,Z0-0.4],[XA,3*R,Z1],[XB,3*R,Z1+0.4],[XB,PH,Z0],[XA-0.3,PH,Z0-0.4],[XA-0.3,PH,-16.4],[DX1-0.6,PH,-16.4],[33.0,PH,-17.6,4,"inspect"],[38.0,PH,-12.4,3,"inspect"],[DX1-0.6,PH,-16.4],[XA-0.3,PH,-16.4],[XA-0.3,PH,Z0-0.4],[XB,PH,Z0],[XB,3*R,Z1+0.4],[XA,3*R,Z1],[XA,2*R,Z0-0.4],[XB,2*R,Z0],[XB,R,Z1+0.4],[XA,R,Z1],[XA,0,Z0-0.2],[38,0,-21.6],[24,0,-21.4]];}
-  sealT(26.4,-17.6,"#b8986e","CLOUDY");sealT(26.4,-13.9,"#8fcbe8","CLEAR");
+  const sealW=[sealT(26.4,-17.6,"#b8986e","CLOUDY"),sealT(26.4,-13.9,"#8fcbe8","CLEAR")];
+  const sealSpill=[[26.4,-17.6],[26.4,-13.9]].map(([x,z])=>{const m=new THREE.Mesh(new THREE.CircleGeometry(1,28),new THREE.MeshStandardMaterial({color:0xffffff,transparent:true,opacity:0.7,roughness:0.15,depthWrite:false}));
+    m.rotation.x=-Math.PI/2;m.position.set(x-1.2,0.08,z);m.scale.setScalar(0.01);m.visible=false;scene.add(m);return m;});
+  // filtrate model: the first part of each disk sector's rotation carries fines (cloudy); the spider valve sets where that split is
+  const SPD={v:0.35,tc:420,tl:40,qc:0,ql:0,lc:0.6,ll:0.6,spill:[0,0],hist:[],acc:0};G3.SPD=SPD;
+  function spiderStep(dtm){const F=Math.max(5,(S.rates.fiberIn||0)*2.4+8),k0=0.32,hi=1500,lo=25,v=SPD.v;
+    const tc=v<=k0?hi:(hi*k0+lo*(v-k0))/v, tl=v>=k0?lo:(hi*(k0-v)+lo*(1-k0))/(1-v);
+    const a=Math.min(1,dtm/6);SPD.tc+=(tc*(0.95+0.1*Math.random())-SPD.tc)*a;SPD.tl+=(tl*(0.93+0.14*Math.random())-SPD.tl)*a;
+    SPD.qc=F*v;SPD.ql=F*(1-v);
+    const capC=0.45*F,capL=0.8*F,VOL=60;let rem=Math.min(dtm,30);while(rem>0){const h=Math.min(0.4,rem);rem-=h;
+      SPD.lc=clamp(SPD.lc+h*(SPD.qc-capC*Math.sqrt(Math.max(0,SPD.lc)))/VOL,0,1.05);SPD.ll=clamp(SPD.ll+h*(SPD.ql-capL*Math.sqrt(Math.max(0,SPD.ll)))/VOL,0,1.05);}
+    [SPD.lc,SPD.ll].forEach((l,i)=>{SPD.spill[i]=l>=1?Math.min(1,SPD.spill[i]+dtm/40):Math.max(0,SPD.spill[i]-dtm/300);});
+    SPD.acc+=dtm;if(SPD.acc>=2){SPD.acc=0;SPD.hist.push([SPD.tc,SPD.tl,SPD.qc,SPD.ql]);if(SPD.hist.length>180)SPD.hist.shift();}}
+  const cClear=lin0("#9fd2ec"),cDirty=lin0("#7a5636"),cTmp=new THREE.Color();
+  G3.spiderFrame=(rdt)=>{if(rdt>0)spiderStep(rdt*C.simSpeed);
+    [[SPD.lc,SPD.tc],[SPD.ll,SPD.tl]].forEach(([l,t],i)=>{const w=sealW[i];w.position.y=0.3+2.2*Math.min(1,l);w.material.color.copy(cClear).lerp(cDirty,clamp(Math.sqrt(t/1500),0,1));
+      const sp=sealSpill[i],k=SPD.spill[i];sp.visible=k>0.02;sp.scale.set(0.8+2.6*k,0.8+2.2*k,1);sp.material.color.copy(w.material.color);
+      if(l>=1&&rdt>0&&Math.random()<rdt*12){const a=Math.random()*6.28;emit("drop",26.4+Math.cos(a)*1.5,2.8,(i?-13.9:-17.6)+Math.sin(a)*1.5,Math.cos(a)*1.2,0.5,Math.sin(a)*1.2,0.7,0.26,"#"+w.material.color.clone().convertLinearToSRGB().getHexString(),0.9);}});
+    if(G3.spiderWheel)G3.spiderWheel.rotation.x=SPD.v*12;};
   spool([[31.0,PH+2.35,-15.3],[26.4,PH+2.35,-15.3],[26.4,PH+2.35,-17.6],[26.4,3.0,-17.6]],0.16,M.metal);
   spool([[31.0,PH+2.85,-14.7],[26.4,PH+2.85,-14.7],[26.4,PH+2.85,-13.9],[26.4,3.0,-13.9]],0.16,M.steel);
   // thickened stock drops straight from the repulper hopper into the chest below
@@ -2031,19 +2066,34 @@ const G3={on:false,ok:false};
   [zc-CD/2-0.5,zc+CD/2+0.5].forEach(z=>box(0.6,4.2,0.6,M.steel,-10,2.1,z));
   const reelCore=cylZ(0.25,CD+1.4,M.steel,-10,4.2,zc,8);
   const reel=cylZ(1,CD,M.paper,-10,4.2,zc,24);
-  box(1.4,0.5,9,M.steel,-18.7,0.25,15.5);box(11.4,0.5,1.4,M.steel,-24.4,0.25,19.4);[-24,-27.5].forEach(x=>box(0.12,0.4,1.5,M.warn,x,0.55,19.4,scene,false));box(0.3,0.9,1.6,M.bad,-30.2,0.45,19.4,scene,false);
+  // roll handling: kicker ramp off the winder drums, upender, then a roll conveyor south and west through the warehouse door
+  {const rp=new THREE.Mesh(new THREE.BoxGeometry(2.4,0.18,4.8),M.steel);rp.position.set(-21.7,0.95,zc);rp.rotation.z=0.33;rp.castShadow=true;scene.add(rp);
+    [-2.5,2.5].forEach(dz=>box(2.4,0.6,0.1,M.warn,-21.7,1.2,zc+dz,scene,false));box(0.5,1.2,0.5,M.brand,-20.6,0.6,zc-2.6,scene,false);
+    box(1.6,0.7,1.8,M.brand,-22.9,0.35,zc,scene);
+    box(1.5,0.5,19.4-zc+1.0,M.steel,-22.9,0.25,(zc+19.4)/2+0.3,scene);box(7.6,0.5,1.5,M.steel,-26.6,0.25,19.4,scene);
+    [[-22.15,(zc+19.4)/2],[-23.65,(zc+19.4)/2]].forEach(([x,z])=>box(0.08,0.25,19.4-zc,M.warn,x,0.6,z+0.3,scene,false));
+    box(0.3,0.9,1.6,M.bad,-30.5,0.45,19.4,scene,false);}
   const rollGeo=new THREE.CylinderGeometry(0.62,0.62,1.4,24);
-  const beltRolls=new THREE.InstancedMesh(rollGeo,ROLLM,16);beltRolls.castShadow=true;scene.add(beltRolls);
+  const _one=new THREE.Vector3(1,1,1);const beltRolls=new THREE.InstancedMesh(rollGeo,ROLLM,16);beltRolls.castShadow=true;scene.add(beltRolls);
 
   // sheet ribbon along the machine
   const tc=document.createElement("canvas");tc.width=64;tc.height=4;const tx=tc.getContext("2d");tx.fillStyle="#fff";tx.fillRect(0,0,64,4);tx.fillStyle="#c8c8c8";tx.fillRect(0,0,6,4);
   const sheetTex=new THREE.CanvasTexture(tc);sheetTex.wrapS=THREE.RepeatWrapping;sheetTex.encoding=THREE.sRGBEncoding;
   const sheetMat=mat("paperc",{map:sheetTex,side:THREE.DoubleSide,flatShading:false,roughness:1});
-  const sheetPts=[[57.3,3.4],[54.5,2.95],[41,3.0],[37,3.4],[32,3.4],[29,3.6]];
-  for(let i=0;i<10;i++){sheetPts.push([(872-i*32-600)/10,6.75]);sheetPts.push([(856-i*32-600)/10,1.05]);}
-  let sheetMesh=null;
+  // the sheet runs over the top cans and under the bottom cans (serpentine), with true tangent lines between them
+  const sheetPre=[[57.3,3.4],[54.5,2.95],[41,3.0],[37,3.4],[32,3.4],[29,3.6]],CANR=1.34;
+  const canCirc=[];for(let i=0;i<10;i++){canCirc.push({x:(872-i*32-600)/10,y:5.4,d:1});canCirc.push({x:(856-i*32-600)/10,y:2.4,d:-1});}
+  // tangent point on circle c for a straight run between the circle and point q; "out" = leaving the circle toward q
+  const tanPt=(c,q,out)=>{const dx=q[0]-c.x,dy=q[1]-c.y,D=Math.hypot(dx,dy),ph=Math.atan2(dy,dx),al=Math.acos(Math.min(1,CANR/D));let best=null,bv=-9;
+    for(const sg of [1,-1]){const th=ph+sg*al,tx=c.x+CANR*Math.cos(th),ty=c.y+CANR*Math.sin(th),vx=c.d*-Math.sin(th),vy=c.d*Math.cos(th),lx=out?q[0]-tx:tx-q[0],ly=out?q[1]-ty:ty-q[1],v=(vx*lx+vy*ly)/Math.hypot(lx,ly);if(v>bv){bv=v;best=th;}}return best;};
+  function sheetPath(reelR){const pts=[...sheetPre],key=[0,1,2,3,4,5],end=[-10,4.2+reelR];
+    for(let i=0;i<canCirc.length;i++){const c=canCirc[i],prev=i?[(canCirc[i-1].x+c.x)/2,(canCirc[i-1].y+c.y)/2]:sheetPre[sheetPre.length-1],next=i<canCirc.length-1?[(canCirc[i+1].x+c.x)/2,(canCirc[i+1].y+c.y)/2]:end;
+      const t0=tanPt(c,prev,false);let t1=tanPt(c,next,true),dl=(t1-t0)*c.d;while(dl<0)dl+=Math.PI*2;while(dl>Math.PI*2)dl-=Math.PI*2;
+      const n=Math.max(3,Math.ceil(dl/0.3));for(let k=0;k<=n;k++){const th=t0+c.d*dl*k/n;pts.push([c.x+CANR*Math.cos(th),c.y+CANR*Math.sin(th)]);if(k===Math.floor(n/2))key.push(pts.length-1);}}
+    pts.push(end);key.push(pts.length-1);return {pts,key};}
+  let sheetMesh=null,sheetKey=[];
   function buildSheet(reelR){if(sheetMesh){scene.remove(sheetMesh);sheetMesh.geometry.dispose();}
-    const pts=[...sheetPts,[-10,4.2+reelR]],pos=[],uv=[],idx=[];let acc=0;
+    const sp=sheetPath(reelR),pts=sp.pts,pos=[],uv=[],idx=[];sheetKey=sp.key;let acc=0;
     pts.forEach((p,i)=>{if(i)acc+=Math.hypot(p[0]-pts[i-1][0],p[1]-pts[i-1][1]);
       pos.push(p[0],p[1],zc-CD/2+0.2,p[0],p[1],zc+CD/2-0.2);uv.push(acc/3,0,acc/3,1);
       if(i){const b=(i-1)*2;idx.push(b,b+1,b+2,b+1,b+3,b+2);}});
@@ -2052,9 +2102,14 @@ const G3={on:false,ok:false};
   buildSheet(1);let sheetR=1;
 
   // inventory: bale stacks and roll stacks
+  // bale rows sit between forklift aisles: z -7.3, the walking-floor aisle at -11.5, and -15.7; a cross lane runs along the dock wall at x -32.3
+  const BALEROWS=[-5.6,-9.0,-14.0,-17.4],FKA=[-7.3,-11.5,-15.7],FKLANE=-32.3;
+  function fkLeg(A,B){const P=[A];if(Math.abs(A[1]-B[1])>0.05){P.push([FKLANE,A[1]],[FKLANE,B[1]]);}P.push(B);
+    let L=0;const seg=[];for(let i=1;i<P.length;i++){const d=Math.hypot(P[i][0]-P[i-1][0],P[i][1]-P[i-1][1]);seg.push(d);L+=d;}return {P,seg,L};}
+  function fkAt(leg,t){let d=t*leg.L;for(let i=0;i<leg.seg.length;i++){const a=leg.P[i],b=leg.P[i+1];if(d<=leg.seg[i]||i===leg.seg.length-1){const k=leg.seg[i]>0?Math.min(1,d/leg.seg[i]):0;return [a[0]+(b[0]-a[0])*k,a[1]+(b[1]-a[1])*k,Math.atan2(-(b[1]-a[1]),b[0]-a[0]||1e-6)];}d-=leg.seg[i];}const e=leg.P[leg.P.length-1];return [e[0],e[1],0];}
   const bales=new THREE.InstancedMesh(new THREE.BoxGeometry(1.2,0.9,1.2),M.bale,168);bales.castShadow=true;bales.receiveShadow=true;scene.add(bales);
   {const m4=new THREE.Matrix4();for(let i=0;i<168;i++){const layer=i%3,col=Math.floor(i/3)%14,row=Math.floor(i/42);
-    m4.makeTranslation(-30+col*1.45,0.5+layer*0.92,-7+(-row)*3.2);bales.setMatrixAt(i,m4);}}
+    m4.makeTranslation(-30+col*1.45,0.5+layer*0.92,BALEROWS[row]);bales.setMatrixAt(i,m4);}}
   const rolls=new THREE.InstancedMesh(rollGeo,ROLLM,84);rolls.castShadow=true;rolls.receiveShadow=true;scene.add(rolls);
   {const m4=new THREE.Matrix4();for(let i=0;i<84;i++){m4.makeTranslation(-45+(i%12)*1.75,0.74,31.2-Math.floor(i/12)*1.7);rolls.setMatrixAt(i,m4);}}
 
@@ -2168,6 +2223,12 @@ const G3={on:false,ok:false};
     p.x=e.clientX;p.y=e.clientY;
     if(ptrs.size===2){const m=mid();if(pinch0>0)cam.r=clamp(r0*pinch0/m.d,50,420);if(mid0)panBy(m.x-mid0.x,m.y-mid0.y);mid0=m;}});
   const up=e=>{ptrs.delete(e.pointerId);pinch0=0;mid0=null;};glc.addEventListener("pointerup",up);glc.addEventListener("pointercancel",up);
+  // easter egg: click the spider valve on the disk thickener
+  {const rc=new THREE.Raycaster(),nd=new THREE.Vector2();let downAt=null,hoverT=0;
+    const hit=e=>{if(!G3.spiderHit)return false;const r=glc.getBoundingClientRect();nd.set((e.clientX-r.left)/r.width*2-1,-(e.clientY-r.top)/r.height*2+1);rc.setFromCamera(nd,camera);return rc.intersectObjects(G3.spiderHit,false).length>0;};
+    glc.addEventListener("pointerdown",e=>{downAt=[e.clientX,e.clientY,performance.now()];});
+    glc.addEventListener("pointerup",e=>{if(!downAt)return;const m=Math.hypot(e.clientX-downAt[0],e.clientY-downAt[1]),t=performance.now()-downAt[2];downAt=null;if(m<6&&t<500&&hit(e))openSpider();});
+    glc.addEventListener("pointermove",e=>{const n=performance.now();if(n-hoverT<120||ptrs.size)return;hoverT=n;glc.style.cursor=hit(e)?"pointer":"";});}
   glc.addEventListener("wheel",e=>{e.preventDefault();goal=null;if(e.shiftKey||Math.abs(e.deltaX)>Math.abs(e.deltaY)&&!e.ctrlKey)panBy(-e.deltaX||-e.deltaY,0);else cam.r=clamp(cam.r*Math.exp(e.deltaY*(e.ctrlKey?0.01:0.001)),50,420);},{passive:false});
   // keyboard: arrows/WASD move, Q/E rotate, +/- zoom
   glc.addEventListener("keydown",e=>{const k=e.key.toLowerCase(),st=24;let used=true;
@@ -2476,19 +2537,19 @@ const G3={on:false,ok:false};
   const setRolls=[-1.8,-0.6,0.6,1.8].map(z=>cylZ(1,1.12,M.paper,-1.85,1.75,z,16,wd));
   const web=new THREE.Mesh(new THREE.PlaneGeometry(4.6,4.6),paperDS);web.rotation.x=-Math.PI/2;web.position.set(0.4,2.2,0);wd.add(web);
   box(1.2,1.2,0.8,M.steel,0,0.6,4.3,wd);box(1.1,0.5,0.1,M.robot,0,1.25,3.95,wd,false);
-  const parked=[0,1,2,3].map(k=>{const g=new THREE.Group();g.position.set(-11.5-k*4.4,0,-0.2);scene.add(g);
+  const parked=[0,1,2,3].map(k=>{const g=new THREE.Group();g.position.set(-11.8-k*4.1,0,-0.2);scene.add(g);
     box(0.35,1.1,4.6,M.steel,-1.3,0.55,0,g);box(0.35,1.1,4.6,M.steel,1.3,0.55,0,g);cylZ(2,5.2,M.paper,0,2.15,0,22,g);cylZ(0.22,6.2,M.steel,0,2.15,0,8,g);return g;});
   // overhead crane: carries full reels from the reel to storage and from storage to the winder unwind
   const CR={x:-8,z:zc,y:9.6,jobs:[],j:null,t:0,hidePark:0,hideUnwind:false,lastTurn:-1,lastBuf:0,lastPark:0};
   const crane=new THREE.Group();scene.add(crane);
-  {[-2.4,13.4].forEach(z=>{box(24,0.35,0.4,M.warn,-17,11.4,z,scene,false);for(let x=-27;x<=-7;x+=10)box(0.2,1.6,0.2,M.metal,x,12.2,z,scene,false);});}
+  {[-2.4,13.4].forEach(z=>{box(21.4,0.35,0.4,M.warn,-15.9,11.4,z,scene,false);for(let x=-26;x<=-6;x+=10)box(0.2,1.6,0.2,M.metal,x,12.2,z,scene,false);});}
   const crBridge=new THREE.Group();scene.add(crBridge);box(0.7,0.7,16.4,M.warn,0,11,5.5,crBridge);box(0.9,0.5,0.9,M.ink,0,11.6,-2.4,crBridge,false);box(0.9,0.5,0.9,M.ink,0,11.6,13.4,crBridge,false);
   const crTrolley=box(1.6,0.7,1.4,M.ink,0,10.45,0,crBridge);
   const crCable=new THREE.Mesh(new THREE.CylinderGeometry(0.04,0.04,1,6),M.ink);scene.add(crCable);
   const crHook=new THREE.Group();scene.add(crHook);box(0.6,0.5,0.6,M.warn,0,0.25,0,crHook,false);box(0.25,0.25,5.8,M.ink,0,-0.1,0,crHook,false);
   [-2.7,2.7].forEach(z=>box(0.08,2.4,0.08,M.ink,0,-1.3,z,crHook,false));
   const carried=cylZ(2,5.2,M.paper,0,-2.5,0,22,crHook);carried.visible=false;
-  const UNW=[-16.1,2.4,zc],REELP=[-10,4.2,zc],parkP=k=>[-11.5-k*4.4,2.15,-0.2];
+  const UNW=[-16.1,2.4,zc],REELP=[-10,4.2,zc],parkP=k=>[-11.8-k*4.1,2.15,-0.2];
   function craneUpdate(rdt){const nPark=Math.max(0,Math.ceil(S.winderBuf/P.jumbo-1e-6)-1);
     if(CR.lastTurn<0){CR.lastTurn=S.tot.turnups;CR.lastPark=nPark;}
     if(S.tot.turnups>CR.lastTurn){CR.lastTurn=S.tot.turnups;
@@ -2559,7 +2620,16 @@ const G3={on:false,ok:false};
     else if(mode==="ride"){arm=[-1.15,-1.15];lean=-0.08;legB=-1.25;}
     else{arm=[0.08*Math.sin(t*1.7),-0.08*Math.sin(t*1.7)];}
     u.legs[0].rotation.z=legB??leg;u.legs[1].rotation.z=legB??-leg;u.arms[0].rotation.z=arm[0];u.arms[1].rotation.z=arm[1];u.torso.rotation.z=lean;p.position.y=bob+(u.ry||0);}
-  function moveP(p,tx,tz,speed,rdt){const dx=tx-p.position.x,dz=tz-p.position.z,d=Math.hypot(dx,dz);
+  // walkers steer round the food truck instead of through it: aim for the nearest clear corner first
+  const segBox=(ax,az,bx,bz,b)=>{let t0=0,t1=1;const d=[bx-ax,bz-az],o=[ax,az],lo=[b[0],b[2]],hi=[b[1],b[3]];
+    for(let k=0;k<2;k++){if(Math.abs(d[k])<1e-9){if(o[k]<lo[k]||o[k]>hi[k])return false;}else{let u0=(lo[k]-o[k])/d[k],u1=(hi[k]-o[k])/d[k];if(u0>u1)[u0,u1]=[u1,u0];t0=Math.max(t0,u0);t1=Math.min(t1,u1);if(t0>t1)return false;}}return true;};
+  function avoid(px,pz,tx,tz){const fb=G3.foodBox;if(!fb)return null;const b=[fb[0]-0.5,fb[1]+0.5,fb[2]-0.5,fb[3]+0.5];
+    if(px>b[0]&&px<b[1]&&pz>b[2]&&pz<b[3])return null;if(!segBox(px,pz,tx,tz,b))return null;
+    let best=null,bd=1e9;for(const cx of [fb[0]-1.1,fb[1]+1.1])for(const cz of [fb[2]-1.1,fb[3]+1.1]){if(Math.hypot(cx-px,cz-pz)<0.3||segBox(px,pz,cx,cz,b))continue;const d=Math.hypot(cx-px,cz-pz)+Math.hypot(tx-cx,tz-cz)+(segBox(cx,cz,tx,tz,b)?20:0);if(d<bd){bd=d;best=[cx,cz];}}
+    if(!best){const cx=Math.abs(px-fb[0])<Math.abs(px-fb[1])?fb[0]-1.1:fb[1]+1.1;best=[cx,pz];}return best;}
+  function moveP(p,tx,tz,speed,rdt){const av=avoid(p.position.x,p.position.z,tx,tz);if(av){tx=av[0];tz=av[1];const dx=tx-p.position.x,dz=tz-p.position.z,d=Math.hypot(dx,dz)||1,st=Math.min(d,speed*rdt);
+      p.position.x+=dx/d*st;p.position.z+=dz/d*st;p.rotation.y=lerpAng(p.rotation.y,Math.atan2(-dz,dx),Math.min(1,rdt*12));return false;}
+    const dx=tx-p.position.x,dz=tz-p.position.z,d=Math.hypot(dx,dz);
     if(d<0.15)return true;const s=Math.min(d,speed*rdt);p.position.x+=dx/d*s;p.position.z+=dz/d*s;p.rotation.y=lerpAng(p.rotation.y,Math.atan2(-dz,dx),Math.min(1,rdt*12));return false;}
   function face(p,x,z,rdt){p.rotation.y=lerpAng(p.rotation.y,Math.atan2(-(z-p.position.z),x-p.position.x),Math.min(1,rdt*8));}
   // operator consoles on the tending-side aisle: wet end, press/dryer, dry end. Each operator's home is a console spot
@@ -2912,7 +2982,9 @@ const G3={on:false,ok:false};
       SKY_DAY.set(tok("g-sky")).convertSRGBToLinear();tmpC.copy(SKY_DAY).lerp(wx==="fog"?SKY_FOG:SKY_RAIN,Math.max(wxK*0.25,fogK*0.5)).lerp(SKY_NIGHT,1-day);
       scene.background=tmpC.clone();scene.fog.color.copy(tmpC);}
     {const d=camera.position.distanceTo(target);scene.fog.near=d*(0.9+4*(1-fogK));scene.fog.far=d*(3.4+8*(1-fogK));}
-    const night=1-day;M.wind.emissive=M.wind.emissive||new THREE.Color();M.wind.emissive.copy(lin0("#ffcf7a")).multiplyScalar(0.85*night);
+    const night=1-day;if(!G3.nightL){G3.nightL=[[-10,11,9.1],[12,11,9.1],[34,11,9.1],[56,11,9.1],[30,15,-15],[16,9,-18],[-21,7,-13],[-36,7,23],[57,5,-22]].map(([x,y,z])=>{const l=new THREE.PointLight(0xffe2b0,0,38,1.4);l.position.set(x,y,z);scene.add(l);
+        const f=new THREE.Mesh(new THREE.CylinderGeometry(0.5,0.7,0.3,12),new THREE.MeshBasicMaterial({color:0xfff1cf}));f.position.set(x,y+0.2,z);f.visible=false;scene.add(f);l.userData.f=f;return l;});}
+    G3.nightL.forEach(l=>{l.intensity=1.6*night;l.userData.f.visible=night>0.2;});G3.spiderFrame&&G3.spiderFrame(rdt);M.wind.emissive=M.wind.emissive||new THREE.Color();M.wind.emissive.copy(lin0("#ffcf7a")).multiplyScalar(0.85*night);
     ENV.lampHead.color.copy(lin0("#9aa3b2")).lerp(lin0("#fff2c4"),night);ENV.lampPool.opacity=0.32*night;
     ENV.pudM.opacity=0.55*(S.wet||0);ENV.riverTex.offset.x-=rdt*0.02;
     ENV.bridge.rotation.y-=rdt*0.12;
@@ -2973,6 +3045,7 @@ const G3={on:false,ok:false};
         b.rotation.y=flock.dir<0?Math.PI:0;const f=Math.sin(t*16+b.userData.ph)*0.9;b.userData.p1.rotation.x=f;b.userData.p2.rotation.x=-f;}
       if(flock.x<-30||flock.x>76)flock=null;}
     // food truck
+    G3.foodBox=truck.visible?[truck.position.x-4.3,truck.position.x+4.3,truck.position.z-1.9,truck.position.z+1.9]:null;
     if(FOOD.state==="in"){truck.position.x=Math.max(FOOD.x,truck.position.x-12*rdt);if(truck.position.x<=FOOD.x){FOOD.state="open";FOOD.open=true;FOOD.t=0;}}
     else if(FOOD.state==="open"){FOOD.t+=rdt;if(FOOD.t>50){FOOD.state="out";FOOD.open=false;truck.rotation.y=Math.PI;}}
     else if(FOOD.state==="out"){truck.position.x+=12*rdt;if(truck.position.x>95){truck.visible=false;FOOD.state="off";ambT.food=110+Math.random()*90;}}}
@@ -3140,21 +3213,32 @@ const G3={on:false,ok:false};
       // dye trouble: the sheet and the growing reel flash through colors
       const dyeOn=S.M.offSpec;if(dyeOn){const k=Math.floor(now/1400)%DYE.length;if(k!==dyeK){dyeK=k;dyeSheet.color.copy(lin0(DYE[k]));dyeReel.color.copy(lin0(DYE[(k+2)%DYE.length]));}}
       sheetMesh.material=dyeOn?dyeSheet:sheetMat;reel.material=dyeOn?dyeReel:M.paper;
-      sheetMesh.visible=show;sheetMesh.geometry.setDrawRange(0,segs*6);}sheetTex.offset.x=-V.sheet/24*1.0;
+      sheetMesh.visible=show;sheetMesh.geometry.setDrawRange(0,(sheetKey[Math.min(segs,sheetKey.length-1)]||0)*6);}sheetTex.offset.x=-V.sheet/24*1.0;
     // roll conveyor
-    // rolls queue on the conveyor from the warehouse end back toward the winder
-    {const want=Math.min(14,Math.floor(S.conv||0)),CV=G3.convVis||(G3.convVis=[]);while(CV.length<want)CV.push(20.5);while(CV.length>want)CV.shift();
-      CV.sort((a,b)=>a-b);CV.forEach((d,k)=>{const t=k*1.45;CV[k]=d>t?Math.max(t,d-rdt*4):t;});}
-    let nr=0;G3.convVis.forEach(d=>{if(nr>=16)return;let x,z;if(d<11.2){x=-29.9+d;z=19.4;}else{x=-18.7;z=19.4-(d-11.2);}m4.makeTranslation(x,1.12,z);beltRolls.setMatrixAt(nr++,m4);});
+    // each finished roll is kicked off the winder, rolls down the ramp, is upended and rides the conveyor to the warehouse;
+    // it queues at the end until a clamp truck takes it (the sim's conveyor count)
+    const RV=G3.rollVis||(G3.rollVis={list:[],seen:-1});if(RV.seen<0)RV.seen=S.tot.rolls;
+    if(S.tot.rolls>RV.seen){const n=Math.min(4,S.tot.rolls-RV.seen);RV.seen=S.tot.rolls;for(let k=0;k<n;k++)RV.list.push({d:-3.2+k*0.01,z:zc+[-1.8,-0.6,0.6,1.8][(S.tot.rolls+k)%4],spin:0});while(RV.list.length>18)RV.list.shift();}
+    {const CL=(19.4-zc)+(29.9-22.9),qn=Math.max(0,Math.ceil(S.conv||0)),sp=3*clamp(C.simSpeed/20,1,4);RV.list.sort((a,b)=>b.d-a.d);
+      RV.list.forEach((r,k)=>{const lim=k===0?CL:Math.min(CL,RV.list[k-1].d-1.45);if(r.d<0){const nd=Math.max(r.d,Math.min(k===0?0:Math.min(0,lim),r.d+rdt*2.6));if(nd>r.d)r.spin+=rdt*6;r.d=nd;}else r.d=Math.max(r.d,Math.min(lim,r.d+rdt*sp));});
+      while(RV.list.length&&RV.list[0].d>=CL-0.01&&RV.list.filter(r=>r.d>=CL-1.45*qn-0.2).length>qn+0)RV.list.shift();}
+    let nr=0;const q4=new THREE.Quaternion(),hz=new THREE.Quaternion().setFromEuler(new THREE.Euler(Math.PI/2,0,0));
+    RV.list.forEach(r=>{if(nr>=16)return;let x,y,z,q;
+      if(r.d<0){const f=(r.d+3.2)/3.2;x=-20.4-2.5*f;y=1.75-0.85*f;z=r.z+(zc-r.z)*Math.max(0,f-0.6)/0.4;q=q4.setFromEuler(new THREE.Euler(Math.PI/2,0,-r.spin));}
+      else{const d=r.d,L1=19.4-zc;if(d<L1){x=-22.9;z=zc+d;}else{x=-22.9-(d-L1);z=19.4;}y=1.2;q=q4.identity();}
+      m4.compose(v3.set(x,y,z),q,_one);beltRolls.setMatrixAt(nr++,m4);});
     beltRolls.count=nr;beltRolls.instanceMatrix.needsUpdate=true;
     // forklifts (same paths as the 2D view)
     ensure(lifts,V.lifts.length,()=>forklift(M.warn));
     V.lifts.forEach((L,i)=>{const g=lifts[i];
       if(i>=Math.floor(S.effDrv+1e-9)){const [x,z]=W(272+i*15,316);g.position.set(x,0,z);g.rotation.y=0;g.children[0].material=M.off;g.userData.load.visible=false;return;}
       g.children[0].material=M.fork;g.visible=S.M.recvMul!==0||G3.yardFrozen;if(G3.yardFrozen){g.userData.load.visible=false;return;}
-      const dy=inY(L.door%P.doors),pts=[[272,dy],[300+((i*37)%150),150+((i*53)%120)],[406,215+(i%2?-8:8)],[300+((i*61)%150),150+((i*29)%120)]];
-      const a=Math.floor(L.p),t=L.p-a,A=pts[a],B=pts[(a+1)%4];const [x,z]=W(A[0]+(B[0]-A[0])*t,A[1]+(B[1]-A[1])*t),[bx,bz]=W(B[0],B[1]);
-      g.position.set(x,0,z);g.rotation.y=Math.atan2(-(bz-z),bx-x);g.userData.load.visible=(a===0||a===2);});
+      const dz=W(0,inY(L.door%P.doors))[1],dz2=clamp(dz,-21.5,-5.2),stk=(k,m)=>{const ai=(i*k+m)%3;return [ai===1?-29.4+((i*m*7)%8):-29.4+((i*k*5+m*3)%17),FKA[ai]];};
+      const pts=[[-33.2,dz2],stk(2,1),stk(3,2),[-20.3,-11.5]];
+      const a=Math.floor(L.p),t=L.p-a,A=pts[a],B=pts[(a+1)%4];
+      // legs run door wall lane -> aisle; the dock leg first steps out of the door along the lane
+      const [x,z,ry]=fkAt(fkLeg(A,B),t);
+      g.position.set(x,0,z);g.rotation.y=ry;g.userData.load.visible=(a===0||a===2);});
     // clamp trucks + robots
     const nLo=Math.round(C.loaders.v);ensure(loaders,nLo,()=>clamp3(M.ok));
     for(let i=0;i<nLo;i++){const g=loaders[i];
@@ -3207,6 +3291,19 @@ function hudSync(){const sp=C.simSpeed+'<span class="lg"> min/s</span><span clas
 {let show=false;try{show=localStorage.getItem("paper-mill-knobs")==="1";}catch(e){}
   const setK=v=>{show=v;document.body.classList.toggle("noknobs",!v);$("knobsBtn").textContent=v?"Hide knobs":"Show knobs";$("knobsBtn").setAttribute("aria-expanded",v);try{localStorage.setItem("paper-mill-knobs",v?"1":"0");}catch(e){}};
   setK(show);$("knobsBtn").addEventListener("click",()=>setK(!show));}
+function openSpider(){$("spider").hidden=false;$("spiV").value=Math.round(G3.SPD.v*100);drawSpider();}
+$("spiClose").addEventListener("click",()=>$("spider").hidden=true);
+$("spiV").addEventListener("input",e=>{G3.SPD.v=+e.target.value/100;drawSpider();});
+function drawSpider(){const D=G3.SPD;if(!D||$("spider").hidden)return;
+  $("spiTc").textContent=f0(D.tc)+" mg/L";$("spiTl").textContent=f0(D.tl)+" mg/L";$("spiQc").textContent=f0(D.qc)+" L/s · "+f0(Math.min(100,D.lc*100))+"% full";$("spiQl").textContent=f0(D.ql)+" L/s · "+f0(Math.min(100,D.ll*100))+"% full";
+  const n=$("spiNote");n.className="spin"+(D.lc>=1||D.ll>=1||D.tl>200?" bad":"");
+  n.textContent=D.lc>=1?"Cloudy seal chest is overflowing.":D.ll>=1?"Clear seal chest is overflowing.":D.tl>200?"Fines are carrying over into the clear filtrate.":D.v>0.5?"Clear filtrate is very clean, but the cloudy chest is filling.":"Split looks healthy.";
+  const c=$("spiT"),x=c.getContext("2d"),W=c.width,Hh=c.height,h=D.hist;x.clearRect(0,0,W,Hh);x.fillStyle="#fff";x.fillRect(0,0,W,Hh);
+  x.strokeStyle="#e3e6ee";x.lineWidth=1;for(let k=1;k<4;k++){x.beginPath();x.moveTo(0,Hh*k/4);x.lineTo(W,Hh*k/4);x.stroke();}
+  x.fillStyle="#7a8191";x.font="20px system-ui,sans-serif";x.fillText("TSS (log)",8,22);x.textAlign="right";x.fillText("flow (dashed)",W-8,22);x.textAlign="left";
+  if(h.length<2)return;const X=i=>i/(179)*W,ly=v=>Hh-8-(Math.log10(Math.max(10,v))-1)/(Math.log10(2000)-1)*(Hh-36),fy=v=>Hh-8-v/Math.max(30,...h.map(r=>Math.max(r[2],r[3])))*(Hh-36);
+  [[0,"#8a6644",ly,[]],[1,"#3fa0d0",ly,[]],[2,"#8a6644",fy,[10,8]],[3,"#3fa0d0",fy,[10,8]]].forEach(([k,col,Y,dash])=>{x.setLineDash(dash);x.strokeStyle=col;x.lineWidth=3;x.beginPath();h.forEach((r,i)=>i?x.lineTo(X(i),Y(r[k])):x.moveTo(X(i),Y(r[k])));x.stroke();});x.setLineDash([]);}
+setInterval(drawSpider,500);
 $("hud-play").addEventListener("click",()=>{$("play").click();hudSync();});
 const SPEEDS=[1,2,5,10,20,30,60,120];
 function nudgeSpeed(d){const i=SPEEDS.findIndex(v=>v>=C.simSpeed);const n=SPEEDS[clamp((i<0?SPEEDS.length-1:i)+d,0,SPEEDS.length-1)];const el=$("simspeed");el.value=n;el.dispatchEvent(new Event("input"));hudSync();}
@@ -3227,6 +3324,7 @@ syncControls();updateText();updateChaos();updateShop();
 requestAnimationFrame(frame);
 })();
 </script>
+
 
 </body>
 </html>
