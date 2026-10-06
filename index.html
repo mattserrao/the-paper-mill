@@ -313,7 +313,7 @@ body{margin:0}
 </head>
 <body>
 
-<div class="ver" id="appVersion" aria-label="Version">v1.12.2</div>
+<div class="ver" id="appVersion" aria-label="Version">v1.13.0</div>
 <div class="wrap">
   <header>
     <div class="brand"><span class="logo" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linejoin="round"><circle cx="8.5" cy="12" r="5.5"/><circle cx="8.5" cy="12" r="1.6" fill="currentColor"/><path d="M8.5 6.5H20v11H8.5"/></svg></span>
@@ -1744,13 +1744,30 @@ const G3={on:false,ok:false};
         for(let i=0;i<8;i++)for(let l=0;l<3;l++){m4b.makeTranslation(-4.9+i*1.4,2.05+l*0.97,(l%2?0.35:-0.35));b2.setMatrixAt(n2++,m4b);}b2.castShadow=true;c.add(b2);}});
     ENV.trainWheels=TW;ENV.trainCars=cars;ENV.locoStack=[1.2,4.1];
     T.position.set(-180,0,-29);ENV.train={g:T,state:"away",t:60};}
+  // day-staff cars drive in through the east gate in the morning and leave in the evening, one at a time so they queue nicely
+  const CARQ={inQ:[],outQ:[],t:0,init:false};
+  function carPath(c,arrive){const G=[[100,32.5],[89.5,32.5],[89.5,c.aisle],[c.sx,c.aisle]],P=arrive?[...G,[c.sx,c.sz]]:[[c.sx,c.sz],...G.slice().reverse()];
+    let L=0;const cum=[0];for(let i=1;i<P.length;i++){L+=Math.hypot(P[i][0]-P[i-1][0],P[i][1]-P[i-1][1]);cum.push(L);}return {P,cum,L,d:0,revUntil:arrive?0:cum[1]};}
+  function carsUpdate(rdt,hr){if(!ENV.cars)return;const f=clamp(C.simSpeed/20,1,4),want=c=>!c.day||(hr>=c.arr&&hr<c.dep);
+    if(!CARQ.init){CARQ.init=true;ENV.cars.forEach(c=>{c.st=want(c)?"parked":"gone";c.g.visible=c.st==="parked";c.g.position.set(c.sx,0,c.sz);c.g.rotation.y=Math.PI/2;});}
+    ENV.cars.forEach(c=>{if(c.st==="gone"&&want(c)&&!CARQ.inQ.includes(c)){CARQ.inQ.push(c);c.st="queued";}
+      else if(c.st==="parked"&&!want(c)&&!CARQ.outQ.includes(c)){CARQ.outQ.push(c);c.st="waiting";}});
+    CARQ.t-=rdt;if(CARQ.t<=0){const c=CARQ.outQ.shift()||CARQ.inQ.shift();if(c){const arrive=c.st==="queued";c.path=carPath(c,arrive);c.st=arrive?"in":"out";c.g.visible=true;CARQ.t=0.5/f;}}
+    ENV.cars.forEach(c=>{if(c.st!=="in"&&c.st!=="out")return;const p=c.path,rev=p.d<p.revUntil;p.d=Math.min(p.L,p.d+(rev?3:10)*f*rdt);
+      let i=1;while(i<p.P.length-1&&p.d>p.cum[i])i++;const a=p.P[i-1],b=p.P[i],k=clamp((p.d-p.cum[i-1])/Math.max(1e-6,p.cum[i]-p.cum[i-1]),0,1);
+      c.g.position.set(a[0]+(b[0]-a[0])*k,0,a[1]+(b[1]-a[1])*k);const h=Math.atan2(-(b[1]-a[1]),b[0]-a[0])+(rev?Math.PI:0);let dr=h-c.g.rotation.y;dr=Math.atan2(Math.sin(dr),Math.cos(dr));c.g.rotation.y+=dr*Math.min(1,rdt*8*f);
+      if(p.d>=p.L){if(c.st==="in")c.st="parked";else{c.st="gone";c.g.visible=false;}}});}
   // employee parking lot, cars come and go with the shifts
   {slab(66,88,38,56,M.asphalt,0.02);for(let r=0;r<3;r++)for(let k=0;k<=8;k++)box(0.12,0.02,4.4,M.panelW0||(M.panelW0=mat("panel")),67+k*2.6,0.05,40.6+r*6.2,scene,false);
     slab(60.5,66,31.5,33.4,M.slab,0.025);
     const cols=["#c0392b","#2c3e50","#ecf0f1","#7f8c8d","#2980b9","#16a085","#f1c40f","#34495e","#d35400","#bdc3c7"];ENV.cars=[];
     for(let r=0;r<3;r++)for(let k=0;k<8;k++){const g=new THREE.Group();g.position.set(68.3+k*2.6,0,40.6+r*6.2);g.rotation.y=Math.PI/2;scene.add(g);const cm=cloth0b(cols[(k*7+r*3)%cols.length]);
-      box(4.2,0.9,1.8,cm,0,0.7,0,g);box(2.3,0.75,1.66,cm,-0.2,1.45,0,g);box(2.2,0.6,1.7,M.wind,-0.2,1.45,0,g,false);ENV.cars.push({g,ord:Math.random()});}
-    ENV.cars.sort((a,b)=>a.ord-b.ord);}
+      box(4.2,0.9,1.8,cm,0,0.7,0,g);box(2.3,0.75,1.66,cm,-0.2,1.45,0,g);box(2.2,0.6,1.7,M.wind,-0.2,1.45,0,g,false);
+      ENV.cars.push({g,ord:Math.random(),sx:68.3+k*2.6,sz:40.6+r*6.2,aisle:r===2?49.9:43.7,st:"parked"});}
+    ENV.cars.sort((a,b)=>a.ord-b.ord);
+    // the first third belong to the shift crews (always here); the rest are day staff who arrive around 6 a.m. and leave around 6 p.m.
+    const nShift=Math.round(ENV.cars.length*0.34);ENV.cars.forEach((c,k)=>{c.day=k>=nShift;const f=(k-nShift)/Math.max(1,ENV.cars.length-nShift);c.arr=5.2+f*1.5;c.dep=17.9+f*1.4;});
+    slab(88,91,31.4,56,M.asphalt,0.021);slab(86,100,31.4,33.6,M.asphalt,0.021);}
   // smoking shelter, picnic tables by the food truck spot, safety board
   {const sx=66.5,sz=22;[[-1.4,-0.8],[1.4,-0.8],[-1.4,0.8],[1.4,0.8]].forEach(([a,b])=>box(0.1,2.4,0.1,M.metal,sx+a,1.2,sz+b,scene,false));
     box(3.2,0.12,2.0,mat("g-glass",{transparent:true,opacity:0.5}),sx,2.45,sz);box(3,1.5,0.06,mat("g-glass",{transparent:true,opacity:0.35}),sx,1.3,sz+0.95,scene,false);box(2.4,0.1,0.5,wood,sx,0.5,sz+0.6,scene,false);
@@ -3195,8 +3212,7 @@ const G3={on:false,ok:false};
       if(Math.random()<rdt*8)emitA("drop",ENV.outfall[0]+R()*0.3,ENV.outfall[1]+0.5,ENV.outfall[2],R(),1.5,-1.5,0.6,0.28,"#9ec3d6",0.8);}
     const perm=S.inc.some(i=>i.id==="permit");ENV.wwM.color.copy(perm?ENV.wwBad:ENV.wwBase);
     // parking fills for the day shift and thins out at night
-    const occ=hr<5?0.3:hr<7.5?0.3+0.65*ss((hr-5)/2.5):hr<17?0.95:hr<19.5?0.95-0.55*ss((hr-17)/2.5):0.4;
-    const nC=Math.round(occ*ENV.cars.length);ENV.cars.forEach((c,k)=>c.g.visible=k<nC);
+    carsUpdate(rdt,hr);
     // the train: arrives, sits while the cars are unloaded, then leaves
     // the train eases in, spots its cars at the mill, opens the boxcar doors, then pulls back out
     const tr=ENV.train;if(rdt>0){tr.t-=rdt;tr.v=tr.v||0;const STOP=-17,AW=-200;
@@ -3233,9 +3249,15 @@ const G3={on:false,ok:false};
         if(Math.random()<rdt*6)emit("smoke",16+R()*2,3.4,-13.5+R()*2,R(),2.2,R(),2.6,2.2,"#e9b8c8",0.5);}}if(rdt<=0){parties.forEach(P2=>P2.members.forEach(m=>pose(m,"idle",now)));return;}
     for(const k in ambT)ambT[k]-=rdt;
     const has=k=>parties.some(p=>p.kind===k);
-    if(ambT.tour<=0){ambT.tour=80+Math.random()*80;if(!has("tour"))startTour();}
-    if(ambT.mgr<=0){ambT.mgr=60+Math.random()*60;if(!has("mgr"))startMgr();}
-    if(ambT.office<=0){ambT.office=14+Math.random()*16;if(parties.filter(p=>p.kind==="office").length<2)startOffice();}
+    // office staff, managers and tours keep day hours (6 a.m. to 6 p.m.): they come out of the office and at 6 p.m. head back in
+    const hrA=((S.t+360)/60)%24,dayOn=hrA>=6&&hrA<18;
+    if(dayOn){if(ambT.tour<=0){ambT.tour=80+Math.random()*80;if(!has("tour")&&hrA>=8&&hrA<16)startTour();}
+      if(ambT.mgr<=0){ambT.mgr=60+Math.random()*60;if(!has("mgr")&&hrA<17.5)startMgr();}
+      if(ambT.office<=0){ambT.office=14+Math.random()*16;if(parties.filter(p=>p.kind==="office").length<2&&hrA<17.6)startOffice();}
+      if(!ambUpdate.wasDay){ambT.office=Math.min(ambT.office,1.5);ambT.mgr=Math.min(ambT.mgr,6);}}
+    else parties.forEach(P2=>{if(P2.home||!["tour","mgr","office"].includes(P2.kind))return;P2.home=true;const L=P2.members[0];
+      P2.path=[[L.position.x,Math.abs(L.position.z-AIS)<2?L.position.z:AIS,0],[OFF.door[0],AIS,0],[OFF.door[0],OFF.door[1],0]];P2.i=0;P2.wait=0;});
+    ambUpdate.wasDay=dayOn;
     if(ambT.birds<=0){ambT.birds=30+Math.random()*40;if(!flock)startBirds();}
     if(ambT.food<=0&&FOOD.state==="off"){FOOD.state="in";FOOD.t=0;FOOD.id++;truck.visible=true;truck.rotation.y=0;truck.position.set(95,0,FOOD.z);}
     for(let k=parties.length-1;k>=0;k--)if(!partyUpdate(parties[k],rdt,now))parties.splice(k,1);
