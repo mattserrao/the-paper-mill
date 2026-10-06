@@ -271,6 +271,9 @@ body.noknobs #cards{display:none}
 #freeBtn[aria-pressed=true]{background:var(--ok);border-color:var(--ok);color:#fff}
 .seasongrp{display:inline-flex;gap:8px;align-items:center}.schip{font:700 12px var(--f-body);color:var(--panel);background:var(--brand);border-radius:999px;padding:4px 10px;white-space:nowrap}
 @media (max-width:640px){.seasongrp{grid-column:1/-1;display:grid;grid-template-columns:1fr 1fr;gap:8px}.seasongrp .schip{grid-column:1/-1;justify-self:start}.lbrow{padding:8px 10px}}
+body.zen .hud,body.zen .pad,body.zen #labels3d,body.zen .banner3d,body.zen .chips3d,body.zen .ver{display:none!important}
+.zenexit{position:absolute;right:16px;bottom:calc(16px + env(safe-area-inset-bottom,0px));z-index:8;opacity:0;transition:opacity .6s;background:rgba(255,255,255,.85);backdrop-filter:blur(6px)}
+body.zen .zenexit.show{opacity:1}
 .reroll{font-size:12px;padding:5px 10px;align-self:center;white-space:nowrap}
 /* fullscreen */
 .hud{display:none;z-index:5}
@@ -305,7 +308,7 @@ body{margin:0}
 </head>
 <body>
 
-<div class="ver" id="appVersion" aria-label="Version">v1.5.2</div>
+<div class="ver" id="appVersion" aria-label="Version">v1.6.0</div>
 <div class="wrap">
   <header>
     <div class="brand"><span class="logo" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linejoin="round"><circle cx="8.5" cy="12" r="5.5"/><circle cx="8.5" cy="12" r="1.6" fill="currentColor"/><path d="M8.5 6.5H20v11H8.5"/></svg></span>
@@ -316,7 +319,7 @@ body{margin:0}
       <button id="play" class="primary" aria-pressed="true">Pause</button>
       <button id="balance">Balance all</button>
       <button id="reset">Reset</button>
-      <span class="seasongrp"><button id="seasonBtn" title="30-day season with standard chaos. Your net profit goes on the leaderboard.">Start season</button><button id="scoresBtn">Leaderboard</button><button id="freeBtn" aria-pressed="false" title="Upgrades are free and you can't go bankrupt. Free play games can't go on the leaderboard.">Free play</button><span class="schip" id="seasonChip" hidden></span></span>
+      <span class="seasongrp"><button id="seasonBtn" title="30-day season with standard chaos. Your net profit goes on the leaderboard.">Start season</button><button id="scoresBtn">Leaderboard</button><button id="zenBtn" title="A calm, endless screensaver: slow camera, no disasters, chill music">Zen mode</button><button id="freeBtn" aria-pressed="false" title="Upgrades are free and you can't go bankrupt. Free play games can't go on the leaderboard.">Free play</button><span class="schip" id="seasonChip" hidden></span></span>
       <span class="sndgrp"><button id="sound" aria-pressed="false" title="Lofi music, incident music and sound effects">Sound off</button><input id="vol" type="range" min="0" max="100" value="70" aria-label="Volume" style="width:80px;accent-color:var(--brand)"></span>
       <div class="simspeed"><label for="simspeed">Sim speed</label><input id="simspeed" type="range" min="1" max="120" step="1" value="30"><span id="simspeedv" class="val">30 min/s</span></div>
     </div>
@@ -339,13 +342,13 @@ body{margin:0}
   </div>
   <div class="jumps" id="jumps" role="group" aria-label="Go to area"><span>Go to</span><button data-j="trucks">Trucks</button><button data-j="recv">Receiving</button><button data-j="pulp">Pulper &amp; chest</button><button data-j="pm">Paper machine</button><button data-j="wd">Winder</button><button data-j="wh">Warehouse</button><button data-j="shop">Maintenance</button>
   </div>
-  <div class="view3d" id="view3d" hidden><div class="hud" id="hud">
+  <div class="view3d" id="view3d" hidden><button id="zenExit" class="zenexit" hidden>Leave zen mode</button><div class="hud" id="hud">
     <div class="hk brandk"><i></i><div><span id="hud-mill">Mill</span><b id="hud-clock">–</b></div></div>
     <div class="hk"><span>Cash</span><b id="hud-cash">–</b></div>
     <div class="hk"><span>Production</span><b id="hud-prod">–</b></div>
     <div class="hk opt"><span>Stock chest</span><b id="hud-tank">–</b></div>
     <div class="hk opt2"><span>Profit</span><b id="hud-profit">–</b></div>
-    <div class="hbtns"><button id="hud-play">Pause</button><button id="hud-slow" aria-label="Slower">−</button><span id="hud-speed">30 min/s</span><button id="hud-fast" aria-label="Faster">+</button><button id="hud-sound">Sound</button><button id="hud-lbl">Labels: Auto</button><button id="hud-dis" class="danger" title="Unleash a random disaster">Disaster</button><button id="hud-exit" aria-label="Exit fullscreen"><span class="lg">Exit</span><span class="sm" aria-hidden="true">✕</span></button></div></div><canvas id="gl" tabindex="0" aria-label="3D view of the mill. Arrow keys move, Q and E rotate, plus and minus zoom."></canvas><div class="pad" id="pad" aria-label="Move the view"><button data-p="0,-1" aria-label="Move up">▲</button><button data-p="-1,0" aria-label="Move left">◀</button><button data-p="1,0" aria-label="Move right">▶</button><button data-p="0,1" aria-label="Move down">▼</button></div><div id="labels3d"></div><div class="banner3d" id="banner3d" hidden><span></span><b></b></div><div class="chips3d" id="chips3d"></div><div class="flash3d" id="flash3d"></div><div class="blackout3d" id="blackout3d" hidden><div><b>Power outage</b><span>Lightning hit the substation. Backup generators starting…</span></div></div></div>
+    <div class="hbtns"><button id="hud-play">Pause</button><button id="hud-slow" aria-label="Slower">−</button><span id="hud-speed">30 min/s</span><button id="hud-fast" aria-label="Faster">+</button><button id="hud-sound">Sound</button><button id="hud-lbl">Labels: Auto</button><button id="hud-zen" title="Zen mode">Zen</button><button id="hud-dis" class="danger" title="Unleash a random disaster">Disaster</button><button id="hud-exit" aria-label="Exit fullscreen"><span class="lg">Exit</span><span class="sm" aria-hidden="true">✕</span></button></div></div><canvas id="gl" tabindex="0" aria-label="3D view of the mill. Arrow keys move, Q and E rotate, plus and minus zoom."></canvas><div class="pad" id="pad" aria-label="Move the view"><button data-p="0,-1" aria-label="Move up">▲</button><button data-p="-1,0" aria-label="Move left">◀</button><button data-p="1,0" aria-label="Move right">▶</button><button data-p="0,1" aria-label="Move down">▼</button></div><div id="labels3d"></div><div class="banner3d" id="banner3d" hidden><span></span><b></b></div><div class="chips3d" id="chips3d"></div><div class="flash3d" id="flash3d"></div><div class="blackout3d" id="blackout3d" hidden><div><b>Power outage</b><span>Lightning hit the substation. Backup generators starting…</span></div></div></div>
   <div class="scroller" id="plantwrap"><canvas id="plant" width="1200" height="660" aria-label="Animated mill schematic"></canvas></div>
 
   <section class="chaos collapsed" id="chaosSec" aria-label="Chaos">
@@ -890,8 +893,8 @@ function step(dt){
   spend(((C.drivers.v+C.loaders.v+P.techs)*ECON.wage+P.robots*ECON.robot+P.pmCost)*dt/60,"labor");
   spend(ECON.overhead*dt/60,"overhead"); if(P.premium)spend(P.premium*dt/60,"premium");
   S.profitRate=ease(S.profitRate,(S.cash-cash0)*60/dt*24,dt,480);
-  if(!S.over&&!S.free&&S.cash<ECON.bankrupt&&!(S.season&&S.season.on)){S.over="bankrupt";showOverlay("bankrupt");}
-  if(!S.won&&!S.free&&S.cash>=ECON.goal){S.won=true;if(!(S.season&&S.season.on))showOverlay("win");}
+  if(!S.over&&!S.free&&!S.zen&&S.cash<ECON.bankrupt&&!(S.season&&S.season.on)){S.over="bankrupt";showOverlay("bankrupt");}
+  if(!S.won&&!S.free&&!S.zen&&S.cash>=ECON.goal){S.won=true;if(!(S.season&&S.season.on))showOverlay("win");}
   seasonTick();
   // smoothed rates (per hour)
   const R=S.rates,k=v=>v*60/dt;
@@ -1068,6 +1071,24 @@ function setFree(on){S.free=on;$("freeBtn").setAttribute("aria-pressed",String(o
   if(on)BANNERS.push({text:"Free play: upgrades are free and you can't go bankrupt. No leaderboard.",t:null,kind:"good"});
   $("seasonChip").hidden=!on&&!(S.season&&(S.season.on||S.season.done));if(on)$("seasonChip").textContent="Free play";updateShop();}
 $("freeBtn").addEventListener("click",()=>setFree(!S.free));
+// zen mode: endless, calm screensaver of the mill
+let ZEN=null;
+function setZen(on){if(on===!!ZEN)return;
+  if(on){if(S.season&&S.season.on){S.season=null;seasonLocks(false);}
+    ZEN={speed:C.simSpeed,chaos:CH.on,hays:C.hays,breaks:C.breaks,view:G3.on};
+    S.inc=[];if(S.wd==="hayout")S.wd="run";if(S.pm==="break"){S.pm="run";}BANNERS.length=0;S.zen=true;
+    CH.on=false;$("chaosOn").checked=false;C.hays=false;C.breaks=false;
+    const el=$("simspeed");el.value=1;el.dispatchEvent(new Event("input"));
+    if(!G3.on)setView(true);document.body.classList.add("zen");setFS(true);G3.zen=true;G3.zenS=null;
+    if(soundPref==="on"&&!AUDIO.on)setSound(true);running=true;$("play").textContent="Pause";zenPoke();}
+  else{const z=ZEN;ZEN=null;S.zen=false;G3.zen=false;document.body.classList.remove("zen");
+    CH.on=z.chaos;$("chaosOn").checked=z.chaos;C.hays=z.hays;C.breaks=z.breaks;const el=$("simspeed");el.value=z.speed;el.dispatchEvent(new Event("input"));
+    setFS(false);if(!z.view)setView(false);}
+  $("zenBtn").setAttribute("aria-pressed",String(on));}
+let zenT=0;function zenPoke(){const b=$("zenExit");b.hidden=false;b.classList.add("show");clearTimeout(zenT);zenT=setTimeout(()=>b.classList.remove("show"),2500);}
+$("zenBtn").addEventListener("click",()=>setZen(true));$("hud-zen").addEventListener("click",()=>setZen(true));
+$("zenExit").addEventListener("click",e=>{e.stopPropagation();setZen(false);});
+["pointermove","pointerdown"].forEach(t=>document.addEventListener(t,()=>{if(ZEN)zenPoke();},{passive:true}));
 $("so-more").addEventListener("click",()=>{$("seasonOv").hidden=true;running=true;$("play").textContent="Pause";$("play").setAttribute("aria-pressed","true");$("seasonChip").textContent="Season over · one more turn";});
 $("seasonBtn").addEventListener("click",startSeason);$("scoresBtn").addEventListener("click",openBoard);
 $("so-submit").addEventListener("click",submitScore);$("so-name").addEventListener("keydown",e=>{if(e.key==="Enter")submitScore();e.stopPropagation();});
@@ -3028,6 +3049,10 @@ const G3={on:false,ok:false};
     const out=S.inc.some(i=>i.id==="lightning");if(out){hemi.intensity=0.18;sun.intensity=0.12;}
     if(out!==G3.wasOut){G3.wasOut=out;if(out)scene.background=new THREE.Color("#0b0f0e").convertSRGBToLinear();}
     // camera + render
+    if(G3.zen){const Z=G3.zenS||(G3.zenS={i:0,t:99,tg:new THREE.Vector3(),r:300,th:-0.2});Z.t+=rdt;
+      const POI=[[-14,5,300,-0.2],[20,9,120,-0.5],[24,-10,95,0.4],[-20,14,80,-1.2],[-25,-18,110,0.9],[20,-40,120,2.6],[70,-10,110,-2.2],[-60,10,130,0.1],[10,9,170,2.9]];
+      if(Z.t>20){Z.t=0;Z.i=(Z.i+1+Math.floor(Math.random()*2))%POI.length;const q=POI[Z.i];Z.tg.set(q[0],0,q[1]);Z.r=q[2];Z.th=q[3];}
+      const k=Math.min(1,rdt*0.12);goal=null;target.lerp(Z.tg,k);cam.r+=(Z.r-cam.r)*k;cam.th=lerpAng(cam.th,Z.th+Math.sin(now/26000)*0.6,k*0.8)+rdt*0.02;cam.ph+=(0.8+0.12*Math.sin(now/31000)-cam.ph)*k;}
     G3.padTick(rdt);G3.labelIdle(now);upUpdate(now);fxUpdate(rdt,now);
     G3.roofFade(cam.r*(host.clientWidth<600?1.35:1)/(host.clientWidth<600?1.35:1));
     placeCam();if(shake>0){camera.position.x+=(Math.random()-0.5)*shake;camera.position.y+=(Math.random()-0.5)*shake;camera.position.z+=(Math.random()-0.5)*shake;}
@@ -3053,9 +3078,9 @@ function setFS(on){document.body.classList.toggle("fs",on);$("viewFS").textConte
   else if(document.fullscreenElement)document.exitFullscreen().catch(()=>{});}
 $("viewFS").addEventListener("click",()=>setFS(!document.body.classList.contains("fs")));
 $("hud-exit").addEventListener("click",()=>setFS(false));
-$("hud-dis").addEventListener("click",()=>$("chaosRandom").click());
-document.addEventListener("fullscreenchange",()=>{if(!document.fullscreenElement&&document.body.classList.contains("fs"))setFS(false);});
-document.addEventListener("keydown",e=>{if(e.key==="Escape"&&document.body.classList.contains("fs"))setFS(false);});
+$("hud-dis").addEventListener("click",()=>{if(!ZEN)$("chaosRandom").click();});
+document.addEventListener("fullscreenchange",()=>{if(!document.fullscreenElement&&document.body.classList.contains("fs")){if(ZEN)setZen(false);else setFS(false);}});
+document.addEventListener("keydown",e=>{if(e.key==="Escape"&&ZEN){setZen(false);return;}if(e.key==="Escape"&&document.body.classList.contains("fs"))setFS(false);});
 function hudSync(){const sp=C.simSpeed+'<span class="lg"> min/s</span><span class="sm">m/s</span>',pl=running?'<span class="lg">Pause</span><span class="sm" aria-hidden="true">❚❚</span>':'<span class="lg">Run</span><span class="sm" aria-hidden="true">▶</span>';
   const a=$("hud-speed"),b=$("hud-play");if(a.innerHTML!==sp)a.innerHTML=sp;if(b.innerHTML!==pl){b.innerHTML=pl;b.setAttribute("aria-label",running?"Pause":"Run");}}
 {let show=false;try{show=localStorage.getItem("paper-mill-knobs")==="1";}catch(e){}
@@ -3074,7 +3099,7 @@ function frame(now){
   if(running){let simDt=rdt*C.simSpeed;while(simDt>0){const h=Math.min(0.5,simDt);step(h);simDt-=h;}}
   draw(running?rdt:0);
   if(G3.on&&G3.frame)G3.frame(running?rdt:0);
-  uiAcc+=rdt;if(uiAcc>0.2){uiAcc=0;syncControls();updateText();updateChaos();updateShop();drawTrend();AUDIO.update(S.inc.length>0||S.wd==="hayout");}
+  uiAcc+=rdt;if(uiAcc>0.2){uiAcc=0;syncControls();updateText();updateChaos();updateShop();drawTrend();AUDIO.update(!S.zen&&(S.inc.length>0||S.wd==="hayout"));}
   requestAnimationFrame(frame);
 }
 syncControls();updateText();updateChaos();updateShop();
