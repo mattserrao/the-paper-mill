@@ -304,7 +304,7 @@ body{margin:0}
 </head>
 <body>
 
-<div class="ver" id="appVersion" aria-label="Version">v1.4.0</div>
+<div class="ver" id="appVersion" aria-label="Version">v1.4.1</div>
 <div class="wrap">
   <header>
     <div class="brand"><span class="logo" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linejoin="round"><circle cx="8.5" cy="12" r="5.5"/><circle cx="8.5" cy="12" r="1.6" fill="currentColor"/><path d="M8.5 6.5H20v11H8.5"/></svg></span>
@@ -1010,7 +1010,7 @@ $("ov-a").addEventListener("click",()=>{$("overlay").hidden=true;if(S.over){newG
 $("ov-b").addEventListener("click",()=>{$("overlay").hidden=true;newGame();});
 function newGame(){const sp=C.simSpeed;initCtrl();C.simSpeed=sp;initState();BANNERS.length=0;running=true;$("play").textContent="Pause";$("play").setAttribute("aria-pressed","true");seasonLocks(false);}
 /* ---------- season mode + leaderboard (Supabase) ---------- */
-const LB={url:"",key:""};              // paste the Supabase project URL and anon key here
+const LB={url:"https://htlsrhdvloptctzwzbau.supabase.co",key:"sb_publishable_BSp3JNLLDR4dYPJf-EgPJg_g5t6VMa6"};   // public: the database only allows read + insert
 const SEASON_DAYS=30,APP_VER=(document.getElementById("appVersion")||{}).textContent||"";
 const lbOn=()=>!!(LB.url&&LB.key);
 const lbHdr=(x={})=>Object.assign({apikey:LB.key},LB.key.startsWith("eyJ")?{Authorization:"Bearer "+LB.key}:{},x);
