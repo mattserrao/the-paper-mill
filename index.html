@@ -458,7 +458,7 @@ body{margin:0}
 </head>
 <body>
 
-<div class="ver" id="appVersion" aria-label="Version">v2.9.18</div>
+<div class="ver" id="appVersion" aria-label="Version">v2.9.19</div>
 <div class="wrap">
   <header>
     <div class="brand"><span class="logo" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linejoin="round"><circle cx="8.5" cy="12" r="5.5"/><circle cx="8.5" cy="12" r="1.6" fill="currentColor"/><path d="M8.5 6.5H20v11H8.5"/></svg></span>
@@ -3004,7 +3004,8 @@ const G3={on:false,ok:false};
   // thickened stock drops straight from the repulper hopper into the chest below
   spool([[38.4,PH-0.6,-11.45],[38.4,PH-1.3,-11.45],[36.2,PH-1.3,-13.2],[36.2,10.4,-13.2]],0.28,M.stock);
   fieldPump(45,1,-11,-Math.PI/2);
-  spool([[37.7,1,-12.1],[38.6,1,-11],[57,1,-11],[57,1,6.5],[57,2.4,6.5]],0.32,M.stock);
+  // v2.9.19: the stock line to the refiners runs overhead (it used to lie on the ground and wall off the stock-prep yard)
+  spool([[37.7,1,-12.1],[38.6,1,-11],[40,1,-11],[40,4.8,-11],[57,4.8,-11]],0.32,M.stock);
 
   // paper machine
   const zc=9.1,CD=6.4;
@@ -4331,10 +4332,50 @@ const G3={on:false,ok:false};
     box(0.08,0.75,0.08,M.ink,0.62,0.95,0,g,false);box(0.08,0.08,0.75,M.ink,0.62,1.32,0,g,false);
     cylZ(0.3,0.16,M.ink,0.78,0.3,0,16,g);cylZ(0.3,0.16,M.ink,-0.55,0.3,-0.45,16,g);cylZ(0.3,0.16,M.ink,-0.55,0.3,0.45,16,g);
     box(0.04,1.4,0.04,M.ink,-0.82,1.5,0.25,g,false);const flag=new THREE.Mesh(new THREE.PlaneGeometry(0.42,0.26),new THREE.MeshBasicMaterial({color:lin(tok("fire")),side:THREE.DoubleSide}));flag.position.set(-0.6,2.08,0.25);g.add(flag);
-    scene.add(g);return g;}
+    g.userData.trike=true;scene.add(g);return g;}
   const MAINT_SPOT={refclash:[58.2,-11],fogfan:[47.2,-5.4],shaft:[12,16.4],fabric:[53.5,14.6],felt:[40.5,14.6],overflow:[-5,-10.5],chestover:[29.5,-9.6],hdblow:[24.2,-9.4],boiler:[68.6,-10],thkblow:[41.6,-10.4],lwplug:[11.2,-20.3],cscreen:[15.2,-20.6],fscreen:[19.2,-20.4],lcplug:[26.6,-20.7],winderdown:[-14.6,14.6],fleet:[-6.3,-14],roof:[-21.6,24],lightning:[40,-8]};
   function lane(p){return p[1]>2.4?"F":"C";}
-  function route(from,to){const pts=[],lf=lane(from),lt=lane(to);
+  // v2.9.19: maintenance trikes path-find around buildings and equipment. A 0.5 m ground grid is built once from every
+  // static mesh that reaches into the 0.25-1.9 m band (walls, tanks, skids, pumps, trees, posts), grown by 0.75 m for the
+  // trike, then A* + line-of-sight smoothing. Falls back to the old two-lane route if no path is found.
+  const NAV={x0:-62,z0:-52,cs:0.5,nx:300,nz:210,g:null};
+  function navBuild(){const g=new Uint8Array(NAV.nx*NAV.nz),bb=new THREE.Box3(),INF=0.35;scene.updateMatrixWorld(true);
+    scene.traverse(o=>{if(!o.isMesh||o.isInstancedMesh||o.userData.smBatch||!o.geometry)return;
+      for(let x=o;x&&x!==scene;x=x.parent){const u=x.userData||{};if(!x.visible&&x!==o)return;if(u.legs||u.wheels||u.load||u.cj||u.trike||u.stack||u.noNav||u.mats)return;}
+      if(!o.visible&&o.layers.mask===1)return;
+      const gb=o.geometry.boundingBox||(o.geometry.computeBoundingBox(),o.geometry.boundingBox);bb.copy(gb).applyMatrix4(o.matrixWorld);
+      if(bb.min.y>1.9||bb.max.y<0.25)return;if((bb.max.x-bb.min.x)*(bb.max.z-bb.min.z)>900)return;
+      const i0=Math.max(0,Math.floor((bb.min.x-INF-NAV.x0)/NAV.cs)),i1=Math.min(NAV.nx-1,Math.floor((bb.max.x+INF-NAV.x0)/NAV.cs)),
+        j0=Math.max(0,Math.floor((bb.min.z-INF-NAV.z0)/NAV.cs)),j1=Math.min(NAV.nz-1,Math.floor((bb.max.z+INF-NAV.z0)/NAV.cs));
+      for(let j=j0;j<=j1;j++)for(let i=i0;i<=i1;i++)g[j*NAV.nx+i]=1;});
+    NAV.g=g;}
+  const navC=p=>[clamp(Math.floor((p[0]-NAV.x0)/NAV.cs),0,NAV.nx-1),clamp(Math.floor((p[1]-NAV.z0)/NAV.cs),0,NAV.nz-1)];
+  const navFree=(i,j)=>i>=0&&j>=0&&i<NAV.nx&&j<NAV.nz&&!NAV.g[j*NAV.nx+i];
+  function navNearest(c){if(navFree(c[0],c[1]))return c;for(let r=1;r<16;r++)for(let dj=-r;dj<=r;dj++)for(let di=-r;di<=r;di++){if(Math.max(Math.abs(di),Math.abs(dj))!==r)continue;if(navFree(c[0]+di,c[1]+dj))return [c[0]+di,c[1]+dj];}return null;}
+  function navLOS(a,b){const d=Math.hypot(b[0]-a[0],b[1]-a[1]),n=Math.ceil(d/(NAV.cs*0.5));for(let k=0;k<=n;k++){const c=navC([a[0]+(b[0]-a[0])*k/n,a[1]+(b[1]-a[1])*k/n]);if(!navFree(c[0],c[1]))return false;}return true;}
+  function navPath(from,to){if(!NAV.g)navBuild();const s=navNearest(navC(from)),t=navNearest(navC(to));if(!s||!t)return null;
+    const N=NAV.nx*NAV.nz,gs=new Float32Array(N).fill(1e9),came=new Int32Array(N).fill(-1),closed=new Uint8Array(N),si=s[1]*NAV.nx+s[0],ti=t[1]*NAV.nx+t[0];
+    const heap=[];const push=(f,i)=>{heap.push([f,i]);let k=heap.length-1;while(k>0){const p2=(k-1)>>1;if(heap[p2][0]<=heap[k][0])break;[heap[p2],heap[k]]=[heap[k],heap[p2]];k=p2;}};
+    const pop=()=>{const top=heap[0],last=heap.pop();if(heap.length){heap[0]=last;let k=0;for(;;){const l=2*k+1,r=l+1;let m=k;if(l<heap.length&&heap[l][0]<heap[m][0])m=l;if(r<heap.length&&heap[r][0]<heap[m][0])m=r;if(m===k)break;[heap[m],heap[k]]=[heap[k],heap[m]];k=m;}}return top;};
+    const h=i=>{const x=i%NAV.nx,z=(i/NAV.nx)|0,dx=Math.abs(x-t[0]),dz=Math.abs(z-t[1]);return Math.max(dx,dz)+0.414*Math.min(dx,dz);};
+    gs[si]=0;push(h(si),si);let it=0;
+    while(heap.length&&it++<250000){const [,i]=pop();if(i===ti)break;if(closed[i])continue;closed[i]=1;const x=i%NAV.nx,z=(i/NAV.nx)|0;
+      for(let dz=-1;dz<=1;dz++)for(let dx=-1;dx<=1;dx++){if(!dx&&!dz)continue;const nx=x+dx,nz=z+dz;if(!navFree(nx,nz))continue;if(dx&&dz&&(!navFree(x+dx,z)||!navFree(x,z+dz)))continue;
+        const ni=nz*NAV.nx+nx,ng=gs[i]+(dx&&dz?1.414:1);if(ng<gs[ni]){gs[ni]=ng;came[ni]=i;push(ng+h(ni),ni);}}}
+    if(came[ti]<0&&si!==ti)return null;
+    const cells=[];for(let i=ti;i>=0;i=came[i]){cells.push([NAV.x0+((i%NAV.nx)+0.5)*NAV.cs,NAV.z0+(((i/NAV.nx)|0)+0.5)*NAV.cs]);if(i===si)break;}cells.reverse();
+    const out=[cells[0]];let k=0;while(k<cells.length-1){let j=cells.length-1;while(j>k+1&&!navLOS(cells[k],cells[j]))j--;out.push(cells[j]);k=j;}
+    out.push(to);return out;}
+  G3.navCheck=pts=>{if(!NAV.g)navBuild();let bad=0;for(let i=1;i<pts.length;i++){const a=pts[i-1],b=pts[i],d=Math.hypot(b[0]-a[0],b[1]-a[1]),n=Math.max(1,Math.ceil(d/0.25));
+      for(let k=0;k<=n;k++){const c=navC([a[0]+(b[0]-a[0])*k/n,a[1]+(b[1]-a[1])*k/n]);if(NAV.g[c[1]*NAV.nx+c[0]])bad++;}}return bad;};
+  G3.navWho=(px,pz)=>{const bb=new THREE.Box3(),out=[];scene.traverse(o=>{if(!o.isMesh||o.isInstancedMesh||o.userData.smBatch||!o.geometry)return;
+      for(let x=o;x&&x!==scene;x=x.parent){const u=x.userData||{};if(!x.visible&&x!==o)return;if(u.legs||u.wheels||u.load||u.cj||u.trike||u.stack||u.noNav||u.mats)return;}
+      if(!o.visible&&o.layers.mask===1)return;const gb=o.geometry.boundingBox||(o.geometry.computeBoundingBox(),o.geometry.boundingBox);bb.copy(gb).applyMatrix4(o.matrixWorld);
+      if(bb.min.y>1.9||bb.max.y<0.25)return;if((bb.max.x-bb.min.x)*(bb.max.z-bb.min.z)>900)return;
+      if(px>=bb.min.x-0.45&&px<=bb.max.x+0.45&&pz>=bb.min.z-0.45&&pz<=bb.max.z+0.45)out.push(o.geometry.type+" "+[bb.min.x,bb.max.x,bb.min.y,bb.max.y,bb.min.z,bb.max.z].map(v=>v.toFixed(1)).join(","));});return out;};
+  G3.NAV=NAV;G3.navRoute=(a,b)=>route(a,b);G3.navOld=(a,b)=>routeLanes(a,b);G3.navSpots=()=>({MAINT_SPOT,SLOTS});
+  G3.navPathDbg=(a,b)=>{try{return navPath(a,b);}catch(e){return "ERR "+e.message;}};function route(from,to){let p=null;try{p=navPath(from,to);}catch(e){}return p||routeLanes(from,to);}
+  function routeLanes(from,to){const pts=[],lf=lane(from),lt=lane(to);
     pts.push(lf==="F"?[from[0],17.6]:[Math.max(from[0],-5.5),-0.6]);
     if(lf!==lt)pts.push(...(lf==="C"?[[67,-0.6],[67,17.6]]:[[67,17.6],[67,-0.6]]));
     pts.push(lt==="F"?[to[0],17.6]:[Math.max(to[0],-5.5),-0.6]);pts.push(to);return pts;}
@@ -4403,8 +4444,10 @@ const G3={on:false,ok:false};
       for(let k=0;k<8;k++){const a=k/8*Math.PI*2;box(2.6,0.08,0.08,M.ink,X+3.8,1.6+Math.cos(a)*1.02,z+Math.sin(a)*1.02,g,false);}   // cooling fins
       box(0.7,0.6,0.7,M.ink,X+3.8,2.85,z,g,false);blob(X+1.5,z,3.6);});
     const P=0.24;   // inlet header from the stock line, over and down into each housing; outlets back to the line
-    spool([[57,1,-11],[57.9,1,-11],[57.9,4.6,-11]],P,M.stock);spool([[57.9,4.6,-14],[57.9,4.6,-8]],P,M.stock);
-    ZS.forEach(z=>{spool([[57.9,4.6,z],[X,4.6,z],[X,3.55,z]],P,M.stock);spool([[X,0.7,z+(z<-11?1.55:-1.55)],[X,0.7,-11],[57.3,0.7,-11]],0.2,M.stock);});
+    spool([[57,4.8,-11],[57.9,4.8,-11],[57.9,4.6,-11]],P,M.stock);spool([[57.9,4.6,-14],[57.9,4.6,-8]],P,M.stock);
+    ZS.forEach(z=>{spool([[57.9,4.6,z],[X,4.6,z],[X,3.55,z]],P,M.stock);spool([[X,0.7,z+(z<-11?1.55:-1.55)],[X,0.7,-11],[56.2,0.7,-11]],0.2,M.stock);});
+    // refined stock rises from the outlet header and crosses overhead into the machine hall to the headbox
+    spool([[56.2,0.7,-11],[56.2,5.8,-11],[56.2,5.8,4.6],[57,5.8,4.6],[57,2.4,6.5]],0.32,M.stock);
     });
   const ctrl=upg("apc",g=>{box(6,3.2,4,M.wall,46,1.6,-6,g);box(5.4,1.1,0.1,M.robot,46,2.2,-3.95,g,false);box(6.4,0.3,4.4,M.steel,46,3.35,-6,g);});
   function upUpdate(now){
