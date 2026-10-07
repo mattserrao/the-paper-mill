@@ -452,7 +452,7 @@ body{margin:0}
 </head>
 <body>
 
-<div class="ver" id="appVersion" aria-label="Version">v2.2.1</div>
+<div class="ver" id="appVersion" aria-label="Version">v2.2.2</div>
 <div class="wrap">
   <header>
     <div class="brand"><span class="logo" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linejoin="round"><circle cx="8.5" cy="12" r="5.5"/><circle cx="8.5" cy="12" r="1.6" fill="currentColor"/><path d="M8.5 6.5H20v11H8.5"/></svg></span>
@@ -710,7 +710,7 @@ const AUDIO=(()=>{
     const warm=ctx.createBiquadFilter();warm.type="lowpass";warm.frequency.value=3200;warm.connect(musicBus);
     chillG=ctx.createGain();chillG.gain.value=1;chillG.connect(warm);crackleG=ctx.createGain();crackleG.gain.value=1;crackleG.connect(chillG);
     mcG=ctx.createGain();mcG.gain.value=1.15;mcG.connect(chillG);
-    {verb=ctx.createConvolver();const len=Math.floor(ctx.sampleRate*3.4),b=ctx.createBuffer(2,len,ctx.sampleRate);for(let c=0;c<2;c++){const d=b.getChannelData(c);for(let i=0;i<len;i++)d[i]=(Math.random()*2-1)*Math.pow(1-i/len,2.8);}
+    {verb=ctx.createConvolver();const len=Math.floor(ctx.sampleRate*1.5),b=ctx.createBuffer(2,len,ctx.sampleRate);for(let c=0;c<2;c++){const d=b.getChannelData(c);for(let i=0;i<len;i++)d[i]=(Math.random()*2-1)*Math.pow(1-i/len,2.8);}
      verb.buffer=b;const vg=ctx.createGain();vg.gain.value=0.5;verb.connect(vg);vg.connect(chillG);}
     intG=ctx.createGain();intG.gain.value=0;intG.connect(musicBus);
     noiseBuf=ctx.createBuffer(1,ctx.sampleRate*2,ctx.sampleRate);const d=noiseBuf.getChannelData(0);for(let i=0;i<d.length;i++)d[i]=Math.random()*2-1;
@@ -1879,7 +1879,9 @@ const G3={on:false,ok:false};
   if(!renderer.getContext()){toggle.hidden=true;return;}
   G3.ok=true;
   const mobile=matchMedia("(pointer: coarse)").matches;
-  renderer.setPixelRatio(Math.min(mobile?1.5:2,window.devicePixelRatio||1));
+  renderer.setPixelRatio(Math.min(mobile?1.25:2,window.devicePixelRatio||1));
+  // phones: the shadow pass redraws the whole site, so refresh it 15x a second instead of every frame
+  if(mobile){renderer.shadowMap.autoUpdate=false;G3.shadowHz=15;}
   renderer.shadowMap.enabled=true;renderer.shadowMap.type=THREE.PCFSoftShadowMap;
   renderer.outputEncoding=THREE.sRGBEncoding;renderer.toneMapping=THREE.ACESFilmicToneMapping;renderer.toneMappingExposure=1.12;
   const scene=new THREE.Scene();
@@ -2988,7 +2990,7 @@ const G3={on:false,ok:false};
   setLbl(lblMode);
   document.querySelectorAll("#jumps button").forEach(b=>b.addEventListener("click",()=>{const [x,z,r]=JUMPS[b.dataset.j];goal={t:new THREE.Vector3(x,0,z),r,th:DEF.th,ph:0.88};}));
   $("viewReset").addEventListener("click",()=>{goal={t:DEFT.clone(),r:DEF.r,th:DEF.th,ph:DEF.ph};});
-  $("viewShadows").addEventListener("change",e=>{renderer.shadowMap.enabled=e.target.checked;MATS.forEach(m=>m.needsUpdate=true);});
+  $("viewShadows").addEventListener("change",e=>{renderer.shadowMap.enabled=e.target.checked;renderer.shadowMap.needsUpdate=true;MATS.forEach(m=>m.needsUpdate=true);});
   if(mobile){sun.shadow.mapSize.set(1024,1024);}
 
   function resize(){G3.lastMove=performance.now();const w=host.clientWidth,h=host.clientHeight;host.classList.toggle("compact",w<640);if(!w||!h)return;renderer.setSize(w,h,false);camera.aspect=w/h;camera.updateProjectionMatrix();}
@@ -3960,8 +3962,8 @@ const G3={on:false,ok:false};
   G3.frame=function(rdt){try{G3.frameBody(rdt);}catch(e){G3.fErr=(G3.fErr||0)+1;if(G3.fErr<6)console.error('3D frame error',e);try{renderer.render(scene,camera);}catch(_){}}};
   G3.frameBody=function(rdt){
     if(rdt>0){fpsT+=rdt;fpsN++;if(fpsT>3){const fps=fpsN/fpsT;fpsT=0;fpsN=0;
-      if(fps<28&&quality===2&&renderer.shadowMap.enabled){quality=1;renderer.shadowMap.enabled=false;MATS.forEach(m=>m.needsUpdate=true);$("viewShadows").checked=false;}
-      else if(fps<24&&quality>=1){quality=0;renderer.setPixelRatio(1);resize();}}}
+      const fk=(G3.cap||60)/60;if(fps<28*fk&&quality===2&&renderer.shadowMap.enabled){quality=1;renderer.shadowMap.enabled=false;MATS.forEach(m=>m.needsUpdate=true);$("viewShadows").checked=false;}
+      else if(fps<24*fk&&quality>=1){quality=0;renderer.setPixelRatio(1);resize();}}}
     {const t=performance.now();if(!(t-(G3.palT||0)<500)){G3.palT=t;applyPalette();}}rebuildDoors();
     const R=S.rates,now=performance.now();
     crewUpdate(rdt,now);
@@ -4095,6 +4097,7 @@ const G3={on:false,ok:false};
       const run=S.pm==="run"?1:0.3,L={dryer:near(12,9,20)*run,wet:near(46,9,16)*run,winder:near(-17,8,13)*(S.wd==="run"?1:0.3),stock:near(24,-15,20)*(S.M.pulperDown?0.3:1),fork:Math.max(near(-24,-12,16),near(-36,22,14)),out:0};
       L.out=zk*clamp(1-Math.max(L.dryer,L.wet,L.winder,L.stock,L.fork)*1.5,0,1);AUDIO.ambient(L,zk);}
     G3.roofFade(cam.r*(host.clientWidth<600?1.35:1)/(host.clientWidth<600?1.35:1));
+    if(G3.shadowHz){const t=performance.now();if(!(t-(G3.shT||0)<1000/G3.shadowHz-3)){G3.shT=t;renderer.shadowMap.needsUpdate=true;}}
     placeCam();if(shake>0){camera.position.x+=(Math.random()-0.5)*shake;camera.position.y+=(Math.random()-0.5)*shake;camera.position.z+=(Math.random()-0.5)*shake;}
     renderer.render(scene,camera);
     // labels follow the 3D anchors
@@ -4230,9 +4233,12 @@ const HTML_V2='<div class="v2top" id="v2top">\n  <button class="v2card v2ibtn" i
   showMenu();
 })();
 
+// phones and tablets run at 30 fps to keep them cool; desktops run at the display rate
+const FRAME_CAP=matchMedia("(pointer: coarse)").matches?30:0;G3.cap=FRAME_CAP;
 let last=performance.now(),uiAcc=0,lastPaint=0;
 const paneShown=el=>{if(!el)return false;const p=el.closest(".v2pane");return p?document.body.classList.contains("sheet-open")&&p.classList.contains("on"):true;};
 function frame(now){
+  if(FRAME_CAP&&now-last<1000/FRAME_CAP-3){requestAnimationFrame(frame);return;}
   const rdt=Math.max(0,Math.min(0.1,(now-last)/1000));last=now;
   if(running){let simDt=rdt*C.simSpeed;while(simDt>0&&running){const h=Math.min(0.5,simDt);step(h);simDt-=h;}}
   // schedule the next frame first: a bug in one frame must never stop the game loop
