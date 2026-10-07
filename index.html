@@ -458,7 +458,7 @@ body{margin:0}
 </head>
 <body>
 
-<div class="ver" id="appVersion" aria-label="Version">v2.8.2</div>
+<div class="ver" id="appVersion" aria-label="Version">v2.8.3</div>
 <div class="wrap">
   <header>
     <div class="brand"><span class="logo" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linejoin="round"><circle cx="8.5" cy="12" r="5.5"/><circle cx="8.5" cy="12" r="1.6" fill="currentColor"/><path d="M8.5 6.5H20v11H8.5"/></svg></span>
@@ -3065,7 +3065,10 @@ const G3={on:false,ok:false};
     const dock=[...lane,{x:Math.max(x,L.qMax)+1.2,z:L.inZ+s*2.2,lock:1},{x:L.turnX+3,z:dz-s*3.2,lock:1},{x:L.turnX,z:dz-s*0.4,lock:1},{x:L.dockX,z:dz,rev:true,lock:1}];
     if(phase==="dock")return dock;
     const leave=[{x:L.turnX-1,z:dz,lock:1},{x:L.turnX-1.5,z:L.outZ+(dz>L.outZ?1.5:-1.5),lock:1},{x:L.turnX-4,z:L.outZ,lock:1},{x:-150,z:L.outZ,end:true,fast:true}];
-    // a truck that never made it onto its dock finishes backing in before pulling out again
+    // a truck that never made it onto its dock finishes backing in before pulling out again -- unless the apron is busy:
+    // then it pulls straight out of the queue (otherwise, at high sim speed, finished trucks pile up at the apron forever)
+    const busyApron=L.lock&&L.lock!==g&&L.lock.visible&&L.lock.userData.busy;
+    if((g.userData.phase==="q"||!g.userData.phase)&&busyApron)return [{x:x-2,z:L.outZ},{x:-150,z:L.outZ,end:true,fast:true}];
     return (g.userData.phase==="dock"&&g.userData.route.length?g.userData.route.slice():g.userData.phase==="q"||!g.userData.phase?dock:[]).concat(leave);}
   const TSC=()=>clamp(C.simSpeed/10,1,6);   // trucks keep pace with the sim clock at higher game speeds
   // one truck manoeuvres on each apron at a time; the others hold at the apron entrance or on their dock
@@ -4275,9 +4278,13 @@ const G3={on:false,ok:false};
     S.inQ.forEach((t,k)=>placeTruck(t,{kind:"in",k},rdt));S.inDock.forEach((t,d)=>t&&placeTruck(t,{kind:"in",docked:true,d},rdt));
     S.outQ.forEach((t,k)=>placeTruck(t,{kind:"out",k},rdt));S.outDock.forEach((t,d)=>t&&placeTruck(t,{kind:"out",docked:true,d},rdt));
     S.leaving.forEach(t=>placeTruck(t,{kind:t.kind,leaving:true},rdt));
-    truckMap.forEach((g,t)=>{if(g.userData.seen)return;
-      if(g.userData.phase==="leave"&&!g.userData.done&&g.userData.route.length){stepRoute(g,LANE[g.userData.kind],rdt);g.userData.wheels.forEach(w=>w.rotation.z=-(g.userData.spin||0));return;}
-      g.visible=false;g.userData.busy=false;truckMap.delete(t);});
+    // trucks the sim has finished with drive themselves off; capped at 6 and 90 s each so they can never pile up
+    let ghosts=0;
+    truckMap.forEach((g,t)=>{const u=g.userData;if(u.seen){u.ghost=0;return;}u.ghost=(u.ghost||0)+rdt;
+      if(u.phase==="leave"&&!u.done&&u.route.length&&u.ghost<90&&ghosts<6){ghosts++;
+        {const L=LANE[u.kind],w=u.route[0];if(w.lock&&L.lock&&L.lock!==g&&L.lock.visible&&(L.lock.userData.route||[]).length)u.route=[{x:g.position.x-2,z:L.outZ},{x:-150,z:L.outZ,end:true,fast:true}];}stepRoute(g,LANE[u.kind],rdt);u.wheels.forEach(w=>w.rotation.z=-(u.spin||0));return;}
+      const L=LANE[u.kind];if(L&&L.lock===g)L.lock=null;
+      g.visible=false;u.busy=false;u.ghost=0;truckMap.delete(t);});
     chemUpdate(rdt);beaterUpdate(rdt);
     {const n=clamp(9+S.inQ.length*3+Math.floor(S.yard/250),5,24);G3.yardTr.forEach((g,i)=>g.visible=i<n);}
     // stock
