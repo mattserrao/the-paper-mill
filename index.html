@@ -458,7 +458,7 @@ body{margin:0}
 </head>
 <body>
 
-<div class="ver" id="appVersion" aria-label="Version">v2.9.17</div>
+<div class="ver" id="appVersion" aria-label="Version">v2.9.18</div>
 <div class="wrap">
   <header>
     <div class="brand"><span class="logo" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linejoin="round"><circle cx="8.5" cy="12" r="5.5"/><circle cx="8.5" cy="12" r="1.6" fill="currentColor"/><path d="M8.5 6.5H20v11H8.5"/></svg></span>
@@ -809,7 +809,7 @@ const AUDIO=(()=>{
     win:t=>{[60,64,67,72,76,79,84].forEach((m,k)=>tone(t+k*0.11,sfxBus,"triangle",mtof(m),0.5,0.14));},
     lose:t=>{[[55,0.5],[54,0.5],[53,0.5],[52,1.4]].reduce((tt,[m,d])=>{const o=tone(tt,sfxBus,"sawtooth",mtof(m),d,0.08,0.02);if(d>1)o.o.frequency.linearRampToValueAtTime(mtof(m)*0.97,tt+d);return tt+d;},t);},
   };
-  const EVSFX={fogfan:"clunk",shaft:"clunk",fabric:"clunk",felt:"clunk",winderdown:"clunk",lwplug:"clunk",cscreen:"clunk",fscreen:"clunk",lcplug:"water",hdblow:"water",boiler:"steam",permit:"alarm",thkblow:"water",wrap:"snap",flares:"fire",ragger:"clunk",dryerfire:"fire",balefire:"fire",overflow:"water",chestover:"water",roof:"water",fight:"siren",highway:"siren",lightning:"thunder",tornado:"wind",beaver:"chomp",runner:"whistle"};
+  const EVSFX={refclash:"snap",fogfan:"clunk",shaft:"clunk",fabric:"clunk",felt:"clunk",winderdown:"clunk",lwplug:"clunk",cscreen:"clunk",fscreen:"clunk",lcplug:"water",hdblow:"water",boiler:"steam",permit:"alarm",thkblow:"water",wrap:"snap",flares:"fire",ragger:"clunk",dryerfire:"fire",balefire:"fire",overflow:"water",chestover:"water",roof:"water",fight:"siren",highway:"siren",lightning:"thunder",tornado:"wind",beaver:"chomp",runner:"whistle"};
   // plant PA: a two-tone chime, then a muffled voice (formant-filtered babble through a band-limited, slightly overdriven horn speaker with a hall echo)
   const VOW=[[730,1090],[270,2290],[530,1840],[570,840],[440,1020],[300,870],[660,1720],[490,1350]];
   function paAnnounce(t){const out=ctx.createGain();out.gain.value=0.55;const hp=ctx.createBiquadFilter();hp.type="highpass";hp.frequency.value=450;const lp=ctx.createBiquadFilter();lp.type="lowpass";lp.frequency.value=1900;lp.Q.value=1.2;
@@ -855,7 +855,7 @@ const AUTOKEYS=["inRate","drivers","pulper","pmSp","wdr","loaders","outRate"];
 let C,S;
 const BASE={...P};
 const ECON={price:{"23m":700,"26m":720,"30m":740,"33HT":800},energy:95,chem:25,wage:45,robot:15,overhead:3400,start:2e6,bankrupt:-1.5e6,goal:25e6};
-const REPAIR={fogfan:35e3,shaft:250e3,dryerfire:400e3,fabric:90e3,felt:45e3,slime:30e3,ragger:15e3,overflow:120e3,chestover:60e3,lwplug:25e3,cscreen:45e3,fscreen:60e3,lcplug:30e3,hdblow:55e3,boiler:60e3,permit:120e3,thkblow:70e3,birdhay:0,wrap:15e3,dye:20e3,flares:0,winderdown:40e3,runner:0,badocc:0,balefire:150e3,fleet:40e3,calloff:10e3,fight:5e3,roof:80e3,highway:0,lightning:200e3,tornado:500e3,beaver:25e3};
+const REPAIR={refclash:140e3,fogfan:35e3,shaft:250e3,dryerfire:400e3,fabric:90e3,felt:45e3,slime:30e3,ragger:15e3,overflow:120e3,chestover:60e3,lwplug:25e3,cscreen:45e3,fscreen:60e3,lcplug:30e3,hdblow:55e3,boiler:60e3,permit:120e3,thkblow:70e3,birdhay:0,wrap:15e3,dye:20e3,flares:0,winderdown:40e3,runner:0,badocc:0,balefire:150e3,fleet:40e3,calloff:10e3,fight:5e3,roof:80e3,highway:0,lightning:200e3,tornado:500e3,beaver:25e3};
 const UGROUPS=[["machine","Paper machine"],["stock","Stock prep"],["yard","Warehouse & logistics"],["maint","Maintenance"],["mgmt","Management"]];
 const MAINT=["fogfan","shaft","fabric","felt","winderdown","hdblow","lwplug","cscreen","fscreen","lcplug","boiler","thkblow","ragger","overflow","fleet","roof","lightning"];
 const UPS=[
@@ -864,7 +864,7 @@ const UPS=[
  {id:"shoe",g:"machine",name:"Shoe press",lv:[3e6],desc:"+100 fpm and 12% less energy per ton."},
  {id:"winder",g:"machine",name:"Winder rebuild",lv:[450e3,1e6],desc:"+30 t/h winder speed and 40% fewer hayouts per level."},
  {id:"monitor",g:"machine",name:"Fabric & felt monitoring",lv:[350e3,800e3],desc:"Machine failures 40% rarer and fewer sheet breaks, per level."},
- {id:"refiner",g:"machine",name:"Refiner",lv:[900e3],desc:"Double-disc refiner between the chest and the headbox. Stronger bonding: $22/t less energy and chemicals."},
+ {id:"refiner",g:"machine",name:"Refiner power upgrade",lv:[900e3],desc:"Bigger motors and new plates on the twin refiners between the chest and the headbox. Stronger bonding: $22/t less energy and chemicals."},
  {id:"fire",g:"machine",name:"Fire suppression",lv:[500e3],desc:"Dryer and bale yard fires 60% rarer and half as long."},
  {id:"pulper",g:"stock",name:"Pulper rotor upgrade",lv:[600e3,1.4e6],desc:"+25 t/h pulper capacity per level."},
  {id:"clean",g:"stock",name:"Screens & cleaners",lv:[450e3,1e6],desc:"+3 points of pulper yield and 40% fewer screen and cleaner breakdowns per level. Adds a second row of LC cleaners."},
@@ -930,6 +930,9 @@ let NAME="PM1"; try{NAME=localStorage.getItem("mill-twin-name")||"PM1";}catch(e)
 const BANNERS=[];
 const GROUPS=[["machine","Paper machine"],["stock","Stock prep"],["yard","Warehouse & trucks"],["god","Acts of nature"]];
 const EVENTS=[
+ {id:"refclash",g:"stock",name:"Refiner plates clash",head:"Refiner plates clashed! Maintenance called to the refiners.",dur:[180,300],mtbf:420,mods:{speedCap:0.75},fx:"refclash",
+   // one set clashing slows the machine; both sets clashing takes it down until maintenance has re-plated them
+   start:inc=>{inc.both=Math.random()<0.3;if(inc.both){inc.mods={pmDown:"both refiners clashed"};inc.left=inc.total=inc.left*1.8;inc.note="both refiners: machine down";}else{inc.mods={speedCap:0.75};inc.billMul=0.5;inc.note="one refiner out: machine slowed";}}},
  {id:"shaft",g:"machine",name:"Driveshaft snaps",head:"Dryer driveshaft snaps. Millwrights called in.",dur:[240,480],mtbf:160,mods:{pmDown:"driveshaft"},fx:"shaft"},
  {id:"dryerfire",g:"machine",name:"Fire in the dryers",head:"Fire in the dryer hood! Deluge on, sheet off.",dur:[180,360],mtbf:260,mods:{pmDown:"dryer fire"},fx:"dryerfire"},
  {id:"fabric",g:"machine",name:"Fabric runs off",head:"Forming fabric tracked off the rolls and folded up.",dur:[150,300],mtbf:180,mods:{pmDown:"fabric change"},fx:"fabric"},
@@ -988,7 +991,7 @@ function crewTick(dt){if(!S.crewQ)S.crewQ=[];
   if(!(G3.on&&G3.ok)||now-h.since>(h.k==="ragger"?25000:6000))h.here=true;
   if(h.resp<=0&&h.here)h.go=true;}
 // maintenance: techs work in pairs, oldest job first; a job's repair clock only runs once its pair is on site
-const MJOBS=["fogfan","shaft","fabric","felt","winderdown","hdblow","lwplug","cscreen","fscreen","lcplug","boiler","thkblow","overflow","chestover","fleet","roof","lightning"];
+const MJOBS=["refclash","fogfan","shaft","fabric","felt","winderdown","hdblow","lwplug","cscreen","fscreen","lcplug","boiler","thkblow","overflow","chestover","fleet","roof","lightning"];
 const MNEED=id=>MJOBS.includes(id);
 function maintTick(dt){const crews=Math.max(1,Math.floor(P.techs/2)),list=S.inc.filter(i=>MNEED(i.id)),now=performance.now();
   list.forEach((i,k)=>{i.mSlot=k<crews?k:-1;i.mQ=k-crews+1;if(i.mSlot<0)return;if(!i.mSince){i.mSince=now;i.mResp=8;}
@@ -999,7 +1002,7 @@ function working(k){const h=S.crewQ&&S.crewQ[0];return !!(h&&h.k===k&&h.go);}
 function crewState(k){const q=S.crewQ||[],i=q.findIndex(x=>x.k===k);if(i<0)return "";if(i>0)return `waiting for crew (${i} ahead)`;return q[0].go?"crew working":"crew on the way";}
 function baseMods(){return {pmDown:null,pulperDown:false,speedCap:1,breakMul:1,yieldMul:1,recvMul:1,clampMul:1,drvCap:99,ldrCap:99,docksClosed:false,noIn:false,noOut:false,yardEat:0,hayMul:1,crewAtPM:false,winderDown:false,offSpec:false,feedMul:1};}
 function mods(){const m=baseMods();
-  for(const i of S.inc){const e=EV[i.id].mods||{};
+  for(const i of S.inc){const e=i.mods||EV[i.id].mods||{};
     if(e.pmDown)m.pmDown=e.pmDown; if(e.winderDown)m.winderDown=true; if(e.offSpec)m.offSpec=true; if(e.feedMul)m.feedMul*=e.feedMul; if(e.pulperDown)m.pulperDown=true; if(e.docksClosed)m.docksClosed=true; if(e.noIn)m.noIn=true; if(e.noOut)m.noOut=true;
     if(e.hayMul)m.hayMul*=e.hayMul; if(e.speedCap)m.speedCap=Math.min(m.speedCap,e.speedCap); if(e.breakMul)m.breakMul*=e.breakMul; if(e.yieldMul)m.yieldMul*=(i.id==="badocc"&&LV("detrash"))?0.9:e.yieldMul;
     if(e.recvMul!==undefined)m.recvMul*=e.recvMul; if(e.clampMul!==undefined)m.clampMul*=e.clampMul; if(e.yardEat)m.yardEat+=e.yardEat;
@@ -1019,7 +1022,7 @@ function trigger(id,quiet){
   S.inc.push(inc);(S.evc||(S.evc={}))[id]=(S.evc[id]||0)+1;if(QINC(id))enqueue(id);S.lastInc=S.t;S.tot.incidents++;AUDIO.event(id);
   if(!quiet){BANNERS.push({text:e.head,t:null,id:e.id});while(BANNERS.length>3)BANNERS.splice(1,1);}
   if(e.start)e.start(inc);
-  const bill=S.zen?0:(REPAIR[id]||0)*P.repairMul; if(bill>0){spend(bill,"repairs");inc.note=(inc.note?inc.note+" · ":"")+`repair bill ${money(bill)}`;}
+  const bill=S.zen?0:(REPAIR[id]||0)*P.repairMul*(inc.billMul||1); if(bill>0){spend(bill,"repairs");inc.note=(inc.note?inc.note+" · ":"")+`repair bill ${money(bill)}`;}
   log(e.head+(inc.note?` (${inc.note})`:""),"bad");
   S.M=mods();
 }
@@ -3515,7 +3518,7 @@ const G3={on:false,ok:false};
     const sm=new THREE.MeshBasicMaterial({color:lin(tok("bad")),transparent:true,opacity:0.5});const stem=new THREE.Mesh(new CylG(0.05,0.05,1,6),sm);g.add(stem);
     const o={p,ring,stem,x,y,z,move(nx,nz){this.x=nx;this.z=nz;},update(now){const b=Math.sin(now/320)*0.35;p.position.set(this.x,this.y+b,this.z);p.rotation.y=now/1500;
       const ph=(now/1600)%1;ring.position.set(this.x,0.13,this.z);ring.scale.setScalar(1+ph*5);rm.opacity=0.85*(1-ph);stem.position.set(this.x,(this.y+b)/2,this.z);stem.scale.y=this.y+b;}};return o;}
-  const PINS={fogfan:[49.5,22,-4.2,"!"],shaft:[12,10,15.6,"!"],dryerfire:[12,13,zc,"fire"],fabric:[48,9,zc,"!"],felt:[34.5,11,zc,"!"],slime:[4,11,zc,"!"],ragger:[16,9,-13.5,"!"],overflow:[-21,10,-13,"water"],chestover:[34.5,21,-15,"water"],lwplug:[11.2,9,ZL,"!"],cscreen:[15.2,8,ZL,"!"],fscreen:[19.2,9,ZL,"!"],lcplug:[26.6,8,ZL,"water"],hdblow:[25.8,13,-10.6,"water"],boiler:[76,14,-10,"!"],permit:[22,10,-40,"water"],thkblow:[34.5,22,-15,"water"],birdhay:[-18.7,9,zc,"!"],wrap:[12,12,zc,"!"],flares:[16,10,-13.5,"fire"],dye:[24,11,zc,"!"],winderdown:[-18.7,9,zc,"!"],
+  const PINS={refclash:[60.6,8,-11,"!"],fogfan:[49.5,22,-4.2,"!"],shaft:[12,10,15.6,"!"],dryerfire:[12,13,zc,"fire"],fabric:[48,9,zc,"!"],felt:[34.5,11,zc,"!"],slime:[4,11,zc,"!"],ragger:[16,9,-13.5,"!"],overflow:[-21,10,-13,"water"],chestover:[34.5,21,-15,"water"],lwplug:[11.2,9,ZL,"!"],cscreen:[15.2,8,ZL,"!"],fscreen:[19.2,9,ZL,"!"],lcplug:[26.6,8,ZL,"water"],hdblow:[25.8,13,-10.6,"water"],boiler:[76,14,-10,"!"],permit:[22,10,-40,"water"],thkblow:[34.5,22,-15,"water"],birdhay:[-18.7,9,zc,"!"],wrap:[12,12,zc,"!"],flares:[16,10,-13.5,"fire"],dye:[24,11,zc,"!"],winderdown:[-18.7,9,zc,"!"],
     badocc:[-17,10,-11,"!"],balefire:[-25,11,-12,"fire"],fleet:[-29,10,-16,"!"],calloff:[-36,10,23,"!"],fight:[-38,7,-21,"!"],roof:[-32,10,24,"water"],highway:[-72,7,4,"!"],
     lightning:[34.5,16,-15,"bolt"],tornado:[0,26,0,"!"],beaver:[-24,12,-12.5,"!"]};
   function fxPerson(group,m,x,z){const w=worker(m,M.warn);w.position.set(x,0,z);group.add(w);return w;}
@@ -3564,6 +3567,9 @@ const G3={on:false,ok:false};
     return (now,rdt,inc)=>{zn(now);const k=Math.min(1,(1-inc.left/inc.total)*4);pud.scale.set(1+w*0.35*k,1+1.6*k,1);
       if(Math.random()<rdt*14)emit("drop",x+R()*w*0.6,h,z+R(),R()*3,1+Math.random()*2,R()*3,1.0,0.32,"#7a5636",0.9);if(Math.random()<rdt*3)emit("steam",x+R(),h+0.4,z,0,1.2,0,1.6,1.2,"#a4805c",0.35);};}
   const FXDEF={
+    refclash:g=>{const z=zone(g,56,66,-16.4,-5.6);
+      return (now,rdt,inc)=>{z(now);const zs=inc&&inc.both?[-14,-8]:[-14];zs.forEach(zz=>{if(Math.random()<rdt*10)emit("spark",60.6+0.95,2.0,zz+R()*1.2,R()*5+2,3+Math.random()*4,R()*5,0.5+Math.random()*0.3,0.3,"#ffb23e",1);
+        if(Math.random()<rdt*4)emit("smoke",60.6,3.4,zz,R()*0.6,1.6,R()*0.6,2.6,1.6,"#7e848e",0.5);});};},
     shaft:g=>{const z=zone(g,4,20,12.9,16.6);const motor=box(2.2,1.8,1.8,M.steel,12,0.9,14.8,g);
       const s1=cylZ(0.22,2.6,M.metal,10.6,1.0,14.0,12,g),s2=cylZ(0.22,2.6,M.metal,13.4,0.6,14.2,12,g);s1.rotation.y=0.5;s2.rotation.y=-0.7;s2.rotation.x=0.4;
       return (now,rdt)=>{z(now);motor.rotation.y=Math.sin(now/40)*0.06;for(let k=0;k<4;k++)emit("spark",12,1.4,14.2,R()*9,4+Math.random()*6,R()*7+1.5,0.55+Math.random()*0.3,0.36,"#ff8a1f",1);
@@ -4326,7 +4332,7 @@ const G3={on:false,ok:false};
     cylZ(0.3,0.16,M.ink,0.78,0.3,0,16,g);cylZ(0.3,0.16,M.ink,-0.55,0.3,-0.45,16,g);cylZ(0.3,0.16,M.ink,-0.55,0.3,0.45,16,g);
     box(0.04,1.4,0.04,M.ink,-0.82,1.5,0.25,g,false);const flag=new THREE.Mesh(new THREE.PlaneGeometry(0.42,0.26),new THREE.MeshBasicMaterial({color:lin(tok("fire")),side:THREE.DoubleSide}));flag.position.set(-0.6,2.08,0.25);g.add(flag);
     scene.add(g);return g;}
-  const MAINT_SPOT={fogfan:[47.2,-5.4],shaft:[12,16.4],fabric:[53.5,14.6],felt:[40.5,14.6],overflow:[-5,-10.5],chestover:[29.5,-9.6],hdblow:[24.2,-9.4],boiler:[68.6,-10],thkblow:[41.6,-10.4],lwplug:[11.2,-20.3],cscreen:[15.2,-20.6],fscreen:[19.2,-20.4],lcplug:[26.6,-20.7],winderdown:[-14.6,14.6],fleet:[-6.3,-14],roof:[-21.6,24],lightning:[40,-8]};
+  const MAINT_SPOT={refclash:[58.2,-11],fogfan:[47.2,-5.4],shaft:[12,16.4],fabric:[53.5,14.6],felt:[40.5,14.6],overflow:[-5,-10.5],chestover:[29.5,-9.6],hdblow:[24.2,-9.4],boiler:[68.6,-10],thkblow:[41.6,-10.4],lwplug:[11.2,-20.3],cscreen:[15.2,-20.6],fscreen:[19.2,-20.4],lcplug:[26.6,-20.7],winderdown:[-14.6,14.6],fleet:[-6.3,-14],roof:[-21.6,24],lightning:[40,-8]};
   function lane(p){return p[1]>2.4?"F":"C";}
   function route(from,to){const pts=[],lf=lane(from),lt=lane(to);
     pts.push(lf==="F"?[from[0],17.6]:[Math.max(from[0],-5.5),-0.6]);
@@ -4384,6 +4390,7 @@ const G3={on:false,ok:false};
     const im=new THREE.InstancedMesh(rollGeo,ROLLM,36),m=new THREE.Matrix4();for(let k=0;k<36;k++){m.makeTranslation(-45+(k%12)*1.75,0.74,z0+1.5+Math.floor(k/12)*2.2);im.setMatrixAt(k,m);}im.castShadow=true;g.add(im);g.userData.rolls=im;}));
   const walk=upg("safety",g=>{    [[-21.2,-2.6,26.4,0.5],[-36.4,14.4,25.2,0.5],[23,3.4,68,0.5],[23,15.6,68,0.5]].forEach(([x,z,w,d])=>box(w,0.03,d,M.warn,x,0.07,z,g,false));});
   // refiner upgrade: two large double-disc refiners in parallel off the chest-to-headbox stock line, each with its own motor
+  const REF_MOTORS=[];   // v2.9.18: the twin refiners are standard equipment; the upgrade fits bigger motors
   const refiner=upg("refiner",g=>{const X=60.6,ZS=[-14,-8];
     ZS.forEach(z=>{box(7.2,0.45,3.4,M.steel,X+1.6,0.22,z,g);                                                              // skid
       const hg=new CylG(1.55,1.55,1.7,28);hg.rotateZ(Math.PI/2);const h=new THREE.Mesh(hg,M.brand);h.position.set(X,2.0,z);h.castShadow=true;g.add(h);   // disc housing
@@ -4392,7 +4399,7 @@ const G3={on:false,ok:false};
       box(1.4,1.3,1.6,M.steel,X-1.6,1.3,z,g);const ad=new THREE.Mesh(new CylG(0.28,0.28,1.0,12),M.ink);ad.position.set(X-1.6,2.4,z);g.add(ad);   // gap adjuster
       const sg=new CylG(0.22,0.22,1.6,12);sg.rotateZ(Math.PI/2);const sh=new THREE.Mesh(sg,M.metal);sh.position.set(X+1.75,2.0,z);g.add(sh);   // shaft + coupling
       const cg=new CylG(0.45,0.45,0.35,16);cg.rotateZ(Math.PI/2);const cp=new THREE.Mesh(cg,M.warn);cp.position.set(X+2.2,2.0,z);g.add(cp);
-      const mg=new CylG(1.0,1.0,2.8,24);mg.rotateZ(Math.PI/2);const mo=new THREE.Mesh(mg,M.stock);mo.position.set(X+3.8,1.6,z);mo.castShadow=true;g.add(mo);   // motor
+      const mg=new CylG(1.0,1.0,2.8,24);mg.rotateZ(Math.PI/2);const mo=new THREE.Mesh(mg,M.stock);mo.position.set(X+3.8,1.6,z);mo.castShadow=true;g.add(mo);REF_MOTORS.push(mo);   // motor
       for(let k=0;k<8;k++){const a=k/8*Math.PI*2;box(2.6,0.08,0.08,M.ink,X+3.8,1.6+Math.cos(a)*1.02,z+Math.sin(a)*1.02,g,false);}   // cooling fins
       box(0.7,0.6,0.7,M.ink,X+3.8,2.85,z,g,false);blob(X+1.5,z,3.6);});
     const P=0.24;   // inlet header from the stock line, over and down into each housing; outlets back to the line
@@ -4404,7 +4411,7 @@ const G3={on:false,ok:false};
     motors.visible=LV("drive")>0;motors.children.forEach((m,k)=>m.visible=k<LV("drive"));
     beacons.visible=LV("monitor")>0;beacons.children.forEach((b,k)=>{b.visible=k<3*LV("monitor");b.material=((now/500+k)|0)%3===0?M.ok:M.robot;});
     sprink.visible=LV("fire")>0;cleaners.visible=LV("clean")>0;cleaners.children.forEach((c,k)=>c.visible=k<14*LV("clean"));
-    detrash.visible=LV("detrash")>0;refiner.visible=LV("refiner")>0;walk.visible=LV("safety")>0;ctrl.visible=LV("apc")>0;
+    detrash.visible=LV("detrash")>0;refiner.visible=true;{const k=LV("refiner")>0?1.3:1;REF_MOTORS.forEach(m=>m.scale.set(k>1?1.1:1,k,k));}walk.visible=LV("safety")>0;ctrl.visible=LV("apc")>0;
     annexes.forEach((a,k)=>{a.visible=LV("wh")>k;});
     // rolls fill main bay first, then annexes
     const total=Math.ceil(S.fg/(P.fgCap/(84+36*LV("wh"))));rolls.count=Math.min(84,total);rolls.instanceMatrix.needsUpdate=true;
