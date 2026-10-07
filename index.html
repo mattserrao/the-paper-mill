@@ -500,7 +500,7 @@ body{margin:0}
 </head>
 <body>
 
-<div class="ver" id="appVersion" aria-label="Version">v3.1.0</div>
+<div class="ver" id="appVersion" aria-label="Version">v3.1.1</div>
 <div class="wrap">
   <header>
     <div class="brand"><span class="logo" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linejoin="round"><circle cx="8.5" cy="12" r="5.5"/><circle cx="8.5" cy="12" r="1.6" fill="currentColor"/><path d="M8.5 6.5H20v11H8.5"/></svg></span>
@@ -5287,9 +5287,15 @@ const HTML_V2='<div class="v2top" id="v2top">\n  <button class="v2card v2ibtn" i
   setInterval(flowTick,700);
   // sheets
   const sheet=$$("v2sheet"),tabs=[...document.querySelectorAll(".v2tabs button")],TITLES={shop:"Upgrades",chaos:"Upsets",ctl:"Controls",stats:"Stats"};let cur=null;
-  function openTab(k){cur=k;if(k==="stats")setTimeout(()=>flowTick&&flowTick(),0);tabs.forEach(b=>b.setAttribute("aria-pressed",String(b.dataset.tab===k)));document.querySelectorAll(".v2pane").forEach(p=>p.classList.toggle("on",p.dataset.pane===k));
+  // v3.1.1: opening a bottom panel pauses the game; closing it resumes (same sim speed) if it was running before
+  let sheetHeld=false;
+  function sheetPause(){if(cur||sheetHeld||!running)return;sheetHeld=true;running=false;$$("play").textContent="Run";$$("play").setAttribute("aria-pressed","false");}
+  function sheetResume(){if(!sheetHeld)return;sheetHeld=false;const ov=$$("overlay"),blocked=!$$("v2menu").hidden||(G3.tut&&G3.tut.on)||(S.cards&&S.cards.open)||(ov&&!ov.hidden)||S.over;
+    if(blocked)return;running=true;$$("play").textContent="Pause";$$("play").setAttribute("aria-pressed","true");}
+  function openTab(k){sheetPause();cur=k;if(k==="stats")setTimeout(()=>flowTick&&flowTick(),0);tabs.forEach(b=>b.setAttribute("aria-pressed",String(b.dataset.tab===k)));document.querySelectorAll(".v2pane").forEach(p=>p.classList.toggle("on",p.dataset.pane===k));
     $$("v2sheetT").textContent=TITLES[k];sheet.classList.add("open");sheet.setAttribute("aria-hidden","false");document.body.classList.add("sheet-open");closeMore();}
-  function closeSheet(){cur=null;tabs.forEach(b=>b.setAttribute("aria-pressed","false"));sheet.classList.remove("open");sheet.setAttribute("aria-hidden","true");document.body.classList.remove("sheet-open");}
+  function closeSheet(why){const was=!!cur;cur=null;tabs.forEach(b=>b.setAttribute("aria-pressed","false"));sheet.classList.remove("open");sheet.setAttribute("aria-hidden","true");document.body.classList.remove("sheet-open");
+    if(why==="menu")sheetHeld=false;else if(was)sheetResume();}
   tabs.forEach(b=>b.addEventListener("click",()=>cur===b.dataset.tab?closeSheet():openTab(b.dataset.tab)));
   $$("v2close").addEventListener("click",closeSheet);$$("v2scrim").addEventListener("click",closeSheet);
   // swipe the sheet down to close (mobile)
@@ -5325,7 +5331,7 @@ const HTML_V2='<div class="v2top" id="v2top">\n  <button class="v2card v2ibtn" i
   setInterval(sync,300);sync();
   // ---- menu: shown on load and whenever the game is paused ----
   const menu=$$("v2menu");let first=true;
-  function showMenu(){running=false;$$("play").textContent="Run";$$("play").setAttribute("aria-pressed","false");closeSheet();closeMore();
+  function showMenu(){running=false;$$("play").textContent="Run";$$("play").setAttribute("aria-pressed","false");closeSheet("menu");closeMore();
     const go=$$("v2go"),se=S.season&&S.season.on;go.querySelector("b").textContent=first?"Play":"Resume";
     go.querySelector("small").textContent=first?"30-day season · leaderboard":se?`Season · day ${Math.min(30,Math.floor(S.t/1440)+1)} of 30`:S.free?"Free play":"Back to the mill";
     $$("v2sub").hidden=first;$$("v2nameRow").hidden=true;
