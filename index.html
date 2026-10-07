@@ -458,7 +458,7 @@ body{margin:0}
 </head>
 <body>
 
-<div class="ver" id="appVersion" aria-label="Version">v2.9.2</div>
+<div class="ver" id="appVersion" aria-label="Version">v2.9.3</div>
 <div class="wrap">
   <header>
     <div class="brand"><span class="logo" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linejoin="round"><circle cx="8.5" cy="12" r="5.5"/><circle cx="8.5" cy="12" r="1.6" fill="currentColor"/><path d="M8.5 6.5H20v11H8.5"/></svg></span>
@@ -3328,7 +3328,7 @@ const G3={on:false,ok:false};
   const sm=t=>{t=clamp(t,0,1);return t*t*(3-2*t);},A120=120*Math.PI/180,A105=105*Math.PI/180;
   function reelUpdate(rdt,rr){const f=clamp(C.simSpeed/30,1,3),dt=rdt*f;
     if(TU.seen<0)TU.seen=S.tot.turnups;
-    if(S.tot.turnups>TU.seen){TU.seen=S.tot.turnups;TU.t=0;TU.kick=true;TU.kx=DX-(DR+RM);TU.armHas=false;AUDIO.sfx("clunk",800);}
+    if(S.tot.turnups>TU.seen){TU.seen=S.tot.turnups;TU.t=0;TU.kick=true;TU.kx=DX-(DR+RM);TU.armHas=false;}   // v2.9.3: silent (its ringing clunk every reel was the repeating "ding")
     TU.t+=dt;const spinV=(S.pm==="run"?1:0)*rdt*6;
     // building reel: in the arms right after turn-up, then on the rails against the drum
     let bx,by,phi=Math.PI;if(TU.t<1.6){phi=A120+(Math.PI-A120)*sm(TU.t/1.6);bx=DX+Math.cos(phi)*(DR+rr);by=DY+Math.sin(phi)*(DR+rr);}else{bx=DX-(DR+rr);by=DY;}
