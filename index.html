@@ -453,7 +453,7 @@ body{margin:0}
 </head>
 <body>
 
-<div class="ver" id="appVersion" aria-label="Version">v2.4.0</div>
+<div class="ver" id="appVersion" aria-label="Version">v2.5.0</div>
 <div class="wrap">
   <header>
     <div class="brand"><span class="logo" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linejoin="round"><circle cx="8.5" cy="12" r="5.5"/><circle cx="8.5" cy="12" r="1.6" fill="currentColor"/><path d="M8.5 6.5H20v11H8.5"/></svg></span>
@@ -2701,6 +2701,7 @@ const G3={on:false,ok:false};
 
   // paper machine
   const zc=9.1,CD=6.4;
+  const DX=-5.6,DY=4.2,DR=0.9,RM=2.2,R0=0.45,KX=DX-(DR+RM)-2.6,ZJ=CD/2+0.45;let nipPhi=Math.PI;
   box(5.5,3,CD,M.steel,57.3,1.5+0.6,zc);                                  // headbox
   box(14,0.25,CD,M.steel,47.8,2.4,zc);                                     // forming table
   const wireRolls=[cylZ(0.5,CD+0.4,M.metal,41,2.4,zc),cylZ(0.5,CD+0.4,M.metal,54.5,2.4,zc)];
@@ -2734,9 +2735,20 @@ const G3={on:false,ok:false};
   // machine frame rails + dryer hood frame
   [zc-CD/2-0.6,zc+CD/2+0.6].forEach(z=>{box(74,0.5,0.4,M.steel,26,0.25,z);for(let x=-6;x<=30;x+=6)box(0.35,7.4,0.35,M.steel,x,3.7,z);box(37,0.35,0.35,M.steel,12,7.4,z);});
   // reel + stand, winder, roll conveyor
-  [zc-CD/2-0.5,zc+CD/2+0.5].forEach(z=>box(0.6,4.2,0.6,M.steel,-10,2.1,z));
-  const reelCore=cylZ(0.25,CD+1.4,M.steel,-10,4.2,zc,8);
-  const reel=cylZ(1,CD,M.paper,-10,4.2,zc,24);
+  const popeDrum=cylZ(DR,CD,M.metal,DX,DY,zc,32);for(let k=0;k<8;k++){const a=k/8*Math.PI*2;box(0.06,0.06,CD,M.steel,Math.cos(a)*DR,Math.sin(a)*DR,0,popeDrum,false);}
+  cylZ(0.2,CD+1.8,M.ink,DX,DY,zc,10);[zc-ZJ,zc+ZJ].forEach(z=>{box(0.7,DY+0.4,0.6,M.steel,DX,(DY+0.4)/2,z);
+    box(DX-(KX-1.4),0.35,0.5,M.steel,(DX+KX-1.4)/2-0.3,DY-0.42,z);for(let x=DX-0.6;x>=KX-1;x-=3)box(0.4,DY-0.6,0.4,M.steel,x,(DY-0.6)/2,z);box(0.5,0.9,0.6,M.bad,KX-RM*0+(-0.95),DY+0.1,z);});
+  // one reel spool model: steel shell + long journals, paper scaled on as it builds
+  function spoolModel(parent){const g=new THREE.Group();parent.add(g);const spin=new THREE.Group();g.add(spin);cylZ(R0,CD+0.4,M.steel,0,0,0,20,spin);cylZ(0.22,CD+2.2,M.ink,0,0,0,10,spin);
+    const pg=new THREE.CylinderGeometry(1,1,CD,40);pg.rotateX(Math.PI/2);const paper=new THREE.Mesh(pg,ROLLM);paper.castShadow=paper.receiveShadow=true;spin.add(paper);
+    const mk=box(0.07,0.07,CD+0.02,M.ink,0,1,0,spin,false);
+    return {g,spin,paper,set(R){paper.visible=R>R0+0.02;if(paper.visible)paper.scale.set(R,R,1);mk.position.y=Math.max(R,R0)+0.01;}};}
+  const reelB=spoolModel(scene),reelK=spoolModel(scene),reelN=spoolModel(scene);reelK.g.visible=false;
+  const reel=reelB.paper;
+  const prim=[zc-ZJ,zc+ZJ].map(z=>{const g=new THREE.Group();g.position.set(DX,DY,z);scene.add(g);const a=box(1,0.3,0.3,M.brand,0.5,0,0,g);cylZ(0.34,0.4,M.ink,0,0,0,14,g);const cup=cylZ(0.28,0.45,M.ink,1,0,0,14,g);return {g,a,cup};});
+  const secC=[zc-ZJ,zc+ZJ].map(z=>{const g=new THREE.Group();scene.add(g);box(0.8,0.5,0.6,M.brand,0,DY-0.05,z,g);box(0.25,0.9,0.4,M.brand,0.15,DY+0.3,z,g);return g;});
+  // turn-up state: TU.t counts visual seconds since the last turn-up
+  const TU={t:99,seen:-1,armHas:true,armAng:120*Math.PI/180,armD:DR+R0,kick:false,kx:0};
   // roll handling: kicker ramp off the winder drums, upender, then a roll conveyor south and west through the warehouse door
   {const rp=new THREE.Mesh(new THREE.BoxGeometry(2.4,0.18,4.8),M.steel);rp.position.set(-21.7,0.95,zc);rp.rotation.z=0.33;rp.castShadow=true;scene.add(rp);
     [-2.5,2.5].forEach(dz=>box(2.4,0.6,0.1,M.warn,-21.7,1.2,zc+dz,scene,false));box(0.5,1.2,0.5,M.brand,-20.6,0.6,zc-2.6,scene,false);
@@ -2754,13 +2766,15 @@ const G3={on:false,ok:false};
   // the sheet runs over the top cans and under the bottom cans (serpentine), with true tangent lines between them
   const sheetPre=[[57.3,3.4],[54.5,2.95],[41,3.0],[37,3.4],[32,3.4],[29,3.6]],CANR=1.34;
   const canCirc=[];for(let i=0;i<10;i++){canCirc.push({x:(872-i*32-600)/10,y:5.4,d:1});canCirc.push({x:(856-i*32-600)/10,y:2.4,d:-1});}
+  // Pope reel: the sheet wraps the reel drum and goes into the nip with the building reel (or the new spool right after turn-up)
+  canCirc.push({x:DX,y:DY,d:1,r:DR});
   // tangent point on circle c for a straight run between the circle and point q; "out" = leaving the circle toward q
-  const tanPt=(c,q,out)=>{const dx=q[0]-c.x,dy=q[1]-c.y,D=Math.hypot(dx,dy),ph=Math.atan2(dy,dx),al=Math.acos(Math.min(1,CANR/D));let best=null,bv=-9;
-    for(const sg of [1,-1]){const th=ph+sg*al,tx=c.x+CANR*Math.cos(th),ty=c.y+CANR*Math.sin(th),vx=c.d*-Math.sin(th),vy=c.d*Math.cos(th),lx=out?q[0]-tx:tx-q[0],ly=out?q[1]-ty:ty-q[1],v=(vx*lx+vy*ly)/Math.hypot(lx,ly);if(v>bv){bv=v;best=th;}}return best;};
-  function sheetPath(reelR){const pts=[...sheetPre],key=[0,1,2,3,4,5],end=[-10,4.2+reelR];
+  const tanPt=(c,q,out)=>{const CR0=c.r||CANR,dx=q[0]-c.x,dy=q[1]-c.y,D=Math.hypot(dx,dy),ph=Math.atan2(dy,dx),al=Math.acos(Math.min(1,CR0/D));let best=null,bv=-9;
+    for(const sg of [1,-1]){const th=ph+sg*al,tx=c.x+CR0*Math.cos(th),ty=c.y+CR0*Math.sin(th),vx=c.d*-Math.sin(th),vy=c.d*Math.cos(th),lx=out?q[0]-tx:tx-q[0],ly=out?q[1]-ty:ty-q[1],v=(vx*lx+vy*ly)/Math.hypot(lx,ly);if(v>bv){bv=v;best=th;}}return best;};
+  function sheetPath(reelR){const pts=[...sheetPre],key=[0,1,2,3,4,5],end=[DX+(DR+0.02)*Math.cos(nipPhi),DY+(DR+0.02)*Math.sin(nipPhi)];
     for(let i=0;i<canCirc.length;i++){const c=canCirc[i],prev=i?[(canCirc[i-1].x+c.x)/2,(canCirc[i-1].y+c.y)/2]:sheetPre[sheetPre.length-1],next=i<canCirc.length-1?[(canCirc[i+1].x+c.x)/2,(canCirc[i+1].y+c.y)/2]:end;
       const t0=tanPt(c,prev,false);let t1=tanPt(c,next,true),dl=(t1-t0)*c.d;while(dl<0)dl+=Math.PI*2;while(dl>Math.PI*2)dl-=Math.PI*2;
-      const n=Math.max(3,Math.ceil(dl/0.3));for(let k=0;k<=n;k++){const th=t0+c.d*dl*k/n;pts.push([c.x+CANR*Math.cos(th),c.y+CANR*Math.sin(th)]);if(k===Math.floor(n/2))key.push(pts.length-1);}}
+      const n=Math.max(3,Math.ceil(dl/0.3)),cr=(c.r||CANR)+(c.r?0.03:0);for(let k=0;k<=n;k++){const th=t0+c.d*dl*k/n;pts.push([c.x+cr*Math.cos(th),c.y+cr*Math.sin(th)]);if(k===Math.floor(n/2))key.push(pts.length-1);}}
     pts.push(end);key.push(pts.length-1);return {pts,key};}
   let sheetMesh=null,sheetKey=[];
   function buildSheet(reelR){if(sheetMesh){scene.remove(sheetMesh);sheetMesh.geometry.dispose();}
@@ -3086,6 +3100,28 @@ const G3={on:false,ok:false};
     if(R2.length&&Math.random()<rdt*3){const st=g.userData.stack,a=g.rotation.y,c=Math.cos(a),sn=Math.sin(a);emit("smoke",g.position.x+st[0]*c+st[2]*sn,st[1],g.position.z-st[0]*sn+st[2]*c,0.3,1.4,0,1.4,0.7,"#8c919b",0.45);}
     const frac=g.userData.kind==="in"?t.load/P.truckLoad:t.load/P.truckRolls,n=Math.round(clamp(frac,0,1)*8);
     g.userData.cargo.forEach((c,k)=>c.visible=k<n);}
+  // reel turn-up: at 100% the sheet transfers to the new spool in the primary arms, the full reel is kicked down the rails,
+  // the arms lower the new reel onto the rails, and the crane (strongback) takes the full reel away and brings a new spool
+  const sm=t=>{t=clamp(t,0,1);return t*t*(3-2*t);},A120=120*Math.PI/180,A105=105*Math.PI/180;
+  function reelUpdate(rdt,rr){const f=clamp(C.simSpeed/30,1,3),dt=rdt*f;
+    if(TU.seen<0)TU.seen=S.tot.turnups;
+    if(S.tot.turnups>TU.seen){TU.seen=S.tot.turnups;TU.t=0;TU.kick=true;TU.kx=DX-(DR+RM);TU.armHas=false;AUDIO.sfx("clunk",800);}
+    TU.t+=dt;const spinV=(S.pm==="run"?1:0)*rdt*6;
+    // building reel: in the arms right after turn-up, then on the rails against the drum
+    let bx,by,phi=Math.PI;if(TU.t<1.6){phi=A120+(Math.PI-A120)*sm(TU.t/1.6);bx=DX+Math.cos(phi)*(DR+rr);by=DY+Math.sin(phi)*(DR+rr);}else{bx=DX-(DR+rr);by=DY;}
+    nipPhi=phi;reelB.set(rr);reelB.g.position.set(bx,by,zc);reelB.spin.rotation.z-=spinV/Math.max(rr,0.5);
+    secC.forEach(g=>g.position.x=(TU.t<0.5?DX-(DR+RM):TU.t<1.6?DX-(DR+RM)+(RM-R0)*sm((TU.t-0.5)/1.1):bx)-0.55);
+    // kicked full reel rolls to the end stops and waits for the crane
+    if(TU.kick){TU.kx=DX-(DR+RM)+(KX-(DX-(DR+RM)))*(1-Math.pow(1-clamp(TU.t/1.0,0,1),2));reelK.g.visible=true;reelK.set(RM);reelK.g.position.set(TU.kx,DY,zc);if(TU.t<1)reelK.spin.rotation.z-=spinV*(1-TU.t)/RM;}else reelK.g.visible=false;
+    // primary arms: lower the new reel, go back up empty, take the next spool from the crane, lower it onto the drum
+    let a,d;if(TU.t<1.6){a=phi;d=DR+rr;reelN.g.visible=false;}
+    else if(!TU.armHas){const k=sm((TU.t-1.6)/0.8);a=Math.PI+(A105-Math.PI)*k;d=DR+rr+(DR+R0+0.35-(DR+rr))*k;reelN.g.visible=false;}
+    else{TU.armT=(TU.armT||0)+dt;const k=sm(TU.armT/0.8);a=A105+(A120-A105)*k;d=DR+R0+0.35-0.35*k;reelN.g.visible=true;reelN.set(R0);
+      reelN.g.position.set(DX+Math.cos(a)*d,DY+Math.sin(a)*d,zc);if(k>=1)reelN.spin.rotation.z-=spinV/R0;}
+    prim.forEach(p=>{p.g.rotation.z=a;p.a.scale.x=d;p.a.position.x=d/2;p.cup.position.x=d;});
+    if(S.pm==="run")popeDrum.rotation.z+=rdt*6/DR;
+    // empty spools come back to the rack once a reel has gone to the winder
+    if(rackSpools.every(m=>!m.g.visible)&&!CR.jobs.some(j=>j.kind==="spool"))rackSpools.forEach(m=>m.g.visible=true);}
   let lastLabel=0;
 
   /* ---- step 3 (restyled): chaos effects in the clean isometric look ---- */
@@ -3349,6 +3385,9 @@ const G3={on:false,ok:false};
   const setRolls=[-1.8,-0.6,0.6,1.8].map(z=>cylZ(1,1.12,M.paper,-1.85,1.75,z,16,wd));
   const web=new THREE.Mesh(new THREE.PlaneGeometry(4.6,4.6),paperDS);web.rotation.x=-Math.PI/2;web.position.set(0.4,2.2,0);wd.add(web);
   box(1.2,1.2,0.8,M.steel,0,0.6,4.3,wd);box(1.1,0.5,0.1,M.robot,0,1.25,3.95,wd,false);
+  const SPR={x:-13.4,z:3.6};[-2.2,2.2].forEach(dz=>{});[SPR.z-ZJ+0.4,SPR.z+ZJ-0.4].forEach(()=>{});
+  const rackSpools=[0,1,2].map(k=>{const m=spoolModel(scene);m.g.position.set(SPR.x-k*1.2,0.75,SPR.z+0.6);m.set(R0);return m;});
+  [SPR.x-1.2].forEach(x=>{box(3.4,0.3,0.4,M.steel,x,0.35,SPR.z+0.6-ZJ,scene);box(3.4,0.3,0.4,M.steel,x,0.35,SPR.z+0.6+ZJ,scene);});
   const parked=[0,1,2,3].map(k=>{const g=new THREE.Group();g.position.set(-11.8-k*4.1,0,-0.2);scene.add(g);
     box(0.35,1.1,4.6,M.steel,-1.3,0.55,0,g);box(0.35,1.1,4.6,M.steel,1.3,0.55,0,g);cylZ(2,5.2,M.paper,0,2.15,0,22,g);cylZ(0.22,6.2,M.steel,0,2.15,0,8,g);return g;});
   // overhead crane: carries full reels from the reel to storage and from storage to the winder unwind
@@ -3358,32 +3397,43 @@ const G3={on:false,ok:false};
   const crBridge=new THREE.Group();scene.add(crBridge);box(0.7,0.7,16.4,M.warn,0,11,5.5,crBridge);box(0.9,0.5,0.9,M.ink,0,11.6,-2.4,crBridge,false);box(0.9,0.5,0.9,M.ink,0,11.6,13.4,crBridge,false);
   const crTrolley=box(1.6,0.7,1.4,M.ink,0,10.45,0,crBridge);
   const crCable=new THREE.Mesh(new THREE.CylinderGeometry(0.04,0.04,1,6),M.ink);scene.add(crCable);
-  const crHook=new THREE.Group();scene.add(crHook);box(0.6,0.5,0.6,M.warn,0,0.25,0,crHook,false);box(0.25,0.25,5.8,M.ink,0,-0.1,0,crHook,false);
-  [-2.7,2.7].forEach(z=>box(0.08,2.4,0.08,M.ink,0,-1.3,z,crHook,false));
-  const carried=cylZ(2,5.2,M.paper,0,-2.5,0,22,crHook);carried.visible=false;
-  const UNW=[-16.1,2.4,zc],REELP=[-10,4.2,zc],parkP=k=>[-11.8-k*4.1,2.15,-0.2];
+  // reel strongback: rigid lifting beam longer than the spool, fixed legs ending in J-hooks that cradle the journals
+  const ZH=CD/2+0.9,SB=0.8+RM+0.6;
+  const crHook=new THREE.Group();scene.add(crHook);
+  {box(0.7,0.6,0.55,M.warn,0,0.25,0,crHook,false);cylZ(0.24,0.6,M.ink,0,0.3,0,12,crHook);
+   [-1.2,1.2].forEach(z=>{const a=new THREE.Vector3(0,-0.2,0),b=new THREE.Vector3(0,-0.7,z),d=b.clone().sub(a);const r=new THREE.Mesh(new THREE.CylinderGeometry(0.035,0.035,d.length(),6),M.ink);r.position.copy(a).add(b).multiplyScalar(0.5);r.quaternion.setFromUnitVectors(new THREE.Vector3(0,1,0),d.normalize());crHook.add(r);});
+   box(0.45,0.07,2*ZH+0.4,M.warn,0,-0.75,0,crHook,false);box(0.45,0.07,2*ZH+0.4,M.warn,0,-1.1,0,crHook,false);box(0.09,0.32,2*ZH+0.4,M.warn,0,-0.92,0,crHook,false);
+   [-ZH,ZH].forEach(z=>{box(0.32,SB-1.1,0.2,M.warn,0,-(1.1+SB)/2,z,crHook,false);box(0.85,0.16,0.28,M.ink,0.05,-SB-0.32,z,crHook,false);box(0.14,0.5,0.28,M.ink,0.42,-SB-0.1,z,crHook,false);});}
+  const carried=spoolModel(crHook);carried.g.position.y=-SB;carried.g.visible=false;
+  const UNW=[-16.1,2.4,zc],REELP=[KX,DY,zc],parkP=k=>[-11.8-k*4.1,2.15,-0.2],SPOOLP=()=>[SPR.x-Math.max(0,rackSpools.filter(m=>m.g.visible).length-1)*1.2,0.75,SPR.z+0.6],ARMP=()=>[DX+Math.cos(105*Math.PI/180)*(DR+R0+0.35),DY+Math.sin(105*Math.PI/180)*(DR+R0+0.35),zc];
   function craneUpdate(rdt){const nPark=Math.max(0,Math.ceil(S.winderBuf/P.jumbo-1e-6)-1);
     if(CR.lastTurn<0){CR.lastTurn=S.tot.turnups;CR.lastPark=nPark;}
     if(S.tot.turnups>CR.lastTurn){CR.lastTurn=S.tot.turnups;
-      if(CR.lastBuf<0.3){CR.jobs.push({a:REELP,b:UNW,kind:"unw"});CR.hideUnwind=true;}
-      else{CR.jobs.push({a:REELP,b:parkP(Math.max(0,nPark-1)),kind:"park"});CR.hidePark++;}}
+      if(CR.lastBuf<0.3){CR.jobs.push({a:REELP,b:UNW,kind:"unw",fromReel:true,delay:0.8});CR.hideUnwind=true;}
+      else{CR.jobs.push({a:REELP,b:parkP(Math.max(0,nPark-1)),kind:"park",fromReel:true,delay:0.8});CR.hidePark++;}
+      CR.jobs.push({a:SPOOLP(),b:ARMP(),kind:"spool"});}
     else if(nPark<CR.lastPark&&S.winderBuf>0.3){CR.jobs.push({a:parkP(nPark),b:UNW,kind:"unw"});CR.hideUnwind=true;}
     CR.lastPark=nPark;CR.lastBuf=S.winderBuf;
-    if(CR.jobs.length>3){const j=CR.jobs.shift();if(j.kind==="park")CR.hidePark=Math.max(0,CR.hidePark-1);}
+    while(CR.jobs.length>3){const j=CR.jobs.shift();if(j.kind==="park")CR.hidePark=Math.max(0,CR.hidePark-1);if(j.kind==="spool"){TU.armHas=true;TU.armT=9;}if(j.fromReel)TU.kick=false;}
+    if(!CR.j&&!CR.jobs.length&&TU.t>4&&!TU.armHas){TU.armHas=true;TU.armT=9;}
     if(!CR.j&&CR.jobs.length){CR.j=CR.jobs.shift();CR.t=0;CR.j.s=[CR.x,CR.z];}
     const per=P.jumbo/Math.max(5,S.rates.prod||30)*60/Math.max(1,C.simSpeed),T=clamp(per*0.75,0.9,5)*(CR.jobs.length?0.6:1);
-    if(CR.j&&rdt>0){const j=CR.j;CR.t+=rdt/T;const u=CR.t,L=(a,b,k)=>a+(b-a)*clamp(k,0,1),hi=9.6;let x,z,y;carried.visible=false;
+    if(CR.j&&rdt>0&&(CR.j.delay||0)>0){CR.j.delay-=rdt;}
+    else if(CR.j&&rdt>0){const j=CR.j;CR.t+=rdt/T;const u=CR.t,L=(a,b,k)=>a+(b-a)*clamp(k,0,1),hi=10.0;let x,z,y,on=false;
       if(u<0.2){x=L(j.s[0],j.a[0],u/0.2);z=L(j.s[1],j.a[2],u/0.2);y=hi;}
-      else if(u<0.3){x=j.a[0];z=j.a[2];y=L(hi,j.a[1]+2.5,(u-0.2)/0.1);}
-      else if(u<0.4){x=j.a[0];z=j.a[2];y=L(j.a[1]+2.5,hi,(u-0.3)/0.1);carried.visible=true;}
-      else if(u<0.75){const k=(u-0.4)/0.35;x=L(j.a[0],j.b[0],k);z=L(j.a[2],j.b[2],k);y=hi;carried.visible=true;}
-      else if(u<0.87){x=j.b[0];z=j.b[2];y=L(hi,j.b[1]+2.5,(u-0.75)/0.12);carried.visible=true;}
-      else{x=j.b[0];z=j.b[2];y=L(j.b[1]+2.5,hi,(u-0.87)/0.13);}
-      if(u>=0.87&&!j.dropped){j.dropped=true;if(j.kind==="park")CR.hidePark=Math.max(0,CR.hidePark-1);else CR.hideUnwind=false;}
+      else if(u<0.3){x=j.a[0];z=j.a[2];y=L(hi,j.a[1]+SB,(u-0.2)/0.1);}
+      else if(u<0.4){x=j.a[0];z=j.a[2];y=L(j.a[1]+SB,hi,(u-0.3)/0.1);on=true;}
+      else if(u<0.75){const k=(u-0.4)/0.35;x=L(j.a[0],j.b[0],k);z=L(j.a[2],j.b[2],k);y=hi;on=true;}
+      else if(u<0.87){x=j.b[0];z=j.b[2];y=L(hi,j.b[1]+SB,(u-0.75)/0.12);on=true;}
+      else{x=j.b[0];z=j.b[2];y=L(j.b[1]+SB,hi,(u-0.87)/0.13);}
+      carried.g.visible=on;carried.set(j.kind==="spool"?R0:RM);
+      if(u>=0.3&&!j.picked){j.picked=true;if(j.kind==="spool"){const m=rackSpools.filter(m=>m.g.visible).pop();if(m)m.g.visible=false;}else if(j.fromReel)TU.kick=false;}
+      if(u>=0.87&&!j.dropped){j.dropped=true;if(j.kind==="park")CR.hidePark=Math.max(0,CR.hidePark-1);else if(j.kind==="spool"){TU.armHas=true;TU.armT=0;}else CR.hideUnwind=false;}
       CR.x=x;CR.z=z;CR.y=y;if(u>=1)CR.j=null;}
+    else if(!CR.j)carried.g.visible=false;
     if(!CR.j&&!CR.jobs.length){CR.hideUnwind=false;CR.hidePark=0;}
     crBridge.position.x=CR.x;crTrolley.position.z=CR.z;crHook.position.set(CR.x,CR.y,CR.z);
-    crCable.position.set(CR.x,(10.1+CR.y+0.5)/2,CR.z);crCable.scale.y=Math.max(0.1,10.1-(CR.y+0.5));
+    crCable.position.set(CR.x,(10.1+CR.y+0.55)/2,CR.z);crCable.scale.y=Math.max(0.1,10.1-(CR.y+0.55));
     return nPark;}
   {const t=new THREE.Group();scene.add(t);
     for(let x=-24;x<=56;x+=16)box(0.2,0.25,13.4,M.metal,x,13,9.3,t,false);
@@ -4091,12 +4141,12 @@ const G3={on:false,ok:false};
     cansTop.concat(cansBot).forEach((c,i)=>c.rotation.z=(i<10?-1:1)*V.cans);
     press[0].rotation.z=-V.cans*1.3;press[1].rotation.z=V.cans*1.3;press[2].rotation.z=-V.cans*1.15;press[3].rotation.z=V.cans*1.15;feltTex.offset.x=-V.cans*0.35;feltGuides.forEach(g=>g.rotation.z=-V.cans*4);wireRolls.forEach(w=>w.rotation.z=V.cans*2.5);
     press.forEach((p,i)=>{p.material=LV("shoe")&&i===3?shoeMat:M.metal;});
-    const rr=0.4+2.6*Math.sqrt(S.reel/P.jumbo);reel.scale.set(rr,rr,1);reel.rotation.z=V.cans*0.8;
-    if(Math.abs(rr-sheetR)>0.08){sheetR=rr;buildSheet(rr);}
-    {let show=pmRun&&!CLOTH.fabric.ep&&!CLOTH.felt.ep,segs=26;
+    const rr=R0+(RM-R0)*Math.sqrt(clamp(S.reel/P.jumbo,0,1));reelUpdate(rdt,rr);
+    if(Math.abs(nipPhi-sheetR)>0.02){sheetR=nipPhi;buildSheet(rr);}
+    {let show=pmRun&&!CLOTH.fabric.ep&&!CLOTH.felt.ep,segs=27;
       if(S.tot.breaks!==brkSeen){brkSeen=S.tot.breaks;brkT0=now;}
       if(S.pm==="break"){show=true;const bp={press:2,dryer:5,reel:25}[S.brkType]||5,prog=working("brk")?1-S.breakLeft/Math.max(0.1,S.breakTotal):0,th=clamp((prog-0.55)/0.4,0,1);
-        segs=Math.round(bp+(26-bp)*th);const b=BRKPT[S.brkType]||BRKPT.dryer,gr=Math.min(1,(now-brkT0)/1800)*(1-clamp((prog-0.4)/0.5,0,1));
+        segs=Math.round(bp+(27-bp)*th);const b=BRKPT[S.brkType]||BRKPT.dryer,gr=Math.min(1,(now-brkT0)/1800)*(1-clamp((prog-0.4)/0.5,0,1));
         brokePile.visible=gr>0.03;brokePile.position.set(b[0],0,zc);brokePile.scale.set(1.6*b[1]*gr,0.9*b[1]*gr,2.6*gr);}
       else brokePile.visible=false;
       const wi=S.inc.find(x=>x.id==="wrap");wrapMesh.visible=false;
@@ -4104,7 +4154,7 @@ const G3={on:false,ok:false};
         if(cut<1){wrapMesh.visible=true;const r=1.85-0.5*cut;wrapMesh.position.set(canX(k),5.4,zc);wrapMesh.scale.set(r,r,CD-0.3);wrapMesh.rotation.z=Math.sin(now/90)*0.02*(wi.go?1:0);}}
       // dye trouble: the sheet and the growing reel flash through colors
       const dyeOn=S.M.offSpec;if(dyeOn){const k=Math.floor(now/1400)%DYE.length;if(k!==dyeK){dyeK=k;dyeSheet.color.copy(lin0(DYE[k]));dyeReel.color.copy(lin0(DYE[(k+2)%DYE.length]));}}
-      sheetMesh.material=dyeOn?dyeSheet:sheetMat;reel.material=dyeOn?dyeReel:M.paper;
+      sheetMesh.material=dyeOn?dyeSheet:sheetMat;reel.material=dyeOn?dyeReel:ROLLM;
       sheetMesh.visible=show;sheetMesh.geometry.setDrawRange(0,(sheetKey[Math.min(segs,sheetKey.length-1)]||0)*6);}sheetTex.offset.x=-V.sheet/24*1.0;
     // roll conveyor
     // each finished roll is kicked off the winder, rolls down the ramp, is upended and rides the conveyor to the warehouse;
