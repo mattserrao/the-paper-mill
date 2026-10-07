@@ -458,7 +458,7 @@ body{margin:0}
 </head>
 <body>
 
-<div class="ver" id="appVersion" aria-label="Version">v2.9.11</div>
+<div class="ver" id="appVersion" aria-label="Version">v2.9.12</div>
 <div class="wrap">
   <header>
     <div class="brand"><span class="logo" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linejoin="round"><circle cx="8.5" cy="12" r="5.5"/><circle cx="8.5" cy="12" r="1.6" fill="currentColor"/><path d="M8.5 6.5H20v11H8.5"/></svg></span>
@@ -4746,7 +4746,9 @@ const HTML_V2='<div class="v2top" id="v2top">\n  <button class="v2card v2ibtn" i
 })();
 
 // phones and tablets run at 30 fps to keep them cool; desktops run at the display rate
-const FRAME_CAP=matchMedia("(pointer: coarse)").matches?30:0;G3.cap=FRAME_CAP;
+// v2.9.12: frame rate is a player choice (Controls): Battery saver = 30 fps (every load starts here), Smooth = 60 fps
+let FRAME_CAP=30;G3.cap=FRAME_CAP;
+function setFpsMode(smooth){FRAME_CAP=smooth?0:30;G3.cap=FRAME_CAP;document.querySelectorAll("#fpsSeg button").forEach(b=>b.setAttribute("aria-pressed",String((b.dataset.fps==="smooth")===smooth)));diag("frame rate: "+(smooth?"smooth 60":"battery saver 30"));}
 let last=performance.now(),uiAcc=0,lastPaint=0;
 const paneShown=el=>{if(!el)return false;const p=el.closest(".v2pane");return p?document.body.classList.contains("sheet-open")&&p.classList.contains("on"):true;};
 function frame(now){
@@ -4807,7 +4809,7 @@ requestAnimationFrame(frame);
     L.push("biggest groups (visible drawables): "+[...groups].sort((a,b)=>b[1]-a[1]).slice(0,14).map(([k,v])=>`${k}=${v}`).join(" · "));
     return L;}
   const PHASES=[
-    {name:"as you play (frame cap on)",on:()=>{},off:()=>{}},
+    {name:"as you play (current frame-rate mode)",on:()=>{},off:()=>{}},
     {name:"uncapped baseline",on:()=>{G3.capOff=true;},off:()=>{}},
     {name:"shadows OFF",on:()=>{const D=G3.diagScene();D.renderer.shadowMap.enabled=false;D.MATS.forEach(m=>m.needsUpdate=true);},off:()=>{const D=G3.diagScene();D.renderer.shadowMap.enabled=true;D.renderer.shadowMap.needsUpdate=true;D.MATS.forEach(m=>m.needsUpdate=true);}},
     {name:"half resolution",on:()=>{const D=G3.diagScene();PHASES._pr=D.renderer.getPixelRatio();D.renderer.setPixelRatio(PHASES._pr*0.5);D.resize();},off:()=>{const D=G3.diagScene();D.renderer.setPixelRatio(PHASES._pr);D.resize();}},
@@ -4841,6 +4843,10 @@ requestAnimationFrame(frame);
       d.querySelector("#diagCopy").onclick=()=>{const t=d.querySelector("#diagTxt").textContent;(navigator.clipboard?navigator.clipboard.writeText(t):Promise.reject()).then(()=>{d.querySelector("#diagCopy").textContent="Copied";},()=>{const r=document.createRange();r.selectNodeContents(d.querySelector("#diagTxt"));const s=getSelection();s.removeAllRanges();s.addRange(r);});};}
     d.querySelector("#diagCopy").textContent="Copy";d.querySelector("#diagTxt").textContent=header()+(perfReport?"\n"+perfReport+"\n":"")+"\n"+DIAG.slice().reverse().join("\n");d.hidden=false;
     d.querySelector("#diagPerf").onclick=()=>{d.hidden=true;runPerf(()=>open());};}
+  {const seg=document.createElement("div");seg.className="seg";seg.id="fpsSeg";seg.setAttribute("role","group");seg.setAttribute("aria-label","Frame rate");
+    seg.innerHTML='<button data-fps="saver" aria-pressed="true" title="30 fps: cooler phone, longer battery">Battery saver</button><button data-fps="smooth" aria-pressed="false" title="60 fps: smoother, uses more battery">Smooth</button>';
+    seg.querySelectorAll("button").forEach(x=>x.addEventListener("click",()=>setFpsMode(x.dataset.fps==="smooth")));
+    const row0=document.getElementById("v2ctlrow");if(row0)row0.appendChild(seg);}
   const b=document.createElement("button");b.id="diagBtn";b.textContent="Diagnostics";b.addEventListener("click",open);
   const row=document.getElementById("v2ctlrow");if(row)row.appendChild(b);else document.body.appendChild(b);
   window.__openDiag=open;})();
