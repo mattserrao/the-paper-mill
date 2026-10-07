@@ -483,7 +483,7 @@ body{margin:0}
 </head>
 <body>
 
-<div class="ver" id="appVersion" aria-label="Version">v3.0.1</div>
+<div class="ver" id="appVersion" aria-label="Version">v3.0.2</div>
 <div class="wrap">
   <header>
     <div class="brand"><span class="logo" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linejoin="round"><circle cx="8.5" cy="12" r="5.5"/><circle cx="8.5" cy="12" r="1.6" fill="currentColor"/><path d="M8.5 6.5H20v11H8.5"/></svg></span>
@@ -744,7 +744,8 @@ const AUDIO=(()=>{
     // iPhone: play through the silent switch like a music app
     try{if(navigator.audioSession)navigator.audioSession.type="playback";}catch(e){}
     ctx=new AC();diag("audio: new context "+ctx.sampleRate+" Hz");
-    {const c=ctx;c.onstatechange=()=>{diag("audio state "+c.state);if(c===ctx&&on&&c.state!=="running"&&!document.hidden)wake();};}
+    {const c=ctx;c.onstatechange=()=>{diag("audio state "+c.state+(document.hidden?" (page hidden)":""));if(c===ctx&&on&&c.state!=="running"&&!document.hidden){hurt=true;wake();}};}
+    unlocked=0;
     comp=ctx.createDynamicsCompressor();comp.threshold.value=-16;comp.ratio.value=3;master=ctx.createGain();master.gain.value=vol;comp.connect(master);master.connect(ctx.destination);
     musicBus=ctx.createGain();musicBus.gain.value=0.6;musicBus.connect(comp);sfxBus=ctx.createGain();sfxBus.gain.value=0.85;sfxBus.connect(comp);
     const warm=ctx.createBiquadFilter();warm.type="lowpass";warm.frequency.value=3200;warm.connect(musicBus);
@@ -783,10 +784,11 @@ const AUDIO=(()=>{
   function setOn(v){const was=on,fresh=!ctx;if(v&&!ctx&&!init())return false;on=v;if(!ctx)return on;
     // switching sound back on always starts a brand-new audio context: the sure way out of an iOS context that went silent
     if(on&&!was&&!fresh&&AUDIO_VIS){rebuildAudio();return on;}
-    if(!AUDIO_VIS){AUDIO_VIS=1;document.addEventListener("visibilitychange",()=>{if(!ctx)return;if(document.hidden)ctx.suspend();else if(on)wake();});
+    if(v&&fresh)unlock();
+    if(!AUDIO_VIS){AUDIO_VIS=1;document.addEventListener("visibilitychange",()=>{diag("page "+(document.hidden?"hidden":"visible"));if(!ctx)return;if(document.hidden)ctx.suspend();else if(on){hurt=true;wake();}});
       // phones (iOS above all) suspend or "interrupt" the audio on calls, lock screen, app switches or other audio, and only let it
       // resume from a tap: so every tap/key wakes it, and it also tries on focus, pageshow and whenever the state changes
-      ["pointerdown","touchend","keydown","click"].forEach(ev=>document.addEventListener(ev,wake,{capture:true,passive:true}));
+      ["pointerdown","pointerup","touchend","keydown","click"].forEach(ev=>document.addEventListener(ev,wake,{capture:true,passive:true}));
       window.addEventListener("focus",wake);window.addEventListener("pageshow",wake);
       }
     if(on){ctx.resume();if(!timer)timer=setInterval(tick,25);master.gain.setTargetAtTime(vol,ctx.currentTime,0.1);}
@@ -794,11 +796,17 @@ const AUDIO=(()=>{
   // bring a suspended or interrupted context back; if the clock is frozen while "running" (an iOS quirk), bounce it
   let lastCT=-1,stuckSince=0;
   let rebuildT=0;
+  let hurt=false,unlocked=0;
+  function unlock(){try{const b=ctx.createBuffer(1,1,ctx.sampleRate),s=ctx.createBufferSource();s.buffer=b;s.connect(ctx.destination);s.start(0);unlocked=performance.now();}catch(e){}}
   function rebuildAudio(){try{clearInterval(timer);timer=null;}catch(e){}const old=ctx;try{old.close();}catch(e){}
     ctx=null;ambG=null;for(const k in AMB)delete AMB[k];for(const k in AMBON)delete AMBON[k];for(const k in AMBQ)delete AMBQ[k];
-    if(!init())return;master.gain.value=vol;timer=setInterval(tick,25);try{ctx.resume();}catch(e){}diag("audio: context rebuilt");}
+    if(!init())return;master.gain.value=vol;timer=setInterval(tick,25);try{ctx.resume();}catch(e){}unlock();hurt=false;diag("audio: context rebuilt (in a tap)");}
   function wake(e){const fromTap=!!(e&&e.type&&/pointer|touch|key|click/.test(e.type));if(!ctx||!on||document.hidden)return;
-    if(fromTap&&ctx.state!=="running"){clearTimeout(rebuildT);rebuildT=setTimeout(()=>{if(on&&ctx&&ctx.state!=="running"&&!document.hidden)rebuildAudio();},700);}
+    // in a tap after an interruption (or a stuck clock): start a fresh context right here, inside the gesture
+    // Safari only counts touchend / click / pointerup / keydown as a real gesture for audio (not touchstart / pointerdown)
+    const act=!!(e&&e.type&&/touchend|click|pointerup|keydown/.test(e.type));
+    if(act&&(hurt||ctx.state!=="running"||(stuckSince&&performance.now()-stuckSince>1500))){stuckSince=0;rebuildAudio();return;}
+    if(act&&!unlocked)unlock();
     try{if(ctx.state!=="running"){const p=ctx.resume();if(p&&p.catch)p.catch(()=>{});}
       else if(fromTap&&stuckSince&&performance.now()-stuckSince>1500){stuckSince=0;ctx.suspend().then(()=>ctx.resume()).catch(()=>{});}
       if(!timer)timer=setInterval(tick,25);master.gain.setTargetAtTime(vol,ctx.currentTime,0.1);}catch(e){}}
@@ -856,7 +864,7 @@ const AUDIO=(()=>{
       tt+=0.35;}}
   FX.pa=paAnnounce;let paNext=0;
   function sfx(name,gap=1200){if(!ctx||!on||!FX[name])return;const now=performance.now();if(now-(last[name]||0)<gap||now-(last._any||0)<250)return;last[name]=now;last._any=now;FX[name](ctx.currentTime+0.02);}
-  return {setOn,setVol,update,sfx,ambient,event:id=>sfx(EVSFX[id]||"alarm"),get on(){return on;},get info(){return ctx?ctx.state+" t="+ctx.currentTime.toFixed(1)+(stuckSince?" (clock stuck)":""):"none";}};
+  return {setOn,setVol,update,sfx,ambient,event:id=>sfx(EVSFX[id]||"alarm"),get on(){return on;},get info(){return ctx?ctx.state+" t="+ctx.currentTime.toFixed(1)+(stuckSince?" (clock stuck)":"")+(hurt?" (needs a tap)":"")+(unlocked?" unlocked "+((performance.now()-unlocked)/1000).toFixed(0)+"s ago":" never unlocked"):"none";}};
 })();
 
 const GRADES={ "23m":{sp:2736,bw:24.55}, "26m":{sp:2433,bw:26.06}, "30m":{sp:2222,bw:30.05}, "33HT":{sp:2084,bw:33.08} };
