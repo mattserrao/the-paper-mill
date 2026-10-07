@@ -458,7 +458,7 @@ body{margin:0}
 </head>
 <body>
 
-<div class="ver" id="appVersion" aria-label="Version">v2.9.16</div>
+<div class="ver" id="appVersion" aria-label="Version">v2.9.17</div>
 <div class="wrap">
   <header>
     <div class="brand"><span class="logo" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linejoin="round"><circle cx="8.5" cy="12" r="5.5"/><circle cx="8.5" cy="12" r="1.6" fill="currentColor"/><path d="M8.5 6.5H20v11H8.5"/></svg></span>
@@ -4508,7 +4508,37 @@ const G3={on:false,ok:false};
         at:(t)=>{if(t>12)return null;const u=ease(t/12);return [mix(58,31,u),2.4,zc,mix(40,52,u),mix(0.25,0.75,u),1.1];}},
       // bird's eye: straight down over receiving, then swoop along the line and settle low over the dryers
       {name:"bird's eye swoop",dur:14,ok:()=>true,
-        at:(t)=>{if(t>14)return null;const u=ease(t/14),v=ease((t-3)/11);return [mix(-24,14,u),mix(0,3,v),mix(-8,zc,u),mix(300,110,v),mix(-0.2,0.7,u),mix(0.1,1.02,v)];}}];
+        at:(t)=>{if(t>14)return null;const u=ease(t/14),v=ease((t-3)/11);return [mix(-24,14,u),mix(0,3,v),mix(-8,zc,u),mix(300,110,v),mix(-0.2,0.7,u),mix(0.1,1.02,v)];}},
+      // v2.9.17 ---------------------------------------------------------------------------------------------
+      // ride along with the overhead crane while it carries a reel or a spool
+      {name:"crane ride",dur:20,ok:()=>!!(CR.j||CR.jobs.length),
+        at:(t)=>{if(t>20||(t>4&&!CR.j&&!CR.jobs.length))return null;return [CR.x,Math.max(2,CR.y-3),CR.z,55,0.9+t*0.02,0.95];}},
+      // a finished roll: off the winder, onto the upender, along the conveyor until a clamp truck takes it
+      {name:"roll's journey",dur:30,ok:()=>{const RV=G3.rollVis;return !!(RV&&RV.list.some(r=>r.d<4&&r.wp));},
+        start:()=>{const RV=G3.rollVis,r=RV.list.filter(r=>r.d<4&&r.wp).sort((a,b)=>a.d-b.d)[0];return {r,last:r.wp.slice(),hold:0};},
+        at:(t,mv,rdt)=>{const st=mv.st,RV=G3.rollVis;if(RV&&RV.list.includes(st.r)&&st.r.wp)st.last=st.r.wp.slice();else st.hold+=rdt;
+          if(st.r){st.still=Math.abs(st.r.d-(st.ld??-99))<0.01?(st.still||0)+rdt:0;st.ld=st.r.d;}if(st.hold>2.5||st.still>4||t>30)return null;return [st.last[0],1,st.last[2],46,Math.PI/2+0.35+0.15*Math.sin(t*0.2),1.0];}},
+      // slow, low pass along the dryer section at can height
+      {name:"dryer dolly",dur:14,ok:()=>true,
+        at:(t)=>{if(t>14)return null;const u=ease(t/14);return [mix(30,-6,u),4.5,zc,42,mix(0.05,0.3,u),1.25];}},
+      // tilt up the fog fan stack from its base to the vapour plume
+      {name:"fog fan tilt-up",dur:12,ok:()=>true,
+        at:(t)=>{if(t>12)return null;const u=ease(t/12);return [49.5,mix(2,21,u),-4.2,mix(55,70,u),0.55,mix(1.42,1.15,u)];}},
+      // one slow lap around the whole mill
+      {name:"slow orbit",dur:30,ok:()=>true,start:()=>({th:Math.random()*6.28}),
+        at:(t,mv)=>{if(t>30)return null;return [12,2,0,240,mv.st.th+Math.PI*2*t/30,0.92];}},
+      // close orbit of the disk thickener, spider valve and the two seal chests
+      {name:"thickener orbit",dur:14,ok:()=>true,
+        at:(t)=>{if(t>14)return null;const u=ease(t/14);return [29,mix(10,6,u),-15.5,mix(50,58,u),mix(-0.7,1.0,u),0.95];}},
+      // the OCC train rolling in along the spur (or pulling out)
+      {name:"train pass",dur:25,ok:()=>ENV.train&&ENV.train.state!=="away",
+        at:(t)=>{const tr=ENV.train;if(t>25||tr.state==="away")return null;return [tr.g.position.x+6,2,-29,70,Math.PI-0.45,0.85];}},
+      // shift change: cars in the lot and staff at the office door (only around 6 am / 6 pm)
+      {name:"shift change",dur:14,ok:()=>{const hr=((S.t+360)/60)%24;return (hr>5.6&&hr<6.8)||(hr>17.5&&hr<18.7);},
+        at:(t)=>{if(t>14)return null;const u=ease(t/14);return [mix(78,54,u),0,mix(47,25,u),mix(75,55,u),-0.5,0.9];}},
+      // drift over the clarifier and transfer tank out toward the river
+      {name:"clarifier to river",dur:14,ok:()=>true,
+        at:(t)=>{if(t>14)return null;const u=ease(t/14);return [mix(12,8,u),mix(1.5,0,u),mix(-38,-64,u),mix(70,95,u),mix(0.2,0.6,u),mix(0.85,1.05,u)];}}];
     return zenMovesCache;}
   // v2.9.11 performance profiler: when G3.PF.on, time each section of the 3D frame (ms accumulated per section)
   const PF=G3.PF={on:false,t:0,acc:{},frames:0};const pm=k=>{if(!PF.on)return;const t=performance.now();PF.acc[k]=(PF.acc[k]||0)+(t-PF.t);PF.t=t;};
@@ -4622,7 +4652,7 @@ const G3={on:false,ok:false};
       else if(r.d<0){const a=(r.d+1)*Math.PI/2,c=Math.cos(a),sn=Math.sin(a);upA=Math.max(upA,a);   // tip 90 deg about the plate's hinge
         x=UPX;y=UPY+0.62*c+0.7*sn;z=UPZ-0.7*c+0.62*sn;q4.setFromEuler(_eu.set(Math.PI/2+a,0,0));}
       else{const d=r.d,L1=19.4-zc-UPC;if(d<L1){x=UPX;z=zc+UPC+d;}else{x=UPX-(d-L1);z=19.4;}y=1.2;q4.identity();}
-      m4.compose(v3.set(x,y,z),q4,_one);if(r.col)_rc.set(r.col);else _rc.copy(M.paper.color);beltRolls.setColorAt(nr,_rc);beltRolls.setMatrixAt(nr++,m4);});
+      r.wp=[x,y,z];m4.compose(v3.set(x,y,z),q4,_one);if(r.col)_rc.set(r.col);else _rc.copy(M.paper.color);beltRolls.setColorAt(nr,_rc);beltRolls.setMatrixAt(nr++,m4);});
     upender.rotation.x=upA>0?upA:upender.rotation.x*Math.max(0,1-rdt*6);
     beltRolls.count=nr;beltRolls.instanceMatrix.needsUpdate=true;if(beltRolls.instanceColor)beltRolls.instanceColor.needsUpdate=true;
     pm("roll conveyor");
@@ -4666,6 +4696,8 @@ const G3={on:false,ok:false};
         if(!Z.goto&&Math.random()<0.35){const ok=MV.filter(m=>m.ok());if(ok.length){const m=ok[Math.floor(Math.random()*ok.length)];Z.mv={m,t:0,st:m.start?m.start():null};Z.who=null;Z.t=-(m.dur-10);
             const lk=["dusk","gold","airy","hc","bw"],cur2=document.body.dataset.zs,pl2=lk.filter(l=>l!==cur2);document.body.dataset.zs=Math.random()<0.5?"none":pl2[Math.floor(Math.random()*pl2.length)];}}
         if(Z.mv){}
+        else if(Z.goto){const g2=Z.goto;Z.goto=null;Z.who=null;const from={x:target.x,y:target.y,z:target.z,r:cam.r,th:cam.th,ph:cam.ph};
+          Z.mv={t:0,st:null,m:{name:"upset swoop",at:(t)=>{if(t>10)return null;const u=ease(t/4);return [mix(from.x,g2[0],u),mix(from.y,0,u),mix(from.z,g2[1],u),mix(from.r,55,u),from.th+(lerpAng(from.th,-0.3,1)-from.th)*u,mix(from.ph,0.85,u)];}}};}
         else if(Z.goto){Z.who=null;Z.tg.set(Z.goto[0],0,Z.goto[1]);Z.r=55;Z.th=-0.3+(Math.random()-0.5)*0.8;Z.goto=null;}
         else if(ops.length&&Math.random()<0.45){Z.who=ops[Math.floor(Math.random()*ops.length)];Z.fo=6+Math.random()*3;Z.r=34+Math.random()*14;Z.th=(Math.random()-0.5)*2.4;Z.tg.set(Z.who.position.x,0,Z.who.position.z);}
         else{Z.who=null;Z.i=(Z.i+1+Math.floor(Math.random()*(POI.length-1)))%POI.length;const q=POI[Z.i];Z.tg.set(q[0],0,q[1]);Z.r=q[2];Z.th=q[3];}
