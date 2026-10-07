@@ -483,7 +483,7 @@ body{margin:0}
 </head>
 <body>
 
-<div class="ver" id="appVersion" aria-label="Version">v3.0.0</div>
+<div class="ver" id="appVersion" aria-label="Version">v3.0.1</div>
 <div class="wrap">
   <header>
     <div class="brand"><span class="logo" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linejoin="round"><circle cx="8.5" cy="12" r="5.5"/><circle cx="8.5" cy="12" r="1.6" fill="currentColor"/><path d="M8.5 6.5H20v11H8.5"/></svg></span>
@@ -496,7 +496,7 @@ body{margin:0}
       <button id="reset">Reset</button>
       <span class="seasongrp"><button id="seasonBtn" title="30-day season with standard upsets. Your net profit goes on the leaderboard.">Start season</button><button id="scoresBtn">Leaderboard</button><button id="zenBtn" title="A calm, endless screensaver: slow camera, no disasters, chill music">Zen mode</button><button id="freeBtn" aria-pressed="false" title="Upgrades are free and you can't go bankrupt. Free play games can't go on the leaderboard.">Free play</button><span class="schip" id="seasonChip" hidden></span></span>
       <span class="sndgrp"><button id="sound" aria-pressed="false" title="Lofi music, incident music and sound effects">Sound off</button><input id="vol" type="range" min="0" max="100" value="70" aria-label="Volume" style="width:80px;accent-color:var(--brand)"></span>
-      <div class="simspeed"><label for="simspeed">Sim speed</label><input id="simspeed" type="range" min="1" max="120" step="1" value="30"><span id="simspeedv" class="val">30 min/s</span></div>
+      <div class="simspeed"><label for="simspeed">Sim speed</label><input id="simspeed" type="range" min="1" max="120" step="1" value="10"><span id="simspeedv" class="val">10 min/s</span></div>
     </div>
   </header>
 
@@ -1498,7 +1498,7 @@ function hayout(){AUDIO.sfx("hayout",600);S.wd="hayout";S.hayLeft=40+Math.random
   log(`Winder hayout: ${loss.toFixed(1)} t of paper to broke`,"bad");}
 function initCtrl(){
   C={inRate:{v:1.8,auto:true},drivers:{v:3,auto:true},pulper:{v:40,auto:true},lvlTarget:{v:69},lowLevel:{v:30},
-     pmSp:{v:2736,auto:true},rollW:{v:100/8},loaders:{v:2,auto:true},outRate:{v:1,auto:true},grade:"23m",breaks:true,hays:true,wdr:{v:45,auto:true},simSpeed:30};
+     pmSp:{v:2736,auto:true},rollW:{v:100/8},loaders:{v:2,auto:true},outRate:{v:1,auto:true},grade:"23m",breaks:true,hays:true,wdr:{v:45,auto:true},simSpeed:10};
 }
 function initState(){
   S={date0:new Date().setHours(0,0,0,0),wx:"clear",wxLeft:360,wet:0,crewQ:[],brkType:"dryer",breakTotal:1,hayTotal:1,t:0,yard:700,tank:0.69*P.tankCap,fg:40,pmSpeed:C.pmSp.v,pm:"run",breakLeft:0,reel:8,winderBuf:0,winderAcc:0,
@@ -2815,7 +2815,14 @@ const G3={on:false,ok:false};
     const rim=new THREE.Mesh(new THREE.TorusGeometry(4.2,0.15,6,28),M.steel);rim.rotation.x=Math.PI/2;rim.position.y=3.4;pulper.add(rim);
     const s=new THREE.Mesh(new CylG(4.05,4.05,0.2,24),M.pulp);s.position.y=2.9;pulper.add(s);}
   const rotor=new THREE.Group();rotor.position.y=3.05;pulper.add(rotor);
-  box(6,0.18,0.5,M.steel,0,0,0,rotor,false);box(0.5,0.18,6,M.steel,0,0,0,rotor,false);
+  // v3.0.1: the stock swirls in a vortex over the rotor, which sits out of sight on the tub floor
+  {const c=document.createElement("canvas");c.width=c.height=256;const x=c.getContext("2d"),C0=128;
+    const g=x.createRadialGradient(C0,C0,0,C0,C0,C0);g.addColorStop(0,"rgba(38,24,12,0.95)");g.addColorStop(0.18,"rgba(58,38,20,0.8)");g.addColorStop(0.45,"rgba(90,62,34,0.25)");g.addColorStop(1,"rgba(90,62,34,0)");x.fillStyle=g;x.fillRect(0,0,256,256);
+    for(let arm=0;arm<5;arm++){x.beginPath();for(let k=0;k<=60;k++){const t=k/60,r=10+t*112,a=arm*2*Math.PI/5+t*3.6;const px=C0+Math.cos(a)*r,py=C0+Math.sin(a)*r;k?x.lineTo(px,py):x.moveTo(px,py);}
+      x.strokeStyle=arm%2?"rgba(196,160,112,0.55)":"rgba(52,34,18,0.45)";x.lineWidth=arm%2?5:7;x.stroke();}
+    const t=new THREE.CanvasTexture(c);t.encoding=THREE.sRGBEncoding;
+    const vx=new THREE.Mesh(new CircG(3.9,48),new THREE.MeshBasicMaterial({map:t,transparent:true,depthWrite:false,polygonOffset:true,polygonOffsetFactor:-2,polygonOffsetUnits:-2}));
+    vx.rotation.x=-Math.PI/2;vx.position.y=-0.03;vx.renderOrder=2;rotor.add(vx);}
   const pulpStock=pulper.children[2];
 
   // chest tank: glass shell + liquid + target/low rings
@@ -3709,7 +3716,7 @@ const G3={on:false,ok:false};
       return (now,rdt,inc)=>{rp(now);const k=Math.min(1,(1-inc.left/inc.total)*6);pud.scale.setScalar(5+7*k);
         for(let j=0;j<6;j++)if(Math.random()<rdt*40)emit("drop",34.5+R()*2.5,PH+2.8,-15+R()*1.5,R()*14,4+Math.random()*9,R()*14,1.8,0.42,"#7a5636",0.95);
         if(Math.random()<rdt*8)emit("steam",34.5+R()*2,PH+3.2,-15+R(),R()*2,2,R()*2,1.8,2.2,"#a4805c",0.45);};},
-    // v3.0.0: the rotary steam joint on the middle top dryer (can 5, drive side) blows its packing
+    // v2.9.22: the rotary steam joint on the middle top dryer (can 5, drive side) blows its packing
     steamjoint:g=>{const JX=11.2,JY=5.4,JZ=5.72,z=zone(g,6.5,16,1.6,5.4);
       const ring=new THREE.Mesh(new CylG(0.24,0.24,0.12,12),new THREE.MeshBasicMaterial({color:lin0("#ff4b2b")}));ring.rotation.x=Math.PI/2;ring.position.set(JX,JY,JZ-0.18);g.add(ring);
       return (now,rdt,inc)=>{z(now);const k=inc&&inc.total?(inc.go?Math.max(0.15,Math.min(1,inc.left/inc.total*1.6)):1):1;ring.material.color.setRGB(1,0.25+0.2*Math.sin(now/120),0.1);
@@ -3799,7 +3806,8 @@ const G3={on:false,ok:false};
     S.inc.forEach((inc,i)=>{const def=FXDEF[inc.id];let f=FX[inc.id];
       if(!f)f=makeFX(inc.id);
       f.g.visible=true;f.up(now,rdt,inc);if(f.pinPos)f.pin.move(f.pinPos[0],f.pinPos[1]);f.pin.update(now);
-      tmp.set(f.pin.x,f.pin.p.position.y+3.4,f.pin.z).project(camera);const vis=tmp.z<1&&Math.abs(tmp.x)<1.1&&Math.abs(tmp.y)<1.1;f.el.hidden=!vis;
+      {const zp=!G3.zen;f.pin.p.visible=f.pin.ring.visible=f.pin.stem.visible=zp;}   // v3.0.1: zen mode shows events without the red pins
+      tmp.set(f.pin.x,f.pin.p.position.y+3.4,f.pin.z).project(camera);const vis=!G3.zen&&tmp.z<1&&Math.abs(tmp.x)<1.1&&Math.abs(tmp.y)<1.1;f.el.hidden=!vis;
       if(vis){f.el.style.transform=`translate(${(tmp.x+1)/2*w}px,${(1-tmp.y)/2*hh}px) translate(-50%,-100%)`;
         if(doTxt){f.el.firstChild.textContent=EV[inc.id].name;f.el.lastChild.textContent=`${incState(inc)?incState(inc)+" · ":""}${(inc.left/60).toFixed(1)} h left${inc.note?" · "+inc.note.split(" · ")[0]:""}`;}}});
     stepParts(rdt);fireLight.position.copy(fireLpos);fireFloorK=Math.max(0,fireFloorK-rdt*1.5);
@@ -3951,8 +3959,17 @@ const G3={on:false,ok:false};
   {const scC=document.createElement("canvas");scC.width=128;scC.height=80;const x=scC.getContext("2d");x.fillStyle="#13233a";x.fillRect(0,0,128,80);
     x.strokeStyle="#4fd18b";x.lineWidth=2;x.beginPath();for(let i=0;i<=128;i+=8)x.lineTo(i,46+10*Math.sin(i/14));x.stroke();x.strokeStyle="#ffb02e";x.beginPath();for(let i=0;i<=128;i+=8)x.lineTo(i,26+6*Math.cos(i/9));x.stroke();
     x.fillStyle="#9ab3d6";for(let k=0;k<4;k++)x.fillRect(8+k*30,64,22,8);
-    const scT=new THREE.CanvasTexture(scC);scT.encoding=THREE.sRGBEncoding;const scM=new THREE.MeshBasicMaterial({map:scT,toneMapped:false});
-    CONSOLES.forEach(cx=>{const g=new THREE.Group();g.position.set(cx,0,13.4);scene.add(g);
+    const scT=new THREE.CanvasTexture(scC);scT.encoding=THREE.sRGBEncoding;const scMs=CONSOLES.map(()=>new THREE.MeshBasicMaterial({map:scT,toneMapped:false}));
+    // v3.0.1: the football game an operator puts on when they kick back at the console in zen mode
+    const fbC=document.createElement("canvas");fbC.width=128;fbC.height=80;{const x=fbC.getContext("2d");x.fillStyle="#2f8f3f";x.fillRect(0,0,128,80);
+      for(let i=0;i<8;i++){x.fillStyle=i%2?"#2a8239":"#33994a";x.fillRect(i*16,0,16,80);}x.strokeStyle="#ffffff";x.lineWidth=1.5;for(let i=8;i<128;i+=16){x.beginPath();x.moveTo(i,6);x.lineTo(i,74);x.stroke();}
+      x.fillStyle="#c33b2c";x.fillRect(0,0,8,80);x.fillStyle="#2c5bc3";x.fillRect(120,0,8,80);
+      x.save();x.translate(70,42);x.rotate(-0.4);x.fillStyle="#7a3f17";x.beginPath();x.ellipse(0,0,15,9,0,0,Math.PI*2);x.fill();x.strokeStyle="#fff";x.lineWidth=1.4;x.beginPath();x.moveTo(-6,0);x.lineTo(6,0);x.stroke();
+      for(let k=-4;k<=4;k+=2.6){x.beginPath();x.moveTo(k,-2.5);x.lineTo(k,2.5);x.stroke();}x.restore();
+      x.fillStyle="rgba(0,0,0,0.55)";x.fillRect(0,0,128,13);x.fillStyle="#fff";x.font="700 10px system-ui,sans-serif";x.fillText("HOME 21  AWAY 17  4Q",6,10);}
+    const fbT=new THREE.CanvasTexture(fbC);fbT.encoding=THREE.sRGBEncoding;
+    G3.conTV=(ci,on)=>{const m=scMs[ci];if(!m)return;const t=on?fbT:scT;if(m.map!==t){m.map=t;m.needsUpdate=true;}};
+    CONSOLES.forEach((cx,ci)=>{const scM=scMs[ci];const g=new THREE.Group();g.position.set(cx,0,13.4);scene.add(g);
       box(2.0,1.0,0.7,M.steel,0,0.5,0,g);const top=box(2.0,0.12,0.75,M.ink,0,1.05,0.05,g,false);top.rotation.x=0.35;
       [-0.5,0.5].forEach(dx=>{box(0.08,0.5,0.08,M.ink,dx,1.35,-0.25,g,false);box(0.85,0.55,0.08,M.ink,dx,1.75,-0.25,g,false);
         const sc=new THREE.Mesh(new THREE.PlaneGeometry(0.76,0.47),scM);sc.position.set(dx,1.75,-0.205);g.add(sc);});
@@ -4071,6 +4088,7 @@ const G3={on:false,ok:false};
     if(S.pm!=="break")hiWho.clear();if(!S.inc.some(x=>x.id==="wrap"))wrapWho.clear();
     G3.prevPm=S.pm;G3.prevWrap=S.inc.some(x=>x.id==="wrap");
     ropes.forEach(m=>m.visible=false);spears.forEach(m=>m.visible=false);let u0=null;
+    const tvOn=CONSOLES.map(()=>false);
     crew.forEach((w,i)=>{let tx,tz,act,fx=null;
       if(dryOn){fireCrew(w,i,rdt,now);if(Math.hypot(w.position.x-FIRESPOT[i][0],w.position.z-FIRESPOT[i][1])<0.4)here=true;return;}
       if(hayOn){if(!EP.hay)EP.hay={t0:now-2000,until:now+900,burst:true};const age=now-EP.hay.t0,shuttle=i%2===1,ph=((age/1800)+i*0.37)%2,s=HAY[i];
@@ -4148,8 +4166,16 @@ const G3={on:false,ok:false};
       if(!u.wt||now>u.wt){const atC=hasC&&(u.act!=="type")&&Math.random()<0.45;
         if(atC){const chill=calm&&Math.random()<0.45;u.wx=op[0][0];u.wz=chill?14.55:op[0][1];u.act=chill?"relax":"type";u.wt=now+(chill?9000:4000)+Math.random()*4000;}
         else{u.wx=op[1]+Math.random()*(op[2]-op[1]);u.wz=14.0+Math.random()*1.6;u.act=Math.random()<0.4?"inspect":"idle";u.wt=now+3500+Math.random()*6000;}}
+      // v3.0.1 zen: more feet-up time at the console with the game on; a manager within sight sends them back to busy work
+      if(G3.zen&&hasC){const boss=mgrNear(w.position.x,w.position.z,9);
+        if(boss&&u.act==="relax"){u.act="type";u.wz=op[0][1];u.wt=now+7000+Math.random()*3000;u.caught=true;}
+        else if(boss&&u.caught){u.wt=Math.max(u.wt,now+3000);}
+        else if(!boss&&u.caught&&now>u.wt-2000){u.caught=false;}
+        if(!boss&&!u.caught&&u.act!=="relax"&&u.act!=="type"&&Math.random()<rdt*0.05){u.wx=op[0][0];u.wz=14.55;u.act="relax";u.wt=now+14000+Math.random()*8000;}}
       const far=Math.hypot(u.wx-w.position.x,u.wz-w.position.z)>7,arrived=moveP(w,u.wx,u.wz,far?7:1.6,rdt);
-      if(arrived)face(w,u.wx,u.act==="type"||u.act==="relax"?13.2:zc,rdt);pose(w,arrived?(u.act==="relax"&&!calm?"type":u.act):(far?"run":"walk"),now);});
+      const kick=u.act==="relax"&&(calm||G3.zen);if(hasC&&G3.zen&&kick&&arrived)tvOn[CONSOLES.reduce((b,c,j)=>Math.abs(c-op[0][0])<Math.abs(CONSOLES[b]-op[0][0])?j:b,0)]=true;
+      if(arrived)face(w,u.wx,u.act==="type"||u.act==="relax"?13.2:zc,rdt);pose(w,arrived?(u.act==="relax"&&!kick?"type":u.act):(far?"run":"walk"),now);});
+    G3.tvOn=tvOn;tvOn.forEach((on,ci)=>G3.conTV&&G3.conTV(ci,on));
     // stock prep operators walk their rounds: along the screening line, up the stair tower onto the thickener deck, and back
     spOps.forEach((w,k)=>{const u=w.userData,inc=S.inc.find(x=>SPJOB[x.id]);
       // the stock prep operator restarts a broken ragger tail: up the platform stair, then throws fresh ragger rope into the tub
@@ -4263,6 +4289,7 @@ const G3={on:false,ok:false};
   const AIS=16.5,parties=[];let ambT={tour:25,mgr:45,office:8,birds:15,food:35};
   // a party walks a path [x,z,stop seconds,act]; followers keep formation behind the leader and gather round at the stops
   function party(kind,members,path,walk){parties.push({kind,members,path,i:0,wait:0,walk});}
+  function mgrNear(x,z,r){for(const P2 of parties)if(P2.kind==="mgr")for(const m of P2.members)if(m.visible&&Math.hypot(m.position.x-x,m.position.z-z)<r)return true;return false;}
   const out=(x)=>[[OFF.door[0],AIS],[x,AIS]];
   function startTour(){const lead=person(M.brand,whiteHat),n=5+Math.floor(Math.random()*2),st=[];
     for(let k=0;k<n;k++)st.push(person(STUDENT[k%STUDENT.length],whiteHat));
@@ -4370,8 +4397,8 @@ const G3={on:false,ok:false};
         fmt=v=>Math.round(v).toLocaleString("en-US"),bt=fmt(best)+"|"+fmt(today)+"|"+isNew;const bd=ENV.board;
       if(bt!==bd.last){bd.last=bt;const x=bd.ctx;x.fillStyle="#ffffff";x.fillRect(0,0,512,256);x.fillStyle=isNew?"#c77d00":"#1f8a4c";x.fillRect(0,0,512,64);
         x.fillStyle="#fff";x.font='800 36px "Plus Jakarta Sans",system-ui,sans-serif';x.textAlign="center";x.textBaseline="middle";x.fillText(isNew?"NEW PRODUCTION RECORD":"PRODUCTION RECORD",256,34);
-        x.fillStyle="#1c2233";x.font='800 88px "Plus Jakarta Sans",system-ui,sans-serif';x.fillText(fmt(best)+" t",256,132);
-        x.font='600 26px "Plus Jakarta Sans",system-ui,sans-serif';x.fillText(`best day (6am-6am) · today ${fmt(today)} t`,256,214);bd.tex.needsUpdate=true;}}}
+        x.fillStyle="#1c2233";x.font='800 96px "Plus Jakarta Sans",system-ui,sans-serif';x.fillText(fmt(best)+" t",256,160);
+        bd.tex.needsUpdate=true;}}}
   function ambUpdate(rdt,now){envUpdate(rdt,now);
     {const bi=S.inc.find(x=>x.id==="birdhay");if(bi&&bi.real!==PG.seen){PG.seen=bi.real;PG.t0=now;}
       const u=(now-PG.t0)/1600;if(PG.seen&&u<=1){const s=u*u,x=-2+(-18.7+2)*s,y=10.5-8*s,z=zc+4-4*s;pigeon.visible=true;pigeon.position.set(x,y,z);pigeon.rotation.y=Math.PI;
