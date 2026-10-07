@@ -458,7 +458,7 @@ body{margin:0}
 </head>
 <body>
 
-<div class="ver" id="appVersion" aria-label="Version">v2.8.12</div>
+<div class="ver" id="appVersion" aria-label="Version">v2.8.13</div>
 <div class="wrap">
   <header>
     <div class="brand"><span class="logo" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linejoin="round"><circle cx="8.5" cy="12" r="5.5"/><circle cx="8.5" cy="12" r="1.6" fill="currentColor"/><path d="M8.5 6.5H20v11H8.5"/></svg></span>
@@ -3595,7 +3595,9 @@ const G3={on:false,ok:false};
     f.up=def?def(g):()=>{};f.el.className="lbl inc bad";f.el.addEventListener("click",()=>G3.flyTo(id));f.el.append(document.createElement("b"),document.createElement("span"));incHost.appendChild(f.el);f.el.hidden=true;return f;}
   let warmAt=0;
   function warmFX(now){if(now<warmAt)return;warmAt=now+1500;const id=EVENTS.map(e=>e.id).find(k=>!FX[k]&&!S.inc.some(i=>i.id===k));if(!id)return;
-    try{const f=makeFX(id);f.g.visible=true;renderer.compile(scene,camera);f.g.visible=false;}catch(e){}}
+    try{const f=makeFX(id),kids=scene.children,vis=kids.map(o=>o.visible);
+      // compile only the new effect: hide everything else except the lights (so the shaders match), then restore
+      kids.forEach(o=>{if(!o.isLight&&o!==f.g)o.visible=false;});f.g.visible=true;renderer.compile(scene,camera);kids.forEach((o,i)=>o.visible=vis[i]);f.g.visible=false;}catch(e){}}
   function fxUpdate(rdt,now){
     if(running&&performance.now()>8000)warmFX(now);
     for(const id in FX){FX[id].g.visible=false;FX[id].el.hidden=true;}
