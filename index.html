@@ -458,7 +458,7 @@ body{margin:0}
 </head>
 <body>
 
-<div class="ver" id="appVersion" aria-label="Version">v2.9.4</div>
+<div class="ver" id="appVersion" aria-label="Version">v2.9.5</div>
 <div class="wrap">
   <header>
     <div class="brand"><span class="logo" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linejoin="round"><circle cx="8.5" cy="12" r="5.5"/><circle cx="8.5" cy="12" r="1.6" fill="currentColor"/><path d="M8.5 6.5H20v11H8.5"/></svg></span>
@@ -1383,6 +1383,9 @@ function closeCard(keep){if(cardEl&&!keep)cardEl.hidden=true;S.cards.open=null;c
   if(menuOpen&&!menuOpen.hidden)return;running=true;const pb=document.getElementById("play");if(pb){pb.textContent="Pause";pb.setAttribute("aria-pressed","true");}}
 const HAYLINES=["HAYOUT! Paper is shooting to the roof!","Winder hayout! Every PM hand to the dry end!","Hayout! It's snowing paper in the winder aisle.","Hayout! The set exploded off the drums."];
 // a hayout ruins the outer wraps of the set on the winder (about 3 t), not the whole 12.5 t roll
+// v2.9.5: reels at the winder (on the unwind + in storage); a reel turns up a fraction over 100 t, which used to make the
+// unwind reel count as "more than one" and block storage, so the machine stopped with storage empty
+function reelsAtWinder(){return Math.max(0,Math.ceil(S.winderBuf/P.jumbo-0.005));}
 function hayout(){AUDIO.sfx("hayout",600);S.wd="hayout";S.hayLeft=40+Math.random()*40;S.hayTotal=S.hayLeft;enqueue("hay");
   const extra=Math.min(S.winderBuf,2+Math.random()*4),wraps=Math.min(S.winderAcc,P.jumbo/32),loss=extra+wraps;S.winderBuf-=extra;S.winderAcc-=wraps;S.tot.broke+=loss;S.tot.hayouts++;
   BANNERS.push({text:HAYLINES[Math.floor(Math.random()*HAYLINES.length)],t:null,id:"hay"});while(BANNERS.length>3)BANNERS.splice(1,1);
@@ -1507,7 +1510,7 @@ function step(dt){
   if(S.pm==="break"){if(working("brk"))S.breakLeft-=dt;S.tot.breakMin+=dt;if(S.breakLeft<=0&&level>8){S.pm="run";S.pmSpeed=Math.min(C.pmSp.v,P.minSpeed+300);}}
   else if(S.pm==="down"){if(level>=Math.max(20,low*0.8)){rethread("after running out of stock");S.pmSpeed=P.minSpeed;}}
   else if(S.pm==="full"){if(S.fg<P.fgCap*0.95){S.pm="run";S.pmSpeed=P.minSpeed;}}
-  else if(S.pm==="spools"){if(S.winderBuf<=P.storeReels*P.jumbo+1e-6){S.pm="run";S.pmSpeed=P.minSpeed;}}
+  else if(S.pm==="spools"){if(reelsAtWinder()<=P.storeReels){S.pm="run";S.pmSpeed=P.minSpeed;}}
   let prod=0;
   if(S.pm==="run"){
     let tgt=C.pmSp.v*M.speedCap;
@@ -1517,7 +1520,7 @@ function step(dt){
     tgt=Math.max(Math.min(tgt,C.pmSp.v*M.speedCap),P.minSpeed);
     const r=P.ramp*dt; S.pmSpeed+=clamp(tgt-S.pmSpeed,-r*2,r);
     if(level<5){S.pm="down";}
-    else if(S.reel>=P.jumbo&&S.winderBuf>P.storeReels*P.jumbo+1e-6){S.pm="spools";}
+    else if(S.reel>=P.jumbo&&reelsAtWinder()>P.storeReels){S.pm="spools";}
     else if(Math.random()<dt/390*0.25*P.breakBase*((C.breaks?P.gradeBrk:0)+(M.breakMul-1))){S.pm="break";const r=Math.random();S.brkType=r<0.45?"reel":r<0.8?"dryer":"press";
       S.breakLeft=2*(S.brkType==="reel"?4+Math.random()*6:S.brkType==="dryer"?12+Math.random()*14:26+Math.random()*20);S.breakTotal=S.breakLeft;S.tot.breaks++;enqueue("brk");AUDIO.sfx("snap",2500);
       log(`Sheet break ${S.brkType==="reel"?"at the reel (short)":S.brkType==="dryer"?"before the dryers":"before the presses (long)"}`,"warn");}
@@ -1536,7 +1539,7 @@ function step(dt){
     if(S.plan.hot&&C.grade==="33HT")S.plan.hot.made+=prod;}
   S.reel+=prod; S.tot.prodT+=prod; S.tot.pot+=P.K*C.pmSp.v*g.bw*dt/60;
   planTick(dt,prod);
-  if(S.reel>=P.jumbo&&S.winderBuf<=P.storeReels*P.jumbo+1e-6){S.winderBuf+=S.reel;S.reel=0;S.tot.turnups++;}
+  if(S.reel>=P.jumbo&&reelsAtWinder()<=P.storeReels){S.winderBuf+=S.reel;S.reel=0;S.tot.turnups++;}
   // 6 winder
   if(S.wd==="hayout"){if(working("hay"))S.hayLeft-=dt;S.tot.hayMin+=dt;if(S.hayLeft<=0){S.wd="run";log("Winder cleaned up and running again","ok");}}
   if(S.conv===undefined)S.conv=0;const convFull=S.conv>=P.convCap-1e-6;S.wdBlocked=convFull;
@@ -1830,7 +1833,7 @@ function updateText(){
   pill("p-pm",pmTxt,S.pm==="run"?(pmTxt==="at max speed"?"ok":"warn"):"bad");
   const eff=S.t>0?100*(1-S.tot.breakMin/S.t):100;
   $("r-pm").textContent=`${f1(R.prod/C.rollW.v)} rolls/h · ${S.tot.turnups} reels turned up · ${S.tot.breaks} breaks · ${f0(eff)}% sheet time`;
-  const reelsW=Math.max(0,Math.ceil(S.winderBuf/P.jumbo-1e-6)-1);
+  const reelsW=Math.max(0,reelsAtWinder()-1);
   pill("p-wd",S.wd==="hayout"?"hayout: "+(working("hay")?"crew cleaning":crewState("hay")||"crew cleaning"):S.M.winderDown?"winder down":S.wdBlocked?"roll conveyor full":reelsW>=P.storeReels?"storage full":R.cut>0.5?"winding":"waiting for reel",S.wd==="hayout"||S.M.winderDown||S.wdBlocked?"bad":reelsW>=P.storeReels?"warn":R.cut>0.5?"ok":"");
   $("r-wd").textContent=`${reelsW}/${P.storeReels} reels in storage · ${Math.floor(S.conv||0)}/${P.convCap} rolls on the conveyor · cutting ${f1(R.cut)} t/h · ${S.tot.hayouts} hayouts · ${f1(S.tot.broke)} t broke`;
   const shipCap=S.effLd*P.loaderRate*S.M.clampMul;
@@ -1990,7 +1993,7 @@ function draw(rdt){
   label("reel",500,475,11,col.muted,"center");mono(`${f1(S.reel)}/${P.jumbo} t`,500,370,11,col.muted,"center");
   // winder
   ctx.fillStyle=col.machine;rr(395,402,36,36,3);ctx.fill();label("6  WINDER",388,428,13,col.ink,"right",700);
-  {const nw=Math.ceil(S.winderBuf/P.jumbo-1e-6);
+  {const nw=reelsAtWinder();
     for(let k=0;k<nw;k++){ctx.fillStyle=col.paperc;ctx.strokeStyle=col.machine;ctx.lineWidth=1;ctx.beginPath();ctx.arc(447,454+k*15,6,0,7);ctx.fill();ctx.stroke();}}
   if(S.wd==="hayout"){for(let k=0;k<7;k++){ctx.strokeStyle=col.paperc;ctx.lineWidth=5;ctx.beginPath();const ox=395+k*6;ctx.moveTo(ox,402);
       for(let y=402;y>300;y-=8)ctx.lineTo(ox+Math.sin(y/14+performance.now()/90+k)*10,y);ctx.stroke();ctx.strokeStyle=col.machine;ctx.lineWidth=0.6;ctx.stroke();}
@@ -3230,7 +3233,7 @@ const G3={on:false,ok:false};
     {p:[34.5,9.6,zc-1.5],t:()=>["Twin press",LV("shoe")?"shoe in 2nd press":"tandem bottom felt"]},
     {p:[10,8.4,zc],t:()=>["5 "+NAME+(S.pm==="run"?"":" · "+({break:"sheet break "+({reel:"at the reel",dryer:"before the dryers",press:"before the presses"}[S.brkType]||"")+(working("brk")?": rethreading":": crew on the way"),down:"no stock",full:"warehouse full",spools:"winder backed up",incident:S.M.pmDown||"down"}[S.pm]||"")),f0(S.pmSpeed)+" fpm · "+f1(S.rates.prod)+" t/h"],cls:()=>S.pm==="run"?"":"bad"},
     {p:[-10,9.2,zc],t:()=>["Reel",f1(S.reel)+" / "+P.jumbo+" t"]},
-    {p:[-20,1.5,zc+4],t:()=>["6 Winder"+(S.wd==="hayout"?" · HAYOUT!":""),S.wd==="hayout"?"crew cleaning up":Math.max(0,Math.ceil(S.winderBuf/P.jumbo-1e-6)-1)+"/"+P.storeReels+" reels stored · "+f1(S.rates.cut)+" t/h"],cls:()=>S.wd==="hayout"},
+    {p:[-20,1.5,zc+4],t:()=>["6 Winder"+(S.wd==="hayout"?" · HAYOUT!":""),S.wd==="hayout"?"crew cleaning up":Math.max(0,reelsAtWinder()-1)+"/"+P.storeReels+" reels stored · "+f1(S.rates.cut)+" t/h"],cls:()=>S.wd==="hayout"},
     {p:[-36.4,3.2,14.8],t:()=>["7 Roll warehouse",f0(S.fg)+" rolls"]},
   ];
   LABELS.forEach(L=>{L.el=document.createElement("div");L.el.className="lbl sec";L.b=document.createElement("b");L.s=document.createElement("span");L.el.append(L.b,L.s);labelHost.appendChild(L.el);L.v=new THREE.Vector3(...L.p);});
@@ -3647,18 +3650,21 @@ const G3={on:false,ok:false};
    [-ZH,ZH].forEach(z=>{box(0.32,SB-1.1,0.2,M.warn,0,-(1.1+SB)/2,z,crHook,false);box(0.85,0.16,0.28,M.ink,0.05,-SB-0.32,z,crHook,false);box(0.14,0.5,0.28,M.ink,0.42,-SB-0.1,z,crHook,false);});}
   const carried=spoolModel(crHook);carried.g.position.y=-SB;carried.g.visible=false;
   const UNW=[-16.1,2.4,zc],REELP=[KX,DY,zc],parkP=k=>[-11.8-k*4.1,2.15,-0.2],SPOOLP=()=>[SPR.x-Math.max(0,rackSpools.filter(m=>m.g.visible).length-1)*1.2,0.75,SPR.z+0.6],ARMP=()=>[DX+Math.cos(105*Math.PI/180)*(DR+R0+0.35),DY+Math.sin(105*Math.PI/180)*(DR+R0+0.35),zc];
-  function craneUpdate(rdt){const nPark=Math.max(0,Math.ceil(S.winderBuf/P.jumbo-1e-6)-1);
+  function craneUpdate(rdt){const nPark=Math.max(0,reelsAtWinder()-1);
     if(CR.lastTurn<0){CR.lastTurn=S.tot.turnups;CR.lastPark=nPark;}
-    if(S.tot.turnups>CR.lastTurn){CR.lastTurn=S.tot.turnups;
-      if(CR.lastBuf<0.3){CR.jobs.push({a:REELP,b:UNW,kind:"unw",fromReel:true,delay:0.8});CR.hideUnwind=true;}
-      else{CR.jobs.push({a:REELP,b:parkP(Math.max(0,nPark-1)),kind:"park",fromReel:true,delay:0.8});CR.hidePark++;}
+    // v2.9.5: a turn-up and a stored reel going to the unwind can land in the same frame (fast game speeds): handle both,
+    // never one or the other, so the storage rail always matches the sim
+    let parksAdded=0;
+    if(S.tot.turnups>CR.lastTurn){const n=Math.min(2,S.tot.turnups-CR.lastTurn);CR.lastTurn=S.tot.turnups;
+      for(let i=0;i<n;i++){if(i===0&&CR.lastBuf<0.3){CR.jobs.push({a:REELP,b:UNW,kind:"unw",fromReel:true,delay:0.8});CR.hideUnwind=true;}
+        else{CR.jobs.push({a:REELP,b:parkP(Math.max(0,nPark-1)),kind:"park",fromReel:true,delay:0.8});parksAdded++;}}
       CR.jobs.push({a:SPOOLP(),b:ARMP(),kind:"spool"});}
-    else if(nPark<CR.lastPark&&S.winderBuf>0.3){CR.jobs.push({a:parkP(nPark),b:UNW,kind:"unw",fromPark:true});CR.hideUnwind=true;CR.extraPark=(CR.extraPark||0)+1;}
+    {const moved=Math.min(2,CR.lastPark+parksAdded-nPark);for(let i=0;i<moved;i++)if(S.winderBuf>0.3){CR.jobs.unshift({a:parkP(nPark+i),b:UNW,kind:"unw",fromPark:true});CR.hideUnwind=true;}}
     CR.lastPark=nPark;CR.lastBuf=S.winderBuf;
     while(CR.jobs.length>3){const j=CR.jobs.shift();if(j.fromPark)CR.extraPark=Math.max(0,(CR.extraPark||0)-1);if(j.kind==="park")CR.hidePark=Math.max(0,CR.hidePark-1);if(j.kind==="spool"){TU.armHas=true;TU.armT=9;}if(j.fromReel)TU.kick=false;}
     if(!CR.j&&!CR.jobs.length&&TU.t>4&&!TU.armHas){TU.armHas=true;TU.armT=9;}
     if(!CR.j&&CR.jobs.length){CR.j=CR.jobs.shift();CR.t=0;CR.j.s=[CR.x,CR.z];}
-    const per=P.jumbo/Math.max(5,S.rates.prod||30)*60/Math.max(1,C.simSpeed),T=clamp(per*0.75,0.9,5)*(CR.jobs.length?0.6:1);
+    const per=P.jumbo/Math.max(5,S.rates.prod||30)*60/Math.max(1,C.simSpeed),T=clamp(per*0.25,0.6,4)*(CR.jobs.length?0.7:1);   // v2.9.5: each reel makes up to 3 crane moves, so a move must take well under a third of a reel
     if(CR.j&&rdt>0&&(CR.j.delay||0)>0){CR.j.delay-=rdt;}
     else if(CR.j&&rdt>0){const j=CR.j;CR.t+=rdt/T;const u=CR.t,L=(a,b,k)=>a+(b-a)*clamp(k,0,1),hi=10.0;let x,z,y,on=false;
       if(u<0.2){x=L(j.s[0],j.a[0],u/0.2);z=L(j.s[1],j.a[2],u/0.2);y=hi;}
@@ -3987,7 +3993,7 @@ const G3={on:false,ok:false};
     const sr=0.3+0.7*Math.min(1,S.winderAcc/C.rollW.v);setRolls.forEach(r=>{r.scale.set(sr,sr,1);r.visible=S.wd!=="hayout";if(cutting)r.rotation.z-=rdt*10;});
     if(cutting){unwind.rotation.z+=rdt*6;drums.forEach(d=>d.rotation.z+=rdt*12);}
     web.visible=cutting&&unwind.visible;
-    const nPark=Math.min(parked.length,Math.max(0,nP0-CR.hidePark)+(CR.extraPark||0));parked.forEach((g,k)=>g.children[2].visible=g.children[3].visible=k<nPark);
+    const inFlight=[CR.j,...CR.jobs].filter(Boolean),nPark=clamp(nP0-inFlight.filter(j=>j.kind==="park"&&!j.dropped).length+inFlight.filter(j=>j.fromPark&&!j.picked).length,0,parked.length);parked.forEach((g,k)=>g.children[2].visible=g.children[3].visible=k<nPark);
     hayFx(rdt,now);
   }
 
