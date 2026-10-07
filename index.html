@@ -458,7 +458,7 @@ body{margin:0}
 </head>
 <body>
 
-<div class="ver" id="appVersion" aria-label="Version">v2.8.6</div>
+<div class="ver" id="appVersion" aria-label="Version">v2.8.7</div>
 <div class="wrap">
   <header>
     <div class="brand"><span class="logo" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linejoin="round"><circle cx="8.5" cy="12" r="5.5"/><circle cx="8.5" cy="12" r="1.6" fill="currentColor"/><path d="M8.5 6.5H20v11H8.5"/></svg></span>
@@ -742,15 +742,28 @@ const AUDIO=(()=>{
       else if(AMBON[k]!==false){AMBQ[k]=AMBQ[k]||t;if(t-AMBQ[k]>3){AMB[k].disconnect();AMBON[k]=false;}}
       AMB[k].gain.setTargetAtTime(v*({dryer:0.55,wet:0.45,stock:0.5,winder:0.5,fork:0.6,out:0.7}[k]),t,0.4);}}
   function setOn(v){if(v&&!ctx&&!init())return false;on=v;if(!ctx)return on;
-    if(!AUDIO_VIS){AUDIO_VIS=1;document.addEventListener("visibilitychange",()=>{if(!ctx)return;if(document.hidden)ctx.suspend();else if(on)ctx.resume();});}
+    if(!AUDIO_VIS){AUDIO_VIS=1;document.addEventListener("visibilitychange",()=>{if(!ctx)return;if(document.hidden)ctx.suspend();else if(on)wake();});
+      // phones (iOS above all) suspend or "interrupt" the audio on calls, lock screen, app switches or other audio, and only let it
+      // resume from a tap: so every tap/key wakes it, and it also tries on focus, pageshow and whenever the state changes
+      ["pointerdown","touchend","keydown","click"].forEach(ev=>document.addEventListener(ev,wake,{capture:true,passive:true}));
+      window.addEventListener("focus",wake);window.addEventListener("pageshow",wake);
+      ctx.onstatechange=()=>{if(on&&ctx.state!=="running"&&!document.hidden)wake();};}
     if(on){ctx.resume();if(!timer)timer=setInterval(tick,25);master.gain.setTargetAtTime(vol,ctx.currentTime,0.1);}
     else{master.gain.setTargetAtTime(0.0001,ctx.currentTime,0.08);setTimeout(()=>{if(!on&&ctx){clearInterval(timer);timer=null;ctx.suspend();}},400);}return on;}
+  // bring a suspended or interrupted context back; if the clock is frozen while "running" (an iOS quirk), bounce it
+  let lastCT=-1,stuckSince=0;
+  function wake(){if(!ctx||!on||document.hidden)return;try{if(ctx.state!=="running"){const p=ctx.resume();if(p&&p.catch)p.catch(()=>{});}
+      else if(stuckSince&&performance.now()-stuckSince>1500){stuckSince=0;ctx.suspend().then(()=>ctx.resume()).catch(()=>{});}
+      if(!timer)timer=setInterval(tick,25);master.gain.setTargetAtTime(vol,ctx.currentTime,0.1);}catch(e){}}
+  function watchdog(){if(!ctx||!on||document.hidden)return;
+    if(ctx.state!=="running"){wake();return;}
+    const ct=ctx.currentTime;if(ct===lastCT){if(!stuckSince)stuckSince=performance.now();}else stuckSince=0;lastCT=ct;if(stuckSince&&performance.now()-stuckSince>1500)wake();}
   function setVol(v){vol=v;if(ctx&&on)master.gain.setTargetAtTime(vol,ctx.currentTime,0.05);}
   function fadeTo(k){target=k;switchedAt=ctx.currentTime;const t=ctx.currentTime;
     if(k==="intense"){seqs.intense.step=0;seqs.intense.next=t+0.05;}else{seqs.chill.step=Math.ceil(seqs.chill.step/64)*64;}
     chillG.gain.setTargetAtTime(k==="chill"?1:0.0001,t,k==="chill"?1.2:0.35);intG.gain.setTargetAtTime(k==="intense"?1:0.0001,t,k==="intense"?0.3:1.2);}
   // switch to intense as soon as something goes wrong; ease back to chill after a few calm seconds
-  function update(intense){if(!ctx||!on)return;const now=performance.now();
+  function update(intense){if(!ctx||!on)return;watchdog();const now=performance.now();
     if(intense){calmSince=0;if(target!=="intense")fadeTo("intense");}
     else if(target==="intense"){if(!calmSince)calmSince=now;if(now-calmSince>4000)fadeTo("chill");}}
   // sound effects
