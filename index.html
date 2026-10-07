@@ -458,7 +458,7 @@ body{margin:0}
 </head>
 <body>
 
-<div class="ver" id="appVersion" aria-label="Version">v2.9.14</div>
+<div class="ver" id="appVersion" aria-label="Version">v2.9.15</div>
 <div class="wrap">
   <header>
     <div class="brand"><span class="logo" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linejoin="round"><circle cx="8.5" cy="12" r="5.5"/><circle cx="8.5" cy="12" r="1.6" fill="currentColor"/><path d="M8.5 6.5H20v11H8.5"/></svg></span>
@@ -2930,10 +2930,12 @@ const G3={on:false,ok:false};
   box(0.9,1.3,1.2,M.steel,29.7,TY-0.1,TZ,thk);box(0.9,TY-0.75,1.2,M.steel,29.7,(TY-0.75)/2,TZ,thk);
   {const mg=new CylG(0.5,0.5,1.4,16);mg.rotateZ(Math.PI/2);const mo=new THREE.Mesh(mg,M.brand);mo.position.set(30.9,TY-0.4,TZ);mo.castShadow=true;thk.add(mo);}
   // spider (filtrate) valve: splits the disk filtrate between the cloudy and clear seal chests. Click it to adjust (easter egg)
-  {const vg2=new CylG(0.62,0.62,0.5,16);vg2.rotateZ(Math.PI/2);const v=new THREE.Mesh(vg2,M.steel);v.position.set(22.65,TY,TZ);v.castShadow=true;thk.add(v);
-    const hw=new THREE.Mesh(new THREE.TorusGeometry(0.42,0.06,6,18),M.bad);hw.rotation.y=Math.PI/2;hw.position.set(22.25,TY+0.2,TZ);thk.add(hw);
-    const sp=new THREE.Mesh(new THREE.BoxGeometry(0.06,0.8,0.08),M.bad);sp.position.set(22.25,TY+0.2,TZ);thk.add(sp);const sp2=sp.clone();sp2.rotation.x=Math.PI/2;thk.add(sp2);
-    const hb=new THREE.Mesh(new SphG(1.5,8,6),new THREE.MeshBasicMaterial());hb.visible=false;hb.position.set(22.45,TY+0.1,TZ);thk.add(hb);
+  // v2.9.15: sits 0.8 m lower (it clipped the overhead pipe), fed by a short drop from the disk shaft
+  {const VY=TY-0.8;pipe([[22.65,TY,TZ],[22.65,VY+0.45,TZ]],0.2,M.steel,thk);
+    const vg2=new CylG(0.62,0.62,0.5,16);vg2.rotateZ(Math.PI/2);const v=new THREE.Mesh(vg2,M.steel);v.position.set(22.65,VY,TZ);v.castShadow=true;thk.add(v);
+    const hw=new THREE.Mesh(new THREE.TorusGeometry(0.42,0.06,6,18),M.bad);hw.rotation.y=Math.PI/2;hw.position.set(22.25,VY+0.2,TZ);thk.add(hw);
+    const sp=new THREE.Mesh(new THREE.BoxGeometry(0.06,0.8,0.08),M.bad);sp.position.set(22.25,VY+0.2,TZ);thk.add(sp);const sp2=sp.clone();sp2.rotation.x=Math.PI/2;thk.add(sp2);
+    const hb=new THREE.Mesh(new SphG(1.5,8,6),new THREE.MeshBasicMaterial());hb.visible=false;hb.position.set(22.45,VY+0.1,TZ);thk.add(hb);
     G3.spiderHit=[hb,v,hw,sp,sp2];G3.spiderWheel=hw;}
   // knock-off shower headers above the disks
   pipe([[22.8,TY+2.05,TZ+0.55],[29.2,TY+2.05,TZ+0.55]],0.09,M.metal,thk);pipe([[22.8,TY+2.05,TZ-0.55],[29.2,TY+2.05,TZ-0.55]],0.09,M.metal,thk);
