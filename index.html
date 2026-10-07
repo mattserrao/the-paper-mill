@@ -452,13 +452,13 @@ body{margin:0}
 #dealOv.dealres{background:transparent!important;pointer-events:none;-webkit-backdrop-filter:none;backdrop-filter:none}
 #dealOv.dealres .modal{pointer-events:auto;cursor:pointer;box-shadow:0 18px 50px rgba(28,34,51,.28)}
 #dealOv.dealres .dk{visibility:hidden}
-.dtimer{flex:1;height:4px;border-radius:2px;background:var(--line);overflow:hidden}.dtimer i{display:block;height:100%;width:100%;background:var(--brand);transform-origin:left;animation:dtim 5s linear forwards}
+.dtimer{flex:1;height:4px;border-radius:2px;background:var(--line);overflow:hidden}.dtimer i{display:block;height:100%;width:100%;background:var(--brand);transform-origin:left;animation:dtim 3s linear forwards}
 @keyframes dtim{to{transform:scaleX(0)}}
 </style>
 </head>
 <body>
 
-<div class="ver" id="appVersion" aria-label="Version">v2.8.0</div>
+<div class="ver" id="appVersion" aria-label="Version">v2.8.1</div>
 <div class="wrap">
   <header>
     <div class="brand"><span class="logo" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linejoin="round"><circle cx="8.5" cy="12" r="5.5"/><circle cx="8.5" cy="12" r="1.6" fill="currentColor"/><path d="M8.5 6.5H20v11H8.5"/></svg></span>
@@ -1352,12 +1352,12 @@ function openCard(c){const o=c.odds();S.cards.open={c,o};running=false;const pb=
     <div id="deal-res" class="dres" hidden></div>
     <div class="btns" id="deal-btns"><button id="deal-no">Decline</button><button id="deal-yes" class="primary">Accept</button></div></div>`;
   cardEl.classList.remove("dealres");clearTimeout(cardEl._t);cardEl.hidden=false;AUDIO.sfx("cash",150);
-  // one click: the decision resumes play straight away; the outcome stays on screen for 5 s (no backdrop, game running), then fades
+  // one click: the decision resumes play straight away; the outcome stays on screen for 3 s (no backdrop, game running), then fades
   const done=msg=>{const r=document.getElementById("deal-res");r.textContent=msg;r.hidden=false;
     document.getElementById("deal-btns").innerHTML='<div class="dtimer"><i></i></div>';
     closeCard(true);cardEl.classList.add("dealres");cardEl.hidden=false;clearTimeout(cardEl._t);
     const m=cardEl.querySelector(".modal");setTimeout(()=>m.addEventListener("click",()=>{cardEl.hidden=true;cardEl.classList.remove("dealres");},{once:true}),0);
-    cardEl._t=setTimeout(()=>{cardEl.hidden=true;cardEl.classList.remove("dealres");},5000);};
+    cardEl._t=setTimeout(()=>{cardEl.hidden=true;cardEl.classList.remove("dealres");},3000);};
   document.getElementById("deal-no").addEventListener("click",()=>{log(`Declined: ${c.title}`,"");done("Declined. Nothing changes.");});
   document.getElementById("deal-yes").addEventListener("click",()=>{const msg=c.accept({o});log(`Accepted: ${c.title} (${o}% chance). ${msg}`,"warn");S.M=mods();done(msg);});
   document.getElementById("deal-yes").focus();}
