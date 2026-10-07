@@ -458,7 +458,7 @@ body{margin:0}
 </head>
 <body>
 
-<div class="ver" id="appVersion" aria-label="Version">v2.9.8</div>
+<div class="ver" id="appVersion" aria-label="Version">v2.9.9</div>
 <div class="wrap">
   <header>
     <div class="brand"><span class="logo" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linejoin="round"><circle cx="8.5" cy="12" r="5.5"/><circle cx="8.5" cy="12" r="1.6" fill="currentColor"/><path d="M8.5 6.5H20v11H8.5"/></svg></span>
@@ -601,6 +601,14 @@ body{margin:0}
 
 <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
 <script>
+/* v2.9.9 diagnostics: a rolling log of errors, warnings (incl. three.js shader / WebGL context messages), audio state changes
+   and a stats snapshot every 15 s, shown from Controls > Diagnostics with a Copy button */
+const DIAG=[],DIAG_T0=performance.now();
+function diag(m){try{DIAG.push(((performance.now()-DIAG_T0)/1000).toFixed(1)+"s "+String(m).slice(0,400));if(DIAG.length>150)DIAG.shift();}catch(e){}}
+window.addEventListener("error",e=>diag("ERROR "+(e.message||e)+(e.lineno?" @"+e.lineno+":"+e.colno:"")));
+window.addEventListener("unhandledrejection",e=>diag("REJECT "+((e.reason&&e.reason.message)||e.reason)));
+["error","warn"].forEach(k=>{const f=console[k].bind(console);console[k]=(...a)=>{diag(k.toUpperCase()+" "+a.map(x=>x&&x.stack?x.message+" | "+String(x.stack).split("\n").slice(0,3).join(" < "):String(x)).join(" "));f(...a);};});
+document.addEventListener("visibilitychange",()=>diag("page "+(document.hidden?"hidden":"visible")));
 (()=>{
 /* ---- random brand colors and a wacky paper-themed mill name on every load ---- */
 const BRANDS=["#2f5bea","#0c8f7f","#d6336c","#6741d9","#e8590c","#1971c2","#2f9e44","#c2255c","#5f3dc4","#0b7285","#e03131","#9c36b5","#1098ad","#d9480f"];
@@ -710,7 +718,8 @@ const AUDIO=(()=>{
   function init(){const AC=window.AudioContext||window.webkitAudioContext;if(!AC)return false;
     // iPhone: play through the silent switch like a music app
     try{if(navigator.audioSession)navigator.audioSession.type="playback";}catch(e){}
-    ctx=new AC();
+    ctx=new AC();diag("audio: new context "+ctx.sampleRate+" Hz");
+    {const c=ctx;c.onstatechange=()=>{diag("audio state "+c.state);if(c===ctx&&on&&c.state!=="running"&&!document.hidden)wake();};}
     comp=ctx.createDynamicsCompressor();comp.threshold.value=-16;comp.ratio.value=3;master=ctx.createGain();master.gain.value=vol;comp.connect(master);master.connect(ctx.destination);
     musicBus=ctx.createGain();musicBus.gain.value=0.6;musicBus.connect(comp);sfxBus=ctx.createGain();sfxBus.gain.value=0.85;sfxBus.connect(comp);
     const warm=ctx.createBiquadFilter();warm.type="lowpass";warm.frequency.value=3200;warm.connect(musicBus);
@@ -746,13 +755,15 @@ const AUDIO=(()=>{
       if(v>0.001){AMBQ[k]=0;if(AMBON[k]===false){AMB[k].connect(ambG);AMBON[k]=true;}}
       else if(AMBON[k]!==false){AMBQ[k]=AMBQ[k]||t;if(t-AMBQ[k]>3){AMB[k].disconnect();AMBON[k]=false;}}
       AMB[k].gain.setTargetAtTime(v*({dryer:0.55,wet:0.45,stock:0.5,winder:0.5,fork:0.6,out:0.7}[k]),t,0.4);}}
-  function setOn(v){if(v&&!ctx&&!init())return false;on=v;if(!ctx)return on;
+  function setOn(v){const was=on,fresh=!ctx;if(v&&!ctx&&!init())return false;on=v;if(!ctx)return on;
+    // switching sound back on always starts a brand-new audio context: the sure way out of an iOS context that went silent
+    if(on&&!was&&!fresh&&AUDIO_VIS){rebuildAudio();return on;}
     if(!AUDIO_VIS){AUDIO_VIS=1;document.addEventListener("visibilitychange",()=>{if(!ctx)return;if(document.hidden)ctx.suspend();else if(on)wake();});
       // phones (iOS above all) suspend or "interrupt" the audio on calls, lock screen, app switches or other audio, and only let it
       // resume from a tap: so every tap/key wakes it, and it also tries on focus, pageshow and whenever the state changes
       ["pointerdown","touchend","keydown","click"].forEach(ev=>document.addEventListener(ev,wake,{capture:true,passive:true}));
       window.addEventListener("focus",wake);window.addEventListener("pageshow",wake);
-      ctx.onstatechange=()=>{if(on&&ctx.state!=="running"&&!document.hidden)wake();};}
+      }
     if(on){ctx.resume();if(!timer)timer=setInterval(tick,25);master.gain.setTargetAtTime(vol,ctx.currentTime,0.1);}
     else{master.gain.setTargetAtTime(0.0001,ctx.currentTime,0.08);setTimeout(()=>{if(!on&&ctx){clearInterval(timer);timer=null;ctx.suspend();}},400);}return on;}
   // bring a suspended or interrupted context back; if the clock is frozen while "running" (an iOS quirk), bounce it
@@ -760,7 +771,7 @@ const AUDIO=(()=>{
   let rebuildT=0;
   function rebuildAudio(){try{clearInterval(timer);timer=null;}catch(e){}const old=ctx;try{old.close();}catch(e){}
     ctx=null;ambG=null;for(const k in AMB)delete AMB[k];for(const k in AMBON)delete AMBON[k];for(const k in AMBQ)delete AMBQ[k];
-    if(!init())return;master.gain.value=vol;timer=setInterval(tick,25);try{ctx.resume();}catch(e){}console.warn("audio: context rebuilt");}
+    if(!init())return;master.gain.value=vol;timer=setInterval(tick,25);try{ctx.resume();}catch(e){}diag("audio: context rebuilt");}
   function wake(e){const fromTap=!!(e&&e.type&&/pointer|touch|key|click/.test(e.type));if(!ctx||!on||document.hidden)return;
     if(fromTap&&ctx.state!=="running"){clearTimeout(rebuildT);rebuildT=setTimeout(()=>{if(on&&ctx&&ctx.state!=="running"&&!document.hidden)rebuildAudio();},700);}
     try{if(ctx.state!=="running"){const p=ctx.resume();if(p&&p.catch)p.catch(()=>{});}
@@ -820,7 +831,7 @@ const AUDIO=(()=>{
       tt+=0.35;}}
   FX.pa=paAnnounce;let paNext=0;
   function sfx(name,gap=1200){if(!ctx||!on||!FX[name])return;const now=performance.now();if(now-(last[name]||0)<gap||now-(last._any||0)<250)return;last[name]=now;last._any=now;FX[name](ctx.currentTime+0.02);}
-  return {setOn,setVol,update,sfx,ambient,event:id=>sfx(EVSFX[id]||"alarm"),get on(){return on;}};
+  return {setOn,setVol,update,sfx,ambient,event:id=>sfx(EVSFX[id]||"alarm"),get on(){return on;},get info(){return ctx?ctx.state+" t="+ctx.currentTime.toFixed(1)+(stuckSince?" (clock stuck)":""):"none";}};
 })();
 
 const GRADES={ "23m":{sp:2736,bw:24.55}, "26m":{sp:2433,bw:26.06}, "30m":{sp:2222,bw:30.05}, "33HT":{sp:2084,bw:33.08} };
@@ -4720,7 +4731,7 @@ const HTML_V2='<div class="v2top" id="v2top">\n  <button class="v2card v2ibtn" i
 const FRAME_CAP=matchMedia("(pointer: coarse)").matches?30:0;G3.cap=FRAME_CAP;
 let last=performance.now(),uiAcc=0,lastPaint=0;
 const paneShown=el=>{if(!el)return false;const p=el.closest(".v2pane");return p?document.body.classList.contains("sheet-open")&&p.classList.contains("on"):true;};
-function frame(now){
+function frame(now){frame.n=(frame.n||0)+1;
   if(BANNERS.length){const b=BANNERS[0];if(b.t===null)b.t=now;if(now-b.t>5000)BANNERS.shift();}
   if(FRAME_CAP&&now-last<1000/FRAME_CAP-3){requestAnimationFrame(frame);return;}
   const rdt=Math.max(0,Math.min(0.1,(now-last)/1000));last=now;
@@ -4738,6 +4749,25 @@ function frame(now){
 }
 syncControls();updateText();updateChaos();updateShop();
 requestAnimationFrame(frame);
+// ---- diagnostics snapshot + panel ----
+(()=>{let lastN=0,lastT=performance.now();
+  const snap=()=>{try{const t=performance.now(),fps=((frame.n||0)-lastN)/((t-lastT)/1000);lastN=frame.n||0;lastT=t;const R=G3.renderer,I=R&&R.info;
+    diag(`snap fps=${fps.toFixed(0)} running=${running} day=${(S.t/1440).toFixed(2)} pm=${S.pm} wd=${S.wd} inc=[${S.inc.map(i=>i.id).join(",")}] audio=${AUDIO.info} on=${AUDIO.on}`+
+      (I?` calls=${I.render.calls} tris=${I.render.triangles} geo=${I.memory.geometries} tex=${I.memory.textures} prog=${I.programs?I.programs.length:"?"}`:"")+
+      (G3.SM?` merged=${G3.SM.list.length}${G3.SM.done?"":" (merging)"}`:"")+(performance.memory?` heap=${(performance.memory.usedJSHeapSize/1e6).toFixed(0)}MB`:"")+(G3.lost?" GL-LOST":""));}catch(e){diag("snap failed "+e.message);}};
+  setInterval(snap,15000);setTimeout(snap,3000);
+  function header(){let gl="";try{const g=G3.renderer.getContext(),ext=g.getExtension("WEBGL_debug_renderer_info");
+      gl=`${G3.renderer.capabilities.isWebGL2?"WebGL2":"WebGL1"} ${ext?g.getParameter(ext.UNMASKED_RENDERER_WEBGL):""} maxTex=${g.getParameter(g.MAX_TEXTURE_SIZE)} fragUnif=${g.getParameter(g.MAX_FRAGMENT_UNIFORM_VECTORS)} lost=${g.isContextLost()}`;}catch(e){gl="no GL info";}
+    return `Paper Mill ${document.getElementById("appVersion").textContent} · ${new Date().toISOString()}\n${navigator.userAgent}\nscreen ${screen.width}x${screen.height} dpr=${devicePixelRatio} · ${gl}\n`;}
+  function open(){snap();let d=document.getElementById("diagOv");if(!d){d=document.createElement("div");d.id="diagOv";
+      d.style.cssText="position:fixed;inset:12px;z-index:400;background:var(--panel,#fff);color:var(--ink,#111);border:1px solid var(--line,#ccc);border-radius:12px;box-shadow:0 12px 40px rgba(0,0,0,.3);display:flex;flex-direction:column;padding:10px;gap:8px";
+      d.innerHTML='<div style="display:flex;gap:8px;align-items:center"><b style="flex:1;font:700 15px system-ui">Diagnostics</b><button id="diagCopy">Copy</button><button id="diagClose">Close</button></div><pre id="diagTxt" style="flex:1;overflow:auto;margin:0;font:11px/1.35 ui-monospace,monospace;white-space:pre-wrap;word-break:break-word"></pre>';
+      document.body.appendChild(d);d.querySelector("#diagClose").onclick=()=>d.hidden=true;
+      d.querySelector("#diagCopy").onclick=()=>{const t=d.querySelector("#diagTxt").textContent;(navigator.clipboard?navigator.clipboard.writeText(t):Promise.reject()).then(()=>{d.querySelector("#diagCopy").textContent="Copied";},()=>{const r=document.createRange();r.selectNodeContents(d.querySelector("#diagTxt"));const s=getSelection();s.removeAllRanges();s.addRange(r);});};}
+    d.querySelector("#diagCopy").textContent="Copy";d.querySelector("#diagTxt").textContent=header()+"\n"+DIAG.slice().reverse().join("\n");d.hidden=false;}
+  const b=document.createElement("button");b.id="diagBtn";b.textContent="Diagnostics";b.addEventListener("click",open);
+  const row=document.getElementById("v2ctlrow");if(row)row.appendChild(b);else document.body.appendChild(b);
+  window.__openDiag=open;})();
 })();
 </script>
 
