@@ -458,7 +458,7 @@ body{margin:0}
 </head>
 <body>
 
-<div class="ver" id="appVersion" aria-label="Version">v2.9.15</div>
+<div class="ver" id="appVersion" aria-label="Version">v2.9.16</div>
 <div class="wrap">
   <header>
     <div class="brand"><span class="logo" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linejoin="round"><circle cx="8.5" cy="12" r="5.5"/><circle cx="8.5" cy="12" r="1.6" fill="currentColor"/><path d="M8.5 6.5H20v11H8.5"/></svg></span>
@@ -4489,6 +4489,27 @@ const G3={on:false,ok:false};
     if(!SM.done&&!SM.queue&&SM.mergeAt&&now>=SM.mergeAt){try{smMerge();}catch(e){console.error("static merge failed",e);SM.off=true;SM.list.forEach(r=>r.o.layers.set(0));}return;}
     if(SM.done&&now>SM.checkT){SM.checkT=now+500;try{smWatch();}catch(e){}}}
   const TRUCK_FAR=330;
+
+  // ---- v2.9.16 zen camera moves: scripted shots that drive the camera every frame ----
+  // each returns [tx,ty,tz, r, th, ph] or null when finished (th: 0 = looking from +z, ph: 0 = straight down, PI/2 = level)
+  const ease=u=>u<0?0:u>1?1:u*u*(3-2*u),mix=(a,b,u)=>a+(b-a)*u,_zv=new THREE.Vector3();
+  let zenMovesCache=null;
+  function zenMoves(){if(zenMovesCache)return zenMovesCache;const LEND=PLEN[PLEN.length-1],TUB=[16,1.2,-13.5];
+    zenMovesCache=[
+      // ride a bale down the walking floor, under the guillotine, up the incline and into the pulper tub
+      {name:"bale ride",dur:30,ok:()=>S.rates.feed>0.3&&!S.M.pulperDown,
+        start:()=>({d:Math.max(0.5,wfOff%2.6+2.6),hold:0}),
+        at:(t,mv,rdt)=>{const st=mv.st,sp=Math.min(2.2,0.35+S.rates.feed*0.03);if(S.rates.feed>0.3)st.d+=rdt*sp;
+          if(st.d<=LEND)pathAt(st.d,_zv);else{const e=Math.min(1,(st.d-LEND)/3);_zv.set(mix(cB.x,TUB[0],e),mix(cB.y+0.6,TUB[1],e),mix(cB.z,TUB[2],e));st.hold+=st.d>LEND+3?rdt:0;}
+          if(st.hold>2.5||t>40)return null;const up=clamp(st.d/LEND,0,1);
+          return [_zv.x,_zv.y,_zv.z,mix(48,62,up),Math.PI-0.45+0.2*Math.sin(t*0.15),mix(1.0,0.88,up)];}},
+      // low dolly down the forming section: headbox, wire and forming table, into the presses
+      {name:"forming sweep",dur:12,ok:()=>true,
+        at:(t)=>{if(t>12)return null;const u=ease(t/12);return [mix(58,31,u),2.4,zc,mix(40,52,u),mix(0.25,0.75,u),1.1];}},
+      // bird's eye: straight down over receiving, then swoop along the line and settle low over the dryers
+      {name:"bird's eye swoop",dur:14,ok:()=>true,
+        at:(t)=>{if(t>14)return null;const u=ease(t/14),v=ease((t-3)/11);return [mix(-24,14,u),mix(0,3,v),mix(-8,zc,u),mix(300,110,v),mix(-0.2,0.7,u),mix(0.1,1.02,v)];}}];
+    return zenMovesCache;}
   // v2.9.11 performance profiler: when G3.PF.on, time each section of the 3D frame (ms accumulated per section)
   const PF=G3.PF={on:false,t:0,acc:{},frames:0};const pm=k=>{if(!PF.on)return;const t=performance.now();PF.acc[k]=(PF.acc[k]||0)+(t-PF.t);PF.t=t;};
   G3.EXP={};let moversCache=null;
@@ -4640,8 +4661,12 @@ const G3={on:false,ok:false};
     // and picks a look: half the shots are the plain camera, the rest one of the approved grades
     if(G3.zen){const Z=G3.zenS||(G3.zenS={i:0,t:99,tg:new THREE.Vector3(),r:300,th:-0.2,who:null,fo:0});Z.t+=rdt;
       const POI=[[-14,5,300,-0.2],[20,9,120,-0.5],[24,-10,95,0.4],[-20,14,80,-1.2],[-25,-18,110,0.9],[20,-40,120,2.6],[70,-10,110,-2.2],[-60,10,130,0.1],[10,9,170,2.9],[40,10,70,0.6],[-36,24,90,-0.8]];
-      if(Z.t>10){Z.t=0;const ops=G3.followable?G3.followable().filter(w=>w.visible):[];
-        if(Z.goto){Z.who=null;Z.tg.set(Z.goto[0],0,Z.goto[1]);Z.r=55;Z.th=-0.3+(Math.random()-0.5)*0.8;Z.goto=null;}
+      if(Z.t>10){Z.t=0;Z.mv=null;const ops=G3.followable?G3.followable().filter(w=>w.visible):[];
+        const MV=zenMoves();
+        if(!Z.goto&&Math.random()<0.35){const ok=MV.filter(m=>m.ok());if(ok.length){const m=ok[Math.floor(Math.random()*ok.length)];Z.mv={m,t:0,st:m.start?m.start():null};Z.who=null;Z.t=-(m.dur-10);
+            const lk=["dusk","gold","airy","hc","bw"],cur2=document.body.dataset.zs,pl2=lk.filter(l=>l!==cur2);document.body.dataset.zs=Math.random()<0.5?"none":pl2[Math.floor(Math.random()*pl2.length)];}}
+        if(Z.mv){}
+        else if(Z.goto){Z.who=null;Z.tg.set(Z.goto[0],0,Z.goto[1]);Z.r=55;Z.th=-0.3+(Math.random()-0.5)*0.8;Z.goto=null;}
         else if(ops.length&&Math.random()<0.45){Z.who=ops[Math.floor(Math.random()*ops.length)];Z.fo=6+Math.random()*3;Z.r=34+Math.random()*14;Z.th=(Math.random()-0.5)*2.4;Z.tg.set(Z.who.position.x,0,Z.who.position.z);}
         else{Z.who=null;Z.i=(Z.i+1+Math.floor(Math.random()*(POI.length-1)))%POI.length;const q=POI[Z.i];Z.tg.set(q[0],0,q[1]);Z.r=q[2];Z.th=q[3];}
         // hard cut: jump the camera straight to the new shot
@@ -4651,7 +4676,8 @@ const G3={on:false,ok:false};
         document.body.dataset.zs=nx;}
       Z.dis=(Z.dis??40)-rdt;if(Z.dis<=0){Z.dis=60+Math.random()*60;const safe=["fogfan","flares","runner"].filter(id=>!S.inc.some(i=>i.id===id));if(safe.length){const id=safe[Math.floor(Math.random()*safe.length)];trigger(id,true);Z.goto=G3.spotOf(id);Z.t=99;}}
       if(Z.who){Z.fo-=rdt;if(Z.fo<=0){Z.who=null;Z.r=Math.min(140,Z.r*2.6);}else{const p=Z.who.position;Z.tg.set(p.x,0,p.z);}}
-      const k=Math.min(1,rdt*(Z.who?0.6:0.1));goal=null;target.lerp(Z.tg,k);cam.r+=(Z.r-cam.r)*k*0.5;cam.th=lerpAng(cam.th,Z.th+Math.sin(now/26000)*0.3,k*0.5)+rdt*0.015;cam.ph+=(0.8+0.08*Math.sin(now/31000)-cam.ph)*k;}
+      if(Z.mv){goal=null;Z.mv.t+=rdt;const f=Z.mv.m.at(Z.mv.t,Z.mv,rdt);if(!f){Z.mv=null;Z.t=99;}else{target.set(f[0],f[1],f[2]);cam.r=f[3];cam.th=f[4];cam.ph=f[5];Z.tg.copy(target);Z.r=f[3];Z.th=f[4];}}
+      else{const k=Math.min(1,rdt*(Z.who?0.6:0.1));goal=null;target.lerp(Z.tg,k);cam.r+=(Z.r-cam.r)*k*0.5;cam.th=lerpAng(cam.th,Z.th+Math.sin(now/26000)*0.3,k*0.5)+rdt*0.015;cam.ph+=(0.8+0.08*Math.sin(now/31000)-cam.ph)*k;}}
     pm("zen / camera shots");G3.padTick(rdt);G3.labelIdle(now);upUpdate(now);pm("upgrade visuals");fxUpdate(rdt,now);pm("upset effects + particles");
     // area ambience: how close the camera is, and which part of the mill it's looking at
     G3.ambT=(G3.ambT||0)+rdt;if(G3.ambT>0.25){G3.ambT=0;const zk=clamp((150-cam.r)/90,0,1),x=target.x,z=target.z,near=(cx,cz,r)=>zk*clamp(1.3-Math.hypot(x-cx,z-cz)/r,0,1);
