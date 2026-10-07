@@ -458,7 +458,7 @@ body{margin:0}
 </head>
 <body>
 
-<div class="ver" id="appVersion" aria-label="Version">v2.9.7</div>
+<div class="ver" id="appVersion" aria-label="Version">v2.9.8</div>
 <div class="wrap">
   <header>
     <div class="brand"><span class="logo" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linejoin="round"><circle cx="8.5" cy="12" r="5.5"/><circle cx="8.5" cy="12" r="1.6" fill="currentColor"/><path d="M8.5 6.5H20v11H8.5"/></svg></span>
@@ -625,7 +625,7 @@ document.getElementById("reroll").addEventListener("click",rollMill);
   el.addEventListener("blur",()=>done(true));})();
 /* ---- generative music and sound effects (Web Audio, no files) ---- */
 const AUDIO=(()=>{
-  const LOOK=matchMedia("(pointer: coarse)").matches?0.5:0.3;let AUDIO_VIS=0,ctx=null,master,comp,musicBus,sfxBus,chillG,intG,crackleG,mcG,verb,noiseBuf,timer=null,on=false,vol=0.7,target="chill",calmSince=0,switchedAt=0;
+  const AMOB=matchMedia("(pointer: coarse)").matches,LOOK=AMOB?0.5:0.3;let AUDIO_VIS=0,ctx=null,master,comp,musicBus,sfxBus,chillG,intG,crackleG,mcG,verb,noiseBuf,timer=null,on=false,vol=0.7,target="chill",calmSince=0,switchedAt=0;
   const mtof=m=>440*Math.pow(2,(m-69)/12),last={};
   function nz(t,dur,bus,v,type,f,q=0.8,attack=0.002){const s=ctx.createBufferSource();s.buffer=noiseBuf;s.loop=true;const fl=ctx.createBiquadFilter();fl.type=type;fl.frequency.setValueAtTime(f,t);fl.Q.value=q;
     const g=ctx.createGain();g.gain.setValueAtTime(0.0001,t);g.gain.exponentialRampToValueAtTime(v,t+attack);g.gain.exponentialRampToValueAtTime(0.0001,t+dur);s.connect(fl);fl.connect(g);g.connect(bus);s.start(t,Math.random()*1.5);s.stop(t+dur+0.05);return {s,fl,g};}
@@ -716,11 +716,12 @@ const AUDIO=(()=>{
     const warm=ctx.createBiquadFilter();warm.type="lowpass";warm.frequency.value=3200;warm.connect(musicBus);
     chillG=ctx.createGain();chillG.gain.value=1;chillG.connect(warm);crackleG=ctx.createGain();crackleG.gain.value=1;crackleG.connect(chillG);
     mcG=ctx.createGain();mcG.gain.value=1.15;mcG.connect(chillG);
-    {verb=ctx.createConvolver();const len=Math.floor(ctx.sampleRate*1.5),b=ctx.createBuffer(2,len,ctx.sampleRate);for(let c=0;c<2;c++){const d=b.getChannelData(c);for(let i=0;i<len;i++)d[i]=(Math.random()*2-1)*Math.pow(1-i/len,2.8);}
+    if(AMOB){verb=ctx.createGain();verb.gain.value=0;verb.connect(chillG);}
+    else{verb=ctx.createConvolver();const len=Math.floor(ctx.sampleRate*1.5),b=ctx.createBuffer(2,len,ctx.sampleRate);for(let c=0;c<2;c++){const d=b.getChannelData(c);for(let i=0;i<len;i++)d[i]=(Math.random()*2-1)*Math.pow(1-i/len,2.8);}
      verb.buffer=b;const vg=ctx.createGain();vg.gain.value=0.5;verb.connect(vg);vg.connect(chillG);}
     intG=ctx.createGain();intG.gain.value=0;intG.connect(musicBus);
     noiseBuf=ctx.createBuffer(1,ctx.sampleRate*2,ctx.sampleRate);const d=noiseBuf.getChannelData(0);for(let i=0;i<d.length;i++)d[i]=Math.random()*2-1;
-    startCrackle();ambInit();for(const k in seqs)seqs[k].next=ctx.currentTime+0.1;return true;}
+    if(!AMOB){startCrackle();ambInit();}for(const k in seqs)seqs[k].next=ctx.currentTime+0.1;paNext=0;return true;}
   // ---- area ambience when zoomed in: dryer rumble and steam hiss, wet-end and stock-prep water, winder whir, forklifts, birds outside ----
   let zoomK=0,ambG=null;const AMB={};const lv={dryer:0,wet:0,stock:0,winder:0,fork:0,out:0};let beepAt=0,birdAt=0;
   function loopNoise(type,f,q,g0){const s=ctx.createBufferSource();s.buffer=noiseBuf;s.loop=true;const fl=ctx.createBiquadFilter();fl.type=type;fl.frequency.value=f;fl.Q.value=q;const g=ctx.createGain();g.gain.value=g0;s.connect(fl);fl.connect(g);s.start(0,Math.random()*1.5);return {g,fl};}
@@ -756,7 +757,13 @@ const AUDIO=(()=>{
     else{master.gain.setTargetAtTime(0.0001,ctx.currentTime,0.08);setTimeout(()=>{if(!on&&ctx){clearInterval(timer);timer=null;ctx.suspend();}},400);}return on;}
   // bring a suspended or interrupted context back; if the clock is frozen while "running" (an iOS quirk), bounce it
   let lastCT=-1,stuckSince=0;
-  function wake(e){const fromTap=!!(e&&e.type&&/pointer|touch|key|click/.test(e.type));if(!ctx||!on||document.hidden)return;try{if(ctx.state!=="running"){const p=ctx.resume();if(p&&p.catch)p.catch(()=>{});}
+  let rebuildT=0;
+  function rebuildAudio(){try{clearInterval(timer);timer=null;}catch(e){}const old=ctx;try{old.close();}catch(e){}
+    ctx=null;ambG=null;for(const k in AMB)delete AMB[k];for(const k in AMBON)delete AMBON[k];for(const k in AMBQ)delete AMBQ[k];
+    if(!init())return;master.gain.value=vol;timer=setInterval(tick,25);try{ctx.resume();}catch(e){}console.warn("audio: context rebuilt");}
+  function wake(e){const fromTap=!!(e&&e.type&&/pointer|touch|key|click/.test(e.type));if(!ctx||!on||document.hidden)return;
+    if(fromTap&&ctx.state!=="running"){clearTimeout(rebuildT);rebuildT=setTimeout(()=>{if(on&&ctx&&ctx.state!=="running"&&!document.hidden)rebuildAudio();},700);}
+    try{if(ctx.state!=="running"){const p=ctx.resume();if(p&&p.catch)p.catch(()=>{});}
       else if(fromTap&&stuckSince&&performance.now()-stuckSince>1500){stuckSince=0;ctx.suspend().then(()=>ctx.resume()).catch(()=>{});}
       if(!timer)timer=setInterval(tick,25);master.gain.setTargetAtTime(vol,ctx.currentTime,0.1);}catch(e){}}
   function watchdog(){if(!ctx||!on||document.hidden)return;
@@ -2158,9 +2165,17 @@ const G3={on:false,ok:false};
   if(typeof THREE==="undefined"){toggle.hidden=true;return;}
   let renderer;
   // if the phone/GPU drops the WebGL context (memory pressure), ask the browser to give it back instead of leaving a frozen picture
-  glc.addEventListener("webglcontextlost",e=>{e.preventDefault();G3.lost=true;console.warn("WebGL context lost; waiting for restore");},false);
-  glc.addEventListener("webglcontextrestored",()=>{G3.lost=false;console.warn("WebGL context restored");},false);
-  try{renderer=new THREE.WebGLRenderer({canvas:glc,antialias:true,powerPreference:"high-performance"});}
+  glc.addEventListener("webglcontextlost",e=>{e.preventDefault();G3.lost=true;console.warn("WebGL context lost; waiting for restore");
+    // if the phone doesn't hand the graphics back, say so plainly and offer a reload instead of leaving a frozen picture
+    setTimeout(()=>{if(!G3.lost||document.getElementById("glLostMsg"))return;const d=document.createElement("div");d.id="glLostMsg";
+      d.style.cssText="position:fixed;inset:auto 16px 96px 16px;z-index:300;background:var(--panel,#fff);color:var(--ink,#111);border:1px solid var(--line,#ccc);border-radius:12px;padding:12px 14px;font:500 14px system-ui;box-shadow:0 10px 30px rgba(0,0,0,.25);display:flex;gap:10px;align-items:center";
+      d.innerHTML='<span style="flex:1">Your device reset the 3D graphics (low memory).</span><button style="font:600 14px system-ui;padding:8px 12px;border-radius:8px">Reload</button>';
+      d.querySelector("button").onclick=()=>location.reload();document.body.appendChild(d);},4000);},false);
+  glc.addEventListener("webglcontextrestored",()=>{G3.lost=false;console.warn("WebGL context restored");{const m=document.getElementById("glLostMsg");if(m)m.remove();}
+    try{G3.scene&&G3.scene.traverse(o=>{const ms=o.material?(Array.isArray(o.material)?o.material:[o.material]):[];ms.forEach(m=>{m.needsUpdate=true;["map","alphaMap","emissiveMap"].forEach(k=>{if(m[k])m[k].needsUpdate=true;});});
+      if(o.geometry&&o.geometry.attributes)for(const k in o.geometry.attributes)o.geometry.attributes[k].needsUpdate=true;if(o.geometry&&o.geometry.index)o.geometry.index.needsUpdate=true;});
+      if(G3.renderer)G3.renderer.shadowMap.needsUpdate=true;}catch(e){}},false);
+  try{renderer=new THREE.WebGLRenderer({canvas:glc,antialias:!matchMedia("(pointer: coarse)").matches,powerPreference:"high-performance"});}
   catch(e){toggle.hidden=true;return;}
   if(!renderer.getContext()){toggle.hidden=true;return;}
   G3.ok=true;
@@ -2176,7 +2191,7 @@ const G3={on:false,ok:false};
   class CircG extends THREE.CircleGeometry{constructor(r=1,sg=32,...x){super(r,Math.max(3,Math.min(sg,32)),...x);}}
   renderer.shadowMap.enabled=true;renderer.shadowMap.type=THREE.PCFSoftShadowMap;
   renderer.outputEncoding=THREE.sRGBEncoding;renderer.toneMapping=THREE.ACESFilmicToneMapping;renderer.toneMappingExposure=1.12;
-  const scene=new THREE.Scene();
+  const scene=new THREE.Scene();G3.scene=scene;G3.renderer=renderer;
   const camera=new THREE.PerspectiveCamera(18,16/9,2,1400);
 
   /* palette: every material is bound to a CSS token so theme switches recolor the scene */
@@ -3598,14 +3613,14 @@ const G3={on:false,ok:false};
     f.up=def?def(g):()=>{};f.el.className="lbl inc bad";f.el.addEventListener("click",()=>G3.flyTo(id));f.el.append(document.createElement("b"),document.createElement("span"));incHost.appendChild(f.el);f.el.hidden=true;return f;}
   let warmAt=0;
   let hayWarm=false;
-  function warmFX(now){if(now<warmAt)return;warmAt=now+1500;
+  function warmFX(now){if(now<warmAt)return;warmAt=now+(mobile?4000:1500);
     if(!hayWarm&&G3.hayParts){hayWarm=true;try{const kids=scene.children,vis=kids.map(o=>o.visible);kids.forEach(o=>{if(!o.isLight)o.visible=false;});G3.hayParts.forEach(o=>o.visible=true);
       renderer.compile(scene,camera);kids.forEach((o,i)=>o.visible=vis[i]);G3.hayParts.forEach(o=>o.visible=false);}catch(e){}return;}const id=EVENTS.map(e=>e.id).find(k=>!FX[k]&&!S.inc.some(i=>i.id===k));if(!id)return;
     try{const f=makeFX(id),kids=scene.children,vis=kids.map(o=>o.visible);
       // compile only the new effect: hide everything else except the lights (so the shaders match), then restore
       kids.forEach(o=>{if(!o.isLight&&o!==f.g)o.visible=false;});f.g.visible=true;renderer.compile(scene,camera);kids.forEach((o,i)=>o.visible=vis[i]);f.g.visible=false;}catch(e){}}
   function fxUpdate(rdt,now){
-    if(running&&performance.now()>8000)warmFX(now);
+    if(running&&performance.now()>(mobile?30000:8000)&&SM.done)warmFX(now);
     for(const id in FX){FX[id].g.visible=false;FX[id].el.hidden=true;}
     [wireLoop,...feltMeshes].forEach(m=>{m.scale.z=1;m.visible=true;});clothTick(now,rdt);
     const doTxt=now-lastIncTxt>200;if(doTxt)lastIncTxt=now;const w=host.clientWidth,hh=host.clientHeight;
@@ -4375,7 +4390,7 @@ const G3={on:false,ok:false};
     keep.forEach(r=>{const o=r.o,g=o.geometry;if(!g.boundingSphere)g.computeBoundingSphere();_smV.copy(g.boundingSphere.center).applyMatrix4(o.matrixWorld);
       const line=!!o.isLineSegments,uv=!!g.attributes.uv,key=[line?"L":"M",o.material.uuid,o.castShadow?1:0,o.receiveShadow?1:0,uv?1:0,Math.floor(_smV.x/SMCELL),Math.floor(_smV.z/SMCELL)].join("|");
       let b=SM.batches.get(key);if(!b){b={recs:[],mat:o.material,line,uv,cast:o.castShadow,recv:o.receiveShadow,mesh:null};SM.batches.set(key,b);}
-      b.recs.push(r);r.key=key;o.layers.set(SMLAYER);});
+      b.recs.push(r);r.key=key;});
     // roofs fade with zoom, so each roof is merged inside its own group (it keeps fading and hiding as a whole)
     let roofN=0;roofs.forEach((g,gi)=>{g.updateMatrixWorld(true);const inv=new THREE.Matrix4().copy(g.matrixWorld).invert();
       g.traverse(o=>{if(o===g||!smOK(o)&&!(o.isMesh&&o.material&&!Array.isArray(o.material)&&o.material.transparent))return;if(o.isInstancedMesh||Array.isArray(o.material)||o.layers.mask!==1)return;
@@ -4383,18 +4398,24 @@ const G3={on:false,ok:false};
         let x=o;for(;x&&x!==g;x=x.parent)if(!x.visible)return;
         const line=!!o.isLineSegments;if(!line&&!o.isMesh)return;const uv=!!a.uv,key=["R",gi,line?"L":"M",o.material.uuid,o.castShadow?1:0,o.receiveShadow?1:0,uv?1:0].join("|");
         let b=SM.batches.get(key);if(!b){b={recs:[],mat:o.material,line,uv,cast:o.castShadow,recv:o.receiveShadow,mesh:null,parent:g,roof:true};SM.batches.set(key,b);}
-        b.recs.push({o,mw:new THREE.Matrix4().multiplyMatrices(inv,o.matrixWorld),key});o.layers.set(SMLAYER);roofN++;});});
-    SM.list=keep;SM.batches.forEach((b,k)=>smBuild(k));SM.done=true;
+        b.recs.push({o,mw:new THREE.Matrix4().multiplyMatrices(inv,o.matrixWorld),key});roofN++;});});
+    SM.list=keep;SM.queue=[...SM.batches.keys()];SM.roofN=roofN;}
+  // v2.9.8: batches are built a few per frame (no single long stall at start-up, which phones punish)
+  function smStep(){const N=mobile?6:30;for(let i=0;i<N&&SM.queue.length;i++){const key=SM.queue.shift(),b=SM.batches.get(key);
+      if(!b.roof)b.recs=b.recs.filter(r=>smSame(r));smBuild(key);b.recs.forEach(r=>r.o.layers.set(SMLAYER));}
+    if(SM.queue.length)return;
+    SM.list=SM.list.filter(r=>r.o.layers.mask!==1);SM.done=true;
     {const keepGeo=new Set();scene.traverse(o=>{if(o.geometry&&o.layers.mask===1)keepGeo.add(o.geometry);});const freed=new Set();
       SM.batches.forEach(b=>b.recs.forEach(r=>{const g=r.o.geometry;if(!keepGeo.has(g)&&!freed.has(g)){freed.add(g);g.dispose();}}));}
-    console.info(`static merge: ${keep.length} objects + ${roofN} roof parts into ${SM.batches.size} batches`);}
+    console.info(`static merge: ${SM.list.length} objects + ${SM.roofN} roof parts into ${SM.batches.size} batches`);}
   // anything that changes after the merge is handed back (drawn on its own again) and its batch rebuilt
   function smWatch(){const dirty=SM.dirty||(SM.dirty=new Set());SM.list=SM.list.filter(r=>{if(smSame(r))return true;r.o.layers.set(0);SM.dyn.add(r.o);const b=SM.batches.get(r.key);
       b.recs=b.recs.filter(x=>x!==r);dirty.add(r.key);return false;});
     let n=0;for(const k of [...dirty]){if(n++>=2)break;dirty.delete(k);smBuild(k);}}
-  function smTick(now){if(SM.off)return;if(!SM.snapAt){SM.snapAt=now+2500;return;}
+  function smTick(now){if(SM.off)return;if(!SM.snapAt){SM.snapAt=now+(mobile?12000:2500);return;}
+    if(SM.queue&&SM.queue.length){try{smStep();}catch(e){console.error("static merge failed",e);SM.off=true;SM.queue=[];}return;}
     if(!SM.list.length&&!SM.done&&now>=SM.snapAt){smSnapshot();SM.mergeAt=now+2500;return;}
-    if(!SM.done&&SM.mergeAt&&now>=SM.mergeAt){try{smMerge();}catch(e){console.error("static merge failed",e);SM.off=true;SM.list.forEach(r=>r.o.layers.set(0));}return;}
+    if(!SM.done&&!SM.queue&&SM.mergeAt&&now>=SM.mergeAt){try{smMerge();}catch(e){console.error("static merge failed",e);SM.off=true;SM.list.forEach(r=>r.o.layers.set(0));}return;}
     if(SM.done&&now>SM.checkT){SM.checkT=now+500;try{smWatch();}catch(e){}}}
   const TRUCK_FAR=330;
   G3.frameBody=function(rdt){
