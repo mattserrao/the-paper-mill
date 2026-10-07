@@ -458,7 +458,7 @@ body{margin:0}
 </head>
 <body>
 
-<div class="ver" id="appVersion" aria-label="Version">v2.9.9</div>
+<div class="ver" id="appVersion" aria-label="Version">v2.9.10</div>
 <div class="wrap">
   <header>
     <div class="brand"><span class="logo" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linejoin="round"><circle cx="8.5" cy="12" r="5.5"/><circle cx="8.5" cy="12" r="1.6" fill="currentColor"/><path d="M8.5 6.5H20v11H8.5"/></svg></span>
@@ -4423,7 +4423,7 @@ const G3={on:false,ok:false};
   function smWatch(){const dirty=SM.dirty||(SM.dirty=new Set());SM.list=SM.list.filter(r=>{if(smSame(r))return true;r.o.layers.set(0);SM.dyn.add(r.o);const b=SM.batches.get(r.key);
       b.recs=b.recs.filter(x=>x!==r);dirty.add(r.key);return false;});
     let n=0;for(const k of [...dirty]){if(n++>=2)break;dirty.delete(k);smBuild(k);}}
-  function smTick(now){if(SM.off)return;if(!SM.snapAt){SM.snapAt=now+(mobile?12000:2500);return;}
+  function smTick(now){if(SM.off)return;if(mobile){SM.off=true;SM.done=true;diag("static merge skipped on phones");return;}   // v2.9.10: iPhone loses the WebGL context while batches uploadif(!SM.snapAt){SM.snapAt=now+(mobile?12000:2500);return;}
     if(SM.queue&&SM.queue.length){try{smStep();}catch(e){console.error("static merge failed",e);SM.off=true;SM.queue=[];}return;}
     if(!SM.list.length&&!SM.done&&now>=SM.snapAt){smSnapshot();SM.mergeAt=now+2500;return;}
     if(!SM.done&&!SM.queue&&SM.mergeAt&&now>=SM.mergeAt){try{smMerge();}catch(e){console.error("static merge failed",e);SM.off=true;SM.list.forEach(r=>r.o.layers.set(0));}return;}
