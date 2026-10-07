@@ -453,7 +453,7 @@ body{margin:0}
 </head>
 <body>
 
-<div class="ver" id="appVersion" aria-label="Version">v2.6.0</div>
+<div class="ver" id="appVersion" aria-label="Version">v2.6.1</div>
 <div class="wrap">
   <header>
     <div class="brand"><span class="logo" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linejoin="round"><circle cx="8.5" cy="12" r="5.5"/><circle cx="8.5" cy="12" r="1.6" fill="currentColor"/><path d="M8.5 6.5H20v11H8.5"/></svg></span>
@@ -2971,7 +2971,7 @@ const G3={on:false,ok:false};
     const docks=[...Array(P.shipDoors).keys()].filter(d=>S.outDock[d]);
     if(docks.length&&n>0&&S.M.clampMul!==0){const d=docks[i%docks.length],dz=W(0,outY(d))[1],s2=slot(n-1-((i*5)%Math.min(12,n)));
       J.path=via(here,[s2[0],s2[1]-1.45]);J.after=()=>{J.carry={col:null};J.path=[[s2[0],AIS2],[LANEX,AIS2],[LANEX,dz]];J.after=()=>{J.carry=null;J.path=[[LANEX+1.4,dz]];J.wait=0.3;};};return;}
-    J.path=via(here,[-38-i*2.2,AIS2]);J.wait=2;}
+    J.path=via(here,[-38-i*2.2,AIS2]);J.wait=0.6;}
   function moveVeh(g,tx,tz,sp,rdt){const dx=tx-g.position.x,dz=tz-g.position.z,d=Math.hypot(dx,dz);if(d<0.15)return true;const st=Math.min(d,sp*rdt);g.position.x+=dx/d*st;g.position.z+=dz/d*st;
     g.rotation.y=lerpAng(g.rotation.y,Math.atan2(-dz,dx),Math.min(1,rdt*10));return false;}
   function chemUpdate(rdt){if(!CHEM.g){CHEM.g=makeTruck("chem");CHEM.g.visible=false;}const g=CHEM.g,L=LANE.in,u=g.userData;if(rdt<=0)return;
@@ -3420,9 +3420,9 @@ const G3={on:false,ok:false};
       if(CR.lastBuf<0.3){CR.jobs.push({a:REELP,b:UNW,kind:"unw",fromReel:true,delay:0.8});CR.hideUnwind=true;}
       else{CR.jobs.push({a:REELP,b:parkP(Math.max(0,nPark-1)),kind:"park",fromReel:true,delay:0.8});CR.hidePark++;}
       CR.jobs.push({a:SPOOLP(),b:ARMP(),kind:"spool"});}
-    else if(nPark<CR.lastPark&&S.winderBuf>0.3){CR.jobs.push({a:parkP(nPark),b:UNW,kind:"unw"});CR.hideUnwind=true;}
+    else if(nPark<CR.lastPark&&S.winderBuf>0.3){CR.jobs.push({a:parkP(nPark),b:UNW,kind:"unw",fromPark:true});CR.hideUnwind=true;CR.extraPark=(CR.extraPark||0)+1;}
     CR.lastPark=nPark;CR.lastBuf=S.winderBuf;
-    while(CR.jobs.length>3){const j=CR.jobs.shift();if(j.kind==="park")CR.hidePark=Math.max(0,CR.hidePark-1);if(j.kind==="spool"){TU.armHas=true;TU.armT=9;}if(j.fromReel)TU.kick=false;}
+    while(CR.jobs.length>3){const j=CR.jobs.shift();if(j.fromPark)CR.extraPark=Math.max(0,(CR.extraPark||0)-1);if(j.kind==="park")CR.hidePark=Math.max(0,CR.hidePark-1);if(j.kind==="spool"){TU.armHas=true;TU.armT=9;}if(j.fromReel)TU.kick=false;}
     if(!CR.j&&!CR.jobs.length&&TU.t>4&&!TU.armHas){TU.armHas=true;TU.armT=9;}
     if(!CR.j&&CR.jobs.length){CR.j=CR.jobs.shift();CR.t=0;CR.j.s=[CR.x,CR.z];}
     const per=P.jumbo/Math.max(5,S.rates.prod||30)*60/Math.max(1,C.simSpeed),T=clamp(per*0.75,0.9,5)*(CR.jobs.length?0.6:1);
@@ -3435,11 +3435,11 @@ const G3={on:false,ok:false};
       else if(u<0.87){x=j.b[0];z=j.b[2];y=L(hi,j.b[1]+SB,(u-0.75)/0.12);on=true;}
       else{x=j.b[0];z=j.b[2];y=L(j.b[1]+SB,hi,(u-0.87)/0.13);}
       carried.g.visible=on;carried.set(j.kind==="spool"?R0:RM);
-      if(u>=0.3&&!j.picked){j.picked=true;if(j.kind==="spool"){const m=rackSpools.filter(m=>m.g.visible).pop();if(m)m.g.visible=false;}else if(j.fromReel)TU.kick=false;}
+      if(u>=0.3&&!j.picked){j.picked=true;if(j.fromPark)CR.extraPark=Math.max(0,(CR.extraPark||0)-1);if(j.kind==="spool"){const m=rackSpools.filter(m=>m.g.visible).pop();if(m)m.g.visible=false;}else if(j.fromReel)TU.kick=false;}
       if(u>=0.87&&!j.dropped){j.dropped=true;if(j.kind==="park")CR.hidePark=Math.max(0,CR.hidePark-1);else if(j.kind==="spool"){TU.armHas=true;TU.armT=0;}else CR.hideUnwind=false;}
       CR.x=x;CR.z=z;CR.y=y;if(u>=1)CR.j=null;}
     else if(!CR.j)carried.g.visible=false;
-    if(!CR.j&&!CR.jobs.length){CR.hideUnwind=false;CR.hidePark=0;}
+    if(!CR.j&&!CR.jobs.length){CR.hideUnwind=false;CR.hidePark=0;CR.extraPark=0;}
     crBridge.position.x=CR.x;crTrolley.position.z=CR.z;crHook.position.set(CR.x,CR.y,CR.z);
     crCable.position.set(CR.x,(10.1+CR.y+0.55)/2,CR.z);crCable.scale.y=Math.max(0.1,10.1-(CR.y+0.55));
     return nPark;}
@@ -3761,13 +3761,13 @@ const G3={on:false,ok:false};
     G3.yardFrozen=away;
     brigadeUpdate(rdt,now);techUpdate(rdt,now);ambUpdate(rdt,now);
     // winder machinery
-    const cutting=S.rates.cut>0.5&&S.wd!=="hayout";
+    const cutting=S.rates.cut>0.5&&S.wd!=="hayout"&&!CR.hideUnwind;
     const nP0=craneUpdate(rdt);
     const ur=0.35+1.65*Math.sqrt(Math.min(S.winderBuf,P.jumbo)/P.jumbo);unwind.scale.set(ur,ur,1);unwind.visible=S.winderBuf>0.2&&!CR.hideUnwind;
     const sr=0.3+0.7*Math.min(1,S.winderAcc/C.rollW.v);setRolls.forEach(r=>{r.scale.set(sr,sr,1);r.visible=S.wd!=="hayout";if(cutting)r.rotation.z-=rdt*10;});
     if(cutting){unwind.rotation.z+=rdt*6;drums.forEach(d=>d.rotation.z+=rdt*12);}
     web.visible=cutting&&unwind.visible;
-    const nPark=Math.max(0,nP0-CR.hidePark);parked.forEach((g,k)=>g.children[2].visible=g.children[3].visible=k<nPark);
+    const nPark=Math.min(parked.length,Math.max(0,nP0-CR.hidePark)+(CR.extraPark||0));parked.forEach((g,k)=>g.children[2].visible=g.children[3].visible=k<nPark);
     hayFx(rdt,now);
   }
 
@@ -4195,7 +4195,8 @@ const G3={on:false,ok:false};
     // clamp trucks + robots
     const nLo=Math.round(C.loaders.v);ensure(loaders,nLo,()=>clamp3(M.ok));
     for(let i=0;i<nLo;i++){const g=loaders[i];
-      if(i>=Math.floor(S.effHum+1e-9)){const [x,z]=W(374+i*15,642);g.position.set(x,0,z);g.children[0].material=M.off;g.userData.load.visible=false;g.visible=true;continue;}
+      if(!g.userData.homed){g.userData.homed=true;g.position.set(-28-i*2.2,0,17);g.rotation.y=Math.PI;}
+      if(i>=Math.floor(S.effHum+1e-9)){g.position.set(-26-i*1.8,0,30.6);g.rotation.y=-Math.PI/2;g.userData.cj=null;g.children[0].material=M.off;g.userData.load.visible=false;g.visible=true;continue;}
       g.children[0].material=M.fork;g.visible=S.M.clampMul!==0||G3.yardFrozen;if(G3.yardFrozen){g.userData.load.visible=false;continue;}
       clampJob(g,i,rdt);}
     ensure(robots,P.robots,robot);
