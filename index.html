@@ -458,7 +458,7 @@ body{margin:0}
 </head>
 <body>
 
-<div class="ver" id="appVersion" aria-label="Version">v2.9.5</div>
+<div class="ver" id="appVersion" aria-label="Version">v2.9.6</div>
 <div class="wrap">
   <header>
     <div class="brand"><span class="logo" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linejoin="round"><circle cx="8.5" cy="12" r="5.5"/><circle cx="8.5" cy="12" r="1.6" fill="currentColor"/><path d="M8.5 6.5H20v11H8.5"/></svg></span>
@@ -777,8 +777,7 @@ const AUDIO=(()=>{
     clunk:t=>{tone(t,sfxBus,"sine",90,0.5,0.6,0.002,40);[220,331,467].forEach(f=>tone(t+0.01,sfxBus,"triangle",f,1.1,0.08));const g=nz(t+0.1,1.4,sfxBus,0.18,"bandpass",900,4);g.fl.frequency.linearRampToValueAtTime(400,t+1.4);},
     snap:t=>{nz(t,0.08,sfxBus,0.5,"highpass",3000);tone(t+0.02,sfxBus,"sine",110,0.25,0.4,0.002,50);tone(t+0.3,sfxBus,"square",988,0.12,0.06);tone(t+0.45,sfxBus,"square",988,0.12,0.06);},
     hayout:t=>{const f=nz(t,1.8,sfxBus,0.4,"bandpass",500,1.5,0.05);f.fl.frequency.exponentialRampToValueAtTime(4000,t+1.0);
-      const lfo=ctx.createOscillator(),lg=ctx.createGain();lfo.frequency.value=26;lg.gain.value=0.25;lfo.connect(lg);lg.connect(f.g.gain);lfo.start(t);lfo.stop(t+1.8);
-      nz(t+0.05,0.25,sfxBus,0.35,"highpass",1800);for(let k=0;k<14;k++)nz(t+0.3+Math.random()*1.4,0.05,sfxBus,0.08,"bandpass",2500+Math.random()*2000,3);},
+      nz(t+0.05,0.25,sfxBus,0.35,"highpass",1800);for(let k=0;k<6;k++)nz(t+0.3+Math.random()*1.4,0.05,sfxBus,0.08,"bandpass",2500+Math.random()*2000,3);},
     water:t=>{nz(t,0.9,sfxBus,0.35,"bandpass",1100,0.7,0.02);for(let k=0;k<10;k++){const s=t+0.1+Math.random()*0.8,f=300+Math.random()*500;tone(s,sfxBus,"sine",f,0.08,0.06,0.003,f*1.8);}},
     steam:t=>{nz(t,0.25,sfxBus,0.4,"highpass",1200);const a=nz(t+0.05,4.2,sfxBus,0.55,"bandpass",2600,0.45,0.08);a.fl.frequency.setValueAtTime(2600,t+2.5);a.fl.frequency.exponentialRampToValueAtTime(1300,t+4.2);
       const b=nz(t+0.05,4.0,sfxBus,0.3,"lowpass",500,0.6,0.1);tone(t,sfxBus,"sine",70,0.6,0.4,0.004,40);},
@@ -3598,7 +3597,10 @@ const G3={on:false,ok:false};
   function makeFX(id){const def=FXDEF[id];const g=new THREE.Group();scene.add(g);const pp=PINS[id]||[0,10,0,"!"];const f=FX[id]={g,up:null,pin:pinAt(g,pp[0],pp[1],pp[2],pp[3]),el:document.createElement("div")};
     f.up=def?def(g):()=>{};f.el.className="lbl inc bad";f.el.addEventListener("click",()=>G3.flyTo(id));f.el.append(document.createElement("b"),document.createElement("span"));incHost.appendChild(f.el);f.el.hidden=true;return f;}
   let warmAt=0;
-  function warmFX(now){if(now<warmAt)return;warmAt=now+1500;const id=EVENTS.map(e=>e.id).find(k=>!FX[k]&&!S.inc.some(i=>i.id===k));if(!id)return;
+  let hayWarm=false;
+  function warmFX(now){if(now<warmAt)return;warmAt=now+1500;
+    if(!hayWarm&&G3.hayParts){hayWarm=true;try{const kids=scene.children,vis=kids.map(o=>o.visible);kids.forEach(o=>{if(!o.isLight)o.visible=false;});G3.hayParts.forEach(o=>o.visible=true);
+      renderer.compile(scene,camera);kids.forEach((o,i)=>o.visible=vis[i]);G3.hayParts.forEach(o=>o.visible=false);}catch(e){}return;}const id=EVENTS.map(e=>e.id).find(k=>!FX[k]&&!S.inc.some(i=>i.id===k));if(!id)return;
     try{const f=makeFX(id),kids=scene.children,vis=kids.map(o=>o.visible);
       // compile only the new effect: hide everything else except the lights (so the shaders match), then restore
       kids.forEach(o=>{if(!o.isLight&&o!==f.g)o.visible=false;});f.g.visible=true;renderer.compile(scene,camera);kids.forEach((o,i)=>o.visible=vis[i]);f.g.visible=false;}catch(e){}}
@@ -3830,7 +3832,7 @@ const G3={on:false,ok:false};
   const HN=30,hayI=new THREE.InstancedMesh(new THREE.BoxGeometry(1.4,0.04,1),paperDS,HN);hayI.frustumCulled=false;hayI.visible=false;scene.add(hayI);
   const hayS=[],hM4=new THREE.Matrix4(),hQ=new THREE.Quaternion(),hE=new THREE.Euler(),hP=new THREE.Vector3(),hSc=new THREE.Vector3(1,1,1);
   for(let k=0;k<HN;k++)hayS.push({p:[0,0,0],v:[0,0,0],r:[0,0,0],sp:[0,0,0],k:0});
-  const heapG=new SphG(1,12,6,0,Math.PI*2,0,Math.PI/2),heap=new THREE.Mesh(heapG,paperDS);heap.position.set(-18.7,0,zc);heap.visible=false;scene.add(heap);
+  const heapG=new SphG(1,12,6,0,Math.PI*2,0,Math.PI/2),heap=new THREE.Mesh(heapG,paperDS);heap.position.set(-18.7,0,zc);heap.visible=false;scene.add(heap);G3.hayParts=[hayI,heap];
   let shake=0;
   function hayFx(rdt,now){const ep=EP.hay,on=!!(ep&&now<ep.until),age=on?(now-ep.t0)/1000:99,left=on?(ep.until-now)/1000:0;
     if(on&&!ep.burst){ep.burst=true;hayS.forEach(s=>{s.p=[-18.7+(Math.random()-0.5)*2,3.8,zc+(Math.random()-0.5)*3];s.v=[(Math.random()-0.5)*6,4+Math.random()*4,(Math.random()-0.5)*6];
@@ -3875,7 +3877,7 @@ const G3={on:false,ok:false};
     ropes.forEach(m=>m.visible=false);spears.forEach(m=>m.visible=false);let u0=null;
     crew.forEach((w,i)=>{let tx,tz,act,fx=null;
       if(dryOn){fireCrew(w,i,rdt,now);if(Math.hypot(w.position.x-FIRESPOT[i][0],w.position.z-FIRESPOT[i][1])<0.4)here=true;return;}
-      if(hayOn){const age=now-EP.hay.t0,shuttle=i%2===1,ph=((age/1800)+i*0.37)%2,s=HAY[i];
+      if(hayOn){if(!EP.hay)EP.hay={t0:now-2000,until:now+900,burst:true};const age=now-EP.hay.t0,shuttle=i%2===1,ph=((age/1800)+i*0.37)%2,s=HAY[i];
         if(age<1100){tx=w.position.x;tz=w.position.z;act="look";fx=[-18.7,zc];}
         else if(shuttle&&ph>1){tx=-12;tz=15.6;act="dump";}
         else{tx=s[0];tz=s[1];act="clean";fx=[-18.7,zc];}
@@ -4377,10 +4379,13 @@ const G3={on:false,ok:false};
         let b=SM.batches.get(key);if(!b){b={recs:[],mat:o.material,line,uv,cast:o.castShadow,recv:o.receiveShadow,mesh:null,parent:g,roof:true};SM.batches.set(key,b);}
         b.recs.push({o,mw:new THREE.Matrix4().multiplyMatrices(inv,o.matrixWorld),key});o.layers.set(SMLAYER);roofN++;});});
     SM.list=keep;SM.batches.forEach((b,k)=>smBuild(k));SM.done=true;
+    {const keepGeo=new Set();scene.traverse(o=>{if(o.geometry&&o.layers.mask===1)keepGeo.add(o.geometry);});const freed=new Set();
+      SM.batches.forEach(b=>b.recs.forEach(r=>{const g=r.o.geometry;if(!keepGeo.has(g)&&!freed.has(g)){freed.add(g);g.dispose();}}));}
     console.info(`static merge: ${keep.length} objects + ${roofN} roof parts into ${SM.batches.size} batches`);}
   // anything that changes after the merge is handed back (drawn on its own again) and its batch rebuilt
-  function smWatch(){const dirty=new Set();SM.list=SM.list.filter(r=>{if(smSame(r))return true;r.o.layers.set(0);SM.dyn.add(r.o);const b=SM.batches.get(r.key);
-      b.recs=b.recs.filter(x=>x!==r);dirty.add(r.key);return false;});dirty.forEach(k=>smBuild(k));}
+  function smWatch(){const dirty=SM.dirty||(SM.dirty=new Set());SM.list=SM.list.filter(r=>{if(smSame(r))return true;r.o.layers.set(0);SM.dyn.add(r.o);const b=SM.batches.get(r.key);
+      b.recs=b.recs.filter(x=>x!==r);dirty.add(r.key);return false;});
+    let n=0;for(const k of [...dirty]){if(n++>=2)break;dirty.delete(k);smBuild(k);}}
   function smTick(now){if(SM.off)return;if(!SM.snapAt){SM.snapAt=now+2500;return;}
     if(!SM.list.length&&!SM.done&&now>=SM.snapAt){smSnapshot();SM.mergeAt=now+2500;return;}
     if(!SM.done&&SM.mergeAt&&now>=SM.mergeAt){try{smMerge();}catch(e){console.error("static merge failed",e);SM.off=true;SM.list.forEach(r=>r.o.layers.set(0));}return;}
