@@ -458,7 +458,7 @@ body{margin:0}
 </head>
 <body>
 
-<div class="ver" id="appVersion" aria-label="Version">v2.9.12</div>
+<div class="ver" id="appVersion" aria-label="Version">v2.9.13</div>
 <div class="wrap">
   <header>
     <div class="brand"><span class="logo" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linejoin="round"><circle cx="8.5" cy="12" r="5.5"/><circle cx="8.5" cy="12" r="1.6" fill="currentColor"/><path d="M8.5 6.5H20v11H8.5"/></svg></span>
@@ -1486,6 +1486,9 @@ function newTruck(kind){return kind==="in"?{id:++TRUCKID,load:P.truckLoad,x:-70,
 
 function step(dt){
   S.t+=dt;
+  // v2.9.13: daily production (a mill day runs 6am to 6am, and S.t=0 is 6am) and the best day so far
+  {const di=Math.floor(S.t/1440);if(!S.pd)S.pd={i:di,start:S.tot.prodT,rec:0,recDay:0};
+    if(di>S.pd.i){const made=S.tot.prodT-S.pd.start;if(made>S.pd.rec){S.pd.rec=made;S.pd.recDay=S.pd.i+1;}S.pd.i=di;S.pd.start=S.tot.prodT;}}
   const cash0=S.cash;
   chaosTick(dt);
   cardTick(dt);
@@ -4200,9 +4203,13 @@ const G3={on:false,ok:false};
     // slow-changing signs
     envAcc+=rdt;if(envAcc>1){envAcc=0;
       const q=S.inQ&&S.inQ[0],txt=q?(14.6+(q.load||0)).toFixed(1)+" t":"-- . - t";const sc=ENV.scale;if(txt!==sc.last){sc.last=txt;const x=sc.ctx;x.fillStyle="#101418";x.fillRect(0,0,256,80);x.fillStyle="#ff5a3c";x.font='700 46px "IBM Plex Mono",monospace';x.textAlign="center";x.textBaseline="middle";x.fillText(txt,128,42);sc.tex.needsUpdate=true;}
-      const days=Math.max(0,Math.floor((S.t-(S.lastInc||0))/1440)),bt=String(days);const bd=ENV.board;if(bt!==bd.last){bd.last=bt;const x=bd.ctx;x.fillStyle="#ffffff";x.fillRect(0,0,512,256);x.fillStyle="#1f8a4c";x.fillRect(0,0,512,64);
-        x.fillStyle="#fff";x.font='800 40px "Plus Jakarta Sans",system-ui,sans-serif';x.textAlign="center";x.textBaseline="middle";x.fillText("SAFETY FIRST",256,34);
-        x.fillStyle="#1c2233";x.font='800 96px "Plus Jakarta Sans",system-ui,sans-serif';x.fillText(bt,256,140);x.font='600 26px "Plus Jakarta Sans",system-ui,sans-serif';x.fillText("days without an incident",256,218);bd.tex.needsUpdate=true;}}}
+      // v2.9.13: the yard board shows the daily production record (best 6am-6am day) and today's tons so far
+      const pd=S.pd||{start:0,rec:0},today=Math.max(0,S.tot.prodT-pd.start),best=Math.max(pd.rec,today),isNew=pd.rec>0&&today>pd.rec,
+        fmt=v=>Math.round(v).toLocaleString("en-US"),bt=fmt(best)+"|"+fmt(today)+"|"+isNew;const bd=ENV.board;
+      if(bt!==bd.last){bd.last=bt;const x=bd.ctx;x.fillStyle="#ffffff";x.fillRect(0,0,512,256);x.fillStyle=isNew?"#c77d00":"#1f8a4c";x.fillRect(0,0,512,64);
+        x.fillStyle="#fff";x.font='800 36px "Plus Jakarta Sans",system-ui,sans-serif';x.textAlign="center";x.textBaseline="middle";x.fillText(isNew?"NEW PRODUCTION RECORD":"PRODUCTION RECORD",256,34);
+        x.fillStyle="#1c2233";x.font='800 88px "Plus Jakarta Sans",system-ui,sans-serif';x.fillText(fmt(best)+" t",256,132);
+        x.font='600 26px "Plus Jakarta Sans",system-ui,sans-serif';x.fillText(`best day (6am-6am) · today ${fmt(today)} t`,256,214);bd.tex.needsUpdate=true;}}}
   function ambUpdate(rdt,now){envUpdate(rdt,now);
     {const bi=S.inc.find(x=>x.id==="birdhay");if(bi&&bi.real!==PG.seen){PG.seen=bi.real;PG.t0=now;}
       const u=(now-PG.t0)/1600;if(PG.seen&&u<=1){const s=u*u,x=-2+(-18.7+2)*s,y=10.5-8*s,z=zc+4-4*s;pigeon.visible=true;pigeon.position.set(x,y,z);pigeon.rotation.y=Math.PI;
