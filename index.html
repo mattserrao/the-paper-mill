@@ -458,7 +458,7 @@ body{margin:0}
 </head>
 <body>
 
-<div class="ver" id="appVersion" aria-label="Version">v2.8.1</div>
+<div class="ver" id="appVersion" aria-label="Version">v2.8.2</div>
 <div class="wrap">
   <header>
     <div class="brand"><span class="logo" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linejoin="round"><circle cx="8.5" cy="12" r="5.5"/><circle cx="8.5" cy="12" r="1.6" fill="currentColor"/><path d="M8.5 6.5H20v11H8.5"/></svg></span>
@@ -3773,40 +3773,27 @@ const G3={on:false,ok:false};
   const EP={hay:null,brk:null};let seenHay=-1,seenBrk=-1;
   G3.yardFrozen=false;
 
-  /* ---- hayout: paper fountain, drapes over the trusses, flying sheets ---- */
-  const FN=36,fGeo=new THREE.BufferGeometry(),fPos=new Float32Array((FN+1)*6),fIdx=[];
-  for(let i=0;i<FN;i++){const b=i*2;fIdx.push(b,b+1,b+2,b+1,b+3,b+2);}
-  fGeo.setAttribute("position",new THREE.BufferAttribute(fPos,3));fGeo.setIndex(fIdx);
-  const fountain=new THREE.Mesh(fGeo,paperDS);fountain.frustumCulled=false;fountain.visible=false;scene.add(fountain);
-  const drapes=[];for(let k=0;k<9;k++){const g=new THREE.PlaneGeometry(2.2,1);g.translate(0,-0.5,0);const d=new THREE.Mesh(g,paperDS);
-    d.position.set(-24+k*1.6+(k%2)*0.7,12.85,3.5+((k*7)%12));d.userData.len=4+Math.random()*8;d.visible=false;scene.add(d);drapes.push(d);}
-  const sheetG=new THREE.BoxGeometry(1.5,0.04,1.1),flyers=[];
-  function launchSheet(){let s=flyers.find(o=>!o.on);if(!s){if(flyers.length>=280)return;s={m:new THREE.Mesh(sheetG,paperDS)};scene.add(s.m);flyers.push(s);}
-    s.on=true;s.landed=false;s.m.visible=true;s.m.position.set(-18.7+(Math.random()-0.5)*2,3.8,zc+(Math.random()-0.5)*4);
-    s.v=[(Math.random()-0.5)*16,13+Math.random()*16,(Math.random()-0.5)*16];s.spin=[Math.random()*8,Math.random()*8,Math.random()*8];s.k=Math.random()*6;}
+  /* ---- hayout (v2.8.2, light): a short burst of 30 sheets (one instanced draw call) and a paper heap that shrinks as the crew cleans ---- */
+  const HN=30,hayI=new THREE.InstancedMesh(new THREE.BoxGeometry(1.4,0.04,1),paperDS,HN);hayI.frustumCulled=false;hayI.visible=false;scene.add(hayI);
+  const hayS=[],hM4=new THREE.Matrix4(),hQ=new THREE.Quaternion(),hE=new THREE.Euler(),hP=new THREE.Vector3(),hSc=new THREE.Vector3(1,1,1);
+  for(let k=0;k<HN;k++)hayS.push({p:[0,0,0],v:[0,0,0],r:[0,0,0],sp:[0,0,0],k:0});
+  const heapG=new THREE.SphereGeometry(1,12,6,0,Math.PI*2,0,Math.PI/2),heap=new THREE.Mesh(heapG,paperDS);heap.position.set(-18.7,0,zc);heap.visible=false;scene.add(heap);
   let shake=0;
   function hayFx(rdt,now){const ep=EP.hay,on=!!(ep&&now<ep.until),age=on?(now-ep.t0)/1000:99,left=on?(ep.until-now)/1000:0;
-    // fountain: twisting ribbon of paper climbing to the roof trusses
-    if(on&&!ep.burst){ep.burst=true;for(let k=0;k<90;k++)launchSheet();}
-    fountain.visible=on&&age<5;
-    if(fountain.visible){const H=3.6+Math.min(1,age/0.5)*9.2,t=now/1000;
-      for(let i=0;i<=FN;i++){const s=i/FN,y=3.6+s*(H-3.6),cx=-18.7+Math.sin(s*7+t*9)*1.4*s,cz=zc+Math.cos(s*6+t*8)*1.2*s,a=s*10+t*6,w=1.3+s*1.6;
-        fPos.set([cx-Math.cos(a)*w,y,cz-Math.sin(a)*w,cx+Math.cos(a)*w,y,cz+Math.sin(a)*w],i*6);}
-      fGeo.attributes.position.needsUpdate=true;
-      for(let k=0;k<Math.ceil(rdt*70);k++)launchSheet();}
-    // drapes hang from the trusses, then get pulled down during cleanup
-    drapes.forEach((d,k)=>{d.visible=on&&age>0.4;if(!d.visible)return;const grow=Math.min(1,(age-0.4)/1.6),shrink=Math.min(1,left/2.5);
-      d.scale.y=Math.max(0.01,d.userData.len*grow*shrink);d.rotation.x=Math.sin(now/600+k)*0.18;d.rotation.z=Math.cos(now/700+k*1.3)*0.12;});
-    // flying sheets flutter down and pile up; the crew clears the pile before the episode ends
-    const landed=flyers.filter(s=>s.on&&s.landed);
-    if(on&&age>5&&landed.length){const want=Math.floor(landed.length*Math.max(0,left-1)/Math.max(1,(ep.until-ep.t0)/1000-6));for(let k=want;k<landed.length;k++){landed[k].on=false;landed[k].m.visible=false;}}
-    if(!on)flyers.forEach(s=>{if(s.on&&s.landed){s.on=false;s.m.visible=false;}});
-    flyers.forEach(s=>{if(!s.on||s.landed)return;const p=s.m.position;s.v[1]-=7*rdt;s.v[0]*=1-0.9*rdt;s.v[2]*=1-0.9*rdt;if(s.v[1]<-3)s.v[1]=-3;
-      p.x+=(s.v[0]+Math.sin(now/220+s.k)*2)*rdt;p.y+=s.v[1]*rdt;p.z+=(s.v[2]+Math.cos(now/260+s.k)*2)*rdt;
-      s.m.rotation.x+=s.spin[0]*rdt;s.m.rotation.y+=s.spin[1]*rdt;s.m.rotation.z+=s.spin[2]*rdt;
-      if(p.y>12.6&&s.v[1]>0){s.v[1]=-1;}
-      if(p.y<=0.06){p.y=0.06+Math.random()*0.05;s.landed=true;s.m.rotation.set(0,Math.random()*3,0);}});
-    shake=on&&age<1?(1-age)*1.8:0;
+    if(on&&!ep.burst){ep.burst=true;hayS.forEach(s=>{s.p=[-18.7+(Math.random()-0.5)*2,3.8,zc+(Math.random()-0.5)*3];s.v=[(Math.random()-0.5)*6,4+Math.random()*4,(Math.random()-0.5)*6];
+      s.r=[Math.random()*3,Math.random()*3,Math.random()*3];s.sp=[Math.random()*6,Math.random()*6,Math.random()*6];s.k=Math.random()*6;});}
+    // burst: about 2.5 s of sheets popping up and fluttering down, then hidden
+    hayI.visible=on&&age<2.6;
+    if(hayI.visible){for(let k=0;k<HN;k++){const s=hayS[k];s.v[1]=Math.max(-3,s.v[1]-7*rdt);
+        s.p[0]+=(s.v[0]+Math.sin(now/220+s.k))*rdt;s.p[1]=Math.max(0.05,s.p[1]+s.v[1]*rdt);s.p[2]+=(s.v[2]+Math.cos(now/260+s.k))*rdt;
+        if(s.p[1]>0.05){s.r[0]+=s.sp[0]*rdt;s.r[1]+=s.sp[1]*rdt;s.r[2]+=s.sp[2]*rdt;}
+        hE.set(s.r[0],s.r[1],s.r[2]);hQ.setFromEuler(hE);hP.set(s.p[0],s.p[1],s.p[2]);hM4.compose(hP,hQ,hSc);hayI.setMatrixAt(k,hM4);}
+      hayI.instanceMatrix.needsUpdate=true;}
+    // heap: grows as the sheets land, shrinks to nothing as the crew clears it
+    heap.visible=on&&age>0.5;
+    if(heap.visible){const g=Math.min(1,(age-0.5)/1.5),sh=S.wd==="hayout"?Math.max(0.25,Math.min(1,(S.hayLeft||0)/Math.max(1,S.hayTotal||1))):Math.min(1,left/0.9),f=Math.max(0.01,g*sh);
+      heap.scale.set(3.2*f,0.9*f,2.6*f);}
+    shake=0;
   }
 
   function crewUpdate(rdt,now){
