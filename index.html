@@ -453,7 +453,7 @@ body{margin:0}
 </head>
 <body>
 
-<div class="ver" id="appVersion" aria-label="Version">v2.5.0</div>
+<div class="ver" id="appVersion" aria-label="Version">v2.6.0</div>
 <div class="wrap">
   <header>
     <div class="brand"><span class="logo" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linejoin="round"><circle cx="8.5" cy="12" r="5.5"/><circle cx="8.5" cy="12" r="1.6" fill="currentColor"/><path d="M8.5 6.5H20v11H8.5"/></svg></span>
@@ -815,7 +815,7 @@ const AUTOKEYS=["inRate","drivers","pulper","pmSp","wdr","loaders","outRate"];
 
 let C,S;
 const BASE={...P};
-const ECON={price:{"23m":680,"26m":700,"30m":720,"33HT":780},energy:95,chem:25,wage:45,robot:15,overhead:3400,start:2e6,bankrupt:-1.5e6,goal:25e6};
+const ECON={price:{"23m":690,"26m":710,"30m":730,"33HT":790},energy:95,chem:25,wage:45,robot:15,overhead:3400,start:2e6,bankrupt:-1.5e6,goal:25e6};
 const REPAIR={fogfan:35e3,shaft:250e3,dryerfire:400e3,fabric:90e3,felt:45e3,slime:30e3,ragger:15e3,overflow:120e3,chestover:60e3,lwplug:25e3,cscreen:45e3,fscreen:60e3,lcplug:30e3,hdblow:55e3,boiler:60e3,permit:120e3,thkblow:70e3,birdhay:0,wrap:15e3,dye:20e3,flares:0,winderdown:40e3,runner:0,badocc:0,balefire:150e3,fleet:40e3,calloff:10e3,fight:5e3,roof:80e3,highway:0,lightning:200e3,tornado:500e3,beaver:25e3};
 const UGROUPS=[["machine","Paper machine"],["stock","Stock prep"],["yard","Warehouse & logistics"],["maint","Maintenance"],["mgmt","Management"]];
 const MAINT=["fogfan","shaft","fabric","felt","winderdown","hdblow","lwplug","cscreen","fscreen","lcplug","boiler","thkblow","ragger","overflow","fleet","roof","lightning"];
@@ -989,8 +989,10 @@ function chaosTick(dt){
   for(const i of S.inc)if(i.left<=0&&EV[i.id].end)EV[i.id].end(i);
   for(const i of S.inc)if(i.left<=0)log(`${EV[i.id].name}: cleared, back to normal`,"ok");
   S.inc=S.inc.filter(i=>i.left>0);
-  if(CH.on&&CH.en.chestover&&!active("chestover")&&S.tank>=P.tankCap*0.995&&Math.random()<dt/60/25)trigger("chestover");
-  if(CH.on)for(const e of EVENTS)if(CH.en[e.id]&&!active(e.id)&&Math.random()<dt/60/e.mtbf*CH.lvl*freqMul(e.id)*0.75)trigger(e.id);
+  const um=upsetMul();
+  if(CH.on&&um>0&&CH.en.chestover&&!active("chestover")&&S.tank>=P.tankCap*0.995&&Math.random()<dt/60/25)trigger("chestover");
+  if(CH.on&&um>0)for(const e of EVENTS)if(CH.en[e.id]&&!active(e.id)&&Math.random()<dt/60/e.mtbf*CH.lvl*freqMul(e.id)*0.75*um)trigger(e.id);
+  if(S.season&&S.season.on&&!S.season.rough&&S.t>=14*1440){S.season.rough=true;roughPatch();}
 }
 
 /* ---------- event cards: offers the player can accept or decline (v2.2.0) ---------- */
@@ -1466,6 +1468,12 @@ function updateShop(){
   const m=document.createElement("div");m.className="stat";const t=S.shipT||0;
   m.innerHTML=`<span>Operating margin per ton shipped</span><b>${t>0?money(net/t+S.ledger.upgrades/t):"–"}</b>`;lg.appendChild(m);
 }
+// random upsets run at half the original rate. Seasons script the pressure: a quiet start-up (days 1-3), normal running,
+// then a rough patch on days 15-16 at 4x the normal rate, then normal again to the end.
+function upsetMul(){const base=0.5;if(!(S.season&&S.season.on))return base;const d=Math.floor(S.t/1440)+1;if(d<=3)return 0;if(d===15||d===16)return base*4;return base;}
+function roughPatch(){running=false;$("play").textContent="Run";$("play").setAttribute("aria-pressed","false");$("overlay").hidden=false;$("overlay").style.zIndex="160";AUDIO.sfx("alarm",100);
+  $("ov-h").textContent="Rough patch";$("ov-p").textContent="The Mill is going through a rough patch. Batten down the hatches.";
+  $("ov-a").textContent="Batten down";$("ov-b").hidden=true;$("ov-a").focus();log("Day 15: the mill hits a rough patch. Upsets are four times as likely for two days.","bad");}
 function showOverlay(kind){running=false;$("play").textContent="Run";$("play").setAttribute("aria-pressed","false");
   const ov=$("overlay");ov.hidden=false;
   AUDIO.sfx(kind==="bankrupt"?"lose":"win",100);
@@ -1474,7 +1482,7 @@ function showOverlay(kind){running=false;$("play").textContent="Run";$("play").s
   else{$("ov-h").textContent="Mill of the Year";$("ov-p").textContent=`${NAME} reached $25M cash on ${hhmm(S.t)}, having made ${f0(S.tot.prodT)} t of paper and survived ${S.tot.incidents} disasters.`;
     $("ov-a").textContent="One more turn";$("ov-b").textContent="New game";$("ov-b").hidden=false;}
   $("ov-a").focus();}
-$("ov-a").addEventListener("click",()=>{$("overlay").hidden=true;if(S.over){newGame();}else{running=true;$("play").textContent="Pause";$("play").setAttribute("aria-pressed","true");}});
+$("ov-a").addEventListener("click",()=>{$("overlay").hidden=true;$("overlay").style.zIndex="";const dc=document.getElementById("dealOv");if(S.over){newGame();}else if(dc&&!dc.hidden){}else{running=true;$("play").textContent="Pause";$("play").setAttribute("aria-pressed","true");}});
 $("ov-b").addEventListener("click",()=>{$("overlay").hidden=true;newGame();});
 function newGame(){const sp=C.simSpeed;initCtrl();C.simSpeed=sp;initState();BANNERS.length=0;running=true;$("play").textContent="Pause";$("play").setAttribute("aria-pressed","true");seasonLocks(false);const fb=$("freeBtn");if(fb){fb.setAttribute("aria-pressed","false");fb.textContent="Free play";}}
 /* ---------- season mode + leaderboard (Supabase) ---------- */
