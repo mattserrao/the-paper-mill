@@ -458,7 +458,7 @@ body{margin:0}
 </head>
 <body>
 
-<div class="ver" id="appVersion" aria-label="Version">v2.9.3</div>
+<div class="ver" id="appVersion" aria-label="Version">v2.9.4</div>
 <div class="wrap">
   <header>
     <div class="brand"><span class="logo" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linejoin="round"><circle cx="8.5" cy="12" r="5.5"/><circle cx="8.5" cy="12" r="1.6" fill="currentColor"/><path d="M8.5 6.5H20v11H8.5"/></svg></span>
@@ -881,7 +881,7 @@ function applyUpgrades(){
   P.robots=2*LV("agv"); P.fgCap=BASE.fgCap+112*LV("wh"); P.autoFeed=LV("feedconv")>0;
   P.occPrice=P.blendP+((S&&S.plan)?S.plan.mkt:0)-20*LV("contract"); P.priceAdd=25*LV("sales"); P.repairMul=(LV("insure")?0.4:1)*(1-0.15*LV("reliab"));P.techs=2+2*LV("maintcrew");P.pmCost=400*LV("pmprog"); P.premium=LV("insure")?1500:0;
   P.breakBase=Math.pow(0.7,LV("monitor"))*Math.pow(0.9,LV("pmprog"));
-  P.winderMax=90+30*LV("winder")+((S&&S.perk&&S.perk.winder)||0);P.hayBase=Math.pow(0.6,LV("winder"));const wr=document.getElementById("s-wdr");if(wr)wr.max=P.winderMax;
+  P.winderMax=45+30*LV("winder")+((S&&S.perk&&S.perk.winder)||0);P.hayBase=Math.pow(0.6,LV("winder"));const wr=document.getElementById("s-wdr");if(wr)wr.max=P.winderMax;
   const sp=document.getElementById("s-pmSp"),pu=document.getElementById("s-pulper");
   if(sp)sp.max=3300+P.spBonus; if(pu)pu.max=P.pulperMax;
 }
