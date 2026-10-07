@@ -458,7 +458,7 @@ body{margin:0}
 </head>
 <body>
 
-<div class="ver" id="appVersion" aria-label="Version">v2.8.8</div>
+<div class="ver" id="appVersion" aria-label="Version">v2.8.9</div>
 <div class="wrap">
   <header>
     <div class="brand"><span class="logo" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linejoin="round"><circle cx="8.5" cy="12" r="5.5"/><circle cx="8.5" cy="12" r="1.6" fill="currentColor"/><path d="M8.5 6.5H20v11H8.5"/></svg></span>
@@ -3383,10 +3383,19 @@ const G3={on:false,ok:false};
   // big fires: dense flames, a white-hot core, embers, and a flickering orange light that washes over the scene
   const fireLight=new THREE.PointLight(0xff7a1f,0,60,1.6);scene.add(fireLight);let fireL=0,fireLpos=new THREE.Vector3();
   function fireGlow(x,y,z,k){fireL=Math.max(fireL,k);fireLpos.set(x,y,z);}
-  function fireAt(spots,rate,size=1.7){return (rdt,mult=1)=>{let cx=0,cy=0,cz=0;spots.forEach(([x,y,z])=>{cx+=x;cy+=y;cz+=z;
+  // v2.8.9 fire "pop": a flickering orange pool of light on the floor under the fire, and a flash-over burst when it starts
+  const fireFloor=new THREE.Mesh(new THREE.PlaneGeometry(1,1),new THREE.MeshBasicMaterial({color:0xff6a1a,transparent:true,depthWrite:false,blending:THREE.AdditiveBlending,toneMapped:false,opacity:0}));
+  fireFloor.rotation.x=-Math.PI/2;fireFloor.renderOrder=3;fireFloor.visible=false;scene.add(fireFloor);let fireFloorK=0;
+  function fireAt(spots,rate,size=1.7){let last=-1e9;return (rdt,mult=1)=>{let cx=0,cy=0,cz=0;
+    const nowF=performance.now();if(nowF-last>3000&&rdt>0){spots.forEach(([x,y,z])=>{for(let k=0;k<4;k++)emit("fire",x+R()*1.2,y+Math.random()*0.5,z+R()*1.2,R()*2.5,3+Math.random()*3,R()*2.5,0.7+Math.random()*0.4,size*(1.3+Math.random()*0.7),"#ffffff",1);
+        for(let k=0;k<5;k++)emit("spark",x+R(),y+0.6,z+R(),R()*7,7+Math.random()*9,R()*7,1.4+Math.random(),0.26,Math.random()<0.5?"#ffd36a":"#ff5a1f",1);});fireFloorK=2.2;}
+    last=nowF;
+    spots.forEach(([x,y,z])=>{cx+=x;cy+=y;cz+=z;
       if(Math.random()<rdt*rate*mult*0.7)emit("fire",x+R()*0.4,y+0.2,z+R()*0.4,R()*0.3,1.6+Math.random(),R()*0.3,0.4+Math.random()*0.2,size*0.55,"#fff4c2",1);
       if(Math.random()<rdt*rate*mult*0.5)emit("spark",x+R(),y+0.6,z+R(),R()*3,5+Math.random()*7,R()*3,1.2+Math.random()*0.8,0.22,Math.random()<0.5?"#ffb02e":"#ff5a1f",1);});
     const n=spots.length;fireGlow(cx/n,cy/n+2.5,cz/n,mult);
+    {let x0=1e9,x1=-1e9,z0=1e9,z1=-1e9;spots.forEach(([x,,z])=>{x0=Math.min(x0,x);x1=Math.max(x1,x);z0=Math.min(z0,z);z1=Math.max(z1,z);});
+      fireFloor.position.set(cx/n,0.09,cz/n);fireFloor.scale.set(x1-x0+16,z1-z0+16,1);fireFloor.userData.on=Math.max(fireFloor.userData.on||0,mult);}
     spots.forEach(([x,y,z])=>{for(let k=0;k<2;k++)if(Math.random()<rdt*rate*mult)emit("fire",x+R()*0.8,y+Math.random()*0.3,z+R()*0.8,R()*0.6,2.2+Math.random()*1.6,R()*0.6,0.55+Math.random()*0.35,size*(0.8+Math.random()*0.5),"#ffffff",0.95);});};}
   function smokeCol(x0,x1,y,z0,z1,rate,color="#8e95a3",op=0.6,size=3.2){return rdt=>{for(let k=0;k<3;k++)if(Math.random()<rdt*rate/3)emit("smoke",x0+Math.random()*(x1-x0),y,z0+Math.random()*(z1-z0),0.7+R()*0.6,2.6+Math.random()*1.4,R()*0.6,3.2+Math.random()*1.6,size*(0.8+Math.random()*0.5),color,op);};}
   // striped hazard zone painted on the floor, with a pulsing outline
@@ -3588,7 +3597,9 @@ const G3={on:false,ok:false};
       tmp.set(f.pin.x,f.pin.p.position.y+3.4,f.pin.z).project(camera);const vis=tmp.z<1&&Math.abs(tmp.x)<1.1&&Math.abs(tmp.y)<1.1;f.el.hidden=!vis;
       if(vis){f.el.style.transform=`translate(${(tmp.x+1)/2*w}px,${(1-tmp.y)/2*hh}px) translate(-50%,-100%)`;
         if(doTxt){f.el.firstChild.textContent=EV[inc.id].name;f.el.lastChild.textContent=`${incState(inc)?incState(inc)+" · ":""}${(inc.left/60).toFixed(1)} h left${inc.note?" · "+inc.note.split(" · ")[0]:""}`;}}});
-    stepParts(rdt);fireLight.position.copy(fireLpos);fireLight.intensity=fireL>0?fireL*(2.6+0.9*Math.sin(performance.now()/60)+0.6*Math.sin(performance.now()/23)):0;fireL=0;
+    stepParts(rdt);fireLight.position.copy(fireLpos);fireFloorK=Math.max(0,fireFloorK-rdt*1.5);
+    {const fl=0.9*Math.sin(performance.now()/60)+0.6*Math.sin(performance.now()/23),on=fireFloor.userData.on||0;fireLight.intensity=fireL>0?fireL*(3.4+fl+fireFloorK*3):0;
+      fireFloor.visible=on>0;if(on>0){if(!fireFloor.material.map){fireFloor.material.map=spriteTex((x,w)=>{const g=x.createRadialGradient(w/2,w/2,0,w/2,w/2,w/2);g.addColorStop(0,"rgba(255,255,255,1)");g.addColorStop(0.4,"rgba(255,255,255,0.6)");g.addColorStop(1,"rgba(255,255,255,0)");x.fillStyle=g;x.fillRect(0,0,w,w);});fireFloor.material.needsUpdate=true;}fireFloor.material.opacity=Math.min(1,on*(0.42+0.1*fl+fireFloorK*0.25));}fireFloor.userData.on=0;}fireL=0;
     const out=S.inc.some(i=>i.id==="lightning");blackEl.hidden=!out;if(!out)$("flash3d").style.opacity=0;
   }
 
@@ -4095,10 +4106,10 @@ const G3={on:false,ok:false};
       // v2.8.4: no point lights (every pixel paid for all 10 of them, day and night); each fixture throws a soft additive pool of light on the floor instead
       const gT=spriteTex((x,w)=>{const g=x.createRadialGradient(w/2,w/2,0,w/2,w/2,w/2);g.addColorStop(0,"rgba(255,255,255,1)");g.addColorStop(0.35,"rgba(255,255,255,0.55)");g.addColorStop(1,"rgba(255,255,255,0)");x.fillStyle=g;x.fillRect(0,0,w,w);});
       G3.nightL=[[-10,11,9.1],[12,11,9.1],[34,11,9.1],[56,11,9.1],[31.2,PH+4.25,-17.5],[39,PH+4.25,-12.5],[16,9,-18],[-21,7,-13],[-36,7,23],[57,5,-22]].map(([x,y,z],i)=>{
-        const deck=i===4||i===5,D=deck?11:i<4?18:13,fy=deck?PH+0.14:0.07;
+        const deck=i===4||i===5,D=deck?11:i<4?16:13,fy=deck?PH+0.14:0.07;
         const p=new THREE.Mesh(new THREE.PlaneGeometry(D,D),new THREE.MeshBasicMaterial({map:gT,color:0xffd9a0,transparent:true,depthWrite:false,blending:THREE.AdditiveBlending,toneMapped:false,opacity:0}));
         p.rotation.x=-Math.PI/2;p.position.set(x,fy,z);p.renderOrder=2;p.visible=false;scene.add(p);
-        const f=new THREE.Mesh(new CylG(0.5,0.7,0.3,12),new THREE.MeshBasicMaterial({color:0xfff1cf}));f.position.set(x,y+0.2,z);f.visible=false;scene.add(f);return {p,f,k:deck?0.55:0.4};});}
+        const f=new THREE.Mesh(new CylG(0.5,0.7,0.3,12),new THREE.MeshBasicMaterial({color:0xfff1cf}));f.position.set(x,y+0.2,z);f.visible=false;scene.add(f);return {p,f,k:deck?0.55:i<4?0.22:0.35};});}
     G3.nightL.forEach(l=>{l.p.material.opacity=l.k*night;l.p.visible=night>0.05;l.f.visible=night>0.2;});
     if(G3.fogFan&&rdt>0){const F=G3.fogFan,down=S.inc.some(i=>i.id==="fogfan"),k=down?0:(S.pm==="run"?1:0.35);F.spin+=(k-F.spin)*Math.min(1,rdt*0.8);F.rot.rotation.y+=rdt*F.spin*14;
       if(Math.random()<rdt*9*k)emitA("steam",F.top[0]+R()*0.5,F.top[1],F.top[2]+R()*0.5,R()*0.7+0.5,3.0+Math.random()*1.8,R()*0.7,3.4,2.0+Math.random()*1.6,"#f4f6f8",0.6);}G3.spiderFrame&&G3.spiderFrame(rdt);M.wind.emissive=M.wind.emissive||new THREE.Color();M.wind.emissive.copy(lin0("#ffcf7a")).multiplyScalar(0.85*night);
