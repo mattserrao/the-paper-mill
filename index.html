@@ -452,7 +452,7 @@ body{margin:0}
 </head>
 <body>
 
-<div class="ver" id="appVersion" aria-label="Version">v2.2.0</div>
+<div class="ver" id="appVersion" aria-label="Version">v2.2.1</div>
 <div class="wrap">
   <header>
     <div class="brand"><span class="logo" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linejoin="round"><circle cx="8.5" cy="12" r="5.5"/><circle cx="8.5" cy="12" r="1.6" fill="currentColor"/><path d="M8.5 6.5H20v11H8.5"/></svg></span>
@@ -730,7 +730,11 @@ const AUDIO=(()=>{
   function ambTick(now){if(!ambG)return;
     if(lv.fork>0.25&&now>beepAt){beepAt=now+2.5+Math.random()*3;for(let k=0;k<3;k++)tone(now+0.05+k*0.5,ambG,"square",1040,0.22,0.035*lv.fork,0.005);}
     if(lv.out>0.25&&now>birdAt){birdAt=now+1.5+Math.random()*4;const f=2400+Math.random()*1800;for(let k=0;k<2+Math.floor(Math.random()*3);k++)tone(now+0.05+k*0.13,ambG,"sine",f*(1+Math.random()*0.15),0.09,0.03*lv.out,0.005,f*1.25);}}
-  function ambient(levels,zk){zoomK=zk;if(!ambG)return;const t=ctx.currentTime;for(const k in AMB){const v=(levels[k]||0);lv[k]=v;AMB[k].gain.setTargetAtTime(v*({dryer:0.55,wet:0.45,stock:0.5,winder:0.5,fork:0.6,out:0.7}[k]),t,0.4);}}
+  const AMBON={},AMBQ={};
+  function ambient(levels,zk){zoomK=zk;if(!ambG)return;const t=ctx.currentTime;for(const k in AMB){const v=(levels[k]||0);lv[k]=v;
+      if(v>0.001){AMBQ[k]=0;if(AMBON[k]===false){AMB[k].connect(ambG);AMBON[k]=true;}}
+      else if(AMBON[k]!==false){AMBQ[k]=AMBQ[k]||t;if(t-AMBQ[k]>3){AMB[k].disconnect();AMBON[k]=false;}}
+      AMB[k].gain.setTargetAtTime(v*({dryer:0.55,wet:0.45,stock:0.5,winder:0.5,fork:0.6,out:0.7}[k]),t,0.4);}}
   function setOn(v){if(v&&!ctx&&!init())return false;on=v;if(!ctx)return on;
     if(!AUDIO_VIS){AUDIO_VIS=1;document.addEventListener("visibilitychange",()=>{if(!ctx)return;if(document.hidden)ctx.suspend();else if(on)ctx.resume();});}
     if(on){ctx.resume();if(!timer)timer=setInterval(tick,25);master.gain.setTargetAtTime(vol,ctx.currentTime,0.1);}
@@ -1885,10 +1889,10 @@ const G3={on:false,ok:false};
   const MATS=[];
   function tok(name){return getComputedStyle(document.documentElement).getPropertyValue("--"+name).trim()||"#888";}
   function mat(token,opts={}){const m=new THREE.MeshStandardMaterial(Object.assign({roughness:0.72,metalness:0.04,flatShading:false},opts));m.userData.token=token;MATS.push(m);return m;}
-  let paletteKey="";
+  let paletteKey="",skyHex="#b3bbcb";
   function applyPalette(){
     const key=["g-sky","g-ground","bg","ink","brand","paperc"].map(tok).join();
-    if(key===paletteKey)return;paletteKey=key;
+    if(key===paletteKey)return;paletteKey=key;skyHex=tok("g-sky");
     MATS.forEach(m=>m.color.set(tok(m.userData.token)).convertSRGBToLinear());
     scene.background=new THREE.Color(tok("g-sky")).convertSRGBToLinear();
     const dark=new THREE.Color(tok("bg")).getHSL({}).l<0.3;
@@ -2978,6 +2982,7 @@ const G3={on:false,ok:false};
   $("hud-lbl").addEventListener("click",()=>setLbl({auto:"on",on:"off",off:"auto"}[lblMode]));
   const poke=()=>{G3.lastMove=performance.now();};
   ["pointerdown","pointermove","wheel","keydown","touchstart"].forEach(t=>glc.addEventListener(t,poke,{passive:true}));
+  document.addEventListener("keydown",poke,{passive:true});document.addEventListener("pointerdown",poke,{passive:true});
   $("pad").addEventListener("pointerdown",poke);
   G3.labelIdle=now=>{if(!G3.lblStarted){G3.lblStarted=1;G3.lastMove=now+2500;}labelHost.classList.toggle("lbl-idle",lblMode==="auto"&&now-G3.lastMove>3500);};
   setLbl(lblMode);
@@ -2986,7 +2991,7 @@ const G3={on:false,ok:false};
   $("viewShadows").addEventListener("change",e=>{renderer.shadowMap.enabled=e.target.checked;MATS.forEach(m=>m.needsUpdate=true);});
   if(mobile){sun.shadow.mapSize.set(1024,1024);}
 
-  function resize(){const w=host.clientWidth,h=host.clientHeight;host.classList.toggle("compact",w<640);if(!w||!h)return;renderer.setSize(w,h,false);camera.aspect=w/h;camera.updateProjectionMatrix();}
+  function resize(){G3.lastMove=performance.now();const w=host.clientWidth,h=host.clientHeight;host.classList.toggle("compact",w<640);if(!w||!h)return;renderer.setSize(w,h,false);camera.aspect=w/h;camera.updateProjectionMatrix();}
   new ResizeObserver(resize).observe(host);
 
   /* ---- per-frame update from sim state ---- */
@@ -3755,8 +3760,8 @@ const G3={on:false,ok:false};
     const wx=S.wx||"clear";fogK+=((wx==="fog"?0.45:wx==="snow"?0.12:wx==="rain"?0.06:0)-fogK)*Math.min(1,rdt*0.8+0.01);
     wxK+=((wx==="rain"||wx==="snow"?1:0)-wxK)*Math.min(1,rdt*0.6+0.01);
     if(!out){hemi.intensity=baseHemi*(0.3+0.7*day)*(1-0.05*wxK);sun.intensity=baseSun*(0.1+0.9*day)*(1-0.18*Math.max(wxK,fogK));
-      SKY_DAY.set(tok("g-sky")).convertSRGBToLinear();tmpC.copy(SKY_DAY).lerp(wx==="fog"?SKY_FOG:SKY_RAIN,Math.max(wxK*0.25,fogK*0.5)).lerp(SKY_NIGHT,1-day);
-      scene.background=tmpC.clone();scene.fog.color.copy(tmpC);}
+      SKY_DAY.set(skyHex).convertSRGBToLinear();tmpC.copy(SKY_DAY).lerp(wx==="fog"?SKY_FOG:SKY_RAIN,Math.max(wxK*0.25,fogK*0.5)).lerp(SKY_NIGHT,1-day);
+      if(scene.background&&scene.background.isColor)scene.background.copy(tmpC);else scene.background=tmpC.clone();scene.fog.color.copy(tmpC);}
     {const d=camera.position.distanceTo(target);scene.fog.near=d*(0.9+4*(1-fogK));scene.fog.far=d*(3.4+8*(1-fogK));if(G3.zen&&document.body.dataset.zs!=="none"){scene.fog.near*=0.45;scene.fog.far*=0.55;}}
     const night=1-day;if(!G3.nightL){G3.nightL=[[-10,11,9.1],[12,11,9.1],[34,11,9.1],[56,11,9.1],[31.2,PH+4.25,-17.5],[39,PH+4.25,-12.5],[16,9,-18],[-21,7,-13],[-36,7,23],[57,5,-22]].map(([x,y,z])=>{const l=new THREE.PointLight(0xffe2b0,0,38,1.4);l.position.set(x,y,z);scene.add(l);
         const f=new THREE.Mesh(new THREE.CylinderGeometry(0.5,0.7,0.3,12),new THREE.MeshBasicMaterial({color:0xfff1cf}));f.position.set(x,y+0.2,z);f.visible=false;scene.add(f);l.userData.f=f;return l;});}
@@ -3957,7 +3962,7 @@ const G3={on:false,ok:false};
     if(rdt>0){fpsT+=rdt;fpsN++;if(fpsT>3){const fps=fpsN/fpsT;fpsT=0;fpsN=0;
       if(fps<28&&quality===2&&renderer.shadowMap.enabled){quality=1;renderer.shadowMap.enabled=false;MATS.forEach(m=>m.needsUpdate=true);$("viewShadows").checked=false;}
       else if(fps<24&&quality>=1){quality=0;renderer.setPixelRatio(1);resize();}}}
-    applyPalette();rebuildDoors();
+    {const t=performance.now();if(!(t-(G3.palT||0)<500)){G3.palT=t;applyPalette();}}rebuildDoors();
     const R=S.rates,now=performance.now();
     crewUpdate(rdt,now);
     // trucks
@@ -4094,8 +4099,8 @@ const G3={on:false,ok:false};
     renderer.render(scene,camera);
     // labels follow the 3D anchors
     const w=host.clientWidth,hh=host.clientHeight,doText=now-lastLabel>200;if(doText)lastLabel=now;
-    LABELS.forEach(L=>{tmp.copy(L.v).project(camera);const vis=tmp.z<1&&Math.abs(tmp.x)<1.05&&Math.abs(tmp.y)<1.05;L.el.hidden=!vis;
-      if(!vis)return;L.el.style.transform=`translate(${(tmp.x+1)/2*w}px,${(1-tmp.y)/2*hh}px) translate(-50%,-100%)`;
+    LABELS.forEach(L=>{tmp.copy(L.v).project(camera);const vis=tmp.z<1&&Math.abs(tmp.x)<1.05&&Math.abs(tmp.y)<1.05;if(L.el.hidden===vis)L.el.hidden=!vis;
+      if(!vis)return;const tf=`translate(${Math.round((tmp.x+1)/2*w)}px,${Math.round((1-tmp.y)/2*hh)}px) translate(-50%,-100%)`;if(L.tf!==tf){L.tf=tf;L.el.style.transform=tf;}
       if(doText){const [a,b]=L.t();L.b.textContent=a;L.s.textContent=b;L.el.classList.toggle("bad",!!(L.cls&&L.cls()));}});
     // headline + active incidents
     if(doText&&document.body.classList.contains("fs")){[["hud-cash","k-cash"],["hud-prod","k-prod"],["hud-tank","k-tank"],["hud-profit","k-profit"],["hud-clock","k-clock"]].forEach(([a,b])=>$(a).textContent=$(b).textContent);{const hp=$("hud-profit");hp.style.color=/^[−-]/.test(hp.textContent)?"var(--bad)":"var(--ink)";}
@@ -4225,15 +4230,19 @@ const HTML_V2='<div class="v2top" id="v2top">\n  <button class="v2card v2ibtn" i
   showMenu();
 })();
 
-let last=performance.now(),uiAcc=0;
+let last=performance.now(),uiAcc=0,lastPaint=0;
+const paneShown=el=>{if(!el)return false;const p=el.closest(".v2pane");return p?document.body.classList.contains("sheet-open")&&p.classList.contains("on"):true;};
 function frame(now){
   const rdt=Math.max(0,Math.min(0.1,(now-last)/1000));last=now;
   if(running){let simDt=rdt*C.simSpeed;while(simDt>0&&running){const h=Math.min(0.5,simDt);step(h);simDt-=h;}}
   // schedule the next frame first: a bug in one frame must never stop the game loop
   requestAnimationFrame(frame);
-  try{draw(running?rdt:0);
-    if(G3.on&&G3.frame)G3.frame(running?rdt:0);
-    uiAcc+=rdt;if(uiAcc>0.2){uiAcc=0;syncControls();updateText();updateChaos();updateShop();drawTrend();AUDIO.update(!S.zen&&(S.inc.length>0||S.wd==="hayout"));}}
+  try{const live=running||now-(G3.lastMove||0)<2500||now-lastPaint>1000;
+    if(live){lastPaint=now;
+      if(!(G3.on&&G3.ok))draw(running?rdt:0);
+      if(G3.on&&G3.frame)G3.frame(running?rdt:0);}
+    uiAcc+=rdt;if(uiAcc>0.2){uiAcc=0;syncControls();updateText();
+      if(paneShown($("chaosSec")))updateChaos();if(paneShown($("shopSec")))updateShop();if(paneShown($("trend")))drawTrend();AUDIO.update(!S.zen&&(S.inc.length>0||S.wd==="hayout"));}}
   catch(e){if(!frame.errs)frame.errs=0;if(frame.errs++<5)console.error("frame error",e);}
 }
 syncControls();updateText();updateChaos();updateShop();
