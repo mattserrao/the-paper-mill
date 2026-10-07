@@ -458,7 +458,7 @@ body{margin:0}
 </head>
 <body>
 
-<div class="ver" id="appVersion" aria-label="Version">v2.9.0</div>
+<div class="ver" id="appVersion" aria-label="Version">v2.9.1</div>
 <div class="wrap">
   <header>
     <div class="brand"><span class="logo" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linejoin="round"><circle cx="8.5" cy="12" r="5.5"/><circle cx="8.5" cy="12" r="1.6" fill="currentColor"/><path d="M8.5 6.5H20v11H8.5"/></svg></span>
@@ -738,8 +738,7 @@ const AUDIO=(()=>{
     // levels go stale when the 3D view stops refreshing them (paused, a card open, menu): fade the ambience out instead of
     // repeating the last spot's sounds forever
     if(performance.now()-ambSeen>1000){for(const k in lv)lv[k]=0;if(!ambMuted){ambMuted=true;for(const k in AMB)AMB[k].gain.setTargetAtTime(0,now,0.6);}}
-    // forklift reversing beeper: only close up to the forklifts, two short beeps every 8-16 s
-    if(lv.fork>0.45&&now>beepAt){beepAt=now+8+Math.random()*8;for(let k=0;k<2;k++)tone(now+0.05+k*0.5,ambG,"square",1040,0.18,0.022*lv.fork,0.005);}
+    // v2.9.1: no forklift / truck sounds (reversing beeper and engine hum removed)
     if(lv.out>0.25&&now>birdAt){birdAt=now+1.5+Math.random()*4;const f=2400+Math.random()*1800;for(let k=0;k<2+Math.floor(Math.random()*3);k++)tone(now+0.05+k*0.13,ambG,"sine",f*(1+Math.random()*0.15),0.09,0.03*lv.out,0.005,f*1.25);}}
   const AMBON={},AMBQ={};
   function ambient(levels,zk){zoomK=zk;ambSeen=performance.now();ambMuted=false;if(!ambG)return;const t=ctx.currentTime;for(const k in AMB){const v=(levels[k]||0);lv[k]=v;
@@ -4525,7 +4524,7 @@ const G3={on:false,ok:false};
     G3.padTick(rdt);G3.labelIdle(now);upUpdate(now);fxUpdate(rdt,now);
     // area ambience: how close the camera is, and which part of the mill it's looking at
     G3.ambT=(G3.ambT||0)+rdt;if(G3.ambT>0.25){G3.ambT=0;const zk=clamp((150-cam.r)/90,0,1),x=target.x,z=target.z,near=(cx,cz,r)=>zk*clamp(1.3-Math.hypot(x-cx,z-cz)/r,0,1);
-      const run=S.pm==="run"?1:0.3,L={dryer:near(12,9,20)*run,wet:near(46,9,16)*run,winder:near(-17,8,13)*(S.wd==="run"?1:0.3),stock:near(24,-15,20)*(S.M.pulperDown?0.3:1),fork:Math.max(near(-24,-12,16),near(-36,22,14)),out:0};
+      const run=S.pm==="run"?1:0.3,L={dryer:near(12,9,20)*run,wet:near(46,9,16)*run,winder:near(-17,8,13)*(S.wd==="run"?1:0.3),stock:near(24,-15,20)*(S.M.pulperDown?0.3:1),fork:0,out:0};
       L.out=zk*clamp(1-Math.max(L.dryer,L.wet,L.winder,L.stock,L.fork)*1.5,0,1);AUDIO.ambient(L,zk);}
     G3.roofFade(cam.r*(host.clientWidth<600?1.35:1)/(host.clientWidth<600?1.35:1));
     if(G3.shadowHz){const t=performance.now();if(!(t-(G3.shT||0)<1000/G3.shadowHz-3)){G3.shT=t;renderer.shadowMap.needsUpdate=true;}}
