@@ -458,7 +458,7 @@ body{margin:0}
 </head>
 <body>
 
-<div class="ver" id="appVersion" aria-label="Version">v2.9.10</div>
+<div class="ver" id="appVersion" aria-label="Version">v2.9.11</div>
 <div class="wrap">
   <header>
     <div class="brand"><span class="logo" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linejoin="round"><circle cx="8.5" cy="12" r="5.5"/><circle cx="8.5" cy="12" r="1.6" fill="currentColor"/><path d="M8.5 6.5H20v11H8.5"/></svg></span>
@@ -4429,7 +4429,10 @@ const G3={on:false,ok:false};
     if(!SM.done&&!SM.queue&&SM.mergeAt&&now>=SM.mergeAt){try{smMerge();}catch(e){console.error("static merge failed",e);SM.off=true;SM.list.forEach(r=>r.o.layers.set(0));}return;}
     if(SM.done&&now>SM.checkT){SM.checkT=now+500;try{smWatch();}catch(e){}}}
   const TRUCK_FAR=330;
-  G3.frameBody=function(rdt){
+  // v2.9.11 performance profiler: when G3.PF.on, time each section of the 3D frame (ms accumulated per section)
+  const PF=G3.PF={on:false,t:0,acc:{},frames:0};const pm=k=>{if(!PF.on)return;const t=performance.now();PF.acc[k]=(PF.acc[k]||0)+(t-PF.t);PF.t=t;};
+  G3.EXP={};let moversCache=null;
+  G3.frameBody=function(rdt){if(PF.on){PF.t=performance.now();PF.frames++;}
     // v2.8.8: the machine's motion clocks (dryer cans, presses, felts, sheet, pulper swirl, belts) used to be advanced only by the
     // old 2D drawing, which no longer runs when the 3D view is up, so everything stood still
     if(rdt>0){const R=S.rates;if(!S.M.pulperDown)V.swirl+=rdt*(0.4+R.feed*0.06);V.belt=(V.belt+rdt*R.feed*1.4)%30;V.cans+=rdt*S.pmSpeed/700;
@@ -4439,8 +4442,8 @@ const G3={on:false,ok:false};
       const fk=(G3.cap||60)/60;if(fps<28*fk&&quality===2&&renderer.shadowMap.enabled){quality=1;renderer.shadowMap.enabled=false;MATS.forEach(m=>m.needsUpdate=true);$("viewShadows").checked=false;}
       else if(fps<24*fk&&quality>=1){quality=0;renderer.setPixelRatio(1);resize();}}}
     {const t=performance.now();if(!(t-(G3.palT||0)<500)){G3.palT=t;applyPalette();}}rebuildDoors();
-    const R=S.rates,now=performance.now();
-    crewUpdate(rdt,now);
+    const R=S.rates,now=performance.now();pm("setup (palette, doors, shadow trim)");
+    crewUpdate(rdt,now);pm("crew + people");
     // trucks
     truckMap.forEach(g=>g.userData.seen=false);
     S.inQ.forEach((t,k)=>placeTruck(t,{kind:"in",k},rdt));S.inDock.forEach((t,d)=>t&&placeTruck(t,{kind:"in",docked:true,d},rdt));
@@ -4453,7 +4456,7 @@ const G3={on:false,ok:false};
         {const L=LANE[u.kind],w=u.route[0];if(w.lock&&L.lock&&L.lock!==g&&L.lock.visible&&(L.lock.userData.route||[]).length)u.route=[{x:g.position.x-2,z:L.outZ},{x:-150,z:L.outZ,end:true,fast:true}];}stepRoute(g,LANE[u.kind],rdt);u.wheels.forEach(w=>w.rotation.z=-(u.spin||0));return;}
       const L=LANE[u.kind];if(L&&L.lock===g)L.lock=null;
       g.visible=false;u.busy=false;u.ghost=0;truckMap.delete(t);});
-    chemUpdate(rdt);beaterUpdate(rdt);
+    pm("trucks");chemUpdate(rdt);beaterUpdate(rdt);pm("tanker + beater trucks");
     {const n=clamp(9+S.inQ.length*3+Math.floor(S.yard/250),5,24);G3.yardTr.forEach((g,i)=>g.visible=i<n);}
     // stock
     {const nB=Math.min(168,Math.ceil(S.yard/12));if(nB!==baleShown){baleShown=nB;bales.reset();for(let i=0;i<nB;i++)bales.put(gradeOf(i*7+1,false),baleM[i]);bales.done();}}
@@ -4492,6 +4495,7 @@ const G3={on:false,ok:false};
       gauge.position.set(-cr*0.38,0,cr*0.93);gauge.rotation.y=-0.39;}
     const lvl=S.tank/P.tankCap,h=Math.max(0.06,lvl*9.8);liquid.position.y=h;liquid.rotation.z=-V.swirl*0.3;fill.scale.y=h;fill.position.y=0.25+h/2;
     liquid.material=lvl*100<C.lowLevel.v?surfLow:surfMat;fill.material=lvl*100<C.lowLevel.v?M.bad:M.liquid;ringT.position.y=0.2+C.lvlTarget.v/100*9.8;ringL.position.y=0.2+C.lowLevel.v/100*9.8;
+    pm("stock prep (bales, pulper, chest)");
     // machine
     const pmRun=S.pm==="run";
     cansTop.concat(cansBot).forEach((c,i)=>c.rotation.z=(i<10?-1:1)*V.cans);
@@ -4512,6 +4516,7 @@ const G3={on:false,ok:false};
       const dyeOn=S.M.offSpec;if(dyeOn){const k=Math.floor(now/1400)%DYE.length;if(k!==dyeK){dyeK=k;dyeSheet.color.copy(lin0(DYE[k]));dyeReel.color.copy(lin0(DYE[(k+2)%DYE.length]));}}
       sheetMesh.material=dyeOn?dyeSheet:sheetMat;reel.material=dyeOn?dyeReel:ROLLM;
       sheetMesh.visible=show;sheetMesh.geometry.setDrawRange(0,(sheetKey[Math.min(segs,sheetKey.length-1)]||0)*6);}sheetTex.offset.x=-V.sheet/24*1.0;
+    pm("paper machine, reel, crane, winder");
     // roll conveyor
     // each finished roll is kicked off the winder, rolls down the ramp, is upended and rides the conveyor to the warehouse;
     // it queues at the end until a clamp truck takes it (the sim's conveyor count)
@@ -4539,6 +4544,7 @@ const G3={on:false,ok:false};
       m4.compose(v3.set(x,y,z),q4,_one);if(r.col)_rc.set(r.col);else _rc.copy(M.paper.color);beltRolls.setColorAt(nr,_rc);beltRolls.setMatrixAt(nr++,m4);});
     upender.rotation.x=upA>0?upA:upender.rotation.x*Math.max(0,1-rdt*6);
     beltRolls.count=nr;beltRolls.instanceMatrix.needsUpdate=true;if(beltRolls.instanceColor)beltRolls.instanceColor.needsUpdate=true;
+    pm("roll conveyor");
     // forklifts (same paths as the 2D view)
     ensure(lifts,V.lifts.length,()=>forklift(M.warn));
     V.lifts.forEach((L,i)=>{const g=lifts[i];
@@ -4560,6 +4566,7 @@ const G3={on:false,ok:false};
     ensure(robots,P.robots,robot);
     robots.forEach((g,r)=>{if(r>=P.robots)return;const ph=S.M.clampMul===0?0.3:(V.rollsAnim*0.45+r*0.29)%2,t=ph<1?ph:2-ph,[x,z]=W(130+t*200,outY(r%P.shipDoors)+(r%2?6:-6));
       g.position.set(x,0,z);g.userData.light.material=((now/400+r)|0)%2?M.ok:M.stock;});
+    pm("forklifts, clamp trucks, robots");
     // blackout dims the plant
     const out=S.inc.some(i=>i.id==="lightning");if(out){hemi.intensity=0.18;sun.intensity=0.12;}
     if(out!==G3.wasOut){G3.wasOut=out;if(out)scene.background=new THREE.Color("#0b0f0e").convertSRGBToLinear();}
@@ -4580,7 +4587,7 @@ const G3={on:false,ok:false};
       Z.dis=(Z.dis??40)-rdt;if(Z.dis<=0){Z.dis=60+Math.random()*60;const safe=["fogfan","flares","runner"].filter(id=>!S.inc.some(i=>i.id===id));if(safe.length){const id=safe[Math.floor(Math.random()*safe.length)];trigger(id,true);Z.goto=G3.spotOf(id);Z.t=99;}}
       if(Z.who){Z.fo-=rdt;if(Z.fo<=0){Z.who=null;Z.r=Math.min(140,Z.r*2.6);}else{const p=Z.who.position;Z.tg.set(p.x,0,p.z);}}
       const k=Math.min(1,rdt*(Z.who?0.6:0.1));goal=null;target.lerp(Z.tg,k);cam.r+=(Z.r-cam.r)*k*0.5;cam.th=lerpAng(cam.th,Z.th+Math.sin(now/26000)*0.3,k*0.5)+rdt*0.015;cam.ph+=(0.8+0.08*Math.sin(now/31000)-cam.ph)*k;}
-    G3.padTick(rdt);G3.labelIdle(now);upUpdate(now);fxUpdate(rdt,now);
+    pm("zen / camera shots");G3.padTick(rdt);G3.labelIdle(now);upUpdate(now);pm("upgrade visuals");fxUpdate(rdt,now);pm("upset effects + particles");
     // area ambience: how close the camera is, and which part of the mill it's looking at
     G3.ambT=(G3.ambT||0)+rdt;if(G3.ambT>0.25){G3.ambT=0;const zk=clamp((150-cam.r)/90,0,1),x=target.x,z=target.z,near=(cx,cz,r)=>zk*clamp(1.3-Math.hypot(x-cx,z-cz)/r,0,1);
       const run=S.pm==="run"?1:0.3,L={dryer:near(12,9,20)*run,wet:near(46,9,16)*run,winder:near(-17,8,13)*(S.wd==="run"?1:0.3),stock:near(24,-15,20)*(S.M.pulperDown?0.3:1),fork:0,out:0};
@@ -4590,20 +4597,31 @@ const G3={on:false,ok:false};
     placeCam();if(shake>0){camera.position.x+=(Math.random()-0.5)*shake;camera.position.y+=(Math.random()-0.5)*shake;camera.position.z+=(Math.random()-0.5)*shake;}
     // v2.8.8: zoomed out past the default view, trucks and parked trailers are specks, so they aren't drawn (they keep driving unseen)
     if(cam.r>TRUCK_FAR){truckPool.in.forEach(g=>g.visible=false);truckPool.out.forEach(g=>g.visible=false);if(CHEM.g)CHEM.g.visible=false;if(BT.g)BT.g.visible=false;wTruck.visible=false;G3.yardTr.forEach(g=>g.visible=false);}
-    smTick(performance.now());
-    renderer.render(scene,camera);
+    pm("ambience, roofs, camera");
+    smTick(performance.now());pm("scenery merge");
+    // performance-test switches (Diagnostics > Performance test)
+    const EXP=G3.EXP;let hidM=null;
+    if(EXP.noParts)parts.forEach(p=>{if(p.s.visible)p.s.visible=false;});
+    if(EXP.noMovers){if(!moversCache)moversCache=scene.children.filter(o=>o.userData&&(o.userData.legs||o.userData.wheels||o.userData.load||o.userData.cj));hidM=moversCache.filter(o=>o.visible);hidM.forEach(o=>o.visible=false);}
+    if(!EXP.noRender)renderer.render(scene,camera);
+    if(hidM)hidM.forEach(o=>o.visible=true);
+    if(PF.on){PF.calls=(PF.calls||0)+renderer.info.render.calls;PF.tris=(PF.tris||0)+renderer.info.render.triangles;}
+    pm("RENDER (three.js draw submission)");
     // labels follow the 3D anchors
     const w=host.clientWidth,hh=host.clientHeight,doText=now-lastLabel>200;if(doText)lastLabel=now;
     LABELS.forEach(L=>{tmp.copy(L.v).project(camera);const vis=tmp.z<1&&Math.abs(tmp.x)<1.05&&Math.abs(tmp.y)<1.05;if(L.el.hidden===vis)L.el.hidden=!vis;
       if(!vis)return;const tf=`translate(${Math.round((tmp.x+1)/2*w)}px,${Math.round((1-tmp.y)/2*hh)}px) translate(-50%,-100%)`;if(L.tf!==tf){L.tf=tf;L.el.style.transform=tf;}
       if(doText){const [a,b]=L.t();L.b.textContent=a;L.s.textContent=b;L.el.classList.toggle("bad",!!(L.cls&&L.cls()));}});
+    pm("3D labels");
     // headline + active incidents
     if(doText&&document.body.classList.contains("fs")){[["hud-cash","k-cash"],["hud-prod","k-prod"],["hud-tank","k-tank"],["hud-profit","k-profit"],["hud-clock","k-clock"]].forEach(([a,b])=>$(a).textContent=$(b).textContent);{const hp=$("hud-profit");hp.style.color=/^[−-]/.test(hp.textContent)?"var(--bad)":"var(--ink)";}
       hudSync();}
     if(doText){const b=BANNERS[0];banner.hidden=!b;if(b){banner.className="banner3d "+(b.kind==="good"?"good":"");banner.querySelector("span").textContent=b.kind==="good"?"INSTALLED":"BREAKING";banner.querySelector("b").textContent=b.text;}
       const ck=S.inc.map(i=>i.id).join("|");if(ck!==chips.dataset.k){chips.dataset.k=ck;chips.replaceChildren(...S.inc.map(i=>{const c=document.createElement("button");c.type="button";c.dataset.id=i.id;c.textContent=EV[i.id].name;c.title="Show "+EV[i.id].name;return c;}));}
       banner.classList.toggle("go",!!(b&&b.id&&G3.spotOf(b.id)));}
-  };
+  ;pm("HUD text");};
+  // the diagnostics needs a few internals for its scene census and switches
+  G3.diagScene=()=>({scene,renderer,parts,MATS,resize,camera});
   applyPalette();rebuildDoors();
 })();
 function setView(three){G3.on=three&&G3.ok;$("view3d").hidden=!G3.on;$("plantwrap").hidden=G3.on;
@@ -4731,21 +4749,26 @@ const HTML_V2='<div class="v2top" id="v2top">\n  <button class="v2card v2ibtn" i
 const FRAME_CAP=matchMedia("(pointer: coarse)").matches?30:0;G3.cap=FRAME_CAP;
 let last=performance.now(),uiAcc=0,lastPaint=0;
 const paneShown=el=>{if(!el)return false;const p=el.closest(".v2pane");return p?document.body.classList.contains("sheet-open")&&p.classList.contains("on"):true;};
-function frame(now){frame.n=(frame.n||0)+1;
+function frame(now){
   if(BANNERS.length){const b=BANNERS[0];if(b.t===null)b.t=now;if(now-b.t>5000)BANNERS.shift();}
-  if(FRAME_CAP&&now-last<1000/FRAME_CAP-3){requestAnimationFrame(frame);return;}
+  const cap=G3.capOff?0:FRAME_CAP;
+  if(cap&&now-last<1000/cap-3){requestAnimationFrame(frame);return;}
+  frame.n=(frame.n||0)+1;const PFo=G3.PF,fT0=performance.now();if(PFo&&PFo.on){PFo.gaps.push(now-(PFo.lastNow||now));PFo.lastNow=now;}
   const rdt=Math.max(0,Math.min(0.1,(now-last)/1000));last=now;
   // schedule the next frame first: a bug in one frame must never stop the game loop (v2.8.5: the sim step too)
   requestAnimationFrame(frame);
   if(running){try{let simDt=rdt*C.simSpeed;while(simDt>0&&running){const h=Math.min(0.5,simDt);step(h);simDt-=h;}}catch(e){if(!frame.serr)frame.serr=0;if(frame.serr++<5)console.error("sim error",e);}}
+  if(PFo&&PFo.on)PFo.acc["SIM (game logic step)"]=(PFo.acc["SIM (game logic step)"]||0)+(performance.now()-fT0);
   try{const live=running||now-(G3.lastMove||0)<2500||now-lastPaint>1000;
     if(live){lastPaint=now;
       if(!(G3.on&&G3.ok))draw(running?rdt:0);
       if(G3.on&&G3.frame)G3.frame(running?rdt:0);}
     uiAcc+=rdt;if(uiAcc>0.2){uiAcc=0;try{AUDIO.update(running&&!S.zen&&(S.inc.length>0||S.wd==="hayout"));}catch(_){}
-      syncControls();updateText();
-      if(paneShown($("chaosSec")))updateChaos();if(paneShown($("shopSec")))updateShop();if(paneShown($("trend")))drawTrend();}}
+      const uT=performance.now();syncControls();updateText();
+      if(paneShown($("chaosSec")))updateChaos();if(paneShown($("shopSec")))updateShop();if(paneShown($("trend")))drawTrend();
+      if(PFo&&PFo.on)PFo.acc["UI panels (5x/s)"]=(PFo.acc["UI panels (5x/s)"]||0)+(performance.now()-uT);}}
   catch(e){if(!frame.errs)frame.errs=0;if(frame.errs++<5)console.error("frame error",e);}
+  if(PFo&&PFo.on){const d=performance.now()-fT0;PFo.js.push(d);}
 }
 syncControls();updateText();updateChaos();updateShop();
 requestAnimationFrame(frame);
@@ -4759,12 +4782,65 @@ requestAnimationFrame(frame);
   function header(){let gl="";try{const g=G3.renderer.getContext(),ext=g.getExtension("WEBGL_debug_renderer_info");
       gl=`${G3.renderer.capabilities.isWebGL2?"WebGL2":"WebGL1"} ${ext?g.getParameter(ext.UNMASKED_RENDERER_WEBGL):""} maxTex=${g.getParameter(g.MAX_TEXTURE_SIZE)} fragUnif=${g.getParameter(g.MAX_FRAGMENT_UNIFORM_VECTORS)} lost=${g.isContextLost()}`;}catch(e){gl="no GL info";}
     return `Paper Mill ${document.getElementById("appVersion").textContent} · ${new Date().toISOString()}\n${navigator.userAgent}\nscreen ${screen.width}x${screen.height} dpr=${devicePixelRatio} · ${gl}\n`;}
+
+  // ---- v2.9.11 performance test: a scene census, then 8 short phases that switch one thing off at a time ----
+  let perfReport="";
+  function census(){const D=G3.diagScene&&G3.diagScene();if(!D)return ["no 3D view"];const {scene,renderer,parts}=D,L=[];
+    const gl=renderer.getContext(),ca=gl.getContextAttributes(),db=[gl.drawingBufferWidth,gl.drawingBufferHeight];
+    L.push(`canvas ${db[0]}x${db[1]} (${(db[0]*db[1]/1e6).toFixed(2)} MP) pixelRatio=${renderer.getPixelRatio()} devicePixelRatio=${devicePixelRatio} antialias=${ca.antialias} frameCap=${G3.cap||"none"} simSpeed=${C.simSpeed}`);
+    L.push(`shadows enabled=${renderer.shadowMap.enabled} type=${renderer.shadowMap.type} autoUpdate=${renderer.shadowMap.autoUpdate} refresh=${G3.shadowHz||"every frame"}Hz`);
+    const c={mesh:0,inst:0,instN:0,line:0,sprite:0,cast:0,transp:0,lights:[],mats:new Map()};const groups=new Map();
+    scene.traverseVisible(o=>{let top=o;while(top.parent&&top.parent!==scene)top=top.parent;
+      const draw=(o.isMesh||o.isLine||o.isSprite||o.isPoints)&&o.layers.mask===1;
+      if(o.isLight)c.lights.push(o.type.replace("Light","")+(o.intensity?"":"(off)"));
+      if(!draw)return;
+      if(o.isInstancedMesh){c.inst++;c.instN+=o.count;}else if(o.isMesh)c.mesh++;else if(o.isLine)c.line++;else if(o.isSprite)c.sprite++;
+      if(o.castShadow&&o.isMesh)c.cast++;
+      (Array.isArray(o.material)?o.material:[o.material]).forEach(m=>{if(!m)return;if(m.transparent)c.transp++;c.mats.set(m.type,(c.mats.get(m.type)||0)+1);});
+      const key=top===o?(o.isSprite?"particles / sprites":o.isInstancedMesh?"instanced: "+(o.geometry.type||""):"loose "+o.type):(top.name||Object.keys(top.userData||{}).slice(0,3).join("|")||top.type);
+      groups.set(key,(groups.get(key)||0)+1);});
+    const I=renderer.info;
+    L.push(`visible drawables: ${c.mesh} meshes, ${c.inst} instanced (${c.instN} instances), ${c.line} lines, ${c.sprite} sprites · shadow casters ${c.cast} · transparent ${c.transp}`);
+    L.push(`materials in view: ${[...c.mats].map(([k,v])=>k.replace("Material","")+" "+v).join(", ")} · lights: ${c.lights.join(", ")}`);
+    L.push(`gpu memory objects: ${I.memory.geometries} geometries, ${I.memory.textures} textures, ${I.programs?I.programs.length:"?"} shader programs · last frame ${I.render.calls} draw calls, ${I.render.triangles} triangles`);
+    L.push(`particles alive ${parts.filter(p=>p.alive).length} / pool ${parts.length} · HTML labels ${document.querySelectorAll(".lbl").length} (${[...document.querySelectorAll(".lbl")].filter(e=>!e.hidden&&e.offsetParent).length} shown) · DOM nodes ${document.getElementsByTagName("*").length}`);
+    L.push("biggest groups (visible drawables): "+[...groups].sort((a,b)=>b[1]-a[1]).slice(0,14).map(([k,v])=>`${k}=${v}`).join(" · "));
+    return L;}
+  const PHASES=[
+    {name:"as you play (frame cap on)",on:()=>{},off:()=>{}},
+    {name:"uncapped baseline",on:()=>{G3.capOff=true;},off:()=>{}},
+    {name:"shadows OFF",on:()=>{const D=G3.diagScene();D.renderer.shadowMap.enabled=false;D.MATS.forEach(m=>m.needsUpdate=true);},off:()=>{const D=G3.diagScene();D.renderer.shadowMap.enabled=true;D.renderer.shadowMap.needsUpdate=true;D.MATS.forEach(m=>m.needsUpdate=true);}},
+    {name:"half resolution",on:()=>{const D=G3.diagScene();PHASES._pr=D.renderer.getPixelRatio();D.renderer.setPixelRatio(PHASES._pr*0.5);D.resize();},off:()=>{const D=G3.diagScene();D.renderer.setPixelRatio(PHASES._pr);D.resize();}},
+    {name:"particles OFF",on:()=>{G3.EXP.noParts=true;},off:()=>{G3.EXP.noParts=false;}},
+    {name:"people + vehicles hidden",on:()=>{G3.EXP.noMovers=true;},off:()=>{G3.EXP.noMovers=false;}},
+    {name:"HTML labels hidden",on:()=>{document.body.classList.add("diagNoLbl");},off:()=>{document.body.classList.remove("diagNoLbl");}},
+    {name:"3D render skipped (CPU-only ceiling)",on:()=>{G3.EXP.noRender=true;},off:()=>{G3.EXP.noRender=false;}}];
+  function runPerf(done){if(!G3.PF){done("no 3D view");return;}const st=document.createElement("style");st.textContent=".diagNoLbl .lbl{display:none!important}";document.head.appendChild(st);
+    const wasRunning=running;if(!running){running=true;}
+    const ban=document.createElement("div");ban.style.cssText="position:fixed;left:16px;right:16px;top:70px;z-index:410;background:#111c;color:#fff;border-radius:10px;padding:10px 12px;font:600 13px system-ui;text-align:center;pointer-events:none";document.body.appendChild(ban);
+    const out=["PERF census:",...census().map(x=>"  "+x),"PERF phases (settle 1.5 s, measure 3 s each):"];let base=null,i=0;
+    const PF=G3.PF;
+    const next=()=>{if(i>=PHASES.length){G3.capOff=false;running=wasRunning;ban.remove();st.remove();
+        // section breakdown from the uncapped baseline
+        out.push("PERF time per frame by section (uncapped baseline, ms/frame):");
+        Object.entries(base.acc).sort((a,b)=>b[1]-a[1]).forEach(([k,v])=>out.push(`  ${(v/Math.max(1,base.frames)).toFixed(2).padStart(6)}  ${k}`));
+        out.push(`  ${(base.jsAvg).toFixed(2).padStart(6)}  = total JavaScript per frame (sim + 3D + UI)`);
+        perfReport=out.join("\n");diag("performance test finished");done(perfReport);return;}
+      const ph=PHASES[i];ban.textContent=`Performance test ${i+1}/${PHASES.length}: ${ph.name} - please don't touch the screen`;ph.on();
+      setTimeout(()=>{PF.acc={};PF.frames=0;PF.calls=0;PF.tris=0;PF.gaps=[];PF.js=[];PF.lastNow=0;PF.on=true;
+        setTimeout(()=>{PF.on=false;const g=PF.gaps.slice(1).sort((a,b)=>a-b),n=g.length,avg=n?g.reduce((a,b)=>a+b,0)/n:0,p90=n?g[Math.floor(n*0.9)]:0,
+            js=PF.js.length?PF.js.reduce((a,b)=>a+b,0)/PF.js.length:0,fps=n?1000/avg:0,calls=PF.frames?PF.calls/PF.frames:0,tris=PF.frames?PF.tris/PF.frames:0;
+          if(i===1)base={acc:{...PF.acc},frames:PF.frames,jsAvg:js};
+          out.push(`  ${String(i+1)}. ${ph.name.padEnd(36)} ${fps.toFixed(1).padStart(5)} fps · frame ${avg.toFixed(1)} ms (p90 ${p90.toFixed(1)}) · JS ${js.toFixed(1)} ms · ${calls.toFixed(0)} draws · ${(tris/1000).toFixed(0)}k tris`);
+          ph.off();i++;setTimeout(next,300);},3000);},1500);};
+    next();}
   function open(){snap();let d=document.getElementById("diagOv");if(!d){d=document.createElement("div");d.id="diagOv";
       d.style.cssText="position:fixed;inset:12px;z-index:400;background:var(--panel,#fff);color:var(--ink,#111);border:1px solid var(--line,#ccc);border-radius:12px;box-shadow:0 12px 40px rgba(0,0,0,.3);display:flex;flex-direction:column;padding:10px;gap:8px";
-      d.innerHTML='<div style="display:flex;gap:8px;align-items:center"><b style="flex:1;font:700 15px system-ui">Diagnostics</b><button id="diagCopy">Copy</button><button id="diagClose">Close</button></div><pre id="diagTxt" style="flex:1;overflow:auto;margin:0;font:11px/1.35 ui-monospace,monospace;white-space:pre-wrap;word-break:break-word"></pre>';
+      d.innerHTML='<div style="display:flex;gap:8px;align-items:center"><b style="flex:1;font:700 15px system-ui">Diagnostics</b><button id="diagPerf">Performance test (25 s)</button><button id="diagCopy">Copy</button><button id="diagClose">Close</button></div><pre id="diagTxt" style="flex:1;overflow:auto;margin:0;font:11px/1.35 ui-monospace,monospace;white-space:pre-wrap;word-break:break-word"></pre>';
       document.body.appendChild(d);d.querySelector("#diagClose").onclick=()=>d.hidden=true;
       d.querySelector("#diagCopy").onclick=()=>{const t=d.querySelector("#diagTxt").textContent;(navigator.clipboard?navigator.clipboard.writeText(t):Promise.reject()).then(()=>{d.querySelector("#diagCopy").textContent="Copied";},()=>{const r=document.createRange();r.selectNodeContents(d.querySelector("#diagTxt"));const s=getSelection();s.removeAllRanges();s.addRange(r);});};}
-    d.querySelector("#diagCopy").textContent="Copy";d.querySelector("#diagTxt").textContent=header()+"\n"+DIAG.slice().reverse().join("\n");d.hidden=false;}
+    d.querySelector("#diagCopy").textContent="Copy";d.querySelector("#diagTxt").textContent=header()+(perfReport?"\n"+perfReport+"\n":"")+"\n"+DIAG.slice().reverse().join("\n");d.hidden=false;
+    d.querySelector("#diagPerf").onclick=()=>{d.hidden=true;runPerf(()=>open());};}
   const b=document.createElement("button");b.id="diagBtn";b.textContent="Diagnostics";b.addEventListener("click",open);
   const row=document.getElementById("v2ctlrow");if(row)row.appendChild(b);else document.body.appendChild(b);
   window.__openDiag=open;})();
