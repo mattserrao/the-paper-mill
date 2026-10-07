@@ -458,7 +458,7 @@ body{margin:0}
 </head>
 <body>
 
-<div class="ver" id="appVersion" aria-label="Version">v2.8.5</div>
+<div class="ver" id="appVersion" aria-label="Version">v2.8.6</div>
 <div class="wrap">
   <header>
     <div class="brand"><span class="logo" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linejoin="round"><circle cx="8.5" cy="12" r="5.5"/><circle cx="8.5" cy="12" r="1.6" fill="currentColor"/><path d="M8.5 6.5H20v11H8.5"/></svg></span>
@@ -596,7 +596,7 @@ body{margin:0}
       <div class="read" id="r-ship">–</div></div>
   </section>
 
-  <p class="foot">Auto keeps each area matched to the paper machine: pulper feed tracks machine demand plus a correction toward the chest level target, truck arrivals and crews follow from that. Drag any slider to take that area to manual; press its AUTO chip or "Balance all" to hand it back. Production is speed × basis weight, scaled so 23m at 2,736 fpm and 24.55 lb gives 34.8 t/h, the calibration median. The winder cuts each jumbo reel into rolls; each reel makes 8 customer rolls and up to four reels can wait in storage, so a slow or hayed-out winder eventually stops the machine. Hayouts send the set in progress to broke. During a sheet break every employee runs to the machine to help rethread, so receiving and shipping pause. Upsets change the same flows: a machine incident stops the reel, stock prep incidents stop the pulper or cut yield, warehouse incidents cut crews, docks or trucks. The plant view is 3D by default (drag to rotate, scroll or pinch to zoom) and drops shadows and resolution on its own if a device struggles; switch to 2D any time. Maintenance techs (2 to start) ride out from the break room on yellow scooters to fix breakdowns; maintenance upgrades make failures rarer and repairs faster. Sound: lofi music plays while the mill runs and switches to intense music during incidents, with sound effects for each disaster; it starts after your first tap. Money: rolls are paid for when an outbound truck leaves (grade price × tons). OCC is paid for when it is unloaded, energy and chemicals per ton made, wages per crew member per hour, plus $4,000/h mill overhead and a repair bill for each disaster. Below −$1.5M the mill goes bankrupt. Assumptions: 22 t OCC per inbound truck, 88% pulper yield, 300 t chest, 30 t/h per forklift driver, 25 rolls/h per loader, 20 rolls per outbound truck.</p>
+  <p class="foot">Auto keeps each area matched to the paper machine: pulper feed tracks machine demand plus a correction toward the chest level target, truck arrivals and crews follow from that. Drag any slider to take that area to manual; press its AUTO chip or "Balance all" to hand it back. Production is speed × basis weight, scaled so 23m at 2,736 fpm and 24.55 lb gives 34.8 t/h, the calibration median. The winder cuts each jumbo reel into rolls; each reel makes 8 customer rolls and up to four reels can wait in storage, so a slow or hayed-out winder eventually stops the machine. Hayouts send the set in progress to broke. During a sheet break every employee runs to the machine to help rethread, so receiving and shipping pause. Upsets change the same flows: a machine incident stops the reel, stock prep incidents stop the pulper or cut yield, warehouse incidents cut crews, docks or trucks. The plant view is 3D by default (drag to rotate, scroll or pinch to zoom) and drops shadows and resolution on its own if a device struggles; switch to 2D any time. Maintenance techs (2 to start) ride out from the break room on yellow scooters to fix breakdowns; maintenance upgrades make failures rarer and repairs faster. Sound: lofi music plays while the mill runs and switches to intense music during incidents, with sound effects for each disaster; it starts after your first tap. Money: rolls are paid for when an outbound truck leaves (grade price × tons). OCC is paid for when it is unloaded, energy and chemicals per ton made, wages per crew member per hour, plus $4,000/h mill overhead and a repair bill for each disaster. Below −$1.5M the mill goes bankrupt. Assumptions: 220 t OCC per inbound truck, 20 rolls per outbound truck, 88% pulper yield, 300 t chest, 30 t/h per forklift driver, 25 rolls/h per loader, 20 rolls per outbound truck.</p>
 </div>
 
 <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
@@ -810,8 +810,8 @@ const OCCG={occ11:{p:160,y:0.88},dlk:{p:215,y:0.93}};
 const WHEEL=["23m","26m","30m","33HT","30m"];
 // seeded random streams (plan, cards) so every player in the same season week sees the same market and the same cards
 function rand(k){const r=S.rng;r[k]=(r[k]+0x6D2B79F5)|0;let t=r[k];t=Math.imul(t^(t>>>15),t|1);t^=t+Math.imul(t^(t>>>7),t|61);return ((t^(t>>>14))>>>0)/4294967296;}
-const P={truckLoad:22,doors:3,driverRate:30,doorRate:45,yieldF:0.88,tankCap:300,yardCap:2000,yardTarget:800,
-  fgCap:225,fgTarget:40,convCap:3,jumbo:100,storeReels:1,rollsPerReel:8,loaderRate:9,truckRolls:2,doorRolls:11.25,shipDoors:3,
+const P={truckLoad:220,doors:3,driverRate:30,doorRate:450,yieldF:0.88,tankCap:300,yardCap:2000,yardTarget:800,
+  fgCap:225,fgTarget:40,convCap:3,jumbo:100,storeReels:1,rollsPerReel:8,loaderRate:9,truckRolls:20,doorRolls:112.5,shipDoors:3,
   K:34.8/(2736*24.55),minSpeed:1200,ramp:150,pmLoss:0.98,maxQueue:8};
 const UNITS={inRate:v=>v.toFixed(1)+" trucks/h",drivers:v=>Math.round(v)+" drivers",pulper:v=>v.toFixed(1)+" t/h",
   lvlTarget:v=>Math.round(v)+" %",lowLevel:v=>Math.round(v)+" %",pmSp:v=>Math.round(v).toLocaleString()+" fpm",
@@ -1422,7 +1422,7 @@ function autoControl(dt){
     C.pulper.v=ease(C.pulper.v,clamp(fiber/P.yieldF,0,P.pulperMax),dt,4);
   }
   if(C.inRate.auto){
-    const queuePenalty=S.inQ.length*0.15;
+    const queuePenalty=S.inQ.length*0.015;
     const r=C.pulper.v/P.truckLoad+(P.yardTarget-S.yard)/(P.truckLoad*10)-queuePenalty;
     C.inRate.v=ease(C.inRate.v,clamp(r,0,8),dt,10);
   }
@@ -1433,7 +1433,7 @@ function autoControl(dt){
   }
   const rph=Math.max(S.rates.prod, S.pm==="run"?P.K*C.pmSp.v*g.bw*0.9:0)/C.rollW.v;
   if(C.outRate.auto){
-    const r=rph/P.truckRolls+(S.fg-P.fgTarget)/(P.truckRolls*8)-S.outQ.length*0.1;
+    const r=rph/P.truckRolls+(S.fg-P.fgTarget)/(P.truckRolls*8)-S.outQ.length*0.01;
     C.outRate.v=ease(C.outRate.v,clamp(r,0,10),dt,10);
   }
   if(C.wdr.auto){const pot=P.K*C.pmSp.v*g.bw,tgt=S.winderBuf>P.jumbo*1.05?P.winderMax:pot*1.25;C.wdr.v=ease(C.wdr.v,clamp(tgt,0,P.winderMax),dt,5);}
