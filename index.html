@@ -458,7 +458,7 @@ body{margin:0}
 </head>
 <body>
 
-<div class="ver" id="appVersion" aria-label="Version">v2.8.11</div>
+<div class="ver" id="appVersion" aria-label="Version">v2.8.12</div>
 <div class="wrap">
   <header>
     <div class="brand"><span class="logo" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linejoin="round"><circle cx="8.5" cy="12" r="5.5"/><circle cx="8.5" cy="12" r="1.6" fill="currentColor"/><path d="M8.5 6.5H20v11H8.5"/></svg></span>
@@ -733,11 +733,16 @@ const AUDIO=(()=>{
     {const o=ctx.createOscillator();o.type="square";o.frequency.value=52;const lfo=ctx.createOscillator(),lg=ctx.createGain();lfo.frequency.value=0.7;lg.gain.value=9;lfo.connect(lg);lg.connect(o.frequency);lfo.start();
       const lp=ctx.createBiquadFilter();lp.type="lowpass";lp.frequency.value=260;const og=ctx.createGain();og.gain.value=0.07;o.connect(lp);lp.connect(og);o.start();mk("fork",[{g:og}]);}
     mk("out",[loopNoise("bandpass",600,0.3,0.06)]);}
+  let ambSeen=0,ambMuted=false;
   function ambTick(now){if(!ambG)return;
-    if(lv.fork>0.25&&now>beepAt){beepAt=now+2.5+Math.random()*3;for(let k=0;k<3;k++)tone(now+0.05+k*0.5,ambG,"square",1040,0.22,0.035*lv.fork,0.005);}
+    // levels go stale when the 3D view stops refreshing them (paused, a card open, menu): fade the ambience out instead of
+    // repeating the last spot's sounds forever
+    if(performance.now()-ambSeen>1000){for(const k in lv)lv[k]=0;if(!ambMuted){ambMuted=true;for(const k in AMB)AMB[k].gain.setTargetAtTime(0,now,0.6);}}
+    // forklift reversing beeper: only close up to the forklifts, two short beeps every 8-16 s
+    if(lv.fork>0.45&&now>beepAt){beepAt=now+8+Math.random()*8;for(let k=0;k<2;k++)tone(now+0.05+k*0.5,ambG,"square",1040,0.18,0.022*lv.fork,0.005);}
     if(lv.out>0.25&&now>birdAt){birdAt=now+1.5+Math.random()*4;const f=2400+Math.random()*1800;for(let k=0;k<2+Math.floor(Math.random()*3);k++)tone(now+0.05+k*0.13,ambG,"sine",f*(1+Math.random()*0.15),0.09,0.03*lv.out,0.005,f*1.25);}}
   const AMBON={},AMBQ={};
-  function ambient(levels,zk){zoomK=zk;if(!ambG)return;const t=ctx.currentTime;for(const k in AMB){const v=(levels[k]||0);lv[k]=v;
+  function ambient(levels,zk){zoomK=zk;ambSeen=performance.now();ambMuted=false;if(!ambG)return;const t=ctx.currentTime;for(const k in AMB){const v=(levels[k]||0);lv[k]=v;
       if(v>0.001){AMBQ[k]=0;if(AMBON[k]===false){AMB[k].connect(ambG);AMBON[k]=true;}}
       else if(AMBON[k]!==false){AMBQ[k]=AMBQ[k]||t;if(t-AMBQ[k]>3){AMB[k].disconnect();AMBON[k]=false;}}
       AMB[k].gain.setTargetAtTime(v*({dryer:0.55,wet:0.45,stock:0.5,winder:0.5,fork:0.6,out:0.7}[k]),t,0.4);}}
