@@ -135,6 +135,10 @@ select{font:13px var(--f-body);color:var(--ink);background:var(--panel);border:1
 .modal h2{margin:0;font:700 30px var(--f-display);letter-spacing:.02em}
 .modal p{margin:0;color:var(--muted)}
 .modal .btns{display:flex;gap:8px;flex-wrap:wrap}
+.modal.deal{max-width:420px;width:100%}.deal .dk{font:600 11px var(--f-body);letter-spacing:.08em;text-transform:uppercase;color:var(--stock)}
+.deal .doc{display:grid;grid-template-columns:auto 1fr;gap:4px 10px;font-size:14px}.deal .doc b.w{color:var(--ok)}.deal .doc b.l{color:var(--bad)}
+.deal .dodds{display:flex;justify-content:space-between;font-size:13px}.deal .dbar{height:8px;border-radius:4px;background:var(--bad);overflow:hidden}.deal .dbar i{display:block;height:100%;background:var(--ok)}
+.deal .dres{font-size:14px;padding:10px 12px;border-radius:6px;background:var(--chip);color:var(--ink)}.deal .btns button{flex:1}
 .kpi.money .v{color:var(--ok)} .kpi.money.neg .v{color:var(--bad)}
 .namefield{display:flex;align-items:center;gap:6px;font-size:12px;color:var(--muted)}
 .namefield input{font:600 14px var(--f-mono);width:10ch;color:var(--ink);background:var(--panel);border:1px solid var(--line);border-radius:6px;padding:6px 8px}
@@ -448,7 +452,7 @@ body{margin:0}
 </head>
 <body>
 
-<div class="ver" id="appVersion" aria-label="Version">v2.1.0</div>
+<div class="ver" id="appVersion" aria-label="Version">v2.2.0</div>
 <div class="wrap">
   <header>
     <div class="brand"><span class="logo" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linejoin="round"><circle cx="8.5" cy="12" r="5.5"/><circle cx="8.5" cy="12" r="1.6" fill="currentColor"/><path d="M8.5 6.5H20v11H8.5"/></svg></span>
@@ -787,6 +791,15 @@ const AUDIO=(()=>{
 })();
 
 const GRADES={ "23m":{sp:2736,bw:24.55}, "26m":{sp:2433,bw:26.06}, "30m":{sp:2222,bw:30.05}, "33HT":{sp:2084,bw:33.08} };
+// cost mix per grade: heavier, high-test grades need more strong DLK fiber, more starch and more drying steam (steam from PM3
+// 3rd-section steam by grade), and break less. Balanced so no grade earns more than ~5% over another at base level.
+// mix = campaign size range in tons; the market-driven planner runs the real grade wheel at roughly the PM3 grade mix.
+const GCOST={"23m":{dlk:0,steam:1,chem:0,brk:1.15,mix:[2600,3600]},"26m":{dlk:0.1,steam:1.02,chem:0,brk:1.25,mix:[80,160]},
+  "30m":{dlk:0.25,steam:1.14,chem:10,brk:0.75,mix:[150,350]},"33HT":{dlk:0.55,steam:1.11,chem:75,brk:0.55,mix:[800,1300]}};
+const OCCG={occ11:{p:160,y:0.88},dlk:{p:215,y:0.93}};
+const WHEEL=["23m","26m","30m","33HT","30m"];
+// seeded random streams (plan, cards) so every player in the same season week sees the same market and the same cards
+function rand(k){const r=S.rng;r[k]=(r[k]+0x6D2B79F5)|0;let t=r[k];t=Math.imul(t^(t>>>15),t|1);t^=t+Math.imul(t^(t>>>7),t|61);return ((t^(t>>>14))>>>0)/4294967296;}
 const P={truckLoad:22,doors:3,driverRate:30,doorRate:45,yieldF:0.88,tankCap:300,yardCap:2000,yardTarget:800,
   fgCap:900,fgTarget:160,convCap:12,jumbo:25,storeReels:4,rollsPerReel:8,loaderRate:25,truckRolls:8,doorRolls:45,shipDoors:3,
   K:34.8/(2736*24.55),minSpeed:1200,ramp:150,pmLoss:0.98,maxQueue:8};
@@ -832,18 +845,25 @@ const UPS=[
 const UP=Object.fromEntries(UPS.map(u=>[u.id,u]));
 const LV=id=>(S&&S.up&&S.up[id])||0;
 function applyUpgrades(){
+  applyGrade();
   P.K=BASE.K*Math.pow(1.06,LV("deckle"))*(1+0.02*LV("apc"));
   P.spBonus=150*LV("drive")+100*LV("shoe");
   P.energyMul=(1-0.12*LV("shoe"))*(1-0.08*LV("apc"));P.refSave=22*LV("refiner");
-  P.pulperMax=70+25*LV("pulper"); P.yieldF=BASE.yieldF+0.03*LV("clean"); P.tankCap=BASE.tankCap+150*LV("chest");
+  P.pulperMax=70+25*LV("pulper"); P.yieldF=P.blendY+0.03*LV("clean"); P.tankCap=BASE.tankCap+150*LV("chest");
   P.driverRate=BASE.driverRate*(1+0.25*LV("forklift")); P.doors=3+LV("docks"); P.shipDoors=3+LV("docks");
   P.robots=2*LV("agv"); P.fgCap=BASE.fgCap+450*LV("wh"); P.autoFeed=LV("feedconv")>0;
-  P.occPrice=160-20*LV("contract"); P.priceAdd=25*LV("sales"); P.repairMul=(LV("insure")?0.4:1)*(1-0.15*LV("reliab"));P.techs=2+2*LV("maintcrew");P.pmCost=400*LV("pmprog"); P.premium=LV("insure")?1500:0;
+  P.occPrice=P.blendP+((S&&S.plan)?S.plan.mkt:0)-20*LV("contract"); P.priceAdd=25*LV("sales"); P.repairMul=(LV("insure")?0.4:1)*(1-0.15*LV("reliab"));P.techs=2+2*LV("maintcrew");P.pmCost=400*LV("pmprog"); P.premium=LV("insure")?1500:0;
   P.breakBase=Math.pow(0.7,LV("monitor"))*Math.pow(0.9,LV("pmprog"));
   P.winderMax=90+30*LV("winder");P.hayBase=Math.pow(0.6,LV("winder"));const wr=document.getElementById("s-wdr");if(wr)wr.max=P.winderMax;
   const sp=document.getElementById("s-pmSp"),pu=document.getElementById("s-pulper");
   if(sp)sp.max=3300+P.spBonus; if(pu)pu.max=P.pulperMax;
 }
+// the OCC blend, energy, chemicals and break rate follow the grade on the machine
+function applyGrade(){const g=(typeof C!=="undefined"&&C&&C.grade)||"23m",c=GCOST[g],d=c.dlk;
+  P.blendP=OCCG.occ11.p*(1-d)+OCCG.dlk.p*d;P.blendY=OCCG.occ11.y*(1-d)+OCCG.dlk.y*d;
+  P.steamMul=c.steam;P.chemAdd=c.chem-((S&&S.perk)?S.perk.chem:0);P.gradeBrk=c.brk;}
+function energyCost(){return Math.max(0,ECON.energy*P.steamMul*P.energyMul+ECON.chem+P.chemAdd-(P.refSave||0));}
+function priceOf(g){let v=ECON.price[g]+P.priceAdd;if(S&&S.perk)v+=S.perk.price[g]||0;if(S&&S.fx)for(const f of S.fx)if(f.price)v+=(f.price[g]||0)+(f.price.all||0);return v;}
 function freqMul(id){let m=1;
   if(["lwplug","cscreen","fscreen","lcplug"].includes(id))m*=Math.pow(0.6,LV("clean"));
   if(MAINT.includes(id))m*=Math.pow(0.75,LV("rcfa"))*Math.pow(0.8,LV("pmprog"));
@@ -853,6 +873,7 @@ function freqMul(id){let m=1;
   if(id==="ragger"||id==="overflow")m*=LV("detrash")?0.4:1;
   if(id==="fleet")m*=Math.pow(0.6,LV("forklift"));
   if(id==="fight"||id==="calloff")m*=LV("safety")?0.5:1;
+  if(S&&S.fx)for(const f of S.fx){if(f.freq&&EV[id]&&(EV[id].g==="machine"||EV[id].g==="stock"))m*=f.freq;if(f.scab&&id==="slime")m*=f.scab;}
   return m;}
 function durMul(id){let d=(id==="dryerfire"||id==="balefire")&&LV("fire")?0.5:1;if(MAINT.includes(id))d*=Math.pow(0.8,LV("maintcrew"))*(LV("stores")?0.75:1);return d;}
 function spend(v,k){if(S.free&&k==="upgrades"){S.ledger[k]+=0;return;}S.cash-=v;S.ledger[k]+=v;}
@@ -939,6 +960,7 @@ function mods(){const m=baseMods();
     if(e.hayMul)m.hayMul*=e.hayMul; if(e.speedCap)m.speedCap=Math.min(m.speedCap,e.speedCap); if(e.breakMul)m.breakMul*=e.breakMul; if(e.yieldMul)m.yieldMul*=(i.id==="badocc"&&LV("detrash"))?0.9:e.yieldMul;
     if(e.recvMul!==undefined)m.recvMul*=e.recvMul; if(e.clampMul!==undefined)m.clampMul*=e.clampMul; if(e.yardEat)m.yardEat+=e.yardEat;
     if(i.drvCap!==undefined)m.drvCap=Math.min(m.drvCap,i.drvCap); if(i.ldrCap!==undefined)m.ldrCap=Math.min(m.ldrCap,i.ldrCap);}
+  for(const f of (S.fx||[])){const e=f.mods||{};if(e.pmDown)m.pmDown=e.pmDown;if(e.speedCap)m.speedCap=Math.min(m.speedCap,e.speedCap);if(e.breakMul)m.breakMul*=e.breakMul;}
   if(S.wx==="rain")m.yieldMul*=0.97;
   if(S.pm==="break"&&S.brkType!=="reel"&&working("brk")){m.recvMul=0;m.clampMul=0;m.crewAtPM=true;}
   return m;}
@@ -965,6 +987,119 @@ function chaosTick(dt){
   if(CH.on&&CH.en.chestover&&!active("chestover")&&S.tank>=P.tankCap*0.995&&Math.random()<dt/60/25)trigger("chestover");
   if(CH.on)for(const e of EVENTS)if(CH.en[e.id]&&!active(e.id)&&Math.random()<dt/60/e.mtbf*CH.lvl*freqMul(e.id)*0.75)trigger(e.id);
 }
+
+/* ---------- event cards: offers the player can accept or decline (v2.2.0) ---------- */
+// one card about every 1.5 game days, never two at once; the sim pauses while a card is open.
+// odds are shown honestly and shift with upgrades and how the mill is running. Seeded per season week.
+function deal(v){S.cash+=v;S.ledger.deals+=v;}
+function addFx(f){S.fx.push(f);S.M=mods();}
+function pend(id,left,fn){S.cards.pend.push({id,left,fn});}
+function pending(id){return S.cards.pend.some(p=>p.id===id)||S.fx.some(f=>f.id===id);}
+function effNow(){return S.tot.pot>0?S.tot.prodT/S.tot.pot:0.9;}
+function qualNow(){return S.q.made>0?1-S.q.off/S.q.made:1;}
+function cardBanner(text,good){BANNERS.push({text,t:null,kind:good?"good":undefined});while(BANNERS.length>3)BANNERS.splice(1,1);log(text,good?"ok":"bad");}
+const CARDS=[
+ {id:"hot",area:"Sales · Paper machine",title:"Hot order",
+  story:()=>"A box plant lost its supplier. They need 900 t of 33HT within 30 hours and will pay $90/t over list.",
+  win:()=>"+$81k premium if all 900 t are made on time",lose:()=>"Every ton short costs $40",
+  odds:()=>clamp(Math.round(50+(effNow()-0.87)*300),10,95),why:"Depends on how well the machine runs: breaks and downtime cost tons.",
+  ok:()=>!S.plan.hot,
+  accept(){S.plan.q.unshift({g:"33HT",t:900,i:3});S.plan.left=0;S.plan.hot={made:0};
+    pend("hot",30*60,()=>{const m=Math.min(900,S.plan.hot.made);S.plan.hot=null;
+      if(m>=900-1e-6){deal(81000);cardBanner("Hot order delivered: 900 t of 33HT on time. +$81k premium.",true);}
+      else{const sh=900-m;deal(-sh*40);cardBanner(`Hot order short by ${Math.round(sh)} t: ${money(sh*40)} penalty.`,false);}});
+    return "33HT jumps to the front of the queue. Delivery due in 30 hours.";}},
+ {id:"chem",area:"Stock prep · Paper machine",title:"Chemical trial",
+  story:()=>"A vendor offers a free 3-day trial of a new strength additive.",
+  win:()=>"Chemical costs drop $12/t for good",lose:()=>"Deposits: scabs 3× as likely and 1.5× sheet breaks during the trial",
+  odds:()=>Math.min(95,65+10*LV("monitor")),why:"Fabric & felt monitoring catches deposits early.",
+  ok:()=>!pending("chem")&&S.perk.chem<36,
+  accept(c){const w=rand("card")*100<c.o;if(!w)addFx({id:"chem",left:3*1440,mods:{breakMul:1.5},scab:3});
+    pend("chem",3*1440,()=>{if(w){S.perk.chem+=12;applyUpgrades();cardBanner("Chemical trial worked: chemicals now $12/t cheaper.",true);}
+      else cardBanner("Chemical trial failed: the additive left deposits. Back to the old recipe.",false);});
+    return "Trial running for 3 days.";}},
+ {id:"eng",area:"Paper machine",title:"Process engineer idea",
+  story:()=>"Your process engineer has a new steam profile that could lift 30m speed by 120 fpm. Engineering time costs $60k.",
+  win:()=>"+120 fpm on 30m, permanently",lose:()=>"$60k spent and sheet breaks 2× for a day",
+  odds:()=>Math.min(95,70+10*LV("rcfa")),why:"Root cause analysis (RCFA) makes trials safer.",
+  ok:()=>!pending("eng")&&(S.perk.sp["30m"]||0)<360,
+  accept(c){deal(-60000);const w=rand("card")*100<c.o;if(!w)addFx({id:"eng",left:1440,mods:{breakMul:2}});
+    pend("eng",1440,()=>{if(w){S.perk.sp["30m"]=(S.perk.sp["30m"]||0)+120;cardBanner("Engineer's steam profile works: 30m runs 120 fpm faster.",true);}
+      else cardBanner("Engineer's trial didn't hold up: back to the old steam profile.",false);});
+    return "Trial running for a day. $60k spent.";}},
+ {id:"cheap",area:"Inbound",title:"Cheap OCC",
+  story:()=>"A broker has 600 t of OCC at $45/t under your price. It arrives over the next shift.",
+  win:()=>"Saves about $27k on fiber",lose:()=>"It's junk: yield drops 20% and sheet breaks double for about 12 hours",
+  odds:()=>Math.min(95,65+20*LV("detrash")),why:"Detrashing automation copes with dirty bales.",
+  ok:()=>!S.plan.disc&&!pending("cheap")&&!active("badocc"),
+  accept(c){S.plan.disc={t:600,v:45};const w=rand("card")*100<c.o;
+    pend("cheap",6*60,()=>{if(w)cardBanner("Cheap OCC checks out: clean bales, about $27k saved.",true);
+      else{trigger("badocc");cardBanner("The cheap OCC was junk: wax, plastic and wet bales in the pulper.",false);}});
+    return "600 t on the way at $45/t off.";}},
+ {id:"grid",area:"Paper machine · Utility",title:"Demand response",
+  story:()=>"The power utility will pay $35k to cut the machine to 70% speed for 4 hours.",
+  win:()=>"+$35k, back to full speed in 4 hours",lose:()=>"The grid event runs 8 hours at 70%, same payment",
+  odds:()=>85,why:"Set by the utility.",
+  ok:()=>!pending("grid"),
+  accept(c){deal(35000);const w=rand("card")*100<c.o;addFx({id:"grid",left:(w?4:8)*60,mods:{speedCap:0.7}});
+    pend("grid",(w?4:8)*60,()=>cardBanner(w?"Demand response over: full speed again.":"Demand response ran 8 hours. Full speed again.",w));
+    return "+$35k paid. Machine capped at 70% speed.";}},
+ {id:"outage",area:"Maintenance",title:"Contractor outage slot",
+  story:()=>"A contractor crew is free for an 8-hour planned shutdown. $80k.",
+  win:()=>"Machine and stock prep breakdowns halved for 7 days",lose:()=>"The job overruns: 12 hours down instead of 8",
+  odds:()=>Math.min(95,80+10*LV("stores")),why:"A stocked spare parts storeroom keeps jobs on time.",
+  ok:()=>!pending("outage")&&!pending("care"),
+  accept(c){deal(-80000);const w=rand("card")*100<c.o,h=w?8:12;addFx({id:"outage",left:h*60,mods:{pmDown:"planned outage"}});
+    pend("outage",h*60,()=>{addFx({id:"care",left:7*1440,freq:0.5});cardBanner(w?"Planned outage finished on time. Breakdowns halved for 7 days.":"Planned outage overran by 4 hours. Breakdowns halved for 7 days.",w);});
+    return "$80k spent. Machine down for planned work.";}},
+ {id:"audit",area:"Quality",title:"Customer audit",
+  story:()=>"Your biggest 33HT customer will audit your quality for the next 3 days. They want 99% on-spec paper.",
+  win:()=>"+$15/t on 33HT for the rest of the game",lose:()=>"−$10/t on 33HT for 7 days",
+  odds:()=>clamp(Math.round(70+(qualNow()-0.99)*2000),10,95),why:"Passes if 99% of paper made is on spec: dye trouble and grade changes cost quality.",
+  ok:()=>!pending("audit")&&(S.perk.price["33HT"]||0)<45,
+  accept(){const m0=S.q.made,o0=S.q.off;
+    pend("audit",3*1440,()=>{const m=S.q.made-m0,q=m>0?1-(S.q.off-o0)/m:0;
+      if(q>=0.99){S.perk.price["33HT"]=(S.perk.price["33HT"]||0)+15;cardBanner(`Customer audit passed at ${(q*100).toFixed(1)}% on spec: +$15/t on 33HT.`,true);}
+      else{addFx({id:"auditfail",left:7*1440,price:{"33HT":-10}});cardBanner(`Customer audit failed at ${(q*100).toFixed(1)}% on spec: −$10/t on 33HT for 7 days.`,false);}});
+    return "Audit running for 3 days.";}},
+ {id:"seconds",area:"Outbound",title:"Seconds buyer",
+  story:()=>`A broker will buy the ${Math.round(S.q.bank)} t of off-spec paper you sent to the beater for $150/t, cash now.`,
+  win:()=>`+${money(S.q.bank*150)} now`,lose:()=>"The broker resells it as prime: −$5/t on all paper for 3 days",
+  odds:()=>80,why:"Fixed odds.",
+  ok:()=>S.q.bank>=20&&!pending("seconds"),
+  accept(c){const v=S.q.bank*150;deal(v);S.q.bank=0;const w=rand("card")*100<c.o;
+    if(!w)addFx({id:"seconds",left:3*1440,price:{all:-5}});
+    pend("seconds",w?1:3*1440,()=>{if(!w)cardBanner("Seconds resold as prime: prices back to normal.",true);});
+    return w?`${money(v)} paid. Clean deal.`:`${money(v)} paid, but customers found prime-labeled seconds: −$5/t for 3 days.`;}},
+];
+function cardTick(dt){const cs=S.cards;if(!cs)return;
+  for(const f of S.fx)f.left-=dt;
+  if(S.fx.some(f=>f.left<=0)){S.fx=S.fx.filter(f=>f.left>0);}
+  for(const p of cs.pend){p.left-=dt;if(p.left<=0)p.fn();}
+  cs.pend=cs.pend.filter(p=>p.left>0);
+  if(cs.open||S.zen||S.over||(S.season&&S.season.done)||S.t<cs.next)return;
+  cs.next=S.t+1440*(1.2+0.6*rand("card"));
+  const pool=CARDS.filter(c=>c.ok()),pick=pool.length?pool[Math.floor(rand("card")*pool.length)]:null;
+  if(pick&&typeof document!=="undefined"&&document.body)openCard(pick);}
+let cardEl=null;
+function openCard(c){const o=c.odds();S.cards.open={c,o};running=false;const pb=document.getElementById("play");if(pb){pb.textContent="Run";pb.setAttribute("aria-pressed","false");}
+  if(!cardEl){cardEl=document.createElement("div");cardEl.className="overlay";cardEl.id="dealOv";cardEl.hidden=true;document.body.appendChild(cardEl);}
+  const t=s=>String(s).replace(/[&<>]/g,x=>({"&":"&amp;","<":"&lt;",">":"&gt;"}[x]));
+  cardEl.innerHTML=`<div class="modal deal" role="dialog" aria-modal="true" aria-labelledby="deal-h"><span class="dk">${t(c.area)} · sim paused</span>
+    <h2 id="deal-h">${t(c.title)}</h2><p>${t(c.story())}</p>
+    <div class="doc"><b class="w">Win</b><span>${t(c.win())}</span><b class="l">Risk</b><span>${t(c.lose())}</span></div>
+    <div><div class="dodds"><span>Chance it works</span><b>${o}%</b></div><div class="dbar"><i style="width:${o}%"></i></div><p style="font-size:12.5px;margin-top:4px">${t(c.why)}</p></div>
+    <div id="deal-res" class="dres" hidden></div>
+    <div class="btns" id="deal-btns"><button id="deal-no">Decline</button><button id="deal-yes" class="primary">Accept</button></div></div>`;
+  cardEl.hidden=false;AUDIO.sfx("cash",150);
+  const done=msg=>{const r=document.getElementById("deal-res");r.textContent=msg;r.hidden=false;
+    document.getElementById("deal-btns").innerHTML='<button id="deal-go" class="primary">Back to the mill</button>';
+    const g=document.getElementById("deal-go");g.addEventListener("click",closeCard);g.focus();};
+  document.getElementById("deal-no").addEventListener("click",()=>{log(`Declined: ${c.title}`,"");done("Declined. Nothing changes.");});
+  document.getElementById("deal-yes").addEventListener("click",()=>{const msg=c.accept({o});log(`Accepted: ${c.title} (${o}% chance). ${msg}`,"warn");S.M=mods();done(msg);});
+  document.getElementById("deal-yes").focus();}
+function closeCard(){if(cardEl)cardEl.hidden=true;S.cards.open=null;const menuOpen=document.getElementById("v2menu");
+  if(menuOpen&&!menuOpen.hidden)return;running=true;const pb=document.getElementById("play");if(pb){pb.textContent="Pause";pb.setAttribute("aria-pressed","true");}}
 const HAYLINES=["HAYOUT! Paper is shooting to the roof!","Winder hayout! Every PM hand to the dry end!","Hayout! It's snowing paper in the winder aisle.","Hayout! The set exploded off the drums."];
 function hayout(){AUDIO.sfx("hayout",600);S.wd="hayout";S.hayLeft=40+Math.random()*40;S.hayTotal=S.hayLeft;enqueue("hay");
   const extra=Math.min(S.winderBuf,2+Math.random()*4),loss=extra+S.winderAcc;S.winderBuf-=extra;S.winderAcc=0;S.tot.broke+=loss;S.tot.hayouts++;
@@ -972,7 +1107,7 @@ function hayout(){AUDIO.sfx("hayout",600);S.wd="hayout";S.hayLeft=40+Math.random
   log(`Winder hayout: ${loss.toFixed(1)} t of paper to broke`,"bad");}
 function initCtrl(){
   C={inRate:{v:1.8,auto:true},drivers:{v:3,auto:true},pulper:{v:40,auto:true},lvlTarget:{v:69},lowLevel:{v:30},
-     pmSp:{v:2736,auto:true},rollW:{v:25/8},loaders:{v:2,auto:true},outRate:{v:1,auto:true},grade:"23m",breaks:false,hays:true,wdr:{v:45,auto:true},simSpeed:30};
+     pmSp:{v:2736,auto:true},rollW:{v:25/8},loaders:{v:2,auto:true},outRate:{v:1,auto:true},grade:"23m",breaks:true,hays:true,wdr:{v:45,auto:true},simSpeed:30};
 }
 function initState(){
   S={date0:new Date().setHours(0,0,0,0),wx:"clear",wxLeft:360,wet:0,crewQ:[],brkType:"dryer",breakTotal:1,hayTotal:1,t:0,yard:700,tank:0.69*P.tankCap,fg:160,pmSpeed:C.pmSp.v,pm:"run",breakLeft:0,reel:8,winderBuf:0,winderAcc:0,
@@ -980,14 +1115,34 @@ function initState(){
      rates:{feed:0,unload:0,fiberIn:0,prod:0,fiberUse:0,load:0,rolls:0,cut:0},
      tot:{inTrucks:0,inTons:0,turned:0,prodT:0,rolls:0,shipped:0,outTrucks:0,breaks:0,breakMin:0,turnups:0,pot:0,incidents:0,hayouts:0,hayMin:0,broke:0},wd:"run",hayLeft:0,
      trend:[],trendAcc:0,rollsVis:[],conv:0,inc:[],lastInc:0,feed:[],M:baseMods(),effDrv:C.drivers.v,effLd:C.loaders.v,effHum:C.loaders.v};
-  S.up={};S.cash=ECON.start;S.ledger={rev:0,occ:0,energy:0,labor:0,overhead:0,repairs:0,premium:0,upgrades:0};S.profitRate=0;S.over=null;S.won=false;S.shipT=0;
+  S.up={};S.cash=ECON.start;S.ledger={rev:0,occ:0,energy:0,labor:0,overhead:0,repairs:0,premium:0,upgrades:0,deals:0};
+  S.q={made:0,off:0,bank:0};S.fx=[];S.perk={chem:0,sp:{},price:{}};S.chg=null;
+  seedRun((Math.random()*2**32)|0);S.profitRate=0;S.over=null;S.won=false;S.shipT=0;
   Object.assign(P,BASE);applyUpgrades();
-  C.rollW.v=P.jumbo/P.rollsPerReel;const g=GRADES[C.grade]; C.pmSp.v=g.sp+P.spBonus; C.wdr.v=Math.min(P.winderMax,P.K*C.pmSp.v*g.bw*1.25);
+  C.rollW.v=P.jumbo/P.rollsPerReel;const g=GRADES[C.grade]; C.pmSp.v=g.sp+P.spBonus+(S.perk.sp[C.grade]||0); C.wdr.v=Math.min(P.winderMax,P.K*C.pmSp.v*g.bw*1.25);
   const demand=P.K*g.sp*g.bw/P.pmLoss; C.pulper.v=demand/P.yieldF;
   C.inRate.v=C.pulper.v/P.truckLoad; C.drivers.v=Math.ceil(2*C.pulper.v/P.driverRate+0.15);
   const rph=P.K*g.sp*g.bw/C.rollW.v; C.loaders.v=Math.ceil(rph*1.15/P.loaderRate); C.outRate.v=rph/P.truckRolls;
   S.rates.fiberIn=demand; S.rates.prod=demand*P.pmLoss; S.rates.feed=C.pulper.v;
 }
+// market-driven planner: a hidden production queue that walks the grade wheel and buys the OCC blend for it
+function seedRun(seed){S.seed=seed>>>0;S.rng={plan:S.seed^0x9e3779b9,card:S.seed^0x85ebca6b};
+  C.grade="23m";const c=GCOST["23m"];
+  S.plan={i:0,q:[],cur:null,left:c.mix[0]+rand("plan")*(c.mix[1]-c.mix[0]),mkt:0,mktLeft:7*1440,disc:null,hot:null};
+  S.cards={next:1440*(1+0.5*rand("card")),open:null,pend:[]};applyGrade();}
+function setGrade(to){const from=C.grade;if(to===from)return;
+  const off=4+2*Math.abs(GRADES[to].bw-GRADES[from].bw);S.chg={left:off,total:off,from,to};C.grade=to;applyUpgrades();
+  log(`Grade change ${from} → ${to} (market orders): about ${off.toFixed(0)} t to the beater during the transition`,"warn");}
+function planTick(dt,good){const pl=S.plan;
+  pl.left-=good;
+  if(pl.left<=0){let nx;
+    if(pl.q.length){nx=pl.q.shift();pl.cur=nx;}
+    else{if(pl.cur&&pl.cur.i!==undefined)pl.i=pl.cur.i;pl.cur=null;pl.i=(pl.i+1)%WHEEL.length;const g=WHEEL[pl.i],c=GCOST[g];nx={g,t:c.mix[0]+rand("plan")*(c.mix[1]-c.mix[0])};}
+    pl.left=nx.t;setGrade(nx.g);}
+  pl.mktLeft-=dt;
+  if(pl.mktLeft<=0){pl.mktLeft=7*1440;const d=Math.round((rand("plan")*2-1)*15),m=clamp(pl.mkt+d,-30,30),ch=m-pl.mkt;pl.mkt=m;applyUpgrades();
+    if(ch)log(`OCC market: ${ch>0?"up":"down"} $${Math.abs(ch)}/t this week`,ch>0?"warn":"ok");}}
+
 initCtrl(); initState();
 
 const clamp=(x,a,b)=>Math.max(a,Math.min(b,x));
@@ -995,7 +1150,7 @@ const ease=(cur,tgt,dt,tau)=>cur+(tgt-cur)*Math.min(1,dt/tau);
 
 function autoControl(dt){
   const g=GRADES[C.grade], level=S.tank/P.tankCap*100;
-  if(C.pmSp.auto) C.pmSp.v=g.sp+P.spBonus;
+  if(C.pmSp.auto) C.pmSp.v=g.sp+P.spBonus+(S.perk.sp[C.grade]||0);
   const pmWants = (S.pm==="full"||S.pm==="incident"||S.pm==="spools")?0:P.K*C.pmSp.v*g.bw/P.pmLoss;
   if(C.pulper.auto){
     const fiber=pmWants+(C.lvlTarget.v-level)/100*P.tankCap/1.5;
@@ -1031,6 +1186,7 @@ function step(dt){
   S.t+=dt;
   const cash0=S.cash;
   chaosTick(dt);
+  cardTick(dt);
   const M=S.M=mods();
   autoControl(dt);
   const g=GRADES[C.grade];
@@ -1055,7 +1211,8 @@ function step(dt){
   let unloaded=0;
   for(let d=0;d<P.doors;d++){const tr=S.inDock[d]; if(!tr||M.docksClosed)continue;
     const u=Math.min(tr.load,P.doorRate*dt/60,cap,Math.max(0,P.yardCap-S.yard));
-    tr.load-=u;cap-=u;S.yard+=u;unloaded+=u;S.tot.inTons+=u;spend(u*P.occPrice,"occ");
+    tr.load-=u;cap-=u;S.yard+=u;unloaded+=u;S.tot.inTons+=u;
+    {const dc=S.plan.disc,dt2=dc?Math.min(u,dc.t):0;spend(u*P.occPrice-dt2*(dc?dc.v:0),"occ");if(dc){dc.t-=dt2;if(dc.t<=1e-6)S.plan.disc=null;}}
     if(tr.load<=0.001){S.leaving.push({...tr,ty:inY(d),kind:"in"});S.inDock[d]=null;}}
   const feed=Math.min(feedRes,S.yard); S.yard-=feed;
   // 3 pulper → chest
@@ -1079,7 +1236,7 @@ function step(dt){
     const r=P.ramp*dt; S.pmSpeed+=clamp(tgt-S.pmSpeed,-r*2,r);
     if(level<5){S.pm="down";}
     else if(S.reel>=P.jumbo&&S.winderBuf>P.storeReels*P.jumbo+1e-6){S.pm="spools";}
-    else if(Math.random()<dt/154*0.75*P.breakBase*((C.breaks?1:0)+(M.breakMul-1))){S.pm="break";const r=Math.random();S.brkType=r<0.45?"reel":r<0.8?"dryer":"press";
+    else if(Math.random()<dt/390*P.breakBase*((C.breaks?P.gradeBrk:0)+(M.breakMul-1))){S.pm="break";const r=Math.random();S.brkType=r<0.45?"reel":r<0.8?"dryer":"press";
       S.breakLeft=S.brkType==="reel"?4+Math.random()*6:S.brkType==="dryer"?12+Math.random()*14:26+Math.random()*20;S.breakTotal=S.breakLeft;S.tot.breaks++;enqueue("brk");AUDIO.sfx("snap",2500);
       log(`Sheet break ${S.brkType==="reel"?"at the reel (short)":S.brkType==="dryer"?"before the dryers":"before the presses (long)"}`,"warn");}
     if(S.pm==="run"){
@@ -1090,8 +1247,13 @@ function step(dt){
     }
   }
   if(S.pm!=="run") S.pmSpeed=ease(S.pmSpeed,0,dt,3);
-  if(M.offSpec&&prod>0){spend(prod*Math.max(0,ECON.energy*P.energyMul+ECON.chem-(P.refSave||0)),"energy");S.tot.broke+=prod;S.tot.beater=(S.tot.beater||0)+prod;prod=0;}
-  S.reel+=prod; S.tot.prodT+=prod; spend(prod*Math.max(0,ECON.energy*P.energyMul+ECON.chem-(P.refSave||0)),"energy"); S.tot.pot+=P.K*C.pmSp.v*g.bw*dt/60;
+  if(prod>0){spend(prod*energyCost(),"energy");S.q.made+=prod;
+    let off=0;if(M.offSpec)off=prod;
+    else if(S.chg){off=Math.min(prod,S.chg.left);S.chg.left-=off;if(S.chg.left<=1e-6){log(`Grade change to ${S.chg.to} complete: back on spec`,"ok");S.chg=null;}}
+    if(off>0){S.tot.broke+=off;S.tot.beater=(S.tot.beater||0)+off;S.q.off+=off;S.q.bank+=off;prod-=off;}
+    if(S.plan.hot&&C.grade==="33HT")S.plan.hot.made+=prod;}
+  S.reel+=prod; S.tot.prodT+=prod; S.tot.pot+=P.K*C.pmSp.v*g.bw*dt/60;
+  planTick(dt,prod);
   if(S.reel>=P.jumbo&&S.winderBuf<=P.storeReels*P.jumbo+1e-6){S.winderBuf+=S.reel;S.reel=0;S.tot.turnups++;}
   // 6 winder
   if(S.wd==="hayout"){if(working("hay"))S.hayLeft-=dt;S.tot.hayMin+=dt;if(S.hayLeft<=0){S.wd="run";log("Winder cleaned up and running again","ok");}}
@@ -1114,7 +1276,7 @@ function step(dt){
   for(let d=0;d<P.shipDoors;d++){const tr=S.outDock[d]; if(!tr)continue;
     const l=Math.min(P.truckRolls-tr.load,P.doorRolls*dt/60,lcap,S.fg);
     tr.load+=l;lcap-=l;S.fg-=l;loaded+=l;
-    if(tr.load>=P.truckRolls-1e-6){S.leaving.push({...tr,ty:outY(d),kind:"out"});S.outDock[d]=null;S.tot.shipped+=P.truckRolls;const tons=P.truckRolls*C.rollW.v;S.shipT+=tons;earn(tons*(ECON.price[C.grade]+P.priceAdd));}}
+    if(tr.load>=P.truckRolls-1e-6){S.leaving.push({...tr,ty:outY(d),kind:"out"});S.outDock[d]=null;S.tot.shipped+=P.truckRolls;const tons=P.truckRolls*C.rollW.v;S.shipT+=tons;earn(tons*priceOf(C.grade));}}
   spend(((C.drivers.v+C.loaders.v+P.techs)*ECON.wage+P.robots*ECON.robot+P.pmCost)*dt/60,"labor");
   spend(ECON.overhead*dt/60,"overhead"); if(P.premium)spend(P.premium*dt/60,"premium");
   S.profitRate=ease(S.profitRate,(S.cash-cash0)*60/dt*24,dt,480);
@@ -1134,7 +1296,7 @@ function step(dt){
 const $=id=>document.getElementById(id);
 const gradeSel=$("grade");
 Object.keys(GRADES).forEach(k=>{const o=document.createElement("option");o.value=k;o.textContent=`${k} · ${GRADES[k].bw} lb · $${ECON.price[k]}/t`;gradeSel.appendChild(o);});
-gradeSel.addEventListener("change",()=>{C.grade=gradeSel.value;});
+gradeSel.disabled=true;gradeSel.title="Set by the market: the planner schedules grades from customer orders";
 const rows=[...document.querySelectorAll(".row[data-key]")];
 let dragging=null;
 rows.forEach(r=>{
@@ -1212,7 +1374,7 @@ function buy(id){const u=UP[id],l=LV(id);if(l>=u.lv.length)return;const cost=u.l
   spend(cost,"upgrades");AUDIO.sfx("cash",150);S.up[id]=l+1;applyUpgrades();
   BANNERS.push({text:`${u.name}${u.lv.length>1?" level "+(l+1):""} is online.`,t:null,kind:"good"});while(BANNERS.length>3)BANNERS.splice(1,1);
   log(`Installed ${u.name}${u.lv.length>1?" level "+(l+1):""} (${money(cost)})`,"ok");updateShop();}
-const LEDGER=[["rev","Paper sales",1],["occ","OCC purchases",-1],["energy","Energy & chemicals",-1],["labor","Wages & robots",-1],["overhead","Mill overhead",-1],["repairs","Disaster repairs",-1],["premium","Insurance premium",-1],["upgrades","Upgrades bought",-1]];
+const LEDGER=[["rev","Paper sales",1],["occ","OCC purchases",-1],["energy","Energy & chemicals",-1],["labor","Wages & robots",-1],["overhead","Mill overhead",-1],["repairs","Disaster repairs",-1],["premium","Insurance premium",-1],["upgrades","Upgrades bought",-1],["deals","Deals & trials",1]];
 function updateShop(){
   $("u-cash").textContent=money(S.cash);
   UGROUPS.forEach(([g])=>{const us=UPS.filter(u=>u.g===g),own=us.reduce((a,u)=>a+LV(u.id),0),tot=us.reduce((a,u)=>a+u.lv.length,0),can=us.filter(u=>LV(u.id)<u.lv.length&&(S.free||S.cash>=u.lv[LV(u.id)])).length;
@@ -1222,7 +1384,7 @@ function updateShop(){
     if(max){b.disabled=true;b.textContent="Maxed";}
     else{const c=u.lv[l];b.disabled=!S.free&&S.cash<c;b.textContent=S.free?"Add (free play)":S.cash<c?`Need ${money(c)}`:`Buy ${money(c)}`;}});
   const lg=$("ledger");lg.replaceChildren();const h=document.createElement("h3");h.textContent="Books since start";lg.appendChild(h);
-  let net=0;LEDGER.forEach(([k,lab,sg])=>{const v=S.ledger[k]*sg;net+=v;if((k==="premium"||k==="repairs")&&!S.ledger[k])return;
+  let net=0;LEDGER.forEach(([k,lab,sg])=>{const v=S.ledger[k]*sg;net+=v;if((k==="premium"||k==="repairs"||k==="deals")&&!S.ledger[k])return;
     const d=document.createElement("div");d.className="stat "+(v>=0?"pos":"neg");d.innerHTML=`<span>${lab}</span><b>${money(v)}</b>`;lg.appendChild(d);});
   const n=document.createElement("div");n.className="stat net "+(net>=0?"pos":"neg");n.innerHTML=`<span>Net</span><b>${money(net)}</b>`;lg.appendChild(n);
   const m=document.createElement("div");m.className="stat";const t=S.shipT||0;
@@ -1247,7 +1409,7 @@ const lbHdr=(x={})=>Object.assign({apikey:LB.key},LB.key.startsWith("eyJ")?{Auth
 function seasonLocks(on){["chaosOn","chaosLvl","chaosClear"].forEach(id=>{const el=$(id);if(el)el.disabled=on;});
   document.querySelectorAll('#chaosgrid input[type=checkbox]').forEach(el=>el.disabled=on);
   $("seasonBtn").textContent=on?"Restart season":"Start season";$("seasonChip").hidden=!on;}
-function startSeason(){newGame();$("freeBtn").setAttribute("aria-pressed","false");$("freeBtn").textContent="Free play";S.season={on:true,end:SEASON_DAYS*1440,done:false};
+function startSeason(){newGame();$("freeBtn").setAttribute("aria-pressed","false");$("freeBtn").textContent="Free play";S.season={on:true,end:SEASON_DAYS*1440,done:false};seedRun(Math.floor(Date.now()/6048e5)*2654435761);C.breaks=true;
   CH.on=true;$("chaosOn").checked=true;CH.lvl=1;$("chaosLvl").value=1;$("chaosLvlv").textContent="1×";
   EVENTS.forEach(e=>{CH.en[e.id]=true;const c=$("en-"+e.id);if(c)c.checked=true;});seasonLocks(true);
   BANNERS.push({text:`Season started: ${SEASON_DAYS} days. Make as much profit as you can.`,t:null,kind:"good"});}
@@ -1280,10 +1442,10 @@ async function submitScore(){const r=S.season&&S.season.result;if(!r||S.free)ret
   catch(e){setMsg(String(e.message||e),"bad");$("so-submit").disabled=false;}}
 async function openBoard(){$("lbOv").hidden=false;const L=$("lb-list");L.replaceChildren(Object.assign(document.createElement("div"),{className:"lbempty",textContent:"Loading…"}));
   let rows=[],note="";
-  if(lbOn()){try{const res=await fetch(LB.url.replace(/\/$/,"")+"/rest/v1/scores?select=name,score,tons,incidents,mill,created_at&order=score.desc,tons.desc&limit=100",{headers:lbHdr()});
+  if(lbOn()){try{const res=await fetch(LB.url.replace(/\/$/,"")+"/rest/v1/scores?select=name,score,tons,incidents,mill,created_at&order=score.desc,tons.desc&limit=100&and=(version.not.like.v1.*,version.not.like.v2.0.*,version.not.like.v2.1.*)",{headers:lbHdr()});
       if(!res.ok)throw new Error(res.status);rows=await res.json();}catch(e){note="Couldn't reach the leaderboard. Showing scores saved on this device.";}}
   else note="Online leaderboard not connected yet. Showing scores saved on this device.";
-  if(note){try{rows=JSON.parse(localStorage.getItem("paper-mill-local-scores")||"[]");}catch(e){rows=[];}}
+  if(note){try{rows=JSON.parse(localStorage.getItem("paper-mill-local-scores")||"[]").filter(r=>!/^v(1\.|2\.[01]\.)/.test(r.version||""));}catch(e){rows=[];}}
   $("lb-sub").textContent=note||"Top 100 · 30-day seasons · ranked by net profit";
   if(!rows.length){L.replaceChildren(Object.assign(document.createElement("div"),{className:"lbempty",textContent:"No scores yet. Start a season and set the bar."}));return;}
   let me="";try{me=localStorage.getItem("paper-mill-player")||"";}catch(e){}
@@ -1356,7 +1518,7 @@ function updateText(){
   $("k-cash").textContent=money(S.cash);$("k-cash-box").classList.toggle("neg",S.cash<0);
   $("k-cash-s").textContent=S.cash<0?`bankrupt at ${money(ECON.bankrupt)}`:`${(100*Math.max(0,S.cash)/ECON.goal).toFixed(1)}% of the $25M goal`;
   {const t=money(S.profitRate)+"/day";$("k-profit").textContent=t;$("k-profit").style.color=/^[−-]/.test(t)?"var(--bad)":"var(--ink)";}
-  $("k-profit-s").textContent=`${money(ECON.price[C.grade]+P.priceAdd)}/t selling price`;
+  $("k-profit-s").textContent=`${money(priceOf(C.grade))}/t selling price`;
   $("k-tank").textContent=f0(level)+" %";
   const net=R.fiberIn-R.fiberUse;
   $("k-tank-s").textContent=`${net>=0?"+":"−"}${f1(Math.abs(net))} t/h ${Math.abs(net)<0.5?"balanced":net>0?"building":"draining"}`;
@@ -4066,7 +4228,7 @@ const HTML_V2='<div class="v2top" id="v2top">\n  <button class="v2card v2ibtn" i
 let last=performance.now(),uiAcc=0;
 function frame(now){
   const rdt=Math.max(0,Math.min(0.1,(now-last)/1000));last=now;
-  if(running){let simDt=rdt*C.simSpeed;while(simDt>0){const h=Math.min(0.5,simDt);step(h);simDt-=h;}}
+  if(running){let simDt=rdt*C.simSpeed;while(simDt>0&&running){const h=Math.min(0.5,simDt);step(h);simDt-=h;}}
   // schedule the next frame first: a bug in one frame must never stop the game loop
   requestAnimationFrame(frame);
   try{draw(running?rdt:0);
