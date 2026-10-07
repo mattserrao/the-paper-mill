@@ -458,7 +458,7 @@ body{margin:0}
 </head>
 <body>
 
-<div class="ver" id="appVersion" aria-label="Version">v2.9.13</div>
+<div class="ver" id="appVersion" aria-label="Version">v2.9.14</div>
 <div class="wrap">
   <header>
     <div class="brand"><span class="logo" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linejoin="round"><circle cx="8.5" cy="12" r="5.5"/><circle cx="8.5" cy="12" r="1.6" fill="currentColor"/><path d="M8.5 6.5H20v11H8.5"/></svg></span>
@@ -2517,6 +2517,57 @@ const G3={on:false,ok:false};
   // warehouse: floor + walls
   slab(-49,-23.8,14.8,32.2,M.slab,0.04);
   ribWall(25.2,WH,0.3,-36.4,WH/2,14.8);ribWall(25.2,WH,0.3,-36.4,WH/2,32.2);ribWall(0.3,WH,3.3,-23.8,WH/2,16.45);ribWall(0.3,WH,11.5,-23.8,WH/2,26.45);ribWall(0.3,WH-2.5,2.6,-23.8,2.5+(WH-2.5)/2,19.4);
+
+  // ---- v2.9.14 lived-in floors: one painted canvas decal per building (bays, aisles, walkways, parking, scuffs, stains,
+  // joints) = one draw call each, plus a few instanced props (pallets, bollards, bins, chargers, extinguishers) ----
+  function floorDecal(x0,x1,z0,z1,ppm,paint){const W2=Math.round((x1-x0)*ppm),H2=Math.round((z1-z0)*ppm),c=document.createElement("canvas");c.width=W2;c.height=H2;
+    const x=c.getContext("2d"),X=v=>(v-x0)*ppm,Z=v=>(v-z0)*ppm;paint(x,X,Z,ppm,W2,H2);
+    const t=new THREE.CanvasTexture(c);t.encoding=THREE.sRGBEncoding;t.anisotropy=4;
+    const m=new THREE.MeshLambertMaterial({map:t,transparent:true,depthWrite:false,polygonOffset:true,polygonOffsetFactor:-2,polygonOffsetUnits:-2});
+    const o=new THREE.Mesh(new THREE.PlaneGeometry(x1-x0,z1-z0),m);o.rotation.x=-Math.PI/2;o.position.set((x0+x1)/2,0.055,(z0+z1)/2);o.receiveShadow=true;o.renderOrder=1;scene.add(o);return o;}
+  let dSeed=7;const drnd=()=>{dSeed=(dSeed*16807)%2147483647;return dSeed/2147483647;};
+  const dScuffs=(x,X,Z,ppm,pts,n)=>{for(let k=0;k<n;k++){const [cx,cz,sp]=pts[Math.floor(drnd()*pts.length)],px=X(cx+(drnd()-0.5)*sp),pz=Z(cz+(drnd()-0.5)*sp*0.6),r=(0.6+drnd()*1.6)*ppm,a0=drnd()*6.28;
+      x.strokeStyle=`rgba(30,30,34,${0.035+drnd()*0.06})`;x.lineWidth=(0.08+drnd()*0.07)*ppm;x.beginPath();x.arc(px,pz,r,a0,a0+0.4+drnd()*1.2);x.stroke();
+      if(drnd()<0.5){x.beginPath();x.arc(px+0.28*ppm,pz+0.16*ppm,r,a0,a0+0.3+drnd()*0.8);x.stroke();}}};
+  const dStains=(x,X,Z,ppm,x0,x1,z0,z1,n)=>{for(let k=0;k<n;k++){const px=X(x0+drnd()*(x1-x0)),pz=Z(z0+drnd()*(z1-z0)),r=(0.3+drnd()*1.1)*ppm;
+      const g=x.createRadialGradient(px,pz,0,px,pz,r);g.addColorStop(0,`rgba(${drnd()<0.5?"60,48,30":"40,40,44"},${0.10+drnd()*0.1})`);g.addColorStop(1,"rgba(0,0,0,0)");x.fillStyle=g;x.beginPath();x.ellipse(px,pz,r,r*(0.5+drnd()*0.5),drnd()*3,0,7);x.fill();}};
+  const dJoints=(x,W2,H2,ppm)=>{x.strokeStyle="rgba(0,0,0,0.07)";x.lineWidth=2;for(let v=6*ppm;v<W2;v+=6*ppm){x.beginPath();x.moveTo(v,0);x.lineTo(v,H2);x.stroke();}for(let v=6*ppm;v<H2;v+=6*ppm){x.beginPath();x.moveTo(0,v);x.lineTo(W2,v);x.stroke();}};
+  const dBox=(x,X,Z,a,b,c,d,col,w)=>{x.strokeStyle=col;x.lineWidth=w;x.strokeRect(X(a),Z(c),X(b)-X(a),Z(d)-Z(c));};
+  const dHatch=(x,X,Z,ppm,a,b,c,d,c1,c2)=>{x.save();x.beginPath();x.rect(X(a),Z(c),X(b)-X(a),Z(d)-Z(c));x.clip();x.fillStyle=c1;x.fillRect(X(a),Z(c),X(b)-X(a),Z(d)-Z(c));x.strokeStyle=c2;x.lineWidth=0.18*ppm;
+    for(let v=-40;v<80;v+=0.6){x.beginPath();x.moveTo(X(a+v),Z(c));x.lineTo(X(a+v+ (d-c)),Z(d));x.stroke();}x.restore();};
+  const dDashH=(x,X,Z,ppm,a,b,z,col)=>{x.strokeStyle=col;x.lineWidth=0.12*ppm;x.setLineDash([1.2*ppm,0.9*ppm]);x.beginPath();x.moveTo(X(a),Z(z));x.lineTo(X(b),Z(z));x.stroke();x.setLineDash([]);};
+  const dDashV=(x,X,Z,ppm,xx,c,d,col)=>{x.strokeStyle=col;x.lineWidth=0.12*ppm;x.setLineDash([1.2*ppm,0.9*ppm]);x.beginPath();x.moveTo(X(xx),Z(c));x.lineTo(X(xx),Z(d));x.stroke();x.setLineDash([]);};
+  const dTxt=(x,X,Z,ppm,s2,cx,cz,size,col,rot=0)=>{x.save();x.translate(X(cx),Z(cz));x.rotate(rot);x.fillStyle=col;x.font=`800 ${size*ppm}px "Plus Jakarta Sans",system-ui,sans-serif`;x.textAlign="center";x.textBaseline="middle";x.fillText(s2,0,0);x.restore();};
+  const YEL="rgba(242,184,7,0.85)",WHT="rgba(255,255,255,0.75)",GRN="rgba(46,160,90,0.55)";
+  const PPM=mobile?20:32;
+  // receiving shed  x -34.4..-8, z -23.5..-3
+  floorDecal(-34.4,-8,-23.5,-3,PPM,(x,X,Z,ppm,W2,H2)=>{dJoints(x,W2,H2,ppm);dStains(x,X,Z,ppm,-34,-9,-23,-3.5,26);
+    [-5.6,-9.0,-14.0,-17.4].forEach((r,i)=>{dBox(x,X,Z,-30.8,-10.4,r-0.75,r+0.75,YEL,0.1*ppm);dTxt(x,X,Z,ppm,"R"+(i+1),-31.6,r,0.7,"rgba(242,184,7,0.9)");});
+    [-7.3,-11.5,-15.7].forEach(z=>dDashH(x,X,Z,ppm,-32,-9.5,z,WHT));dDashV(x,X,Z,ppm,-32.3,-21.5,-4.6,WHT);
+    dHatch(x,X,Z,ppm,-34.3,-33.5,-23.4,-3.1,"rgba(242,184,7,0.35)","rgba(30,30,30,0.35)");          // keep the dock wall clear
+    dHatch(x,X,Z,ppm,-9.3,-8.1,-23.4,-3.1,GRN,"rgba(255,255,255,0.45)");dTxt(x,X,Z,ppm,"WALKWAY",-8.7,-19,0.45,"#fff",Math.PI/2);
+    for(let i=0;i<4;i++)dBox(x,X,Z,-14.2-i*2.6-1.1,-14.2-i*2.6+1.1,-22.9,-20.5,YEL,0.1*ppm);dTxt(x,X,Z,ppm,"FORKLIFT PARKING",-18.1,-20.0,0.5,"rgba(242,184,7,0.95)");
+    dScuffs(x,X,Z,ppm,[[-32.3,-12,3],[-20,-7.3,10],[-20,-11.5,10],[-20,-15.7,10],[-31,-9,3],[-31,-14.5,3],[-31,-20,3],[-20.3,-11.5,3]],140);});
+  // roll warehouse  x -49..-23.8, z 14.8..32.2
+  floorDecal(-49,-23.8,14.8,32.2,PPM,(x,X,Z,ppm,W2,H2)=>{dJoints(x,W2,H2,ppm);dStains(x,X,Z,ppm,-48.5,-24.3,15.3,31.7,20);
+    const ROWS="ABCDEFG";for(let k=0;k<84;k++){const cx=-45+(k%12)*1.75,cz=31.2-Math.floor(k/12)*1.7;dBox(x,X,Z,cx-0.78,cx+0.78,cz-0.74,cz+0.74,"rgba(255,255,255,0.32)",0.05*ppm);
+      if(k%12===0)dTxt(x,X,Z,ppm,ROWS[Math.floor(k/12)],cx-1.3,cz,0.6,"rgba(242,184,7,0.9)");}
+    dDashH(x,X,Z,ppm,-47.6,-24.5,17.0,WHT);dDashV(x,X,Z,ppm,-47.6,15.5,31.5,WHT);
+    dHatch(x,X,Z,ppm,-37.3,-25.5,15.05,16.45,"rgba(220,60,60,0.25)","rgba(255,255,255,0.35)");dTxt(x,X,Z,ppm,"BEATER ROLLS",-31.4,15.75,0.42,"rgba(150,20,20,0.85)");
+    for(let i=0;i<4;i++)dBox(x,X,Z,-45.2+i*2-0.9,-45.2+i*2+0.9,15.0,16.4,YEL,0.09*ppm);dTxt(x,X,Z,ppm,"CLAMP PARKING",-42.2,16.75,0.38,"rgba(242,184,7,0.95)");
+    dHatch(x,X,Z,ppm,-24.6,-23.9,20.6,32.0,GRN,"rgba(255,255,255,0.45)");
+    dScuffs(x,X,Z,ppm,[[-36,17,22],[-47.6,23,6],[-32,19.4,4],[-36,22,18],[-36,26,18]],120);});
+  // props: pallet stacks, bins, chargers, bollards, extinguishers (instanced: a handful of draw calls in total)
+  {const pal=new THREE.MeshLambertMaterial({color:lin0("#b8894f")}),red=new THREE.MeshLambertMaterial({color:lin0("#d63a2f")}),yel=new THREE.MeshLambertMaterial({color:lin0("#f2b807")}),
+      blu=new THREE.MeshLambertMaterial({color:lin0("#2f6fd1")}),gry=new THREE.MeshLambertMaterial({color:lin0("#596273")}),m4=new THREE.Matrix4();
+    const dInst=(geo,m,list,rotY)=>{const im=new THREE.InstancedMesh(geo,m,list.length);list.forEach((p,i)=>{m4.makeRotationY(p[3]||rotY||0);m4.setPosition(p[0],p[1],p[2]);im.setMatrixAt(i,m4);});im.castShadow=true;im.receiveShadow=true;scene.add(im);return im;};
+    const pallets=[];[[-33,-22.4],[-33,-21.2],[-11,-3.8],[-48,31.4],[-48,30.2],[-24.6,15.5]].forEach(([px,pz],j)=>{const h=2+((j*7)%4);for(let k=0;k<h;k++)pallets.push([px,0.08+k*0.15,pz,(k%2)*0.08]);});
+    dInst(new THREE.BoxGeometry(1.15,0.14,1.15),pal,pallets);
+    dInst(new CylG(0.32,0.28,0.95,10),blu,[[-9.6,0.48,-4.0],[-24.4,0.48,31.6],[-48.4,0.48,15.4]]);                    // recycling bins
+    dInst(new CylG(0.11,0.11,1.1,8),yel,[[-33.6,0.55,-23.1],[-33.6,0.55,-3.4],[-8.6,0.55,-12.9],[-8.6,0.55,-10.1],[-48.6,0.55,15.2],[-48.6,0.55,31.8],[-24.2,0.55,18.2],[-24.2,0.55,20.6]]);  // bollards
+    dInst(new THREE.BoxGeometry(0.5,1.3,0.35),gry,[[-12.2,0.65,-23.2],[-17.4,0.65,-23.2],[-45.2,0.65,14.98],[-41.2,0.65,14.98]]);   // battery chargers
+    dInst(new CylG(0.1,0.1,0.45,8),red,[[-8.3,1.2,-6.0],[-8.3,1.2,-20.0],[-34.1,1.2,-11.7],[-23.95,1.2,24.0],[-48.75,1.2,22.0],[-36,1.2,31.95]]);   // fire extinguishers on the walls
+  }
   // machine hall: a cutaway shell, back and end walls only, so the machine stays in view
   ribWall(66,5.2,0.3,31,2.6,2.4);ribWall(0.3,5.2,13.8,64,2.6,9.3);
   {const s=new THREE.Mesh(new THREE.PlaneGeometry(26,3.25),signMat);s.position.set(51,3.1,2.57);scene.add(s);
@@ -4552,11 +4603,15 @@ const G3={on:false,ok:false};
     upender.rotation.x=upA>0?upA:upender.rotation.x*Math.max(0,1-rdt*6);
     beltRolls.count=nr;beltRolls.instanceMatrix.needsUpdate=true;if(beltRolls.instanceColor)beltRolls.instanceColor.needsUpdate=true;
     pm("roll conveyor");
-    // forklifts (same paths as the 2D view)
+    // forklifts (same paths as the 2D view). v2.9.14: their clock used to advance only in the retired 2D view, so in 3D
+    // there were none at all; it now runs here. They also stay visible (stopped) when receiving is halted, and idle ones park in the bays.
+    if(!(G3.on&&G3.ok)||true){const nL=Math.round(C.drivers.v);while(V.lifts.length<nL)V.lifts.push({p:Math.random()*4,door:V.lifts.length%3});V.lifts.length=nL;
+      const busy=clamp((R.feed+R.unload)/Math.max(1,C.drivers.v*P.driverRate),0,1);if(rdt>0&&S.M.recvMul!==0)V.lifts.forEach(L=>{L.p=(L.p+rdt*(0.125+busy*0.45))%4;});}
     ensure(lifts,V.lifts.length,()=>forklift(M.warn));
     V.lifts.forEach((L,i)=>{const g=lifts[i];
-      if(i>=Math.floor(S.effDrv+1e-9)){const [x,z]=W(272+i*15,316);g.position.set(x,0,z);g.rotation.y=0;g.children[0].material=M.off;g.userData.load.visible=false;return;}
-      g.children[0].material=M.fork;g.visible=S.M.recvMul!==0||G3.yardFrozen;if(G3.yardFrozen){g.userData.load.visible=false;return;}
+      g.visible=true;
+      if(i>=Math.floor(S.effDrv+1e-9)){const k=Math.max(0,i-Math.floor(S.effDrv+1e-9))%4;g.position.set(-14.2-k*2.6,0,-21.7);g.rotation.y=Math.PI/2;g.children[0].material=M.off;g.userData.load.visible=false;return;}
+      g.children[0].material=M.fork;if(G3.yardFrozen){g.userData.load.visible=false;return;}
       const dz=W(0,inY(L.door%P.doors))[1],dz2=clamp(dz,-21.5,-5.2),stk=(k,m)=>{const ai=(i*k+m)%3;return [ai===1?-29.4+((i*m*7)%8):-29.4+((i*k*5+m*3)%17),FKA[ai]];};
       const pts=[[-33.2,dz2],stk(2,1),stk(3,2),[-20.3,-11.5]];
       const a=Math.floor(L.p),t=L.p-a,A=pts[a],B=pts[(a+1)%4];
@@ -4567,9 +4622,10 @@ const G3={on:false,ok:false};
     const nLo=Math.round(C.loaders.v);ensure(loaders,nLo,()=>clamp3(M.ok));
     for(let i=0;i<nLo;i++){const g=loaders[i];
       if(!g.userData.homed){g.userData.homed=true;g.position.set(-28-i*2.2,0,17);g.rotation.y=Math.PI;}
-      if(i>=Math.floor(S.effHum+1e-9)){g.position.set(-26-i*1.8,0,30.6);g.rotation.y=-Math.PI/2;g.userData.cj=null;g.children[0].material=M.off;g.userData.load.visible=false;g.visible=true;continue;}
-      g.children[0].material=M.fork;g.visible=S.M.clampMul!==0||G3.yardFrozen;if(G3.yardFrozen){g.userData.load.visible=false;continue;}
-      clampJob(g,i,rdt);}
+      g.visible=true;
+      if(i>=Math.floor(S.effHum+1e-9)){const k=Math.max(0,i-Math.floor(S.effHum+1e-9))%4;g.position.set(-45.2+k*2,0,15.7);g.rotation.y=Math.PI/2;g.userData.cj=null;g.children[0].material=M.off;g.userData.load.visible=false;continue;}
+      g.children[0].material=M.fork;if(G3.yardFrozen){g.userData.load.visible=false;continue;}
+      if(S.M.clampMul!==0)clampJob(g,i,rdt);}
     ensure(robots,P.robots,robot);
     robots.forEach((g,r)=>{if(r>=P.robots)return;const ph=S.M.clampMul===0?0.3:(V.rollsAnim*0.45+r*0.29)%2,t=ph<1?ph:2-ph,[x,z]=W(130+t*200,outY(r%P.shipDoors)+(r%2?6:-6));
       g.position.set(x,0,z);g.userData.light.material=((now/400+r)|0)%2?M.ok:M.stock;});
