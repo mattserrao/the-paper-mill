@@ -448,7 +448,7 @@ body{margin:0}
 </head>
 <body>
 
-<div class="ver" id="appVersion" aria-label="Version">v2.0.1</div>
+<div class="ver" id="appVersion" aria-label="Version">v2.1.0</div>
 <div class="wrap">
   <header>
     <div class="brand"><span class="logo" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linejoin="round"><circle cx="8.5" cy="12" r="5.5"/><circle cx="8.5" cy="12" r="1.6" fill="currentColor"/><path d="M8.5 6.5H20v11H8.5"/></svg></span>
@@ -1823,6 +1823,8 @@ const G3={on:false,ok:false};
   const capTex=new THREE.CanvasTexture(capC);capTex.encoding=THREE.sRGBEncoding;
   M.rollCap=mat("panel",{map:capTex,roughness:0.9});
   const ROLLM=[M.paper,M.rollCap,M.rollCap];
+  // separate materials for instanced meshes that carry per-roll colors (a shared material can't serve meshes with and without instance colors)
+  const ROLLC=()=>[M.paper.clone(),M.rollCap.clone(),M.rollCap.clone()];
   // trailer side graphics carry the mill name and brand color
   const trC=document.createElement("canvas");trC.width=512;trC.height=160;const trTex=new THREE.CanvasTexture(trC);trTex.encoding=THREE.sRGBEncoding;trTex.anisotropy=4;
   function drawTrailer(){const x=trC.getContext("2d"),b=tok("brand");x.fillStyle="#ffffff";x.fillRect(0,0,512,160);x.fillStyle=b;x.fillRect(0,118,512,42);
@@ -1991,7 +1993,7 @@ const G3={on:false,ok:false};
     [-1.6,1.6].forEach(dx=>box(0.14,1.2,0.14,M.ink,44+dx,0.6,21.5,scene,false));ENV.board={ctx:sc.getContext("2d"),tex:st,last:""};}
   // trees: dense outside the fence, scattered on the lawns inside, kept off every road and building
   {const KEEP=[[-145,-33,-6.5,-1],[-145,-48,10,15],[-55,-6,-26,-1.5],[-69,-22,9,50],[-27,67,1,20],[2,46,-27,-1],[47,67,-29,-13],[47,63,21,32],[18,96,29,36],[64,90,36,58],[68,85,-19,-2],[0,48,-50,-29],
-      [-145,-6,-32,-26],[64,69,-2,20],[-33,-27,-58,-29],[-6,6,-33,-24],[24,42,36,42],[63,70,19,25],[42,46,19,23],[-110,-90,-1,10],[-165,-30,-50,-32.6],[-96,-52,-28,-6],[-44,-38,-2,1.5],[30,34,-62,-44],[-405,405,-78,-54]];
+      [-145,-6,-32,-26],[64,69,-2,20],[-33,-27,-58,-29],[-6,6,-33,-24],[24,42,36,42],[63,70,19,25],[42,46,19,23],[-110,-90,-1,10],[-165,-30,-50,-32.6],[-50,-4,-4,14],[-96,-52,-28,-6],[-44,-38,-2,1.5],[30,34,-62,-44],[-405,405,-78,-54]];
     const ok=(x,z)=>!KEEP.some(([a,b,c,d])=>x>a-2&&x<b+2&&z>c-2&&z<d+2);
     const pts=[];let guard=0;
     while(pts.length<300&&guard<6000){guard++;const inside=Math.random()<0.35,x=inside?SITE.x0+Math.random()*(SITE.x1-SITE.x0):-200+Math.random()*400,z=inside?SITE.z0+Math.random()*(SITE.z1-SITE.z0):-130+Math.random()*270;
@@ -2503,7 +2505,7 @@ const G3={on:false,ok:false};
     [[-22.15,(zc+19.4)/2],[-23.65,(zc+19.4)/2]].forEach(([x,z])=>box(0.08,0.25,19.4-zc,M.warn,x,0.6,z+0.3,scene,false));
     box(0.3,0.9,1.6,M.bad,-30.5,0.45,19.4,scene,false);}
   const rollGeo=new THREE.CylinderGeometry(0.62,0.62,1.4,24);
-  const _one=new THREE.Vector3(1,1,1),qB=new THREE.Quaternion(),_yAx=new THREE.Vector3(0,1,0),_eu=new THREE.Euler(),_sc=new THREE.Vector3();const beltRolls=new THREE.InstancedMesh(rollGeo,ROLLM,16);beltRolls.castShadow=true;scene.add(beltRolls);
+  const _rc=new THREE.Color(),_one=new THREE.Vector3(1,1,1),qB=new THREE.Quaternion(),_yAx=new THREE.Vector3(0,1,0),_eu=new THREE.Euler(),_sc=new THREE.Vector3();const beltRolls=new THREE.InstancedMesh(rollGeo,ROLLC(),16);{const c=new THREE.Color(1,1,1);for(let k=0;k<16;k++)beltRolls.setColorAt(k,c);}beltRolls.castShadow=true;scene.add(beltRolls);
 
   // sheet ribbon along the machine
   const tc=document.createElement("canvas");tc.width=64;tc.height=4;const tx=tc.getContext("2d");tx.fillStyle="#fff";tx.fillRect(0,0,64,4);tx.fillStyle="#c8c8c8";tx.fillRect(0,0,6,4);
@@ -2630,6 +2632,86 @@ const G3={on:false,ok:false};
   const truckPool={in:[],out:[]},truckMap=new Map();
   // chemical tanker: every so often it backs onto a free receiving door, hooks up a hose, unloads and leaves (visual only)
   const CHEM={g:null,st:"away",t:25,d:-1,dz:0},_ha=new THREE.Vector3(),_hb=new THREE.Vector3(),_hup=new THREE.Vector3(0,1,0);
+  // ---- beater (off-spec) rolls: staged in a bay in the warehouse, trucked round to receiving and sent back up the line ----
+  // The beater truck has its own side-loading spots so it never fights the sim's trucks for a door:
+  // a door in the warehouse south wall (outbound road side) and a door in the receiving south wall by the walking floor.
+  const BEAT={seen:null,bay:[],line:[],carry:0};G3.BEAT=BEAT;
+  const initCol=im=>{const c=new THREE.Color(1,1,1);for(let k=0;k<im.instanceMatrix.count;k++)im.setColorAt(k,c);};
+  const bayMesh=new THREE.InstancedMesh(rollGeo,ROLLC(),20);initCol(bayMesh);bayMesh.castShadow=true;scene.add(bayMesh);bayMesh.count=0;
+  const bayPos=k=>[-36.6+(k%10)*1.15,15.75];
+  const WDOOR=-39.6,RDOOR=-9.5;
+  slab(-49,-36.5,11.2,13.8,M.asphalt,0.021);slab(-36,-5,-2.6,1.2,M.asphalt,0.021);
+  [[WDOOR,14.62,0],[RDOOR,-3.18,0]].forEach(([x,z])=>{box(2.4,3.0,0.08,M.ink,x,1.5,z,scene,false);box(2.7,0.2,0.12,M.brand,x,3.08,z,scene,false);[-1,1].forEach(sd=>box(0.14,3.1,0.12,M.brand,x+sd*1.27,1.55,z,scene,false));});
+  const BT={g:null,st:"away",t:20,legs:[],cargo:[],unl:0};G3.BT=BT;
+  const lineMesh=new THREE.InstancedMesh(new THREE.CylinderGeometry(0.5,0.5,1.15,16),ROLLC(),10);initCol(lineMesh);lineMesh.castShadow=true;scene.add(lineMesh);lineMesh.count=0;
+  const _bc=new THREE.Color(),_bq=new THREE.Quaternion(),_bz=new THREE.Quaternion().setFromEuler(new THREE.Euler(Math.PI/2,0,0));
+  let rfork=null;
+  function btTruck(){const g=makeTruck("out");g.userData.cargo.forEach(c=>{c.material=[new THREE.MeshStandardMaterial({roughness:0.8}),M.rollCap,M.rollCap];c.visible=false;});g.visible=false;return g;}
+  function bayDraw(){bayMesh.count=Math.min(20,BEAT.bay.length);BEAT.bay.slice(0,20).forEach((c,k)=>{const [x,z]=bayPos(k%10);m4.makeTranslation(x,0.74+Math.floor(k/10)*1.42,z);bayMesh.setMatrixAt(k,m4);bayMesh.setColorAt(k,_bc.set(c));});
+    bayMesh.instanceMatrix.needsUpdate=true;if(bayMesh.instanceColor)bayMesh.instanceColor.needsUpdate=true;}
+  function cargoDraw(){if(!BT.g)return;BT.g.userData.cargo.forEach((c,k)=>{c.visible=k<BT.cargo.length;if(c.visible)c.material[0].color.set(BT.cargo[k]);});}
+  function btGo(legs,st){BT.legs=legs;BT.st=st;}
+  function beaterUpdate(rdt){if(rdt<=0)return;
+    const per=P.jumbo/8,made=Math.floor((S.tot.beater||0)/per);if(BEAT.seen===null)BEAT.seen=made;
+    if(made>BEAT.seen){const RV=G3.rollVis;for(let k=0;k<Math.min(4,made-BEAT.seen);k++)if(RV)RV.list.push({d:-3.2+k*0.01,z:zc+[-1.8,-0.6,0.6,1.8][k%4],spin:0,col:"#"+dyeReel.color.clone().convertLinearToSRGB().getHexString()});BEAT.seen=made;}
+    if(!BT.g)BT.g=btTruck();const g=BT.g,u=g.userData;
+    // drive the current list of legs (rev = backing up)
+    if(BT.legs.length){const w=BT.legs[0];if(driveTo(g,w,(w.rev?3:8)*TSC(),rdt))BT.legs.shift();u.wheels.forEach(wh=>wh.rotation.z=-(u.spin||0));
+      if(Math.random()<rdt*3){const st=u.stack,a=g.rotation.y,c=Math.cos(a),sn=Math.sin(a);emit("smoke",g.position.x+st[0]*c+st[2]*sn,st[1],g.position.z-st[0]*sn+st[2]*c,0.3,1.4,0,1.4,0.7,"#8c919b",0.45);}
+      if(BT.legs.length)return;}
+    const side=open=>{u.doorL.rotation.y=open?-1.4:0;u.doorR.rotation.y=open?1.4:0;};
+    if(BT.st==="away"){BT.t-=rdt*TSC()/3;if(BEAT.bay.length>=4&&BT.t<=0){BT.cargo=[];cargoDraw();g.visible=true;g.position.set(-150,0,12.9);u.heading=0;g.rotation.y=0;
+        btGo([{x:-60,z:12.9},{x:-50,z:12.95},{x:WDOOR+1.05,z:12.95}],"toShip");log("Truck in to collect beater rolls for repulping","");}}
+    else if(BT.st==="toShip"){BT.st="load";}
+    else if(BT.st==="load"){side(false);if((!BEAT.bay.length&&!BEAT.carry)||BT.cargo.length>=8){btGo([{x:-58,z:12.9,rev:true},{x:-64,z:12.0},{x:-150,z:12.0,fast:true}],"leaving1");}}
+    else if(BT.st==="leaving1"){g.visible=false;BT.t=5;BT.st="transit";}
+    else if(BT.st==="transit"){BT.t-=rdt*TSC()/3;if(BT.t<=0){g.visible=true;g.position.set(-150,0,-2.6);u.heading=0;g.rotation.y=0;btGo([{x:-38,z:-2.6},{x:-31,z:0},{x:RDOOR+1.05,z:0}],"toRecv");}}
+    else if(BT.st==="toRecv"){BT.st="unload";BT.unl=0;}
+    else if(BT.st==="unload"){if(!BT.cargo.length&&!BT.unl)btGo([{x:-30,z:0,rev:true},{x:-37,z:-2.4,rev:true},{x:-44,z:-4.5},{x:-150,z:-4.5,fast:true}],"leaving2");}
+    else if(BT.st==="leaving2"){g.visible=false;BT.st="away";BT.t=30;}
+    // receiving clamp: lift each roll off the truck's side, through the door, onto the walking floor
+    if(!rfork){rfork=clamp3(M.ok);rfork.visible=false;rfork.userData.load.material=[new THREE.MeshStandardMaterial({roughness:0.8}),M.rollCap,M.rollCap];rfork.userData.job=null;rfork.position.set(RDOOR,0,-5);}
+    {const f=rfork,J=f.userData;f.visible=BT.st==="unload"||!!J.job||!!(J.back&&J.back.length);
+      if(!J.job&&!(J.back&&J.back.length)&&BT.st==="unload"&&BT.cargo.length){J.job={pts:[[RDOOR,-4.5],[RDOOR,-1.95]],i:0,ph:0};}
+      if(J.job){const j=J.job,p=j.pts[j.i];f.userData.load.visible=j.ph===1;
+        if(moveVeh(f,p[0],p[1],3.5*TSC(),rdt)){j.i++;if(j.i>=j.pts.length){
+          if(j.ph===0){j.col=BT.cargo.pop();cargoDraw();BT.unl=1;J.load.material[0].color.set(j.col||"#fff");j.ph=1;j.i=0;j.pts=[[RDOOR,-3.2],[RDOOR,-9.3]];}
+          else{BEAT.line.push({d:RDOOR-(WF0+0.7),col:j.col});J.job=null;BT.unl=0;J.back=[[RDOOR,-5]];}}}}
+      else if(J.back&&J.back.length){f.userData.load.visible=false;if(moveVeh(f,J.back[0][0],J.back[0][1],3.5*TSC(),rdt))J.back.shift();}}
+    // beater rolls ride the walking floor and the incline into the pulper
+    const run=S.rates.feed>0.3,sp=run?Math.min(2.2,0.35+S.rates.feed*0.03):0.5,LEND=PLEN[PLEN.length-1];let n=0;
+    BEAT.line.forEach(r=>{r.d+=rdt*sp;});
+    BEAT.line=BEAT.line.filter(r=>{if(r.d>LEND+0.6){splashAt(cB.x+cH.x*0.6,cB.z+cH.z*0.6,1);return false;}return true;});
+    BEAT.line.forEach(r=>{if(n>=10)return;if(r.d<=LEND){pathAt(r.d,v3);_bq.copy(_bz);if(r.d>PLEN[2])_bq.premultiply(beltQ);v3.y+=0.05;}else{const e=r.d-LEND;v3.set(cB.x+cH.x*e,cB.y+0.5-2.5*e*e,cB.z+cH.z*e);_bq.copy(_bz);}
+      m4.compose(v3,_bq,_one);lineMesh.setMatrixAt(n,m4);lineMesh.setColorAt(n,_bc.set(r.col||"#fff"));n++;});
+    lineMesh.count=n;lineMesh.instanceMatrix.needsUpdate=true;if(lineMesh.instanceColor)lineMesh.instanceColor.needsUpdate=true;
+    bayDraw();}
+  // warehouse clamp trucks. Lanes: aisle along the south wall (z 17) and a lane inside the shipping doors (x -47.5).
+  // Truck 0 tends the roll conveyor (rolls into the stacks, beater rolls into the bay); the rest load trucks at the doors.
+  const AIS2=17.0,LANEX=-47.6,slot=k=>{k=Math.max(0,Math.min(83,k));return [-45+(k%12)*1.75,31.2-Math.floor(k/12)*1.7];};
+  const via=(from,to)=>{const P2=[[from[0],AIS2]];if(Math.abs(to[0]-from[0])>0.3)P2.push([to[0],AIS2]);P2.push(to);return P2;};
+  function clampJob(g,i,rdt){const J=g.userData.cj||(g.userData.cj={path:[],carry:null,after:null,wait:0}),sp=3.2*TSC();
+    if(!g.userData.load.material.isMaterial&&!g.userData.lm){g.userData.lm=[new THREE.MeshStandardMaterial({roughness:0.8}),M.rollCap,M.rollCap];g.userData.load.material=g.userData.lm;}
+    g.userData.load.visible=!!J.carry;if(J.carry)g.userData.lm[0].color.set(J.carry.col||"#ffffff");
+    if(J.path.length){const p=J.path[0];if(moveVeh(g,p[0],p[1],sp,rdt)){J.path.shift();if(!J.path.length&&J.after){const f=J.after;J.after=null;f();}}return;}
+    if(J.wait>0){J.wait-=rdt;return;}
+    const n=rolls.count,here=[g.position.x,g.position.z];
+    if(i===0){const RV=G3.rollVis,f=RV&&RV.list[0];
+      if(f&&RV.CL&&f.d>=RV.CL-0.05){J.path=via(here,[-31.9,19.4]);J.after=()=>{const r=RV.list[0];if(!r||r.d<RV.CL-0.3){J.wait=0.5;return;}RV.list.shift();J.carry={col:r.col};
+          const to=r.col?[bayPos(BEAT.bay.length)[0],16.9]:(()=>{const s2=slot(n);return [s2[0],s2[1]-1.45];})();BEAT.carry+=r.col?1:0;
+          J.path=via([-31.9,19.4],to);if(r.col)J.path.push([to[0],16.85]);J.after=()=>{if(r.col){BEAT.bay.push(r.col);BEAT.carry--;}J.carry=null;J.wait=0.4;};};}
+      else{J.path=via(here,[-33.5,AIS2]);J.wait=1;}
+      return;}
+    // shipping: beater truck first, then any docked outbound truck
+    if(BT.st==="load"&&BEAT.bay.length&&BT.cargo.length+BEAT.carry<8){const k=BEAT.bay.length-1,[bx]=bayPos(k);BEAT.carry++;
+      J.path=via(here,[bx,AIS2]);J.path.push([bx,16.85]);J.after=()=>{const col=BEAT.bay.pop();if(!col){BEAT.carry--;return;}J.carry={col};
+        J.path=[[bx,AIS2],[WDOOR,AIS2],[WDOOR,15.4]];J.after=()=>{BT.cargo.push(col);cargoDraw();BEAT.carry--;J.carry=null;J.path=[[WDOOR,AIS2]];};};return;}
+    const docks=[...Array(P.shipDoors).keys()].filter(d=>S.outDock[d]);
+    if(docks.length&&n>0&&S.M.clampMul!==0){const d=docks[i%docks.length],dz=W(0,outY(d))[1],s2=slot(n-1-((i*5)%Math.min(12,n)));
+      J.path=via(here,[s2[0],s2[1]-1.45]);J.after=()=>{J.carry={col:null};J.path=[[s2[0],AIS2],[LANEX,AIS2],[LANEX,dz]];J.after=()=>{J.carry=null;J.path=[[LANEX+1.4,dz]];J.wait=0.3;};};return;}
+    J.path=via(here,[-38-i*2.2,AIS2]);J.wait=2;}
+  function moveVeh(g,tx,tz,sp,rdt){const dx=tx-g.position.x,dz=tz-g.position.z,d=Math.hypot(dx,dz);if(d<0.15)return true;const st=Math.min(d,sp*rdt);g.position.x+=dx/d*st;g.position.z+=dz/d*st;
+    g.rotation.y=lerpAng(g.rotation.y,Math.atan2(-dz,dx),Math.min(1,rdt*10));return false;}
   function chemUpdate(rdt){if(!CHEM.g){CHEM.g=makeTruck("chem");CHEM.g.visible=false;}const g=CHEM.g,L=LANE.in,u=g.userData;if(rdt<=0)return;
     if(CHEM.st==="away"){CHEM.t-=rdt*TSC()/3;if(CHEM.t>0)return;const free=[...Array(P.doors).keys()].filter(d=>!S.inDock[d]);
       if(S.inQ.length||!free.length){CHEM.t=4;return;}
@@ -3724,7 +3806,7 @@ const G3={on:false,ok:false};
     truckMap.forEach((g,t)=>{if(g.userData.seen)return;
       if(g.userData.phase==="leave"&&!g.userData.done&&g.userData.route.length){stepRoute(g,LANE[g.userData.kind],rdt);g.userData.wheels.forEach(w=>w.rotation.z=-(g.userData.spin||0));return;}
       g.visible=false;g.userData.busy=false;truckMap.delete(t);});
-    chemUpdate(rdt);
+    chemUpdate(rdt);beaterUpdate(rdt);
     {const n=clamp(9+S.inQ.length*3+Math.floor(S.yard/250),5,24);G3.yardTr.forEach((g,i)=>g.visible=i<n);}
     // stock
     {const nB=Math.min(168,Math.ceil(S.yard/12));if(nB!==baleShown){baleShown=nB;bales.reset();for(let i=0;i<nB;i++)bales.put(gradeOf(i*7+1,false),baleM[i]);bales.done();}}
@@ -3787,16 +3869,19 @@ const G3={on:false,ok:false};
     // each finished roll is kicked off the winder, rolls down the ramp, is upended and rides the conveyor to the warehouse;
     // it queues at the end until a clamp truck takes it (the sim's conveyor count)
     const RV=G3.rollVis||(G3.rollVis={list:[],seen:-1});if(RV.seen<0)RV.seen=S.tot.rolls;
-    if(S.tot.rolls>RV.seen){const n=Math.min(4,S.tot.rolls-RV.seen);RV.seen=S.tot.rolls;for(let k=0;k<n;k++)RV.list.push({d:-3.2+k*0.01,z:zc+[-1.8,-0.6,0.6,1.8][(S.tot.rolls+k)%4],spin:0});while(RV.list.length>18)RV.list.shift();}
+    if(S.tot.rolls>RV.seen){const n=Math.min(4,S.tot.rolls-RV.seen);RV.seen=S.tot.rolls;for(let k=0;k<n;k++)RV.list.push({d:-3.2+k*0.01,z:zc+[-1.8,-0.6,0.6,1.8][(S.tot.rolls+k)%4],spin:0});while(RV.list.length>24){const k=RV.list.findIndex(r=>!r.col);if(k<0)break;RV.list.splice(k,1);}}
     {const CL=(19.4-zc)+(29.9-22.9),qn=Math.max(0,Math.ceil(S.conv||0)),sp=3*clamp(C.simSpeed/20,1,4);RV.list.sort((a,b)=>b.d-a.d);
       RV.list.forEach((r,k)=>{const lim=k===0?CL:Math.min(CL,RV.list[k-1].d-1.45);if(r.d<0){const nd=Math.max(r.d,Math.min(k===0?0:Math.min(0,lim),r.d+rdt*2.6));if(nd>r.d)r.spin+=rdt*6;r.d=nd;}else r.d=Math.max(r.d,Math.min(lim,r.d+rdt*sp));});
-      while(RV.list.length&&RV.list[0].d>=CL-0.01&&RV.list.filter(r=>r.d>=CL-1.45*qn-0.2).length>qn+0)RV.list.shift();}
+      // the clamp tender lifts rolls off the end; if the visual queue runs ahead of the sim, drop plain rolls (never the beater ones)
+      while(RV.list.length&&RV.list[0].d>=CL-0.01&&!RV.list[0].col&&RV.list.filter(r=>r.d>=CL-1.45*(qn+3)-0.2).length>qn+3)RV.list.shift();
+      if(RV.list.length&&RV.list[0].col&&RV.list[0].d>=CL-0.01&&Math.floor(S.effHum+1e-9)<1){BEAT.bay.push(RV.list.shift().col);}
+      RV.CL=CL;}
     let nr=0;const q4=new THREE.Quaternion(),hz=new THREE.Quaternion().setFromEuler(new THREE.Euler(Math.PI/2,0,0));
     RV.list.forEach(r=>{if(nr>=16)return;let x,y,z,q;
       if(r.d<0){const f=(r.d+3.2)/3.2;x=-20.4-2.5*f;y=1.75-0.85*f;z=r.z+(zc-r.z)*Math.max(0,f-0.6)/0.4;q=q4.setFromEuler(new THREE.Euler(Math.PI/2,0,-r.spin));}
       else{const d=r.d,L1=19.4-zc;if(d<L1){x=-22.9;z=zc+d;}else{x=-22.9-(d-L1);z=19.4;}y=1.2;q=q4.identity();}
-      m4.compose(v3.set(x,y,z),q,_one);beltRolls.setMatrixAt(nr++,m4);});
-    beltRolls.count=nr;beltRolls.instanceMatrix.needsUpdate=true;
+      m4.compose(v3.set(x,y,z),q,_one);beltRolls.setColorAt(nr,_rc.set(r.col||"#ffffff"));beltRolls.setMatrixAt(nr++,m4);});
+    beltRolls.count=nr;beltRolls.instanceMatrix.needsUpdate=true;if(beltRolls.instanceColor)beltRolls.instanceColor.needsUpdate=true;
     // forklifts (same paths as the 2D view)
     ensure(lifts,V.lifts.length,()=>forklift(M.warn));
     V.lifts.forEach((L,i)=>{const g=lifts[i];
@@ -3813,9 +3898,7 @@ const G3={on:false,ok:false};
     for(let i=0;i<nLo;i++){const g=loaders[i];
       if(i>=Math.floor(S.effHum+1e-9)){const [x,z]=W(374+i*15,642);g.position.set(x,0,z);g.children[0].material=M.off;g.userData.load.visible=false;g.visible=true;continue;}
       g.children[0].material=M.fork;g.visible=S.M.clampMul!==0||G3.yardFrozen;if(G3.yardFrozen){g.userData.load.visible=false;continue;}
-      if(i===0&&(S.conv||0)>=1){const ph=(V.rollsAnim*0.5)%2,t=ph<1?ph:2-ph,x=-31.4-t*9,z=19.4+t*5;g.position.set(x,0,z);g.rotation.y=Math.atan2(-5,-9)+(ph<1?0:Math.PI);g.userData.load.visible=ph<1;continue;}
-      const ph=(V.rollsAnim*0.6+i*0.37)%2,t=ph<1?ph:2-ph,[x,z]=W(126+t*60+20,outY(i%P.shipDoors));
-      g.position.set(x,0,z);g.rotation.y=ph<1?Math.PI:0;g.userData.load.visible=ph<1;}
+      clampJob(g,i,rdt);}
     ensure(robots,P.robots,robot);
     robots.forEach((g,r)=>{if(r>=P.robots)return;const ph=S.M.clampMul===0?0.3:(V.rollsAnim*0.45+r*0.29)%2,t=ph<1?ph:2-ph,[x,z]=W(130+t*200,outY(r%P.shipDoors)+(r%2?6:-6));
       g.position.set(x,0,z);g.userData.light.material=((now/400+r)|0)%2?M.ok:M.stock;});
