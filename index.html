@@ -458,7 +458,7 @@ body{margin:0}
 </head>
 <body>
 
-<div class="ver" id="appVersion" aria-label="Version">v2.7.2</div>
+<div class="ver" id="appVersion" aria-label="Version">v2.8.0</div>
 <div class="wrap">
   <header>
     <div class="brand"><span class="logo" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linejoin="round"><circle cx="8.5" cy="12" r="5.5"/><circle cx="8.5" cy="12" r="1.6" fill="currentColor"/><path d="M8.5 6.5H20v11H8.5"/></svg></span>
@@ -970,7 +970,7 @@ function mods(){const m=baseMods();
     if(e.hayMul)m.hayMul*=e.hayMul; if(e.speedCap)m.speedCap=Math.min(m.speedCap,e.speedCap); if(e.breakMul)m.breakMul*=e.breakMul; if(e.yieldMul)m.yieldMul*=(i.id==="badocc"&&LV("detrash"))?0.9:e.yieldMul;
     if(e.recvMul!==undefined)m.recvMul*=e.recvMul; if(e.clampMul!==undefined)m.clampMul*=e.clampMul; if(e.yardEat)m.yardEat+=e.yardEat;
     if(i.drvCap!==undefined)m.drvCap=Math.min(m.drvCap,i.drvCap); if(i.ldrCap!==undefined)m.ldrCap=Math.min(m.ldrCap,i.ldrCap);}
-  for(const f of (S.fx||[])){const e=f.mods||{};if(e.pmDown)m.pmDown=e.pmDown;if(e.speedCap)m.speedCap=Math.min(m.speedCap,e.speedCap);if(e.breakMul)m.breakMul*=e.breakMul;if(e.winderDown)m.winderDown=true;if(e.recvMul!==undefined)m.recvMul*=e.recvMul;}
+  for(const f of (S.fx||[])){const e=f.mods||{};if(e.pmDown)m.pmDown=e.pmDown;if(e.speedCap)m.speedCap=Math.min(m.speedCap,e.speedCap);if(e.breakMul)m.breakMul*=e.breakMul;if(e.winderDown)m.winderDown=true;if(e.recvMul!==undefined)m.recvMul*=e.recvMul;if(e.pulperDown)m.pulperDown=true;if(e.docksClosed)m.docksClosed=true;if(e.noOut)m.noOut=true;if(e.noIn)m.noIn=true;if(e.yieldMul)m.yieldMul*=e.yieldMul;}
   if(S.wx==="rain")m.yieldMul*=0.97;
   if(S.pm==="break"&&S.brkType!=="reel"&&working("brk")){m.recvMul=0;m.clampMul=0;m.crewAtPM=true;}
   return m;}
@@ -982,7 +982,7 @@ function trigger(id,quiet){
   if(active(id))return;
   const e=EV[id],dur=(e.dur[0]+Math.random()*(e.dur[1]-e.dur[0]))*durMul(id);
   const inc={id,left:dur,total:dur,real:performance.now(),note:""};
-  S.inc.push(inc);if(QINC(id))enqueue(id);S.lastInc=S.t;S.tot.incidents++;AUDIO.event(id);
+  S.inc.push(inc);(S.evc||(S.evc={}))[id]=(S.evc[id]||0)+1;if(QINC(id))enqueue(id);S.lastInc=S.t;S.tot.incidents++;AUDIO.event(id);
   if(!quiet){BANNERS.push({text:e.head,t:null,id:e.id});while(BANNERS.length>3)BANNERS.splice(1,1);}
   if(e.start)e.start(inc);
   const bill=S.zen?0:(REPAIR[id]||0)*P.repairMul; if(bill>0){spend(bill,"repairs");inc.note=(inc.note?inc.note+" · ":"")+`repair bill ${money(bill)}`;}
@@ -1156,6 +1156,180 @@ const CARDS=[
   accept(c){const w=rand("card")*100<c.o;
     addFx({id:"rail",left:1e9,rail:900,mods:{recvMul:0.67},done:()=>{if(!w)deal(-20000);cardBanner(w?"Railcar unloaded: 900 t of OCC at $30/t off.":"Railcar unloaded, but it came in late: $20k demurrage.",w);}});
     return "Railcar spotted at the bale yard. Unloading at about 50 t/h.";}},
+
+ // ---- v2.8.0 cards ----
+ {id:"safety",area:"Safety · Mill-wide",title:"Safety blitz",
+  story:()=>"Your safety manager wants $15k for a two-day housekeeping and lockout blitz before the state inspector visits.",
+  win:()=>"Clean visit: forklift and dock incidents half as likely for 10 days",lose:()=>"Inspector finds a lockout gap: machine down 3 hours",
+  odds:()=>Math.min(95,70+15*LV("safety")),why:"The safety program upgrade means most of the work is already done.",
+  ok:()=>true,
+  accept(c){deal(-15000);const w=rand("card")*100<c.o;
+    pend("safety",2*1440,()=>{if(w){addFx({id:"safety",left:10*1440,evf:{fleet:0.5,fight:0.5,calloff:0.5}});cardBanner("Inspector signed off clean. Yard incidents halved for 10 days.",true);}
+      else{addFx({id:"safetyx",left:180,mods:{pmDown:"lockout correction"}});cardBanner("Inspector found a lockout gap: machine down 3 hours to fix it.",false);}});
+    return "$15k spent. Inspector arrives in 2 days.";}},
+ {id:"shift",area:"Crew",title:"New shift rotation",
+  story:()=>"The crew wants to trial a 12-hour rotating schedule for a week. It costs nothing.",
+  win:()=>"Rested crews: repairs 25% faster for 7 days",lose:()=>"Confusion over the roster: a crew call-off",
+  odds:()=>70,why:"Fixed odds.",
+  ok:()=>!active("calloff"),
+  accept(c){const w=rand("card")*100<c.o;
+    if(w){addFx({id:"shift",left:7*1440,rep:1.25});return "New rotation starts tonight: repairs 25% faster for 7 days.";}
+    pend("shift",(4+rand("card")*12)*60,()=>{trigger("calloff");cardBanner("The new roster mixed up the crews: call-offs on nights.",false);});
+    return "New rotation starts tonight.";}},
+ {id:"insfire",area:"Insurance",title:"Insurer's fire challenge",
+  story:()=>"Your insurer will rebate $45k if the mill goes 5 days without a dryer or bale fire.",
+  win:()=>"+$45k rebate",lose:()=>"Any fire in 5 days: a $15k surcharge",
+  odds:()=>Math.min(95,75+10*LV("reliab")+10*LV("monitor")),why:"Depends on fire breakdowns: reliability and monitoring upgrades help.",
+  ok:()=>true,
+  accept(){const e=S.evc||(S.evc={}),f0=(e.dryerfire||0)+(e.balefire||0);
+    pend("insfire",5*1440,()=>{const f=(e.dryerfire||0)+(e.balefire||0)-f0;
+      if(f<=0){deal(45000);cardBanner("Five days without a fire: +$45k insurance rebate.",true);}else{deal(-15000);cardBanner("A fire broke out during the challenge: $15k surcharge.",false);}});
+    return "Challenge runs 5 days.";}},
+ {id:"drought",area:"Utility · Water",title:"Drought restriction",
+  story:()=>"The river authority will pay $30k if you cut fresh water use for 2 days. Less shower water means a slower machine.",
+  win:()=>"+$30k, machine capped at 85% speed for 2 days",lose:()=>"Recirculated water builds slime: scabs 3× as likely for the 2 days",
+  odds:()=>Math.min(95,65+15*LV("monitor")),why:"Fabric & felt monitoring keeps an eye on deposits.",
+  ok:()=>true,
+  accept(c){deal(30000);const w=rand("card")*100<c.o;addFx(w?{id:"drought",left:2*1440,mods:{speedCap:0.85}}:{id:"drought",left:2*1440,mods:{speedCap:0.85},scab:3});
+    pend("drought",2*1440,()=>cardBanner("Water restriction lifted: full speed again.",true));
+    return w?"+$30k paid. Machine at 85% speed for 2 days.":"+$30k paid. Machine at 85% speed, and the white water is getting slimy.";}},
+ {id:"grant",area:"Management",title:"Recycling grant",
+  story:()=>"The state has a fiber-recovery grant. A consultant will write the application for $40k.",
+  win:()=>"+$120k grant in 3 days",lose:()=>"Application rejected: $40k gone",
+  odds:()=>Math.min(90,40+15*LV("detrash")+10*LV("apc")),why:"Grants favour mills with modern detrashing and process control.",
+  ok:()=>S.cash>80000,
+  accept(c){deal(-40000);const w=rand("card")*100<c.o;
+    pend("grant",3*1440,()=>{if(w){deal(120000);cardBanner("Recycling grant approved: +$120k.",true);}else cardBanner("Recycling grant rejected.",false);});
+    return "$40k paid. Decision in 3 days.";}},
+ {id:"hedge",area:"Energy",title:"Power price hedge",
+  story:()=>"A trader offers to lock your power price for 14 days for a $20k fee.",
+  win:()=>"Energy $10/t cheaper for 14 days",lose:()=>"Power prices fall anyway: the $20k fee buys nothing",
+  odds:()=>60,why:"Nobody knows where the power market goes.",
+  ok:()=>true,
+  accept(c){deal(-20000);const w=rand("card")*100<c.o;
+    if(!w){pend("hedge",1440,()=>cardBanner("Power prices fell: the hedge was worth nothing.",false));return "$20k paid.";}
+    S.perk.energy+=10;pend("hedge",14*1440,()=>{S.perk.energy-=10;cardBanner("Power hedge expired: energy back to market price.",true);});
+    return "$20k paid. Energy $10/t cheaper for 14 days.";}},
+ {id:"strike",area:"Sales",title:"Competitor strike",
+  story:()=>"A competing mill's crew walked out. Their customers want your paper at $40/t over list on every grade.",
+  win:()=>"+$40/t on everything for 5 days",lose:()=>"The strike settles after a day and the buyers squeeze you: −$10/t for 3 days",
+  odds:()=>65,why:"Depends on the union talks, not you.",
+  ok:()=>true,
+  accept(c){const w=rand("card")*100<c.o;
+    if(w){addFx({id:"strike",left:5*1440,price:{all:40}});pend("strike",5*1440,()=>cardBanner("The strike is over: prices back to list.",true));return "+$40/t on all grades for 5 days.";}
+    addFx({id:"strike",left:1440,price:{all:40}});
+    pend("strike",1440,()=>{addFx({id:"strikex",left:3*1440,price:{all:-10}});cardBanner("The strike settled: buyers squeeze you −$10/t for 3 days.",false);});
+    return "+$40/t on all grades while the strike lasts.";}},
+ {id:"yard",area:"Inbound · Bale yard",title:"Bale yard cleanup",
+  story:()=>"A contractor will sweep and re-stack the bale yard for $12k.",
+  win:()=>"Bale fires and yard fleet trouble 70% rarer for 10 days",lose:()=>"The crew finds a smouldering bale: a bale fire",
+  odds:()=>80,why:"Fixed odds.",
+  ok:()=>!active("balefire"),
+  accept(c){deal(-12000);const w=rand("card")*100<c.o;
+    pend("yard",8*60,()=>{if(w){addFx({id:"yard",left:10*1440,evf:{balefire:0.3,fleet:0.3}});cardBanner("Bale yard swept and re-stacked: fire and fleet risk way down for 10 days.",true);}
+      else{trigger("balefire");cardBanner("Cleanup crew found a smouldering bale!",false);}});
+    return "$12k spent. Cleanup over the next 8 hours.";}},
+ {id:"occlock",area:"Inbound",title:"OCC price lock",
+  story:()=>"A broker offers to lock your next 2,000 t of OCC at $15/t under today's price.",
+  win:()=>"Saves about $30k on fiber",lose:()=>"OCC prices crash next week: you pay $10/t over market on those 2,000 t",
+  odds:()=>60,why:"Fiber markets are a coin toss with a small edge.",
+  ok:()=>!S.plan.disc,
+  accept(c){const w=rand("card")*100<c.o;S.plan.disc={t:2000,v:w?15:-10};
+    return w?"Locked: the next 2,000 t of OCC come in $15/t cheaper.":"Locked in... and then the market fell. The next 2,000 t cost $10/t over market.";}},
+ {id:"film",area:"Outbound",title:"New roll wrap film",
+  story:()=>"A packaging vendor has a tougher stretch film. Fewer damage claims could lift what customers pay. Changeover costs $25k.",
+  win:()=>"+$5/t on every grade, permanently",lose:()=>"The film jams the wrapper: winder down 4 hours",
+  odds:()=>75,why:"Fixed odds.",
+  ok:()=>true,
+  accept(c){deal(-25000);const w=rand("card")*100<c.o;
+    pend("film",12*60,()=>{if(w){for(const g of Object.keys(ECON.price))S.perk.price[g]=(S.perk.price[g]||0)+5;cardBanner("New wrap film cut damage claims: +$5/t on every grade.",true);}
+      else{addFx({id:"film",left:240,mods:{winderDown:1}});cardBanner("The new film jammed the wrapper: winder down 4 hours.",false);}});
+    return "$25k paid. Changeover over 12 hours.";}},
+ {id:"rotor",area:"Stock prep",title:"Pulper rotor rebuild",
+  story:()=>"The vendor has a rebuild crew free today: $35k and 4 hours with the pulper off. The stock chest has to carry the machine.",
+  win:()=>"Ragger and pulper plugs 60% rarer for 14 days",lose:()=>"The rebuild overruns: 8 hours with no pulper",
+  odds:()=>Math.min(95,75+10*LV("stores")),why:"A stocked spare parts storeroom keeps jobs on time.",
+  ok:()=>S.tank>0.6*P.tankCap&&!active("pulper")&&!active("ragger"),
+  accept(c){deal(-35000);const w=rand("card")*100<c.o,h=w?4:8;addFx({id:"rotor",left:h*60,mods:{pulperDown:true}});
+    pend("rotor",h*60,()=>{addFx({id:"rotorok",left:14*1440,evf:{ragger:0.4,lcplug:0.4,hdblow:0.4}});cardBanner(w?"Pulper rotor rebuilt on time: plugs 60% rarer for 14 days.":"Pulper rebuild overran to 8 hours, but it's done: plugs 60% rarer for 14 days.",w);});
+    return "$35k spent. Pulper off while the rotor is rebuilt.";}},
+ {id:"basket",area:"Stock prep",title:"Screen basket trial",
+  story:()=>"A vendor offers a free slotted screen basket to trial in your coarse and fine screens.",
+  win:()=>"Screen failures halved for 14 days",lose:()=>"The basket cracks: a fine screen failure",
+  odds:()=>70,why:"Fixed odds.",
+  ok:()=>!active("fscreen")&&!active("cscreen"),
+  accept(c){const w=rand("card")*100<c.o;
+    if(w){addFx({id:"basket",left:14*1440,evf:{cscreen:0.5,fscreen:0.5}});return "Trial basket in: screen failures halved for 14 days.";}
+    pend("basket",(6+rand("card")*18)*60,()=>{trigger("fscreen");cardBanner("The trial basket cracked: fine screen down.",false);});
+    return "Trial basket in.";}},
+ {id:"vip",area:"Sales · Paper machine",title:"VIP customer tour",
+  story:()=>"A big 23m buyer wants to tour the mill tomorrow. Catering and a fresh coat of paint: $8k.",
+  win:()=>"+$10/t on 23m, permanently",lose:()=>"They see a sheet break: −$8/t on 23m for 5 days",
+  odds:()=>clamp(Math.round(55+(effNow()-0.87)*300),10,95),why:"Depends on how well the machine is running.",
+  ok:()=>true,
+  accept(c){deal(-8000);const w=rand("card")*100<c.o;
+    pend("vip",1440,()=>{if(w){S.perk.price["23m"]=(S.perk.price["23m"]||0)+10;cardBanner("The VIP tour went great: +$10/t on 23m.",true);}
+      else{addFx({id:"vipx",left:5*1440,price:{"23m":-8}});cardBanner("The VIPs watched a sheet break: −$8/t on 23m for 5 days.",false);}});
+    return "$8k spent. Tour tomorrow.";}},
+ {id:"millwright",area:"Maintenance",title:"Retired millwright",
+  story:()=>"A legendary retired millwright will coach your crew for a week. $20k.",
+  win:()=>"Repairs 35% faster for 7 days",lose:()=>"He and your foreman clash: nothing changes",
+  odds:()=>75,why:"Fixed odds.",
+  ok:()=>true,
+  accept(c){deal(-20000);const w=rand("card")*100<c.o;
+    if(w){addFx({id:"millwright",left:7*1440,rep:1.35});return "$20k paid. Repairs 35% faster for 7 days.";}
+    pend("millwright",1440,()=>cardBanner("The millwright went home early after a row with the foreman.",false));return "$20k paid.";}},
+ {id:"tax",area:"Management",title:"Property tax appeal",
+  story:()=>"A lawyer thinks the county over-assessed the mill. The appeal costs $10k.",
+  win:()=>"+$60k refund",lose:()=>"Appeal denied: $10k gone",
+  odds:()=>40,why:"Fixed odds.",
+  ok:()=>true,
+  accept(c){deal(-10000);const w=rand("card")*100<c.o;
+    pend("tax",4*1440,()=>{if(w){deal(60000);cardBanner("Tax appeal won: +$60k refund.",true);}else cardBanner("Tax appeal denied.",false);});
+    return "$10k paid. Ruling in 4 days.";}},
+ {id:"backhaul",area:"Outbound",title:"Backhaul freight deal",
+  story:()=>"A carrier offers backhaul rates on your outbound loads. Lower freight means a better net price.",
+  win:()=>"+$6/t on every grade for 10 days",lose:()=>"Their trucks don't show: no outbound trucks for 6 hours",
+  odds:()=>70,why:"Fixed odds.",
+  ok:()=>true,
+  accept(c){const w=rand("card")*100<c.o;
+    if(w){addFx({id:"backhaul",left:10*1440,price:{all:6}});return "+$6/t on every grade for 10 days.";}
+    addFx({id:"backhaul",left:6*60,mods:{noOut:true}});pend("backhaul",6*60,()=>cardBanner("Outbound trucks are back on schedule.",true));
+    return "The carrier's trucks didn't show: no shipping for 6 hours.";}},
+ {id:"starch",area:"Paper machine",title:"Surface starch upgrade",
+  story:()=>"A starch supplier says a new size-press recipe will lift 33HT strength. $50k for the trial.",
+  win:()=>"+$12/t on 33HT, permanently",lose:()=>"Starch picking: sheet breaks 1.5× for 2 days",
+  odds:()=>Math.min(95,65+10*LV("apc")),why:"Advanced process control holds the size press steady.",
+  ok:()=>S.cash>100000,
+  accept(c){deal(-50000);const w=rand("card")*100<c.o;if(!w)addFx({id:"starch",left:2*1440,mods:{breakMul:1.5}});
+    pend("starch",2*1440,()=>{if(w){S.perk.price["33HT"]=(S.perk.price["33HT"]||0)+12;cardBanner("New starch recipe works: +$12/t on 33HT.",true);}else cardBanner("Starch trial over: back to the old recipe.",false);});
+    return "$50k spent. Trial runs 2 days.";}},
+ {id:"scrap",area:"Yard",title:"Scrap metal buyer",
+  story:()=>"A scrap dealer will haul away the old rolls and motors in the boneyard for $25k cash.",
+  win:()=>"+$25k now",lose:()=>"Their crane truck blocks the docks for 3 hours",
+  odds:()=>80,why:"Fixed odds.",
+  ok:()=>true,
+  accept(c){deal(25000);const w=rand("card")*100<c.o;
+    if(w)return "+$25k. The boneyard is clear.";
+    addFx({id:"scrap",left:180,mods:{docksClosed:true}});pend("scrap",180,()=>cardBanner("Scrap truck gone: docks open again.",true));
+    return "+$25k, but their crane truck is blocking the docks for 3 hours.";}},
+ {id:"boilertune",area:"Energy · Boiler",title:"Boiler tune-up",
+  story:()=>"A combustion specialist will tune the boiler burners for $30k.",
+  win:()=>"Energy $4/t cheaper for good, boiler trips halved for 14 days",lose:()=>"The boiler trips during tuning",
+  odds:()=>Math.min(95,70+10*LV("apc")),why:"Advanced process control makes tuning safer.",
+  ok:()=>!active("boiler"),
+  accept(c){deal(-30000);const w=rand("card")*100<c.o;
+    pend("boilertune",6*60,()=>{if(w){S.perk.energy+=4;addFx({id:"boilertune",left:14*1440,evf:{boiler:0.5}});cardBanner("Boiler tuned: energy $4/t cheaper, trips halved for 14 days.",true);}
+      else{trigger("boiler");cardBanner("The boiler tripped during tuning!",false);}});
+    return "$30k paid. Tuning over 6 hours.";}},
+ {id:"apprent",area:"Crew · Paper machine",title:"Apprentice operators",
+  story:()=>"The local college offers two trained apprentices for two weeks, free.",
+  win:()=>"Extra hands: sheet breaks 20% rarer for 14 days",lose:()=>"Green operators: sheet breaks 1.3× for 5 days",
+  odds:()=>65,why:"Fixed odds.",
+  ok:()=>true,
+  accept(c){const w=rand("card")*100<c.o;
+    addFx(w?{id:"apprent",left:14*1440,mods:{breakMul:0.8}}:{id:"apprent",left:5*1440,mods:{breakMul:1.3}});
+    return w?"Apprentices are a help: sheet breaks 20% rarer for 14 days.":"Apprentices are still learning: sheet breaks 1.3× for 5 days.";}},
 ];
 function cardTick(dt){const cs=S.cards;if(!cs)return;
   for(const f of S.fx){f.left-=dt;if(f.rail>0){const u=Math.min(f.rail,50*dt/60,Math.max(0,P.yardCap-S.yard));S.yard+=u;S.tot.inTons+=u;spend(u*Math.max(0,P.occPrice-30),"occ");f.rail-=u;if(f.rail<=1e-6){f.left=0;f.done&&f.done();}}}
@@ -1164,8 +1338,9 @@ function cardTick(dt){const cs=S.cards;if(!cs)return;
   cs.pend=cs.pend.filter(p=>p.left>0);
   if(cs.open||S.zen||S.over||(S.season&&S.season.done)||S.t<cs.next)return;
   cs.next=S.t+1440*(1.2+0.6*rand("card"));
-  const pool=CARDS.filter(c=>c.ok()),pick=pool.length?pool[Math.floor(rand("card")*pool.length)]:null;
-  if(pick&&typeof document!=="undefined"&&document.body)openCard(pick);}
+  // every card is shown at most once per game: once dealt it is marked seen and never drawn again
+  const seen=cs.seen||(cs.seen={}),pool=CARDS.filter(c=>!seen[c.id]&&c.ok()),pick=pool.length?pool[Math.floor(rand("card")*pool.length)]:null;
+  if(pick&&typeof document!=="undefined"&&document.body){seen[pick.id]=true;openCard(pick);}}
 let cardEl=null;
 function openCard(c){const o=c.odds();S.cards.open={c,o};running=false;const pb=document.getElementById("play");if(pb){pb.textContent="Run";pb.setAttribute("aria-pressed","false");}
   if(!cardEl){cardEl=document.createElement("div");cardEl.className="overlay";cardEl.id="dealOv";cardEl.hidden=true;document.body.appendChild(cardEl);}
@@ -1218,7 +1393,7 @@ function initState(){
 function seedRun(seed){S.seed=seed>>>0;S.rng={plan:S.seed^0x9e3779b9,card:S.seed^0x85ebca6b};
   C.grade="23m";const c=GCOST["23m"];
   S.plan={i:0,q:[],cur:null,left:c.mix[0]+rand("plan")*(c.mix[1]-c.mix[0]),mkt:0,mktLeft:7*1440,disc:null,hot:null};
-  S.cards={next:1440*(1+0.5*rand("card")),open:null,pend:[]};applyGrade();}
+  S.cards={next:1440*(1+0.5*rand("card")),open:null,pend:[],seen:{}};applyGrade();}
 function setGrade(to){const from=C.grade;if(to===from)return;
   const off=4+2*Math.abs(GRADES[to].bw-GRADES[from].bw);S.chg={left:off,total:off,from,to};C.grade=to;applyUpgrades();
   log(`Grade change ${from} → ${to} (market orders): about ${off.toFixed(0)} t to the beater during the transition`,"warn");}
