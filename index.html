@@ -482,6 +482,20 @@ body.season-lock label.check:has(#breaks),body.season-lock label.check:has(#hays
 #tut .tb{display:flex;gap:8px;align-items:center}#tut .tb button{flex:1;padding:11px 10px;border-radius:12px;font:700 14.5px var(--f-body)}
 #tut label{display:flex;gap:7px;align-items:center;font:500 12.5px var(--f-body);color:var(--muted)}
 /* v3.0.0 planned outage */
+
+/* v3.3 report cards */
+.modal.rc{max-width:520px;gap:8px}.rc h3{font-size:14px;margin:8px 0 2px;display:flex;justify-content:space-between;align-items:baseline;gap:8px}.rc h3 small{font-weight:500;color:var(--muted);font-size:11.5px}
+.rchead{display:flex;justify-content:space-between;align-items:center;gap:12px}.rchead h2{font-size:22px;line-height:1.15;margin-top:2px}
+.rcg{width:40px;height:40px;border-radius:10px;display:grid;place-items:center;font-weight:900;font-size:22px;color:#fff;background:#7a8191;flex:none}.rcg.big{width:64px;height:64px;font-size:38px;border-radius:14px}
+.rcg.gA{background:#1f8a4c}.rcg.gB{background:#4f9d2a}.rcg.gC{background:#c48a00}.rcg.gD{background:#d4682a}.rcg.gF{background:#d6333b}
+.rcgrades{display:grid;grid-template-columns:repeat(4,1fr);gap:6px;text-align:center}.rcgrades>div{display:flex;flex-direction:column;align-items:center;gap:4px;padding:8px 4px;border-radius:10px;background:var(--chip)}.rcgrades small{font-size:11.5px;color:var(--muted);font-weight:600}
+.rctip{font-size:13.5px;line-height:1.45;padding:10px 12px;border-radius:10px;background:var(--chip)}.rctip b{color:var(--brand);margin-right:4px}
+.rcr{display:grid;grid-template-columns:1fr auto 92px;gap:8px;font-size:13px;padding:3px 0;border-bottom:1px solid var(--line)}.rcr b{font-variant-numeric:tabular-nums}.rcr i{font-style:normal;color:var(--muted);text-align:right;font-variant-numeric:tabular-nums}
+.rcr.net{border-bottom:0;font-size:14px}.rcr.pos b{color:var(--ok)}.rcr.neg b{color:var(--bad)}
+.rcb{display:grid;grid-template-columns:118px 1fr 52px;gap:8px;align-items:center;font-size:12.5px;padding:2px 0}.rcb>div{height:9px;border-radius:5px;background:var(--line);overflow:hidden}.rcb em{display:block;height:100%;background:#4aa3df;border-radius:5px}.rcb.hot em{background:#d6333b}.rcb b{text-align:right;font-variant-numeric:tabular-nums}
+.rcnote,.rcnone{font-size:12px;color:var(--muted)}
+#so-rc{display:flex;flex-direction:column;gap:8px}.rcmini{display:flex;gap:12px;align-items:flex-start;padding:10px 12px;border-radius:10px;background:var(--chip)}.rcmini b{display:block;font-size:14px}.rcmini small{color:var(--muted);font-size:12px}.rcmini p{font-size:12.5px;margin-top:4px;line-height:1.4}
+@media (max-width:480px){.rcr{grid-template-columns:1fr auto 78px}.rcb{grid-template-columns:96px 1fr 46px}}
 .modal.outg{max-width:460px;width:100%;max-height:calc(100dvh - 32px);overflow:auto;gap:10px}.modal.outg h2{font-size:25px;line-height:1.1}
 .outg .intro{display:flex;flex-direction:column;gap:8px;padding:12px 14px;border-radius:10px;background:var(--chip)}
 .outg .intro p{font-size:13.5px;line-height:1.45;color:var(--ink)}
@@ -503,7 +517,7 @@ body.season-lock label.check:has(#breaks),body.season-lock label.check:has(#hays
 </head>
 <body>
 
-<div class="ver" id="appVersion" aria-label="Version">v3.2.2</div>
+<div class="ver" id="appVersion" aria-label="Version">v3.3.0</div>
 <div class="wrap">
   <header>
     <div class="brand"><span class="logo" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linejoin="round"><circle cx="8.5" cy="12" r="5.5"/><circle cx="8.5" cy="12" r="1.6" fill="currentColor"/><path d="M8.5 6.5H20v11H8.5"/></svg></span>
@@ -582,7 +596,7 @@ body.season-lock label.check:has(#breaks),body.season-lock label.check:has(#hays
 
   <div class="overlay top" id="seasonOv" hidden><div class="modal wide" role="dialog" aria-modal="true" aria-labelledby="so-h">
     <h2 id="so-h">Season complete</h2><p id="so-p" class="muted"></p>
-    <div class="sostats" id="so-stats"></div>
+    <div class="sostats" id="so-stats"></div><div id="so-rc" hidden></div>
     <label class="soname">Name for the leaderboard<input id="so-name" maxlength="16" autocomplete="nickname" spellcheck="false" placeholder="2–16 letters or numbers"></label>
     <div class="btns"><button id="so-submit" class="primary">Submit score</button><button id="so-board">View leaderboard</button><button id="so-more">One more turn</button><button id="so-new">New season</button></div>
     <p id="so-msg" class="somsg" aria-live="polite"></p></div></div>
@@ -1711,6 +1725,7 @@ function step(dt){
   // and so is the lumpy timing of truck departures. Cash and the season score are unchanged.
   if(!S.over&&!S.free&&!S.zen&&S.cash<ECON.bankrupt&&!(S.season&&S.season.on)){S.over="bankrupt";showOverlay("bankrupt");}
   if(!S.won&&!S.free&&!S.zen&&S.cash>=ECON.goal){S.won=true;if(!(S.season&&S.season.on))showOverlay("win");}
+  rcTick(dt);
   seasonTick();
   // smoothed rates (per hour)
   const R=S.rates,k=v=>v*60/dt;
@@ -1852,10 +1867,90 @@ function seasonLocks(on){["chaosOn","chaosLvl","chaosClear"].forEach(id=>{const 
   if(on){C.breaks=C.hays=true;}["breaks","hays"].forEach(id=>{const el=$(id);if(el){if(on)el.checked=true;el.disabled=on;}});
   document.body.classList.toggle("season-lock",on);
   $("seasonBtn").textContent=on?"Restart season":"Start season";$("seasonChip").hidden=!on;}
-function startSeason(){newGame();$("freeBtn").setAttribute("aria-pressed","false");$("freeBtn").textContent="Free play";S.season={on:true,end:SEASON_DAYS*1440,done:false};S.outg={k:1,noticed:false,on:false,rel:{stock:1,wet:1,dry:1},plan:null};seedRun(Math.floor(Date.now()/6048e5)*2654435761);C.breaks=true;
+function startSeason(){newGame();$("freeBtn").setAttribute("aria-pressed","false");$("freeBtn").textContent="Free play";S.season={on:true,end:SEASON_DAYS*1440,done:false};S.rc=null;S.outg={k:1,noticed:false,on:false,rel:{stock:1,wet:1,dry:1},plan:null};seedRun(Math.floor(Date.now()/6048e5)*2654435761);C.breaks=true;
   CH.on=true;$("chaosOn").checked=true;CH.lvl=1;$("chaosLvl").value=1;$("chaosLvlv").textContent="1×";
   EVENTS.forEach(e=>{CH.en[e.id]=true;const c=$("en-"+e.id);if(c)c.checked=true;});seasonLocks(true);
   BANNERS.push({text:`Season started: ${SEASON_DAYS} days. Make as much profit as you can.`,t:null,kind:"good"});}
+
+/* ---------- v3.3: 10-day report cards (season mode) ----------
+   Each period (days 1-10, 11-20, 21-30) gathers money in and out, cost per ton, what caused downtime, how reliable each
+   section was (planned outage time left out) and which step held the mill back. Cards pop up at the start of day 11 and
+   day 21 (sim paused) and the days 21-30 card is shown in the season summary. Each card also shows the season so far. */
+const RC_STEPS=["Receiving","Pulper","Machine at full speed","Machine down","Winder","Shipping"],RC_SEC=[["recv","Receiving"],["pulper","Stock prep"],["machine","Paper machine"],["winder","Winder"],["ship","Shipping"]];
+function rcAcc(){return {t0:S.t,L0:{...S.ledger},prod0:S.tot.prodT,ship0:S.shipT||0,rolls0:S.tot.rolls,brk0:S.tot.breaks,hay0:S.tot.hayouts,min:0,plan:0,up:{recv:0,pulper:0,machine:0,winder:0,ship:0},dn:{},bn:{}};}
+function rcSteps(){const M=S.M||{},g=GRADES[C.grade],yl=P.yieldF*P.pmLoss,rw=C.rollW.v,ld=(S.effLd||C.loaders.v)*P.loaderRate*rw/2;
+  return [Math.min(C.drivers.v*P.driverRate/2,C.inRate.v*P.truckLoad)*yl*(M.recvMul??1)*(M.noIn||M.docksClosed||M.recvMul===0?0:1),
+    P.pulperMax*yl*(M.feedMul||1)*(M.pulperDown?0:1),P.K*(3300+P.spBonus)*g.bw*(M.speedCap||1)*(M.pmDown||S.pm==="break"?0:1),
+    P.winderMax*(M.winderDown||S.wd==="hayout"?0:1),ld*(M.clampMul??1)*(M.noOut||M.clampMul===0?0:1)];}
+function rcTick(dt){const se=S.season;if(!se||!se.on||se.done||dt<=0)return;
+  if(!S.rc)S.rc={i:0,p:rcAcc(),s:rcAcc(),cards:[]};const R=S.rc,M=S.M||{},planned=!!(S.outg&&S.outg.on);
+  const up={recv:!(M.noIn||M.docksClosed||M.recvMul===0),pulper:!M.pulperDown,machine:S.pm==="run",winder:S.wd==="run"&&!M.winderDown,ship:!(M.noOut||M.clampMul===0)};
+  // downtime causes: every active upset by name, plus machine/winder stops that no upset explains
+  const add=(a,k,v)=>{a.dn[k]=(a.dn[k]||0)+v;};
+  [R.p,R.s].forEach(a=>{a.min+=dt;if(planned){a.plan+=dt;return;}for(const k in up)if(up[k])a.up[k]+=dt;
+    S.inc.forEach(i=>{const e=EV[i.id];if(e&&i.id!=="runner"&&i.id!=="birdhay")add(a,e.name,dt);});
+    if(S.pm==="break")add(a,"Sheet breaks",dt);else if(S.pm==="down"&&!M.pmDown)add(a,"Ran out of stock",dt);else if(S.pm==="full")add(a,"Warehouse full",dt);else if(S.pm==="spools")add(a,"Reel storage full",dt);
+    if(S.wd==="hayout")add(a,"Winder hayouts",dt);});
+  // what limited production, sampled every 10 sim minutes: the machine when it runs flat out or is down; upstream when it is
+  // starved (empty bale yard = receiving, otherwise the pulper); the winder when reels back up; shipping when the warehouse is full
+  R.bt=(R.bt||0)+dt;if(R.bt>=10){if(!planned){const k=rcLimit();[R.p,R.s].forEach(a=>{a.bn[k]=(a.bn[k]||0)+R.bt;});}R.bt=0;}
+  // period boundaries: start of day 11 and day 21
+  const pi=Math.floor(S.t/14400);if(pi>R.i&&pi<3){const card=rcMake(R.p,R.i);R.cards.push(card);R.i=pi;R.p=rcAcc();R.pend=card;}
+  if(R.pend&&!(S.cards&&S.cards.open)&&!S.over){const c=R.pend;R.pend=null;rcOpen(c);}}
+function rcLimit(){const M=S.M||{},starved=()=>S.yard<P.yardCap*0.04||M.noIn||M.docksClosed?"Receiving":"Pulper";
+  if(S.pm==="full")return "Shipping";if(S.pm==="spools")return "Winder";if(S.pm==="down")return M.pmDown?"Machine down":starved();if(S.pm!=="run")return "Machine down";
+  if(S.pmSpeed<C.pmSp.v*0.97*(M.speedCap||1)&&S.tank<P.tankCap*0.3)return starved();return "Machine at full speed";}
+function rcGrade(v,cut){return ["A","B","C","D","F"][cut.findIndex(c=>v>=c)<0?4:cut.findIndex(c=>v>=c)];}
+function rcSum(a){const L=S.ledger,d=k=>(L[k]||0)-(a.L0[k]||0),prod=S.tot.prodT-a.prod0,ship=(S.shipT||0)-a.ship0,run=Math.max(1,a.min-a.plan),days=Math.max(0.1,a.min/1440);
+  const ops=["occ","energy","labor","overhead","premium"].reduce((t,k)=>t+d(k),0),spent={Fibre:d("occ"),Energy:d("energy"),Labour:d("labor"),Overhead:d("overhead"),"Premium freight":d("premium"),"Repairs & outages":d("repairs"),Upgrades:d("upgrades")};
+  const rev=d("rev"),deals=d("deals"),earned=rev+Math.max(0,deals),spentT=Object.values(spent).reduce((t,v)=>t+v,0)+Math.max(0,-deals),net=earned-spentT;
+  const rel={};RC_SEC.forEach(([k])=>rel[k]=a.up[k]/run);const relAvg=RC_SEC.reduce((t,[k])=>t+rel[k],0)/RC_SEC.length;
+  const dn=Object.entries(a.dn).sort((x,y)=>y[1]-x[1]).slice(0,5),bnT=Object.values(a.bn).reduce((t,v)=>t+v,0)||1,bn=RC_STEPS.map(k=>[k,(a.bn[k]||0)/bnT]).sort((x,y)=>y[1]-x[1]);
+  const price=priceOf(C.grade),cpt=prod>0?(ops+d("repairs"))/prod:0,margin=earned>0?(earned-(spentT-spent.Upgrades))/earned:0;
+  return {days,prod,ship,rev,deals,earned,spent,spentT,net,ops,cpt,price,margin,rel,relAvg,avail:rel.machine,dn,bn,breaks:S.tot.breaks-a.brk0,hay:S.tot.hayouts-a.hay0,rolls:S.tot.rolls-a.rolls0,plan:a.plan};}
+function rcMake(a,i){const p=rcSum(a),s=rcSum(S.rc.s);
+  const g={Profit:rcGrade(p.margin,[0.30,0.22,0.14,0.06]),"Cost / ton":rcGrade(p.price>0?1-p.cpt/p.price:0,[0.32,0.25,0.18,0.10]),Downtime:rcGrade(p.avail,[0.95,0.91,0.86,0.80]),Reliability:rcGrade(p.relAvg,[0.96,0.92,0.88,0.82])};
+  const gp={A:4,B:3,C:2,D:1,F:0},avg=Object.values(g).reduce((t,v)=>t+gp[v],0)/4,overall=avg>=3.5?"A":avg>=2.5?"B":avg>=1.5?"C":avg>=0.75?"D":"F";
+  // one tip, aimed at the weakest spot
+  const worst=Object.entries(g).sort((x,y)=>gp[x[1]]-gp[y[1]])[0][0],top=p.dn[0],bn=p.bn[0],lowSec=RC_SEC.map(([k,n])=>[n,p.rel[k]]).sort((x,y)=>x[1]-y[1])[0];
+  const hrs=m=>(m/60).toFixed(m<600?1:0)+" h";
+  let tip;
+  if(worst==="Profit"){const rep=p.spent["Repairs & outages"]||0,pf=p.spent["Premium freight"]||0;
+    tip=rep>p.earned*0.1?`Repairs and outage budgets took ${money(rep)}. Fewer breakdowns means fewer bills, so keep the machine and its crews ahead of trouble.`:pf>p.earned*0.05?`Premium freight cost ${money(pf)}. Keep the warehouse moving so trucks don't need rushing.`:`You kept ${Math.round(p.margin*100)}% of sales. Fibre and energy are your biggest costs, so every hour of downtime hurts.`;}
+  else if(worst==="Downtime"&&top)tip=`${top[0]} cost you ${hrs(top[1])} this period. Respond fast when it hits, and give its area a bigger budget at the next outage.`;
+  else if(worst==="Reliability")tip=`${lowSec[0]} was the least reliable section (${Math.round(lowSec[1]*100)}% up). Look at its upgrades and outage budget.`;
+  else if(worst==="Cost / ton")tip=`Each ton cost ${money(p.cpt)} to make against a ${money(p.price)} price. Efficiency upgrades and fewer breaks bring that down.`;
+  else if(bn&&bn[1]>0.4)tip=bn[0]==="Machine at full speed"?`The paper machine ran flat out ${Math.round(bn[1]*100)}% of the time, so it sets your output. Speed and drive upgrades pay back fastest.`:bn[0]==="Machine down"?`The machine being down held the mill back ${Math.round(bn[1]*100)}% of the time. Cut breaks and breakdowns first.`:`The ${bn[0].toLowerCase()} held the mill back ${Math.round(bn[1]*100)}% of the time. That's where an upgrade pays back fastest.`;
+  else tip=overall==="A"?"Great running. Keep the machine up and the buffers healthy.":`Profit margin was ${Math.round(p.margin*100)}%. Shorter downtime is the quickest way to lift it.`;
+  return {i,from:i*10+1,to:i*10+10,p,s,g,overall,tip};}
+function rcHTML(c){const p=c.p,s=c.s,pc=v=>Math.round(v*100)+"%",hrs=m=>(m/60).toFixed(m<600?1:0)+" h",gc=x=>"rcg g"+x;
+  const row=(k,a,b,cls)=>`<div class="rcr${cls?" "+cls:""}"><span>${k}</span><b>${a}</b><i>${b}</i></div>`;
+  const bar=(k,v,lab,hot)=>`<div class="rcb${hot?" hot":""}"><span>${k}</span><div><em style="width:${Math.max(2,Math.round(v*100))}%"></em></div><b>${lab}</b></div>`;
+  const maxDn=p.dn.length?p.dn[0][1]:1;
+  return `<div class="rchead"><div><span class="dk">Report card · days ${c.from}–${c.to}</span><h2 id="rc-h">${MILL.name}</h2></div><div class="${gc(c.overall)} big" aria-label="Overall grade ${c.overall}">${c.overall}</div></div>
+    <div class="rcgrades">${Object.entries(c.g).map(([k,v])=>`<div><div class="${gc(v)}">${v}</div><small>${k}</small></div>`).join("")}</div>
+    <p class="rctip"><b>Tip</b> ${c.tip}</p>
+    <h3>Money <small>these 10 days · season so far</small></h3>
+    ${row("Earned (paper sales"+(p.deals>0?" + deals":"")+")",money(p.earned),money(s.earned),"pos")}
+    ${Object.keys(p.spent).filter(k=>p.spent[k]||s.spent[k]).map(k=>row(k,money(-p.spent[k]),money(-s.spent[k]))).join("")}
+    ${row("Net",money(p.net),money(s.net),"net "+(p.net>=0?"pos":"neg"))}
+    <h3>Cost per ton <small>these 10 days · season so far</small></h3>
+    ${row("Cost to make a ton",money(p.cpt),money(s.cpt))}${row("Selling price",money(p.price),money(s.price))}${row("Profit margin (before upgrades)",pc(p.margin),pc(s.margin))}
+    ${row("Tons made",Math.round(p.prod).toLocaleString("en-US")+" t",Math.round(s.prod).toLocaleString("en-US")+" t")}
+    <h3>Downtime <small>biggest issues, these 10 days</small></h3>
+    ${p.dn.length?p.dn.map(([k,m],i)=>bar(k,m/maxDn,hrs(m),i===0)).join(""):`<p class="rcnone">Nothing went wrong. Remarkable.</p>`}
+    <p class="rcnote">${p.breaks} sheet break${p.breaks===1?"":"s"} · ${p.hay} hayout${p.hay===1?"":"s"}${p.plan>0?` · ${hrs(p.plan)} planned outage (not counted)`:""}</p>
+    <h3>Reliability <small>time each section was up</small></h3>
+    ${RC_SEC.map(([k,n])=>bar(n,p.rel[k],pc(p.rel[k]),p.rel[k]<0.9)).join("")}
+    <h3>Bottlenecks <small>share of time each step limited the mill</small></h3>
+    ${p.bn.filter(([,v])=>v>0.005).map(([k,v],i)=>bar(k,v,pc(v),i===0)).join("")||`<p class="rcnone">Not enough running time to tell.</p>`}`;}
+let rcEl=null;
+function rcOpen(c,fromSummary){if(!rcEl){rcEl=document.createElement("div");rcEl.className="overlay";rcEl.id="rcOv";rcEl.style.zIndex="170";document.body.appendChild(rcEl);}
+  if(!fromSummary){running=false;S.cards.open={report:true};const pb=document.getElementById("play");if(pb){pb.textContent="Run";pb.setAttribute("aria-pressed","false");}}
+  rcEl.innerHTML=`<div class="modal deal outg rc" role="dialog" aria-modal="true" aria-labelledby="rc-h">${rcHTML(c)}<div class="btns"><button class="primary" id="rc-ok" style="flex:1">${fromSummary?"Close":"Back to the mill"}</button></div></div>`;
+  rcEl.hidden=false;AUDIO.sfx(c.overall<="B"?"win":"cash",150);
+  document.getElementById("rc-ok").addEventListener("click",()=>{rcEl.hidden=true;if(!fromSummary)closeCard(true);});rcEl.querySelector(".modal").scrollTop=0;document.getElementById("rc-ok").focus({preventScroll:true});}
+function rcFinal(){const R=S.rc;if(!R)return null;const c=rcMake(R.p,R.i);R.cards.push(c);return c;}
 function seasonTick(){const se=S.season;if(!se||!se.on||se.done)return;
   $("seasonChip").textContent=`Season · day ${Math.min(SEASON_DAYS,Math.floor(S.t/1440)+1)} of ${SEASON_DAYS}`;
   if(S.t>=se.end||S.cash<ECON.bankrupt)endSeason(S.cash<ECON.bankrupt);}
@@ -1868,6 +1963,8 @@ function endSeason(bust){const se=S.season;se.done=true;se.on=false;running=fals
   const eff=S.tot.pot>0?S.tot.prodT/S.tot.pot:1,g=RATINGS.find(x=>eff>=x[0]);
   const st=[["Net profit",money(r.score),"big"],["Tons shipped",f0(r.tons)+" t"],["Disasters survived",String(r.incidents)],["Rolls made",String(S.tot.rolls)],["Grade",g[1]+" · "+g[2]]];
   $("so-stats").replaceChildren(...st.map(([k,v,c])=>{const d=document.createElement("div");if(c)d.className=c;const a=document.createElement("span");a.textContent=k;const b=document.createElement("b");b.textContent=v;d.append(a,b);return d;}));
+  {const c=bust?null:rcFinal(),box=$("so-rc");if(box){if(c){box.hidden=false;box.innerHTML=`<div class="rcmini"><div class="rcg g${c.overall}">${c.overall}</div><div><b>Days ${c.from}–${c.to} report card</b><small>${Object.entries(c.g).map(([k,v])=>k+" "+v).join(" · ")}</small><p>${c.tip}</p></div></div><button id="so-rcbtn" class="ghost">Open the full report card</button>`;
+      $("so-rcbtn").addEventListener("click",()=>rcOpen(c,true));}else box.hidden=true;}}
   let nm="";try{nm=localStorage.getItem("paper-mill-player")||"";}catch(e){}$("so-name").value=nm;
   $("so-submit").disabled=false;$("so-submit").textContent=lbOn()?"Submit score":"Save score";setMsg("");$("seasonOv").hidden=false;$("so-name").focus();}
 function setMsg(t,c){const m=$("so-msg");m.textContent=t;m.className="somsg"+(c?" "+c:"");}
@@ -2770,7 +2867,19 @@ const G3={on:false,ok:false};
       x.save();x.translate(X(wx+2.2),Z(16.3));x.fillStyle="rgba(242,184,7,0.9)";const s2=0.18*ppm;x.beginPath();x.arc(0,-s2*1.6,s2*0.55,0,7);x.fill();x.fillRect(-s2*0.35,-s2,s2*0.7,s2*1.3);x.fillRect(-s2*0.6,s2*0.3,s2*0.35,s2*1.1);x.fillRect(s2*0.25,s2*0.3,s2*0.35,s2*1.1);x.restore();}
     G3.HALL.doors.forEach(d=>{if(d.big){dHatch(x,X,Z,ppm,d.x-d.w/2,d.x+d.w/2,17.4,19.5,"rgba(242,184,7,0.35)","rgba(30,30,30,0.4)");dTxt(x,X,Z,ppm,"KEEP CLEAR",d.x,18.45,0.5,"#ffffff");}
       else if(!d.open){x.fillStyle="rgba(255,255,255,0.8)";for(let zz=17.45;zz<19.4;zz+=0.45)x.fillRect(X(d.x-d.w/2),Z(zz),X(d.x+d.w/2)-X(d.x-d.w/2),0.22*ppm);}});
-    [[30,40,2.6,4.6],[44,52,2.6,4.6],[-20,-10,2.6,4.4]].forEach(([a,b,c,d])=>{dHatch(x,X,Z,ppm,a,b,c,d,"rgba(242,184,7,0.22)","rgba(30,30,30,0.32)");dBox(x,X,Z,a,b,c,d,YEL,0.1*ppm);dTxt(x,X,Z,ppm,"CRANE LOAD ZONE",(a+b)/2,(c+d)/2,0.42,"rgba(28,34,51,0.85)");});});
+    // v3.3 base ply silo: a grated pit under the whole wire footprint, and the white-water trench to the riser by the back wall
+    {const a=41.5,b=54,c=6.2,d=12.0,T=0.7;
+     // white water: cloudy grey-white water with a little foam and ripple
+     {const g=x.createLinearGradient(0,Z(c),0,Z(d));g.addColorStop(0,"rgba(196,206,206,0.96)");g.addColorStop(0.5,"rgba(214,222,220,0.96)");g.addColorStop(1,"rgba(190,201,202,0.96)");x.fillStyle=g;x.fillRect(X(a),Z(c),X(b)-X(a),Z(d)-Z(c));
+      for(let k=0;k<70;k++){const px=X(a+0.3+drnd()*(b-a-0.6)),pz=Z(c+0.3+drnd()*(d-c-0.6)),r=(0.25+drnd()*0.8)*ppm,gg=x.createRadialGradient(px,pz,0,px,pz,r);gg.addColorStop(0,"rgba(255,255,255,0.45)");gg.addColorStop(1,"rgba(255,255,255,0)");x.fillStyle=gg;x.fillRect(px-r,pz-r,r*2,r*2);}
+      x.strokeStyle="rgba(150,166,170,0.35)";x.lineWidth=0.04*ppm;for(let k=0;k<26;k++){const px=X(a+0.5+drnd()*(b-a-1)),pz=Z(c+0.5+drnd()*(d-c-1)),w=(0.6+drnd()*1.4)*ppm;x.beginPath();x.moveTo(px-w,pz);x.quadraticCurveTo(px,pz-0.12*ppm,px+w,pz);x.stroke();}}
+     // tiled border round the rim
+     const tile=(x0,x1,z0,z1)=>{x.fillStyle="rgba(244,245,247,0.98)";x.fillRect(X(x0),Z(z0),X(x1)-X(x0),Z(z1)-Z(z0));x.strokeStyle="rgba(160,168,180,0.9)";x.lineWidth=Math.max(1,0.03*ppm);
+       for(let v=x0;v<=x1+1e-6;v+=0.35){x.beginPath();x.moveTo(X(v),Z(z0));x.lineTo(X(v),Z(z1));x.stroke();}for(let v=z0;v<=z1+1e-6;v+=0.35){x.beginPath();x.moveTo(X(x0),Z(v));x.lineTo(X(x1),Z(v));x.stroke();}};
+     tile(a-T,b+T,c-T,c);tile(a-T,b+T,d,d+T);tile(a-T,a,c,d);tile(b,b+T,c,d);
+     x.strokeStyle="rgba(90,100,112,0.8)";x.lineWidth=0.06*ppm;x.strokeRect(X(a),Z(c),X(b)-X(a),Z(d)-Z(c));
+     x.fillStyle="rgba(28,40,52,0.82)";x.fillRect(X(45.7),Z(3.0),X(46.3)-X(45.7),Z(c-T)-Z(3.0));x.strokeStyle="rgba(150,170,185,0.55)";x.lineWidth=0.05*ppm;for(let v=3.2;v<c-T;v+=0.3){x.beginPath();x.moveTo(X(45.7),Z(v));x.lineTo(X(46.3),Z(v));x.stroke();}}
+    [[30,40,2.6,4.6],[21,29,2.6,4.6],[-20,-10,2.6,4.4]].forEach(([a,b,c,d])=>{dHatch(x,X,Z,ppm,a,b,c,d,"rgba(242,184,7,0.22)","rgba(30,30,30,0.32)");dBox(x,X,Z,a,b,c,d,YEL,0.1*ppm);dTxt(x,X,Z,ppm,"CRANE LOAD ZONE",(a+b)/2,(c+d)/2,0.42,"rgba(28,34,51,0.85)");});});
   // roll warehouse  x -49..-23.8, z 14.8..32.2
   floorDecal(-49,-23.8,14.8,32.2,PPM,(x,X,Z,ppm,W2,H2)=>{dJoints(x,W2,H2,ppm);dStains(x,X,Z,ppm,-48.5,-24.3,15.3,31.7,20);
     const ROWS="ABCDEFG";for(let k=0;k<84;k++){const cx=-45+(k%12)*1.75,cz=31.2-Math.floor(k/12)*1.7;dBox(x,X,Z,cx-0.78,cx+0.78,cz-0.74,cz+0.74,"rgba(255,255,255,0.32)",0.05*ppm);
@@ -3247,6 +3356,35 @@ const G3={on:false,ok:false};
   fieldPump(45,1,-11,-Math.PI/2);
   // v2.9.19: the stock line to the refiners runs overhead (it used to lie on the ground and wall off the stock-prep yard)
   spool([[37.7,1,-12.1],[38.6,1,-11],[40,1,-11],[40,4.8,-11],[57,4.8,-11]],0.32,M.stock);
+  // v3.3: machine chest (after the refiners) and the fan pump south of it. Flow: stock chest > refiners > machine chest > fan pump > headbox,
+  // with base ply white water from the silo under the wire also feeding the fan pump
+  slab(44.2,52.8,-18.4,-7.6,M.slab,0.032);
+  {const MX=47.6,MZ=-15.0,MR=2.75,MH=10;blob(MX,MZ,4.2);
+    const sh=new THREE.Mesh(new CylG(MR,MR,MH,32,1,true),M.tank);sh.position.set(MX,MH/2,MZ);sh.castShadow=true;sh.receiveShadow=true;scene.add(sh);
+    const lid=new THREE.Mesh(new CylG(MR+0.06,MR+0.06,0.22,32),M.steel);lid.position.set(MX,MH+0.11,MZ);lid.castShadow=true;scene.add(lid);
+    box(1.0,0.35,1.0,M.ink,MX-0.9,MH+0.38,MZ+0.6,scene,false);
+    const base=new THREE.Mesh(new CylG(MR+0.08,MR+0.12,0.45,32),M.steel);base.position.set(MX,0.22,MZ);scene.add(base);
+    [3.2,6.6].forEach(y=>{const b=new THREE.Mesh(new CylG(MR+0.03,MR+0.03,0.14,32,1,true),M.steel);b.position.set(MX,y,MZ);scene.add(b);});
+    // side-entry agitator low on the west side
+    // (on the south-east side: the west side is tight against the thickener stair tower, the east side against the trike parking)
+    {const ga=new THREE.Group();ga.position.set(MX,0,MZ);ga.rotation.y=-Math.PI/4;scene.add(ga);
+     const ag=new CylG(0.55,0.55,1.6,16);ag.rotateZ(Math.PI/2);const m=new THREE.Mesh(ag,M.motor);m.position.set(MR+1.1,1.1,0);m.castShadow=true;ga.add(m);
+     box(0.6,0.7,0.8,M.steel,MR+0.2,1.0,0,ga,false);box(2.4,0.18,1.0,M.steel,MR+0.9,0.45,0,ga,false);}
+    // caged ladder up the north side to the roof
+    {const LZ=MZ-MR-0.25;[-0.3,0.3].forEach(dx=>box(0.07,MH+1.0,0.07,M.warn,MX+dx,(MH+1.0)/2,LZ,scene,false));for(let y=0.4;y<MH+0.6;y+=0.45)box(0.62,0.06,0.06,M.warn,MX,y,LZ,scene,false);
+     [2.5,5,7.5,10].forEach(y=>{const c=new THREE.Mesh(new THREE.TorusGeometry(0.45,0.035,4,12,Math.PI),M.warn);c.rotation.set(0,0,0);c.position.set(MX,y,LZ-0.05);c.rotation.x=Math.PI/2;c.rotation.z=Math.PI;scene.add(c);});}
+    // name plate
+    {const c=document.createElement("canvas");c.width=256;c.height=48;const x=c.getContext("2d");x.fillStyle="#ffffff";x.fillRect(0,0,256,48);x.fillStyle="#1c2233";x.font="800 26px system-ui,sans-serif";x.textAlign="center";x.fillText("MACHINE CHEST",128,33);
+     const t=new THREE.CanvasTexture(c);t.encoding=THREE.sRGBEncoding;const pl=new THREE.Mesh(new THREE.PlaneGeometry(2.4,0.45),new THREE.MeshBasicMaterial({map:t}));pl.position.set(MX,4.4,MZ+MR+0.03);scene.add(pl);}
+    // fan pump: a big end-suction pump, twice the size of the others, on its own plinth
+    {const g=pumpModel();g.scale.setScalar(2);g.position.set(49.0,0.25,-9.3);box(5.6,0.25,2.4,M.steel,49.9,0.125,-9.3,scene);blob(49.8,-9.3,3.2);
+     const c=document.createElement("canvas");c.width=256;c.height=48;const x=c.getContext("2d");x.fillStyle="#ffffff";x.fillRect(0,0,256,48);x.fillStyle="#1c2233";x.font="800 26px system-ui,sans-serif";x.textAlign="center";x.fillText("FAN PUMP",128,33);
+     const t=new THREE.CanvasTexture(c);t.encoding=THREE.sRGBEncoding;const pl=new THREE.Mesh(new THREE.PlaneGeometry(1.8,0.34),new THREE.MeshBasicMaterial({map:t}));pl.position.set(50.4,0.6,-8.08);scene.add(pl);}
+    // machine chest outlet to the fan pump suction; base ply white water from the silo joins it
+    spool([[46.6,0.8,-13.0],[46.6,2.35,-13.0],[46.6,2.35,-9.3],[46.6,1.65,-9.3],[47.0,1.65,-9.3]],0.32,M.stock);   // runs above head height so the yard stays open
+    spool([[46.0,0.15,3.0],[46.0,5.6,3.0],[46.0,5.6,-8.4],[46.0,1.65,-8.4],[46.0,1.65,-9.3],[46.4,1.65,-9.3]],0.28,M.stock);
+    // fan pump discharge: up, over the hall's back wall and into the headbox
+    spool([[47.6,3.2,-9.3],[47.6,7.6,-9.3],[47.6,7.6,3.6],[60.75,7.6,3.6],[60.75,7.6,5.85],[60.75,1.9,5.85]],0.34,M.stock);}   // into the top of the tapered header, drive-side end
 
   // paper machine
   const zc=9.1,CD=6.4;
@@ -3625,6 +3763,9 @@ const G3={on:false,ok:false};
     {p:[26.6,3.9,ZL],t:()=>["LC cleaners",S.inc.some(i=>i.id==="lcplug")?"plugged":"sand & grit out"]},
     {p:[41.2,9.4,-15],t:()=>["4 Stock chest",f0(S.tank/P.tankCap*100)+" %"]},
     {p:[58,5.6,zc],t:()=>{const D=G3.SLC;if(!D)return ["Headbox",""];const g=D.geo();return ["Headbox",G3.slcFix?"resetting the slice":"slice "+(12+3*D.v).toFixed(1)+" mm · wet line "+(g.lipX-g.wet).toFixed(1)+" m"];},cls:()=>!!G3.slcFix},
+    {p:[47.6,11.6,-15.0],t:()=>["Machine chest","refined stock"]},
+    {p:[49.8,3.6,-9.3],t:()=>["Fan pump",S.pm==="run"?"to the headbox":"idling"]},
+    {p:[44,0.6,12.9],t:()=>["Base ply silo","white water under the wire"]},
     {p:[34.5,9.6,zc-1.5],t:()=>["Twin press",LV("shoe")?"shoe in 2nd press":"tandem bottom felt"]},
     {p:[10,8.4,zc],t:()=>["5 "+NAME+(S.pm==="run"?"":" · "+({break:"sheet break "+({reel:"at the reel",dryer:"before the dryers",press:"before the presses"}[S.brkType]||"")+(working("brk")?": rethreading":": crew on the way"),down:"no stock",full:"warehouse full",spools:"winder backed up",incident:S.M.pmDown||"down"}[S.pm]||"")),f0(S.pmSpeed)+" fpm · "+f1(S.rates.prod)+" t/h"],cls:()=>S.pm==="run"?"":"bad"},
     {p:[-10,9.2,zc],t:()=>["Reel",f1(S.reel)+" / "+P.jumbo+" t"]},
@@ -4512,13 +4653,31 @@ const G3={on:false,ok:false};
       else if(w.visible){u.hose.visible=false;if(moveP(w,u.home[0],u.home[1],8,rdt))w.visible=false;else pose(w,"run",now);}});}
 
   /* ---- ambient life: office, tours, managers, office walkers, birds, food truck (no effect on the game) ---- */
+  // v3.3: facade textures for the office and the maintenance shop: framed windows on a regular grid (lined up with the doors),
+  // glass with a sky reflection, mullions and transoms, half-drawn blinds, sills, and the building sign, all on one plane per wall
+  G3.winMats=G3.winMats||[];
+  function facade(W,H,wins,sign,doorX){const ppm=48,c=document.createElement("canvas");c.width=Math.round(W*ppm);c.height=Math.round(H*ppm);const x=c.getContext("2d"),Y=v=>c.height-v*ppm;
+    wins.forEach(([cx,y0,w,h],k)=>{const L=cx*ppm-w*ppm/2,T=Y(y0+h),Wp=w*ppm,Hp=h*ppm,f=0.07*ppm;
+      x.fillStyle="#2b3240";x.fillRect(L-f,T-f,Wp+2*f,Hp+2*f);                                         // frame
+      const g=x.createLinearGradient(L,T,L+Wp,T+Hp);g.addColorStop(0,"#9fc3dd");g.addColorStop(0.45,"#cfe3f0");g.addColorStop(0.55,"#7fa6c4");g.addColorStop(1,"#5d7f9c");x.fillStyle=g;x.fillRect(L,T,Wp,Hp);
+      x.fillStyle="rgba(255,255,255,0.35)";x.beginPath();x.moveTo(L+Wp*0.15,T);x.lineTo(L+Wp*0.32,T);x.lineTo(L+Wp*0.12,T+Hp);x.lineTo(L,T+Hp);x.lineTo(L,T+Hp*0.75);x.closePath();x.fill();   // reflection
+      const bl=0.25+0.35*((k*37)%10)/10;x.fillStyle="rgba(238,236,228,0.92)";x.fillRect(L,T,Wp,Hp*bl);x.strokeStyle="rgba(150,148,140,0.6)";x.lineWidth=1;for(let yy=T+3;yy<T+Hp*bl;yy+=4){x.beginPath();x.moveTo(L,yy);x.lineTo(L+Wp,yy);x.stroke();}
+      x.fillStyle="#2b3240";x.fillRect(L+Wp/2-f*0.45,T,f*0.9,Hp);x.fillRect(L,T+Hp*0.32-f*0.4,Wp,f*0.8);                 // mullion + transom
+      x.fillStyle="#e9ebee";x.fillRect(L-f*1.6,T+Hp+f,Wp+f*3.2,f*1.3);x.fillStyle="rgba(0,0,0,0.25)";x.fillRect(L-f*1.6,T+Hp+f*2.3,Wp+f*3.2,f*0.5);   // sill
+      });
+    if(doorX!=null){x.fillStyle="#2b3240";x.fillRect(doorX*ppm-0.85*ppm,Y(2.42),1.7*ppm,0.12*ppm);}                // door head trim
+    if(sign){const [sx,sy,sw,sh,txt]=sign;x.fillStyle="#1c2233";x.fillRect(sx*ppm-sw*ppm/2,Y(sy+sh),sw*ppm,sh*ppm);x.fillStyle="#ffffff";x.font=`800 ${Math.round(sh*ppm*0.62)}px "Plus Jakarta Sans",system-ui,sans-serif`;x.textAlign="center";x.textBaseline="middle";x.fillText(txt,sx*ppm,Y(sy+sh/2)+1);}
+    const t=new THREE.CanvasTexture(c);t.encoding=THREE.sRGBEncoding;t.anisotropy=4;
+    const m=new THREE.MeshStandardMaterial({map:t,alphaTest:0.5,roughness:0.35,metalness:0.1,emissiveMap:t,emissive:new THREE.Color(0)});G3.winMats.push(m);
+    return new THREE.Mesh(new THREE.PlaneGeometry(W,H),m);}
   const OFF={x0:49,x1:61,z0:24,z1:30,door:[53,23.7]};
   {const ow=mat("g-wall",{roughness:0.6}),oh=4.4;const o=box(OFF.x1-OFF.x0,oh,OFF.z1-OFF.z0,ow,(OFF.x0+OFF.x1)/2,oh/2,(OFF.z0+OFF.z1)/2);edges(o);blob((OFF.x0+OFF.x1)/2,(OFF.z0+OFF.z1)/2,8);
     box(OFF.x1-OFF.x0+0.4,0.35,OFF.z1-OFF.z0+0.4,M.brand,(OFF.x0+OFF.x1)/2,oh+0.17,(OFF.z0+OFF.z1)/2);
-    [OFF.z0-0.03,OFF.z1+0.03].forEach(z=>box(OFF.x1-OFF.x0-1.2,1.1,0.1,M.wind,(OFF.x0+OFF.x1)/2+0.6,2.4,z,scene,false));
+    // windows on a 2.2 m grid centred on the door (x 53), so front and back line up; at the front the door takes one bay and the vending machine another
+    {const W=OFF.x1-OFF.x0,H=oh-0.1,X=[50.8,53,55.2,57.4,59.6],win=(xs)=>xs.map(wx=>[wx-OFF.x0,1.2,1.4,1.1]);
+     const fr=facade(W,H,win(X.filter(v=>v!==53&&v!==50.8)).map(([cx,...r])=>[W-cx,...r]),[W-(56.3-OFF.x0),3.05,3.2,0.72,"OFFICE"],W-(OFF.door[0]-OFF.x0));fr.rotation.y=Math.PI;fr.position.set((OFF.x0+OFF.x1)/2,H/2,OFF.z0-0.035);scene.add(fr);
+     const bk=facade(W,H,win(X),[(OFF.x0+OFF.x1)/2-OFF.x0,3.05,3.2,0.72,"OFFICE"]);bk.position.set((OFF.x0+OFF.x1)/2,H/2,OFF.z1+0.035);scene.add(bk);}
     box(1.5,2.3,0.12,M.ink,OFF.door[0],1.15,OFF.z0-0.05,scene,false);box(2.4,0.12,1.2,M.brand,OFF.door[0],2.55,OFF.z0-0.6,scene,false);
-    const c=document.createElement("canvas");c.width=256;c.height=64;const x=c.getContext("2d");x.fillStyle="#1c2233";x.font='800 40px "Plus Jakarta Sans",system-ui,sans-serif';x.textBaseline="middle";x.fillText("OFFICE",8,34);
-    const t=new THREE.CanvasTexture(c);t.encoding=THREE.sRGBEncoding;const sg=new THREE.Mesh(new THREE.PlaneGeometry(3,0.75),new THREE.MeshBasicMaterial({map:t,transparent:true}));sg.position.set(OFF.door[0]+3.4,3.55,OFF.z0-0.1);sg.rotation.y=Math.PI;scene.add(sg);const sg2=sg.clone();sg2.position.set((OFF.x0+OFF.x1)/2,3.55,OFF.z1+0.1);sg2.rotation.y=0;scene.add(sg2);
     box(1.6,0.04,OFF.z0-20.1,M.slab,OFF.door[0],0.06,(OFF.z0+20.1)/2,scene,false);}
   // vending machine by the office door
   const VEND={x:50.4,z:23.1,user:-1};
@@ -4575,7 +4734,7 @@ const G3={on:false,ok:false};
     const p1=new THREE.Group(),p2=new THREE.Group();p1.add(w1);p2.add(w2);g.add(p1,p2);w1.rotation.x=-Math.PI/2;w2.rotation.x=-Math.PI/2;g.userData={p1,p2,ph:Math.random()*6};g.visible=false;scene.add(g);BIRDS.push(g);}
   function startBirds(){const n=3+Math.floor(Math.random()*4),dir=Math.random()<0.5?-1:1;flock={x:dir<0?72:-26,dir,z:4+Math.random()*10,n,offs:BIRDS.map(()=>[Math.random()*3,Math.random()*2.5-1.2,Math.random()*1.5])};}
   // food truck parks out front; operators drift over for food
-  const FOOD={open:false,id:0,x:33,z:32.5,state:"off",t:0,spot(i){return [this.x-2.2+(i%4)*1.5,35.2+(i>=4?1.0:0)];}};
+  const FOOD=G3.FOOD={open:false,id:0,x:33,z:32.5,state:"off",t:0,spot(i){return [this.x-2.2+(i%4)*1.5,35.2+(i>=4?1.0:0)];}};
   const truck=new THREE.Group();scene.add(truck);truck.visible=false;
   {const cols=["#f2b51d","#e4572e","#2ec4b6","#e84393"],bc=cloth(cols[Math.floor(Math.random()*cols.length)]);
     box(5.6,2.6,2.4,bc,0.4,1.75,0,truck);box(1.9,1.9,2.3,bc,-3.1,1.4,0,truck);box(0.1,0.9,2.0,M.wind,-4.06,1.8,0,truck,false);
@@ -4625,7 +4784,7 @@ const G3={on:false,ok:false};
       G3.beacons.forEach(l=>{l.b.visible=l.h.visible=on;l.h.material.opacity=k;l.b.material.color.setRGB(0.4+0.6*bl,0.02+0.05*bl,0.02);});
       const run=S.M.pulperDown?0.25:1;G3.thkL.forEach((l,i)=>{l.b.visible=l.h.visible=on;l.h.material.opacity=night*(i<8?1:run);});}
     if(G3.fogFan&&rdt>0){const F=G3.fogFan,down=S.inc.some(i=>i.id==="fogfan"),k=down?0:(S.pm==="run"?1:0.35);F.spin+=(k-F.spin)*Math.min(1,rdt*0.8);F.rot.rotation.y+=rdt*F.spin*14;
-      if(Math.random()<rdt*9*k)emitA("steam",F.top[0]+R()*0.5,F.top[1],F.top[2]+R()*0.5,R()*0.7+0.5,3.0+Math.random()*1.8,R()*0.7,3.4,2.0+Math.random()*1.6,"#f4f6f8",0.6);}G3.spiderFrame&&G3.spiderFrame(rdt);M.wind.emissive=M.wind.emissive||new THREE.Color();M.wind.emissive.copy(lin0("#ffcf7a")).multiplyScalar(0.85*night);
+      if(Math.random()<rdt*9*k)emitA("steam",F.top[0]+R()*0.5,F.top[1],F.top[2]+R()*0.5,R()*0.7+0.5,3.0+Math.random()*1.8,R()*0.7,3.4,2.0+Math.random()*1.6,"#f4f6f8",0.6);}G3.spiderFrame&&G3.spiderFrame(rdt);M.wind.emissive=M.wind.emissive||new THREE.Color();M.wind.emissive.copy(lin0("#ffcf7a")).multiplyScalar(0.85*night);if(G3.winMats)G3.winMats.forEach(m=>m.emissive.copy(M.wind.emissive).multiplyScalar(0.7));
     ENV.lampHead.color.copy(lin0("#9aa3b2")).lerp(lin0("#fff2c4"),night);ENV.lampPool.opacity=0.32*night;
     ENV.pudM.opacity=0.55*(S.wet||0);ENV.riverTex.offset.x=(ENV.riverTex.offset.x-rdt*0.02)%1;
     ENV.bridge.rotation.y-=rdt*0.12;
@@ -4695,7 +4854,7 @@ const G3={on:false,ok:false};
     {const b=new THREE.Mesh(new CylG(0.17,0.15,0.28,10),M.warn);b.position.set(-0.48,0.3,0);cart.add(b);const mop=new THREE.Mesh(new CylG(0.025,0.025,1.3,6),M.metal);mop.position.set(-0.48,0.9,0.05);mop.rotation.z=0.15;cart.add(mop);}
     [-0.25,0.25].forEach(dx=>[-0.2,0.2].forEach(dz=>{const w=new THREE.Mesh(new CylG(0.07,0.07,0.05,8),M.ink);w.rotation.x=Math.PI/2;w.position.set(dx,0.07,dz);cart.add(w);}));
     const MOP=[[58,15.3],[26,15.3],[-5,15.3]],HOMEJ=[OFF.door[0],OFF.door[1]];
-    const J={st:"off",q:[],t:0,tgt:null};
+    const J={st:"off",q:[],t:0,tgt:null};G3.janitor={jan,J,cans:CANS};
     // ride-on floor scrubbers: one for the machine hall aisle, one for the warehouse lanes
     function scrubber(park,loop){const g=new THREE.Group();g.position.set(park[0],0,park[1]);scene.add(g);g.userData.noNav=true;
       box(1.5,0.55,0.95,M.warn,0,0.5,0,g);box(0.6,0.5,0.85,M.warn,-0.35,0.95,0,g,false);box(0.35,0.12,0.5,M.ink,0.05,0.82,0,g,false);box(0.08,0.4,0.4,M.ink,-0.1,1.0,0,g,false);
@@ -4704,7 +4863,7 @@ const G3={on:false,ok:false};
       [[0.45,0.45],[0.45,-0.45],[-0.5,0.45],[-0.5,-0.45]].forEach(([x,z])=>{const w=new THREE.Mesh(new CylG(0.18,0.18,0.12,10),M.ink);w.rotation.x=Math.PI/2;w.position.set(x,0.18,z);g.add(w);});
       const drv=worker(cloth0b("#5b4b8a"),cloth0b("#2d2d3a"));g.add(drv);drv.position.set(-0.05,0.55,0);drv.rotation.y=0;drv.visible=false;
       return {g,drv,bl,park,loop,i:0,st:"park",hd:0,lap:0,drop:0};}
-    const SCR=[scrubber([60.5,19.0],[[-19.5,19.0],[-19.5,17.9],[60.5,17.9],[60.5,19.0]]),scrubber([-28.5,17.2],[[-46.6,17.2],[-46.6,30.5],[-47.6,30.5],[-47.6,16.3],[-28.5,16.3],[-28.5,17.2]])];
+    const SCR=G3.scrubbers=[scrubber([60.5,19.0],[[-19.5,19.0],[-19.5,17.9],[60.5,17.9],[60.5,19.0]]),scrubber([-28.5,17.2],[[-46.6,17.2],[-46.6,30.5],[-47.6,30.5],[-47.6,16.3],[-28.5,16.3],[-28.5,17.2]])];
     // wet trail behind the scrubbers: little puddles that shrink away
     const WT=60,wetI=new THREE.InstancedMesh(new CircG(0.6,12),new THREE.MeshStandardMaterial({color:0x6f8494,roughness:0.06,metalness:0.25,transparent:true,opacity:0.45,depthWrite:false,polygonOffset:true,polygonOffsetFactor:-3,polygonOffsetUnits:-3}),WT);
     wetI.renderOrder=2;wetI.userData.noNav=true;scene.add(wetI);const wet=[];let wk=0;for(let k=0;k<WT;k++){wet.push({x:0,z:0,t:99});}
@@ -4780,9 +4939,8 @@ const G3={on:false,ok:false};
   {const rm=mat("brand",{transparent:true,roughness:0.55}),rg=new THREE.Group();scene.add(rg);
    const roof=new THREE.Mesh(new THREE.BoxGeometry(SHOP.x1-SHOP.x0+0.6,0.35,SHOP.z1-SHOP.z0+0.6),rm);roof.position.set((SHOP.x0+SHOP.x1)/2,3.45,(SHOP.z0+SHOP.z1)/2);roof.castShadow=true;rg.add(roof);
    rg.userData.mats=[rm];roofs.push(rg);
-   box(1.6,2.3,0.14,M.ink,SHOP.door[0],1.15,SHOP.z1+0.12,scene,false);box(6.5,0.9,0.1,M.wind,(SHOP.x0+SHOP.x1)/2+2.2,2.1,SHOP.z1+0.17,scene,false);
-   const mc=document.createElement("canvas");mc.width=512;mc.height=96;const mx=mc.getContext("2d");mx.fillStyle="#1c2233";mx.font='800 52px "Plus Jakarta Sans",system-ui,sans-serif';mx.textBaseline="middle";mx.fillText("MAINTENANCE",14,50);
-   const mt=new THREE.CanvasTexture(mc);mt.encoding=THREE.sRGBEncoding;const sign=new THREE.Mesh(new THREE.PlaneGeometry(6.4,1.2),new THREE.MeshBasicMaterial({map:mt,transparent:true}));sign.position.set((SHOP.x0+SHOP.x1)/2-0.8,2.85,SHOP.z1+0.18);scene.add(sign);}
+   box(1.6,2.3,0.14,M.ink,SHOP.door[0],1.15,SHOP.z1+0.12,scene,false);{const W=SHOP.x1-SHOP.x0,H=2.95,wx=[51.6,53.4,58.4,60.1,61.8].map(v=>[v-SHOP.x0,1.05,1.3,0.95]);
+     const fs=facade(W,H,wx,[SHOP.door[0]-SHOP.x0,2.22,4.6,0.62,"MAINTENANCE"],SHOP.door[0]-SHOP.x0);fs.position.set((SHOP.x0+SHOP.x1)/2,H/2,SHOP.z1+0.17);scene.add(fs);}}
   const SLOTS=[51.5,52.9,54.3,55.7,58.5,59.9,61.3,62.7].map(x=>[x,-16.6]);
   // shop floor: workbenches with pumps on them along the back wall, rebuild stands, parts racks, a break table
   const BENCH=[];
@@ -4927,8 +5085,8 @@ const G3={on:false,ok:false};
     const P=0.24;   // inlet header from the stock line, over and down into each housing; outlets back to the line
     spool([[57,4.8,-11],[57.9,4.8,-11],[57.9,4.6,-11]],P,M.stock);spool([[57.9,4.6,-14],[57.9,4.6,-8]],P,M.stock);
     ZS.forEach(z=>{spool([[57.9,4.6,z],[X,4.6,z],[X,3.55,z]],P,M.stock);spool([[X,0.7,z+(z<-11?1.55:-1.55)],[X,0.7,-11],[56.2,0.7,-11]],0.2,M.stock);});
-    // refined stock rises from the outlet header and crosses overhead into the machine hall to the headbox
-    spool([[56.2,0.7,-11],[56.2,5.8,-11],[56.2,5.8,4.6],[57,5.8,4.6],[57,2.4,6.5]],0.32,M.stock);
+    // v3.3: refined stock rises from the outlet header and drops into the top of the machine chest
+    spool([[56.2,0.7,-11],[56.2,0.7,-10.2],[56.2,10.8,-10.2],[49.2,10.8,-10.2],[49.2,10.8,-13.6],[49.2,9.6,-13.6]],0.32,M.stock);
     });
   const ctrl=upg("apc",g=>{box(6,3.2,4,M.wall,46,1.6,-6,g);box(5.4,1.1,0.1,M.robot,46,2.2,-3.95,g,false);box(6.4,0.3,4.4,M.steel,46,3.35,-6,g);});
   function upUpdate(now){
@@ -5252,11 +5410,11 @@ const G3={on:false,ok:false};
   function zenMoves(){if(zenMovesCache)return zenMovesCache;const LEND=PLEN[PLEN.length-1],TUB=[16,1.2,-13.5];
     zenMovesCache=[
       // ride a bale down the walking floor, under the guillotine, up the incline and into the pulper tub
-      {name:"bale ride",look:["gold","none"],dur:30,ok:()=>S.rates.feed>0.3&&!S.M.pulperDown,
-        start:()=>({d:Math.max(0.5,wfOff%2.6+2.6),hold:0}),
+      {name:"bale ride",look:["gold","none"],dur:22,ok:()=>S.rates.feed>0.3&&!S.M.pulperDown,
+        start:()=>({d:Math.max(LEND*0.45,wfOff%2.6+2.6),hold:0}),
         at:(t,mv,rdt)=>{const st=mv.st,sp=Math.min(2.2,0.35+S.rates.feed*0.03);if(S.rates.feed>0.3)st.d+=rdt*sp;
           if(st.d<=LEND)pathAt(st.d,_zv);else{const e=Math.min(1,(st.d-LEND)/3);_zv.set(mix(cB.x,TUB[0],e),mix(cB.y+0.6,TUB[1],e),mix(cB.z,TUB[2],e));st.hold+=st.d>LEND+3?rdt:0;}
-          if(st.hold>2.5||t>40)return null;const up=clamp(st.d/LEND,0,1);
+          if(st.hold>2.5||t>22)return null;const up=clamp(st.d/LEND,0,1);
           return [_zv.x,_zv.y,_zv.z,mix(48,62,up),Math.PI-0.45+0.2*Math.sin(t*0.15),mix(1.0,0.88,up)];}},
       // low dolly down the forming section: headbox, wire and forming table, into the presses
       {name:"forming sweep",look:["airy","none"],dur:12,ok:()=>true,
@@ -5266,13 +5424,13 @@ const G3={on:false,ok:false};
         at:(t)=>{if(t>14)return null;const u=ease(t/14),v=ease((t-3)/11);return [mix(-24,14,u),mix(0,3,v),mix(-8,zc,u),mix(300,110,v),mix(-0.2,0.7,u),mix(0.1,1.02,v)];}},
       // v2.9.17 ---------------------------------------------------------------------------------------------
       // ride along with the overhead crane while it carries a reel or a spool
-      {name:"crane ride",rare:1,look:["hc","none"],dur:20,ok:()=>!!(CR.j||CR.jobs.length),
-        at:(t)=>{if(t>20||(t>4&&!CR.j&&!CR.jobs.length))return null;return [CR.x,Math.max(2,CR.y-3),CR.z,55,0.9+t*0.02,0.95];}},
+      {name:"crane ride",rare:1,look:["hc","none"],dur:14,ok:()=>!!(CR.j||CR.jobs.length),
+        at:(t)=>{if(t>14||(t>4&&!CR.j&&!CR.jobs.length))return null;return [CR.x,Math.max(2,CR.y-3),CR.z,55,0.9+t*0.02,0.95];}},
       // a finished roll: off the winder, onto the upender, along the conveyor until a clamp truck takes it
-      {name:"roll's journey",rare:1,look:["gold","none"],dur:30,ok:()=>{const RV=G3.rollVis;return !!(RV&&RV.list.some(r=>r.d<4&&r.wp));},
+      {name:"roll's journey",rare:1,look:["gold","none"],dur:20,ok:()=>{const RV=G3.rollVis;return !!(RV&&RV.list.some(r=>r.d<4&&r.wp));},
         start:()=>{const RV=G3.rollVis,r=RV.list.filter(r=>r.d<4&&r.wp).sort((a,b)=>a.d-b.d)[0];return {r,last:r.wp.slice(),hold:0};},
         at:(t,mv,rdt)=>{const st=mv.st,RV=G3.rollVis;if(RV&&RV.list.includes(st.r)&&st.r.wp)st.last=st.r.wp.slice();else st.hold+=rdt;
-          if(st.r){st.still=Math.abs(st.r.d-(st.ld??-99))<0.01?(st.still||0)+rdt:0;st.ld=st.r.d;}if(st.hold>2.5||st.still>4||t>30)return null;return [st.last[0],1,st.last[2],46,Math.PI/2+0.35+0.15*Math.sin(t*0.2),1.0];}},
+          if(st.r){st.still=Math.abs(st.r.d-(st.ld??-99))<0.01?(st.still||0)+rdt:0;st.ld=st.r.d;}if(st.hold>2.5||st.still>4||t>20)return null;return [st.last[0],1,st.last[2],46,Math.PI/2+0.35+0.15*Math.sin(t*0.2),1.0];}},
       // slow, low pass along the dryer section at can height
       {name:"dryer dolly",look:["dusk","gold"],dur:14,ok:()=>true,
         at:(t)=>{if(t>14)return null;const u=ease(t/14);return [mix(30,-6,u),4.5,zc,42,mix(0.05,0.3,u),1.25];}},
@@ -5280,14 +5438,14 @@ const G3={on:false,ok:false};
       {name:"fog fan tilt-up",look:["airy","none"],dur:12,ok:()=>true,
         at:(t)=>{if(t>12)return null;const u=ease(t/12);return [49.5,mix(2,21,u),-4.2,mix(55,70,u),0.55,mix(1.42,1.15,u)];}},
       // one slow lap around the whole mill
-      {name:"slow orbit",look:["dusk","none"],dur:30,ok:()=>true,start:()=>({th:Math.random()*6.28}),
-        at:(t,mv)=>{if(t>30)return null;return [12,2,0,240,mv.st.th+Math.PI*2*t/30,0.92];}},
+      {name:"slow orbit",look:["dusk","none"],dur:20,ok:()=>true,start:()=>({th:Math.random()*6.28}),
+        at:(t,mv)=>{if(t>20)return null;return [12,2,0,240,mv.st.th+Math.PI*2*t/30,0.92];}},
       // close orbit of the disk thickener, spider valve and the two seal chests
       {name:"thickener orbit",look:["hc","none"],dur:14,ok:()=>true,
         at:(t)=>{if(t>14)return null;const u=ease(t/14);return [29,mix(10,6,u),-15.5,mix(50,58,u),mix(-0.7,1.0,u),0.95];}},
       // the OCC train rolling in along the spur (or pulling out)
-      {name:"train pass",rare:1,look:["bw","gold"],dur:25,ok:()=>ENV.train&&ENV.train.state!=="away",
-        at:(t)=>{const tr=ENV.train;if(t>25||tr.state==="away")return null;return [tr.g.position.x+6,2,-29,70,Math.PI-0.45,0.85];}},
+      {name:"train pass",rare:1,look:["bw","gold"],dur:18,ok:()=>ENV.train&&ENV.train.state!=="away",
+        at:(t)=>{const tr=ENV.train;if(t>18||tr.state==="away")return null;return [tr.g.position.x+6,2,-29,70,Math.PI-0.45,0.85];}},
       // shift change: cars in the lot and staff at the office door (only around 6 am / 6 pm)
       {name:"shift change",rare:1,look:["gold","dusk"],dur:14,ok:()=>{const hr=((S.t+360)/60)%24;return (hr>5.6&&hr<6.8)||(hr>17.5&&hr<18.7);},
         at:(t)=>{if(t>14)return null;const u=ease(t/14);return [mix(78,54,u),0,mix(47,25,u),mix(75,55,u),-0.5,0.9];}},
@@ -5311,26 +5469,58 @@ const G3={on:false,ok:false};
       {name:"refiner yard pass",look:["hc","none"],dur:13,ok:()=>true,
         at:(t)=>{if(t>13)return null;const u=ease(t/13);return [61,2.2,mix(-16,-7,u),40,mix(0.2,0.45,u),0.98];}},
       // follow a loaded truck from the dock out past the gate
-      {name:"truck departure",look:["dusk","none"],rare:1,dur:30,
+      {name:"truck departure",look:["dusk","none"],rare:1,dur:18,
         ok:()=>cam.r<TRUCK_FAR*2&&truckPool.out.some(g=>g.visible&&g.userData.busy&&(g.userData.phase==="leave"||(g.userData.phase==="dock"&&(g.userData.frac||0)>0.85))),
         start:()=>{const L=truckPool.out.filter(g=>g.visible&&g.userData.busy);const g=L.find(g=>g.userData.phase==="leave")||L.sort((a,b)=>(b.userData.frac||0)-(a.userData.frac||0))[0];return {g,p:g.position.clone()};},
         at:(t,mv)=>{const st=mv.st,g=st.g;if(g.visible&&g.userData.busy)st.p.lerp(g.position,0.15);else st.gone=(st.gone||0)+0.02;
-          if(t>30||st.gone>0.5||st.p.x<-140||(t>12&&g.userData.phase==="dock"))return null;return [st.p.x,1.5,st.p.z,mix(55,70,ease(t/30)),-0.95+t*0.012,1.02];}},
+          if(t>18||st.gone>0.5||st.p.x<-140||(t>12&&g.userData.phase==="dock"))return null;return [st.p.x,1.5,st.p.z,mix(55,68,ease(t/18)),-0.95+t*0.02,1.02];}},
       // peek over an operator's shoulder at the console: the game is on, until a manager walks by
-      {name:"control room peek",look:["none"],rare:1,dur:20,
+      {name:"control room peek",look:["none"],rare:1,dur:18,
         ok:()=>!!(G3.tvOn&&G3.tvOn.some(Boolean)),
         start:()=>({ci:Math.max(0,G3.tvOn.findIndex(Boolean)),th:(Math.random()<0.5?-1:1)*(0.25+Math.random()*0.2)}),
-        at:(t,mv)=>{if(t>20)return null;const u=ease(t/20);return [CONSOLES[mv.st.ci],1.5,13.5,mix(23,19,u),mv.st.th,mix(1.0,1.08,u)];}},
+        at:(t,mv)=>{const st=mv.st;if(!st.ext&&mgrNear(CONSOLES[st.ci],13.4,14))st.ext=1;if(t>(st.ext?18:12))return null;const u=ease(t/14);return [CONSOLES[st.ci],1.5,13.5,mix(23,19,u),st.th,mix(1.0,1.08,u)];}},
       // tag along with a manager on their rounds
-      {name:"manager walkabout",look:["bw","none"],rare:1,dur:24,ok:()=>!!(G3.mgrLead&&G3.mgrLead()),
+      {name:"manager walkabout",look:["bw","none"],rare:1,dur:15,ok:()=>!!(G3.mgrLead&&G3.mgrLead()),
         start:()=>{const m=G3.mgrLead();return {m,p:m.position.clone(),th:m.rotation.y+Math.PI/2+0.6};},
-        at:(t,mv)=>{const st=mv.st;if(!st.m.visible||t>24)return null;st.p.lerp(st.m.position,0.08);return [st.p.x,0.8,st.p.z,38,st.th+t*0.03,1.08];}},
+        at:(t,mv)=>{const st=mv.st;if(!st.m.visible||t>15)return null;st.p.lerp(st.m.position,0.08);return [st.p.x,0.8,st.p.z,38,st.th+t*0.03,1.08];}},
       // high, slow pass over the lit mill at night
       {name:"night lights flyover",look:["none","hc"],rare:1,dur:22,ok:()=>(G3.nightK||0)>0.8,start:()=>({d:Math.random()<0.5?1:-1}),
         at:(t,mv)=>{if(t>22)return null;const u=ease(t/22),d=mv.st.d;return [mix(-45*d+15,75*d+15,u),0,mix(-10,5,u),mix(210,170,u),0.35*d+0.25,mix(0.62,0.78,u)];}},
       // long establishing push: from far beyond the river, over the trees, into the mill
       {name:"long establishing shot",look:["dusk","gold"],dur:20,ok:()=>true,
-        at:(t)=>{if(t>20)return null;const u=ease(t/20);return [mix(10,14,u),mix(0,2,u),mix(-80,-4,u),mix(420,170,u),Math.PI+0.25-0.2*u,mix(1.25,0.95,u)];}}];
+        at:(t)=>{if(t>20)return null;const u=ease(t/20);return [mix(10,14,u),mix(0,2,u),mix(-80,-4,u),mix(420,170,u),Math.PI+0.25-0.2*u,mix(1.25,0.95,u)];}},
+      // v3.3 ------------------------------------------------------------------------------------------------
+      // night: chase the hall scrubber from behind, low, beacon flashing and the wet trail behind it
+      {name:"scrubber ride-along",look:["none","dusk"],rare:1,dur:9,ok:()=>!!(G3.scrubbers&&G3.scrubbers[0].st==="run"),
+        start:()=>({th:null}),
+        at:(t,mv,rdt)=>{const R=G3.scrubbers[0];if(t>9||R.st!=="run")return null;const g=R.g,a=g.rotation.y,want=Math.atan2(-Math.cos(a),Math.sin(a));
+          mv.st.th=mv.st.th==null?want:lerpAng(mv.st.th,want,Math.min(1,rdt*1.5));return [g.position.x,0.8,g.position.z,13,mv.st.th,1.18];}},
+      // night: the janitor on their rounds, closer while a can is emptied
+      {name:"janitor's rounds",look:["none","gold"],rare:1,dur:8,ok:()=>!!(G3.janitor&&G3.janitor.jan.visible),start:()=>({th:Math.random()*6.28,r:13}),
+        at:(t,mv,rdt)=>{const {jan,J}=G3.janitor;if(t>8||!jan.visible)return null;const at=J.tgt&&J.tgt.c&&J.t>0;mv.st.r+=((at?8:13)-mv.st.r)*Math.min(1,rdt*1.2);
+          return [jan.position.x,0.9,jan.position.z,mv.st.r,mv.st.th+t*0.08,1.08];}},
+      // a slow push in on the fullest overflowing trash can
+      {name:"litter check",look:["airy","none"],rare:1,dur:6,ok:()=>!!(G3.janitor&&G3.janitor.cans.some(c=>c.f>1.1)),
+        start:()=>({c:G3.janitor.cans.slice().sort((a,b)=>b.f-a.f)[0],th:(Math.random()-0.5)*2}),
+        at:(t,mv)=>{if(t>6)return null;const u=ease(t/6),c=mv.st.c;return [c.x,0.5,c.z,mix(15,8,u),mv.st.th+u*0.3,mix(1.0,1.15,u)];}},
+      // lunch at the food truck and the picnic tables
+      {name:"lunch rush",look:["gold","airy"],rare:1,dur:8,ok:()=>!!(G3.FOOD&&G3.FOOD.open&&G3.followable&&G3.followable().some(w=>w.userData.lunch)),
+        at:(t)=>{if(t>8)return null;const u=ease(t/8);return [33,0.8,mix(34.2,35.4,u),mix(24,18,u),mix(0.35,0.75,u),mix(1.12,1.2,u)];}},
+      // floor-level dolly under the forming table, across the tiled white-water silo
+      {name:"under the wire",look:["hc","none"],dur:6,ok:()=>true,
+        at:(t)=>{if(t>6)return null;const u=ease(t/6);return [mix(53,43,u),0.6,9.1,9,mix(0.25,-0.1,u),1.45];}},
+      // follow the feed: fan pump, up, over the hall wall and down into the headbox header
+      {name:"fan pump to headbox",look:["none","airy"],dur:8,ok:()=>true,
+        at:(t)=>{if(t>8)return null;const P=[[47.6,1.5,-9.3],[47.6,7.6,-9.3],[47.6,7.6,3.6],[60.75,7.6,3.6],[60.75,2.2,5.85]],L=[0];for(let i=1;i<P.length;i++)L.push(L[i-1]+Math.hypot(P[i][0]-P[i-1][0],P[i][1]-P[i-1][1],P[i][2]-P[i-1][2]));
+          const d=ease(t/8)*L[L.length-1];let i=1;while(i<L.length-1&&L[i]<d)i++;const k=(d-L[i-1])/(L[i]-L[i-1]),a=P[i-1],b=P[i];
+          return [mix(a[0],b[0],k),mix(a[1],b[1],k),mix(a[2],b[2],k),17,mix(-0.95,-0.5,t/8),1.0];}},
+      // tight on the dryer can heads turning, manways sweeping round
+      {name:"can heads",look:["hc","none"],dur:5,ok:()=>S.pm==="run",
+        at:(t)=>{if(t>5)return null;const u=ease(t/5);return [mix(23,17.5,u),2.5,12.4,9,0.15,1.43];}},
+      // the L/B gauge, then out to the jet and the wavy wet line on the wire
+      {name:"slice and wet line",look:["airy","none"],dur:7,ok:()=>S.pm==="run",
+        at:(t)=>{if(t>7)return null;const u=ease(Math.max(0,(t-2.2)/4.8)),g=G3.SLC?G3.SLC.geo():{wet:50};
+          return [mix(57.15,mix(g.wet,54,0.35),u),mix(2.95,2.9,u),mix(12.4,9.1,u),mix(5.5,15,u),mix(0.08,0.55,u),mix(1.5,0.92,u)];}}];
     return zenMovesCache;}
   // v2.9.11 performance profiler: when G3.PF.on, time each section of the 3D frame (ms accumulated per section)
   const PF=G3.PF={on:false,t:0,acc:{},frames:0};const pm=k=>{if(!PF.on)return;const t=performance.now();PF.acc[k]=(PF.acc[k]||0)+(t-PF.t);PF.t=t;};
@@ -5484,20 +5674,21 @@ const G3={on:false,ok:false};
     // and picks a look: half the shots are the plain camera, the rest one of the approved grades
     if(G3.zen){const Z=G3.zenS||(G3.zenS={i:0,t:99,tg:new THREE.Vector3(),r:300,th:-0.2,who:null,fo:0});Z.t+=rdt;
       const POI=[[-14,5,300,-0.2],[20,9,120,-0.5],[24,-10,95,0.4],[-20,14,80,-1.2],[-25,-18,110,0.9],[20,-40,120,2.6],[70,-10,110,-2.2],[-60,10,130,0.1],[10,9,170,2.9],[40,10,70,0.6],[-36,24,90,-0.8]];
-      if(Z.t>10){Z.t=0;Z.mv=null;const ops=G3.followable?G3.followable().filter(w=>w.visible):[];
+      // v3.3: each shot sets its own length (Z.len); free shots run 6-10 s, scripted shots run their own course
+      if(Z.t>(Z.len||10)){Z.t=0;Z.len=6+Math.random()*4;Z.mv=null;const ops=G3.followable?G3.followable().filter(w=>w.visible):[];
         const MV=zenMoves();
         if(!Z.goto&&Math.random()<0.4){const H=Z.hist||(Z.hist=[]);let ok=MV.filter(m=>{try{return m.ok();}catch(e){return false;}});
           // v3.2.0 variety: skip shots played recently; if every ready shot is recent, take the one played longest ago
           const fresh=ok.filter(m=>!H.includes(m.name));if(fresh.length)ok=fresh;else if(ok.length)ok=[ok.reduce((a,b)=>H.indexOf(a.name)<=H.indexOf(b.name)?a:b)];
           if(ok.length){let tw=0;ok.forEach(m=>tw+=m.rare?2.5:1);let r=Math.random()*tw,m=ok[0];for(const c of ok){r-=c.rare?2.5:1;if(r<=0){m=c;break;}}
-            Z.mv={m,t:0,st:m.start?m.start():null};Z.who=null;Z.t=-(m.dur-10);H.push(m.name);while(H.length>Math.min(8,MV.length-4))H.shift();G3.zenLast=m.name;
+            Z.mv={m,t:0,st:m.start?m.start():null};Z.who=null;Z.len=m.dur+1;H.push(m.name);while(H.length>Math.min(8,MV.length-4))H.shift();G3.zenLast=m.name;
             // v3.2.0: each shot has its own paired looks
             const lk=m.look||["none"],cur2=document.body.dataset.zs,pl2=lk.length>1?lk.filter(l=>l!==cur2):lk;document.body.dataset.zs=pl2[Math.floor(Math.random()*pl2.length)];}}
         if(Z.mv){}
         else if(Z.goto){const g2=Z.goto;Z.goto=null;Z.who=null;const from={x:target.x,y:target.y,z:target.z,r:cam.r,th:cam.th,ph:cam.ph};
-          Z.mv={t:0,st:null,m:{name:"upset swoop",at:(t)=>{if(t>10)return null;const u=ease(t/4);return [mix(from.x,g2[0],u),mix(from.y,0,u),mix(from.z,g2[1],u),mix(from.r,55,u),from.th+(lerpAng(from.th,-0.3,1)-from.th)*u,mix(from.ph,0.85,u)];}}};}
+          Z.len=11;Z.mv={t:0,st:null,m:{name:"upset swoop",at:(t)=>{if(t>10)return null;const u=ease(t/4);return [mix(from.x,g2[0],u),mix(from.y,0,u),mix(from.z,g2[1],u),mix(from.r,55,u),from.th+(lerpAng(from.th,-0.3,1)-from.th)*u,mix(from.ph,0.85,u)];}}};}
         else if(Z.goto){Z.who=null;Z.tg.set(Z.goto[0],0,Z.goto[1]);Z.r=55;Z.th=-0.3+(Math.random()-0.5)*0.8;Z.goto=null;}
-        else if(ops.length&&Math.random()<0.45){Z.who=ops[Math.floor(Math.random()*ops.length)];Z.fo=6+Math.random()*3;Z.r=34+Math.random()*14;Z.th=(Math.random()-0.5)*2.4;Z.tg.set(Z.who.position.x,0,Z.who.position.z);}
+        else if(ops.length&&Math.random()<0.45){Z.who=ops[Math.floor(Math.random()*ops.length)];Z.fo=Z.len;Z.r=34+Math.random()*14;Z.th=(Math.random()-0.5)*2.4;Z.tg.set(Z.who.position.x,0,Z.who.position.z);}
         else{Z.who=null;Z.i=(Z.i+1+Math.floor(Math.random()*(POI.length-1)))%POI.length;const q=POI[Z.i];Z.tg.set(q[0],0,q[1]);Z.r=q[2];Z.th=q[3];}
         // hard cut: jump the camera straight to the new shot
         target.copy(Z.tg);cam.r=Z.r;cam.th=Z.th;cam.ph=0.8;
