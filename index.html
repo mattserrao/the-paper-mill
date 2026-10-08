@@ -311,7 +311,7 @@ body.zen .zenexit.show{opacity:1}
 .spider[hidden]{display:none}.spih{display:flex;align-items:baseline;gap:8px}.spih b{font-size:14px}.spih span{color:var(--muted);flex:1}.spih button{padding:2px 8px}
 .spis{display:flex;align-items:center;gap:8px;color:var(--muted)}.spis input{flex:1;accent-color:var(--brand)}
 .spir{display:grid;grid-template-columns:1fr 1fr;gap:6px}.spir div{border:1px solid var(--line);border-radius:8px;padding:5px 7px}.spir i{display:inline-block;width:9px;height:9px;border-radius:3px;margin-right:5px}
-.spir b{display:block;font-size:14px;font-variant-numeric:tabular-nums}.spir small{color:var(--muted)}#spiT{width:100%;height:auto;border:1px solid var(--line);border-radius:8px}.spin{margin:0;color:var(--muted);min-height:1.2em}.spin.bad{color:var(--bad)}
+.spir b{display:block;font-size:14px;font-variant-numeric:tabular-nums}.spir small{color:var(--muted)}#spiT,#slcT{width:100%;height:auto;border:1px solid var(--line);border-radius:8px}.spis b{min-width:76px;text-align:right;color:var(--ink);font-variant-numeric:tabular-nums}.spin{margin:0;color:var(--muted);min-height:1.2em}.spin.bad{color:var(--bad)}
 .reroll{font-size:12px;padding:5px 10px;align-self:center;white-space:nowrap}
 /* fullscreen */
 .hud{display:none;z-index:5}
@@ -503,7 +503,7 @@ body.season-lock label.check:has(#breaks),body.season-lock label.check:has(#hays
 </head>
 <body>
 
-<div class="ver" id="appVersion" aria-label="Version">v3.1.3</div>
+<div class="ver" id="appVersion" aria-label="Version">v3.2.0</div>
 <div class="wrap">
   <header>
     <div class="brand"><span class="logo" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linejoin="round"><circle cx="8.5" cy="12" r="5.5"/><circle cx="8.5" cy="12" r="1.6" fill="currentColor"/><path d="M8.5 6.5H20v11H8.5"/></svg></span>
@@ -543,7 +543,7 @@ body.season-lock label.check:has(#breaks),body.season-lock label.check:has(#hays
     <div class="hk"><span>Production</span><b id="hud-prod">–</b></div>
     <div class="hk opt"><span>Stock chest</span><b id="hud-tank">–</b></div>
     <div class="hk opt2"><span>Profit</span><b id="hud-profit">–</b></div>
-    <div class="hbtns"><button id="hud-play">Pause</button><button id="hud-slow" aria-label="Slower">−</button><span id="hud-speed">30 min/s</span><button id="hud-fast" aria-label="Faster">+</button><button id="hud-sound">Sound</button><button id="hud-lbl">Labels: Auto</button><button id="hud-zen" title="Zen mode">Zen</button><button id="hud-dis" class="danger" title="Unleash a random disaster">Disaster</button><button id="hud-exit" aria-label="Exit fullscreen"><span class="lg">Exit</span><span class="sm" aria-hidden="true">✕</span></button></div></div><canvas id="gl" tabindex="0" aria-label="3D view of the mill. Arrow keys move, Q and E rotate, plus and minus zoom."></canvas><div class="pad" id="pad" aria-label="Move the view"><button data-p="0,-1" aria-label="Move up">▲</button><button data-p="-1,0" aria-label="Move left">◀</button><button data-p="1,0" aria-label="Move right">▶</button><button data-p="0,1" aria-label="Move down">▼</button></div><div id="labels3d"></div><div class="banner3d" id="banner3d" hidden><span></span><b></b></div><div class="chips3d" id="chips3d"></div><div class="flash3d" id="flash3d"></div><div class="spider" id="spider" hidden role="dialog" aria-labelledby="spi-h"><div class="spih"><b id="spi-h">Spider valve</b><span>disk thickener filtrate split</span><button id="spiClose" aria-label="Close">✕</button></div>
+    <div class="hbtns"><button id="hud-play">Pause</button><button id="hud-slow" aria-label="Slower">−</button><span id="hud-speed">30 min/s</span><button id="hud-fast" aria-label="Faster">+</button><button id="hud-sound">Sound</button><button id="hud-lbl">Labels: Auto</button><button id="hud-zen" title="Zen mode">Zen</button><button id="hud-dis" class="danger" title="Unleash a random disaster">Disaster</button><button id="hud-exit" aria-label="Exit fullscreen"><span class="lg">Exit</span><span class="sm" aria-hidden="true">✕</span></button></div></div><canvas id="gl" tabindex="0" aria-label="3D view of the mill. Arrow keys move, Q and E rotate, plus and minus zoom."></canvas><div class="pad" id="pad" aria-label="Move the view"><button data-p="0,-1" aria-label="Move up">▲</button><button data-p="-1,0" aria-label="Move left">◀</button><button data-p="1,0" aria-label="Move right">▶</button><button data-p="0,1" aria-label="Move down">▼</button></div><div id="labels3d"></div><div class="banner3d" id="banner3d" hidden><span></span><b></b></div><div class="chips3d" id="chips3d"></div><div class="flash3d" id="flash3d"></div><div class="spider" id="slice" hidden role="dialog" aria-labelledby="slc-h"><div class="spih"><b id="slc-h">Headbox slice</b><span>L/B gauge · tending side</span><button id="slcClose" aria-label="Close">✕</button></div><canvas id="slcT" width="600" height="400"></canvas><label class="spis">Vertical<input type="range" id="slcV" min="-100" max="100" value="0" aria-label="Vertical slice"><b id="slcVv">B 12.0 mm</b></label><label class="spis">Horizontal<input type="range" id="slcH" min="-100" max="100" value="0" aria-label="Horizontal slice"><b id="slcHv">L 0.0 mm</b></label><div class="spir"><div><small>Jet lands</small><b id="slcJ">–</b></div><div><small>Wet line from headbox</small><b id="slcW">–</b></div></div><p id="slcNote" class="spin"></p><button id="slcReset" class="reroll">Reset to standard</button></div><div class="spider" id="spider" hidden role="dialog" aria-labelledby="spi-h"><div class="spih"><b id="spi-h">Spider valve</b><span>disk thickener filtrate split</span><button id="spiClose" aria-label="Close">✕</button></div>
       <label class="spis"><span>Clear</span><input id="spiV" type="range" min="10" max="70" value="35"><span>Cloudy</span></label>
       <div class="spir"><div><i style="background:#8a6644"></i>Cloudy <b id="spiTc">–</b><small id="spiQc"></small></div><div><i style="background:#3fa0d0"></i>Clear <b id="spiTl">–</b><small id="spiQl"></small></div></div>
       <canvas id="spiT" width="560" height="220"></canvas><p id="spiNote" class="spin"></p></div><div class="blackout3d" id="blackout3d" hidden><div><b>Power outage</b><span>Lightning hit the substation. Backup generators starting…</span></div></div></div>
@@ -3144,7 +3144,35 @@ const G3={on:false,ok:false};
   // paper machine
   const zc=9.1,CD=6.4;
   const DX=-5.6,DY=4.2,DR=0.9,RM=2.2,R0=0.45,KX=DX-(DR+RM)-2.6,ZJ=CD/2+0.45;let nipPhi=Math.PI;
-  box(5.5,3,CD,M.steel,57.3,1.5+0.6,zc);                                  // headbox
+  // v3.2.0 headbox: an angular hydraulic headbox. Tapered manifold behind, tube bank body, converging nozzle down to the slice lip,
+  // a row of slice actuators on the nozzle, stiffener ribs, side plates, and the L/B gauge on the tending side
+  const HB=G3.HB={lipX:55.0,lipY:3.1};
+  {const hbM=mat(M.steel.userData.token,{roughness:0.42,metalness:0.3,flatShading:true}),hbD=mat(M.ink.userData.token,{roughness:0.5,metalness:0.25,flatShading:true}),hbS=mat(M.metal.userData.token,{roughness:0.38,metalness:0.4,flatShading:true});
+    const prof=[[60.0,0.6],[60.0,3.3],[59.55,3.78],[57.3,3.78],[55.45,3.24],[55.12,3.14],[55.12,2.99],[55.35,2.97],[56.15,2.55],[56.6,1.5],[56.6,0.6]];
+    const mk=(pts,depth,m,z0)=>{const sh=new THREE.Shape();pts.forEach(([x,y],i)=>i?sh.lineTo(x,y):sh.moveTo(x,y));const g=new THREE.ExtrudeGeometry(sh,{depth,bevelEnabled:false});
+      const o=new THREE.Mesh(g,m);o.position.z=z0;o.castShadow=o.receiveShadow=true;scene.add(o);return o;};
+    const body=mk(prof,CD,hbM,zc-CD/2);edges(body,undefined,20);
+    // side plates, proud of the body, dark
+    [zc-CD/2-0.09,zc+CD/2].forEach(z=>{const sp=mk(prof.map(([x,y])=>[x+(x>58?0.05:x<55.5?0.04:0),y+(y>3.5?0.05:0)]),0.09,hbS,z);edges(sp,undefined,20);});
+    // stiffener ribs down the back wall and across the top deck
+    for(let k=0;k<7;k++){const z=zc-CD/2+0.45+k*(CD-0.9)/6;box(0.14,2.7,0.12,hbD,60.07,1.95,z,scene,false);box(2.1,0.12,0.12,hbD,58.4,3.84,z,scene,false);}
+    // brand stripe on the top edge, walkway grating and handrail on the deck
+    box(0.16,0.1,CD+0.2,M.brand,59.62,3.76,zc,scene,false);box(0.16,0.1,CD+0.2,M.brand,57.3,3.8,zc,scene,false);
+    [zc-CD/2-0.05,zc+CD/2+0.05].forEach(z=>{[57.6,58.6,59.5].forEach(x=>box(0.06,0.9,0.06,M.warn,x,4.27,z,scene,false));box(2.0,0.06,0.06,M.warn,58.55,4.7,z,scene,false);});
+    // tapered manifold header behind the headbox (inlet on the drive side), with its recirculation outlet on the tending side
+    {const tg=new CylG(0.36,0.68,CD+0.6,18);tg.rotateX(Math.PI/2);const t=new THREE.Mesh(tg,hbM);t.position.set(60.75,1.35,zc);t.castShadow=true;scene.add(t);edges(t,undefined,30);
+     cylZ(0.5,0.25,hbD,60.75,1.35,zc-CD/2-0.42,18);cylZ(0.28,0.6,hbD,60.75,1.35,zc+CD/2+0.55,14);for(let k=0;k<5;k++)box(0.5,0.12,0.12,hbD,60.3,1.35,zc-CD/2+0.7+k*(CD-1.4)/4,scene,false);}
+    // slice actuators: a row of small boxes with motors along the nozzle just behind the lip
+    const ang=Math.atan2(3.78-3.24,57.3-55.45);
+    for(let k=0;k<12;k++){const z=zc-CD/2+0.35+k*(CD-0.7)/11,a=box(0.28,0.3,0.3,hbD,56.05,3.58,z,scene,false);a.rotation.z=ang;const m2=new THREE.Mesh(new CylG(0.09,0.09,0.28,8),M.metal);m2.position.set(56.15,3.85,z);scene.add(m2);}
+    box(0.08,0.08,CD,M.metal,56.05,3.78,zc,scene,false);
+    // the slice lip itself: a bright steel bar that moves with the vertical and horizontal slice settings
+    HB.lip=box(0.42,0.1,CD+0.04,M.metal,55.33,3.13,zc,scene,false);
+    // L/B gauge on the tending side: chart paper behind a red pointer, in a dark frame
+    const gc=document.createElement("canvas");gc.width=256;gc.height=192;HB.gc=gc;const gt=new THREE.CanvasTexture(gc);gt.encoding=THREE.sRGBEncoding;HB.gt=gt;
+    const GZ=zc+CD/2+0.09;const fr=box(1.1,0.84,0.08,hbD,57.15,2.95,GZ+0.04,scene,false);
+    const pl=new THREE.Mesh(new THREE.PlaneGeometry(1.0,0.75),new THREE.MeshBasicMaterial({map:gt,toneMapped:false}));pl.position.set(57.15,2.95,GZ+0.085);scene.add(pl);
+    G3.sliceHit=[pl,fr];}
   box(14,0.25,CD,M.steel,47.8,2.4,zc);                                     // forming table
   const wireRolls=[cylZ(0.5,CD+0.4,M.metal,41,2.4,zc),cylZ(0.5,CD+0.4,M.metal,54.5,2.4,zc)];
   // twin press: 1st press nip at x 37, 2nd press nip at x 32, each with its own top felt and one tandem bottom felt
@@ -3206,7 +3234,7 @@ const G3={on:false,ok:false};
   const sheetTex=new THREE.CanvasTexture(tc);sheetTex.wrapS=THREE.RepeatWrapping;sheetTex.encoding=THREE.sRGBEncoding;
   const sheetMat=mat("paperc",{map:sheetTex,side:THREE.DoubleSide,flatShading:false,roughness:1});
   // the sheet runs over the top cans and under the bottom cans (serpentine), with true tangent lines between them
-  const sheetPre=[[57.3,3.4],[54.5,2.95],[41,3.0],[37,3.4],[32,3.4],[29,3.6]],CANR=1.34;
+  const sheetPre=[[55.1,3.07],[54.0,2.95],[41,3.0],[37,3.4],[32,3.4],[29,3.6]],CANR=1.34;
   const canCirc=[];for(let i=0;i<10;i++){canCirc.push({x:(872-i*32-600)/10,y:5.4,d:1});canCirc.push({x:(856-i*32-600)/10,y:2.4,d:-1});}
   // Pope reel: the sheet wraps the reel drum and goes into the nip with the building reel (or the new spool right after turn-up)
   canCirc.push({x:DX,y:DY,d:1,r:DR});
@@ -3227,6 +3255,41 @@ const G3={on:false,ok:false};
     const g=new THREE.BufferGeometry();g.setAttribute("position",new THREE.Float32BufferAttribute(pos,3));g.setAttribute("uv",new THREE.Float32BufferAttribute(uv,2));g.setIndex(idx);g.computeVertexNormals();
     sheetMesh=new THREE.Mesh(g,sheetMat);sheetMesh.receiveShadow=true;scene.add(sheetMesh);}
   buildSheet(1);let sheetR=1;
+  // v3.2.0 slice + wet line. G3.SLC.v = vertical slice (-1 closed .. +1 open), .h = horizontal lip (-1 back .. +1 forward).
+  // Cosmetic only: the lip moves, the jet tips up or down and lands nearer or further, and the wavy wet line slides along the wire.
+  const SLC=G3.SLC={v:0,h:0,dirty:true};
+  SLC.geo=()=>{const lipX=55.12-0.22*SLC.h,lipY=3.1+0.07*SLC.v,land=lipX-(1.0+0.6*SLC.v+0.25*SLC.h),wet=50.2-1.9*SLC.v-1.0*SLC.h;return {lipX,lipY,land,wet};};
+  const WN=48,wetPos=new Float32Array((WN+1)*2*3),edgePos=new Float32Array((WN+1)*2*3),wIdx=[];for(let i=0;i<WN;i++){const b=i*2;wIdx.push(b,b+1,b+2,b+1,b+3,b+2);}
+  const wetG=new THREE.BufferGeometry();wetG.setAttribute("position",new THREE.BufferAttribute(wetPos,3));wetG.setIndex(wIdx);
+  const edgeG=new THREE.BufferGeometry();edgeG.setAttribute("position",new THREE.BufferAttribute(edgePos,3));edgeG.setIndex(wIdx);
+  const wetM=new THREE.MeshStandardMaterial({color:0xa69a86,roughness:0.12,metalness:0.25,transparent:true,opacity:0.28,depthWrite:false,polygonOffset:true,polygonOffsetFactor:-2,polygonOffsetUnits:-2,side:THREE.DoubleSide});
+  const edgeM=new THREE.MeshBasicMaterial({color:0xf3efe2,transparent:true,opacity:0.5,depthWrite:false,polygonOffset:true,polygonOffsetFactor:-3,polygonOffsetUnits:-3,side:THREE.DoubleSide});
+  const jetPos=new Float32Array(12),jetG=new THREE.BufferGeometry();jetG.setAttribute("position",new THREE.BufferAttribute(jetPos,3));jetG.setIndex([0,1,2,1,3,2]);
+  const jetMesh=new THREE.Mesh(jetG,wetM);jetMesh.renderOrder=3;jetMesh.frustumCulled=false;scene.add(jetMesh);
+  const wetMesh=new THREE.Mesh(wetG,wetM),edgeMesh=new THREE.Mesh(edgeG,edgeM);wetMesh.renderOrder=3;edgeMesh.renderOrder=4;wetMesh.frustumCulled=edgeMesh.frustumCulled=false;scene.add(wetMesh);scene.add(edgeMesh);
+  G3.sliceFrame=(now,show)=>{const g=SLC.geo();
+    if(SLC.dirty){SLC.dirty=false;sheetPre[0][0]=g.lipX;sheetPre[0][1]=g.lipY-0.03;sheetPre[1][0]=g.land;buildSheet(sheetR);if(G3.HB&&G3.HB.lip)G3.HB.lip.position.set(g.lipX+0.21,g.lipY+0.03,zc);G3.drawLB&&G3.drawLB();}
+    wetMesh.visible=edgeMesh.visible=jetMesh.visible=show;if(!show)return;
+    {const zA=zc-CD/2+0.2,zB=zc+CD/2-0.2,y0=g.lipY-0.015,y1=2.97;jetPos.set([g.lipX,y0,zA,g.lipX,y0,zB,g.land-0.05,y1,zA,g.land-0.05,y1,zB]);jetG.attributes.position.needsUpdate=true;}const t=now/1000,Y=3.0,z0=zc-CD/2+0.2,z1=zc+CD/2-0.2;
+    for(let i=0;i<=WN;i++){const z=z0+(z1-z0)*i/WN,w=g.wet+0.18*Math.sin(z*1.9+t*0.7)+0.08*Math.sin(z*4.7-t*1.3)+0.035*Math.sin(z*11+t*2.1),o=i*6;
+      wetPos[o]=w;wetPos[o+1]=Y;wetPos[o+2]=z;wetPos[o+3]=g.land-0.05;wetPos[o+4]=Y;wetPos[o+5]=z;
+      edgePos[o]=w-0.03;edgePos[o+1]=Y+0.004;edgePos[o+2]=z;edgePos[o+3]=w+0.04;edgePos[o+4]=Y+0.004;edgePos[o+5]=z;}
+    wetG.attributes.position.needsUpdate=true;edgeG.attributes.position.needsUpdate=true;if(!wetG.boundingSphere)wetG.computeBoundingSphere();};
+  // the L/B gauge: chart paper with the lip position as a red pointer (B up the side = vertical slice, L along the bottom = horizontal)
+  G3.drawLB=(c)=>{const tgt=[G3.HB&&G3.HB.gc,c||document.getElementById("slcT")].filter(Boolean);
+    tgt.forEach(cv=>{const x=cv.getContext("2d"),W=cv.width,H=cv.height,m=W*0.1,gw=W-m*1.5,gh=H-m*1.6,ox=m,oy=m*0.6;
+      x.fillStyle="#f5f1de";x.fillRect(0,0,W,H);
+      for(let k=0;k<=20;k++){const bold=k%5===0;x.strokeStyle=bold?"#9fc49a":"#d3e6cd";x.lineWidth=bold?Math.max(1.5,W/220):Math.max(0.7,W/600);
+        x.beginPath();x.moveTo(ox+gw*k/20,oy);x.lineTo(ox+gw*k/20,oy+gh);x.stroke();if(k<=14){x.beginPath();x.moveTo(ox,oy+gh*k/14);x.lineTo(ox+gw,oy+gh*k/14);x.stroke();}}
+      // sweet-spot band
+      x.fillStyle="rgba(63,160,90,0.12)";x.fillRect(ox+gw*0.3,oy+gh*0.3,gw*0.4,gh*0.4);
+      x.fillStyle="#3b4a5a";x.font=`700 ${Math.round(W/16)}px system-ui,sans-serif`;x.fillText("L/B",ox+4,oy+W/14);
+      x.font=`600 ${Math.round(W/26)}px system-ui,sans-serif`;x.fillStyle="#5d6b78";x.textAlign="center";x.fillText("L · horizontal",ox+gw/2,H-W*0.025);
+      x.save();x.translate(W*0.045,oy+gh/2);x.rotate(-Math.PI/2);x.fillText("B · vertical",0,0);x.restore();x.textAlign="left";
+      const px=ox+gw*(0.5+0.42*SLC.h),py=oy+gh*(0.5-0.42*SLC.v);
+      x.strokeStyle="#c8281e";x.lineWidth=Math.max(2,W/120);x.beginPath();x.moveTo(ox+gw,oy+gh);x.lineTo(px,py);x.stroke();
+      x.fillStyle="#c8281e";x.beginPath();x.arc(px,py,Math.max(4,W/40),0,7);x.fill();x.strokeStyle="#fff";x.lineWidth=Math.max(1,W/260);x.stroke();});
+    if(G3.HB&&G3.HB.gt)G3.HB.gt.needsUpdate=true;};
 
   // inventory: bale stacks and roll stacks
   // bale rows sit between forklift aisles: z -7.3, the walking-floor aisle at -11.5, and -15.7; a cross lane runs along the dock wall at x -32.3
@@ -3449,6 +3512,7 @@ const G3={on:false,ok:false};
     {p:[19.2,5.0,ZL],t:()=>["Fine screens",S.inc.some(i=>i.id==="fscreen")?"down":"slotted baskets"]},
     {p:[26.6,3.9,ZL],t:()=>["LC cleaners",S.inc.some(i=>i.id==="lcplug")?"plugged":"sand & grit out"]},
     {p:[41.2,9.4,-15],t:()=>["4 Stock chest",f0(S.tank/P.tankCap*100)+" %"]},
+    {p:[58,5.6,zc],t:()=>{const D=G3.SLC;if(!D)return ["Headbox",""];const g=D.geo();return ["Headbox",G3.slcFix?"resetting the slice":"slice "+(12+3*D.v).toFixed(1)+" mm · wet line "+(g.lipX-g.wet).toFixed(1)+" m"];},cls:()=>!!G3.slcFix},
     {p:[34.5,9.6,zc-1.5],t:()=>["Twin press",LV("shoe")?"shoe in 2nd press":"tandem bottom felt"]},
     {p:[10,8.4,zc],t:()=>["5 "+NAME+(S.pm==="run"?"":" · "+({break:"sheet break "+({reel:"at the reel",dryer:"before the dryers",press:"before the presses"}[S.brkType]||"")+(working("brk")?": rethreading":": crew on the way"),down:"no stock",full:"warehouse full",spools:"winder backed up",incident:S.M.pmDown||"down"}[S.pm]||"")),f0(S.pmSpeed)+" fpm · "+f1(S.rates.prod)+" t/h"],cls:()=>S.pm==="run"?"":"bad"},
     {p:[-10,9.2,zc],t:()=>["Reel",f1(S.reel)+" / "+P.jumbo+" t"]},
@@ -3500,9 +3564,10 @@ const G3={on:false,ok:false};
   const up=e=>{ptrs.delete(e.pointerId);pinch0=0;mid0=null;};glc.addEventListener("pointerup",up);glc.addEventListener("pointercancel",up);
   // easter egg: click the spider valve on the disk thickener
   {const rc=new THREE.Raycaster(),nd=new THREE.Vector2();if(rc.layers)rc.layers.enableAll();let downAt=null,hoverT=0;
-    const hit=e=>{if(!G3.spiderHit)return false;const r=glc.getBoundingClientRect();nd.set((e.clientX-r.left)/r.width*2-1,-(e.clientY-r.top)/r.height*2+1);rc.setFromCamera(nd,camera);return rc.intersectObjects(G3.spiderHit,false).length>0;};
+    const hit=e=>{const r=glc.getBoundingClientRect();nd.set((e.clientX-r.left)/r.width*2-1,-(e.clientY-r.top)/r.height*2+1);rc.setFromCamera(nd,camera);
+      if(G3.spiderHit&&rc.intersectObjects(G3.spiderHit,false).length)return "spider";if(G3.sliceHit&&rc.intersectObjects(G3.sliceHit,false).length)return "slice";return false;};
     glc.addEventListener("pointerdown",e=>{downAt=[e.clientX,e.clientY,performance.now()];});
-    glc.addEventListener("pointerup",e=>{if(!downAt)return;const m=Math.hypot(e.clientX-downAt[0],e.clientY-downAt[1]),t=performance.now()-downAt[2];downAt=null;if(m<6&&t<500&&hit(e))openSpider();});
+    glc.addEventListener("pointerup",e=>{if(!downAt)return;const m=Math.hypot(e.clientX-downAt[0],e.clientY-downAt[1]),t=performance.now()-downAt[2];downAt=null;if(m<6&&t<500){const h=hit(e);if(h==="spider")openSpider();else if(h==="slice")openSlice();}});
     glc.addEventListener("pointermove",e=>{const n=performance.now();if(n-hoverT<120||ptrs.size)return;hoverT=n;glc.style.cursor=hit(e)?"pointer":"";});}
   glc.addEventListener("wheel",e=>{e.preventDefault();goal=null;if(e.shiftKey||Math.abs(e.deltaX)>Math.abs(e.deltaY)&&!e.ctrlKey)panBy(-e.deltaX||-e.deltaY,0);else cam.r=clamp(cam.r*Math.exp(e.deltaY*(e.ctrlKey?0.01:0.001)),50,420);},{passive:false});
   // keyboard: arrows/WASD move, Q/E rotate, +/- zoom
@@ -3555,7 +3620,7 @@ const G3={on:false,ok:false};
     g.userData.wheels.forEach(w=>w.rotation.z=-(g.userData.spin||0));
     const open=phase==="dock"&&!R2.length;g.userData.doorL.rotation.y=open?-1.4:0;g.userData.doorR.rotation.y=open?1.4:0;
     if(R2.length&&Math.random()<rdt*3){const st=g.userData.stack,a=g.rotation.y,c=Math.cos(a),sn=Math.sin(a);emit("smoke",g.position.x+st[0]*c+st[2]*sn,st[1],g.position.z-st[0]*sn+st[2]*c,0.3,1.4,0,1.4,0.7,"#8c919b",0.45);}
-    const frac=g.userData.kind==="in"?t.load/P.truckLoad:t.load/P.truckRolls,n=Math.round(clamp(frac,0,1)*8);
+    const frac=g.userData.kind==="in"?t.load/P.truckLoad:t.load/P.truckRolls,n=Math.round(clamp(frac,0,1)*8);g.userData.frac=frac;
     g.userData.cargo.forEach((c,k)=>c.visible=k<n);}
   // reel turn-up: at 100% the sheet transfers to the new spool in the primary arms, the full reel is kicked down the rails,
   // the arms lower the new reel onto the rails, and the crane (strongback) takes the full reel away and brings a new spool
@@ -4072,6 +4137,12 @@ const G3={on:false,ok:false};
   const SITES={shaft:{c:[12,zc],a:"fix",p:[[10,14.4],[12,14.4],[14,14.4],[11,15.4]]},slime:{c:[10,zc],a:"clean",p:[[2,14.2],[8,14.2],[14,14.2],[20,14.2]]},
     winderdown:{c:[-18.7,9.4],a:"fix",p:[[-16.6,12.4],[-16.4,10.4],[-20.9,12.4],[-21,10.4]]}};
   const RTY=[];for(let k=0;k<24;k++)RTY.push([29-(k%12)*2.6,k<12?15.4:3.2]);
+  // grawlix speech bubble for the operator who gets the slice wrong
+  const slcBubble=(()=>{const c=document.createElement("canvas");c.width=256;c.height=140;const x=c.getContext("2d");
+    x.fillStyle="#ffffff";x.strokeStyle="#1c2233";x.lineWidth=6;x.beginPath();x.roundRect?x.roundRect(8,8,240,92,28):x.rect(8,8,240,92);x.fill();x.stroke();
+    x.beginPath();x.moveTo(100,98);x.lineTo(118,134);x.lineTo(138,98);x.closePath();x.fill();x.stroke();x.fillStyle="#ffffff";x.fillRect(102,92,34,10);
+    x.font="900 44px system-ui,sans-serif";x.textAlign="center";x.textBaseline="middle";const sy="#$%@&!!";[...sy].forEach((ch,k)=>{x.fillStyle=k%2?"#c8281e":"#1c2233";x.fillText(ch,38+k*30,56+(k%2?-5:4));});
+    const t=new THREE.CanvasTexture(c);t.encoding=THREE.sRGBEncoding;const sp=new THREE.Sprite(new THREE.SpriteMaterial({map:t,transparent:true,depthTest:false,toneMapped:false}));sp.scale.set(1.9,1.04,1);sp.renderOrder=9;sp.visible=false;scene.add(sp);return sp;})();
   const crew=HOME.map(([x,z])=>{const w=worker(M.stock,M.warn);w.position.set(x,0,z);return w;});G3.followable=()=>crew.concat(spOps||[]);
   const BRK={walk:false,smoke:new Set(),pic:new Set()};
   // follow a 3D route [x,y,z,pauseSeconds,pose]; height is interpolated along each leg, so stairs read as climbing
@@ -4147,6 +4218,12 @@ const G3={on:false,ok:false};
         else{tx=s[0];tz=s[1];act="clean";fx=[-18.7,zc];}
         const arrived=act==="look"||moveP(w,tx,tz,10,rdt);if(arrived&&act==="clean")here=true;
         if(arrived&&fx)face(w,fx[0],fx[1],rdt);pose(w,arrived?act:(shuttle&&act==="dump"?"carry":"run"),now);return;}
+      // v3.2.0: the slice was run out to the couch and broke the sheet: the wet-end operator swears, walks to the L/B gauge and resets it
+      if(G3.slcFix&&G3.slcFix.i===i){const F=G3.slcFix;F.t+=rdt;const B=slcBubble;
+        if(F.ph==="swear"){pose(w,"flail",now);face(w,57.15,zc,rdt);if(F.t>2.2){F.ph="walk";F.t=0;}}
+        else if(F.ph==="walk"){if(moveP(w,56.45,12.85,7,rdt)){F.ph="fix";F.t=0;}else pose(w,"run",now);}
+        else{face(w,57.15,12.3,rdt);pose(w,"type",now);if(F.t>2.6){G3.SLC.v=G3.SLC.h=0;G3.SLC.dirty=true;G3.slcFix=null;B.visible=false;G3.onSlcReset&&G3.onSlcReset();return;}}
+        B.visible=F.ph!=="fix"||F.t<0.6;B.position.set(w.position.x,2.75+0.06*Math.sin(now/120),w.position.z);B.material.opacity=F.ph==="swear"?1:Math.max(0,1-F.t/1.2);return;}
       if(brkOn){[tx,tz]=(BRKSPOT[S.brkType]||RT)[i];const arrived=moveP(w,tx,tz,10,rdt);if(arrived){face(w,tx,zc,rdt);here=true;}
         const air=arrived&&head.go&&tx>-4&&tx<28;pose(w,arrived?(air?"air":"rethread"):"run",now);
         if(air){const [nx,,nz]=nozzlePos(w),a=w.rotation.y;hoseTo(airLines[i],nx-Math.cos(a)*0.45,1.35,nz+Math.sin(a)*0.45,w.position.x+0.4,2.6,w.position.z<zc?zc-CD/2-0.4:zc+CD/2+0.4);
@@ -4339,6 +4416,7 @@ const G3={on:false,ok:false};
   const AIS=16.5,parties=[];let ambT={tour:25,mgr:45,office:8,birds:15,food:35};
   // a party walks a path [x,z,stop seconds,act]; followers keep formation behind the leader and gather round at the stops
   function party(kind,members,path,walk){parties.push({kind,members,path,i:0,wait:0,walk});}
+  G3.mgrLead=()=>{for(const P2 of parties)if(P2.kind==="mgr"&&!P2.home&&P2.members[0]&&P2.members[0].visible)return P2.members[0];return null;};
   function mgrNear(x,z,r){for(const P2 of parties)if(P2.kind==="mgr")for(const m of P2.members)if(m.visible&&Math.hypot(m.position.x-x,m.position.z-z)<r)return true;return false;}
   const out=(x)=>[[OFF.door[0],AIS],[x,AIS]];
   function startTour(){const lead=person(M.brand,whiteHat),n=5+Math.floor(Math.random()*2),st=[];
@@ -4405,7 +4483,19 @@ const G3={on:false,ok:false};
         const p=new THREE.Mesh(new THREE.PlaneGeometry(D,D),new THREE.MeshBasicMaterial({map:gT,color:0xffd9a0,transparent:true,depthWrite:false,blending:THREE.AdditiveBlending,toneMapped:false,polygonOffset:true,polygonOffsetFactor:-4,polygonOffsetUnits:-4,opacity:0}));
         p.rotation.x=-Math.PI/2;p.position.set(x,fy,z);p.renderOrder=2;p.visible=false;scene.add(p);
         const f=new THREE.Mesh(new CylG(0.5,0.7,0.3,12),new THREE.MeshBasicMaterial({color:0xfff1cf}));f.position.set(x,y+0.2,z);f.visible=false;scene.add(f);return {p,f,k:deck?0.55:i<4?0.22:0.35};});}
-    G3.nightL.forEach(l=>{l.p.material.opacity=l.k*night;l.p.visible=night>0.05;l.f.visible=night>0.2;});
+    G3.nightL.forEach(l=>{l.p.material.opacity=l.k*night;l.p.visible=night>0.05;l.f.visible=night>0.2;});G3.nightK=night;
+    // v3.2.0: red aviation beacons on top of the boiler stack and the fog fan stack; small lamps on the disk thickener
+    if(!G3.beacons){const gl=spriteTex((x,w)=>{const g=x.createRadialGradient(w/2,w/2,0,w/2,w/2,w/2);g.addColorStop(0,"rgba(255,255,255,1)");g.addColorStop(0.3,"rgba(255,255,255,0.5)");g.addColorStop(1,"rgba(255,255,255,0)");x.fillStyle=g;x.fillRect(0,0,w,w);},64);
+      const lamp=(x,y,z,col,rb,sz)=>{const b=new THREE.Mesh(new THREE.SphereGeometry(rb,10,8),new THREE.MeshBasicMaterial({color:col,toneMapped:false}));b.position.set(x,y,z);b.visible=false;scene.add(b);
+        const h=new THREE.Sprite(new THREE.SpriteMaterial({map:gl,color:col,transparent:true,depthWrite:false,blending:THREE.AdditiveBlending,toneMapped:false,opacity:0}));h.scale.set(sz,sz,1);h.position.set(x,y,z);h.visible=false;scene.add(h);return {b,h};};
+      const fan=G3.fogFan?G3.fogFan.top:[49.5,20.2,-4.2];
+      G3.beacons=[lamp(ENV.stack[0],ENV.stack[1]+0.25,ENV.stack[2],0xff1a10,0.3,6),lamp(fan[0],fan[1]-0.05,fan[2]+1.25,0xff1a10,0.2,4),lamp(fan[0],fan[1]-0.05,fan[2]-1.25,0xff1a10,0.2,4)];
+      // thickener: warm lamps along both rails of the vat, plus a green "running" lamp and an amber one at the drive end
+      const TY2=PH+2.6+0.12;G3.thkL=[];[31.8,33.3,34.8,36.3].forEach(x=>[-1,1].forEach(sd=>G3.thkL.push(lamp(x,TY2,-15+sd*2.05,0xffd58a,0.09,1.5))));
+      G3.thkL.push(lamp(37.7,PH+1.25,-15.6,0x4cff7a,0.1,1.6),lamp(37.7,PH+1.25,-14.4,0xffa62e,0.1,1.6));}
+    {const on=night>0.25,bl=0.5+0.5*Math.sin(performance.now()/1000*Math.PI*0.9),k=night*(0.25+0.75*bl*bl);
+      G3.beacons.forEach(l=>{l.b.visible=l.h.visible=on;l.h.material.opacity=k;l.b.material.color.setRGB(0.4+0.6*bl,0.02+0.05*bl,0.02);});
+      const run=S.M.pulperDown?0.25:1;G3.thkL.forEach((l,i)=>{l.b.visible=l.h.visible=on;l.h.material.opacity=night*(i<8?1:run);});}
     if(G3.fogFan&&rdt>0){const F=G3.fogFan,down=S.inc.some(i=>i.id==="fogfan"),k=down?0:(S.pm==="run"?1:0.35);F.spin+=(k-F.spin)*Math.min(1,rdt*0.8);F.rot.rotation.y+=rdt*F.spin*14;
       if(Math.random()<rdt*9*k)emitA("steam",F.top[0]+R()*0.5,F.top[1],F.top[2]+R()*0.5,R()*0.7+0.5,3.0+Math.random()*1.8,R()*0.7,3.4,2.0+Math.random()*1.6,"#f4f6f8",0.6);}G3.spiderFrame&&G3.spiderFrame(rdt);M.wind.emissive=M.wind.emissive||new THREE.Color();M.wind.emissive.copy(lin0("#ffcf7a")).multiplyScalar(0.85*night);
     ENV.lampHead.color.copy(lin0("#9aa3b2")).lerp(lin0("#fff2c4"),night);ENV.lampPool.opacity=0.32*night;
@@ -4963,48 +5053,85 @@ const G3={on:false,ok:false};
   function zenMoves(){if(zenMovesCache)return zenMovesCache;const LEND=PLEN[PLEN.length-1],TUB=[16,1.2,-13.5];
     zenMovesCache=[
       // ride a bale down the walking floor, under the guillotine, up the incline and into the pulper tub
-      {name:"bale ride",dur:30,ok:()=>S.rates.feed>0.3&&!S.M.pulperDown,
+      {name:"bale ride",look:["gold","none"],dur:30,ok:()=>S.rates.feed>0.3&&!S.M.pulperDown,
         start:()=>({d:Math.max(0.5,wfOff%2.6+2.6),hold:0}),
         at:(t,mv,rdt)=>{const st=mv.st,sp=Math.min(2.2,0.35+S.rates.feed*0.03);if(S.rates.feed>0.3)st.d+=rdt*sp;
           if(st.d<=LEND)pathAt(st.d,_zv);else{const e=Math.min(1,(st.d-LEND)/3);_zv.set(mix(cB.x,TUB[0],e),mix(cB.y+0.6,TUB[1],e),mix(cB.z,TUB[2],e));st.hold+=st.d>LEND+3?rdt:0;}
           if(st.hold>2.5||t>40)return null;const up=clamp(st.d/LEND,0,1);
           return [_zv.x,_zv.y,_zv.z,mix(48,62,up),Math.PI-0.45+0.2*Math.sin(t*0.15),mix(1.0,0.88,up)];}},
       // low dolly down the forming section: headbox, wire and forming table, into the presses
-      {name:"forming sweep",dur:12,ok:()=>true,
+      {name:"forming sweep",look:["airy","none"],dur:12,ok:()=>true,
         at:(t)=>{if(t>12)return null;const u=ease(t/12);return [mix(58,31,u),2.4,zc,mix(40,52,u),mix(0.25,0.75,u),1.1];}},
       // bird's eye: straight down over receiving, then swoop along the line and settle low over the dryers
-      {name:"bird's eye swoop",dur:14,ok:()=>true,
+      {name:"bird's eye swoop",look:["airy","none"],dur:14,ok:()=>true,
         at:(t)=>{if(t>14)return null;const u=ease(t/14),v=ease((t-3)/11);return [mix(-24,14,u),mix(0,3,v),mix(-8,zc,u),mix(300,110,v),mix(-0.2,0.7,u),mix(0.1,1.02,v)];}},
       // v2.9.17 ---------------------------------------------------------------------------------------------
       // ride along with the overhead crane while it carries a reel or a spool
-      {name:"crane ride",dur:20,ok:()=>!!(CR.j||CR.jobs.length),
+      {name:"crane ride",rare:1,look:["hc","none"],dur:20,ok:()=>!!(CR.j||CR.jobs.length),
         at:(t)=>{if(t>20||(t>4&&!CR.j&&!CR.jobs.length))return null;return [CR.x,Math.max(2,CR.y-3),CR.z,55,0.9+t*0.02,0.95];}},
       // a finished roll: off the winder, onto the upender, along the conveyor until a clamp truck takes it
-      {name:"roll's journey",dur:30,ok:()=>{const RV=G3.rollVis;return !!(RV&&RV.list.some(r=>r.d<4&&r.wp));},
+      {name:"roll's journey",rare:1,look:["gold","none"],dur:30,ok:()=>{const RV=G3.rollVis;return !!(RV&&RV.list.some(r=>r.d<4&&r.wp));},
         start:()=>{const RV=G3.rollVis,r=RV.list.filter(r=>r.d<4&&r.wp).sort((a,b)=>a.d-b.d)[0];return {r,last:r.wp.slice(),hold:0};},
         at:(t,mv,rdt)=>{const st=mv.st,RV=G3.rollVis;if(RV&&RV.list.includes(st.r)&&st.r.wp)st.last=st.r.wp.slice();else st.hold+=rdt;
           if(st.r){st.still=Math.abs(st.r.d-(st.ld??-99))<0.01?(st.still||0)+rdt:0;st.ld=st.r.d;}if(st.hold>2.5||st.still>4||t>30)return null;return [st.last[0],1,st.last[2],46,Math.PI/2+0.35+0.15*Math.sin(t*0.2),1.0];}},
       // slow, low pass along the dryer section at can height
-      {name:"dryer dolly",dur:14,ok:()=>true,
+      {name:"dryer dolly",look:["dusk","gold"],dur:14,ok:()=>true,
         at:(t)=>{if(t>14)return null;const u=ease(t/14);return [mix(30,-6,u),4.5,zc,42,mix(0.05,0.3,u),1.25];}},
       // tilt up the fog fan stack from its base to the vapour plume
-      {name:"fog fan tilt-up",dur:12,ok:()=>true,
+      {name:"fog fan tilt-up",look:["airy","none"],dur:12,ok:()=>true,
         at:(t)=>{if(t>12)return null;const u=ease(t/12);return [49.5,mix(2,21,u),-4.2,mix(55,70,u),0.55,mix(1.42,1.15,u)];}},
       // one slow lap around the whole mill
-      {name:"slow orbit",dur:30,ok:()=>true,start:()=>({th:Math.random()*6.28}),
+      {name:"slow orbit",look:["dusk","none"],dur:30,ok:()=>true,start:()=>({th:Math.random()*6.28}),
         at:(t,mv)=>{if(t>30)return null;return [12,2,0,240,mv.st.th+Math.PI*2*t/30,0.92];}},
       // close orbit of the disk thickener, spider valve and the two seal chests
-      {name:"thickener orbit",dur:14,ok:()=>true,
+      {name:"thickener orbit",look:["hc","none"],dur:14,ok:()=>true,
         at:(t)=>{if(t>14)return null;const u=ease(t/14);return [29,mix(10,6,u),-15.5,mix(50,58,u),mix(-0.7,1.0,u),0.95];}},
       // the OCC train rolling in along the spur (or pulling out)
-      {name:"train pass",dur:25,ok:()=>ENV.train&&ENV.train.state!=="away",
+      {name:"train pass",rare:1,look:["bw","gold"],dur:25,ok:()=>ENV.train&&ENV.train.state!=="away",
         at:(t)=>{const tr=ENV.train;if(t>25||tr.state==="away")return null;return [tr.g.position.x+6,2,-29,70,Math.PI-0.45,0.85];}},
       // shift change: cars in the lot and staff at the office door (only around 6 am / 6 pm)
-      {name:"shift change",dur:14,ok:()=>{const hr=((S.t+360)/60)%24;return (hr>5.6&&hr<6.8)||(hr>17.5&&hr<18.7);},
+      {name:"shift change",rare:1,look:["gold","dusk"],dur:14,ok:()=>{const hr=((S.t+360)/60)%24;return (hr>5.6&&hr<6.8)||(hr>17.5&&hr<18.7);},
         at:(t)=>{if(t>14)return null;const u=ease(t/14);return [mix(78,54,u),0,mix(47,25,u),mix(75,55,u),-0.5,0.9];}},
       // drift over the clarifier and transfer tank out toward the river
-      {name:"clarifier to river",dur:14,ok:()=>true,
-        at:(t)=>{if(t>14)return null;const u=ease(t/14);return [mix(12,8,u),mix(1.5,0,u),mix(-38,-64,u),mix(70,95,u),mix(0.2,0.6,u),mix(0.85,1.05,u)];}}];
+      {name:"clarifier to river",look:["airy","none"],dur:14,ok:()=>true,
+        at:(t)=>{if(t>14)return null;const u=ease(t/14);return [mix(12,8,u),mix(1.5,0,u),mix(-38,-64,u),mix(70,95,u),mix(0.2,0.6,u),mix(0.85,1.05,u)];}},
+      // v3.2.0 ----------------------------------------------------------------------------------------------
+      // start high over the pulper and spiral down into the vortex
+      {name:"pulper vortex dive",look:["hc","none"],dur:14,ok:()=>!S.M.pulperDown&&S.rates.feed>0.3,start:()=>({th:Math.random()*6.28}),
+        at:(t,mv)=>{if(t>14)return null;const u=ease(t/14);return [TUB[0],TUB[1],TUB[2],mix(150,34,u),mv.st.th+u*2.6,mix(0.75,0.12,u)];}},
+      // low along the slice: the headbox jet lands on the wire and the sheet forms as we drift down the table
+      {name:"headbox to wire",look:["airy","none"],dur:13,ok:()=>S.pm==="run",
+        at:(t)=>{if(t>13)return null;const u=ease(t/13);return [mix(52,43,u),mix(2.0,1.6,u),zc,mix(28,24,u),mix(0.8,0.65,u),mix(1.3,1.22,u)];}},
+      // sit on the reel and wait for the turn-up: the full reel is kicked down the rails and the new spool takes the sheet
+      {name:"reel turn-up",look:["gold","none"],rare:1,dur:26,
+        ok:()=>{if(S.pm!=="run"||!(S.rates.prod>1))return false;const w=(P.jumbo-S.reel)/S.rates.prod*60/Math.max(0.1,C.simSpeed);return w>1.5&&w<14;},
+        start:()=>({n:S.tot.turnups,at:-1}),
+        at:(t,mv)=>{const st=mv.st;if(st.at<0&&S.tot.turnups>st.n)st.at=t;if((st.at>=0&&t-st.at>7)||t>26||(st.at<0&&S.pm!=="run"))return null;
+          const u=ease(t/20);return [DX-2.2,DY-0.6,zc,mix(40,32,u),mix(-0.55,-0.35,u),mix(1.18,1.25,u)];}},
+      // low sideways track past the twin refiners, doors in the foreground
+      {name:"refiner yard pass",look:["hc","none"],dur:13,ok:()=>true,
+        at:(t)=>{if(t>13)return null;const u=ease(t/13);return [61,2.2,mix(-16,-7,u),40,mix(0.2,0.45,u),0.98];}},
+      // follow a loaded truck from the dock out past the gate
+      {name:"truck departure",look:["dusk","none"],rare:1,dur:30,
+        ok:()=>cam.r<TRUCK_FAR*2&&truckPool.out.some(g=>g.visible&&g.userData.busy&&(g.userData.phase==="leave"||(g.userData.phase==="dock"&&(g.userData.frac||0)>0.85))),
+        start:()=>{const L=truckPool.out.filter(g=>g.visible&&g.userData.busy);const g=L.find(g=>g.userData.phase==="leave")||L.sort((a,b)=>(b.userData.frac||0)-(a.userData.frac||0))[0];return {g,p:g.position.clone()};},
+        at:(t,mv)=>{const st=mv.st,g=st.g;if(g.visible&&g.userData.busy)st.p.lerp(g.position,0.15);else st.gone=(st.gone||0)+0.02;
+          if(t>30||st.gone>0.5||st.p.x<-140||(t>12&&g.userData.phase==="dock"))return null;return [st.p.x,1.5,st.p.z,mix(55,70,ease(t/30)),-0.95+t*0.012,1.02];}},
+      // peek over an operator's shoulder at the console: the game is on, until a manager walks by
+      {name:"control room peek",look:["none"],rare:1,dur:20,
+        ok:()=>!!(G3.tvOn&&G3.tvOn.some(Boolean)),
+        start:()=>({ci:Math.max(0,G3.tvOn.findIndex(Boolean)),th:(Math.random()<0.5?-1:1)*(0.25+Math.random()*0.2)}),
+        at:(t,mv)=>{if(t>20)return null;const u=ease(t/20);return [CONSOLES[mv.st.ci],1.5,13.5,mix(23,19,u),mv.st.th,mix(1.0,1.08,u)];}},
+      // tag along with a manager on their rounds
+      {name:"manager walkabout",look:["bw","none"],rare:1,dur:24,ok:()=>!!(G3.mgrLead&&G3.mgrLead()),
+        start:()=>{const m=G3.mgrLead();return {m,p:m.position.clone(),th:m.rotation.y+Math.PI/2+0.6};},
+        at:(t,mv)=>{const st=mv.st;if(!st.m.visible||t>24)return null;st.p.lerp(st.m.position,0.08);return [st.p.x,0.8,st.p.z,38,st.th+t*0.03,1.08];}},
+      // high, slow pass over the lit mill at night
+      {name:"night lights flyover",look:["none","hc"],rare:1,dur:22,ok:()=>(G3.nightK||0)>0.8,start:()=>({d:Math.random()<0.5?1:-1}),
+        at:(t,mv)=>{if(t>22)return null;const u=ease(t/22),d=mv.st.d;return [mix(-45*d+15,75*d+15,u),0,mix(-10,5,u),mix(210,170,u),0.35*d+0.25,mix(0.62,0.78,u)];}},
+      // long establishing push: from far beyond the river, over the trees, into the mill
+      {name:"long establishing shot",look:["dusk","gold"],dur:20,ok:()=>true,
+        at:(t)=>{if(t>20)return null;const u=ease(t/20);return [mix(10,14,u),mix(0,2,u),mix(-80,-4,u),mix(420,170,u),Math.PI+0.25-0.2*u,mix(1.25,0.95,u)];}}];
     return zenMovesCache;}
   // v2.9.11 performance profiler: when G3.PF.on, time each section of the 3D frame (ms accumulated per section)
   const PF=G3.PF={on:false,t:0,acc:{},frames:0};const pm=k=>{if(!PF.on)return;const t=performance.now();PF.acc[k]=(PF.acc[k]||0)+(t-PF.t);PF.t=t;};
@@ -5093,7 +5220,7 @@ const G3={on:false,ok:false};
       // dye trouble: the sheet and the growing reel flash through colors
       const dyeOn=S.M.offSpec;if(dyeOn){const k=Math.floor(now/1400)%DYE.length;if(k!==dyeK){dyeK=k;dyeSheet.color.copy(lin0(DYE[k]));dyeReel.color.copy(lin0(DYE[(k+2)%DYE.length]));}}
       sheetMesh.material=dyeOn?dyeSheet:sheetMat;reel.material=dyeOn?dyeReel:ROLLM;
-      sheetMesh.visible=show;sheetMesh.geometry.setDrawRange(0,(sheetKey[Math.min(segs,sheetKey.length-1)]||0)*6);}sheetTex.offset.x=-V.sheet/24*1.0;
+      sheetMesh.visible=show;sheetMesh.geometry.setDrawRange(0,(sheetKey[Math.min(segs,sheetKey.length-1)]||0)*6);G3.sliceFrame(now,show&&segs>=2);}sheetTex.offset.x=-V.sheet/24*1.0;
     pm("paper machine, reel, crane, winder");
     // roll conveyor
     // each finished roll is kicked off the winder, rolls down the ramp, is upended and rides the conveyor to the warehouse;
@@ -5160,8 +5287,13 @@ const G3={on:false,ok:false};
       const POI=[[-14,5,300,-0.2],[20,9,120,-0.5],[24,-10,95,0.4],[-20,14,80,-1.2],[-25,-18,110,0.9],[20,-40,120,2.6],[70,-10,110,-2.2],[-60,10,130,0.1],[10,9,170,2.9],[40,10,70,0.6],[-36,24,90,-0.8]];
       if(Z.t>10){Z.t=0;Z.mv=null;const ops=G3.followable?G3.followable().filter(w=>w.visible):[];
         const MV=zenMoves();
-        if(!Z.goto&&Math.random()<0.35){const ok=MV.filter(m=>m.ok());if(ok.length){const m=ok[Math.floor(Math.random()*ok.length)];Z.mv={m,t:0,st:m.start?m.start():null};Z.who=null;Z.t=-(m.dur-10);
-            const lk=["dusk","gold","airy","hc","bw"],cur2=document.body.dataset.zs,pl2=lk.filter(l=>l!==cur2);document.body.dataset.zs=Math.random()<0.5?"none":pl2[Math.floor(Math.random()*pl2.length)];}}
+        if(!Z.goto&&Math.random()<0.4){const H=Z.hist||(Z.hist=[]);let ok=MV.filter(m=>{try{return m.ok();}catch(e){return false;}});
+          // v3.2.0 variety: skip shots played recently; if every ready shot is recent, take the one played longest ago
+          const fresh=ok.filter(m=>!H.includes(m.name));if(fresh.length)ok=fresh;else if(ok.length)ok=[ok.reduce((a,b)=>H.indexOf(a.name)<=H.indexOf(b.name)?a:b)];
+          if(ok.length){let tw=0;ok.forEach(m=>tw+=m.rare?2.5:1);let r=Math.random()*tw,m=ok[0];for(const c of ok){r-=c.rare?2.5:1;if(r<=0){m=c;break;}}
+            Z.mv={m,t:0,st:m.start?m.start():null};Z.who=null;Z.t=-(m.dur-10);H.push(m.name);while(H.length>Math.min(8,MV.length-4))H.shift();G3.zenLast=m.name;
+            // v3.2.0: each shot has its own paired looks
+            const lk=m.look||["none"],cur2=document.body.dataset.zs,pl2=lk.length>1?lk.filter(l=>l!==cur2):lk;document.body.dataset.zs=pl2[Math.floor(Math.random()*pl2.length)];}}
         if(Z.mv){}
         else if(Z.goto){const g2=Z.goto;Z.goto=null;Z.who=null;const from={x:target.x,y:target.y,z:target.z,r:cam.r,th:cam.th,ph:cam.ph};
           Z.mv={t:0,st:null,m:{name:"upset swoop",at:(t)=>{if(t>10)return null;const u=ease(t/4);return [mix(from.x,g2[0],u),mix(from.y,0,u),mix(from.z,g2[1],u),mix(from.r,55,u),from.th+(lerpAng(from.th,-0.3,1)-from.th)*u,mix(from.ph,0.85,u)];}}};}
@@ -5170,9 +5302,9 @@ const G3={on:false,ok:false};
         else{Z.who=null;Z.i=(Z.i+1+Math.floor(Math.random()*(POI.length-1)))%POI.length;const q=POI[Z.i];Z.tg.set(q[0],0,q[1]);Z.r=q[2];Z.th=q[3];}
         // hard cut: jump the camera straight to the new shot
         target.copy(Z.tg);cam.r=Z.r;cam.th=Z.th;cam.ph=0.8;
-        const looks=["dusk","gold","airy","hc","bw"],cur=document.body.dataset.zs,pool=looks.filter(l=>l!==cur);
-        const nx=Math.random()<0.5?"none":pool[Math.floor(Math.random()*pool.length)];
-        document.body.dataset.zs=nx;}
+        // v3.2.0: a scripted shot keeps its own paired look; free shots (viewpoints, operator follows) pick at random
+        if(!Z.mv){const looks=["dusk","gold","airy","hc","bw"],cur=document.body.dataset.zs,pool=looks.filter(l=>l!==cur);
+          document.body.dataset.zs=Math.random()<0.5?"none":pool[Math.floor(Math.random()*pool.length)];}}
       Z.dis=(Z.dis??40)-rdt;if(Z.dis<=0){Z.dis=60+Math.random()*60;const safe=["fogfan","flares","runner"].filter(id=>!S.inc.some(i=>i.id===id));if(safe.length){const id=safe[Math.floor(Math.random()*safe.length)];trigger(id,true);Z.goto=G3.spotOf(id);Z.t=99;}}
       if(Z.who){Z.fo-=rdt;if(Z.fo<=0){Z.who=null;Z.r=Math.min(140,Z.r*2.6);}else{const p=Z.who.position;Z.tg.set(p.x,0,p.z);}}
       if(Z.mv){goal=null;Z.mv.t+=rdt;const f=Z.mv.m.at(Z.mv.t,Z.mv,rdt);if(!f){Z.mv=null;Z.t=99;}else{target.set(f[0],f[1],f[2]);cam.r=f[3];cam.th=f[4];cam.ph=f[5];Z.tg.copy(target);Z.r=f[3];Z.th=f[4];}}
@@ -5230,7 +5362,25 @@ function hudSync(){const sp=C.simSpeed+'<span class="lg"> min/s</span><span clas
 {let show=false;try{show=localStorage.getItem("paper-mill-knobs")==="1";}catch(e){}
   const setK=v=>{show=v;document.body.classList.toggle("noknobs",!v);$("knobsBtn").textContent=v?"Hide knobs":"Show knobs";$("knobsBtn").setAttribute("aria-expanded",v);try{localStorage.setItem("paper-mill-knobs",v?"1":"0");}catch(e){}};
   setK(show);$("knobsBtn").addEventListener("click",()=>setK(!show));}
-function openSpider(){$("spider").hidden=false;$("spiV").value=Math.round(G3.SPD.v*100);drawSpider();}
+function openSlice(){$("spider").hidden=true;$("slice").hidden=false;$("slcV").value=Math.round(G3.SLC.v*100);$("slcH").value=Math.round(G3.SLC.h*100);drawSlice();}
+$("slcClose").addEventListener("click",()=>$("slice").hidden=true);
+["slcV","slcH"].forEach(id=>$(id).addEventListener("input",e=>{if(G3.slcFix)return;G3.SLC[id==="slcV"?"v":"h"]=+e.target.value/100;G3.SLC.dirty=true;
+  const g=G3.SLC.geo();if(g.lipX-g.wet>=6.8)slcBreak();drawSlice();}));
+// v3.2.0: run the jet out to the couch and the sheet breaks; the wet-end operator comes over and puts the slice back
+function slcBreak(){if(G3.slcFix)return;G3.slcFix={i:0,ph:"swear",t:0};
+  if(S.pm==="run"){S.pm="break";S.brkType="press";S.breakLeft=2*(26+Math.random()*20);S.breakTotal=S.breakLeft;S.tot.breaks++;enqueue("brk");AUDIO.sfx("snap",2500);}
+  log("Sheet break! The slice was opened so far the wet line ran off the former. The wet-end operator is resetting it.","bad");
+  ["slcV","slcH","slcReset"].forEach(id=>$(id).disabled=true);}
+G3.onSlcReset=()=>{["slcV","slcH","slcReset"].forEach(id=>$(id).disabled=false);$("slcV").value=0;$("slcH").value=0;log("Slice reset to standard. Wet line is back where it belongs.","ok");drawSlice();};
+$("slcReset").addEventListener("click",()=>{G3.SLC.v=G3.SLC.h=0;G3.SLC.dirty=true;$("slcV").value=0;$("slcH").value=0;drawSlice();});
+function drawSlice(){const D=G3.SLC;if(!D||$("slice").hidden)return;const g=D.geo(),wl=g.lipX-g.wet;
+  $("slcVv").textContent="B "+(12+3*D.v).toFixed(1)+" mm";$("slcHv").textContent="L "+(D.h>=0?"+":"")+(4*D.h).toFixed(1)+" mm";
+  $("slcJ").textContent=(54.5-g.land).toFixed(2)+" m past the breast roll";$("slcW").textContent=wl.toFixed(1)+" m";
+  const n=$("slcNote"),off=wl<4.1||wl>6.3;n.className="spin"+(off?" bad":"");
+  if(G3.slcFix){n.className="spin bad";n.textContent="Sheet break! The wet line ran off the former. An operator is on the way to reset the slice.";G3.drawLB&&G3.drawLB();return;}
+  n.textContent=wl<4.1?"Wet line is close to the headbox: the sheet is draining early. Open the slice or push the lip forward.":wl>6.3?"Wet line is creeping toward the couch: too much water on the wire. Close the slice or pull the lip back.":D.v<-0.7?"Jet is diving steeply into the wire. It's within range, but watch for rush.":"Jet and wet line look right.";
+  G3.drawLB&&G3.drawLB();}
+function openSpider(){$("slice").hidden=true;$("spider").hidden=false;$("spiV").value=Math.round(G3.SPD.v*100);drawSpider();}
 $("spiClose").addEventListener("click",()=>$("spider").hidden=true);
 $("spiV").addEventListener("input",e=>{G3.SPD.v=+e.target.value/100;drawSpider();});
 function drawSpider(){const D=G3.SPD;if(!D||$("spider").hidden)return;
@@ -5251,7 +5401,7 @@ $("hud-slow").addEventListener("click",()=>nudgeSpeed(-1));$("hud-fast").addEven
 $("vb3").addEventListener("click",()=>setView(true));$("vb2").addEventListener("click",()=>setView(false));
 setView(true);   // 3D only; the 2D schematic remains only as a fallback when WebGL is unavailable
 
-const HTML_V2='<div class="v2top" id="v2top">\n  <button class="v2card v2ibtn" id="v2pause" aria-label="Pause and open the menu"><svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor"><rect x="5" y="4" width="5" height="16" rx="1.5"/><rect x="14" y="4" width="5" height="16" rx="1.5"/></svg></button>\n  <button class="v2card v2stats" id="v2stats" aria-expanded="false" aria-controls="v2more">\n    <span class="st mn"><small>Mill</small><b id="v2mill">–</b></span>\n    <span class="st"><small>Cash</small><b id="v2cash">–</b></span>\n    <span class="st"><small>Profit</small><b id="v2profit">–</b></span>\n    <span class="st"><small id="v2clockL">Time</small><b id="v2clock">–</b></span>\n    <span class="chev" aria-hidden="true"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"><path d="M6 9l6 6 6-6"/></svg></span>\n  </button>\n  <button class="v2card v2lbl" id="v2lblBtn" aria-pressed="true" title="Show or hide equipment labels"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 12V4h8l10 10-8 8L3 12z"/><circle cx="7.5" cy="8.5" r="1.4" fill="currentColor"/></svg><span>Labels</span></button>\n</div>\n<div class="v2card v2more" id="v2more">\n  <div class="v2grid">\n    <div><small>Production</small><b data-m="k-prod">–</b><em data-m="k-prod-s"></em></div>\n    <div><small>Reel speed</small><b data-m="k-speed">–</b><em data-m="k-speed-s"></em></div>\n    <div><small>Stock chest</small><b data-m="k-tank">–</b><em data-m="k-tank-s"></em></div>\n    <div><small>OCC bale yard</small><b data-m="k-yard">–</b><em data-m="k-yard-s"></em></div>\n    <div><small>Roll warehouse</small><b data-m="k-fg">–</b><em data-m="k-fg-s"></em></div>\n    <div><small>Cash detail</small><b data-m="k-cash">–</b><em data-m="k-cash-s"></em></div>\n  </div>\n  <div class="v2row">\n    <div class="v2speed"><button id="v2slow" aria-label="Slower">−</button><span id="v2speed">30 min/s</span><button id="v2fast" aria-label="Faster">+</button></div>\n    <label class="v2chk"><input type="checkbox" id="v2labels"> Labels</label>\n    <button id="v2sound">Sound off</button>\n    <button id="v2dis" class="danger">Disaster</button>\n  </div>\n</div>\n<div class="v2dock" id="v2dock">\n  <div id="v2jumpslot"></div>\n  <nav class="v2card v2tabs" aria-label="Panels">\n    <button data-tab="shop" aria-pressed="false"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 19V5M5 12l7-7 7 7"/></svg>Upgrades</button>\n    <button data-tab="chaos" aria-pressed="false"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3l9 16H3z"/><path d="M12 10v4M12 17v.5"/></svg>Upsets<span class="bdg" id="v2bdg" hidden>0</span></button>\n    <button data-tab="ctl" aria-pressed="false"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M4 7h10M18 7h2M4 17h4M12 17h8"/><circle cx="16" cy="7" r="2"/><circle cx="10" cy="17" r="2"/></svg>Controls</button>\n    <button data-tab="stats" aria-pressed="false"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 19h16M7 16V9M12 16V5M17 16v-4"/></svg>Stats</button>\n  </nav>\n</div>\n<div class="v2scrim" id="v2scrim"></div>\n<aside class="v2sheet" id="v2sheet" aria-hidden="true"><header><h2 id="v2sheetT">Upgrades</h2><button id="v2close" aria-label="Close panel">Close</button></header>\n  <div class="v2body">\n    <div class="v2pane" data-pane="shop"></div>\n    <div class="v2pane" data-pane="chaos"></div>\n    <div class="v2pane" data-pane="ctl"><div class="v2sub">Run the mill</div><div class="v2row" id="v2ctlrow"></div><div class="v2sub">Area controls</div></div>\n    <div class="v2pane" data-pane="stats"><div class="v2sub">Right now</div></div>\n  </div></aside>\n<div class="v2menu" id="v2menu"><div class="card" role="dialog" aria-modal="true" aria-labelledby="v2mt">\n  <div class="ttl"><i>⚙</i><div><small>The Paper Mill</small><b id="v2mt">Mill</b><div class="state" id="v2state"></div></div></div>\n  <p>Run a recycled paperboard mill from truck to warehouse. Old corrugated boxes arrive by the truckload, get pulped, cleaned and thickened, and your paper machine turns them into giant reels that the winder cuts into rolls for customers. Keep everything flowing, spend your profit on upgrades, and ride out upsets: breakdowns, fires, storms and the occasional pigeon.</p>\n  <button class="primary go" id="v2go"><b>Play</b><small>30-day season · leaderboard</small></button>\n  <div class="sub" id="v2sub" hidden>\n    <button id="v2season">New season<small>restart the 30 days</small></button>\n    <button id="v2reset" class="warn">Reset mill<small>start over</small></button>\n  </div>\n  <div class="opts">\n    <button id="v2free"><i><svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="8" width="18" height="4" rx="1"/><path d="M12 8v13M19 12v9H5v-9M7.5 8a2.5 2.5 0 0 1 0-5C11 3 12 8 12 8s1-5 4.5-5a2.5 2.5 0 0 1 0 5"/></svg></i><b>Free play</b><small>free upgrades</small></button>\n    <button id="v2board"><i><svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M8 21h8M12 17v4M7 4h10v5a5 5 0 0 1-10 0V4zM17 5h3v2a3 3 0 0 1-3 3M7 5H4v2a3 3 0 0 0 3 3"/></svg></i><b>Leaderboard</b><small>top seasons</small></button>\n    <button id="v2zen"><i><svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M11 20A7 7 0 0 1 9.8 6.1C15.5 5 17 4.5 19 2c1 2 2 4.2 2 8 0 5.5-4.8 10-10 10z"/><path d="M2 21c0-3 1.9-5.4 5.2-6"/></svg></i><b>Zen mode</b><small>sit back</small></button>\n    <button id="v2colors"><i><svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="13.5" cy="6.5" r="1.2"/><circle cx="17.5" cy="10.5" r="1.2"/><circle cx="8.5" cy="7.5" r="1.2"/><circle cx="6.5" cy="12.5" r="1.2"/><path d="M12 2a10 10 0 0 0 0 20c1 0 1.7-.8 1.7-1.7 0-.5-.2-.9-.5-1.2-.3-.3-.4-.7-.4-1.1 0-.9.8-1.7 1.7-1.7h2A5.5 5.5 0 0 0 22 11c0-5-4.5-9-10-9z"/></svg></i><b>New colors</b><small>name &amp; brand</small></button>\n    <button id="v2rename"><i><svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 20h9M16.5 3.5a2.1 2.1 0 0 1 3 3L7 19l-4 1 1-4z"/></svg></i><b>Rename</b><small>make it yours</small></button>\n    <button id="v2fs"><i><svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M8 3H5a2 2 0 0 0-2 2v3M21 8V5a2 2 0 0 0-2-2h-3M3 16v3a2 2 0 0 0 2 2h3M16 21h3a2 2 0 0 0 2-2v-3"/></svg></i><b>Fullscreen</b><small>hide the browser</small></button>\n  </div>\n  <div class="name" id="v2nameRow" hidden><input id="v2name" maxlength="32" autocomplete="off" spellcheck="false" aria-label="Mill name"><button class="primary" id="v2nameOk">Save</button></div>\n  <div class="foot"><span id="v2ver"></span><span>Sound, labels and speed are in the top bar</span></div>\n</div></div>\n';
+const HTML_V2='<div class="v2top" id="v2top">\n  <button class="v2card v2ibtn" id="v2pause" aria-label="Pause and open the menu"><svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor"><rect x="5" y="4" width="5" height="16" rx="1.5"/><rect x="14" y="4" width="5" height="16" rx="1.5"/></svg></button>\n  <button class="v2card v2stats" id="v2stats" aria-expanded="false" aria-controls="v2more">\n    <span class="st mn"><small>Mill</small><b id="v2mill">–</b></span>\n    <span class="st"><small>Cash</small><b id="v2cash">–</b></span>\n    <span class="st"><small>Profit</small><b id="v2profit">–</b></span>\n    <span class="st"><small id="v2clockL">Time</small><b id="v2clock">–</b></span>\n    <span class="chev" aria-hidden="true"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"><path d="M6 9l6 6 6-6"/></svg></span>\n  </button>\n  <button class="v2card v2lbl" id="v2lblBtn" aria-pressed="true" title="Show or hide equipment labels"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 12V4h8l10 10-8 8L3 12z"/><circle cx="7.5" cy="8.5" r="1.4" fill="currentColor"/></svg><span>Labels</span></button>\n</div>\n<div class="v2card v2more" id="v2more">\n  <div class="v2grid">\n    <div><small>Production</small><b data-m="k-prod">–</b><em data-m="k-prod-s"></em></div>\n    <div><small>Reel speed</small><b data-m="k-speed">–</b><em data-m="k-speed-s"></em></div>\n    <div><small>Stock chest</small><b data-m="k-tank">–</b><em data-m="k-tank-s"></em></div>\n    <div><small>OCC bale yard</small><b data-m="k-yard">–</b><em data-m="k-yard-s"></em></div>\n    <div><small>Roll warehouse</small><b data-m="k-fg">–</b><em data-m="k-fg-s"></em></div>\n    <div><small>Cash detail</small><b data-m="k-cash">–</b><em data-m="k-cash-s"></em></div>\n  </div>\n  <div class="v2row">\n    <div class="v2speed"><button id="v2slow" aria-label="Slower">−</button><span id="v2speed">30 min/s</span><button id="v2fast" aria-label="Faster">+</button></div>\n    <label class="v2chk"><input type="checkbox" id="v2labels"> Labels</label>\n    <button id="v2sound">Sound off</button>\n  </div>\n</div>\n<div class="v2dock" id="v2dock">\n  <div id="v2jumpslot"></div>\n  <nav class="v2card v2tabs" aria-label="Panels">\n    <button data-tab="shop" aria-pressed="false"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 19V5M5 12l7-7 7 7"/></svg>Upgrades</button>\n    <button data-tab="chaos" aria-pressed="false"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3l9 16H3z"/><path d="M12 10v4M12 17v.5"/></svg>Upsets<span class="bdg" id="v2bdg" hidden>0</span></button>\n    <button data-tab="ctl" aria-pressed="false"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M4 7h10M18 7h2M4 17h4M12 17h8"/><circle cx="16" cy="7" r="2"/><circle cx="10" cy="17" r="2"/></svg>Controls</button>\n    <button data-tab="stats" aria-pressed="false"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 19h16M7 16V9M12 16V5M17 16v-4"/></svg>Stats</button>\n  </nav>\n</div>\n<div class="v2scrim" id="v2scrim"></div>\n<aside class="v2sheet" id="v2sheet" aria-hidden="true"><header><h2 id="v2sheetT">Upgrades</h2><button id="v2close" aria-label="Close panel">Close</button></header>\n  <div class="v2body">\n    <div class="v2pane" data-pane="shop"></div>\n    <div class="v2pane" data-pane="chaos"></div>\n    <div class="v2pane" data-pane="ctl"><div class="v2sub">Run the mill</div><div class="v2row" id="v2ctlrow"></div><div class="v2sub">Area controls</div></div>\n    <div class="v2pane" data-pane="stats"><div class="v2sub">Right now</div></div>\n  </div></aside>\n<div class="v2menu" id="v2menu"><div class="card" role="dialog" aria-modal="true" aria-labelledby="v2mt">\n  <div class="ttl"><i>⚙</i><div><small>The Paper Mill</small><b id="v2mt">Mill</b><div class="state" id="v2state"></div></div></div>\n  <p>Run a recycled paperboard mill from truck to warehouse. Old corrugated boxes arrive by the truckload, get pulped, cleaned and thickened, and your paper machine turns them into giant reels that the winder cuts into rolls for customers. Keep everything flowing, spend your profit on upgrades, and ride out upsets: breakdowns, fires, storms and the occasional pigeon.</p>\n  <button class="primary go" id="v2go"><b>Play</b><small>30-day season · leaderboard</small></button>\n  <div class="sub" id="v2sub" hidden>\n    <button id="v2season">New season<small>restart the 30 days</small></button>\n    <button id="v2reset" class="warn">Reset mill<small>start over</small></button>\n  </div>\n  <div class="opts">\n    <button id="v2free"><i><svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="8" width="18" height="4" rx="1"/><path d="M12 8v13M19 12v9H5v-9M7.5 8a2.5 2.5 0 0 1 0-5C11 3 12 8 12 8s1-5 4.5-5a2.5 2.5 0 0 1 0 5"/></svg></i><b>Free play</b><small>free upgrades</small></button>\n    <button id="v2board"><i><svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M8 21h8M12 17v4M7 4h10v5a5 5 0 0 1-10 0V4zM17 5h3v2a3 3 0 0 1-3 3M7 5H4v2a3 3 0 0 0 3 3"/></svg></i><b>Leaderboard</b><small>top seasons</small></button>\n    <button id="v2zen"><i><svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M11 20A7 7 0 0 1 9.8 6.1C15.5 5 17 4.5 19 2c1 2 2 4.2 2 8 0 5.5-4.8 10-10 10z"/><path d="M2 21c0-3 1.9-5.4 5.2-6"/></svg></i><b>Zen mode</b><small>sit back</small></button>\n    <button id="v2colors"><i><svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="13.5" cy="6.5" r="1.2"/><circle cx="17.5" cy="10.5" r="1.2"/><circle cx="8.5" cy="7.5" r="1.2"/><circle cx="6.5" cy="12.5" r="1.2"/><path d="M12 2a10 10 0 0 0 0 20c1 0 1.7-.8 1.7-1.7 0-.5-.2-.9-.5-1.2-.3-.3-.4-.7-.4-1.1 0-.9.8-1.7 1.7-1.7h2A5.5 5.5 0 0 0 22 11c0-5-4.5-9-10-9z"/></svg></i><b>New colors</b><small>name &amp; brand</small></button>\n    <button id="v2rename"><i><svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 20h9M16.5 3.5a2.1 2.1 0 0 1 3 3L7 19l-4 1 1-4z"/></svg></i><b>Rename</b><small>make it yours</small></button>\n    <button id="v2fs"><i><svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M8 3H5a2 2 0 0 0-2 2v3M21 8V5a2 2 0 0 0-2-2h-3M3 16v3a2 2 0 0 0 2 2h3M16 21h3a2 2 0 0 0 2-2v-3"/></svg></i><b>Fullscreen</b><small>hide the browser</small></button>\n  </div>\n  <div class="name" id="v2nameRow" hidden><input id="v2name" maxlength="32" autocomplete="off" spellcheck="false" aria-label="Mill name"><button class="primary" id="v2nameOk">Save</button></div>\n  <div class="foot"><span id="v2ver"></span><span>Sound, labels and speed are in the top bar</span></div>\n</div></div>\n';
 
 /* =========================== v2 app shell wiring =========================== */
 (function(){
@@ -5320,7 +5470,6 @@ const HTML_V2='<div class="v2top" id="v2top">\n  <button class="v2card v2ibtn" i
   stats.addEventListener("click",()=>{const o=!top.classList.contains("open");top.classList.toggle("open",o);stats.setAttribute("aria-expanded",String(o));});
   $$("v2slow").addEventListener("click",()=>$$("hud-slow").click());$$("v2fast").addEventListener("click",()=>$$("hud-fast").click());
   $$("v2sound").addEventListener("click",()=>$$("sound").click());
-  $$("v2dis").addEventListener("click",()=>$$("chaosRandom").click());
   // equipment labels: one toggle in the top bar (and the same checkbox in the expanded panel)
   const setLabels=v=>{const b=document.querySelector('#lblMode button[data-m="'+(v?"on":"off")+'"]');if(b)b.click();$$("v2labels").checked=v;$$("v2lblBtn").setAttribute("aria-pressed",String(v));$$("v2lblBtn").lastChild.textContent=v?"Labels":"Labels off";};
   $$("v2labels").addEventListener("change",e=>setLabels(e.target.checked));$$("v2lblBtn").addEventListener("click",()=>setLabels($$("v2lblBtn").getAttribute("aria-pressed")!=="true"));
