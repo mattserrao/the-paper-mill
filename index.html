@@ -517,7 +517,7 @@ body.season-lock label.check:has(#breaks),body.season-lock label.check:has(#hays
 </head>
 <body>
 
-<div class="ver" id="appVersion" aria-label="Version">v3.3.2</div>
+<div class="ver" id="appVersion" aria-label="Version">v3.3.3</div>
 <div class="wrap">
   <header>
     <div class="brand"><span class="logo" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linejoin="round"><circle cx="8.5" cy="12" r="5.5"/><circle cx="8.5" cy="12" r="1.6" fill="currentColor"/><path d="M8.5 6.5H20v11H8.5"/></svg></span>
@@ -987,6 +987,11 @@ function freqMul(id){let m=1;
   if(OUT.area[id])m*=outRel(OUT.area[id]);
   if(S&&S.fx)for(const f of S.fx){if(f.freq&&EV[id]&&(EV[id].g==="machine"||EV[id].g==="stock"))m*=f.freq;if(f.scab&&id==="slime")m*=f.scab;if(f.evf&&f.evf[id])m*=f.evf[id];}
   return m;}
+// v3.3.3: reliability of an outage area = 1 / its average breakdown rate, split into upgrades, outage budget and temporary events
+function areaRel(a){const ids=OUT.ev[a]||[];if(!ids.length)return {tot:1,up:1,out:1,fx:1};let up=0,fx=0;const out=outRel(a);
+  ids.forEach(id=>{let f=1;if(S&&S.fx)for(const x of S.fx){if(x.freq&&EV[id]&&(EV[id].g==="machine"||EV[id].g==="stock"))f*=x.freq;if(x.scab&&id==="slime")f*=x.scab;if(x.evf&&x.evf[id])f*=x.evf[id];}
+    fx+=f;up+=freqMul(id)/(out*f);});
+  up/=ids.length;fx/=ids.length;return {tot:1/(up*out*fx),up:1/up,out:1/out,fx:1/fx};}
 function durMul(id){let d=(id==="dryerfire"||id==="balefire")&&LV("fire")?0.5:1;if(MAINT.includes(id))d*=Math.pow(0.8,LV("maintcrew"))*(LV("stores")?0.75:1);return d;}
 function spend(v,k){if(S.free&&k==="upgrades"){S.ledger[k]+=0;return;}S.cash-=v;S.ledger[k]+=v;}
 function earn(v){S.cash+=v;S.ledger.rev+=v;}
@@ -1086,6 +1091,8 @@ function mods(){const m=baseMods();
   return m;}
 // any stop that takes the sheet off the reel (boiler trip, felt or fabric change, no stock...) must be followed by a full
 // rethread once the cause is fixed: the machine goes into a press-section break and the crew threads it back to the reel
+// v3.3.3: a small notice naming where the sheet broke: at the reel = dryers, before the dryers = presses, before the presses = wet end
+function brkNote(){const w={reel:"Dryers",dryer:"Presses",press:"Wet end"}[S.brkType]||"Dryers";BANNERS.push({text:`Sheet break - ${w}`,t:null,tag:"BREAK"});while(BANNERS.length>3)BANNERS.splice(1,1);}
 function rethread(why){S.pm="break";S.brkType="press";S.breakLeft=2*(26+Math.random()*20);S.breakTotal=S.breakLeft;enqueue("brk");log(`Rethreading the machine ${why}`,"warn");}
 function log(text,cls){S.feed.unshift({t:S.t,text,cls});if(S.feed.length>40)S.feed.pop();}
 function trigger(id,quiet){
@@ -1107,7 +1114,8 @@ function chaosTick(dt){
   for(const i of S.inc)if(i.left<=0&&EV[i.id].end)EV[i.id].end(i);
   for(const i of S.inc)if(i.left<=0)log(`${EV[i.id].name}: cleared, back to normal`,"ok");
   S.inc=S.inc.filter(i=>i.left>0);
-  const um=upsetMul();
+  // v3.3.3: two upsets already running make a third 75% less likely; back to normal once they clear
+  const um=upsetMul()*(S.inc.filter(i=>i.id!=="runner"&&i.id!=="birdhay").length>=2?0.25:1);
   if(CH.on&&um>0&&CH.en.chestover&&!active("chestover")&&S.tank>=P.tankCap*0.995&&Math.random()<dt/60/25)trigger("chestover");
   if(CH.on&&um>0&&!outOn())for(const e of EVENTS)if(CH.en[e.id]&&!active(e.id)&&Math.random()<dt/60/e.mtbf*CH.lvl*freqMul(e.id)*0.75*um)trigger(e.id);
   if(S.season&&S.season.on&&!S.season.rough&&S.t>=14*1440){S.season.rough=true;roughPatch();}
@@ -1679,7 +1687,7 @@ function step(dt){
     else if(S.reel>=P.jumbo&&reelsAtWinder()>P.storeReels){S.pm="spools";}
     else if(Math.random()<dt/390*0.25*P.breakBase*(outRel("wet")+outRel("dry"))/2*((C.breaks?P.gradeBrk:0)+(M.breakMul-1))){S.pm="break";const r=Math.random();S.brkType=r<0.45?"reel":r<0.8?"dryer":"press";
       S.breakLeft=2*(S.brkType==="reel"?4+Math.random()*6:S.brkType==="dryer"?12+Math.random()*14:26+Math.random()*20);S.breakTotal=S.breakLeft;S.tot.breaks++;enqueue("brk");AUDIO.sfx("snap",2500);
-      log(`Sheet break ${S.brkType==="reel"?"at the reel (short)":S.brkType==="dryer"?"before the dryers":"before the presses (long)"}`,"warn");}
+      log(`Sheet break ${S.brkType==="reel"?"at the reel (short)":S.brkType==="dryer"?"before the dryers":"before the presses (long)"}`,"warn");brkNote();}
     if(S.pm==="run"){
       prod=P.K*S.pmSpeed*g.bw*dt/60;
       const use=prod/P.pmLoss;
@@ -1822,6 +1830,10 @@ function buy(id){const u=UP[id],l=LV(id);if(l>=u.lv.length)return;const cost=u.l
   BANNERS.push({text:`${u.name}${u.lv.length>1?" level "+(l+1):""} is online.`,t:null,kind:"good"});while(BANNERS.length>3)BANNERS.splice(1,1);
   log(`Installed ${u.name}${u.lv.length>1?" level "+(l+1):""} (${money(cost)})`,"ok");updateShop();}
 const LEDGER=[["rev","Paper sales",1],["occ","OCC purchases",-1],["energy","Energy & chemicals",-1],["labor","Wages & robots",-1],["overhead","Mill overhead",-1],["repairs","Disaster repairs",-1],["premium","Insurance premium",-1],["upgrades","Upgrades bought",-1],["deals","Deals & trials",1]];
+function updateRel(){const rn=document.getElementById("relnow"),lg=$("ledger"),tg=rn||lg;if(rn)rn.replaceChildren();else{const h0=document.createElement("h3");h0.textContent="Reliability now";lg.appendChild(h0);}const pct=v=>(v>=0?"+":"")+Math.round(v*100)+"%";
+    [["stock","Stock prep"],["wet","Wet end"],["dry","Dry end"]].forEach(([a,n])=>{const r=areaRel(a),d=document.createElement("div"),sum=[r.up,r.out,r.fx].reduce((t,v)=>t+(Math.abs(v-1)>0.005?v-1:0),0);d.className="stat "+(sum>0.005?"pos":sum<-0.005?"neg":"");
+      const bits=[["upgrades",r.up],["outage budget",r.out],["events",r.fx]].filter(([,v])=>Math.abs(v-1)>0.005).map(([k,v])=>k+" "+pct(v-1));
+      d.innerHTML=`<span>${n}<small style="display:block;color:var(--muted);font-size:11.5px;font-weight:500">${bits.length?bits.join(" · "):"standard"}</small></span><b>${Math.abs(sum)<0.005?"–":pct(sum)}</b>`;tg.appendChild(d);});}
 function updateShop(){
   $("u-cash").textContent=money(S.cash);
   UGROUPS.forEach(([g])=>{const us=UPS.filter(u=>u.g===g),own=us.reduce((a,u)=>a+LV(u.id),0),tot=us.reduce((a,u)=>a+u.lv.length,0),can=us.filter(u=>LV(u.id)<u.lv.length&&(S.free||S.cash>=u.lv[LV(u.id)])).length;
@@ -1830,7 +1842,10 @@ function updateShop(){
     el.classList.toggle("max",max);el.querySelectorAll(".pips i").forEach((p,k)=>p.classList.toggle("on",k<l));
     if(max){b.disabled=true;b.textContent="Maxed";}
     else{const c=u.lv[l];b.disabled=!S.free&&S.cash<c;b.textContent=S.free?"Add (free play)":S.cash<c?`Need ${money(c)}`:`Buy ${money(c)}`;}});
-  const lg=$("ledger");lg.replaceChildren();const h=document.createElement("h3");h.textContent="Books since start";lg.appendChild(h);
+  const lg=$("ledger");lg.replaceChildren();
+  // v3.3.3: how reliable each section is right now, against a mill with no upgrades and a standard outage budget
+  updateRel();
+  const h=document.createElement("h3");h.textContent="Books since start";lg.appendChild(h);
   let net=0;LEDGER.forEach(([k,lab,sg])=>{const v=S.ledger[k]*sg;net+=v;if((k==="premium"||k==="repairs"||k==="deals")&&!S.ledger[k])return;
     const d=document.createElement("div");d.className="stat "+(v>=0?"pos":"neg");d.innerHTML=`<span>${lab}</span><b>${money(v)}</b>`;lg.appendChild(d);});
   const n=document.createElement("div");n.className="stat net "+(net>=0?"pos":"neg");n.innerHTML=`<span>Net</span><b>${money(net)}</b>`;lg.appendChild(n);
@@ -1839,7 +1854,10 @@ function updateShop(){
 }
 // random upsets run at half the original rate. Seasons script the pressure: a quiet start-up (days 1-3), normal running,
 // then a rough patch on days 15-16 at 4x the normal rate, then normal again to the end.
-function upsetMul(){const base=0.5;if(!(S.season&&S.season.on))return base;const d=Math.floor(S.t/1440)+1;if(d<=3)return 0;if(d===15||d===16)return base*4;return base;}
+function upsetMul(){const base=0.5,d=Math.floor(S.t/1440)+1;let m=base;
+  if(S.season&&S.season.on){if(d<=3)return 0;if(d===15||d===16)m=base*4;}
+  if(d<=7)m*=0.75;   // v3.3.3: the first week is 25% calmer (seasons and free play)
+  return m;}
 function roughPatch(){running=false;$("play").textContent="Run";$("play").setAttribute("aria-pressed","false");$("overlay").hidden=false;$("overlay").style.zIndex="160";AUDIO.sfx("alarm",100);
   $("ov-h").textContent="Rough patch";$("ov-p").textContent="The Mill is going through a rough patch. Batten down the hatches.";
   $("ov-a").textContent="Batten down";$("ov-b").hidden=true;$("ov-a").focus();log("Day 15: the mill hits a rough patch. Upsets are four times as likely for two days.","bad");}
@@ -1937,7 +1955,7 @@ function rcHTML(c){const p=c.p,s=c.s,pc=v=>Math.round(v*100)+"%",hrs=m=>(m/60).t
     <h3>Cost per ton <small>these 10 days · season so far</small></h3>
     ${row("Cost to make a ton",money(p.cpt),money(s.cpt))}${row("Selling price",money(p.price),money(s.price))}${row("Profit margin (before upgrades)",pc(p.margin),pc(s.margin))}
     ${row("Tons made",Math.round(p.prod).toLocaleString("en-US")+" t",Math.round(s.prod).toLocaleString("en-US")+" t")}
-    <h3>Downtime <small>biggest issues, these 10 days</small></h3>
+    <h3>Downtime <small>biggest issues, last 10 days</small></h3>
     ${p.dn.length?p.dn.map(([k,m],i)=>bar(k,m/maxDn,hrs(m),i===0)).join(""):`<p class="rcnone">Nothing went wrong. Remarkable.</p>`}
     <p class="rcnote">${p.breaks} sheet break${p.breaks===1?"":"s"} · ${p.hay} hayout${p.hay===1?"":"s"}${p.plan>0?` · ${hrs(p.plan)} planned outage (not counted)`:""}</p>
     <h3>Reliability <small>time each section was up</small></h3>
@@ -5262,6 +5280,7 @@ const G3={on:false,ok:false};
   const ROT={old:rotorModel(wornM,wornM),neu:rotorModel(shinyM,shinyM),pallet:null};
   ROT.pallet=box(2.6,0.18,2.6,woodM,0,0.09,0,scene);ROT.pallet.visible=false;
   const PAL=[12.6,-6.0],OLDR=[9.0,-6.0],PCX=16,PCZ=-13.5,MCP=[21,-4.6];
+  mcPark();   // v3.3.3: the mobile crane is always on site, parked beside the pulper
   const plateG=new CylG(0.75,0.75,0.05,22);
   function stack(x,z,m,n){const g=new THREE.Group();g.position.set(x,0,z);g.visible=false;scene.add(g);box(1.7,0.15,1.7,woodM,0,0.075,0,g);
     const ps=[];for(let k=0;k<n;k++){const p=new THREE.Mesh(plateG,m);p.position.y=0.18+k*0.06;p.rotation.y=k*0.7;g.add(p);ps.push(p);}g.userData.ps=ps;return g;}
@@ -5329,13 +5348,13 @@ const G3={on:false,ok:false};
     // two techs sling and guide each lift from the tending-side aisle, clear of the felt crew
     if(f<0.62){const a=tech(4,"hall"),b=tech(5,"hall"),pick=hook&&hook.z>13;const bx=pick?hook.x:46.5;
       go(a,bx-3.9,16.25,pick?"fix":"look",hook?hook.x:37,hook?hook.z:zc,rdt,now);go(b,bx+3.9,16.25,pick?"fix":"point",hook?hook.x:37,hook?hook.z:zc,rdt,now);}}
+  // parked: beside the pulper, boom stowed, outriggers in
+  function mcPark(){MCm.visible=true;MCm.position.set(MCP[0],0,MCP[1]);MCm.rotation.y=0;mcTurret.rotation.y=0;mcBoom.rotation.z=0.04;mcBoom.userData.b.scale.x=4.6;mcBoom.userData.fly.scale.x=6.8;
+    mcOut.forEach(g=>{g.position.z=g.userData.s*1.0;const lg=g.children[1],pd=g.children[2];lg.scale.y=0.3;lg.position.y=-0.425*0.3;pd.position.y=-0.85*0.3-0.03;});}
   function job3(f,rdt,now){// pulper rotor change with a mobile crane
     MCm.visible=true;
-    // the crane truck comes round the fog-fan house along the back road, parks by the pulper, and leaves the same way
-    const din=sst(seg(f,0.0,0.08)),dout=sst(seg(f,0.9,0.98));let tx,tz;
-    if(f<0.5){tx=din<0.6?lrp(46,27,din/0.6):lrp(27,MCP[0],(din-0.6)/0.4);tz=din<0.6?-2.2:lrp(-2.2,MCP[1],sst((din-0.6)/0.4));}
-    else{tx=dout<0.4?lrp(MCP[0],27,dout/0.4):lrp(27,46,(dout-0.4)/0.6);tz=dout<0.4?lrp(MCP[1],-2.2,sst(dout/0.4)):-2.2;}
-    MCm.position.set(tx,0,tz);MCm.rotation.y=(din>0.6&&din<1?-0.25*Math.sin(Math.PI*(din-0.6)/0.4):0)+(dout>0&&dout<0.4?-0.25*Math.sin(Math.PI*dout/0.4):0);
+    // v3.3.3: the crane truck lives beside the pulper (it used to drive in past the fog fan and clip it); it just sets up where it is
+    MCm.position.set(MCP[0],0,MCP[1]);MCm.rotation.y=0;
     const outr=sst(seg(f,0.08,0.11))*(1-sst(seg(f,0.86,0.9)));
     mcOut.forEach(g=>{g.position.z=g.userData.s*(1.0+outr*1.3);const lg=g.children[1],pd=g.children[2],k=0.3+0.7*outr;lg.scale.y=k;lg.position.y=-0.425*k;pd.position.y=-0.85*k-0.03;});
     // drain and refill
@@ -5382,7 +5401,7 @@ const G3={on:false,ok:false};
     else goR(b,fx,fz+0.55,"fix",d.x,fz,rdt,now,6);}
   const d0x=()=>REF_DOORS.length?REF_DOORS[0].x:60.6;
   function outageReset(){press[0].visible=press[1].visible=true;Object.values(R1).forEach(r=>r.visible=false);cradT.forEach(c=>c.visible=false);cradD.forEach(c=>c.visible=false);
-    hcSet(62,9.6,8.6,0,false);MCm.visible=mcHook.visible=mcCable.visible=false;ROT.old.visible=ROT.neu.visible=ROT.pallet.visible=false;pulpStock.position.y=2.9;rotor.visible=true;
+    hcSet(62,9.6,8.6,0,false);mcHook.visible=mcCable.visible=false;mcPark();ROT.old.visible=ROT.neu.visible=ROT.pallet.visible=false;pulpStock.position.y=2.9;rotor.visible=true;
     STK.neu.visible=STK.used.visible=false;carryP.forEach(m=>m.visible=false);REF_DOORS.forEach(d=>{d.door.rotation.y=0;d.face.visible=false;});}
   let ovActive=false;
   function outageVis(rdt,now){const f=outPhase(),o=S.outg;OV.crew.forEach(w=>{if(w)w.userData.used=false;});OV.ropes.forEach(m=>m.visible=false);
@@ -5758,7 +5777,7 @@ $("slcClose").addEventListener("click",()=>$("slice").hidden=true);
   const g=G3.SLC.geo();if(g.lipX-g.wet>=6.8)slcBreak();drawSlice();}));
 // v3.2.0: run the jet out to the couch and the sheet breaks; the wet-end operator comes over and puts the slice back
 function slcBreak(){if(G3.slcFix)return;G3.slcFix={i:0,ph:"swear",t:0};
-  if(S.pm==="run"){S.pm="break";S.brkType="press";S.breakLeft=2*(26+Math.random()*20);S.breakTotal=S.breakLeft;S.tot.breaks++;enqueue("brk");AUDIO.sfx("snap",2500);}
+  if(S.pm==="run"){S.pm="break";S.brkType="press";S.breakLeft=2*(26+Math.random()*20);S.breakTotal=S.breakLeft;S.tot.breaks++;enqueue("brk");AUDIO.sfx("snap",2500);brkNote();}
   log("Sheet break! The slice was opened so far the wet line ran off the former. The wet-end operator is resetting it.","bad");
   ["slcV","slcH","slcReset"].forEach(id=>$(id).disabled=true);}
 G3.onSlcReset=()=>{["slcV","slcH","slcReset"].forEach(id=>$(id).disabled=false);$("slcV").value=0;$("slcH").value=0;log("Slice reset to standard. Wet line is back where it belongs.","ok");drawSlice();};
@@ -5808,6 +5827,8 @@ const HTML_V2='<div class="v2top" id="v2top">\n  <button class="v2card v2ibtn" i
   const sh=$$("viewShadows").closest("label");$$("v2ctlrow").appendChild(sh);$$("v2ctlrow").appendChild($$("viewReset"));
   pane("ctl").appendChild($$("cards"));
   pane("stats").appendChild(document.querySelector(".kpis"));
+  // v3.3.3: reliability of each section right now (upgrades, outage budget and events), filled in by the ledger render
+  {const rs=document.createElement("div");rs.className="v2sub";rs.textContent="Reliability now";const rn=document.createElement("div");rn.id="relnow";rn.className="ledger";pane("stats").append(rs,rn);}
   const tsub=document.createElement("div");tsub.className="v2sub";tsub.textContent="Last 24 hours";pane("stats").appendChild(tsub);
   pane("stats").appendChild(document.querySelector(".trendbox"));
   // ---- v3.1.0 flow & bottleneck: the mill as a river. Each step is drawn as wide as its capacity (tons of paper per hour);
@@ -5845,7 +5866,7 @@ const HTML_V2='<div class="v2top" id="v2top">\n  <button class="v2card v2ibtn" i
   function sheetPause(){if(cur||sheetHeld||!running)return;sheetHeld=true;running=false;$$("play").textContent="Run";$$("play").setAttribute("aria-pressed","false");}
   function sheetResume(){if(!sheetHeld)return;sheetHeld=false;const ov=$$("overlay"),blocked=!$$("v2menu").hidden||(G3.tut&&G3.tut.on)||(S.cards&&S.cards.open)||(ov&&!ov.hidden)||S.over;
     if(blocked)return;running=true;$$("play").textContent="Pause";$$("play").setAttribute("aria-pressed","true");}
-  function openTab(k){sheetPause();cur=k;if(k==="stats")setTimeout(()=>flowTick&&flowTick(),0);tabs.forEach(b=>b.setAttribute("aria-pressed",String(b.dataset.tab===k)));document.querySelectorAll(".v2pane").forEach(p=>p.classList.toggle("on",p.dataset.pane===k));
+  function openTab(k){sheetPause();cur=k;if(k==="stats")setTimeout(()=>{flowTick&&flowTick();updateRel();},0);tabs.forEach(b=>b.setAttribute("aria-pressed",String(b.dataset.tab===k)));document.querySelectorAll(".v2pane").forEach(p=>p.classList.toggle("on",p.dataset.pane===k));
     $$("v2sheetT").textContent=TITLES[k];sheet.classList.add("open");sheet.setAttribute("aria-hidden","false");document.body.classList.add("sheet-open");closeMore();}
   function closeSheet(why){const was=!!cur;cur=null;tabs.forEach(b=>b.setAttribute("aria-pressed","false"));sheet.classList.remove("open");sheet.setAttribute("aria-hidden","true");document.body.classList.remove("sheet-open");
     if(why==="menu")sheetHeld=false;else if(was)sheetResume();}
@@ -5972,7 +5993,7 @@ function frame(now){
       if(G3.on&&G3.frame)G3.frame(running?rdt:0);}
     uiAcc+=rdt;if(uiAcc>0.2){uiAcc=0;try{AUDIO.update(running&&!S.zen&&(S.inc.length>0||S.wd==="hayout"));}catch(_){}
       const uT=performance.now();syncControls();updateText();
-      if(paneShown($("chaosSec")))updateChaos();if(paneShown($("shopSec")))updateShop();if(paneShown($("trend")))drawTrend();
+      if(paneShown($("chaosSec")))updateChaos();if(paneShown($("shopSec")))updateShop();{const rn=document.getElementById("relnow");if(rn&&rn.offsetParent)updateRel();}if(paneShown($("trend")))drawTrend();
       if(PFo&&PFo.on)PFo.acc["UI panels (5x/s)"]=(PFo.acc["UI panels (5x/s)"]||0)+(performance.now()-uT);}}
   catch(e){if(!frame.errs)frame.errs=0;if(frame.errs++<5)console.error("frame error",e);}
   if(PFo&&PFo.on){const d=performance.now()-fT0;PFo.js.push(d);}
