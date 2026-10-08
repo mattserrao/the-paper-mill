@@ -503,7 +503,7 @@ body.season-lock label.check:has(#breaks),body.season-lock label.check:has(#hays
 </head>
 <body>
 
-<div class="ver" id="appVersion" aria-label="Version">v3.2.1</div>
+<div class="ver" id="appVersion" aria-label="Version">v3.2.2</div>
 <div class="wrap">
   <header>
     <div class="brand"><span class="logo" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linejoin="round"><circle cx="8.5" cy="12" r="5.5"/><circle cx="8.5" cy="12" r="1.6" fill="currentColor"/><path d="M8.5 6.5H20v11H8.5"/></svg></span>
@@ -1040,6 +1040,10 @@ const RESP={ragger:6,wrap:4,hay:4,brk:2,dryerfire:3,shaft:8,fabric:6,felt:6,slim
 function enqueue(k){if(!S.crewQ)S.crewQ=[];if(S.crewQ.some(q=>q.k===k))return;S.crewQ.push({k,resp:RESP[k]||6,since:0,here:false,go:false});}
 function crewTick(dt){if(!S.crewQ)S.crewQ=[];
   S.crewQ=S.crewQ.filter(q=>q.k==="hay"?S.wd==="hayout":q.k==="brk"?S.pm==="break":active(q.k));
+  // v3.2.2: the paper machine comes first. Winder jobs (hayouts, winder down) wait behind any machine job, including the rethread,
+  // and if a machine job turns up while the crew is at the winder they leave it and come back to the winder afterwards
+  {const WIND=k=>k==="hay"||k==="winderdown",prev=S.crewQ[0];S.crewQ.sort((a,b)=>(WIND(a.k)?1:0)-(WIND(b.k)?1:0));
+   if(prev&&S.crewQ[0]!==prev&&WIND(prev.k)){prev.go=false;prev.here=false;prev.since=0;}}
   const h=S.crewQ[0];if(!h)return;const now=performance.now();if(!h.since)h.since=now;
   if(h.resp>0)h.resp-=dt;
   // in the 3D view the job starts when the crew actually gets there (with a safety timeout)
@@ -3287,7 +3291,9 @@ const G3={on:false,ok:false};
   function feltLoop(pts,lm=feltMat){const P2=[...pts,pts[0]],pos=[],uv=[],idx=[];let acc=0;
     P2.forEach((p,i)=>{if(i)acc+=Math.hypot(p[0]-P2[i-1][0],p[1]-P2[i-1][1]);pos.push(p[0],p[1],-(CD-0.2),p[0],p[1],0);uv.push(acc/2.5,0,acc/2.5,1);if(i){const b=(i-1)*2;idx.push(b,b+1,b+2,b+1,b+3,b+2);}});
     const g=new THREE.BufferGeometry();g.setAttribute("position",new THREE.Float32BufferAttribute(pos,3));g.setAttribute("uv",new THREE.Float32BufferAttribute(uv,2));g.setIndex(idx);g.computeVertexNormals();
-    const m=new THREE.Mesh(g,lm);m.position.z=zc+CD/2-0.1;m.castShadow=true;m.receiveShadow=true;scene.add(m);return m;}
+    const m=new THREE.Mesh(g,lm);m.position.z=zc+CD/2-0.1;m.castShadow=true;m.receiveShadow=true;scene.add(m);
+    {const acc2=[0];for(let i=1;i<P2.length;i++)acc2.push(acc2[i-1]+Math.hypot(P2[i][0]-P2[i-1][0],P2[i][1]-P2[i-1][1]));m.userData.path={pts:P2,acc:acc2,L:acc2[acc2.length-1],segs:P2.length-1};}
+    return m;}
   // forming fabric (wire) loop over the table and around the breast and couch rolls
   const wireMat=mat("g-wire",{map:feltTex,side:THREE.DoubleSide,roughness:0.55});
   const wireLoop=feltLoop([[40.9,2.93],[54.6,2.93],[55.05,2.4],[54.6,1.87],[40.9,1.87],[40.45,2.4]],wireMat);
@@ -3855,14 +3861,30 @@ const G3={on:false,ok:false};
     {const tg=new CylG(0.42,0.42,TL-0.4,18);tg.rotateZ(Math.PI/2);const tb=new THREE.Mesh(tg,CLOTH_TUBE);tb.castShadow=true;tube.add(tb);tube.userData.roll=tb;
       [-TL/2+0.12,TL/2-0.12].forEach(px=>{box(0.22,1.05,1.05,M.kraft,px,0,0,tube);});
       [-0.42,0.42].forEach(pz=>box(TL,0.16,0.16,M.kraft,0,-0.47,pz,tube,false));[-TL/4,0,TL/4].forEach(px=>box(0.12,1.0,1.0,M.kraft,px,0,0,tube,false));}
+    // v3.2.2 press felts: a felt roll per felt run, and the seam line that is pinned across the machine
+    const FR=id==="felt"?loops.map(m=>{const rg=new CylG(1,1,CD-0.2,18);rg.rotateX(Math.PI/2);const r=new THREE.Mesh(rg,hm);r.castShadow=true;r.visible=false;g.add(r);
+      const core=cylZ(0.17,CD+0.3,M.kraft,0,0,0,10,g);core.visible=false;const sm=box(0.18,0.09,1,new THREE.MeshBasicMaterial({color:0xfff6dc}),0,0,0,g,false);sm.visible=false;return {m,r,core,sm};}):null;
+    const pathAt=(P,u)=>{const d=u*P.L;let i=1;while(i<P.acc.length-1&&P.acc[i]<d)i++;const a=P.pts[i-1],b=P.pts[i],t=(d-P.acc[i-1])/Math.max(1e-6,P.acc[i]-P.acc[i-1]);return [a[0]+(b[0]-a[0])*t,a[1]+(b[1]-a[1])*t,i-1+t];};
+    const feltInstall=(f)=>{const ss=v=>v*v*(3-2*v);let ph,u=0,sl=0,sea=0;
+      if(f<0.67){ph="roll";sl=ss((f-0.62)/0.05);}else if(f<0.88){ph="unroll";u=ss((f-0.67)/0.21);sl=1;}else{ph="seam";u=1;sl=1;sea=Math.min(1,(f-0.88)/0.08);}
+      FR.forEach(({m,r,core,sm},k)=>{const P=m.userData.path;m.scale.z=1;
+        // new felt appears behind the roll as it travels round the run
+        if(ph==="roll"){m.visible=false;}else{m.visible=true;const [, ,seg]=pathAt(P,Math.min(1,u));m.geometry.setDrawRange(0,u>=0.999?Infinity:Math.max(6,Math.floor(seg)*6+6));}
+        const [px,py]=pathAt(P,Math.min(0.999,u)),rad=0.55-0.36*u,zIn=zc+(1-sl)*(CD+2.5);
+        const rv=ph!=="seam";r.visible=core.visible=rv;if(rv){r.scale.set(rad,rad,1);r.position.set(px,py+rad*0.9,zIn);core.position.set(px,py+rad*0.9,zIn);r.rotation.z=-u*P.L/0.4;}
+        // seam: pinned from the tending side across to the drive side, then the line fades into the felt
+        const s0=P.pts[0];sm.visible=ph==="seam"&&sea<1;if(sm.visible){const len=Math.max(0.02,sea*(CD-0.2));sm.scale.z=len;sm.position.set(s0[0],s0[1]+0.06,zc+CD/2-0.1-len/2);}});
+      return ph;};
     return (now,rdt,f)=>{const J=JOBS[id]||(JOBS[id]={});J.t=now;J.x=x;J.hz=HZ;
       const ss=v=>v*v*(3-2*v);let cov=0,hs=1;tube.visible=f>=0.44;
       if(f<0.16){const k=f/0.16;cov=1-ss(k);hs=Math.max(0.02,ss(k));J.ph="run";if(Math.random()<rdt*14)emit("chip",x+R()*5,2+Math.random()*2,zc+CD/2+0.4,R(),1+Math.random(),2+Math.random()*2,0.8,0.22,"#ffffff",0.8);}
       else if(f<0.44){J.ph="bare";}
-      else if(f<0.64){const k=ss((f-0.44)/0.2);J.ph="carry";J.tube=[x+20-20*k,16.2];tube.position.set(J.tube[0],1.55,J.tube[1]);tube.userData.roll.scale.set(1,1,1);}
+      else if(FR&&f>=0.62){tube.visible=false;J.ph=feltInstall(f);J.tube=[x,16.2];cov=1;if(f>0.86)hs=Math.max(0.02,1-(f-0.86)/0.12);heap.scale.setScalar(hs);heap.visible=hs>0.03;J.id=id;J.cov=1;return;}
+      else if(f<(FR?0.62:0.64)){const k=ss((f-0.44)/(FR?0.18:0.2));J.ph="carry";J.tube=[x+20-20*k,16.2];tube.position.set(J.tube[0],1.55,J.tube[1]);tube.userData.roll.scale.set(1,1,1);}
       else{const k=Math.min(1,(f-0.67)/0.27);J.ph=f<0.67?"set":"install";J.tube=[x,16.2];tube.position.set(x,0.6,16.2);cov=ss(Math.max(0,k));
         tube.userData.roll.scale.set(1,1-0.65*cov,1-0.65*cov);if(f>0.86)hs=Math.max(0.02,1-(f-0.86)/0.12);}
       heap.scale.setScalar(hs);heap.visible=hs>0.03;
+      if(FR)FR.forEach(o=>{o.r.visible=o.core.visible=o.sm.visible=false;o.m.geometry.setDrawRange(0,Infinity);});
       J.id=id;J.cov=cov;loops.forEach(m=>{m.scale.z=Math.max(0.002,cov);m.visible=cov>0.004;});};}
   // the cloth change plays on its own clock (at least ~16 s) so it reads at any sim speed
   const CLOTH={fabric:{g:new THREE.Group(),ep:null},felt:{g:new THREE.Group(),ep:null}};
@@ -3870,7 +3892,7 @@ const G3={on:false,ok:false};
   for(const id in CLOTH){CLOTH[id].g.visible=false;scene.add(CLOTH[id].g);}
   function clothTick(now,rdt){for(const id in CLOTH){const c=CLOTH[id],inc=S.inc.find(i=>i.id===id),of=!inc&&G3.outCloth?G3.outCloth(id):null;
       if(of!=null){c.g.visible=true;c.ep=c.ep||{inc:-1,t0:now};c.up(now,rdt,Math.min(0.999,of));continue;}
-      if(!inc){c.ep=null;c.g.visible=false;continue;}
+      if(!inc){if(c.ep&&id==="felt")feltMeshes.forEach(m=>{m.geometry.setDrawRange(0,Infinity);m.scale.z=1;m.visible=true;});c.ep=null;c.g.visible=false;continue;}
       if(!c.ep||c.ep.inc!==inc.real)c.ep={inc:inc.real,t0:now};
       const f=inc.go?0.16+0.84*(1-inc.left/inc.total):Math.min(0.16,(now-c.ep.t0)/2500*0.16);
       c.g.visible=true;c.up(now,rdt,Math.min(0.999,f));}}
@@ -4359,7 +4381,7 @@ const G3={on:false,ok:false};
           else if(job.ph==="carry"&&job.id==="fabric"){gx=job.tube[0]+(r?2.7:-2.7);gz=job.tube[1]+(r?0.75:-0.75);act="haul";}
           else if(job.ph==="carry"){gx=job.tube[0]-2.4+r*1.6;gz=job.tube[1]+(r%2?0.75:-0.75);act="haul";}
           else if(job.ph==="set"){gx=job.tube[0]-2.4+r*1.6;gz=job.tube[1]+(r%2?0.9:-0.9);act="clean";lx=job.x;lz=job.tube[1];}
-          else{gx=job.x-2.7+r*1.8;gz=13.25;act="rethread";lx=gx;lz=zc;}
+          else{gx=job.x-2.7+r*1.8;gz=13.25;act=job.ph==="seam"?"fix":"rethread";lx=gx;lz=zc;}
           const arrived=moveP(w,gx,gz,job.ph==="carry"?12:9,rdt);
           if(job.ph==="carry"){if(arrived)w.rotation.y=Math.PI;pose(w,arrived?"haul":"run",now);}
           else{if(arrived&&lx!==undefined)face(w,lx,lz,rdt);pose(w,arrived?act:"run",now);}return;}}
@@ -5031,7 +5053,7 @@ const G3={on:false,ok:false};
       else if(job.ph==="carry"&&job.id==="fabric"){gx=job.tube[0]+(r?2.7:-2.7);gz=job.tube[1]+(r?0.75:-0.75);act="haul";}
       else if(job.ph==="carry"){gx=job.tube[0]-2.4+r*1.6;gz=job.tube[1]+(r%2?0.75:-0.75);act="haul";}
       else if(job.ph==="set"){gx=job.tube[0]-2.4+r*1.6;gz=job.tube[1]+(r%2?0.9:-0.9);act="clean";lx=job.x;lz=job.tube[1];}
-      else{gx=job.x-2.7+r*1.8;gz=13.25;act="rethread";lx=gx;lz=zc;}
+      else{gx=job.x-2.7+r*1.8;gz=13.25;act=job.ph==="seam"?"fix":"rethread";lx=gx;lz=zc;}
       const arrived=moveP(w,gx,gz,job.ph==="carry"?12:9,rdt);
       if(job.ph==="carry"){if(arrived)w.rotation.y=Math.PI;pose(w,arrived?"haul":"run",now);}
       else{if(arrived&&lx!==undefined)face(w,lx,lz,rdt);pose(w,arrived?act:"run",now);}});}
