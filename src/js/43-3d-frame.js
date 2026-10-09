@@ -200,13 +200,14 @@
     if(PF.on){PF.calls=(PF.calls||0)+renderer.info.render.calls;PF.tris=(PF.tris||0)+renderer.info.render.triangles;}
     pm("RENDER (three.js draw submission)");
     // labels follow the 3D anchors
-    const w=host.clientWidth,hh=host.clientHeight,doText=now-lastLabel>200;if(doText)lastLabel=now;
+    const w=G3.vw||host.clientWidth,hh=G3.vh||host.clientHeight,doText=now-lastLabel>200;if(doText)lastLabel=now;
     LABELS.forEach(L=>{tmp.copy(L.v).project(camera);const vis=tmp.z<1&&Math.abs(tmp.x)<1.05&&Math.abs(tmp.y)<1.05;if(L.el.hidden===vis)L.el.hidden=!vis;
       if(!vis)return;const tf=`translate(${Math.round((tmp.x+1)/2*w)}px,${Math.round((1-tmp.y)/2*hh)}px) translate(-50%,-100%)`;if(L.tf!==tf){L.tf=tf;L.el.style.transform=tf;}
-      if(doText){const [a,b]=L.t();L.b.textContent=a;L.s.textContent=b;L.el.classList.toggle("bad",!!(L.cls&&L.cls()));}});
+      if(doText){const [a,b]=L.t();if(L.ta!==a){L.ta=a;L.b.textContent=a;}if(L.tb!==b){L.tb=b;L.s.textContent=b;}const bad=!!(L.cls&&L.cls());if(L.bad!==bad){L.bad=bad;L.el.classList.toggle("bad",bad);}}});
     pm("3D labels");
     // headline + active incidents
-    if(doText){const b=BANNERS[0];banner.hidden=!b;if(b){banner.className="banner3d "+(b.kind==="good"?"good":"");banner.querySelector("span").textContent=b.tag||(b.kind==="good"?"INSTALLED":"BREAKING");banner.querySelector("b").textContent=b.text;}
+    if(doText){const b=BANNERS[0];if(banner.hidden!==!b)banner.hidden=!b;if(b){const cn="banner3d "+(b.kind==="good"?"good":""),tg=b.tag||(b.kind==="good"?"INSTALLED":"BREAKING");
+      if(banner.className!==cn)banner.className=cn;if(banner._tg!==tg){banner._tg=tg;banner.querySelector("span").textContent=tg;}if(banner._tx!==b.text){banner._tx=b.text;banner.querySelector("b").textContent=b.text;}}
       const ck=S.inc.map(i=>i.id).join("|");if(ck!==chips.dataset.k){chips.dataset.k=ck;chips.replaceChildren(...S.inc.map(i=>{const c=document.createElement("button");c.type="button";c.dataset.id=i.id;c.textContent=EV[i.id].name;c.title="Show "+EV[i.id].name;return c;}));}
       banner.classList.toggle("go",!!(b&&b.id&&G3.spotOf(b.id)));}
   ;pm("HUD text");};

@@ -116,7 +116,7 @@
     const freeze=performance.now()-SM.t0>10000;
     SM.list=SM.list.filter(r=>{if(smSame(r)&&!(r.shared&&!colorSame(r.o.material,r.bm.material))){if(freeze&&(r.bm||r.key))smFreeze(r);return true;}
       smThaw(r);
-      if(r.shadow){r.o.castShadow=true;SH.dirty=true;}
+      if(r.shadow){r.o.castShadow=true;r.shadow=false;if(!shDrop(r))SH.dirty=true;}   // v4.0.1: cut it out of the proxy instead of rebuilding it
       if(r.bm){r.bm.setVisibleAt(r.iid,false);r.o.layers.set(0);SM.dyn.add(r.o);SM.handedBack++;return false;}
       if(r.single||r.proxyOnly){SM.dyn.add(r.o);SM.handedBack++;return false;}
       if(r.o.layers.mask===1&&!r.key)return true;
@@ -142,7 +142,7 @@
     parts.forEach((L,k)=>{if(!L.length)return;let nv=0,ni=0;
       for(const r of L){const g=r.o.geometry;nv+=g.attributes.position.count;ni+=g.index?g.index.count:g.attributes.position.count;}
       const pos=new Float32Array(nv*3),idx=new Uint32Array(ni);let vo=0,io=0;
-      for(const r of L){const g=r.o.geometry,P=g.attributes.position,I=g.index,mw=r.o.matrixWorld,flip=mw.determinant()<0,n=I?I.count:P.count;
+      for(const r of L){const g=r.o.geometry,P=g.attributes.position,I=g.index,mw=r.o.matrixWorld,flip=mw.determinant()<0,n=I?I.count:P.count;r.shK=SH.meshes.length;r.shV0=vo;r.shVN=P.count;
         const e=mw.elements,A=P.array,st=P.isInterleavedBufferAttribute?P.data.stride:3,of=P.isInterleavedBufferAttribute?P.offset:0;
         for(let i=0;i<P.count;i++){const j=i*st+of,x=A[j],y=A[j+1],z=A[j+2],w=1/(e[3]*x+e[7]*y+e[11]*z+e[15]),k=(vo+i)*3;
           pos[k]=(e[0]*x+e[4]*y+e[8]*z+e[12])*w;pos[k+1]=(e[1]*x+e[5]*y+e[9]*z+e[13])*w;pos[k+2]=(e[2]*x+e[6]*y+e[10]*z+e[14])*w;}
@@ -150,8 +150,13 @@
         else for(let q=0;q<n;q++)idx[io+q]=vo+(I?I.getX(q):q);vo+=P.count;io+=n;}
       const geo=new THREE.BufferGeometry();geo.setAttribute("position",new THREE.BufferAttribute(pos,3));geo.setIndex(new THREE.BufferAttribute(idx,1));
       const m=new THREE.Mesh(geo,SH.mat[k]);m.castShadow=true;m.receiveShadow=false;m.frustumCulled=false;m.matrixAutoUpdate=false;m.visible=false;
-      m.userData.smBatch=true;m.name="shadow proxy";scene.add(m);SH.meshes.push(m);});
+      m.userData.smBatch=true;m.userData.rev=SH.builds;m.name="shadow proxy";scene.add(m);SH.meshes.push(m);});
     renderer.shadowMap.needsUpdate=true;}
+  // v4.0.1: an object that starts moving casts its own shadow, so its triangles leave the proxy. Collapsing its vertices
+  // to the origin (zero-area triangles) uploads only that range; rebuilding the whole proxy cost a long frame each time
+  function shDrop(r){const m=SH.meshes[r.shK];if(r.shK==null||!m||m.userData.rev!==SH.builds)return false;
+    const a=m.geometry.attributes.position,i0=r.shV0*3,i1=i0+r.shVN*3;a.array.fill(0,i0,i1);
+    a.addUpdateRange(i0,i1-i0);a.needsUpdate=true;r.shK=null;renderer.shadowMap.needsUpdate=true;SH.drops=(SH.drops||0)+1;return true;}
   function smTick(now){if(SM.off)return;
     if(!SM.t0){SM.t0=now;try{scene.updateMatrixWorld(true);smSnapshot();smMerge();}
       catch(e){console.error("scenery batching failed",e);SM.off=true;SM.done=true;SM.list.forEach(r=>{r.o.layers.set(0);if(r.bm)r.bm.visible=false;});}return;}
