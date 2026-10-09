@@ -1,0 +1,8 @@
+node_modules/
+tools/t186/
+tools/node_modules/
+__pycache__/
+*.pyc
+scorecard-*.json
+result-*.json
+build/
