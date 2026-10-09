@@ -1,0 +1,163 @@
+</style>
+</head>
+<body class="app">
+<div class="view3d" id="view3d"><div aria-hidden="true" class="zenfx" id="zenFx"><b></b><i></i></div><button class="zenexit" hidden id="zenExit">Leave zen mode</button><canvas aria-label="3D view of the mill. Arrow keys move, Q and E rotate, plus and minus zoom." id="gl" tabindex="0"></canvas><div aria-label="Move the view" class="pad" id="pad"><button aria-label="Move up" data-p="0,-1">▲</button><button aria-label="Move left" data-p="-1,0">◀</button><button aria-label="Move right" data-p="1,0">▶</button><button aria-label="Move down" data-p="0,1">▼</button></div><div id="labels3d"></div><div class="banner3d" hidden id="banner3d"><span></span><b></b></div><div class="chips3d" id="chips3d"></div><div class="flash3d" id="flash3d"></div><div aria-labelledby="bri-h" class="spider" hidden id="brian" role="dialog"><div class="spih"><b id="bri-h">Uncle Brian</b><span>night shift · floor scrubber</span><button aria-label="Close" id="briClose">✕</button></div><div id="briTxt" style="font-size:13px;line-height:1.4"></div><button class="primary" id="briGo" style="align-self:flex-start">Follow him</button></div><div aria-labelledby="slc-h" class="spider" hidden id="slice" role="dialog"><div class="spih"><b id="slc-h">Headbox slice</b><span>L/B gauge · tending side</span><button aria-label="Close" id="slcClose">✕</button></div><canvas height="400" id="slcT" width="600"></canvas><label class="spis">Vertical<input aria-label="Vertical slice" id="slcV" max="100" min="-100" type="range" value="0"/><b id="slcVv">B 12.0 mm</b></label><label class="spis">Horizontal<input aria-label="Horizontal slice" id="slcH" max="100" min="-100" type="range" value="0"/><b id="slcHv">L 0.0 mm</b></label><div class="spir"><div><small>Jet lands</small><b id="slcJ">–</b></div><div><small>Wet line from headbox</small><b id="slcW">–</b></div></div><p class="spin" id="slcNote"></p><button class="reroll" id="slcReset">Reset to standard</button></div><div aria-labelledby="spi-h" class="spider" hidden id="spider" role="dialog"><div class="spih"><b id="spi-h">Spider valve</b><span>disk thickener filtrate split</span><button aria-label="Close" id="spiClose">✕</button></div>
+<label class="spis"><span>Clear</span><input id="spiV" max="70" min="10" type="range" value="35"/><span>Cloudy</span></label>
+<div class="spir"><div><i style="background:#8a6644"></i>Cloudy <b id="spiTc">–</b><small id="spiQc"></small></div><div><i style="background:#3fa0d0"></i>Clear <b id="spiTl">–</b><small id="spiQl"></small></div></div>
+<canvas height="220" id="spiT" width="560"></canvas><p class="spin" id="spiNote"></p></div><div class="blackout3d" hidden id="blackout3d"><div><b>Power outage</b><span>Lightning hit the substation. Backup generators starting…</span></div></div></div>
+<div class="overlay top" hidden id="seasonOv"><div aria-labelledby="so-h" aria-modal="true" class="modal wide" role="dialog">
+<h2 id="so-h">Season complete</h2><p class="muted" id="so-p"></p>
+<div class="sostats" id="so-stats"></div><div hidden id="so-rc"></div>
+<label class="soname">Name for the leaderboard<input autocomplete="nickname" id="so-name" maxlength="16" placeholder="2–16 letters or numbers" spellcheck="false"/></label>
+<div class="btns"><button class="primary" id="so-submit">Submit score</button><button id="so-board">View leaderboard</button><button id="so-more">One more turn</button><button id="so-new">New season</button></div>
+<p aria-live="polite" class="somsg" id="so-msg"></p></div></div>
+<div class="overlay top" hidden id="lbOv"><div aria-labelledby="lb-h" aria-modal="true" class="modal wide" role="dialog">
+<div class="lbhead"><h2 id="lb-h">Leaderboard</h2><button aria-label="Close leaderboard" id="lb-close">Close</button></div>
+<p class="muted" id="lb-sub">Top 100 · 30-day seasons · ranked by net profit</p>
+<div class="lblist" id="lb-list"></div></div></div>
+<div class="overlay" hidden id="overlay"><div aria-labelledby="ov-h" aria-modal="true" class="modal" role="dialog">
+<h2 id="ov-h"></h2><p id="ov-p"></p><div class="btns"><button class="primary" id="ov-a"></button><button id="ov-b"></button></div></div></div>
+<div class="v2top" id="v2top">
+<button aria-label="Pause and open the menu" class="v2card v2ibtn" id="v2pause"><svg fill="currentColor" height="18" viewbox="0 0 24 24" width="18"><rect height="16" rx="1.5" width="5" x="5" y="4"></rect><rect height="16" rx="1.5" width="5" x="14" y="4"></rect></svg></button>
+<button aria-controls="v2more" aria-expanded="false" class="v2card v2stats" id="v2stats">
+<span class="st mn"><small>Mill</small><b id="v2mill">–</b></span>
+<span class="st"><small>Cash</small><b id="v2cash">–</b></span>
+<span class="st"><small>Profit</small><b id="v2profit">–</b></span>
+<span class="st"><small id="v2clockL">Time</small><b id="v2clock">–</b></span>
+<span aria-hidden="true" class="chev"><svg fill="none" height="14" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2.6" viewbox="0 0 24 24" width="14"><path d="M6 9l6 6 6-6"></path></svg></span>
+</button>
+<button aria-pressed="true" class="v2card v2lbl" id="v2lblBtn" title="Show or hide equipment labels"><svg fill="none" height="18" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2.2" viewbox="0 0 24 24" width="18"><path d="M3 12V4h8l10 10-8 8L3 12z"></path><circle cx="7.5" cy="8.5" fill="currentColor" r="1.4"></circle></svg><span>Labels</span></button>
+</div>
+<div class="v2card v2more" id="v2more">
+<div class="v2grid">
+<div><small>Production</small><b data-m="k-prod">–</b><em data-m="k-prod-s"></em></div>
+<div><small>Reel speed</small><b data-m="k-speed">–</b><em data-m="k-speed-s"></em></div>
+<div><small>Stock chest</small><b data-m="k-tank">–</b><em data-m="k-tank-s"></em></div>
+<div><small>OCC bale yard</small><b data-m="k-yard">–</b><em data-m="k-yard-s"></em></div>
+<div><small>Roll warehouse</small><b data-m="k-fg">–</b><em data-m="k-fg-s"></em></div>
+<div><small>Cash detail</small><b data-m="k-cash">–</b><em data-m="k-cash-s"></em></div>
+</div>
+<div class="v2row">
+<div class="v2speed"><button aria-label="Slower" id="v2slow">−</button><span id="v2speed">30 min/s</span><button aria-label="Faster" id="v2fast">+</button></div>
+<label class="v2chk"><input id="v2labels" type="checkbox"/> Labels</label>
+<button id="v2sound">Sound off</button>
+</div>
+</div>
+<div class="v2dock" id="v2dock">
+<div aria-label="Go to area" class="jumps" id="jumps" role="group"><span>Go to</span><button data-j="trucks">Trucks</button><button data-j="recv">Receiving</button><button data-j="pulp">Stock Prep</button><button data-j="pm">Paper machine</button><button data-j="wd">Winder</button><button data-j="wh">Warehouse</button><button data-j="shop">Maintenance</button>
+</div>
+<nav aria-label="Panels" class="v2card v2tabs">
+<button aria-pressed="false" data-tab="shop"><svg fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" viewbox="0 0 24 24"><path d="M12 19V5M5 12l7-7 7 7"></path></svg>Upgrades</button>
+<button aria-pressed="false" data-tab="chaos"><svg fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" viewbox="0 0 24 24"><path d="M12 3l9 16H3z"></path><path d="M12 10v4M12 17v.5"></path></svg>Upsets<span class="bdg" hidden id="v2bdg">0</span></button>
+<button aria-pressed="false" data-tab="ctl"><svg fill="none" stroke="currentColor" stroke-linecap="round" stroke-width="2" viewbox="0 0 24 24"><path d="M4 7h10M18 7h2M4 17h4M12 17h8"></path><circle cx="16" cy="7" r="2"></circle><circle cx="10" cy="17" r="2"></circle></svg>Controls</button>
+<button aria-pressed="false" data-tab="stats"><svg fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" viewbox="0 0 24 24"><path d="M4 19h16M7 16V9M12 16V5M17 16v-4"></path></svg>Stats</button>
+</nav>
+</div>
+<div class="v2scrim" id="v2scrim"></div>
+<aside aria-hidden="true" class="v2sheet" id="v2sheet"><header><h2 id="v2sheetT">Upgrades</h2><button aria-label="Close panel" id="v2close">Close</button></header>
+<div class="v2body">
+<div class="v2pane" data-pane="shop"><section aria-label="Upgrades" class="shop" id="shopSec">
+<div class="chaoshead"><h2>Upgrades<span class="dl">Spend cash on throughput, speed, lower costs and automation.</span><span class="dm">Run faster and cheaper.</span></h2>
+<div class="wallet"><small>Cash on hand</small><span id="u-cash">–</span></div><button aria-controls="ugrid" aria-expanded="false" class="more" id="shopMore">Show more</button></div>
+<div class="shopbody">
+<div class="ledger" id="ledger"><h3>Books since start</h3></div>
+<div class="ugroups" id="ugrid"></div>
+</div>
+</section></div>
+<div class="v2pane" data-pane="chaos"><section aria-label="Upset" class="chaos" id="chaosSec">
+<div class="chaoshead">
+<h2>Upset<span class="dl">Trigger a disaster, or let them happen on their own.</span><span class="dm">Trigger one or let them happen.</span></h2>
+<label class="check"><input checked id="chaosOn" type="checkbox"/> Random disasters on</label>
+<div class="simspeed"><label for="chaosLvl">Frequency</label><input id="chaosLvl" max="5" min="0.25" step="0.25" type="range" value="1"/><span class="val" id="chaosLvlv">1×</span></div>
+<button class="danger" id="chaosRandom">Unleash random disaster</button>
+<button id="chaosClear">Clear all incidents</button>
+<button aria-controls="chaosgrid" aria-expanded="false" class="more" id="chaosMore">Show more</button>
+</div>
+<div class="chaosbody">
+<div class="board">
+<div class="sign" id="c-sign">This mill has worked<big id="c-days">0.0</big>days without an incident</div>
+<div class="rating"><span class="g A" id="c-grade">A</span><div><b id="c-grade-t">Bonus secured</b><span id="c-grade-s">–</span></div></div>
+<div class="stat"><span>Production lost vs. max speed</span><b id="c-lost">0 t</b></div>
+<div class="stat"><span>Incidents so far</span><b id="c-count">0</b></div>
+<div class="active" id="c-active"><span class="none">No active incidents.</span></div>
+<div aria-live="polite" class="feed" id="c-feed"></div>
+</div>
+<div class="groups" id="chaosgrid"></div>
+</div>
+</section></div>
+<div class="v2pane" data-pane="ctl"><div class="v2sub">Run the mill</div><div class="v2row" id="v2ctlrow"><button id="balance">Balance all</button><input aria-label="Machine name" autocomplete="off" id="pmname" maxlength="14" spellcheck="false" value="PM1"/><label class="check"><input checked id="viewShadows" type="checkbox"/> Shadows</label><button id="viewReset">Whole mill</button><div aria-label="Section labels" class="seg lblseg" hidden id="lblMode" role="group"><span>Labels</span><button aria-pressed="true" data-m="auto" title="Labels fade out when you stop moving the view">Auto</button><button aria-pressed="false" data-m="on">On</button><button aria-pressed="false" data-m="off">Off</button></div></div><div class="v2sub">Area controls</div><section class="cards" id="cards">
+<div class="card"><h2><span class="n">1</span>Inbound OCC trucks<span class="pill" id="p-in">–</span></h2>
+<div class="row" data-key="inRate"><label for="s-inRate">Truck arrivals</label><span class="val"></span><div class="ctl"><input id="s-inRate" max="8" min="0" step="0.1" type="range"/><button aria-pressed="true" class="auto">AUTO</button></div></div>
+<div class="read" id="r-in">–</div></div>
+<div class="card"><h2><span class="n">2</span>Receiving &amp; pulper feed<span class="pill" id="p-rec">–</span></h2>
+<div class="row" data-key="drivers"><label for="s-drivers">Forklift drivers on shift</label><span class="val"></span><div class="ctl"><input id="s-drivers" max="10" min="0" step="1" type="range"/><button aria-pressed="true" class="auto">AUTO</button></div></div>
+<div class="read" id="r-rec">–</div></div>
+<div class="card"><h2><span class="n">3</span>Pulper<span class="pill" id="p-pul">–</span></h2>
+<div class="row" data-key="pulper"><label for="s-pulper">OCC feed rate</label><span class="val"></span><div class="ctl"><input id="s-pulper" max="70" min="0" step="0.5" type="range"/><button aria-pressed="true" class="auto">AUTO</button></div></div>
+<div class="read" id="r-pul">–</div></div>
+<div class="card"><h2><span class="n">4</span>Stock storage chest<span class="pill" id="p-tank">–</span></h2>
+<div class="row" data-key="lvlTarget"><label for="s-lvlTarget">Level target (auto pulper aims here)</label><span class="val"></span><div class="ctl"><input id="s-lvlTarget" max="95" min="20" step="1" type="range"/></div></div>
+<div class="row" data-key="lowLevel"><label for="s-lowLevel">PM slows below</label><span class="val"></span><div class="ctl"><input id="s-lowLevel" max="60" min="10" step="1" type="range"/></div></div>
+<div class="read" id="r-tank">–</div></div>
+<div class="card"><h2><span class="n">5</span><span>Paper machine <span id="pm-title">PM1</span></span><span class="pill" id="p-pm">–</span></h2>
+<div class="row"><label for="grade">Grade</label><span class="val"><select id="grade"></select></span></div>
+<div class="row"><label>Paper color</label><span class="val"><span aria-label="Paper color" class="seg paperseg" id="paperColor" role="group"><button aria-pressed="true" data-c="brown">Brown</button><button aria-pressed="false" data-c="white">White</button></span></span></div>
+<div class="row" data-key="pmSp"><label for="s-pmSp">Max reel speed</label><span class="val"></span><div class="ctl"><input id="s-pmSp" max="3300" min="1200" step="10" type="range"/><button aria-pressed="true" class="auto">AUTO</button></div></div>
+<div class="row"><label>Customer rolls per reel</label><span class="val">8 × 3.1 t</span></div>
+<label class="check"><input id="breaks" type="checkbox"/> Random sheet breaks (calibration data: 14% of time)</label>
+<div class="read" id="r-pm">–</div></div>
+<div class="card"><h2><span class="n">6</span>Winder<span class="pill" id="p-wd">–</span></h2>
+<div class="row" data-key="wdr"><label for="s-wdr">Winder speed</label><span class="val"></span><div class="ctl"><input id="s-wdr" max="150" min="0" step="1" type="range"/><button aria-pressed="true" class="auto">AUTO</button></div></div>
+<label class="check"><input checked id="hays" type="checkbox"/> Random hayouts (scabs make them far more likely)</label>
+<div class="read" id="r-wd">–</div></div>
+<div class="card"><h2><span class="n">7</span>Warehouse &amp; shipping<span class="pill" id="p-ship">–</span></h2>
+<div class="row" data-key="loaders"><label for="s-loaders">Clamp-truck loaders on shift</label><span class="val"></span><div class="ctl"><input id="s-loaders" max="10" min="0" step="1" type="range"/><button aria-pressed="true" class="auto">AUTO</button></div></div>
+<div class="row" data-key="outRate"><label for="s-outRate">Outbound truck arrivals</label><span class="val"></span><div class="ctl"><input id="s-outRate" max="10" min="0" step="0.1" type="range"/><button aria-pressed="true" class="auto">AUTO</button></div></div>
+<div class="read" id="r-ship">–</div></div>
+</section></div>
+<div class="v2pane" data-pane="stats"><div class="v2sub">Flow &amp; bottleneck</div><div class="flowbox" id="v2flow"></div><div class="v2sub">Right now</div><section aria-label="Key figures" class="kpis">
+<div class="kpi money" id="k-cash-box"><div class="k">Cash</div><div class="v" id="k-cash">–</div><div class="s" id="k-cash-s"> </div></div>
+<div class="kpi"><div class="k">Profit</div><div class="v" id="k-profit">–</div><div class="s" id="k-profit-s"> </div></div>
+<div class="kpi"><div class="k">Sim clock</div><div class="v" id="k-clock">Day 1 00:00</div><div class="s" id="k-clock-s"> </div></div>
+<div class="kpi"><div class="k">Reel speed</div><div class="v" id="k-speed">–</div><div class="s" id="k-speed-s"> </div></div>
+<div class="kpi"><div class="k">Production</div><div class="v" id="k-prod">–</div><div class="s" id="k-prod-s"> </div></div>
+<div class="kpi"><div class="k">Stock chest</div><div class="v" id="k-tank">–</div><div class="s" id="k-tank-s"> </div></div>
+<div class="kpi"><div class="k">OCC bale yard</div><div class="v" id="k-yard">–</div><div class="s" id="k-yard-s"> </div></div>
+<div class="kpi"><div class="k">Roll warehouse</div><div class="v" id="k-fg">–</div><div class="s" id="k-fg-s"> </div></div>
+</section><div class="v2sub">Reliability now</div><div class="ledger" id="relnow"></div><div class="v2sub">Last 24 hours</div><section class="trendbox">
+<div class="trendhead"><b>Last 24<span class="dl"> </span>h</b>
+<span><i class="sw" style="background:var(--stock)"></i>Chest<span class="dl"> level %</span></span>
+<span><i class="sw" style="background:var(--machine)"></i>Reel speed<span class="dl"> % of 3,300 fpm</span></span>
+<span><i class="sw" style="background:var(--kraft)"></i>Bale yard<span class="dl"> % full</span></span>
+<span><i class="sw" style="background:var(--ok)"></i><span class="dm">Rolls</span><span class="dl">Roll warehouse % full</span></span>
+</div>
+<canvas height="150" id="trend" width="1200"></canvas>
+</section></div>
+</div></aside>
+<div class="v2menu" id="v2menu"><div aria-labelledby="v2mt" aria-modal="true" class="card" role="dialog">
+<div class="ttl"><i>⚙</i><div><small>The Paper Mill</small><b id="v2mt">Mill</b><div class="state" id="v2state"></div></div></div>
+<p>Run a recycled paperboard mill from truck to warehouse. Old corrugated boxes arrive by the truckload, get pulped, cleaned and thickened, and your paper machine turns them into giant reels that the winder cuts into rolls for customers. Keep everything flowing, spend your profit on upgrades, and ride out upsets: breakdowns, fires, storms and the occasional pigeon.</p>
+<button class="primary go" id="v2go"><b>Play</b><small>30-day season · leaderboard</small></button>
+<div class="sub" hidden id="v2sub">
+<button id="v2season">New season<small>restart the 30 days</small></button>
+<button class="warn" id="v2reset">Reset mill<small>start over</small></button>
+</div>
+<div class="opts">
+<button id="v2free"><i><svg fill="none" height="20" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" viewbox="0 0 24 24" width="20"><rect height="4" rx="1" width="18" x="3" y="8"></rect><path d="M12 8v13M19 12v9H5v-9M7.5 8a2.5 2.5 0 0 1 0-5C11 3 12 8 12 8s1-5 4.5-5a2.5 2.5 0 0 1 0 5"></path></svg></i><b>Free play</b><small>free upgrades</small></button>
+<button id="v2board"><i><svg fill="none" height="20" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" viewbox="0 0 24 24" width="20"><path d="M8 21h8M12 17v4M7 4h10v5a5 5 0 0 1-10 0V4zM17 5h3v2a3 3 0 0 1-3 3M7 5H4v2a3 3 0 0 0 3 3"></path></svg></i><b>Leaderboard</b><small>top seasons</small></button>
+<button id="v2zen"><i><svg fill="none" height="20" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" viewbox="0 0 24 24" width="20"><path d="M11 20A7 7 0 0 1 9.8 6.1C15.5 5 17 4.5 19 2c1 2 2 4.2 2 8 0 5.5-4.8 10-10 10z"></path><path d="M2 21c0-3 1.9-5.4 5.2-6"></path></svg></i><b>Zen mode</b><small>sit back</small></button>
+<button id="v2colors"><i><svg fill="none" height="20" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" viewbox="0 0 24 24" width="20"><circle cx="13.5" cy="6.5" r="1.2"></circle><circle cx="17.5" cy="10.5" r="1.2"></circle><circle cx="8.5" cy="7.5" r="1.2"></circle><circle cx="6.5" cy="12.5" r="1.2"></circle><path d="M12 2a10 10 0 0 0 0 20c1 0 1.7-.8 1.7-1.7 0-.5-.2-.9-.5-1.2-.3-.3-.4-.7-.4-1.1 0-.9.8-1.7 1.7-1.7h2A5.5 5.5 0 0 0 22 11c0-5-4.5-9-10-9z"></path></svg></i><b>New colors</b><small>name &amp; brand</small></button>
+<button id="v2rename"><i><svg fill="none" height="20" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" viewbox="0 0 24 24" width="20"><path d="M12 20h9M16.5 3.5a2.1 2.1 0 0 1 3 3L7 19l-4 1 1-4z"></path></svg></i><b>Rename</b><small>make it yours</small></button>
+<button id="v2fs"><i><svg fill="none" height="20" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" viewbox="0 0 24 24" width="20"><path d="M8 3H5a2 2 0 0 0-2 2v3M21 8V5a2 2 0 0 0-2-2h-3M3 16v3a2 2 0 0 0 2 2h3M16 21h3a2 2 0 0 0 2-2v-3"></path></svg></i><b>Fullscreen</b><small>hide the browser</small></button>
+</div>
+<div class="name" hidden id="v2nameRow"><input aria-label="Mill name" autocomplete="off" id="v2name" maxlength="32" spellcheck="false"/><button class="primary" id="v2nameOk">Save</button></div>
+<div class="foot"><span id="v2ver"></span><span>Sound, labels and speed are in the top bar</span></div>
+</div></div>
+
+<div class="overlay top" hidden id="no3d"><div aria-labelledby="no3d-h" class="modal" role="alertdialog">
+<h2 id="no3d-h">3D graphics are off</h2>
+<p>The Paper Mill needs WebGL, and this browser or device isn't providing it right now.</p>
+<p class="muted">Try turning on hardware acceleration in your browser settings, updating the browser, or opening the game in Chrome, Safari, Edge or Firefox.</p>
+<div class="btns"><button class="primary" id="no3d-retry">Try again</button></div></div></div>
+
+<script type="module">
