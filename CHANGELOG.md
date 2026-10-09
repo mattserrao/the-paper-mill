@@ -1,5 +1,12 @@
 # Changelog
 
+## Unreleased
+
+### Testing
+- Device autotest: open the game with `?autotest` for a hands-free ~70 s performance test (normal play, three
+  diagnostic phases, all upsets at once) and a sim checksum, ending on a results page with a Copy results button.
+  Built for automated testing on a USB-connected Android phone. Normal play is unchanged.
+
 ## v4.0.0 (2026-10-09)
 
 ### Graphics demand: an estimated ~70% reduction versus v3.3.4

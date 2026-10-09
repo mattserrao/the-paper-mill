@@ -7,7 +7,8 @@
     if(rdt>0){const R=S.rates;if(!S.M.pulperDown)V.swirl+=rdt*(0.4+R.feed*0.06);V.belt=(V.belt+rdt*R.feed*1.4)%30;V.cans+=rdt*S.pmSpeed/700;
       if(S.pm==="run")V.sheet=(V.sheet+rdt*S.pmSpeed/40)%24;V.rollsAnim+=rdt*(0.2+clamp(R.load/Math.max(1,C.loaders.v*P.loaderRate),0,1))*0.5;}
     {const t=performance.now();if(!(t-(G3.shTrim||0)<2000)){G3.shTrim=t;trimShadows();}}
-    if(rdt>0){fpsT+=rdt;fpsN++;if(fpsT>3){const fps=fpsN/fpsT;fpsT=0;fpsN=0;
+    if(rdt>0&&!G3.noFallback){fpsT+=rdt;fpsN++;if(fpsT>3){const fps=fpsN/fpsT;fpsT=0;fpsN=0;
+      // (G3.noFallback: set by the autotest so every build is measured at the same graphics settings)
       // v4 fallback order, cheapest to undo first: render fewer pixels, then refresh shadows less often. Shadows stay on
       // (switching them off recompiles every shader: a long freeze, the opposite of what a struggling device needs)
       const fk=(G3.cap||60)/60;

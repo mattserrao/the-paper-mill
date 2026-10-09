@@ -18,7 +18,7 @@ then `tail.html`. All game code runs inside **one shared closure** (opened in `0
 | `00` | `APP_VER`, the rolling diagnostics log, and the three.js loader (r186.1 as an ES module via top-level `await`; outside the closure, so errors during start-up are caught) |
 | `01–11` | Game: mill name and colors, audio, model constants and seeded random streams, upsets, event cards, outages and state, the sim `step()`, UI wiring, seasons and leaderboard, report cards, Stats trend chart |
 | `20–43` | 3D view, one file per area of the mill: setup, plant, floors, rejects, stock prep, vehicles, labels, camera, upset effects and particles, people, fire response, ambient life, janitorial, techs, upgrades, static-mesh merge, outage jobs, zen camera, and the per-frame update (`43-3d-frame.js`) |
-| `50–53` | Side panels (slice, spider, Uncle Brian), app shell (top bar, sheets, menu, tutorial), main loop, diagnostics panel and the `window.__PM` test hook |
+| `50–53` | Side panels (slice, spider, Uncle Brian), app shell (top bar, sheets, menu, tutorial), main loop, the device autotest (`52b`, only active with `?autotest`), diagnostics panel and the `window.__PM` test hook |
 
 ## Conventions
 
@@ -36,6 +36,24 @@ then `tail.html`. All game code runs inside **one shared closure** (opened in `0
 - **Moving things** (people, vehicles, loads, any single-material opaque mesh drawn on its own) are drawn through dynamic BatchedMeshes, one per look (`G3.dbTick`, `40-3d-static-merge.js`). Their originals live on layer 30 and are still animated by the game. `dbTick` updates world matrices once before the render, and the render skips its own pass.
 - **Shadows:** static casters go through two merged shadow-proxy meshes, shown only during the shadow pass; the sun never moves. Moving things cast their own.
 - **Static scenery** is batched on the first frame with three.js BatchedMesh (`40-3d-static-merge.js`, phones too): one batch per look (material + shadow flags + vertex layout), single-object looks left alone. Edge outlines, mirrored meshes and roof parts use the older bake path. Anything that later moves, hides or changes material is handed back automatically. A new object that should never be batched goes in `SM.dyn` before the first frame.
+
+## Device autotest (`?autotest`)
+
+Open any build with `?autotest` (for example `index.html?autotest`) to run a hands-free performance test, about
+70 s on a phone. It starts a season on a fixed seed (no tutorial, event cards or leaderboard; nothing is saved),
+turns the low-FPS fallback off so builds compare at the same settings, then measures:
+
+- **Normal play** (20 s after 8 s settling): FPS, p50/p95/p99 frame times, frames over 33/50 ms, worst frame, JS ms
+  per frame, draws, triangles, shader programs before and after (should not grow), and time per frame section.
+- **Shadows off, half resolution, 3D render skipped** (5 s each): which limit the phone hits. Render skipped also
+  gives the display's refresh rate.
+- **All upsets at once** (15 s): the worst case.
+- **Sim checksum:** replays 3 sim days on the fixed seed and hashes the results. It only changes when the sim's
+  logic changes; `&expect=<hash>` shows PASS or FAIL.
+
+The results page has a **Copy results** button (the full JSON, including every frame time for normal play and
+upsets). Options: `scale=0.5` shortens every phase, `speed=` sim minutes per second (default 10, the game's
+default), `seed=`, `fallback` keeps the low-FPS fallback on. `tools/autotest.py index.html` runs it headless.
 
 ## three.js (r186) notes
 
@@ -55,6 +73,7 @@ Needs Python 3 with Playwright (Chromium), and Node with `eslint@8`, `three@0.12
 - `phone.py a.html b.html … --shadows`: phone CPU and draws per frame, with shadows forced on so builds compare on equal graphics.
 - `experiments.py index.html`: applies one change at a time (no blur, no labels, single-pass transparency, actors hidden, outlines hidden, shadows on), measures, then reverts.
 - `allocprof.py index.html phone`: which functions allocate the most JS memory during play.
+- `autotest.py index.html [scale] [--desktop] [--expect=hash]`: runs the in-page `?autotest` headless (phone emulation) and checks the results page, the Copy button and that nothing was saved.
 - `bench.py index.html <label> 3`: the older timing benchmark (also provides the shared test hook and local three.js routing the other scripts use).
 - `smoke.py index.html`: drives every menu and panel plus a full 30-day season; fails on any page error.
 - `determinism.py index.html`: two loads of the same season week must play out identically.
