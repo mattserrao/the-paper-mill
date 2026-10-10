@@ -160,10 +160,12 @@
 <h2 id="siteH">Choose your site</h2>
 <p class="muted">The paper machine, winder, roll handling and warehouse are the same everywhere. The land around them, the utilities and the costs are not.</p>
 <div class="envs" id="siteEnvs" role="radiogroup" aria-label="Environment"></div>
+<button class="anybtn" id="siteAny" aria-pressed="false" type="button"><b>Surprise me</b><small>a different environment every visit</small></button>
 <div class="seedrow"><canvas aria-label="Site plan preview" height="150" id="sitePrev" role="img" width="300"></canvas>
 <div class="seedctl"><label for="siteSeed">Mill seed</label><div class="seedin"><input id="siteSeed" inputmode="numeric" max="99999" min="1" type="number"/><button aria-label="Roll a new mill seed" id="siteRoll" title="New seed">🎲</button></div>
-<small id="siteLay">Layout</small></div></div>
-<p class="muted small">Building on a new site reloads the game and starts a fresh run. Each run also has one bottleneck area, drawn at random.</p>
+<small id="siteLay">Layout</small>
+<label class="check"><input id="sitePin" type="checkbox"/> Keep this layout between visits</label></div></div>
+<p class="muted small">Unless you keep a layout, every visit builds a new one. Building here reloads the game and starts a fresh run. Each run also has one bottleneck area, drawn at random.</p>
 <div class="btns"><button class="primary" id="siteGo">Build here</button><button id="siteNo">Cancel</button></div></div></div>
 
 <div class="overlay top" hidden id="no3d"><div aria-labelledby="no3d-h" class="modal" role="alertdialog">

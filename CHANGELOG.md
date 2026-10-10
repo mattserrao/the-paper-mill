@@ -17,12 +17,26 @@ warehouse) is unchanged; everything around it now depends on where you build and
     more rain and fog), soft roads (inbound trucks 12% slower), storms (lightning, roof leaks 1.6×), beavers 3×.
 - **Mill seed** (1–99999, or roll one): sets the layout of the auxiliary plant (the wastewater plant sits behind stock prep
   or behind the maintenance shop, either way round; four layouts) and all the scenery. The picker shows a plan of the site.
-- Changing site reloads the game (the 3D scene is built once per load). The choice is remembered.
+- **A new layout every visit** unless you tick "Keep this layout between visits"; **Surprise me** rolls a different
+  environment every visit too. Changing site reloads the game (the 3D scene is built once per load).
+- **One upset of its own per environment**, with its own effect, repair bill and listing in Upsets (tagged with the site):
+  - Forest valley: **River intake iced over** (fresh water short, stock prep at 60%; 4× as likely in snow): ice floes jam the
+    intake, maintenance breaks them up. Repair $20k.
+  - City mill: **Grid brownout** (speed capped at 80%, pulper at 85%): arcs at the substation, the mill's lights sag. $10k.
+  - Desert flats: **Dust storm** (trucks and clamp trucks slowed, more sheet breaks, speed 90%): tan haze over the whole
+    site, blowing dust, dust rolling across the yard. $25k.
+  - Bayou: **Bayou flood** (unloading at 50%, loading at 60%; 3× as likely in rain): water rises over the yard and the
+    roads, not inside the buildings, with ripples and floating debris, then drains away. $60k.
 
 ### The world around the mill
 - New scenery for each environment, placed from the seed: forests, farms, hills, a chip pile and a hydro line (rural);
   city blocks, houses, a water tower, a substation and a cardboard depot (urban); mesas, cacti, dunes, a solar farm,
   water tanks and a wind pump (desert); ponds, cypress, reeds, shacks on stilts and a barge dock (swamp).
+- **Features**: two or three per visit from each environment's pool, so the land is never the same twice: a lake with a
+  boathouse, a village with a church, a logging camp, wind turbines, an orchard, a radio mast (rural); a park, a stadium,
+  a rail yard, a gas station on the highway (urban); an airstrip, an open-pit mine, an oasis, a ranch (desert); a fishing
+  camp, a boardwalk, a cane field (swamp).
+- The city stays low near the mill (houses, warehouses, lots); towers only beyond 230 m, so the mill stays the focus.
 - Trucks use a highway with a river bridge; staff cars come in on an east road; the rail line runs to the horizon.
 - The river becomes a concrete channel in the city and desert, and a dark bayou in the swamp.
 - **No clipping by construction:** scenery is placed on a 2 m keep-out grid built from every mesh in the mill (plus roads,
@@ -41,22 +55,39 @@ warehouse) is unchanged; everything around it now depends on where you build and
   screen capacity per level), winder rebuild (+30 t/h), extra dock doors (+1 door each), electric forklifts (+25%
   unloading per door), robotic roll handling (+35% loading per door). One level fixes most of them.
 
+### Graphics tiers
+- **Low / Medium / High / Ultra**, chosen automatically from the device (phones: Medium, or Low with under 4 GB; desktops:
+  High, or Ultra on a discrete GPU) and pinnable in Controls. Tiers set the pixel ratio (1 / 1.25 / 2 / 2), shadow map
+  (1024 / 1024 / 2048 / 4096) and softness, shadow refresh (10 / 15 / 30 / 60 Hz), weather particles, scenery density
+  (0.5 / 0.85 / 1 / 1.4) and whether far scenery casts shadows (Ultra). Pixel ratio, shadows and particles change live;
+  the lighting model and scenery density on the next load. `?gfx=` forces a tier for tests.
+- The low-FPS fallback has a third step after pixel ratio 1 and 5 Hz shadows: the far scenery sectors are hidden.
+- Medium on a phone is exactly v4.0.2's settings, so the benchmarks still compare.
+
+### Zen mode
+- Nine new shots of the land: a long approach from a random direction ("over the forest" / "over the rooftops" /
+  "across the flats" / "over the bayou"), a half-orbit of one of the seeded landmarks, the highway bridge, a drift along
+  the river (canal, bayou), and one signature shot per environment: forest canopy, city skyline, mesa horizon, bayou mist.
+  The camera is clamped above scenery, so a sweep over city blocks or mesas rises over them.
+
 ### Economy
 - Paper prices go back up to $713 / $733 / $753 / $813 per ton (23m / 26m / 30m / 33HT; v4.0.2: $625–725) because every
-  run now starts with a bottleneck. A hands-off season still breaks even: 15 seasons per environment average −$94k (rural),
-  +$1k (urban), −$116k (desert), +$42k (swamp); −$42k over all 60. No bankruptcies (worst finish +$69k).
-- The seeded 3-day checksum changes to **`7d891e16`** (rural, mill #1; the default site and the autotest's). Other
-  environments have their own checksums because their weather and costs differ.
+  run now starts with a bottleneck. A hands-off season still breaks even with the environment upsets in: 15 seasons per
+  environment average −$95k (rural), +$13k (urban), −$38k (desert), −$22k (swamp). No bankruptcies.
+- The seeded 3-day checksum changes to **`81890238`** (rural, mill #1; the default site and the autotest's). Other
+  environments have their own checksums because their weather, costs and upsets differ.
 
-### Performance (quick test, phone emulation, rural mill #1)
+### Performance (quick test, phone emulation = Medium tier, rural mill #1)
 - Scenery is merged into six vertex-coloured meshes (one per map sector; only the one around the mill casts shadows):
-  10k–24k triangles depending on environment, replacing 300 instanced trees (two draws each pass).
-- Main-pass draws 224 normal / 459 all upsets, shadow pass 100, shader programs 108–109, triangles 203k / 290k.
+  10k–25k triangles depending on environment, replacing 300 instanced trees (two draws each pass).
+- Main-pass draws 246 normal / 495 all upsets, shadow pass 133 / 89, shader programs 108–110, triangles 231k / 311k.
+  Swamp mill #24 (the heaviest scenery): 225 / 464, 202k / 294k.
 
 ### Testing
 - `tools/quick.py`, `tools/econ.py`: `--env=` and `--mill=` (quick) / `--env=` and `--bn=` (econ) to test any site.
 - New `tools/topview.py` (top-down or perspective render of a site) and `tools/clipcheck.py`.
-- The autotest ignores a saved site and always measures rural, mill #1 (or `&env=`/`&mill=` from the URL).
+- The autotest ignores a saved site and always measures rural, mill #1 (or `&env=`/`&mill=` from the URL); `quick.py`
+  passes `mill=1` so a visit's random layout doesn't move the numbers.
 
 ## v4.0.2 (2026-10-10)
 

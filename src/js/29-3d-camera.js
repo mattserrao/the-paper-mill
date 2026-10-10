@@ -5,6 +5,7 @@
   // on phones the tutorial card covers the lower half: aim past the spot so it sits in the upper half of the screen
   G3.camTo=(x,z,r,th,ph)=>{th=th??DEF.th;const k=host.clientWidth<600?r*0.13:0;goal={t:new THREE.Vector3(x+Math.sin(th)*k,0,z+Math.cos(th)*k),r,th,ph:ph??0.9};};
   G3.camHome=()=>{goal={t:DEFT.clone(),r:DEF.r,th:DEF.th,ph:DEF.ph};};
+  G3.camSet=c=>{goal=null;target.set(c[0],0,c[1]);cam.r=c[2];cam.th=c[3];cam.ph=c[4];};   // tests and screenshots
   {const hm=new THREE.MeshBasicMaterial({color:lin0("#ffb020"),transparent:true,opacity:0.85,depthWrite:false,depthTest:false,side:THREE.DoubleSide,toneMapped:false});
    const ring=new THREE.Mesh(new RingG(0.86,1,64),hm);ring.rotation.x=-Math.PI/2;ring.renderOrder=20;ring.visible=false;scene.add(ring);
    const bm=new THREE.MeshBasicMaterial({color:lin0("#ffd27a"),transparent:true,opacity:0.18,depthWrite:false,side:THREE.DoubleSide,toneMapped:false});
@@ -80,7 +81,14 @@
   document.querySelectorAll("#jumps button").forEach(b=>b.addEventListener("click",()=>{const [x,z,r]=JUMPS[b.dataset.j];goal={t:new THREE.Vector3(x,0,z),r,th:DEF.th,ph:0.88};}));
   $("viewReset").addEventListener("click",()=>{goal={t:DEFT.clone(),r:DEF.r,th:DEF.th,ph:DEF.ph};});
   $("viewShadows").addEventListener("change",e=>{renderer.shadowMap.enabled=e.target.checked;renderer.shadowMap.needsUpdate=true;MATS.forEach(m=>m.needsUpdate=true);});
-  if(mobile){sun.shadow.mapSize.set(1024,1024);}
+  // v4.1: change graphics tier while playing (what can change live; see GFX_TIERS in 20-3d-setup.js)
+  G3.setGfx=pick=>{if(pick!=="auto"&&!GFX_TIERS[pick])return;const t=GFX_TIERS[pick==="auto"?GFX.auto:pick];GFX.pick=pick;GFX.tier=pick==="auto"?GFX.auto:pick;
+    try{localStorage.setItem("paper-mill-gfx",pick);}catch(e){}
+    renderer.setPixelRatio(Math.min(t.pr,window.devicePixelRatio||1));resize();G3.shadowHz=t.hz;GFX.pr=t.pr;GFX.hz=t.hz;
+    if(sun.shadow.mapSize.x!==t.shadow){sun.shadow.mapSize.set(t.shadow,t.shadow);if(sun.shadow.map){sun.shadow.map.dispose();sun.shadow.map=null;}renderer.shadowMap.needsUpdate=true;}sun.shadow.radius=t.soft?5:3;
+    if(G3.wxRange)G3.wxRange(t.wx);if(G3.scenery)G3.scenery.parts.forEach(p=>{if(p.userData.scenery!=="near")p.castShadow=t.far;});
+    diag(`graphics: ${GFX.tier}${pick==="auto"?" (auto)":""}; lighting model and scenery density change on the next load`);
+    document.querySelectorAll("#gfxSeg button").forEach(b=>b.setAttribute("aria-pressed",String(b.dataset.g===pick)));};
 
   function resize(){G3.lastMove=performance.now();const w=host.clientWidth,h=host.clientHeight;G3.vw=w;G3.vh=h;   // v4.0.1: cached for the label code
   host.classList.toggle("compact",w<640);if(!w||!h)return;renderer.setSize(w,h,false);camera.aspect=w/h;camera.updateProjectionMatrix();}

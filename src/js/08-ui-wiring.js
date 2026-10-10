@@ -49,8 +49,8 @@ function setSimSpeed(v){C.simSpeed=Math.max(1,Math.min(TURBO?960:120,Math.round(
 
 const cgrid=$("chaosgrid");
 GROUPS.forEach(([g,lab])=>{const d=document.createElement("div");d.className="grp";const h=document.createElement("h3");h.textContent=lab;d.appendChild(h);
-  EVENTS.filter(e=>e.g===g).forEach(e=>{const r=document.createElement("div");r.className="ev";
-    r.innerHTML=`<button class="trig" id="ev-${e.id}" aria-pressed="false"><span>${e.name}</span><small></small></button><label><input type="checkbox" id="en-${e.id}" checked> random</label>`;
+  EVENTS.filter(e=>e.g===g&&(!e.env||e.env===SITE.env)).forEach(e=>{const r=document.createElement("div");r.className="ev";
+    r.innerHTML=`<button class="trig" id="ev-${e.id}" aria-pressed="false"><span>${e.name}${e.env?' <em class="envtag">'+ENVS[e.env].short+'</em>':""}</span><small></small></button><label><input type="checkbox" id="en-${e.id}" checked> random</label>`;
     d.appendChild(r);
     r.querySelector("button").addEventListener("click",()=>{if(S.season&&S.season.on)return;if(active(e.id))clearIncident(e.id);else trigger(e.id);updateChaos();});
     r.querySelector("input").addEventListener("change",ev=>{CH.en[e.id]=ev.target.checked;});});

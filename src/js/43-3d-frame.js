@@ -13,7 +13,9 @@
       // (switching them off recompiles every shader: a long freeze, the opposite of what a struggling device needs)
       const fk=(G3.cap||60)/60;
       if(fps<28*fk&&quality===2&&renderer.getPixelRatio()>1){quality=1;renderer.setPixelRatio(1);resize();diag("quality: pixel ratio 1 ("+fps.toFixed(0)+" fps)");}
-      else if(fps<24*fk&&quality>=1&&G3.shadowHz>5){quality=0;G3.shadowHz=5;diag("quality: shadows 5 Hz ("+fps.toFixed(0)+" fps)");}}}pm("low-FPS fallback check");
+      else if(fps<24*fk&&quality>=1&&G3.shadowHz>5){quality=0;G3.shadowHz=5;diag("quality: shadows 5 Hz ("+fps.toFixed(0)+" fps)");}
+      // v4.1: still struggling: the far scenery sectors go (the yard and the land round the fence stay)
+      else if(fps<22*fk&&quality===0&&G3.scenery&&!G3.scenery.farOff){G3.scenery.farOff=true;G3.scenery.parts.forEach(p=>{if(p.userData.scenery!=="near")p.visible=false;});diag("quality: far scenery hidden ("+fps.toFixed(0)+" fps)");}}}pm("low-FPS fallback check");
     {const t=performance.now();if(!(t-(G3.palT||0)<500)){G3.palT=t;applyPalette();}}pm("palette (every 0.5 s)");rebuildDoors();
     const R=S.rates,now=performance.now();pm("setup (palette, doors, shadow trim)");
     crewUpdate(rdt,now);pm("crew + people");

@@ -489,3 +489,10 @@ body.season-lock label.check:has(#breaks),body.season-lock label.check:has(#hays
 .bncard[hidden]{display:none}.bncard b{font:700 14px var(--f-body);color:var(--bad)}.bncard span{font-size:12.5px;color:var(--muted)}
 .bncard.ok{border-color:var(--ok);background:color-mix(in srgb,var(--ok) 7%,var(--panel))}.bncard.ok b{color:var(--ok)}
 .usum .fixg{font-style:normal;font:700 10px var(--f-display);letter-spacing:.06em;text-transform:uppercase;color:var(--panel);background:var(--bad);border-radius:3px;padding:1px 5px;margin-right:4px}
+.anybtn{display:flex;flex-direction:column;align-items:flex-start;gap:1px;text-align:left;padding:8px 12px;border-radius:10px;border:1px solid var(--line);background:var(--bg);color:var(--ink);font:inherit;cursor:pointer}
+.anybtn b{font:700 13.5px var(--f-body)}.anybtn small{font-size:11.5px;color:var(--muted)}
+.anybtn[aria-pressed="true"]{border:2px solid var(--stock);padding:7px 11px}
+.envs.any button{opacity:.55}
+.seedctl .check{font-size:12px;color:var(--muted);display:flex;gap:6px;align-items:center;margin-top:2px}
+.ev .envtag{font-style:normal;font:700 9.5px var(--f-display);letter-spacing:.06em;text-transform:uppercase;color:var(--stock);border:1px solid var(--stock);border-radius:3px;padding:0 4px;margin-left:5px;vertical-align:middle}
+.seedctl .check{text-transform:none;letter-spacing:0;font-weight:500}

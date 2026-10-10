@@ -28,7 +28,7 @@ args = [a for a in sys.argv[1:] if not a.startswith("--")]
 flags = {a.split("=")[0]: (a.split("=", 1)[1] if "=" in a else True) for a in sys.argv[1:] if a.startswith("--")}
 path = args[0]; label = args[1] if len(args) > 1 else pathlib.Path(path).parent.name or "build"
 expect = flags.get("--expect", "96960821"); desktop = "--desktop" in flags
-site = "".join(f"&{k}={flags['--'+k]}" for k in ("env", "mill") if "--" + k in flags)   # v4.1: ?env=&mill= (default: rural, mill #1)
+site = "".join(f"&{k}={flags.get('--'+k, '1' if k == 'mill' else '')}" for k in ("env", "mill") if "--" + k in flags or k == "mill")   # v4.1: ?env=&mill= (default: rural, mill #1; a visit without ?mill= rolls a new layout)
 html = pathlib.Path(path).read_text()
 if "window.__PM=" not in html:
     i = html.rindex("})();", 0, html.rindex("</script>")); html = html[:i] + HOOK + html[i:]

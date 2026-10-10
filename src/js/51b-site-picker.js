@@ -5,15 +5,17 @@
   const swatch=(el,e)=>{el.style.background=`linear-gradient(135deg,${SW[e][0]} 55%,${SW[e][1]} 55%)`;};
   const layName=L=>`Wastewater plant ${L.ww==="east"?"behind the maintenance shop":"behind stock prep"}, clarifier on the ${(L.ww==="east")!==L.flip?"east":"west"} side`;
   // menu row
-  function siteRow(){const E=ENVS[SITE.env];$("v2siteN").textContent=E.name;$("v2siteM").textContent=`Mill #${SITE.seed} · layout ${"ABCD"[LAYOUT.i]}`;swatch($("v2siteSw"),SITE.env);}
+  function siteRow(){const E=ENVS[SITE.env];$("v2siteN").textContent=E.name+(SITE.choice==="any"?" (surprise)":"");
+    $("v2siteM").textContent=`Mill #${SITE.seed} · layout ${"ABCD"[LAYOUT.i]} · ${SITE.pin?"kept":"new layout each visit"}`;swatch($("v2siteSw"),SITE.env);}
   siteRow();
   // picker
-  const ov=$("siteOv"),envs=$("siteEnvs"),seedIn=$("siteSeed"),prev=$("sitePrev");let pick=SITE.env;
+  const ov=$("siteOv"),envs=$("siteEnvs"),seedIn=$("siteSeed"),prev=$("sitePrev"),pinIn=$("sitePin"),anyBtn=$("siteAny");let pick=SITE.env,any=SITE.choice==="any";
   ENV_IDS.forEach(id=>{const E=ENVS[id],b=document.createElement("button");b.type="button";b.setAttribute("role","radio");b.dataset.env=id;
     b.innerHTML=`<div class="eh"><span class="sw"></span><b>${E.name}</b><small>${E.short}</small></div><p>${E.blurb}</p><ul>${E.pros.map(t=>`<li class="pro">${t}</li>`).join("")}${E.cons.map(t=>`<li class="con">${t}</li>`).join("")}</ul>`;
     swatch(b.querySelector(".sw"),id);b.addEventListener("click",()=>{pick=id;sync();});envs.appendChild(b);});
   envs.addEventListener("keydown",e=>{const k=e.key;if(!["ArrowRight","ArrowDown","ArrowLeft","ArrowUp"].includes(k))return;e.preventDefault();
     const i=ENV_IDS.indexOf(pick),n=ENV_IDS[(i+(k==="ArrowRight"||k==="ArrowDown"?1:ENV_IDS.length-1))%ENV_IDS.length];pick=n;sync();envs.querySelector(`[data-env="${n}"]`).focus();});
+  anyBtn.addEventListener("click",()=>{any=!any;sync();});
   const seedOf=()=>{const v=Math.round(+seedIn.value);return v>=1&&v<=99999?v:SITE.seed;};
   // a small plan of the site: river, roads, fence, the fixed core and where the seeded wastewater plant goes
   function drawPrev(){const x=prev.getContext("2d"),W=prev.width,H=prev.height,k=W/360,X=v=>(v+170)*k,Z=v=>(v+90)*k,L=layoutFor(seedOf());
@@ -26,13 +28,15 @@
     x.fillStyle="#bfe3d8";x.beginPath();x.arc(X(L.wx(10)),Z(-40),7*k,0,7);x.fill();const p0=Math.min(L.wx(22),L.wx(42));x.fillRect(X(p0),Z(-46),20*k,12*k);
     $("siteLay").textContent=`Layout ${"ABCD"[L.i]}: ${layName(L)}.`;}
   function sync(){envs.querySelectorAll("button").forEach(b=>b.setAttribute("aria-checked",String(b.dataset.env===pick)));
-    envs.querySelectorAll("button").forEach(b=>b.tabIndex=b.dataset.env===pick?0:-1);drawPrev();
-    $("siteGo").textContent=pick===SITE.env&&seedOf()===SITE.seed?"Keep this site":"Build here";}
-  $("v2siteBtn").addEventListener("click",()=>{pick=SITE.env;seedIn.value=SITE.seed;sync();ov.hidden=false;setTimeout(()=>{const b=envs.querySelector('[aria-checked="true"]');if(b)b.focus();},0);});
-  seedIn.addEventListener("input",sync);
+    envs.querySelectorAll("button").forEach(b=>b.tabIndex=b.dataset.env===pick?0:-1);envs.classList.toggle("any",any);
+    anyBtn.setAttribute("aria-pressed",String(any));anyBtn.querySelector("b").textContent=any?"Surprise me: on":"Surprise me";drawPrev();
+    const same=(any?SITE.choice==="any":pick===SITE.env&&SITE.choice!=="any")&&seedOf()===SITE.seed&&pinIn.checked===SITE.pin;
+    $("siteGo").textContent=same&&SITE.saved?"Keep this site":"Build here";}
+  $("v2siteBtn").addEventListener("click",()=>{pick=SITE.env;any=SITE.choice==="any";seedIn.value=SITE.seed;pinIn.checked=SITE.pin;sync();ov.hidden=false;setTimeout(()=>{const b=envs.querySelector('[aria-checked="true"]');if(b)b.focus();},0);});
+  seedIn.addEventListener("input",sync);pinIn.addEventListener("change",sync);
   $("siteRoll").addEventListener("click",()=>{seedIn.value=1+Math.floor(Math.random()*99999);sync();});
   $("siteNo").addEventListener("click",()=>{ov.hidden=true;});
   ov.addEventListener("keydown",e=>{if(e.key==="Escape"){ov.hidden=true;$("v2siteBtn").focus();}});
-  $("siteGo").addEventListener("click",()=>{const s=seedOf();if(pick===SITE.env&&s===SITE.seed&&SITE.saved){ov.hidden=true;return;}
-    siteSave(pick,s);const q=new URLSearchParams(location.search);q.delete("env");q.delete("mill");const qs=q.toString();
+  $("siteGo").addEventListener("click",()=>{const s=seedOf();if($("siteGo").textContent==="Keep this site"){ov.hidden=true;return;}
+    siteSave(any?"any":pick,s,pinIn.checked);const q=new URLSearchParams(location.search);q.delete("env");q.delete("mill");const qs=q.toString();
     const u=location.pathname+(qs?"?"+qs:"")+location.hash;if(u===location.pathname+location.search+location.hash)location.reload();else location.href=u;});}

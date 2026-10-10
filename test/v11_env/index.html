@@ -501,6 +501,13 @@ body.season-lock label.check:has(#breaks),body.season-lock label.check:has(#hays
 .bncard[hidden]{display:none}.bncard b{font:700 14px var(--f-body);color:var(--bad)}.bncard span{font-size:12.5px;color:var(--muted)}
 .bncard.ok{border-color:var(--ok);background:color-mix(in srgb,var(--ok) 7%,var(--panel))}.bncard.ok b{color:var(--ok)}
 .usum .fixg{font-style:normal;font:700 10px var(--f-display);letter-spacing:.06em;text-transform:uppercase;color:var(--panel);background:var(--bad);border-radius:3px;padding:1px 5px;margin-right:4px}
+.anybtn{display:flex;flex-direction:column;align-items:flex-start;gap:1px;text-align:left;padding:8px 12px;border-radius:10px;border:1px solid var(--line);background:var(--bg);color:var(--ink);font:inherit;cursor:pointer}
+.anybtn b{font:700 13.5px var(--f-body)}.anybtn small{font-size:11.5px;color:var(--muted)}
+.anybtn[aria-pressed="true"]{border:2px solid var(--stock);padding:7px 11px}
+.envs.any button{opacity:.55}
+.seedctl .check{font-size:12px;color:var(--muted);display:flex;gap:6px;align-items:center;margin-top:2px}
+.ev .envtag{font-style:normal;font:700 9.5px var(--f-display);letter-spacing:.06em;text-transform:uppercase;color:var(--stock);border:1px solid var(--stock);border-radius:3px;padding:0 4px;margin-left:5px;vertical-align:middle}
+.seedctl .check{text-transform:none;letter-spacing:0;font-weight:500}
 </style>
 </head>
 <body class="app">
@@ -663,10 +670,12 @@ body.season-lock label.check:has(#breaks),body.season-lock label.check:has(#hays
 <h2 id="siteH">Choose your site</h2>
 <p class="muted">The paper machine, winder, roll handling and warehouse are the same everywhere. The land around them, the utilities and the costs are not.</p>
 <div class="envs" id="siteEnvs" role="radiogroup" aria-label="Environment"></div>
+<button class="anybtn" id="siteAny" aria-pressed="false" type="button"><b>Surprise me</b><small>a different environment every visit</small></button>
 <div class="seedrow"><canvas aria-label="Site plan preview" height="150" id="sitePrev" role="img" width="300"></canvas>
 <div class="seedctl"><label for="siteSeed">Mill seed</label><div class="seedin"><input id="siteSeed" inputmode="numeric" max="99999" min="1" type="number"/><button aria-label="Roll a new mill seed" id="siteRoll" title="New seed">🎲</button></div>
-<small id="siteLay">Layout</small></div></div>
-<p class="muted small">Building on a new site reloads the game and starts a fresh run. Each run also has one bottleneck area, drawn at random.</p>
+<small id="siteLay">Layout</small>
+<label class="check"><input id="sitePin" type="checkbox"/> Keep this layout between visits</label></div></div>
+<p class="muted small">Unless you keep a layout, every visit builds a new one. Building here reloads the game and starts a fresh run. Each run also has one bottleneck area, drawn at random.</p>
 <div class="btns"><button class="primary" id="siteGo">Build here</button><button id="siteNo">Cancel</button></div></div></div>
 
 <div class="overlay top" hidden id="no3d"><div aria-labelledby="no3d-h" class="modal" role="alertdialog">
@@ -952,9 +961,9 @@ const AUTOKEYS=["inRate","drivers","pulper","pmSp","wdr","loaders","outRate"];
 let C,S;
 const BASE={...P};
 const ECON={price:{"23m":713,"26m":733,"30m":753,"33HT":813},energy:95,chem:25,wage:45,robot:15,overhead:3400,start:2e6,bankrupt:-1.5e6,goal:25e6};
-const REPAIR={refclash:140e3,steamjoint:90e3,fogfan:35e3,shaft:250e3,dryerfire:400e3,fabric:90e3,felt:45e3,slime:30e3,ragger:15e3,overflow:120e3,chestover:60e3,lwplug:25e3,cscreen:45e3,fscreen:60e3,lcplug:30e3,hdblow:55e3,boiler:60e3,permit:120e3,thkblow:70e3,birdhay:0,wrap:15e3,dye:20e3,flares:0,winderdown:40e3,runner:0,badocc:0,balefire:150e3,fleet:40e3,calloff:10e3,fight:5e3,roof:80e3,highway:0,lightning:200e3,tornado:500e3,beaver:25e3};
+const REPAIR={refclash:140e3,steamjoint:90e3,fogfan:35e3,shaft:250e3,dryerfire:400e3,fabric:90e3,felt:45e3,slime:30e3,ragger:15e3,overflow:120e3,chestover:60e3,lwplug:25e3,cscreen:45e3,fscreen:60e3,lcplug:30e3,hdblow:55e3,boiler:60e3,permit:120e3,thkblow:70e3,birdhay:0,wrap:15e3,dye:20e3,flares:0,winderdown:40e3,runner:0,badocc:0,balefire:150e3,fleet:40e3,calloff:10e3,fight:5e3,roof:80e3,highway:0,lightning:200e3,tornado:500e3,beaver:25e3,icedintake:20e3,brownout:10e3,duststorm:25e3,flood:60e3};
 const UGROUPS=[["machine","Paper machine"],["stock","Stock prep"],["yard","Warehouse & logistics"],["maint","Maintenance"],["mgmt","Management"]];
-const MAINT=["steamjoint","fogfan","shaft","fabric","felt","winderdown","hdblow","lwplug","cscreen","fscreen","lcplug","boiler","thkblow","ragger","overflow","fleet","roof","lightning"];
+const MAINT=["steamjoint","fogfan","shaft","fabric","felt","winderdown","hdblow","lwplug","cscreen","fscreen","lcplug","boiler","thkblow","ragger","overflow","fleet","roof","lightning","icedintake"];
 const UPS=[
  {id:"drive",g:"machine",name:"Drive & gearbox rebuild",lv:[400e3,900e3,1.8e6],desc:"+150 fpm max speed per level."},
  {id:"deckle",g:"machine",name:"Wider trim (deckle)",lv:[1.2e6,2.5e6],desc:"+6% tons at the same speed per level."},
@@ -1044,9 +1053,9 @@ const ENVS={
     occ:-5,price:4,energy:8,wage:4,over:0,chem:0,wx:[0.55,0.76,0.9],inMul:1,
     freq:{permit:1.6,highway:2,fight:1.2}},
   rural:{name:"Forest valley",short:"Rural",blurb:"A mill on a clean river in wooded hills. Quiet, local crews and hydro power, but the cardboard has a long haul and winters bite.",
-    pros:["Clean river water: wastewater fines 40% rarer","Local crews: wages $4/h lower","Hydro power: energy $5/t cheaper"],
+    pros:["Clean river water: wastewater fines 40% rarer","Local crews: wages $4/h lower","Hydro power: energy $8/t cheaper"],
     cons:["Long OCC haul: $12/t dearer","Hard winters: snow twice as often","Wildlife: beavers and birds in the mill twice as often"],
-    occ:12,price:0,energy:-5,wage:-4,over:0,chem:0,wx:[0.5,0.66,0.78],inMul:1,
+    occ:12,price:0,energy:-8,wage:-4,over:0,chem:0,wx:[0.5,0.66,0.78],inMul:1,
     freq:{permit:0.6,beaver:2,birdhay:2}},
   desert:{name:"Desert flats",short:"Desert",blurb:"A dry, sunny site beside a concrete canal and a solar farm. Power is cheap and the trucks always get through; water is precious and dust gets into everything.",
     pros:["Solar farm next door: energy $12/t cheaper","Dry and clear: trucks almost never slowed by weather","Cheap land: overhead $250/h lower"],
@@ -1059,13 +1068,16 @@ const ENVS={
     occ:-3,price:0,energy:0,wage:0,over:-190,chem:-5,wx:[0.4,0.7,0.92],inMul:0.88,
     freq:{slime:1.8,lightning:1.6,roof:1.6,beaver:3}}};
 const ENV_IDS=["rural","urban","desert","swamp"];
-// the site the 3D scene was built for: URL (?env=&mill=) first (tests), then the player's saved choice, then the default
-const SITE=(()=>{const q=new URLSearchParams(location.search);let s=null;
+// the site the 3D scene was built for: URL (?env=&mill=) first (tests), then the player's saved choice, then the default.
+// v4.1: a new layout every visit unless the player pins one; "any" rolls a different environment each visit too.
+const SITE=(()=>{const q=new URLSearchParams(location.search);let s=null;const test=q.has("autotest");
   // the device autotest ignores the saved site, so every phone measures the same scene (rural, mill #1) unless the URL says
-  if(!q.has("autotest"))try{s=JSON.parse(localStorage.getItem("paper-mill-site")||"null");}catch(e){}
-  const env=ENVS[q.get("env")]?q.get("env"):s&&ENVS[s.env]?s.env:"rural";
-  const ms=q.has("mill")?parseInt(q.get("mill"),10):s&&s.seed>=1?s.seed:1;
-  return {env,seed:(ms>>>0)%100000||1,saved:!!s};})();
+  if(!test)try{s=JSON.parse(localStorage.getItem("paper-mill-site")||"null");}catch(e){}
+  const choice=s&&(ENVS[s.env]||s.env==="any")?s.env:"rural";
+  const env=ENVS[q.get("env")]?q.get("env"):choice==="any"?ENV_IDS[Math.floor(Math.random()*ENV_IDS.length)]:choice;
+  const pin=!!(s&&s.pin&&s.seed>=1);
+  const ms=q.has("mill")?parseInt(q.get("mill"),10):test?1:pin?s.seed:1+Math.floor(Math.random()*99999);
+  return {env,seed:(ms>>>0)%100000||1,choice,pin,saved:!!s};})();
 // a small seeded generator for anything built from the mill seed (layout, scenery): independent of the sim's streams
 function siteRng(seed){let s=(seed>>>0)^0x5bd1e995;return ()=>{s=(s+0x6D2B79F5)|0;let t=Math.imul(s^(s>>>15),s|1);t^=t+Math.imul(t^(t>>>7),t|61);return ((t^(t>>>14))>>>0)/4294967296;};}
 // auxiliary layout from the mill seed: the wastewater plant sits behind stock prep (slot "back", x 1..46, z -49..-31,
@@ -1077,7 +1089,7 @@ function layoutFor(seed){const r=siteRng(seed);const L=LAYOUTS[Math.floor(r()*LA
   // wx/wz map a v4.0 wastewater-plant coordinate to this layout (flip mirrors the plant inside its 1..46 slot)
   const dx=L.ww==="east"?45:0,wx=x=>dx+(L.flip?47-x:x),wz=z=>z;return {...L,dx,wx,wz,i:LAYOUTS.indexOf(L)};}
 const LAYOUT=layoutFor(SITE.seed);
-function siteSave(env,seed){try{localStorage.setItem("paper-mill-site",JSON.stringify({env,seed}));}catch(e){}}
+function siteSave(env,seed,pin){try{localStorage.setItem("paper-mill-site",JSON.stringify({env,seed,pin:!!pin}));}catch(e){}}
 // gameplay effect of the environment (sim; applied in applyUpgrades). The site of the loaded scene is the one in play.
 const ENVX=()=>ENVS[SITE.env]||ENVS.rural;
 // ---- bottleneck: one area starts well short of the paper machine's rate. Its capacity is BNK[area] of what the machine
@@ -1120,7 +1132,9 @@ function applySite(){const E=ENVX(),b=BNQ(),need=NEED23(),fiber=need/P.pmLoss,fe
 function lineCaps(){const g=GRADES[C.grade],pm=P.K*(g.sp+P.spBonus)*g.bw,y=P.yieldF,k=P.pmLoss,roll=P.jumbo/P.rollsPerReel;
   return [["recv","Receiving",P.doors*P.doorRate*y*k],["pulper","Pulper",P.pulperMax*y*k],["screens","Screens & cleaners",P.screenMax*k],
     ["pm","Paper machine",pm],["winder","Winder",P.winderMax],["ship","Shipping",P.shipDoors*P.doorRolls*roll]];}
-function siteFreq(id){const f=ENVX().freq;return (f&&f[id])||1;}
+// upset frequency from the site: its own upsets only here (0 elsewhere), the ice follows the weather, the storms the season
+function siteFreq(id){const e=EV[id];if(e&&e.env&&e.env!==SITE.env)return 0;const f=ENVX().freq;let m=(f&&f[id])||1;
+  if(id==="icedintake"&&S)m*=S.wx==="snow"?4:S.wx==="clear"?0.5:1;if(id==="duststorm"&&S)m*=S.wx==="clear"?1.3:0.4;if(id==="flood"&&S)m*=S.wx==="rain"?3:S.wet>0.5?1.5:0.4;return m;}
 // what each bottleneck-fixing upgrade does for its area (shown on the upgrade card)
 const BN_UPTXT={"recv/docks":"Each extra door adds a third more unloading.","recv/forklift":"+25% unloading at every door per level.",
   "pulper/pulper":"+30 t/h of pulping per level.","screens/clean":"+18 t/h of screen capacity per level.","winder/winder":"+30 t/h of winding per level.",
@@ -1195,13 +1209,18 @@ const EVENTS=[
    start:i=>{const pool=EVENTS.filter(e=>e.g!=="god"&&!active(e.id));for(let k=0;k<2&&pool.length;k++){const e=pool.splice(Math.floor(rand("upx")*pool.length),1)[0];trigger(e.id,true);}
      const l=Math.round(S.fg*0.05);S.fg-=l;i.note=`${l} rolls blown away`;}},
  {id:"beaver",g:"god",name:"Giant beaver",head:"A giant beaver crawls out of the river and starts eating the bale yard!",dur:[120,240],mtbf:700,mods:{yardEat:120,recvMul:0.3},fx:"beaver"},
+ // v4.1 environment-specific upsets (env: only on that site; the dice are still drawn everywhere so the streams stay in step)
+ {id:"icedintake",g:"stock",env:"rural",name:"River intake iced over",head:"The river intake has iced over! Fresh water is short: stock prep throttles back until maintenance clears the ice.",dur:[120,240],mtbf:330,mods:{feedMul:0.6},fx:"icedintake"},
+ {id:"brownout",g:"machine",env:"urban",name:"Grid brownout",head:"Peak demand on the city grid: the utility cuts the mill back. Machine speed capped at 80% and the pulper throttled.",dur:[90,180],mtbf:300,mods:{speedCap:0.8,feedMul:0.85},fx:"brownout"},
+ {id:"duststorm",g:"yard",env:"desert",name:"Dust storm",head:"A wall of dust rolls over the mill! Trucks crawl, the clamp trucks slow down and the dust gets into the screens and the sheet.",dur:[60,150],mtbf:260,mods:{recvMul:0.6,clampMul:0.7,breakMul:1.5,speedCap:0.9},fx:"duststorm"},
+ {id:"flood",g:"yard",env:"swamp",name:"Bayou flood",head:"The bayou is over its banks! Water across the yard: forklifts and clamp trucks bog down and the trucks crawl.",dur:[180,360],mtbf:420,mods:{recvMul:0.5,clampMul:0.6},fx:"flood"},
 ];
 const EV=Object.fromEntries(EVENTS.map(e=>[e.id,e]));
 EVENTS.forEach(e=>CH.en[e.id]=true);
 const WXN={clear:"Clear",rain:"Rain",fog:"Fog",snow:"Snow"};
 function active(id){return S.inc.some(i=>i.id===id);}
 // machine and winder upsets go to the crew one at a time, in the order they happen; nothing gets fixed until a crew is there
-const QINC=id=>!!(EV[id]&&((EV[id].g==="machine"&&id!=="runner"&&id!=="birdhay"&&id!=="boiler"&&id!=="fogfan"&&id!=="steamjoint")||id==="ragger"));
+const QINC=id=>!!(EV[id]&&((EV[id].g==="machine"&&id!=="runner"&&id!=="birdhay"&&id!=="boiler"&&id!=="fogfan"&&id!=="steamjoint"&&id!=="brownout")||id==="ragger"));
 const RESP={ragger:6,wrap:4,hay:4,brk:2,dryerfire:3,shaft:8,fabric:6,felt:6,slime:5,winderdown:6};
 function enqueue(k){if(!S.crewQ)S.crewQ=[];if(S.crewQ.some(q=>q.k===k))return;S.crewQ.push({k,resp:RESP[k]||6,since:0,here:false,go:false});}
 function crewTick(dt){if(!S.crewQ)S.crewQ=[];
@@ -1216,7 +1235,7 @@ function crewTick(dt){if(!S.crewQ)S.crewQ=[];
   if(!(G3.on&&G3.ok)||TURBO_FAST(C.simSpeed)||now-h.since>(h.k==="ragger"?25000:6000))h.here=true;
   if(h.resp<=0&&h.here)h.go=true;}
 // maintenance: techs work in pairs, oldest job first; a job's repair clock only runs once its pair is on site
-const MJOBS=["refclash","steamjoint","fogfan","shaft","fabric","felt","winderdown","hdblow","lwplug","cscreen","fscreen","lcplug","boiler","thkblow","overflow","chestover","fleet","roof","lightning"];
+const MJOBS=["refclash","steamjoint","fogfan","shaft","fabric","felt","winderdown","hdblow","lwplug","cscreen","fscreen","lcplug","boiler","thkblow","overflow","chestover","fleet","roof","lightning","icedintake"];
 const MNEED=id=>MJOBS.includes(id);
 function maintTick(dt){const crews=Math.max(1,Math.floor(P.techs/2)),list=S.inc.filter(i=>MNEED(i.id)),now=performance.now();
   list.forEach((i,k)=>{i.mSlot=k<crews?k:-1;i.mQ=k-crews+1;if(i.mSlot<0)return;if(!i.mSince){i.mSince=now;i.mResp=8;}
@@ -1243,7 +1262,7 @@ function brkNote(){const w={reel:"Dryers",dryer:"Presses",press:"Wet end"}[S.brk
 function rethread(why){S.pm="break";S.brkType="press";S.breakLeft=2*(26+rand("brkx")*20);S.breakTotal=S.breakLeft;enqueue("brk");log(`Rethreading the machine ${why}`,"warn");}
 function log(text,cls){S.feed.unshift({t:S.t,text,cls});if(S.feed.length>40)S.feed.pop();}
 function trigger(id,quiet){
-  if(active(id))return;
+  if(active(id))return;if(EV[id]&&EV[id].env&&EV[id].env!==SITE.env)return;   // v4.1: another site's upset
   const e=EV[id],dur=(e.dur[0]+rand("upx")*(e.dur[1]-e.dur[0]))*durMul(id);
   const inc={id,left:dur,total:dur,real:performance.now(),note:""};
   S.inc.push(inc);(S.evc||(S.evc={}))[id]=(S.evc[id]||0)+1;if(QINC(id))enqueue(id);S.lastInc=S.t;S.tot.incidents++;AUDIO.event(id);
@@ -1953,8 +1972,8 @@ function setSimSpeed(v){C.simSpeed=Math.max(1,Math.min(TURBO?960:120,Math.round(
 
 const cgrid=$("chaosgrid");
 GROUPS.forEach(([g,lab])=>{const d=document.createElement("div");d.className="grp";const h=document.createElement("h3");h.textContent=lab;d.appendChild(h);
-  EVENTS.filter(e=>e.g===g).forEach(e=>{const r=document.createElement("div");r.className="ev";
-    r.innerHTML=`<button class="trig" id="ev-${e.id}" aria-pressed="false"><span>${e.name}</span><small></small></button><label><input type="checkbox" id="en-${e.id}" checked> random</label>`;
+  EVENTS.filter(e=>e.g===g&&(!e.env||e.env===SITE.env)).forEach(e=>{const r=document.createElement("div");r.className="ev";
+    r.innerHTML=`<button class="trig" id="ev-${e.id}" aria-pressed="false"><span>${e.name}${e.env?' <em class="envtag">'+ENVS[e.env].short+'</em>':""}</span><small></small></button><label><input type="checkbox" id="en-${e.id}" checked> random</label>`;
     d.appendChild(r);
     r.querySelector("button").addEventListener("click",()=>{if(S.season&&S.season.on)return;if(active(e.id))clearIncident(e.id);else trigger(e.id);updateChaos();});
     r.querySelector("input").addEventListener("change",ev=>{CH.en[e.id]=ev.target.checked;});});
@@ -2202,7 +2221,7 @@ function updateChaos(){
   if(!S.inc.length){const s=document.createElement("span");s.className="none";s.textContent="No active incidents.";act.appendChild(s);}
   S.inc.forEach(i=>{const d=document.createElement("div");d.className="it";d.textContent=EV[i.id].name;const sm=document.createElement("small");
     const cs=incState(i)||(MNEED(i.id)?"maintenance working":QINC(i.id)?crewState(i.id):"");sm.textContent=`${(i.left/60).toFixed(1)} h left${cs?" · "+cs:""}${i.note?" · "+i.note:""}`;d.appendChild(sm);act.appendChild(d);});
-  EVENTS.forEach(e=>{const b=$("ev-"+e.id),i=S.inc.find(x=>x.id===e.id);b.setAttribute("aria-pressed",i?"true":"false");
+  EVENTS.forEach(e=>{const b=$("ev-"+e.id),i=S.inc.find(x=>x.id===e.id);if(!b)return;b.setAttribute("aria-pressed",i?"true":"false");
     b.querySelector("small").textContent=i?`${(i.left/60).toFixed(1)} h`:"";b.title=i?"Click to clear this incident":"Click to trigger now";});
   const k=S.feed.length+"|"+(S.feed[0]?S.feed[0].t:"");
   if(k!==feedKey){feedKey=k;const fd=$("c-feed");fd.replaceChildren();
@@ -2310,16 +2329,30 @@ function no3D(){G3.ok=false;$("no3d").hidden=false;$("no3d-retry").onclick=()=>l
   renderer.debug.checkShaderErrors=false;
   G3.ok=true;
   const mobile=matchMedia("(pointer: coarse)").matches;
-  renderer.setPixelRatio(Math.min(mobile?1.25:2,window.devicePixelRatio||1));
-  // the shadow pass redraws every shadow-casting object, so refresh it 15x a second instead of every frame (v2.8.4: desktop too)
-  renderer.shadowMap.autoUpdate=false;G3.shadowHz=15;
+  /* v4.1 graphics tiers. Auto picks from the device (phones: Medium, or Low with little memory; desktops: High, or Ultra on a
+     discrete GPU); the player can pin one in Controls. Pixel ratio, shadow refresh, shadow map size, weather particles and
+     far-scenery shadows and the shadow softness change live; the lighting model and scenery density take effect on the next load. */
+  const GFX_TIERS={low:{pr:1,shadow:1024,soft:false,hz:10,scenery:0.5,wx:600,lambert:true,far:false},
+    medium:{pr:1.25,shadow:1024,soft:false,hz:15,scenery:0.85,wx:1000,lambert:true,far:false},
+    high:{pr:2,shadow:2048,soft:true,hz:30,scenery:1,wx:2000,lambert:false,far:false},
+    ultra:{pr:2,shadow:4096,soft:true,hz:60,scenery:1.4,wx:2600,lambert:false,far:true}};
+  const gpuName=(()=>{try{const gl=renderer.getContext(),x=gl.getExtension("WEBGL_debug_renderer_info");return x?gl.getParameter(x.UNMASKED_RENDERER_WEBGL):gl.getParameter(gl.RENDERER);}catch(e){return "";}})();
+  const gfxAuto=mobile?((navigator.deviceMemory||4)<4?"low":"medium"):(/NVIDIA|GeForce|RTX|Radeon RX|Radeon Pro|Arc\(TM\)/i.test(gpuName)&&(navigator.hardwareConcurrency||4)>=8?"ultra":"high");
+  let gfxPick="auto";try{gfxPick=localStorage.getItem("paper-mill-gfx")||"auto";}catch(e){}
+  {const q=new URLSearchParams(location.search).get("gfx");if(q&&GFX_TIERS[q])gfxPick=q;}   // ?gfx=low|medium|high|ultra (tests)
+  if(!GFX_TIERS[gfxPick])gfxPick="auto";
+  const GFX=G3.GFX={...GFX_TIERS[gfxPick==="auto"?gfxAuto:gfxPick],tier:gfxPick==="auto"?gfxAuto:gfxPick,pick:gfxPick,auto:gfxAuto,gpu:String(gpuName).slice(0,60)};
+  diag(`graphics: ${GFX.tier}${gfxPick==="auto"?" (auto)":""} on ${GFX.gpu||"unknown GPU"}`);
+  renderer.setPixelRatio(Math.min(GFX.pr,window.devicePixelRatio||1));
+  // the shadow pass redraws every shadow-casting object, so refresh it a few times a second instead of every frame (v2.8.4: desktop too)
+  renderer.shadowMap.autoUpdate=false;G3.shadowHz=GFX.hz;
   // v2.8.4: round shapes get only as many sides as their size needs at this zoom (unit shapes that get scaled up keep 24)
   const segCap=(r,s)=>Math.max(3,Math.min(s,r===1?24:r<0.15?6:r<0.45?10:r<1.2?16:r<4?20:28));
   class CylG extends THREE.CylinderGeometry{constructor(rt=1,rb=1,h=1,rs=32,hs=1,oe=false,ts=0,tl=Math.PI*2){super(rt,rb,h,segCap(Math.max(rt,rb),rs),hs,oe,ts,tl);}}
   class SphG extends THREE.SphereGeometry{constructor(r=1,ws=32,hs=16,...a){super(r,Math.max(3,Math.min(ws,16)),Math.max(2,Math.min(hs,10)),...a);}}
   class RingG extends THREE.RingGeometry{constructor(a=0.5,b=1,ts=32,...x){super(a,b,Math.max(3,Math.min(ts,32)),...x);}}
   class CircG extends THREE.CircleGeometry{constructor(r=1,sg=32,...x){super(r,Math.max(3,Math.min(sg,32)),...x);}}
-  renderer.shadowMap.enabled=true;renderer.shadowMap.type=THREE.PCFShadowMap;
+  renderer.shadowMap.enabled=true;renderer.shadowMap.type=THREE.PCFShadowMap;   // (r186 dropped PCFSoft; the soft tiers widen the PCF kernel instead)
   renderer.outputColorSpace=THREE.SRGBColorSpace;renderer.toneMapping=THREE.ACESFilmicToneMapping;renderer.toneMappingExposure=1.12;
   const scene=new THREE.Scene();G3.scene=scene;G3.renderer=renderer;
   const camera=new THREE.PerspectiveCamera(18,16/9,2,1400);
@@ -2327,7 +2360,7 @@ function no3D(){G3.ok=false;$("no3d").hidden=false;$("no3d-retry").onclick=()=>l
   /* palette: every material is bound to a CSS token so theme switches recolor the scene */
   const MATS=[];
   // v2.9.0: phones get the much cheaper Lambert lighting model instead of physically based shading (same colours, flatter sheen)
-  function StdMat(o){if(!mobile)return new THREE.MeshStandardMaterial(o);const r=Object.assign({},o||{});delete r.roughness;delete r.metalness;delete r.flatShading;delete r.envMapIntensity;delete r.roughnessMap;delete r.metalnessMap;return new THREE.MeshLambertMaterial(r);}
+  function StdMat(o){if(!GFX.lambert)return new THREE.MeshStandardMaterial(o);const r=Object.assign({},o||{});delete r.roughness;delete r.metalness;delete r.flatShading;delete r.envMapIntensity;delete r.roughnessMap;delete r.metalnessMap;return new THREE.MeshLambertMaterial(r);}
   function tok(name){return getComputedStyle(document.documentElement).getPropertyValue("--"+name).trim()||"#888";}
   function mat(token,opts={}){const m=new StdMat(Object.assign({roughness:0.72,metalness:0.04,flatShading:false},opts));m.userData.token=token;MATS.push(m);return m;}
   let paletteKey="",skyHex="#b3bbcb";
@@ -2347,8 +2380,8 @@ function no3D(){G3.ok=false;$("no3d").hidden=false;$("no3d-retry").onclick=()=>l
   const LEG=Math.PI;
   const hemi=new THREE.HemisphereLight(0xffffff,0x888888,0.85*LEG);scene.add(hemi);
   const sun=new THREE.DirectionalLight(0xfff4e6,1.5*LEG);sun.position.set(-75,95,48);
-  sun.castShadow=true;const sz=1024;sun.shadow.mapSize.set(sz,sz);
-  Object.assign(sun.shadow.camera,{left:-90,right:90,top:60,bottom:-60,near:10,far:250});sun.shadow.bias=-0.0004;sun.shadow.radius=3;sun.shadow.normalBias=0.04;
+  sun.castShadow=true;const sz=GFX.shadow;sun.shadow.mapSize.set(sz,sz);
+  Object.assign(sun.shadow.camera,{left:-90,right:90,top:60,bottom:-60,near:10,far:250});sun.shadow.bias=-0.0004;sun.shadow.radius=GFX.soft?5:3;sun.shadow.normalBias=0.04;
   sun.target.position.set(-5,0,5);scene.add(sun,sun.target);
   let baseHemi=0.85,baseSun=0.9;
 
@@ -3741,6 +3774,7 @@ function no3D(){G3.ok=false;$("no3d").hidden=false;$("no3d-retry").onclick=()=>l
   // on phones the tutorial card covers the lower half: aim past the spot so it sits in the upper half of the screen
   G3.camTo=(x,z,r,th,ph)=>{th=th??DEF.th;const k=host.clientWidth<600?r*0.13:0;goal={t:new THREE.Vector3(x+Math.sin(th)*k,0,z+Math.cos(th)*k),r,th,ph:ph??0.9};};
   G3.camHome=()=>{goal={t:DEFT.clone(),r:DEF.r,th:DEF.th,ph:DEF.ph};};
+  G3.camSet=c=>{goal=null;target.set(c[0],0,c[1]);cam.r=c[2];cam.th=c[3];cam.ph=c[4];};   // tests and screenshots
   {const hm=new THREE.MeshBasicMaterial({color:lin0("#ffb020"),transparent:true,opacity:0.85,depthWrite:false,depthTest:false,side:THREE.DoubleSide,toneMapped:false});
    const ring=new THREE.Mesh(new RingG(0.86,1,64),hm);ring.rotation.x=-Math.PI/2;ring.renderOrder=20;ring.visible=false;scene.add(ring);
    const bm=new THREE.MeshBasicMaterial({color:lin0("#ffd27a"),transparent:true,opacity:0.18,depthWrite:false,side:THREE.DoubleSide,toneMapped:false});
@@ -3816,7 +3850,14 @@ function no3D(){G3.ok=false;$("no3d").hidden=false;$("no3d-retry").onclick=()=>l
   document.querySelectorAll("#jumps button").forEach(b=>b.addEventListener("click",()=>{const [x,z,r]=JUMPS[b.dataset.j];goal={t:new THREE.Vector3(x,0,z),r,th:DEF.th,ph:0.88};}));
   $("viewReset").addEventListener("click",()=>{goal={t:DEFT.clone(),r:DEF.r,th:DEF.th,ph:DEF.ph};});
   $("viewShadows").addEventListener("change",e=>{renderer.shadowMap.enabled=e.target.checked;renderer.shadowMap.needsUpdate=true;MATS.forEach(m=>m.needsUpdate=true);});
-  if(mobile){sun.shadow.mapSize.set(1024,1024);}
+  // v4.1: change graphics tier while playing (what can change live; see GFX_TIERS in 20-3d-setup.js)
+  G3.setGfx=pick=>{if(pick!=="auto"&&!GFX_TIERS[pick])return;const t=GFX_TIERS[pick==="auto"?GFX.auto:pick];GFX.pick=pick;GFX.tier=pick==="auto"?GFX.auto:pick;
+    try{localStorage.setItem("paper-mill-gfx",pick);}catch(e){}
+    renderer.setPixelRatio(Math.min(t.pr,window.devicePixelRatio||1));resize();G3.shadowHz=t.hz;GFX.pr=t.pr;GFX.hz=t.hz;
+    if(sun.shadow.mapSize.x!==t.shadow){sun.shadow.mapSize.set(t.shadow,t.shadow);if(sun.shadow.map){sun.shadow.map.dispose();sun.shadow.map=null;}renderer.shadowMap.needsUpdate=true;}sun.shadow.radius=t.soft?5:3;
+    if(G3.wxRange)G3.wxRange(t.wx);if(G3.scenery)G3.scenery.parts.forEach(p=>{if(p.userData.scenery!=="near")p.castShadow=t.far;});
+    diag(`graphics: ${GFX.tier}${pick==="auto"?" (auto)":""}; lighting model and scenery density change on the next load`);
+    document.querySelectorAll("#gfxSeg button").forEach(b=>b.setAttribute("aria-pressed",String(b.dataset.g===pick)));};
 
   function resize(){G3.lastMove=performance.now();const w=host.clientWidth,h=host.clientHeight;G3.vw=w;G3.vh=h;   // v4.0.1: cached for the label code
   host.classList.toggle("compact",w<640);if(!w||!h)return;renderer.setSize(w,h,false);camera.aspect=w/h;camera.updateProjectionMatrix();}
@@ -3983,10 +4024,13 @@ function no3D(){G3.ok=false;$("no3d").hidden=false;$("no3d-retry").onclick=()=>l
     const sm=new THREE.MeshBasicMaterial({color:lin(tok("bad")),transparent:true,opacity:0.5});const stem=new THREE.Mesh(new CylG(0.05,0.05,1,6),sm);g.add(stem);
     const o={p,ring,stem,x,y,z,move(nx,nz){this.x=nx;this.z=nz;},update(now){const b=Math.sin(now/320)*0.35;p.position.set(this.x,this.y+b,this.z);p.rotation.y=now/1500;
       const ph=(now/1600)%1;ring.position.set(this.x,0.13,this.z);ring.scale.setScalar(1+ph*5);rm.opacity=0.85*(1-ph);stem.position.set(this.x,(this.y+b)/2,this.z);stem.scale.y=this.y+b;}};return o;}
-  const PINS={refclash:[60.6,8,-11,"!"],steamjoint:[11.2,9.5,4.6,"!"],fogfan:[49.5,22,-4.2,"!"],shaft:[12,10,15.6,"!"],dryerfire:[12,13,zc,"fire"],fabric:[48,9,zc,"!"],felt:[34.5,11,zc,"!"],slime:[4,11,zc,"!"],ragger:[16,9,-13.5,"!"],overflow:[-21,10,-13,"water"],chestover:[34.5,21,-15,"water"],lwplug:[11.2,9,ZL,"!"],cscreen:[15.2,8,ZL,"!"],fscreen:[19.2,9,ZL,"!"],lcplug:[26.6,8,ZL,"water"],hdblow:[25.8,13,-10.6,"water"],boiler:[76,14,-10,"!"],permit:[LAYOUT.wx(22),10,-40,"water"],thkblow:[34.5,22,-15,"water"],birdhay:[-18.7,9,zc,"!"],wrap:[12,12,zc,"!"],flares:[16,10,-13.5,"fire"],dye:[24,11,zc,"!"],winderdown:[-18.7,9,zc,"!"],
+  const PINS={icedintake:[-30,6,-55.5,"!"],duststorm:[-21,12,-13,"!"],flood:[-62,7,4,"water"],refclash:[60.6,8,-11,"!"],steamjoint:[11.2,9.5,4.6,"!"],fogfan:[49.5,22,-4.2,"!"],shaft:[12,10,15.6,"!"],dryerfire:[12,13,zc,"fire"],fabric:[48,9,zc,"!"],felt:[34.5,11,zc,"!"],slime:[4,11,zc,"!"],ragger:[16,9,-13.5,"!"],overflow:[-21,10,-13,"water"],chestover:[34.5,21,-15,"water"],lwplug:[11.2,9,ZL,"!"],cscreen:[15.2,8,ZL,"!"],fscreen:[19.2,9,ZL,"!"],lcplug:[26.6,8,ZL,"water"],hdblow:[25.8,13,-10.6,"water"],boiler:[76,14,-10,"!"],permit:[LAYOUT.wx(22),10,-40,"water"],thkblow:[34.5,22,-15,"water"],birdhay:[-18.7,9,zc,"!"],wrap:[12,12,zc,"!"],flares:[16,10,-13.5,"fire"],dye:[24,11,zc,"!"],winderdown:[-18.7,9,zc,"!"],
     badocc:[-17,10,-11,"!"],balefire:[-25,11,-12,"fire"],fleet:[-29,10,-16,"!"],calloff:[-36,10,23,"!"],fight:[-38,7,-21,"!"],roof:[-32,10,24,"water"],highway:[-72,7,4,"!"],
     lightning:[34.5,16,-15,"bolt"],tornado:[0,26,0,"!"],beaver:[-24,12,-12.5,"!"]};
   function fxPerson(group,m,x,z){const w=worker(m,M.warn);w.position.set(x,0,z);group.add(w);return w;}
+  // v4.1: the brownout's pin sits on the substation the scenery placed (or the power house when there is none)
+  const subPos=()=>{const u=G3.scenery&&G3.scenery.util&&G3.scenery.util.substation;return u?[u[0],u[1]]:[74,-10];};
+  Object.defineProperty(PINS,"brownout",{get(){const [x,z]=subPos();return [x,x===74?14:9,z,"!"];}});
   const FX={};G3.FX=FX;G3.PB=PB;G3.PT=PT;   // (read by the autotest's GPU probe)
   // wire / felt run-off: the loop runs off the tending side into a heap in the aisle, the section sits bare,
   // the crew carry a new one out in its long shipping crate and pull it on from the front, and the heap is cleared
@@ -4170,6 +4214,31 @@ function no3D(){G3.ok=false;$("no3d").hidden=false;$("no3d-retry").onclick=()=>l
       const tail=E(3,0.35,1.7,M.ink,-5.4,0.9,0);tail.rotation.z=0.25;bv.position.set(-24,0,-12.5);bv.rotation.y=-0.4;g.add(bv);
       return (now,rdt)=>{bv.position.y=Math.abs(Math.sin(now/400))*0.4;teeth.position.y=3.55-Math.abs(Math.sin(now/120))*0.3;head.rotation.z=Math.sin(now/120)*0.08;tail.rotation.z=0.25+Math.sin(now/200)*0.3;
         for(let k=0;k<2;k++)if(Math.random()<rdt*14)emit("chip",-18.5,4,-11.5,1+Math.random()*4,4+Math.random()*4,R()*5,1.3,0.55,"#ffffff",1);};},
+    // ---- v4.1 environment upsets ----
+    // rural: ice floes jammed against the river intake, frost on the pump house; chips fly once maintenance is breaking it up
+    icedintake:g=>{const ice=new StdMat({color:lin0("#e8f3fb"),roughness:0.35}),floes=new THREE.InstancedMesh(new THREE.BoxGeometry(1,1,1),ice,15),fm=[],m4=new THREE.Matrix4(),q4=new THREE.Quaternion(),v3=new THREE.Vector3(),s3=new THREE.Vector3(),yAx=new THREE.Vector3(0,1,0);
+      for(let k=0;k<15;k++)fm.push(k<14?[-37+Math.random()*14,-67+Math.random()*7,Math.random()*3,1.2+Math.random()*2.2,1+Math.random()*1.8,0.3]:[-30,-60.5,0,5,3,0.5]);
+      floes.castShadow=true;g.add(floes);
+      const frost=new THREE.Mesh(new THREE.BoxGeometry(4.12,3.12,4.12),new StdMat({color:lin0("#ffffff"),transparent:true,opacity:0.38,roughness:0.95,depthWrite:false}));frost.position.set(-30,1.5,-55.5);g.add(frost);
+      return (now,rdt,inc)=>{for(let k=0;k<15;k++){const f=fm[k];m4.compose(v3.set(f[0],0.1+Math.sin(now/900+k)*0.04,f[1]),q4.setFromAxisAngle(yAx,f[2]),s3.set(f[3],f[5],f[4]));floes.setMatrixAt(k,m4);}floes.instanceMatrix.needsUpdate=true;
+        if(inc&&inc.mGo&&Math.random()<rdt*8)emit("chip",-30+R()*3,1.2,-58+R()*2,R()*3,2+Math.random()*3,R()*3,0.9,0.4,"#ffffff",1);};},
+    // urban: arc flashes at the substation and the mill's lights sag (envUpdate reads G3.brownK)
+    brownout:g=>{const [px,pz]=subPos(),py=px===74?9.5:3.4,arcs=[];
+      for(let k=0;k<3;k++){const s=new THREE.Sprite(new THREE.SpriteMaterial({map:TX.dot,color:lin("#bfe3ff"),transparent:true,depthWrite:false,toneMapped:false}));s.position.set(px-6+k*6,py,pz-2);s.scale.setScalar(3.2);g.add(s);arcs.push(s);}
+      return (now,rdt)=>{const tick=(now/90)|0,fl=tick%7===0;arcs.forEach((s,k)=>{s.visible=fl&&k===tick%3;});G3.brownK=0.55+0.25*Math.sin(now/230)*Math.sin(now/71);
+        if(fl&&Math.random()<rdt*30)emit("spark",px-6+(tick%3)*6,py,pz-2,R()*3,1+Math.random()*2,R()*3,0.4,0.2,"#9fd0ff",1);};},
+    // desert: the storm is in the sky (envUpdate reads G3.dustK: tan haze, short fog, blowing dust); here, dust rolling across the ground
+    duststorm:g=>{return (now,rdt,inc)=>{const k=inc&&inc.total?inc.left/inc.total:1;G3.dustK=k<0.15?k/0.15:k>0.92?(1-k)/0.08:1;
+        for(let q=0;q<3;q++)if(Math.random()<rdt*36*G3.dustK)emitA("smoke",-95+Math.random()*190,0.6+Math.random()*4,-55+Math.random()*120,9+Math.random()*5,0.2,R()*1.5,3.2,7+Math.random()*6,"#c9a86b",0.5);};},
+    // swamp: water over the yard and the roads (not inside the buildings), rising as the incident starts and draining away at the end
+    flood:g=>{const sh=new THREE.Shape();sh.moveTo(-150,-52);sh.lineTo(96,-52);sh.lineTo(96,66);sh.lineTo(-150,66);sh.closePath();
+      [[-27.2,64,-2.9,19.85],[-34.4,-8,-23.5,-3],[-49,-23.8,14.8,32.2],[4,47,-25,-2],[49,65,-27,-14.5],[70,82,-16,-4],[49,61,24,30]].forEach(([x0,x1,z0,z1])=>{const h=new THREE.Path();h.moveTo(x0,z0);h.lineTo(x1,z0);h.lineTo(x1,z1);h.lineTo(x0,z1);h.closePath();sh.holes.push(h);});
+      const geo=new THREE.ShapeGeometry(sh);geo.rotateX(Math.PI/2);
+      const wm=new StdMat({color:lin0("#5a7f7c"),transparent:true,opacity:0,roughness:0.06,metalness:0.25,depthWrite:false,side:THREE.DoubleSide});
+      const w=new THREE.Mesh(geo,wm);w.position.y=0.09;w.renderOrder=1;g.add(w);const rp=ripples(g,10,-90,80,-45,60,0.12);
+      const debris=[];for(let k=0;k<8;k++){const d=box(1.6,0.12,0.25,M.kraft,-70+Math.random()*140,0.14,-40+Math.random()*90,g,false);d.rotation.y=Math.random()*3;debris.push(d);}
+      return (now,rdt,inc)=>{const k=inc&&inc.total?inc.left/inc.total:1,lvl=k>0.85?(1-k)/0.15:k<0.25?k/0.25:1;wm.opacity=0.72*lvl;w.position.y=0.03+0.07*lvl;G3.floodK=lvl;
+        rp(now);debris.forEach((d,q)=>{d.visible=lvl>0.3;d.position.x+=rdt*0.4;d.position.y=w.position.y+0.05+Math.sin(now/700+q)*0.02;if(d.position.x>90)d.position.x=-100;});};},
   };
   const blackEl=$("blackout3d");let lastIncTxt=0;
   function makeFX(id){const def=FXDEF[id];const g=new THREE.Group();scene.add(g);const pp=PINS[id]||[0,10,0,"!"];const f=FX[id]={g,up:null,pin:pinAt(g,pp[0],pp[1],pp[2],pp[3]),lb:lblNew(true,id)};
@@ -4235,6 +4304,7 @@ function no3D(){G3.ok=false;$("no3d").hidden=false;$("no3d-retry").onclick=()=>l
     stepParts(rdt);fireLight.position.copy(fireLpos);fireFloorK=Math.max(0,fireFloorK-rdt*1.5);
     {const fl=0.9*Math.sin(performance.now()/60)+0.6*Math.sin(performance.now()/23),on=fireFloor.userData.on||0;fireLight.intensity=fireL>0?LEG*0.75*fireL*(3.4+fl+fireFloorK*3):0;
       fireFloor.visible=on>0;if(on>0){if(!fireFloor.material.map){fireFloor.material.map=spriteTex((x,w)=>{const g=x.createRadialGradient(w/2,w/2,0,w/2,w/2,w/2);g.addColorStop(0,"rgba(255,255,255,1)");g.addColorStop(0.4,"rgba(255,255,255,0.6)");g.addColorStop(1,"rgba(255,255,255,0)");x.fillStyle=g;x.fillRect(0,0,w,w);});fireFloor.material.needsUpdate=true;}fireFloor.material.opacity=Math.min(1,on*(0.42+0.1*fl+fireFloorK*0.25));}fireFloor.userData.on=0;}fireL=0;
+    if(!S.inc.some(i=>i.id==="brownout"))G3.brownK=1;if(!S.inc.some(i=>i.id==="duststorm"))G3.dustK=0;if(!S.inc.some(i=>i.id==="flood"))G3.floodK=0;
     const out=S.inc.some(i=>i.id==="lightning");if(blackEl.hidden!==!out)blackEl.hidden=!out;if(!out){const fl=$("flash3d");if(fl.style.opacity!=="0")fl.style.opacity=0;}
   }
 
@@ -4787,17 +4857,19 @@ function no3D(){G3.ok=false;$("no3d").hidden=false;$("no3d-retry").onclick=()=>l
     const p=new THREE.Points(g,m);p.frustumCulled=false;p.visible=false;scene.add(p);
     const rg=new THREE.BufferGeometry(),rp=new Float32Array(n*6);rg.setAttribute("position",new THREE.BufferAttribute(rp,3));
     const rm=new THREE.LineBasicMaterial({color:lin0("#d6e2ee"),transparent:true,opacity:0.6,depthWrite:false});const rl=new THREE.LineSegments(rg,rm);rl.frustumCulled=false;rl.visible=false;scene.add(rl);
-    g.setDrawRange(0,1000);rg.setDrawRange(0,2000);return {p,g,pos,m,n,rg,rp,rm,rl};})();
+    const wxN=Math.min(n,(G3.GFX&&G3.GFX.wx)||1000);g.setDrawRange(0,wxN);rg.setDrawRange(0,wxN*2);G3.wxRange=k=>{const q=Math.min(n,k);g.setDrawRange(0,q);rg.setDrawRange(0,q*2);};return {p,g,pos,m,n,rg,rp,rm,rl};})();
   scene.fog=new THREE.Fog(0xb3bbcb,600,3000);
-  const SKY_DAY=new THREE.Color(),SKY_NIGHT=lin0("#232b44"),SKY_RAIN=lin0("#8c94a2"),SKY_FOG=lin0("#c9ced6"),tmpC=new THREE.Color();let fogK=0,wxK=0,envAcc=0;
+  const SKY_DAY=new THREE.Color(),SKY_NIGHT=lin0("#232b44"),SKY_RAIN=lin0("#8c94a2"),SKY_FOG=lin0("#c9ced6"),SKY_DUST=lin0("#c9a86b"),tmpC=new THREE.Color();let fogK=0,wxK=0,envAcc=0,dustK=0;
   function envUpdate(rdt,now){const out=S.inc.some(i=>i.id==="lightning");
     const hr=((S.t+360)/60)%24,ss=v=>v*v*(3-2*v),day=hr<12?ss(clamp((hr-5.2)/1.6,0,1)):ss(clamp((20.2-hr)/1.6,0,1));
     const wx=S.wx||"clear";fogK+=((wx==="fog"?0.45:wx==="snow"?0.12:wx==="rain"?0.06:0)-fogK)*Math.min(1,rdt*0.8+0.01);
     wxK+=((wx==="rain"||wx==="snow"?1:0)-wxK)*Math.min(1,rdt*0.6+0.01);
-    if(!out){hemi.intensity=LEG*baseHemi*(0.3+0.7*day)*(1-0.05*wxK);sun.intensity=LEG*baseSun*(0.1+0.9*day)*(1-0.18*Math.max(wxK,fogK));
-      SKY_DAY.set(skyHex).convertSRGBToLinear();tmpC.copy(SKY_DAY).lerp(wx==="fog"?SKY_FOG:SKY_RAIN,Math.max(wxK*0.25,fogK*0.5)).lerp(SKY_NIGHT,1-day);
+    // v4.1: a desert dust storm (G3.dustK) and a city brownout (G3.brownK) colour the sky and sag the lights
+    dustK+=((G3.dustK||0)-dustK)*Math.min(1,rdt*0.7+0.01);const bk=G3.brownK==null?1:G3.brownK;
+    if(!out){hemi.intensity=LEG*baseHemi*(0.3+0.7*day)*(1-0.05*wxK)*(1-0.25*dustK);sun.intensity=LEG*baseSun*(0.1+0.9*day)*(1-0.18*Math.max(wxK,fogK))*(1-0.55*dustK);
+      SKY_DAY.set(skyHex).convertSRGBToLinear();tmpC.copy(SKY_DAY).lerp(wx==="fog"?SKY_FOG:SKY_RAIN,Math.max(wxK*0.25,fogK*0.5)).lerp(SKY_NIGHT,1-day).lerp(SKY_DUST,dustK*(0.35+0.5*day));
       if(scene.background&&scene.background.isColor)scene.background.copy(tmpC);else scene.background=tmpC.clone();scene.fog.color.copy(tmpC);}
-    {const d=camera.position.distanceTo(target);scene.fog.near=d*(0.9+4*(1-fogK));scene.fog.far=d*(3.4+8*(1-fogK));if(G3.zen&&document.body.dataset.zs!=="none"){scene.fog.near*=0.45;scene.fog.far*=0.55;}}
+    {const d=camera.position.distanceTo(target);scene.fog.near=d*(0.9+4*(1-fogK))*(1-0.92*dustK);scene.fog.far=d*(3.4+8*(1-fogK))*(1-0.86*dustK);if(G3.zen&&document.body.dataset.zs!=="none"){scene.fog.near*=0.45;scene.fog.far*=0.55;}}
     const night=1-day;if(!G3.nightL){
       // v2.8.4: no point lights (every pixel paid for all 10 of them, day and night); each fixture throws a soft additive pool of light on the floor instead
       const gT=spriteTex((x,w)=>{const g=x.createRadialGradient(w/2,w/2,0,w/2,w/2,w/2);g.addColorStop(0,"rgba(255,255,255,1)");g.addColorStop(0.35,"rgba(255,255,255,0.55)");g.addColorStop(1,"rgba(255,255,255,0)");x.fillStyle=g;x.fillRect(0,0,w,w);});
@@ -4806,7 +4878,7 @@ function no3D(){G3.ok=false;$("no3d").hidden=false;$("no3d-retry").onclick=()=>l
         const p=new THREE.Mesh(new THREE.PlaneGeometry(D,D),new THREE.MeshBasicMaterial({map:gT,color:0xffd9a0,transparent:true,depthWrite:false,blending:THREE.AdditiveBlending,toneMapped:false,polygonOffset:true,polygonOffsetFactor:-4,polygonOffsetUnits:-4,opacity:0}));
         p.rotation.x=-Math.PI/2;p.position.set(x,fy,z);p.renderOrder=2;p.visible=false;scene.add(p);
         const f=new THREE.Mesh(new CylG(0.5,0.7,0.3,12),new THREE.MeshBasicMaterial({color:0xfff1cf}));f.position.set(x,y+0.2,z);f.visible=false;scene.add(f);return {p,f,k:deck?0.55:i<4?0.22:0.35};});}
-    G3.nightL.forEach(l=>{l.p.material.opacity=l.k*night;l.p.visible=night>0.05;l.f.visible=night>0.2;});G3.nightK=night;
+    G3.nightL.forEach(l=>{l.p.material.opacity=l.k*night*bk;l.p.visible=night>0.05;l.f.visible=night>0.2;});G3.nightK=night;
     // v3.2.0: red aviation beacons on top of the boiler stack and the fog fan stack; small lamps on the disk thickener
     if(!G3.beacons){const gl=spriteTex((x,w)=>{const g=x.createRadialGradient(w/2,w/2,0,w/2,w/2,w/2);g.addColorStop(0,"rgba(255,255,255,1)");g.addColorStop(0.3,"rgba(255,255,255,0.5)");g.addColorStop(1,"rgba(255,255,255,0)");x.fillStyle=g;x.fillRect(0,0,w,w);},64);
       const lamp=(x,y,z,col,rb,sz)=>{const b=new THREE.Mesh(new THREE.SphereGeometry(rb,10,8),new THREE.MeshBasicMaterial({color:col,toneMapped:false}));b.position.set(x,y,z);b.visible=false;scene.add(b);
@@ -4820,8 +4892,8 @@ function no3D(){G3.ok=false;$("no3d").hidden=false;$("no3d-retry").onclick=()=>l
       G3.beacons.forEach(l=>{l.b.visible=l.h.visible=on;l.h.material.opacity=k;l.b.material.color.setRGB(0.4+0.6*bl,0.02+0.05*bl,0.02);});
       const run=S.M.pulperDown?0.25:1;G3.thkL.forEach((l,i)=>{l.b.visible=l.h.visible=on;l.h.material.opacity=night*(i<8?1:run);});}
     if(G3.fogFan&&rdt>0){const F=G3.fogFan,down=S.inc.some(i=>i.id==="fogfan"),k=down?0:(S.pm==="run"?1:0.35);F.spin+=(k-F.spin)*Math.min(1,rdt*0.8);F.rot.rotation.y+=rdt*F.spin*14;
-      if(Math.random()<rdt*9*k)emitA("steam",F.top[0]+R()*0.5,F.top[1],F.top[2]+R()*0.5,R()*0.7+0.5,3.0+Math.random()*1.8,R()*0.7,3.4,2.0+Math.random()*1.6,"#f4f6f8",0.6);}G3.spiderFrame&&G3.spiderFrame(rdt);M.wind.emissive=M.wind.emissive||new THREE.Color();M.wind.emissive.copy(lin0("#ffcf7a")).multiplyScalar(0.85*night);if(G3.winMats)G3.winMats.forEach(m=>m.emissive.copy(M.wind.emissive).multiplyScalar(0.7));
-    ENV.lampHead.color.copy(lin0("#9aa3b2")).lerp(lin0("#fff2c4"),night);ENV.lampPool.opacity=0.32*night;
+      if(Math.random()<rdt*9*k)emitA("steam",F.top[0]+R()*0.5,F.top[1],F.top[2]+R()*0.5,R()*0.7+0.5,3.0+Math.random()*1.8,R()*0.7,3.4,2.0+Math.random()*1.6,"#f4f6f8",0.6);}G3.spiderFrame&&G3.spiderFrame(rdt);M.wind.emissive=M.wind.emissive||new THREE.Color();M.wind.emissive.copy(lin0("#ffcf7a")).multiplyScalar(0.85*night*bk);if(G3.winMats)G3.winMats.forEach(m=>m.emissive.copy(M.wind.emissive).multiplyScalar(0.7));
+    ENV.lampHead.color.copy(lin0("#9aa3b2")).lerp(lin0("#fff2c4"),night*bk);ENV.lampPool.opacity=0.32*night*bk;
     ENV.pudM.opacity=0.55*(S.wet||0);ENV.riverTex.offset.x=(ENV.riverTex.offset.x-rdt*0.02)%1;
     ENV.bridge.rotation.y-=rdt*0.12;
     // steam plume grows with production and dies when the boiler trips
@@ -4845,10 +4917,11 @@ function no3D(){G3.ok=false;$("no3d").hidden=false;$("no3d-retry").onclick=()=>l
     tr.g.visible=tr.state!=="away";
     G3.wasteFrame&&G3.wasteFrame(rdt);
     // weather particles
-    const P2=WXP,snow=wx==="snow";
-    P2.p.visible=wxK>0.05&&snow;P2.rl.visible=wxK>0.05&&wx==="rain";
-    if((P2.p.visible||P2.rl.visible)&&rdt>0){P2.m.opacity=0.45*wxK;P2.rm.opacity=0.25*wxK;P2.p.position.set(target.x,0,target.z);P2.rl.position.set(target.x,0,target.z);
-      const a=P2.pos,r=P2.rp;for(let i=0;i<P2.n;i++){const j=i*3;if(snow){a[j+1]-=rdt*(2.5+(i%5)*0.3);a[j]+=Math.sin(now/900+i)*rdt*0.8;}else{a[j+1]-=rdt*34;a[j]+=rdt*4;}
+    const P2=WXP,snow=wx==="snow",dust=dustK>0.05&&!(wxK>0.05&&snow);   // (v4.1: the points double as blowing dust in a desert storm)
+    P2.p.visible=(wxK>0.05&&snow)||dust;P2.rl.visible=wxK>0.05&&wx==="rain";
+    if(P2.dust!==dust){P2.dust=dust;P2.m.color.set(dust?0xd8b985:0xffffff);P2.m.size=dust?1.5:0.7;}
+    if((P2.p.visible||P2.rl.visible)&&rdt>0){P2.m.opacity=dust?0.42*dustK:0.45*wxK;P2.rm.opacity=0.25*wxK;P2.p.position.set(target.x,0,target.z);P2.rl.position.set(target.x,0,target.z);
+      const a=P2.pos,r=P2.rp;for(let i=0;i<P2.n;i++){const j=i*3;if(dust){a[j]+=rdt*(14+(i%7)*2);a[j+1]+=Math.sin(now/300+i)*rdt*2.5;if(a[j+1]>14||a[j+1]<0.2)a[j+1]=0.3+Math.random()*10;}else if(snow){a[j+1]-=rdt*(2.5+(i%5)*0.3);a[j]+=Math.sin(now/900+i)*rdt*0.8;}else{a[j+1]-=rdt*34;a[j]+=rdt*4;}
         if(a[j+1]<0){a[j+1]+=40;a[j]=R()*80;a[j+2]=R()*80;}if(a[j]>40)a[j]-=80;
         if(P2.rl.visible){const k=i*6;r[k]=a[j];r[k+1]=a[j+1];r[k+2]=a[j+2];r[k+3]=a[j]-0.14;r[k+4]=a[j+1]+1.3;r[k+5]=a[j+2];}}
       P2.g.attributes.position.needsUpdate=true;if(P2.rl.visible)P2.rg.attributes.position.needsUpdate=true;}
@@ -4996,7 +5069,7 @@ function no3D(){G3.ok=false;$("no3d").hidden=false;$("no3d-retry").onclick=()=>l
     cylZ(0.3,0.16,M.ink,0.78,0.3,0,16,g);cylZ(0.3,0.16,M.ink,-0.55,0.3,-0.45,16,g);cylZ(0.3,0.16,M.ink,-0.55,0.3,0.45,16,g);
     box(0.04,1.4,0.04,M.ink,-0.82,1.5,0.25,g,false);const flag=new THREE.Mesh(new THREE.PlaneGeometry(0.42,0.26),new THREE.MeshBasicMaterial({color:lin(tok("fire")),side:THREE.DoubleSide}));flag.position.set(-0.6,2.08,0.25);g.add(flag);
     g.userData.trike=true;scene.add(g);return g;}
-  const MAINT_SPOT={refclash:[58.2,-11],steamjoint:[11.2,3.4],fogfan:[47.2,-5.4],shaft:[12,16.4],fabric:[53.5,14.6],felt:[40.5,14.6],overflow:[-5,-10.5],chestover:[29.5,-9.6],hdblow:[24.2,-9.4],boiler:[68.6,-10],thkblow:[41.6,-10.4],lwplug:[11.2,-20.3],cscreen:[15.2,-20.6],fscreen:[19.2,-20.4],lcplug:[26.6,-20.7],winderdown:[-14.6,14.6],fleet:[-6.3,-14],roof:[-21.6,24],lightning:[40,-8]};
+  const MAINT_SPOT={refclash:[58.2,-11],steamjoint:[11.2,3.4],fogfan:[47.2,-5.4],shaft:[12,16.4],fabric:[53.5,14.6],felt:[40.5,14.6],overflow:[-5,-10.5],chestover:[29.5,-9.6],hdblow:[24.2,-9.4],boiler:[68.6,-10],thkblow:[41.6,-10.4],lwplug:[11.2,-20.3],cscreen:[15.2,-20.6],fscreen:[19.2,-20.4],lcplug:[26.6,-20.7],winderdown:[-14.6,14.6],fleet:[-6.3,-14],roof:[-21.6,24],lightning:[40,-8],icedintake:[-30,-50]};
   function lane(p){return p[1]>2.4?"F":"C";}
   // v2.9.19: maintenance trikes path-find around buildings and equipment. A 0.5 m ground grid is built once from every
   // static mesh that reaches into the 0.25-1.9 m band (walls, tanks, skids, pumps, trees, posts), grown by 0.75 m for the
@@ -5755,7 +5828,31 @@ function no3D(){G3.ok=false;$("no3d").hidden=false;$("no3d-retry").onclick=()=>l
       // the L/B gauge, then out to the jet and the wavy wet line on the wire
       {name:"slice and wet line",look:["airy","none"],dur:7,ok:()=>S.pm==="run",
         at:(t)=>{if(t>7)return null;const u=ease(Math.max(0,(t-2.2)/4.8)),g=G3.SLC?G3.SLC.geo():{wet:50};
-          return [mix(57.15,mix(g.wet,54,0.35),u),mix(2.95,2.9,u),mix(12.4,9.1,u),mix(5.5,15,u),mix(0.08,0.55,u),mix(1.5,0.92,u)];}}];
+          return [mix(57.15,mix(g.wet,54,0.35),u),mix(2.95,2.9,u),mix(12.4,9.1,u),mix(5.5,15,u),mix(0.08,0.55,u),mix(1.5,0.92,u)];}},
+      // v4.1: the land around the mill (environment and mill seed) ----------------------------------------------
+      // a long approach from a random direction over the land, settling on the mill
+      {name:{rural:"over the forest",urban:"over the rooftops",desert:"across the flats",swamp:"over the bayou"}[SITE.env]||"approach",look:["dusk","airy"],dur:18,ok:()=>true,
+        start:()=>({a:Math.random()*6.28}),
+        at:(t,mv)=>{if(t>18)return null;const u=ease(t/18),a=mv.st.a;return [mix(14+Math.sin(a)*190,14,u),mix(10,4,u),mix(5+Math.cos(a)*190,5,u),mix(330,175,u),a,mix(1.08,0.9,u)];}},
+      // a slow half-orbit of one of the landmarks the seed placed (water tower, solar farm, lake, village, barge dock...)
+      {name:"landmark",look:["gold","none"],dur:13,ok:()=>!!(G3.scenery&&G3.scenery.util&&Object.keys(G3.scenery.util).length),
+        start:()=>{const U=G3.scenery.util,ks=Object.keys(U),k=ks[Math.floor(Math.random()*ks.length)],[x,z,h]=U[k];return {x,z,h,th:Math.atan2(x-14,z-5)+(Math.random()-0.5)*1.2,k};},
+        at:(t,mv)=>{if(t>13)return null;const s=mv.st,u=ease(t/13);return [s.x,Math.min(12,s.h*0.35),s.z,Math.max(45,s.h*2.2+30),s.th+u*1.3,mix(1.0,0.92,u)];}},
+      // the highway bridge over the river, trucks coming and going
+      {name:"highway bridge",look:["bw","dusk"],dur:12,ok:()=>true,start:()=>({d:Math.random()<0.5?1:-1}),
+        at:(t,mv)=>{if(t>12)return null;const u=ease(t/12);return [-158,2,mix(-66-18*mv.st.d,-66+6*mv.st.d,u),mix(80,62,u),Math.PI/2+0.55*mv.st.d-0.5*mv.st.d*u,mix(1.02,0.96,u)];}},
+      // low along the water: the far bank, the intake and the outfall, out past the mill
+      {name:{urban:"canal run",desert:"canal run",swamp:"bayou drift"}[SITE.env]||"river drift",look:["airy","gold"],dur:16,ok:()=>true,
+        at:(t)=>{if(t>16)return null;const u=ease(t/16);return [mix(-120,70,u),0,-65,mix(60,52,u),Math.PI+0.35-0.5*u,mix(1.08,1.0,u)];}},
+      // one signature shot per environment
+      ...(SITE.env==="rural"?[{name:"forest canopy",look:["gold","airy"],dur:12,ok:()=>true,
+        at:(t)=>{if(t>12)return null;const u=ease(t/12);return [mix(-70,-20,u),mix(6,4,u),mix(125,45,u),42,0.3-0.2*u,1.22];}}]:
+        SITE.env==="urban"?[{name:"city skyline",look:["none","hc"],dur:16,ok:()=>true,start:()=>({th:Math.random()*6.28}),
+        at:(t,mv)=>{if(t>16)return null;const u=ease(t/16);return [14,20,5,mix(300,255,u),mv.st.th+u*0.5,1.14];}}]:
+        SITE.env==="desert"?[{name:"mesa horizon",look:["gold","dusk"],dur:14,ok:()=>true,start:()=>({th:Math.random()*6.28}),
+        at:(t,mv)=>{if(t>14)return null;const u=ease(t/14);return [14,12,5,mix(420,300,u),mv.st.th+u*0.15,mix(1.3,1.2,u)];}}]:
+        [{name:"bayou mist",look:["airy","none"],dur:14,ok:()=>true,
+        at:(t)=>{if(t>14)return null;const u=ease(t/14);return [mix(-130,-45,u),2,mix(120,60,u),46,0.25-0.15*u,1.28];}}])];
     return zenMovesCache;}
   /* ---- v4.1 scenery: the world around the core mill, from the environment (SITE.env) and the mill seed (SITE.seed) ----
      Built once, after every other static object exists, so it can keep clear of all of them:
@@ -5839,6 +5936,10 @@ function no3D(){G3.ok=false;$("no3d").hidden=false;$("no3d-retry").onclick=()=>l
     // claim a footprint: keep-out, camera floor, and (inside the yard) a walker obstacle at the trunk
     function claim(x,z,r,h,trunk){kMark(x-r,x+r,z-r,z+r,3);hMark(x,z,r,h);if(trunk&&x>-62&&x<88&&z>-52&&z<53)NB.push([x-trunk,x+trunk,z-trunk,z+trunk]);}
     const place=(x,z,r,water)=>kFree(x,z,r,water);
+    // where the utilities and features ended up (zen camera shots, the brownout's substation): name -> [x, z, height]
+    const UTIL={};const note=(k,x,z,h)=>{UTIL[k]=[+x.toFixed(1),+z.toFixed(1),h];};
+    // graphics tier: scenery density (Low 0.5 ... Ultra 1.4); the yard and the utilities are the same at every tier
+    const DEN=(G3.GFX&&G3.GFX.scenery)||1;
     /* ---------- noise for natural clustering ---------- */
     const NG=[];for(let k=0;k<40*32;k++)NG.push(RNG());
     function noise(x,z,s=60){const fx=(x+420)/s,fz=(z+320)/s,i=Math.floor(fx),j=Math.floor(fz),u=fx-i,v=fz-j,g=(a,b)=>NG[((b%32+32)%32)*40+((a%40+40)%40)];
@@ -5884,42 +5985,109 @@ function no3D(){G3.ok=false;$("no3d").hidden=false;$("no3d-retry").onclick=()=>l
         if(place(x,z,r))return [x,z];}return null;}
     const UT={
       waterTower(){const p=spot(7);if(!p)return;const [x,z]=p,h=rr(18,24);[[-2.4,-2.4],[2.4,-2.4],[-2.4,2.4],[2.4,2.4]].forEach(([a,b])=>add(T.box,x+a,0,z+b,0.45,h,0.45,0,"#9aa3ad",0.2));
-        add(T.cyl10,x,h,z,5,5,5,0,"#e9ecef",0.15);add(T.cone6,x,h+5,z,5.3,2.2,5.3,0,"#c7ccd3",0.05);add(T.cyl6,x,0,z,0.6,h,0.6,0,"#9aa3ad",0.1);claim(x,z,6,h+7,0);},
+        add(T.cyl10,x,h,z,5,5,5,0,"#e9ecef",0.15);add(T.cone6,x,h+5,z,5.3,2.2,5.3,0,"#c7ccd3",0.05);add(T.cyl6,x,0,z,0.6,h,0.6,0,"#9aa3ad",0.1);claim(x,z,6,h+7,0);note("waterTower",x,z,h+7);},
       substation(n=3){const p=spot(11);if(!p)return;const [x,z]=p;add(T.quad,x,0.03,z,20,1,16,0,"#b6b3aa",0);for(let k=0;k<n;k++){const tx=x-6+k*6;add(T.box,tx,0,z-2,3.2,3,2.4,0,"#7d8792",0.25);
           add(T.box,tx,3,z-2,0.3,2.2,0.3,0,"#4a4f58",0);add(T.box,tx-1,3,z-2,0.3,1.6,0.3,0,"#4a4f58",0);}
         [[-9,-7],[9,-7],[-9,7],[9,7]].forEach(([a,b])=>add(T.box,x+a,0,z+b,0.3,6,0.3,0,"#8d939c",0.1));add(T.box,x,5.8,z-7,18,0.3,0.3,0,"#8d939c",0);add(T.box,x,5.8,z+7,18,0.3,0.3,0,"#8d939c",0);
         // fence (thin, see-through look approximated by a low wall of mesh colour)
-        [[0,-8,20,0.1],[0,8,20,0.1],[-10,0,0.1,16],[10,0,0.1,16]].forEach(([a,b,w,d])=>add(T.box,x+a,0,z+b,w,2.2,d,0,"#a8b0b8",0.3));claim(x,z,11,7,0);return [x,z];},
-      pylons(from,to){const n=Math.max(2,Math.round(Math.hypot(to[0]-from[0],to[1]-from[1])/55));for(let k=0;k<=n;k++){const x=from[0]+(to[0]-from[0])*k/n,z=from[1]+(to[1]-from[1])*k/n;if(!place(x,z,2.5))continue;
+        [[0,-8,20,0.1],[0,8,20,0.1],[-10,0,0.1,16],[10,0,0.1,16]].forEach(([a,b,w,d])=>add(T.box,x+a,0,z+b,w,2.2,d,0,"#a8b0b8",0.3));claim(x,z,11,7,0);note("substation",x,z,7);return [x,z];},
+      // a line of pylons; never inside the fence or on the river (the mill's own line is the power house)
+      pylons(from,to){const n=Math.max(2,Math.round(Math.hypot(to[0]-from[0],to[1]-from[1])/55));for(let k=0;k<=n;k++){const x=from[0]+(to[0]-from[0])*k/n,z=from[1]+(to[1]-from[1])*k/n;if(inside(x,z,-8)||(z>-80&&z<-52)||!place(x,z,2.5))continue;
           const ry=Math.atan2(-(to[1]-from[1]),to[0]-from[0])+Math.PI/2;add(T.cone4,x,0,z,1.5,24,1.5,ry,"#7d838c",0.15);add(T.box,x,17,z,0.25,0.35,9,ry,"#7d838c",0);add(T.box,x,20.5,z,0.25,0.3,6,ry,"#7d838c",0);claim(x,z,2,24,0);}},
       solarFarm(){const w=70,d=44;let p=null;for(let t=0;t<60&&!p;t++){const q=spot(30,14,110);if(q&&place(q[0],q[1],32))p=q;}if(!p)return;const [x,z]=p;
         for(let r=0;r<8;r++)for(let c=0;c<6;c++){const px=x-w/2+5+c*11.5,pz=z-d/2+3+r*5.4;add(T.box,px,1.0,pz,10.5,0.12,2.6,0,"#2c3e63",0,undefined,-0.45);add(T.box,px,0,pz+0.6,0.2,1.2,0.2,0,"#8d939c",0);}
-        add(T.box,x+w/2-3,0,z+d/2-2,3,2.2,2,0,"#e2e5e9",0.2);kMark(x-w/2,x+w/2,z-d/2,z+d/2,3);hMark(x,z,36,2);return [x,z];},
+        add(T.box,x+w/2-3,0,z+d/2-2,3,2.2,2,0,"#e2e5e9",0.2);kMark(x-w/2,x+w/2,z-d/2,z+d/2,3);hMark(x,z,36,2);note("solarFarm",x,z,2);return [x,z];},
       waterTanks(){const p=spot(10);if(!p)return;const [x,z]=p;[[-4,0,5,7],[5,1,4,6]].forEach(([a,b,r,h])=>add(T.cyl10,x+a,0,z+b,r,h,r,0,"#e7e2d6",0.15));
-        [[-9,-8],[8,-9],[10,7]].forEach(([a,b])=>{if(place(x+a,z+b,1.5)){add(T.box,x+a,0,z+b,1.4,1.2,1.4,0,"#9aa0a8",0.2);add(T.box,x+a,1.2,z+b,0.3,2.5,0.3,0,"#6b7079",0);claim(x+a,z+b,1.5,4,0);}});claim(x,z,9,8,0);},
-      windpump(){const p=spot(3,10,90);if(!p)return;const [x,z]=p;add(T.cone4,x,0,z,1.4,9,1.4,0.6,"#8a8f98",0.2);add(T.cyl6,x,9,z+0.4,1.6,0.1,1.6,0,"#c9ced6",0,undefined,Math.PI/2);claim(x,z,1.6,10,0);},
+        [[-9,-8],[8,-9],[10,7]].forEach(([a,b])=>{if(place(x+a,z+b,1.5)){add(T.box,x+a,0,z+b,1.4,1.2,1.4,0,"#9aa0a8",0.2);add(T.box,x+a,1.2,z+b,0.3,2.5,0.3,0,"#6b7079",0);claim(x+a,z+b,1.5,4,0);}});claim(x,z,9,8,0);note("waterTanks",x,z,8);},
+      windpump(){const p=spot(3,10,90);if(!p)return;const [x,z]=p;add(T.cone4,x,0,z,1.4,9,1.4,0.6,"#8a8f98",0.2);add(T.cyl6,x,9,z+0.4,1.6,0.1,1.6,0,"#c9ced6",0,undefined,Math.PI/2);claim(x,z,1.6,10,0);note("windpump",x,z,10);},
       bargeDock(){const x=rr(-90,60),z=-63;add(T.box,x,0.4,z+4,22,0.4,4,0,"#7b5d42",0.1);for(let k=-10;k<=10;k+=5)add(T.cyl6,x+k,-0.6,z+5.5,0.25,1.6,0.25,0,"#5c4632",0);
-        add(T.box,x+2,0.1,z-2.5,26,1.1,7,0,"#4f5560",0.3);for(let i=0;i<9;i++)for(let l=0;l<2;l++)add(T.box,x-8+i*2.5,1.2+l*1.0,z-2.5+(i%2?0.9:-0.9),1.9,0.95,1.6,0,pick(["#b07a43","#a7784a","#8f6a45"]),0.15);claim(x,z,1,1,0);hMark(x,z,14,4);},
+        add(T.box,x+2,0.1,z-2.5,26,1.1,7,0,"#4f5560",0.3);for(let i=0;i<9;i++)for(let l=0;l<2;l++)add(T.box,x-8+i*2.5,1.2+l*1.0,z-2.5+(i%2?0.9:-0.9),1.9,0.95,1.6,0,pick(["#b07a43","#a7784a","#8f6a45"]),0.15);claim(x,z,1,1,0);hMark(x,z,14,4);note("bargeDock",x,z,4);},
       recycler(){const p=spot(14,10,80);if(!p)return;const [x,z]=p;add(T.box,x,0,z,18,7,12,0,"#a9b0ba",0.2);add(T.gable,x,7,z,18.4,2.2,12.6,0,"#6f7a88",0.05);
         for(let i=0;i<6;i++)for(let l=0;l<3;l++)add(T.box,x-8+i*2.2,l*1.1,z+9.5,2,1.05,1.8,0,pick(["#b07a43","#a7784a","#8f6a45"]),0.1);
-        const sg=pick(["CITY RECYCLING","METRO FIBER","OCC DEPOT"]);sg&&add(T.box,x,7.4,z-6.3,10,1.4,0.2,0,"#2a5aa8",0);claim(x,z,14,10,0);},
+        add(T.box,x,7.4,z-6.3,10,1.4,0.2,0,"#2a5aa8",0);claim(x,z,14,10,0);note("recycler",x,z,10);},
       chipPile(){const p=spot(10,10,60);if(!p)return;const [x,z]=p;add(T.cone6,x,0,z,9,7,9,RNG()*6,"#c9a46c",0.3);add(T.cone6,x+8,0,z+3,6,4.5,6,RNG()*6,"#b98f5a",0.3);
-        for(let k=0;k<5;k++)add(T.cyl6,x-12,0.4+(k%2)*0.7,z-6+k*0.75,0.35,7,0.35,0,"#8a6a4a",0.1,undefined,0,Math.PI/2);claim(x,z,12,8,0);},
+        for(let k=0;k<5;k++)add(T.cyl6,x-12,0.4+(k%2)*0.7,z-6+k*0.75,0.35,7,0.35,0,"#8a6a4a",0.1,undefined,0,Math.PI/2);claim(x,z,12,8,0);note("chipPile",x,z,8);},
       farm(){const p=spot(16,40,170);if(!p)return;const [x,z]=p,ry=RNG()<0.5?0:Math.PI/2;house(x,z,ry,12,8,6,"#a8322c","#5a3a2e");house(x+(ry?10:0),z+(ry?0:12),ry,8,7,4.5,"#f1ede4","#4a4f58");
-        silo(x-10,z-6,2.4,12,"#c9ced6");silo(x-15,z-6,2.4,10,"#c9ced6");claim(x,z,18,15,0);
+        silo(x-10,z-6,2.4,12,"#c9ced6");silo(x-15,z-6,2.4,10,"#c9ced6");claim(x,z,18,15,0);if(!UTIL.farm)note("farm",x,z,15);
         // fields: striped crop rows
         const fx=x+rr(30,50)*(RNG()<0.5?-1:1),fz=z+rr(-20,20),fw=rr(40,70),fd=rr(30,50),c1=pick(["#a6c46a","#c9c06a","#8fb85c","#d6c27a"]);
         if(place(fx,fz,Math.min(fw,fd)/2)){for(let k=0;k<fd;k+=4)add(T.quad,fx,0.02,fz-fd/2+k+1,fw,1,2,0,k%8?c1:"#9a8a5a",0);kMark(fx-fw/2,fx+fw/2,fz-fd/2,fz+fd/2,3);
           for(let k=0;k<6;k++){const bx=fx+rr(-fw/2+3,fw/2-3),bz=fz+rr(-fd/2+3,fd/2-3);add(T.cyl10,bx,0.75,bz,0.75,1.5,0.75,0,"#d6b65a",0.1,undefined,Math.PI/2);}}},
       shack(){let p=null;for(let t=0;t<200&&!p;t++){const x=rr(-300,300),z=rr(-90,-80);if(place(x,z,5,true))p=[x,z];}if(!p)return;const [x,z]=p;
         [[-2,-2],[2,-2],[-2,2],[2,2]].forEach(([a,b])=>add(T.cyl6,x+a,0,z+b,0.2,1.8,0.2,0,"#5c4632",0));add(T.box,x,1.8,z,5,2.6,5,RNG(),"#7d6a52",0.15);add(T.gable,x,4.4,z,5.6,1.6,5.6,0,"#4f5560",0);
-        add(T.box,x,1.6,z+5,1.4,0.15,6,0,"#7b5d42",0);claim(x,z,5,7,0);}};
+        add(T.box,x,1.6,z+5,1.4,0.15,6,0,"#7b5d42",0);claim(x,z,5,7,0);if(!UTIL.shack)note("shack",x,z,7);}};
+    /* ---------- features: a few per visit from each environment's pool, so the land is never the same twice ---------- */
+    const FEAT={
+      // a lake with a boathouse, reeds round the edge
+      lake(){let p=null;for(let t=0;t<120&&!p;t++){const q=spot(34,30,170);if(q)p=q;}if(!p)return;const [x,z]=p,r=rr(22,32),pts=[],n=11;
+        for(let k=0;k<n;k++){const a=k/n*6.283,rk=r*rr(0.7,1.1);pts.push([x+Math.cos(a)*rk,z+Math.sin(a)*rk*0.75]);}poly(pts,0.03,ENVK==="swamp"?"#4f736d":"#7fb0cf");kMark(x-r,x+r,z-r*0.75,z+r*0.75,2);
+        for(let k=0;k<14;k++){const a=rr(0,6.28),d=r*rr(0.98,1.12),rx=x+Math.cos(a)*d,rz=z+Math.sin(a)*d*0.75;if(!place(rx,rz,0.7,true))continue;for(let q=0;q<3;q++)add(T.cone4,rx+rr(-0.5,0.5),0,rz+rr(-0.4,0.4),0.12,rr(1.2,2),0.12,RNG(),"#7f8f4f",0.2);claim(rx,rz,0.6,2,0);}
+        const bx=x+r*1.02,bz=z;if(place(bx,bz,4,true)){add(T.box,bx,0.3,bz,5,3,4,0,"#8a6a4a",0.15);add(T.gable,bx,3.3,bz,5.4,1.6,4.6,0,"#4a4f58",0);add(T.box,bx-4,0.25,bz,4,0.2,1.4,0,"#7b5d42",0);claim(bx,bz,4,5,0);}
+        for(let k=0;k<8;k++){const a=rr(0,6.28),d=r*rr(1.1,1.4);broadleaf(x+Math.cos(a)*d,z+Math.sin(a)*d*0.75,rr(0.8,1.3),true);}note("lake",x,z,1);},
+      // a village: a dozen houses round a green with a church
+      village(){let p=null;for(let t=0;t<120&&!p;t++){const q=spot(40,40,190);if(q)p=q;}if(!p)return;const [x,z]=p,ry=RNG()<0.5?0:Math.PI/2;
+        add(T.quad,x,0.025,z,70,1,6,ry,ROADC,0);for(let k=0;k<12;k++){const side=k%2?1:-1,hx=x+(k-6)*5.8+rr(-1,1),hz=z+side*(7+rr(0,3)),rx=ry?x+side*(7+rr(0,3)):hx,rz=ry?z+(k-6)*5.8:hz;
+          if(!place(rx,rz,3.6))continue;house(rx,rz,ry+(RNG()<0.5?0:Math.PI/2),rr(6,8.5),rr(5,7),rr(3,4.2),pick(["#f1ede4","#e2d2c2","#d9c8a8","#c9d2d6","#b9c4b0"]),pick(["#7a4a3a","#4a4f58","#5a5f69"]));claim(rx,rz,4,6,0);
+          if(RNG()<0.5)broadleaf(rx+rr(-5,5),rz+rr(-5,5),rr(0.6,0.9),true);}
+        const cx=x+(ry?16:0),cz=z+(ry?0:16);if(place(cx,cz,7)){add(T.box,cx,0,cz,9,6,14,ry,"#e9e4da",0.15);add(T.gable,cx,6,cz,14.4,3.4,9.4,ry+Math.PI/2,"#4a4f58",0);add(T.box,cx+(ry?0:-4),0,cz+(ry?-4:0),3.2,13,3.2,0,"#e9e4da",0.1);add(T.cone4,cx+(ry?0:-4),13,cz+(ry?-4:0),2.6,5,2.6,Math.PI/4,"#4a4f58",0);claim(cx,cz,8,18,0);}
+        note("village",x,z,8);},
+      // logging camp: log decks, a loader shed and a skidder trail
+      logging(){const p=spot(16,10,120);if(!p)return;const [x,z]=p;for(let d=0;d<3;d++)for(let l=0;l<4;l++)for(let k=0;k<5-l;k++)add(T.cyl6,x-8+d*7,0.35+l*0.62,z-4+k*0.75+l*0.37,0.36,9,0.36,0,pick(["#8a6a4a","#7a5a3c","#9a7350"]),0.1,undefined,0,Math.PI/2);
+        add(T.box,x+8,0,z+6,8,4,6,0,"#8a8f98",0.2);add(T.gable,x+8,4,z+6,8.4,1.6,6.6,0,"#5b6270",0);add(T.quad,x,0.02,z+12,34,1,4,0,"#9a8a6a",0);claim(x,z,16,6,0);note("logging",x,z,6);},
+      // three wind turbines on the skyline (merged, so the blades stand still)
+      turbines(){const a0=rr(0,6.28);for(let k=0;k<3;k++){const a=a0+k*0.25,d=rr(200,330),x=Math.cos(a)*d,z=Math.sin(a)*d*0.85;if(!place(x,z,6))continue;
+          add(T.cyl10,x,0,z,1.6,42,1.6,0,"#eef0f2",0.1);add(T.box,x,41,z,4,2.4,2.2,0,"#eef0f2",0.05);for(let b=0;b<3;b++)add(T.box,x+1.8,42,z,0.5,19,1.2,0,"#eef0f2",0,undefined,b*2.094+0.3,0);claim(x,z,3,62,0);if(!UTIL.turbines)note("turbines",x,z,62);}},
+      // an orchard: a grid of small round trees
+      orchard(){const p=spot(26,20,150);if(!p)return;const [x,z]=p;for(let i=0;i<9;i++)for(let j=0;j<6;j++){const tx=x-20+i*5,tz=z-12.5+j*5;if(!place(tx,tz,1.2))continue;add(T.tri3,tx,0,tz,0.2,1.3,0.2,0,"#7a5a3c",0.1);add(T.ico,tx,2,tz,1.5,1.3,1.5,RNG()*6,pick(["#6fa76b","#7cb072","#8ab879"]),0.3);claim(tx,tz,1.3,3.3,0.2);}note("orchard",x,z,3);},
+      // a city park: lawn, winding path, a pond and benches
+      park(){const p=spot(30,14,120);if(!p)return;const [x,z]=p;add(T.quad,x,0.022,z,56,1,42,0,"#9fc27a",0);kMark(x-28,x+28,z-21,z+21,3);const pts=[];for(let k=0;k<8;k++){const a=k/8*6.283;pts.push([x+Math.cos(a)*rr(6,9),z+Math.sin(a)*rr(5,7)]);}poly(pts,0.03,"#7fb0cf");
+        for(let k=0;k<7;k++){const a=k/7*6.283;add(T.quad,x+Math.cos(a)*17,0.026,z+Math.sin(a)*13,9,1,1.6,-a+Math.PI/2,"#d9cfb8",0);}
+        for(let k=0;k<16;k++){const a=rr(0,6.28),d=rr(11,24);const tx=x+Math.cos(a)*d,tz=z+Math.sin(a)*d*0.75;add(T.tri3,tx,0,tz,0.25,2.4,0.25,0,"#7a5a3c",0.1);add(T.ico,tx,3.4,tz,2,1.7,2,RNG()*6,pick(["#6fa76b","#5f9a63","#7cb072"]),0.3);hMark(tx,tz,2,6);}
+        hMark(x,z,30,6);note("park",x,z,6);},
+      // a stadium bowl
+      stadium(){let p=null;for(let t=0;t<80&&!p;t++){const q=spot(42,40,200);if(q)p=q;}if(!p)return;const [x,z]=p;add(T.cyl10,x,0,z,46,14,34,0,"#c9c4ba",0.25);add(T.cyl10,x,14,z,48,1.2,36,0,"#5b6270",0);add(T.cyl10,x,0.2,z,38,14.2,26,0,"#6fa76b",0);
+        kMark(x-48,x+48,z-36,z+36,3);hMark(x,z,48,16);note("stadium",x,z,16);},
+      // a rail yard beside the line: sidings and boxcars
+      railyard(){const x=rr(-330,-200),z=-29;for(let k=0;k<3;k++){const zz=z-4-k*4;[zz-0.7,zz+0.7].forEach(zr=>add(T.box,x,0.14,zr,80,0.16,0.12,0,"#8d939c",0,"w"));for(let c=0;c<4;c++){if(RNG()<0.35)continue;add(T.box,x-30+c*18+k*5,0.9,zz,12,3.3,2.8,0,pick(["#9b3d2a","#3d5f8c","#5b6270","#7a4a3a"]),0.2,"w");}}
+        kMark(x-42,x+42,z-18,z-2,3);hMark(x,z-9,42,5);note("railyard",x,z-8,5);},
+      // a gas station on the highway
+      gas(){const z=rr(40,110)*(RNG()<0.5?-1:1)+(RNG()<0.5?0:-150),x=HXr+12;if(!place(x+6,z,10))return;add(T.quad,x+6,0.024,z,16,1,22,0,"#9a9ea6",0);add(T.box,x+10,0,z-6,8,4,6,0,"#e9e4da",0.15);
+        [[x+4,z-3],[x+4,z+3]].forEach(([a,b])=>{add(T.box,a,0,b,0.5,3.6,0.5,0,"#8d939c",0);add(T.box,a,0,b,1,1.6,0.6,0,"#d6382c",0.1);});add(T.box,x+4,3.6,z,8,0.5,10,0,"#f2c230",0.05);
+        add(T.box,x+13,0,z+6,0.4,7,0.4,0,"#6b7079",0);add(T.box,x+13,7,z+6,3,1.6,0.3,0,"#d6382c",0);claim(x+6,z,10,8,0);note("gas",x+6,z,8);},
+      // an airstrip with a hangar and windsock
+      airstrip(){let p=null;for(let t=0;t<80&&!p;t++){const q=spot(70,40,200);if(q)p=q;}if(!p)return;const [x,z]=p,ry=rr(0,3.14);add(T.quad,x,0.024,z,170,1,14,ry,"#9a9ea6",0);for(let k=-7;k<=7;k++)add(T.quad,x+Math.cos(ry)*k*11,0.03,z-Math.sin(ry)*k*11,5,1,0.6,ry,"#f2f2f2",0);
+        const hx=x+Math.sin(ry)*16,hz=z+Math.cos(ry)*16;add(T.box,hx,0,hz,14,6,12,ry,"#c9c4ba",0.2);add(T.gable,hx,6,hz,14.4,3,12.6,ry,"#8d939c",0);add(T.box,hx+Math.sin(ry)*10,0,hz+Math.cos(ry)*10,0.2,5,0.2,0,"#8d939c",0);add(T.cone4,hx+Math.sin(ry)*10,5,hz+Math.cos(ry)*10,0.6,2.4,0.6,0,"#f27a30",0,undefined,0,-1.3);
+        kMark(x-90,x+90,z-90,z+90,3);hMark(x,z,90,9);note("airstrip",x,z,9);},
+      // an open-pit mine: terraced pit, headframe, tailings
+      mine(){let p=null;for(let t=0;t<80&&!p;t++){const q=spot(40,60,220);if(q)p=q;}if(!p)return;const [x,z]=p;["#c98b5a","#b9774a","#a56a42"].forEach((c,i)=>add(T.cyl10,x,-1-i*3,z,36-i*9,3,30-i*8,0,c,0.2));
+        add(T.cone4,x+30,0,z-10,4,16,4,0,"#5b6270",0.15);add(T.box,x+30,15,z-10,6,2,3,0,"#5b6270",0);add(T.cone6,x+34,0,z+20,16,9,16,RNG()*6,"#d9b589",0.3);add(T.box,x+14,0,z-22,12,5,8,0,"#a9b0ba",0.2);kMark(x-40,x+40,z-30,z+30,3);hMark(x,z,42,18);note("mine",x,z,18);},
+      // an oasis: palms round a pool
+      oasis(){const p=spot(16,20,160);if(!p)return;const [x,z]=p,pts=[];for(let k=0;k<9;k++){const a=k/9*6.283,rk=rr(6,10);pts.push([x+Math.cos(a)*rk,z+Math.sin(a)*rk*0.8]);}poly(pts,0.03,"#5fa8bd");kMark(x-10,x+10,z-8,z+8,2);
+        for(let k=0;k<10;k++){const a=rr(0,6.28),d=rr(9,15),tx=x+Math.cos(a)*d,tz=z+Math.sin(a)*d*0.8,s=rr(0.8,1.2);if(!place(tx,tz,1.2,true))continue;add(T.cyl6,tx,0,tz,0.25*s,6*s,0.25*s,0,"#8a6a4a",0.15);for(let f=0;f<6;f++)add(T.box,tx+Math.cos(f*1.05)*1.6*s,6*s,tz+Math.sin(f*1.05)*1.6*s,3.2*s,0.12,0.7*s,-f*1.05,"#5f8a4e",0.1,undefined,0,-0.5);claim(tx,tz,1.2,7*s,0.3);}
+        note("oasis",x,z,7);},
+      // a ranch: house, barn, corrals, a water trough
+      ranch(){const p=spot(18,30,160);if(!p)return;const [x,z]=p;house(x,z,0,10,8,4,"#d9c8a8","#7a4a3a");add(T.box,x+14,0,z+2,10,6,8,0,"#a8322c",0.15);add(T.gable,x+14,6,z+2,10.4,2.6,8.6,0,"#5a3a2e",0);
+        for(let k=0;k<12;k++){const a=k/12*6.283;add(T.box,x-14+Math.cos(a)*9,0,z+Math.sin(a)*7,0.2,1.3,0.2,0,"#8a6a4a",0);}add(T.cyl6,x-14,1.3,z,9,0.08,7,0,"#8a6a4a",0);claim(x,z,24,8,0);note("ranch",x,z,8);},
+      // a fishing camp on the bank: dock, two skiffs, a cabin on stilts
+      fishcamp(){const x=rr(-120,120)+(RNG()<0.5?0:-200),z=-58;if(!place(x,z+6,6,true))return;add(T.box,x,0.6,z+3,3,0.3,8,0,"#7b5d42",0.1);for(let k=-3;k<=3;k+=2)add(T.cyl6,x,-0.5,z+k,0.2,1.3,0.2,0,"#5c4632",0);
+        [[x-3,z-1],[x+3,z-2]].forEach(([a,b])=>{add(T.box,a,0.1,b,1.4,0.5,4,0.2,pick(["#e9e4da","#5b8de4","#e46b5b"]),0.2);});[[-2,-2],[2,-2],[-2,2],[2,2]].forEach(([a,b])=>add(T.cyl6,x+a,0,z+8+b,0.2,2,0.2,0,"#5c4632",0));add(T.box,x,2,z+8,5,2.6,5,0,"#8a7a62",0.15);add(T.gable,x,4.6,z+8,5.6,1.6,5.6,0,"#4f5560",0);
+        claim(x,z+8,4,7,0);note("fishcamp",x,z,7);},
+      // a boardwalk out over the marsh to a lookout
+      boardwalk(){const p=spot(6,30,160);if(!p)return;const [x,z]=p,ry=rr(0,3.14);for(let k=0;k<12;k++){const px=x+Math.cos(ry)*k*4,pz=z-Math.sin(ry)*k*4;add(T.box,px,0.8,pz,4.2,0.14,1.6,ry,"#7b5d42",0.1);[-0.7,0.7].forEach(s2=>add(T.cyl6,px+Math.sin(ry)*s2,0,pz+Math.cos(ry)*s2,0.1,0.8,0.1,0,"#5c4632",0));}
+        const ex=x+Math.cos(ry)*48,ez=z-Math.sin(ry)*48;add(T.box,ex,0.8,ez,5,0.14,5,ry,"#7b5d42",0.1);[[-2,-2],[2,-2],[-2,2],[2,2]].forEach(([a,b])=>add(T.cyl6,ex+a,0,ez+b,0.15,3.6,0.15,0,"#5c4632",0));add(T.gable,ex,3.6,ez,5.6,1.4,5.6,ry,"#4f5560",0);note("boardwalk",ex,ez,5);},
+      // a sugar cane field
+      cane(){const p=spot(28,20,170);if(!p)return;const [x,z]=p,w=rr(40,60),d=rr(30,46);for(let k=0;k<d;k+=2.5)add(T.quad,x,0.02,z-d/2+k+1,w,1,1.6,0,k%5?"#8fb85c":"#6f9a45",0);kMark(x-w/2,x+w/2,z-d/2,z+d/2,3);
+        for(let k=0;k<40;k++){const bx=x+rr(-w/2+2,w/2-2),bz=z+rr(-d/2+2,d/2-2);add(T.cone4,bx,0,bz,0.6,rr(2.2,3.2),0.6,RNG(),"#9fc27a",0.25);}hMark(x,z,Math.max(w,d)/2,3);note("cane",x,z,3);},
+      // a lattice radio mast with its guy lines
+      mast(){const p=spot(5,20,160);if(!p)return;const [x,z]=p,h=rr(40,60);add(T.cone4,x,0,z,1.4,h,1.4,0.78,"#d6382c",0.1);add(T.box,x,h,z,0.3,4,0.3,0,"#f2f2f2",0);for(let k=0;k<3;k++){const a=k*2.094;add(T.cyl6,x+Math.cos(a)*14,0,z+Math.sin(a)*14,0.08,0.9,0.08,0,"#8d939c",0);}claim(x,z,2,h+4,0);note("mast",x,z,h+4);}};
+    const POOL={rural:["lake","village","logging","turbines","orchard","mast"],urban:["park","stadium","railyard","gas","mast","village"],desert:["airstrip","mine","oasis","ranch","turbines","mast"],swamp:["fishcamp","boardwalk","cane","lake","mast","village"]};
+    function features(){const pool=POOL[ENVK].slice(),n=2+Math.floor(RNG()*2);for(let k=0;k<n&&pool.length;k++){const f=pool.splice(Math.floor(RNG()*pool.length),1)[0];try{FEAT[f]();}catch(e){diag("scenery feature "+f+" failed: "+e.message);}}}
     /* ---------- environment kits ---------- */
     // scatter helper: n tries over a box, kept where the noise mask passes; fn(x,z) places one thing
-    function scatter(n,x0,x1,z0,z1,mask,fn){let k=0;for(let t=0;t<n;t++){const x=rr(x0,x1),z=rr(z0,z1);if(mask&&!mask(x,z))continue;if(fn(x,z))k++;}return k;}
+    function scatter(n,x0,x1,z0,z1,mask,fn){let k=0;n=Math.round(n*DEN);for(let t=0;t<n;t++){const x=rr(x0,x1),z=rr(z0,z1);if(mask&&!mask(x,z))continue;if(fn(x,z))k++;}return k;}
     const farOK=(x,z)=>Math.hypot(x+5,z-5)<330&&!inside(x,z,-4);
     if(ENVK==="rural"){
-      UT.pylons([F.x1+40,-50],[F.x1+260,-300]);const sub=UT.substation(2);if(sub)UT.pylons([F.x1+40,-50],sub);
+      UT.pylons([F.x1+40,-50],[F.x1+260,-300]);features();const sub=UT.substation(2);if(sub)UT.pylons(sub,[sub[0]*3.2,sub[1]*3.2]);
       UT.chipPile();UT.farm();if(RNG()<0.7)UT.farm();
       // forest belts: dense where the noise is high, conifers on the far hills
       scatter(3400,-410,410,-310,310,(x,z)=>farOK(x,z)&&noise(x,z)>0.44+0.25*Math.max(0,1-Math.hypot(x+5,z-5)/160),(x,z)=>{const d=Math.hypot(x,z),far=d>170;return RNG()<(d>150?0.55:0.3)?conifer(x,z,rr(0.85,1.3)):broadleaf(x,z,rr(0.8,1.4),far);});
@@ -5928,26 +6096,27 @@ function no3D(){G3.ok=false;$("no3d").hidden=false;$("no3d-retry").onclick=()=>l
       // far hills
       for(let k=0;k<7;k++){const a=rr(0,6.28),d=rr(330,400),x=Math.cos(a)*d,z=Math.sin(a)*d*0.8;if(!place(x,z,12))continue;add(T.mound,x,-3,z,rr(60,100),rr(9,18),rr(45,75),RNG()*6,pick(["#8fb27c","#86ab76","#94b683"]),0.25);}}
     if(ENVK==="urban"){
-      UT.waterTower();UT.substation(3);UT.recycler();
+      UT.waterTower();UT.substation(3);UT.recycler();features();
       // city blocks across the highway, beyond the east road, across the river and south of the mill
       const blocks=[[-410,HXr-12,-310,310],[EX+10,410,-310,310],[HXr+12,EX-10,-310,-85],[HXr+12,EX-10,F.z1+16,310]];
       blocks.forEach(([x0,x1,z0,z1])=>{const bw=rr(34,42);for(let bx=x0+6;bx<x1-10;bx+=bw+10)for(let bz=z0+6;bz<z1-10;bz+=bw+8){
-        const dmill=Math.hypot(bx+5,bz-5),downtown=noise(bx,bz,140)>0.55||dmill>260;
+        const dmill=Math.hypot(bx+5,bz-5),downtown=dmill>230&&(noise(bx,bz,140)>0.45||dmill>300);
         // streets between blocks
         if(bz+bw+8<z1-10&&RNG()<0.9){const zz=bz+bw+4;if(place(bx+bw/2,zz,2))add(T.quad,bx+bw/2,0.025,zz,bw+10,1,6,0,ROADC,0);}
         const lots=downtown?1+Math.floor(RNG()*2):3+Math.floor(RNG()*2);
         for(let l=0;l<lots;l++){const lw=bw/(downtown?1:2)-4,lx=bx+(downtown?bw/2:(l%2?bw*0.75:bw*0.25)),lz=bz+(downtown?(l?bw*0.75:bw*0.3):(l<2?bw*0.25:bw*0.75)),r=lw/2;
           if(!place(lx,lz,r))continue;
-          if(downtown){const h=rr(12,dmill>200?52:34)*(dmill<150?0.6:1),w=rr(lw*0.6,lw),d=rr(lw*0.6,lw);building(lx,lz,w,d,h,0,pick(["#c9c4ba","#b9bfc8","#d6cfc0","#a9b4c2","#c7b39b"]),pick(["#5b6270","#6d6a63","#4a4f58"]));claim(lx,lz,r,h+1,0);}
+          if(downtown){const h=rr(12,dmill>300?52:30),w=rr(lw*0.6,lw),d=rr(lw*0.6,lw);building(lx,lz,w,d,h,0,pick(["#c9c4ba","#b9bfc8","#d6cfc0","#a9b4c2","#c7b39b"]),pick(["#5b6270","#6d6a63","#4a4f58"]));claim(lx,lz,r,h+1,0);}
           else if(RNG()<0.6){house(lx,lz,RNG()<0.5?0:Math.PI/2,rr(7,10),rr(6,8),rr(3,5),pick(["#e9e4da","#d8c8b0","#c9d2d6","#e2d2c2","#b9c4b0"]),pick(["#7a4a3a","#5a5f69","#6d5a4a"]));
             if(RNG()<0.7)broadleaf(lx+rr(-r,r),lz+rr(-r,r),rr(0.6,0.9),true);claim(lx,lz,r,6,0);}
-          else{building(lx,lz,rr(lw*0.7,lw),rr(lw*0.7,lw),rr(5,9),0,pick(["#b8bcc4","#c9c4ba","#a7aeb8"]),"#6d737c");claim(lx,lz,r,10,0);}}}});
+          else if(RNG()<0.75){building(lx,lz,rr(lw*0.7,lw),rr(lw*0.7,lw),rr(5,9),0,pick(["#b8bcc4","#c9c4ba","#a7aeb8"]),"#6d737c");claim(lx,lz,r,10,0);}
+          else{add(T.quad,lx,0.024,lz,lw,1,lw,0,"#9a9ea6",0);for(let q=0;q<4;q++)add(T.box,lx-lw/3+q*lw/4.5,0,lz+rr(-lw/3,lw/3),2.4,2.6,6,0,pick(["#d6382c","#2a5aa8","#f2c230","#5b6270"]),0.15);claim(lx,lz,r,3,0);}}}});
       // street trees and a billboard by the highway
       scatter(260,-410,410,-310,310,farOK,(x,z)=>noise(x,z,40)>0.6&&broadleaf(x,z,rr(0.6,0.95),true));
       scatter(40,F.x0,F.x1,F.z0,F.z1,null,(x,z)=>broadleaf(x,z,rr(0.6,1),false));
       {const z=rr(30,70),x=HXr+10;if(place(x,z,4)){add(T.box,x,0,z,0.4,7,0.4,0,"#6b7079",0);add(T.box,x,7,z,0.4,3.2,8,0,"#f2c230",0.1);claim(x,z,4,11,0);}}}
     if(ENVK==="desert"){
-      UT.solarFarm();UT.waterTanks();UT.windpump();const sub=UT.substation(2);if(sub)UT.pylons(sub,[F.x0-120,320]);
+      UT.solarFarm();UT.waterTanks();UT.windpump();features();const sub=UT.substation(2);if(sub)UT.pylons(sub,[sub[0]*3.2,sub[1]*3.2]);
       // mesas and buttes on the skyline: stacked prisms in sandstone bands
       for(let k=0;k<12;k++){const a=rr(0,6.28),d=rr(230,400),x=Math.cos(a)*d,z=Math.sin(a)*d*0.85;if(!place(x,z,25))continue;const w=rr(30,80),dd=rr(25,60),h=rr(18,42),ry=RNG()*6;
         add(T.box,x,0,z,w*1.12,h*0.18,dd*1.12,ry,"#d9a06b",0.15);add(T.box,x,h*0.18,z,w,h*0.62,dd,ry,"#c98b5a",0.25);add(T.box,x,h*0.8,z,w*0.97,h*0.2,dd*0.97,ry,"#b9774a",0.1);claim(x,z,Math.max(w,dd)/2,h,0);}
@@ -5958,7 +6127,7 @@ function no3D(){G3.ok=false;$("no3d").hidden=false;$("no3d-retry").onclick=()=>l
       scatter(50,F.x0,F.x1,F.z0,F.z1,null,(x,z)=>bush(x,z,rr(0.6,1),pick(["#8a9a5b","#9aa36a"])));
       for(let k=0;k<14;k++){const a=rr(0,6.28),d=rr(140,330),x=Math.cos(a)*d,z=Math.sin(a)*d;if(place(x,z,20))add(T.mound,x,-0.6,z,rr(20,45),rr(3,7),rr(10,22),RNG()*6,"#e8d6aa",0.25);}}
     if(ENVK==="swamp"){
-      UT.bargeDock();UT.shack();UT.shack();const sub=UT.substation(2);if(sub)UT.pylons(sub,[F.x1+300,280]);
+      UT.bargeDock();UT.shack();UT.shack();features();const sub=UT.substation(2);if(sub)UT.pylons(sub,[sub[0]*3.2,sub[1]*3.2]);
       // ponds and sloughs: irregular water patches with cypress and reeds round the edges
       const ponds=[];for(let t=0;t<220&&ponds.length<26;t++){const x=rr(-400,400),z=rr(-300,300),r=rr(8,26);if(!farOK(x,z)||!place(x,z,r+2))continue;
         const pts=[],n=9;for(let k=0;k<n;k++){const a=k/n*6.283,rk=r*rr(0.65,1.15);pts.push([x+Math.cos(a)*rk,z+Math.sin(a)*rk*0.8]);}
@@ -5980,10 +6149,10 @@ function no3D(){G3.ok=false;$("no3d").hidden=false;$("no3d-retry").onclick=()=>l
     const smat=new StdMat({vertexColors:true,roughness:0.9,flatShading:true});smat.color.set(0xffffff);
     let tris=0;const parts=[];
     for(const k in SEC){const S2=SEC[k];if(!S2.n)continue;const g=new THREE.BufferGeometry();g.setAttribute("position",new THREE.Float32BufferAttribute(S2.p,3));g.setAttribute("color",new THREE.Float32BufferAttribute(S2.c,3));
-      g.computeVertexNormals();g.computeBoundingSphere();const m=new THREE.Mesh(g,smat);m.castShadow=k==="near";m.receiveShadow=k==="near";m.userData.scenery=k;m.userData.noNav=true;scene.add(m);parts.push(m);tris+=S2.n;}
+      g.computeVertexNormals();g.computeBoundingSphere();const m=new THREE.Mesh(g,smat);m.castShadow=k==="near"||!!(G3.GFX&&G3.GFX.far);m.receiveShadow=k==="near";m.userData.scenery=k;m.userData.noNav=true;scene.add(m);parts.push(m);tris+=S2.n;}
     // for the clipping check (tools/clipcheck.py): is (x,z) inside a scenery footprint?
     G3.sceneryAt=(x,z)=>{const i=kIdx(x,z);return i>=0&&KO[i]===3;};
-    G3.scenery={env:ENVK,seed:SITE.seed,layout:LAYOUT.i,parts,tris,sectors:Object.fromEntries(Object.entries(SEC).map(([k,v])=>[k,v.n])),navBoxes:NB.length};
+    G3.scenery={env:ENVK,seed:SITE.seed,layout:LAYOUT.i,parts,tris,util:UTIL,sectors:Object.fromEntries(Object.entries(SEC).map(([k,v])=>[k,v.n])),navBoxes:NB.length};
     diag(`scenery: ${ENVK} mill #${SITE.seed} (layout ${LAYOUT.i}): ${tris} triangles in ${parts.length} meshes`);}
   // v2.9.11 performance profiler: when G3.PF.on, time each section of the 3D frame (ms accumulated per section)
   const PF=G3.PF={on:false,t:0,acc:{},frames:0};const pm=k=>{if(!PF.on)return;const t=performance.now();PF.acc[k]=(PF.acc[k]||0)+(t-PF.t);PF.t=t;};
@@ -6000,7 +6169,9 @@ function no3D(){G3.ok=false;$("no3d").hidden=false;$("no3d-retry").onclick=()=>l
       // (switching them off recompiles every shader: a long freeze, the opposite of what a struggling device needs)
       const fk=(G3.cap||60)/60;
       if(fps<28*fk&&quality===2&&renderer.getPixelRatio()>1){quality=1;renderer.setPixelRatio(1);resize();diag("quality: pixel ratio 1 ("+fps.toFixed(0)+" fps)");}
-      else if(fps<24*fk&&quality>=1&&G3.shadowHz>5){quality=0;G3.shadowHz=5;diag("quality: shadows 5 Hz ("+fps.toFixed(0)+" fps)");}}}pm("low-FPS fallback check");
+      else if(fps<24*fk&&quality>=1&&G3.shadowHz>5){quality=0;G3.shadowHz=5;diag("quality: shadows 5 Hz ("+fps.toFixed(0)+" fps)");}
+      // v4.1: still struggling: the far scenery sectors go (the yard and the land round the fence stay)
+      else if(fps<22*fk&&quality===0&&G3.scenery&&!G3.scenery.farOff){G3.scenery.farOff=true;G3.scenery.parts.forEach(p=>{if(p.userData.scenery!=="near")p.visible=false;});diag("quality: far scenery hidden ("+fps.toFixed(0)+" fps)");}}}pm("low-FPS fallback check");
     {const t=performance.now();if(!(t-(G3.palT||0)<500)){G3.palT=t;applyPalette();}}pm("palette (every 0.5 s)");rebuildDoors();
     const R=S.rates,now=performance.now();pm("setup (palette, doors, shadow trim)");
     crewUpdate(rdt,now);pm("crew + people");
@@ -6405,15 +6576,17 @@ setView();
   const swatch=(el,e)=>{el.style.background=`linear-gradient(135deg,${SW[e][0]} 55%,${SW[e][1]} 55%)`;};
   const layName=L=>`Wastewater plant ${L.ww==="east"?"behind the maintenance shop":"behind stock prep"}, clarifier on the ${(L.ww==="east")!==L.flip?"east":"west"} side`;
   // menu row
-  function siteRow(){const E=ENVS[SITE.env];$("v2siteN").textContent=E.name;$("v2siteM").textContent=`Mill #${SITE.seed} · layout ${"ABCD"[LAYOUT.i]}`;swatch($("v2siteSw"),SITE.env);}
+  function siteRow(){const E=ENVS[SITE.env];$("v2siteN").textContent=E.name+(SITE.choice==="any"?" (surprise)":"");
+    $("v2siteM").textContent=`Mill #${SITE.seed} · layout ${"ABCD"[LAYOUT.i]} · ${SITE.pin?"kept":"new layout each visit"}`;swatch($("v2siteSw"),SITE.env);}
   siteRow();
   // picker
-  const ov=$("siteOv"),envs=$("siteEnvs"),seedIn=$("siteSeed"),prev=$("sitePrev");let pick=SITE.env;
+  const ov=$("siteOv"),envs=$("siteEnvs"),seedIn=$("siteSeed"),prev=$("sitePrev"),pinIn=$("sitePin"),anyBtn=$("siteAny");let pick=SITE.env,any=SITE.choice==="any";
   ENV_IDS.forEach(id=>{const E=ENVS[id],b=document.createElement("button");b.type="button";b.setAttribute("role","radio");b.dataset.env=id;
     b.innerHTML=`<div class="eh"><span class="sw"></span><b>${E.name}</b><small>${E.short}</small></div><p>${E.blurb}</p><ul>${E.pros.map(t=>`<li class="pro">${t}</li>`).join("")}${E.cons.map(t=>`<li class="con">${t}</li>`).join("")}</ul>`;
     swatch(b.querySelector(".sw"),id);b.addEventListener("click",()=>{pick=id;sync();});envs.appendChild(b);});
   envs.addEventListener("keydown",e=>{const k=e.key;if(!["ArrowRight","ArrowDown","ArrowLeft","ArrowUp"].includes(k))return;e.preventDefault();
     const i=ENV_IDS.indexOf(pick),n=ENV_IDS[(i+(k==="ArrowRight"||k==="ArrowDown"?1:ENV_IDS.length-1))%ENV_IDS.length];pick=n;sync();envs.querySelector(`[data-env="${n}"]`).focus();});
+  anyBtn.addEventListener("click",()=>{any=!any;sync();});
   const seedOf=()=>{const v=Math.round(+seedIn.value);return v>=1&&v<=99999?v:SITE.seed;};
   // a small plan of the site: river, roads, fence, the fixed core and where the seeded wastewater plant goes
   function drawPrev(){const x=prev.getContext("2d"),W=prev.width,H=prev.height,k=W/360,X=v=>(v+170)*k,Z=v=>(v+90)*k,L=layoutFor(seedOf());
@@ -6426,15 +6599,17 @@ setView();
     x.fillStyle="#bfe3d8";x.beginPath();x.arc(X(L.wx(10)),Z(-40),7*k,0,7);x.fill();const p0=Math.min(L.wx(22),L.wx(42));x.fillRect(X(p0),Z(-46),20*k,12*k);
     $("siteLay").textContent=`Layout ${"ABCD"[L.i]}: ${layName(L)}.`;}
   function sync(){envs.querySelectorAll("button").forEach(b=>b.setAttribute("aria-checked",String(b.dataset.env===pick)));
-    envs.querySelectorAll("button").forEach(b=>b.tabIndex=b.dataset.env===pick?0:-1);drawPrev();
-    $("siteGo").textContent=pick===SITE.env&&seedOf()===SITE.seed?"Keep this site":"Build here";}
-  $("v2siteBtn").addEventListener("click",()=>{pick=SITE.env;seedIn.value=SITE.seed;sync();ov.hidden=false;setTimeout(()=>{const b=envs.querySelector('[aria-checked="true"]');if(b)b.focus();},0);});
-  seedIn.addEventListener("input",sync);
+    envs.querySelectorAll("button").forEach(b=>b.tabIndex=b.dataset.env===pick?0:-1);envs.classList.toggle("any",any);
+    anyBtn.setAttribute("aria-pressed",String(any));anyBtn.querySelector("b").textContent=any?"Surprise me: on":"Surprise me";drawPrev();
+    const same=(any?SITE.choice==="any":pick===SITE.env&&SITE.choice!=="any")&&seedOf()===SITE.seed&&pinIn.checked===SITE.pin;
+    $("siteGo").textContent=same&&SITE.saved?"Keep this site":"Build here";}
+  $("v2siteBtn").addEventListener("click",()=>{pick=SITE.env;any=SITE.choice==="any";seedIn.value=SITE.seed;pinIn.checked=SITE.pin;sync();ov.hidden=false;setTimeout(()=>{const b=envs.querySelector('[aria-checked="true"]');if(b)b.focus();},0);});
+  seedIn.addEventListener("input",sync);pinIn.addEventListener("change",sync);
   $("siteRoll").addEventListener("click",()=>{seedIn.value=1+Math.floor(Math.random()*99999);sync();});
   $("siteNo").addEventListener("click",()=>{ov.hidden=true;});
   ov.addEventListener("keydown",e=>{if(e.key==="Escape"){ov.hidden=true;$("v2siteBtn").focus();}});
-  $("siteGo").addEventListener("click",()=>{const s=seedOf();if(pick===SITE.env&&s===SITE.seed&&SITE.saved){ov.hidden=true;return;}
-    siteSave(pick,s);const q=new URLSearchParams(location.search);q.delete("env");q.delete("mill");const qs=q.toString();
+  $("siteGo").addEventListener("click",()=>{const s=seedOf();if($("siteGo").textContent==="Keep this site"){ov.hidden=true;return;}
+    siteSave(any?"any":pick,s,pinIn.checked);const q=new URLSearchParams(location.search);q.delete("env");q.delete("mill");const qs=q.toString();
     const u=location.pathname+(qs?"?"+qs:"")+location.hash;if(u===location.pathname+location.search+location.hash)location.reload();else location.href=u;});}
 // frame rate is a player choice (Controls): Smooth = the display's rate (v4 default), Battery saver = 30 fps; remembered
 let FRAME_CAP=0;try{if(localStorage.getItem("paper-mill-fps")==="saver")FRAME_CAP=30;}catch(e){}G3.cap=FRAME_CAP;
@@ -6770,6 +6945,10 @@ requestAnimationFrame(frame);
   {const seg=document.createElement("div");seg.className="seg";seg.id="fpsSeg";seg.setAttribute("role","group");seg.setAttribute("aria-label","Frame rate");
     seg.innerHTML=`<button data-fps="saver" aria-pressed="${FRAME_CAP===30}" title="30 fps: cooler phone, longer battery">Battery saver</button><button data-fps="smooth" aria-pressed="${FRAME_CAP!==30}" title="Full frame rate: smoother, uses more battery">Smooth</button>`;
     seg.querySelectorAll("button").forEach(x=>x.addEventListener("click",()=>setFpsMode(x.dataset.fps==="smooth")));
+    const row0=document.getElementById("v2ctlrow");if(row0)row0.appendChild(seg);}
+  if(G3.GFX){const seg=document.createElement("div");seg.className="seg";seg.id="gfxSeg";seg.setAttribute("role","group");seg.setAttribute("aria-label","Graphics");const cap=s=>s[0].toUpperCase()+s.slice(1);
+    seg.innerHTML=`<span>Graphics</span>`+["auto","low","medium","high","ultra"].map(g=>`<button data-g="${g}" aria-pressed="${G3.GFX.pick===g}" title="${g==="auto"?"Picked from your device: "+cap(G3.GFX.auto):{low:"1024 shadows, 10 Hz, lighter scenery",medium:"1024 shadows, 15 Hz",high:"2048 softer shadows, 30 Hz, full scenery",ultra:"4096 softer shadows, every frame, dense scenery with far shadows"}[g]}">${g==="auto"?"Auto ("+cap(G3.GFX.auto)+")":cap(g)}</button>`).join("");
+    seg.querySelectorAll("button").forEach(x=>x.addEventListener("click",()=>G3.setGfx(x.dataset.g)));
     const row0=document.getElementById("v2ctlrow");if(row0)row0.appendChild(seg);}
   {const l=document.createElement("label");l.className="check";l.innerHTML='<input id="showFps" type="checkbox"/> Show FPS';
     const row0=document.getElementById("v2ctlrow");if(row0)row0.appendChild(l);

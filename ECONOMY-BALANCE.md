@@ -68,7 +68,9 @@ risks. `econ.py` gained `--env=` (site) and `--bn=` (force a bottleneck; `none` 
 | 4 | recv 0.70, winder 0.80; prices +$83/t | pulper +$119k, recv +$115k, screens +$43k, winder +$100k, ship +$447k → ship 0.80 |
 | 5 | environments with no bottleneck (+$83/t) | rural $1.67M, desert $1.74M, swamp $1.90M, urban $2.03M → urban OCC −$14 → −$5 and price +$8 → +$4; swamp OCC −$6 → −$3, overhead −$300 → −$190 |
 | 6 | prices +$78/t, natural bottlenecks, 15 seeds per environment | rural −$266k, urban −$170k, desert −$337k, swamp −$126k → prices +$10/t |
-| **7** | **final: $713 / $733 / $753 / $813, 15 seeds per environment** | **rural −$94k, urban +$1k, desert −$116k (price −$10 → −$7), swamp +$42k; all 60 −$42k; no bankruptcies** |
+| 7 | $713 / $733 / $753 / $813, 15 seeds per environment | rural −$94k, urban +$1k, desert −$116k (price −$10 → −$7), swamp +$42k; all 60 −$42k; no bankruptcies |
+| 8 | + one upset per environment (iced intake, brownout, dust storm, flood), 15 seeds each | rural −$149k, urban +$13k, desert −$38k, swamp −$22k; SD up from ~$0.7M to ~$1.0M |
+| **9** | **final: rural hydro energy −$5 → −$8/t** | **rural −$95k; urban +$13k, desert −$38k, swamp −$22k; no bankruptcies** |
 
 - Prices end close to v4.0.1's list prices ($714–814): the bottleneck takes back roughly what v4.0.2's $89/t cut removed.
 - Run-to-run spread is still large (SD ~$0.7–0.8M per season), so per-bottleneck averages over three or four seeds

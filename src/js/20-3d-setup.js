@@ -26,16 +26,30 @@ function no3D(){G3.ok=false;$("no3d").hidden=false;$("no3d-retry").onclick=()=>l
   renderer.debug.checkShaderErrors=false;
   G3.ok=true;
   const mobile=matchMedia("(pointer: coarse)").matches;
-  renderer.setPixelRatio(Math.min(mobile?1.25:2,window.devicePixelRatio||1));
-  // the shadow pass redraws every shadow-casting object, so refresh it 15x a second instead of every frame (v2.8.4: desktop too)
-  renderer.shadowMap.autoUpdate=false;G3.shadowHz=15;
+  /* v4.1 graphics tiers. Auto picks from the device (phones: Medium, or Low with little memory; desktops: High, or Ultra on a
+     discrete GPU); the player can pin one in Controls. Pixel ratio, shadow refresh, shadow map size, weather particles and
+     far-scenery shadows and the shadow softness change live; the lighting model and scenery density take effect on the next load. */
+  const GFX_TIERS={low:{pr:1,shadow:1024,soft:false,hz:10,scenery:0.5,wx:600,lambert:true,far:false},
+    medium:{pr:1.25,shadow:1024,soft:false,hz:15,scenery:0.85,wx:1000,lambert:true,far:false},
+    high:{pr:2,shadow:2048,soft:true,hz:30,scenery:1,wx:2000,lambert:false,far:false},
+    ultra:{pr:2,shadow:4096,soft:true,hz:60,scenery:1.4,wx:2600,lambert:false,far:true}};
+  const gpuName=(()=>{try{const gl=renderer.getContext(),x=gl.getExtension("WEBGL_debug_renderer_info");return x?gl.getParameter(x.UNMASKED_RENDERER_WEBGL):gl.getParameter(gl.RENDERER);}catch(e){return "";}})();
+  const gfxAuto=mobile?((navigator.deviceMemory||4)<4?"low":"medium"):(/NVIDIA|GeForce|RTX|Radeon RX|Radeon Pro|Arc\(TM\)/i.test(gpuName)&&(navigator.hardwareConcurrency||4)>=8?"ultra":"high");
+  let gfxPick="auto";try{gfxPick=localStorage.getItem("paper-mill-gfx")||"auto";}catch(e){}
+  {const q=new URLSearchParams(location.search).get("gfx");if(q&&GFX_TIERS[q])gfxPick=q;}   // ?gfx=low|medium|high|ultra (tests)
+  if(!GFX_TIERS[gfxPick])gfxPick="auto";
+  const GFX=G3.GFX={...GFX_TIERS[gfxPick==="auto"?gfxAuto:gfxPick],tier:gfxPick==="auto"?gfxAuto:gfxPick,pick:gfxPick,auto:gfxAuto,gpu:String(gpuName).slice(0,60)};
+  diag(`graphics: ${GFX.tier}${gfxPick==="auto"?" (auto)":""} on ${GFX.gpu||"unknown GPU"}`);
+  renderer.setPixelRatio(Math.min(GFX.pr,window.devicePixelRatio||1));
+  // the shadow pass redraws every shadow-casting object, so refresh it a few times a second instead of every frame (v2.8.4: desktop too)
+  renderer.shadowMap.autoUpdate=false;G3.shadowHz=GFX.hz;
   // v2.8.4: round shapes get only as many sides as their size needs at this zoom (unit shapes that get scaled up keep 24)
   const segCap=(r,s)=>Math.max(3,Math.min(s,r===1?24:r<0.15?6:r<0.45?10:r<1.2?16:r<4?20:28));
   class CylG extends THREE.CylinderGeometry{constructor(rt=1,rb=1,h=1,rs=32,hs=1,oe=false,ts=0,tl=Math.PI*2){super(rt,rb,h,segCap(Math.max(rt,rb),rs),hs,oe,ts,tl);}}
   class SphG extends THREE.SphereGeometry{constructor(r=1,ws=32,hs=16,...a){super(r,Math.max(3,Math.min(ws,16)),Math.max(2,Math.min(hs,10)),...a);}}
   class RingG extends THREE.RingGeometry{constructor(a=0.5,b=1,ts=32,...x){super(a,b,Math.max(3,Math.min(ts,32)),...x);}}
   class CircG extends THREE.CircleGeometry{constructor(r=1,sg=32,...x){super(r,Math.max(3,Math.min(sg,32)),...x);}}
-  renderer.shadowMap.enabled=true;renderer.shadowMap.type=THREE.PCFShadowMap;
+  renderer.shadowMap.enabled=true;renderer.shadowMap.type=THREE.PCFShadowMap;   // (r186 dropped PCFSoft; the soft tiers widen the PCF kernel instead)
   renderer.outputColorSpace=THREE.SRGBColorSpace;renderer.toneMapping=THREE.ACESFilmicToneMapping;renderer.toneMappingExposure=1.12;
   const scene=new THREE.Scene();G3.scene=scene;G3.renderer=renderer;
   const camera=new THREE.PerspectiveCamera(18,16/9,2,1400);
@@ -43,7 +57,7 @@ function no3D(){G3.ok=false;$("no3d").hidden=false;$("no3d-retry").onclick=()=>l
   /* palette: every material is bound to a CSS token so theme switches recolor the scene */
   const MATS=[];
   // v2.9.0: phones get the much cheaper Lambert lighting model instead of physically based shading (same colours, flatter sheen)
-  function StdMat(o){if(!mobile)return new THREE.MeshStandardMaterial(o);const r=Object.assign({},o||{});delete r.roughness;delete r.metalness;delete r.flatShading;delete r.envMapIntensity;delete r.roughnessMap;delete r.metalnessMap;return new THREE.MeshLambertMaterial(r);}
+  function StdMat(o){if(!GFX.lambert)return new THREE.MeshStandardMaterial(o);const r=Object.assign({},o||{});delete r.roughness;delete r.metalness;delete r.flatShading;delete r.envMapIntensity;delete r.roughnessMap;delete r.metalnessMap;return new THREE.MeshLambertMaterial(r);}
   function tok(name){return getComputedStyle(document.documentElement).getPropertyValue("--"+name).trim()||"#888";}
   function mat(token,opts={}){const m=new StdMat(Object.assign({roughness:0.72,metalness:0.04,flatShading:false},opts));m.userData.token=token;MATS.push(m);return m;}
   let paletteKey="",skyHex="#b3bbcb";
@@ -63,8 +77,8 @@ function no3D(){G3.ok=false;$("no3d").hidden=false;$("no3d-retry").onclick=()=>l
   const LEG=Math.PI;
   const hemi=new THREE.HemisphereLight(0xffffff,0x888888,0.85*LEG);scene.add(hemi);
   const sun=new THREE.DirectionalLight(0xfff4e6,1.5*LEG);sun.position.set(-75,95,48);
-  sun.castShadow=true;const sz=1024;sun.shadow.mapSize.set(sz,sz);
-  Object.assign(sun.shadow.camera,{left:-90,right:90,top:60,bottom:-60,near:10,far:250});sun.shadow.bias=-0.0004;sun.shadow.radius=3;sun.shadow.normalBias=0.04;
+  sun.castShadow=true;const sz=GFX.shadow;sun.shadow.mapSize.set(sz,sz);
+  Object.assign(sun.shadow.camera,{left:-90,right:90,top:60,bottom:-60,near:10,far:250});sun.shadow.bias=-0.0004;sun.shadow.radius=GFX.soft?5:3;sun.shadow.normalBias=0.04;
   sun.target.position.set(-5,0,5);scene.add(sun,sun.target);
   let baseHemi=0.85,baseSun=0.9;
 

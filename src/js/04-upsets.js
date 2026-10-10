@@ -44,13 +44,18 @@ const EVENTS=[
    start:i=>{const pool=EVENTS.filter(e=>e.g!=="god"&&!active(e.id));for(let k=0;k<2&&pool.length;k++){const e=pool.splice(Math.floor(rand("upx")*pool.length),1)[0];trigger(e.id,true);}
      const l=Math.round(S.fg*0.05);S.fg-=l;i.note=`${l} rolls blown away`;}},
  {id:"beaver",g:"god",name:"Giant beaver",head:"A giant beaver crawls out of the river and starts eating the bale yard!",dur:[120,240],mtbf:700,mods:{yardEat:120,recvMul:0.3},fx:"beaver"},
+ // v4.1 environment-specific upsets (env: only on that site; the dice are still drawn everywhere so the streams stay in step)
+ {id:"icedintake",g:"stock",env:"rural",name:"River intake iced over",head:"The river intake has iced over! Fresh water is short: stock prep throttles back until maintenance clears the ice.",dur:[120,240],mtbf:330,mods:{feedMul:0.6},fx:"icedintake"},
+ {id:"brownout",g:"machine",env:"urban",name:"Grid brownout",head:"Peak demand on the city grid: the utility cuts the mill back. Machine speed capped at 80% and the pulper throttled.",dur:[90,180],mtbf:300,mods:{speedCap:0.8,feedMul:0.85},fx:"brownout"},
+ {id:"duststorm",g:"yard",env:"desert",name:"Dust storm",head:"A wall of dust rolls over the mill! Trucks crawl, the clamp trucks slow down and the dust gets into the screens and the sheet.",dur:[60,150],mtbf:260,mods:{recvMul:0.6,clampMul:0.7,breakMul:1.5,speedCap:0.9},fx:"duststorm"},
+ {id:"flood",g:"yard",env:"swamp",name:"Bayou flood",head:"The bayou is over its banks! Water across the yard: forklifts and clamp trucks bog down and the trucks crawl.",dur:[180,360],mtbf:420,mods:{recvMul:0.5,clampMul:0.6},fx:"flood"},
 ];
 const EV=Object.fromEntries(EVENTS.map(e=>[e.id,e]));
 EVENTS.forEach(e=>CH.en[e.id]=true);
 const WXN={clear:"Clear",rain:"Rain",fog:"Fog",snow:"Snow"};
 function active(id){return S.inc.some(i=>i.id===id);}
 // machine and winder upsets go to the crew one at a time, in the order they happen; nothing gets fixed until a crew is there
-const QINC=id=>!!(EV[id]&&((EV[id].g==="machine"&&id!=="runner"&&id!=="birdhay"&&id!=="boiler"&&id!=="fogfan"&&id!=="steamjoint")||id==="ragger"));
+const QINC=id=>!!(EV[id]&&((EV[id].g==="machine"&&id!=="runner"&&id!=="birdhay"&&id!=="boiler"&&id!=="fogfan"&&id!=="steamjoint"&&id!=="brownout")||id==="ragger"));
 const RESP={ragger:6,wrap:4,hay:4,brk:2,dryerfire:3,shaft:8,fabric:6,felt:6,slime:5,winderdown:6};
 function enqueue(k){if(!S.crewQ)S.crewQ=[];if(S.crewQ.some(q=>q.k===k))return;S.crewQ.push({k,resp:RESP[k]||6,since:0,here:false,go:false});}
 function crewTick(dt){if(!S.crewQ)S.crewQ=[];
@@ -65,7 +70,7 @@ function crewTick(dt){if(!S.crewQ)S.crewQ=[];
   if(!(G3.on&&G3.ok)||TURBO_FAST(C.simSpeed)||now-h.since>(h.k==="ragger"?25000:6000))h.here=true;
   if(h.resp<=0&&h.here)h.go=true;}
 // maintenance: techs work in pairs, oldest job first; a job's repair clock only runs once its pair is on site
-const MJOBS=["refclash","steamjoint","fogfan","shaft","fabric","felt","winderdown","hdblow","lwplug","cscreen","fscreen","lcplug","boiler","thkblow","overflow","chestover","fleet","roof","lightning"];
+const MJOBS=["refclash","steamjoint","fogfan","shaft","fabric","felt","winderdown","hdblow","lwplug","cscreen","fscreen","lcplug","boiler","thkblow","overflow","chestover","fleet","roof","lightning","icedintake"];
 const MNEED=id=>MJOBS.includes(id);
 function maintTick(dt){const crews=Math.max(1,Math.floor(P.techs/2)),list=S.inc.filter(i=>MNEED(i.id)),now=performance.now();
   list.forEach((i,k)=>{i.mSlot=k<crews?k:-1;i.mQ=k-crews+1;if(i.mSlot<0)return;if(!i.mSince){i.mSince=now;i.mResp=8;}
@@ -92,7 +97,7 @@ function brkNote(){const w={reel:"Dryers",dryer:"Presses",press:"Wet end"}[S.brk
 function rethread(why){S.pm="break";S.brkType="press";S.breakLeft=2*(26+rand("brkx")*20);S.breakTotal=S.breakLeft;enqueue("brk");log(`Rethreading the machine ${why}`,"warn");}
 function log(text,cls){S.feed.unshift({t:S.t,text,cls});if(S.feed.length>40)S.feed.pop();}
 function trigger(id,quiet){
-  if(active(id))return;
+  if(active(id))return;if(EV[id]&&EV[id].env&&EV[id].env!==SITE.env)return;   // v4.1: another site's upset
   const e=EV[id],dur=(e.dur[0]+rand("upx")*(e.dur[1]-e.dur[0]))*durMul(id);
   const inc={id,left:dur,total:dur,real:performance.now(),note:""};
   S.inc.push(inc);(S.evc||(S.evc={}))[id]=(S.evc[id]||0)+1;if(QINC(id))enqueue(id);S.lastInc=S.t;S.tot.incidents++;AUDIO.event(id);

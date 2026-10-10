@@ -115,5 +115,29 @@
       // the L/B gauge, then out to the jet and the wavy wet line on the wire
       {name:"slice and wet line",look:["airy","none"],dur:7,ok:()=>S.pm==="run",
         at:(t)=>{if(t>7)return null;const u=ease(Math.max(0,(t-2.2)/4.8)),g=G3.SLC?G3.SLC.geo():{wet:50};
-          return [mix(57.15,mix(g.wet,54,0.35),u),mix(2.95,2.9,u),mix(12.4,9.1,u),mix(5.5,15,u),mix(0.08,0.55,u),mix(1.5,0.92,u)];}}];
+          return [mix(57.15,mix(g.wet,54,0.35),u),mix(2.95,2.9,u),mix(12.4,9.1,u),mix(5.5,15,u),mix(0.08,0.55,u),mix(1.5,0.92,u)];}},
+      // v4.1: the land around the mill (environment and mill seed) ----------------------------------------------
+      // a long approach from a random direction over the land, settling on the mill
+      {name:{rural:"over the forest",urban:"over the rooftops",desert:"across the flats",swamp:"over the bayou"}[SITE.env]||"approach",look:["dusk","airy"],dur:18,ok:()=>true,
+        start:()=>({a:Math.random()*6.28}),
+        at:(t,mv)=>{if(t>18)return null;const u=ease(t/18),a=mv.st.a;return [mix(14+Math.sin(a)*190,14,u),mix(10,4,u),mix(5+Math.cos(a)*190,5,u),mix(330,175,u),a,mix(1.08,0.9,u)];}},
+      // a slow half-orbit of one of the landmarks the seed placed (water tower, solar farm, lake, village, barge dock...)
+      {name:"landmark",look:["gold","none"],dur:13,ok:()=>!!(G3.scenery&&G3.scenery.util&&Object.keys(G3.scenery.util).length),
+        start:()=>{const U=G3.scenery.util,ks=Object.keys(U),k=ks[Math.floor(Math.random()*ks.length)],[x,z,h]=U[k];return {x,z,h,th:Math.atan2(x-14,z-5)+(Math.random()-0.5)*1.2,k};},
+        at:(t,mv)=>{if(t>13)return null;const s=mv.st,u=ease(t/13);return [s.x,Math.min(12,s.h*0.35),s.z,Math.max(45,s.h*2.2+30),s.th+u*1.3,mix(1.0,0.92,u)];}},
+      // the highway bridge over the river, trucks coming and going
+      {name:"highway bridge",look:["bw","dusk"],dur:12,ok:()=>true,start:()=>({d:Math.random()<0.5?1:-1}),
+        at:(t,mv)=>{if(t>12)return null;const u=ease(t/12);return [-158,2,mix(-66-18*mv.st.d,-66+6*mv.st.d,u),mix(80,62,u),Math.PI/2+0.55*mv.st.d-0.5*mv.st.d*u,mix(1.02,0.96,u)];}},
+      // low along the water: the far bank, the intake and the outfall, out past the mill
+      {name:{urban:"canal run",desert:"canal run",swamp:"bayou drift"}[SITE.env]||"river drift",look:["airy","gold"],dur:16,ok:()=>true,
+        at:(t)=>{if(t>16)return null;const u=ease(t/16);return [mix(-120,70,u),0,-65,mix(60,52,u),Math.PI+0.35-0.5*u,mix(1.08,1.0,u)];}},
+      // one signature shot per environment
+      ...(SITE.env==="rural"?[{name:"forest canopy",look:["gold","airy"],dur:12,ok:()=>true,
+        at:(t)=>{if(t>12)return null;const u=ease(t/12);return [mix(-70,-20,u),mix(6,4,u),mix(125,45,u),42,0.3-0.2*u,1.22];}}]:
+        SITE.env==="urban"?[{name:"city skyline",look:["none","hc"],dur:16,ok:()=>true,start:()=>({th:Math.random()*6.28}),
+        at:(t,mv)=>{if(t>16)return null;const u=ease(t/16);return [14,20,5,mix(300,255,u),mv.st.th+u*0.5,1.14];}}]:
+        SITE.env==="desert"?[{name:"mesa horizon",look:["gold","dusk"],dur:14,ok:()=>true,start:()=>({th:Math.random()*6.28}),
+        at:(t,mv)=>{if(t>14)return null;const u=ease(t/14);return [14,12,5,mix(420,300,u),mv.st.th+u*0.15,mix(1.3,1.2,u)];}}]:
+        [{name:"bayou mist",look:["airy","none"],dur:14,ok:()=>true,
+        at:(t)=>{if(t>14)return null;const u=ease(t/14);return [mix(-130,-45,u),2,mix(120,60,u),46,0.25-0.15*u,1.28];}}])];
     return zenMovesCache;}

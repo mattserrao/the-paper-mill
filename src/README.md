@@ -40,8 +40,15 @@ then `tail.html`. All game code runs inside **one shared closure** (opened in `0
 ## Site, mill seed and bottleneck (v4.1)
 
 - **`SITE`** (`03b-site.js`) is the environment (`rural`, `urban`, `desert`, `swamp`) and mill seed the page was loaded
-  with: from `?env=&mill=` (tests), else the saved choice (`paper-mill-site`), else rural / #1. The autotest ignores the
-  saved choice. The 3D scene is built once from it, so the site picker saves and reloads.
+  with: from `?env=&mill=` (tests), else the saved choice (`paper-mill-site`: `{env|"any", seed, pin}`), else rural. The
+  seed is rolled fresh on every load unless pinned (`Math.random` here is the one allowed use outside cosmetics: it picks
+  the world before the run starts, not luck during play); `?autotest` always gets mill #1. The 3D scene is built once
+  from it, so the site picker saves and reloads.
+- **Environment upsets** (`env:` on an event in `04-upsets.js`): `trigger()` refuses another site's upset, `siteFreq()`
+  returns 0 for it, the Upsets panel lists only this site's, and `10-report-cards.js` tolerates the missing buttons. The
+  dice are still drawn for every event everywhere (chaosTick), so the streams stay in step across sites. Their effects
+  set `G3.dustK` / `G3.brownK` / `G3.floodK`, which `envUpdate` (36) reads for the sky, fog, lights and weather points;
+  31's frame tail resets them when the upset is over.
 - **Environment gameplay** goes through `applySite()` (called from `applyUpgrades`): `P.siteOcc`, `sitePrice`, `siteEnergy`,
   `siteWage`, `siteOver`, `siteIn` (inbound trucks), `siteWx` (weather thresholds; still one `rand("wx")` draw) and
   `siteFreq(id)` (upset frequency, inside `freqMul`, shown as "site" under Reliability). Keep each environment's
@@ -58,6 +65,13 @@ then `tail.html`. All game code runs inside **one shared closure** (opened in `0
   map sector (not batched: the colour attribute keeps them out of the static merge). Anything that must stay clear of
   scenery but is hidden at build time (like the food truck) needs a `kMark` there. `G3.navBoxes` adds scenery trunks to the
   walkers' grid; `G3.sceneryH(x,z)` keeps the camera above scenery (`placeCam`); `G3.sceneryAt(x,z)` is for tests.
+- **Features** (`FEAT` in 42b): each environment has a pool; `features()` builds two or three per visit from the seed.
+  Every utility and feature records its position in `G3.scenery.util` (`name -> [x, z, height]`) for the zen "landmark"
+  shot and the brownout's substation pin.
+- **Graphics tiers** (`GFX_TIERS` / `G3.GFX` in `20-3d-setup.js`): Auto picks from the device; `?gfx=` or
+  `paper-mill-gfx` pins one. `G3.setGfx()` (29) applies what can change live (pixel ratio, shadow map size and radius,
+  shadow Hz, weather points, far-sector shadows); `GFX.lambert` (material model) and `GFX.scenery` (density) need a reload.
+  New visual features should scale with the tier where it makes sense. Phone emulation in the tools is the Medium tier.
 - Don't name a 3D-closure variable `SITE`: it shadows the global (the fence rectangle is `FENCE`).
 
 ## Device autotest (`?autotest`)

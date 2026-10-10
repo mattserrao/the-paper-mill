@@ -80,6 +80,10 @@
     // claim a footprint: keep-out, camera floor, and (inside the yard) a walker obstacle at the trunk
     function claim(x,z,r,h,trunk){kMark(x-r,x+r,z-r,z+r,3);hMark(x,z,r,h);if(trunk&&x>-62&&x<88&&z>-52&&z<53)NB.push([x-trunk,x+trunk,z-trunk,z+trunk]);}
     const place=(x,z,r,water)=>kFree(x,z,r,water);
+    // where the utilities and features ended up (zen camera shots, the brownout's substation): name -> [x, z, height]
+    const UTIL={};const note=(k,x,z,h)=>{UTIL[k]=[+x.toFixed(1),+z.toFixed(1),h];};
+    // graphics tier: scenery density (Low 0.5 ... Ultra 1.4); the yard and the utilities are the same at every tier
+    const DEN=(G3.GFX&&G3.GFX.scenery)||1;
     /* ---------- noise for natural clustering ---------- */
     const NG=[];for(let k=0;k<40*32;k++)NG.push(RNG());
     function noise(x,z,s=60){const fx=(x+420)/s,fz=(z+320)/s,i=Math.floor(fx),j=Math.floor(fz),u=fx-i,v=fz-j,g=(a,b)=>NG[((b%32+32)%32)*40+((a%40+40)%40)];
@@ -125,42 +129,109 @@
         if(place(x,z,r))return [x,z];}return null;}
     const UT={
       waterTower(){const p=spot(7);if(!p)return;const [x,z]=p,h=rr(18,24);[[-2.4,-2.4],[2.4,-2.4],[-2.4,2.4],[2.4,2.4]].forEach(([a,b])=>add(T.box,x+a,0,z+b,0.45,h,0.45,0,"#9aa3ad",0.2));
-        add(T.cyl10,x,h,z,5,5,5,0,"#e9ecef",0.15);add(T.cone6,x,h+5,z,5.3,2.2,5.3,0,"#c7ccd3",0.05);add(T.cyl6,x,0,z,0.6,h,0.6,0,"#9aa3ad",0.1);claim(x,z,6,h+7,0);},
+        add(T.cyl10,x,h,z,5,5,5,0,"#e9ecef",0.15);add(T.cone6,x,h+5,z,5.3,2.2,5.3,0,"#c7ccd3",0.05);add(T.cyl6,x,0,z,0.6,h,0.6,0,"#9aa3ad",0.1);claim(x,z,6,h+7,0);note("waterTower",x,z,h+7);},
       substation(n=3){const p=spot(11);if(!p)return;const [x,z]=p;add(T.quad,x,0.03,z,20,1,16,0,"#b6b3aa",0);for(let k=0;k<n;k++){const tx=x-6+k*6;add(T.box,tx,0,z-2,3.2,3,2.4,0,"#7d8792",0.25);
           add(T.box,tx,3,z-2,0.3,2.2,0.3,0,"#4a4f58",0);add(T.box,tx-1,3,z-2,0.3,1.6,0.3,0,"#4a4f58",0);}
         [[-9,-7],[9,-7],[-9,7],[9,7]].forEach(([a,b])=>add(T.box,x+a,0,z+b,0.3,6,0.3,0,"#8d939c",0.1));add(T.box,x,5.8,z-7,18,0.3,0.3,0,"#8d939c",0);add(T.box,x,5.8,z+7,18,0.3,0.3,0,"#8d939c",0);
         // fence (thin, see-through look approximated by a low wall of mesh colour)
-        [[0,-8,20,0.1],[0,8,20,0.1],[-10,0,0.1,16],[10,0,0.1,16]].forEach(([a,b,w,d])=>add(T.box,x+a,0,z+b,w,2.2,d,0,"#a8b0b8",0.3));claim(x,z,11,7,0);return [x,z];},
-      pylons(from,to){const n=Math.max(2,Math.round(Math.hypot(to[0]-from[0],to[1]-from[1])/55));for(let k=0;k<=n;k++){const x=from[0]+(to[0]-from[0])*k/n,z=from[1]+(to[1]-from[1])*k/n;if(!place(x,z,2.5))continue;
+        [[0,-8,20,0.1],[0,8,20,0.1],[-10,0,0.1,16],[10,0,0.1,16]].forEach(([a,b,w,d])=>add(T.box,x+a,0,z+b,w,2.2,d,0,"#a8b0b8",0.3));claim(x,z,11,7,0);note("substation",x,z,7);return [x,z];},
+      // a line of pylons; never inside the fence or on the river (the mill's own line is the power house)
+      pylons(from,to){const n=Math.max(2,Math.round(Math.hypot(to[0]-from[0],to[1]-from[1])/55));for(let k=0;k<=n;k++){const x=from[0]+(to[0]-from[0])*k/n,z=from[1]+(to[1]-from[1])*k/n;if(inside(x,z,-8)||(z>-80&&z<-52)||!place(x,z,2.5))continue;
           const ry=Math.atan2(-(to[1]-from[1]),to[0]-from[0])+Math.PI/2;add(T.cone4,x,0,z,1.5,24,1.5,ry,"#7d838c",0.15);add(T.box,x,17,z,0.25,0.35,9,ry,"#7d838c",0);add(T.box,x,20.5,z,0.25,0.3,6,ry,"#7d838c",0);claim(x,z,2,24,0);}},
       solarFarm(){const w=70,d=44;let p=null;for(let t=0;t<60&&!p;t++){const q=spot(30,14,110);if(q&&place(q[0],q[1],32))p=q;}if(!p)return;const [x,z]=p;
         for(let r=0;r<8;r++)for(let c=0;c<6;c++){const px=x-w/2+5+c*11.5,pz=z-d/2+3+r*5.4;add(T.box,px,1.0,pz,10.5,0.12,2.6,0,"#2c3e63",0,undefined,-0.45);add(T.box,px,0,pz+0.6,0.2,1.2,0.2,0,"#8d939c",0);}
-        add(T.box,x+w/2-3,0,z+d/2-2,3,2.2,2,0,"#e2e5e9",0.2);kMark(x-w/2,x+w/2,z-d/2,z+d/2,3);hMark(x,z,36,2);return [x,z];},
+        add(T.box,x+w/2-3,0,z+d/2-2,3,2.2,2,0,"#e2e5e9",0.2);kMark(x-w/2,x+w/2,z-d/2,z+d/2,3);hMark(x,z,36,2);note("solarFarm",x,z,2);return [x,z];},
       waterTanks(){const p=spot(10);if(!p)return;const [x,z]=p;[[-4,0,5,7],[5,1,4,6]].forEach(([a,b,r,h])=>add(T.cyl10,x+a,0,z+b,r,h,r,0,"#e7e2d6",0.15));
-        [[-9,-8],[8,-9],[10,7]].forEach(([a,b])=>{if(place(x+a,z+b,1.5)){add(T.box,x+a,0,z+b,1.4,1.2,1.4,0,"#9aa0a8",0.2);add(T.box,x+a,1.2,z+b,0.3,2.5,0.3,0,"#6b7079",0);claim(x+a,z+b,1.5,4,0);}});claim(x,z,9,8,0);},
-      windpump(){const p=spot(3,10,90);if(!p)return;const [x,z]=p;add(T.cone4,x,0,z,1.4,9,1.4,0.6,"#8a8f98",0.2);add(T.cyl6,x,9,z+0.4,1.6,0.1,1.6,0,"#c9ced6",0,undefined,Math.PI/2);claim(x,z,1.6,10,0);},
+        [[-9,-8],[8,-9],[10,7]].forEach(([a,b])=>{if(place(x+a,z+b,1.5)){add(T.box,x+a,0,z+b,1.4,1.2,1.4,0,"#9aa0a8",0.2);add(T.box,x+a,1.2,z+b,0.3,2.5,0.3,0,"#6b7079",0);claim(x+a,z+b,1.5,4,0);}});claim(x,z,9,8,0);note("waterTanks",x,z,8);},
+      windpump(){const p=spot(3,10,90);if(!p)return;const [x,z]=p;add(T.cone4,x,0,z,1.4,9,1.4,0.6,"#8a8f98",0.2);add(T.cyl6,x,9,z+0.4,1.6,0.1,1.6,0,"#c9ced6",0,undefined,Math.PI/2);claim(x,z,1.6,10,0);note("windpump",x,z,10);},
       bargeDock(){const x=rr(-90,60),z=-63;add(T.box,x,0.4,z+4,22,0.4,4,0,"#7b5d42",0.1);for(let k=-10;k<=10;k+=5)add(T.cyl6,x+k,-0.6,z+5.5,0.25,1.6,0.25,0,"#5c4632",0);
-        add(T.box,x+2,0.1,z-2.5,26,1.1,7,0,"#4f5560",0.3);for(let i=0;i<9;i++)for(let l=0;l<2;l++)add(T.box,x-8+i*2.5,1.2+l*1.0,z-2.5+(i%2?0.9:-0.9),1.9,0.95,1.6,0,pick(["#b07a43","#a7784a","#8f6a45"]),0.15);claim(x,z,1,1,0);hMark(x,z,14,4);},
+        add(T.box,x+2,0.1,z-2.5,26,1.1,7,0,"#4f5560",0.3);for(let i=0;i<9;i++)for(let l=0;l<2;l++)add(T.box,x-8+i*2.5,1.2+l*1.0,z-2.5+(i%2?0.9:-0.9),1.9,0.95,1.6,0,pick(["#b07a43","#a7784a","#8f6a45"]),0.15);claim(x,z,1,1,0);hMark(x,z,14,4);note("bargeDock",x,z,4);},
       recycler(){const p=spot(14,10,80);if(!p)return;const [x,z]=p;add(T.box,x,0,z,18,7,12,0,"#a9b0ba",0.2);add(T.gable,x,7,z,18.4,2.2,12.6,0,"#6f7a88",0.05);
         for(let i=0;i<6;i++)for(let l=0;l<3;l++)add(T.box,x-8+i*2.2,l*1.1,z+9.5,2,1.05,1.8,0,pick(["#b07a43","#a7784a","#8f6a45"]),0.1);
-        const sg=pick(["CITY RECYCLING","METRO FIBER","OCC DEPOT"]);sg&&add(T.box,x,7.4,z-6.3,10,1.4,0.2,0,"#2a5aa8",0);claim(x,z,14,10,0);},
+        add(T.box,x,7.4,z-6.3,10,1.4,0.2,0,"#2a5aa8",0);claim(x,z,14,10,0);note("recycler",x,z,10);},
       chipPile(){const p=spot(10,10,60);if(!p)return;const [x,z]=p;add(T.cone6,x,0,z,9,7,9,RNG()*6,"#c9a46c",0.3);add(T.cone6,x+8,0,z+3,6,4.5,6,RNG()*6,"#b98f5a",0.3);
-        for(let k=0;k<5;k++)add(T.cyl6,x-12,0.4+(k%2)*0.7,z-6+k*0.75,0.35,7,0.35,0,"#8a6a4a",0.1,undefined,0,Math.PI/2);claim(x,z,12,8,0);},
+        for(let k=0;k<5;k++)add(T.cyl6,x-12,0.4+(k%2)*0.7,z-6+k*0.75,0.35,7,0.35,0,"#8a6a4a",0.1,undefined,0,Math.PI/2);claim(x,z,12,8,0);note("chipPile",x,z,8);},
       farm(){const p=spot(16,40,170);if(!p)return;const [x,z]=p,ry=RNG()<0.5?0:Math.PI/2;house(x,z,ry,12,8,6,"#a8322c","#5a3a2e");house(x+(ry?10:0),z+(ry?0:12),ry,8,7,4.5,"#f1ede4","#4a4f58");
-        silo(x-10,z-6,2.4,12,"#c9ced6");silo(x-15,z-6,2.4,10,"#c9ced6");claim(x,z,18,15,0);
+        silo(x-10,z-6,2.4,12,"#c9ced6");silo(x-15,z-6,2.4,10,"#c9ced6");claim(x,z,18,15,0);if(!UTIL.farm)note("farm",x,z,15);
         // fields: striped crop rows
         const fx=x+rr(30,50)*(RNG()<0.5?-1:1),fz=z+rr(-20,20),fw=rr(40,70),fd=rr(30,50),c1=pick(["#a6c46a","#c9c06a","#8fb85c","#d6c27a"]);
         if(place(fx,fz,Math.min(fw,fd)/2)){for(let k=0;k<fd;k+=4)add(T.quad,fx,0.02,fz-fd/2+k+1,fw,1,2,0,k%8?c1:"#9a8a5a",0);kMark(fx-fw/2,fx+fw/2,fz-fd/2,fz+fd/2,3);
           for(let k=0;k<6;k++){const bx=fx+rr(-fw/2+3,fw/2-3),bz=fz+rr(-fd/2+3,fd/2-3);add(T.cyl10,bx,0.75,bz,0.75,1.5,0.75,0,"#d6b65a",0.1,undefined,Math.PI/2);}}},
       shack(){let p=null;for(let t=0;t<200&&!p;t++){const x=rr(-300,300),z=rr(-90,-80);if(place(x,z,5,true))p=[x,z];}if(!p)return;const [x,z]=p;
         [[-2,-2],[2,-2],[-2,2],[2,2]].forEach(([a,b])=>add(T.cyl6,x+a,0,z+b,0.2,1.8,0.2,0,"#5c4632",0));add(T.box,x,1.8,z,5,2.6,5,RNG(),"#7d6a52",0.15);add(T.gable,x,4.4,z,5.6,1.6,5.6,0,"#4f5560",0);
-        add(T.box,x,1.6,z+5,1.4,0.15,6,0,"#7b5d42",0);claim(x,z,5,7,0);}};
+        add(T.box,x,1.6,z+5,1.4,0.15,6,0,"#7b5d42",0);claim(x,z,5,7,0);if(!UTIL.shack)note("shack",x,z,7);}};
+    /* ---------- features: a few per visit from each environment's pool, so the land is never the same twice ---------- */
+    const FEAT={
+      // a lake with a boathouse, reeds round the edge
+      lake(){let p=null;for(let t=0;t<120&&!p;t++){const q=spot(34,30,170);if(q)p=q;}if(!p)return;const [x,z]=p,r=rr(22,32),pts=[],n=11;
+        for(let k=0;k<n;k++){const a=k/n*6.283,rk=r*rr(0.7,1.1);pts.push([x+Math.cos(a)*rk,z+Math.sin(a)*rk*0.75]);}poly(pts,0.03,ENVK==="swamp"?"#4f736d":"#7fb0cf");kMark(x-r,x+r,z-r*0.75,z+r*0.75,2);
+        for(let k=0;k<14;k++){const a=rr(0,6.28),d=r*rr(0.98,1.12),rx=x+Math.cos(a)*d,rz=z+Math.sin(a)*d*0.75;if(!place(rx,rz,0.7,true))continue;for(let q=0;q<3;q++)add(T.cone4,rx+rr(-0.5,0.5),0,rz+rr(-0.4,0.4),0.12,rr(1.2,2),0.12,RNG(),"#7f8f4f",0.2);claim(rx,rz,0.6,2,0);}
+        const bx=x+r*1.02,bz=z;if(place(bx,bz,4,true)){add(T.box,bx,0.3,bz,5,3,4,0,"#8a6a4a",0.15);add(T.gable,bx,3.3,bz,5.4,1.6,4.6,0,"#4a4f58",0);add(T.box,bx-4,0.25,bz,4,0.2,1.4,0,"#7b5d42",0);claim(bx,bz,4,5,0);}
+        for(let k=0;k<8;k++){const a=rr(0,6.28),d=r*rr(1.1,1.4);broadleaf(x+Math.cos(a)*d,z+Math.sin(a)*d*0.75,rr(0.8,1.3),true);}note("lake",x,z,1);},
+      // a village: a dozen houses round a green with a church
+      village(){let p=null;for(let t=0;t<120&&!p;t++){const q=spot(40,40,190);if(q)p=q;}if(!p)return;const [x,z]=p,ry=RNG()<0.5?0:Math.PI/2;
+        add(T.quad,x,0.025,z,70,1,6,ry,ROADC,0);for(let k=0;k<12;k++){const side=k%2?1:-1,hx=x+(k-6)*5.8+rr(-1,1),hz=z+side*(7+rr(0,3)),rx=ry?x+side*(7+rr(0,3)):hx,rz=ry?z+(k-6)*5.8:hz;
+          if(!place(rx,rz,3.6))continue;house(rx,rz,ry+(RNG()<0.5?0:Math.PI/2),rr(6,8.5),rr(5,7),rr(3,4.2),pick(["#f1ede4","#e2d2c2","#d9c8a8","#c9d2d6","#b9c4b0"]),pick(["#7a4a3a","#4a4f58","#5a5f69"]));claim(rx,rz,4,6,0);
+          if(RNG()<0.5)broadleaf(rx+rr(-5,5),rz+rr(-5,5),rr(0.6,0.9),true);}
+        const cx=x+(ry?16:0),cz=z+(ry?0:16);if(place(cx,cz,7)){add(T.box,cx,0,cz,9,6,14,ry,"#e9e4da",0.15);add(T.gable,cx,6,cz,14.4,3.4,9.4,ry+Math.PI/2,"#4a4f58",0);add(T.box,cx+(ry?0:-4),0,cz+(ry?-4:0),3.2,13,3.2,0,"#e9e4da",0.1);add(T.cone4,cx+(ry?0:-4),13,cz+(ry?-4:0),2.6,5,2.6,Math.PI/4,"#4a4f58",0);claim(cx,cz,8,18,0);}
+        note("village",x,z,8);},
+      // logging camp: log decks, a loader shed and a skidder trail
+      logging(){const p=spot(16,10,120);if(!p)return;const [x,z]=p;for(let d=0;d<3;d++)for(let l=0;l<4;l++)for(let k=0;k<5-l;k++)add(T.cyl6,x-8+d*7,0.35+l*0.62,z-4+k*0.75+l*0.37,0.36,9,0.36,0,pick(["#8a6a4a","#7a5a3c","#9a7350"]),0.1,undefined,0,Math.PI/2);
+        add(T.box,x+8,0,z+6,8,4,6,0,"#8a8f98",0.2);add(T.gable,x+8,4,z+6,8.4,1.6,6.6,0,"#5b6270",0);add(T.quad,x,0.02,z+12,34,1,4,0,"#9a8a6a",0);claim(x,z,16,6,0);note("logging",x,z,6);},
+      // three wind turbines on the skyline (merged, so the blades stand still)
+      turbines(){const a0=rr(0,6.28);for(let k=0;k<3;k++){const a=a0+k*0.25,d=rr(200,330),x=Math.cos(a)*d,z=Math.sin(a)*d*0.85;if(!place(x,z,6))continue;
+          add(T.cyl10,x,0,z,1.6,42,1.6,0,"#eef0f2",0.1);add(T.box,x,41,z,4,2.4,2.2,0,"#eef0f2",0.05);for(let b=0;b<3;b++)add(T.box,x+1.8,42,z,0.5,19,1.2,0,"#eef0f2",0,undefined,b*2.094+0.3,0);claim(x,z,3,62,0);if(!UTIL.turbines)note("turbines",x,z,62);}},
+      // an orchard: a grid of small round trees
+      orchard(){const p=spot(26,20,150);if(!p)return;const [x,z]=p;for(let i=0;i<9;i++)for(let j=0;j<6;j++){const tx=x-20+i*5,tz=z-12.5+j*5;if(!place(tx,tz,1.2))continue;add(T.tri3,tx,0,tz,0.2,1.3,0.2,0,"#7a5a3c",0.1);add(T.ico,tx,2,tz,1.5,1.3,1.5,RNG()*6,pick(["#6fa76b","#7cb072","#8ab879"]),0.3);claim(tx,tz,1.3,3.3,0.2);}note("orchard",x,z,3);},
+      // a city park: lawn, winding path, a pond and benches
+      park(){const p=spot(30,14,120);if(!p)return;const [x,z]=p;add(T.quad,x,0.022,z,56,1,42,0,"#9fc27a",0);kMark(x-28,x+28,z-21,z+21,3);const pts=[];for(let k=0;k<8;k++){const a=k/8*6.283;pts.push([x+Math.cos(a)*rr(6,9),z+Math.sin(a)*rr(5,7)]);}poly(pts,0.03,"#7fb0cf");
+        for(let k=0;k<7;k++){const a=k/7*6.283;add(T.quad,x+Math.cos(a)*17,0.026,z+Math.sin(a)*13,9,1,1.6,-a+Math.PI/2,"#d9cfb8",0);}
+        for(let k=0;k<16;k++){const a=rr(0,6.28),d=rr(11,24);const tx=x+Math.cos(a)*d,tz=z+Math.sin(a)*d*0.75;add(T.tri3,tx,0,tz,0.25,2.4,0.25,0,"#7a5a3c",0.1);add(T.ico,tx,3.4,tz,2,1.7,2,RNG()*6,pick(["#6fa76b","#5f9a63","#7cb072"]),0.3);hMark(tx,tz,2,6);}
+        hMark(x,z,30,6);note("park",x,z,6);},
+      // a stadium bowl
+      stadium(){let p=null;for(let t=0;t<80&&!p;t++){const q=spot(42,40,200);if(q)p=q;}if(!p)return;const [x,z]=p;add(T.cyl10,x,0,z,46,14,34,0,"#c9c4ba",0.25);add(T.cyl10,x,14,z,48,1.2,36,0,"#5b6270",0);add(T.cyl10,x,0.2,z,38,14.2,26,0,"#6fa76b",0);
+        kMark(x-48,x+48,z-36,z+36,3);hMark(x,z,48,16);note("stadium",x,z,16);},
+      // a rail yard beside the line: sidings and boxcars
+      railyard(){const x=rr(-330,-200),z=-29;for(let k=0;k<3;k++){const zz=z-4-k*4;[zz-0.7,zz+0.7].forEach(zr=>add(T.box,x,0.14,zr,80,0.16,0.12,0,"#8d939c",0,"w"));for(let c=0;c<4;c++){if(RNG()<0.35)continue;add(T.box,x-30+c*18+k*5,0.9,zz,12,3.3,2.8,0,pick(["#9b3d2a","#3d5f8c","#5b6270","#7a4a3a"]),0.2,"w");}}
+        kMark(x-42,x+42,z-18,z-2,3);hMark(x,z-9,42,5);note("railyard",x,z-8,5);},
+      // a gas station on the highway
+      gas(){const z=rr(40,110)*(RNG()<0.5?-1:1)+(RNG()<0.5?0:-150),x=HXr+12;if(!place(x+6,z,10))return;add(T.quad,x+6,0.024,z,16,1,22,0,"#9a9ea6",0);add(T.box,x+10,0,z-6,8,4,6,0,"#e9e4da",0.15);
+        [[x+4,z-3],[x+4,z+3]].forEach(([a,b])=>{add(T.box,a,0,b,0.5,3.6,0.5,0,"#8d939c",0);add(T.box,a,0,b,1,1.6,0.6,0,"#d6382c",0.1);});add(T.box,x+4,3.6,z,8,0.5,10,0,"#f2c230",0.05);
+        add(T.box,x+13,0,z+6,0.4,7,0.4,0,"#6b7079",0);add(T.box,x+13,7,z+6,3,1.6,0.3,0,"#d6382c",0);claim(x+6,z,10,8,0);note("gas",x+6,z,8);},
+      // an airstrip with a hangar and windsock
+      airstrip(){let p=null;for(let t=0;t<80&&!p;t++){const q=spot(70,40,200);if(q)p=q;}if(!p)return;const [x,z]=p,ry=rr(0,3.14);add(T.quad,x,0.024,z,170,1,14,ry,"#9a9ea6",0);for(let k=-7;k<=7;k++)add(T.quad,x+Math.cos(ry)*k*11,0.03,z-Math.sin(ry)*k*11,5,1,0.6,ry,"#f2f2f2",0);
+        const hx=x+Math.sin(ry)*16,hz=z+Math.cos(ry)*16;add(T.box,hx,0,hz,14,6,12,ry,"#c9c4ba",0.2);add(T.gable,hx,6,hz,14.4,3,12.6,ry,"#8d939c",0);add(T.box,hx+Math.sin(ry)*10,0,hz+Math.cos(ry)*10,0.2,5,0.2,0,"#8d939c",0);add(T.cone4,hx+Math.sin(ry)*10,5,hz+Math.cos(ry)*10,0.6,2.4,0.6,0,"#f27a30",0,undefined,0,-1.3);
+        kMark(x-90,x+90,z-90,z+90,3);hMark(x,z,90,9);note("airstrip",x,z,9);},
+      // an open-pit mine: terraced pit, headframe, tailings
+      mine(){let p=null;for(let t=0;t<80&&!p;t++){const q=spot(40,60,220);if(q)p=q;}if(!p)return;const [x,z]=p;["#c98b5a","#b9774a","#a56a42"].forEach((c,i)=>add(T.cyl10,x,-1-i*3,z,36-i*9,3,30-i*8,0,c,0.2));
+        add(T.cone4,x+30,0,z-10,4,16,4,0,"#5b6270",0.15);add(T.box,x+30,15,z-10,6,2,3,0,"#5b6270",0);add(T.cone6,x+34,0,z+20,16,9,16,RNG()*6,"#d9b589",0.3);add(T.box,x+14,0,z-22,12,5,8,0,"#a9b0ba",0.2);kMark(x-40,x+40,z-30,z+30,3);hMark(x,z,42,18);note("mine",x,z,18);},
+      // an oasis: palms round a pool
+      oasis(){const p=spot(16,20,160);if(!p)return;const [x,z]=p,pts=[];for(let k=0;k<9;k++){const a=k/9*6.283,rk=rr(6,10);pts.push([x+Math.cos(a)*rk,z+Math.sin(a)*rk*0.8]);}poly(pts,0.03,"#5fa8bd");kMark(x-10,x+10,z-8,z+8,2);
+        for(let k=0;k<10;k++){const a=rr(0,6.28),d=rr(9,15),tx=x+Math.cos(a)*d,tz=z+Math.sin(a)*d*0.8,s=rr(0.8,1.2);if(!place(tx,tz,1.2,true))continue;add(T.cyl6,tx,0,tz,0.25*s,6*s,0.25*s,0,"#8a6a4a",0.15);for(let f=0;f<6;f++)add(T.box,tx+Math.cos(f*1.05)*1.6*s,6*s,tz+Math.sin(f*1.05)*1.6*s,3.2*s,0.12,0.7*s,-f*1.05,"#5f8a4e",0.1,undefined,0,-0.5);claim(tx,tz,1.2,7*s,0.3);}
+        note("oasis",x,z,7);},
+      // a ranch: house, barn, corrals, a water trough
+      ranch(){const p=spot(18,30,160);if(!p)return;const [x,z]=p;house(x,z,0,10,8,4,"#d9c8a8","#7a4a3a");add(T.box,x+14,0,z+2,10,6,8,0,"#a8322c",0.15);add(T.gable,x+14,6,z+2,10.4,2.6,8.6,0,"#5a3a2e",0);
+        for(let k=0;k<12;k++){const a=k/12*6.283;add(T.box,x-14+Math.cos(a)*9,0,z+Math.sin(a)*7,0.2,1.3,0.2,0,"#8a6a4a",0);}add(T.cyl6,x-14,1.3,z,9,0.08,7,0,"#8a6a4a",0);claim(x,z,24,8,0);note("ranch",x,z,8);},
+      // a fishing camp on the bank: dock, two skiffs, a cabin on stilts
+      fishcamp(){const x=rr(-120,120)+(RNG()<0.5?0:-200),z=-58;if(!place(x,z+6,6,true))return;add(T.box,x,0.6,z+3,3,0.3,8,0,"#7b5d42",0.1);for(let k=-3;k<=3;k+=2)add(T.cyl6,x,-0.5,z+k,0.2,1.3,0.2,0,"#5c4632",0);
+        [[x-3,z-1],[x+3,z-2]].forEach(([a,b])=>{add(T.box,a,0.1,b,1.4,0.5,4,0.2,pick(["#e9e4da","#5b8de4","#e46b5b"]),0.2);});[[-2,-2],[2,-2],[-2,2],[2,2]].forEach(([a,b])=>add(T.cyl6,x+a,0,z+8+b,0.2,2,0.2,0,"#5c4632",0));add(T.box,x,2,z+8,5,2.6,5,0,"#8a7a62",0.15);add(T.gable,x,4.6,z+8,5.6,1.6,5.6,0,"#4f5560",0);
+        claim(x,z+8,4,7,0);note("fishcamp",x,z,7);},
+      // a boardwalk out over the marsh to a lookout
+      boardwalk(){const p=spot(6,30,160);if(!p)return;const [x,z]=p,ry=rr(0,3.14);for(let k=0;k<12;k++){const px=x+Math.cos(ry)*k*4,pz=z-Math.sin(ry)*k*4;add(T.box,px,0.8,pz,4.2,0.14,1.6,ry,"#7b5d42",0.1);[-0.7,0.7].forEach(s2=>add(T.cyl6,px+Math.sin(ry)*s2,0,pz+Math.cos(ry)*s2,0.1,0.8,0.1,0,"#5c4632",0));}
+        const ex=x+Math.cos(ry)*48,ez=z-Math.sin(ry)*48;add(T.box,ex,0.8,ez,5,0.14,5,ry,"#7b5d42",0.1);[[-2,-2],[2,-2],[-2,2],[2,2]].forEach(([a,b])=>add(T.cyl6,ex+a,0,ez+b,0.15,3.6,0.15,0,"#5c4632",0));add(T.gable,ex,3.6,ez,5.6,1.4,5.6,ry,"#4f5560",0);note("boardwalk",ex,ez,5);},
+      // a sugar cane field
+      cane(){const p=spot(28,20,170);if(!p)return;const [x,z]=p,w=rr(40,60),d=rr(30,46);for(let k=0;k<d;k+=2.5)add(T.quad,x,0.02,z-d/2+k+1,w,1,1.6,0,k%5?"#8fb85c":"#6f9a45",0);kMark(x-w/2,x+w/2,z-d/2,z+d/2,3);
+        for(let k=0;k<40;k++){const bx=x+rr(-w/2+2,w/2-2),bz=z+rr(-d/2+2,d/2-2);add(T.cone4,bx,0,bz,0.6,rr(2.2,3.2),0.6,RNG(),"#9fc27a",0.25);}hMark(x,z,Math.max(w,d)/2,3);note("cane",x,z,3);},
+      // a lattice radio mast with its guy lines
+      mast(){const p=spot(5,20,160);if(!p)return;const [x,z]=p,h=rr(40,60);add(T.cone4,x,0,z,1.4,h,1.4,0.78,"#d6382c",0.1);add(T.box,x,h,z,0.3,4,0.3,0,"#f2f2f2",0);for(let k=0;k<3;k++){const a=k*2.094;add(T.cyl6,x+Math.cos(a)*14,0,z+Math.sin(a)*14,0.08,0.9,0.08,0,"#8d939c",0);}claim(x,z,2,h+4,0);note("mast",x,z,h+4);}};
+    const POOL={rural:["lake","village","logging","turbines","orchard","mast"],urban:["park","stadium","railyard","gas","mast","village"],desert:["airstrip","mine","oasis","ranch","turbines","mast"],swamp:["fishcamp","boardwalk","cane","lake","mast","village"]};
+    function features(){const pool=POOL[ENVK].slice(),n=2+Math.floor(RNG()*2);for(let k=0;k<n&&pool.length;k++){const f=pool.splice(Math.floor(RNG()*pool.length),1)[0];try{FEAT[f]();}catch(e){diag("scenery feature "+f+" failed: "+e.message);}}}
     /* ---------- environment kits ---------- */
     // scatter helper: n tries over a box, kept where the noise mask passes; fn(x,z) places one thing
-    function scatter(n,x0,x1,z0,z1,mask,fn){let k=0;for(let t=0;t<n;t++){const x=rr(x0,x1),z=rr(z0,z1);if(mask&&!mask(x,z))continue;if(fn(x,z))k++;}return k;}
+    function scatter(n,x0,x1,z0,z1,mask,fn){let k=0;n=Math.round(n*DEN);for(let t=0;t<n;t++){const x=rr(x0,x1),z=rr(z0,z1);if(mask&&!mask(x,z))continue;if(fn(x,z))k++;}return k;}
     const farOK=(x,z)=>Math.hypot(x+5,z-5)<330&&!inside(x,z,-4);
     if(ENVK==="rural"){
-      UT.pylons([F.x1+40,-50],[F.x1+260,-300]);const sub=UT.substation(2);if(sub)UT.pylons([F.x1+40,-50],sub);
+      UT.pylons([F.x1+40,-50],[F.x1+260,-300]);features();const sub=UT.substation(2);if(sub)UT.pylons(sub,[sub[0]*3.2,sub[1]*3.2]);
       UT.chipPile();UT.farm();if(RNG()<0.7)UT.farm();
       // forest belts: dense where the noise is high, conifers on the far hills
       scatter(3400,-410,410,-310,310,(x,z)=>farOK(x,z)&&noise(x,z)>0.44+0.25*Math.max(0,1-Math.hypot(x+5,z-5)/160),(x,z)=>{const d=Math.hypot(x,z),far=d>170;return RNG()<(d>150?0.55:0.3)?conifer(x,z,rr(0.85,1.3)):broadleaf(x,z,rr(0.8,1.4),far);});
@@ -169,26 +240,27 @@
       // far hills
       for(let k=0;k<7;k++){const a=rr(0,6.28),d=rr(330,400),x=Math.cos(a)*d,z=Math.sin(a)*d*0.8;if(!place(x,z,12))continue;add(T.mound,x,-3,z,rr(60,100),rr(9,18),rr(45,75),RNG()*6,pick(["#8fb27c","#86ab76","#94b683"]),0.25);}}
     if(ENVK==="urban"){
-      UT.waterTower();UT.substation(3);UT.recycler();
+      UT.waterTower();UT.substation(3);UT.recycler();features();
       // city blocks across the highway, beyond the east road, across the river and south of the mill
       const blocks=[[-410,HXr-12,-310,310],[EX+10,410,-310,310],[HXr+12,EX-10,-310,-85],[HXr+12,EX-10,F.z1+16,310]];
       blocks.forEach(([x0,x1,z0,z1])=>{const bw=rr(34,42);for(let bx=x0+6;bx<x1-10;bx+=bw+10)for(let bz=z0+6;bz<z1-10;bz+=bw+8){
-        const dmill=Math.hypot(bx+5,bz-5),downtown=noise(bx,bz,140)>0.55||dmill>260;
+        const dmill=Math.hypot(bx+5,bz-5),downtown=dmill>230&&(noise(bx,bz,140)>0.45||dmill>300);
         // streets between blocks
         if(bz+bw+8<z1-10&&RNG()<0.9){const zz=bz+bw+4;if(place(bx+bw/2,zz,2))add(T.quad,bx+bw/2,0.025,zz,bw+10,1,6,0,ROADC,0);}
         const lots=downtown?1+Math.floor(RNG()*2):3+Math.floor(RNG()*2);
         for(let l=0;l<lots;l++){const lw=bw/(downtown?1:2)-4,lx=bx+(downtown?bw/2:(l%2?bw*0.75:bw*0.25)),lz=bz+(downtown?(l?bw*0.75:bw*0.3):(l<2?bw*0.25:bw*0.75)),r=lw/2;
           if(!place(lx,lz,r))continue;
-          if(downtown){const h=rr(12,dmill>200?52:34)*(dmill<150?0.6:1),w=rr(lw*0.6,lw),d=rr(lw*0.6,lw);building(lx,lz,w,d,h,0,pick(["#c9c4ba","#b9bfc8","#d6cfc0","#a9b4c2","#c7b39b"]),pick(["#5b6270","#6d6a63","#4a4f58"]));claim(lx,lz,r,h+1,0);}
+          if(downtown){const h=rr(12,dmill>300?52:30),w=rr(lw*0.6,lw),d=rr(lw*0.6,lw);building(lx,lz,w,d,h,0,pick(["#c9c4ba","#b9bfc8","#d6cfc0","#a9b4c2","#c7b39b"]),pick(["#5b6270","#6d6a63","#4a4f58"]));claim(lx,lz,r,h+1,0);}
           else if(RNG()<0.6){house(lx,lz,RNG()<0.5?0:Math.PI/2,rr(7,10),rr(6,8),rr(3,5),pick(["#e9e4da","#d8c8b0","#c9d2d6","#e2d2c2","#b9c4b0"]),pick(["#7a4a3a","#5a5f69","#6d5a4a"]));
             if(RNG()<0.7)broadleaf(lx+rr(-r,r),lz+rr(-r,r),rr(0.6,0.9),true);claim(lx,lz,r,6,0);}
-          else{building(lx,lz,rr(lw*0.7,lw),rr(lw*0.7,lw),rr(5,9),0,pick(["#b8bcc4","#c9c4ba","#a7aeb8"]),"#6d737c");claim(lx,lz,r,10,0);}}}});
+          else if(RNG()<0.75){building(lx,lz,rr(lw*0.7,lw),rr(lw*0.7,lw),rr(5,9),0,pick(["#b8bcc4","#c9c4ba","#a7aeb8"]),"#6d737c");claim(lx,lz,r,10,0);}
+          else{add(T.quad,lx,0.024,lz,lw,1,lw,0,"#9a9ea6",0);for(let q=0;q<4;q++)add(T.box,lx-lw/3+q*lw/4.5,0,lz+rr(-lw/3,lw/3),2.4,2.6,6,0,pick(["#d6382c","#2a5aa8","#f2c230","#5b6270"]),0.15);claim(lx,lz,r,3,0);}}}});
       // street trees and a billboard by the highway
       scatter(260,-410,410,-310,310,farOK,(x,z)=>noise(x,z,40)>0.6&&broadleaf(x,z,rr(0.6,0.95),true));
       scatter(40,F.x0,F.x1,F.z0,F.z1,null,(x,z)=>broadleaf(x,z,rr(0.6,1),false));
       {const z=rr(30,70),x=HXr+10;if(place(x,z,4)){add(T.box,x,0,z,0.4,7,0.4,0,"#6b7079",0);add(T.box,x,7,z,0.4,3.2,8,0,"#f2c230",0.1);claim(x,z,4,11,0);}}}
     if(ENVK==="desert"){
-      UT.solarFarm();UT.waterTanks();UT.windpump();const sub=UT.substation(2);if(sub)UT.pylons(sub,[F.x0-120,320]);
+      UT.solarFarm();UT.waterTanks();UT.windpump();features();const sub=UT.substation(2);if(sub)UT.pylons(sub,[sub[0]*3.2,sub[1]*3.2]);
       // mesas and buttes on the skyline: stacked prisms in sandstone bands
       for(let k=0;k<12;k++){const a=rr(0,6.28),d=rr(230,400),x=Math.cos(a)*d,z=Math.sin(a)*d*0.85;if(!place(x,z,25))continue;const w=rr(30,80),dd=rr(25,60),h=rr(18,42),ry=RNG()*6;
         add(T.box,x,0,z,w*1.12,h*0.18,dd*1.12,ry,"#d9a06b",0.15);add(T.box,x,h*0.18,z,w,h*0.62,dd,ry,"#c98b5a",0.25);add(T.box,x,h*0.8,z,w*0.97,h*0.2,dd*0.97,ry,"#b9774a",0.1);claim(x,z,Math.max(w,dd)/2,h,0);}
@@ -199,7 +271,7 @@
       scatter(50,F.x0,F.x1,F.z0,F.z1,null,(x,z)=>bush(x,z,rr(0.6,1),pick(["#8a9a5b","#9aa36a"])));
       for(let k=0;k<14;k++){const a=rr(0,6.28),d=rr(140,330),x=Math.cos(a)*d,z=Math.sin(a)*d;if(place(x,z,20))add(T.mound,x,-0.6,z,rr(20,45),rr(3,7),rr(10,22),RNG()*6,"#e8d6aa",0.25);}}
     if(ENVK==="swamp"){
-      UT.bargeDock();UT.shack();UT.shack();const sub=UT.substation(2);if(sub)UT.pylons(sub,[F.x1+300,280]);
+      UT.bargeDock();UT.shack();UT.shack();features();const sub=UT.substation(2);if(sub)UT.pylons(sub,[sub[0]*3.2,sub[1]*3.2]);
       // ponds and sloughs: irregular water patches with cypress and reeds round the edges
       const ponds=[];for(let t=0;t<220&&ponds.length<26;t++){const x=rr(-400,400),z=rr(-300,300),r=rr(8,26);if(!farOK(x,z)||!place(x,z,r+2))continue;
         const pts=[],n=9;for(let k=0;k<n;k++){const a=k/n*6.283,rk=r*rr(0.65,1.15);pts.push([x+Math.cos(a)*rk,z+Math.sin(a)*rk*0.8]);}
@@ -221,8 +293,8 @@
     const smat=new StdMat({vertexColors:true,roughness:0.9,flatShading:true});smat.color.set(0xffffff);
     let tris=0;const parts=[];
     for(const k in SEC){const S2=SEC[k];if(!S2.n)continue;const g=new THREE.BufferGeometry();g.setAttribute("position",new THREE.Float32BufferAttribute(S2.p,3));g.setAttribute("color",new THREE.Float32BufferAttribute(S2.c,3));
-      g.computeVertexNormals();g.computeBoundingSphere();const m=new THREE.Mesh(g,smat);m.castShadow=k==="near";m.receiveShadow=k==="near";m.userData.scenery=k;m.userData.noNav=true;scene.add(m);parts.push(m);tris+=S2.n;}
+      g.computeVertexNormals();g.computeBoundingSphere();const m=new THREE.Mesh(g,smat);m.castShadow=k==="near"||!!(G3.GFX&&G3.GFX.far);m.receiveShadow=k==="near";m.userData.scenery=k;m.userData.noNav=true;scene.add(m);parts.push(m);tris+=S2.n;}
     // for the clipping check (tools/clipcheck.py): is (x,z) inside a scenery footprint?
     G3.sceneryAt=(x,z)=>{const i=kIdx(x,z);return i>=0&&KO[i]===3;};
-    G3.scenery={env:ENVK,seed:SITE.seed,layout:LAYOUT.i,parts,tris,sectors:Object.fromEntries(Object.entries(SEC).map(([k,v])=>[k,v.n])),navBoxes:NB.length};
+    G3.scenery={env:ENVK,seed:SITE.seed,layout:LAYOUT.i,parts,tris,util:UTIL,sectors:Object.fromEntries(Object.entries(SEC).map(([k,v])=>[k,v.n])),navBoxes:NB.length};
     diag(`scenery: ${ENVK} mill #${SITE.seed} (layout ${LAYOUT.i}): ${tris} triangles in ${parts.length} meshes`);}
