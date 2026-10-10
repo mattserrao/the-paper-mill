@@ -38,7 +38,7 @@
     L.push(`visible drawables: ${c.mesh} meshes, ${c.inst} instanced (${c.instN} instances), ${c.line} lines, ${c.sprite} sprites · shadow casters ${c.cast} · transparent ${c.transp}`);
     L.push(`materials in view: ${[...c.mats].map(([k,v])=>k.replace("Material","")+" "+v).join(", ")} · lights: ${c.lights.join(", ")}`);
     L.push(`gpu memory objects: ${I.memory.geometries} geometries, ${I.memory.textures} textures, ${I.programs?I.programs.length:"?"} shader programs · last frame ${I.render.calls} draw calls, ${I.render.triangles} triangles`);
-    L.push(`particles alive ${parts.filter(p=>p.alive).length} / pool ${parts.length} · HTML labels ${document.querySelectorAll(".lbl").length} (${[...document.querySelectorAll(".lbl")].filter(e=>!e.hidden&&e.offsetParent).length} shown) · DOM nodes ${document.getElementsByTagName("*").length}`);
+    L.push(`particles alive ${parts.filter(p=>p.alive).length} / pool ${parts.length} · canvas labels ${G3.lblCount?G3.lblCount().join(" ("):"?"} shown) · DOM nodes ${document.getElementsByTagName("*").length}`);
     L.push("biggest groups (visible drawables): "+[...groups].sort((a,b)=>b[1]-a[1]).slice(0,14).map(([k,v])=>`${k}=${v}`).join(" · "));
     return L;}
   const PHASES=[
@@ -50,7 +50,7 @@
     {name:"people + vehicles hidden",on:()=>{G3.EXP.noMovers=true;},off:()=>{G3.EXP.noMovers=false;}},
     {name:"HTML labels hidden",on:()=>{document.body.classList.add("diagNoLbl");},off:()=>{document.body.classList.remove("diagNoLbl");}},
     {name:"3D render skipped (CPU-only ceiling)",on:()=>{G3.EXP.noRender=true;},off:()=>{G3.EXP.noRender=false;}}];
-  function runPerf(done){if(!G3.PF){done("no 3D view");return;}const st=document.createElement("style");st.textContent=".diagNoLbl .lbl{display:none!important}";document.head.appendChild(st);
+  function runPerf(done){if(!G3.PF){done("no 3D view");return;}const st=document.createElement("style");st.textContent=".diagNoLbl .lbl,.diagNoLbl #lbl2d{display:none!important}";document.head.appendChild(st);
     const wasRunning=running;if(!running){running=true;}
     const ban=document.createElement("div");ban.style.cssText="position:fixed;left:16px;right:16px;top:70px;z-index:410;background:#111c;color:#fff;border-radius:10px;padding:10px 12px;font:600 13px system-ui;text-align:center;pointer-events:none";document.body.appendChild(ban);
     const out=["PERF census:",...census().map(x=>"  "+x),"PERF phases (settle 1.5 s, measure 3 s each):"];let base=null,i=0;
