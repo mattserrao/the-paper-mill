@@ -44,9 +44,10 @@
       const tick=now=>{if(!PF.on||now>end)return;requestAnimationFrame(tick);const gap=last?now-last:0;last=now;
         const acc=PF.acc,d={};for(const k in acc){const v=acc[k]-(prev[k]||0);if(v>=0.5)d[k]=+v.toFixed(1);}prev={...acc};
         const pN=programs(),gN=I.memory.geometries,xN=I.memory.textures,js=PF.js.length>nJs?PF.js[PF.js.length-1]:0;nJs=PF.js.length;
-        if(gap>25&&(R.slow_frames||(R.slow_frames=[])).filter(f=>f.phase===name).length<6)R.slow_frames.push({phase:name,t_s:+((now-t0)/1000).toFixed(2),gap_ms:Math.round(gap),js_ms:+js.toFixed(1),
+        if(gap>25){const SF=R.slow_frames||(R.slow_frames=[]),mine=SF.filter(f=>f.phase===name),low=mine.length<6?null:mine.reduce((a,b)=>a.gap_ms<=b.gap_ms?a:b);
+          if(low&&low.gap_ms>=gap){}else{if(low)SF.splice(SF.indexOf(low),1);SF.push({phase:name,t_s:+((now-t0)/1000).toFixed(2),gap_ms:Math.round(gap),js_ms:+js.toFixed(1),
           sections:Object.fromEntries(Object.entries(d).sort((a,b)=>b[1]-a[1]).slice(0,4)),new_programs:pN-pg,new_geometries:gN-geo,new_textures:xN-tex,
-          sim_min:Math.round(S.t),upsets:S.inc.length,moving_batches:G3.DB?G3.DB.bms.length:null,pending_batches:G3.DB?(G3.DB.pending||0)+(G3.DB.q?G3.DB.q.size:0):null});
+          sim_min:Math.round(S.t),upsets:S.inc.length,moving_batches:G3.DB?G3.DB.bms.length:null,pending_batches:G3.DB?(G3.DB.pending||0)+(G3.DB.q?G3.DB.q.size:0):null});}}
         pg=pN;geo=gN;tex=xN;};requestAnimationFrame(tick);}
     while(performance.now()<end){if(!running){R.pauses++;running=true;}say(`${name} · ${Math.max(1,Math.ceil((end-performance.now())/1000))} s`);await wait(250);}
     PF.on=false;const gaps=PF.gaps.slice(1),g=gaps.slice().sort((a,b)=>a-b),n=g.length,sum=g.reduce((a,b)=>a+b,0),js=PF.js.slice().sort((a,b)=>a-b);
@@ -61,6 +62,42 @@
       sections:Object.fromEntries(Object.entries(PF.acc).sort((a,b)=>b[1]-a[1]).map(([k,v])=>[k,+(v/Math.max(1,PF.frames)).toFixed(2)]))};
     if(keepGaps)o.gaps=gaps.map(r1);
     noteLate(name);if(off)off();R.phases[key]=o;return o;}
+  /* ---- v4.0.3 GPU probe: what the upsets cost the GPU ----
+     At 60 FPS the frame rate can't show GPU cost (the phone waits for the display either way). Here every 3D render
+     is followed by a 1-pixel read-back, which makes the CPU wait until the GPU has finished that frame, so the time
+     from the start of render() to the read-back is the frame's draw submission + GPU work. Measured with every upset
+     active: the baseline, then one thing switched off at a time; "saves" = baseline minus that configuration. */
+  async function gpuProbe(){const d=D(),Rr=d.renderer,gl=Rr.getContext(),px=new Uint8Array(4),orig=Rr.render;let buf=null;
+    Rr.render=function(sc,cam){const t=performance.now();orig.call(this,sc,cam);if(buf){gl.readPixels(0,0,1,1,gl.RGBA,gl.UNSIGNED_BYTE,px);buf.push(performance.now()-t);}};
+    // at least 30 frames (or 3x the time), so slow phones still get a real sample; fewer than 8 frames reports null
+    const meas=async(label,settleS,measS)=>{say("GPU probe · "+label);await wait(sec(settleS));buf=[];const t0=performance.now();
+      while(performance.now()-t0<sec(measS)||(buf.length<30&&performance.now()-t0<sec(measS*3)))await wait(50);
+      const a=buf.slice().sort((x,y)=>x-y);buf=null;
+      if(a.length<8)return {ms:null,n:a.length};return {ms:+(a.reduce((x,y)=>x+y,0)/a.length).toFixed(2),med:+a[Math.floor(a.length/2)].toFixed(2),p90:+a[Math.floor(a.length*0.9)].toFixed(2),n:a.length};};
+    const saves=m=>G.base.ms==null||m.ms==null?null:+(G.base.ms-m.ms).toFixed(2);
+    const G={};R.gpu=G;const EXP=G3.EXP;
+    try{
+      // particles alive per batch (each batch is one texture, shared by the particle types listed)
+      const names=new Map();for(const k in G3.PT){const m=G3.PT[k].map;names.set(m,(names.get(m)||[]).concat(k));}
+      const pbs=[...G3.PB.entries()].map(([map,b])=>({b,name:(names.get(map)||["?"]).join("+")}));
+      G.base=await meas("baseline",1,2);G.base.particles=Object.fromEntries(pbs.map(x=>[x.name,x.b.list.length]));
+      EXP.noParts=true;G.no_particles=await meas("particles off",1.5,1.5);EXP.noParts=false;
+      G.particle_types=[];for(const x of pbs){if(!x.b.list.length)continue;EXP.hidePB=x.b;const m=await meas("no "+x.name,0.6,1.2);EXP.hidePB=null;
+        G.particle_types.push({type:x.name,alive:x.b.list.length,saves_ms:saves(m)});}
+      {const pr=Rr.getPixelRatio();Rr.setPixelRatio(pr*0.5);d.resize();const m=await meas("half resolution",1,1.5);Rr.setPixelRatio(pr);d.resize();G.half_res=m;}
+      // shadows: one refresh's cost = every frame minus never (normal play refreshes at 15 Hz, a quarter of frames)
+      {const hz=G3.shadowHz;G3.shadowHz=1000;const a=await meas("shadows every frame",0.6,1.2);G3.shadowHz=0;const b=await meas("shadows never refreshed",0.6,1.2);G3.shadowHz=hz;
+        G.shadow_refresh_ms=a.ms==null||b.ms==null?null:+(a.ms-b.ms).toFixed(2);G.shadows_at_15hz_ms=G.shadow_refresh_ms==null?null:+(G.shadow_refresh_ms*15/60).toFixed(2);}
+      // each upset's own effect (its 3D objects and the particles it emits), hidden one at a time
+      const ids=S.inc.map(i=>i.id).filter((v,i,a)=>a.indexOf(v)===i&&G3.FX[v]);G.effects=[];
+      for(let i=0;i<ids.length;i++){const id=ids[i];EXP.hideFX=id;const m=await meas(`effect ${i+1}/${ids.length}: ${(EVENTS.find(e=>e.id===id)||{}).name||id}`,1.2,0.8);EXP.hideFX=null;
+        G.effects.push({id,name:(EVENTS.find(e=>e.id===id)||{}).name||id,saves_ms:saves(m)});}
+      G.effects.sort((a,b)=>(b.saves_ms??-1e9)-(a.saves_ms??-1e9));
+      G.base_again=await meas("baseline again",1,2);   // drift check: random particles and phone state vary
+      G.no_particles.saves_ms=saves(G.no_particles);G.half_res.saves_ms=saves(G.half_res);
+      G.particle_types.sort((a,b)=>(b.saves_ms??-1e9)-(a.saves_ms??-1e9));
+    }catch(e){G.error=String(e&&e.message||e);}
+    finally{Rr.render=orig;EXP.noParts=false;EXP.hidePB=null;EXP.hideFX=null;}}
   // FNV-1a over the key season numbers after a fixed replay: any change to the sim's logic changes it
   const fnv=s=>{let h=0x811c9dc5;for(let i=0;i<s.length;i++){h^=s.charCodeAt(i);h=Math.imul(h,0x01000193)>>>0;}return h.toString(16).padStart(8,"0");};
   function checksum(){running=false;startSeason();seedRun(SEED);running=false;const t0=performance.now();
@@ -98,6 +135,7 @@
     // the display's refresh rate: with nothing to draw, frames arrive at it (60, 90, 120 Hz)
     {const f=R.phases.no_render.p50;R.display_hz_est=f?[30,60,90,120,144].reduce((b,hz)=>Math.abs(1000/f-hz)<Math.abs(1000/f-b)?hz:b,60):null;}
     await phase("stress","All upsets at once",3,15,()=>{CH.on=true;EVENTS.forEach(e=>{try{trigger(e.id,true);}catch(_){}});},null,true);
+    if(Q.get("gpu")!=="0")await gpuProbe();
     say("checking the simulation");await wait(50);
     try{R.check=checksum();}catch(e){R.check={error:String(e&&e.message||e)};}
     if(wl)try{wl.release();}catch(e){}
@@ -138,6 +176,11 @@
       </div>
       <div class="t"><div class="k">Limited by</div><div class="verdict">${R.verdict}</div>
         <div class="s">Shadows off ${P.shadows_off?P.shadows_off.fps:"-"} fps · half resolution ${P.half_res?P.half_res.fps:"-"} fps · render skipped ${P.no_render?P.no_render.fps:"-"} fps</div></div>
+      ${R.gpu&&R.gpu.base?(()=>{const g=R.gpu,f=v=>v==null?"–":v.toFixed(1)+" ms",top=(g.effects||[]).filter(e=>e.saves_ms!=null).slice(0,5),pt=(g.particle_types||[]).slice(0,3);
+        return `<div class="t"><div class="k">Upsets on the GPU (draw + GPU per frame, all upsets)</div><div class="verdict">${f(g.base.ms)} per frame${g.base_again&&g.base_again.ms!=null?` (again at the end: ${f(g.base_again.ms)})`:""}</div>
+        <div class="s">Saves: particles off ${f(g.no_particles&&g.no_particles.saves_ms)} · half resolution ${f(g.half_res&&g.half_res.saves_ms)} · one shadow refresh costs ${f(g.shadow_refresh_ms)}</div>
+        <div class="s">Particle types: ${pt.map(x=>`${x.type} ${f(x.saves_ms)} (${x.alive})`).join(" · ")||"–"}</div>
+        <div class="s">Costliest effects: ${top.map(x=>`${x.name} ${f(x.saves_ms)}`).join(" · ")||"–"}</div></div>`;})():""}
       <div class="t"><div class="k">Problems</div><div class="${errs?"bad":"ok"}">${errs?errs+" error"+(errs>1?"s":""):"No errors"}${R.pauses?` · game paused ${R.pauses}x`:""}${R.hidden?` · page hidden ${R.hidden}x`:""}${R.late_programs.length?` · ${R.late_programs.length} shader${R.late_programs.length>1?"s":""} compiled during the test`:""}</div>
         ${R.errors.length?`<div class="s">${R.errors.slice(0,3).map(e=>e.replace(/[&<>]/g,"")).join("<br>")}</div>`:""}</div>
       <div class="row"><button id="atAgain">Run again</button><button id="atExit">Exit test</button></div>

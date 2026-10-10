@@ -69,7 +69,7 @@
       const P=b.pos.array,Sc=b.scl.array,Co=b.col.array,A=b.alp.array,R=b.rot.array;
       for(let i=0;i<n;i++){const p=L[i];P[i*3]=p.x;P[i*3+1]=p.y;P[i*3+2]=p.z;Sc[i*2]=p.s1;Sc[i*2+1]=p.s1*(p.t.tall||1);
         Co[i*3]=p.r;Co[i*3+1]=p.g;Co[i*3+2]=p.b;A[i]=p.a;R[i]=p.rot;}
-      b.g.instanceCount=n;b.mesh.visible=n>0&&!(G3.EXP&&G3.EXP.noParts);
+      b.g.instanceCount=n;b.mesh.visible=n>0&&!(G3.EXP&&(G3.EXP.noParts||G3.EXP.hidePB===b));
       if(n){[b.pos,b.scl,b.col,b.alp,b.rot].forEach(x=>{x.clearUpdateRanges();x.addUpdateRange(0,n*x.itemSize);x.needsUpdate=true;});}});}
   const R=()=>Math.random()-0.5;
   // big fires: dense flames, a white-hot core, embers, and a flickering orange light that washes over the scene
@@ -121,7 +121,7 @@
     badocc:[-17,10,-11,"!"],balefire:[-25,11,-12,"fire"],fleet:[-29,10,-16,"!"],calloff:[-36,10,23,"!"],fight:[-38,7,-21,"!"],roof:[-32,10,24,"water"],highway:[-72,7,4,"!"],
     lightning:[34.5,16,-15,"bolt"],tornado:[0,26,0,"!"],beaver:[-24,12,-12.5,"!"]};
   function fxPerson(group,m,x,z){const w=worker(m,M.warn);w.position.set(x,0,z);group.add(w);return w;}
-  const FX={};
+  const FX={};G3.FX=FX;G3.PB=PB;G3.PT=PT;   // (read by the autotest's GPU probe)
   // wire / felt run-off: the loop runs off the tending side into a heap in the aisle, the section sits bare,
   // the crew carry a new one out in its long shipping crate and pull it on from the front, and the heap is cleared
   const JOBS={},CLOTH_TUBE=new StdMat({color:lin0("#d8c49b"),roughness:0.85});
@@ -359,6 +359,7 @@
     const doTxt=now-lastIncTxt>200;if(doTxt)lastIncTxt=now;const w=G3.vw||host.clientWidth,hh=G3.vh||host.clientHeight;
     S.inc.forEach((inc,i)=>{let f=FX[inc.id];
       if(!f)f=makeFX(inc.id);
+      if(G3.EXP&&G3.EXP.hideFX===inc.id){f.g.visible=false;return;}   // autotest GPU probe: this effect off (no drawing, no new particles)
       f.g.visible=true;f.on=true;f.up(now,rdt,inc);if(f.pinPos)f.pin.move(f.pinPos[0],f.pinPos[1]);f.pin.update(now);
       {const zp=!G3.zen;f.pin.p.visible=f.pin.ring.visible=f.pin.stem.visible=zp;}   // v3.0.1: zen mode shows events without the red pins
       tmp.set(f.pin.x,f.pin.p.position.y+3.4,f.pin.z).project(camera);const vis=!G3.zen&&tmp.z<1&&Math.abs(tmp.x)<1.1&&Math.abs(tmp.y)<1.1;if(f.el.hidden!==!vis)f.el.hidden=!vis;
