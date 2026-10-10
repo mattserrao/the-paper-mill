@@ -60,8 +60,20 @@
    mcTurret.position.set(-1.4,1.6,0);MCm.add(mcTurret);box(2.8,0.9,2.3,M.fork,0,0.45,0,mcTurret);box(1.0,1.2,0.9,M.wind,0.4,1.4,-0.75,mcTurret,false);box(1.2,0.7,2.0,M.ink,-1.5,0.85,0,mcTurret,false);
    mcBoom.position.set(0.9,1.1,0.25);mcTurret.add(mcBoom);{const g=new THREE.BoxGeometry(1,0.55,0.55);g.translate(0.5,0,0);const b=new THREE.Mesh(g,M.fork);b.castShadow=true;mcBoom.add(b);mcBoom.userData.b=b;
      const g2=new THREE.BoxGeometry(1,0.4,0.4);g2.translate(0.5,0,0);const b2=new THREE.Mesh(g2,M.warn);mcBoom.add(b2);mcBoom.userData.fly=b2;}}
+  // v4.1 pass 3: the crane gets its detail back: cab glazing with frames, mirrors, a beacon and exhaust, hazard stripes on the
+  // bumpers and counterweight, a boom hoist ram, a sheave head on the boom base, and striped outrigger pads
+  {const stripeM=new StdMat({map:texC(64,8,(x)=>{for(let i=0;i<4;i++){x.fillStyle=i%2?"#ffffff":"#e0343c";x.fillRect(i*16,0,16,8);}},true),roughness:0.6});
+    box(0.06,0.95,0.08,M.ink,4.85,2.6,-1.08,MCm,false);box(0.06,0.95,0.08,M.ink,4.85,2.6,1.08,MCm,false);box(0.06,0.08,2.24,M.ink,4.85,3.08,0,MCm,false);box(0.06,0.08,2.24,M.ink,4.85,2.14,0,MCm,false);   // window frames
+    [-1.0,1.0].forEach(z=>box(0.08,0.32,0.26,M.ink,4.3,2.95,z*1.38,MCm,false));                                                                     // mirrors
+    [[2.6,0.6],[-3.2,0.6],[2.6,-0.6],[-3.2,-0.6]].forEach(([x,z])=>box(0.4,0.14,0.1,stripeM,x,0.72,z*2.1,MCm,false));                                  // bumper stripes
+    const bcn=new THREE.Mesh(DRV_HEAD,M.beacon);bcn.scale.setScalar(0.14);bcn.position.set(3.7,3.3,0.8);MCm.add(bcn);         // beacon
+    const ex=new THREE.Mesh(new CylG(0.08,0.08,1.4,8),M.ink);ex.position.set(2.9,3.4,-0.95);MCm.add(ex);                                                 // exhaust stack
+    box(0.3,0.5,2.0,stripeM,-2.1,0.85,0,mcTurret,false);box(1.1,0.08,0.08,M.warn,-0.9,1.3,1.0,mcTurret,false);box(1.1,0.08,0.08,M.warn,-0.9,1.3,-1.0,mcTurret,false);   // counterweight stripe, handrails
+    const sheave=new THREE.Mesh(new CylG(0.3,0.3,0.7,12),M.ink);sheave.rotation.x=Math.PI/2;sheave.position.set(0.2,0.2,0);mcBoom.add(sheave);           // sheave head at the boom foot
+    const ram=box(2.3,0.2,0.2,M.metal,1.6,-0.5,0,mcBoom,false);ram.rotation.z=0.32;const ramB=box(1.2,0.3,0.3,M.ink,0.9,-0.32,0,mcBoom,false);ramB.rotation.z=0.32;   // hoist ram
+    mcOut.forEach(g=>{const pd=g.children[2];if(pd)pd.material=stripeM;});}
   const mcCable=new THREE.Mesh(new CylG(0.04,0.04,1,6),M.ink);mcCable.visible=false;scene.add(mcCable);
-  const mcHook=new THREE.Group();mcHook.visible=false;scene.add(mcHook);box(0.5,0.5,0.4,M.warn,0,0,0,mcHook,false);
+  const mcHook=new THREE.Group();mcHook.visible=false;scene.add(mcHook);box(0.5,0.5,0.4,M.warn,0,0,0,mcHook,false);box(0.52,0.18,0.42,M.ink,0,-0.2,0,mcHook,false);
   const _mp=new THREE.Vector3();
   // aim the boom so the hook hangs at (hx,hy,hz); the hook block is 0.9 above the load point
   function mcAim(hx,hy,hz,ext){const yaw0=MCm.rotation.y;mcTurret.getWorldPosition(_mp);const yaw=Math.atan2(-(hz-_mp.z),hx-_mp.x);mcTurret.rotation.y=yaw-yaw0;

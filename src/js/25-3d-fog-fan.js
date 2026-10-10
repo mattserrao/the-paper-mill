@@ -188,19 +188,24 @@
       const t0=tanPt(c,prev,false);let t1=tanPt(c,next,true),dl=(t1-t0)*c.d;while(dl<0)dl+=Math.PI*2;while(dl>Math.PI*2)dl-=Math.PI*2;
       const n=Math.max(3,Math.ceil(dl/0.3)),cr=(c.r||CANR)+(c.r?0.03:0);for(let k=0;k<=n;k++){const th=t0+c.d*dl*k/n;pts.push([c.x+cr*Math.cos(th),c.y+cr*Math.sin(th)]);if(k===Math.floor(n/2))key.push(pts.length-1);}}
     pts.push(end);key.push(pts.length-1);return {pts,key};}
-  let sheetMesh=null,sheetKey=[];
-  function buildSheet(reelR){if(sheetMesh){scene.remove(sheetMesh);sheetMesh.geometry.dispose();}
-    const sp=sheetPath(reelR),pts=sp.pts,pos=[],uv=[],idx=[];sheetKey=sp.key;let acc=0;
-    pts.forEach((p,i)=>{if(i)acc+=Math.hypot(p[0]-pts[i-1][0],p[1]-pts[i-1][1]);
-      pos.push(p[0],p[1],zc-CD/2+0.2,p[0],p[1],zc+CD/2-0.2);uv.push(acc/3,0,acc/3,1);
-      if(i){const b=(i-1)*2;idx.push(b,b+1,b+2,b+1,b+3,b+2);}});
-    const g=new THREE.BufferGeometry();g.setAttribute("position",new THREE.Float32BufferAttribute(pos,3));g.setAttribute("uv",new THREE.Float32BufferAttribute(uv,2));g.setIndex(idx);g.computeVertexNormals();
-    sheetMesh=new THREE.Mesh(g,sheetMat);sheetMesh.receiveShadow=true;scene.add(sheetMesh);}
+  // v4.1 pass 3: the sheet is one geometry updated in place as the reel grows (it was rebuilt from scratch, arrays, normals
+  // and all, every time the nip moved 0.02 rad: the single largest steady allocation in the game at speed)
+  let sheetKey=[],sheetN=0;const SHEET_CAP=512;
+  const sheetG=new THREE.BufferGeometry(),sheetPos=new Float32Array(SHEET_CAP*6),sheetUV=new Float32Array(SHEET_CAP*4),sheetIdx=new Uint16Array((SHEET_CAP-1)*6);
+  sheetG.setAttribute("position",new THREE.BufferAttribute(sheetPos,3));sheetG.setAttribute("uv",new THREE.BufferAttribute(sheetUV,2));sheetG.setAttribute("normal",new THREE.BufferAttribute(new Float32Array(SHEET_CAP*6),3));sheetG.setIndex(new THREE.BufferAttribute(sheetIdx,1));
+  const sheetMesh=new THREE.Mesh(sheetG,sheetMat);sheetMesh.receiveShadow=true;sheetMesh.frustumCulled=false;scene.add(sheetMesh);
+  function buildSheet(reelR){const sp=sheetPath(reelR),pts=sp.pts,n=Math.min(pts.length,SHEET_CAP);sheetKey=sp.key;let acc=0;
+    for(let i=0;i<n;i++){const p=pts[i];if(i)acc+=Math.hypot(p[0]-pts[i-1][0],p[1]-pts[i-1][1]);const v=i*6,u=i*4;
+      sheetPos[v]=p[0];sheetPos[v+1]=p[1];sheetPos[v+2]=zc-CD/2+0.2;sheetPos[v+3]=p[0];sheetPos[v+4]=p[1];sheetPos[v+5]=zc+CD/2-0.2;sheetUV[u]=acc/3;sheetUV[u+1]=0;sheetUV[u+2]=acc/3;sheetUV[u+3]=1;
+      if(i){const b=(i-1)*2,q=(i-1)*6;sheetIdx[q]=b;sheetIdx[q+1]=b+1;sheetIdx[q+2]=b+2;sheetIdx[q+3]=b+1;sheetIdx[q+4]=b+3;sheetIdx[q+5]=b+2;}}
+    for(let q=(n-1)*6;q<(sheetN-1)*6;q++)sheetIdx[q]=0;   // a shorter path: the old tail becomes degenerate triangles (no normals from it)
+    sheetN=n;sheetG.attributes.position.needsUpdate=true;sheetG.attributes.uv.needsUpdate=true;sheetG.index.needsUpdate=true;sheetG.computeVertexNormals();sheetG.attributes.normal.needsUpdate=true;}
   buildSheet(1);let sheetR=1;
   // v3.2.0 slice + wet line. G3.SLC.v = vertical slice (-1 closed .. +1 open), .h = horizontal lip (-1 back .. +1 forward).
   // Cosmetic only: the lip moves, the jet tips up or down and lands nearer or further, and the wavy wet line slides along the wire.
   const SLC=G3.SLC={v:0,h:0,dirty:true};
-  SLC.geo=()=>{const lipX=55.12-0.22*SLC.h,lipY=3.1+0.07*SLC.v,land=lipX-(1.0+0.6*SLC.v+0.25*SLC.h),wet=50.2-1.9*SLC.v-1.0*SLC.h;return {lipX,lipY,land,wet};};
+  const _geo={lipX:0,lipY:0,land:0,wet:0};   // (one reused object: this is read every frame)
+  SLC.geo=()=>{const lipX=55.12-0.22*SLC.h;_geo.lipX=lipX;_geo.lipY=3.1+0.07*SLC.v;_geo.land=lipX-(1.0+0.6*SLC.v+0.25*SLC.h);_geo.wet=50.2-1.9*SLC.v-1.0*SLC.h;return _geo;};
   const WN=48,wetPos=new Float32Array((WN+1)*2*3),edgePos=new Float32Array((WN+1)*2*3),wIdx=[];for(let i=0;i<WN;i++){const b=i*2;wIdx.push(b,b+1,b+2,b+1,b+3,b+2);}
   const wetG=new THREE.BufferGeometry();wetG.setAttribute("position",new THREE.BufferAttribute(wetPos,3));wetG.setIndex(wIdx);
   const edgeG=new THREE.BufferGeometry();edgeG.setAttribute("position",new THREE.BufferAttribute(edgePos,3));edgeG.setIndex(wIdx);
@@ -212,7 +217,7 @@
   G3.sliceFrame=(now,show)=>{const g=SLC.geo();
     if(SLC.dirty){SLC.dirty=false;sheetPre[0][0]=g.lipX;sheetPre[0][1]=g.lipY-0.03;sheetPre[1][0]=g.land;buildSheet(sheetR);if(G3.HB&&G3.HB.lip)G3.HB.lip.position.set(g.lipX+0.21,g.lipY+0.03,zc);G3.drawLB&&G3.drawLB();}
     wetMesh.visible=edgeMesh.visible=jetMesh.visible=show;if(!show)return;
-    {const zA=zc-CD/2+0.2,zB=zc+CD/2-0.2,y0=g.lipY-0.015,y1=2.97;jetPos.set([g.lipX,y0,zA,g.lipX,y0,zB,g.land-0.05,y1,zA,g.land-0.05,y1,zB]);jetG.attributes.position.needsUpdate=true;}const t=now/1000,Y=3.0,z0=zc-CD/2+0.2,z1=zc+CD/2-0.2;
+    {const zA=zc-CD/2+0.2,zB=zc+CD/2-0.2,y0=g.lipY-0.015,y1=2.97;jetPos[0]=g.lipX;jetPos[1]=y0;jetPos[2]=zA;jetPos[3]=g.lipX;jetPos[4]=y0;jetPos[5]=zB;jetPos[6]=g.land-0.05;jetPos[7]=y1;jetPos[8]=zA;jetPos[9]=g.land-0.05;jetPos[10]=y1;jetPos[11]=zB;jetG.attributes.position.needsUpdate=true;}const t=now/1000,Y=3.0,z0=zc-CD/2+0.2,z1=zc+CD/2-0.2;
     for(let i=0;i<=WN;i++){const z=z0+(z1-z0)*i/WN,w=g.wet+0.18*Math.sin(z*1.9+t*0.7)+0.08*Math.sin(z*4.7-t*1.3)+0.035*Math.sin(z*11+t*2.1),o=i*6;
       wetPos[o]=w;wetPos[o+1]=Y;wetPos[o+2]=z;wetPos[o+3]=g.land-0.05;wetPos[o+4]=Y;wetPos[o+5]=z;
       edgePos[o]=w-0.03;edgePos[o+1]=Y+0.004;edgePos[o+2]=z;edgePos[o+3]=w+0.04;edgePos[o+4]=Y+0.004;edgePos[o+5]=z;}
@@ -243,6 +248,6 @@
   {const m4=new THREE.Matrix4();for(let i=0;i<168;i++){const layer=i%3,col=Math.floor(i/3)%14,row=Math.floor(i/42);
     m4.makeTranslation(-30+col*1.45,0.5+layer*0.92,BALEROWS[row]);baleM.push(m4.clone());}}
   let baleShown=-1;
-  const rolls=new THREE.InstancedMesh(rollGeo,ROLLM,84);rolls.castShadow=true;rolls.receiveShadow=true;scene.add(rolls);
+  const rolls=new THREE.InstancedMesh(rollGeo,instMat(ROLLM),84);rolls.castShadow=true;rolls.receiveShadow=true;scene.add(rolls);
   {const m4=new THREE.Matrix4();for(let i=0;i<84;i++){m4.makeTranslation(-45+(i%12)*1.75,0.74,31.2-Math.floor(i/12)*1.7);rolls.setMatrixAt(i,m4);}}
 

@@ -2,8 +2,7 @@
   // v4.1 the environment sets the ground, the river and its banks (ENVLOOK); the scenery itself is built in 42b-3d-scenery.js
   const ENVLOOK={rural:{ground:"#b4cf9f",bank:"#d9cba6",water:"#7fb0cf"},urban:{ground:"#bec7ad",bank:"#c4c1b8",water:"#76a0b8"},
     desert:{ground:"#e3d0a4",bank:"#d6ccb6",water:"#5fa8bd"},swamp:{ground:"#a3b487",bank:"#7d7254",water:"#4f736d"}}[SITE.env];G3.envLook=ENVLOOK;
-  const grassM=new StdMat({color:lin0(ENVLOOK.ground),roughness:0.95});
-  slab(-400,400,-300,300,grassM,0);
+  // (v4.1 pass 3: the ground is the terrain mesh built in 42b-3d-scenery.js, flat under the mill, with the environment's texture)
   slab(-140,-95,-5.2,-2.4,M.asphalt);slab(-140,-95,11.2,13.8,M.asphalt);
   slab(-95,-34.4,-5.2,-2.4,M.asphalt);              // inbound road
   slab(-53,-34.4,-24.5,-2.4,M.asphalt,0.03);        // receiving apron
@@ -29,7 +28,7 @@
     run(W0,Z0,W1,Z0);run(W0,Z1,W1,Z1);
     [[Z0,-37.4],[-33.6,-31],[-27,-6],[-1.6,10.4],[14.6,Z1]].forEach(([a,b])=>run(W0,a,W0,b));
     [[Z0,30.5],[34.5,Z1]].forEach(([a,b])=>run(W1,a,W1,b));
-    const pg=new CylG(0.08,0.08,2.6,6),pm=new THREE.InstancedMesh(pg,M.metal,posts.length),m4=new THREE.Matrix4();
+    const pg=new CylG(0.08,0.08,2.6,6),pm=new THREE.InstancedMesh(pg,instMat(M.metal),posts.length),m4=new THREE.Matrix4();
     posts.forEach((p,k)=>{m4.makeTranslation(p[0],1.3,p[1]);pm.setMatrixAt(k,m4);});scene.add(pm);}
   // guard gate between the two roads, with boom barriers
   {const gx=FENCE.x0-1.5,gz=4.4;box(3,2.6,3,conc,gx,1.3,gz);box(3.4,0.25,3.4,M.brand,gx,2.75,gz);box(3.02,0.8,2.2,M.wind,gx,1.75,gz,scene,false);
@@ -52,6 +51,12 @@
     // city and desert: the river runs in a walled concrete channel
     if(SITE.env==="urban"||SITE.env==="desert")[-57.6,-74.4].forEach(z=>box(800,1.1,0.6,conc,0,0.55,z,scene,false));
     slab(-400,400,-72,-60,new StdMat({map:rt,roughness:0.15,metalness:0.1}),0.012);
+    // v4.1 pass 3: a sparse sparkle layer drifting the other way over the water (High and Ultra tiers)
+    if(G3.GFX&&!G3.GFX.lambert){const sc2=document.createElement("canvas");sc2.width=sc2.height=128;const x=sc2.getContext("2d");x.clearRect(0,0,128,128);
+      for(let k=0;k<70;k++){const px=Math.random()*128,py=Math.random()*128,r=0.6+Math.random()*1.4,g=x.createRadialGradient(px,py,0,px,py,r*2.2);g.addColorStop(0,"rgba(255,255,255,0.9)");g.addColorStop(1,"rgba(255,255,255,0)");x.fillStyle=g;x.fillRect(px-3,py-3,6,6);}
+      const st2=new THREE.CanvasTexture(sc2);st2.colorSpace=THREE.SRGBColorSpace;st2.wrapS=st2.wrapT=THREE.RepeatWrapping;st2.repeat.set(60,1.2);ENV.sparkTex=st2;
+      const sp=new THREE.Mesh(new THREE.PlaneGeometry(800,11),new THREE.MeshBasicMaterial({map:st2,transparent:true,opacity:0.35,depthWrite:false,blending:THREE.AdditiveBlending,toneMapped:false}));
+      sp.rotation.x=-Math.PI/2;sp.position.set(0,0.03,-66);sp.renderOrder=1;sp.userData.noNav=true;scene.add(sp);ENV.spark=sp;}
     box(4,3,4,conc,-30,1.5,-55.5);box(4.4,0.3,4.4,M.brand,-30,3.1,-55.5);pipe([[-30,0.8,-57.5],[-30,0.8,-59],[-30,-0.5,-61]],0.35,M.metal);
     // fresh water from the river intake, up and over into the stock line that feeds the cleaners and screens on to stock storage
     {const fw=mat("water",{roughness:0.4});pipe([[-30,0.7,-53.5],[-30,0.7,-31.5],[-4,0.7,-31.5],[-4,0.7,-25.7],[4,0.7,-25.7],[4,6.0,-25.7],[11.2,6.0,-25.7],[11.2,6.0,-23.3]],0.32,fw);
@@ -130,7 +135,7 @@
         const dr=box(2.6,2.7,0.08,cloth0b("#5a2318"),0,2.6,1.47,c);c.userData.door=dr;
         const sg=new THREE.Mesh(new THREE.PlaneGeometry(4,0.5),new THREE.MeshBasicMaterial({map:(()=>{const cc=document.createElement("canvas");cc.width=256;cc.height=32;const x=cc.getContext("2d");x.fillStyle="#ffffff";x.font='800 22px "IBM Plex Mono",monospace';x.fillText(k?"PMRX 220418":"PMRX 104772",8,24);const t=new THREE.CanvasTexture(cc);t.colorSpace=THREE.SRGBColorSpace;return t;})(),transparent:true}));sg.position.set(-3.4,3.9,1.43);c.add(sg);}
       else{box(12,0.4,2.8,cm,0,1.35,0,c);[-5.8,5.8].forEach(x=>box(0.3,2.8,2.8,cm,x,2.9,0,c));
-        const b2=new THREE.InstancedMesh(new THREE.BoxGeometry(1.3,0.95,1.3),M.bale,24),m4b=new THREE.Matrix4();let n2=0;
+        const b2=new THREE.InstancedMesh(new THREE.BoxGeometry(1.3,0.95,1.3),instMat(M.bale),24),m4b=new THREE.Matrix4();let n2=0;
         for(let i=0;i<8;i++)for(let l=0;l<3;l++){m4b.makeTranslation(-4.9+i*1.4,2.05+l*0.97,(l%2?0.35:-0.35));b2.setMatrixAt(n2++,m4b);}b2.castShadow=true;c.add(b2);}});
     cars.forEach(c=>c.userData.train=true);loco.userData.train=true;ENV.trainWheels=TW;ENV.trainCars=cars;ENV.locoStack=[1.2,4.1];
     T.position.set(-180,0,-29);ENV.train={g:T,state:"away",t:60};}
@@ -170,7 +175,7 @@
   // v4.1: trees and the rest of the world outside the buildings are built from the environment and mill seed (42b-3d-scenery.js)
   // street lamps along the roads, the front of the hall and the parking lot
   {const L=[];for(let x=-130;x<-68;x+=16){L.push([x,-6.2]);L.push([x,15]);}for(let x=-20;x<=60;x+=16)L.push([x===44?38.5:x,22.6]);for(let x=68;x<=88;x+=10)L.push([x,57.4]);L.push([60,36]);L.push([46,30]);
-    const pole=new THREE.InstancedMesh(new CylG(0.08,0.1,6,6),M.metal,L.length),head=new THREE.InstancedMesh(new THREE.BoxGeometry(0.9,0.2,0.4),new THREE.MeshBasicMaterial({color:0xffffff}),L.length);
+    const pole=new THREE.InstancedMesh(new CylG(0.08,0.1,6,6),instMat(M.metal),L.length),head=new THREE.InstancedMesh(new THREE.BoxGeometry(0.9,0.2,0.4),new THREE.MeshBasicMaterial({color:0xffffff}),L.length);
     const poolT=spriteTex((x,w)=>{const g=x.createRadialGradient(w/2,w/2,0,w/2,w/2,w/2);g.addColorStop(0,"rgba(255,255,255,1)");g.addColorStop(0.45,"rgba(255,255,255,0.6)");g.addColorStop(1,"rgba(255,255,255,0)");x.fillStyle=g;x.fillRect(0,0,w,w);});
     const poolM=new THREE.MeshBasicMaterial({map:poolT,color:lin0("#ffd98a"),transparent:true,opacity:0,depthWrite:false,polygonOffset:true,polygonOffsetFactor:-4,polygonOffsetUnits:-4,}),pools=new THREE.InstancedMesh(new THREE.PlaneGeometry(9,9),poolM,L.length);pools.renderOrder=3;
     const m4=new THREE.Matrix4(),rx=new THREE.Matrix4().makeRotationX(-Math.PI/2);

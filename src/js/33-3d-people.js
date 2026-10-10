@@ -1,11 +1,15 @@
   /* ---- people ---- */
-  const skin=mat("g-skin");
-  function worker(suit,hatM){const p=new THREE.Group();const hip=new THREE.Group();hip.position.y=0.9;p.add(hip);
+  const skin=M.skin;
+  // v4.1 pass 3: roles. vest: a hi-vis vest material over the torso (with a reflective band); radio: a handset on the belt
+  function worker(suit,hatM,role){const p=new THREE.Group();const hip=new THREE.Group();hip.position.y=0.9;p.add(hip);
     const legs=[-0.15,0.15].map(z=>{const l=new THREE.Group();l.position.z=z;const m=new THREE.Mesh(cubeG,M.ink);m.scale.set(0.22,0.9,0.22);m.position.y=-0.45;m.castShadow=true;l.add(m);hip.add(l);return l;});
     const torso=new THREE.Group();hip.add(torso);
     const body=new THREE.Mesh(cubeG,suit);body.scale.set(0.42,0.85,0.6);body.position.y=0.42;body.castShadow=true;torso.add(body);
     const head=new THREE.Mesh(sphereG,skin);head.scale.setScalar(0.23);head.position.y=1.07;torso.add(head);
     const hat=new THREE.Mesh(new SphG(1,10,5,0,Math.PI*2,0,Math.PI/2),hatM);hat.scale.set(0.29,0.24,0.29);hat.position.y=1.13;torso.add(hat);
+    const brim=new THREE.Mesh(cubeG,hatM);brim.scale.set(0.2,0.03,0.3);brim.position.set(0.3,1.14,0);torso.add(brim);
+    if(role&&role.vest){const v=new THREE.Mesh(cubeG,role.vest);v.scale.set(0.47,0.42,0.65);v.position.y=0.63;torso.add(v);const bd=new THREE.Mesh(cubeG,HIVIS.band);bd.scale.set(0.48,0.06,0.66);bd.position.y=0.56;torso.add(bd);}
+    if(role&&role.radio){const r=new THREE.Mesh(cubeG,M.ink);r.scale.set(0.08,0.16,0.1);r.position.set(0.12,0.06,0.33);torso.add(r);const an=new THREE.Mesh(cubeG,M.ink);an.scale.set(0.02,0.14,0.02);an.position.set(0.12,0.2,0.35);torso.add(an);}
     const armM=[],hands=[];const arms=[-0.39,0.39].map(z=>{const a=new THREE.Group();a.position.set(0,0.78,z);const m=new THREE.Mesh(cubeG,suit);m.scale.set(0.17,0.72,0.17);m.position.y=-0.36;a.add(m);armM.push(m);
       const h=new THREE.Mesh(cubeG,skin);h.scale.set(0.13,0.13,0.13);h.position.y=-0.78;a.add(h);hands.push(h);torso.add(a);return a;});
     const armful=new THREE.Mesh(cubeG,paperDS);armful.scale.set(0.7,0.45,0.75);armful.position.set(0.5,0.45,0);armful.visible=false;torso.add(armful);
@@ -136,7 +140,7 @@
     x.beginPath();x.moveTo(100,98);x.lineTo(118,134);x.lineTo(138,98);x.closePath();x.fill();x.stroke();x.fillStyle="#ffffff";x.fillRect(102,92,34,10);
     x.font="900 44px system-ui,sans-serif";x.textAlign="center";x.textBaseline="middle";const sy="#$%@&!!";[...sy].forEach((ch,k)=>{x.fillStyle=k%2?"#c8281e":"#1c2233";x.fillText(ch,38+k*30,56+(k%2?-5:4));});
     const t=new THREE.CanvasTexture(c);t.colorSpace=THREE.SRGBColorSpace;const sp=new THREE.Sprite(new THREE.SpriteMaterial({map:t,transparent:true,depthTest:false,toneMapped:false}));sp.scale.set(1.9,1.04,1);sp.renderOrder=9;sp.visible=false;scene.add(sp);return sp;})();
-  const crew=HOME.map(([x,z])=>{const w=worker(M.stock,M.warn);w.position.set(x,0,z);return w;});G3.followable=()=>crew.concat(spOps||[]);
+  const crew=HOME.map(([x,z])=>{const w=worker(M.stock,M.warn,{radio:true});w.position.set(x,0,z);return w;});G3.followable=()=>crew.concat(spOps||[]);
   const BRK={walk:false,smoke:new Set(),pic:new Set()};
   // follow a 3D route [x,y,z,pauseSeconds,pose]; height is interpolated along each leg, so stairs read as climbing
   function walkRoute(w,R2,st,rdt,now){const u=w.userData;if(!R2||!R2.length)return true;const p=R2[st.ri];if(!p)return true;
@@ -145,7 +149,7 @@
     const f=st.from,L=Math.hypot(p[0]-f[0],p[2]-f[2])||1e-6,a=moveP(w,p[0],p[2],2.2,rdt),d=Math.hypot(p[0]-w.position.x,p[2]-w.position.z);
     u.ry=a?p[1]:f[1]+(p[1]-f[1])*clamp(1-d/L,0,1);pose(w,"walk",now);
     if(a){if(p[3]){st.pt=p[3];}else{st.ri++;st.from=[p[0],p[1],p[2]];}}return st.ri>=R2.length;}
-  const spOps=[0,1].map(k=>{const w=worker(cloth0b("#3f8f62"),M.warn);w.position.set(20+k*3,0,-19.8);return w;});
+  const spOps=[0,1].map(k=>{const w=worker(cloth0b("#3f8f62"),M.warn,{vest:HIVIS.orange,radio:true});w.position.set(20+k*3,0,-19.8);return w;});
   const SPGROUND=[[12.5,0,-20.6,3,"inspect"],[15.2,0,-20.8,3,"inspect"],[19.2,0,-20.6,3,"inspect"],[26.6,0,-20.8,4,"inspect"],[24,0,-9.4,3,"look"],[20,0,-19.8]];
   const SPJOB={lwplug:[11.2,-21],cscreen:[15.2,-21],fscreen:[19.2,-21],lcplug:[26.6,-21],hdblow:[23.4,-9.6],thkblow:[42,-21],ragger:[9.4,-7.2],overflow:[20,-17],chestover:[29,-21]};
   // a town resident who sprints down the front aisle, jukes at the winder and runs back out

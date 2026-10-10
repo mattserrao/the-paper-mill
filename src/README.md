@@ -17,7 +17,7 @@ then `tail.html`. All game code runs inside **one shared closure** (opened in `0
 |---|---|
 | `00` | `APP_VER`, the rolling diagnostics log, and the three.js loader (r186.1 as an ES module via top-level `await`; outside the closure, so errors during start-up are caught) |
 | `01–11` | Game: mill name and colors, audio, model constants and seeded random streams, the site (`03b`: environments, mill seed and layout, bottleneck), upsets, event cards, outages and state, the sim `step()`, UI wiring, seasons and leaderboard, report cards, Stats trend chart |
-| `20–43` | 3D view, one file per area of the mill: setup, plant, floors, rejects, stock prep, vehicles, labels, camera, upset effects and particles, people, fire response, ambient life, janitorial, techs, upgrades, static-mesh merge, outage jobs, zen camera, the seeded scenery around the mill (`42b`), and the per-frame update (`43-3d-frame.js`) |
+| `20–43` | 3D view, one file per area of the mill: setup, plant, floors, rejects, stock prep, vehicles, labels, camera, upset effects and particles, people, fire response, the sky (`35b`), ambient life, janitorial, techs, upgrades, the yard props (`39b`: water tower, bales, gate sign), static-mesh merge, outage jobs, zen camera, the seeded scenery and terrain around the mill (`42b`), and the per-frame update (`43-3d-frame.js`) |
 | `50–53` | Side panels (slice, spider, Uncle Brian), app shell (top bar, sheets, menu, tutorial), the site picker (`51b`), main loop, the device autotest (`52b`, only active with `?autotest`), diagnostics panel and the `window.__PM` test hook |
 
 ## Conventions
@@ -73,6 +73,48 @@ then `tail.html`. All game code runs inside **one shared closure** (opened in `0
   shadow Hz, weather points, far-sector shadows); `GFX.lambert` (material model) and `GFX.scenery` (density) need a reload.
   New visual features should scale with the tier where it makes sense. Phone emulation in the tools is the Medium tier.
 - Don't name a 3D-closure variable `SITE`: it shadows the global (the fence rectangle is `FENCE`).
+
+### The look (v4.1 pass 3)
+
+- **Terrain** (42b, before the assets): `hBase(x,z)` is noise relief outside the fence (`RELIEF` per environment; the river
+  band, the rail line and every road corridor stay level), `pad(x,z,r)` flattens a feature's ground, `hAt(x,z)` is the
+  final height and is exported as `G3.terrainH`. `add()` and `poly()` add it to everything they place, `G3.sceneryH`
+  includes it, and the ground mesh (`G3.terrain`, vertex-coloured, textured on High and Ultra) samples it. Anything placed
+  outside the fence by other code must add `G3.terrainH(x,z)` itself.
+- **Sky** (`35b-3d-sky.js`): `G3.SKY` holds the dome (a ShaderMaterial band from 11° below the horizon to 35° above, so a
+  view of the mill draws no sky), clouds and mist (camera-facing quads, one mesh each, rebuilt per frame when visible).
+  `envUpdate` (36) calls `SKY.tick(rdt, now, day, skyColour, dustK)`. The dome and clouds hide when the top of the view
+  is below them (`camera.fov` is the vertical field), after 90 ticks so their shaders compile at the start.
+- **Yard props** (`39b-3d-yard-props.js`): the water tower (`YP.tower` for the zen camera), bale stacks, pallets, cores,
+  dumpsters, compactor, charging bay, flagpoles (`YP.flags`, waved by 36 on High/Ultra) and the gate sign. All static and
+  batched; they use the shared materials (`M.steel`, `M.ink`, `M.brand`, `M.ok`, `M.baleG[1]`), because every new
+  material is a new static batch (a draw). The tank band and the gate sign share one canvas atlas (`signM`), redrawn
+  by `G3.rebrand`.
+- **Roles** (33 `worker(suit, hat, role)`, 36 `person(..., role)`): `role.vest` (`HIVIS.orange` / `HIVIS.yellow`) and
+  `role.radio`. `HIVIS.orange` keeps `mat()`'s roughness and metalness so it shares the moving batch (a batch's look
+  leaves out colour, not roughness). Driver figures (27 `cage()`) use `DRV_HEAD` / `DRV_HAT` and `M.beacon` (one shared
+  MeshBasic amber for every vehicle beacon).
+- **Rounded boxes** (`rboxGeo`, 20): 316 triangles on High/Ultra, 140 on Medium, 92 on Low (`RBQ`). Anything with all
+  three sides ≥ 0.45 m made with `box()` is rounded; use `THREE.BoxGeometry` directly for crates and bales seen in bulk.
+- **Textured walls** (`ribWall`, 20): one shared material; the rib pitch is in each wall's uvs. Never clone a texture per
+  object to get a different `repeat`: every clone is a material, and every material is a draw.
+- **Ground shadings** (`skirt`, `blob`, 20): transparent decals flagged `userData.aoDecal`; the static merge (40) bakes
+  them into one mesh per material (map-wide, never culled) instead of a draw each.
+- **Program count** (A2 limit 115): the texture colour space, vertex colours, the presence of a normal attribute,
+  DoubleSide, instancing and batching are each a program variant, and so is the output colour space: a render target has
+  its own, so the prewarm renders to the screen behind a 1 px scissor rather than into one (that alone was 30 programs).
+  The sky's clouds, mist and night windows carry a normal attribute and are FrontSide for that reason.
+- **Shadow-pass shaders**: three.js shares one depth material across all casters and re-derives its shader only when it
+  steps between a plain mesh, an instanced mesh and a batch, taking the side and texture of whatever comes next. The
+  prewarm (31) draws every combination in that order (`plain`/`batch`/`inst` stand-ins) so nothing compiles mid-play;
+  `sortKinds()` (40) groups the scene's children by kind so a shadow pass switches a few times, not dozens.
+- **Materials and instancing**: a material shared between an InstancedMesh and a plain mesh makes three.js re-derive its
+  shader parameters on every switch (a few KB of garbage each); give an InstancedMesh its own copy with `instMat(m)` (20;
+  arrays too, palette token kept).
+- **Per-frame allocation**: the paper sheet (25) is one geometry updated in place; particle batches (31) keep their
+  lists, a count and one update-range object per attribute; `SLC.geo()` returns one reused object; the static-merge watch
+  compacts its list in place. `tools/allocprof.py` shows what allocates; `quick.py`'s `alloc_MB_s` must stay ≤ 2.
+- Debug flags: `?nosky` (no dome, clouds or mist), `?noclouds`, `?noterr` (no ground mesh), `?gfx=low|medium|high|ultra`.
 
 ## Device autotest (`?autotest`)
 

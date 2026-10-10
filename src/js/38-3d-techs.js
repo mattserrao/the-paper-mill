@@ -110,7 +110,7 @@
     if(lf!==lt)pts.push(...(lf==="C"?[[67,-0.6],[67,17.6]]:[[67,17.6],[67,-0.6]]));
     pts.push(lt==="F"?[to[0],17.6]:[Math.max(to[0],-5.5),-0.6]);pts.push(to);return pts;}
   const techs=[];
-  function ensureTechs(){while(techs.length<Math.min(8,P.techs)){const k=techs.length,s=SLOTS[k],w=worker(techM,M.panelWhite||(M.panelWhite=mat("panel"))),t=trike();
+  function ensureTechs(){while(techs.length<Math.min(8,P.techs)){const k=techs.length,s=SLOTS[k],w=worker(techM,M.hatBlue,{vest:HIVIS.yellow,radio:true}),t=trike();
       t.position.set(s[0],0,s[1]);t.rotation.y=Math.PI/2;const b=BENCH[k];w.position.set(b.p[0],0,b.p[1]);techs.push({w,t,k,slot:s,bench:b,state:"home",path:null,inc:null,onSite:0,walk:null});}}
   function walkTo(T,pts,speed,rdt,now){while(T.walk&&T.walk.length){if(moveP(T.w,T.walk[0][0],T.walk[0][1],speed,rdt))T.walk.shift();else{pose(T.w,"run",now);return false;}}return true;}
   function drive(T,rdt){const p=T.path[0],dx=p[0]-T.t.position.x,dz=p[1]-T.t.position.z,d=Math.hypot(dx,dz),s=Math.min(d,22*rdt);

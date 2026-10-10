@@ -23,7 +23,8 @@
   function smThaw(r){if(!r.frozen)return;r.frozen=false;r.o.matrixAutoUpdate=true;r.o.matrixWorldAutoUpdate=true;r.o.updateMatrixWorld(true);}
   function smOK(o){if(!(o.isMesh||o.isLineSegments)||o.isInstancedMesh||o.isSkinnedMesh||o.isSprite||o.isPoints)return false;
     // edge outlines are faint (transparent) lines; merged per material and map cell they look the same, so they're allowed
-    const m=o.material,g=o.geometry;if(!m||Array.isArray(m)||(!o.isLineSegments&&(m.transparent||m.opacity<1))||o.renderOrder||!g||!g.isBufferGeometry)return false;
+    // (v4.1 pass 3: the ground shadings under walls and machines are transparent too, but static and flat: baked, below)
+    const m=o.material,g=o.geometry;if(!m||Array.isArray(m)||(!o.isLineSegments&&(m.transparent||m.opacity<1)&&!o.userData.aoDecal)||o.renderOrder||!g||!g.isBufferGeometry)return false;
     if(o.layers.mask!==1||o.onBeforeRender!==THREE.Object3D.prototype.onBeforeRender)return false;
     const a=g.attributes;if(!a.position||a.position.itemSize!==3)return false;for(const k in a)if(k!=="position"&&k!=="normal"&&k!=="uv")return false;
     if(o.isMesh&&!a.normal)return false;if(g.morphAttributes&&Object.keys(g.morphAttributes).length)return false;
@@ -91,11 +92,12 @@
     bm.computeBoundingBox();bm.computeBoundingSphere();scene.add(bm);SM.bms.push(bm);}
   function smMerge(){const groups=new Map();
     for(const r of SM.list){const o=r.o,g=o.geometry;if(r.proxyOnly)continue;
-      if(o.isMesh&&o.matrixWorld.determinant()>0){const key=[smLook(o.material),o.castShadow?1:0,o.receiveShadow?1:0,smSig(g)].join("|");
+      if(o.isMesh&&o.matrixWorld.determinant()>0&&!o.userData.aoDecal){const key=[smLook(o.material),o.castShadow?1:0,o.receiveShadow?1:0,smSig(g)].join("|");
         let G=groups.get(key);if(!G){G={recs:[],mat:o.material,cast:o.castShadow,recv:o.receiveShadow};groups.set(key,G);}G.recs.push(r);continue;}
       // outlines and mirrored meshes: bake per material and 90 m map cell (off-screen cells are still culled)
       if(!g.boundingSphere)g.computeBoundingSphere();_smV.copy(g.boundingSphere.center).applyMatrix4(o.matrixWorld);
-      const line=!!o.isLineSegments,uv=!!g.attributes.uv,key=[line?"L":"M",o.material.uuid,o.castShadow?1:0,o.receiveShadow?1:0,uv?1:0,Math.floor(_smV.x/SMCELL),Math.floor(_smV.z/SMCELL)].join("|");
+      // (a ground shading decal goes in one map-wide batch per material: two draws for all of them, never culled)
+      const line=!!o.isLineSegments,uv=!!g.attributes.uv,cell=o.userData.aoDecal?0:SMCELL,key=[line?"L":"M",o.material.uuid,o.castShadow?1:0,o.receiveShadow?1:0,uv?1:0,cell?Math.floor(_smV.x/cell):0,cell?Math.floor(_smV.z/cell):0].join("|");
       let b=SM.batches.get(key);if(!b){b={recs:[],mat:o.material,line,uv,cast:o.castShadow,recv:o.receiveShadow,mesh:null};SM.batches.set(key,b);}
       b.recs.push(r);r.key=key;}
     // a group of one gains nothing from batching: that object simply stays as it is and is no longer watched
@@ -110,22 +112,30 @@
         b.recs.push({o,mw:new THREE.Matrix4().multiplyMatrices(inv,o.matrixWorld),key});roofN++;});});
     SM.queue=[...SM.batches.keys()];SM.roofN=roofN;shBuild();}
   // baked batches are built a few per frame (no single long stall at start-up, which phones punish)
+  const kindRank=o=>o.isBatchedMesh?(o._colorsTexture?4:3):o.isInstancedMesh?(o.instanceColor?2:1):0,kindCmp=(a,b)=>kindRank(a)-kindRank(b);
+  function sortKinds(){scene.children.sort(kindCmp);}   // (stable: everything else keeps its order; also after each moving-batch build, so new batches and trucks fall in line)
   function smStep(){const N=mobile?6:30;for(let i=0;i<N&&SM.queue.length;i++){const key=SM.queue.shift(),b=SM.batches.get(key);
       if(!b.roof)b.recs=b.recs.filter(r=>smSame(r));smBuild(key);b.recs.forEach(r=>r.o.layers.set(SMLAYER));}
     if(SM.queue.length)return;SM.done=true;
+    // v4.1 pass 3: the shadow pass visits the scene's children in order and re-derives its depth shader (a few KB of garbage
+    // and a cache-key string each time) whenever it steps between a plain mesh, an instanced mesh and a batch. Grouping the
+    // children by kind once here cuts that to a handful of switches per pass. Draw order is unaffected: the main pass sorts.
+    sortKinds();
     const inst=SM.bms.reduce((a,b)=>a+b.instanceCount,0),baked=[...SM.batches.values()].reduce((a,b)=>a+(b.roof?0:b.recs.length),0);
     console.info(`scenery: ${inst} objects in ${SM.bms.length} batched meshes; ${baked} outlines/mirrored + ${SM.roofN} roof parts baked into ${SM.batches.size} batches; shadows: ${SH.meshes.length} proxies`);}
   // anything that changes is handed back (drawn on its own again): a batched instance is just hidden, a baked batch is rebuilt
   function smWatch(){const dirty=SM.dirty||(SM.dirty=new Set());
     const freeze=performance.now()-SM.t0>10000;
-    SM.list=SM.list.filter(r=>{if(smSame(r)&&!(r.shared&&!colorSame(r.o.material,r.bm.material))){if(freeze&&(r.bm||r.key))smFreeze(r);return true;}
+    // (v4.1 pass 3: compacted in place twice a second instead of filtered into a new 2,700-entry array)
+    const keep=r=>{if(smSame(r)&&!(r.shared&&!colorSame(r.o.material,r.bm.material))){if(freeze&&(r.bm||r.key))smFreeze(r);return true;}
       smThaw(r);
       if(r.shadow){r.o.castShadow=true;r.shadow=false;if(!shDrop(r))SH.dirty=true;}   // v4.0.1: cut it out of the proxy instead of rebuilding it
       if(r.bm){r.bm.setVisibleAt(r.iid,false);r.o.layers.set(0);SM.dyn.add(r.o);SM.handedBack++;return false;}
       if(r.single||r.proxyOnly){SM.dyn.add(r.o);SM.handedBack++;return false;}
       if(r.o.layers.mask===1&&!r.key)return true;
-      r.o.layers.set(0);SM.dyn.add(r.o);SM.handedBack++;const b=SM.batches.get(r.key);if(b){b.recs=b.recs.filter(x=>x!==r);dirty.add(r.key);}return false;});
-    let n=0;for(const k of [...dirty]){if(n++>=2)break;dirty.delete(k);smBuild(k);}
+      r.o.layers.set(0);SM.dyn.add(r.o);SM.handedBack++;const b=SM.batches.get(r.key);if(b){b.recs=b.recs.filter(x=>x!==r);dirty.add(r.key);}return false;};
+    const L=SM.list;let w=0;for(let i=0;i<L.length;i++){const r=L[i];if(keep(r))L[w++]=r;}if(w<L.length)L.length=w;
+    if(dirty.size){let n=0;for(const k of dirty){if(n++>=2)break;dirty.delete(k);smBuild(k);}}
     if(SH.dirty&&performance.now()>SH.t){SH.dirty=false;SH.t=performance.now()+5000;shBuild();}}
   /* ---- static shadow proxy (v4) ----
      The sun never moves, so everything static casts its shadow through two merged, position-only meshes (one for
@@ -214,7 +224,7 @@
     // v4.0.1: mid-play, new batches are queued and made one per frame (dbTick): making them all in one frame uploaded
     // every new batch's buffers and textures at once, a dropped frame on the iPhone ~10 s after a burst of upsets
     const Q=DB.q||(DB.q=new Map());
-    pend.forEach((L,key)=>{if(L.length>=3&&!(DB.pendKeys&&DB.pendKeys.has(key))){if(G3.warm)Q.set(key,L);else dbNew(key,L);}});DB.n=DB.list.length;}
+    pend.forEach((L,key)=>{if(L.length>=3&&!(DB.pendKeys&&DB.pendKeys.has(key))){if(G3.warm)Q.set(key,L);else dbNew(key,L);}});DB.n=DB.list.length;sortKinds();}
   function dbNext(){const Q=DB.q;if(!Q||!Q.size)return;const [key,L0]=Q.entries().next().value;Q.delete(key);
     const L=L0.filter(o=>o.parent&&o.layers.mask===1&&dbOK(o)&&dbKey(o)===key);if(L.length>=3&&!(DB.pendKeys&&DB.pendKeys.has(key)))dbNew(key,L);}   // (a full batch of the same look gets a second one)
   G3.dbForce=()=>{if(SM.done&&!SM.off){try{dbBuild();}catch(e){console.error("moving batches failed",e);}}};

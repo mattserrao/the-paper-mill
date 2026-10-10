@@ -44,7 +44,8 @@
   function pBatch(map,glow,sort,order){const base=new THREE.PlaneGeometry(1,1),g=new THREE.InstancedBufferGeometry();
     g.index=base.index;g.setAttribute("position",base.attributes.position);g.setAttribute("uv",base.attributes.uv);
     const at=(n,k)=>{const a=new THREE.InstancedBufferAttribute(new Float32Array(PCAP*k),k);a.setUsage(THREE.DynamicDrawUsage);g.setAttribute(n,a);return a;};
-    const b={g,sort,pos:at("iPos",3),scl:at("iScl",2),col:at("iCol",3),alp:at("iAlp",1),rot:at("iRot",1),list:[]};g.instanceCount=0;
+    const b={g,sort,pos:at("iPos",3),scl:at("iScl",2),col:at("iCol",3),alp:at("iAlp",1),rot:at("iRot",1),list:[],n:0};g.instanceCount=0;
+    b.attrs=[b.pos,b.scl,b.col,b.alp,b.rot];b.attrs.forEach(x=>{x.rng={start:0,count:0};});   // one range object each, reused every frame (three.js empties the list after each upload)
     const m=new THREE.ShaderMaterial({uniforms:THREE.UniformsUtils.merge([THREE.UniformsLib.fog,{map:{value:null}}]),vertexShader:PVS,fragmentShader:PFS,
       transparent:true,depthWrite:false,fog:!glow,toneMapped:!glow});m.uniforms.map.value=map;
     b.mesh=new THREE.Mesh(g,m);b.mesh.frustumCulled=false;b.mesh.renderOrder=order;scene.add(b.mesh);PB.set(map,b);return b;}
@@ -52,25 +53,30 @@
   pBatch(TX.drop,false,false,1);pBatch(TX.chip,false,false,1);pBatch(TX.puff,false,true,2);pBatch(TX.flame,true,false,3);pBatch(TX.dot,true,false,4);
   const PCOL=new Map(),pcol=c=>{let v=PCOL.get(c);if(!v){v=lin(c);PCOL.set(c,v);}return v;};
   // background ambience (plume, aerators, outfall) is capped so it can never crowd out fires, sparks and disaster effects
-  function emitA(...a){if(liveN<600)emit(...a);}
+  function emitA(type,x,y,z,vx,vy,vz,life,size,color,op){if(liveN<600)emit(type,x,y,z,vx,vy,vz,life,size,color,op);}   // (named arguments: a rest array per call was a steady allocation)
   function emit(type,x,y,z,vx,vy,vz,life,size,color,op=1){let p=pFree.pop();
     if(!p){if(parts.length>=PCAP)return;p={v:[0,0,0]};parts.push(p);}
     const c=pcol(color);p.type=type;p.t=PT[type];p.alive=true;p.x=x;p.y=y;p.z=z;p.v[0]=vx;p.v[1]=vy;p.v[2]=vz;p.life=p.max=life;p.size=size;p.op=op;
     p.r=c.r;p.g=c.g;p.b=c.b;p.rot=Math.random()*6.28;p.spin=(Math.random()-0.5)*2;liveN++;}
-  function stepParts(rdt){liveN=0;PB.forEach(b=>{b.list.length=0;});
-    for(const p of parts){if(!p.alive)continue;p.life-=rdt;if(p.life<=0){p.alive=false;pFree.push(p);continue;}liveN++;
+  // (v4.1 pass 3: no allocation per frame here: the per-batch lists keep their length and a count, the sort is an in-place
+  // insertion sort over the live entries, and each attribute reuses one update-range object; the old version's list resets,
+  // closures and range objects were a steady 0.3 MB/s on a phone)
+  const PBL=[];PB.forEach(b=>PBL.push(b));const pbReg=PB.set.bind(PB);PB.set=(k,b)=>{PBL.push(b);return pbReg(k,b);};
+  function stepParts(rdt){liveN=0;for(let k=0;k<PBL.length;k++)PBL[k].n=0;
+    for(let q=0;q<parts.length;q++){const p=parts[q];if(!p.alive)continue;p.life-=rdt;if(p.life<=0){p.alive=false;pFree.push(p);continue;}liveN++;
       const t=p.t,f=p.life/p.max;p.v[1]-=t.grav*rdt;if(t.drag){p.v[0]*=1-t.drag*rdt;p.v[2]*=1-t.drag*rdt;}
       p.x+=p.v[0]*rdt;p.y+=p.v[1]*rdt;p.z+=p.v[2]*rdt;if(p.y<0.05&&p.v[1]<0){p.y=0.05;p.v[1]=0;p.v[0]*=0.5;p.v[2]*=0.5;}
       p.s1=t.grow?p.size*(0.45+(1-f)*1.7):p.size*(0.35+0.65*f);
-      p.a=p.op*(t.grow?Math.min(1,(1-f)*5)*f:Math.min(1,f*1.6));p.rot+=p.spin*rdt*(t.grow?0.3:1);PB.get(t.map).list.push(p);}
+      p.a=p.op*(t.grow?Math.min(1,(1-f)*5)*f:Math.min(1,f*1.6));p.rot+=p.spin*rdt*(t.grow?0.3:1);const b=PB.get(t.map);b.list[b.n++]=p;}
     const vm=camera.matrixWorldInverse.elements;
-    PB.forEach(b=>{const L=b.list,n=L.length;
-      if(b.sort&&n>1){for(const p of L)p.d=vm[2]*p.x+vm[6]*p.y+vm[10]*p.z;L.sort((u,w)=>u.d-w.d);}
+    for(let k=0;k<PBL.length;k++){const b=PBL[k],L=b.list,n=b.n;
+      if(b.sort&&n>1){for(let i=0;i<n;i++){const p=L[i];p.d=vm[2]*p.x+vm[6]*p.y+vm[10]*p.z;}
+        for(let i=1;i<n;i++){const p=L[i],d=p.d;let j=i-1;while(j>=0&&L[j].d>d){L[j+1]=L[j];j--;}L[j+1]=p;}}
       const P=b.pos.array,Sc=b.scl.array,Co=b.col.array,A=b.alp.array,R=b.rot.array;
       for(let i=0;i<n;i++){const p=L[i];P[i*3]=p.x;P[i*3+1]=p.y;P[i*3+2]=p.z;Sc[i*2]=p.s1;Sc[i*2+1]=p.s1*(p.t.tall||1);
         Co[i*3]=p.r;Co[i*3+1]=p.g;Co[i*3+2]=p.b;A[i]=p.a;R[i]=p.rot;}
       b.g.instanceCount=n;b.mesh.visible=n>0&&!(G3.EXP&&(G3.EXP.noParts||G3.EXP.hidePB===b));
-      if(n){[b.pos,b.scl,b.col,b.alp,b.rot].forEach(x=>{x.clearUpdateRanges();x.addUpdateRange(0,n*x.itemSize);x.needsUpdate=true;});}});}
+      if(n){const at=b.attrs;for(let i=0;i<at.length;i++){const x=at[i],r=x.rng;r.count=n*x.itemSize;if(!x.updateRanges.length)x.updateRanges.push(r);x.needsUpdate=true;}}}}
   const R=()=>Math.random()-0.5;
   // big fires: dense flames, a white-hot core, embers, and a flickering orange light that washes over the scene
   const fireLight=new THREE.PointLight(0xff7a1f,0,45,0);scene.add(fireLight);let fireL=0,fireLpos=new THREE.Vector3();
@@ -259,7 +265,7 @@
       const rp=ripples(g,7,cx-cr-5,cx+cr+5,cz+cr*0.3,cz+cr+5,0.14);
       return (now,rdt,inc)=>{rp(now);pud.scale.setScalar(0.55+0.45*Math.min(1,(1-inc.left/inc.total)*5));for(let k=0;k<4;k++)if(Math.random()<rdt*25){const a=Math.PI*(0.15+Math.random()*0.9)+Math.PI/2;
         emit("drop",cx+Math.sin(a)*cr*1.05,10.1,cz+Math.cos(a)*cr*1.05,Math.sin(a)*1.4,0.6,Math.cos(a)*1.4,1.2,0.34,"#7a5636",0.95);}};},
-    badocc:g=>{const m4=new THREE.Matrix4(),add=(geo,mt,n,sx,sy,sz)=>{const im=new THREE.InstancedMesh(geo,mt,n);for(let k=0;k<n;k++){const q=new THREE.Quaternion().setFromEuler(new THREE.Euler(Math.random()*3,Math.random()*3,Math.random()*3));
+    badocc:g=>{const m4=new THREE.Matrix4(),add=(geo,mt,n,sx,sy,sz)=>{const im=new THREE.InstancedMesh(geo,instMat(mt),n);for(let k=0;k<n;k++){const q=new THREE.Quaternion().setFromEuler(new THREE.Euler(Math.random()*3,Math.random()*3,Math.random()*3));
         m4.compose(new THREE.Vector3(-30+Math.random()*19,1.1+Math.random()*2.4,-17+Math.random()*10),q,new THREE.Vector3(sx,sy,sz));im.setMatrixAt(k,m4);}im.castShadow=true;g.add(im);};
       add(new CylG(0.13,0.13,0.5,10),mat("water",{roughness:0.2}),24,1,1,1);add(rboxGeo(0.5,0.25,0.4),FM.white,18,1,1,1);add(sphereG,FM.slime,16,0.22,0.12,0.2);
       return ()=>{};},
@@ -309,11 +315,13 @@
         for(let k=0;k<2;k++)if(Math.random()<rdt*14)emit("chip",-18.5,4,-11.5,1+Math.random()*4,4+Math.random()*4,R()*5,1.3,0.55,"#ffffff",1);};},
     // ---- v4.1 environment upsets ----
     // rural: ice floes jammed against the river intake, frost on the pump house; chips fly once maintenance is breaking it up
-    icedintake:g=>{const ice=new StdMat({color:lin0("#e8f3fb"),roughness:0.35}),floes=new THREE.InstancedMesh(new THREE.BoxGeometry(1,1,1),ice,15),fm=[],m4=new THREE.Matrix4(),q4=new THREE.Quaternion(),v3=new THREE.Vector3(),s3=new THREE.Vector3(),yAx=new THREE.Vector3(0,1,0);
-      for(let k=0;k<15;k++)fm.push(k<14?[-37+Math.random()*14,-67+Math.random()*7,Math.random()*3,1.2+Math.random()*2.2,1+Math.random()*1.8,0.3]:[-30,-60.5,0,5,3,0.5]);
-      floes.castShadow=true;g.add(floes);
+    icedintake:g=>{const ice=new StdMat({color:lin0("#e8f3fb"),roughness:0.35}),pos=[],nor=[],m4=new THREE.Matrix4();
+      for(let k=0;k<15;k++){const f=k<14?[-37+Math.random()*14,-67+Math.random()*7,Math.random()*3,1.2+Math.random()*2.2,1+Math.random()*1.8,0.3]:[-30,-60.5,0,5,3,0.5];
+        const bg=new THREE.BoxGeometry(f[3],f[5],f[4]).toNonIndexed();m4.makeRotationY(f[2]).setPosition(f[0],0.1,f[1]);bg.applyMatrix4(m4);pos.push(...bg.attributes.position.array);nor.push(...bg.attributes.normal.array);}
+      const fg=new THREE.BufferGeometry();fg.setAttribute("position",new THREE.Float32BufferAttribute(pos,3));fg.setAttribute("normal",new THREE.Float32BufferAttribute(nor,3));
+      const floes=new THREE.Mesh(fg,ice);floes.castShadow=true;g.add(floes);
       const frost=new THREE.Mesh(new THREE.BoxGeometry(4.12,3.12,4.12),new StdMat({color:lin0("#ffffff"),transparent:true,opacity:0.38,roughness:0.95,depthWrite:false}));frost.position.set(-30,1.5,-55.5);g.add(frost);
-      return (now,rdt,inc)=>{for(let k=0;k<15;k++){const f=fm[k];m4.compose(v3.set(f[0],0.1+Math.sin(now/900+k)*0.04,f[1]),q4.setFromAxisAngle(yAx,f[2]),s3.set(f[3],f[5],f[4]));floes.setMatrixAt(k,m4);}floes.instanceMatrix.needsUpdate=true;
+      return (now,rdt,inc)=>{floes.position.y=Math.sin(now/900)*0.035;
         if(inc&&inc.mGo&&Math.random()<rdt*8)emit("chip",-30+R()*3,1.2,-58+R()*2,R()*3,2+Math.random()*3,R()*3,0.9,0.4,"#ffffff",1);};},
     // urban: arc flashes at the substation and the mill's lights sag (envUpdate reads G3.brownK)
     brownout:g=>{const [px,pz]=subPos(),py=px===74?9.5:3.4,arcs=[];
@@ -348,12 +356,25 @@
       if(ids.length){requestAnimationFrame(stepW);return;}
       // one off-screen render with every effect showing and a shadow refresh: this also compiles the shadow-pass
       // (depth) shaders, which compile() doesn't cover. The moving-thing batches are built first so theirs are included.
-      try{if(G3.dbForce)G3.dbForce();const rt=new THREE.WebGLRenderTarget(64,64),shown=[];
+      try{if(G3.dbForce)G3.dbForce();const shown=[];
         // stand-in batches for the shadow-pass variants that moving things may need later (single/double-sided,
         // with/without a texture), so a new batch made mid-play never compiles a shader
         const tex=TX.puff,stand=[];for(const side of [THREE.FrontSide,THREE.DoubleSide])for(const map of [null,tex]){
           const g=new THREE.BoxGeometry(0.01,0.01,0.01),bm=new THREE.BatchedMesh(1,g.attributes.position.count,g.index.count,new THREE.MeshLambertMaterial({side,map}));
           bm.setColorAt(bm.addInstance(bm.addGeometry(g)),new THREE.Color(1,1,1));/* per-object colors, as moving batches use */bm.perObjectFrustumCulled=false;bm.castShadow=true;bm.frustumCulled=false;bm.position.set(0,-50,0);bm.updateMatrixWorld();scene.add(bm);stand.push([bm,g]);}
+        // v4.1 pass 3: the shadow pass shares one depth material and re-derives its shader only when it steps from a plain
+        // mesh to an instanced or batched one (or back); it then takes the side and texture of whatever it draws next. So
+        // every combination is drawn here in exactly that order (the scene is traversed in insertion order), and a batch or
+        // a textured caster that turns up mid-play (the train's bales, a repair job's sign, the felt) finds its depth shader
+        // compiled. Plain meshes get a no-op dispose so the clean-up below treats them like the batches.
+        {const tiny=new THREE.BoxGeometry(0.01,0.01,0.01),dbl=new THREE.MeshLambertMaterial({side:THREE.DoubleSide}),dblT=new THREE.MeshLambertMaterial({side:THREE.DoubleSide,map:tex});
+          const put=o=>{o.castShadow=true;o.frustumCulled=false;o.position.set(0,-50,0);o.updateMatrixWorld();if(!o.dispose)o.dispose=()=>{};scene.add(o);stand.push([o,null]);return o;};
+          const plain=m=>put(new THREE.Mesh(tiny,m)),inst=(m,col)=>{const im=new THREE.InstancedMesh(tiny,m,1);im.setMatrixAt(0,new THREE.Matrix4());if(col)im.setColorAt(0,new THREE.Color(1,1,1));return put(im);};
+          const batch=m=>{const bm=new THREE.BatchedMesh(1,tiny.attributes.position.count,tiny.index.count,m);bm.setColorAt(bm.addInstance(bm.addGeometry(tiny)),new THREE.Color(1,1,1));bm.perObjectFrustumCulled=false;return put(bm);};
+          for(const m of [M.ink,dbl,M.bale,dblT]){batch(M.ink);plain(m);}                                   // plain casters: one/two-sided, plain/textured, each right after a batch
+          for(const m of [M.ink,dbl,M.bale,dblT]){plain(M.ink);batch(m);}                                   // batched casters, the same four, each right after a plain mesh
+          for(const m of [instMat(M.ink),instMat(M.bale)])for(const col of [false,true]){plain(M.ink);inst(m,col);}   // instanced casters, with and without per-instance colour (own copies, see instMat)
+          stand.push([{material:null,dispose(){}},tiny]);}
         // v4.0.1: one stand-in per look a moving batch could ever use (effects included), drawn white with a per-object color
         // exactly as dbNew builds them, so a batch made mid-play reuses a compiled shader
         {const seen=new Set();scene.traverse(o=>{if(o.isBatchedMesh||!dbOK(o))return;const k=dbKey(o);if(seen.has(k))return;seen.add(k);
@@ -374,8 +395,13 @@
           const bm=new THREE.BatchedMesh(1,g.attributes.position.count,g.index.count,c);bm.setColorAt(bm.addInstance(bm.addGeometry(g)),new THREE.Color(1,1,1));
           bm.perObjectFrustumCulled=false;bm.frustumCulled=false;bm.castShadow=sb.castShadow;bm.receiveShadow=sb.receiveShadow;scene.add(bm);stand.push([bm,g]);}
         for(const id in FX){if(!FX[id].g.visible){FX[id].g.visible=true;shown.push(FX[id].g);}}
-        if(G3.dbTick)G3.dbTick();renderer.shadowMap.needsUpdate=true;renderer.setRenderTarget(rt);renderer.render(scene,camera);
-        renderer.setRenderTarget(null);shown.forEach(g=>g.visible=false);rt.dispose();renderer.shadowMap.needsUpdate=true;
+        // v4.1 pass 3: the sky, terrain, clouds and mist never appear with an effect-only shader, and they already compiled for the
+        // screen on the first frame; keeping them out of this off-screen pass saves their render-target shader variants
+        const wld=[G3.terrain,G3.SKY&&G3.SKY.dome,G3.SKY&&G3.SKY.clouds&&G3.SKY.clouds.mesh,G3.SKY&&G3.SKY.mist&&G3.SKY.mist.mesh,G3.nightWin].filter(Boolean),wv=wld.map(o=>o.visible);wld.forEach(o=>o.visible=false);
+        // v4.1 pass 3: drawn to the screen behind a 1 px scissor rather than into a render target: a target has its own output
+        // colour space, and every material drawn there compiled a second program that play never uses (about 30 of them)
+        if(G3.dbTick)G3.dbTick();renderer.shadowMap.needsUpdate=true;renderer.setScissorTest(true);renderer.setScissor(0,0,1,1);renderer.render(scene,camera);
+        renderer.setScissorTest(false);shown.forEach(g=>g.visible=false);wld.forEach((o,i)=>o.visible=wv[i]);renderer.shadowMap.needsUpdate=true;
         // v4.0.1: the stand-ins' materials are kept, not disposed: three.js deletes a shader program once no material uses it,
         // which threw away every shader compiled only for a stand-in
         G3.keepMats=stand.map(([bm])=>bm.material).filter(Boolean);stand.forEach(([bm,g])=>{if(bm.isObject3D)scene.remove(bm);bm.dispose();if(g)g.dispose();});}catch(e){console.error("warm render failed",e);}

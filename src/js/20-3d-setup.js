@@ -60,6 +60,10 @@ function no3D(){G3.ok=false;$("no3d").hidden=false;$("no3d-retry").onclick=()=>l
   function StdMat(o){if(!GFX.lambert)return new THREE.MeshStandardMaterial(o);const r=Object.assign({},o||{});delete r.roughness;delete r.metalness;delete r.flatShading;delete r.envMapIntensity;delete r.roughnessMap;delete r.metalnessMap;return new THREE.MeshLambertMaterial(r);}
   function tok(name){return getComputedStyle(document.documentElement).getPropertyValue("--"+name).trim()||"#888";}
   function mat(token,opts={}){const m=new StdMat(Object.assign({roughness:0.72,metalness:0.04,flatShading:false},opts));m.userData.token=token;MATS.push(m);return m;}
+  // v4.1 pass 3: an InstancedMesh gets its own copy of a shared material (palette token kept, so brand colours still reach it):
+  // three.js re-derives a material's shader parameters every time the same material switches between an instanced mesh and a
+  // plain one, which cost about 6 re-derivations (24 KB of garbage) per frame on the bales, rolls and ink trim
+  function instMat(m){if(Array.isArray(m))return m.map(instMat);const c=m.clone();c.userData=Object.assign({},m.userData);if(MATS.includes(m))MATS.push(c);return c;}
   let paletteKey="",skyHex="#b3bbcb";
   let palV=-1;
   function applyPalette(){if(palV===PAL_V)return;palV=PAL_V;   // only after rollMill or setPaper (see PAL_V)
@@ -84,11 +88,13 @@ function no3D(){G3.ok=false;$("no3d").hidden=false;$("no3d-retry").onclick=()=>l
 
   /* helpers */
   const W=(x,y)=>[(x-600)/10,(y-330)/10];
-  const RB={};
+  // v4.1 pass 3: a rounded box is 316 triangles at High/Ultra; phones get a coarser bevel (140 on Medium, 92 on Low), which
+  // reads the same at phone size and takes a third off the static and moving batches
+  const RB={},RBQ=GFX.tier==="low"?[1,2]:GFX.lambert?[2,2]:[3,4];
   function rboxGeo(w,h,d){const k=w+"|"+h+"|"+d;if(RB[k])return RB[k];const r=Math.min(0.16,Math.min(w,h,d)*0.2),s=new THREE.Shape(),ww=w-2*r,dd=d-2*r,c=Math.min(r*0.6,ww/2,dd/2);
     s.moveTo(-ww/2+c,-dd/2);s.lineTo(ww/2-c,-dd/2);s.quadraticCurveTo(ww/2,-dd/2,ww/2,-dd/2+c);s.lineTo(ww/2,dd/2-c);s.quadraticCurveTo(ww/2,dd/2,ww/2-c,dd/2);
     s.lineTo(-ww/2+c,dd/2);s.quadraticCurveTo(-ww/2,dd/2,-ww/2,dd/2-c);s.lineTo(-ww/2,-dd/2+c);s.quadraticCurveTo(-ww/2,-dd/2,-ww/2+c,-dd/2);
-    const g=new THREE.ExtrudeGeometry(s,{depth:Math.max(0.001,h-2*r),bevelEnabled:true,bevelThickness:r,bevelSize:r,bevelSegments:3,curveSegments:4});
+    const g=new THREE.ExtrudeGeometry(s,{depth:Math.max(0.001,h-2*r),bevelEnabled:true,bevelThickness:r,bevelSize:r,bevelSegments:RBQ[0],curveSegments:RBQ[1]});
     g.rotateX(-Math.PI/2);g.translate(0,-(h-2*r)/2,0);g.computeVertexNormals();g.userData.shared=true;return RB[k]=g;}
   function box(w,h,d,m,x,y,z,parent=scene,shadow=true){const o=new THREE.Mesh(Math.min(w,h,d)>=0.45?rboxGeo(w,h,d):new THREE.BoxGeometry(w,h,d),m);o.position.set(x,y,z);o.castShadow=shadow;o.receiveShadow=true;parent.add(o);return o;}
   function cylZ(r,len,m,x,y,z,seg=24,parent=scene){const g=new CylG(r,r,len,seg);g.rotateX(Math.PI/2);const o=new THREE.Mesh(g,m);o.position.set(x,y,z);o.castShadow=true;o.receiveShadow=true;parent.add(o);return o;}
@@ -102,9 +108,10 @@ function no3D(){G3.ok=false;$("no3d").hidden=false;$("no3d-retry").onclick=()=>l
   const aoRMat=new THREE.MeshBasicMaterial({map:new THREE.CanvasTexture(aoRC),transparent:true,depthWrite:false,polygonOffset:true,polygonOffsetFactor:-1,polygonOffsetUnits:-1});
   // soft darkening on the ground along a wall base: side = which side of the line gets it
   function skirt(x0,z0,x1,z1,w=1.8,parent=scene){const len=Math.hypot(x1-x0,z1-z0),p=new THREE.Mesh(new THREE.PlaneGeometry(len,w),aoMat);p.rotation.x=-Math.PI/2;
-    const ang=Math.atan2(z1-z0,x1-x0);p.rotation.z=-ang;p.position.set((x0+x1)/2,0.035,(z0+z1)/2);parent.add(p);return p;}
+    const ang=Math.atan2(z1-z0,x1-x0);p.rotation.z=-ang;p.position.set((x0+x1)/2,0.035,(z0+z1)/2);p.userData.aoDecal=true;parent.add(p);return p;}
   function box2(x0,x1,z0,z1,w=1.8){skirt(x0,z0-w/2,x1,z0-w/2,w);skirt(x0,z1+w/2,x1,z1+w/2,w);skirt(x0-w/2,z0,x0-w/2,z1,w);skirt(x1+w/2,z0,x1+w/2,z1,w);}
-  function blob(x,z,r){const p=new THREE.Mesh(new THREE.PlaneGeometry(r*2,r*2),aoRMat);p.rotation.x=-Math.PI/2;p.position.set(x,0.04,z);scene.add(p);return p;}
+  function blob(x,z,r){const p=new THREE.Mesh(new THREE.PlaneGeometry(r*2,r*2),aoRMat);p.rotation.x=-Math.PI/2;p.position.set(x,0.04,z);p.userData.aoDecal=true;scene.add(p);return p;}
+  // (aoDecal: the static merge bakes these ground shadings into one mesh per material; as transparent planes they would be a draw each)
   function slab(x0,x1,z0,z1,m,y=0.02){const pg=new THREE.PlaneGeometry(x1-x0,z1-z0);if(m&&m.map){const uv=pg.attributes.uv;for(let i=0;i<uv.count;i++)uv.setXY(i,uv.getX(i)*(x1-x0)/8,uv.getY(i)*(z1-z0)/8);}
     const o=new THREE.Mesh(pg,m);o.rotation.x=-Math.PI/2;o.position.set((x0+x1)/2,y,(z0+z1)/2);o.receiveShadow=true;scene.add(o);if(x1-x0<300)edges(o,edgeSoft,1);return o;}
   // end-suction centrifugal pump on a skid: volute, bearing frame, coupling guard, motor
@@ -129,6 +136,12 @@ function no3D(){G3.ok=false;$("no3d").hidden=false;$("no3d-retry").onclick=()=>l
   M.liquid=mat("pulp",{roughness:0.75});M.pulp=mat("pulp",{roughness:0.3});M.efork=mat("stock");
   M.steel=mat("g-frame",{metalness:0.25,roughness:0.55});M.brand=mat("brand",{roughness:0.55});M.fork=mat("g-fork",{roughness:0.5});M.wind=mat("g-glass",{roughness:0.2,metalness:0.3});
   M.robot=mat("brand",{roughness:0.4});
+  // v4.1 pass 3: people. Skin, role hats (yellow operators, blue maintenance, white managers, green visitors) and hi-vis vests
+  M.skin=mat("g-skin");M.hatBlue=M.stock;M.hatGreen=M.ok;   // (shared materials: no new batch looks)
+  // (the orange keeps mat()'s roughness and metalness: a moving batch's look leaves out colour, so the vests share a batch)
+  const HIVIS={orange:new StdMat({color:lin0("#ff7a1a"),roughness:0.72,metalness:0.04}),yellow:M.warn,band:M.metal};
+  // one shared amber beacon material and the driver's head/hat shapes: a new material per vehicle would mean a new moving batch each
+  M.beacon=new THREE.MeshBasicMaterial({color:lin0("#ff8a1f")});const DRV_HEAD=new SphG(1,8,6),DRV_HAT=new SphG(1,8,4,0,Math.PI*2,0,Math.PI/2);
   // v3.2.1 textures: drawn once into small canvases and shared, so no extra draw calls or per-frame work
   const texC=(w,h,draw,rep2)=>{const c=document.createElement("canvas");c.width=w;c.height=h;draw(c.getContext("2d"),w,h);const t=new THREE.CanvasTexture(c);t.colorSpace=THREE.SRGBColorSpace;
     if(rep2){t.wrapS=t.wrapT=THREE.RepeatWrapping;}t.anisotropy=4;return t;};
@@ -191,8 +204,12 @@ function no3D(){G3.ok=false;$("no3d").hidden=false;$("no3d-retry").onclick=()=>l
   // ribbed cladding for building walls
   const ribC=document.createElement("canvas");ribC.width=32;ribC.height=4;{const x=ribC.getContext("2d");x.fillStyle="#ffffff";x.fillRect(0,0,32,4);x.fillStyle="#e3e6ee";x.fillRect(0,0,4,4);x.fillStyle="#f1f3f8";x.fillRect(4,0,3,4);x.fillStyle="#d7dbe6";x.fillRect(28,0,4,4);}
   const ribTex=new THREE.CanvasTexture(ribC);ribTex.wrapS=ribTex.wrapT=THREE.RepeatWrapping;ribTex.colorSpace=THREE.SRGBColorSpace;
-  function ribWall(w,hh,d,x,y,z,parent=scene){const len=Math.max(w,d),t=ribTex.clone();t.needsUpdate=true;t.repeat.set(len/0.55,1);
-    const m=mat("g-wall",{map:t,roughness:0.8});const o=new THREE.Mesh(new THREE.BoxGeometry(w,hh,d),m);o.position.set(x,y,z);o.castShadow=true;o.receiveShadow=true;parent.add(o);edges(o);
+  // v4.1 pass 3: one shared material; the rib pitch comes from each wall's own uvs (per face, along its length) instead of a
+  // texture clone with its own repeat, so the 22 walls batch into one draw instead of 22
+  const ribM=mat("g-wall",{map:ribTex,roughness:0.8});
+  function ribWall(w,hh,d,x,y,z,parent=scene){const g=new THREE.BoxGeometry(w,hh,d),uv=g.attributes.uv;
+    for(let i=0;i<uv.count;i++)uv.setX(i,uv.getX(i)*((i<8?d:w)/0.55));   // faces 0-1 run along z, the rest along x
+    const o=new THREE.Mesh(g,ribM);o.position.set(x,y,z);o.castShadow=true;o.receiveShadow=true;parent.add(o);edges(o);
     const trim=new THREE.Mesh(new THREE.BoxGeometry(w+0.06,0.32,d+0.06),M.brand);trim.position.set(x,y+hh/2-0.13,z);/* cap sits 3 cm proud of the wall so their tops never share a plane */parent.add(trim);edges(trim);return o;}
   // strapped OCC bales and paper roll end-caps
   const baleC=document.createElement("canvas");baleC.width=64;baleC.height=64;{const x=baleC.getContext("2d");x.fillStyle="#b07a43";x.fillRect(0,0,64,64);
@@ -218,7 +235,7 @@ function no3D(){G3.ok=false;$("no3d").hidden=false;$("no3d-retry").onclick=()=>l
     const t=new THREE.CanvasTexture(c);t.colorSpace=THREE.SRGBColorSpace;return t;}
   M.baleG=[0,1,2].map(g=>mat("panel",{map:g?gradeTex(g):(()=>{const t=gradeTex(0);return t;})(),roughness:0.95}));
   // three instanced meshes, one per grade, filled each frame through put(); counts follow automatically
-  function graded(geo,n,opts={}){const ms=M.baleG.map(m=>{const o=new THREE.InstancedMesh(geo,m,n);o.castShadow=true;if(opts.recv)o.receiveShadow=true;o.count=0;scene.add(o);return o;});
+  function graded(geo,n,opts={}){const ms=M.baleG.map(m=>{const o=new THREE.InstancedMesh(geo,instMat(m),n);o.castShadow=true;if(opts.recv)o.receiveShadow=true;o.count=0;scene.add(o);return o;});
     const k=[0,0,0];return {reset(){k[0]=k[1]=k[2]=0;},put(g,m4){if(k[g]<n)ms[g].setMatrixAt(k[g]++,m4);},done(){ms.forEach((o,i)=>{o.count=k[i];o.instanceMatrix.needsUpdate=true;});}};}
   const hsh2=n=>{const x=Math.sin(n*91.7+3.1)*43758.5453;return x-Math.floor(x);};
   // grade mix: mostly A and B; junk OCC deliveries swing it heavily toward C

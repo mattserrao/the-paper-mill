@@ -33,8 +33,8 @@
   const STUDENT=["#e46b5b","#5b8de4","#59b98a","#e4b85b","#a57be0","#e47fb3","#4fb3c4"].map(cloth),SUIT=cloth("#2a2f3c"),OFFICE=[cloth("#8fb4d8"),cloth("#d9d2c4"),cloth("#b9c99b")];
   function cloth0(h){return new StdMat({color:lin0(h),roughness:0.6});}
   const pool=[];
-  function person(suit,hat,phone){let w=pool.find(p=>!p.visible&&!p.userData.busy&&p.userData.suit===suit);
-    if(!w){w=worker(suit,hat);w.userData.suit=suit;pool.push(w);if(suit===SUIT)tailor(w);if(phone){const ph=new THREE.Mesh(new THREE.BoxGeometry(0.07,0.2,0.11),M.ink);ph.position.set(0.05,1.0,0.36);w.userData.torso.add(ph);w.userData.phoneM=ph;}}
+  function person(suit,hat,phone,role){let w=pool.find(p=>!p.visible&&!p.userData.busy&&p.userData.suit===suit);
+    if(!w){w=worker(suit,hat,role);w.userData.suit=suit;pool.push(w);if(suit===SUIT)tailor(w);if(phone){const ph=new THREE.Mesh(new THREE.BoxGeometry(0.07,0.2,0.11),M.ink);ph.position.set(0.05,1.0,0.36);w.userData.torso.add(ph);w.userData.phoneM=ph;}}
     w.userData.busy=true;w.visible=true;w.position.set(OFF.door[0],0,OFF.door[1]);return w;}
   // managers: slimmer jacket over a white shirt, red tie, charcoal trousers and black shoes (instead of a plain dark block)
   const shirtM=cloth("#f4f2ee"),tieM=cloth("#b3262d"),trouM=cloth("#3a3f4b"),shoeM=cloth("#141518");
@@ -51,8 +51,8 @@
   function party(kind,members,path,walk){parties.push({kind,members,path,i:0,wait:0,walk});}
   G3.mgrLead=()=>{for(const P2 of parties)if(P2.kind==="mgr"&&!P2.home&&P2.members[0]&&P2.members[0].visible)return P2.members[0];return null;};
   function mgrNear(x,z,r){for(const P2 of parties)if(P2.kind==="mgr")for(const m of P2.members)if(m.visible&&Math.hypot(m.position.x-x,m.position.z-z)<r)return true;return false;}
-  function startTour(){const lead=person(M.brand,whiteHat),n=5+Math.floor(Math.random()*2),st=[];
-    for(let k=0;k<n;k++)st.push(person(STUDENT[k%STUDENT.length],whiteHat));
+  function startTour(){const lead=person(M.brand,whiteHat,false,{vest:HIVIS.orange,radio:true}),n=5+Math.floor(Math.random()*2),st=[];
+    for(let k=0;k<n;k++)st.push(person(STUDENT[k%STUDENT.length],M.hatGreen,false,{vest:HIVIS.orange}));
     party("tour",[lead,...st],[[OFF.door[0],AIS,0],[48,AIS,4,"point"],[34.5,AIS,4,"point"],[18,AIS,4,"point"],[-6,AIS,4,"point"],[-14,AIS,3,"point"],[20,AIS+0.6,0],[OFF.door[0],AIS+0.6,0],[OFF.door[0],OFF.door[1],0]],"walk");}
   function startMgr(){const a=person(SUIT,whiteHat),b=person(SUIT,whiteHat);
     party("mgr",[a,b],[[OFF.door[0],AIS-0.3,0],[30,AIS-0.3,3,"point"],[-8,AIS-0.3,2.5,"inspect"],[OFF.door[0],AIS+0.3,0],[OFF.door[0],OFF.door[1],0]],"walk");}
@@ -108,6 +108,8 @@
     if(!out){hemi.intensity=LEG*baseHemi*(0.3+0.7*day)*(1-0.05*wxK)*(1-0.25*dustK);sun.intensity=LEG*baseSun*(0.1+0.9*day)*(1-0.18*Math.max(wxK,fogK))*(1-0.55*dustK);
       SKY_DAY.set(skyHex).convertSRGBToLinear();tmpC.copy(SKY_DAY).lerp(wx==="fog"?SKY_FOG:SKY_RAIN,Math.max(wxK*0.25,fogK*0.5)).lerp(SKY_NIGHT,1-day).lerp(SKY_DUST,dustK*(0.35+0.5*day));
       if(scene.background&&scene.background.isColor)scene.background.copy(tmpC);else scene.background=tmpC.clone();scene.fog.color.copy(tmpC);}
+    if(G3.SKY&&G3.SKY.tick)G3.SKY.tick(rdt,now,day,scene.fog.color,dustK);
+    if(G3.nightWin){const nw=G3.nightWin,on=(1-day)>0.03;if(nw.visible!==on)nw.visible=on;if(on)nw.material.opacity=0.9*(1-day)*bk;}
     {const d=camera.position.distanceTo(target);scene.fog.near=d*(0.9+4*(1-fogK))*(1-0.92*dustK);scene.fog.far=d*(3.4+8*(1-fogK))*(1-0.86*dustK);if(G3.zen&&document.body.dataset.zs!=="none"){scene.fog.near*=0.45;scene.fog.far*=0.55;}}
     const night=1-day;if(!G3.nightL){
       // v2.8.4: no point lights (every pixel paid for all 10 of them, day and night); each fixture throws a soft additive pool of light on the floor instead
@@ -124,6 +126,7 @@
         const h=new THREE.Sprite(new THREE.SpriteMaterial({map:gl,color:col,transparent:true,depthWrite:false,blending:THREE.AdditiveBlending,toneMapped:false,opacity:0}));h.scale.set(sz,sz,1);h.position.set(x,y,z);h.visible=false;scene.add(h);return {b,h};};
       const fan=G3.fogFan?G3.fogFan.top:[49.5,20.2,-4.2];
       G3.beacons=[lamp(ENV.stack[0],ENV.stack[1]+0.25,ENV.stack[2],0xff1a10,0.3,6),lamp(fan[0],fan[1]-0.05,fan[2]+1.25,0xff1a10,0.2,4),lamp(fan[0],fan[1]-0.05,fan[2]-1.25,0xff1a10,0.2,4)];
+      (G3.extraBeacons||[]).forEach(([x,y,z])=>G3.beacons.push(lamp(x,y,z,0xff1a10,0.22,5)));
       // thickener: warm lamps along both rails of the vat, plus a green "running" lamp and an amber one at the drive end
       const TY2=PH+2.6+0.12;G3.thkL=[];[31.8,33.3,34.8,36.3].forEach(x=>[-1,1].forEach(sd=>G3.thkL.push(lamp(x,TY2,-15+sd*2.05,0xffd58a,0.09,1.5))));
       G3.thkL.push(lamp(37.7,PH+1.25,-15.6,0x4cff7a,0.1,1.6),lamp(37.7,PH+1.25,-14.4,0xffa62e,0.1,1.6));}
@@ -134,6 +137,8 @@
       if(Math.random()<rdt*9*k)emitA("steam",F.top[0]+R()*0.5,F.top[1],F.top[2]+R()*0.5,R()*0.7+0.5,3.0+Math.random()*1.8,R()*0.7,3.4,2.0+Math.random()*1.6,"#f4f6f8",0.6);}G3.spiderFrame&&G3.spiderFrame(rdt);M.wind.emissive=M.wind.emissive||new THREE.Color();M.wind.emissive.copy(lin0("#ffcf7a")).multiplyScalar(0.85*night*bk);if(G3.winMats)G3.winMats.forEach(m=>m.emissive.copy(M.wind.emissive).multiplyScalar(0.7));
     ENV.lampHead.color.copy(lin0("#9aa3b2")).lerp(lin0("#fff2c4"),night*bk);ENV.lampPool.opacity=0.32*night*bk;
     ENV.pudM.opacity=0.55*(S.wet||0);ENV.riverTex.offset.x=(ENV.riverTex.offset.x-rdt*0.02)%1;
+    if(G3.YP&&G3.YP.flags&&rdt>0)G3.YP.flags.forEach((f,k)=>{f.rotation.y=0.55+0.28*Math.sin(now/900+k*2.1);});
+    if(ENV.spark){ENV.sparkTex.offset.x=(ENV.sparkTex.offset.x+rdt*0.013)%1;ENV.spark.material.opacity=0.35*day*(1-0.6*(fogK+wxK));}
     ENV.bridge.rotation.y-=rdt*0.12;
     // steam plume grows with production and dies when the boiler trips
     const boil=S.inc.some(i=>i.id==="boiler"),pr=clamp((S.rates.prod||0)/35,0,1.4);if(!boil&&G3.POP)G3.POP.lever.rotation.z=0;

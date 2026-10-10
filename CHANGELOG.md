@@ -77,11 +77,62 @@ warehouse) is unchanged; everything around it now depends on where you build and
 - The seeded 3-day checksum changes to **`81890238`** (rural, mill #1; the default site and the autotest's). Other
   environments have their own checksums because their weather, costs and upsets differ.
 
+### The look (pass 3)
+- **Ground**: the flat slab is gone. A height-field mesh carries each environment's ground colour with large patches of a
+  second and third tone (dry grass and bare earth in the valley, sand tones on the flats, moss and peat in the bayou,
+  paving greys in the city) and, on High and Ultra, a tiled texture (speckle, wind strokes on the sand, leaf litter).
+- **Relief**: gentle hills outside the fence in the valley (up to 11 m) and on the flats (5 m), a hint of it in the city,
+  none in the bayou. The yard, the roads, the rail line, the river banks and every feature sit on flat pads blended into
+  the slope; trees stand on the slope. The camera floor and the keep-out grid follow the terrain.
+- **Sky**: a gradient dome from horizon to zenith with a glow around the sun, orange at dawn and dusk, deep blue at night,
+  tan in a dust storm; drifting clouds (none on Low, 4 on Medium, 10 on High, 14 on Ultra); mist banks over the bayou
+  ponds and along the valley river at dawn (and in fog).
+- **The city at night**: windows light up across the blocks (one merged mesh, faded in with dusk, dimmed by a brownout).
+- **The mill's own landmark**: a branded water tower in the yard (legs, bracing, ladder, catwalk, the mill's name round
+  the tank, a red beacon at night), and a **gate sign** with the mill's name outside the fence. Both redraw on a rename.
+- **Yard clutter that says paper mill**: OCC bale stacks by the rail spur, pallet stacks and a pile of empty roll cores
+  south of the warehouse, dumpsters, an OCC compactor and a recycling cage by the office, a forklift charging bay off the
+  receiving apron, two flagpoles (the flags wave on High and Ultra).
+- **People with jobs**: hard hats with brims in role colours (yellow operators, blue maintenance, white managers, green
+  visitors), hi-vis vests with a reflective band on crews, techs, bale-yard hands and tour leads, a radio on the belt of
+  anyone who'd carry one. Forklifts and clamp trucks have a driver (seat, vest, hat) and an amber beacon.
+- **The mobile crane** has its detail back: cab glazing with frames, mirrors, a beacon, an exhaust stack, hazard stripes
+  on the bumpers, counterweight and outrigger pads, handrails, a sheave head and a boom hoist ram.
+- **City streets**: asphalt with a dashed centre line and sidewalks on a grid between the blocks, street trees, and
+  downtown façades in brick, concrete, glass and stone (plinths, window bands, mullions on glass towers, rooftop plant
+  and tanks); low-rise blocks keep houses, warehouses with sign bands and roller doors, and parking lots.
+- **Water sparkle** on the river and ponds on High and Ultra (a slow-moving additive layer; none on phones).
+- **Mobile budget**: phones get a coarser rounded box (140 triangles on Medium, 92 on Low, 316 on High and Ultra: a third
+  off the mill's static and moving geometry at phone size), one far scenery mesh instead of five, no mullions, rooftop
+  tanks or far street dashes, plain boxes for the bales, and the sky and clouds are skipped when the camera looks down at
+  the mill. The water tower's tank band and the gate sign share one texture atlas (one draw).
+
+### Under the hood (pass 3)
+- **Draw calls**: the 22 ribbed building walls had a texture clone each (one draw each); they now share one material and
+  carry the rib pitch in their uvs, so they batch into one draw. The soft ground shadings under walls and machines
+  (transparent decals, one draw each) are baked into one mesh per material by the static merge.
+- **Shader programs 109 → 79**: the start-up precompile rendered into an off-screen target, and a target has its own
+  output colour space, so every material drawn there compiled a second program that play never used. It now renders to
+  the screen behind a 1 px scissor.
+- **Late shader compiles 3–4 → 0**: three.js's shadow pass shares one depth material and only re-derives its shader when it
+  steps between a plain mesh, an instanced mesh and a batch, taking the side and texture of whatever comes next; the
+  precompile now draws every combination in exactly that order, so a batch or textured caster that turns up mid-play
+  (the train's bales, a repair sign, the felt) finds its shadow shader ready. The felt's own batch shader is compiled at
+  the start too, so nothing compiles in the background any more.
+- **Allocation −30%**: materials shared between instanced meshes and plain meshes (bales, rolls, ink trim, metal posts)
+  made three.js re-derive their shader parameters about six times a frame; instanced meshes now get their own copy
+  (`instMat`). The paper sheet is one geometry updated in place as the reel grows (it was rebuilt from scratch every
+  0.02 rad of nip angle). Particle batches keep their lists and update ranges, the static-merge watch compacts in place,
+  and the scene's children are grouped by kind (plain, instanced, batched) so the shadow pass switches shaders a few
+  times instead of dozens.
+
 ### Performance (quick test, phone emulation = Medium tier, rural mill #1)
-- Scenery is merged into six vertex-coloured meshes (one per map sector; only the one around the mill casts shadows):
-  10k–25k triangles depending on environment, replacing 300 instanced trees (two draws each pass).
-- Main-pass draws 246 normal / 495 all upsets, shadow pass 133 / 89, shader programs 108–110, triangles 231k / 311k.
-  Swamp mill #24 (the heaviest scenery): 225 / 464, 202k / 294k.
+- Scenery is merged into vertex-coloured meshes (one per map sector on desktops, two on phones; only the one around the
+  mill casts shadows): 10k–25k triangles depending on environment, replacing 300 instanced trees (two draws each pass).
+- Pass 3, with everything above: main-pass draws 237 normal / 450 all upsets, shadow pass 140 / 90, shader programs
+  79, triangles 200k / 279k, texture memory 19.4 MB, JS allocation 1.4 MB/s, late shader compiles 0 / 0
+  (pass 2: 246 / 495, 133 / 89, 108–110, 231k / 311k, 17.7 MB, 1.6 MB/s, 0 / 3).
+  Other sites: urban 230 / 442 and 212k / 299k; desert 228 / 455 and 185k / 270k; swamp 237 / 455 and 206k / 297k.
 
 ### Testing
 - `tools/quick.py`, `tools/econ.py`: `--env=` and `--mill=` (quick) / `--env=` and `--bn=` (econ) to test any site.

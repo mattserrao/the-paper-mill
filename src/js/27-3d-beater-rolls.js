@@ -92,7 +92,10 @@
     u.wheels.forEach(w=>w.rotation.z=-(u.spin||0));
     if((CHEM.st==="in"||CHEM.st==="out")&&Math.random()<rdt*3){const st=u.stack,a=g.rotation.y,c=Math.cos(a),sn=Math.sin(a);emit("smoke",g.position.x+st[0]*c+st[2]*sn,st[1],g.position.z-st[0]*sn+st[2]*c,0.3,1.4,0,1.4,0.7,"#8c919b",0.45);}}
   function cage(g){[[-0.45,-0.36],[-0.45,0.36],[0.3,-0.36],[0.3,0.36]].forEach(([x,z])=>box(0.07,1.0,0.07,M.ink,x,1.4,z,g,false));box(0.85,0.07,0.8,M.ink,-0.07,1.92,0,g,false);
-    box(0.32,0.32,0.32,M.ink,-0.15,1.05,0,g,false);[[-0.35,-0.42],[-0.35,0.42],[0.35,-0.42],[0.35,0.42]].forEach(([x,z])=>cylZ(0.2,0.16,M.ink,x,0.2,z,12,g));}
+    // v4.1 pass 3: a driver (seat, hi-vis vest, head, hard hat) instead of a black block
+    box(0.34,0.3,0.36,M.ink,-0.2,0.98,0,g,false);box(0.3,0.36,0.3,HIVIS.orange,-0.12,1.3,0,g,false).receiveShadow=false;   // (same flags as a walker's vest: one batch)
+    const hd=new THREE.Mesh(DRV_HEAD,M.skin);hd.scale.setScalar(0.17);hd.position.set(-0.1,1.62,0);g.add(hd);const ht=new THREE.Mesh(DRV_HAT,M.warn);ht.scale.set(0.21,0.17,0.21);ht.position.set(-0.1,1.66,0);g.add(ht);
+    const bc=new THREE.Mesh(DRV_HEAD,M.beacon);bc.scale.setScalar(0.07);bc.position.set(-0.07,1.98,0.3);g.add(bc);[[-0.35,-0.42],[-0.35,0.42],[0.35,-0.42],[0.35,0.42]].forEach(([x,z])=>cylZ(0.2,0.16,M.ink,x,0.2,z,12,g));}
   function forklift(m){const g=new THREE.Group();box(1.15,0.62,0.85,M.fork,0,0.55,0,g);box(0.3,0.55,0.82,M.ink,-0.62,0.62,0,g);cage(g);
     box(0.08,1.8,0.08,M.ink,0.66,1.0,-0.28,g,false);box(0.08,1.8,0.08,M.ink,0.66,1.0,0.28,g,false);box(0.75,0.06,0.12,M.ink,1.02,0.22,-0.2,g,false);box(0.75,0.06,0.12,M.ink,1.02,0.22,0.2,g,false);
     const load=box(0.72,0.62,0.72,M.bale,1.02,0.58,0,g);g.userData.load=load;scene.add(g);return g;}

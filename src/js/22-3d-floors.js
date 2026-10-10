@@ -61,7 +61,7 @@
   // props: pallet stacks, bins, chargers, bollards, extinguishers (instanced: a handful of draw calls in total)
   {const pal=new THREE.MeshLambertMaterial({color:lin0("#b8894f")}),red=new THREE.MeshLambertMaterial({color:lin0("#d63a2f")}),yel=new THREE.MeshLambertMaterial({color:lin0("#f2b807")}),
       blu=new THREE.MeshLambertMaterial({color:lin0("#2f6fd1")}),gry=new THREE.MeshLambertMaterial({color:lin0("#596273")}),m4=new THREE.Matrix4();
-    const dInst=(geo,m,list,rotY)=>{const im=new THREE.InstancedMesh(geo,m,list.length);list.forEach((p,i)=>{m4.makeRotationY(p[3]||rotY||0);m4.setPosition(p[0],p[1],p[2]);im.setMatrixAt(i,m4);});im.castShadow=true;im.receiveShadow=true;scene.add(im);return im;};
+    const dInst=(geo,m,list,rotY)=>{const im=new THREE.InstancedMesh(geo,instMat(m),list.length);list.forEach((p,i)=>{m4.makeRotationY(p[3]||rotY||0);m4.setPosition(p[0],p[1],p[2]);im.setMatrixAt(i,m4);});im.castShadow=true;im.receiveShadow=true;scene.add(im);return im;};
     const pallets=[];[[-33,-22.4],[-33,-21.2],[-11,-3.8],[-48,31.4],[-48,30.2],[-24.6,15.5]].forEach(([px,pz],j)=>{const h=2+((j*7)%4);for(let k=0;k<h;k++)pallets.push([px,0.08+k*0.15,pz,(k%2)*0.08]);});
     dInst(new THREE.BoxGeometry(1.15,0.14,1.15),pal,pallets);
     dInst(new CylG(0.32,0.28,0.95,10),blu,[[-9.6,0.48,-4.0],[-24.4,0.48,31.6],[-48.4,0.48,15.4]]);                    // recycling bins
