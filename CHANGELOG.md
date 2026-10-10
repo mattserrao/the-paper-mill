@@ -25,6 +25,10 @@ test builds. Gameplay and the simulation are unchanged (same seeded 3-day checks
   frame. Routes are identical.
 - Palette colors are re-read only when the palette changes.
 
+### Fixes
+- Scenery no longer fails to load ("scenery baking failed: console.info is not a function") in browsers or in-app
+  viewers with a partial console.
+
 ### Testing
 - Device autotest: open the game with `?autotest` for a hands-free performance test (normal play, three diagnostic
   phases, all upsets at once with and without HTML labels, GPU probe of each upset effect) and a sim checksum,
