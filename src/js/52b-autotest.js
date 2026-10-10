@@ -39,6 +39,15 @@
   async function phase(key,name,settleS,measureS,on,off,keepGaps){const PF=G3.PF;if(on)on();say(name+" (settling)");await wait(sec(settleS));noteLate(name+" (settling)");
     const p0=programs();PF.acc={};PF.frames=0;PF.calls=0;PF.tris=0;PF.gaps=[];PF.js=[];PF.lastNow=0;PF.on=true;
     const end=performance.now()+sec(measureS);
+    // v4.0.2: what each slow frame (over 25 ms) was spent on: code sections, GPU uploads and shader compiles that frame
+    {const t0=performance.now(),I=D().renderer.info;let last=0,prev={},pg=programs(),geo=I.memory.geometries,tex=I.memory.textures,nJs=0;
+      const tick=now=>{if(!PF.on||now>end)return;requestAnimationFrame(tick);const gap=last?now-last:0;last=now;
+        const acc=PF.acc,d={};for(const k in acc){const v=acc[k]-(prev[k]||0);if(v>=0.5)d[k]=+v.toFixed(1);}prev={...acc};
+        const pN=programs(),gN=I.memory.geometries,xN=I.memory.textures,js=PF.js.length>nJs?PF.js[PF.js.length-1]:0;nJs=PF.js.length;
+        if(gap>25&&(R.slow_frames||(R.slow_frames=[])).filter(f=>f.phase===name).length<6)R.slow_frames.push({phase:name,t_s:+((now-t0)/1000).toFixed(2),gap_ms:Math.round(gap),js_ms:+js.toFixed(1),
+          sections:Object.fromEntries(Object.entries(d).sort((a,b)=>b[1]-a[1]).slice(0,4)),new_programs:pN-pg,new_geometries:gN-geo,new_textures:xN-tex,
+          sim_min:Math.round(S.t),upsets:S.inc.length,moving_batches:G3.DB?G3.DB.bms.length:null,pending_batches:G3.DB?(G3.DB.pending||0)+(G3.DB.q?G3.DB.q.size:0):null});
+        pg=pN;geo=gN;tex=xN;};requestAnimationFrame(tick);}
     while(performance.now()<end){if(!running){R.pauses++;running=true;}say(`${name} · ${Math.max(1,Math.ceil((end-performance.now())/1000))} s`);await wait(250);}
     PF.on=false;const gaps=PF.gaps.slice(1),g=gaps.slice().sort((a,b)=>a-b),n=g.length,sum=g.reduce((a,b)=>a+b,0),js=PF.js.slice().sort((a,b)=>a-b);
     const d=D(),gl=d.renderer.getContext();
