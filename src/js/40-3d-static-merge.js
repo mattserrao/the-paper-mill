@@ -179,7 +179,7 @@
     if(o.onBeforeRender!==THREE.Object3D.prototype.onBeforeRender)return false;const a=g.attributes;if(!a.position||!a.normal)return false;
     for(const k in a)if(k!=="position"&&k!=="normal"&&k!=="uv")return false;if(g.morphAttributes&&Object.keys(g.morphAttributes).length)return false;
     return g.drawRange.start===0&&g.drawRange.count===Infinity&&o.matrixWorld.determinant()>0;}
-  function dbRelease(){for(const r of DB.list)if(r.o.layers.mask===1<<DBLAYER)r.o.layers.set(0);for(const b of DB.bms){scene.remove(b);b.dispose();}DB.list=[];DB.bms=[];DB.byKey=new Map();}
+  function dbRelease(){if(DB.q)DB.q.clear();for(const r of DB.list)if(r.o.layers.mask===1<<DBLAYER)r.o.layers.set(0);for(const b of DB.bms){scene.remove(b);b.dispose();}DB.list=[];DB.bms=[];DB.byKey=new Map();}
   DB.byKey=new Map();DB.full=0;
   const dbKey=o=>dbLookId(o.material)+"|"+(o.castShadow?1:0)+(o.receiveShadow?1:0)+"|"+smSigC(o.geometry);
   function dbAdd(B,o){const g=o.geometry;let gid=B.geos.get(g);
@@ -211,10 +211,15 @@
       let L=pend.get(key);if(!L){L=[];pend.set(key,L);}L.push(o);});DB.n=DB.list.length;
     // new looks get their own batch once three or more things share them (checked at most every 15 s after the first pass)
     const now=performance.now();if(DB.full&&now-DB.full<15000)return;DB.full=now;
-    pend.forEach((L,key)=>{if(L.length>=3&&!(DB.pendKeys&&DB.pendKeys.has(key)))dbNew(key,L);});DB.n=DB.list.length;}
+    // v4.0.1: mid-play, new batches are queued and made one per frame (dbTick): making them all in one frame uploaded
+    // every new batch's buffers and textures at once, a dropped frame on the iPhone ~10 s after a burst of upsets
+    const Q=DB.q||(DB.q=new Map());
+    pend.forEach((L,key)=>{if(L.length>=3&&!(DB.pendKeys&&DB.pendKeys.has(key))){if(G3.warm)Q.set(key,L);else dbNew(key,L);}});DB.n=DB.list.length;}
+  function dbNext(){const Q=DB.q;if(!Q||!Q.size)return;const [key,L0]=Q.entries().next().value;Q.delete(key);
+    const L=L0.filter(o=>o.parent&&o.layers.mask===1&&dbOK(o)&&dbKey(o)===key);if(L.length>=3&&!(DB.pendKeys&&DB.pendKeys.has(key)))dbNew(key,L);}   // (a full batch of the same look gets a second one)
   G3.dbForce=()=>{if(SM.done&&!SM.off){try{dbBuild();}catch(e){console.error("moving batches failed",e);}}};
   // called right before each render: world matrices are brought up to date once here, and the render skips its own pass
-  G3.dbTick=()=>{if(SM.off||!SM.done)return;const now=performance.now();if(now>DB.t){DB.t=now+3000;try{dbBuild();}catch(e){console.error("moving batches failed",e);SM.off=true;dbRelease();return;}}
+  G3.dbTick=()=>{if(SM.off||!SM.done)return;const now=performance.now();try{dbNext();}catch(e){console.error("moving batch failed",e);}if(now>DB.t){DB.t=now+3000;try{dbBuild();}catch(e){console.error("moving batches failed",e);SM.off=true;dbRelease();return;}}
     scene.updateMatrixWorld();matSync();let out=false;const fn=DB.fn=(DB.fn||0)+1;
     // things that haven't changed for a second are checked every 4th frame (a still forklift starting to move shows
     // up within 4 frames); everything else every frame

@@ -21,9 +21,22 @@
   document.body.appendChild(ban);say("loading");
   const q=(a,p)=>a.length?a[Math.min(a.length-1,Math.floor(p*a.length))]:0,r1=v=>Math.round(v*10)/10;
   const D=()=>G3.diagScene(),programs=()=>{const I=D().renderer.info;return I.programs?I.programs.length:0;};
+  // v4.0.1: shader programs compiled after the start-up precompile, with what needed them. The two flag words of
+  // three.js r186's program key are decoded by name (bit order from WebGLPrograms.getProgramCacheKeyBooleans).
+  const F1=["instancing","instancingColor","instancingMorph","matcap","envMap","normalMapOS","normalMapTS","clearcoat","iridescence","alphaTest",
+    "vertexColors","vertexAlphas","uv1","uv2","uv3","tangents","anisotropy","alphaHash","batching","dispersion","batchingColor","gradientMap","packedNormalMap","vertexNormals","retroreflection"];
+  const F2=["fog","useFog","flatShading","logDepth","reversedDepth","skinning","morphTargets","morphNormals","morphColors","premultipliedAlpha",
+    "shadowMap","doubleSided","flipSided","depthPacking","dithering","transmission","sheen","opaque","pointsUvs","videoTex","videoTexEmissive","alphaToCoverage","lightProbeGrids","position"];
+  let P0=null;const lateSeen=new Set();R.late_programs=[];
+  function noteLate(phaseName){if(!P0)return;const d=D(),Rr=d.renderer;for(const p of Rr.info.programs){if(P0.has(p.id)||lateSeen.has(p.id))continue;lateSeen.add(p.id);
+      if(/^Shadows off/.test(phaseName)){R.late_shadows_off=(R.late_shadows_off||0)+1;continue;}   // expected: the phase itself recompiles
+      const k=String(p.cacheKey||"").split(","),w=k.filter(x=>/^\d+$/.test(x)&&+x>=8388608).map(Number),bits=(v,N)=>N.filter((n,i)=>v>>i&1);
+      const who=[];d.scene.traverse(o=>{if(who.length>=4||!o.material)return;(Array.isArray(o.material)?o.material:[o.material]).forEach(m=>{const mp=Rr.properties.get(m);
+        if(mp&&mp.currentProgram===p&&who.length<4)who.push((o.name||o.type)+(o.isBatchedMesh?" [batch]":"")+(o.parent&&o.parent.name?" in "+o.parent.name:"")+" / "+(m.name||m.type)+(m.map?" +map":""));});});
+      if(R.late_programs.length<12)R.late_programs.push({phase:phaseName,type:k[0],flags:w.length>=2?bits(w[0],F1).concat(bits(w[1],F2)).filter(n=>n!=="vertexNormals"&&n!=="position"&&n!=="opaque"):[],who});}}
   const setShadows=on=>{const d=D();d.renderer.shadowMap.enabled=on;d.renderer.shadowMap.needsUpdate=true;d.MATS.forEach(m=>m.needsUpdate=true);};
   // one measured phase: switch something on, settle, record every frame through the existing profiler (G3.PF), switch it off
-  async function phase(key,name,settleS,measureS,on,off,keepGaps){const PF=G3.PF;if(on)on();say(name+" (settling)");await wait(sec(settleS));
+  async function phase(key,name,settleS,measureS,on,off,keepGaps){const PF=G3.PF;if(on)on();say(name+" (settling)");await wait(sec(settleS));noteLate(name+" (settling)");
     const p0=programs();PF.acc={};PF.frames=0;PF.calls=0;PF.tris=0;PF.gaps=[];PF.js=[];PF.lastNow=0;PF.on=true;
     const end=performance.now()+sec(measureS);
     while(performance.now()<end){if(!running){R.pauses++;running=true;}say(`${name} · ${Math.max(1,Math.ceil((end-performance.now())/1000))} s`);await wait(250);}
@@ -38,7 +51,7 @@
       heap_mb:performance.memory?Math.round(performance.memory.usedJSHeapSize/1e6):null,
       sections:Object.fromEntries(Object.entries(PF.acc).sort((a,b)=>b[1]-a[1]).map(([k,v])=>[k,+(v/Math.max(1,PF.frames)).toFixed(2)]))};
     if(keepGaps)o.gaps=gaps.map(r1);
-    if(off)off();R.phases[key]=o;return o;}
+    noteLate(name);if(off)off();R.phases[key]=o;return o;}
   // FNV-1a over the key season numbers after a fixed replay: any change to the sim's logic changes it
   const fnv=s=>{let h=0x811c9dc5;for(let i=0;i<s.length;i++){h^=s.charCodeAt(i);h=Math.imul(h,0x01000193)>>>0;}return h.toString(16).padStart(8,"0");};
   function checksum(){running=false;startSeason();seedRun(SEED);running=false;const t0=performance.now();
@@ -62,7 +75,7 @@
       if(performance.now()-t>120000){R.fatal="the 3D view never became ready";return finish();}await wait(200);}
     say("getting the mill ready");await G3.prewarm();
     const nav=performance.getEntriesByType("navigation")[0];
-    R.startup={dcl_ms:nav?Math.round(nav.domContentLoadedEventEnd):null,ready_ms:Math.round(performance.now()),programs:programs()};
+    R.startup={dcl_ms:nav?Math.round(nav.domContentLoadedEventEnd):null,ready_ms:Math.round(performance.now()),programs:programs()};P0=new Set(D().renderer.info.programs.map(p=>p.id));
     try{const gl=D().renderer.getContext(),x=gl.getExtension("WEBGL_debug_renderer_info");R.gpu=String(x?gl.getParameter(x.UNMASKED_RENDERER_WEBGL):gl.getParameter(gl.RENDERER));}catch(e){R.gpu="?";}
     try{if(navigator.getBattery){const b=await navigator.getBattery();R.battery={level:Math.round(b.level*100),charging:b.charging};}}catch(e){}
     let wl=null;try{if(navigator.wakeLock)wl=await navigator.wakeLock.request("screen");}catch(e){}
@@ -116,7 +129,7 @@
       </div>
       <div class="t"><div class="k">Limited by</div><div class="verdict">${R.verdict}</div>
         <div class="s">Shadows off ${P.shadows_off?P.shadows_off.fps:"-"} fps · half resolution ${P.half_res?P.half_res.fps:"-"} fps · render skipped ${P.no_render?P.no_render.fps:"-"} fps</div></div>
-      <div class="t"><div class="k">Problems</div><div class="${errs?"bad":"ok"}">${errs?errs+" error"+(errs>1?"s":""):"No errors"}${R.pauses?` · game paused ${R.pauses}x`:""}${R.hidden?` · page hidden ${R.hidden}x`:""}</div>
+      <div class="t"><div class="k">Problems</div><div class="${errs?"bad":"ok"}">${errs?errs+" error"+(errs>1?"s":""):"No errors"}${R.pauses?` · game paused ${R.pauses}x`:""}${R.hidden?` · page hidden ${R.hidden}x`:""}${R.late_programs.length?` · ${R.late_programs.length} shader${R.late_programs.length>1?"s":""} compiled during the test`:""}</div>
         ${R.errors.length?`<div class="s">${R.errors.slice(0,3).map(e=>e.replace(/[&<>]/g,"")).join("<br>")}</div>`:""}</div>
       <div class="row"><button id="atAgain">Run again</button><button id="atExit">Exit test</button></div>
       <pre id="atJson"></pre></div>`;
