@@ -56,8 +56,12 @@
   // v4.0.3: same A* as before (same costs, heuristic and heap order, so the same routes), without per-call garbage:
   // the per-cell arrays are kept between calls and reset lazily with a generation stamp instead of 63k-cell fills,
   // and the open list is a binary heap in two typed arrays instead of an array of [f, i] pairs
-  function navPath(G,from,to,maxIt=250000){if(!G.g)navBuild(G);const s=navNearest(G,navC(G,from)),t=navNearest(G,navC(G,to));if(!s||!t)return null;
-    const N=G.nx*G.nz;let W=G.sc;if(!W||W.N!==N)W=G.sc={N,gs:new Float32Array(N),came:new Int32Array(N),closed:new Uint8Array(N),st:new Uint32Array(N),gen:0,hf:new Float64Array(4096),hi:new Int32Array(4096)};
+  // v4.0.4: resumable: navSearch() sets up the search and step(deadline) runs it until done or until performance.now()
+  // passes the deadline, so a long route can be spread over several frames. A search owns its scratch arrays (W) until
+  // it finishes; navPath() is the run-to-completion form used everywhere else.
+  function navScratch(G,N,key){let W=G[key];if(!W||W.N!==N)W=G[key]={N,gs:new Float32Array(N),came:new Int32Array(N),closed:new Uint8Array(N),st:new Uint32Array(N),gen:0,hf:new Float64Array(4096),hi:new Int32Array(4096)};return W;}
+  function navSearch(G,from,to,maxIt,key){if(!G.g)navBuild(G);const s=navNearest(G,navC(G,from)),t=navNearest(G,navC(G,to));if(!s||!t)return {step:()=>({path:null})};
+    const N=G.nx*G.nz,W=navScratch(G,N,key||"sc");
     const gen=W.gen=(W.gen+1)>>>0||1,gs=W.gs,came=W.came,closed=W.closed,st=W.st,si=s[1]*G.nx+s[0],ti=t[1]*G.nx+t[0];
     const touch=i=>{if(st[i]!==gen){st[i]=gen;gs[i]=1e9;came[i]=-1;closed[i]=0;}};
     let hf=W.hf,hi=W.hi,hn=0;
@@ -66,24 +70,34 @@
     const pop=()=>{const top=hi[0];hn--;if(hn>0){hf[0]=hf[hn];hi[0]=hi[hn];let k=0;for(;;){const l=2*k+1,r=l+1;let m=k;if(l<hn&&hf[l]<hf[m])m=l;if(r<hn&&hf[r]<hf[m])m=r;if(m===k)break;
         const a=hf[m],b=hi[m];hf[m]=hf[k];hi[m]=hi[k];hf[k]=a;hi[k]=b;k=m;}}return top;};
     const h=i=>{const x=i%G.nx,z=(i/G.nx)|0,dx=Math.abs(x-t[0]),dz=Math.abs(z-t[1]);return Math.max(dx,dz)+0.414*Math.min(dx,dz);};
-    touch(si);touch(ti);gs[si]=0;push(h(si),si);let it=0;
-    while(hn&&it++<maxIt){const i=pop();if(i===ti)break;if(closed[i])continue;closed[i]=1;const x=i%G.nx,z=(i/G.nx)|0;
-      for(let dz=-1;dz<=1;dz++)for(let dx=-1;dx<=1;dx++){if(!dx&&!dz)continue;const nx=x+dx,nz=z+dz;if(!navFree(G,nx,nz))continue;if(dx&&dz&&(!navFree(G,x+dx,z)||!navFree(G,x,z+dz)))continue;
-        const ni=nz*G.nx+nx;touch(ni);const ng=gs[i]+(dx&&dz?1.414:1);if(ng<gs[ni]){gs[ni]=ng;came[ni]=i;push(ng+h(ni),ni);}}}
-    if(came[ti]<0&&si!==ti)return null;
-    const cells=[];for(let i=ti;i>=0;i=came[i]){cells.push([G.x0+((i%G.nx)+0.5)*G.cs,G.z0+(((i/G.nx)|0)+0.5)*G.cs]);if(i===si)break;}cells.reverse();
-    const out=[cells[0]];let k=0;while(k<cells.length-1){let j=cells.length-1;while(j>k+1&&!navLOS(G,cells[k],cells[j]))j--;out.push(cells[j]);k=j;}
-    out.push(to);return out;}
+    touch(si);touch(ti);gs[si]=0;push(h(si),si);let it=0,done=false;
+    const finish=()=>{if(came[ti]<0&&si!==ti)return null;
+      const cells=[];for(let i=ti;i>=0;i=came[i]){cells.push([G.x0+((i%G.nx)+0.5)*G.cs,G.z0+(((i/G.nx)|0)+0.5)*G.cs]);if(i===si)break;}cells.reverse();
+      const out=[cells[0]];let k=0;while(k<cells.length-1){let j=cells.length-1;while(j>k+1&&!navLOS(G,cells[k],cells[j]))j--;out.push(cells[j]);k=j;}
+      out.push(to);return out;};
+    return {step(deadline){if(done)return {path:null};
+      while(hn&&it++<maxIt){if((it&255)===0&&performance.now()>deadline){it--;return undefined;}
+        const i=pop();if(i===ti)break;if(closed[i])continue;closed[i]=1;const x=i%G.nx,z=(i/G.nx)|0;
+        for(let dz=-1;dz<=1;dz++)for(let dx=-1;dx<=1;dx++){if(!dx&&!dz)continue;const nx=x+dx,nz=z+dz;if(!navFree(G,nx,nz))continue;if(dx&&dz&&(!navFree(G,x+dx,z)||!navFree(G,x,z+dz)))continue;
+          const ni=nz*G.nx+nx;touch(ni);const ng=gs[i]+(dx&&dz?1.414:1);if(ng<gs[ni]){gs[ni]=ng;came[ni]=i;push(ng+h(ni),ni);}}}
+      done=true;return {path:finish()};}};}
+  function navPath(G,from,to,maxIt=250000){return navSearch(G,from,to,maxIt).step(Infinity).path;}
   // people: plan a walk only when the straight line is blocked; re-plan when the destination changes
   function walkPlan(p,tx,tz){const u=p.userData,key=Math.round(tx*4)+","+Math.round(tz*4);if(u.wpKey===key)return u.wp;u.wpKey=key;u.wp=null;
     if(!NAVW.g)navBuild(NAVW);const a=[p.position.x,p.position.z],b=[tx,tz],d=Math.hypot(tx-a[0],tz-a[1]);if(d<1.2)return null;
     {const ca=navC(NAVW,a),cb=navC(NAVW,b);const sA=navNearest(NAVW,ca),sB=navNearest(NAVW,cb);if(!sA||!sB)return null;
       const pa=[NAVW.x0+(sA[0]+0.5)*NAVW.cs,NAVW.z0+(sA[1]+0.5)*NAVW.cs],pb=[NAVW.x0+(sB[0]+0.5)*NAVW.cs,NAVW.z0+(sB[1]+0.5)*NAVW.cs];if(navLOS(NAVW,pa,pb))return null;}
-    if((NAVW.budget??1)<=0){u.wpKey=null;return null;}NAVW.budget=(NAVW.budget??1)-1;   // at most two plans per frame
-    let path=null;const t0=performance.now();try{path=navPath(NAVW,a,b,120000);}catch(e){}
-    NAVW.ms=(NAVW.ms||0)+performance.now()-t0;if(NAVW.ms>3)NAVW.budget=0;   // v4.0.3: over 3 ms of planning this frame: the rest wait a frame
-    if(path){let L=0;for(let i=1;i<path.length;i++)L+=Math.hypot(path[i][0]-path[i-1][0],path[i][1]-path[i-1][1]);if(L>d*3+25)path=null;}
-    u.wp=path?path.slice(1,-1):null;return u.wp;}
+    // v4.0.4: queued; navPump() searches ~2 ms per frame and fills u.wp when done (until then the walker steers locally)
+    const Q=NAVW.jobs||(NAVW.jobs=[]);for(let k=Q.length-1;k>=0;k--)if(Q[k].p===p&&k>0)Q.splice(k,1);
+    Q.push({p,key,a,b,d});return null;}
+  function navPump(){const Q=NAVW.jobs;if(!Q||!Q.length)return;const end=performance.now()+2;
+    while(Q.length&&performance.now()<end){const j=Q[0];
+      if(j.p.userData.wpKey!==j.key){Q.shift();continue;}   // the walker has a new destination: drop this search
+      if(!j.s)try{j.s=navSearch(NAVW,j.a,j.b,120000,"scw");}catch(e){Q.shift();continue;}
+      let r;try{r=j.s.step(end);}catch(e){r={path:null};}if(!r)return;Q.shift();
+      let path=r.path;if(path){let L=0;for(let i=1;i<path.length;i++)L+=Math.hypot(path[i][0]-path[i-1][0],path[i][1]-path[i-1][1]);if(L>j.d*3+25)path=null;}
+      if(j.p.userData.wpKey===j.key)j.p.userData.wp=path?path.slice(1,-1):null;}}
+  G3.navPump=navPump;
   G3.navCheck=(pts,G=NAV)=>{if(!G.g)navBuild(G);let bad=0;for(let i=1;i<pts.length;i++){const a=pts[i-1],b=pts[i],d=Math.hypot(b[0]-a[0],b[1]-a[1]),n=Math.max(1,Math.ceil(d/0.25));
       for(let k=0;k<=n;k++){const c=navC(G,[a[0]+(b[0]-a[0])*k/n,a[1]+(b[1]-a[1])*k/n]);if(G.g[c[1]*G.nx+c[0]])bad++;}}return bad;};
   G3.NAV=NAV;G3.NAVW=NAVW;G3.navRoute=(a,b)=>route(a,b);G3.navOld=(a,b)=>routeLanes(a,b);G3.navSpots=()=>({MAINT_SPOT,SLOTS});G3.navWalk=(a,b)=>navPath(NAVW,a,b,120000);
