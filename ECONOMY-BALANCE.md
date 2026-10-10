@@ -41,3 +41,11 @@ No condition had a bankruptcy. Worst single season in condition 3: finish −$65
   $21k per $1/t (≈ 21,000 t shipped).
 - Not covered: an active player (upgrades, cards, crew calls), which should now be the way to profit; the
   $25M goal may need revisiting at these prices.
+
+## Test build v10_econ_bal (2026-10-10)
+
+`https://mattserrao.github.io/the-paper-mill/test/v10_econ_bal/`: condition 3 applied in the game (prices
+625 / 645 / 665 / 725 $/t, outage budgets $20k / $70k / $170k; tutorial text updated), on top of v9's canvas labels.
+Version tag `v4.0.1-eb`. `econ.py` on the built file reproduces condition 3 exactly (+$121,455 on the 5 base seeds).
+New sim checksum **`810f617a`** (changed on purpose: cash is part of it). Smoke, determinism and id check pass.
+Device autotest: `…/test/v10_econ_bal/?autotest&quick&expect=810f617a`.
