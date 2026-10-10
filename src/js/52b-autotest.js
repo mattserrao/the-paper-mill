@@ -135,6 +135,9 @@
     // the display's refresh rate: with nothing to draw, frames arrive at it (60, 90, 120 Hz)
     {const f=R.phases.no_render.p50;R.display_hz_est=f?[30,60,90,120,144].reduce((b,hz)=>Math.abs(1000/f-hz)<Math.abs(1000/f-b)?hz:b,60):null;}
     await phase("stress","All upsets at once",3,15,()=>{CH.on=true;EVENTS.forEach(e=>{try{trigger(e.id,true);}catch(_){}});},null,true);
+    // the browser's own per-frame work (style, layout, compositing of the HTML overlays) is in neither the JS nor the
+    // GPU numbers: the same all-upsets scene with the labels, chips and banner hidden shows its share
+    {let st=null;await phase("stress_no_html","All upsets, HTML labels hidden",1.5,6,()=>{st=document.createElement("style");st.textContent="#labels3d,#chips3d,.banner3d{display:none!important}";document.head.appendChild(st);},()=>{if(st)st.remove();});}
     if(Q.get("gpu")!=="0")await gpuProbe();
     say("checking the simulation");await wait(50);
     try{R.check=checksum();}catch(e){R.check={error:String(e&&e.message||e)};}
@@ -180,7 +183,8 @@
         return `<div class="t"><div class="k">Upsets on the GPU (draw + GPU per frame, all upsets)</div><div class="verdict">${f(g.base.ms)} per frame${g.base_again&&g.base_again.ms!=null?` (again at the end: ${f(g.base_again.ms)})`:""}</div>
         <div class="s">Saves: particles off ${f(g.no_particles&&g.no_particles.saves_ms)} · half resolution ${f(g.half_res&&g.half_res.saves_ms)} · one shadow refresh costs ${f(g.shadow_refresh_ms)}</div>
         <div class="s">Particle types: ${pt.map(x=>`${x.type} ${f(x.saves_ms)} (${x.alive})`).join(" · ")||"–"}</div>
-        <div class="s">Costliest effects: ${top.map(x=>`${x.name} ${f(x.saves_ms)}`).join(" · ")||"–"}</div></div>`;})():""}
+        <div class="s">Costliest effects: ${top.map(x=>`${x.name} ${f(x.saves_ms)}`).join(" · ")||"–"}</div>
+        ${P.stress_no_html?`<div class="s">All upsets with HTML labels hidden: ${P.stress_no_html.fps} fps, p50 ${P.stress_no_html.p50} ms (with labels: ${s.fps} fps, p50 ${s.p50} ms)</div>`:""}</div>`;})():""}
       <div class="t"><div class="k">Problems</div><div class="${errs?"bad":"ok"}">${errs?errs+" error"+(errs>1?"s":""):"No errors"}${R.pauses?` · game paused ${R.pauses}x`:""}${R.hidden?` · page hidden ${R.hidden}x`:""}${R.late_programs.length?` · ${R.late_programs.length} shader${R.late_programs.length>1?"s":""} compiled during the test`:""}</div>
         ${R.errors.length?`<div class="s">${R.errors.slice(0,3).map(e=>e.replace(/[&<>]/g,"")).join("<br>")}</div>`:""}</div>
       <div class="row"><button id="atAgain">Run again</button><button id="atExit">Exit test</button></div>

@@ -48,16 +48,28 @@
   const navC=(G,p)=>[clamp(Math.floor((p[0]-G.x0)/G.cs),0,G.nx-1),clamp(Math.floor((p[1]-G.z0)/G.cs),0,G.nz-1)];
   const navFree=(G,i,j)=>i>=0&&j>=0&&i<G.nx&&j<G.nz&&!G.g[j*G.nx+i];
   function navNearest(G,c){if(navFree(G,c[0],c[1]))return c;for(let r=1;r<16;r++)for(let dj=-r;dj<=r;dj++)for(let di=-r;di<=r;di++){if(Math.max(Math.abs(di),Math.abs(dj))!==r)continue;if(navFree(G,c[0]+di,c[1]+dj))return [c[0]+di,c[1]+dj];}return null;}
-  function navLOS(G,a,b){const d=Math.hypot(b[0]-a[0],b[1]-a[1]),n=Math.ceil(d/(G.cs*0.5));for(let k=0;k<=n;k++){const c=navC(G,[a[0]+(b[0]-a[0])*k/n,a[1]+(b[1]-a[1])*k/n]);if(!navFree(G,c[0],c[1]))return false;}return true;}
+  // v4.0.3: same samples and arithmetic as navC/navFree, without two array allocations per sample (route smoothing
+  // calls this hundreds of times per route)
+  function navLOS(G,a,b){const ax=a[0],az=a[1],bx=b[0],bz=b[1],d=Math.hypot(bx-ax,bz-az),n=Math.ceil(d/(G.cs*0.5)),nx=G.nx,nz=G.nz,g=G.g;
+    for(let k=0;k<=n;k++){const i=clamp(Math.floor((ax+(bx-ax)*k/n-G.x0)/G.cs),0,nx-1),j=clamp(Math.floor((az+(bz-az)*k/n-G.z0)/G.cs),0,nz-1);
+      if(!(i>=0&&j>=0&&i<nx&&j<nz&&!g[j*nx+i]))return false;}return true;}
+  // v4.0.3: same A* as before (same costs, heuristic and heap order, so the same routes), without per-call garbage:
+  // the per-cell arrays are kept between calls and reset lazily with a generation stamp instead of 63k-cell fills,
+  // and the open list is a binary heap in two typed arrays instead of an array of [f, i] pairs
   function navPath(G,from,to,maxIt=250000){if(!G.g)navBuild(G);const s=navNearest(G,navC(G,from)),t=navNearest(G,navC(G,to));if(!s||!t)return null;
-    const N=G.nx*G.nz,gs=new Float32Array(N).fill(1e9),came=new Int32Array(N).fill(-1),closed=new Uint8Array(N),si=s[1]*G.nx+s[0],ti=t[1]*G.nx+t[0];
-    const heap=[];const push=(f,i)=>{heap.push([f,i]);let k=heap.length-1;while(k>0){const p2=(k-1)>>1;if(heap[p2][0]<=heap[k][0])break;[heap[p2],heap[k]]=[heap[k],heap[p2]];k=p2;}};
-    const pop=()=>{const top=heap[0],last=heap.pop();if(heap.length){heap[0]=last;let k=0;for(;;){const l=2*k+1,r=l+1;let m=k;if(l<heap.length&&heap[l][0]<heap[m][0])m=l;if(r<heap.length&&heap[r][0]<heap[m][0])m=r;if(m===k)break;[heap[m],heap[k]]=[heap[k],heap[m]];k=m;}}return top;};
+    const N=G.nx*G.nz;let W=G.sc;if(!W||W.N!==N)W=G.sc={N,gs:new Float32Array(N),came:new Int32Array(N),closed:new Uint8Array(N),st:new Uint32Array(N),gen:0,hf:new Float64Array(4096),hi:new Int32Array(4096)};
+    const gen=W.gen=(W.gen+1)>>>0||1,gs=W.gs,came=W.came,closed=W.closed,st=W.st,si=s[1]*G.nx+s[0],ti=t[1]*G.nx+t[0];
+    const touch=i=>{if(st[i]!==gen){st[i]=gen;gs[i]=1e9;came[i]=-1;closed[i]=0;}};
+    let hf=W.hf,hi=W.hi,hn=0;
+    const push=(f,i)=>{if(hn===hf.length){const f2=new Float64Array(hn*2),i2=new Int32Array(hn*2);f2.set(hf);i2.set(hi);hf=W.hf=f2;hi=W.hi=i2;}
+      let k=hn++;hf[k]=f;hi[k]=i;while(k>0){const p2=(k-1)>>1;if(hf[p2]<=hf[k])break;const a=hf[p2],b=hi[p2];hf[p2]=hf[k];hi[p2]=hi[k];hf[k]=a;hi[k]=b;k=p2;}};
+    const pop=()=>{const top=hi[0];hn--;if(hn>0){hf[0]=hf[hn];hi[0]=hi[hn];let k=0;for(;;){const l=2*k+1,r=l+1;let m=k;if(l<hn&&hf[l]<hf[m])m=l;if(r<hn&&hf[r]<hf[m])m=r;if(m===k)break;
+        const a=hf[m],b=hi[m];hf[m]=hf[k];hi[m]=hi[k];hf[k]=a;hi[k]=b;k=m;}}return top;};
     const h=i=>{const x=i%G.nx,z=(i/G.nx)|0,dx=Math.abs(x-t[0]),dz=Math.abs(z-t[1]);return Math.max(dx,dz)+0.414*Math.min(dx,dz);};
-    gs[si]=0;push(h(si),si);let it=0;
-    while(heap.length&&it++<maxIt){const [,i]=pop();if(i===ti)break;if(closed[i])continue;closed[i]=1;const x=i%G.nx,z=(i/G.nx)|0;
+    touch(si);touch(ti);gs[si]=0;push(h(si),si);let it=0;
+    while(hn&&it++<maxIt){const i=pop();if(i===ti)break;if(closed[i])continue;closed[i]=1;const x=i%G.nx,z=(i/G.nx)|0;
       for(let dz=-1;dz<=1;dz++)for(let dx=-1;dx<=1;dx++){if(!dx&&!dz)continue;const nx=x+dx,nz=z+dz;if(!navFree(G,nx,nz))continue;if(dx&&dz&&(!navFree(G,x+dx,z)||!navFree(G,x,z+dz)))continue;
-        const ni=nz*G.nx+nx,ng=gs[i]+(dx&&dz?1.414:1);if(ng<gs[ni]){gs[ni]=ng;came[ni]=i;push(ng+h(ni),ni);}}}
+        const ni=nz*G.nx+nx;touch(ni);const ng=gs[i]+(dx&&dz?1.414:1);if(ng<gs[ni]){gs[ni]=ng;came[ni]=i;push(ng+h(ni),ni);}}}
     if(came[ti]<0&&si!==ti)return null;
     const cells=[];for(let i=ti;i>=0;i=came[i]){cells.push([G.x0+((i%G.nx)+0.5)*G.cs,G.z0+(((i/G.nx)|0)+0.5)*G.cs]);if(i===si)break;}cells.reverse();
     const out=[cells[0]];let k=0;while(k<cells.length-1){let j=cells.length-1;while(j>k+1&&!navLOS(G,cells[k],cells[j]))j--;out.push(cells[j]);k=j;}
@@ -68,7 +80,8 @@
     {const ca=navC(NAVW,a),cb=navC(NAVW,b);const sA=navNearest(NAVW,ca),sB=navNearest(NAVW,cb);if(!sA||!sB)return null;
       const pa=[NAVW.x0+(sA[0]+0.5)*NAVW.cs,NAVW.z0+(sA[1]+0.5)*NAVW.cs],pb=[NAVW.x0+(sB[0]+0.5)*NAVW.cs,NAVW.z0+(sB[1]+0.5)*NAVW.cs];if(navLOS(NAVW,pa,pb))return null;}
     if((NAVW.budget??1)<=0){u.wpKey=null;return null;}NAVW.budget=(NAVW.budget??1)-1;   // at most two plans per frame
-    let path=null;try{path=navPath(NAVW,a,b,120000);}catch(e){}
+    let path=null;const t0=performance.now();try{path=navPath(NAVW,a,b,120000);}catch(e){}
+    NAVW.ms=(NAVW.ms||0)+performance.now()-t0;if(NAVW.ms>3)NAVW.budget=0;   // v4.0.3: over 3 ms of planning this frame: the rest wait a frame
     if(path){let L=0;for(let i=1;i<path.length;i++)L+=Math.hypot(path[i][0]-path[i-1][0],path[i][1]-path[i-1][1]);if(L>d*3+25)path=null;}
     u.wp=path?path.slice(1,-1):null;return u.wp;}
   G3.navCheck=(pts,G=NAV)=>{if(!G.g)navBuild(G);let bad=0;for(let i=1;i<pts.length;i++){const a=pts[i-1],b=pts[i],d=Math.hypot(b[0]-a[0],b[1]-a[1]),n=Math.max(1,Math.ceil(d/0.25));
