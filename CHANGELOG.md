@@ -25,6 +25,10 @@ test builds. Gameplay and the simulation are unchanged (same seeded 3-day checks
   frame. Routes are identical.
 - Palette colors are re-read only when the palette changes.
 
+### Controls
+- New **Show FPS** checkbox: a small frame-rate readout in the bottom-right corner, above the bottom bar (hidden
+  while a panel is open). Remembered between visits; off by default.
+
 ### Fixes
 - Scenery no longer fails to load ("scenery baking failed: console.info is not a function") in browsers or in-app
   viewers with a partial console.
