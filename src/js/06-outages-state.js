@@ -1,8 +1,9 @@
 /* ---------- v3.0.0: planned outages (season mode) ----------
    Every 7th season day (days 7, 14, 21, 28) the mill takes a controlled 4-hour shutdown starting 8 AM. 24 h ahead the
-   player sets a maintenance budget per area: $50k = 10% less reliable, $100k = no change, $200k = 20% more reliable.
+   player sets a maintenance budget per area: $20k = 10% less reliable, $70k = no change, $170k = 20% more reliable
+   (v10 economy balance: was $50k / $100k / $200k).
    The new reliability takes effect when the outage ends and lasts until the next one. */
-const OUT={every:7,hour:8,len:240,cost:[50e3,100e3,200e3],rel:[1.1,1,0.8],simCap:5,
+const OUT={every:7,hour:8,len:240,cost:[20e3,70e3,170e3],rel:[1.1,1,0.8],simCap:5,
   jobs:["1st press roll change","Forming fabric (wire) change","Pulper rotor and extraction plate change","Refiner plate change"],
   areas:[["stock","Stock prep","pulper, cleaners, screens, refiners, thickener"],["wet","Wet end","headbox, forming fabric, press felts"],["dry","Dry end","dryers, steam joints, reel, winder"]],
   ev:{stock:["refclash","ragger","overflow","dye","hdblow","lwplug","cscreen","fscreen","lcplug","thkblow","chestover"],wet:["fabric","felt","slime","fogfan"],dry:["shaft","dryerfire","wrap","steamjoint","winderdown","boiler"]},area:{}};

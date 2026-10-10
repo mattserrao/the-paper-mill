@@ -1,4 +1,4 @@
-const APP_VER="v4.0.1";   // shown in the menu and sent with leaderboard scores (max 12 characters)
+const APP_VER="v4.0.1-eb";   // shown in the menu and sent with leaderboard scores (max 12 characters)
 /* v2.9.9 diagnostics: a rolling log of errors, warnings (incl. three.js shader / WebGL context messages), audio state changes
    and a stats snapshot every 15 s, shown from Controls > Diagnostics with a Copy button */
 const DIAG=[],DIAG_T0=performance.now();
