@@ -91,6 +91,10 @@
     {p:[-20,1.5,zc+4],t:()=>["6 Winder"+(S.wd==="hayout"?" · HAYOUT!":""),S.wd==="hayout"?"crew cleaning up":Math.max(0,reelsAtWinder()-1)+"/"+P.storeReels+" reels stored · "+f1(S.rates.cut)+" t/h"],cls:()=>S.wd==="hayout"},
     {p:[-36.4,3.2,14.8],t:()=>["7 Roll warehouse",f0(S.fg)+" rolls"]},
   ];
+  // v4.1: the run's bottleneck area says so on its label (red outline) until it keeps up with the machine
+  {const BNL={recv:"2 Receiving",pulper:"3 Pulper",screens:"Fine screens",winder:"6 Winder",ship:"7 Roll warehouse"};
+    LABELS.forEach(L=>{const t0=L.t,c0=L.cls,mine=()=>{const b=BNQ();return b&&BNL[b]&&L.tag===BNL[b]&&bnShort();};try{L.tag=Object.values(BNL).find(n=>t0()[0].startsWith(n))||null;}catch(e){L.tag=null;}
+      if(!L.tag)return;L.t=()=>{const r=t0();return mine()?[r[0],"BOTTLENECK · "+r[1]]:r;};L.cls=()=>!!((c0&&c0())||mine());});}
   LABELS.forEach(L=>{L.lb=lblNew(false);L.v=new THREE.Vector3(...L.p);});
   const banner=$("banner3d"),chips=$("chips3d");
   // click a disaster (chip, breaking banner or its floating label) to fly the camera there

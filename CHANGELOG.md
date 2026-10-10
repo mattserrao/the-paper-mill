@@ -1,5 +1,63 @@
 # Changelog
 
+## v4.1.0 (test build `test/v11_env`, 2026-10-10)
+
+Environments, seeded mills and a bottleneck. The core line (receiving, stock prep, machine hall, winder, roll handling,
+warehouse) is unchanged; everything around it now depends on where you build and on the mill seed.
+
+### Your site
+- **Four environments**, chosen from the menu (Change site) with their pros and cons listed:
+  - **Forest valley** (rural, the default): clean river (wastewater fines 40% rarer), local crews (−$4/h), hydro power
+    (−$5/t energy); long OCC haul (+$12/t), hard winters (snow 2×), wildlife (beavers, birds 2×).
+  - **City mill** (urban): city cardboard (OCC −$5/t), customers nearby (+$4/t); peak-rate power (+$8/t), city wages
+    (+$4/h), strict sewer permit (fines 1.6×), traffic (highway closures 2×).
+  - **Desert flats**: solar power (−$12/t energy), clear weather, cheap land (−$250/h overhead); scarce water (+$9/t),
+    long haul to customers (−$7/t), dust (screens and cleaners plug 1.5×), dry bale yard (bale fires 2×).
+  - **Bayou** (swamp): endless water (−$5/t chemicals), cheap land (−$190/h), barge OCC (−$3/t); humidity (slime 1.8×,
+    more rain and fog), soft roads (inbound trucks 12% slower), storms (lightning, roof leaks 1.6×), beavers 3×.
+- **Mill seed** (1–99999, or roll one): sets the layout of the auxiliary plant (the wastewater plant sits behind stock prep
+  or behind the maintenance shop, either way round; four layouts) and all the scenery. The picker shows a plan of the site.
+- Changing site reloads the game (the 3D scene is built once per load). The choice is remembered.
+
+### The world around the mill
+- New scenery for each environment, placed from the seed: forests, farms, hills, a chip pile and a hydro line (rural);
+  city blocks, houses, a water tower, a substation and a cardboard depot (urban); mesas, cacti, dunes, a solar farm,
+  water tanks and a wind pump (desert); ponds, cypress, reeds, shacks on stilts and a barge dock (swamp).
+- Trucks use a highway with a river bridge; staff cars come in on an east road; the rail line runs to the horizon.
+- The river becomes a concrete channel in the city and desert, and a dark bayou in the swamp.
+- **No clipping by construction:** scenery is placed on a 2 m keep-out grid built from every mesh in the mill (plus roads,
+  river, rail, the food-truck pitch), and each placed object claims its own footprint. Walkers path round scenery trunks
+  inside the yard, and the camera (including zen shots) stays at least 3 m above any scenery.
+  `tools/clipcheck.py` found no person, vehicle, car or train inside scenery in 4 environments (90 s each, every upset on,
+  zen mode for the last 60 s), and the camera never dipped into scenery.
+
+### Bottleneck
+- Every run has one **bottleneck area**, drawn from the run's seed (a season week gives every player the same one):
+  receiving docks, pulper, screens & cleaners, winder or shipping docks. It starts at 70–82% of what the machine needs
+  (about 25–28 t/h against 35 t/h on 23m), set per area so a hands-off season loses about the same with each.
+- A banner names it at the start; its section label is outlined in red; Upgrades opens with a bottleneck card and a
+  **Line capacity** chart (each area's t/h against the machine's).
+- The upgrades that fix it are 25% off and marked: pulper rotor (+30 t/h per level), screens & cleaners (+18 t/h of
+  screen capacity per level), winder rebuild (+30 t/h), extra dock doors (+1 door each), electric forklifts (+25%
+  unloading per door), robotic roll handling (+35% loading per door). One level fixes most of them.
+
+### Economy
+- Paper prices go back up to $713 / $733 / $753 / $813 per ton (23m / 26m / 30m / 33HT; v4.0.2: $625–725) because every
+  run now starts with a bottleneck. A hands-off season still breaks even: 15 seasons per environment average −$94k (rural),
+  +$1k (urban), −$116k (desert), +$42k (swamp); −$42k over all 60. No bankruptcies (worst finish +$69k).
+- The seeded 3-day checksum changes to **`7d891e16`** (rural, mill #1; the default site and the autotest's). Other
+  environments have their own checksums because their weather and costs differ.
+
+### Performance (quick test, phone emulation, rural mill #1)
+- Scenery is merged into six vertex-coloured meshes (one per map sector; only the one around the mill casts shadows):
+  10k–24k triangles depending on environment, replacing 300 instanced trees (two draws each pass).
+- Main-pass draws 224 normal / 459 all upsets, shadow pass 100, shader programs 108–109, triangles 203k / 290k.
+
+### Testing
+- `tools/quick.py`, `tools/econ.py`: `--env=` and `--mill=` (quick) / `--env=` and `--bn=` (econ) to test any site.
+- New `tools/topview.py` (top-down or perspective render of a site) and `tools/clipcheck.py`.
+- The autotest ignores a saved site and always measures rural, mill #1 (or `&env=`/`&mill=` from the URL).
+
 ## v4.0.2 (2026-10-10)
 
 Economy rebalance and smoother screens when many upsets happen at once.

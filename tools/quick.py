@@ -1,4 +1,4 @@
-"""Quick performance test (~2 min). Usage: python3 quick.py <index.html> [label] [--desktop] [--expect=96960821]
+"""Quick performance test (~2 min). Usage: python3 quick.py <index.html> [label] [--desktop] [--expect=96960821] [--env=rural] [--mill=1]
 
 One phone-emulated load (390x844 @1x, touch: the game's phone path keys on touch, and 1x keeps the software GPU fast enough; --desktop for 800x450), seeded, low-FPS fallback off, at 30 sim-min/s:
   normal  : 10 s settle, 10 s measured
@@ -28,6 +28,7 @@ args = [a for a in sys.argv[1:] if not a.startswith("--")]
 flags = {a.split("=")[0]: (a.split("=", 1)[1] if "=" in a else True) for a in sys.argv[1:] if a.startswith("--")}
 path = args[0]; label = args[1] if len(args) > 1 else pathlib.Path(path).parent.name or "build"
 expect = flags.get("--expect", "96960821"); desktop = "--desktop" in flags
+site = "".join(f"&{k}={flags['--'+k]}" for k in ("env", "mill") if "--" + k in flags)   # v4.1: ?env=&mill= (default: rural, mill #1)
 html = pathlib.Path(path).read_text()
 if "window.__PM=" not in html:
     i = html.rindex("})();", 0, html.rindex("</script>")); html = html[:i] + HOOK + html[i:]
@@ -99,7 +100,7 @@ with sync_playwright() as pw:
     b = pw.chromium.launch(args=["--use-gl=angle", "--use-angle=swiftshader", "--enable-unsafe-swiftshader", "--enable-precise-memory-info"])
     BR = b; ctx = ctx_for(b); pg = ctx.new_page(); errs = []
     pg.on("pageerror", lambda e: errs.append(str(e)[:200]))
-    pg.route("**/*", route_for(html)); pg.add_init_script(INIT); pg.goto("http://bench.local/")
+    pg.route("**/*", route_for(html)); pg.add_init_script(INIT); pg.goto("http://bench.local/" + ("?" + site[1:] if site else ""))
     pg.wait_for_function("window.__PM&&__B.first!==null&&(!__PM.G3.prewarm||__PM.G3.warm)", timeout=240000, polling=500)
     cdp = ctx.new_cdp_session(pg); cdp.send("Performance.enable")
     pg.evaluate("()=>{const G=__PM.G3,R=G.renderer,r=R.render.bind(R);R.render=(a,b)=>{const t=performance.now();r(a,b);__B.cur+=performance.now()-t;};document.getElementById('v2go').click();__PM.setFps(true);__PM.C.simSpeed=30;G.noFallback=true;}")
@@ -113,7 +114,7 @@ with sync_playwright() as pw:
     pg.on("pageerror", lambda e: errs.append(str(e)[:200]))
     base = route_for(html)
     pg.route("**/*", lambda r: r.fulfill(body=html, content_type="text/html") if r.request.url.startswith("http://bench.local/") else base(r))
-    pg.goto(f"http://bench.local/?autotest&scale=0.05&gpu=0&expect={expect}")
+    pg.goto(f"http://bench.local/?autotest&scale=0.05&gpu=0&expect={expect}{site}")
     pg.wait_for_function("window.__AUTOTEST", timeout=300000, polling=1000)
     c = pg.evaluate("()=>window.__AUTOTEST.check||{}")
     out["checksum"] = c.get("hash"); out["checksum_pass"] = c.get("pass")

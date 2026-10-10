@@ -59,6 +59,7 @@
 <div class="v2pane" data-pane="shop"><section aria-label="Upgrades" class="shop" id="shopSec">
 <div class="chaoshead"><h2>Upgrades<span class="dl">Spend cash on throughput, speed, lower costs and automation.</span><span class="dm">Run faster and cheaper.</span></h2>
 <div class="wallet"><small>Cash on hand</small><span id="u-cash">–</span></div><button aria-controls="ugrid" aria-expanded="false" class="more" id="shopMore">Show more</button></div>
+<div class="bncard" hidden id="bnCard"></div>
 <div class="shopbody">
 <div class="ledger" id="ledger"><h3>Books since start</h3></div>
 <div class="ugroups" id="ugrid"></div>
@@ -137,6 +138,7 @@
 <div class="v2menu" id="v2menu"><div aria-labelledby="v2mt" aria-modal="true" class="card" role="dialog">
 <div class="ttl"><i>⚙</i><div><small>The Paper Mill</small><b id="v2mt">Mill</b><div class="state" id="v2state"></div></div></div>
 <p>Run a recycled paperboard mill from truck to warehouse. Old corrugated boxes arrive by the truckload, get pulped, cleaned and thickened, and your paper machine turns them into giant reels that the winder cuts into rolls for customers. Keep everything flowing, spend your profit on upgrades, and ride out upsets: breakdowns, fires, storms and the occasional pigeon.</p>
+<div class="siterow" id="v2site"><span class="sw" id="v2siteSw" aria-hidden="true"></span><div><small>Your site</small><b id="v2siteN">Forest valley</b><span id="v2siteM">Mill #1</span></div><button id="v2siteBtn">Change site</button></div>
 <button class="primary go" id="v2go"><b>Play</b><small>30-day season · leaderboard</small></button>
 <div class="sub" hidden id="v2sub">
 <button id="v2season">New season<small>restart the 30 days</small></button>
@@ -153,6 +155,16 @@
 <div class="name" hidden id="v2nameRow"><input aria-label="Mill name" autocomplete="off" id="v2name" maxlength="32" spellcheck="false"/><button class="primary" id="v2nameOk">Save</button></div>
 <div class="foot"><span id="v2ver"></span><span>Sound, labels and speed are in the top bar</span></div>
 </div></div>
+
+<div class="overlay top siteov" hidden id="siteOv"><div aria-labelledby="siteH" aria-modal="true" class="modal sitepick" role="dialog">
+<h2 id="siteH">Choose your site</h2>
+<p class="muted">The paper machine, winder, roll handling and warehouse are the same everywhere. The land around them, the utilities and the costs are not.</p>
+<div class="envs" id="siteEnvs" role="radiogroup" aria-label="Environment"></div>
+<div class="seedrow"><canvas aria-label="Site plan preview" height="150" id="sitePrev" role="img" width="300"></canvas>
+<div class="seedctl"><label for="siteSeed">Mill seed</label><div class="seedin"><input id="siteSeed" inputmode="numeric" max="99999" min="1" type="number"/><button aria-label="Roll a new mill seed" id="siteRoll" title="New seed">🎲</button></div>
+<small id="siteLay">Layout</small></div></div>
+<p class="muted small">Building on a new site reloads the game and starts a fresh run. Each run also has one bottleneck area, drawn at random.</p>
+<div class="btns"><button class="primary" id="siteGo">Build here</button><button id="siteNo">Cancel</button></div></div></div>
 
 <div class="overlay top" hidden id="no3d"><div aria-labelledby="no3d-h" class="modal" role="alertdialog">
 <h2 id="no3d-h">3D graphics are off</h2>

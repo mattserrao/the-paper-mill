@@ -46,7 +46,7 @@
         at:(t)=>{if(t>14)return null;const u=ease(t/14);return [mix(78,54,u),0,mix(47,25,u),mix(75,55,u),-0.5,0.9];}},
       // drift over the clarifier and transfer tank out toward the river
       {name:"clarifier to river",look:["airy","none"],dur:14,ok:()=>true,
-        at:(t)=>{if(t>14)return null;const u=ease(t/14);return [mix(12,8,u),mix(1.5,0,u),mix(-38,-64,u),mix(70,95,u),mix(0.2,0.6,u),mix(0.85,1.05,u)];}},
+        at:(t)=>{if(t>14)return null;const u=ease(t/14);const wx=ENV.ww[0];return [mix(wx+2,wx-2,u),mix(1.5,0,u),mix(-38,-64,u),mix(70,95,u),mix(0.2,0.6,u),mix(0.85,1.05,u)];}},
       // v3.2.0 ----------------------------------------------------------------------------------------------
       // start high over the pulper and spiral down into the vortex
       {name:"pulper vortex dive",look:["hc","none"],dur:14,ok:()=>!S.M.pulperDown&&S.rates.feed>0.3,start:()=>({th:Math.random()*6.28}),

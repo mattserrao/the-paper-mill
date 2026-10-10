@@ -71,29 +71,31 @@ UGROUPS.forEach(([g,lab])=>{const d=document.createElement("div");d.className="u
   const sm=document.createElement("span");sm.className="usum";sm.id="usum-"+g;h.appendChild(sm);h.setAttribute("role","button");h.tabIndex=0;h.setAttribute("aria-expanded","false");
   const tog=()=>{d.classList.toggle("closed");h.setAttribute("aria-expanded",!d.classList.contains("closed"));};h.addEventListener("click",tog);h.addEventListener("keydown",e=>{if(e.key==="Enter"||e.key===" "){e.preventDefault();tog();}});d.appendChild(h);
   UPS.filter(u=>u.g===g).forEach(u=>{const el=document.createElement("div");el.className="up";el.id="up-"+u.id;
-    el.innerHTML=`<div class="uh"><b>${u.name}</b><span class="pips">${u.lv.map(()=>"<i></i>").join("")}</span></div><p>${u.desc}</p><button class="buy" id="buy-${u.id}"></button>`;
+    el.innerHTML=`<div class="uh"><b>${u.name}</b><span class="pips">${u.lv.map(()=>"<i></i>").join("")}</span></div><p>${u.desc}</p><p class="fixtag" hidden></p><button class="buy" id="buy-${u.id}"></button>`;
     el.querySelector("button").addEventListener("click",()=>buy(u.id));d.appendChild(el);});
   ugrid.appendChild(d);});
 moreToggle("chaosSec","chaosMore","paper-mill-chaos-more")(false||(()=>{try{return localStorage.getItem("paper-mill-chaos-more")==="1";}catch(e){return false;}})());
 moreToggle("shopSec","shopMore","paper-mill-shop-more",v=>document.querySelectorAll(".ugrp").forEach(d=>{d.classList.toggle("closed",!v);d.querySelector("h3").setAttribute("aria-expanded",v);}))((()=>{try{return localStorage.getItem("paper-mill-shop-more")==="1";}catch(e){return false;}})());
-function buy(id){const u=UP[id],l=LV(id);if(l>=u.lv.length)return;const cost=u.lv[l];if(!S.free&&S.cash<cost)return;
+function buy(id){const u=UP[id],l=LV(id);if(l>=u.lv.length)return;const cost=upCost(u,l);if(!S.free&&S.cash<cost)return;
   spend(cost,"upgrades");AUDIO.sfx("cash",150);S.up[id]=l+1;applyUpgrades();
   BANNERS.push({text:`${u.name}${u.lv.length>1?" level "+(l+1):""} is online.`,t:null,kind:"good"});while(BANNERS.length>3)BANNERS.splice(1,1);
   log(`Installed ${u.name}${u.lv.length>1?" level "+(l+1):""} (${money(cost)})`,"ok");updateShop();}
 const LEDGER=[["rev","Paper sales",1],["occ","OCC purchases",-1],["energy","Energy & chemicals",-1],["labor","Wages & robots",-1],["overhead","Mill overhead",-1],["repairs","Disaster repairs",-1],["premium","Insurance premium",-1],["upgrades","Upgrades bought",-1],["deals","Deals & trials",1]];
 function updateRel(){const rn=document.getElementById("relnow"),lg=$("ledger"),tg=rn||lg;if(rn)rn.replaceChildren();else{const h0=document.createElement("h3");h0.textContent="Reliability now";lg.appendChild(h0);}const pct=v=>(v>=0?"+":"")+Math.round(v*100)+"%";
-    [["stock","Stock prep"],["wet","Wet end"],["dry","Dry end"]].forEach(([a,n])=>{const r=areaRel(a),d=document.createElement("div"),sum=[r.up,r.out,r.fx].reduce((t,v)=>t+(Math.abs(v-1)>0.005?v-1:0),0);d.className="stat "+(sum>0.005?"pos":sum<-0.005?"neg":"");
-      const bits=[["upgrades",r.up],["outage budget",r.out],["events",r.fx]].filter(([,v])=>Math.abs(v-1)>0.005).map(([k,v])=>k+" "+pct(v-1));
+    [["stock","Stock prep"],["wet","Wet end"],["dry","Dry end"]].forEach(([a,n])=>{const r=areaRel(a),d=document.createElement("div"),sum=[r.up,r.out,r.fx,r.site||1].reduce((t,v)=>t+(Math.abs(v-1)>0.005?v-1:0),0);d.className="stat "+(sum>0.005?"pos":sum<-0.005?"neg":"");
+      const bits=[["upgrades",r.up],["outage budget",r.out],["events",r.fx],["site",r.site||1]].filter(([,v])=>Math.abs(v-1)>0.005).map(([k,v])=>k+" "+pct(v-1));
       d.innerHTML=`<span>${n}<small style="display:block;color:var(--muted);font-size:11.5px;font-weight:500">${bits.length?bits.join(" · "):"standard"}</small></span><b>${Math.abs(sum)<0.005?"–":pct(sum)}</b>`;tg.appendChild(d);});}
 function updateShop(){
   $("u-cash").textContent=money(S.cash);
-  UGROUPS.forEach(([g])=>{const us=UPS.filter(u=>u.g===g),own=us.reduce((a,u)=>a+LV(u.id),0),tot=us.reduce((a,u)=>a+u.lv.length,0),can=us.filter(u=>LV(u.id)<u.lv.length&&(S.free||S.cash>=u.lv[LV(u.id)])).length;
-    const el=$("usum-"+g);if(el)el.innerHTML=`${own}/${tot} bought${can?` · <b>${can} affordable</b>`:""}`;});
+  UGROUPS.forEach(([g])=>{const us=UPS.filter(u=>u.g===g),own=us.reduce((a,u)=>a+LV(u.id),0),tot=us.reduce((a,u)=>a+u.lv.length,0),can=us.filter(u=>LV(u.id)<u.lv.length&&(S.free||S.cash>=upCost(u,LV(u.id)))).length;
+    const fix=bnShort()&&us.some(upFix);const el=$("usum-"+g);if(el)el.innerHTML=`${fix?'<em class="fixg">fix</em> ':""}${own}/${tot} bought${can?` · <b>${can} affordable</b>`:""}`;});
   UPS.forEach(u=>{const l=LV(u.id),el=$("up-"+u.id),b=$("buy-"+u.id),max=l>=u.lv.length;
     el.classList.toggle("max",max);el.querySelectorAll(".pips i").forEach((p,k)=>p.classList.toggle("on",k<l));
+    {const fx=upFix(u),ft=el.querySelector(".fixtag");el.classList.toggle("fix",fx);if(ft){ft.hidden=!fx;if(fx){const t="Fixes the bottleneck · 25% off. "+(BN_UPTXT[S.bn+"/"+u.id]||"");if(ft.textContent!==t)ft.textContent=t;}}}
     if(max){b.disabled=true;b.textContent="Maxed";}
-    else{const c=u.lv[l];b.disabled=!S.free&&S.cash<c;b.textContent=S.free?"Add (free play)":S.cash<c?`Need ${money(c)}`:`Buy ${money(c)}`;}});
+    else{const c=upCost(u,l);b.disabled=!S.free&&S.cash<c;b.textContent=S.free?"Add (free play)":S.cash<c?`Need ${money(c)}`:`Buy ${money(c)}`;}});
   const lg=$("ledger");lg.replaceChildren();
+  lineCapView(lg);bnCard();
   // v3.3.3: how reliable each section is right now, against a mill with no upgrades and a standard outage budget
   updateRel();
   const h=document.createElement("h3");h.textContent="Books since start";lg.appendChild(h);
@@ -122,4 +124,4 @@ function showOverlay(kind){running=false;
   $("ov-a").focus();}
 $("ov-a").addEventListener("click",()=>{$("overlay").hidden=true;$("overlay").style.zIndex="";const dc=document.getElementById("dealOv");if(S.over){newGame();}else if(dc&&!dc.hidden&&!dc.classList.contains("dealres")){}else{running=true;}});
 $("ov-b").addEventListener("click",()=>{$("overlay").hidden=true;newGame();});
-function newGame(){const sp=C.simSpeed;initCtrl();C.simSpeed=sp;initState();BANNERS.length=0;running=true;seasonLocks(false);}
+function newGame(){const sp=C.simSpeed;initCtrl();C.simSpeed=sp;initState();BANNERS.length=0;running=true;seasonLocks(false);bnNotice();}

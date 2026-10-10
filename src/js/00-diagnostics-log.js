@@ -1,4 +1,4 @@
-const APP_VER="v4.0.2";   // shown in the menu and sent with leaderboard scores (max 12 characters)
+const APP_VER="v4.1.0";   // shown in the menu and sent with leaderboard scores (max 12 characters)
 // TEST BUILDS ONLY (off in releases): turbo speeds 240/480/960 sim min/s for fast playtests. Above 120, crews and maintenance start jobs
 // without waiting for the 3D walk (as with the 3D view off) and outages keep the speed. Set false for a release.
 const TURBO=false,TURBO_FAST=s=>TURBO&&s>120;

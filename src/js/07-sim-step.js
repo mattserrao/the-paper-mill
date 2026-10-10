@@ -15,10 +15,10 @@ function step(dt){
   // 1 inbound arrivals
   // weather: changes every few hours; snow and fog slow the trucks, rain soaks bales
   if(S.wx===undefined){S.wx="clear";S.wxLeft=360;S.wet=0;}
-  S.wxLeft-=dt;if(S.wxLeft<=0){const r=rand("wx");const nx=r<0.55?"clear":r<0.75?"rain":r<0.87?"fog":"snow";if(nx!==S.wx&&nx!=="clear")log(`Weather: ${WXN[nx].toLowerCase()} rolling in`,"warn");S.wx=nx;S.wxLeft=240+rand("wx")*600;}
+  S.wxLeft-=dt;if(S.wxLeft<=0){const r=rand("wx"),w=P.siteWx||[0.55,0.75,0.87];const nx=r<w[0]?"clear":r<w[1]?"rain":r<w[2]?"fog":"snow";if(nx!==S.wx&&nx!=="clear")log(`Weather: ${WXN[nx].toLowerCase()} rolling in`,"warn");S.wx=nx;S.wxLeft=240+rand("wx")*600;}
   S.wet=clamp(S.wet+dt*(S.wx==="rain"?1/90:S.wx==="snow"?1/240:-1/360),0,1);
-  const wxTruck=S.wx==="snow"?0.7:S.wx==="fog"?0.85:1;
-  if(!M.noIn) S.inPhase+=dt*C.inRate.v/60*S.inJit*wxTruck;
+  const wxTruck=S.wx==="snow"?0.7:S.wx==="fog"?0.85:1,siteIn=P.siteIn||1;
+  if(!M.noIn) S.inPhase+=dt*C.inRate.v/60*S.inJit*wxTruck*siteIn;
   while(S.inPhase>=1){S.inPhase-=1;S.inJit=0.6+rand("flow")*0.8;
     if(S.inQ.length<P.maxQueue){S.inQ.push(newTruck("in"));S.tot.inTrucks++;} else S.tot.turned++;}
   S.inQ.forEach(t=>t.wait+=dt);
@@ -27,6 +27,7 @@ function step(dt){
   const level0=S.tank/P.tankCap;
   let want=M.pulperDown?0:C.pulper.v*M.feedMul;
   if(level0>0.97) want=Math.min(want,S.rates.fiberUse/P.yieldF);
+  want=Math.min(want,P.screenMax/(P.yieldF*M.yieldMul||1));   // v4.1: the screens pass at most screenMax t/h of fiber
   const effDrv=Math.min(C.drivers.v,M.drvCap); S.effDrv=effDrv;
   let cap=effDrv*P.driverRate*dt/60*M.recvMul;
   const feedRes=P.autoFeed?(M.recvMul>0?want*dt/60:0):Math.min(want*dt/60,cap); if(!P.autoFeed)cap-=feedRes;
@@ -99,8 +100,8 @@ function step(dt){
     const l=Math.min(P.truckRolls-tr.load,P.doorRolls*dt/60,lcap,S.fg);
     tr.load+=l;lcap-=l;S.fg-=l;loaded+=l;
     if(tr.load>=P.truckRolls-1e-6){S.leaving.push({...tr,ty:outY(d),kind:"out"});S.outDock[d]=null;S.tot.shipped+=P.truckRolls;const tons=P.truckRolls*C.rollW.v;S.shipT+=tons;earn(tons*priceOf(C.grade));}}
-  spend(((C.drivers.v+C.loaders.v+P.techs)*ECON.wage+P.robots*ECON.robot+P.pmCost)*dt/60,"labor");
-  spend(ECON.overhead*dt/60,"overhead"); if(P.premium)spend(P.premium*dt/60,"premium");
+  spend(((C.drivers.v+C.loaders.v+P.techs)*(ECON.wage+(P.siteWage||0))+P.robots*ECON.robot+P.pmCost)*dt/60,"labor");
+  spend((ECON.overhead+(P.siteOver||0))*dt/60,"overhead"); if(P.premium)spend(P.premium*dt/60,"premium");
   // v3.1.2: profit/day is OPERATING profit over the last 12 game hours: good paper is valued as it comes off the machine (tons x price),
   // less OCC, energy, labor, overhead and insurance. One-offs (upgrades, outage budgets, repair bills, card deals) are left out,
   // and so is the lumpy timing of truck departures. Cash and the season score are unchanged.

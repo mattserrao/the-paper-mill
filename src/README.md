@@ -16,9 +16,9 @@ then `tail.html`. All game code runs inside **one shared closure** (opened in `0
 | Range | What lives there |
 |---|---|
 | `00` | `APP_VER`, the rolling diagnostics log, and the three.js loader (r186.1 as an ES module via top-level `await`; outside the closure, so errors during start-up are caught) |
-| `01–11` | Game: mill name and colors, audio, model constants and seeded random streams, upsets, event cards, outages and state, the sim `step()`, UI wiring, seasons and leaderboard, report cards, Stats trend chart |
-| `20–43` | 3D view, one file per area of the mill: setup, plant, floors, rejects, stock prep, vehicles, labels, camera, upset effects and particles, people, fire response, ambient life, janitorial, techs, upgrades, static-mesh merge, outage jobs, zen camera, and the per-frame update (`43-3d-frame.js`) |
-| `50–53` | Side panels (slice, spider, Uncle Brian), app shell (top bar, sheets, menu, tutorial), main loop, the device autotest (`52b`, only active with `?autotest`), diagnostics panel and the `window.__PM` test hook |
+| `01–11` | Game: mill name and colors, audio, model constants and seeded random streams, the site (`03b`: environments, mill seed and layout, bottleneck), upsets, event cards, outages and state, the sim `step()`, UI wiring, seasons and leaderboard, report cards, Stats trend chart |
+| `20–43` | 3D view, one file per area of the mill: setup, plant, floors, rejects, stock prep, vehicles, labels, camera, upset effects and particles, people, fire response, ambient life, janitorial, techs, upgrades, static-mesh merge, outage jobs, zen camera, the seeded scenery around the mill (`42b`), and the per-frame update (`43-3d-frame.js`) |
+| `50–53` | Side panels (slice, spider, Uncle Brian), app shell (top bar, sheets, menu, tutorial), the site picker (`51b`), main loop, the device autotest (`52b`, only active with `?autotest`), diagnostics panel and the `window.__PM` test hook |
 
 ## Conventions
 
@@ -36,6 +36,29 @@ then `tail.html`. All game code runs inside **one shared closure** (opened in `0
 - **Moving things** (people, vehicles, loads, any single-material opaque mesh drawn on its own) are drawn through dynamic BatchedMeshes, one per look (`G3.dbTick`, `40-3d-static-merge.js`). Their originals live on layer 30 and are still animated by the game. `dbTick` updates world matrices once before the render, and the render skips its own pass.
 - **Shadows:** static casters go through two merged shadow-proxy meshes, shown only during the shadow pass; the sun never moves. Moving things cast their own.
 - **Static scenery** is batched on the first frame with three.js BatchedMesh (`40-3d-static-merge.js`, phones too): one batch per look (material + shadow flags + vertex layout), single-object looks left alone. Edge outlines, mirrored meshes and roof parts use the older bake path. Anything that later moves, hides or changes material is handed back automatically. A new object that should never be batched goes in `SM.dyn` before the first frame.
+
+## Site, mill seed and bottleneck (v4.1)
+
+- **`SITE`** (`03b-site.js`) is the environment (`rural`, `urban`, `desert`, `swamp`) and mill seed the page was loaded
+  with: from `?env=&mill=` (tests), else the saved choice (`paper-mill-site`), else rural / #1. The autotest ignores the
+  saved choice. The 3D scene is built once from it, so the site picker saves and reloads.
+- **Environment gameplay** goes through `applySite()` (called from `applyUpgrades`): `P.siteOcc`, `sitePrice`, `siteEnergy`,
+  `siteWage`, `siteOver`, `siteIn` (inbound trucks), `siteWx` (weather thresholds; still one `rand("wx")` draw) and
+  `siteFreq(id)` (upset frequency, inside `freqMul`, shown as "site" under Reliability). Keep each environment's
+  hands-off season near break-even: `econ.py index.html 15 --env=X`.
+- **`LAYOUT`** (`layoutFor(seed)`): where the auxiliary plant sits. Only the wastewater plant moves (two slots, either way
+  round); code that places or points at it uses `LAYOUT.wx(x)` on its v4.0 coordinates (21 plant, 31 permit effect and pin,
+  42 zen shot). The power house stays: the steam rack ties it to the dryers.
+- **Bottleneck:** `S.bn` comes from the run's seed (`bnFor`, a hash, no stream drawn), so a season week shares it.
+  `applySite()` sets the capacities it can cut (`P.doorRate`, `pulperMax`, `screenMax`, `winderMax`, `doorRolls`) from
+  `BNK[area]` × what the machine needs on 23m. Upgrades that fix it (`BN[area].ups`) cost `upCost()` (25% off) and do
+  more for that area. `lineCaps()` gives every area's t/h (Line capacity chart, bottleneck card, labels).
+- **Scenery** (`42b-3d-scenery.js`) runs after every other static object exists: a 2 m keep-out grid from every mesh and
+  instance, off-site roads and rail, then the environment kit and its utilities, merged into one vertex-coloured mesh per
+  map sector (not batched: the colour attribute keeps them out of the static merge). Anything that must stay clear of
+  scenery but is hidden at build time (like the food truck) needs a `kMark` there. `G3.navBoxes` adds scenery trunks to the
+  walkers' grid; `G3.sceneryH(x,z)` keeps the camera above scenery (`placeCam`); `G3.sceneryAt(x,z)` is for tests.
+- Don't name a 3D-closure variable `SITE`: it shadows the global (the fence rectangle is `FENCE`).
 
 ## Device autotest (`?autotest`)
 
@@ -74,6 +97,11 @@ Needs Python 3 with Playwright (Chromium), and Node with `eslint@8`, `three@0.12
 - `experiments.py index.html`: applies one change at a time (no blur, no labels, single-pass transparency, actors hidden, outlines hidden, shadows on), measures, then reverts.
 - `allocprof.py index.html phone`: which functions allocate the most JS memory during play.
 - `autotest.py index.html [scale] [--desktop] [--expect=hash]`: runs the in-page `?autotest` headless (phone emulation) and checks the results page, the Copy button and that nothing was saved.
+- `quick.py index.html <label> [--env=urban] [--mill=7]`: the quick performance test (counts and timings, phone emulation, checksum).
+- `clipcheck.py index.html [env] [mill] [seconds]`: runs a site with every upset and zen mode and fails if any person, vehicle,
+  car or train stands inside scenery, or the camera dips into it.
+- `topview.py index.html out.png "?env=desert&mill=7" [--half=330] [--persp]`: a top-down (or overview) render of a site.
+- `econ.py index.html 15 [--env=swamp] [--bn=winder]`: hands-off seasons for a site, optionally with a forced bottleneck.
 - `bench.py index.html <label> 3`: the older timing benchmark (also provides the shared test hook and local three.js routing the other scripts use).
 - `smoke.py index.html`: drives every menu and panel plus a full 30-day season; fails on any page error.
 - `determinism.py index.html`: two loads of the same season week must play out identically.

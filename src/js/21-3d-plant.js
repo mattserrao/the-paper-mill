@@ -1,5 +1,8 @@
   /* ---- step 1: static plant ---- */
-  const grassM=new StdMat({color:lin0("#b4cf9f"),roughness:0.95});
+  // v4.1 the environment sets the ground, the river and its banks (ENVLOOK); the scenery itself is built in 42b-3d-scenery.js
+  const ENVLOOK={rural:{ground:"#b4cf9f",bank:"#d9cba6",water:"#7fb0cf"},urban:{ground:"#bec7ad",bank:"#c4c1b8",water:"#76a0b8"},
+    desert:{ground:"#e3d0a4",bank:"#d6ccb6",water:"#5fa8bd"},swamp:{ground:"#a3b487",bank:"#7d7254",water:"#4f736d"}}[SITE.env];G3.envLook=ENVLOOK;
+  const grassM=new StdMat({color:lin0(ENVLOOK.ground),roughness:0.95});
   slab(-400,400,-300,300,grassM,0);
   slab(-140,-95,-5.2,-2.4,M.asphalt);slab(-140,-95,11.2,13.8,M.asphalt);
   slab(-95,-34.4,-5.2,-2.4,M.asphalt);              // inbound road
@@ -12,7 +15,7 @@
   for(let x=-92;x<-50;x+=4)box(2,0.02,0.16,M.lane,x,0.05,12.5,scene,false);
   for(let x=-138;x<-94;x+=4){box(2,0.02,0.16,M.lane,x,0.05,-3.8,scene,false);box(2,0.02,0.16,M.lane,x,0.05,12.5,scene,false);}
   /* ======== the site outside the buildings ======== */
-  const SITE={x0:-100,x1:92,z0:-52,z1:64};
+  const FENCE=G3.FENCE={x0:-100,x1:92,z0:-52,z1:64};   // v4.1: was SITE (now the global site choice)
   const ENV={};
   const wood=new StdMat({color:lin0("#9a7350"),roughness:0.9}),conc=mat("g-wall",{roughness:0.8});
   // perimeter fence with gaps for the roads, the rail spur and the food-truck gate
@@ -22,17 +25,17 @@
     function run(ax,az,bx,bz){const L=Math.hypot(bx-ax,bz-az);if(L<0.5)return;const t=fm.clone();t.map=ft.clone();t.map.needsUpdate=true;t.map.repeat.set(L/1.2,H2/1.2);
       const pl=new THREE.Mesh(new THREE.PlaneGeometry(L,H2),t);pl.position.set((ax+bx)/2,H2/2,(az+bz)/2);pl.rotation.y=-Math.atan2(bz-az,bx-ax);scene.add(pl);
       pipe([[ax,H2,az],[bx,H2,bz]],0.05,M.metal);for(let k=0;k<=Math.ceil(L/4);k++){const f=k/Math.ceil(L/4);posts.push([ax+(bx-ax)*f,az+(bz-az)*f]);}}
-    const W0=SITE.x0,W1=SITE.x1,Z0=SITE.z0,Z1=SITE.z1;
+    const W0=FENCE.x0,W1=FENCE.x1,Z0=FENCE.z0,Z1=FENCE.z1;
     run(W0,Z0,W1,Z0);run(W0,Z1,W1,Z1);
     [[Z0,-37.4],[-33.6,-31],[-27,-6],[-1.6,10.4],[14.6,Z1]].forEach(([a,b])=>run(W0,a,W0,b));
     [[Z0,30.5],[34.5,Z1]].forEach(([a,b])=>run(W1,a,W1,b));
     const pg=new CylG(0.08,0.08,2.6,6),pm=new THREE.InstancedMesh(pg,M.metal,posts.length),m4=new THREE.Matrix4();
     posts.forEach((p,k)=>{m4.makeTranslation(p[0],1.3,p[1]);pm.setMatrixAt(k,m4);});scene.add(pm);}
   // guard gate between the two roads, with boom barriers
-  {const gx=SITE.x0-1.5,gz=4.4;box(3,2.6,3,conc,gx,1.3,gz);box(3.4,0.25,3.4,M.brand,gx,2.75,gz);box(3.02,0.8,2.2,M.wind,gx,1.75,gz,scene,false);
+  {const gx=FENCE.x0-1.5,gz=4.4;box(3,2.6,3,conc,gx,1.3,gz);box(3.4,0.25,3.4,M.brand,gx,2.75,gz);box(3.02,0.8,2.2,M.wind,gx,1.75,gz,scene,false);
     const sc=document.createElement("canvas");sc.width=128;sc.height=8;const x=sc.getContext("2d");for(let i=0;i<8;i++){x.fillStyle=i%2?"#ffffff":"#e0343c";x.fillRect(i*16,0,16,8);}
     const st=new THREE.CanvasTexture(sc);st.colorSpace=THREE.SRGBColorSpace;const bm=new StdMat({map:st,roughness:0.6});
-    [[-1.6,1],[14.6,-1]].forEach(([z,dir])=>{box(0.5,1.1,0.5,M.ink,SITE.x0,0.55,z,scene,false);const arm=new THREE.Group();arm.position.set(SITE.x0,1.05,z);scene.add(arm);
+    [[-1.6,1],[14.6,-1]].forEach(([z,dir])=>{box(0.5,1.1,0.5,M.ink,FENCE.x0,0.55,z,scene,false);const arm=new THREE.Group();arm.position.set(FENCE.x0,1.05,z);scene.add(arm);
       const a=new THREE.Mesh(new THREE.BoxGeometry(0.16,0.16,4.2),bm);a.position.z=-dir*2.1;arm.add(a);arm.rotation.x=dir*1.15;});
     ENV.gate=[gx,gz];}
   // truck scale where the inbound queue stops, with a scale house and a weight display
@@ -42,10 +45,12 @@
     const dm=new THREE.Mesh(new THREE.PlaneGeometry(2.4,0.75),new THREE.MeshBasicMaterial({map:dt2,toneMapped:false}));dm.position.set(-37.2,2.4,-1.95);dm.rotation.y=Math.PI;scene.add(dm);box(0.12,2.2,0.12,M.ink,-37.2,1.1,-1.95,scene,false);
     ENV.scale={ctx:dc.getContext("2d"),tex:dt2,last:""};}
   // river along the back with banks, an intake pump house and an outfall
-  {const rc=document.createElement("canvas");rc.width=rc.height=128;const x=rc.getContext("2d");x.fillStyle="#7fb0cf";x.fillRect(0,0,128,128);x.strokeStyle="rgba(255,255,255,.35)";x.lineWidth=2;
+  {const rc=document.createElement("canvas");rc.width=rc.height=128;const x=rc.getContext("2d");x.fillStyle=ENVLOOK.water;x.fillRect(0,0,128,128);x.strokeStyle="rgba(255,255,255,.35)";x.lineWidth=2;
     for(let k=0;k<10;k++){x.beginPath();const y=k*13+4;for(let i=0;i<=128;i+=8)x.lineTo(i,y+3*Math.sin(i/12+k));x.stroke();}
     const rt=new THREE.CanvasTexture(rc);rt.colorSpace=THREE.SRGBColorSpace;rt.wrapS=rt.wrapT=THREE.RepeatWrapping;rt.repeat.set(40,1.5);ENV.riverTex=rt;
-    const sand=new StdMat({color:lin0("#d9cba6"),roughness:1});slab(-400,400,-75,-57,sand,0.006);
+    const sand=new StdMat({color:lin0(ENVLOOK.bank),roughness:1});slab(-400,400,-75,-57,sand,0.006);
+    // city and desert: the river runs in a walled concrete channel
+    if(SITE.env==="urban"||SITE.env==="desert")[-57.6,-74.4].forEach(z=>box(800,1.1,0.6,conc,0,0.55,z,scene,false));
     slab(-400,400,-72,-60,new StdMat({map:rt,roughness:0.15,metalness:0.1}),0.012);
     box(4,3,4,conc,-30,1.5,-55.5);box(4.4,0.3,4.4,M.brand,-30,3.1,-55.5);pipe([[-30,0.8,-57.5],[-30,0.8,-59],[-30,-0.5,-61]],0.35,M.metal);
     // fresh water from the river intake, up and over into the stock line that feeds the cleaners and screens on to stock storage
@@ -55,9 +60,9 @@
      const vb=new THREE.Mesh(new CylG(0.42,0.42,0.5,12),M.steel);vb.rotation.z=Math.PI/2;vb.position.set(7.6,6.0,-25.7);scene.add(vb);
      const hw=new THREE.Mesh(new THREE.TorusGeometry(0.32,0.05,6,16),M.bad);hw.rotation.x=Math.PI/2;hw.position.set(7.6,6.75,-25.7);scene.add(hw);box(0.08,0.7,0.08,M.ink,7.6,6.4,-25.7,scene,false);
      [4,11.2].forEach(x=>box(0.22,5.6,0.22,M.steel,x+0.6,2.8,-25.7,scene,false));}
-    pipe([[32,0.6,-46.5],[32,0.6,-58.5],[32,0.1,-60.5]],0.4,M.metal);ENV.outfall=[32,0.2,-61];}
+    const WX=LAYOUT.wx;pipe([[WX(32),0.6,-46.5],[WX(32),0.6,-58.5],[WX(32),0.1,-60.5]],0.4,M.metal);ENV.outfall=[WX(32),0.2,-61];}
   // wastewater treatment: clarifier with a turning bridge, aeration pond with aerators
-  {const cx=10,cz=-40,r=7;slab(1,46,-49,-31,M.slab,0.025);
+  {const WX=LAYOUT.wx,cx=WX(10),cz=-40,r=7;slab(Math.min(WX(1),WX(46)),Math.max(WX(1),WX(46)),-49,-31,M.slab,0.025);
     const wall=new THREE.Mesh(new CylG(r,r,2.2,48,1,true),mat("g-wall",{side:THREE.DoubleSide}));wall.position.set(cx,1.1,cz);wall.castShadow=true;scene.add(wall);
     const rim=new THREE.Mesh(new THREE.TorusGeometry(r,0.18,6,48),M.steel);rim.rotation.x=Math.PI/2;rim.position.set(cx,2.2,cz);scene.add(rim);
     ENV.wwM=new StdMat({color:lin0("#86b3a6"),roughness:0.2});ENV.wwBase=lin0("#86b3a6");ENV.wwBad=lin0("#8c6e4b");
@@ -70,9 +75,9 @@
     const wtr=new THREE.Mesh(new CircG(r-0.1,48),ENV.wwM2);wtr.rotation.x=-Math.PI/2;wtr.position.set(cx,1.9,cz);scene.add(wtr);
     const well=new THREE.Mesh(new CylG(1,1,2.4,20),M.steel);well.position.set(cx,1.3,cz);scene.add(well);
     ENV.bridge=new THREE.Group();ENV.bridge.position.set(cx,2.5,cz);scene.add(ENV.bridge);box(r,0.35,0.9,M.warn,r/2,0,0,ENV.bridge);box(0.1,1.2,0.6,M.ink,r-0.5,-0.6,0,ENV.bridge,false);
-    const px0=22,px1=42,pz0=-46,pz1=-34;[[px0,px1,pz0,pz0],[px0,px1,pz1,pz1],[px0,px0,pz0,pz1],[px1,px1,pz0,pz1]].forEach(([a,b,c,d])=>box(Math.max(0.4,b-a),1.3,Math.max(0.4,d-c),conc,(a+b)/2,0.65,(c+d)/2));
+    const px0=Math.min(WX(22),WX(42)),px1=Math.max(WX(22),WX(42)),pz0=-46,pz1=-34;[[px0,px1,pz0,pz0],[px0,px1,pz1,pz1],[px0,px0,pz0,pz1],[px1,px1,pz0,pz1]].forEach(([a,b,c,d])=>box(Math.max(0.4,b-a),1.3,Math.max(0.4,d-c),conc,(a+b)/2,0.65,(c+d)/2));
     const pond=new THREE.Mesh(new THREE.PlaneGeometry(px1-px0-0.4,pz1-pz0-0.4),ENV.wwM);pond.rotation.x=-Math.PI/2;pond.position.set((px0+px1)/2,1.0,(pz0+pz1)/2);scene.add(pond);
-    ENV.aer=[[27,-42],[37,-42],[27,-38],[37,-38]];ENV.aer.forEach(([x,z])=>{const a=new THREE.Mesh(new CylG(0.7,0.7,0.4,12),M.warn);a.position.set(x,1.15,z);scene.add(a);});
+    ENV.aer=[[WX(27),-42],[WX(37),-42],[WX(27),-38],[WX(37),-38]];ENV.aer.forEach(([x,z])=>{const a=new THREE.Mesh(new CylG(0.7,0.7,0.4,12),M.warn);a.position.set(x,1.15,z);scene.add(a);});
     // effluent transfer tank and pump between stock prep and the clarifier (visual only)
     {const T=[10,-28.6],R=1.45,H=3.4;const tk=new THREE.Mesh(new CylG(R,R,H,24),M.tank);tk.position.set(T[0],H/2,T[1]);tk.castShadow=true;tk.receiveShadow=true;scene.add(tk);
       const lid=new THREE.Mesh(new CylG(R+0.06,R+0.06,0.14,24),M.steel);lid.position.set(T[0],H+0.07,T[1]);scene.add(lid);
@@ -83,7 +88,8 @@
       const t=new THREE.CanvasTexture(c);t.colorSpace=THREE.SRGBColorSpace;const pl=new THREE.Mesh(new THREE.PlaneGeometry(2.0,0.38),new THREE.MeshBasicMaterial({map:t}));pl.position.set(T[0],2.75,T[1]+R+0.02);scene.add(pl);
       pipe([[10,0.8,-25.2],[10,0.8,-27.2]],0.3,M.stock);
       box(1.1,0.6,0.9,M.brand,11.9,0.45,-30.6,scene);box(0.7,0.55,0.6,M.ink,12.85,0.45,-30.6,scene,false);    // transfer pump and motor
-      pipe([[10,0.6,-30.0],[10,0.6,-30.6],[11.4,0.6,-30.6]],0.22,M.stock);pipe([[11.9,0.9,-30.6],[11.9,0.9,-31.4],[10,0.9,-31.4],[10,2.4,-31.4],[10,2.4,-33]],0.26,M.stock);}pipe([[17.1,1.4,-40],[22,1.4,-40]],0.3,M.metal);ENV.ww=[cx,cz];}
+      pipe([[10,0.6,-30.0],[10,0.6,-30.6],[11.4,0.6,-30.6]],0.22,M.stock);pipe([[11.9,0.9,-30.6],[11.9,0.9,-31.4],[10,0.9,-31.4],[10,2.4,-31.4],...(cx!==10?[[cx,2.4,-31.4]]:[]),[cx,2.4,-33]],0.26,M.stock);
+      /* pipe supports on the long run to a moved clarifier */for(let x=16;x<cx-3;x+=8)box(0.22,2.2,0.22,M.steel,x,1.1,-31.4,scene,false);}pipe([[WX(17.1),1.4,-40],[WX(22),1.4,-40]],0.3,M.metal);ENV.ww=[cx,cz];}
   // power house and boiler stack, steam header into the machine hall
   {const x0=70,x1=82,z0=-16,z1=-4,h=9;const b=box(x1-x0,h,z1-z0,conc,(x0+x1)/2,h/2,(z0+z1)/2);edges(b);box(x1-x0+0.4,0.4,z1-z0+0.4,M.brand,(x0+x1)/2,h+0.2,(z0+z1)/2);
     [z0-0.03,z1+0.03].forEach(z=>box(x1-x0-2,1.2,0.1,M.wind,(x0+x1)/2,5.6,z,scene,false));box(0.1,1.2,z1-z0-2,M.wind,x0-0.03,5.6,(z0+z1)/2,scene,false);
@@ -126,7 +132,7 @@
       else{box(12,0.4,2.8,cm,0,1.35,0,c);[-5.8,5.8].forEach(x=>box(0.3,2.8,2.8,cm,x,2.9,0,c));
         const b2=new THREE.InstancedMesh(new THREE.BoxGeometry(1.3,0.95,1.3),M.bale,24),m4b=new THREE.Matrix4();let n2=0;
         for(let i=0;i<8;i++)for(let l=0;l<3;l++){m4b.makeTranslation(-4.9+i*1.4,2.05+l*0.97,(l%2?0.35:-0.35));b2.setMatrixAt(n2++,m4b);}b2.castShadow=true;c.add(b2);}});
-    ENV.trainWheels=TW;ENV.trainCars=cars;ENV.locoStack=[1.2,4.1];
+    cars.forEach(c=>c.userData.train=true);loco.userData.train=true;ENV.trainWheels=TW;ENV.trainCars=cars;ENV.locoStack=[1.2,4.1];
     T.position.set(-180,0,-29);ENV.train={g:T,state:"away",t:60};}
   // day-staff cars drive in through the east gate in the morning and leave in the evening, one at a time so they queue nicely
   const CARQ={inQ:[],outQ:[],t:0,init:false};
@@ -147,7 +153,7 @@
     const cols=["#c0392b","#2c3e50","#ecf0f1","#7f8c8d","#2980b9","#16a085","#f1c40f","#34495e","#d35400","#bdc3c7"];ENV.cars=[];
     for(let r=0;r<3;r++)for(let k=0;k<8;k++){const g=new THREE.Group();g.position.set(68.3+k*2.6,0,40.6+r*6.2);g.rotation.y=Math.PI/2;scene.add(g);const cm=cloth0b(cols[(k*7+r*3)%cols.length]);
       box(4.2,0.9,1.8,cm,0,0.7,0,g);box(2.3,0.75,1.66,cm,-0.2,1.45,0,g);box(2.2,0.6,1.7,M.wind,-0.2,1.45,0,g,false);
-      ENV.cars.push({g,ord:Math.random(),sx:68.3+k*2.6,sz:40.6+r*6.2,aisle:r===2?49.9:43.7,st:"parked"});}
+      g.userData.car=true;ENV.cars.push({g,ord:Math.random(),sx:68.3+k*2.6,sz:40.6+r*6.2,aisle:r===2?49.9:43.7,st:"parked"});}
     ENV.cars.sort((a,b)=>a.ord-b.ord);
     // the first third belong to the shift crews (always here); the rest are day staff who arrive around 6 a.m. and leave around 6 p.m.
     const nShift=Math.round(ENV.cars.length*0.34);ENV.cars.forEach((c,k)=>{c.day=k>=nShift;const f=(k-nShift)/Math.max(1,ENV.cars.length-nShift);c.arr=5.2+f*1.5;c.dep=17.9+f*1.4;});
@@ -161,21 +167,7 @@
     const sc=document.createElement("canvas");sc.width=512;sc.height=256;const st=new THREE.CanvasTexture(sc);st.colorSpace=THREE.SRGBColorSpace;
     const bd=new THREE.Mesh(new THREE.PlaneGeometry(3.6,1.8),new THREE.MeshBasicMaterial({map:st,toneMapped:false}));bd.position.set(44,2.1,22.9);scene.add(bd);box(3.8,2,0.12,M.ink,44,2.1,22.8,scene,false);
     [-1.6,1.6].forEach(dx=>box(0.14,1.2,0.14,M.ink,44+dx,0.6,22.8,scene,false));ENV.board={ctx:sc.getContext("2d"),tex:st,last:""};}
-  // trees: dense outside the fence, scattered on the lawns inside, kept off every road and building
-  {const KEEP=[[-145,-33,-6.5,-1],[-145,-48,10,15],[-55,-6,-26,-1.5],[-69,-22,9,50],[-27,67,1,23.5],[2,46,-27,-1],[47,67,-29,-13],[47,67,-14,-1],[47,63,21,32],[18,96,29,36],[64,90,36,58],[68,85,-19,-2],[0,48,-50,-29],
-      [-145,-6,-32,-26],[64,69,-2,20],[-33,-27,-58,-29],[-6,6,-33,-24],[24,42,36,42],[63,70,19,25],[42,46,21,25],[-110,-90,-1,10],[-165,-30,-50,-32.6],[-50,-4,-4,14],[-96,-52,-28,-6],[-44,-38,-2,1.5],[30,34,-62,-44],[-405,405,-78,-54]];
-    const ok=(x,z)=>!KEEP.some(([a,b,c,d])=>x>a-2&&x<b+2&&z>c-2&&z<d+2);
-    const pts=[];let guard=0;
-    while(pts.length<300&&guard<6000){guard++;const inside=Math.random()<0.35,x=inside?SITE.x0+Math.random()*(SITE.x1-SITE.x0):-200+Math.random()*400,z=inside?SITE.z0+Math.random()*(SITE.z1-SITE.z0):-130+Math.random()*270;
-      const out=x<SITE.x0-3||x>SITE.x1+3||z<SITE.z0-3||z>SITE.z1+3;if(!inside&&!out)continue;if(!inside&&Math.hypot(x-0,z-5)>200)continue;if(!ok(x,z))continue;
-      if(pts.some(p=>Math.hypot(p[0]-x,p[1]-z)<3.2))continue;pts.push([x,z,0.75+Math.random()*0.7]);}
-    const trunk=new THREE.InstancedMesh(new CylG(0.22,0.3,2.2,6),wood,pts.length),crown=new THREE.InstancedMesh(new THREE.IcosahedronGeometry(1.9,0),new StdMat({roughness:0.9,flatShading:true}),pts.length);
-    const m4=new THREE.Matrix4(),q=new THREE.Quaternion(),c=new THREE.Color(),greens=["#6fa76b","#5f9a63","#7cb072","#8ab879","#5b8f5c","#4f8257","#94bf6e","#6a9a4f","#7aa88a"],autumn=["#c9a24a","#d08a3c","#b9673a"],barks=["#ffffff","#e6dcd2","#d4c8bb","#f2e8dc"];
-    pts.forEach(([x,z,s],k)=>{m4.compose(new THREE.Vector3(x,1.1*s,z),q,new THREE.Vector3(s,s,s));trunk.setMatrixAt(k,m4);
-      m4.compose(new THREE.Vector3(x,(2.2+1.4)*s,z),q.setFromEuler(new THREE.Euler(0,Math.random()*3,0)),new THREE.Vector3(s*1.05,s*1.25,s*1.05));crown.setMatrixAt(k,m4);q.identity();
-      const r=Math.random(),hx=r<0.07?autumn[Math.floor(Math.random()*autumn.length)]:greens[Math.floor(Math.random()*greens.length)];
-      c.set(hx).offsetHSL(0,(Math.random()-0.5)*0.06,(Math.random()-0.5)*0.07);crown.setColorAt(k,c.convertSRGBToLinear());trunk.setColorAt(k,c.set(barks[k%barks.length]).convertSRGBToLinear());});
-    trunk.castShadow=crown.castShadow=true;scene.add(trunk,crown);}
+  // v4.1: trees and the rest of the world outside the buildings are built from the environment and mill seed (42b-3d-scenery.js)
   // street lamps along the roads, the front of the hall and the parking lot
   {const L=[];for(let x=-130;x<-68;x+=16){L.push([x,-6.2]);L.push([x,15]);}for(let x=-20;x<=60;x+=16)L.push([x===44?38.5:x,22.6]);for(let x=68;x<=88;x+=10)L.push([x,57.4]);L.push([60,36]);L.push([46,30]);
     const pole=new THREE.InstancedMesh(new CylG(0.08,0.1,6,6),M.metal,L.length),head=new THREE.InstancedMesh(new THREE.BoxGeometry(0.9,0.2,0.4),new THREE.MeshBasicMaterial({color:0xffffff}),L.length);

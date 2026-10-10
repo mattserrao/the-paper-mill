@@ -90,11 +90,11 @@ function initState(){
 // market-driven planner: a hidden production queue that walks the grade wheel and buys the OCC blend for it
 // v4: every source of luck has its own stream, drawn on a fixed schedule (see step), so all players in the same
 // season week face the same dice at the same sim time: upsets, sheet breaks, hayouts, weather, truck timing
-function seedRun(seed){S.seed=seed>>>0;const k=S.seed;S.rng={plan:k^0x9e3779b9,card:k^0x85ebca6b,up:k^0x27d4eb2f,upx:k^0x165667b1,
+function seedRun(seed){S.seed=seed>>>0;const k=S.seed;S.bn=bnFor(S.seed);S.rng={plan:k^0x9e3779b9,card:k^0x85ebca6b,up:k^0x27d4eb2f,upx:k^0x165667b1,
     brk:k^0xd3a2646c,brkx:k^0xfd7046c5,hay:k^0xb55a4f09,wx:k^0x7feb352d,flow:k^0x846ca68b};
   C.grade="23m";const c=GCOST["23m"];
   S.plan={i:0,q:[],cur:null,left:c.mix[0]+rand("plan")*(c.mix[1]-c.mix[0]),mkt:0,mktLeft:7*1440,disc:null,hot:null};
-  S.cards={next:1440*(1+0.5*rand("card")),open:null,pend:[],seen:{}};applyGrade();}
+  S.cards={next:1440*(1+0.5*rand("card")),open:null,pend:[],seen:{}};applyUpgrades();}
 function setGrade(to){const from=C.grade;if(to===from)return;
   const off=4+2*Math.abs(GRADES[to].bw-GRADES[from].bw);S.chg={left:off,total:off,from,to};C.grade=to;applyUpgrades();
   log(`Grade change ${from} → ${to} (market orders): about ${off.toFixed(0)} t to the beater during the transition`,"warn");}
@@ -119,7 +119,7 @@ function autoControl(dt){
   const pmWants = (S.pm==="full"||S.pm==="incident"||S.pm==="spools")?0:P.K*C.pmSp.v*g.bw/P.pmLoss;
   if(C.pulper.auto){
     const fiber=pmWants+(C.lvlTarget.v-level)/100*P.tankCap/1.5;
-    C.pulper.v=ease(C.pulper.v,clamp(fiber/P.yieldF,0,P.pulperMax),dt,4);
+    C.pulper.v=ease(C.pulper.v,clamp(fiber/P.yieldF,0,Math.min(P.pulperMax,P.screenMax/P.yieldF)),dt,4);
   }
   if(C.inRate.auto){
     const queuePenalty=S.inQ.length*0.015;
