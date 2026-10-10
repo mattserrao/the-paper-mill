@@ -60,3 +60,9 @@ v9 checks on the shipped file: quick test, `?autotest&quick` (headless), smoke, 
 unchanged (738,351 bytes, v4.0.1).
 
 **Next:** draws with every upset active (246 → 496), then the shadow pass and shader programs.
+
+## Release v4.0.2 (2026-10-10)
+
+Live at the root (merge cebb966): v9's canvas labels plus the v10 economy, with test features off (`TURBO=false`,
+speed max 120; autotest only behind `?autotest`). Checksum `810f617a`; smoke, determinism, id check, no-3D screen
+pass. Device run still pending.

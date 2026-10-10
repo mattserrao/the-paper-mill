@@ -49,3 +49,8 @@ No condition had a bankruptcy. Worst single season in condition 3: finish −$65
 Version tag `v4.0.1-eb`. `econ.py` on the built file reproduces condition 3 exactly (+$121,455 on the 5 base seeds).
 New sim checksum **`810f617a`** (changed on purpose: cash is part of it). Smoke, determinism and id check pass.
 Device autotest: `…/test/v10_econ_bal/?autotest&quick&expect=810f617a`.
+
+## Released in v4.0.2 (2026-10-10)
+
+Condition 3 is live in v4.0.2 (merge cebb966). Turbo speeds are off in the release. `econ.py` on the released file:
++$121,455 on the 5 base seeds, as tested.
