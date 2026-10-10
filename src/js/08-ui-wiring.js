@@ -36,7 +36,7 @@ const firstGesture=()=>{GESTURES.forEach(t=>window.removeEventListener(t,firstGe
 GESTURES.forEach(t=>window.addEventListener(t,firstGesture,{capture:true,passive:true}));
 paintSound();
 const PAPER={brown:"#b98d61",white:"#fbfbfd"};
-function setPaper(c){if(!PAPER[c])c="brown";document.documentElement.style.setProperty("--paperc",PAPER[c]);
+function setPaper(c){if(!PAPER[c])c="brown";document.documentElement.style.setProperty("--paperc",PAPER[c]);PAL_V++;
   document.querySelectorAll("#paperColor button").forEach(b=>b.setAttribute("aria-pressed",String(b.dataset.c===c)));try{localStorage.setItem("paper-mill-paper",c);}catch(e){}}
 document.querySelectorAll("#paperColor button").forEach(b=>b.addEventListener("click",()=>setPaper(b.dataset.c)));
 {let pc="brown";try{pc=localStorage.getItem("paper-mill-paper")||"brown";}catch(e){}setPaper(pc);}

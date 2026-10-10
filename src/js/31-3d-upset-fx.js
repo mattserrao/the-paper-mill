@@ -69,7 +69,7 @@
       const P=b.pos.array,Sc=b.scl.array,Co=b.col.array,A=b.alp.array,R=b.rot.array;
       for(let i=0;i<n;i++){const p=L[i];P[i*3]=p.x;P[i*3+1]=p.y;P[i*3+2]=p.z;Sc[i*2]=p.s1;Sc[i*2+1]=p.s1*(p.t.tall||1);
         Co[i*3]=p.r;Co[i*3+1]=p.g;Co[i*3+2]=p.b;A[i]=p.a;R[i]=p.rot;}
-      b.g.instanceCount=n;b.mesh.visible=n>0&&!(G3.EXP&&G3.EXP.noParts);
+      b.g.instanceCount=n;b.mesh.visible=n>0&&!(G3.EXP&&(G3.EXP.noParts||G3.EXP.hidePB===b));
       if(n){[b.pos,b.scl,b.col,b.alp,b.rot].forEach(x=>{x.clearUpdateRanges();x.addUpdateRange(0,n*x.itemSize);x.needsUpdate=true;});}});}
   const R=()=>Math.random()-0.5;
   // big fires: dense flames, a white-hot core, embers, and a flickering orange light that washes over the scene
@@ -121,7 +121,7 @@
     badocc:[-17,10,-11,"!"],balefire:[-25,11,-12,"fire"],fleet:[-29,10,-16,"!"],calloff:[-36,10,23,"!"],fight:[-38,7,-21,"!"],roof:[-32,10,24,"water"],highway:[-72,7,4,"!"],
     lightning:[34.5,16,-15,"bolt"],tornado:[0,26,0,"!"],beaver:[-24,12,-12.5,"!"]};
   function fxPerson(group,m,x,z){const w=worker(m,M.warn);w.position.set(x,0,z);group.add(w);return w;}
-  const FX={};
+  const FX={};G3.FX=FX;G3.PB=PB;G3.PT=PT;   // (read by the autotest's GPU probe)
   // wire / felt run-off: the loop runs off the tending side into a heap in the aisle, the section sits bare,
   // the crew carry a new one out in its long shipping crate and pull it on from the front, and the heap is cleared
   const JOBS={},CLOTH_TUBE=new StdMat({color:lin0("#d8c49b"),roughness:0.85});
@@ -325,27 +325,51 @@
         // with/without a texture), so a new batch made mid-play never compiles a shader
         const tex=TX.puff,stand=[];for(const side of [THREE.FrontSide,THREE.DoubleSide])for(const map of [null,tex]){
           const g=new THREE.BoxGeometry(0.01,0.01,0.01),bm=new THREE.BatchedMesh(1,g.attributes.position.count,g.index.count,new THREE.MeshLambertMaterial({side,map}));
-          bm.addInstance(bm.addGeometry(g));bm.castShadow=true;bm.frustumCulled=false;bm.position.set(0,-50,0);bm.updateMatrixWorld();scene.add(bm);stand.push([bm,g]);}
+          bm.setColorAt(bm.addInstance(bm.addGeometry(g)),new THREE.Color(1,1,1));/* per-object colors, as moving batches use */bm.perObjectFrustumCulled=false;bm.castShadow=true;bm.frustumCulled=false;bm.position.set(0,-50,0);bm.updateMatrixWorld();scene.add(bm);stand.push([bm,g]);}
+        // v4.0.1: one stand-in per look a moving batch could ever use (effects included), drawn white with a per-object color
+        // exactly as dbNew builds them, so a batch made mid-play reuses a compiled shader
+        {const seen=new Set();scene.traverse(o=>{if(o.isBatchedMesh||!dbOK(o))return;const k=dbKey(o);if(seen.has(k))return;seen.add(k);
+          const g=o.geometry,c=o.material.clone();c.color.setRGB(1,1,1);
+          const bm=new THREE.BatchedMesh(1,g.attributes.position.count,Math.max(g.index?g.index.count:0,1),c);bm.setColorAt(bm.addInstance(bm.addGeometry(g)),o.material.color);
+          bm.perObjectFrustumCulled=false;bm.sortObjects=false;bm.frustumCulled=false;bm.castShadow=o.castShadow;bm.receiveShadow=o.receiveShadow;scene.add(bm);stand.push([bm,null]);});}
+        // ...one per material in the scene that a moving batch could use (objects made or freed later reuse these)...
+        {const mats=new Map();scene.traverse(o=>{if(!o.isMesh||o.isBatchedMesh||o.isInstancedMesh||Array.isArray(o.material))return;const m=o.material;
+            if(!m||!DBOK.has(m.type)||m.transparent||m.opacity<1)return;const k=mats.get(m)||0;mats.set(m,k|(o.receiveShadow?2:1));});
+          const g=new THREE.BoxGeometry(0.01,0.01,0.01);
+          mats.forEach((fl,m)=>{for(const recv of [false,true]){if(!(fl&(recv?2:1)))continue;const c=m.clone();c.color.setRGB(1,1,1);
+            const bm=new THREE.BatchedMesh(1,g.attributes.position.count,g.index.count,c);bm.setColorAt(bm.addInstance(bm.addGeometry(g)),m.color);
+            bm.perObjectFrustumCulled=false;bm.frustumCulled=false;bm.castShadow=true;bm.receiveShadow=recv;scene.add(bm);stand.push([bm,null]);}});
+          stand.push([{material:null,dispose(){}},g]);}
+        // ...and a per-object-color twin of every static scenery batch's material: a look first drawn in the scenery can
+        // later turn up on moving things, and their batch then needs the color variant of the same shader
+        for(const sb of SM.bms){const g=new THREE.BoxGeometry(0.01,0.01,0.01),c=sb.material.clone();c.color.setRGB(1,1,1);
+          const bm=new THREE.BatchedMesh(1,g.attributes.position.count,g.index.count,c);bm.setColorAt(bm.addInstance(bm.addGeometry(g)),new THREE.Color(1,1,1));
+          bm.perObjectFrustumCulled=false;bm.frustumCulled=false;bm.castShadow=sb.castShadow;bm.receiveShadow=sb.receiveShadow;scene.add(bm);stand.push([bm,g]);}
         for(const id in FX){if(!FX[id].g.visible){FX[id].g.visible=true;shown.push(FX[id].g);}}
         if(G3.dbTick)G3.dbTick();renderer.shadowMap.needsUpdate=true;renderer.setRenderTarget(rt);renderer.render(scene,camera);
         renderer.setRenderTarget(null);shown.forEach(g=>g.visible=false);rt.dispose();renderer.shadowMap.needsUpdate=true;
-        stand.forEach(([bm,g])=>{scene.remove(bm);bm.dispose();g.dispose();bm.material.dispose();});}catch(e){console.error("warm render failed",e);}
+        // v4.0.1: the stand-ins' materials are kept, not disposed: three.js deletes a shader program once no material uses it,
+        // which threw away every shader compiled only for a stand-in
+        G3.keepMats=stand.map(([bm])=>bm.material).filter(Boolean);stand.forEach(([bm,g])=>{if(bm.isObject3D)scene.remove(bm);bm.dispose();if(g)g.dispose();});}catch(e){console.error("warm render failed",e);}
       try{renderer.compileAsync(scene,camera).then(done,done);}catch(e){done();}};
     requestAnimationFrame(stepW);}));
   function fxUpdate(rdt,now){
-    for(const id in FX){FX[id].g.visible=false;FX[id].el.hidden=true;}
+    for(const id in FX){FX[id].g.visible=false;FX[id].on=false;}   // v4.0.1: labels are hidden after the loop, and only if shown
     [wireLoop,...feltMeshes].forEach(m=>{m.scale.z=1;m.visible=true;});clothTick(now,rdt);
-    const doTxt=now-lastIncTxt>200;if(doTxt)lastIncTxt=now;const w=host.clientWidth,hh=host.clientHeight;
+    const doTxt=now-lastIncTxt>200;if(doTxt)lastIncTxt=now;const w=G3.vw||host.clientWidth,hh=G3.vh||host.clientHeight;
     S.inc.forEach((inc,i)=>{let f=FX[inc.id];
       if(!f)f=makeFX(inc.id);
-      f.g.visible=true;f.up(now,rdt,inc);if(f.pinPos)f.pin.move(f.pinPos[0],f.pinPos[1]);f.pin.update(now);
+      if(G3.EXP&&G3.EXP.hideFX===inc.id){f.g.visible=false;return;}   // autotest GPU probe: this effect off (no drawing, no new particles)
+      f.g.visible=true;f.on=true;f.up(now,rdt,inc);if(f.pinPos)f.pin.move(f.pinPos[0],f.pinPos[1]);f.pin.update(now);
       {const zp=!G3.zen;f.pin.p.visible=f.pin.ring.visible=f.pin.stem.visible=zp;}   // v3.0.1: zen mode shows events without the red pins
-      tmp.set(f.pin.x,f.pin.p.position.y+3.4,f.pin.z).project(camera);const vis=!G3.zen&&tmp.z<1&&Math.abs(tmp.x)<1.1&&Math.abs(tmp.y)<1.1;f.el.hidden=!vis;
-      if(vis){f.el.style.transform=`translate(${(tmp.x+1)/2*w}px,${(1-tmp.y)/2*hh}px) translate(-50%,-100%)`;
-        if(doTxt){f.el.firstChild.textContent=EV[inc.id].name;f.el.lastChild.textContent=`${incState(inc)?incState(inc)+" · ":""}${(inc.left/60).toFixed(1)} h left${inc.note?" · "+inc.note.split(" · ")[0]:""}`;}}});
+      tmp.set(f.pin.x,f.pin.p.position.y+3.4,f.pin.z).project(camera);const vis=!G3.zen&&tmp.z<1&&Math.abs(tmp.x)<1.1&&Math.abs(tmp.y)<1.1;if(f.el.hidden!==!vis)f.el.hidden=!vis;
+      if(vis){const tf=`translate(${Math.round((tmp.x+1)/2*w)}px,${Math.round((1-tmp.y)/2*hh)}px) translate(-50%,-100%)`;if(f.tf!==tf){f.tf=tf;f.el.style.transform=tf;}
+        if(doTxt){const a=EV[inc.id].name,b=`${incState(inc)?incState(inc)+" · ":""}${(inc.left/60).toFixed(1)} h left${inc.note?" · "+inc.note.split(" · ")[0]:""}`;
+          if(f.ta!==a){f.ta=a;f.el.firstChild.textContent=a;}if(f.tb!==b){f.tb=b;f.el.lastChild.textContent=b;}}}});
+    for(const id in FX){const f=FX[id];if(!f.on&&!f.el.hidden)f.el.hidden=true;}
     stepParts(rdt);fireLight.position.copy(fireLpos);fireFloorK=Math.max(0,fireFloorK-rdt*1.5);
     {const fl=0.9*Math.sin(performance.now()/60)+0.6*Math.sin(performance.now()/23),on=fireFloor.userData.on||0;fireLight.intensity=fireL>0?LEG*0.75*fireL*(3.4+fl+fireFloorK*3):0;
       fireFloor.visible=on>0;if(on>0){if(!fireFloor.material.map){fireFloor.material.map=spriteTex((x,w)=>{const g=x.createRadialGradient(w/2,w/2,0,w/2,w/2,w/2);g.addColorStop(0,"rgba(255,255,255,1)");g.addColorStop(0.4,"rgba(255,255,255,0.6)");g.addColorStop(1,"rgba(255,255,255,0)");x.fillStyle=g;x.fillRect(0,0,w,w);});fireFloor.material.needsUpdate=true;}fireFloor.material.opacity=Math.min(1,on*(0.42+0.1*fl+fireFloorK*0.25));}fireFloor.userData.on=0;}fireL=0;
-    const out=S.inc.some(i=>i.id==="lightning");blackEl.hidden=!out;if(!out)$("flash3d").style.opacity=0;
+    const out=S.inc.some(i=>i.id==="lightning");if(blackEl.hidden!==!out)blackEl.hidden=!out;if(!out){const fl=$("flash3d");if(fl.style.opacity!=="0")fl.style.opacity=0;}
   }
 

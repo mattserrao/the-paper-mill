@@ -1,5 +1,47 @@
 # Changelog
 
+## v4.0.1 (2026-10-09)
+
+Performance follow-up to v4.0.0, measured on an iPhone 15 (iOS 18.7, Safari) with the new device autotest across eight
+test builds. Gameplay and the simulation are unchanged (same seeded 3-day checksum, `96960821`).
+
+| Measure, iPhone 15 | v4.0.0 | v4.0.1 | Change |
+|---|---|---|---|
+| Draw calls per frame, normal play (all passes) | 348 | 300 | −14% |
+| Game script time per frame, normal play | 3.4 ms | 3.1 ms | −9% |
+| Worst frame, normal play | 43 ms | 19 ms | −56% |
+| Frames over 33 ms, normal play | 1 | 0 | |
+| Draw calls per frame, all upsets at once | 664 | 565 | −15% |
+| Longest script frame from walker route planning (all upsets) | 18 ms | ≤0.05 ms per frame | |
+| Page style/attribute writes per second, upsets (emulator) | 326 | 77 | −76% |
+
+### Performance
+- Upset labels, chips and banner write to the page only when their text or position changes.
+- Moving objects are cut out of the merged shadow proxy in place instead of rebuilding it.
+- Moving objects of the same shape share one batch whatever their color (per-object color), so far fewer batches.
+- Start-up stand-in shaders are kept, and batches made mid-play compile in the background.
+- New moving batches are made one per frame instead of all in the same frame.
+- Walker route planning is about twice as fast and runs in ~2 ms slices per frame, so long routes no longer stall a
+  frame. Routes are identical.
+- Palette colors are re-read only when the palette changes.
+
+### Controls
+- New **Show FPS** checkbox: a small frame-rate readout in the bottom-right corner, above the bottom bar (hidden
+  while a panel is open). Remembered between visits; off by default.
+
+### Fixes
+- Scenery no longer fails to load ("scenery baking failed: console.info is not a function") in browsers or in-app
+  viewers with a partial console.
+
+### Testing
+- Device autotest: open the game with `?autotest` for a hands-free performance test (normal play, three diagnostic
+  phases, all upsets at once with and without HTML labels, GPU probe of each upset effect) and a sim checksum,
+  ending on a results page with a Copy results button. Normal play is unchanged.
+
+### Known issue
+- With every upset active at once, the moving HTML upset labels can drop the iPhone to ~43–51 FPS on some runs (the
+  same scene with labels hidden holds 60 FPS). Normal play is unaffected.
+
 ## v4.0.0 (2026-10-09)
 
 ### Graphics demand: an estimated ~70% reduction versus v3.3.4

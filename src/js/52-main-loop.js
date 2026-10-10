@@ -2,6 +2,16 @@
 let FRAME_CAP=0;try{if(localStorage.getItem("paper-mill-fps")==="saver")FRAME_CAP=30;}catch(e){}G3.cap=FRAME_CAP;
 function setFpsMode(smooth){FRAME_CAP=smooth?0:30;G3.cap=FRAME_CAP;try{localStorage.setItem("paper-mill-fps",smooth?"smooth":"saver");}catch(e){}document.querySelectorAll("#fpsSeg button").forEach(b=>b.setAttribute("aria-pressed",String((b.dataset.fps==="smooth")===smooth)));diag("frame rate: "+(smooth?"smooth 60":"battery saver 30"));}
 let last=performance.now(),uiAcc=0,uiN=0,lastPaint=0;
+/* v4.0.1: optional FPS readout (Controls > Show FPS), bottom-right; counts drawn loop frames, text written twice a second */
+const FPSM={on:false,el:null,n:0,t0:0,txt:""};
+function setShowFps(on){FPSM.on=!!on;try{localStorage.setItem("paper-mill-showfps",on?"1":"0");}catch(e){}
+  if(on&&!FPSM.el){const d=document.createElement("div");d.id="fpsMeter";d.setAttribute("aria-live","off");document.body.appendChild(d);FPSM.el=d;}
+  if(FPSM.el){FPSM.el.hidden=!on;FPSM.n=0;FPSM.t0=0;FPSM.txt="";FPSM.el.textContent="– FPS";if(on)fpsPlace();}
+  const cb=document.getElementById("showFps");if(cb)cb.checked=FPSM.on;}
+// sit just above the bottom dock (Go-to chips + tabs) so it never covers a button
+function fpsPlace(){const d=document.getElementById("v2dock");let b=8;
+  if(d&&!d.hidden){const r=d.getBoundingClientRect();if(r.height&&r.top<innerHeight)b=Math.max(8,Math.round(innerHeight-r.top+6));}
+  if(b!==FPSM.b){FPSM.b=b;FPSM.el.style.bottom=b+"px";}}
 /* frame-time record (v4): every drawn frame's interval while the game runs, for Controls > Diagnostics and the 15 s
    snapshot. A 600-frame window (~10 s at 60 FPS) plus totals since play started. Paused time isn't counted. */
 const FT={win:new Float32Array(600),n:0,i:0,total:0,over33:0,over50:0,worst:0,since:0,
@@ -18,6 +28,8 @@ function frame(now){
   if(BANNERS.length){const b=BANNERS[0];if(b.t===null)b.t=now;if(now-b.t>5000)BANNERS.shift();}
   const cap=G3.capOff?0:FRAME_CAP;
   if(cap&&now-last<1000/cap-3){requestAnimationFrame(frame);return;}
+  if(FPSM.on){FPSM.n++;if(!FPSM.t0)FPSM.t0=now;else if(now-FPSM.t0>=500){const f=Math.round(FPSM.n*1000/(now-FPSM.t0)),t=(document.hidden?"–":f)+" FPS";
+    if(t!==FPSM.txt){FPSM.txt=t;FPSM.el.textContent=t;}FPSM.n=0;FPSM.t0=now;fpsPlace();}}
   frame.n=(frame.n||0)+1;const PFo=G3.PF,fT0=performance.now();if(PFo&&PFo.on){PFo.gaps.push(now-(PFo.lastNow||now));PFo.lastNow=now;}
   {if(running&&!document.hidden){if(!ftRun){ftRun=true;if(!FT.since)FT.reset();}else if(ftLast)FT.add(now-ftLast);ftLast=now;}else{ftRun=false;ftLast=0;}}
   const rdt=Math.max(0,Math.min(0.1,(now-last)/1000));last=now;

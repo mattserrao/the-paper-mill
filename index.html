@@ -453,6 +453,10 @@ body.season-lock label.check:has(#breaks),body.season-lock label.check:has(#hays
 #outOv.note .modal{pointer-events:auto;cursor:pointer;box-shadow:0 18px 50px rgba(28,34,51,.28)}
 .dtimer{flex:1;height:4px;border-radius:2px;background:var(--line);overflow:hidden}.dtimer i{display:block;height:100%;width:100%;background:var(--brand);transform-origin:left;animation:dtim 2s linear forwards}
 @keyframes dtim{to{transform:scaleX(0)}}
+
+/* v4.0.1 FPS readout (Controls > Show FPS) */
+#fpsMeter{position:fixed;right:calc(8px + env(safe-area-inset-right));bottom:8px;z-index:390;pointer-events:none;padding:3px 7px;border-radius:6px;background:rgba(0,0,0,.6);color:#fff;font:600 12px/1.2 ui-monospace,SFMono-Regular,Menlo,monospace;font-variant-numeric:tabular-nums;contain:strict;width:62px;height:21px;text-align:center;box-sizing:border-box}
+#fpsMeter[hidden],body.sheet-open #fpsMeter{display:none}
 </style>
 </head>
 <body class="app">
@@ -616,13 +620,16 @@ body.season-lock label.check:has(#breaks),body.season-lock label.check:has(#hays
 <div class="btns"><button class="primary" id="no3d-retry">Try again</button></div></div></div>
 
 <script type="module">
-const APP_VER="v4.0.0";   // shown in the menu and sent with leaderboard scores (max 12 characters)
+const APP_VER="v4.0.1";   // shown in the menu and sent with leaderboard scores (max 12 characters)
 /* v2.9.9 diagnostics: a rolling log of errors, warnings (incl. three.js shader / WebGL context messages), audio state changes
    and a stats snapshot every 15 s, shown from Controls > Diagnostics with a Copy button */
 const DIAG=[],DIAG_T0=performance.now();
 function diag(m){try{DIAG.push(((performance.now()-DIAG_T0)/1000).toFixed(1)+"s "+String(m).slice(0,400));if(DIAG.length>150)DIAG.shift();}catch(e){}}
 window.addEventListener("error",e=>diag("ERROR "+(e.message||e)+(e.lineno?" @"+e.lineno+":"+e.colno:"")));
 window.addEventListener("unhandledrejection",e=>diag("REJECT "+((e.reason&&e.reason.message)||e.reason)));
+/* some embedded viewers (in-app HTML previews) ship a partial console: fill any missing method so logging can't stop the game */
+(()=>{const C=(typeof console==="object"&&console)?console:(window.console={}),nop=()=>{},base=typeof C.log==="function"?C.log.bind(C):nop;
+  if(typeof C.log!=="function")C.log=nop;["info","warn","error","debug","table","group","groupCollapsed","groupEnd","time","timeEnd"].forEach(k=>{if(typeof C[k]!=="function")C[k]=base;});})();
 ["error","warn"].forEach(k=>{const f=console[k].bind(console);console[k]=(...a)=>{diag(k.toUpperCase()+" "+a.map(x=>x&&x.stack?x.message+" | "+String(x.stack).split("\n").slice(0,3).join(" < "):String(x)).join(" "));f(...a);};});
 document.addEventListener("visibilitychange",()=>diag("page "+(document.hidden?"hidden":"visible")));
 // three.js r186, loaded as an ES module. jsDelivr serves a pre-bundled minified build; unpkg is the fallback.
@@ -642,9 +649,12 @@ const BRANDS=["#2f5bea","#0c8f7f","#d6336c","#6741d9","#e8590c","#1971c2","#2f9e
 const NAME_A=["Pulp Fiction","Reel Deal","Big Roll Energy","Ream Team","Corrugation Station","Fourdrinier Fiesta","Kraft Punk","Felt Cute","Nip & Tuck","Caliper Crew","Broke & Proud","Basis Weight Watchers","Fiber Optimist","Paper Trail","Dryer Can-Do","Hayout Heights","Couch Roll Potato","Wet End Wonders","Slitter Glitter","Headbox Heroes","Pulp Friction","Lignin Lounge","Starch Madness","Bale Out","Flute Loop","Tissue Issues","Sheet Show","Fluffy Fiber","Paper Jam","Roll Model","Box Office","Cellulose Encounters","Pulpit Rock","Tear Strength","Doctor Blade","Rewind Time","Ply Me to the Moon","Grain Direction","Fold Standard","Reel Housewives"];
 const NAME_B=["Paper Co.","Mills","Paperworks","Board Mill","Containerboard","Fibre Inc.","Pulp & Paper","Paper Products","Mill Works","Corrugated Co."];
 const MILL={brand:"",name:""};
+// v4.0.1: bumped whenever a palette color variable changes (brand here, paper color in setPaper), so the 3D view
+// re-reads the colors only then: reading computed styles forces a full style recalculation mid-frame
+let PAL_V=0;
 function rollMill(){let b;do{b=BRANDS[Math.floor(Math.random()*BRANDS.length)];}while(b===MILL.brand);
   MILL.brand=b;MILL.name=NAME_A[Math.floor(Math.random()*NAME_A.length)]+" "+NAME_B[Math.floor(Math.random()*NAME_B.length)];
-  document.documentElement.style.setProperty("--brand",b);
+  document.documentElement.style.setProperty("--brand",b);PAL_V++;
 }
 rollMill();
 // rename from the menu: trims, caps at 32 characters, repaints the mill's signs
@@ -1752,7 +1762,7 @@ const firstGesture=()=>{GESTURES.forEach(t=>window.removeEventListener(t,firstGe
 GESTURES.forEach(t=>window.addEventListener(t,firstGesture,{capture:true,passive:true}));
 paintSound();
 const PAPER={brown:"#b98d61",white:"#fbfbfd"};
-function setPaper(c){if(!PAPER[c])c="brown";document.documentElement.style.setProperty("--paperc",PAPER[c]);
+function setPaper(c){if(!PAPER[c])c="brown";document.documentElement.style.setProperty("--paperc",PAPER[c]);PAL_V++;
   document.querySelectorAll("#paperColor button").forEach(b=>b.setAttribute("aria-pressed",String(b.dataset.c===c)));try{localStorage.setItem("paper-mill-paper",c);}catch(e){}}
 document.querySelectorAll("#paperColor button").forEach(b=>b.addEventListener("click",()=>setPaper(b.dataset.c)));
 {let pc="brown";try{pc=localStorage.getItem("paper-mill-paper")||"brown";}catch(e){}setPaper(pc);}
@@ -2141,7 +2151,8 @@ function no3D(){G3.ok=false;$("no3d").hidden=false;$("no3d-retry").onclick=()=>l
   function tok(name){return getComputedStyle(document.documentElement).getPropertyValue("--"+name).trim()||"#888";}
   function mat(token,opts={}){const m=new StdMat(Object.assign({roughness:0.72,metalness:0.04,flatShading:false},opts));m.userData.token=token;MATS.push(m);return m;}
   let paletteKey="",skyHex="#b3bbcb";
-  function applyPalette(){
+  let palV=-1;
+  function applyPalette(){if(palV===PAL_V)return;palV=PAL_V;   // only after rollMill or setPaper (see PAL_V)
     const key=["g-sky","g-ground","bg","ink","brand","paperc"].map(tok).join();
     if(key===paletteKey)return;paletteKey=key;skyHex=tok("g-sky");
     MATS.forEach(m=>m.color.set(tok(m.userData.token)).convertSRGBToLinear());
@@ -3507,7 +3518,7 @@ function no3D(){G3.ok=false;$("no3d").hidden=false;$("no3d-retry").onclick=()=>l
       else{const g=R.g.position;target.x+=(g.x-target.x)*0.1;target.z+=(g.z-target.z)*0.1;cam.r+=(FOL.r-cam.r)*0.08;if(FOL.n++<90)cam.ph+=(0.62-cam.ph)*0.06;G3.lastMove=performance.now();}}
     if(goal){G3.lastMove=performance.now();target.lerp(goal.t,0.12);cam.r+=(goal.r-cam.r)*0.12;cam.th=lerpAng(cam.th,goal.th,0.12);cam.ph+=(goal.ph-cam.ph)*0.12;
       goal.n=(goal.n||0)+1;if(goal.n>150||target.distanceTo(goal.t)<0.2&&Math.abs(goal.r-cam.r)<0.5)goal=null;}
-    const rr=cam.r*(host.clientWidth<600?1.35:1);
+    const rr=cam.r*((G3.vw||host.clientWidth)<600?1.35:1);
     camera.position.set(target.x+rr*Math.sin(cam.ph)*Math.sin(cam.th),target.y+rr*Math.cos(cam.ph),target.z+rr*Math.sin(cam.ph)*Math.cos(cam.th));camera.lookAt(target);}
   const ptrs=new Map();let pinch0=0,r0=0,mid0=null,panBtn=false;
   const mid=()=>{const [a,b]=[...ptrs.values()];return {x:(a.x+b.x)/2,y:(a.y+b.y)/2,d:Math.hypot(a.x-b.x,a.y-b.y)};};
@@ -3558,7 +3569,8 @@ function no3D(){G3.ok=false;$("no3d").hidden=false;$("no3d-retry").onclick=()=>l
   $("viewShadows").addEventListener("change",e=>{renderer.shadowMap.enabled=e.target.checked;renderer.shadowMap.needsUpdate=true;MATS.forEach(m=>m.needsUpdate=true);});
   if(mobile){sun.shadow.mapSize.set(1024,1024);}
 
-  function resize(){G3.lastMove=performance.now();const w=host.clientWidth,h=host.clientHeight;host.classList.toggle("compact",w<640);if(!w||!h)return;renderer.setSize(w,h,false);camera.aspect=w/h;camera.updateProjectionMatrix();}
+  function resize(){G3.lastMove=performance.now();const w=host.clientWidth,h=host.clientHeight;G3.vw=w;G3.vh=h;   // v4.0.1: cached for the label code
+  host.classList.toggle("compact",w<640);if(!w||!h)return;renderer.setSize(w,h,false);camera.aspect=w/h;camera.updateProjectionMatrix();}
   new ResizeObserver(resize).observe(host);
 
   /* ---- per-frame update from sim state ---- */
@@ -3674,7 +3686,7 @@ function no3D(){G3.ok=false;$("no3d").hidden=false;$("no3d-retry").onclick=()=>l
       const P=b.pos.array,Sc=b.scl.array,Co=b.col.array,A=b.alp.array,R=b.rot.array;
       for(let i=0;i<n;i++){const p=L[i];P[i*3]=p.x;P[i*3+1]=p.y;P[i*3+2]=p.z;Sc[i*2]=p.s1;Sc[i*2+1]=p.s1*(p.t.tall||1);
         Co[i*3]=p.r;Co[i*3+1]=p.g;Co[i*3+2]=p.b;A[i]=p.a;R[i]=p.rot;}
-      b.g.instanceCount=n;b.mesh.visible=n>0&&!(G3.EXP&&G3.EXP.noParts);
+      b.g.instanceCount=n;b.mesh.visible=n>0&&!(G3.EXP&&(G3.EXP.noParts||G3.EXP.hidePB===b));
       if(n){[b.pos,b.scl,b.col,b.alp,b.rot].forEach(x=>{x.clearUpdateRanges();x.addUpdateRange(0,n*x.itemSize);x.needsUpdate=true;});}});}
   const R=()=>Math.random()-0.5;
   // big fires: dense flames, a white-hot core, embers, and a flickering orange light that washes over the scene
@@ -3726,7 +3738,7 @@ function no3D(){G3.ok=false;$("no3d").hidden=false;$("no3d-retry").onclick=()=>l
     badocc:[-17,10,-11,"!"],balefire:[-25,11,-12,"fire"],fleet:[-29,10,-16,"!"],calloff:[-36,10,23,"!"],fight:[-38,7,-21,"!"],roof:[-32,10,24,"water"],highway:[-72,7,4,"!"],
     lightning:[34.5,16,-15,"bolt"],tornado:[0,26,0,"!"],beaver:[-24,12,-12.5,"!"]};
   function fxPerson(group,m,x,z){const w=worker(m,M.warn);w.position.set(x,0,z);group.add(w);return w;}
-  const FX={};
+  const FX={};G3.FX=FX;G3.PB=PB;G3.PT=PT;   // (read by the autotest's GPU probe)
   // wire / felt run-off: the loop runs off the tending side into a heap in the aisle, the section sits bare,
   // the crew carry a new one out in its long shipping crate and pull it on from the front, and the heap is cleared
   const JOBS={},CLOTH_TUBE=new StdMat({color:lin0("#d8c49b"),roughness:0.85});
@@ -3930,28 +3942,52 @@ function no3D(){G3.ok=false;$("no3d").hidden=false;$("no3d-retry").onclick=()=>l
         // with/without a texture), so a new batch made mid-play never compiles a shader
         const tex=TX.puff,stand=[];for(const side of [THREE.FrontSide,THREE.DoubleSide])for(const map of [null,tex]){
           const g=new THREE.BoxGeometry(0.01,0.01,0.01),bm=new THREE.BatchedMesh(1,g.attributes.position.count,g.index.count,new THREE.MeshLambertMaterial({side,map}));
-          bm.addInstance(bm.addGeometry(g));bm.castShadow=true;bm.frustumCulled=false;bm.position.set(0,-50,0);bm.updateMatrixWorld();scene.add(bm);stand.push([bm,g]);}
+          bm.setColorAt(bm.addInstance(bm.addGeometry(g)),new THREE.Color(1,1,1));/* per-object colors, as moving batches use */bm.perObjectFrustumCulled=false;bm.castShadow=true;bm.frustumCulled=false;bm.position.set(0,-50,0);bm.updateMatrixWorld();scene.add(bm);stand.push([bm,g]);}
+        // v4.0.1: one stand-in per look a moving batch could ever use (effects included), drawn white with a per-object color
+        // exactly as dbNew builds them, so a batch made mid-play reuses a compiled shader
+        {const seen=new Set();scene.traverse(o=>{if(o.isBatchedMesh||!dbOK(o))return;const k=dbKey(o);if(seen.has(k))return;seen.add(k);
+          const g=o.geometry,c=o.material.clone();c.color.setRGB(1,1,1);
+          const bm=new THREE.BatchedMesh(1,g.attributes.position.count,Math.max(g.index?g.index.count:0,1),c);bm.setColorAt(bm.addInstance(bm.addGeometry(g)),o.material.color);
+          bm.perObjectFrustumCulled=false;bm.sortObjects=false;bm.frustumCulled=false;bm.castShadow=o.castShadow;bm.receiveShadow=o.receiveShadow;scene.add(bm);stand.push([bm,null]);});}
+        // ...one per material in the scene that a moving batch could use (objects made or freed later reuse these)...
+        {const mats=new Map();scene.traverse(o=>{if(!o.isMesh||o.isBatchedMesh||o.isInstancedMesh||Array.isArray(o.material))return;const m=o.material;
+            if(!m||!DBOK.has(m.type)||m.transparent||m.opacity<1)return;const k=mats.get(m)||0;mats.set(m,k|(o.receiveShadow?2:1));});
+          const g=new THREE.BoxGeometry(0.01,0.01,0.01);
+          mats.forEach((fl,m)=>{for(const recv of [false,true]){if(!(fl&(recv?2:1)))continue;const c=m.clone();c.color.setRGB(1,1,1);
+            const bm=new THREE.BatchedMesh(1,g.attributes.position.count,g.index.count,c);bm.setColorAt(bm.addInstance(bm.addGeometry(g)),m.color);
+            bm.perObjectFrustumCulled=false;bm.frustumCulled=false;bm.castShadow=true;bm.receiveShadow=recv;scene.add(bm);stand.push([bm,null]);}});
+          stand.push([{material:null,dispose(){}},g]);}
+        // ...and a per-object-color twin of every static scenery batch's material: a look first drawn in the scenery can
+        // later turn up on moving things, and their batch then needs the color variant of the same shader
+        for(const sb of SM.bms){const g=new THREE.BoxGeometry(0.01,0.01,0.01),c=sb.material.clone();c.color.setRGB(1,1,1);
+          const bm=new THREE.BatchedMesh(1,g.attributes.position.count,g.index.count,c);bm.setColorAt(bm.addInstance(bm.addGeometry(g)),new THREE.Color(1,1,1));
+          bm.perObjectFrustumCulled=false;bm.frustumCulled=false;bm.castShadow=sb.castShadow;bm.receiveShadow=sb.receiveShadow;scene.add(bm);stand.push([bm,g]);}
         for(const id in FX){if(!FX[id].g.visible){FX[id].g.visible=true;shown.push(FX[id].g);}}
         if(G3.dbTick)G3.dbTick();renderer.shadowMap.needsUpdate=true;renderer.setRenderTarget(rt);renderer.render(scene,camera);
         renderer.setRenderTarget(null);shown.forEach(g=>g.visible=false);rt.dispose();renderer.shadowMap.needsUpdate=true;
-        stand.forEach(([bm,g])=>{scene.remove(bm);bm.dispose();g.dispose();bm.material.dispose();});}catch(e){console.error("warm render failed",e);}
+        // v4.0.1: the stand-ins' materials are kept, not disposed: three.js deletes a shader program once no material uses it,
+        // which threw away every shader compiled only for a stand-in
+        G3.keepMats=stand.map(([bm])=>bm.material).filter(Boolean);stand.forEach(([bm,g])=>{if(bm.isObject3D)scene.remove(bm);bm.dispose();if(g)g.dispose();});}catch(e){console.error("warm render failed",e);}
       try{renderer.compileAsync(scene,camera).then(done,done);}catch(e){done();}};
     requestAnimationFrame(stepW);}));
   function fxUpdate(rdt,now){
-    for(const id in FX){FX[id].g.visible=false;FX[id].el.hidden=true;}
+    for(const id in FX){FX[id].g.visible=false;FX[id].on=false;}   // v4.0.1: labels are hidden after the loop, and only if shown
     [wireLoop,...feltMeshes].forEach(m=>{m.scale.z=1;m.visible=true;});clothTick(now,rdt);
-    const doTxt=now-lastIncTxt>200;if(doTxt)lastIncTxt=now;const w=host.clientWidth,hh=host.clientHeight;
+    const doTxt=now-lastIncTxt>200;if(doTxt)lastIncTxt=now;const w=G3.vw||host.clientWidth,hh=G3.vh||host.clientHeight;
     S.inc.forEach((inc,i)=>{let f=FX[inc.id];
       if(!f)f=makeFX(inc.id);
-      f.g.visible=true;f.up(now,rdt,inc);if(f.pinPos)f.pin.move(f.pinPos[0],f.pinPos[1]);f.pin.update(now);
+      if(G3.EXP&&G3.EXP.hideFX===inc.id){f.g.visible=false;return;}   // autotest GPU probe: this effect off (no drawing, no new particles)
+      f.g.visible=true;f.on=true;f.up(now,rdt,inc);if(f.pinPos)f.pin.move(f.pinPos[0],f.pinPos[1]);f.pin.update(now);
       {const zp=!G3.zen;f.pin.p.visible=f.pin.ring.visible=f.pin.stem.visible=zp;}   // v3.0.1: zen mode shows events without the red pins
-      tmp.set(f.pin.x,f.pin.p.position.y+3.4,f.pin.z).project(camera);const vis=!G3.zen&&tmp.z<1&&Math.abs(tmp.x)<1.1&&Math.abs(tmp.y)<1.1;f.el.hidden=!vis;
-      if(vis){f.el.style.transform=`translate(${(tmp.x+1)/2*w}px,${(1-tmp.y)/2*hh}px) translate(-50%,-100%)`;
-        if(doTxt){f.el.firstChild.textContent=EV[inc.id].name;f.el.lastChild.textContent=`${incState(inc)?incState(inc)+" · ":""}${(inc.left/60).toFixed(1)} h left${inc.note?" · "+inc.note.split(" · ")[0]:""}`;}}});
+      tmp.set(f.pin.x,f.pin.p.position.y+3.4,f.pin.z).project(camera);const vis=!G3.zen&&tmp.z<1&&Math.abs(tmp.x)<1.1&&Math.abs(tmp.y)<1.1;if(f.el.hidden!==!vis)f.el.hidden=!vis;
+      if(vis){const tf=`translate(${Math.round((tmp.x+1)/2*w)}px,${Math.round((1-tmp.y)/2*hh)}px) translate(-50%,-100%)`;if(f.tf!==tf){f.tf=tf;f.el.style.transform=tf;}
+        if(doTxt){const a=EV[inc.id].name,b=`${incState(inc)?incState(inc)+" · ":""}${(inc.left/60).toFixed(1)} h left${inc.note?" · "+inc.note.split(" · ")[0]:""}`;
+          if(f.ta!==a){f.ta=a;f.el.firstChild.textContent=a;}if(f.tb!==b){f.tb=b;f.el.lastChild.textContent=b;}}}});
+    for(const id in FX){const f=FX[id];if(!f.on&&!f.el.hidden)f.el.hidden=true;}
     stepParts(rdt);fireLight.position.copy(fireLpos);fireFloorK=Math.max(0,fireFloorK-rdt*1.5);
     {const fl=0.9*Math.sin(performance.now()/60)+0.6*Math.sin(performance.now()/23),on=fireFloor.userData.on||0;fireLight.intensity=fireL>0?LEG*0.75*fireL*(3.4+fl+fireFloorK*3):0;
       fireFloor.visible=on>0;if(on>0){if(!fireFloor.material.map){fireFloor.material.map=spriteTex((x,w)=>{const g=x.createRadialGradient(w/2,w/2,0,w/2,w/2,w/2);g.addColorStop(0,"rgba(255,255,255,1)");g.addColorStop(0.4,"rgba(255,255,255,0.6)");g.addColorStop(1,"rgba(255,255,255,0)");x.fillStyle=g;x.fillRect(0,0,w,w);});fireFloor.material.needsUpdate=true;}fireFloor.material.opacity=Math.min(1,on*(0.42+0.1*fl+fireFloorK*0.25));}fireFloor.userData.on=0;}fireL=0;
-    const out=S.inc.some(i=>i.id==="lightning");blackEl.hidden=!out;if(!out)$("flash3d").style.opacity=0;
+    const out=S.inc.some(i=>i.id==="lightning");if(blackEl.hidden!==!out)blackEl.hidden=!out;if(!out){const fl=$("flash3d");if(fl.style.opacity!=="0")fl.style.opacity=0;}
   }
 
   /* ---- winder, waiting reels, roof trusses ---- */
@@ -4734,29 +4770,56 @@ function no3D(){G3.ok=false;$("no3d").hidden=false;$("no3d-retry").onclick=()=>l
   const navC=(G,p)=>[clamp(Math.floor((p[0]-G.x0)/G.cs),0,G.nx-1),clamp(Math.floor((p[1]-G.z0)/G.cs),0,G.nz-1)];
   const navFree=(G,i,j)=>i>=0&&j>=0&&i<G.nx&&j<G.nz&&!G.g[j*G.nx+i];
   function navNearest(G,c){if(navFree(G,c[0],c[1]))return c;for(let r=1;r<16;r++)for(let dj=-r;dj<=r;dj++)for(let di=-r;di<=r;di++){if(Math.max(Math.abs(di),Math.abs(dj))!==r)continue;if(navFree(G,c[0]+di,c[1]+dj))return [c[0]+di,c[1]+dj];}return null;}
-  function navLOS(G,a,b){const d=Math.hypot(b[0]-a[0],b[1]-a[1]),n=Math.ceil(d/(G.cs*0.5));for(let k=0;k<=n;k++){const c=navC(G,[a[0]+(b[0]-a[0])*k/n,a[1]+(b[1]-a[1])*k/n]);if(!navFree(G,c[0],c[1]))return false;}return true;}
-  function navPath(G,from,to,maxIt=250000){if(!G.g)navBuild(G);const s=navNearest(G,navC(G,from)),t=navNearest(G,navC(G,to));if(!s||!t)return null;
-    const N=G.nx*G.nz,gs=new Float32Array(N).fill(1e9),came=new Int32Array(N).fill(-1),closed=new Uint8Array(N),si=s[1]*G.nx+s[0],ti=t[1]*G.nx+t[0];
-    const heap=[];const push=(f,i)=>{heap.push([f,i]);let k=heap.length-1;while(k>0){const p2=(k-1)>>1;if(heap[p2][0]<=heap[k][0])break;[heap[p2],heap[k]]=[heap[k],heap[p2]];k=p2;}};
-    const pop=()=>{const top=heap[0],last=heap.pop();if(heap.length){heap[0]=last;let k=0;for(;;){const l=2*k+1,r=l+1;let m=k;if(l<heap.length&&heap[l][0]<heap[m][0])m=l;if(r<heap.length&&heap[r][0]<heap[m][0])m=r;if(m===k)break;[heap[m],heap[k]]=[heap[k],heap[m]];k=m;}}return top;};
+  // v4.0.3: same samples and arithmetic as navC/navFree, without two array allocations per sample (route smoothing
+  // calls this hundreds of times per route)
+  function navLOS(G,a,b){const ax=a[0],az=a[1],bx=b[0],bz=b[1],d=Math.hypot(bx-ax,bz-az),n=Math.ceil(d/(G.cs*0.5)),nx=G.nx,nz=G.nz,g=G.g;
+    for(let k=0;k<=n;k++){const i=clamp(Math.floor((ax+(bx-ax)*k/n-G.x0)/G.cs),0,nx-1),j=clamp(Math.floor((az+(bz-az)*k/n-G.z0)/G.cs),0,nz-1);
+      if(!(i>=0&&j>=0&&i<nx&&j<nz&&!g[j*nx+i]))return false;}return true;}
+  // v4.0.3: same A* as before (same costs, heuristic and heap order, so the same routes), without per-call garbage:
+  // the per-cell arrays are kept between calls and reset lazily with a generation stamp instead of 63k-cell fills,
+  // and the open list is a binary heap in two typed arrays instead of an array of [f, i] pairs
+  // v4.0.4: resumable: navSearch() sets up the search and step(deadline) runs it until done or until performance.now()
+  // passes the deadline, so a long route can be spread over several frames. A search owns its scratch arrays (W) until
+  // it finishes; navPath() is the run-to-completion form used everywhere else.
+  function navScratch(G,N,key){let W=G[key];if(!W||W.N!==N)W=G[key]={N,gs:new Float32Array(N),came:new Int32Array(N),closed:new Uint8Array(N),st:new Uint32Array(N),gen:0,hf:new Float64Array(4096),hi:new Int32Array(4096)};return W;}
+  function navSearch(G,from,to,maxIt,key){if(!G.g)navBuild(G);const s=navNearest(G,navC(G,from)),t=navNearest(G,navC(G,to));if(!s||!t)return {step:()=>({path:null})};
+    const N=G.nx*G.nz,W=navScratch(G,N,key||"sc");
+    const gen=W.gen=(W.gen+1)>>>0||1,gs=W.gs,came=W.came,closed=W.closed,st=W.st,si=s[1]*G.nx+s[0],ti=t[1]*G.nx+t[0];
+    const touch=i=>{if(st[i]!==gen){st[i]=gen;gs[i]=1e9;came[i]=-1;closed[i]=0;}};
+    let hf=W.hf,hi=W.hi,hn=0;
+    const push=(f,i)=>{if(hn===hf.length){const f2=new Float64Array(hn*2),i2=new Int32Array(hn*2);f2.set(hf);i2.set(hi);hf=W.hf=f2;hi=W.hi=i2;}
+      let k=hn++;hf[k]=f;hi[k]=i;while(k>0){const p2=(k-1)>>1;if(hf[p2]<=hf[k])break;const a=hf[p2],b=hi[p2];hf[p2]=hf[k];hi[p2]=hi[k];hf[k]=a;hi[k]=b;k=p2;}};
+    const pop=()=>{const top=hi[0];hn--;if(hn>0){hf[0]=hf[hn];hi[0]=hi[hn];let k=0;for(;;){const l=2*k+1,r=l+1;let m=k;if(l<hn&&hf[l]<hf[m])m=l;if(r<hn&&hf[r]<hf[m])m=r;if(m===k)break;
+        const a=hf[m],b=hi[m];hf[m]=hf[k];hi[m]=hi[k];hf[k]=a;hi[k]=b;k=m;}}return top;};
     const h=i=>{const x=i%G.nx,z=(i/G.nx)|0,dx=Math.abs(x-t[0]),dz=Math.abs(z-t[1]);return Math.max(dx,dz)+0.414*Math.min(dx,dz);};
-    gs[si]=0;push(h(si),si);let it=0;
-    while(heap.length&&it++<maxIt){const [,i]=pop();if(i===ti)break;if(closed[i])continue;closed[i]=1;const x=i%G.nx,z=(i/G.nx)|0;
-      for(let dz=-1;dz<=1;dz++)for(let dx=-1;dx<=1;dx++){if(!dx&&!dz)continue;const nx=x+dx,nz=z+dz;if(!navFree(G,nx,nz))continue;if(dx&&dz&&(!navFree(G,x+dx,z)||!navFree(G,x,z+dz)))continue;
-        const ni=nz*G.nx+nx,ng=gs[i]+(dx&&dz?1.414:1);if(ng<gs[ni]){gs[ni]=ng;came[ni]=i;push(ng+h(ni),ni);}}}
-    if(came[ti]<0&&si!==ti)return null;
-    const cells=[];for(let i=ti;i>=0;i=came[i]){cells.push([G.x0+((i%G.nx)+0.5)*G.cs,G.z0+(((i/G.nx)|0)+0.5)*G.cs]);if(i===si)break;}cells.reverse();
-    const out=[cells[0]];let k=0;while(k<cells.length-1){let j=cells.length-1;while(j>k+1&&!navLOS(G,cells[k],cells[j]))j--;out.push(cells[j]);k=j;}
-    out.push(to);return out;}
+    touch(si);touch(ti);gs[si]=0;push(h(si),si);let it=0,done=false;
+    const finish=()=>{if(came[ti]<0&&si!==ti)return null;
+      const cells=[];for(let i=ti;i>=0;i=came[i]){cells.push([G.x0+((i%G.nx)+0.5)*G.cs,G.z0+(((i/G.nx)|0)+0.5)*G.cs]);if(i===si)break;}cells.reverse();
+      const out=[cells[0]];let k=0;while(k<cells.length-1){let j=cells.length-1;while(j>k+1&&!navLOS(G,cells[k],cells[j]))j--;out.push(cells[j]);k=j;}
+      out.push(to);return out;};
+    return {step(deadline){if(done)return {path:null};
+      while(hn&&it++<maxIt){if((it&255)===0&&performance.now()>deadline){it--;return undefined;}
+        const i=pop();if(i===ti)break;if(closed[i])continue;closed[i]=1;const x=i%G.nx,z=(i/G.nx)|0;
+        for(let dz=-1;dz<=1;dz++)for(let dx=-1;dx<=1;dx++){if(!dx&&!dz)continue;const nx=x+dx,nz=z+dz;if(!navFree(G,nx,nz))continue;if(dx&&dz&&(!navFree(G,x+dx,z)||!navFree(G,x,z+dz)))continue;
+          const ni=nz*G.nx+nx;touch(ni);const ng=gs[i]+(dx&&dz?1.414:1);if(ng<gs[ni]){gs[ni]=ng;came[ni]=i;push(ng+h(ni),ni);}}}
+      done=true;return {path:finish()};}};}
+  function navPath(G,from,to,maxIt=250000){return navSearch(G,from,to,maxIt).step(Infinity).path;}
   // people: plan a walk only when the straight line is blocked; re-plan when the destination changes
   function walkPlan(p,tx,tz){const u=p.userData,key=Math.round(tx*4)+","+Math.round(tz*4);if(u.wpKey===key)return u.wp;u.wpKey=key;u.wp=null;
     if(!NAVW.g)navBuild(NAVW);const a=[p.position.x,p.position.z],b=[tx,tz],d=Math.hypot(tx-a[0],tz-a[1]);if(d<1.2)return null;
     {const ca=navC(NAVW,a),cb=navC(NAVW,b);const sA=navNearest(NAVW,ca),sB=navNearest(NAVW,cb);if(!sA||!sB)return null;
       const pa=[NAVW.x0+(sA[0]+0.5)*NAVW.cs,NAVW.z0+(sA[1]+0.5)*NAVW.cs],pb=[NAVW.x0+(sB[0]+0.5)*NAVW.cs,NAVW.z0+(sB[1]+0.5)*NAVW.cs];if(navLOS(NAVW,pa,pb))return null;}
-    if((NAVW.budget??1)<=0){u.wpKey=null;return null;}NAVW.budget=(NAVW.budget??1)-1;   // at most two plans per frame
-    let path=null;try{path=navPath(NAVW,a,b,120000);}catch(e){}
-    if(path){let L=0;for(let i=1;i<path.length;i++)L+=Math.hypot(path[i][0]-path[i-1][0],path[i][1]-path[i-1][1]);if(L>d*3+25)path=null;}
-    u.wp=path?path.slice(1,-1):null;return u.wp;}
+    // v4.0.4: queued; navPump() searches ~2 ms per frame and fills u.wp when done (until then the walker steers locally)
+    const Q=NAVW.jobs||(NAVW.jobs=[]);for(let k=Q.length-1;k>=0;k--)if(Q[k].p===p&&k>0)Q.splice(k,1);
+    Q.push({p,key,a,b,d});return null;}
+  function navPump(){const Q=NAVW.jobs;if(!Q||!Q.length)return;const end=performance.now()+2;
+    while(Q.length&&performance.now()<end){const j=Q[0];
+      if(j.p.userData.wpKey!==j.key){Q.shift();continue;}   // the walker has a new destination: drop this search
+      if(!j.s)try{j.s=navSearch(NAVW,j.a,j.b,120000,"scw");}catch(e){Q.shift();continue;}
+      let r;try{r=j.s.step(end);}catch(e){r={path:null};}if(!r)return;Q.shift();
+      let path=r.path;if(path){let L=0;for(let i=1;i<path.length;i++)L+=Math.hypot(path[i][0]-path[i-1][0],path[i][1]-path[i-1][1]);if(L>j.d*3+25)path=null;}
+      if(j.p.userData.wpKey===j.key)j.p.userData.wp=path?path.slice(1,-1):null;}}
+  G3.navPump=navPump;
   G3.navCheck=(pts,G=NAV)=>{if(!G.g)navBuild(G);let bad=0;for(let i=1;i<pts.length;i++){const a=pts[i-1],b=pts[i],d=Math.hypot(b[0]-a[0],b[1]-a[1]),n=Math.max(1,Math.ceil(d/0.25));
       for(let k=0;k<=n;k++){const c=navC(G,[a[0]+(b[0]-a[0])*k/n,a[1]+(b[1]-a[1])*k/n]);if(G.g[c[1]*G.nx+c[0]])bad++;}}return bad;};
   G3.NAV=NAV;G3.NAVW=NAVW;G3.navRoute=(a,b)=>route(a,b);G3.navOld=(a,b)=>routeLanes(a,b);G3.navSpots=()=>({MAINT_SPOT,SLOTS});G3.navWalk=(a,b)=>navPath(NAVW,a,b,120000);
@@ -4929,14 +4992,18 @@ function no3D(){G3.ok=false;$("no3d").hidden=false;$("no3d-retry").onclick=()=>l
   // batched objects with other (look-alike) materials then differ from the batch and are handed back
   const MSYNC=[];
   function bmMat(m){const c=m.clone();c.userData=Object.assign({},m.userData);if(MATS.includes(m))MATS.push(c);MSYNC.push([c,m]);return c;}
+  // v4.0.1: moving batches are white and give each object its own color (BatchedMesh.setColorAt), so things that
+  // differ only in color share one draw. Their copy stays out of MATS (the palette would tint it) and skips color sync.
+  function dbMat(m){const c=m.clone();c.userData=Object.assign({},m.userData);c.color.setRGB(1,1,1);MSYNC.push([c,m,true]);return c;}
   // same look as the batch: compared at 8-bit precision (look-alike materials differ in the last float bits)
   const colorSame=(a,b)=>a.color.getHex()===b.color.getHex()&&(!a.emissive||(a.emissive.getHex()===b.emissive.getHex()&&a.emissiveIntensity===b.emissiveIntensity));
-  function matSync(){for(const [c,m] of MSYNC){if(!c.color.equals(m.color))c.color.copy(m.color);
+  const emSame=(a,b)=>!a.emissive||(a.emissive.getHex()===b.emissive.getHex()&&a.emissiveIntensity===b.emissiveIntensity);
+  function matSync(){for(const [c,m,nc] of MSYNC){if(!nc&&!c.color.equals(m.color))c.color.copy(m.color);
     if(m.emissive&&!c.emissive.equals(m.emissive))c.emissive.copy(m.emissive);if(m.emissiveIntensity!==c.emissiveIntensity)c.emissiveIntensity=m.emissiveIntensity;}}
-  // looks are cached per material; a palette change (new brand colors) starts a new cache
-  let lookCache=new WeakMap(),lookKey="";const lookIds=new Map();
-  function lookId(m){if(paletteKey!==lookKey){lookKey=paletteKey;lookCache=new WeakMap();}let v=lookCache.get(m);
-    if(v===undefined){const s=smLook(m);v=lookIds.get(s);if(v===undefined){v=lookIds.size;lookIds.set(s,v);}lookCache.set(m,v);}return v;}
+  // the look of a moving batch leaves out color (and the palette token that sets it): each object carries its own
+  const dbLookCache=new WeakMap(),dbLookIds=new Map();
+  function dbLookId(m){let v=dbLookCache.get(m);if(v===undefined){
+      const s=smLook(Object.assign(Object.create(m),{color:null,userData:{}}));v=dbLookIds.get(s);if(v===undefined){v=dbLookIds.size;dbLookIds.set(s,v);}dbLookCache.set(m,v);}return v;}
   const sigCache=new WeakMap();const smSigC=g=>{let v=sigCache.get(g);if(v===undefined){v=smSig(g);sigCache.set(g,v);}return v;};
   const smSig=g=>Object.keys(g.attributes).sort().map(k=>k+g.attributes[k].itemSize+(g.attributes[k].normalized?"n":"")).join(",")+(g.index?"|i":"|n");
   // one BatchedMesh for a group of records that share material, shadow flags and vertex layout
@@ -4981,7 +5048,7 @@ function no3D(){G3.ok=false;$("no3d").hidden=false;$("no3d-retry").onclick=()=>l
     const freeze=performance.now()-SM.t0>10000;
     SM.list=SM.list.filter(r=>{if(smSame(r)&&!(r.shared&&!colorSame(r.o.material,r.bm.material))){if(freeze&&(r.bm||r.key))smFreeze(r);return true;}
       smThaw(r);
-      if(r.shadow){r.o.castShadow=true;SH.dirty=true;}
+      if(r.shadow){r.o.castShadow=true;r.shadow=false;if(!shDrop(r))SH.dirty=true;}   // v4.0.1: cut it out of the proxy instead of rebuilding it
       if(r.bm){r.bm.setVisibleAt(r.iid,false);r.o.layers.set(0);SM.dyn.add(r.o);SM.handedBack++;return false;}
       if(r.single||r.proxyOnly){SM.dyn.add(r.o);SM.handedBack++;return false;}
       if(r.o.layers.mask===1&&!r.key)return true;
@@ -5007,7 +5074,7 @@ function no3D(){G3.ok=false;$("no3d").hidden=false;$("no3d-retry").onclick=()=>l
     parts.forEach((L,k)=>{if(!L.length)return;let nv=0,ni=0;
       for(const r of L){const g=r.o.geometry;nv+=g.attributes.position.count;ni+=g.index?g.index.count:g.attributes.position.count;}
       const pos=new Float32Array(nv*3),idx=new Uint32Array(ni);let vo=0,io=0;
-      for(const r of L){const g=r.o.geometry,P=g.attributes.position,I=g.index,mw=r.o.matrixWorld,flip=mw.determinant()<0,n=I?I.count:P.count;
+      for(const r of L){const g=r.o.geometry,P=g.attributes.position,I=g.index,mw=r.o.matrixWorld,flip=mw.determinant()<0,n=I?I.count:P.count;r.shK=SH.meshes.length;r.shV0=vo;r.shVN=P.count;
         const e=mw.elements,A=P.array,st=P.isInterleavedBufferAttribute?P.data.stride:3,of=P.isInterleavedBufferAttribute?P.offset:0;
         for(let i=0;i<P.count;i++){const j=i*st+of,x=A[j],y=A[j+1],z=A[j+2],w=1/(e[3]*x+e[7]*y+e[11]*z+e[15]),k=(vo+i)*3;
           pos[k]=(e[0]*x+e[4]*y+e[8]*z+e[12])*w;pos[k+1]=(e[1]*x+e[5]*y+e[9]*z+e[13])*w;pos[k+2]=(e[2]*x+e[6]*y+e[10]*z+e[14])*w;}
@@ -5015,8 +5082,13 @@ function no3D(){G3.ok=false;$("no3d").hidden=false;$("no3d-retry").onclick=()=>l
         else for(let q=0;q<n;q++)idx[io+q]=vo+(I?I.getX(q):q);vo+=P.count;io+=n;}
       const geo=new THREE.BufferGeometry();geo.setAttribute("position",new THREE.BufferAttribute(pos,3));geo.setIndex(new THREE.BufferAttribute(idx,1));
       const m=new THREE.Mesh(geo,SH.mat[k]);m.castShadow=true;m.receiveShadow=false;m.frustumCulled=false;m.matrixAutoUpdate=false;m.visible=false;
-      m.userData.smBatch=true;m.name="shadow proxy";scene.add(m);SH.meshes.push(m);});
+      m.userData.smBatch=true;m.userData.rev=SH.builds;m.name="shadow proxy";scene.add(m);SH.meshes.push(m);});
     renderer.shadowMap.needsUpdate=true;}
+  // v4.0.1: an object that starts moving casts its own shadow, so its triangles leave the proxy. Collapsing its vertices
+  // to the origin (zero-area triangles) uploads only that range; rebuilding the whole proxy cost a long frame each time
+  function shDrop(r){const m=SH.meshes[r.shK];if(r.shK==null||!m||m.userData.rev!==SH.builds)return false;
+    const a=m.geometry.attributes.position,i0=r.shV0*3,i1=i0+r.shVN*3;a.array.fill(0,i0,i1);
+    a.addUpdateRange(i0,i1-i0);a.needsUpdate=true;r.shK=null;renderer.shadowMap.needsUpdate=true;SH.drops=(SH.drops||0)+1;return true;}
   function smTick(now){if(SM.off)return;
     if(!SM.t0){SM.t0=now;try{scene.updateMatrixWorld(true);smSnapshot();smMerge();}
       catch(e){console.error("scenery batching failed",e);SM.off=true;SM.done=true;SM.list.forEach(r=>{r.o.layers.set(0);if(r.bm)r.bm.visible=false;});}return;}
@@ -5035,39 +5107,56 @@ function no3D(){G3.ok=false;$("no3d").hidden=false;$("no3d-retry").onclick=()=>l
     if(o.onBeforeRender!==THREE.Object3D.prototype.onBeforeRender)return false;const a=g.attributes;if(!a.position||!a.normal)return false;
     for(const k in a)if(k!=="position"&&k!=="normal"&&k!=="uv")return false;if(g.morphAttributes&&Object.keys(g.morphAttributes).length)return false;
     return g.drawRange.start===0&&g.drawRange.count===Infinity&&o.matrixWorld.determinant()>0;}
-  function dbRelease(){for(const r of DB.list)if(r.o.layers.mask===1<<DBLAYER)r.o.layers.set(0);for(const b of DB.bms){scene.remove(b);b.dispose();}DB.list=[];DB.bms=[];DB.byKey=new Map();}
+  function dbRelease(){if(DB.q)DB.q.clear();for(const r of DB.list)if(r.o.layers.mask===1<<DBLAYER)r.o.layers.set(0);for(const b of DB.bms){scene.remove(b);b.dispose();}DB.list=[];DB.bms=[];DB.byKey=new Map();}
   DB.byKey=new Map();DB.full=0;
-  const dbKey=o=>lookId(o.material)+"|"+(o.castShadow?1:0)+(o.receiveShadow?1:0)+"|"+smSigC(o.geometry);
+  const dbKey=o=>dbLookId(o.material)+"|"+(o.castShadow?1:0)+(o.receiveShadow?1:0)+"|"+smSigC(o.geometry);
   function dbAdd(B,o){const g=o.geometry;let gid=B.geos.get(g);
     if(gid===undefined){const nv=g.attributes.position.count,ni=g.index?g.index.count:0;if(B.bm.unusedVertexCount<nv||B.bm.unusedIndexCount<ni)return false;gid=B.bm.addGeometry(g);B.geos.set(g,gid);}
     if(B.bm.instanceCount>=B.bm.maxInstanceCount)return false;
-    const iid=B.bm.addInstance(gid);DB.list.push({o,bm:B.bm,iid,mat:o.material,geo:g,ver:g.attributes.position.version});o.layers.set(DBLAYER);return true;}
+    const iid=B.bm.addInstance(gid),c=o.material.color;B.bm.setColorAt(iid,c);
+    const r={o,bm:B.bm,iid,mat:o.material,geo:g,ver:g.attributes.position.version,cr:c.r,cg:c.g,cb:c.b};
+    if(B.wait){B.wait.push(r);B.bm.setMatrixAt(iid,o.matrixWorld);return true;}
+    DB.list.push(r);o.layers.set(DBLAYER);return true;}
   // a batch per look, with room to grow, so things created later join without rebuilding anything
   function dbNew(key,L){const geos=new Map();let nv=0,ni=0;
     for(const o of L){const g=o.geometry;if(!geos.has(g)){geos.set(g,-1);nv+=g.attributes.position.count;ni+=g.index?g.index.count:0;}}
-    const bm=new THREE.BatchedMesh(Math.ceil(L.length*1.5)+8,Math.ceil(nv*1.5)+64,Math.max(Math.ceil(ni*1.5)+96,1),bmMat(L[0].material));
+    const bm=new THREE.BatchedMesh(Math.ceil(L.length*1.5)+8,Math.ceil(nv*1.5)+64,Math.max(Math.ceil(ni*1.5)+96,1),dbMat(L[0].material));
     bm.perObjectFrustumCulled=false;bm.sortObjects=false;bm.frustumCulled=false;bm.castShadow=L[0].castShadow;bm.receiveShadow=L[0].receiveShadow;
     bm.matrixAutoUpdate=false;bm.userData.smBatch=true;bm.name="moving batch";scene.add(bm);DB.bms.push(bm);
-    const B={bm,geos:new Map()};DB.byKey.set(key,B);for(const o of L)dbAdd(B,o);}
+    const B={bm,geos:new Map()};
+    if(!G3.warm){DB.byKey.set(key,B);for(const o of L)dbAdd(B,o);return;}
+    // v4.0.1: a batch made mid-play is filled but kept hidden while its shader compiles in the background; its objects
+    // keep drawing on their own until then, so a new batch never stalls a frame on a shader compile
+    B.wait=[];for(const o of L)dbAdd(B,o);bm.visible=false;DB.pending=(DB.pending||0)+1;(DB.pendKeys||(DB.pendKeys=new Set())).add(key);
+    const go=()=>{DB.pending--;DB.pendKeys.delete(key);if(!DB.bms.includes(bm))return;const W=B.wait;B.wait=null;DB.byKey.set(key,B);
+      for(const r of W){const o=r.o;if(o.parent&&o.layers.mask===1&&o.material===r.mat&&o.geometry===r.geo&&dbOK(o)){DB.list.push(r);o.layers.set(DBLAYER);}else bm.setVisibleAt(r.iid,false);}
+      bm.visible=true;DB.n=DB.list.length;DB.late=(DB.late||0)+1;};
+    try{renderer.compileAsync(bm,camera,scene).then(go,go);}catch(e){go();}}
   function dbBuild(){DB.builds=(DB.builds||0)+1;
-    if(lookKey!==paletteKey&&DB.list.length){dbRelease();}   // new brand colors: regroup from scratch
+    // (v4.0.1: no regroup on new brand colors: moving batches carry each object's color, updated as it changes)
     const pend=new Map();
     scene.traverse(o=>{if(o.layers.mask!==1||!dbOK(o))return;const key=dbKey(o),B=DB.byKey.get(key);if(B&&dbAdd(B,o))return;
       let L=pend.get(key);if(!L){L=[];pend.set(key,L);}L.push(o);});DB.n=DB.list.length;
     // new looks get their own batch once three or more things share them (checked at most every 15 s after the first pass)
     const now=performance.now();if(DB.full&&now-DB.full<15000)return;DB.full=now;
-    pend.forEach((L,key)=>{if(L.length>=3)dbNew(key,L);});DB.n=DB.list.length;}
+    // v4.0.1: mid-play, new batches are queued and made one per frame (dbTick): making them all in one frame uploaded
+    // every new batch's buffers and textures at once, a dropped frame on the iPhone ~10 s after a burst of upsets
+    const Q=DB.q||(DB.q=new Map());
+    pend.forEach((L,key)=>{if(L.length>=3&&!(DB.pendKeys&&DB.pendKeys.has(key))){if(G3.warm)Q.set(key,L);else dbNew(key,L);}});DB.n=DB.list.length;}
+  function dbNext(){const Q=DB.q;if(!Q||!Q.size)return;const [key,L0]=Q.entries().next().value;Q.delete(key);
+    const L=L0.filter(o=>o.parent&&o.layers.mask===1&&dbOK(o)&&dbKey(o)===key);if(L.length>=3&&!(DB.pendKeys&&DB.pendKeys.has(key)))dbNew(key,L);}   // (a full batch of the same look gets a second one)
   G3.dbForce=()=>{if(SM.done&&!SM.off){try{dbBuild();}catch(e){console.error("moving batches failed",e);}}};
   // called right before each render: world matrices are brought up to date once here, and the render skips its own pass
-  G3.dbTick=()=>{if(SM.off||!SM.done)return;const now=performance.now();if(now>DB.t){DB.t=now+3000;try{dbBuild();}catch(e){console.error("moving batches failed",e);SM.off=true;dbRelease();return;}}
+  G3.dbTick=()=>{if(SM.off||!SM.done)return;const now=performance.now();try{dbNext();}catch(e){console.error("moving batch failed",e);}if(now>DB.t){DB.t=now+3000;try{dbBuild();}catch(e){console.error("moving batches failed",e);SM.off=true;dbRelease();return;}}
     scene.updateMatrixWorld();matSync();let out=false;const fn=DB.fn=(DB.fn||0)+1;
     // things that haven't changed for a second are checked every 4th frame (a still forklift starting to move shows
     // up within 4 frames); everything else every frame
     for(const r of DB.list){const o=r.o;if(r.gone)continue;if(r.idle>60&&((fn+r.iid)&3))continue;
       const bc=r.bm.material,om=o.material;
-      if(om!==r.mat||o.geometry!==r.geo||o.geometry.attributes.position.version!==r.ver||o.layers.mask!==1<<DBLAYER||!colorSame(om,bc)){r.gone=true;out=true;r.bm.setVisibleAt(r.iid,false);if(o.layers.mask===1<<DBLAYER)o.layers.set(0);continue;}
+      if(om!==r.mat||o.geometry!==r.geo||o.geometry.attributes.position.version!==r.ver||o.layers.mask!==1<<DBLAYER||!emSame(om,bc)){r.gone=true;out=true;r.bm.setVisibleAt(r.iid,false);if(o.layers.mask===1<<DBLAYER)o.layers.set(0);continue;}
       // only touch the batch when something changed (each change re-uploads that batch's matrix texture)
-      const vis=smShown(o);let ch=false;if(vis!==r.vis){r.vis=vis;ch=true;r.bm.setVisibleAt(r.iid,vis);}
+      let ch=false;{const c=om.color;if(c.r!==r.cr||c.g!==r.cg||c.b!==r.cb){r.cr=c.r;r.cg=c.g;r.cb=c.b;r.bm.setColorAt(r.iid,c);ch=true;}}
+      const vis=smShown(o);if(vis!==r.vis){r.vis=vis;ch=true;r.bm.setVisibleAt(r.iid,vis);}
       if(vis){const e=o.matrixWorld.elements,m=r.m||(r.m=new Float32Array(16).fill(NaN));let mc=false;for(let i=0;i<16;i++)if(e[i]!==m[i]){mc=true;m[i]=e[i];}
         if(mc){ch=true;r.bm.setMatrixAt(r.iid,o.matrixWorld);}}
       r.idle=ch?0:(r.idle||0)+1;}
@@ -5420,19 +5509,20 @@ function no3D(){G3.ok=false;$("no3d").hidden=false;$("no3d-retry").onclick=()=>l
   // v2.9.11 performance profiler: when G3.PF.on, time each section of the 3D frame (ms accumulated per section)
   const PF=G3.PF={on:false,t:0,acc:{},frames:0};const pm=k=>{if(!PF.on)return;const t=performance.now();PF.acc[k]=(PF.acc[k]||0)+(t-PF.t);PF.t=t;};
   G3.EXP={};let moversCache=null;
-  G3.frameBody=function(rdt){if(PF.on){PF.t=performance.now();PF.frames++;}NAVW.budget=2;
+  G3.frameBody=function(rdt){if(PF.on){PF.t=performance.now();PF.frames++;}navPump();pm("walker route planning (2 ms/frame max)");
     // v2.8.8: the machine's motion clocks (dryer cans, presses, felts, sheet, pulper swirl, belts) used to be advanced only by the
     // old 2D drawing, which no longer runs when the 3D view is up, so everything stood still
     if(rdt>0){const R=S.rates;if(!S.M.pulperDown)V.swirl+=rdt*(0.4+R.feed*0.06);V.belt=(V.belt+rdt*R.feed*1.4)%30;V.cans+=rdt*S.pmSpeed/700;
       if(S.pm==="run")V.sheet=(V.sheet+rdt*S.pmSpeed/40)%24;V.rollsAnim+=rdt*(0.2+clamp(R.load/Math.max(1,C.loaders.v*P.loaderRate),0,1))*0.5;}
-    {const t=performance.now();if(!(t-(G3.shTrim||0)<2000)){G3.shTrim=t;trimShadows();}}
-    if(rdt>0){fpsT+=rdt;fpsN++;if(fpsT>3){const fps=fpsN/fpsT;fpsT=0;fpsN=0;
+    {const t=performance.now();if(!(t-(G3.shTrim||0)<2000)){G3.shTrim=t;trimShadows();}}pm("shadow trim (every 2 s)");
+    if(rdt>0&&!G3.noFallback){fpsT+=rdt;fpsN++;if(fpsT>3){const fps=fpsN/fpsT;fpsT=0;fpsN=0;
+      // (G3.noFallback: set by the autotest so every build is measured at the same graphics settings)
       // v4 fallback order, cheapest to undo first: render fewer pixels, then refresh shadows less often. Shadows stay on
       // (switching them off recompiles every shader: a long freeze, the opposite of what a struggling device needs)
       const fk=(G3.cap||60)/60;
       if(fps<28*fk&&quality===2&&renderer.getPixelRatio()>1){quality=1;renderer.setPixelRatio(1);resize();diag("quality: pixel ratio 1 ("+fps.toFixed(0)+" fps)");}
-      else if(fps<24*fk&&quality>=1&&G3.shadowHz>5){quality=0;G3.shadowHz=5;diag("quality: shadows 5 Hz ("+fps.toFixed(0)+" fps)");}}}
-    {const t=performance.now();if(!(t-(G3.palT||0)<500)){G3.palT=t;applyPalette();}}rebuildDoors();
+      else if(fps<24*fk&&quality>=1&&G3.shadowHz>5){quality=0;G3.shadowHz=5;diag("quality: shadows 5 Hz ("+fps.toFixed(0)+" fps)");}}}pm("low-FPS fallback check");
+    {const t=performance.now();if(!(t-(G3.palT||0)<500)){G3.palT=t;applyPalette();}}pm("palette (every 0.5 s)");rebuildDoors();
     const R=S.rates,now=performance.now();pm("setup (palette, doors, shadow trim)");
     crewUpdate(rdt,now);pm("crew + people");
     // trucks
@@ -5602,7 +5692,7 @@ function no3D(){G3.ok=false;$("no3d").hidden=false;$("no3d-retry").onclick=()=>l
     G3.ambT=(G3.ambT||0)+rdt;if(G3.ambT>0.25){G3.ambT=0;const zk=clamp((150-cam.r)/90,0,1),x=target.x,z=target.z,near=(cx,cz,r)=>zk*clamp(1.3-Math.hypot(x-cx,z-cz)/r,0,1);
       const run=S.pm==="run"?1:0.3,L={dryer:near(12,9,20)*run,wet:near(46,9,16)*run,winder:near(-17,8,13)*(S.wd==="run"?1:0.3),stock:near(24,-15,20)*(S.M.pulperDown?0.3:1),fork:0,out:0};
       L.out=zk*clamp(1-Math.max(L.dryer,L.wet,L.winder,L.stock,L.fork)*1.5,0,1);AUDIO.ambient(L,zk);}
-    G3.roofFade(cam.r*(host.clientWidth<600?1.35:1)/(host.clientWidth<600?1.35:1));
+    {const cw=G3.vw||host.clientWidth;G3.roofFade(cam.r*(cw<600?1.35:1)/(cw<600?1.35:1));}
     if(G3.shadowHz){const t=performance.now();if(!(t-(G3.shT||0)<1000/G3.shadowHz-3)){G3.shT=t;renderer.shadowMap.needsUpdate=true;}}
     placeCam();if(shake>0){camera.position.x+=(Math.random()-0.5)*shake;camera.position.y+=(Math.random()-0.5)*shake;camera.position.z+=(Math.random()-0.5)*shake;}
     // v2.8.8: zoomed out past the default view, trucks and parked trailers are specks, so they aren't drawn (they keep driving unseen)
@@ -5618,13 +5708,14 @@ function no3D(){G3.ok=false;$("no3d").hidden=false;$("no3d-retry").onclick=()=>l
     if(PF.on){PF.calls=(PF.calls||0)+renderer.info.render.calls;PF.tris=(PF.tris||0)+renderer.info.render.triangles;}
     pm("RENDER (three.js draw submission)");
     // labels follow the 3D anchors
-    const w=host.clientWidth,hh=host.clientHeight,doText=now-lastLabel>200;if(doText)lastLabel=now;
+    const w=G3.vw||host.clientWidth,hh=G3.vh||host.clientHeight,doText=now-lastLabel>200;if(doText)lastLabel=now;
     LABELS.forEach(L=>{tmp.copy(L.v).project(camera);const vis=tmp.z<1&&Math.abs(tmp.x)<1.05&&Math.abs(tmp.y)<1.05;if(L.el.hidden===vis)L.el.hidden=!vis;
       if(!vis)return;const tf=`translate(${Math.round((tmp.x+1)/2*w)}px,${Math.round((1-tmp.y)/2*hh)}px) translate(-50%,-100%)`;if(L.tf!==tf){L.tf=tf;L.el.style.transform=tf;}
-      if(doText){const [a,b]=L.t();L.b.textContent=a;L.s.textContent=b;L.el.classList.toggle("bad",!!(L.cls&&L.cls()));}});
+      if(doText){const [a,b]=L.t();if(L.ta!==a){L.ta=a;L.b.textContent=a;}if(L.tb!==b){L.tb=b;L.s.textContent=b;}const bad=!!(L.cls&&L.cls());if(L.bad!==bad){L.bad=bad;L.el.classList.toggle("bad",bad);}}});
     pm("3D labels");
     // headline + active incidents
-    if(doText){const b=BANNERS[0];banner.hidden=!b;if(b){banner.className="banner3d "+(b.kind==="good"?"good":"");banner.querySelector("span").textContent=b.tag||(b.kind==="good"?"INSTALLED":"BREAKING");banner.querySelector("b").textContent=b.text;}
+    if(doText){const b=BANNERS[0];if(banner.hidden!==!b)banner.hidden=!b;if(b){const cn="banner3d "+(b.kind==="good"?"good":""),tg=b.tag||(b.kind==="good"?"INSTALLED":"BREAKING");
+      if(banner.className!==cn)banner.className=cn;if(banner._tg!==tg){banner._tg=tg;banner.querySelector("span").textContent=tg;}if(banner._tx!==b.text){banner._tx=b.text;banner.querySelector("b").textContent=b.text;}}
       const ck=S.inc.map(i=>i.id).join("|");if(ck!==chips.dataset.k){chips.dataset.k=ck;chips.replaceChildren(...S.inc.map(i=>{const c=document.createElement("button");c.type="button";c.dataset.id=i.id;c.textContent=EV[i.id].name;c.title="Show "+EV[i.id].name;return c;}));}
       banner.classList.toggle("go",!!(b&&b.id&&G3.spotOf(b.id)));}
   ;pm("HUD text");};
@@ -5763,7 +5854,7 @@ setView();
     $("v2state").textContent=first?"":"Paused";
     $("v2free").querySelector("b").textContent=S.free?"Free play: on":"Free play";$("v2free").setAttribute("aria-pressed",String(!!S.free));$("v2ver").textContent=APP_VER;menu.hidden=false;}
   function play(){menu.hidden=true;first=false;running=true;}
-  G3.showMenu=showMenu;
+  G3.showMenu=showMenu;G3.play=play;   // play: used by the autotest (52b) to start without the tutorial
   // ---- v3.1.0 quick-start tutorial: shown when a season starts (until the player ticks "don't show again") ----
   const TUT=(()=>{
     const stops=[
@@ -5831,6 +5922,16 @@ setView();
 let FRAME_CAP=0;try{if(localStorage.getItem("paper-mill-fps")==="saver")FRAME_CAP=30;}catch(e){}G3.cap=FRAME_CAP;
 function setFpsMode(smooth){FRAME_CAP=smooth?0:30;G3.cap=FRAME_CAP;try{localStorage.setItem("paper-mill-fps",smooth?"smooth":"saver");}catch(e){}document.querySelectorAll("#fpsSeg button").forEach(b=>b.setAttribute("aria-pressed",String((b.dataset.fps==="smooth")===smooth)));diag("frame rate: "+(smooth?"smooth 60":"battery saver 30"));}
 let last=performance.now(),uiAcc=0,uiN=0,lastPaint=0;
+/* v4.0.1: optional FPS readout (Controls > Show FPS), bottom-right; counts drawn loop frames, text written twice a second */
+const FPSM={on:false,el:null,n:0,t0:0,txt:""};
+function setShowFps(on){FPSM.on=!!on;try{localStorage.setItem("paper-mill-showfps",on?"1":"0");}catch(e){}
+  if(on&&!FPSM.el){const d=document.createElement("div");d.id="fpsMeter";d.setAttribute("aria-live","off");document.body.appendChild(d);FPSM.el=d;}
+  if(FPSM.el){FPSM.el.hidden=!on;FPSM.n=0;FPSM.t0=0;FPSM.txt="";FPSM.el.textContent="– FPS";if(on)fpsPlace();}
+  const cb=document.getElementById("showFps");if(cb)cb.checked=FPSM.on;}
+// sit just above the bottom dock (Go-to chips + tabs) so it never covers a button
+function fpsPlace(){const d=document.getElementById("v2dock");let b=8;
+  if(d&&!d.hidden){const r=d.getBoundingClientRect();if(r.height&&r.top<innerHeight)b=Math.max(8,Math.round(innerHeight-r.top+6));}
+  if(b!==FPSM.b){FPSM.b=b;FPSM.el.style.bottom=b+"px";}}
 /* frame-time record (v4): every drawn frame's interval while the game runs, for Controls > Diagnostics and the 15 s
    snapshot. A 600-frame window (~10 s at 60 FPS) plus totals since play started. Paused time isn't counted. */
 const FT={win:new Float32Array(600),n:0,i:0,total:0,over33:0,over50:0,worst:0,since:0,
@@ -5847,6 +5948,8 @@ function frame(now){
   if(BANNERS.length){const b=BANNERS[0];if(b.t===null)b.t=now;if(now-b.t>5000)BANNERS.shift();}
   const cap=G3.capOff?0:FRAME_CAP;
   if(cap&&now-last<1000/cap-3){requestAnimationFrame(frame);return;}
+  if(FPSM.on){FPSM.n++;if(!FPSM.t0)FPSM.t0=now;else if(now-FPSM.t0>=500){const f=Math.round(FPSM.n*1000/(now-FPSM.t0)),t=(document.hidden?"–":f)+" FPS";
+    if(t!==FPSM.txt){FPSM.txt=t;FPSM.el.textContent=t;}FPSM.n=0;FPSM.t0=now;fpsPlace();}}
   frame.n=(frame.n||0)+1;const PFo=G3.PF,fT0=performance.now();if(PFo&&PFo.on){PFo.gaps.push(now-(PFo.lastNow||now));PFo.lastNow=now;}
   {if(running&&!document.hidden){if(!ftRun){ftRun=true;if(!FT.since)FT.reset();}else if(ftLast)FT.add(now-ftLast);ftLast=now;}else{ftRun=false;ftLast=0;}}
   const rdt=Math.max(0,Math.min(0.1,(now-last)/1000));last=now;
@@ -5866,6 +5969,206 @@ function frame(now){
 }
 syncControls();updateText();updateChaos();updateShop();
 requestAnimationFrame(frame);
+// ---- autotest (v4.0.1): open the page with ?autotest to run a fixed, hands-free performance test on a real device ----
+// Starts a season on a fixed seed with no tutorial, measures steady play, three diagnostic phases and an all-upsets
+// stress phase, replays 3 sim days as a correctness checksum, then shows a results page with a "Copy results" button
+// (JSON). Nothing is saved: no settings, scores or tutorial flags are written. Does nothing without ?autotest.
+// URL options: scale=0.5 (shorter phases), speed=10 (sim min/s), seed=N, expect=<checksum>, fallback (keep the
+// low-FPS fallback on; by default it's off so builds compare at the same graphics settings).
+(()=>{const Q=new URLSearchParams(location.search);if(!Q.has("autotest"))return;
+  const SCALE=Math.max(0.05,+Q.get("scale")||1),SPEED=+Q.get("speed")||10,SEED=(+Q.get("seed")||20261009)>>>0,
+    EXPECT=(Q.get("expect")||"").toLowerCase(),CHECK_DAYS=3,sec=s=>s*1000*SCALE,wait=ms=>new Promise(r=>setTimeout(r,ms));
+  const R={schema:"pm-autotest/1",app:APP_VER,build:location.pathname,ts:new Date().toISOString(),ua:navigator.userAgent,
+    screen:{w:screen.width,h:screen.height,dpr:devicePixelRatio},options:{scale:SCALE,speed:SPEED,seed:SEED,fallback:Q.has("fallback")},
+    phases:{},errors:[],pauses:0,hidden:0};
+  const err=m=>{if(R.errors.length<20)R.errors.push(String(m).slice(0,200));};
+  addEventListener("error",e=>err(e.message||e));addEventListener("unhandledrejection",e=>err("promise: "+(e.reason&&e.reason.message||e.reason)));
+  {const ce=console.error;console.error=(...a)=>{err(a.map(x=>x&&x.message||x).join(" "));ce.apply(console,a);};}
+  document.addEventListener("visibilitychange",()=>{if(document.hidden)R.hidden++;});
+  // ---- the "test running" banner ----
+  const ban=document.createElement("div");ban.id="atBan";
+  ban.style.cssText="position:fixed;left:12px;right:12px;top:12px;z-index:600;background:#1c2233e6;color:#fff;border-radius:10px;padding:10px 14px;font:600 15px system-ui;text-align:center;pointer-events:none";
+  let lastSay="";const say=t=>{ban.textContent="Autotest · "+t+" · please don't touch";const k=t.replace(/ · \d+ s$/,"");if(k!==lastSay){lastSay=k;diag("autotest: "+k);}};
+  document.body.appendChild(ban);say("loading");
+  const q=(a,p)=>a.length?a[Math.min(a.length-1,Math.floor(p*a.length))]:0,r1=v=>Math.round(v*10)/10;
+  const D=()=>G3.diagScene(),programs=()=>{const I=D().renderer.info;return I.programs?I.programs.length:0;};
+  // v4.0.1: shader programs compiled after the start-up precompile, with what needed them. The two flag words of
+  // three.js r186's program key are decoded by name (bit order from WebGLPrograms.getProgramCacheKeyBooleans).
+  const F1=["instancing","instancingColor","instancingMorph","matcap","envMap","normalMapOS","normalMapTS","clearcoat","iridescence","alphaTest",
+    "vertexColors","vertexAlphas","uv1","uv2","uv3","tangents","anisotropy","alphaHash","batching","dispersion","batchingColor","gradientMap","packedNormalMap","vertexNormals","retroreflection"];
+  const F2=["fog","useFog","flatShading","logDepth","reversedDepth","skinning","morphTargets","morphNormals","morphColors","premultipliedAlpha",
+    "shadowMap","doubleSided","flipSided","depthPacking","dithering","transmission","sheen","opaque","pointsUvs","videoTex","videoTexEmissive","alphaToCoverage","lightProbeGrids","position"];
+  let P0=null;const lateSeen=new Set();R.late_programs=[];
+  function noteLate(phaseName){if(!P0)return;const d=D(),Rr=d.renderer;for(const p of Rr.info.programs){if(P0.has(p.id)||lateSeen.has(p.id))continue;lateSeen.add(p.id);
+      if(/^Shadows off/.test(phaseName)){R.late_shadows_off=(R.late_shadows_off||0)+1;continue;}   // expected: the phase itself recompiles
+      const k=String(p.cacheKey||"").split(","),w=k.filter(x=>/^\d+$/.test(x)&&+x>=8388608).map(Number),bits=(v,N)=>N.filter((n,i)=>v>>i&1);
+      const who=[];d.scene.traverse(o=>{if(who.length>=4||!o.material)return;(Array.isArray(o.material)?o.material:[o.material]).forEach(m=>{const mp=Rr.properties.get(m);
+        if(mp&&mp.currentProgram===p&&who.length<4)who.push((o.name||o.type)+(o.isBatchedMesh?" [batch]":"")+(o.parent&&o.parent.name?" in "+o.parent.name:"")+" / "+(m.name||m.type)+(m.map?" +map":""));});});
+      if(R.late_programs.length<12)R.late_programs.push({phase:phaseName,type:k[0],flags:w.length>=2?bits(w[0],F1).concat(bits(w[1],F2)).filter(n=>n!=="vertexNormals"&&n!=="position"&&n!=="opaque"):[],who});}}
+  const setShadows=on=>{const d=D();d.renderer.shadowMap.enabled=on;d.renderer.shadowMap.needsUpdate=true;d.MATS.forEach(m=>m.needsUpdate=true);};
+  // one measured phase: switch something on, settle, record every frame through the existing profiler (G3.PF), switch it off
+  async function phase(key,name,settleS,measureS,on,off,keepGaps){const PF=G3.PF;if(on)on();say(name+" (settling)");await wait(sec(settleS));noteLate(name+" (settling)");
+    const p0=programs();PF.acc={};PF.frames=0;PF.calls=0;PF.tris=0;PF.gaps=[];PF.js=[];PF.lastNow=0;PF.on=true;
+    const end=performance.now()+sec(measureS);
+    // v4.0.2: what each slow frame (over 25 ms) was spent on: code sections, GPU uploads and shader compiles that frame
+    {const t0=performance.now(),I=D().renderer.info;let last=0,prev={},pg=programs(),geo=I.memory.geometries,tex=I.memory.textures,nJs=0;
+      const tick=now=>{if(!PF.on||now>end)return;requestAnimationFrame(tick);const gap=last?now-last:0;last=now;
+        const acc=PF.acc,d={};for(const k in acc){const v=acc[k]-(prev[k]||0);if(v>=0.5)d[k]=+v.toFixed(1);}prev={...acc};
+        const pN=programs(),gN=I.memory.geometries,xN=I.memory.textures,js=PF.js.length>nJs?PF.js[PF.js.length-1]:0;nJs=PF.js.length;
+        if(gap>25){const SF=R.slow_frames||(R.slow_frames=[]),mine=SF.filter(f=>f.phase===name),low=mine.length<6?null:mine.reduce((a,b)=>a.gap_ms<=b.gap_ms?a:b);
+          if(low&&low.gap_ms>=gap){}else{if(low)SF.splice(SF.indexOf(low),1);SF.push({phase:name,t_s:+((now-t0)/1000).toFixed(2),gap_ms:Math.round(gap),js_ms:+js.toFixed(1),
+          sections:Object.fromEntries(Object.entries(d).sort((a,b)=>b[1]-a[1]).slice(0,4)),new_programs:pN-pg,new_geometries:gN-geo,new_textures:xN-tex,
+          sim_min:Math.round(S.t),upsets:S.inc.length,moving_batches:G3.DB?G3.DB.bms.length:null,pending_batches:G3.DB?(G3.DB.pending||0)+(G3.DB.q?G3.DB.q.size:0):null});}}
+        pg=pN;geo=gN;tex=xN;};requestAnimationFrame(tick);}
+    while(performance.now()<end){if(!running){R.pauses++;running=true;}say(`${name} · ${Math.max(1,Math.ceil((end-performance.now())/1000))} s`);await wait(250);}
+    PF.on=false;const gaps=PF.gaps.slice(1),g=gaps.slice().sort((a,b)=>a-b),n=g.length,sum=g.reduce((a,b)=>a+b,0),js=PF.js.slice().sort((a,b)=>a-b);
+    const d=D(),gl=d.renderer.getContext();
+    const o={fps:n?r1(1000*n/sum):0,frames:n,p50:r1(q(g,0.5)),p95:r1(q(g,0.95)),p99:r1(q(g,0.99)),worst:r1(n?g[n-1]:0),
+      over33:g.filter(v=>v>33.4).length,over50:g.filter(v=>v>50).length,
+      js_mean:r1(js.length?js.reduce((a,b)=>a+b,0)/js.length:0),js_p95:r1(q(js,0.95)),
+      draws:PF.frames?Math.round(PF.calls/PF.frames):0,tris_k:PF.frames?Math.round(PF.tris/PF.frames/1000):0,
+      canvas:[gl.drawingBufferWidth,gl.drawingBufferHeight],pixel_ratio:d.renderer.getPixelRatio(),
+      shadows:d.renderer.shadowMap.enabled?(G3.shadowHz||"every frame"):"off",programs:[p0,programs()],
+      heap_mb:performance.memory?Math.round(performance.memory.usedJSHeapSize/1e6):null,
+      sections:Object.fromEntries(Object.entries(PF.acc).sort((a,b)=>b[1]-a[1]).map(([k,v])=>[k,+(v/Math.max(1,PF.frames)).toFixed(2)]))};
+    if(keepGaps)o.gaps=gaps.map(r1);
+    noteLate(name);if(off)off();R.phases[key]=o;return o;}
+  /* ---- v4.0.3 GPU probe: what the upsets cost the GPU ----
+     At 60 FPS the frame rate can't show GPU cost (the phone waits for the display either way). Here every 3D render
+     is followed by a 1-pixel read-back, which makes the CPU wait until the GPU has finished that frame, so the time
+     from the start of render() to the read-back is the frame's draw submission + GPU work. Measured with every upset
+     active: the baseline, then one thing switched off at a time; "saves" = baseline minus that configuration. */
+  async function gpuProbe(){const d=D(),Rr=d.renderer,gl=Rr.getContext(),px=new Uint8Array(4),orig=Rr.render;let buf=null;
+    Rr.render=function(sc,cam){const t=performance.now();orig.call(this,sc,cam);if(buf){gl.readPixels(0,0,1,1,gl.RGBA,gl.UNSIGNED_BYTE,px);buf.push(performance.now()-t);}};
+    // at least 30 frames (or 3x the time), so slow phones still get a real sample; fewer than 8 frames reports null
+    const meas=async(label,settleS,measS)=>{say("GPU probe · "+label);await wait(sec(settleS));buf=[];const t0=performance.now();
+      while(performance.now()-t0<sec(measS)||(buf.length<30&&performance.now()-t0<sec(measS*3)))await wait(50);
+      const a=buf.slice().sort((x,y)=>x-y);buf=null;
+      if(a.length<8)return {ms:null,n:a.length};return {ms:+(a.reduce((x,y)=>x+y,0)/a.length).toFixed(2),med:+a[Math.floor(a.length/2)].toFixed(2),p90:+a[Math.floor(a.length*0.9)].toFixed(2),n:a.length};};
+    const saves=m=>G.base.ms==null||m.ms==null?null:+(G.base.ms-m.ms).toFixed(2);
+    const G={};R.gpu=G;const EXP=G3.EXP;
+    try{
+      // particles alive per batch (each batch is one texture, shared by the particle types listed)
+      const names=new Map();for(const k in G3.PT){const m=G3.PT[k].map;names.set(m,(names.get(m)||[]).concat(k));}
+      const pbs=[...G3.PB.entries()].map(([map,b])=>({b,name:(names.get(map)||["?"]).join("+")}));
+      G.base=await meas("baseline",1,2);G.base.particles=Object.fromEntries(pbs.map(x=>[x.name,x.b.list.length]));
+      EXP.noParts=true;G.no_particles=await meas("particles off",1.5,1.5);EXP.noParts=false;
+      G.particle_types=[];for(const x of pbs){if(!x.b.list.length)continue;EXP.hidePB=x.b;const m=await meas("no "+x.name,0.6,1.2);EXP.hidePB=null;
+        G.particle_types.push({type:x.name,alive:x.b.list.length,saves_ms:saves(m)});}
+      {const pr=Rr.getPixelRatio();Rr.setPixelRatio(pr*0.5);d.resize();const m=await meas("half resolution",1,1.5);Rr.setPixelRatio(pr);d.resize();G.half_res=m;}
+      // shadows: one refresh's cost = every frame minus never (normal play refreshes at 15 Hz, a quarter of frames)
+      {const hz=G3.shadowHz;G3.shadowHz=1000;const a=await meas("shadows every frame",0.6,1.2);G3.shadowHz=0;const b=await meas("shadows never refreshed",0.6,1.2);G3.shadowHz=hz;
+        G.shadow_refresh_ms=a.ms==null||b.ms==null?null:+(a.ms-b.ms).toFixed(2);G.shadows_at_15hz_ms=G.shadow_refresh_ms==null?null:+(G.shadow_refresh_ms*15/60).toFixed(2);}
+      // each upset's own effect (its 3D objects and the particles it emits), hidden one at a time
+      const ids=S.inc.map(i=>i.id).filter((v,i,a)=>a.indexOf(v)===i&&G3.FX[v]);G.effects=[];
+      for(let i=0;i<ids.length;i++){const id=ids[i];EXP.hideFX=id;const m=await meas(`effect ${i+1}/${ids.length}: ${(EVENTS.find(e=>e.id===id)||{}).name||id}`,1.2,0.8);EXP.hideFX=null;
+        G.effects.push({id,name:(EVENTS.find(e=>e.id===id)||{}).name||id,saves_ms:saves(m)});}
+      G.effects.sort((a,b)=>(b.saves_ms??-1e9)-(a.saves_ms??-1e9));
+      G.base_again=await meas("baseline again",1,2);   // drift check: random particles and phone state vary
+      G.no_particles.saves_ms=saves(G.no_particles);G.half_res.saves_ms=saves(G.half_res);
+      G.particle_types.sort((a,b)=>(b.saves_ms??-1e9)-(a.saves_ms??-1e9));
+    }catch(e){G.error=String(e&&e.message||e);}
+    finally{Rr.render=orig;EXP.noParts=false;EXP.hidePB=null;EXP.hideFX=null;}}
+  // FNV-1a over the key season numbers after a fixed replay: any change to the sim's logic changes it
+  const fnv=s=>{let h=0x811c9dc5;for(let i=0;i<s.length;i++){h^=s.charCodeAt(i);h=Math.imul(h,0x01000193)>>>0;}return h.toString(16).padStart(8,"0");};
+  function checksum(){running=false;startSeason();seedRun(SEED);running=false;const t0=performance.now();
+    while(S.t<CHECK_DAYS*1440-1e-9)step(SIM_STEP);
+    const ms=(performance.now()-t0)/CHECK_DAYS;running=false;
+    const v={t:Math.round(S.t),cash:Math.round(S.cash),incidents:S.tot.incidents,breaks:S.tot.breaks,hayouts:S.tot.hayouts||0,
+      tons:Math.round(S.tot.prodT||0),yard:Math.round(S.yard),fg:Math.round(S.fg)};
+    const hash=fnv(JSON.stringify(v));
+    return {sim_days:CHECK_DAYS,hash,ms_per_sim_day:r1(ms),values:v,expect:EXPECT||null,pass:EXPECT?hash===EXPECT:null};}
+  // which limit the frame rate hits, from how the diagnostic phases moved it
+  function verdict(){const P=R.phases,n=P.normal,h=P.half_res,c=P.no_render,hz=R.display_hz_est;if(!n||!n.fps)return "no data";
+    if(hz&&n.fps>=hz*0.95)return `display-locked at ${hz} Hz: the phone has headroom`;
+    if(h&&h.fps>=n.fps*1.15)return "GPU, pixels (fill rate): half resolution was clearly faster";
+    if(n.js_mean>=0.8*1000/n.fps)return "CPU (JavaScript): JS uses most of each frame";
+    if(c&&c.fps>=n.fps*1.15)return "GPU, scene (draws, shaders, shadows): skipping the render was clearly faster";
+    return "unclear: no single switch moved the frame rate";}
+  async function run(){
+    // wait for the 3D view and the start-up precompile (the same wait the first Play does)
+    const t=performance.now();
+    while(!(G3.ok&&G3.prewarm&&G3.diagScene&&G3.play)){if(G3.ok===false){R.fatal="no 3D (WebGL unavailable)";return finish();}
+      if(performance.now()-t>120000){R.fatal="the 3D view never became ready";return finish();}await wait(200);}
+    say("getting the mill ready");await G3.prewarm();
+    const nav=performance.getEntriesByType("navigation")[0];
+    R.startup={dcl_ms:nav?Math.round(nav.domContentLoadedEventEnd):null,ready_ms:Math.round(performance.now()),programs:programs()};P0=new Set(D().renderer.info.programs.map(p=>p.id));
+    try{const gl=D().renderer.getContext(),x=gl.getExtension("WEBGL_debug_renderer_info");R.gpu=String(x?gl.getParameter(x.UNMASKED_RENDERER_WEBGL):gl.getParameter(gl.RENDERER));}catch(e){R.gpu="?";}
+    try{if(navigator.getBattery){const b=await navigator.getBattery();R.battery={level:Math.round(b.level*100),charging:b.charging};}}catch(e){}
+    let wl=null;try{if(navigator.wakeLock)wl=await navigator.wakeLock.request("screen");}catch(e){}
+    // a season on a fixed seed, at the display's frame rate, with no tutorial, event cards or leaderboard; nothing saved
+    FRAME_CAP=0;G3.cap=0;G3.noFallback=!Q.has("fallback");setSimSpeed(SPEED);
+    startSeason();seedRun(SEED);S.cards.next=1e12;G3.play();
+    await phase("normal","Normal play",8,20,null,null,true);
+    await phase("shadows_off","Shadows off",2.5,5,()=>setShadows(false),()=>setShadows(true));
+    let pr=1;await phase("half_res","Half resolution",2,5,()=>{const d=D();pr=d.renderer.getPixelRatio();d.renderer.setPixelRatio(pr*0.5);d.resize();},()=>{const d=D();d.renderer.setPixelRatio(pr);d.resize();});
+    await phase("no_render","3D render skipped",1.5,5,()=>{G3.EXP.noRender=true;},()=>{G3.EXP.noRender=false;});
+    // the display's refresh rate: with nothing to draw, frames arrive at it (60, 90, 120 Hz)
+    {const f=R.phases.no_render.p50;R.display_hz_est=f?[30,60,90,120,144].reduce((b,hz)=>Math.abs(1000/f-hz)<Math.abs(1000/f-b)?hz:b,60):null;}
+    await phase("stress","All upsets at once",3,15,()=>{CH.on=true;EVENTS.forEach(e=>{try{trigger(e.id,true);}catch(_){}});},null,true);
+    // the browser's own per-frame work (style, layout, compositing of the HTML overlays) is in neither the JS nor the
+    // GPU numbers: the same all-upsets scene with the labels, chips and banner hidden shows its share
+    {let st=null;await phase("stress_no_html","All upsets, HTML labels hidden",1.5,6,()=>{st=document.createElement("style");st.textContent="#labels3d,#chips3d,.banner3d{display:none!important}";document.head.appendChild(st);},()=>{if(st)st.remove();});}
+    if(Q.get("gpu")!=="0")await gpuProbe();
+    say("checking the simulation");await wait(50);
+    try{R.check=checksum();}catch(e){R.check={error:String(e&&e.message||e)};}
+    if(wl)try{wl.release();}catch(e){}
+    finish();}
+  function finish(){running=false;G3.noFallback=false;ban.remove();R.verdict=verdict();R.total_s=Math.round(performance.now()/1000);
+    window.__AUTOTEST=R;document.title="Autotest done · "+APP_VER;diag("autotest finished");showResults();}
+  // ---- results page ----
+  function showResults(){const P=R.phases,n=P.normal||{},s=P.stress||{},C=R.check||{},json=JSON.stringify(R);
+    const el=document.createElement("div");el.id="atRes";
+    const css=`#atRes{position:fixed;inset:0;z-index:700;overflow:auto;background:var(--bg,#eef0f6);color:var(--ink,#1c2233);font:15px/1.4 system-ui,sans-serif;padding:16px}
+      #atRes .w{max-width:640px;margin:0 auto;display:flex;flex-direction:column;gap:12px}
+      #atRes h1{font:800 24px system-ui;margin:0}#atRes .sub{color:var(--muted,#687087);font-size:13px;word-break:break-word}
+      #atRes .g{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+      #atRes .t{background:var(--panel,#fff);border:1px solid var(--line,#e1e4ee);border-radius:12px;padding:12px 14px;min-width:0}
+      #atRes .k{font:700 12px system-ui;letter-spacing:.06em;text-transform:uppercase;color:var(--muted,#687087)}
+      #atRes .v{font:800 34px/1.1 system-ui;font-variant-numeric:tabular-nums;margin:2px 0;overflow-wrap:anywhere}#atRes .v.code{font:800 24px/1.4 ui-monospace,monospace}
+      #atRes .s{font-size:13px;color:var(--muted,#687087);font-variant-numeric:tabular-nums}
+      #atRes .ok{color:var(--ok,#1f9254)}#atRes .bad{color:var(--bad,#d6382c)}
+      #atRes .verdict{font-weight:700}
+      #atRes button{font:700 16px system-ui;padding:14px;border-radius:10px;border:1px solid var(--line,#e1e4ee);background:var(--panel,#fff);color:inherit}
+      #atRes #atCopy{background:var(--ink,#1c2233);color:#fff;font-size:20px;padding:18px}
+      #atRes .row{display:flex;gap:10px}#atRes .row button{flex:1}
+      #atRes pre{background:var(--panel,#fff);border:1px solid var(--line,#e1e4ee);border-radius:10px;padding:10px;font:11px/1.35 ui-monospace,monospace;white-space:pre-wrap;word-break:break-all;max-height:30vh;overflow:auto;margin:0}`;
+    const tile=(k,v,sub,cls)=>`<div class="t"><div class="k">${k}</div><div class="v ${cls||""}">${v}</div><div class="s">${sub}</div></div>`;
+    const hz=R.display_hz_est,chk=C.error?["error","bad",C.error]:C.pass===true?["PASS","ok",`checksum ${C.hash} as expected`]:C.pass===false?["FAIL","bad",`got ${C.hash}, expected ${C.expect}`]:[C.hash||"-","",`${C.sim_days||CHECK_DAYS} sim days · ${C.ms_per_sim_day||"-"} ms per day`];
+    const errs=R.errors.length+(R.fatal?1:0);
+    el.innerHTML=`<style>${css}</style><div class="w">
+      <div><h1>Autotest results</h1><div class="sub">${APP_VER} · ${R.build} · ${new Date().toLocaleString()}<br>${R.gpu||""} · ${R.screen.w}x${R.screen.h} @${R.screen.dpr} · display ~${hz||"?"} Hz${R.battery?` · battery ${R.battery.level}%${R.battery.charging?" charging":""}`:""}</div></div>
+      ${R.fatal?`<div class="t bad"><b>Test could not run:</b> ${R.fatal}</div>`:""}
+      <button id="atCopy">Copy results</button>
+      <div class="g">
+        ${tile("Normal play FPS",n.fps??"-",`p50 ${n.p50??"-"} · p95 ${n.p95??"-"} · p99 ${n.p99??"-"} ms`,hz&&n.fps>=hz*0.95?"ok":"")}
+        ${tile("Slow frames",`${n.over33??"-"}`,`over 33 ms (over 50: ${n.over50??"-"}) · worst ${n.worst??"-"} ms`,n.over50?"bad":"")}
+        ${tile("All upsets FPS",s.fps??"-",`p95 ${s.p95??"-"} ms · over 50 ms: ${s.over50??"-"}`)}
+        ${tile("JS per frame",`${n.js_mean??"-"} ms`,`p95 ${n.js_p95??"-"} ms · upsets ${s.js_mean??"-"} ms`)}
+        ${tile("Draws per frame",n.draws??"-",`${n.tris_k??"-"}k triangles · ${n.canvas?n.canvas.join("x"):"-"} px`)}
+        ${tile("Sim checksum",chk[0],chk[2],"code "+chk[1])}
+      </div>
+      <div class="t"><div class="k">Limited by</div><div class="verdict">${R.verdict}</div>
+        <div class="s">Shadows off ${P.shadows_off?P.shadows_off.fps:"-"} fps · half resolution ${P.half_res?P.half_res.fps:"-"} fps · render skipped ${P.no_render?P.no_render.fps:"-"} fps</div></div>
+      ${R.gpu&&R.gpu.base?(()=>{const g=R.gpu,f=v=>v==null?"–":v.toFixed(1)+" ms",top=(g.effects||[]).filter(e=>e.saves_ms!=null).slice(0,5),pt=(g.particle_types||[]).slice(0,3);
+        return `<div class="t"><div class="k">Upsets on the GPU (draw + GPU per frame, all upsets)</div><div class="verdict">${f(g.base.ms)} per frame${g.base_again&&g.base_again.ms!=null?` (again at the end: ${f(g.base_again.ms)})`:""}</div>
+        <div class="s">Saves: particles off ${f(g.no_particles&&g.no_particles.saves_ms)} · half resolution ${f(g.half_res&&g.half_res.saves_ms)} · one shadow refresh costs ${f(g.shadow_refresh_ms)}</div>
+        <div class="s">Particle types: ${pt.map(x=>`${x.type} ${f(x.saves_ms)} (${x.alive})`).join(" · ")||"–"}</div>
+        <div class="s">Costliest effects: ${top.map(x=>`${x.name} ${f(x.saves_ms)}`).join(" · ")||"–"}</div>
+        ${P.stress_no_html?`<div class="s">All upsets with HTML labels hidden: ${P.stress_no_html.fps} fps, p50 ${P.stress_no_html.p50} ms (with labels: ${s.fps} fps, p50 ${s.p50} ms)</div>`:""}</div>`;})():""}
+      <div class="t"><div class="k">Problems</div><div class="${errs?"bad":"ok"}">${errs?errs+" error"+(errs>1?"s":""):"No errors"}${R.pauses?` · game paused ${R.pauses}x`:""}${R.hidden?` · page hidden ${R.hidden}x`:""}${R.late_programs.length?` · ${R.late_programs.length} shader${R.late_programs.length>1?"s":""} compiled during the test`:""}</div>
+        ${R.errors.length?`<div class="s">${R.errors.slice(0,3).map(e=>e.replace(/[&<>]/g,"")).join("<br>")}</div>`:""}</div>
+      <div class="row"><button id="atAgain">Run again</button><button id="atExit">Exit test</button></div>
+      <pre id="atJson"></pre></div>`;
+    document.body.appendChild(el);el.querySelector("#atJson").textContent=json;
+    const copy=el.querySelector("#atCopy");
+    copy.onclick=()=>{const done=()=>{copy.textContent="Copied ✓";},fallback=()=>{const ta=document.createElement("textarea");ta.value=json;ta.style.cssText="position:fixed;top:0;left:0;opacity:0";
+        document.body.appendChild(ta);ta.select();let ok=false;try{ok=document.execCommand("copy");}catch(e){}ta.remove();if(ok)done();else copy.textContent="Copy failed: select the text below";};
+      if(navigator.clipboard&&window.isSecureContext)navigator.clipboard.writeText(json).then(done,fallback);else fallback();};
+    el.querySelector("#atAgain").onclick=()=>location.reload();
+    el.querySelector("#atExit").onclick=()=>{const u=new URL(location.href);u.search="";location.href=u.toString();};}
+  run().catch(e=>{R.fatal="test crashed: "+(e&&e.message||e);finish();});
+})();
 // ---- diagnostics snapshot + panel ----
 (()=>{let lastN=0,lastT=performance.now();
   const snap=()=>{try{const t=performance.now(),fps=((frame.n||0)-lastN)/((t-lastT)/1000);lastN=frame.n||0;lastT=t;const R=G3.renderer,I=R&&R.info;
@@ -5948,6 +6251,10 @@ requestAnimationFrame(frame);
     seg.innerHTML=`<button data-fps="saver" aria-pressed="${FRAME_CAP===30}" title="30 fps: cooler phone, longer battery">Battery saver</button><button data-fps="smooth" aria-pressed="${FRAME_CAP!==30}" title="Full frame rate: smoother, uses more battery">Smooth</button>`;
     seg.querySelectorAll("button").forEach(x=>x.addEventListener("click",()=>setFpsMode(x.dataset.fps==="smooth")));
     const row0=document.getElementById("v2ctlrow");if(row0)row0.appendChild(seg);}
+  {const l=document.createElement("label");l.className="check";l.innerHTML='<input id="showFps" type="checkbox"/> Show FPS';
+    const row0=document.getElementById("v2ctlrow");if(row0)row0.appendChild(l);
+    l.querySelector("input").addEventListener("change",e=>setShowFps(e.target.checked));
+    let on=false;try{on=localStorage.getItem("paper-mill-showfps")==="1";}catch(e){}if(on)setShowFps(true);}
   const b=document.createElement("button");b.id="diagBtn";b.textContent="Diagnostics";b.addEventListener("click",open);
   const row=document.getElementById("v2ctlrow");if(row)row.appendChild(b);else document.body.appendChild(b);
   window.__openDiag=open;})();

@@ -80,6 +80,10 @@
     seg.innerHTML=`<button data-fps="saver" aria-pressed="${FRAME_CAP===30}" title="30 fps: cooler phone, longer battery">Battery saver</button><button data-fps="smooth" aria-pressed="${FRAME_CAP!==30}" title="Full frame rate: smoother, uses more battery">Smooth</button>`;
     seg.querySelectorAll("button").forEach(x=>x.addEventListener("click",()=>setFpsMode(x.dataset.fps==="smooth")));
     const row0=document.getElementById("v2ctlrow");if(row0)row0.appendChild(seg);}
+  {const l=document.createElement("label");l.className="check";l.innerHTML='<input id="showFps" type="checkbox"/> Show FPS';
+    const row0=document.getElementById("v2ctlrow");if(row0)row0.appendChild(l);
+    l.querySelector("input").addEventListener("change",e=>setShowFps(e.target.checked));
+    let on=false;try{on=localStorage.getItem("paper-mill-showfps")==="1";}catch(e){}if(on)setShowFps(true);}
   const b=document.createElement("button");b.id="diagBtn";b.textContent="Diagnostics";b.addEventListener("click",open);
   const row=document.getElementById("v2ctlrow");if(row)row.appendChild(b);else document.body.appendChild(b);
   window.__openDiag=open;})();

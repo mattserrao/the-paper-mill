@@ -78,7 +78,7 @@
     $("v2state").textContent=first?"":"Paused";
     $("v2free").querySelector("b").textContent=S.free?"Free play: on":"Free play";$("v2free").setAttribute("aria-pressed",String(!!S.free));$("v2ver").textContent=APP_VER;menu.hidden=false;}
   function play(){menu.hidden=true;first=false;running=true;}
-  G3.showMenu=showMenu;
+  G3.showMenu=showMenu;G3.play=play;   // play: used by the autotest (52b) to start without the tutorial
   // ---- v3.1.0 quick-start tutorial: shown when a season starts (until the player ticks "don't show again") ----
   const TUT=(()=>{
     const stops=[
