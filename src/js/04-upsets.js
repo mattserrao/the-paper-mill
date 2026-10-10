@@ -62,14 +62,14 @@ function crewTick(dt){if(!S.crewQ)S.crewQ=[];
   const h=S.crewQ[0];if(!h)return;const now=performance.now();if(!h.since)h.since=now;
   if(h.resp>0)h.resp-=dt;
   // in the 3D view the job starts when the crew actually gets there (with a safety timeout)
-  if(!(G3.on&&G3.ok)||now-h.since>(h.k==="ragger"?25000:6000))h.here=true;
+  if(!(G3.on&&G3.ok)||TURBO_FAST(C.simSpeed)||now-h.since>(h.k==="ragger"?25000:6000))h.here=true;
   if(h.resp<=0&&h.here)h.go=true;}
 // maintenance: techs work in pairs, oldest job first; a job's repair clock only runs once its pair is on site
 const MJOBS=["refclash","steamjoint","fogfan","shaft","fabric","felt","winderdown","hdblow","lwplug","cscreen","fscreen","lcplug","boiler","thkblow","overflow","chestover","fleet","roof","lightning"];
 const MNEED=id=>MJOBS.includes(id);
 function maintTick(dt){const crews=Math.max(1,Math.floor(P.techs/2)),list=S.inc.filter(i=>MNEED(i.id)),now=performance.now();
   list.forEach((i,k)=>{i.mSlot=k<crews?k:-1;i.mQ=k-crews+1;if(i.mSlot<0)return;if(!i.mSince){i.mSince=now;i.mResp=8;}
-    if(i.mResp>0)i.mResp-=dt;if(!(G3.on&&G3.ok)||now-i.mSince>9000)i.mHere=true;if(i.mResp<=0&&i.mHere)i.mGo=true;});}
+    if(i.mResp>0)i.mResp-=dt;if(!(G3.on&&G3.ok)||TURBO_FAST(C.simSpeed)||now-i.mSince>9000)i.mHere=true;if(i.mResp<=0&&i.mHere)i.mGo=true;});}
 function maintState(i){if(!MNEED(i.id))return "";if(i.mGo)return "maintenance working";if(i.mSlot>=0)return "maintenance on the way";return `waiting for maintenance (${i.mQ} ahead)`;}
 function incState(i){const a=QINC(i.id)&&!working(i.id)?crewState(i.id):"",b=MNEED(i.id)&&!i.mGo?maintState(i):"";return [a,b].filter(Boolean).join(" · ");}
 function working(k){const h=S.crewQ&&S.crewQ[0];return !!(h&&h.k===k&&h.go);}

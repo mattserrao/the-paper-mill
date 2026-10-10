@@ -46,7 +46,7 @@ function outNote(head,body,ms){const el=outShell();el.classList.add("note");
   el.hidden=false;const m=el.querySelector(".modal");m.addEventListener("click",()=>{el.hidden=true;},{once:true});el._t=setTimeout(()=>{el.hidden=true;},ms);}
 function beginOutage(){const o=S.outg,st=S.t;if(!o.plan)o.plan={stock:1,wet:1,dry:1};o.on=true;o.end=st+OUT.len;
   // slow the clock so the crews can be watched; the old speed comes back when the outage ends
-  o.spd=C.simSpeed;if(C.simSpeed>OUT.simCap){setSimSpeed(OUT.simCap);}
+  o.spd=C.simSpeed;if(C.simSpeed>OUT.simCap&&!TURBO_FAST(C.simSpeed)){setSimSpeed(OUT.simCap);}
   addFx({id:"pout",left:OUT.len,mods:{pmDown:"planned outage",pulperDown:1}});AUDIO.sfx("clunk",400);
   log(`Planned outage ${o.k} has begun: down until ${hourOf(o.end)}`,"warn");BANNERS.push({text:`Planned outage: the mill is down until ${hourOf(o.end)}.`,t:null,kind:"good",tag:"OUTAGE"});
   outNote("Outage has begun",`The mill is down for planned maintenance: ${(OUT.jobs[o.k-1]||"inspections").toLowerCase()} and new press felts. Started ${hourOf(st)}, ends ${outTime(o.end)}.`,5000);}
