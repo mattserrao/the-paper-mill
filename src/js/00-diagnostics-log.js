@@ -1,7 +1,7 @@
-const APP_VER="v4.0.1-eb";   // shown in the menu and sent with leaderboard scores (max 12 characters)
-// TEST BUILDS ONLY: turbo speeds 240/480/960 sim min/s for fast playtests. Above 120, crews and maintenance start jobs
+const APP_VER="v4.0.2";   // shown in the menu and sent with leaderboard scores (max 12 characters)
+// TEST BUILDS ONLY (off in releases): turbo speeds 240/480/960 sim min/s for fast playtests. Above 120, crews and maintenance start jobs
 // without waiting for the 3D walk (as with the 3D view off) and outages keep the speed. Set false for a release.
-const TURBO=true,TURBO_FAST=s=>TURBO&&s>120;
+const TURBO=false,TURBO_FAST=s=>TURBO&&s>120;
 /* v2.9.9 diagnostics: a rolling log of errors, warnings (incl. three.js shader / WebGL context messages), audio state changes
    and a stats snapshot every 15 s, shown from Controls > Diagnostics with a Copy button */
 const DIAG=[],DIAG_T0=performance.now();
