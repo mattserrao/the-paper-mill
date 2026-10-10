@@ -622,6 +622,9 @@ body.season-lock label.check:has(#breaks),body.season-lock label.check:has(#hays
 
 <script type="module">
 const APP_VER="v4.0.1-eb";   // shown in the menu and sent with leaderboard scores (max 12 characters)
+// TEST BUILDS ONLY: turbo speeds 240/480/960 sim min/s for fast playtests. Above 120, crews and maintenance start jobs
+// without waiting for the 3D walk (as with the 3D view off) and outages keep the speed. Set false for a release.
+const TURBO=true,TURBO_FAST=s=>TURBO&&s>120;
 /* v2.9.9 diagnostics: a rolling log of errors, warnings (incl. three.js shader / WebGL context messages), audio state changes
    and a stats snapshot every 15 s, shown from Controls > Diagnostics with a Copy button */
 const DIAG=[],DIAG_T0=performance.now();
@@ -1038,14 +1041,14 @@ function crewTick(dt){if(!S.crewQ)S.crewQ=[];
   const h=S.crewQ[0];if(!h)return;const now=performance.now();if(!h.since)h.since=now;
   if(h.resp>0)h.resp-=dt;
   // in the 3D view the job starts when the crew actually gets there (with a safety timeout)
-  if(!(G3.on&&G3.ok)||now-h.since>(h.k==="ragger"?25000:6000))h.here=true;
+  if(!(G3.on&&G3.ok)||TURBO_FAST(C.simSpeed)||now-h.since>(h.k==="ragger"?25000:6000))h.here=true;
   if(h.resp<=0&&h.here)h.go=true;}
 // maintenance: techs work in pairs, oldest job first; a job's repair clock only runs once its pair is on site
 const MJOBS=["refclash","steamjoint","fogfan","shaft","fabric","felt","winderdown","hdblow","lwplug","cscreen","fscreen","lcplug","boiler","thkblow","overflow","chestover","fleet","roof","lightning"];
 const MNEED=id=>MJOBS.includes(id);
 function maintTick(dt){const crews=Math.max(1,Math.floor(P.techs/2)),list=S.inc.filter(i=>MNEED(i.id)),now=performance.now();
   list.forEach((i,k)=>{i.mSlot=k<crews?k:-1;i.mQ=k-crews+1;if(i.mSlot<0)return;if(!i.mSince){i.mSince=now;i.mResp=8;}
-    if(i.mResp>0)i.mResp-=dt;if(!(G3.on&&G3.ok)||now-i.mSince>9000)i.mHere=true;if(i.mResp<=0&&i.mHere)i.mGo=true;});}
+    if(i.mResp>0)i.mResp-=dt;if(!(G3.on&&G3.ok)||TURBO_FAST(C.simSpeed)||now-i.mSince>9000)i.mHere=true;if(i.mResp<=0&&i.mHere)i.mGo=true;});}
 function maintState(i){if(!MNEED(i.id))return "";if(i.mGo)return "maintenance working";if(i.mSlot>=0)return "maintenance on the way";return `waiting for maintenance (${i.mQ} ahead)`;}
 function incState(i){const a=QINC(i.id)&&!working(i.id)?crewState(i.id):"",b=MNEED(i.id)&&!i.mGo?maintState(i):"";return [a,b].filter(Boolean).join(" · ");}
 function working(k){const h=S.crewQ&&S.crewQ[0];return !!(h&&h.k===k&&h.go);}
@@ -1503,7 +1506,7 @@ function outNote(head,body,ms){const el=outShell();el.classList.add("note");
   el.hidden=false;const m=el.querySelector(".modal");m.addEventListener("click",()=>{el.hidden=true;},{once:true});el._t=setTimeout(()=>{el.hidden=true;},ms);}
 function beginOutage(){const o=S.outg,st=S.t;if(!o.plan)o.plan={stock:1,wet:1,dry:1};o.on=true;o.end=st+OUT.len;
   // slow the clock so the crews can be watched; the old speed comes back when the outage ends
-  o.spd=C.simSpeed;if(C.simSpeed>OUT.simCap){setSimSpeed(OUT.simCap);}
+  o.spd=C.simSpeed;if(C.simSpeed>OUT.simCap&&!TURBO_FAST(C.simSpeed)){setSimSpeed(OUT.simCap);}
   addFx({id:"pout",left:OUT.len,mods:{pmDown:"planned outage",pulperDown:1}});AUDIO.sfx("clunk",400);
   log(`Planned outage ${o.k} has begun: down until ${hourOf(o.end)}`,"warn");BANNERS.push({text:`Planned outage: the mill is down until ${hourOf(o.end)}.`,t:null,kind:"good",tag:"OUTAGE"});
   outNote("Outage has begun",`The mill is down for planned maintenance: ${(OUT.jobs[o.k-1]||"inspections").toLowerCase()} and new press felts. Started ${hourOf(st)}, ends ${outTime(o.end)}.`,5000);}
@@ -1773,7 +1776,7 @@ let running=true;
 // everything the UI refreshes 5 times a second, called from the main loop with a tick counter (no separate timers)
 const UI_TICKS=[];
 // sim speed in sim-minutes per real second; every speed change goes through here
-function setSimSpeed(v){C.simSpeed=Math.max(1,Math.min(120,Math.round(+v)||1));}
+function setSimSpeed(v){C.simSpeed=Math.max(1,Math.min(TURBO?960:120,Math.round(+v)||1));}
 
 const cgrid=$("chaosgrid");
 GROUPS.forEach(([g,lab])=>{const d=document.createElement("div");d.className="grp";const h=document.createElement("h3");h.textContent=lab;d.appendChild(h);
@@ -5842,7 +5845,7 @@ function drawSpider(){const D=G3.SPD;if(!D||$("spider").hidden)return;
   if(h.length<2)return;const X=i=>i/(179)*W,ly=v=>Hh-8-(Math.log10(Math.max(10,v))-1)/(Math.log10(2000)-1)*(Hh-36),fy=v=>Hh-8-v/Math.max(30,...h.map(r=>Math.max(r[2],r[3])))*(Hh-36);
   [[0,"#8a6644",ly,[]],[1,"#3fa0d0",ly,[]],[2,"#8a6644",fy,[10,8]],[3,"#3fa0d0",fy,[10,8]]].forEach(([k,col,Y,dash])=>{x.setLineDash(dash);x.strokeStyle=col;x.lineWidth=3;x.beginPath();h.forEach((r,i)=>i?x.lineTo(X(i),Y(r[k])):x.moveTo(X(i),Y(r[k])));x.stroke();});x.setLineDash([]);}
 UI_TICKS.push(drawSpider);
-const SPEEDS=[1,2,5,10,20,30,60,120];
+const SPEEDS=[1,2,5,10,20,30,60,120].concat(TURBO?[240,480,960]:[]);
 function nudgeSpeed(d){const i=SPEEDS.findIndex(v=>v>=C.simSpeed);const n=SPEEDS[clamp((i<0?SPEEDS.length-1:i)+d,0,SPEEDS.length-1)];setSimSpeed(n);}
 setView();
 
