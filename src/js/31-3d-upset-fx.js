@@ -305,9 +305,9 @@
       return (now,rdt)=>{bv.position.y=Math.abs(Math.sin(now/400))*0.4;teeth.position.y=3.55-Math.abs(Math.sin(now/120))*0.3;head.rotation.z=Math.sin(now/120)*0.08;tail.rotation.z=0.25+Math.sin(now/200)*0.3;
         for(let k=0;k<2;k++)if(Math.random()<rdt*14)emit("chip",-18.5,4,-11.5,1+Math.random()*4,4+Math.random()*4,R()*5,1.3,0.55,"#ffffff",1);};},
   };
-  const blackEl=$("blackout3d"),incHost=$("labels3d");let lastIncTxt=0;
-  function makeFX(id){const def=FXDEF[id];const g=new THREE.Group();scene.add(g);const pp=PINS[id]||[0,10,0,"!"];const f=FX[id]={g,up:null,pin:pinAt(g,pp[0],pp[1],pp[2],pp[3]),el:document.createElement("div")};
-    f.up=def?def(g):()=>{};f.el.className="lbl inc bad";f.el.addEventListener("click",()=>G3.flyTo(id));f.el.append(document.createElement("b"),document.createElement("span"));incHost.appendChild(f.el);f.el.hidden=true;return f;}
+  const blackEl=$("blackout3d");let lastIncTxt=0;
+  function makeFX(id){const def=FXDEF[id];const g=new THREE.Group();scene.add(g);const pp=PINS[id]||[0,10,0,"!"];const f=FX[id]={g,up:null,pin:pinAt(g,pp[0],pp[1],pp[2],pp[3]),lb:lblNew(true,id)};
+    f.up=def?def(g):()=>{};return f;}
   /* v4: every upset effect is built, and every shader compiled, while the start menu is up: a few effects per frame
      (about 8 ms of work each frame), then one compileAsync pass, which compiles in parallel where the browser supports
      it. Nothing compiles mid-play. (r186's compile() walks the whole scene however much is hidden, so v3's
@@ -362,11 +362,10 @@
       if(G3.EXP&&G3.EXP.hideFX===inc.id){f.g.visible=false;return;}   // autotest GPU probe: this effect off (no drawing, no new particles)
       f.g.visible=true;f.on=true;f.up(now,rdt,inc);if(f.pinPos)f.pin.move(f.pinPos[0],f.pinPos[1]);f.pin.update(now);
       {const zp=!G3.zen;f.pin.p.visible=f.pin.ring.visible=f.pin.stem.visible=zp;}   // v3.0.1: zen mode shows events without the red pins
-      tmp.set(f.pin.x,f.pin.p.position.y+3.4,f.pin.z).project(camera);const vis=!G3.zen&&tmp.z<1&&Math.abs(tmp.x)<1.1&&Math.abs(tmp.y)<1.1;if(f.el.hidden!==!vis)f.el.hidden=!vis;
-      if(vis){const tf=`translate(${Math.round((tmp.x+1)/2*w)}px,${Math.round((1-tmp.y)/2*hh)}px) translate(-50%,-100%)`;if(f.tf!==tf){f.tf=tf;f.el.style.transform=tf;}
-        if(doTxt){const a=EV[inc.id].name,b=`${incState(inc)?incState(inc)+" · ":""}${(inc.left/60).toFixed(1)} h left${inc.note?" · "+inc.note.split(" · ")[0]:""}`;
-          if(f.ta!==a){f.ta=a;f.el.firstChild.textContent=a;}if(f.tb!==b){f.tb=b;f.el.lastChild.textContent=b;}}}});
-    for(const id in FX){const f=FX[id];if(!f.on&&!f.el.hidden)f.el.hidden=true;}
+      tmp.set(f.pin.x,f.pin.p.position.y+3.4,f.pin.z).project(camera);const vis=!G3.zen&&tmp.z<1&&Math.abs(tmp.x)<1.1&&Math.abs(tmp.y)<1.1;f.lb.vis=vis;
+      if(vis){f.lb.x=Math.round((tmp.x+1)/2*w);f.lb.y=Math.round((1-tmp.y)/2*hh);
+        if(doTxt||f.lb.a==null){const st=incState(inc),b=`${st?st+" · ":""}${(inc.left/60).toFixed(1)} h left${inc.note?" · "+inc.note.split(" · ")[0]:""}`;lblSet(f.lb,EV[inc.id].name,b,true);}}});
+    for(const id in FX){const f=FX[id];if(!f.on)f.lb.vis=false;}
     stepParts(rdt);fireLight.position.copy(fireLpos);fireFloorK=Math.max(0,fireFloorK-rdt*1.5);
     {const fl=0.9*Math.sin(performance.now()/60)+0.6*Math.sin(performance.now()/23),on=fireFloor.userData.on||0;fireLight.intensity=fireL>0?LEG*0.75*fireL*(3.4+fl+fireFloorK*3):0;
       fireFloor.visible=on>0;if(on>0){if(!fireFloor.material.map){fireFloor.material.map=spriteTex((x,w)=>{const g=x.createRadialGradient(w/2,w/2,0,w/2,w/2,w/2);g.addColorStop(0,"rgba(255,255,255,1)");g.addColorStop(0.4,"rgba(255,255,255,0.6)");g.addColorStop(1,"rgba(255,255,255,0)");x.fillStyle=g;x.fillRect(0,0,w,w);});fireFloor.material.needsUpdate=true;}fireFloor.material.opacity=Math.min(1,on*(0.42+0.1*fl+fireFloorK*0.25));}fireFloor.userData.on=0;}fireL=0;
