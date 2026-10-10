@@ -3,12 +3,13 @@
 // stress phase, replays 3 sim days as a correctness checksum, then shows a results page with a "Copy results" button
 // (JSON). Nothing is saved: no settings, scores or tutorial flags are written. Does nothing without ?autotest.
 // URL options: scale=0.5 (shorter phases), speed=10 (sim min/s), seed=N, expect=<checksum>, fallback (keep the
-// low-FPS fallback on; by default it's off so builds compare at the same graphics settings).
+// low-FPS fallback on; by default it's off so builds compare at the same graphics settings), quick (~30 s: normal play,
+// all upsets with and without the HTML overlays, a short GPU probe and the checksum; skips the diagnostic phases).
 (()=>{const Q=new URLSearchParams(location.search);if(!Q.has("autotest"))return;
   const SCALE=Math.max(0.05,+Q.get("scale")||1),SPEED=+Q.get("speed")||10,SEED=(+Q.get("seed")||20261009)>>>0,
-    EXPECT=(Q.get("expect")||"").toLowerCase(),CHECK_DAYS=3,sec=s=>s*1000*SCALE,wait=ms=>new Promise(r=>setTimeout(r,ms));
+    EXPECT=(Q.get("expect")||"").toLowerCase(),QUICK=Q.has("quick"),CHECK_DAYS=3,sec=s=>s*1000*SCALE,wait=ms=>new Promise(r=>setTimeout(r,ms));
   const R={schema:"pm-autotest/1",app:APP_VER,build:location.pathname,ts:new Date().toISOString(),ua:navigator.userAgent,
-    screen:{w:screen.width,h:screen.height,dpr:devicePixelRatio},options:{scale:SCALE,speed:SPEED,seed:SEED,fallback:Q.has("fallback")},
+    screen:{w:screen.width,h:screen.height,dpr:devicePixelRatio},options:{scale:SCALE,speed:SPEED,seed:SEED,fallback:Q.has("fallback"),quick:QUICK},
     phases:{},errors:[],pauses:0,hidden:0};
   const err=m=>{if(R.errors.length<20)R.errors.push(String(m).slice(0,200));};
   addEventListener("error",e=>err(e.message||e));addEventListener("unhandledrejection",e=>err("promise: "+(e.reason&&e.reason.message||e.reason)));
@@ -82,14 +83,14 @@
       const pbs=[...G3.PB.entries()].map(([map,b])=>({b,name:(names.get(map)||["?"]).join("+")}));
       G.base=await meas("baseline",1,2);G.base.particles=Object.fromEntries(pbs.map(x=>[x.name,x.b.list.length]));
       EXP.noParts=true;G.no_particles=await meas("particles off",1.5,1.5);EXP.noParts=false;
-      G.particle_types=[];for(const x of pbs){if(!x.b.list.length)continue;EXP.hidePB=x.b;const m=await meas("no "+x.name,0.6,1.2);EXP.hidePB=null;
+      G.particle_types=[];if(!QUICK)for(const x of pbs){if(!x.b.list.length)continue;EXP.hidePB=x.b;const m=await meas("no "+x.name,0.6,1.2);EXP.hidePB=null;
         G.particle_types.push({type:x.name,alive:x.b.list.length,saves_ms:saves(m)});}
       {const pr=Rr.getPixelRatio();Rr.setPixelRatio(pr*0.5);d.resize();const m=await meas("half resolution",1,1.5);Rr.setPixelRatio(pr);d.resize();G.half_res=m;}
       // shadows: one refresh's cost = every frame minus never (normal play refreshes at 15 Hz, a quarter of frames)
       {const hz=G3.shadowHz;G3.shadowHz=1000;const a=await meas("shadows every frame",0.6,1.2);G3.shadowHz=0;const b=await meas("shadows never refreshed",0.6,1.2);G3.shadowHz=hz;
         G.shadow_refresh_ms=a.ms==null||b.ms==null?null:+(a.ms-b.ms).toFixed(2);G.shadows_at_15hz_ms=G.shadow_refresh_ms==null?null:+(G.shadow_refresh_ms*15/60).toFixed(2);}
       // each upset's own effect (its 3D objects and the particles it emits), hidden one at a time
-      const ids=S.inc.map(i=>i.id).filter((v,i,a)=>a.indexOf(v)===i&&G3.FX[v]);G.effects=[];
+      const ids=QUICK?[]:S.inc.map(i=>i.id).filter((v,i,a)=>a.indexOf(v)===i&&G3.FX[v]);G.effects=[];
       for(let i=0;i<ids.length;i++){const id=ids[i];EXP.hideFX=id;const m=await meas(`effect ${i+1}/${ids.length}: ${(EVENTS.find(e=>e.id===id)||{}).name||id}`,1.2,0.8);EXP.hideFX=null;
         G.effects.push({id,name:(EVENTS.find(e=>e.id===id)||{}).name||id,saves_ms:saves(m)});}
       G.effects.sort((a,b)=>(b.saves_ms??-1e9)-(a.saves_ms??-1e9));
@@ -128,16 +129,17 @@
     // a season on a fixed seed, at the display's frame rate, with no tutorial, event cards or leaderboard; nothing saved
     FRAME_CAP=0;G3.cap=0;G3.noFallback=!Q.has("fallback");setSimSpeed(SPEED);
     startSeason();seedRun(SEED);S.cards.next=1e12;G3.play();
-    await phase("normal","Normal play",8,20,null,null,true);
+    if(QUICK){await phase("normal","Normal play",4,8,null,null,true);R.display_hz_est=null;}
+    else{await phase("normal","Normal play",8,20,null,null,true);
     await phase("shadows_off","Shadows off",2.5,5,()=>setShadows(false),()=>setShadows(true));
     let pr=1;await phase("half_res","Half resolution",2,5,()=>{const d=D();pr=d.renderer.getPixelRatio();d.renderer.setPixelRatio(pr*0.5);d.resize();},()=>{const d=D();d.renderer.setPixelRatio(pr);d.resize();});
     await phase("no_render","3D render skipped",1.5,5,()=>{G3.EXP.noRender=true;},()=>{G3.EXP.noRender=false;});
     // the display's refresh rate: with nothing to draw, frames arrive at it (60, 90, 120 Hz)
-    {const f=R.phases.no_render.p50;R.display_hz_est=f?[30,60,90,120,144].reduce((b,hz)=>Math.abs(1000/f-hz)<Math.abs(1000/f-b)?hz:b,60):null;}
-    await phase("stress","All upsets at once",3,15,()=>{CH.on=true;EVENTS.forEach(e=>{try{trigger(e.id,true);}catch(_){}});},null,true);
+    {const f=R.phases.no_render.p50;R.display_hz_est=f?[30,60,90,120,144].reduce((b,hz)=>Math.abs(1000/f-hz)<Math.abs(1000/f-b)?hz:b,60):null;}}
+    await phase("stress","All upsets at once",QUICK?2:3,QUICK?10:15,()=>{CH.on=true;EVENTS.forEach(e=>{try{trigger(e.id,true);}catch(_){}});},null,true);
     // the browser's own per-frame work (style, layout, compositing of the HTML overlays) is in neither the JS nor the
     // GPU numbers: the same all-upsets scene with the labels, chips and banner hidden shows its share
-    {let st=null;await phase("stress_no_html","All upsets, HTML labels hidden",1.5,6,()=>{st=document.createElement("style");st.textContent="#labels3d,#chips3d,.banner3d{display:none!important}";document.head.appendChild(st);},()=>{if(st)st.remove();});}
+    {let st=null;await phase("stress_no_html","All upsets, HTML labels hidden",QUICK?1:1.5,QUICK?4:6,()=>{st=document.createElement("style");st.textContent="#labels3d,#chips3d,.banner3d{display:none!important}";document.head.appendChild(st);},()=>{if(st)st.remove();});}
     if(Q.get("gpu")!=="0")await gpuProbe();
     say("checking the simulation");await wait(50);
     try{R.check=checksum();}catch(e){R.check={error:String(e&&e.message||e)};}
