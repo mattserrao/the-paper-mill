@@ -201,9 +201,10 @@
     pm("RENDER (three.js draw submission)");
     // labels follow the 3D anchors
     const w=G3.vw||host.clientWidth,hh=G3.vh||host.clientHeight,doText=now-lastLabel>200;if(doText)lastLabel=now;
-    LABELS.forEach(L=>{tmp.copy(L.v).project(camera);const vis=tmp.z<1&&Math.abs(tmp.x)<1.05&&Math.abs(tmp.y)<1.05;if(L.el.hidden===vis)L.el.hidden=!vis;
-      if(!vis)return;const tf=`translate(${Math.round((tmp.x+1)/2*w)}px,${Math.round((1-tmp.y)/2*hh)}px) translate(-50%,-100%)`;if(L.tf!==tf){L.tf=tf;L.el.style.transform=tf;}
-      if(doText){const [a,b]=L.t();if(L.ta!==a){L.ta=a;L.b.textContent=a;}if(L.tb!==b){L.tb=b;L.s.textContent=b;}const bad=!!(L.cls&&L.cls());if(L.bad!==bad){L.bad=bad;L.el.classList.toggle("bad",bad);}}});
+    LABELS.forEach(L=>{const R=L.lb;tmp.copy(L.v).project(camera);const vis=tmp.z<1&&Math.abs(tmp.x)<1.05&&Math.abs(tmp.y)<1.05;R.vis=vis;
+      if(!vis)return;R.x=Math.round((tmp.x+1)/2*w);R.y=Math.round((1-tmp.y)/2*hh);
+      if(doText||R.a==null){const [a,b]=L.t();lblSet(R,a,b,!!(L.cls&&L.cls()));}});
+    lblPaint(now);
     pm("3D labels");
     // headline + active incidents
     if(doText){const b=BANNERS[0];if(banner.hidden!==!b)banner.hidden=!b;if(b){const cn="banner3d "+(b.kind==="good"?"good":""),tg=b.tag||(b.kind==="good"?"INSTALLED":"BREAKING");

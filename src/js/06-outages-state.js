@@ -1,8 +1,9 @@
 /* ---------- v3.0.0: planned outages (season mode) ----------
    Every 7th season day (days 7, 14, 21, 28) the mill takes a controlled 4-hour shutdown starting 8 AM. 24 h ahead the
-   player sets a maintenance budget per area: $50k = 10% less reliable, $100k = no change, $200k = 20% more reliable.
+   player sets a maintenance budget per area: $20k = 10% less reliable, $70k = no change, $170k = 20% more reliable
+   (v10 economy balance: was $50k / $100k / $200k).
    The new reliability takes effect when the outage ends and lasts until the next one. */
-const OUT={every:7,hour:8,len:240,cost:[50e3,100e3,200e3],rel:[1.1,1,0.8],simCap:5,
+const OUT={every:7,hour:8,len:240,cost:[20e3,70e3,170e3],rel:[1.1,1,0.8],simCap:5,
   jobs:["1st press roll change","Forming fabric (wire) change","Pulper rotor and extraction plate change","Refiner plate change"],
   areas:[["stock","Stock prep","pulper, cleaners, screens, refiners, thickener"],["wet","Wet end","headbox, forming fabric, press felts"],["dry","Dry end","dryers, steam joints, reel, winder"]],
   ev:{stock:["refclash","ragger","overflow","dye","hdblow","lwplug","cscreen","fscreen","lcplug","thkblow","chestover"],wet:["fabric","felt","slime","fogfan"],dry:["shaft","dryerfire","wrap","steamjoint","winderdown","boiler"]},area:{}};
@@ -45,7 +46,7 @@ function outNote(head,body,ms){const el=outShell();el.classList.add("note");
   el.hidden=false;const m=el.querySelector(".modal");m.addEventListener("click",()=>{el.hidden=true;},{once:true});el._t=setTimeout(()=>{el.hidden=true;},ms);}
 function beginOutage(){const o=S.outg,st=S.t;if(!o.plan)o.plan={stock:1,wet:1,dry:1};o.on=true;o.end=st+OUT.len;
   // slow the clock so the crews can be watched; the old speed comes back when the outage ends
-  o.spd=C.simSpeed;if(C.simSpeed>OUT.simCap){setSimSpeed(OUT.simCap);}
+  o.spd=C.simSpeed;if(C.simSpeed>OUT.simCap&&!TURBO_FAST(C.simSpeed)){setSimSpeed(OUT.simCap);}
   addFx({id:"pout",left:OUT.len,mods:{pmDown:"planned outage",pulperDown:1}});AUDIO.sfx("clunk",400);
   log(`Planned outage ${o.k} has begun: down until ${hourOf(o.end)}`,"warn");BANNERS.push({text:`Planned outage: the mill is down until ${hourOf(o.end)}.`,t:null,kind:"good",tag:"OUTAGE"});
   outNote("Outage has begun",`The mill is down for planned maintenance: ${(OUT.jobs[o.k-1]||"inspections").toLowerCase()} and new press felts. Started ${hourOf(st)}, ends ${outTime(o.end)}.`,5000);}

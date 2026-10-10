@@ -1,5 +1,23 @@
 # Changelog
 
+## v4.0.2 (2026-10-10)
+
+Economy rebalance and smoother screens when many upsets happen at once.
+
+### Economy
+- A season played hands-off (every offer declined, standard outage budgets, no upgrades) now breaks even instead of
+  making about $1.4M. Profit comes from running the mill well. Measured over 15 simulated seasons: average finish
+  $2.00M from the $2.0M start (before: $3.43M over 10 seasons).
+- Paper sells for $89/t less: 23m $625, 26m $645, 30m $665, 33HT $725 per ton.
+- Outage budgets per area are $20k / $70k / $170k (were $50k / $100k / $200k), with the same reliability effects.
+- The seeded 3-day checksum changes to `810f617a` (cash is part of it); upsets, breaks and production are unchanged.
+
+### Performance
+- The floating labels over the mill (section names and upset labels) are drawn on one canvas instead of as page
+  elements. With every upset active (phone emulation): repaints per frame 12.1 → 1.2, browser render work per frame
+  2.57 → 1.45 ms, page writes per frame 36.6 → 14.9. On an iPhone this was the cause of frame drops (43–51 FPS) when
+  many upsets were active. Labels look and behave the same: tap an upset label to fly there.
+
 ## v4.0.1 (2026-10-09)
 
 Performance follow-up to v4.0.0, measured on an iPhone 15 (iOS 18.7, Safari) with the new device autotest across eight

@@ -45,7 +45,7 @@ function drawSpider(){const D=G3.SPD;if(!D||$("spider").hidden)return;
   if(h.length<2)return;const X=i=>i/(179)*W,ly=v=>Hh-8-(Math.log10(Math.max(10,v))-1)/(Math.log10(2000)-1)*(Hh-36),fy=v=>Hh-8-v/Math.max(30,...h.map(r=>Math.max(r[2],r[3])))*(Hh-36);
   [[0,"#8a6644",ly,[]],[1,"#3fa0d0",ly,[]],[2,"#8a6644",fy,[10,8]],[3,"#3fa0d0",fy,[10,8]]].forEach(([k,col,Y,dash])=>{x.setLineDash(dash);x.strokeStyle=col;x.lineWidth=3;x.beginPath();h.forEach((r,i)=>i?x.lineTo(X(i),Y(r[k])):x.moveTo(X(i),Y(r[k])));x.stroke();});x.setLineDash([]);}
 UI_TICKS.push(drawSpider);
-const SPEEDS=[1,2,5,10,20,30,60,120];
+const SPEEDS=[1,2,5,10,20,30,60,120].concat(TURBO?[240,480,960]:[]);
 function nudgeSpeed(d){const i=SPEEDS.findIndex(v=>v>=C.simSpeed);const n=SPEEDS[clamp((i<0?SPEEDS.length-1:i)+d,0,SPEEDS.length-1)];setSimSpeed(n);}
 setView();
 

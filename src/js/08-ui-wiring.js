@@ -45,7 +45,7 @@ let running=true;
 // everything the UI refreshes 5 times a second, called from the main loop with a tick counter (no separate timers)
 const UI_TICKS=[];
 // sim speed in sim-minutes per real second; every speed change goes through here
-function setSimSpeed(v){C.simSpeed=Math.max(1,Math.min(120,Math.round(+v)||1));}
+function setSimSpeed(v){C.simSpeed=Math.max(1,Math.min(TURBO?960:120,Math.round(+v)||1));}
 
 const cgrid=$("chaosgrid");
 GROUPS.forEach(([g,lab])=>{const d=document.createElement("div");d.className="grp";const h=document.createElement("h3");h.textContent=lab;d.appendChild(h);
