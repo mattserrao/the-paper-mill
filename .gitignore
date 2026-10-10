@@ -6,3 +6,5 @@ __pycache__/
 scorecard-*.json
 result-*.json
 build/
+.claude/worktrees/
+tools/quick-*.json
