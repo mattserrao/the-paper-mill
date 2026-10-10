@@ -642,9 +642,12 @@ const BRANDS=["#2f5bea","#0c8f7f","#d6336c","#6741d9","#e8590c","#1971c2","#2f9e
 const NAME_A=["Pulp Fiction","Reel Deal","Big Roll Energy","Ream Team","Corrugation Station","Fourdrinier Fiesta","Kraft Punk","Felt Cute","Nip & Tuck","Caliper Crew","Broke & Proud","Basis Weight Watchers","Fiber Optimist","Paper Trail","Dryer Can-Do","Hayout Heights","Couch Roll Potato","Wet End Wonders","Slitter Glitter","Headbox Heroes","Pulp Friction","Lignin Lounge","Starch Madness","Bale Out","Flute Loop","Tissue Issues","Sheet Show","Fluffy Fiber","Paper Jam","Roll Model","Box Office","Cellulose Encounters","Pulpit Rock","Tear Strength","Doctor Blade","Rewind Time","Ply Me to the Moon","Grain Direction","Fold Standard","Reel Housewives"];
 const NAME_B=["Paper Co.","Mills","Paperworks","Board Mill","Containerboard","Fibre Inc.","Pulp & Paper","Paper Products","Mill Works","Corrugated Co."];
 const MILL={brand:"",name:""};
+// v4.0.1: bumped whenever a palette color variable changes (brand here, paper color in setPaper), so the 3D view
+// re-reads the colors only then: reading computed styles forces a full style recalculation mid-frame
+let PAL_V=0;
 function rollMill(){let b;do{b=BRANDS[Math.floor(Math.random()*BRANDS.length)];}while(b===MILL.brand);
   MILL.brand=b;MILL.name=NAME_A[Math.floor(Math.random()*NAME_A.length)]+" "+NAME_B[Math.floor(Math.random()*NAME_B.length)];
-  document.documentElement.style.setProperty("--brand",b);
+  document.documentElement.style.setProperty("--brand",b);PAL_V++;
 }
 rollMill();
 // rename from the menu: trims, caps at 32 characters, repaints the mill's signs
@@ -1752,7 +1755,7 @@ const firstGesture=()=>{GESTURES.forEach(t=>window.removeEventListener(t,firstGe
 GESTURES.forEach(t=>window.addEventListener(t,firstGesture,{capture:true,passive:true}));
 paintSound();
 const PAPER={brown:"#b98d61",white:"#fbfbfd"};
-function setPaper(c){if(!PAPER[c])c="brown";document.documentElement.style.setProperty("--paperc",PAPER[c]);
+function setPaper(c){if(!PAPER[c])c="brown";document.documentElement.style.setProperty("--paperc",PAPER[c]);PAL_V++;
   document.querySelectorAll("#paperColor button").forEach(b=>b.setAttribute("aria-pressed",String(b.dataset.c===c)));try{localStorage.setItem("paper-mill-paper",c);}catch(e){}}
 document.querySelectorAll("#paperColor button").forEach(b=>b.addEventListener("click",()=>setPaper(b.dataset.c)));
 {let pc="brown";try{pc=localStorage.getItem("paper-mill-paper")||"brown";}catch(e){}setPaper(pc);}
@@ -2141,7 +2144,8 @@ function no3D(){G3.ok=false;$("no3d").hidden=false;$("no3d-retry").onclick=()=>l
   function tok(name){return getComputedStyle(document.documentElement).getPropertyValue("--"+name).trim()||"#888";}
   function mat(token,opts={}){const m=new StdMat(Object.assign({roughness:0.72,metalness:0.04,flatShading:false},opts));m.userData.token=token;MATS.push(m);return m;}
   let paletteKey="",skyHex="#b3bbcb";
-  function applyPalette(){
+  let palV=-1;
+  function applyPalette(){if(palV===PAL_V)return;palV=PAL_V;   // only after rollMill or setPaper (see PAL_V)
     const key=["g-sky","g-ground","bg","ink","brand","paperc"].map(tok).join();
     if(key===paletteKey)return;paletteKey=key;skyHex=tok("g-sky");
     MATS.forEach(m=>m.color.set(tok(m.userData.token)).convertSRGBToLinear());
@@ -3507,7 +3511,7 @@ function no3D(){G3.ok=false;$("no3d").hidden=false;$("no3d-retry").onclick=()=>l
       else{const g=R.g.position;target.x+=(g.x-target.x)*0.1;target.z+=(g.z-target.z)*0.1;cam.r+=(FOL.r-cam.r)*0.08;if(FOL.n++<90)cam.ph+=(0.62-cam.ph)*0.06;G3.lastMove=performance.now();}}
     if(goal){G3.lastMove=performance.now();target.lerp(goal.t,0.12);cam.r+=(goal.r-cam.r)*0.12;cam.th=lerpAng(cam.th,goal.th,0.12);cam.ph+=(goal.ph-cam.ph)*0.12;
       goal.n=(goal.n||0)+1;if(goal.n>150||target.distanceTo(goal.t)<0.2&&Math.abs(goal.r-cam.r)<0.5)goal=null;}
-    const rr=cam.r*(host.clientWidth<600?1.35:1);
+    const rr=cam.r*((G3.vw||host.clientWidth)<600?1.35:1);
     camera.position.set(target.x+rr*Math.sin(cam.ph)*Math.sin(cam.th),target.y+rr*Math.cos(cam.ph),target.z+rr*Math.sin(cam.ph)*Math.cos(cam.th));camera.lookAt(target);}
   const ptrs=new Map();let pinch0=0,r0=0,mid0=null,panBtn=false;
   const mid=()=>{const [a,b]=[...ptrs.values()];return {x:(a.x+b.x)/2,y:(a.y+b.y)/2,d:Math.hypot(a.x-b.x,a.y-b.y)};};
@@ -3931,11 +3935,32 @@ function no3D(){G3.ok=false;$("no3d").hidden=false;$("no3d-retry").onclick=()=>l
         // with/without a texture), so a new batch made mid-play never compiles a shader
         const tex=TX.puff,stand=[];for(const side of [THREE.FrontSide,THREE.DoubleSide])for(const map of [null,tex]){
           const g=new THREE.BoxGeometry(0.01,0.01,0.01),bm=new THREE.BatchedMesh(1,g.attributes.position.count,g.index.count,new THREE.MeshLambertMaterial({side,map}));
-          bm.addInstance(bm.addGeometry(g));bm.castShadow=true;bm.frustumCulled=false;bm.position.set(0,-50,0);bm.updateMatrixWorld();scene.add(bm);stand.push([bm,g]);}
+          bm.setColorAt(bm.addInstance(bm.addGeometry(g)),new THREE.Color(1,1,1));/* per-object colors, as moving batches use */bm.perObjectFrustumCulled=false;bm.castShadow=true;bm.frustumCulled=false;bm.position.set(0,-50,0);bm.updateMatrixWorld();scene.add(bm);stand.push([bm,g]);}
+        // v4.0.1: one stand-in per look a moving batch could ever use (effects included), drawn white with a per-object color
+        // exactly as dbNew builds them, so a batch made mid-play reuses a compiled shader
+        {const seen=new Set();scene.traverse(o=>{if(o.isBatchedMesh||!dbOK(o))return;const k=dbKey(o);if(seen.has(k))return;seen.add(k);
+          const g=o.geometry,c=o.material.clone();c.color.setRGB(1,1,1);
+          const bm=new THREE.BatchedMesh(1,g.attributes.position.count,Math.max(g.index?g.index.count:0,1),c);bm.setColorAt(bm.addInstance(bm.addGeometry(g)),o.material.color);
+          bm.perObjectFrustumCulled=false;bm.sortObjects=false;bm.frustumCulled=false;bm.castShadow=o.castShadow;bm.receiveShadow=o.receiveShadow;scene.add(bm);stand.push([bm,null]);});}
+        // ...one per material in the scene that a moving batch could use (objects made or freed later reuse these)...
+        {const mats=new Map();scene.traverse(o=>{if(!o.isMesh||o.isBatchedMesh||o.isInstancedMesh||Array.isArray(o.material))return;const m=o.material;
+            if(!m||!DBOK.has(m.type)||m.transparent||m.opacity<1)return;const k=mats.get(m)||0;mats.set(m,k|(o.receiveShadow?2:1));});
+          const g=new THREE.BoxGeometry(0.01,0.01,0.01);
+          mats.forEach((fl,m)=>{for(const recv of [false,true]){if(!(fl&(recv?2:1)))continue;const c=m.clone();c.color.setRGB(1,1,1);
+            const bm=new THREE.BatchedMesh(1,g.attributes.position.count,g.index.count,c);bm.setColorAt(bm.addInstance(bm.addGeometry(g)),m.color);
+            bm.perObjectFrustumCulled=false;bm.frustumCulled=false;bm.castShadow=true;bm.receiveShadow=recv;scene.add(bm);stand.push([bm,null]);}});
+          stand.push([{material:null,dispose(){}},g]);}
+        // ...and a per-object-color twin of every static scenery batch's material: a look first drawn in the scenery can
+        // later turn up on moving things, and their batch then needs the color variant of the same shader
+        for(const sb of SM.bms){const g=new THREE.BoxGeometry(0.01,0.01,0.01),c=sb.material.clone();c.color.setRGB(1,1,1);
+          const bm=new THREE.BatchedMesh(1,g.attributes.position.count,g.index.count,c);bm.setColorAt(bm.addInstance(bm.addGeometry(g)),new THREE.Color(1,1,1));
+          bm.perObjectFrustumCulled=false;bm.frustumCulled=false;bm.castShadow=sb.castShadow;bm.receiveShadow=sb.receiveShadow;scene.add(bm);stand.push([bm,g]);}
         for(const id in FX){if(!FX[id].g.visible){FX[id].g.visible=true;shown.push(FX[id].g);}}
         if(G3.dbTick)G3.dbTick();renderer.shadowMap.needsUpdate=true;renderer.setRenderTarget(rt);renderer.render(scene,camera);
         renderer.setRenderTarget(null);shown.forEach(g=>g.visible=false);rt.dispose();renderer.shadowMap.needsUpdate=true;
-        stand.forEach(([bm,g])=>{scene.remove(bm);bm.dispose();g.dispose();bm.material.dispose();});}catch(e){console.error("warm render failed",e);}
+        // v4.0.1: the stand-ins' materials are kept, not disposed: three.js deletes a shader program once no material uses it,
+        // which threw away every shader compiled only for a stand-in
+        G3.keepMats=stand.map(([bm])=>bm.material).filter(Boolean);stand.forEach(([bm,g])=>{if(bm.isObject3D)scene.remove(bm);bm.dispose();if(g)g.dispose();});}catch(e){console.error("warm render failed",e);}
       try{renderer.compileAsync(scene,camera).then(done,done);}catch(e){done();}};
     requestAnimationFrame(stepW);}));
   function fxUpdate(rdt,now){
@@ -4932,14 +4957,18 @@ function no3D(){G3.ok=false;$("no3d").hidden=false;$("no3d-retry").onclick=()=>l
   // batched objects with other (look-alike) materials then differ from the batch and are handed back
   const MSYNC=[];
   function bmMat(m){const c=m.clone();c.userData=Object.assign({},m.userData);if(MATS.includes(m))MATS.push(c);MSYNC.push([c,m]);return c;}
+  // v4.0.1: moving batches are white and give each object its own color (BatchedMesh.setColorAt), so things that
+  // differ only in color share one draw. Their copy stays out of MATS (the palette would tint it) and skips color sync.
+  function dbMat(m){const c=m.clone();c.userData=Object.assign({},m.userData);c.color.setRGB(1,1,1);MSYNC.push([c,m,true]);return c;}
   // same look as the batch: compared at 8-bit precision (look-alike materials differ in the last float bits)
   const colorSame=(a,b)=>a.color.getHex()===b.color.getHex()&&(!a.emissive||(a.emissive.getHex()===b.emissive.getHex()&&a.emissiveIntensity===b.emissiveIntensity));
-  function matSync(){for(const [c,m] of MSYNC){if(!c.color.equals(m.color))c.color.copy(m.color);
+  const emSame=(a,b)=>!a.emissive||(a.emissive.getHex()===b.emissive.getHex()&&a.emissiveIntensity===b.emissiveIntensity);
+  function matSync(){for(const [c,m,nc] of MSYNC){if(!nc&&!c.color.equals(m.color))c.color.copy(m.color);
     if(m.emissive&&!c.emissive.equals(m.emissive))c.emissive.copy(m.emissive);if(m.emissiveIntensity!==c.emissiveIntensity)c.emissiveIntensity=m.emissiveIntensity;}}
-  // looks are cached per material; a palette change (new brand colors) starts a new cache
-  let lookCache=new WeakMap(),lookKey="";const lookIds=new Map();
-  function lookId(m){if(paletteKey!==lookKey){lookKey=paletteKey;lookCache=new WeakMap();}let v=lookCache.get(m);
-    if(v===undefined){const s=smLook(m);v=lookIds.get(s);if(v===undefined){v=lookIds.size;lookIds.set(s,v);}lookCache.set(m,v);}return v;}
+  // the look of a moving batch leaves out color (and the palette token that sets it): each object carries its own
+  const dbLookCache=new WeakMap(),dbLookIds=new Map();
+  function dbLookId(m){let v=dbLookCache.get(m);if(v===undefined){
+      const s=smLook(Object.assign(Object.create(m),{color:null,userData:{}}));v=dbLookIds.get(s);if(v===undefined){v=dbLookIds.size;dbLookIds.set(s,v);}dbLookCache.set(m,v);}return v;}
   const sigCache=new WeakMap();const smSigC=g=>{let v=sigCache.get(g);if(v===undefined){v=smSig(g);sigCache.set(g,v);}return v;};
   const smSig=g=>Object.keys(g.attributes).sort().map(k=>k+g.attributes[k].itemSize+(g.attributes[k].normalized?"n":"")).join(",")+(g.index?"|i":"|n");
   // one BatchedMesh for a group of records that share material, shadow flags and vertex layout
@@ -5045,26 +5074,37 @@ function no3D(){G3.ok=false;$("no3d").hidden=false;$("no3d-retry").onclick=()=>l
     return g.drawRange.start===0&&g.drawRange.count===Infinity&&o.matrixWorld.determinant()>0;}
   function dbRelease(){for(const r of DB.list)if(r.o.layers.mask===1<<DBLAYER)r.o.layers.set(0);for(const b of DB.bms){scene.remove(b);b.dispose();}DB.list=[];DB.bms=[];DB.byKey=new Map();}
   DB.byKey=new Map();DB.full=0;
-  const dbKey=o=>lookId(o.material)+"|"+(o.castShadow?1:0)+(o.receiveShadow?1:0)+"|"+smSigC(o.geometry);
+  const dbKey=o=>dbLookId(o.material)+"|"+(o.castShadow?1:0)+(o.receiveShadow?1:0)+"|"+smSigC(o.geometry);
   function dbAdd(B,o){const g=o.geometry;let gid=B.geos.get(g);
     if(gid===undefined){const nv=g.attributes.position.count,ni=g.index?g.index.count:0;if(B.bm.unusedVertexCount<nv||B.bm.unusedIndexCount<ni)return false;gid=B.bm.addGeometry(g);B.geos.set(g,gid);}
     if(B.bm.instanceCount>=B.bm.maxInstanceCount)return false;
-    const iid=B.bm.addInstance(gid);DB.list.push({o,bm:B.bm,iid,mat:o.material,geo:g,ver:g.attributes.position.version});o.layers.set(DBLAYER);return true;}
+    const iid=B.bm.addInstance(gid),c=o.material.color;B.bm.setColorAt(iid,c);
+    const r={o,bm:B.bm,iid,mat:o.material,geo:g,ver:g.attributes.position.version,cr:c.r,cg:c.g,cb:c.b};
+    if(B.wait){B.wait.push(r);B.bm.setMatrixAt(iid,o.matrixWorld);return true;}
+    DB.list.push(r);o.layers.set(DBLAYER);return true;}
   // a batch per look, with room to grow, so things created later join without rebuilding anything
   function dbNew(key,L){const geos=new Map();let nv=0,ni=0;
     for(const o of L){const g=o.geometry;if(!geos.has(g)){geos.set(g,-1);nv+=g.attributes.position.count;ni+=g.index?g.index.count:0;}}
-    const bm=new THREE.BatchedMesh(Math.ceil(L.length*1.5)+8,Math.ceil(nv*1.5)+64,Math.max(Math.ceil(ni*1.5)+96,1),bmMat(L[0].material));
+    const bm=new THREE.BatchedMesh(Math.ceil(L.length*1.5)+8,Math.ceil(nv*1.5)+64,Math.max(Math.ceil(ni*1.5)+96,1),dbMat(L[0].material));
     bm.perObjectFrustumCulled=false;bm.sortObjects=false;bm.frustumCulled=false;bm.castShadow=L[0].castShadow;bm.receiveShadow=L[0].receiveShadow;
     bm.matrixAutoUpdate=false;bm.userData.smBatch=true;bm.name="moving batch";scene.add(bm);DB.bms.push(bm);
-    const B={bm,geos:new Map()};DB.byKey.set(key,B);for(const o of L)dbAdd(B,o);}
+    const B={bm,geos:new Map()};
+    if(!G3.warm){DB.byKey.set(key,B);for(const o of L)dbAdd(B,o);return;}
+    // v4.0.1: a batch made mid-play is filled but kept hidden while its shader compiles in the background; its objects
+    // keep drawing on their own until then, so a new batch never stalls a frame on a shader compile
+    B.wait=[];for(const o of L)dbAdd(B,o);bm.visible=false;DB.pending=(DB.pending||0)+1;(DB.pendKeys||(DB.pendKeys=new Set())).add(key);
+    const go=()=>{DB.pending--;DB.pendKeys.delete(key);if(!DB.bms.includes(bm))return;const W=B.wait;B.wait=null;DB.byKey.set(key,B);
+      for(const r of W){const o=r.o;if(o.parent&&o.layers.mask===1&&o.material===r.mat&&o.geometry===r.geo&&dbOK(o)){DB.list.push(r);o.layers.set(DBLAYER);}else bm.setVisibleAt(r.iid,false);}
+      bm.visible=true;DB.n=DB.list.length;DB.late=(DB.late||0)+1;};
+    try{renderer.compileAsync(bm,camera,scene).then(go,go);}catch(e){go();}}
   function dbBuild(){DB.builds=(DB.builds||0)+1;
-    if(lookKey!==paletteKey&&DB.list.length){dbRelease();}   // new brand colors: regroup from scratch
+    // (v4.0.1: no regroup on new brand colors: moving batches carry each object's color, updated as it changes)
     const pend=new Map();
     scene.traverse(o=>{if(o.layers.mask!==1||!dbOK(o))return;const key=dbKey(o),B=DB.byKey.get(key);if(B&&dbAdd(B,o))return;
       let L=pend.get(key);if(!L){L=[];pend.set(key,L);}L.push(o);});DB.n=DB.list.length;
     // new looks get their own batch once three or more things share them (checked at most every 15 s after the first pass)
     const now=performance.now();if(DB.full&&now-DB.full<15000)return;DB.full=now;
-    pend.forEach((L,key)=>{if(L.length>=3)dbNew(key,L);});DB.n=DB.list.length;}
+    pend.forEach((L,key)=>{if(L.length>=3&&!(DB.pendKeys&&DB.pendKeys.has(key)))dbNew(key,L);});DB.n=DB.list.length;}
   G3.dbForce=()=>{if(SM.done&&!SM.off){try{dbBuild();}catch(e){console.error("moving batches failed",e);}}};
   // called right before each render: world matrices are brought up to date once here, and the render skips its own pass
   G3.dbTick=()=>{if(SM.off||!SM.done)return;const now=performance.now();if(now>DB.t){DB.t=now+3000;try{dbBuild();}catch(e){console.error("moving batches failed",e);SM.off=true;dbRelease();return;}}
@@ -5073,9 +5113,10 @@ function no3D(){G3.ok=false;$("no3d").hidden=false;$("no3d-retry").onclick=()=>l
     // up within 4 frames); everything else every frame
     for(const r of DB.list){const o=r.o;if(r.gone)continue;if(r.idle>60&&((fn+r.iid)&3))continue;
       const bc=r.bm.material,om=o.material;
-      if(om!==r.mat||o.geometry!==r.geo||o.geometry.attributes.position.version!==r.ver||o.layers.mask!==1<<DBLAYER||!colorSame(om,bc)){r.gone=true;out=true;r.bm.setVisibleAt(r.iid,false);if(o.layers.mask===1<<DBLAYER)o.layers.set(0);continue;}
+      if(om!==r.mat||o.geometry!==r.geo||o.geometry.attributes.position.version!==r.ver||o.layers.mask!==1<<DBLAYER||!emSame(om,bc)){r.gone=true;out=true;r.bm.setVisibleAt(r.iid,false);if(o.layers.mask===1<<DBLAYER)o.layers.set(0);continue;}
       // only touch the batch when something changed (each change re-uploads that batch's matrix texture)
-      const vis=smShown(o);let ch=false;if(vis!==r.vis){r.vis=vis;ch=true;r.bm.setVisibleAt(r.iid,vis);}
+      let ch=false;{const c=om.color;if(c.r!==r.cr||c.g!==r.cg||c.b!==r.cb){r.cr=c.r;r.cg=c.g;r.cb=c.b;r.bm.setColorAt(r.iid,c);ch=true;}}
+      const vis=smShown(o);if(vis!==r.vis){r.vis=vis;ch=true;r.bm.setVisibleAt(r.iid,vis);}
       if(vis){const e=o.matrixWorld.elements,m=r.m||(r.m=new Float32Array(16).fill(NaN));let mc=false;for(let i=0;i<16;i++)if(e[i]!==m[i]){mc=true;m[i]=e[i];}
         if(mc){ch=true;r.bm.setMatrixAt(r.iid,o.matrixWorld);}}
       r.idle=ch?0:(r.idle||0)+1;}
@@ -5433,15 +5474,15 @@ function no3D(){G3.ok=false;$("no3d").hidden=false;$("no3d-retry").onclick=()=>l
     // old 2D drawing, which no longer runs when the 3D view is up, so everything stood still
     if(rdt>0){const R=S.rates;if(!S.M.pulperDown)V.swirl+=rdt*(0.4+R.feed*0.06);V.belt=(V.belt+rdt*R.feed*1.4)%30;V.cans+=rdt*S.pmSpeed/700;
       if(S.pm==="run")V.sheet=(V.sheet+rdt*S.pmSpeed/40)%24;V.rollsAnim+=rdt*(0.2+clamp(R.load/Math.max(1,C.loaders.v*P.loaderRate),0,1))*0.5;}
-    {const t=performance.now();if(!(t-(G3.shTrim||0)<2000)){G3.shTrim=t;trimShadows();}}
+    {const t=performance.now();if(!(t-(G3.shTrim||0)<2000)){G3.shTrim=t;trimShadows();}}pm("shadow trim (every 2 s)");
     if(rdt>0&&!G3.noFallback){fpsT+=rdt;fpsN++;if(fpsT>3){const fps=fpsN/fpsT;fpsT=0;fpsN=0;
       // (G3.noFallback: set by the autotest so every build is measured at the same graphics settings)
       // v4 fallback order, cheapest to undo first: render fewer pixels, then refresh shadows less often. Shadows stay on
       // (switching them off recompiles every shader: a long freeze, the opposite of what a struggling device needs)
       const fk=(G3.cap||60)/60;
       if(fps<28*fk&&quality===2&&renderer.getPixelRatio()>1){quality=1;renderer.setPixelRatio(1);resize();diag("quality: pixel ratio 1 ("+fps.toFixed(0)+" fps)");}
-      else if(fps<24*fk&&quality>=1&&G3.shadowHz>5){quality=0;G3.shadowHz=5;diag("quality: shadows 5 Hz ("+fps.toFixed(0)+" fps)");}}}
-    {const t=performance.now();if(!(t-(G3.palT||0)<500)){G3.palT=t;applyPalette();}}rebuildDoors();
+      else if(fps<24*fk&&quality>=1&&G3.shadowHz>5){quality=0;G3.shadowHz=5;diag("quality: shadows 5 Hz ("+fps.toFixed(0)+" fps)");}}}pm("low-FPS fallback check");
+    {const t=performance.now();if(!(t-(G3.palT||0)<500)){G3.palT=t;applyPalette();}}pm("palette (every 0.5 s)");rebuildDoors();
     const R=S.rates,now=performance.now();pm("setup (palette, doors, shadow trim)");
     crewUpdate(rdt,now);pm("crew + people");
     // trucks
@@ -5611,7 +5652,7 @@ function no3D(){G3.ok=false;$("no3d").hidden=false;$("no3d-retry").onclick=()=>l
     G3.ambT=(G3.ambT||0)+rdt;if(G3.ambT>0.25){G3.ambT=0;const zk=clamp((150-cam.r)/90,0,1),x=target.x,z=target.z,near=(cx,cz,r)=>zk*clamp(1.3-Math.hypot(x-cx,z-cz)/r,0,1);
       const run=S.pm==="run"?1:0.3,L={dryer:near(12,9,20)*run,wet:near(46,9,16)*run,winder:near(-17,8,13)*(S.wd==="run"?1:0.3),stock:near(24,-15,20)*(S.M.pulperDown?0.3:1),fork:0,out:0};
       L.out=zk*clamp(1-Math.max(L.dryer,L.wet,L.winder,L.stock,L.fork)*1.5,0,1);AUDIO.ambient(L,zk);}
-    G3.roofFade(cam.r*(host.clientWidth<600?1.35:1)/(host.clientWidth<600?1.35:1));
+    {const cw=G3.vw||host.clientWidth;G3.roofFade(cam.r*(cw<600?1.35:1)/(cw<600?1.35:1));}
     if(G3.shadowHz){const t=performance.now();if(!(t-(G3.shT||0)<1000/G3.shadowHz-3)){G3.shT=t;renderer.shadowMap.needsUpdate=true;}}
     placeCam();if(shake>0){camera.position.x+=(Math.random()-0.5)*shake;camera.position.y+=(Math.random()-0.5)*shake;camera.position.z+=(Math.random()-0.5)*shake;}
     // v2.8.8: zoomed out past the default view, trucks and parked trailers are specks, so they aren't drawn (they keep driving unseen)

@@ -47,7 +47,8 @@ function no3D(){G3.ok=false;$("no3d").hidden=false;$("no3d-retry").onclick=()=>l
   function tok(name){return getComputedStyle(document.documentElement).getPropertyValue("--"+name).trim()||"#888";}
   function mat(token,opts={}){const m=new StdMat(Object.assign({roughness:0.72,metalness:0.04,flatShading:false},opts));m.userData.token=token;MATS.push(m);return m;}
   let paletteKey="",skyHex="#b3bbcb";
-  function applyPalette(){
+  let palV=-1;
+  function applyPalette(){if(palV===PAL_V)return;palV=PAL_V;   // only after rollMill or setPaper (see PAL_V)
     const key=["g-sky","g-ground","bg","ink","brand","paperc"].map(tok).join();
     if(key===paletteKey)return;paletteKey=key;skyHex=tok("g-sky");
     MATS.forEach(m=>m.color.set(tok(m.userData.token)).convertSRGBToLinear());

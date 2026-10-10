@@ -64,14 +64,18 @@
   // batched objects with other (look-alike) materials then differ from the batch and are handed back
   const MSYNC=[];
   function bmMat(m){const c=m.clone();c.userData=Object.assign({},m.userData);if(MATS.includes(m))MATS.push(c);MSYNC.push([c,m]);return c;}
+  // v4.0.1: moving batches are white and give each object its own color (BatchedMesh.setColorAt), so things that
+  // differ only in color share one draw. Their copy stays out of MATS (the palette would tint it) and skips color sync.
+  function dbMat(m){const c=m.clone();c.userData=Object.assign({},m.userData);c.color.setRGB(1,1,1);MSYNC.push([c,m,true]);return c;}
   // same look as the batch: compared at 8-bit precision (look-alike materials differ in the last float bits)
   const colorSame=(a,b)=>a.color.getHex()===b.color.getHex()&&(!a.emissive||(a.emissive.getHex()===b.emissive.getHex()&&a.emissiveIntensity===b.emissiveIntensity));
-  function matSync(){for(const [c,m] of MSYNC){if(!c.color.equals(m.color))c.color.copy(m.color);
+  const emSame=(a,b)=>!a.emissive||(a.emissive.getHex()===b.emissive.getHex()&&a.emissiveIntensity===b.emissiveIntensity);
+  function matSync(){for(const [c,m,nc] of MSYNC){if(!nc&&!c.color.equals(m.color))c.color.copy(m.color);
     if(m.emissive&&!c.emissive.equals(m.emissive))c.emissive.copy(m.emissive);if(m.emissiveIntensity!==c.emissiveIntensity)c.emissiveIntensity=m.emissiveIntensity;}}
-  // looks are cached per material; a palette change (new brand colors) starts a new cache
-  let lookCache=new WeakMap(),lookKey="";const lookIds=new Map();
-  function lookId(m){if(paletteKey!==lookKey){lookKey=paletteKey;lookCache=new WeakMap();}let v=lookCache.get(m);
-    if(v===undefined){const s=smLook(m);v=lookIds.get(s);if(v===undefined){v=lookIds.size;lookIds.set(s,v);}lookCache.set(m,v);}return v;}
+  // the look of a moving batch leaves out color (and the palette token that sets it): each object carries its own
+  const dbLookCache=new WeakMap(),dbLookIds=new Map();
+  function dbLookId(m){let v=dbLookCache.get(m);if(v===undefined){
+      const s=smLook(Object.assign(Object.create(m),{color:null,userData:{}}));v=dbLookIds.get(s);if(v===undefined){v=dbLookIds.size;dbLookIds.set(s,v);}dbLookCache.set(m,v);}return v;}
   const sigCache=new WeakMap();const smSigC=g=>{let v=sigCache.get(g);if(v===undefined){v=smSig(g);sigCache.set(g,v);}return v;};
   const smSig=g=>Object.keys(g.attributes).sort().map(k=>k+g.attributes[k].itemSize+(g.attributes[k].normalized?"n":"")).join(",")+(g.index?"|i":"|n");
   // one BatchedMesh for a group of records that share material, shadow flags and vertex layout
@@ -177,26 +181,37 @@
     return g.drawRange.start===0&&g.drawRange.count===Infinity&&o.matrixWorld.determinant()>0;}
   function dbRelease(){for(const r of DB.list)if(r.o.layers.mask===1<<DBLAYER)r.o.layers.set(0);for(const b of DB.bms){scene.remove(b);b.dispose();}DB.list=[];DB.bms=[];DB.byKey=new Map();}
   DB.byKey=new Map();DB.full=0;
-  const dbKey=o=>lookId(o.material)+"|"+(o.castShadow?1:0)+(o.receiveShadow?1:0)+"|"+smSigC(o.geometry);
+  const dbKey=o=>dbLookId(o.material)+"|"+(o.castShadow?1:0)+(o.receiveShadow?1:0)+"|"+smSigC(o.geometry);
   function dbAdd(B,o){const g=o.geometry;let gid=B.geos.get(g);
     if(gid===undefined){const nv=g.attributes.position.count,ni=g.index?g.index.count:0;if(B.bm.unusedVertexCount<nv||B.bm.unusedIndexCount<ni)return false;gid=B.bm.addGeometry(g);B.geos.set(g,gid);}
     if(B.bm.instanceCount>=B.bm.maxInstanceCount)return false;
-    const iid=B.bm.addInstance(gid);DB.list.push({o,bm:B.bm,iid,mat:o.material,geo:g,ver:g.attributes.position.version});o.layers.set(DBLAYER);return true;}
+    const iid=B.bm.addInstance(gid),c=o.material.color;B.bm.setColorAt(iid,c);
+    const r={o,bm:B.bm,iid,mat:o.material,geo:g,ver:g.attributes.position.version,cr:c.r,cg:c.g,cb:c.b};
+    if(B.wait){B.wait.push(r);B.bm.setMatrixAt(iid,o.matrixWorld);return true;}
+    DB.list.push(r);o.layers.set(DBLAYER);return true;}
   // a batch per look, with room to grow, so things created later join without rebuilding anything
   function dbNew(key,L){const geos=new Map();let nv=0,ni=0;
     for(const o of L){const g=o.geometry;if(!geos.has(g)){geos.set(g,-1);nv+=g.attributes.position.count;ni+=g.index?g.index.count:0;}}
-    const bm=new THREE.BatchedMesh(Math.ceil(L.length*1.5)+8,Math.ceil(nv*1.5)+64,Math.max(Math.ceil(ni*1.5)+96,1),bmMat(L[0].material));
+    const bm=new THREE.BatchedMesh(Math.ceil(L.length*1.5)+8,Math.ceil(nv*1.5)+64,Math.max(Math.ceil(ni*1.5)+96,1),dbMat(L[0].material));
     bm.perObjectFrustumCulled=false;bm.sortObjects=false;bm.frustumCulled=false;bm.castShadow=L[0].castShadow;bm.receiveShadow=L[0].receiveShadow;
     bm.matrixAutoUpdate=false;bm.userData.smBatch=true;bm.name="moving batch";scene.add(bm);DB.bms.push(bm);
-    const B={bm,geos:new Map()};DB.byKey.set(key,B);for(const o of L)dbAdd(B,o);}
+    const B={bm,geos:new Map()};
+    if(!G3.warm){DB.byKey.set(key,B);for(const o of L)dbAdd(B,o);return;}
+    // v4.0.1: a batch made mid-play is filled but kept hidden while its shader compiles in the background; its objects
+    // keep drawing on their own until then, so a new batch never stalls a frame on a shader compile
+    B.wait=[];for(const o of L)dbAdd(B,o);bm.visible=false;DB.pending=(DB.pending||0)+1;(DB.pendKeys||(DB.pendKeys=new Set())).add(key);
+    const go=()=>{DB.pending--;DB.pendKeys.delete(key);if(!DB.bms.includes(bm))return;const W=B.wait;B.wait=null;DB.byKey.set(key,B);
+      for(const r of W){const o=r.o;if(o.parent&&o.layers.mask===1&&o.material===r.mat&&o.geometry===r.geo&&dbOK(o)){DB.list.push(r);o.layers.set(DBLAYER);}else bm.setVisibleAt(r.iid,false);}
+      bm.visible=true;DB.n=DB.list.length;DB.late=(DB.late||0)+1;};
+    try{renderer.compileAsync(bm,camera,scene).then(go,go);}catch(e){go();}}
   function dbBuild(){DB.builds=(DB.builds||0)+1;
-    if(lookKey!==paletteKey&&DB.list.length){dbRelease();}   // new brand colors: regroup from scratch
+    // (v4.0.1: no regroup on new brand colors: moving batches carry each object's color, updated as it changes)
     const pend=new Map();
     scene.traverse(o=>{if(o.layers.mask!==1||!dbOK(o))return;const key=dbKey(o),B=DB.byKey.get(key);if(B&&dbAdd(B,o))return;
       let L=pend.get(key);if(!L){L=[];pend.set(key,L);}L.push(o);});DB.n=DB.list.length;
     // new looks get their own batch once three or more things share them (checked at most every 15 s after the first pass)
     const now=performance.now();if(DB.full&&now-DB.full<15000)return;DB.full=now;
-    pend.forEach((L,key)=>{if(L.length>=3)dbNew(key,L);});DB.n=DB.list.length;}
+    pend.forEach((L,key)=>{if(L.length>=3&&!(DB.pendKeys&&DB.pendKeys.has(key)))dbNew(key,L);});DB.n=DB.list.length;}
   G3.dbForce=()=>{if(SM.done&&!SM.off){try{dbBuild();}catch(e){console.error("moving batches failed",e);}}};
   // called right before each render: world matrices are brought up to date once here, and the render skips its own pass
   G3.dbTick=()=>{if(SM.off||!SM.done)return;const now=performance.now();if(now>DB.t){DB.t=now+3000;try{dbBuild();}catch(e){console.error("moving batches failed",e);SM.off=true;dbRelease();return;}}
@@ -205,9 +220,10 @@
     // up within 4 frames); everything else every frame
     for(const r of DB.list){const o=r.o;if(r.gone)continue;if(r.idle>60&&((fn+r.iid)&3))continue;
       const bc=r.bm.material,om=o.material;
-      if(om!==r.mat||o.geometry!==r.geo||o.geometry.attributes.position.version!==r.ver||o.layers.mask!==1<<DBLAYER||!colorSame(om,bc)){r.gone=true;out=true;r.bm.setVisibleAt(r.iid,false);if(o.layers.mask===1<<DBLAYER)o.layers.set(0);continue;}
+      if(om!==r.mat||o.geometry!==r.geo||o.geometry.attributes.position.version!==r.ver||o.layers.mask!==1<<DBLAYER||!emSame(om,bc)){r.gone=true;out=true;r.bm.setVisibleAt(r.iid,false);if(o.layers.mask===1<<DBLAYER)o.layers.set(0);continue;}
       // only touch the batch when something changed (each change re-uploads that batch's matrix texture)
-      const vis=smShown(o);let ch=false;if(vis!==r.vis){r.vis=vis;ch=true;r.bm.setVisibleAt(r.iid,vis);}
+      let ch=false;{const c=om.color;if(c.r!==r.cr||c.g!==r.cg||c.b!==r.cb){r.cr=c.r;r.cg=c.g;r.cb=c.b;r.bm.setColorAt(r.iid,c);ch=true;}}
+      const vis=smShown(o);if(vis!==r.vis){r.vis=vis;ch=true;r.bm.setVisibleAt(r.iid,vis);}
       if(vis){const e=o.matrixWorld.elements,m=r.m||(r.m=new Float32Array(16).fill(NaN));let mc=false;for(let i=0;i<16;i++)if(e[i]!==m[i]){mc=true;m[i]=e[i];}
         if(mc){ch=true;r.bm.setMatrixAt(r.iid,o.matrixWorld);}}
       r.idle=ch?0:(r.idle||0)+1;}
