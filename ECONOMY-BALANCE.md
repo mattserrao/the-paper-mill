@@ -54,3 +54,24 @@ Device autotest: `…/test/v10_econ_bal/?autotest&quick&expect=810f617a`.
 
 Condition 3 is live in v4.0.2 (merge cebb966). Turbo speeds are off in the release. `econ.py` on the released file:
 +$121,455 on the 5 base seeds, as tested.
+
+## v4.1.0: bottleneck and environments (2026-10-10, test build `test/v11_env`)
+
+Every run now starts with one area at 70–82% of what the machine needs, and the site's environment changes costs and
+risks. `econ.py` gained `--env=` (site) and `--bn=` (force a bottleneck; `none` for no bottleneck).
+
+| Step | Condition | Result (hands-off, 5 base seeds unless noted) |
+|---|---|---|
+| 1 | v4.0.2 prices, rural, no bottleneck | −$67k |
+| 2 | every area at 78% | recv −$0.79M, screens −$1.45M, winder −$1.34M, pulper −$1.52M, ship −$1.97M |
+| 3 | per-area shares (recv 0.68, pulper 0.82, screens 0.81, winder 0.79, ship 0.86) | ship −$0.64M, others −$1.28M to −$1.46M |
+| 4 | recv 0.70, winder 0.80; prices +$83/t | pulper +$119k, recv +$115k, screens +$43k, winder +$100k, ship +$447k → ship 0.80 |
+| 5 | environments with no bottleneck (+$83/t) | rural $1.67M, desert $1.74M, swamp $1.90M, urban $2.03M → urban OCC −$14 → −$5 and price +$8 → +$4; swamp OCC −$6 → −$3, overhead −$300 → −$190 |
+| 6 | prices +$78/t, natural bottlenecks, 15 seeds per environment | rural −$266k, urban −$170k, desert −$337k, swamp −$126k → prices +$10/t |
+| **7** | **final: $713 / $733 / $753 / $813, 15 seeds per environment** | **rural −$94k, urban +$1k, desert −$116k (price −$10 → −$7), swamp +$42k; all 60 −$42k; no bankruptcies** |
+
+- Prices end close to v4.0.1's list prices ($714–814): the bottleneck takes back roughly what v4.0.2's $89/t cut removed.
+- Run-to-run spread is still large (SD ~$0.7–0.8M per season), so per-bottleneck averages over three or four seeds
+  (−$0.7M to +$1.0M in step 7) are mostly seed luck; the forced-bottleneck runs (step 4) are the fair comparison.
+- Fixing the bottleneck is the obvious first purchase: without it a hands-off season loses about $1.3–1.6M against a
+  mill with no bottleneck, and the fix costs $190k–$450k after the 25% discount.

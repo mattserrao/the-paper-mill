@@ -10,7 +10,7 @@ warehouse) is unchanged; everything around it now depends on where you build and
   - **Forest valley** (rural, the default): clean river (wastewater fines 40% rarer), local crews (−$4/h), hydro power
     (−$5/t energy); long OCC haul (+$12/t), hard winters (snow 2×), wildlife (beavers, birds 2×).
   - **City mill** (urban): city cardboard (OCC −$5/t), customers nearby (+$4/t); peak-rate power (+$8/t), city wages
-    (+$4/h), strict sewer permit (fines 1.6×), traffic (highway closures 2×).
+    (+$4/h), strict sewer permit (fines 1.6×), city life (highway closures 2×, dock fights 1.2×).
   - **Desert flats**: solar power (−$12/t energy), clear weather, cheap land (−$250/h overhead); scarce water (+$9/t),
     long haul to customers (−$7/t), dust (screens and cleaners plug 1.5×), dry bale yard (bale fires 2×).
   - **Bayou** (swamp): endless water (−$5/t chemicals), cheap land (−$190/h), barge OCC (−$3/t); humidity (slime 1.8×,

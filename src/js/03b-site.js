@@ -5,7 +5,7 @@
 const ENVS={
   urban:{name:"City mill",short:"Urban",blurb:"An old riverside mill hemmed in by the city. Cardboard and customers are next door; power, labour and the sewer authority are not cheap.",
     pros:["City cardboard next door: OCC $5/t cheaper","Customers close by: paper sells for $4/t more"],
-    cons:["Peak-rate power: energy $8/t dearer","City wages: $4/h more per worker","Strict sewer permit: wastewater fines 60% more often","Traffic: highway closures twice as often"],
+    cons:["Peak-rate power: energy $8/t dearer","City wages: $4/h more per worker","Strict sewer permit: wastewater fines 60% more often","City life: highway closures twice as often, dock fights 20% more often"],
     occ:-5,price:4,energy:8,wage:4,over:0,chem:0,wx:[0.55,0.76,0.9],inMul:1,
     freq:{permit:1.6,highway:2,fight:1.2}},
   rural:{name:"Forest valley",short:"Rural",blurb:"A mill on a clean river in wooded hills. Quiet, local crews and hydro power, but the cardboard has a long haul and winters bite.",
