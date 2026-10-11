@@ -132,6 +132,15 @@ piece; the three sandbox-style piano pieces are the valley's.
   piece; the sound button's tooltip names what is playing. `tools/musictest.py` schedules every step of every piece and
   checks the output level; `tools/musicrec.py` records any piece to MP3.
 
+### Rare sights (pass 15, test v17)
+- Now and then (every 4-10 minutes of play, at random) something odd happens on the site for about half a minute:
+  cowboys ride across the desert flats in a little dust, Bigfoot steps out of the valley woods by the gate and stops to
+  stare at the mill, a tugboat steams in across the city bay along the waterfront and back out, and on the bayou bank a
+  gator takes an operator under (splash, a hard hat bobbing, the gator slides off).
+- Purely visual: random timing outside the sim, no costs, no production effect, nothing logged; built once at start-up
+  and hidden, so nothing compiles when one happens (late shader compiles: 0). `?sight=1` shows one a few seconds in, then
+  every 40 s.
+
 ### Economics fixes (pass 14, test v16)
 - Repair deadlock: maintenance pairs now go first to the job the PM crew is on, then to jobs that need no crew, and last
   to jobs still waiting for the crew; a pair working on a crew job gives it up if the crew is called away. Before, a
