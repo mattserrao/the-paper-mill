@@ -1,5 +1,12 @@
 # Changelog
 
+## v4.2.0 (released 2026-10-11 from test `test/v20`)
+
+Everything in the v4.1.0 work below, through pass 18 (test v20): four redesigned site maps (the city now on the sea),
+working yards, activity scenes and rare sights, the whole-site view, zen map rotation, the iPhone batching fix and
+performance round, the economics fixes (repair deadlock, sim-time repairs, grade-true pricing), new upgrade prices with
+one upgrade a day, galvanised roofs and surface wear.
+
 ## v4.1.0 (test builds `test/v11_env` and, with the music, `test/v12`, 2026-10-10)
 
 Environments, seeded mills and a bottleneck. The core line (receiving, stock prep, machine hall, winder, roll handling,
