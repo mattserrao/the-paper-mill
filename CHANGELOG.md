@@ -132,6 +132,15 @@ piece; the three sandbox-style piano pieces are the valley's.
   piece; the sound button's tooltip names what is playing. `tools/musictest.py` schedules every step of every piece and
   checks the output level; `tools/musicrec.py` records any piece to MP3.
 
+### Upgrade prices and one upgrade a day (pass 17, test v19)
+- New prices (L1 / L2 / L3): Drive rebuild $120k / $105k / $95k; Wider trim $125k / $105k; Shoe press $140k; Fabric & felt
+  monitoring $170k / $115k; Refiner $110k; Fire suppression $90k; Screens & cleaners $60k / $60k; Detrashing $30k;
+  Automatic bale feed $30k; Safety program $10k; RCFA $155k / $75k; Reliability program $195k / $125k; Spare parts
+  storeroom $35k; Advanced process control $80k / $80k; OCC contract $120k / $120k; Sales team $120k / $120k. Other
+  upgrades unchanged. The bottleneck discount (25% off) still applies on top.
+- One upgrade a day: after a purchase the shop's buttons read "next at 6 AM" until the day turns over at 6 am; the
+  wallet line says "1 upgrade a day". Free play is exempt.
+
 ### Zen mode (pass 16, test v18)
 - Map rotation: once every everyday scripted shot of the map has played (or after 15 minutes, with most of them played),
   zen fades out and moves on to the next map (valley -> city -> desert -> bayou -> valley): the page reloads on it with
