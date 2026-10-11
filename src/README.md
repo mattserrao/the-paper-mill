@@ -116,6 +116,20 @@ then `tail.html`. All game code runs inside **one shared closure** (opened in `0
   compacts its list in place. `tools/allocprof.py` shows what allocates; `quick.py`'s `alloc_MB_s` must stay ≤ 2.
 - Debug flags: `?nosky` (no dome, clouds or mist), `?noclouds`, `?noterr` (no ground mesh), `?gfx=low|medium|high|ultra`.
 
+### Music (v4.1 pass 4, `02-audio.js`)
+
+- Two sequencers run at 16 steps a bar: `chill` plays the site's rotation (`ENVROT[env]`: the site's pieces plus the lofi
+  break-room tune) and `intense` the upset piece picked by `pickIntense()` on each switch (`ENVINT[env]` three times in four,
+  else `drive`), each with two chord sets. `AUDIO.update(intense)` from the main loop fades between them.
+- A piece is `{name,bpm,bars,play(st,t,s)}`; `st` counts steps from its start, `s.bpm` is its tempo. Pieces keep their
+  own wandering state on the object (`ph`, `wph`, `ch`, `mi`...); `songStarted` clears the phrase state.
+- Buses: `chillG` (faded) holds `warm` (3.2 kHz lowpass: lofi, piano, crackle, hall return) and `envG` (6.5 kHz: the site
+  pieces, with its tape echo `echoIn`); `intG` has its own echo `echoInt`. `mkOut(bus, hallSend, echoSend)` makes an
+  instrument output. Nothing here allocates per frame in the 3D sense; the scheduler builds nodes 0.3–0.5 s ahead.
+- `Math.random` is allowed in this file (music); the sim never reads it. `?song=` and `?upset=` are listening aids.
+- Checks: `tools/musictest.py` (schedules every step of every piece in the page, then plays each site's first pieces and
+  the upset pieces for a few seconds and reads the output level) and `tools/musicrec.py` (records a piece to MP3).
+
 ## Device autotest (`?autotest`)
 
 Open any build with `?autotest` (for example `index.html?autotest`) to run a hands-free performance test, about
@@ -143,7 +157,7 @@ default), `seed=`, `fallback` keeps the low-FPS fallback on. `tools/autotest.py 
 
 ## Tools (`tools/`)
 
-Needs Python 3 with Playwright (Chromium), and Node with `eslint@8`, `three@0.128.0` (for older builds) and `three@0.186.1` (in `t186/`) installed next to the scripts. The scripts serve three.js locally, so tests run offline.
+Music: `musictest.py` and `musicrec.py` (see above). Needs Python 3 with Playwright (Chromium), and Node with `eslint@8`, `three@0.128.0` (for older builds) and `three@0.186.1` (in `t186/`) installed next to the scripts. The scripts serve three.js locally, so tests run offline.
 
 - `suite.py index.html <label>`: the performance scorecard (~10 min). It runs `calib.py`, `audit.py` (desktop and phone), `hitches.py`, `phone.py` and `steady_high.py`. Add the result as a column in the project doc `paper-mill-benchmarks.md`.
 - `latecompile.py index.html phone`: shader programs compiled after the start-up precompile (should be 0).

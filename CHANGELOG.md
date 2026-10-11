@@ -1,6 +1,6 @@
 # Changelog
 
-## v4.1.0 (test build `test/v11_env`, 2026-10-10)
+## v4.1.0 (test builds `test/v11_env` and, with the music, `test/v12`, 2026-10-10)
 
 Environments, seeded mills and a bottleneck. The core line (receiving, stock prep, machine hall, winder, roll handling,
 warehouse) is unchanged; everything around it now depends on where you build and on the mill seed.
@@ -106,6 +106,31 @@ warehouse) is unchanged; everything around it now depends on where you build and
   off the mill's static and moving geometry at phone size), one far scenery mesh instead of five, no mullions, rooftop
   tanks or far street dashes, plain boxes for the bales, and the sky and clouds are skipped when the camera looks down at
   the mill. The water tower's tank band and the gate sign share one texture atlas (one draw).
+
+### Music (pass 4, test v12)
+Every site has its own calm pieces and its own upset piece, all generative (chords, rhythm templates and short motifs
+with the rest left to dice), so no two plays are alike. The lofi "Break Room" tune still plays everywhere as every fourth
+piece; the three sandbox-style piano pieces are the valley's.
+- **Forest valley**: *Wet End Morning*, *Felt Moss*, *Night Shift Stars* and a new, airier *Canopy Light* (celesta
+  arpeggios over major sevenths). Upset: **Strings**, urgent plucked octaves, piano stabs, timpani, a rising line.
+- **City mill** (Blade Runner): *Neon Rain* (wide detuned pads, a brass lead that slides into its notes, wisps of filtered
+  noise, a heartbeat kick), *Rooftop Static* (a sequencer pulse under two-bar chords, bells with echo), *Tears in the
+  Mist* (the slowest, darkest, in A minor). Upset: **Pulse**, a bass sequence under a cluster pad, risers, claps.
+- **Desert flats** (sparse western): *Dry Wash* (a low drone, a twanging guitar that takes its time, tremolo on the long
+  notes, a rattle now and then), *High Noon Haze* (open-fifth strums, a whistled line, a shaker), *Mesa Wind* (wind, high
+  harmonics, the odd strum). Upset: **Gallop**, toms in a gallop, tremolo guitar chords, a whip crack, a rattle.
+- **Bayou** (folksy): *Cypress Roll* (banjo forward rolls over chords that wander from one to the next, a thumb bass, a tune
+  that meanders up and down the pentatonic), *Slow Water* (harmonica, sparse banjo, a frog, a woodblock), *Porch Swing*
+  (a swing feel, a fiddle drone, washboard). Upset: **Stomp**, a stomp and clap, fast rolls, a walking bass, a harmonica
+  shriek at the turn.
+- The upset music had one pattern; it now has five pieces with two chord sets each, fills every fourth bar and a build
+  over the first bars. The site's own piece plays about three times in four, the old **Drive** otherwise.
+- New instruments, all synthesised in Web Audio as before: analogue-style pads, a portamento lead, plucked strings
+  (banjo and guitar), whistle, harmonica, a bowed drone, a tape echo on every platform (the hall reverb stays
+  desktop-only). The new pieces run through a brighter bus (6.5 kHz) than the 3.2 kHz lofi/piano bus.
+- Listening aids: `?song=<part of a name>` starts a given piece, `?upset=strings|pulse|gallop|stomp|drive` fixes the upset
+  piece; the sound button's tooltip names what is playing. `tools/musictest.py` schedules every step of every piece and
+  checks the output level; `tools/musicrec.py` records any piece to MP3.
 
 ### Under the hood (pass 3)
 - **Draw calls**: the 22 ribbed building walls had a texture clone each (one draw each); they now share one material and
