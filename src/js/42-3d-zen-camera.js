@@ -126,11 +126,11 @@
         start:()=>{const U=G3.scenery.util,ks=Object.keys(U),k=ks[Math.floor(Math.random()*ks.length)],[x,z,h]=U[k];return {x,z,h,th:Math.atan2(x-14,z-5)+(Math.random()-0.5)*1.2,k};},
         at:(t,mv)=>{if(t>13)return null;const s=mv.st,u=ease(t/13);return [s.x,Math.min(12,s.h*0.35),s.z,Math.max(45,s.h*2.2+30),s.th+u*1.3,mix(1.0,0.92,u)];}},
       // the highway bridge over the river, trucks coming and going
-      {name:"highway bridge",look:["bw","dusk"],dur:12,ok:()=>true,start:()=>({d:Math.random()<0.5?1:-1}),
-        at:(t,mv)=>{if(t>12)return null;const u=ease(t/12),rz=riverAt(-158)[0];return [-158,2,mix(rz-18*mv.st.d,rz+6*mv.st.d,u),mix(80,62,u),Math.PI/2+0.55*mv.st.d-0.5*mv.st.d*u,mix(1.02,0.96,u)];}},
+      {name:SITE.env==="urban"?"seafront boulevard":"highway bridge",look:["bw","dusk"],dur:12,ok:()=>true,start:()=>({d:Math.random()<0.5?1:-1}),
+        at:(t,mv)=>{if(t>12)return null;const u=ease(t/12),rv=riverAt(-158),rz=RIVERS[SITE.env].kind==="sea"?rv[0]+rv[1]+12:rv[0];return [-158,2,mix(rz-18*mv.st.d,rz+6*mv.st.d,u),mix(80,62,u),Math.PI/2+0.55*mv.st.d-0.5*mv.st.d*u,mix(1.02,0.96,u)];}},
       // low along the water: the far bank, the intake and the outfall, out past the mill
-      {name:{urban:"canal run",desert:"canal run",swamp:"bayou drift"}[SITE.env]||"river drift",look:["airy","gold"],dur:16,ok:()=>true,
-        at:(t)=>{if(t>16)return null;const u=ease(t/16),x=mix(-120,70,u);return [x,0,riverAt(x)[0]+6,mix(60,52,u),Math.PI+0.35-0.5*u,mix(1.08,1.0,u)];}},
+      {name:{urban:"seafront run",desert:"canal run",swamp:"bayou drift"}[SITE.env]||"river drift",look:["airy","gold"],dur:16,ok:()=>true,
+        at:(t)=>{if(t>16)return null;const u=ease(t/16),x=mix(-120,70,u),rv=riverAt(x);return [x,0,RIVERS[SITE.env].kind==="sea"?rv[0]+rv[1]-10:rv[0]+6,mix(60,52,u),Math.PI+0.35-0.5*u,mix(1.08,1.0,u)];}},
       // one signature shot per environment
       ...(SITE.env==="rural"?[{name:"forest canopy",look:["gold","airy"],dur:12,ok:()=>true,
         // v4.1 pass 5: low over the deep wood when this valley has one, sweeping along its edge with the mill beyond

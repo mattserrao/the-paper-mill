@@ -50,13 +50,14 @@
     // v13: the water follows the site's river line (RIVERS / riverAt in 03b-site.js): banks, water and sparkle are ribbons
     // along it, 5 m a step; straight for the canals, winding for the valley river
     const RV=RIVERS[SITE.env]||RIVERS.rural;ENV.river=RV;
-    const ribbon=(ext,y,m,uvF)=>{const P=[],U=[],I=[];let n=0;for(let x=-420;x<=420.01;x+=5){const [zc,hw]=riverAt(x),a=zc-hw-ext,b=zc+hw+ext;P.push(x,y,a,x,y,b);
+    const SEA=RV.kind==="sea",RX=SEA?1600:420,RS=SEA?25:5;   // the sea runs out to the horizon
+    const ribbon=(ext,y,m,uvF)=>{const P=[],U=[],I=[];let n=0;for(let x=-RX;x<=RX+0.01;x+=RS){const [zc,hw]=riverAt(x),a=zc-hw-ext,b=zc+hw+ext;P.push(x,y,a,x,y,b);
         const uv=uvF(x,a,b);U.push(uv[0],uv[1],uv[2],uv[3]);if(n){const k=(n-1)*2;I.push(k,k+1,k+2,k+1,k+3,k+2);}n++;}
       const g=new THREE.BufferGeometry();g.setAttribute("position",new THREE.Float32BufferAttribute(P,3));g.setAttribute("uv",new THREE.Float32BufferAttribute(U,2));g.setIndex(I);g.computeVertexNormals();
       const o=new THREE.Mesh(g,m);o.receiveShadow=true;scene.add(o);return o;};
-    const sand=new StdMat({color:lin0(RV.bank||ENVLOOK.bank),roughness:1});ribbon(3,0.006,sand,(x,a,b)=>[(x+400)/8,0,(x+400)/8,(b-a)/8]);
+    const sand=new StdMat({color:lin0(RV.bank||ENVLOOK.bank),roughness:1});if(!SEA)ribbon(3,0.006,sand,(x,a,b)=>[(x+400)/8,0,(x+400)/8,(b-a)/8]);
     // city and desert: the river runs in a walled concrete channel
-    if(SITE.env==="urban"||SITE.env==="desert"){const [zc,hw]=riverAt(0);[zc+hw+2.4,zc-hw-2.4].forEach(z=>box(800,1.1,0.6,conc,0,0.55,z,scene,false));}
+    if(SITE.env==="urban"||SITE.env==="desert"){const [zc,hw]=riverAt(0);(SEA?[zc+hw+2.4]:[zc+hw+2.4,zc-hw-2.4]).forEach(z=>box(800,1.1,0.6,conc,0,0.55,z,scene,false));}   // the city: a sea wall
     ribbon(0,0.012,new StdMat({map:rt,roughness:0.15,metalness:0.1}),(x,a,b)=>[(x+400)/8,0,(x+400)/8,(b-a)/8]);
     // v4.1 pass 3: a sparse sparkle layer drifting the other way over the water (High and Ultra tiers)
     if(G3.GFX&&!G3.GFX.lambert){const sc2=document.createElement("canvas");sc2.width=sc2.height=128;const x=sc2.getContext("2d");x.clearRect(0,0,128,128);

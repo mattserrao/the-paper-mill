@@ -161,13 +161,14 @@
     // the highway (west of the gate) and the east road, straight as on the maps; the swamp's highway bends west up north
     const HXr=-158,EX={rural:160,urban:112,desert:144,swamp:160}[ENVK],RZ=x=>riverAt(Math.max(-440,Math.min(440,x)));
     const north=ENVK==="swamp"?[[HXr-22,-320],[HXr-20,-250],[HXr-4,-195]]:[[HXr,-320]],[hz,hw0]=RZ(HXr),[ez,ew0]=RZ(EX);
-    road([...north,[HXr,hz-hw0-9]],9,true);road([[HXr,hz+hw0+9],[HXr,-3.8],[HXr,12.5],[HXr,80],[HXr,320]],9,true);road([[-140,-3.8],[HXr,-3.8]],5.6,false,"near");road([[-140,12.5],[HXr,12.5]],5.6,false,"near");
-    road([[100,32.5],[EX,32.5]],6,false,"e");road([[EX,-320],[EX,ez-ew0-9]],7,true);road([[EX,ez+ew0+9],[EX,32.5],[EX,110],[EX,320]],7,true);
+    const SEA=(RIVERS[ENVK]||{}).kind==="sea";   // the city by the sea: no far bank, so no bridges and no roads beyond
+    if(!SEA)road([...north,[HXr,hz-hw0-9]],9,true);road([[HXr,hz+hw0+9],[HXr,-3.8],[HXr,12.5],[HXr,80],[HXr,320]],9,true);road([[-140,-3.8],[HXr,-3.8]],5.6,false,"near");road([[-140,12.5],[HXr,12.5]],5.6,false,"near");
+    road([[100,32.5],[EX,32.5]],6,false,"e");if(!SEA)road([[EX,-320],[EX,ez-ew0-9]],7,true);road([[EX,ez+ew0+9],[EX,32.5],[EX,110],[EX,320]],7,true);
     // bridges: deck, parapets and piers across the water and its banks
     function bridge(x,w){const [zc,hw]=RZ(x),L=2*hw+20;add(T.box,x,1.2,zc,w+2,0.5,L,0,"#9a9ea6",0.1);[-1,1].forEach(s2=>add(T.box,x+s2*(w/2+0.5),1.7,zc,0.4,0.9,L,0,"#c8ccd2",0.1));
       for(let z=zc-hw-6;z<=zc+hw+6.1;z+=Math.max(8,(2*hw+12)/Math.ceil((2*hw+12)/16)))add(T.box,x,0,z,w,1.2,1.2,0,"#8a8e96",0.2);add(T.quad,x,1.46,zc,w,1,L,0,ROADC,0);
       if(L>40)for(let d=-L/2+3;d<L/2-3;d+=7)add(T.quad,x,1.48,zc+d,0.22,1,3,0,LANE,0);kMark(x-w/2-3,x+w/2+3,zc-L/2,zc+L/2,1);hMark(x,zc,Math.max(8,L/2),3);}
-    bridge(HXr,9);bridge(EX,7);G3.bridgeAt=[HXr,hz];
+    if(!SEA){bridge(HXr,9);bridge(EX,7);}
     // rail line from the spur out to the horizon (the train arrives from the west), level crossing at the highway
     {const n=Math.floor((-139+420)/0.8);for(let k=0;k<n;k+=2){const x=-139.4-k*0.8;add(T.box,x,0,-29,0.35,0.14,2.6,0,"#7b5d42",0,x>-110?"near":"w");}
       [-29.7,-28.3].forEach(z=>{for(let x=-139;x>-420;x-=40)add(T.box,x-20,0.14,z,40,0.16,0.12,0,"#8d939c",0,x>-110?"near":"w");});
@@ -292,12 +293,13 @@
       scatter(90,-410,410,-310,310,inMap,(x,z)=>bush(x,z,rr(0.8,1.4)));
       for(let k=0;k<7;k++){const a=rr(0,6.28),d=rr(360,420),x=Math.cos(a)*d,z=Math.sin(a)*d*0.8;if(!place(x,z,12))continue;add(T.mound,x,-3,z,rr(60,100),rr(9,18),rr(45,75),RNG()*6,pick(["#6f9a5c","#5f8a50","#7aa064"]),0.25);}}
     if(ENVK==="urban"){
-      // City mill: a broad walled river; a street grid on 45 m blocks (the highway and the east avenue are on it) with
-      // houses, small apartment blocks and shops; the rail yard west, and the water tower, recycling yard, substation
-      // and radio mast on the blocks south of the mill
+      // City by the sea (v13 pass 2): the sea runs from the mill's back wall to the horizon. A seafront boulevard either side
+      // of the mill; the beach with its boardwalk, pier and lifeguard towers to the west; the container port with gantry
+      // cranes and a moored ship to the east, its breakwater and lighthouse out in the bay; ships at anchor offshore.
+      // Inland a street grid on 45 m blocks (the highway and the east avenue are on it) with houses, apartments, shops
+      // and parks; the rail yard west, and the water tower, recycling yard, substation and radio mast south of the mill.
       const GP=45,xs=[];for(let x=HXr-GP*6;x<=430;x+=GP)xs.push(x);
-      const [rzc,rhw]=RZ(0),nBank=rzc-rhw-2.4,sBank=rzc+rhw+2.4;   // -124.4 / -57.6
-      const zsN=[nBank-8.6];while(zsN[zsN.length-1]-GP>-330)zsN.push(zsN[zsN.length-1]-GP);
+      const [rzc,rhw]=RZ(0),shore=rzc+rhw,sBank=shore+2.4,BLV=-51.5;   // the sea wall at -57.6, the boulevard just inland
       const zsS=[-8,37,82];while(zsS[zsS.length-1]+GP<330)zsS.push(zsS[zsS.length-1]+GP);
       const MILLX=[HXr,EX],RAILZ=[-50,-8];
       const streetRaw=(cx,cz,len,along,w=6)=>{add(T.quad,cx,0.025,cz,along?len:w,1,along?w:len,0,ROADC,0);
@@ -305,29 +307,79 @@
         if(DEN>=1||Math.hypot(cx,cz)<200)for(let d=-len/2+3;d<len/2-3;d+=7)add(T.quad,cx+(along?d:0),0.03,cz+(along?0:d),along?3:0.2,1,along?0.2:3,0,"#f2f2f2",0);
         kMark(cx-(along?len/2:w/2+1.8),cx+(along?len/2:w/2+1.8),cz-(along?w/2+1.8:len/2),cz+(along?w/2+1.8:len/2),1);
         for(let d=-len/2+6;d<len/2-6;d+=11)if(RNG()<0.55){const s2=RNG()<0.5?-1:1,tx=cx+(along?d:s2*(w/2+2.4)),tz=cz+(along?s2*(w/2+2.4):d);if(kFree(tx,tz,0.9))broadleaf(tx,tz,rr(0.8,1.1),true,true);}};
-      // north-south streets: north of the river all the way; south of it outside the mill's band, and off the rail yard
-      xs.forEach(x=>{if(x===HXr||x===EX)return;streetRaw(x,(-330+zsN[0])/2,zsN[0]+330,false);
-        const z0=x>HXr&&x<EX?82:x<HXr?-8:sBank+4;streetRaw(x,(z0+330)/2,330-z0,false);});
-      // east-west streets: the river road on the north bank, the arterial south of the mill (z 82), the grid beyond
-      zsN.forEach((z,i)=>streetRaw(0,z,860,true,i?6:8));zsS.forEach(z=>{if(z<82){streetRaw((HXr-430)/2,z,430+HXr,true);streetRaw((EX+430)/2,z,430-EX,true);}else streetRaw(0,z,860,true,z===82?9:6);});
-      // the river: promenade trees along both embankments
-      for(let x=-410;x<410;x+=9){if(Math.abs(x-HXr)<14||Math.abs(x-EX)<14)continue;if(RNG()<0.8)broadleaf(x+rr(-1,1),nBank-3.4,rr(0.7,0.95),true,true);if((x<F.x0-6||x>F.x1+6)&&RNG()<0.8)broadleaf(x+rr(-1,1),sBank+3,rr(0.7,0.95),true,true);}
+      const palm=(x,z,s,wet)=>{if(!place(x,z,1.2*s,wet))return false;add(T.cyl6,x,0,z,0.25*s,7*s,0.25*s,0,"#8a6a4a",0.15,undefined,rr(-0.08,0.08),rr(-0.08,0.08));
+        for(let f=0;f<7;f++)add(T.box,x+Math.cos(f*0.9)*1.7*s,7*s,z+Math.sin(f*0.9)*1.7*s,3.4*s,0.12,0.7*s,-f*0.9,"#5f8a4e",0.1,undefined,0,-0.5);claim(x,z,1.2*s,8*s,0.3);return true;};
+      // the seafront boulevard, west and east of the mill, with palms along its inland side
+      streetRaw((HXr-430)/2,BLV,430+HXr,true,7);streetRaw((EX+430)/2,BLV,430-EX,true,7);
+      for(let x=EX+8;x<415;x+=12)palm(x+rr(-1,1),BLV+6,rr(0.85,1.1));
+      // north-south streets south of the shore: from the boulevard east of the mill, off the rail yard west, from z 82 between
+      xs.forEach(x=>{if(x===HXr||x===EX)return;const z0=x>HXr&&x<EX?82:x<HXr?-8:BLV;streetRaw(x,(z0+330)/2,330-z0,false);});
+      zsS.forEach(z=>{if(z<82){streetRaw((HXr-430)/2,z,430+HXr,true);streetRaw((EX+430)/2,z,430-EX,true);}else streetRaw(0,z,860,true,z===82?9:6);});
+      /* --- the beach (west): sand below the sea wall, a boardwalk, the pier, lifeguard towers, umbrellas, palms --- */
+      {const X0=-418,X1=HXr-14,Z0=shore-1,Z1=shore-34,cx=(X0+X1)/2;
+        // sand and the shallows with a wavy waterline, a thin surf line along it
+        const edge=(x,o)=>Z1+o+4*Math.sin(x/23)+5*(noise(x,Z1,40)-0.5),band=(o0,o1,y,hex)=>{const pts=[];for(let x=X0;x<=X1;x+=8)pts.push([x,edge(x,o1)]);for(let x=X1;x>=X0;x-=8)pts.push([x,o0===null?Z0:edge(x,o0)]);poly(pts,y,hex);};
+        band(-2,-26,0.02,"#6aa6bb");band(null,0,0.03,"#e8d9b0");band(1.2,0,0.034,"#f2f6f4");
+        add(T.box,cx,0,shore-3.2,X1-X0,0.5,4,0,"#a07a52",0.1);                                                  // boardwalk along the foot of the wall
+        for(let x=X0+20;x<X1-10;x+=26)palm(x+rr(-3,3),shore-7+rr(-1,1),rr(0.9,1.2),true);
+        // the pier: deck on piles out into the bay, a pavilion and lamps at its end
+        const PX=-292,PL=125;add(T.box,PX,2.0,shore-PL/2,6,0.5,PL,0,"#a07a52",0.1);[-1,1].forEach(s2=>add(T.box,PX+s2*2.9,2.5,shore-PL/2,0.2,0.9,PL,0,"#e9e4da",0));
+        for(let z=shore-4;z>shore-PL;z-=7)[-1,1].forEach(s2=>add(T.cyl6,PX+s2*2.4,-1,z,0.3,3.1,0.3,0,"#6b5440",0));for(let z=shore-10;z>shore-PL;z-=18)add(T.box,PX+2.6,2.5,z,0.15,4,0.15,0,"#4a4f58",0);
+        add(T.box,PX,2.5,shore-PL-5,16,4.5,11,0,"#f1ede4",0.15);add(T.gable,PX,7,shore-PL-5,16.6,2.6,11.6,0,"#2f7fb8",0);add(T.box,PX,2.0,shore-PL-5,20,0.5,15,0,"#a07a52",0.1);
+        hMark(PX,shore-PL/2,PL/2,8);note("pier",PX,shore-PL-5,9);
+        // lifeguard towers, umbrellas and towels on the sand
+        [-382,-226].forEach(x=>{[[-1,-1],[1,-1],[-1,1],[1,1]].forEach(([a,b])=>add(T.cyl6,x+a,0,shore-20+b,0.12,2.6,0.12,0,"#e9e4da",0));add(T.box,x,2.6,shore-20,3,2.2,3,0,"#d6382c",0.1);add(T.gable,x,4.8,shore-20,3.4,1,3.4,0,"#f2f2f2",0);add(T.box,x,2.4,shore-22.5,1,0.15,3,0,"#e9e4da",0,undefined,0.6);note("lifeguard",x,shore-20,6);});
+        for(let k=0;k<Math.round(60*DEN);k++){const x=rr(X0+6,X1-6),z=rr(Z1+4,shore-11);if(Math.abs(x-PX)<6)continue;const c=pick(["#d6382c","#f2c230","#2a5aa8","#1f9254","#f27a30","#ffffff"]);
+          add(T.cyl6,x,0,z,0.06,2.2,0.06,0,"#e9e4da",0);add(T.cone6,x,1.9,z,1.6,0.6,1.6,RNG(),c,0.1);if(RNG()<0.7)add(T.quad,x+rr(-2,2),0.04,z+rr(1.5,2.5),1,1,2,RNG(),pick(["#f2f2f2","#e46b5b","#5b8de4","#f2c230"]),0);}
+        // sailboats off the beach
+        for(let k=0;k<7;k++){const x=rr(-410,-180),z=rr(shore-80,shore-220),ry=rr(0,6.28);add(T.box,x,-0.2,z,5,0.9,1.8,ry,"#f2f2f2",0.2);add(T.cone4,x,0.7,z,0.12,7,1.6,ry+Math.PI/4,"#f7f7f2",0.05);}
+        kMark(X0,X1,Z1-22,shore,3);}
+      /* --- the port (east): a container terminal on reclaimed land, gantry cranes on the quay, a ship alongside --- */
+      {const X0=EX+22,X1=420,ZQ=shore-92,cx=(X0+X1)/2,cz=(shore+ZQ)/2;
+        add(T.box,cx,-1,cz,X1-X0,2.2,shore-ZQ,0,"#b8b6ae",0.25);add(T.box,cx,1.2,ZQ+0.6,X1-X0,0.4,1.2,0,"#e2c230",0);                 // the deck and the quay edge
+        for(let x=X0+6;x<X1;x+=12)add(T.cyl6,x,1.2,ZQ+1.2,0.35,0.6,0.35,0,"#2f3a49",0);
+        [-1,0.4].forEach(o=>add(T.box,cx,1.22,ZQ+12+o*4,X1-X0-6,0.1,0.25,0,"#8d939c",0));                                                   // crane rails
+        // container stacks in blocks
+        for(let bx=X0+14;bx<X1-30;bx+=34)for(let bz=shore-14;bz>ZQ+28;bz-=17)for(let r=0;r<2;r++)for(let c=0;c<6;c++){const n=1+Math.floor(RNG()*4);for(let l=0;l<n;l++)add(T.box,bx+c*3.0,1.2+l*2.6,bz-r*6.4,2.5,2.55,6.1,0,pick(["#d6382c","#2a5aa8","#1f9254","#e2c230","#e9ecef","#8a4a2c","#5b6270","#f27a30"]),0.15);}
+        // gantry cranes: legs on the rails, a girder reaching out over the ship, the machinery house on top
+        [X0+40,X0+100,X0+160].forEach(x=>{const cz2=ZQ+12,col=pick(["#c92a2a","#2a5aa8"]);[[-8,-6],[8,-6],[-8,6],[8,6]].forEach(([a,b])=>add(T.box,x+a,1.2,cz2+b,1.2,30,1.2,0,col,0.15));
+          [-8,8].forEach(a=>add(T.box,x+a,30,cz2,1.4,1.6,14,0,col,0.1));add(T.box,x,31.6,cz2-14,3,2.2,62,0,col,0.1);add(T.box,x,33.8,cz2,7,4,8,0,"#f2f2f2",0.1);add(T.box,x,26,cz2-30,1.2,5,1.2,0,"#2f3a49",0);});
+        add(T.box,X1-26,1.2,shore-30,22,10,30,0,"#c9c4ba",0.2);add(T.gable,X1-26,11.2,shore-30,22.4,2.4,30.6,Math.PI/2,"#6f7a88",0);add(T.box,X0+6,1.2,shore-8,8,7,8,0,"#e9e4da",0.15);
+        kMark(X0-4,X1,ZQ,shore,3);hMark(cx,cz,(X1-X0)/2,34);note("port",X0+100,ZQ+12,34);
+        // the ship alongside: hull with a red waterline, container bays, the bridge and funnel aft
+        const SX=X0+100,SZ=ZQ-15,SL=176;add(T.box,SX,-2,SZ,SL,2.6,26,0,"#a8322c",0.1);add(T.box,SX,0.6,SZ,SL,7,26,0,"#1f2d44",0.15);add(T.box,SX-SL/2-4,0.6,SZ,10,7,16,0,"#1f2d44",0.15,undefined,0,0);
+        for(let b=0;b<11;b++)for(let r=0;r<7;r++){const n=1+Math.floor(RNG()*3);for(let l=0;l<n;l++)add(T.box,SX-SL/2+12+b*12.4,7.6+l*2.6,SZ-10.5+r*3.5,12,2.55,3.2,0,pick(["#d6382c","#2a5aa8","#1f9254","#e2c230","#e9ecef","#8a4a2c","#f27a30"]),0.15);}
+        add(T.box,SX+SL/2-14,7.6,SZ,12,14,22,0,"#f2f2f2",0.15);add(T.box,SX+SL/2-14,21.6,SZ,13,1.6,26,0,"#f2f2f2",0.05);add(T.cyl10,SX+SL/2-6,7.6,SZ,2,18,2,0,"#2f3a49",0.1);
+        hMark(SX,SZ,SL/2,28);note("ship",SX,SZ,24);
+        // two tugs
+        [[SX-SL/2-24,SZ+8],[SX-30,SZ-26]].forEach(([x,z])=>{add(T.box,x,-0.4,z,14,2.4,5.5,0.3,"#c92a2a",0.15);add(T.box,x+1,2,z,5,3,4,0.3,"#f2f2f2",0.1);add(T.cyl6,x+3,2,z,0.5,4,0.5,0,"#2f3a49",0);});
+        /* --- the breakwater from the port's corner out into the bay, with the lighthouse at its head --- */
+        const BW=[[X0+4,ZQ-6],[X0-20,ZQ-40],[X0-62,ZQ-72],[X0-110,ZQ-88]];strip(BW,10,1.0,"#8f8f88",3,0.2);
+        smooth(BW,5).forEach(([x,z],i)=>{for(const s2 of [-1,1])add(T.ico,x+rr(-2,2),-0.6,z+s2*rr(4,6),rr(1.6,2.8),rr(1,1.8),rr(1.6,2.6),RNG()*6,pick(["#8c8c84","#9a9a92","#7d7d76"]),0.3);if(i%3===0)add(T.box,x,1.0,z,4,0.5,4,RNG(),"#9a9a92",0.1);});
+        const [lx,lz]=BW[BW.length-1];add(T.cyl10,lx,0,lz,6,2.2,6,0,"#9a9a92",0.2);
+        for(let k=0;k<6;k++){const r=2.6-k*0.22;add(T.cyl10,lx,2.2+k*3.4,lz,r,3.4,r,0,k%2?"#f2f2f2":"#c92a2a",0.08);}
+        add(T.cyl10,lx,22.6,lz,2.6,0.5,2.6,0,"#2f3a49",0);add(T.cyl10,lx,23.1,lz,1.4,2.6,1.4,0,"#f6e7a1",0);add(T.dome,lx,25.7,lz,1.6,1.4,1.6,0,"#c92a2a",0.05);
+        hMark(lx,lz,6,28);note("lighthouse",lx,lz,27);}
+      // ships at anchor offshore
+      [[-90,shore-300,150,0.15],[260,shore-380,190,-0.1],[-330,shore-430,120,0.3]].forEach(([x,z,L2,ry])=>{add(T.box,x,-1.6,z,L2,2.2,L2*0.14,ry,"#a8322c",0.1);add(T.box,x,0.6,z,L2,5.5,L2*0.14,ry,pick(["#1f2d44","#2f3a49","#4a2f2f"]),0.15);
+        add(T.box,x+Math.cos(ry)*L2*0.38,6.1,z-Math.sin(ry)*L2*0.38,L2*0.07,10,L2*0.13,ry,"#f2f2f2",0.15);for(let b=0;b<6;b++)add(T.box,x+Math.cos(ry)*(-L2*0.38+b*L2*0.11),6.1,z-Math.sin(ry)*(-L2*0.38+b*L2*0.11),L2*0.09,2.6*(1+Math.floor(RNG()*2)),L2*0.12,ry,pick(["#d6382c","#2a5aa8","#1f9254","#e2c230","#e9ecef"]),0.15);});
       // landmark blocks
       LM.railyard(-415,HXr-10);LM.waterTower(-1,104);LM.recycler(-91,104);LM.substation(89,104,3);LM.mast(44,150,46);
       // a trailer lot between the highway and the gate
       {add(T.quad,-130,0.022,46,40,1,44,0,"#9a9ea6",0);for(let i=0;i<5;i++)for(let j=0;j<2;j++)add(T.box,-142+i*6,0,36+j*20,2.6,3.4,13,0,pick(["#e9ecef","#d6382c","#2a5aa8","#e9ecef"]),0.15);kMark(-150,-110,24,68,3);hMark(-130,46,22,4);}
       // the blocks: houses round the edge with gardens, small apartment blocks, corner shops, a park here and there
-      const zsAll=[-330,...zsN.slice().reverse(),sBank+4.6,...zsS,330];
+      const zsAll=[BLV,...zsS,330];
       for(let i=0;i<xs.length-1;i++)for(let j=0;j<zsAll.length-1;j++){const xa=xs[i]+5,xb=xs[i+1]-5,za=zsAll[j]+5,zb=zsAll[j+1]-5;if(xb-xa<20||zb-za<20)continue;
-        const cx=(xa+xb)/2,cz=(za+zb)/2;if(cz>nBank-2&&cz<sBank+2)continue;if(cx>MILLX[0]&&cx<MILLX[1]&&cz>sBank&&cz<82)continue;if(cx<HXr&&cz>RAILZ[0]&&cz<RAILZ[1])continue;
+        const cx=(xa+xb)/2,cz=(za+zb)/2;if(cx>MILLX[0]&&cx<MILLX[1]&&cz>sBank&&cz<82)continue;if(cx<HXr&&cz>RAILZ[0]&&cz<RAILZ[1])continue;
         if(!kFree(cx,cz,6))continue;const d=Math.hypot(cx,cz),r=RNG();
         if(r<0.07){add(T.quad,cx,0.022,cz,xb-xa,1,zb-za,0,"#8fbf6a",0);for(let k=0;k<10;k++)broadleaf(cx+rr(-15,15),cz+rr(-15,15),rr(0.8,1.2),true,true);add(T.quad,cx,0.026,cz,xb-xa-4,1,1.6,0.6,"#d9cfb8",0);kMark(xa,xb,za,zb,3);continue;}
-        if(r<0.27||(d>300&&r<0.45)){// apartment blocks or a downtown tower
-          const tall=d>300&&RNG()<0.5,h=tall?rr(18,36):rr(9,15),body=pick(["#a5543f","#b8654d","#c9c4ba","#b9bfc8","#d6cfc0","#7fa3c4"]);
+        // seafront blocks get apartments and hotels more often; a few towers far out
+        if(r<0.27||(cz<0&&r<0.6)||(d>300&&r<0.45)){
+          const tall=(d>300||cz<0)&&RNG()<0.5,h=tall?rr(18,36):rr(9,15),body=pick(["#a5543f","#b8654d","#c9c4ba","#b9bfc8","#d6cfc0","#7fa3c4","#e9e4da"]);
           if(tall){building(cx,cz,rr(18,26),rr(18,26),h,0,body,pick(["#8a8f98","#6d737c","#9aa0a8"]));claim(cx,cz,13,h+1,0);}
           else{[-1,1].forEach(s2=>{if(kFree(cx,cz+s2*8,4)){building(cx,cz+s2*8.5,xb-xa-6,11,h,0,body,pick(["#8a8f98","#9aa0a8","#7d7a72","#a5543f"]));claim(cx,cz+s2*8.5,6,h+1,0);}});}
           continue;}
-        // houses: three a side facing the north and south streets, gardens behind with a tree or two
+        // houses facing the north and south streets, gardens behind with a tree or two
         const nH=RNG()<0.6?4:3;for(const s2 of [-1,1])for(let k=0;k<nH;k++){const hx=xa+(k+0.5)*(xb-xa)/nH+rr(-0.6,0.6),hz=cz+s2*((zb-za)/2-5.5);if(!kFree(hx,hz,3))continue;
           const shop=k===0&&RNG()<0.12;if(shop){building(hx,hz,9,8,rr(4,6),0,pick(["#b8bcc4","#c9c4ba"]),"#6d737c");add(T.box,hx,3,hz+s2*4.06,7,0.9,0.08,0,pick(["#2a5aa8","#d6382c","#1f9254","#f2c230"]),0);}
           else house(hx,hz,RNG()<0.8?0:Math.PI/2,nH>3?rr(6.2,7.4):rr(7.5,9.5),rr(6.5,8),rr(3.2,5),pick(["#e9e4da","#d8c8b0","#c9d2d6","#e2d2c2","#b9c4b0","#d9b8a0"]),pick(["#7a4a3a","#5a5f69","#6d5a4a","#8a8f98","#4a4f58"]));
@@ -398,7 +450,7 @@
       const base=new THREE.Color(ENVLOOK.ground).convertSRGBToLinear(),tint=new THREE.Color(),mixc=new THREE.Color();
       const PATCH={rural:[["#c9c46c",55,0.6,0.5,500,0],["#b59a6b",40,0.72,0.55,0,500]],urban:[["#9fb585",60,0.6,0.45,500,0],["#b3bd9a",45,0.7,0.35,0,500]],
         desert:[["#ead9b0",52,0.5,0.5,0,0],["#c7b08a",45,0.68,0.5,300,0],["#d9c190",80,0.62,0.35,0,300]],swamp:[["#6f6a4a",45,0.6,0.5,0,0],["#7f9a63",60,0.6,0.5,300,0]]}[ENVK];
-      for(let i=0;i<pa.count;i++){const x=pa.getX(i),z=pa.getZ(i);pa.setY(i,hAt(x,z));
+      const SEAF=(RIVERS[ENVK]||{}).kind==="sea";for(let i=0;i<pa.count;i++){const x=pa.getX(i),z=pa.getZ(i);pa.setY(i,hAt(x,z)-(SEAF&&rDist(x,z)<-6?2.5:0));   // (the sea bed sits well under the water: no flicker far out)
         const df=dFence(x,z),near=sstep(16,60,df);tint.copy(base);
         if(near>0){for(const [hex,sc,th,k,ox,oz] of PATCH){const n=noise(x+ox,z+oz,sc);if(n>th)tint.lerp(mixc.set(hex).convertSRGBToLinear(),k*near*Math.min(1,(n-th)/0.12));}
           tint.multiplyScalar(1+(noise(x,z,70)-0.5)*0.16*near);}

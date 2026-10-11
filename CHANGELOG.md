@@ -132,6 +132,16 @@ piece; the three sandbox-style piano pieces are the valley's.
   piece; the sound button's tooltip names what is playing. `tools/musictest.py` schedules every step of every piece and
   checks the output level; `tools/musicrec.py` records any piece to MP3.
 
+### City by the sea (pass 11, test v13 updated)
+- City mill only: the far side of the river is now the open sea, out to the horizon (`RIVERS.urban` kind "sea"; the
+  sea bed drops under the water so it never flickers). No bridges; the highway and east avenue end at a seafront
+  boulevard either side of the mill.
+- West: a beach below the sea wall with a wavy waterline and shallows, boardwalk, palms, umbrellas, two lifeguard
+  towers and a pier with a pavilion; sailboats offshore. East: a container port on reclaimed land with three gantry
+  cranes, container stacks, a warehouse and a container ship alongside with two tugs; a curved breakwater with a red and
+  white lighthouse at its head. Three ships at anchor in the bay. Seafront blocks favour apartments and hotels.
+- Zen shots renamed and moved for the city: "seafront boulevard" and "seafront run". Sea is a static colour.
+
 ### Map redesign after the v13 site maps (pass 10, test v13)
 - Each site's water now follows its map: a winding valley river with rapids and gravel bars that touches the mill at the
   intake and swings north elsewhere, a broad walled city river, a narrow concrete desert canal, a straight bayou canal
