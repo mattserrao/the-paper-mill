@@ -1,5 +1,10 @@
 # Changelog
 
+## v4.2.2-t3 (test v25): gator riff removed, wide incidental framing
+- The bass riff is gone (synth code removed).
+- The gator scene's camera is now a wide, low shot from across the canal (30 m, orbit 2.25, elevation 1.42): the action sits in the lower third with the mill (clarifier, pipe racks, buildings) filling the background, as if caught in frame by chance. It follows the operator along the bank. The zen camera keeps this angle (a slow ±0.1 rad sway) when a sight supplies one.
+- tools/sightshots.py: "t:f" uses the scene's own framing; waits for rendered frames.
+
 ## v4.2.2-t2 (test v24): the gator riff
 - A palm-muted electric bass riff (E E B G E E B A G, even eighths at 140 bpm, low E string) plays as the bayou gator scene opens and again as it closes (scene t 28.9 s, finishing with the scene). Plays in zen too; the music ducks under it. Silent when sound is off.
 - AUDIO.riff() / AUDIO.riffRender() (offline render); tools/riffrender.py writes it to WAV.

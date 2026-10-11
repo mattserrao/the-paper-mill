@@ -162,7 +162,7 @@
       // v17: a rare sight (cowboys, Bigfoot, the tug, the gator) takes over the camera: cut to it and follow it, slowly
       // circling, until it is over
       {const f=G3.sightFocus&&G3.sightFocus();if(f&&!(Z.mv&&Z.mv.m.sight)){Z.who=null;Z.goto=null;Z.t=0;Z.len=999;document.body.dataset.zs=Math.random()<0.5?"none":"gold";
-        Z.mv={t:0,st:{th:-0.4+(Math.random()-0.5)*1.2},m:{name:"rare sight",sight:1,at:(t,mv,rdt2)=>{const q=G3.sightFocus&&G3.sightFocus();if(!q)return null;mv.st.th+=rdt2*0.05;return [q[0],q[1],q[2],q[3],mv.st.th,1.02];}}};}}
+        Z.mv={t:0,st:{th:-0.4+(Math.random()-0.5)*1.2},m:{name:"rare sight",sight:1,at:(t,mv,rdt2)=>{const q=G3.sightFocus&&G3.sightFocus();if(!q)return null;if(q[4]!=null)return [q[0],q[1],q[2],q[3],q[4]+Math.sin(t*0.12)*0.1,q[5]];mv.st.th+=rdt2*0.05;return [q[0],q[1],q[2],q[3],mv.st.th,1.02];}}};}}
       const POI=[[-14,5,300,-0.2],[20,9,120,-0.5],[24,-10,95,0.4],[-20,14,80,-1.2],[-25,-18,110,0.9],[20,-40,120,2.6],[70,-10,110,-2.2],[-60,10,130,0.1],[10,9,170,2.9],[40,10,70,0.6],[-36,24,90,-0.8]];
       // v3.3: each shot sets its own length (Z.len); free shots run 6-10 s, scripted shots run their own course
       if(Z.t>(Z.len||10)){Z.t=0;Z.len=6+Math.random()*4;Z.mv=null;const ops=G3.followable?G3.followable().filter(w=>w.visible):[];
