@@ -98,20 +98,24 @@
     function hBase(x,z){if(!RELIEF)return 0;const f=sstep(100,230,dFence(x,z));if(f<=0)return 0;
       let n=ENVK==="desert"?noise(x*0.55,z*1.7,52)*1.1+noise(x,z,140)*0.6-0.55:noise(x,z,95)*1.35+noise(x,z,38)*0.45-0.62;
       n=Math.max(0,n);let h=RELIEF*f*n*(ENVK==="desert"?1.15:1.0);
-      if(z>-84&&z<-46)h*=sstep(0,8,Math.min(z+84,-46-z));                       // the river and its banks stay level
-      if(x<-130&&z>-40&&z<-18)h*=sstep(0,6,Math.min(x>-130?0:-130-x,Math.min(z+40,-18-z)));   // the rail line out west
+      // the river and its banks stay level, rising over 10 m beyond them; the rail line out west likewise
+      // (v4.1 pass 5: these ramps were inverted, levelling the band's edges and leaving its middle at hill height)
+      if(z>-94&&z<-36)h*=sstep(0,10,Math.max(-84-z,z+46));
+      if(x<-124&&z>-46&&z<-12)h*=sstep(0,6,Math.max(-40-z,z+18));
       for(let k=0;k<CORR.length;k++){const c=CORR[k];for(let i=1;i<c.length;i++){const d=dSeg(x,z,c[i-1],c[i]);if(d<44){h*=sstep(14,44,d);if(h<=0)return 0;}}}
       return h;}
     // a pad: flat ground of radius r at (x,z), blended into the slope over the next 18 m (features, lakes, big utilities)
     function pad(x,z,r){PADS.push([x,z,r,hBase(x,z)]);}
-    function hAt(x,z){let h=hBase(x,z);for(let k=0;k<PADS.length;k++){const p=PADS[k],d=Math.hypot(x-p[0],z-p[1]);if(d<p[2]+18){const b=1-sstep(p[2],p[2]+18,d);h=h+(p[3]-h)*b;}}return h;}
+    // (v4.1 pass 5: the river band is levelled again after the pads: a pad's blend could lift the ground over the water)
+    function hAt(x,z){let h=hBase(x,z);for(let k=0;k<PADS.length;k++){const p=PADS[k],d=Math.hypot(x-p[0],z-p[1]);if(d<p[2]+18){const b=1-sstep(p[2],p[2]+18,d);h=h+(p[3]-h)*b;}}
+      if(h&&z>-94&&z<-36)h*=sstep(0,10,Math.max(-84-z,z+46));if(h&&x<-124&&z>-46&&z<-12)h*=sstep(0,6,Math.max(-40-z,z+18));return h;}
     G3.terrainH=hAt;
     /* ---------- assets ---------- */
     const GREEN=["#6fa76b","#5f9a63","#7cb072","#8ab879","#5b8f5c","#4f8257","#94bf6e","#6a9a4f","#7aa88a"],AUT=["#c9a24a","#d08a3c","#b9673a"],BARK=["#7a5a3c","#6b4f36","#8a6a4a"];
-    function broadleaf(x,z,s,far){if(!place(x,z,1.6*s))return false;const c=RNG()<0.06?pick(AUT):pick(GREEN);add(T.tri3,x,0,z,0.28*s,2.3*s,0.28*s,RNG()*6,pick(BARK),0.1);
-      add(far?T.oct:T.ico,x,3.4*s,z,1.9*s,(far?1.9:1.5)*s,1.9*s,RNG()*6,c,0.35);claim(x,z,1.7*s,5.2*s,0.3*s);return true;}
-    function conifer(x,z,s){if(!place(x,z,1.3*s))return false;const c=pick(["#3f6f4f","#4a7a55","#557f58","#3d6a52"]);add(T.tri3,x,0,z,0.25*s,1.6*s,0.25*s,RNG()*6,pick(BARK),0.1);
-      add(T.cone6,x,1.1*s,z,1.7*s,3.4*s,1.7*s,RNG()*6,c,0.3);add(T.cone6,x,3.2*s,z,1.2*s,2.9*s,1.2*s,RNG()*6,c,0.25);claim(x,z,1.5*s,6.1*s,0.3*s);return true;}
+    function broadleaf(x,z,s,far,tight){if(!place(x,z,(tight?0.7:1.6)*s))return false;const c=RNG()<0.06?pick(AUT):pick(GREEN);add(T.tri3,x,0,z,0.28*s,2.3*s,0.28*s,RNG()*6,pick(BARK),0.1);
+      add(far?T.oct:T.ico,x,3.4*s,z,1.9*s,(far?1.9:1.5)*s,1.9*s,RNG()*6,c,0.35);claim(x,z,(tight?0.75:1.7)*s,5.2*s,0.3*s);return true;}
+    function conifer(x,z,s,tight){if(!place(x,z,(tight?0.55:1.3)*s))return false;const c=pick(["#3f6f4f","#4a7a55","#557f58","#3d6a52"]);add(T.tri3,x,0,z,0.25*s,1.6*s,0.25*s,RNG()*6,pick(BARK),0.1);
+      add(T.cone6,x,1.1*s,z,1.7*s,3.4*s,1.7*s,RNG()*6,c,0.3);add(T.cone6,x,3.2*s,z,1.2*s,2.9*s,1.2*s,RNG()*6,c,0.25);claim(x,z,(tight?0.6:1.5)*s,6.1*s,0.3*s);return true;}
     function bush(x,z,s,hex){if(!place(x,z,0.9*s))return false;add(T.oct,x,0.35*s,z,1.0*s,0.7*s,1.0*s,RNG()*6,hex||pick(GREEN),0.3);claim(x,z,0.9*s,1.1*s);return true;}
     function rock(x,z,s,hex){if(!place(x,z,1.1*s))return false;add(T.ico,x,0.2*s,z,1.2*s,0.75*s,1.0*s,RNG()*6,hex,0.25);claim(x,z,1.2*s,1*s);return true;}
     function house(x,z,ry,w,d,h,wall,roof){add(T.box,x,0,z,w,h,d,ry,wall,0.15);add(T.gable,x,h,z,w+0.4,h*0.55,d+0.5,ry,roof,0.05);}
@@ -260,8 +264,14 @@
     if(ENVK==="rural"){
       UT.pylons([F.x1+40,-50],[F.x1+260,-300]);features();const sub=UT.substation(2);if(sub)UT.pylons(sub,[sub[0]*3.2,sub[1]*3.2]);
       UT.chipPile();UT.farm();if(RNG()<0.7)UT.farm();
-      // forest belts: dense where the noise is high, conifers on the far hills
-      scatter(3400,-410,410,-310,310,(x,z)=>farOK(x,z)&&noise(x,z)>0.44+0.25*Math.max(0,1-Math.hypot(x+5,z-5)/160),(x,z)=>{const d=Math.hypot(x,z),far=d>170;return RNG()<(d>150?0.55:0.3)?conifer(x,z,rr(0.85,1.3)):broadleaf(x,z,rr(0.8,1.4),far);});
+      // v4.1 pass 5: the deep wood: one stretch of old, tall forest (an ellipse 200-270 m out, in a seeded direction away from
+      // the highway), filled first so it is dense; conifers 13-20 m tall with broadleaf among them and the odd autumn crown
+      {const a=rr(-1.1,1.6)+(RNG()<0.5?0:Math.PI*0.9),d=rr(200,250),wx=Math.sin(a)*d*1.1,wz=Math.cos(a)*d*0.85,ax=rr(95,125),az=rr(65,85),rot=RNG()*3;
+        const inW=(x,z)=>{const dx=x-wx,dz=z-wz,u=(dx*Math.cos(rot)+dz*Math.sin(rot))/ax,v=(-dx*Math.sin(rot)+dz*Math.cos(rot))/az;return u*u+v*v<1-0.25*noise(x,z,30);};
+        const n=scatter(4200,wx-ax-10,wx+ax+10,wz-ax-10,wz+ax+10,(x,z)=>farOK(x,z)&&Math.hypot(x+5,z-5)>140&&inW(x,z),(x,z)=>RNG()<0.68?conifer(x,z,rr(1.7,2.6),true):broadleaf(x,z,rr(1.5,2.3),true,true));
+        if(n>40)note("deepwood",wx,wz,22);}
+      // forest belts: dense where the noise is high, conifers on the far hills; trees grow taller away from the mill
+      scatter(3400,-410,410,-310,310,(x,z)=>farOK(x,z)&&noise(x,z)>0.44+0.25*Math.max(0,1-Math.hypot(x+5,z-5)/160),(x,z)=>{const d=Math.hypot(x,z),far=d>170,g=1+0.45*sstep(110,240,d);return RNG()<(d>150?0.55:0.3)?conifer(x,z,rr(1.0,1.55)*g):broadleaf(x,z,rr(0.95,1.6)*g,far);});
       scatter(320,F.x0,F.x1,F.z0,F.z1,null,(x,z)=>broadleaf(x,z,rr(0.75,1.3),false));
       scatter(80,-410,410,-310,310,farOK,(x,z)=>bush(x,z,rr(0.8,1.4)));
       // far hills
@@ -273,7 +283,12 @@
       blocks.forEach(([x0,x1,z0,z1])=>{const bw=rr(34,42);for(let bx=x0+6;bx<x1-10;bx+=bw+10)for(let bz=z0+6;bz<z1-10;bz+=bw+8){
         const dmill=Math.hypot(bx+5,bz-5),downtown=dmill>230&&(noise(bx,bz,140)>0.45||dmill>300);
         // streets on a grid between the blocks: asphalt, a dashed centre line, sidewalks, street trees along them
-        const street=(cx,cz,len,along)=>{const w=6;add(T.quad,cx,0.025,cz,along?len:w,1,along?w:len,0,ROADC,0);
+        // v4.1 pass 5: streets stop at the river banks (z -84..-48) instead of running across the water
+        const street=(cx,cz,len,along)=>{const B0=-85,B1=-47;
+          if(along){if(cz+4>B0&&cz-4<B1)return;return streetRaw(cx,cz,len,along);}
+          const z0=cz-len/2,z1=cz+len/2;if(z1<=B0||z0>=B1)return streetRaw(cx,cz,len,along);
+          if(B0-z0>8)streetRaw(cx,(z0+B0)/2,B0-z0,false);if(z1-B1>8)streetRaw(cx,(B1+z1)/2,z1-B1,false);};
+        const streetRaw=(cx,cz,len,along)=>{const w=6;add(T.quad,cx,0.025,cz,along?len:w,1,along?w:len,0,ROADC,0);
           [-1,1].forEach(s2=>add(T.quad,cx+(along?0:s2*(w/2+0.9)),0.028,cz+(along?s2*(w/2+0.9):0),along?len:1.8,1,along?1.8:len,0,"#c8c6bf",0));
           if(DEN>=1||dmill<200)for(let d=-len/2+3;d<len/2-3;d+=7)add(T.quad,cx+(along?d:0),0.03,cz+(along?0:d),along?3:0.2,1,along?0.2:3,0,"#f2f2f2",0);   // centre dashes (phones: near streets only)
           kMark(cx-(along?len/2:w/2+0.4),cx+(along?len/2:w/2+0.4),cz-(along?w/2+0.4:len/2),cz+(along?w/2+0.4:len/2),1);
@@ -355,6 +370,7 @@
           for(let k=0;k<5;k++){const gr=x.createRadialGradient(rr(0,Wd),rr(0,Wd),0,rr(0,Wd),rr(0,Wd),rr(30,70));gr.addColorStop(0,"rgba(90,110,60,0.05)");gr.addColorStop(1,"rgba(90,110,60,0)");x.fillStyle=gr;x.fillRect(0,0,Wd,Wd);}}},true);
       // phones (Low/Medium) skip the tile: the vertex colours alone share the scenery's shader, so no extra program is compiled
       const tm=DEN>=1?new StdMat({map:gt,vertexColors:true,roughness:0.95}):new StdMat({vertexColors:true,roughness:0.95,flatShading:true});tm.color.set(0xffffff);
+      tm.polygonOffset=true;tm.polygonOffsetFactor=1;tm.polygonOffsetUnits=2;   // the ground sits a hair behind roads, lots and water drawn on it (no flicker)
       const terr=new THREE.Mesh(g,tm);terr.receiveShadow=true;terr.userData.noNav=true;terr.userData.terrain=true;if(!new URLSearchParams(location.search).has("noterr"))scene.add(terr);G3.terrain=terr;}
     // lit windows (urban): one mesh of small quads facing out of each building, shown at night (envUpdate sets the opacity)
     if(NW.length){const P3=[],I3=[];NW.forEach(([x,y,z,w,h,f],k)=>{const hw=w/2,hh=h/2,b=k*4;

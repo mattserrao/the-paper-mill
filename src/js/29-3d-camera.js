@@ -5,7 +5,7 @@
   // on phones the tutorial card covers the lower half: aim past the spot so it sits in the upper half of the screen
   G3.camTo=(x,z,r,th,ph)=>{th=th??DEF.th;const k=host.clientWidth<600?r*0.13:0;goal={t:new THREE.Vector3(x+Math.sin(th)*k,0,z+Math.cos(th)*k),r,th,ph:ph??0.9};};
   G3.camHome=()=>{goal={t:DEFT.clone(),r:DEF.r,th:DEF.th,ph:DEF.ph};};
-  G3.camSet=c=>{goal=null;target.set(c[0],0,c[1]);cam.r=c[2];cam.th=c[3];cam.ph=c[4];};   // tests and screenshots
+  G3.camSet=c=>{goal=null;target.set(c[0],c[5]||0,c[1]);cam.r=c[2];cam.th=c[3];cam.ph=c[4];};   // tests and screenshots
   {const hm=new THREE.MeshBasicMaterial({color:lin0("#ffb020"),transparent:true,opacity:0.85,depthWrite:false,depthTest:false,side:THREE.DoubleSide,toneMapped:false});
    const ring=new THREE.Mesh(new RingG(0.86,1,64),hm);ring.rotation.x=-Math.PI/2;ring.renderOrder=20;ring.visible=false;scene.add(ring);
    const bm=new THREE.MeshBasicMaterial({color:lin0("#ffd27a"),transparent:true,opacity:0.18,depthWrite:false,side:THREE.DoubleSide,toneMapped:false});
@@ -33,7 +33,11 @@
     camera.position.set(target.x+rr*Math.sin(cam.ph)*Math.sin(cam.th),target.y+rr*Math.cos(cam.ph),target.z+rr*Math.sin(cam.ph)*Math.cos(cam.th));
     // v4.1: never inside scenery (tall city blocks, mesas, trees): stay 3 m above the tallest thing in this 8 m cell
     if(G3.sceneryH){const h=G3.sceneryH(camera.position.x,camera.position.z);if(h>0&&camera.position.y<h+3)camera.position.y=h+3;}
-    camera.lookAt(target);}
+    camera.lookAt(target);
+    // v4.1 pass 5: the near plane follows the zoom. With it fixed at 2 m, a zoomed-out view (300-600 m away) had too little
+    // depth precision to separate the road quads and river layers (millimetres apart) from the ground, and they flickered.
+    // Nothing is ever closer to the camera than a small share of its distance to the target, so this costs no clipping.
+    {const n=Math.max(2,Math.min(30,camera.position.distanceTo(target)*0.06));if(Math.abs(n-camera.near)>camera.near*0.05){camera.near=n;camera.updateProjectionMatrix();}}}
   const ptrs=new Map();let pinch0=0,r0=0,mid0=null,panBtn=false;
   const mid=()=>{const [a,b]=[...ptrs.values()];return {x:(a.x+b.x)/2,y:(a.y+b.y)/2,d:Math.hypot(a.x-b.x,a.y-b.y)};};
   glc.addEventListener("contextmenu",e=>e.preventDefault());

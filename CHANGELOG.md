@@ -132,6 +132,20 @@ piece; the three sandbox-style piano pieces are the valley's.
   piece; the sound button's tooltip names what is playing. `tools/musictest.py` schedules every step of every piece and
   checks the output level; `tools/musicrec.py` records any piece to MP3.
 
+### Fixes (pass 5, test v12 updated)
+- **Hard hats** look like hard hats: a dome seated over the head, a full brim all round with a longer peak at the front,
+  and the moulded ridge (they were a half-sphere with a cap-like visor on one side).
+- **City streets stop at the river** instead of running across the water.
+- **The river no longer disappears under the hills** away from the mill: the terrain's river (and rail) levelling was
+  inverted, flattening the band's edges and leaving its middle at full hill height. Ground next to lots and features
+  could also rise over the water through their flat pads; the band is levelled again after the pads.
+- **No flicker on roads and water when zoomed out**: the camera's near plane now follows the zoom (2 m close up, up to
+  30 m far out), which gives the depth buffer ~15× more precision at a distance; the ground also sits a hair behind
+  whatever is drawn on it (polygon offset).
+- **Forest valley**: trees grow taller away from the mill (up to ~45% at 240 m), and each valley has one **deep wood**,
+  an ellipse of old forest 200–270 m out in a seeded direction, packed into a closed canopy of 13–20 m conifers with
+  broadleaf among them. The zen "forest canopy" shot now sweeps low along its edge.
+
 ### Under the hood (pass 3)
 - **Draw calls**: the 22 ribbed building walls had a texture clone each (one draw each); they now share one material and
   carry the rib pitch in their uvs, so they batch into one draw. The soft ground shadings under walls and machines

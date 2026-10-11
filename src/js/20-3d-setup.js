@@ -142,6 +142,7 @@ function no3D(){G3.ok=false;$("no3d").hidden=false;$("no3d-retry").onclick=()=>l
   const HIVIS={orange:new StdMat({color:lin0("#ff7a1a"),roughness:0.72,metalness:0.04}),yellow:M.warn,band:M.metal};
   // one shared amber beacon material and the driver's head/hat shapes: a new material per vehicle would mean a new moving batch each
   M.beacon=new THREE.MeshBasicMaterial({color:lin0("#ff8a1f")});const DRV_HEAD=new SphG(1,8,6),DRV_HAT=new SphG(1,8,4,0,Math.PI*2,0,Math.PI/2);
+  const HAT_DOME=new SphG(1,12,5,0,Math.PI*2,0,Math.PI/2),HAT_BRIM=new CylG(1,1,1,16);   // workers' hard hats (33)
   // v3.2.1 textures: drawn once into small canvases and shared, so no extra draw calls or per-frame work
   const texC=(w,h,draw,rep2)=>{const c=document.createElement("canvas");c.width=w;c.height=h;draw(c.getContext("2d"),w,h);const t=new THREE.CanvasTexture(c);t.colorSpace=THREE.SRGBColorSpace;
     if(rep2){t.wrapS=t.wrapT=THREE.RepeatWrapping;}t.anisotropy=4;return t;};

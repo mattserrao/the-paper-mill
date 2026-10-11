@@ -133,7 +133,10 @@
         at:(t)=>{if(t>16)return null;const u=ease(t/16);return [mix(-120,70,u),0,-65,mix(60,52,u),Math.PI+0.35-0.5*u,mix(1.08,1.0,u)];}},
       // one signature shot per environment
       ...(SITE.env==="rural"?[{name:"forest canopy",look:["gold","airy"],dur:12,ok:()=>true,
-        at:(t)=>{if(t>12)return null;const u=ease(t/12);return [mix(-70,-20,u),mix(6,4,u),mix(125,45,u),42,0.3-0.2*u,1.22];}}]:
+        // v4.1 pass 5: low over the deep wood when this valley has one, sweeping along its edge with the mill beyond
+        at:(t)=>{if(t>12)return null;const u=ease(t/12),W=G3.scenery&&G3.scenery.util&&G3.scenery.util.deepwood;
+          if(W){const a=Math.atan2(W[0],W[1]),px=Math.cos(a),pz=-Math.sin(a),k=mix(-50,50,u);return [W[0]+px*k,10,W[1]+pz*k,58,a,mix(1.12,1.02,u)];}
+          return [mix(-70,-20,u),mix(6,4,u),mix(125,45,u),42,0.3-0.2*u,1.22];}}]:
         SITE.env==="urban"?[{name:"city skyline",look:["none","hc"],dur:16,ok:()=>true,start:()=>({th:Math.random()*6.28}),
         at:(t,mv)=>{if(t>16)return null;const u=ease(t/16);return [14,20,5,mix(300,255,u),mv.st.th+u*0.5,1.14];}}]:
         SITE.env==="desert"?[{name:"mesa horizon",look:["gold","dusk"],dur:14,ok:()=>true,start:()=>({th:Math.random()*6.28}),
