@@ -5832,7 +5832,25 @@ function no3D(){G3.ok=false;$("no3d").hidden=false;$("no3d-retry").onclick=()=>l
   // the batch with its colour baked in as vertex colours (the material has vertexColors), still one draw per look.
   // The vertex-colour path is also lighter everywhere (fewer leftover objects drawn on their own: 199 vs 231 main-pass draws
   // on the phone benchmark), so it is the default on every device; ?dbcol=1 brings back the colour texture for comparison.
-  const DBCOL=G3.DBCOL=BQ.get("dbcol")==="1";const DBLAYER=30,DBOK=new Set(["MeshStandardMaterial","MeshLambertMaterial","MeshBasicMaterial","MeshPhongMaterial"]);
+  // v4.1 pass 8: neither colour method could be checked on the device that failed (iPhone), so the game checks for itself:
+  // a red cube is drawn off-screen as a one-object batch with each method and the pixel read back. The first method that
+  // comes out red is used; if neither does, moving things are drawn one by one (correct colours, more draws). ?dbcol=1/0
+  // forces the texture / vertex-colour method. The result goes to the diagnostics log.
+  function batchProbe(){const out={};try{
+      const rt=new THREE.WebGLRenderTarget(4,4),sc=new THREE.Scene(),cam=new THREE.OrthographicCamera(-1,1,1,-1,0.1,10),red=new THREE.Color(1,0,0),g=new THREE.BoxGeometry(0.9,1.6,1.6);
+      sc.add(new THREE.AmbientLight(0xffffff,Math.PI));cam.position.z=5;const shNeed=renderer.shadowMap.needsUpdate,cc=renderer.getClearColor(new THREE.Color()),ca=renderer.getClearAlpha();
+      // two objects in one batch, red on the left and green on the right: both must come out in their own colour
+      const green=new THREE.Color(0,1,0),M4=new THREE.Matrix4();
+      for(const mode of ["vc","tex"]){const m=new StdMat({color:0xffffff});if(mode==="vc")m.vertexColors=true;
+        const bm=new THREE.BatchedMesh(4,g.attributes.position.count*4,g.index.count*4,m);bm.perObjectFrustumCulled=false;bm.frustumCulled=false;
+        [[red,-0.5],[green,0.5]].forEach(([c,x])=>{const ii=bm.addInstance(bm.addGeometry(mode==="vc"?vcGeo(g,c):g));if(mode==="tex")bm.setColorAt(ii,c);bm.setMatrixAt(ii,M4.makeTranslation(x,0,0));});
+        sc.add(bm);renderer.setRenderTarget(rt);renderer.setClearColor(0x000000,1);renderer.clear();renderer.render(sc,cam);
+        const L=new Uint8Array(4),Rr=new Uint8Array(4);renderer.readRenderTargetPixels(rt,0,1,1,1,L);renderer.readRenderTargetPixels(rt,3,1,1,1,Rr);renderer.setRenderTarget(null);sc.remove(bm);bm.dispose();m.dispose();
+        out[mode]=L[0]>110&&L[1]<90&&L[2]<90&&Rr[1]>110&&Rr[0]<90&&Rr[2]<90;out[mode+"px"]=Array.from(L).join(",")+"/"+Array.from(Rr).join(",");}
+      rt.dispose();g.dispose();renderer.setClearColor(cc,ca);renderer.shadowMap.needsUpdate=shNeed;}catch(e){out.err=String(e).slice(0,80);}return out;}
+  const BPR=BQ.get("dbcol")?{}:batchProbe();
+  let DBCOL=BQ.get("dbcol")==="1"||(!BQ.get("dbcol")&&!BPR.vc&&!!BPR.tex);const DBOFF=!BQ.get("dbcol")&&!BPR.vc&&!BPR.tex;G3.DBCOL=DBCOL;
+  diag(`batch colours: vertex ${BPR.vc===undefined?"-":BPR.vc?"ok":"FAIL ("+BPR.vcpx+")"}, texture ${BPR.tex===undefined?"-":BPR.tex?"ok":"FAIL ("+BPR.texpx+")"}${BPR.err?" error "+BPR.err:""} -> ${DBOFF?"moving things drawn one by one":DBCOL?"texture":"vertex"}`);const DBLAYER=30,DBOK=new Set(["MeshStandardMaterial","MeshLambertMaterial","MeshBasicMaterial","MeshPhongMaterial"]);
   function dbOK(o){if(!o.isMesh||o.isInstancedMesh||o.isBatchedMesh||o.isSkinnedMesh||o.userData.smBatch||o.renderOrder)return false;
     const m=o.material,g=o.geometry;if(!m||Array.isArray(m)||!DBOK.has(m.type)||m.transparent||m.opacity<1||!g||!g.isBufferGeometry)return false;
     if(o.onBeforeRender!==THREE.Object3D.prototype.onBeforeRender)return false;const a=g.attributes;if(!a.position||!a.normal)return false;
@@ -5896,9 +5914,9 @@ function no3D(){G3.ok=false;$("no3d").hidden=false;$("no3d-retry").onclick=()=>l
     pend.forEach((L,key)=>{if(L.length>=3&&!(DB.pendKeys&&DB.pendKeys.has(key))){if(G3.warm)Q.set(key,L);else dbNew(key,L);}});DB.n=DB.list.length;sortKinds();}
   function dbNext(){const Q=DB.q;if(!Q||!Q.size)return;const [key,L0]=Q.entries().next().value;Q.delete(key);
     const L=L0.filter(o=>o.parent&&o.layers.mask===1&&dbOK(o)&&dbKey(o)===key);if(L.length>=3&&!(DB.pendKeys&&DB.pendKeys.has(key)))dbNew(key,L);}   // (a full batch of the same look gets a second one)
-  G3.dbForce=()=>{if(SM.done&&!SM.off&&!BQ.has("nodb")){try{dbBuild();}catch(e){console.error("moving batches failed",e);}}};
+  G3.dbForce=()=>{if(SM.done&&!SM.off&&!DBOFF&&!BQ.has("nodb")){try{dbBuild();}catch(e){console.error("moving batches failed",e);}}};
   // called right before each render: world matrices are brought up to date once here, and the render skips its own pass
-  G3.dbTick=()=>{if(SM.off||!SM.done||BQ.has("nodb"))return;const now=performance.now();try{dbNext();}catch(e){console.error("moving batch failed",e);}if(now>DB.t){DB.t=now+3000;try{dbBuild();}catch(e){console.error("moving batches failed",e);SM.off=true;dbRelease();return;}}
+  G3.dbTick=()=>{if(SM.off||!SM.done||DBOFF||BQ.has("nodb"))return;const now=performance.now();try{dbNext();}catch(e){console.error("moving batch failed",e);}if(now>DB.t){DB.t=now+3000;try{dbBuild();}catch(e){console.error("moving batches failed",e);SM.off=true;dbRelease();return;}}
     scene.updateMatrixWorld();matSync();let out=false;const fn=DB.fn=(DB.fn||0)+1;
     // things that haven't changed for a second are checked every 4th frame (a still forklift starting to move shows
     // up within 4 frames); everything else every frame
@@ -7488,7 +7506,7 @@ requestAnimationFrame(frame);
   window.__openDiag=open;})();
 // test and benchmark hook (read-only views plus a few controls); used by the benchmark harness and smoke tests
 window.__PM={get THREE(){return THREE},get S(){return S},get C(){return C},get G3(){return G3},get EVENTS(){return EVENTS},get CH(){return CH},SIM_STEP,
-  trigger:(...a)=>trigger(...a),step:h=>step(h),reseed:k=>seedRun(k),lineCaps:()=>lineCaps(),get SITE(){return SITE},get LAYOUT(){return LAYOUT},get AUDIO(){return AUDIO},setBn:b=>{S.bn=b;applyUpgrades();},setFps:v=>setFpsMode(v),setRunning:v=>{running=v},get running(){return running}};
+  trigger:(...a)=>trigger(...a),step:h=>step(h),reseed:k=>seedRun(k),lineCaps:()=>lineCaps(),get SITE(){return SITE},get LAYOUT(){return LAYOUT},get AUDIO(){return AUDIO},get DIAG(){return DIAG},setBn:b=>{S.bn=b;applyUpgrades();},setFps:v=>setFpsMode(v),setRunning:v=>{running=v},get running(){return running}};
 })();
 </script>
 

@@ -132,6 +132,13 @@ piece; the three sandbox-style piano pieces are the valley's.
   piece; the sound button's tooltip names what is playing. `tools/musictest.py` schedules every step of every piece and
   checks the output level; `tools/musicrec.py` records any piece to MP3.
 
+### iPhone colours, self-test (pass 8, test v12 updated)
+- Pass 7's vertex colours did not fix the grey on the iPhone either, and no engine available here reproduces it. The game
+  now tests itself at start-up: two cubes (red, green) are drawn off-screen as one batch with each colour method and the
+  pixels read back; the first method that comes out right is used, and if neither does, moving things are drawn one by
+  one (the `?nodb` look that showed correct colours on the phone). The result is in Controls → Diagnostics as
+  "batch colours: vertex ok/FAIL, texture ok/FAIL -> …".
+
 ### iPhone colours (pass 7, test v12 updated)
 - **Fixed: people, forklifts, machine frames and railings drawn grey on iPhone.** Moving things are drawn in shared batches
   (one draw per look), and each object's colour came from a small float texture read in the vertex shader; on iPhone
