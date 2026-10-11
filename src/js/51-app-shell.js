@@ -29,7 +29,7 @@
   function flowTick(){if(cur!=="stats"||!sheet.classList.contains("open"))return;flowEl.innerHTML=flowSVG()+`<p class="flowtip">Every step is drawn as wide as it can run, in tons of paper per hour. The narrowest step (or one that is down) holds back the whole mill. The bars are your buffers: full ones are backing up, empty ones are running dry.</p>`;}
   UI_TICKS.push(n=>{if(n%4===0)flowTick();});   // the river SVG restarts its animation when redrawn, so ~1x/s
   // sheets
-  const sheet=$("v2sheet"),tabs=[...document.querySelectorAll(".v2tabs button")],TITLES={shop:"Upgrades",chaos:"Upsets",ctl:"Controls",stats:"Stats"};let cur=null;
+  const sheet=$("v2sheet"),tabs=[...document.querySelectorAll(".v2tabs button")],TITLES={shop:"Upgrades",chaos:"Upsets",ctl:"Settings",stats:"Stats"};let cur=null;
   // v3.1.1: opening a bottom panel pauses the game; closing it resumes (same sim speed) if it was running before
   let sheetHeld=false;
   function sheetPause(){if(cur||sheetHeld||!running)return;sheetHeld=true;running=false;}

@@ -49,8 +49,8 @@
 <nav aria-label="Panels" class="v2card v2tabs">
 <button aria-pressed="false" data-tab="shop"><svg fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" viewbox="0 0 24 24"><path d="M12 19V5M5 12l7-7 7 7"></path></svg>Upgrades</button>
 <button aria-pressed="false" data-tab="chaos"><svg fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" viewbox="0 0 24 24"><path d="M12 3l9 16H3z"></path><path d="M12 10v4M12 17v.5"></path></svg>Upsets<span class="bdg" hidden id="v2bdg">0</span></button>
-<button aria-pressed="false" data-tab="ctl"><svg fill="none" stroke="currentColor" stroke-linecap="round" stroke-width="2" viewbox="0 0 24 24"><path d="M4 7h10M18 7h2M4 17h4M12 17h8"></path><circle cx="16" cy="7" r="2"></circle><circle cx="10" cy="17" r="2"></circle></svg>Controls</button>
 <button aria-pressed="false" data-tab="stats"><svg fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" viewbox="0 0 24 24"><path d="M4 19h16M7 16V9M12 16V5M17 16v-4"></path></svg>Stats</button>
+<button aria-pressed="false" data-tab="ctl"><svg fill="none" stroke="currentColor" stroke-linecap="round" stroke-width="2" viewbox="0 0 24 24"><path d="M4 7h10M18 7h2M4 17h4M12 17h8"></path><circle cx="16" cy="7" r="2"></circle><circle cx="10" cy="17" r="2"></circle></svg>Settings</button>
 </nav>
 </div>
 <div class="v2scrim" id="v2scrim"></div>
@@ -86,7 +86,7 @@
 <div class="groups" id="chaosgrid"></div>
 </div>
 </section></div>
-<div class="v2pane" data-pane="ctl"><div class="v2sub">Run the mill</div><div class="v2row" id="v2ctlrow"><button id="balance">Balance all</button><input aria-label="Machine name" autocomplete="off" id="pmname" maxlength="14" spellcheck="false" value="PM1"/><label class="check"><input checked id="viewShadows" type="checkbox"/> Shadows</label><button id="viewReset">Whole mill</button><div aria-label="Section labels" class="seg lblseg" hidden id="lblMode" role="group"><span>Labels</span><button aria-pressed="true" data-m="auto" title="Labels fade out when you stop moving the view">Auto</button><button aria-pressed="false" data-m="on">On</button><button aria-pressed="false" data-m="off">Off</button></div></div><div class="v2sub">Area controls</div><section class="cards" id="cards">
+<div class="v2pane" data-pane="ctl"><div class="v2sub">Run the mill</div><div class="v2row" id="v2ctlrow"><button id="balance">Balance all</button><input aria-label="Machine name" autocomplete="off" id="pmname" maxlength="14" spellcheck="false" value="PM1"/><label class="check"><input checked id="viewShadows" type="checkbox"/> Shadows</label><button id="viewReset">Whole mill</button><div aria-label="Section labels" class="seg lblseg" hidden id="lblMode" role="group"><span>Labels</span><button aria-pressed="true" data-m="auto" title="Labels fade out when you stop moving the view">Auto</button><button aria-pressed="false" data-m="on">On</button><button aria-pressed="false" data-m="off">Off</button></div></div><details class="areactl" id="areactl"><summary class="v2sub">Area controls<span class="lockn">Auto · locked during a season</span></summary><section class="cards" id="cards">
 <div class="card"><h2><span class="n">1</span>Inbound OCC trucks<span class="pill" id="p-in">–</span></h2>
 <div class="row" data-key="inRate"><label for="s-inRate">Truck arrivals</label><span class="val"></span><div class="ctl"><input id="s-inRate" max="8" min="0" step="0.1" type="range"/><button aria-pressed="true" class="auto">AUTO</button></div></div>
 <div class="read" id="r-in">–</div></div>
@@ -115,7 +115,7 @@
 <div class="row" data-key="loaders"><label for="s-loaders">Clamp-truck loaders on shift</label><span class="val"></span><div class="ctl"><input id="s-loaders" max="10" min="0" step="1" type="range"/><button aria-pressed="true" class="auto">AUTO</button></div></div>
 <div class="row" data-key="outRate"><label for="s-outRate">Outbound truck arrivals</label><span class="val"></span><div class="ctl"><input id="s-outRate" max="10" min="0" step="0.1" type="range"/><button aria-pressed="true" class="auto">AUTO</button></div></div>
 <div class="read" id="r-ship">–</div></div>
-</section></div>
+</section></details></div>
 <div class="v2pane" data-pane="stats"><div class="v2sub">Flow &amp; bottleneck</div><div class="flowbox" id="v2flow"></div><div class="v2sub">Right now</div><section aria-label="Key figures" class="kpis">
 <div class="kpi money" id="k-cash-box"><div class="k">Cash</div><div class="v" id="k-cash">–</div><div class="s" id="k-cash-s"> </div></div>
 <div class="kpi"><div class="k">Profit</div><div class="v" id="k-profit">–</div><div class="s" id="k-profit-s"> </div></div>

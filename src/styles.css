@@ -497,3 +497,12 @@ body.season-lock label.check:has(#breaks),body.season-lock label.check:has(#hays
 .ev .envtag{font-style:normal;font:700 9.5px var(--f-display);letter-spacing:.06em;text-transform:uppercase;color:var(--stock);border:1px solid var(--stock);border-radius:3px;padding:0 4px;margin-left:5px;vertical-align:middle}
 .seedctl .check{text-transform:none;letter-spacing:0;font-weight:500}
 body.zen-out{transition:opacity .8s ease;opacity:0}
+
+/* v4.2.1: area controls fold away; locked on AUTO in a season */
+details.areactl>summary{cursor:pointer;list-style:none;display:flex;align-items:center;gap:8px;user-select:none}
+details.areactl>summary::-webkit-details-marker{display:none}
+details.areactl>summary::before{content:"";width:7px;height:7px;border-right:2px solid currentColor;border-bottom:2px solid currentColor;transform:rotate(-45deg);transition:transform .15s}
+details.areactl[open]>summary::before{transform:rotate(45deg)}
+details.areactl .lockn{display:none;margin-left:auto;font-weight:600;text-transform:none;letter-spacing:0}
+body.season-lock details.areactl .lockn{display:inline}
+body.season-lock #cards .row[data-key] input,body.season-lock #cards .row[data-key] button.auto,body.season-lock #balance{opacity:.5;cursor:not-allowed}
