@@ -31,7 +31,7 @@
     const pg=new CylG(0.08,0.08,2.6,6),pm=new THREE.InstancedMesh(pg,instMat(M.metal),posts.length),m4=new THREE.Matrix4();
     posts.forEach((p,k)=>{m4.makeTranslation(p[0],1.3,p[1]);pm.setMatrixAt(k,m4);});scene.add(pm);}
   // guard gate between the two roads, with boom barriers
-  {const gx=FENCE.x0-1.5,gz=4.4;box(3,2.6,3,conc,gx,1.3,gz);box(3.4,0.25,3.4,M.brand,gx,2.75,gz);box(3.02,0.8,2.2,M.wind,gx,1.75,gz,scene,false);
+  {const gx=FENCE.x0-1.5,gz=4.4;box(3,2.6,3,conc,gx,1.3,gz);box(3.4,0.25,3.4,M.roofFlat,gx,2.75,gz);box(3.02,0.8,2.2,M.wind,gx,1.75,gz,scene,false);
     const sc=document.createElement("canvas");sc.width=128;sc.height=8;const x=sc.getContext("2d");for(let i=0;i<8;i++){x.fillStyle=i%2?"#ffffff":"#e0343c";x.fillRect(i*16,0,16,8);}
     const st=new THREE.CanvasTexture(sc);st.colorSpace=THREE.SRGBColorSpace;const bm=new StdMat({map:st,roughness:0.6});
     [[-1.6,1],[14.6,-1]].forEach(([z,dir])=>{box(0.5,1.1,0.5,M.ink,FENCE.x0,0.55,z,scene,false);const arm=new THREE.Group();arm.position.set(FENCE.x0,1.05,z);scene.add(arm);
@@ -39,7 +39,7 @@
     ENV.gate=[gx,gz];}
   // truck scale where the inbound queue stops, with a scale house and a weight display
   {box(8,0.14,3.0,M.steel,-40.7,0.07,-3.8,scene,false);[-4,4].forEach(dx=>box(0.12,0.16,3.0,M.lane,-40.7+dx,0.09,-3.8,scene,false));
-    box(3.2,2.6,2.4,conc,-41,1.3,-0.4);box(3.5,0.22,2.7,M.brand,-41,2.7,-0.4);box(2.2,0.8,0.08,M.wind,-41,1.7,-1.62,scene,false);
+    box(3.2,2.6,2.4,conc,-41,1.3,-0.4);box(3.5,0.22,2.7,M.roofFlat,-41,2.7,-0.4);box(2.2,0.8,0.08,M.wind,-41,1.7,-1.62,scene,false);
     const dc=document.createElement("canvas");dc.width=256;dc.height=80;const dt2=new THREE.CanvasTexture(dc);dt2.colorSpace=THREE.SRGBColorSpace;
     const dm=new THREE.Mesh(new THREE.PlaneGeometry(2.4,0.75),new THREE.MeshBasicMaterial({map:dt2,toneMapped:false}));dm.position.set(-37.2,2.4,-1.95);dm.rotation.y=Math.PI;scene.add(dm);box(0.12,2.2,0.12,M.ink,-37.2,1.1,-1.95,scene,false);
     ENV.scale={ctx:dc.getContext("2d"),tex:dt2,last:""};}
@@ -65,7 +65,7 @@
       const st2=new THREE.CanvasTexture(sc2);st2.colorSpace=THREE.SRGBColorSpace;st2.wrapS=st2.wrapT=THREE.RepeatWrapping;st2.repeat.set(60,1.2);ENV.sparkTex=st2;
       const sp=ribbon(-0.5,0.03,new THREE.MeshBasicMaterial({map:st2,transparent:true,opacity:0.35,depthWrite:false,blending:THREE.AdditiveBlending,toneMapped:false}),(x,a,b)=>[(x+400)/800,0,(x+400)/800,(b-a)/11]);
       sp.receiveShadow=false;sp.renderOrder=1;sp.userData.noNav=true;ENV.spark=sp;}
-    box(4,3,4,conc,-30,1.5,-55.5);box(4.4,0.3,4.4,M.brand,-30,3.1,-55.5);pipe([[-30,0.8,-57.5],[-30,0.8,-59],[-30,-0.5,-61]],0.35,M.metal);
+    box(4,3,4,conc,-30,1.5,-55.5);box(4.4,0.3,4.4,M.roofFlat,-30,3.1,-55.5);pipe([[-30,0.8,-57.5],[-30,0.8,-59],[-30,-0.5,-61]],0.35,M.metal);
     // fresh water from the river intake, up and over into the stock line that feeds the cleaners and screens on to stock storage
     {const fw=mat("water",{roughness:0.4});pipe([[-30,0.7,-53.5],[-30,0.7,-31.5],[-4,0.7,-31.5],[-4,0.7,-25.7],[4,0.7,-25.7],[4,6.0,-25.7],[11.2,6.0,-25.7],[11.2,6.0,-23.3]],0.32,fw);
      [[4,0.7,-25.7],[4,6.0,-25.7],[11.2,6.0,-25.7]].forEach(([x,y,z])=>{const b=new THREE.Mesh(new SphG(0.34,12,8),fw);b.position.set(x,y,z);scene.add(b);});
@@ -104,7 +104,7 @@
       pipe([[10,0.6,-30.0],[10,0.6,-30.6],[11.4,0.6,-30.6]],0.22,M.stock);pipe([[11.9,0.9,-30.6],[11.9,0.9,-31.4],[10,0.9,-31.4],[10,2.4,-31.4],...(cx!==10?[[cx,2.4,-31.4]]:[]),[cx,2.4,-33]],0.26,M.stock);
       /* pipe supports on the long run to a moved clarifier */for(let x=16;x<cx-3;x+=8)box(0.22,2.2,0.22,M.steel,x,1.1,-31.4,scene,false);}pipe([[WX(17.1),1.4,-40],[WX(22),1.4,-40]],0.3,M.metal);ENV.ww=[cx,cz];}
   // power house and boiler stack, steam header into the machine hall
-  {const x0=70,x1=82,z0=-16,z1=-4,h=9;const b=box(x1-x0,h,z1-z0,conc,(x0+x1)/2,h/2,(z0+z1)/2);edges(b);box(x1-x0+0.4,0.4,z1-z0+0.4,M.brand,(x0+x1)/2,h+0.2,(z0+z1)/2);
+  {const x0=70,x1=82,z0=-16,z1=-4,h=9;const b=box(x1-x0,h,z1-z0,conc,(x0+x1)/2,h/2,(z0+z1)/2);edges(b);box(x1-x0+0.4,0.4,z1-z0+0.4,M.roofFlat,(x0+x1)/2,h+0.2,(z0+z1)/2);
     [z0-0.03,z1+0.03].forEach(z=>box(x1-x0-2,1.2,0.1,M.wind,(x0+x1)/2,5.6,z,scene,false));box(0.1,1.2,z1-z0-2,M.wind,x0-0.03,5.6,(z0+z1)/2,scene,false);
     box(0.12,3,2.2,M.ink,x0-0.05,1.5,-10,scene,false);
     const stT=texC(128,512,(x,W,H)=>{x.fillStyle="#f3f2ef";x.fillRect(0,0,W,H);for(let k=0;k<900;k++){const v=Math.random()<0.5?190:255;x.fillStyle=`rgba(${v},${v},${v-6},0.25)`;x.fillRect(Math.random()*W,Math.random()*H,1.5,1.5);}

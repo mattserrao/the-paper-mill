@@ -50,7 +50,7 @@
   // OCC trailer yard west of receiving: dropped trailers waiting to be pulled to a door
   slab(-92,-56,-26.4,-7.6,M.asphalt,0.022);slab(-60,-56,-7.6,-5.0,M.asphalt,0.022);
   for(let x=-90;x<=-58;x+=2.7){box(0.12,0.02,4.6,M.lane,x-1.35,0.05,-23.6,scene,false);box(0.12,0.02,4.6,M.lane,x-1.35,0.05,-10.4,scene,false);}
-  box(2.0,2.2,1.6,mat("g-wall"),-58.6,1.1,-17,scene);box(2.2,0.18,1.8,M.brand,-58.6,2.29,-17,scene,false);box(0.9,0.7,0.05,M.wind,-58.6,1.4,-16.18,scene,false);   // yard booth
+  box(2.0,2.2,1.6,mat("g-wall"),-58.6,1.1,-17,scene);box(2.2,0.18,1.8,M.roofFlat,-58.6,2.29,-17,scene,false);box(0.9,0.7,0.05,M.wind,-58.6,1.4,-16.18,scene,false);   // yard booth
   const yardTr=[];
   function dropTrailer(x,z,face,open){const g=new THREE.Group();g.position.set(x,0,z);g.rotation.y=face;scene.add(g);
     box(4.0,0.16,1.8,M.ink,0,0.84,0,g,false);[-0.92,0.92].forEach(zz=>{const sd=new THREE.Mesh(new THREE.BoxGeometry(4.0,1.32,0.06),[M.wall,M.wall,M.wall,M.wall,M.trailer,M.trailer]);sd.position.set(0,1.6,zz);sd.castShadow=true;g.add(sd);});

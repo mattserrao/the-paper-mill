@@ -165,6 +165,39 @@ function no3D(){G3.ok=false;$("no3d").hidden=false;$("no3d-retry").onclick=()=>l
     ring(70,190,13,"rgba(60,55,50,A)");ring(200,60,9,"rgba(60,55,50,A)");ring(172,214,7,"rgba(150,90,40,A)");ring(40,52,5,"rgba(60,55,50,A)");
     x.strokeStyle="rgba(90,88,84,0.12)";x.lineWidth=1;for(let k=0;k<3;k++){x.beginPath();let px=rnd(0,W),py=rnd(0,W);x.moveTo(px,py);for(let s2=0;s2<6;s2++){px+=rnd(-14,14);py+=rnd(-14,14);x.lineTo(px,py);}x.stroke();}},true);
   M.slab.map=floorTex;M.slab.needsUpdate=true;
+  // v4.1 v20 surface wear: a second, coarser layer on the concrete (traffic lanes polished darker, tyre scuffs at the turns,
+  // a few big stains), drawn over the 8 m tile above; and asphalt gets its own 32 m wear tile: tyre tracks, oil drips at
+  // the stops, patched trenches, crack lines, sun-faded patches
+  {const c=floorTex.image,x=c.getContext("2d"),W=c.width;
+    for(let k=0;k<5;k++){x.strokeStyle=`rgba(70,68,64,${rnd(0.05,0.09)})`;x.lineWidth=rnd(2,4);x.beginPath();const cx=rnd(0,W),cy=rnd(0,W),r=rnd(30,80),a0=rnd(0,6.28);x.arc(cx,cy,r,a0,a0+rnd(0.8,1.8));x.stroke();}
+    for(let k=0;k<4;k++){const g=x.createRadialGradient(0,0,0,0,0,1),cx=rnd(0,W),cy=rnd(0,W),r=rnd(10,26);const g2=x.createRadialGradient(cx,cy,0,cx,cy,r);g2.addColorStop(0,"rgba(70,62,52,0.13)");g2.addColorStop(1,"rgba(70,62,52,0)");x.fillStyle=g2;x.fillRect(0,0,W,W);void g;}
+    floorTex.needsUpdate=true;}
+  const asphTex=texC(512,512,(x,W)=>{x.fillStyle="#f4f4f2";x.fillRect(0,0,W,W);
+    for(let k=0;k<30;k++){const cx=rnd(0,W),cy=rnd(0,W),r=rnd(30,120),g=x.createRadialGradient(cx,cy,0,cx,cy,r),l=Math.random()<0.5;g.addColorStop(0,l?"rgba(255,255,250,0.14)":"rgba(40,40,44,0.13)");g.addColorStop(1,"rgba(128,128,128,0)");x.fillStyle=g;x.fillRect(0,0,W,W);}
+    for(let k=0;k<9000;k++){const v=Math.random()<0.5?rnd(150,200):rnd(235,255);x.fillStyle=`rgba(${v},${v},${v},${rnd(0.15,0.4)})`;x.fillRect(rnd(0,W),rnd(0,W),1.2,1.2);}
+    // tyre tracks: two worn bands along the lane, darker with rubber
+    [W*0.3,W*0.7].forEach(y0=>{for(const o of [-14,14]){const g=x.createLinearGradient(0,y0+o-9,0,y0+o+9);g.addColorStop(0,"rgba(30,30,32,0)");g.addColorStop(0.5,"rgba(30,30,32,0.17)");g.addColorStop(1,"rgba(30,30,32,0)");x.fillStyle=g;x.fillRect(0,y0+o-9,W,18);}});
+    // oil drips, patched trench, cracks
+    for(let k=0;k<10;k++){const cx=rnd(0,W),cy=rnd(0,W),r=rnd(4,14),g=x.createRadialGradient(cx,cy,0,cx,cy,r);g.addColorStop(0,"rgba(20,18,16,0.22)");g.addColorStop(1,"rgba(20,18,16,0)");x.fillStyle=g;x.fillRect(cx-r,cy-r,2*r,2*r);}
+    x.fillStyle="rgba(30,30,34,0.10)";x.fillRect(rnd(0,W*0.6),rnd(0,W),rnd(90,200),rnd(14,24));x.fillRect(rnd(0,W),0,rnd(10,18),W);
+    x.strokeStyle="rgba(25,25,28,0.22)";x.lineWidth=1.1;for(let k=0;k<9;k++){x.beginPath();let px=rnd(0,W),py=rnd(0,W);x.moveTo(px,py);for(let s2=0;s2<9;s2++){px+=rnd(-16,16);py+=rnd(-16,16);x.lineTo(px,py);}x.stroke();}},true);
+  asphTex.repeat.set(0.25,0.25);M.asphalt.map=asphTex;M.asphalt.needsUpdate=true;
+  // v20 roofs: galvanised steel sheet (not the brand colour): standing seams, a faded, dirt-streaked surface, rust runs
+  // from the fixings and the odd replaced (brighter) panel; one 12 m tile
+  const roofTex=texC(512,512,(x,W)=>{for(let i=0;i<W;i+=16){const v=Math.round(rnd(148,168));x.fillStyle=`rgb(${v},${v+4},${v+9})`;x.fillRect(i,0,16,W);x.fillStyle="rgba(255,255,255,0.18)";x.fillRect(i,0,2,W);x.fillStyle="rgba(0,0,0,0.12)";x.fillRect(i+14,0,2,W);}
+    for(let k=0;k<3;k++){const i=Math.floor(rnd(0,W/16))*16;x.fillStyle="rgba(235,240,245,0.35)";x.fillRect(i+2,0,12,W);}
+    for(let k=0;k<26;k++){const cx=rnd(0,W),cy=rnd(0,W),r=rnd(30,110),g=x.createRadialGradient(cx,cy,0,cx,cy,r);g.addColorStop(0,`rgba(70,64,52,${rnd(0.08,0.18)})`);g.addColorStop(1,"rgba(70,64,52,0)");x.fillStyle=g;x.fillRect(0,0,W,W);}
+    for(let k=0;k<40;k++){const px=Math.floor(rnd(0,W/16))*16+rnd(3,13),py=rnd(0,W),L=rnd(20,90),g=x.createLinearGradient(px,py,px,py+L);g.addColorStop(0,"rgba(140,70,30,0.35)");g.addColorStop(1,"rgba(140,70,30,0)");x.fillStyle=g;x.fillRect(px-1.5,py,3,L);}
+    for(let k=0;k<3000;k++){x.fillStyle=`rgba(40,40,40,${rnd(0.03,0.1)})`;x.fillRect(rnd(0,W),rnd(0,W),1.5,1.5);}},true);
+  roofTex.repeat.set(1/12,1/12);G3.roofTex=roofTex;
+  // v20: flat roofs on the small buildings (gatehouse, scale house, intake, power house, office, booths): a grey membrane
+  // with ponding stains and patched seams, instead of the trim colour
+  const flatTex=texC(256,256,(x,W)=>{x.fillStyle="#8d9196";x.fillRect(0,0,W,W);for(let k=0;k<2500;k++){const v=rnd(110,175);x.fillStyle=`rgba(${v},${v},${v+4},0.5)`;x.fillRect(rnd(0,W),rnd(0,W),1.5,1.5);}
+    for(let k=0;k<9;k++){const cx=rnd(0,W),cy=rnd(0,W),r=rnd(18,60),g=x.createRadialGradient(cx,cy,0,cx,cy,r);g.addColorStop(0,"rgba(60,58,52,0.25)");g.addColorStop(1,"rgba(60,58,52,0)");x.fillStyle=g;x.fillRect(0,0,W,W);}
+    x.strokeStyle="rgba(50,50,52,0.35)";x.lineWidth=2;for(let k=1;k<4;k++){x.beginPath();x.moveTo(0,k*W/4+rnd(-4,4));x.lineTo(W,k*W/4+rnd(-4,4));x.stroke();}
+    x.fillStyle="rgba(40,40,42,0.25)";x.fillRect(rnd(20,120),rnd(20,120),rnd(40,90),rnd(30,60));},false);
+  M.roofFlat=new StdMat({map:flatTex,roughness:0.9});M.roofFlat.color.set(0xffffff);
+  G3.roofMat=()=>{const m=new StdMat({map:roofTex,transparent:true,roughness:0.62,metalness:0.3,side:THREE.DoubleSide});m.color.set(0xffffff);return m;};
   // 7: dryer cans: brushed / polished steel with circumferential machining marks and a couple of doctor-blade scuffs
   // left half: the shell (machining marks around the can); top-right square: the can head with a bolted rectangular manway
   const canTex=texC(256,256,(x,W,H)=>{const SW=124;for(let y=0;y<H;y++){const v=Math.round(rnd(200,250));x.fillStyle=`rgb(${v},${v},${v+3})`;x.fillRect(0,y,SW,1);}

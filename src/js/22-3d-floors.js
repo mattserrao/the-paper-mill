@@ -73,9 +73,9 @@
   ribWall(66,5.2,0.3,31,2.6,2.4);ribWall(0.3,5.2,13.8,64,2.6,9.3);
   {const s=new THREE.Mesh(new THREE.PlaneGeometry(26,3.25),signMat);s.position.set(51,3.1,2.57);scene.add(s);
    const s2=new THREE.Mesh(new THREE.PlaneGeometry(13,1.62),signMat);s2.position.set(-21.2,2.55,-2.83);scene.add(s2);}
-  // sawtooth roofs in the brand color; they fade away as you zoom in
+  // sawtooth roofs in galvanised sheet with wear (v20; they were the brand colour); they fade away as you zoom in
   const roofs=[];
-  function sawRoof(x0,x1,z0,z1,y){const g=new THREE.Group(),n=Math.max(3,Math.round((x1-x0)/4.2)),tw=(x1-x0)/n,m=mat("brand",{transparent:true,roughness:0.55,side:THREE.DoubleSide}),gl=mat("g-glass",{transparent:true,roughness:0.15,metalness:0.4}),em=new THREE.LineBasicMaterial({color:lin0("#1c2233"),transparent:true,opacity:0.35});
+  function sawRoof(x0,x1,z0,z1,y){const g=new THREE.Group(),n=Math.max(3,Math.round((x1-x0)/4.2)),tw=(x1-x0)/n,m=G3.roofMat(),gl=mat("g-glass",{transparent:true,roughness:0.15,metalness:0.4}),em=new THREE.LineBasicMaterial({color:lin0("#1c2233"),transparent:true,opacity:0.35});
     for(let i=0;i<n;i++){const s=new THREE.Shape();s.moveTo(0,0);s.lineTo(tw,0);s.lineTo(tw,1.7);s.lineTo(0,0);
       const geo=new THREE.ExtrudeGeometry(s,{depth:z1-z0,bevelEnabled:false});const o=new THREE.Mesh(geo,m);o.position.set(x0+i*tw,y+0.07,z0);o.castShadow=true;g.add(o);edges(o,em,20);
       const glass=new THREE.Mesh(new THREE.PlaneGeometry(z1-z0-0.2,1.3),gl);glass.rotation.y=Math.PI/2;glass.position.set(x0+(i+1)*tw+0.07,y+0.87,(z0+z1)/2);g.add(glass);}
@@ -105,14 +105,14 @@
      const f2=new THREE.Mesh(new THREE.BoxGeometry(X1-XA+0.2,0.5,0.4),bm);f2.position.set((XA+X1)/2,HH-0.1,Z0);g.add(f2);
      const f3=new THREE.Mesh(new THREE.BoxGeometry(XA-X0+0.4,0.5,0.4),bm);f3.position.set((X0+XA)/2,HH-0.1,ZA);g.add(f3);}
     [[X0,-1],[X1,1]].forEach(([x,dir])=>{for(let z=(x===X0?ZA:Z0)+2;z<(x===X1?ZF:Z1)-2.5;z+=3.4){const p=new THREE.Mesh(new THREE.BoxGeometry(0.08,2.6,2.4),gl);p.position.set(x+dir*0.17,9.6,z+1.2);g.add(p);}});
-    const nA=Math.round((XA-X0)/4.4),nB=Math.round((X1-XA)/4.4);
+    const nA=Math.round((XA-X0)/4.4),nB=Math.round((X1-XA)/4.4),rm=G3.roofMat();   // (the sawtooth in galvanised sheet; the fascia and door frames keep the trim colour)
     for(let i=0;i<nA+nB;i++){const bay=i<nA,tw=bay?(XA-X0)/nA:(X1-XA)/nB,xs=bay?X0+i*tw:XA+(i-nA)*tw,z0=bay?ZA:Z0,zf=xs>=XW-0.05?ZF:Z1,dz=zf-z0;
       const sh=new THREE.Shape();sh.moveTo(0,0);sh.lineTo(tw,0);sh.lineTo(tw,2.1);sh.lineTo(0,0);
-      const o=new THREE.Mesh(new THREE.ExtrudeGeometry(sh,{depth:dz,bevelEnabled:false}),bm);o.position.set(xs,HH+0.07,z0);add(o,true);
+      const o=new THREE.Mesh(new THREE.ExtrudeGeometry(sh,{depth:dz,bevelEnabled:false}),rm);o.position.set(xs,HH+0.07,z0);add(o,true);
       const gp=new THREE.Mesh(new THREE.PlaneGeometry(dz-0.3,1.6),gl);gp.rotation.y=Math.PI/2;gp.position.set(xs+tw+0.07,HH+1.07,(z0+zf)/2);g.add(gp);}
     // dryer hood exhaust stacks through the roof (vapour plumes in envUpdate)
 
-    g.userData.mats=[wm,gl,em,bm,g.userData.dk];g.userData.fade=[255,40];scene.add(g);roofs.push(g);}
+    g.userData.mats=[wm,gl,em,bm,rm,g.userData.dk];g.userData.fade=[255,40];scene.add(g);roofs.push(g);}
   // close-up: a low ribbed base wall along the new tending-side line (so people use the doors), hatched thresholds and bollards at the doors
   {const ZF=HALL.zf;let xa=HALL.xw;HALL.doors.forEach(d=>{const a=d.x-d.w/2;if(a-xa>0.05)ribWall(a-xa,1.1,0.3,(xa+a)/2,0.55,ZF);xa=d.x+d.w/2;});ribWall(64.3-xa,1.1,0.3,(xa+64.3)/2,0.55,ZF);
    const hc=document.createElement("canvas");hc.width=128;hc.height=16;{const x=hc.getContext("2d");x.fillStyle="#f2b807";x.fillRect(0,0,128,16);x.fillStyle="#1c2233";for(let k=-2;k<18;k++){x.beginPath();x.moveTo(k*8,16);x.lineTo(k*8+4,16);x.lineTo(k*8+12,0);x.lineTo(k*8+8,0);x.fill();}}

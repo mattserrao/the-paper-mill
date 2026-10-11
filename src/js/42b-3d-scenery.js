@@ -318,7 +318,7 @@
       // the mill's covered OCC store: a long open-sided shed over bale stacks, more stacks outside, a truck unloading
       {const x0=20,x1=104,z0=75,z1=142,cx=(x0+x1)/2;pad(cx,(z0+z1)/2,48);add(T.quad,cx,0.022,(z0+z1)/2,x1-x0,1,z1-z0,0,"#c9c6bd",0);kMark(x0,x1,z0,z1,3);
         const sx=cx-6,sz=z0+24,SW=58,SD=26;for(let x=sx-SW/2;x<=sx+SW/2+0.1;x+=SW/6)[sz-SD/2,sz+SD/2].forEach(z=>add(T.box,x,0,z,0.4,7,0.4,0,"#8d939c",0.1));
-        add(T.box,sx,7,sz,SW+2,0.4,SD+2,0,"#8a929c",0.1);add(T.gable,sx,7.4,sz,SW+2.4,2,SD+2.6,0,MILL.brand||"#2f7d4f",0);
+        add(T.box,sx,7,sz,SW+2,0.4,SD+2,0,"#8a929c",0.1);add(T.gable,sx,7.4,sz,SW+2.4,2,SD+2.6,0,"#9ba2a9",0.05);   // (v20: galvanised, not the trim colour)
         for(let i=0;i<9;i++)for(let j=0;j<4;j++){const n=2+Math.floor(RNG()*3);for(let l=0;l<n;l++)add(T.box,sx-SW/2+4+i*6.2,l*1.15,sz-SD/2+4+j*5.6,1.6,1.1,1.25,0,pick(["#a7784a","#b07a43","#8f6a45","#9c7b55"]),0.15);}
         for(let i=0;i<6;i++)for(let j=0;j<2;j++)for(let l=0;l<2;l++)add(T.box,x0+10+i*7,l*1.15,z1-14+j*5,1.6,1.1,1.25,0,pick(["#a7784a","#b07a43","#8f6a45"]),0.15);
         // the truck: tractor, flatbed with bales, a forklift taking them off

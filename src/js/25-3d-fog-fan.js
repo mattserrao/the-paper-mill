@@ -1,6 +1,6 @@
   // ---- fog remediation fan: pulls wet-end vapour out of the machine room through a duct in the back (drive-side) wall
   {const X=49.5,Z=-4.2,HH=13.4,stk=mat("g-wall",{roughness:0.55});
-    box(3.6,3.2,3.0,M.steel,X,1.6,Z);box(3.8,0.25,3.2,M.brand,X,3.3,Z,scene,false);[-1,1].forEach(d=>box(0.08,2.2,2.2,gratM,X+d*1.81,1.5,Z,scene,false));   // fan housing, louvres
+    box(3.6,3.2,3.0,M.steel,X,1.6,Z);box(3.8,0.25,3.2,M.roofFlat,X,3.3,Z,scene,false);[-1,1].forEach(d=>box(0.08,2.2,2.2,gratM,X+d*1.81,1.5,Z,scene,false));   // fan housing, louvres
     box(1.1,0.9,0.9,M.ink,X+2.3,0.45,Z+0.6,scene);box(0.6,0.5,0.15,M.ok,X+2.3,1.2,Z+1.06,scene,false);   // motor + starter
     const st=new THREE.Mesh(new CylG(0.95,1.05,HH+6-3.3,20),stk);st.position.set(X,3.3+(HH+6-3.3)/2,Z);st.castShadow=true;scene.add(st);
     [7,12,17].forEach(y=>{const b=new THREE.Mesh(new CylG(1.06,1.06,0.2,20),M.steel);b.position.set(X,y,Z);scene.add(b);});

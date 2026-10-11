@@ -132,6 +132,17 @@ piece; the three sandbox-style piano pieces are the valley's.
   piece; the sound button's tooltip names what is playing. `tools/musictest.py` schedules every step of every piece and
   checks the output level; `tools/musicrec.py` records any piece to MP3.
 
+### Roofs, surface wear, trash cans (pass 18, test v20)
+- Roofs: the sawtooth roofs (receiving, warehouse, machine hall) are galvanised steel sheet with standing seams, a faded,
+  dirt-streaked surface, rust runs from the fixings and the odd replaced panel, instead of the brand colour; the small
+  buildings (gatehouse, scale house, intake, power house, office, yard booth, fog fan house) have grey membrane flat roofs
+  with ponding stains and patched seams. The fascia, door frames and the water tower keep the site's trim colour. The
+  valley's OCC store shed roof is galvanised too.
+- Surface wear: concrete gains a coarser layer (polished traffic lanes, tyre scuffs, big stains); asphalt gets its own
+  32 m wear tile (tyre tracks, oil drips, a patched trench, cracks, sun-faded patches).
+- Trash cans: the contents were wider than the tapered can's base and showed through as a pale band round the bottom of
+  every can; they now sit inside it.
+
 ### Upgrade prices and one upgrade a day (pass 17, test v19)
 - New prices (L1 / L2 / L3): Drive rebuild $120k / $105k / $95k; Wider trim $125k / $105k; Shoe press $140k; Fabric & felt
   monitoring $170k / $115k; Refiner $110k; Fire suppression $90k; Screens & cleaners $60k / $60k; Detrashing $30k;

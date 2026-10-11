@@ -18,7 +18,7 @@
     return new THREE.Mesh(new THREE.PlaneGeometry(W,H),m);}
   const OFF={x0:49,x1:61,z0:24,z1:30,door:[53,23.7]};
   {const ow=mat("g-wall",{roughness:0.6}),oh=4.4;const o=box(OFF.x1-OFF.x0,oh,OFF.z1-OFF.z0,ow,(OFF.x0+OFF.x1)/2,oh/2,(OFF.z0+OFF.z1)/2);edges(o);blob((OFF.x0+OFF.x1)/2,(OFF.z0+OFF.z1)/2,8);
-    box(OFF.x1-OFF.x0+0.4,0.35,OFF.z1-OFF.z0+0.4,M.brand,(OFF.x0+OFF.x1)/2,oh+0.17,(OFF.z0+OFF.z1)/2);
+    box(OFF.x1-OFF.x0+0.4,0.35,OFF.z1-OFF.z0+0.4,M.roofFlat,(OFF.x0+OFF.x1)/2,oh+0.17,(OFF.z0+OFF.z1)/2);
     // windows on a 2.2 m grid centred on the door (x 53), so front and back line up; at the front the door takes one bay and the vending machine another
     {const W=OFF.x1-OFF.x0,H=oh-0.1,X=[50.8,53,55.2,57.4,59.6],win=(xs)=>xs.map(wx=>[wx-OFF.x0,1.2,1.4,1.1]);
      const fr=facade(W,H,win(X.filter(v=>v!==53&&v!==50.8)).map(([cx,...r])=>[W-cx,...r]),[W-(56.3-OFF.x0),3.05,3.2,0.72,"OFFICE"],W-(OFF.door[0]-OFF.x0));fr.rotation.y=Math.PI;fr.position.set((OFF.x0+OFF.x1)/2,H/2,OFF.z0-0.035);scene.add(fr);
