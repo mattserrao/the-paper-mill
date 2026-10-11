@@ -1,0 +1,55 @@
+  /* ---- v4.2 test: keep the season on the device (no account, nothing leaves the phone) ----
+     The season is saved to localStorage when the page is hidden or closed (switching apps, locking the phone), every
+     60 s of play, and after a purchase, a card or a new game day. One slot, versioned; the 3D view isn't saved (it
+     rebuilds from the sim). On load, the menu offers "Continue season" when a save from the last 14 days exists; a new
+     season or the end of one clears it. A page that comes back without a reload stays paused behind a "Welcome back".
+     Seasons only (not free play or zen); off in the autotest and with ?nosave. ---- */
+  {const KEY="paper-mill-save",VER=1,MAXAGE=14*86400e3,Q=new URLSearchParams(location.search),OFF=Q.has("nosave")||Q.has("autotest");
+    const live=()=>!!(S&&S.season&&S.season.on&&!S.season.done&&!S.free&&!S.zen&&!S.over);
+    let lastSave=0,lastDay=-1,lastUp=0;
+    function save(why){if(OFF||G3.saveOff||!live())return false;   // (G3.saveOff: tests)
+     const t0=performance.now();
+      try{const S2=Object.assign({},S);
+        // the open card or dialog is kept by name (the card object holds functions); 3D-only fields are left out
+        const op=S.cards&&S.cards.open;S2.cards=Object.assign({},S.cards,{open:op&&op.c?{cid:op.c.id}:op&&op.outage?{outage:true}:null});
+        const data={v:VER,app:APP_VER,env:SITE.env,mill:SITE.seed,at:Date.now(),why,S:S2,C,CH:{on:CH.on,lvl:CH.lvl,en:CH.en},
+          MILL:{name:MILL.name,brand:MILL.brand},day:Math.floor(S.t/1440)+1,cash:S.cash};
+        localStorage.setItem(KEY,JSON.stringify(data));lastSave=performance.now();G3.saveMs=lastSave-t0;return true;}
+      catch(e){diag("save failed: "+String(e&&e.message||e).slice(0,80));return false;}}
+    function read(){if(OFF)return null;try{const d=JSON.parse(localStorage.getItem(KEY)||"null");
+        if(!d||d.v!==VER||!d.S||Date.now()-d.at>MAXAGE)return null;return d;}catch(e){return null;}}
+    function clear(){try{localStorage.removeItem(KEY);}catch(e){}}
+    function restore(d){S=d.S;for(const k in d.C){if(C[k]&&typeof C[k]==="object"&&d.C[k]&&typeof d.C[k]==="object")Object.assign(C[k],d.C[k]);else C[k]=d.C[k];}
+      CH.on=d.CH.on;CH.lvl=d.CH.lvl;Object.assign(CH.en,d.CH.en||{});
+      if(d.MILL){MILL.name=d.MILL.name;MILL.brand=d.MILL.brand;document.documentElement.style.setProperty("--brand",MILL.brand);PAL_V++;}
+      // the open dialog: a card comes back up; an outage plan is asked again
+      const op=S.cards.open;S.cards.open=null;
+      if(op&&op.outage&&S.outg)S.outg.noticed=false;
+      applyUpgrades();S.M=mods();BANNERS.length=0;seasonLocks(true);
+      try{syncControls();}catch(e){}try{updateShop();}catch(e){}try{if(G3.rebrand)G3.rebrand();}catch(e){}
+      if(op&&op.cid){const c=CARDS.find(x=>x.id===op.cid);if(c)setTimeout(()=>openCard(c),400);}
+      diag(`save: season restored, day ${d.day}, ${money(d.cash)}`);}
+    G3.save={save,read,clear,restore};
+    // ---- when to save ----
+    document.addEventListener("visibilitychange",()=>{if(document.hidden){if(save("hidden")&&running){G3.saveWasRunning=true;running=false;}}
+      else if(G3.saveWasRunning){G3.saveWasRunning=false;welcome();}});
+    window.addEventListener("pagehide",()=>save("pagehide"));
+    UI_TICKS.push(()=>{if(OFF||!live())return;const now=performance.now(),day=Math.floor(S.t/1440),ups=Object.values(S.up||{}).reduce((a,b)=>a+b,0)+(S.cards?S.cards.pend.length:0);
+      if(now-lastSave>60000||day!==lastDay||ups!==lastUp){lastDay=day;lastUp=ups;save("tick");}
+      if(S.season&&S.season.done)clear();});
+    // ---- coming back without a reload: paused, with a welcome back ----
+    function welcome(){if(!live()||!G3.showMenu)return;G3.showMenu();const st=$("v2state");if(st)st.textContent="Welcome back · paused while you were away";}
+    // ---- the Continue button on the menu ----
+    const d0=read(),go=$("v2go");
+    if(d0&&go){const b=document.createElement("button");b.className="primary go";b.id="v2cont";
+      b.innerHTML=`<b>Continue season</b><small>day ${d0.day} of 30 · ${money(d0.cash)} · ${(ENVS[d0.env]||{name:d0.env}).name}</small>`;
+      go.parentNode.insertBefore(b,go);go.classList.remove("primary");
+      b.addEventListener("click",()=>{const d=read();if(!d){b.remove();return;}
+        // a save from another map: reload on that map, then continue (?resume=1)
+        if(d.env!==SITE.env||d.mill!==SITE.seed){const q=new URLSearchParams(location.search);q.set("env",d.env);q.set("resume","1");location.href=location.pathname+"?"+q+location.hash;return;}
+        const run=()=>{restore(d);b.remove();go.classList.add("primary");G3.play();};
+        if(G3.warm||!G3.prewarm)run();else{b.setAttribute("aria-busy","true");b.querySelector("small").textContent="Getting the mill ready…";G3.prewarm().then(run);}});
+      if(Q.get("resume")==="1"){try{Q.delete("resume");history.replaceState(null,"",location.pathname+(Q.toString()?"?"+Q:"")+location.hash);}catch(e){}setTimeout(()=>b.click(),300);}}
+    // a new season or a reset starts over: the old save goes
+    ["v2season","v2reset"].forEach(id=>{const el=$(id);if(el)el.addEventListener("click",clear,true);});
+    if(go)go.addEventListener("click",()=>{if($("v2cont")&&!(S.season&&S.season.on))clear();},true);}

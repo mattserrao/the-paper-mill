@@ -1,5 +1,19 @@
 # Changelog
 
+## v4.2.0-s (save test, local only: `test/v21`, not published)
+
+- The season is kept on the device, no account: saved to the browser's storage when the page is hidden or closed, every
+  60 s of play, and after a purchase, a card or a new game day (one slot, versioned, ~24 KB, <1 ms per save). The menu
+  offers "Continue season · day N · cash · map" when a save from the last 14 days exists (a save from another map
+  reloads on it first); Play (a new season), New season and Reset clear it, and so does the end of a season. A page
+  that comes back without a reload is paused behind "Welcome back". Seasons only (not free play or zen); off in the
+  autotest and with ?nosave.
+- Pending event-card outcomes are data now (handler key + values, PENDH in 05-event-cards.js) instead of closures, and the
+  railcar's finish is a key, so everything in a season can be saved. An open card comes back up on Continue; an open
+  outage plan is asked again.
+- tools/savecheck.py: save at day 4 with six pending card outcomes, continue to day 6, and the cash, incidents, breaks
+  and rolls match an uninterrupted run exactly; the hidden page saves and pauses; corrupt or old saves are ignored.
+
 ## v4.2.0 (released 2026-10-11 from test `test/v20`)
 
 Everything in the v4.1.0 work below, through pass 18 (test v20): four redesigned site maps (the city now on the sea),
