@@ -5849,8 +5849,12 @@ function no3D(){G3.ok=false;$("no3d").hidden=false;$("no3d-retry").onclick=()=>l
         out[mode]=L[0]>110&&L[1]<90&&L[2]<90&&Rr[1]>110&&Rr[0]<90&&Rr[2]<90;out[mode+"px"]=Array.from(L).join(",")+"/"+Array.from(Rr).join(",");}
       rt.dispose();g.dispose();renderer.setClearColor(cc,ca);renderer.shadowMap.needsUpdate=shNeed;}catch(e){out.err=String(e).slice(0,80);}return out;}
   const BPR=BQ.get("dbcol")?{}:batchProbe();
-  let DBCOL=BQ.get("dbcol")==="1"||(!BQ.get("dbcol")&&!BPR.vc&&!!BPR.tex);const DBOFF=!BQ.get("dbcol")&&!BPR.vc&&!BPR.tex;G3.DBCOL=DBCOL;
-  diag(`batch colours: vertex ${BPR.vc===undefined?"-":BPR.vc?"ok":"FAIL ("+BPR.vcpx+")"}, texture ${BPR.tex===undefined?"-":BPR.tex?"ok":"FAIL ("+BPR.texpx+")"}${BPR.err?" error "+BPR.err:""} -> ${DBOFF?"moving things drawn one by one":DBCOL?"texture":"vertex"}`);const DBLAYER=30,DBOK=new Set(["MeshStandardMaterial","MeshLambertMaterial","MeshBasicMaterial","MeshPhongMaterial"]);
+  let DBCOL=BQ.get("dbcol")==="1"||(!BQ.get("dbcol")&&!BPR.vc&&!!BPR.tex);// v4.1 pass 9: on iPhone and iPad both methods pass the probe yet the real batches still draw grey (shown on an iPhone,
+  // iOS 18.7, Apple GPU); drawing moving things one by one (?nodb) shows correct colours there, so iOS uses that.
+  // ?dbcol=0 (vertex) or ?dbcol=1 (texture) still forces batches on for testing.
+  const IOS=/iPhone|iPad|iPod/.test(navigator.userAgent)||(/Macintosh/.test(navigator.userAgent)&&navigator.maxTouchPoints>1);
+  const DBOFF=!BQ.get("dbcol")&&(IOS||(!BPR.vc&&!BPR.tex));G3.DBCOL=DBCOL;
+  diag(`batch colours: vertex ${BPR.vc===undefined?"-":BPR.vc?"ok":"FAIL ("+BPR.vcpx+")"}, texture ${BPR.tex===undefined?"-":BPR.tex?"ok":"FAIL ("+BPR.texpx+")"}${BPR.err?" error "+BPR.err:""} -> ${DBOFF?(IOS?"iOS: ":"")+"moving things drawn one by one":DBCOL?"texture":"vertex"}`);const DBLAYER=30,DBOK=new Set(["MeshStandardMaterial","MeshLambertMaterial","MeshBasicMaterial","MeshPhongMaterial"]);
   function dbOK(o){if(!o.isMesh||o.isInstancedMesh||o.isBatchedMesh||o.isSkinnedMesh||o.userData.smBatch||o.renderOrder)return false;
     const m=o.material,g=o.geometry;if(!m||Array.isArray(m)||!DBOK.has(m.type)||m.transparent||m.opacity<1||!g||!g.isBufferGeometry)return false;
     if(o.onBeforeRender!==THREE.Object3D.prototype.onBeforeRender)return false;const a=g.attributes;if(!a.position||!a.normal)return false;
