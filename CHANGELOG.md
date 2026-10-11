@@ -1,5 +1,10 @@
 # Changelog
 
+## v4.2.2-t4 (test v26): the gator cut, short and wide
+- Scene cut from 31 s to 11.5 s: it opens with the operator already at the edge and the gator close, plays the bite at full speed, and hurries the aftermath (a time map from the scene clock onto the choreography).
+- Camera pulled out to 60 m and held still on the mill (orbit 2.25, elevation 1.36, look-at 7 m up): a mill shot in which the bite happens small in the lower third.
+- The pirogue now poles up the near side of the canal past the scene.
+
 ## v4.2.2-t3 (test v25): gator riff removed, wide incidental framing
 - The bass riff is gone (synth code removed).
 - The gator scene's camera is now a wide, low shot from across the canal (30 m, orbit 2.25, elevation 1.42): the action sits in the lower third with the mill (clarifier, pipe racks, buildings) filling the background, as if caught in frame by chance. It follows the operator along the bank. The zen camera keeps this angle (a slow ±0.1 rad sway) when a sight supplies one.

@@ -95,13 +95,13 @@
         // just breaking the surface; it lunges, jaws wide, and snaps off the operator's right hand (no gore, just gone),
         // then death-rolls and sinks with it. The operator sits down hard, stares at the stump, throws the other arm up, gets up
         // and runs off along the bank waving it; the bottle bobs off on the water. The gator surfaces again out in the canal, burps
-        // and slides away, while a one-armed Cajun poles his pirogue past on the far side. Everything is a function of the
+        // and slides away, while a one-armed Cajun poles his pirogue past up the canal. Everything is a function of the
         // scene clock, so any moment can be shown (G3.sightSeek, tests and screenshots).
         swamp:()=>{const [zc,hw]=riverAt(50),bank=zc+hw,EX=48,EZ=bank+1.2,ez=k=>k<=0?0:k>=1?1:k*k*(3-2*k),cl=(t,a,b)=>ez((t-a)/(b-a)),
             bx=(p,w,h,d,x,y,z,k,hex)=>{const m=new THREE.Mesh(cubeG,am(k,hex));m.scale.set(w,h,d);m.position.set(x,y,z);m.castShadow=true;p.add(m);return m;},
             piv=(p,x,y,z)=>{const g=new THREE.Group();g.position.set(x,y,z);p.add(g);return g;},
             ball=(p,r,x,y,z,k,hex,sy=1)=>{const m=new THREE.Mesh(sphereG,am(k,hex));m.scale.set(r,r*sy,r);m.position.set(x,y,z);p.add(m);return m;};
-          const SK="#e0b48c",CV="#2f4a6b",GB="#39432e",GS="#4b5739",GL="#b9b38a",GD="#2a3222",TE="#f2eedb";
+          const FOC_R=60,SK="#e0b48c",CV="#2f4a6b",GB="#39432e",GS="#4b5739",GL="#b9b38a",GD="#2a3222",TE="#f2eedb";
           // ---- the operator (local +x forward, +z their right) ----
           const op=grp(),hip=piv(op,0,0.92,0);
           const L=[-1,1].map(s=>{const l=piv(hip,0,0,s*0.13);bx(l,0.22,0.44,0.23,0,-0.21,0,"cover",CV);const k=piv(l,0,-0.42,0);bx(k,0.2,0.42,0.21,0,-0.2,0,"cover",CV);bx(k,0.32,0.16,0.25,0.05,-0.42,0,"boot","#4a3424");l.userData.k=k;return l;});
@@ -179,12 +179,15 @@
               d.m.visible=true;d.m.position.set(o.x+d.v[0]*dt,y,o.z-1+d.v[2]*dt);}}
           function bottle(t){if(t<13.9||!fit){fb.visible=false;return;}fb.visible=t<31;const k=cl(t,13.9,14.3),T=Math.max(0,t-14.3);
             fb.position.set(fit.h.x+T*0.18+Math.sin(t*1.3)*0.05,fit.h.y*(1-k)+0.03*k+Math.sin(t*2.6)*0.03*k,fit.h.z-0.4*k-T*0.12);fb.rotation.set(1.3*k+Math.sin(t*1.7)*0.2*k,0,0.4*k);}
-          function pirogue(t){pr.visible=true;const x=EX+30-60*t/31,z=zc-hw*0.45;pr.position.set(x,0.02+Math.sin(t*1.4)*0.04,z);pr.rotation.y=Math.PI;pr.rotation.x=Math.sin(t*1.1)*0.02;
+          function pirogue(t){pr.visible=true;const x=EX-6-20*t/11.5,z=zc+hw*0.1;pr.position.set(x,0.02+Math.sin(t*1.4)*0.04,z);pr.rotation.y=Math.PI;pr.rotation.x=Math.sin(t*1.1)*0.02;
             const c=Math.sin(t*1.2);pp.rotation.z=-0.35+c*0.35;cj.a[1].rotation.z=-0.5+c*0.4;}
-          return {t:0,tick(rdt){const t=(this.t+=rdt);if(t<0.5)fit=null;poseOp(t);poseGator(t);rings(t);drops(t);bottle(t);pirogue(t);return t<31;},
-            // a wide, low shot from across the canal: the action sits in the lower third and the mill fills the background,
+          // v4.2.2 t4: the cut is short (11.5 s). The scene clock (tau) maps onto the choreography's clock (t): it opens with the
+          // operator already at the edge and the gator close, plays the bite at full speed, and hurries the aftermath
+          const MAP=[[0,9],[1.2,10.5],[3.2,13.2],[6,16],[7.5,19],[8.7,20.2],[11.5,23]],tm=u=>{for(let i=1;i<MAP.length;i++)if(u<=MAP[i][0]){const a=MAP[i-1],b=MAP[i];return a[1]+(u-a[0])/(b[0]-a[0])*(b[1]-a[1]);}return 23;},END=11.5;
+          return {t:0,tick(rdt){const u=(this.t+=rdt),t=tm(u);if(u<0.3)fit=null;poseOp(t);poseGator(t);rings(t);drops(t);bottle(t);pirogue(u);return u<END;},
+            // a wide, low shot of the mill from across the canal, held still: the bite happens small in the lower third,
             // as if it were caught in frame by chance ([x,y,z,dist,orbit angle,elevation]: the zen camera keeps the angle)
-            focus(){const t=this.t,o=op.position,x=t<8?o.x-1:t>20.2&&t<29.5?Math.min(o.x,EX+14)-1:EX-1;return [x,3,bank+2,30,2.25,1.42];},
+            focus(){return [EX-2,7,bank+3,FOC_R,2.25,1.36];},
             stop(){op.visible=gt.visible=fb.visible=pr.visible=false;RM.forEach(m=>m.visible=false);DR.forEach(d=>d.m.visible=false);fit=null;}};}};
       // (built once at start-up, hidden, so nothing is created or compiled when one happens; rewound each time)
       const one=SIGHTS[SITE.env]?SIGHTS[SITE.env]():null;let wait=FAST?3:rr2(240,600);G3.sight=()=>{wait=0;};G3.sightSeek=t=>{if(sight)sight.t=t;};   // (G3.sight(): show one now, for tests)
