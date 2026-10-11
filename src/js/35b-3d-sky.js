@@ -34,7 +34,7 @@
     const tier=G3.GFX||{},nCloud=new URLSearchParams(location.search).has("noclouds")?0:tier.tier==="low"?0:tier.tier==="medium"?4:tier.tier==="ultra"?14:10;
     const clouds=billboards(Math.max(1,nCloud),0xffffff,0.85),mist=billboards(8,0xf2f7ff,0.5);
     for(let i=0;i<nCloud;i++)clouds.items.push({x:-500+Math.random()*1000,y:150+Math.random()*90,z:-450+Math.random()*900,w:90+Math.random()*120,h:30+Math.random()*24,v:1.2+Math.random()*1.5});
-    SKY.clouds=clouds;SKY.mist=mist;SKY.mistOn=tier.tier!=="low"&&(SITE.env==="swamp"||SITE.env==="rural");
+    SKY.clouds=clouds;SKY.mist=mist;SKY.mistOn=tier.tier!=="low"&&SITE.env==="rural";   // (v17: no mist on the bayou)
     // mist banks: over the ponds in the bayou, along the river in the valley; placed on the first tick (the ponds come from the scenery)
     SKY.placeMist=()=>{if(SKY.mistSet)return;SKY.mistSet=true;const it=mist.items;
       // five overlapping banks along the river either side of the mill, then (bayou) the ponds nearest the mill
