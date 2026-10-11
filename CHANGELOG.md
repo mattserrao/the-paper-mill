@@ -132,6 +132,33 @@ piece; the three sandbox-style piano pieces are the valley's.
   piece; the sound button's tooltip names what is playing. `tools/musictest.py` schedules every step of every piece and
   checks the output level; `tools/musicrec.py` records any piece to MP3.
 
+### Design round 2 (pass 12, test v14)
+- Forest valley: the timber yard is now the neighbouring Valley Timber Co. (own fence, sign, log decks, chip pile, loader
+  shed) beside the mill's covered OCC bale store (open-sided shed, bale stacks, a truck unloading); a concrete service
+  court joins them to the fence, an asphalt lane runs out to the east road and the highway. Rapids differ run to run,
+  gravel bars taper and vary, willow/alder/reed patches along the banks, ragged clearings with a fringe of young trees,
+  a wider spread of tree sizes.
+- City mill: industrial blocks (warehouses with truck yards, depots, scrap and bale yards) round the mill, mid-rise
+  further out, houses beyond; the port is fenced from the boulevard with one gated freight entrance, a hedge and trees;
+  public beach stairs and a hedge between the promenade and the rail yard; town water arrives by a blue main into a tank
+  by the fence, the outfall is buoyed out to its diffuser; the rail yard's sidings fan off ladder tracks with buffer
+  stops at the far end.
+- Desert flats: washes in muted sediment with a darker channel, widening downstream, tapering tributaries, box culverts
+  at the roads and headwalls at the canal; mesas built as asymmetric lobe chains with spurs, broken ledges, talus and
+  boulders; pipes on saddles join the tanks, reservoirs and the mill, with a containment berm and service track; the
+  solar field has a maintenance track, inverter skids and a fenced transformer feeding the line; the palm oasis is now a
+  stock pond with a windmill, trough and cattle.
+- Bayou: the mill stands on a raised dry pad 1.4 m above the wetland, roads on causeways, a riprap edge and drainage
+  swales culverted under the roads, a lined process-water basin; sloughs flare at their mouths and taper to their
+  heads, with branches and reed clumps; open reed beds with mud flats and shallow pools; a marked bale route from the
+  barge dock round the fence to receiving, bales waiting on the apron and a bundle on the crane hook.
+- Activity: a wheel loader carrying logs to a log truck (valley), a shunter with two wagons and a straddle carrier with
+  a container (city), the solar crew's pickup with a dust trail (desert), a forklift taking bales from the dock to
+  receiving (bayou). 42c-3d-activity.js; visual only.
+- Site view: "Whole site" in Go to flies out over the whole map; zoom reaches 760 m and panning widens when zoomed out.
+  Zoomed out, only the area labels and the landmark names show; closer in, the equipment labels return.
+- Fix: the bottleneck tag on the section labels (lost when the numbers came off).
+
 ### City by the sea (pass 11, test v13 updated)
 - City mill only: the far side of the river is now the open sea, out to the horizon (`RIVERS.urban` kind "sea"; the
   sea bed drops under the water so it never flickers). No bridges; the highway and east avenue end at a seafront

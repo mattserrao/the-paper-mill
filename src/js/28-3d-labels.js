@@ -71,28 +71,28 @@
     for(let i=LREC.length-1;i>=0;i--){const R=LREC[i];if(R.inc&&R.on&&px>=R.rx&&px<=R.rx+R.W&&py>=R.ry&&py<=R.ry+R.H)return R.id;}return null;};
   G3.lblCount=()=>[LREC.filter(R=>R.a!=null).length,LREC.filter(R=>R.on).length];
   const LABELS=[
-    {p:[-70,0,-8],t:()=>["Inbound OCC",S.inQ.length?S.inQ.length+" trucks waiting":"road clear"]},
-    {p:[-21,2.8,-24],t:()=>["Receiving",f0(S.yard)+" t bales"]},
-    {p:[16,4.5,-18.5],t:()=>["Pulper",f1(S.rates.feed)+" t/h"]},
+    {area:1,p:[-70,0,-8],t:()=>["Inbound OCC",S.inQ.length?S.inQ.length+" trucks waiting":"road clear"]},
+    {area:1,p:[-21,2.8,-24],t:()=>["Receiving",f0(S.yard)+" t bales"]},
+    {area:1,p:[16,4.5,-18.5],t:()=>["Pulper",f1(S.rates.feed)+" t/h"]},
     {p:[25.8,7.2,-13.2],t:()=>["HD cleaner",S.M.pulperDown?"stopped":"pulling grit & staples"]},
     {p:[34.5,PH+5.0,-15],t:()=>["Disk thickener",S.M.pulperDown?"stopped":"cloudy · clear filtrate"]},
     {p:[11.2,5.4,ZL],t:()=>["Lightweight cleaners",S.inc.some(i=>i.id==="lwplug")?"plugged":"plastics & wax out"]},
     {p:[15.2,4.4,ZL],t:()=>["Coarse screen",S.inc.some(i=>i.id==="cscreen")?"down":"holed basket"]},
     {p:[19.2,5.0,ZL],t:()=>["Fine screens",S.inc.some(i=>i.id==="fscreen")?"down":"slotted baskets"]},
     {p:[26.6,3.9,ZL],t:()=>["LC cleaners",S.inc.some(i=>i.id==="lcplug")?"plugged":"sand & grit out"]},
-    {p:[41.2,9.4,-15],t:()=>["Stock chest",f0(S.tank/P.tankCap*100)+" %"]},
+    {area:1,p:[41.2,9.4,-15],t:()=>["Stock chest",f0(S.tank/P.tankCap*100)+" %"]},
     {p:[58,5.6,zc],t:()=>{const D=G3.SLC;if(!D)return ["Headbox",""];const g=D.geo();return ["Headbox",G3.slcFix?"resetting the slice":"slice "+(12+3*D.v).toFixed(1)+" mm · wet line "+(g.lipX-g.wet).toFixed(1)+" m"];},cls:()=>!!G3.slcFix},
     {p:[47.6,11.6,-15.0],t:()=>["Machine chest","refined stock"]},
     {p:[49.8,3.6,-9.3],t:()=>["Fan pump",S.pm==="run"?"to the headbox":"idling"]},
     {p:[44,0.6,12.9],t:()=>["Base ply silo","white water under the wire"]},
     {p:[34.5,9.6,zc-1.5],t:()=>["Twin press",LV("shoe")?"shoe in 2nd press":"tandem bottom felt"]},
-    {p:[10,8.4,zc],t:()=>[NAME+(S.pm==="run"?"":" · "+({break:"sheet break "+({reel:"at the reel",dryer:"before the dryers",press:"before the presses"}[S.brkType]||"")+(working("brk")?": rethreading":": crew on the way"),down:"no stock",full:"warehouse full",spools:"winder backed up",incident:S.M.pmDown||"down"}[S.pm]||"")),f0(S.pmSpeed)+" fpm · "+f1(S.rates.prod)+" t/h"],cls:()=>S.pm==="run"?"":"bad"},
+    {area:1,p:[10,8.4,zc],t:()=>[NAME+(S.pm==="run"?"":" · "+({break:"sheet break "+({reel:"at the reel",dryer:"before the dryers",press:"before the presses"}[S.brkType]||"")+(working("brk")?": rethreading":": crew on the way"),down:"no stock",full:"warehouse full",spools:"winder backed up",incident:S.M.pmDown||"down"}[S.pm]||"")),f0(S.pmSpeed)+" fpm · "+f1(S.rates.prod)+" t/h"],cls:()=>S.pm==="run"?"":"bad"},
     {p:[-10,9.2,zc],t:()=>["Reel",f1(S.reel)+" / "+P.jumbo+" t"]},
-    {p:[-20,1.5,zc+4],t:()=>["Winder"+(S.wd==="hayout"?" · HAYOUT!":""),S.wd==="hayout"?"crew cleaning up":Math.max(0,reelsAtWinder()-1)+"/"+P.storeReels+" reels stored · "+f1(S.rates.cut)+" t/h"],cls:()=>S.wd==="hayout"},
-    {p:[-36.4,3.2,14.8],t:()=>["Roll warehouse",f0(S.fg)+" rolls"]},
+    {area:1,p:[-20,1.5,zc+4],t:()=>["Winder"+(S.wd==="hayout"?" · HAYOUT!":""),S.wd==="hayout"?"crew cleaning up":Math.max(0,reelsAtWinder()-1)+"/"+P.storeReels+" reels stored · "+f1(S.rates.cut)+" t/h"],cls:()=>S.wd==="hayout"},
+    {area:1,p:[-36.4,3.2,14.8],t:()=>["Roll warehouse",f0(S.fg)+" rolls"]},
   ];
   // v4.1: the run's bottleneck area says so on its label (red outline) until it keeps up with the machine
-  {const BNL={recv:"2 Receiving",pulper:"3 Pulper",screens:"Fine screens",winder:"6 Winder",ship:"7 Roll warehouse"};
+  {const BNL={recv:"Receiving",pulper:"Pulper",screens:"Fine screens",winder:"Winder",ship:"Roll warehouse"};
     LABELS.forEach(L=>{const t0=L.t,c0=L.cls,mine=()=>{const b=BNQ();return b&&BNL[b]&&L.tag===BNL[b]&&bnShort();};try{L.tag=Object.values(BNL).find(n=>t0()[0].startsWith(n))||null;}catch(e){L.tag=null;}
       if(!L.tag)return;L.t=()=>{const r=t0();return mine()?[r[0],"BOTTLENECK · "+r[1]]:r;};L.cls=()=>!!((c0&&c0())||mine());});}
   LABELS.forEach(L=>{L.lb=lblNew(false);L.v=new THREE.Vector3(...L.p);});
