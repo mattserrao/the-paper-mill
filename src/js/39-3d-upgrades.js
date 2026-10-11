@@ -10,7 +10,7 @@
   const annexes=[1,2].map(n=>upg("wh"+n,g=>{const z0=32.2+(n-1)*8,z1=z0+8;
     const f=new THREE.Mesh(new THREE.PlaneGeometry(25.2,8),M.slab);f.rotation.x=-Math.PI/2;f.position.set(-36.4,0.045,(z0+z1)/2);f.receiveShadow=true;g.add(f);
     ribWall(0.3,4.6,8,-49,2.3,(z0+z1)/2,g);ribWall(0.3,4.6,8,-23.8,2.3,(z0+z1)/2,g);ribWall(25.2,4.6,0.3,-36.4,2.3,z1,g);
-    const im=new THREE.InstancedMesh(rollGeo,ROLLM,36),m=new THREE.Matrix4();for(let k=0;k<36;k++){m.makeTranslation(-45+(k%12)*1.75,0.74,z0+1.5+Math.floor(k/12)*2.2);im.setMatrixAt(k,m);}im.castShadow=true;g.add(im);g.userData.rolls=im;}));
+    const im=new THREE.InstancedMesh(rollGeo,instMat(ROLLM),36),m=new THREE.Matrix4();for(let k=0;k<36;k++){m.makeTranslation(-45+(k%12)*1.75,0.74,z0+1.5+Math.floor(k/12)*2.2);im.setMatrixAt(k,m);}im.castShadow=true;g.add(im);g.userData.rolls=im;}));
   const walk=upg("safety",g=>{    [[-21.2,-2.6,26.4,0.5],[-36.4,14.4,25.2,0.5],[23,3.4,68,0.5],[23,15.6,68,0.5]].forEach(([x,z,w,d])=>box(w,0.03,d,M.warn,x,0.07,z,g,false));});
   // refiner upgrade: two large double-disc refiners in parallel off the chest-to-headbox stock line, each with its own motor
   const REF_MOTORS=[],REF_DOORS=[];   // v2.9.18: the twin refiners are standard equipment; the upgrade fits bigger motors

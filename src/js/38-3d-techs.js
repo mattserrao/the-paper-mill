@@ -26,7 +26,7 @@
     cylZ(0.3,0.16,M.ink,0.78,0.3,0,16,g);cylZ(0.3,0.16,M.ink,-0.55,0.3,-0.45,16,g);cylZ(0.3,0.16,M.ink,-0.55,0.3,0.45,16,g);
     box(0.04,1.4,0.04,M.ink,-0.82,1.5,0.25,g,false);const flag=new THREE.Mesh(new THREE.PlaneGeometry(0.42,0.26),new THREE.MeshBasicMaterial({color:lin(tok("fire")),side:THREE.DoubleSide}));flag.position.set(-0.6,2.08,0.25);g.add(flag);
     g.userData.trike=true;scene.add(g);return g;}
-  const MAINT_SPOT={refclash:[58.2,-11],steamjoint:[11.2,3.4],fogfan:[47.2,-5.4],shaft:[12,16.4],fabric:[53.5,14.6],felt:[40.5,14.6],overflow:[-5,-10.5],chestover:[29.5,-9.6],hdblow:[24.2,-9.4],boiler:[68.6,-10],thkblow:[41.6,-10.4],lwplug:[11.2,-20.3],cscreen:[15.2,-20.6],fscreen:[19.2,-20.4],lcplug:[26.6,-20.7],winderdown:[-14.6,14.6],fleet:[-6.3,-14],roof:[-21.6,24],lightning:[40,-8]};
+  const MAINT_SPOT={refclash:[58.2,-11],steamjoint:[11.2,3.4],fogfan:[47.2,-5.4],shaft:[12,16.4],fabric:[53.5,14.6],felt:[40.5,14.6],overflow:[-5,-10.5],chestover:[29.5,-9.6],hdblow:[24.2,-9.4],boiler:[68.6,-10],thkblow:[41.6,-10.4],lwplug:[11.2,-20.3],cscreen:[15.2,-20.6],fscreen:[19.2,-20.4],lcplug:[26.6,-20.7],winderdown:[-14.6,14.6],fleet:[-6.3,-14],roof:[-21.6,24],lightning:[40,-8],icedintake:[-30,-50]};
   function lane(p){return p[1]>2.4?"F":"C";}
   // v2.9.19: maintenance trikes path-find around buildings and equipment. A 0.5 m ground grid is built once from every
   // static mesh that reaches into the 0.25-1.9 m band (walls, tanks, skids, pumps, trees, posts), grown by 0.75 m for the
@@ -44,6 +44,9 @@
       const i0=Math.max(0,Math.floor((bb.min.x-INF-G.x0)/G.cs)),i1=Math.min(G.nx-1,Math.floor((bb.max.x+INF-G.x0)/G.cs)),
         j0=Math.max(0,Math.floor((bb.min.z-INF-G.z0)/G.cs)),j1=Math.min(G.nz-1,Math.floor((bb.max.z+INF-G.z0)/G.cs));
       for(let j=j0;j<=j1;j++)for(let i=i0;i<=i1;i++)g[j*G.nx+i]=1;});
+    // v4.1: scenery trunks and posts inside the yard (merged into one mesh, so not seen above)
+    (G3.navBoxes||[]).forEach(([x0,x1,z0,z1])=>{const i0=Math.max(0,Math.floor((x0-INF-G.x0)/G.cs)),i1=Math.min(G.nx-1,Math.floor((x1+INF-G.x0)/G.cs)),
+      j0=Math.max(0,Math.floor((z0-INF-G.z0)/G.cs)),j1=Math.min(G.nz-1,Math.floor((z1+INF-G.z0)/G.cs));for(let j=j0;j<=j1;j++)for(let i=i0;i<=i1;i++)g[j*G.nx+i]=1;});
     G.g=g;}
   const navC=(G,p)=>[clamp(Math.floor((p[0]-G.x0)/G.cs),0,G.nx-1),clamp(Math.floor((p[1]-G.z0)/G.cs),0,G.nz-1)];
   const navFree=(G,i,j)=>i>=0&&j>=0&&i<G.nx&&j<G.nz&&!G.g[j*G.nx+i];
@@ -107,7 +110,7 @@
     if(lf!==lt)pts.push(...(lf==="C"?[[67,-0.6],[67,17.6]]:[[67,17.6],[67,-0.6]]));
     pts.push(lt==="F"?[to[0],17.6]:[Math.max(to[0],-5.5),-0.6]);pts.push(to);return pts;}
   const techs=[];
-  function ensureTechs(){while(techs.length<Math.min(8,P.techs)){const k=techs.length,s=SLOTS[k],w=worker(techM,M.panelWhite||(M.panelWhite=mat("panel"))),t=trike();
+  function ensureTechs(){while(techs.length<Math.min(8,P.techs)){const k=techs.length,s=SLOTS[k],w=worker(techM,M.hatBlue,{vest:HIVIS.yellow,radio:true}),t=trike();
       t.position.set(s[0],0,s[1]);t.rotation.y=Math.PI/2;const b=BENCH[k];w.position.set(b.p[0],0,b.p[1]);techs.push({w,t,k,slot:s,bench:b,state:"home",path:null,inc:null,onSite:0,walk:null});}}
   function walkTo(T,pts,speed,rdt,now){while(T.walk&&T.walk.length){if(moveP(T.w,T.walk[0][0],T.walk[0][1],speed,rdt))T.walk.shift();else{pose(T.w,"run",now);return false;}}return true;}
   function drive(T,rdt){const p=T.path[0],dx=p[0]-T.t.position.x,dz=p[1]-T.t.position.z,d=Math.hypot(dx,dz),s=Math.min(d,22*rdt);

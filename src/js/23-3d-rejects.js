@@ -83,7 +83,7 @@
     o.quaternion.setFromUnitVectors(new THREE.Vector3(1,0,0),cDir.clone().normalize());o.castShadow=true;scene.add(o);
     [0.25,0.55,0.85].forEach(f=>{const p=cA.clone().lerp(cB,f);box(0.3,p.y,0.3,M.steel,p.x,p.y/2,p.z-0.6);box(0.3,p.y,0.3,M.steel,p.x,p.y/2,p.z+0.6);});}
   const beltBales=graded(new THREE.BoxGeometry(1.15,0.85,1.15),24);
-  const baleWires=new THREE.InstancedMesh(new THREE.BoxGeometry(0.04,0.88,1.18),M.ink,72);scene.add(baleWires);
+  const baleWires=new THREE.InstancedMesh(new THREE.BoxGeometry(0.04,0.88,1.18),instMat(M.ink),72);scene.add(baleWires);
   const PATH=[[WF0+0.7,0.95,WFZ],[CUTX,0.95,WFZ],[cA.x,cA.y+0.55,cA.z],[cB.x,cB.y+0.55,cB.z]],PLEN=[0];for(let i=1;i<PATH.length;i++)PLEN.push(PLEN[i-1]+Math.hypot(PATH[i][0]-PATH[i-1][0],PATH[i][1]-PATH[i-1][1],PATH[i][2]-PATH[i-1][2]));
   function pathAt(d,out){for(let i=1;i<PATH.length;i++)if(d<=PLEN[i]){const f=(d-PLEN[i-1])/(PLEN[i]-PLEN[i-1]),a=PATH[i-1],b=PATH[i];out.set(a[0]+(b[0]-a[0])*f,a[1]+(b[1]-a[1])*f,a[2]+(b[2]-a[2])*f);return true;}return false;}
   let wfOff=0,chop=0,baleCyc=0;

@@ -17,7 +17,7 @@ function no3D(){G3.ok=false;$("no3d").hidden=false;$("no3d-retry").onclick=()=>l
     try{G3.scene&&G3.scene.traverse(o=>{const ms=o.material?(Array.isArray(o.material)?o.material:[o.material]):[];ms.forEach(m=>{m.needsUpdate=true;["map","alphaMap","emissiveMap"].forEach(k=>{if(m[k])m[k].needsUpdate=true;});});
       if(o.geometry&&o.geometry.attributes)for(const k in o.geometry.attributes)o.geometry.attributes[k].needsUpdate=true;if(o.geometry&&o.geometry.index)o.geometry.index.needsUpdate=true;});
       if(G3.renderer)G3.renderer.shadowMap.needsUpdate=true;}catch(e){}},false);
-  try{renderer=new THREE.WebGLRenderer({canvas:glc,antialias:!matchMedia("(pointer: coarse)").matches,powerPreference:"high-performance"});}
+  try{renderer=new THREE.WebGLRenderer({canvas:glc,antialias:!matchMedia("(pointer: coarse)").matches&&(window.devicePixelRatio||1)<1.5,powerPreference:"high-performance"});}   // (v15: no MSAA on high-DPI screens, where the extra pixels already smooth edges)
   catch(e){no3D();return;}
   if(!renderer.getContext()){no3D();return;}
   // r150+ reads every shader's error log on first draw, which forces the GPU to finish compiling right then:
@@ -26,16 +26,39 @@ function no3D(){G3.ok=false;$("no3d").hidden=false;$("no3d-retry").onclick=()=>l
   renderer.debug.checkShaderErrors=false;
   G3.ok=true;
   const mobile=matchMedia("(pointer: coarse)").matches;
-  renderer.setPixelRatio(Math.min(mobile?1.25:2,window.devicePixelRatio||1));
-  // the shadow pass redraws every shadow-casting object, so refresh it 15x a second instead of every frame (v2.8.4: desktop too)
-  renderer.shadowMap.autoUpdate=false;G3.shadowHz=15;
+  /* v4.1 graphics tiers. Auto picks from the device (phones: Medium, or Low with little memory; desktops: High, or Ultra on a
+     discrete GPU); the player can pin one in Controls. Pixel ratio, shadow refresh, shadow map size, weather particles and
+     far-scenery shadows and the shadow softness change live; the lighting model and scenery density take effect on the next load. */
+  // v15: px is each tier's budget of rendered pixels (drawing buffer); the pixel ratio is lowered to stay within it
+  const GFX_TIERS={low:{pr:1,px:0.9e6,shadow:1024,soft:false,hz:10,scenery:0.5,wx:600,lambert:true,far:false},
+    medium:{pr:1.25,px:1.6e6,shadow:1024,soft:false,hz:15,scenery:0.85,wx:1000,lambert:true,far:false},
+    high:{pr:2,px:2.4e6,shadow:2048,soft:true,hz:24,scenery:1,wx:2000,lambert:false,far:false},
+    ultra:{pr:2,px:4.2e6,shadow:4096,soft:true,hz:60,scenery:1.4,wx:2600,lambert:false,far:true}};
+  const gpuName=(()=>{try{const gl=renderer.getContext(),x=gl.getExtension("WEBGL_debug_renderer_info");return x?gl.getParameter(x.UNMASKED_RENDERER_WEBGL):gl.getParameter(gl.RENDERER);}catch(e){return "";}})();
+  // (v15: Auto no longer picks Ultra; desktops get High, held to a smaller pixel budget and 1024 shadows unless the GPU is
+  // a known discrete one; Ultra is the player's choice)
+  const discrete=/NVIDIA|GeForce|RTX|Radeon RX|Radeon Pro|Arc\(TM\)/i.test(gpuName)&&(navigator.hardwareConcurrency||4)>=8;
+  const gfxAuto=mobile?((navigator.deviceMemory||4)<4?"low":"medium"):"high";
+  let gfxPick="auto";try{gfxPick=localStorage.getItem("paper-mill-gfx")||"auto";}catch(e){}
+  {const q=new URLSearchParams(location.search).get("gfx");if(q&&GFX_TIERS[q])gfxPick=q;}   // ?gfx=low|medium|high|ultra (tests)
+  if(!GFX_TIERS[gfxPick])gfxPick="auto";
+  const GFX=G3.GFX={...GFX_TIERS[gfxPick==="auto"?gfxAuto:gfxPick],tier:gfxPick==="auto"?gfxAuto:gfxPick,pick:gfxPick,auto:gfxAuto,gpu:String(gpuName).slice(0,60)};
+  GFX.loaded=GFX.tier;if(gfxPick==="auto"&&!mobile&&!discrete){GFX.px=1.9e6;GFX.shadow=1024;}
+  // the pixel ratio for a canvas of w x h CSS px: the tier's ratio, the screen's, and the pixel budget, whichever is lowest
+  G3.prFor=(w,h)=>G3.prFixed||Math.max(0.75,Math.min(GFX.pr,window.devicePixelRatio||1,Math.sqrt(GFX.px/Math.max(1,w*h))));
+  {const gl=renderer.getContext();G3.multiDraw=!!gl.getExtension("WEBGL_multi_draw");
+    diag(`multi-draw: ${G3.multiDraw?"yes (a batch is one draw)":"NO (three.js draws each batched object separately)"} · antialias ${gl.getContextAttributes().antialias?"on":"off"}`);}
+  diag(`graphics: ${GFX.tier}${gfxPick==="auto"?" (auto)":""} on ${GFX.gpu||"unknown GPU"}`);
+  renderer.setPixelRatio(G3.prFor(innerWidth,innerHeight));
+  // the shadow pass redraws every shadow-casting object, so refresh it a few times a second instead of every frame (v2.8.4: desktop too)
+  renderer.shadowMap.autoUpdate=false;G3.shadowHz=GFX.hz;
   // v2.8.4: round shapes get only as many sides as their size needs at this zoom (unit shapes that get scaled up keep 24)
   const segCap=(r,s)=>Math.max(3,Math.min(s,r===1?24:r<0.15?6:r<0.45?10:r<1.2?16:r<4?20:28));
   class CylG extends THREE.CylinderGeometry{constructor(rt=1,rb=1,h=1,rs=32,hs=1,oe=false,ts=0,tl=Math.PI*2){super(rt,rb,h,segCap(Math.max(rt,rb),rs),hs,oe,ts,tl);}}
   class SphG extends THREE.SphereGeometry{constructor(r=1,ws=32,hs=16,...a){super(r,Math.max(3,Math.min(ws,16)),Math.max(2,Math.min(hs,10)),...a);}}
   class RingG extends THREE.RingGeometry{constructor(a=0.5,b=1,ts=32,...x){super(a,b,Math.max(3,Math.min(ts,32)),...x);}}
   class CircG extends THREE.CircleGeometry{constructor(r=1,sg=32,...x){super(r,Math.max(3,Math.min(sg,32)),...x);}}
-  renderer.shadowMap.enabled=true;renderer.shadowMap.type=THREE.PCFShadowMap;
+  renderer.shadowMap.enabled=true;renderer.shadowMap.type=THREE.PCFShadowMap;   // (r186 dropped PCFSoft; the soft tiers widen the PCF kernel instead)
   renderer.outputColorSpace=THREE.SRGBColorSpace;renderer.toneMapping=THREE.ACESFilmicToneMapping;renderer.toneMappingExposure=1.12;
   const scene=new THREE.Scene();G3.scene=scene;G3.renderer=renderer;
   const camera=new THREE.PerspectiveCamera(18,16/9,2,1400);
@@ -43,9 +66,13 @@ function no3D(){G3.ok=false;$("no3d").hidden=false;$("no3d-retry").onclick=()=>l
   /* palette: every material is bound to a CSS token so theme switches recolor the scene */
   const MATS=[];
   // v2.9.0: phones get the much cheaper Lambert lighting model instead of physically based shading (same colours, flatter sheen)
-  function StdMat(o){if(!mobile)return new THREE.MeshStandardMaterial(o);const r=Object.assign({},o||{});delete r.roughness;delete r.metalness;delete r.flatShading;delete r.envMapIntensity;delete r.roughnessMap;delete r.metalnessMap;return new THREE.MeshLambertMaterial(r);}
+  function StdMat(o){if(!GFX.lambert)return new THREE.MeshStandardMaterial(o);const r=Object.assign({},o||{});delete r.roughness;delete r.metalness;delete r.flatShading;delete r.envMapIntensity;delete r.roughnessMap;delete r.metalnessMap;return new THREE.MeshLambertMaterial(r);}
   function tok(name){return getComputedStyle(document.documentElement).getPropertyValue("--"+name).trim()||"#888";}
   function mat(token,opts={}){const m=new StdMat(Object.assign({roughness:0.72,metalness:0.04,flatShading:false},opts));m.userData.token=token;MATS.push(m);return m;}
+  // v4.1 pass 3: an InstancedMesh gets its own copy of a shared material (palette token kept, so brand colours still reach it):
+  // three.js re-derives a material's shader parameters every time the same material switches between an instanced mesh and a
+  // plain one, which cost about 6 re-derivations (24 KB of garbage) per frame on the bales, rolls and ink trim
+  function instMat(m){if(Array.isArray(m))return m.map(instMat);const c=m.clone();c.userData=Object.assign({},m.userData);if(MATS.includes(m))MATS.push(c);return c;}
   let paletteKey="",skyHex="#b3bbcb";
   let palV=-1;
   function applyPalette(){if(palV===PAL_V)return;palV=PAL_V;   // only after rollMill or setPaper (see PAL_V)
@@ -63,18 +90,20 @@ function no3D(){G3.ok=false;$("no3d").hidden=false;$("no3d-retry").onclick=()=>l
   const LEG=Math.PI;
   const hemi=new THREE.HemisphereLight(0xffffff,0x888888,0.85*LEG);scene.add(hemi);
   const sun=new THREE.DirectionalLight(0xfff4e6,1.5*LEG);sun.position.set(-75,95,48);
-  sun.castShadow=true;const sz=1024;sun.shadow.mapSize.set(sz,sz);
-  Object.assign(sun.shadow.camera,{left:-90,right:90,top:60,bottom:-60,near:10,far:250});sun.shadow.bias=-0.0004;sun.shadow.radius=3;sun.shadow.normalBias=0.04;
+  sun.castShadow=true;const sz=GFX.shadow;sun.shadow.mapSize.set(sz,sz);
+  Object.assign(sun.shadow.camera,{left:-90,right:90,top:60,bottom:-60,near:10,far:250});sun.shadow.bias=-0.0004;sun.shadow.radius=GFX.soft?5:3;sun.shadow.normalBias=0.04;
   sun.target.position.set(-5,0,5);scene.add(sun,sun.target);
   let baseHemi=0.85,baseSun=0.9;
 
   /* helpers */
   const W=(x,y)=>[(x-600)/10,(y-330)/10];
-  const RB={};
+  // v4.1 pass 3: a rounded box is 316 triangles at High/Ultra; phones get a coarser bevel (140 on Medium, 92 on Low), which
+  // reads the same at phone size and takes a third off the static and moving batches
+  const RB={},RBQ=GFX.tier==="low"?[1,2]:GFX.lambert?[2,2]:[3,4];
   function rboxGeo(w,h,d){const k=w+"|"+h+"|"+d;if(RB[k])return RB[k];const r=Math.min(0.16,Math.min(w,h,d)*0.2),s=new THREE.Shape(),ww=w-2*r,dd=d-2*r,c=Math.min(r*0.6,ww/2,dd/2);
     s.moveTo(-ww/2+c,-dd/2);s.lineTo(ww/2-c,-dd/2);s.quadraticCurveTo(ww/2,-dd/2,ww/2,-dd/2+c);s.lineTo(ww/2,dd/2-c);s.quadraticCurveTo(ww/2,dd/2,ww/2-c,dd/2);
     s.lineTo(-ww/2+c,dd/2);s.quadraticCurveTo(-ww/2,dd/2,-ww/2,dd/2-c);s.lineTo(-ww/2,-dd/2+c);s.quadraticCurveTo(-ww/2,-dd/2,-ww/2+c,-dd/2);
-    const g=new THREE.ExtrudeGeometry(s,{depth:Math.max(0.001,h-2*r),bevelEnabled:true,bevelThickness:r,bevelSize:r,bevelSegments:3,curveSegments:4});
+    const g=new THREE.ExtrudeGeometry(s,{depth:Math.max(0.001,h-2*r),bevelEnabled:true,bevelThickness:r,bevelSize:r,bevelSegments:RBQ[0],curveSegments:RBQ[1]});
     g.rotateX(-Math.PI/2);g.translate(0,-(h-2*r)/2,0);g.computeVertexNormals();g.userData.shared=true;return RB[k]=g;}
   function box(w,h,d,m,x,y,z,parent=scene,shadow=true){const o=new THREE.Mesh(Math.min(w,h,d)>=0.45?rboxGeo(w,h,d):new THREE.BoxGeometry(w,h,d),m);o.position.set(x,y,z);o.castShadow=shadow;o.receiveShadow=true;parent.add(o);return o;}
   function cylZ(r,len,m,x,y,z,seg=24,parent=scene){const g=new CylG(r,r,len,seg);g.rotateX(Math.PI/2);const o=new THREE.Mesh(g,m);o.position.set(x,y,z);o.castShadow=true;o.receiveShadow=true;parent.add(o);return o;}
@@ -88,9 +117,10 @@ function no3D(){G3.ok=false;$("no3d").hidden=false;$("no3d-retry").onclick=()=>l
   const aoRMat=new THREE.MeshBasicMaterial({map:new THREE.CanvasTexture(aoRC),transparent:true,depthWrite:false,polygonOffset:true,polygonOffsetFactor:-1,polygonOffsetUnits:-1});
   // soft darkening on the ground along a wall base: side = which side of the line gets it
   function skirt(x0,z0,x1,z1,w=1.8,parent=scene){const len=Math.hypot(x1-x0,z1-z0),p=new THREE.Mesh(new THREE.PlaneGeometry(len,w),aoMat);p.rotation.x=-Math.PI/2;
-    const ang=Math.atan2(z1-z0,x1-x0);p.rotation.z=-ang;p.position.set((x0+x1)/2,0.035,(z0+z1)/2);parent.add(p);return p;}
+    const ang=Math.atan2(z1-z0,x1-x0);p.rotation.z=-ang;p.position.set((x0+x1)/2,0.035,(z0+z1)/2);p.userData.aoDecal=true;parent.add(p);return p;}
   function box2(x0,x1,z0,z1,w=1.8){skirt(x0,z0-w/2,x1,z0-w/2,w);skirt(x0,z1+w/2,x1,z1+w/2,w);skirt(x0-w/2,z0,x0-w/2,z1,w);skirt(x1+w/2,z0,x1+w/2,z1,w);}
-  function blob(x,z,r){const p=new THREE.Mesh(new THREE.PlaneGeometry(r*2,r*2),aoRMat);p.rotation.x=-Math.PI/2;p.position.set(x,0.04,z);scene.add(p);return p;}
+  function blob(x,z,r){const p=new THREE.Mesh(new THREE.PlaneGeometry(r*2,r*2),aoRMat);p.rotation.x=-Math.PI/2;p.position.set(x,0.04,z);p.userData.aoDecal=true;scene.add(p);return p;}
+  // (aoDecal: the static merge bakes these ground shadings into one mesh per material; as transparent planes they would be a draw each)
   function slab(x0,x1,z0,z1,m,y=0.02){const pg=new THREE.PlaneGeometry(x1-x0,z1-z0);if(m&&m.map){const uv=pg.attributes.uv;for(let i=0;i<uv.count;i++)uv.setXY(i,uv.getX(i)*(x1-x0)/8,uv.getY(i)*(z1-z0)/8);}
     const o=new THREE.Mesh(pg,m);o.rotation.x=-Math.PI/2;o.position.set((x0+x1)/2,y,(z0+z1)/2);o.receiveShadow=true;scene.add(o);if(x1-x0<300)edges(o,edgeSoft,1);return o;}
   // end-suction centrifugal pump on a skid: volute, bearing frame, coupling guard, motor
@@ -115,6 +145,13 @@ function no3D(){G3.ok=false;$("no3d").hidden=false;$("no3d-retry").onclick=()=>l
   M.liquid=mat("pulp",{roughness:0.75});M.pulp=mat("pulp",{roughness:0.3});M.efork=mat("stock");
   M.steel=mat("g-frame",{metalness:0.25,roughness:0.55});M.brand=mat("brand",{roughness:0.55});M.fork=mat("g-fork",{roughness:0.5});M.wind=mat("g-glass",{roughness:0.2,metalness:0.3});
   M.robot=mat("brand",{roughness:0.4});
+  // v4.1 pass 3: people. Skin, role hats (yellow operators, blue maintenance, white managers, green visitors) and hi-vis vests
+  M.skin=mat("g-skin");M.hatBlue=M.stock;M.hatGreen=M.ok;   // (shared materials: no new batch looks)
+  // (the orange keeps mat()'s roughness and metalness: a moving batch's look leaves out colour, so the vests share a batch)
+  const HIVIS={orange:new StdMat({color:lin0("#ff7a1a"),roughness:0.72,metalness:0.04}),yellow:M.warn,band:M.metal};
+  // one shared amber beacon material and the driver's head/hat shapes: a new material per vehicle would mean a new moving batch each
+  M.beacon=new THREE.MeshBasicMaterial({color:lin0("#ff8a1f")});const DRV_HEAD=new SphG(1,8,6),DRV_HAT=new SphG(1,8,4,0,Math.PI*2,0,Math.PI/2);
+  const HAT_DOME=new SphG(1,12,5,0,Math.PI*2,0,Math.PI/2),HAT_BRIM=new CylG(1,1,1,16);   // workers' hard hats (33)
   // v3.2.1 textures: drawn once into small canvases and shared, so no extra draw calls or per-frame work
   const texC=(w,h,draw,rep2)=>{const c=document.createElement("canvas");c.width=w;c.height=h;draw(c.getContext("2d"),w,h);const t=new THREE.CanvasTexture(c);t.colorSpace=THREE.SRGBColorSpace;
     if(rep2){t.wrapS=t.wrapT=THREE.RepeatWrapping;}t.anisotropy=4;return t;};
@@ -128,6 +165,39 @@ function no3D(){G3.ok=false;$("no3d").hidden=false;$("no3d-retry").onclick=()=>l
     ring(70,190,13,"rgba(60,55,50,A)");ring(200,60,9,"rgba(60,55,50,A)");ring(172,214,7,"rgba(150,90,40,A)");ring(40,52,5,"rgba(60,55,50,A)");
     x.strokeStyle="rgba(90,88,84,0.12)";x.lineWidth=1;for(let k=0;k<3;k++){x.beginPath();let px=rnd(0,W),py=rnd(0,W);x.moveTo(px,py);for(let s2=0;s2<6;s2++){px+=rnd(-14,14);py+=rnd(-14,14);x.lineTo(px,py);}x.stroke();}},true);
   M.slab.map=floorTex;M.slab.needsUpdate=true;
+  // v4.1 v20 surface wear: a second, coarser layer on the concrete (traffic lanes polished darker, tyre scuffs at the turns,
+  // a few big stains), drawn over the 8 m tile above; and asphalt gets its own 32 m wear tile: tyre tracks, oil drips at
+  // the stops, patched trenches, crack lines, sun-faded patches
+  {const c=floorTex.image,x=c.getContext("2d"),W=c.width;
+    for(let k=0;k<5;k++){x.strokeStyle=`rgba(70,68,64,${rnd(0.05,0.09)})`;x.lineWidth=rnd(2,4);x.beginPath();const cx=rnd(0,W),cy=rnd(0,W),r=rnd(30,80),a0=rnd(0,6.28);x.arc(cx,cy,r,a0,a0+rnd(0.8,1.8));x.stroke();}
+    for(let k=0;k<4;k++){const g=x.createRadialGradient(0,0,0,0,0,1),cx=rnd(0,W),cy=rnd(0,W),r=rnd(10,26);const g2=x.createRadialGradient(cx,cy,0,cx,cy,r);g2.addColorStop(0,"rgba(70,62,52,0.13)");g2.addColorStop(1,"rgba(70,62,52,0)");x.fillStyle=g2;x.fillRect(0,0,W,W);void g;}
+    floorTex.needsUpdate=true;}
+  const asphTex=texC(512,512,(x,W)=>{x.fillStyle="#f4f4f2";x.fillRect(0,0,W,W);
+    for(let k=0;k<30;k++){const cx=rnd(0,W),cy=rnd(0,W),r=rnd(30,120),g=x.createRadialGradient(cx,cy,0,cx,cy,r),l=Math.random()<0.5;g.addColorStop(0,l?"rgba(255,255,250,0.14)":"rgba(40,40,44,0.13)");g.addColorStop(1,"rgba(128,128,128,0)");x.fillStyle=g;x.fillRect(0,0,W,W);}
+    for(let k=0;k<9000;k++){const v=Math.random()<0.5?rnd(150,200):rnd(235,255);x.fillStyle=`rgba(${v},${v},${v},${rnd(0.15,0.4)})`;x.fillRect(rnd(0,W),rnd(0,W),1.2,1.2);}
+    // tyre tracks: two worn bands along the lane, darker with rubber
+    [W*0.3,W*0.7].forEach(y0=>{for(const o of [-14,14]){const g=x.createLinearGradient(0,y0+o-9,0,y0+o+9);g.addColorStop(0,"rgba(30,30,32,0)");g.addColorStop(0.5,"rgba(30,30,32,0.17)");g.addColorStop(1,"rgba(30,30,32,0)");x.fillStyle=g;x.fillRect(0,y0+o-9,W,18);}});
+    // oil drips, patched trench, cracks
+    for(let k=0;k<10;k++){const cx=rnd(0,W),cy=rnd(0,W),r=rnd(4,14),g=x.createRadialGradient(cx,cy,0,cx,cy,r);g.addColorStop(0,"rgba(20,18,16,0.22)");g.addColorStop(1,"rgba(20,18,16,0)");x.fillStyle=g;x.fillRect(cx-r,cy-r,2*r,2*r);}
+    x.fillStyle="rgba(30,30,34,0.10)";x.fillRect(rnd(0,W*0.6),rnd(0,W),rnd(90,200),rnd(14,24));x.fillRect(rnd(0,W),0,rnd(10,18),W);
+    x.strokeStyle="rgba(25,25,28,0.22)";x.lineWidth=1.1;for(let k=0;k<9;k++){x.beginPath();let px=rnd(0,W),py=rnd(0,W);x.moveTo(px,py);for(let s2=0;s2<9;s2++){px+=rnd(-16,16);py+=rnd(-16,16);x.lineTo(px,py);}x.stroke();}},true);
+  asphTex.repeat.set(0.25,0.25);M.asphalt.map=asphTex;M.asphalt.needsUpdate=true;
+  // v20 roofs: galvanised steel sheet (not the brand colour): standing seams, a faded, dirt-streaked surface, rust runs
+  // from the fixings and the odd replaced (brighter) panel; one 12 m tile
+  const roofTex=texC(512,512,(x,W)=>{for(let i=0;i<W;i+=16){const v=Math.round(rnd(148,168));x.fillStyle=`rgb(${v},${v+4},${v+9})`;x.fillRect(i,0,16,W);x.fillStyle="rgba(255,255,255,0.18)";x.fillRect(i,0,2,W);x.fillStyle="rgba(0,0,0,0.12)";x.fillRect(i+14,0,2,W);}
+    for(let k=0;k<3;k++){const i=Math.floor(rnd(0,W/16))*16;x.fillStyle="rgba(235,240,245,0.35)";x.fillRect(i+2,0,12,W);}
+    for(let k=0;k<26;k++){const cx=rnd(0,W),cy=rnd(0,W),r=rnd(30,110),g=x.createRadialGradient(cx,cy,0,cx,cy,r);g.addColorStop(0,`rgba(70,64,52,${rnd(0.08,0.18)})`);g.addColorStop(1,"rgba(70,64,52,0)");x.fillStyle=g;x.fillRect(0,0,W,W);}
+    for(let k=0;k<40;k++){const px=Math.floor(rnd(0,W/16))*16+rnd(3,13),py=rnd(0,W),L=rnd(20,90),g=x.createLinearGradient(px,py,px,py+L);g.addColorStop(0,"rgba(140,70,30,0.35)");g.addColorStop(1,"rgba(140,70,30,0)");x.fillStyle=g;x.fillRect(px-1.5,py,3,L);}
+    for(let k=0;k<3000;k++){x.fillStyle=`rgba(40,40,40,${rnd(0.03,0.1)})`;x.fillRect(rnd(0,W),rnd(0,W),1.5,1.5);}},true);
+  roofTex.repeat.set(1/12,1/12);G3.roofTex=roofTex;
+  // v20: flat roofs on the small buildings (gatehouse, scale house, intake, power house, office, booths): a grey membrane
+  // with ponding stains and patched seams, instead of the trim colour
+  const flatTex=texC(256,256,(x,W)=>{x.fillStyle="#8d9196";x.fillRect(0,0,W,W);for(let k=0;k<2500;k++){const v=rnd(110,175);x.fillStyle=`rgba(${v},${v},${v+4},0.5)`;x.fillRect(rnd(0,W),rnd(0,W),1.5,1.5);}
+    for(let k=0;k<9;k++){const cx=rnd(0,W),cy=rnd(0,W),r=rnd(18,60),g=x.createRadialGradient(cx,cy,0,cx,cy,r);g.addColorStop(0,"rgba(60,58,52,0.25)");g.addColorStop(1,"rgba(60,58,52,0)");x.fillStyle=g;x.fillRect(0,0,W,W);}
+    x.strokeStyle="rgba(50,50,52,0.35)";x.lineWidth=2;for(let k=1;k<4;k++){x.beginPath();x.moveTo(0,k*W/4+rnd(-4,4));x.lineTo(W,k*W/4+rnd(-4,4));x.stroke();}
+    x.fillStyle="rgba(40,40,42,0.25)";x.fillRect(rnd(20,120),rnd(20,120),rnd(40,90),rnd(30,60));},false);
+  M.roofFlat=new StdMat({map:flatTex,roughness:0.9});M.roofFlat.color.set(0xffffff);
+  G3.roofMat=()=>{const m=new StdMat({map:roofTex,transparent:true,roughness:0.62,metalness:0.3,side:THREE.DoubleSide});m.color.set(0xffffff);return m;};
   // 7: dryer cans: brushed / polished steel with circumferential machining marks and a couple of doctor-blade scuffs
   // left half: the shell (machining marks around the can); top-right square: the can head with a bolted rectangular manway
   const canTex=texC(256,256,(x,W,H)=>{const SW=124;for(let y=0;y<H;y++){const v=Math.round(rnd(200,250));x.fillStyle=`rgb(${v},${v},${v+3})`;x.fillRect(0,y,SW,1);}
@@ -177,8 +247,12 @@ function no3D(){G3.ok=false;$("no3d").hidden=false;$("no3d-retry").onclick=()=>l
   // ribbed cladding for building walls
   const ribC=document.createElement("canvas");ribC.width=32;ribC.height=4;{const x=ribC.getContext("2d");x.fillStyle="#ffffff";x.fillRect(0,0,32,4);x.fillStyle="#e3e6ee";x.fillRect(0,0,4,4);x.fillStyle="#f1f3f8";x.fillRect(4,0,3,4);x.fillStyle="#d7dbe6";x.fillRect(28,0,4,4);}
   const ribTex=new THREE.CanvasTexture(ribC);ribTex.wrapS=ribTex.wrapT=THREE.RepeatWrapping;ribTex.colorSpace=THREE.SRGBColorSpace;
-  function ribWall(w,hh,d,x,y,z,parent=scene){const len=Math.max(w,d),t=ribTex.clone();t.needsUpdate=true;t.repeat.set(len/0.55,1);
-    const m=mat("g-wall",{map:t,roughness:0.8});const o=new THREE.Mesh(new THREE.BoxGeometry(w,hh,d),m);o.position.set(x,y,z);o.castShadow=true;o.receiveShadow=true;parent.add(o);edges(o);
+  // v4.1 pass 3: one shared material; the rib pitch comes from each wall's own uvs (per face, along its length) instead of a
+  // texture clone with its own repeat, so the 22 walls batch into one draw instead of 22
+  const ribM=mat("g-wall",{map:ribTex,roughness:0.8});
+  function ribWall(w,hh,d,x,y,z,parent=scene){const g=new THREE.BoxGeometry(w,hh,d),uv=g.attributes.uv;
+    for(let i=0;i<uv.count;i++)uv.setX(i,uv.getX(i)*((i<8?d:w)/0.55));   // faces 0-1 run along z, the rest along x
+    const o=new THREE.Mesh(g,ribM);o.position.set(x,y,z);o.castShadow=true;o.receiveShadow=true;parent.add(o);edges(o);
     const trim=new THREE.Mesh(new THREE.BoxGeometry(w+0.06,0.32,d+0.06),M.brand);trim.position.set(x,y+hh/2-0.13,z);/* cap sits 3 cm proud of the wall so their tops never share a plane */parent.add(trim);edges(trim);return o;}
   // strapped OCC bales and paper roll end-caps
   const baleC=document.createElement("canvas");baleC.width=64;baleC.height=64;{const x=baleC.getContext("2d");x.fillStyle="#b07a43";x.fillRect(0,0,64,64);
@@ -204,7 +278,7 @@ function no3D(){G3.ok=false;$("no3d").hidden=false;$("no3d-retry").onclick=()=>l
     const t=new THREE.CanvasTexture(c);t.colorSpace=THREE.SRGBColorSpace;return t;}
   M.baleG=[0,1,2].map(g=>mat("panel",{map:g?gradeTex(g):(()=>{const t=gradeTex(0);return t;})(),roughness:0.95}));
   // three instanced meshes, one per grade, filled each frame through put(); counts follow automatically
-  function graded(geo,n,opts={}){const ms=M.baleG.map(m=>{const o=new THREE.InstancedMesh(geo,m,n);o.castShadow=true;if(opts.recv)o.receiveShadow=true;o.count=0;scene.add(o);return o;});
+  function graded(geo,n,opts={}){const ms=M.baleG.map(m=>{const o=new THREE.InstancedMesh(geo,instMat(m),n);o.castShadow=true;if(opts.recv)o.receiveShadow=true;o.count=0;scene.add(o);return o;});
     const k=[0,0,0];return {reset(){k[0]=k[1]=k[2]=0;},put(g,m4){if(k[g]<n)ms[g].setMatrixAt(k[g]++,m4);},done(){ms.forEach((o,i)=>{o.count=k[i];o.instanceMatrix.needsUpdate=true;});}};}
   const hsh2=n=>{const x=Math.sin(n*91.7+3.1)*43758.5453;return x-Math.floor(x);};
   // grade mix: mostly A and B; junk OCC deliveries swing it heavily toward C

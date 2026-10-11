@@ -1,10 +1,11 @@
   /* ---- v3.2.1 janitorial: trash cans fill through the day, a night janitor empties them and mops; ride-on scrubbers work the hall and the warehouse at night (visual only) ---- */
   {const NIGHT=hr=>hr>=20.5||hr<5.5;
-    // trash cans (instanced: bodies, contents, overflow litter)
+    // trash cans (instanced: bodies, contents, overflow litter); v20: the contents sit inside the tapered body (they were
+    // wider than its base and showed through as a pale band round the bottom of every can)
     const CANS=[[59.7,13.6],[27.7,13.6],[-3.3,13.6],[51.4,23.6],[64.0,21.2],[30.6,41.4],[35.4,41.4],[-12.6,15.6]].map(([x,z],i)=>({x,z,f:0.15+Math.random()*0.4,r:0.055+Math.random()*0.05,seed:i*7.3}));
     const NB=CANS.length,LIT=10;
-    const bodyI=new THREE.InstancedMesh(new CylG(0.32,0.28,0.95,14),cloth0b("#3f6e57"),NB),rimI=new THREE.InstancedMesh(new CylG(0.34,0.34,0.07,14),M.ink,NB),
-      fillI=new THREE.InstancedMesh(new CylG(0.29,0.29,1,10),cloth0b("#d9cbb0"),NB),litI=new THREE.InstancedMesh(new THREE.BoxGeometry(0.24,0.04,0.18),new StdMat({roughness:0.9}),NB*LIT);
+    const bodyI=new THREE.InstancedMesh(new CylG(0.32,0.28,0.95,14),cloth0b("#3f6e57"),NB),rimI=new THREE.InstancedMesh(new CylG(0.34,0.34,0.07,14),instMat(M.ink),NB),
+      fillI=new THREE.InstancedMesh(new CylG(0.26,0.245,1,10),cloth0b("#d9cbb0"),NB),litI=new THREE.InstancedMesh(new THREE.BoxGeometry(0.24,0.04,0.18),new StdMat({roughness:0.9}),NB*LIT);
     const m4=new THREE.Matrix4(),q=new THREE.Quaternion(),sc=new THREE.Vector3(),ps=new THREE.Vector3(),col=new THREE.Color(),LC=["#f2f0ea","#c9a46e","#d23b3b","#3a6fc9","#f2c230","#e9e6df"];
     CANS.forEach((c,i)=>{m4.makeTranslation(c.x,0.475,c.z);bodyI.setMatrixAt(i,m4);m4.makeTranslation(c.x,0.97,c.z);rimI.setMatrixAt(i,m4);
       for(let k=0;k<LIT;k++){litI.setColorAt(i*LIT+k,col.set(LC[(i+k)%LC.length]).convertSRGBToLinear());}});

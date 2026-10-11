@@ -62,9 +62,14 @@ const HAYLINES=["HAYOUT! Paper is shooting to the roof!","Winder hayout! Every P
 // a hayout ruins the outer wraps of the set on the winder (about 3 t), not the whole 12.5 t roll
 // v2.9.5: reels at the winder (on the unwind + in storage); a reel turns up a fraction over 100 t, which used to make the
 // unwind reel count as "more than one" and block storage, so the machine stopped with storage empty
+function lotPut(L,g,q){if(!(q>0))return;const t=L[L.length-1];if(t&&t[0]===g)t[1]+=q;else L.push([g,q]);}
+// take q from the front of lots L (into lots `out` if given); returns what was taken
+function lotTake(L,q,out){let got=0;while(q>1e-9&&L.length){const h=L[0],k=Math.min(h[1],q);h[1]-=k;q-=k;got+=k;if(out)lotPut(out,h[0],k);if(h[1]<=1e-9)L.shift();}return got;}
+// the value of lots of rolls at today's price for each grade
+const lotValue=(L,tPerRoll,add=0)=>L.reduce((s,[g,q])=>s+q*tPerRoll*(priceOf(g)+add),0);
 function reelsAtWinder(){return Math.max(0,Math.ceil(S.winderBuf/P.jumbo-0.005));}
 function hayout(a=rand("upx"),b=rand("upx")){AUDIO.sfx("hayout",600);S.wd="hayout";S.hayLeft=40+a*40;S.hayTotal=S.hayLeft;enqueue("hay");
-  const extra=Math.min(S.winderBuf,2+b*4),wraps=Math.min(S.winderAcc,P.jumbo/32),loss=extra+wraps;S.winderBuf-=extra;S.winderAcc-=wraps;S.tot.broke+=loss;S.tot.hayouts++;
+  const extra=Math.min(S.winderBuf,2+b*4),wraps=Math.min(S.winderAcc,P.jumbo/32),loss=extra+wraps;S.winderBuf-=extra;S.winderAcc-=wraps;lotTake(S.lots.buf,extra);lotTake(S.lots.acc,wraps);S.tot.broke+=loss;S.tot.hayouts++;
   BANNERS.push({text:HAYLINES[Math.floor(Math.random()*HAYLINES.length)],t:null,id:"hay"});while(BANNERS.length>3)BANNERS.splice(1,1);
   log(`Winder hayout: ${loss.toFixed(1)} t of paper to broke`,"bad");}
 function initCtrl(){
@@ -78,6 +83,9 @@ function initState(){
      tot:{inTrucks:0,inTons:0,turned:0,prodT:0,rolls:0,shipped:0,outTrucks:0,breaks:0,breakMin:0,turnups:0,pot:0,incidents:0,hayouts:0,hayMin:0,broke:0},wd:"run",hayLeft:0,
      trend:[],trendAcc:0,rollsVis:[],conv:0,inc:[],lastInc:0,feed:[],M:baseMods(),effDrv:C.drivers.v,effLd:C.loaders.v,effHum:C.loaders.v};
   S.up={};S.cash=ECON.start;S.ledger={rev:0,occ:0,energy:0,labor:0,overhead:0,repairs:0,premium:0,upgrades:0,deals:0};
+  // v4.1 v16: paper keeps the grade it was made as all the way to the truck: each stage holds lots [grade, amount] in
+  // order (reel and winder stores in t, conveyor and warehouse in rolls) that move first-in first-out with the scalars
+  S.lots={reel:[[C.grade,S.reel]],buf:[],acc:[],conv:[],fg:[[C.grade,S.fg]]};
   S.q={made:0,off:0,bank:0};S.fx=[];S.perk={chem:0,sp:{},price:{},energy:0,winder:0};S.chg=null;
   seedRun((Math.random()*2**32)|0);S.profitRate=0;S.opb=null;S.over=null;S.won=false;S.shipT=0;
   Object.assign(P,BASE);applyUpgrades();
@@ -90,11 +98,11 @@ function initState(){
 // market-driven planner: a hidden production queue that walks the grade wheel and buys the OCC blend for it
 // v4: every source of luck has its own stream, drawn on a fixed schedule (see step), so all players in the same
 // season week face the same dice at the same sim time: upsets, sheet breaks, hayouts, weather, truck timing
-function seedRun(seed){S.seed=seed>>>0;const k=S.seed;S.rng={plan:k^0x9e3779b9,card:k^0x85ebca6b,up:k^0x27d4eb2f,upx:k^0x165667b1,
+function seedRun(seed){S.seed=seed>>>0;const k=S.seed;S.bn=bnFor(S.seed);S.rng={plan:k^0x9e3779b9,card:k^0x85ebca6b,up:k^0x27d4eb2f,upx:k^0x165667b1,
     brk:k^0xd3a2646c,brkx:k^0xfd7046c5,hay:k^0xb55a4f09,wx:k^0x7feb352d,flow:k^0x846ca68b};
   C.grade="23m";const c=GCOST["23m"];
   S.plan={i:0,q:[],cur:null,left:c.mix[0]+rand("plan")*(c.mix[1]-c.mix[0]),mkt:0,mktLeft:7*1440,disc:null,hot:null};
-  S.cards={next:1440*(1+0.5*rand("card")),open:null,pend:[],seen:{}};applyGrade();}
+  S.cards={next:1440*(1+0.5*rand("card")),open:null,pend:[],seen:{}};applyUpgrades();}
 function setGrade(to){const from=C.grade;if(to===from)return;
   const off=4+2*Math.abs(GRADES[to].bw-GRADES[from].bw);S.chg={left:off,total:off,from,to};C.grade=to;applyUpgrades();
   log(`Grade change ${from} → ${to} (market orders): about ${off.toFixed(0)} t to the beater during the transition`,"warn");}
@@ -119,7 +127,7 @@ function autoControl(dt){
   const pmWants = (S.pm==="full"||S.pm==="incident"||S.pm==="spools")?0:P.K*C.pmSp.v*g.bw/P.pmLoss;
   if(C.pulper.auto){
     const fiber=pmWants+(C.lvlTarget.v-level)/100*P.tankCap/1.5;
-    C.pulper.v=ease(C.pulper.v,clamp(fiber/P.yieldF,0,P.pulperMax),dt,4);
+    C.pulper.v=ease(C.pulper.v,clamp(fiber/P.yieldF,0,Math.min(P.pulperMax,P.screenMax/P.yieldF)),dt,4);
   }
   if(C.inRate.auto){
     const queuePenalty=S.inQ.length*0.015;

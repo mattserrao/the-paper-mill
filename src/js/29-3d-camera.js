@@ -5,6 +5,7 @@
   // on phones the tutorial card covers the lower half: aim past the spot so it sits in the upper half of the screen
   G3.camTo=(x,z,r,th,ph)=>{th=th??DEF.th;const k=host.clientWidth<600?r*0.13:0;goal={t:new THREE.Vector3(x+Math.sin(th)*k,0,z+Math.cos(th)*k),r,th,ph:ph??0.9};};
   G3.camHome=()=>{goal={t:DEFT.clone(),r:DEF.r,th:DEF.th,ph:DEF.ph};};
+  G3.camSet=c=>{goal=null;target.set(c[0],c[5]||0,c[1]);cam.r=c[2];cam.th=c[3];cam.ph=c[4];};   // tests and screenshots
   {const hm=new THREE.MeshBasicMaterial({color:lin0("#ffb020"),transparent:true,opacity:0.85,depthWrite:false,depthTest:false,side:THREE.DoubleSide,toneMapped:false});
    const ring=new THREE.Mesh(new RingG(0.86,1,64),hm);ring.rotation.x=-Math.PI/2;ring.renderOrder=20;ring.visible=false;scene.add(ring);
    const bm=new THREE.MeshBasicMaterial({color:lin0("#ffd27a"),transparent:true,opacity:0.18,depthWrite:false,side:THREE.DoubleSide,toneMapped:false});
@@ -16,7 +17,8 @@
   // move the look-at point across the ground, in screen directions
   function panBy(dx,dy){goal=null;folEnd();const s=cam.r*(host.clientWidth<600?1.35:1)*0.00098;
     const rx=Math.cos(cam.th),rz=-Math.sin(cam.th),fx=-Math.sin(cam.th),fz=-Math.cos(cam.th);
-    target.x=clamp(target.x-(rx*dx-fx*dy)*s,-85,70);target.z=clamp(target.z-(rz*dx-fz*dy)*s,-40,48);}
+    // (v14: zoomed out the pan reaches the whole site, so the outer scenery can be looked over)
+    const wk=clamp((cam.r-300)/300,0,1);target.x=clamp(target.x-(rx*dx-fx*dy)*s,-85-260*wk,70+260*wk);target.z=clamp(target.z-(rz*dx-fz*dy)*s,-40-200*wk,48+200*wk);}
   // v3.3.4: follow Uncle Brian on the hall scrubber; drag still orbits, wheel/pinch zoom in close, any pan or camera jump ends it
   const FOL={on:false,r:30,n:0};
   const folEnd=()=>{if(!FOL.on)return;FOL.on=false;G3.onFollowEnd&&G3.onFollowEnd();};
@@ -29,7 +31,14 @@
     if(goal){G3.lastMove=performance.now();target.lerp(goal.t,0.12);cam.r+=(goal.r-cam.r)*0.12;cam.th=lerpAng(cam.th,goal.th,0.12);cam.ph+=(goal.ph-cam.ph)*0.12;
       goal.n=(goal.n||0)+1;if(goal.n>150||target.distanceTo(goal.t)<0.2&&Math.abs(goal.r-cam.r)<0.5)goal=null;}
     const rr=cam.r*((G3.vw||host.clientWidth)<600?1.35:1);
-    camera.position.set(target.x+rr*Math.sin(cam.ph)*Math.sin(cam.th),target.y+rr*Math.cos(cam.ph),target.z+rr*Math.sin(cam.ph)*Math.cos(cam.th));camera.lookAt(target);}
+    camera.position.set(target.x+rr*Math.sin(cam.ph)*Math.sin(cam.th),target.y+rr*Math.cos(cam.ph),target.z+rr*Math.sin(cam.ph)*Math.cos(cam.th));
+    // v4.1: never inside scenery (tall city blocks, mesas, trees): stay 3 m above the tallest thing in this 8 m cell
+    if(G3.sceneryH){const h=G3.sceneryH(camera.position.x,camera.position.z);if(h>0&&camera.position.y<h+3)camera.position.y=h+3;}
+    camera.lookAt(target);
+    // v4.1 pass 5: the near plane follows the zoom. With it fixed at 2 m, a zoomed-out view (300-600 m away) had too little
+    // depth precision to separate the road quads and river layers (millimetres apart) from the ground, and they flickered.
+    // Nothing is ever closer to the camera than a small share of its distance to the target, so this costs no clipping.
+    {const n=Math.max(2,Math.min(30,camera.position.distanceTo(target)*0.06));if(Math.abs(n-camera.near)>camera.near*0.05){camera.near=n;camera.updateProjectionMatrix();}}}
   const ptrs=new Map();let pinch0=0,r0=0,mid0=null,panBtn=false;
   const mid=()=>{const [a,b]=[...ptrs.values()];return {x:(a.x+b.x)/2,y:(a.y+b.y)/2,d:Math.hypot(a.x-b.x,a.y-b.y)};};
   glc.addEventListener("contextmenu",e=>e.preventDefault());
@@ -39,7 +48,7 @@
   glc.addEventListener("pointermove",e=>{const p=ptrs.get(e.pointerId);if(!p)return;const dx=e.clientX-p.x,dy=e.clientY-p.y;
     if(ptrs.size===1){if(panBtn)panBy(dx,dy);else{cam.th-=dx*0.006;if(e.pointerType!=="touch")cam.ph=clamp(cam.ph-dy*0.005,0.25,1.35);}}
     p.x=e.clientX;p.y=e.clientY;
-    if(ptrs.size===2){const m=mid();if(pinch0>0){if(FOL.on)FOL.r=clamp(r0*pinch0/m.d,10,120);else cam.r=clamp(r0*pinch0/m.d,50,420);}if(mid0&&!FOL.on)panBy(m.x-mid0.x,m.y-mid0.y);mid0=m;}});
+    if(ptrs.size===2){const m=mid();if(pinch0>0){if(FOL.on)FOL.r=clamp(r0*pinch0/m.d,10,120);else cam.r=clamp(r0*pinch0/m.d,50,760);}if(mid0&&!FOL.on)panBy(m.x-mid0.x,m.y-mid0.y);mid0=m;}});
   const up=e=>{ptrs.delete(e.pointerId);pinch0=0;mid0=null;};glc.addEventListener("pointerup",up);glc.addEventListener("pointercancel",up);
   // easter egg: click the spider valve on the disk thickener
   {const rc=new THREE.Raycaster(),nd=new THREE.Vector2();if(rc.layers)rc.layers.enableAll();let downAt=null,hoverT=0;
@@ -48,11 +57,11 @@
     glc.addEventListener("pointerdown",e=>{downAt=[e.clientX,e.clientY,performance.now()];});
     glc.addEventListener("pointerup",e=>{if(!downAt)return;const m=Math.hypot(e.clientX-downAt[0],e.clientY-downAt[1]),t=performance.now()-downAt[2];downAt=null;if(m<6&&t<500){const li=G3.lblAt(e);if(li){G3.flyTo(li);return;}const h=hit(e);if(h==="spider")openSpider();else if(h==="slice")openSlice();else if(h==="brian")openBrian();}});
     glc.addEventListener("pointermove",e=>{const n=performance.now();if(n-hoverT<120||ptrs.size)return;hoverT=n;glc.style.cursor=G3.lblAt(e)||hit(e)?"pointer":"";});}
-  glc.addEventListener("wheel",e=>{e.preventDefault();goal=null;if(e.shiftKey||Math.abs(e.deltaX)>Math.abs(e.deltaY)&&!e.ctrlKey)panBy(-e.deltaX||-e.deltaY,0);else if(FOL.on)FOL.r=clamp(FOL.r*Math.exp(e.deltaY*(e.ctrlKey?0.01:0.001)),10,120);else cam.r=clamp(cam.r*Math.exp(e.deltaY*(e.ctrlKey?0.01:0.001)),50,420);},{passive:false});
+  glc.addEventListener("wheel",e=>{e.preventDefault();goal=null;if(e.shiftKey||Math.abs(e.deltaX)>Math.abs(e.deltaY)&&!e.ctrlKey)panBy(-e.deltaX||-e.deltaY,0);else if(FOL.on)FOL.r=clamp(FOL.r*Math.exp(e.deltaY*(e.ctrlKey?0.01:0.001)),10,120);else cam.r=clamp(cam.r*Math.exp(e.deltaY*(e.ctrlKey?0.01:0.001)),50,760);},{passive:false});
   // keyboard: arrows/WASD move, Q/E rotate, +/- zoom
   glc.addEventListener("keydown",e=>{const k=e.key.toLowerCase(),st=24;let used=true;
     if(k==="arrowleft"||k==="a")panBy(st,0);else if(k==="arrowright"||k==="d")panBy(-st,0);else if(k==="arrowup"||k==="w")panBy(0,st);else if(k==="arrowdown"||k==="s")panBy(0,-st);
-    else if(k==="q")cam.th+=0.08;else if(k==="e")cam.th-=0.08;else if(k==="+"||k==="=")cam.r=clamp(cam.r*0.9,50,420);else if(k==="-")cam.r=clamp(cam.r*1.1,50,420);else used=false;
+    else if(k==="q")cam.th+=0.08;else if(k==="e")cam.th-=0.08;else if(k==="+"||k==="=")cam.r=clamp(cam.r*0.9,50,760);else if(k==="-")cam.r=clamp(cam.r*1.1,50,760);else used=false;
     if(used){e.preventDefault();goal=null;}});
   // on-screen pad: press and hold to move
   let padDir=null;
@@ -60,7 +69,7 @@
     b.addEventListener("pointerdown",e=>{e.preventDefault();b.setPointerCapture(e.pointerId);padDir=[px,py];});
     ["pointerup","pointercancel","pointerleave"].forEach(t=>b.addEventListener(t,()=>padDir=null));});
   G3.padTick=rdt=>{if(padDir)panBy(-padDir[0]*500*rdt,-padDir[1]*500*rdt);};
-  const JUMPS={trucks:[-62,2,118],recv:[-21,-13,100],pulp:[24,-15,100],pm:[22,9,130],wd:[-17,7,72],wh:[-37,24,105],shop:[57,-21,48]};
+  const JUMPS={site:[0,30,700,0.62],trucks:[-62,2,118],recv:[-21,-13,100],pulp:[24,-15,100],pm:[22,9,130],wd:[-17,7,72],wh:[-37,24,105],shop:[57,-21,48]};
   // section labels: Auto fades them out after a few idle seconds, On keeps them, Off hides them
   let lblMode="auto";try{lblMode=localStorage.getItem("paper-mill-labels")||"auto";}catch(e){}
   G3.lastMove=performance.now();
@@ -74,12 +83,21 @@
   $("pad").addEventListener("pointerdown",poke);
   G3.labelIdle=now=>{if(!G3.lblStarted){G3.lblStarted=1;G3.lastMove=now+2500;}labelHost.classList.toggle("lbl-idle",lblMode==="auto"&&now-G3.lastMove>3500);};
   setLbl(lblMode);
-  document.querySelectorAll("#jumps button").forEach(b=>b.addEventListener("click",()=>{const [x,z,r]=JUMPS[b.dataset.j];goal={t:new THREE.Vector3(x,0,z),r,th:DEF.th,ph:0.88};}));
+  document.querySelectorAll("#jumps button").forEach(b=>b.addEventListener("click",()=>{const [x,z,r,ph]=JUMPS[b.dataset.j];goal={t:new THREE.Vector3(x,0,z),r,th:DEF.th,ph:ph||0.88};}));
   $("viewReset").addEventListener("click",()=>{goal={t:DEFT.clone(),r:DEF.r,th:DEF.th,ph:DEF.ph};});
   $("viewShadows").addEventListener("change",e=>{renderer.shadowMap.enabled=e.target.checked;renderer.shadowMap.needsUpdate=true;MATS.forEach(m=>m.needsUpdate=true);});
-  if(mobile){sun.shadow.mapSize.set(1024,1024);}
+  // v4.1: change graphics tier while playing (what can change live; see GFX_TIERS in 20-3d-setup.js)
+  G3.setGfx=pick=>{if(pick!=="auto"&&!GFX_TIERS[pick])return;const t=GFX_TIERS[pick==="auto"?GFX.auto:pick];GFX.pick=pick;GFX.tier=pick==="auto"?GFX.auto:pick;
+    try{localStorage.setItem("paper-mill-gfx",pick);}catch(e){}
+    GFX.pr=t.pr;GFX.px=t.px;G3.prFixed=0;resize();G3.shadowHz=t.hz;GFX.hz=t.hz;
+    if(sun.shadow.mapSize.x!==t.shadow){sun.shadow.mapSize.set(t.shadow,t.shadow);if(sun.shadow.map){sun.shadow.map.dispose();sun.shadow.map=null;}renderer.shadowMap.needsUpdate=true;}sun.shadow.radius=t.soft?5:3;
+    if(G3.wxRange)G3.wxRange(t.wx);if(G3.scenery){G3.scenery.farOff=false;G3.scenery.parts.forEach(p=>{p.visible=true;if(p.userData.scenery!=="near")p.castShadow=t.far;});}
+    // (v15: what needs a reload — lighting model, round-shape detail, scenery density — is offered as a button)
+    {const nb=$("gfxReload");if(nb)nb.hidden=GFX.tier===GFX.loaded;}
+    diag(`graphics: ${GFX.tier}${pick==="auto"?" (auto)":""}; lighting model and scenery density change on the next load`);
+    document.querySelectorAll("#gfxSeg button").forEach(b=>b.setAttribute("aria-pressed",String(b.dataset.g===pick)));};
 
   function resize(){G3.lastMove=performance.now();const w=host.clientWidth,h=host.clientHeight;G3.vw=w;G3.vh=h;   // v4.0.1: cached for the label code
-  host.classList.toggle("compact",w<640);if(!w||!h)return;renderer.setSize(w,h,false);camera.aspect=w/h;camera.updateProjectionMatrix();}
+  host.classList.toggle("compact",w<640);if(!w||!h)return;{const pr=G3.prFor(w,h);if(Math.abs(pr-renderer.getPixelRatio())>0.01)renderer.setPixelRatio(pr);}renderer.setSize(w,h,false);camera.aspect=w/h;camera.updateProjectionMatrix();}
   new ResizeObserver(resize).observe(host);
 

@@ -163,7 +163,7 @@
     if(yardBrk&&EP.brk&&!EP.brk.launched){EP.brk.launched=true;let k=0;
       const spots=[];lifts.forEach((g,i)=>{if(g.visible&&i<Math.floor(S.effDrv+1e-9))spots.push([g.position.x,g.position.z]);});
       loaders.forEach((g,i)=>{if(g.visible&&i<Math.floor(S.effHum+1e-9))spots.push([g.position.x,g.position.z]);});
-      spots.forEach(([x,z])=>{let h=helpers[k];if(!h){h=worker(M.warn,skin);helpers.push(h);}h.visible=true;h.position.set(x,0,z);h.userData.from=[x,z];h.userData.out=true;k++;});
+      spots.forEach(([x,z])=>{let h=helpers[k];if(!h){h=worker(M.stock,M.warn,{vest:HIVIS.orange});helpers.push(h);}h.visible=true;h.position.set(x,0,z);h.userData.from=[x,z];h.userData.out=true;k++;});
       for(;k<helpers.length;k++){helpers[k].visible=false;helpers[k].userData.out=false;}}
     let away=false;
     helpers.forEach((h,k)=>{if(!h.userData.out)return;away=true;

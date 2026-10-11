@@ -37,20 +37,25 @@ const EVENTS=[
    start:i=>{const n=1+Math.floor(rand("upx")*3);i.drvCap=Math.max(0,Math.round(C.drivers.v)-n);i.ldrCap=Math.max(1,Math.round(C.loaders.v)-1);i.note=`${n} drivers and 1 loader out`;}},
  {id:"fight",g:"yard",name:"Brawl at the dock",head:"Two truck drivers brawl over a dock door. Police close receiving.",dur:[120,240],mtbf:240,mods:{docksClosed:1},fx:"fight"},
  {id:"roof",g:"yard",name:"Warehouse roof leak",head:"Roof leak over the roll warehouse. Wet rolls culled.",dur:[240,480],mtbf:260,mods:{clampMul:0.6},fx:"roof",
-   start:i=>{const l=Math.round(S.fg*0.08);S.fg-=l;i.note=`${l} rolls scrapped`;}},
+   start:i=>{const l=Math.round(S.fg*0.08);S.fg-=l;lotTake(S.lots.fg,l);i.note=`${l} rolls scrapped`;}},
  {id:"highway",g:"yard",name:"Highway closed",head:"Jack-knifed tanker closes the highway. No trucks in or out.",dur:[360,600],mtbf:300,mods:{noIn:1,noOut:1},fx:"highway"},
  {id:"lightning",g:"god",name:"Lightning strike",head:"Lightning hits the substation. Mill-wide blackout!",dur:[60,180],mtbf:400,mods:{pmDown:"power outage",pulperDown:1,recvMul:0,clampMul:0},fx:"outage"},
  {id:"tornado",g:"god",name:"Tornado",head:"Tornado touches down on the mill site!",dur:[60,120],mtbf:600,fx:"tornado",
    start:i=>{const pool=EVENTS.filter(e=>e.g!=="god"&&!active(e.id));for(let k=0;k<2&&pool.length;k++){const e=pool.splice(Math.floor(rand("upx")*pool.length),1)[0];trigger(e.id,true);}
-     const l=Math.round(S.fg*0.05);S.fg-=l;i.note=`${l} rolls blown away`;}},
+     const l=Math.round(S.fg*0.05);S.fg-=l;lotTake(S.lots.fg,l);i.note=`${l} rolls blown away`;}},
  {id:"beaver",g:"god",name:"Giant beaver",head:"A giant beaver crawls out of the river and starts eating the bale yard!",dur:[120,240],mtbf:700,mods:{yardEat:120,recvMul:0.3},fx:"beaver"},
+ // v4.1 environment-specific upsets (env: only on that site; the dice are still drawn everywhere so the streams stay in step)
+ {id:"icedintake",g:"stock",env:"rural",name:"River intake iced over",head:"The river intake has iced over! Fresh water is short: stock prep throttles back until maintenance clears the ice.",dur:[120,240],mtbf:330,mods:{feedMul:0.6},fx:"icedintake"},
+ {id:"brownout",g:"machine",env:"urban",name:"Grid brownout",head:"Peak demand on the city grid: the utility cuts the mill back. Machine speed capped at 80% and the pulper throttled.",dur:[90,180],mtbf:300,mods:{speedCap:0.8,feedMul:0.85},fx:"brownout"},
+ {id:"duststorm",g:"yard",env:"desert",name:"Dust storm",head:"A wall of dust rolls over the mill! Trucks crawl, the clamp trucks slow down and the dust gets into the screens and the sheet.",dur:[60,150],mtbf:260,mods:{recvMul:0.6,clampMul:0.7,breakMul:1.5,speedCap:0.9},fx:"duststorm"},
+ {id:"flood",g:"yard",env:"swamp",name:"Bayou flood",head:"The bayou is over its banks! Water across the yard: forklifts and clamp trucks bog down and the trucks crawl.",dur:[180,360],mtbf:420,mods:{recvMul:0.5,clampMul:0.6},fx:"flood"},
 ];
 const EV=Object.fromEntries(EVENTS.map(e=>[e.id,e]));
 EVENTS.forEach(e=>CH.en[e.id]=true);
 const WXN={clear:"Clear",rain:"Rain",fog:"Fog",snow:"Snow"};
 function active(id){return S.inc.some(i=>i.id===id);}
 // machine and winder upsets go to the crew one at a time, in the order they happen; nothing gets fixed until a crew is there
-const QINC=id=>!!(EV[id]&&((EV[id].g==="machine"&&id!=="runner"&&id!=="birdhay"&&id!=="boiler"&&id!=="fogfan"&&id!=="steamjoint")||id==="ragger"));
+const QINC=id=>!!(EV[id]&&((EV[id].g==="machine"&&id!=="runner"&&id!=="birdhay"&&id!=="boiler"&&id!=="fogfan"&&id!=="steamjoint"&&id!=="brownout")||id==="ragger"));
 const RESP={ragger:6,wrap:4,hay:4,brk:2,dryerfire:3,shaft:8,fabric:6,felt:6,slime:5,winderdown:6};
 function enqueue(k){if(!S.crewQ)S.crewQ=[];if(S.crewQ.some(q=>q.k===k))return;S.crewQ.push({k,resp:RESP[k]||6,since:0,here:false,go:false});}
 function crewTick(dt){if(!S.crewQ)S.crewQ=[];
@@ -58,18 +63,22 @@ function crewTick(dt){if(!S.crewQ)S.crewQ=[];
   // v3.2.2: the paper machine comes first. Winder jobs (hayouts, winder down) wait behind any machine job, including the rethread,
   // and if a machine job turns up while the crew is at the winder they leave it and come back to the winder afterwards
   {const WIND=k=>k==="hay"||k==="winderdown",prev=S.crewQ[0];S.crewQ.sort((a,b)=>(WIND(a.k)?1:0)-(WIND(b.k)?1:0));
-   if(prev&&S.crewQ[0]!==prev&&WIND(prev.k)){prev.go=false;prev.here=false;prev.since=0;}}
-  const h=S.crewQ[0];if(!h)return;const now=performance.now();if(!h.since)h.since=now;
-  if(h.resp>0)h.resp-=dt;
-  // in the 3D view the job starts when the crew actually gets there (with a safety timeout)
-  if(!(G3.on&&G3.ok)||TURBO_FAST(C.simSpeed)||now-h.since>(h.k==="ragger"?25000:6000))h.here=true;
-  if(h.resp<=0&&h.here)h.go=true;}
-// maintenance: techs work in pairs, oldest job first; a job's repair clock only runs once its pair is on site
-const MJOBS=["refclash","steamjoint","fogfan","shaft","fabric","felt","winderdown","hdblow","lwplug","cscreen","fscreen","lcplug","boiler","thkblow","overflow","chestover","fleet","roof","lightning"];
+   if(prev&&S.crewQ[0]!==prev&&WIND(prev.k)){prev.go=false;prev.here=false;prev.since=0;prev.resp=RESP[prev.k]||6;}}   // (v16: and walk back later)
+  // v16: the job starts when the crew's travel time (sim minutes) has run out: no wall clock, no waiting on the 3D crew,
+  // so game speed and graphics can't change downtime (the 3D crew walks over meanwhile)
+  const h=S.crewQ[0];if(!h)return;if(h.resp>0)h.resp-=dt;if(h.resp<=0)h.go=h.here=true;}
+// maintenance: techs work in pairs; a job's repair clock only runs once its pair is on site (8 sim minutes after it is assigned)
+const MJOBS=["refclash","steamjoint","fogfan","shaft","fabric","felt","winderdown","hdblow","lwplug","cscreen","fscreen","lcplug","boiler","thkblow","overflow","chestover","fleet","roof","lightning","icedintake"];
 const MNEED=id=>MJOBS.includes(id);
-function maintTick(dt){const crews=Math.max(1,Math.floor(P.techs/2)),list=S.inc.filter(i=>MNEED(i.id)),now=performance.now();
-  list.forEach((i,k)=>{i.mSlot=k<crews?k:-1;i.mQ=k-crews+1;if(i.mSlot<0)return;if(!i.mSince){i.mSince=now;i.mResp=8;}
-    if(i.mResp>0)i.mResp-=dt;if(!(G3.on&&G3.ok)||TURBO_FAST(C.simSpeed)||now-i.mSince>9000)i.mHere=true;if(i.mResp<=0&&i.mHere)i.mGo=true;});}
+// v16: pairs go first to the job the PM crew is on (a job that needs both can only progress there), then to jobs that need
+// no crew, oldest first, and last to jobs still waiting for the crew. Before, a winder breakdown could hold the only pair
+// while the crew was at a machine job that also needed the pair: each waited on the other and production stopped for good.
+// A pair keeps a job it is working on, unless that job also needs the crew and the crew has been called away: then the
+// pair goes where it can work (the work already done stays done).
+function maintTick(dt){const crews=Math.max(1,Math.floor(P.techs/2)),head=S.crewQ&&S.crewQ[0]&&S.crewQ[0].k;
+  const rank=i=>QINC(i.id)?(i.id===head?(i.mGo?0:1):3):(i.mGo?0:2),list=S.inc.filter(i=>MNEED(i.id)).map((i,k)=>[i,k]).sort((a,b)=>rank(a[0])-rank(b[0])||a[1]-b[1]).map(a=>a[0]);
+  list.forEach((i,k)=>{i.mQ=k-crews+1;if(k>=crews){if(i.mSlot>=0){i.mSince=0;i.mHere=false;i.mGo=false;}i.mSlot=-1;return;}i.mSlot=k;if(!i.mSince){i.mSince=1;i.mResp=8;}
+    if(i.mResp>0)i.mResp-=dt;if(i.mResp<=0)i.mGo=i.mHere=true;});}
 function maintState(i){if(!MNEED(i.id))return "";if(i.mGo)return "maintenance working";if(i.mSlot>=0)return "maintenance on the way";return `waiting for maintenance (${i.mQ} ahead)`;}
 function incState(i){const a=QINC(i.id)&&!working(i.id)?crewState(i.id):"",b=MNEED(i.id)&&!i.mGo?maintState(i):"";return [a,b].filter(Boolean).join(" · ");}
 function working(k){const h=S.crewQ&&S.crewQ[0];return !!(h&&h.k===k&&h.go);}
@@ -92,9 +101,9 @@ function brkNote(){const w={reel:"Dryers",dryer:"Presses",press:"Wet end"}[S.brk
 function rethread(why){S.pm="break";S.brkType="press";S.breakLeft=2*(26+rand("brkx")*20);S.breakTotal=S.breakLeft;enqueue("brk");log(`Rethreading the machine ${why}`,"warn");}
 function log(text,cls){S.feed.unshift({t:S.t,text,cls});if(S.feed.length>40)S.feed.pop();}
 function trigger(id,quiet){
-  if(active(id))return;
+  if(active(id))return;if(EV[id]&&EV[id].env&&EV[id].env!==SITE.env)return;   // v4.1: another site's upset
   const e=EV[id],dur=(e.dur[0]+rand("upx")*(e.dur[1]-e.dur[0]))*durMul(id);
-  const inc={id,left:dur,total:dur,real:performance.now(),note:""};
+  const inc={id,left:dur,total:dur,real:performance.now(),note:""};   // (real: only the 3D effects use it, as an identity and start time)
   S.inc.push(inc);(S.evc||(S.evc={}))[id]=(S.evc[id]||0)+1;if(QINC(id))enqueue(id);S.lastInc=S.t;S.tot.incidents++;AUDIO.event(id);
   if(!quiet){BANNERS.push({text:e.head,t:null,id:e.id});while(BANNERS.length>3)BANNERS.splice(1,1);}
   if(e.start)e.start(inc);
@@ -109,9 +118,11 @@ function chaosTick(dt){
   for(const i of S.inc){if(QINC(i.id)&&!working(i.id))continue;if(MNEED(i.id)&&!i.mGo)continue;if(QINC(i.id)||MNEED(i.id))i.go=true;i.left-=dt*((QINC(i.id)||MNEED(i.id))?repRate():1);}
   for(const i of S.inc)if(i.left<=0&&EV[i.id].end)EV[i.id].end(i);
   for(const i of S.inc)if(i.left<=0)log(`${EV[i.id].name}: cleared, back to normal`,"ok");
-  S.inc=S.inc.filter(i=>i.left>0);
+  // (v4.1 pass 7: compacted in place and counted with a loop: this runs every sim step, and the two filters made new arrays each time)
+  {let w=0;for(let k=0;k<S.inc.length;k++){const i=S.inc[k];if(i.left>0)S.inc[w++]=i;}S.inc.length=w;}
   // v3.3.3: two upsets already running make a third 75% less likely; back to normal once they clear
-  const um=upsetMul()*(S.inc.filter(i=>i.id!=="runner"&&i.id!=="birdhay").length>=2?0.25:1);
+  let busy=0;for(let k=0;k<S.inc.length;k++){const id=S.inc[k].id;if(id!=="runner"&&id!=="birdhay")busy++;}
+  const um=upsetMul()*(busy>=2?0.25:1);
   {const r=rand("up");if(CH.on&&um>0&&CH.en.chestover&&!active("chestover")&&S.tank>=P.tankCap*0.995&&r<dt/60/25)trigger("chestover");}
   const roll=CH.on&&um>0&&!outOn();
   for(const e of EVENTS){const r=rand("up");if(roll&&CH.en[e.id]&&!active(e.id)&&r<dt/60/e.mtbf*CH.lvl*freqMul(e.id)*0.75*um)trigger(e.id);}
