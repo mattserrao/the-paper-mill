@@ -8,6 +8,8 @@
      again. Edge outlines, mirrored meshes and roof parts (which fade per roof) still bake into one geometry per material
      and map cell (the v2.9 path, smBuild); a change there rebuilds that one baked batch. */
   const SM={t0:0,done:false,list:[],batches:new Map(),bms:[],dyn:new WeakSet(),checkT:0,queue:null,handedBack:0};G3.SM=SM;
+  // device checks: ?nosm turns the static batching off, ?nodb only the moving batches (each object then draws on its own)
+  const BQ=new URLSearchParams(location.search);if(BQ.has("nosm")){SM.off=true;SM.done=true;}
   const _smV=new THREE.Vector3(),_smN=new THREE.Vector3(),_smM3=new THREE.Matrix3(),SMCELL=90,SMLAYER=31;
   function smShown(o){let x=o;for(;x&&x!==scene;x=x.parent)if(!x.visible)return false;return x===scene;}
   function smExcluded(o){for(let x=o;x&&x!==scene;x=x.parent){if(roofs.includes(x)||SM.dyn.has(x))return true;}return false;}
@@ -227,9 +229,9 @@
     pend.forEach((L,key)=>{if(L.length>=3&&!(DB.pendKeys&&DB.pendKeys.has(key))){if(G3.warm)Q.set(key,L);else dbNew(key,L);}});DB.n=DB.list.length;sortKinds();}
   function dbNext(){const Q=DB.q;if(!Q||!Q.size)return;const [key,L0]=Q.entries().next().value;Q.delete(key);
     const L=L0.filter(o=>o.parent&&o.layers.mask===1&&dbOK(o)&&dbKey(o)===key);if(L.length>=3&&!(DB.pendKeys&&DB.pendKeys.has(key)))dbNew(key,L);}   // (a full batch of the same look gets a second one)
-  G3.dbForce=()=>{if(SM.done&&!SM.off){try{dbBuild();}catch(e){console.error("moving batches failed",e);}}};
+  G3.dbForce=()=>{if(SM.done&&!SM.off&&!BQ.has("nodb")){try{dbBuild();}catch(e){console.error("moving batches failed",e);}}};
   // called right before each render: world matrices are brought up to date once here, and the render skips its own pass
-  G3.dbTick=()=>{if(SM.off||!SM.done)return;const now=performance.now();try{dbNext();}catch(e){console.error("moving batch failed",e);}if(now>DB.t){DB.t=now+3000;try{dbBuild();}catch(e){console.error("moving batches failed",e);SM.off=true;dbRelease();return;}}
+  G3.dbTick=()=>{if(SM.off||!SM.done||BQ.has("nodb"))return;const now=performance.now();try{dbNext();}catch(e){console.error("moving batch failed",e);}if(now>DB.t){DB.t=now+3000;try{dbBuild();}catch(e){console.error("moving batches failed",e);SM.off=true;dbRelease();return;}}
     scene.updateMatrixWorld();matSync();let out=false;const fn=DB.fn=(DB.fn||0)+1;
     // things that haven't changed for a second are checked every 4th frame (a still forklift starting to move shows
     // up within 4 frames); everything else every frame

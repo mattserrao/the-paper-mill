@@ -25,15 +25,16 @@ const ENVS={
     freq:{slime:1.8,lightning:1.6,roof:1.6,beaver:3}}};
 const ENV_IDS=["rural","urban","desert","swamp"];
 // the site the 3D scene was built for: URL (?env=&mill=) first (tests), then the player's saved choice, then the default.
-// v4.1: a new layout every visit unless the player pins one; "any" rolls a different environment each visit too.
+// v4.1 pass 6: one fixed layout per environment (no seed for the player to choose or roll; the seed still lays out the
+// scenery, from MILLSEED). ?mill= overrides it for tests. "any" rolls a different environment each visit.
+const MILLSEED={rural:21,urban:22,desert:23,swamp:24};
 const SITE=(()=>{const q=new URLSearchParams(location.search);let s=null;const test=q.has("autotest");
   // the device autotest ignores the saved site, so every phone measures the same scene (rural, mill #1) unless the URL says
   if(!test)try{s=JSON.parse(localStorage.getItem("paper-mill-site")||"null");}catch(e){}
   const choice=s&&(ENVS[s.env]||s.env==="any")?s.env:"rural";
   const env=ENVS[q.get("env")]?q.get("env"):choice==="any"?ENV_IDS[Math.floor(Math.random()*ENV_IDS.length)]:choice;
-  const pin=!!(s&&s.pin&&s.seed>=1);
-  const ms=q.has("mill")?parseInt(q.get("mill"),10):test?1:pin?s.seed:1+Math.floor(Math.random()*99999);
-  return {env,seed:(ms>>>0)%100000||1,choice,pin,saved:!!s};})();
+  const ms=q.has("mill")?parseInt(q.get("mill"),10):MILLSEED[env];
+  return {env,seed:(ms>>>0)%100000||1,choice,saved:!!s};})();
 // a small seeded generator for anything built from the mill seed (layout, scenery): independent of the sim's streams
 function siteRng(seed){let s=(seed>>>0)^0x5bd1e995;return ()=>{s=(s+0x6D2B79F5)|0;let t=Math.imul(s^(s>>>15),s|1);t^=t+Math.imul(t^(t>>>7),t|61);return ((t^(t>>>14))>>>0)/4294967296;};}
 // auxiliary layout from the mill seed: the wastewater plant sits behind stock prep (slot "back", x 1..46, z -49..-31,
@@ -45,7 +46,7 @@ function layoutFor(seed){const r=siteRng(seed);const L=LAYOUTS[Math.floor(r()*LA
   // wx/wz map a v4.0 wastewater-plant coordinate to this layout (flip mirrors the plant inside its 1..46 slot)
   const dx=L.ww==="east"?45:0,wx=x=>dx+(L.flip?47-x:x),wz=z=>z;return {...L,dx,wx,wz,i:LAYOUTS.indexOf(L)};}
 const LAYOUT=layoutFor(SITE.seed);
-function siteSave(env,seed,pin){try{localStorage.setItem("paper-mill-site",JSON.stringify({env,seed,pin:!!pin}));}catch(e){}}
+function siteSave(env){try{localStorage.setItem("paper-mill-site",JSON.stringify({env}));}catch(e){}}
 // gameplay effect of the environment (sim; applied in applyUpgrades). The site of the loaded scene is the one in play.
 const ENVX=()=>ENVS[SITE.env]||ENVS.rural;
 // ---- bottleneck: one area starts well short of the paper machine's rate. Its capacity is BNK[area] of what the machine

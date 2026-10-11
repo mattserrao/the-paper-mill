@@ -132,6 +132,15 @@ piece; the three sandbox-style piano pieces are the valley's.
   piece; the sound button's tooltip names what is playing. `tools/musictest.py` schedules every step of every piece and
   checks the output level; `tools/musicrec.py` records any piece to MP3.
 
+### One layout per site (pass 6, test v12 updated)
+- The mill seed is gone from the game: no seed box, dice or "keep this layout" in the site picker, and no new layout each
+  visit. Each environment has one fixed layout (valley 21, city 22, desert 23, bayou 24: the four checked for clipping);
+  the seed still lays out the scenery internally. `?mill=` still overrides it for tests. The menu's site line now shows
+  the site's headline pro and con. Saved sites from earlier builds keep their environment; their seed and pin are ignored.
+- Device checks: `?nodb` draws moving things (people, forklifts) one by one instead of in shared batches, `?nosm` turns
+  all batching off. For tracking down colours missing on iPhone.
+- `tools/quick.py` now measures the layout players see (rural 21) unless `--mill=` is given. Checksum unchanged.
+
 ### Fixes (pass 5, test v12 updated)
 - **Hard hats** look like hard hats: a dome seated over the head, a full brim all round with a longer peak at the front,
   and the moulded ridge (they were a half-sphere with a cap-like visor on one side).

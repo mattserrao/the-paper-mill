@@ -39,10 +39,10 @@ then `tail.html`. All game code runs inside **one shared closure** (opened in `0
 
 ## Site, mill seed and bottleneck (v4.1)
 
-- **`SITE`** (`03b-site.js`) is the environment (`rural`, `urban`, `desert`, `swamp`) and mill seed the page was loaded
-  with: from `?env=&mill=` (tests), else the saved choice (`paper-mill-site`: `{env|"any", seed, pin}`), else rural. The
-  seed is rolled fresh on every load unless pinned (`Math.random` here is the one allowed use outside cosmetics: it picks
-  the world before the run starts, not luck during play); `?autotest` always gets mill #1. The 3D scene is built once
+- **`SITE`** (`03b-site.js`) is the environment (`rural`, `urban`, `desert`, `swamp`) the page was loaded with: from
+  `?env=` (tests), else the saved choice (`paper-mill-site`: `{env|"any"}`), else rural. The mill seed is fixed per
+  environment (`MILLSEED`; `?mill=` overrides it for tests) and is not shown to the player. "any" rolls the environment
+  with `Math.random` at page load (the one allowed use outside cosmetics: it picks the world before the run starts). The 3D scene is built once
   from it, so the site picker saves and reloads.
 - **Environment upsets** (`env:` on an event in `04-upsets.js`): `trigger()` refuses another site's upset, `siteFreq()`
   returns 0 for it, the Upsets panel lists only this site's, and `10-report-cards.js` tolerates the missing buttons. The

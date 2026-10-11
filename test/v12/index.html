@@ -648,7 +648,7 @@ body.season-lock label.check:has(#breaks),body.season-lock label.check:has(#hays
 <div class="v2menu" id="v2menu"><div aria-labelledby="v2mt" aria-modal="true" class="card" role="dialog">
 <div class="ttl"><i>⚙</i><div><small>The Paper Mill</small><b id="v2mt">Mill</b><div class="state" id="v2state"></div></div></div>
 <p>Run a recycled paperboard mill from truck to warehouse. Old corrugated boxes arrive by the truckload, get pulped, cleaned and thickened, and your paper machine turns them into giant reels that the winder cuts into rolls for customers. Keep everything flowing, spend your profit on upgrades, and ride out upsets: breakdowns, fires, storms and the occasional pigeon.</p>
-<div class="siterow" id="v2site"><span class="sw" id="v2siteSw" aria-hidden="true"></span><div><small>Your site</small><b id="v2siteN">Forest valley</b><span id="v2siteM">Mill #1</span></div><button id="v2siteBtn">Change site</button></div>
+<div class="siterow" id="v2site"><span class="sw" id="v2siteSw" aria-hidden="true"></span><div><small>Your site</small><b id="v2siteN">Forest valley</b><span id="v2siteM"></span></div><button id="v2siteBtn">Change site</button></div>
 <button class="primary go" id="v2go"><b>Play</b><small>30-day season · leaderboard</small></button>
 <div class="sub" hidden id="v2sub">
 <button id="v2season">New season<small>restart the 30 days</small></button>
@@ -672,10 +672,8 @@ body.season-lock label.check:has(#breaks),body.season-lock label.check:has(#hays
 <div class="envs" id="siteEnvs" role="radiogroup" aria-label="Environment"></div>
 <button class="anybtn" id="siteAny" aria-pressed="false" type="button"><b>Surprise me</b><small>a different environment every visit</small></button>
 <div class="seedrow"><canvas aria-label="Site plan preview" height="150" id="sitePrev" role="img" width="300"></canvas>
-<div class="seedctl"><label for="siteSeed">Mill seed</label><div class="seedin"><input id="siteSeed" inputmode="numeric" max="99999" min="1" type="number"/><button aria-label="Roll a new mill seed" id="siteRoll" title="New seed">🎲</button></div>
-<small id="siteLay">Layout</small>
-<label class="check"><input id="sitePin" type="checkbox"/> Keep this layout between visits</label></div></div>
-<p class="muted small">Unless you keep a layout, every visit builds a new one. Building here reloads the game and starts a fresh run. Each run also has one bottleneck area, drawn at random.</p>
+<div class="seedctl"><label>Site plan</label><small id="siteLay">Layout</small></div></div>
+<p class="muted small">Building here reloads the game and starts a fresh run. Each run also has one bottleneck area, drawn at random.</p>
 <div class="btns"><button class="primary" id="siteGo">Build here</button><button id="siteNo">Cancel</button></div></div></div>
 
 <div class="overlay top" hidden id="no3d"><div aria-labelledby="no3d-h" class="modal" role="alertdialog">
@@ -1245,15 +1243,16 @@ const ENVS={
     freq:{slime:1.8,lightning:1.6,roof:1.6,beaver:3}}};
 const ENV_IDS=["rural","urban","desert","swamp"];
 // the site the 3D scene was built for: URL (?env=&mill=) first (tests), then the player's saved choice, then the default.
-// v4.1: a new layout every visit unless the player pins one; "any" rolls a different environment each visit too.
+// v4.1 pass 6: one fixed layout per environment (no seed for the player to choose or roll; the seed still lays out the
+// scenery, from MILLSEED). ?mill= overrides it for tests. "any" rolls a different environment each visit.
+const MILLSEED={rural:21,urban:22,desert:23,swamp:24};
 const SITE=(()=>{const q=new URLSearchParams(location.search);let s=null;const test=q.has("autotest");
   // the device autotest ignores the saved site, so every phone measures the same scene (rural, mill #1) unless the URL says
   if(!test)try{s=JSON.parse(localStorage.getItem("paper-mill-site")||"null");}catch(e){}
   const choice=s&&(ENVS[s.env]||s.env==="any")?s.env:"rural";
   const env=ENVS[q.get("env")]?q.get("env"):choice==="any"?ENV_IDS[Math.floor(Math.random()*ENV_IDS.length)]:choice;
-  const pin=!!(s&&s.pin&&s.seed>=1);
-  const ms=q.has("mill")?parseInt(q.get("mill"),10):test?1:pin?s.seed:1+Math.floor(Math.random()*99999);
-  return {env,seed:(ms>>>0)%100000||1,choice,pin,saved:!!s};})();
+  const ms=q.has("mill")?parseInt(q.get("mill"),10):MILLSEED[env];
+  return {env,seed:(ms>>>0)%100000||1,choice,saved:!!s};})();
 // a small seeded generator for anything built from the mill seed (layout, scenery): independent of the sim's streams
 function siteRng(seed){let s=(seed>>>0)^0x5bd1e995;return ()=>{s=(s+0x6D2B79F5)|0;let t=Math.imul(s^(s>>>15),s|1);t^=t+Math.imul(t^(t>>>7),t|61);return ((t^(t>>>14))>>>0)/4294967296;};}
 // auxiliary layout from the mill seed: the wastewater plant sits behind stock prep (slot "back", x 1..46, z -49..-31,
@@ -1265,7 +1264,7 @@ function layoutFor(seed){const r=siteRng(seed);const L=LAYOUTS[Math.floor(r()*LA
   // wx/wz map a v4.0 wastewater-plant coordinate to this layout (flip mirrors the plant inside its 1..46 slot)
   const dx=L.ww==="east"?45:0,wx=x=>dx+(L.flip?47-x:x),wz=z=>z;return {...L,dx,wx,wz,i:LAYOUTS.indexOf(L)};}
 const LAYOUT=layoutFor(SITE.seed);
-function siteSave(env,seed,pin){try{localStorage.setItem("paper-mill-site",JSON.stringify({env,seed,pin:!!pin}));}catch(e){}}
+function siteSave(env){try{localStorage.setItem("paper-mill-site",JSON.stringify({env}));}catch(e){}}
 // gameplay effect of the environment (sim; applied in applyUpgrades). The site of the loaded scene is the one in play.
 const ENVX=()=>ENVS[SITE.env]||ENVS.rural;
 // ---- bottleneck: one area starts well short of the paper machine's rate. Its capacity is BNK[area] of what the machine
@@ -5648,6 +5647,8 @@ function no3D(){G3.ok=false;$("no3d").hidden=false;$("no3d-retry").onclick=()=>l
      again. Edge outlines, mirrored meshes and roof parts (which fade per roof) still bake into one geometry per material
      and map cell (the v2.9 path, smBuild); a change there rebuilds that one baked batch. */
   const SM={t0:0,done:false,list:[],batches:new Map(),bms:[],dyn:new WeakSet(),checkT:0,queue:null,handedBack:0};G3.SM=SM;
+  // device checks: ?nosm turns the static batching off, ?nodb only the moving batches (each object then draws on its own)
+  const BQ=new URLSearchParams(location.search);if(BQ.has("nosm")){SM.off=true;SM.done=true;}
   const _smV=new THREE.Vector3(),_smN=new THREE.Vector3(),_smM3=new THREE.Matrix3(),SMCELL=90,SMLAYER=31;
   function smShown(o){let x=o;for(;x&&x!==scene;x=x.parent)if(!x.visible)return false;return x===scene;}
   function smExcluded(o){for(let x=o;x&&x!==scene;x=x.parent){if(roofs.includes(x)||SM.dyn.has(x))return true;}return false;}
@@ -5867,9 +5868,9 @@ function no3D(){G3.ok=false;$("no3d").hidden=false;$("no3d-retry").onclick=()=>l
     pend.forEach((L,key)=>{if(L.length>=3&&!(DB.pendKeys&&DB.pendKeys.has(key))){if(G3.warm)Q.set(key,L);else dbNew(key,L);}});DB.n=DB.list.length;sortKinds();}
   function dbNext(){const Q=DB.q;if(!Q||!Q.size)return;const [key,L0]=Q.entries().next().value;Q.delete(key);
     const L=L0.filter(o=>o.parent&&o.layers.mask===1&&dbOK(o)&&dbKey(o)===key);if(L.length>=3&&!(DB.pendKeys&&DB.pendKeys.has(key)))dbNew(key,L);}   // (a full batch of the same look gets a second one)
-  G3.dbForce=()=>{if(SM.done&&!SM.off){try{dbBuild();}catch(e){console.error("moving batches failed",e);}}};
+  G3.dbForce=()=>{if(SM.done&&!SM.off&&!BQ.has("nodb")){try{dbBuild();}catch(e){console.error("moving batches failed",e);}}};
   // called right before each render: world matrices are brought up to date once here, and the render skips its own pass
-  G3.dbTick=()=>{if(SM.off||!SM.done)return;const now=performance.now();try{dbNext();}catch(e){console.error("moving batch failed",e);}if(now>DB.t){DB.t=now+3000;try{dbBuild();}catch(e){console.error("moving batches failed",e);SM.off=true;dbRelease();return;}}
+  G3.dbTick=()=>{if(SM.off||!SM.done||BQ.has("nodb"))return;const now=performance.now();try{dbNext();}catch(e){console.error("moving batch failed",e);}if(now>DB.t){DB.t=now+3000;try{dbBuild();}catch(e){console.error("moving batches failed",e);SM.off=true;dbRelease();return;}}
     scene.updateMatrixWorld();matSync();let out=false;const fn=DB.fn=(DB.fn||0)+1;
     // things that haven't changed for a second are checked every 4th frame (a still forklift starting to move shows
     // up within 4 frames); everything else every frame
@@ -7071,7 +7072,7 @@ setView();
   showMenu();if(G3.prewarm)G3.prewarm();
 })();
 
-// ---- v4.1 site picker: environment (with its pros and cons) and mill seed. The 3D scene is built once per page load,
+// ---- v4.1 site picker: environment (with its pros and cons); the layout is fixed per environment (pass 6). The 3D scene is built once per page load,
 // so "Build here" saves the choice and reloads; nothing else is kept between page loads anyway.
 {const SW={rural:["#b4cf9f","#4f8257"],urban:["#bec7ad","#8a94a3"],desert:["#e3d0a4","#c98b5a"],swamp:["#a3b487","#4f736d"]};
   const WATER={rural:"#7fb0cf",urban:"#76a0b8",desert:"#5fa8bd",swamp:"#4f736d"};
@@ -7079,17 +7080,17 @@ setView();
   const layName=L=>`Wastewater plant ${L.ww==="east"?"behind the maintenance shop":"behind stock prep"}, clarifier on the ${(L.ww==="east")!==L.flip?"east":"west"} side`;
   // menu row
   function siteRow(){const E=ENVS[SITE.env];$("v2siteN").textContent=E.name+(SITE.choice==="any"?" (surprise)":"");
-    $("v2siteM").textContent=`Mill #${SITE.seed} · layout ${"ABCD"[LAYOUT.i]} · ${SITE.pin?"kept":"new layout each visit"}`;swatch($("v2siteSw"),SITE.env);}
+    $("v2siteM").textContent=E.pros[0].split(":")[0]+" · "+E.cons[0].split(":")[0];swatch($("v2siteSw"),SITE.env);}
   siteRow();
   // picker
-  const ov=$("siteOv"),envs=$("siteEnvs"),seedIn=$("siteSeed"),prev=$("sitePrev"),pinIn=$("sitePin"),anyBtn=$("siteAny");let pick=SITE.env,any=SITE.choice==="any";
+  const ov=$("siteOv"),envs=$("siteEnvs"),prev=$("sitePrev"),anyBtn=$("siteAny");let pick=SITE.env,any=SITE.choice==="any";
   ENV_IDS.forEach(id=>{const E=ENVS[id],b=document.createElement("button");b.type="button";b.setAttribute("role","radio");b.dataset.env=id;
     b.innerHTML=`<div class="eh"><span class="sw"></span><b>${E.name}</b><small>${E.short}</small></div><p>${E.blurb}</p><ul>${E.pros.map(t=>`<li class="pro">${t}</li>`).join("")}${E.cons.map(t=>`<li class="con">${t}</li>`).join("")}</ul>`;
     swatch(b.querySelector(".sw"),id);b.addEventListener("click",()=>{pick=id;sync();});envs.appendChild(b);});
   envs.addEventListener("keydown",e=>{const k=e.key;if(!["ArrowRight","ArrowDown","ArrowLeft","ArrowUp"].includes(k))return;e.preventDefault();
     const i=ENV_IDS.indexOf(pick),n=ENV_IDS[(i+(k==="ArrowRight"||k==="ArrowDown"?1:ENV_IDS.length-1))%ENV_IDS.length];pick=n;sync();envs.querySelector(`[data-env="${n}"]`).focus();});
   anyBtn.addEventListener("click",()=>{any=!any;sync();});
-  const seedOf=()=>{const v=Math.round(+seedIn.value);return v>=1&&v<=99999?v:SITE.seed;};
+  const seedOf=()=>MILLSEED[pick];
   // a small plan of the site: river, roads, fence, the fixed core and where the seeded wastewater plant goes
   function drawPrev(){const x=prev.getContext("2d"),W=prev.width,H=prev.height,k=W/360,X=v=>(v+170)*k,Z=v=>(v+90)*k,L=layoutFor(seedOf());
     x.fillStyle=SW[pick][0];x.fillRect(0,0,W,H);x.fillStyle=WATER[pick];x.fillRect(0,Z(-75),W,18*k);
@@ -7099,19 +7100,17 @@ setView();
     x.fillStyle="#9aa3ad";[[4,47,-25,-2],[70,82,-16,-4],[49,65,-27,-14.5],[66,88,38,56]].forEach(([a,b,c,d])=>x.fillRect(X(a),Z(c),(b-a)*k,(d-c)*k));
     const a=Math.min(L.wx(1),L.wx(46)),b=Math.max(L.wx(1),L.wx(46));x.fillStyle="#1f9254";x.fillRect(X(a),Z(-49),(b-a)*k,18*k);
     x.fillStyle="#bfe3d8";x.beginPath();x.arc(X(L.wx(10)),Z(-40),7*k,0,7);x.fill();const p0=Math.min(L.wx(22),L.wx(42));x.fillRect(X(p0),Z(-46),20*k,12*k);
-    $("siteLay").textContent=`Layout ${"ABCD"[L.i]}: ${layName(L)}.`;}
+    $("siteLay").textContent=layName(L)+".";}
   function sync(){envs.querySelectorAll("button").forEach(b=>b.setAttribute("aria-checked",String(b.dataset.env===pick)));
     envs.querySelectorAll("button").forEach(b=>b.tabIndex=b.dataset.env===pick?0:-1);envs.classList.toggle("any",any);
     anyBtn.setAttribute("aria-pressed",String(any));anyBtn.querySelector("b").textContent=any?"Surprise me: on":"Surprise me";drawPrev();
-    const same=(any?SITE.choice==="any":pick===SITE.env&&SITE.choice!=="any")&&seedOf()===SITE.seed&&pinIn.checked===SITE.pin;
+    const same=(any?SITE.choice==="any":pick===SITE.env&&SITE.choice!=="any");
     $("siteGo").textContent=same&&SITE.saved?"Keep this site":"Build here";}
-  $("v2siteBtn").addEventListener("click",()=>{pick=SITE.env;any=SITE.choice==="any";seedIn.value=SITE.seed;pinIn.checked=SITE.pin;sync();ov.hidden=false;setTimeout(()=>{const b=envs.querySelector('[aria-checked="true"]');if(b)b.focus();},0);});
-  seedIn.addEventListener("input",sync);pinIn.addEventListener("change",sync);
-  $("siteRoll").addEventListener("click",()=>{seedIn.value=1+Math.floor(Math.random()*99999);sync();});
+  $("v2siteBtn").addEventListener("click",()=>{pick=SITE.env;any=SITE.choice==="any";sync();ov.hidden=false;setTimeout(()=>{const b=envs.querySelector('[aria-checked="true"]');if(b)b.focus();},0);});
   $("siteNo").addEventListener("click",()=>{ov.hidden=true;});
   ov.addEventListener("keydown",e=>{if(e.key==="Escape"){ov.hidden=true;$("v2siteBtn").focus();}});
-  $("siteGo").addEventListener("click",()=>{const s=seedOf();if($("siteGo").textContent==="Keep this site"){ov.hidden=true;return;}
-    siteSave(any?"any":pick,s,pinIn.checked);const q=new URLSearchParams(location.search);q.delete("env");q.delete("mill");const qs=q.toString();
+  $("siteGo").addEventListener("click",()=>{if($("siteGo").textContent==="Keep this site"){ov.hidden=true;return;}
+    siteSave(any?"any":pick);const q=new URLSearchParams(location.search);q.delete("env");q.delete("mill");const qs=q.toString();
     const u=location.pathname+(qs?"?"+qs:"")+location.hash;if(u===location.pathname+location.search+location.hash)location.reload();else location.href=u;});}
 // frame rate is a player choice (Controls): Smooth = the display's rate (v4 default), Battery saver = 30 fps; remembered
 let FRAME_CAP=0;try{if(localStorage.getItem("paper-mill-fps")==="saver")FRAME_CAP=30;}catch(e){}G3.cap=FRAME_CAP;
