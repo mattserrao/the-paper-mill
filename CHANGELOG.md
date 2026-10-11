@@ -132,6 +132,17 @@ piece; the three sandbox-style piano pieces are the valley's.
   piece; the sound button's tooltip names what is playing. `tools/musictest.py` schedules every step of every piece and
   checks the output level; `tools/musicrec.py` records any piece to MP3.
 
+### iPhone colours (pass 7, test v12 updated)
+- **Fixed: people, forklifts, machine frames and railings drawn grey on iPhone.** Moving things are drawn in shared batches
+  (one draw per look), and each object's colour came from a small float texture read in the vertex shader; on iPhone
+  Safari that lookup came out white. Each object now carries its colour as vertex colours on its own copy of its shape
+  inside the batch (still one draw per look). Colour changes (New colors, blinking lights) write straight into the batch's
+  colour buffer, and a slot freed by an object that leaves is reused by the next one of the same shape.
+- It is also lighter everywhere, so it is the default on every device: main-pass draws 231 → ~198 on the phone benchmark,
+  shadow draws 132 → ~112, sampled JS allocation 13.7 → 11.7 MB per 10 s. `?dbcol=1` brings back the old colour texture.
+- The upset tick no longer builds two new arrays every sim step (compacted in place); the material sync loop no longer
+  destructures. Same results: checksums unchanged.
+
 ### One layout per site (pass 6, test v12 updated)
 - The mill seed is gone from the game: no seed box, dice or "keep this layout" in the site picker, and no new layout each
   visit. Each environment has one fixed layout (valley 21, city 22, desert 23, bayou 24: the four checked for clipping);

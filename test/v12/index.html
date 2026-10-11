@@ -1454,9 +1454,11 @@ function chaosTick(dt){
   for(const i of S.inc){if(QINC(i.id)&&!working(i.id))continue;if(MNEED(i.id)&&!i.mGo)continue;if(QINC(i.id)||MNEED(i.id))i.go=true;i.left-=dt*((QINC(i.id)||MNEED(i.id))?repRate():1);}
   for(const i of S.inc)if(i.left<=0&&EV[i.id].end)EV[i.id].end(i);
   for(const i of S.inc)if(i.left<=0)log(`${EV[i.id].name}: cleared, back to normal`,"ok");
-  S.inc=S.inc.filter(i=>i.left>0);
+  // (v4.1 pass 7: compacted in place and counted with a loop: this runs every sim step, and the two filters made new arrays each time)
+  {let w=0;for(let k=0;k<S.inc.length;k++){const i=S.inc[k];if(i.left>0)S.inc[w++]=i;}S.inc.length=w;}
   // v3.3.3: two upsets already running make a third 75% less likely; back to normal once they clear
-  const um=upsetMul()*(S.inc.filter(i=>i.id!=="runner"&&i.id!=="birdhay").length>=2?0.25:1);
+  let busy=0;for(let k=0;k<S.inc.length;k++){const id=S.inc[k].id;if(id!=="runner"&&id!=="birdhay")busy++;}
+  const um=upsetMul()*(busy>=2?0.25:1);
   {const r=rand("up");if(CH.on&&um>0&&CH.en.chestover&&!active("chestover")&&S.tank>=P.tankCap*0.995&&r<dt/60/25)trigger("chestover");}
   const roll=CH.on&&um>0&&!outOn();
   for(const e of EVENTS){const r=rand("up");if(roll&&CH.en[e.id]&&!active(e.id)&&r<dt/60/e.mtbf*CH.lvl*freqMul(e.id)*0.75*um)trigger(e.id);}
@@ -4478,7 +4480,7 @@ function no3D(){G3.ok=false;$("no3d").hidden=false;$("no3d-retry").onclick=()=>l
         // with/without a texture), so a new batch made mid-play never compiles a shader
         const tex=TX.puff,stand=[];for(const side of [THREE.FrontSide,THREE.DoubleSide])for(const map of [null,tex]){
           const g=new THREE.BoxGeometry(0.01,0.01,0.01),bm=new THREE.BatchedMesh(1,g.attributes.position.count,g.index.count,new THREE.MeshLambertMaterial({side,map}));
-          bm.setColorAt(bm.addInstance(bm.addGeometry(g)),new THREE.Color(1,1,1));/* per-object colors, as moving batches use */bm.perObjectFrustumCulled=false;bm.castShadow=true;bm.frustumCulled=false;bm.position.set(0,-50,0);bm.updateMatrixWorld();scene.add(bm);stand.push([bm,g]);}
+          {const ii=bm.addInstance(bm.addGeometry(G3.DBCOL?g:G3.vcGeo(g,new THREE.Color(1,1,1))));if(G3.DBCOL)bm.setColorAt(ii,new THREE.Color(1,1,1));}/* per-object colors, as moving batches use */bm.perObjectFrustumCulled=false;bm.castShadow=true;bm.frustumCulled=false;bm.position.set(0,-50,0);bm.updateMatrixWorld();scene.add(bm);stand.push([bm,g]);}
         // v4.1 pass 3: the shadow pass shares one depth material and re-derives its shader only when it steps from a plain
         // mesh to an instanced or batched one (or back); it then takes the side and texture of whatever it draws next. So
         // every combination is drawn here in exactly that order (the scene is traversed in insertion order), and a batch or
@@ -4487,7 +4489,7 @@ function no3D(){G3.ok=false;$("no3d").hidden=false;$("no3d-retry").onclick=()=>l
         {const tiny=new THREE.BoxGeometry(0.01,0.01,0.01),dbl=new THREE.MeshLambertMaterial({side:THREE.DoubleSide}),dblT=new THREE.MeshLambertMaterial({side:THREE.DoubleSide,map:tex});
           const put=o=>{o.castShadow=true;o.frustumCulled=false;o.position.set(0,-50,0);o.updateMatrixWorld();if(!o.dispose)o.dispose=()=>{};scene.add(o);stand.push([o,null]);return o;};
           const plain=m=>put(new THREE.Mesh(tiny,m)),inst=(m,col)=>{const im=new THREE.InstancedMesh(tiny,m,1);im.setMatrixAt(0,new THREE.Matrix4());if(col)im.setColorAt(0,new THREE.Color(1,1,1));return put(im);};
-          const batch=m=>{const bm=new THREE.BatchedMesh(1,tiny.attributes.position.count,tiny.index.count,m);bm.setColorAt(bm.addInstance(bm.addGeometry(tiny)),new THREE.Color(1,1,1));bm.perObjectFrustumCulled=false;return put(bm);};
+          const batch=m=>{const bm=new THREE.BatchedMesh(1,tiny.attributes.position.count,tiny.index.count,m);{const ii=bm.addInstance(bm.addGeometry(tiny));if(G3.DBCOL)bm.setColorAt(ii,new THREE.Color(1,1,1));}bm.perObjectFrustumCulled=false;return put(bm);};
           for(const m of [M.ink,dbl,M.bale,dblT]){batch(M.ink);plain(m);}                                   // plain casters: one/two-sided, plain/textured, each right after a batch
           for(const m of [M.ink,dbl,M.bale,dblT]){plain(M.ink);batch(m);}                                   // batched casters, the same four, each right after a plain mesh
           for(const m of [instMat(M.ink),instMat(M.bale)])for(const col of [false,true]){plain(M.ink);inst(m,col);}   // instanced casters, with and without per-instance colour (own copies, see instMat)
@@ -4495,21 +4497,21 @@ function no3D(){G3.ok=false;$("no3d").hidden=false;$("no3d-retry").onclick=()=>l
         // v4.0.1: one stand-in per look a moving batch could ever use (effects included), drawn white with a per-object color
         // exactly as dbNew builds them, so a batch made mid-play reuses a compiled shader
         {const seen=new Set();scene.traverse(o=>{if(o.isBatchedMesh||!dbOK(o))return;const k=dbKey(o);if(seen.has(k))return;seen.add(k);
-          const g=o.geometry,c=o.material.clone();c.color.setRGB(1,1,1);
-          const bm=new THREE.BatchedMesh(1,g.attributes.position.count,Math.max(g.index?g.index.count:0,1),c);bm.setColorAt(bm.addInstance(bm.addGeometry(g)),o.material.color);
+          const g=o.geometry,c=o.material.clone();c.color.setRGB(1,1,1);if(!G3.DBCOL)c.vertexColors=true;
+          const bm=new THREE.BatchedMesh(1,g.attributes.position.count,Math.max(g.index?g.index.count:0,1),c);{const ii=bm.addInstance(bm.addGeometry(G3.DBCOL?g:G3.vcGeo(g,new THREE.Color(1,1,1))));if(G3.DBCOL)bm.setColorAt(ii,o.material.color);}
           bm.perObjectFrustumCulled=false;bm.sortObjects=false;bm.frustumCulled=false;bm.castShadow=o.castShadow;bm.receiveShadow=o.receiveShadow;scene.add(bm);stand.push([bm,null]);});}
         // ...one per material in the scene that a moving batch could use (objects made or freed later reuse these)...
         {const mats=new Map();scene.traverse(o=>{if(!o.isMesh||o.isBatchedMesh||o.isInstancedMesh||Array.isArray(o.material))return;const m=o.material;
             if(!m||!DBOK.has(m.type)||m.transparent||m.opacity<1)return;const k=mats.get(m)||0;mats.set(m,k|(o.receiveShadow?2:1));});
           const g=new THREE.BoxGeometry(0.01,0.01,0.01);
-          mats.forEach((fl,m)=>{for(const recv of [false,true]){if(!(fl&(recv?2:1)))continue;const c=m.clone();c.color.setRGB(1,1,1);
-            const bm=new THREE.BatchedMesh(1,g.attributes.position.count,g.index.count,c);bm.setColorAt(bm.addInstance(bm.addGeometry(g)),m.color);
+          mats.forEach((fl,m)=>{for(const recv of [false,true]){if(!(fl&(recv?2:1)))continue;const c=m.clone();c.color.setRGB(1,1,1);if(!G3.DBCOL)c.vertexColors=true;
+            const bm=new THREE.BatchedMesh(1,g.attributes.position.count,g.index.count,c);{const ii=bm.addInstance(bm.addGeometry(G3.DBCOL?g:G3.vcGeo(g,new THREE.Color(1,1,1))));if(G3.DBCOL)bm.setColorAt(ii,m.color);}
             bm.perObjectFrustumCulled=false;bm.frustumCulled=false;bm.castShadow=true;bm.receiveShadow=recv;scene.add(bm);stand.push([bm,null]);}});
           stand.push([{material:null,dispose(){}},g]);}
         // ...and a per-object-color twin of every static scenery batch's material: a look first drawn in the scenery can
         // later turn up on moving things, and their batch then needs the color variant of the same shader
-        for(const sb of SM.bms){const g=new THREE.BoxGeometry(0.01,0.01,0.01),c=sb.material.clone();c.color.setRGB(1,1,1);
-          const bm=new THREE.BatchedMesh(1,g.attributes.position.count,g.index.count,c);bm.setColorAt(bm.addInstance(bm.addGeometry(g)),new THREE.Color(1,1,1));
+        for(const sb of SM.bms){const g=new THREE.BoxGeometry(0.01,0.01,0.01),c=sb.material.clone();c.color.setRGB(1,1,1);if(!G3.DBCOL)c.vertexColors=true;
+          const bm=new THREE.BatchedMesh(1,g.attributes.position.count,g.index.count,c);{const ii=bm.addInstance(bm.addGeometry(G3.DBCOL?g:G3.vcGeo(g,new THREE.Color(1,1,1))));if(G3.DBCOL)bm.setColorAt(ii,new THREE.Color(1,1,1));}
           bm.perObjectFrustumCulled=false;bm.frustumCulled=false;bm.castShadow=sb.castShadow;bm.receiveShadow=sb.receiveShadow;scene.add(bm);stand.push([bm,g]);}
         for(const id in FX){if(!FX[id].g.visible){FX[id].g.visible=true;shown.push(FX[id].g);}}
         // v4.1 pass 3: the sky, terrain, clouds and mist never appear with an effect-only shader, and they already compiled for the
@@ -5708,11 +5710,11 @@ function no3D(){G3.ok=false;$("no3d").hidden=false;$("no3d-retry").onclick=()=>l
   function bmMat(m){const c=m.clone();c.userData=Object.assign({},m.userData);if(MATS.includes(m))MATS.push(c);MSYNC.push([c,m]);return c;}
   // v4.0.1: moving batches are white and give each object its own color (BatchedMesh.setColorAt), so things that
   // differ only in color share one draw. Their copy stays out of MATS (the palette would tint it) and skips color sync.
-  function dbMat(m){const c=m.clone();c.userData=Object.assign({},m.userData);c.color.setRGB(1,1,1);MSYNC.push([c,m,true]);return c;}
+  function dbMat(m){const c=m.clone();c.userData=Object.assign({},m.userData);c.color.setRGB(1,1,1);if(!DBCOL)c.vertexColors=true;MSYNC.push([c,m,true]);return c;}
   // same look as the batch: compared at 8-bit precision (look-alike materials differ in the last float bits)
   const colorSame=(a,b)=>a.color.getHex()===b.color.getHex()&&(!a.emissive||(a.emissive.getHex()===b.emissive.getHex()&&a.emissiveIntensity===b.emissiveIntensity));
   const emSame=(a,b)=>!a.emissive||(a.emissive.getHex()===b.emissive.getHex()&&a.emissiveIntensity===b.emissiveIntensity);
-  function matSync(){for(const [c,m,nc] of MSYNC){if(!nc&&!c.color.equals(m.color))c.color.copy(m.color);
+  function matSync(){for(let k=0;k<MSYNC.length;k++){const e=MSYNC[k],c=e[0],m=e[1],nc=e[2];if(!nc&&!c.color.equals(m.color))c.color.copy(m.color);
     if(m.emissive&&!c.emissive.equals(m.emissive))c.emissive.copy(m.emissive);if(m.emissiveIntensity!==c.emissiveIntensity)c.emissiveIntensity=m.emissiveIntensity;}}
   // the look of a moving batch leaves out color (and the palette token that sets it): each object carries its own
   const dbLookCache=new WeakMap(),dbLookIds=new Map();
@@ -5824,7 +5826,13 @@ function no3D(){G3.ok=false;$("no3d").hidden=false;$("no3d-retry").onclick=()=>l
      instance takes its original's current world matrix and visibility. An original that swaps material or geometry
      leaves its batch and is drawn on its own again. Every 3 s, new things join an existing batch (batches are made with
      room to grow); a new look gets its own batch once three things share it. */
-  const DB={list:[],bms:[],t:0,n:0};G3.DB=DB;const DBLAYER=30,DBOK=new Set(["MeshStandardMaterial","MeshLambertMaterial","MeshBasicMaterial","MeshPhongMaterial"]);
+  const DB={list:[],bms:[],t:0,n:0};G3.DB=DB;
+  // v4.1 pass 7: per-object colours (BatchedMesh.setColorAt, a float texture read in the vertex shader) came out white on
+  // iPhone Safari (people, forklifts, frames and railings all grey). Each object instead gets its own copy of its geometry in
+  // the batch with its colour baked in as vertex colours (the material has vertexColors), still one draw per look.
+  // The vertex-colour path is also lighter everywhere (fewer leftover objects drawn on their own: 199 vs 231 main-pass draws
+  // on the phone benchmark), so it is the default on every device; ?dbcol=1 brings back the colour texture for comparison.
+  const DBCOL=G3.DBCOL=BQ.get("dbcol")==="1";const DBLAYER=30,DBOK=new Set(["MeshStandardMaterial","MeshLambertMaterial","MeshBasicMaterial","MeshPhongMaterial"]);
   function dbOK(o){if(!o.isMesh||o.isInstancedMesh||o.isBatchedMesh||o.isSkinnedMesh||o.userData.smBatch||o.renderOrder)return false;
     const m=o.material,g=o.geometry;if(!m||Array.isArray(m)||!DBOK.has(m.type)||m.transparent||m.opacity<1||!g||!g.isBufferGeometry)return false;
     if(o.onBeforeRender!==THREE.Object3D.prototype.onBeforeRender)return false;const a=g.attributes;if(!a.position||!a.normal)return false;
@@ -5833,26 +5841,46 @@ function no3D(){G3.ok=false;$("no3d").hidden=false;$("no3d-retry").onclick=()=>l
   function dbRelease(){if(DB.q)DB.q.clear();for(const r of DB.list)if(r.o.layers.mask===1<<DBLAYER)r.o.layers.set(0);for(const b of DB.bms){scene.remove(b);b.dispose();}DB.list=[];DB.bms=[];DB.byKey=new Map();}
   DB.byKey=new Map();DB.full=0;
   const dbKey=o=>dbLookId(o.material)+"|"+(o.castShadow?1:0)+(o.receiveShadow?1:0)+"|"+smSigC(o.geometry);
-  function dbAdd(B,o){const g=o.geometry;let gid=B.geos.get(g);
-    if(gid===undefined){const nv=g.attributes.position.count,ni=g.index?g.index.count:0;if(B.bm.unusedVertexCount<nv||B.bm.unusedIndexCount<ni)return false;gid=B.bm.addGeometry(g);B.geos.set(g,gid);}
+  // a geometry that shares g's buffers and adds a colour attribute filled with c (for the vertex-colour path)
+  function vcGeo(g,c,h){const n=g.attributes.position.count;if(!h){h=new THREE.BufferGeometry();for(const k in g.attributes)h.setAttribute(k,g.attributes[k]);if(g.index)h.setIndex(g.index);
+      h.setAttribute("color",new THREE.BufferAttribute(new Float32Array(n*3),3));}
+    const a=h.attributes.color.array;for(let i=0;i<n;i++){a[i*3]=c.r;a[i*3+1]=c.g;a[i*3+2]=c.b;}h.attributes.color.needsUpdate=true;return h;}
+  G3.vcGeo=vcGeo;const VCG=new WeakMap();
+  // recolour one object in place: write its colour into the batch's own colour buffer over that geometry's vertex range
+  // (three r186 keeps the ranges in _geometryInfo); no allocation, one small upload
+  function vcSet(bm,gid,c){const gi=bm._geometryInfo[gid],at=bm.geometry.attributes.color;if(!gi||!at)return;const a=at.array,s=gi.vertexStart,n=gi.vertexCount;
+    for(let i=s;i<s+n;i++){a[i*3]=c.r;a[i*3+1]=c.g;a[i*3+2]=c.b;}at.addUpdateRange(s*3,n*3);at.needsUpdate=true;}
+  // (vertex-colour path: a slot freed by an object that left this batch is reused by the next object of the same shape, so
+  // batches don't grow as forklift loads, people and trucks come and go)
+  const vcFree=(B,r)=>{if(DBCOL||!B)return;let f=B.free.get(r.geo);if(!f)B.free.set(r.geo,f=[]);f.push(r.iid,r.gid);};
+  function dbAdd(B,o){const g=o.geometry,c=o.material.color;let gid=DBCOL?B.geos.get(g):undefined,vg=null;
+    const fr=!DBCOL&&B.free.get(g);
+    if(fr&&fr.length){gid=fr.pop();const iid=fr.pop();vcSet(B.bm,gid,c);B.bm.setVisibleAt(iid,true);
+      const r={o,B,bm:B.bm,iid,gid,vg:true,mat:o.material,geo:g,ver:g.attributes.position.version,cr:c.r,cg:c.g,cb:c.b};
+      if(B.wait){B.wait.push(r);B.bm.setMatrixAt(iid,o.matrixWorld);return true;}DB.list.push(r);o.layers.set(DBLAYER);return true;}
+    if(gid===undefined){const nv=g.attributes.position.count,ni=g.index?g.index.count:0;if(B.bm.unusedVertexCount<nv||B.bm.unusedIndexCount<ni)return false;
+      if(B.bm.instanceCount>=B.bm.maxInstanceCount)return false;
+      // (vertex-colour path: one geometry per object; the batch copies the data, so one scratch copy per shape is refilled)
+      if(DBCOL){gid=B.bm.addGeometry(g);B.geos.set(g,gid);}else{let h=VCG.get(g);h=vcGeo(g,c,h);VCG.set(g,h);gid=B.bm.addGeometry(h);vg=true;}}
     if(B.bm.instanceCount>=B.bm.maxInstanceCount)return false;
-    const iid=B.bm.addInstance(gid),c=o.material.color;B.bm.setColorAt(iid,c);
-    const r={o,bm:B.bm,iid,mat:o.material,geo:g,ver:g.attributes.position.version,cr:c.r,cg:c.g,cb:c.b};
+    const iid=B.bm.addInstance(gid);if(DBCOL)B.bm.setColorAt(iid,c);
+    const r={o,B,bm:B.bm,iid,gid,vg,mat:o.material,geo:g,ver:g.attributes.position.version,cr:c.r,cg:c.g,cb:c.b};
     if(B.wait){B.wait.push(r);B.bm.setMatrixAt(iid,o.matrixWorld);return true;}
     DB.list.push(r);o.layers.set(DBLAYER);return true;}
   // a batch per look, with room to grow, so things created later join without rebuilding anything
   function dbNew(key,L){const geos=new Map();let nv=0,ni=0;
-    for(const o of L){const g=o.geometry;if(!geos.has(g)){geos.set(g,-1);nv+=g.attributes.position.count;ni+=g.index?g.index.count:0;}}
-    const bm=new THREE.BatchedMesh(Math.ceil(L.length*1.5)+8,Math.ceil(nv*1.5)+64,Math.max(Math.ceil(ni*1.5)+96,1),dbMat(L[0].material));
+    for(const o of L){const g=o.geometry;if(!DBCOL||!geos.has(g)){geos.set(g,-1);nv+=g.attributes.position.count;ni+=g.index?g.index.count:0;}}
+    // (vertex-colour path: every object takes its own vertices, so leave much more room for things that join later)
+    const gr=DBCOL?1.5:3,bm=new THREE.BatchedMesh(Math.ceil(L.length*gr)+8,Math.ceil(nv*gr)+(DBCOL?64:2048),Math.max(Math.ceil(ni*gr)+(DBCOL?96:3072),1),dbMat(L[0].material));
     bm.perObjectFrustumCulled=false;bm.sortObjects=false;bm.frustumCulled=false;bm.castShadow=L[0].castShadow;bm.receiveShadow=L[0].receiveShadow;
     bm.matrixAutoUpdate=false;bm.userData.smBatch=true;bm.name="moving batch";scene.add(bm);DB.bms.push(bm);
-    const B={bm,geos:new Map()};
+    const B={bm,geos:new Map(),free:new Map()};
     if(!G3.warm){DB.byKey.set(key,B);for(const o of L)dbAdd(B,o);return;}
     // v4.0.1: a batch made mid-play is filled but kept hidden while its shader compiles in the background; its objects
     // keep drawing on their own until then, so a new batch never stalls a frame on a shader compile
     B.wait=[];for(const o of L)dbAdd(B,o);bm.visible=false;DB.pending=(DB.pending||0)+1;(DB.pendKeys||(DB.pendKeys=new Set())).add(key);
     const go=()=>{DB.pending--;DB.pendKeys.delete(key);if(!DB.bms.includes(bm))return;const W=B.wait;B.wait=null;DB.byKey.set(key,B);
-      for(const r of W){const o=r.o;if(o.parent&&o.layers.mask===1&&o.material===r.mat&&o.geometry===r.geo&&dbOK(o)){DB.list.push(r);o.layers.set(DBLAYER);}else bm.setVisibleAt(r.iid,false);}
+      for(const r of W){const o=r.o;if(o.parent&&o.layers.mask===1&&o.material===r.mat&&o.geometry===r.geo&&dbOK(o)){DB.list.push(r);o.layers.set(DBLAYER);}else{bm.setVisibleAt(r.iid,false);vcFree(B,r);}}
       bm.visible=true;DB.n=DB.list.length;DB.late=(DB.late||0)+1;};
     try{renderer.compileAsync(bm,camera,scene).then(go,go);}catch(e){go();}}
   function dbBuild(){DB.builds=(DB.builds||0)+1;
@@ -5876,9 +5904,9 @@ function no3D(){G3.ok=false;$("no3d").hidden=false;$("no3d-retry").onclick=()=>l
     // up within 4 frames); everything else every frame
     for(const r of DB.list){const o=r.o;if(r.gone)continue;if(r.idle>60&&((fn+r.iid)&3))continue;
       const bc=r.bm.material,om=o.material;
-      if(om!==r.mat||o.geometry!==r.geo||o.geometry.attributes.position.version!==r.ver||o.layers.mask!==1<<DBLAYER||!emSame(om,bc)){r.gone=true;out=true;r.bm.setVisibleAt(r.iid,false);if(o.layers.mask===1<<DBLAYER)o.layers.set(0);continue;}
+      if(om!==r.mat||o.geometry!==r.geo||o.geometry.attributes.position.version!==r.ver||o.layers.mask!==1<<DBLAYER||!emSame(om,bc)){r.gone=true;out=true;r.bm.setVisibleAt(r.iid,false);vcFree(r.B,r);if(o.layers.mask===1<<DBLAYER)o.layers.set(0);continue;}
       // only touch the batch when something changed (each change re-uploads that batch's matrix texture)
-      let ch=false;{const c=om.color;if(c.r!==r.cr||c.g!==r.cg||c.b!==r.cb){r.cr=c.r;r.cg=c.g;r.cb=c.b;r.bm.setColorAt(r.iid,c);ch=true;}}
+      let ch=false;{const c=om.color;if(c.r!==r.cr||c.g!==r.cg||c.b!==r.cb){r.cr=c.r;r.cg=c.g;r.cb=c.b;if(DBCOL)r.bm.setColorAt(r.iid,c);else vcSet(r.bm,r.gid,c);ch=true;}}
       const vis=smShown(o);if(vis!==r.vis){r.vis=vis;ch=true;r.bm.setVisibleAt(r.iid,vis);}
       if(vis){const e=o.matrixWorld.elements,m=r.m||(r.m=new Float32Array(16).fill(NaN));let mc=false;for(let i=0;i<16;i++)if(e[i]!==m[i]){mc=true;m[i]=e[i];}
         if(mc){ch=true;r.bm.setMatrixAt(r.iid,o.matrixWorld);}}

@@ -114,9 +114,11 @@ function chaosTick(dt){
   for(const i of S.inc){if(QINC(i.id)&&!working(i.id))continue;if(MNEED(i.id)&&!i.mGo)continue;if(QINC(i.id)||MNEED(i.id))i.go=true;i.left-=dt*((QINC(i.id)||MNEED(i.id))?repRate():1);}
   for(const i of S.inc)if(i.left<=0&&EV[i.id].end)EV[i.id].end(i);
   for(const i of S.inc)if(i.left<=0)log(`${EV[i.id].name}: cleared, back to normal`,"ok");
-  S.inc=S.inc.filter(i=>i.left>0);
+  // (v4.1 pass 7: compacted in place and counted with a loop: this runs every sim step, and the two filters made new arrays each time)
+  {let w=0;for(let k=0;k<S.inc.length;k++){const i=S.inc[k];if(i.left>0)S.inc[w++]=i;}S.inc.length=w;}
   // v3.3.3: two upsets already running make a third 75% less likely; back to normal once they clear
-  const um=upsetMul()*(S.inc.filter(i=>i.id!=="runner"&&i.id!=="birdhay").length>=2?0.25:1);
+  let busy=0;for(let k=0;k<S.inc.length;k++){const id=S.inc[k].id;if(id!=="runner"&&id!=="birdhay")busy++;}
+  const um=upsetMul()*(busy>=2?0.25:1);
   {const r=rand("up");if(CH.on&&um>0&&CH.en.chestover&&!active("chestover")&&S.tank>=P.tankCap*0.995&&r<dt/60/25)trigger("chestover");}
   const roll=CH.on&&um>0&&!outOn();
   for(const e of EVENTS){const r=rand("up");if(roll&&CH.en[e.id]&&!active(e.id)&&r<dt/60/e.mtbf*CH.lvl*freqMul(e.id)*0.75*um)trigger(e.id);}

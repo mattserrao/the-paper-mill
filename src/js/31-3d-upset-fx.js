@@ -361,7 +361,7 @@
         // with/without a texture), so a new batch made mid-play never compiles a shader
         const tex=TX.puff,stand=[];for(const side of [THREE.FrontSide,THREE.DoubleSide])for(const map of [null,tex]){
           const g=new THREE.BoxGeometry(0.01,0.01,0.01),bm=new THREE.BatchedMesh(1,g.attributes.position.count,g.index.count,new THREE.MeshLambertMaterial({side,map}));
-          bm.setColorAt(bm.addInstance(bm.addGeometry(g)),new THREE.Color(1,1,1));/* per-object colors, as moving batches use */bm.perObjectFrustumCulled=false;bm.castShadow=true;bm.frustumCulled=false;bm.position.set(0,-50,0);bm.updateMatrixWorld();scene.add(bm);stand.push([bm,g]);}
+          {const ii=bm.addInstance(bm.addGeometry(G3.DBCOL?g:G3.vcGeo(g,new THREE.Color(1,1,1))));if(G3.DBCOL)bm.setColorAt(ii,new THREE.Color(1,1,1));}/* per-object colors, as moving batches use */bm.perObjectFrustumCulled=false;bm.castShadow=true;bm.frustumCulled=false;bm.position.set(0,-50,0);bm.updateMatrixWorld();scene.add(bm);stand.push([bm,g]);}
         // v4.1 pass 3: the shadow pass shares one depth material and re-derives its shader only when it steps from a plain
         // mesh to an instanced or batched one (or back); it then takes the side and texture of whatever it draws next. So
         // every combination is drawn here in exactly that order (the scene is traversed in insertion order), and a batch or
@@ -370,7 +370,7 @@
         {const tiny=new THREE.BoxGeometry(0.01,0.01,0.01),dbl=new THREE.MeshLambertMaterial({side:THREE.DoubleSide}),dblT=new THREE.MeshLambertMaterial({side:THREE.DoubleSide,map:tex});
           const put=o=>{o.castShadow=true;o.frustumCulled=false;o.position.set(0,-50,0);o.updateMatrixWorld();if(!o.dispose)o.dispose=()=>{};scene.add(o);stand.push([o,null]);return o;};
           const plain=m=>put(new THREE.Mesh(tiny,m)),inst=(m,col)=>{const im=new THREE.InstancedMesh(tiny,m,1);im.setMatrixAt(0,new THREE.Matrix4());if(col)im.setColorAt(0,new THREE.Color(1,1,1));return put(im);};
-          const batch=m=>{const bm=new THREE.BatchedMesh(1,tiny.attributes.position.count,tiny.index.count,m);bm.setColorAt(bm.addInstance(bm.addGeometry(tiny)),new THREE.Color(1,1,1));bm.perObjectFrustumCulled=false;return put(bm);};
+          const batch=m=>{const bm=new THREE.BatchedMesh(1,tiny.attributes.position.count,tiny.index.count,m);{const ii=bm.addInstance(bm.addGeometry(tiny));if(G3.DBCOL)bm.setColorAt(ii,new THREE.Color(1,1,1));}bm.perObjectFrustumCulled=false;return put(bm);};
           for(const m of [M.ink,dbl,M.bale,dblT]){batch(M.ink);plain(m);}                                   // plain casters: one/two-sided, plain/textured, each right after a batch
           for(const m of [M.ink,dbl,M.bale,dblT]){plain(M.ink);batch(m);}                                   // batched casters, the same four, each right after a plain mesh
           for(const m of [instMat(M.ink),instMat(M.bale)])for(const col of [false,true]){plain(M.ink);inst(m,col);}   // instanced casters, with and without per-instance colour (own copies, see instMat)
@@ -378,21 +378,21 @@
         // v4.0.1: one stand-in per look a moving batch could ever use (effects included), drawn white with a per-object color
         // exactly as dbNew builds them, so a batch made mid-play reuses a compiled shader
         {const seen=new Set();scene.traverse(o=>{if(o.isBatchedMesh||!dbOK(o))return;const k=dbKey(o);if(seen.has(k))return;seen.add(k);
-          const g=o.geometry,c=o.material.clone();c.color.setRGB(1,1,1);
-          const bm=new THREE.BatchedMesh(1,g.attributes.position.count,Math.max(g.index?g.index.count:0,1),c);bm.setColorAt(bm.addInstance(bm.addGeometry(g)),o.material.color);
+          const g=o.geometry,c=o.material.clone();c.color.setRGB(1,1,1);if(!G3.DBCOL)c.vertexColors=true;
+          const bm=new THREE.BatchedMesh(1,g.attributes.position.count,Math.max(g.index?g.index.count:0,1),c);{const ii=bm.addInstance(bm.addGeometry(G3.DBCOL?g:G3.vcGeo(g,new THREE.Color(1,1,1))));if(G3.DBCOL)bm.setColorAt(ii,o.material.color);}
           bm.perObjectFrustumCulled=false;bm.sortObjects=false;bm.frustumCulled=false;bm.castShadow=o.castShadow;bm.receiveShadow=o.receiveShadow;scene.add(bm);stand.push([bm,null]);});}
         // ...one per material in the scene that a moving batch could use (objects made or freed later reuse these)...
         {const mats=new Map();scene.traverse(o=>{if(!o.isMesh||o.isBatchedMesh||o.isInstancedMesh||Array.isArray(o.material))return;const m=o.material;
             if(!m||!DBOK.has(m.type)||m.transparent||m.opacity<1)return;const k=mats.get(m)||0;mats.set(m,k|(o.receiveShadow?2:1));});
           const g=new THREE.BoxGeometry(0.01,0.01,0.01);
-          mats.forEach((fl,m)=>{for(const recv of [false,true]){if(!(fl&(recv?2:1)))continue;const c=m.clone();c.color.setRGB(1,1,1);
-            const bm=new THREE.BatchedMesh(1,g.attributes.position.count,g.index.count,c);bm.setColorAt(bm.addInstance(bm.addGeometry(g)),m.color);
+          mats.forEach((fl,m)=>{for(const recv of [false,true]){if(!(fl&(recv?2:1)))continue;const c=m.clone();c.color.setRGB(1,1,1);if(!G3.DBCOL)c.vertexColors=true;
+            const bm=new THREE.BatchedMesh(1,g.attributes.position.count,g.index.count,c);{const ii=bm.addInstance(bm.addGeometry(G3.DBCOL?g:G3.vcGeo(g,new THREE.Color(1,1,1))));if(G3.DBCOL)bm.setColorAt(ii,m.color);}
             bm.perObjectFrustumCulled=false;bm.frustumCulled=false;bm.castShadow=true;bm.receiveShadow=recv;scene.add(bm);stand.push([bm,null]);}});
           stand.push([{material:null,dispose(){}},g]);}
         // ...and a per-object-color twin of every static scenery batch's material: a look first drawn in the scenery can
         // later turn up on moving things, and their batch then needs the color variant of the same shader
-        for(const sb of SM.bms){const g=new THREE.BoxGeometry(0.01,0.01,0.01),c=sb.material.clone();c.color.setRGB(1,1,1);
-          const bm=new THREE.BatchedMesh(1,g.attributes.position.count,g.index.count,c);bm.setColorAt(bm.addInstance(bm.addGeometry(g)),new THREE.Color(1,1,1));
+        for(const sb of SM.bms){const g=new THREE.BoxGeometry(0.01,0.01,0.01),c=sb.material.clone();c.color.setRGB(1,1,1);if(!G3.DBCOL)c.vertexColors=true;
+          const bm=new THREE.BatchedMesh(1,g.attributes.position.count,g.index.count,c);{const ii=bm.addInstance(bm.addGeometry(G3.DBCOL?g:G3.vcGeo(g,new THREE.Color(1,1,1))));if(G3.DBCOL)bm.setColorAt(ii,new THREE.Color(1,1,1));}
           bm.perObjectFrustumCulled=false;bm.frustumCulled=false;bm.castShadow=sb.castShadow;bm.receiveShadow=sb.receiveShadow;scene.add(bm);stand.push([bm,g]);}
         for(const id in FX){if(!FX[id].g.visible){FX[id].g.visible=true;shown.push(FX[id].g);}}
         // v4.1 pass 3: the sky, terrain, clouds and mist never appear with an effect-only shader, and they already compiled for the
