@@ -129,6 +129,10 @@
   $("v2free").addEventListener("click",()=>{setFree(!S.free);play();});
   $("v2board").addEventListener("click",openBoard);
   $("v2zen").addEventListener("click",()=>{menu.hidden=true;first=false;setZen(true);});
+  // v17: zen's map rotation reloads the page with ?zen=1: go straight back into zen once the scene is ready (and drop the
+  // flag from the address, so a later reload opens the menu as usual)
+  if(new URLSearchParams(location.search).get("zen")==="1"){const go=()=>{if(G3.ok&&!G3.warm){setTimeout(go,300);return;}
+      try{const q=new URLSearchParams(location.search);q.delete("zen");history.replaceState(null,"",location.pathname+(q.toString()?"?"+q:"")+location.hash);}catch(e){}$("v2zen").click();};setTimeout(go,300);}
   $("v2colors").addEventListener("click",rollMill);
   $("v2rename").addEventListener("click",()=>{$("v2nameRow").hidden=false;const i=$("v2name");i.value=MILL.name;i.focus();i.select();});
   const saveName=()=>{renameMill($("v2name").value);$("v2nameRow").hidden=true;sync();};

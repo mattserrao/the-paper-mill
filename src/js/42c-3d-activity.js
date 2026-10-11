@@ -76,20 +76,20 @@
                 if(pt>0.25){const p=puffs[pi++%puffs.length];p.a=0;p.m.position.set(gx-Math.cos(ry)*1.6,r.g.position.y+0.4,gz+Math.sin(ry)*1.6);p.m.visible=true;}}
               if(pt>0.25)pt=0;for(const p of puffs){if(p.a>=2.5){p.m.visible=false;continue;}p.a+=rdt;const s2=0.6+p.a*1.2;p.m.scale.set(s2,s2*0.6,s2);p.m.material.opacity=0.3*(1-p.a/2.5);}
               return live||this.t*v<20;},
-            stop(){rs.forEach(r=>r.g.visible=false);puffs.forEach(p=>p.m.visible=false);}};},
+            focus(){const r=rs.find(r=>r.g.visible)||rs[0];return [r.g.position.x,1.5,r.g.position.z,40];},stop(){rs.forEach(r=>r.g.visible=false);puffs.forEach(p=>p.m.visible=false);}};},
         // Bigfoot steps out of the trees between the highway and the gate, ambles along the edge, stops to look at the mill, and goes back in
         rural:()=>{const g=grp(),F={l:[-1,1].map(s=>part(g,0.45,1.3,0.45,0,0,s*0.32,"bigfoot","#4a3426")),b:part(g,0.9,1.6,1.25,0,1.25,0,"bigfoot","#4a3426"),
               a:[-1,1].map(s=>part(g,0.32,1.5,0.32,0,1.1,s*0.8,"bigfoot","#4a3426")),h:part(g,0.6,0.62,0.6,0.1,2.85,0,"bigfoot","#4a3426")};part(g,0.12,0.25,0.4,0.42,2.95,0,"skin","#8a6a52");g.visible=false;
           const P=[[-152,74],[-142,58],[-131,44],[-128,32],[-140,22],[-153,26]],T=plen(P);
           return {t:0,tick(rdt){this.t+=rdt;const look=this.t>12&&this.t<18,s=Math.min(T,(this.t<12?this.t:look?12:this.t-6)*2.6);const [x,z,ry]=pathAt(P,s);
               g.visible=true;g.position.set(x,H(x,z),z);g.rotation.y=look?Math.atan2(-(5-z),-14-x):ry;swing(F,look?0:this.t*4.2,look?0:1);F.h.rotation.y=look?Math.sin(this.t*1.3)*0.4:0;return s<T;},
-            stop(){g.visible=false;}};},
+            focus(){return [g.position.x,2.2,g.position.z,24];},stop(){g.visible=false;}};},
         // a tug steams in from sea, runs along the waterfront past the mill and the pier, and heads back out, a wake behind it
         urban:()=>{const g=grp();part(g,13,2.2,5,0,-0.6,0,"tug","#c92a2a");part(g,5,2.4,3.6,-1,1.6,0,"tugw","#f2f2f2");part(g,2.6,1.2,3,-1,4,0,"glass","#46576d");part(g,0.8,3,0.8,-3.6,1.6,0,"dark","#2f3a49");
           part(g,0.9,0.5,0.9,-3.6,4.6,0,"tug","#c92a2a");const wk=new THREE.Mesh(new THREE.PlaneGeometry(1,1),new THREE.MeshBasicMaterial({color:0xffffff,transparent:true,opacity:0.45,depthWrite:false}));wk.rotation.x=-Math.PI/2;wk.scale.set(26,6,1);scene.add(wk);
           const [zc,hw]=riverAt(0),sh=zc+hw,P=[[260,sh-260],[170,sh-150],[60,sh-26],[-60,sh-24],[-180,sh-40],[-292,sh-150],[-380,sh-300]],T=plen(P);g.visible=false;wk.visible=false;
           return {t:0,tick(rdt){this.t+=rdt;const s=Math.min(T,this.t*9);const [x,z,ry]=pathAt(P,s);g.visible=wk.visible=true;g.position.set(x,0.05+Math.sin(this.t*1.6)*0.12,z);g.rotation.y=ry;
-              g.rotation.z=Math.sin(this.t*1.1)*0.03;wk.position.set(x-Math.cos(ry)*18,0.06,z+Math.sin(ry)*18);wk.rotation.z=ry;return s<T;},stop(){g.visible=wk.visible=false;}};},
+              g.rotation.z=Math.sin(this.t*1.1)*0.03;wk.position.set(x-Math.cos(ry)*18,0.06,z+Math.sin(ry)*18);wk.rotation.z=ry;return s<T;},focus(){return [g.position.x,1,g.position.z,55];},stop(){g.visible=wk.visible=false;}};},
         // an operator walks the canal bank east of the intake, stops at the edge; a gator glides in, lunges and takes them
         // under; a splash, a hard hat bobbing on the water, and the gator slides off
         swamp:()=>{const [zc,hw]=riverAt(50),bank=zc+hw,op=grp(),O=figure(op,"#f27a30","#e2c230","",0);op.visible=false;
@@ -107,9 +107,11 @@
               if(t>15&&t<19){ring.visible=true;const k=t-15;ring.position.set(EX,0.08,bank-1.2);ring.scale.set(1+k*2.2,1+k*2.2,1);ring.material.opacity=0.6*(1-k/4);}else ring.visible=false;
               if(t>16&&t<24){hat.visible=true;hat.position.set(EX+Math.sin(t)*0.4,0.05+Math.sin(t*2.4)*0.06,bank-1.6-(t-16)*0.25);}else hat.visible=false;
               if(t>15.6)gt.visible=t<30;return t<30;},
-            stop(){op.visible=gt.visible=hat.visible=ring.visible=false;op.rotation.x=0;}};}};
+            focus(){return [EX+(this.t<9?Math.max(0,22-this.t*22/9)*0.5:0),0.6,bank-1,22];},stop(){op.visible=gt.visible=hat.visible=ring.visible=false;op.rotation.x=0;}};}};
       // (built once at start-up, hidden, so nothing is created or compiled when one happens; rewound each time)
       const one=SIGHTS[SITE.env]?SIGHTS[SITE.env]():null;let wait=FAST?3:rr2(240,600);G3.sight=()=>{wait=0;};   // (G3.sight(): show one now, for tests)
-      if(one)ACT.push(rdt=>{G3.sightT=sight?sight.t:-1;if(sight){if(!sight.tick(rdt)){sight.stop();sight=null;wait=FAST?40:rr2(240,600);}return;}wait-=rdt;if(wait<=0){one.t=0;sight=one;}});}
+      if(one)ACT.push(rdt=>{G3.sightT=sight?sight.t:-1;if(sight){if(!sight.tick(rdt)){sight.stop();sight=null;wait=FAST?40:rr2(240,600);}return;}if(G3.zen&&!FAST&&wait>110)wait=rr2(50,110);wait-=rdt;if(wait<=0){one.t=0;sight=one;}});
+      // (zen: a sight every minute or two, and the zen camera cuts to it and follows it: 43-3d-frame.js)
+      G3.sightFocus=()=>sight&&sight.focus?sight.focus():null;}
     G3.actTick=rdt=>{if(!(rdt>0))return;rdt=Math.min(rdt,0.1);for(let k=0;k<ACT.length;k++)ACT[k](rdt);};
     G3.act=ACT.length;}

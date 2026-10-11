@@ -2,6 +2,27 @@
   // each returns [tx,ty,tz, r, th, ph] or null when finished (th: 0 = looking from +z, ph: 0 = straight down, PI/2 = level)
   const ease=u=>u<0?0:u>1?1:u*u*(3-2*u),mix=(a,b,u)=>a+(b-a)*u,_zv=new THREE.Vector3();
   let zenMovesCache=null;
+  // v17 helpers for the landscape-and-mill shots: U(k) is a place from the scenery's list ([x, z, height]) or null
+  const U=k=>(G3.scenery&&G3.scenery.util&&G3.scenery.util[k])||null,MILLC=[14,2,5];
+  // low from a place, looking across to the mill: the camera sits at the place and creeps toward the mill
+  const fromPlace=(name,k,look,h=1.3,dur=14)=>({name,look,dur,ok:()=>!!U(k),start:()=>{const p=U(k),d=Math.hypot(p[0]-MILLC[0],p[1]-MILLC[2]);return {th:Math.atan2(p[0]-MILLC[0],p[1]-MILLC[2]),d};},
+    at:(t,mv)=>{if(t>dur)return null;const u=ease(t/dur),st=mv.st;return [MILLC[0],MILLC[1],MILLC[2],Math.max(120,st.d*mix(1.0,0.85,u)),st.th+mix(-0.08,0.08,u),h];}});
+  // start close on a place and pull back and up until the mill comes into the frame behind it
+  const reveal=(name,k,look,dur=16)=>({name,look,dur,ok:()=>!!U(k),start:()=>{const p=U(k);return {p,th:Math.atan2(MILLC[0]-p[0],MILLC[2]-p[1])+Math.PI};},
+    at:(t,mv)=>{if(t>dur)return null;const u=ease(t/dur),p=mv.st.p;return [mix(p[0],(p[0]+MILLC[0])/2,u),mix(Math.min(8,p[2]*0.3),2,u),mix(p[1],(p[1]+MILLC[2])/2,u),mix(45,260,u),mv.st.th+0.25*u,mix(1.1,0.92,u)];}});
+  function siteShots(){const E=SITE.env;
+    if(E==="rural")return [fromPlace("timber yard to the mill","timber",["gold","none"],1.25),reveal("bale store reveal","occStore",["airy","none"]),
+      fromPlace("from the farm","farm",["gold","dusk"],1.3,16),reveal("lake reveal","lake",["airy","gold"]),
+      {name:"rapids to the mill",look:["airy","none"],dur:15,ok:()=>true,at:(t)=>{if(t>15)return null;const u=ease(t/15),x=mix(-205,-60,u),rv=riverAt(x);return [x,1,rv[0],mix(50,140,u),Math.PI+0.6-0.4*u,mix(1.28,1.05,u)];}}];
+    if(E==="urban")return [fromPlace("from the pier","pier",["gold","dusk"],1.3),reveal("container port reveal","port",["hc","none"]),fromPlace("lighthouse view","lighthouse",["dusk","gold"],1.25,16),
+      reveal("rail yard reveal","railyard",["bw","none"]),fromPlace("from the water tower","waterTower",["airy","none"],1.2)];
+    if(E==="desert")return [reveal("solar field reveal","solarFarm",["gold","none"]),fromPlace("from the stock pond","stockPond",["dusk","gold"],1.3,16),fromPlace("ranch view","ranch",["gold","none"],1.3),
+      reveal("water works reveal","waterTanks",["airy","none"]),
+      {name:"mesa to the mill",look:["dusk","gold"],dur:16,ok:()=>true,at:(t)=>{if(t>16)return null;const u=ease(t/16);return [mix(255,40,u),mix(30,4,u),mix(-245,-20,u),mix(140,230,u),2.3,mix(1.2,1.0,u)];}}];
+    return [reveal("barge dock reveal","bargeDock",["airy","none"]),fromPlace("from the boardwalk","boardwalk",["gold","dusk"],1.3,16),fromPlace("from the radio mast island","mast",["airy","gold"],1.2),
+      {name:"bale route",look:["hc","none"],dur:12,ok:()=>true,at:(t)=>{if(t>12)return null;const u=ease(t/12);return [mix(-80,-60,u),1,mix(-55,-28,u),mix(45,60,u),-1.0+0.3*u,1.05];}},
+      reveal("dry pad edge","dryPad",["airy","none"])];}
+  G3.zenMoves=()=>zenMoves();   // (tests: run every shot)
   function zenMoves(){if(zenMovesCache)return zenMovesCache;const LEND=PLEN[PLEN.length-1],TUB=[16,1.2,-13.5];
     zenMovesCache=[
       // ride a bale down the walking floor, under the guillotine, up the incline and into the pulper tub
@@ -122,9 +143,9 @@
         start:()=>({a:Math.random()*6.28}),
         at:(t,mv)=>{if(t>18)return null;const u=ease(t/18),a=mv.st.a;return [mix(14+Math.sin(a)*190,14,u),mix(10,4,u),mix(5+Math.cos(a)*190,5,u),mix(330,175,u),a,mix(1.08,0.9,u)];}},
       // a slow half-orbit of one of the landmarks the seed placed (water tower, solar farm, lake, village, barge dock...)
-      {name:"landmark",look:["gold","none"],dur:13,ok:()=>!!(G3.scenery&&G3.scenery.util&&Object.keys(G3.scenery.util).length),
+      {name:"landmark",look:["gold","none"],dur:15,ok:()=>!!(G3.scenery&&G3.scenery.util&&Object.keys(G3.scenery.util).length),
         start:()=>{const U=G3.scenery.util,ks=Object.keys(U),k=ks[Math.floor(Math.random()*ks.length)],[x,z,h]=U[k];return {x,z,h,th:Math.atan2(x-14,z-5)+(Math.random()-0.5)*1.2,k};},
-        at:(t,mv)=>{if(t>13)return null;const s=mv.st,u=ease(t/13);return [s.x,Math.min(12,s.h*0.35),s.z,Math.max(45,s.h*2.2+30),s.th+u*1.3,mix(1.0,0.92,u)];}},
+        at:(t,mv)=>{if(t>15)return null;const s=mv.st,u=ease(t/15);return [s.x,Math.min(12,s.h*0.35),s.z,Math.max(45,s.h*2.2+30),s.th+u*1.3,mix(1.0,0.92,u)];}},
       // the highway bridge over the river, trucks coming and going
       {name:SITE.env==="urban"?"seafront boulevard":"highway bridge",look:["bw","dusk"],dur:12,ok:()=>true,start:()=>({d:Math.random()<0.5?1:-1}),
         at:(t,mv)=>{if(t>12)return null;const u=ease(t/12),rv=riverAt(-158),rz=RIVERS[SITE.env].kind==="sea"?rv[0]+rv[1]+12:rv[0];return [-158,2,mix(rz-18*mv.st.d,rz+6*mv.st.d,u),mix(80,62,u),Math.PI/2+0.55*mv.st.d-0.5*mv.st.d*u,mix(1.02,0.96,u)];}},
@@ -141,6 +162,10 @@
         at:(t,mv)=>{if(t>16)return null;const u=ease(t/16);return [14,20,5,mix(300,255,u),mv.st.th+u*0.5,1.14];}}]:
         SITE.env==="desert"?[{name:"mesa horizon",look:["gold","dusk"],dur:14,ok:()=>true,start:()=>({th:Math.random()*6.28}),
         at:(t,mv)=>{if(t>14)return null;const u=ease(t/14);return [14,12,5,mix(420,300,u),mv.st.th+u*0.15,mix(1.3,1.2,u)];}}]:
-        [{name:"bayou mist",look:["airy","none"],dur:14,ok:()=>true,
-        at:(t)=>{if(t>14)return null;const u=ease(t/14);return [mix(-130,-45,u),2,mix(120,60,u),46,0.25-0.15*u,1.28];}}])];
+        // (v17: the bayou mist is gone; low along a slough instead, toward the mill on its dry pad)
+        [{name:"bayou channels",look:["airy","gold"],dur:14,ok:()=>true,
+        at:(t)=>{if(t>14)return null;const u=ease(t/14);return [mix(-235,-200,u),1.5,mix(-200,-110,u),mix(60,90,u),Math.PI+0.5-0.3*u,mix(1.3,1.18,u)];}}]),
+      // v17: landscape and mill together, map by map: from each site's own places, looking back at the mill, or starting on
+      // a place and pulling back until the mill is in the frame
+      ...siteShots()];
     return zenMovesCache;}

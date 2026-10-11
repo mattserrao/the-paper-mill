@@ -132,6 +132,20 @@ piece; the three sandbox-style piano pieces are the valley's.
   piece; the sound button's tooltip names what is playing. `tools/musictest.py` schedules every step of every piece and
   checks the output level; `tools/musicrec.py` records any piece to MP3.
 
+### Zen mode (pass 16, test v18)
+- Map rotation: once every everyday scripted shot of the map has played (or after 15 minutes, with most of them played),
+  zen fades out and moves on to the next map (valley -> city -> desert -> bayou -> valley): the page reloads on it with
+  ?zen=1 and goes straight back into zen (the flag is then dropped from the address). ?zenstay keeps one map.
+- Scripted shots now come up 55% of the time (was 40%), so a map's shot list is worked through sooner.
+- Shot review, map by map: every shot runs start to finish without errors on all four maps (tools/zencheck.py). New
+  landscape-and-mill shots that start on a place and pull back to the mill, or look across from a place to the mill:
+  valley - timber yard, bale store, farm, lake, rapids to the mill; city - pier, container port, lighthouse, rail yard,
+  water tower; desert - solar field, stock pond, ranch, water works, mesa to the mill; bayou - barge dock, boardwalk,
+  radio mast island, bale route, dry pad edge. "Bayou mist" (mist removed) is now "bayou channels". The landmark
+  half-orbit runs 15 s (was 13).
+- Rare sights in zen: one every minute or two, and the zen camera cuts to it and follows it, slowly circling, until it
+  is over.
+
 ### Rare sights (pass 15, test v17)
 - Now and then (every 4-10 minutes of play, at random) something odd happens on the site for about half a minute:
   cowboys ride across the desert flats in a little dust, Bigfoot steps out of the valley woods by the gate and stops to
