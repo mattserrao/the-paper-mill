@@ -140,8 +140,9 @@ const CARDS=[
   win:()=>`+${money(500*(priceOf(C.grade)+35))} for 500 t`,lose:()=>"The buyer rejects 20% as damaged: those 100 t go at the $150/t seconds price",
   odds:()=>70,why:"Fixed odds.",
   ok:()=>S.fg*C.rollW.v>=500&&!pending("spot"),
-  accept(c){const w=rand("card")*100<c.o,n=500/C.rollW.v,p=priceOf(C.grade)+35;S.fg=Math.max(0,S.fg-n);S.shipT+=500;S.tot.shipped+=n;
-    const v=w?500*p:400*p+100*150;earn(v);pend("spot",1,()=>{});
+  accept(c){const w=rand("card")*100<c.o,n=500/C.rollW.v,T=[];lotTake(S.lots.fg,Math.min(n,S.fg),T);S.fg=Math.max(0,S.fg-n);S.shipT+=500;S.tot.shipped+=n;
+    // (v16: the 500 t are the warehouse's oldest rolls, each at its own grade's price + $35)
+    const full=lotValue(T,C.rollW.v,35),v=w?full:full*0.8+100*150;earn(v);pend("spot",1,()=>{});
     return w?`500 t shipped for ${money(v)}.`:`400 t accepted, 100 t rejected and sold as seconds: ${money(v)} in total.`;}},
  {id:"rail",area:"Inbound",title:"Railcar of OCC",
   story:()=>"A broker can send a railcar of 900 t of OCC at $30/t under your price. Unloading it ties up a receiving door for about 18 hours.",

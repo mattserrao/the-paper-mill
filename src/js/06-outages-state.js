@@ -62,9 +62,14 @@ const HAYLINES=["HAYOUT! Paper is shooting to the roof!","Winder hayout! Every P
 // a hayout ruins the outer wraps of the set on the winder (about 3 t), not the whole 12.5 t roll
 // v2.9.5: reels at the winder (on the unwind + in storage); a reel turns up a fraction over 100 t, which used to make the
 // unwind reel count as "more than one" and block storage, so the machine stopped with storage empty
+function lotPut(L,g,q){if(!(q>0))return;const t=L[L.length-1];if(t&&t[0]===g)t[1]+=q;else L.push([g,q]);}
+// take q from the front of lots L (into lots `out` if given); returns what was taken
+function lotTake(L,q,out){let got=0;while(q>1e-9&&L.length){const h=L[0],k=Math.min(h[1],q);h[1]-=k;q-=k;got+=k;if(out)lotPut(out,h[0],k);if(h[1]<=1e-9)L.shift();}return got;}
+// the value of lots of rolls at today's price for each grade
+const lotValue=(L,tPerRoll,add=0)=>L.reduce((s,[g,q])=>s+q*tPerRoll*(priceOf(g)+add),0);
 function reelsAtWinder(){return Math.max(0,Math.ceil(S.winderBuf/P.jumbo-0.005));}
 function hayout(a=rand("upx"),b=rand("upx")){AUDIO.sfx("hayout",600);S.wd="hayout";S.hayLeft=40+a*40;S.hayTotal=S.hayLeft;enqueue("hay");
-  const extra=Math.min(S.winderBuf,2+b*4),wraps=Math.min(S.winderAcc,P.jumbo/32),loss=extra+wraps;S.winderBuf-=extra;S.winderAcc-=wraps;S.tot.broke+=loss;S.tot.hayouts++;
+  const extra=Math.min(S.winderBuf,2+b*4),wraps=Math.min(S.winderAcc,P.jumbo/32),loss=extra+wraps;S.winderBuf-=extra;S.winderAcc-=wraps;lotTake(S.lots.buf,extra);lotTake(S.lots.acc,wraps);S.tot.broke+=loss;S.tot.hayouts++;
   BANNERS.push({text:HAYLINES[Math.floor(Math.random()*HAYLINES.length)],t:null,id:"hay"});while(BANNERS.length>3)BANNERS.splice(1,1);
   log(`Winder hayout: ${loss.toFixed(1)} t of paper to broke`,"bad");}
 function initCtrl(){
@@ -78,6 +83,9 @@ function initState(){
      tot:{inTrucks:0,inTons:0,turned:0,prodT:0,rolls:0,shipped:0,outTrucks:0,breaks:0,breakMin:0,turnups:0,pot:0,incidents:0,hayouts:0,hayMin:0,broke:0},wd:"run",hayLeft:0,
      trend:[],trendAcc:0,rollsVis:[],conv:0,inc:[],lastInc:0,feed:[],M:baseMods(),effDrv:C.drivers.v,effLd:C.loaders.v,effHum:C.loaders.v};
   S.up={};S.cash=ECON.start;S.ledger={rev:0,occ:0,energy:0,labor:0,overhead:0,repairs:0,premium:0,upgrades:0,deals:0};
+  // v4.1 v16: paper keeps the grade it was made as all the way to the truck: each stage holds lots [grade, amount] in
+  // order (reel and winder stores in t, conveyor and warehouse in rolls) that move first-in first-out with the scalars
+  S.lots={reel:[[C.grade,S.reel]],buf:[],acc:[],conv:[],fg:[[C.grade,S.fg]]};
   S.q={made:0,off:0,bank:0};S.fx=[];S.perk={chem:0,sp:{},price:{},energy:0,winder:0};S.chg=null;
   seedRun((Math.random()*2**32)|0);S.profitRate=0;S.opb=null;S.over=null;S.won=false;S.shipT=0;
   Object.assign(P,BASE);applyUpgrades();

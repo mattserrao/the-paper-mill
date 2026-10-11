@@ -132,6 +132,20 @@ piece; the three sandbox-style piano pieces are the valley's.
   piece; the sound button's tooltip names what is playing. `tools/musictest.py` schedules every step of every piece and
   checks the output level; `tools/musicrec.py` records any piece to MP3.
 
+### Economics fixes (pass 14, test v16)
+- Repair deadlock: maintenance pairs now go first to the job the PM crew is on, then to jobs that need no crew, and last
+  to jobs still waiting for the crew; a pair working on a crew job gives it up if the crew is called away. Before, a
+  winder breakdown could hold the only pair while the crew was at a felt or fabric change that also needed it, and
+  production stopped for good (reproduced on v15: winder down + felt change never cleared; on v16 both clear in 338 min).
+- Repair timing on sim time only: crew and maintenance start work when their travel time (sim minutes) runs out. The
+  wall-clock timeouts and the wait for the 3D crew to arrive are gone, so game speed, frame rate and the 3D view no longer
+  change downtime (the 3D crew still walks over; it is just not waited for). A crew pulled off a winder job walks back.
+- Grade-true pricing: paper carries its grade from the reel through the winder, the conveyor and the warehouse to the
+  truck (first-in first-out lots); each truck is paid roll by roll at its own grade's price, and the spot-buyer card sells
+  the warehouse's oldest rolls at their grades. Losses (hayouts, scrapped or blown-away rolls) come off the same lots.
+- Checks: tools/econfix.py (deadlock, 3D on/off, grade). Autotest checksum unchanged (81890238); 5-season economy mean
+  +$295k (v15 +$344k, same seeds).
+
 ### Performance round (pass 13, test v15), from the v14 graphics performance review
 - Moving batches: the matrix cache is Float64 (a Float32 copy never compared equal to the world matrix, so still things
   were rewritten every frame and their batch's matrix texture re-uploaded, and the every-4th-frame idle check never
