@@ -52,7 +52,7 @@
       shuttle(g,AS.fork.slice().reverse(),3,5,st=>{load.visible=st.dir<0;});}
     /* ---- v17 rare sights: now and then (every 4-10 minutes of play, at random) something odd happens out on the site
        for half a minute: cowboys ride across the desert flats, Bigfoot steps out of the valley woods, a tugboat steams
-       across the city bay, a gator takes an operator on the bayou bank. Purely visual: random timing (not the sim's
+       across the city bay, a gator bites the hand off an operator on the bayou bank (an Amos Moses nod). Purely visual: random timing (not the sim's
        dice), no costs, no production effect, nothing logged. ?sight=1 shows one a few seconds in, then every 40 s. ---- */
     {const Q=new URLSearchParams(location.search),FAST=Q.has("sight"),pathAt=(P,s)=>{let i=1,L=0;for(;i<P.length;i++){const d=Math.hypot(P[i][0]-P[i-1][0],P[i][1]-P[i-1][1]);if(L+d>=s||i===P.length-1){const f=Math.min(1,(s-L)/Math.max(1e-6,d));
           return [P[i-1][0]+(P[i][0]-P[i-1][0])*f,P[i-1][1]+(P[i][1]-P[i-1][1])*f,Math.atan2(-(P[i][1]-P[i-1][1]),P[i][0]-P[i-1][0])];}L+=d;}return [P[0][0],P[0][1],0];},
@@ -90,27 +90,103 @@
           const [zc,hw]=riverAt(0),sh=zc+hw,P=[[260,sh-260],[170,sh-150],[60,sh-26],[-60,sh-24],[-180,sh-40],[-292,sh-150],[-380,sh-300]],T=plen(P);g.visible=false;wk.visible=false;
           return {t:0,tick(rdt){this.t+=rdt;const s=Math.min(T,this.t*9);const [x,z,ry]=pathAt(P,s);g.visible=wk.visible=true;g.position.set(x,0.05+Math.sin(this.t*1.6)*0.12,z);g.rotation.y=ry;
               g.rotation.z=Math.sin(this.t*1.1)*0.03;wk.position.set(x-Math.cos(ry)*18,0.06,z+Math.sin(ry)*18);wk.rotation.z=ry;return s<T;},focus(){return [g.position.x,1,g.position.z,55];},stop(){g.visible=wk.visible=false;}};},
-        // an operator walks the canal bank east of the intake, stops at the edge; a gator glides in, lunges and takes them
-        // under; a splash, a hard hat bobbing on the water, and the gator slides off
-        swamp:()=>{const [zc,hw]=riverAt(50),bank=zc+hw,op=grp(),O=figure(op,"#f27a30","#e2c230","",0);op.visible=false;
-          const gt=grp();part(gt,3.4,0.42,0.95,0,0,0,"gator","#3f4a32");part(gt,1.6,0.3,0.6,2.4,0.05,0,"gator","#3f4a32");const jaw=part(gt,1.4,0.16,0.56,2.4,-0.05,0,"gator","#56603f");part(gt,2.4,0.3,0.4,-2.8,0,0,"gator","#3f4a32");
-          [[0.8,-0.5],[0.8,0.5],[-0.8,-0.5],[-0.8,0.5]].forEach(([a,b])=>part(gt,0.3,0.25,0.3,a,-0.1,b,"gator","#3f4a32"));gt.visible=false;
-          const hat=new THREE.Mesh(sphereG,am("hat#e2c230","#e2c230"));hat.scale.set(0.3,0.18,0.3);hat.visible=false;scene.add(hat);
-          const ring=new THREE.Mesh(new THREE.RingGeometry(0.8,1,24),new THREE.MeshBasicMaterial({color:0xffffff,transparent:true,opacity:0.6,depthWrite:false}));ring.rotation.x=-Math.PI/2;ring.visible=false;scene.add(ring);
-          const EX=48,EZ=bank+1.2;
-          return {t:0,tick(rdt){const t=(this.t+=rdt);op.visible=t<15.6;gt.visible=true;
-              if(t<9){const x=EX+22-t*22/9;op.position.set(x,H(x,EZ),EZ);op.rotation.y=Math.PI;swing(O,t*5);}else{swing(O,0,0);op.rotation.y=Math.PI/2*(t<12?1:1);}
-              // the gator: glides in under the surface, raises its head, lunges
-              const gz=t<10?bank-14+t*1.0:t<14.5?bank-4+Math.min(1,(t-10)/4.5)*(t>14?3:1.5):t<15.6?bank-0.5:bank-0.5-(t-15.6)*1.6;
-              gt.position.set(EX+(t<15.6?0:-(t-15.6)*0.8),t<12?-0.35:-0.1,gz);gt.rotation.y=Math.PI/2;jaw.rotation.z=t>13.8&&t<15.6?-0.5*Math.abs(Math.sin((t-13.8)*9)):0;
-              if(t>14.6&&t<15.6){const k=(t-14.6);op.position.set(EX,H(EX,EZ)-k*2.2,EZ-k*1.8);op.rotation.x=-k*1.2;}
-              if(t>15&&t<19){ring.visible=true;const k=t-15;ring.position.set(EX,0.08,bank-1.2);ring.scale.set(1+k*2.2,1+k*2.2,1);ring.material.opacity=0.6*(1-k/4);}else ring.visible=false;
-              if(t>16&&t<24){hat.visible=true;hat.position.set(EX+Math.sin(t)*0.4,0.05+Math.sin(t*2.4)*0.06,bank-1.6-(t-16)*0.25);}else hat.visible=false;
-              if(t>15.6)gt.visible=t<30;return t<30;},
-            focus(){return [EX+(this.t<9?Math.max(0,22-this.t*22/9)*0.5:0),0.6,bank-1,22];},stop(){op.visible=gt.visible=hat.visible=ring.visible=false;op.rotation.x=0;}};}};
+        // v4.2.2 (an Amos Moses nod): an operator in a hard hat and hi-vis walks the canal bank east of the intake with a
+        // sample bottle, crouches at the edge and reaches down to fill it. A gator has been gliding in, eyes and back
+        // just breaking the surface; it lunges, jaws wide, and snaps off the operator's right hand (no gore, just gone),
+        // then death-rolls and sinks with it. The operator sits down hard, stares at the stump, throws the other arm up, gets up
+        // and runs off along the bank waving it; the bottle bobs off on the water. The gator surfaces again out in the canal, burps
+        // and slides away, while a one-armed Cajun poles his pirogue past on the far side. Everything is a function of the
+        // scene clock, so any moment can be shown (G3.sightSeek, tests and screenshots).
+        swamp:()=>{const [zc,hw]=riverAt(50),bank=zc+hw,EX=48,EZ=bank+1.2,ez=k=>k<=0?0:k>=1?1:k*k*(3-2*k),cl=(t,a,b)=>ez((t-a)/(b-a)),
+            bx=(p,w,h,d,x,y,z,k,hex)=>{const m=new THREE.Mesh(cubeG,am(k,hex));m.scale.set(w,h,d);m.position.set(x,y,z);m.castShadow=true;p.add(m);return m;},
+            piv=(p,x,y,z)=>{const g=new THREE.Group();g.position.set(x,y,z);p.add(g);return g;},
+            ball=(p,r,x,y,z,k,hex,sy=1)=>{const m=new THREE.Mesh(sphereG,am(k,hex));m.scale.set(r,r*sy,r);m.position.set(x,y,z);p.add(m);return m;};
+          const SK="#e0b48c",CV="#2f4a6b",GB="#39432e",GS="#4b5739",GL="#b9b38a",GD="#2a3222",TE="#f2eedb";
+          // ---- the operator (local +x forward, +z their right) ----
+          const op=grp(),hip=piv(op,0,0.92,0);
+          const L=[-1,1].map(s=>{const l=piv(hip,0,0,s*0.13);bx(l,0.22,0.44,0.23,0,-0.21,0,"cover",CV);const k=piv(l,0,-0.42,0);bx(k,0.2,0.42,0.21,0,-0.2,0,"cover",CV);bx(k,0.32,0.16,0.25,0.05,-0.42,0,"boot","#4a3424");l.userData.k=k;return l;});
+          const up=piv(hip,0,0,0);bx(up,0.32,0.66,0.5,0,0.33,0,"cover",CV);bx(up,0.36,0.46,0.54,0,0.43,0,"vest","#d8ea2c");
+          [0.3,0.52].forEach(y=>bx(up,0.37,0.05,0.55,0,y,0,"refl","#e4e8ee"));bx(up,0.34,0.06,0.52,0,0.04,0,"boot","#4a3424");bx(up,0.06,0.15,0.08,0.2,0.56,-0.15,"dark","#2f3a49");
+          const hd=piv(up,0,0.72,0);bx(hd,0.11,0.08,0.11,0,0,0,"skin",SK);bx(hd,0.28,0.3,0.27,0,0.19,0,"skin",SK);
+          [-1,1].forEach(s=>bx(hd,0.02,0.04,0.04,0.145,0.23,s*0.07,"dark","#1e232b"));bx(hd,0.03,0.04,0.15,0.145,0.13,0,"hair","#5a3a22");
+          const hh=piv(hd,0,0.33,0);ball(hh,0.17,0,0.02,0,"hhat","#e2c230",0.72);bx(hh,0.44,0.03,0.38,0.03,0,0,"hhat","#e2c230");
+          const A=[-1,1].map(s=>{const a=piv(up,0,0.64,s*0.33);bx(a,0.15,0.6,0.15,0,-0.3,0,"cover",CV);bx(a,0.165,0.06,0.165,0,-0.6,0,"cuff","#24384f");
+            const hand=bx(a,0.12,0.14,0.12,0,-0.69,0,"skin",SK);return {a,hand};});
+          const bt=piv(A[1].a,0.07,-0.74,0);{const m=new THREE.Mesh(CYLG,am("bottle","#eef2f4"));m.scale.set(0.055,0.18,0.055);bt.add(m);bx(bt,0.07,0.05,0.07,0,0.11,0,"cap","#2a5aa8");}
+          const fb=piv(scene,0,0,0);{const m=new THREE.Mesh(CYLG,am("bottle","#eef2f4"));m.scale.set(0.055,0.18,0.055);fb.add(m);bx(fb,0.07,0.05,0.07,0,0.11,0,"cap","#2a5aa8");}
+          op.visible=fb.visible=false;
+          // ---- the gator (local +x forward): body, belly, flanks, two rows of back scutes, five tail segments with a
+          // crest, splayed legs with toes, a head with eye bumps, nostrils, and upper and lower jaws full of teeth ----
+          const gt=grp(),gb=piv(gt,0,0,0);
+          bx(gb,2.6,0.46,1.1,0,0,0,"gator",GB);bx(gb,2.5,0.3,1.2,0,-0.06,0,"gatorS",GS);bx(gb,2.4,0.14,1.0,0,-0.26,0,"gatorL",GL);
+          bx(gb,1.0,0.4,0.92,1.55,0,0,"gator",GB);bx(gb,0.7,0.36,0.82,2.0,0,0,"gator",GB);bx(gb,0.8,0.4,0.95,-1.5,0,0,"gator",GB);
+          for(let i=0;i<10;i++){const x=-1.75+i*0.38;[-1,1].forEach(s=>{bx(gb,0.22,0.12+(i%2)*0.05,0.16,x,0.27,s*0.2,"gatorD",GD);if(i%2)bx(gb,0.16,0.08,0.12,x,0.22,s*0.42,"gatorD",GD);});}
+          const hd2=piv(gb,2.25,0.03,0);bx(hd2,0.75,0.36,0.78,0.3,0,0,"gator",GB);
+          [-1,1].forEach(s=>{ball(hd2,0.13,0.42,0.22,s*0.24,"gator",GB);ball(hd2,0.065,0.47,0.26,s*0.29,"gatorEye","#e8c840");bx(hd2,0.03,0.09,0.03,0.525,0.26,s*0.3,"dark","#1e232b");});
+          const uj=piv(hd2,0.62,0.02,0);bx(uj,1.5,0.18,0.56,0.75,0.05,0,"gator",GB);bx(uj,0.45,0.16,0.46,1.6,0.04,0,"gator",GB);
+          [-1,1].forEach(s=>{ball(uj,0.055,1.72,0.14,s*0.1,"gatorD",GD);for(let i=0;i<8;i++)bx(uj,0.05,0.1,0.05,0.15+i*0.2,-0.07,s*(i<6?0.25:0.19),"teeth",TE);});
+          const lj=piv(hd2,0.62,-0.1,0);bx(lj,1.5,0.13,0.52,0.75,-0.04,0,"gatorL",GL);bx(lj,0.42,0.12,0.42,1.58,-0.04,0,"gatorL",GL);bx(lj,1.45,0.02,0.36,0.76,0.035,0,"gum","#c98473");
+          [-1,1].forEach(s=>{for(let i=0;i<7;i++)bx(lj,0.05,0.09,0.05,0.25+i*0.2,0.07,s*(i<5?0.22:0.17),"teeth",TE);});
+          const mh=bx(uj,0.12,0.14,0.12,1.0,-0.12,0.08,"skin",SK);mh.visible=false;const bite=piv(uj,1.0,-0.1,0);
+          const tail=[];{let tp=gb;[0.82,0.66,0.52,0.38,0.25].forEach((w,k)=>{const s=piv(tp,k?-0.74:-1.9,0,0);bx(s,0.8,0.36-k*0.05,w,-0.4,0,0,"gator",GB);bx(s,0.78,0.08,w*0.9,-0.4,-0.17+k*0.02,0,"gatorL",GL);
+              if(k<3)[-1,1].forEach(z=>bx(s,0.3,0.15,0.07,-0.4,0.22-k*0.03,z*w*0.24,"gatorD",GD));else bx(s,0.34,0.15,0.07,-0.4,0.18-k*0.03,0,"gatorD",GD);tail.push(s);tp=s;});}
+          const legs=[[1.15,-1],[1.15,1],[-1.15,-1],[-1.15,1]].map(([lx,s])=>{const l=piv(gb,lx,-0.1,s*0.5);bx(l,0.24,0.2,0.5,0,0,s*0.22,"gatorS",GS);const f=piv(l,0,0,s*0.46);
+            bx(f,0.2,0.34,0.2,0,-0.15,0,"gatorS",GS);bx(f,0.36,0.06,0.3,0.06,-0.32,0,"gatorS",GS);for(let q=0;q<3;q++)bx(f,0.12,0.04,0.05,0.28,-0.33,(q-1)*0.1,"gatorL",GL);l.userData.s=s;return l;});
+          gt.scale.setScalar(0.55);gt.visible=false;
+          // ---- the one-armed Cajun in his pirogue, poling past on the far side ----
+          const pr=grp();bx(pr,3.6,0.3,0.78,0,0.1,0,"pirogue","#6b4a2f");[-1,1].forEach(s=>{const m=bx(pr,0.56,0.3,0.56,s*1.8,0.1,0,"pirogue","#6b4a2f");m.rotation.y=Math.PI/4;m.scale.set(0.56,0.3,0.56);const n=bx(pr,0.3,0.26,0.3,s*2.1,0.14,0,"pirogue","#6b4a2f");n.rotation.y=Math.PI/4;});bx(pr,3.3,0.06,0.62,0,0.27,0,"pirogueIn","#4a3424");
+          const cj=figure(pr,"#7a6a4a","#3a2a20","wide",0.28);cj.a[0].visible=false;
+          const pole=new THREE.Mesh(CYLG,am("pole","#8a6a4a"));pole.scale.set(0.04,5.2,0.04);const pp=piv(pr,0.1,1.15,0.38);pp.add(pole);pole.position.y=-1.6;pr.visible=false;
+          // ---- water: rings and droplets ----
+          const RM=[...Array(7)].map(()=>{const m=new THREE.Mesh(new THREE.RingGeometry(0.8,1,28),new THREE.MeshBasicMaterial({color:0xffffff,transparent:true,opacity:0.5,depthWrite:false}));m.rotation.x=-Math.PI/2;m.visible=false;scene.add(m);return m;});
+          const DM=new THREE.MeshBasicMaterial({color:lin0("#dfeee8"),transparent:true,opacity:0.8,depthWrite:false}),
+            DR=[...Array(16)].map((_,i)=>{const m=new THREE.Mesh(sphereG,DM);m.scale.setScalar(0.07+((i*37)%5)*0.015);m.visible=false;scene.add(m);const a=i*2.4;
+              return {m,t0:i<9?13.8:14.6,v:[Math.cos(a)*(0.8+(i%3)*0.5),2.6+(i%4)*0.7,Math.sin(a)*(0.8+(i%3)*0.5)]};});
+          // ---- poses, all from the scene clock ----
+          const P0=new THREE.Vector3(EX+0.3,-0.1,bank-4.6),W=new THREE.Vector3(),W2=new THREE.Vector3();let fit=null;
+          function poseOp(t){op.rotation.set(0,0,0);hip.position.y=0.92;up.rotation.set(0,0,0);hd.rotation.set(0,0,0);hh.position.y=0.33;L.forEach(l=>{l.rotation.set(0,0,0);l.userData.k.rotation.set(0,0,0);});const K=l=>l.userData.k.rotation;A.forEach(a=>a.a.rotation.set(0,0,0));
+            let x=EX,z=EZ;const ar=A[1].a,al=A[0].a;
+            if(t<8){x=EX+16-16*t/8;op.rotation.y=Math.PI;const w=Math.sin(t*6);L[0].rotation.z=w*0.5;L[1].rotation.z=-w*0.5;K(L[0]).z=-Math.max(0,-w)*0.7;K(L[1]).z=-Math.max(0,w)*0.7;al.rotation.z=-w*0.4;ar.rotation.z=w*0.4;hip.position.y=0.92+Math.abs(w)*0.03;}
+            else if(t<19){op.rotation.y=Math.PI+(Math.PI/2-Math.PI)*cl(t,8,9);
+              const c=cl(t,9,10.5),r=cl(t,13.9,14.7);
+              hip.position.y=0.92-0.38*c-0.36*r;z=EZ+0.9*r;L[0].rotation.z=1.4*c+0.1*r;K(L[0]).z=-1.4*c*(1-r);L[1].rotation.z=0.35*c*(1-r)+1.5*r;K(L[1]).z=-1.9*c*(1-r);up.rotation.z=-0.6*c+0.95*r;
+              ar.rotation.z=1.6*c+0.75*r+(t>10.5&&t<13.9?Math.sin(t*3)*0.08:0)+(t>14.7?Math.sin(t*7)*0.15:0);al.rotation.z=0.8*c-1.4*r+3.3*cl(t,16.5,17.5);al.rotation.x=-0.5*cl(t,16.5,17.5);
+              hh.position.y=0.33+0.22*Math.sin(Math.PI*r);hd.rotation.y=-0.45*cl(t,14.8,15.4);hd.rotation.z=0.2*cl(t,14.8,15.4);
+              if(t>17.5)hh.rotation.y=Math.sin(t*9)*0.08;}
+            else{const g=cl(t,19,20.2),T=Math.max(0,t-20.2),dx=0.995,dz=0.1;op.rotation.y=Math.PI/2+(-0.1-Math.PI/2)*g;
+              hip.position.y=0.18+0.74*g;z=EZ+0.9;L.forEach(l=>{l.rotation.z=1.5*(1-g)+0.9*g*(1-cl(t,19.8,20.2));K(l).z=-1.6*g*(1-cl(t,19.8,20.2));});up.rotation.z=0.35*(1-g)+0.15*g;
+              x=EX+dx*3.4*T;z+=dz*3.4*T;if(T>0){const w=Math.sin(T*11);L[0].rotation.z=w*0.8;L[1].rotation.z=-w*0.8;K(L[0]).z=-Math.max(0,-w)*1.2;K(L[1]).z=-Math.max(0,w)*1.2;al.rotation.z=-w*0.6;hip.position.y=0.92+Math.abs(w)*0.06;}
+              ar.rotation.z=2.35*(1-g)+(2.95+Math.sin(t*9)*0.3)*g;hd.rotation.y=-0.45*(1-g);}
+            op.position.set(x,H(x,z),z);A[1].hand.visible=t<13.9;bt.visible=t<13.9;op.visible=t<29.5;}
+          function poseGator(t){gt.visible=true;gt.rotation.set(0,-Math.PI/2,0);gb.rotation.set(0,0,0);hd2.rotation.set(0,0,0);uj.rotation.z=0;lj.rotation.z=0;mh.visible=false;
+            const tuck=k=>legs.forEach(l=>{l.rotation.y=-l.userData.s*1.0*k;});tail.forEach((s,k)=>{s.rotation.y=Math.sin(t*2.2-k*0.7)*(t<13.2||t>20?0.25:0.1);});
+            if(t<13.2){const z=bank-18+13.4*ez(Math.min(1,t/12)),x=EX+0.3+Math.sin(t*0.4)*0.6*(1-cl(t,10,12));gt.position.set(x,-0.1,z);tuck(1);return;}
+            if(!fit){poseOp(13.2);op.updateMatrixWorld(true);A[1].hand.getWorldPosition(W);
+              gt.position.copy(P0);gb.rotation.z=0.15;hd2.rotation.z=0.15;uj.rotation.z=0.05;gt.updateMatrixWorld(true);bite.getWorldPosition(W2);fit={d:W.clone().sub(W2),h:W.clone()};gb.rotation.z=hd2.rotation.z=0;poseOp(t);}
+            if(t<15.8){const k=cl(t,13.2,13.9),j=cl(t,13.9,14.02),r=cl(t,14.4,15.8);
+              gb.rotation.z=0.15*k*(1-r);hd2.rotation.z=0.15*k*(1-r)+(t>14.02&&t<14.4?Math.sin(t*40)*0.06:0);uj.rotation.z=(0.62*k)*(1-j)+0.05*j;lj.rotation.z=-0.28*k*(1-j);tuck(1-k);
+              gt.position.copy(P0).addScaledVector(fit.d,k*(1-r));gb.rotation.x=r*4*Math.PI;mh.visible=t>=13.9;return;}
+            if(t<17.5){gt.position.set(P0.x,-0.1-1.1*cl(t,15.8,17.5),P0.z);tuck(1);mh.visible=true;return;}
+            if(t<21){gt.visible=false;return;}
+            const k=cl(t,21,28.5);gt.position.set(EX-3-9*k,-0.1-1.2*cl(t,27.5,29),bank-9-5*k);gt.rotation.y=-Math.PI/2-0.9;tuck(1);gt.visible=t<29;}
+          function rings(t,gx,gz){const ev=[];
+            if(t<12.6)for(let a=Math.max(0,Math.floor((t-2.4)/0.9))*0.9;a<=t;a+=0.9){const z=bank-18+13.4*ez(Math.min(1,a/12))+1.7;ev.push([a,EX+0.3,z,1.6,2.4]);}
+            [[12.6,0.6,1.6],[13.6,2.2,2],[14.5,2.6,2.2],[15.2,2.4,2.2],[16.2,1.4,2]].forEach(([a,s,d])=>ev.push([a,P0.x,P0.z+1.6,s,d]));
+            for(let a=21;a<28.5;a+=1.3){const k=cl(a,21,28.5);ev.push([a,EX-3-9*k+1.2,bank-9-5*k+1.6,1.2,2.4]);}ev.push([24.4,EX-3-9*cl(24.4,21,28.5)+1.4,bank-9-5*cl(24.4,21,28.5)+2.2,2.2,2.6]);
+            let n=0;for(const [a,x,z,s,d] of ev){if(t<a||t>a+d||n>=RM.length)continue;const m=RM[n++],k=(t-a)/d;m.visible=true;m.position.set(x,0.08,z);m.scale.set(0.4+s*k*2,0.4+s*k*2,1);m.material.opacity=0.55*(1-k);}
+            for(;n<RM.length;n++)RM[n].visible=false;}
+          function drops(t){const o=fit?fit.h:null;for(const d of DR){const dt=t-d.t0;if(!o||dt<0||dt>1.2){d.m.visible=false;continue;}const y=0.1+d.v[1]*dt-4.9*dt*dt;if(y<0){d.m.visible=false;continue;}
+              d.m.visible=true;d.m.position.set(o.x+d.v[0]*dt,y,o.z-1+d.v[2]*dt);}}
+          function bottle(t){if(t<13.9||!fit){fb.visible=false;return;}fb.visible=t<31;const k=cl(t,13.9,14.3),T=Math.max(0,t-14.3);
+            fb.position.set(fit.h.x+T*0.18+Math.sin(t*1.3)*0.05,fit.h.y*(1-k)+0.03*k+Math.sin(t*2.6)*0.03*k,fit.h.z-0.4*k-T*0.12);fb.rotation.set(1.3*k+Math.sin(t*1.7)*0.2*k,0,0.4*k);}
+          function pirogue(t){pr.visible=true;const x=EX+30-60*t/31,z=zc-hw*0.45;pr.position.set(x,0.02+Math.sin(t*1.4)*0.04,z);pr.rotation.y=Math.PI;pr.rotation.x=Math.sin(t*1.1)*0.02;
+            const c=Math.sin(t*1.2);pp.rotation.z=-0.35+c*0.35;cj.a[1].rotation.z=-0.5+c*0.4;}
+          return {t:0,tick(rdt){const t=(this.t+=rdt);if(t<0.5)fit=null;poseOp(t);poseGator(t);rings(t);drops(t);bottle(t);pirogue(t);return t<31;},
+            focus(){const t=this.t,o=op.position;if(t<12)return [o.x-1.5,0.8,o.z-2,15];if(t<21)return [EX,0.6,bank-1.2,13];if(t<29.5)return [o.x,0.8,o.z-3,17];return [EX-8,0.4,bank-10,22];},
+            stop(){op.visible=gt.visible=fb.visible=pr.visible=false;RM.forEach(m=>m.visible=false);DR.forEach(d=>d.m.visible=false);fit=null;}};}};
       // (built once at start-up, hidden, so nothing is created or compiled when one happens; rewound each time)
-      const one=SIGHTS[SITE.env]?SIGHTS[SITE.env]():null;let wait=FAST?3:rr2(240,600);G3.sight=()=>{wait=0;};   // (G3.sight(): show one now, for tests)
-      if(one)ACT.push(rdt=>{G3.sightT=sight?sight.t:-1;if(sight){if(!sight.tick(rdt)){sight.stop();sight=null;wait=FAST?40:rr2(240,600);}return;}if(G3.zen&&!FAST&&wait>110)wait=rr2(50,110);wait-=rdt;if(wait<=0){one.t=0;sight=one;}});
+      const one=SIGHTS[SITE.env]?SIGHTS[SITE.env]():null;let wait=FAST?3:rr2(240,600);G3.sight=()=>{wait=0;};G3.sightSeek=t=>{if(sight)sight.t=t;};   // (G3.sight(): show one now, for tests)
+      if(one)ACT.push(rdt=>{G3.sightT=sight?sight.t:-1;if(sight){if(G3.sightHold!=null){sight.t=G3.sightHold;sight.tick(0);return;}if(!sight.tick(rdt)){sight.stop();sight=null;wait=FAST?40:rr2(240,600);}return;}if(G3.zen&&!FAST&&wait>110)wait=rr2(50,110);wait-=rdt;if(wait<=0){one.t=0;sight=one;}});
       // (zen: a sight every minute or two, and the zen camera cuts to it and follows it: 43-3d-frame.js)
       G3.sightFocus=()=>sight&&sight.focus?sight.focus():null;}
     G3.actTick=rdt=>{if(!(rdt>0))return;rdt=Math.min(rdt,0.1);for(let k=0;k<ACT.length;k++)ACT[k](rdt);};

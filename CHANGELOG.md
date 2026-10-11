@@ -1,5 +1,12 @@
 # Changelog
 
+## v4.2.2-t (test v23): the bayou gator, reworked (an Amos Moses nod)
+- Gator rebuilt at a believable size (~4.7 m): belly, flanks, two rows of back scutes, five-segment swaying tail with a crest, splayed legs with toes, eye bumps with slit pupils, nostrils, hinged upper and lower jaws with teeth.
+- Operator rebuilt with knees, boots, coveralls, hi-vis vest with reflective bands, radio, moustache, hard hat with brim, hands, and a sample bottle.
+- New 31 s scene: walk the bank, kneel to take a sample, gator glides in (eyes and scutes at the surface, wake rings), lunges, snaps off the right hand only (no gore), death-rolls and sinks; operator sits down hard, stares at the stump, runs off along the bank waving it; the bottle floats away; the gator resurfaces and burps; a one-armed Cajun poles a pirogue past.
+- Scene is a pure function of its clock: G3.sightSeek / G3.sightHold for stills. New tool: tools/sightshots.py.
+- Still visual only: random timing, no cost, production or log effect.
+
 ## v4.2.1 (release, from test v22)
 Release on main. Adds save/continue (v4.2.0-s), the Settings panel and the outage speed fix.
 
