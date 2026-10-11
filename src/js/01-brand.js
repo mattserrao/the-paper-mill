@@ -7,10 +7,15 @@ const MILL={brand:"",name:""};
 // v4.0.1: bumped whenever a palette color variable changes (brand here, paper color in setPaper), so the 3D view
 // re-reads the colors only then: reading computed styles forces a full style recalculation mid-frame
 let PAL_V=0;
-function rollMill(){let b;do{b=BRANDS[Math.floor(Math.random()*BRANDS.length)];}while(b===MILL.brand);
+// v13: each site has its own trim colour family (roof trim, signs, the water tower's roof and band), after the v13 site maps:
+// green in the valley, red in the city, rose in the desert, blue on the bayou. siteBrand() (03b) sets the first of the
+// family once the site is known; "New colors" then rolls within it.
+const BRANDS_ENV={rural:["#2f7d4f","#2f9e44","#1f6f5c","#3c8d3a"],urban:["#c92a2a","#e03131","#b5342d","#d9480f"],desert:["#c2255c","#d6336c","#a61e4d","#e8590c"],swamp:["#1971c2","#1864ab","#0b7285","#1c7ed6"]};
+function rollMill(){const L=BRANDS_ENV[MILL.env]||BRANDS;let b;do{b=L[Math.floor(Math.random()*L.length)];}while(b===MILL.brand);
   MILL.brand=b;MILL.name=NAME_A[Math.floor(Math.random()*NAME_A.length)]+" "+NAME_B[Math.floor(Math.random()*NAME_B.length)];
   document.documentElement.style.setProperty("--brand",b);PAL_V++;
 }
 rollMill();
+function siteBrand(env){MILL.env=env;const L=BRANDS_ENV[env];if(!L)return;MILL.brand=L[0];document.documentElement.style.setProperty("--brand",L[0]);PAL_V++;}
 // rename from the menu: trims, caps at 32 characters, repaints the mill's signs
 function renameMill(v){v=String(v||"").replace(/\s+/g," ").trim().slice(0,32);if(!v)return;MILL.name=v;try{if(G3.rebrand)G3.rebrand();}catch(e){}}

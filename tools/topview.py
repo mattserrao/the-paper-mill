@@ -24,7 +24,7 @@ with sync_playwright() as pw:
     url = pg.evaluate("""([half,persp])=>{__PM.setRunning(false);const D=__PM.G3.diagScene(),T=__PM.THREE,R=D.renderer;const W=R.domElement.width,H=R.domElement.height,a=W/H;
       let cam;if(persp){cam=new T.PerspectiveCamera(30,a,1,3000);cam.position.set(-160,170,220);cam.lookAt(0,0,0);}
       else{cam=new T.OrthographicCamera(-half,half,half/a,-half/a,1,2000);cam.position.set(0,600,0);cam.up.set(0,0,-1);cam.lookAt(0,0,0);}
-      R.shadowMap.needsUpdate=true;R.render(D.scene,cam);return R.domElement.toDataURL('image/png');}""", [half, bool(fl.get("--persp"))])
+      if(__PM.G3.scenery)__PM.G3.scenery.parts.forEach(p=>p.visible=true);const fg=D.scene.fog;D.scene.fog=null;R.shadowMap.needsUpdate=true;R.render(D.scene,cam);D.scene.fog=fg;return R.domElement.toDataURL('image/png');}""", [half, bool(fl.get("--persp"))])
     pathlib.Path(out).write_bytes(base64.b64decode(url.split(",", 1)[1]))
     b.close()
 print("saved", out, "errors:", errs[:5])

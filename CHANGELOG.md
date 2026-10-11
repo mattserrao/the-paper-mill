@@ -132,6 +132,19 @@ piece; the three sandbox-style piano pieces are the valley's.
   piece; the sound button's tooltip names what is playing. `tools/musictest.py` schedules every step of every piece and
   checks the output level; `tools/musicrec.py` records any piece to MP3.
 
+### Map redesign after the v13 site maps (pass 10, test v13)
+- Each site's water now follows its map: a winding valley river with rapids and gravel bars that touches the mill at the
+  intake and swings north elsewhere, a broad walled city river, a narrow concrete desert canal, a straight bayou canal
+  (`RIVERS` / `riverAt` in 03b; the plant, scenery, terrain, dawn mist, zen shots and site picker all use it).
+- Landmarks in fixed spots from the maps: valley log and chip yard, farm and fields, orchard, lake, substation, radio
+  mast in a deep-wood clearing; city street grid on 45 m blocks with houses, apartments, shops and parks, rail yard,
+  water tower, recycling yard, substation, mast; desert mesas, dry washes, dirt tracks, solar farm, water tanks and
+  reservoirs, windpump, oasis, ranch, tank-car siding; bayou sloughs and lagoons, barge dock, moored barge, shacks,
+  mast island with boardwalk, substation and line, dirt loop. Denser forest in the valley and the bayou.
+- The mill is unchanged except its trim and water tower colour, now per site (green, red, rose, blue); "New colors"
+  rolls within the site's family. City terrain is flat.
+- Performance was not a goal of this pass (scenery triangles on Medium: valley ~105k, bayou ~149k).
+
 ### iPhone colours, iOS fallback (pass 9, test v12 updated)
 - The pass 8 self-test passed on the iPhone (both methods "ok") but the scene was still grey, so the probe cannot catch it.
   On iPhone and iPad, moving things (people, forklifts, trucks, equipment) are now drawn one by one, the same as

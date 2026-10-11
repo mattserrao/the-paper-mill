@@ -46,6 +46,23 @@ function layoutFor(seed){const r=siteRng(seed);const L=LAYOUTS[Math.floor(r()*LA
   // wx/wz map a v4.0 wastewater-plant coordinate to this layout (flip mirrors the plant inside its 1..46 slot)
   const dx=L.ww==="east"?45:0,wx=x=>dx+(L.flip?47-x:x),wz=z=>z;return {...L,dx,wx,wz,i:LAYOUTS.indexOf(L)};}
 const LAYOUT=layoutFor(SITE.seed);
+siteBrand(SITE.env);
+// v4.1 v13: each site's water, after the v13 site maps: a centre line z(x) through control points and a half-width.
+// The mill's intake (x -30) and outfall (x ±32) always sit on the near bank at z -60, so the river touches the mill there.
+// rural: a wide winding river that swings north away from the mill; urban: a broad walled river; desert: a narrow concrete
+// canal; swamp: a straight bayou canal. riverAt(x) -> [centre z, half-width] (used by the plant, the scenery, the zen camera,
+// the dawn mist and the site picker's plan).
+const RIVERS={
+  rural:{kind:"river",pts:[[-440,-214],[-350,-200],[-270,-166],[-200,-146],[-130,-118],[-75,-84],[-35,-73],[35,-73],[80,-90],[140,-118],[220,-120],[300,-100],[370,-104],[440,-128]],
+    hw:[[-440,22],[-150,18],[-80,13.5],[75,13.5],[140,17],[440,21]],water:"#4b7f99",bank:"#c9c1a8"},
+  urban:{kind:"wide",pts:[[-440,-91],[440,-91]],hw:[[-440,31],[440,31]],water:"#5f8aa6",bank:"#b7b3a8"},
+  desert:{kind:"canal",pts:[[-440,-66],[440,-66]],hw:[[-440,6],[440,6]],water:"#2fb3c4",bank:"#cfc9bb"},
+  swamp:{kind:"canal",pts:[[-440,-67],[440,-67]],hw:[[-440,10],[440,10]],water:"#3f5f52",bank:"#6f6548"}};
+function riverAt(x,env){const R=RIVERS[env||SITE.env]||RIVERS.rural,P=R.pts,H=R.hw;
+  let i=0;while(i<P.length-2&&x>P[i+1][0])i++;const t=Math.max(0,Math.min(1,(x-P[i][0])/(P[i+1][0]-P[i][0]))),p0=P[Math.max(0,i-1)][1],p1=P[i][1],p2=P[i+1][1],p3=P[Math.min(P.length-1,i+2)][1];
+  const z=0.5*(2*p1+(-p0+p2)*t+(2*p0-5*p1+4*p2-p3)*t*t+(-p0+3*p1-3*p2+p3)*t*t*t);   // Catmull-Rom through the points
+  let j=0;while(j<H.length-2&&x>H[j+1][0])j++;const u=Math.max(0,Math.min(1,(x-H[j][0])/(H[j+1][0]-H[j][0]))),s=u*u*(3-2*u);
+  return [z,H[j][1]+(H[j+1][1]-H[j][1])*s];}
 function siteSave(env){try{localStorage.setItem("paper-mill-site",JSON.stringify({env}));}catch(e){}}
 // gameplay effect of the environment (sim; applied in applyUpgrades). The site of the loaded scene is the one in play.
 const ENVX=()=>ENVS[SITE.env]||ENVS.rural;

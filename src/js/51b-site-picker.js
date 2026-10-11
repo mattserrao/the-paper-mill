@@ -1,7 +1,7 @@
 // ---- v4.1 site picker: environment (with its pros and cons); the layout is fixed per environment (pass 6). The 3D scene is built once per page load,
 // so "Build here" saves the choice and reloads; nothing else is kept between page loads anyway.
 {const SW={rural:["#b4cf9f","#4f8257"],urban:["#bec7ad","#8a94a3"],desert:["#e3d0a4","#c98b5a"],swamp:["#a3b487","#4f736d"]};
-  const WATER={rural:"#7fb0cf",urban:"#76a0b8",desert:"#5fa8bd",swamp:"#4f736d"};
+  const WATER={rural:RIVERS.rural.water,urban:RIVERS.urban.water,desert:RIVERS.desert.water,swamp:RIVERS.swamp.water};
   const swatch=(el,e)=>{el.style.background=`linear-gradient(135deg,${SW[e][0]} 55%,${SW[e][1]} 55%)`;};
   const layName=L=>`Wastewater plant ${L.ww==="east"?"behind the maintenance shop":"behind stock prep"}, clarifier on the ${(L.ww==="east")!==L.flip?"east":"west"} side`;
   // menu row
@@ -19,7 +19,8 @@
   const seedOf=()=>MILLSEED[pick];
   // a small plan of the site: river, roads, fence, the fixed core and where the seeded wastewater plant goes
   function drawPrev(){const x=prev.getContext("2d"),W=prev.width,H=prev.height,k=W/360,X=v=>(v+170)*k,Z=v=>(v+90)*k,L=layoutFor(seedOf());
-    x.fillStyle=SW[pick][0];x.fillRect(0,0,W,H);x.fillStyle=WATER[pick];x.fillRect(0,Z(-75),W,18*k);
+    x.fillStyle=SW[pick][0];x.fillRect(0,0,W,H);x.fillStyle=WATER[pick];x.beginPath();
+    for(let v=-175;v<=195;v+=5){const [zc,hw]=riverAt(v,pick);x.lineTo(X(v),Z(zc-hw));}for(let v=195;v>=-175;v-=5){const [zc,hw]=riverAt(v,pick);x.lineTo(X(v),Z(zc+hw));}x.closePath();x.fill();   // v13: the site's river line
     x.fillStyle="#5a5f69";x.fillRect(X(-162.5),0,9*k,H);x.fillRect(X(-158),Z(-5.2),58*k,2.8*k);x.fillRect(X(-158),Z(11.2),58*k,2.8*k);x.fillRect(X(92),Z(31.4),70*k,2.4*k);
     x.strokeStyle="rgba(28,34,51,.45)";x.lineWidth=1;x.strokeRect(X(-100),Z(-52),192*k,116*k);
     x.fillStyle="#d6382c";[[-34.4,-8,-23.5,-3],[-27.2,64,-2.9,19.9],[-49,-23.8,14.8,32.2]].forEach(([a,b,c,d])=>x.fillRect(X(a),Z(c),(b-a)*k,(d-c)*k));
