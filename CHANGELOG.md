@@ -132,6 +132,12 @@ piece; the three sandbox-style piano pieces are the valley's.
   piece; the sound button's tooltip names what is playing. `tools/musictest.py` schedules every step of every piece and
   checks the output level; `tools/musicrec.py` records any piece to MP3.
 
+### iPhone colours, iOS fallback (pass 9, test v12 updated)
+- The pass 8 self-test passed on the iPhone (both methods "ok") but the scene was still grey, so the probe cannot catch it.
+  On iPhone and iPad, moving things (people, forklifts, trucks, equipment) are now drawn one by one, the same as
+  `?nodb`, which showed correct colours there. Diagnostics reads "-> iOS: moving things drawn one by one".
+  `?dbcol=0` / `?dbcol=1` still force the batches on for testing. Desktop and Android are unchanged.
+
 ### iPhone colours, self-test (pass 8, test v12 updated)
 - Pass 7's vertex colours did not fix the grey on the iPhone either, and no engine available here reproduces it. The game
   now tests itself at start-up: two cubes (red, green) are drawn off-screen as one batch with each colour method and the
