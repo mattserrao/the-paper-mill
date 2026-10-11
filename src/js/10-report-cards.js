@@ -132,7 +132,7 @@ function setZen(on){if(on===!!ZEN)return;
     document.body.dataset.zs="none";document.body.classList.add("zen");setFS(true);G3.zen=true;G3.zenS=null;
     if(soundPref==="on"&&!AUDIO.on)setSound(true);running=true;zenPoke();}
   else{const z=ZEN;ZEN=null;S.zen=false;G3.zen=false;document.body.classList.remove("zen");
-    CH.on=z.chaos;$("chaosOn").checked=z.chaos;C.hays=z.hays;C.breaks=z.breaks;setSimSpeed(z.speed);
+    CH.on=z.chaos;$("chaosOn").checked=z.chaos;C.hays=z.hays;C.breaks=z.breaks;setSimSpeed(C.spdPref||z.speed);
     setFS(false);if(G3.showMenu)G3.showMenu();}}
 let zenT=0;function zenPoke(){const b=$("zenExit");b.hidden=false;b.classList.add("show");clearTimeout(zenT);zenT=setTimeout(()=>b.classList.remove("show"),2500);}
 $("zenExit").addEventListener("click",e=>{e.stopPropagation();setZen(false);});

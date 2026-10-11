@@ -127,4 +127,4 @@ function showOverlay(kind){running=false;
   $("ov-a").focus();}
 $("ov-a").addEventListener("click",()=>{$("overlay").hidden=true;$("overlay").style.zIndex="";const dc=document.getElementById("dealOv");if(S.over){newGame();}else if(dc&&!dc.hidden&&!dc.classList.contains("dealres")){}else{running=true;}});
 $("ov-b").addEventListener("click",()=>{$("overlay").hidden=true;newGame();});
-function newGame(){const sp=C.simSpeed;initCtrl();C.simSpeed=sp;initState();BANNERS.length=0;running=true;seasonLocks(false);bnNotice();}
+function newGame(){const sp=C.spdPref||C.simSpeed;initCtrl();C.simSpeed=C.spdPref=sp;initState();BANNERS.length=0;running=true;seasonLocks(false);bnNotice();}

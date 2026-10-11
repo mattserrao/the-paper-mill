@@ -9,6 +9,9 @@ function seasonLocks(on){["chaosOn","chaosLvl","chaosClear"].forEach(id=>{const 
   document.querySelectorAll('#chaosgrid button.trig').forEach(el=>{el.disabled=on;el.title=on?"Locked during a season":"";});
   ["chaosRandom","v2dis"].forEach(id=>{const el=$(id);if(el){el.disabled=on;el.title=on?"Locked during a season":"";}});
   if(on){C.breaks=C.hays=true;}["breaks","hays"].forEach(id=>{const el=$(id);if(el){if(on)el.checked=true;el.disabled=on;}});
+  // v4.2.1: in a season the area controls run on AUTO and are locked (paper colour is only a look, so it stays free)
+  if(on)AUTOKEYS.forEach(k=>{if(C[k])C[k].auto=true;});
+  document.querySelectorAll('#cards .row[data-key] input,#cards .row[data-key] button.auto,#balance').forEach(el=>{el.disabled=on;el.title=on?"Locked on AUTO during a season":"";});
   document.body.classList.toggle("season-lock",on);
 }
 function startSeason(){newGame();S.season={on:true,end:SEASON_DAYS*1440,done:false};S.rc=null;S.outg={k:1,noticed:false,on:false,rel:{stock:1,wet:1,dry:1},plan:null};seedRun(Math.floor(Date.now()/6048e5)*2654435761);C.breaks=true;
