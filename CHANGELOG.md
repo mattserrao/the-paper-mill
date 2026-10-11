@@ -1,6 +1,9 @@
 # Changelog
 
-## v4.2.1-t (test v22)
+## v4.2.1 (release, from test v22)
+Release on main. Adds save/continue (v4.2.0-s), the Settings panel and the outage speed fix.
+
+### test v22 notes
 - Bottom bar: Stats and Controls swapped; Controls renamed **Settings** and now sits far right.
 - Settings: "Area controls" folds away (collapsed by default). In a season every area control runs on AUTO and is locked (Balance all too); paper colour stays free (look only). Free play keeps full control.
 - Fix: after a planned outage the game speed goes back to the speed the player picked. Before, touching the speed during an outage (or a new season / zen started during one) left it stuck at the outage speed. The chosen speed is now kept as `C.spdPref` (saved with the season).
