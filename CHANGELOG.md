@@ -1,5 +1,9 @@
 # Changelog
 
+## v4.2.2-t2 (test v24): the gator riff
+- A palm-muted electric bass riff (E E B G E E B A G, even eighths at 140 bpm, low E string) plays as the bayou gator scene opens and again as it closes (scene t 28.9 s, finishing with the scene). Plays in zen too; the music ducks under it. Silent when sound is off.
+- AUDIO.riff() / AUDIO.riffRender() (offline render); tools/riffrender.py writes it to WAV.
+
 ## v4.2.2-t (test v23): the bayou gator, reworked (an Amos Moses nod)
 - Gator rebuilt at a believable size (~4.7 m): belly, flanks, two rows of back scutes, five-segment swaying tail with a crest, splayed legs with toes, eye bumps with slit pupils, nostrils, hinged upper and lower jaws with teeth.
 - Operator rebuilt with knees, boots, coveralls, hi-vis vest with reflective bands, radio, moustache, hard hat with brim, hands, and a sample bottle.

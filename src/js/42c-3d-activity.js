@@ -181,7 +181,10 @@
             fb.position.set(fit.h.x+T*0.18+Math.sin(t*1.3)*0.05,fit.h.y*(1-k)+0.03*k+Math.sin(t*2.6)*0.03*k,fit.h.z-0.4*k-T*0.12);fb.rotation.set(1.3*k+Math.sin(t*1.7)*0.2*k,0,0.4*k);}
           function pirogue(t){pr.visible=true;const x=EX+30-60*t/31,z=zc-hw*0.45;pr.position.set(x,0.02+Math.sin(t*1.4)*0.04,z);pr.rotation.y=Math.PI;pr.rotation.x=Math.sin(t*1.1)*0.02;
             const c=Math.sin(t*1.2);pp.rotation.z=-0.35+c*0.35;cj.a[1].rotation.z=-0.5+c*0.4;}
-          return {t:0,tick(rdt){const t=(this.t+=rdt);if(t<0.5)fit=null;poseOp(t);poseGator(t);rings(t);drops(t);bottle(t);pirogue(t);return t<31;},
+          return {t:0,tick(rdt){const t0=this.t,t=(this.t+=rdt);if(t<0.5)fit=null;
+              // the riff: as the scene opens and again as it closes (zen too); not when a still is being held
+              if(rdt>0&&((t0<=0&&t>0)||(t0<28.9&&t>=28.9)))try{AUDIO.riff();}catch(e){}
+              poseOp(t);poseGator(t);rings(t);drops(t);bottle(t);pirogue(t);return t<31;},
             focus(){const t=this.t,o=op.position;if(t<12)return [o.x-1.5,0.8,o.z-2,15];if(t<21)return [EX,0.6,bank-1.2,13];if(t<29.5)return [o.x,0.8,o.z-3,17];return [EX-8,0.4,bank-10,22];},
             stop(){op.visible=gt.visible=fb.visible=pr.visible=false;RM.forEach(m=>m.visible=false);DR.forEach(d=>d.m.visible=false);fit=null;}};}};
       // (built once at start-up, hidden, so nothing is created or compiled when one happens; rewound each time)

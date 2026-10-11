@@ -376,6 +376,22 @@ const AUDIO=(()=>{
         tt+=0.05+Math.random()*0.09;f0*=0.985;}
       tt+=0.35;}}
   FX.pa=paAnnounce;let paNext=0;
+  // v4.2.2: the bayou gator's stinger (an Amos Moses nod): a palm-muted electric bass riff on the low strings,
+  // E E B G E E B A G in even eighths at 140 bpm. Saw + sine through a lowpass that snaps shut (the palm mute), a pick
+  // click on each note, and the music ducks underneath. Built against any context so it can be rendered offline too.
+  const RIFF=[28,28,35,31,28,28,35,33,31],RIFF_STEP=60/140/2;
+  function riffAt(c,t,out,nb){const click=c.createBuffer(1,Math.floor(c.sampleRate*0.02),c.sampleRate),cd=click.getChannelData(0);for(let i=0;i<cd.length;i++)cd[i]=(Math.random()*2-1)*Math.pow(1-i/cd.length,3);
+    RIFF.forEach((m,i)=>{const T=t+i*RIFF_STEP,f=440*Math.pow(2,(m-69)/12),len=RIFF_STEP*0.92,lp=c.createBiquadFilter(),g=c.createGain();
+      lp.type="lowpass";lp.Q.value=1.6;lp.frequency.setValueAtTime(1500,T);lp.frequency.exponentialRampToValueAtTime(240,T+0.09);
+      g.gain.setValueAtTime(0.0001,T);g.gain.exponentialRampToValueAtTime(0.55,T+0.004);g.gain.exponentialRampToValueAtTime(0.2,T+0.07);g.gain.exponentialRampToValueAtTime(0.0001,T+len);
+      [["sawtooth",f,0.6],["sine",f,0.9],["square",f*2,0.12]].forEach(([ty,fr,v])=>{const o=c.createOscillator(),og=c.createGain();o.type=ty;o.frequency.value=fr;og.gain.value=v;o.connect(og);og.connect(lp);o.start(T);o.stop(T+len+0.03);});
+      lp.connect(g);g.connect(out);const s2=c.createBufferSource(),hp=c.createBiquadFilter(),cg=c.createGain();s2.buffer=click;hp.type="highpass";hp.frequency.value=1800;cg.gain.value=0.12;s2.connect(hp);hp.connect(cg);cg.connect(out);s2.start(T);});
+    return RIFF.length*RIFF_STEP+0.3;}
+  function riff(){if(!ctx||!on)return;const t=ctx.currentTime+0.03,d=riffAt(ctx,t,sfxBus);
+    musicBus.gain.cancelScheduledValues(t);musicBus.gain.setValueAtTime(musicBus.gain.value,t);musicBus.gain.linearRampToValueAtTime(0.2,t+0.08);musicBus.gain.setValueAtTime(0.2,t+d-0.2);musicBus.gain.linearRampToValueAtTime(0.6,t+d+0.6);}
+  // (tools: render the riff offline to a buffer, for checking and for sharing as a file)
+  function riffRender(){const sr=44100,oc=new OfflineAudioContext(1,Math.ceil(sr*(RIFF.length*RIFF_STEP+0.6)),sr),cmp=oc.createDynamicsCompressor();cmp.connect(oc.destination);
+    riffAt(oc,0.05,cmp);return oc.startRendering().then(b=>Array.from(b.getChannelData(0)));}
   function sfx(name,gap=1200){if(!ctx||!on||!FX[name])return;const now=performance.now();if(now-(last[name]||0)<gap||now-(last._any||0)<250)return;last[name]=now;last._any=now;FX[name](ctx.currentTime+0.02);}
   // tools/musictest.py: schedule every piece's every step (exceptions surface here, not in a player's session) and read the output level
   let meter=null;function level(){if(!ctx)return -1;if(!meter){meter=ctx.createAnalyser();meter.fftSize=2048;master.connect(meter);const z=ctx.createGain();z.gain.value=0;meter.connect(z);z.connect(ctx.destination);}const a=new Float32Array(meter.fftSize);meter.getFloatTimeDomainData(a);let q=0;for(let i=0;i<a.length;i++)q+=a[i]*a[i];return Math.sqrt(q/a.length);}
@@ -384,7 +400,7 @@ const AUDIO=(()=>{
     for(const key in INTENSE){const v=INTENSE[key];for(let pi=0;pi<v.P.length;pi++){const cur={name:key,bpm:v.bpm,play:v.play,P:v.P[pi],B:v.B?v.B[pi]:null,fill:pi%2===0,roll:ROLLS[pi%ROLLS.length]},s={bpm:v.bpm},beat=60/v.bpm/4;
       try{for(let st=0;st<64;st++)cur.play(cur,st,t0+st*beat*0.02,s);out.push("upset "+key+"/"+pi+" ok");}catch(e){out.push("upset "+key+"/"+pi+" ERROR "+e.message);}}}
     return out;}
-  return {setOn,setVol,update,sfx,ambient,event:id=>sfx(EVSFX[id]||"alarm"),selfTest,level,get ctx(){return ctx;},get master(){return master;},get on(){return on;},get now(){return target==="intense"?"upset: "+(seqs.intense.cur?seqs.intense.cur.name:"")+" / "+AUDIO_NOW:AUDIO_NOW;},get info(){return ctx?ctx.state+" t="+ctx.currentTime.toFixed(1)+(stuckSince?" (clock stuck)":"")+(hurt?" (needs a tap)":"")+(unlocked?" unlocked "+((performance.now()-unlocked)/1000).toFixed(0)+"s ago":" never unlocked"):"none";}};
+  return {setOn,setVol,update,sfx,riff,riffRender,ambient,event:id=>sfx(EVSFX[id]||"alarm"),selfTest,level,get ctx(){return ctx;},get master(){return master;},get on(){return on;},get now(){return target==="intense"?"upset: "+(seqs.intense.cur?seqs.intense.cur.name:"")+" / "+AUDIO_NOW:AUDIO_NOW;},get info(){return ctx?ctx.state+" t="+ctx.currentTime.toFixed(1)+(stuckSince?" (clock stuck)":"")+(hurt?" (needs a tap)":"")+(unlocked?" unlocked "+((performance.now()-unlocked)/1000).toFixed(0)+"s ago":" never unlocked"):"none";}};
 })();
 
 const GRADES={ "23m":{sp:2736,bw:24.55}, "26m":{sp:2433,bw:26.06}, "30m":{sp:2222,bw:30.05}, "33HT":{sp:2084,bw:33.08} };
