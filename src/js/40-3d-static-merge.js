@@ -69,7 +69,7 @@
   function bmMat(m){const c=m.clone();c.userData=Object.assign({},m.userData);if(MATS.includes(m))MATS.push(c);MSYNC.push([c,m]);return c;}
   // v4.0.1: moving batches are white and give each object its own color (BatchedMesh.setColorAt), so things that
   // differ only in color share one draw. Their copy stays out of MATS (the palette would tint it) and skips color sync.
-  function dbMat(m){const c=m.clone();c.userData=Object.assign({},m.userData);c.color.setRGB(1,1,1);if(!DBCOL)c.vertexColors=true;MSYNC.push([c,m,true]);return c;}
+  function dbMat(m){const c=m.clone();c.userData=Object.assign({},m.userData);if(!DBMAT)c.color.setRGB(1,1,1);if(!DBCOL)c.vertexColors=true;MSYNC.push([c,m,true]);return c;}
   // same look as the batch: compared at 8-bit precision (look-alike materials differ in the last float bits)
   const colorSame=(a,b)=>a.color.getHex()===b.color.getHex()&&(!a.emissive||(a.emissive.getHex()===b.emissive.getHex()&&a.emissiveIntensity===b.emissiveIntensity));
   const emSame=(a,b)=>!a.emissive||(a.emissive.getHex()===b.emissive.getHex()&&a.emissiveIntensity===b.emissiveIntensity);
@@ -212,8 +212,12 @@
   // iOS 18.7, Apple GPU); drawing moving things one by one (?nodb) shows correct colours there, so iOS uses that.
   // ?dbcol=0 (vertex) or ?dbcol=1 (texture) still forces batches on for testing.
   const IOS=/iPhone|iPad|iPod/.test(navigator.userAgent)||(/Macintosh/.test(navigator.userAgent)&&navigator.maxTouchPoints>1);
-  const DBOFF=!BQ.get("dbcol")&&(IOS||(!BPR.vc&&!BPR.tex));G3.DBCOL=DBCOL;
-  diag(`batch colours: vertex ${BPR.vc===undefined?"-":BPR.vc?"ok":"FAIL ("+BPR.vcpx+")"}, texture ${BPR.tex===undefined?"-":BPR.tex?"ok":"FAIL ("+BPR.texpx+")"}${BPR.err?" error "+BPR.err:""} -> ${DBOFF?(IOS?"iOS: ":"")+"moving things drawn one by one":DBCOL?"texture":"vertex"}`);const DBLAYER=30,DBOK=new Set(["MeshStandardMaterial","MeshLambertMaterial","MeshBasicMaterial","MeshPhongMaterial"]);
+  // v4.1 v15: iOS gets colour-keyed moving batches instead of drawing one by one: the batch's own material carries the
+  // colour (exactly as the static batches do, which draw correctly there), so no per-object colour method is used at all;
+  // things of one look but different colours go to different batches. ?dbios=off goes back to one by one.
+  const DBMAT=IOS&&!BQ.get("dbcol")&&BQ.get("dbios")!=="off";if(DBMAT)DBCOL=true;
+  const DBOFF=!BQ.get("dbcol")&&!DBMAT&&(IOS||(!BPR.vc&&!BPR.tex));G3.DBCOL=DBCOL;G3.DBMAT=DBMAT;
+  diag(`batch colours: vertex ${BPR.vc===undefined?"-":BPR.vc?"ok":"FAIL ("+BPR.vcpx+")"}, texture ${BPR.tex===undefined?"-":BPR.tex?"ok":"FAIL ("+BPR.texpx+")"}${BPR.err?" error "+BPR.err:""} -> ${DBOFF?(IOS?"iOS: ":"")+"moving things drawn one by one":DBMAT?"iOS: colour-keyed batches":DBCOL?"texture":"vertex"}`);const DBLAYER=30,DBOK=new Set(["MeshStandardMaterial","MeshLambertMaterial","MeshBasicMaterial","MeshPhongMaterial"]);
   function dbOK(o){if(!o.isMesh||o.isInstancedMesh||o.isBatchedMesh||o.isSkinnedMesh||o.userData.smBatch||o.renderOrder)return false;
     const m=o.material,g=o.geometry;if(!m||Array.isArray(m)||!DBOK.has(m.type)||m.transparent||m.opacity<1||!g||!g.isBufferGeometry)return false;
     if(o.onBeforeRender!==THREE.Object3D.prototype.onBeforeRender)return false;const a=g.attributes;if(!a.position||!a.normal)return false;
@@ -221,7 +225,7 @@
     return g.drawRange.start===0&&g.drawRange.count===Infinity&&o.matrixWorld.determinant()>0;}
   function dbRelease(){if(DB.q)DB.q.clear();for(const r of DB.list)if(r.o.layers.mask===1<<DBLAYER)r.o.layers.set(0);for(const b of DB.bms){scene.remove(b);b.dispose();}DB.list=[];DB.bms=[];DB.byKey=new Map();}
   DB.byKey=new Map();DB.full=0;
-  const dbKey=o=>dbLookId(o.material)+"|"+(o.castShadow?1:0)+(o.receiveShadow?1:0)+"|"+smSigC(o.geometry);
+  const dbKey=o=>dbLookId(o.material)+"|"+(o.castShadow?1:0)+(o.receiveShadow?1:0)+"|"+smSigC(o.geometry)+(DBMAT?"|"+o.material.color.getHex():"");
   // a geometry that shares g's buffers and adds a colour attribute filled with c (for the vertex-colour path)
   function vcGeo(g,c,h){const n=g.attributes.position.count;if(!h){h=new THREE.BufferGeometry();for(const k in g.attributes)h.setAttribute(k,g.attributes[k]);if(g.index)h.setIndex(g.index);
       h.setAttribute("color",new THREE.BufferAttribute(new Float32Array(n*3),3));}
@@ -244,7 +248,7 @@
       // (vertex-colour path: one geometry per object; the batch copies the data, so one scratch copy per shape is refilled)
       if(DBCOL){gid=B.bm.addGeometry(g);B.geos.set(g,gid);}else{let h=VCG.get(g);h=vcGeo(g,c,h);VCG.set(g,h);gid=B.bm.addGeometry(h);vg=true;}}
     if(B.bm.instanceCount>=B.bm.maxInstanceCount)return false;
-    const iid=B.bm.addInstance(gid);if(DBCOL)B.bm.setColorAt(iid,c);
+    const iid=B.bm.addInstance(gid);if(DBCOL&&!DBMAT)B.bm.setColorAt(iid,c);
     const r={o,B,bm:B.bm,iid,gid,vg,mat:o.material,geo:g,ver:g.attributes.position.version,cr:c.r,cg:c.g,cb:c.b};
     if(B.wait){B.wait.push(r);B.bm.setMatrixAt(iid,o.matrixWorld);return true;}
     DB.list.push(r);o.layers.set(DBLAYER);return true;}
@@ -287,9 +291,13 @@
       const bc=r.bm.material,om=o.material;
       if(om!==r.mat||o.geometry!==r.geo||o.geometry.attributes.position.version!==r.ver||o.layers.mask!==1<<DBLAYER||!emSame(om,bc)){r.gone=true;out=true;r.bm.setVisibleAt(r.iid,false);vcFree(r.B,r);if(o.layers.mask===1<<DBLAYER)o.layers.set(0);continue;}
       // only touch the batch when something changed (each change re-uploads that batch's matrix texture)
-      let ch=false;{const c=om.color;if(c.r!==r.cr||c.g!==r.cg||c.b!==r.cb){r.cr=c.r;r.cg=c.g;r.cb=c.b;if(DBCOL)r.bm.setColorAt(r.iid,c);else vcSet(r.bm,r.gid,c);ch=true;}}
+      let ch=false;{const c=om.color;if(c.r!==r.cr||c.g!==r.cg||c.b!==r.cb){
+        if(DBMAT){r.gone=true;out=true;r.bm.setVisibleAt(r.iid,false);if(o.layers.mask===1<<DBLAYER)o.layers.set(0);continue;}   // (iOS: a new colour means another batch)
+        r.cr=c.r;r.cg=c.g;r.cb=c.b;if(DBCOL)r.bm.setColorAt(r.iid,c);else vcSet(r.bm,r.gid,c);ch=true;}}
       const vis=smShown(o);if(vis!==r.vis){r.vis=vis;ch=true;r.bm.setVisibleAt(r.iid,vis);}
-      if(vis){const e=o.matrixWorld.elements,m=r.m||(r.m=new Float32Array(16).fill(NaN));let mc=false;for(let i=0;i<16;i++)if(e[i]!==m[i]){mc=true;m[i]=e[i];}
-        if(mc){ch=true;r.bm.setMatrixAt(r.iid,o.matrixWorld);}}
+      // (v15: the cache is Float64 like the world matrix; a Float32 copy never compared equal, so still things were rewritten
+      // every frame, their batch's matrix texture re-uploaded, and the every-4th-frame check for idle things never kicked in)
+      if(vis){const e=o.matrixWorld.elements,m=r.m||(r.m=new Float64Array(16).fill(NaN));let mc=false;for(let i=0;i<16;i++)if(e[i]!==m[i]){mc=true;m[i]=e[i];}
+        if(mc){ch=true;r.bm.setMatrixAt(r.iid,o.matrixWorld);DB.mup=(DB.mup||0)+1;}}
       r.idle=ch?0:(r.idle||0)+1;}
     if(out)DB.list=DB.list.filter(r=>!r.gone);};

@@ -40,8 +40,10 @@
     const inside=(x,z,m=0)=>x>F.x0+m&&x<F.x1-m&&z>F.z0+m&&z<F.z1-m;
     /* ---------- geometry merger: vertex colours, flat normals, one mesh per sector ---------- */
     // sectors: the land round the fence ("near", shadowed) and the rest, in one mesh on phones and five on desktops
-    const SEC={near:{p:[],c:[],n:0}},secOf=(x,z)=>x>-110&&x<100&&z>-60&&z<75?"near":DEN<1?"far":z<-60?(x<20?"nw":"ne"):z>75?"s":x<0?"w":"e";
-    ["far","nw","ne","s","w","e"].forEach(k=>SEC[k]={p:[],c:[],n:0});const secN=k=>DEN<1&&k!=="near"?"far":k;   // explicit sectors fold into "far" on phones
+    // v15: away from the mill the land is cut into a grid of ~210 m chunks (up to 12 meshes), each with its own bounds, so
+    // chunks behind the camera or off screen are culled whole; only Low folds everything outside the mill's ring into one
+    const SEC={near:{p:[],c:[],n:0},far:{p:[],c:[],n:0}},secOf=(x,z)=>{if(x>-110&&x<100&&z>-60&&z<75)return "near";if(DEN<0.6)return "far";
+      const k="g"+Math.max(0,Math.min(3,Math.floor((x+420)/210)))+"_"+Math.max(0,Math.min(2,Math.floor((z+320)/214)));return SEC[k]?k:(SEC[k]={p:[],c:[],n:0},k);};
     const _v=new THREE.Vector3(),_m=new THREE.Matrix4(),_q=new THREE.Quaternion(),_s=new THREE.Vector3(),_e=new THREE.Euler(),_col=new THREE.Color();
     const TPL={};
     function tpl(k,make,fix){if(TPL[k])return TPL[k];let g=make();if(g.index)g=g.toNonIndexed();const a=g.attributes.position.array;
@@ -51,7 +53,7 @@
         if(nx*cx+ny*(cy-fix)+nz*cz<0)for(let k=0;k<3;k++){const s=a[t+3+k];a[t+3+k]=a[t+6+k];a[t+6+k]=s;}}
       return TPL[k]=a;}
     // add a template with a transform and colour; shade darkens toward the base for a little ambient occlusion
-    function add(arr,x,y,z,sx,sy,sz,ry,hex,shade=0.18,sec,rx=0,rz=0){const S2=SEC[sec?secN(sec):secOf(x,z)];_col.set(hex).convertSRGBToLinear();y+=hAt(x,z);
+    function add(arr,x,y,z,sx,sy,sz,ry,hex,shade=0.18,sec,rx=0,rz=0){const S2=SEC[sec==="near"?"near":secOf(x,z)];_col.set(hex).convertSRGBToLinear();y+=hAt(x,z);
       _e.set(rx,ry,rz);_q.setFromEuler(_e);_m.compose(_v.set(x,y,z),_q,_s.set(sx,sy,sz));const e=_m.elements;
       let lo=1e9,hi=-1e9;for(let i=1;i<arr.length;i+=3){lo=Math.min(lo,arr[i]);hi=Math.max(hi,arr[i]);}const span=Math.max(1e-6,hi-lo);
       for(let i=0;i<arr.length;i+=3){const ax=arr[i],ay=arr[i+1],az=arr[i+2];
@@ -74,7 +76,7 @@
       quad:tpl("quad",()=>{const g=new THREE.PlaneGeometry(1,1);g.rotateX(-Math.PI/2);return g;}),
       mound:tpl("mound",()=>{const g=new THREE.SphereGeometry(1,7,3,0,Math.PI*2,0,Math.PI/2);return g;})};
     // flat polygon on the ground (water patches, fields): a fan of triangles, pre-transformed
-    function poly(pts,y,hex,sec){const S2=SEC[sec?secN(sec):secOf(pts[0][0],pts[0][1])];_col.set(hex).convertSRGBToLinear();let cx=0,cz=0;pts.forEach(p=>{cx+=p[0];cz+=p[1];});cx/=pts.length;cz/=pts.length;y+=hAt(cx,cz);
+    function poly(pts,y,hex,sec){const S2=SEC[sec==="near"?"near":secOf(pts[0][0],pts[0][1])];_col.set(hex).convertSRGBToLinear();let cx=0,cz=0;pts.forEach(p=>{cx+=p[0];cz+=p[1];});cx/=pts.length;cz/=pts.length;y+=hAt(cx,cz);
       for(let i=0;i<pts.length;i++){const a=pts[i],b=pts[(i+1)%pts.length];S2.p.push(cx,y,cz,b[0],y,b[1],a[0],y,a[1]);for(let k=0;k<3;k++)S2.c.push(_col.r,_col.g,_col.b);S2.n++;}}
     // camera height floor and walker obstacles
     const HC=8,HNX=106,HNZ=80,HX0=-424,HZ0=-320,HM=new Float32Array(HNX*HNZ);
@@ -156,7 +158,7 @@
       out.push(pts[pts.length-1].slice());return out;}
     // a band of width w (a number, or a function of the distance along it, 0..1) along a smoothed polyline, draped on the terrain: tracks, washes, bayou channels, gravel bars.
     // wob widens and narrows it with the noise; ko marks the keep-out (1 solid, 2 water); returns the smoothed points
-    function strip(pts,w,y,hex,ko,wob=0,sec){const P=smooth(pts),S2=SEC[sec?secN(sec):secOf(P[0][0],P[0][1])];_col.set(hex).convertSRGBToLinear();const L=[],R=[];
+    function strip(pts,w,y,hex,ko,wob=0,sec){const P=smooth(pts),S2=SEC[sec==="near"?"near":secOf(P[0][0],P[0][1])];_col.set(hex).convertSRGBToLinear();const L=[],R=[];
       for(let i=0;i<P.length;i++){const a=P[Math.max(0,i-1)],b=P[Math.min(P.length-1,i+1)];let dx=b[0]-a[0],dz=b[1]-a[1];const l=Math.hypot(dx,dz)||1;dx/=l;dz/=l;
         const hw=(typeof w==="function"?w(i/Math.max(1,P.length-1)):w)/2*(1+wob*(noise(P[i][0]*3,P[i][1]*3,40)-0.5)*2);L.push([P[i][0]-dz*hw,P[i][1]+dx*hw]);R.push([P[i][0]+dz*hw,P[i][1]-dx*hw]);if(ko)kMark(P[i][0]-hw-1,P[i][0]+hw+1,P[i][1]-hw-1,P[i][1]+hw+1,ko);}
       const v=p=>{S2.p.push(p[0],y+hAt(p[0],p[1]),p[1]);S2.c.push(_col.r,_col.g,_col.b);};

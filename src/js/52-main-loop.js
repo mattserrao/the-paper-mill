@@ -1,6 +1,9 @@
-// frame rate is a player choice (Controls): Smooth = the display's rate (v4 default), Battery saver = 30 fps; remembered
-let FRAME_CAP=0;try{if(localStorage.getItem("paper-mill-fps")==="saver")FRAME_CAP=30;}catch(e){}G3.cap=FRAME_CAP;
-function setFpsMode(smooth){FRAME_CAP=smooth?0:30;G3.cap=FRAME_CAP;try{localStorage.setItem("paper-mill-fps",smooth?"smooth":"saver");}catch(e){}document.querySelectorAll("#fpsSeg button").forEach(b=>b.setAttribute("aria-pressed",String((b.dataset.fps==="smooth")===smooth)));diag("frame rate: "+(smooth?"smooth 60":"battery saver 30"));}
+// frame rate is a player choice (Controls): Battery saver = 30 fps, Smooth = 60 fps (v15 default: a 120 Hz screen no longer
+// draws twice as many frames), Max = the display's rate; remembered. (true/false still mean Max/saver for the test tools)
+const FPS_CAPS={saver:30,smooth:60,max:0};let FPS_MODE="smooth";try{const v=localStorage.getItem("paper-mill-fps");if(FPS_CAPS[v]!==undefined)FPS_MODE=v;}catch(e){}
+let FRAME_CAP=FPS_CAPS[FPS_MODE];G3.cap=FRAME_CAP;
+function setFpsMode(m){if(m===true)m="max";else if(m===false)m="saver";if(FPS_CAPS[m]===undefined)return;FPS_MODE=m;FRAME_CAP=FPS_CAPS[m];G3.cap=FRAME_CAP;try{localStorage.setItem("paper-mill-fps",m);}catch(e){}
+  document.querySelectorAll("#fpsSeg button").forEach(b=>b.setAttribute("aria-pressed",String(b.dataset.fps===m)));}
 let last=performance.now(),uiAcc=0,uiN=0,lastPaint=0;
 /* v4.0.1: optional FPS readout (Controls > Show FPS), bottom-right; counts drawn loop frames, text written twice a second */
 const FPSM={on:false,el:null,n:0,t0:0,txt:""};

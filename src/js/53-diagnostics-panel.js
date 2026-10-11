@@ -22,7 +22,7 @@
   let perfReport="";
   function census(){const D=G3.diagScene&&G3.diagScene();if(!D)return ["no 3D view"];const {scene,renderer,parts}=D,L=[];
     const gl=renderer.getContext(),ca=gl.getContextAttributes(),db=[gl.drawingBufferWidth,gl.drawingBufferHeight];
-    L.push(`canvas ${db[0]}x${db[1]} (${(db[0]*db[1]/1e6).toFixed(2)} MP) pixelRatio=${renderer.getPixelRatio()} devicePixelRatio=${devicePixelRatio} antialias=${ca.antialias} frameCap=${G3.cap||"none"} simSpeed=${C.simSpeed}`);
+    L.push(`canvas ${db[0]}x${db[1]} (${(db[0]*db[1]/1e6).toFixed(2)} MP) pixelRatio=${renderer.getPixelRatio()} devicePixelRatio=${devicePixelRatio} antialias=${ca.antialias} multiDraw=${G3.multiDraw} frameCap=${G3.cap||"none"} simSpeed=${C.simSpeed}`);
     L.push(`shadows enabled=${renderer.shadowMap.enabled} type=${renderer.shadowMap.type} autoUpdate=${renderer.shadowMap.autoUpdate} refresh=${G3.shadowHz||"every frame"}Hz`);
     const c={mesh:0,inst:0,instN:0,line:0,sprite:0,cast:0,transp:0,lights:[],mats:new Map()};const groups=new Map();
     scene.traverseVisible(o=>{let top=o;while(top.parent&&top.parent!==scene)top=top.parent;
@@ -46,7 +46,7 @@
     {name:"uncapped baseline",on:()=>{G3.capOff=true;},off:()=>{}},
     {name:"shadows OFF",on:()=>{const D=G3.diagScene();D.renderer.shadowMap.enabled=false;D.MATS.forEach(m=>m.needsUpdate=true);},off:()=>{const D=G3.diagScene();D.renderer.shadowMap.enabled=true;D.renderer.shadowMap.needsUpdate=true;D.MATS.forEach(m=>m.needsUpdate=true);}},
     {name:"half resolution",on:()=>{const D=G3.diagScene();PHASES._pr=D.renderer.getPixelRatio();D.renderer.setPixelRatio(PHASES._pr*0.5);D.resize();},off:()=>{const D=G3.diagScene();D.renderer.setPixelRatio(PHASES._pr);D.resize();}},
-    {name:"particles OFF",on:()=>{G3.EXP.noParts=true;},off:()=>{G3.EXP.noParts=false;}},
+    {name:"particle drawing OFF (still updated)",on:()=>{G3.EXP.noParts=true;},off:()=>{G3.EXP.noParts=false;}},
     {name:"people + vehicles hidden",on:()=>{G3.EXP.noMovers=true;},off:()=>{G3.EXP.noMovers=false;}},
     {name:"HTML labels hidden",on:()=>{document.body.classList.add("diagNoLbl");},off:()=>{document.body.classList.remove("diagNoLbl");}},
     {name:"3D render skipped (CPU-only ceiling)",on:()=>{G3.EXP.noRender=true;},off:()=>{G3.EXP.noRender=false;}}];
@@ -62,27 +62,28 @@
         out.push(`  ${(base.jsAvg).toFixed(2).padStart(6)}  = total JavaScript per frame (sim + 3D + UI)`);
         perfReport=out.join("\n");diag("performance test finished");done(perfReport);return;}
       const ph=PHASES[i];ban.textContent=`Performance test ${i+1}/${PHASES.length}: ${ph.name} - please don't touch the screen`;ph.on();
-      setTimeout(()=>{PF.acc={};PF.frames=0;PF.calls=0;PF.tris=0;PF.gaps=[];PF.js=[];PF.lastNow=0;PF.on=true;
+      setTimeout(()=>{PF.acc={};PF.frames=0;PF.calls=0;PF.tris=0;PF.rf=0;PF.mup=0;PF.gaps=[];PF.js=[];PF.lastNow=0;PF.on=true;
         setTimeout(()=>{PF.on=false;const g=PF.gaps.slice(1).sort((a,b)=>a-b),n=g.length,avg=n?g.reduce((a,b)=>a+b,0)/n:0,p90=n?g[Math.floor(n*0.9)]:0,
-            js=PF.js.length?PF.js.reduce((a,b)=>a+b,0)/PF.js.length:0,fps=n?1000/avg:0,calls=PF.frames?PF.calls/PF.frames:0,tris=PF.frames?PF.tris/PF.frames:0;
+            js=PF.js.length?PF.js.reduce((a,b)=>a+b,0)/PF.js.length:0,fps=n?1000/avg:0,calls=PF.rf?PF.calls/PF.rf:0,tris=PF.rf?PF.tris/PF.rf:0,mup=PF.frames?PF.mup/PF.frames:0;
           if(i===1)base={acc:{...PF.acc},frames:PF.frames,jsAvg:js};
-          out.push(`  ${String(i+1)}. ${ph.name.padEnd(36)} ${fps.toFixed(1).padStart(5)} fps · frame ${avg.toFixed(1)} ms (p90 ${p90.toFixed(1)}) · JS ${js.toFixed(1)} ms · ${calls.toFixed(0)} draws · ${(tris/1000).toFixed(0)}k tris`);
+          out.push(`  ${String(i+1)}. ${ph.name.padEnd(36)} ${fps.toFixed(1).padStart(5)} fps · frame ${avg.toFixed(1)} ms (p90 ${p90.toFixed(1)}) · JS ${js.toFixed(1)} ms · ${PF.rf?calls.toFixed(0)+" draws · "+(tris/1000).toFixed(0)+"k tris":"no render"} · ${mup.toFixed(0)} batch matrix writes`);
           ph.off();i++;setTimeout(next,300);},3000);},1500);};
     next();}
   function open(){snap();let d=document.getElementById("diagOv");if(!d){d=document.createElement("div");d.id="diagOv";
       d.style.cssText="position:fixed;inset:12px;z-index:400;background:var(--panel,#fff);color:var(--ink,#111);border:1px solid var(--line,#ccc);border-radius:12px;box-shadow:0 12px 40px rgba(0,0,0,.3);display:flex;flex-direction:column;padding:10px;gap:8px";
-      d.innerHTML='<div style="display:flex;gap:8px;align-items:center"><b style="flex:1;font:700 15px system-ui">Diagnostics</b><button id="diagPerf">Performance test (25 s)</button><button id="diagCopy">Copy</button><button id="diagClose">Close</button></div><pre id="diagTxt" style="flex:1;overflow:auto;margin:0;font:11px/1.35 ui-monospace,monospace;white-space:pre-wrap;word-break:break-word"></pre>';
+      d.innerHTML='<div style="display:flex;gap:8px;align-items:center"><b style="flex:1;font:700 15px system-ui">Diagnostics</b><button id="diagPerf">Performance test (~40 s)</button><button id="diagCopy">Copy</button><button id="diagClose">Close</button></div><pre id="diagTxt" style="flex:1;overflow:auto;margin:0;font:11px/1.35 ui-monospace,monospace;white-space:pre-wrap;word-break:break-word"></pre>';
       document.body.appendChild(d);d.querySelector("#diagClose").onclick=()=>d.hidden=true;
       d.querySelector("#diagCopy").onclick=()=>{const t=d.querySelector("#diagTxt").textContent;(navigator.clipboard?navigator.clipboard.writeText(t):Promise.reject()).then(()=>{d.querySelector("#diagCopy").textContent="Copied";},()=>{const r=document.createRange();r.selectNodeContents(d.querySelector("#diagTxt"));const s=getSelection();s.removeAllRanges();s.addRange(r);});};}
     d.querySelector("#diagCopy").textContent="Copy";d.querySelector("#diagTxt").textContent=header()+(perfReport?"\n"+perfReport+"\n":"")+"\n"+DIAG.slice().reverse().join("\n");d.hidden=false;
     d.querySelector("#diagPerf").onclick=()=>{d.hidden=true;runPerf(()=>open());};}
   {const seg=document.createElement("div");seg.className="seg";seg.id="fpsSeg";seg.setAttribute("role","group");seg.setAttribute("aria-label","Frame rate");
-    seg.innerHTML=`<button data-fps="saver" aria-pressed="${FRAME_CAP===30}" title="30 fps: cooler phone, longer battery">Battery saver</button><button data-fps="smooth" aria-pressed="${FRAME_CAP!==30}" title="Full frame rate: smoother, uses more battery">Smooth</button>`;
-    seg.querySelectorAll("button").forEach(x=>x.addEventListener("click",()=>setFpsMode(x.dataset.fps==="smooth")));
+    seg.innerHTML=[["saver","Battery saver","30 fps: cooler phone, longer battery"],["smooth","Smooth","60 fps"],["max","Max","The display's full rate (120 Hz screens draw twice as many frames)"]].map(([k,t,ti])=>`<button data-fps="${k}" aria-pressed="${FPS_MODE===k}" title="${ti}">${t}</button>`).join("");
+    seg.querySelectorAll("button").forEach(x=>x.addEventListener("click",()=>setFpsMode(x.dataset.fps)));
     const row0=document.getElementById("v2ctlrow");if(row0)row0.appendChild(seg);}
   if(G3.GFX){const seg=document.createElement("div");seg.className="seg";seg.id="gfxSeg";seg.setAttribute("role","group");seg.setAttribute("aria-label","Graphics");const cap=s=>s[0].toUpperCase()+s.slice(1);
-    seg.innerHTML=`<span>Graphics</span>`+["auto","low","medium","high","ultra"].map(g=>`<button data-g="${g}" aria-pressed="${G3.GFX.pick===g}" title="${g==="auto"?"Picked from your device: "+cap(G3.GFX.auto):{low:"1024 shadows, 10 Hz, lighter scenery",medium:"1024 shadows, 15 Hz",high:"2048 softer shadows, 30 Hz, full scenery",ultra:"4096 softer shadows, every frame, dense scenery with far shadows"}[g]}">${g==="auto"?"Auto ("+cap(G3.GFX.auto)+")":cap(g)}</button>`).join("");
+    seg.innerHTML=`<span>Graphics</span>`+["auto","low","medium","high","ultra"].map(g=>`<button data-g="${g}" aria-pressed="${G3.GFX.pick===g}" title="${g==="auto"?"Picked from your device: "+cap(G3.GFX.auto):{low:"1024 shadows, 10 Hz, lighter scenery",medium:"1024 shadows, 15 Hz",high:"2048 softer shadows, 24 Hz, full scenery",ultra:"4096 softer shadows, every frame, dense scenery with far shadows"}[g]}">${g==="auto"?"Auto ("+cap(G3.GFX.auto)+")":cap(g)}</button>`).join("");
     seg.querySelectorAll("button").forEach(x=>x.addEventListener("click",()=>G3.setGfx(x.dataset.g)));
+    {const rb=document.createElement("button");rb.id="gfxReload";rb.hidden=true;rb.textContent="Reload to apply all";rb.title="Lighting model, round-shape detail and scenery density change on reload";rb.addEventListener("click",()=>location.reload());seg.appendChild(rb);}
     const row0=document.getElementById("v2ctlrow");if(row0)row0.appendChild(seg);}
   {const l=document.createElement("label");l.className="check";l.innerHTML='<input id="showFps" type="checkbox"/> Show FPS';
     const row0=document.getElementById("v2ctlrow");if(row0)row0.appendChild(l);

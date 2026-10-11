@@ -89,13 +89,15 @@
   // v4.1: change graphics tier while playing (what can change live; see GFX_TIERS in 20-3d-setup.js)
   G3.setGfx=pick=>{if(pick!=="auto"&&!GFX_TIERS[pick])return;const t=GFX_TIERS[pick==="auto"?GFX.auto:pick];GFX.pick=pick;GFX.tier=pick==="auto"?GFX.auto:pick;
     try{localStorage.setItem("paper-mill-gfx",pick);}catch(e){}
-    renderer.setPixelRatio(Math.min(t.pr,window.devicePixelRatio||1));resize();G3.shadowHz=t.hz;GFX.pr=t.pr;GFX.hz=t.hz;
+    GFX.pr=t.pr;GFX.px=t.px;G3.prFixed=0;resize();G3.shadowHz=t.hz;GFX.hz=t.hz;
     if(sun.shadow.mapSize.x!==t.shadow){sun.shadow.mapSize.set(t.shadow,t.shadow);if(sun.shadow.map){sun.shadow.map.dispose();sun.shadow.map=null;}renderer.shadowMap.needsUpdate=true;}sun.shadow.radius=t.soft?5:3;
-    if(G3.wxRange)G3.wxRange(t.wx);if(G3.scenery)G3.scenery.parts.forEach(p=>{if(p.userData.scenery!=="near")p.castShadow=t.far;});
+    if(G3.wxRange)G3.wxRange(t.wx);if(G3.scenery){G3.scenery.farOff=false;G3.scenery.parts.forEach(p=>{p.visible=true;if(p.userData.scenery!=="near")p.castShadow=t.far;});}
+    // (v15: what needs a reload — lighting model, round-shape detail, scenery density — is offered as a button)
+    {const nb=$("gfxReload");if(nb)nb.hidden=GFX.tier===GFX.loaded;}
     diag(`graphics: ${GFX.tier}${pick==="auto"?" (auto)":""}; lighting model and scenery density change on the next load`);
     document.querySelectorAll("#gfxSeg button").forEach(b=>b.setAttribute("aria-pressed",String(b.dataset.g===pick)));};
 
   function resize(){G3.lastMove=performance.now();const w=host.clientWidth,h=host.clientHeight;G3.vw=w;G3.vh=h;   // v4.0.1: cached for the label code
-  host.classList.toggle("compact",w<640);if(!w||!h)return;renderer.setSize(w,h,false);camera.aspect=w/h;camera.updateProjectionMatrix();}
+  host.classList.toggle("compact",w<640);if(!w||!h)return;{const pr=G3.prFor(w,h);if(Math.abs(pr-renderer.getPixelRatio())>0.01)renderer.setPixelRatio(pr);}renderer.setSize(w,h,false);camera.aspect=w/h;camera.updateProjectionMatrix();}
   new ResizeObserver(resize).observe(host);
 

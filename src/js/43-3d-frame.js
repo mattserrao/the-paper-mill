@@ -7,15 +7,19 @@
     if(rdt>0){const R=S.rates;if(!S.M.pulperDown)V.swirl+=rdt*(0.4+R.feed*0.06);V.belt=(V.belt+rdt*R.feed*1.4)%30;V.cans+=rdt*S.pmSpeed/700;
       if(S.pm==="run")V.sheet=(V.sheet+rdt*S.pmSpeed/40)%24;V.rollsAnim+=rdt*(0.2+clamp(R.load/Math.max(1,C.loaders.v*P.loaderRate),0,1))*0.5;}
     {const t=performance.now();if(!(t-(G3.shTrim||0)<2000)){G3.shTrim=t;trimShadows();}}pm("shadow trim (every 2 s)");
-    if(rdt>0&&!G3.noFallback){fpsT+=rdt;fpsN++;if(fpsT>3){const fps=fpsN/fpsT;fpsT=0;fpsN=0;
+    // v15: the fallback measures real frame intervals (rdt is clamped to 0.1 s, so a 5 FPS stall used to count as 10 FPS)
+    // against the frame budget in use (the cap, or 60), and steps down only after two slow 3-second windows in a row
+    {const t=performance.now(),dt=G3.fbLast?t-G3.fbLast:0;G3.fbLast=t;
+    if(rdt>0&&!G3.noFallback&&dt>0&&dt<2000){fpsT+=dt/1000;fpsN++;if(fpsT>3){const fps=fpsN/fpsT;fpsT=0;fpsN=0;
       // (G3.noFallback: set by the autotest so every build is measured at the same graphics settings)
       // v4 fallback order, cheapest to undo first: render fewer pixels, then refresh shadows less often. Shadows stay on
       // (switching them off recompiles every shader: a long freeze, the opposite of what a struggling device needs)
-      const fk=(G3.cap||60)/60;
-      if(fps<28*fk&&quality===2&&renderer.getPixelRatio()>1){quality=1;renderer.setPixelRatio(1);resize();diag("quality: pixel ratio 1 ("+fps.toFixed(0)+" fps)");}
-      else if(fps<24*fk&&quality>=1&&G3.shadowHz>5){quality=0;G3.shadowHz=5;diag("quality: shadows 5 Hz ("+fps.toFixed(0)+" fps)");}
+      const tgt=G3.cap||60,slow=fps<0.8*tgt;G3.fbSlow=slow?(G3.fbSlow||0)+1:0;
+      if(G3.fbSlow>=2){G3.fbSlow=0;
+      if(quality===2&&renderer.getPixelRatio()>1){quality=1;G3.prFixed=1;renderer.setPixelRatio(1);resize();diag("quality: pixel ratio 1 ("+fps.toFixed(0)+" fps)");}
+      else if(fps<0.72*tgt&&quality>=1&&G3.shadowHz>5){quality=0;G3.shadowHz=5;diag("quality: shadows 5 Hz ("+fps.toFixed(0)+" fps)");}
       // v4.1: still struggling: the far scenery sectors go (the yard and the land round the fence stay)
-      else if(fps<22*fk&&quality===0&&G3.scenery&&!G3.scenery.farOff){G3.scenery.farOff=true;G3.scenery.parts.forEach(p=>{if(p.userData.scenery!=="near")p.visible=false;});diag("quality: far scenery hidden ("+fps.toFixed(0)+" fps)");}}}pm("low-FPS fallback check");
+      else if(fps<0.62*tgt&&quality===0&&G3.scenery&&!G3.scenery.farOff){G3.scenery.farOff=true;G3.scenery.parts.forEach(p=>{if(p.userData.scenery!=="near")p.visible=false;});diag("quality: far scenery hidden ("+fps.toFixed(0)+" fps)");}}}}}pm("low-FPS fallback check");
     {const t=performance.now();if(!(t-(G3.palT||0)<500)){G3.palT=t;applyPalette();}}pm("palette (every 0.5 s)");rebuildDoors();
     const R=S.rates,now=performance.now();pm("setup (palette, doors, shadow trim)");
     crewUpdate(rdt,now);pm("crew + people");if(G3.actTick)G3.actTick(rdt);pm("activity scenes");
@@ -199,7 +203,10 @@
     if(G3.dbTick)G3.dbTick();
     if(!EXP.noRender){scene.matrixWorldAutoUpdate=!G3.DB||!G3.DB.n;renderer.render(scene,camera);scene.matrixWorldAutoUpdate=true;}
     if(hidM)hidM.forEach(o=>o.visible=true);
-    if(PF.on){PF.calls=(PF.calls||0)+renderer.info.render.calls;PF.tris=(PF.tris||0)+renderer.info.render.triangles;}
+    // (v15: no counting when the render was skipped: renderer.info still holds the last real frame's numbers; and the moving
+    // batches' matrix rewrites per frame, the figure the Float32 cache bug inflated)
+    if(PF.on){if(!EXP.noRender){PF.calls=(PF.calls||0)+renderer.info.render.calls;PF.tris=(PF.tris||0)+renderer.info.render.triangles;PF.rf=(PF.rf||0)+1;}PF.mup=(PF.mup||0)+((G3.DB&&G3.DB.mup)||0);}
+    if(G3.DB)G3.DB.mup=0;
     pm("RENDER (three.js draw submission)");
     // labels follow the 3D anchors
     const w=G3.vw||host.clientWidth,hh=G3.vh||host.clientHeight,doText=now-lastLabel>200;if(doText)lastLabel=now;

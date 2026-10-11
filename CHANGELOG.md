@@ -132,6 +132,29 @@ piece; the three sandbox-style piano pieces are the valley's.
   piece; the sound button's tooltip names what is playing. `tools/musictest.py` schedules every step of every piece and
   checks the output level; `tools/musicrec.py` records any piece to MP3.
 
+### Performance round (pass 13, test v15), from the v14 graphics performance review
+- Moving batches: the matrix cache is Float64 (a Float32 copy never compared equal to the world matrix, so still things
+  were rewritten every frame and their batch's matrix texture re-uploaded, and the every-4th-frame idle check never
+  applied). Measured in a phone-emulated run: 453 -> 331 setMatrixAt calls per frame. The perf test now reports batch
+  matrix writes per frame.
+- iOS: colour-keyed moving batches instead of drawing moving things one by one. The batch material carries the colour,
+  exactly like the static batches (which draw correctly on the iPhone); no per-object colour method is used; a colour
+  change moves the object to another batch. Simulated iPhone stress: 1245 -> 510 draws, 0 late shader compiles.
+  `?dbios=off` restores one-by-one. Needs a check on a real iPhone.
+- Diagnostics report WEBGL_multi_draw support (without it three.js draws each batched object separately) and antialias.
+- Graphics defaults: each tier has a rendered-pixel budget (Low 0.9, Medium 1.6, High 2.4, Ultra 4.2 MP) that lowers
+  the pixel ratio; Auto never picks Ultra and gives desktops without a known discrete GPU a 1.9 MP budget and 1024
+  shadows; High refreshes shadows at 24 Hz; no MSAA on screens with a pixel ratio of 1.5 or more.
+- Frame rate: Battery saver 30 / Smooth 60 (new default; 120 Hz screens no longer draw twice the frames) / Max.
+- Quality fallback measures real frame intervals (not the clamped sim step) against the frame budget in use and steps
+  down after two slow 3-second windows (80% / 72% / 62% of target). Changing the graphics tier restores far scenery and
+  offers "Reload to apply all" for what needs a rebuild.
+- Scenery: outside the mill's ring the land is cut into ~210 m chunks (up to 12 meshes) so off-screen chunks are culled;
+  only Low folds them into one. Phone-emulated rural: 269k -> 210k triangles, shadow draws 95 -> 84.
+- Particles: batches over 96 particles are depth-sorted with 48 buckets (linear time) instead of insertion sort.
+- Perf test fixes: no draw/triangle counts for the render-skipped phase (they were the last real frame's), the particle
+  phase is named for what it does (drawing off, still updated), the button says ~40 s.
+
 ### Design round 2 (pass 12, test v14)
 - Forest valley: the timber yard is now the neighbouring Valley Timber Co. (own fence, sign, log decks, chip pile, loader
   shed) beside the mill's covered OCC bale store (open-sided shed, bale stacks, a truck unloading); a concrete service

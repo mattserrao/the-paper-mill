@@ -17,7 +17,7 @@ function no3D(){G3.ok=false;$("no3d").hidden=false;$("no3d-retry").onclick=()=>l
     try{G3.scene&&G3.scene.traverse(o=>{const ms=o.material?(Array.isArray(o.material)?o.material:[o.material]):[];ms.forEach(m=>{m.needsUpdate=true;["map","alphaMap","emissiveMap"].forEach(k=>{if(m[k])m[k].needsUpdate=true;});});
       if(o.geometry&&o.geometry.attributes)for(const k in o.geometry.attributes)o.geometry.attributes[k].needsUpdate=true;if(o.geometry&&o.geometry.index)o.geometry.index.needsUpdate=true;});
       if(G3.renderer)G3.renderer.shadowMap.needsUpdate=true;}catch(e){}},false);
-  try{renderer=new THREE.WebGLRenderer({canvas:glc,antialias:!matchMedia("(pointer: coarse)").matches,powerPreference:"high-performance"});}
+  try{renderer=new THREE.WebGLRenderer({canvas:glc,antialias:!matchMedia("(pointer: coarse)").matches&&(window.devicePixelRatio||1)<1.5,powerPreference:"high-performance"});}   // (v15: no MSAA on high-DPI screens, where the extra pixels already smooth edges)
   catch(e){no3D();return;}
   if(!renderer.getContext()){no3D();return;}
   // r150+ reads every shader's error log on first draw, which forces the GPU to finish compiling right then:
@@ -29,18 +29,27 @@ function no3D(){G3.ok=false;$("no3d").hidden=false;$("no3d-retry").onclick=()=>l
   /* v4.1 graphics tiers. Auto picks from the device (phones: Medium, or Low with little memory; desktops: High, or Ultra on a
      discrete GPU); the player can pin one in Controls. Pixel ratio, shadow refresh, shadow map size, weather particles and
      far-scenery shadows and the shadow softness change live; the lighting model and scenery density take effect on the next load. */
-  const GFX_TIERS={low:{pr:1,shadow:1024,soft:false,hz:10,scenery:0.5,wx:600,lambert:true,far:false},
-    medium:{pr:1.25,shadow:1024,soft:false,hz:15,scenery:0.85,wx:1000,lambert:true,far:false},
-    high:{pr:2,shadow:2048,soft:true,hz:30,scenery:1,wx:2000,lambert:false,far:false},
-    ultra:{pr:2,shadow:4096,soft:true,hz:60,scenery:1.4,wx:2600,lambert:false,far:true}};
+  // v15: px is each tier's budget of rendered pixels (drawing buffer); the pixel ratio is lowered to stay within it
+  const GFX_TIERS={low:{pr:1,px:0.9e6,shadow:1024,soft:false,hz:10,scenery:0.5,wx:600,lambert:true,far:false},
+    medium:{pr:1.25,px:1.6e6,shadow:1024,soft:false,hz:15,scenery:0.85,wx:1000,lambert:true,far:false},
+    high:{pr:2,px:2.4e6,shadow:2048,soft:true,hz:24,scenery:1,wx:2000,lambert:false,far:false},
+    ultra:{pr:2,px:4.2e6,shadow:4096,soft:true,hz:60,scenery:1.4,wx:2600,lambert:false,far:true}};
   const gpuName=(()=>{try{const gl=renderer.getContext(),x=gl.getExtension("WEBGL_debug_renderer_info");return x?gl.getParameter(x.UNMASKED_RENDERER_WEBGL):gl.getParameter(gl.RENDERER);}catch(e){return "";}})();
-  const gfxAuto=mobile?((navigator.deviceMemory||4)<4?"low":"medium"):(/NVIDIA|GeForce|RTX|Radeon RX|Radeon Pro|Arc\(TM\)/i.test(gpuName)&&(navigator.hardwareConcurrency||4)>=8?"ultra":"high");
+  // (v15: Auto no longer picks Ultra; desktops get High, held to a smaller pixel budget and 1024 shadows unless the GPU is
+  // a known discrete one; Ultra is the player's choice)
+  const discrete=/NVIDIA|GeForce|RTX|Radeon RX|Radeon Pro|Arc\(TM\)/i.test(gpuName)&&(navigator.hardwareConcurrency||4)>=8;
+  const gfxAuto=mobile?((navigator.deviceMemory||4)<4?"low":"medium"):"high";
   let gfxPick="auto";try{gfxPick=localStorage.getItem("paper-mill-gfx")||"auto";}catch(e){}
   {const q=new URLSearchParams(location.search).get("gfx");if(q&&GFX_TIERS[q])gfxPick=q;}   // ?gfx=low|medium|high|ultra (tests)
   if(!GFX_TIERS[gfxPick])gfxPick="auto";
   const GFX=G3.GFX={...GFX_TIERS[gfxPick==="auto"?gfxAuto:gfxPick],tier:gfxPick==="auto"?gfxAuto:gfxPick,pick:gfxPick,auto:gfxAuto,gpu:String(gpuName).slice(0,60)};
+  GFX.loaded=GFX.tier;if(gfxPick==="auto"&&!mobile&&!discrete){GFX.px=1.9e6;GFX.shadow=1024;}
+  // the pixel ratio for a canvas of w x h CSS px: the tier's ratio, the screen's, and the pixel budget, whichever is lowest
+  G3.prFor=(w,h)=>G3.prFixed||Math.max(0.75,Math.min(GFX.pr,window.devicePixelRatio||1,Math.sqrt(GFX.px/Math.max(1,w*h))));
+  {const gl=renderer.getContext();G3.multiDraw=!!gl.getExtension("WEBGL_multi_draw");
+    diag(`multi-draw: ${G3.multiDraw?"yes (a batch is one draw)":"NO (three.js draws each batched object separately)"} · antialias ${gl.getContextAttributes().antialias?"on":"off"}`);}
   diag(`graphics: ${GFX.tier}${gfxPick==="auto"?" (auto)":""} on ${GFX.gpu||"unknown GPU"}`);
-  renderer.setPixelRatio(Math.min(GFX.pr,window.devicePixelRatio||1));
+  renderer.setPixelRatio(G3.prFor(innerWidth,innerHeight));
   // the shadow pass redraws every shadow-casting object, so refresh it a few times a second instead of every frame (v2.8.4: desktop too)
   renderer.shadowMap.autoUpdate=false;G3.shadowHz=GFX.hz;
   // v2.8.4: round shapes get only as many sides as their size needs at this zoom (unit shapes that get scaled up keep 24)
