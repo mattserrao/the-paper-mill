@@ -190,8 +190,8 @@
             focus(){return [EX-2,7,bank+3,FOC_R,2.25,1.36];},
             stop(){op.visible=gt.visible=fb.visible=pr.visible=false;RM.forEach(m=>m.visible=false);DR.forEach(d=>d.m.visible=false);fit=null;}};}};
       // (built once at start-up, hidden, so nothing is created or compiled when one happens; rewound each time)
-      const one=SIGHTS[SITE.env]?SIGHTS[SITE.env]():null;let wait=FAST?3:rr2(240,600);G3.sight=()=>{wait=0;};G3.sightSeek=t=>{if(sight)sight.t=t;};   // (G3.sight(): show one now, for tests)
-      if(one)ACT.push(rdt=>{G3.sightT=sight?sight.t:-1;if(sight){if(G3.sightHold!=null){sight.t=G3.sightHold;sight.tick(0);return;}if(!sight.tick(rdt)){sight.stop();sight=null;wait=FAST?40:rr2(240,600);}return;}if(G3.zen&&!FAST&&wait>110)wait=rr2(50,110);wait-=rdt;if(wait<=0){one.t=0;sight=one;}});
+      const one=SIGHTS[SITE.env]?SIGHTS[SITE.env]():null;let wait=FAST?3:rr2(240,600),zenSeen=false;/* zen: one sight per map (the zen map rotation reloads the page) */G3.sight=()=>{wait=0;};G3.sightSeek=t=>{if(sight)sight.t=t;};   // (G3.sight(): show one now, for tests)
+      if(one)ACT.push(rdt=>{G3.sightT=sight?sight.t:-1;if(sight){if(G3.sightHold!=null){sight.t=G3.sightHold;sight.tick(0);return;}if(!sight.tick(rdt)){if(G3.zen)zenSeen=true;sight.stop();sight=null;wait=FAST?40:rr2(240,600);}return;}if(G3.zen&&!FAST){if(zenSeen)return;if(wait>110)wait=rr2(50,110);}wait-=rdt;if(wait<=0){one.t=0;sight=one;}});
       // (zen: a sight every minute or two, and the zen camera cuts to it and follows it: 43-3d-frame.js)
       G3.sightFocus=()=>sight&&sight.focus?sight.focus():null;}
     G3.actTick=rdt=>{if(!(rdt>0))return;rdt=Math.min(rdt,0.1);for(let k=0;k<ACT.length;k++)ACT[k](rdt);};

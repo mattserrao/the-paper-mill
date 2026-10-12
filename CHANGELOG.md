@@ -1,5 +1,9 @@
 # Changelog
 
+## v4.2.2-t5 (test v27): one sight per map in zen
+- Zen plays the map's rare sight once; after it, no more sights on that map. The zen map rotation reloads the page on each map, so each map plays its sight once per visit. Outside zen the 4-10 minute random timing is unchanged.
+- tools/zenonce.py: forces the sight's wait to zero repeatedly in zen and counts starts (v26: 2, v27: 1).
+
 ## v4.2.2-t4 (test v26): the gator cut, short and wide
 - Scene cut from 31 s to 11.5 s: it opens with the operator already at the edge and the gator close, plays the bite at full speed, and hurries the aftermath (a time map from the scene clock onto the choreography).
 - Camera pulled out to 60 m and held still on the mill (orbit 2.25, elevation 1.36, look-at 7 m up): a mill shot in which the bite happens small in the lower third.
