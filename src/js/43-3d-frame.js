@@ -191,7 +191,7 @@
           document.body.dataset.zs=Math.random()<0.5?"none":pool[Math.floor(Math.random()*pool.length)];}}
       Z.dis=(Z.dis??40)-rdt;if(Z.dis<=0){Z.dis=60+Math.random()*60;const safe=["fogfan","flares","runner"].filter(id=>!S.inc.some(i=>i.id===id));if(safe.length){const id=safe[Math.floor(Math.random()*safe.length)];trigger(id,true);Z.goto=G3.spotOf(id);Z.t=99;}}
       if(Z.who){Z.fo-=rdt;if(Z.fo<=0){Z.who=null;Z.r=Math.min(140,Z.r*2.6);}else{const p=Z.who.position;Z.tg.set(p.x,0,p.z);}}
-      if(Z.mv){goal=null;Z.mv.t+=rdt;const f=Z.mv.m.at(Z.mv.t,Z.mv,rdt);if(!f){Z.mv=null;Z.t=99;}else{target.set(f[0],f[1],f[2]);cam.r=f[3];cam.th=f[4];cam.ph=f[5];Z.tg.copy(target);Z.r=f[3];Z.th=f[4];}}
+      if(Z.mv){goal=null;Z.mv.t+=rdt;const f=Z.mv.m.at(Z.mv.t,Z.mv,rdt);if(!f){Z.mv=null;Z.t=99;Z.len=0;}else{target.set(f[0],f[1],f[2]);cam.r=f[3];cam.th=f[4];cam.ph=f[5];Z.tg.copy(target);Z.r=f[3];Z.th=f[4];}}
       else{const k=Math.min(1,rdt*(Z.who?0.6:0.1));goal=null;target.lerp(Z.tg,k);cam.r+=(Z.r-cam.r)*k*0.5;cam.th=lerpAng(cam.th,Z.th+Math.sin(now/26000)*0.3,k*0.5)+rdt*0.015;cam.ph+=(0.8+0.08*Math.sin(now/31000)-cam.ph)*k;}}
     pm("zen / camera shots");
     if(!G3.zenNextMap)G3.zenNextMap=()=>{const order=["rural","urban","desert","swamp"],nx=order[(order.indexOf(SITE.env)+1)%order.length],q=new URLSearchParams(location.search);
