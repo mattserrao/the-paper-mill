@@ -47,7 +47,7 @@
       b.addEventListener("click",()=>{const d=read();if(!d){b.remove();return;}
         // a save from another map: reload on that map, then continue (?resume=1)
         if(d.env!==SITE.env||d.mill!==SITE.seed){const q=new URLSearchParams(location.search);q.set("env",d.env);q.set("resume","1");location.href=location.pathname+"?"+q+location.hash;return;}
-        const run=()=>{restore(d);b.remove();go.classList.add("primary");G3.play();};
+        const run=()=>{restore(d);b.remove();go.classList.add("primary");G3.play();if(G3.labelIntro)G3.labelIntro();};
         if(G3.warm||!G3.prewarm)run();else{b.setAttribute("aria-busy","true");b.querySelector("small").textContent="Getting the mill ready…";G3.prewarm().then(run);}});
       if(Q.get("resume")==="1"){try{Q.delete("resume");history.replaceState(null,"",location.pathname+(Q.toString()?"?"+Q:"")+location.hash);}catch(e){}setTimeout(()=>b.click(),300);}}
     // a new season or a reset starts over: the old save goes

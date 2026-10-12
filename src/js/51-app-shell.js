@@ -52,7 +52,15 @@
   $("v2sound").addEventListener("click",e=>{e.stopPropagation();setSound(!AUDIO.on);});
   // equipment labels: one toggle in the top bar (and the same checkbox in the expanded panel)
   const setLabels=v=>{const b=document.querySelector('#lblMode button[data-m="'+(v?"on":"off")+'"]');if(b)b.click();$("v2labels").checked=v;$("v2lblBtn").setAttribute("aria-pressed",String(v));$("v2lblBtn").lastChild.textContent=v?"Labels":"Labels off";};
-  $("v2labels").addEventListener("change",e=>setLabels(e.target.checked));$("v2lblBtn").addEventListener("click",()=>setLabels($("v2lblBtn").getAttribute("aria-pressed")!=="true"));
+  // v4.2.4: a new season or free play starts with labels on for 5 seconds of play, then they switch off and the Labels
+  // button flashes twice so the player sees where they went. Touching the labels during those 5 s cancels it.
+  const LI={left:0};
+  G3.labelIntro=()=>{if(S.zen)return;setLabels(true);LI.left=5000;LI.last=performance.now();};
+  const lblUser=v=>{LI.left=0;setLabels(v);};
+  // (real seconds of play, so a slow device still gets 5 s; paused or in the menu doesn't count)
+  UI_TICKS.push(()=>{if(LI.left<=0)return;const now=performance.now(),dt=Math.min(3000,now-LI.last);LI.last=now;if(!running||!$("v2menu").hidden)return;LI.left-=dt;if(LI.left>0)return;
+    setLabels(false);const b=$("v2lblBtn");b.classList.remove("lblflash");void b.offsetWidth;b.classList.add("lblflash");setTimeout(()=>b.classList.remove("lblflash"),1300);});
+  $("v2labels").addEventListener("change",e=>lblUser(e.target.checked));$("v2lblBtn").addEventListener("click",()=>lblUser($("v2lblBtn").getAttribute("aria-pressed")!=="true"));
   {const on=document.querySelector('#lblMode button[aria-pressed="true"]');setLabels(!on||on.dataset.m!=="off");}
   // top bar: compact figures straight from the game state ($1.24M, -$850k)
   const short=v=>{const a=Math.abs(v),f=a>=1e6?(a/1e6).toFixed(a>=1e7?1:2)+"M":a>=1e3?(a/1e3).toFixed(a>=1e5?0:1).replace(/\.0$/,"")+"k":Math.round(a)+"";return (v<0?"−":"")+"$"+f;};

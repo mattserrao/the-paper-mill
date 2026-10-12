@@ -122,6 +122,7 @@ async function openBoard(){$("lbOv").hidden=false;const L=$("lb-list");L.replace
 function setFree(on){S.free=on;
   if(on&&S.season&&S.season.on){S.season=null;seasonLocks(false);BANNERS.push({text:"Season abandoned: free play scores can't go on the leaderboard.",t:null});}
   if(on)BANNERS.push({text:"Free play: upgrades are free and you can't go bankrupt. No leaderboard.",t:null,kind:"good"});
+  if(on&&G3.labelIntro)G3.labelIntro();
   updateShop();}
 // zen mode: endless, calm screensaver of the mill
 let ZEN=null;
