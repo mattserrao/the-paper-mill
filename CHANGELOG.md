@@ -1,5 +1,8 @@
 # Changelog
 
+## v4.2.5-t (test): laptop battery
+- The 3D view now asks the browser for its default GPU instead of the high-performance one, so dual-GPU laptops stay on the integrated graphics and use much less battery. Pinning Ultra graphics (then reloading) still asks for the high-performance GPU. Phones are unaffected. Diagnostics shows the GPU preference.
+
 ## v4.2.2 (release)
 Everything since v4.2.1:
 - Rare sights: all four reworked (detail, 11.5 s, a wide held shot of the mill with the event small in frame); zen plays each map's sight once and moves on after it (fix: the zen shot was left at 999 s).
