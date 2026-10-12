@@ -1,5 +1,16 @@
 # Changelog
 
+## v4.2.2 (release)
+Everything since v4.2.1:
+- Rare sights: all four reworked (detail, 11.5 s, a wide held shot of the mill with the event small in frame); zen plays each map's sight once and moves on after it (fix: the zen shot was left at 999 s).
+- Fix: a walker crash (the side-detour and the path planner shared one field) that stopped part of every 3D frame (people frozen or missing, sights that never ended); people and scene updates are now fenced off.
+- Marquee site upsets (visuals only): bayou flood, desert dust storm, city brownout, forest iced intake.
+- Bird on the power lines: a new upset (same outage as lightning, its own dice stream) with a cut-scene: game paused, high follow, dive, wide shot, strike; operatic score, chirps, bang; camera and speed restored.
+- Mill report (Report tab): live period grades, season strip and day-by-day history, cost per ton split, uptime, quality and fibre, money; grade badge and cost/uptime in the top bar; one grade system.
+- Free play: set off any upset by hand from the Upsets panel (locked in a season).
+- Labels on for the first 5 s of a season or free play, then off with the Labels button flashing twice.
+- Compact site picker; the site plan preview removed.
+
 ## v4.2.3-t (test v28): the other three rare sights, reworked like the gator
 - All four sights now share the gator's rules: 11.5 s, a held wide shot of the mill (60-64 m, low elevation, telephoto) with the action small in the lower third, more detail, and a scene that is a pure function of its clock (stills via G3.sightSeek/G3.sightHold). Shared builders: person (knees, boots, hands, hats), puff pool.
 - Desert: three cowboys canter across the flats south of the mill, in front of the roll warehouse and crane. Horses with neck, head, ears, muzzle, mane, tail, saddle and blanket, jointed legs and hooves, cantering gait; riders with cowboy hats, bandanas, a vest, legs in the stirrups; the last one swings a lasso. Dust trails.
