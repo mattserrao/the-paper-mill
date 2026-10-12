@@ -506,3 +506,10 @@ details.areactl[open]>summary::before{transform:rotate(45deg)}
 details.areactl .lockn{display:none;margin-left:auto;font-weight:600;text-transform:none;letter-spacing:0}
 body.season-lock details.areactl .lockn{display:inline}
 body.season-lock #cards .row[data-key] input,body.season-lock #cards .row[data-key] button.auto,body.season-lock #balance{opacity:.5;cursor:not-allowed}
+
+/* v4.2.4: the upset buttons show in the Upsets panel outside a season (free play) and hide, with a note, in a season */
+.v2pane .chaos.collapsed .groups{display:grid}
+.trignote{margin:4px 0 8px;font-size:13px;color:var(--muted)}
+.trignote.locked,body.season-lock .trignote{display:none}
+body.season-lock .trignote.locked{display:block}
+body.season-lock .v2pane #chaosgrid{display:none}
