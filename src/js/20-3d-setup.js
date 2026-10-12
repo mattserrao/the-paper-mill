@@ -17,7 +17,11 @@ function no3D(){G3.ok=false;$("no3d").hidden=false;$("no3d-retry").onclick=()=>l
     try{G3.scene&&G3.scene.traverse(o=>{const ms=o.material?(Array.isArray(o.material)?o.material:[o.material]):[];ms.forEach(m=>{m.needsUpdate=true;["map","alphaMap","emissiveMap"].forEach(k=>{if(m[k])m[k].needsUpdate=true;});});
       if(o.geometry&&o.geometry.attributes)for(const k in o.geometry.attributes)o.geometry.attributes[k].needsUpdate=true;if(o.geometry&&o.geometry.index)o.geometry.index.needsUpdate=true;});
       if(G3.renderer)G3.renderer.shadowMap.needsUpdate=true;}catch(e){}},false);
-  try{renderer=new THREE.WebGLRenderer({canvas:glc,antialias:!matchMedia("(pointer: coarse)").matches&&(window.devicePixelRatio||1)<1.5,powerPreference:"high-performance"});}   // (v15: no MSAA on high-DPI screens, where the extra pixels already smooth edges)
+  // v4.2.3: ask the browser for its default GPU (on a laptop with two, the integrated one) unless the player pinned Ultra.
+  // "high-performance" woke the discrete GPU on dual-GPU laptops for every player, which drains the battery much faster.
+  // Phones have one GPU, so they're unaffected. Picking Ultra already offers a reload, which is when this takes effect.
+  G3.gpuPref=(()=>{let g="";try{g=localStorage.getItem("paper-mill-gfx")||"";}catch(e){}const q=new URLSearchParams(location.search).get("gfx");if(q)g=q;return g==="ultra"?"high-performance":"default";})();
+  try{renderer=new THREE.WebGLRenderer({canvas:glc,antialias:!matchMedia("(pointer: coarse)").matches&&(window.devicePixelRatio||1)<1.5,powerPreference:G3.gpuPref});}   // (v15: no MSAA on high-DPI screens, where the extra pixels already smooth edges)
   catch(e){no3D();return;}
   if(!renderer.getContext()){no3D();return;}
   // r150+ reads every shader's error log on first draw, which forces the GPU to finish compiling right then:
@@ -47,7 +51,7 @@ function no3D(){G3.ok=false;$("no3d").hidden=false;$("no3d-retry").onclick=()=>l
   // the pixel ratio for a canvas of w x h CSS px: the tier's ratio, the screen's, and the pixel budget, whichever is lowest
   G3.prFor=(w,h)=>G3.prFixed||Math.max(0.75,Math.min(GFX.pr,window.devicePixelRatio||1,Math.sqrt(GFX.px/Math.max(1,w*h))));
   {const gl=renderer.getContext();G3.multiDraw=!!gl.getExtension("WEBGL_multi_draw");
-    diag(`multi-draw: ${G3.multiDraw?"yes (a batch is one draw)":"NO (three.js draws each batched object separately)"} · antialias ${gl.getContextAttributes().antialias?"on":"off"}`);}
+    diag(`multi-draw: ${G3.multiDraw?"yes (a batch is one draw)":"NO (three.js draws each batched object separately)"} · antialias ${gl.getContextAttributes().antialias?"on":"off"} · GPU preference ${G3.gpuPref}`);}
   diag(`graphics: ${GFX.tier}${gfxPick==="auto"?" (auto)":""} on ${GFX.gpu||"unknown GPU"}`);
   renderer.setPixelRatio(G3.prFor(innerWidth,innerHeight));
   // the shadow pass redraws every shadow-casting object, so refresh it a few times a second instead of every frame (v2.8.4: desktop too)
