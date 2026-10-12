@@ -29,13 +29,13 @@
   function flowTick(){if(cur!=="stats"||!sheet.classList.contains("open"))return;flowEl.innerHTML=flowSVG()+`<p class="flowtip">Every step is drawn as wide as it can run, in tons of paper per hour. The narrowest step (or one that is down) holds back the whole mill. The bars are your buffers: full ones are backing up, empty ones are running dry.</p>`;}
   UI_TICKS.push(n=>{if(n%4===0)flowTick();});   // the river SVG restarts its animation when redrawn, so ~1x/s
   // sheets
-  const sheet=$("v2sheet"),tabs=[...document.querySelectorAll(".v2tabs button")],TITLES={shop:"Upgrades",chaos:"Upsets",ctl:"Settings",stats:"Stats"};let cur=null;
+  const sheet=$("v2sheet"),tabs=[...document.querySelectorAll(".v2tabs button")],TITLES={shop:"Upgrades",chaos:"Upsets",ctl:"Settings",stats:"Mill report"};let cur=null;
   // v3.1.1: opening a bottom panel pauses the game; closing it resumes (same sim speed) if it was running before
   let sheetHeld=false;
   function sheetPause(){if(cur||sheetHeld||!running)return;sheetHeld=true;running=false;}
   function sheetResume(){if(!sheetHeld)return;sheetHeld=false;const ov=$("overlay"),blocked=!$("v2menu").hidden||(G3.tut&&G3.tut.on)||(S.cards&&S.cards.open)||(ov&&!ov.hidden)||S.over;
     if(blocked)return;running=true;}
-  function openTab(k){sheetPause();cur=k;if(k==="stats")setTimeout(()=>{flowTick&&flowTick();updateRel();},0);tabs.forEach(b=>b.setAttribute("aria-pressed",String(b.dataset.tab===k)));document.querySelectorAll(".v2pane").forEach(p=>p.classList.toggle("on",p.dataset.pane===k));
+  function openTab(k){sheetPause();cur=k;if(k==="stats")setTimeout(()=>{flowTick&&flowTick();updateRel();if(G3.report)G3.report.render();},0);tabs.forEach(b=>b.setAttribute("aria-pressed",String(b.dataset.tab===k)));document.querySelectorAll(".v2pane").forEach(p=>p.classList.toggle("on",p.dataset.pane===k));
     $("v2sheetT").textContent=TITLES[k];sheet.classList.add("open");sheet.setAttribute("aria-hidden","false");document.body.classList.add("sheet-open");closeMore();}
   function closeSheet(why){const was=!!cur;cur=null;tabs.forEach(b=>b.setAttribute("aria-pressed","false"));sheet.classList.remove("open");sheet.setAttribute("aria-hidden","true");document.body.classList.remove("sheet-open");
     if(why==="menu")sheetHeld=false;else if(was)sheetResume();}
