@@ -1,4 +1,4 @@
-  /* ---- v4.2.4 Mill report (the Report tab, the grade badge in the top bar, cost and uptime in the dropdown) ----
+  /* ---- v4.2.4 Mill report (the Report tab, warehouse fill (v4.2.5), the grade badge in the top bar, cost and uptime in the dropdown) ----
      One grade system: the report card's four grades (profit, cost per ton, downtime, reliability) and their overall,
      shown live for the current 10-day period, with the finished periods' cards one tap away and a day-by-day history
      (the day's grades are kept at each midnight by rcTick). Cost per ton is split by what it is spent on; the
@@ -33,6 +33,11 @@
       return `<div class="rhd"><h3>Uptime</h3><small>this period · outages left out</small></div><div class="rup">${RC_SEC.map(([k,n])=>{const v=p.rel[k]||0,w=v<0.9;
         return `<span${w?' class="w"':""}>${n}</span><div><i style="width:${(v*100).toFixed(1)}%;background:${v<0.9?"var(--warn)":"var(--ok)"}"></i></div><b class="mono${w?" w":""}">${pc(v)}</b>`;}).join("")}</div>
         <p class="rnote">${top?"Biggest losses: "+top+" · ":""}${p.breaks} sheet break${p.breaks===1?"":"s"} · ${p.hay} hayout${p.hay===1?"":"s"}</p>`;}
+    // v4.2.5: how full the two warehouses are right now (inbound: the OCC bale yard, in t; outbound: the finished-roll warehouse, in rolls)
+    function whBlock(){const n=v=>Math.round(v).toLocaleString("en-US"),W=[["Inbound",S.yard/P.yardCap,`${n(S.yard)} of ${n(P.yardCap)} t OCC`],["Outbound",S.fg/P.fgCap,`${n(S.fg)} of ${n(P.fgCap)} rolls`]];
+      return `<div class="rhd"><h3>Warehouses</h3><small>% full now</small></div><div class="rup">${W.map(([k,f,t])=>{const v=Math.max(0,Math.min(1,f||0)),w=v>=0.85;
+        return `<span${w?' class="w"':""}>${k}</span><div><i style="width:${(v*100).toFixed(1)}%;background:${v>=0.98?"var(--bad)":w?"var(--warn)":"var(--ok)"}"></i></div><b class="mono${w?" w":""}">${pc(v)}</b>`;}).join("")}</div>
+        <p class="rnote">${W.map(x=>x[0]+": "+x[2]).join(" · ")}</p>`;}
     function qualBlock(p,season){const eff=S.tot.pot>0?S.tot.prodT/S.tot.pot:1;
       return `<h3>Quality &amp; fibre</h3><div class="rq"><div><small>On spec</small><b class="mono">${(p.onspec*100).toFixed(1)}%</b><small>${Math.round(p.off)} t to the beater</small></div>
         <div><small>Fibre yield</small><b class="mono">${p.yld?pc(p.yld):"–"}</b><small>${p.yld?(1/p.yld).toFixed(2)+" t OCC per t":season?"collecting":"in a season"}</small></div>
@@ -57,7 +62,7 @@
         h+=`<section class="rcard"><div class="rhd"><h3>Season</h3><small class="mono">${S.season.done?"Season complete":"Day "+day+" of "+SEASON_DAYS}</small></div><div class="rtiles">${tiles(d)}</div><div class="rprog"><i style="width:${Math.min(100,S.t/(SEASON_DAYS*1440)*100).toFixed(1)}%"></i></div>${daysBlock(d)}</section>`;
         h+=`<section class="rcard"><div class="rhd"><h3>${S.season.done?"Last period":"This period so far"}</h3><small>days ${d.live.from}–${Math.min(d.live.to,day)}${d.prev?" · vs days "+d.prev.from+"–"+d.prev.to:""}</small></div><div class="rgrades">${grades(d)}</div><p class="rtip"><b>Biggest lever:</b> ${d.live.tip}</p></section>`;}
       else h+=`<section class="rcard"><p class="rnone">Grades, uptime and report cards run during a 30-day season. Here are your totals since the start.</p></section>`;
-      h+=`<section class="rcard">${costBlock(p)}</section>`;if(d.season)h+=`<section class="rcard">${upBlock(p)}</section>`;
+      h+=`<section class="rcard">${whBlock()}</section><section class="rcard">${costBlock(p)}</section>`;if(d.season)h+=`<section class="rcard">${upBlock(p)}</section>`;
       h+=`<section class="rcard">${qualBlock(p,d.season)}</section><section class="rcard">${moneyBlock(d)}</section>`;
       el.innerHTML=h;}
     el.addEventListener("click",e=>{const b=e.target.closest("[data-card]");if(b&&S.rc){const c=S.rc.cards[+b.dataset.card];if(c)rcOpen(c,true);}});

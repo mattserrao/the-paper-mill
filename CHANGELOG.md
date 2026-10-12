@@ -1,5 +1,8 @@
 # Changelog
 
+## v4.2.5-t (test): warehouse fill in the Report
+- Report tab: a new Warehouses card shows how full the inbound bale yard (t of OCC) and the outbound roll warehouse (rolls) are right now, as % bars (amber from 85%, red when full). Display only; the sim is unchanged.
+
 ## v4.2.2 (release)
 Everything since v4.2.1:
 - Rare sights: all four reworked (detail, 11.5 s, a wide held shot of the mill with the event small in frame); zen plays each map's sight once and moves on after it (fix: the zen shot was left at 999 s).
