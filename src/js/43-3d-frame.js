@@ -22,7 +22,8 @@
       else if(fps<0.62*tgt&&quality===0&&G3.scenery&&!G3.scenery.farOff){G3.scenery.farOff=true;G3.scenery.parts.forEach(p=>{if(p.userData.scenery!=="near")p.visible=false;});diag("quality: far scenery hidden ("+fps.toFixed(0)+" fps)");}}}}}pm("low-FPS fallback check");
     {const t=performance.now();if(!(t-(G3.palT||0)<500)){G3.palT=t;applyPalette();}}pm("palette (every 0.5 s)");rebuildDoors();
     const R=S.rates,now=performance.now();pm("setup (palette, doors, shadow trim)");
-    crewUpdate(rdt,now);pm("crew + people");if(G3.actTick)G3.actTick(rdt);pm("activity scenes");
+    // v4.2.3: people and the activity scenes are fenced off, so an error in one no longer skips the rest of every frame
+    try{crewUpdate(rdt,now);}catch(e){G3.fErr=(G3.fErr||0)+1;if(G3.fErr<6)console.error("people update",e);}pm("crew + people");try{if(G3.actTick)G3.actTick(rdt);}catch(e){G3.fErr=(G3.fErr||0)+1;if(G3.fErr<6)console.error("activity scenes",e);}pm("activity scenes");
     // trucks
     truckMap.forEach(g=>g.userData.seen=false);
     S.inQ.forEach((t,k)=>placeTruck(t,{kind:"in",k},rdt));S.inDock.forEach((t,d)=>t&&placeTruck(t,{kind:"in",docked:true,d},rdt));

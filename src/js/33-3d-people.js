@@ -106,11 +106,13 @@
   function rope(m,ax,ay,az,bx,by,bz){_ra.set(ax,ay,az);_rb.set(bx,by,bz);const d=_rb.clone().sub(_ra),L=d.length();m.position.copy(_ra).add(_rb).multiplyScalar(0.5);m.quaternion.setFromUnitVectors(_rup,d.normalize());m.scale.set(1,L,1);m.visible=true;}
   // walk around the headbox end to reach the drive side (and back again) instead of through the machine
   const AROUND=62.5,BACKZ=4.3;
+  // v4.2.3: the detour lives in its own field (sideWp). It used to share u.wp with the path planner (walkPlan), which
+  // clears u.wp when a walker's destination changes; the next shift() threw, and the 3D frame stopped part-way every frame
   function goSide(w,gx,gz,sp,rdt){const u=w.userData,tb=gz<6.2,ib=w.position.z<6.2;
-    if(u.wp&&u.wpTo!==tb)u.wp=null;
-    if(!u.wp&&tb!==ib){u.wpTo=tb;const onLine=Math.abs(w.position.x-AROUND)<0.3;u.wp=tb?[[AROUND,onLine?w.position.z:Math.max(13.8,w.position.z)],[AROUND,BACKZ]]:[[AROUND,onLine?w.position.z:BACKZ],[AROUND,14.8]];}
-    while(u.wp&&u.wp.length){if(moveP(w,u.wp[0][0],u.wp[0][1],sp,rdt))u.wp.shift();else return false;}
-    u.wp=null;return moveP(w,gx,gz,sp,rdt);}
+    if(u.sideWp&&u.sideTo!==tb)u.sideWp=null;
+    if(!u.sideWp&&tb!==ib){u.sideTo=tb;const onLine=Math.abs(w.position.x-AROUND)<0.3;u.sideWp=tb?[[AROUND,onLine?w.position.z:Math.max(13.8,w.position.z)],[AROUND,BACKZ]]:[[AROUND,onLine?w.position.z:BACKZ],[AROUND,14.8]];}
+    while(u.sideWp&&u.sideWp.length){if(moveP(w,u.sideWp[0][0],u.sideWp[0][1],sp,rdt))u.sideWp.shift();else return false;}
+    u.sideWp=null;return moveP(w,gx,gz,sp,rdt);}
   const HAY=[[-23.6,14],[-14,13.6],[-24.2,7.5],[-13.2,8.5],[-22.5,4.2],[-15.5,4.2],[-19.5,15.4]];
   const RT=[[27,14.2],[23,14.2],[19,14.2],[15,14.2],[11,14.2],[25,4.1],[17,4.1]];
   const BRKSPOT={reel:[[-8,14.2],[-5.5,14.2],[-3,14.2],[-6.5,4.1],[22,14.2],[17,14.2],[20,4.1]],dryer:RT,
