@@ -9,28 +9,20 @@
     $("v2siteM").textContent=E.pros[0].split(":")[0]+" · "+E.cons[0].split(":")[0];swatch($("v2siteSw"),SITE.env);}
   siteRow();
   // picker
-  const ov=$("siteOv"),envs=$("siteEnvs"),prev=$("sitePrev"),anyBtn=$("siteAny");let pick=SITE.env,any=SITE.choice==="any";
+  const ov=$("siteOv"),envs=$("siteEnvs"),det=$("siteDet"),anyBtn=$("siteAny");let pick=SITE.env,any=SITE.choice==="any";
+  // v4.2.4: compact picker. Four small tiles (name and the headline pro and con); the picked site's story and its full
+  // list of pros and cons sit in one panel underneath. (The site plan preview is gone.)
+  const tag=t=>t.split(":")[0];
   ENV_IDS.forEach(id=>{const E=ENVS[id],b=document.createElement("button");b.type="button";b.setAttribute("role","radio");b.dataset.env=id;
-    b.innerHTML=`<div class="eh"><span class="sw"></span><b>${E.name}</b><small>${E.short}</small></div><p>${E.blurb}</p><ul>${E.pros.map(t=>`<li class="pro">${t}</li>`).join("")}${E.cons.map(t=>`<li class="con">${t}</li>`).join("")}</ul>`;
+    b.innerHTML=`<div class="eh"><span class="sw"></span><b>${E.name}</b></div><small><i class="pro">+</i> ${tag(E.pros[0])}<br><i class="con">−</i> ${tag(E.cons[0])}</small>`;
     swatch(b.querySelector(".sw"),id);b.addEventListener("click",()=>{pick=id;sync();});envs.appendChild(b);});
+  function detail(){const E=ENVS[pick];det.innerHTML=`<p>${E.blurb}</p><div class="pc"><ul>${E.pros.map(t=>`<li class="pro">${t}</li>`).join("")}</ul><ul>${E.cons.map(t=>`<li class="con">${t}</li>`).join("")}</ul></div>`;}
   envs.addEventListener("keydown",e=>{const k=e.key;if(!["ArrowRight","ArrowDown","ArrowLeft","ArrowUp"].includes(k))return;e.preventDefault();
     const i=ENV_IDS.indexOf(pick),n=ENV_IDS[(i+(k==="ArrowRight"||k==="ArrowDown"?1:ENV_IDS.length-1))%ENV_IDS.length];pick=n;sync();envs.querySelector(`[data-env="${n}"]`).focus();});
   anyBtn.addEventListener("click",()=>{any=!any;sync();});
-  const seedOf=()=>MILLSEED[pick];
-  // a small plan of the site: river, roads, fence, the fixed core and where the seeded wastewater plant goes
-  function drawPrev(){const x=prev.getContext("2d"),W=prev.width,H=prev.height,k=W/360,X=v=>(v+170)*k,Z=v=>(v+90)*k,L=layoutFor(seedOf());
-    x.fillStyle=SW[pick][0];x.fillRect(0,0,W,H);x.fillStyle=WATER[pick];x.beginPath();
-    for(let v=-175;v<=195;v+=5){const [zc,hw]=riverAt(v,pick);x.lineTo(X(v),Z(zc-hw));}for(let v=195;v>=-175;v-=5){const [zc,hw]=riverAt(v,pick);x.lineTo(X(v),Z(zc+hw));}x.closePath();x.fill();   // v13: the site's river line
-    x.fillStyle="#5a5f69";x.fillRect(X(-162.5),0,9*k,H);x.fillRect(X(-158),Z(-5.2),58*k,2.8*k);x.fillRect(X(-158),Z(11.2),58*k,2.8*k);x.fillRect(X(92),Z(31.4),70*k,2.4*k);
-    x.strokeStyle="rgba(28,34,51,.45)";x.lineWidth=1;x.strokeRect(X(-100),Z(-52),192*k,116*k);
-    x.fillStyle="#d6382c";[[-34.4,-8,-23.5,-3],[-27.2,64,-2.9,19.9],[-49,-23.8,14.8,32.2]].forEach(([a,b,c,d])=>x.fillRect(X(a),Z(c),(b-a)*k,(d-c)*k));
-    x.fillStyle="#9aa3ad";[[4,47,-25,-2],[70,82,-16,-4],[49,65,-27,-14.5],[66,88,38,56]].forEach(([a,b,c,d])=>x.fillRect(X(a),Z(c),(b-a)*k,(d-c)*k));
-    const a=Math.min(L.wx(1),L.wx(46)),b=Math.max(L.wx(1),L.wx(46));x.fillStyle="#1f9254";x.fillRect(X(a),Z(-49),(b-a)*k,18*k);
-    x.fillStyle="#bfe3d8";x.beginPath();x.arc(X(L.wx(10)),Z(-40),7*k,0,7);x.fill();const p0=Math.min(L.wx(22),L.wx(42));x.fillRect(X(p0),Z(-46),20*k,12*k);
-    $("siteLay").textContent=layName(L)+".";}
   function sync(){envs.querySelectorAll("button").forEach(b=>b.setAttribute("aria-checked",String(b.dataset.env===pick)));
     envs.querySelectorAll("button").forEach(b=>b.tabIndex=b.dataset.env===pick?0:-1);envs.classList.toggle("any",any);
-    anyBtn.setAttribute("aria-pressed",String(any));anyBtn.querySelector("b").textContent=any?"Surprise me: on":"Surprise me";drawPrev();
+    anyBtn.setAttribute("aria-pressed",String(any));anyBtn.querySelector("b").textContent=any?"Surprise me: on":"Surprise me";detail();
     const same=(any?SITE.choice==="any":pick===SITE.env&&SITE.choice!=="any");
     $("siteGo").textContent=same&&SITE.saved?"Keep this site":"Build here";}
   $("v2siteBtn").addEventListener("click",()=>{pick=SITE.env;any=SITE.choice==="any";sync();ov.hidden=false;setTimeout(()=>{const b=envs.querySelector('[aria-checked="true"]');if(b)b.focus();},0);});
