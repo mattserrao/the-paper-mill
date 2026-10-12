@@ -513,3 +513,6 @@ body.season-lock #cards .row[data-key] input,body.season-lock #cards .row[data-k
 .trignote.locked,body.season-lock .trignote{display:none}
 body.season-lock .trignote.locked{display:block}
 body.season-lock .v2pane #chaosgrid{display:none}
+
+/* v4.2.4: a whole-view tint for the site upsets (dust storm haze, brownout sag), set each frame by the effects */
+.tint3d{position:absolute;inset:0;opacity:0;pointer-events:none;z-index:2;background:#000}

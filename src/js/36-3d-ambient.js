@@ -101,7 +101,8 @@
   const SKY_DAY=new THREE.Color(),SKY_NIGHT=lin0("#232b44"),SKY_RAIN=lin0("#8c94a2"),SKY_FOG=lin0("#c9ced6"),SKY_DUST=lin0("#c9a86b"),tmpC=new THREE.Color();let fogK=0,wxK=0,envAcc=0,dustK=0;
   function envUpdate(rdt,now){const out=S.inc.some(i=>i.id==="lightning");
     const hr=((S.t+360)/60)%24,ss=v=>v*v*(3-2*v),day=hr<12?ss(clamp((hr-5.2)/1.6,0,1)):ss(clamp((20.2-hr)/1.6,0,1));
-    const wx=(G3.floodK>0.3&&S.wx!=="snow")?"rain":(S.wx||"clear");fogK+=((wx==="fog"?0.45:wx==="snow"?0.12:wx==="rain"?0.06:0)-fogK)*Math.min(1,rdt*0.8+0.01);
+    const wx=(G3.floodK>0.3&&S.wx!=="snow")?"rain":G3.iceK>0.3?"snow":(S.wx||"clear");   // (v4.2.4: the flood brings rain and the iced intake snow, as visuals)
+    fogK+=((wx==="fog"?0.45:wx==="snow"?0.12:wx==="rain"?0.06:0)-fogK)*Math.min(1,rdt*0.8+0.01);
     wxK+=((wx==="rain"||wx==="snow"?1:0)-wxK)*Math.min(1,rdt*0.6+0.01);
     // v4.1: a desert dust storm (G3.dustK) and a city brownout (G3.brownK) colour the sky and sag the lights
     dustK+=((G3.dustK||0)-dustK)*Math.min(1,rdt*0.7+0.01);const bk=G3.brownK==null?1:G3.brownK;
@@ -142,7 +143,7 @@
     ENV.bridge.rotation.y-=rdt*0.12;
     // steam plume grows with production and dies when the boiler trips
     const boil=S.inc.some(i=>i.id==="boiler"),pr=clamp((S.rates.prod||0)/35,0,1.4);if(!boil&&G3.POP)G3.POP.lever.rotation.z=0;
-    if(!boil&&rdt>0&&Math.random()<rdt*(2+10*pr))emitA("steam",ENV.stack[0]+R()*0.6,ENV.stack[1],ENV.stack[2]+R()*0.6,1.2+R(),2.5+Math.random()*1.5,R()*0.6,4+3*pr,3+4*pr,"#ffffff",0.55);
+    if(!boil&&rdt>0&&Math.random()<rdt*(2+10*pr)*Math.min(1,G3.brownK==null?1:G3.brownK*G3.brownK))emitA("steam",ENV.stack[0]+R()*0.6,ENV.stack[1],ENV.stack[2]+R()*0.6,1.2+R(),2.5+Math.random()*1.5,R()*0.6,4+3*pr,3+4*pr,"#ffffff",0.55);
     if(rdt>0){for(const [x,z] of ENV.aer)if(Math.random()<rdt*6)emitA("steam",x+R()*0.6,1.4,z+R()*0.6,R()*1.5,1.5,R()*1.5,0.8,0.8,"#ffffff",0.6);
       if(Math.random()<rdt*8)emitA("drop",ENV.outfall[0]+R()*0.3,ENV.outfall[1]+0.5,ENV.outfall[2],R(),1.5,-1.5,0.6,0.28,"#9ec3d6",0.8);}
     const perm=S.inc.some(i=>i.id==="permit");ENV.wwM.color.copy(perm?ENV.wwBad:ENV.wwBase);if(ENV.wwM2)ENV.wwM2.color.copy(ENV.wwM.color);

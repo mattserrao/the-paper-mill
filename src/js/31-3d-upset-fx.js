@@ -133,6 +133,7 @@
     lightning:[34.5,16,-15,"bolt"],tornado:[0,26,0,"!"],beaver:[-24,12,-12.5,"!"]};
   function fxPerson(group,m,x,z){const w=worker(m,M.warn);w.position.set(x,0,z);group.add(w);return w;}
   // v4.1: the brownout's pin sits on the substation the scenery placed (or the power house when there is none)
+  const _bkv=new THREE.Vector3();
   const subPos=()=>{const u=G3.scenery&&G3.scenery.util&&G3.scenery.util.substation;return u?[u[0],u[1]]:[74,-10];};
   Object.defineProperty(PINS,"brownout",{get(){const [x,z]=subPos();return [x,x===74?14:9,z,"!"];}});
   const FX={};G3.FX=FX;G3.PB=PB;G3.PT=PT;   // (read by the autotest's GPU probe)
@@ -320,22 +321,75 @@
         for(let k=0;k<2;k++)if(Math.random()<rdt*14)emit("chip",-18.5,4,-11.5,1+Math.random()*4,4+Math.random()*4,R()*5,1.3,0.55,"#ffffff",1);};},
     // ---- v4.1 environment upsets ----
     // rural: ice floes jammed against the river intake, frost on the pump house; chips fly once maintenance is breaking it up
-    icedintake:g=>{const ice=new StdMat({color:lin0("#e8f3fb"),roughness:0.35}),pos=[],nor=[],m4=new THREE.Matrix4();
-      for(let k=0;k<15;k++){const f=k<14?[-37+Math.random()*14,-67+Math.random()*7,Math.random()*3,1.2+Math.random()*2.2,1+Math.random()*1.8,0.3]:[-30,-60.5,0,5,3,0.5];
-        const bg=new THREE.BoxGeometry(f[3],f[5],f[4]).toNonIndexed();m4.makeRotationY(f[2]).setPosition(f[0],0.1,f[1]);bg.applyMatrix4(m4);pos.push(...bg.attributes.position.array);nor.push(...bg.attributes.normal.array);}
-      const fg=new THREE.BufferGeometry();fg.setAttribute("position",new THREE.Float32BufferAttribute(pos,3));fg.setAttribute("normal",new THREE.Float32BufferAttribute(nor,3));
-      const floes=new THREE.Mesh(fg,ice);floes.castShadow=true;g.add(floes);
-      const frost=new THREE.Mesh(new THREE.BoxGeometry(4.12,3.12,4.12),new StdMat({color:lin0("#ffffff"),transparent:true,opacity:0.38,roughness:0.95,depthWrite:false}));frost.position.set(-30,1.5,-55.5);g.add(frost);
-      return (now,rdt,inc)=>{floes.position.y=Math.sin(now/900)*0.035;
-        if(inc&&inc.mGo&&Math.random()<rdt*8)emit("chip",-30+R()*3,1.2,-58+R()*2,R()*3,2+Math.random()*3,R()*3,0.9,0.4,"#ffffff",1);};},
-    // urban: arc flashes at the substation and the mill's lights sag (envUpdate reads G3.brownK)
+    // v4.2.4 marquee site upsets (visuals only). Each plays in three acts over the incident (p = share of it gone):
+    // a warning, the peak, and a recovery with a clear finish.
+    // forest: the river intake ices over. Frost creeps over the intake house, an ice shelf grows out from the bank with
+    // floes locking in, icicles hang off the outfall pipe and snow flurries come in; while maintenance works, chips fly
+    // and a steam lance puffs; at the end the shelf breaks up and the floes drift off downstream and melt.
+    icedintake:g=>{const IX=-30,IZ=-55.5,[rz,rhw]=riverAt(IX),BANK=rz+rhw,ice=new StdMat({color:lin0("#e8f3fb"),roughness:0.35});
+      const shelf=new THREE.Mesh(cubeG,new StdMat({color:lin0("#dfeef7"),roughness:0.25,metalness:0.05}));shelf.scale.set(26,0.22,1);shelf.position.set(IX,0.1,BANK);shelf.castShadow=true;g.add(shelf);
+      const floes=[...Array(16)].map(()=>{const m=new THREE.Mesh(cubeG,ice);const w=1.2+Math.random()*2.4,d=1+Math.random()*1.8;m.scale.set(w,0.26,d);m.castShadow=true;
+        m.userData={x:IX-12+Math.random()*24,z:BANK-3-Math.random()*8,r:Math.random()*3,v:0.6+Math.random()*0.8};g.add(m);return m;});
+      const frost=new THREE.Mesh(new THREE.BoxGeometry(4.12,3.12,4.12),new StdMat({color:lin0("#ffffff"),transparent:true,opacity:0,roughness:0.95,depthWrite:false}));frost.position.set(IX,1.5,IZ);g.add(frost);
+      const icM=new StdMat({color:lin0("#eaf6ff"),roughness:0.15,transparent:true,opacity:0.92}),icicles=[...Array(9)].map((_,i)=>{const m=new THREE.Mesh(new THREE.ConeGeometry(0.09,1,6),icM);m.rotation.x=Math.PI;
+        m.position.set(IX-1.2+i*0.3,1.15,IZ-2.2-(i%2)*0.15);m.userData.l=0.4+((i*37)%5)*0.15;g.add(m);return m;});
+      // the steam lance: a hose to the shelf and puffs while the crew works
+      return (now,rdt,inc)=>{const k=inc&&inc.total?inc.left/inc.total:1,p=1-k,t=now/1000;
+        const grow=EZ(p/0.15),brk=p<0.85?0:EZ((p-0.85)/0.15);G3.iceK=p<0.12?EZ(p/0.12):p<0.88?1:1-EZ((p-0.88)/0.12);
+        frost.material.opacity=0.42*grow*(1-brk);frost.visible=frost.material.opacity>0.01;
+        shelf.visible=grow>0.02&&brk<0.98;shelf.scale.z=Math.max(0.01,9*grow*(1-brk));shelf.position.z=BANK-shelf.scale.z/2;shelf.position.y=0.08;
+        icicles.forEach((m,i)=>{const L=m.userData.l*EZ(grow*1.4-i*0.04)*(1-brk);m.visible=L>0.02;m.scale.set(1,Math.max(0.01,L),1);m.position.y=1.15-L/2;});
+        floes.forEach((m,i)=>{const u=m.userData,lock=EZ(grow*1.2-i*0.02);if(lock<0.01){m.visible=false;return;}m.visible=true;
+          const drift=brk*brk*(18+u.v*12),melt=1-EZ((brk-0.5)/0.5);m.position.set(u.x+drift,0.06+Math.sin(t*0.9+i)*0.03*(brk>0?1:0.3),u.z-(1-lock)*6);m.rotation.y=u.r+brk*u.v*1.5;
+          m.scale.y=0.26*Math.max(0.05,melt);m.visible=melt>0.05;});
+        if(inc&&inc.mGo&&rdt>0){if(Math.random()<rdt*10)emit("chip",IX+R()*3,1.0,BANK-1+R()*2,R()*3,2+Math.random()*3,R()*3,0.9,0.4,"#ffffff",1);
+          if(Math.random()<rdt*6)emitA("steam",IX+2+R(),0.6,BANK-1.5+R(),R()*0.8,1.6+Math.random(),R()*0.8,2.2,1.6,"#ffffff",0.6);}};},
+    // city: a grid brownout. An arc flash at the substation with a white flash of the screen opens it; during it the arcs
+    // crackle on a steady beat, the mill's lights and windows sag and its steam plume shrinks; a utility bucket truck
+    // arrives, a lineman goes up to the transformer in sparks, and the power comes back with a bright "lights up".
     brownout:g=>{const [px,pz]=subPos(),py=px===74?9.5:3.4,arcs=[];
       for(let k=0;k<3;k++){const s=new THREE.Sprite(new THREE.SpriteMaterial({map:TX.dot,color:lin("#bfe3ff"),transparent:true,depthWrite:false,toneMapped:false}));s.position.set(px-6+k*6,py,pz-2);s.scale.setScalar(3.2);g.add(s);arcs.push(s);}
-      return (now,rdt)=>{const tick=(now/90)|0,fl=tick%7===0;arcs.forEach((s,k)=>{s.visible=fl&&k===tick%3;});G3.brownK=0.55+0.25*Math.sin(now/230)*Math.sin(now/71);
-        if(fl&&Math.random()<rdt*30)emit("spark",px-6+(tick%3)*6,py,pz-2,R()*3,1+Math.random()*2,R()*3,0.4,0.2,"#9fd0ff",1);};},
-    // desert: the storm is in the sky (envUpdate reads G3.dustK: tan haze, short fog, blowing dust); here, dust rolling across the ground
-    duststorm:g=>{return (now,rdt,inc)=>{const k=inc&&inc.total?inc.left/inc.total:1;G3.dustK=k<0.15?k/0.15:k>0.92?(1-k)/0.08:1;
-        for(let q=0;q<3;q++)if(Math.random()<rdt*36*G3.dustK)emitA("smoke",-95+Math.random()*190,0.6+Math.random()*4,-55+Math.random()*120,9+Math.random()*5,0.2,R()*1.5,3.2,7+Math.random()*6,"#c9a86b",0.5);};},
+      const big=new THREE.Sprite(new THREE.SpriteMaterial({map:TX.dot,color:lin("#e8f4ff"),transparent:true,depthWrite:false,toneMapped:false}));big.position.set(px,py+1,pz-2);g.add(big);
+      // the bucket truck (white, orange stripe) with a two-part boom, a bucket and a lineman
+      const tr=new THREE.Group();g.add(tr);const W=new StdMat({color:lin0("#f2f2f2"),roughness:0.6}),O=new StdMat({color:lin0("#f27a30"),roughness:0.6}),D=new StdMat({color:lin0("#2f3a49"),roughness:0.8});
+      const tb=(w,h,d,x,y,z,m,par=tr)=>{const b=new THREE.Mesh(cubeG,m);b.scale.set(w,h,d);b.position.set(x,y,z);b.castShadow=true;par.add(b);return b;};
+      tb(2,1.9,2.3,2.6,1.35,0,W);tb(2.05,0.25,2.35,2.6,1.0,0,O);tb(1.8,0.8,2.1,2.7,1.9,0,D);tb(5.6,0.35,2.3,-1.2,0.8,0,W);tb(5.6,0.2,2.32,-1.2,1.0,0,O);
+      [[2.6,-1.1],[2.6,1.1],[-0.6,-1.1],[-0.6,1.1],[-2.8,-1.1],[-2.8,1.1]].forEach(([x,z])=>{const w=new THREE.Mesh(new THREE.CylinderGeometry(0.5,0.5,0.35,14),D);w.rotation.x=Math.PI/2;w.position.set(x,0.5,z);tr.add(w);});
+      const amb=[-1,1].map(s=>{const a=new THREE.Sprite(new THREE.SpriteMaterial({map:TX.dot,color:lin("#ffb020"),transparent:true,depthWrite:false,toneMapped:false}));a.position.set(3.2,2.45,s*0.8);a.scale.setScalar(0.8);tr.add(a);return a;});
+      const b1=new THREE.Group();b1.position.set(-2.6,1.2,0);tr.add(b1);tb(4.6,0.3,0.3,2.3,0,0,W,b1);const b2=new THREE.Group();b2.position.set(4.6,0,0);b1.add(b2);tb(4.2,0.25,0.25,2.1,0,0,W,b2);
+      const bk=new THREE.Group();bk.position.set(4.2,0,0);b2.add(bk);tb(0.9,0.9,0.9,0,0.2,0,O,bk);const lm=new THREE.Group();lm.position.set(0,0.7,0);bk.add(lm);tb(0.3,0.5,0.4,0,0.1,0,O,lm);tb(0.24,0.24,0.24,0,0.5,0,new StdMat({color:lin0("#e0b48c")}),lm);
+      {const h=new THREE.Mesh(sphereG,new StdMat({color:lin0("#f2f2f2")}));h.scale.set(0.16,0.11,0.16);h.position.set(0,0.66,0);lm.add(h);}
+      const TX0=px+30,TX1=px+9,TZ=pz+9;tr.visible=false;let fl0=0;
+      return (now,rdt,inc)=>{const k=inc&&inc.total?inc.left/inc.total:1,p=1-k,t=now/1000;
+        // act 1: the arc flash (first ~3% of the brownout, about a second at normal speed)
+        const fa=p<0.035?Math.sin(p/0.035*Math.PI):0;big.visible=fa>0.02;big.scale.setScalar(4+22*fa);G3.bFlash=p<0.012?0.85:p<0.02?0:p<0.026?0.5:0;if(fa>0.5)shake=Math.max(shake,0.8);
+        // act 2: arcs on a beat, lights sag; act 3 (p > 0.9): power comes back with a bright pulse
+        const beat=((t*1.25)|0),ph=(t*1.25)%1,fl=ph<0.12&&p>0.035&&p<0.9;arcs.forEach((s,i)=>{s.visible=fl&&i===beat%3;s.scale.setScalar(3+2*(1-ph/0.12));});
+        if(p>0.035&&p<0.9&&rdt>0&&Math.random()<rdt*5)emitA("smoke",px+R()*2,py+1.5,pz-2+R()*2,R()*0.6,1.6+Math.random(),R()*0.6,3.5,2.5+Math.random()*2,"#3a3f48",0.55);
+        if(fl&&rdt>0&&Math.random()<rdt*40)emit("spark",px-6+(beat%3)*6,py,pz-2,R()*3,1+Math.random()*2,R()*3,0.4,0.2,"#9fd0ff",1);
+        const back=p<0.9?0:EZ((p-0.9)/0.06);G3.brownK=p<0.035?1-0.45*EZ(p/0.035):(0.55+0.2*Math.sin(t*4.3)*Math.sin(t*14))*(1-back)+back*(1+0.5*Math.sin(Math.min(1,(p-0.9)/0.1)*Math.PI));
+        {const sag=Math.max(0,1-G3.brownK);G3.tint=G3.brownK>1?["#fff6d8",0.35*(G3.brownK-1)]:["#141a2c",0.7*sag];}
+        // the bucket truck: drives in (p 0.45-0.55), boom up (0.55-0.62), works (to 0.9), boom down and away (0.92-1)
+        const din=EZ((p-0.45)/0.1),dout=EZ((p-0.93)/0.07);tr.visible=p>0.45&&dout<1;tr.position.set(TX0+(TX1-TX0)*din+(TX0-TX1)*dout*1.3,0,TZ);tr.rotation.y=Math.PI;
+        const up=EZ((p-0.55)/0.07)*(1-EZ((p-0.9)/0.03));b1.rotation.z=0.15+0.75*up;b2.rotation.z=-0.2-0.5*up;bk.rotation.z=-(b1.rotation.z+b2.rotation.z);lm.rotation.y=Math.sin(t*1.3)*0.4;
+        amb.forEach((a,i)=>{a.visible=tr.visible&&((t*2.5+i*0.5)%1)<0.5;});
+        if(tr.visible&&up>0.95&&p<0.9&&rdt>0&&Math.random()<rdt*14){tr.updateMatrixWorld();const wv=bk.getWorldPosition(_bkv);emit("spark",wv.x+R(),wv.y+1.2,wv.z+R(),R()*2,1+Math.random()*2,R()*2,0.35,0.18,"#ffe08a",1);}};},
+    // desert: a haboob. A wall of dust hundreds of metres wide rolls in from the north over the flats and swallows the
+    // mill; inside it the sky goes orange-brown (envUpdate reads G3.dustK), dust streams across the site and tumbleweeds
+    // bounce through; at the end it thins out and a film of dust on the ground fades away.
+    duststorm:g=>{const WALL=[];for(let i=0;i<60;i++){const s=new THREE.Sprite(new THREE.SpriteMaterial({map:TX.puff,color:lin("#c49a5e"),transparent:true,opacity:0.8,depthWrite:false}));
+        s.userData={x:-320+(i%30)*22+Math.random()*10,y:i<30?14+Math.random()*8:36+Math.random()*12,s:i<30?44+Math.random()*16:38+Math.random()*16,ph:Math.random()*6,dz:Math.random()*14};g.add(s);WALL.push(s);}
+      const TW=new THREE.MeshBasicMaterial({color:lin0("#8a6a3e"),wireframe:true}),weeds=[...Array(7)].map((_,i)=>{const m=new THREE.Mesh(new THREE.IcosahedronGeometry(0.55+Math.random()*0.3,1),TW);
+        m.userData={z:-40+i*17+Math.random()*8,v:7+Math.random()*5,o:Math.random()*400,b:1.5+Math.random()};g.add(m);return m;});
+      const film=new THREE.Mesh(new THREE.CircleGeometry(230,40),new THREE.MeshBasicMaterial({color:lin0("#c9a86b"),transparent:true,opacity:0,depthWrite:false}));film.rotation.x=-Math.PI/2;film.position.set(-10,0.05,10);film.renderOrder=1;g.add(film);
+      return (now,rdt,inc)=>{const k=inc&&inc.total?inc.left/inc.total:1,p=1-k,t=now/1000;
+        // the wall: from 420 m north to past the mill over the first 14% of the storm
+        const a=EZ(p/0.14),wz=-460+560*a,wv=p<0.15;WALL.forEach((s,i)=>{const u=s.userData;s.visible=wv;if(!wv)return;const b=1+0.08*Math.sin(t*0.7+u.ph);s.position.set(u.x+Math.sin(t*0.3+u.ph)*4,u.y,wz+u.dz);s.scale.setScalar(u.s*b);s.material.opacity=0.8*(p>0.12?1-(p-0.12)/0.03:1);});
+        G3.dustK=p<0.1?0:p<0.15?EZ((p-0.1)/0.05):p<0.85?1:1-EZ((p-0.85)/0.15);
+        G3.tint=["#b98a4e",0.42*G3.dustK*(0.9+0.1*Math.sin(t*1.7))];
+        for(let q=0;q<3;q++)if(rdt>0&&Math.random()<rdt*40*G3.dustK)emitA("smoke",-95+Math.random()*190,0.6+Math.random()*4,-55+Math.random()*120,10+Math.random()*6,0.2,R()*1.5,3.2,7+Math.random()*6,"#c9a86b",0.55);
+        weeds.forEach((m,i)=>{const u=m.userData,on=G3.dustK>0.6;m.visible=on;if(!on)return;const x=-170+((t*u.v+u.o)%340);m.position.set(x,0.6+Math.abs(Math.sin(t*u.b*2+i))*1.4,u.z+Math.sin(t*0.5+i)*3);m.rotation.set(t*u.v*0.9,0,-t*u.v*0.9);});
+        const fo=p<0.6?0:p<0.85?EZ((p-0.6)/0.25)*0.22:0.22*(1-EZ((p-0.88)/0.12));film.visible=fo>0.01;film.material.opacity=fo;};},
     // swamp: water over the yard and the roads (not inside the buildings). v4.2.4 (the bayou flood as a marquee upset,
     // visuals only): the canal swells and spills, a muddy front with a foam line spreads south across the yard, rain
     // sets in, sandbag walls go up at the doors, bales, pallets, drums and a tyre float and drift, forklifts and clamp
@@ -481,7 +535,7 @@
     stepParts(rdt);fireLight.position.copy(fireLpos);fireFloorK=Math.max(0,fireFloorK-rdt*1.5);
     {const fl=0.9*Math.sin(performance.now()/60)+0.6*Math.sin(performance.now()/23),on=fireFloor.userData.on||0;fireLight.intensity=fireL>0?LEG*0.75*fireL*(3.4+fl+fireFloorK*3):0;
       fireFloor.visible=on>0;if(on>0){if(!fireFloor.material.map){fireFloor.material.map=spriteTex((x,w)=>{const g=x.createRadialGradient(w/2,w/2,0,w/2,w/2,w/2);g.addColorStop(0,"rgba(255,255,255,1)");g.addColorStop(0.4,"rgba(255,255,255,0.6)");g.addColorStop(1,"rgba(255,255,255,0)");x.fillStyle=g;x.fillRect(0,0,w,w);});fireFloor.material.needsUpdate=true;}fireFloor.material.opacity=Math.min(1,on*(0.42+0.1*fl+fireFloorK*0.25));}fireFloor.userData.on=0;}fireL=0;
-    if(!S.inc.some(i=>i.id==="brownout"))G3.brownK=1;if(!S.inc.some(i=>i.id==="duststorm"))G3.dustK=0;if(!S.inc.some(i=>i.id==="flood"))G3.floodK=0;
-    const out=S.inc.some(i=>i.id==="lightning");if(blackEl.hidden!==!out)blackEl.hidden=!out;if(!out){const fl=$("flash3d");if(fl.style.opacity!=="0")fl.style.opacity=0;}
+    if(!S.inc.some(i=>i.id==="brownout")){G3.brownK=1;G3.bFlash=0;}{const el=$("tint3d"),T=S.inc.some(i=>i.id==="brownout"||i.id==="duststorm")&&G3.tint?G3.tint:null,c=T?T[0]:"#000",o=T?String(Math.round(T[1]*100)/100):"0";if(el){if(el.style.background!==c&&T)el.style.background=c;if(el.style.opacity!==o)el.style.opacity=o;}if(!T)G3.tint=null;}if(!S.inc.some(i=>i.id==="icedintake"))G3.iceK=0;if(!S.inc.some(i=>i.id==="duststorm"))G3.dustK=0;if(!S.inc.some(i=>i.id==="flood"))G3.floodK=0;
+    const out=S.inc.some(i=>i.id==="lightning");if(blackEl.hidden!==!out)blackEl.hidden=!out;if(!out){const fl=$("flash3d"),v=String(G3.bFlash||0);if(fl.style.opacity!==v)fl.style.opacity=v;}
   }
 
