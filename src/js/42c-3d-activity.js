@@ -63,33 +63,113 @@
         p.a=[-1,1].map(s=>part(g,0.16*big,0.62*big,0.16*big,0,y0+0.86*big,s*0.33*big,"body"+body,body));p.h=part(g,0.28*big,0.28*big,0.28*big,0,y0+1.52*big,0,"skin","#e0b48c");
         if(hat)p.hat=part(g,hatK==="wide"?0.75:0.36,0.12,hatK==="wide"?0.75:0.36,0,y0+1.78*big,0,"hat"+hat,hat);if(hat&&hatK==="wide")part(g,0.34,0.24,0.34,0,y0+1.86,0,"hat"+hat,hat);return p;};
       const swing=(p,t,k=1)=>{if(p.l){p.l[0].rotation.z=Math.sin(t)*0.5*k;p.l[1].rotation.z=-Math.sin(t)*0.5*k;}if(p.a){p.a[0].rotation.z=-Math.sin(t)*0.6*k;p.a[1].rotation.z=Math.sin(t)*0.6*k;}};
+      // ---- v4.2.3 shared builders for the sights (all built once at start-up, hidden) ----
+      const BX=(p,w,h,d,x,y,z,k,hex)=>{const m=new THREE.Mesh(cubeG,am(k,hex));m.scale.set(w,h,d);m.position.set(x,y,z);m.castShadow=true;p.add(m);return m;},
+        PIV=(p,x,y,z)=>{const g=new THREE.Group();g.position.set(x,y,z);p.add(g);return g;},
+        BALL=(p,r,x,y,z,k,hex,sy=1)=>{const m=new THREE.Mesh(sphereG,am(k,hex));m.scale.set(r,r*sy,r);m.position.set(x,y,z);p.add(m);return m;},
+        EZ=k=>k<=0?0:k>=1?1:k*k*(3-2*k),CL=(t,a,b)=>EZ((t-a)/(b-a));
+      // a person (local +x forward, +z their right) with knees, boots, hands and a hat; o: shirt, legs, hat ("cowboy"/"hard"/null), hatc, vest, scarf
+      function person(p,o){const SKN=o.skin||"#e0b48c",root=PIV(p,0,0,0),hip=PIV(root,0,0.92,0);
+        const L=[-1,1].map(s=>{const l=PIV(hip,0,0,s*0.13);BX(l,0.22,0.44,0.23,0,-0.21,0,"pl"+o.legs,o.legs);const k=PIV(l,0,-0.42,0);BX(k,0.2,0.42,0.21,0,-0.2,0,"pl"+o.legs,o.legs);
+          BX(k,0.32,0.16,0.25,0.05,-0.42,0,"boot"+(o.boot||"#4a3424"),o.boot||"#4a3424");l.userData.k=k;return l;});
+        const up=PIV(hip,0,0,0);BX(up,0.32,0.66,0.5,0,0.33,0,"ps"+o.shirt,o.shirt);if(o.vest)BX(up,0.36,0.46,0.54,0,0.43,0,"pv"+o.vest,o.vest);BX(up,0.34,0.06,0.52,0,0.04,0,"boot#4a3424","#4a3424");
+        if(o.scarf)BX(up,0.1,0.14,0.3,0.15,0.64,0,"scarf"+o.scarf,o.scarf);
+        const hd=PIV(up,0,0.72,0);BX(hd,0.11,0.08,0.11,0,0,0,"skin",SKN);BX(hd,0.28,0.3,0.27,0,0.19,0,"skin",SKN);[-1,1].forEach(s=>BX(hd,0.02,0.04,0.04,0.145,0.23,s*0.07,"dark","#1e232b"));
+        if(o.hat==="cowboy"){BX(hd,0.64,0.03,0.58,0,0.34,0,"hat"+o.hatc,o.hatc);BX(hd,0.3,0.16,0.27,0,0.43,0,"hat"+o.hatc,o.hatc);}
+        else if(o.hat==="hard"){BALL(hd,0.17,0,0.35,0,"hhat"+o.hatc,o.hatc,0.72);BX(hd,0.44,0.03,0.38,0.03,0.33,0,"hhat"+o.hatc,o.hatc);}
+        const A=[-1,1].map(s=>{const a=PIV(up,0,0.64,s*0.33);BX(a,0.15,0.6,0.15,0,-0.3,0,"ps"+o.shirt,o.shirt);const hand=BX(a,0.12,0.14,0.12,0,-0.68,0,"skin",SKN);return {a,hand};});
+        const K=l=>l.userData.k.rotation;return {root,hip,L,up,hd,A,K};}
+      const walkP=(P,ph,k=1)=>{const w=Math.sin(ph);P.L[0].rotation.z=w*0.5*k;P.L[1].rotation.z=-w*0.5*k;P.K(P.L[0]).z=-Math.max(0,-w)*0.7*k;P.K(P.L[1]).z=-Math.max(0,w)*0.7*k;
+        P.A[0].a.rotation.z=-w*0.4*k;P.A[1].a.rotation.z=w*0.4*k;P.hip.position.y=0.92+Math.abs(w)*0.03*k;};
+      // a pool of soft puffs (dust, smoke) driven from a list of [age, x, y, z] each frame
+      function puffPool(n,hex,op){const out=[...Array(n)].map(()=>{const m=new THREE.Mesh(sphereG,new THREE.MeshBasicMaterial({color:lin0(hex),transparent:true,opacity:op,depthWrite:false}));m.visible=false;scene.add(m);return m;});
+        out.show=(list,life,s0,s1,op2=op)=>{let i=0;for(const [a,x,y,z] of list){if(i>=n)break;if(a<0||a>life)continue;const m=out[i++],k=a/life,s=s0+(s1-s0)*k;m.visible=true;m.position.set(x,y,z);m.scale.set(s,s*0.7,s);m.material.opacity=op2*(1-k);}for(;i<n;i++)out[i].visible=false;};
+        out.hide=()=>out.forEach(m=>m.visible=false);return out;}
       const SIGHTS={
-        // three riders cross the flats south of the mill at a canter, kicking up a little dust
-        desert:()=>{const P=[[300,150],[180,128],[60,150],[-60,130],[-180,150],[-330,170]],T=plen(P),rs=[0,1,2].map(k=>{const g=grp();
-            const col=pick2(["#6b4a2f","#8a5a3a","#3a2a20","#b08a5a"]),horse={b:part(g,2.2,0.9,0.75,0,1.1,0,"horse"+col,col),n:part(g,0.5,0.9,0.4,1.1,1.6,0,"horse"+col,col),hd:part(g,0.8,0.38,0.36,1.45,2.3,0,"horse"+col,col),
-              legs:[[-0.8,-0.25],[-0.8,0.25],[0.8,-0.25],[0.8,0.25]].map(([a,b])=>part(g,0.16,1.1,0.16,a,0,b,"horse"+col,col))};
-            const rider=figure(g,pick2(["#a8322c","#2a5aa8","#c9a24a","#5b6270"]),"#6b4a2f","wide",1.55);rider.l.forEach(l=>{l.rotation.x=0.9;});g.visible=false;return {g,horse,rider,off:k*7+rr2(0,3),lat:(k-1)*3.2};});
-          const dm=new THREE.MeshBasicMaterial({color:lin0("#d9c49c"),transparent:true,opacity:0.3,depthWrite:false}),puffs=[...Array(12)].map(()=>{const m=new THREE.Mesh(sphereG,dm.clone());m.visible=false;scene.add(m);return {m,a:9};});let pi=0,pt=0;
-          return {t:0,tick(rdt){this.t+=rdt;const v=7;let live=false;pt+=rdt;
-              for(const r of rs){const s=this.t*v-r.off;if(s<0||s>T){r.g.visible=false;continue;}live=true;const [x,z,ry]=pathAt(P,s),gx=x+Math.sin(ry)*r.lat,gz=z+Math.cos(ry)*r.lat;
-                r.g.visible=true;r.g.position.set(gx,H(gx,gz)+Math.abs(Math.sin(this.t*6+r.off))*0.25,gz);r.g.rotation.y=ry;r.horse.legs.forEach((l,i)=>{l.rotation.z=Math.sin(this.t*12+i*1.6)*0.6;});
-                if(pt>0.25){const p=puffs[pi++%puffs.length];p.a=0;p.m.position.set(gx-Math.cos(ry)*1.6,r.g.position.y+0.4,gz+Math.sin(ry)*1.6);p.m.visible=true;}}
-              if(pt>0.25)pt=0;for(const p of puffs){if(p.a>=2.5){p.m.visible=false;continue;}p.a+=rdt;const s2=0.6+p.a*1.2;p.m.scale.set(s2,s2*0.6,s2);p.m.material.opacity=0.3*(1-p.a/2.5);}
-              return live||this.t*v<20;},
-            focus(){const r=rs.find(r=>r.g.visible)||rs[0];return [r.g.position.x,1.5,r.g.position.z,40];},stop(){rs.forEach(r=>r.g.visible=false);puffs.forEach(p=>p.m.visible=false);}};},
-        // Bigfoot steps out of the trees between the highway and the gate, ambles along the edge, stops to look at the mill, and goes back in
-        rural:()=>{const g=grp(),F={l:[-1,1].map(s=>part(g,0.45,1.3,0.45,0,0,s*0.32,"bigfoot","#4a3426")),b:part(g,0.9,1.6,1.25,0,1.25,0,"bigfoot","#4a3426"),
-              a:[-1,1].map(s=>part(g,0.32,1.5,0.32,0,1.1,s*0.8,"bigfoot","#4a3426")),h:part(g,0.6,0.62,0.6,0.1,2.85,0,"bigfoot","#4a3426")};part(g,0.12,0.25,0.4,0.42,2.95,0,"skin","#8a6a52");g.visible=false;
-          const P=[[-152,74],[-142,58],[-131,44],[-128,32],[-140,22],[-153,26]],T=plen(P);
-          return {t:0,tick(rdt){this.t+=rdt;const look=this.t>12&&this.t<18,s=Math.min(T,(this.t<12?this.t:look?12:this.t-6)*2.6);const [x,z,ry]=pathAt(P,s);
-              g.visible=true;g.position.set(x,H(x,z),z);g.rotation.y=look?Math.atan2(-(5-z),-14-x):ry;swing(F,look?0:this.t*4.2,look?0:1);F.h.rotation.y=look?Math.sin(this.t*1.3)*0.4:0;return s<T;},
-            focus(){return [g.position.x,2.2,g.position.z,24];},stop(){g.visible=false;}};},
-        // a tug steams in from sea, runs along the waterfront past the mill and the pier, and heads back out, a wake behind it
-        urban:()=>{const g=grp();part(g,13,2.2,5,0,-0.6,0,"tug","#c92a2a");part(g,5,2.4,3.6,-1,1.6,0,"tugw","#f2f2f2");part(g,2.6,1.2,3,-1,4,0,"glass","#46576d");part(g,0.8,3,0.8,-3.6,1.6,0,"dark","#2f3a49");
-          part(g,0.9,0.5,0.9,-3.6,4.6,0,"tug","#c92a2a");const wk=new THREE.Mesh(new THREE.PlaneGeometry(1,1),new THREE.MeshBasicMaterial({color:0xffffff,transparent:true,opacity:0.45,depthWrite:false}));wk.rotation.x=-Math.PI/2;wk.scale.set(26,6,1);scene.add(wk);
-          const [zc,hw]=riverAt(0),sh=zc+hw,P=[[260,sh-260],[170,sh-150],[60,sh-26],[-60,sh-24],[-180,sh-40],[-292,sh-150],[-380,sh-300]],T=plen(P);g.visible=false;wk.visible=false;
-          return {t:0,tick(rdt){this.t+=rdt;const s=Math.min(T,this.t*9);const [x,z,ry]=pathAt(P,s);g.visible=wk.visible=true;g.position.set(x,0.05+Math.sin(this.t*1.6)*0.12,z);g.rotation.y=ry;
-              g.rotation.z=Math.sin(this.t*1.1)*0.03;wk.position.set(x-Math.cos(ry)*18,0.06,z+Math.sin(ry)*18);wk.rotation.z=ry;return s<T;},focus(){return [g.position.x,1,g.position.z,55];},stop(){g.visible=wk.visible=false;}};},
+        // v4.2.3 desert: a held shot of the mill from the flats to the south; three cowboys canter across the foreground,
+        // dust behind them, the last one swinging a lasso. Detailed horses (neck, head, ears, mane, tail, saddle and
+        // blanket, jointed legs with hooves) and riders (hats, bandanas, vests, jointed legs in the stirrups).
+        desert:()=>{const Z0=84,X0=40,V=6.2,END=11.5,CX=16;
+          function horse(p,col,mane,blanket){const g=PIV(p,0,0,0),bd=PIV(g,0,0,0),dk="#2a2a2a";
+            BX(bd,1.9,0.72,0.62,0,1.35,0,"hc"+col,col);BX(bd,0.5,0.62,0.56,0.95,1.38,0,"hc"+col,col);BX(bd,0.55,0.66,0.6,-0.9,1.42,0,"hc"+col,col);BX(bd,1.5,0.14,0.5,0,0.99,0,"hc"+col,col);
+            BX(bd,0.72,0.06,0.72,0.02,1.74,0,"bl"+blanket,blanket);BX(bd,0.52,0.12,0.5,0,1.8,0,"saddle","#5a3a22");BX(bd,0.06,0.16,0.06,0.26,1.92,0,"saddle","#5a3a22");
+            const nk=PIV(bd,1.05,1.55,0);nk.rotation.z=0.85;BX(nk,0.95,0.36,0.3,0.42,0,0,"hc"+col,col);BX(nk,0.85,0.09,0.09,0.42,0.2,0,"mn"+mane,mane);
+            const hp=PIV(nk,0.9,0,0);hp.rotation.z=-1.5;BX(hp,0.62,0.3,0.27,0.3,0,0,"hc"+col,col);BX(hp,0.22,0.24,0.23,0.64,-0.02,0,"mz",dk);
+            [-1,1].forEach(s=>{BX(hp,0.06,0.17,0.06,0.02,0.2,s*0.08,"hc"+col,col);BX(hp,0.04,0.05,0.03,0.25,0.06,s*0.14,"dark","#1e232b");});
+            const tl=PIV(bd,-1.17,1.62,0);BX(tl,0.12,0.8,0.18,-0.06,-0.38,0,"mn"+mane,mane);
+            const legs=[[0.78,-0.2,0],[0.78,0.2,0.18],[-0.75,-0.2,0.5],[-0.75,0.2,0.68]].map(([lx,lz,o])=>{const u=PIV(bd,lx,1.08,lz);BX(u,0.19,0.55,0.19,0,-0.27,0,"hc"+col,col);
+              const k=PIV(u,0,-0.54,0);BX(k,0.13,0.5,0.13,0,-0.25,0,"hc"+col,col);BX(k,0.16,0.1,0.18,0.02,-0.52,0,"hoof",dk);return {u,k,o};});
+            return {g,bd,nk,hp,tl,legs};}
+          const rs=[0,1,2].map(k=>{const h=horse(grp(),["#6b4a2f","#8a5a3a","#c9a26a"][k],["#2a1d14","#3a2a1c","#efe2c2"][k],["#a8322c","#2a5aa8","#c9a24a"][k]);
+            const rd=PIV(h.bd,-0.05,0.94,0),P=person(rd,{shirt:["#a8322c","#5b6270","#d9c49c"][k],legs:"#2f4a6b",hat:"cowboy",hatc:["#6b4a2f","#3a2a20","#efe2c2"][k],vest:k===1?"#6b4a2f":null,scarf:["#2a5aa8","#a8322c","#a8322c"][k]});
+            P.L.forEach((l,i)=>{l.rotation.z=1.2;l.rotation.x=(i?1:-1)*0.42;P.K(l).z=-1.25;});P.up.rotation.z=-0.12;P.A.forEach(a=>a.a.rotation.z=0.9);
+            let lasso=null;if(k===2){lasso=PIV(P.A[1].a,0,-0.7,0);const m=new THREE.Mesh(new THREE.TorusGeometry(0.9,0.025,4,28),am("rope","#c9a26a"));m.rotation.x=Math.PI/2;m.position.y=0.15;lasso.add(m);}
+            h.g.parent.visible=false;return {h,P,lasso,root:h.g.parent,off:[0,1.6,3.4][k],lat:[0,2.4,-1.8][k]};});
+          const dust=puffPool(36,"#b89a6a",0.45);
+          const at=(r,u)=>{const s=u*V-r.off*V*0.42;return [X0-s,Z0+r.lat];};
+          return {t:0,tick(rdt){const u=(this.t+=rdt);const L=[];
+              for(const r of rs){const [x,z]=at(r,u),on=x<X0+2&&x>X0-90;r.root.visible=on;if(!on)continue;r.root.position.set(x,H(x,z),z);r.root.rotation.y=Math.PI;
+                const ph=u*9.5+r.off*2;r.h.legs.forEach(l=>{l.u.rotation.z=0.6*Math.sin(ph+l.o*Math.PI*2);l.k.rotation.z=-Math.max(0,Math.sin(ph+l.o*Math.PI*2+1.2))*0.9;});
+                r.h.bd.position.y=Math.abs(Math.sin(ph))*0.14;r.h.bd.rotation.z=Math.sin(ph)*0.05;r.h.nk.rotation.z=0.85+Math.sin(ph)*0.1;r.h.tl.rotation.z=-0.7+Math.sin(ph*0.5)*0.15;
+                r.P.up.rotation.z=-0.12+Math.sin(ph)*0.05;if(r.lasso){r.P.A[1].a.rotation.z=2.9;r.P.A[1].a.rotation.x=-0.2;r.lasso.rotation.y=u*9;}
+                for(let a=0;a<2.4;a+=0.2){const [px,pz]=at(r,u-a);if(px<X0+2)L.push([a+((u*5)%0.2),px+1.2,H(px,pz)+0.3+a*0.3,pz]);}}
+              dust.show(L,2.4,0.5,2.2);return u<END;},
+            focus(){return [CX,7,Z0-1,60,0.35,1.36];},stop(){rs.forEach(r=>r.root.visible=false);dust.hide();}};},
+        // v4.2.3 valley: a held shot of the mill from the far bank of the river. Bigfoot wades across below the mill, away
+        // from the camera, rings spreading from his legs; mid-river he turns his head and shoulders to look back straight
+        // down the lens without breaking stride (the famous film), then wades on. Two-tone fur, crest, brow, face, long
+        // jointed arms, big feet.
+        rural:()=>{const g=grp(),FUR="#4a3426",FD="#3a281c",FACE="#7a5a44",root=PIV(g,0,0,0),hip=PIV(root,0,1.15,0);
+          const L=[-1,1].map(s=>{const l=PIV(hip,0,0,s*0.24);BX(l,0.42,0.62,0.42,0,-0.3,0,"bf",FUR);const k=PIV(l,0,-0.58,0);BX(k,0.36,0.56,0.36,0,-0.27,0,"bf",FUR);BX(k,0.64,0.14,0.36,0.12,-0.6,0,"bfd",FD);l.userData.k=k;return l;});
+          const up=PIV(hip,0,0,0);BX(up,0.75,0.5,0.85,0,0.25,0,"bf",FUR);BX(up,0.85,0.75,1.05,0.05,0.85,0,"bf",FUR);BX(up,0.6,0.32,0.95,-0.1,1.25,0,"bfd",FD);BX(up,0.08,0.5,0.6,0.46,0.8,0,"bfd",FD);
+          const hd=PIV(up,0.15,1.36,0);BX(hd,0.5,0.52,0.5,0,0.24,0,"bf",FUR);BX(hd,0.3,0.18,0.3,-0.08,0.56,0,"bfd",FD);BX(hd,0.06,0.3,0.36,0.26,0.18,0,"bfface",FACE);BX(hd,0.1,0.08,0.42,0.27,0.35,0,"bfd",FD);
+          [-1,1].forEach(s=>BX(hd,0.03,0.05,0.07,0.3,0.27,s*0.09,"dark","#1e232b"));
+          const A=[-1,1].map(s=>{const a=PIV(up,0.05,1.2,s*0.6);BX(a,0.27,0.66,0.27,0,-0.32,0,"bf",FUR);const e=PIV(a,0,-0.62,0);BX(e,0.23,0.62,0.23,0,-0.3,0,"bf",FUR);BX(e,0.2,0.26,0.15,0,-0.7,0,"bfface",FACE);a.userData.e=e;return a;});
+          g.visible=false;
+          // he wades the river below the mill, north to south, away from the camera on the far bank, and looks back
+          const XB=4,[zc,hw]=riverAt(XB),Z0=zc-hw+1.5,Z1=zc+hw+1,END=11.5,V=(Z1-Z0)/END,hy=-Math.PI/2;
+          const CAM=[XB+2,zc+3,60,Math.PI-0.3,1.3];   // [x,z,r,th,ph]: from the north bank, looking south across the river at the mill
+          const RG=[...Array(6)].map(()=>{const m=new THREE.Mesh(new THREE.RingGeometry(0.8,1,28),new THREE.MeshBasicMaterial({color:0xffffff,transparent:true,opacity:0.5,depthWrite:false}));m.rotation.x=-Math.PI/2;m.visible=false;scene.add(m);return m;});
+          const yAt=z=>{const q=(z-zc)/hw;return Math.abs(q)<1?Math.min(H(XB,z),-1.15*Math.sqrt(1-q*q)):H(XB,z);};
+          return {t:0,tick(rdt){const u=(this.t+=rdt),z=Z0+u*V,x=XB+Math.sin(u*0.4)*0.6,ph=u*2.6,w=Math.sin(ph),wet=Math.abs((z-zc)/hw)<1;
+              g.visible=true;root.position.set(x,yAt(z),z);root.rotation.y=hy;
+              L[0].rotation.z=w*0.4;L[1].rotation.z=-w*0.4;L[0].userData.k.rotation.z=-Math.max(0,-w)*0.6;L[1].userData.k.rotation.z=-Math.max(0,w)*0.6;
+              A[0].rotation.z=-w*0.5;A[1].rotation.z=w*0.5;A.forEach(a=>{a.userData.e.rotation.z=0.25;a.rotation.x=(a===A[0]?-1:1)*0.18*(wet?1:0.3);});hip.position.y=1.15+Math.abs(w)*0.05;
+              // the look: head and shoulders swing round toward the camera, hold, swing back, without breaking stride
+              const cx=CAM[0]+Math.sin(CAM[3])*60,cz=CAM[1]+Math.cos(CAM[3])*60;let cy=Math.atan2(-(cz-z),cx-x)-hy;cy=Math.atan2(Math.sin(cy),Math.cos(cy));cy=Math.max(-1.6,Math.min(1.6,cy));
+              const lk=CL(u,4.6,5.4)*(1-CL(u,7.4,8.2));up.rotation.set(0,Math.sin(ph)*0.1+lk*cy*0.5,-0.18);hd.rotation.y=lk*cy*0.5;
+              // wading: rings spread from his legs
+              let n=0;for(let a=0;a<2.4&&n<RG.length;a+=0.5){const a2=a+(u%0.5),zz=Z0+(u-a2)*V,q=(zz-zc)/hw;if(Math.abs(q)>0.97||u-a2<0)continue;const m=RG[n++],k=a2/2.4;
+                m.visible=true;m.position.set(x,0.08,zz);m.scale.set(0.6+k*3,0.6+k*3,1);m.material.opacity=0.5*(1-k);}for(;n<RG.length;n++)RG[n].visible=false;return u<END;},
+            focus(){return [CAM[0],6,CAM[1],CAM[2],CAM[3],CAM[4]];},stop(){g.visible=false;RG.forEach(m=>m.visible=false);}};},
+        // v4.2.3 city: a held shot of the waterfront mill from out in the bay. A harbour tug steams past in the foreground
+        // towing a barge of bales toward the mill's quay: black hull and red boot-top, tyre fenders and a bow pudding,
+        // white deckhouse and wheelhouse, mast and radar, buff stack with a red band puffing smoke, a deckhand aft, a
+        // tow line, and white water at the bow and in the wake.
+        urban:()=>{const [zc,hw]=riverAt(0),sh=zc+hw,ZT=sh-26,X0=46,V=3.8,END=11.5,TOW=9,BK="#1e2228",RD="#a8322c",WH="#eef0f2";
+          const tug=grp(),hl=PIV(tug,0,0,0);BX(hl,9,1.0,3.6,0,0.25,0,"tugH",BK);{const m=BX(hl,2.55,1.0,2.55,4.5,0.25,0,"tugH",BK);m.rotation.y=Math.PI/4;}
+          BX(hl,9.2,0.28,3.66,-0.05,-0.18,0,"tugR",RD);BX(hl,8.6,0.1,3.4,0,0.78,0,"deck","#7a5a44");[-1,1].forEach(s=>BX(hl,8.6,0.26,0.12,0,0.9,s*1.77,"tugW",WH));BX(hl,0.12,0.26,3.5,-4.3,0.9,0,"tugW",WH);BX(hl,0.6,0.7,2.0,5.9,0.25,0,"tyre","#2f3a49");
+          for(let i=0;i<6;i++)[-1,1].forEach(s=>{const m=new THREE.Mesh(CYLG,am("tyre","#2f3a49"));m.scale.set(0.34,0.24,0.34);m.rotation.x=Math.PI/2;m.position.set(-3+i*1.2,0.45,s*1.86);hl.add(m);});
+          BX(hl,3.6,1.4,2.6,0.8,1.45,0,"tugW",WH);BX(hl,2.3,1.2,2.4,1.4,2.75,0,"tugW",WH);BX(hl,2.35,0.4,2.45,1.4,2.95,0,"glass","#46576d");BX(hl,2.6,0.12,2.7,1.4,3.4,0,"tugR",RD);
+          BX(hl,0.12,2.2,0.12,1.2,4.5,0,"steel","#5b6270");BX(hl,0.12,0.08,1.2,1.2,4.3,0,"steel","#5b6270");BX(hl,0.9,0.08,0.14,1.2,5.0,0,"dark","#2f3a49");
+          BX(hl,0.8,1.6,1.0,-0.7,2.6,0,"buff","#d9b25a");BX(hl,0.82,0.3,1.02,-0.7,3.0,0,"tugR",RD);BX(hl,0.82,0.22,1.02,-0.7,3.45,0,"tugH",BK);
+          BX(hl,0.45,0.6,0.45,-3.6,1.05,0,"steel","#5b6270");{const m=new THREE.Mesh(CYLG,am("rope","#c9a26a"));m.scale.set(0.35,1.2,0.35);m.rotation.x=Math.PI/2;m.position.set(-2.6,1.1,0);hl.add(m);}
+          {const m=new THREE.Mesh(new THREE.TorusGeometry(0.3,0.07,6,16),am("buoy","#f27a30"));m.position.set(0.2,1.6,1.31);hl.add(m);}
+          const dh=person(PIV(hl,-2.3,0.75,0.8),{shirt:"#2f4a6b",legs:"#2f3a49",hat:"hard",hatc:"#f27a30",vest:"#f27a30"});
+          const bg=grp();BX(bg,16,1.2,6.5,0,0.1,0,"barge","#5b6270");BX(bg,16.1,0.3,6.6,0,-0.1,0,"rust","#8a4a2a");
+          for(let i=0;i<4;i++)for(let j=0;j<2;j++)for(let k=0;k<2;k++){BX(bg,1.6,1.0,1.25,-5.4+i*3.6,1.2+k*1.02,(j-0.5)*2.8,"bale","#a7784a");BX(bg,1.62,0.06,1.27,-5.4+i*3.6,1.2+k*1.02,(j-0.5)*2.8,"dark","#2f3a49");}
+          const line=new THREE.Mesh(CYLG,am("rope","#c9a26a"));scene.add(line);
+          const wk=[...Array(3)].map((_,i)=>{const m=new THREE.Mesh(new THREE.PlaneGeometry(1,1),new THREE.MeshBasicMaterial({color:0xffffff,transparent:true,opacity:[0.5,0.35,0.3][i],depthWrite:false}));m.rotation.x=-Math.PI/2;scene.add(m);return m;});
+          const smoke=puffPool(9,"#c8ccd2",0.4);[tug,bg,line,...wk].forEach(o=>o.visible=false);
+          const Y=new THREE.Vector3(0,1,0),A0=new THREE.Vector3(),B0=new THREE.Vector3();
+          return {t:0,tick(rdt){const u=(this.t+=rdt),x=X0-u*V,bx=x+4.5+TOW+8,bob=Math.sin(u*1.6)*0.1;
+              [tug,bg,line,...wk].forEach(o=>o.visible=true);tug.position.set(x,0.05+bob,ZT);tug.rotation.set(0,Math.PI,Math.sin(u*1.1)*0.025);
+              bg.position.set(bx,0.1+Math.sin(u*1.3+1)*0.06,ZT+0.4);bg.rotation.set(0,Math.PI,Math.sin(u*0.9)*0.015);
+              A0.set(x+4.6,1.1,ZT);B0.set(bx-8,0.9,ZT+0.4);const d=B0.clone().sub(A0),l=d.length();line.position.copy(A0).addScaledVector(d,0.5);line.position.y-=0.35;line.scale.set(0.05,l,0.05);line.quaternion.setFromUnitVectors(Y,d.normalize());
+              wk[0].position.set(x+11,0.07,ZT);wk[0].scale.set(14,4.5,1);wk[1].position.set(x-5.4,0.07,ZT);wk[1].scale.set(1.6,4.2,1);wk[2].position.set(bx+12,0.07,ZT+0.4);wk[2].scale.set(10,6.5,1);
+              const sm=[];for(let a=0;a<4.5;a+=0.5){const a2=a+(u%0.5),px=x+0.7+a2*V*0.85+a2*0.8;sm.push([a2,px,3.7+a2*1.4,ZT-a2*0.5]);}smoke.show(sm,4.5,0.5,2.6);
+              walkP(dh,0,0);dh.A[0].a.rotation.z=0.5+Math.sin(u*2)*0.2;dh.hd.rotation.y=-0.8;return u<END;},
+            focus(){return [X0-22,7,ZT+6,64,Math.PI+0.3,1.36];},stop(){[tug,bg,line,...wk].forEach(o=>o.visible=false);smoke.hide();}};},
         // v4.2.2 (an Amos Moses nod): an operator in a hard hat and hi-vis walks the canal bank east of the intake with a
         // sample bottle, crouches at the edge and reaches down to fill it. A gator has been gliding in, eyes and back
         // just breaking the surface; it lunges, jaws wide, and snaps off the operator's right hand (no gore, just gone),

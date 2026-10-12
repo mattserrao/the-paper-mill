@@ -1,5 +1,12 @@
 # Changelog
 
+## v4.2.3-t (test v28): the other three rare sights, reworked like the gator
+- All four sights now share the gator's rules: 11.5 s, a held wide shot of the mill (60-64 m, low elevation, telephoto) with the action small in the lower third, more detail, and a scene that is a pure function of its clock (stills via G3.sightSeek/G3.sightHold). Shared builders: person (knees, boots, hands, hats), puff pool.
+- Desert: three cowboys canter across the flats south of the mill, in front of the roll warehouse and crane. Horses with neck, head, ears, muzzle, mane, tail, saddle and blanket, jointed legs and hooves, cantering gait; riders with cowboy hats, bandanas, a vest, legs in the stirrups; the last one swings a lasso. Dust trails.
+- Valley: Bigfoot wades the river below the mill, away from the camera on the far bank, waist-deep, rings spreading from his legs; mid-river he turns head and shoulders to look back down the lens without breaking stride. Two-tone fur, crest, brow, face, long jointed arms, big feet.
+- City: a harbour tug steams past the waterfront towing a barge of bales: black hull, red boot-top, deck and rails, tyre fenders, bow pudding, deckhouse and wheelhouse, mast and radar, buff stack with a red band and smoke, a deckhand, a tow line, bow wave and wake.
+- tools/sightshots.py turns off the low-FPS fallback (it was hiding far scenery in headless stills).
+
 ## v4.2.2-t5 (test v27): one sight per map in zen
 - Zen plays the map's rare sight once; after it, no more sights on that map. The zen map rotation reloads the page on each map, so each map plays its sight once per visit. Outside zen the 4-10 minute random timing is unchanged.
 - tools/zenonce.py: forces the sight's wait to zero repeatedly in zen and counts starts (v26: 2, v27: 1).

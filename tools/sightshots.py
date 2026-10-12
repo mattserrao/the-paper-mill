@@ -11,7 +11,7 @@ with sync_playwright() as pw:
     pg=b.new_page(viewport={"width":900,"height":560});errs=[];pg.on("pageerror",lambda e:errs.append(str(e)[:300]))
     pg.route("**/*",route_for(html));pg.add_init_script(INIT);pg.goto(f"http://bench.local/?env={env}")
     pg.wait_for_function("window.__PM&&__PM.G3.warm",timeout=240000,polling=300)
-    pg.evaluate("()=>{document.getElementById('v2go').click();__PM.C.simSpeed=1;document.querySelectorAll('#tut').forEach(e=>e.hidden=true);document.querySelectorAll('#labels3d,.v2top,.v2dock,#chips3d,.banner3d,#bn3d').forEach(e=>e.style.visibility='hidden');__PM.S.t=10*60;__PM.G3.sight();}")
+    pg.evaluate("()=>{document.getElementById('v2go').click();__PM.C.simSpeed=1;__PM.G3.noFallback=true;document.querySelectorAll('#tut').forEach(e=>e.hidden=true);document.querySelectorAll('#labels3d,.v2top,.v2dock,#chips3d,.banner3d,#bn3d').forEach(e=>e.style.visibility='hidden');__PM.S.t=10*60;__PM.G3.sight();}")
     pg.wait_for_timeout(3000);print("errs",errs,pg.evaluate("()=>[typeof __PM.G3.sight,__PM.G3.sightT,__PM.G3.act]"))
     pg.wait_for_function("__PM.G3.sightT>=0",timeout=60000)
     for i,(t,c) in enumerate(shots):
