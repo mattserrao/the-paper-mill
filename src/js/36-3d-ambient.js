@@ -101,7 +101,7 @@
   const SKY_DAY=new THREE.Color(),SKY_NIGHT=lin0("#232b44"),SKY_RAIN=lin0("#8c94a2"),SKY_FOG=lin0("#c9ced6"),SKY_DUST=lin0("#c9a86b"),tmpC=new THREE.Color();let fogK=0,wxK=0,envAcc=0,dustK=0;
   function envUpdate(rdt,now){const out=S.inc.some(i=>i.id==="lightning");
     const hr=((S.t+360)/60)%24,ss=v=>v*v*(3-2*v),day=hr<12?ss(clamp((hr-5.2)/1.6,0,1)):ss(clamp((20.2-hr)/1.6,0,1));
-    const wx=S.wx||"clear";fogK+=((wx==="fog"?0.45:wx==="snow"?0.12:wx==="rain"?0.06:0)-fogK)*Math.min(1,rdt*0.8+0.01);
+    const wx=(G3.floodK>0.3&&S.wx!=="snow")?"rain":(S.wx||"clear");fogK+=((wx==="fog"?0.45:wx==="snow"?0.12:wx==="rain"?0.06:0)-fogK)*Math.min(1,rdt*0.8+0.01);
     wxK+=((wx==="rain"||wx==="snow"?1:0)-wxK)*Math.min(1,rdt*0.6+0.01);
     // v4.1: a desert dust storm (G3.dustK) and a city brownout (G3.brownK) colour the sky and sag the lights
     dustK+=((G3.dustK||0)-dustK)*Math.min(1,rdt*0.7+0.01);const bk=G3.brownK==null?1:G3.brownK;

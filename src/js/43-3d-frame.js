@@ -130,7 +130,7 @@
     // there were none at all; it now runs here. They also stay visible (stopped) when receiving is halted, and idle ones park in the bays.
     {const nL=Math.round(C.drivers.v);while(V.lifts.length<nL)V.lifts.push({p:Math.random()*4,door:V.lifts.length%3});V.lifts.length=nL;
       const busy=clamp((R.feed+R.unload)/Math.max(1,C.drivers.v*P.driverRate),0,1);if(rdt>0&&S.M.recvMul!==0)V.lifts.forEach(L=>{L.p=(L.p+rdt*(0.125+busy*0.45))%4;});}
-    ensure(lifts,V.lifts.length,()=>forklift(M.warn));
+    ensure(lifts,V.lifts.length,()=>forklift(M.warn));G3.liftObjs=lifts;
     V.lifts.forEach((L,i)=>{const g=lifts[i];
       g.visible=true;
       if(i>=Math.floor(S.effDrv+1e-9)){const k=Math.max(0,i-Math.floor(S.effDrv+1e-9))%4;g.position.set(-14.2-k*2.6,0,-21.7);g.rotation.y=Math.PI/2;g.children[0].material=M.off;g.userData.load.visible=false;return;}
@@ -142,7 +142,7 @@
       const [x,z,ry]=fkAt(fkLeg(A,B),t);
       g.position.set(x,0,z);g.rotation.y=ry;g.userData.load.visible=(a===0||a===2);});
     // clamp trucks + robots
-    const nLo=Math.round(C.loaders.v);ensure(loaders,nLo,()=>clamp3(M.ok));
+    const nLo=Math.round(C.loaders.v);ensure(loaders,nLo,()=>clamp3(M.ok));G3.loaderObjs=loaders;
     for(let i=0;i<nLo;i++){const g=loaders[i];
       if(!g.userData.homed){g.userData.homed=true;g.position.set(-28-i*2.2,0,17);g.rotation.y=Math.PI;}
       g.visible=true;
