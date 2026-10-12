@@ -587,3 +587,11 @@ button.rpt{cursor:pointer}.rpt.cur{border:2px solid var(--brand);background:var(
 @keyframes lblflash{0%,100%{background:var(--panel);color:var(--ink);box-shadow:none}30%,70%{background:var(--brand);color:#fff;box-shadow:0 0 0 4px color-mix(in srgb,var(--brand) 30%,transparent)}}
 #v2lblBtn.lblflash{animation:lblflash .6s ease-in-out 2}
 @media (prefers-reduced-motion:reduce){#v2lblBtn.lblflash{animation-duration:.9s}}
+
+/* v4.2.4: the bird-on-the-power-lines cut-scene: letterbox bars, the flash, Skip; the game's UI steps aside */
+.cine3d{position:absolute;inset:0;z-index:6;pointer-events:none}
+.cine3d .lb{position:absolute;left:0;right:0;height:11%;background:#000;transform:scaleY(0)}.cine3d .lb.t{top:0;transform-origin:top}.cine3d .lb.b{bottom:0;transform-origin:bottom}
+.cine3d .fl{position:absolute;inset:0;opacity:0;background:radial-gradient(circle at 50% 55%,#ffffff 0%,#d8ecff 35%,#4f8fff 100%);mix-blend-mode:screen}
+.cine3d .skip{position:absolute;right:14px;bottom:calc(11% + 12px + env(safe-area-inset-bottom,0px));pointer-events:auto;padding:8px 14px;border-radius:999px;border:1px solid rgba(255,255,255,.5);background:rgba(0,0,0,.45);color:#fff;font:600 13px var(--f-body);cursor:pointer}
+body.cine .v2top,body.cine .v2dock,body.cine #labels3d,body.cine #chips3d,body.cine #banner3d,body.cine .v2sheet,body.cine .v2scrim{visibility:hidden}
+body.cine .blackout3d{visibility:hidden}

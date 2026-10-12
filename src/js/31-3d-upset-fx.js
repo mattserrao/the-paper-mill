@@ -135,7 +135,7 @@
   // v4.1: the brownout's pin sits on the substation the scenery placed (or the power house when there is none)
   const _bkv=new THREE.Vector3();
   const subPos=()=>{const u=G3.scenery&&G3.scenery.util&&G3.scenery.util.substation;return u?[u[0],u[1]]:[74,-10];};
-  Object.defineProperty(PINS,"brownout",{get(){const [x,z]=subPos();return [x,x===74?14:9,z,"!"];}});
+  Object.defineProperty(PINS,"birdline",{get(){const [x,z]=subPos();return [x,x===74?14:9,z,"!"];}});Object.defineProperty(PINS,"brownout",{get(){const [x,z]=subPos();return [x,x===74?14:9,z,"!"];}});
   const FX={};G3.FX=FX;G3.PB=PB;G3.PT=PT;   // (read by the autotest's GPU probe)
   // wire / felt run-off: the loop runs off the tending side into a heap in the aisle, the section sits bare,
   // the crew carry a new one out in its long shipping crate and pull it on from the front, and the heap is cleared
@@ -527,7 +527,7 @@
       if(!f)f=makeFX(inc.id);
       if(G3.EXP&&G3.EXP.hideFX===inc.id){f.g.visible=false;return;}   // autotest GPU probe: this effect off (no drawing, no new particles)
       f.g.visible=true;f.on=true;f.up(now,rdt,inc);if(f.pinPos)f.pin.move(f.pinPos[0],f.pinPos[1]);f.pin.update(now);
-      {const zp=!G3.zen;f.pin.p.visible=f.pin.ring.visible=f.pin.stem.visible=zp;}   // v3.0.1: zen mode shows events without the red pins
+      {const zp=!G3.zen&&!G3.cineOn;f.pin.p.visible=f.pin.ring.visible=f.pin.stem.visible=zp;}   // v3.0.1: zen mode shows events without the red pins
       tmp.set(f.pin.x,f.pin.p.position.y+3.4,f.pin.z).project(camera);const vis=!G3.zen&&tmp.z<1&&Math.abs(tmp.x)<1.1&&Math.abs(tmp.y)<1.1;f.lb.vis=vis;
       if(vis){f.lb.x=Math.round((tmp.x+1)/2*w);f.lb.y=Math.round((1-tmp.y)/2*hh);
         if(doTxt||f.lb.a==null){const st=incState(inc),b=`${st?st+" · ":""}${(inc.left/60).toFixed(1)} h left${inc.note?" · "+inc.note.split(" · ")[0]:""}`;lblSet(f.lb,EV[inc.id].name,b,true);}}});
@@ -536,6 +536,7 @@
     {const fl=0.9*Math.sin(performance.now()/60)+0.6*Math.sin(performance.now()/23),on=fireFloor.userData.on||0;fireLight.intensity=fireL>0?LEG*0.75*fireL*(3.4+fl+fireFloorK*3):0;
       fireFloor.visible=on>0;if(on>0){if(!fireFloor.material.map){fireFloor.material.map=spriteTex((x,w)=>{const g=x.createRadialGradient(w/2,w/2,0,w/2,w/2,w/2);g.addColorStop(0,"rgba(255,255,255,1)");g.addColorStop(0.4,"rgba(255,255,255,0.6)");g.addColorStop(1,"rgba(255,255,255,0)");x.fillStyle=g;x.fillRect(0,0,w,w);});fireFloor.material.needsUpdate=true;}fireFloor.material.opacity=Math.min(1,on*(0.42+0.1*fl+fireFloorK*0.25));}fireFloor.userData.on=0;}fireL=0;
     if(!S.inc.some(i=>i.id==="brownout")){G3.brownK=1;G3.bFlash=0;}{const el=$("tint3d"),T=S.inc.some(i=>i.id==="brownout"||i.id==="duststorm")&&G3.tint?G3.tint:null,c=T?T[0]:"#000",o=T?String(Math.round(T[1]*100)/100):"0";if(el){if(el.style.background!==c&&T)el.style.background=c;if(el.style.opacity!==o)el.style.opacity=o;}if(!T)G3.tint=null;}if(!S.inc.some(i=>i.id==="icedintake"))G3.iceK=0;if(!S.inc.some(i=>i.id==="duststorm"))G3.dustK=0;if(!S.inc.some(i=>i.id==="flood"))G3.floodK=0;
-    const out=S.inc.some(i=>i.id==="lightning");if(blackEl.hidden!==!out)blackEl.hidden=!out;if(!out){const fl=$("flash3d"),v=String(G3.bFlash||0);if(fl.style.opacity!==v)fl.style.opacity=v;}
+    const out=S.inc.some(i=>i.id==="lightning"||(i.id==="birdline"&&!G3.cineHold));if(blackEl.hidden!==!out)blackEl.hidden=!out;
+    if(out){const bt=S.inc.some(i=>i.id==="lightning")?"Lightning hit the substation. Backup generators starting…":"A bird flew into the substation. Backup generators starting…",sp=blackEl.querySelector("span");if(sp&&sp.textContent!==bt)sp.textContent=bt;}if(!out){const fl=$("flash3d"),v=String(G3.bFlash||0);if(fl.style.opacity!==v)fl.style.opacity=v;}
   }
 

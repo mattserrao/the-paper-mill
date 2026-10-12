@@ -154,7 +154,7 @@
       g.position.set(x,0,z);g.userData.light.material=((now/400+r)|0)%2?M.ok:M.stock;});
     pm("forklifts, clamp trucks, robots");
     // blackout dims the plant
-    const out=S.inc.some(i=>i.id==="lightning");if(out){hemi.intensity=0.18*LEG;sun.intensity=0.12*LEG;}
+    const out=S.inc.some(i=>i.id==="lightning"||(i.id==="birdline"&&!G3.cineHold));if(out){hemi.intensity=0.18*LEG;sun.intensity=0.12*LEG;}
     if(out!==G3.wasOut){G3.wasOut=out;if(out)scene.background=new THREE.Color("#0b0f0e").convertSRGBToLinear();}
     // camera + render
     // zen: a 30 s "shot" at a time. Each shot cuts to a new viewpoint (or locks onto an operator for a stretch of it)

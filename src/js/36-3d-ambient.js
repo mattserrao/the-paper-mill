@@ -99,7 +99,7 @@
     const wxN=Math.min(n,(G3.GFX&&G3.GFX.wx)||1000);g.setDrawRange(0,wxN);rg.setDrawRange(0,wxN*2);G3.wxRange=k=>{const q=Math.min(n,k);g.setDrawRange(0,q);rg.setDrawRange(0,q*2);};return {p,g,pos,m,n,rg,rp,rm,rl};})();
   scene.fog=new THREE.Fog(0xb3bbcb,600,3000);
   const SKY_DAY=new THREE.Color(),SKY_NIGHT=lin0("#232b44"),SKY_RAIN=lin0("#8c94a2"),SKY_FOG=lin0("#c9ced6"),SKY_DUST=lin0("#c9a86b"),tmpC=new THREE.Color();let fogK=0,wxK=0,envAcc=0,dustK=0;
-  function envUpdate(rdt,now){const out=S.inc.some(i=>i.id==="lightning");
+  function envUpdate(rdt,now){const out=S.inc.some(i=>i.id==="lightning"||(i.id==="birdline"&&!G3.cineHold));
     const hr=((S.t+360)/60)%24,ss=v=>v*v*(3-2*v),day=hr<12?ss(clamp((hr-5.2)/1.6,0,1)):ss(clamp((20.2-hr)/1.6,0,1));
     const wx=(G3.floodK>0.3&&S.wx!=="snow")?"rain":G3.iceK>0.3?"snow":(S.wx||"clear");   // (v4.2.4: the flood brings rain and the iced intake snow, as visuals)
     fogK+=((wx==="fog"?0.45:wx==="snow"?0.12:wx==="rain"?0.06:0)-fogK)*Math.min(1,rdt*0.8+0.01);
