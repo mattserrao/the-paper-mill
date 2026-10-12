@@ -37,7 +37,18 @@
     function whBlock(){const n=v=>Math.round(v).toLocaleString("en-US"),W=[["Inbound",S.yard/P.yardCap,`${n(S.yard)} of ${n(P.yardCap)} t OCC`],["Outbound",S.fg/P.fgCap,`${n(S.fg)} of ${n(P.fgCap)} rolls`]];
       return `<div class="rhd"><h3>Warehouses</h3><small>% full now</small></div><div class="rup">${W.map(([k,f,t])=>{const v=Math.max(0,Math.min(1,f||0)),w=v>=0.85;
         return `<span${w?' class="w"':""}>${k}</span><div><i style="width:${(v*100).toFixed(1)}%;background:${v>=0.98?"var(--bad)":w?"var(--warn)":"var(--ok)"}"></i></div><b class="mono${w?" w":""}">${pc(v)}</b>`;}).join("")}</div>
-        <p class="rnote">${W.map(x=>x[0]+": "+x[2]).join(" · ")}</p>`;}
+        <p class="rnote">${W.map(x=>x[0]+": "+x[2]).join(" · ")}</p>${whTrend()}`;}
+    // mockup: % full over the last 24 h, from the 10-minute samples the Live mill chart already keeps (S.trend[2]/[3])
+    function whTrend(){const T=S.trend||[],n=T.length;if(n<2)return `<p class="rnote">Trend builds up over the first hour.</p>`;
+      const L=30,R=350,Tp=10,B=112,X=j=>L+(R-L)*(j+144-n)/143,Y=v=>B-(B-Tp)*Math.max(0,Math.min(1,v)),
+        line=(i,c)=>`<polyline fill="none" stroke="${c}" stroke-width="2.2" stroke-linejoin="round" points="${T.map((p,j)=>X(j).toFixed(1)+","+Y(p[i]).toFixed(1)).join(" ")}"></polyline><circle cx="${X(n-1).toFixed(1)}" cy="${Y(T[n-1][i]).toFixed(1)}" r="3.2" fill="${c}"></circle>`;
+      return `<div class="rhd" style="margin-top:10px"><h4 style="margin:0;font-size:13px">% full, last 24 h</h4><small>amber band: 85%+</small></div>
+        <svg class="rchart" viewBox="0 0 358 132" role="img" aria-label="Inbound and outbound warehouse percent full over the last 24 hours">
+        <rect x="${L}" y="${Tp}" width="${R-L}" height="${(Y(0.85)-Tp).toFixed(1)}" fill="var(--warn)" opacity=".12"></rect>
+        <g class="ax">${[0,50,100].map(v=>`<text x="0" y="${Y(v/100)+4}">${v}%</text><line x1="${L}" y1="${Y(v/100)}" x2="${R}" y2="${Y(v/100)}"></line>`).join("")}
+        ${[-24,-18,-12,-6,0].map(h=>`<text x="${(L+(R-L)*(h+24)/24-(h?9:12)).toFixed(0)}" y="128">${h?h+"h":"now"}</text>`).join("")}</g>
+        ${line(2,"var(--kraft)")}${line(3,"var(--machine)")}</svg>
+        <div class="rleg"><div><i style="background:var(--kraft)"></i><span>Inbound (bale yard)</span></div><div><i style="background:var(--machine)"></i><span>Outbound (rolls)</span></div></div>`;}
     function qualBlock(p,season){const eff=S.tot.pot>0?S.tot.prodT/S.tot.pot:1;
       return `<h3>Quality &amp; fibre</h3><div class="rq"><div><small>On spec</small><b class="mono">${(p.onspec*100).toFixed(1)}%</b><small>${Math.round(p.off)} t to the beater</small></div>
         <div><small>Fibre yield</small><b class="mono">${p.yld?pc(p.yld):"–"}</b><small>${p.yld?(1/p.yld).toFixed(2)+" t OCC per t":season?"collecting":"in a season"}</small></div>
