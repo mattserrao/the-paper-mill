@@ -40,6 +40,7 @@ function frame(now){
   requestAnimationFrame(frame);
   if(running){try{simAcc=Math.min(simAcc+rdt*C.simSpeed,60);while(simAcc>=SIM_STEP&&running){step(SIM_STEP);simAcc-=SIM_STEP;}}catch(e){if(!frame.serr)frame.serr=0;if(frame.serr++<5)console.error("sim error",e);}}
   if(PFo&&PFo.on)PFo.acc["SIM (game logic step)"]=(PFo.acc["SIM (game logic step)"]||0)+(performance.now()-fT0);
+  if(G3.cineTick)G3.cineTick(now);   // (v4.2.4: the bird cut-scene runs on real time while the game is paused)
   try{const live=running||now-(G3.lastMove||0)<2500||now-lastPaint>1000;
     if(live){lastPaint=now;
       if(G3.on&&G3.frame)G3.frame(running?rdt:0);}

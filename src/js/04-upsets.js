@@ -40,6 +40,11 @@ const EVENTS=[
    start:i=>{const l=Math.round(S.fg*0.08);S.fg-=l;lotTake(S.lots.fg,l);i.note=`${l} rolls scrapped`;}},
  {id:"highway",g:"yard",name:"Highway closed",head:"Jack-knifed tanker closes the highway. No trucks in or out.",dur:[360,600],mtbf:300,mods:{noIn:1,noOut:1},fx:"highway"},
  {id:"lightning",g:"god",name:"Lightning strike",head:"Lightning hits the substation. Mill-wide blackout!",dur:[60,180],mtbf:400,mods:{pmDown:"power outage",pulperDown:1,recvMul:0,clampMul:0},fx:"outage"},
+ // v4.2.4: a bird flies into the substation. Same outage as a lightning strike (power out across the mill, same
+ // duration and repair bill); in the 3D view it plays a short cut-scene with the game paused (44-3d-bird-cine.js).
+ // Its own dice stream ("bird"), so adding it leaves every other upset's timing as it was.
+ {id:"birdline",g:"god",name:"Bird on the power lines",head:"A bird flew into the substation! Flash, bang: mill-wide blackout.",dur:[60,180],mtbf:900,stream:"bird",mods:{pmDown:"power outage",pulperDown:1,recvMul:0,clampMul:0},fx:"birdline",
+   start:i=>{if(typeof G3!=="undefined"&&G3.birdCine)G3.birdCine(i);}},
  {id:"tornado",g:"god",name:"Tornado",head:"Tornado touches down on the mill site!",dur:[60,120],mtbf:600,fx:"tornado",
    start:i=>{const pool=EVENTS.filter(e=>e.g!=="god"&&!active(e.id));for(let k=0;k<2&&pool.length;k++){const e=pool.splice(Math.floor(rand("upx")*pool.length),1)[0];trigger(e.id,true);}
      const l=Math.round(S.fg*0.05);S.fg-=l;lotTake(S.lots.fg,l);i.note=`${l} rolls blown away`;}},
@@ -68,7 +73,7 @@ function crewTick(dt){if(!S.crewQ)S.crewQ=[];
   // so game speed and graphics can't change downtime (the 3D crew walks over meanwhile)
   const h=S.crewQ[0];if(!h)return;if(h.resp>0)h.resp-=dt;if(h.resp<=0)h.go=h.here=true;}
 // maintenance: techs work in pairs; a job's repair clock only runs once its pair is on site (8 sim minutes after it is assigned)
-const MJOBS=["refclash","steamjoint","fogfan","shaft","fabric","felt","winderdown","hdblow","lwplug","cscreen","fscreen","lcplug","boiler","thkblow","overflow","chestover","fleet","roof","lightning","icedintake"];
+const MJOBS=["birdline","refclash","steamjoint","fogfan","shaft","fabric","felt","winderdown","hdblow","lwplug","cscreen","fscreen","lcplug","boiler","thkblow","overflow","chestover","fleet","roof","lightning","icedintake"];
 const MNEED=id=>MJOBS.includes(id);
 // v16: pairs go first to the job the PM crew is on (a job that needs both can only progress there), then to jobs that need
 // no crew, oldest first, and last to jobs still waiting for the crew. Before, a winder breakdown could hold the only pair
@@ -125,7 +130,8 @@ function chaosTick(dt){
   const um=upsetMul()*(busy>=2?0.25:1);
   {const r=rand("up");if(CH.on&&um>0&&CH.en.chestover&&!active("chestover")&&S.tank>=P.tankCap*0.995&&r<dt/60/25)trigger("chestover");}
   const roll=CH.on&&um>0&&!outOn();
-  for(const e of EVENTS){const r=rand("up");if(roll&&CH.en[e.id]&&!active(e.id)&&r<dt/60/e.mtbf*CH.lvl*freqMul(e.id)*0.75*um)trigger(e.id);}
+  if(S.rng.bird==null)S.rng.bird=(S.seed^0x5bd1e995)|0;
+  for(const e of EVENTS){const r=rand(e.stream||"up");if(roll&&CH.en[e.id]&&!active(e.id)&&r<dt/60/e.mtbf*CH.lvl*freqMul(e.id)*0.75*um)trigger(e.id);}
   if(S.season&&S.season.on&&!S.season.rough&&S.t>=14*1440){S.season.rough=true;roughPatch();}
 }
 

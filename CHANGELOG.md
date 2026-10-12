@@ -1,5 +1,48 @@
 # Changelog
 
+## v4.2.2 (release)
+Everything since v4.2.1:
+- Rare sights: all four reworked (detail, 11.5 s, a wide held shot of the mill with the event small in frame); zen plays each map's sight once and moves on after it (fix: the zen shot was left at 999 s).
+- Fix: a walker crash (the side-detour and the path planner shared one field) that stopped part of every 3D frame (people frozen or missing, sights that never ended); people and scene updates are now fenced off.
+- Marquee site upsets (visuals only): bayou flood, desert dust storm, city brownout, forest iced intake.
+- Bird on the power lines: a new upset (same outage as lightning, its own dice stream) with a cut-scene: game paused, high follow, dive, wide shot, strike; operatic score, chirps, bang; camera and speed restored.
+- Mill report (Report tab): live period grades, season strip and day-by-day history, cost per ton split, uptime, quality and fibre, money; grade badge and cost/uptime in the top bar; one grade system.
+- Free play: set off any upset by hand from the Upsets panel (locked in a season).
+- Labels on for the first 5 s of a season or free play, then off with the Labels button flashing twice.
+- Compact site picker; the site plan preview removed.
+
+## v4.2.3-t (test v28): the other three rare sights, reworked like the gator
+- All four sights now share the gator's rules: 11.5 s, a held wide shot of the mill (60-64 m, low elevation, telephoto) with the action small in the lower third, more detail, and a scene that is a pure function of its clock (stills via G3.sightSeek/G3.sightHold). Shared builders: person (knees, boots, hands, hats), puff pool.
+- Desert: three cowboys canter across the flats south of the mill, in front of the roll warehouse and crane. Horses with neck, head, ears, muzzle, mane, tail, saddle and blanket, jointed legs and hooves, cantering gait; riders with cowboy hats, bandanas, a vest, legs in the stirrups; the last one swings a lasso. Dust trails.
+- Valley: Bigfoot wades the river below the mill, away from the camera on the far bank, waist-deep, rings spreading from his legs; mid-river he turns head and shoulders to look back down the lens without breaking stride. Two-tone fur, crest, brow, face, long jointed arms, big feet.
+- City: a harbour tug steams past the waterfront towing a barge of bales: black hull, red boot-top, deck and rails, tyre fenders, bow pudding, deckhouse and wheelhouse, mast and radar, buff stack with a red band and smoke, a deckhand, a tow line, bow wave and wake.
+- tools/sightshots.py turns off the low-FPS fallback (it was hiding far scenery in headless stills).
+
+## v4.2.2-t5 (test v27): one sight per map in zen
+- Zen plays the map's rare sight once; after it, no more sights on that map. The zen map rotation reloads the page on each map, so each map plays its sight once per visit. Outside zen the 4-10 minute random timing is unchanged.
+- tools/zenonce.py: forces the sight's wait to zero repeatedly in zen and counts starts (v26: 2, v27: 1).
+
+## v4.2.2-t4 (test v26): the gator cut, short and wide
+- Scene cut from 31 s to 11.5 s: it opens with the operator already at the edge and the gator close, plays the bite at full speed, and hurries the aftermath (a time map from the scene clock onto the choreography).
+- Camera pulled out to 60 m and held still on the mill (orbit 2.25, elevation 1.36, look-at 7 m up): a mill shot in which the bite happens small in the lower third.
+- The pirogue now poles up the near side of the canal past the scene.
+
+## v4.2.2-t3 (test v25): gator riff removed, wide incidental framing
+- The bass riff is gone (synth code removed).
+- The gator scene's camera is now a wide, low shot from across the canal (30 m, orbit 2.25, elevation 1.42): the action sits in the lower third with the mill (clarifier, pipe racks, buildings) filling the background, as if caught in frame by chance. It follows the operator along the bank. The zen camera keeps this angle (a slow ±0.1 rad sway) when a sight supplies one.
+- tools/sightshots.py: "t:f" uses the scene's own framing; waits for rendered frames.
+
+## v4.2.2-t2 (test v24): the gator riff
+- A palm-muted electric bass riff (E E B G E E B A G, even eighths at 140 bpm, low E string) plays as the bayou gator scene opens and again as it closes (scene t 28.9 s, finishing with the scene). Plays in zen too; the music ducks under it. Silent when sound is off.
+- AUDIO.riff() / AUDIO.riffRender() (offline render); tools/riffrender.py writes it to WAV.
+
+## v4.2.2-t (test v23): the bayou gator, reworked (an Amos Moses nod)
+- Gator rebuilt at a believable size (~4.7 m): belly, flanks, two rows of back scutes, five-segment swaying tail with a crest, splayed legs with toes, eye bumps with slit pupils, nostrils, hinged upper and lower jaws with teeth.
+- Operator rebuilt with knees, boots, coveralls, hi-vis vest with reflective bands, radio, moustache, hard hat with brim, hands, and a sample bottle.
+- New 31 s scene: walk the bank, kneel to take a sample, gator glides in (eyes and scutes at the surface, wake rings), lunges, snaps off the right hand only (no gore), death-rolls and sinks; operator sits down hard, stares at the stump, runs off along the bank waving it; the bottle floats away; the gator resurfaces and burps; a one-armed Cajun poles a pirogue past.
+- Scene is a pure function of its clock: G3.sightSeek / G3.sightHold for stills. New tool: tools/sightshots.py.
+- Still visual only: random timing, no cost, production or log effect.
+
 ## v4.2.1 (release, from test v22)
 Release on main. Adds save/continue (v4.2.0-s), the Settings panel and the outage speed fix.
 

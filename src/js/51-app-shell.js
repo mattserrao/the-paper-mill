@@ -29,13 +29,13 @@
   function flowTick(){if(cur!=="stats"||!sheet.classList.contains("open"))return;flowEl.innerHTML=flowSVG()+`<p class="flowtip">Every step is drawn as wide as it can run, in tons of paper per hour. The narrowest step (or one that is down) holds back the whole mill. The bars are your buffers: full ones are backing up, empty ones are running dry.</p>`;}
   UI_TICKS.push(n=>{if(n%4===0)flowTick();});   // the river SVG restarts its animation when redrawn, so ~1x/s
   // sheets
-  const sheet=$("v2sheet"),tabs=[...document.querySelectorAll(".v2tabs button")],TITLES={shop:"Upgrades",chaos:"Upsets",ctl:"Settings",stats:"Stats"};let cur=null;
+  const sheet=$("v2sheet"),tabs=[...document.querySelectorAll(".v2tabs button")],TITLES={shop:"Upgrades",chaos:"Upsets",ctl:"Settings",stats:"Mill report"};let cur=null;
   // v3.1.1: opening a bottom panel pauses the game; closing it resumes (same sim speed) if it was running before
   let sheetHeld=false;
   function sheetPause(){if(cur||sheetHeld||!running)return;sheetHeld=true;running=false;}
   function sheetResume(){if(!sheetHeld)return;sheetHeld=false;const ov=$("overlay"),blocked=!$("v2menu").hidden||(G3.tut&&G3.tut.on)||(S.cards&&S.cards.open)||(ov&&!ov.hidden)||S.over;
     if(blocked)return;running=true;}
-  function openTab(k){sheetPause();cur=k;if(k==="stats")setTimeout(()=>{flowTick&&flowTick();updateRel();},0);tabs.forEach(b=>b.setAttribute("aria-pressed",String(b.dataset.tab===k)));document.querySelectorAll(".v2pane").forEach(p=>p.classList.toggle("on",p.dataset.pane===k));
+  function openTab(k){sheetPause();cur=k;if(k==="stats")setTimeout(()=>{flowTick&&flowTick();updateRel();if(G3.report)G3.report.render();},0);tabs.forEach(b=>b.setAttribute("aria-pressed",String(b.dataset.tab===k)));document.querySelectorAll(".v2pane").forEach(p=>p.classList.toggle("on",p.dataset.pane===k));
     $("v2sheetT").textContent=TITLES[k];sheet.classList.add("open");sheet.setAttribute("aria-hidden","false");document.body.classList.add("sheet-open");closeMore();}
   function closeSheet(why){const was=!!cur;cur=null;tabs.forEach(b=>b.setAttribute("aria-pressed","false"));sheet.classList.remove("open");sheet.setAttribute("aria-hidden","true");document.body.classList.remove("sheet-open");
     if(why==="menu")sheetHeld=false;else if(was)sheetResume();}
@@ -52,7 +52,15 @@
   $("v2sound").addEventListener("click",e=>{e.stopPropagation();setSound(!AUDIO.on);});
   // equipment labels: one toggle in the top bar (and the same checkbox in the expanded panel)
   const setLabels=v=>{const b=document.querySelector('#lblMode button[data-m="'+(v?"on":"off")+'"]');if(b)b.click();$("v2labels").checked=v;$("v2lblBtn").setAttribute("aria-pressed",String(v));$("v2lblBtn").lastChild.textContent=v?"Labels":"Labels off";};
-  $("v2labels").addEventListener("change",e=>setLabels(e.target.checked));$("v2lblBtn").addEventListener("click",()=>setLabels($("v2lblBtn").getAttribute("aria-pressed")!=="true"));
+  // v4.2.4: a new season or free play starts with labels on for 5 seconds of play, then they switch off and the Labels
+  // button flashes twice so the player sees where they went. Touching the labels during those 5 s cancels it.
+  const LI={left:0};
+  G3.labelIntro=()=>{if(S.zen)return;setLabels(true);LI.left=5000;LI.last=performance.now();};
+  const lblUser=v=>{LI.left=0;setLabels(v);};
+  // (real seconds of play, so a slow device still gets 5 s; paused or in the menu doesn't count)
+  UI_TICKS.push(()=>{if(LI.left<=0)return;const now=performance.now(),dt=Math.min(3000,now-LI.last);LI.last=now;if(!running||!$("v2menu").hidden)return;LI.left-=dt;if(LI.left>0)return;
+    setLabels(false);const b=$("v2lblBtn");b.classList.remove("lblflash");void b.offsetWidth;b.classList.add("lblflash");setTimeout(()=>b.classList.remove("lblflash"),1300);});
+  $("v2labels").addEventListener("change",e=>lblUser(e.target.checked));$("v2lblBtn").addEventListener("click",()=>lblUser($("v2lblBtn").getAttribute("aria-pressed")!=="true"));
   {const on=document.querySelector('#lblMode button[aria-pressed="true"]');setLabels(!on||on.dataset.m!=="off");}
   // top bar: compact figures straight from the game state ($1.24M, -$850k)
   const short=v=>{const a=Math.abs(v),f=a>=1e6?(a/1e6).toFixed(a>=1e7?1:2)+"M":a>=1e3?(a/1e3).toFixed(a>=1e5?0:1).replace(/\.0$/,"")+"k":Math.round(a)+"";return (v<0?"−":"")+"$"+f;};

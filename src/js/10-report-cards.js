@@ -3,13 +3,17 @@
    section was (planned outage time left out) and which step held the mill back. Cards pop up at the start of day 11 and
    day 21 (sim paused) and the days 21-30 card is shown in the season summary. Each card also shows the season so far. */
 const RC_STEPS=["Receiving","Pulper","Machine at full speed","Machine down","Winder","Shipping"],RC_SEC=[["recv","Receiving"],["pulper","Stock prep"],["machine","Paper machine"],["winder","Winder"],["ship","Shipping"]];
-function rcAcc(){return {t0:S.t,L0:{...S.ledger},prod0:S.tot.prodT,ship0:S.shipT||0,rolls0:S.tot.rolls,brk0:S.tot.breaks,hay0:S.tot.hayouts,min:0,plan:0,up:{recv:0,pulper:0,machine:0,winder:0,ship:0},dn:{},bn:{}};}
+function rcAcc(){return {t0:S.t,L0:{...S.ledger},prod0:S.tot.prodT,ship0:S.shipT||0,rolls0:S.tot.rolls,brk0:S.tot.breaks,hay0:S.tot.hayouts,off0:S.tot.broke||0,occ:0,fib:0,min:0,plan:0,up:{recv:0,pulper:0,machine:0,winder:0,ship:0},dn:{},bn:{}};}
 function rcTick(dt){const se=S.season;if(!se||!se.on||se.done||dt<=0)return;
   if(!S.rc)S.rc={i:0,p:rcAcc(),s:rcAcc(),cards:[]};const R=S.rc,M=S.M||{},planned=!!(S.outg&&S.outg.on);
   const up={recv:!(M.noIn||M.docksClosed||M.recvMul===0),pulper:!M.pulperDown,machine:S.pm==="run",winder:S.wd==="run"&&!M.winderDown,ship:!(M.noOut||M.clampMul===0)};
   // downtime causes: every active upset by name, plus machine/winder stops that no upset explains
   const add=(a,k,v)=>{a.dn[k]=(a.dn[k]||0)+v;};
-  [R.p,R.s].forEach(a=>{a.min+=dt;if(planned){a.plan+=dt;return;}for(const k in up)if(up[k])a.up[k]+=dt;
+  if(!R.dd){R.dd=rcAcc();R.day=Math.floor(S.t/1440);}
+  // v4.2.4 (Mill report): the day's grades are kept at each midnight, with the day's biggest downtime cause
+  if(Math.floor(S.t/1440)>R.day){const c=rcMake(R.p,R.i),top=Object.entries(R.dd.dn).sort((x,y)=>y[1]-x[1])[0];(R.days||(R.days=[])).push({d:R.day+1,g:c.g,o:c.overall,top:top?[top[0],Math.round(top[1])]:null});R.day=Math.floor(S.t/1440);R.dd=rcAcc();}
+  const feedT=(S.rates.feed||0)*dt/60,fibT=feedT*P.yieldF*(M.yieldMul||1);
+  [R.p,R.s,R.dd].forEach(a=>{a.min+=dt;if(planned){a.plan+=dt;return;}a.occ+=feedT;a.fib+=fibT;for(const k in up)if(up[k])a.up[k]+=dt;
     S.inc.forEach(i=>{const e=EV[i.id];if(e&&i.id!=="runner"&&i.id!=="birdhay")add(a,e.name,dt);});
     if(S.pm==="break")add(a,"Sheet breaks",dt);else if(S.pm==="down"&&!M.pmDown)add(a,"Ran out of stock",dt);else if(S.pm==="full")add(a,"Warehouse full",dt);else if(S.pm==="spools")add(a,"Reel storage full",dt);
     if(S.wd==="hayout")add(a,"Winder hayouts",dt);});
@@ -29,7 +33,8 @@ function rcSum(a){const L=S.ledger,d=k=>(L[k]||0)-(a.L0[k]||0),prod=S.tot.prodT-
   const rel={};RC_SEC.forEach(([k])=>rel[k]=a.up[k]/run);const relAvg=RC_SEC.reduce((t,[k])=>t+rel[k],0)/RC_SEC.length;
   const dn=Object.entries(a.dn).sort((x,y)=>y[1]-x[1]).slice(0,5),bnT=Object.values(a.bn).reduce((t,v)=>t+v,0)||1,bn=RC_STEPS.map(k=>[k,(a.bn[k]||0)/bnT]).sort((x,y)=>y[1]-x[1]);
   const price=priceOf(C.grade),cpt=prod>0?(ops+d("repairs"))/prod:0,margin=earned>0?(earned-(spentT-spent.Upgrades))/earned:0;
-  return {days,prod,ship,rev,deals,earned,spent,spentT,net,ops,cpt,price,margin,rel,relAvg,avail:rel.machine,dn,bn,breaks:S.tot.breaks-a.brk0,hay:S.tot.hayouts-a.hay0,rolls:S.tot.rolls-a.rolls0,plan:a.plan};}
+  const off=(S.tot.broke||0)-(a.off0||0),onspec=prod+off>0?prod/(prod+off):1,yld=a.occ>0?a.fib/a.occ:null;
+  return {days,prod,ship,rev,deals,earned,spent,spentT,net,ops,cpt,price,margin,rel,relAvg,avail:rel.machine,dn,bn,breaks:S.tot.breaks-a.brk0,hay:S.tot.hayouts-a.hay0,rolls:S.tot.rolls-a.rolls0,plan:a.plan,off,onspec,yld};}
 function rcMake(a,i){const p=rcSum(a),s=rcSum(S.rc.s);
   const g={Profit:rcGrade(p.margin,[0.30,0.22,0.14,0.06]),"Cost / ton":rcGrade(p.price>0?1-p.cpt/p.price:0,[0.32,0.25,0.18,0.10]),Downtime:rcGrade(p.avail,[0.95,0.91,0.86,0.80]),Reliability:rcGrade(p.relAvg,[0.96,0.92,0.88,0.82])};
   const gp={A:4,B:3,C:2,D:1,F:0},avg=Object.values(g).reduce((t,v)=>t+gp[v],0)/4,overall=avg>=3.5?"A":avg>=2.5?"B":avg>=1.5?"C":avg>=0.75?"D":"F";
@@ -81,8 +86,8 @@ function endSeason(bust){const se=S.season;se.done=true;se.on=false;running=fals
   const r=seasonResult();se.result=r;AUDIO.sfx(r.score>0?"win":"lose",100);
   $("so-h").textContent=bust?"Season over: bankrupt":"Season complete";
   $("so-p").textContent=bust?`${MILL.name} ran out of money before day ${SEASON_DAYS}.`:`${SEASON_DAYS} days at ${MILL.name}.`;
-  const eff=S.tot.pot>0?S.tot.prodT/S.tot.pot:1,g=RATINGS.find(x=>eff>=x[0]);
-  const st=[["Net profit",money(r.score),"big"],["Tons shipped",f0(r.tons)+" t"],["Disasters survived",String(r.incidents)],["Rolls made",String(S.tot.rolls)],["Grade",g[1]+" · "+g[2]]];
+  const eff=S.tot.pot>0?S.tot.prodT/S.tot.pot:1,sg=S.rc&&S.rc.s?rcMake(S.rc.s,S.rc.i).overall:null,g=sg?RATINGS.find(x=>x[1]===sg):RATINGS.find(x=>eff>=x[0]);
+  const st=[["Net profit",money(r.score),"big"],["Tons shipped",f0(r.tons)+" t"],["Disasters survived",String(r.incidents)],["Rolls made",String(S.tot.rolls)],["Season grade",g[1]+" · "+g[2]],["Output",Math.round(eff*100)+"% of max-speed tons"]];
   $("so-stats").replaceChildren(...st.map(([k,v,c])=>{const d=document.createElement("div");if(c)d.className=c;const a=document.createElement("span");a.textContent=k;const b=document.createElement("b");b.textContent=v;d.append(a,b);return d;}));
   {const c=bust?null:rcFinal(),box=$("so-rc");if(box){if(c){box.hidden=false;box.innerHTML=`<div class="rcmini"><div class="rcg g${c.overall}">${c.overall}</div><div><b>Days ${c.from}–${c.to} report card</b><small>${Object.entries(c.g).map(([k,v])=>k+" "+v).join(" · ")}</small><p>${c.tip}</p></div></div><button id="so-rcbtn" class="ghost">Open the full report card</button>`;
       $("so-rcbtn").addEventListener("click",()=>rcOpen(c,true));}else box.hidden=true;}}
@@ -117,6 +122,7 @@ async function openBoard(){$("lbOv").hidden=false;const L=$("lb-list");L.replace
 function setFree(on){S.free=on;
   if(on&&S.season&&S.season.on){S.season=null;seasonLocks(false);BANNERS.push({text:"Season abandoned: free play scores can't go on the leaderboard.",t:null});}
   if(on)BANNERS.push({text:"Free play: upgrades are free and you can't go bankrupt. No leaderboard.",t:null,kind:"good"});
+  if(on&&G3.labelIntro)G3.labelIntro();
   updateShop();}
 // zen mode: endless, calm screensaver of the mill
 let ZEN=null;
@@ -147,7 +153,7 @@ let feedKey="";
 function updateChaos(){
   const days=(S.t-S.lastInc)/1440;$("c-days").textContent=days.toFixed(1);$("c-sign").classList.toggle("hot",S.inc.length>0);
   const eff=S.tot.pot>0?S.tot.prodT/S.tot.pot:1,r=RATINGS.find(x=>eff>=x[0]);
-  const g=$("c-grade");g.textContent=r[1];g.className="g "+r[1];$("c-grade-t").textContent=r[2];$("c-grade-s").textContent=`${(eff*100).toFixed(1)}% of max-speed tons made`;
+  const g=$("c-grade");g.textContent=Math.round(eff*100)+"%";g.className="g out "+r[1];$("c-grade-t").textContent="Output: "+r[2].toLowerCase().replace(/^./,c=>c.toUpperCase());$("c-grade-s").textContent=`${(eff*100).toFixed(1)}% of max-speed tons made · grades are in the Report tab`;
   $("c-lost").textContent=f0(Math.max(0,S.tot.pot-S.tot.prodT))+" t";$("c-count").textContent=S.tot.incidents;
   const act=$("c-active");act.replaceChildren();
   if(!S.inc.length){const s=document.createElement("span");s.className="none";s.textContent="No active incidents.";act.appendChild(s);}

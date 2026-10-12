@@ -355,7 +355,7 @@ const AUDIO=(()=>{
     win:t=>{[60,64,67,72,76,79,84].forEach((m,k)=>tone(t+k*0.11,sfxBus,"triangle",mtof(m),0.5,0.14));},
     lose:t=>{[[55,0.5],[54,0.5],[53,0.5],[52,1.4]].reduce((tt,[m,d])=>{const o=tone(tt,sfxBus,"sawtooth",mtof(m),d,0.08,0.02);if(d>1)o.o.frequency.linearRampToValueAtTime(mtof(m)*0.97,tt+d);return tt+d;},t);},
   };
-  const EVSFX={refclash:"snap",fogfan:"clunk",shaft:"clunk",fabric:"clunk",felt:"clunk",winderdown:"clunk",lwplug:"clunk",cscreen:"clunk",fscreen:"clunk",lcplug:"water",hdblow:"water",boiler:"steam",steamjoint:"steam",permit:"alarm",thkblow:"water",wrap:"snap",flares:"fire",ragger:"clunk",dryerfire:"fire",balefire:"fire",overflow:"water",chestover:"water",roof:"water",fight:"siren",highway:"siren",lightning:"thunder",tornado:"wind",beaver:"chomp",runner:"whistle"};
+  const EVSFX={birdline:"none",refclash:"snap",fogfan:"clunk",shaft:"clunk",fabric:"clunk",felt:"clunk",winderdown:"clunk",lwplug:"clunk",cscreen:"clunk",fscreen:"clunk",lcplug:"water",hdblow:"water",boiler:"steam",steamjoint:"steam",permit:"alarm",thkblow:"water",wrap:"snap",flares:"fire",ragger:"clunk",dryerfire:"fire",balefire:"fire",overflow:"water",chestover:"water",roof:"water",fight:"siren",highway:"siren",lightning:"thunder",tornado:"wind",beaver:"chomp",runner:"whistle"};
   // plant PA: a two-tone chime, then a muffled voice (formant-filtered babble through a band-limited, slightly overdriven horn speaker with a hall echo)
   const VOW=[[730,1090],[270,2290],[530,1840],[570,840],[440,1020],[300,870],[660,1720],[490,1350]];
   function paAnnounce(t){const out=ctx.createGain();out.gain.value=0.55;const hp=ctx.createBiquadFilter();hp.type="highpass";hp.frequency.value=450;const lp=ctx.createBiquadFilter();lp.type="lowpass";lp.frequency.value=1900;lp.Q.value=1.2;
@@ -384,7 +384,44 @@ const AUDIO=(()=>{
     for(const key in INTENSE){const v=INTENSE[key];for(let pi=0;pi<v.P.length;pi++){const cur={name:key,bpm:v.bpm,play:v.play,P:v.P[pi],B:v.B?v.B[pi]:null,fill:pi%2===0,roll:ROLLS[pi%ROLLS.length]},s={bpm:v.bpm},beat=60/v.bpm/4;
       try{for(let st=0;st<64;st++)cur.play(cur,st,t0+st*beat*0.02,s);out.push("upset "+key+"/"+pi+" ok");}catch(e){out.push("upset "+key+"/"+pi+" ERROR "+e.message);}}}
     return out;}
-  return {setOn,setVol,update,sfx,ambient,event:id=>sfx(EVSFX[id]||"alarm"),selfTest,level,get ctx(){return ctx;},get master(){return master;},get on(){return on;},get now(){return target==="intense"?"upset: "+(seqs.intense.cur?seqs.intense.cur.name:"")+" / "+AUDIO_NOW:AUDIO_NOW;},get info(){return ctx?ctx.state+" t="+ctx.currentTime.toFixed(1)+(stuckSince?" (clock stuck)":"")+(hurt?" (needs a tap)":"")+(unlocked?" unlocked "+((performance.now()-unlocked)/1000).toFixed(0)+"s ago":" never unlocked"):"none";}};
+  // v4.2.4: the bird-on-the-power-lines sequence. An operatic choir (original: D minor, i-VI-iv-V, sung "ah" through two
+  // formant filters with vibrato) over a timpani roll, swelling hard into the last second before impact; pigeon chirps;
+  // and the strike itself: a falling zap, a crackle of arcs and a deep boom. Built against any context (offline renders too).
+  const mt=m=>440*Math.pow(2,(m-69)/12);
+  function cineScore(c,t0,out,impact,nz){const all=[];const chords=[[50,53,57,62],[46,53,58,62],[43,50,55,58],[45,52,57,61]],seg=impact/4;
+    const voice=(m,a,b,v,sw)=>{const g=c.createGain(),f1=c.createBiquadFilter(),f2=c.createBiquadFilter(),lp=c.createBiquadFilter(),mx=c.createGain();
+      f1.type="bandpass";f1.frequency.value=720;f1.Q.value=4;f2.type="bandpass";f2.frequency.value=1150;f2.Q.value=5;lp.type="lowpass";lp.frequency.value=3200;mx.gain.value=1;
+      const lfo=c.createOscillator(),lg=c.createGain();lfo.frequency.value=5.2+Math.random()*0.6;lg.gain.value=9;lfo.connect(lg);
+      [0,7,-6].forEach(dt=>{const o=c.createOscillator();o.type="sawtooth";o.frequency.value=mt(m);o.detune.value=dt;lg.connect(o.detune);o.connect(lp);o.start(a);o.stop(b+0.6);all.push(o);});
+      lp.connect(f1);lp.connect(f2);f1.connect(mx);f2.connect(mx);mx.connect(g);g.connect(out);lfo.start(a);lfo.stop(b+0.6);all.push(lfo);
+      g.gain.setValueAtTime(0.0001,a);g.gain.exponentialRampToValueAtTime(v,a+0.5);if(sw){g.gain.setValueAtTime(v,impact+t0-1.1);g.gain.exponentialRampToValueAtTime(v*2.6,impact+t0-0.05);}
+      g.gain.setTargetAtTime(0.0001,b,sw?0.04:0.12);};
+    chords.forEach((ch,i)=>{const a=t0+i*seg,b=i<3?a+seg+0.25:t0+impact;ch.forEach(m=>voice(m,a,b,0.035,i===3));});
+    // the soprano: enters on the last chord and climbs to the top note in the final second
+    {const o=c.createOscillator(),g=c.createGain(),f=c.createBiquadFilter(),a=t0+seg*3,b=t0+impact;o.type="triangle";o.frequency.setValueAtTime(mt(76),a);o.frequency.setValueAtTime(mt(76),b-1.1);o.frequency.exponentialRampToValueAtTime(mt(81),b-0.7);
+      const l=c.createOscillator(),lg=c.createGain();l.frequency.value=5.6;lg.gain.value=14;l.connect(lg);lg.connect(o.detune);f.type="bandpass";f.frequency.value=1400;f.Q.value=1.2;
+      o.connect(f);f.connect(g);g.connect(out);g.gain.setValueAtTime(0.0001,a);g.gain.exponentialRampToValueAtTime(0.05,a+0.6);g.gain.setValueAtTime(0.05,b-1.1);g.gain.exponentialRampToValueAtTime(0.13,b-0.05);g.gain.exponentialRampToValueAtTime(0.0001,b+0.08);
+      o.start(a);o.stop(b+0.2);l.start(a);l.stop(b+0.2);all.push(o,l);}
+    // timpani: soft strokes on each chord, then a roll building through the last two seconds
+    const timp=(t,v)=>{const o=c.createOscillator(),g=c.createGain();o.type="sine";o.frequency.setValueAtTime(73,t);o.frequency.exponentialRampToValueAtTime(58,t+0.5);g.gain.setValueAtTime(0.0001,t);g.gain.exponentialRampToValueAtTime(v,t+0.01);g.gain.exponentialRampToValueAtTime(0.0001,t+0.7);o.connect(g);g.connect(out);o.start(t);o.stop(t+0.8);all.push(o);};
+    for(let i=0;i<4;i++)timp(t0+i*seg,0.25);for(let t=t0+impact-2;t<t0+impact-0.02;t+=0.07)timp(t,0.05+0.3*((t-(t0+impact-2))/2));
+    return all;}
+  function cineStrike(c,t,out,nb){const g=c.createGain();g.connect(out);
+    const s=c.createBufferSource();s.buffer=nb;const hp=c.createBiquadFilter();hp.type="highpass";hp.frequency.value=900;const sg=c.createGain();sg.gain.setValueAtTime(1.3,t);sg.gain.exponentialRampToValueAtTime(0.0001,t+1.4);s.connect(hp);hp.connect(sg);sg.connect(g);s.start(t);s.stop(t+1.5);
+    const z=c.createOscillator(),zg=c.createGain();z.type="sawtooth";z.frequency.setValueAtTime(1800,t);z.frequency.exponentialRampToValueAtTime(60,t+0.45);zg.gain.setValueAtTime(0.8,t);zg.gain.exponentialRampToValueAtTime(0.0001,t+0.5);z.connect(zg);zg.connect(g);z.start(t);z.stop(t+0.55);
+    const b=c.createOscillator(),bg=c.createGain();b.type="sine";b.frequency.setValueAtTime(70,t);b.frequency.exponentialRampToValueAtTime(28,t+1.6);bg.gain.setValueAtTime(1.6,t);bg.gain.exponentialRampToValueAtTime(0.0001,t+1.8);b.connect(bg);bg.connect(g);b.start(t);b.stop(t+1.9);
+    for(let k=0;k<26;k++){const tt=t+0.05+Math.random()*1.2,cs=c.createBufferSource();cs.buffer=nb;const f=c.createBiquadFilter();f.type="bandpass";f.frequency.value=2500+Math.random()*4000;f.Q.value=2;const cg=c.createGain();
+      cg.gain.setValueAtTime(0.0001,tt);cg.gain.exponentialRampToValueAtTime(0.35*(1-(tt-t)/1.4),tt+0.003);cg.gain.exponentialRampToValueAtTime(0.0001,tt+0.04);cs.connect(f);f.connect(cg);cg.connect(g);cs.start(tt,Math.random());cs.stop(tt+0.06);}}
+  function cineChirp(c,t,out){for(let k=0;k<3;k++){const a=t+k*0.13,o=c.createOscillator(),g=c.createGain();o.type="sine";o.frequency.setValueAtTime(2600+Math.random()*300,a);o.frequency.exponentialRampToValueAtTime(3900,a+0.05);o.frequency.exponentialRampToValueAtTime(3100,a+0.09);
+      g.gain.setValueAtTime(0.0001,a);g.gain.exponentialRampToValueAtTime(0.12,a+0.01);g.gain.exponentialRampToValueAtTime(0.0001,a+0.1);o.connect(g);g.connect(out);o.start(a);o.stop(a+0.12);}}
+  let cineAll=null;
+  const cine={start(impact){if(!ctx||!on)return;const t=ctx.currentTime+0.05;cineAll=cineScore(ctx,t,sfxBus,impact,noiseBuf);musicBus.gain.cancelScheduledValues(t);musicBus.gain.setValueAtTime(musicBus.gain.value,t);musicBus.gain.linearRampToValueAtTime(0.05,t+0.6);},
+    chirp(){if(ctx&&on)cineChirp(ctx,ctx.currentTime+0.02,sfxBus);},
+    strike(){if(ctx&&on)cineStrike(ctx,ctx.currentTime+0.01,sfxBus,noiseBuf);},
+    end(){if(!ctx)return;const t=ctx.currentTime;if(cineAll){cineAll.forEach(o=>{try{o.stop(t+0.05);}catch(e){}});cineAll=null;}musicBus.gain.cancelScheduledValues(t);musicBus.gain.setValueAtTime(musicBus.gain.value,t);musicBus.gain.linearRampToValueAtTime(0.6,t+2);},
+    render(impact){const sr=44100,oc=new OfflineAudioContext(1,Math.ceil(sr*(impact+2.5)),sr),cmp=oc.createDynamicsCompressor();cmp.connect(oc.destination);const nb=oc.createBuffer(1,sr*2,sr),d=nb.getChannelData(0);for(let i=0;i<d.length;i++)d[i]=Math.random()*2-1;
+      cineScore(oc,0.05,cmp,impact,nb);[0.8,2.6,4.2].forEach(x=>cineChirp(oc,x,cmp));cineStrike(oc,impact+0.05,cmp,nb);return oc.startRendering().then(b=>Array.from(b.getChannelData(0)));}};
+  return {setOn,setVol,update,sfx,ambient,cine,event:id=>sfx(EVSFX[id]||"alarm"),selfTest,level,get ctx(){return ctx;},get master(){return master;},get on(){return on;},get now(){return target==="intense"?"upset: "+(seqs.intense.cur?seqs.intense.cur.name:"")+" / "+AUDIO_NOW:AUDIO_NOW;},get info(){return ctx?ctx.state+" t="+ctx.currentTime.toFixed(1)+(stuckSince?" (clock stuck)":"")+(hurt?" (needs a tap)":"")+(unlocked?" unlocked "+((performance.now()-unlocked)/1000).toFixed(0)+"s ago":" never unlocked"):"none";}};
 })();
 
 const GRADES={ "23m":{sp:2736,bw:24.55}, "26m":{sp:2433,bw:26.06}, "30m":{sp:2222,bw:30.05}, "33HT":{sp:2084,bw:33.08} };

@@ -518,10 +518,99 @@ details.areactl[open]>summary::before{transform:rotate(45deg)}
 details.areactl .lockn{display:none;margin-left:auto;font-weight:600;text-transform:none;letter-spacing:0}
 body.season-lock details.areactl .lockn{display:inline}
 body.season-lock #cards .row[data-key] input,body.season-lock #cards .row[data-key] button.auto,body.season-lock #balance{opacity:.5;cursor:not-allowed}
+
+/* v4.2.4: the upset buttons show in the Upsets panel outside a season (free play) and hide, with a note, in a season */
+.v2pane .chaos.collapsed .groups{display:grid}
+.trignote{margin:4px 0 8px;font-size:13px;color:var(--muted)}
+.trignote.locked,body.season-lock .trignote{display:none}
+body.season-lock .trignote.locked{display:block}
+body.season-lock .v2pane #chaosgrid{display:none}
+
+/* v4.2.4: a whole-view tint for the site upsets (dust storm haze, brownout sag), set each frame by the effects */
+.tint3d{position:absolute;inset:0;opacity:0;pointer-events:none;z-index:2;background:#000}
+
+/* v4.2.4: compact site picker: 2x2 tiles at every width, one detail panel for the picked site, no site plan */
+.modal.sitepick{max-width:560px}
+.modal.sitepick h2{font-size:22px;margin-bottom:2px}
+.modal.sitepick>p.muted{margin:0 0 10px}
+.envs{grid-template-columns:repeat(2,minmax(0,1fr))!important;gap:6px}
+.envs button{gap:4px;padding:8px 10px}
+.envs button[aria-checked="true"]{padding:7px 9px}
+.envs button>small{font-size:11.5px;line-height:1.35;color:var(--muted)}
+.envs button>small i{font-style:normal;font-weight:700}.envs i.pro{color:var(--ok)}.envs i.con{color:var(--bad)}
+.envs .eh .sw{width:18px;height:18px;border-radius:5px;flex:none}
+.sitepick .anybtn{padding:6px 10px;margin:6px 0}
+.sitedet{border:1px solid var(--line);border-radius:12px;padding:10px 12px;display:flex;flex-direction:column;gap:6px;background:var(--bg)}
+.sitedet p{margin:0;font-size:12.5px;color:var(--muted)}
+.sitedet .pc{display:grid;grid-template-columns:1fr 1fr;gap:4px 14px}
+.sitedet ul{margin:0;padding:0;list-style:none;display:flex;flex-direction:column;gap:3px;font-size:12px}
+.sitedet li{padding-left:14px;position:relative}.sitedet li::before{position:absolute;left:1px;font-weight:700}
+.sitedet li.pro::before{content:"+";color:var(--ok)}.sitedet li.con::before{content:"−";color:var(--bad)}
+@media (max-width:560px){.sitedet .pc{grid-template-columns:1fr}}
+
+/* v4.2.4 Mill report (Report tab) */
+.rep{display:flex;flex-direction:column;gap:10px;margin-bottom:10px}
+.rcard{background:var(--panel);border:1px solid var(--line);border-radius:14px;padding:12px 14px;display:flex;flex-direction:column;gap:10px}
+.rcard h3{margin:0;font:800 14.5px var(--f-body)}.rcard h4{margin:4px 0 0;font:700 12.5px var(--f-body)}
+.rhd{display:flex;justify-content:space-between;align-items:baseline;gap:8px}.rhd small{font-size:11.5px;color:var(--muted)}
+.mono{font-family:var(--f-mono);font-weight:500}
+.rnone{margin:0;font-size:12.5px;color:var(--muted)}
+.rtiles{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:6px}
+.rpt{display:flex;align-items:center;gap:6px;padding:7px 6px;border-radius:12px;border:1px solid var(--line);background:var(--chip);text-align:left;font:inherit;color:var(--ink);min-width:0}
+button.rpt{cursor:pointer}.rpt.cur{border:2px solid var(--brand);background:var(--panel);padding:6px 5px}.rpt.next{border-style:dashed;background:var(--panel);color:var(--muted)}
+.rpt>span:last-child{display:flex;flex-direction:column;min-width:0}.rpt b{font-size:11.5px;white-space:nowrap}.rpt small{font-size:10.5px;color:var(--muted);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.rpt .rcg{width:26px;height:26px;font-size:14px;border-radius:8px}.rpt.next .rcg{background:transparent;border:1px dashed var(--line);color:var(--muted)}
+.rprog{height:6px;border-radius:3px;background:var(--line);overflow:hidden}.rprog i{display:block;height:100%;background:var(--brand)}
+.rgrades{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:6px}
+.rgr{display:flex;flex-direction:column;align-items:center;gap:3px;padding:8px 4px;border-radius:12px;background:var(--chip)}
+.rgr .rcg{width:34px;height:34px;font-size:18px}.rgr small{font-size:11px;color:var(--muted);text-align:center}
+.rgr em{font-style:normal;font-size:10.5px;font-weight:700;color:var(--muted)}.rgr em.up,.rmoves em.mvup{color:var(--ok)}.rgr em.dn,.rmoves em.mvdn{color:var(--bad)}
+.rtip{margin:0;font-size:12.5px;line-height:1.45;padding:9px 11px;border-radius:10px;background:color-mix(in srgb,var(--warn) 10%,var(--panel))}
+.rcbar{position:relative;padding-top:16px}.rcbars{display:flex;height:20px;border-radius:6px;overflow:hidden;background:var(--chip)}.rcbars i{display:block;height:100%}
+.rprice{position:absolute;top:0;bottom:-4px;width:2px;background:var(--ink)}.rprice span{position:absolute;right:5px;top:-1px;white-space:nowrap;font-size:10.5px;font-weight:700}
+.rmargin{text-align:right;font-size:11.5px;font-weight:700}.rmargin.pos{color:var(--ok)}.rmargin.neg{color:var(--bad)}
+.rleg{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:5px 14px;font-size:12px}
+.rleg div{display:flex;align-items:center;gap:6px;min-width:0}.rleg i{width:10px;height:10px;border-radius:3px;flex:none}.rleg span{flex:1;min-width:0}
+.rup{display:grid;grid-template-columns:96px minmax(0,1fr) 40px;gap:7px 10px;align-items:center;font-size:12.5px}
+.rup div{height:8px;border-radius:4px;background:var(--line);overflow:hidden}.rup i{display:block;height:100%;border-radius:4px}.rup b{text-align:right}.rup .w{font-weight:700;color:var(--warn)}
+.rnote{margin:0;font-size:11.5px;color:var(--muted)}
+.rq{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:6px}.rq div{display:flex;flex-direction:column;gap:2px;padding:8px 9px;border-radius:10px;background:var(--chip);min-width:0}
+.rq small{font-size:10.5px;color:var(--muted)}.rq b{font-size:16px}
+.rsub>summary,.replive>summary{list-style:none;cursor:pointer;display:flex;flex-direction:column;gap:1px;padding:4px 0}
+.rsub>summary::-webkit-details-marker,.replive>summary::-webkit-details-marker{display:none}
+.rsub>summary b,.replive>summary b{font-size:13.5px}.rsub>summary small,.replive>summary small{font-size:11.5px;color:var(--muted)}
+.rsub>summary b::after,.replive>summary b::after{content:" ▾";color:var(--muted)}.rsub[open]>summary b::after,.replive[open]>summary b::after{content:" ▴"}
+.replive{background:var(--panel);border:1px solid var(--line);border-radius:14px;padding:8px 14px}
+.rchart{width:100%;height:auto;max-width:420px}.rchart .ax text{font:11px var(--f-mono);fill:var(--muted)}.rchart .ax line{stroke:var(--line)}
+.rchart .pd{stroke:var(--muted);stroke-dasharray:3 3;opacity:.5}.rchart .ln{fill:none;stroke:var(--brand);stroke-width:2.5;stroke-linejoin:round}.rchart .pt{fill:var(--brand)}.rchart .drop{fill:var(--bad)}
+.rstrips{display:grid;grid-template-columns:82px minmax(0,1fr) 22px;gap:7px 8px;align-items:center;font-size:12px}
+.rstrip{display:flex;gap:2px}.rstrip i{flex:1;height:13px;border-radius:3px;max-width:16px}
+.rstrip .sA,.rstrip .sB{background:var(--ok)}.rstrip .sC{background:var(--warn)}.rstrip .sD,.rstrip .sF{background:var(--bad)}
+.rcgt{font-weight:800}.rcgt.gA,.rcgt.gB{color:var(--ok)}.rcgt.gC{color:var(--warn)}.rcgt.gD,.rcgt.gF{color:var(--bad)}
+.rmoves{display:flex;flex-direction:column;gap:6px;font-size:12.5px}.rmoves div{display:flex;gap:10px;align-items:flex-start}.rmoves b{width:52px;flex:none;color:var(--muted)}.rmoves span{flex:1}.rmoves em{font-style:normal;font-weight:700}
+.rcard .rcr{display:flex;gap:8px;font-size:12.5px;padding:3px 0}.rcard .rcr span{flex:1}.rcard .rcr b,.rcard .rcr i{font-family:var(--f-mono);font-weight:500;font-style:normal;min-width:80px;text-align:right}
+.rcard .rcr i{color:var(--muted)}.rcard .rcr.net{border-top:1px solid var(--line);padding-top:6px;font-weight:700}
+.gbadge{width:22px;height:22px;border-radius:6px;font-size:12.5px;flex:none;margin:0 4px 0 auto}
+.v2stats .gbadge:not([hidden])+.chev{display:none}
+.replink{width:100%;margin-top:8px;padding:10px 12px;border-radius:10px;border:0;background:color-mix(in srgb,var(--brand) 12%,var(--panel));color:var(--brand);font:700 13px var(--f-body);text-align:left;cursor:pointer}
+.rating .g.out{font-size:24px;width:auto;min-width:2.2em}
+
+/* v4.2.4: the Labels button flashes twice when the opening labels switch off */
+@keyframes lblflash{0%,100%{background:var(--panel);color:var(--ink);box-shadow:none}30%,70%{background:var(--brand);color:#fff;box-shadow:0 0 0 4px color-mix(in srgb,var(--brand) 30%,transparent)}}
+#v2lblBtn.lblflash{animation:lblflash .6s ease-in-out 2}
+@media (prefers-reduced-motion:reduce){#v2lblBtn.lblflash{animation-duration:.9s}}
+
+/* v4.2.4: the bird-on-the-power-lines cut-scene: letterbox bars, the flash, Skip; the game's UI steps aside */
+.cine3d{position:absolute;inset:0;z-index:6;pointer-events:none}
+.cine3d .lb{position:absolute;left:0;right:0;height:11%;background:#000;transform:scaleY(0)}.cine3d .lb.t{top:0;transform-origin:top}.cine3d .lb.b{bottom:0;transform-origin:bottom}
+.cine3d .fl{position:absolute;inset:0;opacity:0;background:radial-gradient(circle at 50% 55%,#ffffff 0%,#d8ecff 35%,#4f8fff 100%);mix-blend-mode:screen}
+.cine3d .skip{position:absolute;right:14px;bottom:calc(11% + 12px + env(safe-area-inset-bottom,0px));pointer-events:auto;padding:8px 14px;border-radius:999px;border:1px solid rgba(255,255,255,.5);background:rgba(0,0,0,.45);color:#fff;font:600 13px var(--f-body);cursor:pointer}
+body.cine .v2top,body.cine .v2dock,body.cine #labels3d,body.cine #chips3d,body.cine #banner3d,body.cine .v2sheet,body.cine .v2scrim{visibility:hidden}
+body.cine .blackout3d{visibility:hidden}
 </style>
 </head>
 <body class="app">
-<div class="view3d" id="view3d"><div aria-hidden="true" class="zenfx" id="zenFx"><b></b><i></i></div><button class="zenexit" hidden id="zenExit">Leave zen mode</button><canvas aria-label="3D view of the mill. Arrow keys move, Q and E rotate, plus and minus zoom." id="gl" tabindex="0"></canvas><div aria-label="Move the view" class="pad" id="pad"><button aria-label="Move up" data-p="0,-1">▲</button><button aria-label="Move left" data-p="-1,0">◀</button><button aria-label="Move right" data-p="1,0">▶</button><button aria-label="Move down" data-p="0,1">▼</button></div><div id="labels3d"></div><div class="banner3d" hidden id="banner3d"><span></span><b></b></div><div class="chips3d" id="chips3d"></div><div class="flash3d" id="flash3d"></div><div aria-labelledby="bri-h" class="spider" hidden id="brian" role="dialog"><div class="spih"><b id="bri-h">Uncle Brian</b><span>night shift · floor scrubber</span><button aria-label="Close" id="briClose">✕</button></div><div id="briTxt" style="font-size:13px;line-height:1.4"></div><button class="primary" id="briGo" style="align-self:flex-start">Follow him</button></div><div aria-labelledby="slc-h" class="spider" hidden id="slice" role="dialog"><div class="spih"><b id="slc-h">Headbox slice</b><span>L/B gauge · tending side</span><button aria-label="Close" id="slcClose">✕</button></div><canvas height="400" id="slcT" width="600"></canvas><label class="spis">Vertical<input aria-label="Vertical slice" id="slcV" max="100" min="-100" type="range" value="0"/><b id="slcVv">B 12.0 mm</b></label><label class="spis">Horizontal<input aria-label="Horizontal slice" id="slcH" max="100" min="-100" type="range" value="0"/><b id="slcHv">L 0.0 mm</b></label><div class="spir"><div><small>Jet lands</small><b id="slcJ">–</b></div><div><small>Wet line from headbox</small><b id="slcW">–</b></div></div><p class="spin" id="slcNote"></p><button class="reroll" id="slcReset">Reset to standard</button></div><div aria-labelledby="spi-h" class="spider" hidden id="spider" role="dialog"><div class="spih"><b id="spi-h">Spider valve</b><span>disk thickener filtrate split</span><button aria-label="Close" id="spiClose">✕</button></div>
+<div class="view3d" id="view3d"><div aria-hidden="true" class="zenfx" id="zenFx"><b></b><i></i></div><button class="zenexit" hidden id="zenExit">Leave zen mode</button><canvas aria-label="3D view of the mill. Arrow keys move, Q and E rotate, plus and minus zoom." id="gl" tabindex="0"></canvas><div aria-label="Move the view" class="pad" id="pad"><button aria-label="Move up" data-p="0,-1">▲</button><button aria-label="Move left" data-p="-1,0">◀</button><button aria-label="Move right" data-p="1,0">▶</button><button aria-label="Move down" data-p="0,1">▼</button></div><div id="labels3d"></div><div class="banner3d" hidden id="banner3d"><span></span><b></b></div><div class="chips3d" id="chips3d"></div><div aria-hidden="true" class="tint3d" id="tint3d"></div><div class="flash3d" id="flash3d"></div><div aria-labelledby="bri-h" class="spider" hidden id="brian" role="dialog"><div class="spih"><b id="bri-h">Uncle Brian</b><span>night shift · floor scrubber</span><button aria-label="Close" id="briClose">✕</button></div><div id="briTxt" style="font-size:13px;line-height:1.4"></div><button class="primary" id="briGo" style="align-self:flex-start">Follow him</button></div><div aria-labelledby="slc-h" class="spider" hidden id="slice" role="dialog"><div class="spih"><b id="slc-h">Headbox slice</b><span>L/B gauge · tending side</span><button aria-label="Close" id="slcClose">✕</button></div><canvas height="400" id="slcT" width="600"></canvas><label class="spis">Vertical<input aria-label="Vertical slice" id="slcV" max="100" min="-100" type="range" value="0"/><b id="slcVv">B 12.0 mm</b></label><label class="spis">Horizontal<input aria-label="Horizontal slice" id="slcH" max="100" min="-100" type="range" value="0"/><b id="slcHv">L 0.0 mm</b></label><div class="spir"><div><small>Jet lands</small><b id="slcJ">–</b></div><div><small>Wet line from headbox</small><b id="slcW">–</b></div></div><p class="spin" id="slcNote"></p><button class="reroll" id="slcReset">Reset to standard</button></div><div aria-labelledby="spi-h" class="spider" hidden id="spider" role="dialog"><div class="spih"><b id="spi-h">Spider valve</b><span>disk thickener filtrate split</span><button aria-label="Close" id="spiClose">✕</button></div>
 <label class="spis"><span>Clear</span><input id="spiV" max="70" min="10" type="range" value="35"/><span>Cloudy</span></label>
 <div class="spir"><div><i style="background:#8a6644"></i>Cloudy <b id="spiTc">–</b><small id="spiQc"></small></div><div><i style="background:#3fa0d0"></i>Clear <b id="spiTl">–</b><small id="spiQl"></small></div></div>
 <canvas height="220" id="spiT" width="560"></canvas><p class="spin" id="spiNote"></p></div><div class="blackout3d" hidden id="blackout3d"><div><b>Power outage</b><span>Lightning hit the substation. Backup generators starting…</span></div></div></div>
@@ -544,19 +633,19 @@ body.season-lock #cards .row[data-key] input,body.season-lock #cards .row[data-k
 <span class="st"><small>Cash</small><b id="v2cash">–</b></span>
 <span class="st"><small>Profit</small><b id="v2profit">–</b></span>
 <span class="st"><small id="v2clockL">Time</small><b id="v2clock">–</b></span>
-<span aria-hidden="true" class="chev"><svg fill="none" height="14" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2.6" viewbox="0 0 24 24" width="14"><path d="M6 9l6 6 6-6"></path></svg></span>
+<span class="gbadge" hidden id="v2grade" title="Grade so far this period"></span><span aria-hidden="true" class="chev"><svg fill="none" height="14" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2.6" viewbox="0 0 24 24" width="14"><path d="M6 9l6 6 6-6"></path></svg></span>
 </button>
 <button aria-pressed="true" class="v2card v2lbl" id="v2lblBtn" title="Show or hide equipment labels"><svg fill="none" height="18" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2.2" viewbox="0 0 24 24" width="18"><path d="M3 12V4h8l10 10-8 8L3 12z"></path><circle cx="7.5" cy="8.5" fill="currentColor" r="1.4"></circle></svg><span>Labels</span></button>
 </div>
 <div class="v2card v2more" id="v2more">
 <div class="v2grid">
 <div><small>Production</small><b data-m="k-prod">–</b><em data-m="k-prod-s"></em></div>
-<div><small>Reel speed</small><b data-m="k-speed">–</b><em data-m="k-speed-s"></em></div>
+<div><small>Cost / ton</small><b id="v2cpt">–</b><em id="v2cpt-s"></em></div><div><small>Machine up</small><b id="v2up">–</b><em id="v2up-s"></em></div>
 <div><small>Stock chest</small><b data-m="k-tank">–</b><em data-m="k-tank-s"></em></div>
 <div><small>OCC bale yard</small><b data-m="k-yard">–</b><em data-m="k-yard-s"></em></div>
 <div><small>Roll warehouse</small><b data-m="k-fg">–</b><em data-m="k-fg-s"></em></div>
-<div><small>Cash detail</small><b data-m="k-cash">–</b><em data-m="k-cash-s"></em></div>
 </div>
+<button class="replink" id="v2rep" type="button">Open the mill report</button>
 <div class="v2row">
 <div class="v2speed"><button aria-label="Slower" id="v2slow">−</button><span id="v2speed">30 min/s</span><button aria-label="Faster" id="v2fast">+</button></div>
 <label class="v2chk"><input id="v2labels" type="checkbox"/> Labels</label>
@@ -569,7 +658,7 @@ body.season-lock #cards .row[data-key] input,body.season-lock #cards .row[data-k
 <nav aria-label="Panels" class="v2card v2tabs">
 <button aria-pressed="false" data-tab="shop"><svg fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" viewbox="0 0 24 24"><path d="M12 19V5M5 12l7-7 7 7"></path></svg>Upgrades</button>
 <button aria-pressed="false" data-tab="chaos"><svg fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" viewbox="0 0 24 24"><path d="M12 3l9 16H3z"></path><path d="M12 10v4M12 17v.5"></path></svg>Upsets<span class="bdg" hidden id="v2bdg">0</span></button>
-<button aria-pressed="false" data-tab="stats"><svg fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" viewbox="0 0 24 24"><path d="M4 19h16M7 16V9M12 16V5M17 16v-4"></path></svg>Stats</button>
+<button aria-pressed="false" data-tab="stats"><svg fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" viewbox="0 0 24 24"><path d="M4 19h16M7 16V9M12 16V5M17 16v-4"></path></svg>Report</button>
 <button aria-pressed="false" data-tab="ctl"><svg fill="none" stroke="currentColor" stroke-linecap="round" stroke-width="2" viewbox="0 0 24 24"><path d="M4 7h10M18 7h2M4 17h4M12 17h8"></path><circle cx="16" cy="7" r="2"></circle><circle cx="10" cy="17" r="2"></circle></svg>Settings</button>
 </nav>
 </div>
@@ -603,7 +692,7 @@ body.season-lock #cards .row[data-key] input,body.season-lock #cards .row[data-k
 <div class="active" id="c-active"><span class="none">No active incidents.</span></div>
 <div aria-live="polite" class="feed" id="c-feed"></div>
 </div>
-<div class="groups" id="chaosgrid"></div>
+<p class="trignote" id="trignote">Pick an upset to set it off now, or tap a running one to clear it.</p><p class="trignote locked" id="trignoteLock">Setting off upsets by hand is locked during a season. Try them in free play.</p><div class="groups" id="chaosgrid"></div>
 </div>
 </section></div>
 <div class="v2pane" data-pane="ctl"><div class="v2sub">Run the mill</div><div class="v2row" id="v2ctlrow"><button id="balance">Balance all</button><input aria-label="Machine name" autocomplete="off" id="pmname" maxlength="14" spellcheck="false" value="PM1"/><label class="check"><input checked id="viewShadows" type="checkbox"/> Shadows</label><button id="viewReset">Whole mill</button><div aria-label="Section labels" class="seg lblseg" hidden id="lblMode" role="group"><span>Labels</span><button aria-pressed="true" data-m="auto" title="Labels fade out when you stop moving the view">Auto</button><button aria-pressed="false" data-m="on">On</button><button aria-pressed="false" data-m="off">Off</button></div></div><details class="areactl" id="areactl"><summary class="v2sub">Area controls<span class="lockn">Auto · locked during a season</span></summary><section class="cards" id="cards">
@@ -636,7 +725,7 @@ body.season-lock #cards .row[data-key] input,body.season-lock #cards .row[data-k
 <div class="row" data-key="outRate"><label for="s-outRate">Outbound truck arrivals</label><span class="val"></span><div class="ctl"><input id="s-outRate" max="10" min="0" step="0.1" type="range"/><button aria-pressed="true" class="auto">AUTO</button></div></div>
 <div class="read" id="r-ship">–</div></div>
 </section></details></div>
-<div class="v2pane" data-pane="stats"><div class="v2sub">Flow &amp; bottleneck</div><div class="flowbox" id="v2flow"></div><div class="v2sub">Right now</div><section aria-label="Key figures" class="kpis">
+<div class="v2pane" data-pane="stats"><div class="rep" id="rep"></div><details class="replive" id="repLive"><summary><b>Live mill</b><small>Flow &amp; bottleneck · right now · last 24 h</small></summary><div class="v2sub">Flow &amp; bottleneck</div><div class="flowbox" id="v2flow"></div><div class="v2sub">Right now</div><section aria-label="Key figures" class="kpis">
 <div class="kpi money" id="k-cash-box"><div class="k">Cash</div><div class="v" id="k-cash">–</div><div class="s" id="k-cash-s"> </div></div>
 <div class="kpi"><div class="k">Profit</div><div class="v" id="k-profit">–</div><div class="s" id="k-profit-s"> </div></div>
 <div class="kpi"><div class="k">Sim clock</div><div class="v" id="k-clock">Day 1 00:00</div><div class="s" id="k-clock-s"> </div></div>
@@ -653,7 +742,7 @@ body.season-lock #cards .row[data-key] input,body.season-lock #cards .row[data-k
 <span><i class="sw" style="background:var(--ok)"></i><span class="dm">Rolls</span><span class="dl">Roll warehouse % full</span></span>
 </div>
 <canvas height="150" id="trend" width="1200"></canvas>
-</section></div>
+</section></details></div>
 </div></aside>
 <div class="v2menu" id="v2menu"><div aria-labelledby="v2mt" aria-modal="true" class="card" role="dialog">
 <div class="ttl"><i>⚙</i><div><small>The Paper Mill</small><b id="v2mt">Mill</b><div class="state" id="v2state"></div></div></div>
@@ -678,12 +767,11 @@ body.season-lock #cards .row[data-key] input,body.season-lock #cards .row[data-k
 
 <div class="overlay top siteov" hidden id="siteOv"><div aria-labelledby="siteH" aria-modal="true" class="modal sitepick" role="dialog">
 <h2 id="siteH">Choose your site</h2>
-<p class="muted">The paper machine, winder, roll handling and warehouse are the same everywhere. The land around them, the utilities and the costs are not.</p>
+<p class="muted small">Same paper machine everywhere. The land, utilities and costs change.</p>
 <div class="envs" id="siteEnvs" role="radiogroup" aria-label="Environment"></div>
 <button class="anybtn" id="siteAny" aria-pressed="false" type="button"><b>Surprise me</b><small>a different environment every visit</small></button>
-<div class="seedrow"><canvas aria-label="Site plan preview" height="150" id="sitePrev" role="img" width="300"></canvas>
-<div class="seedctl"><label>Site plan</label><small id="siteLay">Layout</small></div></div>
-<p class="muted small">Building here reloads the game and starts a fresh run. Each run also has one bottleneck area, drawn at random.</p>
+<div aria-live="polite" class="sitedet" id="siteDet"></div>
+<p class="muted small">Building here reloads the game and starts a fresh run.</p>
 <div class="btns"><button class="primary" id="siteGo">Build here</button><button id="siteNo">Cancel</button></div></div></div>
 
 <div class="overlay top" hidden id="no3d"><div aria-labelledby="no3d-h" class="modal" role="alertdialog">
@@ -693,7 +781,7 @@ body.season-lock #cards .row[data-key] input,body.season-lock #cards .row[data-k
 <div class="btns"><button class="primary" id="no3d-retry">Try again</button></div></div></div>
 
 <script type="module">
-const APP_VER="v4.2.1";   // shown in the menu and sent with leaderboard scores (max 12 characters)
+const APP_VER="v4.2.2";   // shown in the menu and sent with leaderboard scores (max 12 characters)
 // TEST BUILDS ONLY (off in releases): turbo speeds 240/480/960 sim min/s for fast playtests. Above 120, crews and maintenance start jobs
 // without waiting for the 3D walk (as with the 3D view off) and outages keep the speed. Set false for a release.
 const TURBO=false,TURBO_FAST=s=>TURBO&&s>120;
@@ -1097,7 +1185,7 @@ const AUDIO=(()=>{
     win:t=>{[60,64,67,72,76,79,84].forEach((m,k)=>tone(t+k*0.11,sfxBus,"triangle",mtof(m),0.5,0.14));},
     lose:t=>{[[55,0.5],[54,0.5],[53,0.5],[52,1.4]].reduce((tt,[m,d])=>{const o=tone(tt,sfxBus,"sawtooth",mtof(m),d,0.08,0.02);if(d>1)o.o.frequency.linearRampToValueAtTime(mtof(m)*0.97,tt+d);return tt+d;},t);},
   };
-  const EVSFX={refclash:"snap",fogfan:"clunk",shaft:"clunk",fabric:"clunk",felt:"clunk",winderdown:"clunk",lwplug:"clunk",cscreen:"clunk",fscreen:"clunk",lcplug:"water",hdblow:"water",boiler:"steam",steamjoint:"steam",permit:"alarm",thkblow:"water",wrap:"snap",flares:"fire",ragger:"clunk",dryerfire:"fire",balefire:"fire",overflow:"water",chestover:"water",roof:"water",fight:"siren",highway:"siren",lightning:"thunder",tornado:"wind",beaver:"chomp",runner:"whistle"};
+  const EVSFX={birdline:"none",refclash:"snap",fogfan:"clunk",shaft:"clunk",fabric:"clunk",felt:"clunk",winderdown:"clunk",lwplug:"clunk",cscreen:"clunk",fscreen:"clunk",lcplug:"water",hdblow:"water",boiler:"steam",steamjoint:"steam",permit:"alarm",thkblow:"water",wrap:"snap",flares:"fire",ragger:"clunk",dryerfire:"fire",balefire:"fire",overflow:"water",chestover:"water",roof:"water",fight:"siren",highway:"siren",lightning:"thunder",tornado:"wind",beaver:"chomp",runner:"whistle"};
   // plant PA: a two-tone chime, then a muffled voice (formant-filtered babble through a band-limited, slightly overdriven horn speaker with a hall echo)
   const VOW=[[730,1090],[270,2290],[530,1840],[570,840],[440,1020],[300,870],[660,1720],[490,1350]];
   function paAnnounce(t){const out=ctx.createGain();out.gain.value=0.55;const hp=ctx.createBiquadFilter();hp.type="highpass";hp.frequency.value=450;const lp=ctx.createBiquadFilter();lp.type="lowpass";lp.frequency.value=1900;lp.Q.value=1.2;
@@ -1126,7 +1214,44 @@ const AUDIO=(()=>{
     for(const key in INTENSE){const v=INTENSE[key];for(let pi=0;pi<v.P.length;pi++){const cur={name:key,bpm:v.bpm,play:v.play,P:v.P[pi],B:v.B?v.B[pi]:null,fill:pi%2===0,roll:ROLLS[pi%ROLLS.length]},s={bpm:v.bpm},beat=60/v.bpm/4;
       try{for(let st=0;st<64;st++)cur.play(cur,st,t0+st*beat*0.02,s);out.push("upset "+key+"/"+pi+" ok");}catch(e){out.push("upset "+key+"/"+pi+" ERROR "+e.message);}}}
     return out;}
-  return {setOn,setVol,update,sfx,ambient,event:id=>sfx(EVSFX[id]||"alarm"),selfTest,level,get ctx(){return ctx;},get master(){return master;},get on(){return on;},get now(){return target==="intense"?"upset: "+(seqs.intense.cur?seqs.intense.cur.name:"")+" / "+AUDIO_NOW:AUDIO_NOW;},get info(){return ctx?ctx.state+" t="+ctx.currentTime.toFixed(1)+(stuckSince?" (clock stuck)":"")+(hurt?" (needs a tap)":"")+(unlocked?" unlocked "+((performance.now()-unlocked)/1000).toFixed(0)+"s ago":" never unlocked"):"none";}};
+  // v4.2.4: the bird-on-the-power-lines sequence. An operatic choir (original: D minor, i-VI-iv-V, sung "ah" through two
+  // formant filters with vibrato) over a timpani roll, swelling hard into the last second before impact; pigeon chirps;
+  // and the strike itself: a falling zap, a crackle of arcs and a deep boom. Built against any context (offline renders too).
+  const mt=m=>440*Math.pow(2,(m-69)/12);
+  function cineScore(c,t0,out,impact,nz){const all=[];const chords=[[50,53,57,62],[46,53,58,62],[43,50,55,58],[45,52,57,61]],seg=impact/4;
+    const voice=(m,a,b,v,sw)=>{const g=c.createGain(),f1=c.createBiquadFilter(),f2=c.createBiquadFilter(),lp=c.createBiquadFilter(),mx=c.createGain();
+      f1.type="bandpass";f1.frequency.value=720;f1.Q.value=4;f2.type="bandpass";f2.frequency.value=1150;f2.Q.value=5;lp.type="lowpass";lp.frequency.value=3200;mx.gain.value=1;
+      const lfo=c.createOscillator(),lg=c.createGain();lfo.frequency.value=5.2+Math.random()*0.6;lg.gain.value=9;lfo.connect(lg);
+      [0,7,-6].forEach(dt=>{const o=c.createOscillator();o.type="sawtooth";o.frequency.value=mt(m);o.detune.value=dt;lg.connect(o.detune);o.connect(lp);o.start(a);o.stop(b+0.6);all.push(o);});
+      lp.connect(f1);lp.connect(f2);f1.connect(mx);f2.connect(mx);mx.connect(g);g.connect(out);lfo.start(a);lfo.stop(b+0.6);all.push(lfo);
+      g.gain.setValueAtTime(0.0001,a);g.gain.exponentialRampToValueAtTime(v,a+0.5);if(sw){g.gain.setValueAtTime(v,impact+t0-1.1);g.gain.exponentialRampToValueAtTime(v*2.6,impact+t0-0.05);}
+      g.gain.setTargetAtTime(0.0001,b,sw?0.04:0.12);};
+    chords.forEach((ch,i)=>{const a=t0+i*seg,b=i<3?a+seg+0.25:t0+impact;ch.forEach(m=>voice(m,a,b,0.035,i===3));});
+    // the soprano: enters on the last chord and climbs to the top note in the final second
+    {const o=c.createOscillator(),g=c.createGain(),f=c.createBiquadFilter(),a=t0+seg*3,b=t0+impact;o.type="triangle";o.frequency.setValueAtTime(mt(76),a);o.frequency.setValueAtTime(mt(76),b-1.1);o.frequency.exponentialRampToValueAtTime(mt(81),b-0.7);
+      const l=c.createOscillator(),lg=c.createGain();l.frequency.value=5.6;lg.gain.value=14;l.connect(lg);lg.connect(o.detune);f.type="bandpass";f.frequency.value=1400;f.Q.value=1.2;
+      o.connect(f);f.connect(g);g.connect(out);g.gain.setValueAtTime(0.0001,a);g.gain.exponentialRampToValueAtTime(0.05,a+0.6);g.gain.setValueAtTime(0.05,b-1.1);g.gain.exponentialRampToValueAtTime(0.13,b-0.05);g.gain.exponentialRampToValueAtTime(0.0001,b+0.08);
+      o.start(a);o.stop(b+0.2);l.start(a);l.stop(b+0.2);all.push(o,l);}
+    // timpani: soft strokes on each chord, then a roll building through the last two seconds
+    const timp=(t,v)=>{const o=c.createOscillator(),g=c.createGain();o.type="sine";o.frequency.setValueAtTime(73,t);o.frequency.exponentialRampToValueAtTime(58,t+0.5);g.gain.setValueAtTime(0.0001,t);g.gain.exponentialRampToValueAtTime(v,t+0.01);g.gain.exponentialRampToValueAtTime(0.0001,t+0.7);o.connect(g);g.connect(out);o.start(t);o.stop(t+0.8);all.push(o);};
+    for(let i=0;i<4;i++)timp(t0+i*seg,0.25);for(let t=t0+impact-2;t<t0+impact-0.02;t+=0.07)timp(t,0.05+0.3*((t-(t0+impact-2))/2));
+    return all;}
+  function cineStrike(c,t,out,nb){const g=c.createGain();g.connect(out);
+    const s=c.createBufferSource();s.buffer=nb;const hp=c.createBiquadFilter();hp.type="highpass";hp.frequency.value=900;const sg=c.createGain();sg.gain.setValueAtTime(1.3,t);sg.gain.exponentialRampToValueAtTime(0.0001,t+1.4);s.connect(hp);hp.connect(sg);sg.connect(g);s.start(t);s.stop(t+1.5);
+    const z=c.createOscillator(),zg=c.createGain();z.type="sawtooth";z.frequency.setValueAtTime(1800,t);z.frequency.exponentialRampToValueAtTime(60,t+0.45);zg.gain.setValueAtTime(0.8,t);zg.gain.exponentialRampToValueAtTime(0.0001,t+0.5);z.connect(zg);zg.connect(g);z.start(t);z.stop(t+0.55);
+    const b=c.createOscillator(),bg=c.createGain();b.type="sine";b.frequency.setValueAtTime(70,t);b.frequency.exponentialRampToValueAtTime(28,t+1.6);bg.gain.setValueAtTime(1.6,t);bg.gain.exponentialRampToValueAtTime(0.0001,t+1.8);b.connect(bg);bg.connect(g);b.start(t);b.stop(t+1.9);
+    for(let k=0;k<26;k++){const tt=t+0.05+Math.random()*1.2,cs=c.createBufferSource();cs.buffer=nb;const f=c.createBiquadFilter();f.type="bandpass";f.frequency.value=2500+Math.random()*4000;f.Q.value=2;const cg=c.createGain();
+      cg.gain.setValueAtTime(0.0001,tt);cg.gain.exponentialRampToValueAtTime(0.35*(1-(tt-t)/1.4),tt+0.003);cg.gain.exponentialRampToValueAtTime(0.0001,tt+0.04);cs.connect(f);f.connect(cg);cg.connect(g);cs.start(tt,Math.random());cs.stop(tt+0.06);}}
+  function cineChirp(c,t,out){for(let k=0;k<3;k++){const a=t+k*0.13,o=c.createOscillator(),g=c.createGain();o.type="sine";o.frequency.setValueAtTime(2600+Math.random()*300,a);o.frequency.exponentialRampToValueAtTime(3900,a+0.05);o.frequency.exponentialRampToValueAtTime(3100,a+0.09);
+      g.gain.setValueAtTime(0.0001,a);g.gain.exponentialRampToValueAtTime(0.12,a+0.01);g.gain.exponentialRampToValueAtTime(0.0001,a+0.1);o.connect(g);g.connect(out);o.start(a);o.stop(a+0.12);}}
+  let cineAll=null;
+  const cine={start(impact){if(!ctx||!on)return;const t=ctx.currentTime+0.05;cineAll=cineScore(ctx,t,sfxBus,impact,noiseBuf);musicBus.gain.cancelScheduledValues(t);musicBus.gain.setValueAtTime(musicBus.gain.value,t);musicBus.gain.linearRampToValueAtTime(0.05,t+0.6);},
+    chirp(){if(ctx&&on)cineChirp(ctx,ctx.currentTime+0.02,sfxBus);},
+    strike(){if(ctx&&on)cineStrike(ctx,ctx.currentTime+0.01,sfxBus,noiseBuf);},
+    end(){if(!ctx)return;const t=ctx.currentTime;if(cineAll){cineAll.forEach(o=>{try{o.stop(t+0.05);}catch(e){}});cineAll=null;}musicBus.gain.cancelScheduledValues(t);musicBus.gain.setValueAtTime(musicBus.gain.value,t);musicBus.gain.linearRampToValueAtTime(0.6,t+2);},
+    render(impact){const sr=44100,oc=new OfflineAudioContext(1,Math.ceil(sr*(impact+2.5)),sr),cmp=oc.createDynamicsCompressor();cmp.connect(oc.destination);const nb=oc.createBuffer(1,sr*2,sr),d=nb.getChannelData(0);for(let i=0;i<d.length;i++)d[i]=Math.random()*2-1;
+      cineScore(oc,0.05,cmp,impact,nb);[0.8,2.6,4.2].forEach(x=>cineChirp(oc,x,cmp));cineStrike(oc,impact+0.05,cmp,nb);return oc.startRendering().then(b=>Array.from(b.getChannelData(0)));}};
+  return {setOn,setVol,update,sfx,ambient,cine,event:id=>sfx(EVSFX[id]||"alarm"),selfTest,level,get ctx(){return ctx;},get master(){return master;},get on(){return on;},get now(){return target==="intense"?"upset: "+(seqs.intense.cur?seqs.intense.cur.name:"")+" / "+AUDIO_NOW:AUDIO_NOW;},get info(){return ctx?ctx.state+" t="+ctx.currentTime.toFixed(1)+(stuckSince?" (clock stuck)":"")+(hurt?" (needs a tap)":"")+(unlocked?" unlocked "+((performance.now()-unlocked)/1000).toFixed(0)+"s ago":" never unlocked"):"none";}};
 })();
 
 const GRADES={ "23m":{sp:2736,bw:24.55}, "26m":{sp:2433,bw:26.06}, "30m":{sp:2222,bw:30.05}, "33HT":{sp:2084,bw:33.08} };
@@ -1150,9 +1275,9 @@ const AUTOKEYS=["inRate","drivers","pulper","pmSp","wdr","loaders","outRate"];
 let C,S;
 const BASE={...P};
 const ECON={price:{"23m":713,"26m":733,"30m":753,"33HT":813},energy:95,chem:25,wage:45,robot:15,overhead:3400,start:2e6,bankrupt:-1.5e6,goal:25e6};
-const REPAIR={refclash:140e3,steamjoint:90e3,fogfan:35e3,shaft:250e3,dryerfire:400e3,fabric:90e3,felt:45e3,slime:30e3,ragger:15e3,overflow:120e3,chestover:60e3,lwplug:25e3,cscreen:45e3,fscreen:60e3,lcplug:30e3,hdblow:55e3,boiler:60e3,permit:120e3,thkblow:70e3,birdhay:0,wrap:15e3,dye:20e3,flares:0,winderdown:40e3,runner:0,badocc:0,balefire:150e3,fleet:40e3,calloff:10e3,fight:5e3,roof:80e3,highway:0,lightning:200e3,tornado:500e3,beaver:25e3,icedintake:20e3,brownout:10e3,duststorm:25e3,flood:60e3};
+const REPAIR={birdline:200e3,refclash:140e3,steamjoint:90e3,fogfan:35e3,shaft:250e3,dryerfire:400e3,fabric:90e3,felt:45e3,slime:30e3,ragger:15e3,overflow:120e3,chestover:60e3,lwplug:25e3,cscreen:45e3,fscreen:60e3,lcplug:30e3,hdblow:55e3,boiler:60e3,permit:120e3,thkblow:70e3,birdhay:0,wrap:15e3,dye:20e3,flares:0,winderdown:40e3,runner:0,badocc:0,balefire:150e3,fleet:40e3,calloff:10e3,fight:5e3,roof:80e3,highway:0,lightning:200e3,tornado:500e3,beaver:25e3,icedintake:20e3,brownout:10e3,duststorm:25e3,flood:60e3};
 const UGROUPS=[["machine","Paper machine"],["stock","Stock prep"],["yard","Warehouse & logistics"],["maint","Maintenance"],["mgmt","Management"]];
-const MAINT=["steamjoint","fogfan","shaft","fabric","felt","winderdown","hdblow","lwplug","cscreen","fscreen","lcplug","boiler","thkblow","ragger","overflow","fleet","roof","lightning","icedintake"];
+const MAINT=["birdline","steamjoint","fogfan","shaft","fabric","felt","winderdown","hdblow","lwplug","cscreen","fscreen","lcplug","boiler","thkblow","ragger","overflow","fleet","roof","lightning","icedintake"];
 // v4.1 v19: prices reset after the payback review (most upgrades now pay back within days, not months)
 const UPS=[
  {id:"drive",g:"machine",name:"Drive & gearbox rebuild",lv:[120e3,105e3,95e3],desc:"+150 fpm max speed per level."},
@@ -1413,6 +1538,11 @@ const EVENTS=[
    start:i=>{const l=Math.round(S.fg*0.08);S.fg-=l;lotTake(S.lots.fg,l);i.note=`${l} rolls scrapped`;}},
  {id:"highway",g:"yard",name:"Highway closed",head:"Jack-knifed tanker closes the highway. No trucks in or out.",dur:[360,600],mtbf:300,mods:{noIn:1,noOut:1},fx:"highway"},
  {id:"lightning",g:"god",name:"Lightning strike",head:"Lightning hits the substation. Mill-wide blackout!",dur:[60,180],mtbf:400,mods:{pmDown:"power outage",pulperDown:1,recvMul:0,clampMul:0},fx:"outage"},
+ // v4.2.4: a bird flies into the substation. Same outage as a lightning strike (power out across the mill, same
+ // duration and repair bill); in the 3D view it plays a short cut-scene with the game paused (44-3d-bird-cine.js).
+ // Its own dice stream ("bird"), so adding it leaves every other upset's timing as it was.
+ {id:"birdline",g:"god",name:"Bird on the power lines",head:"A bird flew into the substation! Flash, bang: mill-wide blackout.",dur:[60,180],mtbf:900,stream:"bird",mods:{pmDown:"power outage",pulperDown:1,recvMul:0,clampMul:0},fx:"birdline",
+   start:i=>{if(typeof G3!=="undefined"&&G3.birdCine)G3.birdCine(i);}},
  {id:"tornado",g:"god",name:"Tornado",head:"Tornado touches down on the mill site!",dur:[60,120],mtbf:600,fx:"tornado",
    start:i=>{const pool=EVENTS.filter(e=>e.g!=="god"&&!active(e.id));for(let k=0;k<2&&pool.length;k++){const e=pool.splice(Math.floor(rand("upx")*pool.length),1)[0];trigger(e.id,true);}
      const l=Math.round(S.fg*0.05);S.fg-=l;lotTake(S.lots.fg,l);i.note=`${l} rolls blown away`;}},
@@ -1441,7 +1571,7 @@ function crewTick(dt){if(!S.crewQ)S.crewQ=[];
   // so game speed and graphics can't change downtime (the 3D crew walks over meanwhile)
   const h=S.crewQ[0];if(!h)return;if(h.resp>0)h.resp-=dt;if(h.resp<=0)h.go=h.here=true;}
 // maintenance: techs work in pairs; a job's repair clock only runs once its pair is on site (8 sim minutes after it is assigned)
-const MJOBS=["refclash","steamjoint","fogfan","shaft","fabric","felt","winderdown","hdblow","lwplug","cscreen","fscreen","lcplug","boiler","thkblow","overflow","chestover","fleet","roof","lightning","icedintake"];
+const MJOBS=["birdline","refclash","steamjoint","fogfan","shaft","fabric","felt","winderdown","hdblow","lwplug","cscreen","fscreen","lcplug","boiler","thkblow","overflow","chestover","fleet","roof","lightning","icedintake"];
 const MNEED=id=>MJOBS.includes(id);
 // v16: pairs go first to the job the PM crew is on (a job that needs both can only progress there), then to jobs that need
 // no crew, oldest first, and last to jobs still waiting for the crew. Before, a winder breakdown could hold the only pair
@@ -1498,7 +1628,8 @@ function chaosTick(dt){
   const um=upsetMul()*(busy>=2?0.25:1);
   {const r=rand("up");if(CH.on&&um>0&&CH.en.chestover&&!active("chestover")&&S.tank>=P.tankCap*0.995&&r<dt/60/25)trigger("chestover");}
   const roll=CH.on&&um>0&&!outOn();
-  for(const e of EVENTS){const r=rand("up");if(roll&&CH.en[e.id]&&!active(e.id)&&r<dt/60/e.mtbf*CH.lvl*freqMul(e.id)*0.75*um)trigger(e.id);}
+  if(S.rng.bird==null)S.rng.bird=(S.seed^0x5bd1e995)|0;
+  for(const e of EVENTS){const r=rand(e.stream||"up");if(roll&&CH.en[e.id]&&!active(e.id)&&r<dt/60/e.mtbf*CH.lvl*freqMul(e.id)*0.75*um)trigger(e.id);}
   if(S.season&&S.season.on&&!S.season.rough&&S.t>=14*1440){S.season.rough=true;roughPatch();}
 }
 
@@ -2336,20 +2467,24 @@ function seasonLocks(on){["chaosOn","chaosLvl","chaosClear"].forEach(id=>{const 
 function startSeason(){newGame();S.season={on:true,end:SEASON_DAYS*1440,done:false};S.rc=null;S.outg={k:1,noticed:false,on:false,rel:{stock:1,wet:1,dry:1},plan:null};seedRun(Math.floor(Date.now()/6048e5)*2654435761);C.breaks=true;
   CH.on=true;$("chaosOn").checked=true;CH.lvl=1;$("chaosLvl").value=1;$("chaosLvlv").textContent="1×";
   EVENTS.forEach(e=>{CH.en[e.id]=true;const c=$("en-"+e.id);if(c)c.checked=true;});seasonLocks(true);
-  BANNERS.push({text:`Season started: ${SEASON_DAYS} days. Make as much profit as you can.`,t:null,kind:"good"});bnNotice();}
+  BANNERS.push({text:`Season started: ${SEASON_DAYS} days. Make as much profit as you can.`,t:null,kind:"good"});bnNotice();if(G3.labelIntro)G3.labelIntro();}
 
 /* ---------- v3.3: 10-day report cards (season mode) ----------
    Each period (days 1-10, 11-20, 21-30) gathers money in and out, cost per ton, what caused downtime, how reliable each
    section was (planned outage time left out) and which step held the mill back. Cards pop up at the start of day 11 and
    day 21 (sim paused) and the days 21-30 card is shown in the season summary. Each card also shows the season so far. */
 const RC_STEPS=["Receiving","Pulper","Machine at full speed","Machine down","Winder","Shipping"],RC_SEC=[["recv","Receiving"],["pulper","Stock prep"],["machine","Paper machine"],["winder","Winder"],["ship","Shipping"]];
-function rcAcc(){return {t0:S.t,L0:{...S.ledger},prod0:S.tot.prodT,ship0:S.shipT||0,rolls0:S.tot.rolls,brk0:S.tot.breaks,hay0:S.tot.hayouts,min:0,plan:0,up:{recv:0,pulper:0,machine:0,winder:0,ship:0},dn:{},bn:{}};}
+function rcAcc(){return {t0:S.t,L0:{...S.ledger},prod0:S.tot.prodT,ship0:S.shipT||0,rolls0:S.tot.rolls,brk0:S.tot.breaks,hay0:S.tot.hayouts,off0:S.tot.broke||0,occ:0,fib:0,min:0,plan:0,up:{recv:0,pulper:0,machine:0,winder:0,ship:0},dn:{},bn:{}};}
 function rcTick(dt){const se=S.season;if(!se||!se.on||se.done||dt<=0)return;
   if(!S.rc)S.rc={i:0,p:rcAcc(),s:rcAcc(),cards:[]};const R=S.rc,M=S.M||{},planned=!!(S.outg&&S.outg.on);
   const up={recv:!(M.noIn||M.docksClosed||M.recvMul===0),pulper:!M.pulperDown,machine:S.pm==="run",winder:S.wd==="run"&&!M.winderDown,ship:!(M.noOut||M.clampMul===0)};
   // downtime causes: every active upset by name, plus machine/winder stops that no upset explains
   const add=(a,k,v)=>{a.dn[k]=(a.dn[k]||0)+v;};
-  [R.p,R.s].forEach(a=>{a.min+=dt;if(planned){a.plan+=dt;return;}for(const k in up)if(up[k])a.up[k]+=dt;
+  if(!R.dd){R.dd=rcAcc();R.day=Math.floor(S.t/1440);}
+  // v4.2.4 (Mill report): the day's grades are kept at each midnight, with the day's biggest downtime cause
+  if(Math.floor(S.t/1440)>R.day){const c=rcMake(R.p,R.i),top=Object.entries(R.dd.dn).sort((x,y)=>y[1]-x[1])[0];(R.days||(R.days=[])).push({d:R.day+1,g:c.g,o:c.overall,top:top?[top[0],Math.round(top[1])]:null});R.day=Math.floor(S.t/1440);R.dd=rcAcc();}
+  const feedT=(S.rates.feed||0)*dt/60,fibT=feedT*P.yieldF*(M.yieldMul||1);
+  [R.p,R.s,R.dd].forEach(a=>{a.min+=dt;if(planned){a.plan+=dt;return;}a.occ+=feedT;a.fib+=fibT;for(const k in up)if(up[k])a.up[k]+=dt;
     S.inc.forEach(i=>{const e=EV[i.id];if(e&&i.id!=="runner"&&i.id!=="birdhay")add(a,e.name,dt);});
     if(S.pm==="break")add(a,"Sheet breaks",dt);else if(S.pm==="down"&&!M.pmDown)add(a,"Ran out of stock",dt);else if(S.pm==="full")add(a,"Warehouse full",dt);else if(S.pm==="spools")add(a,"Reel storage full",dt);
     if(S.wd==="hayout")add(a,"Winder hayouts",dt);});
@@ -2369,7 +2504,8 @@ function rcSum(a){const L=S.ledger,d=k=>(L[k]||0)-(a.L0[k]||0),prod=S.tot.prodT-
   const rel={};RC_SEC.forEach(([k])=>rel[k]=a.up[k]/run);const relAvg=RC_SEC.reduce((t,[k])=>t+rel[k],0)/RC_SEC.length;
   const dn=Object.entries(a.dn).sort((x,y)=>y[1]-x[1]).slice(0,5),bnT=Object.values(a.bn).reduce((t,v)=>t+v,0)||1,bn=RC_STEPS.map(k=>[k,(a.bn[k]||0)/bnT]).sort((x,y)=>y[1]-x[1]);
   const price=priceOf(C.grade),cpt=prod>0?(ops+d("repairs"))/prod:0,margin=earned>0?(earned-(spentT-spent.Upgrades))/earned:0;
-  return {days,prod,ship,rev,deals,earned,spent,spentT,net,ops,cpt,price,margin,rel,relAvg,avail:rel.machine,dn,bn,breaks:S.tot.breaks-a.brk0,hay:S.tot.hayouts-a.hay0,rolls:S.tot.rolls-a.rolls0,plan:a.plan};}
+  const off=(S.tot.broke||0)-(a.off0||0),onspec=prod+off>0?prod/(prod+off):1,yld=a.occ>0?a.fib/a.occ:null;
+  return {days,prod,ship,rev,deals,earned,spent,spentT,net,ops,cpt,price,margin,rel,relAvg,avail:rel.machine,dn,bn,breaks:S.tot.breaks-a.brk0,hay:S.tot.hayouts-a.hay0,rolls:S.tot.rolls-a.rolls0,plan:a.plan,off,onspec,yld};}
 function rcMake(a,i){const p=rcSum(a),s=rcSum(S.rc.s);
   const g={Profit:rcGrade(p.margin,[0.30,0.22,0.14,0.06]),"Cost / ton":rcGrade(p.price>0?1-p.cpt/p.price:0,[0.32,0.25,0.18,0.10]),Downtime:rcGrade(p.avail,[0.95,0.91,0.86,0.80]),Reliability:rcGrade(p.relAvg,[0.96,0.92,0.88,0.82])};
   const gp={A:4,B:3,C:2,D:1,F:0},avg=Object.values(g).reduce((t,v)=>t+gp[v],0)/4,overall=avg>=3.5?"A":avg>=2.5?"B":avg>=1.5?"C":avg>=0.75?"D":"F";
@@ -2421,8 +2557,8 @@ function endSeason(bust){const se=S.season;se.done=true;se.on=false;running=fals
   const r=seasonResult();se.result=r;AUDIO.sfx(r.score>0?"win":"lose",100);
   $("so-h").textContent=bust?"Season over: bankrupt":"Season complete";
   $("so-p").textContent=bust?`${MILL.name} ran out of money before day ${SEASON_DAYS}.`:`${SEASON_DAYS} days at ${MILL.name}.`;
-  const eff=S.tot.pot>0?S.tot.prodT/S.tot.pot:1,g=RATINGS.find(x=>eff>=x[0]);
-  const st=[["Net profit",money(r.score),"big"],["Tons shipped",f0(r.tons)+" t"],["Disasters survived",String(r.incidents)],["Rolls made",String(S.tot.rolls)],["Grade",g[1]+" · "+g[2]]];
+  const eff=S.tot.pot>0?S.tot.prodT/S.tot.pot:1,sg=S.rc&&S.rc.s?rcMake(S.rc.s,S.rc.i).overall:null,g=sg?RATINGS.find(x=>x[1]===sg):RATINGS.find(x=>eff>=x[0]);
+  const st=[["Net profit",money(r.score),"big"],["Tons shipped",f0(r.tons)+" t"],["Disasters survived",String(r.incidents)],["Rolls made",String(S.tot.rolls)],["Season grade",g[1]+" · "+g[2]],["Output",Math.round(eff*100)+"% of max-speed tons"]];
   $("so-stats").replaceChildren(...st.map(([k,v,c])=>{const d=document.createElement("div");if(c)d.className=c;const a=document.createElement("span");a.textContent=k;const b=document.createElement("b");b.textContent=v;d.append(a,b);return d;}));
   {const c=bust?null:rcFinal(),box=$("so-rc");if(box){if(c){box.hidden=false;box.innerHTML=`<div class="rcmini"><div class="rcg g${c.overall}">${c.overall}</div><div><b>Days ${c.from}–${c.to} report card</b><small>${Object.entries(c.g).map(([k,v])=>k+" "+v).join(" · ")}</small><p>${c.tip}</p></div></div><button id="so-rcbtn" class="ghost">Open the full report card</button>`;
       $("so-rcbtn").addEventListener("click",()=>rcOpen(c,true));}else box.hidden=true;}}
@@ -2457,6 +2593,7 @@ async function openBoard(){$("lbOv").hidden=false;const L=$("lb-list");L.replace
 function setFree(on){S.free=on;
   if(on&&S.season&&S.season.on){S.season=null;seasonLocks(false);BANNERS.push({text:"Season abandoned: free play scores can't go on the leaderboard.",t:null});}
   if(on)BANNERS.push({text:"Free play: upgrades are free and you can't go bankrupt. No leaderboard.",t:null,kind:"good"});
+  if(on&&G3.labelIntro)G3.labelIntro();
   updateShop();}
 // zen mode: endless, calm screensaver of the mill
 let ZEN=null;
@@ -2487,7 +2624,7 @@ let feedKey="";
 function updateChaos(){
   const days=(S.t-S.lastInc)/1440;$("c-days").textContent=days.toFixed(1);$("c-sign").classList.toggle("hot",S.inc.length>0);
   const eff=S.tot.pot>0?S.tot.prodT/S.tot.pot:1,r=RATINGS.find(x=>eff>=x[0]);
-  const g=$("c-grade");g.textContent=r[1];g.className="g "+r[1];$("c-grade-t").textContent=r[2];$("c-grade-s").textContent=`${(eff*100).toFixed(1)}% of max-speed tons made`;
+  const g=$("c-grade");g.textContent=Math.round(eff*100)+"%";g.className="g out "+r[1];$("c-grade-t").textContent="Output: "+r[2].toLowerCase().replace(/^./,c=>c.toUpperCase());$("c-grade-s").textContent=`${(eff*100).toFixed(1)}% of max-speed tons made · grades are in the Report tab`;
   $("c-lost").textContent=f0(Math.max(0,S.tot.pot-S.tot.prodT))+" t";$("c-count").textContent=S.tot.incidents;
   const act=$("c-active");act.replaceChildren();
   if(!S.inc.length){const s=document.createElement("span");s.className="none";s.textContent="No active incidents.";act.appendChild(s);}
@@ -4128,6 +4265,7 @@ function no3D(){G3.ok=false;$("no3d").hidden=false;$("no3d-retry").onclick=()=>l
   G3.camTo=(x,z,r,th,ph)=>{th=th??DEF.th;const k=host.clientWidth<600?r*0.13:0;goal={t:new THREE.Vector3(x+Math.sin(th)*k,0,z+Math.cos(th)*k),r,th,ph:ph??0.9};};
   G3.camHome=()=>{goal={t:DEFT.clone(),r:DEF.r,th:DEF.th,ph:DEF.ph};};
   G3.camSet=c=>{goal=null;target.set(c[0],c[5]||0,c[1]);cam.r=c[2];cam.th=c[3];cam.ph=c[4];};   // tests and screenshots
+  G3.camGet=()=>[target.x,target.z,cam.r,cam.th,cam.ph,target.y];   // (v4.2.4: the bird cut-scene puts the camera back)
   {const hm=new THREE.MeshBasicMaterial({color:lin0("#ffb020"),transparent:true,opacity:0.85,depthWrite:false,depthTest:false,side:THREE.DoubleSide,toneMapped:false});
    const ring=new THREE.Mesh(new RingG(0.86,1,64),hm);ring.rotation.x=-Math.PI/2;ring.renderOrder=20;ring.visible=false;scene.add(ring);
    const bm=new THREE.MeshBasicMaterial({color:lin0("#ffd27a"),transparent:true,opacity:0.18,depthWrite:false,side:THREE.DoubleSide,toneMapped:false});
@@ -4349,7 +4487,7 @@ function no3D(){G3.ok=false;$("no3d").hidden=false;$("no3d-retry").onclick=()=>l
         Co[i*3]=p.r;Co[i*3+1]=p.g;Co[i*3+2]=p.b;A[i]=p.a;R[i]=p.rot;}
       b.g.instanceCount=n;b.mesh.visible=n>0&&!(G3.EXP&&(G3.EXP.noParts||G3.EXP.hidePB===b));
       if(n){const at=b.attrs;for(let i=0;i<at.length;i++){const x=at[i],r=x.rng;r.count=n*x.itemSize;if(!x.updateRanges.length)x.updateRanges.push(r);x.needsUpdate=true;}}}}
-  const R=()=>Math.random()-0.5;
+  const R=()=>Math.random()-0.5,EZ=k=>k<=0?0:k>=1?1:k*k*(3-2*k);
   // big fires: dense flames, a white-hot core, embers, and a flickering orange light that washes over the scene
   const fireLight=new THREE.PointLight(0xff7a1f,0,45,0);scene.add(fireLight);let fireL=0,fireLpos=new THREE.Vector3();
   function fireGlow(x,y,z,k){fireL=Math.max(fireL,k);fireLpos.set(x,y,z);}
@@ -4400,8 +4538,9 @@ function no3D(){G3.ok=false;$("no3d").hidden=false;$("no3d-retry").onclick=()=>l
     lightning:[34.5,16,-15,"bolt"],tornado:[0,26,0,"!"],beaver:[-24,12,-12.5,"!"]};
   function fxPerson(group,m,x,z){const w=worker(m,M.warn);w.position.set(x,0,z);group.add(w);return w;}
   // v4.1: the brownout's pin sits on the substation the scenery placed (or the power house when there is none)
+  const _bkv=new THREE.Vector3();
   const subPos=()=>{const u=G3.scenery&&G3.scenery.util&&G3.scenery.util.substation;return u?[u[0],u[1]]:[74,-10];};
-  Object.defineProperty(PINS,"brownout",{get(){const [x,z]=subPos();return [x,x===74?14:9,z,"!"];}});
+  Object.defineProperty(PINS,"birdline",{get(){const [x,z]=subPos();return [x,x===74?14:9,z,"!"];}});Object.defineProperty(PINS,"brownout",{get(){const [x,z]=subPos();return [x,x===74?14:9,z,"!"];}});
   const FX={};G3.FX=FX;G3.PB=PB;G3.PT=PT;   // (read by the autotest's GPU probe)
   // wire / felt run-off: the loop runs off the tending side into a heap in the aisle, the section sits bare,
   // the crew carry a new one out in its long shipping crate and pull it on from the front, and the heap is cleared
@@ -4587,31 +4726,137 @@ function no3D(){G3.ok=false;$("no3d").hidden=false;$("no3d-retry").onclick=()=>l
         for(let k=0;k<2;k++)if(Math.random()<rdt*14)emit("chip",-18.5,4,-11.5,1+Math.random()*4,4+Math.random()*4,R()*5,1.3,0.55,"#ffffff",1);};},
     // ---- v4.1 environment upsets ----
     // rural: ice floes jammed against the river intake, frost on the pump house; chips fly once maintenance is breaking it up
-    icedintake:g=>{const ice=new StdMat({color:lin0("#e8f3fb"),roughness:0.35}),pos=[],nor=[],m4=new THREE.Matrix4();
-      for(let k=0;k<15;k++){const f=k<14?[-37+Math.random()*14,-67+Math.random()*7,Math.random()*3,1.2+Math.random()*2.2,1+Math.random()*1.8,0.3]:[-30,-60.5,0,5,3,0.5];
-        const bg=new THREE.BoxGeometry(f[3],f[5],f[4]).toNonIndexed();m4.makeRotationY(f[2]).setPosition(f[0],0.1,f[1]);bg.applyMatrix4(m4);pos.push(...bg.attributes.position.array);nor.push(...bg.attributes.normal.array);}
-      const fg=new THREE.BufferGeometry();fg.setAttribute("position",new THREE.Float32BufferAttribute(pos,3));fg.setAttribute("normal",new THREE.Float32BufferAttribute(nor,3));
-      const floes=new THREE.Mesh(fg,ice);floes.castShadow=true;g.add(floes);
-      const frost=new THREE.Mesh(new THREE.BoxGeometry(4.12,3.12,4.12),new StdMat({color:lin0("#ffffff"),transparent:true,opacity:0.38,roughness:0.95,depthWrite:false}));frost.position.set(-30,1.5,-55.5);g.add(frost);
-      return (now,rdt,inc)=>{floes.position.y=Math.sin(now/900)*0.035;
-        if(inc&&inc.mGo&&Math.random()<rdt*8)emit("chip",-30+R()*3,1.2,-58+R()*2,R()*3,2+Math.random()*3,R()*3,0.9,0.4,"#ffffff",1);};},
-    // urban: arc flashes at the substation and the mill's lights sag (envUpdate reads G3.brownK)
+    // v4.2.4 marquee site upsets (visuals only). Each plays in three acts over the incident (p = share of it gone):
+    // a warning, the peak, and a recovery with a clear finish.
+    // forest: the river intake ices over. Frost creeps over the intake house, an ice shelf grows out from the bank with
+    // floes locking in, icicles hang off the outfall pipe and snow flurries come in; while maintenance works, chips fly
+    // and a steam lance puffs; at the end the shelf breaks up and the floes drift off downstream and melt.
+    icedintake:g=>{const IX=-30,IZ=-55.5,[rz,rhw]=riverAt(IX),BANK=rz+rhw,ice=new StdMat({color:lin0("#e8f3fb"),roughness:0.35});
+      const shelf=new THREE.Mesh(cubeG,new StdMat({color:lin0("#dfeef7"),roughness:0.25,metalness:0.05}));shelf.scale.set(26,0.22,1);shelf.position.set(IX,0.1,BANK);shelf.castShadow=true;g.add(shelf);
+      const floes=[...Array(16)].map(()=>{const m=new THREE.Mesh(cubeG,ice);const w=1.2+Math.random()*2.4,d=1+Math.random()*1.8;m.scale.set(w,0.26,d);m.castShadow=true;
+        m.userData={x:IX-12+Math.random()*24,z:BANK-3-Math.random()*8,r:Math.random()*3,v:0.6+Math.random()*0.8};g.add(m);return m;});
+      const frost=new THREE.Mesh(new THREE.BoxGeometry(4.12,3.12,4.12),new StdMat({color:lin0("#ffffff"),transparent:true,opacity:0,roughness:0.95,depthWrite:false}));frost.position.set(IX,1.5,IZ);g.add(frost);
+      const icM=new StdMat({color:lin0("#eaf6ff"),roughness:0.15,transparent:true,opacity:0.92}),icicles=[...Array(9)].map((_,i)=>{const m=new THREE.Mesh(new THREE.ConeGeometry(0.09,1,6),icM);m.rotation.x=Math.PI;
+        m.position.set(IX-1.2+i*0.3,1.15,IZ-2.2-(i%2)*0.15);m.userData.l=0.4+((i*37)%5)*0.15;g.add(m);return m;});
+      // the steam lance: a hose to the shelf and puffs while the crew works
+      return (now,rdt,inc)=>{const k=inc&&inc.total?inc.left/inc.total:1,p=1-k,t=now/1000;
+        const grow=EZ(p/0.15),brk=p<0.85?0:EZ((p-0.85)/0.15);G3.iceK=p<0.12?EZ(p/0.12):p<0.88?1:1-EZ((p-0.88)/0.12);
+        frost.material.opacity=0.42*grow*(1-brk);frost.visible=frost.material.opacity>0.01;
+        shelf.visible=grow>0.02&&brk<0.98;shelf.scale.z=Math.max(0.01,9*grow*(1-brk));shelf.position.z=BANK-shelf.scale.z/2;shelf.position.y=0.08;
+        icicles.forEach((m,i)=>{const L=m.userData.l*EZ(grow*1.4-i*0.04)*(1-brk);m.visible=L>0.02;m.scale.set(1,Math.max(0.01,L),1);m.position.y=1.15-L/2;});
+        floes.forEach((m,i)=>{const u=m.userData,lock=EZ(grow*1.2-i*0.02);if(lock<0.01){m.visible=false;return;}m.visible=true;
+          const drift=brk*brk*(18+u.v*12),melt=1-EZ((brk-0.5)/0.5);m.position.set(u.x+drift,0.06+Math.sin(t*0.9+i)*0.03*(brk>0?1:0.3),u.z-(1-lock)*6);m.rotation.y=u.r+brk*u.v*1.5;
+          m.scale.y=0.26*Math.max(0.05,melt);m.visible=melt>0.05;});
+        if(inc&&inc.mGo&&rdt>0){if(Math.random()<rdt*10)emit("chip",IX+R()*3,1.0,BANK-1+R()*2,R()*3,2+Math.random()*3,R()*3,0.9,0.4,"#ffffff",1);
+          if(Math.random()<rdt*6)emitA("steam",IX+2+R(),0.6,BANK-1.5+R(),R()*0.8,1.6+Math.random(),R()*0.8,2.2,1.6,"#ffffff",0.6);}};},
+    // city: a grid brownout. An arc flash at the substation with a white flash of the screen opens it; during it the arcs
+    // crackle on a steady beat, the mill's lights and windows sag and its steam plume shrinks; a utility bucket truck
+    // arrives, a lineman goes up to the transformer in sparks, and the power comes back with a bright "lights up".
     brownout:g=>{const [px,pz]=subPos(),py=px===74?9.5:3.4,arcs=[];
       for(let k=0;k<3;k++){const s=new THREE.Sprite(new THREE.SpriteMaterial({map:TX.dot,color:lin("#bfe3ff"),transparent:true,depthWrite:false,toneMapped:false}));s.position.set(px-6+k*6,py,pz-2);s.scale.setScalar(3.2);g.add(s);arcs.push(s);}
-      return (now,rdt)=>{const tick=(now/90)|0,fl=tick%7===0;arcs.forEach((s,k)=>{s.visible=fl&&k===tick%3;});G3.brownK=0.55+0.25*Math.sin(now/230)*Math.sin(now/71);
-        if(fl&&Math.random()<rdt*30)emit("spark",px-6+(tick%3)*6,py,pz-2,R()*3,1+Math.random()*2,R()*3,0.4,0.2,"#9fd0ff",1);};},
-    // desert: the storm is in the sky (envUpdate reads G3.dustK: tan haze, short fog, blowing dust); here, dust rolling across the ground
-    duststorm:g=>{return (now,rdt,inc)=>{const k=inc&&inc.total?inc.left/inc.total:1;G3.dustK=k<0.15?k/0.15:k>0.92?(1-k)/0.08:1;
-        for(let q=0;q<3;q++)if(Math.random()<rdt*36*G3.dustK)emitA("smoke",-95+Math.random()*190,0.6+Math.random()*4,-55+Math.random()*120,9+Math.random()*5,0.2,R()*1.5,3.2,7+Math.random()*6,"#c9a86b",0.5);};},
-    // swamp: water over the yard and the roads (not inside the buildings), rising as the incident starts and draining away at the end
-    flood:g=>{const sh=new THREE.Shape();sh.moveTo(-150,-52);sh.lineTo(96,-52);sh.lineTo(96,66);sh.lineTo(-150,66);sh.closePath();
-      [[-27.2,64,-2.9,19.85],[-34.4,-8,-23.5,-3],[-49,-23.8,14.8,32.2],[4,47,-25,-2],[49,65,-27,-14.5],[70,82,-16,-4],[49,61,24,30]].forEach(([x0,x1,z0,z1])=>{const h=new THREE.Path();h.moveTo(x0,z0);h.lineTo(x1,z0);h.lineTo(x1,z1);h.lineTo(x0,z1);h.closePath();sh.holes.push(h);});
-      const geo=new THREE.ShapeGeometry(sh);geo.rotateX(Math.PI/2);
-      const wm=new StdMat({color:lin0("#5a7f7c"),transparent:true,opacity:0,roughness:0.06,metalness:0.25,depthWrite:false,side:THREE.DoubleSide});
-      const w=new THREE.Mesh(geo,wm);w.position.y=0.09;w.renderOrder=1;g.add(w);const rp=ripples(g,10,-90,80,-45,60,0.12);
-      const debris=[];for(let k=0;k<8;k++){const d=box(1.6,0.12,0.25,M.kraft,-70+Math.random()*140,0.14,-40+Math.random()*90,g,false);d.rotation.y=Math.random()*3;debris.push(d);}
-      return (now,rdt,inc)=>{const k=inc&&inc.total?inc.left/inc.total:1,lvl=k>0.85?(1-k)/0.15:k<0.25?k/0.25:1;wm.opacity=0.72*lvl;w.position.y=0.03+0.07*lvl;G3.floodK=lvl;
-        rp(now);debris.forEach((d,q)=>{d.visible=lvl>0.3;d.position.x+=rdt*0.4;d.position.y=w.position.y+0.05+Math.sin(now/700+q)*0.02;if(d.position.x>90)d.position.x=-100;});};},
+      const big=new THREE.Sprite(new THREE.SpriteMaterial({map:TX.dot,color:lin("#e8f4ff"),transparent:true,depthWrite:false,toneMapped:false}));big.position.set(px,py+1,pz-2);g.add(big);
+      // the bucket truck (white, orange stripe) with a two-part boom, a bucket and a lineman
+      const tr=new THREE.Group();g.add(tr);const W=new StdMat({color:lin0("#f2f2f2"),roughness:0.6}),O=new StdMat({color:lin0("#f27a30"),roughness:0.6}),D=new StdMat({color:lin0("#2f3a49"),roughness:0.8});
+      const tb=(w,h,d,x,y,z,m,par=tr)=>{const b=new THREE.Mesh(cubeG,m);b.scale.set(w,h,d);b.position.set(x,y,z);b.castShadow=true;par.add(b);return b;};
+      tb(2,1.9,2.3,2.6,1.35,0,W);tb(2.05,0.25,2.35,2.6,1.0,0,O);tb(1.8,0.8,2.1,2.7,1.9,0,D);tb(5.6,0.35,2.3,-1.2,0.8,0,W);tb(5.6,0.2,2.32,-1.2,1.0,0,O);
+      [[2.6,-1.1],[2.6,1.1],[-0.6,-1.1],[-0.6,1.1],[-2.8,-1.1],[-2.8,1.1]].forEach(([x,z])=>{const w=new THREE.Mesh(new THREE.CylinderGeometry(0.5,0.5,0.35,14),D);w.rotation.x=Math.PI/2;w.position.set(x,0.5,z);tr.add(w);});
+      const amb=[-1,1].map(s=>{const a=new THREE.Sprite(new THREE.SpriteMaterial({map:TX.dot,color:lin("#ffb020"),transparent:true,depthWrite:false,toneMapped:false}));a.position.set(3.2,2.45,s*0.8);a.scale.setScalar(0.8);tr.add(a);return a;});
+      const b1=new THREE.Group();b1.position.set(-2.6,1.2,0);tr.add(b1);tb(4.6,0.3,0.3,2.3,0,0,W,b1);const b2=new THREE.Group();b2.position.set(4.6,0,0);b1.add(b2);tb(4.2,0.25,0.25,2.1,0,0,W,b2);
+      const bk=new THREE.Group();bk.position.set(4.2,0,0);b2.add(bk);tb(0.9,0.9,0.9,0,0.2,0,O,bk);const lm=new THREE.Group();lm.position.set(0,0.7,0);bk.add(lm);tb(0.3,0.5,0.4,0,0.1,0,O,lm);tb(0.24,0.24,0.24,0,0.5,0,new StdMat({color:lin0("#e0b48c")}),lm);
+      {const h=new THREE.Mesh(sphereG,new StdMat({color:lin0("#f2f2f2")}));h.scale.set(0.16,0.11,0.16);h.position.set(0,0.66,0);lm.add(h);}
+      const TX0=px+30,TX1=px+9,TZ=pz+9;tr.visible=false;let fl0=0;
+      return (now,rdt,inc)=>{const k=inc&&inc.total?inc.left/inc.total:1,p=1-k,t=now/1000;
+        // act 1: the arc flash (first ~3% of the brownout, about a second at normal speed)
+        const fa=p<0.035?Math.sin(p/0.035*Math.PI):0;big.visible=fa>0.02;big.scale.setScalar(4+22*fa);G3.bFlash=p<0.012?0.85:p<0.02?0:p<0.026?0.5:0;if(fa>0.5)shake=Math.max(shake,0.8);
+        // act 2: arcs on a beat, lights sag; act 3 (p > 0.9): power comes back with a bright pulse
+        const beat=((t*1.25)|0),ph=(t*1.25)%1,fl=ph<0.12&&p>0.035&&p<0.9;arcs.forEach((s,i)=>{s.visible=fl&&i===beat%3;s.scale.setScalar(3+2*(1-ph/0.12));});
+        if(p>0.035&&p<0.9&&rdt>0&&Math.random()<rdt*5)emitA("smoke",px+R()*2,py+1.5,pz-2+R()*2,R()*0.6,1.6+Math.random(),R()*0.6,3.5,2.5+Math.random()*2,"#3a3f48",0.55);
+        if(fl&&rdt>0&&Math.random()<rdt*40)emit("spark",px-6+(beat%3)*6,py,pz-2,R()*3,1+Math.random()*2,R()*3,0.4,0.2,"#9fd0ff",1);
+        const back=p<0.9?0:EZ((p-0.9)/0.06);G3.brownK=p<0.035?1-0.45*EZ(p/0.035):(0.55+0.2*Math.sin(t*4.3)*Math.sin(t*14))*(1-back)+back*(1+0.5*Math.sin(Math.min(1,(p-0.9)/0.1)*Math.PI));
+        {const sag=Math.max(0,1-G3.brownK);G3.tint=G3.brownK>1?["#fff6d8",0.35*(G3.brownK-1)]:["#141a2c",0.7*sag];}
+        // the bucket truck: drives in (p 0.45-0.55), boom up (0.55-0.62), works (to 0.9), boom down and away (0.92-1)
+        const din=EZ((p-0.45)/0.1),dout=EZ((p-0.93)/0.07);tr.visible=p>0.45&&dout<1;tr.position.set(TX0+(TX1-TX0)*din+(TX0-TX1)*dout*1.3,0,TZ);tr.rotation.y=Math.PI;
+        const up=EZ((p-0.55)/0.07)*(1-EZ((p-0.9)/0.03));b1.rotation.z=0.15+0.75*up;b2.rotation.z=-0.2-0.5*up;bk.rotation.z=-(b1.rotation.z+b2.rotation.z);lm.rotation.y=Math.sin(t*1.3)*0.4;
+        amb.forEach((a,i)=>{a.visible=tr.visible&&((t*2.5+i*0.5)%1)<0.5;});
+        if(tr.visible&&up>0.95&&p<0.9&&rdt>0&&Math.random()<rdt*14){tr.updateMatrixWorld();const wv=bk.getWorldPosition(_bkv);emit("spark",wv.x+R(),wv.y+1.2,wv.z+R(),R()*2,1+Math.random()*2,R()*2,0.35,0.18,"#ffe08a",1);}};},
+    // desert: a haboob. A wall of dust hundreds of metres wide rolls in from the north over the flats and swallows the
+    // mill; inside it the sky goes orange-brown (envUpdate reads G3.dustK), dust streams across the site and tumbleweeds
+    // bounce through; at the end it thins out and a film of dust on the ground fades away.
+    duststorm:g=>{const WALL=[];for(let i=0;i<60;i++){const s=new THREE.Sprite(new THREE.SpriteMaterial({map:TX.puff,color:lin("#c49a5e"),transparent:true,opacity:0.8,depthWrite:false}));
+        s.userData={x:-320+(i%30)*22+Math.random()*10,y:i<30?14+Math.random()*8:36+Math.random()*12,s:i<30?44+Math.random()*16:38+Math.random()*16,ph:Math.random()*6,dz:Math.random()*14};g.add(s);WALL.push(s);}
+      const TW=new THREE.MeshBasicMaterial({color:lin0("#8a6a3e"),wireframe:true}),weeds=[...Array(7)].map((_,i)=>{const m=new THREE.Mesh(new THREE.IcosahedronGeometry(0.55+Math.random()*0.3,1),TW);
+        m.userData={z:-40+i*17+Math.random()*8,v:7+Math.random()*5,o:Math.random()*400,b:1.5+Math.random()};g.add(m);return m;});
+      const film=new THREE.Mesh(new THREE.CircleGeometry(230,40),new THREE.MeshBasicMaterial({color:lin0("#c9a86b"),transparent:true,opacity:0,depthWrite:false}));film.rotation.x=-Math.PI/2;film.position.set(-10,0.05,10);film.renderOrder=1;g.add(film);
+      return (now,rdt,inc)=>{const k=inc&&inc.total?inc.left/inc.total:1,p=1-k,t=now/1000;
+        // the wall: from 420 m north to past the mill over the first 14% of the storm
+        const a=EZ(p/0.14),wz=-460+560*a,wv=p<0.15;WALL.forEach((s,i)=>{const u=s.userData;s.visible=wv;if(!wv)return;const b=1+0.08*Math.sin(t*0.7+u.ph);s.position.set(u.x+Math.sin(t*0.3+u.ph)*4,u.y,wz+u.dz);s.scale.setScalar(u.s*b);s.material.opacity=0.8*(p>0.12?1-(p-0.12)/0.03:1);});
+        G3.dustK=p<0.1?0:p<0.15?EZ((p-0.1)/0.05):p<0.85?1:1-EZ((p-0.85)/0.15);
+        G3.tint=["#b98a4e",0.42*G3.dustK*(0.9+0.1*Math.sin(t*1.7))];
+        for(let q=0;q<3;q++)if(rdt>0&&Math.random()<rdt*40*G3.dustK)emitA("smoke",-95+Math.random()*190,0.6+Math.random()*4,-55+Math.random()*120,10+Math.random()*6,0.2,R()*1.5,3.2,7+Math.random()*6,"#c9a86b",0.55);
+        weeds.forEach((m,i)=>{const u=m.userData,on=G3.dustK>0.6;m.visible=on;if(!on)return;const x=-170+((t*u.v+u.o)%340);m.position.set(x,0.6+Math.abs(Math.sin(t*u.b*2+i))*1.4,u.z+Math.sin(t*0.5+i)*3);m.rotation.set(t*u.v*0.9,0,-t*u.v*0.9);});
+        const fo=p<0.6?0:p<0.85?EZ((p-0.6)/0.25)*0.22:0.22*(1-EZ((p-0.88)/0.12));film.visible=fo>0.01;film.material.opacity=fo;};},
+    // swamp: water over the yard and the roads (not inside the buildings). v4.2.4 (the bayou flood as a marquee upset,
+    // visuals only): the canal swells and spills, a muddy front with a foam line spreads south across the yard, rain
+    // sets in, sandbag walls go up at the doors, bales, pallets, drums and a tyre float and drift, forklifts and clamp
+    // trucks throw spray, a gator cruises through the yard once, and at the end the water drains back to the canal
+    // and leaves dark wet ground that dries out. The pulper overflow (same effect) keeps the plain version.
+    flood:g=>{const sh=new THREE.Shape(),Z0=-52,Z1=66,X0=-150,X1=96;sh.moveTo(X0,Z0);sh.lineTo(X1,Z0);sh.lineTo(X1,Z1);sh.lineTo(X0,Z1);sh.closePath();
+      const HOLES=[[-27.2,64,-2.9,19.85],[-34.4,-8,-23.5,-3],[-49,-23.8,14.8,32.2],[4,47,-25,-2],[49,65,-27,-14.5],[70,82,-16,-4],[49,61,24,30]];
+      HOLES.forEach(([x0,x1,z0,z1])=>{const h=new THREE.Path();h.moveTo(x0,z0);h.lineTo(x1,z0);h.lineTo(x1,z1);h.lineTo(x0,z1);h.closePath();sh.holes.push(h);});
+      const inHole=(x,z)=>HOLES.some(([x0,x1,z0,z1])=>x>x0-0.8&&x<x1+0.8&&z>z0-0.8&&z<z1+0.8);
+      const geo=new THREE.ShapeGeometry(sh);geo.rotateX(Math.PI/2);geo.translate(0,0,-Z0);   // (north edge at z 0, so the sheet spreads south by scaling z)
+      const wm=new StdMat({color:lin0("#7b6a47"),transparent:true,opacity:0,roughness:0.04,metalness:0.3,depthWrite:false,side:THREE.DoubleSide});
+      const w=new THREE.Mesh(geo,wm);w.position.set(0,0.09,Z0);w.renderOrder=1;g.add(w);
+      const wetM=new THREE.MeshBasicMaterial({color:lin0("#3e3a2c"),transparent:true,opacity:0,depthWrite:false,side:THREE.DoubleSide});
+      const wet=new THREE.Mesh(geo,wetM);wet.position.set(0,0.06,Z0);wet.renderOrder=1;g.add(wet);
+      // the foam line at the front, and the swollen canal
+      const foamM=new THREE.MeshBasicMaterial({color:0xffffff,transparent:true,opacity:0,depthWrite:false}),foam=new THREE.Mesh(new THREE.PlaneGeometry(X1-X0,3.2),foamM);foam.rotation.x=-Math.PI/2;foam.renderOrder=2;g.add(foam);
+      const [czc,chw]=riverAt(0),canalM=new StdMat({color:lin0("#6e6244"),transparent:true,opacity:0,roughness:0.1,metalness:0.2,depthWrite:false}),canal=new THREE.Mesh(new THREE.PlaneGeometry(700,chw*2+6),canalM);
+      canal.rotation.x=-Math.PI/2;canal.position.set(0,0.1,czc+1);canal.renderOrder=1;g.add(canal);
+      // ripples that only show on the water
+      const RG=new RingG(0.85,1,36),rings=[...Array(36)].map(()=>{const r=new THREE.Mesh(RG,new THREE.MeshBasicMaterial({color:0xffffff,transparent:true,depthWrite:false,side:THREE.DoubleSide}));r.rotation.x=-Math.PI/2;r.userData.ph=Math.random();r.visible=false;g.add(r);return r;});
+      // the current: long faint streaks of foam drifting east across the water
+      const stM=new THREE.MeshBasicMaterial({color:0xffffff,transparent:true,opacity:0,depthWrite:false}),streaks=[...Array(12)].map(()=>{const m=new THREE.Mesh(new THREE.PlaneGeometry(1,1),stM);m.rotation.x=-Math.PI/2;m.userData={x:Math.random(),z:Z0+3+Math.random()*(Z1-Z0-6),l:6+Math.random()*10,v:0.6+Math.random()*0.6};m.scale.set(m.userData.l,0.6,1);m.renderOrder=2;g.add(m);return m;});
+      // sandbag walls along the receiving and shipping door walls (two courses of bags)
+      const bagM=new StdMat({color:lin0("#b9a27a"),roughness:0.95}),walls=[[-35.5,-13.2,17,Math.PI/2],[-50,23.5,15,Math.PI/2]].map(([x,z,L,ry])=>{const wg=new THREE.Group();wg.position.set(x,0,z);wg.rotation.y=ry;g.add(wg);
+        for(let row=0;row<2;row++)for(let i=0;i<Math.round(L/0.62);i++){const b=new THREE.Mesh(cubeG,bagM);b.scale.set(0.58,0.26,0.4);b.position.set(-L/2+0.31+i*0.62+(row?0.3:0),0.13+row*0.25,0);b.rotation.y=(Math.random()-0.5)*0.15;b.castShadow=true;wg.add(b);}return wg;});
+      // floating debris: bales, pallets, drums, a tyre
+      const dm=k=>new StdMat({color:lin0(k),roughness:0.8}),debris=[];
+      const addD=(o,y,ax)=>{o.userData={x:X0+20+Math.random()*(X1-X0-40),z:Z0+4+Math.random()*44,y,ax,ph:Math.random()*6,v:0.25+Math.random()*0.35,r:Math.random()*6};g.add(o);debris.push(o);};
+      for(let k=0;k<9;k++){const o=new THREE.Mesh(cubeG,M.kraft);o.scale.set(1.3,0.85,1.0);addD(o,0.2,0);}
+      for(let k=0;k<4;k++){const o=new THREE.Group();for(let s=0;s<4;s++){const p=new THREE.Mesh(cubeG,dm("#a07a4a"));p.scale.set(1.2,0.05,0.18);p.position.set(0,0.12,-0.4+s*0.27);o.add(p);}
+        for(let s=0;s<3;s++){const p=new THREE.Mesh(cubeG,dm("#8a6a42"));p.scale.set(1.2,0.1,0.1);p.position.set(0,0.05,-0.42+s*0.42);o.add(p);}addD(o,0.06,0);}
+      [["#2a5aa8"],["#a8322c"]].forEach(([c])=>{const o=new THREE.Mesh(new THREE.CylinderGeometry(0.3,0.3,0.9,14),dm(c));o.rotation.z=Math.PI/2;addD(o,0.12,1);});
+      {const o=new THREE.Mesh(new THREE.TorusGeometry(0.42,0.16,8,18),dm("#2f3a49"));o.rotation.x=Math.PI/2;addD(o,0.08,2);}
+      // the gator: cruises through the flooded yard once, eyes and back just out of the water
+      const gm=dm("#39432e"),gd=dm("#2a3222"),gtr=new THREE.Group();g.add(gtr);
+      const gb=(w,h,d,x,y,z,m)=>{const b=new THREE.Mesh(cubeG,m||gm);b.scale.set(w,h,d);b.position.set(x,y,z);gtr.add(b);return b;};
+      gb(1.5,0.26,0.6,0,0,0);gb(0.9,0.2,0.34,1.1,0.0,0);[-1,1].forEach(s=>gb(0.1,0.1,0.1,0.8,0.15,s*0.13,gd));for(let i=0;i<6;i++)gb(0.12,0.08,0.08,-0.6+i*0.22,0.16,0,gd);
+      const gt1=new THREE.Group();gt1.position.set(-0.75,0,0);gtr.add(gt1);{const b=new THREE.Mesh(cubeG,gm);b.scale.set(1.3,0.18,0.3);b.position.x=-0.6;gt1.add(b);}gtr.scale.setScalar(1.35);gtr.visible=false;
+      let lastL=new Map();
+      return (now,rdt,inc)=>{const k=inc&&inc.total?inc.left/inc.total:1,big=!!(inc&&inc.id==="flood"),p=1-k;
+        // s: how far south the water has spread; lv: water level; dry: the wet ground fading at the end
+        let s,lv,cl,wt;if(!big){lv=k>0.85?(1-k)/0.15:k<0.25?k/0.25:1;s=1;cl=0;wt=0;}
+        else{s=p<0.14?EZ(p/0.14):p<0.86?1:1-EZ((p-0.86)/0.1);lv=p<0.14?0.4+0.6*EZ(p/0.14):p<0.86?1:Math.max(0,1-(p-0.86)/0.1);cl=p<0.1?EZ(p/0.1):p<0.86?1:1-EZ((p-0.86)/0.12);wt=p<0.84?0:p<0.96?EZ((p-0.84)/0.06):1-EZ((p-0.96)/0.04);}
+        const sz=Math.max(0.001,s),front=Z0+(Z1-Z0)*sz;
+        w.visible=s>0.002&&lv>0.01;w.scale.z=sz;wm.opacity=(big?0.88:0.72)*lv;w.position.y=0.03+0.07*lv;G3.floodK=big?Math.min(1,cl*1.2):0;
+        wet.visible=wt>0.01;wetM.opacity=0.32*wt;
+        foam.visible=big&&s>0.01&&s<0.99;foam.position.set((X0+X1)/2,w.position.y+0.04,front);foamM.opacity=0.95*(0.75+0.25*Math.sin(now/180))*(p<0.5?1:0.5);if(rdt>0&&Math.random()<rdt*40)emitA("drop",X0+Math.random()*(X1-X0),0.3,front,R()*1.5,1+Math.random()*1.5,1+Math.random(),0.6,0.35,"#e6efe9",0.8);
+        canal.visible=big&&cl>0.01;canalM.opacity=0.55*cl;canal.position.y=0.05+0.25*cl;
+        for(const r of rings){const ph=(now/1500+r.userData.ph)%1;if(ph<0.03||!r.userData.p){r.userData.p=[X0+10+Math.random()*(X1-X0-20),Z0+2+Math.random()*(Z1-Z0-4)];}
+          const [rx,rz]=r.userData.p,on=lv>0.2&&rz<front-1&&!inHole(rx,rz);r.visible=on;if(on){r.position.set(rx,w.position.y+0.02,rz);r.scale.setScalar(0.6+ph*5.5);r.material.opacity=0.75*(1-ph)*lv;}}
+        stM.opacity=0.42*lv;for(const m of streaks){const u=m.userData,x=X0+((u.x*(X1-X0)+now/1000*u.v)%(X1-X0));const on=lv>0.2&&u.z<front-2&&!inHole(x,u.z)&&!inHole(x+u.l/2,u.z)&&!inHole(x-u.l/2,u.z);m.visible=on;if(on)m.position.set(x,w.position.y+0.02,u.z);}
+        // sandbags go up during the warning and come down after the water has gone
+        const sb=big?(p<0.04?0:p<0.12?EZ((p-0.04)/0.08):p<0.97?1:1-EZ((p-0.97)/0.03)):0;walls.forEach((wg,i)=>{wg.visible=sb>0.01;wg.scale.y=Math.max(0.01,EZ(sb*1.6-i*0.12));});
+        for(const d of debris){const u=d.userData,t=now/1000;const x=X0+10+((u.x-X0-10+t*u.v)%(X1-X0-20)+(X1-X0-20))%(X1-X0-20),z=u.z+Math.sin(t*0.2+u.ph)*1.5;
+          const on=lv>0.3&&z<front-1.5&&!inHole(x,z);d.visible=on;if(!on)continue;d.position.set(x,w.position.y+u.y+Math.sin(t*1.4+u.ph)*0.04,z);
+          if(u.ax===1){d.rotation.y=u.r+t*0.1;}else if(u.ax===2){d.rotation.z=Math.sin(t+u.ph)*0.1;}else{d.rotation.set(Math.sin(t*1.1+u.ph)*0.05,u.r+t*0.05,Math.sin(t*0.9+u.ph)*0.05);}}
+        // the gator's cruise (p 0.42-0.62): north-west to south-east across the yard
+        const gp=big?(p-0.42)/0.2:-1;gtr.visible=gp>0&&gp<1&&lv>0.5;if(gtr.visible){const ax=-105,az=-47,bx=-35,bz=-46,x=ax+(bx-ax)*gp,z=az+(bz-az)*gp+Math.sin(gp*9)*1.2;
+          gtr.position.set(x,w.position.y-0.1,z);gtr.rotation.y=Math.atan2(-(bz-az),bx-ax);gt1.rotation.y=Math.sin(now/300)*0.35;}
+        // forklifts and clamp trucks in the water throw spray
+        if(big&&lv>0.5&&rdt>0){for(const L of [G3.liftObjs,G3.loaderObjs])if(L)for(const o of L){if(!o||!o.visible)continue;const x=o.position.x,z=o.position.z,q=lastL.get(o);lastL.set(o,[x,z]);
+            if(!q||z>front||inHole(x,z))continue;const mv=Math.hypot(x-q[0],z-q[1]);if(mv>0.004&&Math.random()<rdt*24)emitA("drop",x+R()*1.2,0.35,z+R()*1.2,R()*2,1.2+Math.random()*1.4,R()*2,0.55,0.3,"#dfe9e6",0.85);}}};},
   };
   const blackEl=$("blackout3d");let lastIncTxt=0;
   function makeFX(id){const def=FXDEF[id];const g=new THREE.Group();scene.add(g);const pp=PINS[id]||[0,10,0,"!"];const f=FX[id]={g,up:null,pin:pinAt(g,pp[0],pp[1],pp[2],pp[3]),lb:lblNew(true,id)};
@@ -4687,7 +4932,7 @@ function no3D(){G3.ok=false;$("no3d").hidden=false;$("no3d-retry").onclick=()=>l
       if(!f)f=makeFX(inc.id);
       if(G3.EXP&&G3.EXP.hideFX===inc.id){f.g.visible=false;return;}   // autotest GPU probe: this effect off (no drawing, no new particles)
       f.g.visible=true;f.on=true;f.up(now,rdt,inc);if(f.pinPos)f.pin.move(f.pinPos[0],f.pinPos[1]);f.pin.update(now);
-      {const zp=!G3.zen;f.pin.p.visible=f.pin.ring.visible=f.pin.stem.visible=zp;}   // v3.0.1: zen mode shows events without the red pins
+      {const zp=!G3.zen&&!G3.cineOn;f.pin.p.visible=f.pin.ring.visible=f.pin.stem.visible=zp;}   // v3.0.1: zen mode shows events without the red pins
       tmp.set(f.pin.x,f.pin.p.position.y+3.4,f.pin.z).project(camera);const vis=!G3.zen&&tmp.z<1&&Math.abs(tmp.x)<1.1&&Math.abs(tmp.y)<1.1;f.lb.vis=vis;
       if(vis){f.lb.x=Math.round((tmp.x+1)/2*w);f.lb.y=Math.round((1-tmp.y)/2*hh);
         if(doTxt||f.lb.a==null){const st=incState(inc),b=`${st?st+" · ":""}${(inc.left/60).toFixed(1)} h left${inc.note?" · "+inc.note.split(" · ")[0]:""}`;lblSet(f.lb,EV[inc.id].name,b,true);}}});
@@ -4695,8 +4940,9 @@ function no3D(){G3.ok=false;$("no3d").hidden=false;$("no3d-retry").onclick=()=>l
     stepParts(rdt);fireLight.position.copy(fireLpos);fireFloorK=Math.max(0,fireFloorK-rdt*1.5);
     {const fl=0.9*Math.sin(performance.now()/60)+0.6*Math.sin(performance.now()/23),on=fireFloor.userData.on||0;fireLight.intensity=fireL>0?LEG*0.75*fireL*(3.4+fl+fireFloorK*3):0;
       fireFloor.visible=on>0;if(on>0){if(!fireFloor.material.map){fireFloor.material.map=spriteTex((x,w)=>{const g=x.createRadialGradient(w/2,w/2,0,w/2,w/2,w/2);g.addColorStop(0,"rgba(255,255,255,1)");g.addColorStop(0.4,"rgba(255,255,255,0.6)");g.addColorStop(1,"rgba(255,255,255,0)");x.fillStyle=g;x.fillRect(0,0,w,w);});fireFloor.material.needsUpdate=true;}fireFloor.material.opacity=Math.min(1,on*(0.42+0.1*fl+fireFloorK*0.25));}fireFloor.userData.on=0;}fireL=0;
-    if(!S.inc.some(i=>i.id==="brownout"))G3.brownK=1;if(!S.inc.some(i=>i.id==="duststorm"))G3.dustK=0;if(!S.inc.some(i=>i.id==="flood"))G3.floodK=0;
-    const out=S.inc.some(i=>i.id==="lightning");if(blackEl.hidden!==!out)blackEl.hidden=!out;if(!out){const fl=$("flash3d");if(fl.style.opacity!=="0")fl.style.opacity=0;}
+    if(!S.inc.some(i=>i.id==="brownout")){G3.brownK=1;G3.bFlash=0;}{const el=$("tint3d"),T=S.inc.some(i=>i.id==="brownout"||i.id==="duststorm")&&G3.tint?G3.tint:null,c=T?T[0]:"#000",o=T?String(Math.round(T[1]*100)/100):"0";if(el){if(el.style.background!==c&&T)el.style.background=c;if(el.style.opacity!==o)el.style.opacity=o;}if(!T)G3.tint=null;}if(!S.inc.some(i=>i.id==="icedintake"))G3.iceK=0;if(!S.inc.some(i=>i.id==="duststorm"))G3.dustK=0;if(!S.inc.some(i=>i.id==="flood"))G3.floodK=0;
+    const out=S.inc.some(i=>i.id==="lightning"||(i.id==="birdline"&&!G3.cineHold));if(blackEl.hidden!==!out)blackEl.hidden=!out;
+    if(out){const bt=S.inc.some(i=>i.id==="lightning")?"Lightning hit the substation. Backup generators starting…":"A bird flew into the substation. Backup generators starting…",sp=blackEl.querySelector("span");if(sp&&sp.textContent!==bt)sp.textContent=bt;}if(!out){const fl=$("flash3d"),v=String(G3.bFlash||0);if(fl.style.opacity!==v)fl.style.opacity=v;}
   }
 
   /* ---- winder, waiting reels, roof trusses ---- */
@@ -4881,11 +5127,13 @@ function no3D(){G3.ok=false;$("no3d").hidden=false;$("no3d-retry").onclick=()=>l
   function rope(m,ax,ay,az,bx,by,bz){_ra.set(ax,ay,az);_rb.set(bx,by,bz);const d=_rb.clone().sub(_ra),L=d.length();m.position.copy(_ra).add(_rb).multiplyScalar(0.5);m.quaternion.setFromUnitVectors(_rup,d.normalize());m.scale.set(1,L,1);m.visible=true;}
   // walk around the headbox end to reach the drive side (and back again) instead of through the machine
   const AROUND=62.5,BACKZ=4.3;
+  // v4.2.3: the detour lives in its own field (sideWp). It used to share u.wp with the path planner (walkPlan), which
+  // clears u.wp when a walker's destination changes; the next shift() threw, and the 3D frame stopped part-way every frame
   function goSide(w,gx,gz,sp,rdt){const u=w.userData,tb=gz<6.2,ib=w.position.z<6.2;
-    if(u.wp&&u.wpTo!==tb)u.wp=null;
-    if(!u.wp&&tb!==ib){u.wpTo=tb;const onLine=Math.abs(w.position.x-AROUND)<0.3;u.wp=tb?[[AROUND,onLine?w.position.z:Math.max(13.8,w.position.z)],[AROUND,BACKZ]]:[[AROUND,onLine?w.position.z:BACKZ],[AROUND,14.8]];}
-    while(u.wp&&u.wp.length){if(moveP(w,u.wp[0][0],u.wp[0][1],sp,rdt))u.wp.shift();else return false;}
-    u.wp=null;return moveP(w,gx,gz,sp,rdt);}
+    if(u.sideWp&&u.sideTo!==tb)u.sideWp=null;
+    if(!u.sideWp&&tb!==ib){u.sideTo=tb;const onLine=Math.abs(w.position.x-AROUND)<0.3;u.sideWp=tb?[[AROUND,onLine?w.position.z:Math.max(13.8,w.position.z)],[AROUND,BACKZ]]:[[AROUND,onLine?w.position.z:BACKZ],[AROUND,14.8]];}
+    while(u.sideWp&&u.sideWp.length){if(moveP(w,u.sideWp[0][0],u.sideWp[0][1],sp,rdt))u.sideWp.shift();else return false;}
+    u.sideWp=null;return moveP(w,gx,gz,sp,rdt);}
   const HAY=[[-23.6,14],[-14,13.6],[-24.2,7.5],[-13.2,8.5],[-22.5,4.2],[-15.5,4.2],[-19.5,15.4]];
   const RT=[[27,14.2],[23,14.2],[19,14.2],[15,14.2],[11,14.2],[25,4.1],[17,4.1]];
   const BRKSPOT={reel:[[-8,14.2],[-5.5,14.2],[-3,14.2],[-6.5,4.1],[22,14.2],[17,14.2],[20,4.1]],dryer:RT,
@@ -5316,9 +5564,10 @@ function no3D(){G3.ok=false;$("no3d").hidden=false;$("no3d-retry").onclick=()=>l
     const wxN=Math.min(n,(G3.GFX&&G3.GFX.wx)||1000);g.setDrawRange(0,wxN);rg.setDrawRange(0,wxN*2);G3.wxRange=k=>{const q=Math.min(n,k);g.setDrawRange(0,q);rg.setDrawRange(0,q*2);};return {p,g,pos,m,n,rg,rp,rm,rl};})();
   scene.fog=new THREE.Fog(0xb3bbcb,600,3000);
   const SKY_DAY=new THREE.Color(),SKY_NIGHT=lin0("#232b44"),SKY_RAIN=lin0("#8c94a2"),SKY_FOG=lin0("#c9ced6"),SKY_DUST=lin0("#c9a86b"),tmpC=new THREE.Color();let fogK=0,wxK=0,envAcc=0,dustK=0;
-  function envUpdate(rdt,now){const out=S.inc.some(i=>i.id==="lightning");
+  function envUpdate(rdt,now){const out=S.inc.some(i=>i.id==="lightning"||(i.id==="birdline"&&!G3.cineHold));
     const hr=((S.t+360)/60)%24,ss=v=>v*v*(3-2*v),day=hr<12?ss(clamp((hr-5.2)/1.6,0,1)):ss(clamp((20.2-hr)/1.6,0,1));
-    const wx=S.wx||"clear";fogK+=((wx==="fog"?0.45:wx==="snow"?0.12:wx==="rain"?0.06:0)-fogK)*Math.min(1,rdt*0.8+0.01);
+    const wx=(G3.floodK>0.3&&S.wx!=="snow")?"rain":G3.iceK>0.3?"snow":(S.wx||"clear");   // (v4.2.4: the flood brings rain and the iced intake snow, as visuals)
+    fogK+=((wx==="fog"?0.45:wx==="snow"?0.12:wx==="rain"?0.06:0)-fogK)*Math.min(1,rdt*0.8+0.01);
     wxK+=((wx==="rain"||wx==="snow"?1:0)-wxK)*Math.min(1,rdt*0.6+0.01);
     // v4.1: a desert dust storm (G3.dustK) and a city brownout (G3.brownK) colour the sky and sag the lights
     dustK+=((G3.dustK||0)-dustK)*Math.min(1,rdt*0.7+0.01);const bk=G3.brownK==null?1:G3.brownK;
@@ -5359,7 +5608,7 @@ function no3D(){G3.ok=false;$("no3d").hidden=false;$("no3d-retry").onclick=()=>l
     ENV.bridge.rotation.y-=rdt*0.12;
     // steam plume grows with production and dies when the boiler trips
     const boil=S.inc.some(i=>i.id==="boiler"),pr=clamp((S.rates.prod||0)/35,0,1.4);if(!boil&&G3.POP)G3.POP.lever.rotation.z=0;
-    if(!boil&&rdt>0&&Math.random()<rdt*(2+10*pr))emitA("steam",ENV.stack[0]+R()*0.6,ENV.stack[1],ENV.stack[2]+R()*0.6,1.2+R(),2.5+Math.random()*1.5,R()*0.6,4+3*pr,3+4*pr,"#ffffff",0.55);
+    if(!boil&&rdt>0&&Math.random()<rdt*(2+10*pr)*Math.min(1,G3.brownK==null?1:G3.brownK*G3.brownK))emitA("steam",ENV.stack[0]+R()*0.6,ENV.stack[1],ENV.stack[2]+R()*0.6,1.2+R(),2.5+Math.random()*1.5,R()*0.6,4+3*pr,3+4*pr,"#ffffff",0.55);
     if(rdt>0){for(const [x,z] of ENV.aer)if(Math.random()<rdt*6)emitA("steam",x+R()*0.6,1.4,z+R()*0.6,R()*1.5,1.5,R()*1.5,0.8,0.8,"#ffffff",0.6);
       if(Math.random()<rdt*8)emitA("drop",ENV.outfall[0]+R()*0.3,ENV.outfall[1]+0.5,ENV.outfall[2],R(),1.5,-1.5,0.6,0.28,"#9ec3d6",0.8);}
     const perm=S.inc.some(i=>i.id==="permit");ENV.wwM.color.copy(perm?ENV.wwBad:ENV.wwBase);if(ENV.wwM2)ENV.wwM2.color.copy(ENV.wwM.color);
@@ -5531,7 +5780,7 @@ function no3D(){G3.ok=false;$("no3d").hidden=false;$("no3d-retry").onclick=()=>l
     cylZ(0.3,0.16,M.ink,0.78,0.3,0,16,g);cylZ(0.3,0.16,M.ink,-0.55,0.3,-0.45,16,g);cylZ(0.3,0.16,M.ink,-0.55,0.3,0.45,16,g);
     box(0.04,1.4,0.04,M.ink,-0.82,1.5,0.25,g,false);const flag=new THREE.Mesh(new THREE.PlaneGeometry(0.42,0.26),new THREE.MeshBasicMaterial({color:lin(tok("fire")),side:THREE.DoubleSide}));flag.position.set(-0.6,2.08,0.25);g.add(flag);
     g.userData.trike=true;scene.add(g);return g;}
-  const MAINT_SPOT={refclash:[58.2,-11],steamjoint:[11.2,3.4],fogfan:[47.2,-5.4],shaft:[12,16.4],fabric:[53.5,14.6],felt:[40.5,14.6],overflow:[-5,-10.5],chestover:[29.5,-9.6],hdblow:[24.2,-9.4],boiler:[68.6,-10],thkblow:[41.6,-10.4],lwplug:[11.2,-20.3],cscreen:[15.2,-20.6],fscreen:[19.2,-20.4],lcplug:[26.6,-20.7],winderdown:[-14.6,14.6],fleet:[-6.3,-14],roof:[-21.6,24],lightning:[40,-8],icedintake:[-30,-50]};
+  const MAINT_SPOT={birdline:[40,-8],refclash:[58.2,-11],steamjoint:[11.2,3.4],fogfan:[47.2,-5.4],shaft:[12,16.4],fabric:[53.5,14.6],felt:[40.5,14.6],overflow:[-5,-10.5],chestover:[29.5,-9.6],hdblow:[24.2,-9.4],boiler:[68.6,-10],thkblow:[41.6,-10.4],lwplug:[11.2,-20.3],cscreen:[15.2,-20.6],fscreen:[19.2,-20.4],lcplug:[26.6,-20.7],winderdown:[-14.6,14.6],fleet:[-6.3,-14],roof:[-21.6,24],lightning:[40,-8],icedintake:[-30,-50]};
   function lane(p){return p[1]>2.4?"F":"C";}
   // v2.9.19: maintenance trikes path-find around buildings and equipment. A 0.5 m ground grid is built once from every
   // static mesh that reaches into the 0.25-1.9 m band (walls, tanks, skids, pumps, trees, posts), grown by 0.75 m for the
@@ -7189,7 +7438,7 @@ function no3D(){G3.ok=false;$("no3d").hidden=false;$("no3d-retry").onclick=()=>l
       shuttle(g,AS.fork.slice().reverse(),3,5,st=>{load.visible=st.dir<0;});}
     /* ---- v17 rare sights: now and then (every 4-10 minutes of play, at random) something odd happens out on the site
        for half a minute: cowboys ride across the desert flats, Bigfoot steps out of the valley woods, a tugboat steams
-       across the city bay, a gator takes an operator on the bayou bank. Purely visual: random timing (not the sim's
+       across the city bay, a gator bites the hand off an operator on the bayou bank (an Amos Moses nod). Purely visual: random timing (not the sim's
        dice), no costs, no production effect, nothing logged. ?sight=1 shows one a few seconds in, then every 40 s. ---- */
     {const Q=new URLSearchParams(location.search),FAST=Q.has("sight"),pathAt=(P,s)=>{let i=1,L=0;for(;i<P.length;i++){const d=Math.hypot(P[i][0]-P[i-1][0],P[i][1]-P[i-1][1]);if(L+d>=s||i===P.length-1){const f=Math.min(1,(s-L)/Math.max(1e-6,d));
           return [P[i-1][0]+(P[i][0]-P[i-1][0])*f,P[i-1][1]+(P[i][1]-P[i-1][1])*f,Math.atan2(-(P[i][1]-P[i-1][1]),P[i][0]-P[i-1][0])];}L+=d;}return [P[0][0],P[0][1],0];},
@@ -7200,58 +7449,295 @@ function no3D(){G3.ok=false;$("no3d").hidden=false;$("no3d-retry").onclick=()=>l
         p.a=[-1,1].map(s=>part(g,0.16*big,0.62*big,0.16*big,0,y0+0.86*big,s*0.33*big,"body"+body,body));p.h=part(g,0.28*big,0.28*big,0.28*big,0,y0+1.52*big,0,"skin","#e0b48c");
         if(hat)p.hat=part(g,hatK==="wide"?0.75:0.36,0.12,hatK==="wide"?0.75:0.36,0,y0+1.78*big,0,"hat"+hat,hat);if(hat&&hatK==="wide")part(g,0.34,0.24,0.34,0,y0+1.86,0,"hat"+hat,hat);return p;};
       const swing=(p,t,k=1)=>{if(p.l){p.l[0].rotation.z=Math.sin(t)*0.5*k;p.l[1].rotation.z=-Math.sin(t)*0.5*k;}if(p.a){p.a[0].rotation.z=-Math.sin(t)*0.6*k;p.a[1].rotation.z=Math.sin(t)*0.6*k;}};
+      // ---- v4.2.3 shared builders for the sights (all built once at start-up, hidden) ----
+      const BX=(p,w,h,d,x,y,z,k,hex)=>{const m=new THREE.Mesh(cubeG,am(k,hex));m.scale.set(w,h,d);m.position.set(x,y,z);m.castShadow=true;p.add(m);return m;},
+        PIV=(p,x,y,z)=>{const g=new THREE.Group();g.position.set(x,y,z);p.add(g);return g;},
+        BALL=(p,r,x,y,z,k,hex,sy=1)=>{const m=new THREE.Mesh(sphereG,am(k,hex));m.scale.set(r,r*sy,r);m.position.set(x,y,z);p.add(m);return m;},
+        EZ=k=>k<=0?0:k>=1?1:k*k*(3-2*k),CL=(t,a,b)=>EZ((t-a)/(b-a));
+      // a person (local +x forward, +z their right) with knees, boots, hands and a hat; o: shirt, legs, hat ("cowboy"/"hard"/null), hatc, vest, scarf
+      function person(p,o){const SKN=o.skin||"#e0b48c",root=PIV(p,0,0,0),hip=PIV(root,0,0.92,0);
+        const L=[-1,1].map(s=>{const l=PIV(hip,0,0,s*0.13);BX(l,0.22,0.44,0.23,0,-0.21,0,"pl"+o.legs,o.legs);const k=PIV(l,0,-0.42,0);BX(k,0.2,0.42,0.21,0,-0.2,0,"pl"+o.legs,o.legs);
+          BX(k,0.32,0.16,0.25,0.05,-0.42,0,"boot"+(o.boot||"#4a3424"),o.boot||"#4a3424");l.userData.k=k;return l;});
+        const up=PIV(hip,0,0,0);BX(up,0.32,0.66,0.5,0,0.33,0,"ps"+o.shirt,o.shirt);if(o.vest)BX(up,0.36,0.46,0.54,0,0.43,0,"pv"+o.vest,o.vest);BX(up,0.34,0.06,0.52,0,0.04,0,"boot#4a3424","#4a3424");
+        if(o.scarf)BX(up,0.1,0.14,0.3,0.15,0.64,0,"scarf"+o.scarf,o.scarf);
+        const hd=PIV(up,0,0.72,0);BX(hd,0.11,0.08,0.11,0,0,0,"skin",SKN);BX(hd,0.28,0.3,0.27,0,0.19,0,"skin",SKN);[-1,1].forEach(s=>BX(hd,0.02,0.04,0.04,0.145,0.23,s*0.07,"dark","#1e232b"));
+        if(o.hat==="cowboy"){BX(hd,0.64,0.03,0.58,0,0.34,0,"hat"+o.hatc,o.hatc);BX(hd,0.3,0.16,0.27,0,0.43,0,"hat"+o.hatc,o.hatc);}
+        else if(o.hat==="hard"){BALL(hd,0.17,0,0.35,0,"hhat"+o.hatc,o.hatc,0.72);BX(hd,0.44,0.03,0.38,0.03,0.33,0,"hhat"+o.hatc,o.hatc);}
+        const A=[-1,1].map(s=>{const a=PIV(up,0,0.64,s*0.33);BX(a,0.15,0.6,0.15,0,-0.3,0,"ps"+o.shirt,o.shirt);const hand=BX(a,0.12,0.14,0.12,0,-0.68,0,"skin",SKN);return {a,hand};});
+        const K=l=>l.userData.k.rotation;return {root,hip,L,up,hd,A,K};}
+      const walkP=(P,ph,k=1)=>{const w=Math.sin(ph);P.L[0].rotation.z=w*0.5*k;P.L[1].rotation.z=-w*0.5*k;P.K(P.L[0]).z=-Math.max(0,-w)*0.7*k;P.K(P.L[1]).z=-Math.max(0,w)*0.7*k;
+        P.A[0].a.rotation.z=-w*0.4*k;P.A[1].a.rotation.z=w*0.4*k;P.hip.position.y=0.92+Math.abs(w)*0.03*k;};
+      // a pool of soft puffs (dust, smoke) driven from a list of [age, x, y, z] each frame
+      function puffPool(n,hex,op){const out=[...Array(n)].map(()=>{const m=new THREE.Mesh(sphereG,new THREE.MeshBasicMaterial({color:lin0(hex),transparent:true,opacity:op,depthWrite:false}));m.visible=false;scene.add(m);return m;});
+        out.show=(list,life,s0,s1,op2=op)=>{let i=0;for(const [a,x,y,z] of list){if(i>=n)break;if(a<0||a>life)continue;const m=out[i++],k=a/life,s=s0+(s1-s0)*k;m.visible=true;m.position.set(x,y,z);m.scale.set(s,s*0.7,s);m.material.opacity=op2*(1-k);}for(;i<n;i++)out[i].visible=false;};
+        out.hide=()=>out.forEach(m=>m.visible=false);return out;}
       const SIGHTS={
-        // three riders cross the flats south of the mill at a canter, kicking up a little dust
-        desert:()=>{const P=[[300,150],[180,128],[60,150],[-60,130],[-180,150],[-330,170]],T=plen(P),rs=[0,1,2].map(k=>{const g=grp();
-            const col=pick2(["#6b4a2f","#8a5a3a","#3a2a20","#b08a5a"]),horse={b:part(g,2.2,0.9,0.75,0,1.1,0,"horse"+col,col),n:part(g,0.5,0.9,0.4,1.1,1.6,0,"horse"+col,col),hd:part(g,0.8,0.38,0.36,1.45,2.3,0,"horse"+col,col),
-              legs:[[-0.8,-0.25],[-0.8,0.25],[0.8,-0.25],[0.8,0.25]].map(([a,b])=>part(g,0.16,1.1,0.16,a,0,b,"horse"+col,col))};
-            const rider=figure(g,pick2(["#a8322c","#2a5aa8","#c9a24a","#5b6270"]),"#6b4a2f","wide",1.55);rider.l.forEach(l=>{l.rotation.x=0.9;});g.visible=false;return {g,horse,rider,off:k*7+rr2(0,3),lat:(k-1)*3.2};});
-          const dm=new THREE.MeshBasicMaterial({color:lin0("#d9c49c"),transparent:true,opacity:0.3,depthWrite:false}),puffs=[...Array(12)].map(()=>{const m=new THREE.Mesh(sphereG,dm.clone());m.visible=false;scene.add(m);return {m,a:9};});let pi=0,pt=0;
-          return {t:0,tick(rdt){this.t+=rdt;const v=7;let live=false;pt+=rdt;
-              for(const r of rs){const s=this.t*v-r.off;if(s<0||s>T){r.g.visible=false;continue;}live=true;const [x,z,ry]=pathAt(P,s),gx=x+Math.sin(ry)*r.lat,gz=z+Math.cos(ry)*r.lat;
-                r.g.visible=true;r.g.position.set(gx,H(gx,gz)+Math.abs(Math.sin(this.t*6+r.off))*0.25,gz);r.g.rotation.y=ry;r.horse.legs.forEach((l,i)=>{l.rotation.z=Math.sin(this.t*12+i*1.6)*0.6;});
-                if(pt>0.25){const p=puffs[pi++%puffs.length];p.a=0;p.m.position.set(gx-Math.cos(ry)*1.6,r.g.position.y+0.4,gz+Math.sin(ry)*1.6);p.m.visible=true;}}
-              if(pt>0.25)pt=0;for(const p of puffs){if(p.a>=2.5){p.m.visible=false;continue;}p.a+=rdt;const s2=0.6+p.a*1.2;p.m.scale.set(s2,s2*0.6,s2);p.m.material.opacity=0.3*(1-p.a/2.5);}
-              return live||this.t*v<20;},
-            focus(){const r=rs.find(r=>r.g.visible)||rs[0];return [r.g.position.x,1.5,r.g.position.z,40];},stop(){rs.forEach(r=>r.g.visible=false);puffs.forEach(p=>p.m.visible=false);}};},
-        // Bigfoot steps out of the trees between the highway and the gate, ambles along the edge, stops to look at the mill, and goes back in
-        rural:()=>{const g=grp(),F={l:[-1,1].map(s=>part(g,0.45,1.3,0.45,0,0,s*0.32,"bigfoot","#4a3426")),b:part(g,0.9,1.6,1.25,0,1.25,0,"bigfoot","#4a3426"),
-              a:[-1,1].map(s=>part(g,0.32,1.5,0.32,0,1.1,s*0.8,"bigfoot","#4a3426")),h:part(g,0.6,0.62,0.6,0.1,2.85,0,"bigfoot","#4a3426")};part(g,0.12,0.25,0.4,0.42,2.95,0,"skin","#8a6a52");g.visible=false;
-          const P=[[-152,74],[-142,58],[-131,44],[-128,32],[-140,22],[-153,26]],T=plen(P);
-          return {t:0,tick(rdt){this.t+=rdt;const look=this.t>12&&this.t<18,s=Math.min(T,(this.t<12?this.t:look?12:this.t-6)*2.6);const [x,z,ry]=pathAt(P,s);
-              g.visible=true;g.position.set(x,H(x,z),z);g.rotation.y=look?Math.atan2(-(5-z),-14-x):ry;swing(F,look?0:this.t*4.2,look?0:1);F.h.rotation.y=look?Math.sin(this.t*1.3)*0.4:0;return s<T;},
-            focus(){return [g.position.x,2.2,g.position.z,24];},stop(){g.visible=false;}};},
-        // a tug steams in from sea, runs along the waterfront past the mill and the pier, and heads back out, a wake behind it
-        urban:()=>{const g=grp();part(g,13,2.2,5,0,-0.6,0,"tug","#c92a2a");part(g,5,2.4,3.6,-1,1.6,0,"tugw","#f2f2f2");part(g,2.6,1.2,3,-1,4,0,"glass","#46576d");part(g,0.8,3,0.8,-3.6,1.6,0,"dark","#2f3a49");
-          part(g,0.9,0.5,0.9,-3.6,4.6,0,"tug","#c92a2a");const wk=new THREE.Mesh(new THREE.PlaneGeometry(1,1),new THREE.MeshBasicMaterial({color:0xffffff,transparent:true,opacity:0.45,depthWrite:false}));wk.rotation.x=-Math.PI/2;wk.scale.set(26,6,1);scene.add(wk);
-          const [zc,hw]=riverAt(0),sh=zc+hw,P=[[260,sh-260],[170,sh-150],[60,sh-26],[-60,sh-24],[-180,sh-40],[-292,sh-150],[-380,sh-300]],T=plen(P);g.visible=false;wk.visible=false;
-          return {t:0,tick(rdt){this.t+=rdt;const s=Math.min(T,this.t*9);const [x,z,ry]=pathAt(P,s);g.visible=wk.visible=true;g.position.set(x,0.05+Math.sin(this.t*1.6)*0.12,z);g.rotation.y=ry;
-              g.rotation.z=Math.sin(this.t*1.1)*0.03;wk.position.set(x-Math.cos(ry)*18,0.06,z+Math.sin(ry)*18);wk.rotation.z=ry;return s<T;},focus(){return [g.position.x,1,g.position.z,55];},stop(){g.visible=wk.visible=false;}};},
-        // an operator walks the canal bank east of the intake, stops at the edge; a gator glides in, lunges and takes them
-        // under; a splash, a hard hat bobbing on the water, and the gator slides off
-        swamp:()=>{const [zc,hw]=riverAt(50),bank=zc+hw,op=grp(),O=figure(op,"#f27a30","#e2c230","",0);op.visible=false;
-          const gt=grp();part(gt,3.4,0.42,0.95,0,0,0,"gator","#3f4a32");part(gt,1.6,0.3,0.6,2.4,0.05,0,"gator","#3f4a32");const jaw=part(gt,1.4,0.16,0.56,2.4,-0.05,0,"gator","#56603f");part(gt,2.4,0.3,0.4,-2.8,0,0,"gator","#3f4a32");
-          [[0.8,-0.5],[0.8,0.5],[-0.8,-0.5],[-0.8,0.5]].forEach(([a,b])=>part(gt,0.3,0.25,0.3,a,-0.1,b,"gator","#3f4a32"));gt.visible=false;
-          const hat=new THREE.Mesh(sphereG,am("hat#e2c230","#e2c230"));hat.scale.set(0.3,0.18,0.3);hat.visible=false;scene.add(hat);
-          const ring=new THREE.Mesh(new THREE.RingGeometry(0.8,1,24),new THREE.MeshBasicMaterial({color:0xffffff,transparent:true,opacity:0.6,depthWrite:false}));ring.rotation.x=-Math.PI/2;ring.visible=false;scene.add(ring);
-          const EX=48,EZ=bank+1.2;
-          return {t:0,tick(rdt){const t=(this.t+=rdt);op.visible=t<15.6;gt.visible=true;
-              if(t<9){const x=EX+22-t*22/9;op.position.set(x,H(x,EZ),EZ);op.rotation.y=Math.PI;swing(O,t*5);}else{swing(O,0,0);op.rotation.y=Math.PI/2*(t<12?1:1);}
-              // the gator: glides in under the surface, raises its head, lunges
-              const gz=t<10?bank-14+t*1.0:t<14.5?bank-4+Math.min(1,(t-10)/4.5)*(t>14?3:1.5):t<15.6?bank-0.5:bank-0.5-(t-15.6)*1.6;
-              gt.position.set(EX+(t<15.6?0:-(t-15.6)*0.8),t<12?-0.35:-0.1,gz);gt.rotation.y=Math.PI/2;jaw.rotation.z=t>13.8&&t<15.6?-0.5*Math.abs(Math.sin((t-13.8)*9)):0;
-              if(t>14.6&&t<15.6){const k=(t-14.6);op.position.set(EX,H(EX,EZ)-k*2.2,EZ-k*1.8);op.rotation.x=-k*1.2;}
-              if(t>15&&t<19){ring.visible=true;const k=t-15;ring.position.set(EX,0.08,bank-1.2);ring.scale.set(1+k*2.2,1+k*2.2,1);ring.material.opacity=0.6*(1-k/4);}else ring.visible=false;
-              if(t>16&&t<24){hat.visible=true;hat.position.set(EX+Math.sin(t)*0.4,0.05+Math.sin(t*2.4)*0.06,bank-1.6-(t-16)*0.25);}else hat.visible=false;
-              if(t>15.6)gt.visible=t<30;return t<30;},
-            focus(){return [EX+(this.t<9?Math.max(0,22-this.t*22/9)*0.5:0),0.6,bank-1,22];},stop(){op.visible=gt.visible=hat.visible=ring.visible=false;op.rotation.x=0;}};}};
+        // v4.2.3 desert: a held shot of the mill from the flats to the south; three cowboys canter across the foreground,
+        // dust behind them, the last one swinging a lasso. Detailed horses (neck, head, ears, mane, tail, saddle and
+        // blanket, jointed legs with hooves) and riders (hats, bandanas, vests, jointed legs in the stirrups).
+        desert:()=>{const Z0=84,X0=40,V=6.2,END=11.5,CX=16;
+          function horse(p,col,mane,blanket){const g=PIV(p,0,0,0),bd=PIV(g,0,0,0),dk="#2a2a2a";
+            BX(bd,1.9,0.72,0.62,0,1.35,0,"hc"+col,col);BX(bd,0.5,0.62,0.56,0.95,1.38,0,"hc"+col,col);BX(bd,0.55,0.66,0.6,-0.9,1.42,0,"hc"+col,col);BX(bd,1.5,0.14,0.5,0,0.99,0,"hc"+col,col);
+            BX(bd,0.72,0.06,0.72,0.02,1.74,0,"bl"+blanket,blanket);BX(bd,0.52,0.12,0.5,0,1.8,0,"saddle","#5a3a22");BX(bd,0.06,0.16,0.06,0.26,1.92,0,"saddle","#5a3a22");
+            const nk=PIV(bd,1.05,1.55,0);nk.rotation.z=0.85;BX(nk,0.95,0.36,0.3,0.42,0,0,"hc"+col,col);BX(nk,0.85,0.09,0.09,0.42,0.2,0,"mn"+mane,mane);
+            const hp=PIV(nk,0.9,0,0);hp.rotation.z=-1.5;BX(hp,0.62,0.3,0.27,0.3,0,0,"hc"+col,col);BX(hp,0.22,0.24,0.23,0.64,-0.02,0,"mz",dk);
+            [-1,1].forEach(s=>{BX(hp,0.06,0.17,0.06,0.02,0.2,s*0.08,"hc"+col,col);BX(hp,0.04,0.05,0.03,0.25,0.06,s*0.14,"dark","#1e232b");});
+            const tl=PIV(bd,-1.17,1.62,0);BX(tl,0.12,0.8,0.18,-0.06,-0.38,0,"mn"+mane,mane);
+            const legs=[[0.78,-0.2,0],[0.78,0.2,0.18],[-0.75,-0.2,0.5],[-0.75,0.2,0.68]].map(([lx,lz,o])=>{const u=PIV(bd,lx,1.08,lz);BX(u,0.19,0.55,0.19,0,-0.27,0,"hc"+col,col);
+              const k=PIV(u,0,-0.54,0);BX(k,0.13,0.5,0.13,0,-0.25,0,"hc"+col,col);BX(k,0.16,0.1,0.18,0.02,-0.52,0,"hoof",dk);return {u,k,o};});
+            return {g,bd,nk,hp,tl,legs};}
+          const rs=[0,1,2].map(k=>{const h=horse(grp(),["#6b4a2f","#8a5a3a","#c9a26a"][k],["#2a1d14","#3a2a1c","#efe2c2"][k],["#a8322c","#2a5aa8","#c9a24a"][k]);
+            const rd=PIV(h.bd,-0.05,0.94,0),P=person(rd,{shirt:["#a8322c","#5b6270","#d9c49c"][k],legs:"#2f4a6b",hat:"cowboy",hatc:["#6b4a2f","#3a2a20","#efe2c2"][k],vest:k===1?"#6b4a2f":null,scarf:["#2a5aa8","#a8322c","#a8322c"][k]});
+            P.L.forEach((l,i)=>{l.rotation.z=1.2;l.rotation.x=(i?1:-1)*0.42;P.K(l).z=-1.25;});P.up.rotation.z=-0.12;P.A.forEach(a=>a.a.rotation.z=0.9);
+            let lasso=null;if(k===2){lasso=PIV(P.A[1].a,0,-0.7,0);const m=new THREE.Mesh(new THREE.TorusGeometry(0.9,0.025,4,28),am("rope","#c9a26a"));m.rotation.x=Math.PI/2;m.position.y=0.15;lasso.add(m);}
+            h.g.parent.visible=false;return {h,P,lasso,root:h.g.parent,off:[0,1.6,3.4][k],lat:[0,2.4,-1.8][k]};});
+          const dust=puffPool(36,"#b89a6a",0.45);
+          const at=(r,u)=>{const s=u*V-r.off*V*0.42;return [X0-s,Z0+r.lat];};
+          return {t:0,tick(rdt){const u=(this.t+=rdt);const L=[];
+              for(const r of rs){const [x,z]=at(r,u),on=x<X0+2&&x>X0-90;r.root.visible=on;if(!on)continue;r.root.position.set(x,H(x,z),z);r.root.rotation.y=Math.PI;
+                const ph=u*9.5+r.off*2;r.h.legs.forEach(l=>{l.u.rotation.z=0.6*Math.sin(ph+l.o*Math.PI*2);l.k.rotation.z=-Math.max(0,Math.sin(ph+l.o*Math.PI*2+1.2))*0.9;});
+                r.h.bd.position.y=Math.abs(Math.sin(ph))*0.14;r.h.bd.rotation.z=Math.sin(ph)*0.05;r.h.nk.rotation.z=0.85+Math.sin(ph)*0.1;r.h.tl.rotation.z=-0.7+Math.sin(ph*0.5)*0.15;
+                r.P.up.rotation.z=-0.12+Math.sin(ph)*0.05;if(r.lasso){r.P.A[1].a.rotation.z=2.9;r.P.A[1].a.rotation.x=-0.2;r.lasso.rotation.y=u*9;}
+                for(let a=0;a<2.4;a+=0.2){const [px,pz]=at(r,u-a);if(px<X0+2)L.push([a+((u*5)%0.2),px+1.2,H(px,pz)+0.3+a*0.3,pz]);}}
+              dust.show(L,2.4,0.5,2.2);return u<END;},
+            focus(){return [CX,7,Z0-1,60,0.35,1.36];},stop(){rs.forEach(r=>r.root.visible=false);dust.hide();}};},
+        // v4.2.3 valley: a held shot of the mill from the far bank of the river. Bigfoot wades across below the mill, away
+        // from the camera, rings spreading from his legs; mid-river he turns his head and shoulders to look back straight
+        // down the lens without breaking stride (the famous film), then wades on. Two-tone fur, crest, brow, face, long
+        // jointed arms, big feet.
+        rural:()=>{const g=grp(),FUR="#4a3426",FD="#3a281c",FACE="#7a5a44",root=PIV(g,0,0,0),hip=PIV(root,0,1.15,0);
+          const L=[-1,1].map(s=>{const l=PIV(hip,0,0,s*0.24);BX(l,0.42,0.62,0.42,0,-0.3,0,"bf",FUR);const k=PIV(l,0,-0.58,0);BX(k,0.36,0.56,0.36,0,-0.27,0,"bf",FUR);BX(k,0.64,0.14,0.36,0.12,-0.6,0,"bfd",FD);l.userData.k=k;return l;});
+          const up=PIV(hip,0,0,0);BX(up,0.75,0.5,0.85,0,0.25,0,"bf",FUR);BX(up,0.85,0.75,1.05,0.05,0.85,0,"bf",FUR);BX(up,0.6,0.32,0.95,-0.1,1.25,0,"bfd",FD);BX(up,0.08,0.5,0.6,0.46,0.8,0,"bfd",FD);
+          const hd=PIV(up,0.15,1.36,0);BX(hd,0.5,0.52,0.5,0,0.24,0,"bf",FUR);BX(hd,0.3,0.18,0.3,-0.08,0.56,0,"bfd",FD);BX(hd,0.06,0.3,0.36,0.26,0.18,0,"bfface",FACE);BX(hd,0.1,0.08,0.42,0.27,0.35,0,"bfd",FD);
+          [-1,1].forEach(s=>BX(hd,0.03,0.05,0.07,0.3,0.27,s*0.09,"dark","#1e232b"));
+          const A=[-1,1].map(s=>{const a=PIV(up,0.05,1.2,s*0.6);BX(a,0.27,0.66,0.27,0,-0.32,0,"bf",FUR);const e=PIV(a,0,-0.62,0);BX(e,0.23,0.62,0.23,0,-0.3,0,"bf",FUR);BX(e,0.2,0.26,0.15,0,-0.7,0,"bfface",FACE);a.userData.e=e;return a;});
+          g.visible=false;
+          // he wades the river below the mill, north to south, away from the camera on the far bank, and looks back
+          const XB=4,[zc,hw]=riverAt(XB),Z0=zc-hw+1.5,Z1=zc+hw+1,END=11.5,V=(Z1-Z0)/END,hy=-Math.PI/2;
+          const CAM=[XB+2,zc+3,60,Math.PI-0.3,1.3];   // [x,z,r,th,ph]: from the north bank, looking south across the river at the mill
+          const RG=[...Array(6)].map(()=>{const m=new THREE.Mesh(new THREE.RingGeometry(0.8,1,28),new THREE.MeshBasicMaterial({color:0xffffff,transparent:true,opacity:0.5,depthWrite:false}));m.rotation.x=-Math.PI/2;m.visible=false;scene.add(m);return m;});
+          const yAt=z=>{const q=(z-zc)/hw;return Math.abs(q)<1?Math.min(H(XB,z),-1.15*Math.sqrt(1-q*q)):H(XB,z);};
+          return {t:0,tick(rdt){const u=(this.t+=rdt),z=Z0+u*V,x=XB+Math.sin(u*0.4)*0.6,ph=u*2.6,w=Math.sin(ph),wet=Math.abs((z-zc)/hw)<1;
+              g.visible=true;root.position.set(x,yAt(z),z);root.rotation.y=hy;
+              L[0].rotation.z=w*0.4;L[1].rotation.z=-w*0.4;L[0].userData.k.rotation.z=-Math.max(0,-w)*0.6;L[1].userData.k.rotation.z=-Math.max(0,w)*0.6;
+              A[0].rotation.z=-w*0.5;A[1].rotation.z=w*0.5;A.forEach(a=>{a.userData.e.rotation.z=0.25;a.rotation.x=(a===A[0]?-1:1)*0.18*(wet?1:0.3);});hip.position.y=1.15+Math.abs(w)*0.05;
+              // the look: head and shoulders swing round toward the camera, hold, swing back, without breaking stride
+              const cx=CAM[0]+Math.sin(CAM[3])*60,cz=CAM[1]+Math.cos(CAM[3])*60;let cy=Math.atan2(-(cz-z),cx-x)-hy;cy=Math.atan2(Math.sin(cy),Math.cos(cy));cy=Math.max(-1.6,Math.min(1.6,cy));
+              const lk=CL(u,4.6,5.4)*(1-CL(u,7.4,8.2));up.rotation.set(0,Math.sin(ph)*0.1+lk*cy*0.5,-0.18);hd.rotation.y=lk*cy*0.5;
+              // wading: rings spread from his legs
+              let n=0;for(let a=0;a<2.4&&n<RG.length;a+=0.5){const a2=a+(u%0.5),zz=Z0+(u-a2)*V,q=(zz-zc)/hw;if(Math.abs(q)>0.97||u-a2<0)continue;const m=RG[n++],k=a2/2.4;
+                m.visible=true;m.position.set(x,0.08,zz);m.scale.set(0.6+k*3,0.6+k*3,1);m.material.opacity=0.5*(1-k);}for(;n<RG.length;n++)RG[n].visible=false;return u<END;},
+            focus(){return [CAM[0],6,CAM[1],CAM[2],CAM[3],CAM[4]];},stop(){g.visible=false;RG.forEach(m=>m.visible=false);}};},
+        // v4.2.3 city: a held shot of the waterfront mill from out in the bay. A harbour tug steams past in the foreground
+        // towing a barge of bales toward the mill's quay: black hull and red boot-top, tyre fenders and a bow pudding,
+        // white deckhouse and wheelhouse, mast and radar, buff stack with a red band puffing smoke, a deckhand aft, a
+        // tow line, and white water at the bow and in the wake.
+        urban:()=>{const [zc,hw]=riverAt(0),sh=zc+hw,ZT=sh-26,X0=46,V=3.8,END=11.5,TOW=9,BK="#1e2228",RD="#a8322c",WH="#eef0f2";
+          const tug=grp(),hl=PIV(tug,0,0,0);BX(hl,9,1.0,3.6,0,0.25,0,"tugH",BK);{const m=BX(hl,2.55,1.0,2.55,4.5,0.25,0,"tugH",BK);m.rotation.y=Math.PI/4;}
+          BX(hl,9.2,0.28,3.66,-0.05,-0.18,0,"tugR",RD);BX(hl,8.6,0.1,3.4,0,0.78,0,"deck","#7a5a44");[-1,1].forEach(s=>BX(hl,8.6,0.26,0.12,0,0.9,s*1.77,"tugW",WH));BX(hl,0.12,0.26,3.5,-4.3,0.9,0,"tugW",WH);BX(hl,0.6,0.7,2.0,5.9,0.25,0,"tyre","#2f3a49");
+          for(let i=0;i<6;i++)[-1,1].forEach(s=>{const m=new THREE.Mesh(CYLG,am("tyre","#2f3a49"));m.scale.set(0.34,0.24,0.34);m.rotation.x=Math.PI/2;m.position.set(-3+i*1.2,0.45,s*1.86);hl.add(m);});
+          BX(hl,3.6,1.4,2.6,0.8,1.45,0,"tugW",WH);BX(hl,2.3,1.2,2.4,1.4,2.75,0,"tugW",WH);BX(hl,2.35,0.4,2.45,1.4,2.95,0,"glass","#46576d");BX(hl,2.6,0.12,2.7,1.4,3.4,0,"tugR",RD);
+          BX(hl,0.12,2.2,0.12,1.2,4.5,0,"steel","#5b6270");BX(hl,0.12,0.08,1.2,1.2,4.3,0,"steel","#5b6270");BX(hl,0.9,0.08,0.14,1.2,5.0,0,"dark","#2f3a49");
+          BX(hl,0.8,1.6,1.0,-0.7,2.6,0,"buff","#d9b25a");BX(hl,0.82,0.3,1.02,-0.7,3.0,0,"tugR",RD);BX(hl,0.82,0.22,1.02,-0.7,3.45,0,"tugH",BK);
+          BX(hl,0.45,0.6,0.45,-3.6,1.05,0,"steel","#5b6270");{const m=new THREE.Mesh(CYLG,am("rope","#c9a26a"));m.scale.set(0.35,1.2,0.35);m.rotation.x=Math.PI/2;m.position.set(-2.6,1.1,0);hl.add(m);}
+          {const m=new THREE.Mesh(new THREE.TorusGeometry(0.3,0.07,6,16),am("buoy","#f27a30"));m.position.set(0.2,1.6,1.31);hl.add(m);}
+          const dh=person(PIV(hl,-2.3,0.75,0.8),{shirt:"#2f4a6b",legs:"#2f3a49",hat:"hard",hatc:"#f27a30",vest:"#f27a30"});
+          const bg=grp();BX(bg,16,1.2,6.5,0,0.1,0,"barge","#5b6270");BX(bg,16.1,0.3,6.6,0,-0.1,0,"rust","#8a4a2a");
+          for(let i=0;i<4;i++)for(let j=0;j<2;j++)for(let k=0;k<2;k++){BX(bg,1.6,1.0,1.25,-5.4+i*3.6,1.2+k*1.02,(j-0.5)*2.8,"bale","#a7784a");BX(bg,1.62,0.06,1.27,-5.4+i*3.6,1.2+k*1.02,(j-0.5)*2.8,"dark","#2f3a49");}
+          const line=new THREE.Mesh(CYLG,am("rope","#c9a26a"));scene.add(line);
+          const wk=[...Array(3)].map((_,i)=>{const m=new THREE.Mesh(new THREE.PlaneGeometry(1,1),new THREE.MeshBasicMaterial({color:0xffffff,transparent:true,opacity:[0.5,0.35,0.3][i],depthWrite:false}));m.rotation.x=-Math.PI/2;scene.add(m);return m;});
+          const smoke=puffPool(9,"#c8ccd2",0.4);[tug,bg,line,...wk].forEach(o=>o.visible=false);
+          const Y=new THREE.Vector3(0,1,0),A0=new THREE.Vector3(),B0=new THREE.Vector3();
+          return {t:0,tick(rdt){const u=(this.t+=rdt),x=X0-u*V,bx=x+4.5+TOW+8,bob=Math.sin(u*1.6)*0.1;
+              [tug,bg,line,...wk].forEach(o=>o.visible=true);tug.position.set(x,0.05+bob,ZT);tug.rotation.set(0,Math.PI,Math.sin(u*1.1)*0.025);
+              bg.position.set(bx,0.1+Math.sin(u*1.3+1)*0.06,ZT+0.4);bg.rotation.set(0,Math.PI,Math.sin(u*0.9)*0.015);
+              A0.set(x+4.6,1.1,ZT);B0.set(bx-8,0.9,ZT+0.4);const d=B0.clone().sub(A0),l=d.length();line.position.copy(A0).addScaledVector(d,0.5);line.position.y-=0.35;line.scale.set(0.05,l,0.05);line.quaternion.setFromUnitVectors(Y,d.normalize());
+              wk[0].position.set(x+11,0.07,ZT);wk[0].scale.set(14,4.5,1);wk[1].position.set(x-5.4,0.07,ZT);wk[1].scale.set(1.6,4.2,1);wk[2].position.set(bx+12,0.07,ZT+0.4);wk[2].scale.set(10,6.5,1);
+              const sm=[];for(let a=0;a<4.5;a+=0.5){const a2=a+(u%0.5),px=x+0.7+a2*V*0.85+a2*0.8;sm.push([a2,px,3.7+a2*1.4,ZT-a2*0.5]);}smoke.show(sm,4.5,0.5,2.6);
+              walkP(dh,0,0);dh.A[0].a.rotation.z=0.5+Math.sin(u*2)*0.2;dh.hd.rotation.y=-0.8;return u<END;},
+            focus(){return [X0-22,7,ZT+6,64,Math.PI+0.3,1.36];},stop(){[tug,bg,line,...wk].forEach(o=>o.visible=false);smoke.hide();}};},
+        // v4.2.2 (an Amos Moses nod): an operator in a hard hat and hi-vis walks the canal bank east of the intake with a
+        // sample bottle, crouches at the edge and reaches down to fill it. A gator has been gliding in, eyes and back
+        // just breaking the surface; it lunges, jaws wide, and snaps off the operator's right hand (no gore, just gone),
+        // then death-rolls and sinks with it. The operator sits down hard, stares at the stump, throws the other arm up, gets up
+        // and runs off along the bank waving it; the bottle bobs off on the water. The gator surfaces again out in the canal, burps
+        // and slides away, while a one-armed Cajun poles his pirogue past up the canal. Everything is a function of the
+        // scene clock, so any moment can be shown (G3.sightSeek, tests and screenshots).
+        swamp:()=>{const [zc,hw]=riverAt(50),bank=zc+hw,EX=48,EZ=bank+1.2,ez=k=>k<=0?0:k>=1?1:k*k*(3-2*k),cl=(t,a,b)=>ez((t-a)/(b-a)),
+            bx=(p,w,h,d,x,y,z,k,hex)=>{const m=new THREE.Mesh(cubeG,am(k,hex));m.scale.set(w,h,d);m.position.set(x,y,z);m.castShadow=true;p.add(m);return m;},
+            piv=(p,x,y,z)=>{const g=new THREE.Group();g.position.set(x,y,z);p.add(g);return g;},
+            ball=(p,r,x,y,z,k,hex,sy=1)=>{const m=new THREE.Mesh(sphereG,am(k,hex));m.scale.set(r,r*sy,r);m.position.set(x,y,z);p.add(m);return m;};
+          const FOC_R=60,SK="#e0b48c",CV="#2f4a6b",GB="#39432e",GS="#4b5739",GL="#b9b38a",GD="#2a3222",TE="#f2eedb";
+          // ---- the operator (local +x forward, +z their right) ----
+          const op=grp(),hip=piv(op,0,0.92,0);
+          const L=[-1,1].map(s=>{const l=piv(hip,0,0,s*0.13);bx(l,0.22,0.44,0.23,0,-0.21,0,"cover",CV);const k=piv(l,0,-0.42,0);bx(k,0.2,0.42,0.21,0,-0.2,0,"cover",CV);bx(k,0.32,0.16,0.25,0.05,-0.42,0,"boot","#4a3424");l.userData.k=k;return l;});
+          const up=piv(hip,0,0,0);bx(up,0.32,0.66,0.5,0,0.33,0,"cover",CV);bx(up,0.36,0.46,0.54,0,0.43,0,"vest","#d8ea2c");
+          [0.3,0.52].forEach(y=>bx(up,0.37,0.05,0.55,0,y,0,"refl","#e4e8ee"));bx(up,0.34,0.06,0.52,0,0.04,0,"boot","#4a3424");bx(up,0.06,0.15,0.08,0.2,0.56,-0.15,"dark","#2f3a49");
+          const hd=piv(up,0,0.72,0);bx(hd,0.11,0.08,0.11,0,0,0,"skin",SK);bx(hd,0.28,0.3,0.27,0,0.19,0,"skin",SK);
+          [-1,1].forEach(s=>bx(hd,0.02,0.04,0.04,0.145,0.23,s*0.07,"dark","#1e232b"));bx(hd,0.03,0.04,0.15,0.145,0.13,0,"hair","#5a3a22");
+          const hh=piv(hd,0,0.33,0);ball(hh,0.17,0,0.02,0,"hhat","#e2c230",0.72);bx(hh,0.44,0.03,0.38,0.03,0,0,"hhat","#e2c230");
+          const A=[-1,1].map(s=>{const a=piv(up,0,0.64,s*0.33);bx(a,0.15,0.6,0.15,0,-0.3,0,"cover",CV);bx(a,0.165,0.06,0.165,0,-0.6,0,"cuff","#24384f");
+            const hand=bx(a,0.12,0.14,0.12,0,-0.69,0,"skin",SK);return {a,hand};});
+          const bt=piv(A[1].a,0.07,-0.74,0);{const m=new THREE.Mesh(CYLG,am("bottle","#eef2f4"));m.scale.set(0.055,0.18,0.055);bt.add(m);bx(bt,0.07,0.05,0.07,0,0.11,0,"cap","#2a5aa8");}
+          const fb=piv(scene,0,0,0);{const m=new THREE.Mesh(CYLG,am("bottle","#eef2f4"));m.scale.set(0.055,0.18,0.055);fb.add(m);bx(fb,0.07,0.05,0.07,0,0.11,0,"cap","#2a5aa8");}
+          op.visible=fb.visible=false;
+          // ---- the gator (local +x forward): body, belly, flanks, two rows of back scutes, five tail segments with a
+          // crest, splayed legs with toes, a head with eye bumps, nostrils, and upper and lower jaws full of teeth ----
+          const gt=grp(),gb=piv(gt,0,0,0);
+          bx(gb,2.6,0.46,1.1,0,0,0,"gator",GB);bx(gb,2.5,0.3,1.2,0,-0.06,0,"gatorS",GS);bx(gb,2.4,0.14,1.0,0,-0.26,0,"gatorL",GL);
+          bx(gb,1.0,0.4,0.92,1.55,0,0,"gator",GB);bx(gb,0.7,0.36,0.82,2.0,0,0,"gator",GB);bx(gb,0.8,0.4,0.95,-1.5,0,0,"gator",GB);
+          for(let i=0;i<10;i++){const x=-1.75+i*0.38;[-1,1].forEach(s=>{bx(gb,0.22,0.12+(i%2)*0.05,0.16,x,0.27,s*0.2,"gatorD",GD);if(i%2)bx(gb,0.16,0.08,0.12,x,0.22,s*0.42,"gatorD",GD);});}
+          const hd2=piv(gb,2.25,0.03,0);bx(hd2,0.75,0.36,0.78,0.3,0,0,"gator",GB);
+          [-1,1].forEach(s=>{ball(hd2,0.13,0.42,0.22,s*0.24,"gator",GB);ball(hd2,0.065,0.47,0.26,s*0.29,"gatorEye","#e8c840");bx(hd2,0.03,0.09,0.03,0.525,0.26,s*0.3,"dark","#1e232b");});
+          const uj=piv(hd2,0.62,0.02,0);bx(uj,1.5,0.18,0.56,0.75,0.05,0,"gator",GB);bx(uj,0.45,0.16,0.46,1.6,0.04,0,"gator",GB);
+          [-1,1].forEach(s=>{ball(uj,0.055,1.72,0.14,s*0.1,"gatorD",GD);for(let i=0;i<8;i++)bx(uj,0.05,0.1,0.05,0.15+i*0.2,-0.07,s*(i<6?0.25:0.19),"teeth",TE);});
+          const lj=piv(hd2,0.62,-0.1,0);bx(lj,1.5,0.13,0.52,0.75,-0.04,0,"gatorL",GL);bx(lj,0.42,0.12,0.42,1.58,-0.04,0,"gatorL",GL);bx(lj,1.45,0.02,0.36,0.76,0.035,0,"gum","#c98473");
+          [-1,1].forEach(s=>{for(let i=0;i<7;i++)bx(lj,0.05,0.09,0.05,0.25+i*0.2,0.07,s*(i<5?0.22:0.17),"teeth",TE);});
+          const mh=bx(uj,0.12,0.14,0.12,1.0,-0.12,0.08,"skin",SK);mh.visible=false;const bite=piv(uj,1.0,-0.1,0);
+          const tail=[];{let tp=gb;[0.82,0.66,0.52,0.38,0.25].forEach((w,k)=>{const s=piv(tp,k?-0.74:-1.9,0,0);bx(s,0.8,0.36-k*0.05,w,-0.4,0,0,"gator",GB);bx(s,0.78,0.08,w*0.9,-0.4,-0.17+k*0.02,0,"gatorL",GL);
+              if(k<3)[-1,1].forEach(z=>bx(s,0.3,0.15,0.07,-0.4,0.22-k*0.03,z*w*0.24,"gatorD",GD));else bx(s,0.34,0.15,0.07,-0.4,0.18-k*0.03,0,"gatorD",GD);tail.push(s);tp=s;});}
+          const legs=[[1.15,-1],[1.15,1],[-1.15,-1],[-1.15,1]].map(([lx,s])=>{const l=piv(gb,lx,-0.1,s*0.5);bx(l,0.24,0.2,0.5,0,0,s*0.22,"gatorS",GS);const f=piv(l,0,0,s*0.46);
+            bx(f,0.2,0.34,0.2,0,-0.15,0,"gatorS",GS);bx(f,0.36,0.06,0.3,0.06,-0.32,0,"gatorS",GS);for(let q=0;q<3;q++)bx(f,0.12,0.04,0.05,0.28,-0.33,(q-1)*0.1,"gatorL",GL);l.userData.s=s;return l;});
+          gt.scale.setScalar(0.55);gt.visible=false;
+          // ---- the one-armed Cajun in his pirogue, poling past on the far side ----
+          const pr=grp();bx(pr,3.6,0.3,0.78,0,0.1,0,"pirogue","#6b4a2f");[-1,1].forEach(s=>{const m=bx(pr,0.56,0.3,0.56,s*1.8,0.1,0,"pirogue","#6b4a2f");m.rotation.y=Math.PI/4;m.scale.set(0.56,0.3,0.56);const n=bx(pr,0.3,0.26,0.3,s*2.1,0.14,0,"pirogue","#6b4a2f");n.rotation.y=Math.PI/4;});bx(pr,3.3,0.06,0.62,0,0.27,0,"pirogueIn","#4a3424");
+          const cj=figure(pr,"#7a6a4a","#3a2a20","wide",0.28);cj.a[0].visible=false;
+          const pole=new THREE.Mesh(CYLG,am("pole","#8a6a4a"));pole.scale.set(0.04,5.2,0.04);const pp=piv(pr,0.1,1.15,0.38);pp.add(pole);pole.position.y=-1.6;pr.visible=false;
+          // ---- water: rings and droplets ----
+          const RM=[...Array(7)].map(()=>{const m=new THREE.Mesh(new THREE.RingGeometry(0.8,1,28),new THREE.MeshBasicMaterial({color:0xffffff,transparent:true,opacity:0.5,depthWrite:false}));m.rotation.x=-Math.PI/2;m.visible=false;scene.add(m);return m;});
+          const DM=new THREE.MeshBasicMaterial({color:lin0("#dfeee8"),transparent:true,opacity:0.8,depthWrite:false}),
+            DR=[...Array(16)].map((_,i)=>{const m=new THREE.Mesh(sphereG,DM);m.scale.setScalar(0.07+((i*37)%5)*0.015);m.visible=false;scene.add(m);const a=i*2.4;
+              return {m,t0:i<9?13.8:14.6,v:[Math.cos(a)*(0.8+(i%3)*0.5),2.6+(i%4)*0.7,Math.sin(a)*(0.8+(i%3)*0.5)]};});
+          // ---- poses, all from the scene clock ----
+          const P0=new THREE.Vector3(EX+0.3,-0.1,bank-4.6),W=new THREE.Vector3(),W2=new THREE.Vector3();let fit=null;
+          function poseOp(t){op.rotation.set(0,0,0);hip.position.y=0.92;up.rotation.set(0,0,0);hd.rotation.set(0,0,0);hh.position.y=0.33;L.forEach(l=>{l.rotation.set(0,0,0);l.userData.k.rotation.set(0,0,0);});const K=l=>l.userData.k.rotation;A.forEach(a=>a.a.rotation.set(0,0,0));
+            let x=EX,z=EZ;const ar=A[1].a,al=A[0].a;
+            if(t<8){x=EX+16-16*t/8;op.rotation.y=Math.PI;const w=Math.sin(t*6);L[0].rotation.z=w*0.5;L[1].rotation.z=-w*0.5;K(L[0]).z=-Math.max(0,-w)*0.7;K(L[1]).z=-Math.max(0,w)*0.7;al.rotation.z=-w*0.4;ar.rotation.z=w*0.4;hip.position.y=0.92+Math.abs(w)*0.03;}
+            else if(t<19){op.rotation.y=Math.PI+(Math.PI/2-Math.PI)*cl(t,8,9);
+              const c=cl(t,9,10.5),r=cl(t,13.9,14.7);
+              hip.position.y=0.92-0.38*c-0.36*r;z=EZ+0.9*r;L[0].rotation.z=1.4*c+0.1*r;K(L[0]).z=-1.4*c*(1-r);L[1].rotation.z=0.35*c*(1-r)+1.5*r;K(L[1]).z=-1.9*c*(1-r);up.rotation.z=-0.6*c+0.95*r;
+              ar.rotation.z=1.6*c+0.75*r+(t>10.5&&t<13.9?Math.sin(t*3)*0.08:0)+(t>14.7?Math.sin(t*7)*0.15:0);al.rotation.z=0.8*c-1.4*r+3.3*cl(t,16.5,17.5);al.rotation.x=-0.5*cl(t,16.5,17.5);
+              hh.position.y=0.33+0.22*Math.sin(Math.PI*r);hd.rotation.y=-0.45*cl(t,14.8,15.4);hd.rotation.z=0.2*cl(t,14.8,15.4);
+              if(t>17.5)hh.rotation.y=Math.sin(t*9)*0.08;}
+            else{const g=cl(t,19,20.2),T=Math.max(0,t-20.2),dx=0.995,dz=0.1;op.rotation.y=Math.PI/2+(-0.1-Math.PI/2)*g;
+              hip.position.y=0.18+0.74*g;z=EZ+0.9;L.forEach(l=>{l.rotation.z=1.5*(1-g)+0.9*g*(1-cl(t,19.8,20.2));K(l).z=-1.6*g*(1-cl(t,19.8,20.2));});up.rotation.z=0.35*(1-g)+0.15*g;
+              x=EX+dx*3.4*T;z+=dz*3.4*T;if(T>0){const w=Math.sin(T*11);L[0].rotation.z=w*0.8;L[1].rotation.z=-w*0.8;K(L[0]).z=-Math.max(0,-w)*1.2;K(L[1]).z=-Math.max(0,w)*1.2;al.rotation.z=-w*0.6;hip.position.y=0.92+Math.abs(w)*0.06;}
+              ar.rotation.z=2.35*(1-g)+(2.95+Math.sin(t*9)*0.3)*g;hd.rotation.y=-0.45*(1-g);}
+            op.position.set(x,H(x,z),z);A[1].hand.visible=t<13.9;bt.visible=t<13.9;op.visible=t<29.5;}
+          function poseGator(t){gt.visible=true;gt.rotation.set(0,-Math.PI/2,0);gb.rotation.set(0,0,0);hd2.rotation.set(0,0,0);uj.rotation.z=0;lj.rotation.z=0;mh.visible=false;
+            const tuck=k=>legs.forEach(l=>{l.rotation.y=-l.userData.s*1.0*k;});tail.forEach((s,k)=>{s.rotation.y=Math.sin(t*2.2-k*0.7)*(t<13.2||t>20?0.25:0.1);});
+            if(t<13.2){const z=bank-18+13.4*ez(Math.min(1,t/12)),x=EX+0.3+Math.sin(t*0.4)*0.6*(1-cl(t,10,12));gt.position.set(x,-0.1,z);tuck(1);return;}
+            if(!fit){poseOp(13.2);op.updateMatrixWorld(true);A[1].hand.getWorldPosition(W);
+              gt.position.copy(P0);gb.rotation.z=0.15;hd2.rotation.z=0.15;uj.rotation.z=0.05;gt.updateMatrixWorld(true);bite.getWorldPosition(W2);fit={d:W.clone().sub(W2),h:W.clone()};gb.rotation.z=hd2.rotation.z=0;poseOp(t);}
+            if(t<15.8){const k=cl(t,13.2,13.9),j=cl(t,13.9,14.02),r=cl(t,14.4,15.8);
+              gb.rotation.z=0.15*k*(1-r);hd2.rotation.z=0.15*k*(1-r)+(t>14.02&&t<14.4?Math.sin(t*40)*0.06:0);uj.rotation.z=(0.62*k)*(1-j)+0.05*j;lj.rotation.z=-0.28*k*(1-j);tuck(1-k);
+              gt.position.copy(P0).addScaledVector(fit.d,k*(1-r));gb.rotation.x=r*4*Math.PI;mh.visible=t>=13.9;return;}
+            if(t<17.5){gt.position.set(P0.x,-0.1-1.1*cl(t,15.8,17.5),P0.z);tuck(1);mh.visible=true;return;}
+            if(t<21){gt.visible=false;return;}
+            const k=cl(t,21,28.5);gt.position.set(EX-3-9*k,-0.1-1.2*cl(t,27.5,29),bank-9-5*k);gt.rotation.y=-Math.PI/2-0.9;tuck(1);gt.visible=t<29;}
+          function rings(t,gx,gz){const ev=[];
+            if(t<12.6)for(let a=Math.max(0,Math.floor((t-2.4)/0.9))*0.9;a<=t;a+=0.9){const z=bank-18+13.4*ez(Math.min(1,a/12))+1.7;ev.push([a,EX+0.3,z,1.6,2.4]);}
+            [[12.6,0.6,1.6],[13.6,2.2,2],[14.5,2.6,2.2],[15.2,2.4,2.2],[16.2,1.4,2]].forEach(([a,s,d])=>ev.push([a,P0.x,P0.z+1.6,s,d]));
+            for(let a=21;a<28.5;a+=1.3){const k=cl(a,21,28.5);ev.push([a,EX-3-9*k+1.2,bank-9-5*k+1.6,1.2,2.4]);}ev.push([24.4,EX-3-9*cl(24.4,21,28.5)+1.4,bank-9-5*cl(24.4,21,28.5)+2.2,2.2,2.6]);
+            let n=0;for(const [a,x,z,s,d] of ev){if(t<a||t>a+d||n>=RM.length)continue;const m=RM[n++],k=(t-a)/d;m.visible=true;m.position.set(x,0.08,z);m.scale.set(0.4+s*k*2,0.4+s*k*2,1);m.material.opacity=0.55*(1-k);}
+            for(;n<RM.length;n++)RM[n].visible=false;}
+          function drops(t){const o=fit?fit.h:null;for(const d of DR){const dt=t-d.t0;if(!o||dt<0||dt>1.2){d.m.visible=false;continue;}const y=0.1+d.v[1]*dt-4.9*dt*dt;if(y<0){d.m.visible=false;continue;}
+              d.m.visible=true;d.m.position.set(o.x+d.v[0]*dt,y,o.z-1+d.v[2]*dt);}}
+          function bottle(t){if(t<13.9||!fit){fb.visible=false;return;}fb.visible=t<31;const k=cl(t,13.9,14.3),T=Math.max(0,t-14.3);
+            fb.position.set(fit.h.x+T*0.18+Math.sin(t*1.3)*0.05,fit.h.y*(1-k)+0.03*k+Math.sin(t*2.6)*0.03*k,fit.h.z-0.4*k-T*0.12);fb.rotation.set(1.3*k+Math.sin(t*1.7)*0.2*k,0,0.4*k);}
+          function pirogue(t){pr.visible=true;const x=EX-6-20*t/11.5,z=zc+hw*0.1;pr.position.set(x,0.02+Math.sin(t*1.4)*0.04,z);pr.rotation.y=Math.PI;pr.rotation.x=Math.sin(t*1.1)*0.02;
+            const c=Math.sin(t*1.2);pp.rotation.z=-0.35+c*0.35;cj.a[1].rotation.z=-0.5+c*0.4;}
+          // v4.2.2 t4: the cut is short (11.5 s). The scene clock (tau) maps onto the choreography's clock (t): it opens with the
+          // operator already at the edge and the gator close, plays the bite at full speed, and hurries the aftermath
+          const MAP=[[0,9],[1.2,10.5],[3.2,13.2],[6,16],[7.5,19],[8.7,20.2],[11.5,23]],tm=u=>{for(let i=1;i<MAP.length;i++)if(u<=MAP[i][0]){const a=MAP[i-1],b=MAP[i];return a[1]+(u-a[0])/(b[0]-a[0])*(b[1]-a[1]);}return 23;},END=11.5;
+          return {t:0,tick(rdt){const u=(this.t+=rdt),t=tm(u);if(u<0.3)fit=null;poseOp(t);poseGator(t);rings(t);drops(t);bottle(t);pirogue(u);return u<END;},
+            // a wide, low shot of the mill from across the canal, held still: the bite happens small in the lower third,
+            // as if it were caught in frame by chance ([x,y,z,dist,orbit angle,elevation]: the zen camera keeps the angle)
+            focus(){return [EX-2,7,bank+3,FOC_R,2.25,1.36];},
+            stop(){op.visible=gt.visible=fb.visible=pr.visible=false;RM.forEach(m=>m.visible=false);DR.forEach(d=>d.m.visible=false);fit=null;}};}};
       // (built once at start-up, hidden, so nothing is created or compiled when one happens; rewound each time)
-      const one=SIGHTS[SITE.env]?SIGHTS[SITE.env]():null;let wait=FAST?3:rr2(240,600);G3.sight=()=>{wait=0;};   // (G3.sight(): show one now, for tests)
-      if(one)ACT.push(rdt=>{G3.sightT=sight?sight.t:-1;if(sight){if(!sight.tick(rdt)){sight.stop();sight=null;wait=FAST?40:rr2(240,600);}return;}if(G3.zen&&!FAST&&wait>110)wait=rr2(50,110);wait-=rdt;if(wait<=0){one.t=0;sight=one;}});
+      const one=SIGHTS[SITE.env]?SIGHTS[SITE.env]():null;let wait=FAST?3:rr2(240,600),zenSeen=false;/* zen: one sight per map (the zen map rotation reloads the page) */G3.sight=()=>{wait=0;};G3.sightSeek=t=>{if(sight)sight.t=t;};   // (G3.sight(): show one now, for tests)
+      if(one)ACT.push(rdt=>{G3.sightT=sight?sight.t:-1;if(sight){if(G3.sightHold!=null){sight.t=G3.sightHold;sight.tick(0);return;}if(!sight.tick(rdt)){if(G3.zen)zenSeen=true;sight.stop();sight=null;wait=FAST?40:rr2(240,600);}return;}if(G3.zen&&!FAST){if(zenSeen)return;if(wait>110)wait=rr2(50,110);}wait-=rdt;if(wait<=0){one.t=0;sight=one;}});
       // (zen: a sight every minute or two, and the zen camera cuts to it and follows it: 43-3d-frame.js)
       G3.sightFocus=()=>sight&&sight.focus?sight.focus():null;}
     G3.actTick=rdt=>{if(!(rdt>0))return;rdt=Math.min(rdt,0.1);for(let k=0;k<ACT.length;k++)ACT[k](rdt);};
     G3.act=ACT.length;}
+  /* ---- v4.2.4 cut-scene: a bird on the power lines (the "birdline" upset) ----
+     When the upset fires in the 3D view the game pauses and the camera cuts away: it rides with a pigeon circling high
+     over the mill (a few chirps, the choir starts), chases it down as it folds its wings and dives, then cuts wide on
+     the substation as it hits the lines: a blue-white flash, arcs, sparks, a loud bang, the mill goes dark. Feathers
+     drift down, the singed bird flaps off trailing smoke, and the camera goes back where it was and the game carries on
+     at the speed it had. Everything runs on its own real-time clock (the sim is paused); one bird and one set of
+     effects, built once at start-up. Skipped in zen, the autotest and with ?nocine; Skip (or tapping the scene) ends it. */
+  {const Q=new URLSearchParams(location.search),NOCINE=Q.has("autotest")||Q.has("nocine"),IMP=10,END=13.4,EZ=k=>k<=0?0:k>=1?1:k*k*(3-2*k);
+    const mat=hex=>new StdMat({color:lin0(hex),roughness:0.75}),SPH=new THREE.SphereGeometry(1,14,10),BOX=new THREE.BoxGeometry(1,1,1);
+    const part=(p,g,m,sx,sy,sz,x,y,z)=>{const o=new THREE.Mesh(g,m);o.scale.set(sx,sy,sz);o.position.set(x,y,z);o.castShadow=true;p.add(o);return o;};
+    // the pigeon (local +x forward), 1.6x life size so it reads on a phone
+    const bird=new THREE.Group(),bb=new THREE.Group();bird.add(bb);bird.scale.setScalar(1.6);bird.visible=false;scene.add(bird);
+    const GREY=mat("#8d93a0"),NECK=mat("#4f7a6a"),WING=mat("#a3aab8"),BAR=mat("#3a3f48"),BEAK=mat("#e0a030"),EYE=mat("#d4602a");
+    part(bb,SPH,GREY,0.3,0.17,0.16,0,0,0);part(bb,SPH,NECK,0.12,0.12,0.12,0.22,0.06,0);part(bb,SPH,GREY,0.09,0.09,0.09,0.32,0.11,0);
+    part(bb,new THREE.ConeGeometry(0.03,0.09,6),BEAK,1,1,1,0.43,0.1,0).rotation.z=-Math.PI/2;[-1,1].forEach(s=>part(bb,SPH,EYE,0.018,0.018,0.018,0.36,0.14,s*0.06));
+    part(bb,BOX,GREY,0.22,0.03,0.16,-0.36,0,0);part(bb,BOX,BAR,0.06,0.031,0.17,-0.46,0,0);
+    const wings=[-1,1].map(s=>{const w=new THREE.Group();w.position.set(0.02,0.06,s*0.1);bb.add(w);part(w,BOX,WING,0.3,0.025,0.5,0,0,s*0.26);part(w,BOX,BAR,0.1,0.027,0.2,-0.08,0,s*0.42);part(w,BOX,BAR,0.06,0.028,0.4,0.04,0,s*0.25);return w;});
+    // the strike: a glow, a halo, jagged arcs, sparks, smoke and feathers
+    const gt=(()=>{const c=document.createElement("canvas");c.width=c.height=64;const x=c.getContext("2d"),g=x.createRadialGradient(32,32,0,32,32,32);g.addColorStop(0,"rgba(255,255,255,1)");g.addColorStop(0.35,"rgba(255,255,255,.55)");g.addColorStop(1,"rgba(255,255,255,0)");x.fillStyle=g;x.fillRect(0,0,64,64);return new THREE.CanvasTexture(c);})();
+    const spr=(hex,op)=>{const s=new THREE.Sprite(new THREE.SpriteMaterial({map:gt,color:lin(hex),transparent:true,opacity:op,depthWrite:false,toneMapped:false,blending:THREE.AdditiveBlending}));s.visible=false;scene.add(s);return s;};
+    const core=spr("#ffffff",1),halo=spr("#7fb8ff",0.7);
+    const arcs=[...Array(7)].map(()=>{const g=new THREE.BufferGeometry();g.setAttribute("position",new THREE.Float32BufferAttribute(new Float32Array(30),3));const l=new THREE.Line(g,new THREE.LineBasicMaterial({color:lin("#cfe8ff"),toneMapped:false,transparent:true}));l.visible=false;l.frustumCulled=false;scene.add(l);return l;});
+    const sparks=[...Array(40)].map((_,i)=>{const s=spr(i%3?"#bfe3ff":"#ffffff",1);const a=Math.random()*Math.PI*2,e=Math.random()*1.2;s.userData.v=[Math.cos(a)*Math.cos(e)*(4+Math.random()*7),3+Math.random()*8,Math.sin(a)*Math.cos(e)*(4+Math.random()*7)];return s;});
+    const smoke=[...Array(8)].map((_,i)=>{const s=new THREE.Sprite(new THREE.SpriteMaterial({map:gt,color:lin("#4a4f58"),transparent:true,opacity:0,depthWrite:false}));s.visible=false;s.userData.o=[(Math.random()-0.5)*2,(Math.random()-0.5)*2,i*0.25];scene.add(s);return s;});
+    const FM=new THREE.MeshBasicMaterial({color:lin0("#c9ced8"),side:THREE.DoubleSide}),feathers=[...Array(10)].map(()=>{const m=new THREE.Mesh(new THREE.PlaneGeometry(0.12,0.4),FM);m.visible=false;m.userData.v=[(Math.random()-0.5)*3,1+Math.random()*2,(Math.random()-0.5)*3,Math.random()*6];scene.add(m);return m;});
+    // the overlay: letterbox bars, the flash and a Skip button
+    const ov=document.createElement("div");ov.className="cine3d";ov.hidden=true;ov.innerHTML='<i class="lb t"></i><i class="lb b"></i><i class="fl"></i><button type="button" class="skip">Skip</button>';
+    ($("view3d")||document.body).appendChild(ov);const fl=ov.querySelector(".fl"),bars=ov.querySelectorAll(".lb");
+    let C=null;
+    const sub=()=>{const u=G3.scenery&&G3.scenery.util&&G3.scenery.util.substation;return u?[u[0],u[1],3.4]:[74,-10,9.5];};
+    function start(){const [sx,sz,sy]=sub(),I=new THREE.Vector3(sx,sy+2.6,sz),cx=-14,cz=5,R=38,away=Math.atan2(cz-sz,cx-sx),a0=away-5.5*0.3;
+      // circle high over the mill; at 5.5 s dive from the far side; from 8.5 s a flat run-in over the last 25 m to the lines
+      const P5=new THREE.Vector3(cx+Math.cos(away)*R,70,cz+Math.sin(away)*R),d=new THREE.Vector3(I.x-P5.x,0,I.z-P5.z).normalize();
+      const A=new THREE.Vector3(I.x-d.x*25,I.y+3,I.z-d.z*25),Pc=new THREE.Vector3(A.x-d.x*12,A.y+6,A.z-d.z*12),wideTh=Math.atan2(-d.z,d.x);
+      C={t:0,last:performance.now(),I,A,cx,cz,R,a0,P5,Pc,d,wideTh,was:running,cam:G3.camGet?G3.camGet():null,chirp:[0.8,2.6,4.2],struck:false,arcT:0,pos:new THREE.Vector3(),prev:new THREE.Vector3()};
+      running=false;G3.cineHold=true;G3.cineOn=true;document.body.classList.add("cine");ov.hidden=false;bird.visible=true;try{AUDIO.cine.start(IMP);}catch(e){}}
+    // where the bird is at time t
+    function birdAt(t,out){const c=C;if(t<5.5){const a=c.a0+t*0.3;out.set(c.cx+Math.cos(a)*c.R,70+Math.sin(t*0.9)*2,c.cz+Math.sin(a)*c.R);return 0;}
+      if(t<8.5){const u=Math.pow((t-5.5)/3,1.3),v=1-u;out.set(v*v*c.P5.x+2*v*u*c.Pc.x+u*u*c.A.x,v*v*c.P5.y+2*v*u*c.Pc.y+u*u*c.A.y,v*v*c.P5.z+2*v*u*c.Pc.z+u*u*c.A.z);return 1;}
+      if(t<IMP){const u=(t-8.5)/(IMP-8.5);out.lerpVectors(c.A,c.I,u);out.y+=Math.sin(u*Math.PI)*0.6;return 1;}
+      const k=t-IMP;out.set(c.I.x-c.d.x*(k*5)+Math.sin(k*9)*0.4,c.I.y+0.8+k*2.6+Math.sin(k*13)*0.3,c.I.z-c.d.z*(k*5));return 2;}
+    function finish(){if(!C)return;const c=C;C=null;bird.visible=false;[core,halo,...sparks,...smoke,...feathers,...arcs].forEach(o=>o.visible=false);
+      ov.hidden=true;fl.style.opacity=0;document.body.classList.remove("cine");G3.cineHold=false;G3.cineOn=false;try{AUDIO.cine.end();}catch(e){}
+      if(c.cam&&G3.camSet)G3.camSet(c.cam);if(c.was&&$("v2menu").hidden)running=true;}
+    ov.querySelector(".skip").addEventListener("click",e=>{e.stopPropagation();if(C&&!C.struck){try{AUDIO.cine.end();AUDIO.cine.strike();}catch(_){}}finish();});
+    G3.birdCine=()=>{if(NOCINE||!G3.on||S.zen||document.hidden||C)return;try{start();}catch(e){console.error("bird cut-scene",e);finish();}};
+    const v=new THREE.Vector3();
+    G3.cineTick=now=>{if(!C)return;try{const c=C,dt=Math.min(0.1,(now-c.last)/1000);c.last=now;c.t+=dt;const t=c.t;G3.lastMove=performance.now();
+        if(c.chirp.length&&t>=c.chirp[0]){c.chirp.shift();try{AUDIO.cine.chirp();}catch(e){}}
+        // the bird: position, heading, pitch and wings
+        c.prev.copy(c.pos);const ph=birdAt(t,c.pos);birdAt(t+0.05,v);bird.position.copy(c.pos);const vx=v.x-c.pos.x,vy=v.y-c.pos.y,vz=v.z-c.pos.z;
+        bird.rotation.set(0,Math.atan2(-vz,vx),0);bb.rotation.z=Math.atan2(vy,Math.hypot(vx,vz))*0.9+(ph===0?Math.sin(t*1.3)*0.05:0);bb.rotation.x=ph===0?-0.35:0;
+        const flap=ph===0?(Math.sin(t*7)>0.2?Math.sin(t*14)*0.7:0.1):ph===1?(t<6.3?Math.sin(t*16)*0.6:t<8.5?-1.1:Math.sin(t*18)*0.5):Math.sin(t*24)*0.9;
+        wings[0].rotation.x=flap;wings[1].rotation.x=-flap;wings.forEach((w,i)=>{w.rotation.y=ph===1&&t>6.3&&t<8.5?(i?-0.7:0.7):0;});bird.visible=t<IMP+3;bird.scale.setScalar(t<8.2?2.2:3);   // (a touch bigger in the wide shot so it reads)
+        // the camera: ride along high above the mill, chase the dive, then the wide shot of the lines
+        let cam;if(t<5.5){const ox=c.pos.x-c.cx,oz=c.pos.z-c.cz;cam=[c.pos.x,c.pos.z,22,Math.atan2(ox,oz),0.62,c.pos.y];}
+        else if(t<8.2){cam=[c.pos.x,c.pos.z,13,Math.atan2(-vx,-vz),0.95,c.pos.y];}
+        else{const sk=t>IMP&&t<IMP+0.6?(IMP+0.6-t)*1.2:0;cam=[(c.I.x*2+c.A.x)/3+(Math.random()-0.5)*sk,(c.I.z*2+c.A.z)/3+(Math.random()-0.5)*sk,64,c.wideTh,1.1,4+(Math.random()-0.5)*sk];}
+        if(G3.camSet)G3.camSet(cam);
+        // letterbox in and out
+        const lb=Math.min(EZ(t/0.6),1-EZ((t-(END-0.7))/0.7));bars.forEach(b=>b.style.transform=`scaleY(${lb.toFixed(3)})`);
+        // the strike
+        if(!c.struck&&t>=IMP){c.struck=true;G3.cineHold=false;try{AUDIO.cine.strike();}catch(e){}}
+        const k=t-IMP;fl.style.opacity=k<0?0:k<0.08?1:Math.max(0,0.95*(1-(k-0.08)/0.7)).toFixed(3);
+        core.visible=k>=0&&k<1.3;if(core.visible){core.position.copy(c.I);core.scale.setScalar(k<0.15?6+k/0.15*26:32*(1-(k-0.15)/1.15)+4);core.material.opacity=k<0.15?1:Math.max(0,1-(k-0.15)/1.15);}
+        halo.visible=k>=0&&k<1.6;if(halo.visible){halo.position.copy(c.I);halo.scale.setScalar(20+k*50);halo.material.opacity=0.75*(1-k/1.6);}
+        const arcOn=k>=0&&k<1.4&&((now/55)|0)%3!==0;c.arcT-=dt;
+        arcs.forEach((l,i)=>{l.visible=arcOn&&(i<4||k<0.5);if(!l.visible)return;if(c.arcT<=0||k<0.03){const p=l.geometry.attributes.position.array,a=Math.random()*Math.PI*2,r=3+Math.random()*7,ex=c.I.x+Math.cos(a)*r,ez=c.I.z+Math.sin(a)*r,ey=Math.random()*c.I.y;
+            for(let q=0;q<10;q++){const f=q/9,j=q===0||q===9?0:1.2;p[q*3]=c.I.x+(ex-c.I.x)*f+(Math.random()-0.5)*j;p[q*3+1]=c.I.y+(ey-c.I.y)*f+(Math.random()-0.5)*j;p[q*3+2]=c.I.z+(ez-c.I.z)*f+(Math.random()-0.5)*j;}l.geometry.attributes.position.needsUpdate=true;}});
+        if(c.arcT<=0)c.arcT=0.06;
+        sparks.forEach(s=>{const on=k>=0&&k<1.6;s.visible=on;if(!on)return;const u=s.userData.v;s.position.set(c.I.x+u[0]*k,c.I.y+u[1]*k-4.9*k*k,c.I.z+u[2]*k);s.scale.setScalar(0.6+(1-k/1.6)*0.6);s.material.opacity=1-k/1.6;if(s.position.y<0.1)s.visible=false;});
+        smoke.forEach(s=>{const u=s.userData.o,kk=k-0.3-u[2];s.visible=kk>0;if(!s.visible)return;s.position.set(c.I.x+u[0]+kk*0.6,c.I.y+kk*2.2,c.I.z+u[1]);s.scale.setScalar(2+kk*3);s.material.opacity=Math.max(0,0.55*(1-kk/3));});
+        feathers.forEach(f=>{const u=f.userData.v,kk=k-0.05;f.visible=kk>0&&kk<3.2;if(!f.visible)return;f.position.set(c.I.x+u[0]*kk+Math.sin(kk*3+u[3])*0.4,Math.max(0.05,c.I.y+1+u[1]*kk-0.9*kk*kk*0.6),c.I.z+u[2]*kk);f.rotation.set(kk*3+u[3],kk*2,Math.sin(kk*4+u[3]));});
+        if(t>=END)finish();}catch(e){console.error("bird cut-scene",e);finish();}};
+    G3.cineSeek=t=>{if(C){C.t=t;C.chirp=C.chirp.filter(x=>x>t);if(t>=IMP&&!C.struck){C.struck=true;G3.cineHold=false;}}};   // (tests and stills)
+    G3.cineIMP=IMP;}
   // v2.9.11 performance profiler: when G3.PF.on, time each section of the 3D frame (ms accumulated per section)
   const PF=G3.PF={on:false,t:0,acc:{},frames:0};const pm=k=>{if(!PF.on)return;const t=performance.now();PF.acc[k]=(PF.acc[k]||0)+(t-PF.t);PF.t=t;};
   G3.EXP={};let moversCache=null;
@@ -7276,7 +7762,8 @@ function no3D(){G3.ok=false;$("no3d").hidden=false;$("no3d-retry").onclick=()=>l
       else if(fps<0.62*tgt&&quality===0&&G3.scenery&&!G3.scenery.farOff){G3.scenery.farOff=true;G3.scenery.parts.forEach(p=>{if(p.userData.scenery!=="near")p.visible=false;});diag("quality: far scenery hidden ("+fps.toFixed(0)+" fps)");}}}}}pm("low-FPS fallback check");
     {const t=performance.now();if(!(t-(G3.palT||0)<500)){G3.palT=t;applyPalette();}}pm("palette (every 0.5 s)");rebuildDoors();
     const R=S.rates,now=performance.now();pm("setup (palette, doors, shadow trim)");
-    crewUpdate(rdt,now);pm("crew + people");if(G3.actTick)G3.actTick(rdt);pm("activity scenes");
+    // v4.2.3: people and the activity scenes are fenced off, so an error in one no longer skips the rest of every frame
+    try{crewUpdate(rdt,now);}catch(e){G3.fErr=(G3.fErr||0)+1;if(G3.fErr<6)console.error("people update",e);}pm("crew + people");try{if(G3.actTick)G3.actTick(rdt);}catch(e){G3.fErr=(G3.fErr||0)+1;if(G3.fErr<6)console.error("activity scenes",e);}pm("activity scenes");
     // trucks
     truckMap.forEach(g=>g.userData.seen=false);
     S.inQ.forEach((t,k)=>placeTruck(t,{kind:"in",k},rdt));S.inDock.forEach((t,d)=>t&&placeTruck(t,{kind:"in",docked:true,d},rdt));
@@ -7383,7 +7870,7 @@ function no3D(){G3.ok=false;$("no3d").hidden=false;$("no3d-retry").onclick=()=>l
     // there were none at all; it now runs here. They also stay visible (stopped) when receiving is halted, and idle ones park in the bays.
     {const nL=Math.round(C.drivers.v);while(V.lifts.length<nL)V.lifts.push({p:Math.random()*4,door:V.lifts.length%3});V.lifts.length=nL;
       const busy=clamp((R.feed+R.unload)/Math.max(1,C.drivers.v*P.driverRate),0,1);if(rdt>0&&S.M.recvMul!==0)V.lifts.forEach(L=>{L.p=(L.p+rdt*(0.125+busy*0.45))%4;});}
-    ensure(lifts,V.lifts.length,()=>forklift(M.warn));
+    ensure(lifts,V.lifts.length,()=>forklift(M.warn));G3.liftObjs=lifts;
     V.lifts.forEach((L,i)=>{const g=lifts[i];
       g.visible=true;
       if(i>=Math.floor(S.effDrv+1e-9)){const k=Math.max(0,i-Math.floor(S.effDrv+1e-9))%4;g.position.set(-14.2-k*2.6,0,-21.7);g.rotation.y=Math.PI/2;g.children[0].material=M.off;g.userData.load.visible=false;return;}
@@ -7395,7 +7882,7 @@ function no3D(){G3.ok=false;$("no3d").hidden=false;$("no3d-retry").onclick=()=>l
       const [x,z,ry]=fkAt(fkLeg(A,B),t);
       g.position.set(x,0,z);g.rotation.y=ry;g.userData.load.visible=(a===0||a===2);});
     // clamp trucks + robots
-    const nLo=Math.round(C.loaders.v);ensure(loaders,nLo,()=>clamp3(M.ok));
+    const nLo=Math.round(C.loaders.v);ensure(loaders,nLo,()=>clamp3(M.ok));G3.loaderObjs=loaders;
     for(let i=0;i<nLo;i++){const g=loaders[i];
       if(!g.userData.homed){g.userData.homed=true;g.position.set(-28-i*2.2,0,17);g.rotation.y=Math.PI;}
       g.visible=true;
@@ -7407,7 +7894,7 @@ function no3D(){G3.ok=false;$("no3d").hidden=false;$("no3d-retry").onclick=()=>l
       g.position.set(x,0,z);g.userData.light.material=((now/400+r)|0)%2?M.ok:M.stock;});
     pm("forklifts, clamp trucks, robots");
     // blackout dims the plant
-    const out=S.inc.some(i=>i.id==="lightning");if(out){hemi.intensity=0.18*LEG;sun.intensity=0.12*LEG;}
+    const out=S.inc.some(i=>i.id==="lightning"||(i.id==="birdline"&&!G3.cineHold));if(out){hemi.intensity=0.18*LEG;sun.intensity=0.12*LEG;}
     if(out!==G3.wasOut){G3.wasOut=out;if(out)scene.background=new THREE.Color("#0b0f0e").convertSRGBToLinear();}
     // camera + render
     // zen: a 30 s "shot" at a time. Each shot cuts to a new viewpoint (or locks onto an operator for a stretch of it)
@@ -7416,7 +7903,7 @@ function no3D(){G3.ok=false;$("no3d").hidden=false;$("no3d-retry").onclick=()=>l
       // v17: a rare sight (cowboys, Bigfoot, the tug, the gator) takes over the camera: cut to it and follow it, slowly
       // circling, until it is over
       {const f=G3.sightFocus&&G3.sightFocus();if(f&&!(Z.mv&&Z.mv.m.sight)){Z.who=null;Z.goto=null;Z.t=0;Z.len=999;document.body.dataset.zs=Math.random()<0.5?"none":"gold";
-        Z.mv={t:0,st:{th:-0.4+(Math.random()-0.5)*1.2},m:{name:"rare sight",sight:1,at:(t,mv,rdt2)=>{const q=G3.sightFocus&&G3.sightFocus();if(!q)return null;mv.st.th+=rdt2*0.05;return [q[0],q[1],q[2],q[3],mv.st.th,1.02];}}};}}
+        Z.mv={t:0,st:{th:-0.4+(Math.random()-0.5)*1.2},m:{name:"rare sight",sight:1,at:(t,mv,rdt2)=>{const q=G3.sightFocus&&G3.sightFocus();if(!q)return null;if(q[4]!=null)return [q[0],q[1],q[2],q[3],q[4]+Math.sin(t*0.12)*0.1,q[5]];mv.st.th+=rdt2*0.05;return [q[0],q[1],q[2],q[3],mv.st.th,1.02];}}};}}
       const POI=[[-14,5,300,-0.2],[20,9,120,-0.5],[24,-10,95,0.4],[-20,14,80,-1.2],[-25,-18,110,0.9],[20,-40,120,2.6],[70,-10,110,-2.2],[-60,10,130,0.1],[10,9,170,2.9],[40,10,70,0.6],[-36,24,90,-0.8]];
       // v3.3: each shot sets its own length (Z.len); free shots run 6-10 s, scripted shots run their own course
       if(Z.t>(Z.len||10)){Z.t=0;Z.len=6+Math.random()*4;Z.mv=null;const ops=G3.followable?G3.followable().filter(w=>w.visible):[];
@@ -7445,7 +7932,7 @@ function no3D(){G3.ok=false;$("no3d").hidden=false;$("no3d-retry").onclick=()=>l
           document.body.dataset.zs=Math.random()<0.5?"none":pool[Math.floor(Math.random()*pool.length)];}}
       Z.dis=(Z.dis??40)-rdt;if(Z.dis<=0){Z.dis=60+Math.random()*60;const safe=["fogfan","flares","runner"].filter(id=>!S.inc.some(i=>i.id===id));if(safe.length){const id=safe[Math.floor(Math.random()*safe.length)];trigger(id,true);Z.goto=G3.spotOf(id);Z.t=99;}}
       if(Z.who){Z.fo-=rdt;if(Z.fo<=0){Z.who=null;Z.r=Math.min(140,Z.r*2.6);}else{const p=Z.who.position;Z.tg.set(p.x,0,p.z);}}
-      if(Z.mv){goal=null;Z.mv.t+=rdt;const f=Z.mv.m.at(Z.mv.t,Z.mv,rdt);if(!f){Z.mv=null;Z.t=99;}else{target.set(f[0],f[1],f[2]);cam.r=f[3];cam.th=f[4];cam.ph=f[5];Z.tg.copy(target);Z.r=f[3];Z.th=f[4];}}
+      if(Z.mv){goal=null;Z.mv.t+=rdt;const f=Z.mv.m.at(Z.mv.t,Z.mv,rdt);if(!f){Z.mv=null;Z.t=99;Z.len=0;}else{target.set(f[0],f[1],f[2]);cam.r=f[3];cam.th=f[4];cam.ph=f[5];Z.tg.copy(target);Z.r=f[3];Z.th=f[4];}}
       else{const k=Math.min(1,rdt*(Z.who?0.6:0.1));goal=null;target.lerp(Z.tg,k);cam.r+=(Z.r-cam.r)*k*0.5;cam.th=lerpAng(cam.th,Z.th+Math.sin(now/26000)*0.3,k*0.5)+rdt*0.015;cam.ph+=(0.8+0.08*Math.sin(now/31000)-cam.ph)*k;}}
     pm("zen / camera shots");
     if(!G3.zenNextMap)G3.zenNextMap=()=>{const order=["rural","urban","desert","swamp"],nx=order[(order.indexOf(SITE.env)+1)%order.length],q=new URLSearchParams(location.search);
@@ -7573,13 +8060,13 @@ setView();
   function flowTick(){if(cur!=="stats"||!sheet.classList.contains("open"))return;flowEl.innerHTML=flowSVG()+`<p class="flowtip">Every step is drawn as wide as it can run, in tons of paper per hour. The narrowest step (or one that is down) holds back the whole mill. The bars are your buffers: full ones are backing up, empty ones are running dry.</p>`;}
   UI_TICKS.push(n=>{if(n%4===0)flowTick();});   // the river SVG restarts its animation when redrawn, so ~1x/s
   // sheets
-  const sheet=$("v2sheet"),tabs=[...document.querySelectorAll(".v2tabs button")],TITLES={shop:"Upgrades",chaos:"Upsets",ctl:"Settings",stats:"Stats"};let cur=null;
+  const sheet=$("v2sheet"),tabs=[...document.querySelectorAll(".v2tabs button")],TITLES={shop:"Upgrades",chaos:"Upsets",ctl:"Settings",stats:"Mill report"};let cur=null;
   // v3.1.1: opening a bottom panel pauses the game; closing it resumes (same sim speed) if it was running before
   let sheetHeld=false;
   function sheetPause(){if(cur||sheetHeld||!running)return;sheetHeld=true;running=false;}
   function sheetResume(){if(!sheetHeld)return;sheetHeld=false;const ov=$("overlay"),blocked=!$("v2menu").hidden||(G3.tut&&G3.tut.on)||(S.cards&&S.cards.open)||(ov&&!ov.hidden)||S.over;
     if(blocked)return;running=true;}
-  function openTab(k){sheetPause();cur=k;if(k==="stats")setTimeout(()=>{flowTick&&flowTick();updateRel();},0);tabs.forEach(b=>b.setAttribute("aria-pressed",String(b.dataset.tab===k)));document.querySelectorAll(".v2pane").forEach(p=>p.classList.toggle("on",p.dataset.pane===k));
+  function openTab(k){sheetPause();cur=k;if(k==="stats")setTimeout(()=>{flowTick&&flowTick();updateRel();if(G3.report)G3.report.render();},0);tabs.forEach(b=>b.setAttribute("aria-pressed",String(b.dataset.tab===k)));document.querySelectorAll(".v2pane").forEach(p=>p.classList.toggle("on",p.dataset.pane===k));
     $("v2sheetT").textContent=TITLES[k];sheet.classList.add("open");sheet.setAttribute("aria-hidden","false");document.body.classList.add("sheet-open");closeMore();}
   function closeSheet(why){const was=!!cur;cur=null;tabs.forEach(b=>b.setAttribute("aria-pressed","false"));sheet.classList.remove("open");sheet.setAttribute("aria-hidden","true");document.body.classList.remove("sheet-open");
     if(why==="menu")sheetHeld=false;else if(was)sheetResume();}
@@ -7596,7 +8083,15 @@ setView();
   $("v2sound").addEventListener("click",e=>{e.stopPropagation();setSound(!AUDIO.on);});
   // equipment labels: one toggle in the top bar (and the same checkbox in the expanded panel)
   const setLabels=v=>{const b=document.querySelector('#lblMode button[data-m="'+(v?"on":"off")+'"]');if(b)b.click();$("v2labels").checked=v;$("v2lblBtn").setAttribute("aria-pressed",String(v));$("v2lblBtn").lastChild.textContent=v?"Labels":"Labels off";};
-  $("v2labels").addEventListener("change",e=>setLabels(e.target.checked));$("v2lblBtn").addEventListener("click",()=>setLabels($("v2lblBtn").getAttribute("aria-pressed")!=="true"));
+  // v4.2.4: a new season or free play starts with labels on for 5 seconds of play, then they switch off and the Labels
+  // button flashes twice so the player sees where they went. Touching the labels during those 5 s cancels it.
+  const LI={left:0};
+  G3.labelIntro=()=>{if(S.zen)return;setLabels(true);LI.left=5000;LI.last=performance.now();};
+  const lblUser=v=>{LI.left=0;setLabels(v);};
+  // (real seconds of play, so a slow device still gets 5 s; paused or in the menu doesn't count)
+  UI_TICKS.push(()=>{if(LI.left<=0)return;const now=performance.now(),dt=Math.min(3000,now-LI.last);LI.last=now;if(!running||!$("v2menu").hidden)return;LI.left-=dt;if(LI.left>0)return;
+    setLabels(false);const b=$("v2lblBtn");b.classList.remove("lblflash");void b.offsetWidth;b.classList.add("lblflash");setTimeout(()=>b.classList.remove("lblflash"),1300);});
+  $("v2labels").addEventListener("change",e=>lblUser(e.target.checked));$("v2lblBtn").addEventListener("click",()=>lblUser($("v2lblBtn").getAttribute("aria-pressed")!=="true"));
   {const on=document.querySelector('#lblMode button[aria-pressed="true"]');setLabels(!on||on.dataset.m!=="off");}
   // top bar: compact figures straight from the game state ($1.24M, -$850k)
   const short=v=>{const a=Math.abs(v),f=a>=1e6?(a/1e6).toFixed(a>=1e7?1:2)+"M":a>=1e3?(a/1e3).toFixed(a>=1e5?0:1).replace(/\.0$/,"")+"k":Math.round(a)+"";return (v<0?"−":"")+"$"+f;};
@@ -7701,28 +8196,20 @@ setView();
     $("v2siteM").textContent=E.pros[0].split(":")[0]+" · "+E.cons[0].split(":")[0];swatch($("v2siteSw"),SITE.env);}
   siteRow();
   // picker
-  const ov=$("siteOv"),envs=$("siteEnvs"),prev=$("sitePrev"),anyBtn=$("siteAny");let pick=SITE.env,any=SITE.choice==="any";
+  const ov=$("siteOv"),envs=$("siteEnvs"),det=$("siteDet"),anyBtn=$("siteAny");let pick=SITE.env,any=SITE.choice==="any";
+  // v4.2.4: compact picker. Four small tiles (name and the headline pro and con); the picked site's story and its full
+  // list of pros and cons sit in one panel underneath. (The site plan preview is gone.)
+  const tag=t=>t.split(":")[0];
   ENV_IDS.forEach(id=>{const E=ENVS[id],b=document.createElement("button");b.type="button";b.setAttribute("role","radio");b.dataset.env=id;
-    b.innerHTML=`<div class="eh"><span class="sw"></span><b>${E.name}</b><small>${E.short}</small></div><p>${E.blurb}</p><ul>${E.pros.map(t=>`<li class="pro">${t}</li>`).join("")}${E.cons.map(t=>`<li class="con">${t}</li>`).join("")}</ul>`;
+    b.innerHTML=`<div class="eh"><span class="sw"></span><b>${E.name}</b></div><small><i class="pro">+</i> ${tag(E.pros[0])}<br><i class="con">−</i> ${tag(E.cons[0])}</small>`;
     swatch(b.querySelector(".sw"),id);b.addEventListener("click",()=>{pick=id;sync();});envs.appendChild(b);});
+  function detail(){const E=ENVS[pick];det.innerHTML=`<p>${E.blurb}</p><div class="pc"><ul>${E.pros.map(t=>`<li class="pro">${t}</li>`).join("")}</ul><ul>${E.cons.map(t=>`<li class="con">${t}</li>`).join("")}</ul></div>`;}
   envs.addEventListener("keydown",e=>{const k=e.key;if(!["ArrowRight","ArrowDown","ArrowLeft","ArrowUp"].includes(k))return;e.preventDefault();
     const i=ENV_IDS.indexOf(pick),n=ENV_IDS[(i+(k==="ArrowRight"||k==="ArrowDown"?1:ENV_IDS.length-1))%ENV_IDS.length];pick=n;sync();envs.querySelector(`[data-env="${n}"]`).focus();});
   anyBtn.addEventListener("click",()=>{any=!any;sync();});
-  const seedOf=()=>MILLSEED[pick];
-  // a small plan of the site: river, roads, fence, the fixed core and where the seeded wastewater plant goes
-  function drawPrev(){const x=prev.getContext("2d"),W=prev.width,H=prev.height,k=W/360,X=v=>(v+170)*k,Z=v=>(v+90)*k,L=layoutFor(seedOf());
-    x.fillStyle=SW[pick][0];x.fillRect(0,0,W,H);x.fillStyle=WATER[pick];x.beginPath();
-    for(let v=-175;v<=195;v+=5){const [zc,hw]=riverAt(v,pick);x.lineTo(X(v),Z(zc-hw));}for(let v=195;v>=-175;v-=5){const [zc,hw]=riverAt(v,pick);x.lineTo(X(v),Z(zc+hw));}x.closePath();x.fill();   // v13: the site's river line
-    x.fillStyle="#5a5f69";x.fillRect(X(-162.5),0,9*k,H);x.fillRect(X(-158),Z(-5.2),58*k,2.8*k);x.fillRect(X(-158),Z(11.2),58*k,2.8*k);x.fillRect(X(92),Z(31.4),70*k,2.4*k);
-    x.strokeStyle="rgba(28,34,51,.45)";x.lineWidth=1;x.strokeRect(X(-100),Z(-52),192*k,116*k);
-    x.fillStyle="#d6382c";[[-34.4,-8,-23.5,-3],[-27.2,64,-2.9,19.9],[-49,-23.8,14.8,32.2]].forEach(([a,b,c,d])=>x.fillRect(X(a),Z(c),(b-a)*k,(d-c)*k));
-    x.fillStyle="#9aa3ad";[[4,47,-25,-2],[70,82,-16,-4],[49,65,-27,-14.5],[66,88,38,56]].forEach(([a,b,c,d])=>x.fillRect(X(a),Z(c),(b-a)*k,(d-c)*k));
-    const a=Math.min(L.wx(1),L.wx(46)),b=Math.max(L.wx(1),L.wx(46));x.fillStyle="#1f9254";x.fillRect(X(a),Z(-49),(b-a)*k,18*k);
-    x.fillStyle="#bfe3d8";x.beginPath();x.arc(X(L.wx(10)),Z(-40),7*k,0,7);x.fill();const p0=Math.min(L.wx(22),L.wx(42));x.fillRect(X(p0),Z(-46),20*k,12*k);
-    $("siteLay").textContent=layName(L)+".";}
   function sync(){envs.querySelectorAll("button").forEach(b=>b.setAttribute("aria-checked",String(b.dataset.env===pick)));
     envs.querySelectorAll("button").forEach(b=>b.tabIndex=b.dataset.env===pick?0:-1);envs.classList.toggle("any",any);
-    anyBtn.setAttribute("aria-pressed",String(any));anyBtn.querySelector("b").textContent=any?"Surprise me: on":"Surprise me";drawPrev();
+    anyBtn.setAttribute("aria-pressed",String(any));anyBtn.querySelector("b").textContent=any?"Surprise me: on":"Surprise me";detail();
     const same=(any?SITE.choice==="any":pick===SITE.env&&SITE.choice!=="any");
     $("siteGo").textContent=same&&SITE.saved?"Keep this site":"Build here";}
   $("v2siteBtn").addEventListener("click",()=>{pick=SITE.env;any=SITE.choice==="any";sync();ov.hidden=false;setTimeout(()=>{const b=envs.querySelector('[aria-checked="true"]');if(b)b.focus();},0);});
@@ -7780,12 +8267,85 @@ setView();
       b.addEventListener("click",()=>{const d=read();if(!d){b.remove();return;}
         // a save from another map: reload on that map, then continue (?resume=1)
         if(d.env!==SITE.env||d.mill!==SITE.seed){const q=new URLSearchParams(location.search);q.set("env",d.env);q.set("resume","1");location.href=location.pathname+"?"+q+location.hash;return;}
-        const run=()=>{restore(d);b.remove();go.classList.add("primary");G3.play();};
+        const run=()=>{restore(d);b.remove();go.classList.add("primary");G3.play();if(G3.labelIntro)G3.labelIntro();};
         if(G3.warm||!G3.prewarm)run();else{b.setAttribute("aria-busy","true");b.querySelector("small").textContent="Getting the mill ready…";G3.prewarm().then(run);}});
       if(Q.get("resume")==="1"){try{Q.delete("resume");history.replaceState(null,"",location.pathname+(Q.toString()?"?"+Q:"")+location.hash);}catch(e){}setTimeout(()=>b.click(),300);}}
     // a new season or a reset starts over: the old save goes
     ["v2season","v2reset"].forEach(id=>{const el=$(id);if(el)el.addEventListener("click",clear,true);});
     if(go)go.addEventListener("click",()=>{if($("v2cont")&&!(S.season&&S.season.on))clear();},true);}
+  /* ---- v4.2.4 Mill report (the Report tab, the grade badge in the top bar, cost and uptime in the dropdown) ----
+     One grade system: the report card's four grades (profit, cost per ton, downtime, reliability) and their overall,
+     shown live for the current 10-day period, with the finished periods' cards one tap away and a day-by-day history
+     (the day's grades are kept at each midnight by rcTick). Cost per ton is split by what it is spent on; the
+     chemicals share of the energy line is worked out from today's rates (the books keep them together). Display only:
+     nothing here touches the simulation. Outside a season the tab shows totals since the start, without grades. */
+  {const el=$("rep"),GP={A:4,B:3,C:2,D:1,F:0},pc=v=>Math.round(v*100)+"%",hrs=m=>(m/60).toFixed(m<600?1:0)+" h";
+    let openDays=false,openMoney=false,lastN=-99;
+    const chemShare=()=>{const t=energyCost();if(!(t>0))return 0;const c=(ECON.chem||0)+(P.chemAdd||0)+((ENVX()&&ENVX().chem)||0);return Math.max(0,Math.min(1,c/t));};
+    const allAcc=()=>({t0:0,L0:{},prod0:0,ship0:0,rolls0:0,brk0:0,hay0:0,off0:0,occ:0,fib:0,min:Math.max(1,S.t),plan:0,up:{recv:0,pulper:0,machine:0,winder:0,ship:0},dn:{},bn:{}});
+    const seasonOn=()=>!!(S.season&&(S.season.on||S.season.done)&&S.rc&&!S.free&&!S.zen);
+    // the numbers everything below draws from
+    function data(){if(seasonOn()){const R=S.rc,live=S.season.done&&R.cards.length>=3?R.cards[2]:rcMake(R.p,R.i),prev=R.i>0?R.cards[R.i-1]:null;return {R,live,prev,p:live.p,season:true};}
+      return {p:rcSum(allAcc()),season:false};}
+    function costRows(p){const sp=p.spent,cs=chemShare(),e=sp.Energy||0;
+      return [["Fibre (OCC)",sp.Fibre||0,"var(--kraft)"],["Energy & steam",e*(1-cs),"var(--stock)"],["Chemicals",e*cs,"var(--pulp)"],["Labour",sp.Labour||0,"var(--machine)"],["Overhead",sp.Overhead||0,"#9aa1b5"],
+        ["Repairs",sp["Repairs & outages"]||0,"var(--bad)"],["Premium freight",sp["Premium freight"]||0,"var(--warn)"]].filter(r=>r[1]>0);}
+    function tiles(d){const R=d.R,out=[];for(let i=0;i<3;i++){const c=R.cards[i],cur=i===R.i&&!S.season.done,lab=`Days ${i*10+1}–${i*10+10}`;
+        if(c&&!cur)out.push(`<button type="button" class="rpt" data-card="${i}"><span class="rcg g${c.overall}">${c.overall}</span><span><b>${lab}</b><small>View card</small></span></button>`);
+        else if(cur){const L=d.live.overall,pv=d.prev?d.prev.overall:null,tr=pv==null?"so far":GP[L]>GP[pv]?"rising":GP[L]<GP[pv]?"falling":"steady";
+          out.push(`<div class="rpt cur"><span class="rcg g${L}">${L}</span><span><b>${lab}</b><small>${tr}</small></span></div>`);}
+        else out.push(`<div class="rpt next"><span class="rcg">–</span><span><b>${lab}</b><small>to come</small></span></div>`);}
+      return out.join("");}
+    function grades(d){const pv=d.prev;return Object.entries(d.live.g).map(([k,v])=>{const o=pv?pv.g[k]:null,dlt=o==null?"":GP[v]>GP[o]?`<em class="up">▲ from ${o}</em>`:GP[v]<GP[o]?`<em class="dn">▼ from ${o}</em>`:`<em>same</em>`;
+      return `<div class="rgr"><span class="rcg g${v}">${v}</span><small>${k}</small>${dlt}</div>`;}).join("");}
+    function costBlock(p){if(!(p.prod>0.5))return `<p class="rnone">No paper made yet.</p>`;const rows=costRows(p),tot=rows.reduce((t,r)=>t+r[1],0)/p.prod,price=p.price,sc=Math.max(price,tot)*1.04;
+      const bar=rows.map(r=>`<i style="width:${(r[1]/p.prod/sc*100).toFixed(2)}%;background:${r[2]}"></i>`).join(""),m=price-tot;
+      return `<div class="rhd"><h3>Cost to make a ton</h3><small class="mono">${money(tot)} of ${money(price)}</small></div>
+        <div class="rcbar"><div class="rcbars">${bar}</div><div class="rprice" style="left:${(price/sc*100).toFixed(2)}%"><span>Price ${money(price)}</span></div></div>
+        <div class="rmargin ${m>=0?"pos":"neg"}">Margin ${money(m)}/t · ${pc(price>0?m/price:0)}</div>
+        <div class="rleg">${rows.map(r=>`<div><i style="background:${r[2]}"></i><span>${r[0]}</span><b class="mono">${money(r[1]/p.prod)}</b></div>`).join("")}</div>`;}
+    function upBlock(p){const top=p.dn.slice(0,3).map(([k,m])=>`${k} (${hrs(m)})`).join(" · ");
+      return `<div class="rhd"><h3>Uptime</h3><small>this period · outages left out</small></div><div class="rup">${RC_SEC.map(([k,n])=>{const v=p.rel[k]||0,w=v<0.9;
+        return `<span${w?' class="w"':""}>${n}</span><div><i style="width:${(v*100).toFixed(1)}%;background:${v<0.9?"var(--warn)":"var(--ok)"}"></i></div><b class="mono${w?" w":""}">${pc(v)}</b>`;}).join("")}</div>
+        <p class="rnote">${top?"Biggest losses: "+top+" · ":""}${p.breaks} sheet break${p.breaks===1?"":"s"} · ${p.hay} hayout${p.hay===1?"":"s"}</p>`;}
+    function qualBlock(p,season){const eff=S.tot.pot>0?S.tot.prodT/S.tot.pot:1;
+      return `<h3>Quality &amp; fibre</h3><div class="rq"><div><small>On spec</small><b class="mono">${(p.onspec*100).toFixed(1)}%</b><small>${Math.round(p.off)} t to the beater</small></div>
+        <div><small>Fibre yield</small><b class="mono">${p.yld?pc(p.yld):"–"}</b><small>${p.yld?(1/p.yld).toFixed(2)+" t OCC per t":season?"collecting":"in a season"}</small></div>
+        <div><small>Output</small><b class="mono">${pc(eff)}</b><small>of max-speed tons</small></div></div>`;}
+    function daysBlock(d){const D=d.R.days||[];if(!D.length)return "";
+      const X=v=>22+(v-1)*(326/29),Y=L=>20+(4-GP[L])*28,pts=D.map(x=>`${X(x.d).toFixed(1)},${Y(x.o)}`).join(" ");
+      const drops=D.filter((x,i)=>i>0&&GP[x.o]<GP[D[i-1].o]);
+      const svg=`<svg class="rchart" viewBox="0 0 358 170" role="img" aria-label="Overall grade at the end of each day"><g class="ax">${["A","B","C","D","F"].map((L,i)=>`<text x="4" y="${24+i*28}">${L}</text><line x1="22" y1="${20+i*28}" x2="350" y2="${20+i*28}"></line>`).join("")}
+        <text x="18" y="162">1</text><text x="${X(10)-6}" y="162">10</text><text x="${X(20)-6}" y="162">20</text><text x="${X(30)-6}" y="162">30</text></g>
+        <line class="pd" x1="${X(10.5)}" y1="8" x2="${X(10.5)}" y2="144"></line><line class="pd" x1="${X(20.5)}" y1="8" x2="${X(20.5)}" y2="144"></line>
+        <polyline class="ln" points="${pts}"></polyline>${D.map(x=>`<circle class="${drops.includes(x)?"drop":"pt"}" cx="${X(x.d).toFixed(1)}" cy="${Y(x.o)}" r="${drops.includes(x)?4.5:3}"></circle>`).join("")}</svg>`;
+      const strip=k=>`<span>${k}</span><div class="rstrip">${D.map(x=>`<i class="s${x.g[k]}" title="Day ${x.d}: ${x.g[k]}"></i>`).join("")}</div><b class="rcgt g${D[D.length-1].g[k]}">${D[D.length-1].g[k]}</b>`;
+      const moves=[];for(let i=D.length-1;i>0&&moves.length<4;i--){const a=D[i-1],b=D[i];if(a.o===b.o)continue;const up=GP[b.o]>GP[a.o];
+        moves.push(`<div><b class="mono">Day ${b.d}</b><span>${up?"Grade up to "+b.o:"Grade down to "+b.o}${b.top&&!up?": "+b.top[0]+" ("+hrs(b.top[1])+")":up?": a cleaner day":""}</span><em class="${up?"mvup":"mvdn"}">${up?"▲":"▼"}</em></div>`);}
+      return `<details class="rsub" id="repDays"${openDays?" open":""}><summary><b>Day by day</b><small>your overall grade at the end of each day</small></summary>${svg}
+        <div class="rstrips">${Object.keys(D[0].g).map(strip).join("")}</div>${moves.length?`<h4>What moved your grade</h4><div class="rmoves">${moves.join("")}</div>`:""}</details>`;}
+    function moneyBlock(d){const p=d.p,s=d.season?d.live.s:null,row=(k,a,b,c)=>`<div class="rcr${c?" "+c:""}"><span>${k}</span><b>${a}</b>${s?`<i>${b}</i>`:""}</div>`;
+      return `<details class="rsub" id="repMoney"${openMoney?" open":""}><summary><b>Money</b><small>${s?"this period · season":"since the start"}</small></summary>
+        ${row("Earned",money(p.earned),s?money(s.earned):"","pos")}${Object.keys(p.spent).filter(k=>p.spent[k]||(s&&s.spent[k])).map(k=>row(k,money(-p.spent[k]),s?money(-s.spent[k]):"")).join("")}${row("Net",money(p.net),s?money(s.net):"","net "+(p.net>=0?"pos":"neg"))}</details>`;}
+    function render(){const d=data(),p=d.p;let h="";
+      if(d.season){const day=Math.min(SEASON_DAYS,Math.floor(S.t/1440)+1);
+        h+=`<section class="rcard"><div class="rhd"><h3>Season</h3><small class="mono">${S.season.done?"Season complete":"Day "+day+" of "+SEASON_DAYS}</small></div><div class="rtiles">${tiles(d)}</div><div class="rprog"><i style="width:${Math.min(100,S.t/(SEASON_DAYS*1440)*100).toFixed(1)}%"></i></div>${daysBlock(d)}</section>`;
+        h+=`<section class="rcard"><div class="rhd"><h3>${S.season.done?"Last period":"This period so far"}</h3><small>days ${d.live.from}–${Math.min(d.live.to,day)}${d.prev?" · vs days "+d.prev.from+"–"+d.prev.to:""}</small></div><div class="rgrades">${grades(d)}</div><p class="rtip"><b>Biggest lever:</b> ${d.live.tip}</p></section>`;}
+      else h+=`<section class="rcard"><p class="rnone">Grades, uptime and report cards run during a 30-day season. Here are your totals since the start.</p></section>`;
+      h+=`<section class="rcard">${costBlock(p)}</section>`;if(d.season)h+=`<section class="rcard">${upBlock(p)}</section>`;
+      h+=`<section class="rcard">${qualBlock(p,d.season)}</section><section class="rcard">${moneyBlock(d)}</section>`;
+      el.innerHTML=h;}
+    el.addEventListener("click",e=>{const b=e.target.closest("[data-card]");if(b&&S.rc){const c=S.rc.cards[+b.dataset.card];if(c)rcOpen(c,true);}});
+    el.addEventListener("toggle",e=>{if(e.target.id==="repDays")openDays=e.target.open;if(e.target.id==="repMoney")openMoney=e.target.open;},true);
+    // the top bar: the grade so far, and cost per ton and machine uptime in the dropdown
+    const set=(id,v)=>{const e=$(id);if(e&&e.textContent!==v)e.textContent=v;};
+    function topBar(){const d=data(),p=d.p,gb=$("v2grade");
+      if(d.season){const L=d.live.overall;gb.hidden=false;if(gb.textContent!==L){gb.textContent=L;gb.className="gbadge rcg g"+L;}}else gb.hidden=true;
+      if(p.prod>0.5){const cpt=costRows(p).reduce((t,r)=>t+r[1],0)/p.prod;set("v2cpt",money(cpt));set("v2cpt-s",`${money(p.price-cpt)} margin`);}else{set("v2cpt","–");set("v2cpt-s","");}
+      if(d.season){set("v2up",pc(p.rel.machine||0));set("v2up-s","this period");}else{set("v2up",pc(S.t>0?1-S.tot.breakMin/S.t:1));set("v2up-s","sheet time");}}
+    $("v2rep").addEventListener("click",()=>{const t=document.querySelector('.v2tabs [data-tab="stats"]');if(t&&t.getAttribute("aria-pressed")!=="true")t.click();});
+    UI_TICKS.push(n=>{if(n%5)return;try{topBar();if(paneShown(el))render();}catch(e){if(!G3.repErr){G3.repErr=1;console.error("report",e);}}});
+    G3.report={render,data};}
 // frame rate is a player choice (Controls): Battery saver = 30 fps, Smooth = 60 fps (v15 default: a 120 Hz screen no longer
 // draws twice as many frames), Max = the display's rate; remembered. (true/false still mean Max/saver for the test tools)
 const FPS_CAPS={saver:30,smooth:60,max:0};let FPS_MODE="smooth";try{const v=localStorage.getItem("paper-mill-fps");if(FPS_CAPS[v]!==undefined)FPS_MODE=v;}catch(e){}
@@ -7828,6 +8388,7 @@ function frame(now){
   requestAnimationFrame(frame);
   if(running){try{simAcc=Math.min(simAcc+rdt*C.simSpeed,60);while(simAcc>=SIM_STEP&&running){step(SIM_STEP);simAcc-=SIM_STEP;}}catch(e){if(!frame.serr)frame.serr=0;if(frame.serr++<5)console.error("sim error",e);}}
   if(PFo&&PFo.on)PFo.acc["SIM (game logic step)"]=(PFo.acc["SIM (game logic step)"]||0)+(performance.now()-fT0);
+  if(G3.cineTick)G3.cineTick(now);   // (v4.2.4: the bird cut-scene runs on real time while the game is paused)
   try{const live=running||now-(G3.lastMove||0)<2500||now-lastPaint>1000;
     if(live){lastPaint=now;
       if(G3.on&&G3.frame)G3.frame(running?rdt:0);}

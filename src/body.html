@@ -1,7 +1,7 @@
 </style>
 </head>
 <body class="app">
-<div class="view3d" id="view3d"><div aria-hidden="true" class="zenfx" id="zenFx"><b></b><i></i></div><button class="zenexit" hidden id="zenExit">Leave zen mode</button><canvas aria-label="3D view of the mill. Arrow keys move, Q and E rotate, plus and minus zoom." id="gl" tabindex="0"></canvas><div aria-label="Move the view" class="pad" id="pad"><button aria-label="Move up" data-p="0,-1">▲</button><button aria-label="Move left" data-p="-1,0">◀</button><button aria-label="Move right" data-p="1,0">▶</button><button aria-label="Move down" data-p="0,1">▼</button></div><div id="labels3d"></div><div class="banner3d" hidden id="banner3d"><span></span><b></b></div><div class="chips3d" id="chips3d"></div><div class="flash3d" id="flash3d"></div><div aria-labelledby="bri-h" class="spider" hidden id="brian" role="dialog"><div class="spih"><b id="bri-h">Uncle Brian</b><span>night shift · floor scrubber</span><button aria-label="Close" id="briClose">✕</button></div><div id="briTxt" style="font-size:13px;line-height:1.4"></div><button class="primary" id="briGo" style="align-self:flex-start">Follow him</button></div><div aria-labelledby="slc-h" class="spider" hidden id="slice" role="dialog"><div class="spih"><b id="slc-h">Headbox slice</b><span>L/B gauge · tending side</span><button aria-label="Close" id="slcClose">✕</button></div><canvas height="400" id="slcT" width="600"></canvas><label class="spis">Vertical<input aria-label="Vertical slice" id="slcV" max="100" min="-100" type="range" value="0"/><b id="slcVv">B 12.0 mm</b></label><label class="spis">Horizontal<input aria-label="Horizontal slice" id="slcH" max="100" min="-100" type="range" value="0"/><b id="slcHv">L 0.0 mm</b></label><div class="spir"><div><small>Jet lands</small><b id="slcJ">–</b></div><div><small>Wet line from headbox</small><b id="slcW">–</b></div></div><p class="spin" id="slcNote"></p><button class="reroll" id="slcReset">Reset to standard</button></div><div aria-labelledby="spi-h" class="spider" hidden id="spider" role="dialog"><div class="spih"><b id="spi-h">Spider valve</b><span>disk thickener filtrate split</span><button aria-label="Close" id="spiClose">✕</button></div>
+<div class="view3d" id="view3d"><div aria-hidden="true" class="zenfx" id="zenFx"><b></b><i></i></div><button class="zenexit" hidden id="zenExit">Leave zen mode</button><canvas aria-label="3D view of the mill. Arrow keys move, Q and E rotate, plus and minus zoom." id="gl" tabindex="0"></canvas><div aria-label="Move the view" class="pad" id="pad"><button aria-label="Move up" data-p="0,-1">▲</button><button aria-label="Move left" data-p="-1,0">◀</button><button aria-label="Move right" data-p="1,0">▶</button><button aria-label="Move down" data-p="0,1">▼</button></div><div id="labels3d"></div><div class="banner3d" hidden id="banner3d"><span></span><b></b></div><div class="chips3d" id="chips3d"></div><div aria-hidden="true" class="tint3d" id="tint3d"></div><div class="flash3d" id="flash3d"></div><div aria-labelledby="bri-h" class="spider" hidden id="brian" role="dialog"><div class="spih"><b id="bri-h">Uncle Brian</b><span>night shift · floor scrubber</span><button aria-label="Close" id="briClose">✕</button></div><div id="briTxt" style="font-size:13px;line-height:1.4"></div><button class="primary" id="briGo" style="align-self:flex-start">Follow him</button></div><div aria-labelledby="slc-h" class="spider" hidden id="slice" role="dialog"><div class="spih"><b id="slc-h">Headbox slice</b><span>L/B gauge · tending side</span><button aria-label="Close" id="slcClose">✕</button></div><canvas height="400" id="slcT" width="600"></canvas><label class="spis">Vertical<input aria-label="Vertical slice" id="slcV" max="100" min="-100" type="range" value="0"/><b id="slcVv">B 12.0 mm</b></label><label class="spis">Horizontal<input aria-label="Horizontal slice" id="slcH" max="100" min="-100" type="range" value="0"/><b id="slcHv">L 0.0 mm</b></label><div class="spir"><div><small>Jet lands</small><b id="slcJ">–</b></div><div><small>Wet line from headbox</small><b id="slcW">–</b></div></div><p class="spin" id="slcNote"></p><button class="reroll" id="slcReset">Reset to standard</button></div><div aria-labelledby="spi-h" class="spider" hidden id="spider" role="dialog"><div class="spih"><b id="spi-h">Spider valve</b><span>disk thickener filtrate split</span><button aria-label="Close" id="spiClose">✕</button></div>
 <label class="spis"><span>Clear</span><input id="spiV" max="70" min="10" type="range" value="35"/><span>Cloudy</span></label>
 <div class="spir"><div><i style="background:#8a6644"></i>Cloudy <b id="spiTc">–</b><small id="spiQc"></small></div><div><i style="background:#3fa0d0"></i>Clear <b id="spiTl">–</b><small id="spiQl"></small></div></div>
 <canvas height="220" id="spiT" width="560"></canvas><p class="spin" id="spiNote"></p></div><div class="blackout3d" hidden id="blackout3d"><div><b>Power outage</b><span>Lightning hit the substation. Backup generators starting…</span></div></div></div>
@@ -24,19 +24,19 @@
 <span class="st"><small>Cash</small><b id="v2cash">–</b></span>
 <span class="st"><small>Profit</small><b id="v2profit">–</b></span>
 <span class="st"><small id="v2clockL">Time</small><b id="v2clock">–</b></span>
-<span aria-hidden="true" class="chev"><svg fill="none" height="14" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2.6" viewbox="0 0 24 24" width="14"><path d="M6 9l6 6 6-6"></path></svg></span>
+<span class="gbadge" hidden id="v2grade" title="Grade so far this period"></span><span aria-hidden="true" class="chev"><svg fill="none" height="14" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2.6" viewbox="0 0 24 24" width="14"><path d="M6 9l6 6 6-6"></path></svg></span>
 </button>
 <button aria-pressed="true" class="v2card v2lbl" id="v2lblBtn" title="Show or hide equipment labels"><svg fill="none" height="18" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2.2" viewbox="0 0 24 24" width="18"><path d="M3 12V4h8l10 10-8 8L3 12z"></path><circle cx="7.5" cy="8.5" fill="currentColor" r="1.4"></circle></svg><span>Labels</span></button>
 </div>
 <div class="v2card v2more" id="v2more">
 <div class="v2grid">
 <div><small>Production</small><b data-m="k-prod">–</b><em data-m="k-prod-s"></em></div>
-<div><small>Reel speed</small><b data-m="k-speed">–</b><em data-m="k-speed-s"></em></div>
+<div><small>Cost / ton</small><b id="v2cpt">–</b><em id="v2cpt-s"></em></div><div><small>Machine up</small><b id="v2up">–</b><em id="v2up-s"></em></div>
 <div><small>Stock chest</small><b data-m="k-tank">–</b><em data-m="k-tank-s"></em></div>
 <div><small>OCC bale yard</small><b data-m="k-yard">–</b><em data-m="k-yard-s"></em></div>
 <div><small>Roll warehouse</small><b data-m="k-fg">–</b><em data-m="k-fg-s"></em></div>
-<div><small>Cash detail</small><b data-m="k-cash">–</b><em data-m="k-cash-s"></em></div>
 </div>
+<button class="replink" id="v2rep" type="button">Open the mill report</button>
 <div class="v2row">
 <div class="v2speed"><button aria-label="Slower" id="v2slow">−</button><span id="v2speed">30 min/s</span><button aria-label="Faster" id="v2fast">+</button></div>
 <label class="v2chk"><input id="v2labels" type="checkbox"/> Labels</label>
@@ -49,7 +49,7 @@
 <nav aria-label="Panels" class="v2card v2tabs">
 <button aria-pressed="false" data-tab="shop"><svg fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" viewbox="0 0 24 24"><path d="M12 19V5M5 12l7-7 7 7"></path></svg>Upgrades</button>
 <button aria-pressed="false" data-tab="chaos"><svg fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" viewbox="0 0 24 24"><path d="M12 3l9 16H3z"></path><path d="M12 10v4M12 17v.5"></path></svg>Upsets<span class="bdg" hidden id="v2bdg">0</span></button>
-<button aria-pressed="false" data-tab="stats"><svg fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" viewbox="0 0 24 24"><path d="M4 19h16M7 16V9M12 16V5M17 16v-4"></path></svg>Stats</button>
+<button aria-pressed="false" data-tab="stats"><svg fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" viewbox="0 0 24 24"><path d="M4 19h16M7 16V9M12 16V5M17 16v-4"></path></svg>Report</button>
 <button aria-pressed="false" data-tab="ctl"><svg fill="none" stroke="currentColor" stroke-linecap="round" stroke-width="2" viewbox="0 0 24 24"><path d="M4 7h10M18 7h2M4 17h4M12 17h8"></path><circle cx="16" cy="7" r="2"></circle><circle cx="10" cy="17" r="2"></circle></svg>Settings</button>
 </nav>
 </div>
@@ -83,7 +83,7 @@
 <div class="active" id="c-active"><span class="none">No active incidents.</span></div>
 <div aria-live="polite" class="feed" id="c-feed"></div>
 </div>
-<div class="groups" id="chaosgrid"></div>
+<p class="trignote" id="trignote">Pick an upset to set it off now, or tap a running one to clear it.</p><p class="trignote locked" id="trignoteLock">Setting off upsets by hand is locked during a season. Try them in free play.</p><div class="groups" id="chaosgrid"></div>
 </div>
 </section></div>
 <div class="v2pane" data-pane="ctl"><div class="v2sub">Run the mill</div><div class="v2row" id="v2ctlrow"><button id="balance">Balance all</button><input aria-label="Machine name" autocomplete="off" id="pmname" maxlength="14" spellcheck="false" value="PM1"/><label class="check"><input checked id="viewShadows" type="checkbox"/> Shadows</label><button id="viewReset">Whole mill</button><div aria-label="Section labels" class="seg lblseg" hidden id="lblMode" role="group"><span>Labels</span><button aria-pressed="true" data-m="auto" title="Labels fade out when you stop moving the view">Auto</button><button aria-pressed="false" data-m="on">On</button><button aria-pressed="false" data-m="off">Off</button></div></div><details class="areactl" id="areactl"><summary class="v2sub">Area controls<span class="lockn">Auto · locked during a season</span></summary><section class="cards" id="cards">
@@ -116,7 +116,7 @@
 <div class="row" data-key="outRate"><label for="s-outRate">Outbound truck arrivals</label><span class="val"></span><div class="ctl"><input id="s-outRate" max="10" min="0" step="0.1" type="range"/><button aria-pressed="true" class="auto">AUTO</button></div></div>
 <div class="read" id="r-ship">–</div></div>
 </section></details></div>
-<div class="v2pane" data-pane="stats"><div class="v2sub">Flow &amp; bottleneck</div><div class="flowbox" id="v2flow"></div><div class="v2sub">Right now</div><section aria-label="Key figures" class="kpis">
+<div class="v2pane" data-pane="stats"><div class="rep" id="rep"></div><details class="replive" id="repLive"><summary><b>Live mill</b><small>Flow &amp; bottleneck · right now · last 24 h</small></summary><div class="v2sub">Flow &amp; bottleneck</div><div class="flowbox" id="v2flow"></div><div class="v2sub">Right now</div><section aria-label="Key figures" class="kpis">
 <div class="kpi money" id="k-cash-box"><div class="k">Cash</div><div class="v" id="k-cash">–</div><div class="s" id="k-cash-s"> </div></div>
 <div class="kpi"><div class="k">Profit</div><div class="v" id="k-profit">–</div><div class="s" id="k-profit-s"> </div></div>
 <div class="kpi"><div class="k">Sim clock</div><div class="v" id="k-clock">Day 1 00:00</div><div class="s" id="k-clock-s"> </div></div>
@@ -133,7 +133,7 @@
 <span><i class="sw" style="background:var(--ok)"></i><span class="dm">Rolls</span><span class="dl">Roll warehouse % full</span></span>
 </div>
 <canvas height="150" id="trend" width="1200"></canvas>
-</section></div>
+</section></details></div>
 </div></aside>
 <div class="v2menu" id="v2menu"><div aria-labelledby="v2mt" aria-modal="true" class="card" role="dialog">
 <div class="ttl"><i>⚙</i><div><small>The Paper Mill</small><b id="v2mt">Mill</b><div class="state" id="v2state"></div></div></div>
@@ -158,12 +158,11 @@
 
 <div class="overlay top siteov" hidden id="siteOv"><div aria-labelledby="siteH" aria-modal="true" class="modal sitepick" role="dialog">
 <h2 id="siteH">Choose your site</h2>
-<p class="muted">The paper machine, winder, roll handling and warehouse are the same everywhere. The land around them, the utilities and the costs are not.</p>
+<p class="muted small">Same paper machine everywhere. The land, utilities and costs change.</p>
 <div class="envs" id="siteEnvs" role="radiogroup" aria-label="Environment"></div>
 <button class="anybtn" id="siteAny" aria-pressed="false" type="button"><b>Surprise me</b><small>a different environment every visit</small></button>
-<div class="seedrow"><canvas aria-label="Site plan preview" height="150" id="sitePrev" role="img" width="300"></canvas>
-<div class="seedctl"><label>Site plan</label><small id="siteLay">Layout</small></div></div>
-<p class="muted small">Building here reloads the game and starts a fresh run. Each run also has one bottleneck area, drawn at random.</p>
+<div aria-live="polite" class="sitedet" id="siteDet"></div>
+<p class="muted small">Building here reloads the game and starts a fresh run.</p>
 <div class="btns"><button class="primary" id="siteGo">Build here</button><button id="siteNo">Cancel</button></div></div></div>
 
 <div class="overlay top" hidden id="no3d"><div aria-labelledby="no3d-h" class="modal" role="alertdialog">
