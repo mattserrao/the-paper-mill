@@ -107,7 +107,14 @@ function leadCardOpen(){if(!S.lead)return;const was=running;running=false;
     el.querySelectorAll("[data-fix]").forEach(b=>b.addEventListener("click",()=>{if(leadFix(b.dataset.fix))draw();}));};
   document.addEventListener("keydown",key,true);draw();el.hidden=false;el.querySelector("#ldc-ok").focus();}
 // the chip: the leader's face, and Dot's fix when a breakdown is waiting for it
-UI_TICKS.push(()=>{const f=$("svL");if(!f)return;const id=S.lead&&survOn()?S.lead.id:"";if(f.dataset.l!==id){f.dataset.l=id;f.innerHTML=id?leadArt(id,true):"";f.hidden=!id;}
+UI_TICKS.push(()=>{const f=$("svL");if(!f)return;const id=S.lead&&survOn()?S.lead.id:"";if(f.dataset.l!==id){f.dataset.l=id;f.innerHTML=id?leadArt(id,true):"";f.hidden=!id;const fb=$("svFold");if(fb)fb.hidden=!id;if(!id)$("survChip").classList.remove("fold");}
   const x=$("svF");if(x){const show=id==="dot",ready=show&&leadFixReady(),hot=ready&&S.inc.some(i=>leadFixable(i.id)&&i.left>0),t=ready?(hot?"Fix it now":"Fix ready"):"Fix used";
-    if(x.hidden===show)x.hidden=!show;if(show){if(x.textContent!==t)x.textContent=t;x.classList.toggle("hot",hot);x.classList.toggle("used",!ready);}}});
-{const c=$("survChip");if(c)c.addEventListener("click",()=>{if(S.lead&&survOn()&&!(S.cards&&S.cards.open))leadCardOpen();});}
+    if(x.hidden===show)x.hidden=!show;if(show){if(x.textContent!==t)x.textContent=t;x.classList.toggle("hot",hot);x.classList.toggle("used",!ready);}$("survChip").classList.toggle("hot",!!(show&&ready&&S.inc.some(i=>leadFixable(i.id)&&i.left>0)));}});
+// v4.4.0-t3: the wave bar slides away to the left (the arrow at its end), leaving the leader's face; tapping the face brings it back
+{const c=$("survChip"),fb=$("svFold");let fold=false;try{fold=localStorage.getItem("paper-mill-chip-fold")==="1";}catch(e){}
+  const setFold=v=>{fold=v;c.classList.toggle("fold",v);c.setAttribute("aria-expanded",String(!v));c.setAttribute("aria-label",v?"Show the wave bar":"Wave bar: open your mill leader's card");try{localStorage.setItem("paper-mill-chip-fold",v?"1":"0");}catch(e){}};
+  if(c){setFold(fold);
+    c.addEventListener("click",e=>{if(fb&&fb.contains(e.target)){e.stopPropagation();setFold(true);return;}
+      if(fold&&S.lead){setFold(false);return;}
+      if(S.lead&&survOn()&&!(S.cards&&S.cards.open))leadCardOpen();});
+    c.addEventListener("keydown",e=>{if((e.key==="Enter"||e.key===" ")&&e.target===c){e.preventDefault();c.click();}});}}

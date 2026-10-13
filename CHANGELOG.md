@@ -5,6 +5,7 @@
 - Main menu: Season and Survival are two equal choices; neither is highlighted. (Continue and Resume stay the main button when they are there.) "Play" is now "Season".
 - The two managers on their rounds walk side by side in step. The second one used to chase its spot, flicking between walking and standing and sliding along.
 - Top bar: cash and profit keep their full width; the clock column gives way. On phones the survival label is short ("W3 · Day 16").
+- Wave bar: an arrow at its right end slides it away to the left, leaving only the leader's face; tap the face to bring it back. The choice is remembered on the device. While folded, the face gets a red ring when Dot's fix is waiting.
 - Survival leaderboard: no leader names. Scores carry no leader, the board doesn't show one, and `supabase/survival.sql` is back to the v4.3 table. The leader still shows on the game-over dialog.
 - Fixed: the Rename box on the menu wasn't hidden again when the menu reopened (v4.3 regression).
 

@@ -632,7 +632,7 @@ details.areactl[open]>summary{margin-bottom:12px}
 /* the wave chip under the top bar (the banner moves down to make room) */
 .survchip{position:fixed;z-index:69;left:max(10px,env(safe-area-inset-left,0px));top:calc(58px + env(safe-area-inset-top,0px));display:flex;align-items:center;gap:10px;height:28px;padding:0 12px 0 3px;border-radius:14px;background:var(--panel);border:1px solid var(--line);box-shadow:0 4px 14px rgba(28,34,51,.12);font:600 12px var(--f-body);color:var(--muted);white-space:nowrap;max-width:calc(100% - 20px);overflow:hidden}
 .survchip[hidden]{display:none}
-.survchip>b{background:var(--ink);color:var(--panel);border-radius:11px;padding:3px 10px;font:800 12px var(--f-body);letter-spacing:.04em;text-transform:uppercase}
+.survchip .svbody>b{background:var(--ink);color:var(--panel);border-radius:11px;padding:3px 10px;font:800 12px var(--f-body);letter-spacing:.04em;text-transform:uppercase}
 .survchip span b{color:var(--ink);font-weight:800;font-variant-numeric:tabular-nums}
 .survchip em{font-style:normal;border-left:1px solid var(--line);padding-left:10px}
 .survchip.pulse{animation:survpulse 1.8s ease-out}
@@ -709,6 +709,17 @@ button.ldcard[aria-checked="true"]{border:2px solid var(--stock);padding:9px;bac
 .survchip .svl{display:block;width:22px;height:22px;flex:none;margin-right:-5px}.survchip .svl[hidden],.survchip u[hidden]{display:none}
 .survchip u{text-decoration:none;font-weight:800;color:var(--ok);border-left:1px solid var(--line);padding-left:10px}
 .survchip u.used{color:var(--muted);font-weight:600}
+/* v4.4.0-t3: the wave bar folds away to the left, leaving the leader's face; tap the face to bring it back */
+.survchip .svbody{display:flex;align-items:center;gap:10px;max-width:640px;overflow:hidden;transition:max-width .32s ease,opacity .22s ease}
+.survchip .svfold{flex:none;display:grid;place-items:center;width:22px;height:22px;margin:0 -8px 0 -4px;padding:0;border:0;border-radius:50%;background:transparent;color:var(--muted);cursor:pointer;transition:opacity .2s}
+.survchip .svfold:hover{background:var(--chip);color:var(--ink)}.survchip .svfold[hidden]{display:none}
+.survchip{transition:padding .32s ease,gap .32s ease}
+.survchip.fold{padding:0 3px;gap:0}
+.survchip.fold .svbody{max-width:0;opacity:0}
+.survchip.fold .svfold{opacity:0;pointer-events:none;width:0;margin:0}
+.survchip.fold .svl{margin-right:0}
+.survchip.fold.hot .svl{box-shadow:0 0 0 2px var(--bad);border-radius:50%}   /* Dot's fix is waiting */
+@media (prefers-reduced-motion: reduce){.survchip,.survchip .svbody{transition:none}}
 .survchip u.hot{color:#fff;background:var(--bad);border:0;border-radius:10px;padding:3px 9px}
 .sostats .wide{grid-column:1/-1}
 </style>
@@ -731,7 +742,7 @@ button.ldcard[aria-checked="true"]{border:2px solid var(--stock);padding:9px;bac
 <div class="lblist" id="lb-list"></div></div></div>
 <div class="overlay" hidden id="overlay"><div aria-labelledby="ov-h" aria-modal="true" class="modal" role="dialog">
 <h2 id="ov-h"></h2><p id="ov-p"></p><div class="btns"><button class="primary" id="ov-a"></button><button id="ov-b"></button></div></div></div>
-<button class="survchip" hidden id="survChip" type="button" title="Survival: every wave, upsets get more likely and fibre, energy, chemicals and wages cost more. A wave ends when its planned outage does. Tap for your mill leader."><i class="svl" hidden id="svL"></i><b id="svW">Wave 1</b><span>Upsets <b id="svU">×1.00</b></span><span>Costs <b id="svC">×1.00</b></span><u hidden id="svF"></u><em id="svN"></em></button>
+<div class="survchip" hidden id="survChip" role="button" tabindex="0" title="Survival: every wave, upsets get more likely and fibre, energy, chemicals and wages cost more. A wave ends when its planned outage does. Tap for your mill leader."><i class="svl" hidden id="svL"></i><span class="svbody"><b id="svW">Wave 1</b><span>Upsets <b id="svU">×1.00</b></span><span>Costs <b id="svC">×1.00</b></span><u hidden id="svF"></u><em id="svN"></em></span><button class="svfold" hidden id="svFold" type="button" aria-label="Slide the wave bar away" title="Hide (tap the face to bring it back)"><svg fill="none" height="14" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2.6" viewbox="0 0 24 24" width="14"><path d="M15 6l-6 6 6 6"></path></svg></button></div>
 <div class="v2top" id="v2top">
 <button aria-label="Pause and open the menu" class="v2card v2ibtn" id="v2pause"><svg fill="currentColor" height="18" viewbox="0 0 24 24" width="18"><rect height="16" rx="1.5" width="5" x="5" y="4"></rect><rect height="16" rx="1.5" width="5" x="14" y="4"></rect></svg></button>
 <button aria-controls="v2more" aria-expanded="false" class="v2card v2stats" id="v2stats">
@@ -2825,10 +2836,17 @@ function leadCardOpen(){if(!S.lead)return;const was=running;running=false;
     el.querySelectorAll("[data-fix]").forEach(b=>b.addEventListener("click",()=>{if(leadFix(b.dataset.fix))draw();}));};
   document.addEventListener("keydown",key,true);draw();el.hidden=false;el.querySelector("#ldc-ok").focus();}
 // the chip: the leader's face, and Dot's fix when a breakdown is waiting for it
-UI_TICKS.push(()=>{const f=$("svL");if(!f)return;const id=S.lead&&survOn()?S.lead.id:"";if(f.dataset.l!==id){f.dataset.l=id;f.innerHTML=id?leadArt(id,true):"";f.hidden=!id;}
+UI_TICKS.push(()=>{const f=$("svL");if(!f)return;const id=S.lead&&survOn()?S.lead.id:"";if(f.dataset.l!==id){f.dataset.l=id;f.innerHTML=id?leadArt(id,true):"";f.hidden=!id;const fb=$("svFold");if(fb)fb.hidden=!id;if(!id)$("survChip").classList.remove("fold");}
   const x=$("svF");if(x){const show=id==="dot",ready=show&&leadFixReady(),hot=ready&&S.inc.some(i=>leadFixable(i.id)&&i.left>0),t=ready?(hot?"Fix it now":"Fix ready"):"Fix used";
-    if(x.hidden===show)x.hidden=!show;if(show){if(x.textContent!==t)x.textContent=t;x.classList.toggle("hot",hot);x.classList.toggle("used",!ready);}}});
-{const c=$("survChip");if(c)c.addEventListener("click",()=>{if(S.lead&&survOn()&&!(S.cards&&S.cards.open))leadCardOpen();});}
+    if(x.hidden===show)x.hidden=!show;if(show){if(x.textContent!==t)x.textContent=t;x.classList.toggle("hot",hot);x.classList.toggle("used",!ready);}$("survChip").classList.toggle("hot",!!(show&&ready&&S.inc.some(i=>leadFixable(i.id)&&i.left>0)));}});
+// v4.4.0-t3: the wave bar slides away to the left (the arrow at its end), leaving the leader's face; tapping the face brings it back
+{const c=$("survChip"),fb=$("svFold");let fold=false;try{fold=localStorage.getItem("paper-mill-chip-fold")==="1";}catch(e){}
+  const setFold=v=>{fold=v;c.classList.toggle("fold",v);c.setAttribute("aria-expanded",String(!v));c.setAttribute("aria-label",v?"Show the wave bar":"Wave bar: open your mill leader's card");try{localStorage.setItem("paper-mill-chip-fold",v?"1":"0");}catch(e){}};
+  if(c){setFold(fold);
+    c.addEventListener("click",e=>{if(fb&&fb.contains(e.target)){e.stopPropagation();setFold(true);return;}
+      if(fold&&S.lead){setFold(false);return;}
+      if(S.lead&&survOn()&&!(S.cards&&S.cards.open))leadCardOpen();});
+    c.addEventListener("keydown",e=>{if((e.key==="Enter"||e.key===" ")&&e.target===c){e.preventDefault();c.click();}});}}
 /* ---------- v3.3: 10-day report cards (season mode) ----------
    Each period (days 1-10, 11-20, 21-30) gathers money in and out, cost per ton, what caused downtime, how reliable each
    section was (planned outage time left out) and which step held the mill back. Cards pop up at the start of day 11 and
