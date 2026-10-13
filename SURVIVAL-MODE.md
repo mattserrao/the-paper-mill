@@ -7,7 +7,7 @@ needs `supabase/survival.sql` run once in Supabase; until then survival scores s
 
 - Main menu: **Survival**, under Play. A survival run is a season with no last day: $2.0M start, the chosen site, a random
   bottleneck, the week's dice, controls on AUTO, one upgrade a day, event cards, planned outages.
-- **Waves** are the stretches between planned outages (every 7 days, 8 AM, 4 hours, same budget dialog). When an outage
+- **Waves** are the stretches between planned outages (every 4 days from v4.4.0-t3, was 7; 8 AM, 4 hours, same budget dialog). When an outage
   ends, the next wave starts.
 - **Each wave** upsets are 20% more likely and fibre, energy and chemicals, and wages 10% dearer than the wave before.
   The steps compound, so the early waves change little.
@@ -27,6 +27,23 @@ not used (and from v4.4.0-t3 seasons don't have it either).
 A chip under the top bar for the whole run (wave, upsets ×, costs ×, time to the next outage); the clock label
 ("Wave 3 · Day 16"); the outage budget dialog (what the next wave brings); the wave report card that pops when an outage
 ends; a banner and a log line at each wave; the Report tab; the game-over dialog.
+
+## 4-day waves (v4.4.0-t3)
+
+Outages, and so waves, come every 4 days instead of 7, with the same steps per wave. `tools/survival.py`, 6 seeds, forest valley:
+
+| Leader | Saver bot | Hands-off bot |
+|---|---|---|
+| none | 35.2 d (wave 9.3) | 25.3 d (wave 7.0) |
+| Chip | 38.2 d | 25.3 d |
+| Dot | 46.0 d | 29.6 d |
+| Felicity | 38.2 d | 25.6 d |
+| Hank | 34.9 d | 24.8 d |
+
+Wave 1 is mostly the quiet start-up (no upsets on days 1 to 3). A wave is about 10 real minutes at the default speed, so a
+run is roughly 1 to 1.5 hours. Dot is now well ahead (her fix comes round every 4 days instead of 7) and Hank is worth
+nothing; the leader numbers below were tuned for 7-day waves and need another pass. The tables further down are the 7-day
+results.
 
 ## Mill leaders (v4.4)
 

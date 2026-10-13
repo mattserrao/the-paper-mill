@@ -26,7 +26,7 @@ const UPS=[
  {id:"pulper",g:"stock",name:"Pulper rotor upgrade",lv:[600e3,1.4e6],desc:"+25 t/h pulper capacity per level."},
  {id:"clean",g:"stock",name:"Screens & cleaners",lv:[60e3,60e3],desc:"+3 points of pulper yield and 40% fewer screen and cleaner breakdowns per level. Adds a second row of LC cleaners."},
  {id:"chest",g:"stock",name:"Bigger stock chest",lv:[300e3,700e3],desc:"+150 t of chest storage per level."},
- {id:"detrash",g:"stock",name:"Detrashing automation",lv:[30e3],desc:"Ragger and overflow incidents 60% rarer. Junk OCC hurts half as much."},
+ {id:"detrash",g:"stock",name:"Detrashing automation",lv:[30e3],desc:"Ragger and overflow upsets 60% rarer. Junk OCC hurts half as much."},
  {id:"feedconv",g:"stock",name:"Automatic bale feed",lv:[30e3],desc:"The conveyor feeds itself. Drivers only unload trucks."},
  {id:"forklift",g:"yard",name:"Electric forklift fleet",lv:[350e3,750e3],desc:"+25% tons per driver-hour per level. Red-tag outages rarer."},
  {id:"docks",g:"yard",name:"Extra dock doors",lv:[250e3,600e3],desc:"+1 receiving and +1 shipping door per level."},

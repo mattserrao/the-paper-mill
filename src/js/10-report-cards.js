@@ -90,7 +90,7 @@ function endSeason(bust){const se=S.season;se.done=true;se.on=false;running=fals
   soMode(false);$("so-h").textContent=bust?"Season over: bankrupt":"Season complete";
   $("so-p").textContent=bust?`${MILL.name} ran out of money before day ${SEASON_DAYS}.`:`${SEASON_DAYS} days at ${MILL.name}${/[.!?]$/.test(MILL.name)?"":"."}`;   // (v4.2.5: no "Co.." when the name ends in a full stop)
   const eff=S.tot.pot>0?S.tot.prodT/S.tot.pot:1,sg=S.rc&&S.rc.s?rcMake(S.rc.s,S.rc.i).overall:null,g=sg?RATINGS.find(x=>x[1]===sg):RATINGS.find(x=>eff>=x[0]);
-  const st=[["Net profit",money(r.score),"big"],["Tons shipped",f0(r.tons)+" t"],["Disasters survived",String(r.incidents)],["Rolls made",String(S.tot.rolls)],["Season grade",g[1]+" · "+g[2]],["Output",Math.round(eff*100)+"% of max-speed tons"]];
+  const st=[["Net profit",money(r.score),"big"],["Tons shipped",f0(r.tons)+" t"],["Upsets survived",String(r.incidents)],["Rolls made",String(S.tot.rolls)],["Season grade",g[1]+" · "+g[2]],["Output",Math.round(eff*100)+"% of max-speed tons"]];
   $("so-stats").replaceChildren(...st.map(([k,v,c])=>{const d=document.createElement("div");if(c)d.className=c;const a=document.createElement("span");a.textContent=k;const b=document.createElement("b");b.textContent=v;d.append(a,b);return d;}));
   {const c=bust?null:rcFinal(),box=$("so-rc");if(box){if(c){box.hidden=false;box.innerHTML=`<div class="rcmini"><div class="rcg g${c.overall}">${c.overall}</div><div><b>Days ${c.from}–${c.to} report card</b><small>${Object.entries(c.g).map(([k,v])=>k+" "+v).join(" · ")}</small><p>${c.tip}</p></div></div><button id="so-rcbtn" class="ghost">Open the full report card</button>`;
       $("so-rcbtn").addEventListener("click",()=>rcOpen(c,true));}else box.hidden=true;}}
@@ -108,7 +108,9 @@ async function submitScore(){const r=S.season&&S.season.result;if(!r||S.free)ret
   try{const post=b=>fetch(LB.url.replace(/\/$/,"")+"/rest/v1/"+(sv?SURV.table:"scores"),{method:"POST",headers:lbHdr({"Content-Type":"application/json",Prefer:"return=minimal"}),body:JSON.stringify(b)});
     let res=await post({...r,name});
     if(sv&&res.status===404){setMsg("Saved on this device. The online survival board isn't set up yet.","ok");return;}   // (the table from supabase/survival.sql)
-    if(!res.ok){let msg="Couldn't submit ("+res.status+")";try{const j=await res.json();if(j&&j.message)msg=j.message;}catch(e){}throw new Error(msg);}
+    if(!res.ok){let msg="Couldn't submit ("+res.status+")";try{const j=await res.json();if(j&&j.message)msg=j.message;}catch(e){}
+      if(sv&&/survival_wave_fits/.test(msg)){setMsg("Saved on this device. The online survival board needs an update before it can take this score.","ok");return;}   // (supabase/survival-4day-waves.sql)
+      throw new Error(msg);}
     setMsg("Submitted! You're on the board.","ok");S.season.submitted=name;openBoard(sv?"surv":"season");}
   catch(e){setMsg(String(e.message||e),"bad");$("so-submit").disabled=false;}}
 // v4.2.5: the board takes focus when it opens and gives it back when it closes
@@ -133,7 +135,7 @@ async function openBoard(tab){if(tab!=="season"&&tab!=="surv")tab=survRun()?"sur
   L.replaceChildren(...rows.map((r,i)=>{const d=document.createElement("div");d.className="lbrow"+(me&&r.name===me?" me":"");
     const mk=(c,t)=>Object.assign(document.createElement("span"),{className:c,textContent:t});
     const dt=r.created_at?new Date(r.created_at).toLocaleDateString(undefined,{month:"short",day:"numeric"}):"";
-    d.append(mk("r",i+1),mk("n",r.name),mk("sc",sv?survTime(r.minutes):money(r.score)),mk("m",[r.mill,sv?"wave "+r.wave:"",f0(r.tons)+" t shipped",(r.incidents??"")+" disasters",dt].filter(Boolean).join(" · ")));return d;}));}
+    d.append(mk("r",i+1),mk("n",r.name),mk("sc",sv?survTime(r.minutes):money(r.score)),mk("m",[r.mill,sv?"wave "+r.wave:"",f0(r.tons)+" t shipped",(r.incidents??"")+" upsets",dt].filter(Boolean).join(" · ")));return d;}));}
 function setFree(on){S.free=on;
   if(on&&S.season&&S.season.on){const sv=survRun();S.season=null;S.lead=null;applyUpgrades();seasonLocks(false);BANNERS.push({text:(sv?"Survival run":"Season")+" abandoned: free play scores can't go on the leaderboard.",t:null});}
   if(on)BANNERS.push({text:"Free play: upgrades are free and you can't go bankrupt. No leaderboard.",t:null,kind:"good"});
@@ -172,14 +174,14 @@ function updateChaos(){
   const g=$("c-grade");g.textContent=Math.round(eff*100)+"%";g.className="g out "+r[1];$("c-grade-t").textContent="Output: "+r[2].toLowerCase().replace(/^./,c=>c.toUpperCase());$("c-grade-s").textContent=`${(eff*100).toFixed(1)}% of max-speed tons made · grades are in the Report tab`;
   $("c-lost").textContent=f0(Math.max(0,S.tot.pot-S.tot.prodT))+" t";$("c-count").textContent=S.tot.incidents;
   const act=$("c-active");act.replaceChildren();
-  if(!S.inc.length){const s=document.createElement("span");s.className="none";s.textContent="No active incidents.";act.appendChild(s);}
+  if(!S.inc.length){const s=document.createElement("span");s.className="none";s.textContent="No active upsets.";act.appendChild(s);}
   S.inc.forEach(i=>{const d=document.createElement("div");d.className="it";d.textContent=EV[i.id].name;const sm=document.createElement("small");
     const cs=incState(i)||(MNEED(i.id)?"maintenance working":QINC(i.id)?crewState(i.id):"");sm.textContent=`${(i.left/60).toFixed(1)} h left${cs?" · "+cs:""}${i.note?" · "+i.note:""}`;d.appendChild(sm);act.appendChild(d);});
   EVENTS.forEach(e=>{const b=$("ev-"+e.id),i=S.inc.find(x=>x.id===e.id);if(!b)return;b.setAttribute("aria-pressed",i?"true":"false");
-    b.querySelector("small").textContent=i?`${(i.left/60).toFixed(1)} h`:"";b.title=i?"Click to clear this incident":"Click to trigger now";});
+    b.querySelector("small").textContent=i?`${(i.left/60).toFixed(1)} h`:"";b.title=i?"Click to clear this upset":"Click to trigger now";});
   const k=S.feed.length+"|"+(S.feed[0]?S.feed[0].t:"");
   if(k!==feedKey){feedKey=k;const fd=$("c-feed");fd.replaceChildren();
-    if(!S.feed.length){const s=document.createElement("span");s.textContent="Incident log is empty.";fd.appendChild(s);}
+    if(!S.feed.length){const s=document.createElement("span");s.textContent="No upsets yet.";fd.appendChild(s);}
     S.feed.forEach(x=>{const d=document.createElement("div");d.className=x.cls;const t=document.createElement("span");t.textContent=hhmm(x.t)+"  ";d.appendChild(t);d.append(x.text);fd.appendChild(d);});}
 }
 function pill(id,text,cls){const el=$(id);el.textContent=text;el.className="pill "+(cls||"");}
@@ -197,7 +199,7 @@ function updateText(){
   $("k-prod-s").textContent=`${f0(S.tot.prodT)} t made · ${f0(S.tot.prodT/days)} t/day`;
   $("k-cash").textContent=money(S.cash);$("k-cash-box").classList.toggle("neg",S.cash<0);
   $("k-cash-s").textContent=S.cash<0?`bankrupt at ${money(ECON.bankrupt)}`:(d=>d>=0?`${money(d)} made so far`:`${money(-d)} down so far`)(S.cash-ECON.start);
-  {const t=money(S.profitRate)+"/day";$("k-profit").textContent=t;$("k-profit").style.color=/^[−-]/.test(t)?"var(--bad)":"var(--ink)";}
+  {const t=S.t>=1440?money(S.profitRate)+"/day":"after day 1";$("k-profit").textContent=t;$("k-profit").style.color=/^[−-]/.test(t)?"var(--bad)":"var(--ink)";}
   $("k-profit-s").textContent=`operating, last 12 h · ${money(priceOf(C.grade))}/t`;
   $("k-tank").textContent=f0(level)+" %";
   const net=R.fiberIn-R.fiberUse;
@@ -214,11 +216,11 @@ function updateText(){
   pill("p-rec",S.M.crewAtPM?"crew at the PM":S.yard<1?"yard empty":recUse>recCap*0.95?"crew maxed":S.yard>=P.yardCap-1?"yard full":"ok",S.M.crewAtPM?"warn":S.yard<1?"bad":recUse>recCap*0.95||S.yard>=P.yardCap-1?"warn":"ok");
   $("r-rec").textContent=`${S.effDrv<C.drivers.v?`Only ${S.effDrv} of ${C.drivers.v} working · `:""}Crew ${f0(recUse)}/${f0(recCap)} t/h busy · feeding ${f1(R.feed)} · unloading ${f1(R.unload)} t/h`;
   const pulHold=level>97, pulStarve=R.feed<C.pulper.v*0.9&&C.pulper.v>1&&!pulHold;
-  pill("p-pul",S.M.pulperDown?"down: incident":pulHold?"hold: chest full":pulStarve?"short of bales":C.pulper.v<0.5?"off":"running",S.M.pulperDown?"bad":pulHold||pulStarve?"warn":C.pulper.v<0.5?"":"ok");
+  pill("p-pul",S.M.pulperDown?"down: upset":pulHold?"hold: chest full":pulStarve?"short of bales":C.pulper.v<0.5?"off":"running",S.M.pulperDown?"bad":pulHold||pulStarve?"warn":C.pulper.v<0.5?"":"ok");
   $("r-pul").textContent=`Fed ${f1(R.feed)} t/h OCC → ${f1(R.fiberIn)} t/h fiber (88% yield)`;
   pill("p-tank",level<5?"empty":level<C.lowLevel.v?"low":level>95?"full":"ok",level<C.lowLevel.v?"bad":level>95?"warn":"ok");
   $("r-tank").textContent=`${f0(S.tank)} of ${P.tankCap} t · in ${f1(R.fiberIn)} · out ${f1(R.fiberUse)} t/h`;
-  const pmTxt={run:S.pmSpeed<C.pmSp.v-40&&level<C.lowLevel.v?"slowed: low stock":S.pmSpeed<C.pmSp.v-40?"ramping":"at max speed",break:"sheet break",down:"down: no stock",full:"down: warehouse full",spools:"down: winder backed up",incident:"down: "+(S.M.pmDown||"incident")}[S.pm];
+  const pmTxt={run:S.pmSpeed<C.pmSp.v-40&&level<C.lowLevel.v?"slowed: low stock":S.pmSpeed<C.pmSp.v-40?"ramping":"at max speed",break:"sheet break",down:"down: no stock",full:"down: warehouse full",spools:"down: winder backed up",incident:"down: "+(S.M.pmDown||"upset")}[S.pm];
   pill("p-pm",pmTxt,S.pm==="run"?(pmTxt==="at max speed"?"ok":"warn"):"bad");
   const eff=S.t>0?100*(1-S.tot.breakMin/S.t):100;
   $("r-pm").textContent=`${f1(R.prod/C.rollW.v)} rolls/h · ${S.tot.turnups} reels turned up · ${S.tot.breaks} breaks · ${f0(eff)}% sheet time`;

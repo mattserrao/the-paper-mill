@@ -114,9 +114,10 @@ function step(dt){
   const R=S.rates,k=v=>v*60/dt;
   R.feed=ease(R.feed,k(feed),dt,6);R.unload=ease(R.unload,k(unloaded),dt,6);R.fiberIn=ease(R.fiberIn,k(fiberIn),dt,6);
   R.prod=ease(R.prod,k(prod),dt,6);R.fiberUse=ease(R.fiberUse,k(prod/P.pmLoss),dt,6);R.load=ease(R.load,k(loaded),dt,6);R.rolls=ease(R.rolls,k(rollsMade),dt,10);R.cut=ease(R.cut,k(cut),dt,6);
-  {const L1=S.ledger,op=prod*priceOf(C.grade)-(L1.occ+L1.energy+L1.labor+L1.overhead+L1.premium-op0),B=S.opb||(S.opb={b:new Array(72).fill(0),i:-1});
-    const bi=Math.floor(S.t/10);if(bi!==B.i){for(let j=Math.max(B.i+1,bi-71);j<=bi;j++)B.b[((j%72)+72)%72]=0;B.i=bi;}
-    B.b[bi%72]+=op;const span=Math.min(720,Math.max(10,S.t));S.profitRate=B.b.reduce((a,v)=>a+v,0)/span*1440;}
+  {const L1=S.ledger,op=prod*priceOf(C.grade)-(L1.occ+L1.energy+L1.labor+L1.overhead+L1.premium-op0),B=S.opb&&S.opb.b.length===144?S.opb:(S.opb={b:new Array(144).fill(0),i:-1});
+    // v4.4.0-t3: profit per day is the last 24 game hours (144 ten-minute buckets); shown from the end of the first day
+    const bi=Math.floor(S.t/10);if(bi!==B.i){for(let j=Math.max(B.i+1,bi-143);j<=bi;j++)B.b[((j%144)+144)%144]=0;B.i=bi;}
+    B.b[bi%144]+=op;S.profitRate=B.b.reduce((a,v)=>a+v,0)*1440/Math.min(1440,Math.max(10,S.t));}
   // trend every 10 sim min
   S.trendAcc+=dt;
   if(S.trendAcc>=10){S.trendAcc-=10;S.trend.push([S.tank/P.tankCap,S.pmSpeed/3300,S.yard/P.yardCap,S.fg/P.fgCap]);if(S.trend.length>144)S.trend.shift();}

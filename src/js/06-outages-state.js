@@ -3,7 +3,8 @@
    player sets a maintenance budget per area: $20k = 10% less reliable, $70k = no change, $170k = 20% more reliable
    (v10 economy balance: was $50k / $100k / $200k).
    The new reliability takes effect when the outage ends and lasts until the next one. */
-const OUT={every:7,hour:8,len:240,cost:[20e3,70e3,170e3],rel:[1.1,1,0.8],simCap:5,
+const OUT={get every(){return survRun()?SURV.every:7;},   // v4.4.0-t3: survival has an outage every 4 days (a wave), seasons every 7
+  hour:8,len:240,cost:[20e3,70e3,170e3],rel:[1.1,1,0.8],simCap:5,
   jobs:["1st press roll change","Forming fabric (wire) change","Pulper rotor and extraction plate change","Refiner plate change"],
   areas:[["stock","Stock prep","pulper, cleaners, screens, refiners, thickener"],["wet","Wet end","headbox, forming fabric, press felts"],["dry","Dry end","dryers, steam joints, reel, winder"]],
   ev:{stock:["refclash","ragger","overflow","dye","hdblow","lwplug","cscreen","fscreen","lcplug","thkblow","chestover"],wet:["fabric","felt","slime","fogfan"],dry:["shaft","dryerfire","wrap","steamjoint","winderdown","boiler"]},area:{}};
@@ -29,7 +30,7 @@ function openOutagePlan(){const o=S.outg,st=outStart(o.k),first=o.k===1,pick={st
   const effTxt=(v,a)=>{const w=a==="stock"?"breakdowns":"breakdowns and sheet breaks";return v===0?["bad","Reliability −10%: more "+w]:v===2?["ok","Reliability +20%: fewer "+w]:["","Reliability unchanged"];};
   el.innerHTML=`<div class="modal deal outg" role="dialog" aria-modal="true" aria-labelledby="out-h"><span class="dk">${survOn()?`Wave ${o.k} · planned outage`:`Planned outage ${o.k} of 4`} · sim paused</span>
     <h2 id="out-h">${first?"Your first planned outage":"Outage in 24 hours"}</h2>
-    ${first?`<div class="intro"><p><b>What's an outage?</b> Planned downtime. Every 7 days the mill comes down on purpose for a controlled 4-hour shutdown, so crews can inspect, clean, repair and replace worn parts before they fail.</p>
+    ${first?`<div class="intro"><p><b>What's an outage?</b> Planned downtime. Every ${OUT.every} days the mill comes down on purpose for a controlled 4-hour shutdown, so crews can inspect, clean, repair and replace worn parts before they fail.</p>
       <p><b>Why it matters:</b> well-maintained equipment breaks down less and runs better, with fewer sheet breaks and hayouts. Your budget for each area sets its reliability until the next outage.</p></div>`:""}
     <p class="when">Starts <b>${outTime(st)}</b>, back up by <b>${hourOf(st+OUT.len)}</b> (4 hours, machine and stock prep down).<br>Major job: <b>${OUT.jobs[outJob(o.k)-1]||"inspections"}</b>, plus new press felts.</p>${survOn()?survPlanNote(o.k):""}<div id="out-lead"></div>
     <div>${OUT.areas.map(([a,n,d])=>`<div class="orow" data-a="${a}"><div><b>${n}</b><small>${d}</small></div><div class="seg">${COST.map((c,i)=>`<button data-v="${i}" aria-pressed="${i===1}">${k(c)}</button>`).join("")}</div><em class="eff"></em></div>`).join("")}</div>

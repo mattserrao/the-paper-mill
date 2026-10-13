@@ -7,7 +7,7 @@
    (compound:false adds the steps instead). Tuned with tools/survival.py: at +20% / +10% a hands-off mill lasts about 6
    waves and a well-upgraded one about 12 to 14. The mode starts and ends in 09b-survival.js; the hooks elsewhere are
    one-liners that do nothing in a season or in free play (the multipliers are exactly 1 there). */
-const SURV={up:0.20,cost:0.10,compound:true,table:"survival",local:"paper-mill-local-survival",best:"paper-mill-survival-best"};
+const SURV={up:0.20,cost:0.10,compound:true,every:4,table:"survival",local:"paper-mill-local-survival",best:"paper-mill-survival-best"};
 const survRun=()=>!!(S&&S.season&&S.season.surv);                 // a survival run, running or just ended
 const survOn=()=>!!(S&&S.season&&S.season.surv&&S.season.on);     // ...and still running
 const survWave=()=>(S&&S.outg&&S.outg.k)||1;

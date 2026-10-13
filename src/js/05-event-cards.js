@@ -148,7 +148,7 @@ const CARDS=[
  // ---- v2.8.0 cards ----
  {id:"safety",area:"Safety · Mill-wide",title:"Safety blitz",
   story:()=>"Your safety manager wants $15k for a two-day housekeeping and lockout blitz before the state inspector visits.",
-  win:()=>"Clean visit: forklift and dock incidents half as likely for 10 days",lose:()=>"Inspector finds a lockout gap: machine down 3 hours",
+  win:()=>"Clean visit: forklift and dock upsets half as likely for 10 days",lose:()=>"Inspector finds a lockout gap: machine down 3 hours",
   odds:()=>Math.min(95,70+15*LV("safety")),why:"The safety program upgrade means most of the work is already done.",
   ok:()=>true,
   accept(c){deal(-15000);const w=rand("card")*100<c.o;
@@ -374,7 +374,7 @@ const PENDH={
  "drone":({w})=>{if(w){addFx({id:"drone",left:10*1440,evf:{dryerfire:0.3,shaft:0.3}});cardBanner("Drone found hot spots and a worn coupling: fixed before they failed.",true);}
       else cardBanner("Drone inspection found nothing.",false);},
  "spot":()=>{},
- "safety":({w})=>{if(w){addFx({id:"safety",left:10*1440,evf:{fleet:0.5,fight:0.5,calloff:0.5}});cardBanner("Inspector signed off clean. Yard incidents halved for 10 days.",true);}
+ "safety":({w})=>{if(w){addFx({id:"safety",left:10*1440,evf:{fleet:0.5,fight:0.5,calloff:0.5}});cardBanner("Inspector signed off clean. Yard upsets halved for 10 days.",true);}
       else{addFx({id:"safetyx",left:180,mods:{pmDown:"lockout correction"}});cardBanner("Inspector found a lockout gap: machine down 3 hours to fix it.",false);}},
  "shift":()=>{trigger("calloff");cardBanner("The new roster mixed up the crews: call-offs on nights.",false);},
  "insfire":({f0})=>{const e=S.evc||{},f=(e.dryerfire||0)+(e.balefire||0)-f0;

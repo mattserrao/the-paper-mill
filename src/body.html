@@ -67,28 +67,28 @@
 <div class="ugroups" id="ugrid"></div>
 </div>
 </section></div>
-<div class="v2pane" data-pane="chaos"><section aria-label="Upset" class="chaos" id="chaosSec">
+<div class="v2pane" data-pane="chaos"><section aria-label="Upsets" class="chaos" id="chaosSec">
 <div class="chaoshead">
-<h2>Upset<span class="dl">Trigger a disaster, or let them happen on their own.</span><span class="dm">Trigger one or let them happen.</span></h2>
-<label class="check"><input checked id="chaosOn" type="checkbox"/> Random disasters on</label>
+<h2>Upsets<span class="dl">Set one off, or let them happen on their own.</span><span class="dm">Trigger one or let them happen.</span></h2>
+<label class="check"><input checked id="chaosOn" type="checkbox"/> Random upsets on</label>
 <div class="simspeed"><label for="chaosLvl">Frequency</label><input id="chaosLvl" max="5" min="0.25" step="0.25" type="range" value="1"/><span class="val" id="chaosLvlv">1×</span></div>
-<button class="danger" id="chaosRandom">Unleash random disaster</button>
-<button id="chaosClear">Clear all incidents</button>
+<button class="danger" id="chaosRandom">Set off a random upset</button>
+<button id="chaosClear">Clear all upsets</button>
 <button aria-controls="chaosgrid" aria-expanded="false" class="more" id="chaosMore">Show more</button>
 </div>
 <div class="chaosbody">
 <div class="board">
-<div class="sign" id="c-sign">This mill has worked<big id="c-days">0.0</big>days without an incident</div>
+<div class="sign" id="c-sign">This mill has worked<big id="c-days">0.0</big>days without an upset</div>
 <div class="rating"><span class="g A" id="c-grade">A</span><div><b id="c-grade-t">Bonus secured</b><span id="c-grade-s">–</span></div></div>
 <div class="stat"><span>Production lost vs. max speed</span><b id="c-lost">0 t</b></div>
-<div class="stat"><span>Incidents so far</span><b id="c-count">0</b></div>
-<div class="active" id="c-active"><span class="none">No active incidents.</span></div>
+<div class="stat"><span>Upsets so far</span><b id="c-count">0</b></div>
+<div class="active" id="c-active"><span class="none">No active upsets.</span></div>
 <div aria-live="polite" class="feed" id="c-feed"></div>
 </div>
 <p class="trignote" id="trignote">Pick an upset to set it off now, or tap a running one to clear it.</p><p class="trignote locked" id="trignoteLock">Setting off upsets by hand is locked during a season or a survival run. Try them in free play.</p><div class="groups" id="chaosgrid"></div>
 </div>
 </section></div>
-<div class="v2pane" data-pane="ctl"><div class="v2sub">Run the mill</div><div class="setgrp end" id="v2ctlrow"><label class="setfield setname"><span class="setlbl">Machine name</span><input autocomplete="off" id="pmname" maxlength="14" spellcheck="false" value="PM1"/></label><button id="balance">Balance all</button></div><div class="v2sub">View</div><div class="setgrp" id="v2viewrow"><button id="viewReset">Whole mill</button><label class="check"><input checked id="viewShadows" type="checkbox"/> Shadows</label><div aria-label="Section labels" class="seg lblseg" hidden id="lblMode" role="group"><span>Labels</span><button aria-pressed="true" data-m="auto" title="Labels fade out when you stop moving the view">Auto</button><button aria-pressed="false" data-m="on">On</button><button aria-pressed="false" data-m="off">Off</button></div></div><div class="v2sub">Performance</div><div class="setstack" id="v2perfrow"></div><details class="areactl" id="areactl"><summary class="v2sub">Area controls<span class="lockn">Auto · locked during a season</span></summary><section class="cards" id="cards">
+<div class="v2pane" data-pane="ctl"><div class="v2sub">Run the mill</div><div class="setgrp end" id="v2ctlrow"><label class="setfield setname"><span class="setlbl">Machine name</span><input autocomplete="off" id="pmname" maxlength="14" spellcheck="false" value="PM1"/></label><button hidden id="balance">Balance all</button></div><div class="v2sub">View</div><div class="setgrp" id="v2viewrow"><button id="viewReset">Whole mill</button><label class="check"><input checked id="viewShadows" type="checkbox"/> Shadows</label><div aria-label="Section labels" class="seg lblseg" hidden id="lblMode" role="group"><span>Labels</span><button aria-pressed="true" data-m="auto" title="Labels fade out when you stop moving the view">Auto</button><button aria-pressed="false" data-m="on">On</button><button aria-pressed="false" data-m="off">Off</button></div></div><div class="v2sub">Performance</div><div class="setstack" id="v2perfrow"></div><details class="areactl" id="areactl"><summary class="v2sub">Area controls<span class="lockn">Auto · locked during a season</span></summary><section class="cards" id="cards">
 <div class="card"><h2><span class="n">1</span>Inbound OCC trucks<span class="pill" id="p-in">–</span></h2>
 <div class="row" data-key="inRate"><label for="s-inRate">Truck arrivals</label><span class="val"></span><div class="ctl"><input id="s-inRate" max="8" min="0" step="0.1" type="range"/><button aria-pressed="true" class="auto">AUTO</button></div></div>
 <div class="read" id="r-in">–</div></div>

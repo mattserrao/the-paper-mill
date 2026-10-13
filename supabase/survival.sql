@@ -1,4 +1,4 @@
--- The Paper Mill: survival leaderboard (v4.3)
+-- The Paper Mill: survival leaderboard (v4.3; 4-day waves from v4.4.0-t3)
 -- Run this once in Supabase: Dashboard -> SQL Editor -> New query -> paste -> Run.
 -- It adds a second table next to public.scores (the season board, leaderboard.sql) and changes nothing there.
 -- It reuses public.banned_words from leaderboard.sql, so run that one first on a new project.
@@ -15,8 +15,8 @@ create table if not exists public.survival (
   version     text    check (char_length(version) <= 12),
   env         text    check (env in ('rural','urban','desert','swamp')),   -- the site the run was played on
   ip_hash     text,
-  -- a wave is 7 sim days (10,080 minutes), so the wave and the time have to agree
-  constraint survival_wave_fits check (wave <= minutes / 10080 + 2 and minutes < wave * 10080)
+  -- a wave is 4 sim days (5,760 minutes) from v4.4.0-t3 (7 days before), so the wave and the time have to agree
+  constraint survival_wave_fits check (wave <= minutes / 5760 + 2 and minutes < wave * 10080)
 );
 create index if not exists survival_rank on public.survival (minutes desc, tons desc);
 
@@ -53,3 +53,8 @@ create policy "anyone can submit" on public.survival for insert to anon with che
 revoke all on public.survival from anon;
 grant select (id, created_at, name, minutes, wave, tons, incidents, mill, version, env) on public.survival to anon;
 grant insert (name, minutes, wave, tons, incidents, mill, version, env) on public.survival to anon;
+
+-- v4.4.0-t3: survival waves are 4 days. A table made by an earlier version of this file checks for 7-day waves and would
+-- refuse every score past wave 3; this swaps the check (it still accepts scores from 7-day test builds).
+alter table public.survival drop constraint if exists survival_wave_fits;
+alter table public.survival add constraint survival_wave_fits check (wave <= minutes / 5760 + 2 and minutes < wave * 10080);

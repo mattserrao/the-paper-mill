@@ -76,7 +76,7 @@ RUN = r"""([k,seed0,bn,bot,up,cost,maxdays,ORDER,compound,leader,swap,sets,pol])
       else if(o.outage){if(bot!=='handsoff'&&S.cash>1.5e6)document.querySelectorAll('#outOv .orow .seg button[data-v="2"]').forEach(b=>b.click());leadPlan();click('out-ok');outs++;}
       else if(o.report){click('rc-ok');}
       if(S.cards.open)S.cards.open=null;}
-    if(S.lead&&S.lead.id==='dot'&&n%8===0&&S.inc.length&&P.leadFixReady()){const last=(7*S.outg.k-1)*1440+120-S.t<1440,min=last?1:(+pol.dot)*1e3;
+    if(S.lead&&S.lead.id==='dot'&&n%8===0&&S.inc.length&&P.leadFixReady()){const last=(P.SURV.every*S.outg.k-1)*1440+120-S.t<1440,min=last?1:(+pol.dot)*1e3;
       const c=S.inc.filter(i=>P.leadFixable(i.id)&&i.left>30&&(i.bill||0)>=min).sort((a,b)=>(b.bill||0)-(a.bill||0))[0];if(c&&P.leadFix(c.id))fixes++;}
     if(S.pm!=="run")dn+=h;
     if(S.outg.k!==wk){incW.push(S.tot.incidents-i0);i0=S.tot.incidents;dnW.push(Math.round((dn-dn0)/60));dn0=dn;waves.push(Math.round((S.cash-c0)/1e3));wk=S.outg.k;c0=S.cash;}

@@ -5,6 +5,13 @@
 - Main menu: Season and Survival are two equal choices; neither is highlighted. (Continue and Resume stay the main button when they are there.) "Play" is now "Season".
 - The two managers on their rounds walk side by side in step. The second one used to chase its spot, flicking between walking and standing and sliding along.
 - Top bar: cash and profit keep their full width; the clock column gives way. On phones the survival label is short ("W3 · Day 16").
+- Grades wait for day 4: the top-bar badge, the Report tab's grades and the day-by-day chart start once three days have run (start-up is too noisy to judge). Cost per ton waits for the end of day 1.
+- Profit per day is the average over the last 24 game hours (it was the last 12, and jumpy early on). It shows "–" until the first day is done.
+- Survival: a planned outage, and so a new wave, every 4 days (was 7). The per-wave steps are unchanged (+20% upsets, +10% costs), so runs are shorter: about 25 days hands-off and 35–46 with upgrades (6 seeds, forest valley).
+- Survival leaderboard: the table's wave check assumed 7-day waves. `supabase/survival-4day-waves.sql` swaps it (run once); until then the game keeps the score on the device and says the board needs an update.
+- Tutorial: six cards (welcome and goal, fibre in, paper out, bottleneck, upsets, outages), numbered "1 of 6". Survival gets its own goal and outage cards (waves, leader).
+- One word for upsets: "disasters" and "incidents" are gone from the game's text (breakdowns, sheet breaks and hayouts keep their names as kinds of upset).
+- Settings: "Balance all" is hidden; the areas stay on automatic.
 - Wave bar: an arrow at its right end slides it away to the left, leaving only the leader's face; tap the face to bring it back. The choice is remembered on the device. While folded, the face gets a red ring when Dot's fix is waiting.
 - Survival leaderboard: no leader names. Scores carry no leader, the board doesn't show one, and `supabase/survival.sql` is back to the v4.3 table. The leader still shows on the game-over dialog.
 - Fixed: the Rename box on the menu wasn't hidden again when the menu reopened (v4.3 regression).

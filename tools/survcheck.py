@@ -83,7 +83,7 @@ with sync_playwright() as pw:
     # (the OCC price also moves with the grade on the machine and the weekly market, so later checks compare it with its own base: occBase)
     r = pg.evaluate(RUNTO, ["S.cards.open&&S.cards.open.outage", 400000])
     txt = pg.evaluate("()=>document.getElementById('outOv').innerText")
-    ok("outage 1: the dialog opens the day before", r["open"] == "outage" and r["day"] == 6, r)
+    ok("outage 1: the dialog opens the day before", r["open"] == "outage" and r["day"] == 3, r)   # (v4.4.0-t3: outages every 4 days, on day 4)
     ok("outage 1: it names the wave and what wave 2 brings", "WAVE 1" in txt.upper() and "wave 2" in txt and "×1.20" in txt and "×1.10" in txt, txt[:400])
     r2 = pg.evaluate("()=>({pressed:(document.querySelector('#out-lpick button[aria-pressed=true]')||{dataset:{}}).dataset.p,chg:!!document.getElementById('out-lchg'),n:document.querySelectorAll('#out-lpick button').length})")
     ok("outage 1: Chip's pick is in the dialog (two deals, one preselected) with the Change leader button", "Chip's pick" in txt and r2["n"] == 2 and r2["pressed"] == "fibre" and r2["chg"], r2)
@@ -100,7 +100,7 @@ with sync_playwright() as pw:
     ok("wave 2: costs ×1.10 applied", abs(s["costMul"] - 1.1) < 1e-9, s)
     ok("wave 2: Chip's sales push is part of the mill (+$5/t)", s["lead"]["st"]["sales"] == 1 and s["lead"]["st"]["fibre"] == 0 and abs(s["price"] - price1 - 5) < 1e-9, s)
     ok("wave 2: chip shows ×1.20 and ×1.10", s["svW"] == "Wave 2" and s["svU"] == "×1.20" and s["svC"] == "×1.10", s)
-    ok("wave 2: upset rate is base 0.5 × 1.20 after the first week", abs(pg.evaluate("()=>{const S=__PM.S,t=S.t;S.t=8*1440;const v=__PM.upsetMul();S.t=t;return v;}") - 0.6) < 1e-9)
+    ok("wave 2: upset rate is base 0.5 × 1.20 after the first week (wave 2 set)", abs(pg.evaluate("()=>{const S=__PM.S,t=S.t;S.t=8*1440;const v=__PM.upsetMul();S.t=t;return v;}") - 0.6) < 1e-9)
     cash2 = s["cash"]; t2 = s["t"]
 
     # 4 save, reload, continue
@@ -157,7 +157,7 @@ with sync_playwright() as pw:
     ok("outage jobs 2, 3, 4, then 1 again", jobs == [out[1], out[2], out[3], out[0]], jobs)
     # outage 5 with the 3D view running: the last of the staging the day before, then the outage itself (the game holds
     # it at 5 sim min/s). Stepped by hand to 3 sim hours before the start; cards that pop are declined.
-    pg.evaluate(RUNTO, ["S.t>=(7*5-1)*1440+120-180", 400000])
+    pg.evaluate(RUNTO, ["S.t>=(4*5-1)*1440+120-180", 400000])
     pg.evaluate("()=>{const P=__PM;P.C.simSpeed=P.C.spdPref=120;P.G3.on=true;P.setRunning(true);}")
     def live(until, secs):
         for _ in range(secs * 2):

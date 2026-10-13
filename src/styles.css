@@ -396,6 +396,7 @@ body.season-lock label.check:has(#breaks),body.season-lock label.check:has(#hays
 /* v3.1.0 quick-start tutorial */
 #tut{position:fixed;left:0;right:0;bottom:0;z-index:160;display:flex;justify-content:center;padding:12px 12px calc(12px + env(safe-area-inset-bottom));pointer-events:none}
 #tut[hidden]{display:none}
+#tut .tsm{font-size:13px;color:var(--muted);margin:2px 0 0}
 #tut.center{top:0;align-items:center;background:color-mix(in srgb,var(--bg) 55%,transparent);pointer-events:auto}
 #tut .tc{pointer-events:auto;width:min(460px,100%);background:var(--panel);border-radius:18px;box-shadow:0 18px 50px rgba(28,34,51,.3);padding:16px 18px 14px;display:flex;flex-direction:column;gap:8px}
 #tut .tk{display:flex;justify-content:space-between;align-items:center;font:700 12px var(--f-body);letter-spacing:.08em;text-transform:uppercase;color:var(--stock)}
@@ -696,6 +697,7 @@ button.ldcard[aria-checked="true"]{border:2px solid var(--stock);padding:9px;bac
 .survchip{cursor:pointer}
 .survchip .svl{display:block;width:22px;height:22px;flex:none;margin-right:-5px}.survchip .svl[hidden],.survchip u[hidden]{display:none}
 .survchip u{text-decoration:none;font-weight:800;color:var(--ok);border-left:1px solid var(--line);padding-left:10px}
+.v2pane #balance[hidden]{display:none}
 .survchip u.used{color:var(--muted);font-weight:600}
 /* v4.4.0-t3: the wave bar folds away to the left, leaving the leader's face; tap the face to bring it back */
 .survchip .svbody{display:flex;align-items:center;gap:10px;max-width:640px;overflow:hidden;transition:max-width .32s ease,opacity .22s ease}

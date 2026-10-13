@@ -28,7 +28,7 @@ function endSurvival(){const se=S.season,r=survResult(),w=r.wave;se.done=true;se
   $("so-h").textContent="Survival over: bankrupt";
   $("so-p").textContent=`${MILL.name} ran out of money in wave ${w}, on day ${Math.floor(S.t/1440)+1}.`;
   const st=[["Time survived",survTime(r.minutes),"big"],["Wave reached",String(w)],["Your best",pb?(best?"New best (was "+survTime(best)+")":"New best"):survTime(best)],
-    ["Upsets by the end",xf(survUp(w))],["Costs by the end",xf(survCost(w))],["Tons shipped",f0(r.tons)+" t"],["Disasters survived",String(r.incidents)]];
+    ["Upsets by the end",xf(survUp(w))],["Costs by the end",xf(survCost(w))],["Tons shipped",f0(r.tons)+" t"],["Upsets survived",String(r.incidents)]];
   if(S.lead)st.splice(3,0,["Mill leader",LEADERS[S.lead.id].name+(S.lead.was?" (after "+LEADERS[S.lead.was].name+")":""),"wide"]);
   $("so-stats").replaceChildren(...st.map(([k,v,c])=>{const d=document.createElement("div");if(c)d.className=c;const a=document.createElement("span");a.textContent=k;const b=document.createElement("b");b.textContent=v;d.append(a,b);return d;}));
   {const box=$("so-rc");if(box)box.hidden=true;}soMode(true);
