@@ -60,7 +60,7 @@
     party("office",[w],[[OFF.door[0],AIS,0],[c+(Math.random()<0.5?-1.6:1.6),14.6,3.5,"inspect"],[OFF.door[0],AIS,0],[OFF.door[0],OFF.door[1],0]],"walk");}
   function partyUpdate(P2,rdt,now){const L=P2.members[0],pt=P2.path[P2.i];
     if(!pt){P2.members.forEach(free);return false;}
-    let stopped=false;
+    let stopped=false;const lx0=L.position.x,lz0=L.position.z;
     if(moveP(L,pt[0],pt[1],P2.kind==="mgr"?1.9:1.7,rdt)){if(P2.wait<(pt[2]||0)){P2.wait+=rdt;stopped=true;}else{P2.i++;P2.wait=0;}}
     const a=L.rotation.y,fx=Math.cos(a),fz=-Math.sin(a);
     if(stopped){face(L,L.position.x,zc,rdt);pose(L,pt[3]==="phone"?"phoneS":(pt[3]||"idle"),now);}else pose(L,P2.walk,now);
@@ -68,7 +68,12 @@
       if(P2.kind==="mgr"){tx=L.position.x-fz*1.0;tz=L.position.z+fx*1.0;}
       else if(stopped){const ang=(k/(P2.members.length-2||1)-0.5)*2.2;tx=L.position.x+Math.sin(ang)*2.1;tz=L.position.z+0.9+Math.cos(ang)*0.9;}
       else{const row=Math.floor(k/2)+1,side=k%2?0.55:-0.55;tx=L.position.x-fx*row*1.0-fz*side;tz=L.position.z-fz*row*1.0+fx*side;}
-      const arr=moveP(m,tx,tz,P2.kind==="mgr"?2.2:2.6,rdt);
+      // v4.4.0-t3: managers walk side by side. Once beside the leader, the second one moves with the leader (plus a soft pull
+      // onto its spot) and walks in step, facing the same way; before, it chased its spot and flicked between walking and standing
+      if(P2.kind==="mgr"&&!stopped){const dlx=L.position.x-lx0,dlz=L.position.z-lz0,ex=tx-m.position.x-dlx,ez=tz-m.position.z-dlz;
+        if(Math.hypot(ex,ez)<1.2){const k=Math.min(1,rdt*3);m.position.x+=dlx+ex*k;m.position.z+=dlz+ez*k;m.rotation.y=lerpAng(m.rotation.y,L.rotation.y,Math.min(1,rdt*6));
+          m.userData.ph=L.userData.ph+0.21;pose(m,"walk",now);return;}}
+      const arr=moveP(m,tx,tz,P2.kind==="mgr"?2.6:2.6,rdt);
       if(arr&&stopped){face(m,L.position.x+(P2.kind==="tour"?0:0),zc,rdt);pose(m,P2.kind==="mgr"?"phoneS":(k%3===0?"inspect":"idle"),now);}
       else if(arr&&P2.kind==="mgr"){m.rotation.y=L.rotation.y;pose(m,"phoneS",now);}else pose(m,P2.walk==="phone"?"phone":"walk",now);});
     return true;}

@@ -1,5 +1,13 @@
 # Changelog
 
+## v4.4.0-t3 (test, not released): fixes
+- Seasons: the day-15 rough patch is gone. Days 1 to 3 stay quiet and the first week 25% calmer; after that, upsets run at the normal rate to the end.
+- Main menu: Season and Survival are two equal choices; neither is highlighted. (Continue and Resume stay the main button when they are there.) "Play" is now "Season".
+- The two managers on their rounds walk side by side in step. The second one used to chase its spot, flicking between walking and standing and sliding along.
+- Top bar: cash and profit keep their full width; the clock column gives way. On phones the survival label is short ("W3 · Day 16").
+- Survival leaderboard: no leader names. Scores carry no leader, the board doesn't show one, and `supabase/survival.sql` is back to the v4.3 table. The leader still shows on the game-over dialog.
+- Fixed: the Rename box on the menu wasn't hidden again when the menu reopened (v4.3 regression).
+
 ## v4.4.0-t2 (test, not released): painted leader portraits
 - The four mill leaders have new portraits: realistic, gritty, hand-inked paintings in place of the flat cartoon drawings. Same people, same props (Chip's phone and hard hat, Dot's wrench, Felicity's clipboard, Hank's thermos and ear muffs).
 - The portraits are embedded images (WebP, about 33 KB each), so the game is still one file; it is about 180 KB larger. Mill kit keeps a fixed green and no longer follows the mill's colour.
@@ -14,7 +22,6 @@
 - The leader's pick is a row in the outage budget dialog (the last pick is offered again); it takes effect when the outage ends. Dot makes no pick: her fix recharges.
 - **One change of leader per run**, made in an outage budget dialog. The new leader takes over as that outage starts, with no waiting period, and makes that outage's pick. Everything the old leader built stays with the mill, with the cost that came with it (Chip's pay settlements, Felicity's project staff, Dot's fixed-for-good list). Their while-in-charge drawback leaves with them.
 - The wave chip shows the leader's face; tap it for the leader card: who they are, what the mill has kept so far, and Dot's fix list (the chip turns red with "Fix it now" when a breakdown is waiting for her). The Reliability view shows the leader's share. The game-over dialog, the saved score and the Survival leaderboard name the leader in charge at the end.
-- Leaderboard: the `survival` table gets a `leader` column (`supabase/survival.sql`, safe to run again). A table made by the v4.3 file still works: the game retries without the column.
 - Balance (tools/survival.py, 10 fixed seeds each, forest valley; days survived against the same runs with no leader). A mill that buys its upgrades and banks cash: 84 days with no leader; Chip +3, Dot +2, Felicity +4, Hank +5. A hands-off mill: 38 days with no leader; Chip +1, Dot +8, Felicity +2, Hank −1. Dot is the forgiving pick for a mill with no upgrades (big uninsured bills come back); Hank needs a mill that can use the speed.
 - What the simulations changed from the first plan: reliability-only boosts turned out to be worth almost nothing late in a run (upsets crowd each other out), and extra tons are worth little once costs pass the sales price. So Felicity's projects also save fibre or energy, Dot's fix returns the bill and is permanent, Hank's numbers are larger with a flat drawback, and Chip's labour trouble became pay settlements that grow with his deals.
 - Code: `03d-leaders.js` (numbers and effects) and `09c-leaders.js` (portraits, picker, card, outage row, change, fix). Without a leader every factor is exactly 1: four hands-off seasons still match v4.2.5 to the dollar, and a survival run without a leader matches v4.3.

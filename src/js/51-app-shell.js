@@ -65,12 +65,13 @@
   // top bar: compact figures straight from the game state ($1.24M, -$850k)
   const short=v=>{const a=Math.abs(v),f=a>=1e6?(a/1e6).toFixed(a>=1e7?1:2)+"M":a>=1e3?(a/1e3).toFixed(a>=1e5?0:1).replace(/\.0$/,"")+"k":Math.round(a)+"";return (v<0?"−":"")+"$"+f;};
   const set=(id,v)=>{const e=$(id);if(e.textContent!==v)e.textContent=v;};
+  const NARROW=matchMedia("(max-width:480px)");   // phones: the survival clock label is "W3 · Day 16"
   const mirror=[...document.querySelectorAll("#v2more [data-m]")].map(el=>[el,$(el.dataset.m)]);
   function sync(){set("v2mill",MILL.name);set("v2mt",MILL.name);set("v2cash",short(S.cash));
     set("v2profit",short(S.profitRate)+"/d");$("v2profit").style.color=S.profitRate<0?"var(--bad)":"var(--ink)";
     {const h=((S.t+360)/60)%24,d=new Date(S.date0||Date.now());d.setMinutes(d.getMinutes()+S.t+360);const hh=Math.floor(h),ap=hh<12?"AM":"PM",h12=hh%12||12;
      set("v2clock",d.toLocaleDateString("en-US",{weekday:"short"})+" "+h12+" "+ap);}
-    {const se=S.season,on=!!(se&&se.on),sv=!!(se&&se.surv),day=Math.floor(S.t/1440)+1,lab=on?(sv?`Wave ${survWave()} · Day ${day}`:`Day ${Math.min(SEASON_DAYS,day)} of ${SEASON_DAYS}`):se&&se.done?(sv?"Run over":"Season over"):"Time";
+    {const se=S.season,on=!!(se&&se.on),sv=!!(se&&se.surv),day=Math.floor(S.t/1440)+1,lab=on?(sv?(NARROW.matches?`W${survWave()} · Day ${day}`:`Wave ${survWave()} · Day ${day}`):`Day ${Math.min(SEASON_DAYS,day)} of ${SEASON_DAYS}`):se&&se.done?(sv?"Run over":"Season over"):"Time";
      set("v2clockL",lab);$("v2clockL").classList.toggle("sday",on);$("v2clockL").title=on?(sv?"Survival: the wave you are in and the day of the run":"Season mode: day of the 30-day season"):"";}
     mirror.forEach(([d,s])=>{if(d.textContent!==s.textContent)d.textContent=s.textContent;});
     const sp=C.simSpeed+" min/s";if($("v2speed").textContent!==sp)$("v2speed").textContent=sp;
@@ -80,9 +81,9 @@
   // ---- menu: shown on load and whenever the game is paused ----
   const menu=$("v2menu");let first=true;
   function showMenu(){running=false;closeSheet("menu");closeMore();
-    const go=$("v2go"),se=S.season&&S.season.on;go.querySelector("b").textContent=first?"Play":"Resume";
-    go.querySelector("small").textContent=first?"30-day season · leaderboard":se?(S.season.surv?`Survival · wave ${survWave()} · day ${Math.floor(S.t/1440)+1}`:`Season · day ${Math.min(30,Math.floor(S.t/1440)+1)} of 30`):S.free?"Free play":"Back to the mill";
-    $("v2sub").hidden=first;$("v2surv").hidden=!first;   // (v4.3: Survival sits under Play on the first menu; once a run is on, "New survival" is with "New season")$("v2nameRow").hidden=true;
+    const go=$("v2go"),se=S.season&&S.season.on;go.querySelector("b").textContent=first?"Season":"Resume";go.classList.toggle("alt",first);go.classList.toggle("primary",!first);
+    go.querySelector("small").textContent=first?"30 days · most profit · leaderboard":se?(S.season.surv?`Survival · wave ${survWave()} · day ${Math.floor(S.t/1440)+1}`:`Season · day ${Math.min(30,Math.floor(S.t/1440)+1)} of 30`):S.free?"Free play":"Back to the mill";
+    $("v2sub").hidden=first;$("v2surv").hidden=!first;$("v2nameRow").hidden=true;   // (Survival sits under Season on the first menu; once a run is on, "New survival" is with "New season")
     $("v2state").textContent=first?"":"Paused";
     $("v2free").querySelector("b").textContent=S.free?"Free play: on":"Free play";$("v2free").setAttribute("aria-pressed",String(!!S.free));$("v2ver").textContent=APP_VER;menu.hidden=false;}
   function play(){menu.hidden=true;first=false;running=true;}

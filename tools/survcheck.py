@@ -60,7 +60,7 @@ with sync_playwright() as pw:
     load()
 
     # 1 start
-    ok("menu: Survival button under Play", pg.evaluate("()=>!document.getElementById('v2surv').hidden&&document.getElementById('v2sub').hidden"))
+    ok("menu: Survival button under Season, neither highlighted", pg.evaluate("()=>!document.getElementById('v2surv').hidden&&document.getElementById('v2sub').hidden&&!document.querySelector('#v2go.primary,#v2surv.primary')"))
     # (pick: open the leader picker with a button, choose a leader, start)
     def pick(btn, who):
         pg.evaluate("(b)=>document.getElementById(b).click()", btn); pg.wait_for_function("!!document.querySelector('#leadOv:not([hidden]) .ldcard')", timeout=60000)
@@ -184,16 +184,16 @@ with sync_playwright() as pw:
     m = int(r["t"]); want = f"{m // 1440}d {m % 1440 // 60}h {m % 60}m"
     ok("bankrupt: the run ends on the survival dialog", r["ov"] and r["season"]["done"] and not r["season"]["on"] and "Survival over" in r["txt"], r["txt"][:200])
     ok("bankrupt: the score is the time survived (" + want + ")", r["season"]["result"]["minutes"] == m and want in r["txt"] and r["season"]["result"]["wave"] == 6, r["season"].get("result"))
-    ok("bankrupt: the leader is on the dialog and in the score", r["season"]["result"]["leader"] == "dot" and "Mill leader" in r["txt"] and "after Chip Kraftwell" in r["txt"], r["txt"][:400])
+    ok("bankrupt: the leader is on the dialog, not in the score", "leader" not in r["season"]["result"] and "Mill leader" in r["txt"] and "after Chip Kraftwell" in r["txt"], r["txt"][:400])
     ok("bankrupt: 'Menu' instead of 'One more turn', and the new-run button says survival", r["more"] == "Menu" and "One more turn" not in r["txt"] and "New survival run" in r["txt"], r["txt"][-200:]); shot("6-game-over")
     pg.keyboard.press("Escape"); pg.wait_for_timeout(300)
     ok("bankrupt: Escape leaves the dialog up", pg.evaluate("()=>!document.getElementById('seasonOv').hidden&&!__PM.running"))
     pg.evaluate("()=>{document.getElementById('so-name').value='Tester';document.getElementById('so-submit').click();}"); pg.wait_for_timeout(1200)
     r = pg.evaluate("()=>({msg:document.getElementById('so-msg').textContent,local:JSON.parse(localStorage.getItem('paper-mill-local-survival')||'[]'),best:+localStorage.getItem('paper-mill-survival-best'),season:localStorage.getItem('paper-mill-local-scores')})")
-    ok("submit with no online table: kept on the device, said so", "Saved on this device" in r["msg"] and len(r["local"]) == 1 and r["local"][0]["minutes"] == m and r["local"][0]["leader"] == "dot" and r["best"] == m and not r["season"], r)
+    ok("submit with no online table: kept on the device, said so", "Saved on this device" in r["msg"] and len(r["local"]) == 1 and r["local"][0]["minutes"] == m and "leader" not in r["local"][0] and r["best"] == m and not r["season"], r)
     pg.evaluate("()=>document.getElementById('so-board').click()"); pg.wait_for_timeout(1200)
     r = pg.evaluate("()=>({tab:document.querySelector('#lb-tabs button[aria-pressed=true]').dataset.t,txt:document.getElementById('lb-list').innerText,sub:document.getElementById('lb-sub').textContent})")
-    ok("leaderboard: opens on the Survival tab with the device's score", r["tab"] == "surv" and "Tester" in r["txt"] and want in r["txt"] and "wave 6" in r["txt"] and "Blade" in r["txt"], r); shot("7-board-survival")
+    ok("leaderboard: opens on the Survival tab with the device's score", r["tab"] == "surv" and "Tester" in r["txt"] and want in r["txt"] and "wave 6" in r["txt"] and "Blade" not in r["txt"], r); shot("7-board-survival")
     pg.evaluate("()=>document.querySelector('#lb-tabs button[data-t=season]').click()"); pg.wait_for_timeout(1000)
     r = pg.evaluate("()=>({tab:document.querySelector('#lb-tabs button[aria-pressed=true]').dataset.t,txt:document.getElementById('lb-list').innerText,sub:document.getElementById('lb-sub').textContent})")
     ok("leaderboard: the Season tab is the season board", r["tab"] == "season" and "Tester" not in r["txt"] and "30-day seasons" in r["sub"], r); shot("8-board-season")

@@ -108,16 +108,13 @@ function updateShop(){
   const m=document.createElement("div");m.className="stat";const t=S.shipT||0;
   m.innerHTML=`<span>Operating margin per ton shipped</span><b>${t>0?money(net/t+S.ledger.upgrades/t):"–"}</b>`;lg.appendChild(m);
 }
-// random upsets run at half the original rate. Seasons script the pressure: a quiet start-up (days 1-3), normal running,
-// then a rough patch on days 15-16 at 4x the normal rate, then normal again to the end.
+// random upsets run at half the original rate. Seasons script the pressure: a quiet start-up (days 1-3), then normal
+// running to the end (v4.4.0-t3: the day-15 rough patch is gone).
 function upsetMul(){const base=0.5,d=Math.floor(S.t/1440)+1;let m=base;
-  if(S.season&&S.season.on){if(d<=3)return 0;if((d===15||d===16)&&!S.season.surv)m=base*4;}
+  if(S.season&&S.season.on&&d<=3)return 0;
   if(d<=7)m*=0.75;   // v3.3.3: the first week is 25% calmer (seasons and free play)
-  if(survOn())m*=survUp();   // v4.3 survival: no rough patch; every wave is rougher than the last
+  if(survOn())m*=survUp();   // v4.3 survival: every wave is rougher than the last
   return m;}
-function roughPatch(){running=false;$("overlay").hidden=false;$("overlay").style.zIndex="160";AUDIO.sfx("alarm",100);
-  $("ov-h").textContent="Rough patch";$("ov-p").textContent="The Mill is going through a rough patch. Batten down the hatches.";
-  $("ov-a").textContent="Batten down";$("ov-b").hidden=true;$("ov-a").focus();log("Day 15: the mill hits a rough patch. Upsets are four times as likely for two days.","bad");}
 // Bankruptcy is the only end-of-game overlay. There is no cash target any more: the goal is to make as much money as you can.
 function showOverlay(){running=false;
   const ov=$("overlay");ov.hidden=false;

@@ -1,8 +1,7 @@
--- The Paper Mill: survival leaderboard (v4.3; the leader column is v4.4)
+-- The Paper Mill: survival leaderboard (v4.3)
 -- Run this once in Supabase: Dashboard -> SQL Editor -> New query -> paste -> Run.
 -- It adds a second table next to public.scores (the season board, leaderboard.sql) and changes nothing there.
 -- It reuses public.banned_words from leaderboard.sql, so run that one first on a new project.
--- Safe to run again: if you ran the v4.3 version, running this one adds the leader column and its grants.
 
 create table if not exists public.survival (
   id          bigint generated always as identity primary key,
@@ -15,13 +14,10 @@ create table if not exists public.survival (
   mill        text    check (char_length(mill) <= 40),
   version     text    check (char_length(version) <= 12),
   env         text    check (env in ('rural','urban','desert','swamp')),   -- the site the run was played on
-  leader      text    check (leader in ('chip','dot','fel','hank')),      -- the mill leader in charge at the end (v4.4)
   ip_hash     text,
   -- a wave is 7 sim days (10,080 minutes), so the wave and the time have to agree
   constraint survival_wave_fits check (wave <= minutes / 10080 + 2 and minutes < wave * 10080)
 );
--- a table made by the v4.3 version of this file has no leader column yet
-alter table public.survival add column if not exists leader text check (leader in ('chip','dot','fel','hank'));
 create index if not exists survival_rank on public.survival (minutes desc, tons desc);
 
 -- guard: name filter + max 3 submissions per minute from the same address (the same rules as the season board)
@@ -55,5 +51,5 @@ create policy "anyone can read"   on public.survival for select to anon using (t
 create policy "anyone can submit" on public.survival for insert to anon with check (true);
 
 revoke all on public.survival from anon;
-grant select (id, created_at, name, minutes, wave, tons, incidents, mill, version, env, leader) on public.survival to anon;
-grant insert (name, minutes, wave, tons, incidents, mill, version, env, leader) on public.survival to anon;
+grant select (id, created_at, name, minutes, wave, tons, incidents, mill, version, env) on public.survival to anon;
+grant insert (name, minutes, wave, tons, incidents, mill, version, env) on public.survival to anon;

@@ -107,7 +107,6 @@ async function submitScore(){const r=S.season&&S.season.result;if(!r||S.free)ret
   $("so-submit").disabled=true;setMsg("Submitting…");
   try{const post=b=>fetch(LB.url.replace(/\/$/,"")+"/rest/v1/"+(sv?SURV.table:"scores"),{method:"POST",headers:lbHdr({"Content-Type":"application/json",Prefer:"return=minimal"}),body:JSON.stringify(b)});
     let res=await post({...r,name});
-    if(sv&&res.status===400&&"leader" in r){const {leader,...r2}=r;res=await post({...r2,name});}   // (a survival table made before v4.4 has no leader column)
     if(sv&&res.status===404){setMsg("Saved on this device. The online survival board isn't set up yet.","ok");return;}   // (the table from supabase/survival.sql)
     if(!res.ok){let msg="Couldn't submit ("+res.status+")";try{const j=await res.json();if(j&&j.message)msg=j.message;}catch(e){}throw new Error(msg);}
     setMsg("Submitted! You're on the board.","ok");S.season.submitted=name;openBoard(sv?"surv":"season");}
@@ -120,11 +119,10 @@ async function openBoard(tab){if(tab!=="season"&&tab!=="surv")tab=survRun()?"sur
   if($("lbOv").hidden){lbBack=document.activeElement;$("lbOv").hidden=false;$("lb-close").focus();}
   document.querySelectorAll("#lb-tabs button").forEach(b=>b.setAttribute("aria-pressed",String(b.dataset.t===tab)));
   const L=$("lb-list");L.replaceChildren(Object.assign(document.createElement("div"),{className:"lbempty",textContent:"Loading…"}));
-  const q=sv?SURV.table+"?select=name,minutes,wave,tons,incidents,mill,leader,created_at&order=minutes.desc,tons.desc&limit=100"
+  const q=sv?SURV.table+"?select=name,minutes,wave,tons,incidents,mill,created_at&order=minutes.desc,tons.desc&limit=100"
     :"scores?select=name,score,tons,incidents,mill,created_at&order=score.desc,tons.desc&limit=100&and=(version.not.like.v1.*,version.not.like.v2.0.*,version.not.like.v2.1.*)";
   let rows=[],note="";
   if(lbOn()){try{let res=await fetch(LB.url.replace(/\/$/,"")+"/rest/v1/"+q,{headers:lbHdr()});
-      if(sv&&res.status===400)res=await fetch(LB.url.replace(/\/$/,"")+"/rest/v1/"+q.replace(",leader,",","),{headers:lbHdr()});   // (a survival table made before v4.4 has no leader column)
       if(!res.ok)throw new Error(res.status);rows=await res.json();}catch(e){note="Couldn't reach the leaderboard. Showing scores saved on this device.";}}
   else note="Online leaderboard not connected yet. Showing scores saved on this device.";
   if(my!==lbReq)return;   // another tab was picked while this one loaded
@@ -135,7 +133,7 @@ async function openBoard(tab){if(tab!=="season"&&tab!=="surv")tab=survRun()?"sur
   L.replaceChildren(...rows.map((r,i)=>{const d=document.createElement("div");d.className="lbrow"+(me&&r.name===me?" me":"");
     const mk=(c,t)=>Object.assign(document.createElement("span"),{className:c,textContent:t});
     const dt=r.created_at?new Date(r.created_at).toLocaleDateString(undefined,{month:"short",day:"numeric"}):"";
-    d.append(mk("r",i+1),mk("n",r.name),mk("sc",sv?survTime(r.minutes):money(r.score)),mk("m",[r.mill,sv?"wave "+r.wave:"",sv&&r.leader&&LEADERS[r.leader]?LEADERS[r.leader].name:"",f0(r.tons)+" t shipped",(r.incidents??"")+" disasters",dt].filter(Boolean).join(" · ")));return d;}));}
+    d.append(mk("r",i+1),mk("n",r.name),mk("sc",sv?survTime(r.minutes):money(r.score)),mk("m",[r.mill,sv?"wave "+r.wave:"",f0(r.tons)+" t shipped",(r.incidents??"")+" disasters",dt].filter(Boolean).join(" · ")));return d;}));}
 function setFree(on){S.free=on;
   if(on&&S.season&&S.season.on){const sv=survRun();S.season=null;S.lead=null;applyUpgrades();seasonLocks(false);BANNERS.push({text:(sv?"Survival run":"Season")+" abandoned: free play scores can't go on the leaderboard.",t:null});}
   if(on)BANNERS.push({text:"Free play: upgrades are free and you can't go bankrupt. No leaderboard.",t:null,kind:"good"});

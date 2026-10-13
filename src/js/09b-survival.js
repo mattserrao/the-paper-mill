@@ -20,7 +20,7 @@ UI_TICKS.push(()=>{const c=$("survChip");if(!c)return;const on=survOn()&&!S.zen;
 // the season-over dialog serves both modes: which buttons it shows and what they say
 // (a bankrupt survival run has no "one more turn": that button goes back to the menu instead, on a fresh mill)
 function soMode(surv){$("so-more").textContent=surv?"Menu":"One more turn";$("so-new").textContent=surv?"New survival run":"New season";}
-function survResult(){return {minutes:Math.floor(S.t),wave:survWave(),tons:Math.round(S.shipT||0),incidents:S.tot.incidents,mill:MILL.name.slice(0,40),version:APP_VER.slice(0,12),env:SITE.env,leader:S.lead?S.lead.id:null};}
+function survResult(){return {minutes:Math.floor(S.t),wave:survWave(),tons:Math.round(S.shipT||0),incidents:S.tot.incidents,mill:MILL.name.slice(0,40),version:APP_VER.slice(0,12),env:SITE.env};}
 function endSurvival(){const se=S.season,r=survResult(),w=r.wave;se.done=true;se.on=false;se.result=r;running=false;
   if(document.body.classList.contains("fs"))setFS(false);seasonLocks(false);AUDIO.sfx("lose",100);
   let best=0;try{best=+localStorage.getItem(SURV.best)||0;}catch(e){}

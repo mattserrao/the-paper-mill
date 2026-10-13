@@ -132,6 +132,5 @@ function chaosTick(dt){
   const roll=CH.on&&um>0&&!outOn();
   if(S.rng.bird==null)S.rng.bird=(S.seed^0x5bd1e995)|0;
   for(const e of EVENTS){const r=rand(e.stream||"up");if(roll&&CH.en[e.id]&&!active(e.id)&&r<dt/60/e.mtbf*CH.lvl*freqMul(e.id)*0.75*um)trigger(e.id);}
-  if(S.season&&S.season.on&&!S.season.surv&&!S.season.rough&&S.t>=14*1440){S.season.rough=true;roughPatch();}
 }
 

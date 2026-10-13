@@ -281,6 +281,8 @@ body.app .overlay{z-index:140}body.app .overlay.top{z-index:150}
 .v2stats{flex:1;min-width:0;display:flex;align-items:center;gap:0;padding:0 2px 0 10px;height:44px;cursor:pointer;text-align:left;font:inherit;color:inherit}
 .v2stats .st{display:flex;flex-direction:column;justify-content:center;min-width:0;flex:1 1 auto;padding:0 6px 0 0;margin-right:7px;border-right:1px solid var(--line)}
 .v2stats .st:last-of-type{border-right:0;margin-right:0}
+.v2stats .st:not(.ck):not(.mn){flex:0 0 auto}.v2stats .st.ck{flex:1 1 0}.v2stats .st.ck small{overflow:hidden;text-overflow:ellipsis}   /* v4.4.0-t3: cash and profit keep their width; the clock column gives way */
+@media (max-width:380px){.v2stats{padding-left:8px}.v2stats .st{padding-right:4px;margin-right:5px}.v2stats .st b{font-size:13.5px}.v2stats .chev{width:14px}.v2top{gap:6px}}
 .v2stats .st small{font:600 12px var(--f-body);color:var(--muted);letter-spacing:.02em;white-space:nowrap}
 .v2stats .st small.sday{color:var(--brand);font-weight:800}
 .v2stats .st b{font:700 14px var(--f-body);letter-spacing:-.01em;font-variant-numeric:tabular-nums;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}

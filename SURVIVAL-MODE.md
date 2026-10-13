@@ -1,6 +1,6 @@
-# The Paper Mill: survival mode and mill leaders (v4.4.0-t2, 2026-10-13)
+# The Paper Mill: survival mode and mill leaders (v4.4.0-t3, 2026-10-13)
 
-Status: built and checked on a local branch (`survival-mode`), with mill leaders added in v4.4.0-t1 and painted portraits in v4.4.0-t2. Not released, not pushed. The online survival board
+Status: built and checked on the test branch `survival-mode` (not merged into main), with mill leaders added in v4.4.0-t1, painted portraits in v4.4.0-t2 and fixes in v4.4.0-t3. Not released. The online survival board
 needs `supabase/survival.sql` run once in Supabase; until then survival scores stay on the device.
 
 ## The mode
@@ -20,7 +20,7 @@ needs `supabase/survival.sql` run once in Supabase; until then survival scores s
 | Costs | ×1.00 | ×1.10 | ×1.21 | ×1.33 | ×1.46 | ×1.61 | ×1.95 | ×2.36 | ×2.85 | ×3.45 |
 
 Wave 1 keeps the season's quiet start: no upsets on days 1 to 3 and a 25% calmer first week. The day-15 rough patch is
-not used.
+not used (and from v4.4.0-t3 seasons don't have it either).
 
 ## Where the player sees the multipliers
 
@@ -47,7 +47,7 @@ that outage's pick, and has no waiting period. Everything the old leader built s
 
 **Where the player sees it.** The picker (four cards with painted portraits; the images are embedded, in `09c-leader-art.js`), the leader's face on the wave chip, the leader card
 (tap the chip: who they are, what the mill has kept, Dot's fix list), the leader row in the outage dialog, the Reliability
-view, the game-over dialog and the Survival leaderboard.
+view and the game-over dialog. The leader is not on the leaderboard.
 
 **Balance.** `tools/survival.py`, 10 fixed seeds each, forest valley. Days survived, and the gain over the same ten runs
 with no leader (standard error of the gain in brackets):
@@ -137,7 +137,7 @@ Crews use the non-3D path in these runs, as in `econ.py`, so real play is slight
 - Four full hands-off seasons (`econ.py`, fixed seeds) finish with the same books to the dollar as v4.2.5.
 - `determinism.py`, `smoke.py`, `savecheck.py`, `settingscheck.py`, `idcheck.py`, `nothree.py` pass.
 - `tools/survcheck.py` passes (it now starts through the leader picker and covers the outage pick, the change of leader,
-  Fix it now, and the leader in the score): menu start, chip and clock, first outage dialog, wave report card, multipliers applied
+  Fix it now, and no leader in the score): menu start, chip and clock, first outage dialog, wave report card, multipliers applied
   (OCC price, energy cost, upset rate), save and continue, outages 2 to 5 with the fifth in 3D (job 1 again), Report tab
   in wave 6, bankruptcy, score, no online table (kept on the device), both leaderboard tabs, new run, free play, a
   season afterwards.
@@ -154,8 +154,8 @@ setting without editing. Every run has to end well before `--maxdays`.
 
 ## Open points
 
-- Run `supabase/survival.sql` in the Supabase SQL editor to turn the online survival board on. If the v4.3 file was
-  already run, run this one again: it adds the `leader` column.
+- Run `supabase/survival.sql` in the Supabase SQL editor to turn the online survival board on (no leader column). Until
+  then survival scores stay on the device.
 - Dot is much the strongest leader for a mill that buys no upgrades (+8 days against +1 to +2). Halving the bill she
   returns would narrow that, at the cost of making her the weakest for an upgraded mill.
 - Hank's speed gains are permanent, and in the last waves of a run extra tons lose money.

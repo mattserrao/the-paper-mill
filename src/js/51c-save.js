@@ -47,7 +47,7 @@
     if(d0&&go){const b=document.createElement("button");b.className="primary go";b.id="v2cont";
       const sv0=!!(d0.S.season&&d0.S.season.surv);   // v4.3: the one slot holds a season or a survival run
       b.innerHTML=`<b>Continue ${sv0?"survival":"season"}</b><small>${sv0?`wave ${(d0.S.outg&&d0.S.outg.k)||1} · day ${d0.day}`:`day ${d0.day} of 30`} · ${money(d0.cash)} · ${(ENVS[d0.env]||{name:d0.env}).name}</small>`;
-      go.parentNode.insertBefore(b,go);go.classList.remove("primary");
+      go.parentNode.insertBefore(b,go);go.classList.remove("primary");go.classList.add("alt");
       b.addEventListener("click",()=>{const d=read();if(!d){b.remove();return;}
         // a save from another map: reload on that map, then continue (?resume=1)
         if(d.env!==SITE.env||d.mill!==SITE.seed){const q=new URLSearchParams(location.search);q.set("env",d.env);q.set("resume","1");location.href=location.pathname+"?"+q+location.hash;return;}

@@ -156,7 +156,7 @@ then `tail.html`. All game code runs inside **one shared closure** (opened in `0
   Picks go through the outage dialog: `leadPlanNew()` / `leadPlanMount()` (09c) write `o.plan.lead={to, pick}`;
   `beginOutage()` applies a change of leader (`leadChange`), `endOutage()` adds the pick to the stacks (`leadOutageEnd`).
   Stacks belong to the mill, not the leader. A new leader needs: an entry in `LEADERS`, `LEAD_IMG` and `LEAD_FACE` (`09c-leader-art.js`), `LEAD_IDS` and
-  `LEAD_PICKS`, its effects in the helpers, a policy in `tools/survival.py`, and the id in `supabase/survival.sql`.
+  `LEAD_PICKS`, its effects in the helpers, and a policy in `tools/survival.py`. (The leader is not on the leaderboard.)
   Portraits are embedded WebP images at 408 x 460 (`09c-leader-art.js`), shown as CSS backgrounds by `leadArt(id)`; `LEAD_FACE` is the
   square that frames each face (the chip avatar and the outage dialog).
 - **Retuning**: change `SURV.up` / `SURV.cost`, then `tools/survival.py index.html 10 --bot=handsoff` (and `buyer`, `saver`), with `--leader=chip|dot|fel|hank` for each leader.
