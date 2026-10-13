@@ -11,7 +11,7 @@
   function pwl(f,xs,ys){if(f<=xs[0])return ys[0];for(let i=1;i<xs.length;i++)if(f<=xs[i])return ys[i-1]+(ys[i]-ys[i-1])*(f-xs[i-1])/(xs[i]-xs[i-1]);return ys[ys.length-1];}
   const CL_Y=[0,0.16,0.44,0.64,1],CL_X={felt:[0.06,0.15,0.62,0.72,0.93],fabric:[0.07,0.16,0.40,0.50,0.86]};
   // cloth-change progress for the outage (null when the outage isn't driving that cloth)
-  function outCloth(id){const f=outPhase();if(f<0)return null;if(id==="fabric"&&S.outg.k!==2)return null;const X=CL_X[id];if(f<X[0]||f>X[4]+0.015)return null;return pwl(f,X,CL_Y);}
+  function outCloth(id){const f=outPhase();if(f<0)return null;if(id==="fabric"&&outJob(S.outg.k)!==2)return null;const X=CL_X[id];if(f<X[0]||f>X[4]+0.015)return null;return pwl(f,X,CL_Y);}
   G3.outCloth=outCloth;
   const ocM=()=>M.panelWhite||(M.panelWhite=mat("panel"));
   const ENTRY={hall:[65.6,15.4],shop:[56,-18.2]};
@@ -105,12 +105,12 @@
   [hcBridge,hcHook,hcCable,MCm,mcCable,mcHook,ROT.old,ROT.neu,ROT.pallet,STK.neu,STK.used,...Object.values(R1),...cradT,...cradD,pulpStock,rotor,press[0],press[1],...REF_DOORS.map(d=>d.door),...REF_DOORS.map(d=>d.face)].forEach(o=>SM.dyn.add(o));
 
   /* -- staging the day before: a real-time scene so it reads at any game speed -- */
-  function stageWant(){const o=S&&S.outg;if(!o||!o.plan||o.on||!S.season||!S.season.on)return 0;const st=outStart(o.k);return S.t>=st-1140&&S.t<st?o.k:0;}
+  function stageWant(){const o=S&&S.outg;if(!o||!o.plan||o.on||!S.season||!S.season.on)return 0;const st=outStart(o.k);return S.t>=st-1140&&S.t<st?outJob(o.k):0;}
   function staged(k,v){if(k===1){cradT.forEach(c=>c.visible=v);R1.newT.visible=R1.newB.visible=v;if(v){R1.newT.position.set(T1[0],RY1,T1[1]);R1.newT.rotation.set(0,Math.PI/2,0);R1.newB.position.set(T2[0],RY1,T2[1]);R1.newB.rotation.set(0,Math.PI/2,0);}}
     if(k===3){ROT.pallet.visible=ROT.neu.visible=v;if(v){ROT.pallet.position.set(PAL[0],0.09,PAL[1]);ROT.neu.position.set(PAL[0],0.18,PAL[1]);ROT.neu.scale.setScalar(1);}}
     if(k===4){STK.neu.visible=v;STK.neu.userData.ps.forEach(p=>p.visible=v);}}
   function stageTick(rdt,now){const k=stageWant(),o=S.outg;
-    if(!k){if(OV.stg&&!(o&&o.on&&OV.stg.k===o.k))OV.stg=null;return false;}
+    if(!k){if(OV.stg&&!(o&&o.on&&OV.stg.k===outJob(o.k)))OV.stg=null;return false;}
     if(!OV.stg||OV.stg.k!==k)OV.stg={k,t0:now,done:false};const st=OV.stg,age=(now-st.t0)/1000;
     if(k===2){return false;}
     if(st.gone){return false;}
@@ -224,14 +224,15 @@
       // keep what was staged in place until the outage starts
       if(!sg&&o&&o.plan&&!o.on){const k=stageWant();if(k)staged(k,true);}
       OV.crew.forEach((w,i)=>crewHome(i,rdt,now));return;}
-    if(!ovActive){ovActive=true;outageReset();staged(o.k,true);OV.stg=null;}
+    const jk=outJob(o.k);   // v4.3: the major job (1-4), which repeats in survival
+    if(!ovActive){ovActive=true;outageReset();staged(jk,true);OV.stg=null;}
     // felts every outage (crew 0-3); wire on outage 2 (crew 4-7)
     const fj=outCloth("felt")!=null&&JOBS.felt?JOBS.felt:null;
     if(fj||f<CL_X.felt[0]){const ws=[0,1,2,3].map(i=>tech(i,"hall"));if(fj&&now-(fj.t||0)<1500)clothCrew(ws,fj,rdt,now);
       else ws.forEach((w,r)=>go(w,34.8-3.6+r*2.4,14.1+(r%2?1.9:-1.2),"look",34.8,14.1,rdt,now));}
-    if(o.k===2){const wj=outCloth("fabric")!=null&&JOBS.fabric?JOBS.fabric:null;if(wj||f<CL_X.fabric[0]){const ws=[4,5,6,7].map(i=>tech(i,"hall"));
+    if(jk===2){const wj=outCloth("fabric")!=null&&JOBS.fabric?JOBS.fabric:null;if(wj||f<CL_X.fabric[0]){const ws=[4,5,6,7].map(i=>tech(i,"hall"));
         if(wj&&now-(wj.t||0)<1500)clothCrew(ws,wj,rdt,now);else ws.forEach((w,r)=>go(w,47.7-3.6+r*2.4,14.1+(r%2?1.9:-1.2),"look",47.7,14.1,rdt,now));}}
-    if(o.k===1)job1(f,rdt,now);if(o.k===3)job3(f,rdt,now);if(o.k===4)job4(f,rdt,now);
+    if(jk===1)job1(f,rdt,now);if(jk===3)job3(f,rdt,now);if(jk===4)job4(f,rdt,now);
     OV.crew.forEach((w,i)=>crewHome(i,rdt,now));}
   G3.outageVis=outageVis;
   const TRUCK_FAR=330;

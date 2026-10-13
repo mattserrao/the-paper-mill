@@ -625,6 +625,35 @@ details.areactl[open]>summary{margin-bottom:12px}
 /* v4.2.5: "Auto" with the device tier underneath, so the Graphics row stays one line high */
 #gfxSeg button{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:1px}
 #gfxSeg .gtier{font:600 12px var(--f-body);opacity:.8;line-height:1}
+
+/* =========================== v4.3 survival mode =========================== */
+/* the wave chip under the top bar (the banner moves down to make room) */
+.survchip{position:fixed;z-index:69;left:max(10px,env(safe-area-inset-left,0px));top:calc(58px + env(safe-area-inset-top,0px));display:flex;align-items:center;gap:10px;height:28px;padding:0 12px 0 3px;border-radius:14px;background:var(--panel);border:1px solid var(--line);box-shadow:0 4px 14px rgba(28,34,51,.12);font:600 12px var(--f-body);color:var(--muted);white-space:nowrap;max-width:calc(100% - 20px);overflow:hidden}
+.survchip[hidden]{display:none}
+.survchip>b{background:var(--ink);color:var(--panel);border-radius:11px;padding:3px 10px;font:800 12px var(--f-body);letter-spacing:.04em;text-transform:uppercase}
+.survchip span b{color:var(--ink);font-weight:800;font-variant-numeric:tabular-nums}
+.survchip em{font-style:normal;border-left:1px solid var(--line);padding-left:10px}
+.survchip.pulse{animation:survpulse 1.8s ease-out}
+@keyframes survpulse{0%{box-shadow:0 0 0 0 color-mix(in srgb,var(--warn) 75%,transparent)}100%{box-shadow:0 0 0 16px transparent}}
+@media (prefers-reduced-motion: reduce){.survchip.pulse{animation:none}}
+body.app.surv .banner3d{top:calc(94px + env(safe-area-inset-top,0px))}
+body.zen .survchip{display:none}
+@media (max-width:420px){.survchip{gap:8px}.survchip em{display:none}}
+/* menu: Survival under Play, and three buttons in the pause row */
+.v2menu .go.alt{background:var(--panel);border:1.5px solid color-mix(in srgb,var(--stock) 55%,var(--line));color:var(--ink);box-shadow:none;padding:10px 14px 9px}
+.v2menu .go.alt b{font-size:17px;color:var(--stock)}
+.v2menu .go.alt small{color:var(--muted);opacity:1}
+.v2menu .go[hidden]{display:none}
+.v2menu .sub{grid-template-columns:repeat(3,minmax(0,1fr))}
+.v2menu .sub button{min-width:0;text-align:center}
+/* what the next wave brings (outage budget dialog, wave report card) */
+.wavenext{font-size:13.5px;line-height:1.45;padding:10px 12px;border-radius:10px;background:color-mix(in srgb,var(--warn) 10%,var(--panel));border:1px solid color-mix(in srgb,var(--warn) 30%,var(--line));color:var(--ink)}
+.wavenext small{color:var(--muted);font-size:12px}
+/* leaderboard tabs */
+.lbtabs{display:flex;width:100%;margin:2px 0 4px}.lbtabs button{flex:1 1 0;min-height:36px;font-weight:700}.lbtabs button+button{border-left:1px solid var(--line)}
+/* mill report: the survival strip */
+.rsurv{display:grid;grid-template-columns:1.4fr 1fr 1fr;gap:6px}.rsurv div{display:flex;flex-direction:column;gap:2px;padding:8px 9px;border-radius:10px;background:var(--chip);min-width:0}
+.rsurv small{font-size:12px;color:var(--muted)}.rsurv b{font-size:16px}
 </style>
 </head>
 <body class="app">
@@ -640,10 +669,12 @@ details.areactl[open]>summary{margin-bottom:12px}
 <p aria-live="polite" class="somsg" id="so-msg"></p></div></div>
 <div class="overlay top" hidden id="lbOv"><div aria-labelledby="lb-h" aria-modal="true" class="modal wide" role="dialog">
 <div class="lbhead"><h2 id="lb-h">Leaderboard</h2><button aria-label="Close leaderboard" id="lb-close">Close</button></div>
+<div aria-label="Leaderboard" class="seg lbtabs" id="lb-tabs" role="group"><button aria-pressed="true" data-t="season">Season</button><button aria-pressed="false" data-t="surv">Survival</button></div>
 <p class="muted" id="lb-sub">Top 100 · 30-day seasons · ranked by net profit</p>
 <div class="lblist" id="lb-list"></div></div></div>
 <div class="overlay" hidden id="overlay"><div aria-labelledby="ov-h" aria-modal="true" class="modal" role="dialog">
 <h2 id="ov-h"></h2><p id="ov-p"></p><div class="btns"><button class="primary" id="ov-a"></button><button id="ov-b"></button></div></div></div>
+<div class="survchip" hidden id="survChip" title="Survival: every wave, upsets get more likely and fibre, energy, chemicals and wages cost more. A wave ends when its planned outage does."><b id="svW">Wave 1</b><span>Upsets <b id="svU">×1.00</b></span><span>Costs <b id="svC">×1.00</b></span><em id="svN"></em></div>
 <div class="v2top" id="v2top">
 <button aria-label="Pause and open the menu" class="v2card v2ibtn" id="v2pause"><svg fill="currentColor" height="18" viewbox="0 0 24 24" width="18"><rect height="16" rx="1.5" width="5" x="5" y="4"></rect><rect height="16" rx="1.5" width="5" x="14" y="4"></rect></svg></button>
 <button aria-controls="v2more" aria-expanded="false" class="v2card v2stats" id="v2stats">
@@ -710,7 +741,7 @@ details.areactl[open]>summary{margin-bottom:12px}
 <div class="active" id="c-active"><span class="none">No active incidents.</span></div>
 <div aria-live="polite" class="feed" id="c-feed"></div>
 </div>
-<p class="trignote" id="trignote">Pick an upset to set it off now, or tap a running one to clear it.</p><p class="trignote locked" id="trignoteLock">Setting off upsets by hand is locked during a season. Try them in free play.</p><div class="groups" id="chaosgrid"></div>
+<p class="trignote" id="trignote">Pick an upset to set it off now, or tap a running one to clear it.</p><p class="trignote locked" id="trignoteLock">Setting off upsets by hand is locked during a season or a survival run. Try them in free play.</p><div class="groups" id="chaosgrid"></div>
 </div>
 </section></div>
 <div class="v2pane" data-pane="ctl"><div class="v2sub">Run the mill</div><div class="setgrp end" id="v2ctlrow"><label class="setfield setname"><span class="setlbl">Machine name</span><input autocomplete="off" id="pmname" maxlength="14" spellcheck="false" value="PM1"/></label><button id="balance">Balance all</button></div><div class="v2sub">View</div><div class="setgrp" id="v2viewrow"><button id="viewReset">Whole mill</button><label class="check"><input checked id="viewShadows" type="checkbox"/> Shadows</label><div aria-label="Section labels" class="seg lblseg" hidden id="lblMode" role="group"><span>Labels</span><button aria-pressed="true" data-m="auto" title="Labels fade out when you stop moving the view">Auto</button><button aria-pressed="false" data-m="on">On</button><button aria-pressed="false" data-m="off">Off</button></div></div><div class="v2sub">Performance</div><div class="setstack" id="v2perfrow"></div><details class="areactl" id="areactl"><summary class="v2sub">Area controls<span class="lockn">Auto · locked during a season</span></summary><section class="cards" id="cards">
@@ -767,13 +798,15 @@ details.areactl[open]>summary{margin-bottom:12px}
 <p>Run a recycled paperboard mill from truck to warehouse. Old corrugated boxes arrive by the truckload, get pulped, cleaned and thickened, and your paper machine turns them into giant reels that the winder cuts into rolls for customers. Keep everything flowing, spend your profit on upgrades, and ride out upsets: breakdowns, fires, storms and the occasional pigeon.</p>
 <div class="siterow" id="v2site"><span class="sw" id="v2siteSw" aria-hidden="true"></span><div><small>Your site</small><b id="v2siteN">Forest valley</b><span id="v2siteM"></span></div><button id="v2siteBtn">Change site</button></div>
 <button class="primary go" id="v2go"><b>Play</b><small>30-day season · leaderboard</small></button>
+<button class="go alt" id="v2surv"><b>Survival</b><small>outlast the waves · leaderboard</small></button>
 <div class="sub" hidden id="v2sub">
 <button id="v2season">New season<small>restart the 30 days</small></button>
+<button id="v2survNew">New survival<small>outlast the waves</small></button>
 <button class="warn" id="v2reset">Reset mill<small>start over</small></button>
 </div>
 <div class="opts">
 <button id="v2free"><i><svg fill="none" height="20" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" viewbox="0 0 24 24" width="20"><rect height="4" rx="1" width="18" x="3" y="8"></rect><path d="M12 8v13M19 12v9H5v-9M7.5 8a2.5 2.5 0 0 1 0-5C11 3 12 8 12 8s1-5 4.5-5a2.5 2.5 0 0 1 0 5"></path></svg></i><b>Free play</b><small>free upgrades</small></button>
-<button id="v2board"><i><svg fill="none" height="20" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" viewbox="0 0 24 24" width="20"><path d="M8 21h8M12 17v4M7 4h10v5a5 5 0 0 1-10 0V4zM17 5h3v2a3 3 0 0 1-3 3M7 5H4v2a3 3 0 0 0 3 3"></path></svg></i><b>Leaderboard</b><small>top seasons</small></button>
+<button id="v2board"><i><svg fill="none" height="20" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" viewbox="0 0 24 24" width="20"><path d="M8 21h8M12 17v4M7 4h10v5a5 5 0 0 1-10 0V4zM17 5h3v2a3 3 0 0 1-3 3M7 5H4v2a3 3 0 0 0 3 3"></path></svg></i><b>Leaderboard</b><small>season · survival</small></button>
 <button id="v2zen"><i><svg fill="none" height="20" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" viewbox="0 0 24 24" width="20"><path d="M11 20A7 7 0 0 1 9.8 6.1C15.5 5 17 4.5 19 2c1 2 2 4.2 2 8 0 5.5-4.8 10-10 10z"></path><path d="M2 21c0-3 1.9-5.4 5.2-6"></path></svg></i><b>Zen mode</b><small>sit back</small></button>
 <button id="v2colors"><i><svg fill="none" height="20" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" viewbox="0 0 24 24" width="20"><circle cx="13.5" cy="6.5" r="1.2"></circle><circle cx="17.5" cy="10.5" r="1.2"></circle><circle cx="8.5" cy="7.5" r="1.2"></circle><circle cx="6.5" cy="12.5" r="1.2"></circle><path d="M12 2a10 10 0 0 0 0 20c1 0 1.7-.8 1.7-1.7 0-.5-.2-.9-.5-1.2-.3-.3-.4-.7-.4-1.1 0-.9.8-1.7 1.7-1.7h2A5.5 5.5 0 0 0 22 11c0-5-4.5-9-10-9z"></path></svg></i><b>New colors</b><small>name &amp; brand</small></button>
 <button id="v2rename"><i><svg fill="none" height="20" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" viewbox="0 0 24 24" width="20"><path d="M12 20h9M16.5 3.5a2.1 2.1 0 0 1 3 3L7 19l-4 1 1-4z"></path></svg></i><b>Rename</b><small>make it yours</small></button>
@@ -799,7 +832,7 @@ details.areactl[open]>summary{margin-bottom:12px}
 <div class="btns"><button class="primary" id="no3d-retry">Try again</button></div></div></div>
 
 <script type="module">
-const APP_VER="v4.2.5";   // shown in the menu and sent with leaderboard scores (max 12 characters)
+const APP_VER="v4.3.0-t1";   // shown in the menu and sent with leaderboard scores (max 12 characters)
 // TEST BUILDS ONLY (off in releases): turbo speeds 240/480/960 sim min/s for fast playtests. Above 120, crews and maintenance start jobs
 // without waiting for the 3D walk (as with the 3D view off) and outages keep the speed. Set false for a release.
 const TURBO=false,TURBO_FAST=s=>TURBO&&s>120;
@@ -1337,7 +1370,8 @@ function applyUpgrades(){
   P.yieldF=P.blendY+0.03*LV("clean"); P.tankCap=BASE.tankCap+150*LV("chest");
   P.driverRate=BASE.driverRate*(1+0.25*LV("forklift")); P.doors=3+LV("docks"); P.shipDoors=3+LV("docks");
   P.robots=2*LV("agv"); P.fgCap=BASE.fgCap+112*LV("wh"); P.autoFeed=LV("feedconv")>0;
-  applySite();P.occPrice=P.blendP+((S&&S.plan)?S.plan.mkt:0)-20*LV("contract")+P.siteOcc; P.priceAdd=25*LV("sales")+P.sitePrice; P.repairMul=(LV("insure")?0.4:1)*(1-0.15*LV("reliab"));P.techs=2+2*LV("maintcrew");P.pmCost=400*LV("pmprog"); P.premium=LV("insure")?1500:0;
+  applySite();P.costMul=survOn()?survCost():1;   // v4.3 survival: fibre, energy and chemicals, and wages cost more every wave (exactly 1 otherwise)
+  P.occPrice=(P.blendP+((S&&S.plan)?S.plan.mkt:0)-20*LV("contract")+P.siteOcc)*P.costMul; P.priceAdd=25*LV("sales")+P.sitePrice; P.repairMul=(LV("insure")?0.4:1)*(1-0.15*LV("reliab"));P.techs=2+2*LV("maintcrew");P.pmCost=400*LV("pmprog"); P.premium=LV("insure")?1500:0;
   P.breakBase=Math.pow(0.7,LV("monitor"))*Math.pow(0.9,LV("pmprog"));
   P.hayBase=Math.pow(0.6,LV("winder"));const wr=document.getElementById("s-wdr");if(wr)wr.max=P.winderMax;
   const sp=document.getElementById("s-pmSp"),pu=document.getElementById("s-pulper");
@@ -1347,7 +1381,7 @@ function applyUpgrades(){
 function applyGrade(){const g=(typeof C!=="undefined"&&C&&C.grade)||"23m",c=GCOST[g],d=c.dlk;
   P.blendP=OCCG.occ11.p*(1-d)+OCCG.dlk.p*d;P.blendY=OCCG.occ11.y*(1-d)+OCCG.dlk.y*d;
   P.steamMul=c.steam;P.chemAdd=c.chem-((S&&S.perk)?S.perk.chem:0);P.gradeBrk=c.brk;}
-function energyCost(){return Math.max(0,ECON.energy*P.steamMul*P.energyMul+ECON.chem+P.chemAdd+(P.siteEnergy||0)-(P.refSave||0)-((S&&S.perk&&S.perk.energy)||0));}
+function energyCost(){return Math.max(0,ECON.energy*P.steamMul*P.energyMul+ECON.chem+P.chemAdd+(P.siteEnergy||0)-(P.refSave||0)-((S&&S.perk&&S.perk.energy)||0))*(P.costMul||1);}
 function priceOf(g){let v=ECON.price[g]+P.priceAdd;if(S&&S.perk)v+=S.perk.price[g]||0;if(S&&S.fx)for(const f of S.fx)if(f.price)v+=(f.price[g]||0)+(f.price.all||0);return v;}
 function freqMul(id){let m=1;
   if(["lwplug","cscreen","fscreen","lcplug"].includes(id))m*=Math.pow(0.6,LV("clean"));
@@ -1516,6 +1550,27 @@ function bnCard(){const el=$("bnCard");if(!el)return;const b=BNQ(),short=bnShort
   const html=short?`<b>Bottleneck: ${BN[b].name}</b><span>${Math.round(me[2])} t/h against the machine's ${Math.round(pm[2])} t/h. ${fix} fixes it, 25% off.</span>`
     :`<b>${BN[b].name}: fixed</b><span>It now keeps up with the machine (${Math.round(me[2])} t/h against ${Math.round(pm[2])} t/h).</span>`;
   if(el.dataset.h!==html){el.dataset.h=html;el.innerHTML=html;}el.classList.toggle("ok",!short);}
+/* ---------- v4.3 survival mode: constants and helpers ----------
+   A survival run is a season with no end date (S.season.surv): the same start, site, bottleneck, weekly dice, AUTO locks,
+   planned outages, event cards and report cards. It ends at bankruptcy, and the score is the time survived.
+   Waves are the gaps between planned outages: the wave being played is the number of the next outage (S.outg.k), so the
+   mode keeps no state of its own. Each wave is SURV.up more upset-prone and SURV.cost dearer (fibre, energy and chemicals,
+   wages) than the wave before it: the steps compound, so the first waves change little and the pressure builds gradually
+   (compound:false adds the steps instead). Tuned with tools/survival.py: at +20% / +10% a hands-off mill lasts about 6
+   waves and a well-upgraded one about 12 to 14. The mode starts and ends in 09b-survival.js; the hooks elsewhere are
+   one-liners that do nothing in a season or in free play (the multipliers are exactly 1 there). */
+const SURV={up:0.20,cost:0.10,compound:true,table:"survival",local:"paper-mill-local-survival",best:"paper-mill-survival-best"};
+const survRun=()=>!!(S&&S.season&&S.season.surv);                 // a survival run, running or just ended
+const survOn=()=>!!(S&&S.season&&S.season.surv&&S.season.on);     // ...and still running
+const survWave=()=>(S&&S.outg&&S.outg.k)||1;
+const survMul=(step,w)=>SURV.compound?Math.pow(1+step,w-1):1+step*(w-1);
+const survUp=(w=survWave())=>survMul(SURV.up,w);
+const survCost=(w=survWave())=>survMul(SURV.cost,w);
+const xf=v=>"×"+v.toFixed(2);
+// time survived: sim minutes -> "12d 7h 35m" (the score on the survival leaderboard)
+function survTime(t){const m=Math.max(0,Math.floor(t)),d=Math.floor(m/1440),h=Math.floor(m%1440/60);return `${d}d ${h}h ${m%60}m`;}
+// when the wave being played began and when it ends (the end of its outage), in sim minutes
+function survSpan(w=survWave()){return [w>1?outStart(w-1)+OUT.len:0,outStart(w)+OUT.len];}
 const EVENTS=[
  {id:"refclash",g:"stock",name:"Refiner plates clash",head:"Refiner plates clashed! Maintenance called to the refiners.",dur:[180,300],mtbf:420,mods:{speedCap:0.75},fx:"refclash",
    // one set clashing slows the machine; both sets clashing takes it down until maintenance has re-plated them
@@ -1650,7 +1705,7 @@ function chaosTick(dt){
   const roll=CH.on&&um>0&&!outOn();
   if(S.rng.bird==null)S.rng.bird=(S.seed^0x5bd1e995)|0;
   for(const e of EVENTS){const r=rand(e.stream||"up");if(roll&&CH.en[e.id]&&!active(e.id)&&r<dt/60/e.mtbf*CH.lvl*freqMul(e.id)*0.75*um)trigger(e.id);}
-  if(S.season&&S.season.on&&!S.season.rough&&S.t>=14*1440){S.season.rough=true;roughPatch();}
+  if(S.season&&S.season.on&&!S.season.surv&&!S.season.rough&&S.t>=14*1440){S.season.rough=true;roughPatch();}
 }
 
 /* ---------- event cards: offers the player can accept or decline (v2.2.0) ---------- */
@@ -1977,7 +2032,8 @@ function cardTick(dt){const cs=S.cards;if(!cs)return;
   if(cs.open||S.zen||S.over||(S.season&&S.season.done)||S.t<cs.next||outOn())return;
   cs.next=S.t+1440*(1.2+0.6*rand("card"));
   // every card is shown at most once per game: once dealt it is marked seen and never drawn again
-  const seen=cs.seen||(cs.seen={}),pool=CARDS.filter(c=>!seen[c.id]&&c.ok()),pick=pool.length?pool[Math.floor(rand("card")*pool.length)]:null;
+  let seen=cs.seen||(cs.seen={});if(survOn()&&CARDS.every(c=>seen[c.id]))seen=cs.seen={};   // v4.3 survival: the deck goes round again
+  const pool=CARDS.filter(c=>!seen[c.id]&&c.ok()),pick=pool.length?pool[Math.floor(rand("card")*pool.length)]:null;
   if(pick&&typeof document!=="undefined"&&document.body){seen[pick.id]=true;openCard(pick);}}
 let cardEl=null;
 function openCard(c){const o=c.odds();S.cards.open={c,o};running=false;
@@ -2066,6 +2122,8 @@ const OUT={every:7,hour:8,len:240,cost:[20e3,70e3,170e3],rel:[1.1,1,0.8],simCap:
   ev:{stock:["refclash","ragger","overflow","dye","hdblow","lwplug","cscreen","fscreen","lcplug","thkblow","chestover"],wet:["fabric","felt","slime","fogfan"],dry:["shaft","dryerfire","wrap","steamjoint","winderdown","boiler"]},area:{}};
 for(const a in OUT.ev)OUT.ev[a].forEach(id=>OUT.area[id]=a);
 const outStart=k=>(OUT.every*k-1)*1440+(OUT.hour-6)*60;
+// v4.3: which of the four major jobs outage k does (1-4). A season has four outages; in survival they go round again.
+const outJob=k=>((k-1)%OUT.jobs.length)+1;
 function outRel(a){const o=S&&S.outg;return o&&o.rel?o.rel[a]:1;}
 const outOn=()=>!!(S&&S.outg&&S.outg.on);
 function outageTick(){const o=S.outg;if(!o||!S.season||!S.season.on||S.zen||S.over)return;
@@ -2081,11 +2139,11 @@ function openOutagePlan(){const o=S.outg,st=outStart(o.k),first=o.k===1,pick={st
   running=false;S.cards.open={outage:true};
   const el=outShell(),k=n=>"$"+Math.round(n/1e3)+"k";
   const effTxt=(v,a)=>{const w=a==="stock"?"breakdowns":"breakdowns and sheet breaks";return v===0?["bad","Reliability −10%: more "+w]:v===2?["ok","Reliability +20%: fewer "+w]:["","Reliability unchanged"];};
-  el.innerHTML=`<div class="modal deal outg" role="dialog" aria-modal="true" aria-labelledby="out-h"><span class="dk">Planned outage ${o.k} of 4 · sim paused</span>
+  el.innerHTML=`<div class="modal deal outg" role="dialog" aria-modal="true" aria-labelledby="out-h"><span class="dk">${survOn()?`Wave ${o.k} · planned outage`:`Planned outage ${o.k} of 4`} · sim paused</span>
     <h2 id="out-h">${first?"Your first planned outage":"Outage in 24 hours"}</h2>
     ${first?`<div class="intro"><p><b>What's an outage?</b> Planned downtime. Every 7 days the mill comes down on purpose for a controlled 4-hour shutdown, so crews can inspect, clean, repair and replace worn parts before they fail.</p>
       <p><b>Why it matters:</b> well-maintained equipment breaks down less and runs better, with fewer sheet breaks and hayouts. Your budget for each area sets its reliability until the next outage.</p></div>`:""}
-    <p class="when">Starts <b>${outTime(st)}</b>, back up by <b>${hourOf(st+OUT.len)}</b> (4 hours, machine and stock prep down).<br>Major job: <b>${OUT.jobs[o.k-1]||"inspections"}</b>, plus new press felts.</p>
+    <p class="when">Starts <b>${outTime(st)}</b>, back up by <b>${hourOf(st+OUT.len)}</b> (4 hours, machine and stock prep down).<br>Major job: <b>${OUT.jobs[outJob(o.k)-1]||"inspections"}</b>, plus new press felts.</p>${survOn()?survPlanNote(o.k):""}
     <div>${OUT.areas.map(([a,n,d])=>`<div class="orow" data-a="${a}"><div><b>${n}</b><small>${d}</small></div><div class="seg">${OUT.cost.map((c,i)=>`<button data-v="${i}" aria-pressed="${i===1}">${k(c)}</button>`).join("")}</div><em class="eff"></em></div>`).join("")}</div>
     <div class="otot"><div><span>Outage budget</span><small id="out-cash"></small></div><b id="out-tot"></b></div>
     <div class="btns"><button class="primary" id="out-ok" style="flex:1">Approve budget</button></div></div>`;
@@ -2106,7 +2164,7 @@ function beginOutage(){const o=S.outg,st=S.t;if(!o.plan)o.plan={stock:1,wet:1,dr
   o.spd=C.spdPref||C.simSpeed;if(C.simSpeed>OUT.simCap&&!TURBO_FAST(C.simSpeed)){setSimSpeed(OUT.simCap);}
   addFx({id:"pout",left:OUT.len,mods:{pmDown:"planned outage",pulperDown:1}});AUDIO.sfx("clunk",400);
   log(`Planned outage ${o.k} has begun: down until ${hourOf(o.end)}`,"warn");BANNERS.push({text:`Planned outage: the mill is down until ${hourOf(o.end)}.`,t:null,kind:"good",tag:"OUTAGE"});
-  outNote("Outage has begun",`The mill is down for planned maintenance: ${(OUT.jobs[o.k-1]||"inspections").toLowerCase()} and new press felts. Started ${hourOf(st)}, ends ${outTime(o.end)}.`,5000);}
+  outNote("Outage has begun",`The mill is down for planned maintenance: ${(OUT.jobs[outJob(o.k)-1]||"inspections").toLowerCase()} and new press felts. Started ${hourOf(st)}, ends ${outTime(o.end)}.`,5000);}
 function endOutage(){const o=S.outg,pl=o.plan||{stock:1,wet:1,dry:1};o.on=false;S.fx=S.fx.filter(f=>f.id!=="pout");S.M=mods();
   // v4.2.1: always go back to the player's own speed (it was lost if they touched the speed during the outage)
   if(!S.zen){const p=C.spdPref||o.spd;if(p)setSimSpeed(p);}o.spd=null;
@@ -2114,8 +2172,8 @@ function endOutage(){const o=S.outg,pl=o.plan||{stock:1,wet:1,dry:1};o.on=false;
   const txt=OUT.areas.map(([a,n])=>`${n} ${pl[a]===2?"+20%":pl[a]===0?"−10%":"±0%"}`).join(" · ");
   BANNERS.push({text:`Outage ${o.k} complete. Reliability until the next outage: ${txt}`,t:null,kind:"good",tag:"OUTAGE"});while(BANNERS.length>3)BANNERS.splice(1,1);
   log(`Outage ${o.k} complete. Reliability until the next outage: ${txt}`,"ok");
-  outNote("Outage complete",`Restarting the mill. Reliability until the next outage: ${txt}.`,4000);
-  o.k++;o.noticed=false;o.plan=null;}
+  if(!survOn())outNote("Outage complete",`Restarting the mill. Reliability until the next outage: ${txt}.`,4000);   // (survival: the wave report card says it)
+  o.k++;o.noticed=false;o.plan=null;if(survOn())survWaveStart();}
 const HAYLINES=["HAYOUT! Paper is shooting to the roof!","Winder hayout! Every PM hand to the dry end!","Hayout! It's snowing paper in the winder aisle.","Hayout! The set exploded off the drums."];
 // a hayout ruins the outer wraps of the set on the winder (about 3 t), not the whole 12.5 t roll
 // v2.9.5: reels at the winder (on the unwind + in storage); a reel turns up a fraction over 100 t, which used to make the
@@ -2317,7 +2375,7 @@ function step(dt){
     const l=Math.min(P.truckRolls-tr.load,P.doorRolls*dt/60,lcap,S.fg);
     tr.load+=l;lcap-=l;S.fg-=l;loaded+=l;lotTake(S.lots.fg,l,tr.lots||(tr.lots=[]));
     if(tr.load>=P.truckRolls-1e-6){S.leaving.push({...tr,ty:outY(d),kind:"out"});S.outDock[d]=null;S.tot.shipped+=P.truckRolls;const tons=P.truckRolls*C.rollW.v;S.shipT+=tons;earn(lotValue(tr.lots||[[C.grade,P.truckRolls]],C.rollW.v));}}   // (v16: each roll at its own grade's price)
-  spend(((C.drivers.v+C.loaders.v+P.techs)*(ECON.wage+(P.siteWage||0))+P.robots*ECON.robot+P.pmCost)*dt/60,"labor");
+  spend(((C.drivers.v+C.loaders.v+P.techs)*(ECON.wage+(P.siteWage||0))*(P.costMul||1)+P.robots*ECON.robot+P.pmCost)*dt/60,"labor");
   spend((ECON.overhead+(P.siteOver||0))*dt/60,"overhead"); if(P.premium)spend(P.premium*dt/60,"premium");
   // v3.1.2: profit/day is OPERATING profit over the last 12 game hours: good paper is valued as it comes off the machine (tons x price),
   // less OCC, energy, labor, overhead and insurance. One-offs (upgrades, outage budgets, repair bills, card deals) are left out,
@@ -2450,8 +2508,9 @@ function updateShop(){
 // random upsets run at half the original rate. Seasons script the pressure: a quiet start-up (days 1-3), normal running,
 // then a rough patch on days 15-16 at 4x the normal rate, then normal again to the end.
 function upsetMul(){const base=0.5,d=Math.floor(S.t/1440)+1;let m=base;
-  if(S.season&&S.season.on){if(d<=3)return 0;if(d===15||d===16)m=base*4;}
+  if(S.season&&S.season.on){if(d<=3)return 0;if((d===15||d===16)&&!S.season.surv)m=base*4;}
   if(d<=7)m*=0.75;   // v3.3.3: the first week is 25% calmer (seasons and free play)
+  if(survOn())m*=survUp();   // v4.3 survival: no rough patch; every wave is rougher than the last
   return m;}
 function roughPatch(){running=false;$("overlay").hidden=false;$("overlay").style.zIndex="160";AUDIO.sfx("alarm",100);
   $("ov-h").textContent="Rough patch";$("ov-p").textContent="The Mill is going through a rough patch. Batten down the hatches.";
@@ -2471,26 +2530,63 @@ const LB={url:"https://htlsrhdvloptctzwzbau.supabase.co",key:"sb_publishable_BSp
 const SEASON_DAYS=30;
 const lbOn=()=>!!(LB.url&&LB.key);
 const lbHdr=(x={})=>Object.assign({apikey:LB.key},LB.key.startsWith("eyJ")?{Authorization:"Bearer "+LB.key}:{},x);
+const lockWhy=auto=>`Locked ${auto?"on AUTO ":""}${survRun()?"in a survival run":"during a season"}`;
 function seasonLocks(on){["chaosOn","chaosLvl","chaosClear"].forEach(id=>{const el=$(id);if(el)el.disabled=on;});
   document.querySelectorAll('#chaosgrid input[type=checkbox]').forEach(el=>el.disabled=on);
   // v3.1.3: in a season upsets can't be set off by hand, and sheet breaks / hayouts can't be switched off
-  document.querySelectorAll('#chaosgrid button.trig').forEach(el=>{el.disabled=on;el.title=on?"Locked during a season":"";});
-  ["chaosRandom","v2dis"].forEach(id=>{const el=$(id);if(el){el.disabled=on;el.title=on?"Locked during a season":"";}});
+  document.querySelectorAll('#chaosgrid button.trig').forEach(el=>{el.disabled=on;el.title=on?lockWhy():"";});
+  ["chaosRandom","v2dis"].forEach(id=>{const el=$(id);if(el){el.disabled=on;el.title=on?lockWhy():"";}});
   if(on){C.breaks=C.hays=true;}["breaks","hays"].forEach(id=>{const el=$(id);if(el){if(on)el.checked=true;el.disabled=on;}});
   // v4.2.1: in a season the area controls run on AUTO and are locked (paper colour is only a look, so it stays free)
   if(on)AUTOKEYS.forEach(k=>{if(C[k])C[k].auto=true;});
-  document.querySelectorAll('#cards .row[data-key] input,#cards .row[data-key] button.auto,#balance').forEach(el=>{el.disabled=on;el.title=on?"Locked on AUTO during a season":"";});
+  document.querySelectorAll('#cards .row[data-key] input,#cards .row[data-key] button.auto,#balance').forEach(el=>{el.disabled=on;el.title=on?lockWhy(1):"";});
   document.body.classList.toggle("season-lock",on);
 }
-function startSeason(){newGame();S.season={on:true,end:SEASON_DAYS*1440,done:false};S.rc=null;S.outg={k:1,noticed:false,on:false,rel:{stock:1,wet:1,dry:1},plan:null};seedRun(Math.floor(Date.now()/6048e5)*2654435761);
+// v4.3: startSeason(true) starts a survival run: the same start with no end date (see 03c-survival.js)
+function startSeason(surv){newGame();S.season=surv?{on:true,surv:true,end:1e12,done:false}:{on:true,end:SEASON_DAYS*1440,done:false};S.rc=null;S.outg={k:1,noticed:false,on:false,rel:{stock:1,wet:1,dry:1},plan:null};seedRun(Math.floor(Date.now()/6048e5)*2654435761);
   // v4.2.5: the bottleneck is rolled fresh for every season (it used to come from the week's seed, so the whole week shared
   // one and the first buy was always the same). Picked before the season starts, like the "any" site, so it draws no
   // stream: the week's dice are unchanged. It is saved with the season (S.bn).
   S.bn=BN_IDS[Math.floor(Math.random()*BN_IDS.length)];applyUpgrades();C.breaks=true;
   CH.on=true;$("chaosOn").checked=true;CH.lvl=1;$("chaosLvl").value=1;$("chaosLvlv").textContent="1×";
   EVENTS.forEach(e=>{CH.en[e.id]=true;const c=$("en-"+e.id);if(c)c.checked=true;});seasonLocks(true);
-  BANNERS.push({text:`Season started: ${SEASON_DAYS} days. Make as much profit as you can.`,t:null,kind:"good"});bnNotice();if(G3.labelIntro)G3.labelIntro();}
+  BANNERS.push(surv?{text:"Survival: every outage starts a rougher, dearer wave. Last as long as you can.",t:null,kind:"good",tag:"SURVIVAL"}:{text:`Season started: ${SEASON_DAYS} days. Make as much profit as you can.`,t:null,kind:"good"});bnNotice();if(G3.labelIntro)G3.labelIntro();}
 
+/* ---------- v4.3 survival mode: start, wave changes, the wave chip, game over ----------
+   Constants and the multipliers are in 03c-survival.js. A wave ends when its planned outage ends (endOutage, 06):
+   the outage number moves on, survWaveStart() applies the new wave's costs, and the wave's report card pops (rcTick, 10).
+   The run ends at bankruptcy (seasonTick, 10), on the season-over dialog with survival figures; the score is the time
+   survived, and it goes to its own leaderboard (the Survival tab; the `survival` table, supabase/survival.sql). */
+function startSurvival(){startSeason(true);}
+// in the outage budget dialog: what the wave after this outage brings
+function survPlanNote(k){return `<p class="wavenext">When this outage ends, <b>wave ${k+1}</b> begins: upsets <b>${xf(survUp(k+1))}</b> <small>(now ${xf(survUp(k))})</small>, costs <b>${xf(survCost(k+1))}</b> <small>(now ${xf(survCost(k))})</small>.</p>`;}
+// called by endOutage once the outage number has moved on: the new wave's costs take effect now
+function survWaveStart(){const w=survWave();applyUpgrades();
+  const t=`Wave ${w}: upsets ${xf(survUp(w))} · costs ${xf(survCost(w))}`;
+  BANNERS.push({text:t,t:null,tag:"WAVE "+w});while(BANNERS.length>3)BANNERS.splice(1,1);
+  log(`Wave ${w-1} survived. ${t} (fibre, energy and chemicals, wages).`,"warn");
+  const c=$("survChip");if(c){c.classList.remove("pulse");void c.offsetWidth;c.classList.add("pulse");}}
+// the chip under the top bar: the wave and its multipliers, for the whole run
+UI_TICKS.push(()=>{const c=$("survChip");if(!c)return;const on=survOn()&&!S.zen;if(c.hidden===on){c.hidden=!on;document.body.classList.toggle("surv",on);}if(!on)return;
+  const w=survWave(),set=(id,v)=>{const e=$(id);if(e.textContent!==v)e.textContent=v;},left=Math.max(0,outStart(w)-S.t),d=Math.floor(left/1440),h=Math.floor(left%1440/60);
+  set("svW","Wave "+w);set("svU",xf(survUp(w)));set("svC",xf(survCost(w)));
+  set("svN",S.outg&&S.outg.on?"outage under way":left<60?"outage within the hour":`outage in ${d?d+"d ":""}${h}h`);});
+// the season-over dialog serves both modes: which buttons it shows and what they say
+// (a bankrupt survival run has no "one more turn": that button goes back to the menu instead, on a fresh mill)
+function soMode(surv){$("so-more").textContent=surv?"Menu":"One more turn";$("so-new").textContent=surv?"New survival run":"New season";}
+function survResult(){return {minutes:Math.floor(S.t),wave:survWave(),tons:Math.round(S.shipT||0),incidents:S.tot.incidents,mill:MILL.name.slice(0,40),version:APP_VER.slice(0,12),env:SITE.env};}
+function endSurvival(){const se=S.season,r=survResult(),w=r.wave;se.done=true;se.on=false;se.result=r;running=false;
+  if(document.body.classList.contains("fs"))setFS(false);seasonLocks(false);AUDIO.sfx("lose",100);
+  let best=0;try{best=+localStorage.getItem(SURV.best)||0;}catch(e){}
+  const pb=r.minutes>best;if(pb){try{localStorage.setItem(SURV.best,String(r.minutes));}catch(e){}}
+  $("so-h").textContent="Survival over: bankrupt";
+  $("so-p").textContent=`${MILL.name} ran out of money in wave ${w}, on day ${Math.floor(S.t/1440)+1}.`;
+  const st=[["Time survived",survTime(r.minutes),"big"],["Wave reached",String(w)],["Your best",pb?(best?"New best (was "+survTime(best)+")":"New best"):survTime(best)],
+    ["Upsets by the end",xf(survUp(w))],["Costs by the end",xf(survCost(w))],["Tons shipped",f0(r.tons)+" t"],["Disasters survived",String(r.incidents)]];
+  $("so-stats").replaceChildren(...st.map(([k,v,c])=>{const d=document.createElement("div");if(c)d.className=c;const a=document.createElement("span");a.textContent=k;const b=document.createElement("b");b.textContent=v;d.append(a,b);return d;}));
+  {const box=$("so-rc");if(box)box.hidden=true;}soMode(true);
+  let nm="";try{nm=localStorage.getItem("paper-mill-player")||"";}catch(e){}$("so-name").value=nm;
+  $("so-submit").disabled=false;$("so-submit").textContent=lbOn()?"Submit score":"Save score";setMsg("");$("seasonOv").hidden=false;$("so-name").focus();}
 /* ---------- v3.3: 10-day report cards (season mode) ----------
    Each period (days 1-10, 11-20, 21-30) gathers money in and out, cost per ton, what caused downtime, how reliable each
    section was (planned outage time left out) and which step held the mill back. Cards pop up at the start of day 11 and
@@ -2504,7 +2600,7 @@ function rcTick(dt){const se=S.season;if(!se||!se.on||se.done||dt<=0)return;
   const add=(a,k,v)=>{a.dn[k]=(a.dn[k]||0)+v;};
   if(!R.dd){R.dd=rcAcc();R.day=Math.floor(S.t/1440);}
   // v4.2.4 (Mill report): the day's grades are kept at each midnight, with the day's biggest downtime cause
-  if(Math.floor(S.t/1440)>R.day){const c=rcMake(R.p,R.i),top=Object.entries(R.dd.dn).sort((x,y)=>y[1]-x[1])[0];(R.days||(R.days=[])).push({d:R.day+1,g:c.g,o:c.overall,top:top?[top[0],Math.round(top[1])]:null});R.day=Math.floor(S.t/1440);R.dd=rcAcc();}
+  if(Math.floor(S.t/1440)>R.day){const c=rcMake(R.p,R.i),top=Object.entries(R.dd.dn).sort((x,y)=>y[1]-x[1])[0];(R.days||(R.days=[])).push({d:R.day+1,g:c.g,o:c.overall,top:top?[top[0],Math.round(top[1])]:null});if(se.surv&&R.days.length>60)R.days.shift();R.day=Math.floor(S.t/1440);R.dd=rcAcc();}
   const feedT=(S.rates.feed||0)*dt/60,fibT=feedT*P.yieldF*(M.yieldMul||1);
   [R.p,R.s,R.dd].forEach(a=>{a.min+=dt;if(planned){a.plan+=dt;return;}a.occ+=feedT;a.fib+=fibT;for(const k in up)if(up[k])a.up[k]+=dt;
     S.inc.forEach(i=>{const e=EV[i.id];if(e&&i.id!=="runner"&&i.id!=="birdhay")add(a,e.name,dt);});
@@ -2513,8 +2609,9 @@ function rcTick(dt){const se=S.season;if(!se||!se.on||se.done||dt<=0)return;
   // what limited production, sampled every 10 sim minutes: the machine when it runs flat out or is down; upstream when it is
   // starved (empty bale yard = receiving, otherwise the pulper); the winder when reels back up; shipping when the warehouse is full
   R.bt=(R.bt||0)+dt;if(R.bt>=10){if(!planned){const k=rcLimit();[R.p,R.s].forEach(a=>{a.bn[k]=(a.bn[k]||0)+R.bt;});}R.bt=0;}
-  // period boundaries: start of day 11 and day 21
-  const pi=Math.floor(S.t/14400);if(pi>R.i&&pi<3){const card=rcMake(R.p,R.i);R.cards.push(card);R.i=pi;R.p=rcAcc();R.pend=card;}
+  // period boundaries: start of day 11 and day 21. v4.3 survival: a period is a wave, its card pops when its outage ends,
+  // and only the last few cards are kept (a run has no fixed length)
+  const pi=se.surv?survWave()-1:Math.floor(S.t/14400);if(pi>R.i&&(se.surv||pi<3)){const card=rcMake(R.p,R.i);if(se.surv)card.next=true;R.cards[R.i]=card;R.i=pi;R.p=rcAcc();R.pend=card;if(se.surv&&pi>4)R.cards[pi-5]=null;}
   if(R.pend&&!(S.cards&&S.cards.open)&&!S.over){const c=R.pend;R.pend=null;rcOpen(c);}}
 function rcLimit(){const M=S.M||{},starved=()=>S.yard<P.yardCap*0.04||M.noIn||M.docksClosed?"Receiving":"Pulper";
   if(S.pm==="full")return "Shipping";if(S.pm==="spools")return "Winder";if(S.pm==="down")return M.pmDown?"Machine down":starved();if(S.pm!=="run")return "Machine down";
@@ -2542,22 +2639,23 @@ function rcMake(a,i){const p=rcSum(a),s=rcSum(S.rc.s);
   else if(worst==="Cost / ton")tip=`Each ton cost ${money(p.cpt)} to make against a ${money(p.price)} price. Efficiency upgrades and fewer breaks bring that down.`;
   else if(bn&&bn[1]>0.4)tip=bn[0]==="Machine at full speed"?`The paper machine ran flat out ${Math.round(bn[1]*100)}% of the time, so it sets your output. Speed and drive upgrades pay back fastest.`:bn[0]==="Machine down"?`The machine being down held the mill back ${Math.round(bn[1]*100)}% of the time. Cut breaks and breakdowns first.`:`The ${bn[0].toLowerCase()} held the mill back ${Math.round(bn[1]*100)}% of the time. That's where an upgrade pays back fastest.`;
   else tip=overall==="A"?"Great running. Keep the machine up and the buffers healthy.":`Profit margin was ${Math.round(p.margin*100)}%. Shorter downtime is the quickest way to lift it.`;
+  if(survRun())return {i,wave:i+1,from:i?i*OUT.every:1,to:(i+1)*OUT.every,p,s,g,overall,tip};   // v4.3: a wave's card (a wave runs from one outage day to the next)
   return {i,from:i*10+1,to:i*10+10,p,s,g,overall,tip};}
-function rcHTML(c){const p=c.p,s=c.s,pc=v=>Math.round(v*100)+"%",hrs=m=>(m/60).toFixed(m<600?1:0)+" h",gc=x=>"rcg g"+x;
+function rcHTML(c){const W=c.wave,per=W?"this wave":"these 10 days",all=W?"run so far":"season so far";const p=c.p,s=c.s,pc=v=>Math.round(v*100)+"%",hrs=m=>(m/60).toFixed(m<600?1:0)+" h",gc=x=>"rcg g"+x;
   const row=(k,a,b,cls)=>`<div class="rcr${cls?" "+cls:""}"><span>${k}</span><b>${a}</b><i>${b}</i></div>`;
   const bar=(k,v,lab,hot)=>`<div class="rcb${hot?" hot":""}"><span>${k}</span><div><em style="width:${Math.max(2,Math.round(v*100))}%"></em></div><b>${lab}</b></div>`;
   const maxDn=p.dn.length?p.dn[0][1]:1;
-  return `<div class="rchead"><div><span class="dk">Report card · days ${c.from}–${c.to}</span><h2 id="rc-h">${escHTML(MILL.name)}</h2></div><div class="${gc(c.overall)} big" aria-label="Overall grade ${c.overall}">${c.overall}</div></div>
+  return `<div class="rchead"><div><span class="dk">${W?`Wave ${W} report card`:"Report card"} · days ${c.from}–${c.to}</span><h2 id="rc-h">${escHTML(MILL.name)}</h2></div><div class="${gc(c.overall)} big" aria-label="Overall grade ${c.overall}">${c.overall}</div></div>
     <div class="rcgrades">${Object.entries(c.g).map(([k,v])=>`<div><div class="${gc(v)}">${v}</div><small>${k}</small></div>`).join("")}</div>
-    <p class="rctip"><b>Tip</b> ${c.tip}</p>
-    <h3>Money <small>these 10 days · season so far</small></h3>
+    <p class="rctip"><b>Tip</b> ${c.tip}</p>${W&&c.next?`<p class="wavenext"><b>Wave ${W} survived.</b> Wave ${W+1} starts now: upsets <b>${xf(survUp(W+1))}</b>, costs <b>${xf(survCost(W+1))}</b>.</p>`:""}
+    <h3>Money <small>${per} · ${all}</small></h3>
     ${row("Earned (paper sales"+(p.deals>0?" + deals":"")+")",money(p.earned),money(s.earned),"pos")}
     ${Object.keys(p.spent).filter(k=>p.spent[k]||s.spent[k]).map(k=>row(k,money(-p.spent[k]),money(-s.spent[k]))).join("")}
     ${row("Net",money(p.net),money(s.net),"net "+(p.net>=0?"pos":"neg"))}
-    <h3>Cost per ton <small>these 10 days · season so far</small></h3>
+    <h3>Cost per ton <small>${per} · ${all}</small></h3>
     ${row("Cost to make a ton",money(p.cpt),money(s.cpt))}${row("Selling price",money(p.price),money(s.price))}${row("Profit margin (before upgrades)",pc(p.margin),pc(s.margin))}
     ${row("Tons made",Math.round(p.prod).toLocaleString("en-US")+" t",Math.round(s.prod).toLocaleString("en-US")+" t")}
-    <h3>Downtime <small>biggest issues, last 10 days</small></h3>
+    <h3>Downtime <small>biggest issues, ${W?"this wave":"last 10 days"}</small></h3>
     ${p.dn.length?p.dn.map(([k,m],i)=>bar(k,m/maxDn,hrs(m),i===0)).join(""):`<p class="rcnone">Nothing went wrong. Remarkable.</p>`}
     <p class="rcnote">${p.breaks} sheet break${p.breaks===1?"":"s"} · ${p.hay} hayout${p.hay===1?"":"s"}${p.plan>0?` · ${hrs(p.plan)} planned outage (not counted)`:""}</p>
     <h3>Reliability <small>time each section was up</small></h3>
@@ -2572,12 +2670,13 @@ function rcOpen(c,fromSummary){if(!rcEl){rcEl=document.createElement("div");rcEl
   document.getElementById("rc-ok").addEventListener("click",()=>{rcEl.hidden=true;if(!fromSummary)closeCard(true);});rcEl.querySelector(".modal").scrollTop=0;document.getElementById("rc-ok").focus({preventScroll:true});}
 function rcFinal(){const R=S.rc;if(!R)return null;const c=rcMake(R.p,R.i);R.cards.push(c);return c;}
 function seasonTick(){const se=S.season;if(!se||!se.on||se.done)return;
+  if(se.surv){if(S.cash<ECON.bankrupt)endSurvival();return;}   // v4.3 survival: no last day, only bankruptcy
   if(S.t>=se.end||S.cash<ECON.bankrupt)endSeason(S.cash<ECON.bankrupt);}
 function seasonResult(){return {score:Math.round(S.cash-ECON.start),tons:Math.round(S.shipT||0),incidents:S.tot.incidents,mill:MILL.name.slice(0,40),version:APP_VER.slice(0,12),days:SEASON_DAYS};}
 function endSeason(bust){const se=S.season;se.done=true;se.on=false;running=false;
   if(document.body.classList.contains("fs"))setFS(false);seasonLocks(false);
   const r=seasonResult();se.result=r;AUDIO.sfx(r.score>0?"win":"lose",100);
-  $("so-h").textContent=bust?"Season over: bankrupt":"Season complete";
+  soMode(false);$("so-h").textContent=bust?"Season over: bankrupt":"Season complete";
   $("so-p").textContent=bust?`${MILL.name} ran out of money before day ${SEASON_DAYS}.`:`${SEASON_DAYS} days at ${MILL.name}${/[.!?]$/.test(MILL.name)?"":"."}`;   // (v4.2.5: no "Co.." when the name ends in a full stop)
   const eff=S.tot.pot>0?S.tot.prodT/S.tot.pot:1,sg=S.rc&&S.rc.s?rcMake(S.rc.s,S.rc.i).overall:null,g=sg?RATINGS.find(x=>x[1]===sg):RATINGS.find(x=>eff>=x[0]);
   const st=[["Net profit",money(r.score),"big"],["Tons shipped",f0(r.tons)+" t"],["Disasters survived",String(r.incidents)],["Rolls made",String(S.tot.rolls)],["Season grade",g[1]+" · "+g[2]],["Output",Math.round(eff*100)+"% of max-speed tons"]];
@@ -2587,36 +2686,44 @@ function endSeason(bust){const se=S.season;se.done=true;se.on=false;running=fals
   let nm="";try{nm=localStorage.getItem("paper-mill-player")||"";}catch(e){}$("so-name").value=nm;
   $("so-submit").disabled=false;$("so-submit").textContent=lbOn()?"Submit score":"Save score";setMsg("");$("seasonOv").hidden=false;$("so-name").focus();}
 function setMsg(t,c){const m=$("so-msg");m.textContent=t;m.className="somsg"+(c?" "+c:"");}
-function saveLocal(r,name){try{const L=JSON.parse(localStorage.getItem("paper-mill-local-scores")||"[]");L.push({...r,name,created_at:new Date().toISOString(),local:1});
-  L.sort((a,b)=>b.score-a.score||b.tons-a.tons);localStorage.setItem("paper-mill-local-scores",JSON.stringify(L.slice(0,20)));}catch(e){}}
-async function submitScore(){const r=S.season&&S.season.result;if(!r||S.free)return;const name=$("so-name").value.replace(/\s+/g," ").trim();
+function saveLocal(r,name,sv){const key=sv?SURV.local:"paper-mill-local-scores";try{const L=JSON.parse(localStorage.getItem(key)||"[]");L.push({...r,name,created_at:new Date().toISOString(),local:1});
+  L.sort(sv?(a,b)=>b.minutes-a.minutes||b.tons-a.tons:(a,b)=>b.score-a.score||b.tons-a.tons);localStorage.setItem(key,JSON.stringify(L.slice(0,20)));}catch(e){}}
+async function submitScore(){const r=S.season&&S.season.result;if(!r||S.free)return;const sv=survRun(),name=$("so-name").value.replace(/\s+/g," ").trim();
   if(!/^[A-Za-z0-9 ._'-]{2,16}$/.test(name)){setMsg("Use 2–16 letters, numbers, spaces or . _ ' -","bad");return;}
   try{localStorage.setItem("paper-mill-player",name);}catch(e){}
-  if(!S.season.saved){S.season.saved=1;saveLocal(r,name);}
+  if(!S.season.saved){S.season.saved=1;saveLocal(r,name,sv);}
   if(!lbOn()){setMsg("Saved on this device. The online leaderboard isn't connected yet.","ok");$("so-submit").disabled=true;return;}
   $("so-submit").disabled=true;setMsg("Submitting…");
-  try{const res=await fetch(LB.url.replace(/\/$/,"")+"/rest/v1/scores",{method:"POST",headers:lbHdr({"Content-Type":"application/json",Prefer:"return=minimal"}),body:JSON.stringify({...r,name})});
+  try{const res=await fetch(LB.url.replace(/\/$/,"")+"/rest/v1/"+(sv?SURV.table:"scores"),{method:"POST",headers:lbHdr({"Content-Type":"application/json",Prefer:"return=minimal"}),body:JSON.stringify({...r,name})});
+    if(sv&&res.status===404){setMsg("Saved on this device. The online survival board isn't set up yet.","ok");return;}   // (the table from supabase/survival.sql)
     if(!res.ok){let msg="Couldn't submit ("+res.status+")";try{const j=await res.json();if(j&&j.message)msg=j.message;}catch(e){}throw new Error(msg);}
-    setMsg("Submitted! You're on the board.","ok");S.season.submitted=name;openBoard();}
+    setMsg("Submitted! You're on the board.","ok");S.season.submitted=name;openBoard(sv?"surv":"season");}
   catch(e){setMsg(String(e.message||e),"bad");$("so-submit").disabled=false;}}
 // v4.2.5: the board takes focus when it opens and gives it back when it closes
-let lbBack=null;
+let lbBack=null,lbReq=0;
 function closeBoard(){$("lbOv").hidden=true;if(lbBack&&lbBack.focus)lbBack.focus();lbBack=null;}
-async function openBoard(){lbBack=document.activeElement;$("lbOv").hidden=false;$("lb-close").focus();const L=$("lb-list");L.replaceChildren(Object.assign(document.createElement("div"),{className:"lbempty",textContent:"Loading…"}));
+// v4.3: a tab per mode ("season" or "surv"). Opened without one, it shows the board of the mode being played.
+async function openBoard(tab){if(tab!=="season"&&tab!=="surv")tab=survRun()?"surv":"season";const sv=tab==="surv",my=++lbReq;
+  if($("lbOv").hidden){lbBack=document.activeElement;$("lbOv").hidden=false;$("lb-close").focus();}
+  document.querySelectorAll("#lb-tabs button").forEach(b=>b.setAttribute("aria-pressed",String(b.dataset.t===tab)));
+  const L=$("lb-list");L.replaceChildren(Object.assign(document.createElement("div"),{className:"lbempty",textContent:"Loading…"}));
+  const q=sv?SURV.table+"?select=name,minutes,wave,tons,incidents,mill,created_at&order=minutes.desc,tons.desc&limit=100"
+    :"scores?select=name,score,tons,incidents,mill,created_at&order=score.desc,tons.desc&limit=100&and=(version.not.like.v1.*,version.not.like.v2.0.*,version.not.like.v2.1.*)";
   let rows=[],note="";
-  if(lbOn()){try{const res=await fetch(LB.url.replace(/\/$/,"")+"/rest/v1/scores?select=name,score,tons,incidents,mill,created_at&order=score.desc,tons.desc&limit=100&and=(version.not.like.v1.*,version.not.like.v2.0.*,version.not.like.v2.1.*)",{headers:lbHdr()});
+  if(lbOn()){try{const res=await fetch(LB.url.replace(/\/$/,"")+"/rest/v1/"+q,{headers:lbHdr()});
       if(!res.ok)throw new Error(res.status);rows=await res.json();}catch(e){note="Couldn't reach the leaderboard. Showing scores saved on this device.";}}
   else note="Online leaderboard not connected yet. Showing scores saved on this device.";
-  if(note){try{rows=JSON.parse(localStorage.getItem("paper-mill-local-scores")||"[]").filter(r=>!/^v(1\.|2\.[01]\.)/.test(r.version||""));}catch(e){rows=[];}}
-  $("lb-sub").textContent=note||"Top 100 · 30-day seasons · ranked by net profit";
-  if(!rows.length){L.replaceChildren(Object.assign(document.createElement("div"),{className:"lbempty",textContent:"No scores yet. Start a season and set the bar."}));return;}
+  if(my!==lbReq)return;   // another tab was picked while this one loaded
+  if(note){try{rows=sv?JSON.parse(localStorage.getItem(SURV.local)||"[]"):JSON.parse(localStorage.getItem("paper-mill-local-scores")||"[]").filter(r=>!/^v(1\.|2\.[01]\.)/.test(r.version||""));}catch(e){rows=[];}}
+  $("lb-sub").textContent=note||(sv?"Top 100 · survival runs · ranked by time survived":"Top 100 · 30-day seasons · ranked by net profit");
+  if(!rows.length){L.replaceChildren(Object.assign(document.createElement("div"),{className:"lbempty",textContent:sv?"No scores yet. Start a survival run and set the bar.":"No scores yet. Start a season and set the bar."}));return;}
   let me="";try{me=localStorage.getItem("paper-mill-player")||"";}catch(e){}
   L.replaceChildren(...rows.map((r,i)=>{const d=document.createElement("div");d.className="lbrow"+(me&&r.name===me?" me":"");
     const mk=(c,t)=>Object.assign(document.createElement("span"),{className:c,textContent:t});
     const dt=r.created_at?new Date(r.created_at).toLocaleDateString(undefined,{month:"short",day:"numeric"}):"";
-    d.append(mk("r",i+1),mk("n",r.name),mk("sc",money(r.score)),mk("m",[r.mill,f0(r.tons)+" t shipped",(r.incidents??"")+" disasters",dt].filter(Boolean).join(" · ")));return d;}));}
+    d.append(mk("r",i+1),mk("n",r.name),mk("sc",sv?survTime(r.minutes):money(r.score)),mk("m",[r.mill,sv?"wave "+r.wave:"",f0(r.tons)+" t shipped",(r.incidents??"")+" disasters",dt].filter(Boolean).join(" · ")));return d;}));}
 function setFree(on){S.free=on;
-  if(on&&S.season&&S.season.on){S.season=null;seasonLocks(false);BANNERS.push({text:"Season abandoned: free play scores can't go on the leaderboard.",t:null});}
+  if(on&&S.season&&S.season.on){const sv=survRun();S.season=null;applyUpgrades();seasonLocks(false);BANNERS.push({text:(sv?"Survival run":"Season")+" abandoned: free play scores can't go on the leaderboard.",t:null});}
   if(on)BANNERS.push({text:"Free play: upgrades are free and you can't go bankrupt. No leaderboard.",t:null,kind:"good"});
   if(on&&G3.labelIntro)G3.labelIntro();
   updateShop();}
@@ -2626,7 +2733,7 @@ let ZEN=null;
 let grainDone=false;function makeGrain(){if(grainDone)return;grainDone=true;const c=document.createElement("canvas");c.width=c.height=128;const x=c.getContext("2d"),im=x.createImageData(128,128);for(let i=0;i<im.data.length;i+=4){const v=Math.random()*255|0;im.data[i]=im.data[i+1]=im.data[i+2]=v;im.data[i+3]=255;}
   x.putImageData(im,0,0);document.documentElement.style.setProperty("--grain",`url(${c.toDataURL()})`);}
 function setZen(on){if(on===!!ZEN)return;
-  if(on){makeGrain();if(S.season&&S.season.on){S.season=null;seasonLocks(false);}
+  if(on){makeGrain();if(S.season&&S.season.on){S.season=null;applyUpgrades();seasonLocks(false);}
     ZEN={speed:C.simSpeed,chaos:CH.on,hays:C.hays,breaks:C.breaks,view:G3.on};
     S.inc=[];if(S.wd==="hayout")S.wd="run";if(S.pm==="break"){S.pm="run";}BANNERS.length=0;S.zen=true;
     CH.on=false;$("chaosOn").checked=false;C.hays=false;C.breaks=false;
@@ -2639,9 +2746,10 @@ function setZen(on){if(on===!!ZEN)return;
 let zenT=0;function zenPoke(){const b=$("zenExit");b.hidden=false;b.classList.add("show");clearTimeout(zenT);zenT=setTimeout(()=>b.classList.remove("show"),2500);}
 $("zenExit").addEventListener("click",e=>{e.stopPropagation();setZen(false);});
 ["pointermove","pointerdown"].forEach(t=>document.addEventListener(t,()=>{if(ZEN)zenPoke();},{passive:true}));
-$("so-more").addEventListener("click",()=>{$("seasonOv").hidden=true;running=true;});
+$("so-more").addEventListener("click",()=>{$("seasonOv").hidden=true;if(survRun()){newGame();if(G3.showMenu)G3.showMenu();return;}running=true;});   // (v4.3: after a survival run the button is "Menu")
 $("so-submit").addEventListener("click",submitScore);$("so-name").addEventListener("keydown",e=>{if(e.key==="Enter")submitScore();e.stopPropagation();});
-$("so-board").addEventListener("click",openBoard);$("so-new").addEventListener("click",()=>{$("seasonOv").hidden=true;startSeason();});
+$("so-board").addEventListener("click",openBoard);$("so-new").addEventListener("click",()=>{$("seasonOv").hidden=true;startSeason(survRun());});
+document.querySelectorAll("#lb-tabs button").forEach(b=>b.addEventListener("click",()=>openBoard(b.dataset.t)));
 $("lb-close").addEventListener("click",closeBoard);
 document.addEventListener("keydown",e=>{if(e.key==="Escape"&&!$("lbOv").hidden){e.preventDefault();closeBoard();}},true);
 const RATINGS=[[0.95,"A","Bonus secured"],[0.85,"B","Solid shift"],[0.75,"C","Corporate is asking questions"],[0.6,"D","Mandatory 6 a.m. meeting"],[0,"F","Your parking spot has been reassigned"]];
@@ -6389,7 +6497,7 @@ function no3D(){G3.ok=false;$("no3d").hidden=false;$("no3d-retry").onclick=()=>l
   function pwl(f,xs,ys){if(f<=xs[0])return ys[0];for(let i=1;i<xs.length;i++)if(f<=xs[i])return ys[i-1]+(ys[i]-ys[i-1])*(f-xs[i-1])/(xs[i]-xs[i-1]);return ys[ys.length-1];}
   const CL_Y=[0,0.16,0.44,0.64,1],CL_X={felt:[0.06,0.15,0.62,0.72,0.93],fabric:[0.07,0.16,0.40,0.50,0.86]};
   // cloth-change progress for the outage (null when the outage isn't driving that cloth)
-  function outCloth(id){const f=outPhase();if(f<0)return null;if(id==="fabric"&&S.outg.k!==2)return null;const X=CL_X[id];if(f<X[0]||f>X[4]+0.015)return null;return pwl(f,X,CL_Y);}
+  function outCloth(id){const f=outPhase();if(f<0)return null;if(id==="fabric"&&outJob(S.outg.k)!==2)return null;const X=CL_X[id];if(f<X[0]||f>X[4]+0.015)return null;return pwl(f,X,CL_Y);}
   G3.outCloth=outCloth;
   const ocM=()=>M.panelWhite||(M.panelWhite=mat("panel"));
   const ENTRY={hall:[65.6,15.4],shop:[56,-18.2]};
@@ -6483,12 +6591,12 @@ function no3D(){G3.ok=false;$("no3d").hidden=false;$("no3d-retry").onclick=()=>l
   [hcBridge,hcHook,hcCable,MCm,mcCable,mcHook,ROT.old,ROT.neu,ROT.pallet,STK.neu,STK.used,...Object.values(R1),...cradT,...cradD,pulpStock,rotor,press[0],press[1],...REF_DOORS.map(d=>d.door),...REF_DOORS.map(d=>d.face)].forEach(o=>SM.dyn.add(o));
 
   /* -- staging the day before: a real-time scene so it reads at any game speed -- */
-  function stageWant(){const o=S&&S.outg;if(!o||!o.plan||o.on||!S.season||!S.season.on)return 0;const st=outStart(o.k);return S.t>=st-1140&&S.t<st?o.k:0;}
+  function stageWant(){const o=S&&S.outg;if(!o||!o.plan||o.on||!S.season||!S.season.on)return 0;const st=outStart(o.k);return S.t>=st-1140&&S.t<st?outJob(o.k):0;}
   function staged(k,v){if(k===1){cradT.forEach(c=>c.visible=v);R1.newT.visible=R1.newB.visible=v;if(v){R1.newT.position.set(T1[0],RY1,T1[1]);R1.newT.rotation.set(0,Math.PI/2,0);R1.newB.position.set(T2[0],RY1,T2[1]);R1.newB.rotation.set(0,Math.PI/2,0);}}
     if(k===3){ROT.pallet.visible=ROT.neu.visible=v;if(v){ROT.pallet.position.set(PAL[0],0.09,PAL[1]);ROT.neu.position.set(PAL[0],0.18,PAL[1]);ROT.neu.scale.setScalar(1);}}
     if(k===4){STK.neu.visible=v;STK.neu.userData.ps.forEach(p=>p.visible=v);}}
   function stageTick(rdt,now){const k=stageWant(),o=S.outg;
-    if(!k){if(OV.stg&&!(o&&o.on&&OV.stg.k===o.k))OV.stg=null;return false;}
+    if(!k){if(OV.stg&&!(o&&o.on&&OV.stg.k===outJob(o.k)))OV.stg=null;return false;}
     if(!OV.stg||OV.stg.k!==k)OV.stg={k,t0:now,done:false};const st=OV.stg,age=(now-st.t0)/1000;
     if(k===2){return false;}
     if(st.gone){return false;}
@@ -6602,14 +6710,15 @@ function no3D(){G3.ok=false;$("no3d").hidden=false;$("no3d-retry").onclick=()=>l
       // keep what was staged in place until the outage starts
       if(!sg&&o&&o.plan&&!o.on){const k=stageWant();if(k)staged(k,true);}
       OV.crew.forEach((w,i)=>crewHome(i,rdt,now));return;}
-    if(!ovActive){ovActive=true;outageReset();staged(o.k,true);OV.stg=null;}
+    const jk=outJob(o.k);   // v4.3: the major job (1-4), which repeats in survival
+    if(!ovActive){ovActive=true;outageReset();staged(jk,true);OV.stg=null;}
     // felts every outage (crew 0-3); wire on outage 2 (crew 4-7)
     const fj=outCloth("felt")!=null&&JOBS.felt?JOBS.felt:null;
     if(fj||f<CL_X.felt[0]){const ws=[0,1,2,3].map(i=>tech(i,"hall"));if(fj&&now-(fj.t||0)<1500)clothCrew(ws,fj,rdt,now);
       else ws.forEach((w,r)=>go(w,34.8-3.6+r*2.4,14.1+(r%2?1.9:-1.2),"look",34.8,14.1,rdt,now));}
-    if(o.k===2){const wj=outCloth("fabric")!=null&&JOBS.fabric?JOBS.fabric:null;if(wj||f<CL_X.fabric[0]){const ws=[4,5,6,7].map(i=>tech(i,"hall"));
+    if(jk===2){const wj=outCloth("fabric")!=null&&JOBS.fabric?JOBS.fabric:null;if(wj||f<CL_X.fabric[0]){const ws=[4,5,6,7].map(i=>tech(i,"hall"));
         if(wj&&now-(wj.t||0)<1500)clothCrew(ws,wj,rdt,now);else ws.forEach((w,r)=>go(w,47.7-3.6+r*2.4,14.1+(r%2?1.9:-1.2),"look",47.7,14.1,rdt,now));}}
-    if(o.k===1)job1(f,rdt,now);if(o.k===3)job3(f,rdt,now);if(o.k===4)job4(f,rdt,now);
+    if(jk===1)job1(f,rdt,now);if(jk===3)job3(f,rdt,now);if(jk===4)job4(f,rdt,now);
     OV.crew.forEach((w,i)=>crewHome(i,rdt,now));}
   G3.outageVis=outageVis;
   const TRUCK_FAR=330;
@@ -8136,8 +8245,8 @@ setView();
     set("v2profit",short(S.profitRate)+"/d");$("v2profit").style.color=S.profitRate<0?"var(--bad)":"var(--ink)";
     {const h=((S.t+360)/60)%24,d=new Date(S.date0||Date.now());d.setMinutes(d.getMinutes()+S.t+360);const hh=Math.floor(h),ap=hh<12?"AM":"PM",h12=hh%12||12;
      set("v2clock",d.toLocaleDateString("en-US",{weekday:"short"})+" "+h12+" "+ap);}
-    {const se=S.season,on=!!(se&&se.on),lab=on?`Day ${Math.min(SEASON_DAYS,Math.floor(S.t/1440)+1)} of ${SEASON_DAYS}`:se&&se.done?"Season over":"Time";
-     set("v2clockL",lab);$("v2clockL").classList.toggle("sday",on);$("v2clockL").title=on?"Season mode: day of the 30-day season":"";}
+    {const se=S.season,on=!!(se&&se.on),sv=!!(se&&se.surv),day=Math.floor(S.t/1440)+1,lab=on?(sv?`Wave ${survWave()} · Day ${day}`:`Day ${Math.min(SEASON_DAYS,day)} of ${SEASON_DAYS}`):se&&se.done?(sv?"Run over":"Season over"):"Time";
+     set("v2clockL",lab);$("v2clockL").classList.toggle("sday",on);$("v2clockL").title=on?(sv?"Survival: the wave you are in and the day of the run":"Season mode: day of the 30-day season"):"";}
     mirror.forEach(([d,s])=>{if(d.textContent!==s.textContent)d.textContent=s.textContent;});
     const sp=C.simSpeed+" min/s";if($("v2speed").textContent!==sp)$("v2speed").textContent=sp;
     const n=S.inc.length,bd=$("v2bdg");bd.hidden=!n;if(bd.textContent!==String(n))bd.textContent=n;
@@ -8147,8 +8256,8 @@ setView();
   const menu=$("v2menu");let first=true;
   function showMenu(){running=false;closeSheet("menu");closeMore();
     const go=$("v2go"),se=S.season&&S.season.on;go.querySelector("b").textContent=first?"Play":"Resume";
-    go.querySelector("small").textContent=first?"30-day season · leaderboard":se?`Season · day ${Math.min(30,Math.floor(S.t/1440)+1)} of 30`:S.free?"Free play":"Back to the mill";
-    $("v2sub").hidden=first;$("v2nameRow").hidden=true;
+    go.querySelector("small").textContent=first?"30-day season · leaderboard":se?(S.season.surv?`Survival · wave ${survWave()} · day ${Math.floor(S.t/1440)+1}`:`Season · day ${Math.min(30,Math.floor(S.t/1440)+1)} of 30`):S.free?"Free play":"Back to the mill";
+    $("v2sub").hidden=first;$("v2surv").hidden=!first;   // (v4.3: Survival sits under Play on the first menu; once a run is on, "New survival" is with "New season")$("v2nameRow").hidden=true;
     $("v2state").textContent=first?"":"Paused";
     $("v2free").querySelector("b").textContent=S.free?"Free play: on":"Free play";$("v2free").setAttribute("aria-pressed",String(!!S.free));$("v2ver").textContent=APP_VER;menu.hidden=false;}
   function play(){menu.hidden=true;first=false;running=true;}
@@ -8173,11 +8282,11 @@ setView();
       let kick="Quick start",h="",body="",next="Next";
       if(k===0){h="Welcome to "+esc(MILL.name||"your mill");body=`<p>Your mill turns old cardboard boxes into new paperboard. Let's follow the fiber from the truck to the customer, then cover how the game works. It takes about a minute.</p>`;next="Start the tour";}
       else if(isTour){const st=stops[k-1];kick=`From pulp to paper · ${k} of ${stops.length}`;h=`<span class="num">${k}</span>${st[0]}`;body=`<p>${st[1]}</p>`;}
-      else if(k===stops.length+1){kick="How the game works";h="Your goal";body=`<ul><li>A season runs <b>30 days</b>. Make as much profit as you can: your score goes on the leaderboard.</li><li>Keep everything flowing. Running out of stock, or a full warehouse, stops the machine.</li><li>Spend profit in <b>Upgrades</b> on capacity, reliability and lower costs.</li></ul>`;}
-      else if(k===stops.length+2){kick="How the game works";h="Upsets & event cards";body=`<ul><li>Breakdowns, fires, storms and the odd pigeon happen. Crews and maintenance fix them on their own.</li><li>A red pin marks each one: tap it to fly there. The <b>Upsets</b> tab shows what is down and how long is left.</li><li>Event cards offer deals with honest odds. Accept or decline: each card only shows up once a season.</li></ul>`;}
+      else if(k===stops.length+1){kick="How the game works";h="Your goal";body=`<ul>${survRun()?`<li><b>Survival</b> has no last day: keep the mill out of bankruptcy for as long as you can. Your time survived goes on the survival leaderboard.</li><li>Every planned outage starts a new <b>wave</b>: upsets get more likely, and fibre, energy and wages cost more. The chip under the top bar shows the multipliers.</li>`:`<li>A season runs <b>30 days</b>. Make as much profit as you can: your score goes on the leaderboard.</li>`}<li>Keep everything flowing. Running out of stock, or a full warehouse, stops the machine.</li><li>Spend profit in <b>Upgrades</b> on capacity, reliability and lower costs.</li></ul>`;}
+      else if(k===stops.length+2){kick="How the game works";h="Upsets & event cards";body=`<ul><li>Breakdowns, fires, storms and the odd pigeon happen. Crews and maintenance fix them on their own.</li><li>A red pin marks each one: tap it to fly there. The <b>Upsets</b> tab shows what is down and how long is left.</li><li>Event cards offer deals with honest odds. Accept or decline: each card only shows up once ${survRun()?"before the deck goes round again":"a season"}.</li></ul>`;}
       else if(k===stops.length+3){kick="How the game works";h="Bottlenecks: the mill is a river";body=`<div class="fig">${RIVER}</div><p>Fiber flows from receiving to shipping like a river. The whole mill can only move as fast as its <b>narrowest point</b>: that's the bottleneck.</p><p>An upset pinches the river at one spot. Upstream backs up (bales pile up in the yard); downstream runs dry (the chest drains, the machine starves, trucks wait). <b>Buffers</b> such as the bale yard, stock chest and warehouse are the wide pools that keep things moving through a short upset. Widen your narrowest spot first: the <b>Stats</b> tab shows the river live, with your bottleneck right now.</p>`;}
       else if(k===stops.length+4){kick="Planned outages";h="Every 7 days: an outage";body=`<ul><li>On days 7, 14, 21 and 28 the mill comes down for a planned <b>4-hour outage</b>. Crews change the felts and do one big job.</li><li>The day before, you set a maintenance budget for stock prep, the wet end and the dry end.</li><li><b>$20k</b>: 10% less reliable &nbsp;·&nbsp; <b>$70k</b>: no change &nbsp;·&nbsp; <b>$170k</b>: 20% more reliable, until the next outage.</li></ul>`;}
-      else{kick="Ready";h="Have fun!";body=`<p>Game speed and sound are in the top bar. Pause any time for the menu. Good luck with your first season!</p><label><input type="checkbox" id="tutOff"> Don't show this tutorial again</label>`;next="Let's go";}
+      else{kick="Ready";h="Have fun!";body=`<p>Game speed and sound are in the top bar. Pause any time for the menu. Good luck with your first ${survRun()?"survival run":"season"}!</p><label><input type="checkbox" id="tutOff"> Don't show this tutorial again</label>`;next="Let's go";}
       return `<div class="tc" role="dialog" aria-modal="true" aria-labelledby="tutH"><div class="tk"><span>${kick}</span>${k<N-1?'<button id="tutSkip">Skip tutorial</button>':""}</div>
         <h2 id="tutH">${h}</h2>${body}<div class="dots">${dots}</div>
         <div class="tb">${k>0?'<button id="tutBack">Back</button>':""}<button class="primary" id="tutNext">${next}</button></div></div>`;}
@@ -8198,7 +8307,7 @@ setView();
   // Play). While another dialog is up on top (the leaderboard, the site picker, a card), keys are left to it.
   {const FOC='button:not([disabled]),[href],input:not([disabled]):not([type=hidden]),select:not([disabled]),textarea:not([disabled]),[tabindex]:not([tabindex="-1"])';
     const up=e=>!!e&&!e.hidden&&e.getClientRects().length>0;
-    const LAYERS=[{el:()=>$("seasonOv"),esc:()=>$("so-more").click()},
+    const LAYERS=[{el:()=>$("seasonOv"),esc:()=>{if(!survRun())$("so-more").click();}},   // (survival: Escape leaves the dialog up, so an unsent score isn't lost)
       {el:()=>document.getElementById("tut"),esc:()=>TUT.close(false)},
       {el:()=>menu,esc:()=>{if(!first)play();}}];
     document.addEventListener("keydown",e=>{if((e.key!=="Tab"&&e.key!=="Escape")||e.defaultPrevented)return;
@@ -8216,6 +8325,12 @@ setView();
     goWait=true;const b=$("v2go");b.setAttribute("aria-busy","true");b.querySelector("small").textContent="Getting the mill ready…";
     G3.prewarm().then(()=>{goWait=false;b.removeAttribute("aria-busy");go();});});
   $("v2season").addEventListener("click",()=>{startSeason();play();if(TUT.want())setTimeout(()=>TUT.open(),60);});
+  // v4.3 survival: the same start as a season (and the same wait for the precompile on the first menu)
+  const goSurv=()=>{startSurvival();play();if(TUT.want())setTimeout(()=>TUT.open(),60);};
+  $("v2surv").addEventListener("click",()=>{if(goWait)return;if(G3.warm||!G3.prewarm){goSurv();return;}
+    goWait=true;const b=$("v2surv"),sm=b.querySelector("small"),was=sm.textContent;b.setAttribute("aria-busy","true");sm.textContent="Getting the mill ready…";
+    G3.prewarm().then(()=>{goWait=false;b.removeAttribute("aria-busy");sm.textContent=was;goSurv();});});
+  $("v2survNew").addEventListener("click",goSurv);
   $("v2free").addEventListener("click",()=>{setFree(!S.free);play();});
   $("v2board").addEventListener("click",openBoard);
   $("v2zen").addEventListener("click",()=>{menu.hidden=true;first=false;setZen(true);});
@@ -8302,7 +8417,7 @@ setView();
       applyUpgrades();S.M=mods();BANNERS.length=0;seasonLocks(true);
       try{syncControls();}catch(e){}try{updateShop();}catch(e){}try{if(G3.rebrand)G3.rebrand();}catch(e){}
       if(op&&op.cid){const c=CARDS.find(x=>x.id===op.cid);if(c)setTimeout(()=>openCard(c),400);}
-      diag(`save: season restored, day ${d.day}, ${money(d.cash)}`);}
+      diag(`save: ${survRun()?"survival run":"season"} restored, day ${d.day}, ${money(d.cash)}`);}
     G3.save={save,read,clear,restore};
     // ---- when to save ----
     document.addEventListener("visibilitychange",()=>{if(document.hidden){if(save("hidden")&&running){G3.saveWasRunning=true;running=false;}}
@@ -8316,7 +8431,8 @@ setView();
     // ---- the Continue button on the menu ----
     const d0=read(),go=$("v2go");
     if(d0&&go){const b=document.createElement("button");b.className="primary go";b.id="v2cont";
-      b.innerHTML=`<b>Continue season</b><small>day ${d0.day} of 30 · ${money(d0.cash)} · ${(ENVS[d0.env]||{name:d0.env}).name}</small>`;
+      const sv0=!!(d0.S.season&&d0.S.season.surv);   // v4.3: the one slot holds a season or a survival run
+      b.innerHTML=`<b>Continue ${sv0?"survival":"season"}</b><small>${sv0?`wave ${(d0.S.outg&&d0.S.outg.k)||1} · day ${d0.day}`:`day ${d0.day} of 30`} · ${money(d0.cash)} · ${(ENVS[d0.env]||{name:d0.env}).name}</small>`;
       go.parentNode.insertBefore(b,go);go.classList.remove("primary");
       b.addEventListener("click",()=>{const d=read();if(!d){b.remove();return;}
         // a save from another map: reload on that map, then continue (?resume=1)
@@ -8328,7 +8444,9 @@ setView();
         if(G3.warm||!G3.prewarm)run();else{b.setAttribute("aria-busy","true");b.querySelector("small").textContent="Getting the mill ready…";G3.prewarm().then(run);}});
       if(Q.get("resume")==="1"){try{Q.delete("resume");history.replaceState(null,"",location.pathname+(Q.toString()?"?"+Q:"")+location.hash);}catch(e){}setTimeout(()=>b.click(),300);}}
     // a new season or a reset starts over: the old save goes
-    ["v2season","v2reset"].forEach(id=>{const el=$(id);if(el)el.addEventListener("click",clear,true);});
+    ["v2season","v2reset","v2surv","v2survNew"].forEach(id=>{const el=$(id);if(el)el.addEventListener("click",clear,true);});
+    // v4.3: starting a survival run from the first menu also takes the Continue button away (its save is gone)
+    {const el=$("v2surv");if(el)el.addEventListener("click",()=>{const c=$("v2cont");if(c){c.remove();if(go)go.classList.add("primary");}},true);}
     if(go)go.addEventListener("click",()=>{if($("v2cont")&&!(S.season&&S.season.on))clear();},true);}
   /* ---- v4.2.4 Mill report (the Report tab, the grade badge in the top bar, cost and uptime in the dropdown) ----
      One grade system: the report card's four grades (profit, cost per ton, downtime, reliability) and their overall,
@@ -8338,16 +8456,17 @@ setView();
      nothing here touches the simulation. Outside a season the tab shows totals since the start, without grades. */
   {const el=$("rep"),GP={A:4,B:3,C:2,D:1,F:0},pc=v=>Math.round(v*100)+"%",hrs=m=>(m/60).toFixed(m<600?1:0)+" h";
     let openDays=false,openMoney=false,lastN=-99;
-    const chemShare=()=>{const t=energyCost();if(!(t>0))return 0;const c=(ECON.chem||0)+(P.chemAdd||0)+((ENVX()&&ENVX().chem)||0);return Math.max(0,Math.min(1,c/t));};
+    const chemShare=()=>{const t=energyCost();if(!(t>0))return 0;const c=((ECON.chem||0)+(P.chemAdd||0)+((ENVX()&&ENVX().chem)||0))*(P.costMul||1);return Math.max(0,Math.min(1,c/t));};
     const allAcc=()=>({t0:0,L0:{},prod0:0,ship0:0,rolls0:0,brk0:0,hay0:0,off0:0,occ:0,fib:0,min:Math.max(1,S.t),plan:0,up:{recv:0,pulper:0,machine:0,winder:0,ship:0},dn:{},bn:{}});
     const seasonOn=()=>!!(S.season&&(S.season.on||S.season.done)&&S.rc&&!S.free&&!S.zen);
     // the numbers everything below draws from
-    function data(){if(seasonOn()){const R=S.rc,live=S.season.done&&R.cards.length>=3?R.cards[2]:rcMake(R.p,R.i),prev=R.i>0?R.cards[R.i-1]:null;return {R,live,prev,p:live.p,season:true};}
+    function data(){if(seasonOn()){const R=S.rc,live=S.season.done&&!S.season.surv&&R.cards.length>=3?R.cards[2]:rcMake(R.p,R.i),prev=R.i>0?R.cards[R.i-1]:null;return {R,live,prev,p:live.p,season:true};}
       return {p:rcSum(allAcc()),season:false};}
     function costRows(p){const sp=p.spent,cs=chemShare(),e=sp.Energy||0;
       return [["Fibre (OCC)",sp.Fibre||0,"var(--kraft)"],["Energy & steam",e*(1-cs),"var(--stock)"],["Chemicals",e*cs,"var(--pulp)"],["Labour",sp.Labour||0,"var(--machine)"],["Overhead",sp.Overhead||0,"#9aa1b5"],
         ["Repairs",sp["Repairs & outages"]||0,"var(--bad)"],["Premium freight",sp["Premium freight"]||0,"var(--warn)"]].filter(r=>r[1]>0);}
-    function tiles(d){const R=d.R,out=[];for(let i=0;i<3;i++){const c=R.cards[i],cur=i===R.i&&!S.season.done,lab=`Days ${i*10+1}–${i*10+10}`;
+    // (v4.3 survival: the tiles are waves, the last two and the one being played)
+    function tiles(d){const R=d.R,out=[],sv=!!S.season.surv,i0=sv?Math.max(0,R.i-2):0;for(let i=i0;i<i0+3;i++){const c=R.cards[i],cur=i===R.i&&(sv||!S.season.done),lab=sv?`Wave ${i+1}`:`Days ${i*10+1}–${i*10+10}`;
         if(c&&!cur)out.push(`<button type="button" class="rpt" data-card="${i}"><span class="rcg g${c.overall}">${c.overall}</span><span><b>${lab}</b><small>View card</small></span></button>`);
         else if(cur){const L=d.live.overall,pv=d.prev?d.prev.overall:null,tr=pv==null?"so far":GP[L]>GP[pv]?"rising":GP[L]<GP[pv]?"falling":"steady";
           out.push(`<div class="rpt cur"><span class="rcg g${L}">${L}</span><span><b>${lab}</b><small>${tr}</small></span></div>`);}
@@ -8370,11 +8489,12 @@ setView();
         <div><small>Fibre yield</small><b class="mono">${p.yld?pc(p.yld):"–"}</b><small>${p.yld?(1/p.yld).toFixed(2)+" t OCC per t":season?"collecting":"in a season"}</small></div>
         <div><small>Output</small><b class="mono">${pc(eff)}</b><small>of max-speed tons</small></div></div>`;}
     function daysBlock(d){const D=d.R.days||[];if(!D.length)return "";
-      const X=v=>22+(v-1)*(326/29),Y=L=>20+(4-GP[L])*28,pts=D.map(x=>`${X(x.d).toFixed(1)},${Y(x.o)}`).join(" ");
+      const sv=!!S.season.surv,d0=sv?Math.max(0,D[D.length-1].d-30):0;   // v4.3 survival: the last 30 days, with a line at each outage
+      const X=v=>22+(v-d0-1)*(326/29),Y=L=>20+(4-GP[L])*28,pts=D.map(x=>`${X(x.d).toFixed(1)},${Y(x.o)}`).join(" ");
       const drops=D.filter((x,i)=>i>0&&GP[x.o]<GP[D[i-1].o]);
       const svg=`<svg class="rchart" viewBox="0 0 358 170" role="img" aria-label="Overall grade at the end of each day"><g class="ax">${["A","B","C","D","F"].map((L,i)=>`<text x="4" y="${24+i*28}">${L}</text><line x1="22" y1="${20+i*28}" x2="350" y2="${20+i*28}"></line>`).join("")}
-        <text x="18" y="162">1</text><text x="${X(10)-6}" y="162">10</text><text x="${X(20)-6}" y="162">20</text><text x="${X(30)-6}" y="162">30</text></g>
-        <line class="pd" x1="${X(10.5)}" y1="8" x2="${X(10.5)}" y2="144"></line><line class="pd" x1="${X(20.5)}" y1="8" x2="${X(20.5)}" y2="144"></line>
+        <text x="18" y="162">${d0+1}</text><text x="${X(d0+10)-6}" y="162">${d0+10}</text><text x="${X(d0+20)-6}" y="162">${d0+20}</text><text x="${X(d0+30)-6}" y="162">${d0+30}</text></g>
+        ${(sv?[1,2,3,4,5].map(k=>(Math.floor(d0/OUT.every)+k)*OUT.every+0.5).filter(v=>v<d0+30):[10.5,20.5]).map(v=>`<line class="pd" x1="${X(v)}" y1="8" x2="${X(v)}" y2="144"></line>`).join("")}
         <polyline class="ln" points="${pts}"></polyline>${D.map(x=>`<circle class="${drops.includes(x)?"drop":"pt"}" cx="${X(x.d).toFixed(1)}" cy="${Y(x.o)}" r="${drops.includes(x)?4.5:3}"></circle>`).join("")}</svg>`;
       const strip=k=>`<span>${k}</span><div class="rstrip">${D.map(x=>`<i class="s${x.g[k]}" title="Day ${x.d}: ${x.g[k]}"></i>`).join("")}</div><b class="rcgt g${D[D.length-1].g[k]}">${D[D.length-1].g[k]}</b>`;
       const moves=[];for(let i=D.length-1;i>0&&moves.length<4;i--){const a=D[i-1],b=D[i];if(a.o===b.o)continue;const up=GP[b.o]>GP[a.o];
@@ -8385,10 +8505,16 @@ setView();
       return `<details class="rsub" id="repMoney"${openMoney?" open":""}><summary><b>Money</b><small>${s?"this period · season":"since the start"}</small></summary>
         ${row("Earned",money(p.earned),s?money(s.earned):"","pos")}${Object.keys(p.spent).filter(k=>p.spent[k]||(s&&s.spent[k])).map(k=>row(k,money(-p.spent[k]),s?money(-s.spent[k]):"")).join("")}${row("Net",money(p.net),s?money(s.net):"","net "+(p.net>=0?"pos":"neg"))}</details>`;}
     function render(){const d=data(),p=d.p;let h="";
-      if(d.season){const day=Math.min(SEASON_DAYS,Math.floor(S.t/1440)+1);
+      if(d.season&&S.season.surv){const day=Math.floor(S.t/1440)+1,w=survWave(),sp=survSpan(w);   // v4.3 survival: waves, the multipliers and the time survived
+        h+=`<section class="rcard"><div class="rhd"><h3>Survival</h3><small class="mono">${S.season.done?"Run over · "+survTime(S.t):"Wave "+w+" · day "+day}</small></div>
+          <div class="rsurv"><div><small>Survived</small><b class="mono">${survTime(S.t)}</b></div><div><small>Upsets</small><b class="mono">${xf(survUp(w))}</b></div><div><small>Costs</small><b class="mono">${xf(survCost(w))}</b></div></div>
+          <p class="rnote">Each wave is rougher than the last: upsets +${Math.round(SURV.up*100)}%, and fibre, energy and chemicals, and wages +${Math.round(SURV.cost*100)}%${SURV.compound?", on top of the wave before":""}. A wave ends when its planned outage does.</p>
+          <div class="rtiles">${tiles(d)}</div><div class="rprog"><i style="width:${Math.max(0,Math.min(100,(S.t-sp[0])/(sp[1]-sp[0])*100)).toFixed(1)}%"></i></div>${daysBlock(d)}</section>`;
+        h+=`<section class="rcard"><div class="rhd"><h3>${S.season.done?"Last wave":"This wave so far"}</h3><small>${day>d.live.from?`days ${d.live.from}–${Math.min(d.live.to,day)}`:`day ${d.live.from}`}${d.prev?" · vs wave "+d.prev.wave:""}</small></div><div class="rgrades">${grades(d)}</div><p class="rtip"><b>Biggest lever:</b> ${d.live.tip}</p></section>`;}
+      else if(d.season){const day=Math.min(SEASON_DAYS,Math.floor(S.t/1440)+1);
         h+=`<section class="rcard"><div class="rhd"><h3>Season</h3><small class="mono">${S.season.done?"Season complete":"Day "+day+" of "+SEASON_DAYS}</small></div><div class="rtiles">${tiles(d)}</div><div class="rprog"><i style="width:${Math.min(100,S.t/(SEASON_DAYS*1440)*100).toFixed(1)}%"></i></div>${daysBlock(d)}</section>`;
         h+=`<section class="rcard"><div class="rhd"><h3>${S.season.done?"Last period":"This period so far"}</h3><small>days ${d.live.from}–${Math.min(d.live.to,day)}${d.prev?" · vs days "+d.prev.from+"–"+d.prev.to:""}</small></div><div class="rgrades">${grades(d)}</div><p class="rtip"><b>Biggest lever:</b> ${d.live.tip}</p></section>`;}
-      else h+=`<section class="rcard"><p class="rnone">Grades, uptime and report cards run during a 30-day season. Here are your totals since the start.</p></section>`;
+      else h+=`<section class="rcard"><p class="rnone">Grades, uptime and report cards run during a 30-day season or a survival run. Here are your totals since the start.</p></section>`;
       h+=`<section class="rcard">${costBlock(p)}</section>`;if(d.season)h+=`<section class="rcard">${upBlock(p)}</section>`;
       h+=`<section class="rcard">${qualBlock(p,d.season)}</section><section class="rcard">${moneyBlock(d)}</section>`;
       el.innerHTML=h;}

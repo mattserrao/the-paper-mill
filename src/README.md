@@ -16,7 +16,7 @@ then `tail.html`. All game code runs inside **one shared closure** (opened in `0
 | Range | What lives there |
 |---|---|
 | `00` | `APP_VER`, the rolling diagnostics log, and the three.js loader (r186.1 as an ES module via top-level `await`; outside the closure, so errors during start-up are caught) |
-| `01–11` | Game: mill name and colors, audio, model constants and seeded random streams, the site (`03b`: environments, mill seed and layout, bottleneck), upsets, event cards, outages and state, the sim `step()`, UI wiring, seasons and leaderboard, report cards, Stats trend chart |
+| `01–11` | Game: mill name and colors, audio, model constants and seeded random streams, the site (`03b`: environments, mill seed and layout, bottleneck), survival mode (`03c`: constants and multipliers; `09b`: wave changes, chip, game over), upsets, event cards, outages and state, the sim `step()`, UI wiring, seasons and leaderboard, report cards, Stats trend chart |
 | `20–43` | 3D view, one file per area of the mill: setup, plant, floors, rejects, stock prep, vehicles, labels, camera, upset effects and particles, people, fire response, the sky (`35b`), ambient life, janitorial, techs, upgrades, the yard props (`39b`: water tower, bales, gate sign), static-mesh merge, outage jobs, zen camera, the seeded scenery and terrain around the mill (`42b`), and the per-frame update (`43-3d-frame.js`) |
 | `50–53` | Side panels (slice, spider, Uncle Brian), app shell (top bar, sheets, menu, tutorial), the site picker (`51b`), main loop, the device autotest (`52b`, only active with `?autotest`), diagnostics panel and the `window.__PM` test hook |
 
@@ -131,6 +131,27 @@ then `tail.html`. All game code runs inside **one shared closure** (opened in `0
 - Checks: `tools/musictest.py` (schedules every step of every piece in the page, then plays each site's first pieces and
   the upset pieces for a few seconds and reads the output level) and `tools/musicrec.py` (records a piece to MP3).
 
+## Survival mode (v4.3)
+
+- **A survival run is a season with no end date**: `startSeason(true)` sets `S.season={on,surv:true,end:1e12}`. Everything that
+  checks `S.season.on` (locks, outages, cards, report cards, save) treats it as a season. `survRun()` is true for a
+  survival run (running or just ended), `survOn()` while it is running.
+- **The wave is the outage number**: `survWave()` is `S.outg.k`, so the mode keeps no state of its own and a restored save
+  needs nothing extra. A wave ends in `endOutage()` (06), which calls `survWaveStart()` (09b) after `o.k++`.
+- **Multipliers** (`SURV` in `03c`): `survUp(w)` and `survCost(w)` are `(1+step)^(w-1)` (`compound:true`) or
+  `1+step·(w-1)`. `upsetMul()` (08) multiplies by `survUp()`; `applyUpgrades()` sets `P.costMul=survCost()` and applies it to
+  `P.occPrice`; `energyCost()` and the wage part of the labour line (07) multiply by `P.costMul`. Outside survival they are
+  exactly 1, so seasons are unchanged to the cent. Anything that ends a run early (free play, zen) calls `applyUpgrades()`.
+- **Outage jobs repeat**: `outJob(k)` (06) is the major job 1-4 for outage `k`; `41-3d-outage-jobs.js` uses it for staging and
+  the crews. Use `outJob(o.k)`, never `o.k`, to pick a job.
+- **Report cards** are per wave in survival: the period index is `survWave()-1`, cards carry `wave`, only the last five are
+  kept (`R.cards[i]=null` for older ones) and the day history is capped at 60 days.
+- **The end**: `seasonTick()` calls `endSurvival()` (09b) at bankruptcy. The result is `{minutes, wave, tons, incidents, mill,
+  version, env}`; `survTime(minutes)` formats it. The board is the `survival` table (`supabase/survival.sql`), with the
+  device list `paper-mill-local-survival` as the fallback (also when the table is missing: a 404 on submit).
+- **Retuning**: change `SURV.up` / `SURV.cost`, then `tools/survival.py index.html 5 --bot=handsoff` (and `buyer`, `saver`).
+  A run has to end: every bot should be bankrupt well before `--maxdays`.
+
 ## Device autotest (`?autotest`)
 
 Open any build with `?autotest` (for example `index.html?autotest`) to run a hands-free performance test, about
@@ -175,6 +196,8 @@ Music: `musictest.py` and `musicrec.py` (see above). Needs Python 3 with Playwri
 - `econ.py index.html 15 [--env=swamp] [--bn=winder]`: hands-off seasons for a site, optionally with a forced bottleneck.
 - `bench.py index.html <label> 3`: the older timing benchmark (also provides the shared test hook and local three.js routing the other scripts use).
 - `smoke.py index.html`: drives every menu and panel plus a full 30-day season; fails on any page error.
+- `survcheck.py index.html [shots_dir]`: drives a survival run from the menu to the leaderboard (waves, multipliers, save and continue, the fifth outage in 3D, bankruptcy, score, both boards); fails on any page error.
+- `survival.py index.html 5 [--bot=handsoff|buyer|saver] [--up=0.2] [--cost=0.1] [--compound=1]`: survival runs to bankruptcy, with days survived and per-wave profit, incidents and downtime.
 - `determinism.py index.html`: two loads of the same season week must play out identically.
 - `balance.py index.html 40`: average outcomes over 40 seasons, to confirm balance after sim changes.
 - `idcheck.py index.html`: every element ID the code looks up exists.

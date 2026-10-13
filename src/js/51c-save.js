@@ -31,7 +31,7 @@
       applyUpgrades();S.M=mods();BANNERS.length=0;seasonLocks(true);
       try{syncControls();}catch(e){}try{updateShop();}catch(e){}try{if(G3.rebrand)G3.rebrand();}catch(e){}
       if(op&&op.cid){const c=CARDS.find(x=>x.id===op.cid);if(c)setTimeout(()=>openCard(c),400);}
-      diag(`save: season restored, day ${d.day}, ${money(d.cash)}`);}
+      diag(`save: ${survRun()?"survival run":"season"} restored, day ${d.day}, ${money(d.cash)}`);}
     G3.save={save,read,clear,restore};
     // ---- when to save ----
     document.addEventListener("visibilitychange",()=>{if(document.hidden){if(save("hidden")&&running){G3.saveWasRunning=true;running=false;}}
@@ -45,7 +45,8 @@
     // ---- the Continue button on the menu ----
     const d0=read(),go=$("v2go");
     if(d0&&go){const b=document.createElement("button");b.className="primary go";b.id="v2cont";
-      b.innerHTML=`<b>Continue season</b><small>day ${d0.day} of 30 · ${money(d0.cash)} · ${(ENVS[d0.env]||{name:d0.env}).name}</small>`;
+      const sv0=!!(d0.S.season&&d0.S.season.surv);   // v4.3: the one slot holds a season or a survival run
+      b.innerHTML=`<b>Continue ${sv0?"survival":"season"}</b><small>${sv0?`wave ${(d0.S.outg&&d0.S.outg.k)||1} · day ${d0.day}`:`day ${d0.day} of 30`} · ${money(d0.cash)} · ${(ENVS[d0.env]||{name:d0.env}).name}</small>`;
       go.parentNode.insertBefore(b,go);go.classList.remove("primary");
       b.addEventListener("click",()=>{const d=read();if(!d){b.remove();return;}
         // a save from another map: reload on that map, then continue (?resume=1)
@@ -57,5 +58,7 @@
         if(G3.warm||!G3.prewarm)run();else{b.setAttribute("aria-busy","true");b.querySelector("small").textContent="Getting the mill ready…";G3.prewarm().then(run);}});
       if(Q.get("resume")==="1"){try{Q.delete("resume");history.replaceState(null,"",location.pathname+(Q.toString()?"?"+Q:"")+location.hash);}catch(e){}setTimeout(()=>b.click(),300);}}
     // a new season or a reset starts over: the old save goes
-    ["v2season","v2reset"].forEach(id=>{const el=$(id);if(el)el.addEventListener("click",clear,true);});
+    ["v2season","v2reset","v2surv","v2survNew"].forEach(id=>{const el=$(id);if(el)el.addEventListener("click",clear,true);});
+    // v4.3: starting a survival run from the first menu also takes the Continue button away (its save is gone)
+    {const el=$("v2surv");if(el)el.addEventListener("click",()=>{const c=$("v2cont");if(c){c.remove();if(go)go.classList.add("primary");}},true);}
     if(go)go.addEventListener("click",()=>{if($("v2cont")&&!(S.season&&S.season.on))clear();},true);}

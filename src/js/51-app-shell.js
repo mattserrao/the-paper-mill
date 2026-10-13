@@ -70,8 +70,8 @@
     set("v2profit",short(S.profitRate)+"/d");$("v2profit").style.color=S.profitRate<0?"var(--bad)":"var(--ink)";
     {const h=((S.t+360)/60)%24,d=new Date(S.date0||Date.now());d.setMinutes(d.getMinutes()+S.t+360);const hh=Math.floor(h),ap=hh<12?"AM":"PM",h12=hh%12||12;
      set("v2clock",d.toLocaleDateString("en-US",{weekday:"short"})+" "+h12+" "+ap);}
-    {const se=S.season,on=!!(se&&se.on),lab=on?`Day ${Math.min(SEASON_DAYS,Math.floor(S.t/1440)+1)} of ${SEASON_DAYS}`:se&&se.done?"Season over":"Time";
-     set("v2clockL",lab);$("v2clockL").classList.toggle("sday",on);$("v2clockL").title=on?"Season mode: day of the 30-day season":"";}
+    {const se=S.season,on=!!(se&&se.on),sv=!!(se&&se.surv),day=Math.floor(S.t/1440)+1,lab=on?(sv?`Wave ${survWave()} · Day ${day}`:`Day ${Math.min(SEASON_DAYS,day)} of ${SEASON_DAYS}`):se&&se.done?(sv?"Run over":"Season over"):"Time";
+     set("v2clockL",lab);$("v2clockL").classList.toggle("sday",on);$("v2clockL").title=on?(sv?"Survival: the wave you are in and the day of the run":"Season mode: day of the 30-day season"):"";}
     mirror.forEach(([d,s])=>{if(d.textContent!==s.textContent)d.textContent=s.textContent;});
     const sp=C.simSpeed+" min/s";if($("v2speed").textContent!==sp)$("v2speed").textContent=sp;
     const n=S.inc.length,bd=$("v2bdg");bd.hidden=!n;if(bd.textContent!==String(n))bd.textContent=n;
@@ -81,8 +81,8 @@
   const menu=$("v2menu");let first=true;
   function showMenu(){running=false;closeSheet("menu");closeMore();
     const go=$("v2go"),se=S.season&&S.season.on;go.querySelector("b").textContent=first?"Play":"Resume";
-    go.querySelector("small").textContent=first?"30-day season · leaderboard":se?`Season · day ${Math.min(30,Math.floor(S.t/1440)+1)} of 30`:S.free?"Free play":"Back to the mill";
-    $("v2sub").hidden=first;$("v2nameRow").hidden=true;
+    go.querySelector("small").textContent=first?"30-day season · leaderboard":se?(S.season.surv?`Survival · wave ${survWave()} · day ${Math.floor(S.t/1440)+1}`:`Season · day ${Math.min(30,Math.floor(S.t/1440)+1)} of 30`):S.free?"Free play":"Back to the mill";
+    $("v2sub").hidden=first;$("v2surv").hidden=!first;   // (v4.3: Survival sits under Play on the first menu; once a run is on, "New survival" is with "New season")$("v2nameRow").hidden=true;
     $("v2state").textContent=first?"":"Paused";
     $("v2free").querySelector("b").textContent=S.free?"Free play: on":"Free play";$("v2free").setAttribute("aria-pressed",String(!!S.free));$("v2ver").textContent=APP_VER;menu.hidden=false;}
   function play(){menu.hidden=true;first=false;running=true;}
@@ -107,11 +107,11 @@
       let kick="Quick start",h="",body="",next="Next";
       if(k===0){h="Welcome to "+esc(MILL.name||"your mill");body=`<p>Your mill turns old cardboard boxes into new paperboard. Let's follow the fiber from the truck to the customer, then cover how the game works. It takes about a minute.</p>`;next="Start the tour";}
       else if(isTour){const st=stops[k-1];kick=`From pulp to paper · ${k} of ${stops.length}`;h=`<span class="num">${k}</span>${st[0]}`;body=`<p>${st[1]}</p>`;}
-      else if(k===stops.length+1){kick="How the game works";h="Your goal";body=`<ul><li>A season runs <b>30 days</b>. Make as much profit as you can: your score goes on the leaderboard.</li><li>Keep everything flowing. Running out of stock, or a full warehouse, stops the machine.</li><li>Spend profit in <b>Upgrades</b> on capacity, reliability and lower costs.</li></ul>`;}
-      else if(k===stops.length+2){kick="How the game works";h="Upsets & event cards";body=`<ul><li>Breakdowns, fires, storms and the odd pigeon happen. Crews and maintenance fix them on their own.</li><li>A red pin marks each one: tap it to fly there. The <b>Upsets</b> tab shows what is down and how long is left.</li><li>Event cards offer deals with honest odds. Accept or decline: each card only shows up once a season.</li></ul>`;}
+      else if(k===stops.length+1){kick="How the game works";h="Your goal";body=`<ul>${survRun()?`<li><b>Survival</b> has no last day: keep the mill out of bankruptcy for as long as you can. Your time survived goes on the survival leaderboard.</li><li>Every planned outage starts a new <b>wave</b>: upsets get more likely, and fibre, energy and wages cost more. The chip under the top bar shows the multipliers.</li>`:`<li>A season runs <b>30 days</b>. Make as much profit as you can: your score goes on the leaderboard.</li>`}<li>Keep everything flowing. Running out of stock, or a full warehouse, stops the machine.</li><li>Spend profit in <b>Upgrades</b> on capacity, reliability and lower costs.</li></ul>`;}
+      else if(k===stops.length+2){kick="How the game works";h="Upsets & event cards";body=`<ul><li>Breakdowns, fires, storms and the odd pigeon happen. Crews and maintenance fix them on their own.</li><li>A red pin marks each one: tap it to fly there. The <b>Upsets</b> tab shows what is down and how long is left.</li><li>Event cards offer deals with honest odds. Accept or decline: each card only shows up once ${survRun()?"before the deck goes round again":"a season"}.</li></ul>`;}
       else if(k===stops.length+3){kick="How the game works";h="Bottlenecks: the mill is a river";body=`<div class="fig">${RIVER}</div><p>Fiber flows from receiving to shipping like a river. The whole mill can only move as fast as its <b>narrowest point</b>: that's the bottleneck.</p><p>An upset pinches the river at one spot. Upstream backs up (bales pile up in the yard); downstream runs dry (the chest drains, the machine starves, trucks wait). <b>Buffers</b> such as the bale yard, stock chest and warehouse are the wide pools that keep things moving through a short upset. Widen your narrowest spot first: the <b>Stats</b> tab shows the river live, with your bottleneck right now.</p>`;}
       else if(k===stops.length+4){kick="Planned outages";h="Every 7 days: an outage";body=`<ul><li>On days 7, 14, 21 and 28 the mill comes down for a planned <b>4-hour outage</b>. Crews change the felts and do one big job.</li><li>The day before, you set a maintenance budget for stock prep, the wet end and the dry end.</li><li><b>$20k</b>: 10% less reliable &nbsp;·&nbsp; <b>$70k</b>: no change &nbsp;·&nbsp; <b>$170k</b>: 20% more reliable, until the next outage.</li></ul>`;}
-      else{kick="Ready";h="Have fun!";body=`<p>Game speed and sound are in the top bar. Pause any time for the menu. Good luck with your first season!</p><label><input type="checkbox" id="tutOff"> Don't show this tutorial again</label>`;next="Let's go";}
+      else{kick="Ready";h="Have fun!";body=`<p>Game speed and sound are in the top bar. Pause any time for the menu. Good luck with your first ${survRun()?"survival run":"season"}!</p><label><input type="checkbox" id="tutOff"> Don't show this tutorial again</label>`;next="Let's go";}
       return `<div class="tc" role="dialog" aria-modal="true" aria-labelledby="tutH"><div class="tk"><span>${kick}</span>${k<N-1?'<button id="tutSkip">Skip tutorial</button>':""}</div>
         <h2 id="tutH">${h}</h2>${body}<div class="dots">${dots}</div>
         <div class="tb">${k>0?'<button id="tutBack">Back</button>':""}<button class="primary" id="tutNext">${next}</button></div></div>`;}
@@ -132,7 +132,7 @@
   // Play). While another dialog is up on top (the leaderboard, the site picker, a card), keys are left to it.
   {const FOC='button:not([disabled]),[href],input:not([disabled]):not([type=hidden]),select:not([disabled]),textarea:not([disabled]),[tabindex]:not([tabindex="-1"])';
     const up=e=>!!e&&!e.hidden&&e.getClientRects().length>0;
-    const LAYERS=[{el:()=>$("seasonOv"),esc:()=>$("so-more").click()},
+    const LAYERS=[{el:()=>$("seasonOv"),esc:()=>{if(!survRun())$("so-more").click();}},   // (survival: Escape leaves the dialog up, so an unsent score isn't lost)
       {el:()=>document.getElementById("tut"),esc:()=>TUT.close(false)},
       {el:()=>menu,esc:()=>{if(!first)play();}}];
     document.addEventListener("keydown",e=>{if((e.key!=="Tab"&&e.key!=="Escape")||e.defaultPrevented)return;
@@ -150,6 +150,12 @@
     goWait=true;const b=$("v2go");b.setAttribute("aria-busy","true");b.querySelector("small").textContent="Getting the mill ready…";
     G3.prewarm().then(()=>{goWait=false;b.removeAttribute("aria-busy");go();});});
   $("v2season").addEventListener("click",()=>{startSeason();play();if(TUT.want())setTimeout(()=>TUT.open(),60);});
+  // v4.3 survival: the same start as a season (and the same wait for the precompile on the first menu)
+  const goSurv=()=>{startSurvival();play();if(TUT.want())setTimeout(()=>TUT.open(),60);};
+  $("v2surv").addEventListener("click",()=>{if(goWait)return;if(G3.warm||!G3.prewarm){goSurv();return;}
+    goWait=true;const b=$("v2surv"),sm=b.querySelector("small"),was=sm.textContent;b.setAttribute("aria-busy","true");sm.textContent="Getting the mill ready…";
+    G3.prewarm().then(()=>{goWait=false;b.removeAttribute("aria-busy");sm.textContent=was;goSurv();});});
+  $("v2survNew").addEventListener("click",goSurv);
   $("v2free").addEventListener("click",()=>{setFree(!S.free);play();});
   $("v2board").addEventListener("click",openBoard);
   $("v2zen").addEventListener("click",()=>{menu.hidden=true;first=false;setZen(true);});

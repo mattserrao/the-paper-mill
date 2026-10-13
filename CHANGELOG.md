@@ -1,5 +1,20 @@
 # Changelog
 
+## v4.3.0-t1 (test, not released): survival mode
+- New mode on the main menu: **Survival**. A survival run is a season with no last day: the same $2.0M start, site, bottleneck, weekly dice, AUTO locks, upgrades, event cards and planned outages. It ends at bankruptcy (−$1.5M), and the score is the time survived, shown as days, hours and minutes.
+- Waves: a wave is the stretch between two planned outages (every 7 days, as in a season). When an outage ends the next wave starts, with upsets 20% more likely and fibre, energy and chemicals, and wages 10% dearer than the wave before (the steps compound, so the first waves change little: wave 2 is ×1.20 / ×1.10, wave 6 ×2.49 / ×1.61, wave 12 ×7.43 / ×2.85). The day-15 rough patch is not used.
+- The multipliers are always on show: a chip under the top bar (wave, upsets ×, costs ×, time to the next outage), the clock label ("Wave 3 · Day 16"), the outage budget dialog (what the next wave brings), a banner and a log line at each wave, the Report tab and the game-over dialog.
+- Outages repeat: after the fourth, the major jobs go round again (press roll, forming fabric, pulper rotor, refiner plates), with their staging and 3D crews. The budget dialog and the reliability rules are unchanged.
+- Report cards are per wave in survival: the card pops when the wave's outage ends and says what the next wave brings. The Report tab shows the time survived, the multipliers, the last two waves and the current one, and the last 30 days of grades.
+- Event cards: in survival the deck is dealt again once every card has been seen.
+- Game over: the season-over dialog with survival figures (time survived, wave reached, your best on this device, final multipliers, tons, disasters). "One more turn" becomes "Menu", and Escape leaves the dialog up so an unsent score isn't lost.
+- Leaderboard: two tabs, Season and Survival. Survival is a new board ranked by time survived (new table `survival`, see `supabase/survival.sql`; it has to be run once in Supabase). Until the table exists, survival scores are kept on the device and the tab lists those.
+- Save and Continue: the one save slot holds a season or a survival run; the menu button reads "Continue survival · wave N · day D".
+- Menu: Survival sits under Play on the first menu; once a run is on, "New survival" is next to "New season". The tutorial's goal page explains survival when it opens on a survival run.
+- Code: the mode is in `03c-survival.js` (constants, multipliers) and `09b-survival.js` (wave changes, chip, game over); the hooks elsewhere multiply by exactly 1 outside survival. Checked: four full hands-off seasons play out to the same dollar as v4.2.5, and determinism.py passes.
+- Balance (tools/survival.py, 5 fixed seeds each, forest valley): a hands-off mill lasts about 39 days (wave 6); a mill that buys every upgrade about 80 days (wave 12); one that skips the dear capacity upgrades and banks the cash about 89 days (wave 13).
+- tools/survival.py: whole survival runs played to bankruptcy by a hands-off, an upgrade-buying or a cash-banking player, with per-wave profit, incidents and downtime; `--up`, `--cost` and `--compound` try other settings. tools/survcheck.py: drives a survival run from the menu to the leaderboard (waves, multipliers, save and continue, the fifth outage in 3D, bankruptcy, score, both boards, free play and a season afterwards).
+
 ## v4.2.5 (release): batch of minor improvements
 - Seasons: the bottleneck is now random for every season instead of being shared by the whole week. The week's upsets, cards and weather are unchanged. tools/determinism.py pins the bottleneck so its two runs still compare.
 - Accessibility: no text smaller than 12px (64 sizes raised), and descriptive body text at least 13px (11 rules). `--ok` and `--warn` darkened to #1a7b47 and #975f00, which pass 4.5:1 on white and on the grey backgrounds.

@@ -613,3 +613,32 @@ details.areactl[open]>summary{margin-bottom:12px}
 /* v4.2.5: "Auto" with the device tier underneath, so the Graphics row stays one line high */
 #gfxSeg button{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:1px}
 #gfxSeg .gtier{font:600 12px var(--f-body);opacity:.8;line-height:1}
+
+/* =========================== v4.3 survival mode =========================== */
+/* the wave chip under the top bar (the banner moves down to make room) */
+.survchip{position:fixed;z-index:69;left:max(10px,env(safe-area-inset-left,0px));top:calc(58px + env(safe-area-inset-top,0px));display:flex;align-items:center;gap:10px;height:28px;padding:0 12px 0 3px;border-radius:14px;background:var(--panel);border:1px solid var(--line);box-shadow:0 4px 14px rgba(28,34,51,.12);font:600 12px var(--f-body);color:var(--muted);white-space:nowrap;max-width:calc(100% - 20px);overflow:hidden}
+.survchip[hidden]{display:none}
+.survchip>b{background:var(--ink);color:var(--panel);border-radius:11px;padding:3px 10px;font:800 12px var(--f-body);letter-spacing:.04em;text-transform:uppercase}
+.survchip span b{color:var(--ink);font-weight:800;font-variant-numeric:tabular-nums}
+.survchip em{font-style:normal;border-left:1px solid var(--line);padding-left:10px}
+.survchip.pulse{animation:survpulse 1.8s ease-out}
+@keyframes survpulse{0%{box-shadow:0 0 0 0 color-mix(in srgb,var(--warn) 75%,transparent)}100%{box-shadow:0 0 0 16px transparent}}
+@media (prefers-reduced-motion: reduce){.survchip.pulse{animation:none}}
+body.app.surv .banner3d{top:calc(94px + env(safe-area-inset-top,0px))}
+body.zen .survchip{display:none}
+@media (max-width:420px){.survchip{gap:8px}.survchip em{display:none}}
+/* menu: Survival under Play, and three buttons in the pause row */
+.v2menu .go.alt{background:var(--panel);border:1.5px solid color-mix(in srgb,var(--stock) 55%,var(--line));color:var(--ink);box-shadow:none;padding:10px 14px 9px}
+.v2menu .go.alt b{font-size:17px;color:var(--stock)}
+.v2menu .go.alt small{color:var(--muted);opacity:1}
+.v2menu .go[hidden]{display:none}
+.v2menu .sub{grid-template-columns:repeat(3,minmax(0,1fr))}
+.v2menu .sub button{min-width:0;text-align:center}
+/* what the next wave brings (outage budget dialog, wave report card) */
+.wavenext{font-size:13.5px;line-height:1.45;padding:10px 12px;border-radius:10px;background:color-mix(in srgb,var(--warn) 10%,var(--panel));border:1px solid color-mix(in srgb,var(--warn) 30%,var(--line));color:var(--ink)}
+.wavenext small{color:var(--muted);font-size:12px}
+/* leaderboard tabs */
+.lbtabs{display:flex;width:100%;margin:2px 0 4px}.lbtabs button{flex:1 1 0;min-height:36px;font-weight:700}.lbtabs button+button{border-left:1px solid var(--line)}
+/* mill report: the survival strip */
+.rsurv{display:grid;grid-template-columns:1.4fr 1fr 1fr;gap:6px}.rsurv div{display:flex;flex-direction:column;gap:2px;padding:8px 9px;border-radius:10px;background:var(--chip);min-width:0}
+.rsurv small{font-size:12px;color:var(--muted)}.rsurv b{font-size:16px}

@@ -6,16 +6,17 @@
      nothing here touches the simulation. Outside a season the tab shows totals since the start, without grades. */
   {const el=$("rep"),GP={A:4,B:3,C:2,D:1,F:0},pc=v=>Math.round(v*100)+"%",hrs=m=>(m/60).toFixed(m<600?1:0)+" h";
     let openDays=false,openMoney=false,lastN=-99;
-    const chemShare=()=>{const t=energyCost();if(!(t>0))return 0;const c=(ECON.chem||0)+(P.chemAdd||0)+((ENVX()&&ENVX().chem)||0);return Math.max(0,Math.min(1,c/t));};
+    const chemShare=()=>{const t=energyCost();if(!(t>0))return 0;const c=((ECON.chem||0)+(P.chemAdd||0)+((ENVX()&&ENVX().chem)||0))*(P.costMul||1);return Math.max(0,Math.min(1,c/t));};
     const allAcc=()=>({t0:0,L0:{},prod0:0,ship0:0,rolls0:0,brk0:0,hay0:0,off0:0,occ:0,fib:0,min:Math.max(1,S.t),plan:0,up:{recv:0,pulper:0,machine:0,winder:0,ship:0},dn:{},bn:{}});
     const seasonOn=()=>!!(S.season&&(S.season.on||S.season.done)&&S.rc&&!S.free&&!S.zen);
     // the numbers everything below draws from
-    function data(){if(seasonOn()){const R=S.rc,live=S.season.done&&R.cards.length>=3?R.cards[2]:rcMake(R.p,R.i),prev=R.i>0?R.cards[R.i-1]:null;return {R,live,prev,p:live.p,season:true};}
+    function data(){if(seasonOn()){const R=S.rc,live=S.season.done&&!S.season.surv&&R.cards.length>=3?R.cards[2]:rcMake(R.p,R.i),prev=R.i>0?R.cards[R.i-1]:null;return {R,live,prev,p:live.p,season:true};}
       return {p:rcSum(allAcc()),season:false};}
     function costRows(p){const sp=p.spent,cs=chemShare(),e=sp.Energy||0;
       return [["Fibre (OCC)",sp.Fibre||0,"var(--kraft)"],["Energy & steam",e*(1-cs),"var(--stock)"],["Chemicals",e*cs,"var(--pulp)"],["Labour",sp.Labour||0,"var(--machine)"],["Overhead",sp.Overhead||0,"#9aa1b5"],
         ["Repairs",sp["Repairs & outages"]||0,"var(--bad)"],["Premium freight",sp["Premium freight"]||0,"var(--warn)"]].filter(r=>r[1]>0);}
-    function tiles(d){const R=d.R,out=[];for(let i=0;i<3;i++){const c=R.cards[i],cur=i===R.i&&!S.season.done,lab=`Days ${i*10+1}–${i*10+10}`;
+    // (v4.3 survival: the tiles are waves, the last two and the one being played)
+    function tiles(d){const R=d.R,out=[],sv=!!S.season.surv,i0=sv?Math.max(0,R.i-2):0;for(let i=i0;i<i0+3;i++){const c=R.cards[i],cur=i===R.i&&(sv||!S.season.done),lab=sv?`Wave ${i+1}`:`Days ${i*10+1}–${i*10+10}`;
         if(c&&!cur)out.push(`<button type="button" class="rpt" data-card="${i}"><span class="rcg g${c.overall}">${c.overall}</span><span><b>${lab}</b><small>View card</small></span></button>`);
         else if(cur){const L=d.live.overall,pv=d.prev?d.prev.overall:null,tr=pv==null?"so far":GP[L]>GP[pv]?"rising":GP[L]<GP[pv]?"falling":"steady";
           out.push(`<div class="rpt cur"><span class="rcg g${L}">${L}</span><span><b>${lab}</b><small>${tr}</small></span></div>`);}
@@ -38,11 +39,12 @@
         <div><small>Fibre yield</small><b class="mono">${p.yld?pc(p.yld):"–"}</b><small>${p.yld?(1/p.yld).toFixed(2)+" t OCC per t":season?"collecting":"in a season"}</small></div>
         <div><small>Output</small><b class="mono">${pc(eff)}</b><small>of max-speed tons</small></div></div>`;}
     function daysBlock(d){const D=d.R.days||[];if(!D.length)return "";
-      const X=v=>22+(v-1)*(326/29),Y=L=>20+(4-GP[L])*28,pts=D.map(x=>`${X(x.d).toFixed(1)},${Y(x.o)}`).join(" ");
+      const sv=!!S.season.surv,d0=sv?Math.max(0,D[D.length-1].d-30):0;   // v4.3 survival: the last 30 days, with a line at each outage
+      const X=v=>22+(v-d0-1)*(326/29),Y=L=>20+(4-GP[L])*28,pts=D.map(x=>`${X(x.d).toFixed(1)},${Y(x.o)}`).join(" ");
       const drops=D.filter((x,i)=>i>0&&GP[x.o]<GP[D[i-1].o]);
       const svg=`<svg class="rchart" viewBox="0 0 358 170" role="img" aria-label="Overall grade at the end of each day"><g class="ax">${["A","B","C","D","F"].map((L,i)=>`<text x="4" y="${24+i*28}">${L}</text><line x1="22" y1="${20+i*28}" x2="350" y2="${20+i*28}"></line>`).join("")}
-        <text x="18" y="162">1</text><text x="${X(10)-6}" y="162">10</text><text x="${X(20)-6}" y="162">20</text><text x="${X(30)-6}" y="162">30</text></g>
-        <line class="pd" x1="${X(10.5)}" y1="8" x2="${X(10.5)}" y2="144"></line><line class="pd" x1="${X(20.5)}" y1="8" x2="${X(20.5)}" y2="144"></line>
+        <text x="18" y="162">${d0+1}</text><text x="${X(d0+10)-6}" y="162">${d0+10}</text><text x="${X(d0+20)-6}" y="162">${d0+20}</text><text x="${X(d0+30)-6}" y="162">${d0+30}</text></g>
+        ${(sv?[1,2,3,4,5].map(k=>(Math.floor(d0/OUT.every)+k)*OUT.every+0.5).filter(v=>v<d0+30):[10.5,20.5]).map(v=>`<line class="pd" x1="${X(v)}" y1="8" x2="${X(v)}" y2="144"></line>`).join("")}
         <polyline class="ln" points="${pts}"></polyline>${D.map(x=>`<circle class="${drops.includes(x)?"drop":"pt"}" cx="${X(x.d).toFixed(1)}" cy="${Y(x.o)}" r="${drops.includes(x)?4.5:3}"></circle>`).join("")}</svg>`;
       const strip=k=>`<span>${k}</span><div class="rstrip">${D.map(x=>`<i class="s${x.g[k]}" title="Day ${x.d}: ${x.g[k]}"></i>`).join("")}</div><b class="rcgt g${D[D.length-1].g[k]}">${D[D.length-1].g[k]}</b>`;
       const moves=[];for(let i=D.length-1;i>0&&moves.length<4;i--){const a=D[i-1],b=D[i];if(a.o===b.o)continue;const up=GP[b.o]>GP[a.o];
@@ -53,10 +55,16 @@
       return `<details class="rsub" id="repMoney"${openMoney?" open":""}><summary><b>Money</b><small>${s?"this period · season":"since the start"}</small></summary>
         ${row("Earned",money(p.earned),s?money(s.earned):"","pos")}${Object.keys(p.spent).filter(k=>p.spent[k]||(s&&s.spent[k])).map(k=>row(k,money(-p.spent[k]),s?money(-s.spent[k]):"")).join("")}${row("Net",money(p.net),s?money(s.net):"","net "+(p.net>=0?"pos":"neg"))}</details>`;}
     function render(){const d=data(),p=d.p;let h="";
-      if(d.season){const day=Math.min(SEASON_DAYS,Math.floor(S.t/1440)+1);
+      if(d.season&&S.season.surv){const day=Math.floor(S.t/1440)+1,w=survWave(),sp=survSpan(w);   // v4.3 survival: waves, the multipliers and the time survived
+        h+=`<section class="rcard"><div class="rhd"><h3>Survival</h3><small class="mono">${S.season.done?"Run over · "+survTime(S.t):"Wave "+w+" · day "+day}</small></div>
+          <div class="rsurv"><div><small>Survived</small><b class="mono">${survTime(S.t)}</b></div><div><small>Upsets</small><b class="mono">${xf(survUp(w))}</b></div><div><small>Costs</small><b class="mono">${xf(survCost(w))}</b></div></div>
+          <p class="rnote">Each wave is rougher than the last: upsets +${Math.round(SURV.up*100)}%, and fibre, energy and chemicals, and wages +${Math.round(SURV.cost*100)}%${SURV.compound?", on top of the wave before":""}. A wave ends when its planned outage does.</p>
+          <div class="rtiles">${tiles(d)}</div><div class="rprog"><i style="width:${Math.max(0,Math.min(100,(S.t-sp[0])/(sp[1]-sp[0])*100)).toFixed(1)}%"></i></div>${daysBlock(d)}</section>`;
+        h+=`<section class="rcard"><div class="rhd"><h3>${S.season.done?"Last wave":"This wave so far"}</h3><small>${day>d.live.from?`days ${d.live.from}–${Math.min(d.live.to,day)}`:`day ${d.live.from}`}${d.prev?" · vs wave "+d.prev.wave:""}</small></div><div class="rgrades">${grades(d)}</div><p class="rtip"><b>Biggest lever:</b> ${d.live.tip}</p></section>`;}
+      else if(d.season){const day=Math.min(SEASON_DAYS,Math.floor(S.t/1440)+1);
         h+=`<section class="rcard"><div class="rhd"><h3>Season</h3><small class="mono">${S.season.done?"Season complete":"Day "+day+" of "+SEASON_DAYS}</small></div><div class="rtiles">${tiles(d)}</div><div class="rprog"><i style="width:${Math.min(100,S.t/(SEASON_DAYS*1440)*100).toFixed(1)}%"></i></div>${daysBlock(d)}</section>`;
         h+=`<section class="rcard"><div class="rhd"><h3>${S.season.done?"Last period":"This period so far"}</h3><small>days ${d.live.from}–${Math.min(d.live.to,day)}${d.prev?" · vs days "+d.prev.from+"–"+d.prev.to:""}</small></div><div class="rgrades">${grades(d)}</div><p class="rtip"><b>Biggest lever:</b> ${d.live.tip}</p></section>`;}
-      else h+=`<section class="rcard"><p class="rnone">Grades, uptime and report cards run during a 30-day season. Here are your totals since the start.</p></section>`;
+      else h+=`<section class="rcard"><p class="rnone">Grades, uptime and report cards run during a 30-day season or a survival run. Here are your totals since the start.</p></section>`;
       h+=`<section class="rcard">${costBlock(p)}</section>`;if(d.season)h+=`<section class="rcard">${upBlock(p)}</section>`;
       h+=`<section class="rcard">${qualBlock(p,d.season)}</section><section class="rcard">${moneyBlock(d)}</section>`;
       el.innerHTML=h;}

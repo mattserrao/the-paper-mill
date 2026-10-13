@@ -322,7 +322,8 @@ function cardTick(dt){const cs=S.cards;if(!cs)return;
   if(cs.open||S.zen||S.over||(S.season&&S.season.done)||S.t<cs.next||outOn())return;
   cs.next=S.t+1440*(1.2+0.6*rand("card"));
   // every card is shown at most once per game: once dealt it is marked seen and never drawn again
-  const seen=cs.seen||(cs.seen={}),pool=CARDS.filter(c=>!seen[c.id]&&c.ok()),pick=pool.length?pool[Math.floor(rand("card")*pool.length)]:null;
+  let seen=cs.seen||(cs.seen={});if(survOn()&&CARDS.every(c=>seen[c.id]))seen=cs.seen={};   // v4.3 survival: the deck goes round again
+  const pool=CARDS.filter(c=>!seen[c.id]&&c.ok()),pick=pool.length?pool[Math.floor(rand("card")*pool.length)]:null;
   if(pick&&typeof document!=="undefined"&&document.body){seen[pick.id]=true;openCard(pick);}}
 let cardEl=null;
 function openCard(c){const o=c.odds();S.cards.open={c,o};running=false;

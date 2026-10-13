@@ -111,8 +111,9 @@ function updateShop(){
 // random upsets run at half the original rate. Seasons script the pressure: a quiet start-up (days 1-3), normal running,
 // then a rough patch on days 15-16 at 4x the normal rate, then normal again to the end.
 function upsetMul(){const base=0.5,d=Math.floor(S.t/1440)+1;let m=base;
-  if(S.season&&S.season.on){if(d<=3)return 0;if(d===15||d===16)m=base*4;}
+  if(S.season&&S.season.on){if(d<=3)return 0;if((d===15||d===16)&&!S.season.surv)m=base*4;}
   if(d<=7)m*=0.75;   // v3.3.3: the first week is 25% calmer (seasons and free play)
+  if(survOn())m*=survUp();   // v4.3 survival: no rough patch; every wave is rougher than the last
   return m;}
 function roughPatch(){running=false;$("overlay").hidden=false;$("overlay").style.zIndex="160";AUDIO.sfx("alarm",100);
   $("ov-h").textContent="Rough patch";$("ov-p").textContent="The Mill is going through a rough patch. Batten down the hatches.";
