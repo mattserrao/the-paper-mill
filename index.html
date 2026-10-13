@@ -781,7 +781,7 @@ body.cine .blackout3d{visibility:hidden}
 <div class="btns"><button class="primary" id="no3d-retry">Try again</button></div></div></div>
 
 <script type="module">
-const APP_VER="v4.2.4";   // shown in the menu and sent with leaderboard scores (max 12 characters)
+const APP_VER="v4.2.5";   // shown in the menu and sent with leaderboard scores (max 12 characters)
 // TEST BUILDS ONLY (off in releases): turbo speeds 240/480/960 sim min/s for fast playtests. Above 120, crews and maintenance start jobs
 // without waiting for the 3D walk (as with the 3D view off) and outages keep the speed. Set false for a release.
 const TURBO=false,TURBO_FAST=s=>TURBO&&s>120;
@@ -2464,7 +2464,11 @@ function seasonLocks(on){["chaosOn","chaosLvl","chaosClear"].forEach(id=>{const 
   document.querySelectorAll('#cards .row[data-key] input,#cards .row[data-key] button.auto,#balance').forEach(el=>{el.disabled=on;el.title=on?"Locked on AUTO during a season":"";});
   document.body.classList.toggle("season-lock",on);
 }
-function startSeason(){newGame();S.season={on:true,end:SEASON_DAYS*1440,done:false};S.rc=null;S.outg={k:1,noticed:false,on:false,rel:{stock:1,wet:1,dry:1},plan:null};seedRun(Math.floor(Date.now()/6048e5)*2654435761);C.breaks=true;
+function startSeason(){newGame();S.season={on:true,end:SEASON_DAYS*1440,done:false};S.rc=null;S.outg={k:1,noticed:false,on:false,rel:{stock:1,wet:1,dry:1},plan:null};seedRun(Math.floor(Date.now()/6048e5)*2654435761);
+  // v4.2.5: the bottleneck is rolled fresh for every season (it used to come from the week's seed, so the whole week shared
+  // one and the first buy was always the same). Picked before the season starts, like the "any" site, so it draws no
+  // stream: the week's dice are unchanged. It is saved with the season (S.bn).
+  S.bn=BN_IDS[Math.floor(Math.random()*BN_IDS.length)];applyUpgrades();C.breaks=true;
   CH.on=true;$("chaosOn").checked=true;CH.lvl=1;$("chaosLvl").value=1;$("chaosLvlv").textContent="1×";
   EVENTS.forEach(e=>{CH.en[e.id]=true;const c=$("en-"+e.id);if(c)c.checked=true;});seasonLocks(true);
   BANNERS.push({text:`Season started: ${SEASON_DAYS} days. Make as much profit as you can.`,t:null,kind:"good"});bnNotice();if(G3.labelIntro)G3.labelIntro();}

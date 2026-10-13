@@ -56,7 +56,8 @@ then `tail.html`. All game code runs inside **one shared closure** (opened in `0
 - **`LAYOUT`** (`layoutFor(seed)`): where the auxiliary plant sits. Only the wastewater plant moves (two slots, either way
   round); code that places or points at it uses `LAYOUT.wx(x)` on its v4.0 coordinates (21 plant, 31 permit effect and pin,
   42 zen shot). The power house stays: the steam rack ties it to the dryers.
-- **Bottleneck:** `S.bn` comes from the run's seed (`bnFor`, a hash, no stream drawn), so a season week shares it.
+- **Bottleneck:** `S.bn` comes from the run's seed (`bnFor`, a hash, no stream drawn). Seasons then re-roll it with
+  `Math.random` in `startSeason()` (v4.2.5), so each season gets its own; the week's dice are unchanged.
   `applySite()` sets the capacities it can cut (`P.doorRate`, `pulperMax`, `screenMax`, `winderMax`, `doorRolls`) from
   `BNK[area]` × what the machine needs on 23m. Upgrades that fix it (`BN[area].ups`) cost `upCost()` (25% off) and do
   more for that area. `lineCaps()` gives every area's t/h (Line capacity chart, bottleneck card, labels).

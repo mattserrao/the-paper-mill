@@ -1,5 +1,8 @@
 # Changelog
 
+## v4.2.5 (local, not released): batch of minor improvements
+- Seasons: the bottleneck is now random for every season instead of being shared by the whole week. The week's upsets, cards and weather are unchanged. tools/determinism.py pins the bottleneck so its two runs still compare.
+
 ## v4.2.4 (release): quick fixes
 - No more $25M goal: the aim is simply to make as much money as you can. The Cash box now shows how much you've made (or lost) since the start instead of "% of the $25M goal", and the "Mill of the Year" win screen is gone. Bankruptcy still ends a free game.
 - Shadows switch: turning shadows off or on no longer recompiles every shader (a long freeze on phones). It fades the sun's shadow out and stops refreshing the shadow map.
