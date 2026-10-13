@@ -86,7 +86,9 @@
   setLbl(lblMode);
   document.querySelectorAll("#jumps button").forEach(b=>b.addEventListener("click",()=>{const [x,z,r,ph]=JUMPS[b.dataset.j];goal={t:new THREE.Vector3(x,0,z),r,th:DEF.th,ph:ph||0.88};}));
   $("viewReset").addEventListener("click",()=>{goal={t:DEFT.clone(),r:DEF.r,th:DEF.th,ph:DEF.ph};});
-  $("viewShadows").addEventListener("change",e=>{renderer.shadowMap.enabled=e.target.checked;renderer.shadowMap.needsUpdate=true;MATS.forEach(m=>m.needsUpdate=true);});
+  // v4.2.4: the Shadows switch fades the sun's shadow to nothing and stops refreshing the shadow map. It never turns the
+  // shadow map off, because that recompiles every shader (a long freeze on phones). shadow.intensity is a uniform.
+  $("viewShadows").addEventListener("change",e=>{const on=e.target.checked;sun.shadow.intensity=on?1:0;G3.shadowsOff=!on;renderer.shadowMap.needsUpdate=true;});
   // v4.1: change graphics tier while playing (what can change live; see GFX_TIERS in 20-3d-setup.js)
   G3.setGfx=pick=>{if(pick!=="auto"&&!GFX_TIERS[pick])return;const t=GFX_TIERS[pick==="auto"?GFX.auto:pick];GFX.pick=pick;GFX.tier=pick==="auto"?GFX.auto:pick;
     try{localStorage.setItem("paper-mill-gfx",pick);}catch(e){}

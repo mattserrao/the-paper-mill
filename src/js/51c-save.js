@@ -17,7 +17,10 @@
         localStorage.setItem(KEY,JSON.stringify(data));lastSave=performance.now();G3.saveMs=lastSave-t0;return true;}
       catch(e){diag("save failed: "+String(e&&e.message||e).slice(0,80));return false;}}
     function read(){if(OFF)return null;try{const d=JSON.parse(localStorage.getItem(KEY)||"null");
-        if(!d||d.v!==VER||!d.S||Date.now()-d.at>MAXAGE)return null;return d;}catch(e){return null;}}
+        if(!d||d.v!==VER||!d.S||Date.now()-d.at>MAXAGE)return null;
+        // v4.2.4: a save without the parts restore() needs is thrown away instead of breaking Continue
+        const o=x=>!!x&&typeof x==="object";if(!(typeof d.S.t==="number"&&o(d.S.season)&&o(d.S.cards)&&o(d.C)&&o(d.CH))){clear();return null;}
+        return d;}catch(e){clear();return null;}}
     function clear(){try{localStorage.removeItem(KEY);}catch(e){}}
     function restore(d){S=d.S;for(const k in d.C){if(C[k]&&typeof C[k]==="object"&&d.C[k]&&typeof d.C[k]==="object")Object.assign(C[k],d.C[k]);else C[k]=d.C[k];}
       CH.on=d.CH.on;CH.lvl=d.CH.lvl;Object.assign(CH.en,d.CH.en||{});
@@ -47,7 +50,10 @@
       b.addEventListener("click",()=>{const d=read();if(!d){b.remove();return;}
         // a save from another map: reload on that map, then continue (?resume=1)
         if(d.env!==SITE.env||d.mill!==SITE.seed){const q=new URLSearchParams(location.search);q.set("env",d.env);q.set("resume","1");location.href=location.pathname+"?"+q+location.hash;return;}
-        const run=()=>{restore(d);b.remove();go.classList.add("primary");G3.play();if(G3.labelIntro)G3.labelIntro();};
+        // v4.2.4: if the save won't load, it is cleared and the page reloads to a clean menu (restore() may have changed state)
+        const run=()=>{try{restore(d);}catch(e){diag("save: restore failed, save cleared: "+String(e&&e.message||e).slice(0,80));clear();G3.saveOff=true;   // (or the reload's own pagehide save would write the broken state back)
+            b.querySelector("small").textContent="That save couldn't be loaded. Starting fresh…";setTimeout(()=>location.reload(),1500);return;}
+          b.remove();go.classList.add("primary");G3.play();if(G3.labelIntro)G3.labelIntro();};
         if(G3.warm||!G3.prewarm)run();else{b.setAttribute("aria-busy","true");b.querySelector("small").textContent="Getting the mill ready…";G3.prewarm().then(run);}});
       if(Q.get("resume")==="1"){try{Q.delete("resume");history.replaceState(null,"",location.pathname+(Q.toString()?"?"+Q:"")+location.hash);}catch(e){}setTimeout(()=>b.click(),300);}}
     // a new season or a reset starts over: the old save goes

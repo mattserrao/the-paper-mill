@@ -40,7 +40,7 @@ No condition had a bankruptcy. Worst single season in condition 3: finish −$65
 - Outage budget cuts move profit exactly $120k per $10k step (they don't change the dice); price moves it about
   $21k per $1/t (≈ 21,000 t shipped).
 - Not covered: an active player (upgrades, cards, crew calls), which should now be the way to profit; the
-  $25M goal may need revisiting at these prices.
+  $25M goal may need revisiting at these prices. (v4.2.4: the goal is retired; the aim is the most money.)
 
 ## Test build v10_econ_bal (2026-10-10)
 
