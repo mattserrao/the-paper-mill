@@ -1,5 +1,10 @@
 # Changelog
 
+## v4.4.0-t2 (test, not released): painted leader portraits
+- The four mill leaders have new portraits: realistic, gritty, hand-inked paintings in place of the flat cartoon drawings. Same people, same props (Chip's phone and hard hat, Dot's wrench, Felicity's clipboard, Hank's thermos and ear muffs).
+- The portraits are embedded images (WebP, about 33 KB each), so the game is still one file; it is about 180 KB larger. Mill kit keeps a fixed green and no longer follows the mill's colour.
+- Code: `09c-leader-art.js` holds the images and the face squares for the round avatars; `leadArt()` replaces `leadSvg()`. No change to the sim: the books, the leader numbers and saves are untouched.
+
 ## v4.4.0-t1 (test, not released): survival mode gets mill leaders
 - New in survival: a **mill leader**, picked after the site and before the run starts (the picker opens when you choose Survival). Each one is strong on one side of the mill and costs you on another. Their card has a portrait, name, title, what they do and what they cost.
 - **Chip Kraftwell**, the dealmaker (business man). At every outage he signs one deal that stays with the mill: a fibre contract (fibre −1.5%) or a sales push (+$5/t on every grade). Labour relations pay for it: every deal ends in a pay settlement (wages +5% for good), and call-offs and dock brawls come twice as often while he's in charge.

@@ -644,8 +644,8 @@ body.zen .survchip{display:none}
 .rsurv small{font-size:12px;color:var(--muted)}.rsurv b{font-size:16px}
 
 /* =========================== v4.4 survival: mill leaders =========================== */
-.ldart{display:block;width:100%;height:auto;border-radius:12px;flex:none}
-.ldart.face{border-radius:50%}
+.ldart{display:block;width:100%;height:auto;aspect-ratio:408/460;border-radius:12px;flex:none;background:#cbc4b2 center/cover no-repeat}   /* the image comes from 09c-leader-art.js */
+.ldart.face{aspect-ratio:1;border-radius:50%}
 /* the card: portrait left, who they are and what they do right (picker, leader card) */
 .ldcard{display:grid;grid-template-columns:92px minmax(0,1fr);gap:12px;align-items:start;text-align:left;padding:10px;border-radius:14px;border:1px solid var(--line);background:var(--bg);color:var(--ink);font:inherit;font-weight:400}
 button.ldcard{cursor:pointer}
@@ -692,7 +692,7 @@ button.ldcard[aria-checked="true"]{border:2px solid var(--stock);padding:9px;bac
 .ldfx button[disabled]{opacity:.4;cursor:not-allowed}.ldfx button{flex:none}
 /* wave chip: the leader's face, and Dot's fix */
 .survchip{cursor:pointer}
-.survchip .svl{width:22px;height:22px;flex:none;margin-right:-5px}.survchip .svl[hidden],.survchip u[hidden]{display:none}
+.survchip .svl{display:block;width:22px;height:22px;flex:none;margin-right:-5px}.survchip .svl[hidden],.survchip u[hidden]{display:none}
 .survchip u{text-decoration:none;font-weight:800;color:var(--ok);border-left:1px solid var(--line);padding-left:10px}
 .survchip u.used{color:var(--muted);font-weight:600}
 .survchip u.hot{color:#fff;background:var(--bad);border:0;border-radius:10px;padding:3px 9px}

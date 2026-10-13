@@ -1,6 +1,6 @@
-# The Paper Mill: survival mode and mill leaders (v4.4.0-t1, 2026-10-13)
+# The Paper Mill: survival mode and mill leaders (v4.4.0-t2, 2026-10-13)
 
-Status: built and checked on a local branch (`survival-mode`), with mill leaders added in v4.4.0-t1. Not released, not pushed. The online survival board
+Status: built and checked on a local branch (`survival-mode`), with mill leaders added in v4.4.0-t1 and painted portraits in v4.4.0-t2. Not released, not pushed. The online survival board
 needs `supabase/survival.sql` run once in Supabase; until then survival scores stay on the device.
 
 ## The mode
@@ -45,7 +45,7 @@ when the outage ends. Picks stack and stay with the mill.
 that outage's pick, and has no waiting period. Everything the old leader built stays, with the cost that came with it
 (pay settlements, project staff, the fixed-for-good list). The while-in-charge drawback leaves with the old leader.
 
-**Where the player sees it.** The picker (four cards with portraits), the leader's face on the wave chip, the leader card
+**Where the player sees it.** The picker (four cards with painted portraits; the images are embedded, in `09c-leader-art.js`), the leader's face on the wave chip, the leader card
 (tap the chip: who they are, what the mill has kept, Dot's fix list), the leader row in the outage dialog, the Reliability
 view, the game-over dialog and the Survival leaderboard.
 
