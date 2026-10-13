@@ -465,7 +465,7 @@
   G3.prewarm=()=>warm||(warm=new Promise(res=>{const ids=EVENTS.map(e=>e.id).filter(k=>!FX[k]);
     const done=()=>{G3.warm=true;diag("shaders precompiled: "+renderer.info.programs.length+" programs");res();};
     const stepW=()=>{if(!SM.done){requestAnimationFrame(stepW);return;}const t=performance.now();
-      while(ids.length&&performance.now()-t<8){try{makeFX(ids.shift()).g.visible=false;}catch(e){}}
+      while(ids.length&&performance.now()-t<8){const id=ids.shift();try{makeFX(id).g.visible=false;}catch(e){diag(`prewarm: upset effect "${id}" failed: ${String(e&&e.message||e).slice(0,100)}`);}}
       if(ids.length){requestAnimationFrame(stepW);return;}
       // one off-screen render with every effect showing and a shadow refresh: this also compiles the shadow-pass
       // (depth) shaders, which compile() doesn't cover. The moving-thing batches are built first so theirs are included.
@@ -520,9 +520,10 @@
         G3.keepMats=stand.map(([bm])=>bm.material).filter(Boolean);stand.forEach(([bm,g])=>{if(bm.isObject3D)scene.remove(bm);bm.dispose();if(g)g.dispose();});}catch(e){console.error("warm render failed",e);}
       try{renderer.compileAsync(scene,camera).then(done,done);}catch(e){done();}};
     requestAnimationFrame(stepW);}));
+  let clothMs=null;
   function fxUpdate(rdt,now){
     for(const id in FX){FX[id].g.visible=false;FX[id].on=false;}   // v4.0.1: labels are hidden after the loop, and only if shown
-    [wireLoop,...feltMeshes].forEach(m=>{m.scale.z=1;m.visible=true;});clothTick(now,rdt);
+    for(const m of (clothMs||(clothMs=[wireLoop,...feltMeshes]))){m.scale.z=1;m.visible=true;}clothTick(now,rdt);   // (v4.2.5: one list, built once)
     const doTxt=now-lastIncTxt>200;if(doTxt)lastIncTxt=now;const w=G3.vw||host.clientWidth,hh=G3.vh||host.clientHeight;
     S.inc.forEach((inc,i)=>{let f=FX[inc.id];
       if(!f)f=makeFX(inc.id);

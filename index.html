@@ -622,6 +622,9 @@ body.cine .blackout3d{visibility:hidden}
 #gfxReload{justify-self:start;min-height:36px}
 details.areactl{margin-top:24px;padding-top:16px;border-top:1px solid var(--line)}details.areactl>summary.v2sub{margin:0}
 details.areactl[open]>summary{margin-bottom:12px}
+/* v4.2.5: "Auto" with the device tier underneath, so the Graphics row stays one line high */
+#gfxSeg button{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:1px}
+#gfxSeg .gtier{font:600 12px var(--f-body);opacity:.8;line-height:1}
 </style>
 </head>
 <body class="app">
@@ -844,7 +847,7 @@ function siteBrand(env){MILL.env=env;const L=BRANDS_ENV[env];if(!L)return;MILL.b
 // rename from the menu: trims, caps at 32 characters, repaints the mill's signs
 // escape text (such as the player-chosen mill name) before it goes into innerHTML
 const escHTML=t=>String(t).replace(/[&<>"']/g,x=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[x]));
-function renameMill(v){v=String(v||"").replace(/\s+/g," ").trim().slice(0,32);if(!v)return;MILL.name=v;try{if(G3.rebrand)G3.rebrand();}catch(e){}}
+function renameMill(v){v=String(v||"").replace(/\s+/g," ").trim().slice(0,32).trim();if(!v)return;MILL.name=v;try{if(G3.rebrand)G3.rebrand();}catch(e){}}
 /* ---- generative music and sound effects (Web Audio, no files) ---- */
 const AUDIO=(()=>{
   const AMOB=matchMedia("(pointer: coarse)").matches,LOOK=AMOB?0.5:0.3;let AUDIO_VIS=0,ctx=null,master,comp,musicBus,sfxBus,chillG,intG,crackleG,mcG,verb,noiseBuf,timer=null,on=false,vol=0.7,target="chill",calmSince=0,switchedAt=0,warm,envG,echoIn,echoInt;
@@ -2575,7 +2578,7 @@ function endSeason(bust){const se=S.season;se.done=true;se.on=false;running=fals
   if(document.body.classList.contains("fs"))setFS(false);seasonLocks(false);
   const r=seasonResult();se.result=r;AUDIO.sfx(r.score>0?"win":"lose",100);
   $("so-h").textContent=bust?"Season over: bankrupt":"Season complete";
-  $("so-p").textContent=bust?`${MILL.name} ran out of money before day ${SEASON_DAYS}.`:`${SEASON_DAYS} days at ${MILL.name}.`;
+  $("so-p").textContent=bust?`${MILL.name} ran out of money before day ${SEASON_DAYS}.`:`${SEASON_DAYS} days at ${MILL.name}${/[.!?]$/.test(MILL.name)?"":"."}`;   // (v4.2.5: no "Co.." when the name ends in a full stop)
   const eff=S.tot.pot>0?S.tot.prodT/S.tot.pot:1,sg=S.rc&&S.rc.s?rcMake(S.rc.s,S.rc.i).overall:null,g=sg?RATINGS.find(x=>x[1]===sg):RATINGS.find(x=>eff>=x[0]);
   const st=[["Net profit",money(r.score),"big"],["Tons shipped",f0(r.tons)+" t"],["Disasters survived",String(r.incidents)],["Rolls made",String(S.tot.rolls)],["Season grade",g[1]+" · "+g[2]],["Output",Math.round(eff*100)+"% of max-speed tons"]];
   $("so-stats").replaceChildren(...st.map(([k,v,c])=>{const d=document.createElement("div");if(c)d.className=c;const a=document.createElement("span");a.textContent=k;const b=document.createElement("b");b.textContent=v;d.append(a,b);return d;}));
@@ -2732,7 +2735,7 @@ function drawTrend(){if(!col.muted)readColors();if(tc.width<4)sizeTrend();
     const p=S.trend[n-1];tctx.fillStyle=c;tctx.beginPath();tctx.arc(r,b-(b-t)*clamp(p[i],0,1),3,0,7);tctx.fill();
   });
 }
-/* ---------- 3D view (Three.js r128) ---------- */
+/* ---------- 3D view (three.js r186) ---------- */
 const G3={on:false,ok:false};
 // no WebGL: say so plainly instead of showing an empty page
 function no3D(){G3.ok=false;$("no3d").hidden=false;$("no3d-retry").onclick=()=>location.reload();diag("3D unavailable: no WebGL");}
@@ -2877,7 +2880,7 @@ function no3D(){G3.ok=false;$("no3d").hidden=false;$("no3d-retry").onclick=()=>l
       const o=new THREE.Mesh(cg,tex?M.pipeStock:m);o.position.copy(a).add(b).multiplyScalar(0.5);o.quaternion.setFromUnitVectors(up,d.normalize());o.castShadow=true;parent.add(o);}
     pts.slice(1,-1).forEach(p=>{const s=new THREE.Mesh(new SphG(r*1.15,10,8),m);s.position.set(...p);parent.add(s);});}
 
-  const M={ground:mat("g-ground"),slab:mat("g-slab"),asphalt:mat("g-asphalt"),wall:mat("g-wall"),steel:mat("machine",{metalness:0.3,roughness:0.6}),metal:mat("g-metal",{metalness:0.35,roughness:0.5}),
+  const M={ground:mat("g-ground"),slab:mat("g-slab"),asphalt:mat("g-asphalt"),wall:mat("g-wall"),metal:mat("g-metal",{metalness:0.35,roughness:0.5}),
     kraft:mat("kraft"),stock:mat("stock"),paper:mat("paperc",{roughness:0.95}),ink:mat("ink"),warn:mat("warn"),ok:mat("ok"),bad:mat("bad"),
     lane:mat("g-lane"),glass:mat("g-wall",{transparent:true,opacity:0.3,depthWrite:false,side:THREE.DoubleSide,roughness:0.2}),robot:mat("stock",{roughness:0.4}),off:mat("smoke")};
   M.liquid=mat("pulp",{roughness:0.75});M.pulp=mat("pulp",{roughness:0.3});M.efork=mat("stock");
@@ -2908,7 +2911,7 @@ function no3D(){G3.ok=false;$("no3d").hidden=false;$("no3d-retry").onclick=()=>l
   // the stops, patched trenches, crack lines, sun-faded patches
   {const c=floorTex.image,x=c.getContext("2d"),W=c.width;
     for(let k=0;k<5;k++){x.strokeStyle=`rgba(70,68,64,${rnd(0.05,0.09)})`;x.lineWidth=rnd(2,4);x.beginPath();const cx=rnd(0,W),cy=rnd(0,W),r=rnd(30,80),a0=rnd(0,6.28);x.arc(cx,cy,r,a0,a0+rnd(0.8,1.8));x.stroke();}
-    for(let k=0;k<4;k++){const g=x.createRadialGradient(0,0,0,0,0,1),cx=rnd(0,W),cy=rnd(0,W),r=rnd(10,26);const g2=x.createRadialGradient(cx,cy,0,cx,cy,r);g2.addColorStop(0,"rgba(70,62,52,0.13)");g2.addColorStop(1,"rgba(70,62,52,0)");x.fillStyle=g2;x.fillRect(0,0,W,W);void g;}
+    for(let k=0;k<4;k++){const cx=rnd(0,W),cy=rnd(0,W),r=rnd(10,26);const g2=x.createRadialGradient(cx,cy,0,cx,cy,r);g2.addColorStop(0,"rgba(70,62,52,0.13)");g2.addColorStop(1,"rgba(70,62,52,0)");x.fillStyle=g2;x.fillRect(0,0,W,W);}
     floorTex.needsUpdate=true;}
   const asphTex=texC(512,512,(x,W)=>{x.fillStyle="#f4f4f2";x.fillRect(0,0,W,W);
     for(let k=0;k<30;k++){const cx=rnd(0,W),cy=rnd(0,W),r=rnd(30,120),g=x.createRadialGradient(cx,cy,0,cx,cy,r),l=Math.random()<0.5;g.addColorStop(0,l?"rgba(255,255,250,0.14)":"rgba(40,40,44,0.13)");g.addColorStop(1,"rgba(128,128,128,0)");x.fillStyle=g;x.fillRect(0,0,W,W);}
@@ -2993,10 +2996,6 @@ function no3D(){G3.ok=false;$("no3d").hidden=false;$("no3d-retry").onclick=()=>l
     const o=new THREE.Mesh(g,ribM);o.position.set(x,y,z);o.castShadow=true;o.receiveShadow=true;parent.add(o);edges(o);
     const trim=new THREE.Mesh(new THREE.BoxGeometry(w+0.06,0.32,d+0.06),M.brand);trim.position.set(x,y+hh/2-0.13,z);/* cap sits 3 cm proud of the wall so their tops never share a plane */parent.add(trim);edges(trim);return o;}
   // strapped OCC bales and paper roll end-caps
-  const baleC=document.createElement("canvas");baleC.width=64;baleC.height=64;{const x=baleC.getContext("2d");x.fillStyle="#b07a43";x.fillRect(0,0,64,64);
-    for(let i=0;i<260;i++){x.fillStyle=Math.random()<0.5?"rgba(90,55,25,.18)":"rgba(255,235,200,.16)";x.fillRect(Math.random()*64,Math.random()*64,6+Math.random()*10,1.5);}
-    x.fillStyle="#f4efe6";x.fillRect(16,0,3,64);x.fillRect(44,0,3,64);}
-  const baleTex=new THREE.CanvasTexture(baleC);baleTex.colorSpace=THREE.SRGBColorSpace;
   M.bale=mat("panel",{map:gradeTex(0),roughness:0.95});
   // OCC bale grades: A is clean brown corrugated; B carries mixed paper; C is low grade with plastics, coated board and trash (more rejects)
   function gradeTex(g){const c=document.createElement("canvas");c.width=c.height=64;const x=c.getContext("2d");x.fillStyle=g===2?"#8f6a45":g===1?"#a7784a":"#b07a43";x.fillRect(0,0,64,64);
@@ -4898,7 +4897,7 @@ function no3D(){G3.ok=false;$("no3d").hidden=false;$("no3d-retry").onclick=()=>l
   G3.prewarm=()=>warm||(warm=new Promise(res=>{const ids=EVENTS.map(e=>e.id).filter(k=>!FX[k]);
     const done=()=>{G3.warm=true;diag("shaders precompiled: "+renderer.info.programs.length+" programs");res();};
     const stepW=()=>{if(!SM.done){requestAnimationFrame(stepW);return;}const t=performance.now();
-      while(ids.length&&performance.now()-t<8){try{makeFX(ids.shift()).g.visible=false;}catch(e){}}
+      while(ids.length&&performance.now()-t<8){const id=ids.shift();try{makeFX(id).g.visible=false;}catch(e){diag(`prewarm: upset effect "${id}" failed: ${String(e&&e.message||e).slice(0,100)}`);}}
       if(ids.length){requestAnimationFrame(stepW);return;}
       // one off-screen render with every effect showing and a shadow refresh: this also compiles the shadow-pass
       // (depth) shaders, which compile() doesn't cover. The moving-thing batches are built first so theirs are included.
@@ -4953,9 +4952,10 @@ function no3D(){G3.ok=false;$("no3d").hidden=false;$("no3d-retry").onclick=()=>l
         G3.keepMats=stand.map(([bm])=>bm.material).filter(Boolean);stand.forEach(([bm,g])=>{if(bm.isObject3D)scene.remove(bm);bm.dispose();if(g)g.dispose();});}catch(e){console.error("warm render failed",e);}
       try{renderer.compileAsync(scene,camera).then(done,done);}catch(e){done();}};
     requestAnimationFrame(stepW);}));
+  let clothMs=null;
   function fxUpdate(rdt,now){
     for(const id in FX){FX[id].g.visible=false;FX[id].on=false;}   // v4.0.1: labels are hidden after the loop, and only if shown
-    [wireLoop,...feltMeshes].forEach(m=>{m.scale.z=1;m.visible=true;});clothTick(now,rdt);
+    for(const m of (clothMs||(clothMs=[wireLoop,...feltMeshes]))){m.scale.z=1;m.visible=true;}clothTick(now,rdt);   // (v4.2.5: one list, built once)
     const doTxt=now-lastIncTxt>200;if(doTxt)lastIncTxt=now;const w=G3.vw||host.clientWidth,hh=G3.vh||host.clientHeight;
     S.inc.forEach((inc,i)=>{let f=FX[inc.id];
       if(!f)f=makeFX(inc.id);
@@ -6246,11 +6246,13 @@ function no3D(){G3.ok=false;$("no3d").hidden=false;$("no3d-retry").onclick=()=>l
   function shDrop(r){const m=SH.meshes[r.shK];if(r.shK==null||!m||m.userData.rev!==SH.builds)return false;
     const a=m.geometry.attributes.position,i0=r.shV0*3,i1=i0+r.shVN*3;a.array.fill(0,i0,i1);
     a.addUpdateRange(i0,i1-i0);a.needsUpdate=true;r.shK=null;renderer.shadowMap.needsUpdate=true;SH.drops=(SH.drops||0)+1;return true;}
+  // v4.2.5: batching failures go to Diagnostics (the first 5, then a count), not only the console or nowhere
+  const smErr=(what,e)=>{SM.errs=(SM.errs||0)+1;if(SM.errs<=5)diag(`batching: ${what} failed: ${String(e&&e.message||e).slice(0,120)}`);else if(SM.errs===6)diag("batching: more failures, not logged");};
   function smTick(now){if(SM.off)return;
     if(!SM.t0){SM.t0=now;try{scene.updateMatrixWorld(true);smSnapshot();smMerge();}
-      catch(e){console.error("scenery batching failed",e);SM.off=true;SM.done=true;SM.list.forEach(r=>{r.o.layers.set(0);if(r.bm)r.bm.visible=false;});}return;}
-    if(SM.queue&&SM.queue.length){try{smStep();}catch(e){console.error("scenery baking failed",e);SM.queue=[];SM.done=true;}return;}
-    if(now>SM.checkT){SM.checkT=now+(now-SM.t0<10000?0:500);try{smWatch();}catch(e){}}}
+      catch(e){console.error("scenery batching failed",e);smErr("scenery batching (batching off)",e);SM.off=true;SM.done=true;SM.list.forEach(r=>{r.o.layers.set(0);if(r.bm)r.bm.visible=false;});}return;}
+    if(SM.queue&&SM.queue.length){try{smStep();}catch(e){console.error("scenery baking failed",e);smErr("scenery baking",e);SM.queue=[];SM.done=true;}return;}
+    if(now>SM.checkT){SM.checkT=now+(now-SM.t0<10000?0:500);try{smWatch();}catch(e){smErr("watch for moved objects",e);}}}
   /* ---- moving things, batched per look (v4) ----
      People, vehicles, loads and anything else drawn on its own share a few materials, so every opaque, single-material
      mesh that shares its look with at least two others is drawn through a dynamic BatchedMesh: one draw per look,
@@ -7770,6 +7772,10 @@ function no3D(){G3.ok=false;$("no3d").hidden=false;$("no3d-retry").onclick=()=>l
   // v2.9.11 performance profiler: when G3.PF.on, time each section of the 3D frame (ms accumulated per section)
   const PF=G3.PF={on:false,t:0,acc:{},frames:0};const pm=k=>{if(!PF.on)return;const t=performance.now();PF.acc[k]=(PF.acc[k]||0)+(t-PF.t);PF.t=t;};
   G3.EXP={};let moversCache=null;
+  // v4.2.5: scratch objects the frame reuses instead of allocating every frame (fewer garbage-collection hitches on phones).
+  // placeTruck only reads its role, so one role object serves every truck.
+  const _tr={kind:"in",k:0,docked:false,d:0,leaving:false},TR=(kind,k,docked,d,leaving)=>{_tr.kind=kind;_tr.k=k;_tr.docked=docked;_tr.d=d;_tr.leaving=leaving;return _tr;};
+  const q4=new THREE.Quaternion();
   G3.frameBody=function(rdt){if(PF.on){PF.t=performance.now();PF.frames++;}navPump();pm("walker route planning (2 ms/frame max)");
     // v2.8.8: the machine's motion clocks (dryer cans, presses, felts, sheet, pulper swirl, belts) used to be advanced only by the
     // old 2D drawing, which no longer runs when the 3D view is up, so everything stood still
@@ -7795,9 +7801,9 @@ function no3D(){G3.ok=false;$("no3d").hidden=false;$("no3d-retry").onclick=()=>l
     try{crewUpdate(rdt,now);}catch(e){G3.fErr=(G3.fErr||0)+1;if(G3.fErr<6)console.error("people update",e);}pm("crew + people");try{if(G3.actTick)G3.actTick(rdt);}catch(e){G3.fErr=(G3.fErr||0)+1;if(G3.fErr<6)console.error("activity scenes",e);}pm("activity scenes");
     // trucks
     truckMap.forEach(g=>g.userData.seen=false);
-    S.inQ.forEach((t,k)=>placeTruck(t,{kind:"in",k},rdt));S.inDock.forEach((t,d)=>t&&placeTruck(t,{kind:"in",docked:true,d},rdt));
-    S.outQ.forEach((t,k)=>placeTruck(t,{kind:"out",k},rdt));S.outDock.forEach((t,d)=>t&&placeTruck(t,{kind:"out",docked:true,d},rdt));
-    S.leaving.forEach(t=>placeTruck(t,{kind:t.kind,leaving:true},rdt));
+    S.inQ.forEach((t,k)=>placeTruck(t,TR("in",k,false,0,false),rdt));S.inDock.forEach((t,d)=>t&&placeTruck(t,TR("in",0,true,d,false),rdt));
+    S.outQ.forEach((t,k)=>placeTruck(t,TR("out",k,false,0,false),rdt));S.outDock.forEach((t,d)=>t&&placeTruck(t,TR("out",0,true,d,false),rdt));
+    S.leaving.forEach(t=>placeTruck(t,TR(t.kind,0,false,0,true),rdt));
     // trucks the sim has finished with drive themselves off; capped at 6 and 90 s each so they can never pile up
     let ghosts=0;
     truckMap.forEach((g,t)=>{const u=g.userData;if(u.seen){u.ghost=0;return;}u.ghost=(u.ghost||0)+rdt;
@@ -7847,7 +7853,7 @@ function no3D(){G3.ok=false;$("no3d").hidden=false;$("no3d-retry").onclick=()=>l
     pm("stock prep (bales, pulper, chest)");
     // machine
     const pmRun=S.pm==="run";
-    cansTop.concat(cansBot).forEach((c,i)=>c.rotation.z=(i<10?1:-1)*V.cans);
+    for(let i=0;i<cansTop.length;i++)cansTop[i].rotation.z=V.cans;for(let i=0;i<cansBot.length;i++)cansBot[i].rotation.z=-V.cans;
     press[0].rotation.z=-V.cans*1.3;press[1].rotation.z=V.cans*1.3;press[2].rotation.z=-V.cans*1.15;press[3].rotation.z=V.cans*1.15;feltTex.offset.x=-(V.cans*0.35)%1;wireTex.offset.x=(V.cans*0.35)%1;feltGuides.forEach(g=>g.rotation.z=-V.cans*4);wireRolls.forEach(w=>w.rotation.z=V.cans*2.5);
     press.forEach((p,i)=>{p.material=LV("shoe")&&i===3?shoeMat:M.metal;});
     const rr=R0+(RM-R0)*Math.sqrt(clamp(S.reel/P.jumbo,0,1));reelUpdate(rdt,rr);
@@ -7884,14 +7890,14 @@ function no3D(){G3.ok=false;$("no3d").hidden=false;$("no3d-retry").onclick=()=>l
       while(RV.list.length&&RV.list[0].d>=CL-0.01&&!RV.list[0].col&&RV.list.filter(r=>r.d>=CL-1.45*(qn+3)-0.2).length>qn+3)RV.list.shift();
       if(RV.list.length&&RV.list[0].col&&RV.list[0].d>=CL-0.01&&Math.floor(S.effHum+1e-9)<1){BEAT.bay.push(RV.list.shift().col);}
       RV.CL=CL;}
-    let nr=0;const q4=new THREE.Quaternion();
+    let nr=0;
     let upA=0;
     RV.list.forEach(r=>{if(nr>=16)return;let x,y,z;
       if(r.d<-1){const f=clamp((r.d+3.2)/2.2,0,1);x=-20.55+(UPX+20.55)*f;y=1.726+(UPY+0.62-1.726)*f*f;z=zc;q4.setFromEuler(_eu.set(Math.PI/2,0,-r.spin));}
       else if(r.d<0){const a=(r.d+1)*Math.PI/2,c=Math.cos(a),sn=Math.sin(a);upA=Math.max(upA,a);   // tip 90 deg about the plate's hinge
         x=UPX;y=UPY+0.62*c+0.7*sn;z=UPZ-0.7*c+0.62*sn;q4.setFromEuler(_eu.set(Math.PI/2+a,0,0));}
       else{const d=r.d,L1=19.4-zc-UPC;if(d<L1){x=UPX;z=zc+UPC+d;}else{x=UPX-(d-L1);z=19.4;}y=1.2;q4.identity();}
-      r.wp=[x,y,z];m4.compose(v3.set(x,y,z),q4,_one);if(r.col)_rc.set(r.col);else _rc.copy(M.paper.color);beltRolls.setColorAt(nr,_rc);beltRolls.setMatrixAt(nr++,m4);});
+      if(r.wp){r.wp[0]=x;r.wp[1]=y;r.wp[2]=z;}else r.wp=[x,y,z];m4.compose(v3.set(x,y,z),q4,_one);if(r.col)_rc.set(r.col);else _rc.copy(M.paper.color);beltRolls.setColorAt(nr,_rc);beltRolls.setMatrixAt(nr++,m4);});
     upender.rotation.x=upA>0?upA:upender.rotation.x*Math.max(0,1-rdt*6);
     beltRolls.count=nr;beltRolls.instanceMatrix.needsUpdate=true;if(beltRolls.instanceColor)beltRolls.instanceColor.needsUpdate=true;
     pm("roll conveyor");
@@ -8740,7 +8746,7 @@ requestAnimationFrame(frame);
     seg.querySelectorAll("button").forEach(x=>x.addEventListener("click",()=>setFpsMode(x.dataset.fps)));
     setField("Frame rate",seg);}
   if(G3.GFX){const seg=document.createElement("div");seg.className="seg";seg.id="gfxSeg";seg.setAttribute("role","group");seg.setAttribute("aria-label","Graphics");const cap=s=>s[0].toUpperCase()+s.slice(1);
-    seg.innerHTML=["auto","low","medium","high","ultra"].map(g=>`<button data-g="${g}" aria-pressed="${G3.GFX.pick===g}" title="${g==="auto"?"Picked from your device: "+cap(G3.GFX.auto):{low:"1024 shadows, 10 Hz, lighter scenery",medium:"1024 shadows, 15 Hz",high:"2048 softer shadows, 24 Hz, full scenery",ultra:"4096 softer shadows, every frame, dense scenery with far shadows"}[g]}">${g==="auto"?"Auto ("+cap(G3.GFX.auto)+")":cap(g)}</button>`).join("");
+    seg.innerHTML=["auto","low","medium","high","ultra"].map(g=>`<button data-g="${g}" aria-pressed="${G3.GFX.pick===g}" title="${g==="auto"?"Picked from your device: "+cap(G3.GFX.auto):{low:"1024 shadows, 10 Hz, lighter scenery",medium:"1024 shadows, 15 Hz",high:"2048 softer shadows, 24 Hz, full scenery",ultra:"4096 softer shadows, every frame, dense scenery with far shadows"}[g]}">${g==="auto"?`Auto <small class="gtier">${cap(G3.GFX.auto)}</small>`:cap(g)}</button>`).join("");
     seg.querySelectorAll("button").forEach(x=>x.addEventListener("click",()=>G3.setGfx(x.dataset.g)));
     {const rb=document.createElement("button");rb.id="gfxReload";rb.hidden=true;rb.textContent="Reload to apply all";rb.title="Lighting model, round-shape detail and scenery density change on reload";rb.addEventListener("click",()=>location.reload());setField("Graphics",seg).appendChild(rb);}}
   {const l=document.createElement("label");l.className="check";l.innerHTML='<input id="showFps" type="checkbox"/> Show FPS';
