@@ -5,6 +5,7 @@
 - Accessibility: no text smaller than 12px (64 sizes raised), and descriptive body text at least 13px (11 rules). `--ok` and `--warn` darkened to #1a7b47 and #975f00, which pass 4.5:1 on white and on the grey backgrounds.
 - Accessibility: Tab and Shift+Tab stay inside the menu, the tutorial and the season-over dialog, and Escape closes them (menu: Resume, tutorial: Skip, season over: One more turn). Escape does nothing on the menu before the first Play.
 - Leaderboard: it takes keyboard focus when it opens and gives it back when it closes, and Escape closes it even while the name field has focus.
+- Settings layout: three labelled groups (Run the mill, View, Performance) with even spacing. The machine name has a visible label and a styled field; Shadows and Show FPS sit with Whole mill; Frame rate and Graphics each get a label above a full-width choice (Graphics no longer runs off the edge on phones); controls are 40px tall; Area controls are set apart by a divider.
 - tools/savecheck.py: clicks Continue and pauses in one step (waiting for the game to start first let a frame of sim slip in, a flaky DIFFER).
 
 ## v4.2.4 (release): quick fixes

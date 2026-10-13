@@ -595,3 +595,18 @@ button.rpt{cursor:pointer}.rpt.cur{border:2px solid var(--brand);background:var(
 .cine3d .skip{position:absolute;right:14px;bottom:calc(11% + 12px + env(safe-area-inset-bottom,0px));pointer-events:auto;padding:8px 14px;border-radius:999px;border:1px solid rgba(255,255,255,.5);background:rgba(0,0,0,.45);color:#fff;font:600 13px var(--f-body);cursor:pointer}
 body.cine .v2top,body.cine .v2dock,body.cine #labels3d,body.cine #chips3d,body.cine #banner3d,body.cine .v2sheet,body.cine .v2scrim{visibility:hidden}
 body.cine .blackout3d{visibility:hidden}
+/* v4.2.5 Settings spacing: three labelled groups (Run the mill, View, Performance), 40px controls, even gaps,
+   full-width segmented choices with their label above, and Area controls set apart by a rule */
+.v2pane[data-pane=ctl] .v2sub{margin:22px 0 10px}.v2pane[data-pane=ctl] .v2sub:first-child{margin-top:2px}
+.setgrp{display:flex;flex-wrap:wrap;gap:10px 14px;align-items:center}.setgrp.end{align-items:flex-end}
+.setgrp>button,.setstack>button{min-height:40px;padding:8px 16px}.setstack>button{justify-self:start}
+.setgrp .check{color:var(--ink);font-size:14px;min-height:40px;gap:10px}.setgrp .check input{width:18px;height:18px;margin:0;accent-color:var(--brand)}
+.setstack{display:grid;gap:16px}
+.setfield{display:grid;gap:6px;min-width:0}.setname{flex:1 1 180px;max-width:320px}
+.setlbl{font:600 12px var(--f-body);color:var(--muted)}
+#pmname{font:600 14px var(--f-body);color:var(--ink);background:var(--panel);border:1px solid var(--line);border-radius:10px;padding:8px 12px;min-height:40px;width:100%;box-sizing:border-box}
+.setfield .seg{display:flex;width:100%}.setfield .seg button{flex:1 1 0;min-width:0;min-height:40px;padding:8px 6px;line-height:1.2}
+.setfield .seg button+button{border-left:1px solid var(--line)}
+#gfxReload{justify-self:start;min-height:36px}
+details.areactl{margin-top:24px;padding-top:16px;border-top:1px solid var(--line)}details.areactl>summary.v2sub{margin:0}
+details.areactl[open]>summary{margin-bottom:12px}
