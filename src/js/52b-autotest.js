@@ -163,7 +163,7 @@
       #atRes button{font:700 16px system-ui;padding:14px;border-radius:10px;border:1px solid var(--line,#e1e4ee);background:var(--panel,#fff);color:inherit}
       #atRes #atCopy{background:var(--ink,#1c2233);color:#fff;font-size:20px;padding:18px}
       #atRes .row{display:flex;gap:10px}#atRes .row button{flex:1}
-      #atRes pre{background:var(--panel,#fff);border:1px solid var(--line,#e1e4ee);border-radius:10px;padding:10px;font:11px/1.35 ui-monospace,monospace;white-space:pre-wrap;word-break:break-all;max-height:30vh;overflow:auto;margin:0}`;
+      #atRes pre{background:var(--panel,#fff);border:1px solid var(--line,#e1e4ee);border-radius:10px;padding:10px;font:12px/1.35 ui-monospace,monospace;white-space:pre-wrap;word-break:break-all;max-height:30vh;overflow:auto;margin:0}`;
     const tile=(k,v,sub,cls)=>`<div class="t"><div class="k">${k}</div><div class="v ${cls||""}">${v}</div><div class="s">${sub}</div></div>`;
     const hz=R.display_hz_est,chk=C.error?["error","bad",C.error]:C.pass===true?["PASS","ok",`checksum ${C.hash} as expected`]:C.pass===false?["FAIL","bad",`got ${C.hash}, expected ${C.expect}`]:[C.hash||"-","",`${C.sim_days||CHECK_DAYS} sim days · ${C.ms_per_sim_day||"-"} ms per day`];
     const errs=R.errors.length+(R.fatal?1:0);

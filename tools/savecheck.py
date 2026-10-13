@@ -23,7 +23,8 @@ with sync_playwright() as pw:
     pg.close()
     pg=page()
     has=pg.evaluate("()=>!!document.getElementById('v2cont')&&document.getElementById('v2cont').textContent");print("continue button:",has)
-    pg.evaluate("()=>{document.getElementById('v2cont').click();}");pg.wait_for_function("__PM.running===true",timeout=60000);pg.evaluate("()=>__PM.setRunning(false)")
+    # click and pause in one go: waiting for running===true first let a frame or two of sim slip in (a flaky DIFFER)
+    r=pg.evaluate("()=>{document.getElementById('v2cont').click();const was=__PM.running;__PM.setRunning(false);return was}");print("continue started the game:",r)
     bb=pg.evaluate(STEP,2*1440*4);print("restored day 5:",bb,"MATCH" if a==bb else "DIFFER")
     # hidden page: save + pause + welcome back
     pg.evaluate("()=>__PM.setRunning(true)")

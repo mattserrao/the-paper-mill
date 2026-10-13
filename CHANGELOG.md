@@ -2,6 +2,10 @@
 
 ## v4.2.5 (local, not released): batch of minor improvements
 - Seasons: the bottleneck is now random for every season instead of being shared by the whole week. The week's upsets, cards and weather are unchanged. tools/determinism.py pins the bottleneck so its two runs still compare.
+- Accessibility: no text smaller than 12px (64 sizes raised), and descriptive body text at least 13px (11 rules). `--ok` and `--warn` darkened to #1a7b47 and #975f00, which pass 4.5:1 on white and on the grey backgrounds.
+- Accessibility: Tab and Shift+Tab stay inside the menu, the tutorial and the season-over dialog, and Escape closes them (menu: Resume, tutorial: Skip, season over: One more turn). Escape does nothing on the menu before the first Play.
+- Leaderboard: it takes keyboard focus when it opens and gives it back when it closes, and Escape closes it even while the name field has focus.
+- tools/savecheck.py: clicks Continue and pauses in one step (waiting for the game to start first let a frame of sim slip in, a flaky DIFFER).
 
 ## v4.2.4 (release): quick fixes
 - No more $25M goal: the aim is simply to make as much money as you can. The Cash box now shows how much you've made (or lost) since the start instead of "% of the $25M goal", and the "Mill of the Year" win screen is gone. Bankruptcy still ends a free game.

@@ -124,9 +124,25 @@
     function close(done){const off=$("tutOff");if(done&&off&&off.checked){try{localStorage.setItem("paper-mill-tutorial","off");}catch(e){}}
       el.hidden=true;G3.tutHi&&G3.tutHi(null);G3.camHome&&G3.camHome();running=true;}
     function want(){try{return localStorage.getItem("paper-mill-tutorial")!=="off";}catch(e){return true;}}
-    return {open,want,get on(){return !!el&&!el.hidden;}};})();
+    return {open,want,close,get on(){return !!el&&!el.hidden;}};})();
   G3.tut=TUT;
   $("v2pause").addEventListener("click",showMenu);
+  // v4.2.5 keyboard: while the season-over dialog, the tutorial or the menu is up (topmost first), Tab and Shift+Tab stay
+  // inside it and Escape closes it: season over = "One more turn", tutorial = Skip, menu = Resume (not before the first
+  // Play). While another dialog is up on top (the leaderboard, the site picker, a card), keys are left to it.
+  {const FOC='button:not([disabled]),[href],input:not([disabled]):not([type=hidden]),select:not([disabled]),textarea:not([disabled]),[tabindex]:not([tabindex="-1"])';
+    const up=e=>!!e&&!e.hidden&&e.getClientRects().length>0;
+    const LAYERS=[{el:()=>$("seasonOv"),esc:()=>$("so-more").click()},
+      {el:()=>document.getElementById("tut"),esc:()=>TUT.close(false)},
+      {el:()=>menu,esc:()=>{if(!first)play();}}];
+    document.addEventListener("keydown",e=>{if((e.key!=="Tab"&&e.key!=="Escape")||e.defaultPrevented)return;
+      const L=LAYERS.find(l=>up(l.el()));if(!L)return;const box=L.el(),t=e.target;
+      if([...document.querySelectorAll(".overlay,[aria-modal=true]")].some(o=>up(o)&&!box.contains(o)&&!o.contains(box)))return;
+      if(e.key==="Escape"){if(t&&t.id==="v2name")return;e.preventDefault();L.esc();return;}
+      const f=[...box.querySelectorAll(FOC)].filter(x=>x.getClientRects().length>0&&!x.closest("[hidden]"));if(!f.length)return;
+      const i=f.indexOf(document.activeElement);
+      const to=i<0?(e.shiftKey?f.length-1:0):e.shiftKey&&i===0?f.length-1:!e.shiftKey&&i===f.length-1?0:-1;
+      if(to>=0){e.preventDefault();f[to].focus();}},true);}   // capture: some fields (the season-over name) stop key events reaching document
   // the first Play waits for the start-up precompile (a few seconds at most), so no shader compiles land mid-play
   let goWait=false;
   const go=()=>{const fresh=first;if(first)startSeason();play();if(fresh&&TUT.want())setTimeout(()=>TUT.open(),60);};
