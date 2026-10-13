@@ -58,7 +58,8 @@
         if(G3.warm||!G3.prewarm)run();else{b.setAttribute("aria-busy","true");b.querySelector("small").textContent="Getting the mill ready…";G3.prewarm().then(run);}});
       if(Q.get("resume")==="1"){try{Q.delete("resume");history.replaceState(null,"",location.pathname+(Q.toString()?"?"+Q:"")+location.hash);}catch(e){}setTimeout(()=>b.click(),300);}}
     // a new season or a reset starts over: the old save goes
-    ["v2season","v2reset","v2surv","v2survNew"].forEach(id=>{const el=$(id);if(el)el.addEventListener("click",clear,true);});
-    // v4.3: starting a survival run from the first menu also takes the Continue button away (its save is gone)
-    {const el=$("v2surv");if(el)el.addEventListener("click",()=>{const c=$("v2cont");if(c){c.remove();if(go)go.classList.add("primary");}},true);}
+    ["v2season","v2reset"].forEach(id=>{const el=$(id);if(el)el.addEventListener("click",clear,true);});
+    // v4.4: a survival run starts from the leader picker, so the old save (and its Continue button) goes when the run
+    // really starts, not when the picker opens
+    G3.save.drop=()=>{clear();const c=$("v2cont");if(c){c.remove();if(go)go.classList.add("primary");}};
     if(go)go.addEventListener("click",()=>{if($("v2cont")&&!(S.season&&S.season.on))clear();},true);}

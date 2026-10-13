@@ -48,15 +48,16 @@ const LV=id=>(S&&S.up&&S.up[id])||0;
 function applyUpgrades(){
   applyGrade();
   P.K=BASE.K*Math.pow(1.06,LV("deckle"))*(1+0.02*LV("apc"));
-  P.spBonus=150*LV("drive")+100*LV("shoe");
+  P.spBonus=150*LV("drive")+100*LV("shoe")+leadSpeed();
   P.energyMul=(1-0.12*LV("shoe"))*(1-0.08*LV("apc"));P.refSave=22*LV("refiner");
   P.yieldF=P.blendY+0.03*LV("clean"); P.tankCap=BASE.tankCap+150*LV("chest");
   P.driverRate=BASE.driverRate*(1+0.25*LV("forklift")); P.doors=3+LV("docks"); P.shipDoors=3+LV("docks");
   P.robots=2*LV("agv"); P.fgCap=BASE.fgCap+112*LV("wh"); P.autoFeed=LV("feedconv")>0;
   applySite();P.costMul=survOn()?survCost():1;   // v4.3 survival: fibre, energy and chemicals, and wages cost more every wave (exactly 1 otherwise)
-  P.occPrice=(P.blendP+((S&&S.plan)?S.plan.mkt:0)-20*LV("contract")+P.siteOcc)*P.costMul; P.priceAdd=25*LV("sales")+P.sitePrice; P.repairMul=(LV("insure")?0.4:1)*(1-0.15*LV("reliab"));P.techs=2+2*LV("maintcrew");P.pmCost=400*LV("pmprog"); P.premium=LV("insure")?1500:0;
-  P.breakBase=Math.pow(0.7,LV("monitor"))*Math.pow(0.9,LV("pmprog"));
-  P.hayBase=Math.pow(0.6,LV("winder"));const wr=document.getElementById("s-wdr");if(wr)wr.max=P.winderMax;
+  P.occPrice=(P.blendP+((S&&S.plan)?S.plan.mkt:0)-20*LV("contract")+P.siteOcc)*P.costMul*leadFibre();   // (v4.4: the leader's fibre deals; Hank runs heavy)
+  P.priceAdd=25*LV("sales")+P.sitePrice+leadPrice(); P.repairMul=(LV("insure")?0.4:1)*(1-0.15*LV("reliab"))*leadBill();P.techs=2+2*LV("maintcrew");P.pmCost=400*LV("pmprog"); P.premium=LV("insure")?1500:0;
+  P.breakBase=Math.pow(0.7,LV("monitor"))*Math.pow(0.9,LV("pmprog"))*leadClean()*leadBreaks();
+  P.hayBase=Math.pow(0.6,LV("winder"))*leadClean();const wr=document.getElementById("s-wdr");if(wr)wr.max=P.winderMax;
   const sp=document.getElementById("s-pmSp"),pu=document.getElementById("s-pulper");
   if(sp)sp.max=3300+P.spBonus; if(pu)pu.max=Math.floor(Math.min(P.pulperMax,P.screenMax/P.yieldF));
 }
@@ -64,7 +65,7 @@ function applyUpgrades(){
 function applyGrade(){const g=(typeof C!=="undefined"&&C&&C.grade)||"23m",c=GCOST[g],d=c.dlk;
   P.blendP=OCCG.occ11.p*(1-d)+OCCG.dlk.p*d;P.blendY=OCCG.occ11.y*(1-d)+OCCG.dlk.y*d;
   P.steamMul=c.steam;P.chemAdd=c.chem-((S&&S.perk)?S.perk.chem:0);P.gradeBrk=c.brk;}
-function energyCost(){return Math.max(0,ECON.energy*P.steamMul*P.energyMul+ECON.chem+P.chemAdd+(P.siteEnergy||0)-(P.refSave||0)-((S&&S.perk&&S.perk.energy)||0))*(P.costMul||1);}
+function energyCost(){return Math.max(0,ECON.energy*P.steamMul*P.energyMul*leadEnergy()+ECON.chem+P.chemAdd+(P.siteEnergy||0)-(P.refSave||0)-((S&&S.perk&&S.perk.energy)||0))*(P.costMul||1);}
 function priceOf(g){let v=ECON.price[g]+P.priceAdd;if(S&&S.perk)v+=S.perk.price[g]||0;if(S&&S.fx)for(const f of S.fx)if(f.price)v+=(f.price[g]||0)+(f.price.all||0);return v;}
 function freqMul(id){let m=1;
   if(["lwplug","cscreen","fscreen","lcplug"].includes(id))m*=Math.pow(0.6,LV("clean"));
@@ -77,13 +78,14 @@ function freqMul(id){let m=1;
   if(id==="fight"||id==="calloff")m*=LV("safety")?0.5:1;
   if(OUT.area[id])m*=outRel(OUT.area[id]);
   m*=siteFreq(id);
+  m*=leadFreq(id);   // v4.4 survival leaders: Chip's labour trouble, Felicity's projects, the upset Dot just fixed
   if(S&&S.fx)for(const f of S.fx){if(f.freq&&EV[id]&&(EV[id].g==="machine"||EV[id].g==="stock"))m*=f.freq;if(f.scab&&id==="slime")m*=f.scab;if(f.evf&&f.evf[id])m*=f.evf[id];}
   return m;}
 // v3.3.3: reliability of an outage area = 1 / its average breakdown rate, split into upgrades, outage budget and temporary events
-function areaRel(a){const ids=OUT.ev[a]||[];if(!ids.length)return {tot:1,up:1,out:1,fx:1,site:1};let up=0,fx=0,st=0;const out=outRel(a);
+function areaRel(a){const ids=OUT.ev[a]||[];if(!ids.length)return {tot:1,up:1,out:1,fx:1,site:1,lead:1};let up=0,fx=0,st=0;const out=outRel(a),ld=leadArea(a);
   ids.forEach(id=>{let f=1;if(S&&S.fx)for(const x of S.fx){if(x.freq&&EV[id]&&(EV[id].g==="machine"||EV[id].g==="stock"))f*=x.freq;if(x.scab&&id==="slime")f*=x.scab;if(x.evf&&x.evf[id])f*=x.evf[id];}
-    const sf=siteFreq(id);fx+=f;st+=sf;up+=freqMul(id)/(out*f*sf);});
-  up/=ids.length;fx/=ids.length;st/=ids.length;return {tot:1/(up*out*fx*st),up:1/up,out:1/out,fx:1/fx,site:1/st};}
+    const sf=siteFreq(id);fx+=f;st+=sf;up+=freqMul(id)/(out*f*sf*ld);});
+  up/=ids.length;fx/=ids.length;st/=ids.length;return {tot:1/(up*out*fx*st*ld),up:1/up,out:1/out,fx:1/fx,site:1/st,lead:1/ld};}
 function durMul(id){let d=(id==="dryerfire"||id==="balefire")&&LV("fire")?0.5:1;if(MAINT.includes(id))d*=Math.pow(0.8,LV("maintcrew"))*(LV("stores")?0.75:1);return d;}
 function spend(v,k){if(S.free&&k==="upgrades"){S.ledger[k]+=0;return;}S.cash-=v;S.ledger[k]+=v;}
 function earn(v){S.cash+=v;S.ledger.rev+=v;}

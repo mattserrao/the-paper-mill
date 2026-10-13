@@ -16,7 +16,7 @@ then `tail.html`. All game code runs inside **one shared closure** (opened in `0
 | Range | What lives there |
 |---|---|
 | `00` | `APP_VER`, the rolling diagnostics log, and the three.js loader (r186.1 as an ES module via top-level `await`; outside the closure, so errors during start-up are caught) |
-| `01–11` | Game: mill name and colors, audio, model constants and seeded random streams, the site (`03b`: environments, mill seed and layout, bottleneck), survival mode (`03c`: constants and multipliers; `09b`: wave changes, chip, game over), upsets, event cards, outages and state, the sim `step()`, UI wiring, seasons and leaderboard, report cards, Stats trend chart |
+| `01–11` | Game: mill name and colors, audio, model constants and seeded random streams, the site (`03b`: environments, mill seed and layout, bottleneck), survival mode (`03c`: constants and multipliers; `09b`: wave changes, chip, game over) and its mill leaders (`03d`: numbers and effects; `09c`: portraits, picker, card, outage pick), upsets, event cards, outages and state, the sim `step()`, UI wiring, seasons and leaderboard, report cards, Stats trend chart |
 | `20–43` | 3D view, one file per area of the mill: setup, plant, floors, rejects, stock prep, vehicles, labels, camera, upset effects and particles, people, fire response, the sky (`35b`), ambient life, janitorial, techs, upgrades, the yard props (`39b`: water tower, bales, gate sign), static-mesh merge, outage jobs, zen camera, the seeded scenery and terrain around the mill (`42b`), and the per-frame update (`43-3d-frame.js`) |
 | `50–53` | Side panels (slice, spider, Uncle Brian), app shell (top bar, sheets, menu, tutorial), the site picker (`51b`), main loop, the device autotest (`52b`, only active with `?autotest`), diagnostics panel and the `window.__PM` test hook |
 
@@ -149,7 +149,16 @@ then `tail.html`. All game code runs inside **one shared closure** (opened in `0
 - **The end**: `seasonTick()` calls `endSurvival()` (09b) at bankruptcy. The result is `{minutes, wave, tons, incidents, mill,
   version, env}`; `survTime(minutes)` formats it. The board is the `survival` table (`supabase/survival.sql`), with the
   device list `paper-mill-local-survival` as the fallback (also when the table is missing: a 404 on submit).
-- **Retuning**: change `SURV.up` / `SURV.cost`, then `tools/survival.py index.html 5 --bot=handsoff` (and `buyer`, `saver`).
+- **Mill leaders (v4.4)**: `S.lead={id, st:{...stacks}, changed, was, fixW, fixed:[]}`, set by `leadStart(id)` from
+  `startSurvival(id)` and saved with the run. The numbers are `LEAD` in `03d`; the effect helpers (`leadFibre`, `leadPrice`,
+  `leadSpeed`, `leadClean`, `leadBreaks`, `leadEnergy`, `leadBill`, `leadWage`, `leadPayroll`, `leadFreq`) are read by
+  `applyUpgrades`, `energyCost`, the labour line (07) and `freqMul`, and return exactly 1 (or 0 for sums) without a leader.
+  Picks go through the outage dialog: `leadPlanNew()` / `leadPlanMount()` (09c) write `o.plan.lead={to, pick}`;
+  `beginOutage()` applies a change of leader (`leadChange`), `endOutage()` adds the pick to the stacks (`leadOutageEnd`).
+  Stacks belong to the mill, not the leader. A new leader needs: an entry in `LEADERS`, `LEAD_ART`, `LEAD_IDS` and
+  `LEAD_PICKS`, its effects in the helpers, a policy in `tools/survival.py`, and the id in `supabase/survival.sql`.
+  Portraits are inline SVG on a 120 x 140 box, with the face inside 30,26 to 90,86 (the chip avatar).
+- **Retuning**: change `SURV.up` / `SURV.cost`, then `tools/survival.py index.html 10 --bot=handsoff` (and `buyer`, `saver`), with `--leader=chip|dot|fel|hank` for each leader.
   A run has to end: every bot should be bankrupt well before `--maxdays`.
 
 ## Device autotest (`?autotest`)

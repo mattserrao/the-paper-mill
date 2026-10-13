@@ -642,3 +642,58 @@ body.zen .survchip{display:none}
 /* mill report: the survival strip */
 .rsurv{display:grid;grid-template-columns:1.4fr 1fr 1fr;gap:6px}.rsurv div{display:flex;flex-direction:column;gap:2px;padding:8px 9px;border-radius:10px;background:var(--chip);min-width:0}
 .rsurv small{font-size:12px;color:var(--muted)}.rsurv b{font-size:16px}
+
+/* =========================== v4.4 survival: mill leaders =========================== */
+.ldart{display:block;width:100%;height:auto;border-radius:12px;flex:none}
+.ldart.face{border-radius:50%}
+/* the card: portrait left, who they are and what they do right (picker, leader card) */
+.ldcard{display:grid;grid-template-columns:92px minmax(0,1fr);gap:12px;align-items:start;text-align:left;padding:10px;border-radius:14px;border:1px solid var(--line);background:var(--bg);color:var(--ink);font:inherit;font-weight:400}
+button.ldcard{cursor:pointer}
+button.ldcard[aria-checked="true"]{border:2px solid var(--stock);padding:9px;background:var(--panel);box-shadow:0 6px 18px color-mix(in srgb,var(--stock) 22%,transparent)}
+.ldbody{display:flex;flex-direction:column;gap:3px;min-width:0}
+.ldbody>small{font:700 12px var(--f-body);letter-spacing:.06em;text-transform:uppercase;color:var(--stock)}
+.ldbody>b{font:800 17px var(--f-display);line-height:1.15}
+.ldbody>em{font-style:normal;font-size:13px;color:var(--muted);margin-bottom:3px}
+.ldbody>i{font-size:13px;color:var(--muted);margin-top:2px}
+.ldcard .pro,.ldcard .con,.ldswap .pro,.ldswap .con{position:relative;display:block;padding-left:16px;font-size:13px;line-height:1.38;color:var(--ink)}
+.ldcard .pro::before,.ldswap .pro::before{content:"+";position:absolute;left:2px;font-weight:800;color:var(--ok)}
+.ldcard .con::before,.ldswap .con::before{content:"−";position:absolute;left:2px;font-weight:800;color:var(--bad)}
+.ldswap .pro:empty,.ldswap .con:empty{display:none}
+/* picker */
+.modal.ldpick{max-width:720px;width:100%;max-height:calc(100dvh - 32px);overflow:auto;gap:10px}
+.modal.ldpick h2{font-size:24px;line-height:1.1}
+.ldpick .dk,.ldone .dk{font:600 12px var(--f-body);letter-spacing:.08em;text-transform:uppercase;color:var(--stock)}
+.ldgrid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px}
+.ldpick .btns button{min-height:40px}.ldpick .btns .primary{flex:1}
+@media (max-width:640px){.ldgrid{grid-template-columns:1fr}.ldcard{grid-template-columns:76px minmax(0,1fr);gap:10px}.modal.ldpick{padding:16px 14px}}
+/* outage budget dialog: the leader's pick and the one change */
+.ldrow{display:flex;flex-direction:column;gap:8px;padding:10px 12px;border-radius:12px;background:var(--chip)}
+.ldwho{display:flex;align-items:center;gap:10px}.ldwho .ldart{width:40px}.ldwho>div{flex:1;min-width:0}
+.ldwho b{display:block;font:700 15px var(--f-body)}.ldwho small{display:block;font:500 12px var(--f-body);color:var(--muted)}
+.ldwho button{flex:none;padding:6px 10px;font-size:12.5px;border-radius:9px}
+.ldq{font:600 13px var(--f-body);color:var(--muted)}.ldq:empty{display:none}.ldq span{font-weight:500;color:var(--bad)}
+.outg .ldseg button{flex:1 1 0;min-width:0;display:flex;flex-direction:column;align-items:center;gap:1px;padding:8px 6px}
+.outg .ldseg button b{font:700 13px var(--f-body)}.outg .ldseg button small{font:500 12px var(--f-body);color:var(--muted);text-align:center}
+.outg .ldseg button[aria-pressed="true"] small{color:inherit;opacity:.85}
+.ldswap{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:6px}
+.ldswap button{display:flex;flex-direction:column;align-items:center;gap:4px;padding:8px 4px;border-radius:10px;border:1px solid var(--line);background:var(--panel);min-width:0;text-align:center}
+.ldswap button[aria-checked="true"]{border:2px solid var(--stock);padding:7px 3px}
+.ldswap button .ldart{width:46px}.ldswap button b{display:block;font:700 12.5px var(--f-body)}.ldswap button small{display:block;font:500 12px var(--f-body);color:var(--muted)}
+.ldswap .ldnote,.ldswap .pro,.ldswap .con{grid-column:1/-1}.ldswap .ldnote{margin:2px 0 0;font-size:13px;color:var(--ink)}
+.ldtally{display:flex;flex-direction:column;gap:3px;font-size:13px}
+.ldtally div{display:flex;justify-content:space-between;gap:12px}.ldtally span{color:var(--muted)}
+.ldtally b{font-variant-numeric:tabular-nums;color:var(--ok);text-align:right}.ldtally .bad b{color:var(--bad)}
+/* leader card */
+.modal.ldone{max-width:440px;width:100%;max-height:calc(100dvh - 32px);overflow:auto;gap:10px}
+.ldone .ldcard{background:var(--chip);border-color:transparent}
+.ldone h3{font:700 14px var(--f-body);margin:4px 0 0;display:flex;flex-wrap:wrap;justify-content:space-between;align-items:baseline;gap:2px 8px;white-space:nowrap}.ldone h3 small{font-weight:500;font-size:12px;color:var(--muted)}
+.ldfx{display:flex;justify-content:space-between;align-items:center;gap:10px;padding:8px 0;border-top:1px solid var(--line)}
+.ldfx b{display:block;font:700 14px var(--f-body)}.ldfx small{font-size:12px;color:var(--muted)}
+.ldfx button[disabled]{opacity:.4;cursor:not-allowed}.ldfx button{flex:none}
+/* wave chip: the leader's face, and Dot's fix */
+.survchip{cursor:pointer}
+.survchip .svl{width:22px;height:22px;flex:none;margin-right:-5px}.survchip .svl[hidden],.survchip u[hidden]{display:none}
+.survchip u{text-decoration:none;font-weight:800;color:var(--ok);border-left:1px solid var(--line);padding-left:10px}
+.survchip u.used{color:var(--muted);font-weight:600}
+.survchip u.hot{color:#fff;background:var(--bad);border:0;border-radius:10px;padding:3px 9px}
+.sostats .wide{grid-column:1/-1}
