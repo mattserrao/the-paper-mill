@@ -86,7 +86,7 @@ const LEDGER=[["rev","Paper sales",1],["occ","OCC purchases",-1],["energy","Ener
 function updateRel(){const rn=document.getElementById("relnow"),lg=$("ledger"),tg=rn||lg;if(rn)rn.replaceChildren();else{const h0=document.createElement("h3");h0.textContent="Reliability now";lg.appendChild(h0);}const pct=v=>(v>=0?"+":"")+Math.round(v*100)+"%";
     [["stock","Stock prep"],["wet","Wet end"],["dry","Dry end"]].forEach(([a,n])=>{const r=areaRel(a),d=document.createElement("div"),sum=[r.up,r.out,r.fx,r.site||1].reduce((t,v)=>t+(Math.abs(v-1)>0.005?v-1:0),0);d.className="stat "+(sum>0.005?"pos":sum<-0.005?"neg":"");
       const bits=[["upgrades",r.up],["outage budget",r.out],["events",r.fx],["site",r.site||1]].filter(([,v])=>Math.abs(v-1)>0.005).map(([k,v])=>k+" "+pct(v-1));
-      d.innerHTML=`<span>${n}<small style="display:block;color:var(--muted);font-size:11.5px;font-weight:500">${bits.length?bits.join(" · "):"standard"}</small></span><b>${Math.abs(sum)<0.005?"–":pct(sum)}</b>`;tg.appendChild(d);});}
+      d.innerHTML=`<span>${n}<small style="display:block;color:var(--muted);font-size:12px;font-weight:500">${bits.length?bits.join(" · "):"standard"}</small></span><b>${Math.abs(sum)<0.005?"–":pct(sum)}</b>`;tg.appendChild(d);});}
 function updateShop(){
   $("u-cash").textContent=money(S.cash);
   {const w=document.querySelector(".wallet small"),t=S.free?"Cash on hand":upLocked()?"Cash on hand · next upgrade at 6 AM":"Cash on hand · 1 upgrade a day";if(w&&w.textContent!==t)w.textContent=t;}
@@ -117,13 +117,12 @@ function upsetMul(){const base=0.5,d=Math.floor(S.t/1440)+1;let m=base;
 function roughPatch(){running=false;$("overlay").hidden=false;$("overlay").style.zIndex="160";AUDIO.sfx("alarm",100);
   $("ov-h").textContent="Rough patch";$("ov-p").textContent="The Mill is going through a rough patch. Batten down the hatches.";
   $("ov-a").textContent="Batten down";$("ov-b").hidden=true;$("ov-a").focus();log("Day 15: the mill hits a rough patch. Upsets are four times as likely for two days.","bad");}
-function showOverlay(kind){running=false;
+// Bankruptcy is the only end-of-game overlay. There is no cash target any more: the goal is to make as much money as you can.
+function showOverlay(){running=false;
   const ov=$("overlay");ov.hidden=false;
-  AUDIO.sfx(kind==="bankrupt"?"lose":"win",100);
-  if(kind==="bankrupt"){$("ov-h").textContent="Chapter 11";$("ov-p").textContent=`${NAME} ran out of money on ${hhmm(S.t)}. The mill has been sold to a private equity firm, which is already "exploring strategic options".`;
-    $("ov-a").textContent="New game";$("ov-b").hidden=true;}
-  else{$("ov-h").textContent="Mill of the Year";$("ov-p").textContent=`${NAME} reached $25M cash on ${hhmm(S.t)}, having made ${f0(S.tot.prodT)} t of paper and survived ${S.tot.incidents} disasters.`;
-    $("ov-a").textContent="One more turn";$("ov-b").textContent="New game";$("ov-b").hidden=false;}
+  AUDIO.sfx("lose",100);
+  $("ov-h").textContent="Chapter 11";$("ov-p").textContent=`${NAME} ran out of money on ${hhmm(S.t)}. The mill has been sold to a private equity firm, which is already "exploring strategic options".`;
+  $("ov-a").textContent="New game";$("ov-b").hidden=true;
   $("ov-a").focus();}
 $("ov-a").addEventListener("click",()=>{$("overlay").hidden=true;$("overlay").style.zIndex="";const dc=document.getElementById("dealOv");if(S.over){newGame();}else if(dc&&!dc.hidden&&!dc.classList.contains("dealres")){}else{running=true;}});
 $("ov-b").addEventListener("click",()=>{$("overlay").hidden=true;newGame();});

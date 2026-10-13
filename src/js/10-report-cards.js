@@ -54,7 +54,7 @@ function rcHTML(c){const p=c.p,s=c.s,pc=v=>Math.round(v*100)+"%",hrs=m=>(m/60).t
   const row=(k,a,b,cls)=>`<div class="rcr${cls?" "+cls:""}"><span>${k}</span><b>${a}</b><i>${b}</i></div>`;
   const bar=(k,v,lab,hot)=>`<div class="rcb${hot?" hot":""}"><span>${k}</span><div><em style="width:${Math.max(2,Math.round(v*100))}%"></em></div><b>${lab}</b></div>`;
   const maxDn=p.dn.length?p.dn[0][1]:1;
-  return `<div class="rchead"><div><span class="dk">Report card · days ${c.from}–${c.to}</span><h2 id="rc-h">${MILL.name}</h2></div><div class="${gc(c.overall)} big" aria-label="Overall grade ${c.overall}">${c.overall}</div></div>
+  return `<div class="rchead"><div><span class="dk">Report card · days ${c.from}–${c.to}</span><h2 id="rc-h">${escHTML(MILL.name)}</h2></div><div class="${gc(c.overall)} big" aria-label="Overall grade ${c.overall}">${c.overall}</div></div>
     <div class="rcgrades">${Object.entries(c.g).map(([k,v])=>`<div><div class="${gc(v)}">${v}</div><small>${k}</small></div>`).join("")}</div>
     <p class="rctip"><b>Tip</b> ${c.tip}</p>
     <h3>Money <small>these 10 days · season so far</small></h3>
@@ -85,7 +85,7 @@ function endSeason(bust){const se=S.season;se.done=true;se.on=false;running=fals
   if(document.body.classList.contains("fs"))setFS(false);seasonLocks(false);
   const r=seasonResult();se.result=r;AUDIO.sfx(r.score>0?"win":"lose",100);
   $("so-h").textContent=bust?"Season over: bankrupt":"Season complete";
-  $("so-p").textContent=bust?`${MILL.name} ran out of money before day ${SEASON_DAYS}.`:`${SEASON_DAYS} days at ${MILL.name}.`;
+  $("so-p").textContent=bust?`${MILL.name} ran out of money before day ${SEASON_DAYS}.`:`${SEASON_DAYS} days at ${MILL.name}${/[.!?]$/.test(MILL.name)?"":"."}`;   // (v4.2.5: no "Co.." when the name ends in a full stop)
   const eff=S.tot.pot>0?S.tot.prodT/S.tot.pot:1,sg=S.rc&&S.rc.s?rcMake(S.rc.s,S.rc.i).overall:null,g=sg?RATINGS.find(x=>x[1]===sg):RATINGS.find(x=>eff>=x[0]);
   const st=[["Net profit",money(r.score),"big"],["Tons shipped",f0(r.tons)+" t"],["Disasters survived",String(r.incidents)],["Rolls made",String(S.tot.rolls)],["Season grade",g[1]+" · "+g[2]],["Output",Math.round(eff*100)+"% of max-speed tons"]];
   $("so-stats").replaceChildren(...st.map(([k,v,c])=>{const d=document.createElement("div");if(c)d.className=c;const a=document.createElement("span");a.textContent=k;const b=document.createElement("b");b.textContent=v;d.append(a,b);return d;}));
@@ -106,7 +106,10 @@ async function submitScore(){const r=S.season&&S.season.result;if(!r||S.free)ret
     if(!res.ok){let msg="Couldn't submit ("+res.status+")";try{const j=await res.json();if(j&&j.message)msg=j.message;}catch(e){}throw new Error(msg);}
     setMsg("Submitted! You're on the board.","ok");S.season.submitted=name;openBoard();}
   catch(e){setMsg(String(e.message||e),"bad");$("so-submit").disabled=false;}}
-async function openBoard(){$("lbOv").hidden=false;const L=$("lb-list");L.replaceChildren(Object.assign(document.createElement("div"),{className:"lbempty",textContent:"Loading…"}));
+// v4.2.5: the board takes focus when it opens and gives it back when it closes
+let lbBack=null;
+function closeBoard(){$("lbOv").hidden=true;if(lbBack&&lbBack.focus)lbBack.focus();lbBack=null;}
+async function openBoard(){lbBack=document.activeElement;$("lbOv").hidden=false;$("lb-close").focus();const L=$("lb-list");L.replaceChildren(Object.assign(document.createElement("div"),{className:"lbempty",textContent:"Loading…"}));
   let rows=[],note="";
   if(lbOn()){try{const res=await fetch(LB.url.replace(/\/$/,"")+"/rest/v1/scores?select=name,score,tons,incidents,mill,created_at&order=score.desc,tons.desc&limit=100&and=(version.not.like.v1.*,version.not.like.v2.0.*,version.not.like.v2.1.*)",{headers:lbHdr()});
       if(!res.ok)throw new Error(res.status);rows=await res.json();}catch(e){note="Couldn't reach the leaderboard. Showing scores saved on this device.";}}
@@ -146,8 +149,8 @@ $("zenExit").addEventListener("click",e=>{e.stopPropagation();setZen(false);});
 $("so-more").addEventListener("click",()=>{$("seasonOv").hidden=true;running=true;});
 $("so-submit").addEventListener("click",submitScore);$("so-name").addEventListener("keydown",e=>{if(e.key==="Enter")submitScore();e.stopPropagation();});
 $("so-board").addEventListener("click",openBoard);$("so-new").addEventListener("click",()=>{$("seasonOv").hidden=true;startSeason();});
-$("lb-close").addEventListener("click",()=>$("lbOv").hidden=true);
-document.addEventListener("keydown",e=>{if(e.key==="Escape"&&!$("lbOv").hidden)$("lbOv").hidden=true;});
+$("lb-close").addEventListener("click",closeBoard);
+document.addEventListener("keydown",e=>{if(e.key==="Escape"&&!$("lbOv").hidden){e.preventDefault();closeBoard();}},true);
 const RATINGS=[[0.95,"A","Bonus secured"],[0.85,"B","Solid shift"],[0.75,"C","Corporate is asking questions"],[0.6,"D","Mandatory 6 a.m. meeting"],[0,"F","Your parking spot has been reassigned"]];
 let feedKey="";
 function updateChaos(){
@@ -180,7 +183,7 @@ function updateText(){
   $("k-prod").textContent=f1(R.prod)+" t/h";
   $("k-prod-s").textContent=`${f0(S.tot.prodT)} t made · ${f0(S.tot.prodT/days)} t/day`;
   $("k-cash").textContent=money(S.cash);$("k-cash-box").classList.toggle("neg",S.cash<0);
-  $("k-cash-s").textContent=S.cash<0?`bankrupt at ${money(ECON.bankrupt)}`:`${(100*Math.max(0,S.cash)/ECON.goal).toFixed(1)}% of the $25M goal`;
+  $("k-cash-s").textContent=S.cash<0?`bankrupt at ${money(ECON.bankrupt)}`:(d=>d>=0?`${money(d)} made so far`:`${money(-d)} down so far`)(S.cash-ECON.start);
   {const t=money(S.profitRate)+"/day";$("k-profit").textContent=t;$("k-profit").style.color=/^[−-]/.test(t)?"var(--bad)":"var(--ink)";}
   $("k-profit-s").textContent=`operating, last 12 h · ${money(priceOf(C.grade))}/t`;
   $("k-tank").textContent=f0(level)+" %";

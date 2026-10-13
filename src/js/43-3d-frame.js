@@ -1,6 +1,10 @@
   // v2.9.11 performance profiler: when G3.PF.on, time each section of the 3D frame (ms accumulated per section)
   const PF=G3.PF={on:false,t:0,acc:{},frames:0};const pm=k=>{if(!PF.on)return;const t=performance.now();PF.acc[k]=(PF.acc[k]||0)+(t-PF.t);PF.t=t;};
   G3.EXP={};let moversCache=null;
+  // v4.2.5: scratch objects the frame reuses instead of allocating every frame (fewer garbage-collection hitches on phones).
+  // placeTruck only reads its role, so one role object serves every truck.
+  const _tr={kind:"in",k:0,docked:false,d:0,leaving:false},TR=(kind,k,docked,d,leaving)=>{_tr.kind=kind;_tr.k=k;_tr.docked=docked;_tr.d=d;_tr.leaving=leaving;return _tr;};
+  const q4=new THREE.Quaternion();
   G3.frameBody=function(rdt){if(PF.on){PF.t=performance.now();PF.frames++;}navPump();pm("walker route planning (2 ms/frame max)");
     // v2.8.8: the machine's motion clocks (dryer cans, presses, felts, sheet, pulper swirl, belts) used to be advanced only by the
     // old 2D drawing, which no longer runs when the 3D view is up, so everything stood still
@@ -26,9 +30,9 @@
     try{crewUpdate(rdt,now);}catch(e){G3.fErr=(G3.fErr||0)+1;if(G3.fErr<6)console.error("people update",e);}pm("crew + people");try{if(G3.actTick)G3.actTick(rdt);}catch(e){G3.fErr=(G3.fErr||0)+1;if(G3.fErr<6)console.error("activity scenes",e);}pm("activity scenes");
     // trucks
     truckMap.forEach(g=>g.userData.seen=false);
-    S.inQ.forEach((t,k)=>placeTruck(t,{kind:"in",k},rdt));S.inDock.forEach((t,d)=>t&&placeTruck(t,{kind:"in",docked:true,d},rdt));
-    S.outQ.forEach((t,k)=>placeTruck(t,{kind:"out",k},rdt));S.outDock.forEach((t,d)=>t&&placeTruck(t,{kind:"out",docked:true,d},rdt));
-    S.leaving.forEach(t=>placeTruck(t,{kind:t.kind,leaving:true},rdt));
+    S.inQ.forEach((t,k)=>placeTruck(t,TR("in",k,false,0,false),rdt));S.inDock.forEach((t,d)=>t&&placeTruck(t,TR("in",0,true,d,false),rdt));
+    S.outQ.forEach((t,k)=>placeTruck(t,TR("out",k,false,0,false),rdt));S.outDock.forEach((t,d)=>t&&placeTruck(t,TR("out",0,true,d,false),rdt));
+    S.leaving.forEach(t=>placeTruck(t,TR(t.kind,0,false,0,true),rdt));
     // trucks the sim has finished with drive themselves off; capped at 6 and 90 s each so they can never pile up
     let ghosts=0;
     truckMap.forEach((g,t)=>{const u=g.userData;if(u.seen){u.ghost=0;return;}u.ghost=(u.ghost||0)+rdt;
@@ -78,7 +82,7 @@
     pm("stock prep (bales, pulper, chest)");
     // machine
     const pmRun=S.pm==="run";
-    cansTop.concat(cansBot).forEach((c,i)=>c.rotation.z=(i<10?1:-1)*V.cans);
+    for(let i=0;i<cansTop.length;i++)cansTop[i].rotation.z=V.cans;for(let i=0;i<cansBot.length;i++)cansBot[i].rotation.z=-V.cans;
     press[0].rotation.z=-V.cans*1.3;press[1].rotation.z=V.cans*1.3;press[2].rotation.z=-V.cans*1.15;press[3].rotation.z=V.cans*1.15;feltTex.offset.x=-(V.cans*0.35)%1;wireTex.offset.x=(V.cans*0.35)%1;feltGuides.forEach(g=>g.rotation.z=-V.cans*4);wireRolls.forEach(w=>w.rotation.z=V.cans*2.5);
     press.forEach((p,i)=>{p.material=LV("shoe")&&i===3?shoeMat:M.metal;});
     const rr=R0+(RM-R0)*Math.sqrt(clamp(S.reel/P.jumbo,0,1));reelUpdate(rdt,rr);
@@ -115,14 +119,14 @@
       while(RV.list.length&&RV.list[0].d>=CL-0.01&&!RV.list[0].col&&RV.list.filter(r=>r.d>=CL-1.45*(qn+3)-0.2).length>qn+3)RV.list.shift();
       if(RV.list.length&&RV.list[0].col&&RV.list[0].d>=CL-0.01&&Math.floor(S.effHum+1e-9)<1){BEAT.bay.push(RV.list.shift().col);}
       RV.CL=CL;}
-    let nr=0;const q4=new THREE.Quaternion();
+    let nr=0;
     let upA=0;
     RV.list.forEach(r=>{if(nr>=16)return;let x,y,z;
       if(r.d<-1){const f=clamp((r.d+3.2)/2.2,0,1);x=-20.55+(UPX+20.55)*f;y=1.726+(UPY+0.62-1.726)*f*f;z=zc;q4.setFromEuler(_eu.set(Math.PI/2,0,-r.spin));}
       else if(r.d<0){const a=(r.d+1)*Math.PI/2,c=Math.cos(a),sn=Math.sin(a);upA=Math.max(upA,a);   // tip 90 deg about the plate's hinge
         x=UPX;y=UPY+0.62*c+0.7*sn;z=UPZ-0.7*c+0.62*sn;q4.setFromEuler(_eu.set(Math.PI/2+a,0,0));}
       else{const d=r.d,L1=19.4-zc-UPC;if(d<L1){x=UPX;z=zc+UPC+d;}else{x=UPX-(d-L1);z=19.4;}y=1.2;q4.identity();}
-      r.wp=[x,y,z];m4.compose(v3.set(x,y,z),q4,_one);if(r.col)_rc.set(r.col);else _rc.copy(M.paper.color);beltRolls.setColorAt(nr,_rc);beltRolls.setMatrixAt(nr++,m4);});
+      if(r.wp){r.wp[0]=x;r.wp[1]=y;r.wp[2]=z;}else r.wp=[x,y,z];m4.compose(v3.set(x,y,z),q4,_one);if(r.col)_rc.set(r.col);else _rc.copy(M.paper.color);beltRolls.setColorAt(nr,_rc);beltRolls.setMatrixAt(nr++,m4);});
     upender.rotation.x=upA>0?upA:upender.rotation.x*Math.max(0,1-rdt*6);
     beltRolls.count=nr;beltRolls.instanceMatrix.needsUpdate=true;if(beltRolls.instanceColor)beltRolls.instanceColor.needsUpdate=true;
     pm("roll conveyor");
@@ -202,7 +206,7 @@
       const run=S.pm==="run"?1:0.3,L={dryer:near(12,9,20)*run,wet:near(46,9,16)*run,winder:near(-17,8,13)*(S.wd==="run"?1:0.3),stock:near(24,-15,20)*(S.M.pulperDown?0.3:1),fork:0,out:0};
       L.out=zk*clamp(1-Math.max(L.dryer,L.wet,L.winder,L.stock,L.fork)*1.5,0,1);AUDIO.ambient(L,zk);}
     {const cw=G3.vw||host.clientWidth;G3.roofFade(cam.r*(cw<600?1.35:1)/(cw<600?1.35:1));}
-    if(G3.shadowHz){const t=performance.now();if(!(t-(G3.shT||0)<1000/G3.shadowHz-3)){G3.shT=t;renderer.shadowMap.needsUpdate=true;}}
+    if(G3.shadowHz&&!G3.shadowsOff){const t=performance.now();if(!(t-(G3.shT||0)<1000/G3.shadowHz-3)){G3.shT=t;renderer.shadowMap.needsUpdate=true;}}
     placeCam();if(shake>0){camera.position.x+=(Math.random()-0.5)*shake;camera.position.y+=(Math.random()-0.5)*shake;camera.position.z+=(Math.random()-0.5)*shake;}
     // v2.8.8: zoomed out past the default view, trucks and parked trailers are specks, so they aren't drawn (they keep driving unseen)
     if(cam.r>TRUCK_FAR){truckPool.in.forEach(g=>g.visible=false);truckPool.out.forEach(g=>g.visible=false);if(CHEM.g)CHEM.g.visible=false;if(BT.g)BT.g.visible=false;wTruck.visible=false;G3.yardTr.forEach(g=>g.visible=false);}

@@ -87,7 +87,8 @@
   const fireLight=new THREE.PointLight(0xff7a1f,0,45,0);scene.add(fireLight);let fireL=0,fireLpos=new THREE.Vector3();
   function fireGlow(x,y,z,k){fireL=Math.max(fireL,k);fireLpos.set(x,y,z);}
   // v2.8.9 fire "pop": a flickering orange pool of light on the floor under the fire, and a flash-over burst when it starts
-  const fireFloor=new THREE.Mesh(new THREE.PlaneGeometry(1,1),new THREE.MeshBasicMaterial({color:0xff6a1a,transparent:true,depthWrite:false,blending:THREE.AdditiveBlending,toneMapped:false,polygonOffset:true,polygonOffsetFactor:-4,polygonOffsetUnits:-4,opacity:0}));
+  const fireFloor=new THREE.Mesh(new THREE.PlaneGeometry(1,1),new THREE.MeshBasicMaterial({map:spriteTex((x,w)=>{const g=x.createRadialGradient(w/2,w/2,0,w/2,w/2,w/2);g.addColorStop(0,"rgba(255,255,255,1)");g.addColorStop(0.4,"rgba(255,255,255,0.6)");g.addColorStop(1,"rgba(255,255,255,0)");x.fillStyle=g;x.fillRect(0,0,w,w);}),color:0xff6a1a,transparent:true,depthWrite:false,blending:THREE.AdditiveBlending,toneMapped:false,polygonOffset:true,polygonOffsetFactor:-4,polygonOffsetUnits:-4,opacity:0}));
+  // v4.2.4: the glow texture is made up front (it used to be added on the first fire, which compiled a new shader mid-play)
   fireFloor.rotation.x=-Math.PI/2;fireFloor.renderOrder=3;fireFloor.visible=false;scene.add(fireFloor);let fireFloorK=0;
   function fireAt(spots,rate,size=1.7){let last=-1e9;return (rdt,mult=1)=>{let cx=0,cy=0,cz=0;
     const nowF=performance.now();if(nowF-last>3000&&rdt>0){spots.forEach(([x,y,z])=>{for(let k=0;k<4;k++)emit("fire",x+R()*1.2,y+Math.random()*0.5,z+R()*1.2,R()*2.5,3+Math.random()*3,R()*2.5,0.7+Math.random()*0.4,size*(1.3+Math.random()*0.7),"#ffffff",1);
@@ -464,7 +465,7 @@
   G3.prewarm=()=>warm||(warm=new Promise(res=>{const ids=EVENTS.map(e=>e.id).filter(k=>!FX[k]);
     const done=()=>{G3.warm=true;diag("shaders precompiled: "+renderer.info.programs.length+" programs");res();};
     const stepW=()=>{if(!SM.done){requestAnimationFrame(stepW);return;}const t=performance.now();
-      while(ids.length&&performance.now()-t<8){try{makeFX(ids.shift()).g.visible=false;}catch(e){}}
+      while(ids.length&&performance.now()-t<8){const id=ids.shift();try{makeFX(id).g.visible=false;}catch(e){diag(`prewarm: upset effect "${id}" failed: ${String(e&&e.message||e).slice(0,100)}`);}}
       if(ids.length){requestAnimationFrame(stepW);return;}
       // one off-screen render with every effect showing and a shadow refresh: this also compiles the shadow-pass
       // (depth) shaders, which compile() doesn't cover. The moving-thing batches are built first so theirs are included.
@@ -506,7 +507,7 @@
         for(const sb of SM.bms){const g=new THREE.BoxGeometry(0.01,0.01,0.01),c=sb.material.clone();c.color.setRGB(1,1,1);if(!G3.DBCOL)c.vertexColors=true;
           const bm=new THREE.BatchedMesh(1,g.attributes.position.count,g.index.count,c);{const ii=bm.addInstance(bm.addGeometry(G3.DBCOL?g:G3.vcGeo(g,new THREE.Color(1,1,1))));if(G3.DBCOL&&!G3.DBMAT)bm.setColorAt(ii,new THREE.Color(1,1,1));}
           bm.perObjectFrustumCulled=false;bm.frustumCulled=false;bm.castShadow=sb.castShadow;bm.receiveShadow=sb.receiveShadow;scene.add(bm);stand.push([bm,g]);}
-        for(const id in FX){if(!FX[id].g.visible){FX[id].g.visible=true;shown.push(FX[id].g);}}
+        for(const id in FX){if(!FX[id].g.visible){FX[id].g.visible=true;shown.push(FX[id].g);}}if(!fireFloor.visible){fireFloor.visible=true;shown.push(fireFloor);}
         // v4.1 pass 3: the sky, terrain, clouds and mist never appear with an effect-only shader, and they already compiled for the
         // screen on the first frame; keeping them out of this off-screen pass saves their render-target shader variants
         const wld=[G3.terrain,G3.SKY&&G3.SKY.dome,G3.SKY&&G3.SKY.clouds&&G3.SKY.clouds.mesh,G3.SKY&&G3.SKY.mist&&G3.SKY.mist.mesh,G3.nightWin].filter(Boolean),wv=wld.map(o=>o.visible);wld.forEach(o=>o.visible=false);
@@ -519,9 +520,10 @@
         G3.keepMats=stand.map(([bm])=>bm.material).filter(Boolean);stand.forEach(([bm,g])=>{if(bm.isObject3D)scene.remove(bm);bm.dispose();if(g)g.dispose();});}catch(e){console.error("warm render failed",e);}
       try{renderer.compileAsync(scene,camera).then(done,done);}catch(e){done();}};
     requestAnimationFrame(stepW);}));
+  let clothMs=null;
   function fxUpdate(rdt,now){
     for(const id in FX){FX[id].g.visible=false;FX[id].on=false;}   // v4.0.1: labels are hidden after the loop, and only if shown
-    [wireLoop,...feltMeshes].forEach(m=>{m.scale.z=1;m.visible=true;});clothTick(now,rdt);
+    for(const m of (clothMs||(clothMs=[wireLoop,...feltMeshes]))){m.scale.z=1;m.visible=true;}clothTick(now,rdt);   // (v4.2.5: one list, built once)
     const doTxt=now-lastIncTxt>200;if(doTxt)lastIncTxt=now;const w=G3.vw||host.clientWidth,hh=G3.vh||host.clientHeight;
     S.inc.forEach((inc,i)=>{let f=FX[inc.id];
       if(!f)f=makeFX(inc.id);
@@ -534,7 +536,7 @@
     for(const id in FX){const f=FX[id];if(!f.on)f.lb.vis=false;}
     stepParts(rdt);fireLight.position.copy(fireLpos);fireFloorK=Math.max(0,fireFloorK-rdt*1.5);
     {const fl=0.9*Math.sin(performance.now()/60)+0.6*Math.sin(performance.now()/23),on=fireFloor.userData.on||0;fireLight.intensity=fireL>0?LEG*0.75*fireL*(3.4+fl+fireFloorK*3):0;
-      fireFloor.visible=on>0;if(on>0){if(!fireFloor.material.map){fireFloor.material.map=spriteTex((x,w)=>{const g=x.createRadialGradient(w/2,w/2,0,w/2,w/2,w/2);g.addColorStop(0,"rgba(255,255,255,1)");g.addColorStop(0.4,"rgba(255,255,255,0.6)");g.addColorStop(1,"rgba(255,255,255,0)");x.fillStyle=g;x.fillRect(0,0,w,w);});fireFloor.material.needsUpdate=true;}fireFloor.material.opacity=Math.min(1,on*(0.42+0.1*fl+fireFloorK*0.25));}fireFloor.userData.on=0;}fireL=0;
+      fireFloor.visible=on>0;if(on>0){fireFloor.material.opacity=Math.min(1,on*(0.42+0.1*fl+fireFloorK*0.25));}fireFloor.userData.on=0;}fireL=0;
     if(!S.inc.some(i=>i.id==="brownout")){G3.brownK=1;G3.bFlash=0;}{const el=$("tint3d"),T=S.inc.some(i=>i.id==="brownout"||i.id==="duststorm")&&G3.tint?G3.tint:null,c=T?T[0]:"#000",o=T?String(Math.round(T[1]*100)/100):"0";if(el){if(el.style.background!==c&&T)el.style.background=c;if(el.style.opacity!==o)el.style.opacity=o;}if(!T)G3.tint=null;}if(!S.inc.some(i=>i.id==="icedintake"))G3.iceK=0;if(!S.inc.some(i=>i.id==="duststorm"))G3.dustK=0;if(!S.inc.some(i=>i.id==="flood"))G3.floodK=0;
     const out=S.inc.some(i=>i.id==="lightning"||(i.id==="birdline"&&!G3.cineHold));if(blackEl.hidden!==!out)blackEl.hidden=!out;
     if(out){const bt=S.inc.some(i=>i.id==="lightning")?"Lightning hit the substation. Backup generators starting…":"A bird flew into the substation. Backup generators starting…",sp=blackEl.querySelector("span");if(sp&&sp.textContent!==bt)sp.textContent=bt;}if(!out){const fl=$("flash3d"),v=String(G3.bFlash||0);if(fl.style.opacity!==v)fl.style.opacity=v;}

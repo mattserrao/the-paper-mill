@@ -1,4 +1,4 @@
-/* ---------- 3D view (Three.js r128) ---------- */
+/* ---------- 3D view (three.js r186) ---------- */
 const G3={on:false,ok:false};
 // no WebGL: say so plainly instead of showing an empty page
 function no3D(){G3.ok=false;$("no3d").hidden=false;$("no3d-retry").onclick=()=>location.reload();diag("3D unavailable: no WebGL");}
@@ -143,7 +143,7 @@ function no3D(){G3.ok=false;$("no3d").hidden=false;$("no3d-retry").onclick=()=>l
       const o=new THREE.Mesh(cg,tex?M.pipeStock:m);o.position.copy(a).add(b).multiplyScalar(0.5);o.quaternion.setFromUnitVectors(up,d.normalize());o.castShadow=true;parent.add(o);}
     pts.slice(1,-1).forEach(p=>{const s=new THREE.Mesh(new SphG(r*1.15,10,8),m);s.position.set(...p);parent.add(s);});}
 
-  const M={ground:mat("g-ground"),slab:mat("g-slab"),asphalt:mat("g-asphalt"),wall:mat("g-wall"),steel:mat("machine",{metalness:0.3,roughness:0.6}),metal:mat("g-metal",{metalness:0.35,roughness:0.5}),
+  const M={ground:mat("g-ground"),slab:mat("g-slab"),asphalt:mat("g-asphalt"),wall:mat("g-wall"),metal:mat("g-metal",{metalness:0.35,roughness:0.5}),
     kraft:mat("kraft"),stock:mat("stock"),paper:mat("paperc",{roughness:0.95}),ink:mat("ink"),warn:mat("warn"),ok:mat("ok"),bad:mat("bad"),
     lane:mat("g-lane"),glass:mat("g-wall",{transparent:true,opacity:0.3,depthWrite:false,side:THREE.DoubleSide,roughness:0.2}),robot:mat("stock",{roughness:0.4}),off:mat("smoke")};
   M.liquid=mat("pulp",{roughness:0.75});M.pulp=mat("pulp",{roughness:0.3});M.efork=mat("stock");
@@ -174,7 +174,7 @@ function no3D(){G3.ok=false;$("no3d").hidden=false;$("no3d-retry").onclick=()=>l
   // the stops, patched trenches, crack lines, sun-faded patches
   {const c=floorTex.image,x=c.getContext("2d"),W=c.width;
     for(let k=0;k<5;k++){x.strokeStyle=`rgba(70,68,64,${rnd(0.05,0.09)})`;x.lineWidth=rnd(2,4);x.beginPath();const cx=rnd(0,W),cy=rnd(0,W),r=rnd(30,80),a0=rnd(0,6.28);x.arc(cx,cy,r,a0,a0+rnd(0.8,1.8));x.stroke();}
-    for(let k=0;k<4;k++){const g=x.createRadialGradient(0,0,0,0,0,1),cx=rnd(0,W),cy=rnd(0,W),r=rnd(10,26);const g2=x.createRadialGradient(cx,cy,0,cx,cy,r);g2.addColorStop(0,"rgba(70,62,52,0.13)");g2.addColorStop(1,"rgba(70,62,52,0)");x.fillStyle=g2;x.fillRect(0,0,W,W);void g;}
+    for(let k=0;k<4;k++){const cx=rnd(0,W),cy=rnd(0,W),r=rnd(10,26);const g2=x.createRadialGradient(cx,cy,0,cx,cy,r);g2.addColorStop(0,"rgba(70,62,52,0.13)");g2.addColorStop(1,"rgba(70,62,52,0)");x.fillStyle=g2;x.fillRect(0,0,W,W);}
     floorTex.needsUpdate=true;}
   const asphTex=texC(512,512,(x,W)=>{x.fillStyle="#f4f4f2";x.fillRect(0,0,W,W);
     for(let k=0;k<30;k++){const cx=rnd(0,W),cy=rnd(0,W),r=rnd(30,120),g=x.createRadialGradient(cx,cy,0,cx,cy,r),l=Math.random()<0.5;g.addColorStop(0,l?"rgba(255,255,250,0.14)":"rgba(40,40,44,0.13)");g.addColorStop(1,"rgba(128,128,128,0)");x.fillStyle=g;x.fillRect(0,0,W,W);}
@@ -259,10 +259,6 @@ function no3D(){G3.ok=false;$("no3d").hidden=false;$("no3d-retry").onclick=()=>l
     const o=new THREE.Mesh(g,ribM);o.position.set(x,y,z);o.castShadow=true;o.receiveShadow=true;parent.add(o);edges(o);
     const trim=new THREE.Mesh(new THREE.BoxGeometry(w+0.06,0.32,d+0.06),M.brand);trim.position.set(x,y+hh/2-0.13,z);/* cap sits 3 cm proud of the wall so their tops never share a plane */parent.add(trim);edges(trim);return o;}
   // strapped OCC bales and paper roll end-caps
-  const baleC=document.createElement("canvas");baleC.width=64;baleC.height=64;{const x=baleC.getContext("2d");x.fillStyle="#b07a43";x.fillRect(0,0,64,64);
-    for(let i=0;i<260;i++){x.fillStyle=Math.random()<0.5?"rgba(90,55,25,.18)":"rgba(255,235,200,.16)";x.fillRect(Math.random()*64,Math.random()*64,6+Math.random()*10,1.5);}
-    x.fillStyle="#f4efe6";x.fillRect(16,0,3,64);x.fillRect(44,0,3,64);}
-  const baleTex=new THREE.CanvasTexture(baleC);baleTex.colorSpace=THREE.SRGBColorSpace;
   M.bale=mat("panel",{map:gradeTex(0),roughness:0.95});
   // OCC bale grades: A is clean brown corrugated; B carries mixed paper; C is low grade with plastics, coated board and trash (more rejects)
   function gradeTex(g){const c=document.createElement("canvas");c.width=c.height=64;const x=c.getContext("2d");x.fillStyle=g===2?"#8f6a45":g===1?"#a7784a":"#b07a43";x.fillRect(0,0,64,64);

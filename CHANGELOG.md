@@ -1,5 +1,23 @@
 # Changelog
 
+## v4.2.5 (release): batch of minor improvements
+- Seasons: the bottleneck is now random for every season instead of being shared by the whole week. The week's upsets, cards and weather are unchanged. tools/determinism.py pins the bottleneck so its two runs still compare.
+- Accessibility: no text smaller than 12px (64 sizes raised), and descriptive body text at least 13px (11 rules). `--ok` and `--warn` darkened to #1a7b47 and #975f00, which pass 4.5:1 on white and on the grey backgrounds.
+- Accessibility: Tab and Shift+Tab stay inside the menu, the tutorial and the season-over dialog, and Escape closes them (menu: Resume, tutorial: Skip, season over: One more turn). Escape does nothing on the menu before the first Play.
+- Leaderboard: it takes keyboard focus when it opens and gives it back when it closes, and Escape closes it even while the name field has focus.
+- Settings layout: three labelled groups (Run the mill, View, Performance) with even spacing. The machine name has a visible label and a styled field; Shadows and Show FPS sit with Whole mill; Frame rate and Graphics each get a label above a full-width choice (Graphics no longer runs off the edge on phones); controls are 40px tall; Area controls are set apart by a divider.
+- Graphics: the Auto choice reads "Auto" with the device's tier underneath, so the row stays one line high.
+- Season over: a mill name ending in a full stop ("… Co.") no longer gets a second one. Renaming the mill no longer leaves a trailing space when a long name is cut to 32 characters.
+- Tidy-ups: removed an unused bale texture, a throwaway canvas gradient and a duplicate steel material (20-3d-setup.js). The frame loop reuses its quaternion, truck role object, roll positions and cloth mesh list, and no longer joins the dryer-can arrays every frame. Batching and prewarm failures are written to Diagnostics instead of being swallowed (first 5, then a count).
+- tools/savecheck.py: clicks Continue and pauses in one step (waiting for the game to start first let a frame of sim slip in, a flaky DIFFER).
+
+## v4.2.4 (release): quick fixes
+- No more $25M goal: the aim is simply to make as much money as you can. The Cash box now shows how much you've made (or lost) since the start instead of "% of the $25M goal", and the "Mill of the Year" win screen is gone. Bankruptcy still ends a free game.
+- Shadows switch: turning shadows off or on no longer recompiles every shader (a long freeze on phones). It fades the sun's shadow out and stops refreshing the shadow map.
+- Fire: the floor glow's texture is made at start-up and compiled with everything else, so the first fire no longer stalls the frame.
+- Continue season: a broken or incomplete save is cleared instead of breaking the button for up to 14 days; if a save fails to load, the page says so and reloads to a clean menu.
+- The mill name is escaped on the report card (it was inserted as HTML). One shared escape helper (`escHTML`, 01-brand.js).
+
 ## v4.2.3 (release)
 Everything since v4.2.2:
 - Laptop battery: the 3D view now asks the browser for its default GPU instead of the high-performance one, so dual-GPU laptops stay on the integrated graphics and use much less battery. Pinning Ultra graphics (then reloading) still asks for the high-performance GPU. Phones are unaffected. Diagnostics shows the GPU preference.

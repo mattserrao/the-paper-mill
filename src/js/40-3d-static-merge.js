@@ -173,11 +173,13 @@
   function shDrop(r){const m=SH.meshes[r.shK];if(r.shK==null||!m||m.userData.rev!==SH.builds)return false;
     const a=m.geometry.attributes.position,i0=r.shV0*3,i1=i0+r.shVN*3;a.array.fill(0,i0,i1);
     a.addUpdateRange(i0,i1-i0);a.needsUpdate=true;r.shK=null;renderer.shadowMap.needsUpdate=true;SH.drops=(SH.drops||0)+1;return true;}
+  // v4.2.5: batching failures go to Diagnostics (the first 5, then a count), not only the console or nowhere
+  const smErr=(what,e)=>{SM.errs=(SM.errs||0)+1;if(SM.errs<=5)diag(`batching: ${what} failed: ${String(e&&e.message||e).slice(0,120)}`);else if(SM.errs===6)diag("batching: more failures, not logged");};
   function smTick(now){if(SM.off)return;
     if(!SM.t0){SM.t0=now;try{scene.updateMatrixWorld(true);smSnapshot();smMerge();}
-      catch(e){console.error("scenery batching failed",e);SM.off=true;SM.done=true;SM.list.forEach(r=>{r.o.layers.set(0);if(r.bm)r.bm.visible=false;});}return;}
-    if(SM.queue&&SM.queue.length){try{smStep();}catch(e){console.error("scenery baking failed",e);SM.queue=[];SM.done=true;}return;}
-    if(now>SM.checkT){SM.checkT=now+(now-SM.t0<10000?0:500);try{smWatch();}catch(e){}}}
+      catch(e){console.error("scenery batching failed",e);smErr("scenery batching (batching off)",e);SM.off=true;SM.done=true;SM.list.forEach(r=>{r.o.layers.set(0);if(r.bm)r.bm.visible=false;});}return;}
+    if(SM.queue&&SM.queue.length){try{smStep();}catch(e){console.error("scenery baking failed",e);smErr("scenery baking",e);SM.queue=[];SM.done=true;}return;}
+    if(now>SM.checkT){SM.checkT=now+(now-SM.t0<10000?0:500);try{smWatch();}catch(e){smErr("watch for moved objects",e);}}}
   /* ---- moving things, batched per look (v4) ----
      People, vehicles, loads and anything else drawn on its own share a few materials, so every opaque, single-material
      mesh that shares its look with at least two others is drawn through a dynamic BatchedMesh: one draw per look,

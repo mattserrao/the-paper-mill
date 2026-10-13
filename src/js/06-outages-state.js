@@ -88,7 +88,7 @@ function initState(){
   // order (reel and winder stores in t, conveyor and warehouse in rolls) that move first-in first-out with the scalars
   S.lots={reel:[[C.grade,S.reel]],buf:[],acc:[],conv:[],fg:[[C.grade,S.fg]]};
   S.q={made:0,off:0,bank:0};S.fx=[];S.perk={chem:0,sp:{},price:{},energy:0,winder:0};S.chg=null;
-  seedRun((Math.random()*2**32)|0);S.profitRate=0;S.opb=null;S.over=null;S.won=false;S.shipT=0;
+  seedRun((Math.random()*2**32)|0);S.profitRate=0;S.opb=null;S.over=null;S.shipT=0;
   Object.assign(P,BASE);applyUpgrades();
   C.rollW.v=P.jumbo/P.rollsPerReel;const g=GRADES[C.grade]; C.pmSp.v=g.sp+P.spBonus+(S.perk.sp[C.grade]||0); C.wdr.v=Math.min(P.winderMax,P.K*C.pmSp.v*g.bw*1.25);
   const demand=P.K*g.sp*g.bw/P.pmLoss; C.pulper.v=demand/P.yieldF;

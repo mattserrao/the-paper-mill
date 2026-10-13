@@ -107,8 +107,7 @@ function step(dt){
   // v3.1.2: profit/day is OPERATING profit over the last 12 game hours: good paper is valued as it comes off the machine (tons x price),
   // less OCC, energy, labor, overhead and insurance. One-offs (upgrades, outage budgets, repair bills, card deals) are left out,
   // and so is the lumpy timing of truck departures. Cash and the season score are unchanged.
-  if(!S.over&&!S.free&&!S.zen&&S.cash<ECON.bankrupt&&!(S.season&&S.season.on)){S.over="bankrupt";showOverlay("bankrupt");}
-  if(!S.won&&!S.free&&!S.zen&&S.cash>=ECON.goal){S.won=true;if(!(S.season&&S.season.on))showOverlay("win");}
+  if(!S.over&&!S.free&&!S.zen&&S.cash<ECON.bankrupt&&!(S.season&&S.season.on)){S.over="bankrupt";showOverlay();}
   rcTick(dt);
   seasonTick();
   // smoothed rates (per hour)
