@@ -1,6 +1,6 @@
 # Changelog
 
-## v5.0.6-t1 (test, 2026-10-14): fixes from the 100-run survival QA
+## v5.0.6 (release, 2026-10-14): fixes and polish from the 100-run survival QA
 From the v5.0.5 QA report (100 bot runs and four agent players). Online, run `supabase/name-filter-v2.sql` once so the boards fold look-alike names too.
 
 - **Outages run at your speed.** The 5 min/s outage clock is now opt-in: the "Outage has begun" notice has a **Watch the crews** button that slows the clock to 5 min/s and flies the camera to the job. Pressing − or + while watching hands your speed straight back, and watching ends with the outage. Playtests found nothing to do in the old 48 s (no upsets or cards can start during an outage) and at 60 min/s it was a third of a run. The notice now closes when the outage ends, so it never outlives a fast one. The speed readout says "Watching crews · 5 min/s" while you watch.
