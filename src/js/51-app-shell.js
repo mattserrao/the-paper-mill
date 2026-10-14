@@ -86,7 +86,7 @@
     $("v2sub").hidden=first;$("v2surv").hidden=!first;$("v2nameRow").hidden=true;   // (Survival sits under Season on the first menu; once a run is on, "New survival" is with "New season")
     $("v2state").textContent=first?"":"Paused";
     $("v2free").querySelector("b").textContent=S.free?"Free play: on":"Free play";$("v2free").setAttribute("aria-pressed",String(!!S.free));$("v2ver").textContent=APP_VER;menu.hidden=false;}
-  function play(){menu.hidden=true;first=false;running=true;}
+  function play(){menu.hidden=true;first=false;running=!(S.cards&&S.cards.open);}   // v5.0.3: an open card, outage plan or report card keeps the sim paused until it is answered
   G3.showMenu=showMenu;G3.play=play;   // play: used by the autotest (52b) to start without the tutorial
   // ---- v3.1.0 quick-start tutorial: shown when a season starts (until the player ticks "don't show again") ----
   const TUT=(()=>{
@@ -159,7 +159,7 @@
       try{const q=new URLSearchParams(location.search);q.delete("zen");history.replaceState(null,"",location.pathname+(q.toString()?"?"+q:"")+location.hash);}catch(e){}$("v2zen").click();};setTimeout(go,300);}
   $("v2colors").addEventListener("click",rollMill);
   $("v2rename").addEventListener("click",()=>{$("v2nameRow").hidden=false;const i=$("v2name");i.value=MILL.name;i.focus();i.select();});
-  const saveName=()=>{renameMill($("v2name").value);$("v2nameRow").hidden=true;sync();};
+  const saveName=()=>{const i=$("v2name");if(renameMill(i.value)===false){i.value="";i.placeholder="That name is not allowed";i.focus();return;}i.placeholder="";$("v2nameRow").hidden=true;sync();};
   $("v2nameOk").addEventListener("click",saveName);$("v2name").addEventListener("keydown",e=>{if(e.key==="Enter")saveName();if(e.key==="Escape")$("v2nameRow").hidden=true;});
   {let arm=0;$("v2reset").addEventListener("click",()=>{const b=$("v2reset");if(Date.now()-arm<3000){newGame();arm=0;b.firstChild.textContent="Reset mill";play();return;}arm=Date.now();b.firstChild.textContent="Tap again to reset";setTimeout(()=>{b.firstChild.textContent="Reset mill";},3000);});}
   const fsEl=document.documentElement;

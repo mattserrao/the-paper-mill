@@ -20,4 +20,7 @@ function siteBrand(env){MILL.env=env;const L=BRANDS_ENV[env];if(!L)return;MILL.b
 // rename from the menu: trims, caps at 32 characters, repaints the mill's signs
 // escape text (such as the player-chosen mill name) before it goes into innerHTML
 const escHTML=t=>String(t).replace(/[&<>"']/g,x=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[x]));
-function renameMill(v){v=String(v||"").replace(/\s+/g," ").trim().slice(0,32).trim();if(!v)return;MILL.name=v;try{if(G3.rebrand)G3.rebrand();}catch(e){}}
+// v5.0.3: the mill name goes to the public boards, so it gets the same banned words as player names (supabase/leaderboard.sql)
+const BANNED_WORDS=["fuck","shit","cunt","bitch","nazi","hitler"];
+const nameOk=v=>{const l=String(v||"").toLowerCase();return !BANNED_WORDS.some(w=>l.includes(w));};
+function renameMill(v){v=String(v||"").replace(/\s+/g," ").trim().slice(0,32).trim();if(!v)return;if(!nameOk(v))return false;MILL.name=v;try{if(G3.rebrand)G3.rebrand();}catch(e){}}

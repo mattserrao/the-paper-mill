@@ -76,7 +76,7 @@ with sync_playwright() as pw:
     ok("rename", pg.evaluate("()=>document.getElementById('v2mt').textContent") == "Smoke Test Mill")
     click("#v2colors"); pg.wait_for_timeout(200)
     click("#v2free"); pg.wait_for_timeout(300)
-    ok("free play", pg.evaluate("()=>!!__PM.S.free") and pg.evaluate("()=>__PM.running"))
+    ok("free play (or an open event card keeps it paused, v5.0.3)", pg.evaluate("()=>!!__PM.S.free") and (pg.evaluate("()=>__PM.running") or pg.evaluate("()=>!!(__PM.S.cards.open&&!document.getElementById('dealOv').hidden)")))
     click("#v2pause"); click("#v2reset"); click("#v2reset"); pg.wait_for_timeout(500)
     ok("reset", pg.evaluate("()=>__PM.S.t") < 60 and pg.evaluate("()=>__PM.running"))
     pg.wait_for_timeout(1500)

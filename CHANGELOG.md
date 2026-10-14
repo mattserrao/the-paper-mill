@@ -1,5 +1,10 @@
 # Changelog
 
+## v5.0.3 (fixes from the survival playtest)
+- A finished run can no longer be continued: after bankruptcy (or the end of a season) the save is now cleared, so a reload no longer offers "Continue survival" and the same run can't be replayed and submitted again. (The old clear sat behind a check that skipped finished runs, so it never ran.)
+- **Resume** in the pause menu no longer restarts the game behind an open event card, outage budget or report card. The game stays paused until the card is answered, so an outage can't start on the default budget before you approve it.
+- Mill names get the same banned-word check as player names: renaming to a banned word is refused ("That name is not allowed"), and a banned mill name from an older save is sent to the board as "Unnamed mill". Online, run `supabase/mill-name-filter.sql` once so the boards refuse it too.
+
 ## v5.0.2 (release): report card labels
 - Report card, Bottlenecks: "Machine at full speed" is now **Paper machine (speed limited)** and "Machine down" is **Paper machine (machine down)**, so the two machine rows read as a pair, and the subtitle is now "% time each step limited the mill" (it was cut off on phones). (Saved report cards keep their numbers: only the shown names changed.)
 

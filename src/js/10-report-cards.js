@@ -86,7 +86,7 @@ function seasonTick(){const se=S.season;if(!se||!se.on||se.done)return;
   if(se.surv){if(S.cash<ECON.bankrupt)endSurvival();return;}   // v4.3 survival: no last day, only bankruptcy
   if(S.t>=se.end||S.cash<ECON.bankrupt)endSeason(S.cash<ECON.bankrupt);}
 function seasonResult(){return {score:Math.round(S.cash-ECON.start),tons:Math.round(S.shipT||0),incidents:S.tot.incidents,mill:MILL.name.slice(0,40),version:APP_VER.slice(0,12),days:SEASON_DAYS};}
-function endSeason(bust){const se=S.season;se.done=true;se.on=false;running=false;
+function endSeason(bust){const se=S.season;se.done=true;se.on=false;running=false;if(G3.save&&G3.save.drop)G3.save.drop();   // v5.0.3: the season is over, so its save goes
   if(document.body.classList.contains("fs"))setFS(false);seasonLocks(false);
   const r=seasonResult();se.result=r;AUDIO.sfx(r.score>0?"win":"lose",100);
   soMode(false);$("so-h").textContent=bust?"Season over: bankrupt":"Season complete";
@@ -108,7 +108,7 @@ async function submitScore(){const r=S.season&&S.season.result;if(!r||S.free)ret
   if(!lbOn()){setMsg("Saved on this device. The online leaderboard isn't connected yet.","ok");$("so-submit").disabled=true;return;}
   $("so-submit").disabled=true;setMsg("Submitting…");
   try{const post=b=>fetch(LB.url.replace(/\/$/,"")+"/rest/v1/"+(sv?SURV.table:"scores"),{method:"POST",headers:lbHdr({"Content-Type":"application/json",Prefer:"return=minimal"}),body:JSON.stringify(b)});
-    let res=await post({...r,name});
+    let res=await post({...r,mill:nameOk(r.mill)?r.mill:"Unnamed mill",name});   // (v5.0.3: a mill name from an older save can still hold a banned word)
     if(sv&&res.status===404){setMsg("Saved on this device. The online survival board isn't set up yet.","ok");return;}   // (the table from supabase/survival.sql)
     if(!res.ok){let msg="Couldn't submit ("+res.status+")";try{const j=await res.json();if(j&&j.message)msg=j.message;}catch(e){}
       if(sv&&/survival_wave_fits/.test(msg)){setMsg("Saved on this device. The online survival board needs an update before it can take this score.","ok");return;}   // (supabase/survival-4day-waves.sql)
