@@ -1,5 +1,18 @@
 # Changelog
 
+## v5.0.0 Survival (release, 2026-10-13)
+The survival release: a second scored mode with mill leaders, painted portraits, and a round of fixes and polish. It
+gathers the three test builds below (v4.3.0-t1, v4.4.0-t1 to t3).
+- **Survival mode**: outlast the waves. An outage every 4 days starts a rougher, dearer wave; the score is the time
+  survived (days, hours, minutes), on its own leaderboard.
+- **Mill leaders**: Chip, Dot, Felicity and Hank, each taking on one survival pressure, with painted portraits.
+- **Seasons**: no more day-15 rough patch. Grades from day 4, profit per day as a 24-hour average, a six-card tutorial,
+  one word for upsets, a cleaner menu and top bar.
+- Online survival board: run `supabase/survival.sql` on a new project, or `supabase/survival-4day-waves.sql` on a table made
+  by an earlier version. Until then scores stay on the device.
+- Open: with the rough patch gone, a hands-off season finishes about +$240k (10 seeds) against the break-even target;
+  a price or outage-budget trim would bring it back. Sim checksum changed (the rough patch was part of the sim).
+
 ## v4.4.0-t3 (test, not released): fixes
 - Seasons: the day-15 rough patch is gone. Days 1 to 3 stay quiet and the first week 25% calmer; after that, upsets run at the normal rate to the end.
 - Main menu: Season and Survival are two equal choices; neither is highlighted. (Continue and Resume stay the main button when they are there.) "Play" is now "Season".

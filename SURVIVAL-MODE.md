@@ -1,6 +1,6 @@
-# The Paper Mill: survival mode and mill leaders (v4.4.0-t3, 2026-10-13)
+# The Paper Mill: survival mode and mill leaders (v5.0.0, 2026-10-13)
 
-Status: built and checked on the test branch `survival-mode` (not merged into main), with mill leaders added in v4.4.0-t1, painted portraits in v4.4.0-t2 and fixes in v4.4.0-t3. Not released. The online survival board
+Status: released in v5.0.0 Survival (2026-10-13), from the test branch `test/survival-v4.4` (v4.3.0-t1 to v4.4.0-t3). The online survival board
 needs `supabase/survival.sql` run once in Supabase; until then survival scores stay on the device.
 
 ## The mode
