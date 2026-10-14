@@ -5,7 +5,7 @@ function step(dt){
   // v2.9.13: daily production (a mill day runs 6am to 6am, and S.t=0 is 6am) and the best day so far
   {const di=Math.floor(S.t/1440);if(!S.pd)S.pd={i:di,start:S.tot.prodT,rec:0,recDay:0};
     if(di>S.pd.i){const made=S.tot.prodT-S.pd.start;if(made>S.pd.rec){S.pd.rec=made;S.pd.recDay=S.pd.i+1;}S.pd.i=di;S.pd.start=S.tot.prodT;}}
-  const L0=S.ledger,op0=L0.occ+L0.energy+L0.labor+L0.overhead+L0.premium;
+
   chaosTick(dt);
   cardTick(dt);
   outageTick();
@@ -98,8 +98,11 @@ function step(dt){
   // clamp trucks first clear the roll conveyor into the warehouse (more urgently as it fills), then load trucks
   {const u=S.conv/P.convCap,docked=S.outDock.some(Boolean),share=docked?(u>0.6?0.9:0.5):1;
     const put=Math.max(0,Math.min(S.conv,P.fgCap-S.fg,lcap*share));S.conv-=put;S.fg+=put;lotTake(S.lots.conv,put,S.lots.fg);lcap-=put;S.rates.put=ease(S.rates.put||0,put*60/dt,dt,6);}
+  // v5.0.4: with a shipping bottleneck the doors' combined rate fills one truck at a time (door by door), so trucks leave
+  // through the day instead of every truck crawling for a day; capacity (doors x rate) and the dock-door upgrade are unchanged
+  let pool=S.bn==="ship"?P.shipDoors*P.doorRolls*dt/60:Infinity;
   for(let d=0;d<P.shipDoors;d++){const tr=S.outDock[d]; if(!tr)continue;
-    const l=Math.min(P.truckRolls-tr.load,P.doorRolls*dt/60,lcap,S.fg);
+    const l=Math.min(P.truckRolls-tr.load,pool===Infinity?P.doorRolls*dt/60:pool,lcap,S.fg);pool-=l;
     tr.load+=l;lcap-=l;S.fg-=l;loaded+=l;lotTake(S.lots.fg,l,tr.lots||(tr.lots=[]));
     if(tr.load>=P.truckRolls-1e-6){S.leaving.push({...tr,ty:outY(d),kind:"out"});S.outDock[d]=null;S.tot.shipped+=P.truckRolls;const tons=P.truckRolls*C.rollW.v;S.shipT+=tons;earn(lotValue(tr.lots||[[C.grade,P.truckRolls]],C.rollW.v));}}   // (v16: each roll at its own grade's price)
   spend(((C.drivers.v+C.loaders.v+P.techs)*(ECON.wage+(P.siteWage||0))*(P.costMul||1)*leadWage()+leadPayroll()*(P.costMul||1)+P.robots*ECON.robot+P.pmCost)*dt/60,"labor");
@@ -114,7 +117,9 @@ function step(dt){
   const R=S.rates,k=v=>v*60/dt;
   R.feed=ease(R.feed,k(feed),dt,6);R.unload=ease(R.unload,k(unloaded),dt,6);R.fiberIn=ease(R.fiberIn,k(fiberIn),dt,6);
   R.prod=ease(R.prod,k(prod),dt,6);R.fiberUse=ease(R.fiberUse,k(prod/P.pmLoss),dt,6);R.load=ease(R.load,k(loaded),dt,6);R.rolls=ease(R.rolls,k(rollsMade),dt,10);R.cut=ease(R.cut,k(cut),dt,6);
-  {const L1=S.ledger,op=prod*priceOf(C.grade)-(L1.occ+L1.energy+L1.labor+L1.overhead+L1.premium-op0),B=S.opb&&S.opb.b.length===144?S.opb:(S.opb={b:new Array(144).fill(0),i:-1});
+  // v5.0.4: profit per day is the real cash change (sales and deals in, every cost out, repairs and outage budgets too); only
+  // upgrades are left out, as they're a choice. Read from the ledger, so money moved between steps (a budget approved) counts too.
+  {const L1=S.ledger,T=L1.rev+(L1.deals||0)-(L1.occ+L1.energy+L1.labor+L1.overhead+L1.premium+L1.repairs),op=S.opLast==null?0:T-S.opLast;S.opLast=T;const B=S.opb&&S.opb.b.length===144?S.opb:(S.opb={b:new Array(144).fill(0),i:-1});
     // v4.4.0-t3: profit per day is the last 24 game hours (144 ten-minute buckets); shown from the end of the first day
     const bi=Math.floor(S.t/10);if(bi!==B.i){for(let j=Math.max(B.i+1,bi-143);j<=bi;j++)B.b[((j%144)+144)%144]=0;B.i=bi;}
     B.b[bi%144]+=op;S.profitRate=B.b.reduce((a,v)=>a+v,0)*1440/Math.min(1440,Math.max(10,S.t));}

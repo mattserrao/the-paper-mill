@@ -68,7 +68,7 @@
   const NARROW=matchMedia("(max-width:480px)"),TINY=matchMedia("(max-width:400px)");   // phones: the survival clock label is "W3 · D16" (v5.0.4: was "W3 · Day 16", cut off once cash went negative)
   const mirror=[...document.querySelectorAll("#v2more [data-m]")].map(el=>[el,$(el.dataset.m)]);
   function sync(){set("v2mill",MILL.name);set("v2mt",MILL.name);set("v2cash",short(S.cash));
-    {const ok=S.t>=1440;set("v2profit",ok?short(S.profitRate)+"/d":"–");$("v2profit").style.color=ok&&S.profitRate<0?"var(--bad)":"var(--ink)";$("v2profit").title=ok?"Profit over the last 24 hours":"Shown once the first day is done (a 24-hour average)";}
+    {const ok=S.t>=1440;set("v2profit",ok?short(S.profitRate)+"/d":"–");$("v2profit").style.color=ok&&S.profitRate<0?"var(--bad)":"var(--ink)";$("v2profit").title=ok?"Cash made over the last 24 hours: sales and deals, less every cost including repairs and outage budgets (upgrades aside)":"Shown once the first day is done (a 24-hour average)";}
     {const h=((S.t+360)/60)%24,d=new Date(S.date0||Date.now());d.setMinutes(d.getMinutes()+S.t+360);const hh=Math.floor(h),ap=hh<12?"AM":"PM",h12=hh%12||12;
      set("v2clock",(TINY.matches?"":d.toLocaleDateString("en-US",{weekday:"short"})+" ")+h12+" "+ap);}   // v5.0.4: no weekday on small phones, so the time is never cut off
     {const se=S.season,on=!!(se&&se.on),sv=!!(se&&se.surv),day=Math.floor(S.t/1440)+1,lab=on?(sv?(NARROW.matches?`W${survWave()} · D${day}`:`Wave ${survWave()} · Day ${day}`):`Day ${Math.min(SEASON_DAYS,day)} of ${SEASON_DAYS}`):se&&se.done?(sv?"Run over":"Season over"):"Time";

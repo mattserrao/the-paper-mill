@@ -18,9 +18,9 @@ const LEAD={
   wage:0.05,             // Chip, pay settlements: wages +5% with every deal (they stay with the deals)
   fixCut:0.5,            // Dot, Fix it now: ends a breakdown, returns part of its bill, and that breakdown is 50% rarer from then on (stacks)
   refund:0.6,            // Dot, Fix it now: share of that breakdown's repair bill she gets back
-  autoFix:0.25,          // v5.0.4: Dot fixes on her own: each fixable breakdown that starts has this chance, once per outage cycle (no button)
+  autoFix:0.5,           // v5.0.4: Dot fixes on her own: each fixable breakdown that starts has this chance, once per outage cycle (no button; 0.25 tested worth no more than no leader)
   rep:0.10,              // Dot, a good millwright: repair jobs 10% quicker while she is in charge
-  bills:1.15,            // Dot, gold-plates every job: repair bills +15% while she is in charge
+  bills:1.05,            // Dot, gold-plates every job: repair bills +5% while she is in charge (v5.0.4: was +15%, with the manual fix)
   cap:0.065,             // Felicity, a project: +6.5% capacity in one area (fibre line, paper machine or finishing), stays with the mill
   overrun:20,            // Felicity, project tie-ins: every outage overruns 20 min per project done so far (machine down)
   rethread:0.20,         // Hank, runnability: time lost to sheet breaks and hayouts -20% per pick...

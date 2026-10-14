@@ -1,7 +1,9 @@
 # Changelog
 
 ## v5.0.4 (playtest review)
-- **Dot fixes on her own.** No more Fix it now button: once per outage cycle, each breakdown she can fix has a 25% chance of being fixed as it starts. It ends on the spot, 60% of its bill comes back and it's fixed at the root, as before; a banner says so, and the chip shows "Fix ready" or "Fix used". (Her roll has its own dice, so nothing else in a run changes.)
+- **Dot fixes on her own.** No more Fix it now button: once per outage cycle, each breakdown she can fix has a 50% chance of being fixed as it starts. It ends on the spot, 60% of its bill comes back and it's fixed at the root, as before; a banner says so, and the chip shows "Fix ready" or "Fix used". Her drawback is now repair bills **+5%** (was +15%). At 25% and +15% she tested no better than no leader; at 50% and +5% she survives 25.6 days hands-off and 40.6 days for the buyer bot (10 runs each; she was 25.9 and 38.8 with the button, no leader is 24.5 and 34.9). (Her roll has its own dice, so nothing else in a run changes.)
+- **Profit per day** in the top bar is now the real cash change over the last 24 hours, repairs and outage budgets included (upgrades aside). It used to leave out repairs, so it read positive while survival waves lost money.
+- **Shipping bottleneck:** the dock doors' combined rate now loads one truck at a time instead of every truck crawling in parallel. Same tons per hour and the same dock upgrade, but the first truck leaves around hour 14 instead of hour 32, and the opening cash dip is about $210k instead of $450k (shipping-bottleneck seasons finish about $155k better).
 - Outage budgets start at the cheapest option when cash is below zero.
 - Zen mode asks first when it would end a season or survival run (tap again within 3 s), and leaving a run for zen or free play drops its save (a reload used to bring the abandoned run back).
 - An event card dealt while an outage notice is on screen waits until the notice closes, instead of hiding under it.

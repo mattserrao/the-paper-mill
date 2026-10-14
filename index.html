@@ -1682,9 +1682,9 @@ const LEAD={
   wage:0.05,             // Chip, pay settlements: wages +5% with every deal (they stay with the deals)
   fixCut:0.5,            // Dot, Fix it now: ends a breakdown, returns part of its bill, and that breakdown is 50% rarer from then on (stacks)
   refund:0.6,            // Dot, Fix it now: share of that breakdown's repair bill she gets back
-  autoFix:0.25,          // v5.0.4: Dot fixes on her own: each fixable breakdown that starts has this chance, once per outage cycle (no button)
+  autoFix:0.5,           // v5.0.4: Dot fixes on her own: each fixable breakdown that starts has this chance, once per outage cycle (no button; 0.25 tested worth no more than no leader)
   rep:0.10,              // Dot, a good millwright: repair jobs 10% quicker while she is in charge
-  bills:1.15,            // Dot, gold-plates every job: repair bills +15% while she is in charge
+  bills:1.05,            // Dot, gold-plates every job: repair bills +5% while she is in charge (v5.0.4: was +15%, with the manual fix)
   cap:0.065,             // Felicity, a project: +6.5% capacity in one area (fibre line, paper machine or finishing), stays with the mill
   overrun:20,            // Felicity, project tie-ins: every outage overruns 20 min per project done so far (machine down)
   rethread:0.20,         // Hank, runnability: time lost to sheet breaks and hayouts -20% per pick...
@@ -2441,7 +2441,7 @@ function step(dt){
   // v2.9.13: daily production (a mill day runs 6am to 6am, and S.t=0 is 6am) and the best day so far
   {const di=Math.floor(S.t/1440);if(!S.pd)S.pd={i:di,start:S.tot.prodT,rec:0,recDay:0};
     if(di>S.pd.i){const made=S.tot.prodT-S.pd.start;if(made>S.pd.rec){S.pd.rec=made;S.pd.recDay=S.pd.i+1;}S.pd.i=di;S.pd.start=S.tot.prodT;}}
-  const L0=S.ledger,op0=L0.occ+L0.energy+L0.labor+L0.overhead+L0.premium;
+
   chaosTick(dt);
   cardTick(dt);
   outageTick();
@@ -2534,8 +2534,11 @@ function step(dt){
   // clamp trucks first clear the roll conveyor into the warehouse (more urgently as it fills), then load trucks
   {const u=S.conv/P.convCap,docked=S.outDock.some(Boolean),share=docked?(u>0.6?0.9:0.5):1;
     const put=Math.max(0,Math.min(S.conv,P.fgCap-S.fg,lcap*share));S.conv-=put;S.fg+=put;lotTake(S.lots.conv,put,S.lots.fg);lcap-=put;S.rates.put=ease(S.rates.put||0,put*60/dt,dt,6);}
+  // v5.0.4: with a shipping bottleneck the doors' combined rate fills one truck at a time (door by door), so trucks leave
+  // through the day instead of every truck crawling for a day; capacity (doors x rate) and the dock-door upgrade are unchanged
+  let pool=S.bn==="ship"?P.shipDoors*P.doorRolls*dt/60:Infinity;
   for(let d=0;d<P.shipDoors;d++){const tr=S.outDock[d]; if(!tr)continue;
-    const l=Math.min(P.truckRolls-tr.load,P.doorRolls*dt/60,lcap,S.fg);
+    const l=Math.min(P.truckRolls-tr.load,pool===Infinity?P.doorRolls*dt/60:pool,lcap,S.fg);pool-=l;
     tr.load+=l;lcap-=l;S.fg-=l;loaded+=l;lotTake(S.lots.fg,l,tr.lots||(tr.lots=[]));
     if(tr.load>=P.truckRolls-1e-6){S.leaving.push({...tr,ty:outY(d),kind:"out"});S.outDock[d]=null;S.tot.shipped+=P.truckRolls;const tons=P.truckRolls*C.rollW.v;S.shipT+=tons;earn(lotValue(tr.lots||[[C.grade,P.truckRolls]],C.rollW.v));}}   // (v16: each roll at its own grade's price)
   spend(((C.drivers.v+C.loaders.v+P.techs)*(ECON.wage+(P.siteWage||0))*(P.costMul||1)*leadWage()+leadPayroll()*(P.costMul||1)+P.robots*ECON.robot+P.pmCost)*dt/60,"labor");
@@ -2550,7 +2553,9 @@ function step(dt){
   const R=S.rates,k=v=>v*60/dt;
   R.feed=ease(R.feed,k(feed),dt,6);R.unload=ease(R.unload,k(unloaded),dt,6);R.fiberIn=ease(R.fiberIn,k(fiberIn),dt,6);
   R.prod=ease(R.prod,k(prod),dt,6);R.fiberUse=ease(R.fiberUse,k(prod/P.pmLoss),dt,6);R.load=ease(R.load,k(loaded),dt,6);R.rolls=ease(R.rolls,k(rollsMade),dt,10);R.cut=ease(R.cut,k(cut),dt,6);
-  {const L1=S.ledger,op=prod*priceOf(C.grade)-(L1.occ+L1.energy+L1.labor+L1.overhead+L1.premium-op0),B=S.opb&&S.opb.b.length===144?S.opb:(S.opb={b:new Array(144).fill(0),i:-1});
+  // v5.0.4: profit per day is the real cash change (sales and deals in, every cost out, repairs and outage budgets too); only
+  // upgrades are left out, as they're a choice. Read from the ledger, so money moved between steps (a budget approved) counts too.
+  {const L1=S.ledger,T=L1.rev+(L1.deals||0)-(L1.occ+L1.energy+L1.labor+L1.overhead+L1.premium+L1.repairs),op=S.opLast==null?0:T-S.opLast;S.opLast=T;const B=S.opb&&S.opb.b.length===144?S.opb:(S.opb={b:new Array(144).fill(0),i:-1});
     // v4.4.0-t3: profit per day is the last 24 game hours (144 ten-minute buckets); shown from the end of the first day
     const bi=Math.floor(S.t/10);if(bi!==B.i){for(let j=Math.max(B.i+1,bi-143);j<=bi;j++)B.b[((j%144)+144)%144]=0;B.i=bi;}
     B.b[bi%144]+=op;S.profitRate=B.b.reduce((a,v)=>a+v,0)*1440/Math.min(1440,Math.max(10,S.t));}
@@ -8570,7 +8575,7 @@ setView();
   const NARROW=matchMedia("(max-width:480px)"),TINY=matchMedia("(max-width:400px)");   // phones: the survival clock label is "W3 · D16" (v5.0.4: was "W3 · Day 16", cut off once cash went negative)
   const mirror=[...document.querySelectorAll("#v2more [data-m]")].map(el=>[el,$(el.dataset.m)]);
   function sync(){set("v2mill",MILL.name);set("v2mt",MILL.name);set("v2cash",short(S.cash));
-    {const ok=S.t>=1440;set("v2profit",ok?short(S.profitRate)+"/d":"–");$("v2profit").style.color=ok&&S.profitRate<0?"var(--bad)":"var(--ink)";$("v2profit").title=ok?"Profit over the last 24 hours":"Shown once the first day is done (a 24-hour average)";}
+    {const ok=S.t>=1440;set("v2profit",ok?short(S.profitRate)+"/d":"–");$("v2profit").style.color=ok&&S.profitRate<0?"var(--bad)":"var(--ink)";$("v2profit").title=ok?"Cash made over the last 24 hours: sales and deals, less every cost including repairs and outage budgets (upgrades aside)":"Shown once the first day is done (a 24-hour average)";}
     {const h=((S.t+360)/60)%24,d=new Date(S.date0||Date.now());d.setMinutes(d.getMinutes()+S.t+360);const hh=Math.floor(h),ap=hh<12?"AM":"PM",h12=hh%12||12;
      set("v2clock",(TINY.matches?"":d.toLocaleDateString("en-US",{weekday:"short"})+" ")+h12+" "+ap);}   // v5.0.4: no weekday on small phones, so the time is never cut off
     {const se=S.season,on=!!(se&&se.on),sv=!!(se&&se.surv),day=Math.floor(S.t/1440)+1,lab=on?(sv?(NARROW.matches?`W${survWave()} · D${day}`:`Wave ${survWave()} · Day ${day}`):`Day ${Math.min(SEASON_DAYS,day)} of ${SEASON_DAYS}`):se&&se.done?(sv?"Run over":"Season over"):"Time";
