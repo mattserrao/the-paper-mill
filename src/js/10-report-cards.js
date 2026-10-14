@@ -52,13 +52,13 @@ function rcMake(a,i){const p=rcSum(a),s=rcSum(S.rc.s);
   else if(worst==="Cost / ton")tip=`Each ton cost ${money(p.cpt)} to make against a ${money(p.price)} price. Efficiency upgrades and fewer breaks bring that down.`;
   else if(bn&&bn[1]>0.4)tip=bn[0]==="Machine at full speed"?`The paper machine ran flat out ${Math.round(bn[1]*100)}% of the time, so it sets your output. Speed and drive upgrades pay back fastest.`:bn[0]==="Machine down"?`The machine being down held the mill back ${Math.round(bn[1]*100)}% of the time. Cut breaks and breakdowns first.`:`The ${bn[0].toLowerCase()} held the mill back ${Math.round(bn[1]*100)}% of the time. That's where an upgrade pays back fastest.`;
   else tip=overall==="A"?"Great running. Keep the machine up and the buffers healthy.":`Profit margin was ${Math.round(p.margin*100)}%. Shorter downtime is the quickest way to lift it.`;
-  if(survRun())return {i,wave:i+1,from:i?i*OUT.every:1,to:(i+1)*OUT.every,p,s,g,overall,tip};   // v4.3: a wave's card (a wave runs from one outage day to the next)
+  if(survRun())return {i,wave:i+1,from:i?i*OUT.every+1:1,to:(i+1)*OUT.every,p,s,g,overall,tip};   // v4.3: a wave's card (a wave runs from one outage day to the next)
   return {i,from:i*10+1,to:i*10+10,p,s,g,overall,tip};}
 function rcHTML(c){const W=c.wave,per=W?"this wave":"these 10 days",all=W?"run so far":"season so far";const p=c.p,s=c.s,pc=v=>Math.round(v*100)+"%",hrs=m=>(m/60).toFixed(m<600?1:0)+" h",gc=x=>"rcg g"+x;
   const row=(k,a,b,cls)=>`<div class="rcr${cls?" "+cls:""}"><span>${k}</span><b>${a}</b><i>${b}</i></div>`;
   const bar=(k,v,lab,hot)=>`<div class="rcb${hot?" hot":""}"><span>${k}</span><div><em style="width:${Math.max(2,Math.round(v*100))}%"></em></div><b>${lab}</b></div>`;
   const maxDn=p.dn.length?p.dn[0][1]:1;
-  return `<div class="rchead"><div><span class="dk">${W?`Wave ${W} report card`:"Report card"} · days ${c.from}–${c.to}</span><h2 id="rc-h">${escHTML(MILL.name)}</h2></div><div class="${gc(c.overall)} big" aria-label="Overall grade ${c.overall}">${c.overall}</div></div>
+  return `<div class="rchead"><div><span class="dk">${W?`Wave ${W} report card`:"Report card"} · <span class="nw">days ${c.from}–${c.to}</span></span><h2 id="rc-h">${escHTML(MILL.name)}</h2></div><div class="${gc(c.overall)} big" aria-label="Overall grade ${c.overall}">${c.overall}</div></div>
     <div class="rcgrades">${Object.entries(c.g).map(([k,v])=>`<div><div class="${gc(v)}">${v}</div><small>${k}</small></div>`).join("")}</div>
     <p class="rctip"><b>Tip</b> ${c.tip}</p>${W&&c.next?`<p class="wavenext"><b>Wave ${W} survived.</b> Wave ${W+1} starts now: upsets <b>${xf(survUp(W+1))}</b>, costs <b>${xf(survCost(W+1))}</b>.</p>`:""}
     <h3>Money <small>${per} · ${all}</small></h3>
@@ -80,7 +80,9 @@ function rcOpen(c,fromSummary){if(!rcEl){rcEl=document.createElement("div");rcEl
   if(!fromSummary){running=false;S.cards.open={report:true};}
   rcEl.innerHTML=`<div class="modal deal outg rc" role="dialog" aria-modal="true" aria-labelledby="rc-h">${rcHTML(c)}<div class="btns"><button class="primary" id="rc-ok" style="flex:1">${fromSummary?"Close":"Back to the mill"}</button></div></div>`;
   rcEl.hidden=false;AUDIO.sfx(c.overall<="B"?"win":"cash",150);
-  document.getElementById("rc-ok").addEventListener("click",()=>{rcEl.hidden=true;if(!fromSummary)closeCard(true);});rcEl.querySelector(".modal").scrollTop=0;document.getElementById("rc-ok").focus({preventScroll:true});}
+  document.getElementById("rc-ok").addEventListener("click",()=>{rcEl.hidden=true;if(!fromSummary)closeCard(true);});
+  if(!rcEl._esc){rcEl._esc=1;document.addEventListener("keydown",e=>{if(e.key==="Escape"&&!rcEl.hidden){const b=document.getElementById("rc-ok");if(b){e.preventDefault();e.stopPropagation();b.click();}}},true);}   // v5.0.5: Escape closes it
+  rcEl.querySelector(".modal").scrollTop=0;document.getElementById("rc-ok").focus({preventScroll:true});}
 function rcFinal(){const R=S.rc;if(!R)return null;const c=rcMake(R.p,R.i);R.cards.push(c);return c;}
 function seasonTick(){const se=S.season;if(!se||!se.on||se.done)return;
   if(se.surv){if(S.cash<ECON.bankrupt)endSurvival();return;}   // v4.3 survival: no last day, only bankruptcy
@@ -94,7 +96,7 @@ function endSeason(bust){const se=S.season;se.done=true;se.on=false;running=fals
   const eff=S.tot.pot>0?S.tot.prodT/S.tot.pot:1,sg=S.rc&&S.rc.s?rcMake(S.rc.s,S.rc.i).overall:null,g=sg?RATINGS.find(x=>x[1]===sg):RATINGS.find(x=>eff>=x[0]);
   const st=[["Net profit",money(r.score),"big"],["Tons shipped",f0(r.tons)+" t"],["Upsets survived",String(r.incidents)],["Rolls made",String(S.tot.rolls)],["Season grade",g[1]+" · "+g[2]],["Output",Math.round(eff*100)+"% of max-speed tons"]];
   $("so-stats").replaceChildren(...st.map(([k,v,c])=>{const d=document.createElement("div");if(c)d.className=c;const a=document.createElement("span");a.textContent=k;const b=document.createElement("b");b.textContent=v;d.append(a,b);return d;}));
-  {const c=bust?null:rcFinal(),box=$("so-rc");if(box){if(c){box.hidden=false;box.innerHTML=`<div class="rcmini"><div class="rcg g${c.overall}">${c.overall}</div><div><b>Days ${c.from}–${c.to} report card</b><small>${Object.entries(c.g).map(([k,v])=>k+" "+v).join(" · ")}</small><p>${c.tip}</p></div></div><button id="so-rcbtn" class="ghost">Open the full report card</button>`;
+  {const c=bust?null:rcFinal(),box=$("so-rc");if(box){if(c){box.hidden=false;box.innerHTML=`<div class="rcmini"><div class="rcg g${c.overall}">${c.overall}</div><div><b><span class="nw">Days ${c.from}–${c.to}</span> report card</b><small>${Object.entries(c.g).map(([k,v])=>k+" "+v).join(" · ")}</small><p>${c.tip}</p></div></div><button id="so-rcbtn" class="ghost">Open the full report card</button>`;
       $("so-rcbtn").addEventListener("click",()=>rcOpen(c,true));}else box.hidden=true;}}
   let nm="";try{nm=localStorage.getItem("paper-mill-player")||"";}catch(e){}$("so-name").value=nm;soCount();
   $("so-submit").disabled=false;$("so-submit").textContent=lbOn()?"Submit score":"Save score";setMsg("");$("seasonOv").hidden=false;$("seasonOv").scrollTop=0;if(matchMedia("(hover:hover) and (pointer:fine)").matches)$("so-name").focus();else $("so-submit").focus({preventScroll:true});}
@@ -116,8 +118,16 @@ async function submitScore(){const r=S.season&&S.season.result;if(!r||S.free)ret
     if(!res.ok){let msg="Couldn't submit ("+res.status+")";try{const j=await res.json();if(j&&j.message)msg=j.message;}catch(e){}
       if(sv&&/survival_wave_fits/.test(msg)){setMsg("Saved on this device. The online survival board needs an update before it can take this score.","ok");return;}   // (supabase/survival-4day-waves.sql)
       throw new Error(msg);}
-    setMsg("Submitted! You're on the board.","ok");S.season.submitted=name;openBoard(sv?"surv":"season");}
+    S.season.submitted=name;$("so-submit").textContent="Submitted ✓";
+    const rk=await lbRank(sv,r);S.season.rank=rk;   // v5.0.5: where the score landed, so the player can find it
+    setMsg(rk?`Submitted: #${rk.rank.toLocaleString("en-US")} of ${rk.total.toLocaleString("en-US")}.${rk.rank>100?" The board shows the top 100; your run is pinned at the bottom.":""}`:"Submitted! You're on the board.","ok");openBoard(sv?"surv":"season");}
   catch(e){setMsg(String(e.message||e),"bad");$("so-submit").disabled=false;}}
+// v5.0.5: a submitted run's rank on its board (runs strictly ahead + 1) and the board's size, from two count-only queries
+async function lbRank(sv,r){try{const base=LB.url.replace(/\/$/,"")+"/rest/v1/"+(sv?SURV.table:"scores")+"?select=id",
+    ver=sv?"":"&and=(version.not.like.v1.*,version.not.like.v2.0.*,version.not.like.v2.1.*)",
+    ahead=sv?`&or=(minutes.gt.${r.minutes},and(minutes.eq.${r.minutes},tons.gt.${r.tons}))`:`&or=(score.gt.${r.score},and(score.eq.${r.score},tons.gt.${r.tons}))`;
+  const n=async q=>{const res=await fetch(base+q,{method:"HEAD",headers:lbHdr({Prefer:"count=exact",Range:"0-0"})});const m=/\/(\d+)/.exec(res.headers.get("content-range")||"");if(!res.ok||!m)throw 0;return +m[1];};
+  const [a,t]=await Promise.all([n(ahead+ver),n(ver)]);return {rank:a+1,total:Math.max(t,a+1)};}catch(e){return null;}}
 // v4.2.5: the board takes focus when it opens and gives it back when it closes
 let lbBack=null,lbReq=0;
 function closeBoard(){$("lbOv").hidden=true;if(lbBack&&lbBack.focus)lbBack.focus();lbBack=null;}
@@ -125,7 +135,7 @@ function closeBoard(){$("lbOv").hidden=true;if(lbBack&&lbBack.focus)lbBack.focus
 async function openBoard(tab){if(tab!=="season"&&tab!=="surv")tab=survRun()?"surv":"season";const sv=tab==="surv",my=++lbReq;
   if($("lbOv").hidden){lbBack=document.activeElement;$("lbOv").hidden=false;$("lb-close").focus();}
   document.querySelectorAll("#lb-tabs button").forEach(b=>b.setAttribute("aria-pressed",String(b.dataset.t===tab)));
-  const L=$("lb-list");L.replaceChildren(Object.assign(document.createElement("div"),{className:"lbempty",textContent:"Loading…"}));
+  const L=$("lb-list");L.replaceChildren(Object.assign(document.createElement("div"),{className:"lbempty",textContent:"Loading…"}));$("lb-sub").textContent="Loading…";
   const q=sv?SURV.table+"?select=name,minutes,wave,tons,incidents,mill,created_at&order=minutes.desc,tons.desc&limit=100"
     :"scores?select=name,score,tons,incidents,mill,created_at&order=score.desc,tons.desc&limit=100&and=(version.not.like.v1.*,version.not.like.v2.0.*,version.not.like.v2.1.*)";
   let rows=[],note="";
@@ -140,7 +150,11 @@ async function openBoard(tab){if(tab!=="season"&&tab!=="surv")tab=survRun()?"sur
   L.replaceChildren(...rows.map((r,i)=>{const d=document.createElement("div");d.className="lbrow"+(me&&r.name===me?" me":"");
     const mk=(c,t)=>Object.assign(document.createElement("span"),{className:c,textContent:t});
     const dt=r.created_at?new Date(r.created_at).toLocaleDateString(undefined,{month:"short",day:"numeric"}):"";
-    d.append(mk("r",i+1),mk("n",r.name),mk("sc",sv?survTime(r.minutes):money(r.score)),mk("m",[r.mill,sv?"wave "+r.wave:"",f0(r.tons)+" t shipped",(r.incidents??"")+" upsets",dt].filter(Boolean).join(" · ")));return d;}));}
+    d.append(mk("r",i+1),mk("n",r.name),mk("sc",sv?survTime(r.minutes):money(r.score)),mk("m",[sv?"wave "+r.wave:"",f0(r.tons)+" t shipped",(r.incidents??"")+" upsets",dt,r.mill].filter(Boolean).join(" · ")));return d;}));
+  // v5.0.5: this run's row is marked and scrolled into view; outside the top 100 it is pinned at the bottom
+  {const se=S.season,rk=se&&se.rank,res=se&&se.result;if(rk&&res&&se.submitted&&(tab==="surv")===!!se.surv){if(rk.rank<=rows.length){const row=L.children[rk.rank-1];if(row){row.classList.add("me","mine");row.scrollIntoView({block:"center"});}}
+    else{const d=document.createElement("div");d.className="lbrow me mine pin";const mk=(c,t)=>Object.assign(document.createElement("span"),{className:c,textContent:t});
+      d.append(mk("r",rk.rank),mk("n",se.submitted),mk("sc",sv?survTime(res.minutes):money(res.score)),mk("m",[sv?"wave "+res.wave:"",f0(res.tons)+" t shipped",res.incidents+" upsets","your run",res.mill].filter(Boolean).join(" · ")));L.append(d);d.scrollIntoView({block:"center"});}}}}
 function setFree(on){S.free=on;
   if(on&&S.season&&S.season.on){const sv=survRun();if(G3.save&&G3.save.drop)G3.save.drop();S.season=null;S.lead=null;applyUpgrades();seasonLocks(false);BANNERS.push({text:(sv?"Survival run":"Season")+" abandoned: free play scores can't go on the leaderboard.",t:null});}
   if(on)BANNERS.push({text:"Free play: upgrades are free and you can't go bankrupt. No leaderboard.",t:null,kind:"good"});
@@ -164,7 +178,7 @@ function setZen(on){if(on===!!ZEN)return;
 let zenT=0;function zenPoke(){const b=$("zenExit");b.hidden=false;b.classList.add("show");clearTimeout(zenT);zenT=setTimeout(()=>b.classList.remove("show"),2500);}
 $("zenExit").addEventListener("click",e=>{e.stopPropagation();setZen(false);});
 ["pointermove","pointerdown"].forEach(t=>document.addEventListener(t,()=>{if(ZEN)zenPoke();},{passive:true}));
-$("so-more").addEventListener("click",()=>{$("seasonOv").hidden=true;if(survRun()){newGame();if(G3.showMenu)G3.showMenu();return;}running=true;});   // (v4.3: after a survival run the button is "Menu")
+$("so-more").addEventListener("click",()=>{$("seasonOv").hidden=true;if(survRun()){newGame();if(G3.showMenu)G3.showMenu();return;}if(S.season)S.season.more=1;running=true;});   // (v4.3: after a survival run the button is "Menu")
 $("so-submit").addEventListener("click",submitScore);$("so-name").addEventListener("keydown",e=>{if(e.key==="Enter")submitScore();e.stopPropagation();});
 $("so-board").addEventListener("click",openBoard);$("so-new").addEventListener("click",()=>{if(survRun()){leadPickOpen(id=>{$("seasonOv").hidden=true;startSurvival(id);});return;}$("seasonOv").hidden=true;startSeason();});   // (v4.4: a new survival run picks its leader first)
 document.querySelectorAll("#lb-tabs button").forEach(b=>b.addEventListener("click",()=>openBoard(b.dataset.t)));

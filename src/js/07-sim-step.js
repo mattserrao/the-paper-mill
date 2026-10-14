@@ -110,7 +110,7 @@ function step(dt){
   // v3.1.2: profit/day is OPERATING profit over the last 12 game hours: good paper is valued as it comes off the machine (tons x price),
   // less OCC, energy, labor, overhead and insurance. One-offs (upgrades, outage budgets, repair bills, card deals) are left out,
   // and so is the lumpy timing of truck departures. Cash and the season score are unchanged.
-  if(!S.over&&!S.free&&!S.zen&&S.cash<ECON.bankrupt&&!(S.season&&S.season.on)){S.over="bankrupt";showOverlay();}
+  if(!S.over&&!S.free&&!S.zen&&S.cash<ECON.bankrupt&&!(S.season&&S.season.on)&&!(S.season&&S.season.done&&!S.season.more)){S.over="bankrupt";showOverlay();}   // v5.0.5: not at the end of a season or survival run (its own results show); only in sandbox play or after "one more turn"
   rcTick(dt);
   seasonTick();
   // smoothed rates (per hour)
@@ -119,10 +119,11 @@ function step(dt){
   R.prod=ease(R.prod,k(prod),dt,6);R.fiberUse=ease(R.fiberUse,k(prod/P.pmLoss),dt,6);R.load=ease(R.load,k(loaded),dt,6);R.rolls=ease(R.rolls,k(rollsMade),dt,10);R.cut=ease(R.cut,k(cut),dt,6);
   // v5.0.4: profit per day is the real cash change (sales and deals in, every cost out, repairs and outage budgets too); only
   // upgrades are left out, as they're a choice. Read from the ledger, so money moved between steps (a budget approved) counts too.
-  {const L1=S.ledger,T=L1.rev+(L1.deals||0)-(L1.occ+L1.energy+L1.labor+L1.overhead+L1.premium+L1.repairs),op=S.opLast==null?0:T-S.opLast;S.opLast=T;const B=S.opb&&S.opb.b.length===144?S.opb:(S.opb={b:new Array(144).fill(0),i:-1});
+  {const L1=S.ledger,T=L1.rev+(L1.deals||0)-(L1.occ+L1.energy+L1.labor+L1.overhead+L1.premium+L1.repairs),op=S.opLast==null?0:T-S.opLast;S.opLast=T;const NB=432,B=S.opb&&S.opb.b.length===NB?S.opb:(S.opb={b:new Array(NB).fill(0),i:-1,sum:0});if(B.sum==null)B.sum=B.b.reduce((a,v)=>a+v,0);
     // v4.4.0-t3: profit per day is the last 24 game hours (144 ten-minute buckets); shown from the end of the first day
-    const bi=Math.floor(S.t/10);if(bi!==B.i){for(let j=Math.max(B.i+1,bi-143);j<=bi;j++)B.b[((j%144)+144)%144]=0;B.i=bi;}
-    B.b[bi%144]+=op;S.profitRate=B.b.reduce((a,v)=>a+v,0)*1440/Math.min(1440,Math.max(10,S.t));}
+    // v5.0.5: averaged over the last 3 days (432 ten-minute buckets, with a running sum), so one truck or one repair bill doesn't flip it
+    const bi=Math.floor(S.t/10);if(bi!==B.i){for(let j=Math.max(B.i+1,bi-NB+1);j<=bi;j++){const k=((j%NB)+NB)%NB;B.sum-=B.b[k];B.b[k]=0;}B.i=bi;}
+    B.b[bi%NB]+=op;B.sum+=op;S.profitRate=B.sum*1440/Math.min(NB*10,Math.max(10,S.t));}
   // trend every 10 sim min
   S.trendAcc+=dt;
   if(S.trendAcc>=10){S.trendAcc-=10;S.trend.push([S.tank/P.tankCap,S.pmSpeed/3300,S.yard/P.yardCap,S.fg/P.fgCap]);if(S.trend.length>144)S.trend.shift();}

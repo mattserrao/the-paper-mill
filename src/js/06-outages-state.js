@@ -45,7 +45,9 @@ function openOutagePlan(){const o=S.outg,st=outStart(o.k),first=o.k===1,d0=S.cas
     o.plan={...pick};if(lp)o.plan.lead={to:lp.to,pick:lp.pick};log(`Outage ${o.k} budget approved: ${money(tot)} (${OUT.areas.map(([a,n])=>n+" "+k(COST[pick[a]])).join(", ")})`,"warn");
     el.hidden=true;closeCard(true);});
   paint();if(lp)leadPlanMount(document.getElementById("out-lead"),lp);el.hidden=false;AUDIO.sfx("cash",150);document.getElementById("out-ok").focus({preventScroll:true});el.querySelector(".modal").scrollTop=0;}   // v5.0.4: opens at the top
-function outNote(head,body,ms){const el=outShell();el.classList.add("note");
+function outNote(head,body,ms){   // v5.0.5: with an event card open, the notice waits until the card is answered, so it never covers the card's buttons
+  {const d=document.getElementById("dealOv");clearInterval(outNote._w);if(S.cards&&S.cards.open&&S.cards.open.c&&d&&!d.hidden){outNote._w=setInterval(()=>{if(!(S.cards.open&&S.cards.open.c)){clearInterval(outNote._w);outNote(head,body,ms);}},200);return;}}
+  const el=outShell();el.classList.add("note");
   el.innerHTML=`<div class="modal deal" role="status"><span class="dk">Planned outage</span><h2>${head}</h2><p>${body}</p><div class="btns"><div class="dtimer"><i style="animation-duration:${ms/1000}s"></i></div></div></div>`;
   el.hidden=false;const m=el.querySelector(".modal");m.addEventListener("click",()=>{el.hidden=true;},{once:true});el._t=setTimeout(()=>{el.hidden=true;},ms);}
 function beginOutage(){const o=S.outg,st=S.t;if(!o.plan)o.plan={stock:1,wet:1,dry:1};o.on=true;o.end=st+OUT.len;

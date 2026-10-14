@@ -1,5 +1,20 @@
 # Changelog
 
+## v5.0.5 (test: second polish round, from the v5.0.4 playtest)
+- **Bug fixes:** Resume no longer runs the game behind the leader card or the tutorial; an outage notice now waits until an open event card is answered instead of covering its buttons; the "Chapter 11" dialog no longer opens (hidden, with focus on New game) under the results at the end of every season or survival run.
+- **Leaderboard:** after Submit you see your rank ("Submitted: #127 of 412"), the board scrolls to your row and marks it, and a run outside the top 100 is pinned at the bottom. Board rows list wave, tons, upsets and date before the mill name, and wrap instead of cutting off; the subtitle says "Loading…" while a tab loads.
+- **Disabled buttons look disabled:** greyed out, and the leader picker's button says "Pick a leader to start"; Submit reads "Submitted ✓" afterwards.
+- **Escape** closes the report card.
+- **Dot:** she only rolls on breakdowns with a repair bill of $100k or more (no dice drawn for cheaper ones), her FIXED banner replaces the breakdown's own, and what she saves shows on her card ("saving $179k") and the game-over screen. Weather and the roof leak say "repaired it and made it safer" instead of "fixed at the root".
+- **Hank:** dryer tunings after the 4th cut steam by half as much (2.75%); the outage dialog shows the current amount.
+- **33HT** no longer sells at a loss late in a survival run: its premium over 23m rises with the wave's cost multiplier (seasons unchanged).
+- **Profit per day** is averaged over the last 3 days, and in survival the label turns into "~8d left" (days to bankruptcy at that rate) once it's under 15 days.
+- **Top-bar grade** shows the last report card's grade until the new period has a day of data.
+- **Desktop:** the mill name gives way, so the clock and wave/day are never cut off.
+- **Tutorial:** the survival card describes Dot correctly (she makes no picks).
+- **Small fixes:** wave report cards no longer overlap days (wave 2 is days 5–8); the day range never splits across lines; the leader tally says "Fixed ×5"; the Upgrades sheet opens at the top; the mill-name filter folds look-alike characters and spacing ("Sh1t", "f u c k") and allows real words like Scunthorpe.
+- Balance (10 bot runs each, days survived hands-off / buyer): no leader 24.8 / 35.1, Dot 26.3 / 41.1, Hank 25.6 / 39.9 (v5.0.4: 24.5 / 34.9, 25.6 / 40.6, 25.1 / 37.3).
+
 ## v5.0.4 (playtest review)
 - **Dot fixes on her own.** No more Fix it now button: once per outage cycle, each breakdown she can fix has a 50% chance of being fixed as it starts. It ends on the spot, 60% of its bill comes back and it's fixed at the root, as before; a banner says so, and the chip shows "Fix ready" or "Fix used". Her drawback is now repair bills **+5%** (was +15%). At 25% and +15% she tested no better than no leader; at 50% and +5% she survives 25.6 days hands-off and 40.6 days for the buyer bot (10 runs each; she was 25.9 and 38.8 with the button, no leader is 24.5 and 34.9). (Her roll has its own dice, so nothing else in a run changes.)
 - **Profit per day** in the top bar is now the real cash change over the last 24 hours, repairs and outage budgets included (upgrades aside). It used to leave out repairs, so it read positive while survival waves lost money.

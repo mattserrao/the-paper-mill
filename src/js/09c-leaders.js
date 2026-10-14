@@ -5,7 +5,7 @@ const LEADERS={
     plus:()=>`Each outage, one deal: lock the next wave's fibre at this wave's price, or a sales push that stays (+$${LEAD.sales}/t on every grade).`,
     minus:()=>`Labour relations: every deal ends in a pay settlement (wages +${pct1(LEAD.wage)}% for good), and call-offs and dock brawls come ${LEAD.strife0}× as often while he's in charge.`},
   dot:{name:'Dot "Doc" Blade',title:"The millwright",role:"Mechanic",say:"If it turns, I can fix it.",
-    plus:()=>`Repairs ${pct1(LEAD.rep)}% quicker. Once per outage cycle she fixes a breakdown on her own (${pct1(LEAD.autoFix)}% chance as each one starts): it ends on the spot, ${LEAD.refund>=1?"its repair bill":pct1(LEAD.refund)+"% of its repair bill"} comes back, and it's fixed at the root (${pct1(LEAD.fixCut)}% rarer from then on).`,
+    plus:()=>`Repairs ${pct1(LEAD.rep)}% quicker. Once per outage cycle she fixes a breakdown on her own (${pct1(LEAD.autoFix)}% chance as each one with a bill of ${money(LEAD.autoMin)}+ starts): it ends on the spot, ${LEAD.refund>=1?"its repair bill":pct1(LEAD.refund)+"% of its repair bill"} comes back, and it's fixed at the root (${pct1(LEAD.fixCut)}% rarer from then on).`,
     minus:()=>`Gold-plates every job: repair bills cost ${pct1(LEAD.bills-1)}% more while she's in charge.`},
   fel:{name:"Felicity Fourdrinier",title:"The process engineer",role:"Engineer",say:"I have a spreadsheet for that.",
     plus:()=>`Each outage, one debottlenecking project that stays: +${pct1(LEAD.cap)}% capacity for the fibre line, the paper machine or finishing.`,
@@ -31,7 +31,7 @@ function leadTally(){const L=S.lead,out=[];if(!L)return out;const n=k=>L.st[k]||
   if(leadIs("dot"))out.push(["Repair bills",pc(LEAD.bills-1),1]);
   if(leadIs("chip"))out.push(["Labour relations",`call-offs and brawls ${xf(leadStrife())}`,1]);
   if(L.fixed&&L.fixed.length){const c={};L.fixed.forEach(x=>c[x]=(c[x]||0)+1);
-    out.push([`Fixed at the root (${L.fixed.length})`,Object.entries(c).map(([x,k])=>`${EV[x]?EV[x].name:x} ${pc(Math.pow(1-LEAD.fixCut,k)-1)}`).join(", ")]);}
+    out.push([`Fixed ×${L.fixed.length}`,Object.entries(c).map(([x,k])=>`${EV[x]?EV[x].name:x} ${pc(Math.pow(1-LEAD.fixCut,k)-1)}`).join(", ")]);}
   return out;}
 const leadTallyHTML=()=>{const t=leadTally();return t.length?`<div class="ldtally">${t.map(([a,b,bad])=>`<div${bad?' class="bad"':""}><span>${a}</span><b>${b}</b></div>`).join("")}</div>`:"";};
 
@@ -47,7 +47,7 @@ function leadPickOpen(done,wait){let sel=null;try{const v=localStorage.getItem("
     <p class="muted small">Each one is strong on one side of the mill and costs you on another. What they build stays with the mill. You can change leader once per run, at an outage.</p>
     <div class="ldgrid" role="radiogroup" aria-label="Mill leader">${LEAD_IDS.map(id=>leadCardHTML(id)).join("")}</div>
     <div class="btns"><button class="primary" id="ld-go" disabled>Start the run</button><button id="ld-no">Back</button></div></div>`;
-  const paint=()=>{el.querySelectorAll(".ldcard").forEach(b=>b.setAttribute("aria-checked",String(b.dataset.l===sel)));const g=el.querySelector("#ld-go");g.disabled=!sel;g.textContent=sel?`Start with ${LEADERS[sel].name.split(" ")[0]}`:"Start the run";};
+  const paint=()=>{el.querySelectorAll(".ldcard").forEach(b=>b.setAttribute("aria-checked",String(b.dataset.l===sel)));const g=el.querySelector("#ld-go");g.disabled=!sel;g.textContent=sel?`Start with ${LEADERS[sel].name.split(" ")[0]}`:"Pick a leader to start";};
   const close=()=>{el.hidden=true;document.removeEventListener("keydown",key,true);if(back&&back.focus)back.focus();};
   const key=e=>{if(e.key==="Escape"){e.preventDefault();e.stopPropagation();close();}};
   el.querySelectorAll(".ldcard").forEach(b=>b.addEventListener("click",()=>{sel=b.dataset.l;paint();}));
@@ -86,11 +86,13 @@ const leadFixReady=()=>leadIs("dot")&&survOn()&&S.lead.fixW!==survWave();
 // v5.0.4: Dot fixes on her own. A fixable breakdown that starts while her fix is ready has an LEAD.autoFix chance of being fixed
 // on the spot (its own dice stream, "lead", so no other luck changes); then the fix is used until the outage ends.
 function leadAuto(inc){if(!inc||S.zen||!leadFixReady()||!leadFixable(inc.id))return;if(S.rng.lead==null)S.rng.lead=(S.seed^0x2c1b3c6d)|0;   // (a save from before v5.0.4)
-  if(rand("lead")<LEAD.autoFix)leadFix(inc.id);}
+  if((inc.bill||0)<LEAD.autoMin)return;   // v5.0.5: not on cheap ones (no dice drawn, so nothing else changes)
+  if(rand("lead")<LEAD.autoFix&&leadFix(inc.id)){for(let i=BANNERS.length-1;i>=0;i--)if(BANNERS[i].id===inc.id)BANNERS.splice(i,1);}}   // v5.0.5: her FIXED banner replaces the breakdown's own
 function leadFix(id){if(!leadFixReady()||!active(id)||!leadFixable(id))return false;const inc=S.inc.find(i=>i.id===id),back=Math.round(((inc&&inc.bill)||0)*LEAD.refund);
-  clearIncident(id);if(back>0){spend(-back,"repairs");inc.bill-=back;}S.lead.fixW=survWave();(S.lead.fixed||(S.lead.fixed=[])).push(id);AUDIO.sfx("clunk",200);
-  BANNERS.push({text:`Dot fixed it at the root: ${EV[id].name.toLowerCase()}.${back>0?" "+money(back)+" back.":""}`,t:null,kind:"good",tag:"FIXED"});while(BANNERS.length>3)BANNERS.splice(1,1);
-  log(`Dot's fix: she ended "${EV[id].name}" on the spot${back>0?" and "+money(back)+" of the repair bill came back":""}. Fixed at the root: it's half as likely from now on.`,"ok");return true;}
+  clearIncident(id);if(back>0){spend(-back,"repairs");inc.bill-=back;S.lead.saved=(S.lead.saved||0)+back;}S.lead.fixW=survWave();(S.lead.fixed||(S.lead.fixed=[])).push(id);AUDIO.sfx("clunk",200);
+  const ext=EV[id].g==="god"||id==="roof";   // (v5.0.5: weather and the roof are made safer, not "fixed at the root")
+  BANNERS.push({text:`${ext?"Dot repaired it and made it safer":"Dot fixed it at the root"}: ${EV[id].name.toLowerCase()}.${back>0?" "+money(back)+" back.":""}`,t:null,kind:"good",tag:"FIXED"});while(BANNERS.length>3)BANNERS.splice(1,1);
+  log(`Dot's fix: she ended "${EV[id].name}" on the spot${back>0?" and "+money(back)+" of the repair bill came back":""}. ${ext?"Made safer":"Fixed at the root"}: it's half as likely from now on.`,"ok");return true;}
 
 /* ---- the leader card (tap the wave chip) ---- */
 let leadCardEl=null;
@@ -101,7 +103,7 @@ function leadCardOpen(){if(!S.lead)return;const was=running;running=false;
   const key=e=>{if(e.key==="Escape"){e.preventDefault();e.stopPropagation();close();}};
   const draw=()=>{const ready=leadFixReady();
     const fix=id!=="dot"?"":`<div class="ldfix"><h3>Dot's fix <small>${ready?"ready":"used this cycle · back when the outage ends"}</small></h3>
-        <p class="muted small">${ready?`She has a ${pct1(LEAD.autoFix)}% chance to fix each breakdown as it starts.`:"She fixed one this cycle."}${(S.lead.fixed||[]).length?` Fixed at the root so far: ${S.lead.fixed.length}.`:""}</p></div>`;
+        <p class="muted small">${ready?`She has a ${pct1(LEAD.autoFix)}% chance to fix each breakdown with a bill of ${money(LEAD.autoMin)} or more as it starts.`:"She fixed one this cycle."}${(S.lead.fixed||[]).length?` Fixed so far: ${S.lead.fixed.length}${S.lead.saved?`, saving ${money(S.lead.saved)}`:""}.`:""}</p></div>`;
     el.innerHTML=`<div class="modal ldone" role="dialog" aria-modal="true" aria-labelledby="ldc-h"><span class="dk">Mill leader · sim paused</span>
       ${leadCardHTML(id,"div")}${fix}
       ${leadTally().length?`<h3 id="ldc-h">What the mill has kept</h3>${leadTallyHTML()}`:`<h3 id="ldc-h">Nothing built yet</h3><p class="muted small">${LEAD_PICKS[id].length?L.name.split(" ")[0]+" makes the first pick at the next outage.":"Dot makes no picks. She fixes one breakdown on her own once every outage cycle."}</p>`}

@@ -33,6 +33,7 @@ function endSurvival(){const se=S.season,r=survResult(),w=r.wave;se.done=true;se
   const st=[["Time survived",survTime(r.minutes),"big"],["Wave reached",String(w)],["Your best",pb?(best?"New best (was "+survTime(best)+")":"New best"):survTime(best)],
     ["Upsets by the end",xf(survUp(w))],["Costs by the end",xf(survCost(w))],["Tons shipped",f0(r.tons)+" t"],["Upsets survived",String(r.incidents)]];
   if(S.lead)st.splice(3,0,["Mill leader",LEADERS[S.lead.id].name+(S.lead.was?" (after "+LEADERS[S.lead.was].name+")":""),"wide"]);
+  if(S.lead&&S.lead.saved)st.splice(4,0,["Dot saved",money(S.lead.saved)+" in repairs ("+S.lead.fixed.length+" fixed)","wide"]);   // v5.0.5
   $("so-stats").replaceChildren(...st.map(([k,v,c])=>{const d=document.createElement("div");if(c)d.className=c;const a=document.createElement("span");a.textContent=k;const b=document.createElement("b");b.textContent=v;d.append(a,b);return d;}));
   {const box=$("so-rc");if(box)box.hidden=true;}soMode(true);
   let nm="";try{nm=localStorage.getItem("paper-mill-player")||"";}catch(e){}$("so-name").value=nm;soCount();

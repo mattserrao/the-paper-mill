@@ -78,7 +78,9 @@
     // the top bar: the grade so far, and cost per ton and machine uptime in the dropdown
     const set=(id,v)=>{const e=$(id);if(e&&e.textContent!==v)e.textContent=v;};
     function topBar(){const d=data(),p=d.p,gb=$("v2grade");
-      if(d.season&&gradesOn()){const L=d.live.overall;gb.hidden=false;if(gb.dataset.g!==L){gb.dataset.g=L;gb.innerHTML=`<b>${L}</b><small>grade</small>`;gb.className="gbadge rcg g"+L;gb.setAttribute("aria-label","Grade so far: "+L);}}else gb.hidden=true;
+      if(d.season&&gradesOn()){   // v5.0.5: until this period has a day of data, it shows the last report card's grade (a few hours' grade jumped about)
+        const R=S.rc,last=R&&R.cards?[...R.cards].reverse().find(Boolean):null,early=!!(last&&R.p&&R.p.min<1440),L=early?last.overall:d.live.overall;
+        gb.hidden=false;if(gb.dataset.g!==L){gb.dataset.g=L;gb.innerHTML=`<b>${L}</b><small>grade</small>`;gb.className="gbadge rcg g"+L;}const tt=early?"Last report card's grade (this period's shows after a day)":"Grade so far this period";if(gb.title!==tt){gb.title=tt;gb.setAttribute("aria-label",tt+": "+L);}}else gb.hidden=true;
       if(p.prod>0.5&&costOn()){const cpt=costRows(p).reduce((t,r)=>t+r[1],0)/p.prod;set("v2cpt",money(cpt));set("v2cpt-s",`${money(p.price-cpt)} margin`);}else{set("v2cpt","–");set("v2cpt-s","");}
       if(d.season){set("v2up",pc(p.rel.machine||0));set("v2up-s","this period");}else{set("v2up",pc(S.t>0?1-S.tot.breakMin/S.t:1));set("v2up-s","sheet time");}}
     $("v2rep").addEventListener("click",()=>{const t=document.querySelector('.v2tabs [data-tab="stats"]');if(t&&t.getAttribute("aria-pressed")!=="true")t.click();});

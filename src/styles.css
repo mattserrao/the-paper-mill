@@ -169,6 +169,9 @@ body{font-size:14px}
 .auto[aria-pressed="true"]{background:color-mix(in srgb,var(--ok) 10%,white)}
 button{border-radius:10px;font-family:var(--f-body)}
 button.primary,.up .buy:not(:disabled){background:var(--brand);border-color:var(--brand);color:#fff}
+button.primary:disabled{opacity:.5;filter:saturate(.35);cursor:not-allowed}   /* v5.0.5: a disabled primary looks disabled */
+.nw{white-space:nowrap}
+.lbrow.mine{outline:2px solid var(--brand);outline-offset:-2px}.lbrow.pin{border-top:2px dashed var(--line)}.lbrow .m{white-space:normal}
 button:focus-visible,input:focus-visible,select:focus-visible{outline-color:var(--brand)}
 .row input[type=range],.simspeed input{accent-color:var(--brand)}
 .seg{border-radius:10px} .seg button[aria-pressed="true"]{background:var(--brand);color:#fff}
@@ -285,6 +288,7 @@ body.app .overlay{z-index:140}body.app .overlay.top{z-index:150}
 @media (max-width:380px){.v2stats{padding-left:8px}.v2stats .st{padding-right:4px;margin-right:5px}.v2stats .st b{font-size:13.5px}.v2stats .chev{width:14px}.v2top{gap:6px}}
 .v2stats .st small{font:600 12px var(--f-body);color:var(--muted);letter-spacing:.02em;white-space:nowrap}
 .v2stats .st small.sday{color:var(--brand);font-weight:800}
+.v2stats .st small.runway{color:var(--bad);font-weight:800}
 .v2stats .st b{font:700 14px var(--f-body);letter-spacing:-.01em;font-variant-numeric:tabular-nums;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .v2stats .chev{margin-left:auto;flex:none;width:18px;height:28px;display:grid;place-items:center;color:var(--muted);transition:transform .2s}
 .v2top.open .chev{transform:rotate(180deg)}
@@ -376,6 +380,7 @@ body.sheet-open .v2scrim{opacity:1;pointer-events:auto}
   .v2more{right:auto;width:min(620px,calc(100% - 20px))}
   .v2grid{grid-template-columns:repeat(3,minmax(0,1fr))}
   .v2stats .mn{display:flex}
+  .v2stats .st.mn{flex:1 1 0;min-width:0}.v2stats .st.ck{flex:0 0 auto}   /* v5.0.5: the mill name gives way, so the clock never cuts off */
   .v2sheet{left:auto;right:12px;top:calc(12px + env(safe-area-inset-top,0px));bottom:12px;height:auto;width:440px;border-radius:20px;transform:translateX(calc(100% + 24px))}
   .v2sheet.open{transform:none}
   .v2sheet header::before{display:none}

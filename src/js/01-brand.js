@@ -22,5 +22,9 @@ function siteBrand(env){MILL.env=env;const L=BRANDS_ENV[env];if(!L)return;MILL.b
 const escHTML=t=>String(t).replace(/[&<>"']/g,x=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[x]));
 // v5.0.3: the mill name goes to the public boards, so it gets the same banned words as player names (supabase/leaderboard.sql)
 const BANNED_WORDS=["fuck","shit","cunt","bitch","nazi","hitler"];
-const nameOk=v=>{const l=String(v||"").toLowerCase();return !BANNED_WORDS.some(w=>l.includes(w));};
+// v5.0.5: matched after folding look-alike characters (1/!→i, 0→o, 3→e, 4/@→a, $/5→s, 7→t) and dropping spaces and punctuation,
+// so "Sh1t" and "f u c k" are caught; a few real words that contain one ("Scunthorpe") are allowed first
+const NAME_OK_WORDS=["scunthorpe","shiitake","shitake"];
+const nameFold=v=>String(v||"").toLowerCase().replace(/[1!|]/g,"i").replace(/0/g,"o").replace(/3/g,"e").replace(/[4@]/g,"a").replace(/[$5]/g,"s").replace(/7/g,"t");
+const nameOk=v=>{let l=nameFold(v);NAME_OK_WORDS.forEach(w=>{l=l.split(w).join(" ");});const tight=l.replace(/[^a-z]/g,"");return !BANNED_WORDS.some(w=>tight.includes(w));};
 function renameMill(v){v=String(v||"").replace(/\s+/g," ").trim().slice(0,32).trim();if(!v)return;if(!nameOk(v))return false;MILL.name=v;try{if(G3.rebrand)G3.rebrand();}catch(e){}}
