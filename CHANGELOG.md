@@ -1,6 +1,6 @@
 # Changelog
 
-## v5.0.2-t1 (test, not released): report card labels
+## v5.0.2 (release): report card labels
 - Report card, Bottlenecks: "Machine at full speed" is now **Paper machine (speed limited)** and "Machine down" is **Paper machine (machine down)**, so the two machine rows read as a pair, and the subtitle is now "% time each step limited the mill" (it was cut off on phones). (Saved report cards keep their numbers: only the shown names changed.)
 
 ## v5.0.1 (fixes)
