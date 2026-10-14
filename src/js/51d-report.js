@@ -17,7 +17,7 @@
       return {p:rcSum(allAcc()),season:false};}
     function costRows(p){const sp=p.spent,cs=chemShare(),e=sp.Energy||0;
       return [["Fibre (OCC)",sp.Fibre||0,"var(--kraft)"],["Energy & steam",e*(1-cs),"var(--stock)"],["Chemicals",e*cs,"var(--pulp)"],["Labour",sp.Labour||0,"var(--machine)"],["Overhead",sp.Overhead||0,"#9aa1b5"],
-        ["Repairs",sp["Repairs & outages"]||0,"var(--bad)"],["Premium freight",sp["Premium freight"]||0,"var(--warn)"]].filter(r=>r[1]>0);}
+        ["Repairs",sp["Repairs & outages"]||0,"var(--bad)"],["Freight & insurance",(sp["Freight & insurance"]||0)+(sp["Premium freight"]||0),"var(--warn)"]].filter(r=>r[1]>0);}
     // (v4.3 survival: the tiles are waves, the last two and the one being played)
     function tiles(d){const R=d.R,out=[],sv=!!S.season.surv,i0=sv?Math.max(0,R.i-2):0;for(let i=i0;i<i0+3;i++){const c=R.cards[i],cur=i===R.i&&(sv||!S.season.done),lab=sv?`Wave ${i+1}`:`Days ${i*10+1}–${i*10+10}`;
         if(c&&!cur)out.push(`<button type="button" class="rpt" data-card="${i}"><span class="rcg g${c.overall}">${c.overall}</span><span><b>${lab}</b><small>View card</small></span></button>`);
@@ -78,7 +78,9 @@
     // the top bar: the grade so far, and cost per ton and machine uptime in the dropdown
     const set=(id,v)=>{const e=$(id);if(e&&e.textContent!==v)e.textContent=v;};
     function topBar(){const d=data(),p=d.p,gb=$("v2grade");
-      if(d.season&&gradesOn()){const L=d.live.overall;gb.hidden=false;if(gb.textContent!==L){gb.textContent=L;gb.className="gbadge rcg g"+L;}}else gb.hidden=true;
+      if(d.season&&gradesOn()){   // v5.0.5: until this period has a day of data, it shows the last report card's grade (a few hours' grade jumped about)
+        const R=S.rc,last=R&&R.cards?[...R.cards].reverse().find(Boolean):null,early=!!(last&&R.p&&R.p.min<1440),L=early?last.overall:d.live.overall;
+        gb.hidden=false;if(gb.dataset.g!==L){gb.dataset.g=L;gb.innerHTML=`<b>${L}</b><small>grade</small>`;gb.className="gbadge rcg g"+L;}const tt=early?"Last report card's grade (this period's shows after a day)":"Grade so far this period";if(gb.title!==tt){gb.title=tt;gb.setAttribute("aria-label",tt+": "+L);}}else gb.hidden=true;
       if(p.prod>0.5&&costOn()){const cpt=costRows(p).reduce((t,r)=>t+r[1],0)/p.prod;set("v2cpt",money(cpt));set("v2cpt-s",`${money(p.price-cpt)} margin`);}else{set("v2cpt","–");set("v2cpt-s","");}
       if(d.season){set("v2up",pc(p.rel.machine||0));set("v2up-s","this period");}else{set("v2up",pc(S.t>0?1-S.tot.breakMin/S.t:1));set("v2up-s","sheet time");}}
     $("v2rep").addEventListener("click",()=>{const t=document.querySelector('.v2tabs [data-tab="stats"]');if(t&&t.getAttribute("aria-pressed")!=="true")t.click();});

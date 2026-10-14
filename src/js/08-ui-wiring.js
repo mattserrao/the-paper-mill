@@ -84,6 +84,8 @@ moreToggle("chaosSec","chaosMore","paper-mill-chaos-more")(false||(()=>{try{retu
 moreToggle("shopSec","shopMore","paper-mill-shop-more",v=>document.querySelectorAll(".ugrp").forEach(d=>{d.classList.toggle("closed",!v);d.querySelector("h3").setAttribute("aria-expanded",v);}))((()=>{try{return localStorage.getItem("paper-mill-shop-more")==="1";}catch(e){return false;}})());
 // v4.1 v19: one upgrade a day; the day turns over at 6 am (S.t 0 is 6 am on day 1). Free play is exempt.
 const upDay=()=>Math.floor(S.t/1440),upLocked=()=>!S.free&&S.upDay===upDay();
+// v5.0.4: the shop day starts at 6 AM on the clock, so after 6 AM the next one is tomorrow's
+const upNext=()=>((S.t+360)/60)%24>=6?"tomorrow 6 AM":"at 6 AM";
 function buy(id){const u=UP[id],l=LV(id);if(l>=u.lv.length)return;const cost=upCost(u,l);if(!S.free&&S.cash<cost)return;if(upLocked())return;
   S.upDay=upDay();spend(cost,"upgrades");AUDIO.sfx("cash",150);S.up[id]=l+1;applyUpgrades();
   BANNERS.push({text:`${u.name}${u.lv.length>1?" level "+(l+1):""} is online.`,t:null,kind:"good"});while(BANNERS.length>3)BANNERS.splice(1,1);
@@ -95,14 +97,14 @@ function updateRel(){const rn=document.getElementById("relnow"),lg=$("ledger"),t
       d.innerHTML=`<span>${n}<small style="display:block;color:var(--muted);font-size:12px;font-weight:500">${bits.length?bits.join(" · "):"standard"}</small></span><b>${Math.abs(sum)<0.005?"–":pct(sum)}</b>`;tg.appendChild(d);});}
 function updateShop(){
   $("u-cash").textContent=money(S.cash);
-  {const w=document.querySelector(".wallet small"),t=S.free?"Cash on hand":upLocked()?"Cash on hand · next upgrade at 6 AM":"Cash on hand · 1 upgrade a day";if(w&&w.textContent!==t)w.textContent=t;}
+  {const w=document.querySelector(".wallet small"),t=S.free?"Cash on hand":upLocked()?"Cash on hand · next upgrade "+upNext():"Cash on hand · 1 upgrade a day";if(w&&w.textContent!==t)w.textContent=t;}
   UGROUPS.forEach(([g])=>{const us=UPS.filter(u=>u.g===g),own=us.reduce((a,u)=>a+LV(u.id),0),tot=us.reduce((a,u)=>a+u.lv.length,0),can=upLocked()?0:us.filter(u=>LV(u.id)<u.lv.length&&(S.free||S.cash>=upCost(u,LV(u.id)))).length;
     const fix=bnShort()&&us.some(upFix);const el=$("usum-"+g);if(el)el.innerHTML=`${fix?'<em class="fixg">fix</em> ':""}${own}/${tot} bought${can?` · <b>${can} affordable</b>`:""}`;});
   UPS.forEach(u=>{const l=LV(u.id),el=$("up-"+u.id),b=$("buy-"+u.id),max=l>=u.lv.length;
     el.classList.toggle("max",max);el.querySelectorAll(".pips i").forEach((p,k)=>p.classList.toggle("on",k<l));
     {const fx=upFix(u),ft=el.querySelector(".fixtag");el.classList.toggle("fix",fx);if(ft){ft.hidden=!fx;if(fx){const t="Fixes the bottleneck · 25% off. "+(BN_UPTXT[S.bn+"/"+u.id]||"");if(ft.textContent!==t)ft.textContent=t;}}}
     if(max){b.disabled=true;b.textContent="Maxed";}
-    else{const c=upCost(u,l),lk=upLocked();b.disabled=lk||(!S.free&&S.cash<c);b.textContent=S.free?"Add (free play)":lk?`${money(c)} · next at 6 AM`:S.cash<c?`Need ${money(c)}`:`Buy ${money(c)}`;}});
+    else{const c=upCost(u,l),lk=upLocked();b.disabled=lk||(!S.free&&S.cash<c);b.textContent=S.free?"Add (free play)":lk?`${money(c)} · ${upNext()}`:S.cash<c?`Need ${money(c)}`:`Buy ${money(c)}`;}});
   const lg=$("ledger");lg.replaceChildren();
   lineCapView(lg);bnCard();
   // v3.3.3: how reliable each section is right now, against a mill with no upgrades and a standard outage budget

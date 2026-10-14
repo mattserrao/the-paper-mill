@@ -1,5 +1,46 @@
 # Changelog
 
+## v5.0.5 (release, 2026-10-14): polish rounds from two survival playtests
+The first feature-lock release: it gathers v5.0.3 and v5.0.4 below (not released on their own) and this second polish round. Online, run `supabase/mill-name-filter.sql` once so both boards refuse banned mill names too.
+
+### Second polish round (from the v5.0.4 playtest)
+- **Bug fixes:** Resume no longer runs the game behind the leader card or the tutorial; an outage notice now waits until an open event card is answered instead of covering its buttons; the "Chapter 11" dialog no longer opens (hidden, with focus on New game) under the results at the end of every season or survival run.
+- **Leaderboard:** after Submit you see your rank ("Submitted: #127 of 412"), the board scrolls to your row and marks it, and a run outside the top 100 is pinned at the bottom. Board rows list wave, tons, upsets and date before the mill name, and wrap instead of cutting off; the subtitle says "Loading…" while a tab loads.
+- **Disabled buttons look disabled:** greyed out, and the leader picker's button says "Pick a leader to start"; Submit reads "Submitted ✓" afterwards.
+- **Escape** closes the report card.
+- **Dot:** she only rolls on breakdowns with a repair bill of $100k or more (no dice drawn for cheaper ones), her FIXED banner replaces the breakdown's own, and what she saves shows on her card ("saving $179k") and the game-over screen. Weather and the roof leak say "repaired it and made it safer" instead of "fixed at the root".
+- **Hank:** dryer tunings after the 4th cut steam by half as much (2.75%); the outage dialog shows the current amount.
+- **33HT** no longer sells at a loss late in a survival run: its premium over 23m rises with the wave's cost multiplier (seasons unchanged).
+- **Profit per day** is averaged over the last 3 days, and in survival the label turns into "~8d left" (days to bankruptcy at that rate) once it's under 15 days.
+- **Top-bar grade** shows the last report card's grade until the new period has a day of data.
+- **Desktop:** the mill name gives way, so the clock and wave/day are never cut off.
+- **Tutorial:** the survival card describes Dot correctly (she makes no picks).
+- **Small fixes:** wave report cards no longer overlap days (wave 2 is days 5–8); the day range never splits across lines; the leader tally says "Fixed ×5"; the Upgrades sheet opens at the top; the mill-name filter folds look-alike characters and spacing ("Sh1t", "f u c k") and allows real words like Scunthorpe.
+- Balance (10 bot runs each, days survived hands-off / buyer): no leader 24.8 / 35.1, Dot 26.3 / 41.1, Hank 25.6 / 39.9 (v5.0.4: 24.5 / 34.9, 25.6 / 40.6, 25.1 / 37.3).
+
+## v5.0.4 (test, released in v5.0.5): playtest review
+- **Dot fixes on her own.** No more Fix it now button: once per outage cycle, each breakdown she can fix has a 50% chance of being fixed as it starts. It ends on the spot, 60% of its bill comes back and it's fixed at the root, as before; a banner says so, and the chip shows "Fix ready" or "Fix used". Her drawback is now repair bills **+5%** (was +15%). At 25% and +15% she tested no better than no leader; at 50% and +5% she survives 25.6 days hands-off and 40.6 days for the buyer bot (10 runs each; she was 25.9 and 38.8 with the button, no leader is 24.5 and 34.9). (Her roll has its own dice, so nothing else in a run changes.)
+- **Profit per day** in the top bar is now the real cash change over the last 24 hours, repairs and outage budgets included (upgrades aside). It used to leave out repairs, so it read positive while survival waves lost money.
+- **Shipping bottleneck:** the dock doors' combined rate now loads one truck at a time instead of every truck crawling in parallel. Same tons per hour and the same dock upgrade, but the first truck leaves around hour 14 instead of hour 32, and the opening cash dip is about $210k instead of $450k (shipping-bottleneck seasons finish about $155k better).
+- Outage budgets start at the cheapest option when cash is below zero.
+- Zen mode asks first when it would end a season or survival run (tap again within 3 s), and leaving a run for zen or free play drops its save (a reload used to bring the abandoned run back).
+- An event card dealt while an outage notice is on screen waits until the notice closes, instead of hiding under it.
+- The outage dialog opens at the top, so its heading and the "What's an outage?" intro show.
+- Tab stays inside an open event card.
+- Report card: "Premium freight" is now **Freight & insurance** (the insurance premium is booked there), and its tip mentions insurance when you have it.
+- The first report card of a run starts with the run, so upgrades bought before the first minute count.
+- Hank's "Dial in the dryers" now says **steam −5.5%** (it cuts steam, not chemicals), on his card, the outage dialog and the tally.
+- Spot market sale card shows the real gain (the $35/t over list, about +$18k), not the whole sale, and what the risk costs against list.
+- Phones: the wave chip keeps the outage countdown (short forms: W10, Up, $, ⏱ 2d 20h, Fix ✓) and nothing is cut off; the clock label is "W13 · D50" and drops the weekday under 400 px; the grade letter in the top bar is labelled.
+- Shop: "next at 6 AM" now says "tomorrow 6 AM" once it's past 6 AM.
+- The leaderboard name box shows a character counter (13/16).
+- Leader picker: a focused card has a dashed ring, so it no longer looks picked.
+
+## v5.0.3 (test, released in v5.0.5): fixes from the survival playtest
+- A finished run can no longer be continued: after bankruptcy (or the end of a season) the save is now cleared, so a reload no longer offers "Continue survival" and the same run can't be replayed and submitted again. (The old clear sat behind a check that skipped finished runs, so it never ran.)
+- **Resume** in the pause menu no longer restarts the game behind an open event card, outage budget or report card. The game stays paused until the card is answered, so an outage can't start on the default budget before you approve it.
+- Mill names get the same banned-word check as player names: renaming to a banned word is refused ("That name is not allowed"), and a banned mill name from an older save is sent to the board as "Unnamed mill". Online, run `supabase/mill-name-filter.sql` once so the boards refuse it too.
+
 ## v5.0.2 (release): report card labels
 - Report card, Bottlenecks: "Machine at full speed" is now **Paper machine (speed limited)** and "Machine down" is **Paper machine (machine down)**, so the two machine rows read as a pair, and the subtitle is now "% time each step limited the mill" (it was cut off on phones). (Saved report cards keep their numbers: only the shown names changed.)
 

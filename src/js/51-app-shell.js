@@ -36,7 +36,7 @@
   function sheetResume(){if(!sheetHeld)return;sheetHeld=false;const ov=$("overlay"),blocked=!$("v2menu").hidden||(G3.tut&&G3.tut.on)||(S.cards&&S.cards.open)||(ov&&!ov.hidden)||S.over;
     if(blocked)return;running=true;}
   function openTab(k){sheetPause();cur=k;if(k==="stats")setTimeout(()=>{flowTick&&flowTick();updateRel();if(G3.report)G3.report.render();},0);tabs.forEach(b=>b.setAttribute("aria-pressed",String(b.dataset.tab===k)));document.querySelectorAll(".v2pane").forEach(p=>p.classList.toggle("on",p.dataset.pane===k));
-    $("v2sheetT").textContent=TITLES[k];sheet.classList.add("open");sheet.setAttribute("aria-hidden","false");document.body.classList.add("sheet-open");closeMore();}
+    $("v2sheetT").textContent=TITLES[k];if(!sheet.classList.contains("open")){const vb=sheet.querySelector(".v2body");if(vb)vb.scrollTop=0;}sheet.classList.add("open");/* v5.0.5: a sheet opens at the top */sheet.setAttribute("aria-hidden","false");document.body.classList.add("sheet-open");closeMore();}
   function closeSheet(why){const was=!!cur;cur=null;tabs.forEach(b=>b.setAttribute("aria-pressed","false"));sheet.classList.remove("open");sheet.setAttribute("aria-hidden","true");document.body.classList.remove("sheet-open");
     if(why==="menu")sheetHeld=false;else if(was)sheetResume();}
   tabs.forEach(b=>b.addEventListener("click",()=>cur===b.dataset.tab?closeSheet():openTab(b.dataset.tab)));
@@ -65,13 +65,15 @@
   // top bar: compact figures straight from the game state ($1.24M, -$850k)
   const short=v=>{const a=Math.abs(v),f=a>=1e6?(a/1e6).toFixed(a>=1e7?1:2)+"M":a>=1e3?(a/1e3).toFixed(a>=1e5?0:1).replace(/\.0$/,"")+"k":Math.round(a)+"";return (v<0?"−":"")+"$"+f;};
   const set=(id,v)=>{const e=$(id);if(e.textContent!==v)e.textContent=v;};
-  const NARROW=matchMedia("(max-width:480px)");   // phones: the survival clock label is "W3 · Day 16"
+  const NARROW=matchMedia("(max-width:480px)"),TINY=matchMedia("(max-width:400px)");   // phones: the survival clock label is "W3 · D16" (v5.0.4: was "W3 · Day 16", cut off once cash went negative)
   const mirror=[...document.querySelectorAll("#v2more [data-m]")].map(el=>[el,$(el.dataset.m)]);
   function sync(){set("v2mill",MILL.name);set("v2mt",MILL.name);set("v2cash",short(S.cash));
-    {const ok=S.t>=1440;set("v2profit",ok?short(S.profitRate)+"/d":"–");$("v2profit").style.color=ok&&S.profitRate<0?"var(--bad)":"var(--ink)";$("v2profit").title=ok?"Profit over the last 24 hours":"Shown once the first day is done (a 24-hour average)";}
+    {const ok=S.t>=1440;set("v2profit",ok?short(S.profitRate)+"/d":"–");$("v2profit").style.color=ok&&S.profitRate<0?"var(--bad)":"var(--ink)";$("v2profit").title=ok?"Cash made per day, averaged over the last 3 days: sales and deals, less every cost including repairs and outage budgets (upgrades aside)":"Shown once the first day is done";
+     // v5.0.5: in survival, when cash is falling, the label says roughly how many days are left before bankruptcy
+     const pl=$("v2profit").previousElementSibling;if(pl){const left=ok&&survOn()&&S.profitRate<0?(S.cash-ECON.bankrupt)/-S.profitRate:Infinity,t=left<15?`~${Math.max(0,Math.floor(left))}d left`:"Profit";if(pl.textContent!==t){pl.textContent=t;pl.classList.toggle("runway",left<15);pl.title=left<15?"Days until bankruptcy if cash keeps falling at this rate":"";}}}
     {const h=((S.t+360)/60)%24,d=new Date(S.date0||Date.now());d.setMinutes(d.getMinutes()+S.t+360);const hh=Math.floor(h),ap=hh<12?"AM":"PM",h12=hh%12||12;
-     set("v2clock",d.toLocaleDateString("en-US",{weekday:"short"})+" "+h12+" "+ap);}
-    {const se=S.season,on=!!(se&&se.on),sv=!!(se&&se.surv),day=Math.floor(S.t/1440)+1,lab=on?(sv?(NARROW.matches?`W${survWave()} · Day ${day}`:`Wave ${survWave()} · Day ${day}`):`Day ${Math.min(SEASON_DAYS,day)} of ${SEASON_DAYS}`):se&&se.done?(sv?"Run over":"Season over"):"Time";
+     set("v2clock",(TINY.matches?"":d.toLocaleDateString("en-US",{weekday:"short"})+" ")+h12+" "+ap);}   // v5.0.4: no weekday on small phones, so the time is never cut off
+    {const se=S.season,on=!!(se&&se.on),sv=!!(se&&se.surv),day=Math.floor(S.t/1440)+1,lab=on?(sv?(NARROW.matches?`W${survWave()} · D${day}`:`Wave ${survWave()} · Day ${day}`):`Day ${Math.min(SEASON_DAYS,day)} of ${SEASON_DAYS}`):se&&se.done?(sv?"Run over":"Season over"):"Time";
      set("v2clockL",lab);$("v2clockL").classList.toggle("sday",on);$("v2clockL").title=on?(sv?"Survival: the wave you are in and the day of the run":"Season mode: day of the 30-day season"):"";}
     mirror.forEach(([d,s])=>{if(d.textContent!==s.textContent)d.textContent=s.textContent;});
     const sp=outCapped()?`${simRate()} min/s · ${C.simSpeed} after`:C.simSpeed+" min/s";if($("v2speed").textContent!==sp)$("v2speed").textContent=sp;$("v2speed").title=outCapped()?"Planned outage: slowed so you can watch the crews. Your speed comes back when it ends.":"";
@@ -86,7 +88,7 @@
     $("v2sub").hidden=first;$("v2surv").hidden=!first;$("v2nameRow").hidden=true;   // (Survival sits under Season on the first menu; once a run is on, "New survival" is with "New season")
     $("v2state").textContent=first?"":"Paused";
     $("v2free").querySelector("b").textContent=S.free?"Free play: on":"Free play";$("v2free").setAttribute("aria-pressed",String(!!S.free));$("v2ver").textContent=APP_VER;menu.hidden=false;}
-  function play(){menu.hidden=true;first=false;running=true;}
+  function play(){menu.hidden=true;first=false;const lc=document.getElementById("leadCard");running=!((S.cards&&S.cards.open)||(lc&&!lc.hidden)||(G3.tut&&G3.tut.on));}   // v5.0.3: an open card, outage plan or report card keeps the sim paused until it is answered (v5.0.5: and the leader card and tutorial)   // v5.0.3: an open card, outage plan or report card keeps the sim paused until it is answered
   G3.showMenu=showMenu;G3.play=play;   // play: used by the autotest (52b) to start without the tutorial
   // ---- v3.1.0 quick-start tutorial: shown when a season starts (until the player ticks "don't show again") ----
   const TUT=(()=>{
@@ -106,7 +108,7 @@
       else if(k===4){h="Find your bottleneck";body=`<div class="fig">${RIVER}</div><p>The mill flows like a river and can only go as fast as its <b>narrowest point</b>. Every mill starts with one: <b>Upgrades</b> names it and fixes it at 25% off. Fix it first, then spend on speed, reliability and lower costs. One upgrade a day.</p>`;}
       else if(k===5){h="Upsets happen";body=`<ul><li>Breakdowns, sheet breaks, storms and the odd pigeon: these are <b>upsets</b>. Crews fix them on their own.</li><li>A red tag marks each one; tap it to fly there. The <b>Upsets</b> tab shows what's down and how long is left.</li><li><b>Event cards</b> offer deals with honest odds. Accept or decline.</li></ul>`;}
       else{h=sv?"Every 4 days: an outage, then a new wave":"Every 7 days: a planned outage";next="Start playing";
-        body=`<ul><li>${sv?"Every 4 days":"On days 7, 14, 21 and 28"} the mill stops for a <b>4-hour outage</b> and crews do one big job. Before it, you set a maintenance budget for each area: more money, fewer breakdowns until the next one.</li>${sv?`<li>Each outage starts a new <b>wave</b>: upsets get likelier and costs rise. The bar under the top bar shows by how much. Your leader makes one pick per outage.</li>`:""}</ul><p class="tsm">Speed and sound are in the top bar; pause any time for the menu.</p><label><input type="checkbox" id="tutOff"> Don't show this tutorial again</label>`;}
+        body=`<ul><li>${sv?"Every 4 days":"On days 7, 14, 21 and 28"} the mill stops for a <b>4-hour outage</b> and crews do one big job. Before it, you set a maintenance budget for each area: more money, fewer breakdowns until the next one.</li>${sv?`<li>Each outage starts a new <b>wave</b>: upsets get likelier and costs rise. The bar under the top bar shows by how much. ${S.lead&&S.lead.id==="dot"?"Dot makes no picks: once per outage cycle she fixes a costly breakdown on her own.":"Your leader makes one pick per outage."}</li>`:""}</ul><p class="tsm">Speed and sound are in the top bar; pause any time for the menu.</p><label><input type="checkbox" id="tutOff"> Don't show this tutorial again</label>`;}
       return `<div class="tc" role="dialog" aria-modal="true" aria-labelledby="tutH"><div class="tk"><span>${kick}</span>${k<N?'<button id="tutSkip">Skip tutorial</button>':""}</div>
         <h2 id="tutH">${h}</h2>${body}<div class="dots">${dots}</div>
         <div class="tb">${k>1?'<button id="tutBack">Back</button>':""}<button class="primary" id="tutNext">${next}</button></div></div>`;}
@@ -152,14 +154,17 @@
   $("v2survNew").addEventListener("click",goSurv);
   $("v2free").addEventListener("click",()=>{setFree(!S.free);play();});
   $("v2board").addEventListener("click",openBoard);
-  $("v2zen").addEventListener("click",()=>{menu.hidden=true;first=false;setZen(true);});
+  // v5.0.4: zen ends a season or survival run, so with one on it asks first (tap again within 3 s), like Reset mill
+  {let arm=0;$("v2zen").addEventListener("click",()=>{const b=$("v2zen"),sm=b.querySelector("small"),run=S.season&&S.season.on;
+    if(run&&Date.now()-arm>=3000){arm=Date.now();sm.textContent=`ends this ${S.season.surv?"survival run":"season"} · tap again`;b.classList.add("warn");setTimeout(()=>{sm.textContent="sit back";b.classList.remove("warn");},3000);return;}
+    arm=0;sm.textContent="sit back";b.classList.remove("warn");menu.hidden=true;first=false;setZen(true);});}
   // v17: zen's map rotation reloads the page with ?zen=1: go straight back into zen once the scene is ready (and drop the
   // flag from the address, so a later reload opens the menu as usual)
   if(new URLSearchParams(location.search).get("zen")==="1"){const go=()=>{if(G3.ok&&!G3.warm){setTimeout(go,300);return;}
       try{const q=new URLSearchParams(location.search);q.delete("zen");history.replaceState(null,"",location.pathname+(q.toString()?"?"+q:"")+location.hash);}catch(e){}$("v2zen").click();};setTimeout(go,300);}
   $("v2colors").addEventListener("click",rollMill);
   $("v2rename").addEventListener("click",()=>{$("v2nameRow").hidden=false;const i=$("v2name");i.value=MILL.name;i.focus();i.select();});
-  const saveName=()=>{renameMill($("v2name").value);$("v2nameRow").hidden=true;sync();};
+  const saveName=()=>{const i=$("v2name");if(renameMill(i.value)===false){i.value="";i.placeholder="That name is not allowed";i.focus();return;}i.placeholder="";$("v2nameRow").hidden=true;sync();};
   $("v2nameOk").addEventListener("click",saveName);$("v2name").addEventListener("keydown",e=>{if(e.key==="Enter")saveName();if(e.key==="Escape")$("v2nameRow").hidden=true;});
   {let arm=0;$("v2reset").addEventListener("click",()=>{const b=$("v2reset");if(Date.now()-arm<3000){newGame();arm=0;b.firstChild.textContent="Reset mill";play();return;}arm=Date.now();b.firstChild.textContent="Tap again to reset";setTimeout(()=>{b.firstChild.textContent="Reset mill";},3000);});}
   const fsEl=document.documentElement;

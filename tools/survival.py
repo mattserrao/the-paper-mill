@@ -13,8 +13,7 @@ Usage: python3 survival.py <index.html> [runs] [--bot=handsoff|buyer|saver] [--l
 
   --leader=X       the mill leader (v4.4). none = no leader, the v4.3 baseline. Every bot plays the leader the same way:
                      chip  sales pushes at the first N outages, fibre locks after (--chip=N, default 3; or all one kind)
-                     dot   Fix it now on the first breakdown whose repair bill is at least $120k (--dot=K, in $k); on the
-                           last day before the outage, on any breakdown with a bill
+                     dot   nothing to play: from v5.0.4 she fixes breakdowns on her own (--dot is ignored)
                      fel   (bn) each project goes to the area that limits the line right now; --fel=rotate takes them in turn
                            (--fel=stock|wet|dry for one area only: fibre line, paper machine, finishing)
                      hank  faster rethreads and run it clean in turn (--hank=rethread|clean for one only)
@@ -76,8 +75,7 @@ RUN = r"""([k,seed0,bn,bot,up,cost,maxdays,ORDER,compound,leader,swap,sets,pol])
       else if(o.outage){if(bot!=='handsoff'&&S.cash>1.5e6)document.querySelectorAll('#outOv .orow .seg button[data-v="2"]').forEach(b=>b.click());leadPlan();click('out-ok');outs++;}
       else if(o.report){click('rc-ok');}
       if(S.cards.open)S.cards.open=null;}
-    if(S.lead&&S.lead.id==='dot'&&n%8===0&&S.inc.length&&P.leadFixReady()){const last=(P.SURV.every*S.outg.k-1)*1440+120-S.t<1440,min=last?1:(+pol.dot)*1e3;
-      const c=S.inc.filter(i=>P.leadFixable(i.id)&&i.left>30&&(i.bill||0)>=min).sort((a,b)=>(b.bill||0)-(a.bill||0))[0];if(c&&P.leadFix(c.id))fixes++;}
+    // (v5.0.4: Dot fixes on her own, as each breakdown starts; the bot no longer presses a button)
     if(S.pm!=="run")dn+=h;
     if(S.outg.k!==wk){incW.push(S.tot.incidents-i0);i0=S.tot.incidents;dnW.push(Math.round((dn-dn0)/60));dn0=dn;waves.push(Math.round((S.cash-c0)/1e3));wk=S.outg.k;c0=S.cash;}
     const d=Math.floor(S.t/1440);if(bot!=='handsoff'&&d!==lastDay){lastDay=d;shop();}
@@ -86,7 +84,7 @@ RUN = r"""([k,seed0,bn,bot,up,cost,maxdays,ORDER,compound,leader,swap,sets,pol])
   ['seasonOv','dealOv','outOv','rcOv'].forEach(id=>{const e=document.getElementById(id);if(e)e.hidden=true;});
   const L=S.ledger;
   return {seed:seed0+k*7919,bn:bn0,alive,days:+(S.t/1440).toFixed(2),wave:S.outg.k,minutes:r?r.minutes:null,cash:Math.round(S.cash),bought,
-    leader:S.lead?S.lead.id:null,was:S.lead?S.lead.was:null,built:S.lead?S.lead.st:null,fixes,
+    leader:S.lead?S.lead.id:null,was:S.lead?S.lead.was:null,built:S.lead?S.lead.st:null,fixes:S.lead&&S.lead.fixed?S.lead.fixed.length:0,
     rev:Math.round(L.rev),occ:Math.round(L.occ),energy:Math.round(L.energy),labor:Math.round(L.labor),overhead:Math.round(L.overhead),repairs:Math.round(L.repairs),
     upgrades:Math.round(L.upgrades),tons:Math.round(S.shipT||0),incidents:S.tot.incidents,breaks:S.tot.breaks,cards,outages:outs,wave_net_k:waves,wave_incidents:incW,wave_down_h:dnW};}"""
 

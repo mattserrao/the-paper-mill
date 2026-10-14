@@ -181,6 +181,9 @@ body{font-size:14px}
 .auto[aria-pressed="true"]{background:color-mix(in srgb,var(--ok) 10%,white)}
 button{border-radius:10px;font-family:var(--f-body)}
 button.primary,.up .buy:not(:disabled){background:var(--brand);border-color:var(--brand);color:#fff}
+button.primary:disabled{opacity:.5;filter:saturate(.35);cursor:not-allowed}   /* v5.0.5: a disabled primary looks disabled */
+.nw{white-space:nowrap}
+.lbrow.mine{outline:2px solid var(--brand);outline-offset:-2px}.lbrow.pin{border-top:2px dashed var(--line)}.lbrow .m{white-space:normal}
 button:focus-visible,input:focus-visible,select:focus-visible{outline-color:var(--brand)}
 .row input[type=range],.simspeed input{accent-color:var(--brand)}
 .seg{border-radius:10px} .seg button[aria-pressed="true"]{background:var(--brand);color:#fff}
@@ -297,6 +300,7 @@ body.app .overlay{z-index:140}body.app .overlay.top{z-index:150}
 @media (max-width:380px){.v2stats{padding-left:8px}.v2stats .st{padding-right:4px;margin-right:5px}.v2stats .st b{font-size:13.5px}.v2stats .chev{width:14px}.v2top{gap:6px}}
 .v2stats .st small{font:600 12px var(--f-body);color:var(--muted);letter-spacing:.02em;white-space:nowrap}
 .v2stats .st small.sday{color:var(--brand);font-weight:800}
+.v2stats .st small.runway{color:var(--bad);font-weight:800}
 .v2stats .st b{font:700 14px var(--f-body);letter-spacing:-.01em;font-variant-numeric:tabular-nums;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .v2stats .chev{margin-left:auto;flex:none;width:18px;height:28px;display:grid;place-items:center;color:var(--muted);transition:transform .2s}
 .v2top.open .chev{transform:rotate(180deg)}
@@ -388,6 +392,7 @@ body.sheet-open .v2scrim{opacity:1;pointer-events:auto}
   .v2more{right:auto;width:min(620px,calc(100% - 20px))}
   .v2grid{grid-template-columns:repeat(3,minmax(0,1fr))}
   .v2stats .mn{display:flex}
+  .v2stats .st.mn{flex:1 1 0;min-width:0}.v2stats .st.ck{flex:0 0 auto}   /* v5.0.5: the mill name gives way, so the clock never cuts off */
   .v2sheet{left:auto;right:12px;top:calc(12px + env(safe-area-inset-top,0px));bottom:12px;height:auto;width:440px;border-radius:20px;transform:translateX(calc(100% + 24px))}
   .v2sheet.open{transform:none}
   .v2sheet header::before{display:none}
@@ -594,6 +599,9 @@ button.rpt{cursor:pointer}.rpt.cur{border:2px solid var(--brand);background:var(
 .rcard .rcr{display:flex;gap:8px;font-size:12.5px;padding:3px 0}.rcard .rcr span{flex:1}.rcard .rcr b,.rcard .rcr i{font-family:var(--f-mono);font-weight:500;font-style:normal;min-width:80px;text-align:right}
 .rcard .rcr i{color:var(--muted)}.rcard .rcr.net{border-top:1px solid var(--line);padding-top:6px;font-weight:700}
 .gbadge{width:22px;height:22px;border-radius:6px;font-size:12.5px;flex:none;margin:0 4px 0 auto}
+/* v5.0.4: the top-bar grade carries its own label */
+.v2stats .gbadge{width:30px;height:32px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:0;line-height:1}.v2stats .gbadge b{font-size:13px}.v2stats .gbadge small{font-size:7.5px;font-weight:700;letter-spacing:.04em;text-transform:uppercase;opacity:.85}
+@media (max-width:380px){.v2stats .gbadge{width:27px;margin-right:2px}.v2stats .gbadge small{font-size:6.5px;letter-spacing:0}}
 .v2stats .gbadge:not([hidden])+.chev{display:none}
 .replink{width:100%;margin-top:8px;padding:10px 12px;border-radius:10px;border:0;background:color-mix(in srgb,var(--brand) 12%,var(--panel));color:var(--brand);font:700 13px var(--f-body);text-align:left;cursor:pointer}
 .rating .g.out{font-size:24px;width:auto;min-width:2.2em}
@@ -641,7 +649,11 @@ details.areactl[open]>summary{margin-bottom:12px}
 @media (prefers-reduced-motion: reduce){.survchip.pulse{animation:none}}
 body.app.surv .banner3d{top:calc(94px + env(safe-area-inset-top,0px))}
 body.zen .survchip{display:none}
-@media (max-width:420px){.survchip{gap:8px}.survchip em{display:none}}
+@media (max-width:420px){.survchip{gap:7px;padding-right:9px}.survchip .svbody{gap:7px}.survchip em,.survchip u{padding-left:7px}.survchip .svbody>b{padding:3px 7px}
+  /* v5.0.4: short forms (data-s) instead of hiding the countdown */
+  .survchip [data-s],.survchip .svbody>b[data-s]{font-size:0}.survchip [data-s]::after{content:attr(data-s);font-size:12px}.survchip .svbody>b[data-s]::after{font-size:12px}.survchip i[data-s]{font-style:normal}}
+@media (max-width:340px){.survchip i[data-s]{display:none}}
+.survchip i[data-s]{font-style:normal}
 /* menu: Survival under Play, and three buttons in the pause row */
 .v2menu .go.alt{background:var(--panel);border:1.5px solid color-mix(in srgb,var(--stock) 55%,var(--line));color:var(--ink);box-shadow:none;padding:10px 14px 9px}
 .v2menu .go.alt b{font-size:17px;color:var(--stock)}
@@ -664,6 +676,8 @@ body.zen .survchip{display:none}
 /* the card: portrait left, who they are and what they do right (picker, leader card) */
 .ldcard{display:grid;grid-template-columns:92px minmax(0,1fr);gap:12px;align-items:start;text-align:left;padding:10px;border-radius:14px;border:1px solid var(--line);background:var(--bg);color:var(--ink);font:inherit;font-weight:400}
 button.ldcard{cursor:pointer}
+.soname .socount{display:block;text-align:right;font:600 11px var(--f-body);color:var(--muted);margin-top:3px;font-variant-numeric:tabular-nums}.soname .socount.full{color:var(--warn)}
+button.ldcard:focus-visible{outline:2px dashed var(--muted);outline-offset:3px}   /* v5.0.4: focus is not a pick */
 button.ldcard[aria-checked="true"]{border:2px solid var(--stock);padding:9px;background:var(--panel);box-shadow:0 6px 18px color-mix(in srgb,var(--stock) 22%,transparent)}
 .ldbody{display:flex;flex-direction:column;gap:3px;min-width:0}
 .ldbody>small{font:700 12px var(--f-body);letter-spacing:.06em;text-transform:uppercase;color:var(--stock)}
@@ -740,7 +754,7 @@ button.ldcard[aria-checked="true"]{border:2px solid var(--stock);padding:9px;bac
 <div class="overlay top" hidden id="seasonOv"><div aria-labelledby="so-h" aria-modal="true" class="modal wide" role="dialog">
 <h2 id="so-h">Season complete</h2><p class="muted" id="so-p"></p>
 <div class="sostats" id="so-stats"></div><div hidden id="so-rc"></div>
-<label class="soname">Name for the leaderboard<input autocomplete="nickname" id="so-name" maxlength="16" placeholder="2–16 letters or numbers" spellcheck="false"/></label>
+<label class="soname">Name for the leaderboard<input autocomplete="nickname" id="so-name" maxlength="16" placeholder="2–16 letters or numbers" spellcheck="false" aria-describedby="so-count"/><small id="so-count" class="socount" aria-live="polite">0/16</small></label>
 <p aria-live="polite" class="somsg" id="so-msg"></p>
 <div class="btns"><button class="primary" id="so-submit">Submit score</button><button id="so-board">View leaderboard</button><button id="so-more">One more turn</button><button id="so-new">New season</button></div></div></div>
 <div class="overlay top" hidden id="lbOv"><div aria-labelledby="lb-h" aria-modal="true" class="modal wide" role="dialog">
@@ -750,7 +764,7 @@ button.ldcard[aria-checked="true"]{border:2px solid var(--stock);padding:9px;bac
 <div class="lblist" id="lb-list"></div></div></div>
 <div class="overlay" hidden id="overlay"><div aria-labelledby="ov-h" aria-modal="true" class="modal" role="dialog">
 <h2 id="ov-h"></h2><p id="ov-p"></p><div class="btns"><button class="primary" id="ov-a"></button><button id="ov-b"></button></div></div></div>
-<div class="survchip" hidden id="survChip" role="button" tabindex="0" title="Survival: every wave, upsets get more likely and fibre, energy, chemicals and wages cost more. A wave ends when its planned outage does. Tap for your mill leader."><i class="svl" hidden id="svL"></i><span class="svbody"><b id="svW">Wave 1</b><span>Upsets <b id="svU">×1.00</b></span><span>Costs <b id="svC">×1.00</b></span><u hidden id="svF"></u><em id="svN"></em></span><button class="svfold" hidden id="svFold" type="button" aria-label="Slide the wave bar away" title="Hide (tap the face to bring it back)"><svg fill="none" height="14" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2.6" viewbox="0 0 24 24" width="14"><path d="M15 6l-6 6 6 6"></path></svg></button></div>
+<div class="survchip" hidden id="survChip" role="button" tabindex="0" title="Survival: every wave, upsets get more likely and fibre, energy, chemicals and wages cost more. A wave ends when its planned outage does. Tap for your mill leader."><i class="svl" hidden id="svL"></i><span class="svbody"><b id="svW">Wave 1</b><span><i data-s="Up">Upsets</i> <b id="svU">×1.00</b></span><span><i data-s="$">Costs</i> <b id="svC">×1.00</b></span><u hidden id="svF"></u><em id="svN"></em></span><button class="svfold" hidden id="svFold" type="button" aria-label="Slide the wave bar away" title="Hide (tap the face to bring it back)"><svg fill="none" height="14" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2.6" viewbox="0 0 24 24" width="14"><path d="M15 6l-6 6 6 6"></path></svg></button></div>
 <div class="v2top" id="v2top">
 <button aria-label="Pause and open the menu" class="v2card v2ibtn" id="v2pause"><svg fill="currentColor" height="18" viewbox="0 0 24 24" width="18"><rect height="16" rx="1.5" width="5" x="5" y="4"></rect><rect height="16" rx="1.5" width="5" x="14" y="4"></rect></svg></button>
 <button aria-controls="v2more" aria-expanded="false" class="v2card v2stats" id="v2stats">
@@ -908,7 +922,7 @@ button.ldcard[aria-checked="true"]{border:2px solid var(--stock);padding:9px;bac
 <div class="btns"><button class="primary" id="no3d-retry">Try again</button></div></div></div>
 
 <script type="module">
-const APP_VER="v5.0.2";   // shown in the menu and sent with leaderboard scores (max 12 characters)
+const APP_VER="v5.0.5";   // shown in the menu and sent with leaderboard scores (max 12 characters)
 // TEST BUILDS ONLY (off in releases): turbo speeds 240/480/960 sim min/s for fast playtests. Above 120, crews and maintenance start jobs
 // without waiting for the 3D walk (as with the 3D view off) and outages keep the speed. Set false for a release.
 const TURBO=false,TURBO_FAST=s=>TURBO&&s>120;
@@ -956,7 +970,14 @@ function siteBrand(env){MILL.env=env;const L=BRANDS_ENV[env];if(!L)return;MILL.b
 // rename from the menu: trims, caps at 32 characters, repaints the mill's signs
 // escape text (such as the player-chosen mill name) before it goes into innerHTML
 const escHTML=t=>String(t).replace(/[&<>"']/g,x=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[x]));
-function renameMill(v){v=String(v||"").replace(/\s+/g," ").trim().slice(0,32).trim();if(!v)return;MILL.name=v;try{if(G3.rebrand)G3.rebrand();}catch(e){}}
+// v5.0.3: the mill name goes to the public boards, so it gets the same banned words as player names (supabase/leaderboard.sql)
+const BANNED_WORDS=["fuck","shit","cunt","bitch","nazi","hitler"];
+// v5.0.5: matched after folding look-alike characters (1/!→i, 0→o, 3→e, 4/@→a, $/5→s, 7→t) and dropping spaces and punctuation,
+// so "Sh1t" and "f u c k" are caught; a few real words that contain one ("Scunthorpe") are allowed first
+const NAME_OK_WORDS=["scunthorpe","shiitake","shitake"];
+const nameFold=v=>String(v||"").toLowerCase().replace(/[1!|]/g,"i").replace(/0/g,"o").replace(/3/g,"e").replace(/[4@]/g,"a").replace(/[$5]/g,"s").replace(/7/g,"t");
+const nameOk=v=>{let l=nameFold(v);NAME_OK_WORDS.forEach(w=>{l=l.split(w).join(" ");});const tight=l.replace(/[^a-z]/g,"");return !BANNED_WORDS.some(w=>tight.includes(w));};
+function renameMill(v){v=String(v||"").replace(/\s+/g," ").trim().slice(0,32).trim();if(!v)return;if(!nameOk(v))return false;MILL.name=v;try{if(G3.rebrand)G3.rebrand();}catch(e){}}
 /* ---- generative music and sound effects (Web Audio, no files) ---- */
 const AUDIO=(()=>{
   const AMOB=matchMedia("(pointer: coarse)").matches,LOOK=AMOB?0.5:0.3;let AUDIO_VIS=0,ctx=null,master,comp,musicBus,sfxBus,chillG,intG,crackleG,mcG,verb,noiseBuf,timer=null,on=false,vol=0.7,target="chill",calmSince=0,switchedAt=0,warm,envG,echoIn,echoInt;
@@ -1460,7 +1481,7 @@ function applyGrade(){const g=(typeof C!=="undefined"&&C&&C.grade)||"23m",c=GCOS
   P.blendP=OCCG.occ11.p*(1-d)+OCCG.dlk.p*d;P.blendY=OCCG.occ11.y*(1-d)+OCCG.dlk.y*d;
   P.steamMul=c.steam;P.chemAdd=c.chem-((S&&S.perk)?S.perk.chem:0);P.gradeBrk=c.brk;}
 function energyCost(){return Math.max(0,ECON.energy*P.steamMul*P.energyMul*leadEnergy()+ECON.chem+P.chemAdd+(P.siteEnergy||0)-(P.refSave||0)-((S&&S.perk&&S.perk.energy)||0))*(P.costMul||1);}
-function priceOf(g){let v=ECON.price[g]+P.priceAdd;if(S&&S.perk)v+=S.perk.price[g]||0;if(S&&S.fx)for(const f of S.fx)if(f.price)v+=(f.price[g]||0)+(f.price.all||0);return v;}
+function priceOf(g){let v=ECON.price[g]+P.priceAdd;if(g==="33HT"&&P.costMul>1)v+=(ECON.price["33HT"]-ECON.price["23m"])*(P.costMul-1);/* v5.0.5: survival only (costMul is 1 elsewhere) */if(S&&S.perk)v+=S.perk.price[g]||0;if(S&&S.fx)for(const f of S.fx)if(f.price)v+=(f.price[g]||0)+(f.price.all||0);return v;}
 function freqMul(id){let m=1;
   if(["lwplug","cscreen","fscreen","lcplug"].includes(id))m*=Math.pow(0.6,LV("clean"));
   if(MAINT.includes(id))m*=Math.pow(0.75,LV("rcfa"))*Math.pow(0.8,LV("pmprog"));
@@ -1670,13 +1691,16 @@ const LEAD={
   wage:0.05,             // Chip, pay settlements: wages +5% with every deal (they stay with the deals)
   fixCut:0.5,            // Dot, Fix it now: ends a breakdown, returns part of its bill, and that breakdown is 50% rarer from then on (stacks)
   refund:0.6,            // Dot, Fix it now: share of that breakdown's repair bill she gets back
+  autoFix:0.5,           // v5.0.4: Dot fixes on her own: each fixable breakdown that starts has this chance, once per outage cycle (no button; 0.25 tested worth no more than no leader)
+  autoMin:100e3,         // v5.0.5: ...and only on breakdowns whose repair bill is at least this (she used to spend it on a $47k felt)
   rep:0.10,              // Dot, a good millwright: repair jobs 10% quicker while she is in charge
-  bills:1.15,            // Dot, gold-plates every job: repair bills +15% while she is in charge
+  bills:1.05,            // Dot, gold-plates every job: repair bills +5% while she is in charge (v5.0.4: was +15%, with the manual fix)
   cap:0.065,             // Felicity, a project: +6.5% capacity in one area (fibre line, paper machine or finishing), stays with the mill
   overrun:20,            // Felicity, project tie-ins: every outage overruns 20 min per project done so far (machine down)
   rethread:0.20,         // Hank, runnability: time lost to sheet breaks and hayouts -20% per pick...
   clean:0.15,            //   ...and sheet breaks and hayouts -15% per pick
-  steam:0.055,           // Hank, dial in the dryers: energy -5.5% per pick (stays with the mill)
+  steamFull:4,           // v5.0.5: Hank's first 4 dryer tunings give the full cut, later ones half (8 picks used to cut steam to 0.64x)
+  steam:0.055,           // Hank, dial in the dryers: steam (the energy part of energyCost, not chemicals) -5.5% per pick (stays with the mill)
   heavy:0.02};           // Hank, runs the sheet heavy (basis-weight giveaway): fibre +2% while he is in charge
 const LEAD_IDS=["chip","dot","fel","hank"];
 // what each leader picks at an outage: [stack key, button label, what it does]  (keys kept from v4.4.0-t1 so saves still load)
@@ -1684,7 +1708,7 @@ const LEAD_PICKS={
   chip:[["fibre","Fibre lock",()=>"next wave's fibre at this wave's price"],["sales","Sales push",()=>`+$${LEAD.sales}/t on every grade`]],
   dot:[],
   fel:[["pstock","Fibre line",()=>`receiving, pulper, screens +${pct1(LEAD.cap)}%`],["pwet","Paper machine",()=>`machine +${pct1(LEAD.cap)}%`],["pdry","Finishing",()=>`winder and shipping +${pct1(LEAD.cap)}%`]],
-  hank:[["rethread","Runnability",()=>`breaks −${pct1(LEAD.clean)}%, rethreads −${pct1(LEAD.rethread)}% time`],["clean","Dial in the dryers",()=>`energy −${pct1(LEAD.steam)}%`]]};
+  hank:[["rethread","Runnability",()=>`breaks −${pct1(LEAD.clean)}%, rethreads −${pct1(LEAD.rethread)}% time`],["clean","Dial in the dryers",()=>`steam −${pct1(leadN("clean")>=LEAD.steamFull?LEAD.steam/2:LEAD.steam)}%`]]};
 const pct1=v=>+(v*100).toFixed(1);   // 0.015 -> 1.5 (labels)
 const leadIs=id=>!!(S&&S.lead&&S.lead.id===id);
 const leadN=k=>(S&&S.lead&&S.lead.st[k])||0;
@@ -1697,7 +1721,7 @@ const leadSpeed=()=>0;                                                     // (v
 const leadClean=()=>Math.pow(1-LEAD.clean,leadN("rethread"));              // sheet breaks and hayouts (Hank's runnability)
 const leadBreaks=()=>1;
 const leadRethread=()=>1/Math.pow(1-LEAD.rethread,leadN("rethread"));      // how fast break and hayout time runs down (Hank)
-const leadEnergy=()=>Math.pow(1-LEAD.steam,leadN("clean"));               // Hank's dryer tuning (key "clean" kept for saves)
+const leadEnergy=()=>{const n=leadN("clean");return Math.pow(1-LEAD.steam,Math.min(n,LEAD.steamFull))*Math.pow(1-LEAD.steam/2,Math.max(0,n-LEAD.steamFull));};   // v5.0.5: picks after the 4th give half               // Hank's dryer tuning (key "clean" kept for saves)
 const leadBill=()=>leadIs("dot")?LEAD.bills:1;
 const leadRep=()=>leadIs("dot")?1/(1-LEAD.rep):1;                           // repair speed (Dot)
 const leadPayroll=()=>0;
@@ -1828,6 +1852,7 @@ function trigger(id,quiet){
   const bill=S.zen?0:(REPAIR[id]||0)*P.repairMul*(inc.billMul||1); if(bill>0){spend(bill,"repairs");inc.bill=bill;inc.note=(inc.note?inc.note+" · ":"")+`repair bill ${money(bill)}`;}
   log(e.head+(inc.note?` (${inc.note})`:""),"bad");
   S.M=mods();
+  if(typeof leadAuto==="function")leadAuto(inc);   // v5.0.4: Dot may fix it on the spot
 }
 function clearIncident(id){const i=S.inc.find(x=>x.id===id);if(i)i.left=0;}
 function chaosTick(dt){
@@ -1978,7 +2003,7 @@ const CARDS=[
     return "$20k spent. Results in 4 hours.";}},
  {id:"spot",area:"Sales · Warehouse",title:"Spot market sale",
   story:()=>`A spot buyer will take 500 t of ${C.grade} from your warehouse right now at $35/t over list.`,
-  win:()=>`+${money(500*(priceOf(C.grade)+35))} for 500 t`,lose:()=>"The buyer rejects 20% as damaged: those 100 t go at the $150/t seconds price",
+  win:()=>`+${money(500*35)} over list ($35/t). ${money(500*(priceOf(C.grade)+35))} comes in now, but those 500 t won't ship later`,lose:()=>`The buyer rejects 20% as damaged: those 100 t go at the $150/t seconds price (about −${money(Math.max(0,100*(priceOf(C.grade)-150)-400*35))} against list)`,
   odds:()=>70,why:"Fixed odds.",
   ok:()=>S.fg*C.rollW.v>=500&&!pending("spot"),
   accept(c){const w=rand("card")*100<c.o,n=500/C.rollW.v,T=[];lotTake(S.lots.fg,Math.min(n,S.fg),T);S.fg=Math.max(0,S.fg-n);S.shipT+=500;S.tot.shipped+=n;
@@ -2176,7 +2201,11 @@ function cardTick(dt){const cs=S.cards;if(!cs)return;
   if(pick&&typeof document!=="undefined"&&document.body){seen[pick.id]=true;openCard(pick);}}
 let cardEl=null;
 function openCard(c){const o=c.odds();S.cards.open={c,o};running=false;
-  if(!cardEl){cardEl=document.createElement("div");cardEl.className="overlay";cardEl.id="dealOv";cardEl.hidden=true;document.body.appendChild(cardEl);}
+  if(!cardEl){cardEl=document.createElement("div");cardEl.className="overlay";cardEl.id="dealOv";cardEl.hidden=true;document.body.appendChild(cardEl);
+    // v5.0.4: while a card waits for an answer, Tab cycles through its own buttons only
+    document.addEventListener("keydown",e=>{if(e.key!=="Tab"||cardEl.hidden||cardEl.classList.contains("dealres")||!(S.cards&&S.cards.open&&S.cards.open.c))return;
+      const b=[...cardEl.querySelectorAll("button:not([disabled])")];if(!b.length)return;e.preventDefault();const i=b.indexOf(document.activeElement);
+      b[i<0?0:(i+(e.shiftKey?b.length-1:1))%b.length].focus();},true);}
   const t=s=>String(s).replace(/[&<>]/g,x=>({"&":"&amp;","<":"&lt;",">":"&gt;"}[x]));
   cardEl.innerHTML=`<div class="modal deal" role="dialog" aria-modal="true" aria-labelledby="deal-h"><span class="dk">${t(c.area)} · sim paused</span>
     <h2 id="deal-h">${t(c.title)}</h2><p>${t(c.story())}</p>
@@ -2185,6 +2214,8 @@ function openCard(c){const o=c.odds();S.cards.open={c,o};running=false;
     <div id="deal-res" class="dres" hidden></div>
     <div class="btns" id="deal-btns"><button id="deal-no">Decline</button><button id="deal-yes" class="primary">Accept</button></div></div>`;
   cardEl.classList.remove("dealres");clearTimeout(cardEl._t);cardEl.hidden=false;AUDIO.sfx("cash",150);
+  {const nt=document.getElementById("outOv");clearInterval(cardEl._w);cardEl.style.visibility="";   // v5.0.4: wait for an outage notice to close, so it never covers the card
+    if(nt&&!nt.hidden&&nt.classList.contains("note")){cardEl.style.visibility="hidden";cardEl._w=setInterval(()=>{if(nt.hidden||!nt.classList.contains("note")){clearInterval(cardEl._w);cardEl.style.visibility="";const y=document.getElementById("deal-yes");if(y)y.focus();}},100);}}
   // one click: the decision resumes play straight away; the outcome stays on screen for 2 s (no backdrop, game running), then fades
   const done=msg=>{const r=document.getElementById("deal-res");r.textContent=msg;r.hidden=false;
     document.getElementById("deal-btns").innerHTML='<div class="dtimer"><i></i></div>';
@@ -2275,7 +2306,7 @@ let outEl=null;
 function outShell(){if(!outEl){outEl=document.createElement("div");outEl.className="overlay";outEl.id="outOv";outEl.hidden=true;document.body.appendChild(outEl);}clearTimeout(outEl._t);outEl.classList.remove("note");return outEl;}
 const outTime=t=>hhmm(t).replace(" · "," at ");
 const hourOf=t=>{const h=Math.floor(((t+360)%1440)/60);return `${h%12||12} ${h<12?"AM":"PM"}`;};
-function openOutagePlan(){const o=S.outg,st=outStart(o.k),first=o.k===1,pick={stock:1,wet:1,dry:1};
+function openOutagePlan(){const o=S.outg,st=outStart(o.k),first=o.k===1,d0=S.cash<0?0:1,pick={stock:d0,wet:d0,dry:d0};   // v5.0.4: in the red, the budgets start at the cheapest
   const COST=OUT.cost,lp=leadPlanNew();   // v4.4 survival leaders: lp is the leader's pick for this outage (and the run's one change of leader)
   running=false;S.cards.open={outage:true};
   const el=outShell(),k=n=>"$"+Math.round(n/1e3)+"k";
@@ -2285,7 +2316,7 @@ function openOutagePlan(){const o=S.outg,st=outStart(o.k),first=o.k===1,pick={st
     ${first?`<div class="intro"><p><b>What's an outage?</b> Planned downtime. Every ${OUT.every} days the mill comes down on purpose for a controlled 4-hour shutdown, so crews can inspect, clean, repair and replace worn parts before they fail.</p>
       <p><b>Why it matters:</b> well-maintained equipment breaks down less and runs better, with fewer sheet breaks and hayouts. Your budget for each area sets its reliability until the next outage.</p></div>`:""}
     <p class="when">Starts <b>${outTime(st)}</b>, back up by <b>${hourOf(st+OUT.len)}</b> (4 hours, machine and stock prep down).<br>Major job: <b>${OUT.jobs[outJob(o.k)-1]||"inspections"}</b>, plus new press felts.</p>${survOn()?survPlanNote(o.k):""}<div id="out-lead"></div>
-    <div>${OUT.areas.map(([a,n,d])=>`<div class="orow" data-a="${a}"><div><b>${n}</b><small>${d}</small></div><div class="seg">${COST.map((c,i)=>`<button data-v="${i}" aria-pressed="${i===1}">${k(c)}</button>`).join("")}</div><em class="eff"></em></div>`).join("")}</div>
+    <div>${OUT.areas.map(([a,n,d])=>`<div class="orow" data-a="${a}"><div><b>${n}</b><small>${d}</small></div><div class="seg">${COST.map((c,i)=>`<button data-v="${i}" aria-pressed="${i===d0}">${k(c)}</button>`).join("")}</div><em class="eff"></em></div>`).join("")}</div>
     <div class="otot"><div><span>Outage budget</span><small id="out-cash"></small></div><b id="out-tot"></b></div>
     <div class="btns"><button class="primary" id="out-ok" style="flex:1">Approve budget</button></div></div>`;
   const paint=()=>{el.querySelectorAll(".orow").forEach(r=>{const a=r.dataset.a,v=pick[a];r.querySelectorAll(".seg button").forEach(b=>b.setAttribute("aria-pressed",String(+b.dataset.v===v)));
@@ -2296,8 +2327,10 @@ function openOutagePlan(){const o=S.outg,st=outStart(o.k),first=o.k===1,pick={st
   document.getElementById("out-ok").addEventListener("click",()=>{const tot=Object.values(pick).reduce((s,v)=>s+COST[v],0);spend(tot,"repairs");
     o.plan={...pick};if(lp)o.plan.lead={to:lp.to,pick:lp.pick};log(`Outage ${o.k} budget approved: ${money(tot)} (${OUT.areas.map(([a,n])=>n+" "+k(COST[pick[a]])).join(", ")})`,"warn");
     el.hidden=true;closeCard(true);});
-  paint();if(lp)leadPlanMount(document.getElementById("out-lead"),lp);el.hidden=false;AUDIO.sfx("cash",150);document.getElementById("out-ok").focus();}
-function outNote(head,body,ms){const el=outShell();el.classList.add("note");
+  paint();if(lp)leadPlanMount(document.getElementById("out-lead"),lp);el.hidden=false;AUDIO.sfx("cash",150);document.getElementById("out-ok").focus({preventScroll:true});el.querySelector(".modal").scrollTop=0;}   // v5.0.4: opens at the top
+function outNote(head,body,ms){   // v5.0.5: with an event card open, the notice waits until the card is answered, so it never covers the card's buttons
+  {const d=document.getElementById("dealOv");clearInterval(outNote._w);if(S.cards&&S.cards.open&&S.cards.open.c&&d&&!d.hidden){outNote._w=setInterval(()=>{if(!(S.cards.open&&S.cards.open.c)){clearInterval(outNote._w);outNote(head,body,ms);}},200);return;}}
+  const el=outShell();el.classList.add("note");
   el.innerHTML=`<div class="modal deal" role="status"><span class="dk">Planned outage</span><h2>${head}</h2><p>${body}</p><div class="btns"><div class="dtimer"><i style="animation-duration:${ms/1000}s"></i></div></div></div>`;
   el.hidden=false;const m=el.querySelector(".modal");m.addEventListener("click",()=>{el.hidden=true;},{once:true});el._t=setTimeout(()=>{el.hidden=true;},ms);}
 function beginOutage(){const o=S.outg,st=S.t;if(!o.plan)o.plan={stock:1,wet:1,dry:1};o.on=true;o.end=st+OUT.len;
@@ -2358,7 +2391,7 @@ function initState(){
 // v4: every source of luck has its own stream, drawn on a fixed schedule (see step), so all players in the same
 // season week face the same dice at the same sim time: upsets, sheet breaks, hayouts, weather, truck timing
 function seedRun(seed){S.seed=seed>>>0;const k=S.seed;S.bn=bnFor(S.seed);S.rng={plan:k^0x9e3779b9,card:k^0x85ebca6b,up:k^0x27d4eb2f,upx:k^0x165667b1,
-    brk:k^0xd3a2646c,brkx:k^0xfd7046c5,hay:k^0xb55a4f09,wx:k^0x7feb352d,flow:k^0x846ca68b};
+    brk:k^0xd3a2646c,brkx:k^0xfd7046c5,hay:k^0xb55a4f09,wx:k^0x7feb352d,flow:k^0x846ca68b,lead:k^0x2c1b3c6d};
   C.grade="23m";const c=GCOST["23m"];
   S.plan={i:0,q:[],cur:null,left:c.mix[0]+rand("plan")*(c.mix[1]-c.mix[0]),mkt:0,mktLeft:7*1440,disc:null,hot:null};
   S.cards={next:1440*(1+0.5*rand("card")),open:null,pend:[],seen:{}};applyUpgrades();}
@@ -2421,7 +2454,7 @@ function step(dt){
   // v2.9.13: daily production (a mill day runs 6am to 6am, and S.t=0 is 6am) and the best day so far
   {const di=Math.floor(S.t/1440);if(!S.pd)S.pd={i:di,start:S.tot.prodT,rec:0,recDay:0};
     if(di>S.pd.i){const made=S.tot.prodT-S.pd.start;if(made>S.pd.rec){S.pd.rec=made;S.pd.recDay=S.pd.i+1;}S.pd.i=di;S.pd.start=S.tot.prodT;}}
-  const L0=S.ledger,op0=L0.occ+L0.energy+L0.labor+L0.overhead+L0.premium;
+
   chaosTick(dt);
   cardTick(dt);
   outageTick();
@@ -2514,8 +2547,11 @@ function step(dt){
   // clamp trucks first clear the roll conveyor into the warehouse (more urgently as it fills), then load trucks
   {const u=S.conv/P.convCap,docked=S.outDock.some(Boolean),share=docked?(u>0.6?0.9:0.5):1;
     const put=Math.max(0,Math.min(S.conv,P.fgCap-S.fg,lcap*share));S.conv-=put;S.fg+=put;lotTake(S.lots.conv,put,S.lots.fg);lcap-=put;S.rates.put=ease(S.rates.put||0,put*60/dt,dt,6);}
+  // v5.0.4: with a shipping bottleneck the doors' combined rate fills one truck at a time (door by door), so trucks leave
+  // through the day instead of every truck crawling for a day; capacity (doors x rate) and the dock-door upgrade are unchanged
+  let pool=S.bn==="ship"?P.shipDoors*P.doorRolls*dt/60:Infinity;
   for(let d=0;d<P.shipDoors;d++){const tr=S.outDock[d]; if(!tr)continue;
-    const l=Math.min(P.truckRolls-tr.load,P.doorRolls*dt/60,lcap,S.fg);
+    const l=Math.min(P.truckRolls-tr.load,pool===Infinity?P.doorRolls*dt/60:pool,lcap,S.fg);pool-=l;
     tr.load+=l;lcap-=l;S.fg-=l;loaded+=l;lotTake(S.lots.fg,l,tr.lots||(tr.lots=[]));
     if(tr.load>=P.truckRolls-1e-6){S.leaving.push({...tr,ty:outY(d),kind:"out"});S.outDock[d]=null;S.tot.shipped+=P.truckRolls;const tons=P.truckRolls*C.rollW.v;S.shipT+=tons;earn(lotValue(tr.lots||[[C.grade,P.truckRolls]],C.rollW.v));}}   // (v16: each roll at its own grade's price)
   spend(((C.drivers.v+C.loaders.v+P.techs)*(ECON.wage+(P.siteWage||0))*(P.costMul||1)*leadWage()+leadPayroll()*(P.costMul||1)+P.robots*ECON.robot+P.pmCost)*dt/60,"labor");
@@ -2523,17 +2559,20 @@ function step(dt){
   // v3.1.2: profit/day is OPERATING profit over the last 12 game hours: good paper is valued as it comes off the machine (tons x price),
   // less OCC, energy, labor, overhead and insurance. One-offs (upgrades, outage budgets, repair bills, card deals) are left out,
   // and so is the lumpy timing of truck departures. Cash and the season score are unchanged.
-  if(!S.over&&!S.free&&!S.zen&&S.cash<ECON.bankrupt&&!(S.season&&S.season.on)){S.over="bankrupt";showOverlay();}
+  if(!S.over&&!S.free&&!S.zen&&S.cash<ECON.bankrupt&&!(S.season&&S.season.on)&&!(S.season&&S.season.done&&!S.season.more)){S.over="bankrupt";showOverlay();}   // v5.0.5: not at the end of a season or survival run (its own results show); only in sandbox play or after "one more turn"
   rcTick(dt);
   seasonTick();
   // smoothed rates (per hour)
   const R=S.rates,k=v=>v*60/dt;
   R.feed=ease(R.feed,k(feed),dt,6);R.unload=ease(R.unload,k(unloaded),dt,6);R.fiberIn=ease(R.fiberIn,k(fiberIn),dt,6);
   R.prod=ease(R.prod,k(prod),dt,6);R.fiberUse=ease(R.fiberUse,k(prod/P.pmLoss),dt,6);R.load=ease(R.load,k(loaded),dt,6);R.rolls=ease(R.rolls,k(rollsMade),dt,10);R.cut=ease(R.cut,k(cut),dt,6);
-  {const L1=S.ledger,op=prod*priceOf(C.grade)-(L1.occ+L1.energy+L1.labor+L1.overhead+L1.premium-op0),B=S.opb&&S.opb.b.length===144?S.opb:(S.opb={b:new Array(144).fill(0),i:-1});
+  // v5.0.4: profit per day is the real cash change (sales and deals in, every cost out, repairs and outage budgets too); only
+  // upgrades are left out, as they're a choice. Read from the ledger, so money moved between steps (a budget approved) counts too.
+  {const L1=S.ledger,T=L1.rev+(L1.deals||0)-(L1.occ+L1.energy+L1.labor+L1.overhead+L1.premium+L1.repairs),op=S.opLast==null?0:T-S.opLast;S.opLast=T;const NB=432,B=S.opb&&S.opb.b.length===NB?S.opb:(S.opb={b:new Array(NB).fill(0),i:-1,sum:0});if(B.sum==null)B.sum=B.b.reduce((a,v)=>a+v,0);
     // v4.4.0-t3: profit per day is the last 24 game hours (144 ten-minute buckets); shown from the end of the first day
-    const bi=Math.floor(S.t/10);if(bi!==B.i){for(let j=Math.max(B.i+1,bi-143);j<=bi;j++)B.b[((j%144)+144)%144]=0;B.i=bi;}
-    B.b[bi%144]+=op;S.profitRate=B.b.reduce((a,v)=>a+v,0)*1440/Math.min(1440,Math.max(10,S.t));}
+    // v5.0.5: averaged over the last 3 days (432 ten-minute buckets, with a running sum), so one truck or one repair bill doesn't flip it
+    const bi=Math.floor(S.t/10);if(bi!==B.i){for(let j=Math.max(B.i+1,bi-NB+1);j<=bi;j++){const k=((j%NB)+NB)%NB;B.sum-=B.b[k];B.b[k]=0;}B.i=bi;}
+    B.b[bi%NB]+=op;B.sum+=op;S.profitRate=B.sum*1440/Math.min(NB*10,Math.max(10,S.t));}
   // trend every 10 sim min
   S.trendAcc+=dt;
   if(S.trendAcc>=10){S.trendAcc-=10;S.trend.push([S.tank/P.tankCap,S.pmSpeed/3300,S.yard/P.yardCap,S.fg/P.fgCap]);if(S.trend.length>144)S.trend.shift();}
@@ -2625,6 +2664,8 @@ moreToggle("chaosSec","chaosMore","paper-mill-chaos-more")(false||(()=>{try{retu
 moreToggle("shopSec","shopMore","paper-mill-shop-more",v=>document.querySelectorAll(".ugrp").forEach(d=>{d.classList.toggle("closed",!v);d.querySelector("h3").setAttribute("aria-expanded",v);}))((()=>{try{return localStorage.getItem("paper-mill-shop-more")==="1";}catch(e){return false;}})());
 // v4.1 v19: one upgrade a day; the day turns over at 6 am (S.t 0 is 6 am on day 1). Free play is exempt.
 const upDay=()=>Math.floor(S.t/1440),upLocked=()=>!S.free&&S.upDay===upDay();
+// v5.0.4: the shop day starts at 6 AM on the clock, so after 6 AM the next one is tomorrow's
+const upNext=()=>((S.t+360)/60)%24>=6?"tomorrow 6 AM":"at 6 AM";
 function buy(id){const u=UP[id],l=LV(id);if(l>=u.lv.length)return;const cost=upCost(u,l);if(!S.free&&S.cash<cost)return;if(upLocked())return;
   S.upDay=upDay();spend(cost,"upgrades");AUDIO.sfx("cash",150);S.up[id]=l+1;applyUpgrades();
   BANNERS.push({text:`${u.name}${u.lv.length>1?" level "+(l+1):""} is online.`,t:null,kind:"good"});while(BANNERS.length>3)BANNERS.splice(1,1);
@@ -2636,14 +2677,14 @@ function updateRel(){const rn=document.getElementById("relnow"),lg=$("ledger"),t
       d.innerHTML=`<span>${n}<small style="display:block;color:var(--muted);font-size:12px;font-weight:500">${bits.length?bits.join(" · "):"standard"}</small></span><b>${Math.abs(sum)<0.005?"–":pct(sum)}</b>`;tg.appendChild(d);});}
 function updateShop(){
   $("u-cash").textContent=money(S.cash);
-  {const w=document.querySelector(".wallet small"),t=S.free?"Cash on hand":upLocked()?"Cash on hand · next upgrade at 6 AM":"Cash on hand · 1 upgrade a day";if(w&&w.textContent!==t)w.textContent=t;}
+  {const w=document.querySelector(".wallet small"),t=S.free?"Cash on hand":upLocked()?"Cash on hand · next upgrade "+upNext():"Cash on hand · 1 upgrade a day";if(w&&w.textContent!==t)w.textContent=t;}
   UGROUPS.forEach(([g])=>{const us=UPS.filter(u=>u.g===g),own=us.reduce((a,u)=>a+LV(u.id),0),tot=us.reduce((a,u)=>a+u.lv.length,0),can=upLocked()?0:us.filter(u=>LV(u.id)<u.lv.length&&(S.free||S.cash>=upCost(u,LV(u.id)))).length;
     const fix=bnShort()&&us.some(upFix);const el=$("usum-"+g);if(el)el.innerHTML=`${fix?'<em class="fixg">fix</em> ':""}${own}/${tot} bought${can?` · <b>${can} affordable</b>`:""}`;});
   UPS.forEach(u=>{const l=LV(u.id),el=$("up-"+u.id),b=$("buy-"+u.id),max=l>=u.lv.length;
     el.classList.toggle("max",max);el.querySelectorAll(".pips i").forEach((p,k)=>p.classList.toggle("on",k<l));
     {const fx=upFix(u),ft=el.querySelector(".fixtag");el.classList.toggle("fix",fx);if(ft){ft.hidden=!fx;if(fx){const t="Fixes the bottleneck · 25% off. "+(BN_UPTXT[S.bn+"/"+u.id]||"");if(ft.textContent!==t)ft.textContent=t;}}}
     if(max){b.disabled=true;b.textContent="Maxed";}
-    else{const c=upCost(u,l),lk=upLocked();b.disabled=lk||(!S.free&&S.cash<c);b.textContent=S.free?"Add (free play)":lk?`${money(c)} · next at 6 AM`:S.cash<c?`Need ${money(c)}`:`Buy ${money(c)}`;}});
+    else{const c=upCost(u,l),lk=upLocked();b.disabled=lk||(!S.free&&S.cash<c);b.textContent=S.free?"Add (free play)":lk?`${money(c)} · ${upNext()}`:S.cash<c?`Need ${money(c)}`:`Buy ${money(c)}`;}});
   const lg=$("ledger");lg.replaceChildren();
   lineCapView(lg);bnCard();
   // v3.3.3: how reliable each section is right now, against a mill with no upgrades and a standard outage budget
@@ -2697,6 +2738,7 @@ function startSeason(surv){newGame();S.season=surv?{on:true,surv:true,end:1e12,d
   S.bn=BN_IDS[Math.floor(Math.random()*BN_IDS.length)];applyUpgrades();C.breaks=true;
   CH.on=true;$("chaosOn").checked=true;CH.lvl=1;$("chaosLvl").value=1;$("chaosLvlv").textContent="1×";
   EVENTS.forEach(e=>{CH.en[e.id]=true;const c=$("en-"+e.id);if(c)c.checked=true;});seasonLocks(true);
+  S.rc={i:0,p:rcAcc(),s:rcAcc(),cards:[]};   // v5.0.4: the first report card starts with the run, so upgrades bought before the first step count (it used to start at the first step)
   BANNERS.push(surv?{text:"Survival: every outage starts a rougher, dearer wave. Last as long as you can.",t:null,kind:"good",tag:"SURVIVAL"}:{text:`Season started: ${SEASON_DAYS} days. Make as much profit as you can.`,t:null,kind:"good"});bnNotice();if(G3.labelIntro)G3.labelIntro();}
 
 /* ---------- v4.3 survival mode: start, wave changes, the wave chip, game over ----------
@@ -2717,12 +2759,15 @@ function survWaveStart(){const w=survWave();applyUpgrades();
 UI_TICKS.push(()=>{const c=$("survChip");if(!c)return;const on=survOn()&&!S.zen;if(c.hidden===on){c.hidden=!on;document.body.classList.toggle("surv",on);}if(!on)return;
   const w=survWave(),set=(id,v)=>{const e=$(id);if(e.textContent!==v)e.textContent=v;},left=Math.max(0,outStart(w)-S.t),d=Math.floor(left/1440),h=Math.floor(left%1440/60);
   set("svW","Wave "+w);set("svU",xf(survUp(w)));set("svC",xf(survCost(w)));
-  set("svN",S.outg&&S.outg.on?"outage under way":left<60?"outage within the hour":`outage in ${d?d+"d ":""}${h}h`);});
+  set("svN",S.outg&&S.outg.on?"outage under way":left<60?"outage within the hour":`outage in ${d?d+"d ":""}${h}h`);
+  // v5.0.4: short forms for phones (styles.css shows data-s under 420 px), so the countdown fits there too
+  const sa=(id,v)=>{const e=$(id);if(e&&e.dataset.s!==v)e.dataset.s=v;};sa("svW","W"+w);
+  sa("svN",S.outg&&S.outg.on?"⏱\uFE0E now":left<60?"⏱\uFE0E <1h":`⏱\uFE0E ${d?d+"d ":""}${h}h`);});
 // the season-over dialog serves both modes: which buttons it shows and what they say
 // (a bankrupt survival run has no "one more turn": that button goes back to the menu instead, on a fresh mill)
 function soMode(surv){$("so-more").textContent=surv?"Menu":"One more turn";$("so-new").textContent=surv?"New survival run":"New season";}
 function survResult(){return {minutes:Math.floor(S.t),wave:survWave(),tons:Math.round(S.shipT||0),incidents:S.tot.incidents,mill:MILL.name.slice(0,40),version:APP_VER.slice(0,12),env:SITE.env};}
-function endSurvival(){const se=S.season,r=survResult(),w=r.wave;se.done=true;se.on=false;se.result=r;running=false;
+function endSurvival(){const se=S.season,r=survResult(),w=r.wave;se.done=true;se.on=false;se.result=r;running=false;if(G3.save&&G3.save.drop)G3.save.drop();   // v5.0.3: the run is over, so its save goes
   if(document.body.classList.contains("fs"))setFS(false);seasonLocks(false);AUDIO.sfx("lose",100);
   let best=0;try{best=+localStorage.getItem(SURV.best)||0;}catch(e){}
   const pb=r.minutes>best;if(pb){try{localStorage.setItem(SURV.best,String(r.minutes));}catch(e){}}
@@ -2731,9 +2776,10 @@ function endSurvival(){const se=S.season,r=survResult(),w=r.wave;se.done=true;se
   const st=[["Time survived",survTime(r.minutes),"big"],["Wave reached",String(w)],["Your best",pb?(best?"New best (was "+survTime(best)+")":"New best"):survTime(best)],
     ["Upsets by the end",xf(survUp(w))],["Costs by the end",xf(survCost(w))],["Tons shipped",f0(r.tons)+" t"],["Upsets survived",String(r.incidents)]];
   if(S.lead)st.splice(3,0,["Mill leader",LEADERS[S.lead.id].name+(S.lead.was?" (after "+LEADERS[S.lead.was].name+")":""),"wide"]);
+  if(S.lead&&S.lead.saved)st.splice(4,0,["Dot saved",money(S.lead.saved)+" in repairs ("+S.lead.fixed.length+" fixed)","wide"]);   // v5.0.5
   $("so-stats").replaceChildren(...st.map(([k,v,c])=>{const d=document.createElement("div");if(c)d.className=c;const a=document.createElement("span");a.textContent=k;const b=document.createElement("b");b.textContent=v;d.append(a,b);return d;}));
   {const box=$("so-rc");if(box)box.hidden=true;}soMode(true);
-  let nm="";try{nm=localStorage.getItem("paper-mill-player")||"";}catch(e){}$("so-name").value=nm;
+  let nm="";try{nm=localStorage.getItem("paper-mill-player")||"";}catch(e){}$("so-name").value=nm;soCount();
   $("so-submit").disabled=false;$("so-submit").textContent=lbOn()?"Submit score":"Save score";setMsg("");$("seasonOv").hidden=false;$("seasonOv").scrollTop=0;if(matchMedia("(hover:hover) and (pointer:fine)").matches)$("so-name").focus();else $("so-submit").focus({preventScroll:true});}
 /* ---------- v4.4 survival mode: mill leader portraits (the art only; the roster and the dialogs are in 09c-leaders.js) ----------
    Painted portraits, one WebP per leader at 408 x 460, embedded so the game stays a single file. They are shown as CSS
@@ -2759,13 +2805,13 @@ const LEADERS={
     plus:()=>`Each outage, one deal: lock the next wave's fibre at this wave's price, or a sales push that stays (+$${LEAD.sales}/t on every grade).`,
     minus:()=>`Labour relations: every deal ends in a pay settlement (wages +${pct1(LEAD.wage)}% for good), and call-offs and dock brawls come ${LEAD.strife0}× as often while he's in charge.`},
   dot:{name:'Dot "Doc" Blade',title:"The millwright",role:"Mechanic",say:"If it turns, I can fix it.",
-    plus:()=>`Repairs ${pct1(LEAD.rep)}% quicker. Fix it now, once per outage cycle: end one breakdown on the spot, get ${LEAD.refund>=1?"its repair bill":pct1(LEAD.refund)+"% of its repair bill"} back, and fix it at the root (${pct1(LEAD.fixCut)}% rarer from then on).`,
+    plus:()=>`Repairs ${pct1(LEAD.rep)}% quicker. Once per outage cycle she fixes a breakdown on her own (${pct1(LEAD.autoFix)}% chance as each one with a bill of ${money(LEAD.autoMin)}+ starts): it ends on the spot, ${LEAD.refund>=1?"its repair bill":pct1(LEAD.refund)+"% of its repair bill"} comes back, and it's fixed at the root (${pct1(LEAD.fixCut)}% rarer from then on).`,
     minus:()=>`Gold-plates every job: repair bills cost ${pct1(LEAD.bills-1)}% more while she's in charge.`},
   fel:{name:"Felicity Fourdrinier",title:"The process engineer",role:"Engineer",say:"I have a spreadsheet for that.",
     plus:()=>`Each outage, one debottlenecking project that stays: +${pct1(LEAD.cap)}% capacity for the fibre line, the paper machine or finishing.`,
     minus:()=>`Project tie-ins: every outage overruns ${LEAD.overrun} minutes for each project done so far.`},
   hank:{name:"Hank Headbox",title:"The machine tender",role:"Operator",say:"She'll tell you what she wants.",
-    plus:()=>`Each outage, one gain that stays: runnability (sheet breaks and hayouts −${pct1(LEAD.clean)}%, and back up ${pct1(LEAD.rethread)}% faster) or dial in the dryers (energy −${pct1(LEAD.steam)}%).`,
+    plus:()=>`Each outage, one gain that stays: runnability (sheet breaks and hayouts −${pct1(LEAD.clean)}%, and back up ${pct1(LEAD.rethread)}% faster) or dial in the dryers (steam −${pct1(LEAD.steam)}%).`,
     minus:()=>`Runs the sheet heavy: fibre +${pct1(LEAD.heavy)}% while he's in charge (basis-weight giveaway).`}};
 function leadStart(id){if(!LEADERS[id])return;S.lead={id,st:{fibre:0,sales:0,rethread:0,clean:0,pstock:0,pwet:0,pdry:0},changed:false,was:null,fixW:0,fixed:[],lockW:0};applyUpgrades();
   try{localStorage.setItem("paper-mill-leader",id);}catch(e){}
@@ -2779,13 +2825,13 @@ function leadTally(){const L=S.lead,out=[];if(!L)return out;const n=k=>L.st[k]||
   [["pstock","fibre line"],["pwet","paper machine"],["pdry","finishing"]].forEach(([k,a])=>{if(n(k))out.push([`${n(k)} ${a} project${n(k)>1?"s":""}`,`capacity ${pc(leadCap(k)-1)}`]);});
   if(leadProjects())out.push(["Project tie-ins",`outages +${leadOverrun()} min`,1]);
   if(n("rethread"))out.push([`${n("rethread")} runnability gain${n("rethread")>1?"s":""}`,`breaks ${pc(leadClean()-1)} · rethreads ${pc(1/leadRethread()-1)}`]);
-  if(n("clean"))out.push([`${n("clean")} dryer tuning${n("clean")>1?"s":""}`,`energy ${pc(leadEnergy()-1)}`]);
+  if(n("clean"))out.push([`${n("clean")} dryer tuning${n("clean")>1?"s":""}`,`steam ${pc(leadEnergy()-1)}`]);
   if(leadIs("hank"))out.push(["Fibre (runs heavy)",pc(LEAD.heavy),1]);
   if(leadIs("dot"))out.push(["Repairs",`${pct1(LEAD.rep)}% quicker`]);
   if(leadIs("dot"))out.push(["Repair bills",pc(LEAD.bills-1),1]);
   if(leadIs("chip"))out.push(["Labour relations",`call-offs and brawls ${xf(leadStrife())}`,1]);
   if(L.fixed&&L.fixed.length){const c={};L.fixed.forEach(x=>c[x]=(c[x]||0)+1);
-    out.push([`Fixed at the root (${L.fixed.length})`,Object.entries(c).map(([x,k])=>`${EV[x]?EV[x].name:x} ${pc(Math.pow(1-LEAD.fixCut,k)-1)}`).join(", ")]);}
+    out.push([`Fixed ×${L.fixed.length}`,Object.entries(c).map(([x,k])=>`${EV[x]?EV[x].name:x} ${pc(Math.pow(1-LEAD.fixCut,k)-1)}`).join(", ")]);}
   return out;}
 const leadTallyHTML=()=>{const t=leadTally();return t.length?`<div class="ldtally">${t.map(([a,b,bad])=>`<div${bad?' class="bad"':""}><span>${a}</span><b>${b}</b></div>`).join("")}</div>`:"";};
 
@@ -2801,7 +2847,7 @@ function leadPickOpen(done,wait){let sel=null;try{const v=localStorage.getItem("
     <p class="muted small">Each one is strong on one side of the mill and costs you on another. What they build stays with the mill. You can change leader once per run, at an outage.</p>
     <div class="ldgrid" role="radiogroup" aria-label="Mill leader">${LEAD_IDS.map(id=>leadCardHTML(id)).join("")}</div>
     <div class="btns"><button class="primary" id="ld-go" disabled>Start the run</button><button id="ld-no">Back</button></div></div>`;
-  const paint=()=>{el.querySelectorAll(".ldcard").forEach(b=>b.setAttribute("aria-checked",String(b.dataset.l===sel)));const g=el.querySelector("#ld-go");g.disabled=!sel;g.textContent=sel?`Start with ${LEADERS[sel].name.split(" ")[0]}`:"Start the run";};
+  const paint=()=>{el.querySelectorAll(".ldcard").forEach(b=>b.setAttribute("aria-checked",String(b.dataset.l===sel)));const g=el.querySelector("#ld-go");g.disabled=!sel;g.textContent=sel?`Start with ${LEADERS[sel].name.split(" ")[0]}`:"Pick a leader to start";};
   const close=()=>{el.hidden=true;document.removeEventListener("keydown",key,true);if(back&&back.focus)back.focus();};
   const key=e=>{if(e.key==="Escape"){e.preventDefault();e.stopPropagation();close();}};
   el.querySelectorAll(".ldcard").forEach(b=>b.addEventListener("click",()=>{sel=b.dataset.l;paint();}));
@@ -2821,7 +2867,7 @@ function leadPlanMount(host,lp){if(!host)return;
     host.innerHTML=`<div class="ldrow"><div class="ldwho">${leadArt(id,true)}<div><b>${escHTML(L.name)}</b><small>${lp.to?"takes over at this outage":L.title}</small></div>
         ${S.lead.changed?"":`<button type="button" class="ghost" id="out-lchg">${lp.choosing?(lp.to?"Keep "+LEADERS[cur].name.split(" ")[0]:"Cancel"):"Change leader"}</button>`}</div>${choose}
       ${picks.length?`<div class="ldq">${first}'s pick for the next cycle${id==="chip"?` <span>· each deal: wages +${pct1(LEAD.wage)}% for good</span>`:id==="fel"?` <span>· each project: outages +${LEAD.overrun} min</span>`:""}</div><div class="seg ldseg" id="out-lpick">${picks.map(([k,lab,what])=>`<button type="button" data-p="${k}" aria-pressed="${lp.pick===k}"><b>${lab}</b><small>${what()}</small></button>`).join("")}</div>`
-        :`<div class="ldq">${id==="dot"?"Dot makes no pick: Fix it now is ready again when the outage ends.":""}</div>`}
+        :`<div class="ldq">${id==="dot"?"Dot makes no pick: her fix is ready again when the outage ends.":""}</div>`}
       ${leadTallyHTML()}</div>`;
     host.querySelectorAll("#out-lpick button").forEach(b=>b.addEventListener("click",()=>{lp.pick=b.dataset.p;draw();}));
     const c=host.querySelector("#out-lchg");if(c)c.addEventListener("click",()=>{if(lp.choosing){lp.choosing=false;lp.to=null;}else lp.choosing=true;draw();});
@@ -2837,10 +2883,16 @@ function leadOutageEnd(pl){const L=S.lead,picks=LEAD_PICKS[L.id];if(!picks.lengt
 /* ---- Dot's fix ---- */
 const leadFixable=id=>MNEED(id)||QINC(id);
 const leadFixReady=()=>leadIs("dot")&&survOn()&&S.lead.fixW!==survWave();
+// v5.0.4: Dot fixes on her own. A fixable breakdown that starts while her fix is ready has an LEAD.autoFix chance of being fixed
+// on the spot (its own dice stream, "lead", so no other luck changes); then the fix is used until the outage ends.
+function leadAuto(inc){if(!inc||S.zen||!leadFixReady()||!leadFixable(inc.id))return;if(S.rng.lead==null)S.rng.lead=(S.seed^0x2c1b3c6d)|0;   // (a save from before v5.0.4)
+  if((inc.bill||0)<LEAD.autoMin)return;   // v5.0.5: not on cheap ones (no dice drawn, so nothing else changes)
+  if(rand("lead")<LEAD.autoFix&&leadFix(inc.id)){for(let i=BANNERS.length-1;i>=0;i--)if(BANNERS[i].id===inc.id)BANNERS.splice(i,1);}}   // v5.0.5: her FIXED banner replaces the breakdown's own
 function leadFix(id){if(!leadFixReady()||!active(id)||!leadFixable(id))return false;const inc=S.inc.find(i=>i.id===id),back=Math.round(((inc&&inc.bill)||0)*LEAD.refund);
-  clearIncident(id);if(back>0){spend(-back,"repairs");inc.bill-=back;}S.lead.fixW=survWave();(S.lead.fixed||(S.lead.fixed=[])).push(id);AUDIO.sfx("clunk",200);
-  BANNERS.push({text:`Dot fixed it at the root: ${EV[id].name.toLowerCase()}.${back>0?" "+money(back)+" back.":""}`,t:null,kind:"good",tag:"FIXED"});while(BANNERS.length>3)BANNERS.splice(1,1);
-  log(`Fix it now: Dot ended "${EV[id].name}" on the spot${back>0?" and "+money(back)+" of the repair bill came back":""}. Fixed at the root: it's half as likely from now on.`,"ok");return true;}
+  clearIncident(id);if(back>0){spend(-back,"repairs");inc.bill-=back;S.lead.saved=(S.lead.saved||0)+back;}S.lead.fixW=survWave();(S.lead.fixed||(S.lead.fixed=[])).push(id);AUDIO.sfx("clunk",200);
+  const ext=EV[id].g==="god"||id==="roof";   // (v5.0.5: weather and the roof are made safer, not "fixed at the root")
+  BANNERS.push({text:`${ext?"Dot repaired it and made it safer":"Dot fixed it at the root"}: ${EV[id].name.toLowerCase()}.${back>0?" "+money(back)+" back.":""}`,t:null,kind:"good",tag:"FIXED"});while(BANNERS.length>3)BANNERS.splice(1,1);
+  log(`Dot's fix: she ended "${EV[id].name}" on the spot${back>0?" and "+money(back)+" of the repair bill came back":""}. ${ext?"Made safer":"Fixed at the root"}: it's half as likely from now on.`,"ok");return true;}
 
 /* ---- the leader card (tap the wave chip) ---- */
 let leadCardEl=null;
@@ -2849,21 +2901,21 @@ function leadCardOpen(){if(!S.lead)return;const was=running;running=false;
   const el=leadCardEl,id=S.lead.id,L=LEADERS[id];
   const close=()=>{el.hidden=true;document.removeEventListener("keydown",key,true);if(was&&!(S.cards&&S.cards.open)&&!S.over&&survOn())running=true;};
   const key=e=>{if(e.key==="Escape"){e.preventDefault();e.stopPropagation();close();}};
-  const draw=()=>{const fx=S.inc.filter(i=>leadFixable(i.id)&&i.left>0),ready=leadFixReady();   // (a fixed one has left=0 until the next sim step clears it)
-    const fix=id!=="dot"?"":`<div class="ldfix"><h3>Fix it now <small>${ready?"ready":"used this cycle · back when the outage ends"}</small></h3>
-        ${fx.length?fx.map(i=>`<div class="ldfx"><span><b>${EV[i.id].name}</b><small>${(i.left/60).toFixed(1)} h left${i.bill>0?" · "+money(i.bill*LEAD.refund)+" back":""}</small></span><button type="button" class="primary" data-fix="${i.id}"${ready?"":" disabled"}>Fix now</button></div>`).join(""):`<p class="muted small">No breakdown to fix right now.</p>`}</div>`;
+  const draw=()=>{const ready=leadFixReady();
+    const fix=id!=="dot"?"":`<div class="ldfix"><h3>Dot's fix <small>${ready?"ready":"used this cycle · back when the outage ends"}</small></h3>
+        <p class="muted small">${ready?`She has a ${pct1(LEAD.autoFix)}% chance to fix each breakdown with a bill of ${money(LEAD.autoMin)} or more as it starts.`:"She fixed one this cycle."}${(S.lead.fixed||[]).length?` Fixed so far: ${S.lead.fixed.length}${S.lead.saved?`, saving ${money(S.lead.saved)}`:""}.`:""}</p></div>`;
     el.innerHTML=`<div class="modal ldone" role="dialog" aria-modal="true" aria-labelledby="ldc-h"><span class="dk">Mill leader · sim paused</span>
       ${leadCardHTML(id,"div")}${fix}
-      ${leadTally().length?`<h3 id="ldc-h">What the mill has kept</h3>${leadTallyHTML()}`:`<h3 id="ldc-h">Nothing built yet</h3><p class="muted small">${LEAD_PICKS[id].length?L.name.split(" ")[0]+" makes the first pick at the next outage.":"Dot makes no picks. Her fix is ready once every outage cycle."}</p>`}
+      ${leadTally().length?`<h3 id="ldc-h">What the mill has kept</h3>${leadTallyHTML()}`:`<h3 id="ldc-h">Nothing built yet</h3><p class="muted small">${LEAD_PICKS[id].length?L.name.split(" ")[0]+" makes the first pick at the next outage.":"Dot makes no picks. She fixes one breakdown on her own once every outage cycle."}</p>`}
       <p class="muted small">${S.lead.changed?`You changed leader once already (${escHTML(LEADERS[S.lead.was].name)} left). ${L.name.split(" ")[0]} stays to the end.`:"You can change leader once per run, in an outage budget dialog. What was built stays with the mill."}</p>
       <div class="btns"><button class="primary" id="ldc-ok" style="flex:1">Back to the mill</button></div></div>`;
     el.querySelector("#ldc-ok").addEventListener("click",close);
-    el.querySelectorAll("[data-fix]").forEach(b=>b.addEventListener("click",()=>{if(leadFix(b.dataset.fix))draw();}));};
+};
   document.addEventListener("keydown",key,true);draw();el.hidden=false;el.querySelector("#ldc-ok").focus();}
 // the chip: the leader's face, and Dot's fix when a breakdown is waiting for it
 UI_TICKS.push(()=>{const f=$("svL");if(!f)return;const id=S.lead&&survOn()?S.lead.id:"";if(f.dataset.l!==id){f.dataset.l=id;f.innerHTML=id?leadArt(id,true):"";f.hidden=!id;const fb=$("svFold");if(fb)fb.hidden=!id;if(!id)$("survChip").classList.remove("fold");}
-  const x=$("svF");if(x){const show=id==="dot",ready=show&&leadFixReady(),hot=ready&&S.inc.some(i=>leadFixable(i.id)&&i.left>0),t=ready?(hot?"Fix it now":"Fix ready"):"Fix used";
-    if(x.hidden===show)x.hidden=!show;if(show){if(x.textContent!==t)x.textContent=t;x.classList.toggle("hot",hot);x.classList.toggle("used",!ready);}$("survChip").classList.toggle("hot",!!(show&&ready&&S.inc.some(i=>leadFixable(i.id)&&i.left>0)));}});
+  const x=$("svF");if(x){const show=id==="dot",ready=show&&leadFixReady(),hot=false,t=ready?"Fix ready":"Fix used";
+    if(x.hidden===show)x.hidden=!show;if(show){if(x.textContent!==t)x.textContent=t;x.dataset.s=ready?"Fix ✓":"Fix –";x.classList.toggle("hot",hot);x.classList.toggle("used",!ready);}$("survChip").classList.remove("hot");}});
 // v4.4.0-t3: the wave bar slides away to the left (the arrow at its end), leaving the leader's face; tapping the face brings it back
 {const c=$("survChip"),fb=$("svFold");let fold=false;try{fold=localStorage.getItem("paper-mill-chip-fold")==="1";}catch(e){}
   const setFold=v=>{fold=v;c.classList.toggle("fold",v);c.setAttribute("aria-expanded",String(!v));c.setAttribute("aria-label",v?"Show the wave bar":"Wave bar: open your mill leader's card");try{localStorage.setItem("paper-mill-chip-fold",v?"1":"0");}catch(e){}};
@@ -2905,7 +2957,7 @@ function rcLimit(){const M=S.M||{},starved=()=>S.yard<P.yardCap*0.04||M.noIn||M.
   if(S.pmSpeed<C.pmSp.v*0.97*(M.speedCap||1)&&S.tank<P.tankCap*0.3)return starved();return "Machine at full speed";}
 function rcGrade(v,cut){return ["A","B","C","D","F"][cut.findIndex(c=>v>=c)<0?4:cut.findIndex(c=>v>=c)];}
 function rcSum(a){const L=S.ledger,d=k=>(L[k]||0)-(a.L0[k]||0),prod=S.tot.prodT-a.prod0,ship=(S.shipT||0)-a.ship0,run=Math.max(1,a.min-a.plan),days=Math.max(0.1,a.min/1440);
-  const ops=["occ","energy","labor","overhead","premium"].reduce((t,k)=>t+d(k),0),spent={Fibre:d("occ"),Energy:d("energy"),Labour:d("labor"),Overhead:d("overhead"),"Premium freight":d("premium"),"Repairs & outages":d("repairs"),Upgrades:d("upgrades")};
+  const ops=["occ","energy","labor","overhead","premium"].reduce((t,k)=>t+d(k),0),spent={Fibre:d("occ"),Energy:d("energy"),Labour:d("labor"),Overhead:d("overhead"),"Freight & insurance":d("premium"),"Repairs & outages":d("repairs"),Upgrades:d("upgrades")};
   const rev=d("rev"),deals=d("deals"),earned=rev+Math.max(0,deals),spentT=Object.values(spent).reduce((t,v)=>t+v,0)+Math.max(0,-deals),net=earned-spentT;
   const rel={};RC_SEC.forEach(([k])=>rel[k]=a.up[k]/run);const relAvg=RC_SEC.reduce((t,[k])=>t+rel[k],0)/RC_SEC.length;
   const dn=Object.entries(a.dn).sort((x,y)=>y[1]-x[1]).slice(0,5),bnT=Object.values(a.bn).reduce((t,v)=>t+v,0)||1,bn=RC_STEPS.map(k=>[k,(a.bn[k]||0)/bnT]).sort((x,y)=>y[1]-x[1]);
@@ -2919,20 +2971,20 @@ function rcMake(a,i){const p=rcSum(a),s=rcSum(S.rc.s);
   const worst=Object.entries(g).sort((x,y)=>gp[x[1]]-gp[y[1]])[0][0],top=p.dn[0],bn=p.bn[0],lowSec=RC_SEC.map(([k,n])=>[n,p.rel[k]]).sort((x,y)=>x[1]-y[1])[0];
   const hrs=m=>(m/60).toFixed(m<600?1:0)+" h";
   let tip;
-  if(worst==="Profit"){const rep=p.spent["Repairs & outages"]||0,pf=p.spent["Premium freight"]||0;
-    tip=rep>p.earned*0.1?`Repairs and outage budgets took ${money(rep)}. Fewer breakdowns means fewer bills, so keep the machine and its crews ahead of trouble.`:pf>p.earned*0.05?`Premium freight cost ${money(pf)}. Keep the warehouse moving so trucks don't need rushing.`:`You kept ${Math.round(p.margin*100)}% of sales. Fibre and energy are your biggest costs, so every hour of downtime hurts.`;}
+  if(worst==="Profit"){const rep=p.spent["Repairs & outages"]||0,pf=p.spent["Freight & insurance"]||p.spent["Premium freight"]||0;
+    tip=rep>p.earned*0.1?`Repairs and outage budgets took ${money(rep)}. Fewer breakdowns means fewer bills, so keep the machine and its crews ahead of trouble.`:pf>p.earned*0.05?`Freight and insurance cost ${money(pf)}. ${LV("insure")?"Insurance is part of it, and pays back in smaller repair bills.":"Keep the warehouse moving so trucks don't need rushing."}`:`You kept ${Math.round(p.margin*100)}% of sales. Fibre and energy are your biggest costs, so every hour of downtime hurts.`;}
   else if(worst==="Downtime"&&top)tip=`${top[0]} cost you ${hrs(top[1])} this period. Respond fast when it hits, and give its area a bigger budget at the next outage.`;
   else if(worst==="Reliability")tip=`${lowSec[0]} was the least reliable section (${Math.round(lowSec[1]*100)}% up). Look at its upgrades and outage budget.`;
   else if(worst==="Cost / ton")tip=`Each ton cost ${money(p.cpt)} to make against a ${money(p.price)} price. Efficiency upgrades and fewer breaks bring that down.`;
   else if(bn&&bn[1]>0.4)tip=bn[0]==="Machine at full speed"?`The paper machine ran flat out ${Math.round(bn[1]*100)}% of the time, so it sets your output. Speed and drive upgrades pay back fastest.`:bn[0]==="Machine down"?`The machine being down held the mill back ${Math.round(bn[1]*100)}% of the time. Cut breaks and breakdowns first.`:`The ${bn[0].toLowerCase()} held the mill back ${Math.round(bn[1]*100)}% of the time. That's where an upgrade pays back fastest.`;
   else tip=overall==="A"?"Great running. Keep the machine up and the buffers healthy.":`Profit margin was ${Math.round(p.margin*100)}%. Shorter downtime is the quickest way to lift it.`;
-  if(survRun())return {i,wave:i+1,from:i?i*OUT.every:1,to:(i+1)*OUT.every,p,s,g,overall,tip};   // v4.3: a wave's card (a wave runs from one outage day to the next)
+  if(survRun())return {i,wave:i+1,from:i?i*OUT.every+1:1,to:(i+1)*OUT.every,p,s,g,overall,tip};   // v4.3: a wave's card (a wave runs from one outage day to the next)
   return {i,from:i*10+1,to:i*10+10,p,s,g,overall,tip};}
 function rcHTML(c){const W=c.wave,per=W?"this wave":"these 10 days",all=W?"run so far":"season so far";const p=c.p,s=c.s,pc=v=>Math.round(v*100)+"%",hrs=m=>(m/60).toFixed(m<600?1:0)+" h",gc=x=>"rcg g"+x;
   const row=(k,a,b,cls)=>`<div class="rcr${cls?" "+cls:""}"><span>${k}</span><b>${a}</b><i>${b}</i></div>`;
   const bar=(k,v,lab,hot)=>`<div class="rcb${hot?" hot":""}"><span>${k}</span><div><em style="width:${Math.max(2,Math.round(v*100))}%"></em></div><b>${lab}</b></div>`;
   const maxDn=p.dn.length?p.dn[0][1]:1;
-  return `<div class="rchead"><div><span class="dk">${W?`Wave ${W} report card`:"Report card"} · days ${c.from}–${c.to}</span><h2 id="rc-h">${escHTML(MILL.name)}</h2></div><div class="${gc(c.overall)} big" aria-label="Overall grade ${c.overall}">${c.overall}</div></div>
+  return `<div class="rchead"><div><span class="dk">${W?`Wave ${W} report card`:"Report card"} · <span class="nw">days ${c.from}–${c.to}</span></span><h2 id="rc-h">${escHTML(MILL.name)}</h2></div><div class="${gc(c.overall)} big" aria-label="Overall grade ${c.overall}">${c.overall}</div></div>
     <div class="rcgrades">${Object.entries(c.g).map(([k,v])=>`<div><div class="${gc(v)}">${v}</div><small>${k}</small></div>`).join("")}</div>
     <p class="rctip"><b>Tip</b> ${c.tip}</p>${W&&c.next?`<p class="wavenext"><b>Wave ${W} survived.</b> Wave ${W+1} starts now: upsets <b>${xf(survUp(W+1))}</b>, costs <b>${xf(survCost(W+1))}</b>.</p>`:""}
     <h3>Money <small>${per} · ${all}</small></h3>
@@ -2954,13 +3006,15 @@ function rcOpen(c,fromSummary){if(!rcEl){rcEl=document.createElement("div");rcEl
   if(!fromSummary){running=false;S.cards.open={report:true};}
   rcEl.innerHTML=`<div class="modal deal outg rc" role="dialog" aria-modal="true" aria-labelledby="rc-h">${rcHTML(c)}<div class="btns"><button class="primary" id="rc-ok" style="flex:1">${fromSummary?"Close":"Back to the mill"}</button></div></div>`;
   rcEl.hidden=false;AUDIO.sfx(c.overall<="B"?"win":"cash",150);
-  document.getElementById("rc-ok").addEventListener("click",()=>{rcEl.hidden=true;if(!fromSummary)closeCard(true);});rcEl.querySelector(".modal").scrollTop=0;document.getElementById("rc-ok").focus({preventScroll:true});}
+  document.getElementById("rc-ok").addEventListener("click",()=>{rcEl.hidden=true;if(!fromSummary)closeCard(true);});
+  if(!rcEl._esc){rcEl._esc=1;document.addEventListener("keydown",e=>{if(e.key==="Escape"&&!rcEl.hidden){const b=document.getElementById("rc-ok");if(b){e.preventDefault();e.stopPropagation();b.click();}}},true);}   // v5.0.5: Escape closes it
+  rcEl.querySelector(".modal").scrollTop=0;document.getElementById("rc-ok").focus({preventScroll:true});}
 function rcFinal(){const R=S.rc;if(!R)return null;const c=rcMake(R.p,R.i);R.cards.push(c);return c;}
 function seasonTick(){const se=S.season;if(!se||!se.on||se.done)return;
   if(se.surv){if(S.cash<ECON.bankrupt)endSurvival();return;}   // v4.3 survival: no last day, only bankruptcy
   if(S.t>=se.end||S.cash<ECON.bankrupt)endSeason(S.cash<ECON.bankrupt);}
 function seasonResult(){return {score:Math.round(S.cash-ECON.start),tons:Math.round(S.shipT||0),incidents:S.tot.incidents,mill:MILL.name.slice(0,40),version:APP_VER.slice(0,12),days:SEASON_DAYS};}
-function endSeason(bust){const se=S.season;se.done=true;se.on=false;running=false;
+function endSeason(bust){const se=S.season;se.done=true;se.on=false;running=false;if(G3.save&&G3.save.drop)G3.save.drop();   // v5.0.3: the season is over, so its save goes
   if(document.body.classList.contains("fs"))setFS(false);seasonLocks(false);
   const r=seasonResult();se.result=r;AUDIO.sfx(r.score>0?"win":"lose",100);
   soMode(false);$("so-h").textContent=bust?"Season over: bankrupt":"Season complete";
@@ -2968,10 +3022,13 @@ function endSeason(bust){const se=S.season;se.done=true;se.on=false;running=fals
   const eff=S.tot.pot>0?S.tot.prodT/S.tot.pot:1,sg=S.rc&&S.rc.s?rcMake(S.rc.s,S.rc.i).overall:null,g=sg?RATINGS.find(x=>x[1]===sg):RATINGS.find(x=>eff>=x[0]);
   const st=[["Net profit",money(r.score),"big"],["Tons shipped",f0(r.tons)+" t"],["Upsets survived",String(r.incidents)],["Rolls made",String(S.tot.rolls)],["Season grade",g[1]+" · "+g[2]],["Output",Math.round(eff*100)+"% of max-speed tons"]];
   $("so-stats").replaceChildren(...st.map(([k,v,c])=>{const d=document.createElement("div");if(c)d.className=c;const a=document.createElement("span");a.textContent=k;const b=document.createElement("b");b.textContent=v;d.append(a,b);return d;}));
-  {const c=bust?null:rcFinal(),box=$("so-rc");if(box){if(c){box.hidden=false;box.innerHTML=`<div class="rcmini"><div class="rcg g${c.overall}">${c.overall}</div><div><b>Days ${c.from}–${c.to} report card</b><small>${Object.entries(c.g).map(([k,v])=>k+" "+v).join(" · ")}</small><p>${c.tip}</p></div></div><button id="so-rcbtn" class="ghost">Open the full report card</button>`;
+  {const c=bust?null:rcFinal(),box=$("so-rc");if(box){if(c){box.hidden=false;box.innerHTML=`<div class="rcmini"><div class="rcg g${c.overall}">${c.overall}</div><div><b><span class="nw">Days ${c.from}–${c.to}</span> report card</b><small>${Object.entries(c.g).map(([k,v])=>k+" "+v).join(" · ")}</small><p>${c.tip}</p></div></div><button id="so-rcbtn" class="ghost">Open the full report card</button>`;
       $("so-rcbtn").addEventListener("click",()=>rcOpen(c,true));}else box.hidden=true;}}
-  let nm="";try{nm=localStorage.getItem("paper-mill-player")||"";}catch(e){}$("so-name").value=nm;
+  let nm="";try{nm=localStorage.getItem("paper-mill-player")||"";}catch(e){}$("so-name").value=nm;soCount();
   $("so-submit").disabled=false;$("so-submit").textContent=lbOn()?"Submit score":"Save score";setMsg("");$("seasonOv").hidden=false;$("seasonOv").scrollTop=0;if(matchMedia("(hover:hover) and (pointer:fine)").matches)$("so-name").focus();else $("so-submit").focus({preventScroll:true});}
+// v5.0.4: the name box shows how many of its 16 characters are used
+function soCount(){const i=$("so-name"),c=$("so-count");if(!i||!c)return;const n=i.value.length;c.textContent=n+"/16";c.classList.toggle("full",n>=16);}
+{const i=document.getElementById("so-name");if(i)i.addEventListener("input",soCount);}
 function setMsg(t,c){const m=$("so-msg");m.textContent=t;m.className="somsg"+(c?" "+c:"");if(t)try{m.scrollIntoView({block:"nearest"});}catch(e){}}
 function saveLocal(r,name,sv){const key=sv?SURV.local:"paper-mill-local-scores";try{const L=JSON.parse(localStorage.getItem(key)||"[]");L.push({...r,name,created_at:new Date().toISOString(),local:1});
   L.sort(sv?(a,b)=>b.minutes-a.minutes||b.tons-a.tons:(a,b)=>b.score-a.score||b.tons-a.tons);localStorage.setItem(key,JSON.stringify(L.slice(0,20)));}catch(e){}}
@@ -2982,13 +3039,21 @@ async function submitScore(){const r=S.season&&S.season.result;if(!r||S.free)ret
   if(!lbOn()){setMsg("Saved on this device. The online leaderboard isn't connected yet.","ok");$("so-submit").disabled=true;return;}
   $("so-submit").disabled=true;setMsg("Submitting…");
   try{const post=b=>fetch(LB.url.replace(/\/$/,"")+"/rest/v1/"+(sv?SURV.table:"scores"),{method:"POST",headers:lbHdr({"Content-Type":"application/json",Prefer:"return=minimal"}),body:JSON.stringify(b)});
-    let res=await post({...r,name});
+    let res=await post({...r,mill:nameOk(r.mill)?r.mill:"Unnamed mill",name});   // (v5.0.3: a mill name from an older save can still hold a banned word)
     if(sv&&res.status===404){setMsg("Saved on this device. The online survival board isn't set up yet.","ok");return;}   // (the table from supabase/survival.sql)
     if(!res.ok){let msg="Couldn't submit ("+res.status+")";try{const j=await res.json();if(j&&j.message)msg=j.message;}catch(e){}
       if(sv&&/survival_wave_fits/.test(msg)){setMsg("Saved on this device. The online survival board needs an update before it can take this score.","ok");return;}   // (supabase/survival-4day-waves.sql)
       throw new Error(msg);}
-    setMsg("Submitted! You're on the board.","ok");S.season.submitted=name;openBoard(sv?"surv":"season");}
+    S.season.submitted=name;$("so-submit").textContent="Submitted ✓";
+    const rk=await lbRank(sv,r);S.season.rank=rk;   // v5.0.5: where the score landed, so the player can find it
+    setMsg(rk?`Submitted: #${rk.rank.toLocaleString("en-US")} of ${rk.total.toLocaleString("en-US")}.${rk.rank>100?" The board shows the top 100; your run is pinned at the bottom.":""}`:"Submitted! You're on the board.","ok");openBoard(sv?"surv":"season");}
   catch(e){setMsg(String(e.message||e),"bad");$("so-submit").disabled=false;}}
+// v5.0.5: a submitted run's rank on its board (runs strictly ahead + 1) and the board's size, from two count-only queries
+async function lbRank(sv,r){try{const base=LB.url.replace(/\/$/,"")+"/rest/v1/"+(sv?SURV.table:"scores")+"?select=id",
+    ver=sv?"":"&and=(version.not.like.v1.*,version.not.like.v2.0.*,version.not.like.v2.1.*)",
+    ahead=sv?`&or=(minutes.gt.${r.minutes},and(minutes.eq.${r.minutes},tons.gt.${r.tons}))`:`&or=(score.gt.${r.score},and(score.eq.${r.score},tons.gt.${r.tons}))`;
+  const n=async q=>{const res=await fetch(base+q,{method:"HEAD",headers:lbHdr({Prefer:"count=exact",Range:"0-0"})});const m=/\/(\d+)/.exec(res.headers.get("content-range")||"");if(!res.ok||!m)throw 0;return +m[1];};
+  const [a,t]=await Promise.all([n(ahead+ver),n(ver)]);return {rank:a+1,total:Math.max(t,a+1)};}catch(e){return null;}}
 // v4.2.5: the board takes focus when it opens and gives it back when it closes
 let lbBack=null,lbReq=0;
 function closeBoard(){$("lbOv").hidden=true;if(lbBack&&lbBack.focus)lbBack.focus();lbBack=null;}
@@ -2996,7 +3061,7 @@ function closeBoard(){$("lbOv").hidden=true;if(lbBack&&lbBack.focus)lbBack.focus
 async function openBoard(tab){if(tab!=="season"&&tab!=="surv")tab=survRun()?"surv":"season";const sv=tab==="surv",my=++lbReq;
   if($("lbOv").hidden){lbBack=document.activeElement;$("lbOv").hidden=false;$("lb-close").focus();}
   document.querySelectorAll("#lb-tabs button").forEach(b=>b.setAttribute("aria-pressed",String(b.dataset.t===tab)));
-  const L=$("lb-list");L.replaceChildren(Object.assign(document.createElement("div"),{className:"lbempty",textContent:"Loading…"}));
+  const L=$("lb-list");L.replaceChildren(Object.assign(document.createElement("div"),{className:"lbempty",textContent:"Loading…"}));$("lb-sub").textContent="Loading…";
   const q=sv?SURV.table+"?select=name,minutes,wave,tons,incidents,mill,created_at&order=minutes.desc,tons.desc&limit=100"
     :"scores?select=name,score,tons,incidents,mill,created_at&order=score.desc,tons.desc&limit=100&and=(version.not.like.v1.*,version.not.like.v2.0.*,version.not.like.v2.1.*)";
   let rows=[],note="";
@@ -3011,9 +3076,13 @@ async function openBoard(tab){if(tab!=="season"&&tab!=="surv")tab=survRun()?"sur
   L.replaceChildren(...rows.map((r,i)=>{const d=document.createElement("div");d.className="lbrow"+(me&&r.name===me?" me":"");
     const mk=(c,t)=>Object.assign(document.createElement("span"),{className:c,textContent:t});
     const dt=r.created_at?new Date(r.created_at).toLocaleDateString(undefined,{month:"short",day:"numeric"}):"";
-    d.append(mk("r",i+1),mk("n",r.name),mk("sc",sv?survTime(r.minutes):money(r.score)),mk("m",[r.mill,sv?"wave "+r.wave:"",f0(r.tons)+" t shipped",(r.incidents??"")+" upsets",dt].filter(Boolean).join(" · ")));return d;}));}
+    d.append(mk("r",i+1),mk("n",r.name),mk("sc",sv?survTime(r.minutes):money(r.score)),mk("m",[sv?"wave "+r.wave:"",f0(r.tons)+" t shipped",(r.incidents??"")+" upsets",dt,r.mill].filter(Boolean).join(" · ")));return d;}));
+  // v5.0.5: this run's row is marked and scrolled into view; outside the top 100 it is pinned at the bottom
+  {const se=S.season,rk=se&&se.rank,res=se&&se.result;if(rk&&res&&se.submitted&&(tab==="surv")===!!se.surv){if(rk.rank<=rows.length){const row=L.children[rk.rank-1];if(row){row.classList.add("me","mine");row.scrollIntoView({block:"center"});}}
+    else{const d=document.createElement("div");d.className="lbrow me mine pin";const mk=(c,t)=>Object.assign(document.createElement("span"),{className:c,textContent:t});
+      d.append(mk("r",rk.rank),mk("n",se.submitted),mk("sc",sv?survTime(res.minutes):money(res.score)),mk("m",[sv?"wave "+res.wave:"",f0(res.tons)+" t shipped",res.incidents+" upsets","your run",res.mill].filter(Boolean).join(" · ")));L.append(d);d.scrollIntoView({block:"center"});}}}}
 function setFree(on){S.free=on;
-  if(on&&S.season&&S.season.on){const sv=survRun();S.season=null;S.lead=null;applyUpgrades();seasonLocks(false);BANNERS.push({text:(sv?"Survival run":"Season")+" abandoned: free play scores can't go on the leaderboard.",t:null});}
+  if(on&&S.season&&S.season.on){const sv=survRun();if(G3.save&&G3.save.drop)G3.save.drop();S.season=null;S.lead=null;applyUpgrades();seasonLocks(false);BANNERS.push({text:(sv?"Survival run":"Season")+" abandoned: free play scores can't go on the leaderboard.",t:null});}
   if(on)BANNERS.push({text:"Free play: upgrades are free and you can't go bankrupt. No leaderboard.",t:null,kind:"good"});
   if(on&&G3.labelIntro)G3.labelIntro();
   updateShop();}
@@ -3023,7 +3092,7 @@ let ZEN=null;
 let grainDone=false;function makeGrain(){if(grainDone)return;grainDone=true;const c=document.createElement("canvas");c.width=c.height=128;const x=c.getContext("2d"),im=x.createImageData(128,128);for(let i=0;i<im.data.length;i+=4){const v=Math.random()*255|0;im.data[i]=im.data[i+1]=im.data[i+2]=v;im.data[i+3]=255;}
   x.putImageData(im,0,0);document.documentElement.style.setProperty("--grain",`url(${c.toDataURL()})`);}
 function setZen(on){if(on===!!ZEN)return;
-  if(on){makeGrain();if(S.season&&S.season.on){S.season=null;S.lead=null;applyUpgrades();seasonLocks(false);}
+  if(on){makeGrain();if(S.season&&S.season.on){if(G3.save&&G3.save.drop)G3.save.drop();S.season=null;S.lead=null;applyUpgrades();seasonLocks(false);}
     ZEN={speed:C.simSpeed,chaos:CH.on,hays:C.hays,breaks:C.breaks,view:G3.on};
     S.inc=[];if(S.wd==="hayout")S.wd="run";if(S.pm==="break"){S.pm="run";}BANNERS.length=0;S.zen=true;
     CH.on=false;$("chaosOn").checked=false;C.hays=false;C.breaks=false;
@@ -3035,7 +3104,7 @@ function setZen(on){if(on===!!ZEN)return;
 let zenT=0;function zenPoke(){const b=$("zenExit");b.hidden=false;b.classList.add("show");clearTimeout(zenT);zenT=setTimeout(()=>b.classList.remove("show"),2500);}
 $("zenExit").addEventListener("click",e=>{e.stopPropagation();setZen(false);});
 ["pointermove","pointerdown"].forEach(t=>document.addEventListener(t,()=>{if(ZEN)zenPoke();},{passive:true}));
-$("so-more").addEventListener("click",()=>{$("seasonOv").hidden=true;if(survRun()){newGame();if(G3.showMenu)G3.showMenu();return;}running=true;});   // (v4.3: after a survival run the button is "Menu")
+$("so-more").addEventListener("click",()=>{$("seasonOv").hidden=true;if(survRun()){newGame();if(G3.showMenu)G3.showMenu();return;}if(S.season)S.season.more=1;running=true;});   // (v4.3: after a survival run the button is "Menu")
 $("so-submit").addEventListener("click",submitScore);$("so-name").addEventListener("keydown",e=>{if(e.key==="Enter")submitScore();e.stopPropagation();});
 $("so-board").addEventListener("click",openBoard);$("so-new").addEventListener("click",()=>{if(survRun()){leadPickOpen(id=>{$("seasonOv").hidden=true;startSurvival(id);});return;}$("seasonOv").hidden=true;startSeason();});   // (v4.4: a new survival run picks its leader first)
 document.querySelectorAll("#lb-tabs button").forEach(b=>b.addEventListener("click",()=>openBoard(b.dataset.t)));
@@ -8505,7 +8574,7 @@ setView();
   function sheetResume(){if(!sheetHeld)return;sheetHeld=false;const ov=$("overlay"),blocked=!$("v2menu").hidden||(G3.tut&&G3.tut.on)||(S.cards&&S.cards.open)||(ov&&!ov.hidden)||S.over;
     if(blocked)return;running=true;}
   function openTab(k){sheetPause();cur=k;if(k==="stats")setTimeout(()=>{flowTick&&flowTick();updateRel();if(G3.report)G3.report.render();},0);tabs.forEach(b=>b.setAttribute("aria-pressed",String(b.dataset.tab===k)));document.querySelectorAll(".v2pane").forEach(p=>p.classList.toggle("on",p.dataset.pane===k));
-    $("v2sheetT").textContent=TITLES[k];sheet.classList.add("open");sheet.setAttribute("aria-hidden","false");document.body.classList.add("sheet-open");closeMore();}
+    $("v2sheetT").textContent=TITLES[k];if(!sheet.classList.contains("open")){const vb=sheet.querySelector(".v2body");if(vb)vb.scrollTop=0;}sheet.classList.add("open");/* v5.0.5: a sheet opens at the top */sheet.setAttribute("aria-hidden","false");document.body.classList.add("sheet-open");closeMore();}
   function closeSheet(why){const was=!!cur;cur=null;tabs.forEach(b=>b.setAttribute("aria-pressed","false"));sheet.classList.remove("open");sheet.setAttribute("aria-hidden","true");document.body.classList.remove("sheet-open");
     if(why==="menu")sheetHeld=false;else if(was)sheetResume();}
   tabs.forEach(b=>b.addEventListener("click",()=>cur===b.dataset.tab?closeSheet():openTab(b.dataset.tab)));
@@ -8534,13 +8603,15 @@ setView();
   // top bar: compact figures straight from the game state ($1.24M, -$850k)
   const short=v=>{const a=Math.abs(v),f=a>=1e6?(a/1e6).toFixed(a>=1e7?1:2)+"M":a>=1e3?(a/1e3).toFixed(a>=1e5?0:1).replace(/\.0$/,"")+"k":Math.round(a)+"";return (v<0?"−":"")+"$"+f;};
   const set=(id,v)=>{const e=$(id);if(e.textContent!==v)e.textContent=v;};
-  const NARROW=matchMedia("(max-width:480px)");   // phones: the survival clock label is "W3 · Day 16"
+  const NARROW=matchMedia("(max-width:480px)"),TINY=matchMedia("(max-width:400px)");   // phones: the survival clock label is "W3 · D16" (v5.0.4: was "W3 · Day 16", cut off once cash went negative)
   const mirror=[...document.querySelectorAll("#v2more [data-m]")].map(el=>[el,$(el.dataset.m)]);
   function sync(){set("v2mill",MILL.name);set("v2mt",MILL.name);set("v2cash",short(S.cash));
-    {const ok=S.t>=1440;set("v2profit",ok?short(S.profitRate)+"/d":"–");$("v2profit").style.color=ok&&S.profitRate<0?"var(--bad)":"var(--ink)";$("v2profit").title=ok?"Profit over the last 24 hours":"Shown once the first day is done (a 24-hour average)";}
+    {const ok=S.t>=1440;set("v2profit",ok?short(S.profitRate)+"/d":"–");$("v2profit").style.color=ok&&S.profitRate<0?"var(--bad)":"var(--ink)";$("v2profit").title=ok?"Cash made per day, averaged over the last 3 days: sales and deals, less every cost including repairs and outage budgets (upgrades aside)":"Shown once the first day is done";
+     // v5.0.5: in survival, when cash is falling, the label says roughly how many days are left before bankruptcy
+     const pl=$("v2profit").previousElementSibling;if(pl){const left=ok&&survOn()&&S.profitRate<0?(S.cash-ECON.bankrupt)/-S.profitRate:Infinity,t=left<15?`~${Math.max(0,Math.floor(left))}d left`:"Profit";if(pl.textContent!==t){pl.textContent=t;pl.classList.toggle("runway",left<15);pl.title=left<15?"Days until bankruptcy if cash keeps falling at this rate":"";}}}
     {const h=((S.t+360)/60)%24,d=new Date(S.date0||Date.now());d.setMinutes(d.getMinutes()+S.t+360);const hh=Math.floor(h),ap=hh<12?"AM":"PM",h12=hh%12||12;
-     set("v2clock",d.toLocaleDateString("en-US",{weekday:"short"})+" "+h12+" "+ap);}
-    {const se=S.season,on=!!(se&&se.on),sv=!!(se&&se.surv),day=Math.floor(S.t/1440)+1,lab=on?(sv?(NARROW.matches?`W${survWave()} · Day ${day}`:`Wave ${survWave()} · Day ${day}`):`Day ${Math.min(SEASON_DAYS,day)} of ${SEASON_DAYS}`):se&&se.done?(sv?"Run over":"Season over"):"Time";
+     set("v2clock",(TINY.matches?"":d.toLocaleDateString("en-US",{weekday:"short"})+" ")+h12+" "+ap);}   // v5.0.4: no weekday on small phones, so the time is never cut off
+    {const se=S.season,on=!!(se&&se.on),sv=!!(se&&se.surv),day=Math.floor(S.t/1440)+1,lab=on?(sv?(NARROW.matches?`W${survWave()} · D${day}`:`Wave ${survWave()} · Day ${day}`):`Day ${Math.min(SEASON_DAYS,day)} of ${SEASON_DAYS}`):se&&se.done?(sv?"Run over":"Season over"):"Time";
      set("v2clockL",lab);$("v2clockL").classList.toggle("sday",on);$("v2clockL").title=on?(sv?"Survival: the wave you are in and the day of the run":"Season mode: day of the 30-day season"):"";}
     mirror.forEach(([d,s])=>{if(d.textContent!==s.textContent)d.textContent=s.textContent;});
     const sp=outCapped()?`${simRate()} min/s · ${C.simSpeed} after`:C.simSpeed+" min/s";if($("v2speed").textContent!==sp)$("v2speed").textContent=sp;$("v2speed").title=outCapped()?"Planned outage: slowed so you can watch the crews. Your speed comes back when it ends.":"";
@@ -8555,7 +8626,7 @@ setView();
     $("v2sub").hidden=first;$("v2surv").hidden=!first;$("v2nameRow").hidden=true;   // (Survival sits under Season on the first menu; once a run is on, "New survival" is with "New season")
     $("v2state").textContent=first?"":"Paused";
     $("v2free").querySelector("b").textContent=S.free?"Free play: on":"Free play";$("v2free").setAttribute("aria-pressed",String(!!S.free));$("v2ver").textContent=APP_VER;menu.hidden=false;}
-  function play(){menu.hidden=true;first=false;running=true;}
+  function play(){menu.hidden=true;first=false;const lc=document.getElementById("leadCard");running=!((S.cards&&S.cards.open)||(lc&&!lc.hidden)||(G3.tut&&G3.tut.on));}   // v5.0.3: an open card, outage plan or report card keeps the sim paused until it is answered (v5.0.5: and the leader card and tutorial)   // v5.0.3: an open card, outage plan or report card keeps the sim paused until it is answered
   G3.showMenu=showMenu;G3.play=play;   // play: used by the autotest (52b) to start without the tutorial
   // ---- v3.1.0 quick-start tutorial: shown when a season starts (until the player ticks "don't show again") ----
   const TUT=(()=>{
@@ -8575,7 +8646,7 @@ setView();
       else if(k===4){h="Find your bottleneck";body=`<div class="fig">${RIVER}</div><p>The mill flows like a river and can only go as fast as its <b>narrowest point</b>. Every mill starts with one: <b>Upgrades</b> names it and fixes it at 25% off. Fix it first, then spend on speed, reliability and lower costs. One upgrade a day.</p>`;}
       else if(k===5){h="Upsets happen";body=`<ul><li>Breakdowns, sheet breaks, storms and the odd pigeon: these are <b>upsets</b>. Crews fix them on their own.</li><li>A red tag marks each one; tap it to fly there. The <b>Upsets</b> tab shows what's down and how long is left.</li><li><b>Event cards</b> offer deals with honest odds. Accept or decline.</li></ul>`;}
       else{h=sv?"Every 4 days: an outage, then a new wave":"Every 7 days: a planned outage";next="Start playing";
-        body=`<ul><li>${sv?"Every 4 days":"On days 7, 14, 21 and 28"} the mill stops for a <b>4-hour outage</b> and crews do one big job. Before it, you set a maintenance budget for each area: more money, fewer breakdowns until the next one.</li>${sv?`<li>Each outage starts a new <b>wave</b>: upsets get likelier and costs rise. The bar under the top bar shows by how much. Your leader makes one pick per outage.</li>`:""}</ul><p class="tsm">Speed and sound are in the top bar; pause any time for the menu.</p><label><input type="checkbox" id="tutOff"> Don't show this tutorial again</label>`;}
+        body=`<ul><li>${sv?"Every 4 days":"On days 7, 14, 21 and 28"} the mill stops for a <b>4-hour outage</b> and crews do one big job. Before it, you set a maintenance budget for each area: more money, fewer breakdowns until the next one.</li>${sv?`<li>Each outage starts a new <b>wave</b>: upsets get likelier and costs rise. The bar under the top bar shows by how much. ${S.lead&&S.lead.id==="dot"?"Dot makes no picks: once per outage cycle she fixes a costly breakdown on her own.":"Your leader makes one pick per outage."}</li>`:""}</ul><p class="tsm">Speed and sound are in the top bar; pause any time for the menu.</p><label><input type="checkbox" id="tutOff"> Don't show this tutorial again</label>`;}
       return `<div class="tc" role="dialog" aria-modal="true" aria-labelledby="tutH"><div class="tk"><span>${kick}</span>${k<N?'<button id="tutSkip">Skip tutorial</button>':""}</div>
         <h2 id="tutH">${h}</h2>${body}<div class="dots">${dots}</div>
         <div class="tb">${k>1?'<button id="tutBack">Back</button>':""}<button class="primary" id="tutNext">${next}</button></div></div>`;}
@@ -8621,14 +8692,17 @@ setView();
   $("v2survNew").addEventListener("click",goSurv);
   $("v2free").addEventListener("click",()=>{setFree(!S.free);play();});
   $("v2board").addEventListener("click",openBoard);
-  $("v2zen").addEventListener("click",()=>{menu.hidden=true;first=false;setZen(true);});
+  // v5.0.4: zen ends a season or survival run, so with one on it asks first (tap again within 3 s), like Reset mill
+  {let arm=0;$("v2zen").addEventListener("click",()=>{const b=$("v2zen"),sm=b.querySelector("small"),run=S.season&&S.season.on;
+    if(run&&Date.now()-arm>=3000){arm=Date.now();sm.textContent=`ends this ${S.season.surv?"survival run":"season"} · tap again`;b.classList.add("warn");setTimeout(()=>{sm.textContent="sit back";b.classList.remove("warn");},3000);return;}
+    arm=0;sm.textContent="sit back";b.classList.remove("warn");menu.hidden=true;first=false;setZen(true);});}
   // v17: zen's map rotation reloads the page with ?zen=1: go straight back into zen once the scene is ready (and drop the
   // flag from the address, so a later reload opens the menu as usual)
   if(new URLSearchParams(location.search).get("zen")==="1"){const go=()=>{if(G3.ok&&!G3.warm){setTimeout(go,300);return;}
       try{const q=new URLSearchParams(location.search);q.delete("zen");history.replaceState(null,"",location.pathname+(q.toString()?"?"+q:"")+location.hash);}catch(e){}$("v2zen").click();};setTimeout(go,300);}
   $("v2colors").addEventListener("click",rollMill);
   $("v2rename").addEventListener("click",()=>{$("v2nameRow").hidden=false;const i=$("v2name");i.value=MILL.name;i.focus();i.select();});
-  const saveName=()=>{renameMill($("v2name").value);$("v2nameRow").hidden=true;sync();};
+  const saveName=()=>{const i=$("v2name");if(renameMill(i.value)===false){i.value="";i.placeholder="That name is not allowed";i.focus();return;}i.placeholder="";$("v2nameRow").hidden=true;sync();};
   $("v2nameOk").addEventListener("click",saveName);$("v2name").addEventListener("keydown",e=>{if(e.key==="Enter")saveName();if(e.key==="Escape")$("v2nameRow").hidden=true;});
   {let arm=0;$("v2reset").addEventListener("click",()=>{const b=$("v2reset");if(Date.now()-arm<3000){newGame();arm=0;b.firstChild.textContent="Reset mill";play();return;}arm=Date.now();b.firstChild.textContent="Tap again to reset";setTimeout(()=>{b.firstChild.textContent="Reset mill";},3000);});}
   const fsEl=document.documentElement;
@@ -8712,9 +8786,9 @@ setView();
     document.addEventListener("visibilitychange",()=>{if(document.hidden){if(save("hidden")&&running){G3.saveWasRunning=true;running=false;}}
       else if(G3.saveWasRunning){G3.saveWasRunning=false;welcome();}});
     window.addEventListener("pagehide",()=>save("pagehide"));
-    UI_TICKS.push(()=>{if(OFF||!live())return;const now=performance.now(),day=Math.floor(S.t/1440),ups=Object.values(S.up||{}).reduce((a,b)=>a+b,0)+(S.cards?S.cards.pend.length:0);
-      if(now-lastSave>60000||day!==lastDay||ups!==lastUp){lastDay=day;lastUp=ups;save("tick");}
-      if(S.season&&S.season.done)clear();});
+    UI_TICKS.push(()=>{if(OFF)return;if(S.season&&S.season.done){if(!S.season.unsaved){S.season.unsaved=1;clear();}return;}if(!live())return;   // v5.0.3: a finished run drops its save (it could be continued and submitted again)
+      const now=performance.now(),day=Math.floor(S.t/1440),ups=Object.values(S.up||{}).reduce((a,b)=>a+b,0)+(S.cards?S.cards.pend.length:0);
+      if(now-lastSave>60000||day!==lastDay||ups!==lastUp){lastDay=day;lastUp=ups;save("tick");}});
     // ---- coming back without a reload: paused, with a welcome back ----
     function welcome(){if(!live()||!G3.showMenu)return;G3.showMenu();const st=$("v2state");if(st)st.textContent="Welcome back · paused while you were away";}
     // ---- the Continue button on the menu ----
@@ -8757,7 +8831,7 @@ setView();
       return {p:rcSum(allAcc()),season:false};}
     function costRows(p){const sp=p.spent,cs=chemShare(),e=sp.Energy||0;
       return [["Fibre (OCC)",sp.Fibre||0,"var(--kraft)"],["Energy & steam",e*(1-cs),"var(--stock)"],["Chemicals",e*cs,"var(--pulp)"],["Labour",sp.Labour||0,"var(--machine)"],["Overhead",sp.Overhead||0,"#9aa1b5"],
-        ["Repairs",sp["Repairs & outages"]||0,"var(--bad)"],["Premium freight",sp["Premium freight"]||0,"var(--warn)"]].filter(r=>r[1]>0);}
+        ["Repairs",sp["Repairs & outages"]||0,"var(--bad)"],["Freight & insurance",(sp["Freight & insurance"]||0)+(sp["Premium freight"]||0),"var(--warn)"]].filter(r=>r[1]>0);}
     // (v4.3 survival: the tiles are waves, the last two and the one being played)
     function tiles(d){const R=d.R,out=[],sv=!!S.season.surv,i0=sv?Math.max(0,R.i-2):0;for(let i=i0;i<i0+3;i++){const c=R.cards[i],cur=i===R.i&&(sv||!S.season.done),lab=sv?`Wave ${i+1}`:`Days ${i*10+1}–${i*10+10}`;
         if(c&&!cur)out.push(`<button type="button" class="rpt" data-card="${i}"><span class="rcg g${c.overall}">${c.overall}</span><span><b>${lab}</b><small>View card</small></span></button>`);
@@ -8818,7 +8892,9 @@ setView();
     // the top bar: the grade so far, and cost per ton and machine uptime in the dropdown
     const set=(id,v)=>{const e=$(id);if(e&&e.textContent!==v)e.textContent=v;};
     function topBar(){const d=data(),p=d.p,gb=$("v2grade");
-      if(d.season&&gradesOn()){const L=d.live.overall;gb.hidden=false;if(gb.textContent!==L){gb.textContent=L;gb.className="gbadge rcg g"+L;}}else gb.hidden=true;
+      if(d.season&&gradesOn()){   // v5.0.5: until this period has a day of data, it shows the last report card's grade (a few hours' grade jumped about)
+        const R=S.rc,last=R&&R.cards?[...R.cards].reverse().find(Boolean):null,early=!!(last&&R.p&&R.p.min<1440),L=early?last.overall:d.live.overall;
+        gb.hidden=false;if(gb.dataset.g!==L){gb.dataset.g=L;gb.innerHTML=`<b>${L}</b><small>grade</small>`;gb.className="gbadge rcg g"+L;}const tt=early?"Last report card's grade (this period's shows after a day)":"Grade so far this period";if(gb.title!==tt){gb.title=tt;gb.setAttribute("aria-label",tt+": "+L);}}else gb.hidden=true;
       if(p.prod>0.5&&costOn()){const cpt=costRows(p).reduce((t,r)=>t+r[1],0)/p.prod;set("v2cpt",money(cpt));set("v2cpt-s",`${money(p.price-cpt)} margin`);}else{set("v2cpt","–");set("v2cpt-s","");}
       if(d.season){set("v2up",pc(p.rel.machine||0));set("v2up-s","this period");}else{set("v2up",pc(S.t>0?1-S.tot.breakMin/S.t:1));set("v2up-s","sheet time");}}
     $("v2rep").addEventListener("click",()=>{const t=document.querySelector('.v2tabs [data-tab="stats"]');if(t&&t.getAttribute("aria-pressed")!=="true")t.click();});

@@ -38,9 +38,9 @@
     document.addEventListener("visibilitychange",()=>{if(document.hidden){if(save("hidden")&&running){G3.saveWasRunning=true;running=false;}}
       else if(G3.saveWasRunning){G3.saveWasRunning=false;welcome();}});
     window.addEventListener("pagehide",()=>save("pagehide"));
-    UI_TICKS.push(()=>{if(OFF||!live())return;const now=performance.now(),day=Math.floor(S.t/1440),ups=Object.values(S.up||{}).reduce((a,b)=>a+b,0)+(S.cards?S.cards.pend.length:0);
-      if(now-lastSave>60000||day!==lastDay||ups!==lastUp){lastDay=day;lastUp=ups;save("tick");}
-      if(S.season&&S.season.done)clear();});
+    UI_TICKS.push(()=>{if(OFF)return;if(S.season&&S.season.done){if(!S.season.unsaved){S.season.unsaved=1;clear();}return;}if(!live())return;   // v5.0.3: a finished run drops its save (it could be continued and submitted again)
+      const now=performance.now(),day=Math.floor(S.t/1440),ups=Object.values(S.up||{}).reduce((a,b)=>a+b,0)+(S.cards?S.cards.pend.length:0);
+      if(now-lastSave>60000||day!==lastDay||ups!==lastUp){lastDay=day;lastUp=ups;save("tick");}});
     // ---- coming back without a reload: paused, with a welcome back ----
     function welcome(){if(!live()||!G3.showMenu)return;G3.showMenu();const st=$("v2state");if(st)st.textContent="Welcome back · paused while you were away";}
     // ---- the Continue button on the menu ----

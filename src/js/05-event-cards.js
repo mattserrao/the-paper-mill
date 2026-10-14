@@ -129,7 +129,7 @@ const CARDS=[
     return "$20k spent. Results in 4 hours.";}},
  {id:"spot",area:"Sales · Warehouse",title:"Spot market sale",
   story:()=>`A spot buyer will take 500 t of ${C.grade} from your warehouse right now at $35/t over list.`,
-  win:()=>`+${money(500*(priceOf(C.grade)+35))} for 500 t`,lose:()=>"The buyer rejects 20% as damaged: those 100 t go at the $150/t seconds price",
+  win:()=>`+${money(500*35)} over list ($35/t). ${money(500*(priceOf(C.grade)+35))} comes in now, but those 500 t won't ship later`,lose:()=>`The buyer rejects 20% as damaged: those 100 t go at the $150/t seconds price (about −${money(Math.max(0,100*(priceOf(C.grade)-150)-400*35))} against list)`,
   odds:()=>70,why:"Fixed odds.",
   ok:()=>S.fg*C.rollW.v>=500&&!pending("spot"),
   accept(c){const w=rand("card")*100<c.o,n=500/C.rollW.v,T=[];lotTake(S.lots.fg,Math.min(n,S.fg),T);S.fg=Math.max(0,S.fg-n);S.shipT+=500;S.tot.shipped+=n;
@@ -327,7 +327,11 @@ function cardTick(dt){const cs=S.cards;if(!cs)return;
   if(pick&&typeof document!=="undefined"&&document.body){seen[pick.id]=true;openCard(pick);}}
 let cardEl=null;
 function openCard(c){const o=c.odds();S.cards.open={c,o};running=false;
-  if(!cardEl){cardEl=document.createElement("div");cardEl.className="overlay";cardEl.id="dealOv";cardEl.hidden=true;document.body.appendChild(cardEl);}
+  if(!cardEl){cardEl=document.createElement("div");cardEl.className="overlay";cardEl.id="dealOv";cardEl.hidden=true;document.body.appendChild(cardEl);
+    // v5.0.4: while a card waits for an answer, Tab cycles through its own buttons only
+    document.addEventListener("keydown",e=>{if(e.key!=="Tab"||cardEl.hidden||cardEl.classList.contains("dealres")||!(S.cards&&S.cards.open&&S.cards.open.c))return;
+      const b=[...cardEl.querySelectorAll("button:not([disabled])")];if(!b.length)return;e.preventDefault();const i=b.indexOf(document.activeElement);
+      b[i<0?0:(i+(e.shiftKey?b.length-1:1))%b.length].focus();},true);}
   const t=s=>String(s).replace(/[&<>]/g,x=>({"&":"&amp;","<":"&lt;",">":"&gt;"}[x]));
   cardEl.innerHTML=`<div class="modal deal" role="dialog" aria-modal="true" aria-labelledby="deal-h"><span class="dk">${t(c.area)} · sim paused</span>
     <h2 id="deal-h">${t(c.title)}</h2><p>${t(c.story())}</p>
@@ -336,6 +340,8 @@ function openCard(c){const o=c.odds();S.cards.open={c,o};running=false;
     <div id="deal-res" class="dres" hidden></div>
     <div class="btns" id="deal-btns"><button id="deal-no">Decline</button><button id="deal-yes" class="primary">Accept</button></div></div>`;
   cardEl.classList.remove("dealres");clearTimeout(cardEl._t);cardEl.hidden=false;AUDIO.sfx("cash",150);
+  {const nt=document.getElementById("outOv");clearInterval(cardEl._w);cardEl.style.visibility="";   // v5.0.4: wait for an outage notice to close, so it never covers the card
+    if(nt&&!nt.hidden&&nt.classList.contains("note")){cardEl.style.visibility="hidden";cardEl._w=setInterval(()=>{if(nt.hidden||!nt.classList.contains("note")){clearInterval(cardEl._w);cardEl.style.visibility="";const y=document.getElementById("deal-yes");if(y)y.focus();}},100);}}
   // one click: the decision resumes play straight away; the outcome stays on screen for 2 s (no backdrop, game running), then fades
   const done=msg=>{const r=document.getElementById("deal-res");r.textContent=msg;r.hidden=false;
     document.getElementById("deal-btns").innerHTML='<div class="dtimer"><i></i></div>';
