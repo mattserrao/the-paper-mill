@@ -9,7 +9,7 @@ page error or wrong result. Usage: python3 survcheck.py <index.html> [screenshot
   4 save, reload, Continue: the same run comes back (wave, costs, cash, leader and what was built)
   5 outages 2-5 with the 3D view running for outage 5: the major jobs go round again (outage 5 = job 1) with no errors.
     Outage 3 changes the leader (Chip to Dot): the change happens as the outage starts, what Chip built stays, there is
-    no second change, Dot's repair bills cost more, and Fix it now ends a breakdown once per cycle, with its bill back, and halves its odds
+    no second change, Dot's repair bills cost more, and Dot's fix (automatic from v5.0.4) ends a breakdown once per cycle, with 60% of its bill back, and halves its odds
   6 the Report tab renders in a late wave; bankruptcy ends the run on the survival dialog ("Menu" instead of "one more
     turn", Escape does not close it); the score is the time survived; with no online table (404) it is saved on the device and the
     Survival tab lists it
@@ -26,7 +26,7 @@ shots = pathlib.Path(sys.argv[2]) if len(sys.argv) > 2 else None
 if shots: shots.mkdir(parents=True, exist_ok=True)
 if "window.__PM=" not in html:
     i = html.rindex("})();", 0, html.rindex("</script>")); html = html[:i] + HOOK + html[i:]
-html = html.replace("window.__PM={", "window.__PM={get P(){return P},get SURV(){return SURV},get OUT(){return OUT},energyCost:()=>energyCost(),upsetMul:()=>upsetMul(),get LEAD(){return LEAD},leadFixReady:()=>leadFixReady(),leadFix:id=>leadFix(id),freq:id=>freqMul(id),wage:()=>leadWage(),", 1)
+html = html.replace("window.__PM={", "window.__PM={get P(){return P},get SURV(){return SURV},get OUT(){return OUT},energyCost:()=>energyCost(),upsetMul:()=>upsetMul(),get LEAD(){return LEAD},leadFixReady:()=>leadFixReady(),leadFix:id=>leadFix(id),leadFixable:id=>leadFixable(id),freq:id=>freqMul(id),wage:()=>leadWage(),", 1)
 fails = []
 def ok(name, cond, got=None):
     print(("ok   " if cond else "FAIL ") + name + ("" if cond else f"   got: {json.dumps(got)[:300]}"))
@@ -141,18 +141,22 @@ with sync_playwright() as pw:
             ok("wave 4: Dot runs the mill; Chip's push and pay settlements stay, his lock was for wave 3 only, his call-offs leave with him", s["lead"]["id"] == "dot" and s["lead"]["changed"] and s["lead"]["was"] == "chip" and s["lead"]["st"]["fibre"] == 1 and s["lead"]["st"]["sales"] == 1
                and abs(s["price"] - price1 - 7) < 1e-9 and abs(s["costMul"] - 1.331) < 1e-9 and abs(s["occ"] / (s["occBase"] * s["costMul"]) - 1) < 1e-9 and abs(pg.evaluate("()=>__PM.wage()") - 1.05 ** 2) < 1e-9 and abs(pg.evaluate("()=>__PM.freq('calloff')") - pg.evaluate("()=>__PM.freq('highway')")) < 1e-9, s)
             ok("wave 4: Dot's repair bills cost 15% more", abs(s["rep"] - 1.15) < 1e-9, s["rep"])
-            # Fix it now: a driveshaft snaps; the chip offers the fix; the card ends it; once per cycle
-            pg.evaluate("()=>{__PM.trigger('shaft');__PM.setRunning(false);}"); s = state(); cashF = pg.evaluate("()=>__PM.S.cash"); b0 = pg.evaluate("()=>(__PM.S.inc.find(i=>i.id==='shaft')||{bill:0}).bill"); f0 = pg.evaluate("()=>__PM.freq('shaft')")
-            ok("fix it now: the chip offers it when a breakdown is on", s["fixTxt"] == "Fix it now", s["fixTxt"])
+            # v5.0.4 Dot's fix is automatic: a driveshaft snaps and (odds forced to 100% here) she fixes it on the spot; once per cycle
+            f0 = pg.evaluate("()=>__PM.freq('shaft')"); cashF = pg.evaluate("()=>__PM.S.cash")
+            f = pg.evaluate("""()=>{const L=__PM.LEAD,a=L.autoFix;L.autoFix=1;__PM.trigger('shaft');const S=__PM.S,cashA=S.cash,inc=S.inc.find(i=>i.id==='shaft')||{left:-1,bill:0};
+              const other=__PM.EVENTS.map(e=>e.id).find(id=>id!=='shaft'&&id!=='refclash'&&!S.inc.some(i=>i.id===id)&&S.lead&&__PM.leadFixable&&__PM.leadFixable(id));
+              const n0=S.lead.fixed.length;if(other)__PM.trigger(other);const n1=S.lead.fixed.length;S.inc=S.inc.filter(i=>i.id!==other);L.autoFix=a;__PM.setRunning(false);
+              return {cash:cashA,left:inc.left,bill:inc.bill,ready:__PM.leadFixReady(),other,secondFixed:n1>n0,freq:__PM.freq('shaft'),fixed:S.lead.fixed.join()};}""")
+            b0 = f["bill"] / (1 - 0.6) if f["bill"] else 0
+            ok("Dot's fix: the breakdown ends on the spot, 60% of its bill comes back, the fix is used, the breakdown is half as likely", f["left"] <= 0 and b0 > 0 and abs((cashF - f["cash"]) - round(b0 * 0.4)) <= 1 and not f["ready"] and not f["secondFixed"] and abs(f["freq"] - f0 / 2) < 1e-9 and f["fixed"] == "shaft", f)
+            pg.evaluate("()=>__PM.setRunning(true)"); pg.wait_for_timeout(500); pg.evaluate("()=>__PM.setRunning(false)"); s = state()
+            ok("Dot's fix: the chip says it is used", s["fixTxt"] == "Fix used", s["fixTxt"])
             pg.evaluate("()=>document.getElementById('survChip').click()"); pg.wait_for_timeout(300); shot("4b-leader-card")
-            c = pg.evaluate("()=>({card:!document.getElementById('leadCard').hidden,btn:!!document.querySelector('[data-fix=shaft]'),txt:document.getElementById('leadCard').innerText})")
-            ok("leader card: Dot, her fix list and what the mill has kept", c["card"] and c["btn"] and "Driveshaft" in c["txt"] and "sales push" in c["txt"] and "Pay settlements" in c["txt"] and "quicker" in c["txt"], c["txt"][:300])
-            pg.evaluate("()=>document.querySelector('[data-fix=shaft]').click()")
-            f = pg.evaluate("()=>({cash:__PM.S.cash,left:(__PM.S.inc.find(i=>i.id==='shaft')||{left:-1}).left,ready:__PM.leadFixReady(),again:__PM.leadFix('shaft'),freq:__PM.freq('shaft'),txt:document.getElementById('leadCard').innerText})")
-            ok("fix it now: the breakdown ends, 60% of its bill comes back, the fix is used, the breakdown is half as likely", f["left"] <= 0 and b0 > 0 and abs(f["cash"] - cashF - round(b0 * 0.6)) < 1 and not f["ready"] and not f["again"] and abs(f["freq"] - f0 / 2) < 1e-9 and "used this cycle" in f["txt"], f)
+            c = pg.evaluate("()=>({card:!document.getElementById('leadCard').hidden,btn:!!document.querySelector('[data-fix]'),txt:document.getElementById('leadCard').innerText})")
+            ok("leader card: Dot, her fix (no button) and what the mill has kept", c["card"] and not c["btn"] and "used this cycle" in c["txt"] and "sales push" in c["txt"] and "Pay settlements" in c["txt"] and "quicker" in c["txt"], c["txt"][:300])
             pg.evaluate("()=>{document.getElementById('ldc-ok').click();__PM.setRunning(false);}")
         if k == 4:
-            ok("wave 5: Fix it now is ready again, and the driveshaft stays on the fixed list", pg.evaluate("()=>__PM.leadFixReady()&&__PM.S.lead.fixed.join()==='shaft'"))
+            ok("wave 5: Dot's fix is ready again, and the driveshaft stays on the fixed list", pg.evaluate("()=>__PM.leadFixReady()&&__PM.S.lead.fixed.join()==='shaft'"))
     out = pg.evaluate("()=>__PM.OUT.jobs")
     ok("outage jobs 2, 3, 4, then 1 again", jobs == [out[1], out[2], out[3], out[0]], jobs)
     # outage 5 with the 3D view running: the last of the staging the day before, then the outage itself (the game holds

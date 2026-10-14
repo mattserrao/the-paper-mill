@@ -43,7 +43,7 @@ it takes effect when the outage ends, and it stays with the mill.
 | Leader | Takes on | At each outage (stays with the mill) | Always, while in charge | Cost |
 |---|---|---|---|---|
 | **Chip Kraftwell**, the dealmaker (business man) | Rising costs | **Fibre lock**: the next wave's fibre at this wave's price (one wave), or a **sales push**: +$7/t on every grade (stays) | | Every deal: wages +5% for good. Call-offs and dock brawls 2× as often |
-| **Dot "Doc" Blade**, the millwright (mechanic) | Breakdowns | No pick. **Fix it now**, once per cycle: ends one breakdown, returns 60% of its bill, and fixes it at the root (50% rarer from then on, stacking) | Repairs 10% quicker | Repair bills +15% |
+| **Dot "Doc" Blade**, the millwright (mechanic) | Breakdowns | No pick. **Her fix** (automatic from v5.0.4), once per cycle: each breakdown has a 25% chance as it starts; it ends, 60% of its bill comes back, and it's fixed at the root (50% rarer from then on, stacking) | Repairs 10% quicker | Repair bills +15% |
 | **Felicity Fourdrinier**, the process engineer | The bottleneck | A **debottlenecking project**: +6.5% capacity for the fibre line (receiving, pulper, screens), the paper machine, or finishing (winder, shipping) | | **Project tie-ins**: every outage overruns 20 min per project done so far (machine down) |
 | **Hank Headbox**, the machine tender (operator) | Sheet breaks and hayouts | **Runnability**: breaks and hayouts −15% and back up 20% faster, or **dial in the dryers**: energy −5.5% | | **Runs the sheet heavy**: fibre +2% (basis-weight giveaway) |
 

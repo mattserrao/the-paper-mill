@@ -18,13 +18,14 @@ const LEAD={
   wage:0.05,             // Chip, pay settlements: wages +5% with every deal (they stay with the deals)
   fixCut:0.5,            // Dot, Fix it now: ends a breakdown, returns part of its bill, and that breakdown is 50% rarer from then on (stacks)
   refund:0.6,            // Dot, Fix it now: share of that breakdown's repair bill she gets back
+  autoFix:0.25,          // v5.0.4: Dot fixes on her own: each fixable breakdown that starts has this chance, once per outage cycle (no button)
   rep:0.10,              // Dot, a good millwright: repair jobs 10% quicker while she is in charge
   bills:1.15,            // Dot, gold-plates every job: repair bills +15% while she is in charge
   cap:0.065,             // Felicity, a project: +6.5% capacity in one area (fibre line, paper machine or finishing), stays with the mill
   overrun:20,            // Felicity, project tie-ins: every outage overruns 20 min per project done so far (machine down)
   rethread:0.20,         // Hank, runnability: time lost to sheet breaks and hayouts -20% per pick...
   clean:0.15,            //   ...and sheet breaks and hayouts -15% per pick
-  steam:0.055,           // Hank, dial in the dryers: energy -5.5% per pick (stays with the mill)
+  steam:0.055,           // Hank, dial in the dryers: steam (the energy part of energyCost, not chemicals) -5.5% per pick (stays with the mill)
   heavy:0.02};           // Hank, runs the sheet heavy (basis-weight giveaway): fibre +2% while he is in charge
 const LEAD_IDS=["chip","dot","fel","hank"];
 // what each leader picks at an outage: [stack key, button label, what it does]  (keys kept from v4.4.0-t1 so saves still load)
@@ -32,7 +33,7 @@ const LEAD_PICKS={
   chip:[["fibre","Fibre lock",()=>"next wave's fibre at this wave's price"],["sales","Sales push",()=>`+$${LEAD.sales}/t on every grade`]],
   dot:[],
   fel:[["pstock","Fibre line",()=>`receiving, pulper, screens +${pct1(LEAD.cap)}%`],["pwet","Paper machine",()=>`machine +${pct1(LEAD.cap)}%`],["pdry","Finishing",()=>`winder and shipping +${pct1(LEAD.cap)}%`]],
-  hank:[["rethread","Runnability",()=>`breaks −${pct1(LEAD.clean)}%, rethreads −${pct1(LEAD.rethread)}% time`],["clean","Dial in the dryers",()=>`energy −${pct1(LEAD.steam)}%`]]};
+  hank:[["rethread","Runnability",()=>`breaks −${pct1(LEAD.clean)}%, rethreads −${pct1(LEAD.rethread)}% time`],["clean","Dial in the dryers",()=>`steam −${pct1(LEAD.steam)}%`]]};
 const pct1=v=>+(v*100).toFixed(1);   // 0.015 -> 1.5 (labels)
 const leadIs=id=>!!(S&&S.lead&&S.lead.id===id);
 const leadN=k=>(S&&S.lead&&S.lead.st[k])||0;

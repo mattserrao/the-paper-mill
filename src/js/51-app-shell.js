@@ -65,13 +65,13 @@
   // top bar: compact figures straight from the game state ($1.24M, -$850k)
   const short=v=>{const a=Math.abs(v),f=a>=1e6?(a/1e6).toFixed(a>=1e7?1:2)+"M":a>=1e3?(a/1e3).toFixed(a>=1e5?0:1).replace(/\.0$/,"")+"k":Math.round(a)+"";return (v<0?"−":"")+"$"+f;};
   const set=(id,v)=>{const e=$(id);if(e.textContent!==v)e.textContent=v;};
-  const NARROW=matchMedia("(max-width:480px)");   // phones: the survival clock label is "W3 · Day 16"
+  const NARROW=matchMedia("(max-width:480px)"),TINY=matchMedia("(max-width:400px)");   // phones: the survival clock label is "W3 · D16" (v5.0.4: was "W3 · Day 16", cut off once cash went negative)
   const mirror=[...document.querySelectorAll("#v2more [data-m]")].map(el=>[el,$(el.dataset.m)]);
   function sync(){set("v2mill",MILL.name);set("v2mt",MILL.name);set("v2cash",short(S.cash));
     {const ok=S.t>=1440;set("v2profit",ok?short(S.profitRate)+"/d":"–");$("v2profit").style.color=ok&&S.profitRate<0?"var(--bad)":"var(--ink)";$("v2profit").title=ok?"Profit over the last 24 hours":"Shown once the first day is done (a 24-hour average)";}
     {const h=((S.t+360)/60)%24,d=new Date(S.date0||Date.now());d.setMinutes(d.getMinutes()+S.t+360);const hh=Math.floor(h),ap=hh<12?"AM":"PM",h12=hh%12||12;
-     set("v2clock",d.toLocaleDateString("en-US",{weekday:"short"})+" "+h12+" "+ap);}
-    {const se=S.season,on=!!(se&&se.on),sv=!!(se&&se.surv),day=Math.floor(S.t/1440)+1,lab=on?(sv?(NARROW.matches?`W${survWave()} · Day ${day}`:`Wave ${survWave()} · Day ${day}`):`Day ${Math.min(SEASON_DAYS,day)} of ${SEASON_DAYS}`):se&&se.done?(sv?"Run over":"Season over"):"Time";
+     set("v2clock",(TINY.matches?"":d.toLocaleDateString("en-US",{weekday:"short"})+" ")+h12+" "+ap);}   // v5.0.4: no weekday on small phones, so the time is never cut off
+    {const se=S.season,on=!!(se&&se.on),sv=!!(se&&se.surv),day=Math.floor(S.t/1440)+1,lab=on?(sv?(NARROW.matches?`W${survWave()} · D${day}`:`Wave ${survWave()} · Day ${day}`):`Day ${Math.min(SEASON_DAYS,day)} of ${SEASON_DAYS}`):se&&se.done?(sv?"Run over":"Season over"):"Time";
      set("v2clockL",lab);$("v2clockL").classList.toggle("sday",on);$("v2clockL").title=on?(sv?"Survival: the wave you are in and the day of the run":"Season mode: day of the 30-day season"):"";}
     mirror.forEach(([d,s])=>{if(d.textContent!==s.textContent)d.textContent=s.textContent;});
     const sp=outCapped()?`${simRate()} min/s · ${C.simSpeed} after`:C.simSpeed+" min/s";if($("v2speed").textContent!==sp)$("v2speed").textContent=sp;$("v2speed").title=outCapped()?"Planned outage: slowed so you can watch the crews. Your speed comes back when it ends.":"";
@@ -152,7 +152,10 @@
   $("v2survNew").addEventListener("click",goSurv);
   $("v2free").addEventListener("click",()=>{setFree(!S.free);play();});
   $("v2board").addEventListener("click",openBoard);
-  $("v2zen").addEventListener("click",()=>{menu.hidden=true;first=false;setZen(true);});
+  // v5.0.4: zen ends a season or survival run, so with one on it asks first (tap again within 3 s), like Reset mill
+  {let arm=0;$("v2zen").addEventListener("click",()=>{const b=$("v2zen"),sm=b.querySelector("small"),run=S.season&&S.season.on;
+    if(run&&Date.now()-arm>=3000){arm=Date.now();sm.textContent=`ends this ${S.season.surv?"survival run":"season"} · tap again`;b.classList.add("warn");setTimeout(()=>{sm.textContent="sit back";b.classList.remove("warn");},3000);return;}
+    arm=0;sm.textContent="sit back";b.classList.remove("warn");menu.hidden=true;first=false;setZen(true);});}
   // v17: zen's map rotation reloads the page with ?zen=1: go straight back into zen once the scene is ready (and drop the
   // flag from the address, so a later reload opens the menu as usual)
   if(new URLSearchParams(location.search).get("zen")==="1"){const go=()=>{if(G3.ok&&!G3.warm){setTimeout(go,300);return;}

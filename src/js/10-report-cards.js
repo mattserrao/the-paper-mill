@@ -31,7 +31,7 @@ function rcLimit(){const M=S.M||{},starved=()=>S.yard<P.yardCap*0.04||M.noIn||M.
   if(S.pmSpeed<C.pmSp.v*0.97*(M.speedCap||1)&&S.tank<P.tankCap*0.3)return starved();return "Machine at full speed";}
 function rcGrade(v,cut){return ["A","B","C","D","F"][cut.findIndex(c=>v>=c)<0?4:cut.findIndex(c=>v>=c)];}
 function rcSum(a){const L=S.ledger,d=k=>(L[k]||0)-(a.L0[k]||0),prod=S.tot.prodT-a.prod0,ship=(S.shipT||0)-a.ship0,run=Math.max(1,a.min-a.plan),days=Math.max(0.1,a.min/1440);
-  const ops=["occ","energy","labor","overhead","premium"].reduce((t,k)=>t+d(k),0),spent={Fibre:d("occ"),Energy:d("energy"),Labour:d("labor"),Overhead:d("overhead"),"Premium freight":d("premium"),"Repairs & outages":d("repairs"),Upgrades:d("upgrades")};
+  const ops=["occ","energy","labor","overhead","premium"].reduce((t,k)=>t+d(k),0),spent={Fibre:d("occ"),Energy:d("energy"),Labour:d("labor"),Overhead:d("overhead"),"Freight & insurance":d("premium"),"Repairs & outages":d("repairs"),Upgrades:d("upgrades")};
   const rev=d("rev"),deals=d("deals"),earned=rev+Math.max(0,deals),spentT=Object.values(spent).reduce((t,v)=>t+v,0)+Math.max(0,-deals),net=earned-spentT;
   const rel={};RC_SEC.forEach(([k])=>rel[k]=a.up[k]/run);const relAvg=RC_SEC.reduce((t,[k])=>t+rel[k],0)/RC_SEC.length;
   const dn=Object.entries(a.dn).sort((x,y)=>y[1]-x[1]).slice(0,5),bnT=Object.values(a.bn).reduce((t,v)=>t+v,0)||1,bn=RC_STEPS.map(k=>[k,(a.bn[k]||0)/bnT]).sort((x,y)=>y[1]-x[1]);
@@ -45,8 +45,8 @@ function rcMake(a,i){const p=rcSum(a),s=rcSum(S.rc.s);
   const worst=Object.entries(g).sort((x,y)=>gp[x[1]]-gp[y[1]])[0][0],top=p.dn[0],bn=p.bn[0],lowSec=RC_SEC.map(([k,n])=>[n,p.rel[k]]).sort((x,y)=>x[1]-y[1])[0];
   const hrs=m=>(m/60).toFixed(m<600?1:0)+" h";
   let tip;
-  if(worst==="Profit"){const rep=p.spent["Repairs & outages"]||0,pf=p.spent["Premium freight"]||0;
-    tip=rep>p.earned*0.1?`Repairs and outage budgets took ${money(rep)}. Fewer breakdowns means fewer bills, so keep the machine and its crews ahead of trouble.`:pf>p.earned*0.05?`Premium freight cost ${money(pf)}. Keep the warehouse moving so trucks don't need rushing.`:`You kept ${Math.round(p.margin*100)}% of sales. Fibre and energy are your biggest costs, so every hour of downtime hurts.`;}
+  if(worst==="Profit"){const rep=p.spent["Repairs & outages"]||0,pf=p.spent["Freight & insurance"]||p.spent["Premium freight"]||0;
+    tip=rep>p.earned*0.1?`Repairs and outage budgets took ${money(rep)}. Fewer breakdowns means fewer bills, so keep the machine and its crews ahead of trouble.`:pf>p.earned*0.05?`Freight and insurance cost ${money(pf)}. ${LV("insure")?"Insurance is part of it, and pays back in smaller repair bills.":"Keep the warehouse moving so trucks don't need rushing."}`:`You kept ${Math.round(p.margin*100)}% of sales. Fibre and energy are your biggest costs, so every hour of downtime hurts.`;}
   else if(worst==="Downtime"&&top)tip=`${top[0]} cost you ${hrs(top[1])} this period. Respond fast when it hits, and give its area a bigger budget at the next outage.`;
   else if(worst==="Reliability")tip=`${lowSec[0]} was the least reliable section (${Math.round(lowSec[1]*100)}% up). Look at its upgrades and outage budget.`;
   else if(worst==="Cost / ton")tip=`Each ton cost ${money(p.cpt)} to make against a ${money(p.price)} price. Efficiency upgrades and fewer breaks bring that down.`;
@@ -96,8 +96,11 @@ function endSeason(bust){const se=S.season;se.done=true;se.on=false;running=fals
   $("so-stats").replaceChildren(...st.map(([k,v,c])=>{const d=document.createElement("div");if(c)d.className=c;const a=document.createElement("span");a.textContent=k;const b=document.createElement("b");b.textContent=v;d.append(a,b);return d;}));
   {const c=bust?null:rcFinal(),box=$("so-rc");if(box){if(c){box.hidden=false;box.innerHTML=`<div class="rcmini"><div class="rcg g${c.overall}">${c.overall}</div><div><b>Days ${c.from}–${c.to} report card</b><small>${Object.entries(c.g).map(([k,v])=>k+" "+v).join(" · ")}</small><p>${c.tip}</p></div></div><button id="so-rcbtn" class="ghost">Open the full report card</button>`;
       $("so-rcbtn").addEventListener("click",()=>rcOpen(c,true));}else box.hidden=true;}}
-  let nm="";try{nm=localStorage.getItem("paper-mill-player")||"";}catch(e){}$("so-name").value=nm;
+  let nm="";try{nm=localStorage.getItem("paper-mill-player")||"";}catch(e){}$("so-name").value=nm;soCount();
   $("so-submit").disabled=false;$("so-submit").textContent=lbOn()?"Submit score":"Save score";setMsg("");$("seasonOv").hidden=false;$("seasonOv").scrollTop=0;if(matchMedia("(hover:hover) and (pointer:fine)").matches)$("so-name").focus();else $("so-submit").focus({preventScroll:true});}
+// v5.0.4: the name box shows how many of its 16 characters are used
+function soCount(){const i=$("so-name"),c=$("so-count");if(!i||!c)return;const n=i.value.length;c.textContent=n+"/16";c.classList.toggle("full",n>=16);}
+{const i=document.getElementById("so-name");if(i)i.addEventListener("input",soCount);}
 function setMsg(t,c){const m=$("so-msg");m.textContent=t;m.className="somsg"+(c?" "+c:"");if(t)try{m.scrollIntoView({block:"nearest"});}catch(e){}}
 function saveLocal(r,name,sv){const key=sv?SURV.local:"paper-mill-local-scores";try{const L=JSON.parse(localStorage.getItem(key)||"[]");L.push({...r,name,created_at:new Date().toISOString(),local:1});
   L.sort(sv?(a,b)=>b.minutes-a.minutes||b.tons-a.tons:(a,b)=>b.score-a.score||b.tons-a.tons);localStorage.setItem(key,JSON.stringify(L.slice(0,20)));}catch(e){}}
@@ -139,7 +142,7 @@ async function openBoard(tab){if(tab!=="season"&&tab!=="surv")tab=survRun()?"sur
     const dt=r.created_at?new Date(r.created_at).toLocaleDateString(undefined,{month:"short",day:"numeric"}):"";
     d.append(mk("r",i+1),mk("n",r.name),mk("sc",sv?survTime(r.minutes):money(r.score)),mk("m",[r.mill,sv?"wave "+r.wave:"",f0(r.tons)+" t shipped",(r.incidents??"")+" upsets",dt].filter(Boolean).join(" · ")));return d;}));}
 function setFree(on){S.free=on;
-  if(on&&S.season&&S.season.on){const sv=survRun();S.season=null;S.lead=null;applyUpgrades();seasonLocks(false);BANNERS.push({text:(sv?"Survival run":"Season")+" abandoned: free play scores can't go on the leaderboard.",t:null});}
+  if(on&&S.season&&S.season.on){const sv=survRun();if(G3.save&&G3.save.drop)G3.save.drop();S.season=null;S.lead=null;applyUpgrades();seasonLocks(false);BANNERS.push({text:(sv?"Survival run":"Season")+" abandoned: free play scores can't go on the leaderboard.",t:null});}
   if(on)BANNERS.push({text:"Free play: upgrades are free and you can't go bankrupt. No leaderboard.",t:null,kind:"good"});
   if(on&&G3.labelIntro)G3.labelIntro();
   updateShop();}
@@ -149,7 +152,7 @@ let ZEN=null;
 let grainDone=false;function makeGrain(){if(grainDone)return;grainDone=true;const c=document.createElement("canvas");c.width=c.height=128;const x=c.getContext("2d"),im=x.createImageData(128,128);for(let i=0;i<im.data.length;i+=4){const v=Math.random()*255|0;im.data[i]=im.data[i+1]=im.data[i+2]=v;im.data[i+3]=255;}
   x.putImageData(im,0,0);document.documentElement.style.setProperty("--grain",`url(${c.toDataURL()})`);}
 function setZen(on){if(on===!!ZEN)return;
-  if(on){makeGrain();if(S.season&&S.season.on){S.season=null;S.lead=null;applyUpgrades();seasonLocks(false);}
+  if(on){makeGrain();if(S.season&&S.season.on){if(G3.save&&G3.save.drop)G3.save.drop();S.season=null;S.lead=null;applyUpgrades();seasonLocks(false);}
     ZEN={speed:C.simSpeed,chaos:CH.on,hays:C.hays,breaks:C.breaks,view:G3.on};
     S.inc=[];if(S.wd==="hayout")S.wd="run";if(S.pm==="break"){S.pm="run";}BANNERS.length=0;S.zen=true;
     CH.on=false;$("chaosOn").checked=false;C.hays=false;C.breaks=false;

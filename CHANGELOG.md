@@ -1,5 +1,21 @@
 # Changelog
 
+## v5.0.4 (playtest review)
+- **Dot fixes on her own.** No more Fix it now button: once per outage cycle, each breakdown she can fix has a 25% chance of being fixed as it starts. It ends on the spot, 60% of its bill comes back and it's fixed at the root, as before; a banner says so, and the chip shows "Fix ready" or "Fix used". (Her roll has its own dice, so nothing else in a run changes.)
+- Outage budgets start at the cheapest option when cash is below zero.
+- Zen mode asks first when it would end a season or survival run (tap again within 3 s), and leaving a run for zen or free play drops its save (a reload used to bring the abandoned run back).
+- An event card dealt while an outage notice is on screen waits until the notice closes, instead of hiding under it.
+- The outage dialog opens at the top, so its heading and the "What's an outage?" intro show.
+- Tab stays inside an open event card.
+- Report card: "Premium freight" is now **Freight & insurance** (the insurance premium is booked there), and its tip mentions insurance when you have it.
+- The first report card of a run starts with the run, so upgrades bought before the first minute count.
+- Hank's "Dial in the dryers" now says **steam −5.5%** (it cuts steam, not chemicals), on his card, the outage dialog and the tally.
+- Spot market sale card shows the real gain (the $35/t over list, about +$18k), not the whole sale, and what the risk costs against list.
+- Phones: the wave chip keeps the outage countdown (short forms: W10, Up, $, ⏱ 2d 20h, Fix ✓) and nothing is cut off; the clock label is "W13 · D50" and drops the weekday under 400 px; the grade letter in the top bar is labelled.
+- Shop: "next at 6 AM" now says "tomorrow 6 AM" once it's past 6 AM.
+- The leaderboard name box shows a character counter (13/16).
+- Leader picker: a focused card has a dashed ring, so it no longer looks picked.
+
 ## v5.0.3 (fixes from the survival playtest)
 - A finished run can no longer be continued: after bankruptcy (or the end of a season) the save is now cleared, so a reload no longer offers "Continue survival" and the same run can't be replayed and submitted again. (The old clear sat behind a check that skipped finished runs, so it never ran.)
 - **Resume** in the pause menu no longer restarts the game behind an open event card, outage budget or report card. The game stays paused until the card is answered, so an outage can't start on the default budget before you approve it.

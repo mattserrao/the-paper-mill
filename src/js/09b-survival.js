@@ -16,7 +16,10 @@ function survWaveStart(){const w=survWave();applyUpgrades();
 UI_TICKS.push(()=>{const c=$("survChip");if(!c)return;const on=survOn()&&!S.zen;if(c.hidden===on){c.hidden=!on;document.body.classList.toggle("surv",on);}if(!on)return;
   const w=survWave(),set=(id,v)=>{const e=$(id);if(e.textContent!==v)e.textContent=v;},left=Math.max(0,outStart(w)-S.t),d=Math.floor(left/1440),h=Math.floor(left%1440/60);
   set("svW","Wave "+w);set("svU",xf(survUp(w)));set("svC",xf(survCost(w)));
-  set("svN",S.outg&&S.outg.on?"outage under way":left<60?"outage within the hour":`outage in ${d?d+"d ":""}${h}h`);});
+  set("svN",S.outg&&S.outg.on?"outage under way":left<60?"outage within the hour":`outage in ${d?d+"d ":""}${h}h`);
+  // v5.0.4: short forms for phones (styles.css shows data-s under 420 px), so the countdown fits there too
+  const sa=(id,v)=>{const e=$(id);if(e&&e.dataset.s!==v)e.dataset.s=v;};sa("svW","W"+w);
+  sa("svN",S.outg&&S.outg.on?"⏱\uFE0E now":left<60?"⏱\uFE0E <1h":`⏱\uFE0E ${d?d+"d ":""}${h}h`);});
 // the season-over dialog serves both modes: which buttons it shows and what they say
 // (a bankrupt survival run has no "one more turn": that button goes back to the menu instead, on a fresh mill)
 function soMode(surv){$("so-more").textContent=surv?"Menu":"One more turn";$("so-new").textContent=surv?"New survival run":"New season";}
@@ -32,5 +35,5 @@ function endSurvival(){const se=S.season,r=survResult(),w=r.wave;se.done=true;se
   if(S.lead)st.splice(3,0,["Mill leader",LEADERS[S.lead.id].name+(S.lead.was?" (after "+LEADERS[S.lead.was].name+")":""),"wide"]);
   $("so-stats").replaceChildren(...st.map(([k,v,c])=>{const d=document.createElement("div");if(c)d.className=c;const a=document.createElement("span");a.textContent=k;const b=document.createElement("b");b.textContent=v;d.append(a,b);return d;}));
   {const box=$("so-rc");if(box)box.hidden=true;}soMode(true);
-  let nm="";try{nm=localStorage.getItem("paper-mill-player")||"";}catch(e){}$("so-name").value=nm;
+  let nm="";try{nm=localStorage.getItem("paper-mill-player")||"";}catch(e){}$("so-name").value=nm;soCount();
   $("so-submit").disabled=false;$("so-submit").textContent=lbOn()?"Submit score":"Save score";setMsg("");$("seasonOv").hidden=false;$("seasonOv").scrollTop=0;if(matchMedia("(hover:hover) and (pointer:fine)").matches)$("so-name").focus();else $("so-submit").focus({preventScroll:true});}

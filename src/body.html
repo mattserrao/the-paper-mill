@@ -8,7 +8,7 @@
 <div class="overlay top" hidden id="seasonOv"><div aria-labelledby="so-h" aria-modal="true" class="modal wide" role="dialog">
 <h2 id="so-h">Season complete</h2><p class="muted" id="so-p"></p>
 <div class="sostats" id="so-stats"></div><div hidden id="so-rc"></div>
-<label class="soname">Name for the leaderboard<input autocomplete="nickname" id="so-name" maxlength="16" placeholder="2–16 letters or numbers" spellcheck="false"/></label>
+<label class="soname">Name for the leaderboard<input autocomplete="nickname" id="so-name" maxlength="16" placeholder="2–16 letters or numbers" spellcheck="false" aria-describedby="so-count"/><small id="so-count" class="socount" aria-live="polite">0/16</small></label>
 <p aria-live="polite" class="somsg" id="so-msg"></p>
 <div class="btns"><button class="primary" id="so-submit">Submit score</button><button id="so-board">View leaderboard</button><button id="so-more">One more turn</button><button id="so-new">New season</button></div></div></div>
 <div class="overlay top" hidden id="lbOv"><div aria-labelledby="lb-h" aria-modal="true" class="modal wide" role="dialog">
@@ -18,7 +18,7 @@
 <div class="lblist" id="lb-list"></div></div></div>
 <div class="overlay" hidden id="overlay"><div aria-labelledby="ov-h" aria-modal="true" class="modal" role="dialog">
 <h2 id="ov-h"></h2><p id="ov-p"></p><div class="btns"><button class="primary" id="ov-a"></button><button id="ov-b"></button></div></div></div>
-<div class="survchip" hidden id="survChip" role="button" tabindex="0" title="Survival: every wave, upsets get more likely and fibre, energy, chemicals and wages cost more. A wave ends when its planned outage does. Tap for your mill leader."><i class="svl" hidden id="svL"></i><span class="svbody"><b id="svW">Wave 1</b><span>Upsets <b id="svU">×1.00</b></span><span>Costs <b id="svC">×1.00</b></span><u hidden id="svF"></u><em id="svN"></em></span><button class="svfold" hidden id="svFold" type="button" aria-label="Slide the wave bar away" title="Hide (tap the face to bring it back)"><svg fill="none" height="14" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2.6" viewbox="0 0 24 24" width="14"><path d="M15 6l-6 6 6 6"></path></svg></button></div>
+<div class="survchip" hidden id="survChip" role="button" tabindex="0" title="Survival: every wave, upsets get more likely and fibre, energy, chemicals and wages cost more. A wave ends when its planned outage does. Tap for your mill leader."><i class="svl" hidden id="svL"></i><span class="svbody"><b id="svW">Wave 1</b><span><i data-s="Up">Upsets</i> <b id="svU">×1.00</b></span><span><i data-s="$">Costs</i> <b id="svC">×1.00</b></span><u hidden id="svF"></u><em id="svN"></em></span><button class="svfold" hidden id="svFold" type="button" aria-label="Slide the wave bar away" title="Hide (tap the face to bring it back)"><svg fill="none" height="14" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2.6" viewbox="0 0 24 24" width="14"><path d="M15 6l-6 6 6 6"></path></svg></button></div>
 <div class="v2top" id="v2top">
 <button aria-label="Pause and open the menu" class="v2card v2ibtn" id="v2pause"><svg fill="currentColor" height="18" viewbox="0 0 24 24" width="18"><rect height="16" rx="1.5" width="5" x="5" y="4"></rect><rect height="16" rx="1.5" width="5" x="14" y="4"></rect></svg></button>
 <button aria-controls="v2more" aria-expanded="false" class="v2card v2stats" id="v2stats">
