@@ -2,7 +2,9 @@
    Each period (days 1-10, 11-20, 21-30) gathers money in and out, cost per ton, what caused downtime, how reliable each
    section was (planned outage time left out) and which step held the mill back. Cards pop up at the start of day 11 and
    day 21 (sim paused) and the days 21-30 card is shown in the season summary. Each card also shows the season so far. */
-const RC_STEPS=["Receiving","Pulper","Machine at full speed","Machine down","Winder","Shipping"],RC_SEC=[["recv","Receiving"],["pulper","Stock prep"],["machine","Paper machine"],["winder","Winder"],["ship","Shipping"]];
+const RC_STEPS=["Receiving","Pulper","Machine at full speed","Machine down","Winder","Shipping"],
+  RC_LBL={"Machine at full speed":"Paper machine (speed limited)","Machine down":"Paper machine (machine down)"},   // v5.0.2: shown names (the keys stay: saves count by them)
+  RC_SEC=[["recv","Receiving"],["pulper","Stock prep"],["machine","Paper machine"],["winder","Winder"],["ship","Shipping"]];
 function rcAcc(){return {t0:S.t,L0:{...S.ledger},prod0:S.tot.prodT,ship0:S.shipT||0,rolls0:S.tot.rolls,brk0:S.tot.breaks,hay0:S.tot.hayouts,off0:S.tot.broke||0,occ:0,fib:0,min:0,plan:0,up:{recv:0,pulper:0,machine:0,winder:0,ship:0},dn:{},bn:{}};}
 function rcTick(dt){const se=S.season;if(!se||!se.on||se.done||dt<=0)return;
   if(!S.rc)S.rc={i:0,p:rcAcc(),s:rcAcc(),cards:[]};const R=S.rc,M=S.M||{},planned=!!(S.outg&&S.outg.on);
@@ -72,7 +74,7 @@ function rcHTML(c){const W=c.wave,per=W?"this wave":"these 10 days",all=W?"run s
     <h3>Reliability <small>time each section was up</small></h3>
     ${RC_SEC.map(([k,n])=>bar(n,p.rel[k],pc(p.rel[k]),p.rel[k]<0.9)).join("")}
     <h3>Bottlenecks <small>share of time each step limited the mill</small></h3>
-    ${p.bn.filter(([,v])=>v>0.005).map(([k,v],i)=>bar(k,v,pc(v),i===0)).join("")||`<p class="rcnone">Not enough running time to tell.</p>`}`;}
+    ${p.bn.filter(([,v])=>v>0.005).map(([k,v],i)=>bar(RC_LBL[k]||k,v,pc(v),i===0)).join("")||`<p class="rcnone">Not enough running time to tell.</p>`}`;}
 let rcEl=null;
 function rcOpen(c,fromSummary){if(!rcEl){rcEl=document.createElement("div");rcEl.className="overlay";rcEl.id="rcOv";rcEl.style.zIndex="170";document.body.appendChild(rcEl);}
   if(!fromSummary){running=false;S.cards.open={report:true};}

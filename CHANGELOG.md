@@ -1,5 +1,8 @@
 # Changelog
 
+## v5.0.2-t1 (test, not released): report card labels
+- Report card, Bottlenecks: "Machine at full speed" is now **Paper machine (speed limited)** and "Machine down" is **Paper machine (machine down)**, so the two machine rows read as a pair. (Saved report cards keep their numbers: only the shown names changed.)
+
 ## v5.0.1 (fixes)
 - Season and survival end: the results dialog was taller than a phone screen and couldn't scroll, so **Submit score** sat off the bottom (and the keyboard, opened for the name field, covered the rest). The dialog now scrolls, its buttons stay pinned to the bottom of the screen, and on phones the keyboard only opens when you tap the name field.
 - Game speed and planned outages, rebuilt: your chosen speed is now the only speed setting and nothing ever overwrites it. During a planned outage the game simply runs at no more than 5 min/s (so the crews can be watched), and zen runs at 1; when either ends you're straight back at your speed, with nothing to restore. Before, the outage lowered your speed setting and tried to put it back afterwards, which could fail (players went in at 120 and came out slower). The speed readout shows both during an outage ("5 min/s · 120 after"), and the speed buttons set the speed you'll come back to. Saves from earlier versions taken mid-outage get the player's speed back. New check: `tools/speedcheck.py`.
