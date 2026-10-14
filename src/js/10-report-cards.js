@@ -73,7 +73,7 @@ function rcHTML(c){const W=c.wave,per=W?"this wave":"these 10 days",all=W?"run s
     <p class="rcnote">${p.breaks} sheet break${p.breaks===1?"":"s"} · ${p.hay} hayout${p.hay===1?"":"s"}${p.plan>0?` · ${hrs(p.plan)} planned outage (not counted)`:""}</p>
     <h3>Reliability <small>time each section was up</small></h3>
     ${RC_SEC.map(([k,n])=>bar(n,p.rel[k],pc(p.rel[k]),p.rel[k]<0.9)).join("")}
-    <h3>Bottlenecks <small>share of time each step limited the mill</small></h3>
+    <h3>Bottlenecks <small>% time each step limited the mill</small></h3>
     ${p.bn.filter(([,v])=>v>0.005).map(([k,v],i)=>bar(RC_LBL[k]||k,v,pc(v),i===0)).join("")||`<p class="rcnone">Not enough running time to tell.</p>`}`;}
 let rcEl=null;
 function rcOpen(c,fromSummary){if(!rcEl){rcEl=document.createElement("div");rcEl.className="overlay";rcEl.id="rcOv";rcEl.style.zIndex="170";document.body.appendChild(rcEl);}

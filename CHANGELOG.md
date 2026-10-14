@@ -1,7 +1,7 @@
 # Changelog
 
 ## v5.0.2-t1 (test, not released): report card labels
-- Report card, Bottlenecks: "Machine at full speed" is now **Paper machine (speed limited)** and "Machine down" is **Paper machine (machine down)**, so the two machine rows read as a pair. (Saved report cards keep their numbers: only the shown names changed.)
+- Report card, Bottlenecks: "Machine at full speed" is now **Paper machine (speed limited)** and "Machine down" is **Paper machine (machine down)**, so the two machine rows read as a pair, and the subtitle is now "% time each step limited the mill" (it was cut off on phones). (Saved report cards keep their numbers: only the shown names changed.)
 
 ## v5.0.1 (fixes)
 - Season and survival end: the results dialog was taller than a phone screen and couldn't scroll, so **Submit score** sat off the bottom (and the keyboard, opened for the name field, covered the rest). The dialog now scrolls, its buttons stay pinned to the bottom of the screen, and on phones the keyboard only opens when you tap the name field.
