@@ -1,5 +1,19 @@
 # Changelog
 
+## v5.0.6-t1 (test, 2026-10-14): fixes from the 100-run survival QA
+From the v5.0.5 QA report (100 bot runs and four agent players). Online, run `supabase/name-filter-v2.sql` once so the boards fold look-alike names too.
+
+- **Outages run at your speed.** The 5 min/s outage clock is now opt-in: the "Outage has begun" notice has a **Watch the crews** button that slows the clock to 5 min/s and flies the camera to the job. Pressing − or + while watching hands your speed straight back, and watching ends with the outage. Playtests found nothing to do in the old 48 s (no upsets or cards can start during an outage) and at 60 min/s it was a third of a run. The notice now closes when the outage ends, so it never outlives a fast one. The speed readout says "Watching crews · 5 min/s" while you watch.
+- **Leaderboard names:** the player name now goes through the same banned-word filter as the mill name (a look-alike name reached the board); the filter also folds Unicode look-alikes, full-width letters and accents ("fυck", "ｆｕｃｋ"). `supabase/name-filter-v2.sql` does the same folding on the server.
+- **One post per run:** pressing Enter in the name box after Submit no longer posts the score again.
+- **Board highlight:** after you submit, only this run's row is marked, not every row with your name.
+- **Survival outage budgets rebalanced:** the cheapest budget was the best one by about 6 days and the top one the worst. Survival budgets per area are now $40k (35% more breakdowns), $70k (unchanged) and $120k (25% fewer). Ten matched runs, buyer bot, desert, Chip: cheapest 40.2 days, standard 42.6, top when cash is over $1.5M 45.0 (was 50.6 / 42.6 / 40.1). Seasons keep $20k / $70k / $170k. The dialog and the outage-complete banner take their percentages from the table.
+- **Wave report card:** a net cost from event cards now has its own "Deals & trials" row, so the money rows add up to Net.
+- **Game over** says why: the −$1.5M bankruptcy line and how far costs and upsets had climbed. The survival tutorial names the line too.
+- **Event cards:** "New roll wrap film" and "VIP customer tour" are no longer dealt again once won, so their permanent price bonuses can't stack when the survival deck reshuffles.
+- **Tutorial:** speed and sound are in the panel that opens from the stats bar (it said "the top bar").
+- Checks: `tools/v506check.py` (new) covers all of the above; `tools/speedcheck.py` updated for the opt-in cap.
+
 ## v5.0.5 (release, 2026-10-14): polish rounds from two survival playtests
 The first feature-lock release: it gathers v5.0.3 and v5.0.4 below (not released on their own) and this second polish round. Online, run `supabase/mill-name-filter.sql` once so both boards refuse banned mill names too.
 

@@ -154,6 +154,11 @@ Waves: change `SURV.up`, `SURV.cost` or `SURV.compound` in `03c-survival.js`, re
 `python3 tools/survival.py index.html 5 --bot=handsoff` and `--bot=saver`. `--up`, `--cost` and `--compound` try a
 setting without editing. Every run has to end well before `--maxdays`.
 
+## Outages and budgets (v5.0.6-t1)
+
+- Outages run at the player's speed. The "Outage has begun" notice offers **Watch the crews** (5 min/s, camera on the job) until the outage ends or the player presses − or +. The 100-run QA found no upsets, cards or Dot fixes can start during an outage, and the old fixed cap was a third of a run at 60 min/s.
+- Survival outage budgets per area: $40k (×1.35 breakdowns), $70k (×1), $120k (×0.75); seasons keep $20k / $70k / $170k (×1.1 / ×1 / ×0.8). With the season table the cheapest budget won survival by ~6 days because repair bills don't rise with the wave. 10 matched seeds, buyer bot, desert, Chip: cheapest 40.2 d, standard 42.6, top when cash > $1.5M 45.0 (was 50.6 / 42.6 / 40.1).
+
 ## Open points
 
 - Run `supabase/survival.sql` in the Supabase SQL editor to turn the online survival board on (no leader column). Until

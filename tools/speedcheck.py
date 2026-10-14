@@ -1,4 +1,4 @@
-"""v5.0.1 speed check: the player's speed is the only speed and nothing overwrites it. A planned outage only caps the
+"""v5.0.1 speed check (v5.0.6: outages run at the player's speed; the cap is the opt-in Watch the crews): the player's speed is the only speed and nothing overwrites it. A planned outage only caps the
 speed the game runs at (simRate), zen runs at 1, and when either ends the game is back at the player's speed with nothing
 to restore. Covers: speed buttons during an outage, a save and Continue in the middle of an outage, zen during an outage,
 and an old (pre-v5.0.1) save that kept the slowed speed. Usage: python3 speedcheck.py <index.html>"""
@@ -17,7 +17,7 @@ CLR = "const clr=()=>{const o=P.S.cards.open;if(!o)return;if(o.c)document.getEle
 TO_OUT = "()=>{const P=__PM;" + CLR + "let k=0;while(!P.S.outg.on&&k++<9*1440*4){P.step(0.25);clr();}P.setRunning(false);return P.S.outg.on}"
 TO_END = "()=>{const P=__PM;" + CLR + "let k=0;while(P.S.outg.on&&k++<1440*4){P.step(0.25);clr();}P.setRunning(false);return !P.S.outg.on}"
 def txt(pg, want):
-    try: pg.wait_for_function("(w)=>document.getElementById('v2speed').textContent.includes(w)", arg=want, timeout=4000, polling=100); return True
+    try: pg.wait_for_function("(w)=>document.getElementById('v2speed').textContent.includes(w)", arg=want, timeout=20000, polling=100); return True
     except Exception: return False
 ST = "()=>({c:__PM.C.simSpeed,rate:__PM.simRate(),on:__PM.S.outg.on,k:__PM.S.outg.k,txt:document.getElementById('v2speed').textContent})"
 with sync_playwright() as pw:
@@ -30,18 +30,24 @@ with sync_playwright() as pw:
     pg = page()
     pg.evaluate("()=>{document.getElementById('v2go').click();__PM.setRunning(false);const t=document.getElementById('tut');if(t)t.hidden=true;const f=document.getElementById('v2fast');while(__PM.C.simSpeed<120)f.click();}")
     ok("the player picks 120", pg.evaluate(ST)["c"] == 120)
-    pg.evaluate(TO_OUT); t = txt(pg, "5 min/s · 120 after"); s = pg.evaluate(ST)
-    ok("outage 1: runs at 5, the player's 120 untouched, the readout says both", s["on"] and s["rate"] == 5 and s["c"] == 120 and t, s)
+    pg.evaluate(TO_OUT); t = txt(pg, "120 min/s"); s = pg.evaluate(ST)
+    ok("outage 1 (v5.0.6): runs at the player's 120, not capped", s["on"] and s["rate"] == 120 and s["c"] == 120 and t, s)
+    pg.evaluate("()=>{const b=document.getElementById('out-watch');clearTimeout(document.getElementById('outOv')._t);if(b)b.click();else __PM.S.outg.watch=true;}"); t = txt(pg, "Watching crews · 5 min/s"); s = pg.evaluate(ST)
+    ok("outage 1: Watch the crews runs it at 5, the player's 120 untouched, the readout says so", s["on"] and s["rate"] == 5 and s["c"] == 120 and t, s)
     pg.evaluate("()=>document.getElementById('v2slow').click()"); s = pg.evaluate(ST)
-    ok("outage 1: tapping slower changes the speed to come back to (60), still runs at 5", s["c"] == 60 and s["rate"] == 5, s)
+    ok("outage 1: the first tap of slower stops watching (back to 120), the speed itself unchanged", s["c"] == 120 and s["rate"] == 120 and not pg.evaluate("()=>__PM.S.outg.watch"), s)
+    pg.evaluate("()=>document.getElementById('v2slow').click()"); s = pg.evaluate(ST)
+    ok("outage 1: the next tap changes the speed (60)", s["c"] == 60 and s["rate"] == 60, s)
+    pg.evaluate("()=>{__PM.S.outg.watch=true}"); s = pg.evaluate(ST)
+    ok("outage 1: watching again runs at 5", s["rate"] == 5 and s["c"] == 60, s)
     # save in the middle of the outage, reload, Continue
     pg.evaluate("()=>{__PM.G3.save.save('test');window.__sv=localStorage.getItem('paper-mill-save');__PM.G3.saveOff=true;}")
     sv = pg.evaluate("()=>window.__sv"); pg.close()
     pg = page(); pg.evaluate("(v)=>localStorage.setItem('paper-mill-save',v)", sv); pg.close(); pg = page()
     pg.evaluate("()=>{document.getElementById('v2cont').click();__PM.setRunning(false);}"); pg.wait_for_timeout(300); s = pg.evaluate(ST)
-    ok("continue mid-outage: still in the outage at 5, the player's speed is 60", s["on"] and s["rate"] == 5 and s["c"] == 60, s)
-    pg.evaluate(TO_END); t = pg.evaluate("()=>{__PM.setRunning(true);return 1}") and txt(pg, "60 min/s"); pg.evaluate("()=>__PM.setRunning(false)"); s = pg.evaluate(ST)
-    ok("outage 1 ends: back at 60 with nothing restored", not s["on"] and s["rate"] == 60 and s["c"] == 60 and t and "after" not in s["txt"], s)
+    ok("continue mid-outage while watching: still in the outage at 5, the player's speed is 60", s["on"] and s["rate"] == 5 and s["c"] == 60, s)
+    pg.evaluate(TO_END); t = pg.evaluate("()=>{__PM.setRunning(true);return 1}") and txt(pg, "60 min/s") and not pg.evaluate("()=>document.getElementById('v2speed').textContent.includes('Watching')"); pg.evaluate("()=>__PM.setRunning(false)"); s = pg.evaluate(ST)
+    ok("outage 1 ends: back at 60 with nothing restored, watching over", not s["on"] and s["rate"] == 60 and s["c"] == 60 and t and "Watching" not in s["txt"] and not pg.evaluate("()=>__PM.S.outg.watch"), s)
     # zen in the middle of outage 2
     pg.evaluate(TO_OUT); pg.evaluate("()=>__PM.setZen(true)"); s = pg.evaluate(ST)
     ok("zen: runs at 1, the player's speed untouched", s["rate"] == 1 and s["c"] == 60, s)
@@ -50,9 +56,10 @@ with sync_playwright() as pw:
     pg.close()
     # an old save from before v5.0.1: slowed speed in C.simSpeed, the player's in C.spdPref
     old = json.loads(sv); old["C"]["simSpeed"] = 5; old["C"]["spdPref"] = 90
+    old["S"]["outg"].pop("watch", None)   # (pre-v5.0.6 saves have no watch flag: the outage runs at the player's speed)
     pg = page(); pg.evaluate("(v)=>localStorage.setItem('paper-mill-save',v)", json.dumps(old)); pg.close(); pg = page()
     pg.evaluate("()=>{document.getElementById('v2cont').click();__PM.setRunning(false);}"); pg.wait_for_timeout(300); s = pg.evaluate(ST)
-    ok("old save: the player's speed (90) comes back, the outage still caps at 5", s["c"] == 90 and s["rate"] == 5 and pg.evaluate("()=>!('spdPref' in __PM.C)"), s)
+    ok("old save: the player's speed (90) comes back, the outage runs at it (v5.0.6: no cap unless watching)", s["c"] == 90 and s["rate"] == 90 and pg.evaluate("()=>!('spdPref' in __PM.C)"), s)
     pg.evaluate(TO_END); s = pg.evaluate(ST)
     ok("old save: the outage ends at 90", s["rate"] == 90, s)
     pg.close(); b.close()

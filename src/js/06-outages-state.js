@@ -1,10 +1,17 @@
 /* ---------- v3.0.0: planned outages (season mode) ----------
    Every 7th season day (days 7, 14, 21, 28) the mill takes a controlled 4-hour shutdown starting 8 AM. 24 h ahead the
    player sets a maintenance budget per area: $20k = 10% less reliable, $70k = no change, $170k = 20% more reliable
+   (survival from v5.0.6: $40k = 35% less, $70k, $120k = 25% more; see OUT below)
    (v10 economy balance: was $50k / $100k / $200k).
    The new reliability takes effect when the outage ends and lasts until the next one. */
 const OUT={get every(){return survRun()?SURV.every:7;},   // v4.4.0-t3: survival has an outage every 4 days (a wave), seasons every 7
-  hour:8,len:240,cost:[20e3,70e3,170e3],rel:[1.1,1,0.8],simCap:5,
+  hour:8,len:240,
+  // v5.0.6 survival: the cheapest budget won by ~6 days (repairs don't rise with the wave, so $20k for 10% more breakdowns
+  // was a bargain) and the top one lost. Survival now: $40k = 35% more breakdowns, $70k = no change, $120k = 25% fewer
+  // (10 matched seeds, buyer bot, desert, Chip: cheapest 40.2 d, standard 42.6, top when cash > $1.5M 45.0). Seasons unchanged.
+  get cost(){return survRun()?[40e3,70e3,120e3]:[20e3,70e3,170e3];},get rel(){return survRun()?[1.35,1,0.75]:[1.1,1,0.8];},
+  simCap:5,   // simCap: the clock while the player watches the crews (v5.0.6: opt-in)
+ 
   jobs:["1st press roll change","Forming fabric (wire) change","Pulper rotor and extraction plate change","Refiner plate change"],
   areas:[["stock","Stock prep","pulper, cleaners, screens, refiners, thickener"],["wet","Wet end","headbox, forming fabric, press felts"],["dry","Dry end","dryers, steam joints, reel, winder"]],
   ev:{stock:["refclash","ragger","overflow","dye","hdblow","lwplug","cscreen","fscreen","lcplug","thkblow","chestover"],wet:["fabric","felt","slime","fogfan"],dry:["shaft","dryerfire","wrap","steamjoint","winderdown","boiler"]},area:{}};
@@ -27,7 +34,8 @@ function openOutagePlan(){const o=S.outg,st=outStart(o.k),first=o.k===1,d0=S.cas
   const COST=OUT.cost,lp=leadPlanNew();   // v4.4 survival leaders: lp is the leader's pick for this outage (and the run's one change of leader)
   running=false;S.cards.open={outage:true};
   const el=outShell(),k=n=>"$"+Math.round(n/1e3)+"k";
-  const effTxt=(v,a)=>{const w=a==="stock"?"breakdowns":"breakdowns and sheet breaks";return v===0?["bad","Reliability −10%: more "+w]:v===2?["ok","Reliability +20%: fewer "+w]:["","Reliability unchanged"];};
+  const relPct=v=>Math.round(Math.abs(1-OUT.rel[v])*100);   // (v5.0.6: from OUT.rel, which differs in survival)
+  const effTxt=(v,a)=>{const w=a==="stock"?"breakdowns":"breakdowns and sheet breaks";return v===0?["bad",`Reliability −${relPct(0)}%: more `+w]:v===2?["ok",`Reliability +${relPct(2)}%: fewer `+w]:["","Reliability unchanged"];};
   el.innerHTML=`<div class="modal deal outg" role="dialog" aria-modal="true" aria-labelledby="out-h"><span class="dk">${survOn()?`Wave ${o.k} · planned outage`:`Planned outage ${o.k} of 4`} · sim paused</span>
     <h2 id="out-h">${first?"Your first planned outage":"Outage in 24 hours"}</h2>
     ${first?`<div class="intro"><p><b>What's an outage?</b> Planned downtime. Every ${OUT.every} days the mill comes down on purpose for a controlled 4-hour shutdown, so crews can inspect, clean, repair and replace worn parts before they fail.</p>
@@ -45,21 +53,28 @@ function openOutagePlan(){const o=S.outg,st=outStart(o.k),first=o.k===1,d0=S.cas
     o.plan={...pick};if(lp)o.plan.lead={to:lp.to,pick:lp.pick};log(`Outage ${o.k} budget approved: ${money(tot)} (${OUT.areas.map(([a,n])=>n+" "+k(COST[pick[a]])).join(", ")})`,"warn");
     el.hidden=true;closeCard(true);});
   paint();if(lp)leadPlanMount(document.getElementById("out-lead"),lp);el.hidden=false;AUDIO.sfx("cash",150);document.getElementById("out-ok").focus({preventScroll:true});el.querySelector(".modal").scrollTop=0;}   // v5.0.4: opens at the top
-function outNote(head,body,ms){   // v5.0.5: with an event card open, the notice waits until the card is answered, so it never covers the card's buttons
-  {const d=document.getElementById("dealOv");clearInterval(outNote._w);if(S.cards&&S.cards.open&&S.cards.open.c&&d&&!d.hidden){outNote._w=setInterval(()=>{if(!(S.cards.open&&S.cards.open.c)){clearInterval(outNote._w);outNote(head,body,ms);}},200);return;}}
+function outNote(head,body,ms,btn){   // v5.0.5: with an event card open, the notice waits until the card is answered, so it never covers the card's buttons
+  {const d=document.getElementById("dealOv");clearInterval(outNote._w);if(S.cards&&S.cards.open&&S.cards.open.c&&d&&!d.hidden){outNote._w=setInterval(()=>{if(!(S.cards.open&&S.cards.open.c)){clearInterval(outNote._w);outNote(head,body,ms,btn);}},200);return;}}
   const el=outShell();el.classList.add("note");
-  el.innerHTML=`<div class="modal deal" role="status"><span class="dk">Planned outage</span><h2>${head}</h2><p>${body}</p><div class="btns"><div class="dtimer"><i style="animation-duration:${ms/1000}s"></i></div></div></div>`;
-  el.hidden=false;const m=el.querySelector(".modal");m.addEventListener("click",()=>{el.hidden=true;},{once:true});el._t=setTimeout(()=>{el.hidden=true;},ms);}
-function beginOutage(){const o=S.outg,st=S.t;if(!o.plan)o.plan={stock:1,wet:1,dry:1};o.on=true;o.end=st+OUT.len;
+  el.innerHTML=`<div class="modal deal" role="status"><span class="dk">Planned outage</span><h2>${head}</h2><p>${body}</p><div class="btns">${btn?`<button class="primary" id="out-watch">${btn.label}</button>`:""}<div class="dtimer"><i style="animation-duration:${ms/1000}s"></i></div></div></div>`;
+  el.hidden=false;const m=el.querySelector(".modal");m.addEventListener("click",()=>{el.hidden=true;},{once:true});
+  if(btn)el.querySelector("#out-watch").addEventListener("click",btn.on);   // (the click also closes the notice, through the modal's own listener)
+  el._t=setTimeout(()=>{el.hidden=true;},ms);}
+// v5.0.6: the "Outage has begun" notice offers to slow the clock (OUT.simCap) and fly the camera to the job
+const OUT_CAM={1:"pm",2:"pm",3:"pulp",4:"pulp"};
+function outWatch(){const o=S.outg;if(!o||!o.on)return;o.watch=true;if(G3.jump)G3.jump(OUT_CAM[outJob(o.k)]||"pm",0.7);log(`Watching the outage crews at ${OUT.simCap} min/s (− or + to speed back up)`,"ok");}
+const outNoteHide=()=>{if(outEl&&outEl.classList.contains("note")){clearTimeout(outEl._t);clearInterval(outNote._w);outEl.hidden=true;}};
+function beginOutage(){const o=S.outg,st=S.t;if(!o.plan)o.plan={stock:1,wet:1,dry:1};o.on=true;o.watch=false;o.end=st+OUT.len;
   if(S.lead&&o.plan.lead&&o.plan.lead.to)leadChange(o.plan.lead.to);   // v4.4: the one change of leader happens as the outage starts
   // (the clock runs at no more than OUT.simCap while o.on, through simRate(); the player's own speed is left alone)
   addFx({id:"pout",left:OUT.len,mods:{pmDown:"planned outage",pulperDown:1}});AUDIO.sfx("clunk",400);
   log(`Planned outage ${o.k} has begun: down until ${hourOf(o.end)}`,"warn");BANNERS.push({text:`Planned outage: the mill is down until ${hourOf(o.end)}.`,t:null,kind:"good",tag:"OUTAGE"});
-  outNote("Outage has begun",`The mill is down for planned maintenance: ${(OUT.jobs[outJob(o.k)-1]||"inspections").toLowerCase()} and new press felts. Started ${hourOf(st)}, ends ${outTime(o.end)}.`,5000);}
-function endOutage(){const o=S.outg,pl=o.plan||{stock:1,wet:1,dry:1};o.on=false;S.fx=S.fx.filter(f=>f.id!=="pout");S.M=mods();
+  const canWatch=C.simSpeed>OUT.simCap&&!TURBO_FAST(C.simSpeed);   // (at 5 min/s or slower there is nothing to slow down)
+  outNote("Outage has begun",`The mill is down for planned maintenance: ${(OUT.jobs[outJob(o.k)-1]||"inspections").toLowerCase()} and new press felts. Started ${hourOf(st)}, ends ${outTime(o.end)}.`,canWatch?7000:5000,canWatch?{label:"Watch the crews",on:outWatch}:null);}
+function endOutage(){const o=S.outg,pl=o.plan||{stock:1,wet:1,dry:1};o.on=false;o.watch=false;outNoteHide();   // v5.0.6: at the player's speed the outage can end before its 7 s notice doesS.fx=S.fx.filter(f=>f.id!=="pout");S.M=mods();
   o.spd=null;   // (v5.0.1: nothing to restore: the outage only capped the running speed, see simRate)
   o.rel={stock:OUT.rel[pl.stock],wet:OUT.rel[pl.wet],dry:OUT.rel[pl.dry]};
-  const txt=OUT.areas.map(([a,n])=>`${n} ${pl[a]===2?"+20%":pl[a]===0?"−10%":"±0%"}`).join(" · ");
+  const rp=v=>Math.round(Math.abs(1-OUT.rel[v])*100),txt=OUT.areas.map(([a,n])=>`${n} ${pl[a]===2?"+"+rp(2)+"%":pl[a]===0?"−"+rp(0)+"%":"±0%"}`).join(" · ");
   BANNERS.push({text:`Outage ${o.k} complete. Reliability until the next outage: ${txt}`,t:null,kind:"good",tag:"OUTAGE"});while(BANNERS.length>3)BANNERS.splice(1,1);
   log(`Outage ${o.k} complete. Reliability until the next outage: ${txt}`,"ok");
   if(!survOn())outNote("Outage complete",`Restarting the mill. Reliability until the next outage: ${txt}.`,4000);   // (survival: the wave report card says it)

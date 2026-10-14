@@ -25,6 +25,9 @@ const BANNED_WORDS=["fuck","shit","cunt","bitch","nazi","hitler"];
 // v5.0.5: matched after folding look-alike characters (1/!→i, 0→o, 3→e, 4/@→a, $/5→s, 7→t) and dropping spaces and punctuation,
 // so "Sh1t" and "f u c k" are caught; a few real words that contain one ("Scunthorpe") are allowed first
 const NAME_OK_WORDS=["scunthorpe","shiitake","shitake"];
-const nameFold=v=>String(v||"").toLowerCase().replace(/[1!|]/g,"i").replace(/0/g,"o").replace(/3/g,"e").replace(/[4@]/g,"a").replace(/[$5]/g,"s").replace(/7/g,"t");
+// v5.0.6: Unicode too: full-width and styled letters fold through NFKD (accents dropped), and Greek/Cyrillic look-alikes
+// map to the Latin letter they imitate ("fυck", "ｆｕｃｋ", "ѕhіt" are caught)
+const NAME_CONFUSE={"а":"a","α":"a","в":"b","β":"b","с":"c","ϲ":"c","е":"e","ε":"e","ё":"e","һ":"h","н":"h","η":"n","і":"i","ι":"i","ї":"i","ј":"j","к":"k","κ":"k","м":"m","о":"o","ο":"o","σ":"o","р":"p","ρ":"p","ѕ":"s","т":"t","τ":"t","υ":"u","μ":"u","ν":"v","ш":"w","ω":"w","х":"x","χ":"x","у":"y","γ":"y","з":"3","ч":"4","ı":"i"};
+const nameFold=v=>String(v||"").normalize("NFKD").replace(/[\u0300-\u036f]/g,"").toLowerCase().replace(/[^\x00-\x7f]/g,c=>NAME_CONFUSE[c]||c).replace(/[1!|]/g,"i").replace(/0/g,"o").replace(/3/g,"e").replace(/[4@]/g,"a").replace(/[$5]/g,"s").replace(/7/g,"t");
 const nameOk=v=>{let l=nameFold(v);NAME_OK_WORDS.forEach(w=>{l=l.split(w).join(" ");});const tight=l.replace(/[^a-z]/g,"");return !BANNED_WORDS.some(w=>tight.includes(w));};
 function renameMill(v){v=String(v||"").replace(/\s+/g," ").trim().slice(0,32).trim();if(!v)return;if(!nameOk(v))return false;MILL.name=v;try{if(G3.rebrand)G3.rebrand();}catch(e){}}

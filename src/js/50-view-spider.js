@@ -46,6 +46,7 @@ function drawSpider(){const D=G3.SPD;if(!D||$("spider").hidden)return;
   [[0,"#8a6644",ly,[]],[1,"#3fa0d0",ly,[]],[2,"#8a6644",fy,[10,8]],[3,"#3fa0d0",fy,[10,8]]].forEach(([k,col,Y,dash])=>{x.setLineDash(dash);x.strokeStyle=col;x.lineWidth=3;x.beginPath();h.forEach((r,i)=>i?x.lineTo(X(i),Y(r[k])):x.moveTo(X(i),Y(r[k])));x.stroke();});x.setLineDash([]);}
 UI_TICKS.push(drawSpider);
 const SPEEDS=[1,2,5,10,20,30,60,120].concat(TURBO?[240,480,960]:[]);
-function nudgeSpeed(d){const i=SPEEDS.findIndex(v=>v>=C.simSpeed);const n=SPEEDS[clamp((i<0?SPEEDS.length-1:i)+d,0,SPEEDS.length-1)];setSimSpeed(n);}   // v5.0.1: always the player's own speed (during an outage it is the speed the mill comes back to)   // v4.2.1: the speed the player picked (an outage slowdown is not a choice)
+function nudgeSpeed(d){if(S&&S.outg&&S.outg.watch&&outCapped()){S.outg.watch=false;return;}   // v5.0.6: while watching the crews, the first press of − or + hands the speed back
+  const i=SPEEDS.findIndex(v=>v>=C.simSpeed);const n=SPEEDS[clamp((i<0?SPEEDS.length-1:i)+d,0,SPEEDS.length-1)];setSimSpeed(n);}   // v5.0.1: always the player's own speed (during an outage it is the speed the mill comes back to)   // v4.2.1: the speed the player picked (an outage slowdown is not a choice)
 setView();
 

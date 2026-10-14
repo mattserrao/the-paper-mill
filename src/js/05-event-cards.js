@@ -225,7 +225,7 @@ const CARDS=[
   story:()=>"A packaging vendor has a tougher stretch film. Fewer damage claims could lift what customers pay. Changeover costs $25k.",
   win:()=>"+$5/t on every grade, permanently",lose:()=>"The film jams the wrapper: winder down 4 hours",
   odds:()=>75,why:"Fixed odds.",
-  ok:()=>true,
+  ok:()=>!pending("film")&&!S.perk.film,   // v5.0.6: once won it stays won (the survival deck reshuffles, and the bonus used to stack)
   accept(c){deal(-25000);const w=rand("card")*100<c.o;
     pend("film",12*60,"film",{w});
     return "$25k paid. Changeover over 12 hours.";}},
@@ -250,7 +250,7 @@ const CARDS=[
   story:()=>"A big 23m buyer wants to tour the mill tomorrow. Catering and a fresh coat of paint: $8k.",
   win:()=>"+$10/t on 23m, permanently",lose:()=>"They see a sheet break: −$8/t on 23m for 5 days",
   odds:()=>clamp(Math.round(55+(effNow()-0.87)*300),10,95),why:"Depends on how well the machine is running.",
-  ok:()=>true,
+  ok:()=>!pending("vip")&&!S.perk.vip,   // v5.0.6: once won it stays won (the survival deck reshuffles, and the bonus used to stack)
   accept(c){deal(-8000);const w=rand("card")*100<c.o;
     pend("vip",1440,"vip",{w});
     return "$8k spent. Tour tomorrow.";}},
@@ -393,11 +393,11 @@ const PENDH={
  "strike#1":()=>{addFx({id:"strikex",left:3*1440,price:{all:-10}});cardBanner("The strike settled: buyers squeeze you −$10/t for 3 days.",false);},
  "yard":({w})=>{if(w){addFx({id:"yard",left:10*1440,evf:{balefire:0.3,fleet:0.3}});cardBanner("Bale yard swept and re-stacked: fire and fleet risk way down for 10 days.",true);}
       else{trigger("balefire");cardBanner("Cleanup crew found a smouldering bale!",false);}},
- "film":({w})=>{if(w){for(const g of Object.keys(ECON.price))S.perk.price[g]=(S.perk.price[g]||0)+5;cardBanner("New wrap film cut damage claims: +$5/t on every grade.",true);}
+ "film":({w})=>{if(w){S.perk.film=1;for(const g of Object.keys(ECON.price))S.perk.price[g]=(S.perk.price[g]||0)+5;cardBanner("New wrap film cut damage claims: +$5/t on every grade.",true);}
       else{addFx({id:"film",left:240,mods:{winderDown:1}});cardBanner("The new film jammed the wrapper: winder down 4 hours.",false);}},
  "rotor":({w})=>{addFx({id:"rotorok",left:14*1440,evf:{ragger:0.4,lcplug:0.4,hdblow:0.4}});cardBanner(w?"Pulper rotor rebuilt on time: plugs 60% rarer for 14 days.":"Pulper rebuild overran to 8 hours, but it's done: plugs 60% rarer for 14 days.",w);},
  "basket":()=>{trigger("fscreen");cardBanner("The trial basket cracked: fine screen down.",false);},
- "vip":({w})=>{if(w){S.perk.price["23m"]=(S.perk.price["23m"]||0)+10;cardBanner("The VIP tour went great: +$10/t on 23m.",true);}
+ "vip":({w})=>{if(w){S.perk.vip=1;S.perk.price["23m"]=(S.perk.price["23m"]||0)+10;cardBanner("The VIP tour went great: +$10/t on 23m.",true);}
       else{addFx({id:"vipx",left:5*1440,price:{"23m":-8}});cardBanner("The VIPs watched a sheet break: −$8/t on 23m for 5 days.",false);}},
  "millwright":()=>cardBanner("The millwright went home early after a row with the foreman.",false),
  "tax":({w})=>{if(w){deal(60000);cardBanner("Tax appeal won: +$60k refund.",true);}else cardBanner("Tax appeal denied.",false);},

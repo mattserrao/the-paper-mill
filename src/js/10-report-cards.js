@@ -32,7 +32,8 @@ function rcLimit(){const M=S.M||{},starved=()=>S.yard<P.yardCap*0.04||M.noIn||M.
 function rcGrade(v,cut){return ["A","B","C","D","F"][cut.findIndex(c=>v>=c)<0?4:cut.findIndex(c=>v>=c)];}
 function rcSum(a){const L=S.ledger,d=k=>(L[k]||0)-(a.L0[k]||0),prod=S.tot.prodT-a.prod0,ship=(S.shipT||0)-a.ship0,run=Math.max(1,a.min-a.plan),days=Math.max(0.1,a.min/1440);
   const ops=["occ","energy","labor","overhead","premium"].reduce((t,k)=>t+d(k),0),spent={Fibre:d("occ"),Energy:d("energy"),Labour:d("labor"),Overhead:d("overhead"),"Freight & insurance":d("premium"),"Repairs & outages":d("repairs"),Upgrades:d("upgrades")};
-  const rev=d("rev"),deals=d("deals"),earned=rev+Math.max(0,deals),spentT=Object.values(spent).reduce((t,v)=>t+v,0)+Math.max(0,-deals),net=earned-spentT;
+  const rev=d("rev"),deals=d("deals");spent["Deals & trials"]=Math.max(0,-deals);   // v5.0.6: a net cost from event cards gets its own row, so the rows add up to Net
+  const earned=rev+Math.max(0,deals),spentT=Object.values(spent).reduce((t,v)=>t+v,0),net=earned-spentT;
   const rel={};RC_SEC.forEach(([k])=>rel[k]=a.up[k]/run);const relAvg=RC_SEC.reduce((t,[k])=>t+rel[k],0)/RC_SEC.length;
   const dn=Object.entries(a.dn).sort((x,y)=>y[1]-x[1]).slice(0,5),bnT=Object.values(a.bn).reduce((t,v)=>t+v,0)||1,bn=RC_STEPS.map(k=>[k,(a.bn[k]||0)/bnT]).sort((x,y)=>y[1]-x[1]);
   const price=priceOf(C.grade),cpt=prod>0?(ops+d("repairs"))/prod:0,margin=earned>0?(earned-(spentT-spent.Upgrades))/earned:0;
@@ -106,8 +107,11 @@ function soCount(){const i=$("so-name"),c=$("so-count");if(!i||!c)return;const n
 function setMsg(t,c){const m=$("so-msg");m.textContent=t;m.className="somsg"+(c?" "+c:"");if(t)try{m.scrollIntoView({block:"nearest"});}catch(e){}}
 function saveLocal(r,name,sv){const key=sv?SURV.local:"paper-mill-local-scores";try{const L=JSON.parse(localStorage.getItem(key)||"[]");L.push({...r,name,created_at:new Date().toISOString(),local:1});
   L.sort(sv?(a,b)=>b.minutes-a.minutes||b.tons-a.tons:(a,b)=>b.score-a.score||b.tons-a.tons);localStorage.setItem(key,JSON.stringify(L.slice(0,20)));}catch(e){}}
-async function submitScore(){const r=S.season&&S.season.result;if(!r||S.free)return;const sv=survRun(),name=$("so-name").value.replace(/\s+/g," ").trim();
+async function submitScore(){const r=S.season&&S.season.result;if(!r||S.free)return;
+  if(S.season.submitted||$("so-submit").disabled)return;   // v5.0.6: one post per run (Enter in the name box used to post again after Submit)
+  const sv=survRun(),name=$("so-name").value.replace(/\s+/g," ").trim();
   if(!/^[A-Za-z0-9 ._'-]{2,16}$/.test(name)){setMsg(name?"Use 2–16 letters, numbers, spaces or . _ ' -":"Type a name for the leaderboard first.","bad");const n=$("so-name");n.scrollIntoView({block:"center"});n.focus();return;}
+  if(!nameOk(name)){setMsg("That name isn't allowed on the leaderboard. Pick another.","bad");const n=$("so-name");n.scrollIntoView({block:"center"});n.focus();return;}   // v5.0.6: the player name gets the mill name's filter ("Sh1t" reached the board)
   try{localStorage.setItem("paper-mill-player",name);}catch(e){}
   if(!S.season.saved){S.season.saved=1;saveLocal(r,name,sv);}
   if(!lbOn()){setMsg("Saved on this device. The online leaderboard isn't connected yet.","ok");$("so-submit").disabled=true;return;}
@@ -147,7 +151,8 @@ async function openBoard(tab){if(tab!=="season"&&tab!=="surv")tab=survRun()?"sur
   $("lb-sub").textContent=note||(sv?"Top 100 · survival runs · ranked by time survived":"Top 100 · 30-day seasons · ranked by net profit");
   if(!rows.length){L.replaceChildren(Object.assign(document.createElement("div"),{className:"lbempty",textContent:sv?"No scores yet. Start a survival run and set the bar.":"No scores yet. Start a season and set the bar."}));return;}
   let me="";try{me=localStorage.getItem("paper-mill-player")||"";}catch(e){}
-  L.replaceChildren(...rows.map((r,i)=>{const d=document.createElement("div");d.className="lbrow"+(me&&r.name===me?" me":"");
+  const se0=S.season,thisRun=!!(se0&&se0.rank&&se0.result&&se0.submitted&&(tab==="surv")===!!se0.surv);   // v5.0.6: just submitted here → only that run's row is marked (below), not every row with the name
+  L.replaceChildren(...rows.map((r,i)=>{const d=document.createElement("div");d.className="lbrow"+(!thisRun&&me&&r.name===me?" me":"");
     const mk=(c,t)=>Object.assign(document.createElement("span"),{className:c,textContent:t});
     const dt=r.created_at?new Date(r.created_at).toLocaleDateString(undefined,{month:"short",day:"numeric"}):"";
     d.append(mk("r",i+1),mk("n",r.name),mk("sc",sv?survTime(r.minutes):money(r.score)),mk("m",[sv?"wave "+r.wave:"",f0(r.tons)+" t shipped",(r.incidents??"")+" upsets",dt,r.mill].filter(Boolean).join(" · ")));return d;}));

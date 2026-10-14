@@ -47,10 +47,12 @@ const UI_TICKS=[];
 // sim speed in sim-minutes per real second; every speed change goes through here
 function setSimSpeed(v){C.simSpeed=Math.max(1,Math.min(TURBO?960:120,Math.round(+v)||1));}
 // v5.0.1: C.simSpeed is the player's chosen speed and nothing else ever changes it. The speed the game actually runs at is
-// simRate(): zen runs at 1, a planned outage at no more than OUT.simCap (so the crews can be watched), otherwise the
-// player's speed. When the outage or zen ends there is nothing to restore: the player's choice was never touched.
+// simRate(): zen runs at 1; a planned outage runs at the player's speed unless they pressed "Watch the crews" on the
+// outage notice (S.outg.watch), then at no more than OUT.simCap until it ends or they touch the speed. When the outage
+// or zen ends there is nothing to restore: the player's choice was never touched. (v5.0.6: outages used to be capped
+// always; playtests found nothing to do in the 48 s and up to half a fast run spent waiting.)
 // (Only inside a running season or survival run: zen and free play end the season mid-outage without ending the outage.)
-const outCapped=()=>!!(S&&S.outg&&S.outg.on&&S.season&&S.season.on&&!S.zen&&C.simSpeed>OUT.simCap&&!TURBO_FAST(C.simSpeed));
+const outCapped=()=>!!(S&&S.outg&&S.outg.on&&S.outg.watch&&S.season&&S.season.on&&!S.zen&&C.simSpeed>OUT.simCap&&!TURBO_FAST(C.simSpeed));
 function simRate(){return S&&S.zen?1:outCapped()?OUT.simCap:C.simSpeed;}
 
 const cgrid=$("chaosgrid");

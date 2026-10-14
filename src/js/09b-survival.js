@@ -29,7 +29,7 @@ function endSurvival(){const se=S.season,r=survResult(),w=r.wave;se.done=true;se
   let best=0;try{best=+localStorage.getItem(SURV.best)||0;}catch(e){}
   const pb=r.minutes>best;if(pb){try{localStorage.setItem(SURV.best,String(r.minutes));}catch(e){}}
   $("so-h").textContent="Survival over: bankrupt";
-  $("so-p").textContent=`${MILL.name} ran out of money in wave ${w}, on day ${Math.floor(S.t/1440)+1}.`;
+  $("so-p").textContent=`${MILL.name} went under in wave ${w}, on day ${Math.floor(S.t/1440)+1}: cash fell past the ${money(ECON.bankrupt)} bankruptcy line. By then fibre, energy and wages cost ${xf(survCost(w))} what they did at the start, and upsets were ${xf(survUp(w))} as likely.`;   // v5.0.6: says why, and where the line is
   const st=[["Time survived",survTime(r.minutes),"big"],["Wave reached",String(w)],["Your best",pb?(best?"New best (was "+survTime(best)+")":"New best"):survTime(best)],
     ["Upsets by the end",xf(survUp(w))],["Costs by the end",xf(survCost(w))],["Tons shipped",f0(r.tons)+" t"],["Upsets survived",String(r.incidents)]];
   if(S.lead)st.splice(3,0,["Mill leader",LEADERS[S.lead.id].name+(S.lead.was?" (after "+LEADERS[S.lead.was].name+")":""),"wide"]);
