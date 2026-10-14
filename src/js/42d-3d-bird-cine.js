@@ -43,7 +43,8 @@
       ov.hidden=true;fl.style.opacity=0;document.body.classList.remove("cine");G3.cineHold=false;G3.cineOn=false;try{AUDIO.cine.end();}catch(e){}
       if(c.cam&&G3.camSet)G3.camSet(c.cam);if(c.was&&$("v2menu").hidden)running=true;}
     ov.querySelector(".skip").addEventListener("click",e=>{e.stopPropagation();if(C&&!C.struck){try{AUDIO.cine.end();AUDIO.cine.strike();}catch(_){}}finish();});
-    G3.birdCine=()=>{if(NOCINE||!G3.on||S.zen||document.hidden||C)return;try{start();}catch(e){console.error("bird cut-scene",e);finish();}};
+    G3.birdCine=()=>{if(NOCINE||!G3.on||S.zen||document.hidden||C)return;if(document.querySelector(".v2sheet.open,.v2top.open"))return;   // v5.0.6: not over an open sheet or the stats panel (it hid the panel and ate the clicks); the upset itself still happens
+      try{start();}catch(e){console.error("bird cut-scene",e);finish();}};
     const v=new THREE.Vector3();
     G3.cineTick=now=>{if(!C)return;try{const c=C,dt=Math.min(0.1,(now-c.last)/1000);c.last=now;c.t+=dt;const t=c.t;G3.lastMove=performance.now();
         if(c.chirp.length&&t>=c.chirp[0]){c.chirp.shift();try{AUDIO.cine.chirp();}catch(e){}}

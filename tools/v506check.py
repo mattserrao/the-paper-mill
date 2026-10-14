@@ -6,7 +6,7 @@ from playwright.sync_api import sync_playwright
 HERE = pathlib.Path(__file__).parent
 exec((HERE / "bench.py").read_text().split("def stats")[0].split("from playwright.sync_api import sync_playwright")[1])
 html = pathlib.Path(sys.argv[1]).read_text()
-html = html.replace("window.__PM={", "window.__PM={simRate:()=>simRate(),outCapped:()=>outCapped(),get OUT(){return OUT},get ECON(){return ECON},rcSum:a=>rcSum(a),nameOk:v=>nameOk(v),get CARDS(){return CARDS},survUp:w=>survUp(w),survCost:w=>survCost(w),", 1)
+html = html.replace("window.__PM={", "window.__PM={simRate:()=>simRate(),outCapped:()=>outCapped(),get OUT(){return OUT},get ECON(){return ECON},rcSum:a=>rcSum(a),nameOk:v=>nameOk(v),get CARDS(){return CARDS},cardHave:c=>cardHave(c),leadShort:id=>leadShort(id),get BANNERS(){return BANNERS},survUp:w=>survUp(w),survCost:w=>survCost(w),", 1)
 fails, posts = [], []
 def ok(c, msg):
     print(("PASS " if c else "FAIL ") + msg, flush=True)
@@ -71,6 +71,20 @@ with sync_playwright() as pw:
     ok(c[0] == [True, True] and c[1] == [False, False], f"film and VIP cards are dealt until won, then not again ({c})")
     # name filter
     ok(pg.evaluate("()=>[__PM.nameOk('Sh1t'),__PM.nameOk('fυck'),__PM.nameOk('ｆｕｃｋ'),__PM.nameOk('Scunthorpe Mill'),__PM.nameOk('Café du Papier')]") == [False, False, False, True, True], "name filter folds Unicode look-alikes")
+    # polish (v5.0.6): card hint ownership, fiber spelling, leader short name, cash-below-zero banner, rename counter
+    h = pg.evaluate("()=>{const c=__PM.CARDS.find(c=>c.id==='cheap');return __PM.cardHave(c)}")
+    ok(h in ("You don't have it yet.", "You have it."), f"card hint says whether you have the upgrade: {h!r}")
+    s2 = pg.evaluate("()=>{const P=__PM,L=JSON.parse(JSON.stringify(P.S.ledger));const a={L0:L,min:1440,plan:0,up:{machine:0,stock:0,dry:0,wet:0,fin:0,recv:0,ship:0},dn:{},bn:{},prod0:0,ship0:0,brk0:0,hay0:0,rolls0:0,off0:0,occ:0,fib:0};return Object.keys(P.rcSum(a).spent)}")
+    ok("Fiber" in s2 and "Fibre" not in s2, f"report rows say Fiber: {s2[:3]}")
+    ok(pg.evaluate("()=>__PM.leadShort('dot')") == "Dot Blade", "leader row uses the short name (Dot Blade)")
+    pg.evaluate("()=>{const P=__PM;P.S.season.red=0;P.S.cash=-1000;for(let i=0;i<8;i++)P.step(0.25);P.setRunning(false)}")
+    bt = pg.evaluate("()=>__PM.BANNERS.map(b=>b.text).find(t=>t.startsWith('Cash is below zero'))")
+    ok(bool(bt) and "−$1.50M" in bt, f"one-time banner when cash goes below zero: {bt!r}")
+    n2 = pg.evaluate("()=>{const P=__PM;for(let i=0;i<8;i++)P.step(0.25);P.setRunning(false);return P.BANNERS.filter(b=>b.text.startsWith('Cash is below zero')).length}")
+    ok(n2 == 1, f"the below-zero banner shows once: {n2}")
+    pg.evaluate("()=>{document.getElementById('v2rename').click();const i=document.getElementById('v2name');i.value='x'.repeat(32);i.dispatchEvent(new Event('input'))}")
+    ok(pg.evaluate("()=>document.getElementById('v2nameCount').textContent") == "32/32", "rename box shows a 32-character counter")
+    pg.evaluate("()=>{document.getElementById('v2nameRow').hidden=true}")
     # bankruptcy: game-over text, name filter on Submit, one post per run
     pg.evaluate("()=>{const P=__PM;P.S.cash=-1.6e6;for(let i=0;i<40&&P.S.season.on;i++)P.step(0.25);P.setRunning(false)}")
     p = pg.evaluate("()=>document.getElementById('so-p').textContent")

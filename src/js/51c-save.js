@@ -31,6 +31,7 @@
       if(op&&op.outage&&S.outg)S.outg.noticed=false;
       applyUpgrades();S.M=mods();BANNERS.length=0;seasonLocks(true);
       try{syncControls();}catch(e){}try{updateShop();}catch(e){}try{if(G3.rebrand)G3.rebrand();}catch(e){}
+      try{UI_TICKS.forEach(f=>f(0));}catch(e){}   // v5.0.6: the top bar (speed, wave, cash) is right from the first frame, not one UI tick later
       if(op&&op.cid){const c=CARDS.find(x=>x.id===op.cid);if(c)setTimeout(()=>openCard(c),400);}
       diag(`save: ${survRun()?"survival run":"season"} restored, day ${d.day}, ${money(d.cash)}`);}
     G3.save={save,read,clear,restore};

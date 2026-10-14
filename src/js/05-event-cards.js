@@ -149,7 +149,7 @@ const CARDS=[
  {id:"safety",area:"Safety · Mill-wide",title:"Safety blitz",
   story:()=>"Your safety manager wants $15k for a two-day housekeeping and lockout blitz before the state inspector visits.",
   win:()=>"Clean visit: forklift and dock upsets half as likely for 10 days",lose:()=>"Inspector finds a lockout gap: machine down 3 hours",
-  odds:()=>Math.min(95,70+15*LV("safety")),why:"The safety program upgrade means most of the work is already done.",
+  odds:()=>Math.min(95,70+15*LV("safety")),why:"With the safety program upgrade, most of the work is already done.",
   ok:()=>true,
   accept(c){deal(-15000);const w=rand("card")*100<c.o;
     pend("safety",2*1440,"safety",{w});
@@ -325,6 +325,12 @@ function cardTick(dt){const cs=S.cards;if(!cs)return;
   let seen=cs.seen||(cs.seen={});if(survOn()&&CARDS.every(c=>seen[c.id]))seen=cs.seen={};   // v4.3 survival: the deck goes round again
   const pool=CARDS.filter(c=>!seen[c.id]&&c.ok()),pick=pool.length?pool[Math.floor(rand("card")*pool.length)]:null;
   if(pick&&typeof document!=="undefined"&&document.body){seen[pick.id]=true;openCard(pick);}}
+// v5.0.6: when a card's odds depend on upgrades (LV("id") in its odds), say whether the mill has them, so the hint
+// line ("Detrashing automation copes with dirty bales.") isn't read as "you have it"
+function cardHave(c){const ids=[...new Set([...String(c.odds).matchAll(/LV\("(\w+)"\)/g)].map(m=>m[1]))];if(!ids.length)return "";
+  const nm=id=>{const u=UPS.find(q=>q.id===id);return u?u.name:id;},has=ids.filter(id=>LV(id)>0),no=ids.filter(id=>!(LV(id)>0));
+  if(ids.length===1)return has.length?"You have it.":"You don't have it yet.";
+  return !no.length?"You have both.":!has.length?"You have neither yet.":`You have ${nm(has[0])}, not ${nm(no[0])}.`;}
 let cardEl=null;
 function openCard(c){const o=c.odds();S.cards.open={c,o};running=false;
   if(!cardEl){cardEl=document.createElement("div");cardEl.className="overlay";cardEl.id="dealOv";cardEl.hidden=true;document.body.appendChild(cardEl);
@@ -336,7 +342,7 @@ function openCard(c){const o=c.odds();S.cards.open={c,o};running=false;
   cardEl.innerHTML=`<div class="modal deal" role="dialog" aria-modal="true" aria-labelledby="deal-h"><span class="dk">${t(c.area)} · sim paused</span>
     <h2 id="deal-h">${t(c.title)}</h2><p>${t(c.story())}</p>
     <div class="doc"><b class="w">Win</b><span>${t(c.win())}</span><b class="l">Risk</b><span>${t(c.lose())}</span></div>
-    <div><div class="dodds"><span>Chance it works</span><b>${o}%</b></div><div class="dbar"><i style="width:${o}%"></i></div><p style="font-size:12.5px;margin-top:4px">${t(c.why)}</p></div>
+    <div><div class="dodds"><span>Chance it works</span><b>${o}%</b></div><div class="dbar"><i style="width:${o}%"></i></div><p style="font-size:12.5px;margin-top:4px">${t(c.why)}${cardHave(c)?` <b>${t(cardHave(c))}</b>`:""}</p></div>
     <div id="deal-res" class="dres" hidden></div>
     <div class="btns" id="deal-btns"><button id="deal-no">Decline</button><button id="deal-yes" class="primary">Accept</button></div></div>`;
   cardEl.classList.remove("dealres");clearTimeout(cardEl._t);cardEl.hidden=false;AUDIO.sfx("cash",150);

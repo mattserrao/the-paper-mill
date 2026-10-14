@@ -2,31 +2,31 @@
    Numbers and effects are in 03d-leaders.js. The portraits are in 09c-leader-art.js (leadArt). */
 const LEADERS={
   chip:{name:"Chip Kraftwell",title:"The dealmaker",role:"Business man",say:"Everything's negotiable.",
-    plus:()=>`Each outage, one deal: lock the next wave's fibre at this wave's price, or a sales push that stays (+$${LEAD.sales}/t on every grade).`,
+    plus:()=>`Each outage, one deal: lock the next wave's fiber at this wave's price, or a sales push that stays (+$${LEAD.sales}/t on every grade).`,
     minus:()=>`Labour relations: every deal ends in a pay settlement (wages +${pct1(LEAD.wage)}% for good), and call-offs and dock brawls come ${LEAD.strife0}× as often while he's in charge.`},
   dot:{name:'Dot "Doc" Blade',title:"The millwright",role:"Mechanic",say:"If it turns, I can fix it.",
     plus:()=>`Repairs ${pct1(LEAD.rep)}% quicker. Once per outage cycle she fixes a breakdown on her own (${pct1(LEAD.autoFix)}% chance as each one with a bill of ${money(LEAD.autoMin)}+ starts): it ends on the spot, ${LEAD.refund>=1?"its repair bill":pct1(LEAD.refund)+"% of its repair bill"} comes back, and it's fixed at the root (${pct1(LEAD.fixCut)}% rarer from then on).`,
     minus:()=>`Gold-plates every job: repair bills cost ${pct1(LEAD.bills-1)}% more while she's in charge.`},
   fel:{name:"Felicity Fourdrinier",title:"The process engineer",role:"Engineer",say:"I have a spreadsheet for that.",
-    plus:()=>`Each outage, one debottlenecking project that stays: +${pct1(LEAD.cap)}% capacity for the fibre line, the paper machine or finishing.`,
+    plus:()=>`Each outage, one debottlenecking project that stays: +${pct1(LEAD.cap)}% capacity for the fiber line, the paper machine or finishing.`,
     minus:()=>`Project tie-ins: every outage overruns ${LEAD.overrun} minutes for each project done so far.`},
   hank:{name:"Hank Headbox",title:"The machine tender",role:"Operator",say:"She'll tell you what she wants.",
     plus:()=>`Each outage, one gain that stays: runnability (sheet breaks and hayouts −${pct1(LEAD.clean)}%, and back up ${pct1(LEAD.rethread)}% faster) or dial in the dryers (steam −${pct1(LEAD.steam)}%).`,
-    minus:()=>`Runs the sheet heavy: fibre +${pct1(LEAD.heavy)}% while he's in charge (basis-weight giveaway).`}};
+    minus:()=>`Runs the sheet heavy: fiber +${pct1(LEAD.heavy)}% while he's in charge (basis-weight giveaway).`}};
 function leadStart(id){if(!LEADERS[id])return;S.lead={id,st:{fibre:0,sales:0,rethread:0,clean:0,pstock:0,pwet:0,pdry:0},changed:false,was:null,fixW:0,fixed:[],lockW:0};applyUpgrades();
   try{localStorage.setItem("paper-mill-leader",id);}catch(e){}
   BANNERS.push({text:`${LEADERS[id].name} runs the mill. "${LEADERS[id].say}"`,t:null,kind:"good",tag:"LEADER"});while(BANNERS.length>3)BANNERS.splice(1,1);
   log(`${LEADERS[id].name}, ${LEADERS[id].title.toLowerCase()}, takes charge of the mill.`,"ok");}
 // what the mill has kept so far, in words (the leader card and the outage dialog)
 function leadTally(){const L=S.lead,out=[];if(!L)return out;const n=k=>L.st[k]||0,pc=v=>(v>=0?"+":"−")+Math.abs(Math.round(v*1000)/10)+"%";
-  if(L.lockW&&L.lockW===survWave()&&survWave()>1)out.push(["Fibre lock (this wave)",`fibre ${pc(leadLock()-1)}`]);
+  if(L.lockW&&L.lockW===survWave()&&survWave()>1)out.push(["Fiber lock (this wave)",`fiber ${pc(leadLock()-1)}`]);
   if(n("sales"))out.push([`${n("sales")} sales push${n("sales")>1?"es":""}`,`+$${LEAD.sales*n("sales")}/t`]);
   if(leadDeals())out.push(["Pay settlements",`wages ${pc(leadWage()-1)}`,1]);
-  [["pstock","fibre line"],["pwet","paper machine"],["pdry","finishing"]].forEach(([k,a])=>{if(n(k))out.push([`${n(k)} ${a} project${n(k)>1?"s":""}`,`capacity ${pc(leadCap(k)-1)}`]);});
+  [["pstock","fiber line"],["pwet","paper machine"],["pdry","finishing"]].forEach(([k,a])=>{if(n(k))out.push([`${n(k)} ${a} project${n(k)>1?"s":""}`,`capacity ${pc(leadCap(k)-1)}`]);});
   if(leadProjects())out.push(["Project tie-ins",`outages +${leadOverrun()} min`,1]);
   if(n("rethread"))out.push([`${n("rethread")} runnability gain${n("rethread")>1?"s":""}`,`breaks ${pc(leadClean()-1)} · rethreads ${pc(1/leadRethread()-1)}`]);
   if(n("clean"))out.push([`${n("clean")} dryer tuning${n("clean")>1?"s":""}`,`steam ${pc(leadEnergy()-1)}`]);
-  if(leadIs("hank"))out.push(["Fibre (runs heavy)",pc(LEAD.heavy),1]);
+  if(leadIs("hank"))out.push(["Fiber (runs heavy)",pc(LEAD.heavy),1]);
   if(leadIs("dot"))out.push(["Repairs",`${pct1(LEAD.rep)}% quicker`]);
   if(leadIs("dot"))out.push(["Repair bills",pc(LEAD.bills-1),1]);
   if(leadIs("chip"))out.push(["Labour relations",`call-offs and brawls ${xf(leadStrife())}`,1]);
@@ -58,13 +58,15 @@ function leadPickOpen(done,wait){let sel=null;try{const v=localStorage.getItem("
 
 /* ---- the outage budget dialog: the leader's pick, and the one change of leader ---- */
 function leadPlanNew(){if(!S.lead||!survOn())return null;const p=LEAD_PICKS[S.lead.id];return {to:null,pick:p.length?(p.some(x=>x[0]===S.lead.last)?S.lead.last:p[0][0]):null};}
+// v5.0.6: the outage dialog's leader row uses the name without the nickname ("Dot Blade"), so it fits beside the button
+const leadShort=id=>LEADERS[id].name.replace(/\s*"[^"]*"/,"");
 function leadPlanMount(host,lp){if(!host)return;
   const draw=()=>{const cur=S.lead.id,id=lp.to||cur,L=LEADERS[id],picks=LEAD_PICKS[id],first=L.name.split(" ")[0];
     if(!picks.some(x=>x[0]===lp.pick))lp.pick=picks.length?picks[0][0]:null;
-    const choose=lp.choosing?`<div class="ldswap" role="radiogroup" aria-label="New mill leader">${LEAD_IDS.filter(x=>x!==cur).map(x=>`<button type="button" role="radio" aria-checked="${lp.to===x}" data-to="${x}">${leadArt(x,true)}<span><b>${escHTML(LEADERS[x].name)}</b><small>${LEADERS[x].role}</small></span></button>`).join("")}
+    const choose=lp.choosing?`<div class="ldswap" role="radiogroup" aria-label="New mill leader">${LEAD_IDS.filter(x=>x!==cur).map(x=>`<button type="button" role="radio" aria-checked="${lp.to===x}" data-to="${x}">${leadArt(x,true)}<span><b>${escHTML(leadShort(x))}</b><small>${LEADERS[x].role}</small></span></button>`).join("")}
         <p class="ldnote">${lp.to?`${escHTML(LEADERS[lp.to].name)} takes over when the outage starts. Everything ${LEADERS[cur].name.split(" ")[0]} built stays with the mill. This is the run's one change of leader.`:`Pick who takes over. Everything ${LEADERS[cur].name.split(" ")[0]} built stays with the mill. You can do this once per run.`}</p>
         <div class="pro">${lp.to?LEADERS[lp.to].plus():""}</div><div class="con">${lp.to?LEADERS[lp.to].minus():""}</div></div>`:"";
-    host.innerHTML=`<div class="ldrow"><div class="ldwho">${leadArt(id,true)}<div><b>${escHTML(L.name)}</b><small>${lp.to?"takes over at this outage":L.title}</small></div>
+    host.innerHTML=`<div class="ldrow"><div class="ldwho">${leadArt(id,true)}<div><b>${escHTML(leadShort(id))}</b><small>${lp.to?"takes over at this outage":L.title}</small></div>
         ${S.lead.changed?"":`<button type="button" class="ghost" id="out-lchg">${lp.choosing?(lp.to?"Keep "+LEADERS[cur].name.split(" ")[0]:"Cancel"):"Change leader"}</button>`}</div>${choose}
       ${picks.length?`<div class="ldq">${first}'s pick for the next cycle${id==="chip"?` <span>· each deal: wages +${pct1(LEAD.wage)}% for good</span>`:id==="fel"?` <span>· each project: outages +${LEAD.overrun} min</span>`:""}</div><div class="seg ldseg" id="out-lpick">${picks.map(([k,lab,what])=>`<button type="button" data-p="${k}" aria-pressed="${lp.pick===k}"><b>${lab}</b><small>${what()}</small></button>`).join("")}</div>`
         :`<div class="ldq">${id==="dot"?"Dot makes no pick: her fix is ready again when the outage ends.":""}</div>`}

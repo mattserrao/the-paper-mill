@@ -10,10 +10,10 @@
    State: S.lead={id, st:{fibre,sales,rethread,clean,pstock,pwet,pdry}, changed, was, fixW, fixed:[ids], lockW} (saved with the run).
    No leader (a season, free play, a run started by a tool without one): every helper below returns exactly 1 or 0. */
 // v4.4.0-t3 redesign: each leader takes on one survival pressure, with a cost the player can see
-//   Chip: rising costs (a fibre price lock or a sales push)  ·  Dot: breakdowns  ·  Hank: sheet breaks and hayouts  ·  Felicity: the bottleneck
+//   Chip: rising costs (a fiber price lock or a sales push)  ·  Dot: breakdowns  ·  Hank: sheet breaks and hayouts  ·  Felicity: the bottleneck
 const LEAD={
   sales:7,               // Chip, sales push: +$/t on every grade per push (stays with the mill)
-  lock:1,                // Chip, fibre lock: the next wave's fibre is bought at the wave before's price (1 = the whole step)
+  lock:1,                // Chip, fiber lock: the next wave's fiber is bought at the wave before's price (1 = the whole step)
   strife0:2,             // Chip, labour relations: call-offs and dock brawls x2 while he is in charge
   wage:0.05,             // Chip, pay settlements: wages +5% with every deal (they stay with the deals)
   fixCut:0.5,            // Dot, Fix it now: ends a breakdown, returns part of its bill, and that breakdown is 50% rarer from then on (stacks)
@@ -22,19 +22,19 @@ const LEAD={
   autoMin:100e3,         // v5.0.5: ...and only on breakdowns whose repair bill is at least this (she used to spend it on a $47k felt)
   rep:0.10,              // Dot, a good millwright: repair jobs 10% quicker while she is in charge
   bills:1.05,            // Dot, gold-plates every job: repair bills +5% while she is in charge (v5.0.4: was +15%, with the manual fix)
-  cap:0.065,             // Felicity, a project: +6.5% capacity in one area (fibre line, paper machine or finishing), stays with the mill
+  cap:0.065,             // Felicity, a project: +6.5% capacity in one area (fiber line, paper machine or finishing), stays with the mill
   overrun:20,            // Felicity, project tie-ins: every outage overruns 20 min per project done so far (machine down)
   rethread:0.20,         // Hank, runnability: time lost to sheet breaks and hayouts -20% per pick...
   clean:0.15,            //   ...and sheet breaks and hayouts -15% per pick
   steamFull:4,           // v5.0.5: Hank's first 4 dryer tunings give the full cut, later ones half (8 picks used to cut steam to 0.64x)
   steam:0.055,           // Hank, dial in the dryers: steam (the energy part of energyCost, not chemicals) -5.5% per pick (stays with the mill)
-  heavy:0.02};           // Hank, runs the sheet heavy (basis-weight giveaway): fibre +2% while he is in charge
+  heavy:0.02};           // Hank, runs the sheet heavy (basis-weight giveaway): fiber +2% while he is in charge
 const LEAD_IDS=["chip","dot","fel","hank"];
 // what each leader picks at an outage: [stack key, button label, what it does]  (keys kept from v4.4.0-t1 so saves still load)
 const LEAD_PICKS={
-  chip:[["fibre","Fibre lock",()=>"next wave's fibre at this wave's price"],["sales","Sales push",()=>`+$${LEAD.sales}/t on every grade`]],
+  chip:[["fibre","Fiber lock",()=>"next wave's fiber at this wave's price"],["sales","Sales push",()=>`+$${LEAD.sales}/t on every grade`]],
   dot:[],
-  fel:[["pstock","Fibre line",()=>`receiving, pulper, screens +${pct1(LEAD.cap)}%`],["pwet","Paper machine",()=>`machine +${pct1(LEAD.cap)}%`],["pdry","Finishing",()=>`winder and shipping +${pct1(LEAD.cap)}%`]],
+  fel:[["pstock","Fiber line",()=>`receiving, pulper, screens +${pct1(LEAD.cap)}%`],["pwet","Paper machine",()=>`machine +${pct1(LEAD.cap)}%`],["pdry","Finishing",()=>`winder and shipping +${pct1(LEAD.cap)}%`]],
   hank:[["rethread","Runnability",()=>`breaks −${pct1(LEAD.clean)}%, rethreads −${pct1(LEAD.rethread)}% time`],["clean","Dial in the dryers",()=>`steam −${pct1(leadN("clean")>=LEAD.steamFull?LEAD.steam/2:LEAD.steam)}%`]]};
 const pct1=v=>+(v*100).toFixed(1);   // 0.015 -> 1.5 (labels)
 const leadIs=id=>!!(S&&S.lead&&S.lead.id===id);
@@ -54,7 +54,7 @@ const leadRep=()=>leadIs("dot")?1/(1-LEAD.rep):1;                           // r
 const leadPayroll=()=>0;
 const leadStrife=()=>leadIs("chip")?LEAD.strife0:1;
 const leadWage=()=>Math.pow(1+LEAD.wage,leadDeals());
-const leadCap=k=>1+LEAD.cap*leadN(k);                                       // Felicity's capacity (pstock fibre line, pwet machine, pdry finishing)
+const leadCap=k=>1+LEAD.cap*leadN(k);                                       // Felicity's capacity (pstock fiber line, pwet machine, pdry finishing)
 const leadOverrun=()=>LEAD.overrun*leadProjects();
 const leadArea=()=>1;
 // a breakdown Dot fixed is fixed at the root: half as likely from then on, and again for each time she fixes it

@@ -31,7 +31,7 @@ function rcLimit(){const M=S.M||{},starved=()=>S.yard<P.yardCap*0.04||M.noIn||M.
   if(S.pmSpeed<C.pmSp.v*0.97*(M.speedCap||1)&&S.tank<P.tankCap*0.3)return starved();return "Machine at full speed";}
 function rcGrade(v,cut){return ["A","B","C","D","F"][cut.findIndex(c=>v>=c)<0?4:cut.findIndex(c=>v>=c)];}
 function rcSum(a){const L=S.ledger,d=k=>(L[k]||0)-(a.L0[k]||0),prod=S.tot.prodT-a.prod0,ship=(S.shipT||0)-a.ship0,run=Math.max(1,a.min-a.plan),days=Math.max(0.1,a.min/1440);
-  const ops=["occ","energy","labor","overhead","premium"].reduce((t,k)=>t+d(k),0),spent={Fibre:d("occ"),Energy:d("energy"),Labour:d("labor"),Overhead:d("overhead"),"Freight & insurance":d("premium"),"Repairs & outages":d("repairs"),Upgrades:d("upgrades")};
+  const ops=["occ","energy","labor","overhead","premium"].reduce((t,k)=>t+d(k),0),spent={Fiber:d("occ"),Energy:d("energy"),Labour:d("labor"),Overhead:d("overhead"),"Freight & insurance":d("premium"),"Repairs & outages":d("repairs"),Upgrades:d("upgrades")};
   const rev=d("rev"),deals=d("deals");spent["Deals & trials"]=Math.max(0,-deals);   // v5.0.6: a net cost from event cards gets its own row, so the rows add up to Net
   const earned=rev+Math.max(0,deals),spentT=Object.values(spent).reduce((t,v)=>t+v,0),net=earned-spentT;
   const rel={};RC_SEC.forEach(([k])=>rel[k]=a.up[k]/run);const relAvg=RC_SEC.reduce((t,[k])=>t+rel[k],0)/RC_SEC.length;
@@ -47,7 +47,7 @@ function rcMake(a,i){const p=rcSum(a),s=rcSum(S.rc.s);
   const hrs=m=>(m/60).toFixed(m<600?1:0)+" h";
   let tip;
   if(worst==="Profit"){const rep=p.spent["Repairs & outages"]||0,pf=p.spent["Freight & insurance"]||p.spent["Premium freight"]||0;
-    tip=rep>p.earned*0.1?`Repairs and outage budgets took ${money(rep)}. Fewer breakdowns means fewer bills, so keep the machine and its crews ahead of trouble.`:pf>p.earned*0.05?`Freight and insurance cost ${money(pf)}. ${LV("insure")?"Insurance is part of it, and pays back in smaller repair bills.":"Keep the warehouse moving so trucks don't need rushing."}`:`You kept ${Math.round(p.margin*100)}% of sales. Fibre and energy are your biggest costs, so every hour of downtime hurts.`;}
+    tip=rep>p.earned*0.1?`Repairs and outage budgets took ${money(rep)}. Fewer breakdowns means fewer bills, so keep the machine and its crews ahead of trouble.`:pf>p.earned*0.05?`Freight and insurance cost ${money(pf)}. ${LV("insure")?"Insurance is part of it, and pays back in smaller repair bills.":"Keep the warehouse moving so trucks don't need rushing."}`:`You kept ${Math.round(p.margin*100)}% of sales. Fiber and energy are your biggest costs, so every hour of downtime hurts.`;}
   else if(worst==="Downtime"&&top)tip=`${top[0]} cost you ${hrs(top[1])} this period. Respond fast when it hits, and give its area a bigger budget at the next outage.`;
   else if(worst==="Reliability")tip=`${lowSec[0]} was the least reliable section (${Math.round(lowSec[1]*100)}% up). Look at its upgrades and outage budget.`;
   else if(worst==="Cost / ton")tip=`Each ton cost ${money(p.cpt)} to make against a ${money(p.price)} price. Efficiency upgrades and fewer breaks bring that down.`;
@@ -61,7 +61,7 @@ function rcHTML(c){const W=c.wave,per=W?"this wave":"these 10 days",all=W?"run s
   const maxDn=p.dn.length?p.dn[0][1]:1;
   return `<div class="rchead"><div><span class="dk">${W?`Wave ${W} report card`:"Report card"} · <span class="nw">days ${c.from}–${c.to}</span></span><h2 id="rc-h">${escHTML(MILL.name)}</h2></div><div class="${gc(c.overall)} big" aria-label="Overall grade ${c.overall}">${c.overall}</div></div>
     <div class="rcgrades">${Object.entries(c.g).map(([k,v])=>`<div><div class="${gc(v)}">${v}</div><small>${k}</small></div>`).join("")}</div>
-    <p class="rctip"><b>Tip</b> ${c.tip}</p>${W&&c.next?`<p class="wavenext"><b>Wave ${W} survived.</b> Wave ${W+1} starts now: upsets <b>${xf(survUp(W+1))}</b>, costs <b>${xf(survCost(W+1))}</b>.</p>`:""}
+    <p class="rctip"><b>Tip</b> ${c.tip}</p>${W&&c.next?`<p class="wavenext"><b>Wave ${W} done.</b> Wave ${W+1} starts now: upsets <b>${xf(survUp(W+1))}</b>, costs <b>${xf(survCost(W+1))}</b>.</p>`:""}
     <h3>Money <small>${per} · ${all}</small></h3>
     ${row("Earned (paper sales"+(p.deals>0?" + deals":"")+")",money(p.earned),money(s.earned),"pos")}
     ${Object.keys(p.spent).filter(k=>p.spent[k]||s.spent[k]).map(k=>row(k,money(-p.spent[k]),money(-s.spent[k]))).join("")}
@@ -86,6 +86,9 @@ function rcOpen(c,fromSummary){if(!rcEl){rcEl=document.createElement("div");rcEl
   rcEl.querySelector(".modal").scrollTop=0;document.getElementById("rc-ok").focus({preventScroll:true});}
 function rcFinal(){const R=S.rc;if(!R)return null;const c=rcMake(R.p,R.i);R.cards.push(c);return c;}
 function seasonTick(){const se=S.season;if(!se||!se.on||se.done)return;
+  if(!se.red&&S.cash<0){se.red=1;const r=S.profitRate<0?(S.cash-ECON.bankrupt)/-S.profitRate:Infinity;   // v5.0.6: once a run, the first time cash goes below zero
+    const t=`Cash is below zero. Bankrupt at ${money(ECON.bankrupt)}${isFinite(r)?`, about ${Math.max(1,Math.round(r))} days away at this rate`:""}.`;
+    BANNERS.push({text:t,t:null,tag:"CASH"});while(BANNERS.length>3)BANNERS.splice(1,1);log(t,"warn");}
   if(se.surv){if(S.cash<ECON.bankrupt)endSurvival();return;}   // v4.3 survival: no last day, only bankruptcy
   if(S.t>=se.end||S.cash<ECON.bankrupt)endSeason(S.cash<ECON.bankrupt);}
 function seasonResult(){return {score:Math.round(S.cash-ECON.start),tons:Math.round(S.shipT||0),incidents:S.tot.incidents,mill:MILL.name.slice(0,40),version:APP_VER.slice(0,12),days:SEASON_DAYS};}
@@ -159,7 +162,7 @@ async function openBoard(tab){if(tab!=="season"&&tab!=="surv")tab=survRun()?"sur
   // v5.0.5: this run's row is marked and scrolled into view; outside the top 100 it is pinned at the bottom
   {const se=S.season,rk=se&&se.rank,res=se&&se.result;if(rk&&res&&se.submitted&&(tab==="surv")===!!se.surv){if(rk.rank<=rows.length){const row=L.children[rk.rank-1];if(row){row.classList.add("me","mine");row.scrollIntoView({block:"center"});}}
     else{const d=document.createElement("div");d.className="lbrow me mine pin";const mk=(c,t)=>Object.assign(document.createElement("span"),{className:c,textContent:t});
-      d.append(mk("r",rk.rank),mk("n",se.submitted),mk("sc",sv?survTime(res.minutes):money(res.score)),mk("m",[sv?"wave "+res.wave:"",f0(res.tons)+" t shipped",res.incidents+" upsets","your run",res.mill].filter(Boolean).join(" · ")));L.append(d);d.scrollIntoView({block:"center"});}}}}
+      d.append(mk("r",rk.rank),mk("n",se.submitted),mk("sc",sv?survTime(res.minutes):money(res.score)),mk("m",[sv?"wave "+res.wave:"",f0(res.tons)+" t shipped",res.incidents+" upsets",new Date().toLocaleDateString(undefined,{month:"short",day:"numeric"}),"your run",res.mill].filter(Boolean).join(" · ")));L.append(d);d.scrollIntoView({block:"center"});}}}}
 function setFree(on){S.free=on;
   if(on&&S.season&&S.season.on){const sv=survRun();if(G3.save&&G3.save.drop)G3.save.drop();S.season=null;S.lead=null;applyUpgrades();seasonLocks(false);BANNERS.push({text:(sv?"Survival run":"Season")+" abandoned: free play scores can't go on the leaderboard.",t:null});}
   if(on)BANNERS.push({text:"Free play: upgrades are free and you can't go bankrupt. No leaderboard.",t:null,kind:"good"});

@@ -87,7 +87,8 @@ moreToggle("shopSec","shopMore","paper-mill-shop-more",v=>document.querySelector
 // v4.1 v19: one upgrade a day; the day turns over at 6 am (S.t 0 is 6 am on day 1). Free play is exempt.
 const upDay=()=>Math.floor(S.t/1440),upLocked=()=>!S.free&&S.upDay===upDay();
 // v5.0.4: the shop day starts at 6 AM on the clock, so after 6 AM the next one is tomorrow's
-const upNext=()=>((S.t+360)/60)%24>=6?"tomorrow 6 AM":"at 6 AM";
+const UP_NARROW=matchMedia("(max-width:420px)");
+const upNext=()=>((S.t+360)/60)%24>=6?"tomorrow 6\u00a0AM":"at 6\u00a0AM";   // v5.0.6: "6 AM" never splits across lines
 function buy(id){const u=UP[id],l=LV(id);if(l>=u.lv.length)return;const cost=upCost(u,l);if(!S.free&&S.cash<cost)return;if(upLocked())return;
   S.upDay=upDay();spend(cost,"upgrades");AUDIO.sfx("cash",150);S.up[id]=l+1;applyUpgrades();
   BANNERS.push({text:`${u.name}${u.lv.length>1?" level "+(l+1):""} is online.`,t:null,kind:"good"});while(BANNERS.length>3)BANNERS.splice(1,1);
@@ -99,7 +100,7 @@ function updateRel(){const rn=document.getElementById("relnow"),lg=$("ledger"),t
       d.innerHTML=`<span>${n}<small style="display:block;color:var(--muted);font-size:12px;font-weight:500">${bits.length?bits.join(" · "):"standard"}</small></span><b>${Math.abs(sum)<0.005?"–":pct(sum)}</b>`;tg.appendChild(d);});}
 function updateShop(){
   $("u-cash").textContent=money(S.cash);
-  {const w=document.querySelector(".wallet small"),t=S.free?"Cash on hand":upLocked()?"Cash on hand · next upgrade "+upNext():"Cash on hand · 1 upgrade a day";if(w&&w.textContent!==t)w.textContent=t;}
+  {const w=document.querySelector(".wallet small"),t=S.free?"Cash on hand":upLocked()?(UP_NARROW.matches?"Next upgrade: "+upNext():"Cash on hand · next upgrade "+upNext()):"Cash on hand · 1 upgrade a day";if(w&&w.textContent!==t)w.textContent=t;}
   UGROUPS.forEach(([g])=>{const us=UPS.filter(u=>u.g===g),own=us.reduce((a,u)=>a+LV(u.id),0),tot=us.reduce((a,u)=>a+u.lv.length,0),can=upLocked()?0:us.filter(u=>LV(u.id)<u.lv.length&&(S.free||S.cash>=upCost(u,LV(u.id)))).length;
     const fix=bnShort()&&us.some(upFix);const el=$("usum-"+g);if(el)el.innerHTML=`${fix?'<em class="fixg">fix</em> ':""}${own}/${tot} bought${can?` · <b>${can} affordable</b>`:""}`;});
   UPS.forEach(u=>{const l=LV(u.id),el=$("up-"+u.id),b=$("buy-"+u.id),max=l>=u.lv.length;

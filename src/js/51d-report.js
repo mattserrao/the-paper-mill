@@ -16,7 +16,7 @@
     function data(){if(seasonOn()){const R=S.rc,live=S.season.done&&!S.season.surv&&R.cards.length>=3?R.cards[2]:rcMake(R.p,R.i),prev=R.i>0?R.cards[R.i-1]:null;return {R,live,prev,p:live.p,season:true};}
       return {p:rcSum(allAcc()),season:false};}
     function costRows(p){const sp=p.spent,cs=chemShare(),e=sp.Energy||0;
-      return [["Fibre (OCC)",sp.Fibre||0,"var(--kraft)"],["Energy & steam",e*(1-cs),"var(--stock)"],["Chemicals",e*cs,"var(--pulp)"],["Labour",sp.Labour||0,"var(--machine)"],["Overhead",sp.Overhead||0,"#9aa1b5"],
+      return [["Fiber (OCC)",sp.Fiber||0,"var(--kraft)"],["Energy & steam",e*(1-cs),"var(--stock)"],["Chemicals",e*cs,"var(--pulp)"],["Labour",sp.Labour||0,"var(--machine)"],["Overhead",sp.Overhead||0,"#9aa1b5"],
         ["Repairs",sp["Repairs & outages"]||0,"var(--bad)"],["Freight & insurance",(sp["Freight & insurance"]||0)+(sp["Premium freight"]||0),"var(--warn)"]].filter(r=>r[1]>0);}
     // (v4.3 survival: the tiles are waves, the last two and the one being played)
     function tiles(d){const R=d.R,out=[],sv=!!S.season.surv,i0=sv?Math.max(0,R.i-2):0;for(let i=i0;i<i0+3;i++){const c=R.cards[i],cur=i===R.i&&(sv||!S.season.done),lab=sv?`Wave ${i+1}`:`Days ${i*10+1}–${i*10+10}`;
@@ -40,8 +40,8 @@
         return `<span${w?' class="w"':""}>${n}</span><div><i style="width:${(v*100).toFixed(1)}%;background:${v<0.9?"var(--warn)":"var(--ok)"}"></i></div><b class="mono${w?" w":""}">${pc(v)}</b>`;}).join("")}</div>
         <p class="rnote">${top?"Biggest losses: "+top+" · ":""}${p.breaks} sheet break${p.breaks===1?"":"s"} · ${p.hay} hayout${p.hay===1?"":"s"}</p>`;}
     function qualBlock(p,season){const eff=S.tot.pot>0?S.tot.prodT/S.tot.pot:1;
-      return `<h3>Quality &amp; fibre</h3><div class="rq"><div><small>On spec</small><b class="mono">${(p.onspec*100).toFixed(1)}%</b><small>${Math.round(p.off)} t to the beater</small></div>
-        <div><small>Fibre yield</small><b class="mono">${p.yld?pc(p.yld):"–"}</b><small>${p.yld?(1/p.yld).toFixed(2)+" t OCC per t":season?"collecting":"in a season"}</small></div>
+      return `<h3>Quality &amp; fiber</h3><div class="rq"><div><small>On spec</small><b class="mono">${(p.onspec*100).toFixed(1)}%</b><small>${Math.round(p.off)} t to the beater</small></div>
+        <div><small>Fiber yield</small><b class="mono">${p.yld?pc(p.yld):"–"}</b><small>${p.yld?(1/p.yld).toFixed(2)+" t OCC per t":season?"collecting":"in a season"}</small></div>
         <div><small>Output</small><b class="mono">${pc(eff)}</b><small>of max-speed tons</small></div></div>`;}
     function daysBlock(d){const D=(d.R.days||[]).filter(x=>x.d>3);if(!D.length)return "";
       const sv=!!S.season.surv,d0=sv?Math.max(0,D[D.length-1].d-30):0;   // v4.3 survival: the last 30 days, with a line at each outage
@@ -63,7 +63,7 @@
       if(d.season&&S.season.surv){const day=Math.floor(S.t/1440)+1,w=survWave(),sp=survSpan(w);   // v4.3 survival: waves, the multipliers and the time survived
         h+=`<section class="rcard"><div class="rhd"><h3>Survival</h3><small class="mono">${S.season.done?"Run over · "+survTime(S.t):"Wave "+w+" · day "+day}</small></div>
           <div class="rsurv"><div><small>Survived</small><b class="mono">${survTime(S.t)}</b></div><div><small>Upsets</small><b class="mono">${xf(survUp(w))}</b></div><div><small>Costs</small><b class="mono">${xf(survCost(w))}</b></div></div>
-          <p class="rnote">Each wave is rougher than the last: upsets +${Math.round(SURV.up*100)}%, and fibre, energy and chemicals, and wages +${Math.round(SURV.cost*100)}%${SURV.compound?", on top of the wave before":""}. A wave ends when its planned outage does.</p>
+          <p class="rnote">Each wave is rougher than the last: upsets +${Math.round(SURV.up*100)}%, and fiber, energy and chemicals, and wages +${Math.round(SURV.cost*100)}%${SURV.compound?", on top of the wave before":""}. A wave ends when its planned outage does.</p>
           <div class="rtiles">${tiles(d)}</div><div class="rprog"><i style="width:${Math.max(0,Math.min(100,(S.t-sp[0])/(sp[1]-sp[0])*100)).toFixed(1)}%"></i></div>${daysBlock(d)}</section>`;
         h+=`<section class="rcard"><div class="rhd"><h3>${S.season.done?"Last wave":"This wave so far"}</h3><small>${day>d.live.from?`days ${d.live.from}–${Math.min(d.live.to,day)}`:`day ${d.live.from}`}${d.prev?" · vs wave "+d.prev.wave:""}</small></div>${gradesOn()?`<div class="rgrades">${grades(d)}</div><p class="rtip"><b>Biggest lever:</b> ${d.live.tip}</p>`:waitNote()}</section>`;}
       else if(d.season){const day=Math.min(SEASON_DAYS,Math.floor(S.t/1440)+1);

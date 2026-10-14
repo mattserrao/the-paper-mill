@@ -12,6 +12,21 @@ From the v5.0.5 QA report (100 bot runs and four agent players). Online, run `su
 - **Game over** says why: the −$1.5M bankruptcy line and how far costs and upsets had climbed. The survival tutorial names the line too.
 - **Event cards:** "New roll wrap film" and "VIP customer tour" are no longer dealt again once won, so their permanent price bonuses can't stack when the survival deck reshuffles.
 - **Tutorial:** speed and sound are in the panel that opens from the stats bar (it said "the top bar").
+
+### Polish (reviewed item by item)
+- **Cash below zero:** a one-time banner the first time cash drops under $0 in a run, with the −$1.5M line and roughly how many days are left at that rate.
+- **Report card:** "Wave 6 done." instead of "Wave 6 survived." (the wave may have lost money).
+- **Event cards:** when the odds depend on upgrades, the hint line says whether you have them ("You don't have it yet.", "You have both.").
+- **Spelling:** "fiber" everywhere the player sees it (it was "fibre" except on one card).
+- **Phone top bar:** the clock keeps its width; cash and profit give way, so "W6 · D23" is never cut off.
+- **Outage dialog:** the leader row uses the short name ("Dot Blade") and the tally values don't wrap.
+- **Upgrades:** "6 AM" never splits across lines; on narrow phones the header reads "Next upgrade: tomorrow 6 AM".
+- **Outage notice** waits until an event card's result has closed, so it never lands on top of it.
+- **Bird cut-scene** doesn't play over an open sheet or the stats panel (it hid the panel and ate the clicks); the upset still happens.
+- **Rename:** the mill-name box shows a 32-character counter.
+- **Continue:** the top bar (speed, wave, cash) is right on the first frame.
+- **Leaderboard:** a run pinned below the top 100 shows the date too.
+
 - Checks: `tools/v506check.py` (new) covers all of the above; `tools/speedcheck.py` updated for the opt-in cap.
 
 ## v5.0.5 (release, 2026-10-14): polish rounds from two survival playtests

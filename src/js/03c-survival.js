@@ -2,7 +2,7 @@
    A survival run is a season with no end date (S.season.surv): the same start, site, bottleneck, weekly dice, AUTO locks,
    planned outages, event cards and report cards. It ends at bankruptcy, and the score is the time survived.
    Waves are the gaps between planned outages: the wave being played is the number of the next outage (S.outg.k), so the
-   mode keeps no state of its own. Each wave is SURV.up more upset-prone and SURV.cost dearer (fibre, energy and chemicals,
+   mode keeps no state of its own. Each wave is SURV.up more upset-prone and SURV.cost dearer (fiber, energy and chemicals,
    wages) than the wave before it: the steps compound, so the first waves change little and the pressure builds gradually
    (compound:false adds the steps instead). Tuned with tools/survival.py: at +20% / +10% a hands-off mill lasts about 6
    waves and a well-upgraded one about 12 to 14. The mode starts and ends in 09b-survival.js; the hooks elsewhere are

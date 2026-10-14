@@ -284,7 +284,8 @@ body.app .overlay{z-index:140}body.app .overlay.top{z-index:150}
 .v2stats{flex:1;min-width:0;display:flex;align-items:center;gap:0;padding:0 2px 0 10px;height:44px;cursor:pointer;text-align:left;font:inherit;color:inherit}
 .v2stats .st{display:flex;flex-direction:column;justify-content:center;min-width:0;flex:1 1 auto;padding:0 6px 0 0;margin-right:7px;border-right:1px solid var(--line)}
 .v2stats .st:last-of-type{border-right:0;margin-right:0}
-.v2stats .st:not(.ck):not(.mn){flex:0 0 auto}.v2stats .st.ck{flex:1 1 0}.v2stats .st.ck small{overflow:hidden;text-overflow:ellipsis}   /* v4.4.0-t3: cash and profit keep their width; the clock column gives way */
+.v2stats .st:not(.ck):not(.mn){flex:0 0 auto}.v2stats .st.ck{flex:1 1 0}.v2stats .st.ck small{overflow:hidden;text-overflow:ellipsis}
+@media (max-width:899px){.v2stats .st.ck{flex:0 0 auto}.v2stats .st:not(.ck):not(.mn){flex:0 1 auto;min-width:0}.v2stats .st:not(.ck) small{overflow:hidden;text-overflow:ellipsis}}   /* v5.0.6: on phones the clock never cuts off; cash and profit give way (as the mill name does on desktop) */   /* v4.4.0-t3: cash and profit keep their width; the clock column gives way */
 @media (max-width:380px){.v2stats{padding-left:8px}.v2stats .st{padding-right:4px;margin-right:5px}.v2stats .st b{font-size:13.5px}.v2stats .chev{width:14px}.v2top{gap:6px}}
 .v2stats .st small{font:600 12px var(--f-body);color:var(--muted);letter-spacing:.02em;white-space:nowrap}
 .v2stats .st small.sday{color:var(--brand);font-weight:800}
@@ -356,7 +357,7 @@ body.sheet-open .v2scrim{opacity:1;pointer-events:auto}
 .v2menu .ttl small{display:block;font:700 12px var(--f-body);letter-spacing:.08em;text-transform:uppercase;color:var(--muted)}
 .v2menu .ttl b{display:block;font:800 21px/1.15 var(--f-display)}
 .v2menu .name[hidden]{display:none}
-.v2menu .name{display:flex;gap:6px;align-items:center;margin:14px 0 4px}
+.v2menu .name{display:flex;gap:6px;align-items:center;margin:14px 0 4px}.v2menu .name .namecount{flex:none;font:600 11px var(--f-body);color:var(--muted);font-variant-numeric:tabular-nums}.v2menu .name .namecount.full{color:var(--warn)}   /* v5.0.6: rename counter, like the leaderboard name box */
 .v2menu .name input{flex:1;min-width:0;font:700 16px var(--f-body);padding:9px 12px;border:1px solid var(--line);border-radius:10px;background:var(--bg);color:var(--ink)}
 .v2menu p{font:400 14px/1.5 var(--f-body);color:var(--muted);margin:10px 0 14px}
 .v2menu .go{width:100%;padding:13px 14px 12px;border-radius:16px;margin-bottom:12px;display:flex;flex-direction:column;align-items:center;gap:2px;box-shadow:0 10px 24px color-mix(in srgb,var(--stock) 35%,transparent)}
@@ -698,7 +699,7 @@ button.ldcard[aria-checked="true"]{border:2px solid var(--stock);padding:9px;bac
 .ldswap button .ldart{width:46px}.ldswap button b{display:block;font:700 12.5px var(--f-body)}.ldswap button small{display:block;font:500 12px var(--f-body);color:var(--muted)}
 .ldswap .ldnote,.ldswap .pro,.ldswap .con{grid-column:1/-1}.ldswap .ldnote{margin:2px 0 0;font-size:13px;color:var(--ink)}
 .ldtally{display:flex;flex-direction:column;gap:3px;font-size:13px}
-.ldtally div{display:flex;justify-content:space-between;gap:12px}.ldtally span{color:var(--muted)}
+.ldtally div{display:flex;justify-content:space-between;gap:12px}.ldtally span{color:var(--muted)}.ldtally b{white-space:nowrap}   /* v5.0.6: "Fixed ×3" stays on one line */
 .ldtally b{font-variant-numeric:tabular-nums;color:var(--ok);text-align:right}.ldtally .bad b{color:var(--bad)}
 /* leader card */
 .modal.ldone{max-width:440px;width:100%;max-height:calc(100dvh - 32px);overflow:auto;gap:10px}

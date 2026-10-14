@@ -92,7 +92,7 @@
   G3.showMenu=showMenu;G3.play=play;   // play: used by the autotest (52b) to start without the tutorial
   // ---- v3.1.0 quick-start tutorial: shown when a season starts (until the player ticks "don't show again") ----
   const TUT=(()=>{
-    // v4.4.0-t3: six cards. Two of them fly the camera (fibre in, paper out); the rest are centred. Survival swaps its own goal and outage cards.
+    // v4.4.0-t3: six cards. Two of them fly the camera (fiber in, paper out); the rest are centred. Survival swaps its own goal and outage cards.
     const stops={2:[[4,-13,96],[14,-14,11]],3:[[22,9,96],[22,9,16]]};
     const N=6;
     // the river picture for the bottleneck card: narrow at the pulper (the bottleneck), a wide pool at the stock chest (a buffer)
@@ -103,7 +103,7 @@
       if(k===1){h="Welcome to "+esc(MILL.name||"your mill");next="Show me the mill";
         body=sv?`<p>Your mill turns old cardboard boxes into new paperboard. <b>Survival</b> has no last day: keep the mill out of bankruptcy (cash below −$1.5M) for as long as you can. Your time survived is your score.</p><p>Your <b>mill leader</b> has a strength and a drawback. Tap their face under the top bar to see them.</p>`
           :`<p>Your mill turns old cardboard boxes into new paperboard. A <b>season</b> runs 30 days: make as much profit as you can. Your profit is your score.</p>`;}
-      else if(k===2){h="Fibre in";body=`<p>Trucks bring bales of old boxes (OCC). The <b>pulper</b>, a giant blender, turns them back into pulp. Cleaners and screens strip out sand, staples and plastic, and the <b>stock chest</b> stores clean pulp so the paper machine never runs dry.</p>`;}
+      else if(k===2){h="Fiber in";body=`<p>Trucks bring bales of old boxes (OCC). The <b>pulper</b>, a giant blender, turns them back into pulp. Cleaners and screens strip out sand, staples and plastic, and the <b>stock chest</b> stores clean pulp so the paper machine never runs dry.</p>`;}
       else if(k===3){h="Paper out";body=`<p>The <b>paper machine</b> sprays pulp onto a moving wire, presses the water out and dries the sheet on steam-heated cans. The <b>winder</b> cuts each big reel into customer rolls, and every ton shipped from the <b>warehouse</b> is money in.</p>`;}
       else if(k===4){h="Find your bottleneck";body=`<div class="fig">${RIVER}</div><p>The mill flows like a river and can only go as fast as its <b>narrowest point</b>. Every mill starts with one: <b>Upgrades</b> names it and fixes it at 25% off. Fix it first, then spend on speed, reliability and lower costs. One upgrade a day.</p>`;}
       else if(k===5){h="Upsets happen";body=`<ul><li>Breakdowns, sheet breaks, storms and the odd pigeon: these are <b>upsets</b>. Crews fix them on their own.</li><li>A red tag marks each one; tap it to fly there. The <b>Upsets</b> tab shows what's down and how long is left.</li><li><b>Event cards</b> offer deals with honest odds. Accept or decline.</li></ul>`;}
@@ -163,7 +163,9 @@
   if(new URLSearchParams(location.search).get("zen")==="1"){const go=()=>{if(G3.ok&&!G3.warm){setTimeout(go,300);return;}
       try{const q=new URLSearchParams(location.search);q.delete("zen");history.replaceState(null,"",location.pathname+(q.toString()?"?"+q:"")+location.hash);}catch(e){}$("v2zen").click();};setTimeout(go,300);}
   $("v2colors").addEventListener("click",rollMill);
-  $("v2rename").addEventListener("click",()=>{$("v2nameRow").hidden=false;const i=$("v2name");i.value=MILL.name;i.focus();i.select();});
+  const nameCount=()=>{const i=$("v2name"),c=$("v2nameCount");if(!i||!c)return;const n=i.value.length;c.textContent=n+"/32";c.classList.toggle("full",n>=32);};   // v5.0.6
+  $("v2name").addEventListener("input",nameCount);
+  $("v2rename").addEventListener("click",()=>{$("v2nameRow").hidden=false;const i=$("v2name");i.value=MILL.name;nameCount();i.focus();i.select();});
   const saveName=()=>{const i=$("v2name");if(renameMill(i.value)===false){i.value="";i.placeholder="That name is not allowed";i.focus();return;}i.placeholder="";$("v2nameRow").hidden=true;sync();};
   $("v2nameOk").addEventListener("click",saveName);$("v2name").addEventListener("keydown",e=>{if(e.key==="Enter")saveName();if(e.key==="Escape")$("v2nameRow").hidden=true;});
   {let arm=0;$("v2reset").addEventListener("click",()=>{const b=$("v2reset");if(Date.now()-arm<3000){newGame();arm=0;b.firstChild.textContent="Reset mill";play();return;}arm=Date.now();b.firstChild.textContent="Tap again to reset";setTimeout(()=>{b.firstChild.textContent="Reset mill";},3000);});}

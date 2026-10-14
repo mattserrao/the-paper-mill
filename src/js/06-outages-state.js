@@ -54,7 +54,9 @@ function openOutagePlan(){const o=S.outg,st=outStart(o.k),first=o.k===1,d0=S.cas
     el.hidden=true;closeCard(true);});
   paint();if(lp)leadPlanMount(document.getElementById("out-lead"),lp);el.hidden=false;AUDIO.sfx("cash",150);document.getElementById("out-ok").focus({preventScroll:true});el.querySelector(".modal").scrollTop=0;}   // v5.0.4: opens at the top
 function outNote(head,body,ms,btn){   // v5.0.5: with an event card open, the notice waits until the card is answered, so it never covers the card's buttons
-  {const d=document.getElementById("dealOv");clearInterval(outNote._w);if(S.cards&&S.cards.open&&S.cards.open.c&&d&&!d.hidden){outNote._w=setInterval(()=>{if(!(S.cards.open&&S.cards.open.c)){clearInterval(outNote._w);outNote(head,body,ms,btn);}},200);return;}}
+  // v5.0.6: it also waits while the card's result toast is showing, so it never lands on top of it
+  {const d=document.getElementById("dealOv"),busy=()=>!!(d&&!d.hidden&&((S.cards&&S.cards.open&&S.cards.open.c)||d.classList.contains("dealres")));clearInterval(outNote._w);
+   if(busy()){outNote._w=setInterval(()=>{if(!busy()){clearInterval(outNote._w);if(S.outg&&S.outg.on||!btn)outNote(head,body,ms,btn);}},200);return;}}
   const el=outShell();el.classList.add("note");
   el.innerHTML=`<div class="modal deal" role="status"><span class="dk">Planned outage</span><h2>${head}</h2><p>${body}</p><div class="btns">${btn?`<button class="primary" id="out-watch">${btn.label}</button>`:""}<div class="dtimer"><i style="animation-duration:${ms/1000}s"></i></div></div></div>`;
   el.hidden=false;const m=el.querySelector(".modal");m.addEventListener("click",()=>{el.hidden=true;},{once:true});
