@@ -712,3 +712,9 @@ button.ldcard[aria-checked="true"]{border:2px solid var(--stock);padding:9px;bac
 @media (prefers-reduced-motion: reduce){.survchip,.survchip .svbody{transition:none}}
 .survchip u.hot{color:#fff;background:var(--bad);border:0;border-radius:10px;padding:3px 9px}
 .sostats .wide{grid-column:1/-1}
+
+/* v5.0.1: the season-over / run-over dialog is taller than a phone screen: the overlay scrolls, and the buttons stay
+   pinned to the bottom of the screen so Submit can always be reached (also with the keyboard up) */
+#seasonOv:not([hidden]){display:block;overflow-y:auto;-webkit-overflow-scrolling:touch;overscroll-behavior:contain}
+#seasonOv>.modal{margin:16px auto;box-sizing:border-box}
+#seasonOv .btns{position:sticky;bottom:-20px;z-index:1;margin:0 -22px -20px;padding:12px 22px calc(14px + env(safe-area-inset-bottom,0px));background:var(--panel);border-top:1px solid var(--line);border-radius:0 0 8px 8px}

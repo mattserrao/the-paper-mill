@@ -95,12 +95,12 @@ function endSeason(bust){const se=S.season;se.done=true;se.on=false;running=fals
   {const c=bust?null:rcFinal(),box=$("so-rc");if(box){if(c){box.hidden=false;box.innerHTML=`<div class="rcmini"><div class="rcg g${c.overall}">${c.overall}</div><div><b>Days ${c.from}–${c.to} report card</b><small>${Object.entries(c.g).map(([k,v])=>k+" "+v).join(" · ")}</small><p>${c.tip}</p></div></div><button id="so-rcbtn" class="ghost">Open the full report card</button>`;
       $("so-rcbtn").addEventListener("click",()=>rcOpen(c,true));}else box.hidden=true;}}
   let nm="";try{nm=localStorage.getItem("paper-mill-player")||"";}catch(e){}$("so-name").value=nm;
-  $("so-submit").disabled=false;$("so-submit").textContent=lbOn()?"Submit score":"Save score";setMsg("");$("seasonOv").hidden=false;$("so-name").focus();}
-function setMsg(t,c){const m=$("so-msg");m.textContent=t;m.className="somsg"+(c?" "+c:"");}
+  $("so-submit").disabled=false;$("so-submit").textContent=lbOn()?"Submit score":"Save score";setMsg("");$("seasonOv").hidden=false;$("seasonOv").scrollTop=0;if(matchMedia("(hover:hover) and (pointer:fine)").matches)$("so-name").focus();else $("so-submit").focus({preventScroll:true});}
+function setMsg(t,c){const m=$("so-msg");m.textContent=t;m.className="somsg"+(c?" "+c:"");if(t)try{m.scrollIntoView({block:"nearest"});}catch(e){}}
 function saveLocal(r,name,sv){const key=sv?SURV.local:"paper-mill-local-scores";try{const L=JSON.parse(localStorage.getItem(key)||"[]");L.push({...r,name,created_at:new Date().toISOString(),local:1});
   L.sort(sv?(a,b)=>b.minutes-a.minutes||b.tons-a.tons:(a,b)=>b.score-a.score||b.tons-a.tons);localStorage.setItem(key,JSON.stringify(L.slice(0,20)));}catch(e){}}
 async function submitScore(){const r=S.season&&S.season.result;if(!r||S.free)return;const sv=survRun(),name=$("so-name").value.replace(/\s+/g," ").trim();
-  if(!/^[A-Za-z0-9 ._'-]{2,16}$/.test(name)){setMsg("Use 2–16 letters, numbers, spaces or . _ ' -","bad");return;}
+  if(!/^[A-Za-z0-9 ._'-]{2,16}$/.test(name)){setMsg(name?"Use 2–16 letters, numbers, spaces or . _ ' -":"Type a name for the leaderboard first.","bad");const n=$("so-name");n.scrollIntoView({block:"center"});n.focus();return;}
   try{localStorage.setItem("paper-mill-player",name);}catch(e){}
   if(!S.season.saved){S.season.saved=1;saveLocal(r,name,sv);}
   if(!lbOn()){setMsg("Saved on this device. The online leaderboard isn't connected yet.","ok");$("so-submit").disabled=true;return;}

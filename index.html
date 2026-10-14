@@ -724,6 +724,12 @@ button.ldcard[aria-checked="true"]{border:2px solid var(--stock);padding:9px;bac
 @media (prefers-reduced-motion: reduce){.survchip,.survchip .svbody{transition:none}}
 .survchip u.hot{color:#fff;background:var(--bad);border:0;border-radius:10px;padding:3px 9px}
 .sostats .wide{grid-column:1/-1}
+
+/* v5.0.1: the season-over / run-over dialog is taller than a phone screen: the overlay scrolls, and the buttons stay
+   pinned to the bottom of the screen so Submit can always be reached (also with the keyboard up) */
+#seasonOv:not([hidden]){display:block;overflow-y:auto;-webkit-overflow-scrolling:touch;overscroll-behavior:contain}
+#seasonOv>.modal{margin:16px auto;box-sizing:border-box}
+#seasonOv .btns{position:sticky;bottom:-20px;z-index:1;margin:0 -22px -20px;padding:12px 22px calc(14px + env(safe-area-inset-bottom,0px));background:var(--panel);border-top:1px solid var(--line);border-radius:0 0 8px 8px}
 </style>
 </head>
 <body class="app">
@@ -735,8 +741,8 @@ button.ldcard[aria-checked="true"]{border:2px solid var(--stock);padding:9px;bac
 <h2 id="so-h">Season complete</h2><p class="muted" id="so-p"></p>
 <div class="sostats" id="so-stats"></div><div hidden id="so-rc"></div>
 <label class="soname">Name for the leaderboard<input autocomplete="nickname" id="so-name" maxlength="16" placeholder="2–16 letters or numbers" spellcheck="false"/></label>
-<div class="btns"><button class="primary" id="so-submit">Submit score</button><button id="so-board">View leaderboard</button><button id="so-more">One more turn</button><button id="so-new">New season</button></div>
-<p aria-live="polite" class="somsg" id="so-msg"></p></div></div>
+<p aria-live="polite" class="somsg" id="so-msg"></p>
+<div class="btns"><button class="primary" id="so-submit">Submit score</button><button id="so-board">View leaderboard</button><button id="so-more">One more turn</button><button id="so-new">New season</button></div></div></div>
 <div class="overlay top" hidden id="lbOv"><div aria-labelledby="lb-h" aria-modal="true" class="modal wide" role="dialog">
 <div class="lbhead"><h2 id="lb-h">Leaderboard</h2><button aria-label="Close leaderboard" id="lb-close">Close</button></div>
 <div aria-label="Leaderboard" class="seg lbtabs" id="lb-tabs" role="group"><button aria-pressed="true" data-t="season">Season</button><button aria-pressed="false" data-t="surv">Survival</button></div>
@@ -902,7 +908,7 @@ button.ldcard[aria-checked="true"]{border:2px solid var(--stock);padding:9px;bac
 <div class="btns"><button class="primary" id="no3d-retry">Try again</button></div></div></div>
 
 <script type="module">
-const APP_VER="v5.0.0";   // shown in the menu and sent with leaderboard scores (max 12 characters)
+const APP_VER="v5.0.1";   // shown in the menu and sent with leaderboard scores (max 12 characters)
 // TEST BUILDS ONLY (off in releases): turbo speeds 240/480/960 sim min/s for fast playtests. Above 120, crews and maintenance start jobs
 // without waiting for the 3D walk (as with the 3D view off) and outages keep the speed. Set false for a release.
 const TURBO=false,TURBO_FAST=s=>TURBO&&s>120;
@@ -2724,7 +2730,7 @@ function endSurvival(){const se=S.season,r=survResult(),w=r.wave;se.done=true;se
   $("so-stats").replaceChildren(...st.map(([k,v,c])=>{const d=document.createElement("div");if(c)d.className=c;const a=document.createElement("span");a.textContent=k;const b=document.createElement("b");b.textContent=v;d.append(a,b);return d;}));
   {const box=$("so-rc");if(box)box.hidden=true;}soMode(true);
   let nm="";try{nm=localStorage.getItem("paper-mill-player")||"";}catch(e){}$("so-name").value=nm;
-  $("so-submit").disabled=false;$("so-submit").textContent=lbOn()?"Submit score":"Save score";setMsg("");$("seasonOv").hidden=false;$("so-name").focus();}
+  $("so-submit").disabled=false;$("so-submit").textContent=lbOn()?"Submit score":"Save score";setMsg("");$("seasonOv").hidden=false;$("seasonOv").scrollTop=0;if(matchMedia("(hover:hover) and (pointer:fine)").matches)$("so-name").focus();else $("so-submit").focus({preventScroll:true});}
 /* ---------- v4.4 survival mode: mill leader portraits (the art only; the roster and the dialogs are in 09c-leaders.js) ----------
    Painted portraits, one WebP per leader at 408 x 460, embedded so the game stays a single file. They are shown as CSS
    backgrounds (one decode each, however many cards are on screen): leadArt(id) is the card portrait, leadArt(id,true)
@@ -2959,12 +2965,12 @@ function endSeason(bust){const se=S.season;se.done=true;se.on=false;running=fals
   {const c=bust?null:rcFinal(),box=$("so-rc");if(box){if(c){box.hidden=false;box.innerHTML=`<div class="rcmini"><div class="rcg g${c.overall}">${c.overall}</div><div><b>Days ${c.from}–${c.to} report card</b><small>${Object.entries(c.g).map(([k,v])=>k+" "+v).join(" · ")}</small><p>${c.tip}</p></div></div><button id="so-rcbtn" class="ghost">Open the full report card</button>`;
       $("so-rcbtn").addEventListener("click",()=>rcOpen(c,true));}else box.hidden=true;}}
   let nm="";try{nm=localStorage.getItem("paper-mill-player")||"";}catch(e){}$("so-name").value=nm;
-  $("so-submit").disabled=false;$("so-submit").textContent=lbOn()?"Submit score":"Save score";setMsg("");$("seasonOv").hidden=false;$("so-name").focus();}
-function setMsg(t,c){const m=$("so-msg");m.textContent=t;m.className="somsg"+(c?" "+c:"");}
+  $("so-submit").disabled=false;$("so-submit").textContent=lbOn()?"Submit score":"Save score";setMsg("");$("seasonOv").hidden=false;$("seasonOv").scrollTop=0;if(matchMedia("(hover:hover) and (pointer:fine)").matches)$("so-name").focus();else $("so-submit").focus({preventScroll:true});}
+function setMsg(t,c){const m=$("so-msg");m.textContent=t;m.className="somsg"+(c?" "+c:"");if(t)try{m.scrollIntoView({block:"nearest"});}catch(e){}}
 function saveLocal(r,name,sv){const key=sv?SURV.local:"paper-mill-local-scores";try{const L=JSON.parse(localStorage.getItem(key)||"[]");L.push({...r,name,created_at:new Date().toISOString(),local:1});
   L.sort(sv?(a,b)=>b.minutes-a.minutes||b.tons-a.tons:(a,b)=>b.score-a.score||b.tons-a.tons);localStorage.setItem(key,JSON.stringify(L.slice(0,20)));}catch(e){}}
 async function submitScore(){const r=S.season&&S.season.result;if(!r||S.free)return;const sv=survRun(),name=$("so-name").value.replace(/\s+/g," ").trim();
-  if(!/^[A-Za-z0-9 ._'-]{2,16}$/.test(name)){setMsg("Use 2–16 letters, numbers, spaces or . _ ' -","bad");return;}
+  if(!/^[A-Za-z0-9 ._'-]{2,16}$/.test(name)){setMsg(name?"Use 2–16 letters, numbers, spaces or . _ ' -":"Type a name for the leaderboard first.","bad");const n=$("so-name");n.scrollIntoView({block:"center"});n.focus();return;}
   try{localStorage.setItem("paper-mill-player",name);}catch(e){}
   if(!S.season.saved){S.season.saved=1;saveLocal(r,name,sv);}
   if(!lbOn()){setMsg("Saved on this device. The online leaderboard isn't connected yet.","ok");$("so-submit").disabled=true;return;}
@@ -8453,7 +8459,7 @@ function drawSpider(){const D=G3.SPD;if(!D||$("spider").hidden)return;
   [[0,"#8a6644",ly,[]],[1,"#3fa0d0",ly,[]],[2,"#8a6644",fy,[10,8]],[3,"#3fa0d0",fy,[10,8]]].forEach(([k,col,Y,dash])=>{x.setLineDash(dash);x.strokeStyle=col;x.lineWidth=3;x.beginPath();h.forEach((r,i)=>i?x.lineTo(X(i),Y(r[k])):x.moveTo(X(i),Y(r[k])));x.stroke();});x.setLineDash([]);}
 UI_TICKS.push(drawSpider);
 const SPEEDS=[1,2,5,10,20,30,60,120].concat(TURBO?[240,480,960]:[]);
-function nudgeSpeed(d){const i=SPEEDS.findIndex(v=>v>=C.simSpeed);const n=SPEEDS[clamp((i<0?SPEEDS.length-1:i)+d,0,SPEEDS.length-1)];setSimSpeed(n);if(!(S.outg&&S.outg.on))C.spdPref=C.simSpeed;}   // v4.2.1: the speed the player picked (an outage slowdown is not a choice)
+function nudgeSpeed(d){const i=SPEEDS.findIndex(v=>v>=C.simSpeed);const n=SPEEDS[clamp((i<0?SPEEDS.length-1:i)+d,0,SPEEDS.length-1)];setSimSpeed(n);if(!(S.outg&&S.outg.on)||C.simSpeed>OUT.simCap)C.spdPref=C.simSpeed;}   // v5.0.1: speeding up during an outage counts as the player's choice for after it too   // v4.2.1: the speed the player picked (an outage slowdown is not a choice)
 setView();
 
 

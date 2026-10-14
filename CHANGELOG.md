@@ -1,5 +1,9 @@
 # Changelog
 
+## v5.0.1 (fixes)
+- Season and survival end: the results dialog was taller than a phone screen and couldn't scroll, so **Submit score** sat off the bottom (and the keyboard, opened for the name field, covered the rest). The dialog now scrolls, its buttons stay pinned to the bottom of the screen, and on phones the keyboard only opens when you tap the name field.
+- Game speed after a planned outage: if you sped the game up during the outage, it dropped back to your old speed when the outage ended. A faster pick during an outage is now the speed you come back to (slowing down to watch the crews still returns you to your old speed afterwards).
+
 ## v5.0.0 Survival (release, 2026-10-13)
 The survival release: a second scored mode with mill leaders, painted portraits, and a round of fixes and polish. It
 gathers the three test builds below (v4.3.0-t1, v4.4.0-t1 to t3).
