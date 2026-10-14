@@ -64,6 +64,8 @@ function endOutage(){const o=S.outg,pl=o.plan||{stock:1,wet:1,dry:1};o.on=false;
   log(`Outage ${o.k} complete. Reliability until the next outage: ${txt}`,"ok");
   if(!survOn())outNote("Outage complete",`Restarting the mill. Reliability until the next outage: ${txt}.`,4000);   // (survival: the wave report card says it)
   if(S.lead)leadOutageEnd(pl.lead);   // v4.4: the leader's pick for this outage is now part of the mill
+  if(S.lead&&leadOverrun()>0){const m=leadOverrun();addFx({id:"felrun",left:m,mods:{pmDown:"project tie-ins"}});   // v4.4.0-t3: Felicity's projects make outages overrun
+    log(`Project tie-ins: the machine stays down ${m>=60?(m/60).toFixed(m%60?1:0)+" h":m+" min"} longer.`,"warn");}
   o.k++;o.noticed=false;o.plan=null;if(survOn())survWaveStart();}
 const HAYLINES=["HAYOUT! Paper is shooting to the roof!","Winder hayout! Every PM hand to the dry end!","Hayout! It's snowing paper in the winder aisle.","Hayout! The set exploded off the drums."];
 // a hayout ruins the outer wraps of the set on the winder (about 3 t), not the whole 12.5 t roll

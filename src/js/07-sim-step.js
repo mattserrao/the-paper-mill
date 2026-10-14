@@ -45,7 +45,7 @@ function step(dt){
   const level=S.tank/P.tankCap*100, low=C.lowLevel.v;
   if(M.pmDown){ if(S.pm!=="incident"){ S.pm="incident"; S.lastDown=M.pmDown; } }
   else if(S.pm==="incident"){ if(level>8)rethread("after the shutdown"+(S.lastDown?" ("+S.lastDown+")":"")); else S.pm="down"; S.pmSpeed=Math.min(S.pmSpeed,P.minSpeed); }
-  if(S.pm==="break"){if(working("brk"))S.breakLeft-=dt;S.tot.breakMin+=dt;if(S.breakLeft<=0&&level>8){S.pm="run";S.pmSpeed=Math.min(C.pmSp.v,P.minSpeed+300);}}
+  if(S.pm==="break"){if(working("brk"))S.breakLeft-=dt*leadRethread();S.tot.breakMin+=dt;if(S.breakLeft<=0&&level>8){S.pm="run";S.pmSpeed=Math.min(C.pmSp.v,P.minSpeed+300);}}
   else if(S.pm==="down"){if(level>=Math.max(20,low*0.8)){rethread("after running out of stock");S.pmSpeed=P.minSpeed;}}
   else if(S.pm==="full"){if(S.fg<P.fgCap*0.95){S.pm="run";S.pmSpeed=P.minSpeed;}}
   else if(S.pm==="spools"){if(reelsAtWinder()<=P.storeReels){S.pm="run";S.pmSpeed=P.minSpeed;}}
@@ -79,7 +79,7 @@ function step(dt){
   planTick(dt,prod);
   if(S.reel>=P.jumbo&&reelsAtWinder()<=P.storeReels){S.winderBuf+=S.reel;lotTake(S.lots.reel,S.reel,S.lots.buf);S.reel=0;S.lots.reel.length=0;S.tot.turnups++;}
   // 6 winder
-  if(S.wd==="hayout"){if(working("hay"))S.hayLeft-=dt;S.tot.hayMin+=dt;if(S.hayLeft<=0){S.wd="run";log("Winder cleaned up and running again","ok");}}
+  if(S.wd==="hayout"){if(working("hay"))S.hayLeft-=dt*leadRethread();S.tot.hayMin+=dt;if(S.hayLeft<=0){S.wd="run";log("Winder cleaned up and running again","ok");}}
   if(S.conv===undefined)S.conv=0;const convFull=S.conv>=P.convCap-1e-6;S.wdBlocked=convFull;
   const cut=S.wd==="hayout"||M.winderDown||convFull?0:Math.min(S.winderBuf,C.wdr.v*dt/60); S.winderBuf-=cut; S.winderAcc+=cut;lotTake(S.lots.buf,cut,S.lots.acc);
   if(cut>0&&L.hay<dt/720*0.75*P.hayBase*outRel("dry")*((C.hays?1:0)+(M.hayMul-1)))hayout(L.hayLen,L.hayLoss);

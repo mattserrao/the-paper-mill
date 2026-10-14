@@ -47,13 +47,14 @@ const UP=Object.fromEntries(UPS.map(u=>[u.id,u]));
 const LV=id=>(S&&S.up&&S.up[id])||0;
 function applyUpgrades(){
   applyGrade();
-  P.K=BASE.K*Math.pow(1.06,LV("deckle"))*(1+0.02*LV("apc"));
+  P.K=BASE.K*Math.pow(1.06,LV("deckle"))*(1+0.02*LV("apc"))*leadCap("pwet");
   P.spBonus=150*LV("drive")+100*LV("shoe")+leadSpeed();
   P.energyMul=(1-0.12*LV("shoe"))*(1-0.08*LV("apc"));P.refSave=22*LV("refiner");
   P.yieldF=P.blendY+0.03*LV("clean"); P.tankCap=BASE.tankCap+150*LV("chest");
   P.driverRate=BASE.driverRate*(1+0.25*LV("forklift")); P.doors=3+LV("docks"); P.shipDoors=3+LV("docks");
   P.robots=2*LV("agv"); P.fgCap=BASE.fgCap+112*LV("wh"); P.autoFeed=LV("feedconv")>0;
-  applySite();P.costMul=survOn()?survCost():1;   // v4.3 survival: fibre, energy and chemicals, and wages cost more every wave (exactly 1 otherwise)
+  applySite();{const a=leadCap("pstock"),f=leadCap("pdry");P.doorRate*=a;P.pulperMax*=a;P.screenMax*=a;P.winderMax*=f;P.doorRolls*=f;}   // v4.4.0-t3: Felicity's projects
+  P.costMul=survOn()?survCost():1;   // v4.3 survival: fibre, energy and chemicals, and wages cost more every wave (exactly 1 otherwise)
   P.occPrice=(P.blendP+((S&&S.plan)?S.plan.mkt:0)-20*LV("contract")+P.siteOcc)*P.costMul*leadFibre();   // (v4.4: the leader's fibre deals; Hank runs heavy)
   P.priceAdd=25*LV("sales")+P.sitePrice+leadPrice(); P.repairMul=(LV("insure")?0.4:1)*(1-0.15*LV("reliab"))*leadBill();P.techs=2+2*LV("maintcrew");P.pmCost=400*LV("pmprog"); P.premium=LV("insure")?1500:0;
   P.breakBase=Math.pow(0.7,LV("monitor"))*Math.pow(0.9,LV("pmprog"))*leadClean()*leadBreaks();

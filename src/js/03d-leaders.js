@@ -7,47 +7,55 @@
    over a run with none, and none is far ahead of the others (SURVIVAL-MODE.md has the table).
    The leader can be changed once per run, in an outage budget dialog; the new one takes over when that outage starts.
 
-   State: S.lead={id, st:{fibre,sales,speed,clean,pstock,pwet,pdry}, changed, was, fixW, fixed:[ids]} (saved with the run).
+   State: S.lead={id, st:{fibre,sales,rethread,clean,pstock,pwet,pdry}, changed, was, fixW, fixed:[ids], lockW} (saved with the run).
    No leader (a season, free play, a run started by a tool without one): every helper below returns exactly 1 or 0. */
+// v4.4.0-t3 redesign: each leader takes on one survival pressure, with a cost the player can see
+//   Chip: rising costs (a fibre price lock or a sales push)  ·  Dot: breakdowns  ·  Hank: sheet breaks and hayouts  ·  Felicity: the bottleneck
 const LEAD={
-  fibre:0.015,           // Chip, fibre contract: fibre cost -1.5% per deal
-  sales:5,               // Chip, sales push: +$5/t on every grade per deal
+  sales:7,               // Chip, sales push: +$/t on every grade per push (stays with the mill)
+  lock:1,                // Chip, fibre lock: the next wave's fibre is bought at the wave before's price (1 = the whole step)
   strife0:2,             // Chip, labour relations: call-offs and dock brawls x2 while he is in charge
   wage:0.05,             // Chip, pay settlements: wages +5% with every deal (they stay with the deals)
-  bills:1.10,            // Dot, gold-plates every job: repair bills +10% (Fix it now gives that one bill back, and that breakdown never returns)
-  proj:0.08,             // Felicity, a project: that area's breakdowns -8%, and the area runs better:
-  pyield:0.015,          //   stock prep: better yield, fibre -1.5%
-  pwetB:0.08,pwetE:0.01, //   wet end: sheet breaks -8%, a drier sheet off the presses (energy -1%)
-  pdryE:0.025,           //   dry end: steam, energy -2.5%
-  payroll:40,            // Felicity, project staff: $/h per project (rises with the wave's cost multiplier, like wages)
-  speed:70,              // Hank, push for tons: fpm of top speed per pick
-  clean:0.15,            // Hank, run it clean: sheet breaks and hayouts -15% per pick
-  hot0:0.04,             // Hank, runs it hot: energy +4% while he is in charge
-  heavy:0.01};           // Hank, runs the sheet heavy: fibre +1% while he is in charge
+  fixCut:0.5,            // Dot, Fix it now: ends a breakdown, returns part of its bill, and that breakdown is 50% rarer from then on (stacks)
+  refund:0.6,            // Dot, Fix it now: share of that breakdown's repair bill she gets back
+  rep:0.10,              // Dot, a good millwright: repair jobs 10% quicker while she is in charge
+  bills:1.15,            // Dot, gold-plates every job: repair bills +15% while she is in charge
+  cap:0.065,             // Felicity, a project: +6.5% capacity in one area (fibre line, paper machine or finishing), stays with the mill
+  overrun:20,            // Felicity, project tie-ins: every outage overruns 20 min per project done so far (machine down)
+  rethread:0.20,         // Hank, runnability: time lost to sheet breaks and hayouts -20% per pick...
+  clean:0.15,            //   ...and sheet breaks and hayouts -15% per pick
+  steam:0.055,           // Hank, dial in the dryers: energy -5.5% per pick (stays with the mill)
+  heavy:0.02};           // Hank, runs the sheet heavy (basis-weight giveaway): fibre +2% while he is in charge
 const LEAD_IDS=["chip","dot","fel","hank"];
-// what each leader picks at an outage: [stack key, button label, what it does]
+// what each leader picks at an outage: [stack key, button label, what it does]  (keys kept from v4.4.0-t1 so saves still load)
 const LEAD_PICKS={
-  chip:[["fibre","Fibre contract",()=>`fibre −${pct1(LEAD.fibre)}%`],["sales","Sales push",()=>`+$${LEAD.sales}/t on every grade`]],
+  chip:[["fibre","Fibre lock",()=>"next wave's fibre at this wave's price"],["sales","Sales push",()=>`+$${LEAD.sales}/t on every grade`]],
   dot:[],
-  fel:[["pstock","Stock prep",()=>`fibre −${pct1(LEAD.pyield)}%`],["pwet","Wet end",()=>`sheet breaks −${pct1(LEAD.pwetB)}%`],["pdry","Dry end",()=>`energy −${pct1(LEAD.pdryE)}%`]],
-  hank:[["speed","Push for tons",()=>`+${LEAD.speed} fpm top speed`],["clean","Run it clean",()=>`breaks and hayouts −${pct1(LEAD.clean)}%`]]};
+  fel:[["pstock","Fibre line",()=>`receiving, pulper, screens +${pct1(LEAD.cap)}%`],["pwet","Paper machine",()=>`machine +${pct1(LEAD.cap)}%`],["pdry","Finishing",()=>`winder and shipping +${pct1(LEAD.cap)}%`]],
+  hank:[["rethread","Runnability",()=>`breaks −${pct1(LEAD.clean)}%, rethreads −${pct1(LEAD.rethread)}% time`],["clean","Dial in the dryers",()=>`energy −${pct1(LEAD.steam)}%`]]};
 const pct1=v=>+(v*100).toFixed(1);   // 0.015 -> 1.5 (labels)
 const leadIs=id=>!!(S&&S.lead&&S.lead.id===id);
 const leadN=k=>(S&&S.lead&&S.lead.st[k])||0;
 const leadDeals=()=>leadN("fibre")+leadN("sales"),leadProjects=()=>leadN("pstock")+leadN("pwet")+leadN("pdry");
-// --- effects (read by applyUpgrades, energyCost, the labour line, freqMul and the outage dialog) ---
-const leadFibre=()=>S&&S.lead?Math.pow(1-LEAD.fibre,leadN("fibre"))*Math.pow(1-LEAD.pyield,leadN("pstock"))*(leadIs("hank")?1+LEAD.heavy:1):1;
+// --- effects (read by applyUpgrades, energyCost, the labour line, freqMul, repairs, breaks and the outage) ---
+const leadLock=()=>S&&S.lead&&S.lead.lockW&&S.lead.lockW===survWave()&&survWave()>1?Math.pow(survCost(survWave()-1)/survCost(survWave()),LEAD.lock):1;
+const leadFibre=()=>S&&S.lead?leadLock()*(leadIs("hank")?1+LEAD.heavy:1):1;
 const leadPrice=()=>LEAD.sales*leadN("sales");
-const leadSpeed=()=>LEAD.speed*leadN("speed");
-const leadClean=()=>Math.pow(1-LEAD.clean,leadN("clean"));                 // sheet breaks and hayouts (Hank)
-const leadBreaks=()=>Math.pow(1-LEAD.pwetB,leadN("pwet"));                 // sheet breaks only (Felicity's wet-end projects)
-const leadEnergy=()=>S&&S.lead?(leadIs("hank")?1+LEAD.hot0:1)*Math.pow(1-LEAD.pdryE,leadN("pdry"))*Math.pow(1-LEAD.pwetE,leadN("pwet")):1;
+const leadSpeed=()=>0;                                                     // (v4.4.0-t1's push for tons is gone)
+const leadClean=()=>Math.pow(1-LEAD.clean,leadN("rethread"));              // sheet breaks and hayouts (Hank's runnability)
+const leadBreaks=()=>1;
+const leadRethread=()=>1/Math.pow(1-LEAD.rethread,leadN("rethread"));      // how fast break and hayout time runs down (Hank)
+const leadEnergy=()=>Math.pow(1-LEAD.steam,leadN("clean"));               // Hank's dryer tuning (key "clean" kept for saves)
 const leadBill=()=>leadIs("dot")?LEAD.bills:1;
-const leadPayroll=()=>LEAD.payroll*leadProjects();
+const leadRep=()=>leadIs("dot")?1/(1-LEAD.rep):1;                           // repair speed (Dot)
+const leadPayroll=()=>0;
 const leadStrife=()=>leadIs("chip")?LEAD.strife0:1;
 const leadWage=()=>Math.pow(1+LEAD.wage,leadDeals());
-const leadArea=a=>Math.pow(1-LEAD.proj,leadN("p"+a));
-// a breakdown Dot fixed on the spot is fixed for good: it never comes back (the list stays with the mill)
-const leadImmune=id=>!!(S&&S.lead&&S.lead.fixed&&S.lead.fixed.includes(id));
-function leadFreq(id){if(!(S&&S.lead))return 1;if(leadImmune(id))return 0;
-  let m=1;if(id==="calloff"||id==="fight")m*=leadStrife();if(OUT.area[id])m*=leadArea(OUT.area[id]);return m;}
+const leadCap=k=>1+LEAD.cap*leadN(k);                                       // Felicity's capacity (pstock fibre line, pwet machine, pdry finishing)
+const leadOverrun=()=>LEAD.overrun*leadProjects();
+const leadArea=()=>1;
+// a breakdown Dot fixed is fixed at the root: half as likely from then on, and again for each time she fixes it
+const leadFixN=id=>S&&S.lead&&S.lead.fixed?S.lead.fixed.filter(x=>x===id).length:0;
+const leadImmune=()=>false;
+function leadFreq(id){if(!(S&&S.lead))return 1;
+  let m=Math.pow(1-LEAD.fixCut,leadFixN(id));if(id==="calloff"||id==="fight")m*=leadStrife();return m;}

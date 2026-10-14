@@ -2,36 +2,36 @@
    Numbers and effects are in 03d-leaders.js. The portraits are in 09c-leader-art.js (leadArt). */
 const LEADERS={
   chip:{name:"Chip Kraftwell",title:"The dealmaker",role:"Business man",say:"Everything's negotiable.",
-    plus:()=>`Each outage, one deal that stays: fibre −${pct1(LEAD.fibre)}% or +$${LEAD.sales}/t on every grade.`,
+    plus:()=>`Each outage, one deal: lock the next wave's fibre at this wave's price, or a sales push that stays (+$${LEAD.sales}/t on every grade).`,
     minus:()=>`Labour relations: every deal ends in a pay settlement (wages +${pct1(LEAD.wage)}% for good), and call-offs and dock brawls come ${LEAD.strife0}× as often while he's in charge.`},
   dot:{name:'Dot "Doc" Blade',title:"The millwright",role:"Mechanic",say:"If it turns, I can fix it.",
-    plus:()=>"Fix it now: once per outage cycle, end one breakdown on the spot and get its repair bill back. Fixed for good: that breakdown never returns.",
+    plus:()=>`Repairs ${pct1(LEAD.rep)}% quicker. Fix it now, once per outage cycle: end one breakdown on the spot, get ${LEAD.refund>=1?"its repair bill":pct1(LEAD.refund)+"% of its repair bill"} back, and fix it at the root (${pct1(LEAD.fixCut)}% rarer from then on).`,
     minus:()=>`Gold-plates every job: repair bills cost ${pct1(LEAD.bills-1)}% more while she's in charge.`},
   fel:{name:"Felicity Fourdrinier",title:"The process engineer",role:"Engineer",say:"I have a spreadsheet for that.",
-    plus:()=>`Each outage, one project that stays: stock prep (fibre −${pct1(LEAD.pyield)}%), wet end (sheet breaks −${pct1(LEAD.pwetB)}%) or dry end (energy −${pct1(LEAD.pdryE)}%). Each also cuts that area's breakdowns ${pct1(LEAD.proj)}%.`,
-    minus:()=>`Project staff: every project adds $${LEAD.payroll}/h to the payroll for good.`},
+    plus:()=>`Each outage, one debottlenecking project that stays: +${pct1(LEAD.cap)}% capacity for the fibre line, the paper machine or finishing.`,
+    minus:()=>`Project tie-ins: every outage overruns ${LEAD.overrun} minutes for each project done so far.`},
   hank:{name:"Hank Headbox",title:"The machine tender",role:"Operator",say:"She'll tell you what she wants.",
-    plus:()=>`Each outage, one gain that stays: +${LEAD.speed} fpm top speed, or sheet breaks and hayouts −${pct1(LEAD.clean)}%.`,
-    minus:()=>`Runs it hot and heavy: energy +${pct1(LEAD.hot0)}% and fibre +${pct1(LEAD.heavy)}% while he's in charge.`}};
-function leadStart(id){if(!LEADERS[id])return;S.lead={id,st:{fibre:0,sales:0,speed:0,clean:0,pstock:0,pwet:0,pdry:0},changed:false,was:null,fixW:0,fixed:[]};applyUpgrades();
+    plus:()=>`Each outage, one gain that stays: runnability (sheet breaks and hayouts −${pct1(LEAD.clean)}%, and back up ${pct1(LEAD.rethread)}% faster) or dial in the dryers (energy −${pct1(LEAD.steam)}%).`,
+    minus:()=>`Runs the sheet heavy: fibre +${pct1(LEAD.heavy)}% while he's in charge (basis-weight giveaway).`}};
+function leadStart(id){if(!LEADERS[id])return;S.lead={id,st:{fibre:0,sales:0,rethread:0,clean:0,pstock:0,pwet:0,pdry:0},changed:false,was:null,fixW:0,fixed:[],lockW:0};applyUpgrades();
   try{localStorage.setItem("paper-mill-leader",id);}catch(e){}
   BANNERS.push({text:`${LEADERS[id].name} runs the mill. "${LEADERS[id].say}"`,t:null,kind:"good",tag:"LEADER"});while(BANNERS.length>3)BANNERS.splice(1,1);
   log(`${LEADERS[id].name}, ${LEADERS[id].title.toLowerCase()}, takes charge of the mill.`,"ok");}
 // what the mill has kept so far, in words (the leader card and the outage dialog)
 function leadTally(){const L=S.lead,out=[];if(!L)return out;const n=k=>L.st[k]||0,pc=v=>(v>=0?"+":"−")+Math.abs(Math.round(v*1000)/10)+"%";
-  if(n("fibre"))out.push([`${n("fibre")} fibre contract${n("fibre")>1?"s":""}`,`fibre ${pc(Math.pow(1-LEAD.fibre,n("fibre"))-1)}`]);
+  if(L.lockW&&L.lockW===survWave()&&survWave()>1)out.push(["Fibre lock (this wave)",`fibre ${pc(leadLock()-1)}`]);
   if(n("sales"))out.push([`${n("sales")} sales push${n("sales")>1?"es":""}`,`+$${LEAD.sales*n("sales")}/t`]);
   if(leadDeals())out.push(["Pay settlements",`wages ${pc(leadWage()-1)}`,1]);
-  [["pstock","stock prep",()=>`fibre ${pc(Math.pow(1-LEAD.pyield,n("pstock"))-1)}`],["pwet","wet end",()=>`sheet breaks ${pc(Math.pow(1-LEAD.pwetB,n("pwet"))-1)}`],["pdry","dry end",()=>`energy ${pc(Math.pow(1-LEAD.pdryE,n("pdry"))-1)}`]]
-    .forEach(([k,a,what])=>{if(n(k))out.push([`${n(k)} ${a} project${n(k)>1?"s":""}`,`${what()} · breakdowns ${pc(Math.pow(1-LEAD.proj,n(k))-1)}`]);});
-  if(leadProjects())out.push(["Project staff",`+$${leadPayroll()}/h payroll`,1]);
-  if(n("speed"))out.push([`${n("speed")} push${n("speed")>1?"es":""} for tons`,`+${leadSpeed()} fpm`]);
-  if(n("clean"))out.push([`${n("clean")} clean-run gain${n("clean")>1?"s":""}`,`breaks and hayouts ${pc(leadClean()-1)}`]);
-  if(leadIs("hank"))out.push(["Energy (runs it hot)",pc(LEAD.hot0),1]);
+  [["pstock","fibre line"],["pwet","paper machine"],["pdry","finishing"]].forEach(([k,a])=>{if(n(k))out.push([`${n(k)} ${a} project${n(k)>1?"s":""}`,`capacity ${pc(leadCap(k)-1)}`]);});
+  if(leadProjects())out.push(["Project tie-ins",`outages +${leadOverrun()} min`,1]);
+  if(n("rethread"))out.push([`${n("rethread")} runnability gain${n("rethread")>1?"s":""}`,`breaks ${pc(leadClean()-1)} · rethreads ${pc(1/leadRethread()-1)}`]);
+  if(n("clean"))out.push([`${n("clean")} dryer tuning${n("clean")>1?"s":""}`,`energy ${pc(leadEnergy()-1)}`]);
   if(leadIs("hank"))out.push(["Fibre (runs heavy)",pc(LEAD.heavy),1]);
+  if(leadIs("dot"))out.push(["Repairs",`${pct1(LEAD.rep)}% quicker`]);
   if(leadIs("dot"))out.push(["Repair bills",pc(LEAD.bills-1),1]);
   if(leadIs("chip"))out.push(["Labour relations",`call-offs and brawls ${xf(leadStrife())}`,1]);
-  if(L.fixed&&L.fixed.length)out.push([`Fixed for good (${L.fixed.length})`,L.fixed.map(x=>EV[x]?EV[x].name:x).join(", ")]);
+  if(L.fixed&&L.fixed.length){const c={};L.fixed.forEach(x=>c[x]=(c[x]||0)+1);
+    out.push([`Fixed at the root (${L.fixed.length})`,Object.entries(c).map(([x,k])=>`${EV[x]?EV[x].name:x} ${pc(Math.pow(1-LEAD.fixCut,k)-1)}`).join(", ")]);}
   return out;}
 const leadTallyHTML=()=>{const t=leadTally();return t.length?`<div class="ldtally">${t.map(([a,b,bad])=>`<div${bad?' class="bad"':""}><span>${a}</span><b>${b}</b></div>`).join("")}</div>`:"";};
 
@@ -66,7 +66,7 @@ function leadPlanMount(host,lp){if(!host)return;
         <div class="pro">${lp.to?LEADERS[lp.to].plus():""}</div><div class="con">${lp.to?LEADERS[lp.to].minus():""}</div></div>`:"";
     host.innerHTML=`<div class="ldrow"><div class="ldwho">${leadArt(id,true)}<div><b>${escHTML(L.name)}</b><small>${lp.to?"takes over at this outage":L.title}</small></div>
         ${S.lead.changed?"":`<button type="button" class="ghost" id="out-lchg">${lp.choosing?(lp.to?"Keep "+LEADERS[cur].name.split(" ")[0]:"Cancel"):"Change leader"}</button>`}</div>${choose}
-      ${picks.length?`<div class="ldq">${first}'s pick for the next cycle${id==="chip"?` <span>· each deal: wages +${pct1(LEAD.wage)}% for good</span>`:id==="fel"?` <span>· each project: +$${LEAD.payroll}/h payroll for good</span>`:""}</div><div class="seg ldseg" id="out-lpick">${picks.map(([k,lab,what])=>`<button type="button" data-p="${k}" aria-pressed="${lp.pick===k}"><b>${lab}</b><small>${what()}</small></button>`).join("")}</div>`
+      ${picks.length?`<div class="ldq">${first}'s pick for the next cycle${id==="chip"?` <span>· each deal: wages +${pct1(LEAD.wage)}% for good</span>`:id==="fel"?` <span>· each project: outages +${LEAD.overrun} min</span>`:""}</div><div class="seg ldseg" id="out-lpick">${picks.map(([k,lab,what])=>`<button type="button" data-p="${k}" aria-pressed="${lp.pick===k}"><b>${lab}</b><small>${what()}</small></button>`).join("")}</div>`
         :`<div class="ldq">${id==="dot"?"Dot makes no pick: Fix it now is ready again when the outage ends.":""}</div>`}
       ${leadTallyHTML()}</div>`;
     host.querySelectorAll("#out-lpick button").forEach(b=>b.addEventListener("click",()=>{lp.pick=b.dataset.p;draw();}));
@@ -78,15 +78,15 @@ function leadChange(to){const L=S.lead;if(!L||L.changed||!LEADERS[to]||to===L.id
   log(`${LEADERS[to].name} takes over from ${LEADERS[old].name}. What was built stays with the mill.`,"warn");}
 // called by endOutage: this outage's pick becomes part of the mill (a tool or an old save may bring no pick: the first one)
 function leadOutageEnd(pl){const L=S.lead,picks=LEAD_PICKS[L.id];if(!picks.length)return;const k=pl&&picks.some(x=>x[0]===pl.pick)?pl.pick:picks[0][0],p=picks.find(x=>x[0]===k);
-  L.st[k]=(L.st[k]||0)+1;L.last=k;log(`${LEADERS[L.id].name}: ${p[1].toLowerCase()} (${p[2]()}).`,"ok");}
+  L.st[k]=(L.st[k]||0)+1;if(k==="fibre"&&L.id==="chip")L.lockW=S.outg.k+1;/* (the lock is for the wave this outage starts) */L.last=k;log(`${LEADERS[L.id].name}: ${p[1].toLowerCase()} (${p[2]()}).`,"ok");}
 
 /* ---- Dot's fix ---- */
 const leadFixable=id=>MNEED(id)||QINC(id);
 const leadFixReady=()=>leadIs("dot")&&survOn()&&S.lead.fixW!==survWave();
-function leadFix(id){if(!leadFixReady()||!active(id)||!leadFixable(id))return false;const inc=S.inc.find(i=>i.id===id),back=(inc&&inc.bill)||0;
-  clearIncident(id);if(back>0){spend(-back,"repairs");inc.bill=0;}S.lead.fixW=survWave();(S.lead.fixed||(S.lead.fixed=[])).push(id);AUDIO.sfx("clunk",200);
-  BANNERS.push({text:`Dot fixed it for good: ${EV[id].name.toLowerCase()}.${back>0?" "+money(back)+" back.":""}`,t:null,kind:"good",tag:"FIXED"});while(BANNERS.length>3)BANNERS.splice(1,1);
-  log(`Fix it now: Dot ended "${EV[id].name}" on the spot${back>0?" and the "+money(back)+" repair bill came back":""}. Fixed for good: it won't happen again.`,"ok");return true;}
+function leadFix(id){if(!leadFixReady()||!active(id)||!leadFixable(id))return false;const inc=S.inc.find(i=>i.id===id),back=Math.round(((inc&&inc.bill)||0)*LEAD.refund);
+  clearIncident(id);if(back>0){spend(-back,"repairs");inc.bill-=back;}S.lead.fixW=survWave();(S.lead.fixed||(S.lead.fixed=[])).push(id);AUDIO.sfx("clunk",200);
+  BANNERS.push({text:`Dot fixed it at the root: ${EV[id].name.toLowerCase()}.${back>0?" "+money(back)+" back.":""}`,t:null,kind:"good",tag:"FIXED"});while(BANNERS.length>3)BANNERS.splice(1,1);
+  log(`Fix it now: Dot ended "${EV[id].name}" on the spot${back>0?" and "+money(back)+" of the repair bill came back":""}. Fixed at the root: it's half as likely from now on.`,"ok");return true;}
 
 /* ---- the leader card (tap the wave chip) ---- */
 let leadCardEl=null;
@@ -97,7 +97,7 @@ function leadCardOpen(){if(!S.lead)return;const was=running;running=false;
   const key=e=>{if(e.key==="Escape"){e.preventDefault();e.stopPropagation();close();}};
   const draw=()=>{const fx=S.inc.filter(i=>leadFixable(i.id)&&i.left>0),ready=leadFixReady();   // (a fixed one has left=0 until the next sim step clears it)
     const fix=id!=="dot"?"":`<div class="ldfix"><h3>Fix it now <small>${ready?"ready":"used this cycle · back when the outage ends"}</small></h3>
-        ${fx.length?fx.map(i=>`<div class="ldfx"><span><b>${EV[i.id].name}</b><small>${(i.left/60).toFixed(1)} h left${i.bill>0?" · "+money(i.bill)+" bill back":""}</small></span><button type="button" class="primary" data-fix="${i.id}"${ready?"":" disabled"}>Fix now</button></div>`).join(""):`<p class="muted small">No breakdown to fix right now.</p>`}</div>`;
+        ${fx.length?fx.map(i=>`<div class="ldfx"><span><b>${EV[i.id].name}</b><small>${(i.left/60).toFixed(1)} h left${i.bill>0?" · "+money(i.bill*LEAD.refund)+" back":""}</small></span><button type="button" class="primary" data-fix="${i.id}"${ready?"":" disabled"}>Fix now</button></div>`).join(""):`<p class="muted small">No breakdown to fix right now.</p>`}</div>`;
     el.innerHTML=`<div class="modal ldone" role="dialog" aria-modal="true" aria-labelledby="ldc-h"><span class="dk">Mill leader · sim paused</span>
       ${leadCardHTML(id,"div")}${fix}
       ${leadTally().length?`<h3 id="ldc-h">What the mill has kept</h3>${leadTallyHTML()}`:`<h3 id="ldc-h">Nothing built yet</h3><p class="muted small">${LEAD_PICKS[id].length?L.name.split(" ")[0]+" makes the first pick at the next outage.":"Dot makes no picks. Her fix is ready once every outage cycle."}</p>`}

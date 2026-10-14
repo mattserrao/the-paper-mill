@@ -17,3 +17,11 @@ parts.append((S / "tail.html").read_text())
 out = pathlib.Path(sys.argv[1]) if len(sys.argv) > 1 else ROOT / "index.html"
 out.write_text("".join(parts))
 print(f"built {out} ({out.stat().st_size:,} bytes)")
+# v4.4.0-t3: syntax check of the game script when Node.js is available (a stray "//" comment mid-line can swallow code
+# and break the whole page; this catches it at build time). Warns only: the built file is still written.
+import shutil, subprocess, tempfile
+if shutil.which("node"):
+    h = out.read_text(); i = h.rindex("<script"); js = h[h.index(">", i) + 1:h.rindex("</script>")]
+    with tempfile.NamedTemporaryFile("w", suffix=".mjs", delete=False) as f: f.write(js)
+    r = subprocess.run(["node", "--check", f.name], capture_output=True, text=True); pathlib.Path(f.name).unlink()
+    print("syntax check: ok" if r.returncode == 0 else "SYNTAX ERROR in the game script:\n" + (r.stderr or r.stdout)[:600])

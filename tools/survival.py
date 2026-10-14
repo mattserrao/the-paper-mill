@@ -12,12 +12,12 @@ Usage: python3 survival.py <index.html> [runs] [--bot=handsoff|buyer|saver] [--l
                    chest, pulper, forklifts, docks) unless one fixes the bottleneck: it banks the cash instead
 
   --leader=X       the mill leader (v4.4). none = no leader, the v4.3 baseline. Every bot plays the leader the same way:
-                     chip  sales pushes at the first N outages, fibre contracts after (--chip=N, default 3; or all one kind)
+                     chip  sales pushes at the first N outages, fibre locks after (--chip=N, default 3; or all one kind)
                      dot   Fix it now on the first breakdown whose repair bill is at least $120k (--dot=K, in $k); on the
                            last day before the outage, on any breakdown with a bill
-                     fel   (rotate) projects in turn: dry end, stock prep, wet end; --fel=stockdry alternates the two that save money
-                           (--fel=stock|wet|dry for one area only)
-                     hank  push for tons and run it clean in turn (--hank=speed|clean for one only)
+                     fel   (bn) each project goes to the area that limits the line right now; --fel=rotate takes them in turn
+                           (--fel=stock|wet|dry for one area only: fibre line, paper machine, finishing)
+                     hank  faster rethreads and run it clean in turn (--hank=rethread|clean for one only)
   --swap=X@W       change leader to X in the budget dialog of outage W (the one change a run allows)
   --set=k=v,...    override leader numbers (LEAD in 03d-leaders.js), e.g. --set=fibre=0.04,sales=9
   --up=U --cost=C --compound=0|1   override the wave steps (SURV in 03c-survival.js)
@@ -41,12 +41,12 @@ maxdays = int(fl.get("--maxdays", 400)); compound = fl.get("--compound")
 leader = fl.get("--leader", "none"); leader = None if leader == "none" else leader
 swap = fl["--swap"].split("@") if "--swap" in fl else None
 sets = {k: float(v) for k, v in (x.split("=") for x in fl["--set"].split(","))} if "--set" in fl else {}
-pol = {"chip": fl.get("--chip", "3"), "fel": fl.get("--fel", "rotate"), "hank": fl.get("--hank", "alt"), "dot": fl.get("--dot", "120")}
+pol = {"chip": fl.get("--chip", "3"), "fel": fl.get("--fel", "bn"), "hank": fl.get("--hank", "alt"), "dot": fl.get("--dot", "120")}
 html = pathlib.Path(path).read_text()
 if "window.__PM=" not in html:
     i = html.rindex("})();", 0, html.rindex("</script>")); html = html[:i] + HOOK + html[i:]
 html = html.replace("window.__PM={", "window.__PM={get ECON(){return ECON},get SURV(){return SURV},get LEAD(){return LEAD},get UPS(){return UPS},get BN(){return BN},"
-                    "buy:id=>buy(id),startSurv:id=>startSurvival(id),leadFix:id=>leadFix(id),leadFixable:id=>leadFixable(id),leadFixReady:()=>leadFixReady(),", 1)
+                    "lineCaps:()=>lineCaps(),buy:id=>buy(id),startSurv:id=>startSurvival(id),leadFix:id=>leadFix(id),leadFixable:id=>leadFixable(id),leadFixReady:()=>leadFixReady(),", 1)
 
 ORDER = ["feedconv", "detrash", "safety", "stores", "clean", "fire", "apc", "refiner", "contract", "sales", "drive", "deckle", "shoe",
          "monitor", "rcfa", "reliab", "maintcrew", "pmprog", "winder", "chest", "pulper", "forklift", "docks", "insure", "wh", "agv"]
@@ -67,8 +67,8 @@ RUN = r"""([k,seed0,bn,bot,up,cost,maxdays,ORDER,compound,leader,swap,sets,pol])
     if(swap&&+swap[1]===S.outg.k&&!S.lead.changed){const c=q('#out-lchg');if(c){c.click();const b=q('.ldswap button[data-to="'+swap[0]+'"]');if(b)b.click();}}
     const who=(swap&&+swap[1]===S.outg.k)?swap[0]:S.lead.id,st=S.lead.st;let want=null;
     if(who==='chip')want=pol.chip==='fibre'||pol.chip==='sales'?pol.chip:(st.sales<+pol.chip?'sales':'fibre');
-    if(who==='fel')want=pol.fel==='rotate'?['pdry','pstock','pwet'][(st.pdry+st.pstock+st.pwet)%3]:pol.fel==='stockdry'?['pstock','pdry'][(st.pdry+st.pstock)%2]:'p'+pol.fel;
-    if(who==='hank')want=pol.hank==='alt'?['speed','clean'][(st.speed+st.clean)%2]:pol.hank;
+    if(who==='fel')want=pol.fel==='bn'?(()=>{const c=P.lineCaps().filter(x=>x[0]!=='pm'||true),lo=c.reduce((a,b)=>b[2]<a[2]?b:a);return {recv:'pstock',pulper:'pstock',screens:'pstock',pm:'pwet',winder:'pdry',ship:'pdry'}[lo[0]];})():pol.fel==='rotate'?['pdry','pstock','pwet'][(st.pdry+st.pstock+st.pwet)%3]:pol.fel==='stockdry'?['pstock','pdry'][(st.pdry+st.pstock)%2]:'p'+pol.fel;
+    if(who==='hank')want=pol.hank==='alt'?['rethread','clean'][((st.rethread||0)+st.clean)%2]:pol.hank;
     if(want){const b=q('#out-lpick button[data-p="'+want+'"]');if(b)b.click();}};
   const waves=[],incW=[],dnW=[];let wk=1,c0=S.cash,i0=0,dn0=0,dn=0;
   while(S.season&&S.season.on&&n<maxdays*1440/h){if(G)G.on=false;P.step(h);n++;const o=S.cards&&S.cards.open;
