@@ -151,11 +151,10 @@ function setZen(on){if(on===!!ZEN)return;
     ZEN={speed:C.simSpeed,chaos:CH.on,hays:C.hays,breaks:C.breaks,view:G3.on};
     S.inc=[];if(S.wd==="hayout")S.wd="run";if(S.pm==="break"){S.pm="run";}BANNERS.length=0;S.zen=true;
     CH.on=false;$("chaosOn").checked=false;C.hays=false;C.breaks=false;
-    setSimSpeed(1);
     document.body.dataset.zs="none";document.body.classList.add("zen");setFS(true);G3.zen=true;G3.zenS=null;
     if(soundPref==="on"&&!AUDIO.on)setSound(true);running=true;zenPoke();}
   else{const z=ZEN;ZEN=null;S.zen=false;G3.zen=false;document.body.classList.remove("zen");
-    CH.on=z.chaos;$("chaosOn").checked=z.chaos;C.hays=z.hays;C.breaks=z.breaks;setSimSpeed(C.spdPref||z.speed);
+    CH.on=z.chaos;$("chaosOn").checked=z.chaos;C.hays=z.hays;C.breaks=z.breaks;
     setFS(false);if(G3.showMenu)G3.showMenu();}}
 let zenT=0;function zenPoke(){const b=$("zenExit");b.hidden=false;b.classList.add("show");clearTimeout(zenT);zenT=setTimeout(()=>b.classList.remove("show"),2500);}
 $("zenExit").addEventListener("click",e=>{e.stopPropagation();setZen(false);});
@@ -192,7 +191,7 @@ function hhmm(t){t+=360;const day=Math.floor(t/1440),h=Math.floor((t%1440)/60),b
 function updateText(){
   const R=S.rates,level=S.tank/P.tankCap*100,days=Math.max(S.t/1440,1/1440);
   $("k-clock").textContent=hhmm(S.t)+(S.wx&&S.wx!=="clear"?" · "+WXN[S.wx]:"");
-  $("k-clock-s").textContent=`${C.simSpeed} sim min per second`;
+  $("k-clock-s").textContent=`${simRate()} sim min per second`;
   $("k-speed").textContent=f0(S.pmSpeed)+" fpm";
   $("k-speed-s").textContent=`max ${f0(C.pmSp.v)} · ${C.grade}`;
   $("k-prod").textContent=f1(R.prod)+" t/h";

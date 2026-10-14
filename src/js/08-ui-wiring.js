@@ -46,6 +46,12 @@ let running=true;
 const UI_TICKS=[];
 // sim speed in sim-minutes per real second; every speed change goes through here
 function setSimSpeed(v){C.simSpeed=Math.max(1,Math.min(TURBO?960:120,Math.round(+v)||1));}
+// v5.0.1: C.simSpeed is the player's chosen speed and nothing else ever changes it. The speed the game actually runs at is
+// simRate(): zen runs at 1, a planned outage at no more than OUT.simCap (so the crews can be watched), otherwise the
+// player's speed. When the outage or zen ends there is nothing to restore: the player's choice was never touched.
+// (Only inside a running season or survival run: zen and free play end the season mid-outage without ending the outage.)
+const outCapped=()=>!!(S&&S.outg&&S.outg.on&&S.season&&S.season.on&&!S.zen&&C.simSpeed>OUT.simCap&&!TURBO_FAST(C.simSpeed));
+function simRate(){return S&&S.zen?1:outCapped()?OUT.simCap:C.simSpeed;}
 
 const cgrid=$("chaosgrid");
 GROUPS.forEach(([g,lab])=>{const d=document.createElement("div");d.className="grp";const h=document.createElement("h3");h.textContent=lab;d.appendChild(h);
@@ -124,4 +130,4 @@ function showOverlay(){running=false;
   $("ov-a").focus();}
 $("ov-a").addEventListener("click",()=>{$("overlay").hidden=true;$("overlay").style.zIndex="";const dc=document.getElementById("dealOv");if(S.over){newGame();}else if(dc&&!dc.hidden&&!dc.classList.contains("dealres")){}else{running=true;}});
 $("ov-b").addEventListener("click",()=>{$("overlay").hidden=true;newGame();});
-function newGame(){const sp=C.spdPref||C.simSpeed;initCtrl();C.simSpeed=C.spdPref=sp;initState();BANNERS.length=0;running=true;seasonLocks(false);bnNotice();}
+function newGame(){const sp=C.simSpeed;initCtrl();C.simSpeed=sp;initState();BANNERS.length=0;running=true;seasonLocks(false);bnNotice();}

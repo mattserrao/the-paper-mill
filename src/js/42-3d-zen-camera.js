@@ -77,7 +77,7 @@
         at:(t)=>{if(t>13)return null;const u=ease(t/13);return [mix(52,43,u),mix(2.0,1.6,u),zc,mix(28,24,u),mix(0.8,0.65,u),mix(1.3,1.22,u)];}},
       // sit on the reel and wait for the turn-up: the full reel is kicked down the rails and the new spool takes the sheet
       {name:"reel turn-up",look:["gold","none"],rare:1,dur:26,
-        ok:()=>{if(S.pm!=="run"||!(S.rates.prod>1))return false;const w=(P.jumbo-S.reel)/S.rates.prod*60/Math.max(0.1,C.simSpeed);return w>1.5&&w<14;},
+        ok:()=>{if(S.pm!=="run"||!(S.rates.prod>1))return false;const w=(P.jumbo-S.reel)/S.rates.prod*60/Math.max(0.1,simRate());return w>1.5&&w<14;},
         start:()=>({n:S.tot.turnups,at:-1}),
         at:(t,mv)=>{const st=mv.st;if(st.at<0&&S.tot.turnups>st.n)st.at=t;if((st.at>=0&&t-st.at>7)||t>26||(st.at<0&&S.pm!=="run"))return null;
           const u=ease(t/20);return [DX-2.2,DY-0.6,zc,mix(40,32,u),mix(-0.55,-0.35,u),mix(1.18,1.25,u)];}},

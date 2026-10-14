@@ -36,7 +36,7 @@
       if(SPD.strain>=1&&!S.zen){SPD.strain=0;trigger("thkblow");SPD.v=0.35;SPD.reset=true;log("Contaminated clear filtrate overloaded the disk thickener. Operators reset the spider valve.","bad");}}
     SPD.acc+=dtm;if(SPD.acc>=2){SPD.acc=0;SPD.hist.push([SPD.tc,SPD.tl,SPD.qc,SPD.ql]);if(SPD.hist.length>180)SPD.hist.shift();}}
   const cClear=lin0("#9fd2ec"),cDirty=lin0("#7a5636");
-  G3.spiderFrame=(rdt)=>{if(rdt>0)spiderStep(rdt*C.simSpeed);
+  G3.spiderFrame=(rdt)=>{if(rdt>0)spiderStep(rdt*simRate());
     [[SPD.lc,SPD.tc],[SPD.ll,SPD.tl]].forEach(([l,t],i)=>{const w=sealW[i];w.position.y=0.3+2.2*Math.min(1,l);{const q=clamp((t-45)/200,0,1);w.material.color.copy(cClear).lerp(cDirty,q*q*(3-2*q));}
       const sp=sealSpill[i],k=SPD.spill[i];sp.visible=k>0.02;sp.scale.set(0.8+2.6*k,0.8+2.2*k,1);sp.material.color.copy(w.material.color);
       if(l>=1&&rdt>0&&Math.random()<rdt*12){const a=Math.random()*6.28;emit("drop",26.4+Math.cos(a)*1.5,2.8,(i?-13.9:-17.6)+Math.sin(a)*1.5,Math.cos(a)*1.2,0.5,Math.sin(a)*1.2,0.7,0.26,"#"+w.material.color.clone().convertLinearToSRGB().getHexString(),0.9);}});

@@ -42,7 +42,7 @@
     const ry=L.rev?h+Math.PI:h;let dr=ry-wTruck.rotation.y;dr=Math.atan2(Math.sin(dr),Math.cos(dr));wTruck.rotation.y+=dr*Math.min(1,dt*10);CMP.wheels.forEach(w=>w.rotation.z-=(L.rev?-1:1)*L.v*dt/0.55);
     if(WT.d>=L.len-1e-3){WT.li++;WT.d=0;if(WT.li>=WT.legs.length)return true;}return false;}
   const bedPos=()=>wTruck.localToWorld(new THREE.Vector3(-1.6,2.45,0));
-  G3.wasteFrame=rdt=>{if(rdt<=0)return;const dt=rdt*clamp(C.simSpeed/30,1,4),day=Math.floor((S.t+360-600)/1440),bz=CMP.bays[WT.bay],can=CMP.cans[WT.bay];
+  G3.wasteFrame=rdt=>{if(rdt<=0)return;const dt=rdt*clamp(simRate()/30,1,4),day=Math.floor((S.t+360-600)/1440),bz=CMP.bays[WT.bay],can=CMP.cans[WT.bay];
     if(WT.lastDay===null)WT.lastDay=day;
     if(WT.state==="idle"){if(day!==WT.lastDay){WT.lastDay=day;WT.bay=day%2===0?0:1;WT.state="in1";WT.legs=legsIn(CMP.bays[WT.bay]);WT.li=0;WT.d=0;wTruck.visible=true;wTruck.rotation.y=0;
         log(`Waste hauler is swapping compactor C${WT.bay+1}`,"");}return;}

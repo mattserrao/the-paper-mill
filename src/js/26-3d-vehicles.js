@@ -75,7 +75,7 @@
     const busyApron=L.lock&&L.lock!==g&&L.lock.visible&&L.lock.userData.busy;
     if((g.userData.phase==="q"||!g.userData.phase)&&busyApron)return [{x:x-2,z:L.outZ},{x:-150,z:L.outZ,end:true,fast:true}];
     return (g.userData.phase==="dock"&&g.userData.route.length?g.userData.route.slice():g.userData.phase==="q"||!g.userData.phase?dock:[]).concat(leave);}
-  const TSC=()=>clamp(C.simSpeed/10,1,6);   // trucks keep pace with the sim clock at higher game speeds
+  const TSC=()=>clamp(simRate()/10,1,6);   // trucks keep pace with the sim clock at higher game speeds
   // one truck manoeuvres on each apron at a time; the others hold at the apron entrance or on their dock
   function stepRoute(g,L,rdt){const R2=g.userData.route,w=R2[0];if(!w)return;
     if(w.lock){if(L.lock&&L.lock!==g&&L.lock.visible&&L.lock.userData.route.some(v=>v.lock))return;

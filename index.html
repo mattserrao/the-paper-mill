@@ -2302,14 +2302,12 @@ function outNote(head,body,ms){const el=outShell();el.classList.add("note");
   el.hidden=false;const m=el.querySelector(".modal");m.addEventListener("click",()=>{el.hidden=true;},{once:true});el._t=setTimeout(()=>{el.hidden=true;},ms);}
 function beginOutage(){const o=S.outg,st=S.t;if(!o.plan)o.plan={stock:1,wet:1,dry:1};o.on=true;o.end=st+OUT.len;
   if(S.lead&&o.plan.lead&&o.plan.lead.to)leadChange(o.plan.lead.to);   // v4.4: the one change of leader happens as the outage starts
-  // slow the clock so the crews can be watched; the old speed comes back when the outage ends
-  o.spd=C.spdPref||C.simSpeed;if(C.simSpeed>OUT.simCap&&!TURBO_FAST(C.simSpeed)){setSimSpeed(OUT.simCap);}
+  // (the clock runs at no more than OUT.simCap while o.on, through simRate(); the player's own speed is left alone)
   addFx({id:"pout",left:OUT.len,mods:{pmDown:"planned outage",pulperDown:1}});AUDIO.sfx("clunk",400);
   log(`Planned outage ${o.k} has begun: down until ${hourOf(o.end)}`,"warn");BANNERS.push({text:`Planned outage: the mill is down until ${hourOf(o.end)}.`,t:null,kind:"good",tag:"OUTAGE"});
   outNote("Outage has begun",`The mill is down for planned maintenance: ${(OUT.jobs[outJob(o.k)-1]||"inspections").toLowerCase()} and new press felts. Started ${hourOf(st)}, ends ${outTime(o.end)}.`,5000);}
 function endOutage(){const o=S.outg,pl=o.plan||{stock:1,wet:1,dry:1};o.on=false;S.fx=S.fx.filter(f=>f.id!=="pout");S.M=mods();
-  // v4.2.1: always go back to the player's own speed (it was lost if they touched the speed during the outage)
-  if(!S.zen){const p=C.spdPref||o.spd;if(p)setSimSpeed(p);}o.spd=null;
+  o.spd=null;   // (v5.0.1: nothing to restore: the outage only capped the running speed, see simRate)
   o.rel={stock:OUT.rel[pl.stock],wet:OUT.rel[pl.wet],dry:OUT.rel[pl.dry]};
   const txt=OUT.areas.map(([a,n])=>`${n} ${pl[a]===2?"+20%":pl[a]===0?"−10%":"±0%"}`).join(" · ");
   BANNERS.push({text:`Outage ${o.k} complete. Reliability until the next outage: ${txt}`,t:null,kind:"good",tag:"OUTAGE"});while(BANNERS.length>3)BANNERS.splice(1,1);
@@ -2589,6 +2587,12 @@ let running=true;
 const UI_TICKS=[];
 // sim speed in sim-minutes per real second; every speed change goes through here
 function setSimSpeed(v){C.simSpeed=Math.max(1,Math.min(TURBO?960:120,Math.round(+v)||1));}
+// v5.0.1: C.simSpeed is the player's chosen speed and nothing else ever changes it. The speed the game actually runs at is
+// simRate(): zen runs at 1, a planned outage at no more than OUT.simCap (so the crews can be watched), otherwise the
+// player's speed. When the outage or zen ends there is nothing to restore: the player's choice was never touched.
+// (Only inside a running season or survival run: zen and free play end the season mid-outage without ending the outage.)
+const outCapped=()=>!!(S&&S.outg&&S.outg.on&&S.season&&S.season.on&&!S.zen&&C.simSpeed>OUT.simCap&&!TURBO_FAST(C.simSpeed));
+function simRate(){return S&&S.zen?1:outCapped()?OUT.simCap:C.simSpeed;}
 
 const cgrid=$("chaosgrid");
 GROUPS.forEach(([g,lab])=>{const d=document.createElement("div");d.className="grp";const h=document.createElement("h3");h.textContent=lab;d.appendChild(h);
@@ -2667,7 +2671,7 @@ function showOverlay(){running=false;
   $("ov-a").focus();}
 $("ov-a").addEventListener("click",()=>{$("overlay").hidden=true;$("overlay").style.zIndex="";const dc=document.getElementById("dealOv");if(S.over){newGame();}else if(dc&&!dc.hidden&&!dc.classList.contains("dealres")){}else{running=true;}});
 $("ov-b").addEventListener("click",()=>{$("overlay").hidden=true;newGame();});
-function newGame(){const sp=C.spdPref||C.simSpeed;initCtrl();C.simSpeed=C.spdPref=sp;initState();BANNERS.length=0;running=true;seasonLocks(false);bnNotice();}
+function newGame(){const sp=C.simSpeed;initCtrl();C.simSpeed=sp;initState();BANNERS.length=0;running=true;seasonLocks(false);bnNotice();}
 /* ---------- season mode + leaderboard (Supabase) ---------- */
 const LB={url:"https://htlsrhdvloptctzwzbau.supabase.co",key:"sb_publishable_BSp3JNLLDR4dYPJf-EgPJg_g5t6VMa6"};   // public: the database only allows read + insert
 const SEASON_DAYS=30;
@@ -3021,11 +3025,10 @@ function setZen(on){if(on===!!ZEN)return;
     ZEN={speed:C.simSpeed,chaos:CH.on,hays:C.hays,breaks:C.breaks,view:G3.on};
     S.inc=[];if(S.wd==="hayout")S.wd="run";if(S.pm==="break"){S.pm="run";}BANNERS.length=0;S.zen=true;
     CH.on=false;$("chaosOn").checked=false;C.hays=false;C.breaks=false;
-    setSimSpeed(1);
     document.body.dataset.zs="none";document.body.classList.add("zen");setFS(true);G3.zen=true;G3.zenS=null;
     if(soundPref==="on"&&!AUDIO.on)setSound(true);running=true;zenPoke();}
   else{const z=ZEN;ZEN=null;S.zen=false;G3.zen=false;document.body.classList.remove("zen");
-    CH.on=z.chaos;$("chaosOn").checked=z.chaos;C.hays=z.hays;C.breaks=z.breaks;setSimSpeed(C.spdPref||z.speed);
+    CH.on=z.chaos;$("chaosOn").checked=z.chaos;C.hays=z.hays;C.breaks=z.breaks;
     setFS(false);if(G3.showMenu)G3.showMenu();}}
 let zenT=0;function zenPoke(){const b=$("zenExit");b.hidden=false;b.classList.add("show");clearTimeout(zenT);zenT=setTimeout(()=>b.classList.remove("show"),2500);}
 $("zenExit").addEventListener("click",e=>{e.stopPropagation();setZen(false);});
@@ -3062,7 +3065,7 @@ function hhmm(t){t+=360;const day=Math.floor(t/1440),h=Math.floor((t%1440)/60),b
 function updateText(){
   const R=S.rates,level=S.tank/P.tankCap*100,days=Math.max(S.t/1440,1/1440);
   $("k-clock").textContent=hhmm(S.t)+(S.wx&&S.wx!=="clear"?" · "+WXN[S.wx]:"");
-  $("k-clock-s").textContent=`${C.simSpeed} sim min per second`;
+  $("k-clock-s").textContent=`${simRate()} sim min per second`;
   $("k-speed").textContent=f0(S.pmSpeed)+" fpm";
   $("k-speed-s").textContent=`max ${f0(C.pmSp.v)} · ${C.grade}`;
   $("k-prod").textContent=f1(R.prod)+" t/h";
@@ -3588,7 +3591,7 @@ function no3D(){G3.ok=false;$("no3d").hidden=false;$("no3d-retry").onclick=()=>l
   const CARQ={inQ:[],outQ:[],t:0,init:false};
   function carPath(c,arrive){const G=[[100,32.5],[89.5,32.5],[89.5,c.aisle],[c.sx,c.aisle]],P=arrive?[...G,[c.sx,c.sz]]:[[c.sx,c.sz],...G.slice().reverse()];
     let L=0;const cum=[0];for(let i=1;i<P.length;i++){L+=Math.hypot(P[i][0]-P[i-1][0],P[i][1]-P[i-1][1]);cum.push(L);}return {P,cum,L,d:0,revUntil:arrive?0:cum[1]};}
-  function carsUpdate(rdt,hr){if(!ENV.cars)return;const f=clamp(C.simSpeed/20,1,4),want=c=>!c.day||(hr>=c.arr&&hr<c.dep);
+  function carsUpdate(rdt,hr){if(!ENV.cars)return;const f=clamp(simRate()/20,1,4),want=c=>!c.day||(hr>=c.arr&&hr<c.dep);
     if(!CARQ.init){CARQ.init=true;ENV.cars.forEach(c=>{c.st=want(c)?"parked":"gone";c.g.visible=c.st==="parked";c.g.position.set(c.sx,0,c.sz);c.g.rotation.y=Math.PI/2;});}
     ENV.cars.forEach(c=>{if(c.st==="gone"&&want(c)&&!CARQ.inQ.includes(c)){CARQ.inQ.push(c);c.st="queued";}
       else if(c.st==="parked"&&!want(c)&&!CARQ.outQ.includes(c)){CARQ.outQ.push(c);c.st="waiting";}});
@@ -3814,7 +3817,7 @@ function no3D(){G3.ok=false;$("no3d").hidden=false;$("no3d-retry").onclick=()=>l
     const ry=L.rev?h+Math.PI:h;let dr=ry-wTruck.rotation.y;dr=Math.atan2(Math.sin(dr),Math.cos(dr));wTruck.rotation.y+=dr*Math.min(1,dt*10);CMP.wheels.forEach(w=>w.rotation.z-=(L.rev?-1:1)*L.v*dt/0.55);
     if(WT.d>=L.len-1e-3){WT.li++;WT.d=0;if(WT.li>=WT.legs.length)return true;}return false;}
   const bedPos=()=>wTruck.localToWorld(new THREE.Vector3(-1.6,2.45,0));
-  G3.wasteFrame=rdt=>{if(rdt<=0)return;const dt=rdt*clamp(C.simSpeed/30,1,4),day=Math.floor((S.t+360-600)/1440),bz=CMP.bays[WT.bay],can=CMP.cans[WT.bay];
+  G3.wasteFrame=rdt=>{if(rdt<=0)return;const dt=rdt*clamp(simRate()/30,1,4),day=Math.floor((S.t+360-600)/1440),bz=CMP.bays[WT.bay],can=CMP.cans[WT.bay];
     if(WT.lastDay===null)WT.lastDay=day;
     if(WT.state==="idle"){if(day!==WT.lastDay){WT.lastDay=day;WT.bay=day%2===0?0:1;WT.state="in1";WT.legs=legsIn(CMP.bays[WT.bay]);WT.li=0;WT.d=0;wTruck.visible=true;wTruck.rotation.y=0;
         log(`Waste hauler is swapping compactor C${WT.bay+1}`,"");}return;}
@@ -4156,7 +4159,7 @@ function no3D(){G3.ok=false;$("no3d").hidden=false;$("no3d-retry").onclick=()=>l
       if(SPD.strain>=1&&!S.zen){SPD.strain=0;trigger("thkblow");SPD.v=0.35;SPD.reset=true;log("Contaminated clear filtrate overloaded the disk thickener. Operators reset the spider valve.","bad");}}
     SPD.acc+=dtm;if(SPD.acc>=2){SPD.acc=0;SPD.hist.push([SPD.tc,SPD.tl,SPD.qc,SPD.ql]);if(SPD.hist.length>180)SPD.hist.shift();}}
   const cClear=lin0("#9fd2ec"),cDirty=lin0("#7a5636");
-  G3.spiderFrame=(rdt)=>{if(rdt>0)spiderStep(rdt*C.simSpeed);
+  G3.spiderFrame=(rdt)=>{if(rdt>0)spiderStep(rdt*simRate());
     [[SPD.lc,SPD.tc],[SPD.ll,SPD.tl]].forEach(([l,t],i)=>{const w=sealW[i];w.position.y=0.3+2.2*Math.min(1,l);{const q=clamp((t-45)/200,0,1);w.material.color.copy(cClear).lerp(cDirty,q*q*(3-2*q));}
       const sp=sealSpill[i],k=SPD.spill[i];sp.visible=k>0.02;sp.scale.set(0.8+2.6*k,0.8+2.2*k,1);sp.material.color.copy(w.material.color);
       if(l>=1&&rdt>0&&Math.random()<rdt*12){const a=Math.random()*6.28;emit("drop",26.4+Math.cos(a)*1.5,2.8,(i?-13.9:-17.6)+Math.sin(a)*1.5,Math.cos(a)*1.2,0.5,Math.sin(a)*1.2,0.7,0.26,"#"+w.material.color.clone().convertLinearToSRGB().getHexString(),0.9);}});
@@ -4448,7 +4451,7 @@ function no3D(){G3.ok=false;$("no3d").hidden=false;$("no3d-retry").onclick=()=>l
     const busyApron=L.lock&&L.lock!==g&&L.lock.visible&&L.lock.userData.busy;
     if((g.userData.phase==="q"||!g.userData.phase)&&busyApron)return [{x:x-2,z:L.outZ},{x:-150,z:L.outZ,end:true,fast:true}];
     return (g.userData.phase==="dock"&&g.userData.route.length?g.userData.route.slice():g.userData.phase==="q"||!g.userData.phase?dock:[]).concat(leave);}
-  const TSC=()=>clamp(C.simSpeed/10,1,6);   // trucks keep pace with the sim clock at higher game speeds
+  const TSC=()=>clamp(simRate()/10,1,6);   // trucks keep pace with the sim clock at higher game speeds
   // one truck manoeuvres on each apron at a time; the others hold at the apron entrance or on their dock
   function stepRoute(g,L,rdt){const R2=g.userData.route,w=R2[0];if(!w)return;
     if(w.lock){if(L.lock&&L.lock!==g&&L.lock.visible&&L.lock.userData.route.some(v=>v.lock))return;
@@ -4801,7 +4804,7 @@ function no3D(){G3.ok=false;$("no3d").hidden=false;$("no3d-retry").onclick=()=>l
   // reel turn-up: at 100% the sheet transfers to the new spool in the primary arms, the full reel is kicked down the rails,
   // the arms lower the new reel onto the rails, and the crane (strongback) takes the full reel away and brings a new spool
   const sm=t=>{t=clamp(t,0,1);return t*t*(3-2*t);},A120=120*Math.PI/180,A105=105*Math.PI/180;
-  function reelUpdate(rdt,rr){const f=clamp(C.simSpeed/30,1,3),dt=rdt*f;
+  function reelUpdate(rdt,rr){const f=clamp(simRate()/30,1,3),dt=rdt*f;
     if(TU.seen<0)TU.seen=S.tot.turnups;
     if(S.tot.turnups>TU.seen){TU.seen=S.tot.turnups;TU.t=0;TU.kick=true;TU.kx=DX-(DR+RM);TU.armHas=false;}   // v2.9.3: silent (its ringing clunk every reel was the repeating "ding")
     TU.t+=dt;const spinV=(S.pm==="run"?1:0)*rdt*6;
@@ -5417,7 +5420,7 @@ function no3D(){G3.ok=false;$("no3d").hidden=false;$("no3d-retry").onclick=()=>l
     while(CR.jobs.length>3){const j=CR.jobs.shift();if(j.fromPark)CR.extraPark=Math.max(0,(CR.extraPark||0)-1);if(j.kind==="park")CR.hidePark=Math.max(0,CR.hidePark-1);if(j.kind==="spool"){TU.armHas=true;TU.armT=9;}if(j.fromReel)TU.kick=false;}
     if(!CR.j&&!CR.jobs.length&&TU.t>4&&!TU.armHas){TU.armHas=true;TU.armT=9;}
     if(!CR.j&&CR.jobs.length){CR.j=CR.jobs.shift();CR.t=0;CR.j.s=[CR.x,CR.z];}
-    const per=P.jumbo/Math.max(5,S.rates.prod||30)*60/Math.max(1,C.simSpeed),T=clamp(per*0.25,0.6,4)*(CR.jobs.length?0.7:1);   // v2.9.5: each reel makes up to 3 crane moves, so a move must take well under a third of a reel
+    const per=P.jumbo/Math.max(5,S.rates.prod||30)*60/Math.max(1,simRate()),T=clamp(per*0.25,0.6,4)*(CR.jobs.length?0.7:1);   // v2.9.5: each reel makes up to 3 crane moves, so a move must take well under a third of a reel
     if(CR.j&&rdt>0&&(CR.j.delay||0)>0){CR.j.delay-=rdt;}
     else if(CR.j&&rdt>0){const j=CR.j;CR.t+=rdt/T;const u=CR.t,L=(a,b,k)=>a+(b-a)*clamp(k,0,1),hi=10.0;let x,z,y,on=false;
       if(u<0.2){x=L(j.s[0],j.a[0],u/0.2);z=L(j.s[1],j.a[2],u/0.2);y=hi;}
@@ -7091,7 +7094,7 @@ function no3D(){G3.ok=false;$("no3d").hidden=false;$("no3d-retry").onclick=()=>l
         at:(t)=>{if(t>13)return null;const u=ease(t/13);return [mix(52,43,u),mix(2.0,1.6,u),zc,mix(28,24,u),mix(0.8,0.65,u),mix(1.3,1.22,u)];}},
       // sit on the reel and wait for the turn-up: the full reel is kicked down the rails and the new spool takes the sheet
       {name:"reel turn-up",look:["gold","none"],rare:1,dur:26,
-        ok:()=>{if(S.pm!=="run"||!(S.rates.prod>1))return false;const w=(P.jumbo-S.reel)/S.rates.prod*60/Math.max(0.1,C.simSpeed);return w>1.5&&w<14;},
+        ok:()=>{if(S.pm!=="run"||!(S.rates.prod>1))return false;const w=(P.jumbo-S.reel)/S.rates.prod*60/Math.max(0.1,simRate());return w>1.5&&w<14;},
         start:()=>({n:S.tot.turnups,at:-1}),
         at:(t,mv)=>{const st=mv.st;if(st.at<0&&S.tot.turnups>st.n)st.at=t;if((st.at>=0&&t-st.at>7)||t>26||(st.at<0&&S.pm!=="run"))return null;
           const u=ease(t/20);return [DX-2.2,DY-0.6,zc,mix(40,32,u),mix(-0.55,-0.35,u),mix(1.18,1.25,u)];}},
@@ -8277,7 +8280,7 @@ function no3D(){G3.ok=false;$("no3d").hidden=false;$("no3d-retry").onclick=()=>l
     const RV=G3.rollVis||(G3.rollVis={list:[],seen:-1});if(RV.seen<0)RV.seen=S.tot.rolls;
     // v2.9.7: d -3.2..-1 rolling down the kick-off ramp (single file), -1..0 tipping up on the upender, >=0 standing on the conveyor.
     // Everything speeds up with the game speed, and if rolls pile up waiting to leave the winder the extra plain ones are skipped.
-    const fac=clamp(C.simSpeed/20,1,4);
+    const fac=clamp(simRate()/20,1,4);
     if(S.tot.rolls>RV.seen){const n=Math.min(4,S.tot.rolls-RV.seen);RV.seen=S.tot.rolls;for(let k=0;k<n;k++)RV.list.push({d:-3.2-k*1.5,spin:0});
       while(RV.list.filter(r=>r.d<-1&&!r.col).length>2){const k=RV.list.findIndex(r=>r.d<-1&&!r.col);RV.list.splice(k,1);}
       while(RV.list.length>24){const k=RV.list.findIndex(r=>!r.col);if(k<0)break;RV.list.splice(k,1);}}
@@ -8459,7 +8462,7 @@ function drawSpider(){const D=G3.SPD;if(!D||$("spider").hidden)return;
   [[0,"#8a6644",ly,[]],[1,"#3fa0d0",ly,[]],[2,"#8a6644",fy,[10,8]],[3,"#3fa0d0",fy,[10,8]]].forEach(([k,col,Y,dash])=>{x.setLineDash(dash);x.strokeStyle=col;x.lineWidth=3;x.beginPath();h.forEach((r,i)=>i?x.lineTo(X(i),Y(r[k])):x.moveTo(X(i),Y(r[k])));x.stroke();});x.setLineDash([]);}
 UI_TICKS.push(drawSpider);
 const SPEEDS=[1,2,5,10,20,30,60,120].concat(TURBO?[240,480,960]:[]);
-function nudgeSpeed(d){const i=SPEEDS.findIndex(v=>v>=C.simSpeed);const n=SPEEDS[clamp((i<0?SPEEDS.length-1:i)+d,0,SPEEDS.length-1)];setSimSpeed(n);if(!(S.outg&&S.outg.on)||C.simSpeed>OUT.simCap)C.spdPref=C.simSpeed;}   // v5.0.1: speeding up during an outage counts as the player's choice for after it too   // v4.2.1: the speed the player picked (an outage slowdown is not a choice)
+function nudgeSpeed(d){const i=SPEEDS.findIndex(v=>v>=C.simSpeed);const n=SPEEDS[clamp((i<0?SPEEDS.length-1:i)+d,0,SPEEDS.length-1)];setSimSpeed(n);}   // v5.0.1: always the player's own speed (during an outage it is the speed the mill comes back to)   // v4.2.1: the speed the player picked (an outage slowdown is not a choice)
 setView();
 
 
@@ -8538,7 +8541,7 @@ setView();
     {const se=S.season,on=!!(se&&se.on),sv=!!(se&&se.surv),day=Math.floor(S.t/1440)+1,lab=on?(sv?(NARROW.matches?`W${survWave()} · Day ${day}`:`Wave ${survWave()} · Day ${day}`):`Day ${Math.min(SEASON_DAYS,day)} of ${SEASON_DAYS}`):se&&se.done?(sv?"Run over":"Season over"):"Time";
      set("v2clockL",lab);$("v2clockL").classList.toggle("sday",on);$("v2clockL").title=on?(sv?"Survival: the wave you are in and the day of the run":"Season mode: day of the 30-day season"):"";}
     mirror.forEach(([d,s])=>{if(d.textContent!==s.textContent)d.textContent=s.textContent;});
-    const sp=C.simSpeed+" min/s";if($("v2speed").textContent!==sp)$("v2speed").textContent=sp;
+    const sp=outCapped()?`${simRate()} min/s · ${C.simSpeed} after`:C.simSpeed+" min/s";if($("v2speed").textContent!==sp)$("v2speed").textContent=sp;$("v2speed").title=outCapped()?"Planned outage: slowed so you can watch the crews. Your speed comes back when it ends.":"";
     const n=S.inc.length,bd=$("v2bdg");bd.hidden=!n;if(bd.textContent!==String(n))bd.textContent=n;
   }
   UI_TICKS.push(sync);sync();
@@ -8692,6 +8695,7 @@ setView();
         return d;}catch(e){clear();return null;}}
     function clear(){try{localStorage.removeItem(KEY);}catch(e){}}
     function restore(d){S=d.S;for(const k in d.C){if(C[k]&&typeof C[k]==="object"&&d.C[k]&&typeof d.C[k]==="object")Object.assign(C[k],d.C[k]);else C[k]=d.C[k];}
+      if(C.spdPref){C.simSpeed=C.spdPref;}else if(S.outg&&S.outg.on&&S.outg.spd){C.simSpeed=S.outg.spd;}delete C.spdPref;   // (v5.0.1: older saves: the player's speed)
       CH.on=d.CH.on;CH.lvl=d.CH.lvl;Object.assign(CH.en,d.CH.en||{});
       if(d.MILL){MILL.name=d.MILL.name;MILL.brand=d.MILL.brand;document.documentElement.style.setProperty("--brand",MILL.brand);PAL_V++;}
       // the open dialog: a card comes back up; an outage plan is asked again
@@ -8858,7 +8862,7 @@ function frame(now){
   const rdt=Math.max(0,Math.min(0.1,(now-last)/1000));last=now;
   // schedule the next frame first: a bug in one frame must never stop the game loop (v2.8.5: the sim step too)
   requestAnimationFrame(frame);
-  if(running){try{simAcc=Math.min(simAcc+rdt*C.simSpeed,60);while(simAcc>=SIM_STEP&&running){step(SIM_STEP);simAcc-=SIM_STEP;}}catch(e){if(!frame.serr)frame.serr=0;if(frame.serr++<5)console.error("sim error",e);}}
+  if(running){try{simAcc=Math.min(simAcc+rdt*simRate(),60);while(simAcc>=SIM_STEP&&running){step(SIM_STEP);simAcc-=SIM_STEP;}}catch(e){if(!frame.serr)frame.serr=0;if(frame.serr++<5)console.error("sim error",e);}}
   if(PFo&&PFo.on)PFo.acc["SIM (game logic step)"]=(PFo.acc["SIM (game logic step)"]||0)+(performance.now()-fT0);
   if(G3.cineTick)G3.cineTick(now);   // (v4.2.4: the bird cut-scene runs on real time while the game is paused)
   try{const live=running||now-(G3.lastMove||0)<2500||now-lastPaint>1000;

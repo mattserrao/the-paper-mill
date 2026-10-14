@@ -23,6 +23,7 @@
         return d;}catch(e){clear();return null;}}
     function clear(){try{localStorage.removeItem(KEY);}catch(e){}}
     function restore(d){S=d.S;for(const k in d.C){if(C[k]&&typeof C[k]==="object"&&d.C[k]&&typeof d.C[k]==="object")Object.assign(C[k],d.C[k]);else C[k]=d.C[k];}
+      if(C.spdPref){C.simSpeed=C.spdPref;}else if(S.outg&&S.outg.on&&S.outg.spd){C.simSpeed=S.outg.spd;}delete C.spdPref;   // (v5.0.1: older saves: the player's speed)
       CH.on=d.CH.on;CH.lvl=d.CH.lvl;Object.assign(CH.en,d.CH.en||{});
       if(d.MILL){MILL.name=d.MILL.name;MILL.brand=d.MILL.brand;document.documentElement.style.setProperty("--brand",MILL.brand);PAL_V++;}
       // the open dialog: a card comes back up; an outage plan is asked again

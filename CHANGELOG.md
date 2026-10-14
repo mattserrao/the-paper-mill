@@ -2,7 +2,7 @@
 
 ## v5.0.1 (fixes)
 - Season and survival end: the results dialog was taller than a phone screen and couldn't scroll, so **Submit score** sat off the bottom (and the keyboard, opened for the name field, covered the rest). The dialog now scrolls, its buttons stay pinned to the bottom of the screen, and on phones the keyboard only opens when you tap the name field.
-- Game speed after a planned outage: if you sped the game up during the outage, it dropped back to your old speed when the outage ended. A faster pick during an outage is now the speed you come back to (slowing down to watch the crews still returns you to your old speed afterwards).
+- Game speed and planned outages, rebuilt: your chosen speed is now the only speed setting and nothing ever overwrites it. During a planned outage the game simply runs at no more than 5 min/s (so the crews can be watched), and zen runs at 1; when either ends you're straight back at your speed, with nothing to restore. Before, the outage lowered your speed setting and tried to put it back afterwards, which could fail (players went in at 120 and came out slower). The speed readout shows both during an outage ("5 min/s · 120 after"), and the speed buttons set the speed you'll come back to. Saves from earlier versions taken mid-outage get the player's speed back. New check: `tools/speedcheck.py`.
 
 ## v5.0.0 Survival (release, 2026-10-13)
 The survival release: a second scored mode with mill leaders, painted portraits, and a round of fixes and polish. It

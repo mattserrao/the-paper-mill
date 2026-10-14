@@ -108,7 +108,7 @@
     const RV=G3.rollVis||(G3.rollVis={list:[],seen:-1});if(RV.seen<0)RV.seen=S.tot.rolls;
     // v2.9.7: d -3.2..-1 rolling down the kick-off ramp (single file), -1..0 tipping up on the upender, >=0 standing on the conveyor.
     // Everything speeds up with the game speed, and if rolls pile up waiting to leave the winder the extra plain ones are skipped.
-    const fac=clamp(C.simSpeed/20,1,4);
+    const fac=clamp(simRate()/20,1,4);
     if(S.tot.rolls>RV.seen){const n=Math.min(4,S.tot.rolls-RV.seen);RV.seen=S.tot.rolls;for(let k=0;k<n;k++)RV.list.push({d:-3.2-k*1.5,spin:0});
       while(RV.list.filter(r=>r.d<-1&&!r.col).length>2){const k=RV.list.findIndex(r=>r.d<-1&&!r.col);RV.list.splice(k,1);}
       while(RV.list.length>24){const k=RV.list.findIndex(r=>!r.col);if(k<0)break;RV.list.splice(k,1);}}

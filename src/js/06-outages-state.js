@@ -50,14 +50,12 @@ function outNote(head,body,ms){const el=outShell();el.classList.add("note");
   el.hidden=false;const m=el.querySelector(".modal");m.addEventListener("click",()=>{el.hidden=true;},{once:true});el._t=setTimeout(()=>{el.hidden=true;},ms);}
 function beginOutage(){const o=S.outg,st=S.t;if(!o.plan)o.plan={stock:1,wet:1,dry:1};o.on=true;o.end=st+OUT.len;
   if(S.lead&&o.plan.lead&&o.plan.lead.to)leadChange(o.plan.lead.to);   // v4.4: the one change of leader happens as the outage starts
-  // slow the clock so the crews can be watched; the old speed comes back when the outage ends
-  o.spd=C.spdPref||C.simSpeed;if(C.simSpeed>OUT.simCap&&!TURBO_FAST(C.simSpeed)){setSimSpeed(OUT.simCap);}
+  // (the clock runs at no more than OUT.simCap while o.on, through simRate(); the player's own speed is left alone)
   addFx({id:"pout",left:OUT.len,mods:{pmDown:"planned outage",pulperDown:1}});AUDIO.sfx("clunk",400);
   log(`Planned outage ${o.k} has begun: down until ${hourOf(o.end)}`,"warn");BANNERS.push({text:`Planned outage: the mill is down until ${hourOf(o.end)}.`,t:null,kind:"good",tag:"OUTAGE"});
   outNote("Outage has begun",`The mill is down for planned maintenance: ${(OUT.jobs[outJob(o.k)-1]||"inspections").toLowerCase()} and new press felts. Started ${hourOf(st)}, ends ${outTime(o.end)}.`,5000);}
 function endOutage(){const o=S.outg,pl=o.plan||{stock:1,wet:1,dry:1};o.on=false;S.fx=S.fx.filter(f=>f.id!=="pout");S.M=mods();
-  // v4.2.1: always go back to the player's own speed (it was lost if they touched the speed during the outage)
-  if(!S.zen){const p=C.spdPref||o.spd;if(p)setSimSpeed(p);}o.spd=null;
+  o.spd=null;   // (v5.0.1: nothing to restore: the outage only capped the running speed, see simRate)
   o.rel={stock:OUT.rel[pl.stock],wet:OUT.rel[pl.wet],dry:OUT.rel[pl.dry]};
   const txt=OUT.areas.map(([a,n])=>`${n} ${pl[a]===2?"+20%":pl[a]===0?"−10%":"±0%"}`).join(" · ");
   BANNERS.push({text:`Outage ${o.k} complete. Reliability until the next outage: ${txt}`,t:null,kind:"good",tag:"OUTAGE"});while(BANNERS.length>3)BANNERS.splice(1,1);

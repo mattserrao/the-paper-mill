@@ -19,7 +19,7 @@
   // reel turn-up: at 100% the sheet transfers to the new spool in the primary arms, the full reel is kicked down the rails,
   // the arms lower the new reel onto the rails, and the crane (strongback) takes the full reel away and brings a new spool
   const sm=t=>{t=clamp(t,0,1);return t*t*(3-2*t);},A120=120*Math.PI/180,A105=105*Math.PI/180;
-  function reelUpdate(rdt,rr){const f=clamp(C.simSpeed/30,1,3),dt=rdt*f;
+  function reelUpdate(rdt,rr){const f=clamp(simRate()/30,1,3),dt=rdt*f;
     if(TU.seen<0)TU.seen=S.tot.turnups;
     if(S.tot.turnups>TU.seen){TU.seen=S.tot.turnups;TU.t=0;TU.kick=true;TU.kx=DX-(DR+RM);TU.armHas=false;}   // v2.9.3: silent (its ringing clunk every reel was the repeating "ding")
     TU.t+=dt;const spinV=(S.pm==="run"?1:0)*rdt*6;

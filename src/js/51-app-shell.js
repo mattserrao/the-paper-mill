@@ -74,7 +74,7 @@
     {const se=S.season,on=!!(se&&se.on),sv=!!(se&&se.surv),day=Math.floor(S.t/1440)+1,lab=on?(sv?(NARROW.matches?`W${survWave()} · Day ${day}`:`Wave ${survWave()} · Day ${day}`):`Day ${Math.min(SEASON_DAYS,day)} of ${SEASON_DAYS}`):se&&se.done?(sv?"Run over":"Season over"):"Time";
      set("v2clockL",lab);$("v2clockL").classList.toggle("sday",on);$("v2clockL").title=on?(sv?"Survival: the wave you are in and the day of the run":"Season mode: day of the 30-day season"):"";}
     mirror.forEach(([d,s])=>{if(d.textContent!==s.textContent)d.textContent=s.textContent;});
-    const sp=C.simSpeed+" min/s";if($("v2speed").textContent!==sp)$("v2speed").textContent=sp;
+    const sp=outCapped()?`${simRate()} min/s · ${C.simSpeed} after`:C.simSpeed+" min/s";if($("v2speed").textContent!==sp)$("v2speed").textContent=sp;$("v2speed").title=outCapped()?"Planned outage: slowed so you can watch the crews. Your speed comes back when it ends.":"";
     const n=S.inc.length,bd=$("v2bdg");bd.hidden=!n;if(bd.textContent!==String(n))bd.textContent=n;
   }
   UI_TICKS.push(sync);sync();

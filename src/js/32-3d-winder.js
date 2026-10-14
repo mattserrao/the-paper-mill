@@ -49,7 +49,7 @@
     while(CR.jobs.length>3){const j=CR.jobs.shift();if(j.fromPark)CR.extraPark=Math.max(0,(CR.extraPark||0)-1);if(j.kind==="park")CR.hidePark=Math.max(0,CR.hidePark-1);if(j.kind==="spool"){TU.armHas=true;TU.armT=9;}if(j.fromReel)TU.kick=false;}
     if(!CR.j&&!CR.jobs.length&&TU.t>4&&!TU.armHas){TU.armHas=true;TU.armT=9;}
     if(!CR.j&&CR.jobs.length){CR.j=CR.jobs.shift();CR.t=0;CR.j.s=[CR.x,CR.z];}
-    const per=P.jumbo/Math.max(5,S.rates.prod||30)*60/Math.max(1,C.simSpeed),T=clamp(per*0.25,0.6,4)*(CR.jobs.length?0.7:1);   // v2.9.5: each reel makes up to 3 crane moves, so a move must take well under a third of a reel
+    const per=P.jumbo/Math.max(5,S.rates.prod||30)*60/Math.max(1,simRate()),T=clamp(per*0.25,0.6,4)*(CR.jobs.length?0.7:1);   // v2.9.5: each reel makes up to 3 crane moves, so a move must take well under a third of a reel
     if(CR.j&&rdt>0&&(CR.j.delay||0)>0){CR.j.delay-=rdt;}
     else if(CR.j&&rdt>0){const j=CR.j;CR.t+=rdt/T;const u=CR.t,L=(a,b,k)=>a+(b-a)*clamp(k,0,1),hi=10.0;let x,z,y,on=false;
       if(u<0.2){x=L(j.s[0],j.a[0],u/0.2);z=L(j.s[1],j.a[2],u/0.2);y=hi;}
