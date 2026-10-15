@@ -41,7 +41,7 @@
       const k=t-IMP;out.set(c.I.x-c.d.x*(k*5)+Math.sin(k*9)*0.4,c.I.y+0.8+k*2.6+Math.sin(k*13)*0.3,c.I.z-c.d.z*(k*5));return 2;}
     function finish(){if(!C)return;const c=C;C=null;bird.visible=false;[core,halo,...sparks,...smoke,...feathers,...arcs].forEach(o=>o.visible=false);
       ov.hidden=true;fl.style.opacity=0;document.body.classList.remove("cine");G3.cineHold=false;G3.cineOn=false;try{AUDIO.cine.end();}catch(e){}
-      if(c.cam&&G3.camSet)G3.camSet(c.cam);if(c.was&&$("v2menu").hidden)running=true;}
+      if(c.cam&&G3.camSet)G3.camSet(c.cam);if(c.was&&$("v2menu").hidden&&!(S.cards&&S.cards.open)&&!S.over)running=true;}   /* v5.1: stay paused if a card or dialog opened meanwhile */
     ov.querySelector(".skip").addEventListener("click",e=>{e.stopPropagation();if(C&&!C.struck){try{AUDIO.cine.end();AUDIO.cine.strike();}catch(_){}}finish();});
     G3.birdCine=()=>{if(NOCINE||!G3.on||S.zen||document.hidden||C)return;if(document.querySelector(".v2sheet.open,.v2top.open"))return;   // v5.0.6: not over an open sheet or the stats panel (it hid the panel and ate the clicks); the upset itself still happens
       try{start();}catch(e){console.error("bird cut-scene",e);finish();}};

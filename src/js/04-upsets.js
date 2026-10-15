@@ -6,7 +6,7 @@ const EVENTS=[
  {id:"dryerfire",g:"machine",name:"Fire in the dryers",head:"Fire in the dryer hood! Deluge on, sheet off.",dur:[180,360],mtbf:260,mods:{pmDown:"dryer fire"},fx:"dryerfire"},
  {id:"fabric",g:"machine",name:"Fabric runs off",head:"Forming fabric tracked off the rolls and folded up.",dur:[150,300],mtbf:180,mods:{pmDown:"fabric change"},fx:"fabric"},
  {id:"felt",g:"machine",name:"Press felt blows",head:"Press felt blown. Crew pulling a new felt.",dur:[90,180],mtbf:140,mods:{pmDown:"felt change"},fx:"felt"},
- {id:"slime",g:"machine",name:"Scabs",head:"Scabs in the sheet! Speed cut to 70% and the winder is hayout city.",dur:[300,600],mtbf:150,mods:{speedCap:0.7,breakMul:3,hayMul:20},fx:"slime"},
+ {id:"slime",g:"machine",name:"Slime build-up",head:"Slime build-up in the sheet! Speed cut to 70% and the winder is hayout city.",dur:[300,600],mtbf:150,mods:{speedCap:0.7,breakMul:3,hayMul:20},fx:"slime"},
  {id:"ragger",g:"stock",name:"Ragger tail break",head:"The ragger tail broke off at the wheel. Pulper stopped until an operator restarts the tail with fresh ragger rope.",dur:[90,180],mtbf:140,mods:{pulperDown:1},fx:"ragger"},
  {id:"overflow",g:"stock",name:"Pulper overflows",head:"Pulper overflows and floods the bale yard!",dur:[240,360],mtbf:220,mods:{pulperDown:1,recvMul:0.5},fx:"flood",
    start:i=>{const l=S.yard*0.15;S.yard-=l;i.note=`${Math.round(l)} t of bales soaked`;}},
@@ -133,6 +133,6 @@ function chaosTick(dt){
   {const r=rand("up");if(CH.on&&um>0&&CH.en.chestover&&!active("chestover")&&S.tank>=P.tankCap*0.995&&r<dt/60/25)trigger("chestover");}
   const roll=CH.on&&um>0&&!outOn();
   if(S.rng.bird==null)S.rng.bird=(S.seed^0x5bd1e995)|0;
-  for(const e of EVENTS){const r=rand(e.stream||"up");if(roll&&CH.en[e.id]&&!active(e.id)&&r<dt/60/e.mtbf*CH.lvl*freqMul(e.id)*0.75*um)trigger(e.id);}
+  for(const e of EVENTS){const r=rand(e.stream||"up");if(roll&&CH.en[e.id]&&!active(e.id)&&!civCool(e.id)&&r<dt/60/e.mtbf*CH.lvl*freqMul(e.id)*0.75*um)trigger(e.id);}
 }
 

@@ -744,7 +744,7 @@ body.zen .civbar{display:none}
 .civbar .cv b{color:var(--ink);font-weight:800}
 .civbar .cvbar{display:block;width:44px;height:6px;border-radius:3px;background:var(--chip);overflow:hidden}
 .civbar .cvbar i{display:block;height:100%;background:var(--muted);border-radius:3px}
-.civbar .cv em{font-style:normal}.civbar .cv u{text-decoration:none;font-size:9px}
+.civbar .cv em{font-style:normal}.civbar .cv u{text-decoration:none;font-size:9px}.civbar .cv u.up{color:var(--ok)}.civbar .cv u.dn{color:var(--bad)}
 .civbar .cv.cr{border-color:var(--bad);animation:civpulse 1.6s ease-in-out infinite}.civbar .cv.cr i{background:var(--bad)}.civbar .cv.cr em{color:var(--bad);font-weight:800}
 .civbar .cv.sn i{background:#d9922b}.civbar .cv.sn em{color:#b9771c}
 .civbar .cv.st i,.civbar .cv.ex i{background:var(--ok)}.civbar .cv.ex em,.civbar .cv.st em{color:var(--ok)}.civbar .cv.ex{border-color:var(--ok)}
@@ -787,7 +787,7 @@ body.app #civOv{z-index:115}   /* the pause menu (120) draws above a choice card
 .civpop{position:fixed;z-index:90;width:240px;padding:10px 12px;border-radius:12px;background:var(--panel);border:1px solid var(--line);box-shadow:0 10px 28px rgba(28,34,51,.18);font:500 12.5px var(--f-body);color:var(--ink)}
 .civpop[hidden]{display:none}.civpop b{display:block;font-size:13px;margin-bottom:4px}.civpop ul{margin:0 0 6px;padding-left:16px}.civpop small{color:var(--muted);font-size:11px}
 @media (max-width:420px){.civbar{flex-wrap:nowrap;gap:4px;max-width:calc(100% - 16px);left:8px}.civbar .cv{padding:0 6px;gap:3px;height:22px}
-  .civbar .cv b{font-size:0}.civbar .cv b::after{content:attr(data-s);font-size:10.5px}.civbar .cvbar{width:20px}.civbar .cv u{display:none}}
+  .civbar .cv b{font-size:0}.civbar .cv b::after{content:attr(data-s);font-size:10.5px}.civbar .cvbar{width:20px}.civbar .cv u{font-size:9px;min-width:0}.civbar .cv u:empty{display:none}}
 .ldstart{display:block;font-size:12px;color:var(--muted);margin-top:2px}
 .ldpick .btns{position:sticky;bottom:-16px;background:var(--panel);padding:10px 0 4px;margin-bottom:-4px;z-index:1}
 .modal:focus{outline:none}
@@ -796,3 +796,9 @@ body.app #civOv{z-index:115}   /* the pause menu (120) draws above a choice card
   .outg .seg button,#deal-yes,#deal-no,.civtoast button,.ldpick .btns button,#out-ok,#out-lchg{min-height:44px}
   .survchip .svfold{width:32px;height:32px}
   .civbtn{min-height:52px}}
+/* ---------- v5.1 QA round 2 ---------- */
+.ldtally .flat b{color:var(--muted)}
+.ldswap button small.ldperk{font-size:11px;line-height:1.25;color:var(--ink);opacity:.8}
+body.app #dealOv,body.app #outOv{z-index:115}   /* event cards and the outage plan draw under the pause menu (120), like the civics card */
+@media (pointer:coarse){#ldc-ok,#rc-ok,#out-watch,#seasonOv .btns button,#so-rcbtn{min-height:44px}#so-name{min-height:44px;box-sizing:border-box}}
+@media (max-width:400px){.v2stats .st b{font-size:13px}.v2stats .st{padding-right:4px;margin-right:5px}}   /* v5.1 QA2: cash and profit fit beside the grade badge */

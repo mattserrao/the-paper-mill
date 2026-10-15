@@ -15,7 +15,7 @@ const LEAD={
   sales:7,               // Chip, sales push: +$/t on every grade per push (stays with the mill)
   lock:1,                // Chip, fiber lock: the next wave's fiber is bought at the wave before's price (1 = the whole step)
   strife0:2,             // Chip, labour relations: call-offs and dock brawls x2 while he is in charge
-  wage:0.05,             // Chip, pay settlements: wages +5% with every deal (they stay with the deals)
+  wage:0.10,             // Chip, pay settlements (QA2: was 5%): wages +10% with every deal (they stay with the deals)
   fixCut:0.5,            // Dot, Fix it now: ends a breakdown, returns part of its bill, and that breakdown is 50% rarer from then on (stacks)
   refund:0.6,            // Dot, Fix it now: share of that breakdown's repair bill she gets back
   autoFix:0.5,           // v5.0.4: Dot fixes on her own: each fixable breakdown that starts has this chance, once per outage cycle (no button; 0.25 tested worth no more than no leader)
@@ -30,9 +30,11 @@ const LEAD={
   steam:0.055,           // Hank, dial in the dryers: steam (the energy part of energyCost, not chemicals) -5.5% per pick (stays with the mill)
   heavy:0.02};           // Hank, runs the sheet heavy (basis-weight giveaway): fiber +2% while he is in charge
 const LEAD_IDS=["chip","dot","fel","hank"];
+// v5.1: the picker words the leaders for the mode being started (before the run exists survRun() is false)
+let leadMode=null;const leadSv=()=>leadMode?leadMode==="surv":survRun();
 // what each leader picks at an outage: [stack key, button label, what it does]  (keys kept from v4.4.0-t1 so saves still load)
 const LEAD_PICKS={
-  chip:[["fibre","Fiber lock",()=>survRun()?"next wave's fiber at this wave's price":"next week's fiber market held at this week's price"],["sales","Sales push",()=>`+$${LEAD.sales}/t on every grade`]],
+  chip:[["fibre","Fiber lock",()=>leadSv()?"next wave's fiber at this wave's price":"fiber market held at this outage's price until the next (never above the market)"],["sales","Sales push",()=>`+$${LEAD.sales}/t on every grade`]],
   dot:[],
   fel:[["pstock","Fiber line",()=>`receiving, pulper, screens +${pct1(LEAD.cap)}%`],["pwet","Paper machine",()=>`machine +${pct1(LEAD.cap)}%`],["pdry","Finishing",()=>`winder and shipping +${pct1(LEAD.cap)}%`]],
   hank:[["rethread","Runnability",()=>`breaks −${pct1(LEAD.clean)}%, rethreads −${pct1(LEAD.rethread)}% time`],["clean","Dial in the dryers",()=>`steam −${pct1(leadN("clean")>=LEAD.steamFull?LEAD.steam/2:LEAD.steam)}%`]]};
@@ -45,7 +47,7 @@ const leadDeals=()=>leadN("fibre")+leadN("sales"),leadProjects=()=>leadN("pstock
 // --- effects (read by applyUpgrades, energyCost, the labour line, freqMul, repairs, breaks and the outage) ---
 // v5.1: in a season costs don't climb wave to wave, so Chip's fiber lock holds the weekly fiber market (S.plan.mkt) at the
 // price of the outage where he made the deal, for the cycle that follows (leadMkt, read by applyUpgrades)
-const leadMkt=m=>(S&&S.lead&&!survRun()&&S.lead.lockW&&S.lead.lockW===survWave()&&S.lead.lockMkt!=null)?S.lead.lockMkt:m;
+const leadMkt=m=>(S&&S.lead&&!survRun()&&S.lead.lockW&&S.lead.lockW===survWave()&&S.lead.lockMkt!=null)?Math.min(S.lead.lockMkt,m):m;   // v5.1 QA2: capped, never worse than the market
 const leadLock=()=>survRun()&&S&&S.lead&&S.lead.lockW&&S.lead.lockW===survWave()&&survWave()>1?Math.pow(survCost(survWave()-1)/survCost(survWave()),LEAD.lock):1;
 const leadFibre=()=>S&&S.lead?leadLock()*(leadIs("hank")?1+LEAD.heavy:1):1;
 const leadPrice=()=>LEAD.sales*leadN("sales");

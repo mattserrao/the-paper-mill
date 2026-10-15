@@ -38,7 +38,7 @@ const CIVNEW={
 const CIVMETER={
   w_sickout:{k:"L",head:"A sick-out: half the crew called in sick. Short shifts today.",fx:{left:1440,mods:{breakMul:1.2,clampMul:0.8}},ch:[{},{end:1},{end:1,flag:"L"}]},
   w_petition:{k:"C",head:"A petition against the mill is going round town hall.",fx:{left:3*1440,comm:1.5},ch:[{},{promise:1},{flag:"C"}]},
-  w_watch:{k:"E",head:"Your key customer has put you on watch: −$5/t for a week.",fx:{left:7*1440,price:{all:-5}},ch:[{},{end:1},{}]},
+  w_watch:{k:"E",head:"Your key customer has put you on watch: −⁠$5/t for a week.",fx:{left:7*1440,price:{all:-5}},ch:[{},{end:1},{}]},
   w_vibration:{k:"M",head:"Vibration alarms on the machine: top speed −5% until it's fixed.",fx:{left:"outage",mods:{speedCap:0.95}},ch:[{end:1,down:120},{},{end:1,flag:"M"}]},
   c_walkout:{k:"L",head:"Walkout! The yard has stopped, and the machine will run dry in about 6 hours.",fx:{left:720,mods:{recvMul:0,clampMul:0}},ch:[{end:1,raise:0.03},{left:360},{after:{L:2}}]},
   c_protest:{k:"C",head:"Protesters are blocking the gate. No trucks in or out.",fx:{left:720,mods:{noIn:1,noOut:1}},ch:[{end:1,pledge:1},{},{left:120}]},
@@ -47,7 +47,7 @@ const CIVMETER={
 // reward cards (Excellent): accept or decline
 const CIVREWARD={
   r_L:{k:"L",n:"Crew pledge",head:"The crew offers to make the next planned outage finish early, with no overrun.",win:"Next outage: no overrun, 1 h early. Free the first time; each later one costs Labor −9."},
-  r_C:{k:"C",n:"Town tax break",head:"The town offers a property tax break if the mill pays into the school fund.",win:"Pay $60k now; running costs −$3k a day for good."},
+  r_C:{k:"C",n:"Town tax break",head:"The town offers a property tax break if the mill pays into the school fund.",win:"Pay $60k now; running costs −⁠$3k a day for good."},
   r_E:{k:"E",n:"Long-term contract",head:"A big customer offers a long-term contract.",win:"+$8/t on every grade for 14 days. You must hit a weekly tonnage target or pay $40 per ton short."},
   r_M:{k:"M",n:"Record run week",head:"The machine is in great shape. Push it for a record week?",win:"Top speed +4% for 7 days, then Machinery −15 from the wear."}};
 // special effects of particular choices ("id:index")
@@ -77,7 +77,7 @@ function civTick(dt){if(!civOn())return;const V=S.civ;
   for(const k of CIVK){const m=V.m[k],d=(m>70?CIV.driftHi:m<30?CIV.driftLo:CIV.drift)/1440*dt;V.m[k]=m<50?Math.min(50,m+d):m>50?Math.max(50,m-d):m;}
   if(V.m.M<25)V.m.L=Math.max(0,V.m.L-0.3/1440*dt);   // (round 1: was under 35, 0.5/day)                    // fighting broken equipment wears the crew down
   if(V.m.C>65&&V.m.L<50)V.m.L=Math.min(50,V.m.L+0.5/1440*dt);           // a good town to hire from
-  {const tx=civTax()+(V.taxDay||0);if(tx>0)deal(tx*dt/1440);}           // tax breaks
+  {const tx=civTax()+(V.taxDay||0);if(tx>0)civPay(-tx*dt/1440);}           // tax breaks
   if(V.prem>0)spend(V.prem*dt/60,"repairs");                            // the insurer's premium increase
   if(S.t-V.snapT>=360){V.snapT=S.t;V.prev=Object.assign({},V.snap);V.snap=Object.assign({},V.m);}
   if(S.t-V.auT>=60){V.auT=S.t;applyUpgrades();}
@@ -93,7 +93,7 @@ function civTick(dt){if(!civOn())return;const V=S.civ;
     for(const id of Object.keys(CIVNEW)){const r=civRng();let p=60/(CIV.newMtbf*1440)*up*((V.odds[id])||1);
       const a=civArea(id);if(a==="Community")p*=civComm()*pet;if(a==="Crew")p*=civYard();
       if(id==="rush"&&S.plan&&S.plan.hot)continue;
-      if(r<p&&!civFxGet(id)&&!V.q.some(q=>q.id===id)&&!(V.cur&&V.cur.id===id))civQueue(id,"new");}}}
+      if(r<p&&!civCool(id)&&!civFxGet(id)&&!V.q.some(q=>q.id===id)&&!(V.cur&&V.cur.id===id))civQueue(id,"new");}}}
   // the standing-order toast commits after 2 sim hours if the page timer hasn't
   if(V.pending&&S.t-V.pending.t>=120)civCommit();   // (v5.1 QA: sim time only, so it waits while the game is paused)
   if(V.q.length&&!V.cur&&!V.pending&&!(S.cards&&S.cards.open)&&!outOn()&&!S.over&&!(S.season&&S.season.done))civNext();}
@@ -141,13 +141,13 @@ function civCommit(){const P=S.civ&&S.civ.pending;if(civToastEl)civToastEl.hidde
 function civDrop(){if(civEl&&!civEl.hidden)civEl.hidden=true;if(civToastEl)civToastEl.hidden=true;if(S&&S.cards&&S.cards.open&&S.cards.open.civ)S.cards.open=null;if(S&&S.civ){S.civ.cur=null;S.civ.pending=null;}}
 
 /* ---- applying a choice ---- */
-function civApply(d,i,auto){const V=S.civ,id=d.id;V.seen[id]=1;
+function civApply(d,i,auto){const V=S.civ,id=d.id;V.seen[id]=1;if(d.kind!=="meter")(V.cd||(V.cd={}))[id]=S.t+CIV.cool;   // v5.1 QA2: an answered upset rests for 2 days
   if(CIVREWARD[id]){civReward(id,i===0);return;}
   const u=CIVU[id],c=u&&u.ch[i];if(!c)return;const tag=civTag(id,i),cost=civCost(c[1]),fx=CIVFX[id+":"+i]||{},mt=CIVMETER[id],mc=mt?mt.ch[i]||{}:{};
   const dot=leadIs("dot")&&tag==="P"&&!!EV[id];   // Dot: proper fixes cost one tier less and skip the extra downtime
   let paid=dot?civCost(Math.max(0,c[1]-1)):cost;if(fx.hedge&&S.cards.pend.some(p=>p.h==="hedge#1"))paid=cost/2;   // the power hedge softens the energy spike
   if(id==="inspector"&&V.flags.blitz){V.flags.blitz=0;if(i===0)paid=Math.max(0,paid-civCost(1));civAdd({L:1},"The safety blitz paid off");}
-  if(paid)deal(-paid);   // (a negative cost earns)
+  if(paid)civPay(paid);   // (a negative cost earns)
   if(c[2])V.odds[id]=Math.max(0.25,Math.min(3,(V.odds[id]||1)*CIV.odds[String(c[2])]));
   let civd=c[3];if(fx.gamble)civd=civRng()<0.5?{L:1,C:1}:{L:1,C:-2};
   const ct=civAdd(civd);
@@ -162,7 +162,7 @@ function civApply(d,i,auto){const V=S.civ,id=d.id;V.seen[id]=1;
   if(fx.warranty){if(civRng()<0.5)log("The vendor gave in: a free felt.","ok");else civFxAdd("civwarranty",{left:2880,mods:{breakMul:1.3}});}
   if(fx.grade)civFxAdd("civgrade",{left:fx.grade,mods:{pmDown:"squeezed-in grade change"}});
   if(id==="rush"&&i<2&&!S.plan.hot){const t=i===0?900:450,prem=i===0?90:60,pen=i===0?40:0;   // (v5.1 QA: a real order, like the old Hot order card)
-    S.plan.q.unshift({g:"33HT",t,i:3});S.plan.left=0;S.plan.hot={made:0};pend("rush",30*60,"rush",{t,prem,pen});civBanner(`Rush order: ${t} t of 33HT due in 30 hours.`,true,"ORDER");}
+    S.plan.q.unshift({g:"33HT",t,i:3});S.plan.left=0;S.plan.hot={made:0};pend("rush",30*60,"rush",{t,prem,pen});civBanner(`Rush order: ${t} t of high-strength board due in 30 hours.`,true,"ORDER");}
   if(fx.posts)civFxAdd("civposts",{left:fx.posts,mods:{speedCap:0.9}});
   // the new upsets' base effect: a proper fix ends it, a cheap fix halves it, a shortcut leaves it
   if(CIVNEW[id]&&civFxGet(id)){if(tag==="P")civFxEnd(id);else if(tag==="Q")civFxGet(id).left/=2;}
@@ -183,7 +183,7 @@ function civApply(d,i,auto){const V=S.civ,id=d.id;V.seen[id]=1;
   log(`${auto?"Standing order":"Decision"} · ${u.n}: ${c[0]}${paid>0?" ("+money(paid)+")":paid<0?" (+"+money(-paid)+")":""}${ct?" · "+ct:""}`,"warn");}
 function civReward(id,yes){const V=S.civ,r=CIVREWARD[id];if(!yes){log(`Declined: ${r.n}`,"");return;}
   if(id==="r_L"){V.pledgeOut=true;V.pledgeN=(V.pledgeN||0)+1;if(V.pledgeN>1)civAdd({L:-3},"Crew pledge again");}
-  if(id==="r_C"){deal(-60e3);V.taxDay=(V.taxDay||0)+3000;V.cspend=S.t;}
+  if(id==="r_C"){civPay(60e3);V.taxDay=(V.taxDay||0)+3000;V.cspend=S.t;}
   if(id==="r_E"){civFxAdd("r_contract",{left:14*1440,price:{all:8}});const day=Math.max(1,S.t/1440),rate=(S.shipT||0)/day;civTimer({act:"contract",target:rate*7*0.9,ship0:S.shipT||0,n:1,left:7*1440});}
   if(id==="r_M"){V.runUntil=S.t+7*1440;civTimer({act:"runend",left:7*1440});applyUpgrades();}
   civBanner(`Accepted: ${r.n}. ${r.win}`,true,"REWARD");}
@@ -232,7 +232,7 @@ function civCardDue(p){if(!civOn())return;if(p.civo){civAdd(p.civo,"Card outcome
 function civPlanHTML(){if(!civOn())return "";const V=S.civ;
   const seg=(n,opts)=>`<div class="seg" data-c="${n}">${opts.map(([v,l],i)=>`<button type="button" data-v="${v}" aria-pressed="${opts.length===2?i===0:i===1}">${l}</button>`).join("")}</div>`;
   return `<div class="civplan"><div class="cvq">Civics for the next cycle</div>
-    <div class="crow"><div><b>Price setting</b><small>Economy ${V.m.E<50?"is low":"is fine"}: discounts win customers, a premium costs goodwill</small></div>${seg("price",[["-5","−$5/t"],["0","Hold"],["5","+$5/t"]])}</div>
+    <div class="crow"><div><b>Price setting</b><small>Economy is ${civBand(V.m.E)[1]}. Discount: Economy +${3*CIV.unit}. Premium: Economy −⁠${5*CIV.unit}</small></div>${seg("price",[["-5","−⁠$5/t"],["0","Hold"],["5","+$5/t"]])}</div>
     <div class="crow"><div><b>Crew bonus</b><small>Labor +${2*CIV.unit} when the outage ends</small></div>${seg("bonus",[["0","None"],["20000","$20k"]])}</div>
     <div class="crow"><div><b>Community donation</b><small>Community +${2*CIV.unit} when the outage ends${V.pledgeDon?" · pledge: "+money(V.pledgeDon)+" every cycle":""}</small></div>${seg("don",[["0","None"],["20000","$20k"]])}</div></div>`;}
 function civPlanWire(host,plan){if(!host)return;plan.civ={price:0,bonus:0,don:0};
@@ -243,9 +243,9 @@ function civOutageBegin(o,st){if(!civOn())return;const V=S.civ;let d=civOver();i
   o.civOver=d;if(d<0){o.end=st+OUT.len+d;const p=civFxGet("pout");if(p)p.left=OUT.len+d;}}
 function civOutageEnd(o,pl){if(!civOn())return;const V=S.civ,pc=pl&&pl.civ;
   if(o.civOver>0){civFxAdd("civover",{left:o.civOver,mods:{pmDown:"outage overran (crew)"}});log(`The crew ran the outage ${o.civOver} min over.`,"warn");}
-  if(pc){if(pc.price){civFxAdd("civprice",{left:OUT.every*1440,price:{all:pc.price}});civAdd({E:pc.price<0?2:-3},"Price setting");}   // (round 1: discount −$5/t, was −$10; the premium costs Economy −3)
+  if(pc){if(pc.price){civFxAdd("civprice",{left:OUT.every*1440,price:{all:pc.price}});civAdd({E:pc.price<0?3:-5},"Price setting");}   // (QA2: premium Economy −15, discount +9)
     if(pc.bonus)civAdd({L:2},"Crew bonus");if(pc.don){civAdd({C:2},"Community donation");V.cspend=S.t;}}
-  if(V.pledgeDon){deal(-V.pledgeDon);V.cspend=S.t;log(`Community pledge: ${money(V.pledgeDon)} donated.`,"");}}
+  if(V.pledgeDon){civPay(V.pledgeDon);V.cspend=S.t;log(`Community pledge: ${money(V.pledgeDon)} donated.`,"");}}
 
 /* ---- the bar: four meters under the wave chip ---- */
 {const bar=document.createElement("div");bar.className="civbar";bar.id="civBar";bar.hidden=true;
@@ -254,7 +254,7 @@ function civOutageEnd(o,pl){if(!civOn())return;const V=S.civ,pc=pl&&pl.civ;
   UI_TICKS.push(()=>{const on=civOn();if(bar.hidden===on){bar.hidden=!on;document.body.classList.toggle("civ",on);}if(!on)return;
     for(const k of CIVK){const v=S.civ.m[k],b=civBand(v),el=bar.querySelector(`[data-k="${k}"]`),pv=(S.civ.prev||S.civ.snap)[k],tr=v-pv;
       el.className="cv "+b[2];el.querySelector("i").style.width=v.toFixed(0)+"%";const em=el.querySelector("em");if(em.textContent!==b[1])em.textContent=b[1];
-      const ar=tr>0.5?"▲":tr<-0.5?"▼":"";const u=el.querySelector("u");if(u.textContent!==ar)u.textContent=ar;
+      const ar=tr>0.5?"▲":tr<-0.5?"▼":"";const u=el.querySelector("u");if(u.textContent!==ar){u.textContent=ar;u.className=tr>0?"up":"dn";}
       el.title=`${CIV.names[k]} ${v.toFixed(0)}/100 · ${b[1]}`;}});}
 // a choice card or toast left open when the run ends (season over, bankrupt, zen, free play) goes away with it
 UI_TICKS.push(()=>{if(civOn()||!S.civ)return;if((civEl&&!civEl.hidden)||S.civ.cur||S.civ.pending)civDrop();});

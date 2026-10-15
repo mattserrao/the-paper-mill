@@ -11,13 +11,19 @@ const CIV={unit:3,           // meter points per design weight (a choice's "+2" 
   cost:{"-1":-25e3,"0":0,"1":10e3,"2":35e3,"3":90e3},    // cash per cost tier ($, $$, $$$; -1 earns) (round 1: was 20k/60k/150k, earns 30k)
   odds:{"-2":0.5,"-1":0.75,"0":1,"1":1.5},             // (round 2: more often = 1.5x, was 1.3x, so shortcuts come back within a season)             // how often the upset comes back, per odds step (stacks, 0.25x to 3x)
   warn:40,crisis:20,reward:80,rearm:65,crisisEvery:7*1440,warnRearm:45,warnCool:3*1440,startMin:42,   // (round 1: crises every 7 days, was 4; warnings re-arm at 45 with a 3-day cooldown; no meter starts below 42)
-  newMtbf:45,                // days between each of the new civic upsets (round 1: was 30; survival: x half the wave's extra upset odds, at most 2x)
+  newMtbf:45,
+  cool:2*1440,               // v5.1 QA2: an upset the player answered can't come back for 2 days                // days between each of the new civic upsets (round 1: was 30; survival: x half the wave's extra upset odds, at most 2x)
   lead:{chip:{E:60,L:40,M:50,C:50},dot:{E:50,L:50,M:60,C:40},fel:{E:50,L:45,M:55,C:50},hank:{E:45,L:60,M:50,C:45}},
   site:{urban:{C:-6},rural:{L:-6},desert:{M:-6},swamp:{C:-6}},   // (round 1: was -10)
   names:{E:"Economy",L:"Labor",M:"Machinery",C:"Community"},
   bands:[[81,"Excellent","ex"],[61,"Strong","st"],[40,"Steady","sd"],[20,"Strained","sn"],[0,"Crisis","cr"]]};
 const CIVK=["E","L","M","C"];
 const civOn=()=>!!(S&&S.civ&&S.season&&S.season.on&&!S.free&&!S.zen);
+// v5.1 QA2: civics money has its own ledger line (it was booked under Deals & trials); a positive v is a cost
+function civPay(v){if(!v)return;S.cash-=v;S.ledger.civ=(S.ledger.civ||0)+v;}
+// the four meters in words, for the report card and the end screen ("" when civics never ran)
+const civSummary=m=>m?CIVK.map(k=>`${CIV.names[k]} ${Math.round(m[k])} ${civBand(m[k])[1]}`).join(" · "):"";
+const civCool=id=>!!(civOn()&&S.civ.cd&&S.civ.cd[id]>S.t);
 const civV=k=>civOn()?S.civ.m[k]:50;
 const civBand=v=>CIV.bands.find(b=>v>=b[0]);
 // -1..+1 from the meter: linear above 50, a slight curve below (20 hurts noticeably more than 40)

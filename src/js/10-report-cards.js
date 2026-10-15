@@ -25,15 +25,15 @@ function rcTick(dt){const se=S.season;if(!se||!se.on||se.done||dt<=0)return;
   // period boundaries: start of day 11 and day 21. v4.3 survival: a period is a wave, its card pops when its outage ends,
   // and only the last few cards are kept (a run has no fixed length)
   const pi=se.surv?survWave()-1:Math.floor(S.t/14400);if(pi>R.i&&(se.surv||pi<3)){const card=rcMake(R.p,R.i);if(se.surv)card.next=true;R.cards[R.i]=card;R.i=pi;R.p=rcAcc();R.pend=card;if(se.surv&&pi>4)R.cards[pi-5]=null;}
-  if(R.pend&&!(S.cards&&S.cards.open)&&!S.over){const c=R.pend;R.pend=null;rcOpen(c);}}
+  if(R.pend&&!(S.cards&&S.cards.open)&&!S.over&&!(S.civ&&S.civ.pending)){   /* (v5.1 QA2: waits for a standing-order toast to commit) */const c=R.pend;R.pend=null;rcOpen(c);}}
 function rcLimit(){const M=S.M||{},starved=()=>S.yard<P.yardCap*0.04||M.noIn||M.docksClosed?"Receiving":"Pulper";
   if(S.pm==="full")return "Shipping";if(S.pm==="spools")return "Winder";if(S.pm==="down")return M.pmDown?"Machine down":starved();if(S.pm!=="run")return "Machine down";
   if(S.pmSpeed<C.pmSp.v*0.97*(M.speedCap||1)&&S.tank<P.tankCap*0.3)return starved();return "Machine at full speed";}
 function rcGrade(v,cut){return ["A","B","C","D","F"][cut.findIndex(c=>v>=c)<0?4:cut.findIndex(c=>v>=c)];}
 function rcSum(a){const L=S.ledger,d=k=>(L[k]||0)-(a.L0[k]||0),prod=S.tot.prodT-a.prod0,ship=(S.shipT||0)-a.ship0,run=Math.max(1,a.min-a.plan),days=Math.max(0.1,a.min/1440);
   const ops=["occ","energy","labor","overhead","premium"].reduce((t,k)=>t+d(k),0),spent={Fiber:d("occ"),Energy:d("energy"),Labour:d("labor"),Overhead:d("overhead"),"Freight & insurance":d("premium"),"Repairs & outages":d("repairs"),Upgrades:d("upgrades")};
-  const rev=d("rev"),deals=d("deals");spent["Deals & trials"]=Math.max(0,-deals);   // v5.0.6: a net cost from event cards gets its own row, so the rows add up to Net
-  const earned=rev+Math.max(0,deals),spentT=Object.values(spent).reduce((t,v)=>t+v,0),net=earned-spentT;
+  const rev=d("rev"),deals=d("deals");spent["Deals & trials"]=Math.max(0,-deals);const cv=d("civ");spent.Civics=Math.max(0,cv);   // v5.0.6: a net cost from event cards gets its own row, so the rows add up to Net
+  const earned=rev+Math.max(0,deals)+Math.max(0,-cv),spentT=Object.values(spent).reduce((t,v)=>t+v,0),net=earned-spentT;
   const rel={};RC_SEC.forEach(([k])=>rel[k]=a.up[k]/run);const relAvg=RC_SEC.reduce((t,[k])=>t+rel[k],0)/RC_SEC.length;
   const dn=Object.entries(a.dn).sort((x,y)=>y[1]-x[1]).slice(0,5),bnT=Object.values(a.bn).reduce((t,v)=>t+v,0)||1,bn=RC_STEPS.map(k=>[k,(a.bn[k]||0)/bnT]).sort((x,y)=>y[1]-x[1]);
   const price=priceOf(C.grade),cpt=prod>0?(ops+d("repairs"))/prod:0,margin=earned>0?(earned-(spentT-spent.Upgrades))/earned:0;
@@ -53,8 +53,9 @@ function rcMake(a,i){const p=rcSum(a),s=rcSum(S.rc.s);
   else if(worst==="Cost / ton")tip=`Each ton cost ${money(p.cpt)} to make against a ${money(p.price)} price. Efficiency upgrades and fewer breaks bring that down.`;
   else if(bn&&bn[1]>0.4)tip=bn[0]==="Machine at full speed"?`The paper machine ran flat out ${Math.round(bn[1]*100)}% of the time, so it sets your output. Speed and drive upgrades pay back fastest.`:bn[0]==="Machine down"?`The machine being down held the mill back ${Math.round(bn[1]*100)}% of the time. Cut breaks and breakdowns first.`:`The ${bn[0].toLowerCase()} held the mill back ${Math.round(bn[1]*100)}% of the time. That's where an upgrade pays back fastest.`;
   else tip=overall==="A"?"Great running. Keep the machine up and the buffers healthy.":`Profit margin was ${Math.round(p.margin*100)}%. Shorter downtime is the quickest way to lift it.`;
-  if(survRun())return {i,wave:i+1,from:i?i*OUT.every+1:1,to:(i+1)*OUT.every,p,s,g,overall,tip};   // v4.3: a wave's card (a wave runs from one outage day to the next)
-  return {i,from:i*10+1,to:i*10+10,p,s,g,overall,tip};}
+  const cm=civOn()?Object.assign({},S.civ.m):null;   // v5.1 QA2: the meters when the card was made
+  if(survRun())return {i,wave:i+1,from:i?i*OUT.every+1:1,to:(i+1)*OUT.every,p,s,g,overall,tip,cm};   // v4.3: a wave's card (a wave runs from one outage day to the next)
+  return {i,from:i*10+1,to:i*10+10,p,s,g,overall,tip,cm};}
 function rcHTML(c){const W=c.wave,per=W?"this wave":"these 10 days",all=W?"run so far":"season so far";const p=c.p,s=c.s,pc=v=>Math.round(v*100)+"%",hrs=m=>(m/60).toFixed(m<600?1:0)+" h",gc=x=>"rcg g"+x;
   const row=(k,a,b,cls)=>`<div class="rcr${cls?" "+cls:""}"><span>${k}</span><b>${a}</b><i>${b}</i></div>`;
   const bar=(k,v,lab,hot)=>`<div class="rcb${hot?" hot":""}"><span>${k}</span><div><em style="width:${Math.max(2,Math.round(v*100))}%"></em></div><b>${lab}</b></div>`;
@@ -66,6 +67,7 @@ function rcHTML(c){const W=c.wave,per=W?"this wave":"these 10 days",all=W?"run s
     ${row("Earned (paper sales"+(p.deals>0?" + deals":"")+")",money(p.earned),money(s.earned),"pos")}
     ${Object.keys(p.spent).filter(k=>p.spent[k]||s.spent[k]).map(k=>row(k,money(-p.spent[k]),money(-s.spent[k]))).join("")}
     ${row("Net",money(p.net),money(s.net),"net "+(p.net>=0?"pos":"neg"))}
+    ${c.cm?`<h3>Civics <small>at the end of ${per}</small></h3>${CIVK.map(k=>row(CIV.names[k],Math.round(c.cm[k])+"/100",civBand(c.cm[k])[1])).join("")}`:""}
     <h3>Cost per ton <small>${per} · ${all}</small></h3>
     ${row("Cost to make a ton",money(p.cpt),money(s.cpt))}${row("Selling price",money(p.price),money(s.price))}${row("Profit margin (before upgrades)",pc(p.margin),pc(s.margin))}
     ${row("Tons made",Math.round(p.prod).toLocaleString("en-US")+" t",Math.round(s.prod).toLocaleString("en-US")+" t")}
@@ -99,6 +101,7 @@ function endSeason(bust){const se=S.season;if(typeof civDrop==="function")civDro
   $("so-p").textContent=bust?`${MILL.name} ran out of money before day ${SEASON_DAYS}.`:`${SEASON_DAYS} days at ${MILL.name}${/[.!?]$/.test(MILL.name)?"":"."}`;   // (v4.2.5: no "Co.." when the name ends in a full stop)
   const eff=S.tot.pot>0?S.tot.prodT/S.tot.pot:1,sg=S.rc&&S.rc.s?rcMake(S.rc.s,S.rc.i).overall:null,g=sg?RATINGS.find(x=>x[1]===sg):RATINGS.find(x=>eff>=x[0]);
   const st=[["Net profit",money(r.score),"big"],["Tons shipped",f0(r.tons)+" t"],["Upsets survived",String(r.incidents)],["Rolls made",String(S.tot.rolls)],["Season grade",g[1]+" · "+g[2]],["Output",Math.round(eff*100)+"% of max-speed tons"]];
+  if(S.civ&&S.civ.m&&!S.free&&civSummary(S.civ.m))st.push(["Civics",civSummary(S.civ.m),"wide"]);   // v5.1 QA2
   if(S.lead)st.push(["Mill leader",LEADERS[S.lead.id].name+(S.lead.was?" (after "+LEADERS[S.lead.was].name+")":""),"wide"]);   // v5.1: seasons have leaders too
   $("so-stats").replaceChildren(...st.map(([k,v,c])=>{const d=document.createElement("div");if(c)d.className=c;const a=document.createElement("span");a.textContent=k;const b=document.createElement("b");b.textContent=v;d.append(a,b);return d;}));
   {const c=bust?null:rcFinal(),box=$("so-rc");if(box){if(c){box.hidden=false;box.innerHTML=`<div class="rcmini"><div class="rcg g${c.overall}">${c.overall}</div><div><b><span class="nw">Days ${c.from}–${c.to}</span> report card</b><small>${Object.entries(c.g).map(([k,v])=>k+" "+v).join(" · ")}</small><p>${c.tip}</p></div></div><button id="so-rcbtn" class="ghost">Open the full report card</button>`;

@@ -452,6 +452,8 @@ body.season-lock label.check:has(#breaks),body.season-lock label.check:has(#hays
 .outg .when{font-size:14px;color:var(--ink)}
 .outg .orow{display:grid;grid-template-columns:1fr auto;gap:4px 10px;align-items:center;padding:10px 0;border-top:1px solid var(--line)}
 .outg .orow b{display:block;font:700 15px var(--f-body)}.outg .orow small{display:block;font:500 12px var(--f-body);color:var(--muted)}
+.outg .crow{display:grid;grid-template-columns:1fr auto;gap:4px 10px;align-items:center;padding:10px 0;border-top:1px solid var(--line)}   /* v5.1 civics levers (not .orow: the budget code walks those) */
+.outg .crow b{display:block;font:700 15px var(--f-body)}.outg .crow small{display:block;font:500 12px var(--f-body);color:var(--muted)}
 .outg .seg{display:flex;border:1px solid var(--line);border-radius:10px;overflow:hidden}
 .outg .seg button{border:0;border-radius:0;padding:8px 10px;font:700 13px var(--f-body);background:var(--panel);color:var(--ink);min-width:54px}
 .outg .seg button+button{border-left:1px solid var(--line)}
@@ -642,6 +644,7 @@ details.areactl[open]>summary{margin-bottom:12px}
 /* the wave chip under the top bar (the banner moves down to make room) */
 .survchip{position:fixed;z-index:69;left:max(10px,env(safe-area-inset-left,0px));top:calc(58px + env(safe-area-inset-top,0px));display:flex;align-items:center;gap:10px;height:28px;padding:0 12px 0 3px;border-radius:14px;background:var(--panel);border:1px solid var(--line);box-shadow:0 4px 14px rgba(28,34,51,.12);font:600 12px var(--f-body);color:var(--muted);white-space:nowrap;max-width:calc(100% - 20px);overflow:hidden}
 .survchip[hidden]{display:none}
+.survchip.season .svbody>span{display:none}   /* v5.1: seasons show the leader and the outage countdown only */
 .survchip .svbody>b{background:var(--ink);color:var(--panel);border-radius:11px;padding:3px 10px;font:800 12px var(--f-body);letter-spacing:.04em;text-transform:uppercase}
 .survchip span b{color:var(--ink);font-weight:800;font-variant-numeric:tabular-nums}
 .survchip em{font-style:normal;border-left:1px solid var(--line);padding-left:10px}
@@ -745,6 +748,72 @@ button.ldcard[aria-checked="true"]{border:2px solid var(--stock);padding:9px;bac
 #seasonOv:not([hidden]){display:block;overflow-y:auto;-webkit-overflow-scrolling:touch;overscroll-behavior:contain}
 #seasonOv>.modal{margin:16px auto;box-sizing:border-box}
 #seasonOv .btns{position:sticky;bottom:-20px;z-index:1;margin:0 -22px -20px;padding:12px 22px calc(14px + env(safe-area-inset-bottom,0px));background:var(--panel);border-top:1px solid var(--line);border-radius:0 0 8px 8px}
+/* ---------- v5.1 (offline): civics ---------- */
+.civbar{position:fixed;z-index:68;left:max(10px,env(safe-area-inset-left,0px));top:calc(92px + env(safe-area-inset-top,0px));display:flex;gap:6px;flex-wrap:wrap;max-width:calc(100% - 20px)}
+.civbar[hidden]{display:none}
+body.zen .civbar{display:none}
+.civbar .cv{display:flex;align-items:center;gap:6px;height:24px;padding:0 8px;border-radius:12px;background:var(--panel);border:1px solid var(--line);box-shadow:0 3px 10px rgba(28,34,51,.10);font:600 11px var(--f-body);color:var(--muted);white-space:nowrap}
+.civbar .cv b{color:var(--ink);font-weight:800}
+.civbar .cvbar{display:block;width:44px;height:6px;border-radius:3px;background:var(--chip);overflow:hidden}
+.civbar .cvbar i{display:block;height:100%;background:var(--muted);border-radius:3px}
+.civbar .cv em{font-style:normal}.civbar .cv u{text-decoration:none;font-size:9px}.civbar .cv u.up{color:var(--ok)}.civbar .cv u.dn{color:var(--bad)}
+.civbar .cv.cr{border-color:var(--bad);animation:civpulse 1.6s ease-in-out infinite}.civbar .cv.cr i{background:var(--bad)}.civbar .cv.cr em{color:var(--bad);font-weight:800}
+.civbar .cv.sn i{background:#d9922b}.civbar .cv.sn em{color:#b9771c}
+.civbar .cv.st i,.civbar .cv.ex i{background:var(--ok)}.civbar .cv.ex em,.civbar .cv.st em{color:var(--ok)}.civbar .cv.ex{border-color:var(--ok)}
+@keyframes civpulse{50%{box-shadow:0 0 0 3px rgba(200,60,60,.25)}}
+@media (prefers-reduced-motion: reduce){.civbar .cv.cr{animation:none}}
+@media (max-width:520px){.civbar .cv{padding:0 6px;gap:4px}.civbar .cvbar{width:26px}.civbar .cv em{display:none}}
+body.app.civ .banner3d{top:calc(126px + env(safe-area-inset-top,0px))}
+.modal.civ .civch{display:grid;gap:8px;margin:10px 0}
+.civbtn{display:flex;gap:10px;align-items:flex-start;text-align:left;width:100%;padding:10px 12px;border:1px solid var(--line);border-radius:10px;background:var(--panel);color:var(--ink);cursor:pointer;font:inherit}
+.civbtn:hover,.civbtn:focus-visible{border-color:var(--ink)}
+.civbtn .cvl{flex:none;display:grid;place-items:center;width:24px;height:24px;border-radius:50%;background:var(--ink);color:var(--panel);font-weight:800;font-size:12px}
+.civbtn .cvb{display:grid;gap:4px;min-width:0}
+.civbtn .cvb b{font-size:14px}.civbtn small{color:var(--muted);font-size:12px}
+.civbtn .cvtag{font-style:normal;font-size:10px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;color:var(--muted)}
+.cvrow{display:flex;flex-wrap:wrap;gap:4px 6px;align-items:center}
+.cvcost{font-weight:800;font-size:12px}.cvcost.free{color:var(--muted);font-weight:600}.cvcost.earn{color:var(--ok)}
+.cvodds{font-size:11px;font-weight:700;padding:1px 6px;border-radius:8px;background:var(--chip)}.cvodds.up{color:var(--ok)}.cvodds.dn{color:var(--bad)}
+.cvc{font-size:11px;font-weight:700;padding:1px 6px;border-radius:8px}.cvc.up{color:var(--ok);background:rgba(60,160,90,.12)}.cvc.dn{color:var(--bad);background:rgba(200,60,60,.10)}
+.civord{display:flex;gap:8px;align-items:center;font-size:13px;color:var(--muted);margin-top:4px}.civord small{color:var(--muted)}
+.civcard{display:flex;flex-wrap:wrap;gap:4px 6px;align-items:center;margin:8px 0 2px;font-size:12px}.civcard>span{font-weight:800;color:var(--ink);margin-right:2px}.civcard em{font-style:normal;color:var(--muted);margin-left:4px}
+.civplan{margin:8px 0;padding-top:6px}
+.cvq{font:600 13px var(--f-body);color:var(--muted);padding:6px 0 0}
+.civtoast{position:fixed;z-index:145;left:50%;transform:translateX(-50%);bottom:calc(122px + env(safe-area-inset-bottom,0px));width:min(560px,calc(100% - 24px));justify-content:space-between;display:flex;align-items:center;gap:10px;padding:8px 10px 8px 14px;border-radius:12px;background:var(--panel);border:1px solid var(--line);box-shadow:0 8px 24px rgba(28,34,51,.18);font-size:13px;max-width:calc(100% - 24px);overflow:hidden}
+.civtoast[hidden]{display:none}
+.civtoast button{flex:none;border:1px solid var(--line);background:var(--chip);color:var(--ink);border-radius:8px;padding:4px 10px;font:600 12px var(--f-body);cursor:pointer}
+.civtoast i{position:absolute;left:0;bottom:0;height:3px;background:var(--ink);width:100%;transition:width .2s linear}
+@keyframes civtoast{from{width:100%}to{width:0}}
+
+/* ---------- v5.1 QA polish ---------- */
+body.app #civOv{z-index:115}   /* the pause menu (120) draws above a choice card */
+.civtoast span{min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.civtoast button{min-height:36px;padding:6px 14px}
+@media (max-width:520px){.civtoast span{white-space:normal;font-size:12px}}
+.modal.civ.cvw{border-top:5px solid #d9922b}.modal.civ.cvw .dk{color:#b9771c}
+.modal.civ.cvx{border-top:5px solid var(--bad)}.modal.civ.cvx .dk{color:var(--bad)}
+.modal.civ.cvr{border-top:5px solid var(--ok)}.modal.civ.cvr .dk{color:var(--ok)}
+.cvbill{font-size:12.5px;color:var(--muted);margin:-4px 0 0}
+.civbar .cv{cursor:pointer}.civbar .cv:focus-visible{outline:2px solid var(--ink);outline-offset:2px}
+.civbar .cv.sd i{background:#8a94a6}
+.civpop{position:fixed;z-index:90;width:240px;padding:10px 12px;border-radius:12px;background:var(--panel);border:1px solid var(--line);box-shadow:0 10px 28px rgba(28,34,51,.18);font:500 12.5px var(--f-body);color:var(--ink)}
+.civpop[hidden]{display:none}.civpop b{display:block;font-size:13px;margin-bottom:4px}.civpop ul{margin:0 0 6px;padding-left:16px}.civpop small{color:var(--muted);font-size:11px}
+@media (max-width:420px){.civbar{flex-wrap:nowrap;gap:4px;max-width:calc(100% - 16px);left:8px}.civbar .cv{padding:0 6px;gap:3px;height:22px}
+  .civbar .cv b{font-size:0}.civbar .cv b::after{content:attr(data-s);font-size:10.5px}.civbar .cvbar{width:20px}.civbar .cv u{font-size:9px;min-width:0}.civbar .cv u:empty{display:none}}
+.ldstart{display:block;font-size:12px;color:var(--muted);margin-top:2px}
+.ldpick .btns{position:sticky;bottom:-16px;background:var(--panel);padding:10px 0 4px;margin-bottom:-4px;z-index:1}
+.modal:focus{outline:none}
+@media (pointer:coarse){
+  .civord{min-height:44px}.civord input{width:22px;height:22px}
+  .outg .seg button,#deal-yes,#deal-no,.civtoast button,.ldpick .btns button,#out-ok,#out-lchg{min-height:44px}
+  .survchip .svfold{width:32px;height:32px}
+  .civbtn{min-height:52px}}
+/* ---------- v5.1 QA round 2 ---------- */
+.ldtally .flat b{color:var(--muted)}
+.ldswap button small.ldperk{font-size:11px;line-height:1.25;color:var(--ink);opacity:.8}
+body.app #dealOv,body.app #outOv{z-index:115}   /* event cards and the outage plan draw under the pause menu (120), like the civics card */
+@media (pointer:coarse){#ldc-ok,#rc-ok,#out-watch,#seasonOv .btns button,#so-rcbtn{min-height:44px}#so-name{min-height:44px;box-sizing:border-box}}
+@media (max-width:400px){.v2stats .st b{font-size:13px}.v2stats .st{padding-right:4px;margin-right:5px}}   /* v5.1 QA2: cash and profit fit beside the grade badge */
 </style>
 </head>
 <body class="app">
@@ -923,7 +992,7 @@ button.ldcard[aria-checked="true"]{border:2px solid var(--stock);padding:9px;bac
 <div class="btns"><button class="primary" id="no3d-retry">Try again</button></div></div></div>
 
 <script type="module">
-const APP_VER="v5.0.6";   // shown in the menu and sent with leaderboard scores (max 12 characters)
+const APP_VER="v5.1.0";   // shown in the menu and sent with leaderboard scores (max 12 characters)
 // TEST BUILDS ONLY (off in releases): turbo speeds 240/480/960 sim min/s for fast playtests. Above 120, crews and maintenance start jobs
 // without waiting for the 3D walk (as with the 3D view off) and outages keep the speed. Set false for a release.
 const TURBO=false,TURBO_FAST=s=>TURBO&&s>120;
@@ -981,7 +1050,7 @@ const NAME_OK_WORDS=["scunthorpe","shiitake","shitake"];
 const NAME_CONFUSE={"а":"a","α":"a","в":"b","β":"b","с":"c","ϲ":"c","е":"e","ε":"e","ё":"e","һ":"h","н":"h","η":"n","і":"i","ι":"i","ї":"i","ј":"j","к":"k","κ":"k","м":"m","о":"o","ο":"o","σ":"o","р":"p","ρ":"p","ѕ":"s","т":"t","τ":"t","υ":"u","μ":"u","ν":"v","ш":"w","ω":"w","х":"x","χ":"x","у":"y","γ":"y","з":"3","ч":"4","ı":"i"};
 const nameFold=v=>String(v||"").normalize("NFKD").replace(/[\u0300-\u036f]/g,"").toLowerCase().replace(/[^\x00-\x7f]/g,c=>NAME_CONFUSE[c]||c).replace(/[1!|]/g,"i").replace(/0/g,"o").replace(/3/g,"e").replace(/[4@]/g,"a").replace(/[$5]/g,"s").replace(/7/g,"t");
 const nameOk=v=>{let l=nameFold(v);NAME_OK_WORDS.forEach(w=>{l=l.split(w).join(" ");});const tight=l.replace(/[^a-z]/g,"");return !BANNED_WORDS.some(w=>tight.includes(w));};
-function renameMill(v){v=String(v||"").replace(/\s+/g," ").trim().slice(0,32).trim();if(!v)return;if(!nameOk(v))return false;MILL.name=v;try{if(G3.rebrand)G3.rebrand();}catch(e){}}
+function renameMill(v){v=String(v||"").replace(/\s+/g," ").trim().slice(0,32).trim();if(!v)return;if(!/^[A-Za-z0-9 ._'&-]+$/.test(v))return "chars";if(!nameOk(v))return false;MILL.name=v;   /* v5.1 QA2: the player-name characters, plus & (the built-in names use it) */try{if(G3.rebrand)G3.rebrand();}catch(e){}}
 /* ---- generative music and sound effects (Web Audio, no files) ---- */
 const AUDIO=(()=>{
   const AMOB=matchMedia("(pointer: coarse)").matches,LOOK=AMOB?0.5:0.3;let AUDIO_VIS=0,ctx=null,master,comp,musicBus,sfxBus,chillG,intG,crackleG,mcG,verb,noiseBuf,timer=null,on=false,vol=0.7,target="chill",calmSince=0,switchedAt=0,warm,envG,echoIn,echoInt;
@@ -1465,18 +1534,19 @@ const UP=Object.fromEntries(UPS.map(u=>[u.id,u]));
 const LV=id=>(S&&S.up&&S.up[id])||0;
 function applyUpgrades(){
   applyGrade();
-  P.K=BASE.K*Math.pow(1.06,LV("deckle"))*(1+0.02*LV("apc"))*leadCap("pwet");
+  P.K=BASE.K*Math.pow(1.06,LV("deckle"))*(1+0.02*LV("apc"))*leadCap("pwet")*civSpeed();   // (v5.1: civics, Machinery)
   P.spBonus=150*LV("drive")+100*LV("shoe")+leadSpeed();
   P.energyMul=(1-0.12*LV("shoe"))*(1-0.08*LV("apc"));P.refSave=22*LV("refiner");
   P.yieldF=P.blendY+0.03*LV("clean"); P.tankCap=BASE.tankCap+150*LV("chest");
   P.driverRate=BASE.driverRate*(1+0.25*LV("forklift")); P.doors=3+LV("docks"); P.shipDoors=3+LV("docks");
   P.robots=2*LV("agv"); P.fgCap=BASE.fgCap+112*LV("wh"); P.autoFeed=LV("feedconv")>0;
   applySite();{const a=leadCap("pstock"),f=leadCap("pdry");P.doorRate*=a;P.pulperMax*=a;P.screenMax*=a;P.winderMax*=f;P.doorRolls*=f;}   // v4.4.0-t3: Felicity's projects
+  P.doorRate*=civRecv();   // v5.1 civics: a low Community limits truck hours
   P.costMul=survOn()?survCost():1;   // v4.3 survival: fiber, energy and chemicals, and wages cost more every wave (exactly 1 otherwise)
-  P.occPrice=(P.blendP+((S&&S.plan)?S.plan.mkt:0)-20*LV("contract")+P.siteOcc)*P.costMul*leadFibre();   // (v4.4: the leader's fiber deals; Hank runs heavy)
-  P.priceAdd=25*LV("sales")+P.sitePrice+leadPrice(); P.repairMul=(LV("insure")?0.4:1)*(1-0.15*LV("reliab"))*leadBill();P.techs=2+2*LV("maintcrew");P.pmCost=400*LV("pmprog"); P.premium=LV("insure")?1500:0;
-  P.breakBase=Math.pow(0.7,LV("monitor"))*Math.pow(0.9,LV("pmprog"))*leadClean()*leadBreaks();
-  P.hayBase=Math.pow(0.6,LV("winder"))*leadClean();const wr=document.getElementById("s-wdr");if(wr)wr.max=P.winderMax;
+  P.occPrice=(P.blendP+((S&&S.plan)?leadMkt(S.plan.mkt):0)-20*LV("contract")+P.siteOcc)*P.costMul*leadFibre();   // (v4.4: the leader's fiber deals; Hank runs heavy)
+  P.priceAdd=25*LV("sales")+P.sitePrice+leadPrice()+civPrice(); P.repairMul=(LV("insure")?0.4:1)*(1-0.15*LV("reliab"))*leadBill()*civBill();P.techs=2+2*LV("maintcrew");P.pmCost=400*LV("pmprog"); P.premium=LV("insure")?1500:0;
+  P.breakBase=Math.pow(0.7,LV("monitor"))*Math.pow(0.9,LV("pmprog"))*leadClean()*leadBreaks()*civBreak();
+  P.hayBase=Math.pow(0.6,LV("winder"))*leadClean()*civBreak();const wr=document.getElementById("s-wdr");if(wr)wr.max=P.winderMax;
   const sp=document.getElementById("s-pmSp"),pu=document.getElementById("s-pulper");
   if(sp)sp.max=3300+P.spBonus; if(pu)pu.max=Math.floor(Math.min(P.pulperMax,P.screenMax/P.yieldF));
 }
@@ -1484,7 +1554,7 @@ function applyUpgrades(){
 function applyGrade(){const g=(typeof C!=="undefined"&&C&&C.grade)||"23m",c=GCOST[g],d=c.dlk;
   P.blendP=OCCG.occ11.p*(1-d)+OCCG.dlk.p*d;P.blendY=OCCG.occ11.y*(1-d)+OCCG.dlk.y*d;
   P.steamMul=c.steam;P.chemAdd=c.chem-((S&&S.perk)?S.perk.chem:0);P.gradeBrk=c.brk;}
-function energyCost(){return Math.max(0,ECON.energy*P.steamMul*P.energyMul*leadEnergy()+ECON.chem+P.chemAdd+(P.siteEnergy||0)-(P.refSave||0)-((S&&S.perk&&S.perk.energy)||0))*(P.costMul||1);}
+function energyCost(){return Math.max(0,ECON.energy*P.steamMul*P.energyMul*leadEnergy()+ECON.chem+P.chemAdd+(P.siteEnergy||0)-(P.refSave||0)-((S&&S.perk&&S.perk.energy)||0)+civEnergy())*(P.costMul||1);}
 function priceOf(g){let v=ECON.price[g]+P.priceAdd;if(g==="33HT"&&P.costMul>1)v+=(ECON.price["33HT"]-ECON.price["23m"])*(P.costMul-1);/* v5.0.5: survival only (costMul is 1 elsewhere) */if(S&&S.perk)v+=S.perk.price[g]||0;if(S&&S.fx)for(const f of S.fx)if(f.price)v+=(f.price[g]||0)+(f.price.all||0);return v;}
 function freqMul(id){let m=1;
   if(["lwplug","cscreen","fscreen","lcplug"].includes(id))m*=Math.pow(0.6,LV("clean"));
@@ -1497,6 +1567,7 @@ function freqMul(id){let m=1;
   if(id==="fight"||id==="calloff")m*=LV("safety")?0.5:1;
   if(OUT.area[id])m*=outRel(OUT.area[id]);
   m*=siteFreq(id);
+  m*=civFreq(id);   // v5.1 civics: each choice's odds, and the meters
   m*=leadFreq(id);   // v4.4 survival leaders: Chip's labour trouble, Felicity's projects, the upset Dot just fixed
   if(S&&S.fx)for(const f of S.fx){if(f.freq&&EV[id]&&(EV[id].g==="machine"||EV[id].g==="stock"))m*=f.freq;if(f.scab&&id==="slime")m*=f.scab;if(f.evf&&f.evf[id])m*=f.evf[id];}
   return m;}
@@ -1692,7 +1763,7 @@ const LEAD={
   sales:7,               // Chip, sales push: +$/t on every grade per push (stays with the mill)
   lock:1,                // Chip, fiber lock: the next wave's fiber is bought at the wave before's price (1 = the whole step)
   strife0:2,             // Chip, labour relations: call-offs and dock brawls x2 while he is in charge
-  wage:0.05,             // Chip, pay settlements: wages +5% with every deal (they stay with the deals)
+  wage:0.10,             // Chip, pay settlements (QA2: was 5%): wages +10% with every deal (they stay with the deals)
   fixCut:0.5,            // Dot, Fix it now: ends a breakdown, returns part of its bill, and that breakdown is 50% rarer from then on (stacks)
   refund:0.6,            // Dot, Fix it now: share of that breakdown's repair bill she gets back
   autoFix:0.5,           // v5.0.4: Dot fixes on her own: each fixable breakdown that starts has this chance, once per outage cycle (no button; 0.25 tested worth no more than no leader)
@@ -1707,18 +1778,25 @@ const LEAD={
   steam:0.055,           // Hank, dial in the dryers: steam (the energy part of energyCost, not chemicals) -5.5% per pick (stays with the mill)
   heavy:0.02};           // Hank, runs the sheet heavy (basis-weight giveaway): fiber +2% while he is in charge
 const LEAD_IDS=["chip","dot","fel","hank"];
+// v5.1: the picker words the leaders for the mode being started (before the run exists survRun() is false)
+let leadMode=null;const leadSv=()=>leadMode?leadMode==="surv":survRun();
 // what each leader picks at an outage: [stack key, button label, what it does]  (keys kept from v4.4.0-t1 so saves still load)
 const LEAD_PICKS={
-  chip:[["fibre","Fiber lock",()=>"next wave's fiber at this wave's price"],["sales","Sales push",()=>`+$${LEAD.sales}/t on every grade`]],
+  chip:[["fibre","Fiber lock",()=>leadSv()?"next wave's fiber at this wave's price":"fiber market held at this outage's price until the next (never above the market)"],["sales","Sales push",()=>`+$${LEAD.sales}/t on every grade`]],
   dot:[],
   fel:[["pstock","Fiber line",()=>`receiving, pulper, screens +${pct1(LEAD.cap)}%`],["pwet","Paper machine",()=>`machine +${pct1(LEAD.cap)}%`],["pdry","Finishing",()=>`winder and shipping +${pct1(LEAD.cap)}%`]],
   hank:[["rethread","Runnability",()=>`breaks −${pct1(LEAD.clean)}%, rethreads −${pct1(LEAD.rethread)}% time`],["clean","Dial in the dryers",()=>`steam −${pct1(leadN("clean")>=LEAD.steamFull?LEAD.steam/2:LEAD.steam)}%`]]};
 const pct1=v=>+(v*100).toFixed(1);   // 0.015 -> 1.5 (labels)
+// v5.1 (offline): leaders also run seasons. leadOn = a leader is in charge of a running season or survival run
+const leadOn=()=>!!(S&&S.lead&&S.season&&S.season.on);
 const leadIs=id=>!!(S&&S.lead&&S.lead.id===id);
 const leadN=k=>(S&&S.lead&&S.lead.st[k])||0;
 const leadDeals=()=>leadN("fibre")+leadN("sales"),leadProjects=()=>leadN("pstock")+leadN("pwet")+leadN("pdry");
 // --- effects (read by applyUpgrades, energyCost, the labour line, freqMul, repairs, breaks and the outage) ---
-const leadLock=()=>S&&S.lead&&S.lead.lockW&&S.lead.lockW===survWave()&&survWave()>1?Math.pow(survCost(survWave()-1)/survCost(survWave()),LEAD.lock):1;
+// v5.1: in a season costs don't climb wave to wave, so Chip's fiber lock holds the weekly fiber market (S.plan.mkt) at the
+// price of the outage where he made the deal, for the cycle that follows (leadMkt, read by applyUpgrades)
+const leadMkt=m=>(S&&S.lead&&!survRun()&&S.lead.lockW&&S.lead.lockW===survWave()&&S.lead.lockMkt!=null)?Math.min(S.lead.lockMkt,m):m;   // v5.1 QA2: capped, never worse than the market
+const leadLock=()=>survRun()&&S&&S.lead&&S.lead.lockW&&S.lead.lockW===survWave()&&survWave()>1?Math.pow(survCost(survWave()-1)/survCost(survWave()),LEAD.lock):1;
 const leadFibre=()=>S&&S.lead?leadLock()*(leadIs("hank")?1+LEAD.heavy:1):1;
 const leadPrice=()=>LEAD.sales*leadN("sales");
 const leadSpeed=()=>0;                                                     // (v4.4.0-t1's push for tons is gone)
@@ -1739,6 +1817,77 @@ const leadFixN=id=>S&&S.lead&&S.lead.fixed?S.lead.fixed.filter(x=>x===id).length
 const leadImmune=()=>false;
 function leadFreq(id){if(!(S&&S.lead))return 1;
   let m=Math.pow(1-LEAD.fixCut,leadFixN(id));if(id==="calloff"||id==="fight")m*=leadStrife();return m;}
+// v5.1 (offline): civics data (balance round 1 edits: Machinery hits on cheap fixes trimmed, Economy off two shortcuts, proper fixes on repeat civic upsets make them rarer), generated from the design grid (Mill Civics Upset Grid). Choice = [label, cost tier, odds step, civics, note].
+// cost tier: -1 earns cash, 0 free, 1 $, 2 $$, 3 $$$. odds step: -2 much rarer, -1 rarer, 0 same, 1 more often. Tags: P proper, Q cheap, S shortcut.
+const CIVU={refclash:{n:"Refiner plates clash",a:"Stock prep",ch:[["New plates and gap monitoring",2,-1,{M:2,L:1}],["Fit used plates",1,1,{}],["Run on one refiner until the outage",0,0,{M:-1,E:-1}]],t:"PQS"},shaft:{n:"Driveshaft snaps",a:"Machine",ch:[["New OEM shaft and vibration monitoring",3,-2,{M:2},"Machine down 3 h longer than the quick fix"],["Machine-shop weld repair",1,1,{}],["Buy a used shaft from a closing mill",1,0,{E:1,M:-1},"Gamble: 1 in 3 it's the wrong spec and fails again"]],t:"PSQ"},dryerfire:{n:"Fire in the dryers",a:"Machine",ch:[["Start a hood-cleaning schedule",2,-1,{M:1,L:1}],["Call the town fire department",1,0,{C:2}],["Fight it in-house, restart fast",0,1,{L:-2}]],t:"PQS"},fabric:{n:"Fabric runs off",a:"Machine",ch:[["New fabric and a guide sensor",2,-1,{M:2},"Machine down 2 h longer"],["Patch and re-track it",1,1,{M:-1,L:-1}],["Borrow a spare from the sister mill",0,0,{M:1,L:-1},"Free now; the sister mill calls the favor in later"]],t:"PSQ"},felt:{n:"Press felt blows",a:"Machine",ch:[["Install a new felt",2,-1,{M:1}],["Run a used spare",1,1,{}],["Fight the vendor on the warranty",0,1,{L:-1,M:-1},"50/50: a free felt, or 2 days on a worn one"]],t:"PSQ"},slime:{n:"Slime build-up",a:"Machine",ch:[["Full boil-out",2,-1,{M:2}],["Dump in extra biocide",1,0,{C:-2}],["Slow down and ride it out",0,1,{L:-1,E:-1}]],t:"PQS"},overflow:{n:"Pulper overflows",a:"Stock prep",ch:[["Level alarms and an interlock",2,-2,{M:1}],["Vac trucks and a full cleanup",1,0,{C:2,L:1}],["Pump it to the sewer",0,0,{C:-2}]],t:"PQS"},winderdown:{n:"Winder breakdown",a:"Machine",ch:[["New slitter drive",2,-1,{M:2,E:1}],["Overtime to clear the backlog",1,0,{L:1,E:1}],["Let the reels stack up",0,0,{E:-2}]],t:"PQS"},wrap:{n:"Dryer can wrap",a:"Machine",ch:[["Upgrade the doctor blades",2,-1,{M:1,L:1}],["Lock out and cut it off safely",1,0,{L:1}],["Spear it free fast",0,0,{L:-2}]],t:"PQS"},dye:{n:"Dye trouble",a:"Stock prep",ch:[["New dye pump and flow meter",2,-1,{M:1,E:1}],["Donate the rainbow paper to schools",1,0,{C:2}],["Ship it as seconds",-1,0,{E:-2}]],t:"PQS"},hdblow:{n:"HD cleaner blowout",a:"Stock prep",ch:[["Rebuild with new wear liners",2,-1,{M:2},"Stock prep down 1 h longer"],["Bypass the cleaner",0,1,{M:-1}],["Patch it until the outage",1,0,{M:-1},"Stock prep at 85% until the next planned outage fixes it"]],t:"PSQ"},lwplug:{n:"Lightweight cleaners plugged",a:"Stock prep",ch:[["Run a town recycling-quality drive",2,-1,{C:2}],["Flush and run",1,0,{M:1}],["Bypass and let the plastic through",0,1,{M:-1,C:-1}]],t:"PQS"},cscreen:{n:"Coarse screen down",a:"Stock prep",ch:[["Fit a spare rotor",2,-1,{M:2},"Stock prep down 1 h longer"],["Rebuild it on overtime",1,0,{L:1}],["Let the apprentices rebuild it",0,0,{L:2,M:-1},"Takes twice as long; trains the crew"]],t:"PQS"},fscreen:{n:"Fine screen basket failure",a:"Stock prep",ch:[["New basket",2,-1,{M:2},"Stock prep down 1 h longer"],["Weld the crack",0,1,{M:-1}],["Patch it until the outage",1,0,{M:-1},"Screens at 85% until the next planned outage fixes it"]],t:"PSQ"},lcplug:{n:"LC cleaners plugged",a:"Stock prep",ch:[["Upgrade the sand trap",2,-1,{M:1}],["Crew flushes the reject lines",1,0,{L:-1}],["Dump the sand rejects on site",0,0,{C:-2}]],t:"PQS"},fogfan:{n:"Fog fan down",a:"Machine",ch:[["Install a backup fan",2,-2,{L:1,M:1}],["Slow down until it's fixed",0,0,{E:-1,L:1}],["Keep running in the fog",0,0,{L:-2}]],t:"PQS"},thkblow:{n:"Thickener blowout",a:"Stock prep",ch:[["Rebuild with new seals and plates",2,-1,{M:1,L:1},"Stock prep down 1 h longer"],["Bypass straight to the chest",0,1,{M:-1,E:-1}],["Patch it until the outage",1,0,{M:-1},"Stock prep at 85% until the next planned outage fixes it"]],t:"PSQ"},steamjoint:{n:"Steam joint leak",a:"Machine",ch:[["Cool down and repack properly",2,-1,{L:1,M:1}],["Hot repack, no shutdown",0,1,{L:-2}],["Clamp it until the outage",1,0,{M:-1},"Dryers at 85% until the next planned outage fixes it"]],t:"PSQ"},boiler:{n:"Boiler trip",a:"Machine",ch:[["Upgrade the boiler controls",3,-2,{M:2},"Machine down 3 h longer"],["Buy backup steam",2,0,{E:1}],["Fast cold restart",0,1,{M:-1}]],t:"PQS"},permit:{n:"Wastewater permit exceeded",a:"Stock prep",ch:[["Upgrade the treatment plant",3,-2,{C:2}],["Throttle back and clean up",1,0,{E:-1,C:2}],["Pay the fine, keep full speed",1,1,{C:-2}]],t:"PQS"},runner:{n:"Runner in the hall",a:"Machine",ch:[["Security fence and badge gates",2,-2,{L:1,C:-1}],["Call the police",0,0,{C:-1}],["Crew walks them out kindly",0,1,{C:1,E:-1},"Crew off their posts: short speed drop"]],t:"PQS"},chestover:{n:"Stock chest overflows",a:"Stock prep",ch:[["Level alarm on the chest",2,-1,{M:1},"Stock prep down 1 h longer"],["Bring in a vac truck",1,0,{L:1}],["Hose it to the sewer",0,0,{C:-2}]],t:"PQS"},badocc:{n:"Junk OCC delivered",a:"Stock prep",ch:[["Reject the loads",1,-1,{M:1,C:-1}],["Run it slow",0,0,{E:-1}],["Run it at full speed",0,1,{M:-1,L:-1}]],t:"PQS"},balefire:{n:"Bale yard fire",a:"Stock prep",ch:[["Sprinklers and a no-smoking patrol",3,-2,{C:2}],["Let the town fire department lead",1,0,{C:2}],["Bulldoze it and keep receiving",0,0,{C:-2,E:1}]],t:"PQS"},fleet:{n:"Forklifts red-tagged",a:"Yard",ch:[["Fix them properly, run on half",2,-1,{M:1,E:-1}],["Rent forklifts",1,0,{E:1}],["Fudge the inspection",0,1,{M:-2,L:-1}]],t:"PQS"},calloff:{n:"Drivers call off",a:"Yard",ch:[["Raise driver pay",2,-1,{L:2}],["Pay a call-in bonus",1,0,{L:1}],["Mandate overtime",0,1,{L:-2}]],t:"PQS"},fight:{n:"Brawl at the dock",a:"Yard",ch:[["Book dock appointments",2,-2,{E:1}],["Ban both carriers",0,-1,{E:-1}],["Press charges and file a report",0,0,{C:-1,L:1}]],t:"PQS"},roof:{n:"Warehouse roof leak",a:"Yard",ch:[["Hire a local roofer for a full repair",3,-2,{C:1,M:1}],["Tarp it",1,1,{M:-1}],["Move the rolls on overtime",1,0,{L:1,E:1}]],t:"PSQ"},highway:{n:"Highway closed",a:"Yard",ch:[["Open the lot to stranded drivers",1,0,{C:2}],["Reroute trucks through town",0,0,{C:-2,E:1}],["Wait it out",0,0,{E:-1}]],t:"PSQ"},beaver:{n:"Giant beaver",a:"Yard",ch:[["Trap the beaver",1,-1,{C:-1}],["Do nothing",0,1,{}],["Relocate it with the wildlife service",2,-1,{C:2}]],t:"QSP"},brownout:{n:"Grid brownout",a:"Machine",ch:[["Comply with the utility",0,0,{E:-1,C:2}],["Run the mill's own turbine flat out",1,0,{M:-1,C:-1}],["Sign a demand-response deal",-1,1,{C:1,E:-1},"Speed cuts whenever the utility calls"]],t:"PSQ"},odor:{n:"Odor complaints",a:"Community",ch:[["Odor control on the stock prep vents",2,-2,{C:2}],["Host an open house",1,0,{C:2,L:1}],["Send a letter, change nothing",0,1,{C:-2}]],t:"PQS"},council:{n:"Truck route vote",a:"Community",ch:[["Agree to night-only trucks",0,0,{L:-1,C:2}],["Share the cost of a bypass road",3,-2,{C:3}],["Fight it at council",1,1,{C:-2}]],t:"QPS"},reporter:{n:"Reporter at the gate",a:"Community",ch:[["Give a plant tour",1,-1,{C:2}],["Let the crew talk",0,0,{L:1},"Gamble: 50/50 Community +1 or −2"],["No comment",0,1,{C:-1}]],t:"PQS"},sponsor:{n:"Town fair sponsorship",a:"Community",ch:[["Sponsor it",2,0,{C:2}],["Send a crew volunteer team",1,0,{C:2,L:1}],["Decline",0,0,{C:-1}]],t:"PQS"},hothall:{n:"Machine hall too hot",a:"Crew",ch:[["Fix the hall ventilation",2,-2,{L:2}],["Extra breaks for the crew",1,0,{L:1,E:-1}],["Push through",0,0,{L:-2}]],t:"PQS"},retire:{n:"Senior operator retires",a:"Crew",ch:[["Pay them to train a replacement",2,0,{L:1,M:1}],["Promote from within",0,0,{L:2,M:-1}],["Hire from outside",1,0,{L:-1,C:1}]],t:"PQS"},nearmiss:{n:"Dock equipment fails a guard audit",a:"Crew",ch:[["Stop the dock and fix the guards",2,-1,{L:2}],["Write it up and move on",0,1,{L:-1}],["Temporary barriers until the outage",1,0,{M:-1},"Dock at 85% until the next planned outage fixes it"]],t:"PSQ"},complaint:{n:"Customer quality complaint",a:"Customer",ch:[["Send a tech rep and credit the loads",2,-1,{E:2,L:1}],["Credit them, no visit",1,0,{E:-1}],["Dispute the claim",0,1,{E:-2}]],t:"PQS"},rush:{n:"Rush order",a:"Customer",ch:[["Take it all, run overtime",0,0,{E:2,L:-1,M:-1},"900 t of high-strength board in 30 h: +$90/t if it all ships on time, −⁠$40/t for any short"],["Take part of it",0,0,{E:1,M:-1},"450 t of high-strength board in 30 h: +$60/t on what you make, no penalty; a squeezed-in grade change"],["Decline",0,0,{E:-1}]],t:"PQS"},pricecut:{n:"Competitor price cut",a:"Customer",ch:[["Match their price",1,0,{E:1}],["Lock customers into a long-term contract",2,-1,{E:2}],["Refuse to match",0,1,{E:-2}]],t:"QPS"},green:{n:"Customer wants recycled-content certification",a:"Customer",ch:[["Get certified",2,-1,{E:2,C:1}],["Self-declare it",0,0,{E:-1,C:-1}],["Decline",0,0,{E:-2}]],t:"PQS"},occshort:{n:"OCC supplier shortage",a:"Inbound",ch:[["Pay the spot premium",2,-1,{E:1}],["Run slow on what's in the yard",0,0,{E:-1,L:-1}],["Switch to the town's mixed paper",1,0,{M:-1,C:1}]],t:"PSQ"},chemlate:{n:"Chemical delivery late",a:"Inbound",ch:[["Air-freight it in",1,0,{E:1}],["Run without it",0,0,{E:-1,M:-1}],["Switch suppliers for good",2,-1,{M:1}]],t:"QSP"},energyspike:{n:"Energy price spike",a:"Utility",ch:[["Pay it",2,0,{},"Half price if you won the Power price hedge"],["Run hard off-peak only",0,0,{E:-1,L:-1}],["Burn rejects in the boiler",-1,0,{C:-2,M:-1}]],t:"PQS"},flu:{n:"Flu runs through the crew",a:"Crew",ch:[["Paid sick days",2,0,{L:2,E:-1}],["Mandatory overtime for the healthy",1,0,{L:-2}],["Bring in local temps",1,0,{M:-1,C:1}]],t:"PSQ"},poach:{n:"Competitor poaches operators",a:"Crew",ch:[["Match their offer",2,-1,{L:1}],["Let them go, promote from within",0,0,{L:1,M:-1}],["Threaten non-compete letters",0,0,{L:-2,C:-1}]],t:"PQS"},inspector:{n:"State safety inspector",a:"Crew",ch:[["Open the doors, fix what they find",2,-1,{L:2,E:-1}],["Rush a cleanup before they reach the floor",1,1,{L:-1}],["Stall with paperwork",0,1,{L:-1,C:-1}]],t:"PQS"},dcs:{n:"Control system crash",a:"Machine",ch:[["Replace the old servers",3,-2,{M:2,L:-1}],["Vendor remote support",1,0,{M:1,L:-1}],["Reboot and hope",0,1,{M:-1}]],t:"PQS"},moisture:{n:"Moisture drifting off spec",a:"Machine",ch:[["Stop and recalibrate the scanner",1,-1,{M:1,E:-1}],["Slow down to dry it",0,0,{E:-1,M:1}],["Ship it anyway",0,0,{E:-2}]],t:"PQS"},freight:{n:"Freight rates jump",a:"Outbound",ch:[["Pay the rate",2,-1,{E:1}],["Ship by rail",1,0,{E:-1,C:2}],["Hold shipments",0,0,{E:-2}]],t:"PQS"},noise:{n:"Night noise complaint",a:"Community",ch:[["Build sound walls on the yard",2,-2,{C:2}],["Quiet rules for the night shift",0,0,{L:-1,C:1}],["Ignore it",0,1,{C:-2}]],t:"PQS"},fishkill:{n:"Fish kill downstream",a:"Community",ch:[["Fund an independent water test",2,-1,{C:2}],["Pay to restock the river",1,0,{C:2}],["Deny it publicly",0,0,{C:-2}]],t:"PQS"},w_sickout:{n:"Sick-out",a:"Warning · Labor",ch:[["Meet the crew and fix the roster",2,0,{L:5}],["Pay a return-to-work bonus",2,0,{L:3},"Ends it now"],["Write up the absences",0,0,{L:-3},"Ends it; if Labor falls into Crisis, the walkout comes at once"]],t:null},w_petition:{n:"Petition at town hall",a:"Warning · Community",ch:[["Host a town hall meeting",2,0,{C:5}],["Promise a fix",0,0,{C:3},"Community −15 unless something raises Community within 7 days"],["Ignore it",0,0,{},"If Community falls into Crisis, the protest comes at once"]],t:null},w_watch:{n:"Key customer puts you on watch",a:"Warning · Economy",ch:[["Plant manager visits with a recovery plan",2,0,{E:5},"The −⁠$5/t keeps running its 7 days"],["Discount the next orders",2,0,{E:3},"Ends the −⁠$5/t penalty now"],["Promise better and hope",0,0,{},"The −⁠$5/t runs its full 7 days"]],t:null},w_vibration:{n:"Vibration alarms",a:"Warning · Machinery",ch:[["Stop and balance the rolls",2,0,{M:5},"2 h down; ends the −5% speed"],["Bring in a vibration analyst",2,0,{M:3},"No downtime; ends at the next outage"],["Bypass the alarms",0,0,{M:-3},"Speed back; if Machinery falls into Crisis, the shutdown comes at once"]],t:null},c_walkout:{n:"Walkout",a:"Crisis · Labor",ch:[["Settle: wages +3% for good",2,0,{L:10},"Ends now; wages stay 3% higher for the rest of the season or run"],["Bring in a mediator",1,0,{L:5},"Ends in 6 h"],["Wait it out",0,0,{L:2},"12 h; yard stops at once, machine stops after 6 h"]],t:null},c_protest:{n:"Protest at the gate",a:"Crisis · Community",ch:[["Sign a community pledge",2,0,{C:10},"Ends now; a $10k donation at every outage"],["Wait it out",0,0,{},"Trucks blocked 12 h"],["Call the police",0,0,{C:-5,L:-1},"Ends in 2 h"]],t:null},c_custwalk:{n:"Customer walks",a:"Crisis · Economy",ch:[["Win them back with a price cut",3,0,{E:8},"Ends in 2 days"],["Sell through a broker",0,0,{E:3},"That grade loses only $5/t, for 5 days"],["Shift production to other grades",0,0,{M:-2},"Ends the penalty; 90 min of grade changes"]],t:null},c_shutdown:{n:"Insurer forces a shutdown",a:"Crisis · Machinery",ch:[["Use the 12 h for a full rebuild",3,0,{M:10}],["Fix the worst item only",1,0,{M:4},"6 h down; insurer rechecks in 7 days"],["Appeal",0,0,{},"50/50: no shutdown, or 12 h plus a premium increase"]],t:null}};
+const CIVCARD={chem:{a:{},w:{},l:{M:-1,L:-1},d:{}},eng:{a:{},w:{M:1},l:{L:-1},d:{}},cheap:{a:{},w:{},l:{M:-1,L:-1},d:{}},grid:{a:{C:2},w:{},l:{E:-1},d:{}},outage:{a:{L:-1},w:{M:2},l:{},d:{}},audit:{a:{},w:{E:2},l:{E:-2},d:{E:-1}},seconds:{a:{},w:{},l:{E:-2},d:{}},intern:{a:{C:2},w:{M:1},l:{L:-1},d:{}},traps:{a:{C:2},w:{M:1},l:{},d:{}},wdrive:{a:{},w:{M:1},l:{M:-1,L:-1},d:{}},ot:{a:{L:1},w:{},l:{L:-2},d:{}},feltv:{a:{},w:{M:1},l:{M:-1},d:{}},drone:{a:{L:1},w:{M:1},l:{},d:{}},spot:{a:{E:-1},w:{},l:{E:-1},d:{}},rail:{a:{C:2},w:{},l:{},d:{}},safety:{a:{},w:{L:1,C:2},l:{L:-1},d:{}},shift:{a:{L:1},w:{},l:{L:-1},d:{L:-1}},insfire:{a:{},w:{},l:{C:-1},d:{}},drought:{a:{C:2},w:{},l:{M:-1},d:{}},grant:{a:{},w:{C:2},l:{},d:{}},hedge:{a:{},w:{},l:{},d:{}},strike:{a:{},w:{E:1},l:{E:-1},d:{}},yard:{a:{},w:{C:2},l:{C:-1},d:{}},occlock:{a:{},w:{},l:{},d:{}},film:{a:{},w:{E:1},l:{},d:{}},rotor:{a:{},w:{M:1},l:{L:-1},d:{}},basket:{a:{},w:{M:1},l:{M:-1},d:{}},vip:{a:{},w:{E:2},l:{E:-1},d:{}},millwright:{a:{},w:{L:1,M:1},l:{L:-1},d:{}},tax:{a:{},w:{C:-1},l:{},d:{}},backhaul:{a:{},w:{},l:{E:-1},d:{}},starch:{a:{},w:{E:1},l:{L:-1},d:{}},scrap:{a:{C:2,M:-1},w:{},l:{E:-1},d:{}},boilertune:{a:{},w:{M:1,C:2},l:{},d:{}},apprent:{a:{C:2},w:{L:1},l:{L:-1},d:{}}};
+/* ---------- v5.1 (offline): civics, the model (meters, effects, odds) ----------
+   Four meters, 0-100: Economy (customers, market), Labor (crew), Machinery (equipment), Community (town, permits).
+   Players see bands (Crisis, Strained, Steady, Strong, Excellent); the game scales each effect smoothly from 50, steeper
+   below 50, full effect at 0 or 100. Cash cost is separate from Economy. Civics run in seasons and survival runs (not free
+   play or zen). The choice cards, the new upsets, standing orders, meter-triggered upsets and the bar are in 09d-civics.js.
+   Not balanced: every number here is a first guess (the design note: civics-design.md in the project).
+   State: S.civ={m:{E,L,M,C}, snap, odds:{id:mul}, orders:{area:tag}, seen:{id}, q:[], cur, tm:[], arm, flags, ...} (saved with the run). */
+const CIV={unit:3,           // meter points per design weight (a choice's "+2" is +6 points)
+  drift:1.5,                 // points per day back toward 50 (balance round 1: was 1)
+  driftHi:3,driftLo:2,       // ...faster above 70 (no pinning at 100) and below 30 (no death spiral)
+  cost:{"-1":-25e3,"0":0,"1":10e3,"2":35e3,"3":90e3},    // cash per cost tier ($, $$, $$$; -1 earns) (round 1: was 20k/60k/150k, earns 30k)
+  odds:{"-2":0.5,"-1":0.75,"0":1,"1":1.5},             // (round 2: more often = 1.5x, was 1.3x, so shortcuts come back within a season)             // how often the upset comes back, per odds step (stacks, 0.25x to 3x)
+  warn:40,crisis:20,reward:80,rearm:65,crisisEvery:7*1440,warnRearm:45,warnCool:3*1440,startMin:42,   // (round 1: crises every 7 days, was 4; warnings re-arm at 45 with a 3-day cooldown; no meter starts below 42)
+  newMtbf:45,
+  cool:2*1440,               // v5.1 QA2: an upset the player answered can't come back for 2 days                // days between each of the new civic upsets (round 1: was 30; survival: x half the wave's extra upset odds, at most 2x)
+  lead:{chip:{E:60,L:40,M:50,C:50},dot:{E:50,L:50,M:60,C:40},fel:{E:50,L:45,M:55,C:50},hank:{E:45,L:60,M:50,C:45}},
+  site:{urban:{C:-6},rural:{L:-6},desert:{M:-6},swamp:{C:-6}},   // (round 1: was -10)
+  names:{E:"Economy",L:"Labor",M:"Machinery",C:"Community"},
+  bands:[[81,"Excellent","ex"],[61,"Strong","st"],[40,"Steady","sd"],[20,"Strained","sn"],[0,"Crisis","cr"]]};
+const CIVK=["E","L","M","C"];
+const civOn=()=>!!(S&&S.civ&&S.season&&S.season.on&&!S.free&&!S.zen);
+// v5.1 QA2: civics money has its own ledger line (it was booked under Deals & trials); a positive v is a cost
+function civPay(v){if(!v)return;S.cash-=v;S.ledger.civ=(S.ledger.civ||0)+v;}
+// the four meters in words, for the report card and the end screen ("" when civics never ran)
+const civSummary=m=>m?CIVK.map(k=>`${CIV.names[k]} ${Math.round(m[k])} ${civBand(m[k])[1]}`).join(" · "):"";
+const civCool=id=>!!(civOn()&&S.civ.cd&&S.civ.cd[id]>S.t);
+const civV=k=>civOn()?S.civ.m[k]:50;
+const civBand=v=>CIV.bands.find(b=>v>=b[0]);
+// -1..+1 from the meter: linear above 50, a slight curve below (20 hurts noticeably more than 40)
+function civS(k){const x=(civV(k)-50)/50;return x<0?-Math.pow(-x,1.1):x;}   // (round 2: curve 1.1, was 1.3, so Strained costs more)
+// the effect at the meter's value: lo at 0, mid at 50, hi at 100
+function civE(k,lo,hi,mid){const s=civS(k);return s<0?mid+(lo-mid)*(-s):mid+(hi-mid)*s;}
+// --- effects (read by applyUpgrades, freqMul, chaosTick, the outage and the tick) ---
+const civPrice=()=>civE("E",-15,15,0);                 // (round 1: was -20 at 0; round 2: -15)                 // $/t on every grade
+const civRepair=()=>civE("L",0.7,1.2,1);               // repair speed
+const civBreak=()=>civE("L",1.3,0.8,1);                // sheet breaks and hayouts
+const civYard=()=>civE("L",1.5,0.5,1);                 // (round 1: was 2 at 0)                   // yard upsets (forklifts, call-offs, brawls...)
+const civOver=()=>Math.round(civE("L",120,-60,0));     // planned outages: minutes over (+) or early (-)
+const civMach=()=>civE("M",1.3,0.7,1);                 // (round 1: was 1.5 at 0)                 // stock prep and machine breakdowns
+const civSpeed=()=>civE("M",0.92,1.03,1)*(S&&S.civ&&S.civ.runUntil>S.t?1.04:1);   // machine capacity (and a record run week)
+const civBill=()=>civE("M",1.2,0.9,1);                 // repair bills
+const civComm=()=>civE("C",1.5,0.5,1);                 // (round 1: was 2 at 0)                   // permit and community upsets
+const civFine=()=>civE("C",1.5,0.75,1);                // fines
+const civRecv=()=>civE("C",0.8,1,1);                   // receiving (truck hours limited)
+const civTax=()=>Math.max(0,civS("C"))*2000;           // (round 1: was $1k/day)           // $/day tax break at the top
+function civRng(){if(S.rng.civ==null)S.rng.civ=(S.seed^0x7f4a7c15)|0;return rand("civ");}
+// the area a standing order covers, for any upset with choices
+const CIV_AREA={"Inbound":"Stock prep","Utility":"Machine","Outbound":"Yard","Customer":"Customers"};
+const civArea=id=>{const u=CIVU[id];return u?(CIV_AREA[u.a]||u.a):"";};
+const civMeterEv=id=>/^[wc]_|^r_/.test(id);
+// upset odds: each choice's odds step, and the meters (Labor for the yard, Machinery for stock prep and the machine, Community for the permit)
+function civFreq(id){if(!civOn())return 1;let m=(S.civ.odds&&S.civ.odds[id])||1;const g=EV[id]&&EV[id].g;
+  if(g==="yard")m*=civYard();if(g==="machine"||g==="stock")m*=civMach();if(id==="permit")m*=civComm();return m;}
+function civEnergy(){let v=0;if(S&&S.fx)for(const f of S.fx)if(f.energy)v+=f.energy;return v;}
+// start values: 50 each, then the leader's, then the site
+function civStart(){S.civ={m:{E:50,L:50,M:50,C:50},snap:{E:50,L:50,M:50,C:50},snapT:0,odds:{},orders:{},seen:{},q:[],cur:null,tm:[],
+  arm:{w:{E:1,L:1,M:1,C:1},r:{E:1,L:1,M:1,C:1},c:{E:0,L:0,M:0,C:0}},flags:{},prem:0,taxDay:0,cspend:-1e9,pledgeN:0,pledgeOut:false,pledgeDon:0,newNext:1440,auT:0,log:[]};
+  civSetStart();}
+function civSetStart(){if(!S.civ)return;const b=(S.lead&&CIV.lead[S.lead.id])||{E:50,L:50,M:50,C:50},sa=CIV.site[SITE.env]||{};
+  CIVK.forEach(k=>{S.civ.m[k]=Math.max(CIV.startMin,Math.min(100,b[k]+(sa[k]||0)));S.civ.snap[k]=S.civ.m[k];});applyUpgrades();}
+// add a design-weight change ({E:1,C:-2}); returns a short text for logs and toasts
+function civAdd(d,why){if(!S.civ||!d)return "";const out=[];
+  for(const k of CIVK){const v=d[k];if(!v)continue;const p=v*CIV.unit;S.civ.m[k]=Math.max(0,Math.min(100,S.civ.m[k]+p));out.push(`${CIV.names[k]} ${v>0?"+":"−"}${Math.abs(p)}`);}
+  if(d.C>0)S.civ.cspend=S.t;   // (v5.1 QA: anything that raises Community keeps a promise to the town)
+  if(out.length){applyUpgrades();if(why)log(`${why}: ${out.join(", ")}`,"");}return out.join(", ");}
+const civTxt=d=>CIVK.filter(k=>d&&d[k]).map(k=>`${CIV.names[k]} ${d[k]>0?"+":"−"}${Math.abs(d[k]*CIV.unit)}`).join(", ");   // (in meter points)
+const civWage=()=>civOn()&&S.civ.wage||1;   // the walkout settlement's lasting raise
 const EVENTS=[
  {id:"refclash",g:"stock",name:"Refiner plates clash",head:"Refiner plates clashed! Maintenance called to the refiners.",dur:[180,300],mtbf:420,mods:{speedCap:0.75},fx:"refclash",
    // one set clashing slows the machine; both sets clashing takes it down until maintenance has re-plated them
@@ -1747,7 +1896,7 @@ const EVENTS=[
  {id:"dryerfire",g:"machine",name:"Fire in the dryers",head:"Fire in the dryer hood! Deluge on, sheet off.",dur:[180,360],mtbf:260,mods:{pmDown:"dryer fire"},fx:"dryerfire"},
  {id:"fabric",g:"machine",name:"Fabric runs off",head:"Forming fabric tracked off the rolls and folded up.",dur:[150,300],mtbf:180,mods:{pmDown:"fabric change"},fx:"fabric"},
  {id:"felt",g:"machine",name:"Press felt blows",head:"Press felt blown. Crew pulling a new felt.",dur:[90,180],mtbf:140,mods:{pmDown:"felt change"},fx:"felt"},
- {id:"slime",g:"machine",name:"Scabs",head:"Scabs in the sheet! Speed cut to 70% and the winder is hayout city.",dur:[300,600],mtbf:150,mods:{speedCap:0.7,breakMul:3,hayMul:20},fx:"slime"},
+ {id:"slime",g:"machine",name:"Slime build-up",head:"Slime build-up in the sheet! Speed cut to 70% and the winder is hayout city.",dur:[300,600],mtbf:150,mods:{speedCap:0.7,breakMul:3,hayMul:20},fx:"slime"},
  {id:"ragger",g:"stock",name:"Ragger tail break",head:"The ragger tail broke off at the wheel. Pulper stopped until an operator restarts the tail with fresh ragger rope.",dur:[90,180],mtbf:140,mods:{pulperDown:1},fx:"ragger"},
  {id:"overflow",g:"stock",name:"Pulper overflows",head:"Pulper overflows and floods the bale yard!",dur:[240,360],mtbf:220,mods:{pulperDown:1,recvMul:0.5},fx:"flood",
    start:i=>{const l=S.yard*0.15;S.yard-=l;i.note=`${Math.round(l)} t of bales soaked`;}},
@@ -1825,7 +1974,7 @@ function maintTick(dt){const crews=Math.max(1,Math.floor(P.techs/2)),head=S.crew
   const rank=i=>QINC(i.id)?(i.id===head?(i.mGo?0:1):3):(i.mGo?0:2),list=S.inc.filter(i=>MNEED(i.id)).map((i,k)=>[i,k]).sort((a,b)=>rank(a[0])-rank(b[0])||a[1]-b[1]).map(a=>a[0]);
   list.forEach((i,k)=>{i.mQ=k-crews+1;if(k>=crews){if(i.mSlot>=0){i.mSince=0;i.mHere=false;i.mGo=false;}i.mSlot=-1;return;}i.mSlot=k;if(!i.mSince){i.mSince=1;i.mResp=8;}
     if(i.mResp>0)i.mResp-=dt;if(i.mResp<=0)i.mGo=i.mHere=true;});}
-function maintState(i){if(!MNEED(i.id))return "";if(i.mGo)return "maintenance working";if(i.mSlot>=0)return "maintenance on the way";return `waiting for maintenance (${i.mQ} ahead)`;}
+function maintState(i){if(!MNEED(i.id))return "";if(i.mGo)return "maintenance working";if(i.mSlot>=0)return "maintenance on the way";return i.mQ>0?`waiting for maintenance (${i.mQ} ahead)`:"waiting for maintenance";}   // (v5.1 QA: mQ is unset until the next tick)
 function incState(i){const a=QINC(i.id)&&!working(i.id)?crewState(i.id):"",b=MNEED(i.id)&&!i.mGo?maintState(i):"";return [a,b].filter(Boolean).join(" · ");}
 function working(k){const h=S.crewQ&&S.crewQ[0];return !!(h&&h.k===k&&h.go);}
 function crewState(k){const q=S.crewQ||[],i=q.findIndex(x=>x.k===k);if(i<0)return "";if(i>0)return `waiting for crew (${i} ahead)`;return q[0].go?"crew working":"crew on the way";}
@@ -1836,7 +1985,7 @@ function mods(){const m=baseMods();
     if(e.hayMul)m.hayMul*=e.hayMul; if(e.speedCap)m.speedCap=Math.min(m.speedCap,e.speedCap); if(e.breakMul)m.breakMul*=e.breakMul; if(e.yieldMul)m.yieldMul*=(i.id==="badocc"&&LV("detrash"))?0.9:e.yieldMul;
     if(e.recvMul!==undefined)m.recvMul*=e.recvMul; if(e.clampMul!==undefined)m.clampMul*=e.clampMul; if(e.yardEat)m.yardEat+=e.yardEat;
     if(i.drvCap!==undefined)m.drvCap=Math.min(m.drvCap,i.drvCap); if(i.ldrCap!==undefined)m.ldrCap=Math.min(m.ldrCap,i.ldrCap);}
-  for(const f of (S.fx||[])){const e=f.mods||{};if(e.pmDown)m.pmDown=e.pmDown;if(e.speedCap)m.speedCap=Math.min(m.speedCap,e.speedCap);if(e.breakMul)m.breakMul*=e.breakMul;if(e.winderDown)m.winderDown=true;if(e.recvMul!==undefined)m.recvMul*=e.recvMul;if(e.pulperDown)m.pulperDown=true;if(e.docksClosed)m.docksClosed=true;if(e.noOut)m.noOut=true;if(e.noIn)m.noIn=true;if(e.yieldMul)m.yieldMul*=e.yieldMul;}
+  for(const f of (S.fx||[])){const e=f.mods||{};if(e.pmDown)m.pmDown=e.pmDown;if(e.speedCap)m.speedCap=Math.min(m.speedCap,e.speedCap);if(e.breakMul)m.breakMul*=e.breakMul;if(e.winderDown)m.winderDown=true;if(e.recvMul!==undefined)m.recvMul*=e.recvMul;if(e.pulperDown)m.pulperDown=true;if(e.docksClosed)m.docksClosed=true;if(e.noOut)m.noOut=true;if(e.noIn)m.noIn=true;if(e.yieldMul)m.yieldMul*=e.yieldMul;if(e.feedMul)m.feedMul*=e.feedMul;if(e.clampMul!==undefined)m.clampMul*=e.clampMul;if(e.offSpec)m.offSpec=true;if(e.hayMul)m.hayMul*=e.hayMul;}   // (v5.1: civics fx use these too)
   if(S.wx==="rain")m.yieldMul*=0.97;
   if(S.pm==="break"&&S.brkType!=="reel"&&working("brk")){m.recvMul=0;m.clampMul=0;m.crewAtPM=true;}
   return m;}
@@ -1857,12 +2006,13 @@ function trigger(id,quiet){
   log(e.head+(inc.note?` (${inc.note})`:""),"bad");
   S.M=mods();
   if(typeof leadAuto==="function")leadAuto(inc);   // v5.0.4: Dot may fix it on the spot
+  if(typeof civOnUpset==="function")civOnUpset(inc);   // v5.1 civics: the upset's choices (or a standing order)
 }
 function clearIncident(id){const i=S.inc.find(x=>x.id===id);if(i)i.left=0;}
 function chaosTick(dt){
   crewTick(dt);
   maintTick(dt);
-  for(const i of S.inc){if(QINC(i.id)&&!working(i.id))continue;if(MNEED(i.id)&&!i.mGo)continue;if(QINC(i.id)||MNEED(i.id))i.go=true;i.left-=dt*((QINC(i.id)||MNEED(i.id))?repRate()*leadRep():1);}
+  for(const i of S.inc){if(QINC(i.id)&&!working(i.id))continue;if(MNEED(i.id)&&!i.mGo)continue;if(QINC(i.id)||MNEED(i.id))i.go=true;i.left-=dt*((QINC(i.id)||MNEED(i.id))?repRate()*leadRep()*civRepair():1);}
   for(const i of S.inc)if(i.left<=0&&EV[i.id].end)EV[i.id].end(i);
   for(const i of S.inc)if(i.left<=0)log(`${EV[i.id].name}: cleared, back to normal`,"ok");
   // (v4.1 pass 7: compacted in place and counted with a loop: this runs every sim step, and the two filters made new arrays each time)
@@ -1873,7 +2023,7 @@ function chaosTick(dt){
   {const r=rand("up");if(CH.on&&um>0&&CH.en.chestover&&!active("chestover")&&S.tank>=P.tankCap*0.995&&r<dt/60/25)trigger("chestover");}
   const roll=CH.on&&um>0&&!outOn();
   if(S.rng.bird==null)S.rng.bird=(S.seed^0x5bd1e995)|0;
-  for(const e of EVENTS){const r=rand(e.stream||"up");if(roll&&CH.en[e.id]&&!active(e.id)&&r<dt/60/e.mtbf*CH.lvl*freqMul(e.id)*0.75*um)trigger(e.id);}
+  for(const e of EVENTS){const r=rand(e.stream||"up");if(roll&&CH.en[e.id]&&!active(e.id)&&!civCool(e.id)&&r<dt/60/e.mtbf*CH.lvl*freqMul(e.id)*0.75*um)trigger(e.id);}
 }
 
 /* ---------- event cards: offers the player can accept or decline (v2.2.0) ---------- */
@@ -1891,10 +2041,10 @@ function qualNow(){return S.q.made>0?1-S.q.off/S.q.made:1;}
 function cardBanner(text,good){BANNERS.push({text,t:null,kind:good?"good":undefined});while(BANNERS.length>3)BANNERS.splice(1,1);log(text,good?"ok":"bad");}
 const CARDS=[
  {id:"hot",area:"Sales · Paper machine",title:"Hot order",
-  story:()=>"A box plant lost its supplier. They need 900 t of 33HT within 30 hours and will pay $90/t over list.",
+  story:()=>"A box plant lost its supplier. They need 900 t of high-strength board within 30 hours and will pay $90/t over list.",
   win:()=>"+$81k premium if all 900 t are made on time",lose:()=>"Every ton short costs $40",
   odds:()=>clamp(Math.round(50+(effNow()-0.87)*300),10,95),why:"Depends on how well the machine runs: breaks and downtime cost tons.",
-  ok:()=>!S.plan.hot,
+  ok:()=>!S.plan.hot&&!(typeof civOn==="function"&&civOn()),   // v5.1 civics: the Rush order upset replaces this card
   accept(){S.plan.q.unshift({g:"33HT",t:900,i:3});S.plan.left=0;S.plan.hot={made:0};
     pend("hot",30*60,"hot");
     return "33HT jumps to the front of the queue. Delivery due in 30 hours.";}},
@@ -1907,8 +2057,8 @@ const CARDS=[
     pend("chem",3*1440,"chem",{w});
     return "Trial running for 3 days.";}},
  {id:"eng",area:"Paper machine",title:"Process engineer idea",
-  story:()=>"Your process engineer has a new steam profile that could lift 30m speed by 120 fpm. Engineering time costs $60k.",
-  win:()=>"+120 fpm on 30m, permanently",lose:()=>"$60k spent and sheet breaks 2× for a day",
+  story:()=>"Your process engineer has a new steam profile that could lift heavy-medium machine speed by 120 fpm. Engineering time costs $60k.",
+  win:()=>"+120 fpm on heavy medium, permanently",lose:()=>"$60k spent and sheet breaks 2× for a day",
   odds:()=>Math.min(95,70+10*LV("rcfa")),why:"Root cause analysis (RCFA) makes trials safer.",
   ok:()=>!pending("eng")&&(S.perk.sp["30m"]||0)<360,
   accept(c){deal(-60000);const w=rand("card")*100<c.o;if(!w)addFx({id:"eng",left:1440,mods:{breakMul:2}});
@@ -1939,8 +2089,8 @@ const CARDS=[
     pend("outage",h*60,"outage",{w});
     return "$80k spent. Machine down for planned work.";}},
  {id:"audit",area:"Quality",title:"Customer audit",
-  story:()=>"Your biggest 33HT customer will audit your quality for the next 3 days. They want 99% on-spec paper.",
-  win:()=>"+$15/t on 33HT for the rest of the game",lose:()=>"−$10/t on 33HT for 7 days",
+  story:()=>"Your biggest high-strength board customer will audit your quality for the next 3 days. They want 99% on-spec paper.",
+  win:()=>"+$15/t on high-strength board for the rest of the game",lose:()=>"−⁠$10/t on high-strength board for 7 days",
   odds:()=>clamp(Math.round(70+(qualNow()-0.99)*2000),10,95),why:"Passes if 99% of paper made is on spec: dye trouble and grade changes cost quality.",
   ok:()=>!pending("audit")&&(S.perk.price["33HT"]||0)<45,
   accept(){const m0=S.q.made,o0=S.q.off;
@@ -1948,13 +2098,13 @@ const CARDS=[
     return "Audit running for 3 days.";}},
  {id:"seconds",area:"Outbound",title:"Seconds buyer",
   story:()=>`A broker will buy the ${Math.round(S.q.bank)} t of off-spec paper you sent to the beater for $150/t, cash now.`,
-  win:()=>`+${money(S.q.bank*150)} now`,lose:()=>"The broker resells it as prime: −$5/t on all paper for 3 days",
+  win:()=>`+${money(S.q.bank*150)} now`,lose:()=>"The broker resells it as prime: −⁠$5/t on all paper for 3 days",
   odds:()=>80,why:"Fixed odds.",
   ok:()=>S.q.bank>=20&&!pending("seconds"),
   accept(c){const v=S.q.bank*150;deal(v);S.q.bank=0;const w=rand("card")*100<c.o;
     if(!w)addFx({id:"seconds",left:3*1440,price:{all:-5}});
     pend("seconds",w?1:3*1440,"seconds",{w});
-    return w?`${money(v)} paid. Clean deal.`:`${money(v)} paid, but customers found prime-labeled seconds: −$5/t for 3 days.`;}},
+    return w?`${money(v)} paid. Clean deal.`:`${money(v)} paid, but customers found prime-labeled seconds: −⁠$5/t for 3 days.`;}},
  {id:"intern",area:"Paper machine",title:"Intern project",
   story:()=>"Your summer intern has a plan to retune the 23m speed profile. It costs nothing to try.",
   win:()=>"+60 fpm on 23m, permanently",lose:()=>"The intern trips the machine: 2 hours down",
@@ -2007,7 +2157,7 @@ const CARDS=[
     return "$20k spent. Results in 4 hours.";}},
  {id:"spot",area:"Sales · Warehouse",title:"Spot market sale",
   story:()=>`A spot buyer will take 500 t of ${C.grade} from your warehouse right now at $35/t over list.`,
-  win:()=>`+${money(500*35)} over list ($35/t). ${money(500*(priceOf(C.grade)+35))} comes in now, but those 500 t won't ship later`,lose:()=>`The buyer rejects 20% as damaged: those 100 t go at the $150/t seconds price (about −${money(Math.max(0,100*(priceOf(C.grade)-150)-400*35))} against list)`,
+  win:()=>`+${money(500*35)} over list ($35/t). ${money(500*(priceOf(C.grade)+35))} comes in now, but those 500 t won't ship later`,lose:()=>`The buyer rejects 20% as damaged: those 100 t go at the $150/t seconds price (about −⁠${money(Math.max(0,100*(priceOf(C.grade)-150)-400*35))} against list)`,
   odds:()=>70,why:"Fixed odds.",
   ok:()=>S.fg*C.rollW.v>=500&&!pending("spot"),
   accept(c){const w=rand("card")*100<c.o,n=500/C.rollW.v,T=[];lotTake(S.lots.fg,Math.min(n,S.fg),T);S.fg=Math.max(0,S.fg-n);S.shipT+=500;S.tot.shipped+=n;
@@ -2060,7 +2210,7 @@ const CARDS=[
  {id:"grant",area:"Management",title:"Recycling grant",
   story:()=>"The state has a fiber-recovery grant. A consultant will write the application for $40k.",
   win:()=>"+$120k grant in 3 days",lose:()=>"Application rejected: $40k gone",
-  odds:()=>Math.min(90,40+15*LV("detrash")+10*LV("apc")),why:"Grants favour mills with modern detrashing and process control.",
+  odds:()=>Math.min(90,40+15*LV("detrash")+10*LV("apc")),why:"Grants favor mills with modern detrashing and process control.",
   ok:()=>S.cash>80000,
   accept(c){deal(-40000);const w=rand("card")*100<c.o;
     pend("grant",3*1440,"grant",{w});
@@ -2075,8 +2225,8 @@ const CARDS=[
     S.perk.energy+=10;pend("hedge",14*1440,"hedge#1");
     return "$20k paid. Energy $10/t cheaper for 14 days.";}},
  {id:"strike",area:"Sales",title:"Competitor strike",
-  story:()=>"A competing mill's crew walked out. Their customers want your paper at $40/t over list on every grade.",
-  win:()=>"+$40/t on everything for 5 days",lose:()=>"The strike settles after a day and the buyers squeeze you: −$10/t for 3 days",
+  story:()=>"Riverside Paper's crew walked out. Their customers want your paper at $40/t over list on every grade.",
+  win:()=>"+$40/t on everything for 5 days",lose:()=>"The strike settles after a day and the buyers squeeze you: −⁠$10/t for 3 days",
   odds:()=>65,why:"Depends on the union talks, not you.",
   ok:()=>true,
   accept(c){const w=rand("card")*100<c.o;
@@ -2086,7 +2236,7 @@ const CARDS=[
     return "+$40/t on all grades while the strike lasts.";}},
  {id:"yard",area:"Inbound · Bale yard",title:"Bale yard cleanup",
   story:()=>"A contractor will sweep and re-stack the bale yard for $12k.",
-  win:()=>"Bale fires and yard fleet trouble 70% rarer for 10 days",lose:()=>"The crew finds a smouldering bale: a bale fire",
+  win:()=>"Bale fires and yard fleet trouble 70% rarer for 10 days",lose:()=>"The crew finds a smoldering bale: a bale fire",
   odds:()=>80,why:"Fixed odds.",
   ok:()=>!active("balefire"),
   accept(c){deal(-12000);const w=rand("card")*100<c.o;
@@ -2126,7 +2276,7 @@ const CARDS=[
     return "Trial basket in.";}},
  {id:"vip",area:"Sales · Paper machine",title:"VIP customer tour",
   story:()=>"A big 23m buyer wants to tour the mill tomorrow. Catering and a fresh coat of paint: $8k.",
-  win:()=>"+$10/t on 23m, permanently",lose:()=>"They see a sheet break: −$8/t on 23m for 5 days",
+  win:()=>"+$10/t on 23m, permanently",lose:()=>"They see a sheet break: −⁠$8/t on 23m for 5 days",
   odds:()=>clamp(Math.round(55+(effNow()-0.87)*300),10,95),why:"Depends on how well the machine is running.",
   ok:()=>!pending("vip")&&!S.perk.vip,   // v5.0.6: once won it stays won (the survival deck reshuffles, and the bonus used to stack)
   accept(c){deal(-8000);const w=rand("card")*100<c.o;
@@ -2158,8 +2308,8 @@ const CARDS=[
     addFx({id:"backhaul",left:6*60,mods:{noOut:true}});pend("backhaul",6*60,"backhaul");
     return "The carrier's trucks didn't show: no shipping for 6 hours.";}},
  {id:"starch",area:"Paper machine",title:"Surface starch upgrade",
-  story:()=>"A starch supplier says a new size-press recipe will lift 33HT strength. $50k for the trial.",
-  win:()=>"+$12/t on 33HT, permanently",lose:()=>"Starch picking: sheet breaks 1.5× for 2 days",
+  story:()=>"A starch supplier says a new size-press recipe will make high-strength board stronger. $50k for the trial.",
+  win:()=>"+$12/t on high-strength board, permanently",lose:()=>"Starch picking: sheet breaks 1.5× for 2 days",
   odds:()=>Math.min(95,65+10*LV("apc")),why:"Advanced process control holds the size press steady.",
   ok:()=>S.cash>100000,
   accept(c){deal(-50000);const w=rand("card")*100<c.o;if(!w)addFx({id:"starch",left:2*1440,mods:{breakMul:1.5}});
@@ -2196,8 +2346,8 @@ function cardTick(dt){const cs=S.cards;if(!cs)return;
   if(S.fx.some(f=>f.left<=0)){S.fx=S.fx.filter(f=>f.left>0);}
   // due callbacks are removed before they run, so one can never fire twice (or forever, if it throws)
   const due=cs.pend.filter(p=>(p.left-=dt)<=0);cs.pend=cs.pend.filter(p=>p.left>0);
-  for(const p of due){try{PENDH[p.h](p.d);}catch(e){console.error("card error",p.id,e);}}
-  if(cs.open||S.zen||S.over||(S.season&&S.season.done)||S.t<cs.next||outOn())return;
+  for(const p of due){try{PENDH[p.h](p.d);}catch(e){console.error("card error",p.id,e);}try{if(typeof civCardDue==="function")civCardDue(p);}catch(e){console.error("civics card",p.id,e);}}
+  if(cs.open||S.zen||S.over||(S.season&&S.season.done)||S.t<cs.next||outOn()||(S.civ&&(S.civ.pending||S.civ.cur)))return;   // (v5.1 QA: not over a standing-order toast)
   cs.next=S.t+1440*(1.2+0.6*rand("card"));
   // every card is shown at most once per game: once dealt it is marked seen and never drawn again
   let seen=cs.seen||(cs.seen={});if(survOn()&&CARDS.every(c=>seen[c.id]))seen=cs.seen={};   // v4.3 survival: the deck goes round again
@@ -2220,7 +2370,7 @@ function openCard(c){const o=c.odds();S.cards.open={c,o};running=false;
   cardEl.innerHTML=`<div class="modal deal" role="dialog" aria-modal="true" aria-labelledby="deal-h"><span class="dk">${t(c.area)} · sim paused</span>
     <h2 id="deal-h">${t(c.title)}</h2><p>${t(c.story())}</p>
     <div class="doc"><b class="w">Win</b><span>${t(c.win())}</span><b class="l">Risk</b><span>${t(c.lose())}</span></div>
-    <div><div class="dodds"><span>Chance it works</span><b>${o}%</b></div><div class="dbar"><i style="width:${o}%"></i></div><p style="font-size:12.5px;margin-top:4px">${t(c.why)}${cardHave(c)?` <b>${t(cardHave(c))}</b>`:""}</p></div>
+    <div><div class="dodds"><span>Chance it works</span><b>${o}%</b></div><div class="dbar"><i style="width:${o}%"></i></div><p style="font-size:12.5px;margin-top:4px">${t(c.why)}${cardHave(c)?` <b>${t(cardHave(c))}</b>`:""}</p></div>${typeof civCardHTML==="function"?civCardHTML(c):""}
     <div id="deal-res" class="dres" hidden></div>
     <div class="btns" id="deal-btns"><button id="deal-no">Decline</button><button id="deal-yes" class="primary">Accept</button></div></div>`;
   cardEl.classList.remove("dealres");clearTimeout(cardEl._t);cardEl.hidden=false;AUDIO.sfx("cash",150);
@@ -2232,27 +2382,29 @@ function openCard(c){const o=c.odds();S.cards.open={c,o};running=false;
     closeCard(true);cardEl.classList.add("dealres");cardEl.hidden=false;clearTimeout(cardEl._t);
     const m=cardEl.querySelector(".modal");setTimeout(()=>m.addEventListener("click",()=>{cardEl.hidden=true;cardEl.classList.remove("dealres");},{once:true}),0);
     cardEl._t=setTimeout(()=>{cardEl.hidden=true;cardEl.classList.remove("dealres");},2000);};
-  document.getElementById("deal-no").addEventListener("click",()=>{log(`Declined: ${c.title}`,"");closeCard();});
-  document.getElementById("deal-yes").addEventListener("click",()=>{const msg=c.accept({o});log(`Accepted: ${c.title} (${o}% chance). ${msg}`,"warn");S.M=mods();done(msg);});
+  document.getElementById("deal-no").addEventListener("click",()=>{log(`Declined: ${c.title}`,"");if(typeof civCardDecline==="function")civCardDecline(c);closeCard();});
+  document.getElementById("deal-yes").addEventListener("click",()=>{const st=S.rng.card,w=rand("card")*100<o;S.rng.card=st;const p0=S.cards.pend.length;   // v5.1: peek at the card's own first roll (no dice drawn) for its civics
+    const msg=c.accept({o});if(typeof civCardAccept==="function")civCardAccept(c,w,p0);log(`Accepted: ${c.title} (${o}% chance). ${msg}`,"warn");S.M=mods();done(msg);});
   document.getElementById("deal-yes").focus();}
 function closeCard(keep){if(cardEl&&!keep)cardEl.hidden=true;S.cards.open=null;const menuOpen=document.getElementById("v2menu");
+  if(S.civ&&S.civ.q.length&&!S.civ.cur&&!S.civ.pending&&typeof civOn==="function"&&civOn()&&!outOn()){civNext();if(S.civ.cur)return;}   // (v5.1 QA: a choice waiting behind this card opens straight away)
   if(menuOpen&&!menuOpen.hidden)return;running=true;}
 // the pending card outcomes, by key (see pend)
 const PENDH={
  "hot":()=>{const m=Math.min(900,S.plan.hot.made);S.plan.hot=null;
-      if(m>=900-1e-6){deal(81000);cardBanner("Hot order delivered: 900 t of 33HT on time. +$81k premium.",true);}
+      if(m>=900-1e-6){deal(81000);cardBanner("Hot order delivered: 900 t of high-strength board on time. +$81k premium.",true);}
       else{const sh=900-m;deal(-sh*40);cardBanner(`Hot order short by ${Math.round(sh)} t: ${money(sh*40)} penalty.`,false);}},
  "chem":({w})=>{if(w){S.perk.chem+=12;applyUpgrades();cardBanner("Chemical trial worked: chemicals now $12/t cheaper.",true);}
       else cardBanner("Chemical trial failed: the additive left deposits. Back to the old recipe.",false);},
- "eng":({w})=>{if(w){S.perk.sp["30m"]=(S.perk.sp["30m"]||0)+120;cardBanner("Engineer's steam profile works: 30m runs 120 fpm faster.",true);}
+ "eng":({w})=>{if(w){S.perk.sp["30m"]=(S.perk.sp["30m"]||0)+120;cardBanner("Engineer's steam profile works: heavy medium runs 120 fpm faster.",true);}
       else cardBanner("Engineer's trial didn't hold up: back to the old steam profile.",false);},
  "cheap":({w})=>{if(w)cardBanner("Cheap OCC checks out: clean bales, about $27k saved.",true);
       else{trigger("badocc");cardBanner("The cheap OCC was junk: wax, plastic and wet bales in the pulper.",false);}},
  "grid":({w})=>cardBanner(w?"Demand response over: full speed again.":"Demand response ran 8 hours. Full speed again.",w),
  "outage":({w})=>{addFx({id:"care",left:7*1440,freq:0.5});cardBanner(w?"Planned outage finished on time. Breakdowns halved for 7 days.":"Planned outage overran by 4 hours. Breakdowns halved for 7 days.",w);},
  "audit":({m0,o0})=>{const m=S.q.made-m0,q=m>0?1-(S.q.off-o0)/m:0;
-      if(q>=0.99){S.perk.price["33HT"]=(S.perk.price["33HT"]||0)+15;cardBanner(`Customer audit passed at ${(q*100).toFixed(1)}% on spec: +$15/t on 33HT.`,true);}
-      else{addFx({id:"auditfail",left:7*1440,price:{"33HT":-10}});cardBanner(`Customer audit failed at ${(q*100).toFixed(1)}% on spec: −$10/t on 33HT for 7 days.`,false);}},
+      if(q>=0.99){S.perk.price["33HT"]=(S.perk.price["33HT"]||0)+15;cardBanner(`Customer audit passed at ${(q*100).toFixed(1)}% on spec: +$15/t on high-strength board.`,true);}
+      else{addFx({id:"auditfail",left:7*1440,price:{"33HT":-10}});cardBanner(`Customer audit failed at ${(q*100).toFixed(1)}% on spec: −⁠$10/t on high-strength board for 7 days.`,false);}},
  "seconds":({w})=>{if(!w)cardBanner("Seconds resold as prime: prices back to normal.",true);},
  "intern":({w})=>{if(w){S.perk.sp["23m"]=(S.perk.sp["23m"]||0)+60;cardBanner("The intern's speed profile works: 23m runs 60 fpm faster.",true);}
       else{addFx({id:"intern",left:120,mods:{pmDown:"intern tripped the machine"}});cardBanner("The intern tripped the machine: 2 hours down.",false);}},
@@ -2274,19 +2426,19 @@ const PENDH={
  "hedge":()=>cardBanner("Power prices fell: the hedge was worth nothing.",false),
  "hedge#1":()=>{S.perk.energy-=10;cardBanner("Power hedge expired: energy back to market price.",true);},
  "strike":()=>cardBanner("The strike is over: prices back to list.",true),
- "strike#1":()=>{addFx({id:"strikex",left:3*1440,price:{all:-10}});cardBanner("The strike settled: buyers squeeze you −$10/t for 3 days.",false);},
+ "strike#1":()=>{addFx({id:"strikex",left:3*1440,price:{all:-10}});cardBanner("The strike settled: buyers squeeze you −⁠$10/t for 3 days.",false);},
  "yard":({w})=>{if(w){addFx({id:"yard",left:10*1440,evf:{balefire:0.3,fleet:0.3}});cardBanner("Bale yard swept and re-stacked: fire and fleet risk way down for 10 days.",true);}
-      else{trigger("balefire");cardBanner("Cleanup crew found a smouldering bale!",false);}},
+      else{trigger("balefire");cardBanner("Cleanup crew found a smoldering bale!",false);}},
  "film":({w})=>{if(w){S.perk.film=1;for(const g of Object.keys(ECON.price))S.perk.price[g]=(S.perk.price[g]||0)+5;cardBanner("New wrap film cut damage claims: +$5/t on every grade.",true);}
       else{addFx({id:"film",left:240,mods:{winderDown:1}});cardBanner("The new film jammed the wrapper: winder down 4 hours.",false);}},
  "rotor":({w})=>{addFx({id:"rotorok",left:14*1440,evf:{ragger:0.4,lcplug:0.4,hdblow:0.4}});cardBanner(w?"Pulper rotor rebuilt on time: plugs 60% rarer for 14 days.":"Pulper rebuild overran to 8 hours, but it's done: plugs 60% rarer for 14 days.",w);},
  "basket":()=>{trigger("fscreen");cardBanner("The trial basket cracked: fine screen down.",false);},
  "vip":({w})=>{if(w){S.perk.vip=1;S.perk.price["23m"]=(S.perk.price["23m"]||0)+10;cardBanner("The VIP tour went great: +$10/t on 23m.",true);}
-      else{addFx({id:"vipx",left:5*1440,price:{"23m":-8}});cardBanner("The VIPs watched a sheet break: −$8/t on 23m for 5 days.",false);}},
+      else{addFx({id:"vipx",left:5*1440,price:{"23m":-8}});cardBanner("The VIPs watched a sheet break: −⁠$8/t on 23m for 5 days.",false);}},
  "millwright":()=>cardBanner("The millwright went home early after a row with the foreman.",false),
  "tax":({w})=>{if(w){deal(60000);cardBanner("Tax appeal won: +$60k refund.",true);}else cardBanner("Tax appeal denied.",false);},
  "backhaul":()=>cardBanner("Outbound trucks are back on schedule.",true),
- "starch":({w})=>{if(w){S.perk.price["33HT"]=(S.perk.price["33HT"]||0)+12;cardBanner("New starch recipe works: +$12/t on 33HT.",true);}else cardBanner("Starch trial over: back to the old recipe.",false);},
+ "starch":({w})=>{if(w){S.perk.price["33HT"]=(S.perk.price["33HT"]||0)+12;cardBanner("New starch recipe works: +$12/t on high-strength board.",true);}else cardBanner("Starch trial over: back to the old recipe.",false);},
  "scrap":()=>cardBanner("Scrap truck gone: docks open again.",true),
  "boilertune":({w})=>{if(w){S.perk.energy+=4;addFx({id:"boilertune",left:14*1440,evf:{boiler:0.5}});cardBanner("Boiler tuned: energy $4/t cheaper, trips halved for 14 days.",true);}
       else{trigger("boiler");cardBanner("The boiler tripped during tuning!",false);}},
@@ -2317,7 +2469,7 @@ const outOn=()=>!!(S&&S.outg&&S.outg.on);
 function outageTick(){const o=S.outg;if(!o||!S.season||!S.season.on||S.zen||S.over)return;
   if(o.on){if(S.t>=o.end)endOutage();return;}
   const st=outStart(o.k);if(st+OUT.len>S.season.end)return;
-  if(!o.noticed&&S.t>=st-1440){if(S.cards&&S.cards.open)return;o.noticed=true;openOutagePlan();return;}
+  if(!o.noticed&&S.t>=st-1440){if(S.cards&&S.cards.open)return;if(S.civ&&(S.civ.pending||S.civ.cur))return;   /* (v5.1 QA: waits for a standing-order toast) */o.noticed=true;openOutagePlan();return;}
   if(o.noticed&&S.t>=st)beginOutage();}
 let outEl=null;
 function outShell(){if(!outEl){outEl=document.createElement("div");outEl.className="overlay";outEl.id="outOv";outEl.hidden=true;document.body.appendChild(outEl);}clearTimeout(outEl._t);outEl.classList.remove("note");return outEl;}
@@ -2328,23 +2480,25 @@ function openOutagePlan(){const o=S.outg,st=outStart(o.k),first=o.k===1,d0=S.cas
   running=false;S.cards.open={outage:true};
   const el=outShell(),k=n=>"$"+Math.round(n/1e3)+"k";
   const relPct=v=>Math.round(Math.abs(1-OUT.rel[v])*100);   // (v5.0.6: from OUT.rel, which differs in survival)
-  const effTxt=(v,a)=>{const w=a==="stock"?"breakdowns":"breakdowns and sheet breaks";return v===0?["bad",`Reliability −${relPct(0)}%: more `+w]:v===2?["ok",`Reliability +${relPct(2)}%: fewer `+w]:["","Reliability unchanged"];};
+  const effTxt=(v,a)=>{const w=a==="stock"?"breakdowns":"breakdowns and sheet breaks";return v===0?["bad",`Reliability −⁠${relPct(0)}%: more `+w]:v===2?["ok",`Reliability +${relPct(2)}%: fewer `+w]:["","Reliability unchanged"];};
   el.innerHTML=`<div class="modal deal outg" role="dialog" aria-modal="true" aria-labelledby="out-h"><span class="dk">${survOn()?`Wave ${o.k} · planned outage`:`Planned outage ${o.k} of 4`} · sim paused</span>
     <h2 id="out-h">${first?"Your first planned outage":"Outage in 24 hours"}</h2>
     ${first?`<div class="intro"><p><b>What's an outage?</b> Planned downtime. Every ${OUT.every} days the mill comes down on purpose for a controlled 4-hour shutdown, so crews can inspect, clean, repair and replace worn parts before they fail.</p>
       <p><b>Why it matters:</b> well-maintained equipment breaks down less and runs better, with fewer sheet breaks and hayouts. Your budget for each area sets its reliability until the next outage.</p></div>`:""}
-    <p class="when">Starts <b>${outTime(st)}</b>, back up by <b>${hourOf(st+OUT.len)}</b> (4 hours, machine and stock prep down).<br>Major job: <b>${OUT.jobs[outJob(o.k)-1]||"inspections"}</b>, plus new press felts.</p>${survOn()?survPlanNote(o.k):""}<div id="out-lead"></div>
+    <p class="when">Starts <b>${outTime(st)}</b>, back up by <b>${hourOf(st+OUT.len)}</b> (4 hours, machine and stock prep down).<br>Major job: <b>${OUT.jobs[outJob(o.k)-1]||"inspections"}</b>, plus new press felts.</p>${survOn()?survPlanNote(o.k):""}<div id="out-lead"></div>${typeof civPlanHTML==="function"?civPlanHTML():""}
     <div>${OUT.areas.map(([a,n,d])=>`<div class="orow" data-a="${a}"><div><b>${n}</b><small>${d}</small></div><div class="seg">${COST.map((c,i)=>`<button data-v="${i}" aria-pressed="${i===d0}">${k(c)}</button>`).join("")}</div><em class="eff"></em></div>`).join("")}</div>
     <div class="otot"><div><span>Outage budget</span><small id="out-cash"></small></div><b id="out-tot"></b></div>
     <div class="btns"><button class="primary" id="out-ok" style="flex:1">Approve budget</button></div></div>`;
   const paint=()=>{el.querySelectorAll(".orow").forEach(r=>{const a=r.dataset.a,v=pick[a];r.querySelectorAll(".seg button").forEach(b=>b.setAttribute("aria-pressed",String(+b.dataset.v===v)));
       const [c,t]=effTxt(v,a),e=r.querySelector(".eff");e.className="eff "+c;e.textContent=t;});
-    const tot=Object.values(pick).reduce((s,v)=>s+COST[v],0);document.getElementById("out-tot").textContent=money(tot);
+    const tot=Object.values(pick).reduce((s,v)=>s+COST[v],0)+(typeof civPlanCost==="function"?civPlanCost(o._civ&&o._civ.civ):0);document.getElementById("out-tot").textContent=money(tot);
     document.getElementById("out-cash").textContent="Cash on hand "+money(S.cash);document.getElementById("out-ok").textContent=`Approve ${money(tot)} budget`;};
   el.querySelectorAll(".orow").forEach(r=>r.querySelectorAll(".seg button").forEach(b=>b.addEventListener("click",()=>{pick[r.dataset.a]=+b.dataset.v;paint();})));
   document.getElementById("out-ok").addEventListener("click",()=>{const tot=Object.values(pick).reduce((s,v)=>s+COST[v],0);spend(tot,"repairs");
-    o.plan={...pick};if(lp)o.plan.lead={to:lp.to,pick:lp.pick};log(`Outage ${o.k} budget approved: ${money(tot)} (${OUT.areas.map(([a,n])=>n+" "+k(COST[pick[a]])).join(", ")})`,"warn");
+    const cpc=o._civ&&o._civ.civ;if(cpc&&civPlanCost(cpc))civPay(civPlanCost(cpc));   // v5.1 civics levers
+    o.plan={...pick};if(cpc)o.plan.civ=cpc;delete o._civ;if(lp)o.plan.lead={to:lp.to,pick:lp.pick};log(`Outage ${o.k} budget approved: ${money(tot)} (${OUT.areas.map(([a,n])=>n+" "+k(COST[pick[a]])).join(", ")})`,"warn");
     el.hidden=true;closeCard(true);});
+  o._civ={};if(typeof civPlanWire==="function"&&civOn()){civPlanWire(el,o._civ);el.querySelectorAll(".civplan .seg button").forEach(b=>b.addEventListener("click",()=>paint()));}
   paint();if(lp)leadPlanMount(document.getElementById("out-lead"),lp);el.hidden=false;AUDIO.sfx("cash",150);document.getElementById("out-ok").focus({preventScroll:true});el.querySelector(".modal").scrollTop=0;}   // v5.0.4: opens at the top
 function outNote(head,body,ms,btn){   // v5.0.5: with an event card open, the notice waits until the card is answered, so it never covers the card's buttons
   // v5.0.6: it also waits while the card's result toast is showing, so it never lands on top of it
@@ -2363,6 +2517,7 @@ function beginOutage(){const o=S.outg,st=S.t;if(!o.plan)o.plan={stock:1,wet:1,dr
   if(S.lead&&o.plan.lead&&o.plan.lead.to)leadChange(o.plan.lead.to);   // v4.4: the one change of leader happens as the outage starts
   // (the clock runs at no more than OUT.simCap while o.on, through simRate(); the player's own speed is left alone)
   addFx({id:"pout",left:OUT.len,mods:{pmDown:"planned outage",pulperDown:1}});AUDIO.sfx("clunk",400);
+  if(typeof civOutageBegin==="function")civOutageBegin(o,st);   // v5.1 civics: Labor sets how long it runs
   log(`Planned outage ${o.k} has begun: down until ${hourOf(o.end)}`,"warn");BANNERS.push({text:`Planned outage: the mill is down until ${hourOf(o.end)}.`,t:null,kind:"good",tag:"OUTAGE"});
   const canWatch=C.simSpeed>OUT.simCap&&!TURBO_FAST(C.simSpeed);   // (at 5 min/s or slower there is nothing to slow down)
   outNote("Outage has begun",`The mill is down for planned maintenance: ${(OUT.jobs[outJob(o.k)-1]||"inspections").toLowerCase()} and new press felts. Started ${hourOf(st)}, ends ${outTime(o.end)}.`,canWatch?7000:5000,canWatch?{label:"Watch the crews",on:outWatch}:null);}
@@ -2376,6 +2531,7 @@ function endOutage(){const o=S.outg,pl=o.plan||{stock:1,wet:1,dry:1};o.on=false;
   if(S.lead)leadOutageEnd(pl.lead);   // v4.4: the leader's pick for this outage is now part of the mill
   if(S.lead&&leadOverrun()>0){const m=leadOverrun();addFx({id:"felrun",left:m,mods:{pmDown:"project tie-ins"}});   // v4.4.0-t3: Felicity's projects make outages overrun
     log(`Project tie-ins: the machine stays down ${m>=60?(m/60).toFixed(m%60?1:0)+" h":m+" min"} longer.`,"warn");}
+  if(typeof civOutageEnd==="function")civOutageEnd(o,pl);   // v5.1 civics: the levers, an overrun
   o.k++;o.noticed=false;o.plan=null;if(survOn())survWaveStart();}
 const HAYLINES=["HAYOUT! Paper is shooting to the roof!","Winder hayout! Every PM hand to the dry end!","Hayout! It's snowing paper in the winder aisle.","Hayout! The set exploded off the drums."];
 // a hayout ruins the outer wraps of the set on the winder (about 3 t), not the whole 12.5 t roll
@@ -2484,6 +2640,7 @@ function step(dt){
 
   chaosTick(dt);
   cardTick(dt);
+  if(typeof civTick==="function")civTick(dt);   // v5.1 civics
   outageTick();
   const M=S.M=mods();
   autoControl(dt);
@@ -2581,7 +2738,7 @@ function step(dt){
     const l=Math.min(P.truckRolls-tr.load,pool===Infinity?P.doorRolls*dt/60:pool,lcap,S.fg);pool-=l;
     tr.load+=l;lcap-=l;S.fg-=l;loaded+=l;lotTake(S.lots.fg,l,tr.lots||(tr.lots=[]));
     if(tr.load>=P.truckRolls-1e-6){S.leaving.push({...tr,ty:outY(d),kind:"out"});S.outDock[d]=null;S.tot.shipped+=P.truckRolls;const tons=P.truckRolls*C.rollW.v;S.shipT+=tons;earn(lotValue(tr.lots||[[C.grade,P.truckRolls]],C.rollW.v));}}   // (v16: each roll at its own grade's price)
-  spend(((C.drivers.v+C.loaders.v+P.techs)*(ECON.wage+(P.siteWage||0))*(P.costMul||1)*leadWage()+leadPayroll()*(P.costMul||1)+P.robots*ECON.robot+P.pmCost)*dt/60,"labor");
+  spend(((C.drivers.v+C.loaders.v+P.techs)*(ECON.wage+(P.siteWage||0))*(P.costMul||1)*leadWage()*(typeof civWage==="function"?civWage():1)+leadPayroll()*(P.costMul||1)+P.robots*ECON.robot+P.pmCost)*dt/60,"labor");
   spend((ECON.overhead+(P.siteOver||0))*dt/60,"overhead"); if(P.premium)spend(P.premium*dt/60,"premium");
   // v3.1.2: profit/day is OPERATING profit over the last 12 game hours: good paper is valued as it comes off the machine (tons x price),
   // less OCC, energy, labor, overhead and insurance. One-offs (upgrades, outage budgets, repair bills, card deals) are left out,
@@ -2608,7 +2765,8 @@ function step(dt){
 /* ---------- UI wiring ---------- */
 const $=id=>document.getElementById(id);
 const gradeSel=$("grade");
-Object.keys(GRADES).forEach(k=>{const o=document.createElement("option");o.value=k;o.textContent=`${k} · ${GRADES[k].bw} lb · $${ECON.price[k]}/t`;gradeSel.appendChild(o);});
+const GRADE_PLAIN={"23m":"light medium","26m":"medium","30m":"heavy medium","33HT":"high-strength board"};   // v5.1 QA2: the plain names cards use
+Object.keys(GRADES).forEach(k=>{const o=document.createElement("option");o.value=k;o.textContent=`${k} · ${GRADE_PLAIN[k]||""} · ${GRADES[k].bw} lb · $${ECON.price[k]}/t`;gradeSel.appendChild(o);});
 gradeSel.disabled=true;gradeSel.title="Set by the market: the planner schedules grades from customer orders";
 const rows=[...document.querySelectorAll(".row[data-key]")];
 let dragging=null;
@@ -2700,7 +2858,7 @@ function buy(id){const u=UP[id],l=LV(id);if(l>=u.lv.length)return;const cost=upC
   S.upDay=upDay();spend(cost,"upgrades");AUDIO.sfx("cash",150);S.up[id]=l+1;applyUpgrades();
   BANNERS.push({text:`${u.name}${u.lv.length>1?" level "+(l+1):""} is online.`,t:null,kind:"good"});while(BANNERS.length>3)BANNERS.splice(1,1);
   log(`Installed ${u.name}${u.lv.length>1?" level "+(l+1):""} (${money(cost)})`,"ok");updateShop();}
-const LEDGER=[["rev","Paper sales",1],["occ","OCC purchases",-1],["energy","Energy & chemicals",-1],["labor","Wages & robots",-1],["overhead","Mill overhead",-1],["repairs","Upset repairs",-1],["premium","Insurance premium",-1],["upgrades","Upgrades bought",-1],["deals","Deals & trials",1]];
+const LEDGER=[["rev","Paper sales",1],["occ","OCC purchases",-1],["energy","Energy & chemicals",-1],["labor","Wages & robots",-1],["overhead","Mill overhead",-1],["repairs","Upset repairs",-1],["premium","Insurance premium",-1],["upgrades","Upgrades bought",-1],["deals","Deals & trials",1],["civ","Civics",-1]];
 function updateRel(){const rn=document.getElementById("relnow"),lg=$("ledger"),tg=rn||lg;if(rn)rn.replaceChildren();else{const h0=document.createElement("h3");h0.textContent="Reliability now";lg.appendChild(h0);}const pct=v=>(v>=0?"+":"")+Math.round(v*100)+"%";
     [["stock","Stock prep"],["wet","Wet end"],["dry","Dry end"]].forEach(([a,n])=>{const r=areaRel(a),d=document.createElement("div"),sum=[r.up,r.out,r.fx,r.site||1,r.lead||1].reduce((t,v)=>t+(Math.abs(v-1)>0.005?v-1:0),0);d.className="stat "+(sum>0.005?"pos":sum<-0.005?"neg":"");
       const bits=[["upgrades",r.up],["outage budget",r.out],["events",r.fx],["site",r.site||1],["leader",r.lead||1]].filter(([,v])=>Math.abs(v-1)>0.005).map(([k,v])=>k+" "+pct(v-1));
@@ -2712,7 +2870,7 @@ function updateShop(){
     const fix=bnShort()&&us.some(upFix);const el=$("usum-"+g);if(el)el.innerHTML=`${fix?'<em class="fixg">fix</em> ':""}${own}/${tot} bought${can?` · <b>${can} affordable</b>`:""}`;});
   UPS.forEach(u=>{const l=LV(u.id),el=$("up-"+u.id),b=$("buy-"+u.id),max=l>=u.lv.length;
     el.classList.toggle("max",max);el.querySelectorAll(".pips i").forEach((p,k)=>p.classList.toggle("on",k<l));
-    {const fx=upFix(u),ft=el.querySelector(".fixtag");el.classList.toggle("fix",fx);if(ft){ft.hidden=!fx;if(fx){const t="Fixes the bottleneck · 25% off. "+(BN_UPTXT[S.bn+"/"+u.id]||"");if(ft.textContent!==t)ft.textContent=t;}}}
+    {const fx=upFix(u),ft=el.querySelector(".fixtag");el.classList.toggle("fix",fx);if(ft){ft.hidden=!fx;if(fx){const t=bnShort()?"Fixes the bottleneck · 25% off. "+(BN_UPTXT[S.bn+"/"+u.id]||""):"Bottleneck fixed · still 25% off";   /* v5.1 QA2: no "fixes" once it is fixed */if(ft.textContent!==t)ft.textContent=t;}}}
     if(max){b.disabled=true;b.textContent="Maxed";}
     else{const c=upCost(u,l),lk=upLocked();b.disabled=lk||(!S.free&&S.cash<c);b.textContent=S.free?"Add (free play)":lk?`${money(c)} · ${upNext()}`:S.cash<c?`Need ${money(c)}`:`Buy ${money(c)}`;}});
   const lg=$("ledger");lg.replaceChildren();
@@ -2720,7 +2878,7 @@ function updateShop(){
   // v3.3.3: how reliable each section is right now, against a mill with no upgrades and a standard outage budget
   updateRel();
   const h=document.createElement("h3");h.textContent="Books since start";lg.appendChild(h);
-  let net=0;LEDGER.forEach(([k,lab,sg])=>{const v=S.ledger[k]*sg;net+=v;if((k==="premium"||k==="repairs"||k==="deals")&&!S.ledger[k])return;
+  let net=0;LEDGER.forEach(([k,lab,sg])=>{const v=(S.ledger[k]||0)*sg;net+=v;if((k==="premium"||k==="repairs"||k==="deals"||k==="civ")&&!S.ledger[k])return;
     const d=document.createElement("div");d.className="stat "+(v>=0?"pos":"neg");d.innerHTML=`<span>${lab}</span><b>${money(v)}</b>`;lg.appendChild(d);});
   const n=document.createElement("div");n.className="stat net "+(net>=0?"pos":"neg");n.innerHTML=`<span>Net</span><b>${money(net)}</b>`;lg.appendChild(n);
   const m=document.createElement("div");m.className="stat";const t=S.shipT||0;
@@ -2765,7 +2923,8 @@ function startSeason(surv){newGame();S.season=surv?{on:true,surv:true,end:1e12,d
   // v4.2.5: the bottleneck is rolled fresh for every season (it used to come from the week's seed, so the whole week shared
   // one and the first buy was always the same). Picked before the season starts, like the "any" site, so it draws no
   // stream: the week's dice are unchanged. It is saved with the season (S.bn).
-  S.bn=BN_IDS[Math.floor(Math.random()*BN_IDS.length)];applyUpgrades();C.breaks=true;
+  S.bn=BN_IDS[Math.floor(Math.random()*BN_IDS.length)];applyUpgrades();
+  if(typeof civStart==="function")civStart();   // v5.1 civics: the four meters start (the leader, picked next, sets their values)C.breaks=true;
   CH.on=true;$("chaosOn").checked=true;CH.lvl=1;$("chaosLvl").value=1;$("chaosLvlv").textContent="1×";
   EVENTS.forEach(e=>{CH.en[e.id]=true;const c=$("en-"+e.id);if(c)c.checked=true;});seasonLocks(true);
   S.rc={i:0,p:rcAcc(),s:rcAcc(),cards:[]};   // v5.0.4: the first report card starts with the run, so upgrades bought before the first step count (it used to start at the first step)
@@ -2786,18 +2945,22 @@ function survWaveStart(){const w=survWave();applyUpgrades();
   log(`Wave ${w-1} done. ${t} (fiber, energy and chemicals, wages).`,"warn");
   const c=$("survChip");if(c){c.classList.remove("pulse");void c.offsetWidth;c.classList.add("pulse");}}
 // the chip under the top bar: the wave and its multipliers, for the whole run
-UI_TICKS.push(()=>{const c=$("survChip");if(!c)return;const on=survOn()&&!S.zen;if(c.hidden===on){c.hidden=!on;document.body.classList.toggle("surv",on);}if(!on)return;
+// v5.1 (offline): a season with a leader shows the chip too, without the wave multipliers (class "season" hides them)
+UI_TICKS.push(()=>{const c=$("survChip");if(!c)return;const sea=!survOn()&&leadOn(),on=(survOn()||sea)&&!S.zen;if(c.hidden===on){c.hidden=!on;document.body.classList.toggle("surv",on);}if(!on)return;
+  if(c.classList.contains("season")!==sea)c.classList.toggle("season",sea);
+  if(sea){const k=survWave(),set=(id,v)=>{const e=$(id);if(e.textContent!==v)e.textContent=v;},more=k<=4&&outStart(k)+OUT.len<=S.season.end,left=more?Math.max(0,outStart(k)-S.t):0,d=Math.floor(left/1440),h=Math.floor(left%1440/60);
+    set("svW",more?`Outage ${k} of 4`:"Season");$("svW").dataset.s=more?`Outage ${k}/4`:"Season";   /* v5.1 QA2: "O1" read as "01" */set("svN",!more?`day ${Math.floor(S.t/1440)+1} of ${SEASON_DAYS}`:S.outg&&S.outg.on?"outage under way":left<60?"outage within the hour":`outage in ${d?d+"d ":""}${h}h`);return;}
   const w=survWave(),set=(id,v)=>{const e=$(id);if(e.textContent!==v)e.textContent=v;},left=Math.max(0,outStart(w)-S.t),d=Math.floor(left/1440),h=Math.floor(left%1440/60);
   set("svW","Wave "+w);set("svU",xf(survUp(w)));set("svC",xf(survCost(w)));
   set("svN",S.outg&&S.outg.on?"outage under way":left<60?"outage within the hour":`outage in ${d?d+"d ":""}${h}h`);
   // v5.0.4: short forms for phones (styles.css shows data-s under 420 px), so the countdown fits there too
-  const sa=(id,v)=>{const e=$(id);if(e&&e.dataset.s!==v)e.dataset.s=v;};sa("svW","W"+w);
+  const sa=(id,v)=>{const e=$(id);if(e&&e.dataset.s!==v)e.dataset.s=v;};sa("svW","Wave "+w);
   sa("svN",S.outg&&S.outg.on?"⏱\uFE0E now":left<60?"⏱\uFE0E <1h":`⏱\uFE0E ${d?d+"d ":""}${h}h`);});
 // the season-over dialog serves both modes: which buttons it shows and what they say
 // (a bankrupt survival run has no "one more turn": that button goes back to the menu instead, on a fresh mill)
 function soMode(surv){$("so-more").textContent=surv?"Menu":"One more turn";$("so-new").textContent=surv?"New survival run":"New season";}
 function survResult(){return {minutes:Math.floor(S.t),wave:survWave(),tons:Math.round(S.shipT||0),incidents:S.tot.incidents,mill:MILL.name.slice(0,40),version:APP_VER.slice(0,12),env:SITE.env};}
-function endSurvival(){const se=S.season,r=survResult(),w=r.wave;se.done=true;se.on=false;se.result=r;running=false;if(G3.save&&G3.save.drop)G3.save.drop();   // v5.0.3: the run is over, so its save goes
+function endSurvival(){if(typeof civDrop==="function")civDrop();const se=S.season,r=survResult(),w=r.wave;se.done=true;se.on=false;se.result=r;running=false;if(G3.save&&G3.save.drop)G3.save.drop();   // v5.0.3: the run is over, so its save goes
   if(document.body.classList.contains("fs"))setFS(false);seasonLocks(false);AUDIO.sfx("lose",100);
   let best=0;try{best=+localStorage.getItem(SURV.best)||0;}catch(e){}
   const pb=r.minutes>best;if(pb){try{localStorage.setItem(SURV.best,String(r.minutes));}catch(e){}}
@@ -2806,6 +2969,7 @@ function endSurvival(){const se=S.season,r=survResult(),w=r.wave;se.done=true;se
   const st=[["Time survived",survTime(r.minutes),"big"],["Wave reached",String(w)],["Your best",pb?(best?"New best (was "+survTime(best)+")":"New best"):survTime(best)],
     ["Upsets by the end",xf(survUp(w))],["Costs by the end",xf(survCost(w))],["Tons shipped",f0(r.tons)+" t"],["Upsets survived",String(r.incidents)]];
   if(S.lead)st.splice(3,0,["Mill leader",LEADERS[S.lead.id].name+(S.lead.was?" (after "+LEADERS[S.lead.was].name+")":""),"wide"]);
+  if(S.civ&&S.civ.m)st.push(["Civics",civSummary(S.civ.m),"wide"]);   // v5.1 QA2
   if(S.lead&&S.lead.saved)st.splice(4,0,["Dot saved",money(S.lead.saved)+" in repairs ("+S.lead.fixed.length+" fixed)","wide"]);   // v5.0.5
   $("so-stats").replaceChildren(...st.map(([k,v,c])=>{const d=document.createElement("div");if(c)d.className=c;const a=document.createElement("span");a.textContent=k;const b=document.createElement("b");b.textContent=v;d.append(a,b);return d;}));
   {const box=$("so-rc");if(box)box.hidden=true;}soMode(true);
@@ -2831,11 +2995,11 @@ const leadArt=(id,face)=>`<span class="ldart${face?" face":""}" data-a="${id}" r
 /* ---------- v4.4 survival mode: mill leaders (roster, picker, card, outage pick, change, Dot's fix) ----------
    Numbers and effects are in 03d-leaders.js. The portraits are in 09c-leader-art.js (leadArt). */
 const LEADERS={
-  chip:{name:"Chip Kraftwell",title:"The dealmaker",role:"Business man",say:"Everything's negotiable.",
-    plus:()=>`Each outage, one deal: lock the next wave's fiber at this wave's price, or a sales push that stays (+$${LEAD.sales}/t on every grade).`,
-    minus:()=>`Labour relations: every deal ends in a pay settlement (wages +${pct1(LEAD.wage)}% for good), and call-offs and dock brawls come ${LEAD.strife0}× as often while he's in charge.`},
+  chip:{name:"Chip Kraftwell",title:"The dealmaker",role:"Businessman",say:"Everything's negotiable.",
+    plus:()=>`Each outage, one deal: ${leadSv()?"lock the next wave's fiber at this wave's price":"hold the fiber market at this outage's price until the next one (never above the market)"}, or a sales push that stays (+$${LEAD.sales}/t on every grade).`,
+    minus:()=>`Labor relations: every deal ends in a pay settlement (wages +${pct1(LEAD.wage)}% for good), and call-offs and dock brawls come ${LEAD.strife0}× as often while he's in charge.`},
   dot:{name:'Dot "Doc" Blade',title:"The millwright",role:"Mechanic",say:"If it turns, I can fix it.",
-    plus:()=>`Repairs ${pct1(LEAD.rep)}% quicker. Once per outage cycle she fixes a breakdown on her own (${pct1(LEAD.autoFix)}% chance as each one with a bill of ${money(LEAD.autoMin)}+ starts): it ends on the spot, ${LEAD.refund>=1?"its repair bill":pct1(LEAD.refund)+"% of its repair bill"} comes back, and it's fixed at the root (${pct1(LEAD.fixCut)}% rarer from then on).`,
+    plus:()=>`Repairs ${pct1(LEAD.rep)}% quicker. Once per outage cycle she may fix a big breakdown (${money(LEAD.autoMin)}+) on her own: ${LEAD.refund>=1?"the bill":pct1(LEAD.refund)+"% of the bill"} comes back and it's ${pct1(LEAD.fixCut)}% rarer from then on.`,
     minus:()=>`Gold-plates every job: repair bills cost ${pct1(LEAD.bills-1)}% more while she's in charge.`},
   fel:{name:"Felicity Fourdrinier",title:"The process engineer",role:"Engineer",say:"I have a spreadsheet for that.",
     plus:()=>`Each outage, one debottlenecking project that stays: +${pct1(LEAD.cap)}% capacity for the fiber line, the paper machine or finishing.`,
@@ -2844,63 +3008,68 @@ const LEADERS={
     plus:()=>`Each outage, one gain that stays: runnability (sheet breaks and hayouts −${pct1(LEAD.clean)}%, and back up ${pct1(LEAD.rethread)}% faster) or dial in the dryers (steam −${pct1(LEAD.steam)}%).`,
     minus:()=>`Runs the sheet heavy: fiber +${pct1(LEAD.heavy)}% while he's in charge (basis-weight giveaway).`}};
 function leadStart(id){if(!LEADERS[id])return;S.lead={id,st:{fibre:0,sales:0,rethread:0,clean:0,pstock:0,pwet:0,pdry:0},changed:false,was:null,fixW:0,fixed:[],lockW:0};applyUpgrades();
+  if(S.civ&&S.t<1&&typeof civSetStart==="function")civSetStart();   // v5.1 civics: the leader's starting meters
   try{localStorage.setItem("paper-mill-leader",id);}catch(e){}
   BANNERS.push({text:`${LEADERS[id].name} runs the mill. "${LEADERS[id].say}"`,t:null,kind:"good",tag:"LEADER"});while(BANNERS.length>3)BANNERS.splice(1,1);
   log(`${LEADERS[id].name}, ${LEADERS[id].title.toLowerCase()}, takes charge of the mill.`,"ok");}
 // what the mill has kept so far, in words (the leader card and the outage dialog)
-function leadTally(){const L=S.lead,out=[];if(!L)return out;const n=k=>L.st[k]||0,pc=v=>(v>=0?"+":"−")+Math.abs(Math.round(v*1000)/10)+"%";
-  if(L.lockW&&L.lockW===survWave()&&survWave()>1)out.push(["Fiber lock (this wave)",`fiber ${pc(leadLock()-1)}`]);
+function leadTally(who){const L=S.lead,out=[];if(!L)return out;const W=who===false?null:(who||L.id);const n=k=>L.st[k]||0,pc=v=>(v>=0?"+":"−")+Math.abs(Math.round(v*1000)/10)+"%";
+  if(L.lockW&&L.lockW===survWave()&&survWave()>1){if(survRun())out.push(["Fiber lock (this wave)",`fiber ${pc(leadLock()-1)}`]);
+    else{const mk=S.plan?S.plan.mkt:0,held=Math.min(L.lockMkt||0,mk);out.push(["Fiber lock (until next outage)",`market held at ${held>=0?"+":"−"}$${Math.abs(held)}/t`+(held<mk?` (market ${mk>=0?"+":"−"}$${Math.abs(mk)})`:" (no saving now)"),held<mk?0:2]);}}
   if(n("sales"))out.push([`${n("sales")} sales push${n("sales")>1?"es":""}`,`+$${LEAD.sales*n("sales")}/t`]);
   if(leadDeals())out.push(["Pay settlements",`wages ${pc(leadWage()-1)}`,1]);
   [["pstock","fiber line"],["pwet","paper machine"],["pdry","finishing"]].forEach(([k,a])=>{if(n(k))out.push([`${n(k)} ${a} project${n(k)>1?"s":""}`,`capacity ${pc(leadCap(k)-1)}`]);});
   if(leadProjects())out.push(["Project tie-ins",`outages +${leadOverrun()} min`,1]);
   if(n("rethread"))out.push([`${n("rethread")} runnability gain${n("rethread")>1?"s":""}`,`breaks ${pc(leadClean()-1)} · rethreads ${pc(1/leadRethread()-1)}`]);
   if(n("clean"))out.push([`${n("clean")} dryer tuning${n("clean")>1?"s":""}`,`steam ${pc(leadEnergy()-1)}`]);
-  if(leadIs("hank"))out.push(["Fiber (runs heavy)",pc(LEAD.heavy),1]);
-  if(leadIs("dot"))out.push(["Repairs",`${pct1(LEAD.rep)}% quicker`]);
-  if(leadIs("dot"))out.push(["Repair bills",pc(LEAD.bills-1),1]);
-  if(leadIs("chip"))out.push(["Labour relations",`call-offs and brawls ${xf(leadStrife())}`,1]);
+  // v5.1 QA2: what the leader in charge costs or gives (W), not kept: the outage dialog shows the incoming leader's, the card lists them apart
+  if(W==="hank")out.push(["Fiber (runs heavy)",pc(LEAD.heavy),1,1]);
+  if(W==="dot")out.push(["Repairs",`${pct1(LEAD.rep)}% quicker`,0,1]);
+  if(W==="dot")out.push(["Repair bills",pc(LEAD.bills-1),1,1]);
+  if(W==="chip")out.push(["Labor relations",`call-offs and brawls ${xf(LEAD.strife0)}`,1,1]);
   if(L.fixed&&L.fixed.length){const c={};L.fixed.forEach(x=>c[x]=(c[x]||0)+1);
     out.push([`Fixed ×${L.fixed.length}`,Object.entries(c).map(([x,k])=>`${EV[x]?EV[x].name:x} ${pc(Math.pow(1-LEAD.fixCut,k)-1)}`).join(", ")]);}
   return out;}
-const leadTallyHTML=()=>{const t=leadTally();return t.length?`<div class="ldtally">${t.map(([a,b,bad])=>`<div${bad?' class="bad"':""}><span>${a}</span><b>${b}</b></div>`).join("")}</div>`:"";};
+const leadTallyRows=t=>t.length?`<div class="ldtally">${t.map(([a,b,bad])=>`<div${bad===1?' class="bad"':bad===2?' class="flat"':""}><span>${a}</span><b>${b}</b></div>`).join("")}</div>`:"";
+const leadTallyHTML=who=>leadTallyRows(leadTally(who));
 
 /* ---- the picker: after the site, before the run starts (menu, pause menu, game over) ---- */
 let leadPickEl=null;
 function leadCardHTML(id,tag="button",extra=""){const L=LEADERS[id];
   return `<${tag} class="ldcard" data-l="${id}"${tag==="button"?' type="button" role="radio" aria-checked="false"':""}>${leadArt(id)}<span class="ldbody"><small>${L.role}</small><b>${escHTML(L.name)}</b><em>${L.title}</em>
-    <span class="pro">${L.plus()}</span><span class="con">${L.minus()}</span><i>“${L.say}”</i>${extra}</span></${tag}>`;}
-function leadPickOpen(done,wait){let sel=null;try{const v=localStorage.getItem("paper-mill-leader");if(LEADERS[v])sel=v;}catch(e){}
+    <span class="pro">${L.plus()}</span><span class="con">${L.minus()}</span>${tag==="button"&&typeof CIV!=="undefined"&&CIV.lead[id]?`<span class="ldstart">Starts: ${CIVK.map(k=>CIV.names[k]+" "+Math.max(CIV.startMin,CIV.lead[id][k]+((CIV.site[SITE.env]||{})[k]||0))).join(" · ")}</span>`:""}<i>“${L.say}”</i>${extra}</span></${tag}>`;}
+function leadPickOpen(done,wait,mode){const sv=mode!=="season";leadMode=sv?"surv":"season";let sel=null;try{const v=localStorage.getItem("paper-mill-leader");if(LEADERS[v])sel=v;}catch(e){}
   if(!leadPickEl){leadPickEl=document.createElement("div");leadPickEl.className="overlay top";leadPickEl.id="leadOv";leadPickEl.hidden=true;document.body.appendChild(leadPickEl);}
   const el=leadPickEl,back=document.activeElement;
-  el.innerHTML=`<div class="modal ldpick" role="dialog" aria-modal="true" aria-labelledby="ld-h"><span class="dk">Survival · ${escHTML((ENVX()&&ENVX().name)||"your site")}</span><h2 id="ld-h">Choose your mill leader</h2>
-    <p class="muted small">Each one is strong on one side of the mill and costs you on another. What they build stays with the mill. You can change leader once per run, at an outage.</p>
+  el.innerHTML=`<div class="modal ldpick" role="dialog" aria-modal="true" aria-labelledby="ld-h"><span class="dk">${sv?"Survival":"Season"} · ${escHTML((ENVX()&&ENVX().name)||"your site")}</span><h2 id="ld-h">Choose your mill leader</h2>
+    <p class="muted small">Each one is strong on one side of the mill and costs you on another. What they build stays with the mill. You can change leader once per ${sv?"run":"season"}, at an outage.</p>
     <div class="ldgrid" role="radiogroup" aria-label="Mill leader">${LEAD_IDS.map(id=>leadCardHTML(id)).join("")}</div>
     <div class="btns"><button class="primary" id="ld-go" disabled>Start the run</button><button id="ld-no">Back</button></div></div>`;
-  const paint=()=>{el.querySelectorAll(".ldcard").forEach(b=>b.setAttribute("aria-checked",String(b.dataset.l===sel)));const g=el.querySelector("#ld-go");g.disabled=!sel;g.textContent=sel?`Start with ${LEADERS[sel].name.split(" ")[0]}`:"Pick a leader to start";};
-  const close=()=>{el.hidden=true;document.removeEventListener("keydown",key,true);if(back&&back.focus)back.focus();};
+  const paint=()=>{el.querySelectorAll(".ldcard").forEach(b=>b.setAttribute("aria-checked",String(b.dataset.l===sel)));const g=el.querySelector("#ld-go");g.disabled=!sel;g.textContent=sel?`Start ${sv?"the run":"the season"} with ${LEADERS[sel].name.split(" ")[0]}`:"Pick a leader to start";};
+  const close=()=>{el.hidden=true;leadMode=null;document.removeEventListener("keydown",key,true);if(back&&back.focus)back.focus();};
   const key=e=>{if(e.key==="Escape"){e.preventDefault();e.stopPropagation();close();}};
   el.querySelectorAll(".ldcard").forEach(b=>b.addEventListener("click",()=>{sel=b.dataset.l;paint();}));
   el.querySelector("#ld-no").addEventListener("click",close);
   el.querySelector("#ld-go").addEventListener("click",()=>{if(!sel)return;const g=el.querySelector("#ld-go"),w=wait&&wait();
     if(w&&w.then){g.disabled=true;g.setAttribute("aria-busy","true");g.textContent="Getting the mill ready…";w.then(()=>{close();done(sel);});}else{close();done(sel);}});
-  document.addEventListener("keydown",key,true);paint();el.hidden=false;el.querySelector(".modal").scrollTop=0;(el.querySelector('.ldcard[aria-checked="true"]')||el.querySelector(".ldcard")).focus();}
+  document.addEventListener("keydown",key,true);paint();el.hidden=false;el.querySelector(".modal").scrollTop=0;{const s=el.querySelector('.ldcard[aria-checked="true"]'),m=el.querySelector(".modal");if(s)s.focus();else{m.tabIndex=-1;m.focus({preventScroll:true});}}}   // (v5.1 QA: no card looks picked before a pick)
 
 /* ---- the outage budget dialog: the leader's pick, and the one change of leader ---- */
-function leadPlanNew(){if(!S.lead||!survOn())return null;const p=LEAD_PICKS[S.lead.id];return {to:null,pick:p.length?(p.some(x=>x[0]===S.lead.last)?S.lead.last:p[0][0]):null};}
+const LEAD_SHORT={chip:"Fiber lock or a sales push; wages rise",dot:"Faster repairs, fixes one breakdown a cycle",fel:"+capacity each outage; outages run longer",hank:"Fewer breaks or cheaper steam; fiber +2%"};
+function leadPlanNew(){if(!leadOn())return null;const p=LEAD_PICKS[S.lead.id];return {to:null,pick:p.length?(p.some(x=>x[0]===S.lead.last)?S.lead.last:p[0][0]):null};}
 // v5.0.6: the outage dialog's leader row uses the name without the nickname ("Dot Blade"), so it fits beside the button
 const leadShort=id=>LEADERS[id].name.replace(/\s*"[^"]*"/,"");
 function leadPlanMount(host,lp){if(!host)return;
   const draw=()=>{const cur=S.lead.id,id=lp.to||cur,L=LEADERS[id],picks=LEAD_PICKS[id],first=L.name.split(" ")[0];
     if(!picks.some(x=>x[0]===lp.pick))lp.pick=picks.length?picks[0][0]:null;
-    const choose=lp.choosing?`<div class="ldswap" role="radiogroup" aria-label="New mill leader">${LEAD_IDS.filter(x=>x!==cur).map(x=>`<button type="button" role="radio" aria-checked="${lp.to===x}" data-to="${x}">${leadArt(x,true)}<span><b>${escHTML(leadShort(x))}</b><small>${LEADERS[x].role}</small></span></button>`).join("")}
-        <p class="ldnote">${lp.to?`${escHTML(LEADERS[lp.to].name)} takes over when the outage starts. Everything ${LEADERS[cur].name.split(" ")[0]} built stays with the mill. This is the run's one change of leader.`:`Pick who takes over. Everything ${LEADERS[cur].name.split(" ")[0]} built stays with the mill. You can do this once per run.`}</p>
+    const choose=lp.choosing?`<div class="ldswap" role="radiogroup" aria-label="New mill leader">${LEAD_IDS.filter(x=>x!==cur).map(x=>`<button type="button" role="radio" aria-checked="${lp.to===x}" data-to="${x}">${leadArt(x,true)}<span><b>${escHTML(leadShort(x))}</b><small>${LEADERS[x].role}</small><small class="ldperk">${LEAD_SHORT[x]}</small></span></button>`).join("")}
+        <p class="ldnote">${lp.to?`${escHTML(LEADERS[lp.to].name)} takes over when the outage starts. Everything ${LEADERS[cur].name.split(" ")[0]} built stays with the mill. This is the ${survRun()?"run":"season"}'s one change of leader.`:`Pick who takes over. Everything ${LEADERS[cur].name.split(" ")[0]} built stays with the mill. You can do this once per ${survRun()?"run":"season"}.`}</p>
         <div class="pro">${lp.to?LEADERS[lp.to].plus():""}</div><div class="con">${lp.to?LEADERS[lp.to].minus():""}</div></div>`:"";
     host.innerHTML=`<div class="ldrow"><div class="ldwho">${leadArt(id,true)}<div><b>${escHTML(leadShort(id))}</b><small>${lp.to?"takes over at this outage":L.title}</small></div>
         ${S.lead.changed?"":`<button type="button" class="ghost" id="out-lchg">${lp.choosing?(lp.to?"Keep "+LEADERS[cur].name.split(" ")[0]:"Cancel"):"Change leader"}</button>`}</div>${choose}
       ${picks.length?`<div class="ldq">${first}'s pick for the next cycle${id==="chip"?` <span>· each deal: wages +${pct1(LEAD.wage)}% for good</span>`:id==="fel"?` <span>· each project: outages +${LEAD.overrun} min</span>`:""}</div><div class="seg ldseg" id="out-lpick">${picks.map(([k,lab,what])=>`<button type="button" data-p="${k}" aria-pressed="${lp.pick===k}"><b>${lab}</b><small>${what()}</small></button>`).join("")}</div>`
         :`<div class="ldq">${id==="dot"?"Dot makes no pick: her fix is ready again when the outage ends.":""}</div>`}
-      ${leadTallyHTML()}</div>`;
+      ${leadTallyHTML(lp.to||null)}</div>`;
     host.querySelectorAll("#out-lpick button").forEach(b=>b.addEventListener("click",()=>{lp.pick=b.dataset.p;draw();}));
     const c=host.querySelector("#out-lchg");if(c)c.addEventListener("click",()=>{if(lp.choosing){lp.choosing=false;lp.to=null;}else lp.choosing=true;draw();});
     host.querySelectorAll(".ldswap button").forEach(b=>b.addEventListener("click",()=>{lp.to=b.dataset.to;draw();}));};
@@ -2910,11 +3079,11 @@ function leadChange(to){const L=S.lead;if(!L||L.changed||!LEADERS[to]||to===L.id
   log(`${LEADERS[to].name} takes over from ${LEADERS[old].name}. What was built stays with the mill.`,"warn");}
 // called by endOutage: this outage's pick becomes part of the mill (a tool or an old save may bring no pick: the first one)
 function leadOutageEnd(pl){const L=S.lead,picks=LEAD_PICKS[L.id];if(!picks.length)return;const k=pl&&picks.some(x=>x[0]===pl.pick)?pl.pick:picks[0][0],p=picks.find(x=>x[0]===k);
-  L.st[k]=(L.st[k]||0)+1;if(k==="fibre"&&L.id==="chip")L.lockW=S.outg.k+1;/* (the lock is for the wave this outage starts) */L.last=k;log(`${LEADERS[L.id].name}: ${p[1].toLowerCase()} (${p[2]()}).`,"ok");}
+  L.st[k]=(L.st[k]||0)+1;if(k==="fibre"&&L.id==="chip"){L.lockW=S.outg.k+1;L.lockMkt=S.plan?S.plan.mkt:0;}/* (the lock is for the wave this outage starts) */L.last=k;log(`${LEADERS[L.id].name}: ${p[1].toLowerCase()} (${p[2]()}).`,"ok");}
 
 /* ---- Dot's fix ---- */
 const leadFixable=id=>MNEED(id)||QINC(id);
-const leadFixReady=()=>leadIs("dot")&&survOn()&&S.lead.fixW!==survWave();
+const leadFixReady=()=>leadIs("dot")&&leadOn()&&S.lead.fixW!==survWave();
 // v5.0.4: Dot fixes on her own. A fixable breakdown that starts while her fix is ready has an LEAD.autoFix chance of being fixed
 // on the spot (its own dice stream, "lead", so no other luck changes); then the fix is used until the outage ends.
 function leadAuto(inc){if(!inc||S.zen||!leadFixReady()||!leadFixable(inc.id))return;if(S.rng.lead==null)S.rng.lead=(S.seed^0x2c1b3c6d)|0;   // (a save from before v5.0.4)
@@ -2931,31 +3100,315 @@ let leadCardEl=null;
 function leadCardOpen(){if(!S.lead)return;const was=running;running=false;
   if(!leadCardEl){leadCardEl=document.createElement("div");leadCardEl.className="overlay";leadCardEl.id="leadCard";leadCardEl.hidden=true;document.body.appendChild(leadCardEl);}
   const el=leadCardEl,id=S.lead.id,L=LEADERS[id];
-  const close=()=>{el.hidden=true;document.removeEventListener("keydown",key,true);if(was&&!(S.cards&&S.cards.open)&&!S.over&&survOn())running=true;};
+  const close=()=>{el.hidden=true;document.removeEventListener("keydown",key,true);if(was&&!(S.cards&&S.cards.open)&&!S.over&&leadOn())running=true;};
   const key=e=>{if(e.key==="Escape"){e.preventDefault();e.stopPropagation();close();}};
   const draw=()=>{const ready=leadFixReady();
     const fix=id!=="dot"?"":`<div class="ldfix"><h3>Dot's fix <small>${ready?"ready":"used this cycle · back when the outage ends"}</small></h3>
         <p class="muted small">${ready?`She has a ${pct1(LEAD.autoFix)}% chance to fix each breakdown with a bill of ${money(LEAD.autoMin)} or more as it starts.`:"She fixed one this cycle."}${(S.lead.fixed||[]).length?` Fixed so far: ${S.lead.fixed.length}${S.lead.saved?`, saving ${money(S.lead.saved)}`:""}.`:""}</p></div>`;
     el.innerHTML=`<div class="modal ldone" role="dialog" aria-modal="true" aria-labelledby="ldc-h"><span class="dk">Mill leader · sim paused</span>
       ${leadCardHTML(id,"div")}${fix}
-      ${leadTally().length?`<h3 id="ldc-h">What the mill has kept</h3>${leadTallyHTML()}`:`<h3 id="ldc-h">Nothing built yet</h3><p class="muted small">${LEAD_PICKS[id].length?L.name.split(" ")[0]+" makes the first pick at the next outage.":"Dot makes no picks. She fixes one breakdown on her own once every outage cycle."}</p>`}
-      <p class="muted small">${S.lead.changed?`You changed leader once already (${escHTML(LEADERS[S.lead.was].name)} left). ${L.name.split(" ")[0]} stays to the end.`:"You can change leader once per run, in an outage budget dialog. What was built stays with the mill."}</p>
+      ${(()=>{const all=leadTally(),kept=all.filter(x=>!x[3]),now=all.filter(x=>x[3]);return (now.length?`<h3>While ${L.name.split(" ")[0]} is in charge</h3>${leadTallyRows(now)}`:"")+(kept.length?`<h3 id="ldc-h">What the mill has kept</h3>${leadTallyRows(kept)}`:`<h3 id="ldc-h">Nothing built yet</h3><p class="muted small">${LEAD_PICKS[id].length?L.name.split(" ")[0]+" makes the first pick at the next outage.":"Dot makes no picks. She fixes one breakdown on her own once every outage cycle."}</p>`);})()}
+      <p class="muted small">${S.lead.changed?`You changed leader once already (${escHTML(LEADERS[S.lead.was].name)} left). ${L.name.split(" ")[0]} stays to the end.`:`You can change leader once per ${survRun()?"run":"season"}, in an outage budget dialog. What was built stays with the mill.`}</p>
       <div class="btns"><button class="primary" id="ldc-ok" style="flex:1">Back to the mill</button></div></div>`;
     el.querySelector("#ldc-ok").addEventListener("click",close);
 };
   document.addEventListener("keydown",key,true);draw();el.hidden=false;el.querySelector("#ldc-ok").focus();}
 // the chip: the leader's face, and Dot's fix when a breakdown is waiting for it
-UI_TICKS.push(()=>{const f=$("svL");if(!f)return;const id=S.lead&&survOn()?S.lead.id:"";if(f.dataset.l!==id){f.dataset.l=id;f.innerHTML=id?leadArt(id,true):"";f.hidden=!id;const fb=$("svFold");if(fb)fb.hidden=!id;if(!id)$("survChip").classList.remove("fold");}
+UI_TICKS.push(()=>{const f=$("svL");if(!f)return;const id=leadOn()?S.lead.id:"";if(f.dataset.l!==id){f.dataset.l=id;f.innerHTML=id?leadArt(id,true):"";f.hidden=!id;const fb=$("svFold");if(fb)fb.hidden=!id;if(!id)$("survChip").classList.remove("fold");}
   const x=$("svF");if(x){const show=id==="dot",ready=show&&leadFixReady(),hot=false,t=ready?"Fix ready":"Fix used";
-    if(x.hidden===show)x.hidden=!show;if(show){if(x.textContent!==t)x.textContent=t;x.dataset.s=ready?"Fix ✓":"Fix –";x.classList.toggle("hot",hot);x.classList.toggle("used",!ready);}$("survChip").classList.remove("hot");}});
+    if(x.hidden===show)x.hidden=!show;if(show){if(x.textContent!==t)x.textContent=t;x.dataset.s=ready?"Fix ready":"Fix used";x.classList.toggle("hot",hot);x.classList.toggle("used",!ready);}$("survChip").classList.remove("hot");}});
 // v4.4.0-t3: the wave bar slides away to the left (the arrow at its end), leaving the leader's face; tapping the face brings it back
-{const c=$("survChip"),fb=$("svFold");let fold=false;try{fold=localStorage.getItem("paper-mill-chip-fold")==="1";}catch(e){}
-  const setFold=v=>{fold=v;c.classList.toggle("fold",v);c.setAttribute("aria-expanded",String(!v));c.setAttribute("aria-label",v?"Show the wave bar":"Wave bar: open your mill leader's card");try{localStorage.setItem("paper-mill-chip-fold",v?"1":"0");}catch(e){}};
+{const c=$("survChip"),fb=$("svFold");let fold=false;
+  // v5.1 QA2: a season's chip counts outages, so its screen-reader label says so
+  const chipLabel=()=>{if(!c)return;const w=survRun()?"wave bar":"outage bar",t=fold?`Show the ${w}`:`${w[0].toUpperCase()+w.slice(1)}: open your mill leader's card`;if(c.getAttribute("aria-label")!==t)c.setAttribute("aria-label",t);};UI_TICKS.push(chipLabel);try{fold=localStorage.getItem("paper-mill-chip-fold")==="1";}catch(e){}
+  const setFold=v=>{fold=v;c.classList.toggle("fold",v);c.setAttribute("aria-expanded",String(!v));chipLabel();try{localStorage.setItem("paper-mill-chip-fold",v?"1":"0");}catch(e){}};
   if(c){setFold(fold);
     c.addEventListener("click",e=>{if(fb&&fb.contains(e.target)){e.stopPropagation();setFold(true);return;}
       if(fold&&S.lead){setFold(false);return;}
-      if(S.lead&&survOn()&&!(S.cards&&S.cards.open))leadCardOpen();});
+      if(leadOn()&&!(S.cards&&S.cards.open))leadCardOpen();});
     c.addEventListener("keydown",e=>{if((e.key==="Enter"||e.key===" ")&&e.target===c){e.preventDefault();c.click();}});}}
+// v5.1 QA2: the season fiber lock starting or ending re-prices fiber at once (it used to wait for the next purchase or deal)
+{let was=null;UI_TICKS.push(()=>{if(!S||!S.lead||survRun())return;const on=!!(S.lead.lockW&&S.lead.lockW===survWave());if(was!==null&&on!==was)applyUpgrades();was=on;});}
+/* ---------- v5.1 (offline): civics, the play (choice cards, new upsets, meter-triggered upsets, standing orders, the bar) ----------
+   The model and the numbers are in 03e-civics.js, the upset and card data in 03e-civics-data.js.
+   - When an upset with choices starts (EVENTS upsets in 04, or one of the new civic upsets below), the sim pauses on a choice
+     card: each choice has a cash cost, changes how often the upset comes back, moves the meters, and may do something
+     special (CIVFX). The new civic upsets have a base effect (CIVNEW); a Fix-properly choice ends it, a Cheap fix halves
+     what's left, a Shortcut leaves it.
+   - Standing orders: per area, by fix type, set with the card's checkbox. They still ask the first time an upset appears,
+     for any $$$ choice, and always for meter-triggered upsets and rewards. When an order answers, a toast says so, with a
+     Change button for 5 seconds (or 2 sim hours) before the choice is made.
+   - Meter-triggered: a warning when a meter enters Strained (under 40), a crisis within a day of entering Crisis (under 20,
+     then every 4 days while it stays there), a reward card on reaching Excellent (over 80, again after falling below 70).
+   Everything here is data on S.civ (saved with the run); timers are {left, act, ...} records, not closures. */
+// the new civic upsets: how often (days between, before the meters and odds), what they say, and their base effect
+const CIVNEW={
+  odor:{head:"Neighbors are complaining about the smell from stock prep."},
+  council:{head:"The town council will vote on banning mill trucks from Main Street."},
+  reporter:{head:"A local reporter is at the gate asking about the mill."},
+  sponsor:{head:"The town fair is looking for a main sponsor."},
+  hothall:{head:"The machine hall is sweltering: the crew is wilting.",fx:{left:1440,mods:{breakMul:1.2}}},
+  retire:{head:"Your senior machine tender is retiring at the end of the week.",fx:{left:3*1440,mods:{breakMul:1.1}}},
+  nearmiss:{head:"The dock equipment failed a guard audit.",fx:{left:720,mods:{clampMul:0.8}}},
+  complaint:{head:"A customer says a load arrived with curl and wants credit.",fx:{left:3*1440,price:{all:-5}}},
+  rush:{head:"A box plant needs 900 t in a hurry and will pay a premium."},
+  pricecut:{head:"Riverside Paper, the competing mill, just cut its price.",fx:{left:5*1440,price:{all:-10}}},
+  green:{head:"A big customer wants recycled-content certification."},
+  occshort:{head:"Your OCC supplier is short this week.",fx:{left:720,mods:{recvMul:0.5}}},
+  chemlate:{head:"The retention aid delivery is late.",fx:{left:720,mods:{breakMul:1.4}}},
+  energyspike:{head:"Power prices just spiked.",fx:{left:2*1440,energy:15}},
+  flu:{head:"Flu is running through the crew.",fx:{left:2*1440,mods:{breakMul:1.15,clampMul:0.85}}},
+  poach:{head:"A competitor is poaching your operators.",fx:{left:3*1440,mods:{breakMul:1.15}}},
+  inspector:{head:"A state safety inspector has arrived."},
+  dcs:{head:"The control system crashed! The machine is down.",fx:{left:90,mods:{pmDown:"control system crash"}}},
+  moisture:{head:"Moisture is drifting off spec on the reel.",fx:{left:180,mods:{offSpec:1}}},
+  freight:{head:"Freight rates just jumped.",fx:{left:3*1440,price:{all:-8}}},
+  noise:{head:"The neighbors are complaining about night noise from the yard."},
+  fishkill:{head:"Dead fish downstream, and people are blaming the mill."}};
+// meter-triggered warnings and crises: the meter, the base effect, and what each choice (A, B, C) does beyond cost and civics
+const CIVMETER={
+  w_sickout:{k:"L",head:"A sick-out: half the crew called in sick. Short shifts today.",fx:{left:1440,mods:{breakMul:1.2,clampMul:0.8}},ch:[{},{end:1},{end:1,flag:"L"}]},
+  w_petition:{k:"C",head:"A petition against the mill is going round town hall.",fx:{left:3*1440,comm:1.5},ch:[{},{promise:1},{flag:"C"}]},
+  w_watch:{k:"E",head:"Your key customer has put you on watch: −⁠$5/t for a week.",fx:{left:7*1440,price:{all:-5}},ch:[{},{end:1},{}]},
+  w_vibration:{k:"M",head:"Vibration alarms on the machine: top speed −5% until it's fixed.",fx:{left:"outage",mods:{speedCap:0.95}},ch:[{end:1,down:120},{},{end:1,flag:"M"}]},
+  c_walkout:{k:"L",head:"Walkout! The yard has stopped, and the machine will run dry in about 6 hours.",fx:{left:720,mods:{recvMul:0,clampMul:0}},ch:[{end:1,raise:0.03},{left:360},{after:{L:2}}]},
+  c_protest:{k:"C",head:"Protesters are blocking the gate. No trucks in or out.",fx:{left:720,mods:{noIn:1,noOut:1}},ch:[{end:1,pledge:1},{},{left:120}]},
+  c_custwalk:{k:"E",head:"Your key customer has walked: one grade loses $10/t for 5 days.",fx:{left:5*1440,grade:-10},ch:[{left:2880},{swap:-5},{end:1,down:90}]},
+  c_shutdown:{k:"M",head:"The insurer has ordered a 12-hour shutdown.",fx:{left:720,mods:{pmDown:"insurer shutdown"}},ch:[{},{left:360,recheck:1},{appeal:1}]}};
+// reward cards (Excellent): accept or decline
+const CIVREWARD={
+  r_L:{k:"L",n:"Crew pledge",head:"The crew offers to make the next planned outage finish early, with no overrun.",win:"Next outage: no overrun, 1 h early. Free the first time; each later one costs Labor −9."},
+  r_C:{k:"C",n:"Town tax break",head:"The town offers a property tax break if the mill pays into the school fund.",win:"Pay $60k now; running costs −⁠$3k a day for good."},
+  r_E:{k:"E",n:"Long-term contract",head:"A big customer offers a long-term contract.",win:"+$8/t on every grade for 14 days. You must hit a weekly tonnage target or pay $40 per ton short."},
+  r_M:{k:"M",n:"Record run week",head:"The machine is in great shape. Push it for a record week?",win:"Top speed +4% for 7 days, then Machinery −15 from the wear."}};
+// special effects of particular choices ("id:index")
+const CIVFX={"shaft:0":{ext:180},"fabric:0":{ext:120},"hdblow:0":{ext:60},"cscreen:0":{ext:60},"fscreen:0":{ext:60},"boiler:0":{ext:180},"chestover:0":{ext:60},
+  "hdblow:2":{band:"stock"},"fscreen:2":{band:"stock"},"thkblow:2":{band:"stock"},"steamjoint:2":{band:"dry"},"nearmiss:2":{band:"dock"},
+  "shaft:2":{retry:1/3},"fabric:2":{favor:30e3},"felt:2":{warranty:1},"cscreen:2":{slow:2},
+  "rush:1":{grade:60},"runner:2":{posts:60},"reporter:1":{gamble:1},"energyspike:0":{hedge:1}};
+const civCost=t=>CIV.cost[String(t)]||0;
+const civTag=(id,i)=>{const t=CIVU[id]&&CIVU[id].t;return t?t[i]:null;};
+const CIVTAGN={P:"Fix properly",Q:"Cheap fix",S:"Shortcut"};
+// (v5.1 QA) customer and community upsets aren't repairs: their choices read Invest / Hold / Decline
+const CIVTAGB={P:"Invest",Q:"Hold",S:"Decline"};
+const civTagName=(area,t)=>(area==="Customers"||area==="Community"?CIVTAGB:CIVTAGN)[t];
+const civAreaWord=a=>a==="Customers"?"customer":a==="Stock prep"?"stock prep":a.toLowerCase();
+const civHead=id=>CIVNEW[id]?CIVNEW[id].head:CIVMETER[id]?CIVMETER[id].head:CIVREWARD[id]?CIVREWARD[id].head:EV[id]?EV[id].head:"";
+const civName=id=>CIVREWARD[id]?CIVREWARD[id].n:CIVU[id]?CIVU[id].n:id;
+const civUntilOutage=()=>{const o=S.outg;if(!o)return 3*1440;const end=outStart(o.k)+OUT.len;return end>S.t&&end<=S.season.end?end-S.t:3*1440;};
+function civFxAdd(id,f){const left=f.left==="outage"?civUntilOutage():f.left;const x={id,left,civ:1};if(f.mods)x.mods=f.mods;if(f.price)x.price=f.price;if(f.energy)x.energy=f.energy;
+  if(f.grade)x.price={[C.grade]:f.grade};S.fx=S.fx.filter(q=>q.id!==id);S.fx.push(x);S.M=mods();applyUpgrades();return x;}
+const civFxGet=id=>S.fx.find(f=>f.id===id);
+function civFxEnd(id){S.fx=S.fx.filter(f=>f.id!==id);S.M=mods();applyUpgrades();}
+function civBanner(text,good,tag){BANNERS.push({text,t:null,kind:good?"good":undefined,tag:tag||"CIVICS"});while(BANNERS.length>3)BANNERS.splice(1,1);log(text,good?"ok":"warn");}
+function civTimer(t){S.civ.tm.push(t);}
+
+/* ---- the tick: drift, cross-links, timers, meter triggers, the new upsets, the queue ---- */
+function civTick(dt){if(!civOn())return;const V=S.civ;
+  for(const k of CIVK){const m=V.m[k],d=(m>70?CIV.driftHi:m<30?CIV.driftLo:CIV.drift)/1440*dt;V.m[k]=m<50?Math.min(50,m+d):m>50?Math.max(50,m-d):m;}
+  if(V.m.M<25)V.m.L=Math.max(0,V.m.L-0.3/1440*dt);   // (round 1: was under 35, 0.5/day)                    // fighting broken equipment wears the crew down
+  if(V.m.C>65&&V.m.L<50)V.m.L=Math.min(50,V.m.L+0.5/1440*dt);           // a good town to hire from
+  {const tx=civTax()+(V.taxDay||0);if(tx>0)civPay(-tx*dt/1440);}           // tax breaks
+  if(V.prem>0)spend(V.prem*dt/60,"repairs");                            // the insurer's premium increase
+  if(S.t-V.snapT>=360){V.snapT=S.t;V.prev=Object.assign({},V.snap);V.snap=Object.assign({},V.m);}
+  if(S.t-V.auT>=60){V.auT=S.t;applyUpgrades();}
+  // timers
+  if(V.tm.length){const due=V.tm.filter(t=>(t.left-=dt)<=0);V.tm=V.tm.filter(t=>t.left>0);for(const t of due){try{civTimerRun(t);}catch(e){console.error("civics timer",t.act,e);}}}
+  // meter triggers (not in the first day, not during an outage)
+  if(S.t>1440&&!outOn())for(const k of CIVK){const m=V.m[k],A=V.arm;
+    if(m>=CIV.warnRearm&&S.t>=(A.wc&&A.wc[k]||0))A.w[k]=1;else if(A.w[k]&&m<CIV.warn&&m>=CIV.crisis){A.w[k]=0;(A.wc||(A.wc={}))[k]=S.t+CIV.warnCool;civTimer({act:"meter",id:{E:"w_watch",L:"w_sickout",M:"w_vibration",C:"w_petition"}[k],left:60+civRng()*1380});}
+    if(m>=CIV.crisis)A.c[k]=0;else if(S.t>=A.c[k]){A.c[k]=S.t+CIV.crisisEvery;civTimer({act:"meter",id:{E:"c_custwalk",L:"c_walkout",M:"c_shutdown",C:"c_protest"}[k],left:V.flags[k]?30:60+civRng()*1380});V.flags[k]=0;}
+    if(m<CIV.rearm)A.r[k]=1;else if(A.r[k]&&m>CIV.reward){A.r[k]=0;civTimer({act:"meter",id:"r_"+k,left:60+civRng()*1380});}}
+  // the new civic upsets: rolled once a sim hour on their own stream
+  if(S.t>=V.newNext){V.newNext=S.t+60;if(!outOn()&&S.t>2*1440){const up=survOn()?0.8*Math.min(1.5,1+(survUp()-1)*0.25):1,   /* (v5.1 QA: fewer in survival; was min(2, 1+half the extra)) */pet=V.m&&S.fx.some(f=>f.id==="w_petition")?1.5:1;
+    for(const id of Object.keys(CIVNEW)){const r=civRng();let p=60/(CIV.newMtbf*1440)*up*((V.odds[id])||1);
+      const a=civArea(id);if(a==="Community")p*=civComm()*pet;if(a==="Crew")p*=civYard();
+      if(id==="rush"&&S.plan&&S.plan.hot)continue;
+      if(r<p&&!civCool(id)&&!civFxGet(id)&&!V.q.some(q=>q.id===id)&&!(V.cur&&V.cur.id===id))civQueue(id,"new");}}}
+  // the standing-order toast commits after 2 sim hours if the page timer hasn't
+  if(V.pending&&S.t-V.pending.t>=120)civCommit();   // (v5.1 QA: sim time only, so it waits while the game is paused)
+  if(V.q.length&&!V.cur&&!V.pending&&!(S.cards&&S.cards.open)&&!outOn()&&!S.over&&!(S.season&&S.season.done))civNext();}
+function civTimerRun(t){const V=S.civ;
+  if(t.act==="meter"){civQueue(t.id,"meter");return;}
+  if(t.act==="retrigger"){if(!active(t.id)){trigger(t.id);civBanner(`The used part didn't hold: ${EV[t.id].name.toLowerCase()} again.`,false);}return;}
+  if(t.act==="favor"){deal(-t.v);civBanner(`The sister mill calls in its favor: ${money(t.v)}.`,false);return;}
+  if(t.act==="promise"){if(V.cspend<t.t0)civAdd({C:-5},"Broken promise to the town");else log("The town saw your community spending: promise kept.","ok");return;}
+  if(t.act==="recheck"){if(V.m.M<CIV.crisis)civQueue("c_shutdown","meter");else log("The insurer rechecked the mill and signed it off.","ok");return;}
+  if(t.act==="after"){civAdd(t.d,civName(t.id));return;}
+  if(t.act==="walkdry"){if(civFxGet("c_walkout"))civFxAdd("c_walkout2",{left:Math.max(10,civFxGet("c_walkout").left),mods:{pmDown:"walkout: no stock"}});return;}
+  if(t.act==="contract"){const short=Math.max(0,t.target-(S.shipT-t.ship0));t.ship0=S.shipT;if(short>0){deal(-short*40);civBanner(`Contract week ${t.n}: ${f0(short)} t short, ${money(short*40)} penalty.`,false);}else civBanner(`Contract week ${t.n}: target met.`,true);
+    if(t.n<2)civTimer(Object.assign({},t,{left:7*1440,n:t.n+1}));return;}
+  if(t.act==="runend"){civAdd({M:-5},"Record run week over: wear");return;}}
+function civQueue(id,kind){const V=S.civ;if(V.q.some(q=>q.id===id))return;V.q.push({id,kind,t:S.t});}
+// the next decision: an upset that has already cleared is skipped (its choices no longer matter)
+function civNext(){const V=S.civ;if(V.pending||V.cur)return;while(V.q.length){const d=V.q.shift();
+  if(d.kind==="up"&&!d.ask&&!active(d.id))continue;
+  if(!d.applied&&(d.kind==="new"||d.kind==="meter")){d.applied=1;const nf=CIVNEW[d.id]||CIVMETER[d.id];if(nf&&nf.fx){civFxAdd(d.id,nf.fx);if(d.id==="c_walkout")civTimer({act:"walkdry",left:360});}
+    if(d.kind==="new")(S.evc||(S.evc={}))[d.id]=(S.evc[d.id]||0)+1;
+    civBanner(civHead(d.id),false,d.id.startsWith("c_")?"CRISIS":d.id.startsWith("w_")?"WARNING":d.id.startsWith("r_")?"REWARD":"UPSET");}
+  // a standing order may answer it
+  if(d.kind!=="meter"&&!d.ask&&civOrder(d))return;
+  V.cur=d;civOpen();return;}}
+// an EVENTS upset that has choices: queue it (04's trigger calls this)
+function civOnUpset(inc){if(!civOn()||!inc||inc.left<=0||!CIVU[inc.id])return;
+  if(inc.id==="permit"&&inc.bill)spend(inc.bill*(civFine()-1),"repairs");   // fines follow Community
+  civQueue(inc.id,"up");if(!(S.cards&&S.cards.open)&&!S.civ.cur&&!S.civ.pending&&!outOn())civNext();}
+
+/* ---- standing orders ---- */
+// (round 1: an order also answers an upset of its area the player hasn't seen yet; the order was set on a card from that area)
+function civOrder(d){const V=S.civ,a=civArea(d.id),o=V.orders[a];if(!o)return false;
+  const t=CIVU[d.id].t||"",i=t.indexOf(o);if(i<0)return false;const c=CIVU[d.id].ch[i];if(!c||c[1]>=3)return false;
+  V.pending={d,i,t:S.t};civToast(d,i);return true;}
+let civToastEl=null;
+function civToast(d,i){if(typeof document==="undefined")return;const c=CIVU[d.id].ch[i];
+  if(!civToastEl){civToastEl=document.createElement("div");civToastEl.className="civtoast";civToastEl.id="civToast";civToastEl.hidden=true;document.body.appendChild(civToastEl);}
+  const el=civToastEl,cost=civCost(c[1]);el.innerHTML=`<span><b>Standing order</b> · ${escHTML(CIVU[d.id].n)}: ${escHTML(c[0])}${cost>0?" ("+money(cost)+")":cost<0?" (earns "+money(-cost)+")":""}</span><button type="button" id="civ-chg">Change</button><i></i>`;
+  el.hidden=false;el.querySelector("#civ-chg").addEventListener("click",civChange);}
+// Change: the choice card comes back for this upset; if another dialog is open it waits behind it (the game stays paused)
+function civChange(){const V=S.civ,P=V&&V.pending;if(!P)return;V.pending=null;if(civToastEl)civToastEl.hidden=true;
+  V.q.unshift(Object.assign({},P.d,{ask:1,applied:1}));if(!(S.cards&&S.cards.open))civNext();}
+function civCommit(){const P=S.civ&&S.civ.pending;if(civToastEl)civToastEl.hidden=true;if(!P)return;S.civ.pending=null;civApply(P.d,P.i,true);}
+// a card or toast is dropped when the run ends, or on free play / zen (they have no civics)
+function civDrop(){if(civEl&&!civEl.hidden)civEl.hidden=true;if(civToastEl)civToastEl.hidden=true;if(S&&S.cards&&S.cards.open&&S.cards.open.civ)S.cards.open=null;if(S&&S.civ){S.civ.cur=null;S.civ.pending=null;}}
+
+/* ---- applying a choice ---- */
+function civApply(d,i,auto){const V=S.civ,id=d.id;V.seen[id]=1;if(d.kind!=="meter")(V.cd||(V.cd={}))[id]=S.t+CIV.cool;   // v5.1 QA2: an answered upset rests for 2 days
+  if(CIVREWARD[id]){civReward(id,i===0);return;}
+  const u=CIVU[id],c=u&&u.ch[i];if(!c)return;const tag=civTag(id,i),cost=civCost(c[1]),fx=CIVFX[id+":"+i]||{},mt=CIVMETER[id],mc=mt?mt.ch[i]||{}:{};
+  const dot=leadIs("dot")&&tag==="P"&&!!EV[id];   // Dot: proper fixes cost one tier less and skip the extra downtime
+  let paid=dot?civCost(Math.max(0,c[1]-1)):cost;if(fx.hedge&&S.cards.pend.some(p=>p.h==="hedge#1"))paid=cost/2;   // the power hedge softens the energy spike
+  if(id==="inspector"&&V.flags.blitz){V.flags.blitz=0;if(i===0)paid=Math.max(0,paid-civCost(1));civAdd({L:1},"The safety blitz paid off");}
+  if(paid)civPay(paid);   // (a negative cost earns)
+  if(c[2])V.odds[id]=Math.max(0.25,Math.min(3,(V.odds[id]||1)*CIV.odds[String(c[2])]));
+  let civd=c[3];if(fx.gamble)civd=civRng()<0.5?{L:1,C:1}:{L:1,C:-2};
+  const ct=civAdd(civd);
+  const inc=S.inc.find(x=>x.id===id);
+  // special effects
+  if(fx.ext&&inc&&!dot){inc.left+=fx.ext;inc.total+=fx.ext;}
+  if(fx.slow&&inc){inc.left*=fx.slow;inc.total*=fx.slow;}
+  if(fx.band){if(inc)clearIncident(id);const m=fx.band==="stock"?{feedMul:0.85}:fx.band==="dry"?{speedCap:0.85}:{clampMul:0.85};civFxAdd("band_"+id,{left:"outage",mods:m});}
+  if(fx.band&&CIVNEW[id])civFxEnd(id);
+  if(fx.retry&&civRng()<fx.retry)civTimer({act:"retrigger",id,left:360+civRng()*720});
+  if(fx.favor)civTimer({act:"favor",v:fx.favor,left:5*1440});
+  if(fx.warranty){if(civRng()<0.5)log("The vendor gave in: a free felt.","ok");else civFxAdd("civwarranty",{left:2880,mods:{breakMul:1.3}});}
+  if(fx.grade)civFxAdd("civgrade",{left:fx.grade,mods:{pmDown:"squeezed-in grade change"}});
+  if(id==="rush"&&i<2&&!S.plan.hot){const t=i===0?900:450,prem=i===0?90:60,pen=i===0?40:0;   // (v5.1 QA: a real order, like the old Hot order card)
+    S.plan.q.unshift({g:"33HT",t,i:3});S.plan.left=0;S.plan.hot={made:0};pend("rush",30*60,"rush",{t,prem,pen});civBanner(`Rush order: ${t} t of high-strength board due in 30 hours.`,true,"ORDER");}
+  if(fx.posts)civFxAdd("civposts",{left:fx.posts,mods:{speedCap:0.9}});
+  // the new upsets' base effect: a proper fix ends it, a cheap fix halves it, a shortcut leaves it
+  if(CIVNEW[id]&&civFxGet(id)){if(tag==="P")civFxEnd(id);else if(tag==="Q")civFxGet(id).left/=2;}
+  // meter upsets
+  if(mt){const f=civFxGet(id);
+    if(mc.end){civFxEnd(id);if(id==="c_walkout")civFxEnd("c_walkout2");}
+    if(mc.left&&f)f.left=Math.min(f.left,mc.left);
+    if(mc.down)civFxAdd("civbalance",{left:mc.down,mods:{pmDown:id==="c_custwalk"?"extra grade changes":"balancing the rolls"}});
+    if(mc.flag)V.flags[mc.flag]=1;
+    if(mc.promise)civTimer({act:"promise",t0:S.t,left:7*1440});
+    if(mc.pledge)V.pledgeDon=(V.pledgeDon||0)+10e3;
+    if(mc.swap&&f&&f.price){const g=Object.keys(f.price)[0];f.price={[g]:mc.swap};}   // the broker: the same grade, a smaller cut, the same 5 days
+    if(mc.raise){V.wage=(V.wage||1)*(1+mc.raise);log(`Walkout settled: wages +${Math.round(mc.raise*100)}% for good.`,"warn");}
+    if(mc.after&&f)civTimer({act:"after",id,d:mc.after,left:f.left});
+    if(mc.recheck)civTimer({act:"recheck",left:7*1440});
+    if(mc.appeal){if(civRng()<0.5){civFxEnd(id);civBanner("Appeal upheld: no shutdown.",true);}else{V.prem+=500;civBanner("Appeal lost: 12 h down, and the premium goes up $500/h.",false);}}}
+  if(V.m)applyUpgrades();S.M=mods();
+  log(`${auto?"Standing order":"Decision"} · ${u.n}: ${c[0]}${paid>0?" ("+money(paid)+")":paid<0?" (+"+money(-paid)+")":""}${ct?" · "+ct:""}`,"warn");}
+function civReward(id,yes){const V=S.civ,r=CIVREWARD[id];if(!yes){log(`Declined: ${r.n}`,"");return;}
+  if(id==="r_L"){V.pledgeOut=true;V.pledgeN=(V.pledgeN||0)+1;if(V.pledgeN>1)civAdd({L:-3},"Crew pledge again");}
+  if(id==="r_C"){civPay(60e3);V.taxDay=(V.taxDay||0)+3000;V.cspend=S.t;}
+  if(id==="r_E"){civFxAdd("r_contract",{left:14*1440,price:{all:8}});const day=Math.max(1,S.t/1440),rate=(S.shipT||0)/day;civTimer({act:"contract",target:rate*7*0.9,ship0:S.shipT||0,n:1,left:7*1440});}
+  if(id==="r_M"){V.runUntil=S.t+7*1440;civTimer({act:"runend",left:7*1440});applyUpgrades();}
+  civBanner(`Accepted: ${r.n}. ${r.win}`,true,"REWARD");}
+
+/* ---- the choice card ---- */
+let civEl=null;
+const civOdds=s=>s<=-2?"much rarer":s<0?"rarer":s>0?"more often":"";
+const civChips=d=>CIVK.filter(k=>d&&d[k]).map(k=>`<span class="cvc ${d[k]>0?"up":"dn"}">${CIV.names[k]} ${d[k]>0?"+":"−"}${Math.abs(d[k]*CIV.unit)}</span>`).join("");   // (v5.1 QA: meter points, as the bar moves)
+function civOpen(){const V=S.civ,d=V.cur;if(!d||typeof document==="undefined")return;running=false;S.cards.open={civ:true};
+  if(!civEl){civEl=document.createElement("div");civEl.className="overlay";civEl.id="civOv";civEl.hidden=true;document.body.appendChild(civEl);}
+  const id=d.id,rw=CIVREWARD[id],u=CIVU[id],mt=CIVMETER[id],area=civArea(id),ord=V.orders[area];
+  const kind=rw?"Reward · "+CIV.names[rw.k]:mt?(id.startsWith("c_")?"Crisis · ":"Warning · ")+CIV.names[mt.k]:"Upset · "+area,cls=rw?" cvr":mt?(id.startsWith("c_")?" cvx":" cvw"):"";
+  const inc=EV[id]&&S.inc.find(x=>x.id===id),bill=inc&&inc.bill>0?`<p class="cvbill">Repair bill ${money(inc.bill)} already paid</p>`:"";
+  const choices=rw?[["Accept",0,0,null,rw.win],["Decline",0,0,null,"Nothing changes."]]:u.ch;
+  civEl.innerHTML=`<div class="modal deal civ${cls}" role="dialog" aria-modal="true" aria-labelledby="civ-h"><span class="dk">${escHTML(kind)} · sim paused</span>
+    <h2 id="civ-h">${escHTML(civName(id))}</h2><p>${escHTML(civHead(id))}</p>${bill}
+    <div class="civch">${choices.map((c,i)=>{const tag=!rw&&civTag(id,i);const cost=c[1]<0?'<span class="cvcost earn">earns '+money(-civCost(c[1]))+'</span>':c[1]>0?`<span class="cvcost">${money(civCost(c[1]))}</span>`:rw?"":'<span class="cvcost free">free</span>';
+      return `<button type="button" class="civbtn" data-i="${i}"><span class="cvl">${"ABC"[i]}</span><span class="cvb"><b>${escHTML(c[0])}</b>${tag&&!mt?`<em class="cvtag">${civTagName(area,tag)}</em>`:""}
+        <span class="cvrow">${cost}${c[2]?`<span class="cvodds ${c[2]<0?"up":"dn"}">${civOdds(c[2])}</span>`:""}${civChips(c[3])}</span>${c[4]?`<small>${escHTML(c[4])}</small>`:""}</span></button>`;}).join("")}</div>
+    ${!mt&&!rw?`<label class="civord"><input type="checkbox" id="civ-ord"${ord&&!d.ask?" checked":""}> ${d.ask&&ord?"Make this the new standing order":"Always do this"} for ${escHTML(civAreaWord(area))} upsets${ord?` <small>(now: ${civTagName(area,ord)})</small>`:""}</label>`:""}</div>`;
+  civEl.hidden=false;
+  civEl.querySelectorAll(".civbtn").forEach(b=>b.addEventListener("click",()=>{const i=+b.dataset.i,box=civEl.querySelector("#civ-ord");
+    if(box){if(box.checked){const t=civTag(id,i);if(t)V.orders[area]=t;}else if(!d.ask)delete V.orders[area];}   // (after Change, an unticked box keeps the order)
+    civEl.hidden=true;V.cur=null;S.cards.open=null;civApply(d,i,false);
+    const menu=document.getElementById("v2menu");running=!(menu&&!menu.hidden);
+    if(V.q.length)civNext();}));
+  const f=civEl.querySelector(".civbtn");if(f)f.focus({preventScroll:true});civEl.querySelector(".modal").scrollTop=0;AUDIO.sfx("cash",150);}
+
+/* ---- event cards: civics on accept, win, lose and decline (05 calls these) ---- */
+function civCardHTML(c){const x=CIVCARD[c.id];if(!civOn()||!x)return "";const p=[["Accept",x.a],["Win",x.w],["Lose",x.l],["Decline",x.d]].filter(q=>civTxt(q[1]));
+  return p.length?`<div class="civcard"><span>Civics</span>${p.map(([k,d])=>`<em>${k}</em>${civChips(d)}`).join("")}</div>`:"";}
+// w is the card's own first dice roll (05 peeks at it without drawing); win/lose effects wait for the card's outcome when it has one
+function civCardAccept(c,w,pend0){const x=CIVCARD[c.id];if(!civOn()||!x)return;civCardBlitz(c,w);civAdd(x.a,c.title);const o=w?x.w:x.l;
+  if(c.id==="audit"||c.id==="insfire"){const p=S.cards.pend.slice(pend0).find(q=>q.id===c.id);if(p){p.civ={w:x.w,l:x.l};return;}}
+  const p=S.cards.pend.slice(pend0).filter(q=>q.id===c.id).pop();if(p&&civTxt(o)){p.civo=o;return;}
+  civAdd(o,c.title+(w?" (won)":" (lost)"));}
+function civCardBlitz(c,w){if(c.id==="safety"&&w&&S.civ)S.civ.flags.blitz=1;}   // the safety blitz prepares the next inspector visit
+function civCardDecline(c){const x=CIVCARD[c.id];if(civOn()&&x)civAdd(x.d,"Declined "+c.title);}
+// a card outcome that is decided later (05's cardTick): audit and the fire challenge decide by result, the others by the roll
+function civCardDue(p){if(!civOn())return;if(p.civo){civAdd(p.civo,"Card outcome");return;}if(!p.civ)return;let won;
+  if(p.id==="audit"){const m=S.q.made-p.d.m0;won=m>0&&1-(S.q.off-p.d.o0)/m>=0.99;}
+  else{const e=S.evc||{};won=((e.dryerfire||0)+(e.balefire||0)-(p.d.f0||0))<=0;}
+  civAdd(won?p.civ.w:p.civ.l,"Card outcome");}
+
+/* ---- the outage dialog: steady levers (price setting, crew bonus, community donation) ---- */
+function civPlanHTML(){if(!civOn())return "";const V=S.civ;
+  const seg=(n,opts)=>`<div class="seg" data-c="${n}">${opts.map(([v,l],i)=>`<button type="button" data-v="${v}" aria-pressed="${opts.length===2?i===0:i===1}">${l}</button>`).join("")}</div>`;
+  return `<div class="civplan"><div class="cvq">Civics for the next cycle</div>
+    <div class="crow"><div><b>Price setting</b><small>Economy is ${civBand(V.m.E)[1]}. Discount: Economy +${3*CIV.unit}. Premium: Economy −⁠${5*CIV.unit}</small></div>${seg("price",[["-5","−⁠$5/t"],["0","Hold"],["5","+$5/t"]])}</div>
+    <div class="crow"><div><b>Crew bonus</b><small>Labor +${2*CIV.unit} when the outage ends</small></div>${seg("bonus",[["0","None"],["20000","$20k"]])}</div>
+    <div class="crow"><div><b>Community donation</b><small>Community +${2*CIV.unit} when the outage ends${V.pledgeDon?" · pledge: "+money(V.pledgeDon)+" every cycle":""}</small></div>${seg("don",[["0","None"],["20000","$20k"]])}</div></div>`;}
+function civPlanWire(host,plan){if(!host)return;plan.civ={price:0,bonus:0,don:0};
+  host.querySelectorAll(".civplan .seg").forEach(sg=>sg.querySelectorAll("button").forEach(b=>b.addEventListener("click",()=>{plan.civ[sg.dataset.c]=+b.dataset.v;sg.querySelectorAll("button").forEach(x=>x.setAttribute("aria-pressed",String(x===b)));})));}
+function civPlanCost(pc){return pc?(pc.bonus||0)+(pc.don||0):0;}
+// at the outage: begin (Labor decides how long it runs), end (the levers take effect)
+function civOutageBegin(o,st){if(!civOn())return;const V=S.civ;let d=civOver();if(V.pledgeOut){d=-60;V.pledgeOut=false;log("Crew pledge: the outage will finish an hour early.","ok");}
+  o.civOver=d;if(d<0){o.end=st+OUT.len+d;const p=civFxGet("pout");if(p)p.left=OUT.len+d;}}
+function civOutageEnd(o,pl){if(!civOn())return;const V=S.civ,pc=pl&&pl.civ;
+  if(o.civOver>0){civFxAdd("civover",{left:o.civOver,mods:{pmDown:"outage overran (crew)"}});log(`The crew ran the outage ${o.civOver} min over.`,"warn");}
+  if(pc){if(pc.price){civFxAdd("civprice",{left:OUT.every*1440,price:{all:pc.price}});civAdd({E:pc.price<0?3:-5},"Price setting");}   // (QA2: premium Economy −15, discount +9)
+    if(pc.bonus)civAdd({L:2},"Crew bonus");if(pc.don){civAdd({C:2},"Community donation");V.cspend=S.t;}}
+  if(V.pledgeDon){civPay(V.pledgeDon);V.cspend=S.t;log(`Community pledge: ${money(V.pledgeDon)} donated.`,"");}}
+
+/* ---- the bar: four meters under the wave chip ---- */
+{const bar=document.createElement("div");bar.className="civbar";bar.id="civBar";bar.hidden=true;
+  bar.innerHTML=CIVK.map(k=>`<div class="cv" data-k="${k}" role="button" tabindex="0"><b data-s="${{E:"Econ",L:"Labor",M:"Mach",C:"Comm"}[k]}">${CIV.names[k]}</b><span class="cvbar"><i></i></span><em></em><u></u></div>`).join("");
+  document.body.appendChild(bar);
+  UI_TICKS.push(()=>{const on=civOn();if(bar.hidden===on){bar.hidden=!on;document.body.classList.toggle("civ",on);}if(!on)return;
+    for(const k of CIVK){const v=S.civ.m[k],b=civBand(v),el=bar.querySelector(`[data-k="${k}"]`),pv=(S.civ.prev||S.civ.snap)[k],tr=v-pv;
+      el.className="cv "+b[2];el.querySelector("i").style.width=v.toFixed(0)+"%";const em=el.querySelector("em");if(em.textContent!==b[1])em.textContent=b[1];
+      const ar=tr>0.5?"▲":tr<-0.5?"▼":"";const u=el.querySelector("u");if(u.textContent!==ar){u.textContent=ar;u.className=tr>0?"up":"dn";}
+      el.title=`${CIV.names[k]} ${v.toFixed(0)}/100 · ${b[1]}`;}});}
+// a choice card or toast left open when the run ends (season over, bankrupt, zen, free play) goes away with it
+UI_TICKS.push(()=>{if(civOn()||!S.civ)return;if((civEl&&!civEl.hidden)||S.civ.cur||S.civ.pending)civDrop();});
+
+/* ---- v5.1 QA: the rush order's outcome, Tab inside the choice card, the toast's countdown, the meter popover ---- */
+PENDH.rush=({t,prem,pen})=>{const m=Math.min(t,(S.plan.hot&&S.plan.hot.made)||0);S.plan.hot=null;
+  if(pen){if(m>=t-1e-6){deal(t*prem);cardBanner(`Rush order delivered: ${t} t on time. +${money(t*prem)} premium.`,true);}else{const sh=t-m;deal(-sh*pen);cardBanner(`Rush order short by ${Math.round(sh)} t: ${money(sh*pen)} penalty.`,false);}}
+  else{deal(m*prem);cardBanner(`Rush order: ${Math.round(m)} t made, +${money(m*prem)} premium.`,true);}};
+document.addEventListener("keydown",e=>{if(e.key!=="Tab"||!civEl||civEl.hidden)return;const m=document.getElementById("v2menu");if(m&&!m.hidden)return;
+  const b=[...civEl.querySelectorAll("button,input")];if(!b.length)return;e.preventDefault();const i=b.indexOf(document.activeElement);b[i<0?0:(i+(e.shiftKey?b.length-1:1))%b.length].focus();},true);
+UI_TICKS.push(()=>{if(!civToastEl||!S.civ)return;const P=S.civ.pending,m=document.getElementById("v2menu"),show=!!P&&!(m&&!m.hidden);
+  if(civToastEl.hidden===show)civToastEl.hidden=!show;if(show){const i=civToastEl.querySelector("i");if(i)i.style.width=Math.max(0,100-(S.t-P.t)/120*100).toFixed(1)+"%";}});
+{const pop=document.createElement("div");pop.className="civpop";pop.id="civPop";pop.hidden=true;document.body.appendChild(pop);let k0=null;
+  const pc=v=>(v>=1?"+":"−")+Math.abs(Math.round((v-1)*100))+"%";
+  const lines=k=>k==="E"?[`Paper price ${civPrice()>=0?"+":"−"}$${Math.abs(civPrice()).toFixed(1)}/t`]
+    :k==="L"?[`Repairs ${civRepair()>=1?"faster":"slower"} ${pc(civRepair())}`,`Sheet breaks ${pc(civBreak())}`,`Yard upsets ${pc(civYard())}`,`Outages ${civOver()>0?civOver()+" min over":civOver()<0?(-civOver())+" min early":"on time"}`]
+    :k==="M"?[`Breakdowns ${pc(civMach())}`,`Machine speed ${pc(civSpeed())}`,`Repair bills ${pc(civBill())}`]
+    :[`Permit and town upsets ${pc(civComm())}`,`Truck receiving ${pc(civRecv())}`,`Fines ${pc(civFine())}`,civTax()>0?`Tax break $${Math.round(civTax())}/day`:""].filter(Boolean);
+  const draw=k=>{const v=S.civ.m[k],b=civBand(v);pop.innerHTML=`<b>${CIV.names[k]} ${v.toFixed(0)}/100 · ${b[1]}</b><ul>${lines(k).map(x=>`<li>${x}</li>`).join("")}</ul><small>Warning under ${CIV.warn} · crisis under ${CIV.crisis} · reward over ${CIV.reward}</small>`;};
+  document.getElementById("civBar").addEventListener("click",e=>{const c=e.target.closest(".cv");if(!c||!civOn())return;e.stopPropagation();const k=c.dataset.k;
+    if(!pop.hidden&&k0===k){pop.hidden=true;return;}k0=k;draw(k);const r=c.getBoundingClientRect();pop.style.left=Math.max(8,Math.min(innerWidth-248,r.left))+"px";pop.style.top=(r.bottom+6)+"px";pop.hidden=false;});
+  document.addEventListener("pointerdown",e=>{if(!pop.hidden&&!e.target.closest("#civPop,#civBar"))pop.hidden=true;});
+  UI_TICKS.push(()=>{if(pop.hidden)return;if(!civOn()){pop.hidden=true;return;}if(k0)draw(k0);});}
 /* ---------- v3.3: 10-day report cards (season mode) ----------
    Each period (days 1-10, 11-20, 21-30) gathers money in and out, cost per ton, what caused downtime, how reliable each
    section was (planned outage time left out) and which step held the mill back. Cards pop up at the start of day 11 and
@@ -2983,15 +3436,15 @@ function rcTick(dt){const se=S.season;if(!se||!se.on||se.done||dt<=0)return;
   // period boundaries: start of day 11 and day 21. v4.3 survival: a period is a wave, its card pops when its outage ends,
   // and only the last few cards are kept (a run has no fixed length)
   const pi=se.surv?survWave()-1:Math.floor(S.t/14400);if(pi>R.i&&(se.surv||pi<3)){const card=rcMake(R.p,R.i);if(se.surv)card.next=true;R.cards[R.i]=card;R.i=pi;R.p=rcAcc();R.pend=card;if(se.surv&&pi>4)R.cards[pi-5]=null;}
-  if(R.pend&&!(S.cards&&S.cards.open)&&!S.over){const c=R.pend;R.pend=null;rcOpen(c);}}
+  if(R.pend&&!(S.cards&&S.cards.open)&&!S.over&&!(S.civ&&S.civ.pending)){   /* (v5.1 QA2: waits for a standing-order toast to commit) */const c=R.pend;R.pend=null;rcOpen(c);}}
 function rcLimit(){const M=S.M||{},starved=()=>S.yard<P.yardCap*0.04||M.noIn||M.docksClosed?"Receiving":"Pulper";
   if(S.pm==="full")return "Shipping";if(S.pm==="spools")return "Winder";if(S.pm==="down")return M.pmDown?"Machine down":starved();if(S.pm!=="run")return "Machine down";
   if(S.pmSpeed<C.pmSp.v*0.97*(M.speedCap||1)&&S.tank<P.tankCap*0.3)return starved();return "Machine at full speed";}
 function rcGrade(v,cut){return ["A","B","C","D","F"][cut.findIndex(c=>v>=c)<0?4:cut.findIndex(c=>v>=c)];}
 function rcSum(a){const L=S.ledger,d=k=>(L[k]||0)-(a.L0[k]||0),prod=S.tot.prodT-a.prod0,ship=(S.shipT||0)-a.ship0,run=Math.max(1,a.min-a.plan),days=Math.max(0.1,a.min/1440);
   const ops=["occ","energy","labor","overhead","premium"].reduce((t,k)=>t+d(k),0),spent={Fiber:d("occ"),Energy:d("energy"),Labour:d("labor"),Overhead:d("overhead"),"Freight & insurance":d("premium"),"Repairs & outages":d("repairs"),Upgrades:d("upgrades")};
-  const rev=d("rev"),deals=d("deals");spent["Deals & trials"]=Math.max(0,-deals);   // v5.0.6: a net cost from event cards gets its own row, so the rows add up to Net
-  const earned=rev+Math.max(0,deals),spentT=Object.values(spent).reduce((t,v)=>t+v,0),net=earned-spentT;
+  const rev=d("rev"),deals=d("deals");spent["Deals & trials"]=Math.max(0,-deals);const cv=d("civ");spent.Civics=Math.max(0,cv);   // v5.0.6: a net cost from event cards gets its own row, so the rows add up to Net
+  const earned=rev+Math.max(0,deals)+Math.max(0,-cv),spentT=Object.values(spent).reduce((t,v)=>t+v,0),net=earned-spentT;
   const rel={};RC_SEC.forEach(([k])=>rel[k]=a.up[k]/run);const relAvg=RC_SEC.reduce((t,[k])=>t+rel[k],0)/RC_SEC.length;
   const dn=Object.entries(a.dn).sort((x,y)=>y[1]-x[1]).slice(0,5),bnT=Object.values(a.bn).reduce((t,v)=>t+v,0)||1,bn=RC_STEPS.map(k=>[k,(a.bn[k]||0)/bnT]).sort((x,y)=>y[1]-x[1]);
   const price=priceOf(C.grade),cpt=prod>0?(ops+d("repairs"))/prod:0,margin=earned>0?(earned-(spentT-spent.Upgrades))/earned:0;
@@ -3011,8 +3464,9 @@ function rcMake(a,i){const p=rcSum(a),s=rcSum(S.rc.s);
   else if(worst==="Cost / ton")tip=`Each ton cost ${money(p.cpt)} to make against a ${money(p.price)} price. Efficiency upgrades and fewer breaks bring that down.`;
   else if(bn&&bn[1]>0.4)tip=bn[0]==="Machine at full speed"?`The paper machine ran flat out ${Math.round(bn[1]*100)}% of the time, so it sets your output. Speed and drive upgrades pay back fastest.`:bn[0]==="Machine down"?`The machine being down held the mill back ${Math.round(bn[1]*100)}% of the time. Cut breaks and breakdowns first.`:`The ${bn[0].toLowerCase()} held the mill back ${Math.round(bn[1]*100)}% of the time. That's where an upgrade pays back fastest.`;
   else tip=overall==="A"?"Great running. Keep the machine up and the buffers healthy.":`Profit margin was ${Math.round(p.margin*100)}%. Shorter downtime is the quickest way to lift it.`;
-  if(survRun())return {i,wave:i+1,from:i?i*OUT.every+1:1,to:(i+1)*OUT.every,p,s,g,overall,tip};   // v4.3: a wave's card (a wave runs from one outage day to the next)
-  return {i,from:i*10+1,to:i*10+10,p,s,g,overall,tip};}
+  const cm=civOn()?Object.assign({},S.civ.m):null;   // v5.1 QA2: the meters when the card was made
+  if(survRun())return {i,wave:i+1,from:i?i*OUT.every+1:1,to:(i+1)*OUT.every,p,s,g,overall,tip,cm};   // v4.3: a wave's card (a wave runs from one outage day to the next)
+  return {i,from:i*10+1,to:i*10+10,p,s,g,overall,tip,cm};}
 function rcHTML(c){const W=c.wave,per=W?"this wave":"these 10 days",all=W?"run so far":"season so far";const p=c.p,s=c.s,pc=v=>Math.round(v*100)+"%",hrs=m=>(m/60).toFixed(m<600?1:0)+" h",gc=x=>"rcg g"+x;
   const row=(k,a,b,cls)=>`<div class="rcr${cls?" "+cls:""}"><span>${k}</span><b>${a}</b><i>${b}</i></div>`;
   const bar=(k,v,lab,hot)=>`<div class="rcb${hot?" hot":""}"><span>${k}</span><div><em style="width:${Math.max(2,Math.round(v*100))}%"></em></div><b>${lab}</b></div>`;
@@ -3024,6 +3478,7 @@ function rcHTML(c){const W=c.wave,per=W?"this wave":"these 10 days",all=W?"run s
     ${row("Earned (paper sales"+(p.deals>0?" + deals":"")+")",money(p.earned),money(s.earned),"pos")}
     ${Object.keys(p.spent).filter(k=>p.spent[k]||s.spent[k]).map(k=>row(k,money(-p.spent[k]),money(-s.spent[k]))).join("")}
     ${row("Net",money(p.net),money(s.net),"net "+(p.net>=0?"pos":"neg"))}
+    ${c.cm?`<h3>Civics <small>at the end of ${per}</small></h3>${CIVK.map(k=>row(CIV.names[k],Math.round(c.cm[k])+"/100",civBand(c.cm[k])[1])).join("")}`:""}
     <h3>Cost per ton <small>${per} · ${all}</small></h3>
     ${row("Cost to make a ton",money(p.cpt),money(s.cpt))}${row("Selling price",money(p.price),money(s.price))}${row("Profit margin (before upgrades)",pc(p.margin),pc(s.margin))}
     ${row("Tons made",Math.round(p.prod).toLocaleString("en-US")+" t",Math.round(s.prod).toLocaleString("en-US")+" t")}
@@ -3050,13 +3505,15 @@ function seasonTick(){const se=S.season;if(!se||!se.on||se.done)return;
   if(se.surv){if(S.cash<ECON.bankrupt)endSurvival();return;}   // v4.3 survival: no last day, only bankruptcy
   if(S.t>=se.end||S.cash<ECON.bankrupt)endSeason(S.cash<ECON.bankrupt);}
 function seasonResult(){return {score:Math.round(S.cash-ECON.start),tons:Math.round(S.shipT||0),incidents:S.tot.incidents,mill:MILL.name.slice(0,40),version:APP_VER.slice(0,12),days:SEASON_DAYS};}
-function endSeason(bust){const se=S.season;se.done=true;se.on=false;running=false;if(G3.save&&G3.save.drop)G3.save.drop();   // v5.0.3: the season is over, so its save goes
+function endSeason(bust){const se=S.season;if(typeof civDrop==="function")civDrop();se.done=true;se.on=false;running=false;if(G3.save&&G3.save.drop)G3.save.drop();   // v5.0.3: the season is over, so its save goes
   if(document.body.classList.contains("fs"))setFS(false);seasonLocks(false);
   const r=seasonResult();se.result=r;AUDIO.sfx(r.score>0?"win":"lose",100);
   soMode(false);$("so-h").textContent=bust?"Season over: bankrupt":"Season complete";
   $("so-p").textContent=bust?`${MILL.name} ran out of money before day ${SEASON_DAYS}.`:`${SEASON_DAYS} days at ${MILL.name}${/[.!?]$/.test(MILL.name)?"":"."}`;   // (v4.2.5: no "Co.." when the name ends in a full stop)
   const eff=S.tot.pot>0?S.tot.prodT/S.tot.pot:1,sg=S.rc&&S.rc.s?rcMake(S.rc.s,S.rc.i).overall:null,g=sg?RATINGS.find(x=>x[1]===sg):RATINGS.find(x=>eff>=x[0]);
   const st=[["Net profit",money(r.score),"big"],["Tons shipped",f0(r.tons)+" t"],["Upsets survived",String(r.incidents)],["Rolls made",String(S.tot.rolls)],["Season grade",g[1]+" · "+g[2]],["Output",Math.round(eff*100)+"% of max-speed tons"]];
+  if(S.civ&&S.civ.m&&!S.free&&civSummary(S.civ.m))st.push(["Civics",civSummary(S.civ.m),"wide"]);   // v5.1 QA2
+  if(S.lead)st.push(["Mill leader",LEADERS[S.lead.id].name+(S.lead.was?" (after "+LEADERS[S.lead.was].name+")":""),"wide"]);   // v5.1: seasons have leaders too
   $("so-stats").replaceChildren(...st.map(([k,v,c])=>{const d=document.createElement("div");if(c)d.className=c;const a=document.createElement("span");a.textContent=k;const b=document.createElement("b");b.textContent=v;d.append(a,b);return d;}));
   {const c=bust?null:rcFinal(),box=$("so-rc");if(box){if(c){box.hidden=false;box.innerHTML=`<div class="rcmini"><div class="rcg g${c.overall}">${c.overall}</div><div><b><span class="nw">Days ${c.from}–${c.to}</span> report card</b><small>${Object.entries(c.g).map(([k,v])=>k+" "+v).join(" · ")}</small><p>${c.tip}</p></div></div><button id="so-rcbtn" class="ghost">Open the full report card</button>`;
       $("so-rcbtn").addEventListener("click",()=>rcOpen(c,true));}else box.hidden=true;}}
@@ -3121,7 +3578,7 @@ async function openBoard(tab){if(tab!=="season"&&tab!=="surv")tab=survRun()?"sur
   {const se=S.season,rk=se&&se.rank,res=se&&se.result;if(rk&&res&&se.submitted&&(tab==="surv")===!!se.surv){if(rk.rank<=rows.length){const row=L.children[rk.rank-1];if(row){row.classList.add("me","mine");row.scrollIntoView({block:"center"});}}
     else{const d=document.createElement("div");d.className="lbrow me mine pin";const mk=(c,t)=>Object.assign(document.createElement("span"),{className:c,textContent:t});
       d.append(mk("r",rk.rank),mk("n",se.submitted),mk("sc",sv?survTime(res.minutes):money(res.score)),mk("m",[sv?"wave "+res.wave:"",f0(res.tons)+" t shipped",res.incidents+" upsets",new Date().toLocaleDateString(undefined,{month:"short",day:"numeric"}),"your run",res.mill].filter(Boolean).join(" · ")));L.append(d);d.scrollIntoView({block:"center"});}}}}
-function setFree(on){S.free=on;
+function setFree(on){S.free=on;if(on&&typeof civDrop==="function")civDrop();   // (v5.1 QA: a choice card would otherwise keep the game paused)
   if(on&&S.season&&S.season.on){const sv=survRun();if(G3.save&&G3.save.drop)G3.save.drop();S.season=null;S.lead=null;applyUpgrades();seasonLocks(false);BANNERS.push({text:(sv?"Survival run":"Season")+" abandoned: free play scores can't go on the leaderboard.",t:null});}
   if(on)BANNERS.push({text:"Free play: upgrades are free and you can't go bankrupt. No leaderboard.",t:null,kind:"good"});
   if(on&&G3.labelIntro)G3.labelIntro();
@@ -3132,7 +3589,7 @@ let ZEN=null;
 let grainDone=false;function makeGrain(){if(grainDone)return;grainDone=true;const c=document.createElement("canvas");c.width=c.height=128;const x=c.getContext("2d"),im=x.createImageData(128,128);for(let i=0;i<im.data.length;i+=4){const v=Math.random()*255|0;im.data[i]=im.data[i+1]=im.data[i+2]=v;im.data[i+3]=255;}
   x.putImageData(im,0,0);document.documentElement.style.setProperty("--grain",`url(${c.toDataURL()})`);}
 function setZen(on){if(on===!!ZEN)return;
-  if(on){makeGrain();if(S.season&&S.season.on){if(G3.save&&G3.save.drop)G3.save.drop();S.season=null;S.lead=null;applyUpgrades();seasonLocks(false);}
+  if(on){makeGrain();if(typeof civDrop==="function")civDrop();if(S.season&&S.season.on){if(G3.save&&G3.save.drop)G3.save.drop();S.season=null;S.lead=null;applyUpgrades();seasonLocks(false);}
     ZEN={speed:C.simSpeed,chaos:CH.on,hays:C.hays,breaks:C.breaks,view:G3.on};
     S.inc=[];if(S.wd==="hayout")S.wd="run";if(S.pm==="break"){S.pm="run";}BANNERS.length=0;S.zen=true;
     CH.on=false;$("chaosOn").checked=false;C.hays=false;C.breaks=false;
@@ -3146,7 +3603,7 @@ $("zenExit").addEventListener("click",e=>{e.stopPropagation();setZen(false);});
 ["pointermove","pointerdown"].forEach(t=>document.addEventListener(t,()=>{if(ZEN)zenPoke();},{passive:true}));
 $("so-more").addEventListener("click",()=>{$("seasonOv").hidden=true;if(survRun()){newGame();if(G3.showMenu)G3.showMenu();return;}if(S.season)S.season.more=1;running=true;});   // (v4.3: after a survival run the button is "Menu")
 $("so-submit").addEventListener("click",submitScore);$("so-name").addEventListener("keydown",e=>{if(e.key==="Enter")submitScore();e.stopPropagation();});
-$("so-board").addEventListener("click",openBoard);$("so-new").addEventListener("click",()=>{if(survRun()){leadPickOpen(id=>{$("seasonOv").hidden=true;startSurvival(id);});return;}$("seasonOv").hidden=true;startSeason();});   // (v4.4: a new survival run picks its leader first)
+$("so-board").addEventListener("click",openBoard);$("so-new").addEventListener("click",()=>{if(survRun()){leadPickOpen(id=>{$("seasonOv").hidden=true;startSurvival(id);});return;}leadPickOpen(id=>{$("seasonOv").hidden=true;startSeason();leadStart(id);},null,"season");});   // (v4.4: a new survival run picks its leader first)
 document.querySelectorAll("#lb-tabs button").forEach(b=>b.addEventListener("click",()=>openBoard(b.dataset.t)));
 $("lb-close").addEventListener("click",closeBoard);
 document.addEventListener("keydown",e=>{if(e.key==="Escape"&&!$("lbOv").hidden){e.preventDefault();closeBoard();}},true);
@@ -8249,7 +8706,7 @@ function no3D(){G3.ok=false;$("no3d").hidden=false;$("no3d-retry").onclick=()=>l
       const k=t-IMP;out.set(c.I.x-c.d.x*(k*5)+Math.sin(k*9)*0.4,c.I.y+0.8+k*2.6+Math.sin(k*13)*0.3,c.I.z-c.d.z*(k*5));return 2;}
     function finish(){if(!C)return;const c=C;C=null;bird.visible=false;[core,halo,...sparks,...smoke,...feathers,...arcs].forEach(o=>o.visible=false);
       ov.hidden=true;fl.style.opacity=0;document.body.classList.remove("cine");G3.cineHold=false;G3.cineOn=false;try{AUDIO.cine.end();}catch(e){}
-      if(c.cam&&G3.camSet)G3.camSet(c.cam);if(c.was&&$("v2menu").hidden)running=true;}
+      if(c.cam&&G3.camSet)G3.camSet(c.cam);if(c.was&&$("v2menu").hidden&&!(S.cards&&S.cards.open)&&!S.over)running=true;}   /* v5.1: stay paused if a card or dialog opened meanwhile */
     ov.querySelector(".skip").addEventListener("click",e=>{e.stopPropagation();if(C&&!C.struck){try{AUDIO.cine.end();AUDIO.cine.strike();}catch(_){}}finish();});
     G3.birdCine=()=>{if(NOCINE||!G3.on||S.zen||document.hidden||C)return;if(document.querySelector(".v2sheet.open,.v2top.open"))return;   // v5.0.6: not over an open sheet or the stats panel (it hid the panel and ate the clicks); the upset itself still happens
       try{start();}catch(e){console.error("bird cut-scene",e);finish();}};
@@ -8648,13 +9105,15 @@ setView();
   const set=(id,v)=>{const e=$(id);if(e.textContent!==v)e.textContent=v;};
   const NARROW=matchMedia("(max-width:480px)"),TINY=matchMedia("(max-width:400px)");   // phones: the survival clock label is "W3 · D16" (v5.0.4: was "W3 · Day 16", cut off once cash went negative)
   const mirror=[...document.querySelectorAll("#v2more [data-m]")].map(el=>[el,$(el.dataset.m)]);
-  function sync(){set("v2mill",MILL.name);set("v2mt",MILL.name);set("v2cash",short(S.cash));
-    {const ok=S.t>=1440;set("v2profit",ok?short(S.profitRate)+"/d":"–");$("v2profit").style.color=ok&&S.profitRate<0?"var(--bad)":"var(--ink)";$("v2profit").title=ok?"Cash made per day, averaged over the last 3 days: sales and deals, less every cost including repairs and outage budgets (upgrades aside)":"Shown once the first day is done";
+  // v5.1 QA2: phones get one fewer digit, so cash and profit fit beside the grade badge
+  const shortC=v=>{const a=Math.abs(v),f=a>=1e6?(a/1e6).toFixed(1)+"M":a>=1e3?Math.round(a/1e3)+"k":Math.round(a)+"";return (v<0?"−":"")+"$"+f;},sh=v=>NARROW.matches?shortC(v):short(v);
+  function sync(){set("v2mill",MILL.name);set("v2mt",MILL.name);set("v2cash",sh(S.cash));
+    {const ok=S.t>=1440;set("v2profit",ok?sh(S.profitRate)+"/d":"–");$("v2profit").style.color=ok&&S.profitRate<0?"var(--bad)":"var(--ink)";$("v2profit").title=ok?"Cash made per day, averaged over the last 3 days: sales and deals, less every cost including repairs and outage budgets (upgrades aside)":"Shown once the first day is done";
      // v5.0.5: in survival, when cash is falling, the label says roughly how many days are left before bankruptcy
      const pl=$("v2profit").previousElementSibling;if(pl){const left=ok&&survOn()&&S.profitRate<0?(S.cash-ECON.bankrupt)/-S.profitRate:Infinity,t=left<15?`~${Math.max(0,Math.floor(left))}d left`:"Profit";if(pl.textContent!==t){pl.textContent=t;pl.classList.toggle("runway",left<15);pl.title=left<15?"Days until bankruptcy if cash keeps falling at this rate":"";}}}
     {const h=((S.t+360)/60)%24,d=new Date(S.date0||Date.now());d.setMinutes(d.getMinutes()+S.t+360);const hh=Math.floor(h),ap=hh<12?"AM":"PM",h12=hh%12||12;
      set("v2clock",(TINY.matches?"":d.toLocaleDateString("en-US",{weekday:"short"})+" ")+h12+" "+ap);}   // v5.0.4: no weekday on small phones, so the time is never cut off
-    {const se=S.season,on=!!(se&&se.on),sv=!!(se&&se.surv),day=Math.floor(S.t/1440)+1,lab=on?(sv?(NARROW.matches?`W${survWave()} · D${day}`:`Wave ${survWave()} · Day ${day}`):`Day ${Math.min(SEASON_DAYS,day)} of ${SEASON_DAYS}`):se&&se.done?(sv?"Run over":"Season over"):"Time";
+    {const se=S.season,on=!!(se&&se.on),sv=!!(se&&se.surv),day=Math.floor(S.t/1440)+1,lab=on?(sv?(NARROW.matches?`W${survWave()} · D${day}`:`Wave ${survWave()} · Day ${day}`):(NARROW.matches?`Day ${Math.min(SEASON_DAYS,day)}/${SEASON_DAYS}`:`Day ${Math.min(SEASON_DAYS,day)} of ${SEASON_DAYS}`)):se&&se.done?(sv?"Run over":"Season over"):"Time";
      set("v2clockL",lab);$("v2clockL").classList.toggle("sday",on);$("v2clockL").title=on?(sv?"Survival: the wave you are in and the day of the run":"Season mode: day of the 30-day season"):"";}
     mirror.forEach(([d,s])=>{if(d.textContent!==s.textContent)d.textContent=s.textContent;});
     const sp=outCapped()?`Watching crews · ${simRate()} min/s`:C.simSpeed+" min/s";if($("v2speed").textContent!==sp)$("v2speed").textContent=sp;$("v2speed").title=outCapped()?`Slowed to ${simRate()} min/s so you can watch the outage crews. Press − or + to go back to ${C.simSpeed} min/s; it also comes back when the outage ends.`:"";
@@ -8675,19 +9134,21 @@ setView();
   const TUT=(()=>{
     // v4.4.0-t3: six cards. Two of them fly the camera (fiber in, paper out); the rest are centred. Survival swaps its own goal and outage cards.
     const stops={2:[[4,-13,96],[14,-14,11]],3:[[22,9,96],[22,9,16]]};
-    const N=6;
+    const N=7;   // v5.1 QA2: a card for the leader and the four civics meters
     // the river picture for the bottleneck card: narrow at the pulper (the bottleneck), a wide pool at the stock chest (a buffer)
     const RIVER='<svg viewBox="0 0 400 150" width="100%" role="img" aria-label="The mill as a paper web flowing from receiving to shipping: wide in some places, narrow at the pulper (the bottleneck), with a wide section at the stock chest acting as a buffer" style="display:block"><defs><linearGradient id="rvK" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#eef0f3"/><stop offset="0.5" stop-color="#ffffff"/><stop offset="1" stop-color="#e8ebef"/></linearGradient></defs><path d="M0,40.8 L4,40.6 L8,41.2 L12,40.6 L16,41.2 L20,41.1 L24,40.8 L28,41.5 L32,41.0 L36,41.6 L40,41.2 L44,41.3 L48,41.8 L52,42.3 L56,41.5 L60,41.7 L64,42.5 L68,43.7 L72,44.7 L76,46.2 L80,49.0 L84,50.0 L88,53.1 L92,54.3 L96,55.6 L100,56.6 L104,57.3 L108,57.9 L112,57.1 L116,57.6 L120,57.7 L124,57.3 L128,57.6 L132,56.8 L136,55.7 L140,53.8 L144,51.7 L148,48.6 L152,46.0 L156,44.7 L160,43.9 L164,43.4 L168,42.8 L172,40.9 L176,38.2 L180,36.1 L184,33.6 L188,31.7 L192,29.8 L196,28.1 L200,28.6 L204,28.1 L208,29.9 L212,32.5 L216,34.5 L220,37.8 L224,39.9 L228,42.7 L232,44.0 L236,44.1 L240,44.6 L244,44.4 L248,45.4 L252,46.0 L256,46.8 L260,47.4 L264,48.5 L268,49.2 L272,48.9 L276,49.2 L280,48.6 L284,49.5 L288,49.8 L292,50.5 L296,50.7 L300,50.5 L304,51.0 L308,51.7 L312,51.2 L316,51.9 L320,51.6 L324,51.4 L328,50.8 L332,50.9 L336,49.1 L340,48.2 L344,47.3 L348,46.9 L352,45.2 L356,45.1 L360,45.1 L364,45.4 L368,45.0 L372,44.6 L376,43.4 L380,42.9 L384,42.2 L388,42.3 L392,41.9 L396,40.7 L400,40.6 L400,86.7 L396,86.6 L392,86.6 L388,86.3 L384,85.3 L380,84.4 L376,84.3 L372,83.7 L368,83.5 L364,83.6 L360,83.2 L356,82.8 L352,82.5 L348,81.8 L344,80.0 L340,80.0 L336,78.8 L332,77.9 L328,77.0 L324,76.0 L320,75.9 L316,75.6 L312,76.4 L308,76.0 L304,76.3 L300,76.9 L296,77.3 L292,77.9 L288,77.9 L284,78.1 L280,78.5 L276,78.5 L272,78.9 L268,78.8 L264,80.3 L260,80.7 L256,80.9 L252,81.8 L248,82.6 L244,83.2 L240,83.4 L236,84.4 L232,84.9 L228,85.5 L224,87.6 L220,89.7 L216,92.6 L212,95.6 L208,97.7 L204,99.9 L200,99.6 L196,99.0 L192,99.0 L188,96.7 L184,94.0 L180,92.1 L176,89.0 L172,87.3 L168,86.1 L164,84.8 L160,84.2 L156,83.1 L152,81.6 L148,78.9 L144,76.9 L140,73.9 L136,72.1 L132,70.4 L128,70.2 L124,70.9 L120,71.1 L116,70.9 L112,70.9 L108,70.9 L104,70.8 L100,70.6 L96,72.0 L92,73.3 L88,74.8 L84,76.9 L80,79.3 L76,81.4 L72,83.7 L68,85.4 L64,85.6 L60,86.5 L56,86.6 L52,86.6 L48,85.9 L44,85.8 L40,85.9 L36,86.0 L32,86.1 L28,86.7 L24,87.1 L20,87.2 L16,86.8 L12,87.1 L8,87.3 L4,86.5 L0,87.2 Z" fill="#1c2233" opacity="0.14" transform="translate(1.5,3)"/><path d="M0,40.8 L4,40.6 L8,41.2 L12,40.6 L16,41.2 L20,41.1 L24,40.8 L28,41.5 L32,41.0 L36,41.6 L40,41.2 L44,41.3 L48,41.8 L52,42.3 L56,41.5 L60,41.7 L64,42.5 L68,43.7 L72,44.7 L76,46.2 L80,49.0 L84,50.0 L88,53.1 L92,54.3 L96,55.6 L100,56.6 L104,57.3 L108,57.9 L112,57.1 L116,57.6 L120,57.7 L124,57.3 L128,57.6 L132,56.8 L136,55.7 L140,53.8 L144,51.7 L148,48.6 L152,46.0 L156,44.7 L160,43.9 L164,43.4 L168,42.8 L172,40.9 L176,38.2 L180,36.1 L184,33.6 L188,31.7 L192,29.8 L196,28.1 L200,28.6 L204,28.1 L208,29.9 L212,32.5 L216,34.5 L220,37.8 L224,39.9 L228,42.7 L232,44.0 L236,44.1 L240,44.6 L244,44.4 L248,45.4 L252,46.0 L256,46.8 L260,47.4 L264,48.5 L268,49.2 L272,48.9 L276,49.2 L280,48.6 L284,49.5 L288,49.8 L292,50.5 L296,50.7 L300,50.5 L304,51.0 L308,51.7 L312,51.2 L316,51.9 L320,51.6 L324,51.4 L328,50.8 L332,50.9 L336,49.1 L340,48.2 L344,47.3 L348,46.9 L352,45.2 L356,45.1 L360,45.1 L364,45.4 L368,45.0 L372,44.6 L376,43.4 L380,42.9 L384,42.2 L388,42.3 L392,41.9 L396,40.7 L400,40.6 L400,86.7 L396,86.6 L392,86.6 L388,86.3 L384,85.3 L380,84.4 L376,84.3 L372,83.7 L368,83.5 L364,83.6 L360,83.2 L356,82.8 L352,82.5 L348,81.8 L344,80.0 L340,80.0 L336,78.8 L332,77.9 L328,77.0 L324,76.0 L320,75.9 L316,75.6 L312,76.4 L308,76.0 L304,76.3 L300,76.9 L296,77.3 L292,77.9 L288,77.9 L284,78.1 L280,78.5 L276,78.5 L272,78.9 L268,78.8 L264,80.3 L260,80.7 L256,80.9 L252,81.8 L248,82.6 L244,83.2 L240,83.4 L236,84.4 L232,84.9 L228,85.5 L224,87.6 L220,89.7 L216,92.6 L212,95.6 L208,97.7 L204,99.9 L200,99.6 L196,99.0 L192,99.0 L188,96.7 L184,94.0 L180,92.1 L176,89.0 L172,87.3 L168,86.1 L164,84.8 L160,84.2 L156,83.1 L152,81.6 L148,78.9 L144,76.9 L140,73.9 L136,72.1 L132,70.4 L128,70.2 L124,70.9 L120,71.1 L116,70.9 L112,70.9 L108,70.9 L104,70.8 L100,70.6 L96,72.0 L92,73.3 L88,74.8 L84,76.9 L80,79.3 L76,81.4 L72,83.7 L68,85.4 L64,85.6 L60,86.5 L56,86.6 L52,86.6 L48,85.9 L44,85.8 L40,85.9 L36,86.0 L32,86.1 L28,86.7 L24,87.1 L20,87.2 L16,86.8 L12,87.1 L8,87.3 L4,86.5 L0,87.2 Z" fill="url(#rvK)" stroke="#b9c0ca" stroke-width="0.9"/><path d="M362.3,73.6 Q364.3,74.4 368.3,73.5" stroke="#dfe3e8" stroke-width="0.7" stroke-opacity="0.55" fill="none"/><path d="M36.4,82.1 Q40.0,80.8 42.2,81.9" stroke="#d3d8df" stroke-width="0.7" stroke-opacity="0.55" fill="none"/><path d="M69.3,50.3 Q71.9,49.9 72.6,51.7" stroke="#b4bcc7" stroke-width="0.7" stroke-opacity="0.55" fill="none"/><path d="M262.3,59.8 Q263.2,60.2 267.1,57.9" stroke="#c3c9d2" stroke-width="0.7" stroke-opacity="0.55" fill="none"/><path d="M210.5,90.6 Q213.7,90.6 214.9,92.3" stroke="#dfe3e8" stroke-width="0.7" stroke-opacity="0.55" fill="none"/><path d="M86.3,64.0 Q89.4,64.5 92.2,63.0" stroke="#c3c9d2" stroke-width="0.7" stroke-opacity="0.55" fill="none"/><path d="M362.4,59.0 Q366.0,59.0 367.2,59.4" stroke="#d3d8df" stroke-width="0.7" stroke-opacity="0.55" fill="none"/><path d="M212.6,65.4 Q213.2,63.8 215.7,65.2" stroke="#d3d8df" stroke-width="0.7" stroke-opacity="0.55" fill="none"/><path d="M70.2,63.0 Q72.7,63.3 76.1,63.4" stroke="#b4bcc7" stroke-width="0.7" stroke-opacity="0.55" fill="none"/><path d="M312.6,56.0 Q314.4,56.1 317.6,54.7" stroke="#b4bcc7" stroke-width="0.7" stroke-opacity="0.55" fill="none"/><path d="M224.4,75.1 Q228.1,74.9 231.1,74.7" stroke="#d3d8df" stroke-width="0.7" stroke-opacity="0.55" fill="none"/><path d="M276.3,62.8 Q280.2,63.3 281.5,62.6" stroke="#dfe3e8" stroke-width="0.7" stroke-opacity="0.55" fill="none"/><path d="M367.4,77.6 Q369.1,77.2 371.2,77.4" stroke="#dfe3e8" stroke-width="0.7" stroke-opacity="0.55" fill="none"/><path d="M30.7,53.4 Q33.2,54.8 34.0,53.9" stroke="#d3d8df" stroke-width="0.7" stroke-opacity="0.55" fill="none"/><path d="M374.0,69.2 Q375.1,68.6 378.4,68.1" stroke="#c3c9d2" stroke-width="0.7" stroke-opacity="0.55" fill="none"/><path d="M159.7,63.5 Q162.0,64.5 166.3,65.8" stroke="#b4bcc7" stroke-width="0.7" stroke-opacity="0.55" fill="none"/><path d="M136.3,60.4 Q136.9,61.0 140.5,61.3" stroke="#b4bcc7" stroke-width="0.7" stroke-opacity="0.55" fill="none"/><path d="M280.4,61.0 Q284.3,59.3 285.4,60.0" stroke="#d3d8df" stroke-width="0.7" stroke-opacity="0.55" fill="none"/><path d="M386.8,48.2 Q389.4,46.6 390.4,46.4" stroke="#d3d8df" stroke-width="0.7" stroke-opacity="0.55" fill="none"/><path d="M326.6,71.3 Q328.9,72.7 331.8,73.8" stroke="#b4bcc7" stroke-width="0.7" stroke-opacity="0.55" fill="none"/><path d="M279.4,53.4 Q280.7,52.4 282.5,54.0" stroke="#c3c9d2" stroke-width="0.7" stroke-opacity="0.55" fill="none"/><path d="M253.2,73.6 Q253.5,75.2 256.4,74.7" stroke="#b4bcc7" stroke-width="0.7" stroke-opacity="0.55" fill="none"/><path d="M6.6,84.7 Q9.1,84.3 10.8,86.6" stroke="#d3d8df" stroke-width="0.7" stroke-opacity="0.55" fill="none"/><path d="M373.5,80.9 Q376.7,80.7 377.3,79.6" stroke="#d3d8df" stroke-width="0.7" stroke-opacity="0.55" fill="none"/><path d="M116.8,64.0 Q117.2,63.0 120.5,63.4" stroke="#c3c9d2" stroke-width="0.7" stroke-opacity="0.55" fill="none"/><path d="M9.3,64.2 Q12.0,64.1 16.2,64.3" stroke="#b4bcc7" stroke-width="0.7" stroke-opacity="0.55" fill="none"/><path d="M262.0,65.3 Q264.3,65.9 267.8,68.3" stroke="#d3d8df" stroke-width="0.7" stroke-opacity="0.55" fill="none"/><path d="M137.7,68.4 Q140.3,68.3 143.5,69.2" stroke="#c3c9d2" stroke-width="0.7" stroke-opacity="0.55" fill="none"/><path d="M333.4,52.6 Q335.8,52.2 338.6,54.6" stroke="#b4bcc7" stroke-width="0.7" stroke-opacity="0.55" fill="none"/><path d="M346.7,69.2 Q348.1,68.6 350.7,68.2" stroke="#d3d8df" stroke-width="0.7" stroke-opacity="0.55" fill="none"/><path d="M108.5,59.5 Q112.2,58.6 112.9,58.8" stroke="#c3c9d2" stroke-width="0.7" stroke-opacity="0.55" fill="none"/><path d="M384.4,56.5 Q386.0,55.4 388.3,54.4" stroke="#d3d8df" stroke-width="0.7" stroke-opacity="0.55" fill="none"/><path d="M100.3,66.7 Q100.8,67.5 103.5,67.8" stroke="#b4bcc7" stroke-width="0.7" stroke-opacity="0.55" fill="none"/><path d="M10.9,55.8 Q13.0,56.7 14.8,56.1" stroke="#b4bcc7" stroke-width="0.7" stroke-opacity="0.55" fill="none"/><path d="M304.7,68.8 Q307.5,67.2 309.5,67.7" stroke="#b4bcc7" stroke-width="0.7" stroke-opacity="0.55" fill="none"/><path d="M292.6,71.5 Q294.4,72.5 296.2,71.6" stroke="#c3c9d2" stroke-width="0.7" stroke-opacity="0.55" fill="none"/><path d="M329.3,65.8 Q333.1,65.6 335.7,67.0" stroke="#c3c9d2" stroke-width="0.7" stroke-opacity="0.55" fill="none"/><path d="M18.6,69.7 Q21.8,67.9 25.4,68.9" stroke="#c3c9d2" stroke-width="0.7" stroke-opacity="0.55" fill="none"/><path d="M250.0,69.9 Q253.1,69.5 254.3,67.6" stroke="#c3c9d2" stroke-width="0.7" stroke-opacity="0.55" fill="none"/><path d="M263.1,51.8 Q264.7,50.4 268.8,50.4" stroke="#d3d8df" stroke-width="0.7" stroke-opacity="0.55" fill="none"/><path d="M93.4,66.1 Q94.4,68.1 97.9,67.7" stroke="#dfe3e8" stroke-width="0.7" stroke-opacity="0.55" fill="none"/><path d="M305.7,66.5 Q307.2,64.6 310.8,64.2" stroke="#dfe3e8" stroke-width="0.7" stroke-opacity="0.55" fill="none"/><path d="M248.0,51.7 Q251.9,50.4 252.9,51.6" stroke="#d3d8df" stroke-width="0.7" stroke-opacity="0.55" fill="none"/><path d="M269.6,58.5 Q272.0,57.2 274.6,58.3" stroke="#d3d8df" stroke-width="0.7" stroke-opacity="0.55" fill="none"/><path d="M125.4,60.3 Q126.5,59.8 130.2,59.3" stroke="#b4bcc7" stroke-width="0.7" stroke-opacity="0.55" fill="none"/><path d="M395.6,59.3 Q397.4,59.4 401.7,62.1" stroke="#dfe3e8" stroke-width="0.7" stroke-opacity="0.55" fill="none"/><path d="M379.3,50.1 Q383.6,50.8 385.6,50.2" stroke="#d3d8df" stroke-width="0.7" stroke-opacity="0.55" fill="none"/><path d="M199.2,89.6 Q202.7,89.3 203.5,88.0" stroke="#b4bcc7" stroke-width="0.7" stroke-opacity="0.55" fill="none"/><path d="M121.6,60.8 Q124.7,58.9 125.9,60.0" stroke="#dfe3e8" stroke-width="0.7" stroke-opacity="0.55" fill="none"/><path d="M334.3,54.9 Q338.8,55.0 340.8,56.3" stroke="#dfe3e8" stroke-width="0.7" stroke-opacity="0.55" fill="none"/><path d="M27.7,59.5 Q32.0,58.9 33.6,56.8" stroke="#c3c9d2" stroke-width="0.7" stroke-opacity="0.55" fill="none"/><path d="M113.1,60.0 Q114.9,61.8 118.7,60.7" stroke="#b4bcc7" stroke-width="0.7" stroke-opacity="0.55" fill="none"/><path d="M204.3,43.3 Q207.5,45.2 208.4,45.3" stroke="#b4bcc7" stroke-width="0.7" stroke-opacity="0.55" fill="none"/><path d="M363.7,79.1 Q364.9,80.3 368.8,80.2" stroke="#b4bcc7" stroke-width="0.7" stroke-opacity="0.55" fill="none"/><path d="M245.5,51.6 Q250.0,51.7 252.0,51.5" stroke="#d3d8df" stroke-width="0.7" stroke-opacity="0.55" fill="none"/><path d="M189.0,54.2 Q192.4,54.0 193.1,55.2" stroke="#d3d8df" stroke-width="0.7" stroke-opacity="0.55" fill="none"/><path d="M121.1,64.5 Q122.3,62.9 125.5,63.0" stroke="#b4bcc7" stroke-width="0.7" stroke-opacity="0.55" fill="none"/><path d="M220.0,61.7 Q221.8,62.4 224.1,62.8" stroke="#d3d8df" stroke-width="0.7" stroke-opacity="0.55" fill="none"/><path d="M37.9,57.6 Q38.8,57.4 41.2,56.7" stroke="#c3c9d2" stroke-width="0.7" stroke-opacity="0.55" fill="none"/><path d="M298.9,62.0 Q300.8,61.6 303.5,62.1" stroke="#c3c9d2" stroke-width="0.7" stroke-opacity="0.55" fill="none"/><path d="M199.3,69.0 Q201.5,70.3 203.6,69.9" stroke="#d3d8df" stroke-width="0.7" stroke-opacity="0.55" fill="none"/><path d="M38.7,80.1 Q40.7,79.9 43.2,80.8" stroke="#c3c9d2" stroke-width="0.7" stroke-opacity="0.55" fill="none"/><path d="M52.4,61.0 Q56.7,61.9 58.2,62.8" stroke="#c3c9d2" stroke-width="0.7" stroke-opacity="0.55" fill="none"/><path d="M157.0,79.1 Q161.4,79.4 163.0,81.3" stroke="#c3c9d2" stroke-width="0.7" stroke-opacity="0.55" fill="none"/><path d="M90.6,58.4 Q94.8,57.7 97.0,55.7" stroke="#b4bcc7" stroke-width="0.7" stroke-opacity="0.55" fill="none"/><path d="M35.7,75.3 Q37.3,73.3 38.5,74.2" stroke="#dfe3e8" stroke-width="0.7" stroke-opacity="0.55" fill="none"/><path d="M383.1,68.9 Q386.5,67.6 388.2,68.6" stroke="#dfe3e8" stroke-width="0.7" stroke-opacity="0.55" fill="none"/><path d="M209.7,69.2 Q212.2,67.1 214.1,67.9" stroke="#dfe3e8" stroke-width="0.7" stroke-opacity="0.55" fill="none"/><path d="M396.6,54.7 Q397.8,55.5 400.6,56.2" stroke="#d3d8df" stroke-width="0.7" stroke-opacity="0.55" fill="none"/><path d="M13.6,60.3 Q15.2,60.3 18.6,57.9" stroke="#b4bcc7" stroke-width="0.7" stroke-opacity="0.55" fill="none"/><path d="M34.1,52.9 Q36.4,53.2 38.8,52.3" stroke="#b4bcc7" stroke-width="0.7" stroke-opacity="0.55" fill="none"/><path d="M145.5,61.6 Q148.0,60.0 148.4,61.0" stroke="#b4bcc7" stroke-width="0.7" stroke-opacity="0.55" fill="none"/><path d="M386.1,56.5 Q388.3,56.4 392.1,54.8" stroke="#dfe3e8" stroke-width="0.7" stroke-opacity="0.55" fill="none"/><path d="M45.2,69.0 Q47.6,71.3 50.2,71.1" stroke="#c3c9d2" stroke-width="0.7" stroke-opacity="0.55" fill="none"/><path d="M377.7,50.8 Q381.3,49.1 382.1,49.5" stroke="#c3c9d2" stroke-width="0.7" stroke-opacity="0.55" fill="none"/><path d="M283.1,55.9 Q284.9,55.3 287.8,56.9" stroke="#c3c9d2" stroke-width="0.7" stroke-opacity="0.55" fill="none"/><path d="M370.9,58.0 Q373.3,57.3 374.3,59.5" stroke="#b4bcc7" stroke-width="0.7" stroke-opacity="0.55" fill="none"/><path d="M334.3,75.6 Q335.2,73.5 338.7,73.8" stroke="#b4bcc7" stroke-width="0.7" stroke-opacity="0.55" fill="none"/><path d="M380.4,49.7 Q383.2,49.6 386.9,47.7" stroke="#b4bcc7" stroke-width="0.7" stroke-opacity="0.55" fill="none"/><path d="M36.8,72.3 Q38.5,71.9 40.5,72.5" stroke="#b4bcc7" stroke-width="0.7" stroke-opacity="0.55" fill="none"/><path d="M14.0,60.3 Q15.6,59.7 20.0,61.9" stroke="#c3c9d2" stroke-width="0.7" stroke-opacity="0.55" fill="none"/><path d="M320.1,55.2 Q322.2,54.0 323.5,53.6" stroke="#dfe3e8" stroke-width="0.7" stroke-opacity="0.55" fill="none"/><path d="M381.2,68.5 Q382.7,68.3 385.2,69.4" stroke="#c3c9d2" stroke-width="0.7" stroke-opacity="0.55" fill="none"/><path d="M287.7,66.4 Q289.2,68.7 293.4,69.1" stroke="#c3c9d2" stroke-width="0.7" stroke-opacity="0.55" fill="none"/><path d="M190.2,93.0 Q192.8,92.4 196.9,92.2" stroke="#b4bcc7" stroke-width="0.7" stroke-opacity="0.55" fill="none"/><path d="M54.6,63.9 Q55.3,65.1 57.3,65.1" stroke="#d3d8df" stroke-width="0.7" stroke-opacity="0.55" fill="none"/><path d="M242.5,57.9 Q245.4,56.4 246.7,57.4" stroke="#d3d8df" stroke-width="0.7" stroke-opacity="0.55" fill="none"/><path d="M157.1,52.0 Q159.3,52.4 161.7,52.7" stroke="#d3d8df" stroke-width="0.7" stroke-opacity="0.55" fill="none"/><path d="M390.2,79.7 Q392.3,77.7 396.9,78.1" stroke="#b4bcc7" stroke-width="0.7" stroke-opacity="0.55" fill="none"/><path d="M393.4,83.6 Q395.0,84.1 396.9,82.3" stroke="#d3d8df" stroke-width="0.7" stroke-opacity="0.55" fill="none"/><path d="M298.2,71.9 Q301.8,70.3 303.5,69.8" stroke="#dfe3e8" stroke-width="0.7" stroke-opacity="0.55" fill="none"/><path d="M149.7,70.9 Q150.8,69.4 153.4,69.9" stroke="#d3d8df" stroke-width="0.7" stroke-opacity="0.55" fill="none"/><path d="M131.2,63.1 Q133.9,64.0 138.2,63.1" stroke="#b4bcc7" stroke-width="0.7" stroke-opacity="0.55" fill="none"/><path d="M394.4,47.4 Q397.8,49.5 399.1,49.0" stroke="#c3c9d2" stroke-width="0.7" stroke-opacity="0.55" fill="none"/><path d="M349.2,55.5 Q351.8,54.8 352.4,55.9" stroke="#c3c9d2" stroke-width="0.7" stroke-opacity="0.55" fill="none"/><path d="M149.4,74.4 Q152.6,75.2 154.1,73.3" stroke="#c3c9d2" stroke-width="0.7" stroke-opacity="0.55" fill="none"/><path d="M254.4,70.5 Q255.9,68.2 258.4,68.6" stroke="#dfe3e8" stroke-width="0.7" stroke-opacity="0.55" fill="none"/><path d="M17.1,73.7 Q21.3,74.4 23.5,75.7" stroke="#dfe3e8" stroke-width="0.7" stroke-opacity="0.55" fill="none"/><path d="M75.3,58.0 Q77.3,57.2 79.0,59.1" stroke="#c3c9d2" stroke-width="0.7" stroke-opacity="0.55" fill="none"/><path d="M317.2,67.3 Q319.4,67.0 320.8,67.4" stroke="#dfe3e8" stroke-width="0.7" stroke-opacity="0.55" fill="none"/><path d="M164.3,56.0 Q165.6,57.1 168.1,57.9" stroke="#dfe3e8" stroke-width="0.7" stroke-opacity="0.55" fill="none"/><path d="M166.0,45.8 Q169.3,46.4 171.8,47.6" stroke="#b4bcc7" stroke-width="0.7" stroke-opacity="0.55" fill="none"/><path d="M82.7,52.0 Q86.9,51.4 89.2,51.5" stroke="#dfe3e8" stroke-width="0.7" stroke-opacity="0.55" fill="none"/><path d="M184.5,44.6 Q186.5,45.9 187.6,44.7" stroke="#c3c9d2" stroke-width="0.7" stroke-opacity="0.55" fill="none"/><path d="M228.9,80.4 Q231.2,78.4 234.5,78.5" stroke="#d3d8df" stroke-width="0.7" stroke-opacity="0.55" fill="none"/><path d="M368.5,50.4 Q372.3,50.2 373.2,51.9" stroke="#d3d8df" stroke-width="0.7" stroke-opacity="0.55" fill="none"/><path d="M333.6,53.2 Q337.2,53.0 340.1,52.0" stroke="#c3c9d2" stroke-width="0.7" stroke-opacity="0.55" fill="none"/><path d="M360.1,68.1 Q363.9,66.2 366.0,66.0" stroke="#b4bcc7" stroke-width="0.7" stroke-opacity="0.55" fill="none"/><path d="M245.4,53.5 Q246.5,55.0 250.3,53.9" stroke="#d3d8df" stroke-width="0.7" stroke-opacity="0.55" fill="none"/><path d="M153.9,51.4 Q157.0,50.5 157.8,52.3" stroke="#c3c9d2" stroke-width="0.7" stroke-opacity="0.55" fill="none"/><path d="M266.5,59.2 Q269.8,60.0 271.0,59.0" stroke="#b4bcc7" stroke-width="0.7" stroke-opacity="0.55" fill="none"/><path d="M124.1,61.7 Q126.3,60.5 128.6,61.1" stroke="#c3c9d2" stroke-width="0.7" stroke-opacity="0.55" fill="none"/><path d="M247.1,63.6 Q249.8,64.0 250.9,64.7" stroke="#d3d8df" stroke-width="0.7" stroke-opacity="0.55" fill="none"/><path d="M323.0,62.0 Q324.2,62.7 326.2,61.5" stroke="#c3c9d2" stroke-width="0.7" stroke-opacity="0.55" fill="none"/><path d="M18.1,48.6 Q22.0,46.7 24.7,47.4" stroke="#b4bcc7" stroke-width="0.7" stroke-opacity="0.55" fill="none"/><path d="M260.5,72.2 Q262.2,72.1 263.3,70.9" stroke="#c3c9d2" stroke-width="0.7" stroke-opacity="0.55" fill="none"/><path d="M78.7,77.8 Q82.2,77.8 83.2,79.9" stroke="#d3d8df" stroke-width="0.7" stroke-opacity="0.55" fill="none"/><path d="M27.9,57.9 Q32.0,56.2 33.6,55.9" stroke="#b4bcc7" stroke-width="0.7" stroke-opacity="0.55" fill="none"/><path d="M58.9,64.1 Q61.3,63.1 65.3,62.2" stroke="#dfe3e8" stroke-width="0.7" stroke-opacity="0.55" fill="none"/><path d="M149.4,55.4 Q151.0,55.2 154.0,56.0" stroke="#b4bcc7" stroke-width="0.7" stroke-opacity="0.55" fill="none"/><path d="M68.8,74.6 Q71.0,74.2 72.3,74.7" stroke="#b4bcc7" stroke-width="0.7" stroke-opacity="0.55" fill="none"/><path d="M221.9,67.7 Q226.3,66.8 227.9,65.2" stroke="#b4bcc7" stroke-width="0.7" stroke-opacity="0.55" fill="none"/><path d="M294.2,61.0 Q295.4,60.2 298.7,60.4" stroke="#c3c9d2" stroke-width="0.7" stroke-opacity="0.55" fill="none"/><path d="M177.1,48.3 Q180.8,46.3 182.5,45.7" stroke="#dfe3e8" stroke-width="0.7" stroke-opacity="0.55" fill="none"/><path d="M292.3,69.9 Q294.6,69.3 296.1,69.1" stroke="#dfe3e8" stroke-width="0.7" stroke-opacity="0.55" fill="none"/><path d="M356.6,51.6 Q357.1,50.4 360.5,52.2" stroke="#dfe3e8" stroke-width="0.7" stroke-opacity="0.55" fill="none"/><path d="M122.3,64.2 Q124.2,62.9 127.4,63.8" stroke="#dfe3e8" stroke-width="0.7" stroke-opacity="0.55" fill="none"/><path d="M249.1,63.2 Q249.9,62.9 252.3,64.7" stroke="#c3c9d2" stroke-width="0.7" stroke-opacity="0.55" fill="none"/><path d="M27.2,49.4 Q30.9,50.1 32.7,48.1" stroke="#c3c9d2" stroke-width="0.7" stroke-opacity="0.55" fill="none"/><path d="M257.4,65.9 Q259.4,67.5 261.8,66.5" stroke="#b4bcc7" stroke-width="0.7" stroke-opacity="0.55" fill="none"/><path d="M100.4,68.0 Q101.7,67.2 103.6,68.1" stroke="#c3c9d2" stroke-width="0.7" stroke-opacity="0.55" fill="none"/><path d="M363.0,50.5 Q364.8,50.7 368.4,51.4" stroke="#b4bcc7" stroke-width="0.7" stroke-opacity="0.55" fill="none"/><path d="M324.1,57.4 Q324.8,58.1 328.3,56.5" stroke="#b4bcc7" stroke-width="0.7" stroke-opacity="0.55" fill="none"/><path d="M285.3,51.5 Q288.3,53.0 291.5,53.1" stroke="#b4bcc7" stroke-width="0.7" stroke-opacity="0.55" fill="none"/><path d="M71.5,81.5 Q72.3,83.0 75.5,82.1" stroke="#dfe3e8" stroke-width="0.7" stroke-opacity="0.55" fill="none"/><path d="M283.8,58.0 Q287.3,57.9 289.0,57.7" stroke="#dfe3e8" stroke-width="0.7" stroke-opacity="0.55" fill="none"/><path d="M119.1,67.9 Q122.1,65.5 125.1,65.2" stroke="#d3d8df" stroke-width="0.7" stroke-opacity="0.55" fill="none"/><path d="M335.3,56.7 Q336.1,57.1 338.7,58.2" stroke="#d3d8df" stroke-width="0.7" stroke-opacity="0.55" fill="none"/><path d="M152.3,75.2 Q156.2,76.9 158.2,78.3" stroke="#b4bcc7" stroke-width="0.7" stroke-opacity="0.55" fill="none"/><path d="M334.5,68.8 Q338.4,68.8 340.9,68.4" stroke="#dfe3e8" stroke-width="0.7" stroke-opacity="0.55" fill="none"/><path d="M314.5,61.8 Q316.2,60.6 319.9,62.2" stroke="#c3c9d2" stroke-width="0.7" stroke-opacity="0.55" fill="none"/><path d="M44.2,81.3 Q44.9,79.2 48.3,79.8" stroke="#c3c9d2" stroke-width="0.7" stroke-opacity="0.55" fill="none"/><path d="M278.0,70.1 Q279.2,71.2 281.3,70.4" stroke="#c3c9d2" stroke-width="0.7" stroke-opacity="0.55" fill="none"/><path d="M350.4,72.2 Q352.5,71.0 356.2,71.5" stroke="#c3c9d2" stroke-width="0.7" stroke-opacity="0.55" fill="none"/><path d="M15.6,78.5 Q19.7,79.3 21.8,79.3" stroke="#dfe3e8" stroke-width="0.7" stroke-opacity="0.55" fill="none"/><path d="M190.9,40.4 Q193.4,40.4 197.0,41.3" stroke="#dfe3e8" stroke-width="0.7" stroke-opacity="0.55" fill="none"/><path d="M10.3,53.8 Q11.9,53.7 14.3,54.7" stroke="#b4bcc7" stroke-width="0.7" stroke-opacity="0.55" fill="none"/><path d="M339.1,67.1 Q340.5,67.8 342.3,66.9" stroke="#dfe3e8" stroke-width="0.7" stroke-opacity="0.55" fill="none"/><path d="M187.7,36.4 Q191.3,37.2 192.8,37.5" stroke="#dfe3e8" stroke-width="0.7" stroke-opacity="0.55" fill="none"/><path d="M69.5,45.7 Q72.7,44.7 73.1,46.7" stroke="#b4bcc7" stroke-width="0.7" stroke-opacity="0.55" fill="none"/><path d="M39.9,71.9 Q43.0,74.7 45.5,74.7" stroke="#dfe3e8" stroke-width="0.7" stroke-opacity="0.55" fill="none"/><path d="M230.9,51.4 Q232.9,51.7 236.6,54.0" stroke="#c3c9d2" stroke-width="0.7" stroke-opacity="0.55" fill="none"/><path d="M196.2,97.0 Q198.1,94.8 201.0,95.0" stroke="#b4bcc7" stroke-width="0.7" stroke-opacity="0.55" fill="none"/><path d="M355.2,72.2 Q357.1,72.0 359.8,72.9" stroke="#b4bcc7" stroke-width="0.7" stroke-opacity="0.55" fill="none"/><path d="M358.9,64.0 Q360.2,64.8 363.1,65.7" stroke="#c3c9d2" stroke-width="0.7" stroke-opacity="0.55" fill="none"/><path d="M140.0,61.3 Q142.2,62.6 143.4,62.5" stroke="#d3d8df" stroke-width="0.7" stroke-opacity="0.55" fill="none"/><path d="M185.4,75.1 Q186.9,75.0 189.3,74.0" stroke="#d3d8df" stroke-width="0.7" stroke-opacity="0.55" fill="none"/><path d="M203.1,48.3 Q206.3,50.0 208.8,50.3" stroke="#d3d8df" stroke-width="0.7" stroke-opacity="0.55" fill="none"/><path d="M288.4,66.6 Q291.9,65.3 292.6,65.4" stroke="#c3c9d2" stroke-width="0.7" stroke-opacity="0.55" fill="none"/><path d="M67.2,70.0 Q67.9,68.8 70.7,68.7" stroke="#dfe3e8" stroke-width="0.7" stroke-opacity="0.55" fill="none"/><path d="M174.2,50.3 Q175.9,48.9 179.4,48.2" stroke="#c3c9d2" stroke-width="0.7" stroke-opacity="0.55" fill="none"/><path d="M7.0,78.9 Q10.7,77.6 11.6,77.6" stroke="#c3c9d2" stroke-width="0.7" stroke-opacity="0.55" fill="none"/><path d="M58.2,68.1 Q61.6,68.5 62.6,69.3" stroke="#b4bcc7" stroke-width="0.7" stroke-opacity="0.55" fill="none"/><path d="M337.0,68.3 Q340.0,69.5 342.2,70.3" stroke="#d3d8df" stroke-width="0.7" stroke-opacity="0.55" fill="none"/><path d="M271.1,67.7 Q273.9,66.1 275.9,66.8" stroke="#b4bcc7" stroke-width="0.7" stroke-opacity="0.55" fill="none"/><path d="M98.0,62.9 Q101.8,61.9 103.5,60.9" stroke="#c3c9d2" stroke-width="0.7" stroke-opacity="0.55" fill="none"/><path d="M248.1,61.0 Q249.8,62.6 253.3,63.3" stroke="#c3c9d2" stroke-width="0.7" stroke-opacity="0.55" fill="none"/><path d="M155.9,63.6 Q159.1,61.1 162.1,60.6" stroke="#d3d8df" stroke-width="0.7" stroke-opacity="0.55" fill="none"/><path d="M207.6,38.3 Q210.9,38.5 212.9,38.5" stroke="#dfe3e8" stroke-width="0.7" stroke-opacity="0.55" fill="none"/><path d="M208.6,58.3 Q212.4,57.0 215.1,56.4" stroke="#c3c9d2" stroke-width="0.7" stroke-opacity="0.55" fill="none"/><path d="M0,50.2 L4,50.2 L8,50.2 L12,50.3 L16,50.3 L20,50.4 L24,50.4 L28,50.5 L32,50.5 L36,50.6 L40,50.6 L44,50.7 L48,50.7 L52,50.8 L56,50.8 L60,50.8 L64,51.0 L68,51.5 L72,52.3 L76,53.4 L80,54.6 L84,55.9 L88,57.2 L92,58.3 L96,59.2 L100,59.8 L104,60.1 L108,60.1 L112,60.1 L116,60.1 L120,60.1 L124,60.1 L128,60.1 L132,60.0 L136,59.3 L140,58.1 L144,56.5 L148,54.8 L152,53.3 L156,52.4 L160,52.0 L164,51.8 L168,51.1 L172,50.0 L176,48.7 L180,47.2 L184,45.7 L188,44.4 L192,43.3 L196,42.6 L200,42.4 L204,42.7 L208,43.6 L212,44.9 L216,46.6 L220,48.3 L224,49.8 L228,51.1 L232,51.8 L236,52.0 L240,52.1 L244,52.4 L248,52.7 L252,53.1 L256,53.6 L260,54.1 L264,54.5 L268,54.8 L272,55.0 L276,55.0 L280,55.1 L284,55.2 L288,55.3 L292,55.6 L296,55.8 L300,56.1 L304,56.3 L308,56.5 L312,56.7 L316,56.8 L320,56.8 L324,56.7 L328,56.4 L332,55.9 L336,55.3 L340,54.7 L344,54.1 L348,53.5 L352,53.0 L356,52.7 L360,52.6 L364,52.5 L368,52.4 L372,52.1 L376,51.8 L380,51.4 L384,51.0 L388,50.7 L392,50.4 L396,50.3 L400,50.2" fill="none" stroke="#a9b2be" stroke-opacity="0.45" stroke-width="1.2" stroke-dasharray="6 10"/><path d="M0,64.0 L4,64.0 L8,64.0 L12,64.0 L16,64.0 L20,64.0 L24,64.0 L28,64.0 L32,64.0 L36,64.0 L40,64.0 L44,64.0 L48,64.0 L52,64.0 L56,64.0 L60,64.0 L64,64.0 L68,64.0 L72,64.0 L76,64.0 L80,64.0 L84,64.0 L88,64.0 L92,64.0 L96,64.0 L100,64.0 L104,64.0 L108,64.0 L112,64.0 L116,64.0 L120,64.0 L124,64.0 L128,64.0 L132,64.0 L136,64.0 L140,64.0 L144,64.0 L148,64.0 L152,64.0 L156,64.0 L160,64.0 L164,64.0 L168,64.0 L172,64.0 L176,64.0 L180,64.0 L184,64.0 L188,64.0 L192,64.0 L196,64.0 L200,64.0 L204,64.0 L208,64.0 L212,64.0 L216,64.0 L220,64.0 L224,64.0 L228,64.0 L232,64.0 L236,64.0 L240,64.0 L244,64.0 L248,64.0 L252,64.0 L256,64.0 L260,64.0 L264,64.0 L268,64.0 L272,64.0 L276,64.0 L280,64.0 L284,64.0 L288,64.0 L292,64.0 L296,64.0 L300,64.0 L304,64.0 L308,64.0 L312,64.0 L316,64.0 L320,64.0 L324,64.0 L328,64.0 L332,64.0 L336,64.0 L340,64.0 L344,64.0 L348,64.0 L352,64.0 L356,64.0 L360,64.0 L364,64.0 L368,64.0 L372,64.0 L376,64.0 L380,64.0 L384,64.0 L388,64.0 L392,64.0 L396,64.0 L400,64.0" fill="none" stroke="#a9b2be" stroke-opacity="0.45" stroke-width="1.2" stroke-dasharray="8 13"/><path d="M0,77.8 L4,77.8 L8,77.8 L12,77.7 L16,77.7 L20,77.7 L24,77.6 L28,77.5 L32,77.5 L36,77.4 L40,77.3 L44,77.3 L48,77.3 L52,77.2 L56,77.2 L60,77.2 L64,77.0 L68,76.5 L72,75.7 L76,74.6 L80,73.4 L84,72.1 L88,70.8 L92,69.7 L96,68.8 L100,68.2 L104,67.9 L108,67.9 L112,67.9 L116,67.9 L120,67.9 L124,67.9 L128,67.9 L132,68.0 L136,68.7 L140,69.9 L144,71.5 L148,73.2 L152,74.7 L156,75.6 L160,76.0 L164,76.2 L168,76.9 L172,78.0 L176,79.3 L180,80.8 L184,82.3 L188,83.6 L192,84.7 L196,85.4 L200,85.6 L204,85.3 L208,84.4 L212,83.1 L216,81.4 L220,79.7 L224,78.2 L228,76.9 L232,76.2 L236,76.0 L240,75.9 L244,75.6 L248,75.3 L252,74.9 L256,74.4 L260,73.9 L264,73.5 L268,73.2 L272,73.0 L276,73.0 L280,72.9 L284,72.8 L288,72.7 L292,72.4 L296,72.2 L300,71.9 L304,71.7 L308,71.5 L312,71.3 L316,71.2 L320,71.2 L324,71.3 L328,71.6 L332,72.1 L336,72.7 L340,73.3 L344,73.9 L348,74.5 L352,75.0 L356,75.3 L360,75.4 L364,75.5 L368,75.6 L372,75.9 L376,76.2 L380,76.6 L384,77.0 L388,77.3 L392,77.6 L396,77.7 L400,77.8" fill="none" stroke="#a9b2be" stroke-opacity="0.45" stroke-width="1.2" stroke-dasharray="10 16"/><g font-family="Plus Jakarta Sans,system-ui,sans-serif" font-size="10" font-weight="700" fill="#1c2233" text-anchor="middle"><text x="24" y="122">Receiving</text><text x="117" y="122">Pulper</text><text x="200" y="122">Stock chest</text><text x="282" y="122">Machine</text><text x="372" y="122">Shipping</text></g><g font-family="Plus Jakarta Sans,system-ui,sans-serif" font-size="9.5" font-weight="700" text-anchor="middle"><path d="M117 44 L117 26" stroke="#d6333b" stroke-width="1.6"/><circle cx="117" cy="64" r="11" fill="none" stroke="#d6333b" stroke-width="2" stroke-dasharray="3 2.5"/><text x="117" y="20" fill="#d6333b">BOTTLENECK</text><text x="200" y="20" fill="#1f8a4c">BUFFER</text><path d="M200 26 L200 30" stroke="#1f8a4c" stroke-width="1.6"/><text x="50" y="140" fill="#6b7280" font-weight="600">backs up here</text><text x="300" y="140" fill="#6b7280" font-weight="600">runs dry here</text></g><path d="M392 64 l-8 -5 v10 z" fill="#a9b2be" opacity="0.8"/></svg>';let i=0,el=null;
     const esc=escHTML;
     function card(k){const sv=survRun(),dots=Array.from({length:N},(_,j)=>`<i class="${j+1===k?"on":""}"></i>`).join("");
       let h="",body="",next="Next";const kick=`Quick start · ${k} of ${N}`;
       if(k===1){h="Welcome to "+esc(MILL.name||"your mill");next="Show me the mill";
-        body=sv?`<p>Your mill turns old cardboard boxes into new paperboard. <b>Survival</b> has no last day: keep the mill out of bankruptcy (cash below −$1.5M) for as long as you can. Your time survived is your score.</p><p>Your <b>mill leader</b> has a strength and a drawback. Tap their face under the top bar to see them.</p>`
+        body=sv?`<p>Your mill turns old cardboard boxes into new paperboard. <b>Survival</b> has no last day: keep the mill out of bankruptcy (cash below −$1.5M) for as long as you can. Your time survived is your score.</p>`
           :`<p>Your mill turns old cardboard boxes into new paperboard. A <b>season</b> runs 30 days: make as much profit as you can. Your profit is your score.</p>`;}
       else if(k===2){h="Fiber in";body=`<p>Trucks bring bales of old boxes (OCC). The <b>pulper</b>, a giant blender, turns them back into pulp. Cleaners and screens strip out sand, staples and plastic, and the <b>stock chest</b> stores clean pulp so the paper machine never runs dry.</p>`;}
       else if(k===3){h="Paper out";body=`<p>The <b>paper machine</b> sprays pulp onto a moving wire, presses the water out and dries the sheet on steam-heated cans. The <b>winder</b> cuts each big reel into customer rolls, and every ton shipped from the <b>warehouse</b> is money in.</p>`;}
       else if(k===4){h="Find your bottleneck";body=`<div class="fig">${RIVER}</div><p>The mill flows like a river and can only go as fast as its <b>narrowest point</b>. Every mill starts with one: <b>Upgrades</b> names it and fixes it at 25% off. Fix it first, then spend on speed, reliability and lower costs. One upgrade a day.</p>`;}
       else if(k===5){h="Upsets happen";body=`<ul><li>Breakdowns, sheet breaks, storms and the odd pigeon: these are <b>upsets</b>. Crews fix them on their own.</li><li>A red tag marks each one; tap it to fly there. The <b>Upsets</b> tab shows what's down and how long is left.</li><li><b>Event cards</b> offer deals with honest odds. Accept or decline.</li></ul>`;}
+      else if(k===6){h="Your leader and the four meters";
+        body=`<ul><li>Your <b>mill leader</b> has a strength and a drawback. Tap their face under the top bar to see them.</li><li>Four meters sit under it: <b>Economy</b> (customers and prices), <b>Labor</b> (the crew), <b>Machinery</b> (the equipment) and <b>Community</b> (the town). Tap one to see what it does.</li><li>Many upsets ask you to choose: each choice costs money and moves the meters. A meter that falls too low brings warnings, then a crisis; a high one earns a reward.</li><li>Tick <b>Always do this</b> on a choice card and that kind of upset is answered for you next time (a note lets you change it).</li></ul>`;}
       else{h=sv?"Every 4 days: an outage, then a new wave":"Every 7 days: a planned outage";next="Start playing";
         body=`<ul><li>${sv?"Every 4 days":"On days 7, 14, 21 and 28"} the mill stops for a <b>4-hour outage</b> and crews do one big job. Before it, you set a maintenance budget for each area: more money, fewer breakdowns until the next one.</li>${sv?`<li>Each outage starts a new <b>wave</b>: upsets get likelier and costs rise. The bar under the top bar shows by how much. ${S.lead&&S.lead.id==="dot"?"Dot makes no picks: once per outage cycle she fixes a costly breakdown on her own.":"Your leader makes one pick per outage."}</li>`:""}</ul><p class="tsm">Speed and sound are in the panel that opens when you tap the stats bar at the top; pause any time for the menu.</p><label><input type="checkbox" id="tutOff"> Don't show this tutorial again</label>`;}
       return `<div class="tc" role="dialog" aria-modal="true" aria-labelledby="tutH"><div class="tk"><span>${kick}</span>${k<N?'<button id="tutSkip">Skip tutorial</button>':""}</div>
@@ -8715,7 +9176,8 @@ setView();
       {el:()=>menu,esc:()=>{if(!first)play();}}];
     document.addEventListener("keydown",e=>{if((e.key!=="Tab"&&e.key!=="Escape")||e.defaultPrevented)return;
       const L=LAYERS.find(l=>up(l.el()));if(!L)return;const box=L.el(),t=e.target;
-      if([...document.querySelectorAll(".overlay,[aria-modal=true]")].some(o=>up(o)&&!box.contains(o)&&!o.contains(box)))return;
+      const zOf=x=>{for(let n=x;n&&n!==document.body;n=n.parentElement){const z=parseInt(getComputedStyle(n).zIndex);if(!isNaN(z))return z;}return 0;},zb=zOf(box);   /* v5.1 QA2: a card drawn under the menu doesn't take its keys */
+      if([...document.querySelectorAll(".overlay,[aria-modal=true]")].some(o=>up(o)&&!box.contains(o)&&!o.contains(box)&&zOf(o)>=zb))return;
       if(e.key==="Escape"){if(t&&t.id==="v2name")return;e.preventDefault();L.esc();return;}
       const f=[...box.querySelectorAll(FOC)].filter(x=>x.getClientRects().length>0&&!x.closest("[hidden]"));if(!f.length)return;
       const i=f.indexOf(document.activeElement);
@@ -8723,11 +9185,13 @@ setView();
       if(to>=0){e.preventDefault();f[to].focus();}},true);}   // capture: some fields (the season-over name) stop key events reaching document
   // the first Play waits for the start-up precompile (a few seconds at most), so no shader compiles land mid-play
   let goWait=false;
-  const go=()=>{const fresh=first;if(first)startSeason();play();if(fresh&&TUT.want())setTimeout(()=>TUT.open(),60);};
+  // v5.1 (offline): a season picks its leader first too (the same picker as survival)
+  const goSeason=(fresh)=>leadPickOpen(id=>{if(G3.save&&G3.save.drop)G3.save.drop();startSeason();leadStart(id);play();if(fresh&&TUT.want())setTimeout(()=>TUT.open(),60);},()=>(G3.warm||!G3.prewarm)?null:G3.prewarm(),"season");
+  const go=()=>{const fresh=first;if(first){goSeason(fresh);return;}play();};
   $("v2go").addEventListener("click",()=>{if(goWait)return;if(G3.warm||!G3.prewarm){go();return;}
     goWait=true;const b=$("v2go");b.setAttribute("aria-busy","true");b.querySelector("small").textContent="Getting the mill ready…";
     G3.prewarm().then(()=>{goWait=false;b.removeAttribute("aria-busy");go();});});
-  $("v2season").addEventListener("click",()=>{startSeason();play();if(TUT.want())setTimeout(()=>TUT.open(),60);});
+  $("v2season").addEventListener("click",()=>goSeason(true));
   // v4.3 survival: the same start as a season. v4.4: the leader is picked first (after the site, before the run starts);
   // the picker opens at once, and its Start button waits for the start-up precompile if that is still running
   const goSurv=()=>leadPickOpen(id=>{if(G3.save&&G3.save.drop)G3.save.drop();startSurvival(id);play();if(TUT.want())setTimeout(()=>TUT.open(),60);},()=>(G3.warm||!G3.prewarm)?null:G3.prewarm());
@@ -8747,7 +9211,7 @@ setView();
   const nameCount=()=>{const i=$("v2name"),c=$("v2nameCount");if(!i||!c)return;const n=i.value.length;c.textContent=n+"/32";c.classList.toggle("full",n>=32);};   // v5.0.6
   $("v2name").addEventListener("input",nameCount);
   $("v2rename").addEventListener("click",()=>{$("v2nameRow").hidden=false;const i=$("v2name");i.value=MILL.name;nameCount();i.focus();i.select();});
-  const saveName=()=>{const i=$("v2name");if(renameMill(i.value)===false){i.value="";i.placeholder="That name is not allowed";i.focus();return;}i.placeholder="";$("v2nameRow").hidden=true;sync();};
+  const saveName=()=>{const i=$("v2name");{const r=renameMill(i.value);if(r===false||r==="chars"){i.value="";i.placeholder=r==="chars"?"Letters, numbers, spaces and . _ ' - & only":"That name is not allowed";i.focus();return;}}i.placeholder="";$("v2nameRow").hidden=true;sync();};
   $("v2nameOk").addEventListener("click",saveName);$("v2name").addEventListener("keydown",e=>{if(e.key==="Enter")saveName();if(e.key==="Escape")$("v2nameRow").hidden=true;});
   {let arm=0;$("v2reset").addEventListener("click",()=>{const b=$("v2reset");if(Date.now()-arm<3000){newGame();arm=0;b.firstChild.textContent="Reset mill";play();return;}arm=Date.now();b.firstChild.textContent="Tap again to reset";setTimeout(()=>{b.firstChild.textContent="Reset mill";},3000);});}
   const fsEl=document.documentElement;
@@ -8826,6 +9290,8 @@ setView();
       try{syncControls();}catch(e){}try{updateShop();}catch(e){}try{if(G3.rebrand)G3.rebrand();}catch(e){}
       try{UI_TICKS.forEach(f=>f(0));}catch(e){}   // v5.0.6: the top bar (speed, wave, cash) is right from the first frame, not one UI tick later
       if(op&&op.cid){const c=CARDS.find(x=>x.id===op.cid);if(c)setTimeout(()=>openCard(c),400);}
+      if(S.civ&&S.civ.cur)setTimeout(()=>{if(typeof civOpen==="function")civOpen();},450);   // v5.1 civics: an open choice comes back
+      if(S.civ&&S.civ.pending){S.civ.q.unshift(S.civ.pending.d);S.civ.pending=null;}
       diag(`save: ${survRun()?"survival run":"season"} restored, day ${d.day}, ${money(d.cash)}`);}
     G3.save={save,read,clear,restore};
     // ---- when to save ----
@@ -8853,11 +9319,12 @@ setView();
         if(G3.warm||!G3.prewarm)run();else{b.setAttribute("aria-busy","true");b.querySelector("small").textContent="Getting the mill ready…";G3.prewarm().then(run);}});
       if(Q.get("resume")==="1"){try{Q.delete("resume");history.replaceState(null,"",location.pathname+(Q.toString()?"?"+Q:"")+location.hash);}catch(e){}setTimeout(()=>b.click(),300);}}
     // a new season or a reset starts over: the old save goes
-    ["v2season","v2reset"].forEach(id=>{const el=$(id);if(el)el.addEventListener("click",clear,true);});
+    // v5.1: a new season goes through the leader picker, so its old save goes when it really starts (G3.save.drop), not on the click
+    ["v2reset"].forEach(id=>{const el=$(id);if(el)el.addEventListener("click",clear,true);});
     // v4.4: a survival run starts from the leader picker, so the old save (and its Continue button) goes when the run
     // really starts, not when the picker opens
     G3.save.drop=()=>{clear();const c=$("v2cont");if(c){c.remove();if(go)go.classList.add("primary");}};
-    if(go)go.addEventListener("click",()=>{if($("v2cont")&&!(S.season&&S.season.on))clear();},true);}
+    }   // (v5.1: Play no longer clears the save on the click; the picker's Start does, through G3.save.drop)
   /* ---- v4.2.4 Mill report (the Report tab, the grade badge in the top bar, cost and uptime in the dropdown) ----
      One grade system: the report card's four grades (profit, cost per ton, downtime, reliability) and their overall,
      shown live for the current 10-day period, with the finished periods' cards one tap away and a day-by-day history

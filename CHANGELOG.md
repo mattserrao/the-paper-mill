@@ -1,5 +1,17 @@
 # Changelog
 
+## v5.1.0 (test build, 2026-10-15): civics, leaders in seasons, two QA rounds
+Test branch only, not released. Four civics meters (Economy, Labor, Machinery, Community, 0–100) run in seasons and survival; mill leaders now run seasons too.
+
+- **Civics:** upsets offer 2–3 choices with a cost, odds and meter effects; new customer, crew, community and supply upsets; warnings under 40, crises under 20, rewards over 80. Players see bands; effects scale underneath. Standing orders answer an area's upsets for you, with a toast and a Change button.
+- **Leaders in seasons:** the leader picker opens before a season; one change of leader per season at an outage.
+- **QA round 1 (100 runs + review):** free play drops an open card; the standing-order toast commits on sim time; Change queues behind open dialogs; outage levers default to None; meter chips show points; walkout raise and rush order are real; the phone bar is one row; Tab stays in the card.
+- **QA round 2 (100 runs + four agent players):**
+  - Bugs: the bird cut-scene stays paused if a card or dialog opened; phone meter chips show a ▲/▼ trend; Invest/Hold/Decline labels match the option names; renting forklifts is $10k; the survival picker words Chip's lock for waves; Chip's season fiber lock never costs more than the market and re-prices when it ends; version v5.1.0; phone cash and profit fit beside the grade badge.
+  - Balance: price premium Economy −15, discount +9; warning fixes cost $35k; Chip's pay settlements +10% per deal; community choices give +6; an answered upset can't return for 2 days; a cheap fix always costs one tier less than the proper fix.
+  - Screens: event cards and the outage plan draw under the pause menu, and its keys work over a card; the report card waits for a pending toast; a tutorial card for the leader and the meters; 44 px tap targets; the leader card and outage dialog list only the current or incoming leader's running cost; a Civics row and meter summary on report cards and the end screen; perks on the Change-leader panel; dock upgrade text once the bottleneck is fixed; mill names use letters, numbers, spaces and . _ ' - &.
+  - Wording: fiber lock line, price setting band, plant-manager note, season chip label, plain short labels on the chip, no line break after a minus sign, plain words for "Scabs", "30m" and "33HT" on cards (the grade picker shows both).
+
 ## v5.0.6 (release, 2026-10-14): fixes and polish from the 100-run survival QA
 From the v5.0.5 QA report (100 bot runs and four agent players). Online, run `supabase/name-filter-v2.sql` once so the boards fold look-alike names too.
 
