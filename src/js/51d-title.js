@@ -73,9 +73,12 @@ function camPullOn(){try{return localStorage.getItem("paper-mill-campull")!=="of
     if(!G3.first){const se=S.season&&S.season.on;b.hidden=false;b.querySelector("b").textContent="Continue";
       s.textContent=se?(S.season.surv?`Survival · wave ${survWave()} · day ${Math.floor(S.t/1440)+1}`:`Season · day ${Math.min(30,Math.floor(S.t/1440)+1)} of 30`):S.free?"Free play":"Back to the mill";return;}
     b.hidden=true;}
-  // (v5.2 QA: taps in the 250 ms after a step change are ignored, so a double tap can't act on the next step)
-  let stepAt=0;el.addEventListener("click",e=>{if(performance.now()-stepAt<250&&e.target.closest("button")){e.stopPropagation();e.preventDefault();}},true);
-  function step(k,nofocus){stepAt=performance.now();main.hidden=k!=="main";mapP.hidden=k!=="map";setP.hidden=k!=="set";el.dataset.step=k;
+  // (v5.2 QA: the second tap of a double tap, landing on the same spot within 300 ms of a step change, is ignored, so it
+  // can't act on the button that has just appeared under the finger. Other taps go through.)
+  let stepAt=0,lastXY=null,stepXY=null;
+  el.addEventListener("click",e=>{const xy=e.detail?[e.clientX,e.clientY]:null;
+    if(xy&&stepXY&&performance.now()-stepAt<300&&Math.hypot(xy[0]-stepXY[0],xy[1]-stepXY[1])<24){e.stopPropagation();e.preventDefault();return;}lastXY=xy;},true);
+  function step(k,nofocus){stepAt=performance.now();stepXY=lastXY;lastXY=null;main.hidden=k!=="main";mapP.hidden=k!=="map";setP.hidden=k!=="set";el.dataset.step=k;
     const f=k==="map"?$t("tEnvs").querySelector('[aria-checked="true"]'):k==="set"?$t("tSetDone"):el.querySelector(".tmodes button:not([hidden])");if(f&&!nofocus)setTimeout(()=>f.focus({preventScroll:true}),30);}
   let hideT=0;
   function show(){clearTimeout(hideT);el.classList.remove("out");running=false;welcome();contState();titleSoundPaint();el.hidden=false;document.body.classList.add("titleon");

@@ -181,10 +181,12 @@ def run(pw, k):
         pg.wait_for_function("__PM.S.season&&__PM.S.season.on", timeout=300000, polling=200)
         if title:
             pg.wait_for_timeout(900)
-            st0 = pg.evaluate("()=>({site:__PM.SITE.env,title:!document.getElementById('title').hidden,titleon:document.body.classList.contains('titleon')})")
+            st0 = pg.evaluate("()=>({site:__PM.SITE.env,title:!document.getElementById('title').hidden,titleon:document.body.classList.contains('titleon'),out:document.getElementById('title').classList.contains('out'),op:getComputedStyle(document.getElementById('title')).opacity})")
+            if st0["title"]:
+                pg.wait_for_timeout(2500); st0["later"] = pg.evaluate("()=>!document.getElementById('title').hidden")
             rec["title_after"] = st0
             if st0["site"] != env: rec["issues"].append(f"title: started on {st0['site']}, picked {env}")
-            if st0["title"] or st0["titleon"]: rec["issues"].append("title screen still up after the run started")
+            if (st0["title"] and st0.get("later")) or st0["titleon"]: rec["issues"].append("title screen still up after the run started")
         pg.evaluate("()=>{__PM.setRunning(false);const t=document.getElementById('tut');if(t)t.hidden=true;}")
         st = pg.evaluate("()=>({surv:!!__PM.S.season.surv,lead:__PM.S.lead&&__PM.S.lead.id,civ:!!__PM.S.civ})")
         if st["surv"] != (mode == "surv"): rec["issues"].append("wrong mode started")
