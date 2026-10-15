@@ -200,7 +200,7 @@
       else{const k=Math.min(1,rdt*(Z.who?0.6:0.1));goal=null;target.lerp(Z.tg,k);cam.r+=(Z.r-cam.r)*k*0.5;cam.th=lerpAng(cam.th,Z.th+Math.sin(now/26000)*0.3,k*0.5)+rdt*0.015;cam.ph+=(0.8+0.08*Math.sin(now/31000)-cam.ph)*k;}}
     pm("zen / camera shots");
     if(!G3.zenNextMap)G3.zenNextMap=()=>{const order=["rural","urban","desert","swamp"],nx=order[(order.indexOf(SITE.env)+1)%order.length],q=new URLSearchParams(location.search);
-      q.set("env",nx);q.delete("mill");q.set("zen","1");diag("zen: on to "+nx);document.body.classList.add("zen-out");setTimeout(()=>{location.href=location.pathname+"?"+q.toString()+location.hash;},900);};G3.padTick(rdt);if(G3.tutTick)G3.tutTick(now);G3.labelIdle(now);upUpdate(now);pm("upgrade visuals");fxUpdate(rdt,now);pm("upset effects + particles");
+      q.set("env",nx);q.delete("mill");q.set("zen","1");diag("zen: on to "+nx);document.body.classList.add("zen-out");setTimeout(()=>{location.href=location.pathname+"?"+q.toString()+location.hash;},900);};G3.padTick(rdt);if(G3.tutTick)G3.tutTick(now);G3.labelIdle(now);upUpdate(now);pm("upgrade visuals");fxUpdate(rdt,now);if(G3.civTick)G3.civTick(rdt,now);pm("upset effects + particles");
     // area ambience: how close the camera is, and which part of the mill it's looking at
     G3.ambT=(G3.ambT||0)+rdt;if(G3.ambT>0.25){G3.ambT=0;const zk=clamp((150-cam.r)/90,0,1),x=target.x,z=target.z,near=(cx,cz,r)=>zk*clamp(1.3-Math.hypot(x-cx,z-cz)/r,0,1);
       const run=S.pm==="run"?1:0.3,L={dryer:near(12,9,20)*run,wet:near(46,9,16)*run,winder:near(-17,8,13)*(S.wd==="run"?1:0.3),stock:near(24,-15,20)*(S.M.pulperDown?0.3:1),fork:0,out:0};

@@ -1,6 +1,6 @@
 /* ---- generative music and sound effects (Web Audio, no files) ---- */
 const AUDIO=(()=>{
-  const AMOB=matchMedia("(pointer: coarse)").matches,LOOK=AMOB?0.5:0.3;let AUDIO_VIS=0,ctx=null,master,comp,musicBus,sfxBus,chillG,intG,crackleG,mcG,verb,noiseBuf,timer=null,on=false,vol=0.7,target="chill",calmSince=0,switchedAt=0,warm,envG,echoIn,echoInt;
+  const AMOB=matchMedia("(pointer: coarse)").matches,LOOK=AMOB?0.5:0.3;let AUDIO_VIS=0,ctx=null,master,comp,musicBus,sfxBus,chillG,intG,crackleG,mcG,verb,noiseBuf,timer=null,on=false,vol=0.7,target="chill",calmSince=0,switchedAt=0,warm,envG,echoIn,echoInt,titleG,titleIn,titleWant=false;
   const mtof=m=>440*Math.pow(2,(m-69)/12),last={};
   function nz(t,dur,bus,v,type,f,q=0.8,attack=0.002){const s=ctx.createBufferSource();s.buffer=noiseBuf;s.loop=true;const fl=ctx.createBiquadFilter();fl.type=type;fl.frequency.setValueAtTime(f,t);fl.Q.value=q;
     const g=ctx.createGain();g.gain.setValueAtTime(0.0001,t);g.gain.exponentialRampToValueAtTime(v,t+attack);g.gain.exponentialRampToValueAtTime(0.0001,t+dur);s.connect(fl);fl.connect(g);g.connect(bus);s.start(t,Math.random()*1.5);s.stop(t+dur+0.05);return {s,fl,g};}
@@ -238,7 +238,49 @@ const AUDIO=(()=>{
   function pickIntense(){const key=UPQ&&INTENSE[UPQ]?UPQ:R1()<0.72?(ENVINT[envKey()]||"drive"):"drive",v=INTENSE[key],pi=Math.floor(R1()*v.P.length);
     return {name:key,bpm:v.bpm,play:v.play,P:v.P[pi],B:v.B?v.B[pi]:null,fill:R1()<0.5,roll:ch1(ROLLS)};}
   function playIntense(step,t,s){if(!s.cur)s.cur=pickIntense();s.cur.play(s.cur,step,t,s);}
-  const seqs={chill:{bpm:76,next:0,step:0,play:playRot},intense:{bpm:138,next:0,step:0,play:playIntense}};
+  /* ---- v5.2 title theme, "Morning at the Mill": an original piece in D major for the title screen. Warm piano with
+     broken chords, a bowed string section that swells in on the second pass and carries the tune on the third, a celesta
+     glinting on top and the odd far-off bird. Two bars of intro, then A B A' B' (8 bars each) and a two-bar breath before
+     it loops (the intro only plays once). About two minutes a lap at 66 bpm. ---- */
+  const TITLE_BPM=66;
+  const TCH={D:{b:38,c:[62,66,69,74]},Ac:{b:37,c:[61,64,69,73]},Bm:{b:35,c:[59,62,66,71]},G:{b:43,c:[59,62,67,71]},Df:{b:42,c:[62,66,69,74]},
+    Em:{b:40,c:[62,67,71,74]},A:{b:45,c:[61,64,69,73]},Asus:{b:45,c:[62,64,69,74]},Fm:{b:42,c:[61,66,69,73]},Dmaj:{b:38,c:[61,66,69,76]}};
+  const TPROG={A:["D","Ac","Bm","G","Df","G","Em","Asus"],B:["G","A","Fm","Bm","G","A","D","Dmaj"]};
+  const TMEL={A:[[[0,74,4],[4,76,4],[8,78,8]],[[0,76,6],[6,74,2],[8,73,8]],[[0,74,4],[4,78,4],[8,81,8]],[[0,79,12],[12,78,4]],
+                [[0,78,4],[4,79,4],[8,81,8]],[[0,83,6],[6,81,2],[8,79,8]],[[0,79,4],[4,78,4],[8,76,4],[12,74,4]],[[0,76,16]]],
+              B:[[[0,83,8],[8,81,8]],[[0,81,6],[6,79,2],[8,78,8]],[[0,78,4],[4,81,4],[8,85,8]],[[0,86,12],[12,85,4]],
+                [[0,83,8],[8,79,8]],[[0,81,4],[4,79,4],[8,76,8]],[[0,78,16]],[[0,74,12]]]};
+  const TARP=[[0,0],[3,1],[6,2],[8,3],[11,2],[14,1]];
+  // strings: three detuned saws per note through a soft low-pass, slow bow, vibrato that blooms after the attack
+  function tStrings(t,notes,len,v,cut=1500){const lp=ctx.createBiquadFilter();lp.type="lowpass";lp.frequency.setValueAtTime(cut*0.6,t);lp.frequency.linearRampToValueAtTime(cut,t+len*0.5);lp.Q.value=0.6;lp.connect(titleIn);
+    const lfo=ctx.createOscillator(),lg=ctx.createGain();lfo.frequency.value=5.3;lg.gain.setValueAtTime(0,t);lg.gain.linearRampToValueAtTime(6,t+1.2);lfo.connect(lg);lfo.start(t);lfo.stop(t+len+1.6);
+    notes.forEach(m=>[-7,0,7].forEach(c=>{const o=ctx.createOscillator(),g=ctx.createGain();o.type="sawtooth";o.frequency.value=mtof(m);o.detune.value=c;lg.connect(o.detune);
+      g.gain.setValueAtTime(0.0001,t);g.gain.exponentialRampToValueAtTime(v,t+Math.min(1.4,len*0.4));g.gain.setValueAtTime(v,t+len*0.85);g.gain.exponentialRampToValueAtTime(0.0001,t+len+1.4);o.connect(g);g.connect(lp);o.start(t);o.stop(t+len+1.5);}));}
+  function tChirp(t){const v=0.012+R1()*0.01;for(let k=0;k<2+Math.floor(R1()*3);k++){const a=t+k*(0.11+R1()*0.05),f=2900+R1()*700,o=ctx.createOscillator(),g=ctx.createGain();o.type="sine";
+    o.frequency.setValueAtTime(f,a);o.frequency.exponentialRampToValueAtTime(f*1.35,a+0.04);o.frequency.exponentialRampToValueAtTime(f*1.1,a+0.08);g.gain.setValueAtTime(0.0001,a);g.gain.exponentialRampToValueAtTime(v,a+0.01);g.gain.exponentialRampToValueAtTime(0.0001,a+0.09);o.connect(g);g.connect(titleIn);o.start(a);o.stop(a+0.1);}}
+  // the form, bar by bar: [section, bar in section, pass] (pass 0 = A/B, pass 1 = A'/B'); "in" = intro, "out" = the breath
+  const TFORM=[["in",0],["in",1],...[0,1].flatMap(p=>["A","B"].flatMap(sec=>Array.from({length:8},(_,i)=>[sec,i,p]))),["out",0],["out",1]];
+  function playTitle(step,t,s){const beat=60/TITLE_BPM/4,st=step%16;let bar=Math.floor(step/16);
+    const loopLen=TFORM.length-2;if(bar>=TFORM.length)bar=2+((bar-2)%loopLen);   // after the first lap, skip the intro
+    const f=TFORM[bar],hum=()=>R1()*0.01,P=(tt,m,len,v,br)=>piano(tt+hum(),m,len,v,br,titleIn);
+    if(f[0]==="in"||f[0]==="out"){const ch=TCH[f[0]==="in"?"Dmaj":"D"];
+      if(st===0)P(t,ch.b+12,beat*16,0.07,0.25);
+      for(const [s0,i] of TARP)if(s0===st)P(t,ch.c[i]+(f[1]&&f[0]==="in"&&s0>=8?12:0),beat*8,0.034,0.4);
+      if(f[0]==="in"&&f[1]===1&&st===12)celesta(t,86,0.05,titleIn);
+      if(st===4&&R1()<0.6)tChirp(t+R1()*0.5);return;}
+    const [sec,i,pass]=f,ch=TCH[TPROG[sec][i]],second=sec==="B";
+    // bass and broken chords on the piano throughout
+    if(st===0){P(t,ch.b+12,beat*16,0.08,0.25);if(pass||second)P(t,ch.b,beat*16,0.045,0.15);}
+    for(const [s0,ci] of TARP)if(s0===st)P(t,ch.c[ci],beat*7,0.026+R1()*0.01,0.42);
+    // strings: in from the B section, warmer on the second lap
+    if(st===0&&(second||pass))tStrings(t,ch.c.slice(0,3).map(m=>m-12),beat*15.5,pass?0.0085:0.0062,pass?1700:1300);
+    // the tune: piano first, strings an octave down on A' (with the piano answering on top), piano an octave up on B'
+    for(const [s0,m,l] of TMEL[sec][i])if(s0===st){
+      if(pass&&sec==="A"){tStrings(t,[m-12],beat*l*0.98,0.016,2000);if(l>=8)celesta(t+beat*2,m+12,0.035,titleIn);}
+      else P(t,m+(pass&&second?12:0),beat*l,0.072+R1()*0.012,0.75);}
+    if(pass&&second&&st===8&&i%2===1)celesta(t,ch.c[3]+12,0.04,titleIn);
+    if(st===10&&R1()<0.12)tChirp(t);}
+  const seqs={chill:{bpm:76,next:0,step:0,play:playRot},intense:{bpm:138,next:0,step:0,play:playIntense},title:{bpm:TITLE_BPM,next:0,step:0,play:playTitle}};
   function tick(){const now=ctx.currentTime,ahead=now+LOOK;
     if(!paNext)paNext=now+35+Math.random()*40;else if(now>paNext){if(zoomK>0.5){paNext=now+100+Math.random()*120;paAnnounce(now+0.05);}else paNext=now+8;}
     ambTick(now);
@@ -264,9 +306,14 @@ const AUDIO=(()=>{
     else{verb=ctx.createConvolver();const len=Math.floor(ctx.sampleRate*1.5),b=ctx.createBuffer(2,len,ctx.sampleRate);for(let c=0;c<2;c++){const d=b.getChannelData(c);for(let i=0;i<len;i++)d[i]=(Math.random()*2-1)*Math.pow(1-i/len,2.8);}
      verb.buffer=b;const vg=ctx.createGain();vg.gain.value=0.5;verb.connect(vg);vg.connect(warm);}
     intG=ctx.createGain();intG.gain.value=0;intG.connect(musicBus);
+    // v5.2 title theme: its own bus and hall (the calm hall returns through chillG, which is faded out under the title)
+    titleG=ctx.createGain();titleG.gain.value=0;titleG.connect(musicBus);titleIn=ctx.createGain();titleIn.connect(titleG);
+    if(!AMOB&&verb.buffer){const tv=ctx.createConvolver();tv.buffer=verb.buffer;const ts=ctx.createGain(),tg=ctx.createGain();ts.gain.value=0.55;tg.gain.value=0.6;titleIn.connect(ts);ts.connect(tv);tv.connect(tg);tg.connect(titleG);}
+    else{const d=ctx.createDelay(1),fb=ctx.createGain(),lp=ctx.createBiquadFilter(),wet=ctx.createGain();d.delayTime.value=0.33;fb.gain.value=0.3;lp.type="lowpass";lp.frequency.value=1800;wet.gain.value=0.35;titleIn.connect(d);d.connect(lp);lp.connect(fb);fb.connect(d);lp.connect(wet);wet.connect(titleG);}
     echoIn=mkEcho(envG,0.36,0.38,2200);echoInt=mkEcho(intG,0.28,0.3,2600);
     noiseBuf=ctx.createBuffer(1,ctx.sampleRate*2,ctx.sampleRate);const d=noiseBuf.getChannelData(0);for(let i=0;i<d.length;i++)d[i]=Math.random()*2-1;
-    if(!AMOB){startCrackle();ambInit();}for(const k in seqs)seqs[k].next=ctx.currentTime+0.1;paNext=0;return true;}
+    if(!AMOB){startCrackle();ambInit();}for(const k in seqs)seqs[k].next=ctx.currentTime+0.1;paNext=0;
+    if(titleWant){target="title";switchedAt=-5;AUDIO_NOW="Morning at the Mill";seqs.title.step=0;chillG.gain.value=0.0001;titleG.gain.value=1;}else target=target==="title"?"chill":target;return true;}
   // ---- area ambience when zoomed in: dryer rumble and steam hiss, wet-end and stock-prep water, winder whir, forklifts, birds outside ----
   let zoomK=0,ambG=null;const AMB={};const lv={dryer:0,wet:0,stock:0,winder:0,fork:0,out:0};let birdAt=0;
   function loopNoise(type,f,q,g0){const s=ctx.createBufferSource();s.buffer=noiseBuf;s.loop=true;const fl=ctx.createBiquadFilter();fl.type=type;fl.frequency.value=f;fl.Q.value=q;const g=ctx.createGain();g.gain.value=g0;s.connect(fl);fl.connect(g);s.start(0,Math.random()*1.5);return {g,fl};}
@@ -329,9 +376,11 @@ const AUDIO=(()=>{
   function fadeTo(k){target=k;switchedAt=ctx.currentTime;const t=ctx.currentTime;
     if(k==="intense"){const v=pickIntense();seqs.intense.cur=v;seqs.intense.bpm=v.bpm;seqs.intense.step=0;seqs.intense.next=t+0.05;const b=document.getElementById("v2sound");if(b)b.title="Now playing: upset ("+v.name+")";}
     else{seqs.chill.step=Math.ceil(seqs.chill.step/64)*64;const b=document.getElementById("v2sound");if(b&&AUDIO_NOW)b.title="Now playing: "+AUDIO_NOW;}
-    chillG.gain.setTargetAtTime(k==="chill"?1:0.0001,t,k==="chill"?1.2:0.35);intG.gain.setTargetAtTime(k==="intense"?1:0.0001,t,k==="intense"?0.3:1.2);}
+    if(k==="title"){seqs.title.step=0;seqs.title.next=t+0.3;AUDIO_NOW="Morning at the Mill";const b=document.getElementById("v2sound");if(b)b.title="Now playing: "+AUDIO_NOW;}
+    chillG.gain.setTargetAtTime(k==="chill"?1:0.0001,t,k==="chill"?1.2:0.35);intG.gain.setTargetAtTime(k==="intense"?1:0.0001,t,k==="intense"?0.3:1.2);
+    titleG.gain.setTargetAtTime(k==="title"?1:0.0001,t,k==="title"?0.6:1.0);}
   // switch to intense as soon as something goes wrong; ease back to chill after a few calm seconds
-  function update(intense){if(!ctx||!on)return;watchdog();const now=performance.now();
+  function update(intense){if(!ctx||!on)return;watchdog();if(target==="title")return;const now=performance.now();
     if(intense){calmSince=0;if(target!=="intense")fadeTo("intense");}
     else if(target==="intense"){if(!calmSince)calmSince=now;if(now-calmSince>4000)fadeTo("chill");}}
   // sound effects
@@ -383,6 +432,7 @@ const AUDIO=(()=>{
     for(const env in ENVROT)for(const so of ENVROT[env]){const s={bpm:so.bpm,local:0};const beat=60/so.bpm/4;try{songStarted(so);for(let st=0;st<so.bars*16;st++)so.play(st,t0+st*beat*0.02,s);out.push(env+": "+so.name+" ok");}catch(e){out.push(env+": "+so.name+" ERROR "+e.message);}}
     for(const key in INTENSE){const v=INTENSE[key];for(let pi=0;pi<v.P.length;pi++){const cur={name:key,bpm:v.bpm,play:v.play,P:v.P[pi],B:v.B?v.B[pi]:null,fill:pi%2===0,roll:ROLLS[pi%ROLLS.length]},s={bpm:v.bpm},beat=60/v.bpm/4;
       try{for(let st=0;st<64;st++)cur.play(cur,st,t0+st*beat*0.02,s);out.push("upset "+key+"/"+pi+" ok");}catch(e){out.push("upset "+key+"/"+pi+" ERROR "+e.message);}}}
+    try{for(let st=0;st<(TFORM.length+4)*16;st++)playTitle(st,t0+st*0.002,{});out.push("title: Morning at the Mill ok");}catch(e){out.push("title ERROR "+e.message);}
     return out;}
   // v4.2.4: the bird-on-the-power-lines sequence. An operatic choir (original: D minor, i-VI-iv-V, sung "ah" through two
   // formant filters with vibrato) over a timpani roll, swelling hard into the last second before impact; pigeon chirps;
@@ -421,7 +471,9 @@ const AUDIO=(()=>{
     end(){if(!ctx)return;const t=ctx.currentTime;if(cineAll){cineAll.forEach(o=>{try{o.stop(t+0.05);}catch(e){}});cineAll=null;}musicBus.gain.cancelScheduledValues(t);musicBus.gain.setValueAtTime(musicBus.gain.value,t);musicBus.gain.linearRampToValueAtTime(0.6,t+2);},
     render(impact){const sr=44100,oc=new OfflineAudioContext(1,Math.ceil(sr*(impact+2.5)),sr),cmp=oc.createDynamicsCompressor();cmp.connect(oc.destination);const nb=oc.createBuffer(1,sr*2,sr),d=nb.getChannelData(0);for(let i=0;i<d.length;i++)d[i]=Math.random()*2-1;
       cineScore(oc,0.05,cmp,impact,nb);[0.8,2.6,4.2].forEach(x=>cineChirp(oc,x,cmp));cineStrike(oc,impact+0.05,cmp,nb);return oc.startRendering().then(b=>Array.from(b.getChannelData(0)));}};
-  return {setOn,setVol,update,sfx,ambient,cine,event:id=>sfx(EVSFX[id]||"alarm"),selfTest,level,get ctx(){return ctx;},get master(){return master;},get on(){return on;},get now(){return target==="intense"?"upset: "+(seqs.intense.cur?seqs.intense.cur.name:"")+" / "+AUDIO_NOW:AUDIO_NOW;},get info(){return ctx?ctx.state+" t="+ctx.currentTime.toFixed(1)+(stuckSince?" (clock stuck)":"")+(hurt?" (needs a tap)":"")+(unlocked?" unlocked "+((performance.now()-unlocked)/1000).toFixed(0)+"s ago":" never unlocked"):"none";}};
+  // v5.2: the title screen asks for its theme; leaving it hands back to the site's calm rotation
+  function title(v){titleWant=!!v;if(!ctx||!on)return;if(v&&target!=="title")fadeTo("title");else if(!v&&target==="title")fadeTo("chill");}
+  return {setOn,setVol,update,sfx,ambient,cine,title,event:id=>sfx(EVSFX[id]||"alarm"),selfTest,level,get ctx(){return ctx;},get master(){return master;},get on(){return on;},get now(){return target==="title"?"Morning at the Mill":target==="intense"?"upset: "+(seqs.intense.cur?seqs.intense.cur.name:"")+" / "+AUDIO_NOW:AUDIO_NOW;},get info(){return ctx?ctx.state+" t="+ctx.currentTime.toFixed(1)+(stuckSince?" (clock stuck)":"")+(hurt?" (needs a tap)":"")+(unlocked?" unlocked "+((performance.now()-unlocked)/1000).toFixed(0)+"s ago":" never unlocked"):"none";}};
 })();
 
 const GRADES={ "23m":{sp:2736,bw:24.55}, "26m":{sp:2433,bw:26.06}, "30m":{sp:2222,bw:30.05}, "33HT":{sp:2084,bw:33.08} };

@@ -41,6 +41,7 @@ def route_for(html):
 INIT = r"""
 (()=>{let s=123456789;Math.random=function(){s|=0;s=s+0x6D2B79F5|0;let t=Math.imul(s^s>>>15,1|s);t=t+Math.imul(t^t>>>7,61|t)^t;return((t^t>>>14)>>>0)/4294967296;};
 try{localStorage.setItem("paper-mill-tutorial","off");localStorage.setItem("paper-mill-sound","off");}catch(e){}
+window.__PM_NOTITLE=true;   // v5.2: the tools start from the old menu, not the title screen
 const B=window.__B={rec:false,frames:[],render:[],gaps:[],cur:0,first:null,last:0,errors:0};
 // count real WebGL draw calls (every pass, any three.js version)
 B.gl=0;B.glFrames=[];for(const C of [window.WebGL2RenderingContext,window.WebGLRenderingContext])if(C)["drawElements","drawArrays","drawElementsInstanced","drawArraysInstanced"].forEach(k=>{const o=C.prototype[k];if(o)C.prototype[k]=function(...a){B.gl++;return o.apply(this,a);};});

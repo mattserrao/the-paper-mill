@@ -151,7 +151,7 @@
   const CARQ={inQ:[],outQ:[],t:0,init:false};
   function carPath(c,arrive){const G=[[100,32.5],[89.5,32.5],[89.5,c.aisle],[c.sx,c.aisle]],P=arrive?[...G,[c.sx,c.sz]]:[[c.sx,c.sz],...G.slice().reverse()];
     let L=0;const cum=[0];for(let i=1;i<P.length;i++){L+=Math.hypot(P[i][0]-P[i-1][0],P[i][1]-P[i-1][1]);cum.push(L);}return {P,cum,L,d:0,revUntil:arrive?0:cum[1]};}
-  function carsUpdate(rdt,hr){if(!ENV.cars)return;const f=clamp(simRate()/20,1,4),want=c=>!c.day||(hr>=c.arr&&hr<c.dep);
+  function carsUpdate(rdt,hr){if(!ENV.cars)return;const f=clamp(simRate()/20,1,4),want=c=>(!c.day||(hr>=c.arr&&hr<c.dep))&&c.ord<(G3.civLotK??1)+0.001;   // v5.2: a strained crew leaves gaps in the lot (31b)
     if(!CARQ.init){CARQ.init=true;ENV.cars.forEach(c=>{c.st=want(c)?"parked":"gone";c.g.visible=c.st==="parked";c.g.position.set(c.sx,0,c.sz);c.g.rotation.y=Math.PI/2;});}
     ENV.cars.forEach(c=>{if(c.st==="gone"&&want(c)&&!CARQ.inQ.includes(c)){CARQ.inQ.push(c);c.st="queued";}
       else if(c.st==="parked"&&!want(c)&&!CARQ.outQ.includes(c)){CARQ.outQ.push(c);c.st="waiting";}});

@@ -90,8 +90,8 @@
     $("v2sub").hidden=first;$("v2surv").hidden=!first;$("v2nameRow").hidden=true;   // (Survival sits under Season on the first menu; once a run is on, "New survival" is with "New season")
     $("v2state").textContent=first?"":"Paused";
     $("v2free").querySelector("b").textContent=S.free?"Free play: on":"Free play";$("v2free").setAttribute("aria-pressed",String(!!S.free));$("v2ver").textContent=APP_VER;menu.hidden=false;}
-  function play(){menu.hidden=true;first=false;const lc=document.getElementById("leadCard");running=!((S.cards&&S.cards.open)||(lc&&!lc.hidden)||(G3.tut&&G3.tut.on));}   // v5.0.3: an open card, outage plan or report card keeps the sim paused until it is answered (v5.0.5: and the leader card and tutorial)   // v5.0.3: an open card, outage plan or report card keeps the sim paused until it is answered
-  G3.showMenu=showMenu;G3.play=play;   // play: used by the autotest (52b) to start without the tutorial
+  function play(){menu.hidden=true;first=false;if(G3.titleHide)G3.titleHide();const lc=document.getElementById("leadCard");running=!((S.cards&&S.cards.open)||(lc&&!lc.hidden)||(G3.tut&&G3.tut.on));}   // v5.0.3: an open card, outage plan or report card keeps the sim paused until it is answered (v5.0.5: and the leader card and tutorial)   // v5.0.3: an open card, outage plan or report card keeps the sim paused until it is answered
+  G3.showMenu=showMenu;G3.play=play;Object.defineProperty(G3,"first",{get:()=>first,configurable:true});   // play: used by the autotest (52b) to start without the tutorial
   // ---- v3.1.0 quick-start tutorial: shown when a season starts (until the player ticks "don't show again") ----
   const TUT=(()=>{
     // v4.4.0-t3: six cards. Two of them fly the camera (fiber in, paper out); the rest are centred. Survival swaps its own goal and outage cards.
@@ -158,13 +158,18 @@
   // the picker opens at once, and its Start button waits for the start-up precompile if that is still running
   const goSurv=()=>leadPickOpen(id=>{if(G3.save&&G3.save.drop)G3.save.drop();startSurvival(id);play();if(TUT.want())setTimeout(()=>TUT.open(),60);},()=>(G3.warm||!G3.prewarm)?null:G3.prewarm());
   $("v2surv").addEventListener("click",goSurv);
+  // v5.2 title screen (51d-title.js) starts the modes through these; the map is picked before them
+  G3.goSeason=()=>{if(goWait)return;goSeason(true);};G3.goSurv=goSurv;
+  G3.goFree=()=>{const run=()=>{if(!S.free)setFree(true);play();if(G3.labelIntro)G3.labelIntro();};if(G3.warm||!G3.prewarm)run();else G3.prewarm().then(run);};
+  G3.goZen=()=>{menu.hidden=true;first=false;if(G3.titleHide)G3.titleHide();setZen(true);};
+  $("v2home").addEventListener("click",()=>{if(G3.titleShow){menu.hidden=true;G3.titleShow();}});
   $("v2survNew").addEventListener("click",goSurv);
   $("v2free").addEventListener("click",()=>{setFree(!S.free);play();});
   $("v2board").addEventListener("click",openBoard);
   // v5.0.4: zen ends a season or survival run, so with one on it asks first (tap again within 3 s), like Reset mill
   {let arm=0;$("v2zen").addEventListener("click",()=>{const b=$("v2zen"),sm=b.querySelector("small"),run=S.season&&S.season.on;
     if(run&&Date.now()-arm>=3000){arm=Date.now();sm.textContent=`ends this ${S.season.surv?"survival run":"season"} · tap again`;b.classList.add("warn");setTimeout(()=>{sm.textContent="sit back";b.classList.remove("warn");},3000);return;}
-    arm=0;sm.textContent="sit back";b.classList.remove("warn");menu.hidden=true;first=false;setZen(true);});}
+    arm=0;sm.textContent="sit back";b.classList.remove("warn");G3.goZen();});}
   // v17: zen's map rotation reloads the page with ?zen=1: go straight back into zen once the scene is ready (and drop the
   // flag from the address, so a later reload opens the menu as usual)
   if(new URLSearchParams(location.search).get("zen")==="1"){const go=()=>{if(G3.ok&&!G3.warm){setTimeout(go,300);return;}

@@ -186,7 +186,7 @@ function setZen(on){if(on===!!ZEN)return;
     if(soundPref==="on"&&!AUDIO.on)setSound(true);running=true;zenPoke();}
   else{const z=ZEN;ZEN=null;S.zen=false;G3.zen=false;document.body.classList.remove("zen");
     CH.on=z.chaos;$("chaosOn").checked=z.chaos;C.hays=z.hays;C.breaks=z.breaks;
-    setFS(false);if(G3.showMenu)G3.showMenu();}}
+    setFS(false);if(G3.titleShow)G3.titleShow();else if(G3.showMenu)G3.showMenu();}}   // v5.2: leaving zen goes back to the title screen
 let zenT=0;function zenPoke(){const b=$("zenExit");b.hidden=false;b.classList.add("show");clearTimeout(zenT);zenT=setTimeout(()=>b.classList.remove("show"),2500);}
 $("zenExit").addEventListener("click",e=>{e.stopPropagation();setZen(false);});
 ["pointermove","pointerdown"].forEach(t=>document.addEventListener(t,()=>{if(ZEN)zenPoke();},{passive:true}));

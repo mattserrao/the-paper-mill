@@ -4,6 +4,7 @@
   // v3.1.0 tutorial: glide the camera to a spot and mark it with a pulsing ring and a light beam
   // on phones the tutorial card covers the lower half: aim past the spot so it sits in the upper half of the screen
   G3.camTo=(x,z,r,th,ph)=>{th=th??DEF.th;const k=host.clientWidth<600?r*0.13:0;goal={t:new THREE.Vector3(x+Math.sin(th)*k,0,z+Math.cos(th)*k),r,th,ph:ph??0.9};};
+  G3.camGlide=c=>{goal={t:new THREE.Vector3(c[0],c[5]||0,c[1]),r:c[2],th:c[3],ph:c[4]};};   // v5.2: glide to an exact view (the camera pull, 31b)
   G3.camHome=()=>{goal={t:DEFT.clone(),r:DEF.r,th:DEF.th,ph:DEF.ph};};
   G3.camSet=c=>{goal=null;target.set(c[0],c[5]||0,c[1]);cam.r=c[2];cam.th=c[3];cam.ph=c[4];};   // tests and screenshots
   G3.camGet=()=>[target.x,target.z,cam.r,cam.th,cam.ph,target.y];   // (v4.2.4: the bird cut-scene puts the camera back)

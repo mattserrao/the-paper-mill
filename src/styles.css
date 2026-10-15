@@ -802,3 +802,103 @@ body.app #civOv{z-index:115}   /* the pause menu (120) draws above a choice card
 body.app #dealOv,body.app #outOv{z-index:115}   /* event cards and the outage plan draw under the pause menu (120), like the civics card */
 @media (pointer:coarse){#ldc-ok,#rc-ok,#out-watch,#seasonOv .btns button,#so-rcbtn{min-height:44px}#so-name{min-height:44px;box-sizing:border-box}}
 @media (max-width:400px){.v2stats .st b{font-size:13px}.v2stats .st{padding-right:4px;margin-right:5px}}   /* v5.1 QA2: cash and profit fit beside the grade badge */
+/* ---------- v5.2 title screen (51d-title.js) ---------- */
+.v2menu .home{width:100%;display:flex;align-items:center;justify-content:center;gap:7px;padding:10px;border-radius:12px;margin-bottom:12px;font:700 14px var(--f-body)}
+.title{position:fixed;inset:0;z-index:130;color:#fff;overflow:hidden;background:#0d1117;font-family:var(--f-body);-webkit-font-smoothing:antialiased;transition:opacity .6s ease}
+.title[hidden]{display:none}
+.title.out{opacity:0;pointer-events:none}
+body.titleon .v2top,body.titleon .v2dock,body.titleon .v2more{visibility:hidden}
+.title .tbg{position:absolute;inset:0;pointer-events:none}
+.title .tdrift{position:absolute;inset:-4%;animation:tdrift 60s ease-in-out infinite alternate;will-change:transform}
+.title .timg{position:absolute;inset:0;background:#1c2330 center/cover no-repeat}
+/* tilt-shift: a blurred copy, masked in at the top and bottom, so the middle of the scene reads like a miniature in focus */
+.title .tblur{filter:blur(9px) saturate(1.08);transform:scale(1.03);-webkit-mask-image:linear-gradient(180deg,#000 0,rgba(0,0,0,.85) 14%,transparent 38%,transparent 60%,rgba(0,0,0,.9) 84%,#000 100%);mask-image:linear-gradient(180deg,#000 0,rgba(0,0,0,.85) 14%,transparent 38%,transparent 60%,rgba(0,0,0,.9) 84%,#000 100%)}
+.title .torbs i{position:absolute;border-radius:50%;mix-blend-mode:screen;animation:torb ease-in-out infinite alternate;transform:translate(-50%,-50%)}
+.title .tvig{position:absolute;inset:0;background:radial-gradient(ellipse 85% 75% at 50% 50%,transparent 45%,rgba(6,8,14,.55) 85%,rgba(6,8,14,.82) 100%)}
+.title[data-step=map] .tshade,.title[data-step=set] .tshade{background:rgba(8,10,16,.55)!important}
+.title .tshade{transition:background .4s;position:absolute;inset:0;background:linear-gradient(90deg,rgba(8,10,16,.72) 0,rgba(8,10,16,.42) 34%,transparent 58%)}
+@keyframes tdrift{from{transform:scale(1.02) translate(0,0)}to{transform:scale(1.09) translate(-1.6%,-1%)}}
+@keyframes torb{from{transform:translate(-50%,-50%) translate(0,0) scale(.9)}to{transform:translate(-50%,-50%) translate(40px,-60px) scale(1.12)}}
+@keyframes tin{from{opacity:0;transform:translateY(14px)}to{opacity:1;transform:none}}
+.title .tmain{position:absolute;left:clamp(24px,6vw,96px);top:50%;transform:translateY(-52%);width:min(410px,calc(100% - 48px));display:flex;flex-direction:column;gap:26px}
+.title .tmain[hidden]{display:none}
+.title .tlogo{animation:tin .9s ease both}
+.title .temb{display:inline-grid;place-items:center;width:58px;height:58px;border-radius:16px;background:color-mix(in srgb,var(--brand) 82%,#000);color:#fff;box-shadow:0 10px 30px rgba(0,0,0,.35);margin-bottom:14px}
+.title h1{margin:0;font:800 clamp(44px,6.2vw,76px)/.95 var(--f-display);letter-spacing:-.025em;text-shadow:0 4px 30px rgba(0,0,0,.45)}
+.title h1 small{display:block;font:700 clamp(13px,1.2vw,15px) var(--f-body);letter-spacing:.32em;text-transform:uppercase;opacity:.82;margin:0 0 8px 2px}
+.title .twel{margin:12px 0 0 2px;font:500 15px/1.4 var(--f-body);color:rgba(255,255,255,.86);text-shadow:0 2px 12px rgba(0,0,0,.5)}
+.title .tmodes{display:flex;flex-direction:column;gap:10px;animation:tin .9s .15s ease both}
+.title .tmodes button{display:flex;align-items:center;gap:14px;width:100%;text-align:left;padding:12px 14px;border-radius:16px;border:1px solid rgba(255,255,255,.14);background:rgba(14,18,27,.66);color:#fff;cursor:pointer;
+  box-shadow:0 8px 26px rgba(0,0,0,.25);transition:transform .18s ease,background .18s ease,border-color .18s ease;font:inherit}
+.title .tmodes button[hidden]{display:none}
+.title .tmodes button:hover,.title .tmodes button:focus-visible{transform:translateX(4px);background:rgba(20,26,40,.86);border-color:color-mix(in srgb,var(--brand) 70%,white)}
+.title .tmodes button:focus-visible{outline:2px solid #fff;outline-offset:2px}
+.title .tmodes button>span:nth-child(2){flex:1;min-width:0}
+.title .tmodes b{display:block;font:800 18px/1.15 var(--f-display);letter-spacing:.005em}
+.title .tmodes small{display:block;font:500 12.5px/1.35 var(--f-body);color:rgba(255,255,255,.72);margin-top:2px}
+.title .tmodes .warn small{color:#ffb4a8}
+.title .tico{flex:none;width:42px;height:42px;border-radius:12px;display:grid;place-items:center;background:rgba(255,255,255,.1);color:#fff}
+.title .tmodes [data-mode="season"] .tico,.title .tcont .tico{background:var(--brand)}
+.title .tchev{flex:none;opacity:.45;font-style:normal;display:grid}
+.title .tcont{background:color-mix(in srgb,var(--brand) 55%,rgba(14,18,27,.8))!important;border-color:color-mix(in srgb,var(--brand) 60%,white)!important}
+.title .tbar{position:absolute;left:0;right:0;bottom:0;display:flex;align-items:center;justify-content:space-between;padding:0 max(18px,env(safe-area-inset-right,0px)) calc(18px + env(safe-area-inset-bottom,0px)) max(18px,env(safe-area-inset-left,0px));pointer-events:none}
+.title .tround{pointer-events:auto;width:50px;height:50px;border-radius:50%;display:grid;place-items:center;border:1px solid rgba(255,255,255,.18);background:rgba(14,18,27,.66);color:#fff;cursor:pointer;transition:background .18s,transform .18s}
+.title .tround:hover{background:rgba(24,30,46,.9);transform:scale(1.05)}
+.title .tround[aria-pressed="false"]{color:rgba(255,255,255,.6)}
+.title:not([data-step=main]) .tver{visibility:hidden}
+.title .tver{font:600 11.5px var(--f-body);color:rgba(255,255,255,.55);letter-spacing:.04em}
+.title .tpanel{position:absolute;inset:0 0 calc(70px + env(safe-area-inset-bottom,0px)) 0;margin:auto;height:fit-content;width:min(760px,calc(100% - 28px));max-height:calc(100dvh - 110px - env(safe-area-inset-bottom,0px));box-sizing:border-box;overflow:auto;padding:22px 22px 18px;border-radius:22px;
+  background:rgba(14,18,27,.9);border:1px solid rgba(255,255,255,.12);box-shadow:0 24px 70px rgba(0,0,0,.5);animation:tin .35s ease both}
+.title .tpanel[hidden]{display:none}
+.title .tpanel h2{margin:0 0 14px;font:800 24px/1.1 var(--f-display)}
+.title .tpk{font:700 11.5px var(--f-body);letter-spacing:.14em;text-transform:uppercase;color:color-mix(in srgb,var(--brand) 45%,white);margin-bottom:4px}
+.title .tenvs{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:10px}
+.title .tenvs button{display:flex;flex-direction:column;align-items:stretch;gap:6px;padding:8px 8px 10px;border-radius:14px;border:2px solid transparent;background:rgba(255,255,255,.06);color:#fff;text-align:left;cursor:pointer;font:inherit;transition:border-color .15s,background .15s}
+.title .tenvs button[aria-checked="true"]{border-color:color-mix(in srgb,var(--brand) 60%,white);background:color-mix(in srgb,var(--brand) 22%,rgba(255,255,255,.04))}
+.title .tenvs .tth{display:block;aspect-ratio:16/10;border-radius:9px;background:#223 center/cover}
+.title .tenvs b{font:800 15px var(--f-display);padding:0 2px}
+.title .tenvs small{font:500 12px/1.45 var(--f-body);color:rgba(255,255,255,.72);padding:0 2px}
+.title .tenvs .pro{font-style:normal;color:#7fe0a3;font-weight:800}.title .tenvs .con{font-style:normal;color:#ff9c8f;font-weight:800}
+.title .tany{margin-top:10px;width:100%;display:flex;align-items:baseline;gap:10px;justify-content:center;padding:10px;border-radius:12px;border:1px dashed rgba(255,255,255,.3);background:transparent;color:#fff;cursor:pointer;font:inherit}
+.title .tany[aria-pressed="true"]{border-style:solid;border-color:color-mix(in srgb,var(--brand) 60%,white);background:color-mix(in srgb,var(--brand) 22%,transparent)}
+.title .tany b{font:700 14px var(--f-body)}.title .tany small{font:500 12px var(--f-body);color:rgba(255,255,255,.65)}
+.title .tdet{margin:12px 2px 0;font:400 13.5px/1.5 var(--f-body);color:rgba(255,255,255,.8);min-height:3em}
+.title .tbtns{display:flex;justify-content:flex-end;gap:10px;margin-top:16px}
+.title .tbtns button,.title .tgrid button{min-height:44px;padding:10px 18px;border-radius:12px;border:1px solid rgba(255,255,255,.2);background:rgba(255,255,255,.08);color:#fff;font:700 14px var(--f-body);cursor:pointer}
+.title .tgo{background:var(--brand)!important;border-color:transparent!important}
+.title .tset{width:min(480px,calc(100% - 28px))}
+.title .tsub{font:700 11.5px var(--f-body);letter-spacing:.12em;text-transform:uppercase;color:rgba(255,255,255,.55);margin:16px 0 6px}
+.title .tsub:first-child{margin-top:0}
+.title .trow{display:flex;align-items:center;justify-content:space-between;gap:14px;padding:9px 0;border-bottom:1px solid rgba(255,255,255,.08)}
+.title .trow b{display:block;font:700 14.5px var(--f-body)}.title .trow small{display:block;font:500 12px/1.35 var(--f-body);color:rgba(255,255,255,.62)}
+.title .trow input[type=range]{width:min(220px,50%);accent-color:var(--brand)}
+.title .tsw{appearance:none;-webkit-appearance:none;flex:none;width:46px;height:28px;border-radius:14px;background:rgba(255,255,255,.22);position:relative;cursor:pointer;transition:background .2s;margin:0}
+.title .tsw::after{content:"";position:absolute;left:3px;top:3px;width:22px;height:22px;border-radius:50%;background:#fff;transition:transform .2s}
+.title .tsw:checked{background:var(--brand)}.title .tsw:checked::after{transform:translateX(18px)}
+.title .tseg{display:flex;border-radius:10px;overflow:hidden;border:1px solid rgba(255,255,255,.2)}
+.title .tseg button{border:0;background:transparent;color:rgba(255,255,255,.75);padding:7px 11px;font:600 12.5px var(--f-body);cursor:pointer}
+.title .tseg button[aria-pressed="true"]{background:var(--brand);color:#fff}
+.title .tgrid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px}
+.title .tname{display:flex;gap:8px;margin-top:10px}.title .tname[hidden]{display:none}
+.title .tname input{flex:1;min-width:0;font:600 16px var(--f-body);padding:9px 12px;border-radius:10px;border:1px solid rgba(255,255,255,.25);background:rgba(255,255,255,.08);color:#fff}
+.title .tnote{margin:10px 0 0;font:500 12.5px var(--f-body);color:rgba(255,255,255,.7);min-height:1em}
+.title .tload{position:absolute;left:50%;bottom:calc(90px + env(safe-area-inset-bottom,0px));transform:translateX(-50%);display:flex;align-items:center;gap:10px;padding:11px 18px;border-radius:999px;background:rgba(14,18,27,.8);font:600 14px var(--f-body)}
+.title .tload[hidden]{display:none}
+.title .tspin{width:16px;height:16px;border-radius:50%;border:2.5px solid rgba(255,255,255,.25);border-top-color:#fff;animation:tspin .8s linear infinite}
+@keyframes tspin{to{transform:rotate(360deg)}}
+/* phones and narrow windows: the logo at the top, the modes at the bottom, the shade top and bottom */
+@media (max-aspect-ratio:9/10),(max-width:640px){
+  .title .tshade{background:linear-gradient(180deg,rgba(8,10,16,.66) 0,rgba(8,10,16,.2) 30%,transparent 46%,rgba(8,10,16,.25) 58%,rgba(8,10,16,.8) 100%)}
+  .title .tmain{left:50%;top:auto;bottom:calc(84px + env(safe-area-inset-bottom,0px));transform:translateX(-50%);width:min(420px,calc(100% - 32px));height:calc(100dvh - 84px - env(safe-area-inset-bottom,0px) - max(28px,env(safe-area-inset-top,0px)));justify-content:space-between;gap:16px}
+  .title .tlogo{text-align:center}
+  .title .temb{width:50px;height:50px;margin-bottom:10px}
+  .title h1{font-size:clamp(40px,12vw,58px)}
+  .title .tmodes{gap:8px}
+  .title .tmodes button{padding:10px 12px;gap:12px}
+  .title .tico{width:38px;height:38px}
+  .title .tmodes b{font-size:16.5px}
+  .title .tenvs{grid-template-columns:repeat(2,minmax(0,1fr))}
+  .title .tpanel{padding:18px 16px 14px;inset:max(14px,env(safe-area-inset-top,0px)) 0 calc(78px + env(safe-area-inset-bottom,0px)) 0;max-height:calc(100dvh - 92px - max(14px,env(safe-area-inset-top,0px)) - env(safe-area-inset-bottom,0px))}
+}
+@media (max-height:560px) and (min-aspect-ratio:9/10){.title .tmain{gap:14px}.title .temb{display:none}.title h1{font-size:40px}.title .tmodes{gap:6px}.title .tmodes button{padding:8px 12px}}
+@media (prefers-reduced-motion:reduce){.title .tdrift,.title .torbs i{animation:none}}

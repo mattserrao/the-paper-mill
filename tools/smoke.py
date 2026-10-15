@@ -69,7 +69,8 @@ with sync_playwright() as pw:
     pg.keyboard.press("Escape"); pg.wait_for_timeout(600)
     zs = pg.evaluate("()=>!!__PM.S.zen"); log.append(f"  zen after Esc={zs} menu={vis('#v2menu')}")
     if zs: click("#zenExit"); pg.wait_for_timeout(600)
-    ok("zen off -> menu", not pg.evaluate("()=>!!__PM.S.zen") and vis("#v2menu"))
+    ok("zen off -> menu", not pg.evaluate("()=>!!__PM.S.zen") and (vis("#v2menu") or vis("#title")))   # v5.2: leaving zen goes to the title screen
+    if vis("#title"): click("#tCont") if vis("#tCont") else None; pg.evaluate("()=>{const t=document.getElementById('title');if(t&&!t.hidden)__PM.G3.titleHide();__PM.G3.showMenu()}"); pg.wait_for_timeout(700)
     click("#v2board"); pg.wait_for_timeout(500)
     ok("leaderboard opens", vis("#lbOv")); click("#lb-close"); pg.wait_for_timeout(200)
     click("#v2rename"); pg.evaluate("()=>{document.getElementById('v2name').value='Smoke Test Mill'}"); pg.evaluate("()=>document.getElementById('v2name').dispatchEvent(new KeyboardEvent('keydown',{key:'Enter'}))"); pg.wait_for_timeout(500)

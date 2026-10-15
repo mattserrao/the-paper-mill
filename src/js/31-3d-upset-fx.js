@@ -132,6 +132,10 @@
   const PINS={icedintake:[-30,6,-55.5,"!"],duststorm:[-21,12,-13,"!"],flood:[-62,7,4,"water"],refclash:[60.6,8,-11,"!"],steamjoint:[11.2,9.5,4.6,"!"],fogfan:[49.5,22,-4.2,"!"],shaft:[12,10,15.6,"!"],dryerfire:[12,13,zc,"fire"],fabric:[48,9,zc,"!"],felt:[34.5,11,zc,"!"],slime:[4,11,zc,"!"],ragger:[16,9,-13.5,"!"],overflow:[-21,10,-13,"water"],chestover:[34.5,21,-15,"water"],lwplug:[11.2,9,ZL,"!"],cscreen:[15.2,8,ZL,"!"],fscreen:[19.2,9,ZL,"!"],lcplug:[26.6,8,ZL,"water"],hdblow:[25.8,13,-10.6,"water"],boiler:[76,14,-10,"!"],permit:[LAYOUT.wx(22),10,-40,"water"],thkblow:[34.5,22,-15,"water"],birdhay:[-18.7,9,zc,"!"],wrap:[12,12,zc,"!"],flares:[16,10,-13.5,"fire"],dye:[24,11,zc,"!"],winderdown:[-18.7,9,zc,"!"],
     badocc:[-17,10,-11,"!"],balefire:[-25,11,-12,"fire"],fleet:[-29,10,-16,"!"],calloff:[-36,10,23,"!"],fight:[-38,7,-21,"!"],roof:[-32,10,24,"water"],highway:[-72,7,4,"!"],
     lightning:[34.5,16,-15,"bolt"],tornado:[0,26,0,"!"],beaver:[-24,12,-12.5,"!"]};
+  // a small lift truck (counterbalance forklift) for the yard upsets: body, overhead guard, mast and forks, nobody aboard
+  function liftTruck(group,x,z,ry){const f=new THREE.Group();f.position.set(x,0,z);f.rotation.y=ry;group.add(f);box(1.8,0.9,1.1,M.warn,0,0.75,0,f);box(0.7,0.7,1.0,M.ink,-0.75,0.85,0,f);
+    [[-0.3,0.5],[-0.3,-0.5],[0.6,0.5],[0.6,-0.5]].forEach(([a,b])=>box(0.06,1.3,0.06,M.ink,a,1.85,b,f,false));box(1.0,0.06,1.06,M.ink,0.15,2.5,0,f,false);
+    box(0.12,2.4,0.9,M.ink,1.0,1.2,0,f);[-0.28,0.28].forEach(b=>box(1.0,0.06,0.12,M.metal,1.5,0.12,b,f,false));[[0.55,0.58],[0.55,-0.58],[-0.55,0.58],[-0.55,-0.58]].forEach(([a,b])=>cylZ(0.28,0.22,M.ink,a,0.28,b,12,f));return f;}
   function fxPerson(group,m,x,z){const w=worker(m,M.warn);w.position.set(x,0,z);group.add(w);return w;}
   // v4.1: the brownout's pin sits on the substation the scenery placed (or the power house when there is none)
   const _bkv=new THREE.Vector3();
@@ -288,6 +292,18 @@
       bub.position.set(-37.9,3.6,-21);bub.scale.set(3.3,2.2,1);bub.renderOrder=9;g.add(bub);
       return (now,rdt)=>{const j=Math.sin(now/70)*0.25;a.position.x=-38.6+j;b.position.x=-37.2-j;pose(a,"rethread",now);pose(b,"rethread",now+300);
         const on=((now/220)|0)%2;red.scale.setScalar(on?2.4:0.6);blue.scale.setScalar(on?0.6:2.4);bub.position.y=3.6+Math.sin(now/200)*0.15;};},
+    // v5.2: the two yard upsets that had only a pin. Forklifts red-tagged: two lift trucks parked in a taped-off bay with
+    // red tags swinging on the masts. Drivers call off: three lift trucks parked by the roll warehouse with nobody on them,
+    // a supervisor on the phone trying to find drivers, and a "drivers needed" board.
+    fleet:g=>{const zn=zone(g,-33,-25,-20,-12.5),tags=[];
+      [[-31,-17.5,0.3],[-27.2,-15,-0.4]].forEach(([x,z,ry])=>{const f=liftTruck(g,x,z,ry);const t=new THREE.Mesh(new THREE.BoxGeometry(0.36,0.5,0.04),M.bad);t.position.set(1.05,1.8,0.3);f.add(t);tags.push(t);});
+      return now=>{zn(now);tags.forEach((t,i)=>t.rotation.z=Math.sin(now/260+i)*0.35);};},
+    calloff:g=>{[-55,-51.5,-48].forEach((x,i)=>liftTruck(g,x,33.2,Math.PI/2+(i-1)*0.12));const sup=fxPerson(g,M.warn,-45.2,33.3);sup.rotation.y=Math.PI*0.9;
+      const c=document.createElement("canvas");c.width=256;c.height=128;const x=c.getContext("2d");x.fillStyle="#ffe066";x.fillRect(0,0,256,128);x.strokeStyle="#1c2233";x.lineWidth=8;x.strokeRect(4,4,248,120);
+      x.fillStyle="#1c2233";x.font='800 40px "Plus Jakarta Sans",system-ui,sans-serif';x.textAlign="center";x.textBaseline="middle";x.fillText("DRIVERS",128,44);x.fillText("NEEDED",128,88);
+      const t=new THREE.CanvasTexture(c);t.colorSpace=THREE.SRGBColorSpace;const bd=new THREE.Mesh(new THREE.PlaneGeometry(2.4,1.2),new THREE.MeshBasicMaterial({map:t,toneMapped:false}));bd.position.set(-58.6,1.6,33.4);g.add(bd);
+      [-1,1].forEach(s=>box(0.08,1.6,0.08,M.ink,-58.6+s*1.05,0.8,33.3,g,false));
+      return now=>{pose(sup,"phone",now);};},
     roof:g=>{const drops=[];for(let k=0;k<90;k++){const d=new THREE.Mesh(cubeG,FM.rain);d.scale.set(0.05,0.7,0.05);d.position.set(-48+Math.random()*24,Math.random()*7,15.5+Math.random()*16);g.add(d);drops.push(d);}
       const pud=new THREE.Mesh(new CircG(5.5,40),FM.water);pud.rotation.x=-Math.PI/2;pud.position.set(-35,0.08,23);g.add(pud);const rp=ripples(g,6,-39,-31,20,26,0.1);
       return (now,rdt)=>{rp(now);drops.forEach(d=>{d.position.y-=rdt*16;if(d.position.y<0)d.position.y+=7;});};},
@@ -469,7 +485,7 @@
       if(ids.length){requestAnimationFrame(stepW);return;}
       // one off-screen render with every effect showing and a shadow refresh: this also compiles the shadow-pass
       // (depth) shaders, which compile() doesn't cover. The moving-thing batches are built first so theirs are included.
-      try{if(G3.dbForce)G3.dbForce();const shown=[];
+      try{if(G3.civBuild)G3.civBuild();if(G3.dbForce)G3.dbForce();const shown=[];   // (v5.2: the civics scenes are built here too, 31b)
         // stand-in batches for the shadow-pass variants that moving things may need later (single/double-sided,
         // with/without a texture), so a new batch made mid-play never compiles a shader
         const tex=TX.puff,stand=[];for(const side of [THREE.FrontSide,THREE.DoubleSide])for(const map of [null,tex]){
@@ -507,7 +523,7 @@
         for(const sb of SM.bms){const g=new THREE.BoxGeometry(0.01,0.01,0.01),c=sb.material.clone();c.color.setRGB(1,1,1);if(!G3.DBCOL)c.vertexColors=true;
           const bm=new THREE.BatchedMesh(1,g.attributes.position.count,g.index.count,c);{const ii=bm.addInstance(bm.addGeometry(G3.DBCOL?g:G3.vcGeo(g,new THREE.Color(1,1,1))));if(G3.DBCOL&&!G3.DBMAT)bm.setColorAt(ii,new THREE.Color(1,1,1));}
           bm.perObjectFrustumCulled=false;bm.frustumCulled=false;bm.castShadow=sb.castShadow;bm.receiveShadow=sb.receiveShadow;scene.add(bm);stand.push([bm,g]);}
-        for(const id in FX){if(!FX[id].g.visible){FX[id].g.visible=true;shown.push(FX[id].g);}}if(!fireFloor.visible){fireFloor.visible=true;shown.push(fireFloor);}
+        for(const id in FX){if(!FX[id].g.visible){FX[id].g.visible=true;shown.push(FX[id].g);}}if(G3.civShowAll)G3.civShowAll(shown);if(!fireFloor.visible){fireFloor.visible=true;shown.push(fireFloor);}
         // v4.1 pass 3: the sky, terrain, clouds and mist never appear with an effect-only shader, and they already compiled for the
         // screen on the first frame; keeping them out of this off-screen pass saves their render-target shader variants
         const wld=[G3.terrain,G3.SKY&&G3.SKY.dome,G3.SKY&&G3.SKY.clouds&&G3.SKY.clouds.mesh,G3.SKY&&G3.SKY.mist&&G3.SKY.mist.mesh,G3.nightWin].filter(Boolean),wv=wld.map(o=>o.visible);wld.forEach(o=>o.visible=false);

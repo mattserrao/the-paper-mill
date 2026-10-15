@@ -27,7 +27,7 @@ $("breaks").addEventListener("change",e=>{if(S.season&&S.season.on){e.target.che
 $("hays").addEventListener("change",e=>{if(S.season&&S.season.on){e.target.checked=C.hays=true;return;}C.hays=e.target.checked;});
 // sound: on by default, but browsers only allow audio after the first tap or click
 let soundPref="on";try{soundPref=localStorage.getItem("paper-mill-sound")||"on";}catch(e){}
-function paintSound(){const s=AUDIO.on,b=$("v2sound");if(b){b.textContent=s?"Sound on":"Sound off";b.setAttribute("aria-pressed",String(s));}}
+function paintSound(){const s=AUDIO.on,b=$("v2sound");if(b){b.textContent=s?"Sound on":"Sound off";b.setAttribute("aria-pressed",String(s));}if(typeof titleSoundPaint==="function")titleSoundPaint();}
 function setSound(v){AUDIO.setOn(v);soundPref=v?"on":"off";try{localStorage.setItem("paper-mill-sound",soundPref);}catch(e){}paintSound();}
 {let vv=70;try{vv=+(localStorage.getItem("paper-mill-vol")||70);}catch(e){}AUDIO.setVol(vv/100);}
 // Safari only accepts audio from a completed tap (touchend / click / pointerup / keydown), not from pointerdown:
