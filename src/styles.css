@@ -959,3 +959,20 @@ body.titleon #leadOv .modal .primary:disabled{opacity:.55}
 .title .tmodes button:focus-visible{outline:2px solid rgba(255,255,255,.9);outline-offset:1px}
 .title .tmodes button:focus:not(:focus-visible){outline:none}
 @media (max-width:640px){.jumps{mask-image:linear-gradient(90deg,#000 72%,transparent);-webkit-mask-image:linear-gradient(90deg,#000 72%,transparent)}}
+/* ---------- v5.3 dark mode (00b-theme.js sets body.dark from the device setting or Settings → Appearance) ----------
+   The interface tokens are redefined on body, not :root, so the 3D world (which reads :root) keeps its colours. */
+body.dark{color-scheme:dark;
+  --bg:#14181f; --panel:#1d222b; --ink:#e8ecf2; --muted:#9ea7b6; --line:#313846; --chip:#272d38;
+  --brand:#4a72f0; --stock:#6fb0d8; --machine:#a3adc0; --kraft:#d39a5f; --pulp:#c49a6c;
+  --ok:#4fc386; --warn:#e3a943; --bad:#ff6f61;
+  --shadow:0 1px 2px rgba(0,0,0,.3),0 8px 24px rgba(0,0,0,.35)}
+body.dark .v2card,body.dark .spider,body.dark .zenexit,body.dark .blackout3d div,body.dark.app #jumps button{background:color-mix(in srgb,var(--panel) 96%,transparent);border-color:var(--line);color:var(--ink)}
+body.dark.app #jumps>span{background:color-mix(in srgb,var(--panel) 85%,transparent);color:var(--ink)}
+body.dark .v2card{box-shadow:0 6px 20px rgba(0,0,0,.35)}
+body.dark .civbar .cv.sn .cvi,body.dark .civbar .cv.sn em{color:#e3a943}
+body.dark .v2tabs button[aria-pressed=true],body.dark .v2lbl[aria-pressed=true]{background:color-mix(in srgb,var(--brand) 22%,var(--panel))}
+body.dark .pill.ok{background:color-mix(in srgb,var(--ok) 18%,var(--panel))}body.dark .pill.warn{background:color-mix(in srgb,var(--warn) 18%,var(--panel))}body.dark .pill.bad{background:color-mix(in srgb,var(--bad) 18%,var(--panel))}
+body.dark .auto[aria-pressed="true"]{background:color-mix(in srgb,var(--ok) 18%,var(--panel))}
+body.dark .v2menu .warn{border-color:color-mix(in srgb,var(--bad) 50%,var(--panel))}
+body.dark .v2menu{background:radial-gradient(ellipse at 50% 30%,rgba(20,24,31,.55),rgba(12,15,20,.82))}
+body.dark .v2scrim{background:rgba(0,0,0,.4)}

@@ -35,7 +35,7 @@ with sync_playwright() as pw:
     E("()=>{document.querySelector('#leadOv .ldcard[data-l=chip]').click();document.getElementById('ld-go').click();}")
     pg.wait_for_function("__PM.S.lead&&__PM.S.season&&__PM.S.season.on", timeout=240000); pg.wait_for_timeout(1000)
     E("()=>{__PM.G3.on=false;__PM.S.cards.next=1e12;}")
-    ok("version label v5.2.0", E("()=>__PM.APP_VER") == "v5.2.0")
+    ok("version label v5.3.0", E("()=>__PM.APP_VER") == "v5.3.0")
     # fiber lock cap
     r = E("()=>{const S=__PM.S;S.lead.lockW=1;S.lead.lockMkt=10;const w=S.lead.lockW;return [__PM.leadMkt(3),__PM.leadMkt(15)]}")
     ok("season fiber lock is capped: market +3 under a +10 lock pays +3; market +15 pays +10", r == [3, 10], r)

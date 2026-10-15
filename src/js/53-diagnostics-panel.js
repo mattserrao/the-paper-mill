@@ -83,6 +83,7 @@
     seg.innerHTML=[["saver","Battery saver","30 fps: cooler phone, longer battery"],["smooth","Smooth","60 fps"],["max","Max","The display's full rate (120 Hz screens draw twice as many frames)"]].map(([k,t,ti])=>`<button data-fps="${k}" aria-pressed="${FPS_MODE===k}" title="${ti}">${t}</button>`).join("");
     seg.querySelectorAll("button").forEach(x=>x.addEventListener("click",()=>setFpsMode(x.dataset.fps)));
     setField("Frame rate",seg);}
+  {const w=document.createElement("div");w.innerHTML=themeSegHTML("seg");const seg=w.firstChild;seg.id="themeSeg";setField("Appearance",seg);}   // (v5.3 dark mode, 00b)
   if(G3.GFX){const seg=document.createElement("div");seg.className="seg";seg.id="gfxSeg";seg.setAttribute("role","group");seg.setAttribute("aria-label","Graphics");const cap=s=>s[0].toUpperCase()+s.slice(1);
     seg.innerHTML=["auto","low","medium","high","ultra"].map(g=>`<button data-g="${g}" aria-pressed="${G3.GFX.pick===g}" title="${g==="auto"?"Picked from your device: "+cap(G3.GFX.auto):{low:"1024 shadows, 10 Hz, lighter scenery",medium:"1024 shadows, 15 Hz",high:"2048 softer shadows, 24 Hz, full scenery",ultra:"4096 softer shadows, every frame, dense scenery with far shadows"}[g]}">${g==="auto"?`Auto <small class="gtier">${cap(G3.GFX.auto)}</small>`:cap(g)}</button>`).join("");
     seg.querySelectorAll("button").forEach(x=>x.addEventListener("click",()=>G3.setGfx(x.dataset.g)));

@@ -130,6 +130,7 @@ function camPullOn(){try{return localStorage.getItem("paper-mill-campull")!=="of
       <div class="tsub">Play</div>${tog("tsCam","Fly to big moments","the camera visits major upsets and civics crises, then comes back",camPullOn())}
       ${tog("tsTut","Quick-start tutorial","shown when a season or survival run starts",tut)}
       <div class="tsub">Graphics</div>${tog("tsShadow","Shadows","",!sh||sh.checked)}
+      <div class="trow"><span><b>Appearance</b><small>Auto follows your device</small></span>${themeSegHTML("tseg")}</div>
       <div class="trow"><span><b>Frame rate</b></span><div class="tseg" role="group" aria-label="Frame rate"><button data-f="saver" aria-pressed="${FPS_MODE==="saver"}">Battery saver</button><button data-f="smooth" aria-pressed="${FPS_MODE!=="saver"}">Smooth</button></div></div>
       <div class="tsub">Your mill</div><div class="tgrid"><button id="tsBoard">Leaderboards</button><button id="tsColors">New colors</button><button id="tsName">Rename</button><button id="tsFs">Fullscreen</button></div>
       <div class="tname" id="tsNameRow" hidden><input id="tsNameIn" maxlength="32" autocomplete="off" spellcheck="false" aria-label="Mill name"/><button class="tgo" id="tsNameOk">Save</button></div><p class="tnote" id="tsNote"></p>`;
@@ -138,7 +139,7 @@ function camPullOn(){try{return localStorage.getItem("paper-mill-campull")!=="of
     $t("tsCam").addEventListener("change",e=>{try{localStorage.setItem("paper-mill-campull",e.target.checked?"on":"off");}catch(_){}});
     $t("tsTut").addEventListener("change",e=>{try{localStorage.setItem("paper-mill-tutorial",e.target.checked?"on":"off");}catch(_){}});
     $t("tsShadow").addEventListener("change",e=>{if(sh&&sh.checked!==e.target.checked)sh.click();});
-    $t("tSetBody").querySelectorAll(".tseg button").forEach(b=>b.addEventListener("click",()=>{setFpsMode(b.dataset.f);$t("tSetBody").querySelectorAll(".tseg button").forEach(x=>x.setAttribute("aria-pressed",String(x===b)));}));
+    $t("tSetBody").querySelectorAll(".tseg button[data-f]").forEach(b=>b.addEventListener("click",()=>{setFpsMode(b.dataset.f);$t("tSetBody").querySelectorAll(".tseg button[data-f]").forEach(x=>x.setAttribute("aria-pressed",String(x===b)));}));
     $t("tsBoard").addEventListener("click",()=>openBoard());
     $t("tsColors").addEventListener("click",()=>{rollMill();welcome();$t("tsNote").textContent="New colors: "+MILL.name;});
     $t("tsName").addEventListener("click",()=>{$t("tsNameRow").hidden=false;const i=$t("tsNameIn");i.value=MILL.name;i.focus();i.select();});

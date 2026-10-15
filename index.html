@@ -971,6 +971,23 @@ body.titleon #leadOv .modal .primary:disabled{opacity:.55}
 .title .tmodes button:focus-visible{outline:2px solid rgba(255,255,255,.9);outline-offset:1px}
 .title .tmodes button:focus:not(:focus-visible){outline:none}
 @media (max-width:640px){.jumps{mask-image:linear-gradient(90deg,#000 72%,transparent);-webkit-mask-image:linear-gradient(90deg,#000 72%,transparent)}}
+/* ---------- v5.3 dark mode (00b-theme.js sets body.dark from the device setting or Settings → Appearance) ----------
+   The interface tokens are redefined on body, not :root, so the 3D world (which reads :root) keeps its colours. */
+body.dark{color-scheme:dark;
+  --bg:#14181f; --panel:#1d222b; --ink:#e8ecf2; --muted:#9ea7b6; --line:#313846; --chip:#272d38;
+  --brand:#4a72f0; --stock:#6fb0d8; --machine:#a3adc0; --kraft:#d39a5f; --pulp:#c49a6c;
+  --ok:#4fc386; --warn:#e3a943; --bad:#ff6f61;
+  --shadow:0 1px 2px rgba(0,0,0,.3),0 8px 24px rgba(0,0,0,.35)}
+body.dark .v2card,body.dark .spider,body.dark .zenexit,body.dark .blackout3d div,body.dark.app #jumps button{background:color-mix(in srgb,var(--panel) 96%,transparent);border-color:var(--line);color:var(--ink)}
+body.dark.app #jumps>span{background:color-mix(in srgb,var(--panel) 85%,transparent);color:var(--ink)}
+body.dark .v2card{box-shadow:0 6px 20px rgba(0,0,0,.35)}
+body.dark .civbar .cv.sn .cvi,body.dark .civbar .cv.sn em{color:#e3a943}
+body.dark .v2tabs button[aria-pressed=true],body.dark .v2lbl[aria-pressed=true]{background:color-mix(in srgb,var(--brand) 22%,var(--panel))}
+body.dark .pill.ok{background:color-mix(in srgb,var(--ok) 18%,var(--panel))}body.dark .pill.warn{background:color-mix(in srgb,var(--warn) 18%,var(--panel))}body.dark .pill.bad{background:color-mix(in srgb,var(--bad) 18%,var(--panel))}
+body.dark .auto[aria-pressed="true"]{background:color-mix(in srgb,var(--ok) 18%,var(--panel))}
+body.dark .v2menu .warn{border-color:color-mix(in srgb,var(--bad) 50%,var(--panel))}
+body.dark .v2menu{background:radial-gradient(ellipse at 50% 30%,rgba(20,24,31,.55),rgba(12,15,20,.82))}
+body.dark .v2scrim{background:rgba(0,0,0,.4)}
 </style>
 </head>
 <body class="app">
@@ -1151,7 +1168,7 @@ body.titleon #leadOv .modal .primary:disabled{opacity:.55}
 <div class="btns"><button class="primary" id="no3d-retry">Try again</button></div></div></div>
 
 <script type="module">
-const APP_VER="v5.2.0";   // shown in the menu and sent with leaderboard scores (max 12 characters)
+const APP_VER="v5.3.0";   // shown in the menu and sent with leaderboard scores (max 12 characters)
 // TEST BUILDS ONLY (off in releases): turbo speeds 240/480/960 sim min/s for fast playtests. Above 120, crews and maintenance start jobs
 // without waiting for the 3D walk (as with the 3D view off) and outages keep the speed. Set false for a release.
 const TURBO=false,TURBO_FAST=s=>TURBO&&s>120;
@@ -1177,6 +1194,22 @@ if(THREE)THREE.ColorManagement.enabled=false;
 // Draw transparent double-sided materials in one pass, as r128 did. r150+ draws them twice (back faces, then front) and
 // flags the material for a full shader re-check on each pass: two extra draws and ~25 KB of garbage per object per frame.
 if(THREE)Object.defineProperty(THREE.Material.prototype,"forceSinglePass",{get(){return true;},set(){},configurable:true});
+/* ---------- v5.3 dark mode ----------
+   The game's panels, cards, sheets and menus follow the device's light/dark setting by default (prefers-color-scheme),
+   and Settings → Appearance can pin Light or Dark (saved on the device). Only the interface changes: the dark palette
+   lives on body.dark, so the 3D world, which reads its colours from :root, looks the same in both. */
+let THEME_PREF="auto";try{const v=localStorage.getItem("paper-mill-theme");if(v==="light"||v==="dark")THEME_PREF=v;}catch(e){}
+const THEME_MQ=window.matchMedia?matchMedia("(prefers-color-scheme: dark)"):null;
+function themeDark(){return THEME_PREF==="dark"||(THEME_PREF==="auto"&&!!(THEME_MQ&&THEME_MQ.matches));}
+function applyTheme(){const d=themeDark(),b=document.body;if(!b)return;if(b.classList.contains("dark")!==d)b.classList.toggle("dark",d);
+  let m=document.querySelector('meta[name="theme-color"]');if(!m){m=document.createElement("meta");m.name="theme-color";document.head.appendChild(m);}m.content=d?"#14181f":"#eef0f6";
+  document.querySelectorAll("[data-theme-pick]").forEach(x=>x.setAttribute("aria-pressed",String(x.dataset.themePick===THEME_PREF)));}
+function setTheme(v){THEME_PREF=v==="light"||v==="dark"?v:"auto";try{if(THEME_PREF==="auto")localStorage.removeItem("paper-mill-theme");else localStorage.setItem("paper-mill-theme",THEME_PREF);}catch(e){}applyTheme();}
+// the Auto / Light / Dark buttons, for both settings panels (title and in-game)
+const themeSegHTML=cls=>`<div class="${cls}" role="group" aria-label="Appearance">${[["auto","Auto","Follow the device setting"],["light","Light",""],["dark","Dark",""]].map(([k,t,ti])=>`<button type="button" data-theme-pick="${k}" aria-pressed="${THEME_PREF===k}"${ti?` title="${ti}"`:""}>${t}</button>`).join("")}</div>`;
+document.addEventListener("click",e=>{const b=e.target.closest&&e.target.closest("[data-theme-pick]");if(b)setTheme(b.dataset.themePick);});
+if(THEME_MQ){try{THEME_MQ.addEventListener("change",applyTheme);}catch(e){try{THEME_MQ.addListener(applyTheme);}catch(_){}}}
+if(document.body)applyTheme();else document.addEventListener("DOMContentLoaded",applyTheme);
 (()=>{
 /* ---- random brand colors and a wacky paper-themed mill name on every load ---- */
 const BRANDS=["#2f5bea","#0c8f7f","#d6336c","#6741d9","#e8590c","#1971c2","#2f9e44","#c2255c","#5f3dc4","#0b7285","#e03131","#9c36b5","#1098ad","#d9480f"];
@@ -10050,6 +10083,7 @@ function camPullOn(){try{return localStorage.getItem("paper-mill-campull")!=="of
       <div class="tsub">Play</div>${tog("tsCam","Fly to big moments","the camera visits major upsets and civics crises, then comes back",camPullOn())}
       ${tog("tsTut","Quick-start tutorial","shown when a season or survival run starts",tut)}
       <div class="tsub">Graphics</div>${tog("tsShadow","Shadows","",!sh||sh.checked)}
+      <div class="trow"><span><b>Appearance</b><small>Auto follows your device</small></span>${themeSegHTML("tseg")}</div>
       <div class="trow"><span><b>Frame rate</b></span><div class="tseg" role="group" aria-label="Frame rate"><button data-f="saver" aria-pressed="${FPS_MODE==="saver"}">Battery saver</button><button data-f="smooth" aria-pressed="${FPS_MODE!=="saver"}">Smooth</button></div></div>
       <div class="tsub">Your mill</div><div class="tgrid"><button id="tsBoard">Leaderboards</button><button id="tsColors">New colors</button><button id="tsName">Rename</button><button id="tsFs">Fullscreen</button></div>
       <div class="tname" id="tsNameRow" hidden><input id="tsNameIn" maxlength="32" autocomplete="off" spellcheck="false" aria-label="Mill name"/><button class="tgo" id="tsNameOk">Save</button></div><p class="tnote" id="tsNote"></p>`;
@@ -10058,7 +10092,7 @@ function camPullOn(){try{return localStorage.getItem("paper-mill-campull")!=="of
     $t("tsCam").addEventListener("change",e=>{try{localStorage.setItem("paper-mill-campull",e.target.checked?"on":"off");}catch(_){}});
     $t("tsTut").addEventListener("change",e=>{try{localStorage.setItem("paper-mill-tutorial",e.target.checked?"on":"off");}catch(_){}});
     $t("tsShadow").addEventListener("change",e=>{if(sh&&sh.checked!==e.target.checked)sh.click();});
-    $t("tSetBody").querySelectorAll(".tseg button").forEach(b=>b.addEventListener("click",()=>{setFpsMode(b.dataset.f);$t("tSetBody").querySelectorAll(".tseg button").forEach(x=>x.setAttribute("aria-pressed",String(x===b)));}));
+    $t("tSetBody").querySelectorAll(".tseg button[data-f]").forEach(b=>b.addEventListener("click",()=>{setFpsMode(b.dataset.f);$t("tSetBody").querySelectorAll(".tseg button[data-f]").forEach(x=>x.setAttribute("aria-pressed",String(x===b)));}));
     $t("tsBoard").addEventListener("click",()=>openBoard());
     $t("tsColors").addEventListener("click",()=>{rollMill();welcome();$t("tsNote").textContent="New colors: "+MILL.name;});
     $t("tsName").addEventListener("click",()=>{$t("tsNameRow").hidden=false;const i=$t("tsNameIn");i.value=MILL.name;i.focus();i.select();});
@@ -10424,6 +10458,7 @@ requestAnimationFrame(frame);
     seg.innerHTML=[["saver","Battery saver","30 fps: cooler phone, longer battery"],["smooth","Smooth","60 fps"],["max","Max","The display's full rate (120 Hz screens draw twice as many frames)"]].map(([k,t,ti])=>`<button data-fps="${k}" aria-pressed="${FPS_MODE===k}" title="${ti}">${t}</button>`).join("");
     seg.querySelectorAll("button").forEach(x=>x.addEventListener("click",()=>setFpsMode(x.dataset.fps)));
     setField("Frame rate",seg);}
+  {const w=document.createElement("div");w.innerHTML=themeSegHTML("seg");const seg=w.firstChild;seg.id="themeSeg";setField("Appearance",seg);}   // (v5.3 dark mode, 00b)
   if(G3.GFX){const seg=document.createElement("div");seg.className="seg";seg.id="gfxSeg";seg.setAttribute("role","group");seg.setAttribute("aria-label","Graphics");const cap=s=>s[0].toUpperCase()+s.slice(1);
     seg.innerHTML=["auto","low","medium","high","ultra"].map(g=>`<button data-g="${g}" aria-pressed="${G3.GFX.pick===g}" title="${g==="auto"?"Picked from your device: "+cap(G3.GFX.auto):{low:"1024 shadows, 10 Hz, lighter scenery",medium:"1024 shadows, 15 Hz",high:"2048 softer shadows, 24 Hz, full scenery",ultra:"4096 softer shadows, every frame, dense scenery with far shadows"}[g]}">${g==="auto"?`Auto <small class="gtier">${cap(G3.GFX.auto)}</small>`:cap(g)}</button>`).join("");
     seg.querySelectorAll("button").forEach(x=>x.addEventListener("click",()=>G3.setGfx(x.dataset.g)));
