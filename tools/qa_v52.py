@@ -104,7 +104,7 @@ PLAY = r"""async ([style,seed,swap,mode])=>{const P=__PM,S=P.S,h=P.SIM_STEP||0.2
       await new Promise(r=>requestAnimationFrame(()=>requestAnimationFrame(()=>setTimeout(r,260))));
       {const live=()=>S.season&&S.season.on&&!S.over&&!S.zen;
         const look=()=>{const lb=document.getElementById('v2lead'),cd=document.getElementById('v2cd');return {lead:!S.lead||(!lb.hidden&&lb.dataset.l===S.lead.id),cd:!cd.hidden&&!!cd.textContent,got:lb.dataset.l||'none'};};
-        if(live()){let r=look();if(!r.lead||!r.cd){await new Promise(z=>setTimeout(z,600));if(live())r=look();else r={lead:1,cd:1};}
+        if(live()&&d>0){let r=look();if(!r.lead||!r.cd){await new Promise(z=>setTimeout(z,600));if(live())r=look();else r={lead:1,cd:1};}
           if(!r.lead||!r.cd){let fr=0;await new Promise(z=>{const t0=performance.now();const f=()=>{fr++;if(performance.now()-t0<500)requestAnimationFrame(f);else z();};requestAnimationFrame(f);});
             log.tbDbg=log.tbDbg||[];if(log.tbDbg.length<4)log.tbDbg.push({d,t:S.t,frames500:fr,after:look(),body:document.body.className,title:!document.getElementById('title').hidden,cdTxt:document.getElementById('v2cd').textContent,leadOn:P.leadOn?P.leadOn():'?',cards:!!(S.cards&&S.cards.open),ovs:[...document.querySelectorAll('.overlay')].filter(e=>!e.hidden).map(e=>e.id)});}
           if(!r.lead)bad('leader not shown in the top bar while the season runs ('+r.got+' vs '+S.lead.id+')');if(!r.cd)bad('no outage countdown under the clock while the season runs');}}}
@@ -145,7 +145,9 @@ def run(pw, k):
     swap = [LEADERS[(LEADERS.index(leader) + 1) % 4], 2 + k % 2] if k % 3 == 0 else None
     wk = 0 if k % 5 == 0 else k; netlog, errs = [], []
     b = pw.chromium.launch(args=["--use-gl=angle", "--use-angle=swiftshader", "--enable-unsafe-swiftshader", "--ignore-gpu-blocklist"])
-    pg = b.new_page(viewport={"width": 900, "height": 640})
+    dark = k % 4 in (2, 3)   # v5.3: half the runs with the device in dark mode
+    pg = b.new_page(viewport={"width": 900, "height": 640}, color_scheme="dark" if dark else "light")
+    rec_dark = dark
     pg.on("pageerror", lambda e: errs.append("PAGEERROR " + str(e)[:300]))
     pg.on("console", lambda m: m.type == "error" and "Failed to load resource" not in m.text and errs.append("CONSOLE " + m.text[:300]))
     pg.route("**/*", make_route(base, netlog))
@@ -154,6 +156,7 @@ def run(pw, k):
     try:
         title = k % 10 in (1, 4)
         rec["title_start"] = title
+        rec["dark"] = rec_dark
         if title:
             # through the title screen: pick the mode, then this run's map (a different map reloads the page), then the leader
             pg.add_init_script("window.__PM_NOTITLE=false;try{if(!sessionStorage.getItem('qa-once')){sessionStorage.setItem('qa-once','1');localStorage.setItem('paper-mill-site',JSON.stringify({env:'rural'}))}}catch(e){}")
@@ -179,6 +182,7 @@ def run(pw, k):
         pg.evaluate("l=>document.querySelector('#leadOv .ldcard[data-l=\"'+l+'\"]').click()", leader)
         pg.evaluate("()=>document.getElementById('ld-go').click()")
         pg.wait_for_function("__PM.S.season&&__PM.S.season.on", timeout=300000, polling=200)
+        if pg.evaluate("()=>document.body.classList.contains('dark')") != rec_dark: rec["issues"].append(f"theme: body.dark is not {rec_dark} with the device in {'dark' if rec_dark else 'light'} mode")
         if title:
             pg.wait_for_timeout(900)
             st0 = pg.evaluate("()=>({site:__PM.SITE.env,title:!document.getElementById('title').hidden,titleon:document.body.classList.contains('titleon'),out:document.getElementById('title').classList.contains('out'),op:getComputedStyle(document.getElementById('title')).opacity})")
