@@ -928,6 +928,49 @@ body.app.civ .banner3d{top:calc(90px + env(safe-area-inset-top,0px))}
 @media (max-width:420px){.civbar .cv{padding:0 6px;gap:4px;height:22px}.civbar .cv b{font-size:0}.civbar .cv b::after{content:none}.civbar .cvbar{width:28px}}
 @media (max-width:420px){.v2top .v2ibtn,.v2top .v2lead,.v2top .v2lbl{width:38px;min-width:38px}.v2lead .lf{width:30px;height:30px}
   .v2stats .st.ck em{font-size:0}.v2stats .st.ck em::after{content:attr(data-s);font-size:10.5px}}
+/* v5.2 QA: tutorial step 6 lifts the top bar and the meters above its backdrop and rings the leader's face and the meters */
+body.tutlead .v2top,body.tutlead .civbar{z-index:161}
+body.tutlead #v2lead,body.tutlead .civbar .cv{box-shadow:0 0 0 3px var(--stock),0 6px 18px rgba(28,34,51,.25)}
+/* v5.2 QA: 44 px touch targets. Slim controls keep their look and get a larger invisible hit area (::before); the rest
+   grow to 44 px. */
+.v2row .v2speed button{width:44px;height:44px}
+.v2chk{min-height:44px;box-sizing:border-box}
+#v2sound,#v2rep{min-height:44px}
+.civbar .cv{position:relative}
+.civbar .cv::before{content:"";position:absolute;left:-3px;right:-3px;top:-11px;bottom:-11px}
+.civbar{top:calc(62px + env(safe-area-inset-top,0px))}
+.jumps button{position:relative}
+.jumps button::before{content:"";position:absolute;left:-3px;right:-3px;top:-6px;bottom:-6px}
+#tutSkip{min-height:44px;padding:0 6px!important;margin:-12px -6px -12px 0}
+.title .trow{min-height:44px;box-sizing:border-box}
+.title .tsw{position:relative}
+.title .tseg button{min-height:44px}
+.title .tany{min-height:44px;box-sizing:border-box}
+#leadOv .btns button{min-height:44px}
+@media (max-width:420px){.v2top .v2ibtn,.v2top .v2lead,.v2top .v2lbl{width:44px;min-width:44px}}
+/* v5.2 QA: the leader picker on a phone: compact cards (face, name, a line each for the strength and the drawback);
+   the picked card opens to the full text. Over the title screen the picker takes the title's dark look. */
+.ldcard .ldshort{display:none}
+@media (max-width:640px){
+  .ldgrid{gap:8px}
+  .ldcard{grid-template-columns:56px minmax(0,1fr);gap:10px;padding:8px 10px}
+  .ldcard .ldart,.ldcard>img,.ldcard>svg,.ldcard>.lf{width:56px;height:56px}
+  button.ldcard[aria-checked="false"] .ldbody>.pro,button.ldcard[aria-checked="false"] .ldbody>.con,button.ldcard[aria-checked="false"] .ldstart,button.ldcard[aria-checked="false"] .ldbody>i{display:none}
+  button.ldcard[aria-checked="false"] .ldshort{display:block;margin-top:3px}
+  button.ldcard[aria-checked="false"] .ldshort .pro,button.ldcard[aria-checked="false"] .ldshort .con{font-size:12.5px;line-height:1.3}
+  button.ldcard[aria-checked="true"]{grid-template-columns:76px minmax(0,1fr)}
+}
+.ldpick .btns::before{content:"";position:absolute;left:0;right:0;bottom:100%;height:34px;pointer-events:none;background:linear-gradient(transparent,var(--panel));opacity:0;transition:opacity .2s}
+.modal.ldpick.more .btns::before{opacity:1}
+body.titleon #leadOv .modal{--panel:#1c2129;--bg:#252b36;--chip:#2e3542;--ink:#eef1f5;--muted:#a9b2c1;--line:rgba(255,255,255,.12);--ok:#5fd08f;--bad:#ff7d6e;--stock:#7fb7dc;color:var(--ink);background:var(--panel);border:1px solid rgba(255,255,255,.1)}
+body.titleon #leadOv .modal button:not(.primary):not(.ldcard){background:var(--chip);color:var(--ink);border-color:var(--line)}
+body.titleon #leadOv .modal .primary:disabled{opacity:.55}
+/* v5.2 QA: title tidy: "THE" readable on every background, a focus ring that hugs the button, a clearer scroll fade on
+   the Go-to chips */
+.title h1 small{opacity:1;color:#fff;text-shadow:0 1px 2px rgba(0,0,0,.65),0 2px 14px rgba(0,0,0,.55)}
+.title .tmodes button:focus-visible{outline:2px solid rgba(255,255,255,.9);outline-offset:1px}
+.title .tmodes button:focus:not(:focus-visible){outline:none}
+@media (max-width:640px){.jumps{mask-image:linear-gradient(90deg,#000 72%,transparent);-webkit-mask-image:linear-gradient(90deg,#000 72%,transparent)}}
 </style>
 </head>
 <body class="app">
@@ -1108,7 +1151,7 @@ body.app.civ .banner3d{top:calc(90px + env(safe-area-inset-top,0px))}
 <div class="btns"><button class="primary" id="no3d-retry">Try again</button></div></div></div>
 
 <script type="module">
-const APP_VER="v5.1.0";   // shown in the menu and sent with leaderboard scores (max 12 characters)
+const APP_VER="v5.2.0";   // shown in the menu and sent with leaderboard scores (max 12 characters)
 // TEST BUILDS ONLY (off in releases): turbo speeds 240/480/960 sim min/s for fast playtests. Above 120, crews and maintenance start jobs
 // without waiting for the 3D walk (as with the 3D view off) and outages keep the speed. Set false for a release.
 const TURBO=false,TURBO_FAST=s=>TURBO&&s>120;
@@ -3090,7 +3133,7 @@ function startSeason(surv){newGame();S.season=surv?{on:true,surv:true,end:1e12,d
   CH.on=true;$("chaosOn").checked=true;CH.lvl=1;$("chaosLvl").value=1;$("chaosLvlv").textContent="1×";
   EVENTS.forEach(e=>{CH.en[e.id]=true;const c=$("en-"+e.id);if(c)c.checked=true;});seasonLocks(true);
   S.rc={i:0,p:rcAcc(),s:rcAcc(),cards:[]};   // v5.0.4: the first report card starts with the run, so upgrades bought before the first step count (it used to start at the first step)
-  BANNERS.push(surv?{text:"Survival: every outage starts a rougher, dearer wave. Last as long as you can.",t:null,kind:"good",tag:"SURVIVAL"}:{text:`Season started: ${SEASON_DAYS} days. Make as much profit as you can.`,t:null,kind:"good"});bnNotice();if(G3.labelIntro)G3.labelIntro();}
+  BANNERS.push(surv?{text:"Survival: every outage starts a rougher, dearer wave. Last as long as you can.",t:null,kind:"good",tag:"SURVIVAL"}:{text:`Season started: ${SEASON_DAYS} days. Make as much profit as you can.`,t:null,kind:"good",tag:"SEASON"});bnNotice();if(G3.labelIntro)G3.labelIntro();}
 
 /* ---------- v4.3 survival mode: start, wave changes, the wave chip, game over ----------
    Constants and the multipliers are in 03c-survival.js. A wave ends when its planned outage ends (endOutage, 06):
@@ -3204,8 +3247,11 @@ const leadTallyHTML=who=>leadTallyRows(leadTally(who));
 
 /* ---- the picker: after the site, before the run starts (menu, pause menu, game over) ---- */
 let leadPickEl=null;
-function leadCardHTML(id,tag="button",extra=""){const L=LEADERS[id];
-  return `<${tag} class="ldcard" data-l="${id}"${tag==="button"?' type="button" role="radio" aria-checked="false"':""}>${leadArt(id)}<span class="ldbody"><small>${L.role}</small><b>${escHTML(L.name)}</b><em>${L.title}</em>
+// v5.2 QA: one line each for the compact phone picker (the full text shows on the picked card)
+const LEAD_PICK={chip:["Fiber deals or a price push","Pay settlements, more strife"],dot:["Faster repairs, fixes big breakdowns","Repair bills cost more"],
+  fel:["A capacity project each outage","Outages run longer"],hank:["Fewer sheet breaks or cheaper steam","Runs heavy: more fiber"]};
+function leadCardHTML(id,tag="button",extra=""){const L=LEADERS[id],sh=LEAD_PICK[id];
+  return `<${tag} class="ldcard" data-l="${id}"${tag==="button"?' type="button" role="radio" aria-checked="false"':""}>${leadArt(id)}<span class="ldbody"><small>${L.role}</small><b>${escHTML(L.name)}</b><em>${L.title}</em>${tag==="button"&&sh?`<span class="ldshort"><span class="pro">${sh[0]}</span><span class="con">${sh[1]}</span></span>`:""}
     <span class="pro">${L.plus()}</span><span class="con">${L.minus()}</span>${tag==="button"&&typeof CIV!=="undefined"&&CIV.lead[id]?`<span class="ldstart">Starts: ${CIVK.map(k=>CIV.names[k]+" "+Math.max(CIV.startMin,CIV.lead[id][k]+((CIV.site[SITE.env]||{})[k]||0))).join(" · ")}</span>`:""}<i>“${L.say}”</i>${extra}</span></${tag}>`;}
 function leadPickOpen(done,wait,mode){const sv=mode!=="season";leadMode=sv?"surv":"season";let sel=null;try{const v=localStorage.getItem("paper-mill-leader");if(LEADERS[v])sel=v;}catch(e){}
   if(!leadPickEl){leadPickEl=document.createElement("div");leadPickEl.className="overlay top";leadPickEl.id="leadOv";leadPickEl.hidden=true;document.body.appendChild(leadPickEl);}
@@ -3217,11 +3263,12 @@ function leadPickOpen(done,wait,mode){const sv=mode!=="season";leadMode=sv?"surv
   const paint=()=>{el.querySelectorAll(".ldcard").forEach(b=>b.setAttribute("aria-checked",String(b.dataset.l===sel)));const g=el.querySelector("#ld-go");g.disabled=!sel;g.textContent=sel?`Start ${sv?"the run":"the season"} with ${LEADERS[sel].name.split(" ")[0]}`:"Pick a leader to start";};
   const close=()=>{el.hidden=true;leadMode=null;document.removeEventListener("keydown",key,true);if(back&&back.focus)back.focus();};
   const key=e=>{if(e.key==="Escape"){e.preventDefault();e.stopPropagation();close();}};
-  el.querySelectorAll(".ldcard").forEach(b=>b.addEventListener("click",()=>{sel=b.dataset.l;paint();}));
+  el.querySelectorAll(".ldcard").forEach(b=>b.addEventListener("click",()=>{sel=b.dataset.l;paint();more();if(innerWidth<=640)requestAnimationFrame(()=>b.scrollIntoView({block:"nearest",behavior:"smooth"}));}));
+  const md=el.querySelector(".modal"),more=()=>md.classList.toggle("more",md.scrollHeight-md.scrollTop-md.clientHeight>24);md.addEventListener("scroll",more,{passive:true});
   el.querySelector("#ld-no").addEventListener("click",close);
   el.querySelector("#ld-go").addEventListener("click",()=>{if(!sel)return;const g=el.querySelector("#ld-go"),w=wait&&wait();
     if(w&&w.then){g.disabled=true;g.setAttribute("aria-busy","true");g.textContent="Getting the mill ready…";w.then(()=>{close();done(sel);});}else{close();done(sel);}});
-  document.addEventListener("keydown",key,true);paint();el.hidden=false;el.querySelector(".modal").scrollTop=0;{const s=el.querySelector('.ldcard[aria-checked="true"]'),m=el.querySelector(".modal");if(s)s.focus();else{m.tabIndex=-1;m.focus({preventScroll:true});}}}   // (v5.1 QA: no card looks picked before a pick)
+  document.addEventListener("keydown",key,true);paint();el.hidden=false;el.querySelector(".modal").scrollTop=0;more();{const s=el.querySelector('.ldcard[aria-checked="true"]'),m=el.querySelector(".modal");if(s)s.focus();else{m.tabIndex=-1;m.focus({preventScroll:true});}}}   // (v5.1 QA: no card looks picked before a pick)
 
 /* ---- the outage budget dialog: the leader's pick, and the one change of leader ---- */
 const LEAD_SHORT={chip:"Fiber lock or a sales push; wages rise",dot:"Faster repairs, fixes one breakdown a cycle",fel:"+capacity each outage; outages run longer",hank:"Fewer breaks or cheaper steam; fiber +2%"};
@@ -3591,6 +3638,7 @@ UI_TICKS.push(()=>{if(!civToastEl||!S.civ)return;const P=S.civ.pending,m=documen
   document.getElementById("civBar").addEventListener("click",e=>{const c=e.target.closest(".cv");if(!c||!civOn())return;e.stopPropagation();const k=c.dataset.k;
     if(!pop.hidden&&k0===k){pop.hidden=true;return;}k0=k;draw(k);const r=c.getBoundingClientRect();pop.style.left=Math.max(8,Math.min(innerWidth-248,r.left))+"px";pop.style.top=(r.bottom+6)+"px";pop.hidden=false;});
   document.addEventListener("pointerdown",e=>{if(!pop.hidden&&!e.target.closest("#civPop,#civBar"))pop.hidden=true;});
+  document.addEventListener("keydown",e=>{if(e.key==="Escape"&&!pop.hidden){pop.hidden=true;e.stopPropagation();e.preventDefault();}},true);   // (v5.2 QA: Esc closes it before it reaches the pause key)
   UI_TICKS.push(()=>{if(pop.hidden)return;if(!civOn()){pop.hidden=true;return;}if(k0)draw(k0);});}
 /* ---------- v3.3: 10-day report cards (season mode) ----------
    Each period (days 1-10, 11-20, 21-30) gathers money in and out, cost per ton, what caused downtime, how reliable each
@@ -9405,7 +9453,7 @@ function no3D(){G3.ok=false;$("no3d").hidden=false;$("no3d-retry").onclick=()=>l
     lblPaint(now);
     pm("3D labels");
     // headline + active incidents
-    if(doText){const b=BANNERS[0];if(banner.hidden!==!b)banner.hidden=!b;if(b){const cn="banner3d "+(b.kind==="good"?"good":""),tg=b.tag||(b.kind==="good"?"INSTALLED":"BREAKING");
+    if(doText){const b=G3.tut&&G3.tut.on?null:BANNERS[0];if(banner.hidden!==!b)banner.hidden=!b;if(b){const cn="banner3d "+(b.kind==="good"?"good":""),tg=b.tag||(b.kind==="good"?"INSTALLED":"BREAKING");
       if(banner.className!==cn)banner.className=cn;if(banner._tg!==tg){banner._tg=tg;banner.querySelector("span").textContent=tg;}if(banner._tx!==b.text){banner._tx=b.text;banner.querySelector("b").textContent=b.text;}}
       const ck=S.inc.map(i=>i.id).join("|");if(ck!==chips.dataset.k){chips.dataset.k=ck;chips.replaceChildren(...S.inc.map(i=>{const c=document.createElement("button");c.type="button";c.dataset.id=i.id;c.textContent=EV[i.id].name;c.title="Show "+EV[i.id].name;return c;}));}
       banner.classList.toggle("go",!!(b&&b.id&&G3.spotOf(b.id)));}
@@ -9530,6 +9578,16 @@ const TITLE_ART=[
   const top=$("v2top"),stats=$("v2stats");
   function closeMore(){top.classList.remove("open");stats.setAttribute("aria-expanded","false");}
   stats.addEventListener("click",()=>{const o=!top.classList.contains("open");top.classList.toggle("open",o);stats.setAttribute("aria-expanded",String(o));});
+  // v5.2 QA: the civics bars move down below the open panel (it used to cover them), and the panel closes when a card,
+  // dialog or the pause menu opens over it
+  {const more=$("v2more"),cb=$("civBar");let lastY=-1;
+    const place=()=>{const o=top.classList.contains("open");let y=-1;if(o){const r=more.getBoundingClientRect();if(r.height)y=Math.round(r.bottom+8);}
+      if(y!==lastY){lastY=y;if(cb)cb.style.top=y<0?"":y+"px";const p=$("civPop");if(p&&!p.hidden)p.hidden=true;}};
+    stats.addEventListener("click",()=>requestAnimationFrame(place));
+    UI_TICKS.push(()=>{if(!top.classList.contains("open")){if(lastY>=0)place();return;}
+      const blocked=(S.cards&&S.cards.open)||!$("v2menu").hidden||[...document.querySelectorAll(".overlay")].some(o=>!o.hidden&&!o.classList.contains("note")&&!o.classList.contains("dealres"));
+      if(blocked)closeMore();place();});
+    addEventListener("resize",()=>requestAnimationFrame(place));}
   $("v2slow").addEventListener("click",()=>nudgeSpeed(-1));$("v2fast").addEventListener("click",()=>nudgeSpeed(1));
   $("v2sound").addEventListener("click",e=>{e.stopPropagation();setSound(!AUDIO.on);});
   // equipment labels: one toggle in the top bar (and the same checkbox in the expanded panel)
@@ -9592,20 +9650,20 @@ const TITLE_ART=[
       else if(k===4){h="Find your bottleneck";body=`<div class="fig">${RIVER}</div><p>The mill flows like a river and can only go as fast as its <b>narrowest point</b>. Every mill starts with one: <b>Upgrades</b> names it and fixes it at 25% off. Fix it first, then spend on speed, reliability and lower costs. One upgrade a day.</p>`;}
       else if(k===5){h="Upsets happen";body=`<ul><li>Breakdowns, sheet breaks, storms and the odd pigeon: these are <b>upsets</b>. Crews fix them on their own.</li><li>A red tag marks each one; tap it to fly there. The <b>Upsets</b> tab shows what's down and how long is left.</li><li><b>Event cards</b> offer deals with honest odds. Accept or decline.</li></ul>`;}
       else if(k===6){h="Your leader and the four meters";
-        body=`<ul><li>Your <b>mill leader</b> has a strength and a drawback. Tap their face under the top bar to see them.</li><li>Four meters sit under it: <b>Economy</b> (customers and prices), <b>Labor</b> (the crew), <b>Machinery</b> (the equipment) and <b>Community</b> (the town). Tap one to see what it does.</li><li>Many upsets ask you to choose: each choice costs money and moves the meters. A meter that falls too low brings warnings, then a crisis; a high one earns a reward.</li><li>Tick <b>Always do this</b> on a choice card and that kind of upset is answered for you next time (a note lets you change it).</li></ul>`;}
+        body=`<ul><li>Your <b>mill leader</b> has a strength and a drawback. Tap their face in the top bar, next to pause, to see them.</li><li>Four meters sit just under the top bar: <b>Economy</b> (customers and prices), <b>Labor</b> (the crew), <b>Machinery</b> (the equipment) and <b>Community</b> (the town). Tap one to see what it does.</li><li>Many upsets ask you to choose: each choice costs money and moves the meters. A meter that falls too low brings warnings, then a crisis; a high one earns a reward.</li><li>Tick <b>Always do this</b> on a choice card and that kind of upset is answered for you next time (a note lets you change it).</li></ul>`;}
       else{h=sv?"Every 4 days: an outage, then a new wave":"Every 7 days: a planned outage";next="Start playing";
-        body=`<ul><li>${sv?"Every 4 days":"On days 7, 14, 21 and 28"} the mill stops for a <b>4-hour outage</b> and crews do one big job. Before it, you set a maintenance budget for each area: more money, fewer breakdowns until the next one.</li>${sv?`<li>Each outage starts a new <b>wave</b>: upsets get likelier and costs rise. The bar under the top bar shows by how much. ${S.lead&&S.lead.id==="dot"?"Dot makes no picks: once per outage cycle she fixes a costly breakdown on her own.":"Your leader makes one pick per outage."}</li>`:""}</ul><p class="tsm">Speed and sound are in the panel that opens when you tap the stats bar at the top; pause any time for the menu.</p><label><input type="checkbox" id="tutOff"> Don't show this tutorial again</label>`;}
+        body=`<ul><li>${sv?"Every 4 days":"On days 7, 14, 21 and 28"} the mill stops for a <b>4-hour outage</b> and crews do one big job. Before it, you set a maintenance budget for each area: more money, fewer breakdowns until the next one.</li>${sv?`<li>Each outage starts a new <b>wave</b>: upsets get likelier and costs rise. Tap the top bar to see by how much. ${S.lead&&S.lead.id==="dot"?"Dot makes no picks: once per outage cycle she fixes a costly breakdown on her own.":"Your leader makes one pick per outage."}</li>`:""}</ul><p class="tsm">Speed and sound are in the panel that opens when you tap the stats bar at the top; pause any time for the menu.</p><label><input type="checkbox" id="tutOff"> Don't show this tutorial again</label>`;}
       return `<div class="tc" role="dialog" aria-modal="true" aria-labelledby="tutH"><div class="tk"><span>${kick}</span>${k<N?'<button id="tutSkip">Skip tutorial</button>':""}</div>
         <h2 id="tutH">${h}</h2>${body}<div class="dots">${dots}</div>
         <div class="tb">${k>1?'<button id="tutBack">Back</button>':""}<button class="primary" id="tutNext">${next}</button></div></div>`;}
-    function show(k){i=k;const st=stops[k];el.className=st?"":"center";el.innerHTML=card(k);
+    function show(k){i=k;const st=stops[k];el.className=st?"":"center";el.innerHTML=card(k);document.body.classList.toggle("tutlead",k===6);
       if(st){G3.camTo&&G3.camTo(st[0][0],st[0][1],st[0][2]);G3.tutHi&&G3.tutHi(st[1][0],st[1][1],st[1][2]);}
       else{G3.tutHi&&G3.tutHi(null);if(G3.camHome)G3.camHome();}
       $("tutNext").onclick=()=>{if(i<N)show(i+1);else close(true);};const b=$("tutBack");if(b)b.onclick=()=>show(i-1);const sk=$("tutSkip");if(sk)sk.onclick=()=>close(false);$("tutNext").focus();}
     function open(){if(!el){el=document.createElement("div");el.id="tut";document.body.appendChild(el);}
       running=false;el.hidden=false;show(1);}
     function close(done){const off=$("tutOff");if(done&&off&&off.checked){try{localStorage.setItem("paper-mill-tutorial","off");}catch(e){}}
-      el.hidden=true;G3.tutHi&&G3.tutHi(null);G3.camHome&&G3.camHome();running=true;}
+      el.hidden=true;document.body.classList.remove("tutlead");G3.tutHi&&G3.tutHi(null);G3.camHome&&G3.camHome();running=true;}
     function want(){try{return localStorage.getItem("paper-mill-tutorial")!=="off";}catch(e){return true;}}
     return {open,want,close,get on(){return !!el&&!el.hidden;}};})();
   G3.tut=TUT;
@@ -9883,7 +9941,9 @@ function camPullOn(){try{return localStorage.getItem("paper-mill-campull")!=="of
   if(pend&&!(pend.at&&Date.now()-pend.at<120000&&["season","surv","free"].includes(pend.mode)))pend=null;
   // ---- the background: random per load (never the same scene twice in a row), kept across a map-change reload ----
   let art=0;{let lastA=-1;try{lastA=+(localStorage.getItem("paper-mill-title-art")??-1);}catch(e){}
-    if(pend&&TITLE_ART[pend.art])art=pend.art;else{do{art=Math.floor(Math.random()*TITLE_ART.length);}while(TITLE_ART.length>1&&art===lastA);}
+    // (v5.2 QA: after a map change the background is the new map's own scene, so the picture matches what was picked)
+    const own=pend?TITLE_ART.findIndex(a=>a.id===ENVART[SITE.env]):-1;
+    if(own>=0)art=own;else if(pend&&TITLE_ART[pend.art])art=pend.art;else{do{art=Math.floor(Math.random()*TITLE_ART.length);}while(TITLE_ART.length>1&&art===lastA);}
     try{localStorage.setItem("paper-mill-title-art",String(art));}catch(e){}}
   // light orbs drift through the blur, tinted to each scene
   const ORB={"bird-cutscene":["#ffe6b0","#bfe3ff","#fff4dc"],"forest-valley":["#ffe7a3","#d9f5b8","#fff6d8"],"bayou-night":["#ffb347","#ffd27a","#ff8f5a"],
@@ -9933,7 +9993,9 @@ function camPullOn(){try{return localStorage.getItem("paper-mill-campull")!=="of
     if(!G3.first){const se=S.season&&S.season.on;b.hidden=false;b.querySelector("b").textContent="Continue";
       s.textContent=se?(S.season.surv?`Survival · wave ${survWave()} · day ${Math.floor(S.t/1440)+1}`:`Season · day ${Math.min(30,Math.floor(S.t/1440)+1)} of 30`):S.free?"Free play":"Back to the mill";return;}
     b.hidden=true;}
-  function step(k,nofocus){main.hidden=k!=="main";mapP.hidden=k!=="map";setP.hidden=k!=="set";el.dataset.step=k;
+  // (v5.2 QA: taps in the 250 ms after a step change are ignored, so a double tap can't act on the next step)
+  let stepAt=0;el.addEventListener("click",e=>{if(performance.now()-stepAt<250&&e.target.closest("button")){e.stopPropagation();e.preventDefault();}},true);
+  function step(k,nofocus){stepAt=performance.now();main.hidden=k!=="main";mapP.hidden=k!=="map";setP.hidden=k!=="set";el.dataset.step=k;
     const f=k==="map"?$t("tEnvs").querySelector('[aria-checked="true"]'):k==="set"?$t("tSetDone"):el.querySelector(".tmodes button:not([hidden])");if(f&&!nofocus)setTimeout(()=>f.focus({preventScroll:true}),30);}
   let hideT=0;
   function show(){clearTimeout(hideT);el.classList.remove("out");running=false;welcome();contState();titleSoundPaint();el.hidden=false;document.body.classList.add("titleon");
@@ -10004,8 +10066,12 @@ function camPullOn(){try{return localStorage.getItem("paper-mill-campull")!=="of
   $t("tCog").addEventListener("click",()=>{if(setP.hidden){paintSet();step("set");}else step("main");});
   $t("tSetDone").addEventListener("click",()=>step("main"));
   $t("tSnd").addEventListener("click",()=>{setSound(soundPref!=="on");titleSoundPaint();});
-  el.addEventListener("keydown",e=>{if(e.key!=="Escape"||el.hidden)return;if(document.querySelector("#leadOv:not([hidden]),#lbOv:not([hidden])"))return;
+  // (v5.2 QA: on the document, not the title, so Esc still works once focus has left it, e.g. after backing out of the
+  // leader picker; the picker's own Esc stops the event first. Focus comes back to the map step's button.)
+  document.addEventListener("keydown",e=>{if(e.key!=="Escape"||el.hidden||el.classList.contains("out"))return;if(document.querySelector("#leadOv:not([hidden]),#lbOv:not([hidden])"))return;
     if(!mapP.hidden||!setP.hidden){e.preventDefault();step("main");}});
+  const refocus=()=>setTimeout(()=>{if(el.hidden||mapP.hidden)return;const a=document.activeElement;if(!a||a===document.body||!el.contains(a))$t("tMapGo").focus({preventScroll:true});},0);
+  document.addEventListener("keydown",e=>{if(e.key==="Escape")refocus();},true);document.addEventListener("click",e=>{if(e.target&&e.target.id==="ld-no")refocus();},true);
   // ---- start ----
   if(SKIP)return;
   show();
@@ -10042,7 +10108,7 @@ G3.FT=FT;let ftLast=0,ftRun=false;
 const SIM_STEP=0.25;let simAcc=0;
 const paneShown=el=>{if(!el)return false;const p=el.closest(".v2pane");return p?document.body.classList.contains("sheet-open")&&p.classList.contains("on"):true;};
 function frame(now){
-  if(BANNERS.length){const b=BANNERS[0];if(b.t===null)b.t=now;if(now-b.t>5000)BANNERS.shift();}
+  if(BANNERS.length&&!(G3.tut&&G3.tut.on)){const b=BANNERS[0];if(b.t===null)b.t=now;if(now-b.t>5000)BANNERS.shift();}
   const cap=G3.capOff?0:FRAME_CAP;
   if(cap&&now-last<1000/cap-3){requestAnimationFrame(frame);return;}
   if(FPSM.on){FPSM.n++;if(!FPSM.t0)FPSM.t0=now;else if(now-FPSM.t0>=500){const f=Math.round(FPSM.n*1000/(now-FPSM.t0)),t=(document.hidden?"–":f)+" FPS";

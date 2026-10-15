@@ -284,4 +284,5 @@ UI_TICKS.push(()=>{if(!civToastEl||!S.civ)return;const P=S.civ.pending,m=documen
   document.getElementById("civBar").addEventListener("click",e=>{const c=e.target.closest(".cv");if(!c||!civOn())return;e.stopPropagation();const k=c.dataset.k;
     if(!pop.hidden&&k0===k){pop.hidden=true;return;}k0=k;draw(k);const r=c.getBoundingClientRect();pop.style.left=Math.max(8,Math.min(innerWidth-248,r.left))+"px";pop.style.top=(r.bottom+6)+"px";pop.hidden=false;});
   document.addEventListener("pointerdown",e=>{if(!pop.hidden&&!e.target.closest("#civPop,#civBar"))pop.hidden=true;});
+  document.addEventListener("keydown",e=>{if(e.key==="Escape"&&!pop.hidden){pop.hidden=true;e.stopPropagation();e.preventDefault();}},true);   // (v5.2 QA: Esc closes it before it reaches the pause key)
   UI_TICKS.push(()=>{if(pop.hidden)return;if(!civOn()){pop.hidden=true;return;}if(k0)draw(k0);});}

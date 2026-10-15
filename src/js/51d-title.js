@@ -21,7 +21,9 @@ function camPullOn(){try{return localStorage.getItem("paper-mill-campull")!=="of
   if(pend&&!(pend.at&&Date.now()-pend.at<120000&&["season","surv","free"].includes(pend.mode)))pend=null;
   // ---- the background: random per load (never the same scene twice in a row), kept across a map-change reload ----
   let art=0;{let lastA=-1;try{lastA=+(localStorage.getItem("paper-mill-title-art")??-1);}catch(e){}
-    if(pend&&TITLE_ART[pend.art])art=pend.art;else{do{art=Math.floor(Math.random()*TITLE_ART.length);}while(TITLE_ART.length>1&&art===lastA);}
+    // (v5.2 QA: after a map change the background is the new map's own scene, so the picture matches what was picked)
+    const own=pend?TITLE_ART.findIndex(a=>a.id===ENVART[SITE.env]):-1;
+    if(own>=0)art=own;else if(pend&&TITLE_ART[pend.art])art=pend.art;else{do{art=Math.floor(Math.random()*TITLE_ART.length);}while(TITLE_ART.length>1&&art===lastA);}
     try{localStorage.setItem("paper-mill-title-art",String(art));}catch(e){}}
   // light orbs drift through the blur, tinted to each scene
   const ORB={"bird-cutscene":["#ffe6b0","#bfe3ff","#fff4dc"],"forest-valley":["#ffe7a3","#d9f5b8","#fff6d8"],"bayou-night":["#ffb347","#ffd27a","#ff8f5a"],
@@ -71,7 +73,9 @@ function camPullOn(){try{return localStorage.getItem("paper-mill-campull")!=="of
     if(!G3.first){const se=S.season&&S.season.on;b.hidden=false;b.querySelector("b").textContent="Continue";
       s.textContent=se?(S.season.surv?`Survival · wave ${survWave()} · day ${Math.floor(S.t/1440)+1}`:`Season · day ${Math.min(30,Math.floor(S.t/1440)+1)} of 30`):S.free?"Free play":"Back to the mill";return;}
     b.hidden=true;}
-  function step(k,nofocus){main.hidden=k!=="main";mapP.hidden=k!=="map";setP.hidden=k!=="set";el.dataset.step=k;
+  // (v5.2 QA: taps in the 250 ms after a step change are ignored, so a double tap can't act on the next step)
+  let stepAt=0;el.addEventListener("click",e=>{if(performance.now()-stepAt<250&&e.target.closest("button")){e.stopPropagation();e.preventDefault();}},true);
+  function step(k,nofocus){stepAt=performance.now();main.hidden=k!=="main";mapP.hidden=k!=="map";setP.hidden=k!=="set";el.dataset.step=k;
     const f=k==="map"?$t("tEnvs").querySelector('[aria-checked="true"]'):k==="set"?$t("tSetDone"):el.querySelector(".tmodes button:not([hidden])");if(f&&!nofocus)setTimeout(()=>f.focus({preventScroll:true}),30);}
   let hideT=0;
   function show(){clearTimeout(hideT);el.classList.remove("out");running=false;welcome();contState();titleSoundPaint();el.hidden=false;document.body.classList.add("titleon");
@@ -142,8 +146,12 @@ function camPullOn(){try{return localStorage.getItem("paper-mill-campull")!=="of
   $t("tCog").addEventListener("click",()=>{if(setP.hidden){paintSet();step("set");}else step("main");});
   $t("tSetDone").addEventListener("click",()=>step("main"));
   $t("tSnd").addEventListener("click",()=>{setSound(soundPref!=="on");titleSoundPaint();});
-  el.addEventListener("keydown",e=>{if(e.key!=="Escape"||el.hidden)return;if(document.querySelector("#leadOv:not([hidden]),#lbOv:not([hidden])"))return;
+  // (v5.2 QA: on the document, not the title, so Esc still works once focus has left it, e.g. after backing out of the
+  // leader picker; the picker's own Esc stops the event first. Focus comes back to the map step's button.)
+  document.addEventListener("keydown",e=>{if(e.key!=="Escape"||el.hidden||el.classList.contains("out"))return;if(document.querySelector("#leadOv:not([hidden]),#lbOv:not([hidden])"))return;
     if(!mapP.hidden||!setP.hidden){e.preventDefault();step("main");}});
+  const refocus=()=>setTimeout(()=>{if(el.hidden||mapP.hidden)return;const a=document.activeElement;if(!a||a===document.body||!el.contains(a))$t("tMapGo").focus({preventScroll:true});},0);
+  document.addEventListener("keydown",e=>{if(e.key==="Escape")refocus();},true);document.addEventListener("click",e=>{if(e.target&&e.target.id==="ld-no")refocus();},true);
   // ---- start ----
   if(SKIP)return;
   show();

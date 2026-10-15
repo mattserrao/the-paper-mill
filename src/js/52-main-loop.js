@@ -28,7 +28,7 @@ G3.FT=FT;let ftLast=0,ftRun=false;
 const SIM_STEP=0.25;let simAcc=0;
 const paneShown=el=>{if(!el)return false;const p=el.closest(".v2pane");return p?document.body.classList.contains("sheet-open")&&p.classList.contains("on"):true;};
 function frame(now){
-  if(BANNERS.length){const b=BANNERS[0];if(b.t===null)b.t=now;if(now-b.t>5000)BANNERS.shift();}
+  if(BANNERS.length&&!(G3.tut&&G3.tut.on)){const b=BANNERS[0];if(b.t===null)b.t=now;if(now-b.t>5000)BANNERS.shift();}
   const cap=G3.capOff?0:FRAME_CAP;
   if(cap&&now-last<1000/cap-3){requestAnimationFrame(frame);return;}
   if(FPSM.on){FPSM.n++;if(!FPSM.t0)FPSM.t0=now;else if(now-FPSM.t0>=500){const f=Math.round(FPSM.n*1000/(now-FPSM.t0)),t=(document.hidden?"–":f)+" FPS";

@@ -48,6 +48,16 @@
   const top=$("v2top"),stats=$("v2stats");
   function closeMore(){top.classList.remove("open");stats.setAttribute("aria-expanded","false");}
   stats.addEventListener("click",()=>{const o=!top.classList.contains("open");top.classList.toggle("open",o);stats.setAttribute("aria-expanded",String(o));});
+  // v5.2 QA: the civics bars move down below the open panel (it used to cover them), and the panel closes when a card,
+  // dialog or the pause menu opens over it
+  {const more=$("v2more"),cb=$("civBar");let lastY=-1;
+    const place=()=>{const o=top.classList.contains("open");let y=-1;if(o){const r=more.getBoundingClientRect();if(r.height)y=Math.round(r.bottom+8);}
+      if(y!==lastY){lastY=y;if(cb)cb.style.top=y<0?"":y+"px";const p=$("civPop");if(p&&!p.hidden)p.hidden=true;}};
+    stats.addEventListener("click",()=>requestAnimationFrame(place));
+    UI_TICKS.push(()=>{if(!top.classList.contains("open")){if(lastY>=0)place();return;}
+      const blocked=(S.cards&&S.cards.open)||!$("v2menu").hidden||[...document.querySelectorAll(".overlay")].some(o=>!o.hidden&&!o.classList.contains("note")&&!o.classList.contains("dealres"));
+      if(blocked)closeMore();place();});
+    addEventListener("resize",()=>requestAnimationFrame(place));}
   $("v2slow").addEventListener("click",()=>nudgeSpeed(-1));$("v2fast").addEventListener("click",()=>nudgeSpeed(1));
   $("v2sound").addEventListener("click",e=>{e.stopPropagation();setSound(!AUDIO.on);});
   // equipment labels: one toggle in the top bar (and the same checkbox in the expanded panel)
@@ -110,20 +120,20 @@
       else if(k===4){h="Find your bottleneck";body=`<div class="fig">${RIVER}</div><p>The mill flows like a river and can only go as fast as its <b>narrowest point</b>. Every mill starts with one: <b>Upgrades</b> names it and fixes it at 25% off. Fix it first, then spend on speed, reliability and lower costs. One upgrade a day.</p>`;}
       else if(k===5){h="Upsets happen";body=`<ul><li>Breakdowns, sheet breaks, storms and the odd pigeon: these are <b>upsets</b>. Crews fix them on their own.</li><li>A red tag marks each one; tap it to fly there. The <b>Upsets</b> tab shows what's down and how long is left.</li><li><b>Event cards</b> offer deals with honest odds. Accept or decline.</li></ul>`;}
       else if(k===6){h="Your leader and the four meters";
-        body=`<ul><li>Your <b>mill leader</b> has a strength and a drawback. Tap their face under the top bar to see them.</li><li>Four meters sit under it: <b>Economy</b> (customers and prices), <b>Labor</b> (the crew), <b>Machinery</b> (the equipment) and <b>Community</b> (the town). Tap one to see what it does.</li><li>Many upsets ask you to choose: each choice costs money and moves the meters. A meter that falls too low brings warnings, then a crisis; a high one earns a reward.</li><li>Tick <b>Always do this</b> on a choice card and that kind of upset is answered for you next time (a note lets you change it).</li></ul>`;}
+        body=`<ul><li>Your <b>mill leader</b> has a strength and a drawback. Tap their face in the top bar, next to pause, to see them.</li><li>Four meters sit just under the top bar: <b>Economy</b> (customers and prices), <b>Labor</b> (the crew), <b>Machinery</b> (the equipment) and <b>Community</b> (the town). Tap one to see what it does.</li><li>Many upsets ask you to choose: each choice costs money and moves the meters. A meter that falls too low brings warnings, then a crisis; a high one earns a reward.</li><li>Tick <b>Always do this</b> on a choice card and that kind of upset is answered for you next time (a note lets you change it).</li></ul>`;}
       else{h=sv?"Every 4 days: an outage, then a new wave":"Every 7 days: a planned outage";next="Start playing";
-        body=`<ul><li>${sv?"Every 4 days":"On days 7, 14, 21 and 28"} the mill stops for a <b>4-hour outage</b> and crews do one big job. Before it, you set a maintenance budget for each area: more money, fewer breakdowns until the next one.</li>${sv?`<li>Each outage starts a new <b>wave</b>: upsets get likelier and costs rise. The bar under the top bar shows by how much. ${S.lead&&S.lead.id==="dot"?"Dot makes no picks: once per outage cycle she fixes a costly breakdown on her own.":"Your leader makes one pick per outage."}</li>`:""}</ul><p class="tsm">Speed and sound are in the panel that opens when you tap the stats bar at the top; pause any time for the menu.</p><label><input type="checkbox" id="tutOff"> Don't show this tutorial again</label>`;}
+        body=`<ul><li>${sv?"Every 4 days":"On days 7, 14, 21 and 28"} the mill stops for a <b>4-hour outage</b> and crews do one big job. Before it, you set a maintenance budget for each area: more money, fewer breakdowns until the next one.</li>${sv?`<li>Each outage starts a new <b>wave</b>: upsets get likelier and costs rise. Tap the top bar to see by how much. ${S.lead&&S.lead.id==="dot"?"Dot makes no picks: once per outage cycle she fixes a costly breakdown on her own.":"Your leader makes one pick per outage."}</li>`:""}</ul><p class="tsm">Speed and sound are in the panel that opens when you tap the stats bar at the top; pause any time for the menu.</p><label><input type="checkbox" id="tutOff"> Don't show this tutorial again</label>`;}
       return `<div class="tc" role="dialog" aria-modal="true" aria-labelledby="tutH"><div class="tk"><span>${kick}</span>${k<N?'<button id="tutSkip">Skip tutorial</button>':""}</div>
         <h2 id="tutH">${h}</h2>${body}<div class="dots">${dots}</div>
         <div class="tb">${k>1?'<button id="tutBack">Back</button>':""}<button class="primary" id="tutNext">${next}</button></div></div>`;}
-    function show(k){i=k;const st=stops[k];el.className=st?"":"center";el.innerHTML=card(k);
+    function show(k){i=k;const st=stops[k];el.className=st?"":"center";el.innerHTML=card(k);document.body.classList.toggle("tutlead",k===6);
       if(st){G3.camTo&&G3.camTo(st[0][0],st[0][1],st[0][2]);G3.tutHi&&G3.tutHi(st[1][0],st[1][1],st[1][2]);}
       else{G3.tutHi&&G3.tutHi(null);if(G3.camHome)G3.camHome();}
       $("tutNext").onclick=()=>{if(i<N)show(i+1);else close(true);};const b=$("tutBack");if(b)b.onclick=()=>show(i-1);const sk=$("tutSkip");if(sk)sk.onclick=()=>close(false);$("tutNext").focus();}
     function open(){if(!el){el=document.createElement("div");el.id="tut";document.body.appendChild(el);}
       running=false;el.hidden=false;show(1);}
     function close(done){const off=$("tutOff");if(done&&off&&off.checked){try{localStorage.setItem("paper-mill-tutorial","off");}catch(e){}}
-      el.hidden=true;G3.tutHi&&G3.tutHi(null);G3.camHome&&G3.camHome();running=true;}
+      el.hidden=true;document.body.classList.remove("tutlead");G3.tutHi&&G3.tutHi(null);G3.camHome&&G3.camHome();running=true;}
     function want(){try{return localStorage.getItem("paper-mill-tutorial")!=="off";}catch(e){return true;}}
     return {open,want,close,get on(){return !!el&&!el.hidden;}};})();
   G3.tut=TUT;

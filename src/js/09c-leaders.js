@@ -41,8 +41,11 @@ const leadTallyHTML=who=>leadTallyRows(leadTally(who));
 
 /* ---- the picker: after the site, before the run starts (menu, pause menu, game over) ---- */
 let leadPickEl=null;
-function leadCardHTML(id,tag="button",extra=""){const L=LEADERS[id];
-  return `<${tag} class="ldcard" data-l="${id}"${tag==="button"?' type="button" role="radio" aria-checked="false"':""}>${leadArt(id)}<span class="ldbody"><small>${L.role}</small><b>${escHTML(L.name)}</b><em>${L.title}</em>
+// v5.2 QA: one line each for the compact phone picker (the full text shows on the picked card)
+const LEAD_PICK={chip:["Fiber deals or a price push","Pay settlements, more strife"],dot:["Faster repairs, fixes big breakdowns","Repair bills cost more"],
+  fel:["A capacity project each outage","Outages run longer"],hank:["Fewer sheet breaks or cheaper steam","Runs heavy: more fiber"]};
+function leadCardHTML(id,tag="button",extra=""){const L=LEADERS[id],sh=LEAD_PICK[id];
+  return `<${tag} class="ldcard" data-l="${id}"${tag==="button"?' type="button" role="radio" aria-checked="false"':""}>${leadArt(id)}<span class="ldbody"><small>${L.role}</small><b>${escHTML(L.name)}</b><em>${L.title}</em>${tag==="button"&&sh?`<span class="ldshort"><span class="pro">${sh[0]}</span><span class="con">${sh[1]}</span></span>`:""}
     <span class="pro">${L.plus()}</span><span class="con">${L.minus()}</span>${tag==="button"&&typeof CIV!=="undefined"&&CIV.lead[id]?`<span class="ldstart">Starts: ${CIVK.map(k=>CIV.names[k]+" "+Math.max(CIV.startMin,CIV.lead[id][k]+((CIV.site[SITE.env]||{})[k]||0))).join(" · ")}</span>`:""}<i>“${L.say}”</i>${extra}</span></${tag}>`;}
 function leadPickOpen(done,wait,mode){const sv=mode!=="season";leadMode=sv?"surv":"season";let sel=null;try{const v=localStorage.getItem("paper-mill-leader");if(LEADERS[v])sel=v;}catch(e){}
   if(!leadPickEl){leadPickEl=document.createElement("div");leadPickEl.className="overlay top";leadPickEl.id="leadOv";leadPickEl.hidden=true;document.body.appendChild(leadPickEl);}
@@ -54,11 +57,12 @@ function leadPickOpen(done,wait,mode){const sv=mode!=="season";leadMode=sv?"surv
   const paint=()=>{el.querySelectorAll(".ldcard").forEach(b=>b.setAttribute("aria-checked",String(b.dataset.l===sel)));const g=el.querySelector("#ld-go");g.disabled=!sel;g.textContent=sel?`Start ${sv?"the run":"the season"} with ${LEADERS[sel].name.split(" ")[0]}`:"Pick a leader to start";};
   const close=()=>{el.hidden=true;leadMode=null;document.removeEventListener("keydown",key,true);if(back&&back.focus)back.focus();};
   const key=e=>{if(e.key==="Escape"){e.preventDefault();e.stopPropagation();close();}};
-  el.querySelectorAll(".ldcard").forEach(b=>b.addEventListener("click",()=>{sel=b.dataset.l;paint();}));
+  el.querySelectorAll(".ldcard").forEach(b=>b.addEventListener("click",()=>{sel=b.dataset.l;paint();more();if(innerWidth<=640)requestAnimationFrame(()=>b.scrollIntoView({block:"nearest",behavior:"smooth"}));}));
+  const md=el.querySelector(".modal"),more=()=>md.classList.toggle("more",md.scrollHeight-md.scrollTop-md.clientHeight>24);md.addEventListener("scroll",more,{passive:true});
   el.querySelector("#ld-no").addEventListener("click",close);
   el.querySelector("#ld-go").addEventListener("click",()=>{if(!sel)return;const g=el.querySelector("#ld-go"),w=wait&&wait();
     if(w&&w.then){g.disabled=true;g.setAttribute("aria-busy","true");g.textContent="Getting the mill ready…";w.then(()=>{close();done(sel);});}else{close();done(sel);}});
-  document.addEventListener("keydown",key,true);paint();el.hidden=false;el.querySelector(".modal").scrollTop=0;{const s=el.querySelector('.ldcard[aria-checked="true"]'),m=el.querySelector(".modal");if(s)s.focus();else{m.tabIndex=-1;m.focus({preventScroll:true});}}}   // (v5.1 QA: no card looks picked before a pick)
+  document.addEventListener("keydown",key,true);paint();el.hidden=false;el.querySelector(".modal").scrollTop=0;more();{const s=el.querySelector('.ldcard[aria-checked="true"]'),m=el.querySelector(".modal");if(s)s.focus();else{m.tabIndex=-1;m.focus({preventScroll:true});}}}   // (v5.1 QA: no card looks picked before a pick)
 
 /* ---- the outage budget dialog: the leader's pick, and the one change of leader ---- */
 const LEAD_SHORT={chip:"Fiber lock or a sales push; wages rise",dot:"Faster repairs, fixes one breakdown a cycle",fel:"+capacity each outage; outages run longer",hank:"Fewer breaks or cheaper steam; fiber +2%"};

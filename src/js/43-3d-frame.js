@@ -237,7 +237,7 @@
     lblPaint(now);
     pm("3D labels");
     // headline + active incidents
-    if(doText){const b=BANNERS[0];if(banner.hidden!==!b)banner.hidden=!b;if(b){const cn="banner3d "+(b.kind==="good"?"good":""),tg=b.tag||(b.kind==="good"?"INSTALLED":"BREAKING");
+    if(doText){const b=G3.tut&&G3.tut.on?null:BANNERS[0];if(banner.hidden!==!b)banner.hidden=!b;if(b){const cn="banner3d "+(b.kind==="good"?"good":""),tg=b.tag||(b.kind==="good"?"INSTALLED":"BREAKING");
       if(banner.className!==cn)banner.className=cn;if(banner._tg!==tg){banner._tg=tg;banner.querySelector("span").textContent=tg;}if(banner._tx!==b.text){banner._tx=b.text;banner.querySelector("b").textContent=b.text;}}
       const ck=S.inc.map(i=>i.id).join("|");if(ck!==chips.dataset.k){chips.dataset.k=ck;chips.replaceChildren(...S.inc.map(i=>{const c=document.createElement("button");c.type="button";c.dataset.id=i.id;c.textContent=EV[i.id].name;c.title="Show "+EV[i.id].name;return c;}));}
       banner.classList.toggle("go",!!(b&&b.id&&G3.spotOf(b.id)));}
