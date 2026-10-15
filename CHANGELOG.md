@@ -1,5 +1,20 @@
 # Changelog
 
+## v5.4.0 (release, 2026-10-15): title screen, civics world, dark mode
+Released to main. Brings in everything from the v5.1–v5.4 test builds (v5.1.0 civics and leaders in seasons are released with it).
+
+- **Title screen (v5.2):** Mode → Map → Leader. Season, Survival, Free Play and Zen Mode, a settings cog and a sound toggle. One of five painted backgrounds per load with bokeh and vignette (after a map change, that map's own scene), and its own welcoming theme, "Morning at the Mill". Main menu in the pause menu returns to it; Continue resumes the run.
+- **Civics in the world (v5.2):** meter levels change the mill and town (lit windows, the car park, signs, protests, a barbecue, beacons and more); civic events and upsets that had no animation got one.
+- **Camera pulls (v5.2, v5.4):** major civic events and upsets fly the camera there and back; a touch or key cancels. For a major upset the camera flies there first, then its choice card opens. Settings → "Fly to big moments" turns it off.
+- **Top bar (v5.2):** the leader's face sits in the bar (tap for their card), the outage countdown is under the clock, the civics meters are slim colour bars with icons; the mill name moved to the expanded panel and the pause menu.
+- **Dark mode (v5.3, v5.4):** the interface follows the device's light/dark setting, live; Settings → Appearance pins Auto, Light or Dark. The mill keeps its own brand colour (lifted for dark panels), the trend chart and 3D labels follow the theme; the 3D world is unchanged.
+- **Performance (v5.2 review):** DOM writes cut from ~183/s to ~6/s and browser render time per frame from 6.4 to 3.8 ms; finished trucks no longer pile up in the scene; civics scenes build a few per frame during start-up; nothing is drawn behind the title screen. Dead code removed. The simulation is bit-identical.
+- **QA (three rounds, 100 scripted runs each, plus agent players):**
+  - Bugs fixed: the season-start banner said INSTALLED; Esc didn't close the meter popup; the tutorial pointed under the top bar; the open stats panel covered the meters; Esc on the title's map step after backing out of the leader picker; major upsets usually lost their camera pull; the trend chart ignored dark mode.
+  - Phones: 44 px touch targets throughout; a compact leader picker (one line each for strength and drawback, the picked card opens fully); cash and profit fit beside the grade (the grade badge lives in the Report tab on phones); sharp trend-chart text; the title Settings Done button stays in view.
+  - Polish: banners wait while the tutorial is open; a double tap can't act on the next title step; the title's "THE" and focus rings; dark-mode dialog edges, outage picks, pips and panel.
+- **Tools:** `tools/qa_v52.py` (100-run QA with title-screen starts, top-bar, civics-scene and theme checks; half the runs in dark mode); `tools/titleart.py` packs the title backgrounds.
+
 ## v5.1.0 (test build, 2026-10-15): civics, leaders in seasons, two QA rounds
 Test branch only, not released. Four civics meters (Economy, Labor, Machinery, Community, 0–100) run in seasons and survival; mill leaders now run seasons too.
 
