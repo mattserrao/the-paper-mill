@@ -963,7 +963,7 @@ body.titleon #leadOv .modal .primary:disabled{opacity:.55}
    The interface tokens are redefined on body, not :root, so the 3D world (which reads :root) keeps its colours. */
 body.dark{color-scheme:dark;
   --bg:#14181f; --panel:#1d222b; --ink:#e8ecf2; --muted:#9ea7b6; --line:#313846; --chip:#272d38;
-  --brand:#4a72f0; --stock:#6fb0d8; --machine:#a3adc0; --kraft:#d39a5f; --pulp:#c49a6c;
+  --stock:#6fb0d8; --machine:#a3adc0; --kraft:#d39a5f; --pulp:#c49a6c;
   --ok:#4fc386; --warn:#e3a943; --bad:#ff6f61;
   --shadow:0 1px 2px rgba(0,0,0,.3),0 8px 24px rgba(0,0,0,.35)}
 body.dark .v2card,body.dark .spider,body.dark .zenexit,body.dark .blackout3d div,body.dark.app #jumps button{background:color-mix(in srgb,var(--panel) 96%,transparent);border-color:var(--line);color:var(--ink)}
@@ -976,3 +976,14 @@ body.dark .auto[aria-pressed="true"]{background:color-mix(in srgb,var(--ok) 18%,
 body.dark .v2menu .warn{border-color:color-mix(in srgb,var(--bad) 50%,var(--panel))}
 body.dark .v2menu{background:radial-gradient(ellipse at 50% 30%,rgba(20,24,31,.55),rgba(12,15,20,.82))}
 body.dark .v2scrim{background:rgba(0,0,0,.4)}
+/* v5.4 dark mode: a quiet dialog edge, brand-coloured picks in the outage plan, visible empty pips, a solid stats panel */
+body.dark .modal{border:1px solid var(--line);box-shadow:0 18px 50px rgba(0,0,0,.45)}
+body.dark .outg .seg button[aria-pressed="true"],body.dark .seg button[aria-pressed="true"]{background:var(--brand);color:#fff}
+body.dark .pips i{background:transparent;border-color:#4b5466}
+body.dark .v2more{background:var(--panel)}
+/* v5.4 phone fixes: the grade badge leaves the phone top bar (it is in the Report tab) so cash and profit fit; the
+   rating number grows to fit "100%"; the title Settings Done button stays in view while the list scrolls */
+@media (max-width:420px){.v2stats .gbadge{display:none!important}.v2stats .gbadge+.chev{display:grid!important}}
+.rating .g{width:auto;min-width:1.2em}
+.title .tset .tbtns{position:sticky;bottom:-18px;margin:10px -22px -18px;padding:14px 22px 18px;background:linear-gradient(rgba(14,18,27,0),rgba(14,18,27,.92) 35%)}
+@media (max-width:640px){.title .tset .tbtns{bottom:-14px;margin:10px -16px -14px;padding:14px 16px 14px}}

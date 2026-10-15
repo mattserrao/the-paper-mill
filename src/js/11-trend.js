@@ -1,15 +1,16 @@
 /* ---------- Stats: 24-hour trend chart, theme colors, shared animation phases ---------- */
 const tc=$("trend"),tctx=tc.getContext("2d");
-// chart colors come from the CSS tokens; read once (they don't change while the page is open)
+// chart colors come from the CSS tokens (v5.4: read again when the theme changes)
 const col={};
-function readColors(){const cs=getComputedStyle(document.documentElement);
+function readColors(){const cs=getComputedStyle(document.body||document.documentElement);   // (v5.4: body, where dark mode sets its colours)
   ["muted","line","stock","machine","kraft","ok"].forEach(k=>col[k]=cs.getPropertyValue("--"+k).trim());}
 const DPR=()=>Math.min(2,window.devicePixelRatio||1);
 function sizeTrend(){const d=DPR(),w=tc.clientWidth||1000;tc.width=w*d;tc.height=150*d;}
 sizeTrend();window.addEventListener("resize",sizeTrend);
 // animation phases advanced by the 3D frame (conveyor belt, chest swirl, sheet, dryer cans, forklifts)
 const V={belt:0,swirl:0,sheet:0,cans:0,lifts:[],rollsAnim:0};
-function drawTrend(){if(!col.muted)readColors();if(tc.width<4)sizeTrend();
+document.addEventListener("pm-theme",()=>{readColors();});   // (v5.4: repaint in the new theme)
+function drawTrend(){if(!col.muted)readColors();if(tc.width<4||(tc.clientWidth>0&&Math.abs(tc.clientWidth*DPR()-tc.width)>2))sizeTrend();   // (v5.4: re-sized once it is shown, so phones get sharp, unsquashed text)
   {const n=S.trend.length,k=n+"|"+tc.width+"|"+col.muted+"|"+col.stock;if(n>=2&&S.trend[n-1]===drawTrend.last&&k===drawTrend.key)return;drawTrend.last=S.trend[n-1];drawTrend.key=k;}   // (v5.2: redraw only when a point is added, the canvas resizes or the colors change)
   const d=DPR(),W=tc.width/d,H=150;tctx.setTransform(d,0,0,d,0,0);tctx.clearRect(0,0,W,H);
   const l=34,r=W-8,t=8,b=H-20;

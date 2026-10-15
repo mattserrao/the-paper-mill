@@ -975,7 +975,7 @@ body.titleon #leadOv .modal .primary:disabled{opacity:.55}
    The interface tokens are redefined on body, not :root, so the 3D world (which reads :root) keeps its colours. */
 body.dark{color-scheme:dark;
   --bg:#14181f; --panel:#1d222b; --ink:#e8ecf2; --muted:#9ea7b6; --line:#313846; --chip:#272d38;
-  --brand:#4a72f0; --stock:#6fb0d8; --machine:#a3adc0; --kraft:#d39a5f; --pulp:#c49a6c;
+  --stock:#6fb0d8; --machine:#a3adc0; --kraft:#d39a5f; --pulp:#c49a6c;
   --ok:#4fc386; --warn:#e3a943; --bad:#ff6f61;
   --shadow:0 1px 2px rgba(0,0,0,.3),0 8px 24px rgba(0,0,0,.35)}
 body.dark .v2card,body.dark .spider,body.dark .zenexit,body.dark .blackout3d div,body.dark.app #jumps button{background:color-mix(in srgb,var(--panel) 96%,transparent);border-color:var(--line);color:var(--ink)}
@@ -988,6 +988,17 @@ body.dark .auto[aria-pressed="true"]{background:color-mix(in srgb,var(--ok) 18%,
 body.dark .v2menu .warn{border-color:color-mix(in srgb,var(--bad) 50%,var(--panel))}
 body.dark .v2menu{background:radial-gradient(ellipse at 50% 30%,rgba(20,24,31,.55),rgba(12,15,20,.82))}
 body.dark .v2scrim{background:rgba(0,0,0,.4)}
+/* v5.4 dark mode: a quiet dialog edge, brand-coloured picks in the outage plan, visible empty pips, a solid stats panel */
+body.dark .modal{border:1px solid var(--line);box-shadow:0 18px 50px rgba(0,0,0,.45)}
+body.dark .outg .seg button[aria-pressed="true"],body.dark .seg button[aria-pressed="true"]{background:var(--brand);color:#fff}
+body.dark .pips i{background:transparent;border-color:#4b5466}
+body.dark .v2more{background:var(--panel)}
+/* v5.4 phone fixes: the grade badge leaves the phone top bar (it is in the Report tab) so cash and profit fit; the
+   rating number grows to fit "100%"; the title Settings Done button stays in view while the list scrolls */
+@media (max-width:420px){.v2stats .gbadge{display:none!important}.v2stats .gbadge+.chev{display:grid!important}}
+.rating .g{width:auto;min-width:1.2em}
+.title .tset .tbtns{position:sticky;bottom:-18px;margin:10px -22px -18px;padding:14px 22px 18px;background:linear-gradient(rgba(14,18,27,0),rgba(14,18,27,.92) 35%)}
+@media (max-width:640px){.title .tset .tbtns{bottom:-14px;margin:10px -16px -14px;padding:14px 16px 14px}}
 </style>
 </head>
 <body class="app">
@@ -1168,7 +1179,7 @@ body.dark .v2scrim{background:rgba(0,0,0,.4)}
 <div class="btns"><button class="primary" id="no3d-retry">Try again</button></div></div></div>
 
 <script type="module">
-const APP_VER="v5.3.0";   // shown in the menu and sent with leaderboard scores (max 12 characters)
+const APP_VER="v5.4.0";   // shown in the menu and sent with leaderboard scores (max 12 characters)
 // TEST BUILDS ONLY (off in releases): turbo speeds 240/480/960 sim min/s for fast playtests. Above 120, crews and maintenance start jobs
 // without waiting for the 3D walk (as with the 3D view off) and outages keep the speed. Set false for a release.
 const TURBO=false,TURBO_FAST=s=>TURBO&&s>120;
@@ -1201,8 +1212,16 @@ if(THREE)Object.defineProperty(THREE.Material.prototype,"forceSinglePass",{get()
 let THEME_PREF="auto";try{const v=localStorage.getItem("paper-mill-theme");if(v==="light"||v==="dark")THEME_PREF=v;}catch(e){}
 const THEME_MQ=window.matchMedia?matchMedia("(prefers-color-scheme: dark)"):null;
 function themeDark(){return THEME_PREF==="dark"||(THEME_PREF==="auto"&&!!(THEME_MQ&&THEME_MQ.matches));}
-function applyTheme(){const d=themeDark(),b=document.body;if(!b)return;if(b.classList.contains("dark")!==d)b.classList.toggle("dark",d);
+// v5.4: dark mode keeps the mill's own brand colour, lifted 20% toward white so it reads on dark panels (set as a hex value
+// on body so the canvas labels and charts can use it; re-done when the brand changes on :root)
+function themeBrand(){const b=document.body;if(!b)return;if(!themeDark()){b.style.removeProperty("--brand");return;}
+  const r=getComputedStyle(document.documentElement).getPropertyValue("--brand").trim(),m=/^#?([0-9a-f]{6})$/i.exec(r);if(!m)return;
+  const n=parseInt(m[1],16),c=s=>Math.round(((n>>s)&255)*0.8+255*0.2).toString(16).padStart(2,"0"),h="#"+c(16)+c(8)+c(0);
+  if(b.style.getPropertyValue("--brand")!==h)b.style.setProperty("--brand",h);}
+try{new MutationObserver(()=>{themeBrand();}).observe(document.documentElement,{attributes:true,attributeFilter:["style"]});}catch(e){}
+function applyTheme(){const d=themeDark(),b=document.body;if(!b)return;if(b.classList.contains("dark")!==d)b.classList.toggle("dark",d);themeBrand();
   let m=document.querySelector('meta[name="theme-color"]');if(!m){m=document.createElement("meta");m.name="theme-color";document.head.appendChild(m);}m.content=d?"#14181f":"#eef0f6";
+  if(applyTheme.was!==d){applyTheme.was=d;document.dispatchEvent(new Event("pm-theme"));}
   document.querySelectorAll("[data-theme-pick]").forEach(x=>x.setAttribute("aria-pressed",String(x.dataset.themePick===THEME_PREF)));}
 function setTheme(v){THEME_PREF=v==="light"||v==="dark"?v:"auto";try{if(THEME_PREF==="auto")localStorage.removeItem("paper-mill-theme");else localStorage.setItem("paper-mill-theme",THEME_PREF);}catch(e){}applyTheme();}
 // the Auto / Light / Dark buttons, for both settings panels (title and in-game)
@@ -3591,13 +3610,16 @@ function civOpen(){const V=S.civ,d=V.cur;if(!d||typeof document==="undefined")re
       return `<button type="button" class="civbtn" data-i="${i}"><span class="cvl">${"ABC"[i]}</span><span class="cvb"><b>${escHTML(c[0])}</b>${tag&&!mt?`<em class="cvtag">${civTagName(area,tag)}</em>`:""}
         <span class="cvrow">${cost}${c[2]?`<span class="cvodds ${c[2]<0?"up":"dn"}">${civOdds(c[2])}</span>`:""}${civChips(c[3])}</span>${c[4]?`<small>${escHTML(c[4])}</small>`:""}</span></button>`;}).join("")}</div>
     ${!mt&&!rw?`<label class="civord"><input type="checkbox" id="civ-ord"${ord&&!d.ask?" checked":""}> ${d.ask&&ord?"Make this the new standing order":"Always do this"} for ${escHTML(civAreaWord(area))} upsets${ord?` <small>(now: ${civTagName(area,ord)})</small>`:""}</label>`:""}</div>`;
-  civEl.hidden=false;
   civEl.querySelectorAll(".civbtn").forEach(b=>b.addEventListener("click",()=>{const i=+b.dataset.i,box=civEl.querySelector("#civ-ord");
     if(box){if(box.checked){const t=civTag(id,i);if(t)V.orders[area]=t;}else if(!d.ask)delete V.orders[area];}   // (after Change, an unticked box keeps the order)
     civEl.hidden=true;V.cur=null;S.cards.open=null;civApply(d,i,false);
     const menu=document.getElementById("v2menu");running=!(menu&&!menu.hidden);
     if(V.q.length)civNext();}));
-  const f=civEl.querySelector(".civbtn");if(f)f.focus({preventScroll:true});civEl.querySelector(".modal").scrollTop=0;AUDIO.sfx("cash",150);}
+  // v5.4: for a major upset the camera flies there first (the game is already paused), then the card opens over the
+  // scene; it opens anyway after 3.5 s, or at once when there is no camera move (pulls off, no 3D, recently moved)
+  let shown=false;const reveal=()=>{if(shown||V.cur!==d||!S.cards.open||!S.cards.open.civ)return;shown=true;civEl.hidden=false;
+    const f=civEl.querySelector(".civbtn");if(f)f.focus({preventScroll:true});civEl.querySelector(".modal").scrollTop=0;AUDIO.sfx("cash",150);};
+  if(G3.civPullCard&&G3.civPullCard(id,reveal))setTimeout(reveal,3500);else reveal();}
 
 /* ---- event cards: civics on accept, win, lose and decline (05 calls these) ---- */
 function civCardHTML(c){const x=CIVCARD[c.id];if(!civOn()||!x)return "";const p=[["Accept",x.a],["Win",x.w],["Lose",x.l],["Decline",x.d]].filter(q=>civTxt(q[1]));
@@ -3948,16 +3970,17 @@ function updateText(){
 
 /* ---------- Stats: 24-hour trend chart, theme colors, shared animation phases ---------- */
 const tc=$("trend"),tctx=tc.getContext("2d");
-// chart colors come from the CSS tokens; read once (they don't change while the page is open)
+// chart colors come from the CSS tokens (v5.4: read again when the theme changes)
 const col={};
-function readColors(){const cs=getComputedStyle(document.documentElement);
+function readColors(){const cs=getComputedStyle(document.body||document.documentElement);   // (v5.4: body, where dark mode sets its colours)
   ["muted","line","stock","machine","kraft","ok"].forEach(k=>col[k]=cs.getPropertyValue("--"+k).trim());}
 const DPR=()=>Math.min(2,window.devicePixelRatio||1);
 function sizeTrend(){const d=DPR(),w=tc.clientWidth||1000;tc.width=w*d;tc.height=150*d;}
 sizeTrend();window.addEventListener("resize",sizeTrend);
 // animation phases advanced by the 3D frame (conveyor belt, chest swirl, sheet, dryer cans, forklifts)
 const V={belt:0,swirl:0,sheet:0,cans:0,lifts:[],rollsAnim:0};
-function drawTrend(){if(!col.muted)readColors();if(tc.width<4)sizeTrend();
+document.addEventListener("pm-theme",()=>{readColors();});   // (v5.4: repaint in the new theme)
+function drawTrend(){if(!col.muted)readColors();if(tc.width<4||(tc.clientWidth>0&&Math.abs(tc.clientWidth*DPR()-tc.width)>2))sizeTrend();   // (v5.4: re-sized once it is shown, so phones get sharp, unsquashed text)
   {const n=S.trend.length,k=n+"|"+tc.width+"|"+col.muted+"|"+col.stock;if(n>=2&&S.trend[n-1]===drawTrend.last&&k===drawTrend.key)return;drawTrend.last=S.trend[n-1];drawTrend.key=k;}   // (v5.2: redraw only when a point is added, the canvas resizes or the colors change)
   const d=DPR(),W=tc.width/d,H=150;tctx.setTransform(d,0,0,d,0,0);tctx.clearRect(0,0,W,H);
   const l=34,r=W-8,t=8,b=H-20;
@@ -5433,7 +5456,11 @@ function no3D(){G3.ok=false;$("no3d").hidden=false;$("no3d-retry").onclick=()=>l
   const lblSet=(R,a,b,bad)=>{if(R.a!==a||R.b!==b||R.bad!==bad){R.a=a;R.b=b;R.bad=bad;R.ver++;}};
   try{if(document.fonts){document.fonts.addEventListener("loadingdone",()=>{LB.gen++;});document.fonts.ready.then(()=>{LB.gen++;});}}catch(e){}
   const mixW=(hex,k)=>{const m=/^#?([0-9a-f]{6})$/i.exec(hex);if(!m)return hex;const n=parseInt(m[1],16),c=s=>Math.round(((n>>s)&255)*k+255*(1-k));return `rgb(${c(16)},${c(8)},${c(0)})`;};
-  function lblStyle(){LB.fb=tok("f-body");LB.ink=tok("ink");LB.muted=tok("muted");LB.bad=tok("bad");LB.brand=tok("brand");LB.incLine=mixW(LB.bad,0.45);LB.gen++;}
+  // v5.4: in dark mode the pills are dark with light text (colours read from body, where dark mode sets them)
+  const tkb=n=>(document.body&&getComputedStyle(document.body).getPropertyValue("--"+n).trim())||tok(n);
+  function lblStyle(){LB.dark=!!(document.body&&document.body.classList.contains("dark"));LB.fb=tok("f-body");LB.ink=tkb("ink");LB.muted=tkb("muted");LB.bad=tkb("bad");LB.brand=tkb("brand");
+    LB.incLine=LB.dark?"rgba(255,111,97,.55)":mixW(LB.bad,0.45);LB.fill=LB.dark?"rgba(29,34,43,.9)":"rgba(255,255,255,.9)";LB.fillInc=LB.dark?"rgba(29,34,43,.94)":"rgba(255,255,255,.92)";LB.edge=LB.dark?"rgba(255,255,255,.14)":"rgba(225,228,238,.9)";LB.gen++;}
+  document.addEventListener("pm-theme",()=>{LB.pal=-1;LB.force=true;});
   const rr=(X,x,y,w,h,r)=>{r=Math.min(r,w/2,h/2);X.beginPath();X.moveTo(x+r,y);X.arcTo(x+w,y,x+w,y+h,r);X.arcTo(x+w,y+h,x,y+h,r);X.arcTo(x,y+h,x,y,r);X.arcTo(x,y,x+w,y,r);X.closePath();};
   // one label's pill, drawn at the overlay's pixel ratio into its own canvas (box W x H CSS px, plus a margin m for the shadow)
   function pill(R){const C=LB.cmp,d=LB.d,inc=R.inc,showS=!C;R.cv=R.cv||document.createElement("canvas");const X=R.cv.getContext("2d");
@@ -5454,8 +5481,8 @@ function no3D(){G3.ok=false;$("no3d").hidden=false;$("no3d-retry").onclick=()=>l
     // shadow outside the box only (like box-shadow), then the box over it
     X.save();rr(X,0,0,W,H,rad);X.shadowColor=sh[2];X.shadowBlur=sh[1]*d;X.shadowOffsetY=sh[0]*d;X.fillStyle="#000";X.fill();
     X.shadowColor="transparent";X.globalCompositeOperation="destination-out";X.fill();X.restore();
-    rr(X,0,0,W,H,rad);X.fillStyle=inc?"rgba(255,255,255,.92)":"rgba(255,255,255,.9)";X.fill();
-    rr(X,0.5,0.5,W-1,H-1,rad-0.5);X.lineWidth=1;X.strokeStyle=inc?LB.incLine:R.bad?LB.bad:"rgba(225,228,238,.9)";X.stroke();
+    rr(X,0,0,W,H,rad);X.fillStyle=inc?LB.fillInc:LB.fill;X.fill();
+    rr(X,0.5,0.5,W-1,H-1,rad-0.5);X.lineWidth=1;X.strokeStyle=inc?LB.incLine:R.bad?LB.bad:LB.edge;X.stroke();
     const red=inc||R.bad,x0=1+pl,yb=1+pt,line=(m2,s,lh,top)=>{const [A,D]=asc(m2,s);return top+(lh-(A+D))/2+A;};
     const rowH=inc?lb:Math.max(lb,showS?ls:0),bTop=inc?yb:yb+(rowH-lb)/2,bBase=line(mb,bs,lb,bTop);
     X.fillStyle=red?LB.bad:LB.brand;X.beginPath();X.arc(x0+3,bBase-4,3,0,Math.PI*2);X.fill();
@@ -6404,22 +6431,27 @@ function no3D(){G3.ok=false;$("no3d").hidden=false;$("no3d-retry").onclick=()=>l
     want.winK=winK;want.evs=evs;return want;}
   /* ---- camera pull ---- */
   const PULL={on:null,touch:0,last:-1e9,incSeen:new WeakSet(),civSeen:{},pend:null};
-  const touched=()=>{PULL.touch=performance.now();if(PULL.on&&PULL.on.phase!=="back")PULL.on=null;};
+  // (a pull carrying a choice card hands the card over whenever it ends early, so the card always opens)
+  const handCard=P=>{if(P&&P.card){const f=P.card;P.card=null;f();}};
+  const touched=()=>{PULL.touch=performance.now();if(PULL.on&&PULL.on.phase!=="back"){handCard(PULL.on);PULL.on=null;}};
   ["pointerdown","wheel","touchstart"].forEach(t=>host.addEventListener(t,touched,{passive:true}));glc.addEventListener("keydown",touched);
   const MAJOR=new Set(["dryerfire","balefire","shaft","tornado","lightning","flood","overflow","chestover","hdblow","thkblow","beaver","fight","flares","refclash",
     "c_walkout","c_protest","c_custwalk","c_shutdown","dcs","fishkill","r_L","r_C","r_E","r_M"]);
   function civSpot(id){const L=EVP[id];if(!L)return null;const p=CV.parts[L[0][0]];return p&&L[0][0]!=="fx"?p.spot:null;}
   const pullBlocked=()=>!camPullOn()||S.zen||G3.zen||G3.cineOn||(G3.tut&&G3.tut.on)||(G3.following&&G3.following())||(S.outg&&S.outg.watch);
-  function pullTo(id){const now=performance.now();if(pullBlocked())return;
-    if(now-PULL.touch<5000||now-PULL.last<12000||PULL.on)return;const sp=G3.spotOf(id)||civSpot(id);if(!sp)return;
+  function pullTo(id,card){const now=performance.now();if(pullBlocked()||!G3.on)return false;
+    if(now-PULL.touch<5000||now-PULL.last<12000||PULL.on)return false;const sp=G3.spotOf(id)||civSpot(id);if(!sp)return false;
     const c=G3.camGet(),to=[sp[0],sp[1],Math.min(90,Math.max(55,c[2]*0.4)),c[3],0.9];
-    PULL.last=now;PULL.on={id,back:c,to,t:now,phase:"go"};G3.camGlide(to);diag("camera: fly to "+id);}
+    PULL.last=now;PULL.on={id,back:c,to,t:now,phase:"go",card:card||null};G3.camGlide(to);diag("camera: fly to "+id+(card?" (then its card)":""));return true;}
+  // v5.4: a major upset's choice card pauses the game at once; the camera flies there first and the card opens on arrival
+  G3.civPullCard=(id,show)=>{if(!MAJOR.has(id)||!CV.built)return false;if(S&&S.inc)for(const inc of S.inc)if(inc.id===id)PULL.incSeen.add(inc);return pullTo(id,show);};
   // go: glide there; hold: about 4 s once it arrives (or after 4 s of gliding at most); back: glide home. A pull asked for
   // while the game is paused (a crisis opens its choice card at once) waits until play resumes.
   function pullTick(){const now=performance.now();
     if(PULL.pend&&!PULL.on&&running&&!(S.cards&&S.cards.open)){const id=PULL.pend;PULL.pend=null;pullTo(id);}
-    const P=PULL.on;if(!P)return;if(G3.cineOn){PULL.on=null;return;}   // (the bird cut-scene takes the camera and puts it back itself)
-    if(P.phase==="go"){const c=G3.camGet(),near=Math.hypot(c[0]-P.to[0],c[1]-P.to[1])<4&&Math.abs(c[2]-P.to[2])<8;if(near||now-P.t>4000){P.phase="hold";P.t=now;}}
+    const P=PULL.on;if(!P)return;if(G3.cineOn){handCard(P);PULL.on=null;return;}   // (the bird cut-scene takes the camera and puts it back itself)
+    if(P.phase==="go"){const c=G3.camGet(),near=Math.hypot(c[0]-P.to[0],c[1]-P.to[1])<4&&Math.abs(c[2]-P.to[2])<8;if(near||now-P.t>(P.card?2500:4000)){P.phase="hold";P.t=now;handCard(P);}}
+    else if(P.phase==="hold"&&(!running||(S.cards&&S.cards.open)))P.t=now;   // (the hold waits while a card is open)
     else if(P.phase==="hold"&&now-P.t>4000){P.phase="back";P.t=now;G3.camGlide(P.back);}   // (a touch or key during go or hold cancels the pull: the view stays where the player put it)
     else if(P.phase==="back"&&now-P.t>2500)PULL.on=null;}
   // a run starting or coming back: whatever is already going on doesn't pull the camera (called from play(), 51)

@@ -15,7 +15,11 @@
   const lblSet=(R,a,b,bad)=>{if(R.a!==a||R.b!==b||R.bad!==bad){R.a=a;R.b=b;R.bad=bad;R.ver++;}};
   try{if(document.fonts){document.fonts.addEventListener("loadingdone",()=>{LB.gen++;});document.fonts.ready.then(()=>{LB.gen++;});}}catch(e){}
   const mixW=(hex,k)=>{const m=/^#?([0-9a-f]{6})$/i.exec(hex);if(!m)return hex;const n=parseInt(m[1],16),c=s=>Math.round(((n>>s)&255)*k+255*(1-k));return `rgb(${c(16)},${c(8)},${c(0)})`;};
-  function lblStyle(){LB.fb=tok("f-body");LB.ink=tok("ink");LB.muted=tok("muted");LB.bad=tok("bad");LB.brand=tok("brand");LB.incLine=mixW(LB.bad,0.45);LB.gen++;}
+  // v5.4: in dark mode the pills are dark with light text (colours read from body, where dark mode sets them)
+  const tkb=n=>(document.body&&getComputedStyle(document.body).getPropertyValue("--"+n).trim())||tok(n);
+  function lblStyle(){LB.dark=!!(document.body&&document.body.classList.contains("dark"));LB.fb=tok("f-body");LB.ink=tkb("ink");LB.muted=tkb("muted");LB.bad=tkb("bad");LB.brand=tkb("brand");
+    LB.incLine=LB.dark?"rgba(255,111,97,.55)":mixW(LB.bad,0.45);LB.fill=LB.dark?"rgba(29,34,43,.9)":"rgba(255,255,255,.9)";LB.fillInc=LB.dark?"rgba(29,34,43,.94)":"rgba(255,255,255,.92)";LB.edge=LB.dark?"rgba(255,255,255,.14)":"rgba(225,228,238,.9)";LB.gen++;}
+  document.addEventListener("pm-theme",()=>{LB.pal=-1;LB.force=true;});
   const rr=(X,x,y,w,h,r)=>{r=Math.min(r,w/2,h/2);X.beginPath();X.moveTo(x+r,y);X.arcTo(x+w,y,x+w,y+h,r);X.arcTo(x+w,y+h,x,y+h,r);X.arcTo(x,y+h,x,y,r);X.arcTo(x,y,x+w,y,r);X.closePath();};
   // one label's pill, drawn at the overlay's pixel ratio into its own canvas (box W x H CSS px, plus a margin m for the shadow)
   function pill(R){const C=LB.cmp,d=LB.d,inc=R.inc,showS=!C;R.cv=R.cv||document.createElement("canvas");const X=R.cv.getContext("2d");
@@ -36,8 +40,8 @@
     // shadow outside the box only (like box-shadow), then the box over it
     X.save();rr(X,0,0,W,H,rad);X.shadowColor=sh[2];X.shadowBlur=sh[1]*d;X.shadowOffsetY=sh[0]*d;X.fillStyle="#000";X.fill();
     X.shadowColor="transparent";X.globalCompositeOperation="destination-out";X.fill();X.restore();
-    rr(X,0,0,W,H,rad);X.fillStyle=inc?"rgba(255,255,255,.92)":"rgba(255,255,255,.9)";X.fill();
-    rr(X,0.5,0.5,W-1,H-1,rad-0.5);X.lineWidth=1;X.strokeStyle=inc?LB.incLine:R.bad?LB.bad:"rgba(225,228,238,.9)";X.stroke();
+    rr(X,0,0,W,H,rad);X.fillStyle=inc?LB.fillInc:LB.fill;X.fill();
+    rr(X,0.5,0.5,W-1,H-1,rad-0.5);X.lineWidth=1;X.strokeStyle=inc?LB.incLine:R.bad?LB.bad:LB.edge;X.stroke();
     const red=inc||R.bad,x0=1+pl,yb=1+pt,line=(m2,s,lh,top)=>{const [A,D]=asc(m2,s);return top+(lh-(A+D))/2+A;};
     const rowH=inc?lb:Math.max(lb,showS?ls:0),bTop=inc?yb:yb+(rowH-lb)/2,bBase=line(mb,bs,lb,bTop);
     X.fillStyle=red?LB.bad:LB.brand;X.beginPath();X.arc(x0+3,bBase-4,3,0,Math.PI*2);X.fill();

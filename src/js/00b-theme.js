@@ -5,8 +5,16 @@
 let THEME_PREF="auto";try{const v=localStorage.getItem("paper-mill-theme");if(v==="light"||v==="dark")THEME_PREF=v;}catch(e){}
 const THEME_MQ=window.matchMedia?matchMedia("(prefers-color-scheme: dark)"):null;
 function themeDark(){return THEME_PREF==="dark"||(THEME_PREF==="auto"&&!!(THEME_MQ&&THEME_MQ.matches));}
-function applyTheme(){const d=themeDark(),b=document.body;if(!b)return;if(b.classList.contains("dark")!==d)b.classList.toggle("dark",d);
+// v5.4: dark mode keeps the mill's own brand colour, lifted 20% toward white so it reads on dark panels (set as a hex value
+// on body so the canvas labels and charts can use it; re-done when the brand changes on :root)
+function themeBrand(){const b=document.body;if(!b)return;if(!themeDark()){b.style.removeProperty("--brand");return;}
+  const r=getComputedStyle(document.documentElement).getPropertyValue("--brand").trim(),m=/^#?([0-9a-f]{6})$/i.exec(r);if(!m)return;
+  const n=parseInt(m[1],16),c=s=>Math.round(((n>>s)&255)*0.8+255*0.2).toString(16).padStart(2,"0"),h="#"+c(16)+c(8)+c(0);
+  if(b.style.getPropertyValue("--brand")!==h)b.style.setProperty("--brand",h);}
+try{new MutationObserver(()=>{themeBrand();}).observe(document.documentElement,{attributes:true,attributeFilter:["style"]});}catch(e){}
+function applyTheme(){const d=themeDark(),b=document.body;if(!b)return;if(b.classList.contains("dark")!==d)b.classList.toggle("dark",d);themeBrand();
   let m=document.querySelector('meta[name="theme-color"]');if(!m){m=document.createElement("meta");m.name="theme-color";document.head.appendChild(m);}m.content=d?"#14181f":"#eef0f6";
+  if(applyTheme.was!==d){applyTheme.was=d;document.dispatchEvent(new Event("pm-theme"));}
   document.querySelectorAll("[data-theme-pick]").forEach(x=>x.setAttribute("aria-pressed",String(x.dataset.themePick===THEME_PREF)));}
 function setTheme(v){THEME_PREF=v==="light"||v==="dark"?v:"auto";try{if(THEME_PREF==="auto")localStorage.removeItem("paper-mill-theme");else localStorage.setItem("paper-mill-theme",THEME_PREF);}catch(e){}applyTheme();}
 // the Auto / Light / Dark buttons, for both settings panels (title and in-game)

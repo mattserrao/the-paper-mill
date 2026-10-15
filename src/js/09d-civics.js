@@ -204,13 +204,16 @@ function civOpen(){const V=S.civ,d=V.cur;if(!d||typeof document==="undefined")re
       return `<button type="button" class="civbtn" data-i="${i}"><span class="cvl">${"ABC"[i]}</span><span class="cvb"><b>${escHTML(c[0])}</b>${tag&&!mt?`<em class="cvtag">${civTagName(area,tag)}</em>`:""}
         <span class="cvrow">${cost}${c[2]?`<span class="cvodds ${c[2]<0?"up":"dn"}">${civOdds(c[2])}</span>`:""}${civChips(c[3])}</span>${c[4]?`<small>${escHTML(c[4])}</small>`:""}</span></button>`;}).join("")}</div>
     ${!mt&&!rw?`<label class="civord"><input type="checkbox" id="civ-ord"${ord&&!d.ask?" checked":""}> ${d.ask&&ord?"Make this the new standing order":"Always do this"} for ${escHTML(civAreaWord(area))} upsets${ord?` <small>(now: ${civTagName(area,ord)})</small>`:""}</label>`:""}</div>`;
-  civEl.hidden=false;
   civEl.querySelectorAll(".civbtn").forEach(b=>b.addEventListener("click",()=>{const i=+b.dataset.i,box=civEl.querySelector("#civ-ord");
     if(box){if(box.checked){const t=civTag(id,i);if(t)V.orders[area]=t;}else if(!d.ask)delete V.orders[area];}   // (after Change, an unticked box keeps the order)
     civEl.hidden=true;V.cur=null;S.cards.open=null;civApply(d,i,false);
     const menu=document.getElementById("v2menu");running=!(menu&&!menu.hidden);
     if(V.q.length)civNext();}));
-  const f=civEl.querySelector(".civbtn");if(f)f.focus({preventScroll:true});civEl.querySelector(".modal").scrollTop=0;AUDIO.sfx("cash",150);}
+  // v5.4: for a major upset the camera flies there first (the game is already paused), then the card opens over the
+  // scene; it opens anyway after 3.5 s, or at once when there is no camera move (pulls off, no 3D, recently moved)
+  let shown=false;const reveal=()=>{if(shown||V.cur!==d||!S.cards.open||!S.cards.open.civ)return;shown=true;civEl.hidden=false;
+    const f=civEl.querySelector(".civbtn");if(f)f.focus({preventScroll:true});civEl.querySelector(".modal").scrollTop=0;AUDIO.sfx("cash",150);};
+  if(G3.civPullCard&&G3.civPullCard(id,reveal))setTimeout(reveal,3500);else reveal();}
 
 /* ---- event cards: civics on accept, win, lose and decline (05 calls these) ---- */
 function civCardHTML(c){const x=CIVCARD[c.id];if(!civOn()||!x)return "";const p=[["Accept",x.a],["Win",x.w],["Lose",x.l],["Decline",x.d]].filter(q=>civTxt(q[1]));

@@ -167,22 +167,27 @@
     want.winK=winK;want.evs=evs;return want;}
   /* ---- camera pull ---- */
   const PULL={on:null,touch:0,last:-1e9,incSeen:new WeakSet(),civSeen:{},pend:null};
-  const touched=()=>{PULL.touch=performance.now();if(PULL.on&&PULL.on.phase!=="back")PULL.on=null;};
+  // (a pull carrying a choice card hands the card over whenever it ends early, so the card always opens)
+  const handCard=P=>{if(P&&P.card){const f=P.card;P.card=null;f();}};
+  const touched=()=>{PULL.touch=performance.now();if(PULL.on&&PULL.on.phase!=="back"){handCard(PULL.on);PULL.on=null;}};
   ["pointerdown","wheel","touchstart"].forEach(t=>host.addEventListener(t,touched,{passive:true}));glc.addEventListener("keydown",touched);
   const MAJOR=new Set(["dryerfire","balefire","shaft","tornado","lightning","flood","overflow","chestover","hdblow","thkblow","beaver","fight","flares","refclash",
     "c_walkout","c_protest","c_custwalk","c_shutdown","dcs","fishkill","r_L","r_C","r_E","r_M"]);
   function civSpot(id){const L=EVP[id];if(!L)return null;const p=CV.parts[L[0][0]];return p&&L[0][0]!=="fx"?p.spot:null;}
   const pullBlocked=()=>!camPullOn()||S.zen||G3.zen||G3.cineOn||(G3.tut&&G3.tut.on)||(G3.following&&G3.following())||(S.outg&&S.outg.watch);
-  function pullTo(id){const now=performance.now();if(pullBlocked())return;
-    if(now-PULL.touch<5000||now-PULL.last<12000||PULL.on)return;const sp=G3.spotOf(id)||civSpot(id);if(!sp)return;
+  function pullTo(id,card){const now=performance.now();if(pullBlocked()||!G3.on)return false;
+    if(now-PULL.touch<5000||now-PULL.last<12000||PULL.on)return false;const sp=G3.spotOf(id)||civSpot(id);if(!sp)return false;
     const c=G3.camGet(),to=[sp[0],sp[1],Math.min(90,Math.max(55,c[2]*0.4)),c[3],0.9];
-    PULL.last=now;PULL.on={id,back:c,to,t:now,phase:"go"};G3.camGlide(to);diag("camera: fly to "+id);}
+    PULL.last=now;PULL.on={id,back:c,to,t:now,phase:"go",card:card||null};G3.camGlide(to);diag("camera: fly to "+id+(card?" (then its card)":""));return true;}
+  // v5.4: a major upset's choice card pauses the game at once; the camera flies there first and the card opens on arrival
+  G3.civPullCard=(id,show)=>{if(!MAJOR.has(id)||!CV.built)return false;if(S&&S.inc)for(const inc of S.inc)if(inc.id===id)PULL.incSeen.add(inc);return pullTo(id,show);};
   // go: glide there; hold: about 4 s once it arrives (or after 4 s of gliding at most); back: glide home. A pull asked for
   // while the game is paused (a crisis opens its choice card at once) waits until play resumes.
   function pullTick(){const now=performance.now();
     if(PULL.pend&&!PULL.on&&running&&!(S.cards&&S.cards.open)){const id=PULL.pend;PULL.pend=null;pullTo(id);}
-    const P=PULL.on;if(!P)return;if(G3.cineOn){PULL.on=null;return;}   // (the bird cut-scene takes the camera and puts it back itself)
-    if(P.phase==="go"){const c=G3.camGet(),near=Math.hypot(c[0]-P.to[0],c[1]-P.to[1])<4&&Math.abs(c[2]-P.to[2])<8;if(near||now-P.t>4000){P.phase="hold";P.t=now;}}
+    const P=PULL.on;if(!P)return;if(G3.cineOn){handCard(P);PULL.on=null;return;}   // (the bird cut-scene takes the camera and puts it back itself)
+    if(P.phase==="go"){const c=G3.camGet(),near=Math.hypot(c[0]-P.to[0],c[1]-P.to[1])<4&&Math.abs(c[2]-P.to[2])<8;if(near||now-P.t>(P.card?2500:4000)){P.phase="hold";P.t=now;handCard(P);}}
+    else if(P.phase==="hold"&&(!running||(S.cards&&S.cards.open)))P.t=now;   // (the hold waits while a card is open)
     else if(P.phase==="hold"&&now-P.t>4000){P.phase="back";P.t=now;G3.camGlide(P.back);}   // (a touch or key during go or hold cancels the pull: the view stays where the player put it)
     else if(P.phase==="back"&&now-P.t>2500)PULL.on=null;}
   // a run starting or coming back: whatever is already going on doesn't pull the camera (called from play(), 51)
