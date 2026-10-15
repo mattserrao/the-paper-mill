@@ -88,8 +88,8 @@ with sync_playwright() as pw:
     s = state()
     ok("1 a season (not survival) with Chip in charge", s["season"] and not s["surv"] and s["lead"] == "chip", s)
     ok("1 chip shows in the season: outage countdown, no multipliers", s["chip"] and s["seasonChip"] and s["svW"] == "Outage 1 of 4", s)
-    ok("1 civics bar: four meters, start = Chip (60/40/50/50) with rural Labor −10", s["bar"] and len(s["bands"]) == 4 and {k: round(v) for k, v in s["civ"].items()} == {"E": 60, "L": 30, "M": 50, "C": 50}, s)
-    ok("1 bands shown: Labor 30 = Strained, Economy 60 = Steady", s["bands"][1] == "Strained" and s["bands"][0] == "Steady", s)
+    ok("1 civics bar: four meters, start = Chip (60/40/50/50), rural Labor −6, no meter below 42", s["bar"] and len(s["bands"]) == 4 and {k: round(v) for k, v in s["civ"].items()} == {"E": 60, "L": 42, "M": 50, "C": 50}, s)
+    ok("1 bands shown: Labor 42 = Steady, Economy 60 = Steady", s["bands"][1] == "Steady" and s["bands"][0] == "Steady", s)
     shot("1-season-start")
 
     # ---- 2 effects move the right way ----
@@ -98,10 +98,10 @@ with sync_playwright() as pw:
       Object.assign(m,keep);P.applyUpgrades();return out;}""")
     e0, e50, e100, e20, e40 = eff["0"], eff["50"], eff["100"], eff["20"], eff["40"]
     ok("2 at 50 every effect is neutral", e50["price"] == 0 and e50["rep"] == 1 and e50["brk"] == 1 and e50["mach"] == 1 and e50["speed"] == 1 and e50["recv"] == 1 and e50["over"] == 0, e50)
-    ok("2 Economy: price −$20/t at 0, +$15/t at 100 (and in P.priceAdd)", e0["price"] == -20 and e100["price"] == 15 and e100["pa"] - e0["pa"] == 35, [e0, e100])
-    ok("2 Labor: repairs slower at 0, faster at 100; breaks up/down; yard upsets ×2/×0.5; outage +120/−60 min", e0["rep"] < 1 < e100["rep"] and e0["brk"] > 1 > e100["brk"] and e0["yard"] == 2 and e100["yard"] == 0.5 and e0["over"] == 120 and e100["over"] == -60, [e0, e100])
-    ok("2 Machinery: breakdowns ×1.5/×0.7 (shaft odds follow), speed and bills", e0["mach"] == 1.5 and e100["mach"] == 0.7 and e0["shaft"] > e50["shaft"] > e100["shaft"] and e0["K"] < e50["K"] < e100["K"] and e0["bill"] > 1 > e100["bill"], [e0, e100])
-    ok("2 Community: permit ×2/×0.5, receiving −20% at 0", e0["comm"] == 2 and e100["comm"] == 0.5 and e0["recv"] == 0.8 and e0["permit"] > e100["permit"], [e0, e100])
+    ok("2 Economy: price −$15/t at 0, +$15/t at 100 (and in P.priceAdd)", e0["price"] == -15 and e100["price"] == 15 and e100["pa"] - e0["pa"] == 30, [e0, e100])
+    ok("2 Labor: repairs slower at 0, faster at 100; breaks up/down; yard upsets ×1.5/×0.5; outage +120/−60 min", e0["rep"] < 1 < e100["rep"] and e0["brk"] > 1 > e100["brk"] and e0["yard"] == 1.5 and e100["yard"] == 0.5 and e0["over"] == 120 and e100["over"] == -60, [e0, e100])
+    ok("2 Machinery: breakdowns ×1.3/×0.7 (shaft odds follow), speed and bills", e0["mach"] == 1.3 and e100["mach"] == 0.7 and e0["shaft"] > e50["shaft"] > e100["shaft"] and e0["K"] < e50["K"] < e100["K"] and e0["bill"] > 1 > e100["bill"], [e0, e100])
+    ok("2 Community: permit ×1.5/×0.5, receiving −20% at 0", e0["comm"] == 1.5 and e100["comm"] == 0.5 and e0["recv"] == 0.8 and e0["permit"] > e100["permit"], [e0, e100])
     ok("2 below 50 is steeper: 20 hurts more than twice what 40 does", (e20["price"] / e40["price"]) > 3, [e20["price"], e40["price"]])
 
     # ---- 3 a choice card for an EVENTS upset, then a standing order ----
@@ -111,11 +111,11 @@ with sync_playwright() as pw:
       document.getElementById('civ-ord').checked=true;document.querySelectorAll('#civOv .civbtn')[1].click();
       return {open,btns,box,dcash:Math.round(S.cash-cash),dm:Object.fromEntries(Object.keys(m).map(k=>[k,S.civ.m[k]-m[k]])),odds:S.civ.odds.felt,order:S.civ.orders['Machine'],closed:document.getElementById('civOv').hidden,running:P.running};}""")
     ok("3 felt blows → the choice card opens with 3 choices and the order checkbox", c["open"] and len(c["btns"]) == 3 and c["box"], c)
-    ok("3 choice B (run a used spare): $20k, Machinery −1 (−3 points), felt comes back more often, order = Cheap fix", c["dcash"] <= -20000 and c["dm"]["M"] == -3 and abs(c["odds"] - 1.3) < 1e-9 and c["order"] == "S", c)
+    ok("3 choice B (run a used spare): $10k, no meter change, felt comes back 1.5x as often, order = Shortcut", c["dcash"] <= -10000 and c["dm"]["M"] == 0 and abs(c["odds"] - 1.5) < 1e-9 and c["order"] == "S", c)
     ev("()=>{__PM.S.inc=__PM.S.inc.filter(i=>i.id!=='felt');}")
     c2 = ev("""()=>{const P=__PM,S=P.S;P.setRunning(false);if(S.cards.open&&S.cards.open.c)document.getElementById('deal-no').click();P.setRunning(false);P.trigger('felt');const toast=!document.getElementById('civToast').hidden,pend=!!S.civ.pending,card=!document.getElementById('civOv').hidden;P.civCommit();
       return {toast,pend,card,odds:S.civ.odds.felt,toastAfter:!document.getElementById('civToast').hidden};}""")
-    ok("3 the standing order answers the next felt: toast with Change, no card, then commits", c2["toast"] and c2["pend"] and not c2["card"] and abs(c2["odds"] - 1.69) < 1e-6 and not c2["toastAfter"], c2)
+    ok("3 the standing order answers the next felt: toast with Change, no card, then commits", c2["toast"] and c2["pend"] and not c2["card"] and abs(c2["odds"] - 2.25) < 1e-6 and not c2["toastAfter"], c2)
     c3 = ev("""()=>{const P=__PM,S=P.S;P.setRunning(false);if(S.cards.open&&S.cards.open.c)document.getElementById('deal-no').click();P.setRunning(false);S.civ.orders['Machine']='P';S.inc=S.inc.filter(i=>i.id!=='shaft');P.trigger('shaft');const card=!document.getElementById('civOv').hidden&&S.civ.cur&&S.civ.cur.id==='shaft';
       const inc=S.inc.find(i=>i.id==='shaft'),l0=inc&&inc.left;document.querySelectorAll('#civOv .civbtn')[0].click();const l1=inc&&inc.left;return {card,first:!S.civ.seen.shaft,ext:l1-l0};}""")
     ok("3 a first-time upset still asks; the proper fix adds 3 h of downtime", c3["card"] and abs(c3["ext"] - 180) < 1, c3)
@@ -162,7 +162,7 @@ with sync_playwright() as pw:
     m0 = ev("()=>Object.assign({},__PM.S.civ.m)")
     o2 = bot("S.outg.k>1", 40000)
     m1 = ev("()=>({m:Object.assign({},__PM.S.civ.m),sales:__PM.S.lead.st.sales,price:(__PM.S.fx.find(f=>f.id==='civprice')||{}).price})")
-    ok("6 when the outage ends: Chip's sales push counts, the +$10/t price setting is on, Labor and Community got their +2", m1["sales"] == 1 and m1["price"] == {"all": 10}, {"m0": m0, "m1": m1, "o2": o2})
+    ok("6 when the outage ends: Chip's sales push counts, the +$5/t price setting is on, Labor and Community got their +2", m1["sales"] == 1 and m1["price"] == {"all": 5}, {"m0": m0, "m1": m1, "o2": o2})
 
     # ---- 7 save and reload ----
     ev("()=>{__PM.S.civ.orders={Yard:'Q'};__PM.S.civ.odds.fleet=0.75;__PM.S.civ.m.C=77;__PM.G3.save.save('test');}")
@@ -177,7 +177,7 @@ with sync_playwright() as pw:
     s = state(); R["bot"]["season"] = bs
     st = ev("()=>({h:document.getElementById('so-h').textContent,stats:[...document.querySelectorAll('#so-stats > div')].map(d=>d.textContent),vis:!document.getElementById('seasonOv').hidden})")
     ok("8 bot finishes the season: season-over dialog with the mill leader listed", bs["done"] and st["vis"] and any("Mill leader" in x for x in st["stats"]), {"bot": bs, "st": st})
-    ok("8 the bot saw upset choices, new upsets, cards and outages, and used standing orders", bs["bot"]["kinds"].get("up", 0) > 3 and bs["bot"]["kinds"].get("new", 0) >= 2 and bs["bot"]["cards"] > 5 and bs["bot"]["outs"] >= 3 and bs["bot"]["auto"] > 0, bs["bot"])
+    ok("8 the bot saw upset choices, new upsets, cards and outages, and used standing orders", bs["bot"]["kinds"].get("up", 0) + bs["bot"]["auto"] > 3 and bs["bot"]["kinds"].get("new", 0) >= 2 and bs["bot"]["cards"] > 5 and bs["bot"]["outs"] >= 3 and bs["bot"]["auto"] > 0, bs["bot"])
     ok("8 no NaN, no bot errors", not s["nan"] and not bs["bot"]["errs"], {"s": s, "e": bs["bot"]["errs"]})
     shot("8-season-over")
 
@@ -186,7 +186,7 @@ with sync_playwright() as pw:
     r = pick("v2surv", "dot")
     pg.wait_for_function("__PM.S.season&&__PM.S.season.on", timeout=300000, polling=200); pg.wait_for_timeout(500); ev("()=>__PM.setRunning(false)")
     s = state()
-    ok("9 survival with Dot: civics on, start = Dot (50/50/60/40) with desert Machinery −10", s["surv"] and s["lead"] == "dot" and {k: round(v) for k, v in s["civ"].items()} == {"E": 50, "L": 50, "M": 50, "C": 40} and s["bar"], s)
+    ok("9 survival with Dot: civics on, start = Dot (50/50/60/40), desert Machinery −6, no meter below 42", s["surv"] and s["lead"] == "dot" and {k: round(v) for k, v in s["civ"].items()} == {"E": 50, "L": 50, "M": 54, "C": 42} and s["bar"], s)
     ev("()=>{window.__BOT=null;}")
     bv = bot("S.t>=20*1440||(S.season&&S.season.done)", 400000)
     s = state(); R["bot"]["survival"] = bv

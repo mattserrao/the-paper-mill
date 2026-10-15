@@ -42,7 +42,7 @@ const CIVMETER={
   w_vibration:{k:"M",head:"Vibration alarms on the machine: top speed −5% until it's fixed.",fx:{left:"outage",mods:{speedCap:0.95}},ch:[{end:1,down:120},{},{end:1,flag:"M"}]},
   c_walkout:{k:"L",head:"Walkout! The yard has stopped, and the machine will run dry in about 6 hours.",fx:{left:720,mods:{recvMul:0,clampMul:0}},ch:[{end:1},{left:360},{after:{L:2}}]},
   c_protest:{k:"C",head:"Protesters are blocking the gate. No trucks in or out.",fx:{left:720,mods:{noIn:1,noOut:1}},ch:[{end:1,pledge:1},{},{left:120}]},
-  c_custwalk:{k:"E",head:"Your key customer has walked: one grade loses $15/t for a week.",fx:{left:7*1440,grade:-15},ch:[{left:2880},{swap:-10},{end:1}]},
+  c_custwalk:{k:"E",head:"Your key customer has walked: one grade loses $10/t for 5 days.",fx:{left:5*1440,grade:-10},ch:[{left:2880},{swap:-10},{end:1}]},
   c_shutdown:{k:"M",head:"The insurer has ordered a 12-hour shutdown.",fx:{left:720,mods:{pmDown:"insurer shutdown"}},ch:[{},{left:360,recheck:1},{appeal:1}]}};
 // reward cards (Excellent): accept or decline
 const CIVREWARD={
@@ -70,8 +70,8 @@ function civTimer(t){S.civ.tm.push(t);}
 
 /* ---- the tick: drift, cross-links, timers, meter triggers, the new upsets, the queue ---- */
 function civTick(dt){if(!civOn())return;const V=S.civ;
-  for(const k of CIVK){const m=V.m[k],d=CIV.drift/1440*dt;V.m[k]=m<50?Math.min(50,m+d):m>50?Math.max(50,m-d):m;}
-  if(V.m.M<35)V.m.L=Math.max(0,V.m.L-0.5/1440*dt);                    // fighting broken equipment wears the crew down
+  for(const k of CIVK){const m=V.m[k],d=(m>70?CIV.driftHi:m<30?CIV.driftLo:CIV.drift)/1440*dt;V.m[k]=m<50?Math.min(50,m+d):m>50?Math.max(50,m-d):m;}
+  if(V.m.M<25)V.m.L=Math.max(0,V.m.L-0.3/1440*dt);   // (round 1: was under 35, 0.5/day)                    // fighting broken equipment wears the crew down
   if(V.m.C>65&&V.m.L<50)V.m.L=Math.min(50,V.m.L+0.5/1440*dt);           // a good town to hire from
   {const tx=civTax()+(V.taxDay||0);if(tx>0)deal(tx*dt/1440);}           // tax breaks
   if(V.prem>0)spend(V.prem*dt/60,"repairs");                            // the insurer's premium increase
@@ -81,11 +81,11 @@ function civTick(dt){if(!civOn())return;const V=S.civ;
   if(V.tm.length){const due=V.tm.filter(t=>(t.left-=dt)<=0);V.tm=V.tm.filter(t=>t.left>0);for(const t of due){try{civTimerRun(t);}catch(e){console.error("civics timer",t.act,e);}}}
   // meter triggers (not in the first day, not during an outage)
   if(S.t>1440&&!outOn())for(const k of CIVK){const m=V.m[k],A=V.arm;
-    if(m>=CIV.warn)A.w[k]=1;else if(A.w[k]&&m>=CIV.crisis){A.w[k]=0;civTimer({act:"meter",id:{E:"w_watch",L:"w_sickout",M:"w_vibration",C:"w_petition"}[k],left:60+civRng()*1380});}
+    if(m>=CIV.warnRearm&&S.t>=(A.wc&&A.wc[k]||0))A.w[k]=1;else if(A.w[k]&&m<CIV.warn&&m>=CIV.crisis){A.w[k]=0;(A.wc||(A.wc={}))[k]=S.t+CIV.warnCool;civTimer({act:"meter",id:{E:"w_watch",L:"w_sickout",M:"w_vibration",C:"w_petition"}[k],left:60+civRng()*1380});}
     if(m>=CIV.crisis)A.c[k]=0;else if(S.t>=A.c[k]){A.c[k]=S.t+CIV.crisisEvery;civTimer({act:"meter",id:{E:"c_custwalk",L:"c_walkout",M:"c_shutdown",C:"c_protest"}[k],left:V.flags[k]?30:60+civRng()*1380});V.flags[k]=0;}
     if(m<CIV.rearm)A.r[k]=1;else if(A.r[k]&&m>CIV.reward){A.r[k]=0;civTimer({act:"meter",id:"r_"+k,left:60+civRng()*1380});}}
   // the new civic upsets: rolled once a sim hour on their own stream
-  if(S.t>=V.newNext){V.newNext=S.t+60;if(!outOn()&&S.t>2*1440){const up=survOn()?survUp():1,pet=V.m&&S.fx.some(f=>f.id==="w_petition")?1.5:1;
+  if(S.t>=V.newNext){V.newNext=S.t+60;if(!outOn()&&S.t>2*1440){const up=survOn()?Math.min(2,1+(survUp()-1)*0.5):1,pet=V.m&&S.fx.some(f=>f.id==="w_petition")?1.5:1;
     for(const id of Object.keys(CIVNEW)){const r=civRng();let p=60/(CIV.newMtbf*1440)*up*((V.odds[id])||1);
       const a=civArea(id);if(a==="Community")p*=civComm()*pet;if(a==="Crew")p*=civYard();
       if(r<p&&!civFxGet(id)&&!V.q.some(q=>q.id===id)&&!(V.cur&&V.cur.id===id))civQueue(id,"new");}}}
@@ -119,7 +119,8 @@ function civOnUpset(inc){if(!civOn()||!inc||inc.left<=0||!CIVU[inc.id])return;
   civQueue(inc.id,"up");if(!(S.cards&&S.cards.open)&&!S.civ.cur&&!outOn())civNext();}
 
 /* ---- standing orders ---- */
-function civOrder(d){const V=S.civ,a=civArea(d.id),o=V.orders[a];if(!o||!V.seen[d.id])return false;
+// (round 1: an order also answers an upset of its area the player hasn't seen yet; the order was set on a card from that area)
+function civOrder(d){const V=S.civ,a=civArea(d.id),o=V.orders[a];if(!o)return false;
   const t=CIVU[d.id].t||"",i=t.indexOf(o);if(i<0)return false;const c=CIVU[d.id].ch[i];if(!c||c[1]>=3)return false;
   V.pending={d,i,t:S.t};civToast(d,i);return true;}
 let civToastEl=null;
@@ -218,7 +219,7 @@ function civCardDue(p){if(!civOn())return;if(p.civo){civAdd(p.civo,"Card outcome
 function civPlanHTML(){if(!civOn())return "";const V=S.civ;
   const seg=(n,opts)=>`<div class="seg" data-c="${n}">${opts.map(([v,l],i)=>`<button type="button" data-v="${v}" aria-pressed="${i===1||(opts.length===2&&i===0)}">${l}</button>`).join("")}</div>`;
   return `<div class="civplan"><div class="ldq">Civics for the next cycle</div>
-    <div class="crow"><div><b>Price setting</b><small>Economy ${V.m.E<50?"is low":"is fine"}: discounts win customers, a premium costs goodwill</small></div>${seg("price",[["-10","−$10/t"],["0","Hold"],["10","+$10/t"]])}</div>
+    <div class="crow"><div><b>Price setting</b><small>Economy ${V.m.E<50?"is low":"is fine"}: discounts win customers, a premium costs goodwill</small></div>${seg("price",[["-5","−$5/t"],["0","Hold"],["5","+$5/t"]])}</div>
     <div class="crow"><div><b>Crew bonus</b><small>Labor +2 when the outage ends</small></div>${seg("bonus",[["0","None"],["20000","$20k"]])}</div>
     <div class="crow"><div><b>Community donation</b><small>Community +2 when the outage ends${V.pledgeDon?" · pledge: "+money(V.pledgeDon)+" every cycle":""}</small></div>${seg("don",[["0","None"],["20000","$20k"]])}</div></div>`;}
 function civPlanWire(host,plan){if(!host)return;plan.civ={price:0,bonus:0,don:0};
@@ -229,7 +230,7 @@ function civOutageBegin(o,st){if(!civOn())return;const V=S.civ;let d=civOver();i
   o.civOver=d;if(d<0){o.end=st+OUT.len+d;const p=civFxGet("pout");if(p)p.left=OUT.len+d;}}
 function civOutageEnd(o,pl){if(!civOn())return;const V=S.civ,pc=pl&&pl.civ;
   if(o.civOver>0){civFxAdd("civover",{left:o.civOver,mods:{pmDown:"outage overran (crew)"}});log(`The crew ran the outage ${o.civOver} min over.`,"warn");}
-  if(pc){if(pc.price){civFxAdd("civprice",{left:OUT.every*1440,price:{all:pc.price}});civAdd({E:pc.price<0?2:-2},"Price setting");}
+  if(pc){if(pc.price){civFxAdd("civprice",{left:OUT.every*1440,price:{all:pc.price}});civAdd({E:pc.price<0?2:-3},"Price setting");}   // (round 1: discount −$5/t, was −$10; the premium costs Economy −3)
     if(pc.bonus)civAdd({L:2},"Crew bonus");if(pc.don){civAdd({C:2},"Community donation");V.cspend=S.t;}}
   if(V.pledgeDon){deal(-V.pledgeDon);V.cspend=S.t;log(`Community pledge: ${money(V.pledgeDon)} donated.`,"");}}
 

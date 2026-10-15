@@ -6,13 +6,14 @@
    Not balanced: every number here is a first guess (the design note: civics-design.md in the project).
    State: S.civ={m:{E,L,M,C}, snap, odds:{id:mul}, orders:{area:tag}, seen:{id}, q:[], cur, tm:[], arm, flags, ...} (saved with the run). */
 const CIV={unit:3,           // meter points per design weight (a choice's "+2" is +6 points)
-  drift:1,                   // points per day back toward 50
-  cost:{"-1":-30e3,"0":0,"1":20e3,"2":60e3,"3":150e3},   // cash per cost tier ($, $$, $$$; -1 earns)
-  odds:{"-2":0.5,"-1":0.75,"0":1,"1":1.3},             // how often the upset comes back, per odds step (stacks, 0.25x to 3x)
-  warn:40,crisis:20,reward:80,rearm:70,crisisEvery:4*1440,
-  newMtbf:30,                // days between each of the new civic upsets (survival: x the wave's upset multiplier)
+  drift:1.5,                 // points per day back toward 50 (balance round 1: was 1)
+  driftHi:3,driftLo:2,       // ...faster above 70 (no pinning at 100) and below 30 (no death spiral)
+  cost:{"-1":-25e3,"0":0,"1":10e3,"2":35e3,"3":90e3},    // cash per cost tier ($, $$, $$$; -1 earns) (round 1: was 20k/60k/150k, earns 30k)
+  odds:{"-2":0.5,"-1":0.75,"0":1,"1":1.5},             // (round 2: more often = 1.5x, was 1.3x, so shortcuts come back within a season)             // how often the upset comes back, per odds step (stacks, 0.25x to 3x)
+  warn:40,crisis:20,reward:80,rearm:65,crisisEvery:7*1440,warnRearm:45,warnCool:3*1440,startMin:42,   // (round 1: crises every 7 days, was 4; warnings re-arm at 45 with a 3-day cooldown; no meter starts below 42)
+  newMtbf:45,                // days between each of the new civic upsets (round 1: was 30; survival: x half the wave's extra upset odds, at most 2x)
   lead:{chip:{E:60,L:40,M:50,C:50},dot:{E:50,L:50,M:60,C:40},fel:{E:50,L:45,M:55,C:50},hank:{E:45,L:60,M:50,C:45}},
-  site:{urban:{C:-10},rural:{L:-10},desert:{M:-10},swamp:{C:-10}},
+  site:{urban:{C:-6},rural:{L:-6},desert:{M:-6},swamp:{C:-6}},   // (round 1: was -10)
   names:{E:"Economy",L:"Labor",M:"Machinery",C:"Community"},
   bands:[[81,"Excellent","ex"],[61,"Strong","st"],[40,"Steady","sd"],[20,"Strained","sn"],[0,"Crisis","cr"]]};
 const CIVK=["E","L","M","C"];
@@ -20,22 +21,22 @@ const civOn=()=>!!(S&&S.civ&&S.season&&S.season.on&&!S.free&&!S.zen);
 const civV=k=>civOn()?S.civ.m[k]:50;
 const civBand=v=>CIV.bands.find(b=>v>=b[0]);
 // -1..+1 from the meter: linear above 50, a slight curve below (20 hurts noticeably more than 40)
-function civS(k){const x=(civV(k)-50)/50;return x<0?-Math.pow(-x,1.3):x;}
+function civS(k){const x=(civV(k)-50)/50;return x<0?-Math.pow(-x,1.1):x;}   // (round 2: curve 1.1, was 1.3, so Strained costs more)
 // the effect at the meter's value: lo at 0, mid at 50, hi at 100
 function civE(k,lo,hi,mid){const s=civS(k);return s<0?mid+(lo-mid)*(-s):mid+(hi-mid)*s;}
 // --- effects (read by applyUpgrades, freqMul, chaosTick, the outage and the tick) ---
-const civPrice=()=>civE("E",-20,15,0);                 // $/t on every grade
+const civPrice=()=>civE("E",-15,15,0);                 // (round 1: was -20 at 0; round 2: -15)                 // $/t on every grade
 const civRepair=()=>civE("L",0.7,1.2,1);               // repair speed
 const civBreak=()=>civE("L",1.3,0.8,1);                // sheet breaks and hayouts
-const civYard=()=>civE("L",2,0.5,1);                   // yard upsets (forklifts, call-offs, brawls...)
+const civYard=()=>civE("L",1.5,0.5,1);                 // (round 1: was 2 at 0)                   // yard upsets (forklifts, call-offs, brawls...)
 const civOver=()=>Math.round(civE("L",120,-60,0));     // planned outages: minutes over (+) or early (-)
-const civMach=()=>civE("M",1.5,0.7,1);                 // stock prep and machine breakdowns
+const civMach=()=>civE("M",1.3,0.7,1);                 // (round 1: was 1.5 at 0)                 // stock prep and machine breakdowns
 const civSpeed=()=>civE("M",0.92,1.03,1)*(S&&S.civ&&S.civ.runUntil>S.t?1.04:1);   // machine capacity (and a record run week)
 const civBill=()=>civE("M",1.2,0.9,1);                 // repair bills
-const civComm=()=>civE("C",2,0.5,1);                   // permit and community upsets
+const civComm=()=>civE("C",1.5,0.5,1);                 // (round 1: was 2 at 0)                   // permit and community upsets
 const civFine=()=>civE("C",1.5,0.75,1);                // fines
 const civRecv=()=>civE("C",0.8,1,1);                   // receiving (truck hours limited)
-const civTax=()=>Math.max(0,civS("C"))*1000;           // $/day tax break at the top
+const civTax=()=>Math.max(0,civS("C"))*2000;           // (round 1: was $1k/day)           // $/day tax break at the top
 function civRng(){if(S.rng.civ==null)S.rng.civ=(S.seed^0x7f4a7c15)|0;return rand("civ");}
 // the area a standing order covers, for any upset with choices
 const CIV_AREA={"Inbound":"Stock prep","Utility":"Machine","Outbound":"Yard","Customer":"Customers"};
@@ -50,7 +51,7 @@ function civStart(){S.civ={m:{E:50,L:50,M:50,C:50},snap:{E:50,L:50,M:50,C:50},sn
   arm:{w:{E:1,L:1,M:1,C:1},r:{E:1,L:1,M:1,C:1},c:{E:0,L:0,M:0,C:0}},flags:{},prem:0,taxDay:0,cspend:-1e9,pledgeN:0,pledgeOut:false,pledgeDon:0,newNext:1440,auT:0,log:[]};
   civSetStart();}
 function civSetStart(){if(!S.civ)return;const b=(S.lead&&CIV.lead[S.lead.id])||{E:50,L:50,M:50,C:50},sa=CIV.site[SITE.env]||{};
-  CIVK.forEach(k=>{S.civ.m[k]=Math.max(0,Math.min(100,b[k]+(sa[k]||0)));S.civ.snap[k]=S.civ.m[k];});applyUpgrades();}
+  CIVK.forEach(k=>{S.civ.m[k]=Math.max(CIV.startMin,Math.min(100,b[k]+(sa[k]||0)));S.civ.snap[k]=S.civ.m[k];});applyUpgrades();}
 // add a design-weight change ({E:1,C:-2}); returns a short text for logs and toasts
 function civAdd(d,why){if(!S.civ||!d)return "";const out=[];
   for(const k of CIVK){const v=d[k];if(!v)continue;const p=v*CIV.unit;S.civ.m[k]=Math.max(0,Math.min(100,S.civ.m[k]+p));out.push(`${CIV.names[k]} ${v>0?"+":"−"}${Math.abs(v)}`);}
