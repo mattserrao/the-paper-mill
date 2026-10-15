@@ -65,7 +65,7 @@ with sync_playwright() as pw:
     ok("season summary shown", vis("#seasonOv"))
     if shot: pg.screenshot(path=f"{shot}-summary.png")
     click("#so-more"); pg.wait_for_timeout(300)
-    st = pg.evaluate("()=>({run:__PM.running,cards:JSON.stringify(Object.keys(__PM.S.cards&&__PM.S.cards.open||{})),ovs:[...document.querySelectorAll('.overlay')].filter(o=>!o.hidden).map(o=>o.id),menu:!document.getElementById('v2menu').hidden})")
+    st = pg.evaluate("()=>({ovh:(document.getElementById('ov-h')||{}).textContent,run:__PM.running,cards:JSON.stringify(Object.keys(__PM.S.cards&&__PM.S.cards.open||{})),ovs:[...document.querySelectorAll('.overlay')].filter(o=>!o.hidden).map(o=>o.id),menu:!document.getElementById('v2menu').hidden})")
     ok("one more turn runs (or an event card paused it)", st["run"] or "dealOv" in st["ovs"]); log.append("  after one-more-turn: " + str(st))
     click("#v2pause"); pg.wait_for_timeout(200)
     click("#v2zen"); pg.wait_for_timeout(2000)
