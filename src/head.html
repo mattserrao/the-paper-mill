@@ -5,8 +5,15 @@
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="mobile-web-app-capable" content="yes">
-<meta name="theme-color" content="#ffffff">
+<meta name="theme-color" content="#0e121b">
 <title>The Paper Mill</title>
+<!-- v5.4.1: the game script waits for three.js before it runs, so until the title screen is built a dark splash stands in
+     for it (the old menu used to show for that moment). Same skip rule as the title (51d-title.js). three.js starts
+     downloading here, while the page itself is still arriving. -->
+<script>(function(){try{var q=new URLSearchParams(location.search);if(q.has("env")||q.has("autotest")||q.has("notitle")||q.get("zen")==="1"||window.__PM_NOTITLE)return;
+  var h=document.documentElement;h.classList.add("pm-boot");
+  var off=function(){h.classList.remove("pm-boot");};addEventListener("error",off);setTimeout(off,25000);}catch(e){}})();   /* (if the game never starts, the plain menu shows) */</script>
+<link rel="modulepreload" href="https://cdn.jsdelivr.net/npm/three@0.186.1/+esm" crossorigin>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=IBM+Plex+Mono:wght@400;500&display=swap">
 <style>

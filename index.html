@@ -5,8 +5,15 @@
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="mobile-web-app-capable" content="yes">
-<meta name="theme-color" content="#ffffff">
+<meta name="theme-color" content="#0e121b">
 <title>The Paper Mill</title>
+<!-- v5.4.1: the game script waits for three.js before it runs, so until the title screen is built a dark splash stands in
+     for it (the old menu used to show for that moment). Same skip rule as the title (51d-title.js). three.js starts
+     downloading here, while the page itself is still arriving. -->
+<script>(function(){try{var q=new URLSearchParams(location.search);if(q.has("env")||q.has("autotest")||q.has("notitle")||q.get("zen")==="1"||window.__PM_NOTITLE)return;
+  var h=document.documentElement;h.classList.add("pm-boot");
+  var off=function(){h.classList.remove("pm-boot");};addEventListener("error",off);setTimeout(off,25000);}catch(e){}})();   /* (if the game never starts, the plain menu shows) */</script>
+<link rel="modulepreload" href="https://cdn.jsdelivr.net/npm/three@0.186.1/+esm" crossorigin>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=IBM+Plex+Mono:wght@400;500&display=swap">
 <style>
@@ -999,9 +1006,24 @@ body.dark .v2more{background:var(--panel)}
 .rating .g{width:auto;min-width:1.2em}
 .title .tset .tbtns{position:sticky;bottom:-18px;margin:10px -22px -18px;padding:14px 22px 18px;background:linear-gradient(rgba(14,18,27,0),rgba(14,18,27,.92) 35%)}
 @media (max-width:640px){.title .tset .tbtns{bottom:-14px;margin:10px -16px -14px;padding:14px 16px 14px}}
+/* v5.4.1: the start-up splash (head.html sets html.pm-boot; the title screen removes it). Everything else on the page
+   stays hidden behind it, so the old menu never flashes. */
+#pmBoot{display:none}
+html.pm-boot body{background:#0e121b}
+html.pm-boot body>*:not(#pmBoot):not(#title){visibility:hidden!important}
+html.pm-boot #pmBoot{display:grid;place-content:center;justify-items:center;gap:22px;position:fixed;inset:0;z-index:400;color:#fff;
+  background:radial-gradient(ellipse at 50% 40%,#1e2a3a 0,#0e121b 70%)}
+#pmBoot .pbw{font:800 clamp(40px,6.2vw,76px)/.95 "Plus Jakarta Sans",system-ui,-apple-system,"Segoe UI",sans-serif;letter-spacing:-.025em;text-align:center;opacity:0;animation:pmbIn .6s .15s ease forwards}
+#pmBoot .pbw small{display:block;font:700 clamp(13px,1.2vw,15px) "Plus Jakarta Sans",system-ui,sans-serif;letter-spacing:.32em;text-transform:uppercase;margin:0 0 8px 2px;opacity:.9}
+#pmBoot .pbl{display:block;width:120px;height:3px;border-radius:2px;background:rgba(255,255,255,.14);overflow:hidden;position:relative;opacity:0;animation:pmbIn .6s .6s ease forwards}
+#pmBoot .pbl::after{content:"";position:absolute;inset:0;width:40%;border-radius:2px;background:rgba(255,255,255,.75);animation:pmbBar 1.2s ease-in-out infinite}
+@keyframes pmbIn{to{opacity:1}}
+@keyframes pmbBar{0%{transform:translateX(-100%)}100%{transform:translateX(250%)}}
+@media (prefers-reduced-motion: reduce){#pmBoot .pbw,#pmBoot .pbl{animation:none;opacity:1}#pmBoot .pbl::after{animation:none;width:100%;opacity:.4}}
 </style>
 </head>
 <body class="app">
+<div aria-hidden="true" id="pmBoot"><div class="pbw"><small>The</small>Paper Mill</div><i class="pbl"></i></div>
 <div class="view3d" id="view3d"><div aria-hidden="true" class="zenfx" id="zenFx"><b></b><i></i></div><button class="zenexit" hidden id="zenExit">Leave zen mode</button><canvas aria-label="3D view of the mill. Arrow keys move, Q and E rotate, plus and minus zoom." id="gl" tabindex="0"></canvas><div aria-label="Move the view" class="pad" id="pad"><button aria-label="Move up" data-p="0,-1">▲</button><button aria-label="Move left" data-p="-1,0">◀</button><button aria-label="Move right" data-p="1,0">▶</button><button aria-label="Move down" data-p="0,1">▼</button></div><div id="labels3d"></div><div class="banner3d" hidden id="banner3d"><span></span><b></b></div><div class="chips3d" id="chips3d"></div><div aria-hidden="true" class="tint3d" id="tint3d"></div><div class="flash3d" id="flash3d"></div><div aria-labelledby="bri-h" class="spider" hidden id="brian" role="dialog"><div class="spih"><b id="bri-h">Uncle Brian</b><span>night shift · floor scrubber</span><button aria-label="Close" id="briClose">✕</button></div><div id="briTxt" style="font-size:13px;line-height:1.4"></div><button class="primary" id="briGo" style="align-self:flex-start">Follow him</button></div><div aria-labelledby="slc-h" class="spider" hidden id="slice" role="dialog"><div class="spih"><b id="slc-h">Headbox slice</b><span>L/B gauge · tending side</span><button aria-label="Close" id="slcClose">✕</button></div><canvas height="400" id="slcT" width="600"></canvas><label class="spis">Vertical<input aria-label="Vertical slice" id="slcV" max="100" min="-100" type="range" value="0"/><b id="slcVv">B 12.0 mm</b></label><label class="spis">Horizontal<input aria-label="Horizontal slice" id="slcH" max="100" min="-100" type="range" value="0"/><b id="slcHv">L 0.0 mm</b></label><div class="spir"><div><small>Jet lands</small><b id="slcJ">–</b></div><div><small>Wet line from headbox</small><b id="slcW">–</b></div></div><p class="spin" id="slcNote"></p><button class="reroll" id="slcReset">Reset to standard</button></div><div aria-labelledby="spi-h" class="spider" hidden id="spider" role="dialog"><div class="spih"><b id="spi-h">Spider valve</b><span>disk thickener filtrate split</span><button aria-label="Close" id="spiClose">✕</button></div>
 <label class="spis"><span>Clear</span><input id="spiV" max="70" min="10" type="range" value="35"/><span>Cloudy</span></label>
 <div class="spir"><div><i style="background:#8a6644"></i>Cloudy <b id="spiTc">–</b><small id="spiQc"></small></div><div><i style="background:#3fa0d0"></i>Clear <b id="spiTl">–</b><small id="spiQl"></small></div></div>
@@ -1179,7 +1201,7 @@ body.dark .v2more{background:var(--panel)}
 <div class="btns"><button class="primary" id="no3d-retry">Try again</button></div></div></div>
 
 <script type="module">
-const APP_VER="v5.4.0";   // shown in the menu and sent with leaderboard scores (max 12 characters)
+const APP_VER="v5.4.1";   // shown in the menu and sent with leaderboard scores (max 12 characters)
 // TEST BUILDS ONLY (off in releases): turbo speeds 240/480/960 sim min/s for fast playtests. Above 120, crews and maintenance start jobs
 // without waiting for the 3D walk (as with the 3D view off) and outages keep the speed. Set false for a release.
 const TURBO=false,TURBO_FAST=s=>TURBO&&s>120;
@@ -10066,7 +10088,7 @@ function camPullOn(){try{return localStorage.getItem("paper-mill-campull")!=="of
   function step(k,nofocus){stepAt=performance.now();stepXY=lastXY;lastXY=null;main.hidden=k!=="main";mapP.hidden=k!=="map";setP.hidden=k!=="set";el.dataset.step=k;
     const f=k==="map"?$t("tEnvs").querySelector('[aria-checked="true"]'):k==="set"?$t("tSetDone"):el.querySelector(".tmodes button:not([hidden])");if(f&&!nofocus)setTimeout(()=>f.focus({preventScroll:true}),30);}
   let hideT=0;
-  function show(){clearTimeout(hideT);el.classList.remove("out");running=false;welcome();contState();titleSoundPaint();el.hidden=false;document.body.classList.add("titleon");
+  function show(){clearTimeout(hideT);el.classList.remove("out");running=false;welcome();contState();titleSoundPaint();el.hidden=false;document.documentElement.classList.remove("pm-boot");document.body.classList.add("titleon");
     const m=document.getElementById("v2menu");if(m)m.hidden=true;step("main",true);try{AUDIO.title(true);}catch(e){}}
   function hide(){if(el.hidden)return;el.classList.add("out");document.body.classList.remove("titleon");try{AUDIO.title(false);}catch(e){}
     hideT=setTimeout(()=>{el.hidden=true;el.classList.remove("out");$t("tLoad").hidden=true;},650);}
@@ -10142,7 +10164,7 @@ function camPullOn(){try{return localStorage.getItem("paper-mill-campull")!=="of
   const refocus=()=>setTimeout(()=>{if(el.hidden||mapP.hidden)return;const a=document.activeElement;if(!a||a===document.body||!el.contains(a))$t("tMapGo").focus({preventScroll:true});},0);
   document.addEventListener("keydown",e=>{if(e.key==="Escape")refocus();},true);document.addEventListener("click",e=>{if(e.target&&e.target.id==="ld-no")refocus();},true);
   // ---- start ----
-  if(SKIP)return;
+  if(SKIP){document.documentElement.classList.remove("pm-boot");return;}
   show();
   if(pend){mode=pend.mode;openMap(pend.mode);$t("tLoadT").textContent="Building your mill…";$t("tLoad").hidden=false;mapP.hidden=true;
     const go=()=>{if(!G3.ok){if(G3.ok===false){$t("tLoad").hidden=true;mapP.hidden=false;return;}setTimeout(go,200);return;}$t("tLoad").hidden=true;mapP.hidden=false;paintMap();proceed(pend.mode);};setTimeout(go,300);}

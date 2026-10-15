@@ -987,3 +987,17 @@ body.dark .v2more{background:var(--panel)}
 .rating .g{width:auto;min-width:1.2em}
 .title .tset .tbtns{position:sticky;bottom:-18px;margin:10px -22px -18px;padding:14px 22px 18px;background:linear-gradient(rgba(14,18,27,0),rgba(14,18,27,.92) 35%)}
 @media (max-width:640px){.title .tset .tbtns{bottom:-14px;margin:10px -16px -14px;padding:14px 16px 14px}}
+/* v5.4.1: the start-up splash (head.html sets html.pm-boot; the title screen removes it). Everything else on the page
+   stays hidden behind it, so the old menu never flashes. */
+#pmBoot{display:none}
+html.pm-boot body{background:#0e121b}
+html.pm-boot body>*:not(#pmBoot):not(#title){visibility:hidden!important}
+html.pm-boot #pmBoot{display:grid;place-content:center;justify-items:center;gap:22px;position:fixed;inset:0;z-index:400;color:#fff;
+  background:radial-gradient(ellipse at 50% 40%,#1e2a3a 0,#0e121b 70%)}
+#pmBoot .pbw{font:800 clamp(40px,6.2vw,76px)/.95 "Plus Jakarta Sans",system-ui,-apple-system,"Segoe UI",sans-serif;letter-spacing:-.025em;text-align:center;opacity:0;animation:pmbIn .6s .15s ease forwards}
+#pmBoot .pbw small{display:block;font:700 clamp(13px,1.2vw,15px) "Plus Jakarta Sans",system-ui,sans-serif;letter-spacing:.32em;text-transform:uppercase;margin:0 0 8px 2px;opacity:.9}
+#pmBoot .pbl{display:block;width:120px;height:3px;border-radius:2px;background:rgba(255,255,255,.14);overflow:hidden;position:relative;opacity:0;animation:pmbIn .6s .6s ease forwards}
+#pmBoot .pbl::after{content:"";position:absolute;inset:0;width:40%;border-radius:2px;background:rgba(255,255,255,.75);animation:pmbBar 1.2s ease-in-out infinite}
+@keyframes pmbIn{to{opacity:1}}
+@keyframes pmbBar{0%{transform:translateX(-100%)}100%{transform:translateX(250%)}}
+@media (prefers-reduced-motion: reduce){#pmBoot .pbw,#pmBoot .pbl{animation:none;opacity:1}#pmBoot .pbl::after{animation:none;width:100%;opacity:.4}}

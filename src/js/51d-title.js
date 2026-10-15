@@ -81,7 +81,7 @@ function camPullOn(){try{return localStorage.getItem("paper-mill-campull")!=="of
   function step(k,nofocus){stepAt=performance.now();stepXY=lastXY;lastXY=null;main.hidden=k!=="main";mapP.hidden=k!=="map";setP.hidden=k!=="set";el.dataset.step=k;
     const f=k==="map"?$t("tEnvs").querySelector('[aria-checked="true"]'):k==="set"?$t("tSetDone"):el.querySelector(".tmodes button:not([hidden])");if(f&&!nofocus)setTimeout(()=>f.focus({preventScroll:true}),30);}
   let hideT=0;
-  function show(){clearTimeout(hideT);el.classList.remove("out");running=false;welcome();contState();titleSoundPaint();el.hidden=false;document.body.classList.add("titleon");
+  function show(){clearTimeout(hideT);el.classList.remove("out");running=false;welcome();contState();titleSoundPaint();el.hidden=false;document.documentElement.classList.remove("pm-boot");document.body.classList.add("titleon");
     const m=document.getElementById("v2menu");if(m)m.hidden=true;step("main",true);try{AUDIO.title(true);}catch(e){}}
   function hide(){if(el.hidden)return;el.classList.add("out");document.body.classList.remove("titleon");try{AUDIO.title(false);}catch(e){}
     hideT=setTimeout(()=>{el.hidden=true;el.classList.remove("out");$t("tLoad").hidden=true;},650);}
@@ -157,7 +157,7 @@ function camPullOn(){try{return localStorage.getItem("paper-mill-campull")!=="of
   const refocus=()=>setTimeout(()=>{if(el.hidden||mapP.hidden)return;const a=document.activeElement;if(!a||a===document.body||!el.contains(a))$t("tMapGo").focus({preventScroll:true});},0);
   document.addEventListener("keydown",e=>{if(e.key==="Escape")refocus();},true);document.addEventListener("click",e=>{if(e.target&&e.target.id==="ld-no")refocus();},true);
   // ---- start ----
-  if(SKIP)return;
+  if(SKIP){document.documentElement.classList.remove("pm-boot");return;}
   show();
   if(pend){mode=pend.mode;openMap(pend.mode);$t("tLoadT").textContent="Building your mill…";$t("tLoad").hidden=false;mapP.hidden=true;
     const go=()=>{if(!G3.ok){if(G3.ok===false){$t("tLoad").hidden=true;mapP.hidden=false;return;}setTimeout(go,200);return;}$t("tLoad").hidden=true;mapP.hidden=false;paintMap();proceed(pend.mode);};setTimeout(go,300);}

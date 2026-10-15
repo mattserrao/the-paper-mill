@@ -1,5 +1,10 @@
 # Changelog
 
+## v5.4.1 (fix, 2026-10-15): no old-menu flash on load
+- The game script waits for the 3D library (three.js) before it runs, and until then the page showed its static markup: the old pause menu, for as long as the download took. A dark "The Paper Mill" splash with a loading bar now stands in until the title screen is built, and nothing else on the page shows behind it. Test links that skip the title (`?env=`, `?autotest`, `?notitle`, `?zen=1`) are unchanged.
+- three.js starts downloading from the top of the page (modulepreload), so the wait is shorter.
+- The browser bar colour starts dark to match.
+
 ## v5.4.0 (release, 2026-10-15): title screen, civics world, dark mode
 Released to main. Brings in everything from the v5.1–v5.4 test builds (v5.1.0 civics and leaders in seasons are released with it).
 
