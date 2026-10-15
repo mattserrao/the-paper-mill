@@ -1,11 +1,11 @@
 /* ---------- v4.4 survival mode: mill leaders (roster, picker, card, outage pick, change, Dot's fix) ----------
    Numbers and effects are in 03d-leaders.js. The portraits are in 09c-leader-art.js (leadArt). */
 const LEADERS={
-  chip:{name:"Chip Kraftwell",title:"The dealmaker",role:"Business man",say:"Everything's negotiable.",
+  chip:{name:"Chip Kraftwell",title:"The dealmaker",role:"Businessman",say:"Everything's negotiable.",
     plus:()=>`Each outage, one deal: ${survRun()?"lock the next wave's fiber at this wave's price":"hold next week's fiber market at this week's price"}, or a sales push that stays (+$${LEAD.sales}/t on every grade).`,
-    minus:()=>`Labour relations: every deal ends in a pay settlement (wages +${pct1(LEAD.wage)}% for good), and call-offs and dock brawls come ${LEAD.strife0}× as often while he's in charge.`},
+    minus:()=>`Labor relations: every deal ends in a pay settlement (wages +${pct1(LEAD.wage)}% for good), and call-offs and dock brawls come ${LEAD.strife0}× as often while he's in charge.`},
   dot:{name:'Dot "Doc" Blade',title:"The millwright",role:"Mechanic",say:"If it turns, I can fix it.",
-    plus:()=>`Repairs ${pct1(LEAD.rep)}% quicker. Once per outage cycle she fixes a breakdown on her own (${pct1(LEAD.autoFix)}% chance as each one with a bill of ${money(LEAD.autoMin)}+ starts): it ends on the spot, ${LEAD.refund>=1?"its repair bill":pct1(LEAD.refund)+"% of its repair bill"} comes back, and it's fixed at the root (${pct1(LEAD.fixCut)}% rarer from then on).`,
+    plus:()=>`Repairs ${pct1(LEAD.rep)}% quicker. Once per outage cycle she may fix a big breakdown (${money(LEAD.autoMin)}+) on her own: ${LEAD.refund>=1?"the bill":pct1(LEAD.refund)+"% of the bill"} comes back and it's ${pct1(LEAD.fixCut)}% rarer from then on.`,
     minus:()=>`Gold-plates every job: repair bills cost ${pct1(LEAD.bills-1)}% more while she's in charge.`},
   fel:{name:"Felicity Fourdrinier",title:"The process engineer",role:"Engineer",say:"I have a spreadsheet for that.",
     plus:()=>`Each outage, one debottlenecking project that stays: +${pct1(LEAD.cap)}% capacity for the fiber line, the paper machine or finishing.`,
@@ -30,7 +30,7 @@ function leadTally(){const L=S.lead,out=[];if(!L)return out;const n=k=>L.st[k]||
   if(leadIs("hank"))out.push(["Fiber (runs heavy)",pc(LEAD.heavy),1]);
   if(leadIs("dot"))out.push(["Repairs",`${pct1(LEAD.rep)}% quicker`]);
   if(leadIs("dot"))out.push(["Repair bills",pc(LEAD.bills-1),1]);
-  if(leadIs("chip"))out.push(["Labour relations",`call-offs and brawls ${xf(leadStrife())}`,1]);
+  if(leadIs("chip"))out.push(["Labor relations",`call-offs and brawls ${xf(leadStrife())}`,1]);
   if(L.fixed&&L.fixed.length){const c={};L.fixed.forEach(x=>c[x]=(c[x]||0)+1);
     out.push([`Fixed ×${L.fixed.length}`,Object.entries(c).map(([x,k])=>`${EV[x]?EV[x].name:x} ${pc(Math.pow(1-LEAD.fixCut,k)-1)}`).join(", ")]);}
   return out;}
@@ -40,7 +40,7 @@ const leadTallyHTML=()=>{const t=leadTally();return t.length?`<div class="ldtall
 let leadPickEl=null;
 function leadCardHTML(id,tag="button",extra=""){const L=LEADERS[id];
   return `<${tag} class="ldcard" data-l="${id}"${tag==="button"?' type="button" role="radio" aria-checked="false"':""}>${leadArt(id)}<span class="ldbody"><small>${L.role}</small><b>${escHTML(L.name)}</b><em>${L.title}</em>
-    <span class="pro">${L.plus()}</span><span class="con">${L.minus()}</span><i>“${L.say}”</i>${extra}</span></${tag}>`;}
+    <span class="pro">${L.plus()}</span><span class="con">${L.minus()}</span>${typeof CIV!=="undefined"&&CIV.lead[id]?`<span class="ldstart">Starts: ${CIVK.map(k=>CIV.names[k]+" "+Math.max(CIV.startMin,CIV.lead[id][k]+((CIV.site[SITE.env]||{})[k]||0))).join(" · ")}</span>`:""}<i>“${L.say}”</i>${extra}</span></${tag}>`;}
 function leadPickOpen(done,wait,mode){const sv=mode!=="season";let sel=null;try{const v=localStorage.getItem("paper-mill-leader");if(LEADERS[v])sel=v;}catch(e){}
   if(!leadPickEl){leadPickEl=document.createElement("div");leadPickEl.className="overlay top";leadPickEl.id="leadOv";leadPickEl.hidden=true;document.body.appendChild(leadPickEl);}
   const el=leadPickEl,back=document.activeElement;
@@ -55,7 +55,7 @@ function leadPickOpen(done,wait,mode){const sv=mode!=="season";let sel=null;try{
   el.querySelector("#ld-no").addEventListener("click",close);
   el.querySelector("#ld-go").addEventListener("click",()=>{if(!sel)return;const g=el.querySelector("#ld-go"),w=wait&&wait();
     if(w&&w.then){g.disabled=true;g.setAttribute("aria-busy","true");g.textContent="Getting the mill ready…";w.then(()=>{close();done(sel);});}else{close();done(sel);}});
-  document.addEventListener("keydown",key,true);paint();el.hidden=false;el.querySelector(".modal").scrollTop=0;(el.querySelector('.ldcard[aria-checked="true"]')||el.querySelector(".ldcard")).focus();}
+  document.addEventListener("keydown",key,true);paint();el.hidden=false;el.querySelector(".modal").scrollTop=0;{const s=el.querySelector('.ldcard[aria-checked="true"]'),m=el.querySelector(".modal");if(s)s.focus();else{m.tabIndex=-1;m.focus({preventScroll:true});}}}   // (v5.1 QA: no card looks picked before a pick)
 
 /* ---- the outage budget dialog: the leader's pick, and the one change of leader ---- */
 function leadPlanNew(){if(!leadOn())return null;const p=LEAD_PICKS[S.lead.id];return {to:null,pick:p.length?(p.some(x=>x[0]===S.lead.last)?S.lead.last:p[0][0]):null};}

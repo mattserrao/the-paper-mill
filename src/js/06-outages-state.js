@@ -24,7 +24,7 @@ const outOn=()=>!!(S&&S.outg&&S.outg.on);
 function outageTick(){const o=S.outg;if(!o||!S.season||!S.season.on||S.zen||S.over)return;
   if(o.on){if(S.t>=o.end)endOutage();return;}
   const st=outStart(o.k);if(st+OUT.len>S.season.end)return;
-  if(!o.noticed&&S.t>=st-1440){if(S.cards&&S.cards.open)return;o.noticed=true;openOutagePlan();return;}
+  if(!o.noticed&&S.t>=st-1440){if(S.cards&&S.cards.open)return;if(S.civ&&(S.civ.pending||S.civ.cur))return;   /* (v5.1 QA: waits for a standing-order toast) */o.noticed=true;openOutagePlan();return;}
   if(o.noticed&&S.t>=st)beginOutage();}
 let outEl=null;
 function outShell(){if(!outEl){outEl=document.createElement("div");outEl.className="overlay";outEl.id="outOv";outEl.hidden=true;document.body.appendChild(outEl);}clearTimeout(outEl._t);outEl.classList.remove("note");return outEl;}

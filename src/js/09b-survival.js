@@ -28,7 +28,7 @@ UI_TICKS.push(()=>{const c=$("survChip");if(!c)return;const sea=!survOn()&&leadO
 // (a bankrupt survival run has no "one more turn": that button goes back to the menu instead, on a fresh mill)
 function soMode(surv){$("so-more").textContent=surv?"Menu":"One more turn";$("so-new").textContent=surv?"New survival run":"New season";}
 function survResult(){return {minutes:Math.floor(S.t),wave:survWave(),tons:Math.round(S.shipT||0),incidents:S.tot.incidents,mill:MILL.name.slice(0,40),version:APP_VER.slice(0,12),env:SITE.env};}
-function endSurvival(){const se=S.season,r=survResult(),w=r.wave;se.done=true;se.on=false;se.result=r;running=false;if(G3.save&&G3.save.drop)G3.save.drop();   // v5.0.3: the run is over, so its save goes
+function endSurvival(){if(typeof civDrop==="function")civDrop();const se=S.season,r=survResult(),w=r.wave;se.done=true;se.on=false;se.result=r;running=false;if(G3.save&&G3.save.drop)G3.save.drop();   // v5.0.3: the run is over, so its save goes
   if(document.body.classList.contains("fs"))setFS(false);seasonLocks(false);AUDIO.sfx("lose",100);
   let best=0;try{best=+localStorage.getItem(SURV.best)||0;}catch(e){}
   const pb=r.minutes>best;if(pb){try{localStorage.setItem(SURV.best,String(r.minutes));}catch(e){}}

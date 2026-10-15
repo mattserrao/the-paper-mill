@@ -84,7 +84,7 @@ function maintTick(dt){const crews=Math.max(1,Math.floor(P.techs/2)),head=S.crew
   const rank=i=>QINC(i.id)?(i.id===head?(i.mGo?0:1):3):(i.mGo?0:2),list=S.inc.filter(i=>MNEED(i.id)).map((i,k)=>[i,k]).sort((a,b)=>rank(a[0])-rank(b[0])||a[1]-b[1]).map(a=>a[0]);
   list.forEach((i,k)=>{i.mQ=k-crews+1;if(k>=crews){if(i.mSlot>=0){i.mSince=0;i.mHere=false;i.mGo=false;}i.mSlot=-1;return;}i.mSlot=k;if(!i.mSince){i.mSince=1;i.mResp=8;}
     if(i.mResp>0)i.mResp-=dt;if(i.mResp<=0)i.mGo=i.mHere=true;});}
-function maintState(i){if(!MNEED(i.id))return "";if(i.mGo)return "maintenance working";if(i.mSlot>=0)return "maintenance on the way";return `waiting for maintenance (${i.mQ} ahead)`;}
+function maintState(i){if(!MNEED(i.id))return "";if(i.mGo)return "maintenance working";if(i.mSlot>=0)return "maintenance on the way";return i.mQ>0?`waiting for maintenance (${i.mQ} ahead)`:"waiting for maintenance";}   // (v5.1 QA: mQ is unset until the next tick)
 function incState(i){const a=QINC(i.id)&&!working(i.id)?crewState(i.id):"",b=MNEED(i.id)&&!i.mGo?maintState(i):"";return [a,b].filter(Boolean).join(" · ");}
 function working(k){const h=S.crewQ&&S.crewQ[0];return !!(h&&h.k===k&&h.go);}
 function crewState(k){const q=S.crewQ||[],i=q.findIndex(x=>x.k===k);if(i<0)return "";if(i>0)return `waiting for crew (${i} ahead)`;return q[0].go?"crew working":"crew on the way";}

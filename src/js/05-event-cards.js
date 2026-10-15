@@ -182,7 +182,7 @@ const CARDS=[
  {id:"grant",area:"Management",title:"Recycling grant",
   story:()=>"The state has a fiber-recovery grant. A consultant will write the application for $40k.",
   win:()=>"+$120k grant in 3 days",lose:()=>"Application rejected: $40k gone",
-  odds:()=>Math.min(90,40+15*LV("detrash")+10*LV("apc")),why:"Grants favour mills with modern detrashing and process control.",
+  odds:()=>Math.min(90,40+15*LV("detrash")+10*LV("apc")),why:"Grants favor mills with modern detrashing and process control.",
   ok:()=>S.cash>80000,
   accept(c){deal(-40000);const w=rand("card")*100<c.o;
     pend("grant",3*1440,"grant",{w});
@@ -208,7 +208,7 @@ const CARDS=[
     return "+$40/t on all grades while the strike lasts.";}},
  {id:"yard",area:"Inbound · Bale yard",title:"Bale yard cleanup",
   story:()=>"A contractor will sweep and re-stack the bale yard for $12k.",
-  win:()=>"Bale fires and yard fleet trouble 70% rarer for 10 days",lose:()=>"The crew finds a smouldering bale: a bale fire",
+  win:()=>"Bale fires and yard fleet trouble 70% rarer for 10 days",lose:()=>"The crew finds a smoldering bale: a bale fire",
   odds:()=>80,why:"Fixed odds.",
   ok:()=>!active("balefire"),
   accept(c){deal(-12000);const w=rand("card")*100<c.o;
@@ -319,7 +319,7 @@ function cardTick(dt){const cs=S.cards;if(!cs)return;
   // due callbacks are removed before they run, so one can never fire twice (or forever, if it throws)
   const due=cs.pend.filter(p=>(p.left-=dt)<=0);cs.pend=cs.pend.filter(p=>p.left>0);
   for(const p of due){try{PENDH[p.h](p.d);}catch(e){console.error("card error",p.id,e);}try{if(typeof civCardDue==="function")civCardDue(p);}catch(e){console.error("civics card",p.id,e);}}
-  if(cs.open||S.zen||S.over||(S.season&&S.season.done)||S.t<cs.next||outOn())return;
+  if(cs.open||S.zen||S.over||(S.season&&S.season.done)||S.t<cs.next||outOn()||(S.civ&&(S.civ.pending||S.civ.cur)))return;   // (v5.1 QA: not over a standing-order toast)
   cs.next=S.t+1440*(1.2+0.6*rand("card"));
   // every card is shown at most once per game: once dealt it is marked seen and never drawn again
   let seen=cs.seen||(cs.seen={});if(survOn()&&CARDS.every(c=>seen[c.id]))seen=cs.seen={};   // v4.3 survival: the deck goes round again
@@ -359,6 +359,7 @@ function openCard(c){const o=c.odds();S.cards.open={c,o};running=false;
     const msg=c.accept({o});if(typeof civCardAccept==="function")civCardAccept(c,w,p0);log(`Accepted: ${c.title} (${o}% chance). ${msg}`,"warn");S.M=mods();done(msg);});
   document.getElementById("deal-yes").focus();}
 function closeCard(keep){if(cardEl&&!keep)cardEl.hidden=true;S.cards.open=null;const menuOpen=document.getElementById("v2menu");
+  if(S.civ&&S.civ.q.length&&!S.civ.cur&&!S.civ.pending&&typeof civOn==="function"&&civOn()&&!outOn()){civNext();if(S.civ.cur)return;}   // (v5.1 QA: a choice waiting behind this card opens straight away)
   if(menuOpen&&!menuOpen.hidden)return;running=true;}
 // the pending card outcomes, by key (see pend)
 const PENDH={
@@ -399,7 +400,7 @@ const PENDH={
  "strike":()=>cardBanner("The strike is over: prices back to list.",true),
  "strike#1":()=>{addFx({id:"strikex",left:3*1440,price:{all:-10}});cardBanner("The strike settled: buyers squeeze you −$10/t for 3 days.",false);},
  "yard":({w})=>{if(w){addFx({id:"yard",left:10*1440,evf:{balefire:0.3,fleet:0.3}});cardBanner("Bale yard swept and re-stacked: fire and fleet risk way down for 10 days.",true);}
-      else{trigger("balefire");cardBanner("Cleanup crew found a smouldering bale!",false);}},
+      else{trigger("balefire");cardBanner("Cleanup crew found a smoldering bale!",false);}},
  "film":({w})=>{if(w){S.perk.film=1;for(const g of Object.keys(ECON.price))S.perk.price[g]=(S.perk.price[g]||0)+5;cardBanner("New wrap film cut damage claims: +$5/t on every grade.",true);}
       else{addFx({id:"film",left:240,mods:{winderDown:1}});cardBanner("The new film jammed the wrapper: winder down 4 hours.",false);}},
  "rotor":({w})=>{addFx({id:"rotorok",left:14*1440,evf:{ragger:0.4,lcplug:0.4,hdblow:0.4}});cardBanner(w?"Pulper rotor rebuilt on time: plugs 60% rarer for 14 days.":"Pulper rebuild overran to 8 hours, but it's done: plugs 60% rarer for 14 days.",w);},

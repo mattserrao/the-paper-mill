@@ -54,6 +54,8 @@ function civSetStart(){if(!S.civ)return;const b=(S.lead&&CIV.lead[S.lead.id])||{
   CIVK.forEach(k=>{S.civ.m[k]=Math.max(CIV.startMin,Math.min(100,b[k]+(sa[k]||0)));S.civ.snap[k]=S.civ.m[k];});applyUpgrades();}
 // add a design-weight change ({E:1,C:-2}); returns a short text for logs and toasts
 function civAdd(d,why){if(!S.civ||!d)return "";const out=[];
-  for(const k of CIVK){const v=d[k];if(!v)continue;const p=v*CIV.unit;S.civ.m[k]=Math.max(0,Math.min(100,S.civ.m[k]+p));out.push(`${CIV.names[k]} ${v>0?"+":"−"}${Math.abs(v)}`);}
+  for(const k of CIVK){const v=d[k];if(!v)continue;const p=v*CIV.unit;S.civ.m[k]=Math.max(0,Math.min(100,S.civ.m[k]+p));out.push(`${CIV.names[k]} ${v>0?"+":"−"}${Math.abs(p)}`);}
+  if(d.C>0)S.civ.cspend=S.t;   // (v5.1 QA: anything that raises Community keeps a promise to the town)
   if(out.length){applyUpgrades();if(why)log(`${why}: ${out.join(", ")}`,"");}return out.join(", ");}
-const civTxt=d=>CIVK.filter(k=>d&&d[k]).map(k=>`${CIV.names[k]} ${d[k]>0?"+":"−"}${Math.abs(d[k])}`).join(", ");
+const civTxt=d=>CIVK.filter(k=>d&&d[k]).map(k=>`${CIV.names[k]} ${d[k]>0?"+":"−"}${Math.abs(d[k]*CIV.unit)}`).join(", ");   // (in meter points)
+const civWage=()=>civOn()&&S.civ.wage||1;   // the walkout settlement's lasting raise
