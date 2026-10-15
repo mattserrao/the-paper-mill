@@ -123,6 +123,13 @@ function leadCardOpen(){if(!S.lead)return;const was=running;running=false;
 UI_TICKS.push(()=>{const f=$("svL");if(!f)return;const id=leadOn()?S.lead.id:"";if(f.dataset.l!==id){f.dataset.l=id;f.innerHTML=id?leadArt(id,true):"";f.hidden=!id;const fb=$("svFold");if(fb)fb.hidden=!id;if(!id)$("survChip").classList.remove("fold");}
   const x=$("svF");if(x){const show=id==="dot",ready=show&&leadFixReady(),t=ready?"Fix ready":"Fix used";
     if(x.hidden===show)x.hidden=!show;if(show){if(x.textContent!==t)x.textContent=t;x.dataset.s=ready?"Fix ready":"Fix used";x.classList.toggle("used",!ready);}}});
+// v5.2: the leader's face sits in the main bar (the old chip under the bar is retired); tapping it opens their card.
+// Dot's fix shows as a dot on the face: green when ready.
+{const b=$("v2lead"),f=$("v2leadF"),x=$("v2leadX");
+  if(b){b.addEventListener("click",()=>{if(leadOn()&&!(S.cards&&S.cards.open))leadCardOpen();});
+    UI_TICKS.push(()=>{const id=leadOn()&&!S.zen?S.lead.id:"";if(b.dataset.l!==id){b.dataset.l=id;f.innerHTML=id?leadArt(id,true):"";b.hidden=!id;document.body.classList.toggle("lead",!!id);
+        if(id){const L=LEADERS[id];b.title=`${L.name}, ${L.title}. Tap for their card.`;b.setAttribute("aria-label",b.title);}}
+      const show=id==="dot",ready=show&&leadFixReady();if(x.hidden===show)x.hidden=!show;if(show&&x.classList.contains("used")===ready){x.classList.toggle("used",!ready);x.title=ready?"Fix ready":"Fix used";}});}}
 // v4.4.0-t3: the wave bar slides away to the left (the arrow at its end), leaving the leader's face; tapping the face brings it back
 {const c=$("survChip"),fb=$("svFold");let fold=false;
   // v5.1 QA2: a season's chip counts outages, so its screen-reader label says so

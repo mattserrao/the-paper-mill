@@ -249,15 +249,20 @@ function civOutageEnd(o,pl){if(!civOn())return;const V=S.civ,pc=pl&&pl.civ;
 
 /* ---- the bar: four meters under the wave chip ---- */
 {const bar=document.createElement("div");bar.className="civbar";bar.id="civBar";bar.hidden=true;
-  bar.innerHTML=CIVK.map(k=>`<div class="cv" data-k="${k}" role="button" tabindex="0"><b data-s="${{E:"Econ",L:"Labor",M:"Mach",C:"Comm"}[k]}">${CIV.names[k]}</b><span class="cvbar"><i></i></span><em></em><u></u></div>`).join("");
+  // v5.2: slim colour bars with an icon each, no words (the band shows by colour; tap a meter for its details)
+  const CIVICO={E:'<path d="M12 3v18M16.5 7.5C16 6 14.3 5 12 5c-2.6 0-4.5 1.3-4.5 3.3 0 4.4 9 2.4 9 7 0 2-1.9 3.4-4.5 3.4-2.4 0-4.2-1.1-4.7-2.8"/>',
+    L:'<path d="M4 18h16M6 18v-2a6 6 0 0 1 12 0v2M10 10V6.5a2 2 0 0 1 4 0V10"/>',
+    M:'<circle cx="12" cy="12" r="3"/><path d="M12 2.5v3M12 18.5v3M2.5 12h3M18.5 12h3M5.3 5.3l2.1 2.1M16.6 16.6l2.1 2.1M5.3 18.7l2.1-2.1M16.6 7.4l2.1-2.1"/>',
+    C:'<path d="M3 11l9-7 9 7M5 10v10h14V10M10 20v-5h4v5"/>'};
+  bar.innerHTML=CIVK.map(k=>`<div class="cv" data-k="${k}" role="button" tabindex="0" aria-label="${CIV.names[k]}"><svg class="cvi" viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">${CIVICO[k]}</svg><b data-s="${{E:"Econ",L:"Labor",M:"Mach",C:"Comm"}[k]}">${CIV.names[k]}</b><span class="cvbar"><i></i></span><em></em><u></u></div>`).join("");
   document.body.appendChild(bar);
   // (v5.2: the elements are looked up once, and each is written only when its value changes)
   const CE={};for(const k of CIVK){const el=bar.querySelector(`[data-k="${k}"]`);CE[k]={el,i:el.querySelector("i"),em:el.querySelector("em"),u:el.querySelector("u"),v:null,c:null};}
   UI_TICKS.push(()=>{const on=civOn();if(bar.hidden===on){bar.hidden=!on;document.body.classList.toggle("civ",on);}if(!on)return;
     for(const k of CIVK){const v=S.civ.m[k],b=civBand(v),E=CE[k],pv=(S.civ.prev||S.civ.snap)[k],tr=v-pv,vs=v.toFixed(0),c="cv "+b[2];
       if(E.c!==c){E.c=c;E.el.className=c;}
-      if(E.v!==vs){E.v=vs;E.i.style.width=vs+"%";E.el.title=`${CIV.names[k]} ${vs}/100 · ${b[1]}`;}if(E.em.textContent!==b[1])E.em.textContent=b[1];
-      const ar=tr>0.5?"▲":tr<-0.5?"▼":"";if(E.u.textContent!==ar){E.u.textContent=ar;E.u.className=tr>0?"up":"dn";}}});}
+      if(E.v!==vs||E.el.dataset.b!==b[1]){E.v=vs;E.el.dataset.b=b[1];E.i.style.width=vs+"%";E.el.title=`${CIV.names[k]} ${vs}/100 · ${b[1]}`;E.el.setAttribute("aria-label",E.el.title);}if(E.em.textContent!==b[1])E.em.textContent=b[1];
+      const ar=tr>0.5?"▲":tr<-0.5?"▼":"";if(E.u.textContent!==ar){E.u.textContent=ar;E.u.className=tr>0?"tup":"tdn";   /* (v5.2: "up" picked up the upgrade card style) */}}});}
 // a choice card or toast left open when the run ends (season over, bankrupt, zen, free play) goes away with it
 UI_TICKS.push(()=>{if(civOn()||!S.civ)return;if((civEl&&!civEl.hidden)||S.civ.cur||S.civ.pending)civDrop();});
 

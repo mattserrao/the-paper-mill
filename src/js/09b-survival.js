@@ -12,7 +12,14 @@ function survWaveStart(){const w=survWave();applyUpgrades();
   BANNERS.push({text:t,t:null,tag:"WAVE "+w});while(BANNERS.length>3)BANNERS.splice(1,1);
   log(`Wave ${w-1} done. ${t} (fiber, energy and chemicals, wages).`,"warn");
   const c=$("survChip");if(c){c.classList.remove("pulse");void c.offsetWidth;c.classList.add("pulse");}}
-// the chip under the top bar: the wave and its multipliers, for the whole run
+// v5.2: the outage countdown under the clock, and survival's wave multipliers at the top of the expanded panel
+UI_TICKS.push(()=>{const cd=$("v2cd"),wv=$("v2wave");if(!cd)return;const on=!!(S.season&&S.season.on)&&!S.zen,sv=on&&survOn();let t="",wt="";
+  if(on){const k=survWave(),more=sv||(k<=4&&outStart(k)+OUT.len<=S.season.end),left=more?Math.max(0,outStart(k)-S.t):0,d=Math.floor(left/1440),h=Math.floor(left%1440/60);
+    t=!more?"no more outages":S.outg&&S.outg.on?"outage under way":left<60?"outage within the hour":`outage in ${d?d+"d ":""}${h}h`;
+    if(sv)wt=`Wave ${k} · upsets ${xf(survUp(k))} · costs ${xf(survCost(k))}`;}
+  {const ts=!t?"":t.startsWith("outage in ")?"⏱\uFE0E "+t.slice(10):t==="outage under way"?"⏱\uFE0E now":t==="outage within the hour"?"⏱\uFE0E <1h":t;if(cd.dataset.s!==ts)cd.dataset.s=ts;}   // (phones show the short form)
+  if(cd.textContent!==t)cd.textContent=t;if(cd.hidden===!!t)cd.hidden=!t;if(wv.textContent!==wt)wv.textContent=wt;if(wv.hidden===!!wt)wv.hidden=!wt;});
+// the chip under the top bar: the wave and its multipliers, for the whole run (v5.2: kept for the tools, hidden by styles.css)
 // v5.1 (offline): a season with a leader shows the chip too, without the wave multipliers (class "season" hides them)
 UI_TICKS.push(()=>{const c=$("survChip");if(!c)return;const sea=!survOn()&&leadOn(),on=(survOn()||sea)&&!S.zen;if(c.hidden===on){c.hidden=!on;document.body.classList.toggle("surv",on);}if(!on)return;
   if(c.classList.contains("season")!==sea)c.classList.toggle("season",sea);

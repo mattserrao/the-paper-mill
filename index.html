@@ -743,7 +743,7 @@ body.zen .civbar{display:none}
 .civbar .cv b{color:var(--ink);font-weight:800}
 .civbar .cvbar{display:block;width:44px;height:6px;border-radius:3px;background:var(--chip);overflow:hidden}
 .civbar .cvbar i{display:block;height:100%;background:var(--muted);border-radius:3px}
-.civbar .cv em{font-style:normal}.civbar .cv u{text-decoration:none;font-size:9px}.civbar .cv u.up{color:var(--ok)}.civbar .cv u.dn{color:var(--bad)}
+.civbar .cv em{font-style:normal}.civbar .cv u{text-decoration:none;font-size:9px}.civbar .cv u.tup{color:var(--ok)}.civbar .cv u.tdn{color:var(--bad)}
 .civbar .cv.cr{border-color:var(--bad);animation:civpulse 1.6s ease-in-out infinite}.civbar .cv.cr i{background:var(--bad)}.civbar .cv.cr em{color:var(--bad);font-weight:800}
 .civbar .cv.sn i{background:#d9922b}.civbar .cv.sn em{color:#b9771c}
 .civbar .cv.st i,.civbar .cv.ex i{background:var(--ok)}.civbar .cv.ex em,.civbar .cv.st em{color:var(--ok)}.civbar .cv.ex{border-color:var(--ok)}
@@ -823,7 +823,7 @@ body.titleon .v2top,body.titleon .v2dock,body.titleon .v2more{visibility:hidden}
 .title .tmain{position:absolute;left:clamp(24px,6vw,96px);top:50%;transform:translateY(-52%);width:min(410px,calc(100% - 48px));display:flex;flex-direction:column;gap:26px}
 .title .tmain[hidden]{display:none}
 .title .tlogo{animation:tin .9s ease both}
-.title .temb{display:inline-grid;place-items:center;width:58px;height:58px;border-radius:16px;background:color-mix(in srgb,var(--brand) 82%,#000);color:#fff;box-shadow:0 10px 30px rgba(0,0,0,.35);margin-bottom:14px}
+.title .temb{display:inline-grid;place-items:center;width:58px;height:58px;border-radius:16px;background:rgba(255,255,255,.1);border:1px solid rgba(255,255,255,.14);color:#fff;margin-bottom:14px}
 .title h1{margin:0;font:800 clamp(44px,6.2vw,76px)/.95 var(--f-display);letter-spacing:-.025em;text-shadow:0 4px 30px rgba(0,0,0,.45)}
 .title h1 small{display:block;font:700 clamp(13px,1.2vw,15px) var(--f-body);letter-spacing:.32em;text-transform:uppercase;opacity:.82;margin:0 0 8px 2px}
 .title .twel{margin:12px 0 0 2px;font:500 15px/1.4 var(--f-body);color:rgba(255,255,255,.86);text-shadow:0 2px 12px rgba(0,0,0,.5)}
@@ -838,7 +838,7 @@ body.titleon .v2top,body.titleon .v2dock,body.titleon .v2more{visibility:hidden}
 .title .tmodes small{display:block;font:500 12.5px/1.35 var(--f-body);color:rgba(255,255,255,.72);margin-top:2px}
 .title .tmodes .warn small{color:#ffb4a8}
 .title .tico{flex:none;width:42px;height:42px;border-radius:12px;display:grid;place-items:center;background:rgba(255,255,255,.1);color:#fff}
-.title .tmodes [data-mode="season"] .tico,.title .tcont .tico{background:var(--brand)}
+.title .tcont .tico{background:var(--brand)}
 .title .tchev{flex:none;opacity:.45;font-style:normal;display:grid}
 .title .tcont{background:color-mix(in srgb,var(--brand) 55%,rgba(14,18,27,.8))!important;border-color:color-mix(in srgb,var(--brand) 60%,white)!important}
 .title .tbar{position:absolute;left:0;right:0;bottom:0;display:flex;align-items:center;justify-content:space-between;padding:0 max(18px,env(safe-area-inset-right,0px)) calc(18px + env(safe-area-inset-bottom,0px)) max(18px,env(safe-area-inset-left,0px));pointer-events:none}
@@ -902,6 +902,32 @@ body.titleon .v2top,body.titleon .v2dock,body.titleon .v2more{visibility:hidden}
 }
 @media (max-height:560px) and (min-aspect-ratio:9/10){.title .tmain{gap:14px}.title .temb{display:none}.title h1{font-size:40px}.title .tmodes{gap:6px}.title .tmodes button{padding:8px 12px}}
 @media (prefers-reduced-motion:reduce){.title .tdrift,.title .torbs i{animation:none}}
+
+/* ---------- v5.2 top bar: the leader in the bar, the countdown under the clock, slim civics meters ---------- */
+.survchip{display:none!important}   /* (retired: its parts moved into the main bar and the expanded panel) */
+.v2lead{width:44px;min-width:44px;height:44px;padding:0;border-radius:14px;display:grid;place-items:center;position:relative;cursor:pointer}
+.v2lead[hidden]{display:none}
+.v2lead .lf{display:block;width:34px;height:34px;border-radius:50%;overflow:hidden}
+.v2lead .lf>*{width:100%;height:100%;display:block}
+.v2lead .lfix{position:absolute;right:4px;bottom:4px;width:11px;height:11px;border-radius:50%;background:var(--ok);border:2px solid var(--panel)}
+.v2lead .lfix.used{background:var(--muted)}.v2lead .lfix[hidden]{display:none}
+.v2lead:focus-visible{outline:2px solid var(--ink);outline-offset:2px}
+.v2stats .st.ck em{font:600 10.5px var(--f-body);font-style:normal;color:var(--muted);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;margin-top:1px}
+.v2stats .st.ck em[hidden]{display:none}
+.v2stats .st.ck:has(em:not([hidden])) small{font-size:11px}.v2stats .st.ck:has(em:not([hidden])) b{font-size:13px;line-height:1.15}
+.v2mhead{display:flex;flex-wrap:wrap;align-items:baseline;justify-content:space-between;gap:4px 12px;padding:0 2px}
+.v2mhead b{font:800 15px var(--f-display);min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.v2mhead span{font:600 12px var(--f-body);color:var(--muted)}.v2mhead span[hidden]{display:none}
+.civbar{top:calc(58px + env(safe-area-inset-top,0px));gap:6px}
+.civbar .cv{height:22px;padding:0 8px 0 7px;gap:6px}
+.civbar .cv b,.civbar .cv em{display:none}
+.civbar .cv .cvi{flex:none;color:var(--muted)}
+.civbar .cvbar{width:46px;height:6px}
+.civbar .cv.cr .cvi{color:var(--bad)}.civbar .cv.sn .cvi{color:#b9771c}.civbar .cv.ex .cvi{color:var(--ok)}
+body.app.civ .banner3d{top:calc(90px + env(safe-area-inset-top,0px))}
+@media (max-width:420px){.civbar .cv{padding:0 6px;gap:4px;height:22px}.civbar .cv b{font-size:0}.civbar .cv b::after{content:none}.civbar .cvbar{width:28px}}
+@media (max-width:420px){.v2top .v2ibtn,.v2top .v2lead,.v2top .v2lbl{width:38px;min-width:38px}.v2lead .lf{width:30px;height:30px}
+  .v2stats .st.ck em{font-size:0}.v2stats .st.ck em::after{content:attr(data-s);font-size:10.5px}}
 </style>
 </head>
 <body class="app">
@@ -925,16 +951,17 @@ body.titleon .v2top,body.titleon .v2dock,body.titleon .v2more{visibility:hidden}
 <div class="survchip" hidden id="survChip" role="button" tabindex="0" title="Survival: every wave, upsets get more likely and fiber, energy, chemicals and wages cost more. A wave ends when its planned outage does. Tap for your mill leader."><i class="svl" hidden id="svL"></i><span class="svbody"><b id="svW">Wave 1</b><span><i data-s="Up">Upsets</i> <b id="svU">×1.00</b></span><span><i data-s="$">Costs</i> <b id="svC">×1.00</b></span><u hidden id="svF"></u><em id="svN"></em></span><button class="svfold" hidden id="svFold" type="button" aria-label="Slide the wave bar away" title="Hide (tap the face to bring it back)"><svg fill="none" height="14" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2.6" viewbox="0 0 24 24" width="14"><path d="M15 6l-6 6 6 6"></path></svg></button></div>
 <div class="v2top" id="v2top">
 <button aria-label="Pause and open the menu" class="v2card v2ibtn" id="v2pause"><svg fill="currentColor" height="18" viewbox="0 0 24 24" width="18"><rect height="16" rx="1.5" width="5" x="5" y="4"></rect><rect height="16" rx="1.5" width="5" x="14" y="4"></rect></svg></button>
+<button class="v2card v2lead" hidden id="v2lead" type="button" aria-label="Your mill leader"><span class="lf" id="v2leadF"></span><i class="lfix" hidden id="v2leadX"></i></button>
 <button aria-controls="v2more" aria-expanded="false" class="v2card v2stats" id="v2stats">
-<span class="st mn"><small>Mill</small><b id="v2mill">–</b></span>
 <span class="st"><small>Cash</small><b id="v2cash">–</b></span>
 <span class="st"><small>Profit</small><b id="v2profit">–</b></span>
-<span class="st ck"><small id="v2clockL">Time</small><b id="v2clock">–</b></span>
+<span class="st ck"><small id="v2clockL">Time</small><b id="v2clock">–</b><em hidden id="v2cd"></em></span>
 <span class="gbadge" hidden id="v2grade" title="Grade so far this period"></span><span aria-hidden="true" class="chev"><svg fill="none" height="14" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2.6" viewbox="0 0 24 24" width="14"><path d="M6 9l6 6 6-6"></path></svg></span>
 </button>
 <button aria-pressed="true" class="v2card v2lbl" id="v2lblBtn" title="Show or hide equipment labels"><svg fill="none" height="18" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2.2" viewbox="0 0 24 24" width="18"><path d="M3 12V4h8l10 10-8 8L3 12z"></path><circle cx="7.5" cy="8.5" fill="currentColor" r="1.4"></circle></svg><span>Labels</span></button>
 </div>
 <div class="v2card v2more" id="v2more">
+<div class="v2mhead"><b id="v2mill">–</b><span hidden id="v2wave"></span></div>
 <div class="v2grid">
 <div><small>Production</small><b data-m="k-prod">–</b><em data-m="k-prod-s"></em></div>
 <div><small>Cost / ton</small><b id="v2cpt">–</b><em id="v2cpt-s"></em></div><div><small>Machine up</small><b id="v2up">–</b><em id="v2up-s"></em></div>
@@ -3079,7 +3106,14 @@ function survWaveStart(){const w=survWave();applyUpgrades();
   BANNERS.push({text:t,t:null,tag:"WAVE "+w});while(BANNERS.length>3)BANNERS.splice(1,1);
   log(`Wave ${w-1} done. ${t} (fiber, energy and chemicals, wages).`,"warn");
   const c=$("survChip");if(c){c.classList.remove("pulse");void c.offsetWidth;c.classList.add("pulse");}}
-// the chip under the top bar: the wave and its multipliers, for the whole run
+// v5.2: the outage countdown under the clock, and survival's wave multipliers at the top of the expanded panel
+UI_TICKS.push(()=>{const cd=$("v2cd"),wv=$("v2wave");if(!cd)return;const on=!!(S.season&&S.season.on)&&!S.zen,sv=on&&survOn();let t="",wt="";
+  if(on){const k=survWave(),more=sv||(k<=4&&outStart(k)+OUT.len<=S.season.end),left=more?Math.max(0,outStart(k)-S.t):0,d=Math.floor(left/1440),h=Math.floor(left%1440/60);
+    t=!more?"no more outages":S.outg&&S.outg.on?"outage under way":left<60?"outage within the hour":`outage in ${d?d+"d ":""}${h}h`;
+    if(sv)wt=`Wave ${k} · upsets ${xf(survUp(k))} · costs ${xf(survCost(k))}`;}
+  {const ts=!t?"":t.startsWith("outage in ")?"⏱\uFE0E "+t.slice(10):t==="outage under way"?"⏱\uFE0E now":t==="outage within the hour"?"⏱\uFE0E <1h":t;if(cd.dataset.s!==ts)cd.dataset.s=ts;}   // (phones show the short form)
+  if(cd.textContent!==t)cd.textContent=t;if(cd.hidden===!!t)cd.hidden=!t;if(wv.textContent!==wt)wv.textContent=wt;if(wv.hidden===!!wt)wv.hidden=!wt;});
+// the chip under the top bar: the wave and its multipliers, for the whole run (v5.2: kept for the tools, hidden by styles.css)
 // v5.1 (offline): a season with a leader shows the chip too, without the wave multipliers (class "season" hides them)
 UI_TICKS.push(()=>{const c=$("survChip");if(!c)return;const sea=!survOn()&&leadOn(),on=(survOn()||sea)&&!S.zen;if(c.hidden===on){c.hidden=!on;document.body.classList.toggle("surv",on);}if(!on)return;
   if(c.classList.contains("season")!==sea)c.classList.toggle("season",sea);
@@ -3252,6 +3286,13 @@ function leadCardOpen(){if(!S.lead)return;const was=running;running=false;
 UI_TICKS.push(()=>{const f=$("svL");if(!f)return;const id=leadOn()?S.lead.id:"";if(f.dataset.l!==id){f.dataset.l=id;f.innerHTML=id?leadArt(id,true):"";f.hidden=!id;const fb=$("svFold");if(fb)fb.hidden=!id;if(!id)$("survChip").classList.remove("fold");}
   const x=$("svF");if(x){const show=id==="dot",ready=show&&leadFixReady(),t=ready?"Fix ready":"Fix used";
     if(x.hidden===show)x.hidden=!show;if(show){if(x.textContent!==t)x.textContent=t;x.dataset.s=ready?"Fix ready":"Fix used";x.classList.toggle("used",!ready);}}});
+// v5.2: the leader's face sits in the main bar (the old chip under the bar is retired); tapping it opens their card.
+// Dot's fix shows as a dot on the face: green when ready.
+{const b=$("v2lead"),f=$("v2leadF"),x=$("v2leadX");
+  if(b){b.addEventListener("click",()=>{if(leadOn()&&!(S.cards&&S.cards.open))leadCardOpen();});
+    UI_TICKS.push(()=>{const id=leadOn()&&!S.zen?S.lead.id:"";if(b.dataset.l!==id){b.dataset.l=id;f.innerHTML=id?leadArt(id,true):"";b.hidden=!id;document.body.classList.toggle("lead",!!id);
+        if(id){const L=LEADERS[id];b.title=`${L.name}, ${L.title}. Tap for their card.`;b.setAttribute("aria-label",b.title);}}
+      const show=id==="dot",ready=show&&leadFixReady();if(x.hidden===show)x.hidden=!show;if(show&&x.classList.contains("used")===ready){x.classList.toggle("used",!ready);x.title=ready?"Fix ready":"Fix used";}});}}
 // v4.4.0-t3: the wave bar slides away to the left (the arrow at its end), leaving the leader's face; tapping the face brings it back
 {const c=$("survChip"),fb=$("svFold");let fold=false;
   // v5.1 QA2: a season's chip counts outages, so its screen-reader label says so
@@ -3515,15 +3556,20 @@ function civOutageEnd(o,pl){if(!civOn())return;const V=S.civ,pc=pl&&pl.civ;
 
 /* ---- the bar: four meters under the wave chip ---- */
 {const bar=document.createElement("div");bar.className="civbar";bar.id="civBar";bar.hidden=true;
-  bar.innerHTML=CIVK.map(k=>`<div class="cv" data-k="${k}" role="button" tabindex="0"><b data-s="${{E:"Econ",L:"Labor",M:"Mach",C:"Comm"}[k]}">${CIV.names[k]}</b><span class="cvbar"><i></i></span><em></em><u></u></div>`).join("");
+  // v5.2: slim colour bars with an icon each, no words (the band shows by colour; tap a meter for its details)
+  const CIVICO={E:'<path d="M12 3v18M16.5 7.5C16 6 14.3 5 12 5c-2.6 0-4.5 1.3-4.5 3.3 0 4.4 9 2.4 9 7 0 2-1.9 3.4-4.5 3.4-2.4 0-4.2-1.1-4.7-2.8"/>',
+    L:'<path d="M4 18h16M6 18v-2a6 6 0 0 1 12 0v2M10 10V6.5a2 2 0 0 1 4 0V10"/>',
+    M:'<circle cx="12" cy="12" r="3"/><path d="M12 2.5v3M12 18.5v3M2.5 12h3M18.5 12h3M5.3 5.3l2.1 2.1M16.6 16.6l2.1 2.1M5.3 18.7l2.1-2.1M16.6 7.4l2.1-2.1"/>',
+    C:'<path d="M3 11l9-7 9 7M5 10v10h14V10M10 20v-5h4v5"/>'};
+  bar.innerHTML=CIVK.map(k=>`<div class="cv" data-k="${k}" role="button" tabindex="0" aria-label="${CIV.names[k]}"><svg class="cvi" viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">${CIVICO[k]}</svg><b data-s="${{E:"Econ",L:"Labor",M:"Mach",C:"Comm"}[k]}">${CIV.names[k]}</b><span class="cvbar"><i></i></span><em></em><u></u></div>`).join("");
   document.body.appendChild(bar);
   // (v5.2: the elements are looked up once, and each is written only when its value changes)
   const CE={};for(const k of CIVK){const el=bar.querySelector(`[data-k="${k}"]`);CE[k]={el,i:el.querySelector("i"),em:el.querySelector("em"),u:el.querySelector("u"),v:null,c:null};}
   UI_TICKS.push(()=>{const on=civOn();if(bar.hidden===on){bar.hidden=!on;document.body.classList.toggle("civ",on);}if(!on)return;
     for(const k of CIVK){const v=S.civ.m[k],b=civBand(v),E=CE[k],pv=(S.civ.prev||S.civ.snap)[k],tr=v-pv,vs=v.toFixed(0),c="cv "+b[2];
       if(E.c!==c){E.c=c;E.el.className=c;}
-      if(E.v!==vs){E.v=vs;E.i.style.width=vs+"%";E.el.title=`${CIV.names[k]} ${vs}/100 · ${b[1]}`;}if(E.em.textContent!==b[1])E.em.textContent=b[1];
-      const ar=tr>0.5?"▲":tr<-0.5?"▼":"";if(E.u.textContent!==ar){E.u.textContent=ar;E.u.className=tr>0?"up":"dn";}}});}
+      if(E.v!==vs||E.el.dataset.b!==b[1]){E.v=vs;E.el.dataset.b=b[1];E.i.style.width=vs+"%";E.el.title=`${CIV.names[k]} ${vs}/100 · ${b[1]}`;E.el.setAttribute("aria-label",E.el.title);}if(E.em.textContent!==b[1])E.em.textContent=b[1];
+      const ar=tr>0.5?"▲":tr<-0.5?"▼":"";if(E.u.textContent!==ar){E.u.textContent=ar;E.u.className=tr>0?"tup":"tdn";   /* (v5.2: "up" picked up the upgrade card style) */}}});}
 // a choice card or toast left open when the run ends (season over, bankrupt, zen, free play) goes away with it
 UI_TICKS.push(()=>{if(civOn()||!S.civ)return;if((civEl&&!civEl.hidden)||S.civ.cur||S.civ.pending)civDrop();});
 

@@ -21,16 +21,17 @@
 <div class="survchip" hidden id="survChip" role="button" tabindex="0" title="Survival: every wave, upsets get more likely and fiber, energy, chemicals and wages cost more. A wave ends when its planned outage does. Tap for your mill leader."><i class="svl" hidden id="svL"></i><span class="svbody"><b id="svW">Wave 1</b><span><i data-s="Up">Upsets</i> <b id="svU">×1.00</b></span><span><i data-s="$">Costs</i> <b id="svC">×1.00</b></span><u hidden id="svF"></u><em id="svN"></em></span><button class="svfold" hidden id="svFold" type="button" aria-label="Slide the wave bar away" title="Hide (tap the face to bring it back)"><svg fill="none" height="14" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2.6" viewbox="0 0 24 24" width="14"><path d="M15 6l-6 6 6 6"></path></svg></button></div>
 <div class="v2top" id="v2top">
 <button aria-label="Pause and open the menu" class="v2card v2ibtn" id="v2pause"><svg fill="currentColor" height="18" viewbox="0 0 24 24" width="18"><rect height="16" rx="1.5" width="5" x="5" y="4"></rect><rect height="16" rx="1.5" width="5" x="14" y="4"></rect></svg></button>
+<button class="v2card v2lead" hidden id="v2lead" type="button" aria-label="Your mill leader"><span class="lf" id="v2leadF"></span><i class="lfix" hidden id="v2leadX"></i></button>
 <button aria-controls="v2more" aria-expanded="false" class="v2card v2stats" id="v2stats">
-<span class="st mn"><small>Mill</small><b id="v2mill">–</b></span>
 <span class="st"><small>Cash</small><b id="v2cash">–</b></span>
 <span class="st"><small>Profit</small><b id="v2profit">–</b></span>
-<span class="st ck"><small id="v2clockL">Time</small><b id="v2clock">–</b></span>
+<span class="st ck"><small id="v2clockL">Time</small><b id="v2clock">–</b><em hidden id="v2cd"></em></span>
 <span class="gbadge" hidden id="v2grade" title="Grade so far this period"></span><span aria-hidden="true" class="chev"><svg fill="none" height="14" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2.6" viewbox="0 0 24 24" width="14"><path d="M6 9l6 6 6-6"></path></svg></span>
 </button>
 <button aria-pressed="true" class="v2card v2lbl" id="v2lblBtn" title="Show or hide equipment labels"><svg fill="none" height="18" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2.2" viewbox="0 0 24 24" width="18"><path d="M3 12V4h8l10 10-8 8L3 12z"></path><circle cx="7.5" cy="8.5" fill="currentColor" r="1.4"></circle></svg><span>Labels</span></button>
 </div>
 <div class="v2card v2more" id="v2more">
+<div class="v2mhead"><b id="v2mill">–</b><span hidden id="v2wave"></span></div>
 <div class="v2grid">
 <div><small>Production</small><b data-m="k-prod">–</b><em data-m="k-prod-s"></em></div>
 <div><small>Cost / ton</small><b id="v2cpt">–</b><em id="v2cpt-s"></em></div><div><small>Machine up</small><b id="v2up">–</b><em id="v2up-s"></em></div>
