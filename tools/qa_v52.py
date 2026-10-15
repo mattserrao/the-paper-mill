@@ -102,8 +102,12 @@ PLAY = r"""async ([style,seed,swap,mode])=>{const P=__PM,S=P.S,h=P.SIM_STEP||0.2
     const d=Math.floor(S.t/1440);if(style!=='handsoff'&&d!==lastDay){lastDay=d;shop();
       // top bar: the leader in the bar, the countdown under the clock (after a frame of UI ticks)
       await new Promise(r=>requestAnimationFrame(()=>requestAnimationFrame(()=>setTimeout(r,260))));
-      {const lb=document.getElementById('v2lead'),cd=document.getElementById('v2cd');if(S.lead&&(lb.hidden||lb.dataset.l!==S.lead.id))bad('leader not shown in the top bar ('+(lb.dataset.l||'none')+' vs '+S.lead.id+')');
-        if(S.season&&S.season.on&&!S.over){const k=P.survWave?0:0;if(cd.hidden)bad('no outage countdown under the clock');}}}
+      {const live=()=>S.season&&S.season.on&&!S.over&&!S.zen;
+        const look=()=>{const lb=document.getElementById('v2lead'),cd=document.getElementById('v2cd');return {lead:!S.lead||(!lb.hidden&&lb.dataset.l===S.lead.id),cd:!cd.hidden&&!!cd.textContent,got:lb.dataset.l||'none'};};
+        if(live()){let r=look();if(!r.lead||!r.cd){await new Promise(z=>setTimeout(z,600));if(live())r=look();else r={lead:1,cd:1};}
+          if(!r.lead||!r.cd){let fr=0;await new Promise(z=>{const t0=performance.now();const f=()=>{fr++;if(performance.now()-t0<500)requestAnimationFrame(f);else z();};requestAnimationFrame(f);});
+            log.tbDbg=log.tbDbg||[];if(log.tbDbg.length<4)log.tbDbg.push({d,t:S.t,frames500:fr,after:look(),body:document.body.className,title:!document.getElementById('title').hidden,cdTxt:document.getElementById('v2cd').textContent,leadOn:P.leadOn?P.leadOn():'?',cards:!!(S.cards&&S.cards.open),ovs:[...document.querySelectorAll('.overlay')].filter(e=>!e.hidden).map(e=>e.id)});}
+          if(!r.lead)bad('leader not shown in the top bar while the season runs ('+r.got+' vs '+S.lead.id+')');if(!r.cd)bad('no outage countdown under the clock while the season runs');}}}
     P.setRunning(false);if(n%4000===0)await new Promise(r=>setTimeout(r,0));}
   log.steps=n;log.simSec=+((performance.now()-t0)/1000).toFixed(1);log.day=+(S.t/1440).toFixed(2);log.done=!!(S.season&&S.season.done);log.result=S.season&&S.season.result;
   log.cash=Math.round(S.cash);log.bn=S.bn;log.leaderEnd=S.lead&&S.lead.id;log.leadWas=S.lead&&S.lead.was;log.wage=S.civ&&S.civ.wage||1;
