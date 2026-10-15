@@ -8,6 +8,7 @@ function step(dt){
 
   chaosTick(dt);
   cardTick(dt);
+  if(typeof civTick==="function")civTick(dt);   // v5.1 civics
   outageTick();
   const M=S.M=mods();
   autoControl(dt);

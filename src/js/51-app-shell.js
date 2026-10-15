@@ -142,11 +142,13 @@
       if(to>=0){e.preventDefault();f[to].focus();}},true);}   // capture: some fields (the season-over name) stop key events reaching document
   // the first Play waits for the start-up precompile (a few seconds at most), so no shader compiles land mid-play
   let goWait=false;
-  const go=()=>{const fresh=first;if(first)startSeason();play();if(fresh&&TUT.want())setTimeout(()=>TUT.open(),60);};
+  // v5.1 (offline): a season picks its leader first too (the same picker as survival)
+  const goSeason=(fresh)=>leadPickOpen(id=>{if(G3.save&&G3.save.drop)G3.save.drop();startSeason();leadStart(id);play();if(fresh&&TUT.want())setTimeout(()=>TUT.open(),60);},()=>(G3.warm||!G3.prewarm)?null:G3.prewarm(),"season");
+  const go=()=>{const fresh=first;if(first){goSeason(fresh);return;}play();};
   $("v2go").addEventListener("click",()=>{if(goWait)return;if(G3.warm||!G3.prewarm){go();return;}
     goWait=true;const b=$("v2go");b.setAttribute("aria-busy","true");b.querySelector("small").textContent="Getting the mill ready…";
     G3.prewarm().then(()=>{goWait=false;b.removeAttribute("aria-busy");go();});});
-  $("v2season").addEventListener("click",()=>{startSeason();play();if(TUT.want())setTimeout(()=>TUT.open(),60);});
+  $("v2season").addEventListener("click",()=>goSeason(true));
   // v4.3 survival: the same start as a season. v4.4: the leader is picked first (after the site, before the run starts);
   // the picker opens at once, and its Start button waits for the start-up precompile if that is still running
   const goSurv=()=>leadPickOpen(id=>{if(G3.save&&G3.save.drop)G3.save.drop();startSurvival(id);play();if(TUT.want())setTimeout(()=>TUT.open(),60);},()=>(G3.warm||!G3.prewarm)?null:G3.prewarm());

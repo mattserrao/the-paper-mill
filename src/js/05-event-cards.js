@@ -16,7 +16,7 @@ const CARDS=[
   story:()=>"A box plant lost its supplier. They need 900 t of 33HT within 30 hours and will pay $90/t over list.",
   win:()=>"+$81k premium if all 900 t are made on time",lose:()=>"Every ton short costs $40",
   odds:()=>clamp(Math.round(50+(effNow()-0.87)*300),10,95),why:"Depends on how well the machine runs: breaks and downtime cost tons.",
-  ok:()=>!S.plan.hot,
+  ok:()=>!S.plan.hot&&!(typeof civOn==="function"&&civOn()),   // v5.1 civics: the Rush order upset replaces this card
   accept(){S.plan.q.unshift({g:"33HT",t:900,i:3});S.plan.left=0;S.plan.hot={made:0};
     pend("hot",30*60,"hot");
     return "33HT jumps to the front of the queue. Delivery due in 30 hours.";}},
@@ -197,7 +197,7 @@ const CARDS=[
     S.perk.energy+=10;pend("hedge",14*1440,"hedge#1");
     return "$20k paid. Energy $10/t cheaper for 14 days.";}},
  {id:"strike",area:"Sales",title:"Competitor strike",
-  story:()=>"A competing mill's crew walked out. Their customers want your paper at $40/t over list on every grade.",
+  story:()=>"Riverside Paper's crew walked out. Their customers want your paper at $40/t over list on every grade.",
   win:()=>"+$40/t on everything for 5 days",lose:()=>"The strike settles after a day and the buyers squeeze you: −$10/t for 3 days",
   odds:()=>65,why:"Depends on the union talks, not you.",
   ok:()=>true,
@@ -318,7 +318,7 @@ function cardTick(dt){const cs=S.cards;if(!cs)return;
   if(S.fx.some(f=>f.left<=0)){S.fx=S.fx.filter(f=>f.left>0);}
   // due callbacks are removed before they run, so one can never fire twice (or forever, if it throws)
   const due=cs.pend.filter(p=>(p.left-=dt)<=0);cs.pend=cs.pend.filter(p=>p.left>0);
-  for(const p of due){try{PENDH[p.h](p.d);}catch(e){console.error("card error",p.id,e);}}
+  for(const p of due){try{PENDH[p.h](p.d);}catch(e){console.error("card error",p.id,e);}try{if(typeof civCardDue==="function")civCardDue(p);}catch(e){console.error("civics card",p.id,e);}}
   if(cs.open||S.zen||S.over||(S.season&&S.season.done)||S.t<cs.next||outOn())return;
   cs.next=S.t+1440*(1.2+0.6*rand("card"));
   // every card is shown at most once per game: once dealt it is marked seen and never drawn again
@@ -342,7 +342,7 @@ function openCard(c){const o=c.odds();S.cards.open={c,o};running=false;
   cardEl.innerHTML=`<div class="modal deal" role="dialog" aria-modal="true" aria-labelledby="deal-h"><span class="dk">${t(c.area)} · sim paused</span>
     <h2 id="deal-h">${t(c.title)}</h2><p>${t(c.story())}</p>
     <div class="doc"><b class="w">Win</b><span>${t(c.win())}</span><b class="l">Risk</b><span>${t(c.lose())}</span></div>
-    <div><div class="dodds"><span>Chance it works</span><b>${o}%</b></div><div class="dbar"><i style="width:${o}%"></i></div><p style="font-size:12.5px;margin-top:4px">${t(c.why)}${cardHave(c)?` <b>${t(cardHave(c))}</b>`:""}</p></div>
+    <div><div class="dodds"><span>Chance it works</span><b>${o}%</b></div><div class="dbar"><i style="width:${o}%"></i></div><p style="font-size:12.5px;margin-top:4px">${t(c.why)}${cardHave(c)?` <b>${t(cardHave(c))}</b>`:""}</p></div>${typeof civCardHTML==="function"?civCardHTML(c):""}
     <div id="deal-res" class="dres" hidden></div>
     <div class="btns" id="deal-btns"><button id="deal-no">Decline</button><button id="deal-yes" class="primary">Accept</button></div></div>`;
   cardEl.classList.remove("dealres");clearTimeout(cardEl._t);cardEl.hidden=false;AUDIO.sfx("cash",150);
@@ -354,8 +354,9 @@ function openCard(c){const o=c.odds();S.cards.open={c,o};running=false;
     closeCard(true);cardEl.classList.add("dealres");cardEl.hidden=false;clearTimeout(cardEl._t);
     const m=cardEl.querySelector(".modal");setTimeout(()=>m.addEventListener("click",()=>{cardEl.hidden=true;cardEl.classList.remove("dealres");},{once:true}),0);
     cardEl._t=setTimeout(()=>{cardEl.hidden=true;cardEl.classList.remove("dealres");},2000);};
-  document.getElementById("deal-no").addEventListener("click",()=>{log(`Declined: ${c.title}`,"");closeCard();});
-  document.getElementById("deal-yes").addEventListener("click",()=>{const msg=c.accept({o});log(`Accepted: ${c.title} (${o}% chance). ${msg}`,"warn");S.M=mods();done(msg);});
+  document.getElementById("deal-no").addEventListener("click",()=>{log(`Declined: ${c.title}`,"");if(typeof civCardDecline==="function")civCardDecline(c);closeCard();});
+  document.getElementById("deal-yes").addEventListener("click",()=>{const st=S.rng.card,w=rand("card")*100<o;S.rng.card=st;const p0=S.cards.pend.length;   // v5.1: peek at the card's own first roll (no dice drawn) for its civics
+    const msg=c.accept({o});if(typeof civCardAccept==="function")civCardAccept(c,w,p0);log(`Accepted: ${c.title} (${o}% chance). ${msg}`,"warn");S.M=mods();done(msg);});
   document.getElementById("deal-yes").focus();}
 function closeCard(keep){if(cardEl&&!keep)cardEl.hidden=true;S.cards.open=null;const menuOpen=document.getElementById("v2menu");
   if(menuOpen&&!menuOpen.hidden)return;running=true;}

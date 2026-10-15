@@ -32,16 +32,21 @@ const LEAD={
 const LEAD_IDS=["chip","dot","fel","hank"];
 // what each leader picks at an outage: [stack key, button label, what it does]  (keys kept from v4.4.0-t1 so saves still load)
 const LEAD_PICKS={
-  chip:[["fibre","Fiber lock",()=>"next wave's fiber at this wave's price"],["sales","Sales push",()=>`+$${LEAD.sales}/t on every grade`]],
+  chip:[["fibre","Fiber lock",()=>survRun()?"next wave's fiber at this wave's price":"next week's fiber market held at this week's price"],["sales","Sales push",()=>`+$${LEAD.sales}/t on every grade`]],
   dot:[],
   fel:[["pstock","Fiber line",()=>`receiving, pulper, screens +${pct1(LEAD.cap)}%`],["pwet","Paper machine",()=>`machine +${pct1(LEAD.cap)}%`],["pdry","Finishing",()=>`winder and shipping +${pct1(LEAD.cap)}%`]],
   hank:[["rethread","Runnability",()=>`breaks −${pct1(LEAD.clean)}%, rethreads −${pct1(LEAD.rethread)}% time`],["clean","Dial in the dryers",()=>`steam −${pct1(leadN("clean")>=LEAD.steamFull?LEAD.steam/2:LEAD.steam)}%`]]};
 const pct1=v=>+(v*100).toFixed(1);   // 0.015 -> 1.5 (labels)
+// v5.1 (offline): leaders also run seasons. leadOn = a leader is in charge of a running season or survival run
+const leadOn=()=>!!(S&&S.lead&&S.season&&S.season.on);
 const leadIs=id=>!!(S&&S.lead&&S.lead.id===id);
 const leadN=k=>(S&&S.lead&&S.lead.st[k])||0;
 const leadDeals=()=>leadN("fibre")+leadN("sales"),leadProjects=()=>leadN("pstock")+leadN("pwet")+leadN("pdry");
 // --- effects (read by applyUpgrades, energyCost, the labour line, freqMul, repairs, breaks and the outage) ---
-const leadLock=()=>S&&S.lead&&S.lead.lockW&&S.lead.lockW===survWave()&&survWave()>1?Math.pow(survCost(survWave()-1)/survCost(survWave()),LEAD.lock):1;
+// v5.1: in a season costs don't climb wave to wave, so Chip's fiber lock holds the weekly fiber market (S.plan.mkt) at the
+// price of the outage where he made the deal, for the cycle that follows (leadMkt, read by applyUpgrades)
+const leadMkt=m=>(S&&S.lead&&!survRun()&&S.lead.lockW&&S.lead.lockW===survWave()&&S.lead.lockMkt!=null)?S.lead.lockMkt:m;
+const leadLock=()=>survRun()&&S&&S.lead&&S.lead.lockW&&S.lead.lockW===survWave()&&survWave()>1?Math.pow(survCost(survWave()-1)/survCost(survWave()),LEAD.lock):1;
 const leadFibre=()=>S&&S.lead?leadLock()*(leadIs("hank")?1+LEAD.heavy:1):1;
 const leadPrice=()=>LEAD.sales*leadN("sales");
 const leadSpeed=()=>0;                                                     // (v4.4.0-t1's push for tons is gone)

@@ -95,7 +95,7 @@ function mods(){const m=baseMods();
     if(e.hayMul)m.hayMul*=e.hayMul; if(e.speedCap)m.speedCap=Math.min(m.speedCap,e.speedCap); if(e.breakMul)m.breakMul*=e.breakMul; if(e.yieldMul)m.yieldMul*=(i.id==="badocc"&&LV("detrash"))?0.9:e.yieldMul;
     if(e.recvMul!==undefined)m.recvMul*=e.recvMul; if(e.clampMul!==undefined)m.clampMul*=e.clampMul; if(e.yardEat)m.yardEat+=e.yardEat;
     if(i.drvCap!==undefined)m.drvCap=Math.min(m.drvCap,i.drvCap); if(i.ldrCap!==undefined)m.ldrCap=Math.min(m.ldrCap,i.ldrCap);}
-  for(const f of (S.fx||[])){const e=f.mods||{};if(e.pmDown)m.pmDown=e.pmDown;if(e.speedCap)m.speedCap=Math.min(m.speedCap,e.speedCap);if(e.breakMul)m.breakMul*=e.breakMul;if(e.winderDown)m.winderDown=true;if(e.recvMul!==undefined)m.recvMul*=e.recvMul;if(e.pulperDown)m.pulperDown=true;if(e.docksClosed)m.docksClosed=true;if(e.noOut)m.noOut=true;if(e.noIn)m.noIn=true;if(e.yieldMul)m.yieldMul*=e.yieldMul;}
+  for(const f of (S.fx||[])){const e=f.mods||{};if(e.pmDown)m.pmDown=e.pmDown;if(e.speedCap)m.speedCap=Math.min(m.speedCap,e.speedCap);if(e.breakMul)m.breakMul*=e.breakMul;if(e.winderDown)m.winderDown=true;if(e.recvMul!==undefined)m.recvMul*=e.recvMul;if(e.pulperDown)m.pulperDown=true;if(e.docksClosed)m.docksClosed=true;if(e.noOut)m.noOut=true;if(e.noIn)m.noIn=true;if(e.yieldMul)m.yieldMul*=e.yieldMul;if(e.feedMul)m.feedMul*=e.feedMul;if(e.clampMul!==undefined)m.clampMul*=e.clampMul;if(e.offSpec)m.offSpec=true;if(e.hayMul)m.hayMul*=e.hayMul;}   // (v5.1: civics fx use these too)
   if(S.wx==="rain")m.yieldMul*=0.97;
   if(S.pm==="break"&&S.brkType!=="reel"&&working("brk")){m.recvMul=0;m.clampMul=0;m.crewAtPM=true;}
   return m;}
@@ -116,12 +116,13 @@ function trigger(id,quiet){
   log(e.head+(inc.note?` (${inc.note})`:""),"bad");
   S.M=mods();
   if(typeof leadAuto==="function")leadAuto(inc);   // v5.0.4: Dot may fix it on the spot
+  if(typeof civOnUpset==="function")civOnUpset(inc);   // v5.1 civics: the upset's choices (or a standing order)
 }
 function clearIncident(id){const i=S.inc.find(x=>x.id===id);if(i)i.left=0;}
 function chaosTick(dt){
   crewTick(dt);
   maintTick(dt);
-  for(const i of S.inc){if(QINC(i.id)&&!working(i.id))continue;if(MNEED(i.id)&&!i.mGo)continue;if(QINC(i.id)||MNEED(i.id))i.go=true;i.left-=dt*((QINC(i.id)||MNEED(i.id))?repRate()*leadRep():1);}
+  for(const i of S.inc){if(QINC(i.id)&&!working(i.id))continue;if(MNEED(i.id)&&!i.mGo)continue;if(QINC(i.id)||MNEED(i.id))i.go=true;i.left-=dt*((QINC(i.id)||MNEED(i.id))?repRate()*leadRep()*civRepair():1);}
   for(const i of S.inc)if(i.left<=0&&EV[i.id].end)EV[i.id].end(i);
   for(const i of S.inc)if(i.left<=0)log(`${EV[i.id].name}: cleared, back to normal`,"ok");
   // (v4.1 pass 7: compacted in place and counted with a loop: this runs every sim step, and the two filters made new arrays each time)

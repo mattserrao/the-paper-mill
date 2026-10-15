@@ -13,7 +13,11 @@ function survWaveStart(){const w=survWave();applyUpgrades();
   log(`Wave ${w-1} done. ${t} (fiber, energy and chemicals, wages).`,"warn");
   const c=$("survChip");if(c){c.classList.remove("pulse");void c.offsetWidth;c.classList.add("pulse");}}
 // the chip under the top bar: the wave and its multipliers, for the whole run
-UI_TICKS.push(()=>{const c=$("survChip");if(!c)return;const on=survOn()&&!S.zen;if(c.hidden===on){c.hidden=!on;document.body.classList.toggle("surv",on);}if(!on)return;
+// v5.1 (offline): a season with a leader shows the chip too, without the wave multipliers (class "season" hides them)
+UI_TICKS.push(()=>{const c=$("survChip");if(!c)return;const sea=!survOn()&&leadOn(),on=(survOn()||sea)&&!S.zen;if(c.hidden===on){c.hidden=!on;document.body.classList.toggle("surv",on);}if(!on)return;
+  if(c.classList.contains("season")!==sea)c.classList.toggle("season",sea);
+  if(sea){const k=survWave(),set=(id,v)=>{const e=$(id);if(e.textContent!==v)e.textContent=v;},more=k<=4&&outStart(k)+OUT.len<=S.season.end,left=more?Math.max(0,outStart(k)-S.t):0,d=Math.floor(left/1440),h=Math.floor(left%1440/60);
+    set("svW",more?`Outage ${k} of 4`:"Season");$("svW").dataset.s=more?`O${k}`:"S";set("svN",!more?`day ${Math.floor(S.t/1440)+1} of ${SEASON_DAYS}`:S.outg&&S.outg.on?"outage under way":left<60?"outage within the hour":`outage in ${d?d+"d ":""}${h}h`);return;}
   const w=survWave(),set=(id,v)=>{const e=$(id);if(e.textContent!==v)e.textContent=v;},left=Math.max(0,outStart(w)-S.t),d=Math.floor(left/1440),h=Math.floor(left%1440/60);
   set("svW","Wave "+w);set("svU",xf(survUp(w)));set("svC",xf(survCost(w)));
   set("svN",S.outg&&S.outg.on?"outage under way":left<60?"outage within the hour":`outage in ${d?d+"d ":""}${h}h`);

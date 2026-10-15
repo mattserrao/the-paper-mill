@@ -440,6 +440,8 @@ body.season-lock label.check:has(#breaks),body.season-lock label.check:has(#hays
 .outg .when{font-size:14px;color:var(--ink)}
 .outg .orow{display:grid;grid-template-columns:1fr auto;gap:4px 10px;align-items:center;padding:10px 0;border-top:1px solid var(--line)}
 .outg .orow b{display:block;font:700 15px var(--f-body)}.outg .orow small{display:block;font:500 12px var(--f-body);color:var(--muted)}
+.outg .crow{display:grid;grid-template-columns:1fr auto;gap:4px 10px;align-items:center;padding:10px 0;border-top:1px solid var(--line)}   /* v5.1 civics levers (not .orow: the budget code walks those) */
+.outg .crow b{display:block;font:700 15px var(--f-body)}.outg .crow small{display:block;font:500 12px var(--f-body);color:var(--muted)}
 .outg .seg{display:flex;border:1px solid var(--line);border-radius:10px;overflow:hidden}
 .outg .seg button{border:0;border-radius:0;padding:8px 10px;font:700 13px var(--f-body);background:var(--panel);color:var(--ink);min-width:54px}
 .outg .seg button+button{border-left:1px solid var(--line)}
@@ -630,6 +632,7 @@ details.areactl[open]>summary{margin-bottom:12px}
 /* the wave chip under the top bar (the banner moves down to make room) */
 .survchip{position:fixed;z-index:69;left:max(10px,env(safe-area-inset-left,0px));top:calc(58px + env(safe-area-inset-top,0px));display:flex;align-items:center;gap:10px;height:28px;padding:0 12px 0 3px;border-radius:14px;background:var(--panel);border:1px solid var(--line);box-shadow:0 4px 14px rgba(28,34,51,.12);font:600 12px var(--f-body);color:var(--muted);white-space:nowrap;max-width:calc(100% - 20px);overflow:hidden}
 .survchip[hidden]{display:none}
+.survchip.season .svbody>span{display:none}   /* v5.1: seasons show the leader and the outage countdown only */
 .survchip .svbody>b{background:var(--ink);color:var(--panel);border-radius:11px;padding:3px 10px;font:800 12px var(--f-body);letter-spacing:.04em;text-transform:uppercase}
 .survchip span b{color:var(--ink);font-weight:800;font-variant-numeric:tabular-nums}
 .survchip em{font-style:normal;border-left:1px solid var(--line);padding-left:10px}
@@ -733,3 +736,38 @@ button.ldcard[aria-checked="true"]{border:2px solid var(--stock);padding:9px;bac
 #seasonOv:not([hidden]){display:block;overflow-y:auto;-webkit-overflow-scrolling:touch;overscroll-behavior:contain}
 #seasonOv>.modal{margin:16px auto;box-sizing:border-box}
 #seasonOv .btns{position:sticky;bottom:-20px;z-index:1;margin:0 -22px -20px;padding:12px 22px calc(14px + env(safe-area-inset-bottom,0px));background:var(--panel);border-top:1px solid var(--line);border-radius:0 0 8px 8px}
+/* ---------- v5.1 (offline): civics ---------- */
+.civbar{position:fixed;z-index:68;left:max(10px,env(safe-area-inset-left,0px));top:calc(92px + env(safe-area-inset-top,0px));display:flex;gap:6px;flex-wrap:wrap;max-width:calc(100% - 20px)}
+.civbar[hidden]{display:none}
+body.zen .civbar{display:none}
+.civbar .cv{display:flex;align-items:center;gap:6px;height:24px;padding:0 8px;border-radius:12px;background:var(--panel);border:1px solid var(--line);box-shadow:0 3px 10px rgba(28,34,51,.10);font:600 11px var(--f-body);color:var(--muted);white-space:nowrap}
+.civbar .cv b{color:var(--ink);font-weight:800}
+.civbar .cvbar{display:block;width:44px;height:6px;border-radius:3px;background:var(--chip);overflow:hidden}
+.civbar .cvbar i{display:block;height:100%;background:var(--muted);border-radius:3px}
+.civbar .cv em{font-style:normal}.civbar .cv u{text-decoration:none;font-size:9px}
+.civbar .cv.cr{border-color:var(--bad);animation:civpulse 1.6s ease-in-out infinite}.civbar .cv.cr i{background:var(--bad)}.civbar .cv.cr em{color:var(--bad);font-weight:800}
+.civbar .cv.sn i{background:#d9922b}.civbar .cv.sn em{color:#b9771c}
+.civbar .cv.st i,.civbar .cv.ex i{background:var(--ok)}.civbar .cv.ex em,.civbar .cv.st em{color:var(--ok)}.civbar .cv.ex{border-color:var(--ok)}
+@keyframes civpulse{50%{box-shadow:0 0 0 3px rgba(200,60,60,.25)}}
+@media (prefers-reduced-motion: reduce){.civbar .cv.cr{animation:none}}
+@media (max-width:520px){.civbar .cv{padding:0 6px;gap:4px}.civbar .cvbar{width:26px}.civbar .cv em{display:none}}
+body.app.civ .banner3d{top:calc(126px + env(safe-area-inset-top,0px))}
+.modal.civ .civch{display:grid;gap:8px;margin:10px 0}
+.civbtn{display:flex;gap:10px;align-items:flex-start;text-align:left;width:100%;padding:10px 12px;border:1px solid var(--line);border-radius:10px;background:var(--panel);color:var(--ink);cursor:pointer;font:inherit}
+.civbtn:hover,.civbtn:focus-visible{border-color:var(--ink)}
+.civbtn .cvl{flex:none;display:grid;place-items:center;width:24px;height:24px;border-radius:50%;background:var(--ink);color:var(--panel);font-weight:800;font-size:12px}
+.civbtn .cvb{display:grid;gap:4px;min-width:0}
+.civbtn .cvb b{font-size:14px}.civbtn small{color:var(--muted);font-size:12px}
+.civbtn .cvtag{font-style:normal;font-size:10px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;color:var(--muted)}
+.cvrow{display:flex;flex-wrap:wrap;gap:4px 6px;align-items:center}
+.cvcost{font-weight:800;font-size:12px}.cvcost.free{color:var(--muted);font-weight:600}.cvcost.earn{color:var(--ok)}
+.cvodds{font-size:11px;font-weight:700;padding:1px 6px;border-radius:8px;background:var(--chip)}.cvodds.up{color:var(--ok)}.cvodds.dn{color:var(--bad)}
+.cvc{font-size:11px;font-weight:700;padding:1px 6px;border-radius:8px}.cvc.up{color:var(--ok);background:rgba(60,160,90,.12)}.cvc.dn{color:var(--bad);background:rgba(200,60,60,.10)}
+.civord{display:flex;gap:8px;align-items:center;font-size:13px;color:var(--muted);margin-top:4px}.civord small{color:var(--muted)}
+.civcard{display:flex;flex-wrap:wrap;gap:4px 6px;align-items:center;margin:8px 0 2px;font-size:12px}.civcard>span{font-weight:800;color:var(--ink);margin-right:2px}.civcard em{font-style:normal;color:var(--muted);margin-left:4px}
+.civplan{margin:8px 0;padding-top:6px;border-top:1px solid var(--line)}
+.civtoast{position:fixed;z-index:80;left:50%;transform:translateX(-50%);bottom:calc(84px + env(safe-area-inset-bottom,0px));display:flex;align-items:center;gap:10px;padding:8px 10px 8px 14px;border-radius:12px;background:var(--panel);border:1px solid var(--line);box-shadow:0 8px 24px rgba(28,34,51,.18);font-size:13px;max-width:calc(100% - 24px);overflow:hidden}
+.civtoast[hidden]{display:none}
+.civtoast button{flex:none;border:1px solid var(--line);background:var(--chip);color:var(--ink);border-radius:8px;padding:4px 10px;font:600 12px var(--f-body);cursor:pointer}
+.civtoast i{position:absolute;left:0;bottom:0;height:3px;background:var(--ink);animation:civtoast 5s linear forwards}
+@keyframes civtoast{from{width:100%}to{width:0}}

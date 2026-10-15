@@ -47,18 +47,19 @@ const UP=Object.fromEntries(UPS.map(u=>[u.id,u]));
 const LV=id=>(S&&S.up&&S.up[id])||0;
 function applyUpgrades(){
   applyGrade();
-  P.K=BASE.K*Math.pow(1.06,LV("deckle"))*(1+0.02*LV("apc"))*leadCap("pwet");
+  P.K=BASE.K*Math.pow(1.06,LV("deckle"))*(1+0.02*LV("apc"))*leadCap("pwet")*civSpeed();   // (v5.1: civics, Machinery)
   P.spBonus=150*LV("drive")+100*LV("shoe")+leadSpeed();
   P.energyMul=(1-0.12*LV("shoe"))*(1-0.08*LV("apc"));P.refSave=22*LV("refiner");
   P.yieldF=P.blendY+0.03*LV("clean"); P.tankCap=BASE.tankCap+150*LV("chest");
   P.driverRate=BASE.driverRate*(1+0.25*LV("forklift")); P.doors=3+LV("docks"); P.shipDoors=3+LV("docks");
   P.robots=2*LV("agv"); P.fgCap=BASE.fgCap+112*LV("wh"); P.autoFeed=LV("feedconv")>0;
   applySite();{const a=leadCap("pstock"),f=leadCap("pdry");P.doorRate*=a;P.pulperMax*=a;P.screenMax*=a;P.winderMax*=f;P.doorRolls*=f;}   // v4.4.0-t3: Felicity's projects
+  P.doorRate*=civRecv();   // v5.1 civics: a low Community limits truck hours
   P.costMul=survOn()?survCost():1;   // v4.3 survival: fiber, energy and chemicals, and wages cost more every wave (exactly 1 otherwise)
-  P.occPrice=(P.blendP+((S&&S.plan)?S.plan.mkt:0)-20*LV("contract")+P.siteOcc)*P.costMul*leadFibre();   // (v4.4: the leader's fiber deals; Hank runs heavy)
-  P.priceAdd=25*LV("sales")+P.sitePrice+leadPrice(); P.repairMul=(LV("insure")?0.4:1)*(1-0.15*LV("reliab"))*leadBill();P.techs=2+2*LV("maintcrew");P.pmCost=400*LV("pmprog"); P.premium=LV("insure")?1500:0;
-  P.breakBase=Math.pow(0.7,LV("monitor"))*Math.pow(0.9,LV("pmprog"))*leadClean()*leadBreaks();
-  P.hayBase=Math.pow(0.6,LV("winder"))*leadClean();const wr=document.getElementById("s-wdr");if(wr)wr.max=P.winderMax;
+  P.occPrice=(P.blendP+((S&&S.plan)?leadMkt(S.plan.mkt):0)-20*LV("contract")+P.siteOcc)*P.costMul*leadFibre();   // (v4.4: the leader's fiber deals; Hank runs heavy)
+  P.priceAdd=25*LV("sales")+P.sitePrice+leadPrice()+civPrice(); P.repairMul=(LV("insure")?0.4:1)*(1-0.15*LV("reliab"))*leadBill()*civBill();P.techs=2+2*LV("maintcrew");P.pmCost=400*LV("pmprog"); P.premium=LV("insure")?1500:0;
+  P.breakBase=Math.pow(0.7,LV("monitor"))*Math.pow(0.9,LV("pmprog"))*leadClean()*leadBreaks()*civBreak();
+  P.hayBase=Math.pow(0.6,LV("winder"))*leadClean()*civBreak();const wr=document.getElementById("s-wdr");if(wr)wr.max=P.winderMax;
   const sp=document.getElementById("s-pmSp"),pu=document.getElementById("s-pulper");
   if(sp)sp.max=3300+P.spBonus; if(pu)pu.max=Math.floor(Math.min(P.pulperMax,P.screenMax/P.yieldF));
 }
@@ -66,7 +67,7 @@ function applyUpgrades(){
 function applyGrade(){const g=(typeof C!=="undefined"&&C&&C.grade)||"23m",c=GCOST[g],d=c.dlk;
   P.blendP=OCCG.occ11.p*(1-d)+OCCG.dlk.p*d;P.blendY=OCCG.occ11.y*(1-d)+OCCG.dlk.y*d;
   P.steamMul=c.steam;P.chemAdd=c.chem-((S&&S.perk)?S.perk.chem:0);P.gradeBrk=c.brk;}
-function energyCost(){return Math.max(0,ECON.energy*P.steamMul*P.energyMul*leadEnergy()+ECON.chem+P.chemAdd+(P.siteEnergy||0)-(P.refSave||0)-((S&&S.perk&&S.perk.energy)||0))*(P.costMul||1);}
+function energyCost(){return Math.max(0,ECON.energy*P.steamMul*P.energyMul*leadEnergy()+ECON.chem+P.chemAdd+(P.siteEnergy||0)-(P.refSave||0)-((S&&S.perk&&S.perk.energy)||0)+civEnergy())*(P.costMul||1);}
 function priceOf(g){let v=ECON.price[g]+P.priceAdd;if(g==="33HT"&&P.costMul>1)v+=(ECON.price["33HT"]-ECON.price["23m"])*(P.costMul-1);/* v5.0.5: survival only (costMul is 1 elsewhere) */if(S&&S.perk)v+=S.perk.price[g]||0;if(S&&S.fx)for(const f of S.fx)if(f.price)v+=(f.price[g]||0)+(f.price.all||0);return v;}
 function freqMul(id){let m=1;
   if(["lwplug","cscreen","fscreen","lcplug"].includes(id))m*=Math.pow(0.6,LV("clean"));
@@ -79,6 +80,7 @@ function freqMul(id){let m=1;
   if(id==="fight"||id==="calloff")m*=LV("safety")?0.5:1;
   if(OUT.area[id])m*=outRel(OUT.area[id]);
   m*=siteFreq(id);
+  m*=civFreq(id);   // v5.1 civics: each choice's odds, and the meters
   m*=leadFreq(id);   // v4.4 survival leaders: Chip's labour trouble, Felicity's projects, the upset Dot just fixed
   if(S&&S.fx)for(const f of S.fx){if(f.freq&&EV[id]&&(EV[id].g==="machine"||EV[id].g==="stock"))m*=f.freq;if(f.scab&&id==="slime")m*=f.scab;if(f.evf&&f.evf[id])m*=f.evf[id];}
   return m;}

@@ -99,6 +99,7 @@ function endSeason(bust){const se=S.season;se.done=true;se.on=false;running=fals
   $("so-p").textContent=bust?`${MILL.name} ran out of money before day ${SEASON_DAYS}.`:`${SEASON_DAYS} days at ${MILL.name}${/[.!?]$/.test(MILL.name)?"":"."}`;   // (v4.2.5: no "Co.." when the name ends in a full stop)
   const eff=S.tot.pot>0?S.tot.prodT/S.tot.pot:1,sg=S.rc&&S.rc.s?rcMake(S.rc.s,S.rc.i).overall:null,g=sg?RATINGS.find(x=>x[1]===sg):RATINGS.find(x=>eff>=x[0]);
   const st=[["Net profit",money(r.score),"big"],["Tons shipped",f0(r.tons)+" t"],["Upsets survived",String(r.incidents)],["Rolls made",String(S.tot.rolls)],["Season grade",g[1]+" · "+g[2]],["Output",Math.round(eff*100)+"% of max-speed tons"]];
+  if(S.lead)st.push(["Mill leader",LEADERS[S.lead.id].name+(S.lead.was?" (after "+LEADERS[S.lead.was].name+")":""),"wide"]);   // v5.1: seasons have leaders too
   $("so-stats").replaceChildren(...st.map(([k,v,c])=>{const d=document.createElement("div");if(c)d.className=c;const a=document.createElement("span");a.textContent=k;const b=document.createElement("b");b.textContent=v;d.append(a,b);return d;}));
   {const c=bust?null:rcFinal(),box=$("so-rc");if(box){if(c){box.hidden=false;box.innerHTML=`<div class="rcmini"><div class="rcg g${c.overall}">${c.overall}</div><div><b><span class="nw">Days ${c.from}–${c.to}</span> report card</b><small>${Object.entries(c.g).map(([k,v])=>k+" "+v).join(" · ")}</small><p>${c.tip}</p></div></div><button id="so-rcbtn" class="ghost">Open the full report card</button>`;
       $("so-rcbtn").addEventListener("click",()=>rcOpen(c,true));}else box.hidden=true;}}
@@ -188,7 +189,7 @@ $("zenExit").addEventListener("click",e=>{e.stopPropagation();setZen(false);});
 ["pointermove","pointerdown"].forEach(t=>document.addEventListener(t,()=>{if(ZEN)zenPoke();},{passive:true}));
 $("so-more").addEventListener("click",()=>{$("seasonOv").hidden=true;if(survRun()){newGame();if(G3.showMenu)G3.showMenu();return;}if(S.season)S.season.more=1;running=true;});   // (v4.3: after a survival run the button is "Menu")
 $("so-submit").addEventListener("click",submitScore);$("so-name").addEventListener("keydown",e=>{if(e.key==="Enter")submitScore();e.stopPropagation();});
-$("so-board").addEventListener("click",openBoard);$("so-new").addEventListener("click",()=>{if(survRun()){leadPickOpen(id=>{$("seasonOv").hidden=true;startSurvival(id);});return;}$("seasonOv").hidden=true;startSeason();});   // (v4.4: a new survival run picks its leader first)
+$("so-board").addEventListener("click",openBoard);$("so-new").addEventListener("click",()=>{if(survRun()){leadPickOpen(id=>{$("seasonOv").hidden=true;startSurvival(id);});return;}leadPickOpen(id=>{$("seasonOv").hidden=true;startSeason();leadStart(id);},null,"season");});   // (v4.4: a new survival run picks its leader first)
 document.querySelectorAll("#lb-tabs button").forEach(b=>b.addEventListener("click",()=>openBoard(b.dataset.t)));
 $("lb-close").addEventListener("click",closeBoard);
 document.addEventListener("keydown",e=>{if(e.key==="Escape"&&!$("lbOv").hidden){e.preventDefault();closeBoard();}},true);

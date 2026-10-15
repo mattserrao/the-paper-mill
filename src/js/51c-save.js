@@ -33,6 +33,8 @@
       try{syncControls();}catch(e){}try{updateShop();}catch(e){}try{if(G3.rebrand)G3.rebrand();}catch(e){}
       try{UI_TICKS.forEach(f=>f(0));}catch(e){}   // v5.0.6: the top bar (speed, wave, cash) is right from the first frame, not one UI tick later
       if(op&&op.cid){const c=CARDS.find(x=>x.id===op.cid);if(c)setTimeout(()=>openCard(c),400);}
+      if(S.civ&&S.civ.cur)setTimeout(()=>{if(typeof civOpen==="function")civOpen();},450);   // v5.1 civics: an open choice comes back
+      if(S.civ&&S.civ.pending){S.civ.q.unshift(S.civ.pending.d);S.civ.pending=null;}
       diag(`save: ${survRun()?"survival run":"season"} restored, day ${d.day}, ${money(d.cash)}`);}
     G3.save={save,read,clear,restore};
     // ---- when to save ----
@@ -60,8 +62,9 @@
         if(G3.warm||!G3.prewarm)run();else{b.setAttribute("aria-busy","true");b.querySelector("small").textContent="Getting the mill ready…";G3.prewarm().then(run);}});
       if(Q.get("resume")==="1"){try{Q.delete("resume");history.replaceState(null,"",location.pathname+(Q.toString()?"?"+Q:"")+location.hash);}catch(e){}setTimeout(()=>b.click(),300);}}
     // a new season or a reset starts over: the old save goes
-    ["v2season","v2reset"].forEach(id=>{const el=$(id);if(el)el.addEventListener("click",clear,true);});
+    // v5.1: a new season goes through the leader picker, so its old save goes when it really starts (G3.save.drop), not on the click
+    ["v2reset"].forEach(id=>{const el=$(id);if(el)el.addEventListener("click",clear,true);});
     // v4.4: a survival run starts from the leader picker, so the old save (and its Continue button) goes when the run
     // really starts, not when the picker opens
     G3.save.drop=()=>{clear();const c=$("v2cont");if(c){c.remove();if(go)go.classList.add("primary");}};
-    if(go)go.addEventListener("click",()=>{if($("v2cont")&&!(S.season&&S.season.on))clear();},true);}
+    }   // (v5.1: Play no longer clears the save on the click; the picker's Start does, through G3.save.drop)

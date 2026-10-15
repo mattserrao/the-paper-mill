@@ -2,7 +2,7 @@
    Numbers and effects are in 03d-leaders.js. The portraits are in 09c-leader-art.js (leadArt). */
 const LEADERS={
   chip:{name:"Chip Kraftwell",title:"The dealmaker",role:"Business man",say:"Everything's negotiable.",
-    plus:()=>`Each outage, one deal: lock the next wave's fiber at this wave's price, or a sales push that stays (+$${LEAD.sales}/t on every grade).`,
+    plus:()=>`Each outage, one deal: ${survRun()?"lock the next wave's fiber at this wave's price":"hold next week's fiber market at this week's price"}, or a sales push that stays (+$${LEAD.sales}/t on every grade).`,
     minus:()=>`Labour relations: every deal ends in a pay settlement (wages +${pct1(LEAD.wage)}% for good), and call-offs and dock brawls come ${LEAD.strife0}× as often while he's in charge.`},
   dot:{name:'Dot "Doc" Blade',title:"The millwright",role:"Mechanic",say:"If it turns, I can fix it.",
     plus:()=>`Repairs ${pct1(LEAD.rep)}% quicker. Once per outage cycle she fixes a breakdown on her own (${pct1(LEAD.autoFix)}% chance as each one with a bill of ${money(LEAD.autoMin)}+ starts): it ends on the spot, ${LEAD.refund>=1?"its repair bill":pct1(LEAD.refund)+"% of its repair bill"} comes back, and it's fixed at the root (${pct1(LEAD.fixCut)}% rarer from then on).`,
@@ -14,12 +14,13 @@ const LEADERS={
     plus:()=>`Each outage, one gain that stays: runnability (sheet breaks and hayouts −${pct1(LEAD.clean)}%, and back up ${pct1(LEAD.rethread)}% faster) or dial in the dryers (steam −${pct1(LEAD.steam)}%).`,
     minus:()=>`Runs the sheet heavy: fiber +${pct1(LEAD.heavy)}% while he's in charge (basis-weight giveaway).`}};
 function leadStart(id){if(!LEADERS[id])return;S.lead={id,st:{fibre:0,sales:0,rethread:0,clean:0,pstock:0,pwet:0,pdry:0},changed:false,was:null,fixW:0,fixed:[],lockW:0};applyUpgrades();
+  if(S.civ&&S.t<1&&typeof civSetStart==="function")civSetStart();   // v5.1 civics: the leader's starting meters
   try{localStorage.setItem("paper-mill-leader",id);}catch(e){}
   BANNERS.push({text:`${LEADERS[id].name} runs the mill. "${LEADERS[id].say}"`,t:null,kind:"good",tag:"LEADER"});while(BANNERS.length>3)BANNERS.splice(1,1);
   log(`${LEADERS[id].name}, ${LEADERS[id].title.toLowerCase()}, takes charge of the mill.`,"ok");}
 // what the mill has kept so far, in words (the leader card and the outage dialog)
 function leadTally(){const L=S.lead,out=[];if(!L)return out;const n=k=>L.st[k]||0,pc=v=>(v>=0?"+":"−")+Math.abs(Math.round(v*1000)/10)+"%";
-  if(L.lockW&&L.lockW===survWave()&&survWave()>1)out.push(["Fiber lock (this wave)",`fiber ${pc(leadLock()-1)}`]);
+  if(L.lockW&&L.lockW===survWave()&&survWave()>1)out.push(survRun()?["Fiber lock (this wave)",`fiber ${pc(leadLock()-1)}`]:["Fiber lock (this week)",`market held at ${L.lockMkt>=0?"+":"−"}$${Math.abs(L.lockMkt||0)}/t`]);
   if(n("sales"))out.push([`${n("sales")} sales push${n("sales")>1?"es":""}`,`+$${LEAD.sales*n("sales")}/t`]);
   if(leadDeals())out.push(["Pay settlements",`wages ${pc(leadWage()-1)}`,1]);
   [["pstock","fiber line"],["pwet","paper machine"],["pdry","finishing"]].forEach(([k,a])=>{if(n(k))out.push([`${n(k)} ${a} project${n(k)>1?"s":""}`,`capacity ${pc(leadCap(k)-1)}`]);});
@@ -40,14 +41,14 @@ let leadPickEl=null;
 function leadCardHTML(id,tag="button",extra=""){const L=LEADERS[id];
   return `<${tag} class="ldcard" data-l="${id}"${tag==="button"?' type="button" role="radio" aria-checked="false"':""}>${leadArt(id)}<span class="ldbody"><small>${L.role}</small><b>${escHTML(L.name)}</b><em>${L.title}</em>
     <span class="pro">${L.plus()}</span><span class="con">${L.minus()}</span><i>“${L.say}”</i>${extra}</span></${tag}>`;}
-function leadPickOpen(done,wait){let sel=null;try{const v=localStorage.getItem("paper-mill-leader");if(LEADERS[v])sel=v;}catch(e){}
+function leadPickOpen(done,wait,mode){const sv=mode!=="season";let sel=null;try{const v=localStorage.getItem("paper-mill-leader");if(LEADERS[v])sel=v;}catch(e){}
   if(!leadPickEl){leadPickEl=document.createElement("div");leadPickEl.className="overlay top";leadPickEl.id="leadOv";leadPickEl.hidden=true;document.body.appendChild(leadPickEl);}
   const el=leadPickEl,back=document.activeElement;
-  el.innerHTML=`<div class="modal ldpick" role="dialog" aria-modal="true" aria-labelledby="ld-h"><span class="dk">Survival · ${escHTML((ENVX()&&ENVX().name)||"your site")}</span><h2 id="ld-h">Choose your mill leader</h2>
-    <p class="muted small">Each one is strong on one side of the mill and costs you on another. What they build stays with the mill. You can change leader once per run, at an outage.</p>
+  el.innerHTML=`<div class="modal ldpick" role="dialog" aria-modal="true" aria-labelledby="ld-h"><span class="dk">${sv?"Survival":"Season"} · ${escHTML((ENVX()&&ENVX().name)||"your site")}</span><h2 id="ld-h">Choose your mill leader</h2>
+    <p class="muted small">Each one is strong on one side of the mill and costs you on another. What they build stays with the mill. You can change leader once per ${sv?"run":"season"}, at an outage.</p>
     <div class="ldgrid" role="radiogroup" aria-label="Mill leader">${LEAD_IDS.map(id=>leadCardHTML(id)).join("")}</div>
     <div class="btns"><button class="primary" id="ld-go" disabled>Start the run</button><button id="ld-no">Back</button></div></div>`;
-  const paint=()=>{el.querySelectorAll(".ldcard").forEach(b=>b.setAttribute("aria-checked",String(b.dataset.l===sel)));const g=el.querySelector("#ld-go");g.disabled=!sel;g.textContent=sel?`Start with ${LEADERS[sel].name.split(" ")[0]}`:"Pick a leader to start";};
+  const paint=()=>{el.querySelectorAll(".ldcard").forEach(b=>b.setAttribute("aria-checked",String(b.dataset.l===sel)));const g=el.querySelector("#ld-go");g.disabled=!sel;g.textContent=sel?`Start ${sv?"the run":"the season"} with ${LEADERS[sel].name.split(" ")[0]}`:"Pick a leader to start";};
   const close=()=>{el.hidden=true;document.removeEventListener("keydown",key,true);if(back&&back.focus)back.focus();};
   const key=e=>{if(e.key==="Escape"){e.preventDefault();e.stopPropagation();close();}};
   el.querySelectorAll(".ldcard").forEach(b=>b.addEventListener("click",()=>{sel=b.dataset.l;paint();}));
@@ -57,14 +58,14 @@ function leadPickOpen(done,wait){let sel=null;try{const v=localStorage.getItem("
   document.addEventListener("keydown",key,true);paint();el.hidden=false;el.querySelector(".modal").scrollTop=0;(el.querySelector('.ldcard[aria-checked="true"]')||el.querySelector(".ldcard")).focus();}
 
 /* ---- the outage budget dialog: the leader's pick, and the one change of leader ---- */
-function leadPlanNew(){if(!S.lead||!survOn())return null;const p=LEAD_PICKS[S.lead.id];return {to:null,pick:p.length?(p.some(x=>x[0]===S.lead.last)?S.lead.last:p[0][0]):null};}
+function leadPlanNew(){if(!leadOn())return null;const p=LEAD_PICKS[S.lead.id];return {to:null,pick:p.length?(p.some(x=>x[0]===S.lead.last)?S.lead.last:p[0][0]):null};}
 // v5.0.6: the outage dialog's leader row uses the name without the nickname ("Dot Blade"), so it fits beside the button
 const leadShort=id=>LEADERS[id].name.replace(/\s*"[^"]*"/,"");
 function leadPlanMount(host,lp){if(!host)return;
   const draw=()=>{const cur=S.lead.id,id=lp.to||cur,L=LEADERS[id],picks=LEAD_PICKS[id],first=L.name.split(" ")[0];
     if(!picks.some(x=>x[0]===lp.pick))lp.pick=picks.length?picks[0][0]:null;
     const choose=lp.choosing?`<div class="ldswap" role="radiogroup" aria-label="New mill leader">${LEAD_IDS.filter(x=>x!==cur).map(x=>`<button type="button" role="radio" aria-checked="${lp.to===x}" data-to="${x}">${leadArt(x,true)}<span><b>${escHTML(leadShort(x))}</b><small>${LEADERS[x].role}</small></span></button>`).join("")}
-        <p class="ldnote">${lp.to?`${escHTML(LEADERS[lp.to].name)} takes over when the outage starts. Everything ${LEADERS[cur].name.split(" ")[0]} built stays with the mill. This is the run's one change of leader.`:`Pick who takes over. Everything ${LEADERS[cur].name.split(" ")[0]} built stays with the mill. You can do this once per run.`}</p>
+        <p class="ldnote">${lp.to?`${escHTML(LEADERS[lp.to].name)} takes over when the outage starts. Everything ${LEADERS[cur].name.split(" ")[0]} built stays with the mill. This is the ${survRun()?"run":"season"}'s one change of leader.`:`Pick who takes over. Everything ${LEADERS[cur].name.split(" ")[0]} built stays with the mill. You can do this once per run.`}</p>
         <div class="pro">${lp.to?LEADERS[lp.to].plus():""}</div><div class="con">${lp.to?LEADERS[lp.to].minus():""}</div></div>`:"";
     host.innerHTML=`<div class="ldrow"><div class="ldwho">${leadArt(id,true)}<div><b>${escHTML(leadShort(id))}</b><small>${lp.to?"takes over at this outage":L.title}</small></div>
         ${S.lead.changed?"":`<button type="button" class="ghost" id="out-lchg">${lp.choosing?(lp.to?"Keep "+LEADERS[cur].name.split(" ")[0]:"Cancel"):"Change leader"}</button>`}</div>${choose}
@@ -80,11 +81,11 @@ function leadChange(to){const L=S.lead;if(!L||L.changed||!LEADERS[to]||to===L.id
   log(`${LEADERS[to].name} takes over from ${LEADERS[old].name}. What was built stays with the mill.`,"warn");}
 // called by endOutage: this outage's pick becomes part of the mill (a tool or an old save may bring no pick: the first one)
 function leadOutageEnd(pl){const L=S.lead,picks=LEAD_PICKS[L.id];if(!picks.length)return;const k=pl&&picks.some(x=>x[0]===pl.pick)?pl.pick:picks[0][0],p=picks.find(x=>x[0]===k);
-  L.st[k]=(L.st[k]||0)+1;if(k==="fibre"&&L.id==="chip")L.lockW=S.outg.k+1;/* (the lock is for the wave this outage starts) */L.last=k;log(`${LEADERS[L.id].name}: ${p[1].toLowerCase()} (${p[2]()}).`,"ok");}
+  L.st[k]=(L.st[k]||0)+1;if(k==="fibre"&&L.id==="chip"){L.lockW=S.outg.k+1;L.lockMkt=S.plan?S.plan.mkt:0;}/* (the lock is for the wave this outage starts) */L.last=k;log(`${LEADERS[L.id].name}: ${p[1].toLowerCase()} (${p[2]()}).`,"ok");}
 
 /* ---- Dot's fix ---- */
 const leadFixable=id=>MNEED(id)||QINC(id);
-const leadFixReady=()=>leadIs("dot")&&survOn()&&S.lead.fixW!==survWave();
+const leadFixReady=()=>leadIs("dot")&&leadOn()&&S.lead.fixW!==survWave();
 // v5.0.4: Dot fixes on her own. A fixable breakdown that starts while her fix is ready has an LEAD.autoFix chance of being fixed
 // on the spot (its own dice stream, "lead", so no other luck changes); then the fix is used until the outage ends.
 function leadAuto(inc){if(!inc||S.zen||!leadFixReady()||!leadFixable(inc.id))return;if(S.rng.lead==null)S.rng.lead=(S.seed^0x2c1b3c6d)|0;   // (a save from before v5.0.4)
@@ -101,7 +102,7 @@ let leadCardEl=null;
 function leadCardOpen(){if(!S.lead)return;const was=running;running=false;
   if(!leadCardEl){leadCardEl=document.createElement("div");leadCardEl.className="overlay";leadCardEl.id="leadCard";leadCardEl.hidden=true;document.body.appendChild(leadCardEl);}
   const el=leadCardEl,id=S.lead.id,L=LEADERS[id];
-  const close=()=>{el.hidden=true;document.removeEventListener("keydown",key,true);if(was&&!(S.cards&&S.cards.open)&&!S.over&&survOn())running=true;};
+  const close=()=>{el.hidden=true;document.removeEventListener("keydown",key,true);if(was&&!(S.cards&&S.cards.open)&&!S.over&&leadOn())running=true;};
   const key=e=>{if(e.key==="Escape"){e.preventDefault();e.stopPropagation();close();}};
   const draw=()=>{const ready=leadFixReady();
     const fix=id!=="dot"?"":`<div class="ldfix"><h3>Dot's fix <small>${ready?"ready":"used this cycle · back when the outage ends"}</small></h3>
@@ -109,13 +110,13 @@ function leadCardOpen(){if(!S.lead)return;const was=running;running=false;
     el.innerHTML=`<div class="modal ldone" role="dialog" aria-modal="true" aria-labelledby="ldc-h"><span class="dk">Mill leader · sim paused</span>
       ${leadCardHTML(id,"div")}${fix}
       ${leadTally().length?`<h3 id="ldc-h">What the mill has kept</h3>${leadTallyHTML()}`:`<h3 id="ldc-h">Nothing built yet</h3><p class="muted small">${LEAD_PICKS[id].length?L.name.split(" ")[0]+" makes the first pick at the next outage.":"Dot makes no picks. She fixes one breakdown on her own once every outage cycle."}</p>`}
-      <p class="muted small">${S.lead.changed?`You changed leader once already (${escHTML(LEADERS[S.lead.was].name)} left). ${L.name.split(" ")[0]} stays to the end.`:"You can change leader once per run, in an outage budget dialog. What was built stays with the mill."}</p>
+      <p class="muted small">${S.lead.changed?`You changed leader once already (${escHTML(LEADERS[S.lead.was].name)} left). ${L.name.split(" ")[0]} stays to the end.`:`You can change leader once per ${survRun()?"run":"season"}, in an outage budget dialog. What was built stays with the mill.`}</p>
       <div class="btns"><button class="primary" id="ldc-ok" style="flex:1">Back to the mill</button></div></div>`;
     el.querySelector("#ldc-ok").addEventListener("click",close);
 };
   document.addEventListener("keydown",key,true);draw();el.hidden=false;el.querySelector("#ldc-ok").focus();}
 // the chip: the leader's face, and Dot's fix when a breakdown is waiting for it
-UI_TICKS.push(()=>{const f=$("svL");if(!f)return;const id=S.lead&&survOn()?S.lead.id:"";if(f.dataset.l!==id){f.dataset.l=id;f.innerHTML=id?leadArt(id,true):"";f.hidden=!id;const fb=$("svFold");if(fb)fb.hidden=!id;if(!id)$("survChip").classList.remove("fold");}
+UI_TICKS.push(()=>{const f=$("svL");if(!f)return;const id=leadOn()?S.lead.id:"";if(f.dataset.l!==id){f.dataset.l=id;f.innerHTML=id?leadArt(id,true):"";f.hidden=!id;const fb=$("svFold");if(fb)fb.hidden=!id;if(!id)$("survChip").classList.remove("fold");}
   const x=$("svF");if(x){const show=id==="dot",ready=show&&leadFixReady(),hot=false,t=ready?"Fix ready":"Fix used";
     if(x.hidden===show)x.hidden=!show;if(show){if(x.textContent!==t)x.textContent=t;x.dataset.s=ready?"Fix ✓":"Fix –";x.classList.toggle("hot",hot);x.classList.toggle("used",!ready);}$("survChip").classList.remove("hot");}});
 // v4.4.0-t3: the wave bar slides away to the left (the arrow at its end), leaving the leader's face; tapping the face brings it back
@@ -124,5 +125,5 @@ UI_TICKS.push(()=>{const f=$("svL");if(!f)return;const id=S.lead&&survOn()?S.lea
   if(c){setFold(fold);
     c.addEventListener("click",e=>{if(fb&&fb.contains(e.target)){e.stopPropagation();setFold(true);return;}
       if(fold&&S.lead){setFold(false);return;}
-      if(S.lead&&survOn()&&!(S.cards&&S.cards.open))leadCardOpen();});
+      if(leadOn()&&!(S.cards&&S.cards.open))leadCardOpen();});
     c.addEventListener("keydown",e=>{if((e.key==="Enter"||e.key===" ")&&e.target===c){e.preventDefault();c.click();}});}}
