@@ -123,6 +123,7 @@ function camPullOn(){try{return localStorage.getItem("paper-mill-campull")!=="of
     setTimeout(()=>{if(u===location.pathname+location.search+location.hash)location.reload();else location.href=u;},250);});
   // ---- settings ----
   const tog=(id,label,sub,on)=>`<label class="trow"><span><b>${label}</b>${sub?`<small>${sub}</small>`:""}</span><input type="checkbox" class="tsw" id="${id}"${on?" checked":""}/></label>`;
+  const gfxCap=g=>g[0].toUpperCase()+g.slice(1),GFX_TIP={auto:"Picked from your device",low:"1024 shadows, 10 Hz, lighter scenery",medium:"1024 shadows, 15 Hz",high:"2048 softer shadows, 24 Hz, full scenery",ultra:"4096 softer shadows, every frame, dense scenery with far shadows"};
   function paintSet(){let vol=70;try{vol=+(localStorage.getItem("paper-mill-vol")||70);}catch(e){}
     const tut=(()=>{try{return localStorage.getItem("paper-mill-tutorial")!=="off";}catch(e){return true;}})(),sh=$("viewShadows");
     $t("tSetBody").innerHTML=`<div class="tsub">Sound</div>${tog("tsSound","Sound","music and mill sounds",soundPref==="on")}
@@ -130,6 +131,8 @@ function camPullOn(){try{return localStorage.getItem("paper-mill-campull")!=="of
       <div class="tsub">Play</div>${tog("tsCam","Fly to big moments","the camera visits major upsets and civics crises, then comes back",camPullOn())}
       ${tog("tsTut","Quick-start tutorial","shown when a season or survival run starts",tut)}
       <div class="tsub">Graphics</div>${tog("tsShadow","Shadows","",!sh||sh.checked)}
+      ${G3.GFX?`<div class="trow tcol"><span><b>Graphics quality</b><small>Auto picks for your device (${gfxCap(G3.GFX.auto)})</small></span><div class="tseg tseg5" role="group" aria-label="Graphics quality">${["auto","low","medium","high","ultra"].map(g=>`<button type="button" data-g="${g}" aria-pressed="${G3.GFX.pick===g}" title="${GFX_TIP[g]}">${g==="auto"?"Auto":gfxCap(g)}</button>`).join("")}</div>
+        <div class="tgfxr" id="tsGfxR"${G3.GFX.tier===G3.GFX.loaded?" hidden":""}><small>Lighting and scenery detail change on the next load.</small><button type="button" id="tsGfxReload">Reload now</button></div></div>`:""}
       <div class="trow"><span><b>Appearance</b><small>Auto follows your device</small></span>${themeSegHTML("tseg")}</div>
       <div class="trow"><span><b>Frame rate</b></span><div class="tseg" role="group" aria-label="Frame rate"><button data-f="saver" aria-pressed="${FPS_MODE==="saver"}">Battery saver</button><button data-f="smooth" aria-pressed="${FPS_MODE!=="saver"}">Smooth</button></div></div>
       <div class="tsub">Your mill</div><div class="tgrid"><button id="tsBoard">Leaderboards</button><button id="tsColors">New colors</button><button id="tsName">Rename</button><button id="tsFs">Fullscreen</button></div>
@@ -140,6 +143,11 @@ function camPullOn(){try{return localStorage.getItem("paper-mill-campull")!=="of
     $t("tsTut").addEventListener("change",e=>{try{localStorage.setItem("paper-mill-tutorial",e.target.checked?"on":"off");}catch(_){}});
     $t("tsShadow").addEventListener("change",e=>{if(sh&&sh.checked!==e.target.checked)sh.click();});
     $t("tSetBody").querySelectorAll(".tseg button[data-f]").forEach(b=>b.addEventListener("click",()=>{setFpsMode(b.dataset.f);$t("tSetBody").querySelectorAll(".tseg button[data-f]").forEach(x=>x.setAttribute("aria-pressed",String(x===b)));}));
+    // v5.4.2: graphics quality on the title too (the same setting as in-game Settings → Graphics)
+    $t("tSetBody").querySelectorAll(".tseg button[data-g]").forEach(b=>b.addEventListener("click",()=>{G3.setGfx(b.dataset.g);
+      document.querySelectorAll("button[data-g]").forEach(x=>x.setAttribute("aria-pressed",String(x.dataset.g===G3.GFX.pick)));
+      const r=$t("tsGfxR");if(r)r.hidden=G3.GFX.tier===G3.GFX.loaded;}));
+    {const rb=$t("tsGfxReload");if(rb)rb.addEventListener("click",()=>location.reload());}
     $t("tsBoard").addEventListener("click",()=>openBoard());
     $t("tsColors").addEventListener("click",()=>{rollMill();welcome();$t("tsNote").textContent="New colors: "+MILL.name;});
     $t("tsName").addEventListener("click",()=>{$t("tsNameRow").hidden=false;const i=$t("tsNameIn");i.value=MILL.name;i.focus();i.select();});

@@ -1001,3 +1001,11 @@ html.pm-boot #pmBoot{display:grid;place-content:center;justify-items:center;gap:
 @keyframes pmbIn{to{opacity:1}}
 @keyframes pmbBar{0%{transform:translateX(-100%)}100%{transform:translateX(250%)}}
 @media (prefers-reduced-motion: reduce){#pmBoot .pbw,#pmBoot .pbl{animation:none;opacity:1}#pmBoot .pbl::after{animation:none;width:100%;opacity:.4}}
+/* v5.4.2: graphics quality in the title settings: label above, five buttons across the row */
+.title .trow.tcol{flex-direction:column;align-items:stretch;gap:8px}
+.title .tseg.tseg5{display:grid;grid-template-columns:repeat(5,1fr)}
+.title .tseg.tseg5 button{padding-left:4px;padding-right:4px}
+.title .tgfxr{display:flex;align-items:center;justify-content:space-between;gap:10px}
+.title .tgfxr[hidden]{display:none}
+.title .tgfxr small{font:500 12px/1.35 var(--f-body);color:rgba(255,255,255,.62)}
+.title .tgfxr button{flex:none;min-height:44px;padding:0 14px;border-radius:12px;border:1px solid rgba(255,255,255,.2);background:rgba(255,255,255,.08);color:#fff;font:700 13px var(--f-body);cursor:pointer}

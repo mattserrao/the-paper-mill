@@ -1,5 +1,8 @@
 # Changelog
 
+## v5.4.2 (2026-10-15): graphics quality on the title screen
+- Title screen → Settings → Graphics now has **Graphics quality** (Auto, Low, Medium, High, Ultra), the same setting as in-game Settings → Graphics; Auto names the tier picked for the device. Changes apply at once; lighting and scenery detail need a reload, offered with a **Reload now** button.
+
 ## v5.4.1 (fix, 2026-10-15): no old-menu flash on load
 - The game script waits for the 3D library (three.js) before it runs, and until then the page showed its static markup: the old pause menu, for as long as the download took. A dark "The Paper Mill" splash with a loading bar now stands in until the title screen is built, and nothing else on the page shows behind it. Test links that skip the title (`?env=`, `?autotest`, `?notitle`, `?zen=1`) are unchanged.
 - three.js starts downloading from the top of the page (modulepreload), so the wait is shorter.
