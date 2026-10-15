@@ -251,11 +251,13 @@ function civOutageEnd(o,pl){if(!civOn())return;const V=S.civ,pc=pl&&pl.civ;
 {const bar=document.createElement("div");bar.className="civbar";bar.id="civBar";bar.hidden=true;
   bar.innerHTML=CIVK.map(k=>`<div class="cv" data-k="${k}" role="button" tabindex="0"><b data-s="${{E:"Econ",L:"Labor",M:"Mach",C:"Comm"}[k]}">${CIV.names[k]}</b><span class="cvbar"><i></i></span><em></em><u></u></div>`).join("");
   document.body.appendChild(bar);
+  // (v5.2: the elements are looked up once, and each is written only when its value changes)
+  const CE={};for(const k of CIVK){const el=bar.querySelector(`[data-k="${k}"]`);CE[k]={el,i:el.querySelector("i"),em:el.querySelector("em"),u:el.querySelector("u"),v:null,c:null};}
   UI_TICKS.push(()=>{const on=civOn();if(bar.hidden===on){bar.hidden=!on;document.body.classList.toggle("civ",on);}if(!on)return;
-    for(const k of CIVK){const v=S.civ.m[k],b=civBand(v),el=bar.querySelector(`[data-k="${k}"]`),pv=(S.civ.prev||S.civ.snap)[k],tr=v-pv;
-      el.className="cv "+b[2];el.querySelector("i").style.width=v.toFixed(0)+"%";const em=el.querySelector("em");if(em.textContent!==b[1])em.textContent=b[1];
-      const ar=tr>0.5?"▲":tr<-0.5?"▼":"";const u=el.querySelector("u");if(u.textContent!==ar){u.textContent=ar;u.className=tr>0?"up":"dn";}
-      el.title=`${CIV.names[k]} ${v.toFixed(0)}/100 · ${b[1]}`;}});}
+    for(const k of CIVK){const v=S.civ.m[k],b=civBand(v),E=CE[k],pv=(S.civ.prev||S.civ.snap)[k],tr=v-pv,vs=v.toFixed(0),c="cv "+b[2];
+      if(E.c!==c){E.c=c;E.el.className=c;}
+      if(E.v!==vs){E.v=vs;E.i.style.width=vs+"%";E.el.title=`${CIV.names[k]} ${vs}/100 · ${b[1]}`;}if(E.em.textContent!==b[1])E.em.textContent=b[1];
+      const ar=tr>0.5?"▲":tr<-0.5?"▼":"";if(E.u.textContent!==ar){E.u.textContent=ar;E.u.className=tr>0?"up":"dn";}}});}
 // a choice card or toast left open when the run ends (season over, bankrupt, zen, free play) goes away with it
 UI_TICKS.push(()=>{if(civOn()||!S.civ)return;if((civEl&&!civEl.hidden)||S.civ.cur||S.civ.pending)civDrop();});
 
@@ -265,7 +267,7 @@ PENDH.rush=({t,prem,pen})=>{const m=Math.min(t,(S.plan.hot&&S.plan.hot.made)||0)
   else{deal(m*prem);cardBanner(`Rush order: ${Math.round(m)} t made, +${money(m*prem)} premium.`,true);}};
 document.addEventListener("keydown",e=>{if(e.key!=="Tab"||!civEl||civEl.hidden)return;const m=document.getElementById("v2menu");if(m&&!m.hidden)return;
   const b=[...civEl.querySelectorAll("button,input")];if(!b.length)return;e.preventDefault();const i=b.indexOf(document.activeElement);b[i<0?0:(i+(e.shiftKey?b.length-1:1))%b.length].focus();},true);
-UI_TICKS.push(()=>{if(!civToastEl||!S.civ)return;const P=S.civ.pending,m=document.getElementById("v2menu"),show=!!P&&!(m&&!m.hidden);
+UI_TICKS.push(()=>{if(!civToastEl||!S.civ)return;const P=S.civ.pending,m=document.getElementById("v2menu"),show=!!P&&!(m&&!m.hidden)&&!document.body.classList.contains("titleon");
   if(civToastEl.hidden===show)civToastEl.hidden=!show;if(show){const i=civToastEl.querySelector("i");if(i)i.style.width=Math.max(0,100-(S.t-P.t)/120*100).toFixed(1)+"%";}});
 {const pop=document.createElement("div");pop.className="civpop";pop.id="civPop";pop.hidden=true;document.body.appendChild(pop);let k0=null;
   const pc=v=>(v>=1?"+":"−")+Math.abs(Math.round((v-1)*100))+"%";

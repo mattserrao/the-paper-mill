@@ -5,7 +5,7 @@
      chemicals share of the energy line is worked out from today's rates (the books keep them together). Display only:
      nothing here touches the simulation. Outside a season the tab shows totals since the start, without grades. */
   {const el=$("rep"),GP={A:4,B:3,C:2,D:1,F:0},pc=v=>Math.round(v*100)+"%",hrs=m=>(m/60).toFixed(m<600?1:0)+" h";
-    let openDays=false,openMoney=false,lastN=-99;
+    let openDays=false,openMoney=false;
     const chemShare=()=>{const t=energyCost();if(!(t>0))return 0;const c=((ECON.chem||0)+(P.chemAdd||0)+((ENVX()&&ENVX().chem)||0))*(P.costMul||1);return Math.max(0,Math.min(1,c/t));};
     const allAcc=()=>({t0:0,L0:{},prod0:0,ship0:0,rolls0:0,brk0:0,hay0:0,off0:0,occ:0,fib:0,min:Math.max(1,S.t),plan:0,up:{recv:0,pulper:0,machine:0,winder:0,ship:0},dn:{},bn:{}});
     const seasonOn=()=>!!(S.season&&(S.season.on||S.season.done)&&S.rc&&!S.free&&!S.zen);
@@ -72,7 +72,7 @@
       else h+=`<section class="rcard"><p class="rnone">Grades, uptime and report cards run during a 30-day season or a survival run. Here are your totals since the start.</p></section>`;
       h+=`<section class="rcard">${costBlock(p)}</section>`;if(d.season)h+=`<section class="rcard">${upBlock(p)}</section>`;
       h+=`<section class="rcard">${qualBlock(p,d.season)}</section><section class="rcard">${moneyBlock(d)}</section>`;
-      el.innerHTML=h;}
+      if(h!==el._h){el._h=h;el.innerHTML=h;}}   // (v5.2: unchanged report, no rebuild)
     el.addEventListener("click",e=>{const b=e.target.closest("[data-card]");if(b&&S.rc){const c=S.rc.cards[+b.dataset.card];if(c)rcOpen(c,true);}});
     el.addEventListener("toggle",e=>{if(e.target.id==="repDays")openDays=e.target.open;if(e.target.id==="repMoney")openMoney=e.target.open;},true);
     // the top bar: the grade so far, and cost per ton and machine uptime in the dropdown

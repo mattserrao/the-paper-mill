@@ -42,7 +42,7 @@ function drawSpider(){const D=G3.SPD;if(!D||$("spider").hidden)return;
   const c=$("spiT"),x=c.getContext("2d"),W=c.width,Hh=c.height,h=D.hist;x.clearRect(0,0,W,Hh);x.fillStyle="#fff";x.fillRect(0,0,W,Hh);
   x.strokeStyle="#e3e6ee";x.lineWidth=1;for(let k=1;k<4;k++){x.beginPath();x.moveTo(0,Hh*k/4);x.lineTo(W,Hh*k/4);x.stroke();}
   x.fillStyle="#7a8191";x.font="20px system-ui,sans-serif";x.fillText("TSS (log)",8,22);x.textAlign="right";x.fillText("flow (dashed)",W-8,22);x.textAlign="left";
-  if(h.length<2)return;const X=i=>i/(179)*W,ly=v=>Hh-8-(Math.log10(Math.max(10,v))-1)/(Math.log10(2000)-1)*(Hh-36),fy=v=>Hh-8-v/Math.max(30,...h.map(r=>Math.max(r[2],r[3])))*(Hh-36);
+  if(h.length<2)return;const X=i=>i/(179)*W,ly=v=>Hh-8-(Math.log10(Math.max(10,v))-1)/(Math.log10(2000)-1)*(Hh-36),fmax=Math.max(30,...h.map(r=>Math.max(r[2],r[3]))),fy=v=>Hh-8-v/fmax*(Hh-36);   // (v5.2: the scale is found once, not once per point)
   [[0,"#8a6644",ly,[]],[1,"#3fa0d0",ly,[]],[2,"#8a6644",fy,[10,8]],[3,"#3fa0d0",fy,[10,8]]].forEach(([k,col,Y,dash])=>{x.setLineDash(dash);x.strokeStyle=col;x.lineWidth=3;x.beginPath();h.forEach((r,i)=>i?x.lineTo(X(i),Y(r[k])):x.moveTo(X(i),Y(r[k])));x.stroke();});x.setLineDash([]);}
 UI_TICKS.push(drawSpider);
 const SPEEDS=[1,2,5,10,20,30,60,120].concat(TURBO?[240,480,960]:[]);

@@ -27,7 +27,7 @@ $("breaks").addEventListener("change",e=>{if(S.season&&S.season.on){e.target.che
 $("hays").addEventListener("change",e=>{if(S.season&&S.season.on){e.target.checked=C.hays=true;return;}C.hays=e.target.checked;});
 // sound: on by default, but browsers only allow audio after the first tap or click
 let soundPref="on";try{soundPref=localStorage.getItem("paper-mill-sound")||"on";}catch(e){}
-function paintSound(){const s=AUDIO.on,b=$("v2sound");if(b){b.textContent=s?"Sound on":"Sound off";b.setAttribute("aria-pressed",String(s));}if(typeof titleSoundPaint==="function")titleSoundPaint();}
+function paintSound(){const s=AUDIO.on,b=$("v2sound");if(b){b.textContent=s?"Sound on":"Sound off";b.setAttribute("aria-pressed",String(s));}titleSoundPaint();}
 function setSound(v){AUDIO.setOn(v);soundPref=v?"on":"off";try{localStorage.setItem("paper-mill-sound",soundPref);}catch(e){}paintSound();}
 {let vv=70;try{vv=+(localStorage.getItem("paper-mill-vol")||70);}catch(e){}AUDIO.setVol(vv/100);}
 // Safari only accepts audio from a completed tap (touchend / click / pointerup / keydown), not from pointerdown:
@@ -95,30 +95,33 @@ function buy(id){const u=UP[id],l=LV(id);if(l>=u.lv.length)return;const cost=upC
   BANNERS.push({text:`${u.name}${u.lv.length>1?" level "+(l+1):""} is online.`,t:null,kind:"good"});while(BANNERS.length>3)BANNERS.splice(1,1);
   log(`Installed ${u.name}${u.lv.length>1?" level "+(l+1):""} (${money(cost)})`,"ok");updateShop();}
 const LEDGER=[["rev","Paper sales",1],["occ","OCC purchases",-1],["energy","Energy & chemicals",-1],["labor","Wages & robots",-1],["overhead","Mill overhead",-1],["repairs","Upset repairs",-1],["premium","Insurance premium",-1],["upgrades","Upgrades bought",-1],["deals","Deals & trials",1],["civ","Civics",-1]];
-function updateRel(){const rn=document.getElementById("relnow"),lg=$("ledger"),tg=rn||lg;if(rn)rn.replaceChildren();else{const h0=document.createElement("h3");h0.textContent="Reliability now";lg.appendChild(h0);}const pct=v=>(v>=0?"+":"")+Math.round(v*100)+"%";
+function updateRel(){const tg=$("relnow"),out=document.createElement("div");const pct=v=>(v>=0?"+":"")+Math.round(v*100)+"%";
     [["stock","Stock prep"],["wet","Wet end"],["dry","Dry end"]].forEach(([a,n])=>{const r=areaRel(a),d=document.createElement("div"),sum=[r.up,r.out,r.fx,r.site||1,r.lead||1].reduce((t,v)=>t+(Math.abs(v-1)>0.005?v-1:0),0);d.className="stat "+(sum>0.005?"pos":sum<-0.005?"neg":"");
       const bits=[["upgrades",r.up],["outage budget",r.out],["events",r.fx],["site",r.site||1],["leader",r.lead||1]].filter(([,v])=>Math.abs(v-1)>0.005).map(([k,v])=>k+" "+pct(v-1));
-      d.innerHTML=`<span>${n}<small style="display:block;color:var(--muted);font-size:12px;font-weight:500">${bits.length?bits.join(" · "):"standard"}</small></span><b>${Math.abs(sum)<0.005?"–":pct(sum)}</b>`;tg.appendChild(d);});}
-function updateShop(){
-  $("u-cash").textContent=money(S.cash);
+      d.innerHTML=`<span>${n}<small style="display:block;color:var(--muted);font-size:12px;font-weight:500">${bits.length?bits.join(" · "):"standard"}</small></span><b>${Math.abs(sum)<0.005?"–":pct(sum)}</b>`;out.appendChild(d);});
+  if(out.innerHTML!==tg.innerHTML)tg.replaceChildren(...out.childNodes);}   // (v5.2: built off-page, swapped in only when it changed)
+function updateShop(){const short=bnShort();   // (v5.2: once per tick, not once per upgrade)
+  {const e=$("u-cash"),t=money(S.cash);if(e.textContent!==t)e.textContent=t;}
   {const w=document.querySelector(".wallet small"),t=S.free?"Cash on hand":upLocked()?(UP_NARROW.matches?"Next upgrade: "+upNext():"Cash on hand · next upgrade "+upNext()):"Cash on hand · 1 upgrade a day";if(w&&w.textContent!==t)w.textContent=t;}
   UGROUPS.forEach(([g])=>{const us=UPS.filter(u=>u.g===g),own=us.reduce((a,u)=>a+LV(u.id),0),tot=us.reduce((a,u)=>a+u.lv.length,0),can=upLocked()?0:us.filter(u=>LV(u.id)<u.lv.length&&(S.free||S.cash>=upCost(u,LV(u.id)))).length;
-    const fix=bnShort()&&us.some(upFix);const el=$("usum-"+g);if(el)el.innerHTML=`${fix?'<em class="fixg">fix</em> ':""}${own}/${tot} bought${can?` · <b>${can} affordable</b>`:""}`;});
+    const fix=short&&us.some(upFix);const el=$("usum-"+g),h=`${fix?'<em class="fixg">fix</em> ':""}${own}/${tot} bought${can?` · <b>${can} affordable</b>`:""}`;if(el&&el.innerHTML!==h)el.innerHTML=h;});
   UPS.forEach(u=>{const l=LV(u.id),el=$("up-"+u.id),b=$("buy-"+u.id),max=l>=u.lv.length;
-    el.classList.toggle("max",max);el.querySelectorAll(".pips i").forEach((p,k)=>p.classList.toggle("on",k<l));
-    {const fx=upFix(u),ft=el.querySelector(".fixtag");el.classList.toggle("fix",fx);if(ft){ft.hidden=!fx;if(fx){const t=bnShort()?"Fixes the bottleneck · 25% off. "+(BN_UPTXT[S.bn+"/"+u.id]||""):"Bottleneck fixed · still 25% off";   /* v5.1 QA2: no "fixes" once it is fixed */if(ft.textContent!==t)ft.textContent=t;}}}
-    if(max){b.disabled=true;b.textContent="Maxed";}
-    else{const c=upCost(u,l),lk=upLocked();b.disabled=lk||(!S.free&&S.cash<c);b.textContent=S.free?"Add (free play)":lk?`${money(c)} · ${upNext()}`:S.cash<c?`Need ${money(c)}`:`Buy ${money(c)}`;}});
-  const lg=$("ledger");lg.replaceChildren();
+    el.classList.toggle("max",max);if(el.dataset.lv!==String(l)){el.dataset.lv=l;el.querySelectorAll(".pips i").forEach((p,k)=>p.classList.toggle("on",k<l));}
+    {const fx=upFix(u),ft=el.querySelector(".fixtag");el.classList.toggle("fix",fx);if(ft){ft.hidden=!fx;if(fx){const t=short?"Fixes the bottleneck · 25% off. "+(BN_UPTXT[S.bn+"/"+u.id]||""):"Bottleneck fixed · still 25% off";   /* v5.1 QA2: no "fixes" once it is fixed */if(ft.textContent!==t)ft.textContent=t;}}}
+    let bt,bd;if(max){bd=true;bt="Maxed";}
+    else{const c=upCost(u,l),lk=upLocked();bd=lk||(!S.free&&S.cash<c);bt=S.free?"Add (free play)":lk?`${money(c)} · ${upNext()}`:S.cash<c?`Need ${money(c)}`:`Buy ${money(c)}`;}
+    if(b.disabled!==bd)b.disabled=bd;if(b.textContent!==bt)b.textContent=bt;});
+  // v5.2: the ledger is built off-page and swapped in only when it changed (it used to be rebuilt 5 times a second);
+  // the reliability panel it used to refresh here lives in the Stats pane, which refreshes it itself
+  const lg0=$("ledger"),lg=document.createElement("div");
   lineCapView(lg);bnCard();
-  // v3.3.3: how reliable each section is right now, against a mill with no upgrades and a standard outage budget
-  updateRel();
   const h=document.createElement("h3");h.textContent="Books since start";lg.appendChild(h);
   let net=0;LEDGER.forEach(([k,lab,sg])=>{const v=(S.ledger[k]||0)*sg;net+=v;if((k==="premium"||k==="repairs"||k==="deals"||k==="civ")&&!S.ledger[k])return;
     const d=document.createElement("div");d.className="stat "+(v>=0?"pos":"neg");d.innerHTML=`<span>${lab}</span><b>${money(v)}</b>`;lg.appendChild(d);});
   const n=document.createElement("div");n.className="stat net "+(net>=0?"pos":"neg");n.innerHTML=`<span>Net</span><b>${money(net)}</b>`;lg.appendChild(n);
   const m=document.createElement("div");m.className="stat";const t=S.shipT||0;
   m.innerHTML=`<span>Operating margin per ton shipped</span><b>${t>0?money(net/t+S.ledger.upgrades/t):"–"}</b>`;lg.appendChild(m);
+  if(lg.innerHTML!==lg0.innerHTML)lg0.replaceChildren(...lg.childNodes);
 }
 // random upsets run at half the original rate. Seasons script the pressure: a quiet start-up (days 1-3), then normal
 // running to the end (v4.4.0-t3: the day-15 rough patch is gone).

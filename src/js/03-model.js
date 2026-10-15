@@ -48,7 +48,7 @@ const LV=id=>(S&&S.up&&S.up[id])||0;
 function applyUpgrades(){
   applyGrade();
   P.K=BASE.K*Math.pow(1.06,LV("deckle"))*(1+0.02*LV("apc"))*leadCap("pwet")*civSpeed();   // (v5.1: civics, Machinery)
-  P.spBonus=150*LV("drive")+100*LV("shoe")+leadSpeed();
+  P.spBonus=150*LV("drive")+100*LV("shoe");
   P.energyMul=(1-0.12*LV("shoe"))*(1-0.08*LV("apc"));P.refSave=22*LV("refiner");
   P.yieldF=P.blendY+0.03*LV("clean"); P.tankCap=BASE.tankCap+150*LV("chest");
   P.driverRate=BASE.driverRate*(1+0.25*LV("forklift")); P.doors=3+LV("docks"); P.shipDoors=3+LV("docks");
@@ -58,10 +58,11 @@ function applyUpgrades(){
   P.costMul=survOn()?survCost():1;   // v4.3 survival: fiber, energy and chemicals, and wages cost more every wave (exactly 1 otherwise)
   P.occPrice=(P.blendP+((S&&S.plan)?leadMkt(S.plan.mkt):0)-20*LV("contract")+P.siteOcc)*P.costMul*leadFibre();   // (v4.4: the leader's fiber deals; Hank runs heavy)
   P.priceAdd=25*LV("sales")+P.sitePrice+leadPrice()+civPrice(); P.repairMul=(LV("insure")?0.4:1)*(1-0.15*LV("reliab"))*leadBill()*civBill();P.techs=2+2*LV("maintcrew");P.pmCost=400*LV("pmprog"); P.premium=LV("insure")?1500:0;
-  P.breakBase=Math.pow(0.7,LV("monitor"))*Math.pow(0.9,LV("pmprog"))*leadClean()*leadBreaks()*civBreak();
-  P.hayBase=Math.pow(0.6,LV("winder"))*leadClean()*civBreak();const wr=document.getElementById("s-wdr");if(wr)wr.max=P.winderMax;
-  const sp=document.getElementById("s-pmSp"),pu=document.getElementById("s-pulper");
-  if(sp)sp.max=3300+P.spBonus; if(pu)pu.max=Math.floor(Math.min(P.pulperMax,P.screenMax/P.yieldF));
+  P.breakBase=Math.pow(0.7,LV("monitor"))*Math.pow(0.9,LV("pmprog"))*leadClean()*civBreak();
+  P.hayBase=Math.pow(0.6,LV("winder"))*leadClean()*civBreak();
+  // the sliders' limits follow the upgrades (v5.2: written only when they change; this runs hourly from the sim)
+  const lim=(id,v)=>{const e=document.getElementById(id),t=String(v);if(e&&e.max!==t)e.max=t;};
+  lim("s-wdr",P.winderMax);lim("s-pmSp",3300+P.spBonus);lim("s-pulper",Math.floor(Math.min(P.pulperMax,P.screenMax/P.yieldF)));
 }
 // the OCC blend, energy, chemicals and break rate follow the grade on the machine
 function applyGrade(){const g=(typeof C!=="undefined"&&C&&C.grade)||"23m",c=GCOST[g],d=c.dlk;
@@ -69,11 +70,13 @@ function applyGrade(){const g=(typeof C!=="undefined"&&C&&C.grade)||"23m",c=GCOS
   P.steamMul=c.steam;P.chemAdd=c.chem-((S&&S.perk)?S.perk.chem:0);P.gradeBrk=c.brk;}
 function energyCost(){return Math.max(0,ECON.energy*P.steamMul*P.energyMul*leadEnergy()+ECON.chem+P.chemAdd+(P.siteEnergy||0)-(P.refSave||0)-((S&&S.perk&&S.perk.energy)||0)+civEnergy())*(P.costMul||1);}
 function priceOf(g){let v=ECON.price[g]+P.priceAdd;if(g==="33HT"&&P.costMul>1)v+=(ECON.price["33HT"]-ECON.price["23m"])*(P.costMul-1);/* v5.0.5: survival only (costMul is 1 elsewhere) */if(S&&S.perk)v+=S.perk.price[g]||0;if(S&&S.fx)for(const f of S.fx)if(f.price)v+=(f.price[g]||0)+(f.price.all||0);return v;}
-function freqMul(id){let m=1;
-  if(["lwplug","cscreen","fscreen","lcplug"].includes(id))m*=Math.pow(0.6,LV("clean"));
-  if(MAINT.includes(id))m*=Math.pow(0.75,LV("rcfa"))*Math.pow(0.8,LV("pmprog"));
-  if(["shaft","felt","fabric"].includes(id))m*=Math.pow(0.6,LV("reliab"));
-  if(["shaft","fabric","felt","dryerfire","slime"].includes(id))m*=Math.pow(0.6,LV("monitor"));
+// (v5.2: the id lists are Sets built once; freqMul runs for every upset on every sim step)
+const FM_CLEAN=new Set(["lwplug","cscreen","fscreen","lcplug"]),FM_REL=new Set(["shaft","felt","fabric"]),FM_MON=new Set(["shaft","fabric","felt","dryerfire","slime"]);let FM_MAINT=null;
+function freqMul(id){let m=1;const MS=FM_MAINT||(FM_MAINT=new Set(MAINT));
+  if(FM_CLEAN.has(id))m*=Math.pow(0.6,LV("clean"));
+  if(MS.has(id))m*=Math.pow(0.75,LV("rcfa"))*Math.pow(0.8,LV("pmprog"));
+  if(FM_REL.has(id))m*=Math.pow(0.6,LV("reliab"));
+  if(FM_MON.has(id))m*=Math.pow(0.6,LV("monitor"));
   if(id==="dryerfire"||id==="balefire")m*=LV("fire")?0.4:1;
   if(id==="ragger"||id==="overflow")m*=LV("detrash")?0.4:1;
   if(id==="fleet")m*=Math.pow(0.6,LV("forklift"));
@@ -85,12 +88,12 @@ function freqMul(id){let m=1;
   if(S&&S.fx)for(const f of S.fx){if(f.freq&&EV[id]&&(EV[id].g==="machine"||EV[id].g==="stock"))m*=f.freq;if(f.scab&&id==="slime")m*=f.scab;if(f.evf&&f.evf[id])m*=f.evf[id];}
   return m;}
 // v3.3.3: reliability of an outage area = 1 / its average breakdown rate, split into upgrades, outage budget and temporary events
-function areaRel(a){const ids=OUT.ev[a]||[];if(!ids.length)return {tot:1,up:1,out:1,fx:1,site:1,lead:1};let up=0,fx=0,st=0;const out=outRel(a),ld=leadArea(a);
+function areaRel(a){const ids=OUT.ev[a]||[];if(!ids.length)return {tot:1,up:1,out:1,fx:1,site:1,lead:1};let up=0,fx=0,st=0;const out=outRel(a),ld=1;
   ids.forEach(id=>{let f=1;if(S&&S.fx)for(const x of S.fx){if(x.freq&&EV[id]&&(EV[id].g==="machine"||EV[id].g==="stock"))f*=x.freq;if(x.scab&&id==="slime")f*=x.scab;if(x.evf&&x.evf[id])f*=x.evf[id];}
     const sf=siteFreq(id);fx+=f;st+=sf;up+=freqMul(id)/(out*f*sf*ld);});
   up/=ids.length;fx/=ids.length;st/=ids.length;return {tot:1/(up*out*fx*st*ld),up:1/up,out:1/out,fx:1/fx,site:1/st,lead:1/ld};}
 function durMul(id){let d=(id==="dryerfire"||id==="balefire")&&LV("fire")?0.5:1;if(MAINT.includes(id))d*=Math.pow(0.8,LV("maintcrew"))*(LV("stores")?0.75:1);return d;}
-function spend(v,k){if(S.free&&k==="upgrades"){S.ledger[k]+=0;return;}S.cash-=v;S.ledger[k]+=v;}
+function spend(v,k){if(S.free&&k==="upgrades")return;S.cash-=v;S.ledger[k]+=v;}
 function earn(v){S.cash+=v;S.ledger.rev+=v;}
 function money(v){const a=Math.abs(v),sg=v<0?"−":"";return a>=1e6?`${sg}$${(a/1e6).toFixed(2)}M`:a>=1e4?`${sg}$${Math.round(a/1e3)}k`:`${sg}$${Math.round(a).toLocaleString()}`;}
 function inY(d){const n=P.doors;return n<=3?[130,185,240][d]:118+d*150/(n-1);}

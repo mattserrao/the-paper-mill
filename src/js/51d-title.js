@@ -61,35 +61,41 @@ function camPullOn(){try{return localStorage.getItem("paper-mill-campull")!=="of
   {const orbs=el.querySelector(".torbs"),cols=ORB[A.id]||ORB["forest-valley"],n=matchMedia("(pointer: coarse)").matches?9:14;
     for(let i=0;i<n;i++){const o=document.createElement("i"),s=24+Math.random()*120,c=cols[i%cols.length];
       o.style.cssText=`left:${(Math.random()*100).toFixed(1)}%;top:${(Math.random()<0.5?Math.random()*34:62+Math.random()*38).toFixed(1)}%;width:${s.toFixed(0)}px;height:${s.toFixed(0)}px;`+
-        `background:radial-gradient(circle,${c} 0,${c}cc 38%,${c}00 70%);opacity:${(0.2+Math.random()*0.35).toFixed(2)};animation-duration:${(18+Math.random()*24).toFixed(1)}s;animation-delay:${(-Math.random()*30).toFixed(1)}s`;
+        `background:radial-gradient(circle,${c} 0,${c}cc 38%,${c}00 70%);opacity:${(0.16+Math.random()*0.28).toFixed(2)};animation-duration:${(18+Math.random()*24).toFixed(1)}s;animation-delay:${(-Math.random()*30).toFixed(1)}s`;
       orbs.appendChild(o);}}
   // ---- show / hide ----
   let mode=null;
   const welcome=()=>{$t("tWel").textContent="Welcome to "+(MILL.name||"your mill");};
   function contState(){const c=document.getElementById("v2cont"),b=$t("tCont"),s=$t("tContS");
-    if(c){b.hidden=false;b.querySelector("b").textContent=c.querySelector("b").textContent;s.textContent=c.querySelector("small").textContent;return;}
+    if(c&&G3.first){b.hidden=false;b.querySelector("b").textContent=c.querySelector("b").textContent;s.textContent=c.querySelector("small").textContent;return;}
     if(!G3.first){const se=S.season&&S.season.on;b.hidden=false;b.querySelector("b").textContent="Continue";
       s.textContent=se?(S.season.surv?`Survival · wave ${survWave()} · day ${Math.floor(S.t/1440)+1}`:`Season · day ${Math.min(30,Math.floor(S.t/1440)+1)} of 30`):S.free?"Free play":"Back to the mill";return;}
     b.hidden=true;}
   function step(k,nofocus){main.hidden=k!=="main";mapP.hidden=k!=="map";setP.hidden=k!=="set";el.dataset.step=k;
     const f=k==="map"?$t("tEnvs").querySelector('[aria-checked="true"]'):k==="set"?$t("tSetDone"):el.querySelector(".tmodes button:not([hidden])");if(f&&!nofocus)setTimeout(()=>f.focus({preventScroll:true}),30);}
-  function show(){running=false;welcome();contState();titleSoundPaint();el.hidden=false;document.body.classList.add("titleon");
+  let hideT=0;
+  function show(){clearTimeout(hideT);el.classList.remove("out");running=false;welcome();contState();titleSoundPaint();el.hidden=false;document.body.classList.add("titleon");
     const m=document.getElementById("v2menu");if(m)m.hidden=true;step("main",true);try{AUDIO.title(true);}catch(e){}}
   function hide(){if(el.hidden)return;el.classList.add("out");document.body.classList.remove("titleon");try{AUDIO.title(false);}catch(e){}
-    setTimeout(()=>{el.hidden=true;el.classList.remove("out");$t("tLoad").hidden=true;},650);}
-  G3.titleShow=show;G3.titleHide=hide;G3.titleArt=()=>A.id;
+    hideT=setTimeout(()=>{el.hidden=true;el.classList.remove("out");$t("tLoad").hidden=true;},650);}
+  G3.titleShow=show;G3.titleHide=hide;
+  // while a start waits for the start-up precompile: a "getting ready" note, and further taps are ignored
+  const busy=()=>!$t("tLoad").hidden;const wait=()=>{$t("tLoadT").textContent="Getting the mill ready…";$t("tLoad").hidden=false;};
   // ---- modes ----
-  let zenArm=0;
+  let zenArm=0,freeArm=0;
   el.querySelectorAll(".tmodes [data-mode]").forEach(b=>b.addEventListener("click",()=>{const m=b.dataset.mode;
     if(m==="zen"){const run=S.season&&S.season.on,sm=b.querySelector("small");
       if(run&&Date.now()-zenArm>=3000){zenArm=Date.now();sm.textContent=`ends this ${S.season.surv?"survival run":"season"} · tap again`;b.classList.add("warn");setTimeout(()=>{sm.textContent="sit back and watch";b.classList.remove("warn");},3000);return;}
       zenArm=0;G3.goZen();return;}
+    if(m==="free"&&S.season&&S.season.on&&!S.free){const sm=b.querySelector("small");
+      if(Date.now()-freeArm>=3000){freeArm=Date.now();sm.textContent=`ends this ${S.season.surv?"survival run":"season"} · tap again`;b.classList.add("warn");setTimeout(()=>{sm.textContent="free upgrades · no clock";b.classList.remove("warn");},3000);return;}
+      freeArm=0;}
     openMap(m);}));
-  $t("tCont").addEventListener("click",()=>{const c=document.getElementById("v2cont");if(c){c.click();return;}G3.play();});
+  $t("tCont").addEventListener("click",()=>{const c=document.getElementById("v2cont");if(c&&G3.first){if(busy())return;if(!G3.warm)wait();c.click();return;}G3.play();});
   // ---- map step ----
   const MODEN={season:"Season",surv:"Survival",free:"Free play"},envs=$t("tEnvs");let pick=SITE.env,any=SITE.choice==="any";
   ENV_IDS.forEach(id=>{const E=ENVS[id],b=document.createElement("button"),th=TITLE_ART.find(a=>a.id===ENVART[id]);b.type="button";b.setAttribute("role","radio");b.dataset.env=id;
-    b.innerHTML=`<span class="tth" style="background-image:url('${th?th.d:""}')"></span><b>${esc(E.name)}</b><small><i class="pro">+</i> ${esc(E.pros[0].split(":")[0])}<br><i class="con">−</i> ${esc(E.cons[0].split(":")[0])}</small>`;
+    b.innerHTML=`<span class="tth" style="background-image:url('${th?th.t:""}')"></span><b>${esc(E.name)}</b><small><i class="pro">+</i> ${esc(E.pros[0].split(":")[0])}<br><i class="con">−</i> ${esc(E.cons[0].split(":")[0])}</small>`;
     b.addEventListener("click",()=>{pick=id;any=false;paintMap();});envs.appendChild(b);});
   envs.addEventListener("keydown",e=>{const k=e.key;if(!["ArrowRight","ArrowDown","ArrowLeft","ArrowUp"].includes(k))return;e.preventDefault();
     const i=ENV_IDS.indexOf(pick),n=ENV_IDS[(i+(k==="ArrowRight"||k==="ArrowDown"?1:ENV_IDS.length-1))%ENV_IDS.length];pick=n;any=false;paintMap();envs.querySelector(`[data-env="${n}"]`).focus();});
@@ -101,7 +107,7 @@ function camPullOn(){try{return localStorage.getItem("paper-mill-campull")!=="of
     $t("tMapGo").textContent=reload?"Build here":mode==="free"?"Start free play":"Choose your leader";}
   function openMap(m){mode=m;pick=SITE.env;any=SITE.choice==="any";$t("tMapK").textContent=MODEN[m];paintMap();step("map");}
   $t("tMapBack").addEventListener("click",()=>step("main"));
-  function proceed(m){if(m==="season")G3.goSeason();else if(m==="surv")G3.goSurv();else G3.goFree();}
+  function proceed(m){if(m==="season")G3.goSeason();else if(m==="surv")G3.goSurv();else{if(busy())return;if(!G3.warm)wait();G3.goFree();}}
   $t("tMapGo").addEventListener("click",()=>{const reload=any||pick!==SITE.env||SITE.choice==="any";
     if(!reload){proceed(mode);return;}
     siteSave(any?"any":pick);try{sessionStorage.setItem(KEY,JSON.stringify({mode,art,at:Date.now()}));}catch(e){}

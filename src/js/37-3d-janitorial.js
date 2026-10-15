@@ -41,11 +41,11 @@
     const WT=60,wetI=new THREE.InstancedMesh(new CircG(0.6,12),new THREE.MeshStandardMaterial({color:0x6f8494,roughness:0.06,metalness:0.25,transparent:true,opacity:0.45,depthWrite:false,polygonOffset:true,polygonOffsetFactor:-3,polygonOffsetUnits:-3}),WT);
     wetI.renderOrder=2;wetI.userData.noNav=true;scene.add(wetI);const wet=[];let wk=0;for(let k=0;k<WT;k++){wet.push({x:0,z:0,t:99});}
     const wrot=new THREE.Quaternion().setFromAxisAngle(new THREE.Vector3(1,0,0),-Math.PI/2);
-    let lastT=null,wetAcc=0;
+    let lastT=null,wetAcc=0,canAcc=0;
     G3.janUpdate=(rdt,now)=>{if(!S)return;const hr=((S.t+360)/60)%24,night=NIGHT(hr);
       // litter builds during the working day
       if(lastT===null)lastT=S.t;const dh=Math.max(0,Math.min(60,(S.t-lastT)/60));lastT=S.t;
-      if(dh>0&&hr>=6&&hr<20){CANS.forEach(c=>c.f=Math.min(1.35,c.f+c.r*dh*(0.7+0.6*Math.random())));drawCans();}
+      if(dh>0&&hr>=6&&hr<20){CANS.forEach(c=>c.f=Math.min(1.35,c.f+c.r*dh*(0.7+0.6*Math.random())));canAcc+=dh;if(canAcc>0.25){canAcc=0;drawCans();}}   // (v5.2: redrawn every 15 sim minutes, not every frame)
       // janitor
       if(J.st==="off"&&night&&rdt>0){J.q=CANS.filter(c=>c.f>0.12);if(J.q.length){J.st="cans";jan.visible=cart.visible=true;jan.position.set(HOMEJ[0],0,HOMEJ[1]);J.t=0;J.tgt=null;}}
       if(J.st==="done"&&!night&&hr>=6&&hr<20)J.st="off";

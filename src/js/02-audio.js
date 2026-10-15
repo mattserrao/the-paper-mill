@@ -35,7 +35,7 @@ const AUDIO=(()=>{
     if(st%2===0&&Math.random()<0.2)bell(T,bus,PENTA[Math.floor(Math.random()*PENTA.length)],0.045);
     if(Math.random()<0.08)nz(t,0.02,crackleG,0.05+Math.random()*0.08,"highpass",3000);}
   // quiet, sparse piano and celesta pieces in the spirit of a sandbox-game soundtrack, with a long hall reverb
-  function voice(t,m,len,v,parts,bright,send,bus=mcG){const f=mtof(m),out=ctx.createGain();out.connect(bus);const sd=ctx.createGain();sd.gain.value=bus===mcG?send:0;out.connect(sd);sd.connect(verb);
+  function voice(t,m,len,v,parts,bright,send,bus=mcG){const f=mtof(m),out=ctx.createGain();out.connect(bus);if(bus===mcG){const sd=ctx.createGain();sd.gain.value=send;out.connect(sd);sd.connect(verb);}   // (v5.2: no silent send into the hall from other buses)
     const lp=ctx.createBiquadFilter();lp.type="lowpass";lp.frequency.setValueAtTime(700+2200*bright,t);lp.frequency.exponentialRampToValueAtTime(420,t+Math.min(len,4));lp.connect(out);
     parts.forEach(([ty,mul,a,dec])=>{const o=ctx.createOscillator(),g=ctx.createGain(),d=Math.min(dec,len+1.4);o.type=ty;o.frequency.value=f*mul;g.gain.setValueAtTime(0.0001,t);g.gain.exponentialRampToValueAtTime(v*a,t+0.007);
       g.gain.exponentialRampToValueAtTime(v*a*0.35,t+0.45);g.gain.exponentialRampToValueAtTime(0.0001,t+d);o.connect(g);g.connect(lp);o.start(t);o.stop(t+d+0.05);});}
@@ -308,14 +308,15 @@ const AUDIO=(()=>{
     intG=ctx.createGain();intG.gain.value=0;intG.connect(musicBus);
     // v5.2 title theme: its own bus and hall (the calm hall returns through chillG, which is faded out under the title)
     titleG=ctx.createGain();titleG.gain.value=0;titleG.connect(musicBus);titleIn=ctx.createGain();titleIn.connect(titleG);
-    if(!AMOB&&verb.buffer){const tv=ctx.createConvolver();tv.buffer=verb.buffer;const ts=ctx.createGain(),tg=ctx.createGain();ts.gain.value=0.55;tg.gain.value=0.6;titleIn.connect(ts);ts.connect(tv);tv.connect(tg);tg.connect(titleG);}
+    // (desktop: the one hall is shared; nothing else plays into it under the title, and titleG is silent once the title goes)
+    if(!AMOB&&verb.buffer){const ts=ctx.createGain(),tg=ctx.createGain();ts.gain.value=0.55;tg.gain.value=0.6;titleIn.connect(ts);ts.connect(verb);verb.connect(tg);tg.connect(titleG);}
     else{const d=ctx.createDelay(1),fb=ctx.createGain(),lp=ctx.createBiquadFilter(),wet=ctx.createGain();d.delayTime.value=0.33;fb.gain.value=0.3;lp.type="lowpass";lp.frequency.value=1800;wet.gain.value=0.35;titleIn.connect(d);d.connect(lp);lp.connect(fb);fb.connect(d);lp.connect(wet);wet.connect(titleG);}
     echoIn=mkEcho(envG,0.36,0.38,2200);echoInt=mkEcho(intG,0.28,0.3,2600);
     noiseBuf=ctx.createBuffer(1,ctx.sampleRate*2,ctx.sampleRate);const d=noiseBuf.getChannelData(0);for(let i=0;i<d.length;i++)d[i]=Math.random()*2-1;
     if(!AMOB){startCrackle();ambInit();}for(const k in seqs)seqs[k].next=ctx.currentTime+0.1;paNext=0;
-    if(titleWant){target="title";switchedAt=-5;AUDIO_NOW="Morning at the Mill";seqs.title.step=0;chillG.gain.value=0.0001;titleG.gain.value=1;}else target=target==="title"?"chill":target;return true;}
+    if(titleWant){target="title";switchedAt=-5;seqs.title.step=0;chillG.gain.value=0.0001;titleG.gain.value=1;}else if(target==="intense"){intG.gain.value=1;chillG.gain.value=0.0001;}else target=target==="title"?"chill":target;return true;}   // (v5.2 review: a rebuilt context keeps the upset music)
   // ---- area ambience when zoomed in: dryer rumble and steam hiss, wet-end and stock-prep water, winder whir, forklifts, birds outside ----
-  let zoomK=0,ambG=null;const AMB={};const lv={dryer:0,wet:0,stock:0,winder:0,fork:0,out:0};let birdAt=0;
+  let zoomK=0,ambG=null;const AMB={};const lv={dryer:0,wet:0,stock:0,winder:0,out:0};let birdAt=0;
   function loopNoise(type,f,q,g0){const s=ctx.createBufferSource();s.buffer=noiseBuf;s.loop=true;const fl=ctx.createBiquadFilter();fl.type=type;fl.frequency.value=f;fl.Q.value=q;const g=ctx.createGain();g.gain.value=g0;s.connect(fl);fl.connect(g);s.start(0,Math.random()*1.5);return {g,fl};}
   function ambInit(){ambG=ctx.createGain();ambG.gain.value=0.9;ambG.connect(sfxBus);
     const mk=(name,parts)=>{const g=ctx.createGain();g.gain.value=0;g.connect(ambG);parts.forEach(p=>p.g.connect(g));AMB[name]=g;return parts;};
@@ -323,8 +324,6 @@ const AUDIO=(()=>{
     {const [a]=mk("wet",[loopNoise("bandpass",900,0.45,0.5),loopNoise("highpass",2400,0.5,0.1)]);const lfo=ctx.createOscillator(),lg=ctx.createGain();lfo.frequency.value=0.35;lg.gain.value=300;lfo.connect(lg);lg.connect(a.fl.frequency);lfo.start();}
     mk("stock",[loopNoise("bandpass",420,0.6,0.6),loopNoise("lowpass",120,0.8,0.5)]);
     {const o=ctx.createOscillator();o.type="sawtooth";o.frequency.value=118;const lp=ctx.createBiquadFilter();lp.type="lowpass";lp.frequency.value=380;const og=ctx.createGain();og.gain.value=0.05;o.connect(lp);lp.connect(og);o.start();mk("winder",[{g:og},loopNoise("highpass",5000,0.6,0.05)]);}
-    {const o=ctx.createOscillator();o.type="square";o.frequency.value=52;const lfo=ctx.createOscillator(),lg=ctx.createGain();lfo.frequency.value=0.7;lg.gain.value=9;lfo.connect(lg);lg.connect(o.frequency);lfo.start();
-      const lp=ctx.createBiquadFilter();lp.type="lowpass";lp.frequency.value=260;const og=ctx.createGain();og.gain.value=0.07;o.connect(lp);lp.connect(og);o.start();mk("fork",[{g:og}]);}
     mk("out",[loopNoise("bandpass",600,0.3,0.06)]);}
   let ambSeen=0,ambMuted=false;
   function ambTick(now){if(!ambG)return;
@@ -337,7 +336,7 @@ const AUDIO=(()=>{
   function ambient(levels,zk){zoomK=zk;ambSeen=performance.now();ambMuted=false;if(!ambG)return;const t=ctx.currentTime;for(const k in AMB){const v=(levels[k]||0);lv[k]=v;
       if(v>0.001){AMBQ[k]=0;if(AMBON[k]===false){AMB[k].connect(ambG);AMBON[k]=true;}}
       else if(AMBON[k]!==false){AMBQ[k]=AMBQ[k]||t;if(t-AMBQ[k]>3){AMB[k].disconnect();AMBON[k]=false;}}
-      AMB[k].gain.setTargetAtTime(v*({dryer:0.55,wet:0.45,stock:0.5,winder:0.5,fork:0.6,out:0.7}[k]),t,0.4);}}
+      AMB[k].gain.setTargetAtTime(v*({dryer:0.55,wet:0.45,stock:0.5,winder:0.5,out:0.7}[k]),t,0.4);}}
   function setOn(v){const was=on,fresh=!ctx;if(v&&!ctx&&!init())return false;on=v;if(!ctx)return on;
     // switching sound back on always starts a brand-new audio context: the sure way out of an iOS context that went silent
     if(on&&!was&&!fresh&&AUDIO_VIS){rebuildAudio();return on;}
@@ -375,8 +374,8 @@ const AUDIO=(()=>{
   function setVol(v){vol=v;if(ctx&&on)master.gain.setTargetAtTime(vol,ctx.currentTime,0.05);}
   function fadeTo(k){target=k;switchedAt=ctx.currentTime;const t=ctx.currentTime;
     if(k==="intense"){const v=pickIntense();seqs.intense.cur=v;seqs.intense.bpm=v.bpm;seqs.intense.step=0;seqs.intense.next=t+0.05;const b=document.getElementById("v2sound");if(b)b.title="Now playing: upset ("+v.name+")";}
-    else{seqs.chill.step=Math.ceil(seqs.chill.step/64)*64;const b=document.getElementById("v2sound");if(b&&AUDIO_NOW)b.title="Now playing: "+AUDIO_NOW;}
-    if(k==="title"){seqs.title.step=0;seqs.title.next=t+0.3;AUDIO_NOW="Morning at the Mill";const b=document.getElementById("v2sound");if(b)b.title="Now playing: "+AUDIO_NOW;}
+    else{const b=document.getElementById("v2sound");if(b&&AUDIO_NOW)b.title="Now playing: "+AUDIO_NOW;}
+    if(k==="title"){seqs.title.step=0;seqs.title.next=t+0.3;const b=document.getElementById("v2sound");if(b)b.title="Now playing: Morning at the Mill";}
     chillG.gain.setTargetAtTime(k==="chill"?1:0.0001,t,k==="chill"?1.2:0.35);intG.gain.setTargetAtTime(k==="intense"?1:0.0001,t,k==="intense"?0.3:1.2);
     titleG.gain.setTargetAtTime(k==="title"?1:0.0001,t,k==="title"?0.6:1.0);}
   // switch to intense as soon as something goes wrong; ease back to chill after a few calm seconds
@@ -424,7 +423,7 @@ const AUDIO=(()=>{
           tt+=d+0.015;}
         tt+=0.05+Math.random()*0.09;f0*=0.985;}
       tt+=0.35;}}
-  FX.pa=paAnnounce;let paNext=0;
+  let paNext=0;
   function sfx(name,gap=1200){if(!ctx||!on||!FX[name])return;const now=performance.now();if(now-(last[name]||0)<gap||now-(last._any||0)<250)return;last[name]=now;last._any=now;FX[name](ctx.currentTime+0.02);}
   // tools/musictest.py: schedule every piece's every step (exceptions surface here, not in a player's session) and read the output level
   let meter=null;function level(){if(!ctx)return -1;if(!meter){meter=ctx.createAnalyser();meter.fftSize=2048;master.connect(meter);const z=ctx.createGain();z.gain.value=0;meter.connect(z);z.connect(ctx.destination);}const a=new Float32Array(meter.fftSize);meter.getFloatTimeDomainData(a);let q=0;for(let i=0;i<a.length;i++)q+=a[i]*a[i];return Math.sqrt(q/a.length);}
@@ -437,18 +436,17 @@ const AUDIO=(()=>{
   // v4.2.4: the bird-on-the-power-lines sequence. An operatic choir (original: D minor, i-VI-iv-V, sung "ah" through two
   // formant filters with vibrato) over a timpani roll, swelling hard into the last second before impact; pigeon chirps;
   // and the strike itself: a falling zap, a crackle of arcs and a deep boom. Built against any context (offline renders too).
-  const mt=m=>440*Math.pow(2,(m-69)/12);
   function cineScore(c,t0,out,impact,nz){const all=[];const chords=[[50,53,57,62],[46,53,58,62],[43,50,55,58],[45,52,57,61]],seg=impact/4;
     const voice=(m,a,b,v,sw)=>{const g=c.createGain(),f1=c.createBiquadFilter(),f2=c.createBiquadFilter(),lp=c.createBiquadFilter(),mx=c.createGain();
       f1.type="bandpass";f1.frequency.value=720;f1.Q.value=4;f2.type="bandpass";f2.frequency.value=1150;f2.Q.value=5;lp.type="lowpass";lp.frequency.value=3200;mx.gain.value=1;
       const lfo=c.createOscillator(),lg=c.createGain();lfo.frequency.value=5.2+Math.random()*0.6;lg.gain.value=9;lfo.connect(lg);
-      [0,7,-6].forEach(dt=>{const o=c.createOscillator();o.type="sawtooth";o.frequency.value=mt(m);o.detune.value=dt;lg.connect(o.detune);o.connect(lp);o.start(a);o.stop(b+0.6);all.push(o);});
+      [0,7,-6].forEach(dt=>{const o=c.createOscillator();o.type="sawtooth";o.frequency.value=mtof(m);o.detune.value=dt;lg.connect(o.detune);o.connect(lp);o.start(a);o.stop(b+0.6);all.push(o);});
       lp.connect(f1);lp.connect(f2);f1.connect(mx);f2.connect(mx);mx.connect(g);g.connect(out);lfo.start(a);lfo.stop(b+0.6);all.push(lfo);
       g.gain.setValueAtTime(0.0001,a);g.gain.exponentialRampToValueAtTime(v,a+0.5);if(sw){g.gain.setValueAtTime(v,impact+t0-1.1);g.gain.exponentialRampToValueAtTime(v*2.6,impact+t0-0.05);}
       g.gain.setTargetAtTime(0.0001,b,sw?0.04:0.12);};
     chords.forEach((ch,i)=>{const a=t0+i*seg,b=i<3?a+seg+0.25:t0+impact;ch.forEach(m=>voice(m,a,b,0.035,i===3));});
     // the soprano: enters on the last chord and climbs to the top note in the final second
-    {const o=c.createOscillator(),g=c.createGain(),f=c.createBiquadFilter(),a=t0+seg*3,b=t0+impact;o.type="triangle";o.frequency.setValueAtTime(mt(76),a);o.frequency.setValueAtTime(mt(76),b-1.1);o.frequency.exponentialRampToValueAtTime(mt(81),b-0.7);
+    {const o=c.createOscillator(),g=c.createGain(),f=c.createBiquadFilter(),a=t0+seg*3,b=t0+impact;o.type="triangle";o.frequency.setValueAtTime(mtof(76),a);o.frequency.setValueAtTime(mtof(76),b-1.1);o.frequency.exponentialRampToValueAtTime(mtof(81),b-0.7);
       const l=c.createOscillator(),lg=c.createGain();l.frequency.value=5.6;lg.gain.value=14;l.connect(lg);lg.connect(o.detune);f.type="bandpass";f.frequency.value=1400;f.Q.value=1.2;
       o.connect(f);f.connect(g);g.connect(out);g.gain.setValueAtTime(0.0001,a);g.gain.exponentialRampToValueAtTime(0.05,a+0.6);g.gain.setValueAtTime(0.05,b-1.1);g.gain.exponentialRampToValueAtTime(0.13,b-0.05);g.gain.exponentialRampToValueAtTime(0.0001,b+0.08);
       o.start(a);o.stop(b+0.2);l.start(a);l.stop(b+0.2);all.push(o,l);}
@@ -468,9 +466,7 @@ const AUDIO=(()=>{
   const cine={start(impact){if(!ctx||!on)return;const t=ctx.currentTime+0.05;cineAll=cineScore(ctx,t,sfxBus,impact,noiseBuf);musicBus.gain.cancelScheduledValues(t);musicBus.gain.setValueAtTime(musicBus.gain.value,t);musicBus.gain.linearRampToValueAtTime(0.05,t+0.6);},
     chirp(){if(ctx&&on)cineChirp(ctx,ctx.currentTime+0.02,sfxBus);},
     strike(){if(ctx&&on)cineStrike(ctx,ctx.currentTime+0.01,sfxBus,noiseBuf);},
-    end(){if(!ctx)return;const t=ctx.currentTime;if(cineAll){cineAll.forEach(o=>{try{o.stop(t+0.05);}catch(e){}});cineAll=null;}musicBus.gain.cancelScheduledValues(t);musicBus.gain.setValueAtTime(musicBus.gain.value,t);musicBus.gain.linearRampToValueAtTime(0.6,t+2);},
-    render(impact){const sr=44100,oc=new OfflineAudioContext(1,Math.ceil(sr*(impact+2.5)),sr),cmp=oc.createDynamicsCompressor();cmp.connect(oc.destination);const nb=oc.createBuffer(1,sr*2,sr),d=nb.getChannelData(0);for(let i=0;i<d.length;i++)d[i]=Math.random()*2-1;
-      cineScore(oc,0.05,cmp,impact,nb);[0.8,2.6,4.2].forEach(x=>cineChirp(oc,x,cmp));cineStrike(oc,impact+0.05,cmp,nb);return oc.startRendering().then(b=>Array.from(b.getChannelData(0)));}};
+    end(){if(!ctx)return;const t=ctx.currentTime;if(cineAll){cineAll.forEach(o=>{try{o.stop(t+0.05);}catch(e){}});cineAll=null;}musicBus.gain.cancelScheduledValues(t);musicBus.gain.setValueAtTime(musicBus.gain.value,t);musicBus.gain.linearRampToValueAtTime(0.6,t+2);}};
   // v5.2: the title screen asks for its theme; leaving it hands back to the site's calm rotation
   function title(v){titleWant=!!v;if(!ctx||!on)return;if(v&&target!=="title")fadeTo("title");else if(!v&&target==="title")fadeTo("chill");}
   return {setOn,setVol,update,sfx,ambient,cine,title,event:id=>sfx(EVSFX[id]||"alarm"),selfTest,level,get ctx(){return ctx;},get master(){return master;},get on(){return on;},get now(){return target==="title"?"Morning at the Mill":target==="intense"?"upset: "+(seqs.intense.cur?seqs.intense.cur.name:"")+" / "+AUDIO_NOW:AUDIO_NOW;},get info(){return ctx?ctx.state+" t="+ctx.currentTime.toFixed(1)+(stuckSince?" (clock stuck)":"")+(hurt?" (needs a tap)":"")+(unlocked?" unlocked "+((performance.now()-unlocked)/1000).toFixed(0)+"s ago":" never unlocked"):"none";}};

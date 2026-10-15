@@ -1,9 +1,7 @@
 // ---- v4.1 site picker: environment (with its pros and cons); the layout is fixed per environment (pass 6). The 3D scene is built once per page load,
 // so "Build here" saves the choice and reloads; nothing else is kept between page loads anyway.
 {const SW={rural:["#b4cf9f","#4f8257"],urban:["#bec7ad","#8a94a3"],desert:["#e3d0a4","#c98b5a"],swamp:["#a3b487","#4f736d"]};
-  const WATER={rural:RIVERS.rural.water,urban:RIVERS.urban.water,desert:RIVERS.desert.water,swamp:RIVERS.swamp.water};
   const swatch=(el,e)=>{el.style.background=`linear-gradient(135deg,${SW[e][0]} 55%,${SW[e][1]} 55%)`;};
-  const layName=L=>`Wastewater plant ${L.ww==="east"?"behind the maintenance shop":"behind stock prep"}, clarifier on the ${(L.ww==="east")!==L.flip?"east":"west"} side`;
   // menu row
   function siteRow(){const E=ENVS[SITE.env];$("v2siteN").textContent=E.name+(SITE.choice==="any"?" (surprise)":"");
     $("v2siteM").textContent=E.pros[0].split(":")[0]+" · "+E.cons[0].split(":")[0];swatch($("v2siteSw"),SITE.env);}

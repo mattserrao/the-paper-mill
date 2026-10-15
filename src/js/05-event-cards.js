@@ -318,7 +318,7 @@ function cardTick(dt){const cs=S.cards;if(!cs)return;
   if(S.fx.some(f=>f.left<=0)){S.fx=S.fx.filter(f=>f.left>0);}
   // due callbacks are removed before they run, so one can never fire twice (or forever, if it throws)
   const due=cs.pend.filter(p=>(p.left-=dt)<=0);cs.pend=cs.pend.filter(p=>p.left>0);
-  for(const p of due){try{PENDH[p.h](p.d);}catch(e){console.error("card error",p.id,e);}try{if(typeof civCardDue==="function")civCardDue(p);}catch(e){console.error("civics card",p.id,e);}}
+  for(const p of due){try{PENDH[p.h](p.d);}catch(e){console.error("card error",p.id,e);}try{civCardDue(p);}catch(e){console.error("civics card",p.id,e);}}
   if(cs.open||S.zen||S.over||(S.season&&S.season.done)||S.t<cs.next||outOn()||(S.civ&&(S.civ.pending||S.civ.cur)))return;   // (v5.1 QA: not over a standing-order toast)
   cs.next=S.t+1440*(1.2+0.6*rand("card"));
   // every card is shown at most once per game: once dealt it is marked seen and never drawn again

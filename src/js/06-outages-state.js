@@ -46,14 +46,14 @@ function openOutagePlan(){const o=S.outg,st=outStart(o.k),first=o.k===1,d0=S.cas
     <div class="btns"><button class="primary" id="out-ok" style="flex:1">Approve budget</button></div></div>`;
   const paint=()=>{el.querySelectorAll(".orow").forEach(r=>{const a=r.dataset.a,v=pick[a];r.querySelectorAll(".seg button").forEach(b=>b.setAttribute("aria-pressed",String(+b.dataset.v===v)));
       const [c,t]=effTxt(v,a),e=r.querySelector(".eff");e.className="eff "+c;e.textContent=t;});
-    const tot=Object.values(pick).reduce((s,v)=>s+COST[v],0)+(typeof civPlanCost==="function"?civPlanCost(o._civ&&o._civ.civ):0);document.getElementById("out-tot").textContent=money(tot);
+    const tot=Object.values(pick).reduce((s,v)=>s+COST[v],0)+civPlanCost(o._civ&&o._civ.civ);document.getElementById("out-tot").textContent=money(tot);
     document.getElementById("out-cash").textContent="Cash on hand "+money(S.cash);document.getElementById("out-ok").textContent=`Approve ${money(tot)} budget`;};
   el.querySelectorAll(".orow").forEach(r=>r.querySelectorAll(".seg button").forEach(b=>b.addEventListener("click",()=>{pick[r.dataset.a]=+b.dataset.v;paint();})));
   document.getElementById("out-ok").addEventListener("click",()=>{const tot=Object.values(pick).reduce((s,v)=>s+COST[v],0);spend(tot,"repairs");
     const cpc=o._civ&&o._civ.civ;if(cpc&&civPlanCost(cpc))civPay(civPlanCost(cpc));   // v5.1 civics levers
     o.plan={...pick};if(cpc)o.plan.civ=cpc;delete o._civ;if(lp)o.plan.lead={to:lp.to,pick:lp.pick};log(`Outage ${o.k} budget approved: ${money(tot)} (${OUT.areas.map(([a,n])=>n+" "+k(COST[pick[a]])).join(", ")})`,"warn");
     el.hidden=true;closeCard(true);});
-  o._civ={};if(typeof civPlanWire==="function"&&civOn()){civPlanWire(el,o._civ);el.querySelectorAll(".civplan .seg button").forEach(b=>b.addEventListener("click",()=>paint()));}
+  o._civ={};if(civOn()){civPlanWire(el,o._civ);el.querySelectorAll(".civplan .seg button").forEach(b=>b.addEventListener("click",()=>paint()));}
   paint();if(lp)leadPlanMount(document.getElementById("out-lead"),lp);el.hidden=false;AUDIO.sfx("cash",150);document.getElementById("out-ok").focus({preventScroll:true});el.querySelector(".modal").scrollTop=0;}   // v5.0.4: opens at the top
 function outNote(head,body,ms,btn){   // v5.0.5: with an event card open, the notice waits until the card is answered, so it never covers the card's buttons
   // v5.0.6: it also waits while the card's result toast is showing, so it never lands on top of it
@@ -111,7 +111,7 @@ function initState(){
      inPhase:0.6,inJit:1,outPhase:0.3,outJit:1,inQ:[],inDock:[null,null,null],outQ:[],outDock:[null,null,null],leaving:[],
      rates:{feed:0,unload:0,fiberIn:0,prod:0,fiberUse:0,load:0,rolls:0,cut:0},
      tot:{inTrucks:0,inTons:0,turned:0,prodT:0,rolls:0,shipped:0,outTrucks:0,breaks:0,breakMin:0,turnups:0,pot:0,incidents:0,hayouts:0,hayMin:0,broke:0},wd:"run",hayLeft:0,
-     trend:[],trendAcc:0,rollsVis:[],conv:0,inc:[],lastInc:0,feed:[],M:baseMods(),effDrv:C.drivers.v,effLd:C.loaders.v,effHum:C.loaders.v};
+     trend:[],trendAcc:0,conv:0,inc:[],lastInc:0,feed:[],M:baseMods(),effDrv:C.drivers.v,effLd:C.loaders.v,effHum:C.loaders.v};
   S.up={};S.cash=ECON.start;S.ledger={rev:0,occ:0,energy:0,labor:0,overhead:0,repairs:0,premium:0,upgrades:0,deals:0};
   // v4.1 v16: paper keeps the grade it was made as all the way to the truck: each stage holds lots [grade, amount] in
   // order (reel and winder stores in t, conveyor and warehouse in rolls) that move first-in first-out with the scalars
@@ -183,5 +183,5 @@ function autoControl(dt){
 }
 
 let TRUCKID=0;
-function newTruck(kind){return kind==="in"?{id:++TRUCKID,load:P.truckLoad,x:-70,y:292,wait:0}:{id:++TRUCKID,load:0,x:-70,y:455,wait:0};}
+function newTruck(kind){return kind==="in"?{id:++TRUCKID,load:P.truckLoad}:{id:++TRUCKID,load:0};}
 

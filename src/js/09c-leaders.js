@@ -121,8 +121,8 @@ function leadCardOpen(){if(!S.lead)return;const was=running;running=false;
   document.addEventListener("keydown",key,true);draw();el.hidden=false;el.querySelector("#ldc-ok").focus();}
 // the chip: the leader's face, and Dot's fix when a breakdown is waiting for it
 UI_TICKS.push(()=>{const f=$("svL");if(!f)return;const id=leadOn()?S.lead.id:"";if(f.dataset.l!==id){f.dataset.l=id;f.innerHTML=id?leadArt(id,true):"";f.hidden=!id;const fb=$("svFold");if(fb)fb.hidden=!id;if(!id)$("survChip").classList.remove("fold");}
-  const x=$("svF");if(x){const show=id==="dot",ready=show&&leadFixReady(),hot=false,t=ready?"Fix ready":"Fix used";
-    if(x.hidden===show)x.hidden=!show;if(show){if(x.textContent!==t)x.textContent=t;x.dataset.s=ready?"Fix ready":"Fix used";x.classList.toggle("hot",hot);x.classList.toggle("used",!ready);}$("survChip").classList.remove("hot");}});
+  const x=$("svF");if(x){const show=id==="dot",ready=show&&leadFixReady(),t=ready?"Fix ready":"Fix used";
+    if(x.hidden===show)x.hidden=!show;if(show){if(x.textContent!==t)x.textContent=t;x.dataset.s=ready?"Fix ready":"Fix used";x.classList.toggle("used",!ready);}}});
 // v4.4.0-t3: the wave bar slides away to the left (the arrow at its end), leaving the leader's face; tapping the face brings it back
 {const c=$("survChip"),fb=$("svFold");let fold=false;
   // v5.1 QA2: a season's chip counts outages, so its screen-reader label says so

@@ -41,12 +41,13 @@ function frame(now){
   if(running){try{simAcc=Math.min(simAcc+rdt*simRate(),60);while(simAcc>=SIM_STEP&&running){step(SIM_STEP);simAcc-=SIM_STEP;}}catch(e){if(!frame.serr)frame.serr=0;if(frame.serr++<5)console.error("sim error",e);}}
   if(PFo&&PFo.on)PFo.acc["SIM (game logic step)"]=(PFo.acc["SIM (game logic step)"]||0)+(performance.now()-fT0);
   if(G3.cineTick)G3.cineTick(now);   // (v4.2.4: the bird cut-scene runs on real time while the game is paused)
-  try{const live=running||now-(G3.lastMove||0)<2500||now-lastPaint>1000;
+  // v5.2: nothing is drawn behind the opaque title screen once the start-up precompile is done (it needs its frames until then)
+  try{const covered=G3.warm&&document.body.classList.contains("titleon"),live=!covered&&(running||now-(G3.lastMove||0)<2500||now-lastPaint>1000);
     if(live){lastPaint=now;
       if(G3.on&&G3.frame)G3.frame(running?rdt:0);}
     uiAcc+=rdt;if(uiAcc>0.2){uiAcc=0;uiN++;try{AUDIO.update(running&&!S.zen&&(S.inc.length>0||S.wd==="hayout"));}catch(_){}
       const uT=performance.now();if(paneShown($("cards")))syncControls();updateText();UI_TICKS.forEach(f=>{try{f(uiN);}catch(e){console.error("ui tick",e);}});
-      if(paneShown($("chaosSec")))updateChaos();if(!$("brian").hidden)briUpd();if(paneShown($("shopSec")))updateShop();{const rn=document.getElementById("relnow");if(rn&&rn.offsetParent)updateRel();}if(paneShown($("trend")))drawTrend();
+      if(paneShown($("chaosSec")))updateChaos();if(!$("brian").hidden)briUpd();if(paneShown($("shopSec")))updateShop();if(paneShown($("relnow"))&&$("repLive").open)updateRel();   /* (v5.2: no offsetParent layout read) */if(paneShown($("trend")))drawTrend();
       if(PFo&&PFo.on)PFo.acc["UI panels (5x/s)"]=(PFo.acc["UI panels (5x/s)"]||0)+(performance.now()-uT);}}
   catch(e){if(!frame.errs)frame.errs=0;if(frame.errs++<5)console.error("frame error",e);}
   if(PFo&&PFo.on){const d=performance.now()-fT0;PFo.js.push(d);}

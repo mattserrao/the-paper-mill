@@ -14,7 +14,7 @@
   box(0.25,0.5,0.25,M.ink,-0.9,-0.25,0,scene,false);
   const web=new THREE.Mesh(new THREE.PlaneGeometry(4.6,4.6),paperDS);web.rotation.x=-Math.PI/2;web.position.set(0.4,2.2,0);wd.add(web);
   box(1.2,1.2,0.8,M.steel,0,0.6,4.3,wd);box(1.1,0.5,0.1,M.robot,0,1.25,3.95,wd,false);
-  const SPR={x:-13.4,z:3.6};[-2.2,2.2].forEach(dz=>{});[SPR.z-ZJ+0.4,SPR.z+ZJ-0.4].forEach(()=>{});
+  const SPR={x:-13.4,z:3.6};
   const rackSpools=[0,1,2].map(k=>{const m=spoolModel(scene);m.g.position.set(SPR.x-k*1.2,0.75,SPR.z+0.6);m.set(R0);return m;});
   [SPR.x-1.2].forEach(x=>{box(3.4,0.3,0.4,M.steel,x,0.35,SPR.z+0.6-ZJ,scene);box(3.4,0.3,0.4,M.steel,x,0.35,SPR.z+0.6+ZJ,scene);});
   const parked=[0,1,2,3].map(k=>{const g=new THREE.Group();g.position.set(-11.8-k*4.1,0,-0.2);scene.add(g);

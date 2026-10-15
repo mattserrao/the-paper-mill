@@ -101,9 +101,10 @@
     const p=new THREE.Points(g,m);p.frustumCulled=false;p.visible=false;scene.add(p);
     const rg=new THREE.BufferGeometry(),rp=new Float32Array(n*6);rg.setAttribute("position",new THREE.BufferAttribute(rp,3));
     const rm=new THREE.LineBasicMaterial({color:lin0("#d6e2ee"),transparent:true,opacity:0.6,depthWrite:false});const rl=new THREE.LineSegments(rg,rm);rl.frustumCulled=false;rl.visible=false;scene.add(rl);
-    const wxN=Math.min(n,(G3.GFX&&G3.GFX.wx)||1000);g.setDrawRange(0,wxN);rg.setDrawRange(0,wxN*2);G3.wxRange=k=>{const q=Math.min(n,k);g.setDrawRange(0,q);rg.setDrawRange(0,q*2);};return {p,g,pos,m,n,rg,rp,rm,rl};})();
+    const wxN=Math.min(n,(G3.GFX&&G3.GFX.wx)||1000);g.setDrawRange(0,wxN);rg.setDrawRange(0,wxN*2);G3.wxRange=k=>{const q=Math.min(n,k);g.setDrawRange(0,q);rg.setDrawRange(0,q*2);WXP.k=q;};return {p,g,pos,m,n,rg,rp,rm,rl,k:wxN};})();   // (v5.2: k = points drawn; only those are moved and uploaded)
   scene.fog=new THREE.Fog(0xb3bbcb,600,3000);
-  const SKY_DAY=new THREE.Color(),SKY_NIGHT=lin0("#232b44"),SKY_RAIN=lin0("#8c94a2"),SKY_FOG=lin0("#c9ced6"),SKY_DUST=lin0("#c9a86b"),tmpC=new THREE.Color();let fogK=0,wxK=0,envAcc=0,dustK=0;
+  const SKY_DAY=new THREE.Color(),SKY_NIGHT=lin0("#232b44"),SKY_RAIN=lin0("#8c94a2"),SKY_FOG=lin0("#c9ced6"),SKY_DUST=lin0("#c9a86b"),tmpC=new THREE.Color(),WIN_EM=lin0("#ffcf7a"),LAMP_OFF=lin0("#9aa3b2"),LAMP_ON=lin0("#fff2c4");let skyLast=null;   // (v5.2: parsed once, not every frame)
+  let fogK=0,wxK=0,envAcc=0,dustK=0;
   function envUpdate(rdt,now){const out=S.inc.some(i=>i.id==="lightning"||(i.id==="birdline"&&!G3.cineHold));
     const hr=((S.t+360)/60)%24,ss=v=>v*v*(3-2*v),day=hr<12?ss(clamp((hr-5.2)/1.6,0,1)):ss(clamp((20.2-hr)/1.6,0,1));
     const wx=(G3.floodK>0.3&&S.wx!=="snow")?"rain":G3.iceK>0.3?"snow":(S.wx||"clear");   // (v4.2.4: the flood brings rain and the iced intake snow, as visuals)
@@ -112,7 +113,7 @@
     // v4.1: a desert dust storm (G3.dustK) and a city brownout (G3.brownK) colour the sky and sag the lights
     dustK+=((G3.dustK||0)-dustK)*Math.min(1,rdt*0.7+0.01);const bk=G3.brownK==null?1:G3.brownK;
     if(!out){hemi.intensity=LEG*baseHemi*(0.3+0.7*day)*(1-0.05*wxK)*(1-0.25*dustK);sun.intensity=LEG*baseSun*(0.1+0.9*day)*(1-0.18*Math.max(wxK,fogK))*(1-0.55*dustK);
-      SKY_DAY.set(skyHex).convertSRGBToLinear();tmpC.copy(SKY_DAY).lerp(wx==="fog"?SKY_FOG:SKY_RAIN,Math.max(wxK*0.25,fogK*0.5)).lerp(SKY_NIGHT,1-day).lerp(SKY_DUST,dustK*(0.35+0.5*day));
+      if(skyHex!==skyLast){skyLast=skyHex;SKY_DAY.set(skyHex).convertSRGBToLinear();}tmpC.copy(SKY_DAY).lerp(wx==="fog"?SKY_FOG:SKY_RAIN,Math.max(wxK*0.25,fogK*0.5)).lerp(SKY_NIGHT,1-day).lerp(SKY_DUST,dustK*(0.35+0.5*day));
       if(scene.background&&scene.background.isColor)scene.background.copy(tmpC);else scene.background=tmpC.clone();scene.fog.color.copy(tmpC);}
     if(G3.SKY&&G3.SKY.tick)G3.SKY.tick(rdt,now,day,scene.fog.color,dustK);
     if(G3.nightWin){const nw=G3.nightWin,on=(1-day)>0.03;if(nw.visible!==on)nw.visible=on;if(on)nw.material.opacity=0.9*(1-day)*bk*(G3.civWinK??1);}
@@ -140,9 +141,9 @@
       G3.beacons.forEach(l=>{l.b.visible=l.h.visible=on;l.h.material.opacity=k;l.b.material.color.setRGB(0.4+0.6*bl,0.02+0.05*bl,0.02);});
       const run=S.M.pulperDown?0.25:1;G3.thkL.forEach((l,i)=>{l.b.visible=l.h.visible=on;l.h.material.opacity=night*(i<8?1:run);});}
     if(G3.fogFan&&rdt>0){const F=G3.fogFan,down=S.inc.some(i=>i.id==="fogfan"),k=down?0:(S.pm==="run"?1:0.35);F.spin+=(k-F.spin)*Math.min(1,rdt*0.8);F.rot.rotation.y+=rdt*F.spin*14;
-      if(Math.random()<rdt*9*k)emitA("steam",F.top[0]+R()*0.5,F.top[1],F.top[2]+R()*0.5,R()*0.7+0.5,3.0+Math.random()*1.8,R()*0.7,3.4,2.0+Math.random()*1.6,"#f4f6f8",0.6);}G3.spiderFrame&&G3.spiderFrame(rdt);M.wind.emissive=M.wind.emissive||new THREE.Color();M.wind.emissive.copy(lin0("#ffcf7a")).multiplyScalar(0.85*night*bk);if(G3.winMats)G3.winMats.forEach(m=>m.emissive.copy(M.wind.emissive).multiplyScalar(0.7));
-    ENV.lampHead.color.copy(lin0("#9aa3b2")).lerp(lin0("#fff2c4"),night*bk);ENV.lampPool.opacity=0.32*night*bk;
-    ENV.pudM.opacity=0.55*(S.wet||0);ENV.riverTex.offset.x=(ENV.riverTex.offset.x-rdt*0.02)%1;
+      if(Math.random()<rdt*9*k)emitA("steam",F.top[0]+R()*0.5,F.top[1],F.top[2]+R()*0.5,R()*0.7+0.5,3.0+Math.random()*1.8,R()*0.7,3.4,2.0+Math.random()*1.6,"#f4f6f8",0.6);}G3.spiderFrame&&G3.spiderFrame(rdt);M.wind.emissive=M.wind.emissive||new THREE.Color();M.wind.emissive.copy(WIN_EM).multiplyScalar(0.85*night*bk);if(G3.winMats)G3.winMats.forEach(m=>m.emissive.copy(M.wind.emissive).multiplyScalar(0.7));
+    ENV.lampHead.color.copy(LAMP_OFF).lerp(LAMP_ON,night*bk);ENV.lampPool.opacity=0.32*night*bk;if(ENV.lampPoolMesh)ENV.lampPoolMesh.visible=night*bk>0.01;   // (v5.2: no invisible draws by day)
+    ENV.pudM.opacity=0.55*(S.wet||0);if(ENV.pudMeshes){const v=(S.wet||0)>0.01;if(ENV.pudMeshes.v!==v){ENV.pudMeshes.v=v;ENV.pudMeshes.forEach(m=>m.visible=v);}}ENV.riverTex.offset.x=(ENV.riverTex.offset.x-rdt*0.02)%1;
     if(G3.YP&&G3.YP.flags&&rdt>0)G3.YP.flags.forEach((f,k)=>{f.rotation.y=0.55+0.28*Math.sin(now/900+k*2.1);});
     if(ENV.spark){ENV.sparkTex.offset.x=(ENV.sparkTex.offset.x+rdt*0.013)%1;ENV.spark.material.opacity=0.35*day*(1-0.6*(fogK+wxK));}
     ENV.bridge.rotation.y-=rdt*0.12;
@@ -171,10 +172,10 @@
     P2.p.visible=(wxK>0.05&&snow)||dust;P2.rl.visible=wxK>0.05&&wx==="rain";
     if(P2.dust!==dust){P2.dust=dust;P2.m.color.set(dust?0xd8b985:0xffffff);P2.m.size=dust?1.5:0.7;}
     if((P2.p.visible||P2.rl.visible)&&rdt>0){P2.m.opacity=dust?0.42*dustK:0.45*wxK;P2.rm.opacity=0.25*wxK;P2.p.position.set(target.x,0,target.z);P2.rl.position.set(target.x,0,target.z);
-      const a=P2.pos,r=P2.rp;for(let i=0;i<P2.n;i++){const j=i*3;if(dust){a[j]+=rdt*(14+(i%7)*2);a[j+1]+=Math.sin(now/300+i)*rdt*2.5;if(a[j+1]>14||a[j+1]<0.2)a[j+1]=0.3+Math.random()*10;}else if(snow){a[j+1]-=rdt*(2.5+(i%5)*0.3);a[j]+=Math.sin(now/900+i)*rdt*0.8;}else{a[j+1]-=rdt*34;a[j]+=rdt*4;}
+      const a=P2.pos,r=P2.rp;for(let i=0;i<P2.k;i++){const j=i*3;if(dust){a[j]+=rdt*(14+(i%7)*2);a[j+1]+=Math.sin(now/300+i)*rdt*2.5;if(a[j+1]>14||a[j+1]<0.2)a[j+1]=0.3+Math.random()*10;}else if(snow){a[j+1]-=rdt*(2.5+(i%5)*0.3);a[j]+=Math.sin(now/900+i)*rdt*0.8;}else{a[j+1]-=rdt*34;a[j]+=rdt*4;}
         if(a[j+1]<0){a[j+1]+=40;a[j]=R()*80;a[j+2]=R()*80;}if(a[j]>40)a[j]-=80;
         if(P2.rl.visible){const k=i*6;r[k]=a[j];r[k+1]=a[j+1];r[k+2]=a[j+2];r[k+3]=a[j]-0.14;r[k+4]=a[j+1]+1.3;r[k+5]=a[j+2];}}
-      P2.g.attributes.position.needsUpdate=true;if(P2.rl.visible)P2.rg.attributes.position.needsUpdate=true;}
+      {const pa=P2.g.attributes.position;pa.clearUpdateRanges();pa.addUpdateRange(0,P2.k*3);pa.needsUpdate=true;}if(P2.rl.visible){const ra=P2.rg.attributes.position;ra.clearUpdateRanges();ra.addUpdateRange(0,P2.k*6);ra.needsUpdate=true;}}
     // slow-changing signs
     envAcc+=rdt;if(envAcc>1){envAcc=0;
       const q=S.inQ&&S.inQ[0],txt=q?(14.6+(q.load||0)).toFixed(1)+" t":"-- . - t";const sc=ENV.scale;if(txt!==sc.last){sc.last=txt;const x=sc.ctx;x.fillStyle="#101418";x.fillRect(0,0,256,80);x.fillStyle="#ff5a3c";x.font='700 46px "IBM Plex Mono",monospace';x.textAlign="center";x.textBaseline="middle";x.fillText(txt,128,42);sc.tex.needsUpdate=true;}

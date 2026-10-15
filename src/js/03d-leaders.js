@@ -51,21 +51,16 @@ const leadMkt=m=>(S&&S.lead&&!survRun()&&S.lead.lockW&&S.lead.lockW===survWave()
 const leadLock=()=>survRun()&&S&&S.lead&&S.lead.lockW&&S.lead.lockW===survWave()&&survWave()>1?Math.pow(survCost(survWave()-1)/survCost(survWave()),LEAD.lock):1;
 const leadFibre=()=>S&&S.lead?leadLock()*(leadIs("hank")?1+LEAD.heavy:1):1;
 const leadPrice=()=>LEAD.sales*leadN("sales");
-const leadSpeed=()=>0;                                                     // (v4.4.0-t1's push for tons is gone)
 const leadClean=()=>Math.pow(1-LEAD.clean,leadN("rethread"));              // sheet breaks and hayouts (Hank's runnability)
-const leadBreaks=()=>1;
 const leadRethread=()=>1/Math.pow(1-LEAD.rethread,leadN("rethread"));      // how fast break and hayout time runs down (Hank)
 const leadEnergy=()=>{const n=leadN("clean");return Math.pow(1-LEAD.steam,Math.min(n,LEAD.steamFull))*Math.pow(1-LEAD.steam/2,Math.max(0,n-LEAD.steamFull));};   // v5.0.5: picks after the 4th give half               // Hank's dryer tuning (key "clean" kept for saves)
 const leadBill=()=>leadIs("dot")?LEAD.bills:1;
 const leadRep=()=>leadIs("dot")?1/(1-LEAD.rep):1;                           // repair speed (Dot)
-const leadPayroll=()=>0;
 const leadStrife=()=>leadIs("chip")?LEAD.strife0:1;
 const leadWage=()=>Math.pow(1+LEAD.wage,leadDeals());
 const leadCap=k=>1+LEAD.cap*leadN(k);                                       // Felicity's capacity (pstock fiber line, pwet machine, pdry finishing)
 const leadOverrun=()=>LEAD.overrun*leadProjects();
-const leadArea=()=>1;
 // a breakdown Dot fixed is fixed at the root: half as likely from then on, and again for each time she fixes it
-const leadFixN=id=>S&&S.lead&&S.lead.fixed?S.lead.fixed.filter(x=>x===id).length:0;
-const leadImmune=()=>false;
+const leadFixN=id=>{const f=S&&S.lead&&S.lead.fixed;if(!f)return 0;let n=0;for(let i=0;i<f.length;i++)if(f[i]===id)n++;return n;};
 function leadFreq(id){if(!(S&&S.lead))return 1;
   let m=Math.pow(1-LEAD.fixCut,leadFixN(id));if(id==="calloff"||id==="fight")m*=leadStrife();return m;}

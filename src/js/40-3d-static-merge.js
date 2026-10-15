@@ -115,7 +115,7 @@
     SM.queue=[...SM.batches.keys()];SM.roofN=roofN;shBuild();}
   // baked batches are built a few per frame (no single long stall at start-up, which phones punish)
   const kindRank=o=>o.isBatchedMesh?(o._colorsTexture?4:3):o.isInstancedMesh?(o.instanceColor?2:1):0,kindCmp=(a,b)=>kindRank(a)-kindRank(b);
-  function sortKinds(){scene.children.sort(kindCmp);}   // (stable: everything else keeps its order; also after each moving-batch build, so new batches and trucks fall in line)
+  function sortKinds(){const c=scene.children;for(let i=1;i<c.length;i++)if(kindRank(c[i-1])>kindRank(c[i])){c.sort(kindCmp);return;}}   // (v5.2: an O(n) check first; a full sort only when out of order)   // (stable: everything else keeps its order; also after each moving-batch build, so new batches and trucks fall in line)
   function smStep(){const N=mobile?6:30;for(let i=0;i<N&&SM.queue.length;i++){const key=SM.queue.shift(),b=SM.batches.get(key);
       if(!b.roof)b.recs=b.recs.filter(r=>smSame(r));smBuild(key);b.recs.forEach(r=>r.o.layers.set(SMLAYER));}
     if(SM.queue.length)return;SM.done=true;

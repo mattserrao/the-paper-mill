@@ -10,6 +10,7 @@ sizeTrend();window.addEventListener("resize",sizeTrend);
 // animation phases advanced by the 3D frame (conveyor belt, chest swirl, sheet, dryer cans, forklifts)
 const V={belt:0,swirl:0,sheet:0,cans:0,lifts:[],rollsAnim:0};
 function drawTrend(){if(!col.muted)readColors();if(tc.width<4)sizeTrend();
+  {const n=S.trend.length,k=n+"|"+tc.width+"|"+col.muted+"|"+col.stock;if(n>=2&&S.trend[n-1]===drawTrend.last&&k===drawTrend.key)return;drawTrend.last=S.trend[n-1];drawTrend.key=k;}   // (v5.2: redraw only when a point is added, the canvas resizes or the colors change)
   const d=DPR(),W=tc.width/d,H=150;tctx.setTransform(d,0,0,d,0,0);tctx.clearRect(0,0,W,H);
   const l=34,r=W-8,t=8,b=H-20;
   tctx.font='11px "IBM Plex Mono",monospace';tctx.fillStyle=col.muted;tctx.strokeStyle=col.line;tctx.lineWidth=1;tctx.textAlign="right";

@@ -3,6 +3,7 @@
   G3.EXP={};let moversCache=null;
   // v4.2.5: scratch objects the frame reuses instead of allocating every frame (fewer garbage-collection hitches on phones).
   // placeTruck only reads its role, so one role object serves every truck.
+  const WDX=[-0.35,0,0.35];   // (v5.2: bale wire offsets, hoisted)
   const _tr={kind:"in",k:0,docked:false,d:0,leaving:false},TR=(kind,k,docked,d,leaving)=>{_tr.kind=kind;_tr.k=k;_tr.docked=docked;_tr.d=d;_tr.leaving=leaving;return _tr;};
   const q4=new THREE.Quaternion();
   G3.frameBody=function(rdt){if(PF.on){PF.t=performance.now();PF.frames++;}navPump();pm("walker route planning (2 ms/frame max)");
@@ -33,6 +34,10 @@
     S.inQ.forEach((t,k)=>placeTruck(t,TR("in",k,false,0,false),rdt));S.inDock.forEach((t,d)=>t&&placeTruck(t,TR("in",0,true,d,false),rdt));
     S.outQ.forEach((t,k)=>placeTruck(t,TR("out",k,false,0,false),rdt));S.outDock.forEach((t,d)=>t&&placeTruck(t,TR("out",0,true,d,false),rdt));
     S.leaving.forEach(t=>placeTruck(t,TR(t.kind,0,false,0,true),rdt));
+    // v5.2: a leaving truck that has driven off the map is dropped from the list (the sim never reads it); the ghost pass
+    // below then hides it and hands it back to the pool. Before, finished trucks stayed listed and parked off-map, drawn
+    // every frame: ~60 extra trucks and over 1,000 extra draws after ten sim days.
+    for(let i=S.leaving.length-1;i>=0;i--){const g=truckMap.get(S.leaving[i].id);if(g&&g.userData.done)S.leaving.splice(i,1);}
     // trucks the sim has finished with drive themselves off; capped at 6 and 90 s each so they can never pile up
     let ghosts=0;
     truckMap.forEach((g,t)=>{const u=g.userData;if(u.seen){u.ghost=0;return;}u.ghost=(u.ghost||0)+rdt;
@@ -44,7 +49,6 @@
     {const n=clamp(9+S.inQ.length*3+Math.floor(S.yard/250),5,24);G3.yardTr.forEach((g,i)=>g.visible=i<n);}
     // stock
     {const nB=Math.min(168,Math.ceil(S.yard/12));if(nB!==baleShown){baleShown=nB;bales.reset();for(let i=0;i<nB;i++)bales.put(gradeOf(i*7+1,false),baleM[i]);bales.done();}}
-    rolls.count=Math.min(84,Math.ceil(S.fg/(P.fgCap/84)));rolls.instanceMatrix.needsUpdate=true;
     // conveyor bales
     // bales ride the walking floor, lose their wires under the guillotine, then climb to the pulper
     const run=R.feed>0.3,GAP=2.6;if(run){const o=wfOff;wfOff=(wfOff+rdt*Math.min(2.2,0.35+R.feed*0.03))%GAP;if(wfOff<o)baleCyc++;}if(run&&G3.slats)G3.slats.offset.x=(G3.__sl=((G3.__sl||0)-rdt*Math.min(2.2,0.35+R.feed*0.03)/1.2)%1);
@@ -52,7 +56,7 @@
     if(run||S.yard>0){let k=0;for(let d=wfOff;d<LEND+1.7&&nb<24;d+=GAP,k++){const id=baleCyc-k,cut=d-PLEN[1];if(!run&&cut>0)continue;
         const gr=gradeOf(id,junk);
         if(cut<0.35){if(!pathAt(d,v3))break;m4.makeTranslation(v3.x,v3.y,v3.z);beltBales.put(gr,m4);nb++;if(Math.abs(v3.x-CUTX)<0.55&&d<PLEN[2])under=true;
-          if(d<PLEN[1]-0.3)for(const dx of [-0.35,0,0.35]){m4.makeTranslation(v3.x+dx,v3.y,v3.z);baleWires.setMatrixAt(nw++,m4);}continue;}
+          if(d<PLEN[1]-0.3)for(const dx of WDX){m4.makeTranslation(v3.x+dx,v3.y,v3.z);baleWires.setMatrixAt(nw++,m4);}continue;}
         const f=Math.pow(clamp((cut-0.35)/(LEND-PLEN[1]),0,1),0.65);
         for(let j=0;j<6&&nc<150;j++){const h1=hsh(id*7+j),h2=hsh(id*13+j*3),h3=hsh(id*29+j*5),lay=Math.floor(j/2);
           const along=(j%2?0.29:-0.29)*(1+2.4*f)+(h1-0.5)*1.6*f+lay*0.25*f,across=clamp((h2-0.5)*1.0*f,-0.3,0.3),dd=d+along;
@@ -155,7 +159,7 @@
       if(S.M.clampMul!==0)clampJob(g,i,rdt);}
     ensure(robots,P.robots,robot);
     robots.forEach((g,r)=>{if(r>=P.robots)return;const ph=S.M.clampMul===0?0.3:(V.rollsAnim*0.45+r*0.29)%2,t=ph<1?ph:2-ph,[x,z]=W(130+t*200,outY(r%P.shipDoors)+(r%2?6:-6));
-      g.position.set(x,0,z);g.userData.light.material=((now/400+r)|0)%2?M.ok:M.stock;});
+      g.position.set(x,0,z);{const l=g.userData.light,m=l.userData.bm||(l.userData.bm=l.material=M.stock.clone());m.color.copy((((now/400+r)|0)%2?M.ok:M.stock).color);}});   // (v5.2: blink by colour, see 39)
     pm("forklifts, clamp trucks, robots");
     // blackout dims the plant
     const out=S.inc.some(i=>i.id==="lightning"||(i.id==="birdline"&&!G3.cineHold));if(out){hemi.intensity=0.18*LEG;sun.intensity=0.12*LEG;}
@@ -186,7 +190,6 @@
         if(Z.mv){}
         else if(Z.goto){const g2=Z.goto;Z.goto=null;Z.who=null;const from={x:target.x,y:target.y,z:target.z,r:cam.r,th:cam.th,ph:cam.ph};
           Z.len=11;Z.mv={t:0,st:null,m:{name:"upset swoop",at:(t)=>{if(t>10)return null;const u=ease(t/4);return [mix(from.x,g2[0],u),mix(from.y,0,u),mix(from.z,g2[1],u),mix(from.r,55,u),from.th+(lerpAng(from.th,-0.3,1)-from.th)*u,mix(from.ph,0.85,u)];}}};}
-        else if(Z.goto){Z.who=null;Z.tg.set(Z.goto[0],0,Z.goto[1]);Z.r=55;Z.th=-0.3+(Math.random()-0.5)*0.8;Z.goto=null;}
         else if(ops.length&&Math.random()<0.45){Z.who=ops[Math.floor(Math.random()*ops.length)];Z.fo=Z.len;Z.r=34+Math.random()*14;Z.th=(Math.random()-0.5)*2.4;Z.tg.set(Z.who.position.x,0,Z.who.position.z);}
         else{Z.who=null;Z.i=(Z.i+1+Math.floor(Math.random()*(POI.length-1)))%POI.length;const q=POI[Z.i];Z.tg.set(q[0],0,q[1]);Z.r=q[2];Z.th=q[3];}
         // hard cut: jump the camera straight to the new shot
@@ -203,9 +206,9 @@
       q.set("env",nx);q.delete("mill");q.set("zen","1");diag("zen: on to "+nx);document.body.classList.add("zen-out");setTimeout(()=>{location.href=location.pathname+"?"+q.toString()+location.hash;},900);};G3.padTick(rdt);if(G3.tutTick)G3.tutTick(now);G3.labelIdle(now);upUpdate(now);pm("upgrade visuals");fxUpdate(rdt,now);if(G3.civTick)G3.civTick(rdt,now);pm("upset effects + particles");
     // area ambience: how close the camera is, and which part of the mill it's looking at
     G3.ambT=(G3.ambT||0)+rdt;if(G3.ambT>0.25){G3.ambT=0;const zk=clamp((150-cam.r)/90,0,1),x=target.x,z=target.z,near=(cx,cz,r)=>zk*clamp(1.3-Math.hypot(x-cx,z-cz)/r,0,1);
-      const run=S.pm==="run"?1:0.3,L={dryer:near(12,9,20)*run,wet:near(46,9,16)*run,winder:near(-17,8,13)*(S.wd==="run"?1:0.3),stock:near(24,-15,20)*(S.M.pulperDown?0.3:1),fork:0,out:0};
-      L.out=zk*clamp(1-Math.max(L.dryer,L.wet,L.winder,L.stock,L.fork)*1.5,0,1);AUDIO.ambient(L,zk);}
-    {const cw=G3.vw||host.clientWidth;G3.roofFade(cam.r*(cw<600?1.35:1)/(cw<600?1.35:1));}
+      const run=S.pm==="run"?1:0.3,L={dryer:near(12,9,20)*run,wet:near(46,9,16)*run,winder:near(-17,8,13)*(S.wd==="run"?1:0.3),stock:near(24,-15,20)*(S.M.pulperDown?0.3:1),out:0};
+      L.out=zk*clamp(1-Math.max(L.dryer,L.wet,L.winder,L.stock)*1.5,0,1);AUDIO.ambient(L,zk);}
+    G3.roofFade(cam.r);
     if(G3.shadowHz&&!G3.shadowsOff){const t=performance.now();if(!(t-(G3.shT||0)<1000/G3.shadowHz-3)){G3.shT=t;renderer.shadowMap.needsUpdate=true;}}
     placeCam();if(shake>0){camera.position.x+=(Math.random()-0.5)*shake;camera.position.y+=(Math.random()-0.5)*shake;camera.position.z+=(Math.random()-0.5)*shake;}
     // v2.8.8: zoomed out past the default view, trucks and parked trailers are specks, so they aren't drawn (they keep driving unseen)
@@ -227,7 +230,8 @@
     const w=G3.vw||host.clientWidth,hh=G3.vh||host.clientHeight,doText=now-lastLabel>200;if(doText)lastLabel=now;
     // v14: zoomed out, only the area labels and the landmark names show; closer in, the equipment labels and no landmarks
     const wide=camera.position.distanceTo(target)>400;
-    LABELS.forEach(L=>{const R=L.lb;if(L.land?!wide:(!L.area&&wide)){R.vis=false;return;}tmp.copy(L.v).project(camera);const vis=tmp.z<1&&Math.abs(tmp.x)<1.05&&Math.abs(tmp.y)<1.05;R.vis=vis;
+    // (v5.2: no projecting or text building while the section labels can't show: zen, hidden view, labels off)
+    if(!(G3.zen||LB.hid||labelHost.classList.contains("lbl-off")))LABELS.forEach(L=>{const R=L.lb;if(L.land?!wide:(!L.area&&wide)){R.vis=false;return;}tmp.copy(L.v).project(camera);const vis=tmp.z<1&&Math.abs(tmp.x)<1.05&&Math.abs(tmp.y)<1.05;R.vis=vis;
       if(!vis)return;R.x=Math.round((tmp.x+1)/2*w);R.y=Math.round((1-tmp.y)/2*hh);
       if(doText||R.a==null){const [a,b]=L.t();lblSet(R,a,b,!!(L.cls&&L.cls()));}});
     lblPaint(now);

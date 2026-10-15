@@ -6,19 +6,22 @@ const RC_STEPS=["Receiving","Pulper","Machine at full speed","Machine down","Win
   RC_LBL={"Machine at full speed":"Paper machine (speed limited)","Machine down":"Paper machine (machine down)"},   // v5.0.2: shown names (the keys stay: saves count by them)
   RC_SEC=[["recv","Receiving"],["pulper","Stock prep"],["machine","Paper machine"],["winder","Winder"],["ship","Shipping"]];
 function rcAcc(){return {t0:S.t,L0:{...S.ledger},prod0:S.tot.prodT,ship0:S.shipT||0,rolls0:S.tot.rolls,brk0:S.tot.breaks,hay0:S.tot.hayouts,off0:S.tot.broke||0,occ:0,fib:0,min:0,plan:0,up:{recv:0,pulper:0,machine:0,winder:0,ship:0},dn:{},bn:{}};}
+const RC_UP={recv:false,pulper:false,machine:false,winder:false,ship:false},RC_ACC=[null,null,null],rcAdd=(a,k,v)=>{a.dn[k]=(a.dn[k]||0)+v;};
 function rcTick(dt){const se=S.season;if(!se||!se.on||se.done||dt<=0)return;
   if(!S.rc)S.rc={i:0,p:rcAcc(),s:rcAcc(),cards:[]};const R=S.rc,M=S.M||{},planned=!!(S.outg&&S.outg.on);
-  const up={recv:!(M.noIn||M.docksClosed||M.recvMul===0),pulper:!M.pulperDown,machine:S.pm==="run",winder:S.wd==="run"&&!M.winderDown,ship:!(M.noOut||M.clampMul===0)};
+  const up=RC_UP;up.recv=!(M.noIn||M.docksClosed||M.recvMul===0);up.pulper=!M.pulperDown;up.machine=S.pm==="run";up.winder=S.wd==="run"&&!M.winderDown;up.ship=!(M.noOut||M.clampMul===0);
   // downtime causes: every active upset by name, plus machine/winder stops that no upset explains
-  const add=(a,k,v)=>{a.dn[k]=(a.dn[k]||0)+v;};
+  const add=rcAdd;
   if(!R.dd){R.dd=rcAcc();R.day=Math.floor(S.t/1440);}
   // v4.2.4 (Mill report): the day's grades are kept at each midnight, with the day's biggest downtime cause
   if(Math.floor(S.t/1440)>R.day){const c=rcMake(R.p,R.i),top=Object.entries(R.dd.dn).sort((x,y)=>y[1]-x[1])[0];(R.days||(R.days=[])).push({d:R.day+1,g:c.g,o:c.overall,top:top?[top[0],Math.round(top[1])]:null});if(se.surv&&R.days.length>60)R.days.shift();R.day=Math.floor(S.t/1440);R.dd=rcAcc();}
   const feedT=(S.rates.feed||0)*dt/60,fibT=feedT*P.yieldF*(M.yieldMul||1);
-  [R.p,R.s,R.dd].forEach(a=>{a.min+=dt;if(planned){a.plan+=dt;return;}a.occ+=feedT;a.fib+=fibT;for(const k in up)if(up[k])a.up[k]+=dt;
-    S.inc.forEach(i=>{const e=EV[i.id];if(e&&i.id!=="runner"&&i.id!=="birdhay")add(a,e.name,dt);});
+  // (v5.2: plain loops, no per-step arrays or closures; same order, so the sums are identical)
+  RC_ACC[0]=R.p;RC_ACC[1]=R.s;RC_ACC[2]=R.dd;
+  for(let n=0;n<3;n++){const a=RC_ACC[n];a.min+=dt;if(planned){a.plan+=dt;continue;}a.occ+=feedT;a.fib+=fibT;for(const k in up)if(up[k])a.up[k]+=dt;
+    for(const i of S.inc){const e=EV[i.id];if(e&&i.id!=="runner"&&i.id!=="birdhay")add(a,e.name,dt);}
     if(S.pm==="break")add(a,"Sheet breaks",dt);else if(S.pm==="down"&&!M.pmDown)add(a,"Ran out of stock",dt);else if(S.pm==="full")add(a,"Warehouse full",dt);else if(S.pm==="spools")add(a,"Reel storage full",dt);
-    if(S.wd==="hayout")add(a,"Winder hayouts",dt);});
+    if(S.wd==="hayout")add(a,"Winder hayouts",dt);}
   // what limited production, sampled every 10 sim minutes: the machine when it runs flat out or is down; upstream when it is
   // starved (empty bale yard = receiving, otherwise the pulper); the winder when reels back up; shipping when the warehouse is full
   R.bt=(R.bt||0)+dt;if(R.bt>=10){if(!planned){const k=rcLimit();[R.p,R.s].forEach(a=>{a.bn[k]=(a.bn[k]||0)+R.bt;});}R.bt=0;}
@@ -94,7 +97,7 @@ function seasonTick(){const se=S.season;if(!se||!se.on||se.done)return;
   if(se.surv){if(S.cash<ECON.bankrupt)endSurvival();return;}   // v4.3 survival: no last day, only bankruptcy
   if(S.t>=se.end||S.cash<ECON.bankrupt)endSeason(S.cash<ECON.bankrupt);}
 function seasonResult(){return {score:Math.round(S.cash-ECON.start),tons:Math.round(S.shipT||0),incidents:S.tot.incidents,mill:MILL.name.slice(0,40),version:APP_VER.slice(0,12),days:SEASON_DAYS};}
-function endSeason(bust){const se=S.season;if(typeof civDrop==="function")civDrop();se.done=true;se.on=false;running=false;if(G3.save&&G3.save.drop)G3.save.drop();   // v5.0.3: the season is over, so its save goes
+function endSeason(bust){const se=S.season;civDrop();se.done=true;se.on=false;running=false;if(G3.save&&G3.save.drop)G3.save.drop();   // v5.0.3: the season is over, so its save goes
   if(document.body.classList.contains("fs"))setFS(false);seasonLocks(false);
   const r=seasonResult();se.result=r;AUDIO.sfx(r.score>0?"win":"lose",100);
   soMode(false);$("so-h").textContent=bust?"Season over: bankrupt":"Season complete";
@@ -167,7 +170,7 @@ async function openBoard(tab){if(tab!=="season"&&tab!=="surv")tab=survRun()?"sur
   {const se=S.season,rk=se&&se.rank,res=se&&se.result;if(rk&&res&&se.submitted&&(tab==="surv")===!!se.surv){if(rk.rank<=rows.length){const row=L.children[rk.rank-1];if(row){row.classList.add("me","mine");row.scrollIntoView({block:"center"});}}
     else{const d=document.createElement("div");d.className="lbrow me mine pin";const mk=(c,t)=>Object.assign(document.createElement("span"),{className:c,textContent:t});
       d.append(mk("r",rk.rank),mk("n",se.submitted),mk("sc",sv?survTime(res.minutes):money(res.score)),mk("m",[sv?"wave "+res.wave:"",f0(res.tons)+" t shipped",res.incidents+" upsets",new Date().toLocaleDateString(undefined,{month:"short",day:"numeric"}),"your run",res.mill].filter(Boolean).join(" · ")));L.append(d);d.scrollIntoView({block:"center"});}}}}
-function setFree(on){S.free=on;if(on&&typeof civDrop==="function")civDrop();   // (v5.1 QA: a choice card would otherwise keep the game paused)
+function setFree(on){S.free=on;if(on)civDrop();   // (v5.1 QA: a choice card would otherwise keep the game paused)
   if(on&&S.season&&S.season.on){const sv=survRun();if(G3.save&&G3.save.drop)G3.save.drop();S.season=null;S.lead=null;applyUpgrades();seasonLocks(false);BANNERS.push({text:(sv?"Survival run":"Season")+" abandoned: free play scores can't go on the leaderboard.",t:null});}
   if(on)BANNERS.push({text:"Free play: upgrades are free and you can't go bankrupt. No leaderboard.",t:null,kind:"good"});
   if(on&&G3.labelIntro)G3.labelIntro();
@@ -178,7 +181,7 @@ let ZEN=null;
 let grainDone=false;function makeGrain(){if(grainDone)return;grainDone=true;const c=document.createElement("canvas");c.width=c.height=128;const x=c.getContext("2d"),im=x.createImageData(128,128);for(let i=0;i<im.data.length;i+=4){const v=Math.random()*255|0;im.data[i]=im.data[i+1]=im.data[i+2]=v;im.data[i+3]=255;}
   x.putImageData(im,0,0);document.documentElement.style.setProperty("--grain",`url(${c.toDataURL()})`);}
 function setZen(on){if(on===!!ZEN)return;
-  if(on){makeGrain();if(typeof civDrop==="function")civDrop();if(S.season&&S.season.on){if(G3.save&&G3.save.drop)G3.save.drop();S.season=null;S.lead=null;applyUpgrades();seasonLocks(false);}
+  if(on){makeGrain();civDrop();if(S.season&&S.season.on){if(G3.save&&G3.save.drop)G3.save.drop();S.season=null;S.lead=null;applyUpgrades();seasonLocks(false);}
     ZEN={speed:C.simSpeed,chaos:CH.on,hays:C.hays,breaks:C.breaks,view:G3.on};
     S.inc=[];if(S.wd==="hayout")S.wd="run";if(S.pm==="break"){S.pm="run";}BANNERS.length=0;S.zen=true;
     CH.on=false;$("chaosOn").checked=false;C.hays=false;C.breaks=false;
@@ -214,51 +217,57 @@ function updateChaos(){
     if(!S.feed.length){const s=document.createElement("span");s.textContent="No upsets yet.";fd.appendChild(s);}
     S.feed.forEach(x=>{const d=document.createElement("div");d.className=x.cls;const t=document.createElement("span");t.textContent=hhmm(x.t)+"  ";d.appendChild(t);d.append(x.text);fd.appendChild(d);});}
 }
-function pill(id,text,cls){const el=$(id);el.textContent=text;el.className="pill "+(cls||"");}
+function pill(id,text,cls){const el=$(id),c="pill "+(cls||"");if(el.textContent!==text)el.textContent=text;if(el.className!==c)el.className=c;}
 const f0=v=>Math.round(v).toLocaleString(), f1=v=>v.toFixed(1);
 function hhmm(t){t+=360;const day=Math.floor(t/1440),h=Math.floor((t%1440)/60),base=(S&&S.date0)||new Date().setHours(0,0,0,0);
   const d=new Date(base+day*864e5),h12=h%12||12;return `${d.toLocaleDateString(undefined,{weekday:"short",month:"short",day:"numeric"})} · ${h12} ${h<12?"AM":"PM"}`;}
 
 function updateText(){
+  // v5.2: compare before writing, and only fill what is on screen: the top bar's mirrored figures always (51-app-shell
+  // copies them), the Stats pane's figures while it is open, the area cards while Settings > Area controls is open
   const R=S.rates,level=S.tank/P.tankCap*100,days=Math.max(S.t/1440,1/1440);
-  $("k-clock").textContent=hhmm(S.t)+(S.wx&&S.wx!=="clear"?" · "+WXN[S.wx]:"");
-  $("k-clock-s").textContent=`${simRate()} sim min per second`;
-  $("k-speed").textContent=f0(S.pmSpeed)+" fpm";
-  $("k-speed-s").textContent=`max ${f0(C.pmSp.v)} · ${C.grade}`;
-  $("k-prod").textContent=f1(R.prod)+" t/h";
-  $("k-prod-s").textContent=`${f0(S.tot.prodT)} t made · ${f0(S.tot.prodT/days)} t/day`;
-  $("k-cash").textContent=money(S.cash);$("k-cash-box").classList.toggle("neg",S.cash<0);
-  $("k-cash-s").textContent=S.cash<0?`bankrupt at ${money(ECON.bankrupt)}`:(d=>d>=0?`${money(d)} made so far`:`${money(-d)} down so far`)(S.cash-ECON.start);
-  {const t=S.t>=1440?money(S.profitRate)+"/day":"after day 1";$("k-profit").textContent=t;$("k-profit").style.color=/^[−-]/.test(t)?"var(--bad)":"var(--ink)";}
-  $("k-profit-s").textContent=`operating, last 12 h · ${money(priceOf(C.grade))}/t`;
-  $("k-tank").textContent=f0(level)+" %";
+  const txt=(id,v)=>{const e=$(id);if(e.textContent!==v)e.textContent=v;};
+  txt("k-prod",f1(R.prod)+" t/h");
+  txt("k-prod-s",`${f0(S.tot.prodT)} t made · ${f0(S.tot.prodT/days)} t/day`);
+  if(paneShown($("repLive"))&&$("repLive").open){
+    txt("k-clock",hhmm(S.t)+(S.wx&&S.wx!=="clear"?" · "+WXN[S.wx]:""));
+    txt("k-clock-s",`${simRate()} sim min per second`);
+    txt("k-speed",f0(S.pmSpeed)+" fpm");
+    txt("k-speed-s",`max ${f0(C.pmSp.v)} · ${C.grade}`);
+    txt("k-cash",money(S.cash));$("k-cash-box").classList.toggle("neg",S.cash<0);
+    txt("k-cash-s",S.cash<0?`bankrupt at ${money(ECON.bankrupt)}`:(d=>d>=0?`${money(d)} made so far`:`${money(-d)} down so far`)(S.cash-ECON.start));
+    {const t=S.t>=1440?money(S.profitRate)+"/day":"after day 1";txt("k-profit",t);$("k-profit").style.color=/^[−-]/.test(t)?"var(--bad)":"var(--ink)";}
+    txt("k-profit-s",`operating, last 12 h · ${money(priceOf(C.grade))}/t`);
+  }
+  txt("k-tank",f0(level)+" %");
   const net=R.fiberIn-R.fiberUse;
-  $("k-tank-s").textContent=`${net>=0?"+":"−"}${f1(Math.abs(net))} t/h ${Math.abs(net)<0.5?"balanced":net>0?"building":"draining"}`;
-  $("k-yard").textContent=f0(S.yard)+" t";
-  $("k-yard-s").textContent=R.feed>0.5?`${f1(S.yard/R.feed)} h of pulper feed`:"pulper not feeding";
-  $("k-fg").textContent=f0(S.fg)+" rolls";
-  $("k-fg-s").textContent=`${f0(S.tot.shipped)} shipped`;
+  txt("k-tank-s",`${net>=0?"+":"−"}${f1(Math.abs(net))} t/h ${Math.abs(net)<0.5?"balanced":net>0?"building":"draining"}`);
+  txt("k-yard",f0(S.yard)+" t");
+  txt("k-yard-s",R.feed>0.5?`${f1(S.yard/R.feed)} h of pulper feed`:"pulper not feeding");
+  txt("k-fg",f0(S.fg)+" rolls");
+  txt("k-fg-s",`${f0(S.tot.shipped)} shipped`);
 
+  if(!(paneShown($("cards"))&&$("areactl").open))return;
   // pills + readouts
   pill("p-in",S.tot.turned?`${S.tot.turned} turned away`:S.inQ.length>2?`${S.inQ.length} waiting`:"flowing",S.tot.turned?"bad":S.inQ.length>2?"warn":"ok");
-  $("r-in").textContent=`${S.tot.inTrucks} trucks · ${f0(S.tot.inTons)} t received · queue ${S.inQ.length} · at doors ${S.inDock.filter(Boolean).length}/${P.doors}`;
+  txt("r-in",`${S.tot.inTrucks} trucks · ${f0(S.tot.inTons)} t received · queue ${S.inQ.length} · at doors ${S.inDock.filter(Boolean).length}/${P.doors}`);
   const recCap=S.effDrv*P.driverRate*S.M.recvMul, recUse=(P.autoFeed?0:R.feed)+R.unload;
   pill("p-rec",S.M.crewAtPM?"crew at the PM":S.yard<1?"yard empty":recUse>recCap*0.95?"crew maxed":S.yard>=P.yardCap-1?"yard full":"ok",S.M.crewAtPM?"warn":S.yard<1?"bad":recUse>recCap*0.95||S.yard>=P.yardCap-1?"warn":"ok");
-  $("r-rec").textContent=`${S.effDrv<C.drivers.v?`Only ${S.effDrv} of ${C.drivers.v} working · `:""}Crew ${f0(recUse)}/${f0(recCap)} t/h busy · feeding ${f1(R.feed)} · unloading ${f1(R.unload)} t/h`;
+  txt("r-rec",`${S.effDrv<C.drivers.v?`Only ${S.effDrv} of ${C.drivers.v} working · `:""}Crew ${f0(recUse)}/${f0(recCap)} t/h busy · feeding ${f1(R.feed)} · unloading ${f1(R.unload)} t/h`);
   const pulHold=level>97, pulStarve=R.feed<C.pulper.v*0.9&&C.pulper.v>1&&!pulHold;
   pill("p-pul",S.M.pulperDown?"down: upset":pulHold?"hold: chest full":pulStarve?"short of bales":C.pulper.v<0.5?"off":"running",S.M.pulperDown?"bad":pulHold||pulStarve?"warn":C.pulper.v<0.5?"":"ok");
-  $("r-pul").textContent=`Fed ${f1(R.feed)} t/h OCC → ${f1(R.fiberIn)} t/h fiber (88% yield)`;
+  txt("r-pul",`Fed ${f1(R.feed)} t/h OCC → ${f1(R.fiberIn)} t/h fiber (88% yield)`);
   pill("p-tank",level<5?"empty":level<C.lowLevel.v?"low":level>95?"full":"ok",level<C.lowLevel.v?"bad":level>95?"warn":"ok");
-  $("r-tank").textContent=`${f0(S.tank)} of ${P.tankCap} t · in ${f1(R.fiberIn)} · out ${f1(R.fiberUse)} t/h`;
+  txt("r-tank",`${f0(S.tank)} of ${P.tankCap} t · in ${f1(R.fiberIn)} · out ${f1(R.fiberUse)} t/h`);
   const pmTxt={run:S.pmSpeed<C.pmSp.v-40&&level<C.lowLevel.v?"slowed: low stock":S.pmSpeed<C.pmSp.v-40?"ramping":"at max speed",break:"sheet break",down:"down: no stock",full:"down: warehouse full",spools:"down: winder backed up",incident:"down: "+(S.M.pmDown||"upset")}[S.pm];
   pill("p-pm",pmTxt,S.pm==="run"?(pmTxt==="at max speed"?"ok":"warn"):"bad");
   const eff=S.t>0?100*(1-S.tot.breakMin/S.t):100;
-  $("r-pm").textContent=`${f1(R.prod/C.rollW.v)} rolls/h · ${S.tot.turnups} reels turned up · ${S.tot.breaks} breaks · ${f0(eff)}% sheet time`;
+  txt("r-pm",`${f1(R.prod/C.rollW.v)} rolls/h · ${S.tot.turnups} reels turned up · ${S.tot.breaks} breaks · ${f0(eff)}% sheet time`);
   const reelsW=Math.max(0,reelsAtWinder()-1);
   pill("p-wd",S.wd==="hayout"?"hayout: "+(working("hay")?"crew cleaning":crewState("hay")||"crew cleaning"):S.M.winderDown?"winder down":S.wdBlocked?"roll conveyor full":reelsW>=P.storeReels?"storage full":R.cut>0.5?"winding":"waiting for reel",S.wd==="hayout"||S.M.winderDown||S.wdBlocked?"bad":reelsW>=P.storeReels?"warn":R.cut>0.5?"ok":"");
-  $("r-wd").textContent=`${reelsW}/${P.storeReels} reels in storage · ${Math.floor(S.conv||0)}/${P.convCap} rolls on the conveyor · cutting ${f1(R.cut)} t/h · ${S.tot.hayouts} hayouts · ${f1(S.tot.broke)} t broke`;
+  txt("r-wd",`${reelsW}/${P.storeReels} reels in storage · ${Math.floor(S.conv||0)}/${P.convCap} rolls on the conveyor · cutting ${f1(R.cut)} t/h · ${S.tot.hayouts} hayouts · ${f1(S.tot.broke)} t broke`);
   const shipCap=S.effLd*P.loaderRate*S.M.clampMul;
   pill("p-ship",S.M.crewAtPM?"crew at the PM":S.fg>=P.fgCap-1?"warehouse full":S.conv>P.convCap*0.7?"rolls waiting for clamps":S.outQ.length>2?`${S.outQ.length} trucks waiting`:S.fg<5&&S.outDock.some(Boolean)?"no rolls":"ok",S.M.crewAtPM?"warn":S.fg>=P.fgCap-1?"bad":S.outQ.length>2||(S.fg<5&&S.outDock.some(Boolean))?"warn":"ok");
-  $("r-ship").textContent=`${S.effLd<C.loaders.v?`Only ${S.effLd} of ${C.loaders.v} loaders · `:""}Putting away ${f1(R.put||0)} rolls/h · loading ${f1(R.load)} of ${f0(shipCap)} rolls/h · ${S.outDock.filter(Boolean).length}/${P.shipDoors} doors · ${S.tot.shipped/P.truckRolls} trucks out`;
+  txt("r-ship",`${S.effLd<C.loaders.v?`Only ${S.effLd} of ${C.loaders.v} loaders · `:""}Putting away ${f1(R.put||0)} rolls/h · loading ${f1(R.load)} of ${f0(shipCap)} rolls/h · ${S.outDock.filter(Boolean).length}/${P.shipDoors} doors · ${S.tot.shipped/P.truckRolls} trucks out`);
 }
 

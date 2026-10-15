@@ -90,7 +90,7 @@
     $("v2sub").hidden=first;$("v2surv").hidden=!first;$("v2nameRow").hidden=true;   // (Survival sits under Season on the first menu; once a run is on, "New survival" is with "New season")
     $("v2state").textContent=first?"":"Paused";
     $("v2free").querySelector("b").textContent=S.free?"Free play: on":"Free play";$("v2free").setAttribute("aria-pressed",String(!!S.free));$("v2ver").textContent=APP_VER;menu.hidden=false;}
-  function play(){menu.hidden=true;first=false;if(G3.titleHide)G3.titleHide();const lc=document.getElementById("leadCard");running=!((S.cards&&S.cards.open)||(lc&&!lc.hidden)||(G3.tut&&G3.tut.on));}   // v5.0.3: an open card, outage plan or report card keeps the sim paused until it is answered (v5.0.5: and the leader card and tutorial)   // v5.0.3: an open card, outage plan or report card keeps the sim paused until it is answered
+  function play(){menu.hidden=true;first=false;if(G3.titleHide)G3.titleHide();if(G3.civReset)G3.civReset();const lc=document.getElementById("leadCard");running=!((S.cards&&S.cards.open)||(lc&&!lc.hidden)||(G3.tut&&G3.tut.on));}   // v5.0.3: an open card, outage plan or report card keeps the sim paused until it is answered (v5.0.5: and the leader card and tutorial)   // v5.0.3: an open card, outage plan or report card keeps the sim paused until it is answered
   G3.showMenu=showMenu;G3.play=play;Object.defineProperty(G3,"first",{get:()=>first,configurable:true});   // play: used by the autotest (52b) to start without the tutorial
   // ---- v3.1.0 quick-start tutorial: shown when a season starts (until the player ticks "don't show again") ----
   const TUT=(()=>{

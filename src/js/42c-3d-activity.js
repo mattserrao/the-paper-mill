@@ -54,15 +54,12 @@
        for half a minute: cowboys ride across the desert flats, Bigfoot steps out of the valley woods, a tugboat steams
        across the city bay, a gator bites the hand off an operator on the bayou bank (an Amos Moses nod). Purely visual: random timing (not the sim's
        dice), no costs, no production effect, nothing logged. ?sight=1 shows one a few seconds in, then every 40 s. ---- */
-    {const Q=new URLSearchParams(location.search),FAST=Q.has("sight"),pathAt=(P,s)=>{let i=1,L=0;for(;i<P.length;i++){const d=Math.hypot(P[i][0]-P[i-1][0],P[i][1]-P[i-1][1]);if(L+d>=s||i===P.length-1){const f=Math.min(1,(s-L)/Math.max(1e-6,d));
-          return [P[i-1][0]+(P[i][0]-P[i-1][0])*f,P[i-1][1]+(P[i][1]-P[i-1][1])*f,Math.atan2(-(P[i][1]-P[i-1][1]),P[i][0]-P[i-1][0])];}L+=d;}return [P[0][0],P[0][1],0];},
-        plen=P=>{let L=0;for(let i=1;i<P.length;i++)L+=Math.hypot(P[i][0]-P[i-1][0],P[i][1]-P[i-1][1]);return L;};
-      let sight=null;const pick2=a=>a[Math.floor(Math.random()*a.length)],rr2=(a,b)=>a+Math.random()*(b-a);
+    {const Q=new URLSearchParams(location.search),FAST=Q.has("sight");
+      let sight=null;const rr2=(a,b)=>a+Math.random()*(b-a);
       // a person-shaped figure (operator, rider): legs, body, arms, head, a hat
       const figure=(g,body,hat,hatK,y0=0,big=1)=>{const p={};p.l=[-1,1].map(s=>part(g,0.2*big,0.8*big,0.22*big,0,y0,s*0.14*big,"dark","#2f3a49"));p.b=part(g,0.3*big,0.7*big,0.5*big,0,y0+0.8*big,0,"body"+body,body);
         p.a=[-1,1].map(s=>part(g,0.16*big,0.62*big,0.16*big,0,y0+0.86*big,s*0.33*big,"body"+body,body));p.h=part(g,0.28*big,0.28*big,0.28*big,0,y0+1.52*big,0,"skin","#e0b48c");
         if(hat)p.hat=part(g,hatK==="wide"?0.75:0.36,0.12,hatK==="wide"?0.75:0.36,0,y0+1.78*big,0,"hat"+hat,hat);if(hat&&hatK==="wide")part(g,0.34,0.24,0.34,0,y0+1.86,0,"hat"+hat,hat);return p;};
-      const swing=(p,t,k=1)=>{if(p.l){p.l[0].rotation.z=Math.sin(t)*0.5*k;p.l[1].rotation.z=-Math.sin(t)*0.5*k;}if(p.a){p.a[0].rotation.z=-Math.sin(t)*0.6*k;p.a[1].rotation.z=Math.sin(t)*0.6*k;}};
       // ---- v4.2.3 shared builders for the sights (all built once at start-up, hidden) ----
       const BX=(p,w,h,d,x,y,z,k,hex)=>{const m=new THREE.Mesh(cubeG,am(k,hex));m.scale.set(w,h,d);m.position.set(x,y,z);m.castShadow=true;p.add(m);return m;},
         PIV=(p,x,y,z)=>{const g=new THREE.Group();g.position.set(x,y,z);p.add(g);return g;},

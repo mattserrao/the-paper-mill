@@ -36,7 +36,7 @@
     const st=new THREE.CanvasTexture(sc);st.colorSpace=THREE.SRGBColorSpace;const bm=new StdMat({map:st,roughness:0.6});
     [[-1.6,1],[14.6,-1]].forEach(([z,dir])=>{box(0.5,1.1,0.5,M.ink,FENCE.x0,0.55,z,scene,false);const arm=new THREE.Group();arm.position.set(FENCE.x0,1.05,z);scene.add(arm);
       const a=new THREE.Mesh(new THREE.BoxGeometry(0.16,0.16,4.2),bm);a.position.z=-dir*2.1;arm.add(a);arm.rotation.x=dir*1.15;});
-    ENV.gate=[gx,gz];}
+}
   // truck scale where the inbound queue stops, with a scale house and a weight display
   {box(8,0.14,3.0,M.steel,-40.7,0.07,-3.8,scene,false);[-4,4].forEach(dx=>box(0.12,0.16,3.0,M.lane,-40.7+dx,0.09,-3.8,scene,false));
     box(3.2,2.6,2.4,conc,-41,1.3,-0.4);box(3.5,0.22,2.7,M.roofFlat,-41,2.7,-0.4);box(2.2,0.8,0.08,M.wind,-41,1.7,-1.62,scene,false);
@@ -188,10 +188,10 @@
     const poolM=new THREE.MeshBasicMaterial({map:poolT,color:lin0("#ffd98a"),transparent:true,opacity:0,depthWrite:false,polygonOffset:true,polygonOffsetFactor:-4,polygonOffsetUnits:-4,}),pools=new THREE.InstancedMesh(new THREE.PlaneGeometry(9,9),poolM,L.length);pools.renderOrder=3;
     const m4=new THREE.Matrix4(),rx=new THREE.Matrix4().makeRotationX(-Math.PI/2);
     L.forEach(([x,z],k)=>{m4.makeTranslation(x,3,z);pole.setMatrixAt(k,m4);m4.makeTranslation(x,6,z);head.setMatrixAt(k,m4);m4.makeTranslation(x,0.1,z).multiply(rx);pools.setMatrixAt(k,m4);});
-    scene.add(pole,head,pools);ENV.lampHead=head.material;ENV.lampPool=poolM;}
+    scene.add(pole,head,pools);ENV.lampHead=head.material;ENV.lampPool=poolM;ENV.lampPoolMesh=pools;}
   // puddles show up on the asphalt when it has been raining
   {ENV.pudM=new StdMat({color:lin0("#5d6a80"),roughness:0.05,metalness:0.3,transparent:true,opacity:0,depthWrite:false,polygonOffset:true,polygonOffsetFactor:-2,polygonOffsetUnits:-2});
-    [[-70,-3.8,3,1],[-55,-3.4,2,0.8],[-40,-12,2.6,1.4],[-55,22,3,1.6],[-80,12.6,2.4,0.8],[72,46,3,1.6],[80,52,2,1],[30,32.6,2.4,1],[-30,-30,2,1]].forEach(([x,z,a,b])=>{const p=new THREE.Mesh(new CircG(1,20),ENV.pudM);p.rotation.x=-Math.PI/2;p.scale.set(a,b,1);p.position.set(x,0.045,z);scene.add(p);});}
+    [[-70,-3.8,3,1],[-55,-3.4,2,0.8],[-40,-12,2.6,1.4],[-55,22,3,1.6],[-80,12.6,2.4,0.8],[72,46,3,1.6],[80,52,2,1],[30,32.6,2.4,1],[-30,-30,2,1]].forEach(([x,z,a,b])=>{const p=new THREE.Mesh(new CircG(1,20),ENV.pudM);(ENV.pudMeshes||(ENV.pudMeshes=[])).push(p);p.rotation.x=-Math.PI/2;p.scale.set(a,b,1);p.position.set(x,0.045,z);scene.add(p);});}
   function cloth0b(h){return new StdMat({color:lin0(h),roughness:0.6});}
   // painted walkway and zone lines
   [[-25,64,2.9],[-25,64,16.4]].forEach(([a,b,z])=>{for(let x=a;x<b;x+=2.4)box(1.3,0.02,0.14,M.lane,x,0.06,z,scene,false);});

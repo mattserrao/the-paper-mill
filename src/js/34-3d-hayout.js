@@ -67,7 +67,7 @@
       if(hk==="wrap"){const wi=S.inc.find(x=>x.id==="wrap"),cx=canX(wi?wi.can:5);const order=HOME.map((h,j)=>[Math.abs(h[0]-cx),j]).sort((a,b)=>a[0]-b[0]).map(a=>a[1]),r=order.indexOf(i);
         if(r<3){wrapWho.add(i);const gx=cx-1.6+r*1.6,gz=13.5,ok=moveP(w,gx,gz,9,rdt);
           if(ok){face(w,gx,zc,rdt);here=true;const prog=wi&&wi.go?1-wi.left/wi.total:0;
-            if(prog<0.7){pose(w,"spear",now);const a=w.rotation.y,j=Math.sin(now/180+r*2)*0.35;stretch2(spears[r],w.position.x+Math.cos(a)*0.5,1.45,w.position.z-Math.sin(a)*0.5,cx-0.6+r*0.6,5.9+j*0.3,zc+CD/2-1.1-j);
+            if(prog<0.7){pose(w,"spear",now);const a=w.rotation.y,j=Math.sin(now/180+r*2)*0.35;stretch(spears[r],w.position.x+Math.cos(a)*0.5,1.45,w.position.z-Math.sin(a)*0.5,cx-0.6+r*0.6,5.9+j*0.3,zc+CD/2-1.1-j);
               if(wi&&wi.go&&Math.random()<rdt*8)emit("chip",cx+R()*1.5,6+Math.random(),zc+CD/2-1,R()*2,2+Math.random()*2,2+Math.random()*2,1.2,0.3,"#c8a477",1);}
             else pose(w,"rethread",now);}
           else pose(w,"run",now);return;}}

@@ -410,7 +410,6 @@ body.season-lock label.check:has(#breaks),body.season-lock label.check:has(#hays
 #tut h2{margin:0;font:800 22px/1.15 var(--f-display)}
 #tut p{margin:0;font:400 14.5px/1.5 var(--f-body);color:var(--ink)}
 #tut ul{margin:0;padding-left:18px;font:400 14px/1.45 var(--f-body);color:var(--ink)}#tut li{margin:3px 0}
-#tut .num{display:inline-grid;place-items:center;min-width:22px;height:22px;border-radius:7px;background:var(--brand);color:#fff;font:800 12px var(--f-body);margin-right:8px;vertical-align:2px}
 #tut .fig{background:#e4e8ee;border-radius:12px;padding:8px 8px 2px}
 .flowbox{color:var(--ink);background:var(--bg);border-radius:12px;padding:8px 8px 6px;margin-bottom:6px}.flowbox svg text{font-family:var(--f-body)}
 .flowbox .flowtip{margin:4px 4px 0;font:500 12px/1.4 var(--f-body);color:var(--muted)}
@@ -488,14 +487,7 @@ body.season-lock label.check:has(#breaks),body.season-lock label.check:has(#hays
 .envs ul{margin:0;padding:0;list-style:none;display:flex;flex-direction:column;gap:2px;font-size:13px}
 .envs li{padding-left:16px;position:relative}.envs li::before{position:absolute;left:2px;font-weight:700}
 .envs li.pro::before{content:"+";color:var(--ok)}.envs li.con::before{content:"−";color:var(--bad)}
-.seedrow{display:flex;gap:12px;align-items:center;flex-wrap:wrap}
-.seedrow canvas{width:200px;height:100px;border-radius:8px;border:1px solid var(--line);flex:none}
-.seedctl{display:flex;flex-direction:column;gap:4px;min-width:150px;flex:1}
-.seedctl label{font:600 12px var(--f-body);letter-spacing:.08em;text-transform:uppercase;color:var(--muted)}
-.seedin{display:flex;gap:6px}.seedin input{flex:1;min-width:0;font:600 15px var(--f-mono);padding:8px 10px;border:1px solid var(--line);border-radius:10px;background:var(--bg);color:var(--ink)}
-.seedin button{padding:6px 10px;border-radius:10px;font-size:17px}
-.seedctl small{font-size:12px;color:var(--muted)}
-@media (max-width:560px){.envs{grid-template-columns:1fr}.seedrow canvas{width:100%;height:auto;aspect-ratio:2/1}}
+@media (max-width:560px){.envs{grid-template-columns:1fr}}
 .bncard{display:flex;flex-direction:column;gap:2px;margin:0 0 12px;padding:9px 12px;border:1px solid var(--bad);border-left-width:4px;border-radius:8px;background:color-mix(in srgb,var(--bad) 7%,var(--panel))}
 .bncard[hidden]{display:none}.bncard b{font:700 14px var(--f-body);color:var(--bad)}.bncard span{font-size:12.5px;color:var(--muted)}
 .bncard.ok{border-color:var(--ok);background:color-mix(in srgb,var(--ok) 7%,var(--panel))}.bncard.ok b{color:var(--ok)}
@@ -504,9 +496,7 @@ body.season-lock label.check:has(#breaks),body.season-lock label.check:has(#hays
 .anybtn b{font:700 13.5px var(--f-body)}.anybtn small{font-size:12px;color:var(--muted)}
 .anybtn[aria-pressed="true"]{border:2px solid var(--stock);padding:7px 11px}
 .envs.any button{opacity:.55}
-.seedctl .check{font-size:12px;color:var(--muted);display:flex;gap:6px;align-items:center;margin-top:2px}
 .ev .envtag{font-style:normal;font:700 12px var(--f-display);letter-spacing:.06em;text-transform:uppercase;color:var(--stock);border:1px solid var(--stock);border-radius:3px;padding:0 4px;margin-left:5px;vertical-align:middle}
-.seedctl .check{text-transform:none;letter-spacing:0;font-weight:500}
 body.zen-out{transition:opacity .8s ease;opacity:0}
 
 /* v4.2.1: area controls fold away; locked on AUTO in a season */
@@ -708,9 +698,6 @@ button.ldcard[aria-checked="true"]{border:2px solid var(--stock);padding:9px;bac
 .modal.ldone{max-width:440px;width:100%;max-height:calc(100dvh - 32px);overflow:auto;gap:10px}
 .ldone .ldcard{background:var(--chip);border-color:transparent}
 .ldone h3{font:700 14px var(--f-body);margin:4px 0 0;display:flex;flex-wrap:wrap;justify-content:space-between;align-items:baseline;gap:2px 8px;white-space:nowrap}.ldone h3 small{font-weight:500;font-size:12px;color:var(--muted)}
-.ldfx{display:flex;justify-content:space-between;align-items:center;gap:10px;padding:8px 0;border-top:1px solid var(--line)}
-.ldfx b{display:block;font:700 14px var(--f-body)}.ldfx small{font-size:12px;color:var(--muted)}
-.ldfx button[disabled]{opacity:.4;cursor:not-allowed}.ldfx button{flex:none}
 /* wave chip: the leader's face, and Dot's fix */
 .survchip{cursor:pointer}
 .survchip .svl{display:block;width:22px;height:22px;flex:none;margin-right:-5px}.survchip .svl[hidden],.survchip u[hidden]{display:none}
@@ -813,7 +800,8 @@ body.titleon .v2top,body.titleon .v2dock,body.titleon .v2more{visibility:hidden}
 .title .timg{position:absolute;inset:0;background:#1c2330 center/cover no-repeat}
 /* tilt-shift: a blurred copy, masked in at the top and bottom, so the middle of the scene reads like a miniature in focus */
 .title .tblur{filter:blur(9px) saturate(1.08);transform:scale(1.03);-webkit-mask-image:linear-gradient(180deg,#000 0,rgba(0,0,0,.85) 14%,transparent 38%,transparent 60%,rgba(0,0,0,.9) 84%,#000 100%);mask-image:linear-gradient(180deg,#000 0,rgba(0,0,0,.85) 14%,transparent 38%,transparent 60%,rgba(0,0,0,.9) 84%,#000 100%)}
-.title .torbs i{position:absolute;border-radius:50%;mix-blend-mode:screen;animation:torb ease-in-out infinite alternate;transform:translate(-50%,-50%)}
+.title .torbs i{position:absolute;border-radius:50%;animation:torb ease-in-out infinite alternate;transform:translate(-50%,-50%)}
+.title:not([data-step=main]) .torbs i,.title:not([data-step=main]) .tdrift{animation-play-state:paused}   /* (v5.2: no motion under a panel) */
 .title .tvig{position:absolute;inset:0;background:radial-gradient(ellipse 85% 75% at 50% 50%,transparent 45%,rgba(6,8,14,.55) 85%,rgba(6,8,14,.82) 100%)}
 .title[data-step=map] .tshade,.title[data-step=set] .tshade{background:rgba(8,10,16,.55)!important}
 .title .tshade{transition:background .4s;position:absolute;inset:0;background:linear-gradient(90deg,rgba(8,10,16,.72) 0,rgba(8,10,16,.42) 34%,transparent 58%)}

@@ -86,7 +86,7 @@
       done=true;return {path:finish()};}};}
   function navPath(G,from,to,maxIt=250000){return navSearch(G,from,to,maxIt).step(Infinity).path;}
   // people: plan a walk only when the straight line is blocked; re-plan when the destination changes
-  function walkPlan(p,tx,tz){const u=p.userData,key=Math.round(tx*4)+","+Math.round(tz*4);if(u.wpKey===key)return u.wp;u.wpKey=key;u.wp=null;
+  function walkPlan(p,tx,tz){const u=p.userData,key=(Math.round(tx*4)+2048)*4096+(Math.round(tz*4)+2048);   /* (v5.2: a number, no string per walker per frame) */if(u.wpKey===key)return u.wp;u.wpKey=key;u.wp=null;
     if(!NAVW.g)navBuild(NAVW);const a=[p.position.x,p.position.z],b=[tx,tz],d=Math.hypot(tx-a[0],tz-a[1]);if(d<1.2)return null;
     {const ca=navC(NAVW,a),cb=navC(NAVW,b);const sA=navNearest(NAVW,ca),sB=navNearest(NAVW,cb);if(!sA||!sB)return null;
       const pa=[NAVW.x0+(sA[0]+0.5)*NAVW.cs,NAVW.z0+(sA[1]+0.5)*NAVW.cs],pb=[NAVW.x0+(sB[0]+0.5)*NAVW.cs,NAVW.z0+(sB[1]+0.5)*NAVW.cs];if(navLOS(NAVW,pa,pb))return null;}

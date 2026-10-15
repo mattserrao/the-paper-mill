@@ -1,7 +1,7 @@
   /* ---- step 3 (restyled): chaos effects in the clean isometric look ---- */
   function basic(token,opts={}){const m=new THREE.MeshBasicMaterial(opts);m.userData.token=token;MATS.push(m);return m;}
   const FM={slime:mat("slime",{roughness:0.3}),beaver:mat("beaver",{roughness:0.8}),white:mat("panel"),water:mat("water",{transparent:true,opacity:0.55,roughness:0.08,metalness:0.2,depthWrite:false}),pulp:mat("pulp",{transparent:true,opacity:0.82,roughness:0.2,metalness:0.05,depthWrite:false}),
-    rain:basic("water",{transparent:true,opacity:0.55}),fabric:mat("water",{roughness:0.5}),scab:mat("beaver",{roughness:0.9}),cone:mat("fire",{roughness:0.5}),belly:mat("kraft",{roughness:0.85})};
+    rain:basic("water",{transparent:true,opacity:0.55}),scab:mat("beaver",{roughness:0.9}),cone:mat("fire",{roughness:0.5}),belly:mat("kraft",{roughness:0.85})};
   const sphereG=new SphG(1,20,14),cubeG=new THREE.BoxGeometry(1,1,1);
   const lin=c=>new THREE.Color(c).convertSRGBToLinear();
   function spriteTex(draw,w=128,h=w){const c=document.createElement("canvas");c.width=w;c.height=h;draw(c.getContext("2d"),w,h);const t=new THREE.CanvasTexture(c);t.colorSpace=THREE.SRGBColorSpace;return t;}
@@ -50,7 +50,7 @@
       transparent:true,depthWrite:false,fog:!glow,toneMapped:!glow});m.uniforms.map.value=map;
     b.mesh=new THREE.Mesh(g,m);b.mesh.frustumCulled=false;b.mesh.renderOrder=order;scene.add(b.mesh);PB.set(map,b);return b;}
   // smoke/steam puffs are sorted back to front; flames and sparks glow over them
-  pBatch(TX.drop,false,false,1);pBatch(TX.chip,false,false,1);pBatch(TX.puff,false,true,2);pBatch(TX.flame,true,false,3);pBatch(TX.dot,true,false,4);
+  pBatch(TX.drop,false,false,1);pBatch(TX.chip,false,false,1);pBatch(TX.puff,false,true,2);pBatch(TX.flame,true,false,3);pBatch(TX.dot,true,false,4);for(const k in PT)PT[k].b=PB.get(PT[k].map);   // (v5.2: each particle type knows its batch: no Map lookup per particle)
   const PCOL=new Map(),pcol=c=>{let v=PCOL.get(c);if(!v){v=lin(c);PCOL.set(c,v);}return v;};
   // background ambience (plume, aerators, outfall) is capped so it can never crowd out fires, sparks and disaster effects
   function emitA(type,x,y,z,vx,vy,vz,life,size,color,op){if(liveN<600)emit(type,x,y,z,vx,vy,vz,life,size,color,op);}   // (named arguments: a rest array per call was a steady allocation)
@@ -68,7 +68,7 @@
       const t=p.t,f=p.life/p.max;p.v[1]-=t.grav*rdt;if(t.drag){p.v[0]*=1-t.drag*rdt;p.v[2]*=1-t.drag*rdt;}
       p.x+=p.v[0]*rdt;p.y+=p.v[1]*rdt;p.z+=p.v[2]*rdt;if(p.y<0.05&&p.v[1]<0){p.y=0.05;p.v[1]=0;p.v[0]*=0.5;p.v[2]*=0.5;}
       p.s1=t.grow?p.size*(0.45+(1-f)*1.7):p.size*(0.35+0.65*f);
-      p.a=p.op*(t.grow?Math.min(1,(1-f)*5)*f:Math.min(1,f*1.6));p.rot+=p.spin*rdt*(t.grow?0.3:1);const b=PB.get(t.map);b.list[b.n++]=p;}
+      p.a=p.op*(t.grow?Math.min(1,(1-f)*5)*f:Math.min(1,f*1.6));p.rot+=p.spin*rdt*(t.grow?0.3:1);const b=t.b;b.list[b.n++]=p;}
     const vm=camera.matrixWorldInverse.elements;
     for(let k=0;k<PBL.length;k++){const b=PBL[k],L=b.list,n=b.n;
       if(b.sort&&n>1){for(let i=0;i<n;i++){const p=L[i];p.d=vm[2]*p.x+vm[6]*p.y+vm[10]*p.z;}
@@ -217,9 +217,9 @@
     slime:g=>{const blobs=[];for(let k=0;k<34;k++){const b=new THREE.Mesh(sphereG,FM.scab);const i=k%10,top=k%2;b.position.set((top?872:856)/10-60-i*3.2+R(),top?6.75:1.05,zc+R()*5.5);
         b.userData.s=0.18+Math.random()*0.3;b.scale.set(b.userData.s*1.4,b.userData.s*0.45,b.userData.s);g.add(b);blobs.push(b);}
       return now=>blobs.forEach((b,k)=>{const f=1+0.18*Math.sin(now/300+k);b.scale.set(b.userData.s*1.4*f,b.userData.s*0.45,b.userData.s*f);});},
-    ragger:g=>{const rope={rotation:{}};
+    ragger:g=>{
       const rm=new THREE.MeshBasicMaterial({color:lin(tok("bad")),transparent:true,toneMapped:false,side:THREE.DoubleSide});const ring=new THREE.Mesh(new RingG(5,5.6,48),rm);ring.rotation.x=-Math.PI/2;ring.position.set(16,0.12,-13.5);g.add(ring);
-      return now=>{rope.rotation.z=Math.sin(now/500)*0.03;rm.opacity=0.45+0.4*Math.sin(now/250);};},
+      return now=>{rm.opacity=0.45+0.4*Math.sin(now/250);};},
     overflow:g=>{const w1=new THREE.Mesh(new THREE.PlaneGeometry(26.4,20.5,24,18),FM.pulp);w1.rotation.x=-Math.PI/2;w1.position.set(-21.2,0.35,-13.25);
       const w2=new THREE.Mesh(new THREE.PlaneGeometry(22,9,16,8),FM.pulp);w2.rotation.x=-Math.PI/2;w2.position.set(3,0.2,-12.5);g.add(w1,w2);
       const rp=ripples(g,10,-33,-9,-22,-4,0.42),rp2=ripples(g,4,-7,13,-16,-9,0.27);
@@ -376,7 +376,7 @@
       const b1=new THREE.Group();b1.position.set(-2.6,1.2,0);tr.add(b1);tb(4.6,0.3,0.3,2.3,0,0,W,b1);const b2=new THREE.Group();b2.position.set(4.6,0,0);b1.add(b2);tb(4.2,0.25,0.25,2.1,0,0,W,b2);
       const bk=new THREE.Group();bk.position.set(4.2,0,0);b2.add(bk);tb(0.9,0.9,0.9,0,0.2,0,O,bk);const lm=new THREE.Group();lm.position.set(0,0.7,0);bk.add(lm);tb(0.3,0.5,0.4,0,0.1,0,O,lm);tb(0.24,0.24,0.24,0,0.5,0,new StdMat({color:lin0("#e0b48c")}),lm);
       {const h=new THREE.Mesh(sphereG,new StdMat({color:lin0("#f2f2f2")}));h.scale.set(0.16,0.11,0.16);h.position.set(0,0.66,0);lm.add(h);}
-      const TX0=px+30,TX1=px+9,TZ=pz+9;tr.visible=false;let fl0=0;
+      const TX0=px+30,TX1=px+9,TZ=pz+9;tr.visible=false;
       return (now,rdt,inc)=>{const k=inc&&inc.total?inc.left/inc.total:1,p=1-k,t=now/1000;
         // act 1: the arc flash (first ~3% of the brownout, about a second at normal speed)
         const fa=p<0.035?Math.sin(p/0.035*Math.PI):0;big.visible=fa>0.02;big.scale.setScalar(4+22*fa);G3.bFlash=p<0.012?0.85:p<0.02?0:p<0.026?0.5:0;if(fa>0.5)shake=Math.max(shake,0.8);
@@ -483,6 +483,7 @@
     const stepW=()=>{if(!SM.done){requestAnimationFrame(stepW);return;}const t=performance.now();
       while(ids.length&&performance.now()-t<8){const id=ids.shift();try{makeFX(id).g.visible=false;}catch(e){diag(`prewarm: upset effect "${id}" failed: ${String(e&&e.message||e).slice(0,100)}`);}}
       if(ids.length){requestAnimationFrame(stepW);return;}
+      if(G3.civBuildStep&&!G3.civBuildStep(t)){requestAnimationFrame(stepW);return;}   // (v5.2: the civics scenes, a few per frame)
       // one off-screen render with every effect showing and a shadow refresh: this also compiles the shadow-pass
       // (depth) shaders, which compile() doesn't cover. The moving-thing batches are built first so theirs are included.
       try{if(G3.civBuild)G3.civBuild();if(G3.dbForce)G3.dbForce();const shown=[];   // (v5.2: the civics scenes are built here too, 31b)
@@ -529,7 +530,10 @@
         const wld=[G3.terrain,G3.SKY&&G3.SKY.dome,G3.SKY&&G3.SKY.clouds&&G3.SKY.clouds.mesh,G3.SKY&&G3.SKY.mist&&G3.SKY.mist.mesh,G3.nightWin].filter(Boolean),wv=wld.map(o=>o.visible);wld.forEach(o=>o.visible=false);
         // v4.1 pass 3: drawn to the screen behind a 1 px scissor rather than into a render target: a target has its own output
         // colour space, and every material drawn there compiled a second program that play never uses (about 30 of them)
-        if(G3.dbTick)G3.dbTick();renderer.shadowMap.needsUpdate=true;renderer.setScissorTest(true);renderer.setScissor(0,0,1,1);renderer.render(scene,camera);
+        if(G3.dbTick)G3.dbTick();
+        // v5.2: the roofs drawn half-faded too, so the transparent roof shaders the first zoom-in needs are compiled now, not mid-play
+        const rf=G3.roofFade&&G3.camGet?G3.camGet()[2]:null;if(rf!=null)G3.roofFade(120);
+        renderer.shadowMap.needsUpdate=true;renderer.setScissorTest(true);renderer.setScissor(0,0,1,1);renderer.render(scene,camera);if(rf!=null)G3.roofFade(rf);
         renderer.setScissorTest(false);shown.forEach(g=>g.visible=false);wld.forEach((o,i)=>o.visible=wv[i]);renderer.shadowMap.needsUpdate=true;
         // v4.0.1: the stand-ins' materials are kept, not disposed: three.js deletes a shader program once no material uses it,
         // which threw away every shader compiled only for a stand-in

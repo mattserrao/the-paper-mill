@@ -5,7 +5,7 @@
      Outage 3: pulper rotor change: the tub is drained, a mobile crane lifts the old rotor and extraction plate out and sets the new ones (staged the day before).
      Outage 4: refiner plate change: a stack of new plates is staged the day before; the doors swing open and the plates are swapped, one refiner at a time.
      All work runs on the outage clock and is finished by ~93% of the 4-hour window. */
-  const OV={crew:[],ropes:[],stg:null,lastK:0};
+  const OV={crew:[],ropes:[],stg:null};
   const sst=v=>v<=0?0:v>=1?1:v*v*(3-2*v),seg=(f,a,b)=>clamp((f-a)/(b-a),0,1),lrp=(a,b,u)=>a+(b-a)*u;
   function outPhase(){const o=S&&S.outg;if(!o||!o.on)return -1;return clamp((S.t-(o.end-OUT.len))/OUT.len,0,1);}
   function pwl(f,xs,ys){if(f<=xs[0])return ys[0];for(let i=1;i<xs.length;i++)if(f<=xs[i])return ys[i-1]+(ys[i]-ys[i-1])*(f-xs[i-1])/(xs[i]-xs[i-1]);return ys[ys.length-1];}
@@ -220,7 +220,7 @@
   let ovActive=false;
   function outageVis(rdt,now){const f=outPhase(),o=S.outg;OV.crew.forEach(w=>{if(w)w.userData.used=false;});OV.ropes.forEach(m=>m.visible=false);
     if(f<0){if(ovActive){ovActive=false;outageReset();}
-      const sg=stageTick(rdt,now);if(!sg&&OV.lastK){}
+      const sg=stageTick(rdt,now);
       // keep what was staged in place until the outage starts
       if(!sg&&o&&o.plan&&!o.on){const k=stageWant();if(k)staged(k,true);}
       OV.crew.forEach((w,i)=>crewHome(i,rdt,now));return;}

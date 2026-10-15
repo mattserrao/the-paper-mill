@@ -3,12 +3,12 @@ function step(dt){
   const L={brk:rand("brk"),brkType:rand("brk"),brkLen:rand("brk"),hay:rand("hay"),hayLen:rand("hay"),hayLoss:rand("hay")};
   S.t+=dt;
   // v2.9.13: daily production (a mill day runs 6am to 6am, and S.t=0 is 6am) and the best day so far
-  {const di=Math.floor(S.t/1440);if(!S.pd)S.pd={i:di,start:S.tot.prodT,rec:0,recDay:0};
-    if(di>S.pd.i){const made=S.tot.prodT-S.pd.start;if(made>S.pd.rec){S.pd.rec=made;S.pd.recDay=S.pd.i+1;}S.pd.i=di;S.pd.start=S.tot.prodT;}}
+  {const di=Math.floor(S.t/1440);if(!S.pd)S.pd={i:di,start:S.tot.prodT,rec:0};
+    if(di>S.pd.i){const made=S.tot.prodT-S.pd.start;if(made>S.pd.rec)S.pd.rec=made;S.pd.i=di;S.pd.start=S.tot.prodT;}}
 
   chaosTick(dt);
   cardTick(dt);
-  if(typeof civTick==="function")civTick(dt);   // v5.1 civics
+  civTick(dt);   // v5.1 civics
   outageTick();
   const M=S.M=mods();
   autoControl(dt);
@@ -22,7 +22,6 @@ function step(dt){
   if(!M.noIn) S.inPhase+=dt*C.inRate.v/60*S.inJit*wxTruck*siteIn;
   while(S.inPhase>=1){S.inPhase-=1;S.inJit=0.6+rand("flow")*0.8;
     if(S.inQ.length<P.maxQueue){S.inQ.push(newTruck("in"));S.tot.inTrucks++;} else S.tot.turned++;}
-  S.inQ.forEach(t=>t.wait+=dt);
   if(!M.docksClosed) for(let d=0;d<P.doors;d++) if(!S.inDock[d]&&S.inQ.length) S.inDock[d]=S.inQ.shift();
   // 2 receiving: drivers split between pulper feed and unloading
   const level0=S.tank/P.tankCap;
@@ -37,7 +36,7 @@ function step(dt){
     const u=Math.min(tr.load,P.doorRate*dt/60,cap,Math.max(0,P.yardCap-S.yard));
     tr.load-=u;cap-=u;S.yard+=u;unloaded+=u;S.tot.inTons+=u;
     {const dc=S.plan.disc,dt2=dc?Math.min(u,dc.t):0;spend(u*P.occPrice-dt2*(dc?dc.v:0),"occ");if(dc){dc.t-=dt2;if(dc.t<=1e-6)S.plan.disc=null;}}
-    if(tr.load<=0.001){S.leaving.push({...tr,ty:inY(d),kind:"in"});S.inDock[d]=null;}}
+    if(tr.load<=0.001){S.leaving.push({...tr,ty:inY(d),kind:"in"});if(S.leaving.length>24)S.leaving.shift();S.inDock[d]=null;}}
   const feed=Math.min(feedRes,S.yard); S.yard-=feed;
   // 3 pulper → chest
   if(M.yardEat) S.yard=Math.max(0,S.yard-M.yardEat*dt/60);
@@ -92,7 +91,6 @@ function step(dt){
   if(!M.noOut) S.outPhase+=dt*C.outRate.v/60*S.outJit*wxTruck;
   while(S.outPhase>=1){S.outPhase-=1;S.outJit=0.6+rand("flow")*0.8;
     if(S.outQ.length<P.maxQueue){S.outQ.push(newTruck("out"));S.tot.outTrucks++;}}
-  S.outQ.forEach(t=>t.wait+=dt);
   for(let d=0;d<P.shipDoors;d++) if(!S.outDock[d]&&S.outQ.length) S.outDock[d]=S.outQ.shift();
   const effHum=Math.min(C.loaders.v,M.ldrCap); S.effHum=effHum; const effLd=effHum+P.robots; S.effLd=effLd;
   let lcap=effLd*P.loaderRate*dt/60*M.clampMul, loaded=0;
@@ -105,8 +103,8 @@ function step(dt){
   for(let d=0;d<P.shipDoors;d++){const tr=S.outDock[d]; if(!tr)continue;
     const l=Math.min(P.truckRolls-tr.load,pool===Infinity?P.doorRolls*dt/60:pool,lcap,S.fg);pool-=l;
     tr.load+=l;lcap-=l;S.fg-=l;loaded+=l;lotTake(S.lots.fg,l,tr.lots||(tr.lots=[]));
-    if(tr.load>=P.truckRolls-1e-6){S.leaving.push({...tr,ty:outY(d),kind:"out"});S.outDock[d]=null;S.tot.shipped+=P.truckRolls;const tons=P.truckRolls*C.rollW.v;S.shipT+=tons;earn(lotValue(tr.lots||[[C.grade,P.truckRolls]],C.rollW.v));}}   // (v16: each roll at its own grade's price)
-  spend(((C.drivers.v+C.loaders.v+P.techs)*(ECON.wage+(P.siteWage||0))*(P.costMul||1)*leadWage()*(typeof civWage==="function"?civWage():1)+leadPayroll()*(P.costMul||1)+P.robots*ECON.robot+P.pmCost)*dt/60,"labor");
+    if(tr.load>=P.truckRolls-1e-6){S.leaving.push({...tr,ty:outY(d),kind:"out"});if(S.leaving.length>24)S.leaving.shift();S.outDock[d]=null;S.tot.shipped+=P.truckRolls;const tons=P.truckRolls*C.rollW.v;S.shipT+=tons;earn(lotValue(tr.lots||[[C.grade,P.truckRolls]],C.rollW.v));}}   // (v16: each roll at its own grade's price)
+  spend(((C.drivers.v+C.loaders.v+P.techs)*(ECON.wage+(P.siteWage||0))*(P.costMul||1)*leadWage()*civWage()+P.robots*ECON.robot+P.pmCost)*dt/60,"labor");
   spend((ECON.overhead+(P.siteOver||0))*dt/60,"overhead"); if(P.premium)spend(P.premium*dt/60,"premium");
   // v3.1.2: profit/day is OPERATING profit over the last 12 game hours: good paper is valued as it comes off the machine (tons x price),
   // less OCC, energy, labor, overhead and insurance. One-offs (upgrades, outage budgets, repair bills, card deals) are left out,

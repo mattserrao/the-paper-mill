@@ -1,6 +1,5 @@
   /* ---- step 4: upgrades you can see ---- */
-  const UPV={};
-  function upg(id,build){const g=new THREE.Group();scene.add(g);build(g);UPV[id]=g;return g;}
+    function upg(id,build){const g=new THREE.Group();scene.add(g);build(g);return g;}
   const motors=upg("drive",g=>{for(let k=0;k<3;k++){const m=new THREE.Group();box(1.6,1.4,1.4,M.stock,0,0.7,0,m);cylZ(0.25,1.2,M.metal,0,0.7,-1,8,m);m.position.set(2+k*9,0,zc-CD/2-2.2);g.add(m);}});
   const beacons=upg("monitor",g=>{for(let k=0;k<6;k++){const b=new THREE.Mesh(new CylG(0.22,0.22,0.5,8),M.robot);b.position.set(-4+k*7,7.85,zc+CD/2+0.6);g.add(b);}});
   const sprink=upg("fire",g=>{pipe([[-6,8.6,zc],[30,8.6,zc]],0.18,M.bad,g);for(let x=-4;x<=28;x+=4)box(0.12,0.5,0.12,M.bad,x,8.3,zc,g,false);});
@@ -40,13 +39,13 @@
   const ctrl=upg("apc",g=>{box(6,3.2,4,M.wall,46,1.6,-6,g);box(5.4,1.1,0.1,M.robot,46,2.2,-3.95,g,false);box(6.4,0.3,4.4,M.steel,46,3.35,-6,g);});
   function upUpdate(now){
     motors.visible=LV("drive")>0;motors.children.forEach((m,k)=>m.visible=k<LV("drive"));
-    beacons.visible=LV("monitor")>0;beacons.children.forEach((b,k)=>{b.visible=k<3*LV("monitor");b.material=((now/500+k)|0)%3===0?M.ok:M.robot;});
+    beacons.visible=LV("monitor")>0;beacons.children.forEach((b,k)=>{b.visible=k<3*LV("monitor");{const m=b.userData.bm||(b.userData.bm=b.material=M.robot.clone());m.color.copy((((now/500+k)|0)%3===0?M.ok:M.robot).color);}});   // (v5.2: blink by colour on the light's own material: swapping materials pulled it out of its batch)
     sprink.visible=LV("fire")>0;cleaners.visible=LV("clean")>0;cleaners.children.forEach((c,k)=>c.visible=k<14*LV("clean"));
     detrash.visible=LV("detrash")>0;refiner.visible=true;{const k=LV("refiner")>0?1.3:1;REF_MOTORS.forEach(m=>m.scale.set(k>1?1.1:1,k,k));}walk.visible=LV("safety")>0;ctrl.visible=LV("apc")>0;
     annexes.forEach((a,k)=>{a.visible=LV("wh")>k;});
     // rolls fill main bay first, then annexes
-    const total=Math.ceil(S.fg/(P.fgCap/(84+36*LV("wh"))));rolls.count=Math.min(84,total);rolls.instanceMatrix.needsUpdate=true;
-    annexes.forEach((a,k)=>{const n=clamp(total-84-36*k,0,36);a.userData.rolls.count=n;a.userData.rolls.instanceMatrix.needsUpdate=true;});
+    const total=Math.ceil(S.fg/(P.fgCap/(84+36*LV("wh"))));rolls.count=Math.min(84,total);   // (v5.2: the matrices never change, only the count: no re-upload)
+    annexes.forEach((a,k)=>{const n=clamp(total-84-36*k,0,36);a.userData.rolls.count=n;});
     const ps=1+0.15*LV("pulper");pulper.scale.set(ps,1,ps);
     belt.material=P.autoFeed?M.robot:M.steel;
     lifts.forEach(l=>{if(l.children[0].material===M.fork&&LV("forklift"))l.children[0].material=M.efork;});
@@ -55,7 +54,8 @@
   let fpsN=0,fpsT=0,quality=2;
   G3.frame=function(rdt){try{G3.frameBody(rdt);}catch(e){G3.fErr=(G3.fErr||0)+1;if(G3.fErr<6)console.error('3D frame error',e);try{renderer.render(scene,camera);}catch(_){}}};
   const shChecked=new WeakSet(),_shB=new THREE.Vector3(),_shS=new THREE.Vector3();
+  let shFlip=false;
   function trimShadows(){scene.traverse(o=>{if(!o.isMesh||shChecked.has(o))return;shChecked.add(o);if(!o.castShadow||o.isInstancedMesh)return;
     const g=o.geometry;if(!g)return;if(!g.boundingBox)g.computeBoundingBox();g.boundingBox.getSize(_shB);o.getWorldScale(_shS);
     const d=[Math.abs(_shB.x*_shS.x),Math.abs(_shB.y*_shS.y),Math.abs(_shB.z*_shS.z)].sort((a,b)=>a-b);
-    if(!(d[2]>=2&&d[1]>=0.6))o.castShadow=false;});renderer.shadowMap.needsUpdate=true;}
+    if(!(d[2]>=2&&d[1]>=0.6)){o.castShadow=false;shFlip=true;}});if(shFlip){shFlip=false;renderer.shadowMap.needsUpdate=true;}}   // (v5.2: a shadow refresh only if something changed)

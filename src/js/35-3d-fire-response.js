@@ -8,7 +8,6 @@
   function hoseLine(){const m=new THREE.Mesh(new CylG(0.07,0.07,1,8),hoseM);m.visible=false;scene.add(m);return m;}
   const _a=new THREE.Vector3(),_b=new THREE.Vector3(),_up=new THREE.Vector3(0,1,0);
   function stretch(m,ax,ay,az,bx,by,bz){_a.set(ax,ay,az);_b.set(bx,by,bz);const d=_b.clone().sub(_a),L=d.length();m.position.copy(_a).add(_b).multiplyScalar(0.5);m.scale.set(1,L,1);m.quaternion.setFromUnitVectors(_up,d.normalize());m.visible=true;}
-  function stretch2(m,ax,ay,az,bx,by,bz){stretch(m,ax,ay,az,bx,by,bz);}
   function nozzlePos(w){const a=w.rotation.y;return [w.position.x+Math.cos(a)*0.95,1.45,w.position.z-Math.sin(a)*0.95];}
   // spray: droplets on a ballistic arc that lands on the target
   function spray(w,tgt,kind){const [nx,ny,nz]=nozzlePos(w),t=0.75,dx=tgt[0]+R()*1.2-nx,dy=tgt[1]-ny,dz=tgt[2]+R()*1.2-nz;

@@ -58,12 +58,12 @@ const EVENTS=[
 const EV=Object.fromEntries(EVENTS.map(e=>[e.id,e]));
 EVENTS.forEach(e=>CH.en[e.id]=true);
 const WXN={clear:"Clear",rain:"Rain",fog:"Fog",snow:"Snow"};
-function active(id){return S.inc.some(i=>i.id===id);}
+function active(id){const a=S.inc;for(let k=0;k<a.length;k++)if(a[k].id===id)return true;return false;}
 // machine and winder upsets go to the crew one at a time, in the order they happen; nothing gets fixed until a crew is there
-const QINC=id=>!!(EV[id]&&((EV[id].g==="machine"&&id!=="runner"&&id!=="birdhay"&&id!=="boiler"&&id!=="fogfan"&&id!=="steamjoint"&&id!=="brownout")||id==="ragger"));
+const QSET=new Set(EVENTS.map(e=>e.id).filter(id=>(EV[id].g==="machine"&&id!=="runner"&&id!=="birdhay"&&id!=="boiler"&&id!=="fogfan"&&id!=="steamjoint"&&id!=="brownout")||id==="ragger")),QINC=id=>QSET.has(id);   // (v5.2: a Set, built once)
 const RESP={ragger:6,wrap:4,hay:4,brk:2,dryerfire:3,shaft:8,fabric:6,felt:6,slime:5,winderdown:6};
 function enqueue(k){if(!S.crewQ)S.crewQ=[];if(S.crewQ.some(q=>q.k===k))return;S.crewQ.push({k,resp:RESP[k]||6,since:0,here:false,go:false});}
-function crewTick(dt){if(!S.crewQ)S.crewQ=[];
+function crewTick(dt){if(!S.crewQ)S.crewQ=[];if(!S.crewQ.length)return;   // (v5.2: nothing queued, nothing to do)
   S.crewQ=S.crewQ.filter(q=>q.k==="hay"?S.wd==="hayout":q.k==="brk"?S.pm==="break":active(q.k));
   // v3.2.2: the paper machine comes first. Winder jobs (hayouts, winder down) wait behind any machine job, including the rethread,
   // and if a machine job turns up while the crew is at the winder they leave it and come back to the winder afterwards
@@ -74,13 +74,13 @@ function crewTick(dt){if(!S.crewQ)S.crewQ=[];
   const h=S.crewQ[0];if(!h)return;if(h.resp>0)h.resp-=dt;if(h.resp<=0)h.go=h.here=true;}
 // maintenance: techs work in pairs; a job's repair clock only runs once its pair is on site (8 sim minutes after it is assigned)
 const MJOBS=["birdline","refclash","steamjoint","fogfan","shaft","fabric","felt","winderdown","hdblow","lwplug","cscreen","fscreen","lcplug","boiler","thkblow","overflow","chestover","fleet","roof","lightning","icedintake"];
-const MNEED=id=>MJOBS.includes(id);
+const MSET=new Set(MJOBS),MNEED=id=>MSET.has(id);
 // v16: pairs go first to the job the PM crew is on (a job that needs both can only progress there), then to jobs that need
 // no crew, oldest first, and last to jobs still waiting for the crew. Before, a winder breakdown could hold the only pair
 // while the crew was at a machine job that also needed the pair: each waited on the other and production stopped for good.
 // A pair keeps a job it is working on, unless that job also needs the crew and the crew has been called away: then the
 // pair goes where it can work (the work already done stays done).
-function maintTick(dt){const crews=Math.max(1,Math.floor(P.techs/2)),head=S.crewQ&&S.crewQ[0]&&S.crewQ[0].k;
+function maintTick(dt){if(!S.inc.length)return;const crews=Math.max(1,Math.floor(P.techs/2)),head=S.crewQ&&S.crewQ[0]&&S.crewQ[0].k;
   const rank=i=>QINC(i.id)?(i.id===head?(i.mGo?0:1):3):(i.mGo?0:2),list=S.inc.filter(i=>MNEED(i.id)).map((i,k)=>[i,k]).sort((a,b)=>rank(a[0])-rank(b[0])||a[1]-b[1]).map(a=>a[0]);
   list.forEach((i,k)=>{i.mQ=k-crews+1;if(k>=crews){if(i.mSlot>=0){i.mSince=0;i.mHere=false;i.mGo=false;}i.mSlot=-1;return;}i.mSlot=k;if(!i.mSince){i.mSince=1;i.mResp=8;}
     if(i.mResp>0)i.mResp-=dt;if(i.mResp<=0)i.mGo=i.mHere=true;});}
@@ -115,8 +115,8 @@ function trigger(id,quiet){
   const bill=S.zen?0:(REPAIR[id]||0)*P.repairMul*(inc.billMul||1); if(bill>0){spend(bill,"repairs");inc.bill=bill;inc.note=(inc.note?inc.note+" · ":"")+`repair bill ${money(bill)}`;}
   log(e.head+(inc.note?` (${inc.note})`:""),"bad");
   S.M=mods();
-  if(typeof leadAuto==="function")leadAuto(inc);   // v5.0.4: Dot may fix it on the spot
-  if(typeof civOnUpset==="function")civOnUpset(inc);   // v5.1 civics: the upset's choices (or a standing order)
+  leadAuto(inc);   // v5.0.4: Dot may fix it on the spot
+  civOnUpset(inc);   // v5.1 civics: the upset's choices (or a standing order)
 }
 function clearIncident(id){const i=S.inc.find(x=>x.id===id);if(i)i.left=0;}
 function chaosTick(dt){

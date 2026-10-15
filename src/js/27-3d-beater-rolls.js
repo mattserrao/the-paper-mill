@@ -13,7 +13,9 @@
   const _bc=new THREE.Color(),_bq=new THREE.Quaternion(),_bz=new THREE.Quaternion().setFromEuler(new THREE.Euler(Math.PI/2,0,0));
   let rfork=null;
   function btTruck(){const g=makeTruck("out");g.userData.cargo.forEach(c=>{c.material=[new StdMat({roughness:0.8}),M.rollCap,M.rollCap];c.visible=false;});g.visible=false;return g;}
-  function bayDraw(){bayMesh.count=Math.min(20,BEAT.bay.length);BEAT.bay.slice(0,20).forEach((c,k)=>{const [x,z]=bayPos(k%10);m4.makeTranslation(x,0.74+Math.floor(k/10)*1.42,z);bayMesh.setMatrixAt(k,m4);bayMesh.setColorAt(k,_bc.set(c));});
+  let bayKey="";
+  function bayDraw(){const B=BEAT.bay,n=B.length,k0=n+"|"+B[0]+"|"+B[Math.min(19,n-1)];if(k0===bayKey)return;bayKey=k0;   // (v5.2: redrawn only when the bay changes)
+    bayMesh.count=Math.min(20,BEAT.bay.length);BEAT.bay.slice(0,20).forEach((c,k)=>{const [x,z]=bayPos(k%10);m4.makeTranslation(x,0.74+Math.floor(k/10)*1.42,z);bayMesh.setMatrixAt(k,m4);bayMesh.setColorAt(k,_bc.set(c));});
     bayMesh.instanceMatrix.needsUpdate=true;if(bayMesh.instanceColor)bayMesh.instanceColor.needsUpdate=true;}
   function cargoDraw(){if(!BT.g)return;BT.g.userData.cargo.forEach((c,k)=>{c.visible=k<BT.cargo.length;if(c.visible)c.material[0].color.set(BT.cargo[k]);});}
   function btGo(legs,st){BT.legs=legs;BT.st=st;}

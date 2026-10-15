@@ -47,7 +47,6 @@ function civRng(){if(S.rng.civ==null)S.rng.civ=(S.seed^0x7f4a7c15)|0;return rand
 // the area a standing order covers, for any upset with choices
 const CIV_AREA={"Inbound":"Stock prep","Utility":"Machine","Outbound":"Yard","Customer":"Customers"};
 const civArea=id=>{const u=CIVU[id];return u?(CIV_AREA[u.a]||u.a):"";};
-const civMeterEv=id=>/^[wc]_|^r_/.test(id);
 // upset odds: each choice's odds step, and the meters (Labor for the yard, Machinery for stock prep and the machine, Community for the permit)
 function civFreq(id){if(!civOn())return 1;let m=(S.civ.odds&&S.civ.odds[id])||1;const g=EV[id]&&EV[id].g;
   if(g==="yard")m*=civYard();if(g==="machine"||g==="stock")m*=civMach();if(id==="permit")m*=civComm();return m;}
