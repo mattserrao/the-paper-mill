@@ -28,7 +28,7 @@ Engines: chromium (V8 + SwiftShader software GPU) is the default; webkit (JavaSc
 meaningful as ratios between builds measured in the same session on the same machine; the --compare table shows % change.
 Counts transfer across sessions. With --repeat, each metric is the median of the runs and the spread (min-max) is kept.
 --profile adds 8 s CPU sampling profiles (chromium): self time per function and per source file (from src/ line offsets).
-Writes bench-<label>[-engine].json next to this script (or in --out) and prints a summary."""
+Writes bench-<label>.json (chromium) or bench-<label>-webkit.json next to this script (or in --out) and prints a summary."""
 import json, pathlib, sys, statistics as st, time
 from playwright.sync_api import sync_playwright
 import pmbench as PB
@@ -184,7 +184,7 @@ with sync_playwright() as pw:
         med, spread = median_of(runs)
         res = {"label": label, "engine": eng, "build": str(path), "runs": repeat, "secs": SECS, "dpr": DPR, "leader": leader, "mode": mode,
                "ts": time.strftime("%Y-%m-%d %H:%M"), "median": med, "spread": spread, "detail": runs}
-        fn = out_dir / f"bench-{label}{'' if engine != 'both' else '-' + eng}.json"
+        fn = out_dir / f"bench-{label}{'' if eng == 'chromium' else '-' + eng}.json"
         fn.write_text(json.dumps(res, indent=1)); print("wrote", fn)
         print(json.dumps({k: v for k, v in med.items() if k != "sections"}))
         for key in ("profile_cpu", "profile_render"):
