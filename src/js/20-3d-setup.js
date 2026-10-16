@@ -29,6 +29,17 @@ function no3D(){G3.ok=false;$("no3d").hidden=false;$("no3d-retry").onclick=()=>l
   // the start-up precompile (G3.prewarm) do the work up front as intended.
   renderer.debug.checkShaderErrors=false;
   G3.ok=true;
+  /* v5.5 perf: three.js recomposes the local matrix of every auto-updating node on every frame (about 4,900 here: people
+     and vehicle parts, effects built up front, overlays), then multiplies it with the parent's, whether or not anything
+     moved. Skip the recompose when position, rotation and scale are unchanged since the last one; the world matrix is then
+     recomputed only when a parent moved (three.js passes that down as "force"). Re-parenting clears the cache, so a node
+     moved to another parent picks up its new world matrix on the next frame as before. */
+  if(!THREE.Object3D.prototype.__pmMatrixSkip){const P=THREE.Object3D.prototype,um=P.updateMatrix,add=P.add,rem=P.remove;P.__pmMatrixSkip=true;
+    P.updateMatrix=function(){const p=this.position,q=this.quaternion,s=this.scale;let c=this._mc;
+      if(c!==undefined&&c[0]===p.x&&c[1]===p.y&&c[2]===p.z&&c[3]===q.x&&c[4]===q.y&&c[5]===q.z&&c[6]===q.w&&c[7]===s.x&&c[8]===s.y&&c[9]===s.z)return;
+      if(c===undefined)c=this._mc=new Float64Array(10);c[0]=p.x;c[1]=p.y;c[2]=p.z;c[3]=q.x;c[4]=q.y;c[5]=q.z;c[6]=q.w;c[7]=s.x;c[8]=s.y;c[9]=s.z;um.call(this);};
+    P.add=function(...a){for(const o of a)if(o&&o._mc)o._mc=undefined;return add.apply(this,a);};
+    P.remove=function(...a){for(const o of a)if(o&&o._mc)o._mc=undefined;return rem.apply(this,a);};}
   const mobile=matchMedia("(pointer: coarse)").matches;
   /* v4.1 graphics tiers. Auto picks from the device (phones: Medium, or Low with little memory; desktops: High, or Ultra on a
      discrete GPU); the player can pin one in Controls. Pixel ratio, shadow refresh, shadow map size, weather particles and
