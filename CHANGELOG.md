@@ -1,5 +1,8 @@
 # Changelog
 
+## v5.7.1 (2026-10-16): dock order
+- The bottom menu reads Upgrades · Upsets · Report · Round · Settings: Settings is back on the far right.
+
 ## v5.7.0 (2026-10-16): catching failures early
 New design principle: failures are visible before they occur. Mills that walk the floor and invest in monitoring pay
 less and lose less time. Every number is a first guess (balancing comes later).
