@@ -54,11 +54,13 @@ function setSimSpeed(v){C.simSpeed=Math.max(1,Math.min(TURBO?960:120,Math.round(
 // always; playtests found nothing to do in the 48 s and up to half a fast run spent waiting.)
 // (Only inside a running season or survival run: zen and free play end the season mid-outage without ending the outage.)
 const outCapped=()=>!!(S&&S.outg&&S.outg.on&&S.outg.watch&&S.season&&S.season.on&&!S.zen&&C.simSpeed>OUT.simCap&&!TURBO_FAST(C.simSpeed));
-function simRate(){return S&&S.zen?1:outCapped()?OUT.simCap:C.simSpeed;}
+// v5.6: a knob panel or a DCS / QCS screen open runs the game at 1 min/s (G3.knobUI), and closing it is back at the
+// player's speed (their choice is never touched)
+function simRate(){return S&&S.zen?1:G3.knobUI?1:outCapped()?OUT.simCap:C.simSpeed;}
 
 const cgrid=$("chaosgrid");
 GROUPS.forEach(([g,lab])=>{const d=document.createElement("div");d.className="grp";const h=document.createElement("h3");h.textContent=lab;d.appendChild(h);
-  EVENTS.filter(e=>e.g===g&&(!e.env||e.env===SITE.env)).forEach(e=>{const r=document.createElement("div");r.className="ev";
+  EVENTS.filter(e=>e.g===g&&!e.knob&&(!e.env||e.env===SITE.env)).forEach(e=>{const r=document.createElement("div");r.className="ev";
     r.innerHTML=`<button class="trig" id="ev-${e.id}" aria-pressed="false"><span>${e.name}${e.env?' <em class="envtag">'+ENVS[e.env].short+'</em>':""}</span><small></small></button><label><input type="checkbox" id="en-${e.id}" checked> random</label>`;
     d.appendChild(r);
     r.querySelector("button").addEventListener("click",()=>{if(S.season&&S.season.on)return;if(active(e.id))clearIncident(e.id);else trigger(e.id);updateChaos();});
@@ -70,7 +72,7 @@ function moreToggle(sec,btn,key,onSet){let open=false;try{open=localStorage.getI
   const set=v=>{open=v;$(sec).classList.toggle("collapsed",!v);$(btn).textContent=v?"Show less":"Show more";$(btn).setAttribute("aria-expanded",v);if(onSet)onSet(v);try{localStorage.setItem(key,v?"1":"0");}catch(e){}};
   $(btn).addEventListener("click",()=>set(!open));return set;}
 $("chaosLvl").addEventListener("input",e=>{CH.lvl=+e.target.value;$("chaosLvlv").textContent=CH.lvl+"×";});
-$("chaosRandom").addEventListener("click",()=>{if(S.season&&S.season.on)return;const pool=EVENTS.filter(e=>!active(e.id));if(pool.length)trigger(pool[Math.floor(Math.random()*pool.length)].id);updateChaos();});
+$("chaosRandom").addEventListener("click",()=>{if(S.season&&S.season.on)return;const pool=EVENTS.filter(e=>!e.knob&&!active(e.id));if(pool.length)trigger(pool[Math.floor(Math.random()*pool.length)].id);updateChaos();});
 $("chaosClear").addEventListener("click",()=>{if(S.season&&S.season.on)return;S.inc.forEach(i=>i.left=0);});
 function applyName(){$("pm-title").textContent=NAME;$("pmname").value=NAME;}
 $("pmname").addEventListener("input",e=>{NAME=e.target.value.trim()||"PM";$("pm-title").textContent=NAME;try{localStorage.setItem("mill-twin-name",NAME);}catch(err){}});

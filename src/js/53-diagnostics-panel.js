@@ -97,5 +97,5 @@
   window.__openDiag=open;})();
 // test and benchmark hook (read-only views plus a few controls); used by the benchmark harness and smoke tests
 window.__PM={get THREE(){return THREE},get S(){return S},get C(){return C},get G3(){return G3},get EVENTS(){return EVENTS},get CH(){return CH},SIM_STEP,
-  trigger:(...a)=>trigger(...a),step:h=>step(h),reseed:k=>seedRun(k),lineCaps:()=>lineCaps(),get SITE(){return SITE},get LAYOUT(){return LAYOUT},get AUDIO(){return AUDIO},get DIAG(){return DIAG},setBn:b=>{S.bn=b;applyUpgrades();},setFps:v=>setFpsMode(v),setRunning:v=>{running=v},get running(){return running}};
+  trigger:(...a)=>trigger(...a),step:h=>step(h),reseed:k=>seedRun(k),lineCaps:()=>lineCaps(),get SITE(){return SITE},get LAYOUT(){return LAYOUT},get AUDIO(){return AUDIO},get DIAG(){return DIAG},setBn:b=>{S.bn=b;applyUpgrades();},knob:{set:(i,v)=>knobSet(i,v),read:()=>knobRead(),off:()=>knobsOff(),reset:i=>knobReset(i),list:KNOBS,get K(){return S.knob},open:(a,t)=>G3.openStation&&G3.openStation(a,t),panel:i=>G3.openKnob&&G3.openKnob(i),close:()=>G3.closeKnobUI&&G3.closeKnobUI()},simRate:()=>simRate(),setFps:v=>setFpsMode(v),setRunning:v=>{running=v},get running(){return running}};
 })();
