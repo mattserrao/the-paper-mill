@@ -13,7 +13,7 @@ html = html.replace("window.__PM={", "window.__PM={simRate:()=>simRate(),setZen:
 fails = []
 def ok(name, cond, got=None):
     print(("ok   " if cond else "FAIL ") + name + ("" if cond else f"   got: {got}")); (None if cond else fails.append(name))
-CLR = "const clr=()=>{const o=P.S.cards.open;if(!o)return;if(o.c)document.getElementById('deal-no').click();else if(o.outage)document.getElementById('out-ok').click();else if(o.report)document.getElementById('rc-ok').click();if(P.S.cards.open)P.S.cards.open=null;P.setRunning(false);};"
+CLR = "const clr=()=>{const o=P.S.cards.open;if(!o)return;if(o.c)document.getElementById('deal-no').click();else if(o.outage)document.getElementById('out-ok').click();else if(o.report)document.getElementById('rc-ok').click();if(P.S.cards.open)P.S.cards.open=null;if(P.S.civ){P.S.civ.cur=null;P.S.civ.pending=null;if(P.S.civ.q)P.S.civ.q.length=0;}P.setRunning(false);};"   # (v5.6: v5.1 civics choices hold the outage notice back too)
 TO_OUT = "()=>{const P=__PM;" + CLR + "let k=0;while(!P.S.outg.on&&k++<9*1440*4){P.step(0.25);clr();}P.setRunning(false);return P.S.outg.on}"
 TO_END = "()=>{const P=__PM;" + CLR + "let k=0;while(P.S.outg.on&&k++<1440*4){P.step(0.25);clr();}P.setRunning(false);return !P.S.outg.on}"
 def txt(pg, want):
@@ -28,7 +28,8 @@ with sync_playwright() as pw:
         pg.add_init_script(INIT.replace("localStorage.clear()", "0") if "localStorage.clear()" in INIT else INIT); pg.goto("http://bench.local/")
         pg.wait_for_function("window.__PM&&__PM.G3.warm", timeout=240000, polling=300); return pg
     pg = page()
-    pg.evaluate("()=>{document.getElementById('v2go').click();__PM.setRunning(false);const t=document.getElementById('tut');if(t)t.hidden=true;const f=document.getElementById('v2fast');while(__PM.C.simSpeed<120)f.click();}")
+    pg.evaluate("()=>{document.getElementById('v2go').click()}");pick_leader(pg)   # (v5.6: the v5.1 leader picker)
+    pg.evaluate("()=>{__PM.setRunning(false);const t=document.getElementById('tut');if(t)t.hidden=true;const f=document.getElementById('v2fast');while(__PM.C.simSpeed<120)f.click();}")
     ok("the player picks 120", pg.evaluate(ST)["c"] == 120)
     pg.evaluate(TO_OUT); t = txt(pg, "120 min/s"); s = pg.evaluate(ST)
     ok("outage 1 (v5.0.6): runs at the player's 120, not capped", s["on"] and s["rate"] == 120 and s["c"] == 120 and t, s)

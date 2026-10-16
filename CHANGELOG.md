@@ -1,5 +1,36 @@
 # Changelog
 
+## v5.6.0 (2026-10-16): fiddly knobs
+Red knobs all over the mill that do nothing until you touch them. Move one and the trouble turns up later, often
+somewhere else, and you trace it back on the new DCS and QCS screens. Every knob starts at standard; a game where
+nobody touches them plays exactly as before (same seeded checksum `272b1f02`, determinism unchanged).
+- **Ten new knobs.** Stock prep: pulper dilution valve (too thick trips the rotor, too thin overflows the pulper and
+  starves the chest), refiner plate gap (run in too far and the plates clash), machine chest agitator (consistency
+  swings, off-spec, then a wet-end break). Wet end: headbox dilution zones (CD streaks, reels rejected until the
+  operator finds them), forming table vacuum (low: wetter sheet, more steam, wet-end breaks; high: wears the fabric out),
+  press loading (high: crushing; low: the dryers pull more steam until the boiler trips), fabric guide roll (manual
+  drifts; trimmed on AUTO works until it runs out of travel, then the fabric walks off and needs changing), couch pit
+  agitator (fiber settles, and the next wet-end break overflows the pit onto the floor), pick-up felt oscillator
+  (stripes, off-spec, maintenance restarts it). Dry end: press-to-dryer draw (tight snaps, slack wrinkles the reel and
+  the draw flutters) and 1st section steam.
+- **Knobs act together.** Refiner gap, vacuum and press loading set how much water reaches the dryers; with
+  1st section steam they decide whether the sheet comes off wet (off-spec, dryer breaks, a boiler trip) or over-dried
+  (brittle reel breaks). Dryer steam shows up in the energy bill and as steam off the dryer roof.
+- **Real costs:** repair bills, paper to the beater, steam, breaks and downtime. The crew always traces a problem back
+  in the end and sets the knob to standard, and the log names it.
+- **DCS and QCS screens** for SPOT (stock prep), WET (wet end) and DET (dry end): a process picture with live tags,
+  alarms, setpoints and 6-hour trends; QCS shows the reel's status, basis weight and moisture trends, the CD moisture
+  profile and web inspection counts. Open them from the operator consoles (a new one in stock prep, the three on the
+  machine floor). Field knobs open their own panel when you tap the red hardware.
+- **The game slows to 1 min/s** while a knob panel or DCS screen is open (and the spider valve and slice panels), and is
+  back at your speed when you close it.
+- **Fiddly knobs view** (Settings → View): the mill washes out and only the red knobs and their labels stay, including
+  the spider valve and the headbox slice. Tap one to open it.
+- Base values on the screens follow PM3 run data (reel speed, basis weight and 3rd section steam by grade).
+- Season, survival and free play; not in zen mode.
+- Tools: `knobcheck.py` (new); `smoke.py`, `settingscheck.py`, `savecheck.py`, `speedcheck.py` follow the v5.1 start
+  flow again (leader picker; civics choices cleared while waiting for an outage).
+
 ## v5.5.0 (2026-10-16): performance
 Less work per frame in normal play, measured with the new frame-cost benchmark (`tools/fpsbench.py`, phone emulation,
 main v5.4.2 vs this build run alternately): frame cost −12% (Chromium) / −14% (WebKit, Safari's engine), GPU −12–13%,

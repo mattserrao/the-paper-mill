@@ -16,9 +16,9 @@ then `tail.html`. All game code runs inside **one shared closure** (opened in `0
 | Range | What lives there |
 |---|---|
 | `00` | `APP_VER`, the rolling diagnostics log, and the three.js loader (r186.1 as an ES module via top-level `await`; outside the closure, so errors during start-up are caught) |
-| `01–11` | Game: mill name and colors, audio, model constants and seeded random streams, the site (`03b`: environments, mill seed and layout, bottleneck), survival mode (`03c`: constants and multipliers; `09b`: wave changes, chip, game over) and its mill leaders (`03d`: numbers and effects; `09c`: portraits, picker, card, outage pick), upsets, event cards, outages and state, the sim `step()`, UI wiring, seasons and leaderboard, report cards, Stats trend chart |
-| `20–43` | 3D view, one file per area of the mill: setup, plant, floors, rejects, stock prep, vehicles, labels, camera, upset effects and particles, people, fire response, the sky (`35b`), ambient life, janitorial, techs, upgrades, the yard props (`39b`: water tower, bales, gate sign), static-mesh merge, outage jobs, zen camera, the seeded scenery and terrain around the mill (`42b`), and the per-frame update (`43-3d-frame.js`) |
-| `50–53` | Side panels (slice, spider, Uncle Brian), app shell (top bar, sheets, menu, tutorial), the site picker (`51b`), main loop, the device autotest (`52b`, only active with `?autotest`), diagnostics panel and the `window.__PM` test hook |
+| `01–11` | Game: mill name and colors, the fiddly knobs' process model (`07b`), audio, model constants and seeded random streams, the site (`03b`: environments, mill seed and layout, bottleneck), survival mode (`03c`: constants and multipliers; `09b`: wave changes, chip, game over) and its mill leaders (`03d`: numbers and effects; `09c`: portraits, picker, card, outage pick), upsets, event cards, outages and state, the sim `step()`, UI wiring, seasons and leaderboard, report cards, Stats trend chart |
+| `20–43` | 3D view, one file per area of the mill: setup, plant, floors, rejects, stock prep, vehicles, labels, camera, upset effects and particles, people, fire response, the sky (`35b`), ambient life, janitorial, techs, upgrades, the yard props (`39b`: water tower, bales, gate sign), static-mesh merge, the knobs' red hardware, stock prep console and fiddly knobs view (`40b`), outage jobs, zen camera, the seeded scenery and terrain around the mill (`42b`), and the per-frame update (`43-3d-frame.js`) |
+| `50–53` | Side panels (slice, spider, Uncle Brian), the fiddly knob panel and the SPOT / WET / DET DCS and QCS screens (`50b`), app shell (top bar, sheets, menu, tutorial), the site picker (`51b`), main loop, the device autotest (`52b`, only active with `?autotest`), diagnostics panel and the `window.__PM` test hook |
 
 ## Conventions
 
@@ -212,3 +212,21 @@ Music: `musictest.py` and `musicrec.py` (see above). Needs Python 3 with Playwri
 - `balance.py index.html 40`: average outcomes over 40 seasons, to confirm balance after sim changes.
 - `idcheck.py index.html`: every element ID the code looks up exists.
 - `nothree.py index.html`: with three.js unreachable, the page shows the no-3D screen without errors.
+
+## Fiddly knobs (v5.6)
+
+- **Model** (`07b-knobs.js`): `S.knob` only exists once the player moves a knob, and `knobTick()` returns at once while
+  every knob is at standard and the process has settled. An untouched game draws no dice and changes nothing (the
+  autotest checksum is unchanged). Each knob drives a slow process state (first-order lags, a few two-stage), so trouble
+  shows up minutes to hours later; breaks come from hazards that fill up (no dice), breakdowns reuse the upset effects
+  through `knobTrig()` with their own `"knob"` dice stream. Three knob-only upsets (`rotortrip`, `oscfail`, `couchpit`)
+  are in `EVENTS` with `knob:true`, `stream:"knob"` and an endless MTBF: never rolled, left out of the Upsets panel and
+  the tornado. Every consequence ends with the crew tracing it to its knob(s) and resetting them (`knobFix`).
+- **Hooks into the sim:** `knobTick(dt)` after `autoControl` in `step()`, `knobMods(m)` at the end of `mods()`,
+  `knobOff()` (share of the reel to the beater) and `knobSteamCost()` in the production block, `knobHist()` (read-only
+  DCS trends, kept outside `S`) at the end of `step()`.
+- **Speed:** with a knob panel, a DCS / QCS screen, the spider valve or the slice open, `simRate()` returns 1 (`G3.knobUI`);
+  the player's own speed is never touched.
+- **Tests:** `tools/knobcheck.py <index.html>`: every knob on its own and the interacting pairs (consequence happens,
+  later rather than at once, costs money, gets traced and reset), an untouched run, and the screens (speed, view, taps
+  in 3D, save and continue).

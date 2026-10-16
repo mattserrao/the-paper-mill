@@ -123,11 +123,12 @@ function knobTick(dt){const K=S.knob;if(!K||!K.any||S.zen)return;
       K.edge=over?K.edge+Math.sign(need)*dt/60*15:Math.sign(K.edge)*Math.max(0,Math.abs(K.edge)-dt/60*15);}
     else{K.gacc+=dt/60*8;K.gtrav=0;K.edge=v.gt+(walk-(K.gw0||0))+K.gacc;}}
   // ---- water into the dryers and the steam that dries it ----
-  const W=1+Math.max(0,0.5-x.fr)*1.0-Math.max(0,x.fr-0.5)*0.4+Math.max(0,30-x.vac)*0.015-Math.max(0,x.vac-30)*0.004+Math.max(0,100-x.pl)*0.012-Math.max(0,x.pl-100)*0.003;
+  // (only the refiner can make it drier than normal, and then only the moisture moves: no knob ever saves steam)
+  const W=1+Math.max(0,0.5-x.fr)*1.0-Math.max(0,x.fr-0.5)*0.4+Math.max(0,30-x.vac)*0.015+Math.max(0,100-x.pl)*0.012;
   x.d1=L(x.d1,(v.st1-70)/130*0.35,8);
   const a=clamp(W-x.d1,0.7,1.3);K.W=W;K.a=a;
   x.m=Math.max(0.5,L(x.m,7+20*(W-x.d1-a),10));                                        // reel moisture (%)
-  K.sf=a+Math.max(0,x.d1);                                              // steam load (1 = normal)
+  K.sf=Math.max(1,a+Math.max(0,x.d1));                                  // steam load (1 = normal, never less)
   x.bs=L(x.bs,K.sf>=1.29?1:0,40);                                       // boiler header sagging under the load
   x.dl1=L(x.dl1||0,Math.max(0,1.0-v.draw),10);x.dl=L(x.dl,x.dl1,10);   // (two stages: the reel has to build a few wraps before the wrinkles show)
   x.cr1=L(x.cr1||0,Math.max(0,x.pl-115)/30,10);x.cr=L(x.cr||0,x.cr1,10);x.dt=L(x.dt,Math.max(0,v.draw-2.4),10);
