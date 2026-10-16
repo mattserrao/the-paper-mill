@@ -163,7 +163,17 @@
   const disks=new THREE.Group();disks.position.set(26,TY,TZ);thk.add(disks);
   {const sh=new CylG(0.22,0.22,7.6,12);sh.rotateZ(Math.PI/2);const s=new THREE.Mesh(sh,M.metal);s.position.set(0.3,0,0);disks.add(s);
     const dg=new CylG(1.7,1.7,0.12,28);dg.rotateZ(Math.PI/2);
-    for(let k=0;k<11;k++){const d=new THREE.Mesh(dg,[M.steel,dFace,dFace]);d.position.x=-2.5+k*0.5;d.castShadow=true;disks.add(d);}}
+    /* v5.5 perf: the 11 disks were 11 three-material meshes, 33 draws in the main pass and 33 more per shadow refresh for
+       156 triangles. One merged geometry: all the sides first (steel), then every face (the textured disc), 2 draws. */
+    {const P=dg.attributes.position,N=dg.attributes.normal,U=dg.attributes.uv,I=dg.index,nv=P.count,n=11;
+      const pos=new Float32Array(nv*3*n),nor=new Float32Array(nv*3*n),uv=new Float32Array(nv*2*n);
+      for(let k=0;k<n;k++){const dx=-2.5+k*0.5;for(let i=0;i<nv;i++){const j=k*nv+i;pos[j*3]=P.getX(i)+dx;pos[j*3+1]=P.getY(i);pos[j*3+2]=P.getZ(i);nor[j*3]=N.getX(i);nor[j*3+1]=N.getY(i);nor[j*3+2]=N.getZ(i);uv[j*2]=U.getX(i);uv[j*2+1]=U.getY(i);}}
+      const side=dg.groups[0],faces=dg.groups.slice(1),idx=[];
+      for(let k=0;k<n;k++)for(let q=0;q<side.count;q++)idx.push(I.getX(side.start+q)+k*nv);const sideCount=idx.length;
+      for(let k=0;k<n;k++)for(const gr of faces)for(let q=0;q<gr.count;q++)idx.push(I.getX(gr.start+q)+k*nv);
+      const g=new THREE.BufferGeometry();g.setAttribute("position",new THREE.BufferAttribute(pos,3));g.setAttribute("normal",new THREE.BufferAttribute(nor,3));g.setAttribute("uv",new THREE.BufferAttribute(uv,2));
+      g.setIndex(idx);g.addGroup(0,sideCount,0);g.addGroup(sideCount,idx.length-sideCount,1);
+      const d=new THREE.Mesh(g,[M.steel,dFace]);d.castShadow=true;disks.add(d);}}
   // drive: gearbox + motor on the far end, filtrate valve on the near end
   box(0.9,1.3,1.2,M.steel,29.7,TY-0.1,TZ,thk);box(0.9,TY-0.75,1.2,M.steel,29.7,(TY-0.75)/2,TZ,thk);
   {const mg=new CylG(0.5,0.5,1.4,16);mg.rotateZ(Math.PI/2);const mo=new THREE.Mesh(mg,M.brand);mo.position.set(30.9,TY-0.4,TZ);mo.castShadow=true;thk.add(mo);}

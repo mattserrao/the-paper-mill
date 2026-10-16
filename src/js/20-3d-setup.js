@@ -299,7 +299,12 @@ function no3D(){G3.ok=false;$("no3d").hidden=false;$("no3d-retry").onclick=()=>l
     const t=new THREE.CanvasTexture(c);t.colorSpace=THREE.SRGBColorSpace;return t;}
   M.baleG=[0,1,2].map(g=>mat("panel",{map:g?gradeTex(g):(()=>{const t=gradeTex(0);return t;})(),roughness:0.95}));
   // three instanced meshes, one per grade, filled each frame through put(); counts follow automatically
-  function graded(geo,n,opts={}){const ms=M.baleG.map(m=>{const o=new THREE.InstancedMesh(geo,instMat(m),n);o.castShadow=true;if(opts.recv)o.receiveShadow=true;o.count=0;scene.add(o);return o;});
+  /* v5.5 perf: an InstancedMesh with count 0 draws nothing, but three.js still walks it, switches its program and refreshes
+     its uniforms in every pass (about 10 of them per frame: bale and roll grades not on site). "visible" becomes an accessor
+     that reads false while the mesh is empty; the game's own true/false goes on underneath and shows again with the first
+     instance. (G3.emptyHide also runs over any InstancedMesh added later: 43-3d-frame.js) */
+  G3.emptyHide=o=>{if(!o.isInstancedMesh||o.__emptyHide)return;o.__emptyHide=true;let v=o.visible;Object.defineProperty(o,"visible",{get(){return v&&this.count>0;},set(x){v=!!x;},configurable:true,enumerable:true});};
+  function graded(geo,n,opts={}){const ms=M.baleG.map(m=>{const o=new THREE.InstancedMesh(geo,instMat(m),n);o.castShadow=true;if(opts.recv)o.receiveShadow=true;o.count=0;scene.add(o);G3.emptyHide(o);return o;});
     const k=[0,0,0];return {reset(){k[0]=k[1]=k[2]=0;},put(g,m4){if(k[g]<n)ms[g].setMatrixAt(k[g]++,m4);},done(){ms.forEach((o,i)=>{o.count=k[i];o.instanceMatrix.needsUpdate=true;});}};}
   const hsh2=n=>{const x=Math.sin(n*91.7+3.1)*43758.5453;return x-Math.floor(x);};
   // grade mix: mostly A and B; junk OCC deliveries swing it heavily toward C
