@@ -87,9 +87,10 @@
     const bm=new THREE.BatchedMesh(grp.recs.length,nv,Math.max(ni,1),bmMat(grp.mat));
     for(const g of geos.keys())geos.set(g,bm.addGeometry(g));
     for(const r of grp.recs){r.bm=bm;r.shared=true;r.iid=bm.addInstance(geos.get(r.o.geometry));bm.setMatrixAt(r.iid,r.o.matrixWorld);r.o.layers.set(SMLAYER);}
-    // no per-object culling or sorting: the scenery is light for any GPU, and culling would re-upload each batch's
-    // draw list every pass (main + shadow). The draw list now only changes when an object is handed back.
-    bm.perObjectFrustumCulled=false;bm.sortObjects=false;
+    // v5.5 perf: per-object frustum culling is on again (phones look at a third of the mill at the default zoom, so most
+    // batched triangles were off-screen vertex work); three.js rebuilds each batch's draw list per pass for it, which the
+    // benchmark showed to be cheaper than drawing everything. No sorting (the batches are opaque).
+    bm.perObjectFrustumCulled=!BQ.has("nocull");bm.sortObjects=false;
     bm.castShadow=grp.cast;bm.receiveShadow=grp.recv;bm.matrixAutoUpdate=false;bm.userData.smBatch=true;bm.name="scenery batch";
     bm.computeBoundingBox();bm.computeBoundingSphere();scene.add(bm);SM.bms.push(bm);}
   function smMerge(){const groups=new Map();

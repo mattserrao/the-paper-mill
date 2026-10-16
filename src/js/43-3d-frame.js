@@ -219,6 +219,12 @@
     const EXP=G3.EXP;let hidM=null;
     if(EXP.noMovers){if(!moversCache)moversCache=scene.children.filter(o=>o.userData&&(o.userData.legs||o.userData.wheels||o.userData.load||o.userData.cj));hidM=moversCache.filter(o=>o.visible);hidM.forEach(o=>o.visible=false);}
     if(G3.dbTick)G3.dbTick();
+    /* v5.5 perf: per-object frustum culling of the static batches (40-3d-static-merge.js) costs a pass over every batched
+       instance, so it runs only on frames where the camera moved or the shadow map refreshes (the shadow pass builds its
+       own list, and the main pass right after it leaves the list the still frames then reuse). */
+    if(G3.SM&&G3.SM.bms&&G3.SM.bms.length&&!G3.SM.off){const C=G3.cullCam||(G3.cullCam=new Float64Array(23).fill(NaN)),p=camera.position,q=camera.quaternion,pm=camera.projectionMatrix.elements;
+      let moved=false;const v=[p.x,p.y,p.z,q.x,q.y,q.z,q.w];for(let i=0;i<7;i++)if(C[i]!==v[i]){moved=true;C[i]=v[i];}for(let i=0;i<16;i++)if(C[7+i]!==pm[i]){moved=true;C[7+i]=pm[i];}
+      const on=!G3.cullOff&&(moved||renderer.shadowMap.needsUpdate||!!G3.cullAlways);for(const b of G3.SM.bms)b.perObjectFrustumCulled=on;}   // (G3.cullOff / cullAlways: A/B switches for the tools)
     if(!EXP.noRender){scene.matrixWorldAutoUpdate=!G3.DB||!G3.DB.n;renderer.render(scene,camera);scene.matrixWorldAutoUpdate=true;}
     if(hidM)hidM.forEach(o=>o.visible=true);
     // (v15: no counting when the render was skipped: renderer.info still holds the last real frame's numbers; and the moving
