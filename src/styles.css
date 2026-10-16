@@ -1069,3 +1069,35 @@ body.dark .kvchip{background:color-mix(in srgb,var(--panel) 96%,transparent)}
   body.app .kvchip{top:auto;bottom:calc(132px + env(safe-area-inset-bottom,0px))}
   body.app .knobp{top:calc(96px + env(safe-area-inset-top,0px));max-height:calc(100% - 250px)}
 }
+/* ---- v5.7 catching failures early: the Round button, the Round card (Vibration Report), the walk strip, outage prep ---- */
+.v2tabs.r5{grid-template-columns:repeat(5,1fr)}
+.v2tabs .v2round[hidden]{display:none}
+.v2round .rdot{position:absolute;top:5px;right:calc(50% - 18px);width:9px;height:9px;border-radius:50%;background:var(--ok);box-shadow:0 0 0 2px var(--panel)}
+.v2round .rdot[hidden]{display:none}
+.v2round.used{opacity:.55}
+.overlay.tellov{z-index:95}
+.tellcard{gap:10px;max-height:calc(100dvh - 32px);overflow:auto}.tellcard h2{font-size:24px;line-height:1.15}
+.tellcard .tnorep{font:500 13px var(--f-body);background:color-mix(in srgb,var(--ink) 6%,var(--panel));border-radius:8px;padding:8px 10px}
+.tareas{display:flex;flex-direction:column;gap:6px}
+.tarea{display:flex;justify-content:space-between;align-items:center;gap:10px;text-align:left;width:100%;min-height:52px;padding:8px 12px;border:1px solid var(--line);border-radius:10px;background:var(--panel);color:var(--ink)}
+.tarea b{display:block;font:700 15px var(--f-body)}.tarea small{display:block;font:500 12px var(--f-body);color:var(--muted)}
+.tarea:disabled{opacity:.6}
+.tarea .tv{font:800 22px/1 var(--f-body);font-style:normal;display:flex;flex-direction:column;align-items:flex-end;gap:2px;min-width:74px}
+.tarea .tv small{font:600 11px var(--f-body);text-transform:uppercase;letter-spacing:.04em}
+.tv0{color:var(--muted)}.tv1{color:var(--warn)}.tv2{color:var(--bad)}
+.tellstrip{position:fixed;z-index:84;left:50%;transform:translateX(-50%);bottom:calc(env(safe-area-inset-bottom,0px) + 128px);display:grid;grid-template-columns:1fr auto;gap:0 12px;align-items:center;
+  max-width:calc(100% - 24px);padding:8px 14px;border-radius:12px;background:color-mix(in srgb,var(--panel) 94%,transparent);border:2px solid var(--brand);box-shadow:0 4px 18px rgba(0,0,0,.18);pointer-events:none}
+.tellstrip[hidden]{display:none}
+.tellstrip b{font:700 14px var(--f-body)}.tellstrip span{font:800 18px var(--f-body);color:var(--brand);grid-row:span 2}.tellstrip small{font:500 12px var(--f-body);color:var(--muted)}
+.prep{display:flex;flex-direction:column;gap:2px;margin-top:4px}
+.prep .phead{display:flex;justify-content:space-between;gap:8px;align-items:baseline;flex-wrap:wrap}.prep .phead b{font:700 16px var(--f-body)}.prep .phead span{font:700 13px var(--f-body);color:var(--ok)}
+.prep .psub{font:500 12px var(--f-body);color:var(--muted);margin-bottom:4px}
+.prow{display:grid;grid-template-columns:1fr;gap:6px;padding:10px 0;border-top:1px solid var(--line)}
+.prow b{display:block;font:700 14px var(--f-body)}.prow small{display:block;font:500 12px var(--f-body);color:var(--muted)}
+.prow.locked{opacity:.55}.prow .pact em{font:600 12px var(--f-body);color:var(--muted);font-style:normal}
+.prow .pact .seg{display:flex;flex-wrap:wrap}.prow .pact .seg button{flex:1;min-height:40px}
+.prow .pact .pdone{color:var(--ok);font-weight:700}.prow .pact .pw{margin-top:4px}
+#v2cd.prepnew::before{content:"";display:inline-block;width:7px;height:7px;border-radius:50%;background:var(--ok);margin-right:4px;vertical-align:middle}
+.tellcard .tprep{display:flex;justify-content:space-between;align-items:center;gap:8px;width:100%;min-height:48px;padding:8px 12px;border-radius:10px;border:1px dashed var(--ok);background:color-mix(in srgb,var(--ok) 7%,var(--panel));color:var(--ink);text-align:left}
+.tellcard .tprep b{font:700 14px var(--f-body)}.tellcard .tprep small{font:600 12px var(--f-body);color:var(--ok)}
+.prepcard .phead b{display:none}

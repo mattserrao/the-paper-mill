@@ -70,7 +70,8 @@
         h+=`<section class="rcard"><div class="rhd"><h3>Season</h3><small class="mono">${S.season.done?"Season complete":"Day "+day+" of "+SEASON_DAYS}</small></div><div class="rtiles">${tiles(d)}</div><div class="rprog"><i style="width:${Math.min(100,S.t/(SEASON_DAYS*1440)*100).toFixed(1)}%"></i></div>${daysBlock(d)}</section>`;
         h+=`<section class="rcard"><div class="rhd"><h3>${S.season.done?"Last period":"This period so far"}</h3><small>days ${d.live.from}–${Math.min(d.live.to,day)}${d.prev?" · vs days "+d.prev.from+"–"+d.prev.to:""}</small></div>${gradesOn()?`<div class="rgrades">${grades(d)}</div><p class="rtip"><b>Biggest lever:</b> ${d.live.tip}</p>`:waitNote()}</section>`;}
       else h+=`<section class="rcard"><p class="rnone">Grades, uptime and report cards run during a 30-day season or a survival run. Here are your totals since the start.</p></section>`;
-      h+=`<section class="rcard">${costBlock(p)}</section>`;if(d.season)h+=`<section class="rcard">${upBlock(p)}</section>`;
+      h+=`<section class="rcard">${costBlock(p)}</section>`;
+      {const T=S.tell;if(T&&T.pre)h+=`<section class="rcard"><div class="rhd"><h3>Caught early</h3><small>daily rounds</small></div><p class="rnote">${T.n?`${T.n} upset${T.n>1?"s":""} caught before ${T.n>1?"they":"it"} happened: saved ${money(T.saved)} and ${tellHrs(T.savedMin)} of downtime.`:"Nothing caught yet. Walk an area with the Round button once a day: a tell spotted early is a planned repair at a fraction of the bill, with no downtime."}</p></section>`;}   // v5.7if(d.season)h+=`<section class="rcard">${upBlock(p)}</section>`;
       h+=`<section class="rcard">${qualBlock(p,d.season)}</section><section class="rcard">${moneyBlock(d)}</section>`;
       if(h!==el._h){el._h=h;el.innerHTML=h;}}   // (v5.2: unchanged report, no rebuild)
     el.addEventListener("click",e=>{const b=e.target.closest("[data-card]");if(b&&S.rc){const c=S.rc.cards[+b.dataset.card];if(c)rcOpen(c,true);}});

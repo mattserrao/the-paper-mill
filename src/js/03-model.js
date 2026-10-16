@@ -35,7 +35,7 @@ const UPS=[
  {id:"safety",g:"yard",name:"Safety & HR program",lv:[10e3],desc:"Dock fights and call-offs half as often."},
  {id:"maintcrew",g:"maint",name:"Maintenance techs",lv:[250e3,500e3,900e3],desc:"+2 techs on yellow scooters per level. Repairs finish 20% faster per level."},
  {id:"rcfa",g:"maint",name:"Root cause analysis (RCFA)",lv:[155e3,75e3],desc:"Every breakdown is investigated: repeat failures 25% rarer per level."},
- {id:"reliab",g:"maint",name:"Reliability program",lv:[195e3,125e3],desc:"Vibration and oil analysis: drive, felt and fabric failures 40% rarer and repair bills 15% lower per level."},
+ {id:"reliab",g:"maint",name:"Reliability program",lv:[195e3,125e3],desc:"Vibration and oil analysis: drive, felt and fabric failures 40% rarer and repair bills 15% lower per level. Level 1 adds the Vibration Report to your daily rounds."},
  {id:"pmprog",g:"maint",name:"Preventive maintenance",lv:[200e3,450e3,800e3],desc:"Planned shutdown work: all breakdowns 20% rarer and fewer sheet breaks per level. Costs $400/h per level."},
  {id:"stores",g:"maint",name:"Spare parts storeroom",lv:[35e3],desc:"Parts on the shelf: repairs finish 25% faster."},
  {id:"apc",g:"mgmt",name:"Advanced process control",lv:[80e3,80e3],desc:"+2% tons and 8% less energy per level."},

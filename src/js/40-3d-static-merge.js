@@ -7,7 +7,7 @@
      that moves, shows or hides, swaps material or edits its geometry just has its instance hidden and is drawn on its own
      again. Edge outlines, mirrored meshes and roof parts (which fade per roof) still bake into one geometry per material
      and map cell (the v2.9 path, smBuild); a change there rebuilds that one baked batch. */
-  const SM={t0:0,done:false,list:[],batches:new Map(),bms:[],dyn:new WeakSet(),checkT:0,queue:null,handedBack:0};G3.SM=SM;
+  const SM={t0:0,done:false,list:[],batches:new Map(),bms:[],dyn:new WeakSet(),checkT:0,queue:null,handedBack:0};G3.SM=SM;(G3.dynLater||[]).forEach(o=>SM.dyn.add(o));   // (v5.7: objects built before SM existed, e.g. the tells)
   // device checks: ?nosm turns the static batching off, ?nodb only the moving batches (each object then draws on its own)
   const BQ=new URLSearchParams(location.search);if(BQ.has("nosm")){SM.off=true;SM.done=true;}
   const _smV=new THREE.Vector3(),_smN=new THREE.Vector3(),_smM3=new THREE.Matrix3(),SMCELL=90,SMLAYER=31;

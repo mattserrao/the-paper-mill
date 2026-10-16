@@ -139,6 +139,11 @@ function chaosTick(dt){
   {const r=rand("up");if(CH.on&&um>0&&CH.en.chestover&&!active("chestover")&&S.tank>=P.tankCap*0.995&&r<dt/60/25)trigger("chestover");}
   const roll=CH.on&&um>0&&!outOn();
   if(S.rng.bird==null)S.rng.bird=(S.seed^0x5bd1e995)|0;if(S.rng.knob==null)S.rng.knob=(S.seed^0x6b9f3c21)|0;
-  for(const e of EVENTS){const r=rand(e.stream||"up");if(roll&&CH.en[e.id]&&!active(e.id)&&!civCool(e.id)&&r<dt/60/e.mtbf*CH.lvl*freqMul(e.id)*0.75*um)trigger(e.id);}
+  // v5.7: tellable upsets are queued with a lead time instead of firing (04b-tells.js); they may roll during an outage
+  // (just not into one), and not while the same upset is already waiting. The dice drawn are the same as before.
+  const tl=tellsOn();if(tl)tellTick(um);
+  for(const e of EVENTS){const r=rand(e.stream||"up"),t=tl&&TELLABLE.has(e.id);
+    if((t?CH.on&&um>0&&!tellPending(e.id):roll)&&CH.en[e.id]&&!active(e.id)&&!civCool(e.id)&&r<dt/60/e.mtbf*CH.lvl*freqMul(e.id)*0.75*um){if(t)tellQueue(e.id);else trigger(e.id);}}
+  if(tl)prepTick();
 }
 
