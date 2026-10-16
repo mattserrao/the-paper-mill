@@ -118,7 +118,7 @@ with sync_playwright() as pw:
         ui("label tap in the view opens the knob", "P.G3.lblTap('knob:couch');await wait(50);const o=!document.getElementById('knobP').hidden&&document.getElementById('kp-h').textContent;document.getElementById('kpClose').click();return o", "Couch pit agitator")
         ui("exit chip turns the view off", "document.getElementById('kvExit').click();await wait(100);return [!!P.G3.kvOn,P.G3.kvVeil.visible,document.getElementById('knobView').checked]", [False, False, False])
         # a real tap on the red hardware in 3D: aim the camera at it and click where it lands on screen
-        pg.evaluate("()=>{__PM.setRunning(false);const k=__PM.G3.KX.osc.at;__PM.G3.camSet([k[0],k[2],40,-0.2,0.9,0]);}")
+        pg.evaluate("()=>{__PM.setRunning(false);document.querySelectorAll('.overlay').forEach(o=>o.hidden=true);if(__PM.S.cards)__PM.S.cards.open=null;const k=__PM.G3.KX.osc.at;__PM.G3.camSet([k[0],k[2],40,-0.2,0.9,0]);}")
         pg.wait_for_timeout(1200)
         xy = pg.evaluate("()=>{const G=__PM.G3,c=G.diagScene().camera,k=G.KX.osc.at,v=new __PM.THREE.Vector3(k[0],k[1]-0.3,k[2]).project(c),r=document.getElementById('gl').getBoundingClientRect();return [r.left+(v.x+1)/2*r.width,r.top+(1-v.y)/2*r.height]}")
         print("     tap at", [round(v) for v in xy], pg.evaluate("xy=>{const e=document.elementFromPoint(xy[0],xy[1]);return e&&(e.id||e.className||e.tagName)}", xy))

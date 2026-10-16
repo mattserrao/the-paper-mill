@@ -90,10 +90,10 @@
           if(camera.position.distanceTo(m.v)>170)b=bad?"moved":"";   // zoomed out: names only, so they don't pile up
           lblSet(m.lb,a,b,bad);}});}
     // ---- what a moved knob looks like ----
-    // the bottom (pick-up) felt gets its own felt texture so stripes can be painted into it (same shader as the other felts)
+    // the pick-up felt (1st press top felt) gets its own felt texture so stripes can be painted into it (same shader as the other felts)
     let pfLvl=-1;
     function paintStripes(k){const c=G3.pfCanvas;if(!c)return;const x=c.getContext("2d"),W=c.width,H=c.height;x.fillStyle="#fff";x.fillRect(0,0,W,H);x.fillStyle="#9a9a9a";x.fillRect(0,0,10,H);
-      if(k>0.02){x.fillStyle=`rgba(70,58,44,${Math.min(0.85,k*0.9)})`;[0.12,0.29,0.47,0.66,0.83].forEach((v,i)=>x.fillRect(0,Math.round(v*H),W,Math.max(1,Math.round(H*(0.035+0.02*(i%2))))));}
+      if(k>0.02){x.fillStyle=`rgba(92,64,30,${Math.min(0.95,0.35+k*0.7)})`;[0.12,0.29,0.47,0.66,0.83].forEach((v,i)=>x.fillRect(0,Math.round(v*H),W,Math.max(1,Math.round(H*(0.035+0.02*(i%2))))));}
       G3.pfTex.needsUpdate=true;}
     let wire0=null,flut=false,lastSt=0;
     G3.knobFrame=(rdt,now)=>{const K=S.knob,on=!!(K&&K.any)&&!S.zen;
@@ -116,6 +116,6 @@
     // ---- breakdowns only a knob causes: their effects and pins (31-3d-upset-fx.js builds and precompiles them) ----
     FXDEF.rotortrip=g=>spFx(g,16,-13.5,2.6,8);
     FXDEF.couchpit=g=>spFx(g,40.6,11.4,0.6,6);
-    FXDEF.oscfail=g=>(now,rdt)=>{if(Math.random()<rdt*8)emit("steam",34+Math.random()*3,0.8,zc+R()*5,R()*0.4,0.8+Math.random(),R()*0.4,1.6,1.1,"#dfe7ee",0.5);};
-    PINS.rotortrip=[16,9,-13.5,"bolt"];PINS.couchpit=[40.6,7,12.2,"water"];PINS.oscfail=[35,9,zc,"!"];
+    FXDEF.oscfail=g=>(now,rdt)=>{if(Math.random()<rdt*8)emit("steam",35.5+Math.random()*3.5,7.4,zc+R()*5,R()*0.4,0.8+Math.random(),R()*0.4,1.6,1.1,"#dfe7ee",0.5);};
+    PINS.rotortrip=[16,9,-13.5,"bolt"];PINS.couchpit=[40.6,7,12.2,"water"];PINS.oscfail=[37,11,zc,"!"];
   }

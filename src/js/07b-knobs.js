@@ -28,7 +28,7 @@ const KNOBS=[
     tip:"Keeps the forming fabric tracking down the middle of the rolls. Normally on AUTO with no trim."},
   {id:"couch",name:"Couch pit agitator",area:"WET",where:"Couch pit, under the wire",field:true,
     tip:"Keeps the broke in the couch pit moving. Normally running."},
-  {id:"osc",name:"Pick-up felt oscillator",area:"WET",where:"Pick-up felt showers, press section",field:true,unit:"% stroke speed",min:0,max:100,step:5,
+  {id:"osc",name:"Pick-up felt oscillator",area:"WET",where:"Pick-up felt showers, 1st press top felt",field:true,unit:"% stroke speed",min:0,max:100,step:5,
     tip:"Sweeps the felt-cleaning shower back and forth across the pick-up felt. Normally 100%."},
   {id:"draw",name:"Press-to-dryer draw",area:"DET",where:"Dry end DCS",dcs:true,unit:"%",min:0,max:4,step:0.1,dp:1,
     tip:"Speed difference between the presses and the first dryers, which keeps the open draw taut. Standard is 1.5%."},

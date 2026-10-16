@@ -3145,7 +3145,7 @@ const KNOBS=[
     tip:"Keeps the forming fabric tracking down the middle of the rolls. Normally on AUTO with no trim."},
   {id:"couch",name:"Couch pit agitator",area:"WET",where:"Couch pit, under the wire",field:true,
     tip:"Keeps the broke in the couch pit moving. Normally running."},
-  {id:"osc",name:"Pick-up felt oscillator",area:"WET",where:"Pick-up felt showers, press section",field:true,unit:"% stroke speed",min:0,max:100,step:5,
+  {id:"osc",name:"Pick-up felt oscillator",area:"WET",where:"Pick-up felt showers, 1st press top felt",field:true,unit:"% stroke speed",min:0,max:100,step:5,
     tip:"Sweeps the felt-cleaning shower back and forth across the pick-up felt. Normally 100%."},
   {id:"draw",name:"Press-to-dryer draw",area:"DET",where:"Dry end DCS",dcs:true,unit:"%",min:0,max:4,step:0.1,dp:1,
     tip:"Speed difference between the presses and the first dryers, which keeps the open draw taut. Standard is 1.5%."},
@@ -3240,11 +3240,12 @@ function knobTick(dt){const K=S.knob;if(!K||!K.any||S.zen)return;
       K.edge=over?K.edge+Math.sign(need)*dt/60*15:Math.sign(K.edge)*Math.max(0,Math.abs(K.edge)-dt/60*15);}
     else{K.gacc+=dt/60*8;K.gtrav=0;K.edge=v.gt+(walk-(K.gw0||0))+K.gacc;}}
   // ---- water into the dryers and the steam that dries it ----
-  const W=1+Math.max(0,0.5-x.fr)*1.0-Math.max(0,x.fr-0.5)*0.4+Math.max(0,30-x.vac)*0.015-Math.max(0,x.vac-30)*0.004+Math.max(0,100-x.pl)*0.012-Math.max(0,x.pl-100)*0.003;
+  // (only the refiner can make it drier than normal, and then only the moisture moves: no knob ever saves steam)
+  const W=1+Math.max(0,0.5-x.fr)*1.0-Math.max(0,x.fr-0.5)*0.4+Math.max(0,30-x.vac)*0.015+Math.max(0,100-x.pl)*0.012;
   x.d1=L(x.d1,(v.st1-70)/130*0.35,8);
   const a=clamp(W-x.d1,0.7,1.3);K.W=W;K.a=a;
   x.m=Math.max(0.5,L(x.m,7+20*(W-x.d1-a),10));                                        // reel moisture (%)
-  K.sf=a+Math.max(0,x.d1);                                              // steam load (1 = normal)
+  K.sf=Math.max(1,a+Math.max(0,x.d1));                                  // steam load (1 = normal, never less)
   x.bs=L(x.bs,K.sf>=1.29?1:0,40);                                       // boiler header sagging under the load
   x.dl1=L(x.dl1||0,Math.max(0,1.0-v.draw),10);x.dl=L(x.dl,x.dl1,10);   // (two stages: the reel has to build a few wraps before the wrinkles show)
   x.cr1=L(x.cr1||0,Math.max(0,x.pl-115)/30,10);x.cr=L(x.cr||0,x.cr1,10);x.dt=L(x.dt,Math.max(0,v.draw-2.4),10);
@@ -5458,14 +5459,15 @@ function no3D(){G3.ok=false;$("no3d").hidden=false;$("no3d-retry").onclick=()=>l
   const feltGuides=[];
   function guide(x,y){feltGuides.push(cylZ(0.28,CD+0.2,M.steel,x,y,zc,10));}
   // 1st press top felt
-  feltMeshes.push(feltLoop([[35.6,3.47],[38.4,3.47],[39.4,5.6],[39.2,7.1],[35.2,7.1],[34.9,5.6]]));[[39.4,5.6],[39.2,7.1],[35.2,7.1],[34.9,5.6]].forEach(p=>guide(...p));
+  // (v5.6: the pick-up felt is the 1st press top felt; it has its own felt texture so the knobs can paint oscillator
+  // stripes into it, 40b-3d-knobs.js)
+  {const c=document.createElement("canvas");c.width=64;c.height=32;const x=c.getContext("2d");x.fillStyle="#fff";x.fillRect(0,0,64,32);x.fillStyle="#9a9a9a";x.fillRect(0,0,10,32);
+    const t=new THREE.CanvasTexture(c);t.wrapS=THREE.RepeatWrapping;t.colorSpace=THREE.SRGBColorSpace;G3.pfCanvas=c;G3.pfTex=t;
+    feltMeshes.push(feltLoop([[35.6,3.47],[38.4,3.47],[39.4,5.6],[39.2,7.1],[35.2,7.1],[34.9,5.6]],mat("g-felt",{map:t,side:THREE.DoubleSide,flatShading:false,roughness:1})));}[[39.4,5.6],[39.2,7.1],[35.2,7.1],[34.9,5.6]].forEach(p=>guide(...p));
   // 2nd press top felt
   feltMeshes.push(feltLoop([[30.5,3.47],[33.5,3.47],[34.2,6.1],[33.8,7.6],[30.3,7.6],[29.8,6.1]]));[[34.2,6.1],[33.8,7.6],[30.3,7.6],[29.8,6.1]].forEach(p=>guide(...p));
   // tandem bottom felt: picks the sheet up off the wire and carries it through both nips
-  // (v5.6: its own felt texture, so the knobs can paint oscillator stripes into it; 40b-3d-knobs.js)
-  {const c=document.createElement("canvas");c.width=64;c.height=32;const x=c.getContext("2d");x.fillStyle="#fff";x.fillRect(0,0,64,32);x.fillStyle="#9a9a9a";x.fillRect(0,0,10,32);
-    const t=new THREE.CanvasTexture(c);t.wrapS=THREE.RepeatWrapping;t.colorSpace=THREE.SRGBColorSpace;G3.pfCanvas=c;G3.pfTex=t;
-    feltMeshes.push(feltLoop([[41.2,2.95],[38,3.32],[30.6,3.32],[29.6,2.4],[29.6,0.55],[40.6,0.55],[41.6,1.7]],mat("g-felt",{map:t,side:THREE.DoubleSide,flatShading:false,roughness:1})));}[[29.6,2.4],[29.6,0.55],[40.6,0.55],[41.6,1.7]].forEach(p=>guide(...p));
+  feltMeshes.push(feltLoop([[41.2,2.95],[38,3.32],[30.6,3.32],[29.6,2.4],[29.6,0.55],[40.6,0.55],[41.6,1.7]]));[[29.6,2.4],[29.6,0.55],[40.6,0.55],[41.6,1.7]].forEach(p=>guide(...p));
   // press frames make the section stand out
   [zc-CD/2-0.55,zc+CD/2+0.55].forEach(z=>{box(1.1,6.2,0.5,M.steel,37,3.1,z);box(1.3,6.6,0.5,M.steel,32,3.3,z);box(6.5,0.5,0.5,M.steel,34.5,7.9,z);});
   const shoeMat=M.stock;
@@ -8335,10 +8337,10 @@ function no3D(){G3.ok=false;$("no3d").hidden=false;$("no3d-retry").onclick=()=>l
           if(camera.position.distanceTo(m.v)>170)b=bad?"moved":"";   // zoomed out: names only, so they don't pile up
           lblSet(m.lb,a,b,bad);}});}
     // ---- what a moved knob looks like ----
-    // the bottom (pick-up) felt gets its own felt texture so stripes can be painted into it (same shader as the other felts)
+    // the pick-up felt (1st press top felt) gets its own felt texture so stripes can be painted into it (same shader as the other felts)
     let pfLvl=-1;
     function paintStripes(k){const c=G3.pfCanvas;if(!c)return;const x=c.getContext("2d"),W=c.width,H=c.height;x.fillStyle="#fff";x.fillRect(0,0,W,H);x.fillStyle="#9a9a9a";x.fillRect(0,0,10,H);
-      if(k>0.02){x.fillStyle=`rgba(70,58,44,${Math.min(0.85,k*0.9)})`;[0.12,0.29,0.47,0.66,0.83].forEach((v,i)=>x.fillRect(0,Math.round(v*H),W,Math.max(1,Math.round(H*(0.035+0.02*(i%2))))));}
+      if(k>0.02){x.fillStyle=`rgba(92,64,30,${Math.min(0.95,0.35+k*0.7)})`;[0.12,0.29,0.47,0.66,0.83].forEach((v,i)=>x.fillRect(0,Math.round(v*H),W,Math.max(1,Math.round(H*(0.035+0.02*(i%2))))));}
       G3.pfTex.needsUpdate=true;}
     let wire0=null,flut=false,lastSt=0;
     G3.knobFrame=(rdt,now)=>{const K=S.knob,on=!!(K&&K.any)&&!S.zen;
@@ -8361,8 +8363,8 @@ function no3D(){G3.ok=false;$("no3d").hidden=false;$("no3d-retry").onclick=()=>l
     // ---- breakdowns only a knob causes: their effects and pins (31-3d-upset-fx.js builds and precompiles them) ----
     FXDEF.rotortrip=g=>spFx(g,16,-13.5,2.6,8);
     FXDEF.couchpit=g=>spFx(g,40.6,11.4,0.6,6);
-    FXDEF.oscfail=g=>(now,rdt)=>{if(Math.random()<rdt*8)emit("steam",34+Math.random()*3,0.8,zc+R()*5,R()*0.4,0.8+Math.random(),R()*0.4,1.6,1.1,"#dfe7ee",0.5);};
-    PINS.rotortrip=[16,9,-13.5,"bolt"];PINS.couchpit=[40.6,7,12.2,"water"];PINS.oscfail=[35,9,zc,"!"];
+    FXDEF.oscfail=g=>(now,rdt)=>{if(Math.random()<rdt*8)emit("steam",35.5+Math.random()*3.5,7.4,zc+R()*5,R()*0.4,0.8+Math.random(),R()*0.4,1.6,1.1,"#dfe7ee",0.5);};
+    PINS.rotortrip=[16,9,-13.5,"bolt"];PINS.couchpit=[40.6,7,12.2,"water"];PINS.oscfail=[37,11,zc,"!"];
   }
   /* ---- v3.0.0: planned outage jobs ----
      Every outage: maintenance technicians change the press felts (the felt-change animation, driven by the outage clock).
