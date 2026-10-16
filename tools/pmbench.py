@@ -43,7 +43,10 @@ SAMPLER = r"""()=>{const G=__PM.G3,R=G.renderer,gl=R.getContext(),SM=R.shadowMap
  if(window.__F)return;const F=window.__F={on:false,stall:true};
  const px=new Uint8Array(4);const r0=R.render.bind(R);F.shEvery=0;F.renders=0;
  const sm0=SM.render.bind(SM);SM.render=(...a)=>{const will=SM.enabled&&(SM.autoUpdate||SM.needsUpdate);const g0=B.gl;sm0(...a);if(will&&F.on){F.shRuns++;F.shDraws+=B.gl-g0;}};
- R.render=(s,c)=>{F.renders++;if(F.shEvery)SM.needsUpdate=(F.renders%F.shEvery===0);const g0=B.gl;const a=performance.now();r0(s,c);const b=performance.now();
+ // the shadow refresh schedule is applied before the game's frame runs (as the game's own timer would), so frame code
+ // that looks at shadowMap.needsUpdate sees it
+ const fb=G.frameBody;G.frameBody=function(...a){F.renders++;if(F.shEvery)SM.needsUpdate=(F.renders%F.shEvery===0);return fb.apply(this,a);};
+ R.render=(s,c)=>{const g0=B.gl;const a=performance.now();r0(s,c);const b=performance.now();
    B.cur+=b-a;if(F.stall){gl.readPixels(0,0,1,1,gl.RGBA,gl.UNSIGNED_BYTE,px);}const d=performance.now();
    if(F.on){F.n++;F.sub.push(b-a);F.gpu.push(d-b);F.draws+=B.gl-g0;F.tris+=R.info.render.triangles;}};
  const orig=requestAnimationFrame;let lastHeap=0;

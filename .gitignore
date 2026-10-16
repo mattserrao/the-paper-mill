@@ -8,3 +8,8 @@ result-*.json
 build/
 .claude/worktrees/
 tools/quick-*.json
+tools/package.json
+tools/package-lock.json
+tools/bench-*.json
+tools/drawcost.json
+tools/gpuexp.json
