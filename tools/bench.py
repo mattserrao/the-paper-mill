@@ -57,6 +57,16 @@ window.requestAnimationFrame=cb=>raf(t=>{const t0=performance.now();B.cur=0;cons
 HOOK = ("window.__PM={get THREE(){return THREE},get S(){return S},get C(){return C},get G3(){return G3},get EVENTS(){return EVENTS},get CH(){return CH},"
         "trigger:(...a)=>trigger(...a),step:h=>step(h),setFps:v=>setFpsMode(v),setRunning:v=>{running=v},get running(){return running}};\n")
 
+
+# v5.6: since v5.1 a season starts Select mode -> (map) -> leader picker; the tools that click Season (#v2go) pick a
+# leader here so the season really starts (shared by every tool that loads this prelude)
+def pick_leader(pg, who="hank", timeout=90000):
+    try: pg.wait_for_function("()=>{const o=document.getElementById('leadOv');return o&&!o.hidden}", timeout=timeout)
+    except Exception: return False
+    pg.evaluate("w=>{document.querySelector('#leadOv .ldcard[data-l=\"'+w+'\"]').click();document.getElementById('ld-go').click()}", who)
+    pg.wait_for_function("__PM.S.season&&__PM.S.season.on", timeout=60000, polling=50)
+    return True
+
 def stats(xs):
     xs = sorted(xs)
     if not xs: return {"n": 0, "mean": 0, "p95": 0}

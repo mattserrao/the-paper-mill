@@ -219,6 +219,7 @@
     // performance-test switches (Diagnostics > Performance test)
     const EXP=G3.EXP;let hidM=null;
     if(EXP.noMovers){if(!moversCache)moversCache=scene.children.filter(o=>o.userData&&(o.userData.legs||o.userData.wheels||o.userData.load||o.userData.cj));hidM=moversCache.filter(o=>o.visible);hidM.forEach(o=>o.visible=false);}
+    try{if(G3.knobFrame)G3.knobFrame(rdt,now);}catch(e){G3.fErr=(G3.fErr||0)+1;if(G3.fErr<6)console.error("knobs",e);}   // v5.6 fiddly knobs (40b)
     if(G3.dbTick)G3.dbTick();
     /* v5.5 perf: per-object frustum culling of the static batches (40-3d-static-merge.js) costs a pass over every batched
        instance, so it runs only on frames where the camera moved or the shadow map refreshes (the shadow pass builds its
@@ -238,7 +239,8 @@
     // v14: zoomed out, only the area labels and the landmark names show; closer in, the equipment labels and no landmarks
     const wide=camera.position.distanceTo(target)>400;
     // (v5.2: no projecting or text building while the section labels can't show: zen, hidden view, labels off)
-    if(!(G3.zen||LB.hid||labelHost.classList.contains("lbl-off")))LABELS.forEach(L=>{const R=L.lb;if(L.land?!wide:(!L.area&&wide)){R.vis=false;return;}tmp.copy(L.v).project(camera);const vis=tmp.z<1&&Math.abs(tmp.x)<1.05&&Math.abs(tmp.y)<1.05;R.vis=vis;
+    if(G3.kvOn)LABELS.forEach(L=>{L.lb.vis=false;});   // v5.6: the fiddly knobs view shows only the knobs' labels (and upsets')
+    else if(!(G3.zen||LB.hid||labelHost.classList.contains("lbl-off")))LABELS.forEach(L=>{const R=L.lb;if(L.land?!wide:(!L.area&&wide)){R.vis=false;return;}tmp.copy(L.v).project(camera);const vis=tmp.z<1&&Math.abs(tmp.x)<1.05&&Math.abs(tmp.y)<1.05;R.vis=vis;
       if(!vis)return;R.x=Math.round((tmp.x+1)/2*w);R.y=Math.round((1-tmp.y)/2*hh);
       if(doText||R.a==null){const [a,b]=L.t();lblSet(R,a,b,!!(L.cls&&L.cls()));}});
     lblPaint(now);

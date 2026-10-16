@@ -46,7 +46,7 @@ const EVENTS=[
  {id:"birdline",g:"god",name:"Bird on the power lines",head:"A bird flew into the substation! Flash, bang: mill-wide blackout.",dur:[60,180],mtbf:900,stream:"bird",mods:{pmDown:"power outage",pulperDown:1,recvMul:0,clampMul:0},fx:"birdline",
    start:i=>{if(typeof G3!=="undefined"&&G3.birdCine)G3.birdCine(i);}},
  {id:"tornado",g:"god",name:"Tornado",head:"Tornado touches down on the mill site!",dur:[60,120],mtbf:600,fx:"tornado",
-   start:i=>{const pool=EVENTS.filter(e=>e.g!=="god"&&!active(e.id));for(let k=0;k<2&&pool.length;k++){const e=pool.splice(Math.floor(rand("upx")*pool.length),1)[0];trigger(e.id,true);}
+   start:i=>{const pool=EVENTS.filter(e=>e.g!=="god"&&!e.knob&&!active(e.id));for(let k=0;k<2&&pool.length;k++){const e=pool.splice(Math.floor(rand("upx")*pool.length),1)[0];trigger(e.id,true);}
      const l=Math.round(S.fg*0.05);S.fg-=l;lotTake(S.lots.fg,l);i.note=`${l} rolls blown away`;}},
  {id:"beaver",g:"god",name:"Giant beaver",head:"A giant beaver crawls out of the river and starts eating the bale yard!",dur:[120,240],mtbf:700,mods:{yardEat:120,recvMul:0.3},fx:"beaver"},
  // v4.1 environment-specific upsets (env: only on that site; the dice are still drawn everywhere so the streams stay in step)
@@ -54,13 +54,18 @@ const EVENTS=[
  {id:"brownout",g:"machine",env:"urban",name:"Grid brownout",head:"Peak demand on the city grid: the utility cuts the mill back. Machine speed capped at 80% and the pulper throttled.",dur:[90,180],mtbf:300,mods:{speedCap:0.8,feedMul:0.85},fx:"brownout"},
  {id:"duststorm",g:"yard",env:"desert",name:"Dust storm",head:"A wall of dust rolls over the mill! Trucks crawl, the clamp trucks slow down and the dust gets into the screens and the sheet.",dur:[60,150],mtbf:260,mods:{recvMul:0.6,clampMul:0.7,breakMul:1.5,speedCap:0.9},fx:"duststorm"},
  {id:"flood",g:"yard",env:"swamp",name:"Bayou flood",head:"The bayou is over its banks! Water across the yard: forklifts and clamp trucks bog down and the trucks crawl.",dur:[180,360],mtbf:420,mods:{recvMul:0.5,clampMul:0.6},fx:"flood"},
+ // v5.6 fiddly knobs: breakdowns that only a moved knob causes (07b-knobs.js). Never rolled at random: their own dice
+ // stream and an endless MTBF, so every other upset keeps its timing; left out of the Upsets panel and the tornado.
+ {id:"rotortrip",g:"stock",knob:true,stream:"knob",name:"Pulper rotor trip",head:"The pulper rotor tripped out on high amps.",dur:[60,120],mtbf:1e12,mods:{pulperDown:1},fx:"rotortrip"},
+ {id:"oscfail",g:"machine",knob:true,stream:"knob",name:"Felt oscillator stopped",head:"The pick-up felt oscillator stopped. The felt is filling in stripes.",dur:[60,120],mtbf:1e12,mods:{},fx:"oscfail"},
+ {id:"couchpit",g:"machine",knob:true,stream:"knob",name:"Couch pit overflow",head:"The couch pit overflowed onto the machine floor.",dur:[90,150],mtbf:1e12,mods:{},fx:"couchpit"},
 ];
 const EV=Object.fromEntries(EVENTS.map(e=>[e.id,e]));
 EVENTS.forEach(e=>CH.en[e.id]=true);
 const WXN={clear:"Clear",rain:"Rain",fog:"Fog",snow:"Snow"};
 function active(id){const a=S.inc;for(let k=0;k<a.length;k++)if(a[k].id===id)return true;return false;}
 // machine and winder upsets go to the crew one at a time, in the order they happen; nothing gets fixed until a crew is there
-const QSET=new Set(EVENTS.map(e=>e.id).filter(id=>(EV[id].g==="machine"&&id!=="runner"&&id!=="birdhay"&&id!=="boiler"&&id!=="fogfan"&&id!=="steamjoint"&&id!=="brownout")||id==="ragger")),QINC=id=>QSET.has(id);   // (v5.2: a Set, built once)
+const QSET=new Set(EVENTS.map(e=>e.id).filter(id=>(EV[id].g==="machine"&&!EV[id].knob&&id!=="runner"&&id!=="birdhay"&&id!=="boiler"&&id!=="fogfan"&&id!=="steamjoint"&&id!=="brownout")||id==="ragger")),QINC=id=>QSET.has(id);   // (v5.2: a Set, built once)
 const RESP={ragger:6,wrap:4,hay:4,brk:2,dryerfire:3,shaft:8,fabric:6,felt:6,slime:5,winderdown:6};
 function enqueue(k){if(!S.crewQ)S.crewQ=[];if(S.crewQ.some(q=>q.k===k))return;S.crewQ.push({k,resp:RESP[k]||6,since:0,here:false,go:false});}
 function crewTick(dt){if(!S.crewQ)S.crewQ=[];if(!S.crewQ.length)return;   // (v5.2: nothing queued, nothing to do)
@@ -73,7 +78,7 @@ function crewTick(dt){if(!S.crewQ)S.crewQ=[];if(!S.crewQ.length)return;   // (v5
   // so game speed and graphics can't change downtime (the 3D crew walks over meanwhile)
   const h=S.crewQ[0];if(!h)return;if(h.resp>0)h.resp-=dt;if(h.resp<=0)h.go=h.here=true;}
 // maintenance: techs work in pairs; a job's repair clock only runs once its pair is on site (8 sim minutes after it is assigned)
-const MJOBS=["birdline","refclash","steamjoint","fogfan","shaft","fabric","felt","winderdown","hdblow","lwplug","cscreen","fscreen","lcplug","boiler","thkblow","overflow","chestover","fleet","roof","lightning","icedintake"];
+const MJOBS=["rotortrip","oscfail","birdline","refclash","steamjoint","fogfan","shaft","fabric","felt","winderdown","hdblow","lwplug","cscreen","fscreen","lcplug","boiler","thkblow","overflow","chestover","fleet","roof","lightning","icedintake"];
 const MSET=new Set(MJOBS),MNEED=id=>MSET.has(id);
 // v16: pairs go first to the job the PM crew is on (a job that needs both can only progress there), then to jobs that need
 // no crew, oldest first, and last to jobs still waiting for the crew. Before, a winder breakdown could hold the only pair
@@ -98,6 +103,7 @@ function mods(){const m=baseMods();
   for(const f of (S.fx||[])){const e=f.mods||{};if(e.pmDown)m.pmDown=e.pmDown;if(e.speedCap)m.speedCap=Math.min(m.speedCap,e.speedCap);if(e.breakMul)m.breakMul*=e.breakMul;if(e.winderDown)m.winderDown=true;if(e.recvMul!==undefined)m.recvMul*=e.recvMul;if(e.pulperDown)m.pulperDown=true;if(e.docksClosed)m.docksClosed=true;if(e.noOut)m.noOut=true;if(e.noIn)m.noIn=true;if(e.yieldMul)m.yieldMul*=e.yieldMul;if(e.feedMul)m.feedMul*=e.feedMul;if(e.clampMul!==undefined)m.clampMul*=e.clampMul;if(e.offSpec)m.offSpec=true;if(e.hayMul)m.hayMul*=e.hayMul;}   // (v5.1: civics fx use these too)
   if(S.wx==="rain")m.yieldMul*=0.97;
   if(S.pm==="break"&&S.brkType!=="reel"&&working("brk")){m.recvMul=0;m.clampMul=0;m.crewAtPM=true;}
+  knobMods(m);   // v5.6 fiddly knobs (nothing unless a knob was moved)
   return m;}
 // any stop that takes the sheet off the reel (boiler trip, felt or fabric change, no stock...) must be followed by a full
 // rethread once the cause is fixed: the machine goes into a press-section break and the crew threads it back to the reel
@@ -132,7 +138,7 @@ function chaosTick(dt){
   const um=upsetMul()*(busy>=2?0.25:1);
   {const r=rand("up");if(CH.on&&um>0&&CH.en.chestover&&!active("chestover")&&S.tank>=P.tankCap*0.995&&r<dt/60/25)trigger("chestover");}
   const roll=CH.on&&um>0&&!outOn();
-  if(S.rng.bird==null)S.rng.bird=(S.seed^0x5bd1e995)|0;
+  if(S.rng.bird==null)S.rng.bird=(S.seed^0x5bd1e995)|0;if(S.rng.knob==null)S.rng.knob=(S.seed^0x6b9f3c21)|0;
   for(const e of EVENTS){const r=rand(e.stream||"up");if(roll&&CH.en[e.id]&&!active(e.id)&&!civCool(e.id)&&r<dt/60/e.mtbf*CH.lvl*freqMul(e.id)*0.75*um)trigger(e.id);}
 }
 

@@ -13,7 +13,8 @@ with sync_playwright() as pw:
         pg=ctx.new_page();pg.on("pageerror",lambda e:errs.append(str(e)[:200]));pg.route("**/*",route_for(html));pg.add_init_script(INIT.replace("localStorage.clear()","0") if "localStorage.clear()" in INIT else INIT);pg.goto("http://bench.local/")
         pg.wait_for_function("window.__PM&&__PM.G3.warm",timeout=240000,polling=300);return pg
     pg=page()
-    pg.evaluate("()=>{document.getElementById('v2go').click();__PM.setRunning(false);const t=document.getElementById('tut');if(t)t.hidden=true;}")
+    pg.evaluate("()=>{document.getElementById('v2go').click()}");pick_leader(pg)   # (v5.6: the v5.1 leader picker)
+    pg.evaluate("()=>{__PM.setRunning(false);const t=document.getElementById('tut');if(t)t.hidden=true;}")
     # play 3 days with upsets and accept every card that comes up, so pending outcomes exist
     pg.evaluate("""()=>{const P=__PM;for(let k=0;k<3*1440*4;k++){if(k%1500===0)P.S.cards.next=P.S.t;P.step(0.25);const o=P.S.cards.open;if(o&&o.c){document.getElementById('deal-yes').click();P.setRunning(false);}else if(o)P.S.cards.open=null;}}""")
     st=pg.evaluate("()=>[__PM.S.cards.pend.map(p=>p.h),__PM.S.fx.map(f=>f.id),Math.round(__PM.S.t)]");print("before save: pending",st)

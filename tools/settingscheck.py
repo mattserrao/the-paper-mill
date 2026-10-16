@@ -13,7 +13,8 @@ with sync_playwright() as pw:
     pg.goto("http://bench.local/");pg.wait_for_function("window.__PM&&__PM.G3.warm",timeout=240000,polling=300)
     print("tabs:",pg.evaluate("()=>[...document.querySelectorAll('.v2tabs button')].map(b=>b.textContent.trim())"))
     print("folded:",pg.evaluate("()=>{const d=document.getElementById('areactl');return d?!d.open:null}"))
-    pg.evaluate("()=>{document.getElementById('v2go').click();__PM.setRunning(false);const t=document.getElementById('tut');if(t)t.hidden=true;}")
+    pg.evaluate("()=>{document.getElementById('v2go').click()}");pick_leader(pg)   # (v5.6: the v5.1 leader picker)
+    pg.evaluate("()=>{__PM.setRunning(false);const t=document.getElementById('tut');if(t)t.hidden=true;}")
     print("season locks:",pg.evaluate("""()=>{const C=__PM.C,ins=[...document.querySelectorAll('#cards .row[data-key] input,#cards .row[data-key] button.auto')];
       return {season:!!(__PM.S.season&&__PM.S.season.on),allDisabled:ins.every(e=>e.disabled),n:ins.length,allAuto:['inRate','drivers','pulper','pmSp','wdr','loaders','outRate'].every(k=>C[k].auto),paperFree:!document.querySelector('#paperColor button').disabled}}"""))
     # pick 30 min/s, run to the outage, touch the speed during it, run to the end

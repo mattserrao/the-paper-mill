@@ -524,7 +524,7 @@
         for(const sb of SM.bms){const g=new THREE.BoxGeometry(0.01,0.01,0.01),c=sb.material.clone();c.color.setRGB(1,1,1);if(!G3.DBCOL)c.vertexColors=true;
           const bm=new THREE.BatchedMesh(1,g.attributes.position.count,g.index.count,c);{const ii=bm.addInstance(bm.addGeometry(G3.DBCOL?g:G3.vcGeo(g,new THREE.Color(1,1,1))));if(G3.DBCOL&&!G3.DBMAT)bm.setColorAt(ii,new THREE.Color(1,1,1));}
           bm.perObjectFrustumCulled=false;bm.frustumCulled=false;bm.castShadow=sb.castShadow;bm.receiveShadow=sb.receiveShadow;scene.add(bm);stand.push([bm,g]);}
-        for(const id in FX){if(!FX[id].g.visible){FX[id].g.visible=true;shown.push(FX[id].g);}}if(G3.civShowAll)G3.civShowAll(shown);if(!fireFloor.visible){fireFloor.visible=true;shown.push(fireFloor);}
+        for(const id in FX){if(!FX[id].g.visible){FX[id].g.visible=true;shown.push(FX[id].g);}}if(G3.civShowAll)G3.civShowAll(shown);if(G3.warmShow)G3.warmShow(shown);   /* (v5.6: the fiddly knobs view, 40b) */if(!fireFloor.visible){fireFloor.visible=true;shown.push(fireFloor);}
         // v4.1 pass 3: the sky, terrain, clouds and mist never appear with an effect-only shader, and they already compiled for the
         // screen on the first frame; keeping them out of this off-screen pass saves their render-target shader variants
         const wld=[G3.terrain,G3.SKY&&G3.SKY.dome,G3.SKY&&G3.SKY.clouds&&G3.SKY.clouds.mesh,G3.SKY&&G3.SKY.mist&&G3.SKY.mist.mesh,G3.nightWin].filter(Boolean),wv=wld.map(o=>o.visible);wld.forEach(o=>o.visible=false);

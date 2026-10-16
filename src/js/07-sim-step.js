@@ -12,6 +12,7 @@ function step(dt){
   outageTick();
   const M=S.M=mods();
   autoControl(dt);
+  knobTick(dt);   // v5.6 fiddly knobs (returns at once unless a knob was moved)
   const g=GRADES[C.grade];
   // 1 inbound arrivals
   // weather: changes every few hours; snow and fog slow the trucks, rain soaks bales
@@ -70,9 +71,10 @@ function step(dt){
     }
   }
   if(S.pm!=="run") S.pmSpeed=ease(S.pmSpeed,0,dt,3);
-  if(prod>0){spend(prod*energyCost(),"energy");S.q.made+=prod;
+  if(prod>0){spend(prod*energyCost(),"energy");knobSteamCost(prod);S.q.made+=prod;
     let off=0;if(M.offSpec)off=prod;
     else if(S.chg){off=Math.min(prod,S.chg.left);S.chg.left-=off;if(S.chg.left<=1e-6){log(`Grade change to ${S.chg.to} complete: back on spec`,"ok");S.chg=null;}}
+    {const kf=knobOff();if(kf>0)off=Math.min(prod,off+(prod-off)*kf);}   // v5.6: a moved knob sending part of the reel to the beater
     if(off>0){S.tot.broke+=off;S.tot.beater=(S.tot.beater||0)+off;S.q.off+=off;S.q.bank+=off;prod-=off;}
     if(S.plan.hot&&C.grade==="33HT")S.plan.hot.made+=prod;}
   S.reel+=prod;lotPut(S.lots.reel,C.grade,prod); S.tot.prodT+=prod; S.tot.pot+=P.K*C.pmSp.v*g.bw*dt/60;
@@ -126,5 +128,6 @@ function step(dt){
   // trend every 10 sim min
   S.trendAcc+=dt;
   if(S.trendAcc>=10){S.trendAcc-=10;S.trend.push([S.tank/P.tankCap,S.pmSpeed/3300,S.yard/P.yardCap,S.fg/P.fgCap]);if(S.trend.length>144)S.trend.shift();}
+  if(!S.zen)knobHist();   // v5.6: DCS / QCS trends (reads only)
 }
 

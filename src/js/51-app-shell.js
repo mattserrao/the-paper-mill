@@ -88,7 +88,7 @@
     {const se=S.season,on=!!(se&&se.on),sv=!!(se&&se.surv),day=Math.floor(S.t/1440)+1,lab=on?(sv?(NARROW.matches?`W${survWave()} · D${day}`:`Wave ${survWave()} · Day ${day}`):(NARROW.matches?`Day ${Math.min(SEASON_DAYS,day)}/${SEASON_DAYS}`:`Day ${Math.min(SEASON_DAYS,day)} of ${SEASON_DAYS}`)):se&&se.done?(sv?"Run over":"Season over"):"Time";
      set("v2clockL",lab);$("v2clockL").classList.toggle("sday",on);$("v2clockL").title=on?(sv?"Survival: the wave you are in and the day of the run":"Season mode: day of the 30-day season"):"";}
     mirror.forEach(([d,s])=>{if(d.textContent!==s.textContent)d.textContent=s.textContent;});
-    const sp=outCapped()?`Watching crews · ${simRate()} min/s`:C.simSpeed+" min/s";if($("v2speed").textContent!==sp)$("v2speed").textContent=sp;$("v2speed").title=outCapped()?`Slowed to ${simRate()} min/s so you can watch the outage crews. Press − or + to go back to ${C.simSpeed} min/s; it also comes back when the outage ends.`:"";
+    const sp=G3.knobUI&&!S.zen?"Knob open · 1 min/s":outCapped()?`Watching crews · ${simRate()} min/s`:C.simSpeed+" min/s";if($("v2speed").textContent!==sp)$("v2speed").textContent=sp;$("v2speed").title=outCapped()?`Slowed to ${simRate()} min/s so you can watch the outage crews. Press − or + to go back to ${C.simSpeed} min/s; it also comes back when the outage ends.`:"";
     const n=S.inc.length,bd=$("v2bdg");bd.hidden=!n;if(bd.textContent!==String(n))bd.textContent=n;
   }
   UI_TICKS.push(sync);sync();
