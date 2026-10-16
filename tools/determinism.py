@@ -11,15 +11,15 @@ def run(seed_math):
     with sync_playwright() as pw:
         b = pw.chromium.launch(args=["--use-gl=angle", "--use-angle=swiftshader", "--enable-unsafe-swiftshader"])
         pg = b.new_page(viewport={"width": 640, "height": 400})
-        pg.route("**/*", route_for(html)); pg.add_init_script(init); pg.goto("http://bench.local/")
-        pg.wait_for_function("window.__PM&&window.__B&&__B.first!==null", timeout=60000)
+        pg.route("**/*", route_for(html)); pg.add_init_script(init); pg.goto("http://bench.local/?notitle")
+        pg.wait_for_function("window.__PM&&window.__B&&__B.first!==null&&(!__PM.G3.prewarm||__PM.G3.warm)", timeout=240000, polling=500)
+        # v5.1+ start flow: Season, then the leader picker; the run is paused the moment it starts and its random
+        # bottleneck (v4.2.5) pinned, so both loads step the same sim from the same state
         pg.evaluate("()=>document.getElementById('v2go').click()")
-        # v5.1+: a season starts after the leader is picked
-        pg.wait_for_function("()=>!document.getElementById('leadOv').hidden", timeout=60000)
+        pg.wait_for_function("()=>{const o=document.getElementById('leadOv');return o&&!o.hidden}", timeout=60000)
         pg.evaluate("()=>{document.querySelector('#leadOv .ldcard[data-l=\"hank\"]').click();document.getElementById('ld-go').click()}")
-        pg.wait_for_function("__PM.S.season&&__PM.S.season.on", timeout=120000, polling=200); pg.wait_for_timeout(300)
-        # v4.2.5: seasons roll a random bottleneck. Restart the season, stop at once and pin it, so the two loads compare.
-        pg.evaluate("()=>{document.getElementById('v2season').click();__PM.setRunning(false);__PM.setBn('pulper');}")
+        pg.wait_for_function("__PM.S.season&&__PM.S.season.on", timeout=120000, polling=50)
+        pg.evaluate("()=>{__PM.setRunning(false);__PM.setBn('pulper');}")
         r = pg.evaluate("""()=>{const P=__PM,S=P.S,h=P.SIM_STEP||0.5;P.setRunning(false);const log=[];let seen=0;
             while(S.t<9*1440-1e-9){P.step(h);if(S.tot.incidents>seen){seen=S.tot.incidents;log.push(Math.round(S.t)+":"+S.inc.map(x=>x.id).join("+"));}}
             return {t:S.t,cash:Math.round(S.cash),inc:S.tot.incidents,breaks:S.tot.breaks,hay:S.tot.hayouts||0,first:log.slice(0,8)};}""")
