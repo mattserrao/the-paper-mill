@@ -1,8 +1,8 @@
 # Changelog
 
-## v5.7.0-t1 (test build, 2026-10-16): catching failures early
+## v5.7.0 (2026-10-16): catching failures early
 New design principle: failures are visible before they occur. Mills that walk the floor and invest in monitoring pay
-less and lose less time. Functionality only; every number is a first guess (no balancing yet).
+less and lose less time. Every number is a first guess (balancing comes later).
 - **Tells.** Equipment and property upsets (stock prep, wet end, dry end and winder, yard and warehouse, utilities: 27 in
   all) are pre-rolled: the same dice as before, but a hit is queued and fires 1.5 in-game days later (survival: 0.1 day
   less each wave, at least 1 day). Until then a clearly failing piece of equipment sits at the spot: a red-hot motor,
