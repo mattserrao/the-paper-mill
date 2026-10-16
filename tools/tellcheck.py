@@ -187,7 +187,6 @@ with sync_playwright() as pw:
     catch_round(pg, "dry", ["shaft", "wrap"], "tap")
     r = pg.evaluate("()=>({n:__PM.S.tell.n,q:__PM.S.tell.q.map(p=>p.id)})")
     ok("phone: two tells caught with taps", r["n"] == n0 + 2 and "shaft" not in r["q"] and "wrap" not in r["q"], r)
-    pg.screenshot(path=str(pathlib.Path(sys.argv[1]).parent / "tellcheck-phone.png"))
     ok("phone: no page errors", not errs, errs[:3]); b.close()
 
     # ================= SURVIVAL =================
