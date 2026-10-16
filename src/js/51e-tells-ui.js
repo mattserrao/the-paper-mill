@@ -6,7 +6,7 @@
   // ---- the dock button ----
   if(TAB){btn=document.createElement("button");btn.type="button";btn.id="v2round";btn.className="v2round";btn.hidden=true;
     btn.innerHTML=`<svg fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" viewbox="0 0 24 24"><path d="M9 4h6v3H9z"></path><path d="M9 5.5H6.5V21h11V5.5H15"></path><path d="M9 12l2 2 4-4"></path></svg>Round<i class="rdot" hidden></i>`;
-    TAB.appendChild(btn);btn.addEventListener("click",()=>{if(cur)return;tellOpen();});}
+    TAB.insertBefore(btn,TAB.querySelector('[data-tab="ctl"]'));   /* (Settings stays on the far right) */btn.addEventListener("click",()=>{if(cur)return;tellOpen();});}
   function shell(id){let el=document.getElementById(id);if(!el){el=document.createElement("div");el.className="overlay tellov";el.id=id;el.hidden=true;document.body.appendChild(el);
       el.addEventListener("click",e=>{if(e.target===el)el.hidden=true;});}return el;}
   const ARROW=["→","↗","⇈"],AWORD=["steady","climbing","climbing fast"];
