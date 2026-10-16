@@ -12,17 +12,27 @@
   const BQ=new URLSearchParams(location.search);if(BQ.has("nosm")){SM.off=true;SM.done=true;}
   const _smV=new THREE.Vector3(),_smN=new THREE.Vector3(),_smM3=new THREE.Matrix3(),SMCELL=90,SMLAYER=31;
   function smShown(o){let x=o;for(;x&&x!==scene;x=x.parent)if(!x.visible)return false;return x===scene;}
+  /* v5.5 perf: frozen originals are parked in a holder outside the scene graph (SMHOLD), so neither three.js's per-frame
+     matrix update nor its render traversal visits them (about 2,500 nodes a frame on a phone). Their record keeps the
+     logical parent (r.par) for the watch (position, rotation, scale and parent matrix) and for the hand-back. */
+  const SMHOLD=new THREE.Group();SMHOLD.name="parked originals";SM.holder=SMHOLD;
+  const smPar=r=>(r.par&&r.o.parent===SMHOLD)?r.par:r.o.parent;
+  function smShownR(r){const o=r.o;if(o.parent!==SMHOLD)return smShown(o);if(!o.visible)return false;const p=r.par;return p===scene?true:!!p&&smShown(p);}
   function smExcluded(o){for(let x=o;x&&x!==scene;x=x.parent){if(roofs.includes(x)||SM.dyn.has(x))return true;}return false;}
   function smRecord(o){return {o,m:Float64Array.from(o.matrixWorld.elements),mat:o.material,geo:o.geometry,ver:o.geometry.attributes.position.version,key:null};}
-  function smSame(r){const o=r.o;if(o.material!==r.mat||o.geometry!==r.geo||o.geometry.attributes.position.version!==r.ver||!smShown(o))return false;
+  function smSame(r){const o=r.o;if(o.material!==r.mat||o.geometry!==r.geo||o.geometry.attributes.position.version!==r.ver||!smShownR(r))return false;
     if(r.frozen){if(!o.position.equals(r.fp)||!o.quaternion.equals(r.fq)||!o.scale.equals(r.fs))return false;
-      const e=o.parent.matrixWorld.elements,m=r.pm;for(let i=0;i<16;i++)if(Math.abs(e[i]-m[i])>1e-5)return false;return true;}
+      const par=smPar(r);if(!par)return false;const e=par.matrixWorld.elements,m=r.pm;for(let i=0;i<16;i++)if(Math.abs(e[i]-m[i])>1e-5)return false;return true;}
     const e=o.matrixWorld.elements,m=r.m;for(let i=0;i<16;i++)if(Math.abs(e[i]-m[i])>1e-5)return false;return true;}
   /* originals drawn by a batch don't need their matrices recomputed every frame: freeze them once the start-up watch
      (10 s) is over and watch their position, rotation, scale and parent instead. Unfrozen on hand-back. */
   function smFreeze(r){const o=r.o;if(r.frozen||!o.parent)return;r.frozen=true;r.fp=o.position.clone();r.fq=o.quaternion.clone();r.fs=o.scale.clone();
-    r.pm=Float64Array.from(o.parent.matrixWorld.elements);o.matrixAutoUpdate=false;o.matrixWorldAutoUpdate=false;}
-  function smThaw(r){if(!r.frozen)return;r.frozen=false;r.o.matrixAutoUpdate=true;r.o.matrixWorldAutoUpdate=true;r.o.updateMatrixWorld(true);}
+    r.pm=Float64Array.from(o.parent.matrixWorld.elements);o.matrixAutoUpdate=false;o.matrixWorldAutoUpdate=false;
+    if(!BQ.has("nopark")&&!o.children.length){r.par=o.parent;SMHOLD.add(o);o.__smRec=r;o.add=smParkedAdd;}}   // (leaves only: a parked node's children would never be drawn)
+  // a child added to a parked node brings the node back into the scene first (still frozen), so the child is drawn
+  function smUnpark(r){const o=r.o;if(o.parent!==SMHOLD)return;SMHOLD.remove(o);delete o.add;delete o.__smRec;if(r.par)r.par.add(o);r.par=null;}
+  function smParkedAdd(...a){if(this.__smRec)smUnpark(this.__smRec);return THREE.Object3D.prototype.add.apply(this,a);}
+  function smThaw(r){if(!r.frozen)return;r.frozen=false;smUnpark(r);const o=r.o;o.matrixAutoUpdate=true;o.matrixWorldAutoUpdate=true;o.updateMatrixWorld(true);}
   function smOK(o){if(!(o.isMesh||o.isLineSegments)||o.isInstancedMesh||o.isSkinnedMesh||o.isSprite||o.isPoints)return false;
     // edge outlines are faint (transparent) lines; merged per material and map cell they look the same, so they're allowed
     // (v4.1 pass 3: the ground shadings under walls and machines are transparent too, but static and flat: baked, below)
