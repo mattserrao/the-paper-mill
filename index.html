@@ -3157,7 +3157,7 @@ const KZONES=12;
 function knobState(){if(!S.knob){S.knob={v:Object.assign({},KNOB_IDEAL),z:new Array(KZONES).fill(0),
     x:{cp:5,fr:0.5,ch:0,sw:0,vac:30,pl:100,st:0,d1:0,m:7,dl:0,dt:0,bs:0,z:new Array(KZONES).fill(0)},
     any:false,cs:0,wear:0,gacc:0,gm0:0,H:{},harm:{},off:0,offWhy:"",sf:1,a:1,W:1,feed:1,brk:1,edge:0,gtrav:0,inc:[],warned:{},moved:{}};}
-  if(S.rng&&S.rng.knob==null)S.rng.knob=(S.seed^0x6b9f3c21)|0;return S.knob;}
+  if(S.knob.pmPrev==null)S.knob.pmPrev=S.pm;if(S.rng&&S.rng.knob==null)S.rng.knob=(S.seed^0x6b9f3c21)|0;return S.knob;}
 function knobVal(id){const K=S.knob;return K?K.v[id]:KNOB_IDEAL[id];}
 function knobAt(id){const K=S.knob;if(!K)return true;if(id==="zones")return K.z.every(v=>v===0);if(id==="guide")return K.v.gm===1&&K.v.gt===0;return K.v[id]===KNOB_IDEAL[id];}
 // the player moves a knob (UI): v is the new value (zones: [i,v]; guide: {gm,gt})
@@ -3230,10 +3230,10 @@ function knobTick(dt){const K=S.knob;if(!K||!K.any||S.zen)return;
   // ---- wet end ----
   for(let i=0;i<KZONES;i++)x.z[i]=L(x.z[i],K.z[i],20);
   x.vac=L(x.vac,v.vac,15);x.pl=L(x.pl,v.press,15);
-  if(v.vac>45)K.wear=Math.min(1.2,K.wear+dt/60*(v.vac-45)/15*0.25);   // high vacuum drags on the forming fabric
+  K.wear=v.vac>45?Math.min(1.2,K.wear+dt/60*(v.vac-45)/15*0.25):Math.max(0,K.wear-dt/60*0.05);   // high vacuum drags on the forming fabric (and a fresh stretch of normal running lets it recover, slowly)
   x.st=L(x.st,v.osc>=40?0:(40-v.osc)/40,v.osc>=40?60:90);              // pick-up felt filling in stripes
   K.cs=clamp(K.cs+dt/60*(v.couch?-2:1),0,3);                            // fiber settled in the couch pit
-  if(S.pm==="break"&&K.pmPrev!=="break")knobCouch();K.pmPrev=S.pm;       // any new break before the presses (random ones and rethreads too)
+  if(S.pm==="break"&&K.pmPrev!=null&&K.pmPrev!=="break")knobCouch();K.pmPrev=S.pm;       // any new break before the presses (random ones and rethreads too)
   // guide roll: the fabric walks a little all the time. AUTO soaks it up within its travel; trim uses travel up; MANUAL holds still
   {const walk=knobWalk();
     if(v.gm){const need=v.gt+walk,over=Math.abs(need)>30;K.gtrav=clamp(Math.abs(need)/30,0,1.5);   // out of travel: the fabric starts to walk
@@ -3314,9 +3314,8 @@ function knobRead(){const K=S.knob,x=K?K.x:null,g=GRADES[C.grade]||GRADES["23m"]
 // outside S so saves don't grow; a new game or a loaded save starts it fresh.
 const KHIST={S:null,t:-1,a:[]};
 function knobHist(){if(KHIST.S!==S){KHIST.S=S;KHIST.a.length=0;KHIST.t=-1;}const k=Math.floor(S.t/2);if(k===KHIST.t)return;KHIST.t=k;
-  const r=knobRead(),u=v=>r.run?v:null;   // (readings that only exist with a sheet on are left blank while the machine is down)
-  KHIST.a.push([S.t,r.cp,r.amps,r.gap,u(r.refkw),r.mcCons,r.vac,u(r.couchSol),r.pl,u(r.pressSol),r.edge,r.st1,u(r.st3),u(r.steam),r.boiler,u(r.moist),u(r.bw),u(r.tension),r.pulpLvl,r.stripes,r.off]);
-  if(KHIST.a.length>180)KHIST.a.shift();}
+  const r=knobRead(),u=v=>r.run?v:null,row=KHIST.a.length>=180?KHIST.a.shift():[];row.length=0;   // (readings that only exist with a sheet on are left blank while the machine is down)
+  row.push(S.t,r.cp,r.amps,r.gap,u(r.refkw),r.mcCons,r.vac,u(r.couchSol),r.pl,u(r.pressSol),r.edge,r.st1,u(r.st3),u(r.steam),r.boiler,u(r.moist),u(r.bw),u(r.tension),r.pulpLvl,r.stripes,r.off);KHIST.a.push(row);}   // (rows reused once 6 h are full)
 const KH_COL={cp:1,amps:2,gap:3,refkw:4,mcCons:5,vac:6,couchSol:7,pl:8,pressSol:9,edge:10,st1:11,st3:12,steam:13,boiler:14,moist:15,bw:16,tension:17,pulpLvl:18,stripes:19,off:20};
 /* ---------- UI wiring ---------- */
 const $=id=>document.getElementById(id);
@@ -6569,7 +6568,7 @@ function no3D(){G3.ok=false;$("no3d").hidden=false;$("no3d-retry").onclick=()=>l
         for(const sb of SM.bms){const g=new THREE.BoxGeometry(0.01,0.01,0.01),c=sb.material.clone();c.color.setRGB(1,1,1);if(!G3.DBCOL)c.vertexColors=true;
           const bm=new THREE.BatchedMesh(1,g.attributes.position.count,g.index.count,c);{const ii=bm.addInstance(bm.addGeometry(G3.DBCOL?g:G3.vcGeo(g,new THREE.Color(1,1,1))));if(G3.DBCOL&&!G3.DBMAT)bm.setColorAt(ii,new THREE.Color(1,1,1));}
           bm.perObjectFrustumCulled=false;bm.frustumCulled=false;bm.castShadow=sb.castShadow;bm.receiveShadow=sb.receiveShadow;scene.add(bm);stand.push([bm,g]);}
-        for(const id in FX){if(!FX[id].g.visible){FX[id].g.visible=true;shown.push(FX[id].g);}}if(G3.civShowAll)G3.civShowAll(shown);if(!fireFloor.visible){fireFloor.visible=true;shown.push(fireFloor);}
+        for(const id in FX){if(!FX[id].g.visible){FX[id].g.visible=true;shown.push(FX[id].g);}}if(G3.civShowAll)G3.civShowAll(shown);if(G3.warmShow)G3.warmShow(shown);   /* (v5.6: the fiddly knobs view, 40b) */if(!fireFloor.visible){fireFloor.visible=true;shown.push(fireFloor);}
         // v4.1 pass 3: the sky, terrain, clouds and mist never appear with an effect-only shader, and they already compiled for the
         // screen on the first frame; keeping them out of this off-screen pass saves their render-target shader variants
         const wld=[G3.terrain,G3.SKY&&G3.SKY.dome,G3.SKY&&G3.SKY.clouds&&G3.SKY.clouds.mesh,G3.SKY&&G3.SKY.mist&&G3.SKY.mist.mesh,G3.nightWin].filter(Boolean),wv=wld.map(o=>o.visible);wld.forEach(o=>o.visible=false);
@@ -8309,6 +8308,8 @@ function no3D(){G3.ok=false;$("no3d").hidden=false;$("no3d-retry").onclick=()=>l
       const hm=new THREE.Mesh(HG,HM);hm.position.set(at[0],at[1]+2.2,at[2]);hm.scale.setScalar(2.2);hm.updateMatrixWorld(true);hm.userData.tag=tag;KVHITS.push(hm);});
     // (the section labels' Off setting would hide the knobs' labels too: lifted while the view is up, put back after)
     let kvLblOff=false;
+    // shown for the prewarm's one render, so the view's shaders are compiled at start-up, not when it is first turned on
+    G3.warmShow=shown=>{[veil,KVG].forEach(o=>{if(!o.visible){o.visible=true;shown.push(o);}});};
     G3.knobView=on=>{on=!!on;if(on===!!G3.kvOn)return;G3.kvOn=on;veil.visible=KVG.visible=on;if(!on)MARKS.forEach(m=>m.lb.vis=false);LB.force=true;
       if(on){kvLblOff=labelHost.classList.contains("lbl-off");labelHost.classList.remove("lbl-off");}else if(kvLblOff)labelHost.classList.add("lbl-off");
       // the spider valve sits inside the thickener's group: put its marker where it really is in the world
@@ -10157,11 +10158,11 @@ function stationOv(){let o=$("dcsOv");if(o)return o;
   o.addEventListener("click",e=>{if(e.target===o)closeStation();});
   o.querySelectorAll("[data-t]").forEach(b=>b.addEventListener("click",()=>{KUI.tab=b.dataset.t;stationBuild();}));
   o.querySelectorAll("[data-a]").forEach(b=>b.addEventListener("click",()=>{KUI.st=b.dataset.a;stationBuild();}));
-  document.addEventListener("keydown",e=>{if(e.key==="Escape"&&KUI.st)closeStation();});
+
   return o;}
 function openStation(a,tab){if(S.zen||!AREA_N[a])return;closeKnob();["spider","slice","brian"].forEach(k=>$(k).hidden=true);const o=stationOv();KUI.st=a;if(tab)KUI.tab=tab;o.hidden=false;stationBuild();kuiSync();
   setTimeout(()=>{try{$("dcsClose").focus({preventScroll:true});}catch(_){}},0);}
-function closeStation(quiet){const o=$("dcsOv");if(o)o.hidden=true;KUI.st=null;if(!quiet)kuiSync();}
+function closeStation(quiet){const o=$("dcsOv"),was=o&&!o.hidden;if(o)o.hidden=true;KUI.st=null;if(!quiet){kuiSync();if(was)try{$("gl").focus({preventScroll:true});}catch(_){}}}
 // the process picture for each area: equipment boxes and live tags. Coordinates in a 640 x 230 view box.
 const MIMIC={
   SPOT:{title:"PM3 · STOCK PREP",eq:[[14,80,96,70,"PULPER"],[132,95,74,40,"SCREENS"],[228,80,80,70,"STOCK CHEST"],[330,95,78,40,"REFINERS"],[430,80,92,70,"MACHINE CHEST"],[546,100,80,30,"FAN PUMP"]],
@@ -10223,7 +10224,7 @@ function drawTrend6(cv,series){if(!cv)return;const x=cv.getContext("2d"),W=cv.wi
   series.forEach(([k,,col,lo,hi])=>{const c=KH_COL[k];x.strokeStyle=col;x.lineWidth=2.5;x.beginPath();let st=false;
     for(const r of a){if(r[0]<t0)continue;const v=r[c];if(v==null||v!==v){st=false;continue;}const y=H-8-clamp((v-lo)/(hi-lo),0,1)*(H-24);if(!st){x.moveTo(X(r[0]),y);st=true;}else x.lineTo(X(r[0]),y);}x.stroke();});}
 function kuiRefresh(){if(!KUI.panel&&!KUI.st)return;const r=knobRead();
-  if(KUI.panel){const id=KUI.panel;document.querySelectorAll("#kpCtl .kctl").forEach(knobCtlSync);$("kpRead").innerHTML=knobReadout(id,r);
+  if(KUI.panel){const id=KUI.panel;document.querySelectorAll("#kpCtl .kctl").forEach(knobCtlSync);{const h=knobReadout(id,r),e=$("kpRead");if(e._h!==h){e._h=h;e.innerHTML=h;}}
     const n=$("kpNote"),moved=!knobAt(id),busy=S.knob&&S.knob.inc.some(i=>i.cause.includes(id));n.className="spin"+(moved?" bad":"");
     n.textContent=busy?"A crew is working on trouble out here.":moved?`Moved off standard (${knobFmt(id)}). Things may take a while to show up, and not always here.`:"At standard.";
     $("kpReset").disabled=!moved;if(id==="zones")kuiCd(document.querySelector('#kpCtl canvas[data-cd]'),r);}
@@ -10235,7 +10236,7 @@ function kuiRefresh(){if(!KUI.panel&&!KUI.st)return;const r=knobRead();
     else{const K=S.knob,F=(K&&K.F)||{},off=r.off,st=$("qcsSt");
       const sh=!r.run?["MACHINE DOWN","down"]:off>0.02?[`REJECTING · ${KOFFN[r.why]||"off spec"} · ${Math.round(off*100)}% to the beater`,"bad"]:S.chg?["GRADE CHANGE · to the beater","warn"]:S.M.offSpec?["REJECTING · off spec","bad"]:["ON SPEC","ok"];
       if(st._h!==sh[0]){st._h=sh[0];st.textContent=sh[0];st.className="qcsst "+sh[1];}
-      const g=GRADES[C.grade];$("qcsV").innerHTML=`<div><small>Grade</small><b>${C.grade}</b></div><div><small>Basis weight</small><b>${r.run?kf(r.bw,2):"–"}</b><small>target ${g.bw}</small></div><div><small>Moisture</small><b>${r.run?kf(r.moist):"–"} %</b><small>target 7.0</small></div><div><small>Reel speed</small><b>${Math.round(r.speed)}</b><small>fpm</small></div>`;
+      const g=GRADES[C.grade],qv=$("qcsV"),qh=`<div><small>Grade</small><b>${C.grade}</b></div><div><small>Basis weight</small><b>${r.run?kf(r.bw,2):"–"}</b><small>target ${g.bw}</small></div><div><small>Moisture</small><b>${r.run?kf(r.moist):"–"} %</b><small>target 7.0</small></div><div><small>Reel speed</small><b>${Math.round(r.speed)}</b><small>fpm</small></div>`;if(qv._h!==qh){qv._h=qh;qv.innerHTML=qh;}
       drawTrend6($("qcsTr"),[["moist","","#4fd18b",0,14],["bw","","#ffb02e",(g.bw-3),(g.bw+3)],["off","","#ff7a8a",0,1]]);kuiCd($("qcsCd"),r);
       const D=[["Wrinkles",F.wrinkles],["Crush marks",F.crush],["Felt stripes",F.stripes],["CD streaks",F.cd],["Weight swings",F.bw],["Wet sheet",F.wet],["Dry sheet",F.dry]];
       const h=D.map(([n,v])=>{const c=v>0.01?Math.round(4+v*80):0;return `<div class="${c?"hit":""}"><small>${n}</small><b>${c}</b><small>/ reel</small></div>`;}).join("");const dd=$("qcsDef");if(dd._h!==h){dd._h=h;dd.innerHTML=h;}}}}
@@ -10249,6 +10250,8 @@ function kuiCd(cv,r){if(!cv)return;const x=cv.getContext("2d"),W=cv.width,H=cv.h
   x.strokeStyle="rgba(79,209,139,.85)";x.setLineDash([6,6]);x.lineWidth=1.5;x.beginPath();x.moveTo(0,Y(7));x.lineTo(W,Y(7));x.stroke();x.setLineDash([]);
   x.textAlign="left";x.fillStyle="rgba(190,205,230,.8)";x.font="600 12px system-ui,sans-serif";x.fillText("7 % target",6,Y(7)-4);}
 function clockOf(t){const m=((Math.floor(t)+360)%1440+1440)%1440,h=Math.floor(m/60),mm=m%60;return `${(h%12)||12}:${String(mm).padStart(2,"0")} ${h<12?"AM":"PM"}`;}
+// Escape closes the DCS or the knob panel and nothing else (capture phase: the sheet and fullscreen handlers don't see it)
+document.addEventListener("keydown",e=>{if(e.key!=="Escape"||!(KUI.st||KUI.panel))return;e.preventDefault();e.stopPropagation();if(KUI.st)closeStation();else closeKnob();},true);
 UI_TICKS.push(()=>{if(S.zen&&(KUI.panel||KUI.st)){closeKnob();closeStation();}kuiSync();if(KUI.panel||KUI.st)kuiRefresh();});
 // taps in the 3D view (29-3d-camera.js) and labels in the knob view (40b)
 G3.knobTap=h=>{if(!h||S.zen)return;if(h.k==="knob")openKnob(h.id);else if(h.k==="station")openStation(h.a,"dcs");else if(h.k==="spider")openSpider();else if(h.k==="slice")openSlice();};

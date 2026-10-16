@@ -62,6 +62,8 @@
       const hm=new THREE.Mesh(HG,HM);hm.position.set(at[0],at[1]+2.2,at[2]);hm.scale.setScalar(2.2);hm.updateMatrixWorld(true);hm.userData.tag=tag;KVHITS.push(hm);});
     // (the section labels' Off setting would hide the knobs' labels too: lifted while the view is up, put back after)
     let kvLblOff=false;
+    // shown for the prewarm's one render, so the view's shaders are compiled at start-up, not when it is first turned on
+    G3.warmShow=shown=>{[veil,KVG].forEach(o=>{if(!o.visible){o.visible=true;shown.push(o);}});};
     G3.knobView=on=>{on=!!on;if(on===!!G3.kvOn)return;G3.kvOn=on;veil.visible=KVG.visible=on;if(!on)MARKS.forEach(m=>m.lb.vis=false);LB.force=true;
       if(on){kvLblOff=labelHost.classList.contains("lbl-off");labelHost.classList.remove("lbl-off");}else if(kvLblOff)labelHost.classList.add("lbl-off");
       // the spider valve sits inside the thickener's group: put its marker where it really is in the world

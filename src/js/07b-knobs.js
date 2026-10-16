@@ -40,7 +40,7 @@ const KZONES=12;
 function knobState(){if(!S.knob){S.knob={v:Object.assign({},KNOB_IDEAL),z:new Array(KZONES).fill(0),
     x:{cp:5,fr:0.5,ch:0,sw:0,vac:30,pl:100,st:0,d1:0,m:7,dl:0,dt:0,bs:0,z:new Array(KZONES).fill(0)},
     any:false,cs:0,wear:0,gacc:0,gm0:0,H:{},harm:{},off:0,offWhy:"",sf:1,a:1,W:1,feed:1,brk:1,edge:0,gtrav:0,inc:[],warned:{},moved:{}};}
-  if(S.rng&&S.rng.knob==null)S.rng.knob=(S.seed^0x6b9f3c21)|0;return S.knob;}
+  if(S.knob.pmPrev==null)S.knob.pmPrev=S.pm;if(S.rng&&S.rng.knob==null)S.rng.knob=(S.seed^0x6b9f3c21)|0;return S.knob;}
 function knobVal(id){const K=S.knob;return K?K.v[id]:KNOB_IDEAL[id];}
 function knobAt(id){const K=S.knob;if(!K)return true;if(id==="zones")return K.z.every(v=>v===0);if(id==="guide")return K.v.gm===1&&K.v.gt===0;return K.v[id]===KNOB_IDEAL[id];}
 // the player moves a knob (UI): v is the new value (zones: [i,v]; guide: {gm,gt})
@@ -113,10 +113,10 @@ function knobTick(dt){const K=S.knob;if(!K||!K.any||S.zen)return;
   // ---- wet end ----
   for(let i=0;i<KZONES;i++)x.z[i]=L(x.z[i],K.z[i],20);
   x.vac=L(x.vac,v.vac,15);x.pl=L(x.pl,v.press,15);
-  if(v.vac>45)K.wear=Math.min(1.2,K.wear+dt/60*(v.vac-45)/15*0.25);   // high vacuum drags on the forming fabric
+  K.wear=v.vac>45?Math.min(1.2,K.wear+dt/60*(v.vac-45)/15*0.25):Math.max(0,K.wear-dt/60*0.05);   // high vacuum drags on the forming fabric (and a fresh stretch of normal running lets it recover, slowly)
   x.st=L(x.st,v.osc>=40?0:(40-v.osc)/40,v.osc>=40?60:90);              // pick-up felt filling in stripes
   K.cs=clamp(K.cs+dt/60*(v.couch?-2:1),0,3);                            // fiber settled in the couch pit
-  if(S.pm==="break"&&K.pmPrev!=="break")knobCouch();K.pmPrev=S.pm;       // any new break before the presses (random ones and rethreads too)
+  if(S.pm==="break"&&K.pmPrev!=null&&K.pmPrev!=="break")knobCouch();K.pmPrev=S.pm;       // any new break before the presses (random ones and rethreads too)
   // guide roll: the fabric walks a little all the time. AUTO soaks it up within its travel; trim uses travel up; MANUAL holds still
   {const walk=knobWalk();
     if(v.gm){const need=v.gt+walk,over=Math.abs(need)>30;K.gtrav=clamp(Math.abs(need)/30,0,1.5);   // out of travel: the fabric starts to walk
@@ -197,7 +197,6 @@ function knobRead(){const K=S.knob,x=K?K.x:null,g=GRADES[C.grade]||GRADES["23m"]
 // outside S so saves don't grow; a new game or a loaded save starts it fresh.
 const KHIST={S:null,t:-1,a:[]};
 function knobHist(){if(KHIST.S!==S){KHIST.S=S;KHIST.a.length=0;KHIST.t=-1;}const k=Math.floor(S.t/2);if(k===KHIST.t)return;KHIST.t=k;
-  const r=knobRead(),u=v=>r.run?v:null;   // (readings that only exist with a sheet on are left blank while the machine is down)
-  KHIST.a.push([S.t,r.cp,r.amps,r.gap,u(r.refkw),r.mcCons,r.vac,u(r.couchSol),r.pl,u(r.pressSol),r.edge,r.st1,u(r.st3),u(r.steam),r.boiler,u(r.moist),u(r.bw),u(r.tension),r.pulpLvl,r.stripes,r.off]);
-  if(KHIST.a.length>180)KHIST.a.shift();}
+  const r=knobRead(),u=v=>r.run?v:null,row=KHIST.a.length>=180?KHIST.a.shift():[];row.length=0;   // (readings that only exist with a sheet on are left blank while the machine is down)
+  row.push(S.t,r.cp,r.amps,r.gap,u(r.refkw),r.mcCons,r.vac,u(r.couchSol),r.pl,u(r.pressSol),r.edge,r.st1,u(r.st3),u(r.steam),r.boiler,u(r.moist),u(r.bw),u(r.tension),r.pulpLvl,r.stripes,r.off);KHIST.a.push(row);}   // (rows reused once 6 h are full)
 const KH_COL={cp:1,amps:2,gap:3,refkw:4,mcCons:5,vac:6,couchSol:7,pl:8,pressSol:9,edge:10,st1:11,st3:12,steam:13,boiler:14,moist:15,bw:16,tension:17,pulpLvl:18,stripes:19,off:20};

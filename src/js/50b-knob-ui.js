@@ -74,11 +74,11 @@ function stationOv(){let o=$("dcsOv");if(o)return o;
   o.addEventListener("click",e=>{if(e.target===o)closeStation();});
   o.querySelectorAll("[data-t]").forEach(b=>b.addEventListener("click",()=>{KUI.tab=b.dataset.t;stationBuild();}));
   o.querySelectorAll("[data-a]").forEach(b=>b.addEventListener("click",()=>{KUI.st=b.dataset.a;stationBuild();}));
-  document.addEventListener("keydown",e=>{if(e.key==="Escape"&&KUI.st)closeStation();});
+
   return o;}
 function openStation(a,tab){if(S.zen||!AREA_N[a])return;closeKnob();["spider","slice","brian"].forEach(k=>$(k).hidden=true);const o=stationOv();KUI.st=a;if(tab)KUI.tab=tab;o.hidden=false;stationBuild();kuiSync();
   setTimeout(()=>{try{$("dcsClose").focus({preventScroll:true});}catch(_){}},0);}
-function closeStation(quiet){const o=$("dcsOv");if(o)o.hidden=true;KUI.st=null;if(!quiet)kuiSync();}
+function closeStation(quiet){const o=$("dcsOv"),was=o&&!o.hidden;if(o)o.hidden=true;KUI.st=null;if(!quiet){kuiSync();if(was)try{$("gl").focus({preventScroll:true});}catch(_){}}}
 // the process picture for each area: equipment boxes and live tags. Coordinates in a 640 x 230 view box.
 const MIMIC={
   SPOT:{title:"PM3 · STOCK PREP",eq:[[14,80,96,70,"PULPER"],[132,95,74,40,"SCREENS"],[228,80,80,70,"STOCK CHEST"],[330,95,78,40,"REFINERS"],[430,80,92,70,"MACHINE CHEST"],[546,100,80,30,"FAN PUMP"]],
@@ -140,7 +140,7 @@ function drawTrend6(cv,series){if(!cv)return;const x=cv.getContext("2d"),W=cv.wi
   series.forEach(([k,,col,lo,hi])=>{const c=KH_COL[k];x.strokeStyle=col;x.lineWidth=2.5;x.beginPath();let st=false;
     for(const r of a){if(r[0]<t0)continue;const v=r[c];if(v==null||v!==v){st=false;continue;}const y=H-8-clamp((v-lo)/(hi-lo),0,1)*(H-24);if(!st){x.moveTo(X(r[0]),y);st=true;}else x.lineTo(X(r[0]),y);}x.stroke();});}
 function kuiRefresh(){if(!KUI.panel&&!KUI.st)return;const r=knobRead();
-  if(KUI.panel){const id=KUI.panel;document.querySelectorAll("#kpCtl .kctl").forEach(knobCtlSync);$("kpRead").innerHTML=knobReadout(id,r);
+  if(KUI.panel){const id=KUI.panel;document.querySelectorAll("#kpCtl .kctl").forEach(knobCtlSync);{const h=knobReadout(id,r),e=$("kpRead");if(e._h!==h){e._h=h;e.innerHTML=h;}}
     const n=$("kpNote"),moved=!knobAt(id),busy=S.knob&&S.knob.inc.some(i=>i.cause.includes(id));n.className="spin"+(moved?" bad":"");
     n.textContent=busy?"A crew is working on trouble out here.":moved?`Moved off standard (${knobFmt(id)}). Things may take a while to show up, and not always here.`:"At standard.";
     $("kpReset").disabled=!moved;if(id==="zones")kuiCd(document.querySelector('#kpCtl canvas[data-cd]'),r);}
@@ -152,7 +152,7 @@ function kuiRefresh(){if(!KUI.panel&&!KUI.st)return;const r=knobRead();
     else{const K=S.knob,F=(K&&K.F)||{},off=r.off,st=$("qcsSt");
       const sh=!r.run?["MACHINE DOWN","down"]:off>0.02?[`REJECTING · ${KOFFN[r.why]||"off spec"} · ${Math.round(off*100)}% to the beater`,"bad"]:S.chg?["GRADE CHANGE · to the beater","warn"]:S.M.offSpec?["REJECTING · off spec","bad"]:["ON SPEC","ok"];
       if(st._h!==sh[0]){st._h=sh[0];st.textContent=sh[0];st.className="qcsst "+sh[1];}
-      const g=GRADES[C.grade];$("qcsV").innerHTML=`<div><small>Grade</small><b>${C.grade}</b></div><div><small>Basis weight</small><b>${r.run?kf(r.bw,2):"–"}</b><small>target ${g.bw}</small></div><div><small>Moisture</small><b>${r.run?kf(r.moist):"–"} %</b><small>target 7.0</small></div><div><small>Reel speed</small><b>${Math.round(r.speed)}</b><small>fpm</small></div>`;
+      const g=GRADES[C.grade],qv=$("qcsV"),qh=`<div><small>Grade</small><b>${C.grade}</b></div><div><small>Basis weight</small><b>${r.run?kf(r.bw,2):"–"}</b><small>target ${g.bw}</small></div><div><small>Moisture</small><b>${r.run?kf(r.moist):"–"} %</b><small>target 7.0</small></div><div><small>Reel speed</small><b>${Math.round(r.speed)}</b><small>fpm</small></div>`;if(qv._h!==qh){qv._h=qh;qv.innerHTML=qh;}
       drawTrend6($("qcsTr"),[["moist","","#4fd18b",0,14],["bw","","#ffb02e",(g.bw-3),(g.bw+3)],["off","","#ff7a8a",0,1]]);kuiCd($("qcsCd"),r);
       const D=[["Wrinkles",F.wrinkles],["Crush marks",F.crush],["Felt stripes",F.stripes],["CD streaks",F.cd],["Weight swings",F.bw],["Wet sheet",F.wet],["Dry sheet",F.dry]];
       const h=D.map(([n,v])=>{const c=v>0.01?Math.round(4+v*80):0;return `<div class="${c?"hit":""}"><small>${n}</small><b>${c}</b><small>/ reel</small></div>`;}).join("");const dd=$("qcsDef");if(dd._h!==h){dd._h=h;dd.innerHTML=h;}}}}
@@ -166,6 +166,8 @@ function kuiCd(cv,r){if(!cv)return;const x=cv.getContext("2d"),W=cv.width,H=cv.h
   x.strokeStyle="rgba(79,209,139,.85)";x.setLineDash([6,6]);x.lineWidth=1.5;x.beginPath();x.moveTo(0,Y(7));x.lineTo(W,Y(7));x.stroke();x.setLineDash([]);
   x.textAlign="left";x.fillStyle="rgba(190,205,230,.8)";x.font="600 12px system-ui,sans-serif";x.fillText("7 % target",6,Y(7)-4);}
 function clockOf(t){const m=((Math.floor(t)+360)%1440+1440)%1440,h=Math.floor(m/60),mm=m%60;return `${(h%12)||12}:${String(mm).padStart(2,"0")} ${h<12?"AM":"PM"}`;}
+// Escape closes the DCS or the knob panel and nothing else (capture phase: the sheet and fullscreen handlers don't see it)
+document.addEventListener("keydown",e=>{if(e.key!=="Escape"||!(KUI.st||KUI.panel))return;e.preventDefault();e.stopPropagation();if(KUI.st)closeStation();else closeKnob();},true);
 UI_TICKS.push(()=>{if(S.zen&&(KUI.panel||KUI.st)){closeKnob();closeStation();}kuiSync();if(KUI.panel||KUI.st)kuiRefresh();});
 // taps in the 3D view (29-3d-camera.js) and labels in the knob view (40b)
 G3.knobTap=h=>{if(!h||S.zen)return;if(h.k==="knob")openKnob(h.id);else if(h.k==="station")openStation(h.a,"dcs");else if(h.k==="spider")openSpider();else if(h.k==="slice")openSlice();};
