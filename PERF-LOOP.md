@@ -5,6 +5,30 @@ on it in separate worktrees, judge with the quick test plus correctness checks, 
 it here. The live game (`index.html` at the root of main) stays v4.0.1; only `test/vN/` folders go to main. Source
 changes live on branch `perf-loop`.
 
+## Frame-cost benchmark (v5.5, `tools/fpsbench.py`)
+
+On a phone the display locks the game at 60 FPS while the frame is only part-full, so FPS stops moving long before the
+work does. `fpsbench.py` measures the work inside each frame instead, in phone emulation (390x844, touch, DPR 1.25, the
+Auto/medium tier, seeded, 30 sim-min/s, normal play):
+
+```
+cd tools
+python3 fpsbench.py ../index.html <label> [--repeat=3] [--secs=15] [--engine=chromium|webkit|both] [--profile]
+python3 fpsbench.py --ab before.html after.html before after --repeat=4     # A, B, A, B, ...: machine drift cancels
+python3 fpsbench.py --compare bench-before.json bench-after.json            # markdown table with % changes
+```
+
+- **cpu_ms** = sim + scene update (measured with the render skipped, so the loop runs at 60 Hz and time-based work is
+  amortized as on a phone) + three.js draw submission.
+- **gpu_ms** = how long a 1-pixel read-back waits after each render (shadows refreshed every 4th frame, as the medium tier
+  does at 60 FPS), split into **fragment_ms** (scales with pixels, measured again at half the pixel ratio) and
+  **vertex_ms** (per-triangle, per-draw and per-pass work). The emulated GPUs are software rasterizers: Chromium's
+  SwiftShader is vertex-heavy, WebKit's is fill-heavy; use the ratios between builds, never the absolute ms.
+- **frame_ms** = cpu + gpu, and **unlocked_fps** = 1000 / frame_ms: what the frame rate would be with no display cap.
+- Counts (draws per pass, triangles, programs, textures, page writes) are machine-independent.
+- `abtest.py` flips one switch A/B/A/B on one loaded page (precise enough for 0.1 ms CPU); `gpuexp.py` hides each kind of
+  object in turn to show what it costs; `drawcost.py` lists every draw of one frame with its triangles.
+
 ## Quick test
 
 ```

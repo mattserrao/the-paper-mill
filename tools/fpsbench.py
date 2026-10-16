@@ -3,6 +3,7 @@
 Usage:
   python3 fpsbench.py <index.html> <label> [--engine=chromium|webkit|both] [--repeat=3] [--secs=12] [--dpr=1.25]
                       [--leader=hank] [--mode=season|survival] [--gfx=medium] [--profile] [--out=DIR]
+  python3 fpsbench.py --ab <before.html> <after.html> <labelA> <labelB> [--repeat=4 ...]   # alternate A, B, A, B: drift cancels
   python3 fpsbench.py --compare before.json after.json [more.json ...]       # markdown table, % change vs the first
 
 Why not FPS: on a phone the display locks the game at 60 FPS while the frame is only part-full, so FPS stops moving long
@@ -79,11 +80,15 @@ if "--compare" in flags:
     sys.exit(0)
 
 # ---------------------------------------------------------------------------------------------------------------------
-path = args[0]; label = args[1] if len(args) > 1 else pathlib.Path(path).parent.name or "build"
+# --ab: two builds measured alternately (A, B, A, B, ...) so machine drift cancels; writes one file per build
+AB = "--ab" in flags
+if AB: paths, labels = args[0:2], args[2:4]
+else: paths, labels = [args[0]], [args[1] if len(args) > 1 else pathlib.Path(args[0]).parent.name or "build"]
+path, label = paths[0], labels[0]
 engine = flags.get("--engine", "chromium"); repeat = int(flags.get("--repeat", 1)); SECS = float(flags.get("--secs", 12))
 DPR = float(flags.get("--dpr", 1.25)); leader = flags.get("--leader", "hank"); mode = flags.get("--mode", "season")
 gfx = flags.get("--gfx", ""); out_dir = pathlib.Path(flags.get("--out", HERE)); profile = "--profile" in flags
-html = PB.load_html(path)
+htmls = [PB.load_html(p) for p in paths]; html = htmls[0]
 
 def line_map():
     """index.html line -> src file, from build.py's concatenation order (for the profile's per-file split)."""
@@ -121,7 +126,8 @@ def cpu_profile(cdp, pg, secs=8):
             "by_file_pct_of_busy": {k: round(100 * v / max(1, busy), 1) for k, v in sorted(by_file.items(), key=lambda x: -x[1]) if k != "(idle/program)"},
             "top_self_pct_of_busy": [[k, round(100 * v / max(1, busy), 1)] for k, v in top]}
 
-def one_run(pw, eng):
+def one_run(pw, eng, html=None):
+    html = html or htmls[0]
     b = PB.launch(pw, eng); ctx = PB.phone_context(b, DPR); pg = ctx.new_page(); errs = []
     warm_s = PB.start_game(pg, html, mode, leader, gfx, errs)
     ms = int(SECS * 1000)
@@ -176,18 +182,20 @@ def median_of(runs):
 out_dir.mkdir(parents=True, exist_ok=True)
 with sync_playwright() as pw:
     for eng in (["chromium", "webkit"] if engine == "both" else [engine]):
-        runs = []
+        runs = [[] for _ in paths]
         for i in range(repeat):
-            t = time.time(); runs.append(one_run(pw, eng)); s = runs[-1]["summary"]
-            print(f"[{label} {eng} run {i + 1}/{repeat} {time.time() - t:.0f}s] frame {s['frame_ms']} ms = cpu {s['cpu_ms']} ({s['sim_scene_ms']} + submit {s['submit_ms']}) + gpu {s['gpu_ms']} "
-                  f"(fragment {s['fragment_ms']}, vertex {s['vertex_ms']}); draws {s['draws_main']}/{s['draws_shadow']}, tris {s['tris_k']}k, programs {s['programs']}; errors {runs[-1]['errors']}", flush=True)
-        med, spread = median_of(runs)
-        res = {"label": label, "engine": eng, "build": str(path), "runs": repeat, "secs": SECS, "dpr": DPR, "leader": leader, "mode": mode,
-               "ts": time.strftime("%Y-%m-%d %H:%M"), "median": med, "spread": spread, "detail": runs}
-        fn = out_dir / f"bench-{label}{'' if eng == 'chromium' else '-' + eng}.json"
-        fn.write_text(json.dumps(res, indent=1)); print("wrote", fn)
-        print(json.dumps({k: v for k, v in med.items() if k != "sections"}))
-        for key in ("profile_cpu", "profile_render"):
-            if runs[-1].get(key):
-                p = runs[-1][key]; print(f"{key}: busy {p['busy_pct']}% · by file: {json.dumps(dict(list(p['by_file_pct_of_busy'].items())[:12]))}")
-                for k, v in p["top_self_pct_of_busy"][:15]: print(f"  {v:5.1f}%  {k}")
+            for j, (h, lab) in enumerate(zip(htmls, labels)):
+                t = time.time(); runs[j].append(one_run(pw, eng, h)); s = runs[j][-1]["summary"]
+                print(f"[{lab} {eng} run {i + 1}/{repeat} {time.time() - t:.0f}s] frame {s['frame_ms']} ms = cpu {s['cpu_ms']} ({s['sim_scene_ms']} + submit {s['submit_ms']}) + gpu {s['gpu_ms']} "
+                      f"(fragment {s['fragment_ms']}, vertex {s['vertex_ms']}); draws {s['draws_main']}/{s['draws_shadow']}, tris {s['tris_k']}k, programs {s['programs']}; errors {runs[j][-1]['errors']}", flush=True)
+        for j, (pth, lab) in enumerate(zip(paths, labels)):
+            med, spread = median_of(runs[j])
+            res = {"label": lab, "engine": eng, "build": str(pth), "runs": repeat, "secs": SECS, "dpr": DPR, "leader": leader, "mode": mode, "interleaved": AB,
+                   "ts": time.strftime("%Y-%m-%d %H:%M"), "median": med, "spread": spread, "detail": runs[j]}
+            fn = out_dir / f"bench-{lab}{'' if eng == 'chromium' else '-' + eng}.json"
+            fn.write_text(json.dumps(res, indent=1)); print("wrote", fn)
+            print(json.dumps({k: v for k, v in med.items() if k != "sections"}))
+            for key in ("profile_cpu", "profile_render"):
+                if runs[j][-1].get(key):
+                    p = runs[j][-1][key]; print(f"{key}: busy {p['busy_pct']}% · by file: {json.dumps(dict(list(p['by_file_pct_of_busy'].items())[:12]))}")
+                    for k, v in p["top_self_pct_of_busy"][:15]: print(f"  {v:5.1f}%  {k}")
