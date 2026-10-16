@@ -7,6 +7,7 @@
   const _tr={kind:"in",k:0,docked:false,d:0,leaving:false},TR=(kind,k,docked,d,leaving)=>{_tr.kind=kind;_tr.k=k;_tr.docked=docked;_tr.d=d;_tr.leaving=leaving;return _tr;};
   const q4=new THREE.Quaternion();
   G3.frameBody=function(rdt){if(PF.on){PF.t=performance.now();PF.frames++;}navPump();pm("walker route planning (2 ms/frame max)");
+    {const t=performance.now();if(!(t-(G3.ehT||0)<5000)){G3.ehT=t;if(G3.emptyHide)scene.traverse(o=>{if(o.isInstancedMesh)G3.emptyHide(o);});}}   // (v5.5 perf: see G3.emptyHide)
     // v2.8.8: the machine's motion clocks (dryer cans, presses, felts, sheet, pulper swirl, belts) used to be advanced only by the
     // old 2D drawing, which no longer runs when the 3D view is up, so everything stood still
     if(rdt>0){const R=S.rates;if(!S.M.pulperDown)V.swirl+=rdt*(0.4+R.feed*0.06);V.belt=(V.belt+rdt*R.feed*1.4)%30;V.cans+=rdt*S.pmSpeed/700;
@@ -219,6 +220,12 @@
     const EXP=G3.EXP;let hidM=null;
     if(EXP.noMovers){if(!moversCache)moversCache=scene.children.filter(o=>o.userData&&(o.userData.legs||o.userData.wheels||o.userData.load||o.userData.cj));hidM=moversCache.filter(o=>o.visible);hidM.forEach(o=>o.visible=false);}
     if(G3.dbTick)G3.dbTick();
+    /* v5.5 perf: per-object frustum culling of the static batches (40-3d-static-merge.js) costs a pass over every batched
+       instance, so it runs only on frames where the camera moved or the shadow map refreshes (the shadow pass builds its
+       own list, and the main pass right after it leaves the list the still frames then reuse). */
+    if(G3.SM&&G3.SM.bms&&G3.SM.bms.length&&!G3.SM.off){const C=G3.cullCam||(G3.cullCam=new Float64Array(23).fill(NaN)),p=camera.position,q=camera.quaternion,pm=camera.projectionMatrix.elements;
+      let moved=false;const v=[p.x,p.y,p.z,q.x,q.y,q.z,q.w];for(let i=0;i<7;i++)if(C[i]!==v[i]){moved=true;C[i]=v[i];}for(let i=0;i<16;i++)if(C[7+i]!==pm[i]){moved=true;C[7+i]=pm[i];}
+      const on=!G3.cullOff&&(moved||renderer.shadowMap.needsUpdate||!!G3.cullAlways);for(const b of G3.SM.bms)b.perObjectFrustumCulled=on;}   // (G3.cullOff / cullAlways: A/B switches for the tools)
     if(!EXP.noRender){scene.matrixWorldAutoUpdate=!G3.DB||!G3.DB.n;renderer.render(scene,camera);scene.matrixWorldAutoUpdate=true;}
     if(hidM)hidM.forEach(o=>o.visible=true);
     // (v15: no counting when the render was skipped: renderer.info still holds the last real frame's numbers; and the moving

@@ -29,6 +29,17 @@ function no3D(){G3.ok=false;$("no3d").hidden=false;$("no3d-retry").onclick=()=>l
   // the start-up precompile (G3.prewarm) do the work up front as intended.
   renderer.debug.checkShaderErrors=false;
   G3.ok=true;
+  /* v5.5 perf: three.js recomposes the local matrix of every auto-updating node on every frame (about 4,900 here: people
+     and vehicle parts, effects built up front, overlays), then multiplies it with the parent's, whether or not anything
+     moved. Skip the recompose when position, rotation and scale are unchanged since the last one; the world matrix is then
+     recomputed only when a parent moved (three.js passes that down as "force"). Re-parenting clears the cache, so a node
+     moved to another parent picks up its new world matrix on the next frame as before. */
+  if(!THREE.Object3D.prototype.__pmMatrixSkip){const P=THREE.Object3D.prototype,um=P.updateMatrix,add=P.add,rem=P.remove;P.__pmMatrixSkip=true;
+    P.updateMatrix=function(){const p=this.position,q=this.quaternion,s=this.scale;let c=this._mc;
+      if(c!==undefined&&c[0]===p.x&&c[1]===p.y&&c[2]===p.z&&c[3]===q.x&&c[4]===q.y&&c[5]===q.z&&c[6]===q.w&&c[7]===s.x&&c[8]===s.y&&c[9]===s.z)return;
+      if(c===undefined)c=this._mc=new Float64Array(10);c[0]=p.x;c[1]=p.y;c[2]=p.z;c[3]=q.x;c[4]=q.y;c[5]=q.z;c[6]=q.w;c[7]=s.x;c[8]=s.y;c[9]=s.z;um.call(this);};
+    P.add=function(...a){for(const o of a)if(o&&o._mc)o._mc=undefined;return add.apply(this,a);};
+    P.remove=function(...a){for(const o of a)if(o&&o._mc)o._mc=undefined;return rem.apply(this,a);};}
   const mobile=matchMedia("(pointer: coarse)").matches;
   /* v4.1 graphics tiers. Auto picks from the device (phones: Medium, or Low with little memory; desktops: High, or Ultra on a
      discrete GPU); the player can pin one in Controls. Pixel ratio, shadow refresh, shadow map size, weather particles and
@@ -96,6 +107,16 @@ function no3D(){G3.ok=false;$("no3d").hidden=false;$("no3d-retry").onclick=()=>l
   const sun=new THREE.DirectionalLight(0xfff4e6,1.5*LEG);sun.position.set(-75,95,48);
   sun.castShadow=true;const sz=GFX.shadow;sun.shadow.mapSize.set(sz,sz);
   Object.assign(sun.shadow.camera,{left:-90,right:90,top:60,bottom:-60,near:10,far:250});sun.shadow.bias=-0.0004;sun.shadow.radius=GFX.soft?5:3;sun.shadow.normalBias=0.04;
+  /* v5.5 perf: three.js's PCF shadow lookup takes 5 rotated-disk samples per lit pixel. The soft tiers keep all 5; the
+     phone tiers (no soft shadows anyway) take 3 (?taps=1|3|5 overrides for tests): a fifth of the pixel work on every
+     shadow-receiving surface, for a slightly grainier edge that the phone's pixel density hides. Patched into the shader
+     chunk before the start-up precompile, so no shader is rebuilt later. */
+  {const q=new URLSearchParams(location.search).get("taps"),taps=GFX.taps=q?Math.max(1,Math.min(5,+q)):(GFX.soft?5:3);
+    if(taps<5&&THREE.ShaderChunk&&/vogelDiskSample\( 0, 5, phi \)/.test(THREE.ShaderChunk.shadowmap_pars_fragment)){
+      const c=THREE.ShaderChunk.shadowmap_pars_fragment,i0=c.indexOf("shadow = (\n\t\t\t\t\ttexture( shadowMap, vec3( shadowCoord.xy + vogelDiskSample( 0, 5, phi )"),i1=c.indexOf(") * 0.2;",i0);
+      if(i0>0&&i1>i0){const lines=[];for(let k=0;k<taps;k++)lines.push(taps===1?"texture( shadowMap, vec3( shadowCoord.xy, shadowCoord.z ) )":`texture( shadowMap, vec3( shadowCoord.xy + vogelDiskSample( ${k}, ${taps}, phi ) * radius, shadowCoord.z ) )`);
+        THREE.ShaderChunk.shadowmap_pars_fragment=c.slice(0,i0)+"shadow = (\n\t\t\t\t\t"+lines.join(" +\n\t\t\t\t\t")+"\n\t\t\t\t"+`) * ${(1/taps).toFixed(6)};`+c.slice(i1+") * 0.2;".length);
+        diag(`shadows: ${taps}-tap lookup`);}}}
   sun.target.position.set(-5,0,5);scene.add(sun,sun.target);
   let baseHemi=0.85,baseSun=0.9;
 
@@ -278,7 +299,12 @@ function no3D(){G3.ok=false;$("no3d").hidden=false;$("no3d-retry").onclick=()=>l
     const t=new THREE.CanvasTexture(c);t.colorSpace=THREE.SRGBColorSpace;return t;}
   M.baleG=[0,1,2].map(g=>mat("panel",{map:g?gradeTex(g):(()=>{const t=gradeTex(0);return t;})(),roughness:0.95}));
   // three instanced meshes, one per grade, filled each frame through put(); counts follow automatically
-  function graded(geo,n,opts={}){const ms=M.baleG.map(m=>{const o=new THREE.InstancedMesh(geo,instMat(m),n);o.castShadow=true;if(opts.recv)o.receiveShadow=true;o.count=0;scene.add(o);return o;});
+  /* v5.5 perf: an InstancedMesh with count 0 draws nothing, but three.js still walks it, switches its program and refreshes
+     its uniforms in every pass (about 10 of them per frame: bale and roll grades not on site). "visible" becomes an accessor
+     that reads false while the mesh is empty; the game's own true/false goes on underneath and shows again with the first
+     instance. (G3.emptyHide also runs over any InstancedMesh added later: 43-3d-frame.js) */
+  G3.emptyHide=o=>{if(!o.isInstancedMesh||o.__emptyHide)return;o.__emptyHide=true;let v=o.visible;Object.defineProperty(o,"visible",{get(){return v&&this.count>0;},set(x){v=!!x;},configurable:true,enumerable:true});};
+  function graded(geo,n,opts={}){const ms=M.baleG.map(m=>{const o=new THREE.InstancedMesh(geo,instMat(m),n);o.castShadow=true;if(opts.recv)o.receiveShadow=true;o.count=0;scene.add(o);G3.emptyHide(o);return o;});
     const k=[0,0,0];return {reset(){k[0]=k[1]=k[2]=0;},put(g,m4){if(k[g]<n)ms[g].setMatrixAt(k[g]++,m4);},done(){ms.forEach((o,i)=>{o.count=k[i];o.instanceMatrix.needsUpdate=true;});}};}
   const hsh2=n=>{const x=Math.sin(n*91.7+3.1)*43758.5453;return x-Math.floor(x);};
   // grade mix: mostly A and B; junk OCC deliveries swing it heavily toward C

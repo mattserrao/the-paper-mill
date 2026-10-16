@@ -1,5 +1,17 @@
 # Changelog
 
+## v5.5.0 (2026-10-16): performance
+Less work per frame in normal play, measured with the new frame-cost benchmark (`tools/fpsbench.py`, phone emulation,
+main v5.4.2 vs this build run alternately): frame cost −12% (Chromium) / −14% (WebKit, Safari's engine), GPU −12–13%,
+triangles per frame −24%, shadow-pass draws −28%. Gameplay unchanged (same seeded checksum `272b1f02`, determinism, smoke).
+- Nodes that haven't moved no longer have their matrices recomputed every frame.
+- Off-screen scenery in the merged batches is culled, only on frames where the camera moved or shadows refresh.
+- Frozen scenery originals at the top of the scene are parked outside the scene graph, so three.js stops walking them.
+- Phone tiers (Low/Medium) take 3 shadow samples per pixel instead of 5: very slightly grainier shadow edges (`?taps=5` restores).
+- The disc filter's 11 disks draw in 2 calls instead of 33; empty bale and roll meshes are skipped.
+- Tools: `fpsbench.py` (frame cost that a 60 Hz display can't hide; `--ab` for interleaved before/after), `abtest.py`,
+  `gpuexp.py`, `drawcost.py`; `determinism.py` follows the v5 start flow. See PERF-LOOP.md.
+
 ## v5.4.2 (2026-10-15): graphics quality on the title screen
 - Title screen → Settings → Graphics now has **Graphics quality** (Auto, Low, Medium, High, Ultra), the same setting as in-game Settings → Graphics; Auto names the tier picked for the device. Changes apply at once; lighting and scenery detail need a reload, offered with a **Reload now** button.
 
