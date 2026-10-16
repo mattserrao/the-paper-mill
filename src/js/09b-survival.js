@@ -16,8 +16,9 @@ function survWaveStart(){const w=survWave();applyUpgrades();
 UI_TICKS.push(()=>{const cd=$("v2cd"),wv=$("v2wave");if(!cd)return;const on=!!(S.season&&S.season.on)&&!S.zen,sv=on&&survOn();let t="",wt="";
   if(on){const k=survWave(),more=sv||(k<=4&&outStart(k)+OUT.len<=S.season.end),left=more?Math.max(0,outStart(k)-S.t):0,d=Math.floor(left/1440),h=Math.floor(left%1440/60);
     t=!more?"no more outages":S.outg&&S.outg.on?"outage under way":left<60?"outage within the hour":`outage in ${d?d+"d ":""}${h}h`;
+    {const f=typeof prepFor==="function"&&prepFor();if(f){const pr=prepState(f.k),tl=prepTally(pr),nw=PREP.items.some(X=>prepUnlocked(X,f.left)&&!pr.it[X.k]);t+=` · prep ${tl.n}/4`;if(cd.classList.contains("prepnew")!==nw)cd.classList.toggle("prepnew",nw);}else if(cd.classList.contains("prepnew"))cd.classList.remove("prepnew");}   // v5.7 outage prep
     if(sv)wt=`Wave ${k} · upsets ${xf(survUp(k))} · costs ${xf(survCost(k))}`;}
-  {const ts=!t?"":t.startsWith("outage in ")?"⏱\uFE0E "+t.slice(10):t==="outage under way"?"⏱\uFE0E now":t==="outage within the hour"?"⏱\uFE0E <1h":t;if(cd.dataset.s!==ts)cd.dataset.s=ts;}   // (phones show the short form)
+  {const t0=t.replace(/ · prep \d\/4$/,""),ts=!t0?"":t0.startsWith("outage in ")?"⏱\uFE0E "+t0.slice(10):t0==="outage under way"?"⏱\uFE0E now":t0.startsWith("outage within the hour")?"⏱\uFE0E <1h":t0;   /* (v5.7: phones leave out the prep tally: a dot shows a new item) */if(cd.dataset.s!==ts)cd.dataset.s=ts;}   // (phones show the short form)
   if(cd.textContent!==t)cd.textContent=t;if(cd.hidden===!!t)cd.hidden=!t;if(wv.textContent!==wt)wv.textContent=wt;if(wv.hidden===!!wt)wv.hidden=!wt;});
 // the chip under the top bar: the wave and its multipliers, for the whole run (v5.2: kept for the tools, hidden by styles.css)
 // v5.1 (offline): a season with a leader shows the chip too, without the wave multipliers (class "season" hides them)
@@ -45,6 +46,7 @@ function endSurvival(){civDrop();const se=S.season,r=survResult(),w=r.wave;se.do
     ["Upsets by the end",xf(survUp(w))],["Costs by the end",xf(survCost(w))],["Tons shipped",f0(r.tons)+" t"],["Upsets survived",String(r.incidents)]];
   if(S.lead)st.splice(3,0,["Mill leader",LEADERS[S.lead.id].name+(S.lead.was?" (after "+LEADERS[S.lead.was].name+")":""),"wide"]);
   if(S.civ&&S.civ.m)st.push(["Civics",civSummary(S.civ.m),"wide"]);   // v5.1 QA2
+  {const ts=tellEndStat();if(ts)st.push(ts);}   // v5.7 catching failures early
   if(S.lead&&S.lead.saved)st.splice(4,0,["Dot saved",money(S.lead.saved)+" in repairs ("+S.lead.fixed.length+" fixed)","wide"]);   // v5.0.5
   $("so-stats").replaceChildren(...st.map(([k,v,c])=>{const d=document.createElement("div");if(c)d.className=c;const a=document.createElement("span");a.textContent=k;const b=document.createElement("b");b.textContent=v;d.append(a,b);return d;}));
   {const box=$("so-rc");if(box)box.hidden=true;}soMode(true);

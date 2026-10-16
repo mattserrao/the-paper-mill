@@ -174,7 +174,7 @@
   const MAJOR=new Set(["dryerfire","balefire","shaft","tornado","lightning","flood","overflow","chestover","hdblow","thkblow","beaver","fight","flares","refclash",
     "c_walkout","c_protest","c_custwalk","c_shutdown","dcs","fishkill","r_L","r_C","r_E","r_M"]);
   function civSpot(id){const L=EVP[id];if(!L)return null;const p=CV.parts[L[0][0]];return p&&L[0][0]!=="fx"?p.spot:null;}
-  const pullBlocked=()=>!camPullOn()||S.zen||G3.zen||G3.cineOn||(G3.tut&&G3.tut.on)||(G3.following&&G3.following())||(S.outg&&S.outg.watch);
+  const pullBlocked=()=>!camPullOn()||G3.rounding||S.zen||G3.zen||G3.cineOn||(G3.tut&&G3.tut.on)||(G3.following&&G3.following())||(S.outg&&S.outg.watch);
   function pullTo(id,card){const now=performance.now();if(pullBlocked()||!G3.on)return false;
     if(now-PULL.touch<5000||now-PULL.last<12000||PULL.on)return false;const sp=G3.spotOf(id)||civSpot(id);if(!sp)return false;
     const c=G3.camGet(),to=[sp[0],sp[1],Math.min(90,Math.max(55,c[2]*0.4)),c[3],0.9];

@@ -1088,6 +1088,38 @@ body.dark .kvchip{background:color-mix(in srgb,var(--panel) 96%,transparent)}
   body.app .kvchip{top:auto;bottom:calc(132px + env(safe-area-inset-bottom,0px))}
   body.app .knobp{top:calc(96px + env(safe-area-inset-top,0px));max-height:calc(100% - 250px)}
 }
+/* ---- v5.7 catching failures early: the Round button, the Round card (Vibration Report), the walk strip, outage prep ---- */
+.v2tabs.r5{grid-template-columns:repeat(5,1fr)}
+.v2tabs .v2round[hidden]{display:none}
+.v2round .rdot{position:absolute;top:5px;right:calc(50% - 18px);width:9px;height:9px;border-radius:50%;background:var(--ok);box-shadow:0 0 0 2px var(--panel)}
+.v2round .rdot[hidden]{display:none}
+.v2round.used{opacity:.55}
+.overlay.tellov{z-index:95}
+.tellcard{gap:10px;max-height:calc(100dvh - 32px);overflow:auto}.tellcard h2{font-size:24px;line-height:1.15}
+.tellcard .tnorep{font:500 13px var(--f-body);background:color-mix(in srgb,var(--ink) 6%,var(--panel));border-radius:8px;padding:8px 10px}
+.tareas{display:flex;flex-direction:column;gap:6px}
+.tarea{display:flex;justify-content:space-between;align-items:center;gap:10px;text-align:left;width:100%;min-height:52px;padding:8px 12px;border:1px solid var(--line);border-radius:10px;background:var(--panel);color:var(--ink)}
+.tarea b{display:block;font:700 15px var(--f-body)}.tarea small{display:block;font:500 12px var(--f-body);color:var(--muted)}
+.tarea:disabled{opacity:.6}
+.tarea .tv{font:800 22px/1 var(--f-body);font-style:normal;display:flex;flex-direction:column;align-items:flex-end;gap:2px;min-width:74px}
+.tarea .tv small{font:600 11px var(--f-body);text-transform:uppercase;letter-spacing:.04em}
+.tv0{color:var(--muted)}.tv1{color:var(--warn)}.tv2{color:var(--bad)}
+.tellstrip{position:fixed;z-index:84;left:50%;transform:translateX(-50%);bottom:calc(env(safe-area-inset-bottom,0px) + 128px);display:grid;grid-template-columns:1fr auto;gap:0 12px;align-items:center;
+  max-width:calc(100% - 24px);padding:8px 14px;border-radius:12px;background:color-mix(in srgb,var(--panel) 94%,transparent);border:2px solid var(--brand);box-shadow:0 4px 18px rgba(0,0,0,.18);pointer-events:none}
+.tellstrip[hidden]{display:none}
+.tellstrip b{font:700 14px var(--f-body)}.tellstrip span{font:800 18px var(--f-body);color:var(--brand);grid-row:span 2}.tellstrip small{font:500 12px var(--f-body);color:var(--muted)}
+.prep{display:flex;flex-direction:column;gap:2px;margin-top:4px}
+.prep .phead{display:flex;justify-content:space-between;gap:8px;align-items:baseline;flex-wrap:wrap}.prep .phead b{font:700 16px var(--f-body)}.prep .phead span{font:700 13px var(--f-body);color:var(--ok)}
+.prep .psub{font:500 12px var(--f-body);color:var(--muted);margin-bottom:4px}
+.prow{display:grid;grid-template-columns:1fr;gap:6px;padding:10px 0;border-top:1px solid var(--line)}
+.prow b{display:block;font:700 14px var(--f-body)}.prow small{display:block;font:500 12px var(--f-body);color:var(--muted)}
+.prow.locked{opacity:.55}.prow .pact em{font:600 12px var(--f-body);color:var(--muted);font-style:normal}
+.prow .pact .seg{display:flex;flex-wrap:wrap}.prow .pact .seg button{flex:1;min-height:40px}
+.prow .pact .pdone{color:var(--ok);font-weight:700}.prow .pact .pw{margin-top:4px}
+#v2cd.prepnew::before{content:"";display:inline-block;width:7px;height:7px;border-radius:50%;background:var(--ok);margin-right:4px;vertical-align:middle}
+.tellcard .tprep{display:flex;justify-content:space-between;align-items:center;gap:8px;width:100%;min-height:48px;padding:8px 12px;border-radius:10px;border:1px dashed var(--ok);background:color-mix(in srgb,var(--ok) 7%,var(--panel));color:var(--ink);text-align:left}
+.tellcard .tprep b{font:700 14px var(--f-body)}.tellcard .tprep small{font:600 12px var(--f-body);color:var(--ok)}
+.prepcard .phead b{display:none}
 </style>
 </head>
 <body class="app">
@@ -1269,7 +1301,7 @@ body.dark .kvchip{background:color-mix(in srgb,var(--panel) 96%,transparent)}
 <div class="btns"><button class="primary" id="no3d-retry">Try again</button></div></div></div>
 
 <script type="module">
-const APP_VER="v5.6.0";   // shown in the menu and sent with leaderboard scores (max 12 characters)
+const APP_VER="v5.7.0";   // shown in the menu and sent with leaderboard scores (max 12 characters)
 // TEST BUILDS ONLY (off in releases): turbo speeds 240/480/960 sim min/s for fast playtests. Above 120, crews and maintenance start jobs
 // without waiting for the 3D walk (as with the 3D view off) and outages keep the speed. Set false for a release.
 const TURBO=false,TURBO_FAST=s=>TURBO&&s>120;
@@ -1871,7 +1903,7 @@ const UPS=[
  {id:"safety",g:"yard",name:"Safety & HR program",lv:[10e3],desc:"Dock fights and call-offs half as often."},
  {id:"maintcrew",g:"maint",name:"Maintenance techs",lv:[250e3,500e3,900e3],desc:"+2 techs on yellow scooters per level. Repairs finish 20% faster per level."},
  {id:"rcfa",g:"maint",name:"Root cause analysis (RCFA)",lv:[155e3,75e3],desc:"Every breakdown is investigated: repeat failures 25% rarer per level."},
- {id:"reliab",g:"maint",name:"Reliability program",lv:[195e3,125e3],desc:"Vibration and oil analysis: drive, felt and fabric failures 40% rarer and repair bills 15% lower per level."},
+ {id:"reliab",g:"maint",name:"Reliability program",lv:[195e3,125e3],desc:"Vibration and oil analysis: drive, felt and fabric failures 40% rarer and repair bills 15% lower per level. Level 1 adds the Vibration Report to your daily rounds."},
  {id:"pmprog",g:"maint",name:"Preventive maintenance",lv:[200e3,450e3,800e3],desc:"Planned shutdown work: all breakdowns 20% rarer and fewer sheet breaks per level. Costs $400/h per level."},
  {id:"stores",g:"maint",name:"Spare parts storeroom",lv:[35e3],desc:"Parts on the shelf: repairs finish 25% faster."},
  {id:"apc",g:"mgmt",name:"Advanced process control",lv:[80e3,80e3],desc:"+2% tons and 8% less energy per level."},
@@ -2375,9 +2407,152 @@ function chaosTick(dt){
   {const r=rand("up");if(CH.on&&um>0&&CH.en.chestover&&!active("chestover")&&S.tank>=P.tankCap*0.995&&r<dt/60/25)trigger("chestover");}
   const roll=CH.on&&um>0&&!outOn();
   if(S.rng.bird==null)S.rng.bird=(S.seed^0x5bd1e995)|0;if(S.rng.knob==null)S.rng.knob=(S.seed^0x6b9f3c21)|0;
-  for(const e of EVENTS){const r=rand(e.stream||"up");if(roll&&CH.en[e.id]&&!active(e.id)&&!civCool(e.id)&&r<dt/60/e.mtbf*CH.lvl*freqMul(e.id)*0.75*um)trigger(e.id);}
+  // v5.7: tellable upsets are queued with a lead time instead of firing (04b-tells.js); they may roll during an outage
+  // (just not into one), and not while the same upset is already waiting. The dice drawn are the same as before.
+  const tl=tellsOn();if(tl)tellTick(um);
+  for(const e of EVENTS){const r=rand(e.stream||"up"),t=tl&&TELLABLE.has(e.id);
+    if((t?CH.on&&um>0&&!tellPending(e.id):roll)&&CH.en[e.id]&&!active(e.id)&&!civCool(e.id)&&r<dt/60/e.mtbf*CH.lvl*freqMul(e.id)*0.75*um){if(t)tellQueue(e.id);else trigger(e.id);}}
+  if(tl)prepTick();
 }
 
+/* ---------- v5.7 Catching failures early: the model (tells, the daily Round, the Vibration Report, outage prep) ----------
+   Design: failures are visible before they occur. A tellable upset that the dice pick is not fired; it is queued with a
+   lead time (TELL.lead days; survival loses TELL.step a wave down to TELL.min). Until it is due, its tell (an exaggerated,
+   clearly failing piece of equipment, 31c-3d-tells.js) sits in its round area, visible only while an operator walks that
+   area on a Round. Caught: planned repair at TELL.cut of the bill, no downtime, Machinery and Labor up. Missed: it fires
+   through trigger() exactly as before (bills, Dot, the civics card, the effect). Non-tellable upsets roll and fire as before.
+   The dice are the same draws as before (one per upset per step on its own stream); only the firing time moves. The
+   opening of a run pre-rolls one lead window on its own stream ("tell0") so the first upsets aren't held back by the lead.
+   Seasons, survival and free play; not zen (tellsOn). Numbers are first guesses (no balancing yet).
+   State: S.tell={q:[{id,due,born,area}], pre, day, n, saved, savedMin, cn:{id:n}, prep:{k,...}} (saved with the run). */
+const TELL={lead:1.5,step:0.1,min:1,          // lead time in days: seasons and free play; survival −step per wave, at least min
+  cut:0.4,                                    // planned repair: share of the upset's repair bill
+  roundS:15,                                  // a Round's walk, real seconds
+  catchCiv:{M:1,L:1/3},                       // caught: Machinery +3, Labor +1 (meter points = weight × CIV.unit)
+  cleanCiv:{plant:{L:1/3},town:{C:1/3}},      // a clean walk: Labor +1 (plant areas) or Community +1 (yard, utilities)
+  relCiv:{M:2}};                              // buying the Reliability program (level 1) unlocks the report: Machinery +6
+// the round areas: key, name, camera jump, the upsets whose tells live there, and which civic a clean walk nudges
+const TAREAS=[
+  {k:"yard",n:"Yard & warehouse",j:"recv",ids:["balefire","fleet","roof"],cv:"town"},
+  {k:"pulp",n:"Pulper & cleaners",j:"pulp",ids:["ragger","overflow","hdblow","lwplug","lcplug"],cv:"plant"},
+  {k:"scr",n:"Screens & refiners",j:"pulp",ids:["cscreen","fscreen","refclash","thkblow","dye"],cv:"plant"},
+  {k:"wet",n:"Wet end",j:"pm",ids:["fabric","felt","slime","fogfan"],cv:"plant"},
+  {k:"dry",n:"Dry end & winder",j:"pm",ids:["shaft","dryerfire","wrap","steamjoint","winderdown"],cv:"plant"},
+  {k:"util",n:"Utilities",j:"shop",ids:["boiler","permit","icedintake","brownout"],cv:"town"}];
+const TAREA={},TELLABLE=new Set();TAREAS.forEach(a=>a.ids.forEach(id=>{TAREA[id]=a.k;TELLABLE.add(id);}));
+const TAREAK=Object.fromEntries(TAREAS.map(a=>[a.k,a]));
+// what each tell looks like, in words (the log and the catch toast)
+const TELLTXT={balefire:"pallets stacked against a space heater at the bale yard",fleet:"a forklift dripping hydraulic oil on a bald tire",roof:"a roof seam over the roll warehouse lifting in the wind",
+  ragger:"the ragger winch smoking and the rope fraying",overflow:"the pulper level probe stuck and the floor already wet",hdblow:"a weeping flange on the HD cleaner",lwplug:"the lightweight cleaner reject line backing up",lcplug:"sand pouring out of the LC cleaner rejects",
+  cscreen:"the coarse screen rotor shaking on its base",fscreen:"a fine screen basket rattling",refclash:"the refiner motor surging and the housing shaking",thkblow:"the disk thickener leaking at the vat seal",dye:"off-color stock in the dye pump sight glass",
+  fabric:"a forming fabric guide roll bearing glowing hot",felt:"a press felt seam starting to lift",slime:"slime streaks building on the forming board",fogfan:"the fog fan motor smoking",
+  shaft:"the dryer driveshaft wobbling at the coupling",dryerfire:"lint and broke piled under the dryer hood",wrap:"a doctor blade chattering on a dryer can",steamjoint:"a dryer steam joint hissing",winderdown:"a slitter drive overheating on the winder",
+  boiler:"the boiler feed pump shaking and smoking",permit:"the wastewater outfall running discolored",icedintake:"ice building up on the river intake screen",brownout:"the substation panel flickering"};
+// v5.7: tells only in a running season, survival run or free play; never in zen, a lost run or the start menu
+const tellsOn=()=>!!(S&&!S.zen&&!S.over&&((S.season&&S.season.on)||S.free));
+const tellOk=id=>TELLABLE.has(id)&&tellsOn();
+function tellLead(){const w=survOn()?survWave():1;return Math.max(TELL.min,TELL.lead-(survOn()?TELL.step*(w-1):0))*1440;}
+function tellState(){if(!S.tell)S.tell={q:[],pre:false,day:-1,n:0,saved:0,savedMin:0,cn:{},prep:null};return S.tell;}
+const tellPending=id=>{const q=S.tell&&S.tell.q;if(!q)return false;for(let k=0;k<q.length;k++)if(q[k].id===id)return true;return false;};
+// is a planned outage running at sim time t? (nothing rolls into an outage, as before nothing rolled during one)
+function outAt(t){const o=S.outg;if(!o||!S.season||!S.season.on||S.zen)return false;
+  if(o.on)return t<o.end;const st=outStart(o.k);return t>=st&&t<st+OUT.len;}
+// queue a hit from the dice; true = the caller must not fire it
+function tellQueue(id){const T=tellState(),due=S.t+tellLead();if(outAt(due))return true;   // (rolled into an outage: dropped, as a roll during one used to be)
+  T.q.push({id,due,born:S.t,area:TAREA[id]});return true;}
+// every step from chaosTick: fire what is due (waiting while the same upset is still running or an outage is on), and
+// pre-roll the opening window the first time the dice are live
+function tellTick(um){const T=tellState();
+  if(!T.pre&&tellsOn()&&CH.on&&um>0){T.pre=true;tellPre(um);}
+  for(let k=0;k<T.q.length;k++){const p=T.q[k];if(p.due>S.t)continue;
+    if(!CH.on||!CH.en[p.id]||(EV[p.id].env&&EV[p.id].env!==SITE.env)){T.q.splice(k--,1);continue;}   // (switched off since, or another site's)
+    if(active(p.id)||outOn())continue;
+    T.q.splice(k--,1);trigger(p.id);}}
+// the opening: one lead window rolled at once, on its own stream, each hit due somewhere inside the window
+function tellPre(um){if(S.rng.tell0==null)S.rng.tell0=(S.seed^0x3c6ef372)|0;const L=tellLead(),h=15;
+  for(let t=0;t<L;t+=h)for(const e of EVENTS){if(!TELLABLE.has(e.id))continue;const r=rand("tell0");
+    if(CH.en[e.id]&&!tellPending(e.id)&&r<h/60/e.mtbf*CH.lvl*freqMul(e.id)*0.75*um){const due=S.t+t+rand("tell0")*h;if(!outAt(due))S.tell.q.push({id:e.id,due,born:S.t,area:TAREA[e.id]});}}
+  S.tell.q.sort((a,b)=>a.due-b.due);}
+// what a caught upset would have cost and how long it would have run (mid-range, with the player's repair upgrades)
+const tellBill=id=>(REPAIR[id]||0)*P.repairMul;
+const tellMins=id=>{const d=EV[id].dur;return (d[0]+d[1])/2*durMul(id);};
+// a tap on a tell during a Round: planned repair, no downtime
+function tellCatch(id){const T=tellState(),k=T.q.findIndex(p=>p.id===id);if(k<0)return null;T.q.splice(k,1);
+  const bill=tellBill(id),cost=bill*TELL.cut,mins=tellMins(id);
+  if(cost>0)spend(cost,"repairs");T.n++;T.saved+=bill-cost;T.savedMin+=mins;T.cn[id]=(T.cn[id]||0)+1;
+  if(civOn())civAdd(TELL.catchCiv,"Caught early");
+  log(`Caught early: ${TELLTXT[id]||EV[id].name}. Planned repair ${money(cost)}, no downtime (${EV[id].name.toLowerCase()} avoided).`,"ok");
+  return {id,cost,bill,mins,txt:TELLTXT[id]||EV[id].name};}
+// a Round: one per in-game day (the day turns over at 6 AM, like the shop)
+const tellDay=()=>Math.floor(S.t/1440);
+const tellCan=()=>tellsOn()&&tellState().day!==tellDay();
+function tellRoundStart(a){if(!tellCan()||!TAREAK[a])return false;tellState().day=tellDay();log(`Daily round: an operator is walking ${TAREAK[a].n.toLowerCase()}.`,"");return true;}
+// the walk is over: nothing in the area at all gives a small nudge (a missed tell gives nothing)
+function tellRoundEnd(a,caught){const T=tellState(),left=T.q.filter(p=>p.area===a).length;
+  if(caught>0||left>0){if(!caught)log(`Round over: something in ${TAREAK[a].n.toLowerCase()} went unnoticed.`,"warn");return {clean:false,missed:left};}
+  const d=TELL.cleanCiv[TAREAK[a].cv];if(civOn())civAdd(d,"Clean walk");else log("Clean walk.","");return {clean:true,missed:0,d};}
+// the Vibration Report: the Reliability program (vibration and oil analysis) or Dot's own kit
+const tellRep=()=>LV("reliab")>=1||leadIs("dot");
+// per area: 0 steady, 1 climbing (something pending), 2 climbing fast (due within 24 h)
+function tellTrend(a){const q=(S.tell&&S.tell.q)||[];let v=0;for(const p of q)if(p.area===a)v=Math.max(v,p.due-S.t<1440?2:1);return v;}
+// in the visible list: only tells the dice actually rolled (the 3D shows them during a Round)
+const tellIn=a=>((S.tell&&S.tell.q)||[]).filter(p=>p.area===a);
+const tellSummary=()=>{const T=S&&S.tell;if(!T||!T.n)return "";return `Upsets caught early: ${T.n} — saved ${money(T.saved)} and ${tellHrs(T.savedMin)} of downtime.`;};
+// the end screens' line: "3 — saved $412k and 9.5 hours of downtime" (null when tells never ran this run)
+const tellEndStat=()=>{const T=S&&S.tell;if(!T||!T.pre)return null;return ["Upsets caught early",T.n?`${T.n} — saved ${money(T.saved)} and ${tellHrs(T.savedMin)} of downtime`:"none","wide"];};
+const tellHrs=m=>{const h=m/60;return h>=10?Math.round(h)+" hours":h>=1?h.toFixed(1).replace(/\.0$/,"")+(h===1?" hour":" hours"):Math.round(m)+" min";};
+
+/* ---- Outage prep checklist: opens 3 days before each planned outage, four items unlocking across the lead-in ----
+   Each completed item shortens the outage and refunds PREP.refund of the approved budget when it ends. Seasons and
+   survival (free play has no planned outages). State: S.tell.prep={k, it:{parts,crew,contr,draw}} for outage k. */
+const PREP={open:72*60,refund:0.05,minLen:60,
+  items:[
+    {k:"parts",at:72*60,n:"Order the parts",d:"Rolls, plates and bearings for the major job, on the shelf before the shutdown."},
+    {k:"crew",at:48*60,n:"Walk the job plan with the crew",d:"Lockout points, lifts and the job sequence, agreed before anyone picks up a tool."},
+    {k:"contr",at:24*60,n:"Contractors",d:"An outside crew can work in parallel with yours."},
+    {k:"draw",at:8*60,n:"Draw down ahead of the shutdown",d:"Run the chest and the dry end down so the machine comes off clean and restarts faster."}],
+  parts:{now:30e3,wait:12e3,rush:45e3,min:30,odds:0.5},crew:{min:20,civ:{L:1/3}},contr:{cost:25e3,min:45,own:15,civ:{L:-1/3}},draw:{cap:0.85,min:30}};
+const prepOn=()=>!!(S&&S.season&&S.season.on&&!S.zen&&!S.free&&S.outg&&!S.outg.on&&!S.over);
+// the outage the checklist is for, and how long until it starts (null: none coming up within the window)
+function prepFor(){if(!prepOn())return null;const o=S.outg,st=outStart(o.k);if(st+OUT.len>S.season.end)return null;const left=st-S.t;return left<=PREP.open&&left>0?{k:o.k,st,left}:null;}
+function prepState(k){const T=tellState();if(!T.prep||T.prep.k!==k)T.prep={k,it:{},seen:{}};return T.prep;}
+const prepUnlocked=(it,left)=>left<=it.at;
+// how far along: done items, minutes off the outage
+function prepTally(pr){const it=pr&&pr.it||{};let n=0,m=0;
+  if(it.parts&&it.parts.got){n++;m+=PREP.parts.min;}
+  if(it.crew){n++;m+=PREP.crew.min;}
+  if(it.contr){n++;m+=it.contr==="in"?PREP.contr.min:PREP.contr.own;}
+  if(it.draw){n++;m+=PREP.draw.min;}
+  return {n,m};}
+const prepLine=(n,m)=>`Prep ${n}/4 — outage shortened ${m>=60?Math.floor(m/60)+" h"+(m%60?" "+m%60+" m":""):m+" min"}`;
+const prepTxt=pr=>{const t=prepTally(pr);return prepLine(t.n,t.m);};
+// the player's choices
+function prepDo(item,ch){const f=prepFor();if(!f)return false;const pr=prepState(f.k),it=pr.it,X=PREP.items.find(i=>i.k===item);if(!X||!prepUnlocked(X,f.left))return false;
+  if(item==="parts"){const P2=PREP.parts;
+    if(ch==="now"&&!it.parts){spend(P2.now,"repairs");it.parts={how:"now",got:true};log(`Outage prep: parts ordered at full price (${money(P2.now)}).`,"ok");return true;}
+    if(ch==="wait"&&!it.parts){spend(P2.wait,"repairs");it.parts={how:"wait",got:false,res:false};log(`Outage prep: waiting for the cheaper lot (${money(P2.wait)}). It may not arrive in time.`,"warn");return true;}
+    if(ch==="rush"&&it.parts&&it.parts.res&&!it.parts.got){spend(P2.rush,"repairs");it.parts.got=true;it.parts.how="rush";log(`Outage prep: parts rush-ordered (${money(P2.rush)}).`,"warn");return true;}
+    return false;}
+  if(item==="crew"&&!it.crew){it.crew=true;if(civOn())civAdd(PREP.crew.civ,"Job plan walked with the crew");else log("Outage prep: job plan walked with the crew.","ok");return true;}
+  if(item==="contr"&&!it.contr){if(ch==="in"){spend(PREP.contr.cost,"repairs");it.contr="in";if(civOn())civAdd(PREP.contr.civ,"Contractors booked");else log("Outage prep: contractors booked.","ok");}
+    else{it.contr="own";log("Outage prep: your own crew will do it.","ok");}return true;}
+  if(item==="draw"&&!it.draw){it.draw=true;addFx({id:"prepdraw",left:Math.max(1,f.left),mods:{speedCap:PREP.draw.cap}});log(`Outage prep: drawing down, machine capped at ${Math.round(PREP.draw.cap*100)}% until the shutdown.`,"warn");return true;}
+  return false;}
+// once a step from the sim: unlock notices and the cheap parts lot arriving (or not) at T−24 h
+function prepTick(){const f=prepFor();if(!f)return;const pr=prepState(f.k),it=pr.it;
+  for(const X of PREP.items)if(prepUnlocked(X,f.left)&&!pr.seen[X.k]){pr.seen[X.k]=1;
+    if(X.k==="parts"){BANNERS.push({text:`Outage ${f.k} prep checklist is open: tap the outage countdown.`,t:null,tag:"PREP"});}
+    else BANNERS.push({text:`Outage prep: “${X.n}” is ready.`,t:null,tag:"PREP"});while(BANNERS.length>3)BANNERS.splice(1,1);}
+  if(it.parts&&it.parts.how==="wait"&&!it.parts.res&&f.left<=24*60){it.parts.res=true;if(S.rng.tell==null)S.rng.tell=(S.seed^0x1b873593)|0;
+    it.parts.got=rand("tell")<PREP.parts.odds;
+    if(it.parts.got)log("Outage prep: the cheaper parts lot arrived on time.","ok");
+    else{BANNERS.push({text:"Outage prep: the cheaper parts lot won't make it. Rush-order or go without.",t:null,tag:"PREP"});while(BANNERS.length>3)BANNERS.splice(1,1);log("Outage prep: the cheaper parts lot won't arrive in time.","warn");}}}
+// the outage starts: take the minutes off (never shorter than PREP.minLen); the draw-down cap ends
+function prepBegin(o,st){const pr=S.tell&&S.tell.prep;S.fx=S.fx.filter(f=>f.id!=="prepdraw");if(!pr||pr.k!==o.k){o.prep=null;return;}
+  const t=prepTally(pr),len0=o.end-st,cut=Math.max(0,Math.min(t.m,len0-PREP.minLen));o.end-=cut;const p=S.fx.find(f=>f.id==="pout");if(p)p.left=Math.max(1,p.left-cut);
+  o.prep={n:t.n,m:cut};if(cut>0)log(`Outage prep ${t.n}/4: the outage is ${cut} min shorter.`,"ok");S.M=mods();}
+// the outage ends: refund on the approved budget
+function prepEnd(o,budget){const p=o.prep;if(!p||!p.n||!(budget>0))return;const r=budget*PREP.refund*p.n;S.cash+=r;S.ledger.repairs-=r;log(`Outage prep ${p.n}/4: ${money(r)} of the outage budget came back.`,"ok");}
 /* ---------- event cards: offers the player can accept or decline (v2.2.0) ---------- */
 // one card about every 1.5 game days, never two at once; the sim pauses while a card is open.
 // odds are shown honestly and shift with upgrades and how the mill is running. Seeded per season week.
@@ -2837,7 +3012,7 @@ function openOutagePlan(){const o=S.outg,st=outStart(o.k),first=o.k===1,d0=S.cas
     <h2 id="out-h">${first?"Your first planned outage":"Outage in 24 hours"}</h2>
     ${first?`<div class="intro"><p><b>What's an outage?</b> Planned downtime. Every ${OUT.every} days the mill comes down on purpose for a controlled 4-hour shutdown, so crews can inspect, clean, repair and replace worn parts before they fail.</p>
       <p><b>Why it matters:</b> well-maintained equipment breaks down less and runs better, with fewer sheet breaks and hayouts. Your budget for each area sets its reliability until the next outage.</p></div>`:""}
-    <p class="when">Starts <b>${outTime(st)}</b>, back up by <b>${hourOf(st+OUT.len)}</b> (4 hours, machine and stock prep down).<br>Major job: <b>${OUT.jobs[outJob(o.k)-1]||"inspections"}</b>, plus new press felts.</p>${survOn()?survPlanNote(o.k):""}<div id="out-lead"></div>${typeof civPlanHTML==="function"?civPlanHTML():""}
+    <p class="when">Starts <b>${outTime(st)}</b>, back up by <b>${hourOf(st+OUT.len)}</b> (4 hours, machine and stock prep down).<br>Major job: <b>${OUT.jobs[outJob(o.k)-1]||"inspections"}</b>, plus new press felts.</p>${survOn()?survPlanNote(o.k):""}<div id="out-lead"></div><div id="out-prep"></div>${typeof civPlanHTML==="function"?civPlanHTML():""}
     <div>${OUT.areas.map(([a,n,d])=>`<div class="orow" data-a="${a}"><div><b>${n}</b><small>${d}</small></div><div class="seg">${COST.map((c,i)=>`<button data-v="${i}" aria-pressed="${i===d0}">${k(c)}</button>`).join("")}</div><em class="eff"></em></div>`).join("")}</div>
     <div class="otot"><div><span>Outage budget</span><small id="out-cash"></small></div><b id="out-tot"></b></div>
     <div class="btns"><button class="primary" id="out-ok" style="flex:1">Approve budget</button></div></div>`;
@@ -2851,7 +3026,7 @@ function openOutagePlan(){const o=S.outg,st=outStart(o.k),first=o.k===1,d0=S.cas
     o.plan={...pick};if(cpc)o.plan.civ=cpc;delete o._civ;if(lp)o.plan.lead={to:lp.to,pick:lp.pick};log(`Outage ${o.k} budget approved: ${money(tot)} (${OUT.areas.map(([a,n])=>n+" "+k(COST[pick[a]])).join(", ")})`,"warn");
     el.hidden=true;closeCard(true);});
   o._civ={};if(civOn()){civPlanWire(el,o._civ);el.querySelectorAll(".civplan .seg button").forEach(b=>b.addEventListener("click",()=>paint()));}
-  paint();if(lp)leadPlanMount(document.getElementById("out-lead"),lp);el.hidden=false;AUDIO.sfx("cash",150);document.getElementById("out-ok").focus({preventScroll:true});el.querySelector(".modal").scrollTop=0;}   // v5.0.4: opens at the top
+  paint();if(lp)leadPlanMount(document.getElementById("out-lead"),lp);if(G3.prepMount)G3.prepMount(document.getElementById("out-prep"));   /* v5.7 outage prep */el.hidden=false;AUDIO.sfx("cash",150);document.getElementById("out-ok").focus({preventScroll:true});el.querySelector(".modal").scrollTop=0;}   // v5.0.4: opens at the top
 function outNote(head,body,ms,btn){   // v5.0.5: with an event card open, the notice waits until the card is answered, so it never covers the card's buttons
   // v5.0.6: it also waits while the card's result toast is showing, so it never lands on top of it
   {const d=document.getElementById("dealOv"),busy=()=>!!(d&&!d.hidden&&((S.cards&&S.cards.open&&S.cards.open.c)||d.classList.contains("dealres")));clearInterval(outNote._w);
@@ -2870,9 +3045,10 @@ function beginOutage(){const o=S.outg,st=S.t;if(!o.plan)o.plan={stock:1,wet:1,dr
   // (the clock runs at no more than OUT.simCap while o.on, through simRate(); the player's own speed is left alone)
   addFx({id:"pout",left:OUT.len,mods:{pmDown:"planned outage",pulperDown:1}});AUDIO.sfx("clunk",400);
   if(typeof civOutageBegin==="function")civOutageBegin(o,st);   // v5.1 civics: Labor sets how long it runs
+  prepBegin(o,st);   // v5.7 outage prep: completed checklist items take minutes off
   log(`Planned outage ${o.k} has begun: down until ${hourOf(o.end)}`,"warn");BANNERS.push({text:`Planned outage: the mill is down until ${hourOf(o.end)}.`,t:null,kind:"good",tag:"OUTAGE"});
   const canWatch=C.simSpeed>OUT.simCap&&!TURBO_FAST(C.simSpeed);   // (at 5 min/s or slower there is nothing to slow down)
-  outNote("Outage has begun",`The mill is down for planned maintenance: ${(OUT.jobs[outJob(o.k)-1]||"inspections").toLowerCase()} and new press felts. Started ${hourOf(st)}, ends ${outTime(o.end)}.`,canWatch?7000:5000,canWatch?{label:"Watch the crews",on:outWatch}:null);}
+  outNote("Outage has begun",`The mill is down for planned maintenance: ${(OUT.jobs[outJob(o.k)-1]||"inspections").toLowerCase()} and new press felts. Started ${hourOf(st)}, ends ${outTime(o.end)}.${o.prep?`<br><b>${prepLine(o.prep.n,o.prep.m)}.</b>`:""}`,canWatch?7000:5000,canWatch?{label:"Watch the crews",on:outWatch}:null);}
 function endOutage(){const o=S.outg,pl=o.plan||{stock:1,wet:1,dry:1};o.on=false;o.watch=false;outNoteHide();   // v5.0.6: at the player's speed the outage can end before its 7 s notice doesS.fx=S.fx.filter(f=>f.id!=="pout");S.M=mods();
   o.spd=null;   // (v5.0.1: nothing to restore: the outage only capped the running speed, see simRate)
   o.rel={stock:OUT.rel[pl.stock],wet:OUT.rel[pl.wet],dry:OUT.rel[pl.dry]};
@@ -2884,6 +3060,7 @@ function endOutage(){const o=S.outg,pl=o.plan||{stock:1,wet:1,dry:1};o.on=false;
   if(S.lead&&leadOverrun()>0){const m=leadOverrun();addFx({id:"felrun",left:m,mods:{pmDown:"project tie-ins"}});   // v4.4.0-t3: Felicity's projects make outages overrun
     log(`Project tie-ins: the machine stays down ${m>=60?(m/60).toFixed(m%60?1:0)+" h":m+" min"} longer.`,"warn");}
   if(typeof civOutageEnd==="function")civOutageEnd(o,pl);   // v5.1 civics: the levers, an overrun
+  prepEnd(o,OUT.areas.reduce((s,[a])=>s+(OUT.cost[pl[a]]||0),0));o.prep=null;   // v5.7 outage prep: part of the budget back
   o.k++;o.noticed=false;o.plan=null;if(survOn())survWaveStart();}
 const HAYLINES=["HAYOUT! Paper is shooting to the roof!","Winder hayout! Every PM hand to the dry end!","Hayout! It's snowing paper in the winder aisle.","Hayout! The set exploded off the drums."];
 // a hayout ruins the outer wraps of the set on the winder (about 3 t), not the whole 12.5 t roll
@@ -3413,6 +3590,7 @@ const UP_NARROW=matchMedia("(max-width:420px)");
 const upNext=()=>((S.t+360)/60)%24>=6?"tomorrow 6\u00a0AM":"at 6\u00a0AM";   // v5.0.6: "6 AM" never splits across lines
 function buy(id){const u=UP[id],l=LV(id);if(l>=u.lv.length)return;const cost=upCost(u,l);if(!S.free&&S.cash<cost)return;if(upLocked())return;
   S.upDay=upDay();spend(cost,"upgrades");AUDIO.sfx("cash",150);S.up[id]=l+1;applyUpgrades();
+  if(id==="reliab"&&l===0&&civOn())civAdd(TELL.relCiv,"Reliability program");   // v5.7: monitoring raises Machinery (and unlocks the Vibration Report)
   BANNERS.push({text:`${u.name}${u.lv.length>1?" level "+(l+1):""} is online.`,t:null,kind:"good"});while(BANNERS.length>3)BANNERS.splice(1,1);
   log(`Installed ${u.name}${u.lv.length>1?" level "+(l+1):""} (${money(cost)})`,"ok");updateShop();}
 const LEDGER=[["rev","Paper sales",1],["occ","OCC purchases",-1],["energy","Energy & chemicals",-1],["labor","Wages & robots",-1],["overhead","Mill overhead",-1],["repairs","Upset repairs",-1],["premium","Insurance premium",-1],["upgrades","Upgrades bought",-1],["deals","Deals & trials",1],["civ","Civics",-1]];
@@ -3508,8 +3686,9 @@ function survWaveStart(){const w=survWave();applyUpgrades();
 UI_TICKS.push(()=>{const cd=$("v2cd"),wv=$("v2wave");if(!cd)return;const on=!!(S.season&&S.season.on)&&!S.zen,sv=on&&survOn();let t="",wt="";
   if(on){const k=survWave(),more=sv||(k<=4&&outStart(k)+OUT.len<=S.season.end),left=more?Math.max(0,outStart(k)-S.t):0,d=Math.floor(left/1440),h=Math.floor(left%1440/60);
     t=!more?"no more outages":S.outg&&S.outg.on?"outage under way":left<60?"outage within the hour":`outage in ${d?d+"d ":""}${h}h`;
+    {const f=typeof prepFor==="function"&&prepFor();if(f){const pr=prepState(f.k),tl=prepTally(pr),nw=PREP.items.some(X=>prepUnlocked(X,f.left)&&!pr.it[X.k]);t+=` · prep ${tl.n}/4`;if(cd.classList.contains("prepnew")!==nw)cd.classList.toggle("prepnew",nw);}else if(cd.classList.contains("prepnew"))cd.classList.remove("prepnew");}   // v5.7 outage prep
     if(sv)wt=`Wave ${k} · upsets ${xf(survUp(k))} · costs ${xf(survCost(k))}`;}
-  {const ts=!t?"":t.startsWith("outage in ")?"⏱\uFE0E "+t.slice(10):t==="outage under way"?"⏱\uFE0E now":t==="outage within the hour"?"⏱\uFE0E <1h":t;if(cd.dataset.s!==ts)cd.dataset.s=ts;}   // (phones show the short form)
+  {const t0=t.replace(/ · prep \d\/4$/,""),ts=!t0?"":t0.startsWith("outage in ")?"⏱\uFE0E "+t0.slice(10):t0==="outage under way"?"⏱\uFE0E now":t0.startsWith("outage within the hour")?"⏱\uFE0E <1h":t0;   /* (v5.7: phones leave out the prep tally: a dot shows a new item) */if(cd.dataset.s!==ts)cd.dataset.s=ts;}   // (phones show the short form)
   if(cd.textContent!==t)cd.textContent=t;if(cd.hidden===!!t)cd.hidden=!t;if(wv.textContent!==wt)wv.textContent=wt;if(wv.hidden===!!wt)wv.hidden=!wt;});
 // the chip under the top bar: the wave and its multipliers, for the whole run (v5.2: kept for the tools, hidden by styles.css)
 // v5.1 (offline): a season with a leader shows the chip too, without the wave multipliers (class "season" hides them)
@@ -3537,6 +3716,7 @@ function endSurvival(){civDrop();const se=S.season,r=survResult(),w=r.wave;se.do
     ["Upsets by the end",xf(survUp(w))],["Costs by the end",xf(survCost(w))],["Tons shipped",f0(r.tons)+" t"],["Upsets survived",String(r.incidents)]];
   if(S.lead)st.splice(3,0,["Mill leader",LEADERS[S.lead.id].name+(S.lead.was?" (after "+LEADERS[S.lead.was].name+")":""),"wide"]);
   if(S.civ&&S.civ.m)st.push(["Civics",civSummary(S.civ.m),"wide"]);   // v5.1 QA2
+  {const ts=tellEndStat();if(ts)st.push(ts);}   // v5.7 catching failures early
   if(S.lead&&S.lead.saved)st.splice(4,0,["Dot saved",money(S.lead.saved)+" in repairs ("+S.lead.fixed.length+" fixed)","wide"]);   // v5.0.5
   $("so-stats").replaceChildren(...st.map(([k,v,c])=>{const d=document.createElement("div");if(c)d.className=c;const a=document.createElement("span");a.textContent=k;const b=document.createElement("b");b.textContent=v;d.append(a,b);return d;}));
   {const box=$("so-rc");if(box)box.hidden=true;}soMode(true);
@@ -4106,6 +4286,7 @@ function endSeason(bust){const se=S.season;civDrop();se.done=true;se.on=false;ru
   const st=[["Net profit",money(r.score),"big"],["Tons shipped",f0(r.tons)+" t"],["Upsets survived",String(r.incidents)],["Rolls made",String(S.tot.rolls)],["Season grade",g[1]+" · "+g[2]],["Output",Math.round(eff*100)+"% of max-speed tons"]];
   if(S.civ&&S.civ.m&&!S.free&&civSummary(S.civ.m))st.push(["Civics",civSummary(S.civ.m),"wide"]);   // v5.1 QA2
   if(S.lead)st.push(["Mill leader",LEADERS[S.lead.id].name+(S.lead.was?" (after "+LEADERS[S.lead.was].name+")":""),"wide"]);   // v5.1: seasons have leaders too
+  {const ts=tellEndStat();if(ts)st.push(ts);}   // v5.7 catching failures early
   $("so-stats").replaceChildren(...st.map(([k,v,c])=>{const d=document.createElement("div");if(c)d.className=c;const a=document.createElement("span");a.textContent=k;const b=document.createElement("b");b.textContent=v;d.append(a,b);return d;}));
   {const c=bust?null:rcFinal(),box=$("so-rc");if(box){if(c){box.hidden=false;box.innerHTML=`<div class="rcmini"><div class="rcg g${c.overall}">${c.overall}</div><div><b><span class="nw">Days ${c.from}–${c.to}</span> report card</b><small>${Object.entries(c.g).map(([k,v])=>k+" "+v).join(" · ")}</small><p>${c.tip}</p></div></div><button id="so-rcbtn" class="ghost">Open the full report card</button>`;
       $("so-rcbtn").addEventListener("click",()=>rcOpen(c,true));}else box.hidden=true;}}
@@ -5951,7 +6132,7 @@ function no3D(){G3.ok=false;$("no3d").hidden=false;$("no3d-retry").onclick=()=>l
       if(G3.knobHit){const k=G3.knobHit(rc);if(k)return k;}   // v5.6 fiddly knobs and the DCS consoles (40b)
       if(G3.spiderHit&&rc.intersectObjects(G3.spiderHit,false).length)return "spider";if(G3.sliceHit&&rc.intersectObjects(G3.sliceHit,false).length)return "slice";if(G3.scrubbers&&rc.intersectObject(G3.scrubbers[0].hit,false).length)return "brian";return false;};
     glc.addEventListener("pointerdown",e=>{downAt=[e.clientX,e.clientY,performance.now()];});
-    glc.addEventListener("pointerup",e=>{if(!downAt)return;const m=Math.hypot(e.clientX-downAt[0],e.clientY-downAt[1]),t=performance.now()-downAt[2];downAt=null;if(m<6&&t<500){const li=G3.lblAt(e);if(li){if(G3.lblTap&&G3.lblTap(li))return;G3.flyTo(li);return;}const h=hit(e);if(h&&h.k)G3.knobTap(h);else if(h==="spider")openSpider();else if(h==="slice")openSlice();else if(h==="brian")openBrian();}});
+    glc.addEventListener("pointerup",e=>{if(!downAt)return;const m=Math.hypot(e.clientX-downAt[0],e.clientY-downAt[1]),t=performance.now()-downAt[2];downAt=null;if(m<6&&t<500){if(G3.tellTap&&G3.tellTap(e))return;   /* v5.7: a tell on a Round comes first */const li=G3.lblAt(e);if(li){if(G3.lblTap&&G3.lblTap(li))return;G3.flyTo(li);return;}const h=hit(e);if(h&&h.k)G3.knobTap(h);else if(h==="spider")openSpider();else if(h==="slice")openSlice();else if(h==="brian")openBrian();}});
     glc.addEventListener("pointermove",e=>{const n=performance.now();if(n-hoverT<120||ptrs.size)return;hoverT=n;glc.style.cursor=G3.lblAt(e)||hit(e)?"pointer":"";});}
   glc.addEventListener("wheel",e=>{e.preventDefault();goal=null;if(e.shiftKey||Math.abs(e.deltaX)>Math.abs(e.deltaY)&&!e.ctrlKey)panBy(-e.deltaX||-e.deltaY,0);else if(FOL.on)FOL.r=clamp(FOL.r*Math.exp(e.deltaY*(e.ctrlKey?0.01:0.001)),10,120);else cam.r=clamp(cam.r*Math.exp(e.deltaY*(e.ctrlKey?0.01:0.001)),50,760);},{passive:false});
   // keyboard: arrows/WASD move, Q/E rotate, +/- zoom
@@ -6568,7 +6749,7 @@ function no3D(){G3.ok=false;$("no3d").hidden=false;$("no3d-retry").onclick=()=>l
         for(const sb of SM.bms){const g=new THREE.BoxGeometry(0.01,0.01,0.01),c=sb.material.clone();c.color.setRGB(1,1,1);if(!G3.DBCOL)c.vertexColors=true;
           const bm=new THREE.BatchedMesh(1,g.attributes.position.count,g.index.count,c);{const ii=bm.addInstance(bm.addGeometry(G3.DBCOL?g:G3.vcGeo(g,new THREE.Color(1,1,1))));if(G3.DBCOL&&!G3.DBMAT)bm.setColorAt(ii,new THREE.Color(1,1,1));}
           bm.perObjectFrustumCulled=false;bm.frustumCulled=false;bm.castShadow=sb.castShadow;bm.receiveShadow=sb.receiveShadow;scene.add(bm);stand.push([bm,g]);}
-        for(const id in FX){if(!FX[id].g.visible){FX[id].g.visible=true;shown.push(FX[id].g);}}if(G3.civShowAll)G3.civShowAll(shown);if(G3.warmShow)G3.warmShow(shown);   /* (v5.6: the fiddly knobs view, 40b) */if(!fireFloor.visible){fireFloor.visible=true;shown.push(fireFloor);}
+        for(const id in FX){if(!FX[id].g.visible){FX[id].g.visible=true;shown.push(FX[id].g);}}if(G3.civShowAll)G3.civShowAll(shown);if(G3.warmShow)G3.warmShow(shown);if(G3.tellWarm)G3.tellWarm(shown);   /* (v5.6: the fiddly knobs view, 40b) */if(!fireFloor.visible){fireFloor.visible=true;shown.push(fireFloor);}
         // v4.1 pass 3: the sky, terrain, clouds and mist never appear with an effect-only shader, and they already compiled for the
         // screen on the first frame; keeping them out of this off-screen pass saves their render-target shader variants
         const wld=[G3.terrain,G3.SKY&&G3.SKY.dome,G3.SKY&&G3.SKY.clouds&&G3.SKY.clouds.mesh,G3.SKY&&G3.SKY.mist&&G3.SKY.mist.mesh,G3.nightWin].filter(Boolean),wv=wld.map(o=>o.visible);wld.forEach(o=>o.visible=false);
@@ -6782,7 +6963,7 @@ function no3D(){G3.ok=false;$("no3d").hidden=false;$("no3d-retry").onclick=()=>l
   const MAJOR=new Set(["dryerfire","balefire","shaft","tornado","lightning","flood","overflow","chestover","hdblow","thkblow","beaver","fight","flares","refclash",
     "c_walkout","c_protest","c_custwalk","c_shutdown","dcs","fishkill","r_L","r_C","r_E","r_M"]);
   function civSpot(id){const L=EVP[id];if(!L)return null;const p=CV.parts[L[0][0]];return p&&L[0][0]!=="fx"?p.spot:null;}
-  const pullBlocked=()=>!camPullOn()||S.zen||G3.zen||G3.cineOn||(G3.tut&&G3.tut.on)||(G3.following&&G3.following())||(S.outg&&S.outg.watch);
+  const pullBlocked=()=>!camPullOn()||G3.rounding||S.zen||G3.zen||G3.cineOn||(G3.tut&&G3.tut.on)||(G3.following&&G3.following())||(S.outg&&S.outg.watch);
   function pullTo(id,card){const now=performance.now();if(pullBlocked()||!G3.on)return false;
     if(now-PULL.touch<5000||now-PULL.last<12000||PULL.on)return false;const sp=G3.spotOf(id)||civSpot(id);if(!sp)return false;
     const c=G3.camGet(),to=[sp[0],sp[1],Math.min(90,Math.max(55,c[2]*0.4)),c[3],0.9];
@@ -7064,6 +7245,125 @@ function no3D(){G3.ok=false;$("no3d").hidden=false;$("no3d-retry").onclick=()=>l
   const EP={hay:null,brk:null};let seenHay=-1,seenBrk=-1;
   G3.yardFrozen=false;
 
+  /* ---- v5.7 tells: the clearly failing equipment a Round can spot (the model is 04b-tells.js, the UI 51e-tells-ui.js) ----
+     One small prop per tellable upset, at that equipment, built before the first frame from shared materials and kept out
+     of the static merge. They are only shown during a Round, and only the ones the dice have actually queued in
+     the walked area. Each has a big tap target: a tap within TAP_PX of it on screen (or of its projected 2.5 m radius)
+     counts, so it works on a phone. An operator in hi-vis walks the area's stops while the Round runs. */
+  {const TG=new THREE.Group();TG.visible=false;scene.add(TG);(G3.dynLater||(G3.dynLater=[])).push(TG);   // (kept out of the static merge: SM is made in 40)
+    const KIT={},TAP_PX=44;
+    const disc=new CircG(1,24),puddle=(g,x,z,r,m)=>{const p=new THREE.Mesh(disc,m||FM.pulp);p.rotation.x=-Math.PI/2;p.position.set(x,0.07,z);p.scale.setScalar(r);g.add(p);return p;};
+    const cyl=(r,h,m,x,y,z,g,rz,rx)=>{const c=new THREE.Mesh(new CylG(r,r,h,12),m);c.position.set(x,y,z);if(rz)c.rotation.z=rz;if(rx)c.rotation.x=rx;g.add(c);return c;};
+    // ---- props (local coordinates; +x along the machine) ----
+    function pump(g){box(1.7,0.22,0.9,M.steel,0,0.11,0,g,false);const w=new THREE.Group();w.position.set(0,0.62,0);g.add(w);
+      cyl(0.36,0.95,M.bad,-0.35,0,0,w,Math.PI/2);cyl(0.42,0.28,M.brand,0.45,0,0,w,Math.PI/2);box(0.24,0.3,0.3,M.warn,0.12,0,0,w,false);return {w,top:[0,1.2,0]};}
+    function motor(g){box(1.2,0.2,0.8,M.steel,0,0.1,0,g,false);const w=new THREE.Group();w.position.set(0,0.65,0);g.add(w);
+      cyl(0.42,1.0,M.bad,0,0,0,w,Math.PI/2);box(0.3,0.3,0.4,M.ink,0,0.45,0,w,false);return {w,top:[0,1.3,0]};}
+    function flange(g){cyl(0.22,3,M.metal,0,0.9,0,g,Math.PI/2);cyl(0.36,0.14,M.steel,0,0.9,0,g,Math.PI/2);cyl(0.12,0.9,M.metal,-1.2,0.45,0,g);return {top:[0,0.95,0]};}
+    function hot(g){box(0.9,1.2,0.9,M.steel,0,0.6,0,g,false);const h=box(0.62,0.48,0.62,M.bad,0,1.38,0,g,false);cyl(0.1,1.6,M.metal,0,1.4,0,g,0,Math.PI/2);return {w:h,top:[0,1.6,0]};}
+    function pallets(g){for(let k=0;k<5;k++)box(1.2,0.14,1.0,M.kraft,0,0.08+k*0.17,0,g,false);
+      const ht=new THREE.Group();ht.position.set(0.95,0,0.05);g.add(ht);box(0.5,0.7,0.36,M.steel,0,0.35,0,ht,false);const gl=new THREE.Mesh(cubeG,M.beacon);gl.scale.set(0.04,0.42,0.28);gl.position.set(-0.26,0.38,0);ht.add(gl);
+      return {glow:gl,top:[0.5,0.9,0]};}
+    function forklift(g){box(1.8,0.9,1.1,M.warn,0,0.75,0,g);box(0.12,2.0,1.0,M.ink,1.0,1.1,0,g,false);box(1.0,0.06,0.15,M.metal,1.5,0.15,0.3,g,false);box(1.0,0.06,0.15,M.metal,1.5,0.15,-0.3,g,false);
+      [[-0.6,0.56],[-0.6,-0.56],[0.6,0.56],[0.6,-0.56]].forEach(([x,z])=>cyl(0.3,0.22,M.ink,x,0.3,z,g,0,Math.PI/2));const w=new THREE.Group();g.add(w);return {top:[0,1.4,0],w};}
+    function bucket(g){cyl(0.3,0.45,M.warn,0,0.23,0,g);return {top:[0,0.5,0]};}
+    function panel(g){box(1.2,1.6,0.5,M.steel,0,0.8,0,g);const gl=new THREE.Mesh(cubeG,M.beacon);gl.scale.set(0.5,0.3,0.04);gl.position.set(0,1.2,0.27);g.add(gl);return {glow:gl,top:[0,1.7,0]};}
+    function ice(g){for(let k=0;k<7;k++){const b=box(0.5+((k*37)%5)/10,0.25,0.4+((k*13)%4)/10,M.paper,-1.4+k*0.45,0.12+(k%2)*0.1,((k*7)%3-1)*0.25,g,false);b.rotation.y=k*0.6;}cyl(0.12,2.4,M.metal,0,0.5,0,g,Math.PI/2);return {top:[0,0.6,0]};}
+    function streak(g){box(2.2,0.08,1.2,M.steel,0,1.0,0,g,false);for(let k=0;k<9;k++){const b=new THREE.Mesh(sphereG,FM.slime);b.scale.set(0.18+(k%3)*0.06,0.06,0.12);b.position.set(-0.9+k*0.22,1.06,((k*5)%3-1)*0.3);g.add(b);}cyl(0.06,1.0,M.steel,-1,0.5,0.5,g);cyl(0.06,1.0,M.steel,1,0.5,-0.5,g);return {top:[0,1.2,0]};}
+    function lint(g){for(let k=0;k<8;k++){const b=new THREE.Mesh(sphereG,M.paper);b.scale.set(0.5+(k%3)*0.2,0.22+(k%2)*0.12,0.45);b.position.set(-1.2+k*0.34,0.15,((k*3)%3-1)*0.35);g.add(b);}return {top:[0,0.5,0]};}
+    function drive(g){box(1.4,1.2,1.2,M.steel,-1.0,0.6,0,g);const w=new THREE.Group();w.position.set(0.4,0.75,0);g.add(w);cyl(0.32,0.5,M.warn,0,0,0,w,Math.PI/2);cyl(0.14,1.6,M.metal,0.9,0,0,w,Math.PI/2);return {w,top:[0,1.4,0]};}
+    function blade(g){box(2.4,0.12,0.3,M.metal,0,1.1,0,g,false);const w=new THREE.Group();w.position.set(0,1.1,0.2);g.add(w);box(2.3,0.04,0.25,M.steel,0,0,0,w,false);cyl(0.05,1.1,M.steel,-1.1,0.55,0,g);cyl(0.05,1.1,M.steel,1.1,0.55,0,g);return {w,top:[0,1.3,0]};}
+    function glass(g){box(0.8,1.2,0.6,M.steel,0,0.6,0,g,false);const s=new THREE.Mesh(cubeG,M.bad);s.scale.set(0.3,0.36,0.05);s.position.set(0,0.95,0.31);g.add(s);cyl(0.1,1.6,M.metal,0,0.95,-0.6,g,0,Math.PI/2);return {glow:s,top:[0,1.3,0]};}
+    // ---- where each tell sits: [x, z, prop, effect, rotation, extra] (ground level; checked against the area screenshots) ----
+    const SC=1.8;   // tells are drawn larger than life: exaggerated, so they read from the round's camera
+    const DEF={
+      balefire:[-14,-8.3,pallets,"heat",0],fleet:[-14,-15.2,forklift,"oil",Math.PI],roof:[-36,23.5,bucket,"roof",0],
+      ragger:[10.5,-9.5,motor,"smoke",0],overflow:[22,-8,flange,"wet",0],hdblow:[27.5,-7.5,flange,"spray",0],lwplug:[9,-18.5,flange,"spray",0],lcplug:[26.6,-27,flange,"sand",0],
+      cscreen:[14.5,-27.5,pump,"shake",0],fscreen:[20,-27.5,pump,"rattle",0],refclash:[60.6,-6.6,pump,"shake",Math.PI/2],thkblow:[35,-9,flange,"spray",0],dye:[30.5,-6,glass,"dye",0],
+      fabric:[48,15.6,hot,"hot",0],felt:[35,15.6,hot,"hot",0],slime:[42,15.6,streak,"slime",0],fogfan:[52,-4.5,motor,"smoke",0],
+      shaft:[12,15.6,drive,"shake",0],dryerfire:[4,3.4,lint,"lint",0],wrap:[24,15.6,blade,"chatter",0],steamjoint:[14,3.4,flange,"steam",0],winderdown:[-22,16.5,motor,"hot",0],
+      boiler:[74,-7,pump,"smoke",0],permit:[null,-42,lint,"outfall",0],icedintake:[-30,-52.5,ice,"",0],brownout:[null,null,panel,"flicker",0]};
+    const R=()=>Math.random()-0.5;
+    for(const id in DEF){const [x,z,make,fx,ry]=DEF[id],g=new THREE.Group();g.rotation.y=ry||0;g.scale.setScalar(SC);TG.add(g);g.visible=false;
+      const parts=make(g);if(fx==="wet"||fx==="oil"||fx==="spray"||fx==="roof"||fx==="sand")puddle(g,0.6,0.5,1.1,fx==="oil"?FM.scab:fx==="roof"?FM.water:FM.pulp);
+      if(fx==="outfall")puddle(g,0,0,2.4,FM.slime);
+      KIT[id]={id,g,fx,parts,x,z,place:id==="permit"?()=>[LAYOUT.wx(30),-42]:id==="brownout"?()=>{const p=G3.scenery&&G3.scenery.util&&G3.scenery.util.substation;return p?[p[0]+4,p[1]+4]:[70,-6];}:null};}
+    const posOf=k=>{if(k.place){const [x,z]=k.place();k.x=x;k.z=z;}return [k.x,k.z];};
+    // ---- the operator who walks the round ----
+    const op=worker(M.stock,M.warn,{vest:HIVIS.orange,radio:true});op.visible=false;
+    // the walk: past every place a tell can be in the area (the same route whatever is there), from one end to the other
+    const AREA=a=>(TAREAK[a]||{ids:[]}).ids.filter(id=>KIT[id]&&(!EV[id].env||EV[id].env===SITE.env));
+    function route(a){const pts=AREA(a).map(id=>{const [x,z]=posOf(KIT[id]);return [x,z-1.8];});pts.sort((p,q)=>p[0]-q[0]);
+      if(pts.length===1)pts.push([pts[0][0]+4,pts[0][1]]);return pts;}
+    const RND={on:false,a:null,t:0,len:15,pts:[],L:0,seg:[],shown:new Set(),hits:new Set(),camT:0,touch:0,done:null};
+    G3.tellRoundOn=()=>RND.on;
+    host.addEventListener("pointerdown",()=>{RND.touch=performance.now();},{passive:true});
+    // start: the camera goes over, the operator appears at the first stop
+    G3.tellRound=(a,secs,done)=>{if(RND.on)return false;const pts=route(a);if(!pts.length)return false;
+      let L=0;const seg=[0];for(let k=1;k<pts.length;k++){L+=Math.hypot(pts[k][0]-pts[k-1][0],pts[k][1]-pts[k-1][1]);seg.push(L);}
+      Object.assign(RND,{on:true,a,t:0,len:secs||15,pts,L,seg,done:done||null,camT:-1e9});RND.shown.clear();RND.hits.clear();
+      TG.visible=true;op.visible=true;op.position.set(pts[0][0],0,pts[0][1]);op.updateMatrixWorld(true);G3.rounding=true;
+      const cx=pts.reduce((s,p)=>s+p[0],0)/pts.length,cz=pts.reduce((s,p)=>s+p[1],0)/pts.length,span=Math.max(...pts.map(p=>Math.hypot(p[0]-cx,p[1]-cz)));
+      RND.wide=span<12;RND.cx=cx;RND.cz=cz;RND.r=58;RND.ph=0.62;   // (a steeper view than usual: less is hidden behind tanks and conveyors)   // (close enough that the roofs fade out: 22-3d-floors.js)
+      if(G3.camTo){if(RND.wide)G3.camTo(cx,cz,RND.r,undefined,RND.ph);else G3.camTo(pts[0][0],pts[0][1],RND.r,undefined,RND.ph);}return true;};
+    G3.tellRoundStop=()=>{if(!RND.on)return;RND.on=false;G3.rounding=false;TG.visible=false;op.visible=false;for(const id in KIT)KIT[id].g.visible=false;RND.shown.clear();};
+    G3.tellRoundLeft=()=>RND.on?Math.max(0,RND.len-RND.t):0;
+    // which tells show: the ones queued in this area (an upset that fires mid-walk disappears; a caught one vanishes)
+    function syncShown(){const q=(S.tell&&S.tell.q)||[],want=new Set();for(const p of q)if(p.area===RND.a&&KIT[p.id]&&!RND.hits.has(p.id))want.add(p.id);
+      for(const id in KIT){const k=KIT[id],on=want.has(id);if(k.g.visible!==on){if(on){const [x,z]=posOf(k);k.g.position.set(x,0,z);k.g.updateMatrixWorld(true);}k.g.visible=on;}}
+      RND.shown=want;}
+    // a tap: the nearest shown tell within reach on screen
+    const _v=new THREE.Vector3(),_e=new THREE.Vector3();
+    G3.tellTap=e=>{if(!RND.on||!RND.shown.size)return false;const r=glc.getBoundingClientRect(),px=e.clientX-r.left,py=e.clientY-r.top;let best=null,bd=1e9;
+      for(const id of RND.shown){const k=KIT[id],t=k.parts.top;_v.set(k.x,t[1]*SC*0.6,k.z);_e.copy(_v).add(_e.set(0,2.5,0));
+        _v.project(camera);_e.project(camera);if(_v.z>1)continue;const sx=(_v.x+1)/2*r.width,sy=(1-_v.y)/2*r.height,ex=(_e.x+1)/2*r.width,ey=(1-_e.y)/2*r.height;
+        const reach=Math.max(TAP_PX,Math.hypot(ex-sx,ey-sy)),d=Math.hypot(px-sx,py-sy);if(d<=reach&&d<bd){bd=d;best=id;}}
+      if(!best)return false;RND.hits.add(best);const k=KIT[best];
+      for(let i=0;i<26;i++)emit("spark",k.x+R()*1.2,1.4,k.z+R()*1.2,R()*5,4+Math.random()*4,R()*5,0.7,0.3,"#5ee08a",1);
+      k.g.visible=false;RND.shown.delete(best);if(G3.onTellCaught)G3.onTellCaught(best);return true;};
+    // the screen position of a shown tell (tests)
+    G3.tellScreen=id=>{const k=KIT[id];if(!k||!k.g.visible)return null;const r=glc.getBoundingClientRect(),t=k.parts.top;_v.set(k.x,t[1]*SC*0.6,k.z).project(camera);return [r.left+(_v.x+1)/2*r.width,r.top+(1-_v.y)/2*r.height,_v.z];};
+    G3.tellSeek=f=>{if(RND.on)RND.t=f*RND.len;};G3.tellOp=()=>[op.position.x,op.position.z];
+    G3.tellHold=ms=>{RND.touch=performance.now()+(ms||60000);};   // (tests: the camera stays where the tool put it)
+    G3.tellShowAll=on=>{TG.visible=!!on;for(const id in KIT){const k=KIT[id],[x,z]=posOf(k);k.g.position.set(x,0,z);k.g.updateMatrixWorld(true);k.g.visible=!!on;}};   // (layout checks)
+    G3.tellKits=()=>Object.keys(KIT);
+    G3.tellPos=id=>KIT[id]?posOf(KIT[id]):null;
+    // for the prewarm's one render: everything shown, so nothing compiles mid-round
+    G3.tellWarm=shown=>{if(!TG.visible){TG.visible=true;shown.push(TG);}for(const id in KIT)if(!KIT[id].g.visible){KIT[id].g.visible=true;shown.push(KIT[id].g);}if(!op.visible){op.visible=true;shown.push(op);}};
+    // ---- every frame ----
+    let flick=0;
+    G3.tellFrame=(rdt,now)=>{if(!RND.on)return;
+      if(running&&!document.hidden)RND.t+=rdt;
+      syncShown();
+      // the operator: along the route at an even pace, a short look at each stop
+      {const f=Math.min(1,RND.t/Math.max(1,RND.len-1)),d=f*RND.L;let k=1;while(k<RND.seg.length-1&&RND.seg[k]<d)k++;
+        const a=RND.pts[k-1],b=RND.pts[k],sl=RND.seg[k]-RND.seg[k-1]||1,u=clamp((d-RND.seg[k-1])/sl,0,1),x=a[0]+(b[0]-a[0])*u,z=a[1]+(b[1]-a[1])*u;
+        op.position.set(x,0,z);op.rotation.y=-Math.atan2(b[1]-a[1],b[0]-a[0]);pose(op,f>=1?"inspect":u<0.12&&k>1?"inspect":"walk",now);op.updateMatrixWorld(true);
+        // a long gap (the utilities are spread out) is driven: the figure hides while it covers it
+        op.visible=!(sl>30&&u>0.08&&u<0.92);
+        // a wide area: the camera keeps the operator in view unless the player moved it in the last 3 s
+        if(!RND.wide&&now-RND.camT>1500&&now-RND.touch>3000){RND.camT=now;if(G3.camTo)G3.camTo(x,z,RND.r,undefined,RND.ph);}}
+      // what each tell does
+      if(rdt>0)for(const id of RND.shown){const k=KIT[id],x=k.x,z=k.z,p=k.parts,top=[p.top[0]*SC,p.top[1]*SC,p.top[2]*SC];
+        if(p.w){const s=k.fx==="shake"||k.fx==="rattle"?0.16:k.fx==="chatter"?0.12:0.06;p.w.rotation.x=Math.sin(now/37)*s;p.w.rotation.z=Math.sin(now/29)*s*0.6;p.w.updateMatrixWorld(true);}
+        const ty=top[1];
+        switch(k.fx){
+          case "smoke":case "hot":case "heat":if(Math.random()<rdt*14)emit("smoke",x+R()*0.8,ty+0.3,z+R()*0.8,R()*0.4,1.4+Math.random()*0.8,R()*0.4,3.2,1.6+Math.random()*1.0,k.fx==="heat"?"#4a4f57":"#59606b",0.8);
+            if(k.fx!=="smoke"&&Math.random()<rdt*18)emit("spark",x+R()*0.8,ty,z+R()*0.8,R()*3,3+Math.random()*3,R()*3,0.6,0.22,"#ffb347",1);break;
+          case "spray":case "wet":if(Math.random()<rdt*45)emit("drop",x+R()*0.5,1.7,z,R()*3.5,1.5+Math.random()*2,1.8+Math.random()*2.4,0.8,0.22,"#c9b08a",0.95);break;
+          case "sand":if(Math.random()<rdt*40)emit("chip",x+R()*0.5,1.7,z+R()*0.5,R()*2,1,R()*2,0.9,0.16,"#b9a27a",1);break;
+          case "oil":if(Math.random()<rdt*16)emit("drop",x+R()*1.2,0.9,z+R()*0.8,0,-0.5,0,0.6,0.18,"#3b2f22",1);if(Math.random()<rdt*4)emit("smoke",x+R(),1.6,z,R()*0.3,1,R()*0.3,2.4,1.2,"#6b6b6b",0.5);break;
+          case "roof":if(Math.random()<rdt*30)emit("drop",x+R()*0.8,8,z+R()*0.8,0,-2,0,0.8,0.2,"#9fc5e8",0.95);break;
+          case "steam":if(Math.random()<rdt*36)emit("steam",x+R()*0.4,1.7,z+0.5,R()*2,3+Math.random()*2,2+Math.random()*1.5,1.8,1.2+Math.random()*0.8,"#f2f4f6",0.85);break;
+          case "rattle":case "shake":case "chatter":if(Math.random()<rdt*12)emit("spark",x+R()*1,ty*0.8,z+R()*1,R()*4,3+Math.random()*3,R()*4,0.5,0.22,"#ffd27a",1);if(Math.random()<rdt*3)emit("smoke",x,ty,z,R()*0.3,1,R()*0.3,2.2,1.2,"#7a7f88",0.5);break;
+          case "lint":if(Math.random()<rdt*8)emit("smoke",x+R()*3,0.8,z+R()*1.5,R()*0.3,1.2,R()*0.3,3,1.8,"#6b707a",0.65);if(Math.random()<rdt*6)emit("fire",x+R()*2,0.5,z+R(),0,0.6,0,0.5,0.5,"#ff8a3a",0.8);break;
+          case "slime":if(Math.random()<rdt*12)emit("drop",x+R()*3,1.9,z+R()*1.5,0,-0.3,0,0.8,0.22,"#7c8a3a",1);break;
+          case "outfall":if(Math.random()<rdt*14)emit("smoke",x+R()*4,0.4,z+R()*4,R()*0.3,0.5,R()*0.3,2.4,2.2,"#d9c79a",0.7);break;
+          case "flicker":if(Math.random()<rdt*10)emit("spark",x+R(),ty,z+0.6,R()*3,2+Math.random()*3,2,0.5,0.22,"#bfe3ff",1);break;
+          case "dye":if(Math.random()<rdt*14)emit("drop",x+R()*0.4,1.8,z+0.6,R()*1.5,1,1.5,0.8,0.22,["#d64fd6","#3fb6e0","#f2c230"][(Math.random()*3)|0],1);break;}
+        if(p.glow){flick+=rdt;const on=k.fx==="flicker"?Math.sin(now/45)+Math.sin(now/17)>0.2:Math.sin(now/180)>-0.3;if(p.glow.visible!==on)p.glow.visible=on;}}
+      if(RND.t>=RND.len){const d=RND.done;G3.tellRoundStop();if(d)d();}};
+  }
   /* ---- hayout (v2.8.2, light): a short burst of 30 sheets (one instanced draw call) and a paper heap that shrinks as the crew cleans ---- */
   const HN=30,hayI=new THREE.InstancedMesh(new THREE.BoxGeometry(1.4,0.04,1),paperDS,HN);hayI.frustumCulled=false;hayI.visible=false;scene.add(hayI);
   const hayS=[],hM4=new THREE.Matrix4(),hQ=new THREE.Quaternion(),hE=new THREE.Euler(),hP=new THREE.Vector3(),hSc=new THREE.Vector3(1,1,1);
@@ -7935,7 +8235,7 @@ function no3D(){G3.ok=false;$("no3d").hidden=false;$("no3d-retry").onclick=()=>l
      that moves, shows or hides, swaps material or edits its geometry just has its instance hidden and is drawn on its own
      again. Edge outlines, mirrored meshes and roof parts (which fade per roof) still bake into one geometry per material
      and map cell (the v2.9 path, smBuild); a change there rebuilds that one baked batch. */
-  const SM={t0:0,done:false,list:[],batches:new Map(),bms:[],dyn:new WeakSet(),checkT:0,queue:null,handedBack:0};G3.SM=SM;
+  const SM={t0:0,done:false,list:[],batches:new Map(),bms:[],dyn:new WeakSet(),checkT:0,queue:null,handedBack:0};G3.SM=SM;(G3.dynLater||[]).forEach(o=>SM.dyn.add(o));   // (v5.7: objects built before SM existed, e.g. the tells)
   // device checks: ?nosm turns the static batching off, ?nodb only the moving batches (each object then draws on its own)
   const BQ=new URLSearchParams(location.search);if(BQ.has("nosm")){SM.off=true;SM.done=true;}
   const _smV=new THREE.Vector3(),_smN=new THREE.Vector3(),_smM3=new THREE.Matrix3(),SMCELL=90,SMLAYER=31;
@@ -9981,6 +10281,7 @@ function no3D(){G3.ok=false;$("no3d").hidden=false;$("no3d-retry").onclick=()=>l
     const EXP=G3.EXP;let hidM=null;
     if(EXP.noMovers){if(!moversCache)moversCache=scene.children.filter(o=>o.userData&&(o.userData.legs||o.userData.wheels||o.userData.load||o.userData.cj));hidM=moversCache.filter(o=>o.visible);hidM.forEach(o=>o.visible=false);}
     try{if(G3.knobFrame)G3.knobFrame(rdt,now);}catch(e){G3.fErr=(G3.fErr||0)+1;if(G3.fErr<6)console.error("knobs",e);}   // v5.6 fiddly knobs (40b)
+    try{if(G3.tellFrame)G3.tellFrame(rdt,now);}catch(e){G3.fErr=(G3.fErr||0)+1;if(G3.fErr<6)console.error("tells",e);}   // v5.7 the daily round (33b)
     if(G3.dbTick)G3.dbTick();
     /* v5.5 perf: per-object frustum culling of the static batches (40-3d-static-merge.js) costs a pass over every batched
        instance, so it runs only on frames where the camera moved or the shadow map refreshes (the shadow pass builds its
@@ -10641,7 +10942,8 @@ G3.openKnob=openKnob;G3.openStation=openStation;G3.closeKnobUI=()=>{closeKnob();
         h+=`<section class="rcard"><div class="rhd"><h3>Season</h3><small class="mono">${S.season.done?"Season complete":"Day "+day+" of "+SEASON_DAYS}</small></div><div class="rtiles">${tiles(d)}</div><div class="rprog"><i style="width:${Math.min(100,S.t/(SEASON_DAYS*1440)*100).toFixed(1)}%"></i></div>${daysBlock(d)}</section>`;
         h+=`<section class="rcard"><div class="rhd"><h3>${S.season.done?"Last period":"This period so far"}</h3><small>days ${d.live.from}–${Math.min(d.live.to,day)}${d.prev?" · vs days "+d.prev.from+"–"+d.prev.to:""}</small></div>${gradesOn()?`<div class="rgrades">${grades(d)}</div><p class="rtip"><b>Biggest lever:</b> ${d.live.tip}</p>`:waitNote()}</section>`;}
       else h+=`<section class="rcard"><p class="rnone">Grades, uptime and report cards run during a 30-day season or a survival run. Here are your totals since the start.</p></section>`;
-      h+=`<section class="rcard">${costBlock(p)}</section>`;if(d.season)h+=`<section class="rcard">${upBlock(p)}</section>`;
+      h+=`<section class="rcard">${costBlock(p)}</section>`;
+      {const T=S.tell;if(T&&T.pre)h+=`<section class="rcard"><div class="rhd"><h3>Caught early</h3><small>daily rounds</small></div><p class="rnote">${T.n?`${T.n} upset${T.n>1?"s":""} caught before ${T.n>1?"they":"it"} happened: saved ${money(T.saved)} and ${tellHrs(T.savedMin)} of downtime.`:"Nothing caught yet. Walk an area with the Round button once a day: a tell spotted early is a planned repair at a fraction of the bill, with no downtime."}</p></section>`;}   // v5.7if(d.season)h+=`<section class="rcard">${upBlock(p)}</section>`;
       h+=`<section class="rcard">${qualBlock(p,d.season)}</section><section class="rcard">${moneyBlock(d)}</section>`;
       if(h!==el._h){el._h=h;el.innerHTML=h;}}   // (v5.2: unchanged report, no rebuild)
     el.addEventListener("click",e=>{const b=e.target.closest("[data-card]");if(b&&S.rc){const c=S.rc.cards[+b.dataset.card];if(c)rcOpen(c,true);}});
@@ -10829,6 +11131,75 @@ function camPullOn(){try{return localStorage.getItem("paper-mill-campull")!=="of
   if(pend){mode=pend.mode;openMap(pend.mode);$t("tLoadT").textContent="Building your mill…";$t("tLoad").hidden=false;mapP.hidden=true;
     const go=()=>{if(!G3.ok){if(G3.ok===false){$t("tLoad").hidden=true;mapP.hidden=false;return;}setTimeout(go,200);return;}$t("tLoad").hidden=true;mapP.hidden=false;paintMap();proceed(pend.mode);};setTimeout(go,300);}
 })();
+/* ---------- v5.7 Catching failures early: the UI (the model is 04b-tells.js, the 3D tells and the walk 33b-3d-tells.js) ----------
+   One Round button in the dock; its card is the Vibration Report (the areas with trend arrows when the report is
+   unlocked) and starting a Round is a tap on an area. While the walk runs, a slim strip counts down. The outage prep
+   checklist opens from the outage countdown under the clock, and the same block sits in the 24-hour budget dialog. */
+{const TAB=document.querySelector(".v2tabs");let btn=null,ov=null,strip=null,cur=null;
+  // ---- the dock button ----
+  if(TAB){btn=document.createElement("button");btn.type="button";btn.id="v2round";btn.className="v2round";btn.hidden=true;
+    btn.innerHTML=`<svg fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" viewbox="0 0 24 24"><path d="M9 4h6v3H9z"></path><path d="M9 5.5H6.5V21h11V5.5H15"></path><path d="M9 12l2 2 4-4"></path></svg>Round<i class="rdot" hidden></i>`;
+    TAB.appendChild(btn);btn.addEventListener("click",()=>{if(cur)return;tellOpen();});}
+  function shell(id){let el=document.getElementById(id);if(!el){el=document.createElement("div");el.className="overlay tellov";el.id=id;el.hidden=true;document.body.appendChild(el);
+      el.addEventListener("click",e=>{if(e.target===el)el.hidden=true;});}return el;}
+  const ARROW=["→","↗","⇈"],AWORD=["steady","climbing","climbing fast"];
+  // ---- the Round card (the Vibration Report) ----
+  function tellOpen(){if(!tellsOn())return;ov=shell("tellOv");const can=tellCan(),rep=tellRep();
+    ov.innerHTML=`<div class="modal deal tellcard" role="dialog" aria-modal="true" aria-labelledby="tell-h"><span class="dk">Daily round${rep?" · Vibration Report":""}</span>
+      <h2 id="tell-h">${can?"Where should the operator walk?":"Today's round is done"}</h2>
+      <p>${can?"An operator walks one area for about 15 seconds. Tap any failing equipment you spot: a planned repair now costs far less than the breakdown.":"One round a day. The next one is available at 6 AM."}</p>
+      ${rep?"":`<p class="tnorep">Get the Reliability program (Upgrades → Maintenance) to see vibration trends here.</p>`}
+      <div class="tareas">${TAREAS.filter(a=>a.ids.some(id=>!EV[id].env||EV[id].env===SITE.env)).map(a=>{const v=rep?tellTrend(a.k):-1;
+        return `<button type="button" class="tarea" data-a="${a.k}"${can?"":" disabled"}><span><b>${escHTML(a.n)}</b><small>${escHTML(a.ids.filter(id=>!EV[id].env||EV[id].env===SITE.env).map(id=>EV[id].name.replace(/^(\w)(\w*)/,(m,a,b)=>b&&b===b.toUpperCase()?m:a.toLowerCase()+b)).slice(0,3).join(", "))}…</small></span>${v>=0?`<em class="tv tv${v}" title="${AWORD[v]}">${ARROW[v]}<small>${AWORD[v]}</small></em>`:""}</button>`;}).join("")}</div>
+      ${(()=>{const f=prepFor();if(!f)return "";const pr=prepState(f.k),tl=prepTally(pr);return `<button type="button" class="tprep" id="tell-prep"><span><b>Outage ${f.k} prep checklist</b><br><small>${prepLine(tl.n,tl.m)}</small></span><span aria-hidden="true">›</span></button>`;})()}
+      <div class="btns"><button type="button" id="tell-x" style="flex:1">Close</button></div></div>`;
+    {const pb=ov.querySelector("#tell-prep");if(pb)pb.addEventListener("click",()=>{ov.hidden=true;prepOpen();});}
+    ov.querySelectorAll(".tarea").forEach(b=>b.addEventListener("click",()=>{ov.hidden=true;roundGo(b.dataset.a);}));
+    ov.querySelector("#tell-x").addEventListener("click",()=>{ov.hidden=true;});ov.hidden=false;const f=ov.querySelector(".tarea:not([disabled])")||ov.querySelector("#tell-x");if(f)f.focus({preventScroll:true});}
+  G3.tellOpen=tellOpen;
+  // ---- a Round ----
+  function roundGo(a){if(!tellRoundStart(a))return;cur={a,n:0};
+    if(!strip){strip=document.createElement("div");strip.id="tellStrip";strip.className="tellstrip";strip.setAttribute("role","status");document.body.appendChild(strip);}
+    strip.hidden=false;paintStrip();
+    const done=()=>{const c=cur;cur=null;strip.hidden=true;if(!c)return;const r=tellRoundEnd(c.a,c.n),n=TAREAK[c.a].n.toLowerCase();
+      const text=c.n?`Round done: ${c.n} caught in ${n}.`:r.clean?`Clean walk through ${n}. ${civOn()?civTxt(r.d)+".":""}`:`Round over: something in ${n} went unnoticed.`;
+      if(c.n)log(text,"ok");BANNERS.push({text,t:null,kind:c.n||r.clean?"good":undefined,tag:"ROUND"});while(BANNERS.length>3)BANNERS.splice(1,1);};
+    if(G3.tellRound&&G3.on!==false&&G3.tellRound(a,TELL.roundS,done))return;
+    // no 3D view (tests, ?no3d): the walk still takes its time, with nothing to tap
+    cur.no3d=true;let left=TELL.roundS*1000;const tk=setInterval(()=>{if(running)left-=200;if(left<=0){clearInterval(tk);done();}},200);}
+  G3.tellRoundUI=roundGo;
+  G3.onTellCaught=id=>{if(!cur)return;const r=tellCatch(id);if(!r)return;cur.n++;AUDIO.sfx("cash",150);
+    BANNERS.push({text:`Caught: ${r.txt}. Planned repair ${money(r.cost)}, no downtime.`,t:null,kind:"good",tag:"ROUND"});while(BANNERS.length>3)BANNERS.splice(1,1);paintStrip();};
+  function paintStrip(){if(!strip||!cur)return;const s=Math.ceil(G3.tellRoundLeft?G3.tellRoundLeft():0),t=`<b>Round · ${escHTML(TAREAK[cur.a].n)}</b><span>${s} s</span><small>${cur.n?`${cur.n} caught · `:""}tap anything failing</small>`;
+    if(strip.innerHTML!==t)strip.innerHTML=t;}
+  UI_TICKS.push(()=>{if(btn){const on=tellsOn(),can=on&&tellCan()&&!cur;if(btn.hidden===on){btn.hidden=!on;TAB.classList.toggle("r5",on);}
+      if(on){const dot=btn.querySelector(".rdot");if(dot.hidden===can)dot.hidden=!can;const tt=cur?"Round under way":can?"Daily round: walk an area":"Today's round is done. Next one at 6 AM";if(btn.title!==tt){btn.title=tt;btn.setAttribute("aria-label",tt);}btn.classList.toggle("used",!can&&!cur);}}
+    if(cur){if(!tellsOn()||(G3.tellRoundOn&&!G3.tellRoundOn()&&!cur.no3d)){if(G3.tellRoundStop)G3.tellRoundStop();cur=null;if(strip)strip.hidden=true;}else paintStrip();}});
+  // ---- the outage prep checklist ----
+  const hm=m=>m>=60?Math.floor(m/60)+" h"+(m%60?" "+Math.round(m%60)+" m":""):Math.max(0,Math.round(m))+" min";
+  function prepHTML(f){const pr=prepState(f.k),it=pr.it,P2=PREP.parts,t=prepTally(pr);
+    const row=(X,body)=>{const open=prepUnlocked(X,f.left);return `<div class="prow${open?"":" locked"}" data-i="${X.k}"><div><b>${escHTML(X.n)}</b><small>${escHTML(X.d)}</small></div><div class="pact">${open?body:`<em>opens in ${hm(f.left-X.at)}</em>`}</div></div>`;};
+    const done=s=>`<em class="pdone">✓ ${s}</em>`;
+    const parts=it.parts?(it.parts.got?done(it.parts.how==="now"?"ordered":it.parts.how==="rush"?"rush-ordered":"cheap lot arrived · −"+P2.min+" min"):it.parts.res?`<div class="seg"><button data-c="rush">Rush ${money(P2.rush)}</button></div><small class="pw">The cheap lot didn't make it</small>`:`<em class="pwait">cheap lot on order · arrives or not 24 h out</em>`)
+      :`<div class="seg"><button data-c="now">Order now ${money(P2.now)}</button><button data-c="wait">Wait for a cheaper lot ${money(P2.wait)}</button></div><small class="pw">−${P2.min} min. The cheaper lot arrives half the time.</small>`;
+    const crew=it.crew?done(`walked · −${PREP.crew.min} min`):`<div class="seg"><button data-c="go">Walk it · free</button></div><small class="pw">−${PREP.crew.min} min, Labor +1</small>`;
+    const contr=it.contr?done(it.contr==="in"?`contractors booked · −${PREP.contr.min} min`:`own crew · −${PREP.contr.own} min`):`<div class="seg"><button data-c="in">Bring them in ${money(PREP.contr.cost)}</button><button data-c="own">Own crew · free</button></div><small class="pw">Contractors −${PREP.contr.min} min, Labor −1. Own crew −${PREP.contr.own} min.</small>`;
+    const draw=it.draw?done(`drawing down · −${PREP.draw.min} min`):`<div class="seg"><button data-c="go">Draw down</button></div><small class="pw">−${PREP.draw.min} min. The machine runs at ${Math.round(PREP.draw.cap*100)}% until the shutdown.</small>`;
+    const B={parts,crew,contr:contr,draw};
+    return `<div class="prep"><div class="phead"><b>Outage ${f.k} prep</b><span>${prepLine(t.n,t.m)}</span></div><small class="psub">Each item done shortens the outage and returns ${Math.round(PREP.refund*100)}% of its budget when it ends. Starts in ${hm(f.left)}.</small>${PREP.items.map(X=>row(X,B[X.k])).join("")}</div>`;}
+  // mount (and re-mount after every choice) into a host element: the prep card or the budget dialog
+  function prepMount(host){if(!host)return;const f=prepFor();if(!f){host.innerHTML="";return;}host.innerHTML=prepHTML(f);
+    host.querySelectorAll(".prow").forEach(r=>r.querySelectorAll("button[data-c]").forEach(b=>b.addEventListener("click",()=>{if(prepDo(r.dataset.i,b.dataset.c)){AUDIO.sfx("cash",120);prepMount(host);}})));}
+  G3.prepMount=prepMount;
+  function prepOpen(){const f=prepFor();if(!f)return false;const el=shell("prepOv");
+    el.innerHTML=`<div class="modal deal outg prepcard" role="dialog" aria-modal="true" aria-labelledby="prep-h"><span class="dk">Planned outage ${f.k} · checklist</span><h2 id="prep-h">Outage ${f.k} prep</h2><div id="prep-body"></div><div class="btns"><button type="button" id="prep-x" style="flex:1">Close</button></div></div>`;
+    prepMount(el.querySelector("#prep-body"));el.querySelector("#prep-x").addEventListener("click",()=>{el.hidden=true;});el.hidden=false;return true;}
+  G3.prepOpen=prepOpen;
+  // the countdown under the clock opens it (only while a checklist is open; otherwise the tap expands the top bar as before)
+  {const cd=document.getElementById("v2cd");if(cd)cd.addEventListener("click",e=>{if(prepFor()){e.stopPropagation();e.preventDefault();prepOpen();}},true);}
+  // keep an open prep card current (items unlock as the clock runs)
+  UI_TICKS.push(n=>{if(n%5)return;const el=document.getElementById("prepOv");if(el&&!el.hidden){const b=el.querySelector("#prep-body");if(!prepFor()){el.hidden=true;return;}if(b&&!b.contains(document.activeElement))prepMount(b);}});
+}
 // frame rate is a player choice (Controls): Battery saver = 30 fps, Smooth = 60 fps (v15 default: a 120 Hz screen no longer
 // draws twice as many frames), Max = the display's rate; remembered. (true/false still mean Max/saver for the test tools)
 const FPS_CAPS={saver:30,smooth:60,max:0};let FPS_MODE="smooth";try{const v=localStorage.getItem("paper-mill-fps");if(FPS_CAPS[v]!==undefined)FPS_MODE=v;}catch(e){}
@@ -11186,7 +11557,7 @@ requestAnimationFrame(frame);
   window.__openDiag=open;})();
 // test and benchmark hook (read-only views plus a few controls); used by the benchmark harness and smoke tests
 window.__PM={get THREE(){return THREE},get S(){return S},get C(){return C},get G3(){return G3},get EVENTS(){return EVENTS},get CH(){return CH},SIM_STEP,
-  trigger:(...a)=>trigger(...a),step:h=>step(h),reseed:k=>seedRun(k),lineCaps:()=>lineCaps(),get SITE(){return SITE},get LAYOUT(){return LAYOUT},get AUDIO(){return AUDIO},get DIAG(){return DIAG},setBn:b=>{S.bn=b;applyUpgrades();},knob:{set:(i,v)=>knobSet(i,v),read:()=>knobRead(),off:()=>knobsOff(),reset:i=>knobReset(i),list:KNOBS,get K(){return S.knob},open:(a,t)=>G3.openStation&&G3.openStation(a,t),panel:i=>G3.openKnob&&G3.openKnob(i),close:()=>G3.closeKnobUI&&G3.closeKnobUI()},simRate:()=>simRate(),setFps:v=>setFpsMode(v),setRunning:v=>{running=v},get running(){return running}};
+  trigger:(...a)=>trigger(...a),step:h=>step(h),reseed:k=>seedRun(k),lineCaps:()=>lineCaps(),get SITE(){return SITE},get LAYOUT(){return LAYOUT},get AUDIO(){return AUDIO},get DIAG(){return DIAG},setBn:b=>{S.bn=b;applyUpgrades();},knob:{set:(i,v)=>knobSet(i,v),read:()=>knobRead(),off:()=>knobsOff(),reset:i=>knobReset(i),list:KNOBS,get K(){return S.knob},open:(a,t)=>G3.openStation&&G3.openStation(a,t),panel:i=>G3.openKnob&&G3.openKnob(i),close:()=>G3.closeKnobUI&&G3.closeKnobUI()},tell:{get T(){return S.tell},on:()=>tellsOn(),lead:()=>tellLead(),catch:id=>tellCatch(id),start:a=>tellRoundStart(a),end:(a,n)=>tellRoundEnd(a,n),trend:a=>tellTrend(a),rep:()=>tellRep(),can:()=>tellCan(),summary:()=>tellSummary(),areas:TAREAS,prepFor:()=>prepFor(),prepDo:(i,c)=>prepDo(i,c),prepTally:()=>prepTally(S.tell&&S.tell.prep),round:a=>G3.tellRound&&G3.tellRound(a),open:()=>G3.tellOpen&&G3.tellOpen(),prepOpen:()=>G3.prepOpen&&G3.prepOpen()},simRate:()=>simRate(),setFps:v=>setFpsMode(v),setRunning:v=>{running=v},get running(){return running}};
 })();
 </script>
 

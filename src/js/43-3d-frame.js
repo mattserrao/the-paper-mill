@@ -220,6 +220,7 @@
     const EXP=G3.EXP;let hidM=null;
     if(EXP.noMovers){if(!moversCache)moversCache=scene.children.filter(o=>o.userData&&(o.userData.legs||o.userData.wheels||o.userData.load||o.userData.cj));hidM=moversCache.filter(o=>o.visible);hidM.forEach(o=>o.visible=false);}
     try{if(G3.knobFrame)G3.knobFrame(rdt,now);}catch(e){G3.fErr=(G3.fErr||0)+1;if(G3.fErr<6)console.error("knobs",e);}   // v5.6 fiddly knobs (40b)
+    try{if(G3.tellFrame)G3.tellFrame(rdt,now);}catch(e){G3.fErr=(G3.fErr||0)+1;if(G3.fErr<6)console.error("tells",e);}   // v5.7 the daily round (33b)
     if(G3.dbTick)G3.dbTick();
     /* v5.5 perf: per-object frustum culling of the static batches (40-3d-static-merge.js) costs a pass over every batched
        instance, so it runs only on frames where the camera moved or the shadow map refreshes (the shadow pass builds its

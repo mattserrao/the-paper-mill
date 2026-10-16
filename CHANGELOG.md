@@ -1,5 +1,34 @@
 # Changelog
 
+## v5.7.0 (2026-10-16): catching failures early
+New design principle: failures are visible before they occur. Mills that walk the floor and invest in monitoring pay
+less and lose less time. Every number is a first guess (balancing comes later).
+- **Tells.** Equipment and property upsets (stock prep, wet end, dry end and winder, yard and warehouse, utilities: 27 in
+  all) are pre-rolled: the same dice as before, but a hit is queued and fires 1.5 in-game days later (survival: 0.1 day
+  less each wave, at least 1 day). Until then a clearly failing piece of equipment sits at the spot: a red-hot motor,
+  a pump shaking itself loose, a weeping flange, a hissing steam joint, pallets stacked against a heater, a forklift
+  dripping oil. Acts of nature, people and supply events, the chest overflow, knob breakdowns and civic upsets still
+  come without warning.
+- **Daily Round.** A Round button in the dock, once per in-game day (the day turns over at 6 AM). Pick an area and an
+  operator walks it for about 15 seconds while the game keeps running; the camera follows. Tells only show during a
+  Round, in the area being walked. Tap one: planned repair at 40% of the bill, no downtime, Machinery +3, Labor +1.
+  Miss it and it fires as usual. A walk through an area with nothing wrong still gives Labor +1 (plant) or Community +1
+  (yard, utilities). Tap targets are sized for phones.
+- **Vibration Report.** The Round card lists the six areas; with the report each shows steady, climbing or climbing fast
+  (due within a day). It comes with the Reliability program (level 1, which now also gives Machinery +6) or with Dot.
+- **Outage prep checklist.** Opens 3 days before each planned outage, from the outage countdown or the Round card, and in
+  the 24-hour budget dialog. Four items unlock at 72, 48, 24 and 8 hours out: order the parts (now at full price, or a
+  cheaper lot that arrives half the time, with a rush order if it doesn't), walk the job plan with the crew, contractors
+  or your own crew, and drawing down (the machine runs at 85% until the shutdown). Each completed item takes minutes off
+  the outage (never under an hour) and returns 5% of its budget when it ends. The countdown and the "Outage has begun"
+  notice show the tally ("Prep 3/4 — outage shortened 1 h 35 m").
+- **Visible:** the end screens (season and survival) and the mill report show "Upsets caught early: N — saved $X and Y
+  hours of downtime".
+- Seasons and survival get everything; free play gets tells, Rounds and the report (no planned outages, so no
+  checklist); zen has none of it.
+- The seeded run changes (upsets now land 1.5 days after their roll); hands-off runs still replay identically.
+- Tools: `tellcheck.py` (45 checks), `tellshots.py`, `telluishots.py`, `gridview.py` (top-down layout view with a grid).
+
 ## v5.6.0 (2026-10-16): fiddly knobs
 Red knobs all over the mill that do nothing until you touch them. Move one and the trouble turns up later, often
 somewhere else, and you trace it back on the new DCS and QCS screens. Every knob starts at standard; a game where

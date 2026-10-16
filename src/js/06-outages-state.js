@@ -40,7 +40,7 @@ function openOutagePlan(){const o=S.outg,st=outStart(o.k),first=o.k===1,d0=S.cas
     <h2 id="out-h">${first?"Your first planned outage":"Outage in 24 hours"}</h2>
     ${first?`<div class="intro"><p><b>What's an outage?</b> Planned downtime. Every ${OUT.every} days the mill comes down on purpose for a controlled 4-hour shutdown, so crews can inspect, clean, repair and replace worn parts before they fail.</p>
       <p><b>Why it matters:</b> well-maintained equipment breaks down less and runs better, with fewer sheet breaks and hayouts. Your budget for each area sets its reliability until the next outage.</p></div>`:""}
-    <p class="when">Starts <b>${outTime(st)}</b>, back up by <b>${hourOf(st+OUT.len)}</b> (4 hours, machine and stock prep down).<br>Major job: <b>${OUT.jobs[outJob(o.k)-1]||"inspections"}</b>, plus new press felts.</p>${survOn()?survPlanNote(o.k):""}<div id="out-lead"></div>${typeof civPlanHTML==="function"?civPlanHTML():""}
+    <p class="when">Starts <b>${outTime(st)}</b>, back up by <b>${hourOf(st+OUT.len)}</b> (4 hours, machine and stock prep down).<br>Major job: <b>${OUT.jobs[outJob(o.k)-1]||"inspections"}</b>, plus new press felts.</p>${survOn()?survPlanNote(o.k):""}<div id="out-lead"></div><div id="out-prep"></div>${typeof civPlanHTML==="function"?civPlanHTML():""}
     <div>${OUT.areas.map(([a,n,d])=>`<div class="orow" data-a="${a}"><div><b>${n}</b><small>${d}</small></div><div class="seg">${COST.map((c,i)=>`<button data-v="${i}" aria-pressed="${i===d0}">${k(c)}</button>`).join("")}</div><em class="eff"></em></div>`).join("")}</div>
     <div class="otot"><div><span>Outage budget</span><small id="out-cash"></small></div><b id="out-tot"></b></div>
     <div class="btns"><button class="primary" id="out-ok" style="flex:1">Approve budget</button></div></div>`;
@@ -54,7 +54,7 @@ function openOutagePlan(){const o=S.outg,st=outStart(o.k),first=o.k===1,d0=S.cas
     o.plan={...pick};if(cpc)o.plan.civ=cpc;delete o._civ;if(lp)o.plan.lead={to:lp.to,pick:lp.pick};log(`Outage ${o.k} budget approved: ${money(tot)} (${OUT.areas.map(([a,n])=>n+" "+k(COST[pick[a]])).join(", ")})`,"warn");
     el.hidden=true;closeCard(true);});
   o._civ={};if(civOn()){civPlanWire(el,o._civ);el.querySelectorAll(".civplan .seg button").forEach(b=>b.addEventListener("click",()=>paint()));}
-  paint();if(lp)leadPlanMount(document.getElementById("out-lead"),lp);el.hidden=false;AUDIO.sfx("cash",150);document.getElementById("out-ok").focus({preventScroll:true});el.querySelector(".modal").scrollTop=0;}   // v5.0.4: opens at the top
+  paint();if(lp)leadPlanMount(document.getElementById("out-lead"),lp);if(G3.prepMount)G3.prepMount(document.getElementById("out-prep"));   /* v5.7 outage prep */el.hidden=false;AUDIO.sfx("cash",150);document.getElementById("out-ok").focus({preventScroll:true});el.querySelector(".modal").scrollTop=0;}   // v5.0.4: opens at the top
 function outNote(head,body,ms,btn){   // v5.0.5: with an event card open, the notice waits until the card is answered, so it never covers the card's buttons
   // v5.0.6: it also waits while the card's result toast is showing, so it never lands on top of it
   {const d=document.getElementById("dealOv"),busy=()=>!!(d&&!d.hidden&&((S.cards&&S.cards.open&&S.cards.open.c)||d.classList.contains("dealres")));clearInterval(outNote._w);
@@ -73,9 +73,10 @@ function beginOutage(){const o=S.outg,st=S.t;if(!o.plan)o.plan={stock:1,wet:1,dr
   // (the clock runs at no more than OUT.simCap while o.on, through simRate(); the player's own speed is left alone)
   addFx({id:"pout",left:OUT.len,mods:{pmDown:"planned outage",pulperDown:1}});AUDIO.sfx("clunk",400);
   if(typeof civOutageBegin==="function")civOutageBegin(o,st);   // v5.1 civics: Labor sets how long it runs
+  prepBegin(o,st);   // v5.7 outage prep: completed checklist items take minutes off
   log(`Planned outage ${o.k} has begun: down until ${hourOf(o.end)}`,"warn");BANNERS.push({text:`Planned outage: the mill is down until ${hourOf(o.end)}.`,t:null,kind:"good",tag:"OUTAGE"});
   const canWatch=C.simSpeed>OUT.simCap&&!TURBO_FAST(C.simSpeed);   // (at 5 min/s or slower there is nothing to slow down)
-  outNote("Outage has begun",`The mill is down for planned maintenance: ${(OUT.jobs[outJob(o.k)-1]||"inspections").toLowerCase()} and new press felts. Started ${hourOf(st)}, ends ${outTime(o.end)}.`,canWatch?7000:5000,canWatch?{label:"Watch the crews",on:outWatch}:null);}
+  outNote("Outage has begun",`The mill is down for planned maintenance: ${(OUT.jobs[outJob(o.k)-1]||"inspections").toLowerCase()} and new press felts. Started ${hourOf(st)}, ends ${outTime(o.end)}.${o.prep?`<br><b>${prepLine(o.prep.n,o.prep.m)}.</b>`:""}`,canWatch?7000:5000,canWatch?{label:"Watch the crews",on:outWatch}:null);}
 function endOutage(){const o=S.outg,pl=o.plan||{stock:1,wet:1,dry:1};o.on=false;o.watch=false;outNoteHide();   // v5.0.6: at the player's speed the outage can end before its 7 s notice doesS.fx=S.fx.filter(f=>f.id!=="pout");S.M=mods();
   o.spd=null;   // (v5.0.1: nothing to restore: the outage only capped the running speed, see simRate)
   o.rel={stock:OUT.rel[pl.stock],wet:OUT.rel[pl.wet],dry:OUT.rel[pl.dry]};
@@ -87,6 +88,7 @@ function endOutage(){const o=S.outg,pl=o.plan||{stock:1,wet:1,dry:1};o.on=false;
   if(S.lead&&leadOverrun()>0){const m=leadOverrun();addFx({id:"felrun",left:m,mods:{pmDown:"project tie-ins"}});   // v4.4.0-t3: Felicity's projects make outages overrun
     log(`Project tie-ins: the machine stays down ${m>=60?(m/60).toFixed(m%60?1:0)+" h":m+" min"} longer.`,"warn");}
   if(typeof civOutageEnd==="function")civOutageEnd(o,pl);   // v5.1 civics: the levers, an overrun
+  prepEnd(o,OUT.areas.reduce((s,[a])=>s+(OUT.cost[pl[a]]||0),0));o.prep=null;   // v5.7 outage prep: part of the budget back
   o.k++;o.noticed=false;o.plan=null;if(survOn())survWaveStart();}
 const HAYLINES=["HAYOUT! Paper is shooting to the roof!","Winder hayout! Every PM hand to the dry end!","Hayout! It's snowing paper in the winder aisle.","Hayout! The set exploded off the drums."];
 // a hayout ruins the outer wraps of the set on the winder (about 3 t), not the whole 12.5 t roll
