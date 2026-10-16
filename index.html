@@ -7678,7 +7678,9 @@ function no3D(){G3.ok=false;$("no3d").hidden=false;$("no3d-retry").onclick=()=>l
      (10 s) is over and watch their position, rotation, scale and parent instead. Unfrozen on hand-back. */
   function smFreeze(r){const o=r.o;if(r.frozen||!o.parent)return;r.frozen=true;r.fp=o.position.clone();r.fq=o.quaternion.clone();r.fs=o.scale.clone();
     r.pm=Float64Array.from(o.parent.matrixWorld.elements);o.matrixAutoUpdate=false;o.matrixWorldAutoUpdate=false;
-    if(!BQ.has("nopark")&&!o.children.length){r.par=o.parent;SMHOLD.add(o);o.__smRec=r;o.add=smParkedAdd;}}   // (leaves only: a parked node's children would never be drawn)
+    // (leaves only: a parked node's children would never be drawn. Direct children of the scene only: game code reaches
+    // parts of its groups by position, e.g. g.children[2], and taking a child out of a group would shift those positions)
+    if(!BQ.has("nopark")&&!o.children.length&&o.parent===scene){r.par=o.parent;SMHOLD.add(o);o.__smRec=r;o.add=smParkedAdd;}}
   // a child added to a parked node brings the node back into the scene first (still frozen), so the child is drawn
   function smUnpark(r){const o=r.o;if(o.parent!==SMHOLD)return;SMHOLD.remove(o);delete o.add;delete o.__smRec;if(r.par)r.par.add(o);r.par=null;}
   function smParkedAdd(...a){if(this.__smRec)smUnpark(this.__smRec);return THREE.Object3D.prototype.add.apply(this,a);}
