@@ -14,6 +14,9 @@ def run(seed_math):
         pg.route("**/*", route_for(html)); pg.add_init_script(init); pg.goto("http://bench.local/")
         pg.wait_for_function("window.__PM&&window.__B&&__B.first!==null", timeout=60000)
         pg.evaluate("()=>document.getElementById('v2go').click()")
+        # v5.1+: a season starts after the leader is picked
+        pg.wait_for_function("()=>!document.getElementById('leadOv').hidden", timeout=60000)
+        pg.evaluate("()=>{document.querySelector('#leadOv .ldcard[data-l=\"hank\"]').click();document.getElementById('ld-go').click()}")
         pg.wait_for_function("__PM.S.season&&__PM.S.season.on", timeout=120000, polling=200); pg.wait_for_timeout(300)
         # v4.2.5: seasons roll a random bottleneck. Restart the season, stop at once and pin it, so the two loads compare.
         pg.evaluate("()=>{document.getElementById('v2season').click();__PM.setRunning(false);__PM.setBn('pulper');}")
