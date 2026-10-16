@@ -192,3 +192,11 @@ function knobRead(){const K=S.knob,x=K?K.x:null,g=GRADES[C.grade]||GRADES["23m"]
     st1:knobVal("st1"),st3,steam:run?38*(K?K.sf:1)*S.pmSpeed/2736:0,boiler:1-(x?x.bs:0)*0.45,moist:run?m+wob(0.13,4)*0.25:0,
     bw:run?bw*(1+sw*0.08*wob(0.21,3))+wob(0.11,5)*0.12:0,draw:knobVal("draw"),tension:run?1.0+(knobVal("draw")-1.5)*0.42:0,
     zones:z.map((v,i)=>m+v*0.35+Math.sin(i*1.7+t*0.01)*0.12),off:K?K.off:0,why:K?K.offWhy:"",F:K&&K.F||{},speed:S.pmSpeed};}
+// DCS / QCS trend history: a reading every 2 sim minutes, 6 hours kept. Read-only on the sim (it never writes S), kept
+// outside S so saves don't grow; a new game or a loaded save starts it fresh.
+const KHIST={S:null,t:-1,a:[]};
+function knobHist(){if(KHIST.S!==S){KHIST.S=S;KHIST.a.length=0;KHIST.t=-1;}const k=Math.floor(S.t/2);if(k===KHIST.t)return;KHIST.t=k;
+  const r=knobRead(),u=v=>r.run?v:null;   // (readings that only exist with a sheet on are left blank while the machine is down)
+  KHIST.a.push([S.t,r.cp,r.amps,r.gap,u(r.refkw),r.mcCons,r.vac,u(r.couchSol),r.pl,u(r.pressSol),r.edge,r.st1,u(r.st3),u(r.steam),r.boiler,u(r.moist),u(r.bw),u(r.tension),r.pulpLvl,r.stripes,r.off]);
+  if(KHIST.a.length>180)KHIST.a.shift();}
+const KH_COL={cp:1,amps:2,gap:3,refkw:4,mcCons:5,vac:6,couchSol:7,pl:8,pressSol:9,edge:10,st1:11,st3:12,steam:13,boiler:14,moist:15,bw:16,tension:17,pulpLvl:18,stripes:19,off:20};

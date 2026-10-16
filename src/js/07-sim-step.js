@@ -128,5 +128,6 @@ function step(dt){
   // trend every 10 sim min
   S.trendAcc+=dt;
   if(S.trendAcc>=10){S.trendAcc-=10;S.trend.push([S.tank/P.tankCap,S.pmSpeed/3300,S.yard/P.yardCap,S.fg/P.fgCap]);if(S.trend.length>144)S.trend.shift();}
+  if(!S.zen)knobHist();   // v5.6: DCS / QCS trends (reads only)
 }
 
