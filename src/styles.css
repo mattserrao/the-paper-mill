@@ -1101,3 +1101,29 @@ body.dark .kvchip{background:color-mix(in srgb,var(--panel) 96%,transparent)}
 .tellcard .tprep{display:flex;justify-content:space-between;align-items:center;gap:8px;width:100%;min-height:48px;padding:8px 12px;border-radius:10px;border:1px dashed var(--ok);background:color-mix(in srgb,var(--ok) 7%,var(--panel));color:var(--ink);text-align:left}
 .tellcard .tprep b{font:700 14px var(--f-body)}.tellcard .tprep small{font:600 12px var(--f-body);color:var(--ok)}
 .prepcard .phead b{display:none}
+/* ---- v5.7.2 Help: guide and glossary (title screen ? and pause menu Help) ---- */
+.overlay.helpov{z-index:200}
+.modal.help{width:min(620px,100%);max-width:620px;max-height:calc(100dvh - 32px);padding:0;gap:0;overflow:hidden;display:flex;flex-direction:column}
+.help .hhead{display:flex;justify-content:space-between;align-items:center;padding:16px 18px 8px}
+.help .hhead h2{font-size:26px}
+.help .hx{width:44px;height:44px;border-radius:50%;border:1px solid var(--line);background:var(--panel);color:var(--ink);font:700 16px var(--f-body);display:grid;place-items:center}
+.help .htabs{display:grid;grid-template-columns:1fr 1fr;gap:4px;margin:0 18px 10px;padding:4px;border-radius:12px;background:color-mix(in srgb,var(--ink) 6%,var(--panel))}
+.help .htabs button{min-height:40px;border:0;border-radius:9px;background:transparent;color:var(--muted);font:700 14px var(--f-body)}
+.help .htabs button[aria-selected=true]{background:var(--panel);color:var(--ink);box-shadow:0 1px 3px rgba(0,0,0,.12)}
+.help .hbody{overflow:auto;padding:0 18px 12px;flex:1;min-height:0}
+.help .hsec{border-top:1px solid var(--line)}
+.help .hsec summary{min-height:46px;display:flex;align-items:center;justify-content:space-between;cursor:pointer;font:700 15px var(--f-body);color:var(--ink);list-style:none}
+.help .hsec summary::-webkit-details-marker{display:none}
+.help .hsec summary::after{content:"+";font:600 20px var(--f-body);color:var(--muted)}
+.help .hsec[open] summary::after{content:"−"}
+.help .hsb{padding:0 0 12px;font:400 14px/1.5 var(--f-body);color:var(--ink)}
+.help .hsb p{margin:0 0 8px;color:var(--ink)}.help .hsb ul,.help .hsb ol{margin:0 0 6px;padding-left:20px}.help .hsb li{margin:0 0 6px}
+.help .hq{width:100%;box-sizing:border-box;min-height:44px;font:500 16px var(--f-body);padding:8px 12px;border-radius:10px;border:1px solid var(--line);background:var(--panel);color:var(--ink);margin-bottom:6px}
+.help .hgl{margin:0}
+.help .hterm{padding:9px 0;border-top:1px solid var(--line)}
+.help .hterm dt{font:700 14.5px var(--f-body);color:var(--ink)}.help .hterm dd{margin:2px 0 0;font:400 13.5px/1.45 var(--f-body);color:var(--muted)}
+.help .hnone{color:var(--muted);padding:12px 0}
+.help .hfoot{display:flex;align-items:center;gap:12px;flex-wrap:wrap;padding:12px 18px calc(14px + env(safe-area-inset-bottom,0px));border-top:1px solid var(--line)}
+.help .hfoot button{min-height:44px;padding:0 16px;border-radius:12px;font:700 14px var(--f-body)}
+.help .hfoot span{font:500 12.5px var(--f-body);color:var(--muted);flex:1;min-width:180px}
+.title .tleft{display:flex;gap:10px;pointer-events:auto}
