@@ -1,0 +1,44 @@
+THE PAPER MILL - VERSION NOTES
+One line per version, oldest first. Add a line here with every release: build.py embeds this file in the game
+(triple-tap the version number on the title screen) and warns if APP_VER has no line.
+(t / s = test or local build, not released on its own)
+
+4.0.0      Graphics Overhaul: 60 FPS on iPhone, ~80% Fewer Draw Calls
+4.0.1      Performance Follow-Up, Show FPS Option and Device Autotest
+4.0.2      Economy Rebalance and Smoother Upset Labels
+4.1.0      Four Environments, Seeded Mills, Bottlenecks, Graphics Tiers and Site Music
+4.2.0      New Site Maps, Rare Sights, Zen Map Rotation and Economics Fixes
+4.2.0-s    Save and Continue Season (Test)
+4.2.1      Save/Continue, Settings Panel and Outage Speed Fix
+4.2.2-t    Bayou Gator Sight Reworked (Test)
+4.2.2-t2   Gator Bass Riff (Test)
+4.2.2-t3   Gator Riff Removed, Wide Camera Framing (Test)
+4.2.2-t4   Gator Scene Shortened and Widened (Test)
+4.2.2-t5   One Rare Sight per Map in Zen (Test)
+4.2.2      Rare Sights Reworked, Bird Strike Upset, Mill Report Tab
+4.2.3-t    Cowboys, Bigfoot and Tugboat Sights Reworked (Test)
+4.2.3      Laptop Battery Saving (Default GPU)
+4.2.4      $25M Goal Removed and Quick Fixes
+4.2.5      Random Bottleneck per Season and Accessibility Improvements
+4.3.0-t1   Survival Mode (Test)
+4.4.0-t1   Mill Leaders in Survival (Test)
+4.4.0-t2   Painted Leader Portraits (Test)
+4.4.0-t3   Leader Redesign, 4-Day Waves and Fixes (Test)
+5.0.0      Survival Mode Release with Mill Leaders
+5.0.1      Results Dialog and Game Speed Fixes
+5.0.2      Report Card Label Fixes
+5.0.3      Survival Playtest Fixes (Test)
+5.0.4      Playtest Review: Dot Auto-Fix and Shipping Fix (Test)
+5.0.5      Polish Rounds from Survival Playtests
+5.0.6      Survival QA Fixes, Opt-In Outage Watch, Leaderboard Filters
+5.1.0      Civics Meters and Leaders in Seasons (Test)
+5.4.0      Title Screen, Civics in the World and Dark Mode
+5.4.1      Loading Splash, No Old-Menu Flash
+5.4.2      Graphics Quality on the Title Screen
+5.5.0      Performance Improvements
+5.6.0      Fiddly Knobs, DCS/QCS Screens and Knobs View
+5.7.0      Catching Failures Early: Tells, Daily Rounds, Vibration Report, Outage Prep
+5.7.1      Bottom Menu Reorder, Settings Back on the Right
+5.7.2      Help Page with Game Guide and Glossary
+5.7.3      Bare Graphics Mode for Weak Phones
+5.7.4      Version Notes Pop-Up (Triple-Tap the Version Number)

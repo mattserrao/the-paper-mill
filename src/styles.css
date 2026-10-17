@@ -834,7 +834,7 @@ body.titleon .v2top,body.titleon .v2dock,body.titleon .v2more{visibility:hidden}
 .title .tround:hover{background:rgba(24,30,46,.9);transform:scale(1.05)}
 .title .tround[aria-pressed="false"]{color:rgba(255,255,255,.6)}
 .title:not([data-step=main]) .tver{visibility:hidden}
-.title .tver{font:600 11.5px var(--f-body);color:rgba(255,255,255,.55);letter-spacing:.04em}
+.title .tver{font:600 11.5px var(--f-body);color:rgba(255,255,255,.55);letter-spacing:.04em;pointer-events:auto;cursor:default;padding:10px 6px;user-select:none;-webkit-user-select:none;touch-action:manipulation;-webkit-tap-highlight-color:transparent}
 .title .tpanel{position:absolute;inset:0 0 calc(70px + env(safe-area-inset-bottom,0px)) 0;margin:auto;height:fit-content;width:min(760px,calc(100% - 28px));max-height:calc(100dvh - 110px - env(safe-area-inset-bottom,0px));box-sizing:border-box;overflow:auto;padding:22px 22px 18px;border-radius:22px;
   background:rgba(14,18,27,.9);border:1px solid rgba(255,255,255,.12);box-shadow:0 24px 70px rgba(0,0,0,.5);animation:tin .35s ease both}
 .title .tpanel[hidden]{display:none}
@@ -1130,3 +1130,8 @@ body.dark .kvchip{background:color-mix(in srgb,var(--panel) 96%,transparent)}
 /* v5.7.3: six graphics choices (Auto, Bare, Low, Medium, High, Ultra) */
 .title .tseg.tseg6{grid-template-columns:repeat(3,1fr)}
 #gfxSeg{flex-wrap:wrap}
+/* ---- v5.7.4 version notes (triple-tap the title screen's version number) ---- */
+.vnotes .hbody{padding-bottom:16px}
+.vnotes .hterm{display:grid;grid-template-columns:5.5em 1fr;gap:10px;align-items:baseline}
+.vnotes .hterm dd{margin:0}
+.vnotes .hterm.vcur dt{color:var(--ok)}
