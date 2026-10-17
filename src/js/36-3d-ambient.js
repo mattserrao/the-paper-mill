@@ -85,7 +85,7 @@
   function startBirds(){const n=3+Math.floor(Math.random()*4),dir=Math.random()<0.5?-1:1;flock={x:dir<0?72:-26,dir,z:4+Math.random()*10,n,offs:BIRDS.map(()=>[Math.random()*3,Math.random()*2.5-1.2,Math.random()*1.5])};}
   // food truck parks out front; operators drift over for food
   const FOOD=G3.FOOD={open:false,id:0,x:33,z:32.5,state:"off",t:0,spot(i){return [this.x-2.2+(i%4)*1.5,35.2+(i>=4?1.0:0)];}};
-  const truck=new THREE.Group();scene.add(truck);truck.visible=false;
+  const truck=new THREE.Group();scene.add(truck);truck.visible=false;truck.userData.food=true;   // (v6: the paper style draws it as a cut-out card)
   {const cols=["#f2b51d","#e4572e","#2ec4b6","#e84393"],bc=cloth(cols[Math.floor(Math.random()*cols.length)]);
     box(5.6,2.6,2.4,bc,0.4,1.75,0,truck);box(1.9,1.9,2.3,bc,-3.1,1.4,0,truck);box(0.1,0.9,2.0,M.wind,-4.06,1.8,0,truck,false);
     box(3.0,1.1,0.1,M.ink,0.6,2.05,1.22,truck,false);const aw=box(3.6,0.08,1.3,M.bad,0.6,2.85,1.75,truck,false);aw.rotation.x=0.35;box(3.0,0.1,0.5,M.steel,0.6,1.45,1.45,truck,false);
