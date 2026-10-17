@@ -78,7 +78,7 @@
     b.addEventListener("pointerdown",e=>{e.preventDefault();b.setPointerCapture(e.pointerId);padDir=[px,py];});
     ["pointerup","pointercancel","pointerleave"].forEach(t=>b.addEventListener(t,()=>padDir=null));});
   // v6.1 t2: is the camera moving (or about to)? The stop-motion world (52) draws every frame only then
-  G3.camBusy=()=>!!goal||FOL.on||ptrs.size>0||!!padDir||Math.abs(rShown-(goal?cam.r:rStep(cam.r)))>0.01||performance.now()-(G3.lastMove||0)<300||!!(S&&S.zen)||!!G3.cineHold;
+  G3.camBusy=()=>!!goal||FOL.on||ptrs.size>0||!!padDir||Math.abs(rShown-(goal?cam.r:rStep(cam.r)))>0.01||performance.now()-(G3.lastMove||0)<300||!!G3.cineHold;   // (v6.1 t3: zen is stop-motion too)
   G3.padTick=rdt=>{if(padDir)panBy(-padDir[0]*500*rdt,-padDir[1]*500*rdt);};
   const JUMPS={site:[0,30,700,0.62],trucks:[-62,2,118],recv:[-21,-13,100],pulp:[24,-15,100],pm:[22,9,130],wd:[-17,7,72],wh:[-37,24,105],shop:[57,-21,48]};
   // section labels: Auto fades them out after a few idle seconds, On keeps them, Off hides them

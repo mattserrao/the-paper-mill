@@ -1336,7 +1336,7 @@ body.dark .kvchip{background:color-mix(in srgb,var(--panel) 96%,transparent)}
 <div class="btns"><button class="primary" id="no3d-retry">Try again</button></div></div></div>
 
 <script type="module">
-const APP_VER="v6.1.0-t2";   // shown in the menu and sent with leaderboard scores (max 12 characters)
+const APP_VER="v6.1.0-t3";   // shown in the menu and sent with leaderboard scores (max 12 characters)
 // TEST BUILDS ONLY (off in releases): turbo speeds 240/480/960 sim min/s for fast playtests. Above 120, crews and maintenance start jobs
 // without waiting for the 3D walk (as with the 3D view off) and outages keep the speed. Set false for a release.
 const TURBO=false,TURBO_FAST=s=>TURBO&&s>120;
@@ -5205,7 +5205,7 @@ function no3D(){G3.ok=false;$("no3d").hidden=false;$("no3d-retry").onclick=()=>l
   document.querySelectorAll("#cutMode button").forEach(b=>b.addEventListener("click",()=>G3.setCutaway(b.dataset.c)));G3.setCutaway(cutMode);
   const LIFT=9;
   let rfT=0;
-  G3.roofFade=r=>{if(cutMode==="on")r=0;else if(cutMode==="off")r=1e9;const now=performance.now(),ek=rfT?1-Math.exp(-Math.min(0.25,(now-rfT)/1000)*7):1;rfT=now;
+  G3.roofFade=r=>{if(cutMode==="on")r=0;else if(cutMode==="off")r=1e9;const now=performance.now(),ek=rfT?1-Math.exp(-Math.min(0.25,(now-rfT)/1000)*11):1;rfT=now;
     roofs.forEach(g=>{const f=g.userData.fade||[170,70],aT=clamp((r-f[0])/f[1],0,1);
     let a=g.userData.aa;a=a===undefined?aT:Math.abs(aT-a)<0.004?aT:a+(aT-a)*ek;g.userData.aa=a;const solid=a>0.995;g.visible=a>0.02;
     {const y=(1-a)*(1-a)*LIFT;if(g.position.y!==y)g.position.y=y;}
@@ -5721,6 +5721,12 @@ function no3D(){G3.ok=false;$("no3d").hidden=false;$("no3d-retry").onclick=()=>l
   const canGeoFix=o=>{const g=o.geometry,uv=g.attributes.uv,side=g.groups[0].count,idx=g.index,capV=new Set(),sideV=new Set();for(let k=0;k<side;k++)sideV.add(idx.getX(k));for(let k=side;k<idx.count;k++)capV.add(idx.getX(k));
     sideV.forEach(v=>uv.setX(v,uv.getX(v)*0.484));capV.forEach(v=>uv.setXY(v,0.5+uv.getX(v)*0.5,0.5+uv.getY(v)*0.5));return o;};
   for(let i=0;i<10;i++){cansTop.push(canGeoFix(cylZ(1.3,CD,M.can,(872-i*32-600)/10,5.4,zc,16)));cansBot.push(canGeoFix(cylZ(1.3,CD,M.can,(856-i*32-600)/10,2.4,zc,16)));}
+  /* v6.1 t3: the 20 spinning dryer cans are one instanced draw. The cans stay as the game's handles (rotated in 43) on a hidden
+     layer, out of the static merge; canInst copies their matrices into the instanced mesh each drawn frame. */
+  const canInst=(()=>{const all=cansTop.concat(cansBot);all.forEach(o=>{o.layers.set(27);(G3.dynLater||(G3.dynLater=[])).push(o);});
+    const im=new THREE.InstancedMesh(all[0].geometry,instMat(M.can),all.length);all.forEach((o,i)=>{o.updateMatrix();im.setMatrixAt(i,o.matrix);});
+    im.computeBoundingSphere();im.userData.smBatch=true;im.name="dryer cans";scene.add(im);
+    return ()=>{for(let i=0;i<all.length;i++){const o=all[i];o.updateMatrix();im.setMatrixAt(i,o.matrix);}im.instanceMatrix.needsUpdate=true;};})();
   // machine frame rails + dryer hood frame
   [zc-CD/2-0.6,zc+CD/2+0.6].forEach(z=>{box(74,0.5,0.4,M.steel,26,0.25,z);for(let x=-6;x<=30;x+=6)box(0.35,7.4,0.35,M.steel,x,3.7,z);box(37,0.35,0.35,M.steel,12,7.4,z);});
   // reel + stand, winder, roll conveyor
@@ -6217,7 +6223,7 @@ function no3D(){G3.ok=false;$("no3d").hidden=false;$("no3d-retry").onclick=()=>l
     b.addEventListener("pointerdown",e=>{e.preventDefault();b.setPointerCapture(e.pointerId);padDir=[px,py];});
     ["pointerup","pointercancel","pointerleave"].forEach(t=>b.addEventListener(t,()=>padDir=null));});
   // v6.1 t2: is the camera moving (or about to)? The stop-motion world (52) draws every frame only then
-  G3.camBusy=()=>!!goal||FOL.on||ptrs.size>0||!!padDir||Math.abs(rShown-(goal?cam.r:rStep(cam.r)))>0.01||performance.now()-(G3.lastMove||0)<300||!!(S&&S.zen)||!!G3.cineHold;
+  G3.camBusy=()=>!!goal||FOL.on||ptrs.size>0||!!padDir||Math.abs(rShown-(goal?cam.r:rStep(cam.r)))>0.01||performance.now()-(G3.lastMove||0)<300||!!G3.cineHold;   // (v6.1 t3: zen is stop-motion too)
   G3.padTick=rdt=>{if(padDir)panBy(-padDir[0]*500*rdt,-padDir[1]*500*rdt);};
   const JUMPS={site:[0,30,700,0.62],trucks:[-62,2,118],recv:[-21,-13,100],pulp:[24,-15,100],pm:[22,9,130],wd:[-17,7,72],wh:[-37,24,105],shop:[57,-21,48]};
   // section labels: Auto fades them out after a few idle seconds, On keeps them, Off hides them
@@ -7916,7 +7922,7 @@ function no3D(){G3.ok=false;$("no3d").hidden=false;$("no3d-retry").onclick=()=>l
      Time of day: one full-screen multiply (one draw, no render target) tints the whole picture: warm at dawn, clean by day,
      rose at dusk, blue at night, on top of the season's own cast. The lights still dim at night as before (36). */
   {const PALS=["spring","summer","autumn","winter"];G3.PALS=PALS;
-   const SEASON_TINT={spring:[0.97,1.0,0.95],summer:[1.0,0.985,0.95],autumn:[1.0,0.94,0.86],winter:[0.92,0.95,1.0]};
+   const SEASON_TINT={spring:[0.97,1.0,0.95],summer:[1,1,1],autumn:[1.0,0.94,0.86],winter:[0.92,0.95,1.0]};
    const gq=new THREE.Mesh(new THREE.PlaneGeometry(2,2),new THREE.ShaderMaterial({vertexShader:"void main(){gl_Position=vec4(position.xy,0.0,1.0);}",
      fragmentShader:"uniform vec3 uTint;void main(){gl_FragColor=vec4(uTint,1.0);}",uniforms:{uTint:{value:new THREE.Vector3(1,1,1)}},
      blending:THREE.MultiplyBlending,premultipliedAlpha:true,transparent:true,depthTest:false,depthWrite:false,fog:false,toneMapped:false}));
@@ -7944,11 +7950,14 @@ function no3D(){G3.ok=false;$("no3d").hidden=false;$("no3d-retry").onclick=()=>l
        a[j]=_c.r;a[j+1]=_c.g;a[j+2]=_c.b;}
      ca.needsUpdate=true;return n;}
    let shownPal=1,chkT=0;G3.palShown=()=>PALS[shownPal];
-   G3.setPal=p=>{p=((p%4)+4)%4;if(p===shownPal&&ORIG.size)return;shownPal=p;let n=0;
-     try{if(G3.scenery&&G3.scenery.parts)G3.scenery.parts.forEach(m=>{n+=recolour(m,p,false);});if(G3.terrain)n+=recolour(G3.terrain,p,true);}catch(e){console.error("palette failed",e);}
-     diag(`palette: ${PALS[p]} (${n} vertices recoloured)`);};
+   // v6.1 t3: one mesh per frame instead of all at once (no single long frame when a season starts)
+   let palQ=[],palN=0;
+   G3.setPal=p=>{p=((p%4)+4)%4;if(p===shownPal&&ORIG.size)return;shownPal=p;palN=0;
+     palQ=[...(G3.scenery&&G3.scenery.parts||[]).map(m=>[m,false]),...(G3.terrain?[[G3.terrain,true]]:[])];if(!ORIG.size)ORIG.set(gq,null);};
+   function palStep(){const it=palQ.shift();if(!it)return;try{palN+=recolour(it[0],shownPal,it[1]);}catch(e){console.error("palette failed",e);}
+     if(!palQ.length)diag(`palette: ${PALS[shownPal]} (${palN} vertices recoloured)`);}
    // every frame: the time-of-day grade; once a second, the season
-   G3.palTick=now=>{if(now>chkT){chkT=now+1000;const p=palNow();if(p!==shownPal||!ORIG.size&&p!==1)G3.setPal(p);}
+   G3.palTick=now=>{if(palQ.length)palStep();if(now>chkT){chkT=now+1000;const p=palNow();if(p!==shownPal||!ORIG.size&&p!==1)G3.setPal(p);}
      const hr=S?((S.t+360)/60)%24:12,bump=(c,w)=>Math.max(0,1-Math.abs(((hr-c+36)%24)-12)/w);
      const dawn=bump(6.6,1.6),dusk=bump(19.2,1.5),night=G3.nightK!=null?G3.nightK:0,st=SEASON_TINT[PALS[shownPal]];
      let r=st[0],g=st[1],b=st[2];
@@ -8401,18 +8410,19 @@ function no3D(){G3.ok=false;$("no3d").hidden=false;$("no3d-retry").onclick=()=>l
   function smBuild(key){const b=SM.batches.get(key);const par=b.parent||scene;if(b.mesh){par.remove(b.mesh);b.mesh.geometry.dispose();b.mesh=null;}
     const L=b.recs;if(!L.length)return;const line=b.line,hasUV=b.uv;let nv=0,ni=0;
     L.forEach(r=>{const g=r.o.geometry;nv+=g.attributes.position.count;ni+=g.index?g.index.count:g.attributes.position.count;});
-    const pos=new Float32Array(nv*3),nor=line?null:new Float32Array(nv*3),uv=hasUV?new Float32Array(nv*2):null,idx=new Uint32Array(ni);let vo=0,io=0;
+    const pos=new Float32Array(nv*3),nor=line?null:new Float32Array(nv*3),uv=hasUV?new Float32Array(nv*2):null,col=b.vc?new Float32Array(nv*3):null,idx=new Uint32Array(ni);let vo=0,io=0;
     L.forEach(r=>{const o=r.o,g=o.geometry,P=g.attributes.position,N=g.attributes.normal,U=g.attributes.uv,mw=r.mw||o.matrixWorld,flip=!line&&mw.determinant()<0;
       if(!line)_smM3.getNormalMatrix(mw);
       for(let i=0;i<P.count;i++){_smV.set(P.getX(i),P.getY(i),P.getZ(i)).applyMatrix4(mw);pos[(vo+i)*3]=_smV.x;pos[(vo+i)*3+1]=_smV.y;pos[(vo+i)*3+2]=_smV.z;
         if(nor){_smN.set(N.getX(i),N.getY(i),N.getZ(i)).applyMatrix3(_smM3).normalize();nor[(vo+i)*3]=_smN.x;nor[(vo+i)*3+1]=_smN.y;nor[(vo+i)*3+2]=_smN.z;}
-        if(uv&&U){uv[(vo+i)*2]=U.getX(i);uv[(vo+i)*2+1]=U.getY(i);}}
+        if(uv&&U){uv[(vo+i)*2]=U.getX(i);uv[(vo+i)*2+1]=U.getY(i);}
+        if(col){const c=o.material.color;col[(vo+i)*3]=c.r;col[(vo+i)*3+1]=c.g;col[(vo+i)*3+2]=c.b;}}
       const I=g.index,n=I?I.count:P.count;
       if(!line&&flip)for(let k=0;k<n;k+=3){const a=I?I.getX(k):k,b2=I?I.getX(k+1):k+1,c=I?I.getX(k+2):k+2;idx[io+k]=vo+a;idx[io+k+1]=vo+c;idx[io+k+2]=vo+b2;}
       else for(let k=0;k<n;k++)idx[io+k]=vo+(I?I.getX(k):k);
       vo+=P.count;io+=n;});
     const geo=new THREE.BufferGeometry();geo.setAttribute("position",new THREE.BufferAttribute(pos,3));if(nor)geo.setAttribute("normal",new THREE.BufferAttribute(nor,3));
-    if(uv)geo.setAttribute("uv",new THREE.BufferAttribute(uv,2));geo.setIndex(new THREE.BufferAttribute(idx,1));geo.computeBoundingSphere();
+    if(uv)geo.setAttribute("uv",new THREE.BufferAttribute(uv,2));if(col)geo.setAttribute("color",new THREE.BufferAttribute(col,3));geo.setIndex(new THREE.BufferAttribute(idx,1));geo.computeBoundingSphere();
     const mesh=line?new THREE.LineSegments(geo,b.mat):new THREE.Mesh(geo,b.mat);mesh.castShadow=b.cast;mesh.receiveShadow=b.recv;mesh.matrixAutoUpdate=false;mesh.userData.smBatch=true;
     par.add(mesh);b.mesh=mesh;}
   // multi-material meshes can't be batched, but if static they can still cast through the shadow proxy (proxyOnly)
@@ -8469,10 +8479,16 @@ function no3D(){G3.ok=false;$("no3d").hidden=false;$("no3d-retry").onclick=()=>l
   /* v6.1 t2 flat batches: with no shadow maps and one lighting model, untextured opaque materials that differ only in colour
      share one batch: white, each object carrying its own colour (BatchedMesh.setColorAt, the moving batches' method). The
      watch (smWatch) copies a material's colour change to its objects instead of handing them back. ~50 draws became a few. */
-  const flatOK=m=>FLATB&&!DBOFF&&!DBMAT&&!m.transparent&&m.opacity===1&&!m.vertexColors&&SMMAPS.every(k=>!m[k])&&(!m.emissive||m.emissive.getHex()===0);
+  const flatOK=m=>FLATB&&!m.transparent&&m.opacity===1&&!m.vertexColors&&SMMAPS.every(k=>!m[k])&&(!m.emissive||m.emissive.getHex()===0);
   function smMerge(){const groups=new Map(),shd=renderer.shadowMap.enabled;
     for(const r of SM.list){const o=r.o,g=o.geometry;if(r.proxyOnly)continue;
-      if(o.isMesh&&o.matrixWorld.determinant()>0&&!o.userData.aoDecal){const flat=flatOK(o.material);
+      // v6.1 t3: on iPhone/iPad (or wherever batch colours fail) a flat look is baked instead: one plain vertex-coloured
+      // mesh per look and 90 m map cell, the method the scenery already uses there (a BatchedMesh's per-object colour draws grey)
+      if(o.isMesh&&!o.userData.aoDecal&&flatOK(o.material)&&(DBMAT||DBOFF||BQ.has("flatbake"))){if(!g.boundingSphere)g.computeBoundingSphere();_smV.copy(g.boundingSphere.center).applyMatrix4(o.matrixWorld);
+        const key=["FV",smLook(Object.assign(Object.create(o.material),{color:null,userData:{}})),g.attributes.uv?1:0,Math.floor(_smV.x/SMCELL),Math.floor(_smV.z/SMCELL)].join("|");
+        let b=SM.batches.get(key);if(!b){const fm=flatMat(o.material);fm.vertexColors=true;b={recs:[],mat:fm,line:false,uv:!!g.attributes.uv,cast:o.castShadow,recv:o.receiveShadow,mesh:null,vc:true};SM.batches.set(key,b);}
+        b.recs.push(r);r.key=key;r.flat=true;r.flatVC=true;r.hex=o.material.color.getHex();continue;}
+      if(o.isMesh&&o.matrixWorld.determinant()>0&&!o.userData.aoDecal){const flat=flatOK(o.material)&&!DBOFF&&!DBMAT;
         const key=[flat?"F/"+smLook(Object.assign(Object.create(o.material),{color:null,userData:{}})):smLook(o.material),shd&&o.castShadow?1:0,shd&&o.receiveShadow?1:0,smSig(g)].join("|");
         let G=groups.get(key);if(!G){G={recs:[],mat:o.material,cast:o.castShadow,recv:o.receiveShadow,flat};groups.set(key,G);}G.recs.push(r);continue;}
       // outlines and mirrored meshes: bake per material and 90 m map cell (off-screen cells are still culled)
@@ -8508,7 +8524,7 @@ function no3D(){G3.ok=false;$("no3d").hidden=false;$("no3d-retry").onclick=()=>l
   function smWatch(){const dirty=SM.dirty||(SM.dirty=new Set());
     const freeze=performance.now()-SM.t0>10000;
     // (v4.1 pass 3: compacted in place twice a second instead of filtered into a new 2,700-entry array)
-    const keep=r=>{let recol=false;if(r.flat&&r.bm&&smSame(r)){const h=r.o.material.color.getHex();if(h!==r.hex){if(r.flatVC)recol=true;else{r.hex=h;r.bm.setColorAt(r.iid,r.o.material.color);}}}   // (v6.1 t2: a flat batch follows colour changes; on the vertex-colour path the object is handed back)
+    const keep=r=>{let recol=false;if(r.flat&&smSame(r)){const h=r.o.material.color.getHex();if(h!==r.hex){if(r.flatVC||!r.bm)recol=true;else{r.hex=h;r.bm.setColorAt(r.iid,r.o.material.color);}}}   // (v6.1 t2: a flat batch follows colour changes; on the vertex-colour path the object is handed back)
       if(!recol&&smSame(r)&&!(r.shared&&!r.flat&&!colorSame(r.o.material,r.bm.material))&&!(r.flat&&!emSame(r.o.material,r.bm.material))){if(freeze&&(r.bm||r.key))smFreeze(r);return true;}
       smThaw(r);
       if(r.shadow){r.o.castShadow=true;r.shadow=false;if(!shDrop(r))SH.dirty=true;}   // v4.0.1: cut it out of the proxy instead of rebuilding it
@@ -8556,7 +8572,7 @@ function no3D(){G3.ok=false;$("no3d").hidden=false;$("no3d-retry").onclick=()=>l
   // v4.2.5: batching failures go to Diagnostics (the first 5, then a count), not only the console or nowhere
   const smErr=(what,e)=>{SM.errs=(SM.errs||0)+1;if(SM.errs<=5)diag(`batching: ${what} failed: ${String(e&&e.message||e).slice(0,120)}`);else if(SM.errs===6)diag("batching: more failures, not logged");};
   function smTick(now){if(SM.off)return;
-    if(!SM.t0){SM.t0=now;try{scene.updateMatrixWorld(true);try{if(G3.splitMulti)G3.splitMulti();scene.updateMatrixWorld(true);}catch(e){console.error("split failed",e);}try{if(G3.dropBuild)G3.dropBuild();}catch(e){console.error("drop shadows failed",e);}smSnapshot();smMerge();}
+    if(!SM.t0){SM.t0=now;try{scene.updateMatrixWorld(true);try{if(G3.atlasSigns)G3.atlasSigns();}catch(e){console.error("sign atlas failed",e);}try{if(G3.splitMulti)G3.splitMulti();scene.updateMatrixWorld(true);}catch(e){console.error("split failed",e);}try{if(G3.dropBuild)G3.dropBuild();}catch(e){console.error("drop shadows failed",e);}smSnapshot();smMerge();}
       catch(e){console.error("scenery batching failed",e);smErr("scenery batching (batching off)",e);SM.off=true;SM.done=true;SM.list.forEach(r=>{r.o.layers.set(0);if(r.bm)r.bm.visible=false;});}return;}
     if(SM.queue&&SM.queue.length){try{smStep();}catch(e){console.error("scenery baking failed",e);smErr("scenery baking",e);SM.queue=[];SM.done=true;}return;}
     if(now>SM.checkT){SM.checkT=now+(now-SM.t0<10000?0:500);try{smWatch();}catch(e){smErr("watch for moved objects",e);}}}
@@ -8866,6 +8882,32 @@ function no3D(){G3.ok=false;$("no3d").hidden=false;$("no3d-retry").onclick=()=>l
       for(let i=1;i<subs.length;i++){const c=new THREE.Mesh(subs[i][1],subs[i][0]);c.castShadow=o.castShadow;c.receiveShadow=o.receiveShadow;c.renderOrder=o.renderOrder;o.add(c);parts++;}
       n++;}
     diag(`multi-material meshes split: ${n} (${parts} extra parts)`);};
+  /* v6.1 t3 sign atlas: small opaque signs and tags (unlit planes, each with its own canvas texture) are a draw each. On the
+     first frame, before the static merge, every such texture that isn't tiled is copied into one shared 2048 canvas, the
+     plane's UVs are pointed at its spot, and all of them share one material, so they batch into one draw. A texture the game
+     redraws later (its version changes) is copied again (checked twice a second). */
+  G3.atlasSigns=()=>{const W=2048,cv=document.createElement("canvas");cv.width=W;cv.height=W;const x=cv.getContext("2d");
+    const L=[],seen=new Map();let rowY=0,rowH=0,cx=0,n=0;
+    scene.traverse(o=>{if(!o.isMesh||o.isInstancedMesh||o.isBatchedMesh||o.layers.mask!==1)return;const m=o.material;
+      if(!m||Array.isArray(m)||m.type!=="MeshBasicMaterial"||m.transparent||m.opacity<1||!m.map||m.alphaMap||m.vertexColors||o.renderOrder)return;
+      const t=m.map,im=t.image;if(!im||!(im instanceof HTMLCanvasElement)||im.width>512||im.height>256)return;
+      if(t.wrapS!==THREE.ClampToEdgeWrapping||t.wrapT!==THREE.ClampToEdgeWrapping||t.repeat.x!==1||t.repeat.y!==1||t.offset.x||t.offset.y||t.rotation)return;
+      if(!m.color.equals(new THREE.Color(1,1,1)))return;const g=o.geometry;if(!g||!g.attributes.uv||g.attributes.uv.count>64)return;
+      for(let p=o;p&&p!==scene;p=p.parent)if(p.userData&&p.userData.cut)return;
+      L.push(o);});
+    if(L.length<3)return;
+    const mat=new THREE.MeshBasicMaterial({map:null});
+    const place=t=>{let r=seen.get(t);if(r)return r;const im=t.image,w=im.width+4,h=im.height+4;if(cx+w>W){cx=0;rowY+=rowH;rowH=0;}if(rowY+h>W)return null;
+      r={t,x:cx+2,y:rowY+2,w:im.width,h:im.height,v:t.version};seen.set(t,r);cx+=w;rowH=Math.max(rowH,h);
+      x.drawImage(im,r.x,r.y);x.drawImage(im,0,0,im.width,1,r.x,r.y-2,im.width,2);x.drawImage(im,0,im.height-1,im.width,1,r.x,r.y+im.height,im.width,2);   // (a 2 px apron so mipmaps don't bleed)
+      return r;};
+    for(const o of L){const r=place(o.material.map);if(!r)continue;
+      const g=o.geometry.clone(),uv=g.attributes.uv,fy=o.material.map.flipY!==false;
+      for(let i=0;i<uv.count;i++){const u=uv.getX(i),v=uv.getY(i),py=fy?(1-v):v;uv.setXY(i,(r.x+u*r.w)/W,1-(r.y+py*r.h)/W);}
+      o.geometry=g;o.material=mat;n++;}
+    const tex=new THREE.CanvasTexture(cv);tex.colorSpace=THREE.SRGBColorSpace;tex.anisotropy=4;mat.map=tex;
+    G3.signAtlas={tex,seen};diag(`sign atlas: ${n} signs, ${seen.size} textures in one`);
+    UI_TICKS.push(k=>{if(k%2)return;let ch=false;for(const r of seen.values())if(r.t.version!==r.v){r.v=r.t.version;x.clearRect(r.x,r.y,r.w,r.h);x.drawImage(r.t.image,r.x,r.y);ch=true;}if(ch)tex.needsUpdate=true;});};
   /* ---- v3.0.0: planned outage jobs ----
      Every outage: maintenance technicians change the press felts (the felt-change animation, driven by the outage clock).
      Outage 1: 1st press roll change with a wet-end overhead crane (new rolls staged on cradles the day before).
@@ -10310,13 +10352,16 @@ function no3D(){G3.ok=false;$("no3d").hidden=false;$("no3d-retry").onclick=()=>l
    // --- finding them: anything built with userData.cut, rescanned every 2 s (pools grow during play) ---
    function rescan(){const seen=new Set(CUT.actors.map(a=>a.o));scene.traverse(o=>{if(o.userData&&o.userData.cut&&KIND[o.userData.cut]&&!seen.has(o)){
        let up=o.parent,nested=false;for(;up&&up!==scene;up=up.parent)if(up.userData&&up.userData.cut){nested=true;break;}   // (a driver inside a truck is part of the truck)
-       if(!nested)CUT.actors.push({o,kind:o.userData.cut,K:KIND[o.userData.cut],cell:null,hid:false,hT:0});}});}
+       if(!nested){CUT.actors.push({o,kind:o.userData.cut,K:KIND[o.userData.cut],cell:null,hid:false,hT:0});
+         // v6.1 t3: the hidden model's parts no longer get their world matrices every frame (about 2,000 nodes); a picture
+         // forces them (updateMatrixWorld(true)) and getWorldPosition still works, only the root is kept current
+         o.children.forEach(c=>{c.matrixWorldAutoUpdate=false;});}}});}
    const shown=o=>{for(let x=o;x;x=x.parent){if(!x.visible)return false;if(x===scene)return true;}return false;};
    function hide(a,on){a.o.traverse(c=>{if(c.isMesh||c.isLine||c.isPoints){const want=on?CUT_LAYER:0;if(on?c.layers.mask!==1<<CUT_LAYER:c.layers.mask===1<<CUT_LAYER)c.layers.set(want);}});a.hid=on;}
    // the look of one actor right now: every node's visibility and material, and its moving parts in coarse steps
    const q=(v,s)=>Math.round(v/s);
    function lookKey(a){const o=a.o,u=o.userData;let k=a.kind+":";o.traverse(c=>{if(c===o)return;const mt=c.material;k+=c.visible?(c.isMesh&&mt?(Array.isArray(mt)?mt.map(x=>x.id.toString(36)).join("."):mt.id.toString(36)):"v"):"-";});
-     if(a.kind==="person"&&u.legs){k+="|"+q(u.legs[0].rotation.z,0.6)+","+q(u.arms[0].rotation.z,0.6)+","+q(u.arms[1].rotation.z,0.6)+","+q(u.arms[1].rotation.x,0.9)+","+q(u.torso.rotation.z,0.3)+","+q(u.armM?u.armM[1].scale.y:1,0.3)+(u.tool&&u.tool.visible?","+q(u.tool.rotation.x,0.6):"");}
+     if(a.kind==="person"&&u.legs){k+="|"+q(u.legs[0].rotation.z,0.6)+","+q(u.arms[0].rotation.z,0.8)+","+q(u.arms[1].rotation.z,0.8)+","+q(u.arms[1].rotation.x,0.9)+","+q(u.torso.rotation.z,0.4)+","+q(u.armM?u.armM[1].scale.y:1,0.3)+(u.tool&&u.tool.visible?","+q(u.tool.rotation.x,0.6):"");}
      else if(a.kind==="lift"&&u.load)k+="|"+q(u.load.position.y,0.3);
      else if(a.kind==="truck")k+="|"+(u.doorL?q(u.doorL.rotation.y,0.6)+","+q(u.doorR.rotation.y,0.6):"");
      return k;}
@@ -10360,7 +10405,8 @@ function no3D(){G3.ok=false;$("no3d").hidden=false;$("no3d-retry").onclick=()=>l
    // start-up: compile the picture shaders (the cut-outs' materials as drawn into RT_A) behind the "Getting the mill ready" screen
    G3.cutWarm=()=>{try{rescan();basis();const seen=new Set();for(const a of CUT.actors){const kk=a.kind;if(seen.size>40)break;
        let m=false;a.o.traverse(c=>{if(c.material&&!seen.has(c.material)){seen.add(c.material);m=true;}});if(m){const key="warm:"+CUT.caps;const c=capture(a,key,0,ATL[a.K.at]);if(c){CUT.cells.set(key,c);CUT.byKD.set(kk+"#0",c);CUT.byK.set(kk,c);}}}}
-     catch(e){CUT.errs++;console.error("cut-out warm-up failed",e);}};
+     catch(e){CUT.errs++;console.error("cut-out warm-up failed",e);}
+     sets.forEach(S2=>{S2.card.count=S2.shad.count=1;});};   // (one card each so the start-up compile sees their shaders; the next tick resets the counts)
    // --- every frame (43-3d-frame.js, after the moving batches, before the render) ---
    let scanT=0;
    // an atlas that fills up starts over: its pictures are dropped and retaken as they are needed again
@@ -10488,7 +10534,7 @@ function no3D(){G3.ok=false;$("no3d").hidden=false;$("no3d-retry").onclick=()=>l
     pm("stock prep (bales, pulper, chest)");
     // machine
     const pmRun=S.pm==="run";
-    for(let i=0;i<cansTop.length;i++)cansTop[i].rotation.z=V.cans;for(let i=0;i<cansBot.length;i++)cansBot[i].rotation.z=-V.cans;
+    for(let i=0;i<cansTop.length;i++)cansTop[i].rotation.z=V.cans;for(let i=0;i<cansBot.length;i++)cansBot[i].rotation.z=-V.cans;canInst();
     press[0].rotation.z=-V.cans*1.3;press[1].rotation.z=V.cans*1.3;press[2].rotation.z=-V.cans*1.15;press[3].rotation.z=V.cans*1.15;feltTex.offset.x=-(V.cans*0.35)%1;wireTex.offset.x=(V.cans*0.35)%1;feltGuides.forEach(g=>g.rotation.z=-V.cans*4);wireRolls.forEach(w=>w.rotation.z=V.cans*2.5);
     press.forEach((p,i)=>{p.material=LV("shoe")&&i===3?shoeMat:M.metal;});
     const rr=R0+(RM-R0)*Math.sqrt(clamp(S.reel/P.jumbo,0,1));reelUpdate(rdt,rr);
@@ -11671,7 +11717,7 @@ function camPullOn(){try{return localStorage.getItem("paper-mill-campull")!=="of
    (within 700 ms per tap) and a list of every version's one-line note pops up, newest first. The list comes from
    VERSION-NOTES.txt at the repo root: build.py swaps it in for the placeholder below, so adding a line there with each
    release keeps the pop-up current (build.py warns when APP_VER has no line). ---------- */
-{const VNOTES=[["4.0.0", "Graphics Overhaul: 60 FPS on iPhone, ~80% Fewer Draw Calls"], ["4.0.1", "Performance Follow-Up, Show FPS Option and Device Autotest"], ["4.0.2", "Economy Rebalance and Smoother Upset Labels"], ["4.1.0", "Four Environments, Seeded Mills, Bottlenecks, Graphics Tiers and Site Music"], ["4.2.0", "New Site Maps, Rare Sights, Zen Map Rotation and Economics Fixes"], ["4.2.0-s", "Save and Continue Season (Test)"], ["4.2.1", "Save/Continue, Settings Panel and Outage Speed Fix"], ["4.2.2-t", "Bayou Gator Sight Reworked (Test)"], ["4.2.2-t2", "Gator Bass Riff (Test)"], ["4.2.2-t3", "Gator Riff Removed, Wide Camera Framing (Test)"], ["4.2.2-t4", "Gator Scene Shortened and Widened (Test)"], ["4.2.2-t5", "One Rare Sight per Map in Zen (Test)"], ["4.2.2", "Rare Sights Reworked, Bird Strike Upset, Mill Report Tab"], ["4.2.3-t", "Cowboys, Bigfoot and Tugboat Sights Reworked (Test)"], ["4.2.3", "Laptop Battery Saving (Default GPU)"], ["4.2.4", "$25M Goal Removed and Quick Fixes"], ["4.2.5", "Random Bottleneck per Season and Accessibility Improvements"], ["4.3.0-t1", "Survival Mode (Test)"], ["4.4.0-t1", "Mill Leaders in Survival (Test)"], ["4.4.0-t2", "Painted Leader Portraits (Test)"], ["4.4.0-t3", "Leader Redesign, 4-Day Waves and Fixes (Test)"], ["5.0.0", "Survival Mode Release with Mill Leaders"], ["5.0.1", "Results Dialog and Game Speed Fixes"], ["5.0.2", "Report Card Label Fixes"], ["5.0.3", "Survival Playtest Fixes (Test)"], ["5.0.4", "Playtest Review: Dot Auto-Fix and Shipping Fix (Test)"], ["5.0.5", "Polish Rounds from Survival Playtests"], ["5.0.6", "Survival QA Fixes, Opt-In Outage Watch, Leaderboard Filters"], ["5.1.0", "Civics Meters and Leaders in Seasons (Test)"], ["5.4.0", "Title Screen, Civics in the World and Dark Mode"], ["5.4.1", "Loading Splash, No Old-Menu Flash"], ["5.4.2", "Graphics Quality on the Title Screen"], ["5.5.0", "Performance Improvements"], ["5.6.0", "Fiddly Knobs, DCS/QCS Screens and Knobs View"], ["5.7.0", "Catching Failures Early: Tells, Daily Rounds, Vibration Report, Outage Prep"], ["5.7.1", "Bottom Menu Reorder, Settings Back on the Right"], ["5.7.2", "Help Page with Game Guide and Glossary"], ["5.7.3", "Bare Graphics Mode for Weak Phones"], ["5.7.4", "Version Notes Pop-Up (Triple-Tap the Version Number)"], ["6.1.0-t1", "Isometric Paper View: Fixed Camera, Cut-Outs, Drop Shadows, Cutaways, Season Palettes (Test)"], ["6.1.0-t2", "Iso Round 2: Cut-Outs Always Paper, GPU Pictures, Stop-Motion World, Fewer Draws (Test)"]];
+{const VNOTES=[["4.0.0", "Graphics Overhaul: 60 FPS on iPhone, ~80% Fewer Draw Calls"], ["4.0.1", "Performance Follow-Up, Show FPS Option and Device Autotest"], ["4.0.2", "Economy Rebalance and Smoother Upset Labels"], ["4.1.0", "Four Environments, Seeded Mills, Bottlenecks, Graphics Tiers and Site Music"], ["4.2.0", "New Site Maps, Rare Sights, Zen Map Rotation and Economics Fixes"], ["4.2.0-s", "Save and Continue Season (Test)"], ["4.2.1", "Save/Continue, Settings Panel and Outage Speed Fix"], ["4.2.2-t", "Bayou Gator Sight Reworked (Test)"], ["4.2.2-t2", "Gator Bass Riff (Test)"], ["4.2.2-t3", "Gator Riff Removed, Wide Camera Framing (Test)"], ["4.2.2-t4", "Gator Scene Shortened and Widened (Test)"], ["4.2.2-t5", "One Rare Sight per Map in Zen (Test)"], ["4.2.2", "Rare Sights Reworked, Bird Strike Upset, Mill Report Tab"], ["4.2.3-t", "Cowboys, Bigfoot and Tugboat Sights Reworked (Test)"], ["4.2.3", "Laptop Battery Saving (Default GPU)"], ["4.2.4", "$25M Goal Removed and Quick Fixes"], ["4.2.5", "Random Bottleneck per Season and Accessibility Improvements"], ["4.3.0-t1", "Survival Mode (Test)"], ["4.4.0-t1", "Mill Leaders in Survival (Test)"], ["4.4.0-t2", "Painted Leader Portraits (Test)"], ["4.4.0-t3", "Leader Redesign, 4-Day Waves and Fixes (Test)"], ["5.0.0", "Survival Mode Release with Mill Leaders"], ["5.0.1", "Results Dialog and Game Speed Fixes"], ["5.0.2", "Report Card Label Fixes"], ["5.0.3", "Survival Playtest Fixes (Test)"], ["5.0.4", "Playtest Review: Dot Auto-Fix and Shipping Fix (Test)"], ["5.0.5", "Polish Rounds from Survival Playtests"], ["5.0.6", "Survival QA Fixes, Opt-In Outage Watch, Leaderboard Filters"], ["5.1.0", "Civics Meters and Leaders in Seasons (Test)"], ["5.4.0", "Title Screen, Civics in the World and Dark Mode"], ["5.4.1", "Loading Splash, No Old-Menu Flash"], ["5.4.2", "Graphics Quality on the Title Screen"], ["5.5.0", "Performance Improvements"], ["5.6.0", "Fiddly Knobs, DCS/QCS Screens and Knobs View"], ["5.7.0", "Catching Failures Early: Tells, Daily Rounds, Vibration Report, Outage Prep"], ["5.7.1", "Bottom Menu Reorder, Settings Back on the Right"], ["5.7.2", "Help Page with Game Guide and Glossary"], ["5.7.3", "Bare Graphics Mode for Weak Phones"], ["5.7.4", "Version Notes Pop-Up (Triple-Tap the Version Number)"], ["6.1.0-t1", "Isometric Paper View: Fixed Camera, Cut-Outs, Drop Shadows, Cutaways, Season Palettes (Test)"], ["6.1.0-t2", "Iso Round 2: Cut-Outs Always Paper, GPU Pictures, Stop-Motion World, Fewer Draws (Test)"], ["6.1.0-t3", "Iso Round 3: iPhone Batching, Instanced Cans, Sign Atlas, Lighter Frames (Test)"]];
   let ov=null,held=false;
   function render(){
     const cur=APP_VER.replace(/^v/i,""),rows=VNOTES.slice().reverse().map(([v,n])=>
@@ -11745,7 +11791,8 @@ function frame(now){
          last picture stays on screen. Settings > Performance > Stop-motion (on by default). */
       if(G3.on&&G3.frame){WACC.t=Math.min(0.25,WACC.t+(running?rdt:0));
         if(!STOPMO||(G3.camBusy&&G3.camBusy())||now-WACC.last>=1000/15-4){WACC.last=now;const d=Math.min(0.1,WACC.t);WACC.t=0;G3.frame(d);}}}
-    uiAcc+=rdt;if(uiAcc>0.2){uiAcc=0;uiN++;try{AUDIO.update(running&&!S.zen&&(S.inc.length>0||S.wd==="hayout"));}catch(_){}
+    uiAcc+=rdt;if(uiAcc>(document.body.classList.contains("sheet-open")?0.2:0.4)){   // (v6.1 t3: 2.5 a second with no panel open)
+      uiAcc=0;uiN++;try{AUDIO.update(running&&!S.zen&&(S.inc.length>0||S.wd==="hayout"));}catch(_){}
       const uT=performance.now();if(paneShown($("cards")))syncControls();updateText();UI_TICKS.forEach(f=>{try{f(uiN);}catch(e){console.error("ui tick",e);}});
       if(paneShown($("chaosSec")))updateChaos();if(!$("brian").hidden)briUpd();if(paneShown($("shopSec")))updateShop();if(paneShown($("relnow"))&&$("repLive").open)updateRel();   /* (v5.2: no offsetParent layout read) */if(paneShown($("trend")))drawTrend();
       if(PFo&&PFo.on)PFo.acc["UI panels (5x/s)"]=(PFo.acc["UI panels (5x/s)"]||0)+(performance.now()-uT);}}

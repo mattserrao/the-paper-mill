@@ -46,18 +46,19 @@
   function smBuild(key){const b=SM.batches.get(key);const par=b.parent||scene;if(b.mesh){par.remove(b.mesh);b.mesh.geometry.dispose();b.mesh=null;}
     const L=b.recs;if(!L.length)return;const line=b.line,hasUV=b.uv;let nv=0,ni=0;
     L.forEach(r=>{const g=r.o.geometry;nv+=g.attributes.position.count;ni+=g.index?g.index.count:g.attributes.position.count;});
-    const pos=new Float32Array(nv*3),nor=line?null:new Float32Array(nv*3),uv=hasUV?new Float32Array(nv*2):null,idx=new Uint32Array(ni);let vo=0,io=0;
+    const pos=new Float32Array(nv*3),nor=line?null:new Float32Array(nv*3),uv=hasUV?new Float32Array(nv*2):null,col=b.vc?new Float32Array(nv*3):null,idx=new Uint32Array(ni);let vo=0,io=0;
     L.forEach(r=>{const o=r.o,g=o.geometry,P=g.attributes.position,N=g.attributes.normal,U=g.attributes.uv,mw=r.mw||o.matrixWorld,flip=!line&&mw.determinant()<0;
       if(!line)_smM3.getNormalMatrix(mw);
       for(let i=0;i<P.count;i++){_smV.set(P.getX(i),P.getY(i),P.getZ(i)).applyMatrix4(mw);pos[(vo+i)*3]=_smV.x;pos[(vo+i)*3+1]=_smV.y;pos[(vo+i)*3+2]=_smV.z;
         if(nor){_smN.set(N.getX(i),N.getY(i),N.getZ(i)).applyMatrix3(_smM3).normalize();nor[(vo+i)*3]=_smN.x;nor[(vo+i)*3+1]=_smN.y;nor[(vo+i)*3+2]=_smN.z;}
-        if(uv&&U){uv[(vo+i)*2]=U.getX(i);uv[(vo+i)*2+1]=U.getY(i);}}
+        if(uv&&U){uv[(vo+i)*2]=U.getX(i);uv[(vo+i)*2+1]=U.getY(i);}
+        if(col){const c=o.material.color;col[(vo+i)*3]=c.r;col[(vo+i)*3+1]=c.g;col[(vo+i)*3+2]=c.b;}}
       const I=g.index,n=I?I.count:P.count;
       if(!line&&flip)for(let k=0;k<n;k+=3){const a=I?I.getX(k):k,b2=I?I.getX(k+1):k+1,c=I?I.getX(k+2):k+2;idx[io+k]=vo+a;idx[io+k+1]=vo+c;idx[io+k+2]=vo+b2;}
       else for(let k=0;k<n;k++)idx[io+k]=vo+(I?I.getX(k):k);
       vo+=P.count;io+=n;});
     const geo=new THREE.BufferGeometry();geo.setAttribute("position",new THREE.BufferAttribute(pos,3));if(nor)geo.setAttribute("normal",new THREE.BufferAttribute(nor,3));
-    if(uv)geo.setAttribute("uv",new THREE.BufferAttribute(uv,2));geo.setIndex(new THREE.BufferAttribute(idx,1));geo.computeBoundingSphere();
+    if(uv)geo.setAttribute("uv",new THREE.BufferAttribute(uv,2));if(col)geo.setAttribute("color",new THREE.BufferAttribute(col,3));geo.setIndex(new THREE.BufferAttribute(idx,1));geo.computeBoundingSphere();
     const mesh=line?new THREE.LineSegments(geo,b.mat):new THREE.Mesh(geo,b.mat);mesh.castShadow=b.cast;mesh.receiveShadow=b.recv;mesh.matrixAutoUpdate=false;mesh.userData.smBatch=true;
     par.add(mesh);b.mesh=mesh;}
   // multi-material meshes can't be batched, but if static they can still cast through the shadow proxy (proxyOnly)
@@ -114,10 +115,16 @@
   /* v6.1 t2 flat batches: with no shadow maps and one lighting model, untextured opaque materials that differ only in colour
      share one batch: white, each object carrying its own colour (BatchedMesh.setColorAt, the moving batches' method). The
      watch (smWatch) copies a material's colour change to its objects instead of handing them back. ~50 draws became a few. */
-  const flatOK=m=>FLATB&&!DBOFF&&!DBMAT&&!m.transparent&&m.opacity===1&&!m.vertexColors&&SMMAPS.every(k=>!m[k])&&(!m.emissive||m.emissive.getHex()===0);
+  const flatOK=m=>FLATB&&!m.transparent&&m.opacity===1&&!m.vertexColors&&SMMAPS.every(k=>!m[k])&&(!m.emissive||m.emissive.getHex()===0);
   function smMerge(){const groups=new Map(),shd=renderer.shadowMap.enabled;
     for(const r of SM.list){const o=r.o,g=o.geometry;if(r.proxyOnly)continue;
-      if(o.isMesh&&o.matrixWorld.determinant()>0&&!o.userData.aoDecal){const flat=flatOK(o.material);
+      // v6.1 t3: on iPhone/iPad (or wherever batch colours fail) a flat look is baked instead: one plain vertex-coloured
+      // mesh per look and 90 m map cell, the method the scenery already uses there (a BatchedMesh's per-object colour draws grey)
+      if(o.isMesh&&!o.userData.aoDecal&&flatOK(o.material)&&(DBMAT||DBOFF||BQ.has("flatbake"))){if(!g.boundingSphere)g.computeBoundingSphere();_smV.copy(g.boundingSphere.center).applyMatrix4(o.matrixWorld);
+        const key=["FV",smLook(Object.assign(Object.create(o.material),{color:null,userData:{}})),g.attributes.uv?1:0,Math.floor(_smV.x/SMCELL),Math.floor(_smV.z/SMCELL)].join("|");
+        let b=SM.batches.get(key);if(!b){const fm=flatMat(o.material);fm.vertexColors=true;b={recs:[],mat:fm,line:false,uv:!!g.attributes.uv,cast:o.castShadow,recv:o.receiveShadow,mesh:null,vc:true};SM.batches.set(key,b);}
+        b.recs.push(r);r.key=key;r.flat=true;r.flatVC=true;r.hex=o.material.color.getHex();continue;}
+      if(o.isMesh&&o.matrixWorld.determinant()>0&&!o.userData.aoDecal){const flat=flatOK(o.material)&&!DBOFF&&!DBMAT;
         const key=[flat?"F/"+smLook(Object.assign(Object.create(o.material),{color:null,userData:{}})):smLook(o.material),shd&&o.castShadow?1:0,shd&&o.receiveShadow?1:0,smSig(g)].join("|");
         let G=groups.get(key);if(!G){G={recs:[],mat:o.material,cast:o.castShadow,recv:o.receiveShadow,flat};groups.set(key,G);}G.recs.push(r);continue;}
       // outlines and mirrored meshes: bake per material and 90 m map cell (off-screen cells are still culled)
@@ -153,7 +160,7 @@
   function smWatch(){const dirty=SM.dirty||(SM.dirty=new Set());
     const freeze=performance.now()-SM.t0>10000;
     // (v4.1 pass 3: compacted in place twice a second instead of filtered into a new 2,700-entry array)
-    const keep=r=>{let recol=false;if(r.flat&&r.bm&&smSame(r)){const h=r.o.material.color.getHex();if(h!==r.hex){if(r.flatVC)recol=true;else{r.hex=h;r.bm.setColorAt(r.iid,r.o.material.color);}}}   // (v6.1 t2: a flat batch follows colour changes; on the vertex-colour path the object is handed back)
+    const keep=r=>{let recol=false;if(r.flat&&smSame(r)){const h=r.o.material.color.getHex();if(h!==r.hex){if(r.flatVC||!r.bm)recol=true;else{r.hex=h;r.bm.setColorAt(r.iid,r.o.material.color);}}}   // (v6.1 t2: a flat batch follows colour changes; on the vertex-colour path the object is handed back)
       if(!recol&&smSame(r)&&!(r.shared&&!r.flat&&!colorSame(r.o.material,r.bm.material))&&!(r.flat&&!emSame(r.o.material,r.bm.material))){if(freeze&&(r.bm||r.key))smFreeze(r);return true;}
       smThaw(r);
       if(r.shadow){r.o.castShadow=true;r.shadow=false;if(!shDrop(r))SH.dirty=true;}   // v4.0.1: cut it out of the proxy instead of rebuilding it
@@ -201,7 +208,7 @@
   // v4.2.5: batching failures go to Diagnostics (the first 5, then a count), not only the console or nowhere
   const smErr=(what,e)=>{SM.errs=(SM.errs||0)+1;if(SM.errs<=5)diag(`batching: ${what} failed: ${String(e&&e.message||e).slice(0,120)}`);else if(SM.errs===6)diag("batching: more failures, not logged");};
   function smTick(now){if(SM.off)return;
-    if(!SM.t0){SM.t0=now;try{scene.updateMatrixWorld(true);try{if(G3.splitMulti)G3.splitMulti();scene.updateMatrixWorld(true);}catch(e){console.error("split failed",e);}try{if(G3.dropBuild)G3.dropBuild();}catch(e){console.error("drop shadows failed",e);}smSnapshot();smMerge();}
+    if(!SM.t0){SM.t0=now;try{scene.updateMatrixWorld(true);try{if(G3.atlasSigns)G3.atlasSigns();}catch(e){console.error("sign atlas failed",e);}try{if(G3.splitMulti)G3.splitMulti();scene.updateMatrixWorld(true);}catch(e){console.error("split failed",e);}try{if(G3.dropBuild)G3.dropBuild();}catch(e){console.error("drop shadows failed",e);}smSnapshot();smMerge();}
       catch(e){console.error("scenery batching failed",e);smErr("scenery batching (batching off)",e);SM.off=true;SM.done=true;SM.list.forEach(r=>{r.o.layers.set(0);if(r.bm)r.bm.visible=false;});}return;}
     if(SM.queue&&SM.queue.length){try{smStep();}catch(e){console.error("scenery baking failed",e);smErr("scenery baking",e);SM.queue=[];SM.done=true;}return;}
     if(now>SM.checkT){SM.checkT=now+(now-SM.t0<10000?0:500);try{smWatch();}catch(e){smErr("watch for moved objects",e);}}}

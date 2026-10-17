@@ -51,7 +51,8 @@ function frame(now){
          last picture stays on screen. Settings > Performance > Stop-motion (on by default). */
       if(G3.on&&G3.frame){WACC.t=Math.min(0.25,WACC.t+(running?rdt:0));
         if(!STOPMO||(G3.camBusy&&G3.camBusy())||now-WACC.last>=1000/15-4){WACC.last=now;const d=Math.min(0.1,WACC.t);WACC.t=0;G3.frame(d);}}}
-    uiAcc+=rdt;if(uiAcc>0.2){uiAcc=0;uiN++;try{AUDIO.update(running&&!S.zen&&(S.inc.length>0||S.wd==="hayout"));}catch(_){}
+    uiAcc+=rdt;if(uiAcc>(document.body.classList.contains("sheet-open")?0.2:0.4)){   // (v6.1 t3: 2.5 a second with no panel open)
+      uiAcc=0;uiN++;try{AUDIO.update(running&&!S.zen&&(S.inc.length>0||S.wd==="hayout"));}catch(_){}
       const uT=performance.now();if(paneShown($("cards")))syncControls();updateText();UI_TICKS.forEach(f=>{try{f(uiN);}catch(e){console.error("ui tick",e);}});
       if(paneShown($("chaosSec")))updateChaos();if(!$("brian").hidden)briUpd();if(paneShown($("shopSec")))updateShop();if(paneShown($("relnow"))&&$("repLive").open)updateRel();   /* (v5.2: no offsetParent layout read) */if(paneShown($("trend")))drawTrend();
       if(PFo&&PFo.on)PFo.acc["UI panels (5x/s)"]=(PFo.acc["UI panels (5x/s)"]||0)+(performance.now()-uT);}}

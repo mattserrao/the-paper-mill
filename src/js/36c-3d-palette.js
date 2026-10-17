@@ -6,7 +6,7 @@
      Time of day: one full-screen multiply (one draw, no render target) tints the whole picture: warm at dawn, clean by day,
      rose at dusk, blue at night, on top of the season's own cast. The lights still dim at night as before (36). */
   {const PALS=["spring","summer","autumn","winter"];G3.PALS=PALS;
-   const SEASON_TINT={spring:[0.97,1.0,0.95],summer:[1.0,0.985,0.95],autumn:[1.0,0.94,0.86],winter:[0.92,0.95,1.0]};
+   const SEASON_TINT={spring:[0.97,1.0,0.95],summer:[1,1,1],autumn:[1.0,0.94,0.86],winter:[0.92,0.95,1.0]};
    const gq=new THREE.Mesh(new THREE.PlaneGeometry(2,2),new THREE.ShaderMaterial({vertexShader:"void main(){gl_Position=vec4(position.xy,0.0,1.0);}",
      fragmentShader:"uniform vec3 uTint;void main(){gl_FragColor=vec4(uTint,1.0);}",uniforms:{uTint:{value:new THREE.Vector3(1,1,1)}},
      blending:THREE.MultiplyBlending,premultipliedAlpha:true,transparent:true,depthTest:false,depthWrite:false,fog:false,toneMapped:false}));
@@ -34,11 +34,14 @@
        a[j]=_c.r;a[j+1]=_c.g;a[j+2]=_c.b;}
      ca.needsUpdate=true;return n;}
    let shownPal=1,chkT=0;G3.palShown=()=>PALS[shownPal];
-   G3.setPal=p=>{p=((p%4)+4)%4;if(p===shownPal&&ORIG.size)return;shownPal=p;let n=0;
-     try{if(G3.scenery&&G3.scenery.parts)G3.scenery.parts.forEach(m=>{n+=recolour(m,p,false);});if(G3.terrain)n+=recolour(G3.terrain,p,true);}catch(e){console.error("palette failed",e);}
-     diag(`palette: ${PALS[p]} (${n} vertices recoloured)`);};
+   // v6.1 t3: one mesh per frame instead of all at once (no single long frame when a season starts)
+   let palQ=[],palN=0;
+   G3.setPal=p=>{p=((p%4)+4)%4;if(p===shownPal&&ORIG.size)return;shownPal=p;palN=0;
+     palQ=[...(G3.scenery&&G3.scenery.parts||[]).map(m=>[m,false]),...(G3.terrain?[[G3.terrain,true]]:[])];if(!ORIG.size)ORIG.set(gq,null);};
+   function palStep(){const it=palQ.shift();if(!it)return;try{palN+=recolour(it[0],shownPal,it[1]);}catch(e){console.error("palette failed",e);}
+     if(!palQ.length)diag(`palette: ${PALS[shownPal]} (${palN} vertices recoloured)`);}
    // every frame: the time-of-day grade; once a second, the season
-   G3.palTick=now=>{if(now>chkT){chkT=now+1000;const p=palNow();if(p!==shownPal||!ORIG.size&&p!==1)G3.setPal(p);}
+   G3.palTick=now=>{if(palQ.length)palStep();if(now>chkT){chkT=now+1000;const p=palNow();if(p!==shownPal||!ORIG.size&&p!==1)G3.setPal(p);}
      const hr=S?((S.t+360)/60)%24:12,bump=(c,w)=>Math.max(0,1-Math.abs(((hr-c+36)%24)-12)/w);
      const dawn=bump(6.6,1.6),dusk=bump(19.2,1.5),night=G3.nightK!=null?G3.nightK:0,st=SEASON_TINT[PALS[shownPal]];
      let r=st[0],g=st[1],b=st[2];

@@ -50,13 +50,16 @@
    // --- finding them: anything built with userData.cut, rescanned every 2 s (pools grow during play) ---
    function rescan(){const seen=new Set(CUT.actors.map(a=>a.o));scene.traverse(o=>{if(o.userData&&o.userData.cut&&KIND[o.userData.cut]&&!seen.has(o)){
        let up=o.parent,nested=false;for(;up&&up!==scene;up=up.parent)if(up.userData&&up.userData.cut){nested=true;break;}   // (a driver inside a truck is part of the truck)
-       if(!nested)CUT.actors.push({o,kind:o.userData.cut,K:KIND[o.userData.cut],cell:null,hid:false,hT:0});}});}
+       if(!nested){CUT.actors.push({o,kind:o.userData.cut,K:KIND[o.userData.cut],cell:null,hid:false,hT:0});
+         // v6.1 t3: the hidden model's parts no longer get their world matrices every frame (about 2,000 nodes); a picture
+         // forces them (updateMatrixWorld(true)) and getWorldPosition still works, only the root is kept current
+         o.children.forEach(c=>{c.matrixWorldAutoUpdate=false;});}}});}
    const shown=o=>{for(let x=o;x;x=x.parent){if(!x.visible)return false;if(x===scene)return true;}return false;};
    function hide(a,on){a.o.traverse(c=>{if(c.isMesh||c.isLine||c.isPoints){const want=on?CUT_LAYER:0;if(on?c.layers.mask!==1<<CUT_LAYER:c.layers.mask===1<<CUT_LAYER)c.layers.set(want);}});a.hid=on;}
    // the look of one actor right now: every node's visibility and material, and its moving parts in coarse steps
    const q=(v,s)=>Math.round(v/s);
    function lookKey(a){const o=a.o,u=o.userData;let k=a.kind+":";o.traverse(c=>{if(c===o)return;const mt=c.material;k+=c.visible?(c.isMesh&&mt?(Array.isArray(mt)?mt.map(x=>x.id.toString(36)).join("."):mt.id.toString(36)):"v"):"-";});
-     if(a.kind==="person"&&u.legs){k+="|"+q(u.legs[0].rotation.z,0.6)+","+q(u.arms[0].rotation.z,0.6)+","+q(u.arms[1].rotation.z,0.6)+","+q(u.arms[1].rotation.x,0.9)+","+q(u.torso.rotation.z,0.3)+","+q(u.armM?u.armM[1].scale.y:1,0.3)+(u.tool&&u.tool.visible?","+q(u.tool.rotation.x,0.6):"");}
+     if(a.kind==="person"&&u.legs){k+="|"+q(u.legs[0].rotation.z,0.6)+","+q(u.arms[0].rotation.z,0.8)+","+q(u.arms[1].rotation.z,0.8)+","+q(u.arms[1].rotation.x,0.9)+","+q(u.torso.rotation.z,0.4)+","+q(u.armM?u.armM[1].scale.y:1,0.3)+(u.tool&&u.tool.visible?","+q(u.tool.rotation.x,0.6):"");}
      else if(a.kind==="lift"&&u.load)k+="|"+q(u.load.position.y,0.3);
      else if(a.kind==="truck")k+="|"+(u.doorL?q(u.doorL.rotation.y,0.6)+","+q(u.doorR.rotation.y,0.6):"");
      return k;}
@@ -100,7 +103,8 @@
    // start-up: compile the picture shaders (the cut-outs' materials as drawn into RT_A) behind the "Getting the mill ready" screen
    G3.cutWarm=()=>{try{rescan();basis();const seen=new Set();for(const a of CUT.actors){const kk=a.kind;if(seen.size>40)break;
        let m=false;a.o.traverse(c=>{if(c.material&&!seen.has(c.material)){seen.add(c.material);m=true;}});if(m){const key="warm:"+CUT.caps;const c=capture(a,key,0,ATL[a.K.at]);if(c){CUT.cells.set(key,c);CUT.byKD.set(kk+"#0",c);CUT.byK.set(kk,c);}}}}
-     catch(e){CUT.errs++;console.error("cut-out warm-up failed",e);}};
+     catch(e){CUT.errs++;console.error("cut-out warm-up failed",e);}
+     sets.forEach(S2=>{S2.card.count=S2.shad.count=1;});};   // (one card each so the start-up compile sees their shaders; the next tick resets the counts)
    // --- every frame (43-3d-frame.js, after the moving batches, before the render) ---
    let scanT=0;
    // an atlas that fills up starts over: its pictures are dropped and retaken as they are needed again

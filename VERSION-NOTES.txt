@@ -44,3 +44,4 @@ One line per version, oldest first. Add a line here with every release: build.py
 5.7.4      Version Notes Pop-Up (Triple-Tap the Version Number)
 6.1.0-t1   Isometric Paper View: Fixed Camera, Cut-Outs, Drop Shadows, Cutaways, Season Palettes (Test)
 6.1.0-t2   Iso Round 2: Cut-Outs Always Paper, GPU Pictures, Stop-Motion World, Fewer Draws (Test)
+6.1.0-t3   Iso Round 3: iPhone Batching, Instanced Cans, Sign Atlas, Lighter Frames (Test)

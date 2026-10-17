@@ -58,3 +58,29 @@
       for(let i=1;i<subs.length;i++){const c=new THREE.Mesh(subs[i][1],subs[i][0]);c.castShadow=o.castShadow;c.receiveShadow=o.receiveShadow;c.renderOrder=o.renderOrder;o.add(c);parts++;}
       n++;}
     diag(`multi-material meshes split: ${n} (${parts} extra parts)`);};
+  /* v6.1 t3 sign atlas: small opaque signs and tags (unlit planes, each with its own canvas texture) are a draw each. On the
+     first frame, before the static merge, every such texture that isn't tiled is copied into one shared 2048 canvas, the
+     plane's UVs are pointed at its spot, and all of them share one material, so they batch into one draw. A texture the game
+     redraws later (its version changes) is copied again (checked twice a second). */
+  G3.atlasSigns=()=>{const W=2048,cv=document.createElement("canvas");cv.width=W;cv.height=W;const x=cv.getContext("2d");
+    const L=[],seen=new Map();let rowY=0,rowH=0,cx=0,n=0;
+    scene.traverse(o=>{if(!o.isMesh||o.isInstancedMesh||o.isBatchedMesh||o.layers.mask!==1)return;const m=o.material;
+      if(!m||Array.isArray(m)||m.type!=="MeshBasicMaterial"||m.transparent||m.opacity<1||!m.map||m.alphaMap||m.vertexColors||o.renderOrder)return;
+      const t=m.map,im=t.image;if(!im||!(im instanceof HTMLCanvasElement)||im.width>512||im.height>256)return;
+      if(t.wrapS!==THREE.ClampToEdgeWrapping||t.wrapT!==THREE.ClampToEdgeWrapping||t.repeat.x!==1||t.repeat.y!==1||t.offset.x||t.offset.y||t.rotation)return;
+      if(!m.color.equals(new THREE.Color(1,1,1)))return;const g=o.geometry;if(!g||!g.attributes.uv||g.attributes.uv.count>64)return;
+      for(let p=o;p&&p!==scene;p=p.parent)if(p.userData&&p.userData.cut)return;
+      L.push(o);});
+    if(L.length<3)return;
+    const mat=new THREE.MeshBasicMaterial({map:null});
+    const place=t=>{let r=seen.get(t);if(r)return r;const im=t.image,w=im.width+4,h=im.height+4;if(cx+w>W){cx=0;rowY+=rowH;rowH=0;}if(rowY+h>W)return null;
+      r={t,x:cx+2,y:rowY+2,w:im.width,h:im.height,v:t.version};seen.set(t,r);cx+=w;rowH=Math.max(rowH,h);
+      x.drawImage(im,r.x,r.y);x.drawImage(im,0,0,im.width,1,r.x,r.y-2,im.width,2);x.drawImage(im,0,im.height-1,im.width,1,r.x,r.y+im.height,im.width,2);   // (a 2 px apron so mipmaps don't bleed)
+      return r;};
+    for(const o of L){const r=place(o.material.map);if(!r)continue;
+      const g=o.geometry.clone(),uv=g.attributes.uv,fy=o.material.map.flipY!==false;
+      for(let i=0;i<uv.count;i++){const u=uv.getX(i),v=uv.getY(i),py=fy?(1-v):v;uv.setXY(i,(r.x+u*r.w)/W,1-(r.y+py*r.h)/W);}
+      o.geometry=g;o.material=mat;n++;}
+    const tex=new THREE.CanvasTexture(cv);tex.colorSpace=THREE.SRGBColorSpace;tex.anisotropy=4;mat.map=tex;
+    G3.signAtlas={tex,seen};diag(`sign atlas: ${n} signs, ${seen.size} textures in one`);
+    UI_TICKS.push(k=>{if(k%2)return;let ch=false;for(const r of seen.values())if(r.t.version!==r.v){r.v=r.t.version;x.clearRect(r.x,r.y,r.w,r.h);x.drawImage(r.t.image,r.x,r.y);ch=true;}if(ch)tex.needsUpdate=true;});};

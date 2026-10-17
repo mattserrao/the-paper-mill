@@ -1,5 +1,19 @@
 # Changelog
 
+## v6.1.0-t3 (2026-10-17): iso test, round 3 (test branch test/v6.1-iso)
+- **iPhone/iPad get the colour-sharing too:** a BatchedMesh's per-object colour draws grey there, so on those devices
+  untextured looks that differ only in colour are baked into plain vertex-coloured meshes per 90 m cell (the method the
+  scenery already uses on iOS). `?flatbake=1` forces that path for testing; it renders the same colours.
+- **Dryer cans:** the 20 spinning cans are one instanced draw (the game still turns the original cans, now hidden).
+- **Sign atlas:** small unlit signs and tags with their own canvas texture are copied into one shared texture on the first
+  frame, so they batch into one draw; a sign the game redraws is copied again.
+- **Lighter frames:** the hidden cut-out models' parts no longer update their world matrices every frame (about 2,000
+  nodes); UI panels refresh 2.5 times a second while no panel is open; the season recolour runs one mesh per frame.
+- **Cut-outs:** coarser pose steps (fewer pictures); their card shaders compile at start-up; Zen is stop-motion too.
+- Summer's colour grade is neutral, so a midday summer view skips the full-screen tint pass; roofs lift faster.
+- Whole-mill draws: main ~520 → t2 ~217 → t3 ~176; mid zoom ~456 → ~137 → ~157 at start-up, settling lower once the
+  moving batches form.
+
 ## v6.1.0-t2 (2026-10-17): iso test, round 2 (test branch test/v6.1-iso)
 - **Cut-outs never fall back to 3D.** t1 switched every cut-out back to its 3D model for good the first time a truck was
   pictured (its trailer sides use two materials, which the look key didn't expect). Now a cut-out is hidden from its first
