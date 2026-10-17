@@ -1,5 +1,12 @@
 # Changelog
 
+## v5.7.4 (2026-10-17): version notes
+- **Version notes:** tap the version number at the bottom of the title screen three times quickly (or press Enter three
+  times on it) and a list of every version's one-line note pops up, newest first, with the current version marked.
+  Escape, ✕ or a tap outside closes it.
+- The notes live in `VERSION-NOTES.txt` at the repo root; `build.py` embeds them and warns if `APP_VER` has no line, so
+  add a line there with every release.
+
 ## v5.7.3 (2026-10-16): Bare graphics
 - **Graphics quality → Bare**: the bones only, for weak phones and long sessions on battery. Flat unlit colours, plain
   boxes, no shadows or outlines, no sky, clouds or weather, nothing outside the fence but the ground and roads, no

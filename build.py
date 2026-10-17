@@ -14,6 +14,14 @@ S = ROOT / "src"
 parts = [(S / "head.html").read_text(), (S / "styles.css").read_text(), (S / "body.html").read_text()]
 parts += [p.read_text() for p in sorted((S / "js").glob("*.js"))]
 parts.append((S / "tail.html").read_text())
+# v5.7.4: VERSION-NOTES.txt (one line per version: "5.7.4   Short note") is embedded for the title screen's version
+# notes pop-up (51g-version-notes.js). Add a line there with every release.
+import json, re
+notes = [list(m.groups()) for m in (re.match(r"^(\d+\.\d+\.\d+\S*)\s+(.+?)\s*$", l) for l in (ROOT / "VERSION-NOTES.txt").read_text().splitlines()) if m]
+parts = [p.replace("/*@VERSION_NOTES@*/[]", json.dumps(notes, ensure_ascii=False)) for p in parts]
+ver = re.search(r'APP_VER="v?([^"]+)"', (S / "js" / "00-diagnostics-log.js").read_text())
+if ver and not any(n[0] == ver.group(1) for n in notes):
+    print(f"WARNING: VERSION-NOTES.txt has no line for {ver.group(1)} (APP_VER); add one so the version notes pop-up is current")
 out = pathlib.Path(sys.argv[1]) if len(sys.argv) > 1 else ROOT / "index.html"
 out.write_text("".join(parts))
 print(f"built {out} ({out.stat().st_size:,} bytes)")

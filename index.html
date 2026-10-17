@@ -853,7 +853,7 @@ body.titleon .v2top,body.titleon .v2dock,body.titleon .v2more{visibility:hidden}
 .title .tround:hover{background:rgba(24,30,46,.9);transform:scale(1.05)}
 .title .tround[aria-pressed="false"]{color:rgba(255,255,255,.6)}
 .title:not([data-step=main]) .tver{visibility:hidden}
-.title .tver{font:600 11.5px var(--f-body);color:rgba(255,255,255,.55);letter-spacing:.04em}
+.title .tver{font:600 11.5px var(--f-body);color:rgba(255,255,255,.55);letter-spacing:.04em;pointer-events:auto;cursor:default;padding:10px 6px;user-select:none;-webkit-user-select:none;touch-action:manipulation;-webkit-tap-highlight-color:transparent}
 .title .tpanel{position:absolute;inset:0 0 calc(70px + env(safe-area-inset-bottom,0px)) 0;margin:auto;height:fit-content;width:min(760px,calc(100% - 28px));max-height:calc(100dvh - 110px - env(safe-area-inset-bottom,0px));box-sizing:border-box;overflow:auto;padding:22px 22px 18px;border-radius:22px;
   background:rgba(14,18,27,.9);border:1px solid rgba(255,255,255,.12);box-shadow:0 24px 70px rgba(0,0,0,.5);animation:tin .35s ease both}
 .title .tpanel[hidden]{display:none}
@@ -1149,6 +1149,11 @@ body.dark .kvchip{background:color-mix(in srgb,var(--panel) 96%,transparent)}
 /* v5.7.3: six graphics choices (Auto, Bare, Low, Medium, High, Ultra) */
 .title .tseg.tseg6{grid-template-columns:repeat(3,1fr)}
 #gfxSeg{flex-wrap:wrap}
+/* ---- v5.7.4 version notes (triple-tap the title screen's version number) ---- */
+.vnotes .hbody{padding-bottom:16px}
+.vnotes .hterm{display:grid;grid-template-columns:5.5em 1fr;gap:10px;align-items:baseline}
+.vnotes .hterm dd{margin:0}
+.vnotes .hterm.vcur dt{color:var(--ok)}
 </style>
 </head>
 <body class="app">
@@ -1331,7 +1336,7 @@ body.dark .kvchip{background:color-mix(in srgb,var(--panel) 96%,transparent)}
 <div class="btns"><button class="primary" id="no3d-retry">Try again</button></div></div></div>
 
 <script type="module">
-const APP_VER="v5.7.3";   // shown in the menu and sent with leaderboard scores (max 12 characters)
+const APP_VER="v5.7.4";   // shown in the menu and sent with leaderboard scores (max 12 characters)
 // TEST BUILDS ONLY (off in releases): turbo speeds 240/480/960 sim min/s for fast playtests. Above 120, crews and maintenance start jobs
 // without waiting for the 3D walk (as with the 3D view off) and outages keep the speed. Set false for a release.
 const TURBO=false,TURBO_FAST=s=>TURBO&&s>120;
@@ -11367,6 +11372,31 @@ function camPullOn(){try{return localStorage.getItem("paper-mill-campull")!=="of
   {const cog=document.getElementById("tCog");if(cog){const b=document.createElement("button");b.className="tround";b.id="tHelp";b.type="button";b.setAttribute("aria-label","Help");
       b.innerHTML=`<svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="9.5"/><path d="M9.3 9.3a2.8 2.8 0 0 1 5.4 1c0 1.9-2.7 2.5-2.7 4"/><path d="M12 17.3v.2"/></svg>`;
       const wrap=document.createElement("span");wrap.className="tleft";cog.parentNode.insertBefore(wrap,cog);wrap.appendChild(cog);wrap.appendChild(b);b.addEventListener("click",open);}}
+}
+/* ---------- v5.7.4 Version notes: tap the version number at the bottom of the title screen three times quickly
+   (within 700 ms per tap) and a list of every version's one-line note pops up, newest first. The list comes from
+   VERSION-NOTES.txt at the repo root: build.py swaps it in for the placeholder below, so adding a line there with each
+   release keeps the pop-up current (build.py warns when APP_VER has no line). ---------- */
+{const VNOTES=[["4.0.0", "Graphics Overhaul: 60 FPS on iPhone, ~80% Fewer Draw Calls"], ["4.0.1", "Performance Follow-Up, Show FPS Option and Device Autotest"], ["4.0.2", "Economy Rebalance and Smoother Upset Labels"], ["4.1.0", "Four Environments, Seeded Mills, Bottlenecks, Graphics Tiers and Site Music"], ["4.2.0", "New Site Maps, Rare Sights, Zen Map Rotation and Economics Fixes"], ["4.2.0-s", "Save and Continue Season (Test)"], ["4.2.1", "Save/Continue, Settings Panel and Outage Speed Fix"], ["4.2.2-t", "Bayou Gator Sight Reworked (Test)"], ["4.2.2-t2", "Gator Bass Riff (Test)"], ["4.2.2-t3", "Gator Riff Removed, Wide Camera Framing (Test)"], ["4.2.2-t4", "Gator Scene Shortened and Widened (Test)"], ["4.2.2-t5", "One Rare Sight per Map in Zen (Test)"], ["4.2.2", "Rare Sights Reworked, Bird Strike Upset, Mill Report Tab"], ["4.2.3-t", "Cowboys, Bigfoot and Tugboat Sights Reworked (Test)"], ["4.2.3", "Laptop Battery Saving (Default GPU)"], ["4.2.4", "$25M Goal Removed and Quick Fixes"], ["4.2.5", "Random Bottleneck per Season and Accessibility Improvements"], ["4.3.0-t1", "Survival Mode (Test)"], ["4.4.0-t1", "Mill Leaders in Survival (Test)"], ["4.4.0-t2", "Painted Leader Portraits (Test)"], ["4.4.0-t3", "Leader Redesign, 4-Day Waves and Fixes (Test)"], ["5.0.0", "Survival Mode Release with Mill Leaders"], ["5.0.1", "Results Dialog and Game Speed Fixes"], ["5.0.2", "Report Card Label Fixes"], ["5.0.3", "Survival Playtest Fixes (Test)"], ["5.0.4", "Playtest Review: Dot Auto-Fix and Shipping Fix (Test)"], ["5.0.5", "Polish Rounds from Survival Playtests"], ["5.0.6", "Survival QA Fixes, Opt-In Outage Watch, Leaderboard Filters"], ["5.1.0", "Civics Meters and Leaders in Seasons (Test)"], ["5.4.0", "Title Screen, Civics in the World and Dark Mode"], ["5.4.1", "Loading Splash, No Old-Menu Flash"], ["5.4.2", "Graphics Quality on the Title Screen"], ["5.5.0", "Performance Improvements"], ["5.6.0", "Fiddly Knobs, DCS/QCS Screens and Knobs View"], ["5.7.0", "Catching Failures Early: Tells, Daily Rounds, Vibration Report, Outage Prep"], ["5.7.1", "Bottom Menu Reorder, Settings Back on the Right"], ["5.7.2", "Help Page with Game Guide and Glossary"], ["5.7.3", "Bare Graphics Mode for Weak Phones"], ["5.7.4", "Version Notes Pop-Up (Triple-Tap the Version Number)"]];
+  let ov=null,held=false;
+  function render(){
+    const cur=APP_VER.replace(/^v/i,""),rows=VNOTES.slice().reverse().map(([v,n])=>
+      `<div class="hterm${v===cur?" vcur":""}"><dt>${escHTML(v)}</dt><dd>${escHTML(n)}</dd></div>`).join("");
+    ov.innerHTML=`<div class="modal help vnotes" role="dialog" aria-modal="true" aria-labelledby="vn-h">
+      <div class="hhead"><h2 id="vn-h">Version notes</h2><button type="button" class="hx" id="vn-x" aria-label="Close version notes">✕</button></div>
+      <div class="hbody"><dl class="hgl">${rows||`<p class="hnone">No version notes in this build.</p>`}</dl></div></div>`;
+    ov.querySelector("#vn-x").addEventListener("click",close);}
+  function open(){if(!ov){ov=document.createElement("div");ov.className="overlay helpov";ov.id="vnOv";ov.hidden=true;document.body.appendChild(ov);
+      ov.addEventListener("click",e=>{if(e.target===ov)close();});ov.addEventListener("keydown",e=>{if(e.key==="Escape"){e.stopPropagation();close();}});}
+    held=running;running=false;render();ov.hidden=false;ov.querySelector("#vn-x").focus({preventScroll:true});}
+  function close(){if(!ov||ov.hidden)return;ov.hidden=true;const m=document.getElementById("v2menu");if(held&&!(m&&!m.hidden))running=true;held=false;
+    const v=document.querySelector(".title .tver");if(v&&!v.closest("[hidden]"))v.focus({preventScroll:true});}
+  G3.vnOpen=open;G3.vnClose=close;G3.VNOTES=VNOTES;
+  // three quick taps on the title screen's version number (Enter or Space three times works for keyboards too)
+  const v=document.querySelector(".title .tver");
+  if(v){v.tabIndex=0;v.setAttribute("role","button");v.setAttribute("aria-label",`Version ${APP_VER}. Tap three times for version notes`);
+    let n=0,last=0;const hit=()=>{const t=performance.now();n=t-last<700?n+1:1;last=t;if(n>=3){n=0;open();}};
+    v.addEventListener("click",hit);v.addEventListener("keydown",e=>{if(e.key==="Enter"||e.key===" "){e.preventDefault();hit();}});}
 }
 // frame rate is a player choice (Controls): Battery saver = 30 fps, Smooth = 60 fps (v15 default: a 120 Hz screen no longer
 // draws twice as many frames), Max = the display's rate; remembered. (true/false still mean Max/saver for the test tools)

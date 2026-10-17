@@ -22,6 +22,7 @@ then `tail.html`. All game code runs inside **one shared closure** (opened in `0
 
 ## Conventions
 
+- **Every release:** bump `APP_VER`, add a `CHANGELOG.md` entry and a one-line note to `VERSION-NOTES.txt` (shown by triple-tapping the title screen's version number; `build.py` warns when it's missing).
 - **Running state:** set `running` directly; nothing else mirrors it.
 - **Sim speed:** always call `setSimSpeed(v)`.
 - **UI refresh:** anything that redraws 5 times a second registers with `UI_TICKS.push(fn)`; the main loop calls it with a tick counter. Don't add `setInterval` timers.
