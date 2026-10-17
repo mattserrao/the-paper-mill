@@ -81,6 +81,8 @@
   function bmMat(m){const c=m.clone();c.userData=Object.assign({},m.userData);if(MATS.includes(m))MATS.push(c);MSYNC.push([c,m]);return c;}
   // v4.0.1: moving batches are white and give each object its own color (BatchedMesh.setColorAt), so things that
   // differ only in color share one draw. Their copy stays out of MATS (the palette would tint it) and skips color sync.
+  function flatMat(m){const c=m.clone();c.userData={};c.color.setRGB(1,1,1);MSYNC.push([c,m,true]);return c;}   // (white; colour per object)
+  const FLATB=!BQ.has("noflat");
   function dbMat(m){const c=m.clone();c.userData=Object.assign({},m.userData);if(!DBMAT)c.color.setRGB(1,1,1);if(!DBCOL)c.vertexColors=true;MSYNC.push([c,m,true]);return c;}
   // same look as the batch: compared at 8-bit precision (look-alike materials differ in the last float bits)
   const colorSame=(a,b)=>a.color.getHex()===b.color.getHex()&&(!a.emissive||(a.emissive.getHex()===b.emissive.getHex()&&a.emissiveIntensity===b.emissiveIntensity));
@@ -94,21 +96,30 @@
   const sigCache=new WeakMap();const smSigC=g=>{let v=sigCache.get(g);if(v===undefined){v=smSig(g);sigCache.set(g,v);}return v;};
   const smSig=g=>Object.keys(g.attributes).sort().map(k=>k+g.attributes[k].itemSize+(g.attributes[k].normalized?"n":"")).join(",")+(g.index?"|i":"|n");
   // one BatchedMesh for a group of records that share material, shadow flags and vertex layout
-  function bmBuild(grp){const geos=new Map();let nv=0,ni=0;
-    for(const r of grp.recs){const g=r.o.geometry;if(!geos.has(g)){geos.set(g,-1);nv+=g.attributes.position.count;ni+=g.index?g.index.count:0;}}
-    const bm=new THREE.BatchedMesh(grp.recs.length,nv,Math.max(ni,1),bmMat(grp.mat));
+  // (flat batches on the vertex-colour path: one coloured copy of a shape per colour, shared by every object of that colour)
+  const FLATVC=new Map();const flatGeo=r=>{const g=r.o.geometry,h=r.o.material.color.getHex(),k=g.uuid+"|"+h;let v=FLATVC.get(k);if(!v){v=vcGeo(g,r.o.material.color);FLATVC.set(k,v);}return v;};
+  function bmBuild(grp){const geos=new Map();let nv=0,ni=0;const vc=grp.flat&&!DBCOL,gOf=r=>vc?flatGeo(r):r.o.geometry;
+    for(const r of grp.recs){const g=gOf(r);if(!geos.has(g)){geos.set(g,-1);nv+=g.attributes.position.count;ni+=g.index?g.index.count:0;}}
+    const fm=grp.flat?flatMat(grp.mat):null;if(fm&&vc)fm.vertexColors=true;
+    const bm=new THREE.BatchedMesh(grp.recs.length,nv,Math.max(ni,1),fm||bmMat(grp.mat));
     for(const g of geos.keys())geos.set(g,bm.addGeometry(g));
-    for(const r of grp.recs){r.bm=bm;r.shared=true;r.iid=bm.addInstance(geos.get(r.o.geometry));bm.setMatrixAt(r.iid,r.o.matrixWorld);r.o.layers.set(SMLAYER);}
+    for(const r of grp.recs){r.bm=bm;r.shared=true;r.iid=bm.addInstance(geos.get(gOf(r)));if(vc)r.flatVC=true;bm.setMatrixAt(r.iid,r.o.matrixWorld);r.o.layers.set(SMLAYER);
+      if(grp.flat){r.flat=true;r.hex=r.o.material.color.getHex();if(!vc)bm.setColorAt(r.iid,r.o.material.color);}}
     // v5.5 perf: per-object frustum culling is on again (phones look at a third of the mill at the default zoom, so most
     // batched triangles were off-screen vertex work); three.js rebuilds each batch's draw list per pass for it, which the
     // benchmark showed to be cheaper than drawing everything. No sorting (the batches are opaque).
     bm.perObjectFrustumCulled=!BQ.has("nocull");bm.sortObjects=false;
     bm.castShadow=grp.cast;bm.receiveShadow=grp.recv;bm.matrixAutoUpdate=false;bm.userData.smBatch=true;bm.name="scenery batch";
     bm.computeBoundingBox();bm.computeBoundingSphere();scene.add(bm);SM.bms.push(bm);}
-  function smMerge(){const groups=new Map();
+  /* v6.1 t2 flat batches: with no shadow maps and one lighting model, untextured opaque materials that differ only in colour
+     share one batch: white, each object carrying its own colour (BatchedMesh.setColorAt, the moving batches' method). The
+     watch (smWatch) copies a material's colour change to its objects instead of handing them back. ~50 draws became a few. */
+  const flatOK=m=>FLATB&&!DBOFF&&!DBMAT&&!m.transparent&&m.opacity===1&&!m.vertexColors&&SMMAPS.every(k=>!m[k])&&(!m.emissive||m.emissive.getHex()===0);
+  function smMerge(){const groups=new Map(),shd=renderer.shadowMap.enabled;
     for(const r of SM.list){const o=r.o,g=o.geometry;if(r.proxyOnly)continue;
-      if(o.isMesh&&o.matrixWorld.determinant()>0&&!o.userData.aoDecal){const key=[smLook(o.material),o.castShadow?1:0,o.receiveShadow?1:0,smSig(g)].join("|");
-        let G=groups.get(key);if(!G){G={recs:[],mat:o.material,cast:o.castShadow,recv:o.receiveShadow};groups.set(key,G);}G.recs.push(r);continue;}
+      if(o.isMesh&&o.matrixWorld.determinant()>0&&!o.userData.aoDecal){const flat=flatOK(o.material);
+        const key=[flat?"F/"+smLook(Object.assign(Object.create(o.material),{color:null,userData:{}})):smLook(o.material),shd&&o.castShadow?1:0,shd&&o.receiveShadow?1:0,smSig(g)].join("|");
+        let G=groups.get(key);if(!G){G={recs:[],mat:o.material,cast:o.castShadow,recv:o.receiveShadow,flat};groups.set(key,G);}G.recs.push(r);continue;}
       // outlines and mirrored meshes: bake per material and 90 m map cell (off-screen cells are still culled)
       if(!g.boundingSphere)g.computeBoundingSphere();_smV.copy(g.boundingSphere.center).applyMatrix4(o.matrixWorld);
       // (a ground shading decal goes in one map-wide batch per material: two draws for all of them, never culled)
@@ -142,7 +153,8 @@
   function smWatch(){const dirty=SM.dirty||(SM.dirty=new Set());
     const freeze=performance.now()-SM.t0>10000;
     // (v4.1 pass 3: compacted in place twice a second instead of filtered into a new 2,700-entry array)
-    const keep=r=>{if(smSame(r)&&!(r.shared&&!colorSame(r.o.material,r.bm.material))){if(freeze&&(r.bm||r.key))smFreeze(r);return true;}
+    const keep=r=>{let recol=false;if(r.flat&&r.bm&&smSame(r)){const h=r.o.material.color.getHex();if(h!==r.hex){if(r.flatVC)recol=true;else{r.hex=h;r.bm.setColorAt(r.iid,r.o.material.color);}}}   // (v6.1 t2: a flat batch follows colour changes; on the vertex-colour path the object is handed back)
+      if(!recol&&smSame(r)&&!(r.shared&&!r.flat&&!colorSame(r.o.material,r.bm.material))&&!(r.flat&&!emSame(r.o.material,r.bm.material))){if(freeze&&(r.bm||r.key))smFreeze(r);return true;}
       smThaw(r);
       if(r.shadow){r.o.castShadow=true;r.shadow=false;if(!shDrop(r))SH.dirty=true;}   // v4.0.1: cut it out of the proxy instead of rebuilding it
       if(r.bm){r.bm.setVisibleAt(r.iid,false);r.o.layers.set(0);SM.dyn.add(r.o);SM.handedBack++;return false;}
@@ -162,7 +174,7 @@
   G3.SH=SH;
   {const sm=renderer.shadowMap,orig=sm.render.bind(sm);
     sm.render=(...a)=>{for(const m of SH.meshes)m.visible=true;try{orig(...a);}finally{for(const m of SH.meshes)m.visible=false;}};}
-  function shBuild(){SH.builds=(SH.builds||0)+1;for(const m of SH.meshes){scene.remove(m);m.geometry.dispose();}SH.meshes=[];
+  function shBuild(){if(!renderer.shadowMap.enabled)return;   /* (v6.1: no shadow maps, no proxies) */SH.builds=(SH.builds||0)+1;for(const m of SH.meshes){scene.remove(m);m.geometry.dispose();}SH.meshes=[];
     const parts=[[],[]];
     for(const r of SM.list){if(r.shadow===undefined)r.shadow=!!r.o.castShadow&&r.o.isMesh;if(!r.shadow)continue;
       const m0=Array.isArray(r.o.material)?r.o.material[0]:r.o.material;r.o.castShadow=false;parts[m0.side===THREE.FrontSide?0:1].push(r);}
@@ -189,7 +201,7 @@
   // v4.2.5: batching failures go to Diagnostics (the first 5, then a count), not only the console or nowhere
   const smErr=(what,e)=>{SM.errs=(SM.errs||0)+1;if(SM.errs<=5)diag(`batching: ${what} failed: ${String(e&&e.message||e).slice(0,120)}`);else if(SM.errs===6)diag("batching: more failures, not logged");};
   function smTick(now){if(SM.off)return;
-    if(!SM.t0){SM.t0=now;try{scene.updateMatrixWorld(true);try{if(G3.dropBuild)G3.dropBuild();}catch(e){console.error("drop shadows failed",e);}smSnapshot();smMerge();}
+    if(!SM.t0){SM.t0=now;try{scene.updateMatrixWorld(true);try{if(G3.splitMulti)G3.splitMulti();scene.updateMatrixWorld(true);}catch(e){console.error("split failed",e);}try{if(G3.dropBuild)G3.dropBuild();}catch(e){console.error("drop shadows failed",e);}smSnapshot();smMerge();}
       catch(e){console.error("scenery batching failed",e);smErr("scenery batching (batching off)",e);SM.off=true;SM.done=true;SM.list.forEach(r=>{r.o.layers.set(0);if(r.bm)r.bm.visible=false;});}return;}
     if(SM.queue&&SM.queue.length){try{smStep();}catch(e){console.error("scenery baking failed",e);smErr("scenery baking",e);SM.queue=[];SM.done=true;}return;}
     if(now>SM.checkT){SM.checkT=now+(now-SM.t0<10000?0:500);try{smWatch();}catch(e){smErr("watch for moved objects",e);}}}
@@ -240,7 +252,7 @@
     return g.drawRange.start===0&&g.drawRange.count===Infinity&&o.matrixWorld.determinant()>0;}
   function dbRelease(){if(DB.q)DB.q.clear();for(const r of DB.list)if(r.o.layers.mask===1<<DBLAYER)r.o.layers.set(0);for(const b of DB.bms){scene.remove(b);b.dispose();}DB.list=[];DB.bms=[];DB.byKey=new Map();}
   DB.byKey=new Map();DB.full=0;
-  const dbKey=o=>dbLookId(o.material)+"|"+(o.castShadow?1:0)+(o.receiveShadow?1:0)+"|"+smSigC(o.geometry)+(DBMAT?"|"+o.material.color.getHex():"");
+  const dbKey=o=>dbLookId(o.material)+"|"+(renderer.shadowMap.enabled?(o.castShadow?1:0)+""+(o.receiveShadow?1:0):"")+"|"+smSigC(o.geometry)+(DBMAT?"|"+o.material.color.getHex():"");
   // a geometry that shares g's buffers and adds a colour attribute filled with c (for the vertex-colour path)
   function vcGeo(g,c,h){const n=g.attributes.position.count;if(!h){h=new THREE.BufferGeometry();for(const k in g.attributes)h.setAttribute(k,g.attributes[k]);if(g.index)h.setIndex(g.index);
       h.setAttribute("color",new THREE.BufferAttribute(new Float32Array(n*3),3));}

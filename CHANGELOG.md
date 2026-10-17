@@ -1,5 +1,42 @@
 # Changelog
 
+## v6.1.0-t2 (2026-10-17): iso test, round 2 (test branch test/v6.1-iso)
+- **Cut-outs never fall back to 3D.** t1 switched every cut-out back to its 3D model for good the first time a truck was
+  pictured (its trailer sides use two materials, which the look key didn't expect). Now a cut-out is hidden from its first
+  frame; until its own picture exists it borrows the nearest one (its last, else one of its kind at that heading); errors
+  are counted per picture and never switch the paper look off. An atlas that fills starts over instead of giving up.
+- **Pictures are taken on the GPU.** t1 read every picture back with `gl.readPixels`, which stalled the GPU each time
+  (about 600 ms per picture in the software renderer; on phones a visible hitch). Now the model is drawn into a small
+  float render target and a finishing pass writes it into the atlas (a render target too) with the screen's tone mapping
+  and colour encoding, the paper edge and the ink line. Nothing comes back to the CPU. Their shaders compile behind the
+  "Getting the mill ready" screen.
+- **Stop-motion world** (Settings → Performance, on by default): while the view is still, the mill is updated and drawn
+  15 times a second; a pan, zoom or glide draws every frame. Frames in between draw nothing (the last picture stays).
+- **Fewer draws:** untextured opaque materials that differ only in colour now share one static batch, each object
+  carrying its colour (`?noflat` turns it off); multi-material meshes (deck plates with grating tops, gauge faces) are
+  split into single-material parts on the first frame so they batch too; moving-batch looks no longer split by shadow
+  flags. Whole-mill view: about 330 → 200 draws.
+- **Cheaper shading:** Lambert on every tier (the paper look needs no PBR); no sky dome, clouds or mist (the fixed view
+  never shows the sky); the shadow-map proxies and the 2-second shadow trim no longer run.
+- Atlases are 2048 × 1024 (half the memory of t1).
+- Tools: `isobench.py` (frames, renders, JS and render ms, draws per view; `--stopmo=off`), `isoshots.py` (season and
+  time-of-day arguments).
+
+## v6.1.0-t1 (2026-10-17): isometric paper view (test branch test/v6.1-iso)
+- **Fixed isometric camera:** orthographic, true iso angle, no turning or tilting. Drag pans 1:1; zoom moves in whole
+  steps of the widest view (1x, 2x, 3x, 4x, 6x, 8x, 12x) so the ink lines stay crisp.
+- **2D cut-outs** for workers, fork-trucks (and clamp trucks) and delivery trucks only: each is a picture of its 3D model
+  from the iso angle (8 headings, its current pose and load), with a paper edge and an ink line, drawn as a flat card at
+  12 fps (stop-motion). The 3D models keep running underneath on a hidden layer.
+- **Drop shadows** replace shadow maps: one flat dark-paper mesh of every standing object's outline, pushed right and a
+  little toward the viewer, darkened once per pixel (stencil). The cut-outs carry their own. Settings → View → Drop shadows.
+- **Cutaway buildings:** roofs and the machine hall shell lift off like a box lid as you zoom in. Settings → View →
+  Cutaway: Auto (by zoom), On, Off.
+- **Season palettes:** spring, summer, autumn or winter per season (rolled at the start, like the bottleneck), one per
+  wave in survival, every 7 days in free play and Zen: trees, bushes and grass recoloured once. **Time of day** is a
+  single full-screen colour shift (dawn peach, dusk rose, night blue).
+- Bare graphics tier removed on this branch; Burg Gretesch was never in the repo, so the four maps are unchanged.
+
 ## v5.7.4 (2026-10-17): version notes
 - **Version notes:** tap the version number at the bottom of the title screen three times quickly (or press Enter three
   times on it) and a list of every version's one-line note pops up, newest first, with the current version marked.

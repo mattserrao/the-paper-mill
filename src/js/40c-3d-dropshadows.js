@@ -25,7 +25,7 @@
       const m=Array.isArray(o.material)?o.material[0]:o.material;if(!m||!LIT.has(m.type)||m.transparent&&m.opacity<0.9||o.userData.aoDecal||o.castShadow===false)return;
       const g=o.geometry;if(!g||!g.attributes.position)return;if(!g.boundingBox)g.computeBoundingBox();if(!shown(o)||actor(o))return;
       bb.copy(g.boundingBox).applyMatrix4(o.matrixWorld);
-      if(bb.max.y<0.35||bb.max.y-bb.min.y<0.2||bb.max.x-bb.min.x>140||bb.max.z-bb.min.z>140)return;   // flat, buried or a whole scenery sector
+      if(bb.max.y<0.35||bb.max.y-bb.min.y<0.2||Math.max(bb.max.x-bb.min.x,bb.max.z-bb.min.z,bb.max.y-bb.min.y)<0.7||bb.max.x-bb.min.x>140||bb.max.z-bb.min.z>140)return;   // flat, buried or a whole scenery sector
       const b=g.boundingBox,P=[];
       for(let i=0;i<8;i++){v.set(i&1?b.max.x:b.min.x,i&2?b.max.y:b.min.y,i&4?b.max.z:b.min.z).applyMatrix4(o.matrixWorld);const h=Math.max(0,v.y);P.push([v.x+h*DROP.x,v.z+h*DROP.z]);
         if(v.y<1.2)P.push([v.x,v.z]);}   // (a box standing on the ground keeps its own footprint inside the shadow)
@@ -37,3 +37,24 @@
     const mesh=new THREE.Mesh(geo,dropMat);mesh.name="drop shadows";mesh.renderOrder=1;mesh.userData.smBatch=true;scene.add(mesh);G3.dropMesh=mesh;
     if(G3.SM&&G3.SM.dyn)G3.SM.dyn.add(mesh);
     diag(`drop shadows: ${n} objects, ${pos.length/9|0} triangles, ${(performance.now()-t0).toFixed(0)} ms`);};
+  /* v6.1 t2: multi-material meshes (a deck plate with a grating top, a gauge plate with a printed face...) draw once per
+     material group and can't be batched. On the first frame, before the static merge, each one keeps its first material's
+     faces and gets one child per other material holding that material's faces (same transform, so moving or hiding the
+     original still moves or hides all of it). The parts then batch with everything else. Cut-out actors are left alone. */
+  G3.splitMulti=()=>{let n=0,parts=0;const cache=new Map(),L=[];
+    scene.traverse(o=>{if(!o.isMesh||o.isInstancedMesh||o.isBatchedMesh||o.isSkinnedMesh||!Array.isArray(o.material))return;
+      const g=o.geometry;if(!g||!g.groups||!g.groups.length||g.morphAttributes&&Object.keys(g.morphAttributes).length)return;
+      for(let x=o;x&&x!==scene;x=x.parent)if(x.userData&&x.userData.cut)return;L.push(o);});
+    for(const o of L){const g=o.geometry,ms=o.material,byM=new Map();
+      for(const gr of g.groups){const m=ms[gr.materialIndex];if(!m)continue;if(!byM.has(m))byM.set(m,[]);byM.get(m).push(gr);}
+      const subs=[];for(const [m,grs] of byM){const ck=g.uuid+"|"+grs.map(x=>x.start+":"+x.count).join(",");let sg=cache.get(ck);
+        if(!sg){sg=new THREE.BufferGeometry();for(const k in g.attributes)sg.setAttribute(k,g.attributes[k]);
+          const src=g.index?g.index.array:null,cnt=grs.reduce((a,x)=>a+x.count,0),idx=new Uint32Array(cnt);let w=0;
+          for(const x of grs)for(let i=0;i<x.count;i++)idx[w++]=src?src[x.start+i]:x.start+i;
+          sg.setIndex(new THREE.BufferAttribute(idx,1));sg.computeBoundingSphere();sg.computeBoundingBox();cache.set(ck,sg);}
+        subs.push([m,sg]);}
+      if(!subs.length)continue;
+      o.geometry=subs[0][1];o.material=subs[0][0];
+      for(let i=1;i<subs.length;i++){const c=new THREE.Mesh(subs[i][1],subs[i][0]);c.castShadow=o.castShadow;c.receiveShadow=o.receiveShadow;c.renderOrder=o.renderOrder;o.add(c);parts++;}
+      n++;}
+    diag(`multi-material meshes split: ${n} (${parts} extra parts)`);};

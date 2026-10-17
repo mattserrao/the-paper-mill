@@ -12,7 +12,7 @@
     // old 2D drawing, which no longer runs when the 3D view is up, so everything stood still
     if(rdt>0){const R=S.rates;if(!S.M.pulperDown)V.swirl+=rdt*(0.4+R.feed*0.06);V.belt=(V.belt+rdt*R.feed*1.4)%30;V.cans+=rdt*S.pmSpeed/700;
       if(S.pm==="run")V.sheet=(V.sheet+rdt*S.pmSpeed/40)%24;V.rollsAnim+=rdt*(0.2+clamp(R.load/Math.max(1,C.loaders.v*P.loaderRate),0,1))*0.5;}
-    {const t=performance.now();if(!(t-(G3.shTrim||0)<2000)){G3.shTrim=t;trimShadows();}}pm("shadow trim (every 2 s)");
+    if(renderer.shadowMap.enabled){const t=performance.now();if(!(t-(G3.shTrim||0)<2000)){G3.shTrim=t;trimShadows();}}pm("shadow trim (every 2 s)");
     // v15: the fallback measures real frame intervals (rdt is clamped to 0.1 s, so a 5 FPS stall used to count as 10 FPS)
     // against the frame budget in use (the cap, or 60), and steps down only after two slow 3-second windows in a row
     {const t=performance.now(),dt=G3.fbLast?t-G3.fbLast:0;G3.fbLast=t;

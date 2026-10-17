@@ -5,6 +5,8 @@ let FRAME_CAP=FPS_CAPS[FPS_MODE];if(G3.bare&&!(FRAME_CAP>0&&FRAME_CAP<=30))FRAME
 function setFpsMode(m){if(m===true)m="max";else if(m===false)m="saver";if(FPS_CAPS[m]===undefined)return;FPS_MODE=m;FRAME_CAP=FPS_CAPS[m];if(G3.bare&&!(FRAME_CAP>0&&FRAME_CAP<=30))FRAME_CAP=30;G3.cap=FRAME_CAP;try{localStorage.setItem("paper-mill-fps",m);}catch(e){}
   document.querySelectorAll("#fpsSeg button").forEach(b=>b.setAttribute("aria-pressed",String(b.dataset.fps===m)));}
 let last=performance.now(),uiAcc=0,uiN=0,lastPaint=0;
+const WACC={t:0,last:0};let STOPMO=true;try{STOPMO=localStorage.getItem("paper-mill-stopmo")!=="off";}catch(e){}
+function setStopMo(on){STOPMO=!!on;try{localStorage.setItem("paper-mill-stopmo",on?"on":"off");}catch(e){}const c=document.getElementById("stopMo");if(c)c.checked=STOPMO;}
 /* v4.0.1: optional FPS readout (Controls > Show FPS), bottom-right; counts drawn loop frames, text written twice a second */
 const FPSM={on:false,el:null,n:0,t0:0,txt:""};
 function setShowFps(on){FPSM.on=!!on;try{localStorage.setItem("paper-mill-showfps",on?"1":"0");}catch(e){}
@@ -44,7 +46,11 @@ function frame(now){
   // v5.2: nothing is drawn behind the opaque title screen once the start-up precompile is done (it needs its frames until then)
   try{const covered=G3.warm&&document.body.classList.contains("titleon"),live=!covered&&(running||now-(G3.lastMove||0)<2500||now-lastPaint>1000);
     if(live){lastPaint=now;
-      if(G3.on&&G3.frame)G3.frame(running?rdt:0);}
+      /* v6.1 t2 stop-motion world: while the camera is still, the 3D world is updated and drawn 15 times a second (the
+         cut-outs already step at that rate); a pan, zoom or glide draws every frame. Skipped frames draw nothing, so the
+         last picture stays on screen. Settings > Performance > Stop-motion (on by default). */
+      if(G3.on&&G3.frame){WACC.t=Math.min(0.25,WACC.t+(running?rdt:0));
+        if(!STOPMO||(G3.camBusy&&G3.camBusy())||now-WACC.last>=1000/15-4){WACC.last=now;const d=Math.min(0.1,WACC.t);WACC.t=0;G3.frame(d);}}}
     uiAcc+=rdt;if(uiAcc>0.2){uiAcc=0;uiN++;try{AUDIO.update(running&&!S.zen&&(S.inc.length>0||S.wd==="hayout"));}catch(_){}
       const uT=performance.now();if(paneShown($("cards")))syncControls();updateText();UI_TICKS.forEach(f=>{try{f(uiN);}catch(e){console.error("ui tick",e);}});
       if(paneShown($("chaosSec")))updateChaos();if(!$("brian").hidden)briUpd();if(paneShown($("shopSec")))updateShop();if(paneShown($("relnow"))&&$("repLive").open)updateRel();   /* (v5.2: no offsetParent layout read) */if(paneShown($("trend")))drawTrend();

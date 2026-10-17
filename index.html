@@ -1336,7 +1336,7 @@ body.dark .kvchip{background:color-mix(in srgb,var(--panel) 96%,transparent)}
 <div class="btns"><button class="primary" id="no3d-retry">Try again</button></div></div></div>
 
 <script type="module">
-const APP_VER="v6.1.0-t1";   // shown in the menu and sent with leaderboard scores (max 12 characters)
+const APP_VER="v6.1.0-t2";   // shown in the menu and sent with leaderboard scores (max 12 characters)
 // TEST BUILDS ONLY (off in releases): turbo speeds 240/480/960 sim min/s for fast playtests. Above 120, crews and maintenance start jobs
 // without waiting for the 3D walk (as with the 3D view off) and outages keep the speed. Set false for a release.
 const TURBO=false,TURBO_FAST=s=>TURBO&&s>120;
@@ -4566,8 +4566,8 @@ function no3D(){G3.ok=false;$("no3d").hidden=false;$("no3d-retry").onclick=()=>l
   // ground and roads, no sky, no ambient life, token upset effects, 30 FPS. Picked by the player only (Auto never), on reload.
   const GFX_TIERS={low:{pr:1,px:0.9e6,shadow:1024,soft:false,hz:10,scenery:0.5,wx:600,lambert:true,far:false},
     medium:{pr:1.25,px:1.6e6,shadow:1024,soft:false,hz:15,scenery:0.85,wx:1000,lambert:true,far:false},
-    high:{pr:2,px:2.4e6,shadow:2048,soft:true,hz:24,scenery:1,wx:2000,lambert:false,far:false},
-    ultra:{pr:2,px:4.2e6,shadow:4096,soft:true,hz:60,scenery:1.4,wx:2600,lambert:false,far:true}};
+    high:{pr:2,px:2.4e6,shadow:2048,soft:true,hz:24,scenery:1,wx:2000,lambert:true,far:false},
+    ultra:{pr:2,px:4.2e6,shadow:4096,soft:true,hz:60,scenery:1.4,wx:2600,lambert:true,far:true}};   // (v6.1 t2: Lambert on every tier: the paper look needs no PBR)
   const gpuName=(()=>{try{const gl=renderer.getContext(),x=gl.getExtension("WEBGL_debug_renderer_info");return x?gl.getParameter(x.UNMASKED_RENDERER_WEBGL):gl.getParameter(gl.RENDERER);}catch(e){return "";}})();
   // (v15: Auto no longer picks Ultra; desktops get High, held to a smaller pixel budget and 1024 shadows unless the GPU is
   // a known discrete one; Ultra is the player's choice)
@@ -6216,6 +6216,8 @@ function no3D(){G3.ok=false;$("no3d").hidden=false;$("no3d-retry").onclick=()=>l
   $("pad").querySelectorAll("button").forEach(b=>{const [px,py]=b.dataset.p.split(",").map(Number);
     b.addEventListener("pointerdown",e=>{e.preventDefault();b.setPointerCapture(e.pointerId);padDir=[px,py];});
     ["pointerup","pointercancel","pointerleave"].forEach(t=>b.addEventListener(t,()=>padDir=null));});
+  // v6.1 t2: is the camera moving (or about to)? The stop-motion world (52) draws every frame only then
+  G3.camBusy=()=>!!goal||FOL.on||ptrs.size>0||!!padDir||Math.abs(rShown-(goal?cam.r:rStep(cam.r)))>0.01||performance.now()-(G3.lastMove||0)<300||!!(S&&S.zen)||!!G3.cineHold;
   G3.padTick=rdt=>{if(padDir)panBy(-padDir[0]*500*rdt,-padDir[1]*500*rdt);};
   const JUMPS={site:[0,30,700,0.62],trucks:[-62,2,118],recv:[-21,-13,100],pulp:[24,-15,100],pm:[22,9,130],wd:[-17,7,72],wh:[-37,24,105],shop:[57,-21,48]};
   // section labels: Auto fades them out after a few idle seconds, On keeps them, Off hides them
@@ -6836,6 +6838,7 @@ function no3D(){G3.ok=false;$("no3d").hidden=false;$("no3d-retry").onclick=()=>l
         // v4.0.1: the stand-ins' materials are kept, not disposed: three.js deletes a shader program once no material uses it,
         // which threw away every shader compiled only for a stand-in
         G3.keepMats=stand.map(([bm])=>bm.material).filter(Boolean);stand.forEach(([bm,g])=>{if(bm.isObject3D)scene.remove(bm);bm.dispose();if(g)g.dispose();});}catch(e){console.error("warm render failed",e);}
+      try{if(G3.cutWarm)G3.cutWarm();}catch(e){}   // v6.1 t2: the cut-out pictures' shaders (42f)
       try{renderer.compileAsync(scene,camera).then(done,done);}catch(e){done();}};
     requestAnimationFrame(stepW);}));
   let clothMs=null;
@@ -7661,7 +7664,8 @@ function no3D(){G3.ok=false;$("no3d").hidden=false;$("no3d-retry").onclick=()=>l
      G3.skyTick with the sky colour it already computes for the fog. Clouds and mist are camera-facing quads in one
      mesh each (one draw), their corners rewritten per frame; none on the Low tier. ---- */
   const SKY={n:0};G3.SKY=SKY;
-  if(!G3.bare&&!new URLSearchParams(location.search).has("nosky")){const uni={top:{value:new THREE.Color(0.5,0.6,0.8)},hor:{value:new THREE.Color(0.8,0.85,0.9)},sunDir:{value:sun.position.clone().normalize()},glow:{value:new THREE.Color(1,0.85,0.6)},gk:{value:0}};
+  if(!G3.bare&&!camera.isIso&&!new URLSearchParams(location.search).has("nosky")){   // (v6.1 iso: the view never reaches the sky)
+  const uni={top:{value:new THREE.Color(0.5,0.6,0.8)},hor:{value:new THREE.Color(0.8,0.85,0.9)},sunDir:{value:sun.position.clone().normalize()},glow:{value:new THREE.Color(1,0.85,0.6)},gk:{value:0}};
     const skyMat=new THREE.ShaderMaterial({uniforms:uni,
       vertexShader:"varying vec3 vDir;void main(){vDir=normalize(position);vec4 p=projectionMatrix*modelViewMatrix*vec4(position,1.0);gl_Position=vec4(p.xy,p.w*0.99999,p.w);}",
       // the dome is a band from 11 degrees below the horizon to 35 degrees above it: the gradient reaches the clear colour at its
@@ -8432,6 +8436,8 @@ function no3D(){G3.ok=false;$("no3d").hidden=false;$("no3d-retry").onclick=()=>l
   function bmMat(m){const c=m.clone();c.userData=Object.assign({},m.userData);if(MATS.includes(m))MATS.push(c);MSYNC.push([c,m]);return c;}
   // v4.0.1: moving batches are white and give each object its own color (BatchedMesh.setColorAt), so things that
   // differ only in color share one draw. Their copy stays out of MATS (the palette would tint it) and skips color sync.
+  function flatMat(m){const c=m.clone();c.userData={};c.color.setRGB(1,1,1);MSYNC.push([c,m,true]);return c;}   // (white; colour per object)
+  const FLATB=!BQ.has("noflat");
   function dbMat(m){const c=m.clone();c.userData=Object.assign({},m.userData);if(!DBMAT)c.color.setRGB(1,1,1);if(!DBCOL)c.vertexColors=true;MSYNC.push([c,m,true]);return c;}
   // same look as the batch: compared at 8-bit precision (look-alike materials differ in the last float bits)
   const colorSame=(a,b)=>a.color.getHex()===b.color.getHex()&&(!a.emissive||(a.emissive.getHex()===b.emissive.getHex()&&a.emissiveIntensity===b.emissiveIntensity));
@@ -8445,21 +8451,30 @@ function no3D(){G3.ok=false;$("no3d").hidden=false;$("no3d-retry").onclick=()=>l
   const sigCache=new WeakMap();const smSigC=g=>{let v=sigCache.get(g);if(v===undefined){v=smSig(g);sigCache.set(g,v);}return v;};
   const smSig=g=>Object.keys(g.attributes).sort().map(k=>k+g.attributes[k].itemSize+(g.attributes[k].normalized?"n":"")).join(",")+(g.index?"|i":"|n");
   // one BatchedMesh for a group of records that share material, shadow flags and vertex layout
-  function bmBuild(grp){const geos=new Map();let nv=0,ni=0;
-    for(const r of grp.recs){const g=r.o.geometry;if(!geos.has(g)){geos.set(g,-1);nv+=g.attributes.position.count;ni+=g.index?g.index.count:0;}}
-    const bm=new THREE.BatchedMesh(grp.recs.length,nv,Math.max(ni,1),bmMat(grp.mat));
+  // (flat batches on the vertex-colour path: one coloured copy of a shape per colour, shared by every object of that colour)
+  const FLATVC=new Map();const flatGeo=r=>{const g=r.o.geometry,h=r.o.material.color.getHex(),k=g.uuid+"|"+h;let v=FLATVC.get(k);if(!v){v=vcGeo(g,r.o.material.color);FLATVC.set(k,v);}return v;};
+  function bmBuild(grp){const geos=new Map();let nv=0,ni=0;const vc=grp.flat&&!DBCOL,gOf=r=>vc?flatGeo(r):r.o.geometry;
+    for(const r of grp.recs){const g=gOf(r);if(!geos.has(g)){geos.set(g,-1);nv+=g.attributes.position.count;ni+=g.index?g.index.count:0;}}
+    const fm=grp.flat?flatMat(grp.mat):null;if(fm&&vc)fm.vertexColors=true;
+    const bm=new THREE.BatchedMesh(grp.recs.length,nv,Math.max(ni,1),fm||bmMat(grp.mat));
     for(const g of geos.keys())geos.set(g,bm.addGeometry(g));
-    for(const r of grp.recs){r.bm=bm;r.shared=true;r.iid=bm.addInstance(geos.get(r.o.geometry));bm.setMatrixAt(r.iid,r.o.matrixWorld);r.o.layers.set(SMLAYER);}
+    for(const r of grp.recs){r.bm=bm;r.shared=true;r.iid=bm.addInstance(geos.get(gOf(r)));if(vc)r.flatVC=true;bm.setMatrixAt(r.iid,r.o.matrixWorld);r.o.layers.set(SMLAYER);
+      if(grp.flat){r.flat=true;r.hex=r.o.material.color.getHex();if(!vc)bm.setColorAt(r.iid,r.o.material.color);}}
     // v5.5 perf: per-object frustum culling is on again (phones look at a third of the mill at the default zoom, so most
     // batched triangles were off-screen vertex work); three.js rebuilds each batch's draw list per pass for it, which the
     // benchmark showed to be cheaper than drawing everything. No sorting (the batches are opaque).
     bm.perObjectFrustumCulled=!BQ.has("nocull");bm.sortObjects=false;
     bm.castShadow=grp.cast;bm.receiveShadow=grp.recv;bm.matrixAutoUpdate=false;bm.userData.smBatch=true;bm.name="scenery batch";
     bm.computeBoundingBox();bm.computeBoundingSphere();scene.add(bm);SM.bms.push(bm);}
-  function smMerge(){const groups=new Map();
+  /* v6.1 t2 flat batches: with no shadow maps and one lighting model, untextured opaque materials that differ only in colour
+     share one batch: white, each object carrying its own colour (BatchedMesh.setColorAt, the moving batches' method). The
+     watch (smWatch) copies a material's colour change to its objects instead of handing them back. ~50 draws became a few. */
+  const flatOK=m=>FLATB&&!DBOFF&&!DBMAT&&!m.transparent&&m.opacity===1&&!m.vertexColors&&SMMAPS.every(k=>!m[k])&&(!m.emissive||m.emissive.getHex()===0);
+  function smMerge(){const groups=new Map(),shd=renderer.shadowMap.enabled;
     for(const r of SM.list){const o=r.o,g=o.geometry;if(r.proxyOnly)continue;
-      if(o.isMesh&&o.matrixWorld.determinant()>0&&!o.userData.aoDecal){const key=[smLook(o.material),o.castShadow?1:0,o.receiveShadow?1:0,smSig(g)].join("|");
-        let G=groups.get(key);if(!G){G={recs:[],mat:o.material,cast:o.castShadow,recv:o.receiveShadow};groups.set(key,G);}G.recs.push(r);continue;}
+      if(o.isMesh&&o.matrixWorld.determinant()>0&&!o.userData.aoDecal){const flat=flatOK(o.material);
+        const key=[flat?"F/"+smLook(Object.assign(Object.create(o.material),{color:null,userData:{}})):smLook(o.material),shd&&o.castShadow?1:0,shd&&o.receiveShadow?1:0,smSig(g)].join("|");
+        let G=groups.get(key);if(!G){G={recs:[],mat:o.material,cast:o.castShadow,recv:o.receiveShadow,flat};groups.set(key,G);}G.recs.push(r);continue;}
       // outlines and mirrored meshes: bake per material and 90 m map cell (off-screen cells are still culled)
       if(!g.boundingSphere)g.computeBoundingSphere();_smV.copy(g.boundingSphere.center).applyMatrix4(o.matrixWorld);
       // (a ground shading decal goes in one map-wide batch per material: two draws for all of them, never culled)
@@ -8493,7 +8508,8 @@ function no3D(){G3.ok=false;$("no3d").hidden=false;$("no3d-retry").onclick=()=>l
   function smWatch(){const dirty=SM.dirty||(SM.dirty=new Set());
     const freeze=performance.now()-SM.t0>10000;
     // (v4.1 pass 3: compacted in place twice a second instead of filtered into a new 2,700-entry array)
-    const keep=r=>{if(smSame(r)&&!(r.shared&&!colorSame(r.o.material,r.bm.material))){if(freeze&&(r.bm||r.key))smFreeze(r);return true;}
+    const keep=r=>{let recol=false;if(r.flat&&r.bm&&smSame(r)){const h=r.o.material.color.getHex();if(h!==r.hex){if(r.flatVC)recol=true;else{r.hex=h;r.bm.setColorAt(r.iid,r.o.material.color);}}}   // (v6.1 t2: a flat batch follows colour changes; on the vertex-colour path the object is handed back)
+      if(!recol&&smSame(r)&&!(r.shared&&!r.flat&&!colorSame(r.o.material,r.bm.material))&&!(r.flat&&!emSame(r.o.material,r.bm.material))){if(freeze&&(r.bm||r.key))smFreeze(r);return true;}
       smThaw(r);
       if(r.shadow){r.o.castShadow=true;r.shadow=false;if(!shDrop(r))SH.dirty=true;}   // v4.0.1: cut it out of the proxy instead of rebuilding it
       if(r.bm){r.bm.setVisibleAt(r.iid,false);r.o.layers.set(0);SM.dyn.add(r.o);SM.handedBack++;return false;}
@@ -8513,7 +8529,7 @@ function no3D(){G3.ok=false;$("no3d").hidden=false;$("no3d-retry").onclick=()=>l
   G3.SH=SH;
   {const sm=renderer.shadowMap,orig=sm.render.bind(sm);
     sm.render=(...a)=>{for(const m of SH.meshes)m.visible=true;try{orig(...a);}finally{for(const m of SH.meshes)m.visible=false;}};}
-  function shBuild(){SH.builds=(SH.builds||0)+1;for(const m of SH.meshes){scene.remove(m);m.geometry.dispose();}SH.meshes=[];
+  function shBuild(){if(!renderer.shadowMap.enabled)return;   /* (v6.1: no shadow maps, no proxies) */SH.builds=(SH.builds||0)+1;for(const m of SH.meshes){scene.remove(m);m.geometry.dispose();}SH.meshes=[];
     const parts=[[],[]];
     for(const r of SM.list){if(r.shadow===undefined)r.shadow=!!r.o.castShadow&&r.o.isMesh;if(!r.shadow)continue;
       const m0=Array.isArray(r.o.material)?r.o.material[0]:r.o.material;r.o.castShadow=false;parts[m0.side===THREE.FrontSide?0:1].push(r);}
@@ -8540,7 +8556,7 @@ function no3D(){G3.ok=false;$("no3d").hidden=false;$("no3d-retry").onclick=()=>l
   // v4.2.5: batching failures go to Diagnostics (the first 5, then a count), not only the console or nowhere
   const smErr=(what,e)=>{SM.errs=(SM.errs||0)+1;if(SM.errs<=5)diag(`batching: ${what} failed: ${String(e&&e.message||e).slice(0,120)}`);else if(SM.errs===6)diag("batching: more failures, not logged");};
   function smTick(now){if(SM.off)return;
-    if(!SM.t0){SM.t0=now;try{scene.updateMatrixWorld(true);try{if(G3.dropBuild)G3.dropBuild();}catch(e){console.error("drop shadows failed",e);}smSnapshot();smMerge();}
+    if(!SM.t0){SM.t0=now;try{scene.updateMatrixWorld(true);try{if(G3.splitMulti)G3.splitMulti();scene.updateMatrixWorld(true);}catch(e){console.error("split failed",e);}try{if(G3.dropBuild)G3.dropBuild();}catch(e){console.error("drop shadows failed",e);}smSnapshot();smMerge();}
       catch(e){console.error("scenery batching failed",e);smErr("scenery batching (batching off)",e);SM.off=true;SM.done=true;SM.list.forEach(r=>{r.o.layers.set(0);if(r.bm)r.bm.visible=false;});}return;}
     if(SM.queue&&SM.queue.length){try{smStep();}catch(e){console.error("scenery baking failed",e);smErr("scenery baking",e);SM.queue=[];SM.done=true;}return;}
     if(now>SM.checkT){SM.checkT=now+(now-SM.t0<10000?0:500);try{smWatch();}catch(e){smErr("watch for moved objects",e);}}}
@@ -8591,7 +8607,7 @@ function no3D(){G3.ok=false;$("no3d").hidden=false;$("no3d-retry").onclick=()=>l
     return g.drawRange.start===0&&g.drawRange.count===Infinity&&o.matrixWorld.determinant()>0;}
   function dbRelease(){if(DB.q)DB.q.clear();for(const r of DB.list)if(r.o.layers.mask===1<<DBLAYER)r.o.layers.set(0);for(const b of DB.bms){scene.remove(b);b.dispose();}DB.list=[];DB.bms=[];DB.byKey=new Map();}
   DB.byKey=new Map();DB.full=0;
-  const dbKey=o=>dbLookId(o.material)+"|"+(o.castShadow?1:0)+(o.receiveShadow?1:0)+"|"+smSigC(o.geometry)+(DBMAT?"|"+o.material.color.getHex():"");
+  const dbKey=o=>dbLookId(o.material)+"|"+(renderer.shadowMap.enabled?(o.castShadow?1:0)+""+(o.receiveShadow?1:0):"")+"|"+smSigC(o.geometry)+(DBMAT?"|"+o.material.color.getHex():"");
   // a geometry that shares g's buffers and adds a colour attribute filled with c (for the vertex-colour path)
   function vcGeo(g,c,h){const n=g.attributes.position.count;if(!h){h=new THREE.BufferGeometry();for(const k in g.attributes)h.setAttribute(k,g.attributes[k]);if(g.index)h.setIndex(g.index);
       h.setAttribute("color",new THREE.BufferAttribute(new Float32Array(n*3),3));}
@@ -8817,7 +8833,7 @@ function no3D(){G3.ok=false;$("no3d").hidden=false;$("no3d-retry").onclick=()=>l
       const m=Array.isArray(o.material)?o.material[0]:o.material;if(!m||!LIT.has(m.type)||m.transparent&&m.opacity<0.9||o.userData.aoDecal||o.castShadow===false)return;
       const g=o.geometry;if(!g||!g.attributes.position)return;if(!g.boundingBox)g.computeBoundingBox();if(!shown(o)||actor(o))return;
       bb.copy(g.boundingBox).applyMatrix4(o.matrixWorld);
-      if(bb.max.y<0.35||bb.max.y-bb.min.y<0.2||bb.max.x-bb.min.x>140||bb.max.z-bb.min.z>140)return;   // flat, buried or a whole scenery sector
+      if(bb.max.y<0.35||bb.max.y-bb.min.y<0.2||Math.max(bb.max.x-bb.min.x,bb.max.z-bb.min.z,bb.max.y-bb.min.y)<0.7||bb.max.x-bb.min.x>140||bb.max.z-bb.min.z>140)return;   // flat, buried or a whole scenery sector
       const b=g.boundingBox,P=[];
       for(let i=0;i<8;i++){v.set(i&1?b.max.x:b.min.x,i&2?b.max.y:b.min.y,i&4?b.max.z:b.min.z).applyMatrix4(o.matrixWorld);const h=Math.max(0,v.y);P.push([v.x+h*DROP.x,v.z+h*DROP.z]);
         if(v.y<1.2)P.push([v.x,v.z]);}   // (a box standing on the ground keeps its own footprint inside the shadow)
@@ -8829,6 +8845,27 @@ function no3D(){G3.ok=false;$("no3d").hidden=false;$("no3d-retry").onclick=()=>l
     const mesh=new THREE.Mesh(geo,dropMat);mesh.name="drop shadows";mesh.renderOrder=1;mesh.userData.smBatch=true;scene.add(mesh);G3.dropMesh=mesh;
     if(G3.SM&&G3.SM.dyn)G3.SM.dyn.add(mesh);
     diag(`drop shadows: ${n} objects, ${pos.length/9|0} triangles, ${(performance.now()-t0).toFixed(0)} ms`);};
+  /* v6.1 t2: multi-material meshes (a deck plate with a grating top, a gauge plate with a printed face...) draw once per
+     material group and can't be batched. On the first frame, before the static merge, each one keeps its first material's
+     faces and gets one child per other material holding that material's faces (same transform, so moving or hiding the
+     original still moves or hides all of it). The parts then batch with everything else. Cut-out actors are left alone. */
+  G3.splitMulti=()=>{let n=0,parts=0;const cache=new Map(),L=[];
+    scene.traverse(o=>{if(!o.isMesh||o.isInstancedMesh||o.isBatchedMesh||o.isSkinnedMesh||!Array.isArray(o.material))return;
+      const g=o.geometry;if(!g||!g.groups||!g.groups.length||g.morphAttributes&&Object.keys(g.morphAttributes).length)return;
+      for(let x=o;x&&x!==scene;x=x.parent)if(x.userData&&x.userData.cut)return;L.push(o);});
+    for(const o of L){const g=o.geometry,ms=o.material,byM=new Map();
+      for(const gr of g.groups){const m=ms[gr.materialIndex];if(!m)continue;if(!byM.has(m))byM.set(m,[]);byM.get(m).push(gr);}
+      const subs=[];for(const [m,grs] of byM){const ck=g.uuid+"|"+grs.map(x=>x.start+":"+x.count).join(",");let sg=cache.get(ck);
+        if(!sg){sg=new THREE.BufferGeometry();for(const k in g.attributes)sg.setAttribute(k,g.attributes[k]);
+          const src=g.index?g.index.array:null,cnt=grs.reduce((a,x)=>a+x.count,0),idx=new Uint32Array(cnt);let w=0;
+          for(const x of grs)for(let i=0;i<x.count;i++)idx[w++]=src?src[x.start+i]:x.start+i;
+          sg.setIndex(new THREE.BufferAttribute(idx,1));sg.computeBoundingSphere();sg.computeBoundingBox();cache.set(ck,sg);}
+        subs.push([m,sg]);}
+      if(!subs.length)continue;
+      o.geometry=subs[0][1];o.material=subs[0][0];
+      for(let i=1;i<subs.length;i++){const c=new THREE.Mesh(subs[i][1],subs[i][0]);c.castShadow=o.castShadow;c.receiveShadow=o.receiveShadow;c.renderOrder=o.renderOrder;o.add(c);parts++;}
+      n++;}
+    diag(`multi-material meshes split: ${n} (${parts} extra parts)`);};
   /* ---- v3.0.0: planned outage jobs ----
      Every outage: maintenance technicians change the press felts (the felt-change animation, driven by the outage clock).
      Outage 1: 1st press roll change with a wet-end overhead crane (new rolls staged on cradles the day before).
@@ -10228,24 +10265,25 @@ function no3D(){G3.ok=false;$("no3d").hidden=false;$("no3d-retry").onclick=()=>l
      from the iso angle, with a paper edge and an ink line round it, packed into an atlas. A picture is taken the first time
      a look is needed: the model as it stands (pose, load, doors), one of 8 headings. The game keeps moving and posing the
      3D models as before, but they sit on a hidden layer (CUT_LAYER) and never reach the screen.
-     Pictures: the model is moved into a small scene with daylight-fixed lights matching the main scene's light set (so no
-     new shaders), drawn twice into a corner of the canvas (on black and on white, to recover its alpha), read back and
-     finished in a 2D canvas, then copied into the atlas. At most CAP_N pictures a frame, before the main render.
+     Pictures (v6.1 t2, all on the GPU, nothing read back): the model is moved into a small scene with daylight-fixed lights
+     matching the main scene's light set, drawn into a small float render target (RT_A, 4x MSAA where WebGL2 allows), then a
+     finishing pass draws it into its atlas cell (the atlas is a render target too): the same ACES tone mapping and sRGB
+     encoding the screen uses, plus the paper edge and a slightly uneven ink line grown from its alpha. The t1 version read
+     each picture back to the CPU (gl.readPixels), which stalled the GPU for every picture. At most CAP_N pictures a frame.
      Cards update at 12 per second (stop-motion), each with an offset dark-paper drop shadow (40c's stencil, so it merges
      with the building shadows). One draw per atlas for the cards and one for their shadows. */
-  {const CUT_LAYER=26,FPS=12,CAP_N=2,AW=2048,PAD=4,INK="#2b1d12",PAPERC="#fbf6ea";
+  {const CUT_LAYER=26,FPS=15,CAP_N=2,CAP_BURST=10,AW=2048,AH=1024,PAD=4,INK="#2b1d12",PAPERC="#fbf6ea";
    const KIND={person:{R:1.3,cy:1.0,ppm:36,at:0},lift:{R:2.0,cy:1.1,ppm:34,at:1},truck:{R:4.2,cy:1.4,ppm:30,at:1}};
-   const CUT=G3.CUT={actors:[],cells:new Map(),queue:[],qset:new Set(),caps:0,full:0,t:0,ok:true};
+   const CUT=G3.CUT={actors:[],cells:new Map(),byKD:new Map(),byK:new Map(),queue:[],qset:new Set(),caps:0,full:0,resets:0,errs:0,t:0,ok:true,burst:0};
    // --- atlases: a shelf packer over a 2048 square each ---
-   function atlas(){const data=new Uint8Array(AW*AW*4);const t=new THREE.DataTexture(data,AW,AW,THREE.RGBAFormat,THREE.UnsignedByteType);
-     t.flipY=false;t.generateMipmaps=true;t.minFilter=THREE.LinearMipmapLinearFilter;t.magFilter=THREE.LinearFilter;t.anisotropy=4;t.needsUpdate=true;
-     return {tex:t,rows:[],nextY:0,full:false};}
+   function atlas(){const rt=new THREE.WebGLRenderTarget(AW,AH,{depthBuffer:false,generateMipmaps:true,minFilter:THREE.LinearMipmapLinearFilter,magFilter:THREE.LinearFilter});
+     rt.texture.anisotropy=4;rt.scissorTest=true;return {rt,tex:rt.texture,rows:[],nextY:0,full:false};}
    function alloc(A,s){for(const r of A.rows)if(r.h===s&&r.x+s<=AW){const x=r.x;r.x+=s+PAD;return [x,r.y];}
-     if(A.nextY+s>AW){A.full=true;return null;}const r={y:A.nextY,h:s,x:s+PAD};A.nextY+=s+PAD;A.rows.push(r);return [0,r.y];}
+     if(A.nextY+s>AH){A.full=true;return null;}const r={y:A.nextY,h:s,x:s+PAD};A.nextY+=s+PAD;A.rows.push(r);return [0,r.y];}
    const ATL=[atlas(),atlas()];
    // --- the card material: atlas colour, cut at the paper edge; shadows are the same cards in dark paper ---
    const aa=renderer.getContext().getContextAttributes().antialias;
-   const VS=`attribute vec4 aRect;varying vec2 vUv;void main(){vUv=vec2(aRect.x+uv.x*aRect.z,aRect.y+(1.0-uv.y)*aRect.w);
+   const VS=`attribute vec4 aRect;varying vec2 vUv;void main(){vUv=vec2(aRect.x+uv.x*aRect.z,aRect.y+uv.y*aRect.w);
      gl_Position=projectionMatrix*modelViewMatrix*instanceMatrix*vec4(position,1.0);}`;
    const FS=`uniform sampler2D map;uniform float uLit;uniform float uCut;varying vec2 vUv;void main(){vec4 c=texture2D(map,vUv);if(c.a<uCut)discard;
      gl_FragColor=vec4(c.rgb*uLit,c.a);}`;
@@ -10277,71 +10315,90 @@ function no3D(){G3.ok=false;$("no3d").hidden=false;$("no3d-retry").onclick=()=>l
    function hide(a,on){a.o.traverse(c=>{if(c.isMesh||c.isLine||c.isPoints){const want=on?CUT_LAYER:0;if(on?c.layers.mask!==1<<CUT_LAYER:c.layers.mask===1<<CUT_LAYER)c.layers.set(want);}});a.hid=on;}
    // the look of one actor right now: every node's visibility and material, and its moving parts in coarse steps
    const q=(v,s)=>Math.round(v/s);
-   function lookKey(a){const o=a.o,u=o.userData;let k=a.kind+":";o.traverse(c=>{if(c===o)return;k+=c.visible?(c.isMesh&&c.material?c.material.id.toString(36):"v"):"-";});
-     if(a.kind==="person"&&u.legs){k+="|"+q(u.legs[0].rotation.z,0.45)+","+q(u.arms[0].rotation.z,0.45)+","+q(u.arms[1].rotation.z,0.45)+","+q(u.arms[1].rotation.x,0.9)+","+q(u.torso.rotation.z,0.3)+","+q(u.armM?u.armM[1].scale.y:1,0.3)+(u.tool&&u.tool.visible?","+q(u.tool.rotation.x,0.6):"");}
+   function lookKey(a){const o=a.o,u=o.userData;let k=a.kind+":";o.traverse(c=>{if(c===o)return;const mt=c.material;k+=c.visible?(c.isMesh&&mt?(Array.isArray(mt)?mt.map(x=>x.id.toString(36)).join("."):mt.id.toString(36)):"v"):"-";});
+     if(a.kind==="person"&&u.legs){k+="|"+q(u.legs[0].rotation.z,0.6)+","+q(u.arms[0].rotation.z,0.6)+","+q(u.arms[1].rotation.z,0.6)+","+q(u.arms[1].rotation.x,0.9)+","+q(u.torso.rotation.z,0.3)+","+q(u.armM?u.armM[1].scale.y:1,0.3)+(u.tool&&u.tool.visible?","+q(u.tool.rotation.x,0.6):"");}
      else if(a.kind==="lift"&&u.load)k+="|"+q(u.load.position.y,0.3);
      else if(a.kind==="truck")k+="|"+(u.doorL?q(u.doorL.rotation.y,0.6)+","+q(u.doorR.rotation.y,0.6):"");
      return k;}
    const _m=new THREE.Matrix4(),_p=new THREE.Vector3();
    function heading(o){const e=o.matrixWorld.elements;return (((Math.round(Math.atan2(-e[2],e[0])/(Math.PI/4))%8)+8)%8);}
    // --- taking one picture ---
-   const gl=renderer.getContext();let bufK=null,bufW=null;
-   const cvO=document.createElement("canvas"),cvS=document.createElement("canvas"),cvC=document.createElement("canvas");
-   function finish(px){   // black/white pair -> straight-alpha picture with a paper edge and an ink line, in cvC
-     const id=new ImageData(px,px),d=id.data;
-     for(let y=0;y<px;y++){const ry=(px-1-y)*px*8,wy=ry+px*4,o0=y*px*4;   // (read back bottom-up: black in the left half, white in the right)
-       for(let x=0;x<px;x++){const ib=ry+x*4,iw=wy+x*4,o=o0+x*4;const kb=bufK[ib],kg=bufK[ib+1],kbb=bufK[ib+2];
-         const al=1-((bufK[iw]-kb)+(bufK[iw+1]-kg)+(bufK[iw+2]-kbb))/765;
-         if(al<=0.004){d[o+3]=0;continue;}d[o]=Math.min(255,kb/al);d[o+1]=Math.min(255,kg/al);d[o+2]=Math.min(255,kbb/al);d[o+3]=Math.round(Math.min(1,al)*255);}}
-     cvO.width=cvO.height=cvS.width=cvS.height=cvC.width=cvC.height=px;cvO.getContext("2d").putImageData(id,0,0);
-     const xs=cvS.getContext("2d"),xc=cvC.getContext("2d");xc.clearRect(0,0,px,px);
-     const sil=col=>{xs.globalCompositeOperation="copy";xs.drawImage(cvO,0,0);xs.globalCompositeOperation="source-in";xs.fillStyle=col;xs.fillRect(0,0,px,px);xs.globalCompositeOperation="source-over";};
-     const ring=(r,n)=>{for(let i=0;i<n;i++){const a=i/n*Math.PI*2,rr=r*(0.86+0.14*Math.sin(i*2.7+px));xc.drawImage(cvS,Math.cos(a)*rr,Math.sin(a)*rr);}};   // (a slightly uneven line: cut by hand)
-     sil(INK);ring(3.1,16);sil(PAPERC);ring(1.9,12);xc.drawImage(cvO,0,0);}
-   function capture(a,key,dir,A){const K=a.K,s=Math.round(2*K.R*K.ppm),cw=renderer.domElement.width,chh=renderer.domElement.height,px=Math.min(s,Math.floor(cw/2)-2,chh-2);if(px<24)return null;
+   const RTS=256,gl2=renderer.capabilities.isWebGL2!==false;
+   const hf=!!(renderer.extensions.has("EXT_color_buffer_half_float")||renderer.extensions.has("EXT_color_buffer_float"));
+   const RT_A=new THREE.WebGLRenderTarget(RTS,RTS,{type:hf?THREE.HalfFloatType:THREE.UnsignedByteType,samples:gl2?4:0,generateMipmaps:false,minFilter:THREE.NearestFilter,magFilter:THREE.NearestFilter});
+   RT_A.scissorTest=true;
+   const finU={src:{value:RT_A.texture},uScale:{value:1},uPx:{value:64},uExp:{value:renderer.toneMappingExposure},uInk:{value:new THREE.Color(INK)},uPaper:{value:new THREE.Color(PAPERC)}};
+   const fin=new THREE.Mesh(new THREE.PlaneGeometry(2,2),new THREE.ShaderMaterial({uniforms:finU,depthTest:false,depthWrite:false,blending:THREE.NoBlending,toneMapped:false,fog:false,
+     vertexShader:"varying vec2 vUv;void main(){vUv=uv;gl_Position=vec4(position.xy,0.0,1.0);}",
+     fragmentShader:`uniform sampler2D src;uniform float uScale,uPx,uExp;uniform vec3 uInk,uPaper;varying vec2 vUv;
+       vec3 RRT(vec3 v){vec3 a=v*(v+0.0245786)-0.000090537;vec3 b=v*(0.983729*v+0.4329510)+0.238081;return a/b;}
+       vec3 aces(vec3 c){const mat3 I=mat3(vec3(0.59719,0.07600,0.02840),vec3(0.35458,0.90834,0.13383),vec3(0.04823,0.01566,0.83777));
+         const mat3 O=mat3(vec3(1.60475,-0.10208,-0.00327),vec3(-0.53108,1.10813,-0.07276),vec3(-0.07367,-0.00605,1.07602));c*=uExp/0.6;return clamp(O*RRT(I*c),0.0,1.0);}
+       vec3 srgb(vec3 c){return mix(pow(c,vec3(0.41666))*1.055-vec3(0.055),c*12.92,vec3(lessThanEqual(c,vec3(0.0031308))));}
+       float ringA(vec2 uv,float r,int n){float m=0.0;for(int i=0;i<16;i++){if(i>=n)break;float a=float(i)/float(n)*6.2831853;float rr=r*(0.86+0.14*sin(float(i)*2.7+uPx));
+         m=max(m,texture2D(src,(uv+vec2(cos(a),sin(a))*rr/uPx)*uScale).a);}return m;}
+       void main(){vec4 o=texture2D(src,vUv*uScale);float ink=ringA(vUv,3.1,16),pap=ringA(vUv,1.9,12);
+         vec3 c=o.a>0.004?srgb(aces(o.rgb/o.a)):vec3(0.0);
+         vec3 col=mix(mix(uInk,uPaper,pap),c,o.a);float A=max(max(ink,pap),o.a);gl_FragColor=vec4(A>0.0?col:vec3(0.0),A);}`}));
+   fin.frustumCulled=false;const finS=new THREE.Scene();finS.add(fin);const finC=new THREE.OrthographicCamera(-1,1,1,-1,0,1);
+   function capture(a,key,dir,A){const K=a.K,px=Math.min(RTS-8,Math.round(2*K.R*K.ppm));
      const at=alloc(A,px);if(!at)return null;
      const o=a.o,par=o.parent,p0=o.position.clone(),ry=o.rotation.y,vis=o.visible;
-     // pose it at the origin of the picture scene, facing heading dir
-     cs.add(o);o.position.set(0,0,0);o.rotation.y=dir*Math.PI/4;o.visible=true;o.updateMatrixWorld(true);
-     cs.fog=scene.fog;   // (the same fog object: fog is part of the shader, and the picture is far nearer than it starts)
-     ch.color.copy(hemi.color);ch.groundColor.copy(hemi.groundColor);cd.color.copy(sun.color);cd.position.copy(sun.position).sub(sun.target.position);cd.target.position.set(0,0,0);cd.updateMatrixWorld();cd.target.updateMatrixWorld();
-     cc.left=-K.R;cc.right=K.R;cc.top=K.R;cc.bottom=-K.R;cc.updateProjectionMatrix();cc.position.set(0,K.cy,0).addScaledVector(toCam,150);cc.quaternion.copy(camera.quaternion);cc.updateMatrixWorld();
-     const pr=renderer.getPixelRatio(),cl=renderer.getClearColor(new THREE.Color()),ca=renderer.getClearAlpha(),ac=renderer.autoClear,bg=cs.background;
-     renderer.autoClear=false;renderer.setRenderTarget(null);renderer.setScissorTest(true);
-     [[0,0x000000],[px,0xffffff]].forEach(([x0,col])=>{renderer.setViewport(x0/pr,0,px/pr,px/pr);renderer.setScissor(x0/pr,0,px/pr,px/pr);renderer.setClearColor(col,1);renderer.clear(true,true,false);renderer.render(cs,cc);});
-     if(!bufK||bufK.length<px*px*8)bufK=new Uint8Array(px*px*8);
-     gl.readPixels(0,0,px*2,px,gl.RGBA,gl.UNSIGNED_BYTE,bufK);
-     renderer.setScissorTest(false);const sz=renderer.getSize(new THREE.Vector2());renderer.setViewport(0,0,sz.x,sz.y);renderer.setClearColor(cl,ca);renderer.autoClear=ac;
-     // put it back exactly as it was
-     if(par)par.add(o);else cs.remove(o);o.position.copy(p0);o.rotation.y=ry;o.visible=vis;o.updateMatrixWorld(true);
-     finish(px);
-     const src=new THREE.DataTexture(new Uint8Array(cvC.getContext("2d").getImageData(0,0,px,px).data.buffer),px,px,THREE.RGBAFormat,THREE.UnsignedByteType);
-     renderer.copyTextureToTexture(src,A.tex,null,new THREE.Vector2(at[0],at[1]));src.dispose();
-     CUT.caps++;return {r:[at[0]/AW,at[1]/AW,px/AW,px/AW],a:K.at,w:2*K.R};}
+     const cl=renderer.getClearColor(new THREE.Color()),ca=renderer.getClearAlpha(),ac=renderer.autoClear,rt0=renderer.getRenderTarget();
+     try{cs.add(o);o.position.set(0,0,0);o.rotation.y=dir*Math.PI/4;o.visible=true;o.updateMatrixWorld(true);
+       cs.fog=scene.fog;   // (the same fog object: fog is part of the shader, and the picture is far nearer than it starts)
+       ch.color.copy(hemi.color);ch.groundColor.copy(hemi.groundColor);cd.color.copy(sun.color);cd.position.copy(sun.position).sub(sun.target.position);cd.target.position.set(0,0,0);cd.updateMatrixWorld();cd.target.updateMatrixWorld();
+       cc.left=-K.R;cc.right=K.R;cc.top=K.R;cc.bottom=-K.R;cc.updateProjectionMatrix();cc.position.set(0,K.cy,0).addScaledVector(toCam,150);cc.quaternion.copy(camera.quaternion);cc.updateMatrixWorld();
+       renderer.autoClear=false;
+       RT_A.viewport.set(0,0,px,px);RT_A.scissor.set(0,0,px,px);renderer.setRenderTarget(RT_A);renderer.setClearColor(0x000000,0);renderer.clear(true,true,false);renderer.render(cs,cc);
+       finU.uScale.value=px/RTS;finU.uPx.value=px;finU.uExp.value=renderer.toneMappingExposure;
+       A.rt.viewport.set(at[0],at[1],px,px);A.rt.scissor.set(at[0],at[1],px,px);renderer.setRenderTarget(A.rt);renderer.render(finS,finC);
+     }finally{   // put it back exactly as it was, and the renderer too
+       renderer.setRenderTarget(rt0);renderer.setClearColor(cl,ca);renderer.autoClear=ac;
+       if(par)par.add(o);else cs.remove(o);o.position.copy(p0);o.rotation.y=ry;o.visible=vis;o.updateMatrixWorld(true);}
+     CUT.caps++;return {r:[at[0]/AW,at[1]/AH,px/AW,px/AH],a:K.at,w:2*K.R};}
+   // start-up: compile the picture shaders (the cut-outs' materials as drawn into RT_A) behind the "Getting the mill ready" screen
+   G3.cutWarm=()=>{try{rescan();basis();const seen=new Set();for(const a of CUT.actors){const kk=a.kind;if(seen.size>40)break;
+       let m=false;a.o.traverse(c=>{if(c.material&&!seen.has(c.material)){seen.add(c.material);m=true;}});if(m){const key="warm:"+CUT.caps;const c=capture(a,key,0,ATL[a.K.at]);if(c){CUT.cells.set(key,c);CUT.byKD.set(kk+"#0",c);CUT.byK.set(kk,c);}}}}
+     catch(e){CUT.errs++;console.error("cut-out warm-up failed",e);}};
    // --- every frame (43-3d-frame.js, after the moving batches, before the render) ---
    let scanT=0;
-   G3.cutTick=now=>{if(!CUT.ok)return;try{
-     if(now>scanT){scanT=now+2000;rescan();}
-     // pictures still owed, oldest first (CAP_N a frame)
-     let n=0;while(CUT.queue.length&&n<CAP_N){const [a,key,dir]=CUT.queue.shift();CUT.qset.delete(key);if(CUT.cells.has(key)||!shown(a.o))continue;
-       const A=ATL[a.K.at];if(A.full){CUT.full++;continue;}if(!n)basis();const c=capture(a,key,dir,A);n++;if(c)CUT.cells.set(key,c);}
+   // an atlas that fills up starts over: its pictures are dropped and retaken as they are needed again
+   function resetAtlas(i){const A=ATL[i];A.rows=[];A.nextY=0;A.full=false;CUT.resets++;
+     for(const [k,c] of CUT.cells)if(c.a===i)CUT.cells.delete(k);for(const M2 of [CUT.byKD,CUT.byK])for(const [k,c] of M2)if(c.a===i)M2.delete(k);
+     for(const a of CUT.actors)if(a.cell&&a.cell.a===i)a.cell=null;diag(`cut-outs: atlas ${i} full, starting it over`);}
+   const want=(a,key,dir,first)=>{if(CUT.qset.has(key))return;CUT.qset.add(key);if(first)CUT.queue.unshift([a,key,dir]);else CUT.queue.push([a,key,dir]);};
+   /* v6.1 t2: the paper always wins. A cut-out is hidden from the first frame it is seen, never shown in 3D again: until its
+      own picture exists it borrows the nearest one (its last picture, else the last of its kind at that heading, else any of
+      its kind), and one with no picture at all goes to the front of the queue. Errors are counted per picture or per
+      actor and never switch the cut-outs off. */
+   G3.cutTick=now=>{if(!CUT.ok)return;
+     if(now>scanT){scanT=now+2000;try{rescan();}catch(e){CUT.errs++;}}
+     if(!CUT.burst)CUT.burst=now+6000;   // (the first seconds take pictures faster: everyone needs one)
+     let n=0;const capN=now<CUT.burst?CAP_BURST:CAP_N;
+     while(CUT.queue.length&&n<capN){const [a,key,dir]=CUT.queue.shift();CUT.qset.delete(key);if(CUT.cells.has(key)||!shown(a.o))continue;
+       let A=ATL[a.K.at];if(A.full){CUT.full++;resetAtlas(a.K.at);A=ATL[a.K.at];}if(!n)basis();n++;
+       let c=null;try{c=capture(a,key,dir,A);}catch(e){CUT.errs++;if(CUT.errs<6)console.error("cut-out picture failed",e);}
+       if(c){CUT.cells.set(key,c);CUT.byKD.set(a.kind+"#"+dir,c);CUT.byK.set(a.kind,c);}}
      if(now<CUT.t)return;CUT.t=now+1000/FPS;basis();
      {const k=G3.nightK!=null?G3.nightK:0;lit.value=1-0.62*k;}
      const cnt=[0,0];
-     for(const a of CUT.actors){const o=a.o;if(!shown(o)){continue;}
-       const dir=heading(o),look=lookKey(a),key=look+"#"+dir;let c=CUT.cells.get(key);
-       if(!c){if(!CUT.qset.has(key)){CUT.qset.add(key);CUT.queue.push([a,key,dir]);}c=a.cell;}
-       if(!c){if(a.hid)hide(a,false);continue;}   // never pictured yet: the 3D model stays for a frame or two
-       a.cell=c;if(!a.hid||now>a.hT){a.hT=now+1000;hide(a,true);}   // (re-checked every second: pools add parts later)
+     for(const a of CUT.actors){const o=a.o;try{if(!shown(o))continue;
+       if(!a.hid||now>a.hT){a.hT=now+300;hide(a,true);}   // (hidden at once; re-checked every second, pools add parts later)
+       const dir=heading(o),key=lookKey(a)+"#"+dir;let c=CUT.cells.get(key);
+       if(!c){want(a,key,dir,!a.cell);c=a.cell||CUT.byKD.get(a.kind+"#"+dir)||CUT.byK.get(a.kind);}
+       if(!c)continue;a.cell=c;
        const S2=sets[c.a],i=cnt[c.a];if(i>=S2.N)continue;cnt[c.a]++;
        o.getWorldPosition(_p);_p.y+=a.K.cy;_p.addScaledVector(toCam,a.K.R);
        _m.makeRotationFromQuaternion(camera.quaternion).scale(_v3.set(c.w,c.w,1)).setPosition(_p);S2.card.setMatrixAt(i,_m);
        const off=c.w*0.05;_p.addScaledVector(cRight,off).addScaledVector(cUp,-off*0.8).addScaledVector(toCam,-0.02);_m.setPosition(_p);S2.shad.setMatrixAt(i,_m);
-       S2.rect.setXYZW(i,c.r[0],c.r[1],c.r[2],c.r[3]);}
-     sets.forEach((S2,i)=>{S2.card.count=S2.shad.count=cnt[i];S2.card.instanceMatrix.needsUpdate=S2.shad.instanceMatrix.needsUpdate=true;S2.rect.needsUpdate=true;S2.shad.visible=!G3.shadowsOff;});
-   }catch(e){CUT.ok=false;console.error("cut-outs failed",e);diag("cut-outs: failed, 3D models back: "+String(e&&e.message||e).slice(0,120));CUT.actors.forEach(a=>hide(a,false));sets.forEach(S2=>{S2.card.visible=S2.shad.visible=false;});}};
+       S2.rect.setXYZW(i,c.r[0],c.r[1],c.r[2],c.r[3]);}catch(e){CUT.errs++;if(CUT.errs<6)console.error("cut-out failed",e);}}
+     sets.forEach((S2,i)=>{S2.card.count=S2.shad.count=cnt[i];S2.card.instanceMatrix.needsUpdate=S2.shad.instanceMatrix.needsUpdate=true;S2.rect.needsUpdate=true;S2.shad.visible=!G3.shadowsOff;});};
    const _v3=new THREE.Vector3();
-   CUT.stats=()=>({actors:CUT.actors.length,cells:CUT.cells.size,caps:CUT.caps,queue:CUT.queue.length,full:CUT.full,rows:ATL.map(A=>A.nextY)});}
+   CUT.stats=()=>({actors:CUT.actors.length,cells:CUT.cells.size,caps:CUT.caps,queue:CUT.queue.length,full:CUT.full,resets:CUT.resets,errs:CUT.errs,rows:ATL.map(A=>A.nextY),
+     shown3D:CUT.actors.filter(a=>shown(a.o)&&(!a.hid||(()=>{let l=0;a.o.traverse(c=>{if((c.isMesh||c.isLine)&&c.visible&&c.layers.mask!==1<<CUT_LAYER)l++;});return l;})())).length});
+   // a lost and restored graphics context empties the atlases: take every picture again
+   glc.addEventListener("webglcontextrestored",()=>{[0,1].forEach(resetAtlas);});}
   // v2.9.11 performance profiler: when G3.PF.on, time each section of the 3D frame (ms accumulated per section)
   const PF=G3.PF={on:false,t:0,acc:{},frames:0};const pm=k=>{if(!PF.on)return;const t=performance.now();PF.acc[k]=(PF.acc[k]||0)+(t-PF.t);PF.t=t;};
   G3.EXP={};let moversCache=null;
@@ -10356,7 +10413,7 @@ function no3D(){G3.ok=false;$("no3d").hidden=false;$("no3d-retry").onclick=()=>l
     // old 2D drawing, which no longer runs when the 3D view is up, so everything stood still
     if(rdt>0){const R=S.rates;if(!S.M.pulperDown)V.swirl+=rdt*(0.4+R.feed*0.06);V.belt=(V.belt+rdt*R.feed*1.4)%30;V.cans+=rdt*S.pmSpeed/700;
       if(S.pm==="run")V.sheet=(V.sheet+rdt*S.pmSpeed/40)%24;V.rollsAnim+=rdt*(0.2+clamp(R.load/Math.max(1,C.loaders.v*P.loaderRate),0,1))*0.5;}
-    {const t=performance.now();if(!(t-(G3.shTrim||0)<2000)){G3.shTrim=t;trimShadows();}}pm("shadow trim (every 2 s)");
+    if(renderer.shadowMap.enabled){const t=performance.now();if(!(t-(G3.shTrim||0)<2000)){G3.shTrim=t;trimShadows();}}pm("shadow trim (every 2 s)");
     // v15: the fallback measures real frame intervals (rdt is clamped to 0.1 s, so a 5 FPS stall used to count as 10 FPS)
     // against the frame budget in use (the cap, or 60), and steps down only after two slow 3-second windows in a row
     {const t=performance.now(),dt=G3.fbLast?t-G3.fbLast:0;G3.fbLast=t;
@@ -11614,7 +11671,7 @@ function camPullOn(){try{return localStorage.getItem("paper-mill-campull")!=="of
    (within 700 ms per tap) and a list of every version's one-line note pops up, newest first. The list comes from
    VERSION-NOTES.txt at the repo root: build.py swaps it in for the placeholder below, so adding a line there with each
    release keeps the pop-up current (build.py warns when APP_VER has no line). ---------- */
-{const VNOTES=[["4.0.0", "Graphics Overhaul: 60 FPS on iPhone, ~80% Fewer Draw Calls"], ["4.0.1", "Performance Follow-Up, Show FPS Option and Device Autotest"], ["4.0.2", "Economy Rebalance and Smoother Upset Labels"], ["4.1.0", "Four Environments, Seeded Mills, Bottlenecks, Graphics Tiers and Site Music"], ["4.2.0", "New Site Maps, Rare Sights, Zen Map Rotation and Economics Fixes"], ["4.2.0-s", "Save and Continue Season (Test)"], ["4.2.1", "Save/Continue, Settings Panel and Outage Speed Fix"], ["4.2.2-t", "Bayou Gator Sight Reworked (Test)"], ["4.2.2-t2", "Gator Bass Riff (Test)"], ["4.2.2-t3", "Gator Riff Removed, Wide Camera Framing (Test)"], ["4.2.2-t4", "Gator Scene Shortened and Widened (Test)"], ["4.2.2-t5", "One Rare Sight per Map in Zen (Test)"], ["4.2.2", "Rare Sights Reworked, Bird Strike Upset, Mill Report Tab"], ["4.2.3-t", "Cowboys, Bigfoot and Tugboat Sights Reworked (Test)"], ["4.2.3", "Laptop Battery Saving (Default GPU)"], ["4.2.4", "$25M Goal Removed and Quick Fixes"], ["4.2.5", "Random Bottleneck per Season and Accessibility Improvements"], ["4.3.0-t1", "Survival Mode (Test)"], ["4.4.0-t1", "Mill Leaders in Survival (Test)"], ["4.4.0-t2", "Painted Leader Portraits (Test)"], ["4.4.0-t3", "Leader Redesign, 4-Day Waves and Fixes (Test)"], ["5.0.0", "Survival Mode Release with Mill Leaders"], ["5.0.1", "Results Dialog and Game Speed Fixes"], ["5.0.2", "Report Card Label Fixes"], ["5.0.3", "Survival Playtest Fixes (Test)"], ["5.0.4", "Playtest Review: Dot Auto-Fix and Shipping Fix (Test)"], ["5.0.5", "Polish Rounds from Survival Playtests"], ["5.0.6", "Survival QA Fixes, Opt-In Outage Watch, Leaderboard Filters"], ["5.1.0", "Civics Meters and Leaders in Seasons (Test)"], ["5.4.0", "Title Screen, Civics in the World and Dark Mode"], ["5.4.1", "Loading Splash, No Old-Menu Flash"], ["5.4.2", "Graphics Quality on the Title Screen"], ["5.5.0", "Performance Improvements"], ["5.6.0", "Fiddly Knobs, DCS/QCS Screens and Knobs View"], ["5.7.0", "Catching Failures Early: Tells, Daily Rounds, Vibration Report, Outage Prep"], ["5.7.1", "Bottom Menu Reorder, Settings Back on the Right"], ["5.7.2", "Help Page with Game Guide and Glossary"], ["5.7.3", "Bare Graphics Mode for Weak Phones"], ["5.7.4", "Version Notes Pop-Up (Triple-Tap the Version Number)"], ["6.1.0-t1", "Isometric Paper View: Fixed Camera, Cut-Outs, Drop Shadows, Cutaways, Season Palettes (Test)"]];
+{const VNOTES=[["4.0.0", "Graphics Overhaul: 60 FPS on iPhone, ~80% Fewer Draw Calls"], ["4.0.1", "Performance Follow-Up, Show FPS Option and Device Autotest"], ["4.0.2", "Economy Rebalance and Smoother Upset Labels"], ["4.1.0", "Four Environments, Seeded Mills, Bottlenecks, Graphics Tiers and Site Music"], ["4.2.0", "New Site Maps, Rare Sights, Zen Map Rotation and Economics Fixes"], ["4.2.0-s", "Save and Continue Season (Test)"], ["4.2.1", "Save/Continue, Settings Panel and Outage Speed Fix"], ["4.2.2-t", "Bayou Gator Sight Reworked (Test)"], ["4.2.2-t2", "Gator Bass Riff (Test)"], ["4.2.2-t3", "Gator Riff Removed, Wide Camera Framing (Test)"], ["4.2.2-t4", "Gator Scene Shortened and Widened (Test)"], ["4.2.2-t5", "One Rare Sight per Map in Zen (Test)"], ["4.2.2", "Rare Sights Reworked, Bird Strike Upset, Mill Report Tab"], ["4.2.3-t", "Cowboys, Bigfoot and Tugboat Sights Reworked (Test)"], ["4.2.3", "Laptop Battery Saving (Default GPU)"], ["4.2.4", "$25M Goal Removed and Quick Fixes"], ["4.2.5", "Random Bottleneck per Season and Accessibility Improvements"], ["4.3.0-t1", "Survival Mode (Test)"], ["4.4.0-t1", "Mill Leaders in Survival (Test)"], ["4.4.0-t2", "Painted Leader Portraits (Test)"], ["4.4.0-t3", "Leader Redesign, 4-Day Waves and Fixes (Test)"], ["5.0.0", "Survival Mode Release with Mill Leaders"], ["5.0.1", "Results Dialog and Game Speed Fixes"], ["5.0.2", "Report Card Label Fixes"], ["5.0.3", "Survival Playtest Fixes (Test)"], ["5.0.4", "Playtest Review: Dot Auto-Fix and Shipping Fix (Test)"], ["5.0.5", "Polish Rounds from Survival Playtests"], ["5.0.6", "Survival QA Fixes, Opt-In Outage Watch, Leaderboard Filters"], ["5.1.0", "Civics Meters and Leaders in Seasons (Test)"], ["5.4.0", "Title Screen, Civics in the World and Dark Mode"], ["5.4.1", "Loading Splash, No Old-Menu Flash"], ["5.4.2", "Graphics Quality on the Title Screen"], ["5.5.0", "Performance Improvements"], ["5.6.0", "Fiddly Knobs, DCS/QCS Screens and Knobs View"], ["5.7.0", "Catching Failures Early: Tells, Daily Rounds, Vibration Report, Outage Prep"], ["5.7.1", "Bottom Menu Reorder, Settings Back on the Right"], ["5.7.2", "Help Page with Game Guide and Glossary"], ["5.7.3", "Bare Graphics Mode for Weak Phones"], ["5.7.4", "Version Notes Pop-Up (Triple-Tap the Version Number)"], ["6.1.0-t1", "Isometric Paper View: Fixed Camera, Cut-Outs, Drop Shadows, Cutaways, Season Palettes (Test)"], ["6.1.0-t2", "Iso Round 2: Cut-Outs Always Paper, GPU Pictures, Stop-Motion World, Fewer Draws (Test)"]];
   let ov=null,held=false;
   function render(){
     const cur=APP_VER.replace(/^v/i,""),rows=VNOTES.slice().reverse().map(([v,n])=>
@@ -11642,6 +11699,8 @@ let FRAME_CAP=FPS_CAPS[FPS_MODE];if(G3.bare&&!(FRAME_CAP>0&&FRAME_CAP<=30))FRAME
 function setFpsMode(m){if(m===true)m="max";else if(m===false)m="saver";if(FPS_CAPS[m]===undefined)return;FPS_MODE=m;FRAME_CAP=FPS_CAPS[m];if(G3.bare&&!(FRAME_CAP>0&&FRAME_CAP<=30))FRAME_CAP=30;G3.cap=FRAME_CAP;try{localStorage.setItem("paper-mill-fps",m);}catch(e){}
   document.querySelectorAll("#fpsSeg button").forEach(b=>b.setAttribute("aria-pressed",String(b.dataset.fps===m)));}
 let last=performance.now(),uiAcc=0,uiN=0,lastPaint=0;
+const WACC={t:0,last:0};let STOPMO=true;try{STOPMO=localStorage.getItem("paper-mill-stopmo")!=="off";}catch(e){}
+function setStopMo(on){STOPMO=!!on;try{localStorage.setItem("paper-mill-stopmo",on?"on":"off");}catch(e){}const c=document.getElementById("stopMo");if(c)c.checked=STOPMO;}
 /* v4.0.1: optional FPS readout (Controls > Show FPS), bottom-right; counts drawn loop frames, text written twice a second */
 const FPSM={on:false,el:null,n:0,t0:0,txt:""};
 function setShowFps(on){FPSM.on=!!on;try{localStorage.setItem("paper-mill-showfps",on?"1":"0");}catch(e){}
@@ -11681,7 +11740,11 @@ function frame(now){
   // v5.2: nothing is drawn behind the opaque title screen once the start-up precompile is done (it needs its frames until then)
   try{const covered=G3.warm&&document.body.classList.contains("titleon"),live=!covered&&(running||now-(G3.lastMove||0)<2500||now-lastPaint>1000);
     if(live){lastPaint=now;
-      if(G3.on&&G3.frame)G3.frame(running?rdt:0);}
+      /* v6.1 t2 stop-motion world: while the camera is still, the 3D world is updated and drawn 15 times a second (the
+         cut-outs already step at that rate); a pan, zoom or glide draws every frame. Skipped frames draw nothing, so the
+         last picture stays on screen. Settings > Performance > Stop-motion (on by default). */
+      if(G3.on&&G3.frame){WACC.t=Math.min(0.25,WACC.t+(running?rdt:0));
+        if(!STOPMO||(G3.camBusy&&G3.camBusy())||now-WACC.last>=1000/15-4){WACC.last=now;const d=Math.min(0.1,WACC.t);WACC.t=0;G3.frame(d);}}}
     uiAcc+=rdt;if(uiAcc>0.2){uiAcc=0;uiN++;try{AUDIO.update(running&&!S.zen&&(S.inc.length>0||S.wd==="hayout"));}catch(_){}
       const uT=performance.now();if(paneShown($("cards")))syncControls();updateText();UI_TICKS.forEach(f=>{try{f(uiN);}catch(e){console.error("ui tick",e);}});
       if(paneShown($("chaosSec")))updateChaos();if(!$("brian").hidden)briUpd();if(paneShown($("shopSec")))updateShop();if(paneShown($("relnow"))&&$("repLive").open)updateRel();   /* (v5.2: no offsetParent layout read) */if(paneShown($("trend")))drawTrend();
@@ -11983,6 +12046,9 @@ requestAnimationFrame(frame);
     seg.innerHTML=["auto","low","medium","high","ultra"].map(g=>`<button data-g="${g}" aria-pressed="${G3.GFX.pick===g}" title="${g==="auto"?"Picked from your device: "+cap(G3.GFX.auto):{bare:"Bare bones: flat colours, no shadows, no scenery or ambient life, 30 FPS (needs a reload)",low:"1024 shadows, 10 Hz, lighter scenery",medium:"1024 shadows, 15 Hz",high:"2048 softer shadows, 24 Hz, full scenery",ultra:"4096 softer shadows, every frame, dense scenery with far shadows"}[g]}">${g==="auto"?`Auto <small class="gtier">${cap(G3.GFX.auto)}</small>`:cap(g)}</button>`).join("");
     seg.querySelectorAll("button").forEach(x=>x.addEventListener("click",()=>G3.setGfx(x.dataset.g)));
     {const rb=document.createElement("button");rb.id="gfxReload";rb.hidden=true;rb.textContent="Reload to apply all";rb.title="Lighting model, round-shape detail and scenery density change on reload";rb.addEventListener("click",()=>location.reload());setField("Graphics",seg).appendChild(rb);}}
+  {const l=document.createElement("label");l.className="check";l.title="While the view is still, the mill moves at 15 frames a second, like stop-motion; panning and zooming stay smooth";
+    l.innerHTML='<input id="stopMo" type="checkbox"/> Stop-motion (saves power)';const p=document.getElementById("v2perfrow")||document.getElementById("v2ctlrow");if(p)p.appendChild(l);
+    const c=l.querySelector("input");c.checked=STOPMO;c.addEventListener("change",e=>setStopMo(e.target.checked));}
   {const l=document.createElement("label");l.className="check";l.innerHTML='<input id="showFps" type="checkbox"/> Show FPS';
     const row0=document.getElementById("v2viewrow")||document.getElementById("v2ctlrow");if(row0)row0.appendChild(l);
     l.querySelector("input").addEventListener("change",e=>setShowFps(e.target.checked));

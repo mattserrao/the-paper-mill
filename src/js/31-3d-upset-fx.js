@@ -540,6 +540,7 @@
         // v4.0.1: the stand-ins' materials are kept, not disposed: three.js deletes a shader program once no material uses it,
         // which threw away every shader compiled only for a stand-in
         G3.keepMats=stand.map(([bm])=>bm.material).filter(Boolean);stand.forEach(([bm,g])=>{if(bm.isObject3D)scene.remove(bm);bm.dispose();if(g)g.dispose();});}catch(e){console.error("warm render failed",e);}
+      try{if(G3.cutWarm)G3.cutWarm();}catch(e){}   // v6.1 t2: the cut-out pictures' shaders (42f)
       try{renderer.compileAsync(scene,camera).then(done,done);}catch(e){done();}};
     requestAnimationFrame(stepW);}));
   let clothMs=null;

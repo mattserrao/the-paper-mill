@@ -3,7 +3,8 @@
      G3.skyTick with the sky colour it already computes for the fog. Clouds and mist are camera-facing quads in one
      mesh each (one draw), their corners rewritten per frame; none on the Low tier. ---- */
   const SKY={n:0};G3.SKY=SKY;
-  if(!G3.bare&&!new URLSearchParams(location.search).has("nosky")){const uni={top:{value:new THREE.Color(0.5,0.6,0.8)},hor:{value:new THREE.Color(0.8,0.85,0.9)},sunDir:{value:sun.position.clone().normalize()},glow:{value:new THREE.Color(1,0.85,0.6)},gk:{value:0}};
+  if(!G3.bare&&!camera.isIso&&!new URLSearchParams(location.search).has("nosky")){   // (v6.1 iso: the view never reaches the sky)
+  const uni={top:{value:new THREE.Color(0.5,0.6,0.8)},hor:{value:new THREE.Color(0.8,0.85,0.9)},sunDir:{value:sun.position.clone().normalize()},glow:{value:new THREE.Color(1,0.85,0.6)},gk:{value:0}};
     const skyMat=new THREE.ShaderMaterial({uniforms:uni,
       vertexShader:"varying vec3 vDir;void main(){vDir=normalize(position);vec4 p=projectionMatrix*modelViewMatrix*vec4(position,1.0);gl_Position=vec4(p.xy,p.w*0.99999,p.w);}",
       // the dome is a band from 11 degrees below the horizon to 35 degrees above it: the gradient reaches the clear colour at its
