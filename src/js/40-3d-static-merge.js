@@ -16,11 +16,13 @@
      matrix update nor its render traversal visits them (about 2,500 nodes a frame on a phone). Their record keeps the
      logical parent (r.par) for the watch (position, rotation, scale and parent matrix) and for the hand-back. */
   const SMHOLD=new THREE.Group();SMHOLD.name="parked originals";SM.holder=SMHOLD;
-  const smPar=r=>(r.par&&r.o.parent===SMHOLD)?r.par:r.o.parent;
-  function smShownR(r){const o=r.o;if(o.parent!==SMHOLD)return smShown(o);if(!o.visible)return false;const p=r.par;return p===scene?true:!!p&&smShown(p);}
+  // (v5.8: a multi-material object has a record per material; the one that parked it (o.__smRec) holds the logical parent)
+  const smPar=r=>{const o=r.o;if(o.parent===SMHOLD){const R=o.__smRec||r;return R.par||null;}return o.parent;};
+  function smShownR(r){const o=r.o;if(o.parent!==SMHOLD)return smShown(o);if(!o.visible)return false;const p=(o.__smRec||r).par;return p===scene?true:!!p&&smShown(p);}
   function smExcluded(o){for(let x=o;x&&x!==scene;x=x.parent){if(roofs.includes(x)||SM.dyn.has(x))return true;}return false;}
   function smRecord(o){return {o,m:Float64Array.from(o.matrixWorld.elements),mat:o.material,geo:o.geometry,ver:o.geometry.attributes.position.version,key:null};}
-  function smSame(r){const o=r.o;if(o.material!==r.mat||o.geometry!==r.geo||o.geometry.attributes.position.version!==r.ver||!smShownR(r))return false;
+  function smSame(r){const o=r.o;if(r.st&&r.st.fail)return false;if(r.mats){const M=o.material;if(!Array.isArray(M))return false;for(let i=0;i<r.mats.length;i++)if(M[i]!==r.mats[i])return false;}
+    if(o.material!==r.mat||o.geometry!==r.geo||o.geometry.attributes.position.version!==r.ver||!smShownR(r))return false;
     if(r.frozen){if(!o.position.equals(r.fp)||!o.quaternion.equals(r.fq)||!o.scale.equals(r.fs))return false;
       const par=smPar(r);if(!par)return false;const e=par.matrixWorld.elements,m=r.pm;for(let i=0;i<16;i++)if(Math.abs(e[i]-m[i])>1e-5)return false;return true;}
     const e=o.matrixWorld.elements,m=r.m;for(let i=0;i<16;i++)if(Math.abs(e[i]-m[i])>1e-5)return false;return true;}
@@ -32,7 +34,7 @@
     // parts of its groups by position, e.g. g.children[2], and taking a child out of a group would shift those positions)
     if(!BQ.has("nopark")&&!o.children.length&&o.parent===scene){r.par=o.parent;SMHOLD.add(o);o.__smRec=r;o.add=smParkedAdd;}}
   // a child added to a parked node brings the node back into the scene first (still frozen), so the child is drawn
-  function smUnpark(r){const o=r.o;if(o.parent!==SMHOLD)return;SMHOLD.remove(o);delete o.add;delete o.__smRec;if(r.par)r.par.add(o);r.par=null;}
+  function smUnpark(r){const o=r.o;if(o.parent!==SMHOLD)return;const R=o.__smRec||r;SMHOLD.remove(o);delete o.add;delete o.__smRec;if(R.par)R.par.add(o);R.par=null;}   // (v5.8: the record that parked it; a multi-material object has several)
   function smParkedAdd(...a){if(this.__smRec)smUnpark(this.__smRec);return THREE.Object3D.prototype.add.apply(this,a);}
   function smThaw(r){if(!r.frozen)return;r.frozen=false;smUnpark(r);const o=r.o;o.matrixAutoUpdate=true;o.matrixWorldAutoUpdate=true;o.updateMatrixWorld(true);}
   function smOK(o){if(!(o.isMesh||o.isLineSegments)||o.isInstancedMesh||o.isSkinnedMesh||o.isSprite||o.isPoints)return false;
@@ -44,27 +46,50 @@
     if(o.isMesh&&!a.normal)return false;if(g.morphAttributes&&Object.keys(g.morphAttributes).length)return false;
     if(g.drawRange.start!==0||g.drawRange.count!==Infinity)return false;return true;}
   function smBuild(key){const b=SM.batches.get(key);const par=b.parent||scene;if(b.mesh){par.remove(b.mesh);b.mesh.geometry.dispose();b.mesh=null;}
-    const L=b.recs;if(!L.length)return;const line=b.line,hasUV=b.uv;let nv=0,ni=0;
-    L.forEach(r=>{const g=r.o.geometry;nv+=g.attributes.position.count;ni+=g.index?g.index.count:g.attributes.position.count;});
-    const pos=new Float32Array(nv*3),nor=line?null:new Float32Array(nv*3),uv=hasUV?new Float32Array(nv*2):null,idx=new Uint32Array(ni);let vo=0,io=0;
+    const L=b.recs;if(!L.length)return;const line=b.line,hasUV=b.uv,vc=b.vc;let nv=0,ni=0;
+    L.forEach(r=>{const g=r.o.geometry;nv+=g.attributes.position.count;ni+=r.sub?r.sub.count:g.index?g.index.count:g.attributes.position.count;});
+    const pos=new Float32Array(nv*3),nor=line?null:new Float32Array(nv*3),uv=hasUV?new Float32Array(nv*2):null,col=vc?new Float32Array(nv*3):null,idx=new Uint32Array(ni);let vo=0,io=0;
     L.forEach(r=>{const o=r.o,g=o.geometry,P=g.attributes.position,N=g.attributes.normal,U=g.attributes.uv,mw=r.mw||o.matrixWorld,flip=!line&&mw.determinant()<0;
       if(!line)_smM3.getNormalMatrix(mw);
       for(let i=0;i<P.count;i++){_smV.set(P.getX(i),P.getY(i),P.getZ(i)).applyMatrix4(mw);pos[(vo+i)*3]=_smV.x;pos[(vo+i)*3+1]=_smV.y;pos[(vo+i)*3+2]=_smV.z;
         if(nor){_smN.set(N.getX(i),N.getY(i),N.getZ(i)).applyMatrix3(_smM3).normalize();nor[(vo+i)*3]=_smN.x;nor[(vo+i)*3+1]=_smN.y;nor[(vo+i)*3+2]=_smN.z;}
         if(uv&&U){uv[(vo+i)*2]=U.getX(i);uv[(vo+i)*2+1]=U.getY(i);}}
-      const I=g.index,n=I?I.count:P.count;
-      if(!line&&flip)for(let k=0;k<n;k+=3){const a=I?I.getX(k):k,b2=I?I.getX(k+1):k+1,c=I?I.getX(k+2):k+2;idx[io+k]=vo+a;idx[io+k+1]=vo+c;idx[io+k+2]=vo+b2;}
-      else for(let k=0;k<n;k++)idx[io+k]=vo+(I?I.getX(k):k);
+      if(col){const c=vcMat(r).color;for(let i=0;i<P.count;i++){const k=(vo+i)*3;col[k]=c.r;col[k+1]=c.g;col[k+2]=c.b;}}
+      const I=g.index,s0=r.sub?r.sub.start:0,n=r.sub?r.sub.count:I?I.count:P.count;
+      if(!line&&flip)for(let k=0;k<n;k+=3){const q=s0+k,a=I?I.getX(q):q,b2=I?I.getX(q+1):q+1,c=I?I.getX(q+2):q+2;idx[io+k]=vo+a;idx[io+k+1]=vo+c;idx[io+k+2]=vo+b2;}
+      else for(let k=0;k<n;k++){const q=s0+k;idx[io+k]=vo+(I?I.getX(q):q);}
       vo+=P.count;io+=n;});
     const geo=new THREE.BufferGeometry();geo.setAttribute("position",new THREE.BufferAttribute(pos,3));if(nor)geo.setAttribute("normal",new THREE.BufferAttribute(nor,3));
-    if(uv)geo.setAttribute("uv",new THREE.BufferAttribute(uv,2));geo.setIndex(new THREE.BufferAttribute(idx,1));geo.computeBoundingSphere();
+    if(uv)geo.setAttribute("uv",new THREE.BufferAttribute(uv,2));if(col)geo.setAttribute("color",new THREE.BufferAttribute(col,3));geo.setIndex(new THREE.BufferAttribute(idx,1));geo.computeBoundingSphere();
     const mesh=line?new THREE.LineSegments(geo,b.mat):new THREE.Mesh(geo,b.mat);mesh.castShadow=b.cast;mesh.receiveShadow=b.recv;mesh.matrixAutoUpdate=false;mesh.userData.smBatch=true;
     par.add(mesh);b.mesh=mesh;}
   // multi-material meshes can't be batched, but if static they can still cast through the shadow proxy (proxyOnly)
   const smShadowOnly=o=>o.isMesh&&!o.isInstancedMesh&&!o.isBatchedMesh&&o.castShadow&&Array.isArray(o.material)&&!o.material.some(m=>m.transparent)&&o.layers.mask===1&&
     o.geometry&&o.geometry.attributes.position&&o.onBeforeRender===THREE.Object3D.prototype.onBeforeRender;
+  /* v5.8 perf: one-off meshes merged. Two kinds were still drawn one by one: opaque meshes whose look nobody else shares
+     (a batch of one gains nothing) and multi-material meshes (one draw per material). Both are now baked per 180 m map cell
+     into merged meshes that ignore colour: each object's colour goes into the merged mesh as vertex colours (a plain mesh
+     with vertex colours, like the far scenery, so it draws correctly on iPhones, where vertex-coloured batches came out
+     grey). A multi-material mesh gives one record per material group; its records leave together. A colour change
+     (a brand colour) rebuilds that merged mesh with the new colours; an object whose colour keeps changing (a fourth
+     time) or whose glow changes is handed back and drawn on its own. ?novcbake turns it off. */
+  const SMVC=!BQ.has("novcbake"),VCCELL=180;   // (bigger cells than the outline bakes: these objects are few and small)
+  function smOKMulti(o){if(!o.isMesh||o.isInstancedMesh||o.isBatchedMesh||o.isSkinnedMesh||!Array.isArray(o.material)||!o.material.length)return false;const g=o.geometry;
+    if(!g||!g.isBufferGeometry||!g.groups||!g.groups.length||o.renderOrder||o.layers.mask!==1||o.onBeforeRender!==THREE.Object3D.prototype.onBeforeRender)return false;
+    for(const m of o.material)if(!m||m.transparent||m.opacity<1||!m.color||!DBOK.has(m.type)||m.vertexColors)return false;
+    const a=g.attributes;if(!a.position||a.position.itemSize!==3||!a.normal)return false;for(const k in a)if(k!=="position"&&k!=="normal"&&k!=="uv")return false;
+    if(g.morphAttributes&&Object.keys(g.morphAttributes).length)return false;return g.drawRange.start===0&&g.drawRange.count===Infinity;}
+  function smMultiRecs(o){const g=o.geometry,n=g.index?g.index.count:g.attributes.position.count,st={fail:false},mats=o.material.slice();let first=true;
+    for(const gr of g.groups){const m=o.material[gr.materialIndex];const c=Math.min(gr.count,n-gr.start);if(!m||!(c>0))continue;
+      const r=smRecord(o);r.mats=mats;r.sub={start:gr.start,count:c,m};r.st=st;if(!first)r.shadow=false;first=false;SM.list.push(r);}}
+  // (vertex-colour bakes: the colour and glow an object had when baked; a change hands it back)
+  const vcMat=r=>r.sub?r.sub.m:r.o.material;
+  function vcMark(r){const m=vcMat(r);r.vch=m.color.getHex();r.veh=m.emissive?m.emissive.getHex():0;r.vei=m.emissiveIntensity;}
+  const vcCol=r=>vcMat(r).color.getHex()===r.vch;
+  function vcGlow(r){const m=vcMat(r);return !m.emissive||(m.emissive.getHex()===r.veh&&m.emissiveIntensity===r.vei);}
+  function vcBakeMat(m){const c=m.clone();c.userData=Object.assign({},m.userData);c.vertexColors=true;c.color.setRGB(1,1,1);MSYNC.push([c,m,true]);return c;}
   function smSnapshot(){SM.list=[];scene.traverse(o=>{if(o.userData&&o.userData.smBatch)return;if(!smShown(o)||smExcluded(o))return;
-    if(smOK(o))SM.list.push(smRecord(o));else if(smShadowOnly(o)){const r=smRecord(o);r.proxyOnly=true;SM.list.push(r);}});}
+    if(smOK(o))SM.list.push(smRecord(o));else if(SMVC&&smOKMulti(o))smMultiRecs(o);else if(smShadowOnly(o)){const r=smRecord(o);r.proxyOnly=true;SM.list.push(r);}});}
   // materials that look identical share a batch (many were created separately with the same settings); if one is later
   // changed on its own, the watcher sees its look diverge from the batch's material and hands that object back
   const SMMAPS=["map","emissiveMap","alphaMap","normalMap","roughnessMap","metalnessMap","aoMap","lightMap","bumpMap","envMap"],
@@ -106,7 +131,9 @@
     bm.castShadow=grp.cast;bm.receiveShadow=grp.recv;bm.matrixAutoUpdate=false;bm.userData.smBatch=true;bm.name="scenery batch";
     bm.computeBoundingBox();bm.computeBoundingSphere();scene.add(bm);SM.bms.push(bm);}
   function smMerge(){const groups=new Map();
+    const vcCand=[];
     for(const r of SM.list){const o=r.o,g=o.geometry;if(r.proxyOnly)continue;
+      if(r.sub){vcCand.push(r);continue;}
       if(o.isMesh&&o.matrixWorld.determinant()>0&&!o.userData.aoDecal){const key=[smLook(o.material),o.castShadow?1:0,o.receiveShadow?1:0,smSig(g)].join("|");
         let G=groups.get(key);if(!G){G={recs:[],mat:o.material,cast:o.castShadow,recv:o.receiveShadow};groups.set(key,G);}G.recs.push(r);continue;}
       // outlines and mirrored meshes: bake per material and 90 m map cell (off-screen cells are still culled)
@@ -116,7 +143,14 @@
       let b=SM.batches.get(key);if(!b){b={recs:[],mat:o.material,line,uv,cast:o.castShadow,recv:o.receiveShadow,mesh:null};SM.batches.set(key,b);}
       b.recs.push(r);r.key=key;}
     // a group of one gains nothing from batching: that object simply stays as it is and is no longer watched
-    groups.forEach(G=>{if(G.recs.length>1)bmBuild(G);else G.recs[0].single=true;});
+    groups.forEach(G=>{if(G.recs.length>1)bmBuild(G);else if(SMVC&&DBOK.has(G.mat.type)&&!G.mat.vertexColors&&G.mat.color)vcCand.push(G.recs[0]);else G.recs[0].single=true;});
+    // (v5.8: colour-free bakes, per look without colour, shadow flags, uv and map cell; a bake needs two or more records)
+    {const vb=new Map();for(const r of vcCand){const o=r.o,g=o.geometry,m=vcMat(r);if(!g.boundingSphere)g.computeBoundingSphere();_smV.copy(g.boundingSphere.center).applyMatrix4(o.matrixWorld);
+        const uv=!!g.attributes.uv,key=["C",dbLookId(m),o.castShadow?1:0,o.receiveShadow?1:0,uv?1:0,Math.floor(_smV.x/VCCELL),Math.floor(_smV.z/VCCELL)].join("|");let L=vb.get(key);if(!L)vb.set(key,L=[]);L.push(r);}
+      const drop=new Set();
+      vb.forEach((L,key)=>{const subs=new Set(L.filter(r=>r.sub).map(r=>r.o));if(L.length<2&&!subs.size){L[0].single=true;return;}
+        const r0=L[0],m0=vcMat(r0);L.forEach(vcMark);SM.batches.set(key,{recs:L,mat:vcBakeMat(m0),line:false,uv:!!r0.o.geometry.attributes.uv,vc:true,cast:r0.o.castShadow,recv:r0.o.receiveShadow,mesh:null});L.forEach(r=>r.key=key);});
+      SM.vcN=vcCand.length;}
     // roofs fade with zoom, so each roof is baked inside its own group (it keeps fading and hiding as a whole)
     let roofN=0;roofs.forEach((g,gi)=>{g.updateMatrixWorld(true);const inv=new THREE.Matrix4().copy(g.matrixWorld).invert();
       g.traverse(o=>{if(o===g||!smOK(o)&&!(o.isMesh&&o.material&&!Array.isArray(o.material)&&o.material.transparent))return;if(o.isInstancedMesh||Array.isArray(o.material)||o.layers.mask!==1)return;
@@ -142,8 +176,8 @@
   function smWatch(){const dirty=SM.dirty||(SM.dirty=new Set());
     const freeze=performance.now()-SM.t0>10000;
     // (v4.1 pass 3: compacted in place twice a second instead of filtered into a new 2,700-entry array)
-    const keep=r=>{if(smSame(r)&&!(r.shared&&!colorSame(r.o.material,r.bm.material))){if(freeze&&(r.bm||r.key))smFreeze(r);return true;}
-      smThaw(r);
+    const keep=r=>{if(smSame(r)&&!(r.shared&&!colorSame(r.o.material,r.bm.material))&&(r.vch===undefined||(vcGlow(r)&&(vcCol(r)||(r.vcr=(r.vcr||0)+1)<=3)))){if(r.vch!==undefined&&!vcCol(r)){vcMark(r);dirty.add(r.key);}if(freeze&&(r.bm||r.key))smFreeze(r);return true;}
+      smThaw(r);if(r.st)r.st.fail=true;
       if(r.shadow){r.o.castShadow=true;r.shadow=false;if(!shDrop(r))SH.dirty=true;}   // v4.0.1: cut it out of the proxy instead of rebuilding it
       if(r.bm){r.bm.setVisibleAt(r.iid,false);r.o.layers.set(0);SM.dyn.add(r.o);SM.handedBack++;return false;}
       if(r.single||r.proxyOnly){SM.dyn.add(r.o);SM.handedBack++;return false;}

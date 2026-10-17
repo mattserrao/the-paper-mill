@@ -55,6 +55,8 @@
   // easter egg: click the spider valve on the disk thickener
   {const rc=new THREE.Raycaster(),nd=new THREE.Vector2();if(rc.layers)rc.layers.enableAll();let downAt=null,hoverT=0;
     const hit=e=>{const r=glc.getBoundingClientRect();nd.set((e.clientX-r.left)/r.width*2-1,-(e.clientY-r.top)/r.height*2+1);rc.setFromCamera(nd,camera);
+      // (v5.8: hidden groups skip the per-frame matrix update, so the easter-egg targets are brought up to date here, on the tap)
+      for(const L of [G3.spiderHit,G3.sliceHit,G3.scrubbers&&[G3.scrubbers[0].hit]])if(L)for(const o of L)if(o&&o.updateWorldMatrix)o.updateWorldMatrix(true,false);
       if(G3.knobHit){const k=G3.knobHit(rc);if(k)return k;}   // v5.6 fiddly knobs and the DCS consoles (40b)
       if(G3.spiderHit&&rc.intersectObjects(G3.spiderHit,false).length)return "spider";if(G3.sliceHit&&rc.intersectObjects(G3.sliceHit,false).length)return "slice";if(G3.scrubbers&&rc.intersectObject(G3.scrubbers[0].hit,false).length)return "brian";return false;};
     glc.addEventListener("pointerdown",e=>{downAt=[e.clientX,e.clientY,performance.now()];});
@@ -99,7 +101,7 @@
     if(sun.shadow.mapSize.x!==t.shadow){sun.shadow.mapSize.set(t.shadow,t.shadow);if(sun.shadow.map){sun.shadow.map.dispose();sun.shadow.map=null;}renderer.shadowMap.needsUpdate=true;}sun.shadow.radius=t.soft?5:3;
     if(G3.wxRange)G3.wxRange(t.wx);if(G3.scenery){G3.scenery.farOff=false;G3.scenery.parts.forEach(p=>{p.visible=true;if(p.userData.scenery!=="near")p.castShadow=t.far;});}
     // (v15: what needs a reload — lighting model, round-shape detail, scenery density — is offered as a button)
-    {const nb=$("gfxReload");if(nb)nb.hidden=GFX.tier===GFX.loaded;}
+    {const nb=$("gfxReload");if(nb)nb.hidden=GFX.tier===GFX.loaded&&G3.toneOn===G3.toneLoaded;}
     diag(`graphics: ${GFX.tier}${pick==="auto"?" (auto)":""}; lighting model and scenery density change on the next load`);
     document.querySelectorAll("#gfxSeg button").forEach(b=>b.setAttribute("aria-pressed",String(b.dataset.g===pick)));};
 

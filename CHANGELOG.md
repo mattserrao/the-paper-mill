@@ -1,5 +1,28 @@
 # Changelog
 
+## v5.8.0 (test build, 2026-10-17): performance — hidden groups, one-off meshes, outline and tone switches
+Test branch `test/v5.8-perf`, built on main v5.7.3 (knobs, Catching Failures Early, help page, Bare). Gameplay unchanged:
+same seeded checksum (`272b1f02`) as main.
+- **Hidden groups skip the per-frame matrix update.** Upset effects, civics scenes, outage props and stand-ins are built
+  up front and wait hidden; three.js already skipped them when drawing but still recomputed their matrices every frame.
+  A hidden group (258 of them in normal play) is now skipped with everything under it and caught up in full the frame
+  it is shown. Nothing leaves the scene graph, so `g.children[i]`, `traverse()` and parent links work as before; the
+  easter-egg click targets are brought up to date on the tap. Phone emulation, 3 interleaved runs each: scene update
+  2.8 → 2.4 ms per frame (−14%). `?nohideskip` turns it off.
+- **One-off meshes merged.** Opaque meshes whose look nobody else shares, and multi-material meshes (one draw per
+  material), are baked per 180 m map cell into merged meshes that carry each object's colour as vertex colours (plain
+  meshes, so iPhones draw the colours correctly; vertex-coloured batches came out grey there). 273 objects in 13 merged
+  meshes; main-pass draws −10% on a fixed frame (multi-material draws 21 → 3 per frame). A brand-colour change rebuilds
+  the merged mesh; anything whose colour keeps changing, or whose glow changes, is drawn on its own again. 2 more
+  shader programs (83), both compiled behind the menu (no late compiles). `?novcbake` turns it off. The far scenery
+  stays one mesh per map sector so off-screen sectors are still culled.
+- **Settings → Graphics: Outlines and Tone mapping** (title screen and in-game View row), both on by default. Outlines
+  switch at once; tone mapping changes on the next load (switching it live recompiles every shader, a freeze on phones),
+  with the Reload button offered. Not shown in Bare (it has neither). `?nooutlines` / `?notone` for tests.
+- Checks: smoke, determinism, idcheck, nothree, knobcheck, tellcheck (45/45), civcheck, savecheck, settingscheck,
+  speedcheck, barecheck, helpcheck, zencheck pass; survcheck fails the same 2 checks on main (pre-existing).
+  tellcheck's click catch is timing-sensitive under CPU load on both builds (passes when run alone).
+
 ## v5.7.3 (2026-10-16): Bare graphics
 - **Graphics quality → Bare**: the bones only, for weak phones and long sessions on battery. Flat unlit colours, plain
   boxes, no shadows or outlines, no sky, clouds or weather, nothing outside the fence but the ground and roads, no

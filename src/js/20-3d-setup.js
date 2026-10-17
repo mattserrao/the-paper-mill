@@ -39,7 +39,20 @@ function no3D(){G3.ok=false;$("no3d").hidden=false;$("no3d-retry").onclick=()=>l
       if(c!==undefined&&c[0]===p.x&&c[1]===p.y&&c[2]===p.z&&c[3]===q.x&&c[4]===q.y&&c[5]===q.z&&c[6]===q.w&&c[7]===s.x&&c[8]===s.y&&c[9]===s.z)return;
       if(c===undefined)c=this._mc=new Float64Array(10);c[0]=p.x;c[1]=p.y;c[2]=p.z;c[3]=q.x;c[4]=q.y;c[5]=q.z;c[6]=q.w;c[7]=s.x;c[8]=s.y;c[9]=s.z;um.call(this);};
     P.add=function(...a){for(const o of a)if(o&&o._mc)o._mc=undefined;return add.apply(this,a);};
-    P.remove=function(...a){for(const o of a)if(o&&o._mc)o._mc=undefined;return rem.apply(this,a);};}
+    P.remove=function(...a){for(const o of a)if(o&&o._mc)o._mc=undefined;return rem.apply(this,a);};
+    /* v5.8 perf: hidden groups are out of the per-frame matrix update. Effects, civics scenes, outage props and stand-ins
+       are built up front and wait hidden (about 3,700 of ~5,900 nodes in normal play); three.js already skips them when
+       drawing, but still recomputed every one of their matrices every frame. A hidden node that has children is now
+       skipped together with everything under it and marked stale; the frame it is shown again, it and its subtree are
+       recomputed in full (so a parent that moved meanwhile is picked up). Hidden leaves are still updated (cheap; some
+       are click targets). Nothing leaves the scene graph, so game code that reaches parts by position (g.children[2]),
+       traverse() and parent links behave as before. ?nohideskip turns it off. Same code as three.js r186 otherwise. */
+    if(!new URLSearchParams(location.search).has("nohideskip"))P.updateMatrixWorld=function(force){
+      if(this._pmStale===true){this._pmStale=false;force=true;}
+      if(this.matrixAutoUpdate)this.updateMatrix();
+      if(this.matrixWorldNeedsUpdate||force){if(this.matrixWorldAutoUpdate===true){if(this.parent===null)this.matrixWorld.copy(this.matrix);else this.matrixWorld.multiplyMatrices(this.parent.matrixWorld,this.matrix);}
+        this.matrixWorldNeedsUpdate=false;force=true;}
+      const c=this.children;for(let i=0,l=c.length;i<l;i++){const ch=c[i];if(ch.visible===false&&ch.children.length!==0){ch._pmStale=true;G3.hideSkips=(G3.hideSkips||0)+1;continue;}ch.updateMatrixWorld(force);}};}
   const mobile=matchMedia("(pointer: coarse)").matches;
   /* v4.1 graphics tiers. Auto picks from the device (phones: Medium, or Low with little memory; desktops: High, or Ultra on a
      discrete GPU); the player can pin one in Controls. Pixel ratio, shadow refresh, shadow map size, weather particles and
@@ -76,7 +89,13 @@ function no3D(){G3.ok=false;$("no3d").hidden=false;$("no3d-retry").onclick=()=>l
   class RingG extends THREE.RingGeometry{constructor(a=0.5,b=1,ts=32,...x){super(a,b,Math.max(3,Math.min(ts,32)),...x);}}
   class CircG extends THREE.CircleGeometry{constructor(r=1,sg=32,...x){super(r,Math.max(3,Math.min(sg,32)),...x);}}
   renderer.shadowMap.enabled=!BARE;renderer.shadowMap.type=THREE.PCFShadowMap;   // (r186 dropped PCFSoft; the soft tiers widen the PCF kernel instead)
-  renderer.outputColorSpace=THREE.SRGBColorSpace;renderer.toneMapping=THREE.ACESFilmicToneMapping;renderer.toneMappingExposure=1.12;
+  /* v5.8: Settings → Graphics has two switches for the cheapest look-only work. Outlines (edge lines on buildings and
+     machines) change at once: their materials are hidden, so nothing recompiles. Tone mapping (the filmic colour curve)
+     changes on the next load, because switching it live recompiles every shader (a long freeze on phones). Both default on.
+     ?nooutlines and ?notone force them off for tests. */
+  {const q=new URLSearchParams(location.search),pref=k=>{try{return localStorage.getItem(k);}catch(e){return null;}};
+    G3.outlinesOn=pref("paper-mill-outlines")!=="off"&&!q.has("nooutlines");G3.toneOn=G3.toneLoaded=pref("paper-mill-tonemap")!=="off"&&!q.has("notone");}
+  renderer.outputColorSpace=THREE.SRGBColorSpace;renderer.toneMapping=G3.toneOn?THREE.ACESFilmicToneMapping:THREE.NoToneMapping;renderer.toneMappingExposure=1.12;
   const scene=new THREE.Scene();G3.scene=scene;G3.renderer=renderer;
   const camera=new THREE.PerspectiveCamera(18,16/9,2,1400);
 
@@ -145,7 +164,12 @@ function no3D(){G3.ok=false;$("no3d").hidden=false;$("no3d-retry").onclick=()=>l
   const edgeSoft=new THREE.LineBasicMaterial({color:new THREE.Color("#3c4559").convertSRGBToLinear(),transparent:true,opacity:0.22});
   const edgeMat=new THREE.LineBasicMaterial({color:lin0("#3c4559"),transparent:true,opacity:0.42});
   function lin0(c){return new THREE.Color(c).convertSRGBToLinear();}
-  function edges(o,mt=edgeMat,ang=25){if(BARE)return new THREE.Group();   /* (v5.7.3 bare: no outlines) */const e=new THREE.LineSegments(new THREE.EdgesGeometry(o.geometry,ang),mt);o.add(e);return e;}
+  const EDGEMATS=G3.edgeMats=new Set();
+  G3.setOutlines=on=>{G3.outlinesOn=!!on;try{localStorage.setItem("paper-mill-outlines",on?"on":"off");}catch(e){}for(const m of EDGEMATS)m.visible=!!on;
+    document.querySelectorAll("#viewEdges,#tsEdge").forEach(c=>c.checked=!!on);};
+  G3.setTone=on=>{G3.toneOn=!!on;try{localStorage.setItem("paper-mill-tonemap",on?"on":"off");}catch(e){}document.querySelectorAll("#viewTone,#tsTone").forEach(c=>c.checked=!!on);
+    const rb=document.getElementById("gfxReload");if(rb)rb.hidden=G3.toneOn===G3.toneLoaded&&G3.GFX.tier===G3.GFX.loaded;};
+  function edges(o,mt=edgeMat,ang=25){if(BARE)return new THREE.Group();   /* (v5.7.3 bare: no outlines) */if(!EDGEMATS.has(mt)){EDGEMATS.add(mt);mt.visible=G3.outlinesOn;}const e=new THREE.LineSegments(new THREE.EdgesGeometry(o.geometry,ang),mt);o.add(e);return e;}
   const aoC=document.createElement("canvas");aoC.width=4;aoC.height=64;{const x=aoC.getContext("2d"),g=x.createLinearGradient(0,0,0,64);g.addColorStop(0,"rgba(28,34,51,0.34)");g.addColorStop(0.35,"rgba(28,34,51,0.14)");g.addColorStop(1,"rgba(28,34,51,0)");x.fillStyle=g;x.fillRect(0,0,4,64);}
   const aoTex=new THREE.CanvasTexture(aoC);const aoMat=new THREE.MeshBasicMaterial({map:aoTex,transparent:true,depthWrite:false});
   const aoRC=document.createElement("canvas");aoRC.width=aoRC.height=128;{const x=aoRC.getContext("2d"),g=x.createRadialGradient(64,64,30,64,64,64);g.addColorStop(0,"rgba(28,34,51,0.38)");g.addColorStop(0.5,"rgba(28,34,51,0.16)");g.addColorStop(1,"rgba(28,34,51,0)");x.fillStyle=g;x.fillRect(0,0,128,128);}

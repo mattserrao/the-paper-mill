@@ -131,8 +131,9 @@ function camPullOn(){try{return localStorage.getItem("paper-mill-campull")!=="of
       <div class="tsub">Play</div>${tog("tsCam","Fly to big moments","the camera visits major upsets and civics crises, then comes back",camPullOn())}
       ${tog("tsTut","Quick-start tutorial","shown when a season or survival run starts",tut)}
       <div class="tsub">Graphics</div>${tog("tsShadow","Shadows","",!sh||sh.checked)}
+      ${G3.ok&&!G3.bare?tog("tsEdge","Outlines","edge lines on buildings and machines",G3.outlinesOn)+tog("tsTone","Tone mapping","filmic colour curve; changes on the next load",G3.toneOn):""}
       ${G3.GFX?`<div class="trow tcol"><span><b>Graphics quality</b><small>Auto picks for your device (${gfxCap(G3.GFX.auto)})</small></span><div class="tseg tseg5 tseg6" role="group" aria-label="Graphics quality">${["auto","bare","low","medium","high","ultra"].map(g=>`<button type="button" data-g="${g}" aria-pressed="${G3.GFX.pick===g}" title="${GFX_TIP[g]}">${g==="auto"?"Auto":gfxCap(g)}</button>`).join("")}</div>
-        <div class="tgfxr" id="tsGfxR"${G3.GFX.tier===G3.GFX.loaded?" hidden":""}><small>Lighting and scenery detail change on the next load.</small><button type="button" id="tsGfxReload">Reload now</button></div></div>`:""}
+        <div class="tgfxr" id="tsGfxR"${G3.GFX.tier===G3.GFX.loaded&&G3.toneOn===G3.toneLoaded?" hidden":""}><small>Lighting, scenery detail and tone mapping change on the next load.</small><button type="button" id="tsGfxReload">Reload now</button></div></div>`:""}
       <div class="trow"><span><b>Appearance</b><small>Auto follows your device</small></span>${themeSegHTML("tseg")}</div>
       <div class="trow"><span><b>Frame rate</b></span><div class="tseg" role="group" aria-label="Frame rate"><button data-f="saver" aria-pressed="${FPS_MODE==="saver"}">Battery saver</button><button data-f="smooth" aria-pressed="${FPS_MODE!=="saver"}">Smooth</button></div></div>
       <div class="tsub">Your mill</div><div class="tgrid"><button id="tsBoard">Leaderboards</button><button id="tsColors">New colors</button><button id="tsName">Rename</button><button id="tsFs">Fullscreen</button></div>
@@ -142,11 +143,13 @@ function camPullOn(){try{return localStorage.getItem("paper-mill-campull")!=="of
     $t("tsCam").addEventListener("change",e=>{try{localStorage.setItem("paper-mill-campull",e.target.checked?"on":"off");}catch(_){}});
     $t("tsTut").addEventListener("change",e=>{try{localStorage.setItem("paper-mill-tutorial",e.target.checked?"on":"off");}catch(_){}});
     $t("tsShadow").addEventListener("change",e=>{if(sh&&sh.checked!==e.target.checked)sh.click();});
+    {const e1=$t("tsEdge"),e2=$t("tsTone");if(e1)e1.addEventListener("change",e=>G3.setOutlines(e.target.checked));
+      if(e2)e2.addEventListener("change",e=>{G3.setTone(e.target.checked);const r=$t("tsGfxR");if(r)r.hidden=G3.GFX.tier===G3.GFX.loaded&&G3.toneOn===G3.toneLoaded;});}
     $t("tSetBody").querySelectorAll(".tseg button[data-f]").forEach(b=>b.addEventListener("click",()=>{setFpsMode(b.dataset.f);$t("tSetBody").querySelectorAll(".tseg button[data-f]").forEach(x=>x.setAttribute("aria-pressed",String(x===b)));}));
     // v5.4.2: graphics quality on the title too (the same setting as in-game Settings → Graphics)
     $t("tSetBody").querySelectorAll(".tseg button[data-g]").forEach(b=>b.addEventListener("click",()=>{G3.setGfx(b.dataset.g);
       document.querySelectorAll("button[data-g]").forEach(x=>x.setAttribute("aria-pressed",String(x.dataset.g===G3.GFX.pick)));
-      const r=$t("tsGfxR");if(r)r.hidden=G3.GFX.tier===G3.GFX.loaded;}));
+      const r=$t("tsGfxR");if(r)r.hidden=G3.GFX.tier===G3.GFX.loaded&&G3.toneOn===G3.toneLoaded;}));
     {const rb=$t("tsGfxReload");if(rb)rb.addEventListener("click",()=>location.reload());}
     $t("tsBoard").addEventListener("click",()=>openBoard());
     $t("tsColors").addEventListener("click",()=>{rollMill();welcome();$t("tsNote").textContent="New colors: "+MILL.name;});

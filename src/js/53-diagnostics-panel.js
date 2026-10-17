@@ -88,6 +88,11 @@
     seg.innerHTML=["auto","bare","low","medium","high","ultra"].map(g=>`<button data-g="${g}" aria-pressed="${G3.GFX.pick===g}" title="${g==="auto"?"Picked from your device: "+cap(G3.GFX.auto):{bare:"Bare bones: flat colours, no shadows, no scenery or ambient life, 30 FPS (needs a reload)",low:"1024 shadows, 10 Hz, lighter scenery",medium:"1024 shadows, 15 Hz",high:"2048 softer shadows, 24 Hz, full scenery",ultra:"4096 softer shadows, every frame, dense scenery with far shadows"}[g]}">${g==="auto"?`Auto <small class="gtier">${cap(G3.GFX.auto)}</small>`:cap(g)}</button>`).join("");
     seg.querySelectorAll("button").forEach(x=>x.addEventListener("click",()=>G3.setGfx(x.dataset.g)));
     {const rb=document.createElement("button");rb.id="gfxReload";rb.hidden=true;rb.textContent="Reload to apply all";rb.title="Lighting model, round-shape detail and scenery density change on reload";rb.addEventListener("click",()=>location.reload());setField("Graphics",seg).appendChild(rb);}}
+  // v5.8: Outlines (at once) and Tone mapping (next load), next to Shadows
+  if(G3.ok&&!G3.bare){const row0=document.getElementById("v2viewrow")||document.getElementById("v2ctlrow");
+    for(const [id,txt,ti,on,fn] of [["viewEdges","Outlines","Edge lines on buildings and machines",G3.outlinesOn,v=>G3.setOutlines(v)],["viewTone","Tone mapping","Filmic colour curve; changes on the next load (Reload to apply)",G3.toneOn,v=>G3.setTone(v)]]){
+      const l=document.createElement("label");l.className="check";l.title=ti;l.innerHTML=`<input id="${id}" type="checkbox"${on?" checked":""}/> ${txt}`;if(row0)row0.appendChild(l);
+      l.querySelector("input").addEventListener("change",e=>fn(e.target.checked));}}
   {const l=document.createElement("label");l.className="check";l.innerHTML='<input id="showFps" type="checkbox"/> Show FPS';
     const row0=document.getElementById("v2viewrow")||document.getElementById("v2ctlrow");if(row0)row0.appendChild(l);
     l.querySelector("input").addEventListener("change",e=>setShowFps(e.target.checked));
