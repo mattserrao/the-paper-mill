@@ -146,7 +146,11 @@ function no3D(){G3.ok=false;$("no3d").hidden=false;$("no3d-retry").onclick=()=>l
     m.clone=function(){const c=own.call(this);if(this.emissive&&c.isMeshBasicMaterial){c.emissive=this.emissive.clone();c.emissiveIntensity=this.emissiveIntensity;}return styleTag(c);};return m;}
   G3.styleMat=styleMat;
   function StdMat(o){if(BARE)return bareMat(o);if(STY)return styleMat(o);if(!GFX.lambert)return new THREE.MeshStandardMaterial(o);const r=Object.assign({},o||{});delete r.roughness;delete r.metalness;delete r.flatShading;delete r.envMapIntensity;delete r.roughnessMap;delete r.metalnessMap;return new THREE.MeshLambertMaterial(r);}
-  function tok(name){return getComputedStyle(document.documentElement).getPropertyValue("--"+name).trim()||"#888";}
+  // v6 paper: the 3D greys become coloured card stock (construction paper), white walls and floors a cream card; brand,
+  // product and warning colours keep the game's palette
+  const PTOK={"g-metal":"#8ea2bf","g-frame":"#566a92","ink":"#3d3843","g-felt":"#7a8cb0","g-glass":"#4a6280","panel":"#f5efe2","g-wall":"#f3ecdd",
+    "g-slab":"#e9e2d2","g-tile":"#ece5d6","g-asphalt":"#7c818e","smoke":"#9a948c"};
+  function tok(name){if(PAPER0&&PTOK[name])return PTOK[name];return getComputedStyle(document.documentElement).getPropertyValue("--"+name).trim()||"#888";}
   function mat(token,opts={}){const m=new StdMat(Object.assign({roughness:0.72,metalness:0.04,flatShading:false},opts));m.userData.token=token;MATS.push(m);return m;}
   // v4.1 pass 3: an InstancedMesh gets its own copy of a shared material (palette token kept, so brand colours still reach it):
   // three.js re-derives a material's shader parameters every time the same material switches between an instanced mesh and a

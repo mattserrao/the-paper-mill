@@ -42,6 +42,7 @@ with sync_playwright() as pw:
     pg.evaluate("()=>{__PM.trigger('balefire',true);__PM.setRunning(true)}"); jump("recv"); pg.wait_for_timeout(4000)
     pg.evaluate("()=>__PM.setRunning(false)"); snap("fire", 300)
     jump("wh"); snap("warehouse", 4000)
+    pg.evaluate("()=>{__PM.C.simSpeed=20;__PM.setRunning(true)}"); jump("trucks"); pg.wait_for_timeout(9000); pg.evaluate("()=>__PM.setRunning(false)"); snap("trucks", 600)
     pg.evaluate("()=>{const S=__PM.S;S.inc.forEach(i=>i.left=0);S.t+=15*60;__PM.C.simSpeed=1;__PM.setRunning(true)}")
     jump("pm"); pg.wait_for_timeout(5000); pg.evaluate("()=>__PM.setRunning(false)"); snap("night", 500)
     b.close()

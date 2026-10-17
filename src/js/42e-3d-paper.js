@@ -18,28 +18,53 @@
     for(const m of [edgeMat,edgeSoft]){m.onBeforeCompile=inkBias;m.customProgramCacheKey=()=>"pmink";}
     // (v6.1: the hairline ink on every part is gone; bold outlines come from one merged shell, built with the shadows below)
     edgeMat.transparent=true;edgeMat.opacity=0.38;edgeSoft.opacity=0.25;   // the game's own fold lines stay, as light pencil
-    /* bold ink: each sizeable piece gets an ink "shell" child: its own shape, swollen outward a few centimetres and drawn inside
-       out (back faces) in ink, so only the rim that pokes past the piece shows, as a thick outline at every angle. Shells are
-       added now, before the scenery batching runs, so they batch with everything else (a handful of draws in all), and a
-       piece that moves carries its shell with it. Swell directions point away from the piece's centre (per axis, so long
-       beams get an even rim); shapes are shared between pieces of the same shape and size. */
-    {const W=0.085,INKM=new THREE.MeshBasicMaterial({color:INKC,side:THREE.BackSide,fog:false});G3.inkHullMat=INKM;
-      const HC=new Map(),_s=new THREE.Vector3(),_c=new THREE.Vector3(),_d=new THREE.Vector3(),_p=new THREE.Vector3();let n=0,tri=0;const todo=[];
-      scene.traverse(o=>{if(!o.isMesh||o.isInstancedMesh||o.isSkinnedMesh||o.isBatchedMesh)return;const m=o.material;
-        if(!m||Array.isArray(m)||!m.isMeshBasicMaterial||m.emissive===undefined||m.transparent||!o.visible)return;
-        const g=o.geometry,pa=g&&g.attributes.position;if(!pa||pa.count>1600||o.userData.inkHull)return;
-        o.updateWorldMatrix(true,false);if(o.matrixWorld.determinant()<0||m.side!==THREE.FrontSide||(g.parameters&&g.parameters.openEnded))return;   // (mirrored pieces and open or two-sided shells: an inside-out copy would show through them)
-        if(!g.boundingBox)g.computeBoundingBox();o.getWorldScale(_s);const b=g.boundingBox,sx=(b.max.x-b.min.x)*Math.abs(_s.x),sy=(b.max.y-b.min.y)*Math.abs(_s.y),sz=(b.max.z-b.min.z)*Math.abs(_s.z);
-        if(Math.max(sx,sy,sz)<0.4||(sy<0.25&&sx*sz>30))return;todo.push([o,sx,sy,sz]);});
-      for(const [o,sx,sy,sz] of todo){const g=o.geometry,k=g.uuid+"|"+[_s.x,_s.y,_s.z].map(v=>v.toFixed(2)).join();o.getWorldScale(_s);
-        let hg=HC.get(k);
-        if(!hg){hg=g.clone();const pa=hg.attributes.position,b=g.boundingBox;b.getCenter(_c);
-          const ex=Math.max(b.max.x-b.min.x,1e-3),ey=Math.max(b.max.y-b.min.y,1e-3),ez=Math.max(b.max.z-b.min.z,1e-3);
-          for(let i=0;i<pa.count;i++){_p.fromBufferAttribute(pa,i);_d.set((_p.x-_c.x)/ex,(_p.y-_c.y)/ey,(_p.z-_c.z)/ez);if(_d.lengthSq()<1e-8)_d.set(0,1,0);_d.normalize();
-            pa.setXYZ(i,_p.x+_d.x*W/Math.max(Math.abs(_s.x),1e-3),_p.y+_d.y*W/Math.max(Math.abs(_s.y),1e-3),_p.z+_d.z*W/Math.max(Math.abs(_s.z),1e-3));}
-          pa.needsUpdate=true;hg.computeBoundingSphere();hg.computeBoundingBox();HC.set(k,hg);}
-        const h=new THREE.Mesh(hg,INKM);h.userData.inkHull=true;h.raycast=()=>{};h.castShadow=false;h.receiveShadow=false;o.add(h);n++;tri+=(hg.index?hg.index.count:hg.attributes.position.count)/3;}
-      diag(`paper ink: ${n} pieces outlined (${HC.size} shapes, ${tri|0} triangles)`);}
+    /* Folded-card simplification and bold ink, applied to every paper part (machines, buildings, props, vehicles):
+       - strokes: thin long parts (rails, posts, rungs, small pipes: two sides under 0.2 m) are no longer modelled tubes or bars;
+         each becomes a drawn stroke, two crossed flat strips (4 triangles instead of 12-40), in its own colour
+       - crumbs: parts smaller than ~0.2 m all round (bolts, brackets, nameplates) are left off; lights and glowing parts stay
+       - ink: each chunky part (at least 0.25 m thick, 0.8 m long) gets an ink "shell" child: its own shape, swollen outward a few
+         centimetres and drawn inside out (back faces) in ink, so only the rim that pokes past the part shows, as a bold outline
+         at every angle. Shells are added before the scenery batching runs, so they batch with everything else, and a part that
+         moves carries its shell. Mirrored, open and two-sided parts get none (an inside-out copy would show through them). */
+    const W_INK=0.085,INKM=new THREE.MeshBasicMaterial({color:INKC,side:THREE.BackSide,fog:false});G3.inkHullMat=INKM;
+    const HC=new Map(),SC=new Map(),DS=new Map(),_s=new THREE.Vector3(),_c=new THREE.Vector3(),_d=new THREE.Vector3(),_p=new THREE.Vector3();
+    const PS={hull:0,hullTri:0,stroke:0,strokeSaved:0,crumb:0};G3.paperStats=PS;
+    const triOf=g=>(g.index?g.index.count:g.attributes.position.count)/3;
+    const paperPart=o=>{if(!o.isMesh||o.isInstancedMesh||o.isSkinnedMesh||o.isBatchedMesh||o.userData.inkHull||o.userData.stroke)return false;const m=o.material;
+      return !!m&&!Array.isArray(m)&&m.isMeshBasicMaterial&&m.emissive!==undefined&&!m.transparent&&o.visible;};
+    function dims(o){const g=o.geometry;if(!g.boundingBox)g.computeBoundingBox();o.getWorldScale(_s);const b=g.boundingBox;
+      return [(b.max.x-b.min.x)*Math.abs(_s.x),(b.max.y-b.min.y)*Math.abs(_s.y),(b.max.z-b.min.z)*Math.abs(_s.z)];}
+    // a stroke: two crossed strips along the part's long axis, filling its own box (in the part's geometry space)
+    function strokeGeo(g){let sg=SC.get(g.uuid);if(sg)return sg;const b=g.boundingBox,c=b.getCenter(new THREE.Vector3()),e=b.getSize(new THREE.Vector3());
+      const ax=e.x>=e.y&&e.x>=e.z?0:e.y>=e.z?1:2,u=(ax+1)%3,v=(ax+2)%3,P=[];const pt=(a,bu,bv)=>{const q=[0,0,0];q[ax]=c.getComponent(ax)+a*e.getComponent(ax)/2;q[u]=c.getComponent(u)+bu*e.getComponent(u)/2;q[v]=c.getComponent(v)+bv*e.getComponent(v)/2;return q;};
+      for(const [du,dv] of [[1,0],[0,1]]){const A=pt(-1,-du,-dv),B=pt(1,-du,-dv),C=pt(1,du,dv),D=pt(-1,du,dv);P.push(...A,...B,...C,...A,...C,...D);}
+      // same layout as the game's own shapes (indexed, with normals and texture coordinates) so strokes batch with everything else
+      sg=new THREE.BufferGeometry();sg.setAttribute("position",new THREE.Float32BufferAttribute(P,3));const nv=P.length/3;
+      sg.setAttribute("normal",new THREE.Float32BufferAttribute(new Array(nv*3).fill(0).map((_,i)=>i%3===1?1:0),3));sg.setAttribute("uv",new THREE.Float32BufferAttribute(new Array(nv*2).fill(0.5),2));
+      sg.setIndex([...Array(nv).keys()]);sg.computeBoundingSphere();sg.computeBoundingBox();SC.set(g.uuid,sg);return sg;}
+    function dbl(m){let c=DS.get(m);if(!c){c=m.clone();c.side=THREE.DoubleSide;c.userData=Object.assign({},m.userData);if(MATS.includes(m))MATS.push(c);DS.set(m,c);}return c;}
+    function addHull(o,sx,sy,sz){const g=o.geometry;o.getWorldScale(_s);const k=g.uuid+"|"+[_s.x,_s.y,_s.z].map(v=>v.toFixed(2)).join();let hg=HC.get(k);
+      if(!hg){hg=g.clone();const pa=hg.attributes.position,b=g.boundingBox;b.getCenter(_c);
+        const ex=Math.max(b.max.x-b.min.x,1e-3),ey=Math.max(b.max.y-b.min.y,1e-3),ez=Math.max(b.max.z-b.min.z,1e-3);
+        for(let i=0;i<pa.count;i++){_p.fromBufferAttribute(pa,i);_d.set((_p.x-_c.x)/ex,(_p.y-_c.y)/ey,(_p.z-_c.z)/ez);if(_d.lengthSq()<1e-8)_d.set(0,1,0);_d.normalize();
+          pa.setXYZ(i,_p.x+_d.x*W_INK/Math.max(Math.abs(_s.x),1e-3),_p.y+_d.y*W_INK/Math.max(Math.abs(_s.y),1e-3),_p.z+_d.z*W_INK/Math.max(Math.abs(_s.z),1e-3));}
+        pa.needsUpdate=true;hg.computeBoundingSphere();hg.computeBoundingBox();HC.set(k,hg);}
+      const h=new THREE.Mesh(hg,INKM);h.userData.inkHull=true;h.raycast=()=>{};h.castShadow=false;h.receiveShadow=false;o.add(h);PS.hull++;PS.hullTri+=triOf(hg);}
+    // one part through the rules; vehicle parts keep their small bits only if they glow (lights) and are never turned to strokes
+    // when they are wheels (round, short)
+    function cardify(o,vehicle){if(!paperPart(o))return;const m=o.material,g=o.geometry;if(!g||!g.attributes.position)return;
+      o.updateWorldMatrix(true,false);const [sx,sy,sz]=dims(o),mx=Math.max(sx,sy,sz),mn=Math.min(sx,sy,sz),md=sx+sy+sz-mx-mn;
+      const glow=m.emissive&&(m.emissive.r+m.emissive.g+m.emissive.b)>0.02;
+      if(mx<0.2&&!glow&&!o.userData.keep){o.visible=false;PS.crumb++;return;}
+      if(vehicle)return;   // (vehicles: the rest is done per vehicle, as one merged outline)
+      if(md<0.2&&mx>0.6&&!glow&&g.attributes.position.count<=400){const t0=triOf(g);o.geometry=strokeGeo(g);o.material=dbl(m);o.userData.stroke=true;PS.stroke++;PS.strokeSaved+=t0-4;return;}
+      if(o.matrixWorld.determinant()<0||m.side!==THREE.FrontSide||(g.parameters&&g.parameters.openEnded)||g.attributes.position.count>1600)return;
+      if(mn>=0.25&&mx>=0.8&&!(sy<0.25&&sx*sz>30))addHull(o,sx,sy,sz);}
+    G3.paperCardify=cardify;
+    {const all=[];scene.traverse(o=>{if(o.isMesh&&!(o.userData&&o.userData.legs))all.push(o);});
+      // (worker figures are paper dolls already; their hidden 3D parts are skipped by the visibility check)
+      for(const o of all)cardify(o,false);
+      diag(`paper card: ${PS.stroke} parts drawn as strokes (${PS.strokeSaved|0} triangles saved), ${PS.crumb} crumbs left off, ${PS.hull} outlined (${PS.hullTri|0} triangles)`);}
     /* paper drop shadows: each standing piece throws a flat, hard-edged shadow down and to the right on the table, as a lamp over
        the table would. Built once, after the static batching has listed the pieces that don't move: every one is flattened
        onto the ground along the light (a planar shadow), all merged into one mesh drawn in one call. A stencil lets each
@@ -71,6 +96,52 @@
       sm.onBeforeCompile=sh=>{sh.vertexShader=sh.vertexShader.replace("#include <project_vertex>","#include <project_vertex>\ngl_Position.z-=0.004*gl_Position.w;");};sm.customProgramCacheKey=()=>"pmshade";
       const mesh=new THREE.Mesh(g,sm);mesh.renderOrder=1;mesh.frustumCulled=false;mesh.userData.noNav=true;mesh.raycast=()=>{};scene.add(mesh);G3.paperShadowMesh=mesh;
       diag(`paper shadows: ${parts} pieces, ${(pos.length/9|0)} triangles, one draw`);};
+    /* vehicles as hand-moved paper pieces: any group on the table that travels (trucks, trains, forklifts, loaders, cars,
+       the food truck) is found the first time it moves, gets the card rules and ink above, and from then on is "pushed by a
+       hand": on each stop-motion step it hops a little and tips side to side while it moves, and settles flat when it stops.
+       Its parts move into an inner "puppet" group so the game's own position and heading are never touched. Each one also
+       drags a flat cut-paper shadow along (all vehicle shadows are one instanced batch: one draw). */
+    const VEH=new Map(),VLAST=new WeakMap(),VSKIP=new WeakSet(),VMAX=96;G3.noVehPaper=new URLSearchParams(location.search).has("novehpaper");G3.paperVehicles=VEH;
+    const vsc=document.createElement("canvas");vsc.width=vsc.height=64;{const x=vsc.getContext("2d");x.fillStyle="#fff";x.beginPath();x.roundRect?x.roundRect(4,8,56,48,14):x.rect(4,8,56,48);x.fill();}
+    const vsm=new THREE.MeshBasicMaterial({color:INKC,alphaMap:new THREE.CanvasTexture(vsc),alphaTest:0.5,transparent:true,opacity:0.36,depthWrite:false,fog:false,
+      polygonOffset:true,polygonOffsetFactor:-1,polygonOffsetUnits:-4,stencilWrite:true,stencilRef:1,stencilFunc:THREE.NotEqualStencilFunc,stencilZPass:THREE.ReplaceStencilOp});
+    const vsg=new THREE.PlaneGeometry(1,1);vsg.rotateX(-Math.PI/2);const VSH=new THREE.InstancedMesh(vsg,vsm,VMAX);VSH.count=0;VSH.frustumCulled=false;VSH.renderOrder=1;VSH.userData.noNav=true;VSH.raycast=()=>{};scene.add(VSH);
+    const _wp=new THREE.Vector3(),_wq=new THREE.Quaternion(),_ws=new THREE.Vector3(),_m4=new THREE.Matrix4(),_e=new THREE.Euler(0,0,0,"YXZ"),_bx=new THREE.Box3();
+    const shownW=o=>{for(let x=o;x;x=x.parent)if(!x.visible)return false;return true;};
+    function vehicleAdopt(g){let n=0;g.traverse(o=>{if(o.isMesh)n++;});if(n<3)return null;
+      // measure in the group's own frame
+      const pm=g.matrix.clone(),pp=g.parent;g.updateMatrixWorld(true);const inv=new THREE.Matrix4().copy(g.matrixWorld).invert();_bx.makeEmpty();
+      g.traverse(o=>{if(o.isMesh&&o.visible&&o.geometry){if(!o.geometry.boundingBox)o.geometry.computeBoundingBox();const b=o.geometry.boundingBox.clone().applyMatrix4(_m4.multiplyMatrices(inv,o.matrixWorld));_bx.union(b);}});
+      if(_bx.isEmpty())return null;const sz=_bx.getSize(new THREE.Vector3()),foot=Math.max(sz.x,sz.z);g.getWorldPosition(_wp);
+      // only things that roll along the ground (cranes and hoists overhead move too, but are machinery, not pieces pushed about)
+      if(foot<1.2||foot>80||Math.abs(_wp.y+_bx.min.y)>0.7||sz.y>1.8*foot){VSKIP.add(g);return null;}
+      const pup=new THREE.Group();pup.userData.puppet=true;const kids=g.children.slice();for(const k of kids)pup.add(k);g.add(pup);
+      g.traverse(o=>{if(o.isMesh)cardify(o,true);});
+      // one ink outline for the whole vehicle (one draw): the shells of its big parts (body, cab, trailer, tank: 1 m and up, so
+      // cargo and wheels, which come and go or spin, have none), merged in the puppet's own frame
+      {pup.updateMatrixWorld(true);const pinv=new THREE.Matrix4().copy(pup.matrixWorld).invert(),parts=[];
+        pup.traverse(o=>{if(!paperPart(o)||!o.geometry||!o.geometry.attributes.position||o.geometry.attributes.position.count>1600)return;const m=o.material;
+          if(m.side!==THREE.FrontSide||(o.geometry.parameters&&o.geometry.parameters.openEnded))return;const [sx,sy,sz]=dims(o);if(Math.max(sx,sy,sz)<1.0||Math.min(sx,sy,sz)<0.25)return;
+          const before=o.children.length;addHull(o,sx,sy,sz);const h=o.children[o.children.length-1];if(o.children.length===before)return;
+          o.remove(h);const hg=h.geometry.index?h.geometry.toNonIndexed():h.geometry.clone();hg.applyMatrix4(_m4.multiplyMatrices(pinv,o.matrixWorld));
+          parts.push(hg.attributes.position.array);});
+        if(parts.length){const n=parts.reduce((a,b)=>a+b.length,0),arr=new Float32Array(n);let k=0;for(const a of parts){arr.set(a,k);k+=a.length;}
+          const mg=new THREE.BufferGeometry();mg.setAttribute("position",new THREE.BufferAttribute(arr,3));mg.computeBoundingSphere();
+          const vm=new THREE.Mesh(mg,INKM);vm.userData.inkHull=true;vm.raycast=()=>{};pup.add(vm);}}
+      const v={g,pup,box:_bx.clone(),h:sz.y,moving:0,ph:Math.random()*6};VEH.set(g,v);return v;}
+    function vehiclesStep(step){
+      // find newly moving groups (top level, or one level down: the train's cars ride on a train group)
+      const scan=o=>{if(!o.isGroup||VEH.has(o)||VSKIP.has(o)||o.userData.legs||o.userData.puppet)return;o.getWorldPosition(_wp);const l=VLAST.get(o);
+        if(l){const d=Math.hypot(_wp.x-l.x,_wp.z-l.z);if(d>0.02&&d<40&&shownW(o))vehicleAdopt(o);l.copy(_wp);}else VLAST.set(o,_wp.clone());};
+      for(const c of scene.children){scan(c);if(c.isGroup&&!VEH.has(c)&&c.children.length<12)for(const cc of c.children)scan(cc);}
+      let n=0;
+      for(const v of VEH.values()){const g=v.g;g.getWorldPosition(_wp);const l=VLAST.get(g)||_wp.clone();const mv=Math.hypot(_wp.x-l.x,_wp.z-l.z)>0.01;VLAST.set(g,_wp.clone());
+        v.moving=mv?3:Math.max(0,v.moving-1);const on=v.moving>0;   // (keeps hopping for a few steps after a stop, then settles)
+        v.pup.position.y=on&&(step+(v.ph|0))%2?0.09:0;v.pup.rotation.z=on?((step+(v.ph|0))%2?0.035:-0.035):0;v.pup.rotation.x=on?Math.sin(step*0.9+v.ph)*0.02:0;
+        if(n<VMAX&&shownW(g)){g.matrixWorld.decompose(_wp,_wq,_ws);_e.setFromQuaternion(_wq,"YXZ");const b=v.box,cx=(b.min.x+b.max.x)/2,cz=(b.min.z+b.max.z)/2;
+          _p.set(cx,0,cz).applyQuaternion(_wq).add(_wp);const off=v.h*0.42;_e.x=0;_e.z=0;_wq.setFromEuler(_e);
+          _m4.compose(_p.set(_p.x+0.62*off,_wp.y+0.06,_p.z+0.42*off),_wq,_ws.set((b.max.x-b.min.x)*1.02,1,(b.max.z-b.min.z)*1.02));VSH.setMatrixAt(n++,_m4);}}
+      VSH.count=n;VSH.instanceMatrix.needsUpdate=true;}
     // the table: no sky dome or clouds (the background and fog are the paper colour, which the day/night still tints)
     if(G3.SKY){const K=G3.SKY;for(const k of ["dome","clouds","mist"]){const o=K[k]&&(K[k].isObject3D?K[k]:K[k].mesh);if(o)o.visible=false;}K.tick=null;}
     // light: one multiplier for every paper surface, from full day white to a cool, dim night
@@ -83,7 +154,7 @@
     G3.paperSteps=0;G3.paperCamDraws=0;
     G3.frame=function(rdt){const now=performance.now();acc+=rdt;
       if(now-lastStep>=STEP_MS-4||G3.paperEvery){lastStep=now;const a=Math.min(acc,0.25);acc=0;G3.paperSteps++;
-        paperLight();if(G3.paperDollTick)G3.paperDollTick(now);if(!G3.paperShadowDone)G3.paperShadow();base(a);camKey();return;}
+        paperLight();if(G3.paperDollTick)G3.paperDollTick(now);try{if(!G3.noVehPaper)vehiclesStep(G3.paperSteps);}catch(e){if(!G3.vehErr){G3.vehErr=1;console.error("paper vehicles",e);}}if(!G3.paperShadowDone)G3.paperShadow();base(a);camKey();return;}
       try{placeCam();if(camKey()){G3.paperCamDraws++;if(G3.SM&&G3.SM.bms)for(const b of G3.SM.bms)b.perObjectFrustumCulled=true;
         scene.matrixWorldAutoUpdate=false;renderer.render(scene,camera);scene.matrixWorldAutoUpdate=true;}}catch(e){console.error("paper frame",e);}};
     diag("paper: stop-motion 12/s, camera smooth");

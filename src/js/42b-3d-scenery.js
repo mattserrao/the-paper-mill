@@ -133,11 +133,20 @@
     G3.terrainH=hAt;
     /* ---------- assets ---------- */
     const GREEN=["#6fa76b","#5f9a63","#7cb072","#8ab879","#5b8f5c","#4f8257","#94bf6e","#6a9a4f","#7aa88a"],AUT=["#c9a24a","#d08a3c","#b9673a"],BARK=["#7a5a3c","#6b4f36","#8a6a4a"];
-    function broadleaf(x,z,s,far,tight){if(!place(x,z,(tight?0.7:1.6)*s))return false;const c=RNG()<0.06?pick(AUT):pick(GREEN);add(T.tri3,x,0,z,0.28*s,2.3*s,0.28*s,RNG()*6,pick(BARK),0.1);
-      add(far?TC.oct:TC.ico,x,3.4*s,z,1.9*s,(far?1.9:1.5)*s,1.9*s,FACE(RNG()*6),c,0.35);claim(x,z,(tight?0.75:1.7)*s,5.2*s,0.3*s);return true;}
-    function conifer(x,z,s,tight){if(!place(x,z,(tight?0.55:1.3)*s))return false;const c=pick(["#3f6f4f","#4a7a55","#557f58","#3d6a52"]);add(T.tri3,x,0,z,0.25*s,1.6*s,0.25*s,RNG()*6,pick(BARK),0.1);
-      add(TC.cone6,x,1.1*s,z,1.7*s,3.4*s,1.7*s,FACE(RNG()*6),c,0.3);add(TC.cone6,x,3.2*s,z,1.2*s,2.9*s,1.2*s,FACE(RNG()*6),c,0.25);claim(x,z,(tight?0.6:1.5)*s,6.1*s,0.3*s);return true;}
-    function bush(x,z,s,hex){if(!place(x,z,0.9*s))return false;add(TC.oct,x,0.35*s,z,1.0*s,0.7*s,1.0*s,FACE(RNG()*6),hex||pick(GREEN),0.3);claim(x,z,0.9*s,1.1*s);return true;}
+    /* v6 paper: trees and bushes are hand-drawn cut-out cards (PTREES, built into one instanced batch at the end). The random
+       numbers the 3D trees drew (turn, bark colour) are still drawn in the same order, so the site layout is unchanged. */
+    const PTREES=G3.style==="paper"?[]:null;
+    function broadleaf(x,z,s,far,tight){if(!place(x,z,(tight?0.7:1.6)*s))return false;const c=RNG()<0.06?pick(AUT):pick(GREEN);
+      if(PTREES){RNG();pick(BARK);RNG();PTREES.push([x,z,s,c,0]);}
+      else{add(T.tri3,x,0,z,0.28*s,2.3*s,0.28*s,RNG()*6,pick(BARK),0.1);add(far?TC.oct:TC.ico,x,3.4*s,z,1.9*s,(far?1.9:1.5)*s,1.9*s,FACE(RNG()*6),c,0.35);}
+      claim(x,z,(tight?0.75:1.7)*s,5.2*s,0.3*s);return true;}
+    function conifer(x,z,s,tight){if(!place(x,z,(tight?0.55:1.3)*s))return false;const c=pick(["#3f6f4f","#4a7a55","#557f58","#3d6a52"]);
+      if(PTREES){RNG();pick(BARK);RNG();RNG();PTREES.push([x,z,s,c,1]);}
+      else{add(T.tri3,x,0,z,0.25*s,1.6*s,0.25*s,RNG()*6,pick(BARK),0.1);add(TC.cone6,x,1.1*s,z,1.7*s,3.4*s,1.7*s,FACE(RNG()*6),c,0.3);add(TC.cone6,x,3.2*s,z,1.2*s,2.9*s,1.2*s,FACE(RNG()*6),c,0.25);}
+      claim(x,z,(tight?0.6:1.5)*s,6.1*s,0.3*s);return true;}
+    function bush(x,z,s,hex){if(!place(x,z,0.9*s))return false;
+      if(PTREES){RNG();PTREES.push([x,z,s,hex||pick(GREEN),2]);}else add(TC.oct,x,0.35*s,z,1.0*s,0.7*s,1.0*s,FACE(RNG()*6),hex||pick(GREEN),0.3);
+      claim(x,z,0.9*s,1.1*s);return true;}
     function rock(x,z,s,hex){if(!place(x,z,1.1*s))return false;add(T.ico,x,0.2*s,z,1.2*s,0.75*s,1.0*s,RNG()*6,hex,0.25);claim(x,z,1.2*s,1*s);return true;}
     function house(x,z,ry,w,d,h,wall,roof){add(T.box,x,0,z,w,h,d,ry,wall,0.15);add(T.gable,x,h,z,w+0.4,h*0.55,d+0.5,ry,roof,0.05);}
     const NW=[];   // lit windows for the night (urban): [x,y,z,w,h,face] per window, merged into one mesh at the end
@@ -626,6 +635,7 @@
     let tris=0;const parts=[];
     for(const k in SEC){const S2=SEC[k];if(!S2.n)continue;const g=new THREE.BufferGeometry();g.setAttribute("position",new THREE.Float32BufferAttribute(S2.p,3));g.setAttribute("color",new THREE.Float32BufferAttribute(S2.c,3));
       g.computeVertexNormals();g.computeBoundingSphere();const m=new THREE.Mesh(g,smat);m.castShadow=k==="near"||!!(G3.GFX&&G3.GFX.far);m.receiveShadow=k==="near";m.userData.scenery=k;m.userData.noNav=true;scene.add(m);parts.push(m);tris+=S2.n;}
+    if(PTREES&&PTREES.length&&G3.paperTreeBatch)G3.paperTreeBatch(PTREES,hAt);
     // v14: landmark names, shown only in the zoomed-out site view (43-3d-frame.js swaps them with the equipment labels)
     {const NM={timber:"Valley Timber Co.",occStore:"OCC bale store",farm:"Farm",orchard:"Orchard",lake:"Lake",mast:"Radio mast",substation:"Substation",deepwood:"Deep woods",
         railyard:"Rail yard",waterTower:"Water tower",recycler:"Recycling yard",pier:"Pier",port:"Container port",lighthouse:"Lighthouse",townWater:"Town water",beach:"Beach",
