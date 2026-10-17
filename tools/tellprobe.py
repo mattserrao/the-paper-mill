@@ -4,12 +4,12 @@ import pathlib, sys, json
 from playwright.sync_api import sync_playwright
 src = open(pathlib.Path(__file__).parent / "bench.py").read()
 exec(src.split("def stats")[0].split("from playwright.sync_api import sync_playwright")[1])
-html = pathlib.Path(sys.argv[1]).read_text(); mode = sys.argv[2]; js = pathlib.Path(sys.argv[3]).read_text()
+html = pathlib.Path(sys.argv[1]).read_text(); mode = sys.argv[2]; js = pathlib.Path(sys.argv[3]).read_text(); extra = sys.argv[4] if len(sys.argv) > 4 else ""
 with sync_playwright() as pw:
     b = pw.chromium.launch(args=["--use-gl=angle", "--use-angle=swiftshader", "--enable-unsafe-swiftshader"])
     pg = b.new_page(viewport={"width": 640, "height": 400}); errs = []
     pg.on("pageerror", lambda e: errs.append(str(e)[:300]))
-    pg.route("**/*", route_for(html)); pg.add_init_script(INIT); pg.goto("http://bench.local/?notitle&nosave")
+    pg.route("**/*", route_for(html)); pg.add_init_script(INIT); pg.goto("http://bench.local/?notitle&nosave" + extra)
     pg.wait_for_function("window.__PM&&window.__B&&__B.first!==null&&(!__PM.G3.prewarm||__PM.G3.warm)", timeout=240000, polling=500)
     if mode == "free": pg.evaluate("()=>document.getElementById('v2free').click()")
     else:

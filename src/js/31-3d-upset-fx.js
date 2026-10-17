@@ -472,6 +472,8 @@
   };
   const blackEl=$("blackout3d");let lastIncTxt=0;
   function makeFX(id){const def=FXDEF[id];const g=new THREE.Group();scene.add(g);const pp=PINS[id]||[0,10,0,"!"];const f=FX[id]={g,up:null,pin:pinAt(g,pp[0],pp[1],pp[2],pp[3]),lb:lblNew(true,id)};
+    // v5.7.3 bare: a token puff at the spot instead of the full effect (the red tag and label are as usual)
+    if(G3.bare){const x=pp[0],z=pp[2];f.up=(now,rdt)=>{if(rdt>0&&Math.random()<rdt*2.5)emit("smoke",x+R()*1.5,2,z+R()*1.5,R()*0.3,1.4,R()*0.3,2.4,1.6,"#6b707a",0.65);};return f;}
     f.up=def?def(g):()=>{};return f;}
   /* v4: every upset effect is built, and every shader compiled, while the start menu is up: a few effects per frame
      (about 8 ms of work each frame), then one compileAsync pass, which compiles in parallel where the browser supports

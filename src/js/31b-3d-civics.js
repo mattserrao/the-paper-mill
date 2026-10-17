@@ -116,7 +116,7 @@
   const PART_IDS=Object.keys(BUILD).filter(k=>k!=="fx");
   // built a few scenes per frame during the start-up precompile (v5.2 review: all at once stalled the page for seconds on
   // slow devices, and the title music with it); civBuild() finishes whatever is left in one go
-  const toBuild=[...PART_IDS];
+  const toBuild=G3.bare?[]:[...PART_IDS];   // (v5.7.3 bare: no civics scenery in the world)
   function buildOne(id){try{const g=new THREE.Group();g.visible=false;scene.add(g);const P=CV.parts[id]=Object.assign({g,id},BUILD[id](g));
       P.tick(performance.now(),0,2,null,{});   // a first paint of its boards, so their textures upload before play
     }catch(e){diag(`civics scene "${id}" failed: ${String(e&&e.message||e).slice(0,100)}`);}}

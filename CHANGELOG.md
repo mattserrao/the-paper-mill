@@ -1,5 +1,15 @@
 # Changelog
 
+## v5.7.3 (2026-10-16): Bare graphics
+- **Graphics quality → Bare**: the bones only, for weak phones and long sessions on battery. Flat unlit colours, plain
+  boxes, no shadows or outlines, no sky, clouds or weather, nothing outside the fence but the ground and roads, no
+  ambient life (tours, managers, janitor, scrubbers, birds, food truck), no civics scenery, token puffs for upsets (tags
+  and labels as usual), and 30 FPS at most. Crews, trucks, forklifts, tells, rounds and knobs all work as before.
+- The player's choice only (Auto never picks it); changing to or from Bare takes a reload, offered as before.
+- Measured in phone emulation against Low: frame cost −44%, GPU −45%, CPU −21%, triangles −61%, no shadow pass,
+  shader programs 81 → 67, texture memory −40%.
+- Tools: `barecheck.py` (Low vs Bare screenshots, counts, and an error-free run with every upset, a Round and a knob).
+
 ## v5.7.2 (2026-10-16): help page
 - **Help**, from a new ? button on the title screen (next to the settings cog) and a Help tile in the pause menu: one page
   with two tabs.
