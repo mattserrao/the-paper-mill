@@ -1127,3 +1127,6 @@ body.dark .kvchip{background:color-mix(in srgb,var(--panel) 96%,transparent)}
 .help .hfoot button{min-height:44px;padding:0 16px;border-radius:12px;font:700 14px var(--f-body)}
 .help .hfoot span{font:500 12.5px var(--f-body);color:var(--muted);flex:1;min-width:180px}
 .title .tleft{display:flex;gap:10px;pointer-events:auto}
+/* v5.7.3: six graphics choices (Auto, Bare, Low, Medium, High, Ultra) */
+.title .tseg.tseg6{grid-template-columns:repeat(3,1fr)}
+#gfxSeg{flex-wrap:wrap}

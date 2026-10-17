@@ -45,7 +45,9 @@ function no3D(){G3.ok=false;$("no3d").hidden=false;$("no3d-retry").onclick=()=>l
      discrete GPU); the player can pin one in Controls. Pixel ratio, shadow refresh, shadow map size, weather particles and
      far-scenery shadows and the shadow softness change live; the lighting model and scenery density take effect on the next load. */
   // v15: px is each tier's budget of rendered pixels (drawing buffer); the pixel ratio is lowered to stay within it
-  const GFX_TIERS={low:{pr:1,px:0.9e6,shadow:1024,soft:false,hz:10,scenery:0.5,wx:600,lambert:true,far:false},
+  // v5.7.3 bare: the bones only. Flat unlit colours (one matcap), plain boxes, no shadows, nothing outside the fence but the
+  // ground and roads, no sky, no ambient life, token upset effects, 30 FPS. Picked by the player only (Auto never), on reload.
+  const GFX_TIERS={bare:{pr:0.75,px:0.5e6,shadow:512,soft:false,hz:10,scenery:0,wx:0,lambert:true,far:false,bare:true},low:{pr:1,px:0.9e6,shadow:1024,soft:false,hz:10,scenery:0.5,wx:600,lambert:true,far:false},
     medium:{pr:1.25,px:1.6e6,shadow:1024,soft:false,hz:15,scenery:0.85,wx:1000,lambert:true,far:false},
     high:{pr:2,px:2.4e6,shadow:2048,soft:true,hz:24,scenery:1,wx:2000,lambert:false,far:false},
     ultra:{pr:2,px:4.2e6,shadow:4096,soft:true,hz:60,scenery:1.4,wx:2600,lambert:false,far:true}};
@@ -58,7 +60,7 @@ function no3D(){G3.ok=false;$("no3d").hidden=false;$("no3d-retry").onclick=()=>l
   {const q=new URLSearchParams(location.search).get("gfx");if(q&&GFX_TIERS[q])gfxPick=q;}   // ?gfx=low|medium|high|ultra (tests)
   if(!GFX_TIERS[gfxPick])gfxPick="auto";
   const GFX=G3.GFX={...GFX_TIERS[gfxPick==="auto"?gfxAuto:gfxPick],tier:gfxPick==="auto"?gfxAuto:gfxPick,pick:gfxPick,auto:gfxAuto,gpu:String(gpuName).slice(0,60)};
-  GFX.loaded=GFX.tier;if(gfxPick==="auto"&&!mobile&&!discrete){GFX.px=1.9e6;GFX.shadow=1024;}
+  GFX.loaded=GFX.tier;const BARE=G3.bare=GFX.tier==="bare";if(gfxPick==="auto"&&!mobile&&!discrete){GFX.px=1.9e6;GFX.shadow=1024;}
   // the pixel ratio for a canvas of w x h CSS px: the tier's ratio, the screen's, and the pixel budget, whichever is lowest
   G3.prFor=(w,h)=>G3.prFixed||Math.max(0.75,Math.min(GFX.pr,window.devicePixelRatio||1,Math.sqrt(GFX.px/Math.max(1,w*h))));
   {const gl=renderer.getContext();G3.multiDraw=!!gl.getExtension("WEBGL_multi_draw");
@@ -68,12 +70,12 @@ function no3D(){G3.ok=false;$("no3d").hidden=false;$("no3d-retry").onclick=()=>l
   // the shadow pass redraws every shadow-casting object, so refresh it a few times a second instead of every frame (v2.8.4: desktop too)
   renderer.shadowMap.autoUpdate=false;G3.shadowHz=GFX.hz;
   // v2.8.4: round shapes get only as many sides as their size needs at this zoom (unit shapes that get scaled up keep 24)
-  const segCap=(r,s)=>Math.max(3,Math.min(s,r===1?24:r<0.15?6:r<0.45?10:r<1.2?16:r<4?20:28));
+  const segCap=(r,s)=>Math.max(3,Math.min(s,BARE?(r<0.45?6:r<4?10:14):r===1?24:r<0.15?6:r<0.45?10:r<1.2?16:r<4?20:28));   // (v5.7.3: bare keeps round things to a few sides)
   class CylG extends THREE.CylinderGeometry{constructor(rt=1,rb=1,h=1,rs=32,hs=1,oe=false,ts=0,tl=Math.PI*2){super(rt,rb,h,segCap(Math.max(rt,rb),rs),hs,oe,ts,tl);}}
   class SphG extends THREE.SphereGeometry{constructor(r=1,ws=32,hs=16,...a){super(r,Math.max(3,Math.min(ws,16)),Math.max(2,Math.min(hs,10)),...a);}}
   class RingG extends THREE.RingGeometry{constructor(a=0.5,b=1,ts=32,...x){super(a,b,Math.max(3,Math.min(ts,32)),...x);}}
   class CircG extends THREE.CircleGeometry{constructor(r=1,sg=32,...x){super(r,Math.max(3,Math.min(sg,32)),...x);}}
-  renderer.shadowMap.enabled=true;renderer.shadowMap.type=THREE.PCFShadowMap;   // (r186 dropped PCFSoft; the soft tiers widen the PCF kernel instead)
+  renderer.shadowMap.enabled=!BARE;renderer.shadowMap.type=THREE.PCFShadowMap;   // (r186 dropped PCFSoft; the soft tiers widen the PCF kernel instead)
   renderer.outputColorSpace=THREE.SRGBColorSpace;renderer.toneMapping=THREE.ACESFilmicToneMapping;renderer.toneMappingExposure=1.12;
   const scene=new THREE.Scene();G3.scene=scene;G3.renderer=renderer;
   const camera=new THREE.PerspectiveCamera(18,16/9,2,1400);
@@ -81,7 +83,15 @@ function no3D(){G3.ok=false;$("no3d").hidden=false;$("no3d-retry").onclick=()=>l
   /* palette: every material is bound to a CSS token so theme switches recolor the scene */
   const MATS=[];
   // v2.9.0: phones get the much cheaper Lambert lighting model instead of physically based shading (same colours, flatter sheen)
-  function StdMat(o){if(!GFX.lambert)return new THREE.MeshStandardMaterial(o);const r=Object.assign({},o||{});delete r.roughness;delete r.metalness;delete r.flatShading;delete r.envMapIntensity;delete r.roughnessMap;delete r.metalnessMap;return new THREE.MeshLambertMaterial(r);}
+  // v5.7.3 bare: every lit material becomes one unlit matcap material (a soft top-lit ball): flat colour with just enough
+  // shading to tell a box's top from its sides, and no lights, shadows or fog in the shader
+  let MCAP=null;
+  function bareMat(o){const r={};for(const k of ["color","map","alphaMap","transparent","opacity","side","vertexColors","depthWrite","depthTest","alphaTest","polygonOffset","polygonOffsetFactor","polygonOffsetUnits","visible"])if(o&&o[k]!==undefined)r[k]=o[k];
+    if(!MCAP){const c=document.createElement("canvas");c.width=c.height=64;const x=c.getContext("2d"),gr=x.createRadialGradient(26,20,4,32,32,34);gr.addColorStop(0,"#ffffff");gr.addColorStop(0.7,"#e6e6e6");gr.addColorStop(1,"#bdbdbd");x.fillStyle=gr;x.fillRect(0,0,64,64);
+      MCAP=new THREE.CanvasTexture(c);MCAP.colorSpace=THREE.SRGBColorSpace;}
+    r.matcap=MCAP;r.fog=false;return new THREE.MeshMatcapMaterial(r);}
+  G3.bareMat=bareMat;
+  function StdMat(o){if(BARE)return bareMat(o);if(!GFX.lambert)return new THREE.MeshStandardMaterial(o);const r=Object.assign({},o||{});delete r.roughness;delete r.metalness;delete r.flatShading;delete r.envMapIntensity;delete r.roughnessMap;delete r.metalnessMap;return new THREE.MeshLambertMaterial(r);}
   function tok(name){return getComputedStyle(document.documentElement).getPropertyValue("--"+name).trim()||"#888";}
   function mat(token,opts={}){const m=new StdMat(Object.assign({roughness:0.72,metalness:0.04,flatShading:false},opts));m.userData.token=token;MATS.push(m);return m;}
   // v4.1 pass 3: an InstancedMesh gets its own copy of a shared material (palette token kept, so brand colours still reach it):
@@ -105,7 +115,7 @@ function no3D(){G3.ok=false;$("no3d").hidden=false;$("no3d-retry").onclick=()=>l
   const LEG=Math.PI;
   const hemi=new THREE.HemisphereLight(0xffffff,0x888888,0.85*LEG);scene.add(hemi);
   const sun=new THREE.DirectionalLight(0xfff4e6,1.5*LEG);sun.position.set(-75,95,48);
-  sun.castShadow=true;const sz=GFX.shadow;sun.shadow.mapSize.set(sz,sz);
+  sun.castShadow=!BARE;const sz=GFX.shadow;sun.shadow.mapSize.set(sz,sz);
   Object.assign(sun.shadow.camera,{left:-90,right:90,top:60,bottom:-60,near:10,far:250});sun.shadow.bias=-0.0004;sun.shadow.radius=GFX.soft?5:3;sun.shadow.normalBias=0.04;
   /* v5.5 perf: three.js's PCF shadow lookup takes 5 rotated-disk samples per lit pixel. The soft tiers keep all 5; the
      phone tiers (no soft shadows anyway) take 3 (?taps=1|3|5 overrides for tests): a fifth of the pixel work on every
@@ -130,12 +140,12 @@ function no3D(){G3.ok=false;$("no3d").hidden=false;$("no3d-retry").onclick=()=>l
     s.lineTo(-ww/2+c,dd/2);s.quadraticCurveTo(-ww/2,dd/2,-ww/2,dd/2-c);s.lineTo(-ww/2,-dd/2+c);s.quadraticCurveTo(-ww/2,-dd/2,-ww/2+c,-dd/2);
     const g=new THREE.ExtrudeGeometry(s,{depth:Math.max(0.001,h-2*r),bevelEnabled:true,bevelThickness:r,bevelSize:r,bevelSegments:RBQ[0],curveSegments:RBQ[1]});
     g.rotateX(-Math.PI/2);g.translate(0,-(h-2*r)/2,0);g.computeVertexNormals();g.userData.shared=true;return RB[k]=g;}
-  function box(w,h,d,m,x,y,z,parent=scene,shadow=true){const o=new THREE.Mesh(Math.min(w,h,d)>=0.45?rboxGeo(w,h,d):new THREE.BoxGeometry(w,h,d),m);o.position.set(x,y,z);o.castShadow=shadow;o.receiveShadow=true;parent.add(o);return o;}
+  function box(w,h,d,m,x,y,z,parent=scene,shadow=true){const o=new THREE.Mesh(Math.min(w,h,d)>=0.45&&!BARE?rboxGeo(w,h,d):new THREE.BoxGeometry(w,h,d),m);o.position.set(x,y,z);o.castShadow=shadow;o.receiveShadow=true;parent.add(o);return o;}
   function cylZ(r,len,m,x,y,z,seg=24,parent=scene){const g=new CylG(r,r,len,seg);g.rotateX(Math.PI/2);const o=new THREE.Mesh(g,m);o.position.set(x,y,z);o.castShadow=true;o.receiveShadow=true;parent.add(o);return o;}
   const edgeSoft=new THREE.LineBasicMaterial({color:new THREE.Color("#3c4559").convertSRGBToLinear(),transparent:true,opacity:0.22});
   const edgeMat=new THREE.LineBasicMaterial({color:lin0("#3c4559"),transparent:true,opacity:0.42});
   function lin0(c){return new THREE.Color(c).convertSRGBToLinear();}
-  function edges(o,mt=edgeMat,ang=25){const e=new THREE.LineSegments(new THREE.EdgesGeometry(o.geometry,ang),mt);o.add(e);return e;}
+  function edges(o,mt=edgeMat,ang=25){if(BARE)return new THREE.Group();   /* (v5.7.3 bare: no outlines) */const e=new THREE.LineSegments(new THREE.EdgesGeometry(o.geometry,ang),mt);o.add(e);return e;}
   const aoC=document.createElement("canvas");aoC.width=4;aoC.height=64;{const x=aoC.getContext("2d"),g=x.createLinearGradient(0,0,0,64);g.addColorStop(0,"rgba(28,34,51,0.34)");g.addColorStop(0.35,"rgba(28,34,51,0.14)");g.addColorStop(1,"rgba(28,34,51,0)");x.fillStyle=g;x.fillRect(0,0,4,64);}
   const aoTex=new THREE.CanvasTexture(aoC);const aoMat=new THREE.MeshBasicMaterial({map:aoTex,transparent:true,depthWrite:false});
   const aoRC=document.createElement("canvas");aoRC.width=aoRC.height=128;{const x=aoRC.getContext("2d"),g=x.createRadialGradient(64,64,30,64,64,64);g.addColorStop(0,"rgba(28,34,51,0.38)");g.addColorStop(0.5,"rgba(28,34,51,0.16)");g.addColorStop(1,"rgba(28,34,51,0)");x.fillStyle=g;x.fillRect(0,0,128,128);}

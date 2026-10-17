@@ -5,7 +5,7 @@
      drift down, the singed bird flaps off trailing smoke, and the camera goes back where it was and the game carries on
      at the speed it had. Everything runs on its own real-time clock (the sim is paused); one bird and one set of
      effects, built once at start-up. Skipped in zen, the autotest and with ?nocine; Skip (or tapping the scene) ends it. */
-  {const Q=new URLSearchParams(location.search),NOCINE=Q.has("autotest")||Q.has("nocine"),IMP=10,END=13.4,EZ=k=>k<=0?0:k>=1?1:k*k*(3-2*k);
+  {const Q=new URLSearchParams(location.search),NOCINE=Q.has("autotest")||Q.has("nocine")||!!G3.bare,IMP=10,END=13.4,EZ=k=>k<=0?0:k>=1?1:k*k*(3-2*k);
     const mat=hex=>new StdMat({color:lin0(hex),roughness:0.75}),SPH=new THREE.SphereGeometry(1,14,10),BOX=new THREE.BoxGeometry(1,1,1);
     const part=(p,g,m,sx,sy,sz,x,y,z)=>{const o=new THREE.Mesh(g,m);o.scale.set(sx,sy,sz);o.position.set(x,y,z);o.castShadow=true;p.add(o);return o;};
     // the pigeon (local +x forward), 1.6x life size so it reads on a phone
