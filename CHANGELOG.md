@@ -1,5 +1,16 @@
 # Changelog
 
+## v5.7.2 (2026-10-16): help page
+- **Help**, from a new ? button on the title screen (next to the settings cog) and a Help tile in the pause menu: one page
+  with two tabs.
+- **Game guide:** short sections on the goal and modes, the flow from truck to warehouse, the bottleneck and upgrades,
+  upsets, daily rounds and tells, planned outages and prep, civics, mill leaders, fiddly knobs, controls, and scores
+  and saving.
+- **Glossary:** 51 game and mill terms (OCC, pulper, ragger, headbox, hayout, basis weight, tell, wave...) with a filter.
+- **Tutorial:** in a run, "Replay the tutorial" closes Help and runs the quick-start cards; on the title screen it turns
+  the tutorial on for your next run. The game stays paused while Help is open.
+- Tools: `helpcheck.py`.
+
 ## v5.7.1 (2026-10-16): dock order
 - The bottom menu reads Upgrades · Upsets · Report · Round · Settings: Settings is back on the far right.
 
