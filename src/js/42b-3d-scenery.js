@@ -97,7 +97,7 @@
       const su=u*u*(3-2*u),sv=v*v*(3-2*v);return (g(i,j)*(1-su)+g(i+1,j)*su)*(1-sv)+(g(i,j+1)*(1-su)+g(i+1,j+1)*su)*sv;}
     /* ---------- terrain (v4.1 pass 3): gentle relief outside the fence, flat corridors for the river, rail and roads,
        flat pads under the features; everything placed through add() stands on it ---------- */
-    const RELIEF={rural:11,urban:0,desert:5.5,swamp:0}[ENVK]||0,PADS=[],CORR=[];
+    const RELIEF=0,   /* (v6.1 t7: flat paper ground on every map; was rural 11 m, desert 5.5 m of relief) */PADS=[],CORR=[];
     const sstep=(a,b,v)=>{const t=Math.max(0,Math.min(1,(v-a)/(b-a)));return t*t*(3-2*t);};
     const dFence=(x,z)=>{const dx=Math.max(F.x0-x,0,x-F.x1),dz=Math.max(F.z0-z,0,z-F.z1);return Math.hypot(dx,dz);};
     const dSeg=(x,z,a,b)=>{const vx=b[0]-a[0],vz=b[1]-a[1],L=vx*vx+vz*vz||1e-6,t=Math.max(0,Math.min(1,((x-a[0])*vx+(z-a[1])*vz)/L));return Math.hypot(x-a[0]-vx*t,z-a[1]-vz*t);};
@@ -125,11 +125,28 @@
     G3.terrainH=hAt;
     /* ---------- assets ---------- */
     const GREEN=["#6fa76b","#5f9a63","#7cb072","#8ab879","#5b8f5c","#4f8257","#94bf6e","#6a9a4f","#7aa88a"],AUT=["#c9a24a","#d08a3c","#b9673a"],BARK=["#7a5a3c","#6b4f36","#8a6a4a"];
-    function broadleaf(x,z,s,far,tight){if(!place(x,z,(tight?0.7:1.6)*s))return false;const c=RNG()<0.06?pick(AUT):pick(GREEN);add(T.tri3,x,0,z,0.28*s,2.3*s,0.28*s,RNG()*6,pick(BARK),0.1);
+    /* v6.1 t7: paper-card trees. The camera never turns, so a tree is a flat standee facing it: a crown polygon and a trunk
+       strip, a few triangles in the same vertex-coloured scenery mesh (lighter at the top, darker at the base), instead of a
+       3D crown and trunk. CR/CU are the camera's right and the card's up (world up); cards wind toward the camera. */
+    const CR=[Math.SQRT1_2,0,Math.SQRT1_2],_cc=new THREE.Color(),_cc2=new THREE.Color();
+    function card(x,y0,z,pts,hex,shade=0.3,fwd=0,hexLo){const S2=SEC[secOf(x,z)];const yb=y0+hAt(x,z);x-=Math.SQRT1_2*fwd;z+=Math.SQRT1_2*fwd;   /* (fwd: a crown sits a hair in front of its trunk) */_cc.set(hex).convertSRGBToLinear();_cc2.set(hexLo||hex).convertSRGBToLinear();
+      let lo=1e9,hi=-1e9;for(const p of pts){lo=Math.min(lo,p[1]);hi=Math.max(hi,p[1]);}const span=Math.max(1e-6,hi-lo);
+      const P=(u,v)=>[x+CR[0]*u,yb+v,z+CR[2]*u];
+      for(let i=1;i<pts.length-1;i++)for(const p of [pts[0],pts[i],pts[i+1]]){const w=P(p[0],p[1]);S2.p.push(w[0],w[1],w[2]);const t=(p[1]-lo)/span,k=1-shade*(1-t);
+        S2.c.push((_cc2.r+(_cc.r-_cc2.r)*t)*k,(_cc2.g+(_cc.g-_cc2.g)*t)*k,(_cc2.b+(_cc.b-_cc2.b)*t)*k);}
+      S2.n+=pts.length-2;}
+    const ring=(cx,cy,rx,ry,n,j)=>{const o=[];for(let i=0;i<n;i++){const a=Math.PI/2-i/n*Math.PI*2,k=1+(j?(RNG()-0.5)*j:0);o.push([cx+Math.cos(a)*rx*k,cy+Math.sin(a)*ry*k]);}return o.reverse();};
+    function trunk(x,z,w,h,hex){card(x,0,z,[[-w/2,0],[w/2,0],[w/2,h],[-w/2,h]],hex,0.15);}
+    function broadleaf(x,z,s,far,tight){if(!place(x,z,(tight?0.7:1.6)*s))return false;const c=RNG()<0.06?pick(AUT):pick(GREEN);
+      trunk(x,z,0.45*s,2.6*s,pick(BARK));card(x,0,z,ring(0,3.6*s,1.9*s,1.75*s,7,0.25),c,0.35,0.08);claim(x,z,(tight?0.75:1.7)*s,5.2*s,0.3*s);return true;}
+    function conifer(x,z,s,tight){if(!place(x,z,(tight?0.55:1.3)*s))return false;const c=pick(["#3f6f4f","#4a7a55","#557f58","#3d6a52"]);trunk(x,z,0.4*s,1.6*s,pick(BARK));
+      card(x,0,z,[[-1.7*s,1.1*s],[1.7*s,1.1*s],[0,4.5*s]],c,0.3,0.08);card(x,0,z,[[-1.25*s,3.2*s],[1.25*s,3.2*s],[0,6.1*s]],c,0.25,0.16);claim(x,z,(tight?0.6:1.5)*s,6.1*s,0.3*s);return true;}
+    function bush(x,z,s,hex){if(!place(x,z,0.9*s))return false;const h=hex||pick(GREEN);card(x,0,z,[[-1.0*s,0],[1.0*s,0],[0.75*s,0.75*s],[0,1.05*s],[-0.75*s,0.75*s]],h,0.3);claim(x,z,0.9*s,1.1*s);return true;}
+    function broadleaf3D(x,z,s,far,tight){if(!place(x,z,(tight?0.7:1.6)*s))return false;const c=RNG()<0.06?pick(AUT):pick(GREEN);add(T.tri3,x,0,z,0.28*s,2.3*s,0.28*s,RNG()*6,pick(BARK),0.1);
       add(far?T.oct:T.ico,x,3.4*s,z,1.9*s,(far?1.9:1.5)*s,1.9*s,RNG()*6,c,0.35);claim(x,z,(tight?0.75:1.7)*s,5.2*s,0.3*s);return true;}
-    function conifer(x,z,s,tight){if(!place(x,z,(tight?0.55:1.3)*s))return false;const c=pick(["#3f6f4f","#4a7a55","#557f58","#3d6a52"]);add(T.tri3,x,0,z,0.25*s,1.6*s,0.25*s,RNG()*6,pick(BARK),0.1);
+    function conifer3D(x,z,s,tight){if(!place(x,z,(tight?0.55:1.3)*s))return false;const c=pick(["#3f6f4f","#4a7a55","#557f58","#3d6a52"]);add(T.tri3,x,0,z,0.25*s,1.6*s,0.25*s,RNG()*6,pick(BARK),0.1);
       add(T.cone6,x,1.1*s,z,1.7*s,3.4*s,1.7*s,RNG()*6,c,0.3);add(T.cone6,x,3.2*s,z,1.2*s,2.9*s,1.2*s,RNG()*6,c,0.25);claim(x,z,(tight?0.6:1.5)*s,6.1*s,0.3*s);return true;}
-    function bush(x,z,s,hex){if(!place(x,z,0.9*s))return false;add(T.oct,x,0.35*s,z,1.0*s,0.7*s,1.0*s,RNG()*6,hex||pick(GREEN),0.3);claim(x,z,0.9*s,1.1*s);return true;}
+    function bush3D(x,z,s,hex){if(!place(x,z,0.9*s))return false;add(T.oct,x,0.35*s,z,1.0*s,0.7*s,1.0*s,RNG()*6,hex||pick(GREEN),0.3);claim(x,z,0.9*s,1.1*s);return true;}
     function rock(x,z,s,hex){if(!place(x,z,1.1*s))return false;add(T.ico,x,0.2*s,z,1.2*s,0.75*s,1.0*s,RNG()*6,hex,0.25);claim(x,z,1.2*s,1*s);return true;}
     function house(x,z,ry,w,d,h,wall,roof){add(T.box,x,0,z,w,h,d,ry,wall,0.15);add(T.gable,x,h,z,w+0.4,h*0.55,d+0.5,ry,roof,0.05);}
     const NW=[];   // lit windows for the night (urban): [x,y,z,w,h,face] per window, merged into one mesh at the end
@@ -560,8 +577,8 @@
       track([[HXr+5,78],[-100,86],[0,92],[92,86],[132,66],[EX-4,40]],3.6);track([[HXr-5,-150],[-205,-170],[-215,-230],[-190,-262],[HXr-15,-262]],3);track([[EX+4,100],[230,110],[280,96],[330,120]],3);track([[EX+4,230],[200,240],[230,300]],3);
       OPEN.push([-160,140,66,98]);
       G3.ponds=ponds.map(p=>p.slice());
-      const cypress=(x,z,s,wet)=>{if(!place(x,z,(wet?1.2:1.0)*s,wet))return false;add(T.cone6,x,0,z,0.9*s,1.6*s,0.9*s,RNG()*6,"#6b5440",0.1);add(T.cyl6,x,0,z,0.3*s,6.5*s,0.3*s,0,"#7a6248",0.1);
-        add(T.ico,x,6.8*s,z,2.6*s,1.0*s,2.6*s,RNG()*6,pick(["#4f6b3e","#5f7d4a","#57714a","#45603a","#6c8a52"]),0.3);if(RNG()<0.5)add(T.cone4,x+0.8*s,4.8*s,z,0.4*s,1.6*s,0.4*s,0,"#8a9a7a",0,undefined,Math.PI,0);
+      const cypress=(x,z,s,wet)=>{if(!place(x,z,(wet?1.2:1.0)*s,wet))return false;card(x,0,z,[[-0.9*s,0],[0.9*s,0],[0.3*s,1.6*s],[-0.3*s,1.6*s]],"#6b5440",0.1);trunk(x,z,0.6*s,6.6*s,"#7a6248");
+        card(x,0,z,ring(0,7.2*s,2.6*s,0.9*s,6,0.2),pick(["#4f6b3e","#5f7d4a","#57714a","#45603a","#6c8a52"]),0.3,0.08);   /* (v6.1 t7: paper card) */if(RNG()<0.5)add(T.cone4,x+0.8*s,4.8*s,z,0.4*s,1.6*s,0.4*s,0,"#8a9a7a",0,undefined,Math.PI,0);
         claim(x,z,1.1*s,8*s,0.3*s);return true;};
       ponds.forEach(([x,z,r])=>{for(let k=0;k<8;k++){const a=rr(0,6.28),d=r*rr(0.5,1.2);cypress(x+Math.cos(a)*d,z+Math.sin(a)*d*0.8,rr(0.8,1.3),true);}});
       // alligator basking at the first pond
@@ -578,7 +595,7 @@
       // reeds along the canal banks
       for(let k=0;k<220;k++){const x=rr(-400,400),[zc,hw]=RZ(x),z=RNG()<0.5?zc+hw+rr(0.5,2.5):zc-hw-rr(0.5,2.5);if(!place(x,z,0.5,true))continue;for(let q=0;q<3;q++)add(T.cone4,x+rr(-0.5,0.5),0,z+rr(-0.4,0.4),0.12,rr(1.2,2.2),0.12,RNG(),pick(["#7f8f4f","#8f9a5a"]),0.2);claim(x,z,0.5,2,0);}}
     /* ---------- the ground: a height-field mesh with the environment's tile and large-scale colour variation ---------- */
-    {const cs=DEN<0.9?12:DEN>1.2?6:8,W=840,D=640,nx=Math.round(W/cs),nz=Math.round(D/cs);
+    {const cs=ENVK==="swamp"?12:(RIVERS[ENVK]||{}).kind==="sea"?16:24,W=840,D=640,   /* (v6.1 t7: flat ground needs few rows: 24 m cells, 12 m where the bayou pad steps down, 16 m by the sea) */nx=Math.round(W/cs),nz=Math.round(D/cs);
       const g=new THREE.PlaneGeometry(W,D,nx,nz);g.rotateX(-Math.PI/2);const pa=g.attributes.position,col=new Float32Array(pa.count*3);
       const base=new THREE.Color(ENVLOOK.ground).convertSRGBToLinear(),tint=new THREE.Color(),mixc=new THREE.Color();
       const PATCH={rural:[["#c9c46c",55,0.6,0.5,500,0],["#b59a6b",40,0.72,0.55,0,500]],urban:[["#9fb585",60,0.6,0.45,500,0],["#b3bd9a",45,0.7,0.35,0,500]],
@@ -616,6 +633,14 @@
     /* ---------- build the merged meshes ---------- */
     const smat=new StdMat({vertexColors:true,roughness:0.9,flatShading:true});smat.color.set(0xffffff);
     let tris=0;const parts=[];
+    // v6.1 t7: the fixed camera never sees a triangle facing away from it (the material is single-sided, so they were only
+    // ever transformed and thrown away): keep the ones facing the camera
+    {const th=-Math.PI/4,ph=Math.acos(Math.sqrt(1/3)),vx=Math.sin(ph)*Math.sin(th),vy=Math.cos(ph),vz=Math.sin(ph)*Math.cos(th);let before=0,after=0;
+     for(const k in SEC){const S2=SEC[k];if(!S2.n)continue;const P=S2.p,C=S2.c,np=[],nc=[];
+       for(let t=0;t<P.length;t+=9){const ux=P[t+3]-P[t],uy=P[t+4]-P[t+1],uz=P[t+5]-P[t+2],wx=P[t+6]-P[t],wy=P[t+7]-P[t+1],wz=P[t+8]-P[t+2];
+         if((uy*wz-uz*wy)*vx+(uz*wx-ux*wz)*vy+(ux*wy-uy*wx)*vz<=1e-7)continue;for(let q=0;q<9;q++){np.push(P[t+q]);nc.push(C[t+q]);}}
+       before+=S2.n;S2.p=np;S2.c=nc;S2.n=np.length/9;after+=S2.n;}
+     diag(`scenery back faces stripped: ${before} -> ${after} triangles`);}
     for(const k in SEC){const S2=SEC[k];if(!S2.n)continue;const g=new THREE.BufferGeometry();g.setAttribute("position",new THREE.Float32BufferAttribute(S2.p,3));g.setAttribute("color",new THREE.Float32BufferAttribute(S2.c,3));
       g.computeVertexNormals();g.computeBoundingSphere();const m=new THREE.Mesh(g,smat);m.castShadow=k==="near"||!!(G3.GFX&&G3.GFX.far);m.receiveShadow=k==="near";m.userData.scenery=k;m.userData.noNav=true;scene.add(m);parts.push(m);tris+=S2.n;}
     // v14: landmark names, shown only in the zoomed-out site view (43-3d-frame.js swaps them with the equipment labels)

@@ -1,5 +1,17 @@
 # Changelog
 
+## v6.1.0-t7 (2026-10-17): triangle cut (test branch test/v6.1-iso)
+- **Paper-card trees:** broadleaf, conifer, cypress and bushes are flat standees facing the camera (a crown polygon and a
+  trunk strip, lighter at the top), 4-7 triangles instead of 8-26.
+- **Flat ground:** no hills on any map (the bayou keeps its raised mill pad); the ground mesh uses 24 m cells (12 m on
+  the bayou, 16 m by the sea): about 1,900 triangles instead of 16,800.
+- **Hidden faces removed:** the camera never turns, so every static single-sided shape (mill and scenery) keeps only its
+  triangles facing the camera, one stripped copy per shape and orientation; a part that later moves gets its full shape
+  back. Mill: 59,800 → 30,300 triangles. `?nostrip` turns it off.
+- **Plain boxes** instead of rounded ones (12 triangles, shared per size); **round things** have 6-12 sides (spheres 8 x 6).
+- Triangles per frame, 1100 x 700 view: mid zoom 169k → 68k, whole site 220k → 84k. Phone view: whole site 143k → 60k,
+  mid 103k → 50k, close 44k → 26k (main: 175k / 152k / 79k).
+
 ## v6.1.0-t6 (2026-10-17): iso optimization round (test branch test/v6.1-iso)
 Profiled frame by frame (CPU, per drawn frame, phone-sized view). The biggest costs were work done for things nobody can see:
 - **Hidden objects skip the world-matrix pass.** The game builds many effect, crew, civics and outage groups up front and

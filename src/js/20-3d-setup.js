@@ -75,11 +75,11 @@ function no3D(){G3.ok=false;$("no3d").hidden=false;$("no3d-retry").onclick=()=>l
   // the shadow pass redraws every shadow-casting object, so refresh it a few times a second instead of every frame (v2.8.4: desktop too)
   renderer.shadowMap.autoUpdate=false;G3.shadowHz=GFX.hz;
   // v2.8.4: round shapes get only as many sides as their size needs at this zoom (unit shapes that get scaled up keep 24)
-  const segCap=(r,s)=>Math.max(3,Math.min(s,BARE?(r<0.45?6:r<4?10:14):r===1?24:r<0.15?6:r<0.45?10:r<1.2?16:r<4?20:28));   // (v5.7.3: bare keeps round things to a few sides)
+  const segCap=(r,s)=>Math.max(3,Math.min(s,r===1?12:r<0.45?6:r<4?8:12));   // (v6.1 t7: 6-12 sides; tanks and rolls read as folded card)   // (v5.7.3: bare keeps round things to a few sides)
   class CylG extends THREE.CylinderGeometry{constructor(rt=1,rb=1,h=1,rs=32,hs=1,oe=false,ts=0,tl=Math.PI*2){super(rt,rb,h,segCap(Math.max(rt,rb),rs),hs,oe,ts,tl);}}
-  class SphG extends THREE.SphereGeometry{constructor(r=1,ws=32,hs=16,...a){super(r,Math.max(3,Math.min(ws,16)),Math.max(2,Math.min(hs,10)),...a);}}
-  class RingG extends THREE.RingGeometry{constructor(a=0.5,b=1,ts=32,...x){super(a,b,Math.max(3,Math.min(ts,32)),...x);}}
-  class CircG extends THREE.CircleGeometry{constructor(r=1,sg=32,...x){super(r,Math.max(3,Math.min(sg,32)),...x);}}
+  class SphG extends THREE.SphereGeometry{constructor(r=1,ws=32,hs=16,...a){super(r,Math.max(3,Math.min(ws,8)),Math.max(2,Math.min(hs,6)),...a);}}
+  class RingG extends THREE.RingGeometry{constructor(a=0.5,b=1,ts=32,...x){super(a,b,Math.max(3,Math.min(ts,16)),...x);}}
+  class CircG extends THREE.CircleGeometry{constructor(r=1,sg=32,...x){super(r,Math.max(3,Math.min(sg,12)),...x);}}
   renderer.shadowMap.enabled=false;   /* v6.1 iso: no shadow maps; flat drop shadows instead (40c) */renderer.shadowMap.type=THREE.PCFShadowMap;   // (r186 dropped PCFSoft; the soft tiers widen the PCF kernel instead)
   renderer.outputColorSpace=THREE.SRGBColorSpace;renderer.toneMapping=THREE.ACESFilmicToneMapping;renderer.toneMappingExposure=1.12;
   const scene=new THREE.Scene();G3.scene=scene;G3.renderer=renderer;
@@ -153,7 +153,9 @@ function no3D(){G3.ok=false;$("no3d").hidden=false;$("no3d-retry").onclick=()=>l
     s.lineTo(-ww/2+c,dd/2);s.quadraticCurveTo(-ww/2,dd/2,-ww/2,dd/2-c);s.lineTo(-ww/2,-dd/2+c);s.quadraticCurveTo(-ww/2,-dd/2,-ww/2+c,-dd/2);
     const g=new THREE.ExtrudeGeometry(s,{depth:Math.max(0.001,h-2*r),bevelEnabled:true,bevelThickness:r,bevelSize:r,bevelSegments:RBQ[0],curveSegments:RBQ[1]});
     g.rotateX(-Math.PI/2);g.translate(0,-(h-2*r)/2,0);g.computeVertexNormals();g.userData.shared=true;return RB[k]=g;}
-  function box(w,h,d,m,x,y,z,parent=scene,shadow=true){const o=new THREE.Mesh(Math.min(w,h,d)>=0.45&&!BARE?rboxGeo(w,h,d):new THREE.BoxGeometry(w,h,d),m);o.position.set(x,y,z);o.castShadow=shadow;o.receiveShadow=true;parent.add(o);return o;}
+  // v6.1 t7: plain boxes (12 triangles; a rounded box was 92-316), one shared geometry per size
+  const BXG={};const boxGeo=(w,h,d)=>{const k=w+"|"+h+"|"+d;let g=BXG[k];if(!g){g=new THREE.BoxGeometry(w,h,d);g.userData.shared=true;BXG[k]=g;}return g;};
+  function box(w,h,d,m,x,y,z,parent=scene,shadow=true){const o=new THREE.Mesh(boxGeo(w,h,d),m);o.position.set(x,y,z);o.castShadow=shadow;o.receiveShadow=true;parent.add(o);return o;}
   function cylZ(r,len,m,x,y,z,seg=24,parent=scene){const g=new CylG(r,r,len,seg);g.rotateX(Math.PI/2);const o=new THREE.Mesh(g,m);o.position.set(x,y,z);o.castShadow=true;o.receiveShadow=true;parent.add(o);return o;}
   const edgeSoft=new THREE.LineBasicMaterial({color:new THREE.Color("#3c4559").convertSRGBToLinear(),transparent:true,opacity:0.22});
   const edgeMat=new THREE.LineBasicMaterial({color:lin0("#3c4559"),transparent:true,opacity:0.42});

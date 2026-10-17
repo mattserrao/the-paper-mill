@@ -1336,7 +1336,7 @@ body.dark .kvchip{background:color-mix(in srgb,var(--panel) 96%,transparent)}
 <div class="btns"><button class="primary" id="no3d-retry">Try again</button></div></div></div>
 
 <script type="module">
-const APP_VER="v6.1.0-t6";   // shown in the menu and sent with leaderboard scores (max 12 characters)
+const APP_VER="v6.1.0-t7";   // shown in the menu and sent with leaderboard scores (max 12 characters)
 // TEST BUILDS ONLY (off in releases): turbo speeds 240/480/960 sim min/s for fast playtests. Above 120, crews and maintenance start jobs
 // without waiting for the 3D walk (as with the 3D view off) and outages keep the speed. Set false for a release.
 const TURBO=false,TURBO_FAST=s=>TURBO&&s>120;
@@ -4592,11 +4592,11 @@ function no3D(){G3.ok=false;$("no3d").hidden=false;$("no3d-retry").onclick=()=>l
   // the shadow pass redraws every shadow-casting object, so refresh it a few times a second instead of every frame (v2.8.4: desktop too)
   renderer.shadowMap.autoUpdate=false;G3.shadowHz=GFX.hz;
   // v2.8.4: round shapes get only as many sides as their size needs at this zoom (unit shapes that get scaled up keep 24)
-  const segCap=(r,s)=>Math.max(3,Math.min(s,BARE?(r<0.45?6:r<4?10:14):r===1?24:r<0.15?6:r<0.45?10:r<1.2?16:r<4?20:28));   // (v5.7.3: bare keeps round things to a few sides)
+  const segCap=(r,s)=>Math.max(3,Math.min(s,r===1?12:r<0.45?6:r<4?8:12));   // (v6.1 t7: 6-12 sides; tanks and rolls read as folded card)   // (v5.7.3: bare keeps round things to a few sides)
   class CylG extends THREE.CylinderGeometry{constructor(rt=1,rb=1,h=1,rs=32,hs=1,oe=false,ts=0,tl=Math.PI*2){super(rt,rb,h,segCap(Math.max(rt,rb),rs),hs,oe,ts,tl);}}
-  class SphG extends THREE.SphereGeometry{constructor(r=1,ws=32,hs=16,...a){super(r,Math.max(3,Math.min(ws,16)),Math.max(2,Math.min(hs,10)),...a);}}
-  class RingG extends THREE.RingGeometry{constructor(a=0.5,b=1,ts=32,...x){super(a,b,Math.max(3,Math.min(ts,32)),...x);}}
-  class CircG extends THREE.CircleGeometry{constructor(r=1,sg=32,...x){super(r,Math.max(3,Math.min(sg,32)),...x);}}
+  class SphG extends THREE.SphereGeometry{constructor(r=1,ws=32,hs=16,...a){super(r,Math.max(3,Math.min(ws,8)),Math.max(2,Math.min(hs,6)),...a);}}
+  class RingG extends THREE.RingGeometry{constructor(a=0.5,b=1,ts=32,...x){super(a,b,Math.max(3,Math.min(ts,16)),...x);}}
+  class CircG extends THREE.CircleGeometry{constructor(r=1,sg=32,...x){super(r,Math.max(3,Math.min(sg,12)),...x);}}
   renderer.shadowMap.enabled=false;   /* v6.1 iso: no shadow maps; flat drop shadows instead (40c) */renderer.shadowMap.type=THREE.PCFShadowMap;   // (r186 dropped PCFSoft; the soft tiers widen the PCF kernel instead)
   renderer.outputColorSpace=THREE.SRGBColorSpace;renderer.toneMapping=THREE.ACESFilmicToneMapping;renderer.toneMappingExposure=1.12;
   const scene=new THREE.Scene();G3.scene=scene;G3.renderer=renderer;
@@ -4670,7 +4670,9 @@ function no3D(){G3.ok=false;$("no3d").hidden=false;$("no3d-retry").onclick=()=>l
     s.lineTo(-ww/2+c,dd/2);s.quadraticCurveTo(-ww/2,dd/2,-ww/2,dd/2-c);s.lineTo(-ww/2,-dd/2+c);s.quadraticCurveTo(-ww/2,-dd/2,-ww/2+c,-dd/2);
     const g=new THREE.ExtrudeGeometry(s,{depth:Math.max(0.001,h-2*r),bevelEnabled:true,bevelThickness:r,bevelSize:r,bevelSegments:RBQ[0],curveSegments:RBQ[1]});
     g.rotateX(-Math.PI/2);g.translate(0,-(h-2*r)/2,0);g.computeVertexNormals();g.userData.shared=true;return RB[k]=g;}
-  function box(w,h,d,m,x,y,z,parent=scene,shadow=true){const o=new THREE.Mesh(Math.min(w,h,d)>=0.45&&!BARE?rboxGeo(w,h,d):new THREE.BoxGeometry(w,h,d),m);o.position.set(x,y,z);o.castShadow=shadow;o.receiveShadow=true;parent.add(o);return o;}
+  // v6.1 t7: plain boxes (12 triangles; a rounded box was 92-316), one shared geometry per size
+  const BXG={};const boxGeo=(w,h,d)=>{const k=w+"|"+h+"|"+d;let g=BXG[k];if(!g){g=new THREE.BoxGeometry(w,h,d);g.userData.shared=true;BXG[k]=g;}return g;};
+  function box(w,h,d,m,x,y,z,parent=scene,shadow=true){const o=new THREE.Mesh(boxGeo(w,h,d),m);o.position.set(x,y,z);o.castShadow=shadow;o.receiveShadow=true;parent.add(o);return o;}
   function cylZ(r,len,m,x,y,z,seg=24,parent=scene){const g=new CylG(r,r,len,seg);g.rotateX(Math.PI/2);const o=new THREE.Mesh(g,m);o.position.set(x,y,z);o.castShadow=true;o.receiveShadow=true;parent.add(o);return o;}
   const edgeSoft=new THREE.LineBasicMaterial({color:new THREE.Color("#3c4559").convertSRGBToLinear(),transparent:true,opacity:0.22});
   const edgeMat=new THREE.LineBasicMaterial({color:lin0("#3c4559"),transparent:true,opacity:0.42});
@@ -8404,7 +8406,8 @@ function no3D(){G3.ok=false;$("no3d").hidden=false;$("no3d-retry").onclick=()=>l
   // a child added to a parked node brings the node back into the scene first (still frozen), so the child is drawn
   function smUnpark(r){const o=r.o;if(o.parent!==SMHOLD)return;SMHOLD.remove(o);delete o.add;delete o.__smRec;if(r.par)r.par.add(o);r.par=null;}
   function smParkedAdd(...a){if(this.__smRec)smUnpark(this.__smRec);return THREE.Object3D.prototype.add.apply(this,a);}
-  function smThaw(r){if(!r.frozen)return;r.frozen=false;smUnpark(r);const o=r.o;o.matrixAutoUpdate=true;o.matrixWorldAutoUpdate=true;o.updateMatrixWorld(true);}
+  function smThaw(r){{const o=r.o;if(o.userData.fullGeo){o.geometry=o.userData.fullGeo;delete o.userData.fullGeo;}}   // (v6.1 t7: a moving object gets its full shape back)
+    if(!r.frozen)return;r.frozen=false;smUnpark(r);const o=r.o;o.matrixAutoUpdate=true;o.matrixWorldAutoUpdate=true;o.updateMatrixWorld(true);}
   function smOK(o){if(!(o.isMesh||o.isLineSegments)||o.isInstancedMesh||o.isSkinnedMesh||o.isSprite||o.isPoints)return false;
     // edge outlines are faint (transparent) lines; merged per material and map cell they look the same, so they're allowed
     // (v4.1 pass 3: the ground shadings under walls and machines are transparent too, but static and flat: baked, below)
@@ -8578,7 +8581,7 @@ function no3D(){G3.ok=false;$("no3d").hidden=false;$("no3d-retry").onclick=()=>l
   // v4.2.5: batching failures go to Diagnostics (the first 5, then a count), not only the console or nowhere
   const smErr=(what,e)=>{SM.errs=(SM.errs||0)+1;if(SM.errs<=5)diag(`batching: ${what} failed: ${String(e&&e.message||e).slice(0,120)}`);else if(SM.errs===6)diag("batching: more failures, not logged");};
   function smTick(now){if(SM.off)return;
-    if(!SM.t0){SM.t0=now;try{scene.updateMatrixWorld(true);try{if(G3.atlasSigns)G3.atlasSigns();}catch(e){console.error("sign atlas failed",e);}try{if(G3.splitMulti)G3.splitMulti();scene.updateMatrixWorld(true);}catch(e){console.error("split failed",e);}try{if(G3.dropBuild)G3.dropBuild();}catch(e){console.error("drop shadows failed",e);}smSnapshot();smMerge();}
+    if(!SM.t0){SM.t0=now;try{scene.updateMatrixWorld(true);try{if(G3.atlasSigns)G3.atlasSigns();}catch(e){console.error("sign atlas failed",e);}try{if(G3.splitMulti)G3.splitMulti();scene.updateMatrixWorld(true);}catch(e){console.error("split failed",e);}try{if(G3.dropBuild)G3.dropBuild();}catch(e){console.error("drop shadows failed",e);}smSnapshot();try{if(G3.stripBack&&!BQ.has("nostrip"))G3.stripBack(SM.list);}catch(e){console.error("strip failed",e);}smMerge();}
       catch(e){console.error("scenery batching failed",e);smErr("scenery batching (batching off)",e);SM.off=true;SM.done=true;SM.list.forEach(r=>{r.o.layers.set(0);if(r.bm)r.bm.visible=false;});}return;}
     if(SM.queue&&SM.queue.length){try{smStep();}catch(e){console.error("scenery baking failed",e);smErr("scenery baking",e);SM.queue=[];SM.done=true;}return;}
     if(now>SM.checkT){SM.checkT=now+(now-SM.t0<10000?0:500);try{smWatch();}catch(e){smErr("watch for moved objects",e);}}}
@@ -8918,6 +8921,27 @@ function no3D(){G3.ok=false;$("no3d").hidden=false;$("no3d-retry").onclick=()=>l
     const tex=new THREE.CanvasTexture(cv);tex.colorSpace=THREE.SRGBColorSpace;tex.anisotropy=4;mat.map=tex;
     G3.signAtlas={tex,seen};diag(`sign atlas: ${n} signs, ${seen.size} textures in one`);
     UI_TICKS.push(k=>{if(k%2)return;let ch=false;for(const r of seen.values())if(r.t.version!==r.v){r.v=r.t.version;x.clearRect(r.x,r.y,r.w,r.h);x.drawImage(r.t.image,r.x,r.y);ch=true;}if(ch)tex.needsUpdate=true;});};
+  /* v6.1 t7: faces the camera can never see. The view direction never changes, so on the first frame every static, opaque,
+     single-sided mesh in the static merge keeps only its triangles that face the camera (the GPU threw the others away
+     anyway, after transforming them). One stripped copy per shape and orientation is shared. An object that later moves or
+     turns gets its full shape back when the merge hands it back (40). */
+  G3.stripBack=list=>{const th=-Math.PI/4,ph=Math.acos(Math.sqrt(1/3)),cx=Math.sin(ph)*Math.sin(th),cy=Math.cos(ph),cz=Math.sin(ph)*Math.cos(th);
+    const cache=new Map(),a=new THREE.Vector3(),b=new THREE.Vector3(),c=new THREE.Vector3();let n0=0,n1=0,objs=0;
+    for(const r of list){const o=r.o;if(!o.isMesh||o.isLine||r.proxyOnly)continue;const m=o.material;if(!m||Array.isArray(m)||m.side!==THREE.FrontSide||m.transparent||o.userData.aoDecal)continue;
+      const g=o.geometry,P=g.attributes.position;if(!P||g.morphAttributes&&Object.keys(g.morphAttributes).length)continue;
+      const e=o.matrixWorld.elements;if(o.matrixWorld.determinant()<=0)continue;
+      const key=g.uuid+"|"+[0,1,2,4,5,6,8,9,10].map(i=>e[i].toFixed(3)).join(",");let sg=cache.get(key);
+      const I=g.index,cnt=I?I.count:P.count;
+      if(sg===undefined){const keep=[];
+        for(let t=0;t<cnt;t+=3){const i0=I?I.getX(t):t,i1=I?I.getX(t+1):t+1,i2=I?I.getX(t+2):t+2;
+          a.fromBufferAttribute(P,i0).applyMatrix4(o.matrixWorld);b.fromBufferAttribute(P,i1).applyMatrix4(o.matrixWorld);c.fromBufferAttribute(P,i2).applyMatrix4(o.matrixWorld);
+          b.sub(a);c.sub(a);const nx=b.y*c.z-b.z*c.y,ny=b.z*c.x-b.x*c.z,nz=b.x*c.y-b.y*c.x;if(nx*cx+ny*cy+nz*cz>1e-7)keep.push(i0,i1,i2);}
+        if(keep.length>=cnt*0.95||!keep.length)sg=null;   // (nothing to gain, or nothing visible: left as it is)
+        else{sg=new THREE.BufferGeometry();for(const k in g.attributes)sg.setAttribute(k,g.attributes[k]);sg.setIndex(keep);sg.computeBoundingSphere();sg.computeBoundingBox();sg.userData.shared=true;}
+        cache.set(key,sg);}
+      n0+=cnt/3;if(!sg){n1+=cnt/3;continue;}
+      o.userData.fullGeo=g;o.geometry=sg;r.geo=sg;r.ver=sg.attributes.position.version;n1+=sg.index.count/3;objs++;}
+    diag(`back faces stripped: ${objs} objects, ${Math.round(n0)} -> ${Math.round(n1)} triangles`);};
   /* ---- v3.0.0: planned outage jobs ----
      Every outage: maintenance technicians change the press felts (the felt-change animation, driven by the outage clock).
      Outage 1: 1st press roll change with a wet-end overhead crane (new rolls staged on cradles the day before).
@@ -9427,7 +9451,7 @@ function no3D(){G3.ok=false;$("no3d").hidden=false;$("no3d-retry").onclick=()=>l
       const su=u*u*(3-2*u),sv=v*v*(3-2*v);return (g(i,j)*(1-su)+g(i+1,j)*su)*(1-sv)+(g(i,j+1)*(1-su)+g(i+1,j+1)*su)*sv;}
     /* ---------- terrain (v4.1 pass 3): gentle relief outside the fence, flat corridors for the river, rail and roads,
        flat pads under the features; everything placed through add() stands on it ---------- */
-    const RELIEF={rural:11,urban:0,desert:5.5,swamp:0}[ENVK]||0,PADS=[],CORR=[];
+    const RELIEF=0,   /* (v6.1 t7: flat paper ground on every map; was rural 11 m, desert 5.5 m of relief) */PADS=[],CORR=[];
     const sstep=(a,b,v)=>{const t=Math.max(0,Math.min(1,(v-a)/(b-a)));return t*t*(3-2*t);};
     const dFence=(x,z)=>{const dx=Math.max(F.x0-x,0,x-F.x1),dz=Math.max(F.z0-z,0,z-F.z1);return Math.hypot(dx,dz);};
     const dSeg=(x,z,a,b)=>{const vx=b[0]-a[0],vz=b[1]-a[1],L=vx*vx+vz*vz||1e-6,t=Math.max(0,Math.min(1,((x-a[0])*vx+(z-a[1])*vz)/L));return Math.hypot(x-a[0]-vx*t,z-a[1]-vz*t);};
@@ -9455,11 +9479,28 @@ function no3D(){G3.ok=false;$("no3d").hidden=false;$("no3d-retry").onclick=()=>l
     G3.terrainH=hAt;
     /* ---------- assets ---------- */
     const GREEN=["#6fa76b","#5f9a63","#7cb072","#8ab879","#5b8f5c","#4f8257","#94bf6e","#6a9a4f","#7aa88a"],AUT=["#c9a24a","#d08a3c","#b9673a"],BARK=["#7a5a3c","#6b4f36","#8a6a4a"];
-    function broadleaf(x,z,s,far,tight){if(!place(x,z,(tight?0.7:1.6)*s))return false;const c=RNG()<0.06?pick(AUT):pick(GREEN);add(T.tri3,x,0,z,0.28*s,2.3*s,0.28*s,RNG()*6,pick(BARK),0.1);
+    /* v6.1 t7: paper-card trees. The camera never turns, so a tree is a flat standee facing it: a crown polygon and a trunk
+       strip, a few triangles in the same vertex-coloured scenery mesh (lighter at the top, darker at the base), instead of a
+       3D crown and trunk. CR/CU are the camera's right and the card's up (world up); cards wind toward the camera. */
+    const CR=[Math.SQRT1_2,0,Math.SQRT1_2],_cc=new THREE.Color(),_cc2=new THREE.Color();
+    function card(x,y0,z,pts,hex,shade=0.3,fwd=0,hexLo){const S2=SEC[secOf(x,z)];const yb=y0+hAt(x,z);x-=Math.SQRT1_2*fwd;z+=Math.SQRT1_2*fwd;   /* (fwd: a crown sits a hair in front of its trunk) */_cc.set(hex).convertSRGBToLinear();_cc2.set(hexLo||hex).convertSRGBToLinear();
+      let lo=1e9,hi=-1e9;for(const p of pts){lo=Math.min(lo,p[1]);hi=Math.max(hi,p[1]);}const span=Math.max(1e-6,hi-lo);
+      const P=(u,v)=>[x+CR[0]*u,yb+v,z+CR[2]*u];
+      for(let i=1;i<pts.length-1;i++)for(const p of [pts[0],pts[i],pts[i+1]]){const w=P(p[0],p[1]);S2.p.push(w[0],w[1],w[2]);const t=(p[1]-lo)/span,k=1-shade*(1-t);
+        S2.c.push((_cc2.r+(_cc.r-_cc2.r)*t)*k,(_cc2.g+(_cc.g-_cc2.g)*t)*k,(_cc2.b+(_cc.b-_cc2.b)*t)*k);}
+      S2.n+=pts.length-2;}
+    const ring=(cx,cy,rx,ry,n,j)=>{const o=[];for(let i=0;i<n;i++){const a=Math.PI/2-i/n*Math.PI*2,k=1+(j?(RNG()-0.5)*j:0);o.push([cx+Math.cos(a)*rx*k,cy+Math.sin(a)*ry*k]);}return o.reverse();};
+    function trunk(x,z,w,h,hex){card(x,0,z,[[-w/2,0],[w/2,0],[w/2,h],[-w/2,h]],hex,0.15);}
+    function broadleaf(x,z,s,far,tight){if(!place(x,z,(tight?0.7:1.6)*s))return false;const c=RNG()<0.06?pick(AUT):pick(GREEN);
+      trunk(x,z,0.45*s,2.6*s,pick(BARK));card(x,0,z,ring(0,3.6*s,1.9*s,1.75*s,7,0.25),c,0.35,0.08);claim(x,z,(tight?0.75:1.7)*s,5.2*s,0.3*s);return true;}
+    function conifer(x,z,s,tight){if(!place(x,z,(tight?0.55:1.3)*s))return false;const c=pick(["#3f6f4f","#4a7a55","#557f58","#3d6a52"]);trunk(x,z,0.4*s,1.6*s,pick(BARK));
+      card(x,0,z,[[-1.7*s,1.1*s],[1.7*s,1.1*s],[0,4.5*s]],c,0.3,0.08);card(x,0,z,[[-1.25*s,3.2*s],[1.25*s,3.2*s],[0,6.1*s]],c,0.25,0.16);claim(x,z,(tight?0.6:1.5)*s,6.1*s,0.3*s);return true;}
+    function bush(x,z,s,hex){if(!place(x,z,0.9*s))return false;const h=hex||pick(GREEN);card(x,0,z,[[-1.0*s,0],[1.0*s,0],[0.75*s,0.75*s],[0,1.05*s],[-0.75*s,0.75*s]],h,0.3);claim(x,z,0.9*s,1.1*s);return true;}
+    function broadleaf3D(x,z,s,far,tight){if(!place(x,z,(tight?0.7:1.6)*s))return false;const c=RNG()<0.06?pick(AUT):pick(GREEN);add(T.tri3,x,0,z,0.28*s,2.3*s,0.28*s,RNG()*6,pick(BARK),0.1);
       add(far?T.oct:T.ico,x,3.4*s,z,1.9*s,(far?1.9:1.5)*s,1.9*s,RNG()*6,c,0.35);claim(x,z,(tight?0.75:1.7)*s,5.2*s,0.3*s);return true;}
-    function conifer(x,z,s,tight){if(!place(x,z,(tight?0.55:1.3)*s))return false;const c=pick(["#3f6f4f","#4a7a55","#557f58","#3d6a52"]);add(T.tri3,x,0,z,0.25*s,1.6*s,0.25*s,RNG()*6,pick(BARK),0.1);
+    function conifer3D(x,z,s,tight){if(!place(x,z,(tight?0.55:1.3)*s))return false;const c=pick(["#3f6f4f","#4a7a55","#557f58","#3d6a52"]);add(T.tri3,x,0,z,0.25*s,1.6*s,0.25*s,RNG()*6,pick(BARK),0.1);
       add(T.cone6,x,1.1*s,z,1.7*s,3.4*s,1.7*s,RNG()*6,c,0.3);add(T.cone6,x,3.2*s,z,1.2*s,2.9*s,1.2*s,RNG()*6,c,0.25);claim(x,z,(tight?0.6:1.5)*s,6.1*s,0.3*s);return true;}
-    function bush(x,z,s,hex){if(!place(x,z,0.9*s))return false;add(T.oct,x,0.35*s,z,1.0*s,0.7*s,1.0*s,RNG()*6,hex||pick(GREEN),0.3);claim(x,z,0.9*s,1.1*s);return true;}
+    function bush3D(x,z,s,hex){if(!place(x,z,0.9*s))return false;add(T.oct,x,0.35*s,z,1.0*s,0.7*s,1.0*s,RNG()*6,hex||pick(GREEN),0.3);claim(x,z,0.9*s,1.1*s);return true;}
     function rock(x,z,s,hex){if(!place(x,z,1.1*s))return false;add(T.ico,x,0.2*s,z,1.2*s,0.75*s,1.0*s,RNG()*6,hex,0.25);claim(x,z,1.2*s,1*s);return true;}
     function house(x,z,ry,w,d,h,wall,roof){add(T.box,x,0,z,w,h,d,ry,wall,0.15);add(T.gable,x,h,z,w+0.4,h*0.55,d+0.5,ry,roof,0.05);}
     const NW=[];   // lit windows for the night (urban): [x,y,z,w,h,face] per window, merged into one mesh at the end
@@ -9890,8 +9931,8 @@ function no3D(){G3.ok=false;$("no3d").hidden=false;$("no3d-retry").onclick=()=>l
       track([[HXr+5,78],[-100,86],[0,92],[92,86],[132,66],[EX-4,40]],3.6);track([[HXr-5,-150],[-205,-170],[-215,-230],[-190,-262],[HXr-15,-262]],3);track([[EX+4,100],[230,110],[280,96],[330,120]],3);track([[EX+4,230],[200,240],[230,300]],3);
       OPEN.push([-160,140,66,98]);
       G3.ponds=ponds.map(p=>p.slice());
-      const cypress=(x,z,s,wet)=>{if(!place(x,z,(wet?1.2:1.0)*s,wet))return false;add(T.cone6,x,0,z,0.9*s,1.6*s,0.9*s,RNG()*6,"#6b5440",0.1);add(T.cyl6,x,0,z,0.3*s,6.5*s,0.3*s,0,"#7a6248",0.1);
-        add(T.ico,x,6.8*s,z,2.6*s,1.0*s,2.6*s,RNG()*6,pick(["#4f6b3e","#5f7d4a","#57714a","#45603a","#6c8a52"]),0.3);if(RNG()<0.5)add(T.cone4,x+0.8*s,4.8*s,z,0.4*s,1.6*s,0.4*s,0,"#8a9a7a",0,undefined,Math.PI,0);
+      const cypress=(x,z,s,wet)=>{if(!place(x,z,(wet?1.2:1.0)*s,wet))return false;card(x,0,z,[[-0.9*s,0],[0.9*s,0],[0.3*s,1.6*s],[-0.3*s,1.6*s]],"#6b5440",0.1);trunk(x,z,0.6*s,6.6*s,"#7a6248");
+        card(x,0,z,ring(0,7.2*s,2.6*s,0.9*s,6,0.2),pick(["#4f6b3e","#5f7d4a","#57714a","#45603a","#6c8a52"]),0.3,0.08);   /* (v6.1 t7: paper card) */if(RNG()<0.5)add(T.cone4,x+0.8*s,4.8*s,z,0.4*s,1.6*s,0.4*s,0,"#8a9a7a",0,undefined,Math.PI,0);
         claim(x,z,1.1*s,8*s,0.3*s);return true;};
       ponds.forEach(([x,z,r])=>{for(let k=0;k<8;k++){const a=rr(0,6.28),d=r*rr(0.5,1.2);cypress(x+Math.cos(a)*d,z+Math.sin(a)*d*0.8,rr(0.8,1.3),true);}});
       // alligator basking at the first pond
@@ -9908,7 +9949,7 @@ function no3D(){G3.ok=false;$("no3d").hidden=false;$("no3d-retry").onclick=()=>l
       // reeds along the canal banks
       for(let k=0;k<220;k++){const x=rr(-400,400),[zc,hw]=RZ(x),z=RNG()<0.5?zc+hw+rr(0.5,2.5):zc-hw-rr(0.5,2.5);if(!place(x,z,0.5,true))continue;for(let q=0;q<3;q++)add(T.cone4,x+rr(-0.5,0.5),0,z+rr(-0.4,0.4),0.12,rr(1.2,2.2),0.12,RNG(),pick(["#7f8f4f","#8f9a5a"]),0.2);claim(x,z,0.5,2,0);}}
     /* ---------- the ground: a height-field mesh with the environment's tile and large-scale colour variation ---------- */
-    {const cs=DEN<0.9?12:DEN>1.2?6:8,W=840,D=640,nx=Math.round(W/cs),nz=Math.round(D/cs);
+    {const cs=ENVK==="swamp"?12:(RIVERS[ENVK]||{}).kind==="sea"?16:24,W=840,D=640,   /* (v6.1 t7: flat ground needs few rows: 24 m cells, 12 m where the bayou pad steps down, 16 m by the sea) */nx=Math.round(W/cs),nz=Math.round(D/cs);
       const g=new THREE.PlaneGeometry(W,D,nx,nz);g.rotateX(-Math.PI/2);const pa=g.attributes.position,col=new Float32Array(pa.count*3);
       const base=new THREE.Color(ENVLOOK.ground).convertSRGBToLinear(),tint=new THREE.Color(),mixc=new THREE.Color();
       const PATCH={rural:[["#c9c46c",55,0.6,0.5,500,0],["#b59a6b",40,0.72,0.55,0,500]],urban:[["#9fb585",60,0.6,0.45,500,0],["#b3bd9a",45,0.7,0.35,0,500]],
@@ -9946,6 +9987,14 @@ function no3D(){G3.ok=false;$("no3d").hidden=false;$("no3d-retry").onclick=()=>l
     /* ---------- build the merged meshes ---------- */
     const smat=new StdMat({vertexColors:true,roughness:0.9,flatShading:true});smat.color.set(0xffffff);
     let tris=0;const parts=[];
+    // v6.1 t7: the fixed camera never sees a triangle facing away from it (the material is single-sided, so they were only
+    // ever transformed and thrown away): keep the ones facing the camera
+    {const th=-Math.PI/4,ph=Math.acos(Math.sqrt(1/3)),vx=Math.sin(ph)*Math.sin(th),vy=Math.cos(ph),vz=Math.sin(ph)*Math.cos(th);let before=0,after=0;
+     for(const k in SEC){const S2=SEC[k];if(!S2.n)continue;const P=S2.p,C=S2.c,np=[],nc=[];
+       for(let t=0;t<P.length;t+=9){const ux=P[t+3]-P[t],uy=P[t+4]-P[t+1],uz=P[t+5]-P[t+2],wx=P[t+6]-P[t],wy=P[t+7]-P[t+1],wz=P[t+8]-P[t+2];
+         if((uy*wz-uz*wy)*vx+(uz*wx-ux*wz)*vy+(ux*wy-uy*wx)*vz<=1e-7)continue;for(let q=0;q<9;q++){np.push(P[t+q]);nc.push(C[t+q]);}}
+       before+=S2.n;S2.p=np;S2.c=nc;S2.n=np.length/9;after+=S2.n;}
+     diag(`scenery back faces stripped: ${before} -> ${after} triangles`);}
     for(const k in SEC){const S2=SEC[k];if(!S2.n)continue;const g=new THREE.BufferGeometry();g.setAttribute("position",new THREE.Float32BufferAttribute(S2.p,3));g.setAttribute("color",new THREE.Float32BufferAttribute(S2.c,3));
       g.computeVertexNormals();g.computeBoundingSphere();const m=new THREE.Mesh(g,smat);m.castShadow=k==="near"||!!(G3.GFX&&G3.GFX.far);m.receiveShadow=k==="near";m.userData.scenery=k;m.userData.noNav=true;scene.add(m);parts.push(m);tris+=S2.n;}
     // v14: landmark names, shown only in the zoomed-out site view (43-3d-frame.js swaps them with the equipment labels)
@@ -11736,7 +11785,7 @@ function camPullOn(){try{return localStorage.getItem("paper-mill-campull")!=="of
    (within 700 ms per tap) and a list of every version's one-line note pops up, newest first. The list comes from
    VERSION-NOTES.txt at the repo root: build.py swaps it in for the placeholder below, so adding a line there with each
    release keeps the pop-up current (build.py warns when APP_VER has no line). ---------- */
-{const VNOTES=[["4.0.0", "Graphics Overhaul: 60 FPS on iPhone, ~80% Fewer Draw Calls"], ["4.0.1", "Performance Follow-Up, Show FPS Option and Device Autotest"], ["4.0.2", "Economy Rebalance and Smoother Upset Labels"], ["4.1.0", "Four Environments, Seeded Mills, Bottlenecks, Graphics Tiers and Site Music"], ["4.2.0", "New Site Maps, Rare Sights, Zen Map Rotation and Economics Fixes"], ["4.2.0-s", "Save and Continue Season (Test)"], ["4.2.1", "Save/Continue, Settings Panel and Outage Speed Fix"], ["4.2.2-t", "Bayou Gator Sight Reworked (Test)"], ["4.2.2-t2", "Gator Bass Riff (Test)"], ["4.2.2-t3", "Gator Riff Removed, Wide Camera Framing (Test)"], ["4.2.2-t4", "Gator Scene Shortened and Widened (Test)"], ["4.2.2-t5", "One Rare Sight per Map in Zen (Test)"], ["4.2.2", "Rare Sights Reworked, Bird Strike Upset, Mill Report Tab"], ["4.2.3-t", "Cowboys, Bigfoot and Tugboat Sights Reworked (Test)"], ["4.2.3", "Laptop Battery Saving (Default GPU)"], ["4.2.4", "$25M Goal Removed and Quick Fixes"], ["4.2.5", "Random Bottleneck per Season and Accessibility Improvements"], ["4.3.0-t1", "Survival Mode (Test)"], ["4.4.0-t1", "Mill Leaders in Survival (Test)"], ["4.4.0-t2", "Painted Leader Portraits (Test)"], ["4.4.0-t3", "Leader Redesign, 4-Day Waves and Fixes (Test)"], ["5.0.0", "Survival Mode Release with Mill Leaders"], ["5.0.1", "Results Dialog and Game Speed Fixes"], ["5.0.2", "Report Card Label Fixes"], ["5.0.3", "Survival Playtest Fixes (Test)"], ["5.0.4", "Playtest Review: Dot Auto-Fix and Shipping Fix (Test)"], ["5.0.5", "Polish Rounds from Survival Playtests"], ["5.0.6", "Survival QA Fixes, Opt-In Outage Watch, Leaderboard Filters"], ["5.1.0", "Civics Meters and Leaders in Seasons (Test)"], ["5.4.0", "Title Screen, Civics in the World and Dark Mode"], ["5.4.1", "Loading Splash, No Old-Menu Flash"], ["5.4.2", "Graphics Quality on the Title Screen"], ["5.5.0", "Performance Improvements"], ["5.6.0", "Fiddly Knobs, DCS/QCS Screens and Knobs View"], ["5.7.0", "Catching Failures Early: Tells, Daily Rounds, Vibration Report, Outage Prep"], ["5.7.1", "Bottom Menu Reorder, Settings Back on the Right"], ["5.7.2", "Help Page with Game Guide and Glossary"], ["5.7.3", "Bare Graphics Mode for Weak Phones"], ["5.7.4", "Version Notes Pop-Up (Triple-Tap the Version Number)"], ["6.1.0-t1", "Isometric Paper View: Fixed Camera, Cut-Outs, Drop Shadows, Cutaways, Season Palettes (Test)"], ["6.1.0-t2", "Iso Round 2: Cut-Outs Always Paper, GPU Pictures, Stop-Motion World, Fewer Draws (Test)"], ["6.1.0-t3", "Iso Round 3: iPhone Batching, Instanced Cans, Sign Atlas, Lighter Frames (Test)"], ["6.1.0-t4", "Iso Fixes: Operators and Fork-Trucks Back, Less Stutter (Test)"], ["6.1.0-t5", "Cut-Out Edge Artifact Fixed (Test)"], ["6.1.0-t6", "Iso Optimization: Hidden Objects Cost Nothing, Lighter Moving Batches (Test)"]];
+{const VNOTES=[["4.0.0", "Graphics Overhaul: 60 FPS on iPhone, ~80% Fewer Draw Calls"], ["4.0.1", "Performance Follow-Up, Show FPS Option and Device Autotest"], ["4.0.2", "Economy Rebalance and Smoother Upset Labels"], ["4.1.0", "Four Environments, Seeded Mills, Bottlenecks, Graphics Tiers and Site Music"], ["4.2.0", "New Site Maps, Rare Sights, Zen Map Rotation and Economics Fixes"], ["4.2.0-s", "Save and Continue Season (Test)"], ["4.2.1", "Save/Continue, Settings Panel and Outage Speed Fix"], ["4.2.2-t", "Bayou Gator Sight Reworked (Test)"], ["4.2.2-t2", "Gator Bass Riff (Test)"], ["4.2.2-t3", "Gator Riff Removed, Wide Camera Framing (Test)"], ["4.2.2-t4", "Gator Scene Shortened and Widened (Test)"], ["4.2.2-t5", "One Rare Sight per Map in Zen (Test)"], ["4.2.2", "Rare Sights Reworked, Bird Strike Upset, Mill Report Tab"], ["4.2.3-t", "Cowboys, Bigfoot and Tugboat Sights Reworked (Test)"], ["4.2.3", "Laptop Battery Saving (Default GPU)"], ["4.2.4", "$25M Goal Removed and Quick Fixes"], ["4.2.5", "Random Bottleneck per Season and Accessibility Improvements"], ["4.3.0-t1", "Survival Mode (Test)"], ["4.4.0-t1", "Mill Leaders in Survival (Test)"], ["4.4.0-t2", "Painted Leader Portraits (Test)"], ["4.4.0-t3", "Leader Redesign, 4-Day Waves and Fixes (Test)"], ["5.0.0", "Survival Mode Release with Mill Leaders"], ["5.0.1", "Results Dialog and Game Speed Fixes"], ["5.0.2", "Report Card Label Fixes"], ["5.0.3", "Survival Playtest Fixes (Test)"], ["5.0.4", "Playtest Review: Dot Auto-Fix and Shipping Fix (Test)"], ["5.0.5", "Polish Rounds from Survival Playtests"], ["5.0.6", "Survival QA Fixes, Opt-In Outage Watch, Leaderboard Filters"], ["5.1.0", "Civics Meters and Leaders in Seasons (Test)"], ["5.4.0", "Title Screen, Civics in the World and Dark Mode"], ["5.4.1", "Loading Splash, No Old-Menu Flash"], ["5.4.2", "Graphics Quality on the Title Screen"], ["5.5.0", "Performance Improvements"], ["5.6.0", "Fiddly Knobs, DCS/QCS Screens and Knobs View"], ["5.7.0", "Catching Failures Early: Tells, Daily Rounds, Vibration Report, Outage Prep"], ["5.7.1", "Bottom Menu Reorder, Settings Back on the Right"], ["5.7.2", "Help Page with Game Guide and Glossary"], ["5.7.3", "Bare Graphics Mode for Weak Phones"], ["5.7.4", "Version Notes Pop-Up (Triple-Tap the Version Number)"], ["6.1.0-t1", "Isometric Paper View: Fixed Camera, Cut-Outs, Drop Shadows, Cutaways, Season Palettes (Test)"], ["6.1.0-t2", "Iso Round 2: Cut-Outs Always Paper, GPU Pictures, Stop-Motion World, Fewer Draws (Test)"], ["6.1.0-t3", "Iso Round 3: iPhone Batching, Instanced Cans, Sign Atlas, Lighter Frames (Test)"], ["6.1.0-t4", "Iso Fixes: Operators and Fork-Trucks Back, Less Stutter (Test)"], ["6.1.0-t5", "Cut-Out Edge Artifact Fixed (Test)"], ["6.1.0-t6", "Iso Optimization: Hidden Objects Cost Nothing, Lighter Moving Batches (Test)"], ["6.1.0-t7", "Iso Triangle Cut: Paper-Card Trees, Flat Ground, Hidden Faces Gone, Plain Boxes (Test)"]];
   let ov=null,held=false;
   function render(){
     const cur=APP_VER.replace(/^v/i,""),rows=VNOTES.slice().reverse().map(([v,n])=>

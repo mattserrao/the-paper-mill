@@ -34,7 +34,8 @@
   // a child added to a parked node brings the node back into the scene first (still frozen), so the child is drawn
   function smUnpark(r){const o=r.o;if(o.parent!==SMHOLD)return;SMHOLD.remove(o);delete o.add;delete o.__smRec;if(r.par)r.par.add(o);r.par=null;}
   function smParkedAdd(...a){if(this.__smRec)smUnpark(this.__smRec);return THREE.Object3D.prototype.add.apply(this,a);}
-  function smThaw(r){if(!r.frozen)return;r.frozen=false;smUnpark(r);const o=r.o;o.matrixAutoUpdate=true;o.matrixWorldAutoUpdate=true;o.updateMatrixWorld(true);}
+  function smThaw(r){{const o=r.o;if(o.userData.fullGeo){o.geometry=o.userData.fullGeo;delete o.userData.fullGeo;}}   // (v6.1 t7: a moving object gets its full shape back)
+    if(!r.frozen)return;r.frozen=false;smUnpark(r);const o=r.o;o.matrixAutoUpdate=true;o.matrixWorldAutoUpdate=true;o.updateMatrixWorld(true);}
   function smOK(o){if(!(o.isMesh||o.isLineSegments)||o.isInstancedMesh||o.isSkinnedMesh||o.isSprite||o.isPoints)return false;
     // edge outlines are faint (transparent) lines; merged per material and map cell they look the same, so they're allowed
     // (v4.1 pass 3: the ground shadings under walls and machines are transparent too, but static and flat: baked, below)
@@ -208,7 +209,7 @@
   // v4.2.5: batching failures go to Diagnostics (the first 5, then a count), not only the console or nowhere
   const smErr=(what,e)=>{SM.errs=(SM.errs||0)+1;if(SM.errs<=5)diag(`batching: ${what} failed: ${String(e&&e.message||e).slice(0,120)}`);else if(SM.errs===6)diag("batching: more failures, not logged");};
   function smTick(now){if(SM.off)return;
-    if(!SM.t0){SM.t0=now;try{scene.updateMatrixWorld(true);try{if(G3.atlasSigns)G3.atlasSigns();}catch(e){console.error("sign atlas failed",e);}try{if(G3.splitMulti)G3.splitMulti();scene.updateMatrixWorld(true);}catch(e){console.error("split failed",e);}try{if(G3.dropBuild)G3.dropBuild();}catch(e){console.error("drop shadows failed",e);}smSnapshot();smMerge();}
+    if(!SM.t0){SM.t0=now;try{scene.updateMatrixWorld(true);try{if(G3.atlasSigns)G3.atlasSigns();}catch(e){console.error("sign atlas failed",e);}try{if(G3.splitMulti)G3.splitMulti();scene.updateMatrixWorld(true);}catch(e){console.error("split failed",e);}try{if(G3.dropBuild)G3.dropBuild();}catch(e){console.error("drop shadows failed",e);}smSnapshot();try{if(G3.stripBack&&!BQ.has("nostrip"))G3.stripBack(SM.list);}catch(e){console.error("strip failed",e);}smMerge();}
       catch(e){console.error("scenery batching failed",e);smErr("scenery batching (batching off)",e);SM.off=true;SM.done=true;SM.list.forEach(r=>{r.o.layers.set(0);if(r.bm)r.bm.visible=false;});}return;}
     if(SM.queue&&SM.queue.length){try{smStep();}catch(e){console.error("scenery baking failed",e);smErr("scenery baking",e);SM.queue=[];SM.done=true;}return;}
     if(now>SM.checkT){SM.checkT=now+(now-SM.t0<10000?0:500);try{smWatch();}catch(e){smErr("watch for moved objects",e);}}}

@@ -84,3 +84,24 @@
     const tex=new THREE.CanvasTexture(cv);tex.colorSpace=THREE.SRGBColorSpace;tex.anisotropy=4;mat.map=tex;
     G3.signAtlas={tex,seen};diag(`sign atlas: ${n} signs, ${seen.size} textures in one`);
     UI_TICKS.push(k=>{if(k%2)return;let ch=false;for(const r of seen.values())if(r.t.version!==r.v){r.v=r.t.version;x.clearRect(r.x,r.y,r.w,r.h);x.drawImage(r.t.image,r.x,r.y);ch=true;}if(ch)tex.needsUpdate=true;});};
+  /* v6.1 t7: faces the camera can never see. The view direction never changes, so on the first frame every static, opaque,
+     single-sided mesh in the static merge keeps only its triangles that face the camera (the GPU threw the others away
+     anyway, after transforming them). One stripped copy per shape and orientation is shared. An object that later moves or
+     turns gets its full shape back when the merge hands it back (40). */
+  G3.stripBack=list=>{const th=-Math.PI/4,ph=Math.acos(Math.sqrt(1/3)),cx=Math.sin(ph)*Math.sin(th),cy=Math.cos(ph),cz=Math.sin(ph)*Math.cos(th);
+    const cache=new Map(),a=new THREE.Vector3(),b=new THREE.Vector3(),c=new THREE.Vector3();let n0=0,n1=0,objs=0;
+    for(const r of list){const o=r.o;if(!o.isMesh||o.isLine||r.proxyOnly)continue;const m=o.material;if(!m||Array.isArray(m)||m.side!==THREE.FrontSide||m.transparent||o.userData.aoDecal)continue;
+      const g=o.geometry,P=g.attributes.position;if(!P||g.morphAttributes&&Object.keys(g.morphAttributes).length)continue;
+      const e=o.matrixWorld.elements;if(o.matrixWorld.determinant()<=0)continue;
+      const key=g.uuid+"|"+[0,1,2,4,5,6,8,9,10].map(i=>e[i].toFixed(3)).join(",");let sg=cache.get(key);
+      const I=g.index,cnt=I?I.count:P.count;
+      if(sg===undefined){const keep=[];
+        for(let t=0;t<cnt;t+=3){const i0=I?I.getX(t):t,i1=I?I.getX(t+1):t+1,i2=I?I.getX(t+2):t+2;
+          a.fromBufferAttribute(P,i0).applyMatrix4(o.matrixWorld);b.fromBufferAttribute(P,i1).applyMatrix4(o.matrixWorld);c.fromBufferAttribute(P,i2).applyMatrix4(o.matrixWorld);
+          b.sub(a);c.sub(a);const nx=b.y*c.z-b.z*c.y,ny=b.z*c.x-b.x*c.z,nz=b.x*c.y-b.y*c.x;if(nx*cx+ny*cy+nz*cz>1e-7)keep.push(i0,i1,i2);}
+        if(keep.length>=cnt*0.95||!keep.length)sg=null;   // (nothing to gain, or nothing visible: left as it is)
+        else{sg=new THREE.BufferGeometry();for(const k in g.attributes)sg.setAttribute(k,g.attributes[k]);sg.setIndex(keep);sg.computeBoundingSphere();sg.computeBoundingBox();sg.userData.shared=true;}
+        cache.set(key,sg);}
+      n0+=cnt/3;if(!sg){n1+=cnt/3;continue;}
+      o.userData.fullGeo=g;o.geometry=sg;r.geo=sg;r.ver=sg.attributes.position.version;n1+=sg.index.count/3;objs++;}
+    diag(`back faces stripped: ${objs} objects, ${Math.round(n0)} -> ${Math.round(n1)} triangles`);};
