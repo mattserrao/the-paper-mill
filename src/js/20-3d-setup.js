@@ -21,7 +21,7 @@ function no3D(){G3.ok=false;$("no3d").hidden=false;$("no3d-retry").onclick=()=>l
   // "high-performance" woke the discrete GPU on dual-GPU laptops for every player, which drains the battery much faster.
   // Phones have one GPU, so they're unaffected. Picking Ultra already offers a reload, which is when this takes effect.
   G3.gpuPref=(()=>{let g="";try{g=localStorage.getItem("paper-mill-gfx")||"";}catch(e){}const q=new URLSearchParams(location.search).get("gfx");if(q)g=q;return g==="ultra"?"high-performance":"default";})();
-  try{renderer=new THREE.WebGLRenderer({canvas:glc,stencil:!/[?&]style=(classic|dusk)/.test(location.search),antialias:!matchMedia("(pointer: coarse)").matches&&(window.devicePixelRatio||1)<1.5,powerPreference:G3.gpuPref});}   // (v15: no MSAA on high-DPI screens, where the extra pixels already smooth edges)
+  try{renderer=new THREE.WebGLRenderer({canvas:glc,stencil:!/[?&]style=(classic|dusk)/.test(location.search),antialias:!/[?&]style=(classic|dusk)/.test(location.search)||!matchMedia("(pointer: coarse)").matches&&(window.devicePixelRatio||1)<1.5,powerPreference:G3.gpuPref});}   // (v15: no MSAA on high-DPI screens, where the extra pixels already smooth edges)
   catch(e){no3D();return;}
   if(!renderer.getContext()){no3D();return;}
   // r150+ reads every shader's error log on first draw, which forces the GPU to finish compiling right then:
@@ -70,11 +70,13 @@ function no3D(){G3.ok=false;$("no3d").hidden=false;$("no3d-retry").onclick=()=>l
   // the shadow pass redraws every shadow-casting object, so refresh it a few times a second instead of every frame (v2.8.4: desktop too)
   renderer.shadowMap.autoUpdate=false;G3.shadowHz=GFX.hz;
   // v2.8.4: round shapes get only as many sides as their size needs at this zoom (unit shapes that get scaled up keep 24)
-  const segCap=(r,s)=>Math.max(3,Math.min(s,BARE?(r<0.45?6:r<4?10:14):r===1?24:r<0.15?6:r<0.45?10:r<1.2?16:r<4?20:28));   // (v5.7.3: bare keeps round things to a few sides)
+  // v6 paper: chunky folded card. Round parts get few sides (a can is a 6-10 sided fold, not a smooth tube), boxes are plain boxes
+  const PAPER0=!BARE&&!/[?&]style=(classic|dusk)/.test(location.search);G3.paper0=PAPER0;
+  const segCap=(r,s)=>Math.max(3,Math.min(s,PAPER0?(r<0.3?4:r<1.2?6:r<4?8:10):BARE?(r<0.45?6:r<4?10:14):r===1?24:r<0.15?6:r<0.45?10:r<1.2?16:r<4?20:28));   // (v5.7.3: bare keeps round things to a few sides)
   class CylG extends THREE.CylinderGeometry{constructor(rt=1,rb=1,h=1,rs=32,hs=1,oe=false,ts=0,tl=Math.PI*2){super(rt,rb,h,segCap(Math.max(rt,rb),rs),hs,oe,ts,tl);}}
-  class SphG extends THREE.SphereGeometry{constructor(r=1,ws=32,hs=16,...a){super(r,Math.max(3,Math.min(ws,16)),Math.max(2,Math.min(hs,10)),...a);}}
-  class RingG extends THREE.RingGeometry{constructor(a=0.5,b=1,ts=32,...x){super(a,b,Math.max(3,Math.min(ts,32)),...x);}}
-  class CircG extends THREE.CircleGeometry{constructor(r=1,sg=32,...x){super(r,Math.max(3,Math.min(sg,32)),...x);}}
+  class SphG extends THREE.SphereGeometry{constructor(r=1,ws=32,hs=16,...a){super(r,Math.max(3,Math.min(ws,PAPER0?7:16)),Math.max(2,Math.min(hs,PAPER0?4:10)),...a);}}
+  class RingG extends THREE.RingGeometry{constructor(a=0.5,b=1,ts=32,...x){super(a,b,Math.max(3,Math.min(ts,PAPER0?10:32)),...x);}}
+  class CircG extends THREE.CircleGeometry{constructor(r=1,sg=32,...x){super(r,Math.max(3,Math.min(sg,PAPER0?10:32)),...x);}}
   renderer.shadowMap.enabled=!BARE;renderer.shadowMap.type=THREE.PCFShadowMap;   // (r186 dropped PCFSoft; the soft tiers widen the PCF kernel instead)
   renderer.outputColorSpace=THREE.SRGBColorSpace;renderer.toneMapping=THREE.ACESFilmicToneMapping;renderer.toneMappingExposure=1.12;
   const scene=new THREE.Scene();G3.scene=scene;G3.renderer=renderer;
@@ -129,6 +131,7 @@ function no3D(){G3.ok=false;$("no3d").hidden=false;$("no3d-retry").onclick=()=>l
       "float d=dot(fn,vec3(-0.57,0.72,0.37));float t=fn.y>0.8?1.0:d>0.2?0.88:d>-0.2?0.74:0.6;"+
       "t*=mix(mix(stAo.x,1.0,smoothstep(0.0,stAo.y,max(vStP.y,0.0))),1.0,clamp(fn.y,0.0,1.0));"+
       "vec2 wp=vStP.xz+vStP.y*vec2(0.7,-0.4);float dr=stN(wp*0.18)*0.08-0.04,gr=stN(wp*5.0);"+
+      "if(fn.y>0.8){float mt=stN(wp*0.05)*0.6+stN(wp*0.6)*0.4;float fl=step(0.86,stH(floor(wp*9.0)));t*=0.94+0.1*mt;t+=fl*0.05-step(0.93,stH(floor(wp*7.0)+3.1))*0.05;}"+
       "float hz=fract((gl_FragCoord.x+gl_FragCoord.y)*0.2);t*=1.0-0.2*stDay*step(t,0.7)*step(0.6,hz);"+
       "outgoingLight=(outgoingLight*t*vec3(1.03,1.0,0.93)*0.97+vec3(0.03,0.027,0.02))*(1.0+dr)*(0.96+0.06*gr)*stLight+emissive;}\n#include <opaque_fragment>");};}
   const PAPER_PATCH=paperPatch();
@@ -195,7 +198,7 @@ function no3D(){G3.ok=false;$("no3d").hidden=false;$("no3d-retry").onclick=()=>l
     s.lineTo(-ww/2+c,dd/2);s.quadraticCurveTo(-ww/2,dd/2,-ww/2,dd/2-c);s.lineTo(-ww/2,-dd/2+c);s.quadraticCurveTo(-ww/2,-dd/2,-ww/2+c,-dd/2);
     const g=new THREE.ExtrudeGeometry(s,{depth:Math.max(0.001,h-2*r),bevelEnabled:true,bevelThickness:r,bevelSize:r,bevelSegments:RBQ[0],curveSegments:RBQ[1]});
     g.rotateX(-Math.PI/2);g.translate(0,-(h-2*r)/2,0);g.computeVertexNormals();g.userData.shared=true;return RB[k]=g;}
-  function box(w,h,d,m,x,y,z,parent=scene,shadow=true){const o=new THREE.Mesh(Math.min(w,h,d)>=0.45&&!BARE?rboxGeo(w,h,d):new THREE.BoxGeometry(w,h,d),m);o.position.set(x,y,z);o.castShadow=shadow;o.receiveShadow=true;parent.add(o);return o;}
+  function box(w,h,d,m,x,y,z,parent=scene,shadow=true){const o=new THREE.Mesh(Math.min(w,h,d)>=0.45&&!BARE&&!PAPER0?rboxGeo(w,h,d):new THREE.BoxGeometry(w,h,d),m);o.position.set(x,y,z);o.castShadow=shadow;o.receiveShadow=true;parent.add(o);return o;}
   function cylZ(r,len,m,x,y,z,seg=24,parent=scene){const g=new CylG(r,r,len,seg);g.rotateX(Math.PI/2);const o=new THREE.Mesh(g,m);o.position.set(x,y,z);o.castShadow=true;o.receiveShadow=true;parent.add(o);return o;}
   const edgeSoft=new THREE.LineBasicMaterial({color:new THREE.Color("#3c4559").convertSRGBToLinear(),transparent:true,opacity:0.22});
   const edgeMat=new THREE.LineBasicMaterial({color:lin0("#3c4559"),transparent:true,opacity:0.42});
