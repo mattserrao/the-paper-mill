@@ -35,6 +35,11 @@ function no3D(){G3.ok=false;$("no3d").hidden=false;$("no3d-retry").onclick=()=>l
      recomputed only when a parent moved (three.js passes that down as "force"). Re-parenting clears the cache, so a node
      moved to another parent picks up its new world matrix on the next frame as before. */
   if(!THREE.Object3D.prototype.__pmMatrixSkip){const P=THREE.Object3D.prototype,um=P.updateMatrix,add=P.add,rem=P.remove;P.__pmMatrixSkip=true;
+    /* v6.1 t6: an invisible object and everything under it skip the per-frame world-matrix pass (the game builds many effect,
+       crew and civics groups up front and keeps them hidden: about a third of the scene). When one is shown again its
+       matrices are brought up to date on that same pass (a changed local matrix, or a moved parent, still updates it), and
+       getWorldPosition() updates on demand as before. */
+    {const umw=P.updateMatrixWorld;P.updateMatrixWorld=function(force){if(!this.visible&&this.parent)return;return umw.call(this,force);};}
     P.updateMatrix=function(){const p=this.position,q=this.quaternion,s=this.scale;let c=this._mc;
       if(c!==undefined&&c[0]===p.x&&c[1]===p.y&&c[2]===p.z&&c[3]===q.x&&c[4]===q.y&&c[5]===q.z&&c[6]===q.w&&c[7]===s.x&&c[8]===s.y&&c[9]===s.z)return;
       if(c===undefined)c=this._mc=new Float64Array(10);c[0]=p.x;c[1]=p.y;c[2]=p.z;c[3]=q.x;c[4]=q.y;c[5]=q.z;c[6]=q.w;c[7]=s.x;c[8]=s.y;c[9]=s.z;um.call(this);};

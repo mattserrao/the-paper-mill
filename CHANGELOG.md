@@ -1,5 +1,18 @@
 # Changelog
 
+## v6.1.0-t6 (2026-10-17): iso optimization round (test branch test/v6.1-iso)
+Profiled frame by frame (CPU, per drawn frame, phone-sized view). The biggest costs were work done for things nobody can see:
+- **Hidden objects skip the world-matrix pass.** The game builds many effect, crew, civics and outage groups up front and
+  keeps them hidden (about a third of the scene); three.js still updated all their matrices every frame. A hidden object
+  and everything under it now skips that pass and catches up the frame it is shown. Matrix update 4.2 → 1.1 ms.
+- **Moving batches stop re-checking hidden parts.** Their per-frame check walked about 2,500 parts, most of them inside
+  those hidden groups; a hidden group's parts now cost one check, settled parts are checked every 8th frame instead of
+  every 4th, and the cut-out models leave the batches the moment they are found. 11.7 → 4.8 ms.
+- **Season recolour** 3,000 vertices a frame (4.7 → 0.9 ms while it runs).
+- **Cut-outs** re-read each figure's look every other tick.
+- JS per frame (median, software renderer) about 42 → 36 ms; the main render is a little cheaper too (15.5 → 12.2 ms).
+  Absolute numbers are from the software renderer, so only the ratios mean anything.
+
 ## v6.1.0-t5 (2026-10-17): cut-out edge artifact (test branch test/v6.1-iso)
 - Moving cut-outs had a stray patch of ink and paper at their top right. The finishing pass grows the ink line by sampling
   around each pixel; near the picture's top and right edges it read past the picture into the scratch target, where a

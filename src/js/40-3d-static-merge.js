@@ -321,7 +321,11 @@
     scene.updateMatrixWorld();matSync();let out=false;const fn=DB.fn=(DB.fn||0)+1;
     // things that haven't changed for a second are checked every 4th frame (a still forklift starting to move shows
     // up within 4 frames); everything else every frame
-    for(const r of DB.list){const o=r.o;if(r.gone)continue;if(r.idle>60&&((fn+r.iid)&3))continue;
+    for(const r of DB.list){const o=r.o;if(r.gone)continue;
+      // (v6.1 t6: parts of a hidden group, the bulk of this list, cost one check while their group stays hidden)
+      if(r.vis===false&&r.top&&!r.top.visible&&r.top.parent===scene&&o.layers.mask===1<<DBLAYER)continue;
+      if(r.top===undefined){let t=o;while(t.parent&&t.parent!==scene)t=t.parent;r.top=t;}
+      if(r.idle>60&&((fn+r.iid)&7))continue;   // (t6: settled parts checked every 8th frame)
       const bc=r.bm.material,om=o.material;
       if(om!==r.mat||o.geometry!==r.geo||o.geometry.attributes.position.version!==r.ver||o.layers.mask!==1<<DBLAYER||!emSame(om,bc)){r.gone=true;out=true;r.bm.setVisibleAt(r.iid,false);vcFree(r.B,r);if(o.layers.mask===1<<DBLAYER)o.layers.set(0);continue;}
       // only touch the batch when something changed (each change re-uploads that batch's matrix texture)

@@ -51,7 +51,7 @@
    // --- finding them: anything built with userData.cut, rescanned every 2 s (pools grow during play) ---
    function rescan(){const seen=new Set(CUT.actors.map(a=>a.o));scene.traverse(o=>{if(o.userData&&o.userData.cut&&KIND[o.userData.cut]&&!seen.has(o)){
        let up=o.parent,nested=false;for(;up&&up!==scene;up=up.parent)if(up.userData&&up.userData.cut){nested=true;break;}   // (a driver inside a truck is part of the truck)
-       if(!nested){CUT.actors.push({o,kind:o.userData.cut,K:KIND[o.userData.cut],cell:null,hid:false,hT:0});
+       if(!nested){const a={o,kind:o.userData.cut,K:KIND[o.userData.cut],cell:null,hid:false,hT:0};CUT.actors.push(a);if(CUT.ok)hide(a,true);   // (t6: hidden at once, so the moving batches never track them)
          // v6.1 t3: the hidden model's parts no longer get their world matrices every frame (about 2,000 nodes); a picture
          // forces them (updateMatrixWorld(true)) and getWorldPosition still works, only the root is kept current
          o.children.forEach(c=>{c.matrixWorldAutoUpdate=false;});}}});}
@@ -133,12 +133,12 @@
        let A=ATL[a.K.at];if(A.full){CUT.full++;resetAtlas(a.K.at);A=ATL[a.K.at];}if(!n)basis();n++;
        const lastOne=n>=capN||!CUT.queue.length;let c=null;try{c=capture(a,key,dir,A,lastOne);}catch(e){CUT.errs++;if(CUT.errs<6)console.error("cut-out picture failed",e);}
        if(c){CUT.cells.set(key,c);CUT.byKD.set(a.kind+"#"+dir,c);CUT.byK.set(a.kind,c);}}
-     if(now<CUT.t)return;CUT.t=now+1000/FPS;basis();
+     if(now<CUT.t)return;CUT.t=now+1000/FPS;CUT.tk=(CUT.tk||0)+1;basis();
      {const k=G3.nightK!=null?G3.nightK:0;lit.value=1-0.62*k;}
      const cnt=[0,0];
      for(const a of CUT.actors){const o=a.o;try{if(!shown(o))continue;
        if(!a.hid||now>a.hT){a.hT=now+300;hide(a,true);}   // (hidden at once; re-checked every second, pools add parts later)
-       const dir=heading(o),key=lookKey(a)+"#"+dir;let c=CUT.cells.get(key);
+       const dir=heading(o);if(!a.lk||((CUT.tk+(a.ix||(a.ix=CUT.actors.indexOf(a)+1)))&1))a.lk=lookKey(a);const key=a.lk+"#"+dir;   /* (t6: the look is re-read every other tick) */let c=CUT.cells.get(key);
        if(!c){want(a,key,dir,!a.cell);c=a.cell||CUT.byKD.get(a.kind+"#"+dir)||CUT.byK.get(a.kind);}
        if(!c)continue;a.cell=c;
        const S2=sets[c.a],i=cnt[c.a];if(i>=S2.N)continue;cnt[c.a]++;
