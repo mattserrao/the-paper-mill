@@ -11,8 +11,7 @@
   nodes); UI panels refresh 2.5 times a second while no panel is open; the season recolour runs one mesh per frame.
 - **Cut-outs:** coarser pose steps (fewer pictures); their card shaders compile at start-up; Zen is stop-motion too.
 - Summer's colour grade is neutral, so a midday summer view skips the full-screen tint pass; roofs lift faster.
-- Whole-mill draws: main ~520 → t2 ~217 → t3 ~176; mid zoom ~456 → ~137 → ~157 at start-up, settling lower once the
-  moving batches form.
+- Draws per frame at mid zoom, same probe: t2 204 → t3 157 (main 456); whole mill about 176 (main about 520).
 
 ## v6.1.0-t2 (2026-10-17): iso test, round 2 (test branch test/v6.1-iso)
 - **Cut-outs never fall back to 3D.** t1 switched every cut-out back to its 3D model for good the first time a truck was
