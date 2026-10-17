@@ -80,7 +80,7 @@
          const mat3 O=mat3(vec3(1.60475,-0.10208,-0.00327),vec3(-0.53108,1.10813,-0.07276),vec3(-0.07367,-0.00605,1.07602));c*=uExp/0.6;return clamp(O*RRT(I*c),0.0,1.0);}
        vec3 srgb(vec3 c){return mix(pow(c,vec3(0.41666))*1.055-vec3(0.055),c*12.92,vec3(lessThanEqual(c,vec3(0.0031308))));}
        float ringA(vec2 uv,float r,int n){float m=0.0;for(int i=0;i<16;i++){if(i>=n)break;float a=float(i)/float(n)*6.2831853;float rr=r*(0.86+0.14*sin(float(i)*2.7+uPx));
-         m=max(m,texture2D(src,(uv+vec2(cos(a),sin(a))*rr/uPx)*uScale).a);}return m;}
+         vec2 q=uv+vec2(cos(a),sin(a))*rr/uPx;if(q.x>=0.0&&q.y>=0.0&&q.x<=1.0&&q.y<=1.0)m=max(m,texture2D(src,q*uScale).a);}return m;}
        void main(){vec4 o=texture2D(src,vUv*uScale);float ink=ringA(vUv,3.1,16),pap=ringA(vUv,1.9,12);
          vec3 c=o.a>0.004?srgb(aces(o.rgb/o.a/0.5)):vec3(0.0);
          vec3 col=mix(mix(uInk,uPaper,pap),c,o.a);float A=max(max(ink,pap),o.a);gl_FragColor=vec4(A>0.0?col:vec3(0.0),A);}`}));
@@ -95,7 +95,7 @@
        ch.color.copy(hemi.color);ch.groundColor.copy(hemi.groundColor);cd.color.copy(sun.color);cd.position.copy(sun.position).sub(sun.target.position);cd.target.position.set(0,0,0);cd.updateMatrixWorld();cd.target.updateMatrixWorld();
        cc.left=-K.R;cc.right=K.R;cc.top=K.R;cc.bottom=-K.R;cc.updateProjectionMatrix();cc.position.set(0,K.cy,0).addScaledVector(toCam,150);cc.quaternion.copy(camera.quaternion);cc.updateMatrixWorld();
        renderer.autoClear=false;
-       RT_A.viewport.set(0,0,px,px);RT_A.scissor.set(0,0,px,px);renderer.setRenderTarget(RT_A);renderer.setClearColor(0x000000,0);renderer.clear(true,true,false);renderer.render(cs,cc);
+       RT_A.viewport.set(0,0,px,px);RT_A.scissor.set(0,0,Math.min(RTS,px+8),Math.min(RTS,px+8));   /* (t5: cleared a little past the picture too) */renderer.setRenderTarget(RT_A);renderer.setClearColor(0x000000,0);renderer.clear(true,true,false);renderer.render(cs,cc);
        finU.uScale.value=px/RTS;finU.uPx.value=px;finU.uExp.value=renderer.toneMappingExposure;
        A.tex.generateMipmaps=mips!==false;   // (mipmaps once per frame, on its last picture: a 2048 x 1024 rebuild each time was a hitch)
        A.rt.viewport.set(at[0],at[1],px,px);A.rt.scissor.set(at[0],at[1],px,px);renderer.setRenderTarget(A.rt);renderer.render(finS,finC);

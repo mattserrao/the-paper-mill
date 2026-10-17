@@ -1,5 +1,11 @@
 # Changelog
 
+## v6.1.0-t5 (2026-10-17): cut-out edge artifact (test branch test/v6.1-iso)
+- Moving cut-outs had a stray patch of ink and paper at their top right. The finishing pass grows the ink line by sampling
+  around each pixel; near the picture's top and right edges it read past the picture into the scratch target, where a
+  bigger earlier picture (a truck or fork-truck) was still lying, and drew its outline. Samples outside the picture now
+  count as empty, and the scratch target is cleared a little past the picture too.
+
 ## v6.1.0-t4 (2026-10-17): iso fixes (test branch test/v6.1-iso)
 - **Operators, fork-trucks and trucks show again.** t3 stopped updating the hidden models' parts every frame, which also
   stopped them following the model into its picture, so every picture came out empty and the cut-outs vanished. The
