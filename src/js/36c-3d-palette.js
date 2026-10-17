@@ -18,10 +18,10 @@
    // recolour the scenery and the ground (originals kept, so any season can follow any other)
    const ORIG=new Map(),_c=new THREE.Color(),hsl={h:0,s:0,l:0};
    const hh=(x,z)=>{const v=Math.sin(Math.floor(x/2.5)*12.9898+Math.floor(z/2.5)*78.233)*43758.5453;return v-Math.floor(v);};
-   function recolour(mesh,pal,ground){const g=mesh&&mesh.geometry;if(!g||!g.attributes.color)return 0;const ca=g.attributes.color,pa=g.attributes.position;
+   function recolour(mesh,pal,ground,i0=0,i1=Infinity){const g=mesh&&mesh.geometry;if(!g||!g.attributes.color)return 0;const ca=g.attributes.color,pa=g.attributes.position;
      let o=ORIG.get(mesh);if(!o){o=Float32Array.from(ca.array);ORIG.set(mesh,o);}
      const a=ca.array,st=ca.itemSize;let n=0;mesh.updateMatrixWorld();const e=mesh.matrixWorld.elements;
-     for(let i=0;i<ca.count;i++){const j=i*st;_c.setRGB(o[j],o[j+1],o[j+2]);_c.getHSL(hsl);
+     for(let i=i0,ie=Math.min(ca.count,i1);i<ie;i++){const j=i*st;_c.setRGB(o[j],o[j+1],o[j+2]);_c.getHSL(hsl);
        const veg=hsl.h>0.16&&hsl.h<0.47&&hsl.s>0.1&&hsl.l>0.06&&hsl.l<0.85;
        if(pal===1||!veg){a[j]=o[j];a[j+1]=o[j+1];a[j+2]=o[j+2];continue;}
        const lx=pa.getX(i),lz=pa.getZ(i),wx=e[0]*lx+e[8]*lz+e[12],wz=e[2]*lx+e[10]*lz+e[14],r=hh(wx,wz);n++;
@@ -32,13 +32,14 @@
          else if(r<0.45)_c.setHSL(hsl.h,hsl.s*0.55,hsl.l*0.7);   // conifers and evergreens: darker, duller
          else _c.setHSL(0.07,0.14,Math.min(0.5,hsl.l*0.75+0.08));}   // bare branches
        a[j]=_c.r;a[j+1]=_c.g;a[j+2]=_c.b;}
-     ca.needsUpdate=true;return n;}
+     if(i1>=ca.count)ca.needsUpdate=true;return n;}   // (uploaded once, when its last chunk is done)
    let shownPal=1,chkT=0;G3.palShown=()=>PALS[shownPal];
    // v6.1 t3: one mesh per frame instead of all at once (no single long frame when a season starts)
    let palQ=[],palN=0;
    G3.setPal=p=>{p=((p%4)+4)%4;if(p===shownPal&&ORIG.size)return;shownPal=p;palN=0;
-     palQ=[...(G3.scenery&&G3.scenery.parts||[]).map(m=>[m,false]),...(G3.terrain?[[G3.terrain,true]]:[])];if(!ORIG.size)ORIG.set(gq,null);};
-   function palStep(){const it=palQ.shift();if(!it)return;try{palN+=recolour(it[0],shownPal,it[1]);}catch(e){console.error("palette failed",e);}
+     palQ=[...(G3.scenery&&G3.scenery.parts||[]).map(m=>[m,false,0]),...(G3.terrain?[[G3.terrain,true,0]]:[])];if(!ORIG.size)ORIG.set(gq,null);};
+   function palStep(){const it=palQ[0];if(!it)return;const CH=12000;   // (v6.1 t4: 12,000 vertices a frame, not a whole mesh)
+     try{const g=it[0].geometry,cnt=g&&g.attributes.color?g.attributes.color.count:0;palN+=recolour(it[0],shownPal,it[1],it[2],it[2]+CH);it[2]+=CH;if(it[2]>=cnt)palQ.shift();}catch(e){palQ.shift();console.error("palette failed",e);}
      if(!palQ.length)diag(`palette: ${PALS[shownPal]} (${palN} vertices recoloured)`);}
    // every frame: the time-of-day grade; once a second, the season
    G3.palTick=now=>{if(palQ.length)palStep();if(now>chkT){chkT=now+1000;const p=palNow();if(p!==shownPal||!ORIG.size&&p!==1)G3.setPal(p);}

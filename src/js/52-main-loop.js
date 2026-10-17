@@ -5,7 +5,7 @@ let FRAME_CAP=FPS_CAPS[FPS_MODE];if(G3.bare&&!(FRAME_CAP>0&&FRAME_CAP<=30))FRAME
 function setFpsMode(m){if(m===true)m="max";else if(m===false)m="saver";if(FPS_CAPS[m]===undefined)return;FPS_MODE=m;FRAME_CAP=FPS_CAPS[m];if(G3.bare&&!(FRAME_CAP>0&&FRAME_CAP<=30))FRAME_CAP=30;G3.cap=FRAME_CAP;try{localStorage.setItem("paper-mill-fps",m);}catch(e){}
   document.querySelectorAll("#fpsSeg button").forEach(b=>b.setAttribute("aria-pressed",String(b.dataset.fps===m)));}
 let last=performance.now(),uiAcc=0,uiN=0,lastPaint=0;
-const WACC={t:0,last:0};let STOPMO=true;try{STOPMO=localStorage.getItem("paper-mill-stopmo")!=="off";}catch(e){}
+const WACC={t:0,last:0};let STOPMO=false;try{STOPMO=localStorage.getItem("paper-mill-stopmo")==="on";}catch(e){}   // (v6.1 t4: off by default; it read as stutter)
 function setStopMo(on){STOPMO=!!on;try{localStorage.setItem("paper-mill-stopmo",on?"on":"off");}catch(e){}const c=document.getElementById("stopMo");if(c)c.checked=STOPMO;}
 /* v4.0.1: optional FPS readout (Controls > Show FPS), bottom-right; counts drawn loop frames, text written twice a second */
 const FPSM={on:false,el:null,n:0,t0:0,txt:""};

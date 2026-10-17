@@ -1336,7 +1336,7 @@ body.dark .kvchip{background:color-mix(in srgb,var(--panel) 96%,transparent)}
 <div class="btns"><button class="primary" id="no3d-retry">Try again</button></div></div></div>
 
 <script type="module">
-const APP_VER="v6.1.0-t3";   // shown in the menu and sent with leaderboard scores (max 12 characters)
+const APP_VER="v6.1.0-t4";   // shown in the menu and sent with leaderboard scores (max 12 characters)
 // TEST BUILDS ONLY (off in releases): turbo speeds 240/480/960 sim min/s for fast playtests. Above 120, crews and maintenance start jobs
 // without waiting for the 3D walk (as with the 3D view off) and outages keep the speed. Set false for a release.
 const TURBO=false,TURBO_FAST=s=>TURBO&&s>120;
@@ -7934,10 +7934,10 @@ function no3D(){G3.ok=false;$("no3d").hidden=false;$("no3d-retry").onclick=()=>l
    // recolour the scenery and the ground (originals kept, so any season can follow any other)
    const ORIG=new Map(),_c=new THREE.Color(),hsl={h:0,s:0,l:0};
    const hh=(x,z)=>{const v=Math.sin(Math.floor(x/2.5)*12.9898+Math.floor(z/2.5)*78.233)*43758.5453;return v-Math.floor(v);};
-   function recolour(mesh,pal,ground){const g=mesh&&mesh.geometry;if(!g||!g.attributes.color)return 0;const ca=g.attributes.color,pa=g.attributes.position;
+   function recolour(mesh,pal,ground,i0=0,i1=Infinity){const g=mesh&&mesh.geometry;if(!g||!g.attributes.color)return 0;const ca=g.attributes.color,pa=g.attributes.position;
      let o=ORIG.get(mesh);if(!o){o=Float32Array.from(ca.array);ORIG.set(mesh,o);}
      const a=ca.array,st=ca.itemSize;let n=0;mesh.updateMatrixWorld();const e=mesh.matrixWorld.elements;
-     for(let i=0;i<ca.count;i++){const j=i*st;_c.setRGB(o[j],o[j+1],o[j+2]);_c.getHSL(hsl);
+     for(let i=i0,ie=Math.min(ca.count,i1);i<ie;i++){const j=i*st;_c.setRGB(o[j],o[j+1],o[j+2]);_c.getHSL(hsl);
        const veg=hsl.h>0.16&&hsl.h<0.47&&hsl.s>0.1&&hsl.l>0.06&&hsl.l<0.85;
        if(pal===1||!veg){a[j]=o[j];a[j+1]=o[j+1];a[j+2]=o[j+2];continue;}
        const lx=pa.getX(i),lz=pa.getZ(i),wx=e[0]*lx+e[8]*lz+e[12],wz=e[2]*lx+e[10]*lz+e[14],r=hh(wx,wz);n++;
@@ -7948,13 +7948,14 @@ function no3D(){G3.ok=false;$("no3d").hidden=false;$("no3d-retry").onclick=()=>l
          else if(r<0.45)_c.setHSL(hsl.h,hsl.s*0.55,hsl.l*0.7);   // conifers and evergreens: darker, duller
          else _c.setHSL(0.07,0.14,Math.min(0.5,hsl.l*0.75+0.08));}   // bare branches
        a[j]=_c.r;a[j+1]=_c.g;a[j+2]=_c.b;}
-     ca.needsUpdate=true;return n;}
+     if(i1>=ca.count)ca.needsUpdate=true;return n;}   // (uploaded once, when its last chunk is done)
    let shownPal=1,chkT=0;G3.palShown=()=>PALS[shownPal];
    // v6.1 t3: one mesh per frame instead of all at once (no single long frame when a season starts)
    let palQ=[],palN=0;
    G3.setPal=p=>{p=((p%4)+4)%4;if(p===shownPal&&ORIG.size)return;shownPal=p;palN=0;
-     palQ=[...(G3.scenery&&G3.scenery.parts||[]).map(m=>[m,false]),...(G3.terrain?[[G3.terrain,true]]:[])];if(!ORIG.size)ORIG.set(gq,null);};
-   function palStep(){const it=palQ.shift();if(!it)return;try{palN+=recolour(it[0],shownPal,it[1]);}catch(e){console.error("palette failed",e);}
+     palQ=[...(G3.scenery&&G3.scenery.parts||[]).map(m=>[m,false,0]),...(G3.terrain?[[G3.terrain,true,0]]:[])];if(!ORIG.size)ORIG.set(gq,null);};
+   function palStep(){const it=palQ[0];if(!it)return;const CH=12000;   // (v6.1 t4: 12,000 vertices a frame, not a whole mesh)
+     try{const g=it[0].geometry,cnt=g&&g.attributes.color?g.attributes.color.count:0;palN+=recolour(it[0],shownPal,it[1],it[2],it[2]+CH);it[2]+=CH;if(it[2]>=cnt)palQ.shift();}catch(e){palQ.shift();console.error("palette failed",e);}
      if(!palQ.length)diag(`palette: ${PALS[shownPal]} (${palN} vertices recoloured)`);}
    // every frame: the time-of-day grade; once a second, the season
    G3.palTick=now=>{if(palQ.length)palStep();if(now>chkT){chkT=now+1000;const p=palNow();if(p!==shownPal||!ORIG.size&&p!==1)G3.setPal(p);}
@@ -10314,7 +10315,7 @@ function no3D(){G3.ok=false;$("no3d").hidden=false;$("no3d-retry").onclick=()=>l
      each picture back to the CPU (gl.readPixels), which stalled the GPU for every picture. At most CAP_N pictures a frame.
      Cards update at 12 per second (stop-motion), each with an offset dark-paper drop shadow (40c's stencil, so it merges
      with the building shadows). One draw per atlas for the cards and one for their shadows. */
-  {const CUT_LAYER=26,FPS=15,CAP_N=2,CAP_BURST=10,AW=2048,AH=1024,PAD=4,INK="#2b1d12",PAPERC="#fbf6ea";
+  {const CUT_LAYER=26,FPS=15,CAP_N=1,CAP_BURST=4,AW=2048,AH=1024,PAD=4,INK="#2b1d12",PAPERC="#fbf6ea";
    const KIND={person:{R:1.3,cy:1.0,ppm:36,at:0},lift:{R:2.0,cy:1.1,ppm:34,at:1},truck:{R:4.2,cy:1.4,ppm:30,at:1}};
    const CUT=G3.CUT={actors:[],cells:new Map(),byKD:new Map(),byK:new Map(),queue:[],qset:new Set(),caps:0,full:0,resets:0,errs:0,t:0,ok:true,burst:0};
    // --- atlases: a shelf packer over a 2048 square each ---
@@ -10322,7 +10323,7 @@ function no3D(){G3.ok=false;$("no3d").hidden=false;$("no3d-retry").onclick=()=>l
      rt.texture.anisotropy=4;rt.scissorTest=true;return {rt,tex:rt.texture,rows:[],nextY:0,full:false};}
    function alloc(A,s){for(const r of A.rows)if(r.h===s&&r.x+s<=AW){const x=r.x;r.x+=s+PAD;return [x,r.y];}
      if(A.nextY+s>AH){A.full=true;return null;}const r={y:A.nextY,h:s,x:s+PAD};A.nextY+=s+PAD;A.rows.push(r);return [0,r.y];}
-   const ATL=[atlas(),atlas()];
+   const ATL=[atlas(),atlas()];CUT.atl=ATL;
    // --- the card material: atlas colour, cut at the paper edge; shadows are the same cards in dark paper ---
    const aa=renderer.getContext().getContextAttributes().antialias;
    const VS=`attribute vec4 aRect;varying vec2 vUv;void main(){vUv=vec2(aRect.x+uv.x*aRect.z,aRect.y+uv.y*aRect.w);
@@ -10343,7 +10344,8 @@ function no3D(){G3.ok=false;$("no3d").hidden=false;$("no3d-retry").onclick=()=>l
      [card,shad].forEach((o,k)=>{o.count=0;o.frustumCulled=false;o.instanceMatrix.setUsage(THREE.DynamicDrawUsage);o.userData.smBatch=true;o.renderOrder=k?1:0;o.name=k?"cut-out shadows":"cut-outs";scene.add(o);});
      return {N,rect,card,shad};});
    // --- the picture-taking scene: same light types and counts as the main scene, fixed daylight ---
-   const cs=new THREE.Scene(),ch=new THREE.HemisphereLight(0xffffff,0x888888,0.5*LEG),cd=new THREE.DirectionalLight(0xfff4e6,1.4*LEG),cp=new THREE.PointLight(0xff7a1f,0,45,0);
+   const LSC=0.5;   // (v6.1 t4: the picture is lit at half strength into an 8-bit target and doubled again in the finishing pass, so highlights up to 2x don't clip)
+   const cs=new THREE.Scene(),ch=new THREE.HemisphereLight(0xffffff,0x888888,0.5*LEG*LSC),cd=new THREE.DirectionalLight(0xfff4e6,1.4*LEG*LSC),cp=new THREE.PointLight(0xff7a1f,0,45,0);
    cs.add(ch,cd,cd.target,cp);[ch,cd,cp].forEach(l=>l.layers.enable(CUT_LAYER));cp.position.set(0,-500,0);
    const cc=new THREE.OrthographicCamera(-1,1,1,-1,1,400);cc.layers.set(0);cc.layers.enable(CUT_LAYER);cc.layers.enable(30);
    // view direction (unit, from the target toward the camera) and screen right/up, from the fixed main camera
@@ -10370,7 +10372,7 @@ function no3D(){G3.ok=false;$("no3d").hidden=false;$("no3d-retry").onclick=()=>l
    // --- taking one picture ---
    const RTS=256,gl2=renderer.capabilities.isWebGL2!==false;
    const hf=!!(renderer.extensions.has("EXT_color_buffer_half_float")||renderer.extensions.has("EXT_color_buffer_float"));
-   const RT_A=new THREE.WebGLRenderTarget(RTS,RTS,{type:hf?THREE.HalfFloatType:THREE.UnsignedByteType,samples:gl2?4:0,generateMipmaps:false,minFilter:THREE.NearestFilter,magFilter:THREE.NearestFilter});
+   const RT_A=new THREE.WebGLRenderTarget(RTS,RTS,{type:THREE.UnsignedByteType,   /* (v6.1 t4: 8-bit everywhere; a half-float MSAA target isn't renderable on every phone) */samples:gl2?4:0,generateMipmaps:false,minFilter:THREE.NearestFilter,magFilter:THREE.NearestFilter});
    RT_A.scissorTest=true;
    const finU={src:{value:RT_A.texture},uScale:{value:1},uPx:{value:64},uExp:{value:renderer.toneMappingExposure},uInk:{value:new THREE.Color(INK)},uPaper:{value:new THREE.Color(PAPERC)}};
    const fin=new THREE.Mesh(new THREE.PlaneGeometry(2,2),new THREE.ShaderMaterial({uniforms:finU,depthTest:false,depthWrite:false,blending:THREE.NoBlending,toneMapped:false,fog:false,
@@ -10383,13 +10385,14 @@ function no3D(){G3.ok=false;$("no3d").hidden=false;$("no3d-retry").onclick=()=>l
        float ringA(vec2 uv,float r,int n){float m=0.0;for(int i=0;i<16;i++){if(i>=n)break;float a=float(i)/float(n)*6.2831853;float rr=r*(0.86+0.14*sin(float(i)*2.7+uPx));
          m=max(m,texture2D(src,(uv+vec2(cos(a),sin(a))*rr/uPx)*uScale).a);}return m;}
        void main(){vec4 o=texture2D(src,vUv*uScale);float ink=ringA(vUv,3.1,16),pap=ringA(vUv,1.9,12);
-         vec3 c=o.a>0.004?srgb(aces(o.rgb/o.a)):vec3(0.0);
+         vec3 c=o.a>0.004?srgb(aces(o.rgb/o.a/0.5)):vec3(0.0);
          vec3 col=mix(mix(uInk,uPaper,pap),c,o.a);float A=max(max(ink,pap),o.a);gl_FragColor=vec4(A>0.0?col:vec3(0.0),A);}`}));
    fin.frustumCulled=false;const finS=new THREE.Scene();finS.add(fin);const finC=new THREE.OrthographicCamera(-1,1,1,-1,0,1);
-   function capture(a,key,dir,A){const K=a.K,px=Math.min(RTS-8,Math.round(2*K.R*K.ppm));
+   function capture(a,key,dir,A,mips){const K=a.K,px=Math.min(RTS-8,Math.round(2*K.R*K.ppm));
      const at=alloc(A,px);if(!at)return null;
      const o=a.o,par=o.parent,p0=o.position.clone(),ry=o.rotation.y,vis=o.visible;
      const cl=renderer.getClearColor(new THREE.Color()),ca=renderer.getClearAlpha(),ac=renderer.autoClear,rt0=renderer.getRenderTarget();
+     o.children.forEach(c=>{c.matrixWorldAutoUpdate=true;});   // (t4: the frozen parts must follow the model into the picture; t3 drew them where they stood in the mill, so every picture came out empty)
      try{cs.add(o);o.position.set(0,0,0);o.rotation.y=dir*Math.PI/4;o.visible=true;o.updateMatrixWorld(true);
        cs.fog=scene.fog;   // (the same fog object: fog is part of the shader, and the picture is far nearer than it starts)
        ch.color.copy(hemi.color);ch.groundColor.copy(hemi.groundColor);cd.color.copy(sun.color);cd.position.copy(sun.position).sub(sun.target.position);cd.target.position.set(0,0,0);cd.updateMatrixWorld();cd.target.updateMatrixWorld();
@@ -10397,16 +10400,23 @@ function no3D(){G3.ok=false;$("no3d").hidden=false;$("no3d-retry").onclick=()=>l
        renderer.autoClear=false;
        RT_A.viewport.set(0,0,px,px);RT_A.scissor.set(0,0,px,px);renderer.setRenderTarget(RT_A);renderer.setClearColor(0x000000,0);renderer.clear(true,true,false);renderer.render(cs,cc);
        finU.uScale.value=px/RTS;finU.uPx.value=px;finU.uExp.value=renderer.toneMappingExposure;
+       A.tex.generateMipmaps=mips!==false;   // (mipmaps once per frame, on its last picture: a 2048 x 1024 rebuild each time was a hitch)
        A.rt.viewport.set(at[0],at[1],px,px);A.rt.scissor.set(at[0],at[1],px,px);renderer.setRenderTarget(A.rt);renderer.render(finS,finC);
      }finally{   // put it back exactly as it was, and the renderer too
        renderer.setRenderTarget(rt0);renderer.setClearColor(cl,ca);renderer.autoClear=ac;
-       if(par)par.add(o);else cs.remove(o);o.position.copy(p0);o.rotation.y=ry;o.visible=vis;o.updateMatrixWorld(true);}
+       if(par)par.add(o);else cs.remove(o);o.position.copy(p0);o.rotation.y=ry;o.visible=vis;o.updateMatrixWorld(true);o.children.forEach(c=>{c.matrixWorldAutoUpdate=false;});}
      CUT.caps++;return {r:[at[0]/AW,at[1]/AH,px/AW,px/AH],a:K.at,w:2*K.R};}
    // start-up: compile the picture shaders (the cut-outs' materials as drawn into RT_A) behind the "Getting the mill ready" screen
    G3.cutWarm=()=>{try{rescan();basis();const seen=new Set();for(const a of CUT.actors){const kk=a.kind;if(seen.size>40)break;
        let m=false;a.o.traverse(c=>{if(c.material&&!seen.has(c.material)){seen.add(c.material);m=true;}});if(m){const key="warm:"+CUT.caps;const c=capture(a,key,0,ATL[a.K.at]);if(c){CUT.cells.set(key,c);CUT.byKD.set(kk+"#0",c);CUT.byK.set(kk,c);}}}}
      catch(e){CUT.errs++;console.error("cut-out warm-up failed",e);}
-     sets.forEach(S2=>{S2.card.count=S2.shad.count=1;});};   // (one card each so the start-up compile sees their shaders; the next tick resets the counts)
+     sets.forEach(S2=>{S2.card.count=S2.shad.count=1;});
+     // v6.1 t4 self-test: read back the centre of one warm-up picture (once, at start-up). Empty means this device can't
+     // render the pictures: the cut-outs stay off and the 3D models are shown, rather than nothing at all.
+     try{const c=CUT.byK.get("person")||CUT.byK.get("lift")||CUT.byK.get("truck");if(c){const A=ATL[c.a],px=new Uint8Array(4*256);
+         const cx=Math.round((c.r[0]+c.r[2]/2)*AW),cy=Math.round((c.r[1]+c.r[3]*0.45)*AH);renderer.readRenderTargetPixels(A.rt,cx-8,cy-8,16,16,px);
+         let a=0;for(let i=3;i<px.length;i+=4)a=Math.max(a,px[i]);CUT.selfTest=a;if(a===0){CUT.ok=false;CUT.actors.forEach(x=>x.o.children.forEach(c=>{c.matrixWorldAutoUpdate=true;}));diag("cut-outs: pictures came out empty on this device; 3D models shown instead");}
+         else diag("cut-outs: self-test ok");}}catch(e){CUT.selfTest=-1;}};   // (one card each so the start-up compile sees their shaders; the next tick resets the counts)
    // --- every frame (43-3d-frame.js, after the moving batches, before the render) ---
    let scanT=0;
    // an atlas that fills up starts over: its pictures are dropped and retaken as they are needed again
@@ -10424,7 +10434,7 @@ function no3D(){G3.ok=false;$("no3d").hidden=false;$("no3d-retry").onclick=()=>l
      let n=0;const capN=now<CUT.burst?CAP_BURST:CAP_N;
      while(CUT.queue.length&&n<capN){const [a,key,dir]=CUT.queue.shift();CUT.qset.delete(key);if(CUT.cells.has(key)||!shown(a.o))continue;
        let A=ATL[a.K.at];if(A.full){CUT.full++;resetAtlas(a.K.at);A=ATL[a.K.at];}if(!n)basis();n++;
-       let c=null;try{c=capture(a,key,dir,A);}catch(e){CUT.errs++;if(CUT.errs<6)console.error("cut-out picture failed",e);}
+       const lastOne=n>=capN||!CUT.queue.length;let c=null;try{c=capture(a,key,dir,A,lastOne);}catch(e){CUT.errs++;if(CUT.errs<6)console.error("cut-out picture failed",e);}
        if(c){CUT.cells.set(key,c);CUT.byKD.set(a.kind+"#"+dir,c);CUT.byK.set(a.kind,c);}}
      if(now<CUT.t)return;CUT.t=now+1000/FPS;basis();
      {const k=G3.nightK!=null?G3.nightK:0;lit.value=1-0.62*k;}
@@ -11717,7 +11727,7 @@ function camPullOn(){try{return localStorage.getItem("paper-mill-campull")!=="of
    (within 700 ms per tap) and a list of every version's one-line note pops up, newest first. The list comes from
    VERSION-NOTES.txt at the repo root: build.py swaps it in for the placeholder below, so adding a line there with each
    release keeps the pop-up current (build.py warns when APP_VER has no line). ---------- */
-{const VNOTES=[["4.0.0", "Graphics Overhaul: 60 FPS on iPhone, ~80% Fewer Draw Calls"], ["4.0.1", "Performance Follow-Up, Show FPS Option and Device Autotest"], ["4.0.2", "Economy Rebalance and Smoother Upset Labels"], ["4.1.0", "Four Environments, Seeded Mills, Bottlenecks, Graphics Tiers and Site Music"], ["4.2.0", "New Site Maps, Rare Sights, Zen Map Rotation and Economics Fixes"], ["4.2.0-s", "Save and Continue Season (Test)"], ["4.2.1", "Save/Continue, Settings Panel and Outage Speed Fix"], ["4.2.2-t", "Bayou Gator Sight Reworked (Test)"], ["4.2.2-t2", "Gator Bass Riff (Test)"], ["4.2.2-t3", "Gator Riff Removed, Wide Camera Framing (Test)"], ["4.2.2-t4", "Gator Scene Shortened and Widened (Test)"], ["4.2.2-t5", "One Rare Sight per Map in Zen (Test)"], ["4.2.2", "Rare Sights Reworked, Bird Strike Upset, Mill Report Tab"], ["4.2.3-t", "Cowboys, Bigfoot and Tugboat Sights Reworked (Test)"], ["4.2.3", "Laptop Battery Saving (Default GPU)"], ["4.2.4", "$25M Goal Removed and Quick Fixes"], ["4.2.5", "Random Bottleneck per Season and Accessibility Improvements"], ["4.3.0-t1", "Survival Mode (Test)"], ["4.4.0-t1", "Mill Leaders in Survival (Test)"], ["4.4.0-t2", "Painted Leader Portraits (Test)"], ["4.4.0-t3", "Leader Redesign, 4-Day Waves and Fixes (Test)"], ["5.0.0", "Survival Mode Release with Mill Leaders"], ["5.0.1", "Results Dialog and Game Speed Fixes"], ["5.0.2", "Report Card Label Fixes"], ["5.0.3", "Survival Playtest Fixes (Test)"], ["5.0.4", "Playtest Review: Dot Auto-Fix and Shipping Fix (Test)"], ["5.0.5", "Polish Rounds from Survival Playtests"], ["5.0.6", "Survival QA Fixes, Opt-In Outage Watch, Leaderboard Filters"], ["5.1.0", "Civics Meters and Leaders in Seasons (Test)"], ["5.4.0", "Title Screen, Civics in the World and Dark Mode"], ["5.4.1", "Loading Splash, No Old-Menu Flash"], ["5.4.2", "Graphics Quality on the Title Screen"], ["5.5.0", "Performance Improvements"], ["5.6.0", "Fiddly Knobs, DCS/QCS Screens and Knobs View"], ["5.7.0", "Catching Failures Early: Tells, Daily Rounds, Vibration Report, Outage Prep"], ["5.7.1", "Bottom Menu Reorder, Settings Back on the Right"], ["5.7.2", "Help Page with Game Guide and Glossary"], ["5.7.3", "Bare Graphics Mode for Weak Phones"], ["5.7.4", "Version Notes Pop-Up (Triple-Tap the Version Number)"], ["6.1.0-t1", "Isometric Paper View: Fixed Camera, Cut-Outs, Drop Shadows, Cutaways, Season Palettes (Test)"], ["6.1.0-t2", "Iso Round 2: Cut-Outs Always Paper, GPU Pictures, Stop-Motion World, Fewer Draws (Test)"], ["6.1.0-t3", "Iso Round 3: iPhone Batching, Instanced Cans, Sign Atlas, Lighter Frames (Test)"]];
+{const VNOTES=[["4.0.0", "Graphics Overhaul: 60 FPS on iPhone, ~80% Fewer Draw Calls"], ["4.0.1", "Performance Follow-Up, Show FPS Option and Device Autotest"], ["4.0.2", "Economy Rebalance and Smoother Upset Labels"], ["4.1.0", "Four Environments, Seeded Mills, Bottlenecks, Graphics Tiers and Site Music"], ["4.2.0", "New Site Maps, Rare Sights, Zen Map Rotation and Economics Fixes"], ["4.2.0-s", "Save and Continue Season (Test)"], ["4.2.1", "Save/Continue, Settings Panel and Outage Speed Fix"], ["4.2.2-t", "Bayou Gator Sight Reworked (Test)"], ["4.2.2-t2", "Gator Bass Riff (Test)"], ["4.2.2-t3", "Gator Riff Removed, Wide Camera Framing (Test)"], ["4.2.2-t4", "Gator Scene Shortened and Widened (Test)"], ["4.2.2-t5", "One Rare Sight per Map in Zen (Test)"], ["4.2.2", "Rare Sights Reworked, Bird Strike Upset, Mill Report Tab"], ["4.2.3-t", "Cowboys, Bigfoot and Tugboat Sights Reworked (Test)"], ["4.2.3", "Laptop Battery Saving (Default GPU)"], ["4.2.4", "$25M Goal Removed and Quick Fixes"], ["4.2.5", "Random Bottleneck per Season and Accessibility Improvements"], ["4.3.0-t1", "Survival Mode (Test)"], ["4.4.0-t1", "Mill Leaders in Survival (Test)"], ["4.4.0-t2", "Painted Leader Portraits (Test)"], ["4.4.0-t3", "Leader Redesign, 4-Day Waves and Fixes (Test)"], ["5.0.0", "Survival Mode Release with Mill Leaders"], ["5.0.1", "Results Dialog and Game Speed Fixes"], ["5.0.2", "Report Card Label Fixes"], ["5.0.3", "Survival Playtest Fixes (Test)"], ["5.0.4", "Playtest Review: Dot Auto-Fix and Shipping Fix (Test)"], ["5.0.5", "Polish Rounds from Survival Playtests"], ["5.0.6", "Survival QA Fixes, Opt-In Outage Watch, Leaderboard Filters"], ["5.1.0", "Civics Meters and Leaders in Seasons (Test)"], ["5.4.0", "Title Screen, Civics in the World and Dark Mode"], ["5.4.1", "Loading Splash, No Old-Menu Flash"], ["5.4.2", "Graphics Quality on the Title Screen"], ["5.5.0", "Performance Improvements"], ["5.6.0", "Fiddly Knobs, DCS/QCS Screens and Knobs View"], ["5.7.0", "Catching Failures Early: Tells, Daily Rounds, Vibration Report, Outage Prep"], ["5.7.1", "Bottom Menu Reorder, Settings Back on the Right"], ["5.7.2", "Help Page with Game Guide and Glossary"], ["5.7.3", "Bare Graphics Mode for Weak Phones"], ["5.7.4", "Version Notes Pop-Up (Triple-Tap the Version Number)"], ["6.1.0-t1", "Isometric Paper View: Fixed Camera, Cut-Outs, Drop Shadows, Cutaways, Season Palettes (Test)"], ["6.1.0-t2", "Iso Round 2: Cut-Outs Always Paper, GPU Pictures, Stop-Motion World, Fewer Draws (Test)"], ["6.1.0-t3", "Iso Round 3: iPhone Batching, Instanced Cans, Sign Atlas, Lighter Frames (Test)"], ["6.1.0-t4", "Iso Fixes: Operators and Fork-Trucks Back, Less Stutter (Test)"]];
   let ov=null,held=false;
   function render(){
     const cur=APP_VER.replace(/^v/i,""),rows=VNOTES.slice().reverse().map(([v,n])=>
@@ -11745,7 +11755,7 @@ let FRAME_CAP=FPS_CAPS[FPS_MODE];if(G3.bare&&!(FRAME_CAP>0&&FRAME_CAP<=30))FRAME
 function setFpsMode(m){if(m===true)m="max";else if(m===false)m="saver";if(FPS_CAPS[m]===undefined)return;FPS_MODE=m;FRAME_CAP=FPS_CAPS[m];if(G3.bare&&!(FRAME_CAP>0&&FRAME_CAP<=30))FRAME_CAP=30;G3.cap=FRAME_CAP;try{localStorage.setItem("paper-mill-fps",m);}catch(e){}
   document.querySelectorAll("#fpsSeg button").forEach(b=>b.setAttribute("aria-pressed",String(b.dataset.fps===m)));}
 let last=performance.now(),uiAcc=0,uiN=0,lastPaint=0;
-const WACC={t:0,last:0};let STOPMO=true;try{STOPMO=localStorage.getItem("paper-mill-stopmo")!=="off";}catch(e){}
+const WACC={t:0,last:0};let STOPMO=false;try{STOPMO=localStorage.getItem("paper-mill-stopmo")==="on";}catch(e){}   // (v6.1 t4: off by default; it read as stutter)
 function setStopMo(on){STOPMO=!!on;try{localStorage.setItem("paper-mill-stopmo",on?"on":"off");}catch(e){}const c=document.getElementById("stopMo");if(c)c.checked=STOPMO;}
 /* v4.0.1: optional FPS readout (Controls > Show FPS), bottom-right; counts drawn loop frames, text written twice a second */
 const FPSM={on:false,el:null,n:0,t0:0,txt:""};

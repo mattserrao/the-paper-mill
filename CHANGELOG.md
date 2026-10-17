@@ -1,5 +1,15 @@
 # Changelog
 
+## v6.1.0-t4 (2026-10-17): iso fixes (test branch test/v6.1-iso)
+- **Operators, fork-trucks and trucks show again.** t3 stopped updating the hidden models' parts every frame, which also
+  stopped them following the model into its picture, so every picture came out empty and the cut-outs vanished. The
+  parts are now brought along for each picture. A start-up self-test reads one picture back once: if a device ever
+  produces empty pictures, the cut-outs stay off and the 3D models are shown instead of nothing.
+- **Less stutter:** stop-motion is now off by default (Settings → Performance to turn it on); pictures are taken one a
+  frame (four in the first seconds) and the atlas mipmaps are rebuilt once a frame instead of after every picture; the
+  pictures use a plain 8-bit target (lit at half strength, doubled in the finishing pass) that every phone can render;
+  the season recolour runs 12,000 vertices a frame instead of a whole mesh.
+
 ## v6.1.0-t3 (2026-10-17): iso test, round 3 (test branch test/v6.1-iso)
 - **iPhone/iPad get the colour-sharing too:** a BatchedMesh's per-object colour draws grey there, so on those devices
   untextured looks that differ only in colour are baked into plain vertex-coloured meshes per 90 m cell (the method the

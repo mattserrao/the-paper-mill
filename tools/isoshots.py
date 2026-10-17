@@ -35,7 +35,7 @@ with sync_playwright() as pw:
         # close any card that popped up over the view
         pg.evaluate("()=>{const o=document.querySelector('#evc:not([hidden]) button');if(o)o.click();}")
         pg.screenshot(path=f"{pre}-{env}-{name}.png")
-    st = pg.evaluate("()=>{const I=__PM.G3.renderer.info;return {calls:I.render.calls,tris:I.render.triangles,progs:(I.programs||[]).length,cut:__PM.G3.CUT?__PM.G3.CUT.stats():null}}")
+    st = pg.evaluate("()=>{const I=__PM.G3.renderer.info;return {calls:I.render.calls,tris:I.render.triangles,progs:(I.programs||[]).length,cut:__PM.G3.CUT?Object.assign(__PM.G3.CUT.stats(),{self:__PM.G3.CUT.selfTest,ok:__PM.G3.CUT.ok}):null}}")
     print(st)
     b.close()
 print("errors:", errs[:8] if errs else "none")

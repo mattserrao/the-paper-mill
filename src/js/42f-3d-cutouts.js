@@ -12,7 +12,7 @@
      each picture back to the CPU (gl.readPixels), which stalled the GPU for every picture. At most CAP_N pictures a frame.
      Cards update at 12 per second (stop-motion), each with an offset dark-paper drop shadow (40c's stencil, so it merges
      with the building shadows). One draw per atlas for the cards and one for their shadows. */
-  {const CUT_LAYER=26,FPS=15,CAP_N=2,CAP_BURST=10,AW=2048,AH=1024,PAD=4,INK="#2b1d12",PAPERC="#fbf6ea";
+  {const CUT_LAYER=26,FPS=15,CAP_N=1,CAP_BURST=4,AW=2048,AH=1024,PAD=4,INK="#2b1d12",PAPERC="#fbf6ea";
    const KIND={person:{R:1.3,cy:1.0,ppm:36,at:0},lift:{R:2.0,cy:1.1,ppm:34,at:1},truck:{R:4.2,cy:1.4,ppm:30,at:1}};
    const CUT=G3.CUT={actors:[],cells:new Map(),byKD:new Map(),byK:new Map(),queue:[],qset:new Set(),caps:0,full:0,resets:0,errs:0,t:0,ok:true,burst:0};
    // --- atlases: a shelf packer over a 2048 square each ---
@@ -20,7 +20,7 @@
      rt.texture.anisotropy=4;rt.scissorTest=true;return {rt,tex:rt.texture,rows:[],nextY:0,full:false};}
    function alloc(A,s){for(const r of A.rows)if(r.h===s&&r.x+s<=AW){const x=r.x;r.x+=s+PAD;return [x,r.y];}
      if(A.nextY+s>AH){A.full=true;return null;}const r={y:A.nextY,h:s,x:s+PAD};A.nextY+=s+PAD;A.rows.push(r);return [0,r.y];}
-   const ATL=[atlas(),atlas()];
+   const ATL=[atlas(),atlas()];CUT.atl=ATL;
    // --- the card material: atlas colour, cut at the paper edge; shadows are the same cards in dark paper ---
    const aa=renderer.getContext().getContextAttributes().antialias;
    const VS=`attribute vec4 aRect;varying vec2 vUv;void main(){vUv=vec2(aRect.x+uv.x*aRect.z,aRect.y+uv.y*aRect.w);
@@ -41,7 +41,8 @@
      [card,shad].forEach((o,k)=>{o.count=0;o.frustumCulled=false;o.instanceMatrix.setUsage(THREE.DynamicDrawUsage);o.userData.smBatch=true;o.renderOrder=k?1:0;o.name=k?"cut-out shadows":"cut-outs";scene.add(o);});
      return {N,rect,card,shad};});
    // --- the picture-taking scene: same light types and counts as the main scene, fixed daylight ---
-   const cs=new THREE.Scene(),ch=new THREE.HemisphereLight(0xffffff,0x888888,0.5*LEG),cd=new THREE.DirectionalLight(0xfff4e6,1.4*LEG),cp=new THREE.PointLight(0xff7a1f,0,45,0);
+   const LSC=0.5;   // (v6.1 t4: the picture is lit at half strength into an 8-bit target and doubled again in the finishing pass, so highlights up to 2x don't clip)
+   const cs=new THREE.Scene(),ch=new THREE.HemisphereLight(0xffffff,0x888888,0.5*LEG*LSC),cd=new THREE.DirectionalLight(0xfff4e6,1.4*LEG*LSC),cp=new THREE.PointLight(0xff7a1f,0,45,0);
    cs.add(ch,cd,cd.target,cp);[ch,cd,cp].forEach(l=>l.layers.enable(CUT_LAYER));cp.position.set(0,-500,0);
    const cc=new THREE.OrthographicCamera(-1,1,1,-1,1,400);cc.layers.set(0);cc.layers.enable(CUT_LAYER);cc.layers.enable(30);
    // view direction (unit, from the target toward the camera) and screen right/up, from the fixed main camera
@@ -68,7 +69,7 @@
    // --- taking one picture ---
    const RTS=256,gl2=renderer.capabilities.isWebGL2!==false;
    const hf=!!(renderer.extensions.has("EXT_color_buffer_half_float")||renderer.extensions.has("EXT_color_buffer_float"));
-   const RT_A=new THREE.WebGLRenderTarget(RTS,RTS,{type:hf?THREE.HalfFloatType:THREE.UnsignedByteType,samples:gl2?4:0,generateMipmaps:false,minFilter:THREE.NearestFilter,magFilter:THREE.NearestFilter});
+   const RT_A=new THREE.WebGLRenderTarget(RTS,RTS,{type:THREE.UnsignedByteType,   /* (v6.1 t4: 8-bit everywhere; a half-float MSAA target isn't renderable on every phone) */samples:gl2?4:0,generateMipmaps:false,minFilter:THREE.NearestFilter,magFilter:THREE.NearestFilter});
    RT_A.scissorTest=true;
    const finU={src:{value:RT_A.texture},uScale:{value:1},uPx:{value:64},uExp:{value:renderer.toneMappingExposure},uInk:{value:new THREE.Color(INK)},uPaper:{value:new THREE.Color(PAPERC)}};
    const fin=new THREE.Mesh(new THREE.PlaneGeometry(2,2),new THREE.ShaderMaterial({uniforms:finU,depthTest:false,depthWrite:false,blending:THREE.NoBlending,toneMapped:false,fog:false,
@@ -81,13 +82,14 @@
        float ringA(vec2 uv,float r,int n){float m=0.0;for(int i=0;i<16;i++){if(i>=n)break;float a=float(i)/float(n)*6.2831853;float rr=r*(0.86+0.14*sin(float(i)*2.7+uPx));
          m=max(m,texture2D(src,(uv+vec2(cos(a),sin(a))*rr/uPx)*uScale).a);}return m;}
        void main(){vec4 o=texture2D(src,vUv*uScale);float ink=ringA(vUv,3.1,16),pap=ringA(vUv,1.9,12);
-         vec3 c=o.a>0.004?srgb(aces(o.rgb/o.a)):vec3(0.0);
+         vec3 c=o.a>0.004?srgb(aces(o.rgb/o.a/0.5)):vec3(0.0);
          vec3 col=mix(mix(uInk,uPaper,pap),c,o.a);float A=max(max(ink,pap),o.a);gl_FragColor=vec4(A>0.0?col:vec3(0.0),A);}`}));
    fin.frustumCulled=false;const finS=new THREE.Scene();finS.add(fin);const finC=new THREE.OrthographicCamera(-1,1,1,-1,0,1);
-   function capture(a,key,dir,A){const K=a.K,px=Math.min(RTS-8,Math.round(2*K.R*K.ppm));
+   function capture(a,key,dir,A,mips){const K=a.K,px=Math.min(RTS-8,Math.round(2*K.R*K.ppm));
      const at=alloc(A,px);if(!at)return null;
      const o=a.o,par=o.parent,p0=o.position.clone(),ry=o.rotation.y,vis=o.visible;
      const cl=renderer.getClearColor(new THREE.Color()),ca=renderer.getClearAlpha(),ac=renderer.autoClear,rt0=renderer.getRenderTarget();
+     o.children.forEach(c=>{c.matrixWorldAutoUpdate=true;});   // (t4: the frozen parts must follow the model into the picture; t3 drew them where they stood in the mill, so every picture came out empty)
      try{cs.add(o);o.position.set(0,0,0);o.rotation.y=dir*Math.PI/4;o.visible=true;o.updateMatrixWorld(true);
        cs.fog=scene.fog;   // (the same fog object: fog is part of the shader, and the picture is far nearer than it starts)
        ch.color.copy(hemi.color);ch.groundColor.copy(hemi.groundColor);cd.color.copy(sun.color);cd.position.copy(sun.position).sub(sun.target.position);cd.target.position.set(0,0,0);cd.updateMatrixWorld();cd.target.updateMatrixWorld();
@@ -95,16 +97,23 @@
        renderer.autoClear=false;
        RT_A.viewport.set(0,0,px,px);RT_A.scissor.set(0,0,px,px);renderer.setRenderTarget(RT_A);renderer.setClearColor(0x000000,0);renderer.clear(true,true,false);renderer.render(cs,cc);
        finU.uScale.value=px/RTS;finU.uPx.value=px;finU.uExp.value=renderer.toneMappingExposure;
+       A.tex.generateMipmaps=mips!==false;   // (mipmaps once per frame, on its last picture: a 2048 x 1024 rebuild each time was a hitch)
        A.rt.viewport.set(at[0],at[1],px,px);A.rt.scissor.set(at[0],at[1],px,px);renderer.setRenderTarget(A.rt);renderer.render(finS,finC);
      }finally{   // put it back exactly as it was, and the renderer too
        renderer.setRenderTarget(rt0);renderer.setClearColor(cl,ca);renderer.autoClear=ac;
-       if(par)par.add(o);else cs.remove(o);o.position.copy(p0);o.rotation.y=ry;o.visible=vis;o.updateMatrixWorld(true);}
+       if(par)par.add(o);else cs.remove(o);o.position.copy(p0);o.rotation.y=ry;o.visible=vis;o.updateMatrixWorld(true);o.children.forEach(c=>{c.matrixWorldAutoUpdate=false;});}
      CUT.caps++;return {r:[at[0]/AW,at[1]/AH,px/AW,px/AH],a:K.at,w:2*K.R};}
    // start-up: compile the picture shaders (the cut-outs' materials as drawn into RT_A) behind the "Getting the mill ready" screen
    G3.cutWarm=()=>{try{rescan();basis();const seen=new Set();for(const a of CUT.actors){const kk=a.kind;if(seen.size>40)break;
        let m=false;a.o.traverse(c=>{if(c.material&&!seen.has(c.material)){seen.add(c.material);m=true;}});if(m){const key="warm:"+CUT.caps;const c=capture(a,key,0,ATL[a.K.at]);if(c){CUT.cells.set(key,c);CUT.byKD.set(kk+"#0",c);CUT.byK.set(kk,c);}}}}
      catch(e){CUT.errs++;console.error("cut-out warm-up failed",e);}
-     sets.forEach(S2=>{S2.card.count=S2.shad.count=1;});};   // (one card each so the start-up compile sees their shaders; the next tick resets the counts)
+     sets.forEach(S2=>{S2.card.count=S2.shad.count=1;});
+     // v6.1 t4 self-test: read back the centre of one warm-up picture (once, at start-up). Empty means this device can't
+     // render the pictures: the cut-outs stay off and the 3D models are shown, rather than nothing at all.
+     try{const c=CUT.byK.get("person")||CUT.byK.get("lift")||CUT.byK.get("truck");if(c){const A=ATL[c.a],px=new Uint8Array(4*256);
+         const cx=Math.round((c.r[0]+c.r[2]/2)*AW),cy=Math.round((c.r[1]+c.r[3]*0.45)*AH);renderer.readRenderTargetPixels(A.rt,cx-8,cy-8,16,16,px);
+         let a=0;for(let i=3;i<px.length;i+=4)a=Math.max(a,px[i]);CUT.selfTest=a;if(a===0){CUT.ok=false;CUT.actors.forEach(x=>x.o.children.forEach(c=>{c.matrixWorldAutoUpdate=true;}));diag("cut-outs: pictures came out empty on this device; 3D models shown instead");}
+         else diag("cut-outs: self-test ok");}}catch(e){CUT.selfTest=-1;}};   // (one card each so the start-up compile sees their shaders; the next tick resets the counts)
    // --- every frame (43-3d-frame.js, after the moving batches, before the render) ---
    let scanT=0;
    // an atlas that fills up starts over: its pictures are dropped and retaken as they are needed again
@@ -122,7 +131,7 @@
      let n=0;const capN=now<CUT.burst?CAP_BURST:CAP_N;
      while(CUT.queue.length&&n<capN){const [a,key,dir]=CUT.queue.shift();CUT.qset.delete(key);if(CUT.cells.has(key)||!shown(a.o))continue;
        let A=ATL[a.K.at];if(A.full){CUT.full++;resetAtlas(a.K.at);A=ATL[a.K.at];}if(!n)basis();n++;
-       let c=null;try{c=capture(a,key,dir,A);}catch(e){CUT.errs++;if(CUT.errs<6)console.error("cut-out picture failed",e);}
+       const lastOne=n>=capN||!CUT.queue.length;let c=null;try{c=capture(a,key,dir,A,lastOne);}catch(e){CUT.errs++;if(CUT.errs<6)console.error("cut-out picture failed",e);}
        if(c){CUT.cells.set(key,c);CUT.byKD.set(a.kind+"#"+dir,c);CUT.byK.set(a.kind,c);}}
      if(now<CUT.t)return;CUT.t=now+1000/FPS;basis();
      {const k=G3.nightK!=null?G3.nightK:0;lit.value=1-0.62*k;}
