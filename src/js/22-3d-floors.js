@@ -3,7 +3,7 @@
   function floorDecal(x0,x1,z0,z1,ppm,paint){const W2=Math.round((x1-x0)*ppm),H2=Math.round((z1-z0)*ppm),c=document.createElement("canvas");c.width=W2;c.height=H2;
     const x=c.getContext("2d"),X=v=>(v-x0)*ppm,Z=v=>(v-z0)*ppm;paint(x,X,Z,ppm,W2,H2);
     const t=new THREE.CanvasTexture(c);t.colorSpace=THREE.SRGBColorSpace;t.anisotropy=4;
-    const m=(BARE?G3.bareMat:o=>new THREE.MeshLambertMaterial(o))({map:t,transparent:true,depthWrite:false,polygonOffset:true,polygonOffsetFactor:-2,polygonOffsetUnits:-2});
+    const m=(BARE?G3.bareMat:G3.styleMat&&G3.style?G3.styleMat:o=>new THREE.MeshLambertMaterial(o))({map:t,transparent:true,depthWrite:false,polygonOffset:true,polygonOffsetFactor:-2,polygonOffsetUnits:-2});
     const o=new THREE.Mesh(new THREE.PlaneGeometry(x1-x0,z1-z0),m);o.rotation.x=-Math.PI/2;o.position.set((x0+x1)/2,0.055,(z0+z1)/2);o.receiveShadow=true;o.renderOrder=1;scene.add(o);return o;}
   let dSeed=7;const drnd=()=>{dSeed=(dSeed*16807)%2147483647;return dSeed/2147483647;};
   const dScuffs=(x,X,Z,ppm,pts,n)=>{for(let k=0;k<n;k++){const [cx,cz,sp]=pts[Math.floor(drnd()*pts.length)],px=X(cx+(drnd()-0.5)*sp),pz=Z(cz+(drnd()-0.5)*sp*0.6),r=(0.6+drnd()*1.6)*ppm,a0=drnd()*6.28;
@@ -59,7 +59,7 @@
     dHatch(x,X,Z,ppm,-24.6,-23.9,20.6,32.0,GRN,"rgba(255,255,255,0.45)");
     dScuffs(x,X,Z,ppm,[[-36,17,22],[-47.6,23,6],[-32,19.4,4],[-36,22,18],[-36,26,18]],120);});
   // props: pallet stacks, bins, chargers, bollards, extinguishers (instanced: a handful of draw calls in total)
-  {const LamB=o=>BARE?G3.bareMat(o):new THREE.MeshLambertMaterial(o);const pal=LamB({color:lin0("#b8894f")}),red=LamB({color:lin0("#d63a2f")}),yel=LamB({color:lin0("#f2b807")}),
+  {const LamB=o=>BARE?G3.bareMat(o):G3.style?G3.styleMat(o):new THREE.MeshLambertMaterial(o);const pal=LamB({color:lin0("#b8894f")}),red=LamB({color:lin0("#d63a2f")}),yel=LamB({color:lin0("#f2b807")}),
       blu=LamB({color:lin0("#2f6fd1")}),gry=LamB({color:lin0("#596273")}),m4=new THREE.Matrix4();
     const dInst=(geo,m,list,rotY)=>{const im=new THREE.InstancedMesh(geo,instMat(m),list.length);list.forEach((p,i)=>{m4.makeRotationY(p[3]||rotY||0);m4.setPosition(p[0],p[1],p[2]);im.setMatrixAt(i,m4);});im.castShadow=true;im.receiveShadow=true;scene.add(im);return im;};
     const pallets=[];[[-33,-22.4],[-33,-21.2],[-11,-3.8],[-48,31.4],[-48,30.2],[-24.6,15.5]].forEach(([px,pz],j)=>{const h=2+((j*7)%4);for(let k=0;k<h;k++)pallets.push([px,0.08+k*0.15,pz,(k%2)*0.08]);});

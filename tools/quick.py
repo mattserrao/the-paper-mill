@@ -28,7 +28,7 @@ args = [a for a in sys.argv[1:] if not a.startswith("--")]
 flags = {a.split("=")[0]: (a.split("=", 1)[1] if "=" in a else True) for a in sys.argv[1:] if a.startswith("--")}
 path = args[0]; label = args[1] if len(args) > 1 else pathlib.Path(path).parent.name or "build"
 expect = flags.get("--expect", "96960821"); desktop = "--desktop" in flags
-site = "".join(f"&{k}={flags.get('--'+k)}" for k in ("env", "mill") if "--" + k in flags)   # v4.1: ?env=&mill= (default: rural with its fixed layout, mill #21, as players see it)
+site = "".join(f"&{k}={flags.get('--'+k)}" for k in ("env", "mill", "style") if "--" + k in flags)   # v4.1: ?env=&mill= (default: rural with its fixed layout, mill #21, as players see it)
 html = pathlib.Path(path).read_text()
 if "window.__PM=" not in html:
     i = html.rindex("})();", 0, html.rindex("</script>")); html = html[:i] + HOOK + html[i:]
@@ -103,7 +103,7 @@ with sync_playwright() as pw:
     pg.route("**/*", route_for(html)); pg.add_init_script(INIT); pg.goto("http://bench.local/" + ("?" + site[1:] if site else ""))
     pg.wait_for_function("window.__PM&&__B.first!==null&&(!__PM.G3.prewarm||__PM.G3.warm)", timeout=240000, polling=500)
     cdp = ctx.new_cdp_session(pg); cdp.send("Performance.enable")
-    pg.evaluate("()=>{const G=__PM.G3,R=G.renderer,r=R.render.bind(R);R.render=(a,b)=>{const t=performance.now();r(a,b);__B.cur+=performance.now()-t;};document.getElementById('v2go').click();__PM.setFps(true);__PM.C.simSpeed=30;G.noFallback=true;}")
+    pg.evaluate("()=>{const G=__PM.G3,R=G.renderer,r=R.render.bind(R);R.render=(a,b)=>{const t=performance.now();r(a,b);__B.cur+=performance.now()-t;};document.getElementById('v2go').click();const lc=document.querySelector('.ldcard');if(lc){lc.click();const g=document.querySelector('#ld-go');g&&g.click();}__PM.setFps(true);__PM.C.simSpeed=30;G.noFallback=true;}")
     pg.evaluate(SAMPLER)
     out["normal"] = phase(pg, cdp, 8000, 12000)
     pg.evaluate("()=>{__PM.CH.on=true;__PM.EVENTS.forEach(e=>{try{__PM.trigger(e.id,true)}catch(_){}})}")

@@ -91,7 +91,35 @@ function no3D(){G3.ok=false;$("no3d").hidden=false;$("no3d-retry").onclick=()=>l
       MCAP=new THREE.CanvasTexture(c);MCAP.colorSpace=THREE.SRGBColorSpace;}
     r.matcap=MCAP;r.fog=false;return new THREE.MeshMatcapMaterial(r);}
   G3.bareMat=bareMat;
-  function StdMat(o){if(BARE)return bareMat(o);if(!GFX.lambert)return new THREE.MeshStandardMaterial(o);const r=Object.assign({},o||{});delete r.roughness;delete r.metalness;delete r.flatShading;delete r.envMapIntensity;delete r.roughnessMap;delete r.metalnessMap;return new THREE.MeshLambertMaterial(r);}
+  /* v6.0 art style (test build: ?style=paper|dusk; the classic lit look stays the default until the switch is approved).
+     Every lit material becomes one of two shared models, patched once so all of them compile to one shader per variant:
+       paper  toon shading with a 3-step ramp (flat 3-tone faces, like cut card), warm paper grade
+       dusk   smooth Lambert shading, warm low sun, violet lift in the shadows
+     Both add baked-style ambient occlusion in the shader (walls darken toward the ground, floors don't) and a colour grade,
+     with its own exposure. No extra passes, textures or draws. */
+  const STYLE=G3.style=BARE?"":(()=>{const q=new URLSearchParams(location.search).get("style");return q==="paper"||q==="dusk"?q:"";})();
+  const STY=G3.STY=STYLE?{
+    paper:{ao:[0.72,2.6],lift:[0.012,0.010,0.004],gain:[1.02,0.99,0.93],sat:0.94,sky:"#e3d8c2",sun:"#fff3e0",hemi:"#fffaf0",hemiK:0.42,sunK:1.5,exp:0.98},
+    dusk:{ao:[0.58,3.2],lift:[0.008,0.010,0.030],gain:[1.05,0.97,0.92],sat:0.95,sky:"#d79b8a",sun:"#ffb37c",hemi:"#cdc8ec",hemiK:0.5,sunK:1.35,exp:1.05}}[STYLE]:null;
+  let styleTone=null;
+  if(STY){renderer.toneMappingExposure=STY.exp;   // (ACES kept: the fire, flash and glow effects are tuned for it)
+   
+    if(STYLE==="paper"){const d=new Uint8Array([110,110,110,255,185,185,185,255,255,255,255,255]);   // 3 tones: shade, side, lit
+      styleTone=new THREE.DataTexture(d,3,1);styleTone.minFilter=styleTone.magFilter=THREE.NearestFilter;styleTone.generateMipmaps=false;styleTone.needsUpdate=true;}}
+  const STU=G3.styleU={stAo:{value:new THREE.Vector2(...(STY?STY.ao:[1,1]))},stLift:{value:new THREE.Vector3(...(STY?STY.lift:[0,0,0]))},
+    stGain:{value:new THREE.Vector3(...(STY?STY.gain:[1,1,1]))},stSat:{value:STY?STY.sat:1}};
+  function stylePatch(sh){Object.assign(sh.uniforms,STU);
+    sh.vertexShader=sh.vertexShader.replace("void main() {","varying float vStY;\nvoid main() {").replace("#include <project_vertex>",
+      "#include <project_vertex>\n{vec4 stW=vec4(transformed,1.0);\n#ifdef USE_BATCHING\nstW=batchingMatrix*stW;\n#endif\n#ifdef USE_INSTANCING\nstW=instanceMatrix*stW;\n#endif\nvStY=(modelMatrix*stW).y;}");
+    sh.fragmentShader=sh.fragmentShader.replace("void main() {","varying float vStY;uniform vec2 stAo;uniform vec3 stLift,stGain;uniform float stSat;\nvoid main() {").replace("#include <opaque_fragment>",
+      // walls (normal facing sideways) darken near the ground; floors and roofs keep full light
+      "{float up=clamp(dot(normal,normalize((viewMatrix*vec4(0.,1.,0.,0.)).xyz)),0.,1.);float ao=mix(stAo.x,1.0,smoothstep(0.0,stAo.y,max(vStY,0.0)));"+
+      "outgoingLight*=mix(ao,1.0,up*up);float l=dot(outgoingLight,vec3(0.2126,0.7152,0.0722));outgoingLight=mix(vec3(l),outgoingLight,stSat);outgoingLight=outgoingLight*stGain+stLift*(1.0-min(l,1.0));}\n#include <opaque_fragment>");}
+  function styleMat(o){const r=Object.assign({},o||{});for(const k of ["roughness","metalness","flatShading","envMapIntensity","roughnessMap","metalnessMap","envMap"])delete r[k];
+    const m=STYLE==="paper"?new THREE.MeshToonMaterial(Object.assign(r,{gradientMap:styleTone})):new THREE.MeshLambertMaterial(r);
+    m.onBeforeCompile=stylePatch;m.customProgramCacheKey=()=>"pmstyle";return m;}
+  G3.styleMat=styleMat;
+  function StdMat(o){if(BARE)return bareMat(o);if(STY)return styleMat(o);if(!GFX.lambert)return new THREE.MeshStandardMaterial(o);const r=Object.assign({},o||{});delete r.roughness;delete r.metalness;delete r.flatShading;delete r.envMapIntensity;delete r.roughnessMap;delete r.metalnessMap;return new THREE.MeshLambertMaterial(r);}
   function tok(name){return getComputedStyle(document.documentElement).getPropertyValue("--"+name).trim()||"#888";}
   function mat(token,opts={}){const m=new StdMat(Object.assign({roughness:0.72,metalness:0.04,flatShading:false},opts));m.userData.token=token;MATS.push(m);return m;}
   // v4.1 pass 3: an InstancedMesh gets its own copy of a shared material (palette token kept, so brand colours still reach it):
@@ -107,7 +135,10 @@ function no3D(){G3.ok=false;$("no3d").hidden=false;$("no3d-retry").onclick=()=>l
     scene.background=new THREE.Color(tok("g-sky")).convertSRGBToLinear();
     
     hemi.color.set("#ffffff");hemi.groundColor.set(tok("g-ground")).convertSRGBToLinear();
-    baseHemi=0.5;baseSun=1.4;if(G3.rebrand)G3.rebrand();
+    baseHemi=0.5;baseSun=1.4;
+    if(STY){skyHex=STY.sky;hemi.color.set(STY.hemi).convertSRGBToLinear();sun.color.set(STY.sun).convertSRGBToLinear();baseHemi*=STY.hemiK/0.5;baseSun*=STY.sunK/1.4;
+      if(STYLE==="dusk")hemi.groundColor.lerp(new THREE.Color("#2f3a58").convertSRGBToLinear(),0.3);}
+    if(G3.rebrand)G3.rebrand();
   }
 
   /* lights */
@@ -127,7 +158,8 @@ function no3D(){G3.ok=false;$("no3d").hidden=false;$("no3d-retry").onclick=()=>l
       if(i0>0&&i1>i0){const lines=[];for(let k=0;k<taps;k++)lines.push(taps===1?"texture( shadowMap, vec3( shadowCoord.xy, shadowCoord.z ) )":`texture( shadowMap, vec3( shadowCoord.xy + vogelDiskSample( ${k}, ${taps}, phi ) * radius, shadowCoord.z ) )`);
         THREE.ShaderChunk.shadowmap_pars_fragment=c.slice(0,i0)+"shadow = (\n\t\t\t\t\t"+lines.join(" +\n\t\t\t\t\t")+"\n\t\t\t\t"+`) * ${(1/taps).toFixed(6)};`+c.slice(i1+") * 0.2;".length);
         diag(`shadows: ${taps}-tap lookup`);}}}
-  sun.target.position.set(-5,0,5);scene.add(sun,sun.target);
+  sun.target.position.set(-5,0,5);if(STYLE==="dusk")sun.position.set(-90,52,74);   // (v6 dusk: a lower, warmer evening sun)
+  scene.add(sun,sun.target);
   let baseHemi=0.85,baseSun=0.9;
 
   /* helpers */
