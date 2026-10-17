@@ -86,7 +86,9 @@
         _f.set(1,0,0).applyQuaternion(_pq);const face=_f.dot(_r)>=0?1:-1;
         let fr=POSE[mode]||0;if(mode==="run")fr=(step+(d.k*3))%2?1:2;
         const hop=moving?((step%2)?0.09:0):(fr===3||fr===6)&&(step%4<2)?0.04:0;
-        const tilt=moving?((step%2)?0.07:-0.07)*face:fr===3?-0.12*face:0;
+        // a hand nudges each piece now and then: a small lean that changes every ~0.7 s, different for every figure
+        const nudge=(Math.sin((Math.floor(now/700)+d.k*7.31+n*3.17)*12.9898)*43758.5453%1)*0.08-0.04;
+        const tilt=(moving?((step%2)?0.07:-0.07)*face:fr===3?-0.12*face:0)+nudge;
         const H=2.6*_s.y,Wd=H*CW/CH;
         _e.set(back,yaw,tilt);_q.setFromEuler(_e);_m.compose(_v.set(_v.x,_v.y+hop,_v.z),_q,_s.set(Wd*face,H,1));
         cards.setMatrixAt(n,_m);const k=Math.max(0,d.k);cell.setXY(n,(k%PER_ROW)*FR+fr,Math.floor(k/PER_ROW));n++;}

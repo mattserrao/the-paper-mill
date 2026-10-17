@@ -21,7 +21,7 @@ function no3D(){G3.ok=false;$("no3d").hidden=false;$("no3d-retry").onclick=()=>l
   // "high-performance" woke the discrete GPU on dual-GPU laptops for every player, which drains the battery much faster.
   // Phones have one GPU, so they're unaffected. Picking Ultra already offers a reload, which is when this takes effect.
   G3.gpuPref=(()=>{let g="";try{g=localStorage.getItem("paper-mill-gfx")||"";}catch(e){}const q=new URLSearchParams(location.search).get("gfx");if(q)g=q;return g==="ultra"?"high-performance":"default";})();
-  try{renderer=new THREE.WebGLRenderer({canvas:glc,antialias:!matchMedia("(pointer: coarse)").matches&&(window.devicePixelRatio||1)<1.5,powerPreference:G3.gpuPref});}   // (v15: no MSAA on high-DPI screens, where the extra pixels already smooth edges)
+  try{renderer=new THREE.WebGLRenderer({canvas:glc,stencil:!/[?&]style=(classic|dusk)/.test(location.search),antialias:!matchMedia("(pointer: coarse)").matches&&(window.devicePixelRatio||1)<1.5,powerPreference:G3.gpuPref});}   // (v15: no MSAA on high-DPI screens, where the extra pixels already smooth edges)
   catch(e){no3D();return;}
   if(!renderer.getContext()){no3D();return;}
   // r150+ reads every shader's error log on first draw, which forces the GPU to finish compiling right then:
@@ -91,49 +91,56 @@ function no3D(){G3.ok=false;$("no3d").hidden=false;$("no3d-retry").onclick=()=>l
       MCAP=new THREE.CanvasTexture(c);MCAP.colorSpace=THREE.SRGBColorSpace;}
     r.matcap=MCAP;r.fog=false;return new THREE.MeshMatcapMaterial(r);}
   G3.bareMat=bareMat;
-  /* v6.0 art style (test build: ?style=paper|dusk; the classic lit look stays the default until the switch is approved).
-     Every lit material becomes one of two shared models, patched once so all of them compile to one shader per variant:
-       paper  toon shading with a 3-step ramp (flat 3-tone faces, like cut card), warm paper grade
-       dusk   smooth Lambert shading, warm low sun, violet lift in the shadows
-     Both add baked-style ambient occlusion in the shader (walls darken toward the ground, floors don't) and a colour grade,
-     with its own exposure. No extra passes, textures or draws. */
-  const STYLE=G3.style=BARE?"":(()=>{const q=new URLSearchParams(location.search).get("style");return q==="paper"||q==="dusk"?q:"";})();
+  /* v6.0 Paper-craft (this fork commits to it; ?style=classic / ?style=dusk stay only for side-by-side tests).
+     Everything is cut and folded card on a tabletop, moved by hand:
+       - no lights, no shadow maps: every surface is unlit flat paper. Each face gets one of four baked-style tones from its own
+         facing (worked out from the screen-space slope of its position, so even rounded parts read as folded card), walls
+         darken toward the table, pencil hatching marks the darkest faces by day, and a card grain runs through the sheet
+       - a whole-scene light multiplier carries the day and night (one uniform), and emissive parts (lamps, warning lights)
+         still glow through it
+     dusk keeps phase 1's smooth Lambert shading (parked). */
+  const STYLE=G3.style=BARE?"":(()=>{const q=new URLSearchParams(location.search).get("style");return q==="classic"?"":q==="dusk"?"dusk":"paper";})();
+  const PAPER=STYLE==="paper";
   const STY=G3.STY=STYLE?{
-    paper:{ao:[0.72,2.6],lift:[0.012,0.010,0.004],gain:[1.02,0.99,0.93],sat:0.94,sky:"#e3d8c2",sun:"#fff3e0",hemi:"#fffaf0",hemiK:0.42,sunK:1.5,exp:0.98},
+    paper:{ao:[0.66,2.4],lift:[0,0,0],gain:[1,1,1],sat:1,sky:"#e9e0cc",sun:"#ffffff",hemi:"#ffffff",hemiK:0.5,sunK:1.4,exp:1.0},
     dusk:{ao:[0.58,3.2],lift:[0.008,0.010,0.030],gain:[1.05,0.97,0.92],sat:0.95,sky:"#d79b8a",sun:"#ffb37c",hemi:"#cdc8ec",hemiK:0.5,sunK:1.35,exp:1.05}}[STYLE]:null;
-  let styleTone=null;
-  if(STY){renderer.toneMappingExposure=STY.exp;   // (ACES kept: the fire, flash and glow effects are tuned for it)
-   
-    if(STYLE==="paper"){const d=new Uint8Array([110,110,110,255,185,185,185,255,255,255,255,255]);   // 3 tones: shade, side, lit
-      styleTone=new THREE.DataTexture(d,3,1);styleTone.minFilter=styleTone.magFilter=THREE.NearestFilter;styleTone.generateMipmaps=false;styleTone.needsUpdate=true;}}
+  if(STY)renderer.toneMappingExposure=STY.exp;
+  if(PAPER)renderer.toneMapping=THREE.NoToneMapping;   // (flat paper colours go out as picked; no filmic curve to fight)
   const STU=G3.styleU={stAo:{value:new THREE.Vector2(...(STY?STY.ao:[1,1]))},stLift:{value:new THREE.Vector3(...(STY?STY.lift:[0,0,0]))},
-    stGain:{value:new THREE.Vector3(...(STY?STY.gain:[1,1,1]))},stSat:{value:STY?STY.sat:1},stDay:{value:1}};
-  /* paper extras (v6 prototype): world-space card grain and gentle sheet-to-sheet colour drift, and pencil hatching laid over
-     the shade band (screen-space diagonal strokes where the light falls off). All arithmetic in the one shared shader. */
-  const ST_HEAD="varying vec3 vStP;uniform vec2 stAo;uniform vec3 stLift,stGain;uniform float stSat,stDay;\n"+
+    stGain:{value:new THREE.Vector3(...(STY?STY.gain:[1,1,1]))},stSat:{value:STY?STY.sat:1},stDay:{value:1},stLight:{value:new THREE.Color(1,1,1)}};
+  const ST_HEAD="varying vec3 vStP;uniform vec2 stAo;uniform vec3 stLift,stGain,stLight;uniform float stSat,stDay;\n"+
     "float stH(vec2 p){return fract(sin(dot(p,vec2(127.1,311.7)))*43758.5453);}\n"+
     "float stN(vec2 p){vec2 i=floor(p),f=fract(p);f=f*f*(3.0-2.0*f);return mix(mix(stH(i),stH(i+vec2(1,0)),f.x),mix(stH(i+vec2(0,1)),stH(i+vec2(1,1)),f.x),f.y);}\n";
+  const ST_VERT=["void main() {","varying vec3 vStP;\nvoid main() {","#include <project_vertex>",
+    "#include <project_vertex>\n{vec4 stW=vec4(transformed,1.0);\n#ifdef USE_BATCHING\nstW=batchingMatrix*stW;\n#endif\n#ifdef USE_INSTANCING\nstW=instanceMatrix*stW;\n#endif\nvStP=(modelMatrix*stW).xyz;}"];
+  // dusk (parked): lit Lambert + occlusion + grade
   function stylePatch(sh){Object.assign(sh.uniforms,STU);
-    sh.vertexShader=sh.vertexShader.replace("void main() {","varying vec3 vStP;\nvoid main() {").replace("#include <project_vertex>",
-      "#include <project_vertex>\n{vec4 stW=vec4(transformed,1.0);\n#ifdef USE_BATCHING\nstW=batchingMatrix*stW;\n#endif\n#ifdef USE_INSTANCING\nstW=instanceMatrix*stW;\n#endif\nvStP=(modelMatrix*stW).xyz;}");
-    const paper=STYLE==="paper"?
-      // sheet drift (+-5% value over a few metres), card fibre grain, hatching where the toon ramp is in its shade step
-      "{vec2 wp=vStP.xz+vStP.y*vec2(0.7,-0.4);float dr=stN(wp*0.18)*0.10-0.05;float gr=stN(wp*6.0)*0.6+stN(wp*23.0)*0.4;"+
-      "float base=max(dot(diffuseColor.rgb,vec3(0.2126,0.7152,0.0722)),0.02),lit=dot(outgoingLight,vec3(0.2126,0.7152,0.0722))/base;"+
-      "float hz=fract((gl_FragCoord.x+gl_FragCoord.y)*0.19);float hatch=(1.0-smoothstep(0.55,0.75,lit))*step(0.62,hz)*(0.55+0.45*stN(gl_FragCoord.xy*0.05));"+
-      "outgoingLight*=(1.0+dr)*(0.955+0.07*gr)*(1.0-0.22*hatch*stDay);}":"";
+    sh.vertexShader=sh.vertexShader.replace(ST_VERT[0],ST_VERT[1]).replace(ST_VERT[2],ST_VERT[3]);
     sh.fragmentShader=sh.fragmentShader.replace("void main() {",ST_HEAD+"void main() {").replace("#include <opaque_fragment>",
-      // walls (normal facing sideways) darken near the ground; floors and roofs keep full light
       "{float up=clamp(dot(normal,normalize((viewMatrix*vec4(0.,1.,0.,0.)).xyz)),0.,1.);float ao=mix(stAo.x,1.0,smoothstep(0.0,stAo.y,max(vStP.y,0.0)));"+
-      "outgoingLight*=mix(ao,1.0,up*up);}"+paper+
+      "outgoingLight*=mix(ao,1.0,up*up);}"+
       "{float l=dot(outgoingLight,vec3(0.2126,0.7152,0.0722));outgoingLight=mix(vec3(l),outgoingLight,stSat);outgoingLight=outgoingLight*stGain+stLift*(1.0-min(l,1.0));}\n#include <opaque_fragment>");}
+  // paper: unlit card. The face's facing comes from the slope of its world position across the pixel (flat per face, no normals
+  // needed), turned toward the camera; four tones by how it faces the (fixed) window light, top faces brightest.
+  function paperPatch(){return sh=>{Object.assign(sh.uniforms,STU,{emissive:{value:new THREE.Color()}});   // (three.js fills it from material.emissive x intensity every frame)
+    sh.vertexShader=sh.vertexShader.replace(ST_VERT[0],ST_VERT[1]).replace(ST_VERT[2],ST_VERT[3]);
+    sh.fragmentShader=sh.fragmentShader.replace("void main() {",ST_HEAD+"uniform vec3 emissive;\nvoid main() {").replace("#include <opaque_fragment>",
+      "{vec3 fn=normalize(cross(dFdx(vStP),dFdy(vStP)));if(dot(fn,cameraPosition-vStP)<0.0)fn=-fn;"+
+      "float d=dot(fn,vec3(-0.57,0.72,0.37));float t=fn.y>0.8?1.0:d>0.2?0.88:d>-0.2?0.74:0.6;"+
+      "t*=mix(mix(stAo.x,1.0,smoothstep(0.0,stAo.y,max(vStP.y,0.0))),1.0,clamp(fn.y,0.0,1.0));"+
+      "vec2 wp=vStP.xz+vStP.y*vec2(0.7,-0.4);float dr=stN(wp*0.18)*0.08-0.04,gr=stN(wp*5.0);"+
+      "float hz=fract((gl_FragCoord.x+gl_FragCoord.y)*0.2);t*=1.0-0.2*stDay*step(t,0.7)*step(0.6,hz);"+
+      "outgoingLight=(outgoingLight*t*vec3(1.03,1.0,0.93)*0.97+vec3(0.03,0.027,0.02))*(1.0+dr)*(0.96+0.06*gr)*stLight+emissive;}\n#include <opaque_fragment>");};}
+  const PAPER_PATCH=paperPatch();
   function styleMat(o){const r=Object.assign({},o||{});for(const k of ["roughness","metalness","flatShading","envMapIntensity","roughnessMap","metalnessMap","envMap"])delete r[k];
-    const m=STYLE==="paper"?new THREE.MeshToonMaterial(Object.assign(r,{gradientMap:styleTone})):new THREE.MeshLambertMaterial(r);
-    return styleTag(m);}
-  // copies (the static batches, instanced meshes and effects clone materials) must keep the patch, or they'd compile as a
-  // second, unstyled shader and break batching by look
+    if(!PAPER)return styleTag(new THREE.MeshLambertMaterial(r));
+    const em=r.emissive,ei=r.emissiveIntensity;delete r.emissive;delete r.emissiveIntensity;delete r.emissiveMap;
+    const m=new THREE.MeshBasicMaterial(r);m.emissive=new THREE.Color(em!==undefined?em:0);m.emissiveIntensity=ei!==undefined?ei:1;return styleTag(m);}
+  // copies (static batches, instanced meshes, effects clone materials) must keep the patch, or they'd compile as a second,
+  // unstyled shader and break batching by look; paper copies carry their own glow colour
   const styleKey=()=>"pmstyle";
-  function styleTag(m){m.onBeforeCompile=stylePatch;m.customProgramCacheKey=styleKey;const own=m.clone;m.clone=function(){return styleTag(own.call(this));};return m;}
+  function styleTag(m){m.onBeforeCompile=PAPER&&m.isMeshBasicMaterial?PAPER_PATCH:stylePatch;m.customProgramCacheKey=styleKey;const own=m.clone;
+    m.clone=function(){const c=own.call(this);if(this.emissive&&c.isMeshBasicMaterial){c.emissive=this.emissive.clone();c.emissiveIntensity=this.emissiveIntensity;}return styleTag(c);};return m;}
   G3.styleMat=styleMat;
   function StdMat(o){if(BARE)return bareMat(o);if(STY)return styleMat(o);if(!GFX.lambert)return new THREE.MeshStandardMaterial(o);const r=Object.assign({},o||{});delete r.roughness;delete r.metalness;delete r.flatShading;delete r.envMapIntensity;delete r.roughnessMap;delete r.metalnessMap;return new THREE.MeshLambertMaterial(r);}
   function tok(name){return getComputedStyle(document.documentElement).getPropertyValue("--"+name).trim()||"#888";}
@@ -174,7 +181,7 @@ function no3D(){G3.ok=false;$("no3d").hidden=false;$("no3d-retry").onclick=()=>l
       if(i0>0&&i1>i0){const lines=[];for(let k=0;k<taps;k++)lines.push(taps===1?"texture( shadowMap, vec3( shadowCoord.xy, shadowCoord.z ) )":`texture( shadowMap, vec3( shadowCoord.xy + vogelDiskSample( ${k}, ${taps}, phi ) * radius, shadowCoord.z ) )`);
         THREE.ShaderChunk.shadowmap_pars_fragment=c.slice(0,i0)+"shadow = (\n\t\t\t\t\t"+lines.join(" +\n\t\t\t\t\t")+"\n\t\t\t\t"+`) * ${(1/taps).toFixed(6)};`+c.slice(i1+") * 0.2;".length);
         diag(`shadows: ${taps}-tap lookup`);}}}
-  sun.target.position.set(-5,0,5);if(STYLE==="paper"){sun.shadow.radius=1;sun.shadow.bias=-0.0006;}if(STYLE==="dusk")sun.position.set(-90,52,74);   // (v6 dusk: a lower, warmer evening sun)
+  sun.target.position.set(-5,0,5);if(PAPER){sun.castShadow=false;renderer.shadowMap.enabled=false;}   // (paper: no shadow pass at all)if(STYLE==="dusk")sun.position.set(-90,52,74);   // (v6 dusk: a lower, warmer evening sun)
   scene.add(sun,sun.target);
   let baseHemi=0.85,baseSun=0.9;
 

@@ -4537,7 +4537,7 @@ function no3D(){G3.ok=false;$("no3d").hidden=false;$("no3d-retry").onclick=()=>l
   // "high-performance" woke the discrete GPU on dual-GPU laptops for every player, which drains the battery much faster.
   // Phones have one GPU, so they're unaffected. Picking Ultra already offers a reload, which is when this takes effect.
   G3.gpuPref=(()=>{let g="";try{g=localStorage.getItem("paper-mill-gfx")||"";}catch(e){}const q=new URLSearchParams(location.search).get("gfx");if(q)g=q;return g==="ultra"?"high-performance":"default";})();
-  try{renderer=new THREE.WebGLRenderer({canvas:glc,antialias:!matchMedia("(pointer: coarse)").matches&&(window.devicePixelRatio||1)<1.5,powerPreference:G3.gpuPref});}   // (v15: no MSAA on high-DPI screens, where the extra pixels already smooth edges)
+  try{renderer=new THREE.WebGLRenderer({canvas:glc,stencil:!/[?&]style=(classic|dusk)/.test(location.search),antialias:!matchMedia("(pointer: coarse)").matches&&(window.devicePixelRatio||1)<1.5,powerPreference:G3.gpuPref});}   // (v15: no MSAA on high-DPI screens, where the extra pixels already smooth edges)
   catch(e){no3D();return;}
   if(!renderer.getContext()){no3D();return;}
   // r150+ reads every shader's error log on first draw, which forces the GPU to finish compiling right then:
@@ -4607,49 +4607,56 @@ function no3D(){G3.ok=false;$("no3d").hidden=false;$("no3d-retry").onclick=()=>l
       MCAP=new THREE.CanvasTexture(c);MCAP.colorSpace=THREE.SRGBColorSpace;}
     r.matcap=MCAP;r.fog=false;return new THREE.MeshMatcapMaterial(r);}
   G3.bareMat=bareMat;
-  /* v6.0 art style (test build: ?style=paper|dusk; the classic lit look stays the default until the switch is approved).
-     Every lit material becomes one of two shared models, patched once so all of them compile to one shader per variant:
-       paper  toon shading with a 3-step ramp (flat 3-tone faces, like cut card), warm paper grade
-       dusk   smooth Lambert shading, warm low sun, violet lift in the shadows
-     Both add baked-style ambient occlusion in the shader (walls darken toward the ground, floors don't) and a colour grade,
-     with its own exposure. No extra passes, textures or draws. */
-  const STYLE=G3.style=BARE?"":(()=>{const q=new URLSearchParams(location.search).get("style");return q==="paper"||q==="dusk"?q:"";})();
+  /* v6.0 Paper-craft (this fork commits to it; ?style=classic / ?style=dusk stay only for side-by-side tests).
+     Everything is cut and folded card on a tabletop, moved by hand:
+       - no lights, no shadow maps: every surface is unlit flat paper. Each face gets one of four baked-style tones from its own
+         facing (worked out from the screen-space slope of its position, so even rounded parts read as folded card), walls
+         darken toward the table, pencil hatching marks the darkest faces by day, and a card grain runs through the sheet
+       - a whole-scene light multiplier carries the day and night (one uniform), and emissive parts (lamps, warning lights)
+         still glow through it
+     dusk keeps phase 1's smooth Lambert shading (parked). */
+  const STYLE=G3.style=BARE?"":(()=>{const q=new URLSearchParams(location.search).get("style");return q==="classic"?"":q==="dusk"?"dusk":"paper";})();
+  const PAPER=STYLE==="paper";
   const STY=G3.STY=STYLE?{
-    paper:{ao:[0.72,2.6],lift:[0.012,0.010,0.004],gain:[1.02,0.99,0.93],sat:0.94,sky:"#e3d8c2",sun:"#fff3e0",hemi:"#fffaf0",hemiK:0.42,sunK:1.5,exp:0.98},
+    paper:{ao:[0.66,2.4],lift:[0,0,0],gain:[1,1,1],sat:1,sky:"#e9e0cc",sun:"#ffffff",hemi:"#ffffff",hemiK:0.5,sunK:1.4,exp:1.0},
     dusk:{ao:[0.58,3.2],lift:[0.008,0.010,0.030],gain:[1.05,0.97,0.92],sat:0.95,sky:"#d79b8a",sun:"#ffb37c",hemi:"#cdc8ec",hemiK:0.5,sunK:1.35,exp:1.05}}[STYLE]:null;
-  let styleTone=null;
-  if(STY){renderer.toneMappingExposure=STY.exp;   // (ACES kept: the fire, flash and glow effects are tuned for it)
-   
-    if(STYLE==="paper"){const d=new Uint8Array([110,110,110,255,185,185,185,255,255,255,255,255]);   // 3 tones: shade, side, lit
-      styleTone=new THREE.DataTexture(d,3,1);styleTone.minFilter=styleTone.magFilter=THREE.NearestFilter;styleTone.generateMipmaps=false;styleTone.needsUpdate=true;}}
+  if(STY)renderer.toneMappingExposure=STY.exp;
+  if(PAPER)renderer.toneMapping=THREE.NoToneMapping;   // (flat paper colours go out as picked; no filmic curve to fight)
   const STU=G3.styleU={stAo:{value:new THREE.Vector2(...(STY?STY.ao:[1,1]))},stLift:{value:new THREE.Vector3(...(STY?STY.lift:[0,0,0]))},
-    stGain:{value:new THREE.Vector3(...(STY?STY.gain:[1,1,1]))},stSat:{value:STY?STY.sat:1},stDay:{value:1}};
-  /* paper extras (v6 prototype): world-space card grain and gentle sheet-to-sheet colour drift, and pencil hatching laid over
-     the shade band (screen-space diagonal strokes where the light falls off). All arithmetic in the one shared shader. */
-  const ST_HEAD="varying vec3 vStP;uniform vec2 stAo;uniform vec3 stLift,stGain;uniform float stSat,stDay;\n"+
+    stGain:{value:new THREE.Vector3(...(STY?STY.gain:[1,1,1]))},stSat:{value:STY?STY.sat:1},stDay:{value:1},stLight:{value:new THREE.Color(1,1,1)}};
+  const ST_HEAD="varying vec3 vStP;uniform vec2 stAo;uniform vec3 stLift,stGain,stLight;uniform float stSat,stDay;\n"+
     "float stH(vec2 p){return fract(sin(dot(p,vec2(127.1,311.7)))*43758.5453);}\n"+
     "float stN(vec2 p){vec2 i=floor(p),f=fract(p);f=f*f*(3.0-2.0*f);return mix(mix(stH(i),stH(i+vec2(1,0)),f.x),mix(stH(i+vec2(0,1)),stH(i+vec2(1,1)),f.x),f.y);}\n";
+  const ST_VERT=["void main() {","varying vec3 vStP;\nvoid main() {","#include <project_vertex>",
+    "#include <project_vertex>\n{vec4 stW=vec4(transformed,1.0);\n#ifdef USE_BATCHING\nstW=batchingMatrix*stW;\n#endif\n#ifdef USE_INSTANCING\nstW=instanceMatrix*stW;\n#endif\nvStP=(modelMatrix*stW).xyz;}"];
+  // dusk (parked): lit Lambert + occlusion + grade
   function stylePatch(sh){Object.assign(sh.uniforms,STU);
-    sh.vertexShader=sh.vertexShader.replace("void main() {","varying vec3 vStP;\nvoid main() {").replace("#include <project_vertex>",
-      "#include <project_vertex>\n{vec4 stW=vec4(transformed,1.0);\n#ifdef USE_BATCHING\nstW=batchingMatrix*stW;\n#endif\n#ifdef USE_INSTANCING\nstW=instanceMatrix*stW;\n#endif\nvStP=(modelMatrix*stW).xyz;}");
-    const paper=STYLE==="paper"?
-      // sheet drift (+-5% value over a few metres), card fibre grain, hatching where the toon ramp is in its shade step
-      "{vec2 wp=vStP.xz+vStP.y*vec2(0.7,-0.4);float dr=stN(wp*0.18)*0.10-0.05;float gr=stN(wp*6.0)*0.6+stN(wp*23.0)*0.4;"+
-      "float base=max(dot(diffuseColor.rgb,vec3(0.2126,0.7152,0.0722)),0.02),lit=dot(outgoingLight,vec3(0.2126,0.7152,0.0722))/base;"+
-      "float hz=fract((gl_FragCoord.x+gl_FragCoord.y)*0.19);float hatch=(1.0-smoothstep(0.55,0.75,lit))*step(0.62,hz)*(0.55+0.45*stN(gl_FragCoord.xy*0.05));"+
-      "outgoingLight*=(1.0+dr)*(0.955+0.07*gr)*(1.0-0.22*hatch*stDay);}":"";
+    sh.vertexShader=sh.vertexShader.replace(ST_VERT[0],ST_VERT[1]).replace(ST_VERT[2],ST_VERT[3]);
     sh.fragmentShader=sh.fragmentShader.replace("void main() {",ST_HEAD+"void main() {").replace("#include <opaque_fragment>",
-      // walls (normal facing sideways) darken near the ground; floors and roofs keep full light
       "{float up=clamp(dot(normal,normalize((viewMatrix*vec4(0.,1.,0.,0.)).xyz)),0.,1.);float ao=mix(stAo.x,1.0,smoothstep(0.0,stAo.y,max(vStP.y,0.0)));"+
-      "outgoingLight*=mix(ao,1.0,up*up);}"+paper+
+      "outgoingLight*=mix(ao,1.0,up*up);}"+
       "{float l=dot(outgoingLight,vec3(0.2126,0.7152,0.0722));outgoingLight=mix(vec3(l),outgoingLight,stSat);outgoingLight=outgoingLight*stGain+stLift*(1.0-min(l,1.0));}\n#include <opaque_fragment>");}
+  // paper: unlit card. The face's facing comes from the slope of its world position across the pixel (flat per face, no normals
+  // needed), turned toward the camera; four tones by how it faces the (fixed) window light, top faces brightest.
+  function paperPatch(){return sh=>{Object.assign(sh.uniforms,STU,{emissive:{value:new THREE.Color()}});   // (three.js fills it from material.emissive x intensity every frame)
+    sh.vertexShader=sh.vertexShader.replace(ST_VERT[0],ST_VERT[1]).replace(ST_VERT[2],ST_VERT[3]);
+    sh.fragmentShader=sh.fragmentShader.replace("void main() {",ST_HEAD+"uniform vec3 emissive;\nvoid main() {").replace("#include <opaque_fragment>",
+      "{vec3 fn=normalize(cross(dFdx(vStP),dFdy(vStP)));if(dot(fn,cameraPosition-vStP)<0.0)fn=-fn;"+
+      "float d=dot(fn,vec3(-0.57,0.72,0.37));float t=fn.y>0.8?1.0:d>0.2?0.88:d>-0.2?0.74:0.6;"+
+      "t*=mix(mix(stAo.x,1.0,smoothstep(0.0,stAo.y,max(vStP.y,0.0))),1.0,clamp(fn.y,0.0,1.0));"+
+      "vec2 wp=vStP.xz+vStP.y*vec2(0.7,-0.4);float dr=stN(wp*0.18)*0.08-0.04,gr=stN(wp*5.0);"+
+      "float hz=fract((gl_FragCoord.x+gl_FragCoord.y)*0.2);t*=1.0-0.2*stDay*step(t,0.7)*step(0.6,hz);"+
+      "outgoingLight=(outgoingLight*t*vec3(1.03,1.0,0.93)*0.97+vec3(0.03,0.027,0.02))*(1.0+dr)*(0.96+0.06*gr)*stLight+emissive;}\n#include <opaque_fragment>");};}
+  const PAPER_PATCH=paperPatch();
   function styleMat(o){const r=Object.assign({},o||{});for(const k of ["roughness","metalness","flatShading","envMapIntensity","roughnessMap","metalnessMap","envMap"])delete r[k];
-    const m=STYLE==="paper"?new THREE.MeshToonMaterial(Object.assign(r,{gradientMap:styleTone})):new THREE.MeshLambertMaterial(r);
-    return styleTag(m);}
-  // copies (the static batches, instanced meshes and effects clone materials) must keep the patch, or they'd compile as a
-  // second, unstyled shader and break batching by look
+    if(!PAPER)return styleTag(new THREE.MeshLambertMaterial(r));
+    const em=r.emissive,ei=r.emissiveIntensity;delete r.emissive;delete r.emissiveIntensity;delete r.emissiveMap;
+    const m=new THREE.MeshBasicMaterial(r);m.emissive=new THREE.Color(em!==undefined?em:0);m.emissiveIntensity=ei!==undefined?ei:1;return styleTag(m);}
+  // copies (static batches, instanced meshes, effects clone materials) must keep the patch, or they'd compile as a second,
+  // unstyled shader and break batching by look; paper copies carry their own glow colour
   const styleKey=()=>"pmstyle";
-  function styleTag(m){m.onBeforeCompile=stylePatch;m.customProgramCacheKey=styleKey;const own=m.clone;m.clone=function(){return styleTag(own.call(this));};return m;}
+  function styleTag(m){m.onBeforeCompile=PAPER&&m.isMeshBasicMaterial?PAPER_PATCH:stylePatch;m.customProgramCacheKey=styleKey;const own=m.clone;
+    m.clone=function(){const c=own.call(this);if(this.emissive&&c.isMeshBasicMaterial){c.emissive=this.emissive.clone();c.emissiveIntensity=this.emissiveIntensity;}return styleTag(c);};return m;}
   G3.styleMat=styleMat;
   function StdMat(o){if(BARE)return bareMat(o);if(STY)return styleMat(o);if(!GFX.lambert)return new THREE.MeshStandardMaterial(o);const r=Object.assign({},o||{});delete r.roughness;delete r.metalness;delete r.flatShading;delete r.envMapIntensity;delete r.roughnessMap;delete r.metalnessMap;return new THREE.MeshLambertMaterial(r);}
   function tok(name){return getComputedStyle(document.documentElement).getPropertyValue("--"+name).trim()||"#888";}
@@ -4690,7 +4697,7 @@ function no3D(){G3.ok=false;$("no3d").hidden=false;$("no3d-retry").onclick=()=>l
       if(i0>0&&i1>i0){const lines=[];for(let k=0;k<taps;k++)lines.push(taps===1?"texture( shadowMap, vec3( shadowCoord.xy, shadowCoord.z ) )":`texture( shadowMap, vec3( shadowCoord.xy + vogelDiskSample( ${k}, ${taps}, phi ) * radius, shadowCoord.z ) )`);
         THREE.ShaderChunk.shadowmap_pars_fragment=c.slice(0,i0)+"shadow = (\n\t\t\t\t\t"+lines.join(" +\n\t\t\t\t\t")+"\n\t\t\t\t"+`) * ${(1/taps).toFixed(6)};`+c.slice(i1+") * 0.2;".length);
         diag(`shadows: ${taps}-tap lookup`);}}}
-  sun.target.position.set(-5,0,5);if(STYLE==="paper"){sun.shadow.radius=1;sun.shadow.bias=-0.0006;}if(STYLE==="dusk")sun.position.set(-90,52,74);   // (v6 dusk: a lower, warmer evening sun)
+  sun.target.position.set(-5,0,5);if(PAPER){sun.castShadow=false;renderer.shadowMap.enabled=false;}   // (paper: no shadow pass at all)if(STYLE==="dusk")sun.position.set(-90,52,74);   // (v6 dusk: a lower, warmer evening sun)
   scene.add(sun,sun.target);
   let baseHemi=0.85,baseSun=0.9;
 
@@ -6199,6 +6206,10 @@ function no3D(){G3.ok=false;$("no3d").hidden=false;$("no3d-retry").onclick=()=>l
       else{const g=R.g.position;target.x+=(g.x-target.x)*0.1;target.z+=(g.z-target.z)*0.1;cam.r+=(FOL.r-cam.r)*0.08;if(FOL.n++<90)cam.ph+=(0.62-cam.ph)*0.06;G3.lastMove=performance.now();}}
     if(goal){G3.lastMove=performance.now();target.lerp(goal.t,0.12);cam.r+=(goal.r-cam.r)*0.12;cam.th=lerpAng(cam.th,goal.th,0.12);cam.ph+=(goal.ph-cam.ph)*0.12;
       goal.n=(goal.n||0)+1;if(goal.n>150||target.distanceTo(goal.t)<0.2&&Math.abs(goal.r-cam.r)<0.5)goal=null;}
+    // v6 paper tabletop: a person leaning over a table: the tilt stays between looking well down and a low glance across,
+    // and the turn stays within about 35 degrees of the home view (pan and zoom are free; cut-scenes and Zen keep their own)
+    if(G3.style==="paper"&&!goal&&!FOL.on&&!(S&&S.zen)&&!G3.cineHold){cam.ph=clamp(cam.ph,0.55,1.08);
+      const d=Math.atan2(Math.sin(cam.th-DEF.th),Math.cos(cam.th-DEF.th));if(Math.abs(d)>0.6)cam.th=DEF.th+Math.sign(d)*0.6;}
     const rr=cam.r*((G3.vw||host.clientWidth)<600?1.35:1);
     camera.position.set(target.x+rr*Math.sin(cam.ph)*Math.sin(cam.th),target.y+rr*Math.cos(cam.ph),target.z+rr*Math.sin(cam.ph)*Math.cos(cam.th));
     // v4.1: never inside scenery (tall city blocks, mesas, trees): stay 3 m above the tallest thing in this 8 m cell
@@ -7262,7 +7273,9 @@ function no3D(){G3.ok=false;$("no3d").hidden=false;$("no3d-retry").onclick=()=>l
         _f.set(1,0,0).applyQuaternion(_pq);const face=_f.dot(_r)>=0?1:-1;
         let fr=POSE[mode]||0;if(mode==="run")fr=(step+(d.k*3))%2?1:2;
         const hop=moving?((step%2)?0.09:0):(fr===3||fr===6)&&(step%4<2)?0.04:0;
-        const tilt=moving?((step%2)?0.07:-0.07)*face:fr===3?-0.12*face:0;
+        // a hand nudges each piece now and then: a small lean that changes every ~0.7 s, different for every figure
+        const nudge=(Math.sin((Math.floor(now/700)+d.k*7.31+n*3.17)*12.9898)*43758.5453%1)*0.08-0.04;
+        const tilt=(moving?((step%2)?0.07:-0.07)*face:fr===3?-0.12*face:0)+nudge;
         const H=2.6*_s.y,Wd=H*CW/CH;
         _e.set(back,yaw,tilt);_q.setFromEuler(_e);_m.compose(_v.set(_v.x,_v.y+hop,_v.z),_q,_s.set(Wd*face,H,1));
         cards.setMatrixAt(n,_m);const k=Math.max(0,d.k);cell.setXY(n,(k%PER_ROW)*FR+fr,Math.floor(k/PER_ROW));n++;}
@@ -10258,63 +10271,78 @@ function no3D(){G3.ok=false;$("no3d").hidden=false;$("no3d-retry").onclick=()=>l
         if(t>=END)finish();}catch(e){console.error("bird cut-scene",e);finish();}};
     G3.cineSeek=t=>{if(C){C.t=t;C.chirp=C.chirp.filter(x=>x>t);if(t>=IMP&&!C.struck){C.struck=true;G3.cineHold=false;}}};   // (tests and stills)
     G3.cineIMP=IMP;}
-  /* ---- v6 Paper-craft (prototype, ?style=paper): hand-drawn ink lines and pop-up scenery ----
-     Ink: the scene renders into an off-screen target, then one full-screen pass draws wobbly ink where depth creases (object
-     outlines, folds between walls and floors) or where the flat shade bands meet (fold lines on the card). The line positions
-     wobble with a slowly changing noise seed (a few redraws a second: "line boil", like a hand-drawn cartoon), and the stroke
-     darkness varies along the line like pen pressure. The same pass lays a faint paper-fibre grain over everything, figures
-     and effects included, so the whole picture sits on one sheet. Cost: one extra full-screen pass, no extra scene draws. */
+  /* ---- v6 Paper-craft: the tabletop ----
+     The feeling: cut-out paper pieces on a table, moved by a hand. So:
+       stop-motion  the scene (figures, machines, vehicles, effects) advances on "twos", about 12 drawings a second; between
+                    drawings nothing is updated or redrawn, unless the camera moves (it stays smooth). Paused and still: nothing
+                    is drawn at all.
+       ink          every folded-card part gets its inked edges once, at start-up (fold lines and outlines as fixed, slightly
+                    wavering lines), so there is no per-frame outline pass.
+       table        no sky dome or clouds; the mill sits on paper, and the camera is a person leaning over a table: a limited
+                    tilt and turn, free pan and zoom. */
   if(G3.style==="paper"){
-    // (no MSAA on the target: its multisample resolve cannot target the XR-flagged colour format; the ink lines hide the stair-steps)
-    const rt=new THREE.WebGLRenderTarget(4,4,{depthTexture:new THREE.DepthTexture(4,4)});
-    rt.texture.minFilter=rt.texture.magFilter=THREE.NearestFilter;rt.texture.generateMipmaps=false;rt.texture.colorSpace=THREE.SRGBColorSpace;
-    // three.js tone-maps and sRGB-encodes only when drawing to the screen (or an XR target). Flagging the target as XR makes
-    // every material shade exactly as it does on screen (same shaders, no recompiles, effects blend as before), and the
-    // target stores the finished 8-bit colours, which the ink pass then reads and writes unchanged.
-    rt.isXRRenderTarget=true;
-    const U={tC:{value:rt.texture},tD:{value:rt.depthTexture},px:{value:new THREE.Vector2(1,1)},seed:{value:0},cn:{value:camera.near},cf:{value:camera.far},
-      ink:{value:new THREE.Color("#2b2320")},on:{value:1}};
-    const post=new THREE.ShaderMaterial({uniforms:U,depthTest:false,depthWrite:false,toneMapped:false,
-      vertexShader:"varying vec2 vUv;void main(){vUv=uv;gl_Position=vec4(position.xy,0.0,1.0);}",
-      fragmentShader:`#include <packing>
-uniform sampler2D tC,tD;uniform vec2 px;uniform float seed,cn,cf,on;uniform vec3 ink;varying vec2 vUv;
-float h(vec2 p){return fract(sin(dot(p,vec2(127.1,311.7)))*43758.5453);}
-float n(vec2 p){vec2 i=floor(p),f=fract(p);f=f*f*(3.0-2.0*f);return mix(mix(h(i),h(i+vec2(1,0)),f.x),mix(h(i+vec2(0,1)),h(i+vec2(1,1)),f.x),f.y);}
-float vz(vec2 uv){return -perspectiveDepthToViewZ(texture2D(tD,uv).x,cn,cf);}
-float lu(vec2 uv){return dot(texture2D(tC,uv).rgb,vec3(0.2126,0.7152,0.0722));}
-void main(){
-  vec3 c=texture2D(tC,vUv).rgb;
-  if(on>0.5){
-    vec2 q=vUv/px;   // pixel coordinates
-    vec2 w=(vec2(n(q*0.045+seed),n(q*0.045+seed+17.3))-0.5)*px*2.2;   // hand wobble, ~1 px
-    vec2 uv=vUv+w,o=px*1.15;
-    float z=vz(uv),zl=vz(uv-vec2(o.x,0.)),zr=vz(uv+vec2(o.x,0.)),zd=vz(uv-vec2(0.,o.y)),zu=vz(uv+vec2(0.,o.y));
-    // second difference: flat or sloping surfaces give 0, silhouettes and folds give a spike
-    float dz=(abs(zl+zr-2.0*z)+abs(zd+zu-2.0*z))/max(z,1.0);
-    float sil=max(max(abs(zl-z),abs(zr-z)),max(abs(zd-z),abs(zu-z)))/max(z,1.0);
-    float de=max(smoothstep(0.006,0.02,dz),smoothstep(0.03,0.08,sil));
-    float l=lu(uv),dl=max(max(abs(lu(uv-vec2(o.x,0.))-l),abs(lu(uv+vec2(o.x,0.))-l)),max(abs(lu(uv-vec2(0.,o.y))-l),abs(lu(uv+vec2(0.,o.y))-l)));
-    float ce=smoothstep(0.09,0.2,dl/(l+0.15))*0.6;
-    float fade=1.0-smoothstep(480.0,950.0,z);   // far scenery keeps fewer lines, like a lighter pen
-    float e=max(de,ce)*fade*(0.6+0.4*n(q*vec2(0.08,0.05)+seed*3.1));
-    c=mix(c,ink,clamp(e,0.0,1.0)*0.9);
-    float g=n(q*0.9)*0.55+n(q*0.23)*0.45;   // paper fibre over the whole sheet
-    c*=0.965+0.06*g;
-  }
-  gl_FragColor=vec4(c,1.0);
-}`});
-    const qs=new THREE.Scene(),qc=new THREE.OrthographicCamera(-1,1,1,-1,0,1),quad=new THREE.Mesh(new THREE.PlaneGeometry(2,2),post);quad.frustumCulled=false;qs.add(quad);
-    const sz=new THREE.Vector2();let boilT=0;
-    G3.paperInk=U;
-    G3.paperRender=()=>{renderer.getDrawingBufferSize(sz);
-      if(rt.width!==sz.x||rt.height!==sz.y){rt.setSize(sz.x,sz.y);U.px.value.set(1/sz.x,1/sz.y);}
-      const now=performance.now();if(now-boilT>220){boilT=now;U.seed.value=(U.seed.value+3.7)%97;}   // line boil, ~4.5 redraws a second
-      if(G3.paperDollTick)G3.paperDollTick(now);
-      if(G3.styleU)G3.styleU.stDay.value=Math.max(0,Math.min(1,(hemi.intensity/(LEG*baseHemi)-0.35)/0.5));   // hatching fades out at night
-      U.cn.value=camera.near;U.cf.value=camera.far;
-      renderer.setRenderTarget(rt);renderer.render(scene,camera);renderer.setRenderTarget(null);renderer.render(qs,qc);};
-    diag("paper ink pass on");
-  
+    const STEP_MS=1000/12,INKC=new THREE.Color("#2b2320");
+    // inked edges: the shared outline materials become opaque ink, and every sizeable card part gets its fold lines baked once
+    edgeMat.color.copy(INKC);edgeMat.transparent=false;edgeMat.opacity=1;edgeSoft.color.copy(INKC);edgeSoft.opacity=0.55;
+    // ink sits on the fold, so it is drawn a hair in front of the faces it outlines (a depth bias in the line shader) instead of
+    // fighting them for the same depth
+    const inkBias=sh=>{sh.vertexShader=sh.vertexShader.replace("#include <project_vertex>","#include <project_vertex>\ngl_Position.z-=0.0015*gl_Position.w;");};
+    const inkMat=new THREE.LineBasicMaterial({color:INKC});inkMat.onBeforeCompile=inkBias;inkMat.customProgramCacheKey=()=>"pmink";G3.inkMat=inkMat;
+    for(const m of [edgeMat,edgeSoft]){m.onBeforeCompile=inkBias;m.customProgramCacheKey=()=>"pmink";}
+    {const rn=(()=>{let q=99;return()=>{q=(q*1664525+1013904223)>>>0;return q/4294967296-0.5;};})(),EC=new Map(),_s=new THREE.Vector3();let n=0,skipped=0;
+      const inked=[];scene.traverse(o=>{if(!o.isMesh||o.isInstancedMesh||o.isSkinnedMesh||!o.visible)return;const m=o.material;
+        if(!m||Array.isArray(m)||!m.isMeshBasicMaterial||m.emissive===undefined||m.transparent)return;
+        if(o.children.some(c=>c.isLineSegments))return;const g=o.geometry;if(!g||!g.attributes.position||g.attributes.position.count>3000){skipped++;return;}
+        if(!g.boundingSphere)g.computeBoundingSphere();o.getWorldScale(_s);if(g.boundingSphere.radius*Math.max(_s.x,_s.y,_s.z)<0.3)return;inked.push(o);});
+      for(const o of inked){const g=o.geometry;let e=EC.get(g);
+        if(!e){const eg=new THREE.EdgesGeometry(g,32),a=eg.attributes.position.array,j=Math.min(0.03,g.boundingSphere.radius*0.012);
+          for(let k=0;k<a.length;k++)a[k]+=rn()*j;   // a hand-drawn line never sits exactly on the fold
+          e=eg;EC.set(g,e);}
+        const l=new THREE.LineSegments(e,inkMat);l.userData.inkEdge=true;l.raycast=()=>{};o.add(l);n++;}
+      diag(`paper ink: ${n} parts inked (${EC.size} shapes), ${skipped} large meshes left to their own lines`);}
+    /* paper drop shadows: each standing piece throws a flat, hard-edged shadow down and to the right on the table, as a lamp over
+       the table would. Built once, after the static batching has listed the pieces that don't move: every one is flattened
+       onto the ground along the light (a planar shadow), all merged into one mesh drawn in one call. A stencil lets each
+       pixel darken only once, so overlapping shadows stay one even tone like a single sheet of shade. */
+    G3.paperShadow=()=>{if(G3.paperShadowDone||!G3.SM||!G3.SM.done||!G3.SM.list)return;G3.paperShadowDone=true;
+      const SX=0.62,SZ=0.42,pos=[],_v=new THREE.Vector3(),_bb=new THREE.Box3();let parts=0;
+      // (roofs throw no table shadow: they lift away when you zoom in, and their shade would sit on the floor inside)
+      const roofSet=new Set();try{roofs.forEach(g=>g.traverse(x=>roofSet.add(x)));}catch(e){}
+      for(const r of G3.SM.list){const o=r.o;if(!o||!o.isMesh||r.proxyOnly||roofSet.has(o))continue;const m=o.material;if(!m||Array.isArray(m)||m.transparent)continue;
+        const g=o.geometry,pa=g&&g.attributes.position;if(!pa||pa.count>4000)continue;o.updateWorldMatrix(true,false);
+        if(!g.boundingBox)g.computeBoundingBox();if(g.boundingBox.max.y-g.boundingBox.min.y<0.05&&g.boundingBox.max.y<0.2)continue;
+        // the shadow lies on whatever the piece stands on (its own lowest point: the floor slab, a deck, the yard)
+        _bb.copy(g.boundingBox).applyMatrix4(o.matrixWorld);const base=_bb.min.y>1.2?0:_bb.min.y,tall=_bb.max.y-base;   // (raised parts, like a tank on its tower, throw onto the ground)
+        if(tall<0.25||(tall<1.2&&(_bb.max.x-_bb.min.x)*(_bb.max.z-_bb.min.z)>60))continue;   // floors, slabs and pads cast nothing
+        const ix=g.index?g.index.array:null,n=ix?ix.length:pa.count;
+        for(let k=0;k<n;k++){_v.fromBufferAttribute(pa,ix?ix[k]:k).applyMatrix4(o.matrixWorld);const h=Math.max(0,_v.y-base);pos.push(_v.x+h*SX,base+0.05,_v.z+h*SZ);}parts++;}
+      // ink on moving parts would be one extra draw each (the static batches can't take them): keep ink only where it was batched
+      {const rec=new Set(G3.SM.list.map(r=>r.o));let cut=0;const drop=[];scene.traverse(o=>{if(o.userData&&o.userData.inkEdge&&!rec.has(o))drop.push(o);});
+        drop.forEach(o=>{o.parent&&o.parent.remove(o);cut++;});diag(`paper ink: ${cut} lines on moving parts dropped`);}
+      if(!pos.length)return;const g=new THREE.BufferGeometry();g.setAttribute("position",new THREE.Float32BufferAttribute(pos,3));g.computeBoundingSphere();
+      const sm=new THREE.MeshBasicMaterial({color:new THREE.Color("#2b2320"),transparent:true,opacity:0.42,depthWrite:false,side:THREE.DoubleSide,fog:false,
+        polygonOffset:true,polygonOffsetFactor:-1,polygonOffsetUnits:-4,stencilWrite:true,stencilRef:1,stencilFunc:THREE.NotEqualStencilFunc,stencilZPass:THREE.ReplaceStencilOp});
+      // pulled toward the camera a little, so the shade reaches over floor slabs and pads that sit just above a piece's foot
+      sm.onBeforeCompile=sh=>{sh.vertexShader=sh.vertexShader.replace("#include <project_vertex>","#include <project_vertex>\ngl_Position.z-=0.004*gl_Position.w;");};sm.customProgramCacheKey=()=>"pmshade";
+      const mesh=new THREE.Mesh(g,sm);mesh.renderOrder=1;mesh.frustumCulled=false;mesh.userData.noNav=true;mesh.raycast=()=>{};scene.add(mesh);G3.paperShadowMesh=mesh;
+      diag(`paper shadows: ${parts} pieces, ${(pos.length/9|0)} triangles, one draw`);};
+    // the table: no sky dome or clouds (the background and fog are the paper colour, which the day/night still tints)
+    if(G3.SKY){const K=G3.SKY;for(const k of ["dome","clouds","mist"]){const o=K[k]&&(K[k].isObject3D?K[k]:K[k].mesh);if(o)o.visible=false;}K.tick=null;}
+    // light: one multiplier for every paper surface, from full day white to a cool, dim night
+    const NIGHT=new THREE.Color(0.30,0.34,0.50),WHITE=new THREE.Color(1,1,1);
+    function paperLight(){const day=Math.max(0,Math.min(1,(hemi.intensity/(LEG*baseHemi)-0.3)/0.7));G3.styleU.stLight.value.copy(NIGHT).lerp(WHITE,day);G3.styleU.stDay.value=day;}
+    // stop-motion frame pacing: full updates on the step, camera-only redraws between steps
+    G3.noFallback=true;   // (12 drawings a second is the design, not a slow device: the quality fallback must not react to it)
+    const base=G3.frame,lc=new Float64Array(7).fill(NaN);let acc=0,lastStep=-1e9;
+    const camKey=()=>{const p=camera.position,q=camera.quaternion,v=[p.x,p.y,p.z,q.x,q.y,q.z,q.w];let ch=false;for(let i=0;i<7;i++)if(lc[i]!==v[i]){ch=true;lc[i]=v[i];}return ch;};
+    G3.paperSteps=0;G3.paperCamDraws=0;
+    G3.frame=function(rdt){const now=performance.now();acc+=rdt;
+      if(now-lastStep>=STEP_MS-4||G3.paperEvery){lastStep=now;const a=Math.min(acc,0.25);acc=0;G3.paperSteps++;
+        paperLight();if(G3.paperDollTick)G3.paperDollTick(now);if(!G3.paperShadowDone)G3.paperShadow();base(a);camKey();return;}
+      try{placeCam();if(camKey()){G3.paperCamDraws++;if(G3.SM&&G3.SM.bms)for(const b of G3.SM.bms)b.perObjectFrustumCulled=true;
+        scene.matrixWorldAutoUpdate=false;renderer.render(scene,camera);scene.matrixWorldAutoUpdate=true;}}catch(e){console.error("paper frame",e);}};
+    diag("paper: stop-motion 12/s, camera smooth");
+
     /* paper effects: flames become layered torn-paper cut-outs and smoke/steam puffs become cotton-wool card clouds, each with
        an inked edge. Same particle system and textures, just redrawn, so no new draws or shaders. */
     {const rn=(()=>{let q=7;return()=>{q=(q*1664525+1013904223)>>>0;return q/4294967296;};})(),INK="#2b2320";

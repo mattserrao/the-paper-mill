@@ -32,6 +32,10 @@
       else{const g=R.g.position;target.x+=(g.x-target.x)*0.1;target.z+=(g.z-target.z)*0.1;cam.r+=(FOL.r-cam.r)*0.08;if(FOL.n++<90)cam.ph+=(0.62-cam.ph)*0.06;G3.lastMove=performance.now();}}
     if(goal){G3.lastMove=performance.now();target.lerp(goal.t,0.12);cam.r+=(goal.r-cam.r)*0.12;cam.th=lerpAng(cam.th,goal.th,0.12);cam.ph+=(goal.ph-cam.ph)*0.12;
       goal.n=(goal.n||0)+1;if(goal.n>150||target.distanceTo(goal.t)<0.2&&Math.abs(goal.r-cam.r)<0.5)goal=null;}
+    // v6 paper tabletop: a person leaning over a table: the tilt stays between looking well down and a low glance across,
+    // and the turn stays within about 35 degrees of the home view (pan and zoom are free; cut-scenes and Zen keep their own)
+    if(G3.style==="paper"&&!goal&&!FOL.on&&!(S&&S.zen)&&!G3.cineHold){cam.ph=clamp(cam.ph,0.55,1.08);
+      const d=Math.atan2(Math.sin(cam.th-DEF.th),Math.cos(cam.th-DEF.th));if(Math.abs(d)>0.6)cam.th=DEF.th+Math.sign(d)*0.6;}
     const rr=cam.r*((G3.vw||host.clientWidth)<600?1.35:1);
     camera.position.set(target.x+rr*Math.sin(cam.ph)*Math.sin(cam.th),target.y+rr*Math.cos(cam.ph),target.z+rr*Math.sin(cam.ph)*Math.cos(cam.th));
     // v4.1: never inside scenery (tall city blocks, mesas, trees): stay 3 m above the tallest thing in this 8 m cell
