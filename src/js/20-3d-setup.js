@@ -117,7 +117,11 @@ function no3D(){G3.ok=false;$("no3d").hidden=false;$("no3d-retry").onclick=()=>l
       "outgoingLight*=mix(ao,1.0,up*up);float l=dot(outgoingLight,vec3(0.2126,0.7152,0.0722));outgoingLight=mix(vec3(l),outgoingLight,stSat);outgoingLight=outgoingLight*stGain+stLift*(1.0-min(l,1.0));}\n#include <opaque_fragment>");}
   function styleMat(o){const r=Object.assign({},o||{});for(const k of ["roughness","metalness","flatShading","envMapIntensity","roughnessMap","metalnessMap","envMap"])delete r[k];
     const m=STYLE==="paper"?new THREE.MeshToonMaterial(Object.assign(r,{gradientMap:styleTone})):new THREE.MeshLambertMaterial(r);
-    m.onBeforeCompile=stylePatch;m.customProgramCacheKey=()=>"pmstyle";return m;}
+    return styleTag(m);}
+  // copies (the static batches, instanced meshes and effects clone materials) must keep the patch, or they'd compile as a
+  // second, unstyled shader and break batching by look
+  const styleKey=()=>"pmstyle";
+  function styleTag(m){m.onBeforeCompile=stylePatch;m.customProgramCacheKey=styleKey;const own=m.clone;m.clone=function(){return styleTag(own.call(this));};return m;}
   G3.styleMat=styleMat;
   function StdMat(o){if(BARE)return bareMat(o);if(STY)return styleMat(o);if(!GFX.lambert)return new THREE.MeshStandardMaterial(o);const r=Object.assign({},o||{});delete r.roughness;delete r.metalness;delete r.flatShading;delete r.envMapIntensity;delete r.roughnessMap;delete r.metalnessMap;return new THREE.MeshLambertMaterial(r);}
   function tok(name){return getComputedStyle(document.documentElement).getPropertyValue("--"+name).trim()||"#888";}

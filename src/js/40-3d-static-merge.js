@@ -232,7 +232,7 @@
   // things of one look but different colours go to different batches. ?dbios=off goes back to one by one.
   const DBMAT=IOS&&!BQ.get("dbcol")&&BQ.get("dbios")!=="off";if(DBMAT)DBCOL=true;
   const DBOFF=!BQ.get("dbcol")&&!DBMAT&&(IOS||(!BPR.vc&&!BPR.tex));G3.DBCOL=DBCOL;G3.DBMAT=DBMAT;
-  diag(`batch colours: vertex ${BPR.vc===undefined?"-":BPR.vc?"ok":"FAIL ("+BPR.vcpx+")"}, texture ${BPR.tex===undefined?"-":BPR.tex?"ok":"FAIL ("+BPR.texpx+")"}${BPR.err?" error "+BPR.err:""} -> ${DBOFF?(IOS?"iOS: ":"")+"moving things drawn one by one":DBMAT?"iOS: colour-keyed batches":DBCOL?"texture":"vertex"}`);const DBLAYER=30,DBOK=new Set(["MeshStandardMaterial","MeshLambertMaterial","MeshBasicMaterial","MeshPhongMaterial","MeshMatcapMaterial"]);
+  diag(`batch colours: vertex ${BPR.vc===undefined?"-":BPR.vc?"ok":"FAIL ("+BPR.vcpx+")"}, texture ${BPR.tex===undefined?"-":BPR.tex?"ok":"FAIL ("+BPR.texpx+")"}${BPR.err?" error "+BPR.err:""} -> ${DBOFF?(IOS?"iOS: ":"")+"moving things drawn one by one":DBMAT?"iOS: colour-keyed batches":DBCOL?"texture":"vertex"}`);const DBLAYER=30,DBOK=new Set(["MeshStandardMaterial","MeshLambertMaterial","MeshBasicMaterial","MeshPhongMaterial","MeshMatcapMaterial","MeshToonMaterial"]);
   function dbOK(o){if(!o.isMesh||o.isInstancedMesh||o.isBatchedMesh||o.isSkinnedMesh||o.userData.smBatch||o.renderOrder)return false;
     const m=o.material,g=o.geometry;if(!m||Array.isArray(m)||!DBOK.has(m.type)||m.transparent||m.opacity<1||!g||!g.isBufferGeometry)return false;
     if(o.onBeforeRender!==THREE.Object3D.prototype.onBeforeRender)return false;const a=g.attributes;if(!a.position||!a.normal)return false;
