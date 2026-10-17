@@ -21,7 +21,7 @@ function no3D(){G3.ok=false;$("no3d").hidden=false;$("no3d-retry").onclick=()=>l
   // "high-performance" woke the discrete GPU on dual-GPU laptops for every player, which drains the battery much faster.
   // Phones have one GPU, so they're unaffected. Picking Ultra already offers a reload, which is when this takes effect.
   G3.gpuPref=(()=>{let g="";try{g=localStorage.getItem("paper-mill-gfx")||"";}catch(e){}const q=new URLSearchParams(location.search).get("gfx");if(q)g=q;return g==="ultra"?"high-performance":"default";})();
-  try{renderer=new THREE.WebGLRenderer({canvas:glc,antialias:!matchMedia("(pointer: coarse)").matches&&(window.devicePixelRatio||1)<1.5,powerPreference:G3.gpuPref});}   // (v15: no MSAA on high-DPI screens, where the extra pixels already smooth edges)
+  try{renderer=new THREE.WebGLRenderer({canvas:glc,stencil:true,antialias:!matchMedia("(pointer: coarse)").matches&&(window.devicePixelRatio||1)<1.5,powerPreference:G3.gpuPref});}   // (v15: no MSAA on high-DPI screens, where the extra pixels already smooth edges)
   catch(e){no3D();return;}
   if(!renderer.getContext()){no3D();return;}
   // r150+ reads every shader's error log on first draw, which forces the GPU to finish compiling right then:
@@ -47,7 +47,7 @@ function no3D(){G3.ok=false;$("no3d").hidden=false;$("no3d-retry").onclick=()=>l
   // v15: px is each tier's budget of rendered pixels (drawing buffer); the pixel ratio is lowered to stay within it
   // v5.7.3 bare: the bones only. Flat unlit colours (one matcap), plain boxes, no shadows, nothing outside the fence but the
   // ground and roads, no sky, no ambient life, token upset effects, 30 FPS. Picked by the player only (Auto never), on reload.
-  const GFX_TIERS={bare:{pr:0.75,px:0.5e6,shadow:512,soft:false,hz:10,scenery:0,wx:0,lambert:true,far:false,bare:true},low:{pr:1,px:0.9e6,shadow:1024,soft:false,hz:10,scenery:0.5,wx:600,lambert:true,far:false},
+  const GFX_TIERS={low:{pr:1,px:0.9e6,shadow:1024,soft:false,hz:10,scenery:0.5,wx:600,lambert:true,far:false},
     medium:{pr:1.25,px:1.6e6,shadow:1024,soft:false,hz:15,scenery:0.85,wx:1000,lambert:true,far:false},
     high:{pr:2,px:2.4e6,shadow:2048,soft:true,hz:24,scenery:1,wx:2000,lambert:false,far:false},
     ultra:{pr:2,px:4.2e6,shadow:4096,soft:true,hz:60,scenery:1.4,wx:2600,lambert:false,far:true}};
@@ -75,10 +75,18 @@ function no3D(){G3.ok=false;$("no3d").hidden=false;$("no3d-retry").onclick=()=>l
   class SphG extends THREE.SphereGeometry{constructor(r=1,ws=32,hs=16,...a){super(r,Math.max(3,Math.min(ws,16)),Math.max(2,Math.min(hs,10)),...a);}}
   class RingG extends THREE.RingGeometry{constructor(a=0.5,b=1,ts=32,...x){super(a,b,Math.max(3,Math.min(ts,32)),...x);}}
   class CircG extends THREE.CircleGeometry{constructor(r=1,sg=32,...x){super(r,Math.max(3,Math.min(sg,32)),...x);}}
-  renderer.shadowMap.enabled=!BARE;renderer.shadowMap.type=THREE.PCFShadowMap;   // (r186 dropped PCFSoft; the soft tiers widen the PCF kernel instead)
+  renderer.shadowMap.enabled=false;   /* v6.1 iso: no shadow maps; flat drop shadows instead (40c) */renderer.shadowMap.type=THREE.PCFShadowMap;   // (r186 dropped PCFSoft; the soft tiers widen the PCF kernel instead)
   renderer.outputColorSpace=THREE.SRGBColorSpace;renderer.toneMapping=THREE.ACESFilmicToneMapping;renderer.toneMappingExposure=1.12;
   const scene=new THREE.Scene();G3.scene=scene;G3.renderer=renderer;
-  const camera=new THREE.PerspectiveCamera(18,16/9,2,1400);
+  // v6.1 iso: workers, fork-trucks and delivery trucks are drawn as 2D cut-outs (42f); they stay out of the static merge
+  const cutMark=(g,kind)=>{g.userData.cut=kind;if(G3.SM&&G3.SM.dyn)G3.SM.dyn.add(g);else (G3.dynLater||(G3.dynLater=[])).push(g);return g;};
+  /* v6.1 iso: a fixed isometric orthographic camera. cam.r (29) still means "how far out": the view is as tall as a
+     perspective camera with an 18 degree field would see at that distance, so every zoom number in the game keeps its meaning.
+     The camera itself sits ISO_D back along the view line; fov and aspect are kept for the code that reads them. */
+  const ISO_D=1200;
+  const camera=new THREE.OrthographicCamera(-1,1,1,-1,1,ISO_D*2.6);camera.fov=18;camera.aspect=16/9;camera.isIso=true;
+  camera.isoFit=(rr)=>{const hh=rr*Math.tan(camera.fov*Math.PI/360),hw=hh*camera.aspect;
+    if(camera.top!==hh||camera.right!==hw){camera.left=-hw;camera.right=hw;camera.top=hh;camera.bottom=-hh;camera.updateProjectionMatrix();}};
 
   /* palette: every material is bound to a CSS token so theme switches recolor the scene */
   const MATS=[];
@@ -115,7 +123,7 @@ function no3D(){G3.ok=false;$("no3d").hidden=false;$("no3d-retry").onclick=()=>l
   const LEG=Math.PI;
   const hemi=new THREE.HemisphereLight(0xffffff,0x888888,0.85*LEG);scene.add(hemi);
   const sun=new THREE.DirectionalLight(0xfff4e6,1.5*LEG);sun.position.set(-75,95,48);
-  sun.castShadow=!BARE;const sz=GFX.shadow;sun.shadow.mapSize.set(sz,sz);
+  sun.castShadow=false;const sz=GFX.shadow;sun.shadow.mapSize.set(sz,sz);
   Object.assign(sun.shadow.camera,{left:-90,right:90,top:60,bottom:-60,near:10,far:250});sun.shadow.bias=-0.0004;sun.shadow.radius=GFX.soft?5:3;sun.shadow.normalBias=0.04;
   /* v5.5 perf: three.js's PCF shadow lookup takes 5 rotated-disk samples per lit pixel. The soft tiers keep all 5; the
      phone tiers (no soft shadows anyway) take 3 (?taps=1|3|5 overrides for tests): a fifth of the pixel work on every

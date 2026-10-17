@@ -49,7 +49,7 @@
       dome.position.copy(camera.position);
       // looking down at the mill, the top of the view is below the dome band (and well below the clouds): skip those draws
       // (both stay on for the first ticks so their shaders compile at the start, not on the first tilt up)
-      camera.getWorldDirection(_fw);const topEl=SKY.n++<90?9:Math.asin(Math.max(-1,Math.min(1,_fw.y)))+camera.fov*Math.PI/360;
+      camera.getWorldDirection(_fw);const topEl=SKY.n++<90?9:camera.isIso?-9:Math.asin(Math.max(-1,Math.min(1,_fw.y)))+camera.fov*Math.PI/360;   // (v6.1 iso: the fixed view never reaches the sky)
       dome.visible=topEl>-0.33;
       if(nCloud&&clouds.mesh){clouds.mesh.visible=topEl>0.15;if(clouds.mesh.visible){clouds.mesh.material.opacity=(0.8*day+0.12)*(1-dustK);clouds.mesh.material.color.setScalar(0.55+0.45*day);
         for(const c of clouds.items){c.x+=rdt*c.v;if(c.x>560)c.x-=1120;}clouds.update();}}

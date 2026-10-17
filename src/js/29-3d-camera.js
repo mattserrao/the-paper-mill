@@ -1,5 +1,14 @@
   /* ---- camera controls: drag to orbit, wheel/pinch to zoom ---- */
-  const target=new THREE.Vector3(-14,0,5);const DEF={th:-0.2,ph:0.96,r:305};const cam={...DEF};
+  const target=new THREE.Vector3(-14,0,5);
+  /* v6.1 iso: the camera never turns or tilts. ISO_TH looks across the mill from the south-west corner (45 degrees),
+     ISO_PH is the true isometric elevation (35.26 degrees above the ground). Everything that used to set th/ph still may:
+     placeCam pins them. Zoom rests on whole-number steps of the widest view (1x, 2x, 3x ... 12x), so pixels per metre are
+     always a clean multiple and the ink lines stay crisp; between steps the zoom eases over a few frames. */
+  const ISO_TH=-Math.PI/4,ISO_PH=Math.acos(Math.sqrt(1/3)),R_MAX=760,R_K=[1,2,3,4,6,8,12],R_STEPS=R_K.map(k=>R_MAX/k);
+  const rStep=r=>{let b=R_STEPS[0];for(const v of R_STEPS)if(Math.abs(Math.log(v/r))<Math.abs(Math.log(b/r)))b=v;return b;};
+  const rNext=(r,dir)=>{const i=R_STEPS.indexOf(rStep(r));return R_STEPS[clamp(i+dir,0,R_STEPS.length-1)];};
+  G3.rSteps=R_STEPS;G3.rStep=rStep;
+  const DEF={th:ISO_TH,ph:ISO_PH,r:R_MAX/3};const cam={...DEF};let rShown=DEF.r;
   const DEFT=target.clone();let goal=null;
   // v3.1.0 tutorial: glide the camera to a spot and mark it with a pulsing ring and a light beam
   // on phones the tutorial card covers the lower half: aim past the spot so it sits in the upper half of the screen
@@ -17,8 +26,8 @@
    G3.tutTick=now=>{if(!HI.on)return;ring.visible=beam.visible=true;const ph=(now/1400)%1;ring.position.set(HI.x,0.15,HI.z);ring.scale.setScalar(HI.r*(0.92+0.16*ph));hm.opacity=0.9-0.45*ph;
      beam.position.set(HI.x,9,HI.z);beam.scale.set(HI.r*0.9,18,HI.r*0.9);bm.opacity=0.10+0.06*Math.sin(now/300);};}
   // move the look-at point across the ground, in screen directions
-  function panBy(dx,dy){goal=null;folEnd();const s=cam.r*(host.clientWidth<600?1.35:1)*0.00098;
-    const rx=Math.cos(cam.th),rz=-Math.sin(cam.th),fx=-Math.sin(cam.th),fz=-Math.cos(cam.th);
+  function panBy(dx,dy){goal=null;folEnd();const rr=rShown*(host.clientWidth<600?1.35:1),wpp=2*rr*Math.tan(camera.fov*Math.PI/360)/Math.max(1,host.clientHeight),s=wpp;
+    const rx=Math.cos(cam.th),rz=-Math.sin(cam.th),fx=-Math.sin(cam.th)/Math.cos(ISO_PH),fz=-Math.cos(cam.th)/Math.cos(ISO_PH);   // (v6.1: screen up runs along the ground, foreshortened by the view angle)
     // (v14: zoomed out the pan reaches the whole site, so the outer scenery can be looked over)
     const wk=clamp((cam.r-300)/300,0,1);target.x=clamp(target.x-(rx*dx-fx*dy)*s,-85-260*wk,70+260*wk);target.z=clamp(target.z-(rz*dx-fz*dy)*s,-40-200*wk,48+200*wk);}
   // v3.3.4: follow Uncle Brian on the hall scrubber; drag still orbits, wheel/pinch zoom in close, any pan or camera jump ends it
@@ -31,16 +40,13 @@
   function placeCam(){if(FOL.on){const R=G3.scrubbers&&G3.scrubbers[0];if(goal||(S&&S.zen)||!R)folEnd();
       else{const g=R.g.position;target.x+=(g.x-target.x)*0.1;target.z+=(g.z-target.z)*0.1;cam.r+=(FOL.r-cam.r)*0.08;if(FOL.n++<90)cam.ph+=(0.62-cam.ph)*0.06;G3.lastMove=performance.now();}}
     if(goal){G3.lastMove=performance.now();target.lerp(goal.t,0.12);cam.r+=(goal.r-cam.r)*0.12;cam.th=lerpAng(cam.th,goal.th,0.12);cam.ph+=(goal.ph-cam.ph)*0.12;
-      goal.n=(goal.n||0)+1;if(goal.n>150||target.distanceTo(goal.t)<0.2&&Math.abs(goal.r-cam.r)<0.5)goal=null;}
-    const rr=cam.r*((G3.vw||host.clientWidth)<600?1.35:1);
-    camera.position.set(target.x+rr*Math.sin(cam.ph)*Math.sin(cam.th),target.y+rr*Math.cos(cam.ph),target.z+rr*Math.sin(cam.ph)*Math.cos(cam.th));
-    // v4.1: never inside scenery (tall city blocks, mesas, trees): stay 3 m above the tallest thing in this 8 m cell
-    if(G3.sceneryH){const h=G3.sceneryH(camera.position.x,camera.position.z);if(h>0&&camera.position.y<h+3)camera.position.y=h+3;}
-    camera.lookAt(target);
-    // v4.1 pass 5: the near plane follows the zoom. With it fixed at 2 m, a zoomed-out view (300-600 m away) had too little
-    // depth precision to separate the road quads and river layers (millimetres apart) from the ground, and they flickered.
-    // Nothing is ever closer to the camera than a small share of its distance to the target, so this costs no clipping.
-    {const n=Math.max(2,Math.min(30,camera.position.distanceTo(target)*0.06));if(Math.abs(n-camera.near)>camera.near*0.05){camera.near=n;camera.updateProjectionMatrix();}}}
+      goal.n=(goal.n||0)+1;if(goal.n>150||target.distanceTo(goal.t)<0.2&&Math.abs(goal.r-cam.r)<0.5){goal=null;cam.r=rStep(cam.r);}}
+    // v6.1 iso: angles pinned; the shown zoom eases to the nearest whole-number step of whatever cam.r asks for
+    cam.th=ISO_TH;cam.ph=ISO_PH;cam.r=clamp(cam.r,R_STEPS[R_STEPS.length-1]*0.8,R_MAX);
+    {const want=goal?cam.r:rStep(cam.r);const k=Math.abs(Math.log(want/rShown));rShown=k<0.004?want:Math.exp(Math.log(rShown)+(Math.log(want)-Math.log(rShown))*0.35);}
+    const rr=rShown*((G3.vw||host.clientWidth)<600?1.35:1);G3.camR=rShown;G3.camDist=rr;
+    camera.position.set(target.x+ISO_D*Math.sin(cam.ph)*Math.sin(cam.th),target.y+ISO_D*Math.cos(cam.ph),target.z+ISO_D*Math.sin(cam.ph)*Math.cos(cam.th));
+    camera.lookAt(target);camera.isoFit(rr);}
   const ptrs=new Map();let pinch0=0,r0=0,mid0=null,panBtn=false;
   const mid=()=>{const [a,b]=[...ptrs.values()];return {x:(a.x+b.x)/2,y:(a.y+b.y)/2,d:Math.hypot(a.x-b.x,a.y-b.y)};};
   glc.addEventListener("contextmenu",e=>e.preventDefault());
@@ -48,9 +54,9 @@
     panBtn=e.button===2||e.button===1||e.shiftKey;
     if(ptrs.size===2){const m=mid();pinch0=m.d;r0=FOL.on?FOL.r:cam.r;mid0=m;}});
   glc.addEventListener("pointermove",e=>{const p=ptrs.get(e.pointerId);if(!p)return;const dx=e.clientX-p.x,dy=e.clientY-p.y;
-    if(ptrs.size===1){if(panBtn)panBy(dx,dy);else{cam.th-=dx*0.006;if(e.pointerType!=="touch")cam.ph=clamp(cam.ph-dy*0.005,0.25,1.35);}}
+    if(ptrs.size===1)panBy(dx,dy);   // (v6.1 iso: the camera never turns, so any drag pans)
     p.x=e.clientX;p.y=e.clientY;
-    if(ptrs.size===2){const m=mid();if(pinch0>0){if(FOL.on)FOL.r=clamp(r0*pinch0/m.d,10,120);else cam.r=clamp(r0*pinch0/m.d,50,760);}if(mid0&&!FOL.on)panBy(m.x-mid0.x,m.y-mid0.y);mid0=m;}});
+    if(ptrs.size===2){const m=mid();if(pinch0>0){if(FOL.on)FOL.r=clamp(r0*pinch0/m.d,10,120);else cam.r=rStep(clamp(r0*pinch0/m.d,50,760));}if(mid0&&!FOL.on)panBy(m.x-mid0.x,m.y-mid0.y);mid0=m;}});
   const up=e=>{ptrs.delete(e.pointerId);pinch0=0;mid0=null;};glc.addEventListener("pointerup",up);glc.addEventListener("pointercancel",up);
   // easter egg: click the spider valve on the disk thickener
   {const rc=new THREE.Raycaster(),nd=new THREE.Vector2();if(rc.layers)rc.layers.enableAll();let downAt=null,hoverT=0;
@@ -60,11 +66,11 @@
     glc.addEventListener("pointerdown",e=>{downAt=[e.clientX,e.clientY,performance.now()];});
     glc.addEventListener("pointerup",e=>{if(!downAt)return;const m=Math.hypot(e.clientX-downAt[0],e.clientY-downAt[1]),t=performance.now()-downAt[2];downAt=null;if(m<6&&t<500){if(G3.tellTap&&G3.tellTap(e))return;   /* v5.7: a tell on a Round comes first */const li=G3.lblAt(e);if(li){if(G3.lblTap&&G3.lblTap(li))return;G3.flyTo(li);return;}const h=hit(e);if(h&&h.k)G3.knobTap(h);else if(h==="spider")openSpider();else if(h==="slice")openSlice();else if(h==="brian")openBrian();}});
     glc.addEventListener("pointermove",e=>{const n=performance.now();if(n-hoverT<120||ptrs.size)return;hoverT=n;glc.style.cursor=G3.lblAt(e)||hit(e)?"pointer":"";});}
-  glc.addEventListener("wheel",e=>{e.preventDefault();goal=null;if(e.shiftKey||Math.abs(e.deltaX)>Math.abs(e.deltaY)&&!e.ctrlKey)panBy(-e.deltaX||-e.deltaY,0);else if(FOL.on)FOL.r=clamp(FOL.r*Math.exp(e.deltaY*(e.ctrlKey?0.01:0.001)),10,120);else cam.r=clamp(cam.r*Math.exp(e.deltaY*(e.ctrlKey?0.01:0.001)),50,760);},{passive:false});
+  let wAcc=0;glc.addEventListener("wheel",e=>{e.preventDefault();goal=null;if(e.shiftKey||Math.abs(e.deltaX)>Math.abs(e.deltaY)&&!e.ctrlKey)panBy(-e.deltaX||-e.deltaY,0);else if(FOL.on)FOL.r=clamp(FOL.r*Math.exp(e.deltaY*(e.ctrlKey?0.01:0.001)),10,120);else{wAcc+=e.deltaY*(e.ctrlKey?10:1);if(Math.abs(wAcc)>=60){cam.r=rNext(cam.r,wAcc>0?-1:1);wAcc=0;}}},{passive:false});   // (v6.1: one zoom step per wheel notch)
   // keyboard: arrows/WASD move, Q/E rotate, +/- zoom
   glc.addEventListener("keydown",e=>{const k=e.key.toLowerCase(),st=24;let used=true;
     if(k==="arrowleft"||k==="a")panBy(st,0);else if(k==="arrowright"||k==="d")panBy(-st,0);else if(k==="arrowup"||k==="w")panBy(0,st);else if(k==="arrowdown"||k==="s")panBy(0,-st);
-    else if(k==="q")cam.th+=0.08;else if(k==="e")cam.th-=0.08;else if(k==="+"||k==="=")cam.r=clamp(cam.r*0.9,50,760);else if(k==="-")cam.r=clamp(cam.r*1.1,50,760);else used=false;
+    else if(k==="+"||k==="=")cam.r=rNext(cam.r,1);else if(k==="-")cam.r=rNext(cam.r,-1);else used=false;   // (v6.1: no turning; zoom by whole steps)
     if(used){e.preventDefault();goal=null;}});
   // on-screen pad: press and hold to move
   let padDir=null;
@@ -91,7 +97,7 @@
   $("viewReset").addEventListener("click",()=>{goal={t:DEFT.clone(),r:DEF.r,th:DEF.th,ph:DEF.ph};});
   // v4.2.4: the Shadows switch fades the sun's shadow to nothing and stops refreshing the shadow map. It never turns the
   // shadow map off, because that recompiles every shader (a long freeze on phones). shadow.intensity is a uniform.
-  $("viewShadows").addEventListener("change",e=>{const on=e.target.checked;sun.shadow.intensity=on?1:0;G3.shadowsOff=!on;renderer.shadowMap.needsUpdate=true;});
+  $("viewShadows").addEventListener("change",e=>{const on=e.target.checked;G3.shadowsOff=!on;if(G3.dropMesh)G3.dropMesh.visible=on;});   // (v6.1 iso: the flat drop shadows, 40c and 32c)
   // v4.1: change graphics tier while playing (what can change live; see GFX_TIERS in 20-3d-setup.js)
   G3.setGfx=pick=>{if(pick!=="auto"&&!GFX_TIERS[pick])return;const t=GFX_TIERS[pick==="auto"?GFX.auto:pick];GFX.pick=pick;GFX.tier=pick==="auto"?GFX.auto:pick;
     try{localStorage.setItem("paper-mill-gfx",pick);}catch(e){}
@@ -104,6 +110,6 @@
     document.querySelectorAll("#gfxSeg button").forEach(b=>b.setAttribute("aria-pressed",String(b.dataset.g===pick)));};
 
   function resize(){G3.lastMove=performance.now();const w=host.clientWidth,h=host.clientHeight;G3.vw=w;G3.vh=h;   // v4.0.1: cached for the label code
-  host.classList.toggle("compact",w<640);if(!w||!h)return;{const pr=G3.prFor(w,h);if(Math.abs(pr-renderer.getPixelRatio())>0.01)renderer.setPixelRatio(pr);}renderer.setSize(w,h,false);camera.aspect=w/h;camera.updateProjectionMatrix();}
+  host.classList.toggle("compact",w<640);if(!w||!h)return;{const pr=G3.prFor(w,h);if(Math.abs(pr-renderer.getPixelRatio())>0.01)renderer.setPixelRatio(pr);}renderer.setSize(w,h,false);camera.aspect=w/h;camera.top=NaN;camera.isoFit(G3.camDist||DEF.r);}
   new ResizeObserver(resize).observe(host);
 

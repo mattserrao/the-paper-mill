@@ -21,6 +21,7 @@ function startSeason(surv){newGame();S.season=surv?{on:true,surv:true,end:1e12,d
   // one and the first buy was always the same). Picked before the season starts, like the "any" site, so it draws no
   // stream: the week's dice are unchanged. It is saved with the season (S.bn).
   S.bn=BN_IDS[Math.floor(Math.random()*BN_IDS.length)];applyUpgrades();
+  S.pal=Math.floor(Math.random()*4);   // v6.1 iso: the season's palette (spring, summer, autumn, winter; 36c), cosmetic like the bottleneck
   if(typeof civStart==="function")civStart();   // v5.1 civics: the four meters start (the leader, picked next, sets their values)C.breaks=true;
   CH.on=true;$("chaosOn").checked=true;CH.lvl=1;$("chaosLvl").value=1;$("chaosLvlv").textContent="1×";
   EVENTS.forEach(e=>{CH.en[e.id]=true;const c=$("en-"+e.id);if(c)c.checked=true;});seasonLocks(true);

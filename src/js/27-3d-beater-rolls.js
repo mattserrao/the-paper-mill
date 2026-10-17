@@ -100,10 +100,10 @@
     const bc=new THREE.Mesh(DRV_HEAD,M.beacon);bc.scale.setScalar(0.07);bc.position.set(-0.07,1.98,0.3);g.add(bc);[[-0.35,-0.42],[-0.35,0.42],[0.35,-0.42],[0.35,0.42]].forEach(([x,z])=>cylZ(0.2,0.16,M.ink,x,0.2,z,12,g));}
   function forklift(m){const g=new THREE.Group();box(1.15,0.62,0.85,M.fork,0,0.55,0,g);box(0.3,0.55,0.82,M.ink,-0.62,0.62,0,g);cage(g);
     box(0.08,1.8,0.08,M.ink,0.66,1.0,-0.28,g,false);box(0.08,1.8,0.08,M.ink,0.66,1.0,0.28,g,false);box(0.75,0.06,0.12,M.ink,1.02,0.22,-0.2,g,false);box(0.75,0.06,0.12,M.ink,1.02,0.22,0.2,g,false);
-    const load=box(0.72,0.62,0.72,M.bale,1.02,0.58,0,g);g.userData.load=load;scene.add(g);return g;}
+    const load=box(0.72,0.62,0.72,M.bale,1.02,0.58,0,g);g.userData.load=load;scene.add(g);return cutMark(g,"lift");}
   function clamp3(m){const g=new THREE.Group();box(1.15,0.62,0.85,M.fork,0,0.55,0,g);box(0.3,0.55,0.82,M.ink,-0.62,0.62,0,g);cage(g);
     box(0.08,1.9,0.08,M.ink,0.66,1.05,-0.3,g,false);box(0.08,1.9,0.08,M.ink,0.66,1.05,0.3,g,false);box(0.5,0.62,0.08,M.brand,0.98,0.95,-0.48,g,false);box(0.5,0.62,0.08,M.brand,0.98,0.95,0.48,g,false);
-    const r=new THREE.Mesh(new CylG(0.4,0.4,0.9,18),ROLLM);r.position.set(0.95,0.95,0);g.add(r);g.userData.load=r;scene.add(g);return g;}
+    const r=new THREE.Mesh(new CylG(0.4,0.4,0.9,18),ROLLM);r.position.set(0.95,0.95,0);g.add(r);g.userData.load=r;scene.add(g);return cutMark(g,"lift");}
   function robot(){const g=new THREE.Group();box(1.1,0.35,1.1,M.robot,0,0.3,0,g);const l=box(0.3,0.08,0.3,M.ok,0,0.52,0,g,false);g.userData.light=l;scene.add(g);return g;}
   const lifts=[],loaders=[],robots=[];
   function ensure(arr,n,make){while(arr.length<n)arr.push(make());arr.forEach((o,i)=>o.visible=i<n);}

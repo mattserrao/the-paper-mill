@@ -42,3 +42,4 @@ One line per version, oldest first. Add a line here with every release: build.py
 5.7.2      Help Page with Game Guide and Glossary
 5.7.3      Bare Graphics Mode for Weak Phones
 5.7.4      Version Notes Pop-Up (Triple-Tap the Version Number)
+6.1.0-t1   Isometric Paper View: Fixed Camera, Cut-Outs, Drop Shadows, Cutaways, Season Palettes (Test)

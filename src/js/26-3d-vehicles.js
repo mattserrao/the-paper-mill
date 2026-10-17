@@ -46,7 +46,7 @@
       const hb=new THREE.Mesh(hubG,chromeM);hb.position.set(x,0.4,z);g.add(hb);wheels.push(w);}));
     const cargo=[];for(let k=0;k<(kind==="chem"?0:8);k++){const c=kind==="in"?box(0.8,0.72,0.78,M.bale,-2.5+(k%4)*0.9,1.32,(Math.floor(k/4)?0.42:-0.42),g)
       :(()=>{const r=new THREE.Mesh(new CylG(0.4,0.4,0.9,18),ROLLM);r.position.set(-2.5+(k%4)*0.9,1.4,Math.floor(k/4)?0.42:-0.42);r.castShadow=true;g.add(r);return r;})();cargo.push(c);}
-    Object.assign(g.userData,{cargo,kind,heading:0,wheels,doorL,doorR,stack:[1.85,2.95,0.85]});scene.add(g);return g;}   // merge: the chem tanker stores its hose here first
+    Object.assign(g.userData,{cargo,kind,heading:0,wheels,doorL,doorR,stack:[1.85,2.95,0.85]});scene.add(g);return cutMark(g,"truck");}   // merge: the chem tanker stores its hose here first
   // OCC trailer yard west of receiving: dropped trailers waiting to be pulled to a door
   slab(-92,-56,-26.4,-7.6,M.asphalt,0.022);slab(-60,-56,-7.6,-5.0,M.asphalt,0.022);
   for(let x=-90;x<=-58;x+=2.7){box(0.12,0.02,4.6,M.lane,x-1.35,0.05,-23.6,scene,false);box(0.12,0.02,4.6,M.lane,x-1.35,0.05,-10.4,scene,false);}

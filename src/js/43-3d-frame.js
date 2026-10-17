@@ -222,6 +222,8 @@
     try{if(G3.knobFrame)G3.knobFrame(rdt,now);}catch(e){G3.fErr=(G3.fErr||0)+1;if(G3.fErr<6)console.error("knobs",e);}   // v5.6 fiddly knobs (40b)
     try{if(G3.tellFrame)G3.tellFrame(rdt,now);}catch(e){G3.fErr=(G3.fErr||0)+1;if(G3.fErr<6)console.error("tells",e);}   // v5.7 the daily round (33b)
     if(G3.dbTick)G3.dbTick();
+    if(G3.cutTick)G3.cutTick(now);
+    if(G3.palTick)G3.palTick(now);   // v6.1 iso: season palette and time-of-day grade (36c)   // v6.1 iso: cut-out pictures and cards (42f)
     /* v5.5 perf: per-object frustum culling of the static batches (40-3d-static-merge.js) costs a pass over every batched
        instance, so it runs only on frames where the camera moved or the shadow map refreshes (the shadow pass builds its
        own list, and the main pass right after it leaves the list the still frames then reuse). */
@@ -238,7 +240,7 @@
     // labels follow the 3D anchors
     const w=G3.vw||host.clientWidth,hh=G3.vh||host.clientHeight,doText=now-lastLabel>200;if(doText)lastLabel=now;
     // v14: zoomed out, only the area labels and the landmark names show; closer in, the equipment labels and no landmarks
-    const wide=camera.position.distanceTo(target)>400;
+    const wide=(G3.camDist||camera.position.distanceTo(target))>400;
     // (v5.2: no projecting or text building while the section labels can't show: zen, hidden view, labels off)
     if(G3.kvOn)LABELS.forEach(L=>{L.lb.vis=false;});   // v5.6: the fiddly knobs view shows only the knobs' labels (and upsets')
     else if(!(G3.zen||LB.hid||labelHost.classList.contains("lbl-off")))LABELS.forEach(L=>{const R=L.lb;if(L.land?!wide:(!L.area&&wide)){R.vis=false;return;}tmp.copy(L.v).project(camera);const vis=tmp.z<1&&Math.abs(tmp.x)<1.05&&Math.abs(tmp.y)<1.05;R.vis=vis;

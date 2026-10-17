@@ -122,7 +122,18 @@
   // roofs and the hall shell fade out as you zoom in. Fully shown, they render opaque (no transparency sorting); while fading they
   // stop writing depth, so overlapping roof panels can't hide each other in a draw-order-dependent way (that made them flicker
   // when the camera moves, which zen mode does all the time)
-  G3.roofFade=r=>{roofs.forEach(g=>{const f=g.userData.fade||[170,70],a=clamp((r-f[0])/f[1],0,1),solid=a>0.995;g.visible=a>0.02;
+  // v6.1 iso cutaway: the roof (and the hall shell) lifts off as it fades, like the lid of a card box, and eases over a
+  // few frames because the zoom moves in whole steps. Settings > View > Cutaway: Auto (by zoom), On (always off), Off (always on).
+  let cutMode="auto";try{cutMode=localStorage.getItem("paper-mill-cutaway")||"auto";}catch(e){}
+  G3.setCutaway=m=>{if(!["auto","on","off"].includes(m))return;cutMode=m;try{localStorage.setItem("paper-mill-cutaway",m);}catch(e){}
+    document.querySelectorAll("#cutMode button").forEach(b=>b.setAttribute("aria-pressed",String(b.dataset.c===m)));};
+  document.querySelectorAll("#cutMode button").forEach(b=>b.addEventListener("click",()=>G3.setCutaway(b.dataset.c)));G3.setCutaway(cutMode);
+  const LIFT=9;
+  let rfT=0;
+  G3.roofFade=r=>{if(cutMode==="on")r=0;else if(cutMode==="off")r=1e9;const now=performance.now(),ek=rfT?1-Math.exp(-Math.min(0.25,(now-rfT)/1000)*7):1;rfT=now;
+    roofs.forEach(g=>{const f=g.userData.fade||[170,70],aT=clamp((r-f[0])/f[1],0,1);
+    let a=g.userData.aa;a=a===undefined?aT:Math.abs(aT-a)<0.004?aT:a+(aT-a)*ek;g.userData.aa=a;const solid=a>0.995;g.visible=a>0.02;
+    {const y=(1-a)*(1-a)*LIFT;if(g.position.y!==y)g.position.y=y;}
     if(g.userData.a!==undefined&&Math.abs(g.userData.a-a)<0.002)return;g.userData.a=a;
     g.userData.mats.forEach((m,i)=>{const glassy=i===1||i===2,tr=glassy||!solid;if(m.transparent!==tr){m.transparent=tr;m.needsUpdate=true;}m.depthWrite=solid&&!glassy;
       m.opacity=i===1?a*0.75:i===2?a*0.35:a;});

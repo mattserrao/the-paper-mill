@@ -77,7 +77,7 @@
     function kvFrame(now){if(!G3.kvOn)return;
       if(labelHost.classList.contains("lbl-off")){kvLblOff=true;labelHost.classList.remove("lbl-off");}   // (the labels intro may switch them off meanwhile)
       // (the scene's automatic matrix update is off while moving batches draw, 43-3d-frame.js: update these by hand)
-      {const d=camera.near*1.2,h=2*d*Math.tan(camera.fov*Math.PI/360)*1.15;camera.getWorldDirection(_d);veil.position.copy(camera.position).addScaledVector(_d,d);veil.quaternion.copy(camera.quaternion);veil.scale.set(h*camera.aspect,h,1);veil.updateMatrixWorld();}   // (just past the near plane, which moves with the zoom)
+      {const d=camera.near*1.2,h=(camera.isIso?camera.top-camera.bottom:2*d*Math.tan(camera.fov*Math.PI/360))*1.15;camera.getWorldDirection(_d);veil.position.copy(camera.position).addScaledVector(_d,d);veil.quaternion.copy(camera.quaternion);veil.scale.set(h*camera.aspect,h,1);veil.updateMatrixWorld();}   // (just past the near plane, which moves with the zoom)
       const w=G3.vw||host.clientWidth,hh=G3.vh||host.clientHeight,doTxt=now-(kvFrame.t||0)>200;if(doTxt)kvFrame.t=now;
       const pulse=0.5+0.5*Math.sin(now/260);
       MARKS.forEach(m=>{m.r.lookAt(camera.position);const s=1+0.35*pulse;m.r.scale.set(s,s,s);m.r.position.set(0,0,0);
@@ -89,7 +89,7 @@
           else if(m.st){const ids=KNOBS.filter(k=>k.dcs&&k.area===m.st).map(k=>k.id),moved=ids.filter(i=>!knobAt(i));a=(m.st==="WET"?"Wet end DCS":"Dry end DCS");
             b=moved.length?moved.map(i=>KNOBN[i].name+": "+knobFmt(i)).join(" · "):ids.map(i=>KNOBN[i].name).join(" · ");bad=moved.length>0;}
           else{a=KNOBN[m.id].name;b=knobAt(m.id)?"standard · "+knobFmt(m.id):"moved · "+knobFmt(m.id);bad=!knobAt(m.id);}
-          if(camera.position.distanceTo(m.v)>170)b=bad?"moved":"";   // zoomed out: names only, so they don't pile up
+          if((G3.camDist||camera.position.distanceTo(m.v))>170)b=bad?"moved":"";   // zoomed out: names only, so they don't pile up
           lblSet(m.lb,a,b,bad);}});}
     // ---- what a moved knob looks like ----
     // the pick-up felt (1st press top felt) gets its own felt texture so stripes can be painted into it (same shader as the other felts)

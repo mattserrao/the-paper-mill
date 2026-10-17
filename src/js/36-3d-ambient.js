@@ -117,7 +117,8 @@
       if(scene.background&&scene.background.isColor)scene.background.copy(tmpC);else scene.background=tmpC.clone();scene.fog.color.copy(tmpC);}
     if(G3.SKY&&G3.SKY.tick)G3.SKY.tick(rdt,now,day,scene.fog.color,dustK);
     if(G3.nightWin){const nw=G3.nightWin,on=(1-day)>0.03;if(nw.visible!==on)nw.visible=on;if(on)nw.material.opacity=0.9*(1-day)*bk*(G3.civWinK??1);}
-    {const d=camera.position.distanceTo(target);scene.fog.near=d*(0.9+4*(1-fogK))*(1-0.92*dustK);scene.fog.far=d*(3.4+8*(1-fogK))*(1-0.86*dustK);if(G3.zen&&document.body.dataset.zs!=="none"){scene.fog.near*=0.45;scene.fog.far*=0.55;}}
+    {const d=G3.camDist||camera.position.distanceTo(target),d0=camera.isIso?camera.position.distanceTo(target)-d:0;scene.fog.near=d0+d*(0.9+4*(1-fogK))*(1-0.92*dustK);scene.fog.far=d0+d*(3.4+8*(1-fogK))*(1-0.86*dustK);   // (v6.1 iso: fog measured as if the camera stood at its zoom distance)
+    if(G3.zen&&document.body.dataset.zs!=="none"){scene.fog.near*=0.45;scene.fog.far*=0.55;}}
     const night=1-day;if(!G3.nightL){
       // v2.8.4: no point lights (every pixel paid for all 10 of them, day and night); each fixture throws a soft additive pool of light on the floor instead
       const gT=spriteTex((x,w)=>{const g=x.createRadialGradient(w/2,w/2,0,w/2,w/2,w/2);g.addColorStop(0,"rgba(255,255,255,1)");g.addColorStop(0.35,"rgba(255,255,255,0.55)");g.addColorStop(1,"rgba(255,255,255,0)");x.fillStyle=g;x.fillRect(0,0,w,w);});
