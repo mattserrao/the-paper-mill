@@ -107,14 +107,26 @@ function no3D(){G3.ok=false;$("no3d").hidden=false;$("no3d-retry").onclick=()=>l
     if(STYLE==="paper"){const d=new Uint8Array([110,110,110,255,185,185,185,255,255,255,255,255]);   // 3 tones: shade, side, lit
       styleTone=new THREE.DataTexture(d,3,1);styleTone.minFilter=styleTone.magFilter=THREE.NearestFilter;styleTone.generateMipmaps=false;styleTone.needsUpdate=true;}}
   const STU=G3.styleU={stAo:{value:new THREE.Vector2(...(STY?STY.ao:[1,1]))},stLift:{value:new THREE.Vector3(...(STY?STY.lift:[0,0,0]))},
-    stGain:{value:new THREE.Vector3(...(STY?STY.gain:[1,1,1]))},stSat:{value:STY?STY.sat:1}};
+    stGain:{value:new THREE.Vector3(...(STY?STY.gain:[1,1,1]))},stSat:{value:STY?STY.sat:1},stDay:{value:1}};
+  /* paper extras (v6 prototype): world-space card grain and gentle sheet-to-sheet colour drift, and pencil hatching laid over
+     the shade band (screen-space diagonal strokes where the light falls off). All arithmetic in the one shared shader. */
+  const ST_HEAD="varying vec3 vStP;uniform vec2 stAo;uniform vec3 stLift,stGain;uniform float stSat,stDay;\n"+
+    "float stH(vec2 p){return fract(sin(dot(p,vec2(127.1,311.7)))*43758.5453);}\n"+
+    "float stN(vec2 p){vec2 i=floor(p),f=fract(p);f=f*f*(3.0-2.0*f);return mix(mix(stH(i),stH(i+vec2(1,0)),f.x),mix(stH(i+vec2(0,1)),stH(i+vec2(1,1)),f.x),f.y);}\n";
   function stylePatch(sh){Object.assign(sh.uniforms,STU);
-    sh.vertexShader=sh.vertexShader.replace("void main() {","varying float vStY;\nvoid main() {").replace("#include <project_vertex>",
-      "#include <project_vertex>\n{vec4 stW=vec4(transformed,1.0);\n#ifdef USE_BATCHING\nstW=batchingMatrix*stW;\n#endif\n#ifdef USE_INSTANCING\nstW=instanceMatrix*stW;\n#endif\nvStY=(modelMatrix*stW).y;}");
-    sh.fragmentShader=sh.fragmentShader.replace("void main() {","varying float vStY;uniform vec2 stAo;uniform vec3 stLift,stGain;uniform float stSat;\nvoid main() {").replace("#include <opaque_fragment>",
+    sh.vertexShader=sh.vertexShader.replace("void main() {","varying vec3 vStP;\nvoid main() {").replace("#include <project_vertex>",
+      "#include <project_vertex>\n{vec4 stW=vec4(transformed,1.0);\n#ifdef USE_BATCHING\nstW=batchingMatrix*stW;\n#endif\n#ifdef USE_INSTANCING\nstW=instanceMatrix*stW;\n#endif\nvStP=(modelMatrix*stW).xyz;}");
+    const paper=STYLE==="paper"?
+      // sheet drift (+-5% value over a few metres), card fibre grain, hatching where the toon ramp is in its shade step
+      "{vec2 wp=vStP.xz+vStP.y*vec2(0.7,-0.4);float dr=stN(wp*0.18)*0.10-0.05;float gr=stN(wp*6.0)*0.6+stN(wp*23.0)*0.4;"+
+      "float base=max(dot(diffuseColor.rgb,vec3(0.2126,0.7152,0.0722)),0.02),lit=dot(outgoingLight,vec3(0.2126,0.7152,0.0722))/base;"+
+      "float hz=fract((gl_FragCoord.x+gl_FragCoord.y)*0.19);float hatch=(1.0-smoothstep(0.55,0.75,lit))*step(0.62,hz)*(0.55+0.45*stN(gl_FragCoord.xy*0.05));"+
+      "outgoingLight*=(1.0+dr)*(0.955+0.07*gr)*(1.0-0.22*hatch*stDay);}":"";
+    sh.fragmentShader=sh.fragmentShader.replace("void main() {",ST_HEAD+"void main() {").replace("#include <opaque_fragment>",
       // walls (normal facing sideways) darken near the ground; floors and roofs keep full light
-      "{float up=clamp(dot(normal,normalize((viewMatrix*vec4(0.,1.,0.,0.)).xyz)),0.,1.);float ao=mix(stAo.x,1.0,smoothstep(0.0,stAo.y,max(vStY,0.0)));"+
-      "outgoingLight*=mix(ao,1.0,up*up);float l=dot(outgoingLight,vec3(0.2126,0.7152,0.0722));outgoingLight=mix(vec3(l),outgoingLight,stSat);outgoingLight=outgoingLight*stGain+stLift*(1.0-min(l,1.0));}\n#include <opaque_fragment>");}
+      "{float up=clamp(dot(normal,normalize((viewMatrix*vec4(0.,1.,0.,0.)).xyz)),0.,1.);float ao=mix(stAo.x,1.0,smoothstep(0.0,stAo.y,max(vStP.y,0.0)));"+
+      "outgoingLight*=mix(ao,1.0,up*up);}"+paper+
+      "{float l=dot(outgoingLight,vec3(0.2126,0.7152,0.0722));outgoingLight=mix(vec3(l),outgoingLight,stSat);outgoingLight=outgoingLight*stGain+stLift*(1.0-min(l,1.0));}\n#include <opaque_fragment>");}
   function styleMat(o){const r=Object.assign({},o||{});for(const k of ["roughness","metalness","flatShading","envMapIntensity","roughnessMap","metalnessMap","envMap"])delete r[k];
     const m=STYLE==="paper"?new THREE.MeshToonMaterial(Object.assign(r,{gradientMap:styleTone})):new THREE.MeshLambertMaterial(r);
     return styleTag(m);}
@@ -162,7 +174,7 @@ function no3D(){G3.ok=false;$("no3d").hidden=false;$("no3d-retry").onclick=()=>l
       if(i0>0&&i1>i0){const lines=[];for(let k=0;k<taps;k++)lines.push(taps===1?"texture( shadowMap, vec3( shadowCoord.xy, shadowCoord.z ) )":`texture( shadowMap, vec3( shadowCoord.xy + vogelDiskSample( ${k}, ${taps}, phi ) * radius, shadowCoord.z ) )`);
         THREE.ShaderChunk.shadowmap_pars_fragment=c.slice(0,i0)+"shadow = (\n\t\t\t\t\t"+lines.join(" +\n\t\t\t\t\t")+"\n\t\t\t\t"+`) * ${(1/taps).toFixed(6)};`+c.slice(i1+") * 0.2;".length);
         diag(`shadows: ${taps}-tap lookup`);}}}
-  sun.target.position.set(-5,0,5);if(STYLE==="dusk")sun.position.set(-90,52,74);   // (v6 dusk: a lower, warmer evening sun)
+  sun.target.position.set(-5,0,5);if(STYLE==="paper"){sun.shadow.radius=1;sun.shadow.bias=-0.0006;}if(STYLE==="dusk")sun.position.set(-90,52,74);   // (v6 dusk: a lower, warmer evening sun)
   scene.add(sun,sun.target);
   let baseHemi=0.85,baseSun=0.9;
 

@@ -32,6 +32,11 @@ with sync_playwright() as pw:
         f = f"{out}-{name}.png"; pg.screenshot(path=f); shots.append((name, f))
     def jump(j): pg.evaluate(f"()=>document.querySelector('#jumps [data-j=\"{j}\"]').click()")
     jump("site"); snap("overview", 4000)
+    # close-up on a group of workers (the first visible figure near the paper machine floor)
+    pg.evaluate("""()=>{const G=__PM.G3;let best=null;G.scene.traverse(o=>{if(o.userData&&o.userData.legs&&o.parent){let v=true;for(let x=o;x;x=x.parent)if(x.visible===false)v=false;
+      if(v){const w=new o.position.constructor();o.getWorldPosition(w);if(!best||Math.abs(w.x)+Math.abs(w.z)<Math.abs(best.x)+Math.abs(best.z))best=w;}}});
+      if(best)G.camSet([best.x,best.z,38,-0.35,0.85,0]);}""")
+    snap("workers", 2500)
     jump("pm"); snap("papermachine", 4000)
     jump("pulp"); snap("stockprep", 4000)
     pg.evaluate("()=>{__PM.trigger('balefire',true);__PM.setRunning(true)}"); jump("recv"); pg.wait_for_timeout(4000)

@@ -75,6 +75,13 @@
         -0.5,0,0.5, -0.5,0,-0.5, -0.5,1,0, 0.5,0,-0.5, 0.5,0,0.5, 0.5,1,0];const g=new THREE.BufferGeometry();g.setAttribute("position",new THREE.Float32BufferAttribute(v,3));return g;},0.2),
       quad:tpl("quad",()=>{const g=new THREE.PlaneGeometry(1,1);g.rotateX(-Math.PI/2);return g;}),
       mound:tpl("mound",()=>{const g=new THREE.SphereGeometry(1,7,3,0,Math.PI*2,0,Math.PI/2);return g;})};
+    // v6 Paper-craft: tree crowns and bushes become crossed cut-out cards (pop-up book scenery), both faces drawn
+    const cardX=(shape)=>()=>{const v=[];const tri=(a,b,c)=>{v.push(...a,...b,...c,...a,...c,...b);};
+      for(const r of [0,Math.PI/2]){const cs=Math.cos(r),sn=Math.sin(r),P=(x,y)=>[x*cs,y,x*sn];const o=shape();for(let i=0;i<o.length;i++){const a=o[i],b=o[(i+1)%o.length];tri(P(0,o.c),P(a[0],a[1]),P(b[0],b[1]));}}
+      const g=new THREE.BufferGeometry();g.setAttribute("position",new THREE.Float32BufferAttribute(v,3));return g;};
+    const roundCard=()=>{const o=[];for(let i=0;i<12;i++){const a=i/12*Math.PI*2,k=i%2?0.9:1.04;o.push([Math.cos(a)*k,Math.sin(a)*k]);}o.c=0;return o;};   // a scalloped, hand-cut circle
+    const triCard=()=>{const o=[[-1,0],[-0.55,0.32],[-0.8,0.3],[-0.35,0.62],[-0.55,0.6],[0,1],[0.55,0.6],[0.35,0.62],[0.8,0.3],[0.55,0.32],[1,0]];o.c=0.4;return o;};   // a stepped fir cut-out
+    const TC=G3.style==="paper"?{ico:tpl("pcRound",cardX(roundCard)),oct:tpl("pcRound",cardX(roundCard)),cone6:tpl("pcTri",cardX(triCard))}:T;
     // flat polygon on the ground (water patches, fields): a fan of triangles, pre-transformed
     function poly(pts,y,hex,sec){const S2=SEC[sec==="near"?"near":secOf(pts[0][0],pts[0][1])];_col.set(hex).convertSRGBToLinear();let cx=0,cz=0;pts.forEach(p=>{cx+=p[0];cz+=p[1];});cx/=pts.length;cz/=pts.length;y+=hAt(cx,cz);
       for(let i=0;i<pts.length;i++){const a=pts[i],b=pts[(i+1)%pts.length];S2.p.push(cx,y,cz,b[0],y,b[1],a[0],y,a[1]);for(let k=0;k<3;k++)S2.c.push(_col.r,_col.g,_col.b);S2.n++;}}
@@ -126,10 +133,10 @@
     /* ---------- assets ---------- */
     const GREEN=["#6fa76b","#5f9a63","#7cb072","#8ab879","#5b8f5c","#4f8257","#94bf6e","#6a9a4f","#7aa88a"],AUT=["#c9a24a","#d08a3c","#b9673a"],BARK=["#7a5a3c","#6b4f36","#8a6a4a"];
     function broadleaf(x,z,s,far,tight){if(!place(x,z,(tight?0.7:1.6)*s))return false;const c=RNG()<0.06?pick(AUT):pick(GREEN);add(T.tri3,x,0,z,0.28*s,2.3*s,0.28*s,RNG()*6,pick(BARK),0.1);
-      add(far?T.oct:T.ico,x,3.4*s,z,1.9*s,(far?1.9:1.5)*s,1.9*s,RNG()*6,c,0.35);claim(x,z,(tight?0.75:1.7)*s,5.2*s,0.3*s);return true;}
+      add(far?TC.oct:TC.ico,x,3.4*s,z,1.9*s,(far?1.9:1.5)*s,1.9*s,RNG()*6,c,0.35);claim(x,z,(tight?0.75:1.7)*s,5.2*s,0.3*s);return true;}
     function conifer(x,z,s,tight){if(!place(x,z,(tight?0.55:1.3)*s))return false;const c=pick(["#3f6f4f","#4a7a55","#557f58","#3d6a52"]);add(T.tri3,x,0,z,0.25*s,1.6*s,0.25*s,RNG()*6,pick(BARK),0.1);
-      add(T.cone6,x,1.1*s,z,1.7*s,3.4*s,1.7*s,RNG()*6,c,0.3);add(T.cone6,x,3.2*s,z,1.2*s,2.9*s,1.2*s,RNG()*6,c,0.25);claim(x,z,(tight?0.6:1.5)*s,6.1*s,0.3*s);return true;}
-    function bush(x,z,s,hex){if(!place(x,z,0.9*s))return false;add(T.oct,x,0.35*s,z,1.0*s,0.7*s,1.0*s,RNG()*6,hex||pick(GREEN),0.3);claim(x,z,0.9*s,1.1*s);return true;}
+      add(TC.cone6,x,1.1*s,z,1.7*s,3.4*s,1.7*s,RNG()*6,c,0.3);add(TC.cone6,x,3.2*s,z,1.2*s,2.9*s,1.2*s,RNG()*6,c,0.25);claim(x,z,(tight?0.6:1.5)*s,6.1*s,0.3*s);return true;}
+    function bush(x,z,s,hex){if(!place(x,z,0.9*s))return false;add(TC.oct,x,0.35*s,z,1.0*s,0.7*s,1.0*s,RNG()*6,hex||pick(GREEN),0.3);claim(x,z,0.9*s,1.1*s);return true;}
     function rock(x,z,s,hex){if(!place(x,z,1.1*s))return false;add(T.ico,x,0.2*s,z,1.2*s,0.75*s,1.0*s,RNG()*6,hex,0.25);claim(x,z,1.2*s,1*s);return true;}
     function house(x,z,ry,w,d,h,wall,roof){add(T.box,x,0,z,w,h,d,ry,wall,0.15);add(T.gable,x,h,z,w+0.4,h*0.55,d+0.5,ry,roof,0.05);}
     const NW=[];   // lit windows for the night (urban): [x,y,z,w,h,face] per window, merged into one mesh at the end
