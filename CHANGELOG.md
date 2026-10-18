@@ -12,7 +12,7 @@
 - **Sharper on phones:** low tier 1.5x and medium 2x pixel ratio within a pixel budget (was 1x / 1.25x); the low-FPS
   fallback still drops to 1x on a struggling device.
 - **Less parking churn:** parked cars and activity props go to the moving batches from the start; static groups are
-  parked after 30 s. Hand-backs in the first minute ~290 -> ~100, groups un-parked 37 -> 0.
+  parked after 30 s. Groups un-parked again: 37 -> 0-6 per run (hand-backs of other static objects little changed, ~270).
 - **Upset effects instanced:** an effect's look-alike parts (rain streaks, ripples, splash blobs, tornado puffs and debris)
   draw as one instanced mesh per shape and look; sprites become camera-facing cards. Roof leak ~100 draws -> 6, tornado
   ~75 -> ~6, pulper overflow 19 -> 6. ?nofxinst = before.
