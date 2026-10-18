@@ -1,5 +1,11 @@
 # Changelog
 
+## v6.1.0 (2026-10-18): release of the isometric paper build (test/v6.1-iso t1-t20) to main
+- Everything in v6.1.0-t1 to t20 below: the fixed isometric camera and paper art style, cut-out people and vehicles,
+  paper upsets, weather, night, water and rare sights, tilt-shift, performance work, and the t20 balance pass.
+- QA before release: 50 full season playthroughs on t20 (4 maps, 4 play styles, 10 phone-sized, 25 dark mode): 50/50
+  finished and submitted, 0 issues, 0 errors; balance check 200 seasons per build (tools/qa_balance.py).
+
 ## v6.1.0-t20 (2026-10-18): balance (test branch test/v6.1-iso)
 Measured with tools/qa_balance.py: scripted testers play full 30-day seasons through the real dialogs (sim only), the
 same seeds for every tester, 10 seeds on each of the four maps (200 seasons per comparison), plus every upgrade measured
