@@ -1,5 +1,9 @@
 # Changelog
 
+## v6.1.3 (2026-10-18): broke hole
+- The broke hole by the winder (the black square on the dry-end floor) is now a floor opening that reads as one: broke
+  paper in a brown pit, a yellow kick-plate round the edge and a yellow guard rail on three sides.
+
 ## v6.1.2 (2026-10-18): iPhone people colours
 - People showing as uncoloured 3D figures on an iPhone: when the cut-out self-test reads its first picture back empty
   (some iPhones do while shaders are still compiling), the game falls back to 3D people, and on iPhone the shared

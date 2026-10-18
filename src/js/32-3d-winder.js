@@ -70,5 +70,13 @@
   {const t=new THREE.Group();scene.add(t);
     for(let x=-24;x<=56;x+=16)box(0.2,0.25,13.4,M.metal,x,13,9.3,t,false);
     box(80.4,0.25,0.2,M.metal,16,13,2.6,t,false);for(let x=-24;x<=56;x+=16)box(0.22,13,0.22,M.metal,x,6.5,2.6,t,false);}
-  box(2.2,0.06,2.2,M.ink,-12,0.06,15.6,scene,false);   // broke hole by the winder
+  /* the broke hole by the winder (v6.1.3: read as a black square on the floor). Now a floor opening that looks like one:
+     broke paper down in the pit, a yellow kick-plate round the edge and a yellow guard rail on three sides */
+  {const HX=-12,HZ=15.6,W=2.2,pit=new StdMat({color:lin0("#6f5a3e"),roughness:0.95}),ylw=new StdMat({color:lin0("#e2b42a"),roughness:0.6});
+    box(W-0.2,0.04,W-0.2,pit,HX,0.03,HZ,scene,false);
+    for(let k=0;k<5;k++)box(0.5,0.05,0.35,M.kraft,HX-0.6+((k*0.53)%1.2),0.06,HZ-0.5+((k*0.37)%1.0),scene,false);   // scraps of broke in the pit
+    [[0,-W/2],[0,W/2]].forEach(([dx,dz])=>box(W,0.1,0.12,ylw,HX+dx,0.05,HZ+dz,scene,false));[[-W/2,0],[W/2,0]].forEach(([dx,dz])=>box(0.12,0.1,W,ylw,HX+dx,0.05,HZ+dz,scene,false));
+    [[-1,-1],[1,-1],[-1,1],[1,1]].forEach(([sx,sz])=>box(0.08,1.0,0.08,ylw,HX+sx*W/2,0.5,HZ+sz*W/2,scene,false));
+    box(W,0.06,0.06,ylw,HX,1.0,HZ-W/2,scene,false);box(0.06,0.06,W,ylw,HX-W/2,1.0,HZ,scene,false);box(0.06,0.06,W,ylw,HX+W/2,1.0,HZ,scene,false);
+    box(W,0.06,0.06,ylw,HX,0.55,HZ-W/2,scene,false);box(0.06,0.06,W,ylw,HX-W/2,0.55,HZ,scene,false);box(0.06,0.06,W,ylw,HX+W/2,0.55,HZ,scene,false);}
 
