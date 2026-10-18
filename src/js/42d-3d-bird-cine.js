@@ -46,10 +46,13 @@
       ov.hidden=true;fl.style.opacity=0;document.body.classList.remove("cine");G3.cineHold=false;G3.cineOn=false;try{AUDIO.cine.end();}catch(e){}
       if(c.cam&&G3.camSet)G3.camSet(c.cam);if(c.was&&$("v2menu").hidden&&!(S.cards&&S.cards.open)&&!S.over)running=true;}   /* v5.1: stay paused if a card or dialog opened meanwhile */
     ov.querySelector(".skip").addEventListener("click",e=>{e.stopPropagation();if(C&&!C.struck){try{AUDIO.cine.end();AUDIO.cine.strike();}catch(_){}}finish();});
-    G3.birdCine=()=>{if(NOCINE||!G3.on||S.zen||document.hidden||C)return;if(document.querySelector(".v2sheet.open,.v2top.open"))return;   // v5.0.6: not over an open sheet or the stats panel (it hid the panel and ate the clicks); the upset itself still happens
+    /* v6.1 t17: set off while a sheet or the stats panel is open (the Upsets list), the cut-scene waits and plays the
+       moment it closes, if the bird is still on the lines (it used to be skipped) */
+    let pend=0;const SHEETS=".v2sheet.open,.v2top.open";
+    G3.birdCine=()=>{if(NOCINE||!G3.on||S.zen||document.hidden||C)return;if(document.querySelector(SHEETS)){pend=performance.now();return;}pend=0;   // v5.0.6: not over an open sheet or the stats panel (it hid the panel and ate the clicks); the upset itself still happens
       try{start();}catch(e){console.error("bird cut-scene",e);finish();}};
     const v=new THREE.Vector3();
-    G3.cineTick=now=>{if(!C)return;try{const c=C,dt=Math.min(0.1,(now-c.last)/1000);c.last=now;c.t+=dt;const t=c.t;G3.lastMove=performance.now();
+    G3.cineTick=now=>{if(!C){if(pend&&!document.querySelector(SHEETS)){const t0=pend;pend=0;if(performance.now()-t0<120000&&S.inc.some(i=>i.id==="birdline"))G3.birdCine();}return;}try{const c=C,dt=Math.min(0.1,(now-c.last)/1000);c.last=now;c.t+=dt;const t=c.t;G3.lastMove=performance.now();
         if(c.chirp.length&&t>=c.chirp[0]){c.chirp.shift();try{AUDIO.cine.chirp();}catch(e){}}
         // the bird: position, heading, pitch and wings
         c.prev.copy(c.pos);const ph=birdAt(t,c.pos);birdAt(t+0.05,v);bird.position.copy(c.pos);const vx=v.x-c.pos.x,vy=v.y-c.pos.y,vz=v.z-c.pos.z;

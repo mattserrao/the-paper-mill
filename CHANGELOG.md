@@ -1,5 +1,10 @@
 # Changelog
 
+## v6.1.0-t17 (2026-10-18): bird cut-scene fix (test branch test/v6.1-iso)
+- **Bird on the power lines:** set off from the Upsets list, the cut-scene was skipped (it never plays over an open sheet).
+  Picking it now closes the list and the cut-scene plays; a bird that strikes while any sheet or the stats panel is open
+  waits and plays the moment it closes (if the bird is still on the lines).
+
 ## v6.1.0-t16 (2026-10-18): polish from the t15 season QA (test branch test/v6.1-iso)
 - **Paper props dim at night** like the cut-out people (to 38% at full night): cut-out cards (beaver, car, highway props,
   junk, shaft halves, pigeon), paper ice, dye splats, the tornado card, paper clouds, smoke, drops, confetti and feathers.

@@ -63,7 +63,7 @@ GROUPS.forEach(([g,lab])=>{const d=document.createElement("div");d.className="gr
   EVENTS.filter(e=>e.g===g&&!e.knob&&(!e.env||e.env===SITE.env)).forEach(e=>{const r=document.createElement("div");r.className="ev";
     r.innerHTML=`<button class="trig" id="ev-${e.id}" aria-pressed="false"><span>${e.name}${e.env?' <em class="envtag">'+ENVS[e.env].short+'</em>':""}</span><small></small></button><label><input type="checkbox" id="en-${e.id}" checked> random</label>`;
     d.appendChild(r);
-    r.querySelector("button").addEventListener("click",()=>{if(S.season&&S.season.on)return;if(active(e.id))clearIncident(e.id);else trigger(e.id);updateChaos();});
+    r.querySelector("button").addEventListener("click",()=>{if(S.season&&S.season.on)return;if(active(e.id))clearIncident(e.id);else{trigger(e.id);if(e.id==="birdline"&&typeof G3!=="undefined"&&G3.on&&$("v2close"))$("v2close").click();}updateChaos();});   // (t17: picking the bird closes the list so its cut-scene plays)
     r.querySelector("input").addEventListener("change",ev=>{CH.en[e.id]=ev.target.checked;});});
   cgrid.appendChild(d);});
 $("chaosOn").addEventListener("change",e=>CH.on=e.target.checked);

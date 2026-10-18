@@ -58,3 +58,4 @@ One line per version, oldest first. Add a line here with every release: build.py
 6.1.0-t14  Paper Upsets: Cut-Out Props, Paper Pigeon, Paper Sparks, Steam, Fireworks, Ice and Flood (Test)
 6.1.0-t15  Beaver Reworked as One Smaller Cut-Out (Test)
 6.1.0-t16  Paper Props Dim at Night, Labels Never Overlap, Fewer Cut-Out Pictures (Test)
+6.1.0-t17  Bird on the Power Lines Cut-Scene Plays When Set Off From the Upsets List (Test)
