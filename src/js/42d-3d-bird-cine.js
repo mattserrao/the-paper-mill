@@ -15,6 +15,8 @@
     part(bb,new THREE.ConeGeometry(0.03,0.09,6),BEAK,1,1,1,0.43,0.1,0).rotation.z=-Math.PI/2;[-1,1].forEach(s=>part(bb,SPH,EYE,0.018,0.018,0.018,0.36,0.14,s*0.06));
     part(bb,BOX,GREY,0.22,0.03,0.16,-0.36,0,0);part(bb,BOX,BAR,0.06,0.031,0.17,-0.46,0,0);
     const wings=[-1,1].map(s=>{const w=new THREE.Group();w.position.set(0.02,0.06,s*0.1);bb.add(w);part(w,BOX,WING,0.3,0.025,0.5,0,0,s*0.26);part(w,BOX,BAR,0.1,0.027,0.2,-0.08,0,s*0.42);part(w,BOX,BAR,0.06,0.028,0.4,0.04,0,s*0.25);return w;});
+    // v6.1 t14: the pigeon is a cut-out card (wings up / down / folded for the dive), turned to face the way it flies
+    const card=G3.pigeonCard?G3.pigeonCard():null,_cv=new THREE.Vector3();if(card){card.scale.set(1.25,0.98,1);bird.add(card);bb.visible=false;}
     // the strike: a glow, a halo, jagged arcs, sparks, smoke and feathers
     const gt=(()=>{const c=document.createElement("canvas");c.width=c.height=64;const x=c.getContext("2d"),g=x.createRadialGradient(32,32,0,32,32,32);g.addColorStop(0,"rgba(255,255,255,1)");g.addColorStop(0.35,"rgba(255,255,255,.55)");g.addColorStop(1,"rgba(255,255,255,0)");x.fillStyle=g;x.fillRect(0,0,64,64);return new THREE.CanvasTexture(c);})();
     const spr=(hex,op)=>{const s=new THREE.Sprite(new THREE.SpriteMaterial({map:gt,color:lin(hex),transparent:true,opacity:op,depthWrite:false,toneMapped:false,blending:THREE.AdditiveBlending}));s.visible=false;scene.add(s);return s;};
@@ -22,7 +24,8 @@
     const arcs=[...Array(7)].map(()=>{const g=new THREE.BufferGeometry();g.setAttribute("position",new THREE.Float32BufferAttribute(new Float32Array(30),3));const l=new THREE.Line(g,new THREE.LineBasicMaterial({color:lin("#cfe8ff"),toneMapped:false,transparent:true}));l.visible=false;l.frustumCulled=false;scene.add(l);return l;});
     const sparks=[...Array(40)].map((_,i)=>{const s=spr(i%3?"#bfe3ff":"#ffffff",1);const a=Math.random()*Math.PI*2,e=Math.random()*1.2;s.userData.v=[Math.cos(a)*Math.cos(e)*(4+Math.random()*7),3+Math.random()*8,Math.sin(a)*Math.cos(e)*(4+Math.random()*7)];return s;});
     const smoke=[...Array(8)].map((_,i)=>{const s=new THREE.Sprite(new THREE.SpriteMaterial({map:gt,color:lin("#4a4f58"),transparent:true,opacity:0,depthWrite:false}));s.visible=false;s.userData.o=[(Math.random()-0.5)*2,(Math.random()-0.5)*2,i*0.25];scene.add(s);return s;});
-    const FM=new THREE.MeshBasicMaterial({color:lin0("#c9ced8"),side:THREE.DoubleSide}),feathers=[...Array(10)].map(()=>{const m=new THREE.Mesh(new THREE.PlaneGeometry(0.12,0.4),FM);m.visible=false;m.userData.v=[(Math.random()-0.5)*3,1+Math.random()*2,(Math.random()-0.5)*3,Math.random()*6];scene.add(m);return m;});
+    const FM=new THREE.MeshBasicMaterial({color:lin0("#c9ced8"),side:THREE.DoubleSide}),feathers=[...Array(10)].map(()=>{const m=new THREE.Mesh(card?new THREE.PlaneGeometry(0.4,0.5):new THREE.PlaneGeometry(0.12,0.4),FM);m.visible=false;m.userData.v=[(Math.random()-0.5)*3,1+Math.random()*2,(Math.random()-0.5)*3,Math.random()*6];scene.add(m);return m;});
+    if(card){FM.map=TX.feather;FM.alphaTest=0.5;FM.toneMapped=false;FM.color.copy(lin0("#e4e7ec"));}   // (t14: paper feathers)
     // the overlay: letterbox bars, the flash and a Skip button
     const ov=document.createElement("div");ov.className="cine3d";ov.hidden=true;ov.innerHTML='<i class="lb t"></i><i class="lb b"></i><i class="fl"></i><button type="button" class="skip">Skip</button>';
     ($("view3d")||document.body).appendChild(ov);const fl=ov.querySelector(".fl"),bars=ov.querySelectorAll(".lb");
@@ -52,7 +55,7 @@
         c.prev.copy(c.pos);const ph=birdAt(t,c.pos);birdAt(t+0.05,v);bird.position.copy(c.pos);const vx=v.x-c.pos.x,vy=v.y-c.pos.y,vz=v.z-c.pos.z;
         bird.rotation.set(0,Math.atan2(-vz,vx),0);bb.rotation.z=Math.atan2(vy,Math.hypot(vx,vz))*0.9+(ph===0?Math.sin(t*1.3)*0.05:0);bb.rotation.x=ph===0?-0.35:0;
         const flap=ph===0?(Math.sin(t*7)>0.2?Math.sin(t*14)*0.7:0.1):ph===1?(t<6.3?Math.sin(t*16)*0.6:t<8.5?-1.1:Math.sin(t*18)*0.5):Math.sin(t*24)*0.9;
-        wings[0].rotation.x=flap;wings[1].rotation.x=-flap;wings.forEach((w,i)=>{w.rotation.y=ph===1&&t>6.3&&t<8.5?(i?-0.7:0.7):0;});bird.visible=t<IMP+3;bird.scale.setScalar(t<8.2?2.2:3);   // (a touch bigger in the wide shot so it reads)
+        wings[0].rotation.x=flap;wings[1].rotation.x=-flap;wings.forEach((w,i)=>{w.rotation.y=ph===1&&t>6.3&&t<8.5?(i?-0.7:0.7):0;});bird.visible=t<IMP+3;if(card){const fold=ph===1&&t>6.3&&t<8.5,dir=screenDir(c.pos,_cv.set(vx,vy,vz));card.frame(fold?2:flap>0?0:1,dir);card.material.rotation=bb.rotation.z*dir;}bird.scale.setScalar(t<8.2?2.2:3);   // (a touch bigger in the wide shot so it reads)
         // the camera: ride along high above the mill, chase the dive, then the wide shot of the lines
         let cam;if(t<5.5){const ox=c.pos.x-c.cx,oz=c.pos.z-c.cz;cam=[c.pos.x,c.pos.z,22,Math.atan2(ox,oz),0.62,c.pos.y];}
         else if(t<8.2){cam=[c.pos.x,c.pos.z,13,Math.atan2(-vx,-vz),0.95,c.pos.y];}

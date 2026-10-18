@@ -43,10 +43,104 @@
     barrier:spriteTex((x,w)=>{x.fillStyle="#ffffff";x.fillRect(0,0,w,w);x.fillStyle="#d6382c";for(let i=-w;i<w*2;i+=32){x.beginPath();x.moveTo(i,0);x.lineTo(i+16,0);x.lineTo(i+16-w,w);x.lineTo(i-w,w);x.fill();}}),
   };
   TX.stripes.wrapS=TX.stripes.wrapT=THREE.RepeatWrapping;
+  /* v6.1 t14: upset props and particles as paper. Cut-out cards: a drawing on card (flat colours, an ink line, the lower part a
+     shade darker like a fold), shown as a camera-facing sprite; animated ones swap between two drawings (stop-motion) and
+     have a mirrored copy so they face the way they move. ?softfx = the old 3D props and soft particles */
+  const INK="#2b1d12",SOFTFX=/[?&]softfx/.test(location.search);
+  function cardTex(draw,w,h){return spriteTex((x,W,H)=>{x.clearRect(0,0,W,H);x.lineJoin="round";x.lineCap="round";draw(x,W,H);
+      x.save();x.globalCompositeOperation="source-atop";x.fillStyle="rgba(70,45,20,0.11)";x.fillRect(0,H*0.64,W,H);x.restore();},w,h);}
+  function mirrorTex(t){const s=t.image,c=document.createElement("canvas");c.width=s.width;c.height=s.height;const x=c.getContext("2d");x.translate(s.width,0);x.scale(-1,1);x.drawImage(s,0,0);
+    const m=new THREE.CanvasTexture(c);m.colorSpace=THREE.SRGBColorSpace;return m;}
+  // fill a path, then its ink line
+  function ink(x,path,fill,lw){path();if(fill){x.fillStyle=fill;x.fill();}x.lineWidth=lw;x.strokeStyle=INK;x.stroke();}
+  const poly=(x,P,u)=>()=>{x.beginPath();P.forEach(([a,b],i)=>i?x.lineTo(a*u,b*u):x.moveTo(a*u,b*u));x.closePath();};
+  const ell=(x,cx,cy,rx,ry,u,rot=0)=>()=>{x.beginPath();x.ellipse(cx*u,cy*u,rx*u,ry*u,rot,0,Math.PI*2);};
+  function cardSprite(tex,w,h,base){const s=new THREE.Sprite(new THREE.SpriteMaterial({map:tex,alphaTest:0.5,transparent:false,toneMapped:false}));s.scale.set(w,h,1);if(base)s.center.set(0.5,0);return s;}
+  // which way something moving along v from p goes across the screen (+1 right, -1 left)
+  const _sa=new THREE.Vector3(),_sb=new THREE.Vector3();
+  const screenDir=(p,v)=>{_sa.copy(p).project(camera);_sb.copy(p).add(v).project(camera);return _sb.x>=_sa.x?1:-1;};
+  // a card with drawings facing right (r) and their mirror images (l); frame(k, dir) picks one
+  function animCard(texs,w,h,base){const r=texs,l=texs.map(mirrorTex),s=cardSprite(r[0],w,h,base);s.frame=(k,dir)=>{const t=(dir<0?l:r)[k];if(s.material.map!==t)s.material.map=t;};return s;}
+  // the pigeon, side on, facing right: 0 wings up, 1 wings down, 2 folded (diving)
+  const pigeonTex=wing=>cardTex((x,W)=>{const u=W/256,lw=5*u;
+    ink(x,poly(x,[[72,104],[16,94],[20,126],[74,122]],u),"#7d8494",lw);x.strokeStyle="#3a3f48";x.lineWidth=7*u;x.beginPath();x.moveTo(30*u,98*u);x.lineTo(32*u,122*u);x.stroke();
+    if(wing===1)ink(x,poly(x,[[118,108],[150,104],[150,150],[128,186],[96,178],[104,140]],u),"#959cab",lw);
+    ink(x,ell(x,122,110,60,32,u),"#a3aab8",lw);
+    if(wing===0){ink(x,poly(x,[[112,100],[96,26],[130,6],[160,30],[156,96]],u),"#b8bfcc",lw);x.strokeStyle="#3a3f48";x.lineWidth=8*u;x.beginPath();x.moveTo(110*u,52*u);x.lineTo(146*u,46*u);x.moveTo(116*u,72*u);x.lineTo(150*u,66*u);x.stroke();}
+    if(wing===2){ink(x,poly(x,[[78,100],[150,90],[172,104],[150,118],[92,124]],u),"#b8bfcc",lw);x.strokeStyle="#3a3f48";x.lineWidth=7*u;x.beginPath();x.moveTo(104*u,100*u);x.lineTo(104*u,120*u);x.moveTo(124*u,96*u);x.lineTo(124*u,118*u);x.stroke();}
+    if(wing===1){x.strokeStyle="#3a3f48";x.lineWidth=8*u;x.beginPath();x.moveTo(108*u,150*u);x.lineTo(140*u,146*u);x.stroke();}
+    ink(x,ell(x,164,94,22,20,u),"#5d8a78",lw);ink(x,ell(x,184,76,24,23,u),"#8d93a0",lw);
+    ink(x,poly(x,[[204,70],[226,80],[204,86]],u),"#e0a030",4*u);ink(x,ell(x,190,70,6,6,u),"#d4602a",3*u);x.fillStyle=INK;x.beginPath();x.arc(191*u,70*u,2.5*u,0,7);x.fill();},256,200);
+  const PIG=SOFTFX?null:[pigeonTex(0),pigeonTex(1),pigeonTex(2)];
+  G3.pigeonCard=()=>PIG?animCard(PIG,1.0,0.78):null;
+  // the beaver, side on, facing right, holding a log: 0 teeth down, 1 chewing (mouth open)
+  const beaverTex=open=>cardTex((x,W)=>{const u=W/320,lw=6*u;
+    ink(x,ell(x,52,196,52,19,u,-0.28),"#4a3a2e",lw);x.strokeStyle="rgba(255,255,255,0.35)";x.lineWidth=3*u;for(let k=0;k<4;k++){x.beginPath();x.moveTo((22+k*18)*u,(196-k*3)*u);x.lineTo((36+k*18)*u,(214-k*3)*u);x.stroke();}
+    ink(x,ell(x,118,218,24,12,u),"#5e3d22",lw);ink(x,ell(x,154,150,96,72,u),"#8a5a32",lw);ink(x,ell(x,180,178,54,40,u),"#b98a5a",lw);ink(x,ell(x,206,222,24,12,u),"#5e3d22",lw);
+    ink(x,ell(x,232,62,13,13,u),"#8a5a32",lw);ink(x,ell(x,250,108,50,46,u),"#8a5a32",lw);ink(x,ell(x,290,128,27,21,u),"#b98a5a",lw);
+    if(open){x.fillStyle=INK;x.beginPath();x.ellipse(290*u,150*u,15*u,9*u,0,0,7);x.fill();}
+    ink(x,poly(x,open?[[278,140],[298,140],[298,174],[278,174]]:[[278,144],[298,144],[298,166],[278,166]],u),"#fbf6ea",4*u);x.strokeStyle=INK;x.lineWidth=3*u;x.beginPath();x.moveTo(288*u,(open?140:144)*u);x.lineTo(288*u,(open?174:166)*u);x.stroke();
+    ink(x,ell(x,310,118,10,8,u),INK,2*u);ink(x,ell(x,262,94,11,11,u),"#fbf6ea",4*u);x.fillStyle=INK;x.beginPath();x.arc(265*u,95*u,5*u,0,7);x.fill();
+    ink(x,poly(x,[[244,182],[316,176],[318,200],[246,206]],u),"#c8a070",lw);ink(x,ell(x,316,188,7,12,u,-0.08),"#e9d2a8",4*u);ink(x,ell(x,236,192,16,11,u),"#8a5a32",lw);},320,256);
+  const BEAV=SOFTFX?null:[beaverTex(0),beaverTex(1)];
+  // the car at the brawl (a white car with a light bar), side on
+  const carTex=SOFTFX?null:cardTex((x,W)=>{const u=W/320,lw=6*u;
+    ink(x,poly(x,[[92,72],[118,36],[214,36],[242,72]],u),"#f4f1ea",lw);ink(x,poly(x,[[106,70],[124,44],[162,44],[162,70]],u),"#a9cbe0",4*u);ink(x,poly(x,[[172,70],[172,44],[208,44],[228,70]],u),"#a9cbe0",4*u);
+    ink(x,()=>{x.beginPath();x.roundRect(16*u,70*u,290*u,56*u,16*u);},"#f4f1ea",lw);ink(x,poly(x,[[18,100],[304,100],[304,116],[18,116]],u),"#2f3a49",4*u);
+    ink(x,poly(x,[[140,24],[165,24],[165,36],[140,36]],u),"#e8392e",4*u);ink(x,poly(x,[[165,24],[190,24],[190,36],[165,36]],u),"#2f6bff",4*u);
+    ink(x,ell(x,296,84,8,6,u),"#ffd23f",3*u);ink(x,ell(x,24,84,6,6,u),"#d63a24",3*u);
+    for(const cx of [82,238]){ink(x,ell(x,cx,128,25,25,u),"#2f3a49",lw);ink(x,ell(x,cx,128,10,10,u),"#c9ced6",3*u);}},320,160);
+  // highway: a striped barrier on legs, a traffic cone, the tipped tanker
+  const barrierTex=SOFTFX?null:cardTex((x,W)=>{const u=W/256,lw=5*u;for(const lx of [44,200]){ink(x,poly(x,[[lx,64],[lx+12,64],[lx+12,118],[lx,118]],u),"#5b6270",4*u);ink(x,poly(x,[[lx-14,114],[lx+26,114],[lx+26,124],[lx-14,124]],u),"#5b6270",4*u);}
+    const bd=()=>{x.beginPath();x.rect(10*u,16*u,236*u,50*u);};bd();x.fillStyle="#fbf6ea";x.fill();x.save();bd();x.clip();x.fillStyle="#d6382c";for(let i=-60;i<300;i+=40){x.beginPath();x.moveTo(i*u,16*u);x.lineTo((i+20)*u,16*u);x.lineTo((i-30)*u,66*u);x.lineTo((i-50)*u,66*u);x.fill();}x.restore();
+    ink(x,bd,null,lw);},256,128);
+  const coneTex=SOFTFX?null:cardTex((x,W)=>{const u=W/96,lw=4*u;ink(x,poly(x,[[6,112],[90,112],[90,124],[6,124]],u),"#d65a14",lw);ink(x,poly(x,[[42,8],[54,8],[78,112],[18,112]],u),"#f2701e",lw);
+    ink(x,poly(x,[[33,46],[63,46],[69,70],[27,70]],u),"#fbf6ea",3*u);},96,128);
+  const tankerTex=SOFTFX?null:cardTex((x,W,H)=>{const u=W/384,lw=6*u;x.translate(W/2,H/2);x.rotate(-0.2);x.translate(-W/2,-H/2);
+    ink(x,()=>{x.beginPath();x.roundRect(40*u,46*u,240*u,90*u,44*u);},"#c9ced6",lw);x.strokeStyle="rgba(255,255,255,0.7)";x.lineWidth=8*u;x.beginPath();x.moveTo(80*u,70*u);x.lineTo(240*u,70*u);x.stroke();
+    for(const bx of [110,200]){x.strokeStyle=INK;x.lineWidth=4*u;x.beginPath();x.moveTo(bx*u,48*u);x.lineTo(bx*u,134*u);x.stroke();}
+    ink(x,poly(x,[[160,78],[178,96],[160,114],[142,96]],u),"#ffd23f",3*u);
+    ink(x,poly(x,[[284,64],[330,64],[352,98],[352,140],[284,140]],u),"#2f6bff",lw);ink(x,poly(x,[[294,72],[326,72],[342,98],[294,98]],u),"#a9cbe0",4*u);
+    ink(x,poly(x,[[36,132],[352,132],[352,146],[36,146]],u),"#5b6270",4*u);for(const cx of [80,128,236,318]){ink(x,ell(x,cx,150,20,20,u),"#2f3a49",lw);ink(x,ell(x,cx,150,7,7,u),"#c9ced6",3*u);}},384,192);
+  // junk from a bad OCC load: a glass bottle, a foam block, a plastic bag, a tangle of wire
+  const junkTex=SOFTFX?null:[cardTex((x,W)=>{const u=W/128;ink(x,()=>{x.beginPath();x.moveTo(56*u,8*u);x.lineTo(72*u,8*u);x.lineTo(72*u,38*u);x.quadraticCurveTo(92*u,48*u,92*u,66*u);x.lineTo(92*u,118*u);x.lineTo(36*u,118*u);x.lineTo(36*u,66*u);x.quadraticCurveTo(36*u,48*u,56*u,38*u);x.closePath();},"#5fae6e",5*u);
+      x.fillStyle="rgba(255,255,255,0.55)";x.fillRect(44*u,64*u,8*u,44*u);ink(x,poly(x,[[40,72],[88,72],[88,96],[40,96]],u),"#fbf6ea",3*u);},128,128),
+    cardTex((x,W)=>{const u=W/128;ink(x,poly(x,[[14,40],[96,28],[116,52],[112,104],[30,114],[10,88]],u),"#f6f4ee",5*u);x.fillStyle="#c9c4b8";for(let k=0;k<9;k++){x.beginPath();x.arc((30+(k*37)%76)*u,(52+(k*23)%50)*u,4*u,0,7);x.fill();}},128,128),
+    cardTex((x,W)=>{const u=W/128;ink(x,()=>{x.beginPath();x.moveTo(22*u,40*u);x.quadraticCurveTo(10*u,90*u,30*u,116*u);x.lineTo(100*u,116*u);x.quadraticCurveTo(120*u,80*u,104*u,40*u);x.closePath();},"#e3ecf2",5*u);
+      for(const hx of [34,80]){x.strokeStyle=INK;x.lineWidth=5*u;x.beginPath();x.ellipse((hx+8)*u,30*u,10*u,16*u,0,Math.PI,Math.PI*2);x.stroke();}x.strokeStyle="#9fb0bd";x.lineWidth=3*u;x.beginPath();x.moveTo(40*u,64*u);x.lineTo(56*u,96*u);x.moveTo(78*u,58*u);x.lineTo(86*u,100*u);x.stroke();},128,128),
+    cardTex((x,W)=>{const u=W/128;x.strokeStyle=INK;x.lineWidth=9*u;x.beginPath();for(let k=0;k<5;k++)x.ellipse(64*u,70*u,(40-k*5)*u,(26-k*3)*u,k*0.6,0,Math.PI*2);x.stroke();x.strokeStyle="#b56a2e";x.lineWidth=4*u;x.beginPath();for(let k=0;k<5;k++)x.ellipse(64*u,70*u,(40-k*5)*u,(26-k*3)*u,k*0.6,0,Math.PI*2);x.stroke();},128,128)];
+  // the snapped driveshaft: a steel bar with a coupling at one end and a jagged break at the other
+  const shaftTex=SOFTFX?null:cardTex((x,W)=>{const u=W/256;ink(x,poly(x,[[30,22],[204,22],[214,14],[220,28],[232,20],[226,36],[238,44],[204,42],[30,42]],u),"#b9c0cc",4*u);x.fillStyle="rgba(255,255,255,0.7)";x.fillRect(36*u,25*u,160*u,5*u);
+    ink(x,poly(x,[[8,8],[30,8],[30,56],[8,56]],u),"#5b6270",4*u);for(const by of [16,48]){x.fillStyle="#c9ced6";x.beginPath();x.arc(19*u,by*u,3*u,0,7);x.fill();}},256,64);
+  // paper ice: floes cut from pale blue card with ink cracks, and the shelf along the bank (its jagged edge to the river)
+  const iceTex=k=>cardTex((x,W)=>{let s=17+k*31;const rnd=()=>{s=(s*16807)%2147483647;return s/2147483647;};const n=7+(k%3),P=[];for(let i=0;i<n;i++){const a=i/n*Math.PI*2+rnd()*0.4,r=W*(0.34+rnd()*0.12);P.push([W/2+Math.cos(a)*r,W/2+Math.sin(a)*r]);}
+    ink(x,poly(x,P,1),"#e6f2fa",W*0.035);x.strokeStyle="#8fb3c9";x.lineWidth=W*0.02;for(let j=0;j<3;j++){x.beginPath();let px=W*(0.3+rnd()*0.4),py=W*(0.3+rnd()*0.4);x.moveTo(px,py);for(let q=0;q<3;q++){px+=(rnd()-0.5)*W*0.25;py+=(rnd()-0.5)*W*0.25;x.lineTo(px,py);}x.stroke();}
+    x.fillStyle="rgba(255,255,255,0.8)";x.beginPath();x.ellipse(W*0.4,W*0.38,W*0.08,W*0.04,-0.5,0,7);x.fill();},128,128);
+  const shelfTex=SOFTFX?null:cardTex((x,W,H)=>{let s=5;const rnd=()=>{s=(s*16807)%2147483647;return s/2147483647;};const P=[[2,H-2],[2,H*0.3]];for(let i=1;i<=24;i++)P.push([W*i/24,H*(0.08+rnd()*0.32)]);P.push([W-2,H-2]);
+    ink(x,poly(x,P,1),"#e6f2fa",5);x.strokeStyle="#8fb3c9";x.lineWidth=3;for(let j=0;j<10;j++){x.beginPath();let px=rnd()*W,py=H*(0.45+rnd()*0.45);x.moveTo(px,py);for(let q=0;q<3;q++){px+=(rnd()-0.5)*50;py+=(rnd()-0.5)*30;x.lineTo(px,py);}x.stroke();}},512,128);
+  // a dye splat (white: each is tinted its dye colour)
+  const splatTex=SOFTFX?null:cardTex((x,W)=>{const c=W/2;x.beginPath();for(let i=0;i<=40;i++){const a=i/40*Math.PI*2,r=W*(0.26+0.06*Math.sin(a*5)+0.05*Math.sin(a*9+1));i?x.lineTo(c+Math.cos(a)*r,c+Math.sin(a)*r):x.moveTo(c+Math.cos(a)*r,c+Math.sin(a)*r);}x.closePath();
+    const p=new Path2D();for(const [dx,dy,r] of [[0.38,-0.1,0.06],[-0.36,0.2,0.05],[0.1,0.4,0.045],[-0.15,-0.4,0.05]]){p.moveTo(c+dx*W+r*W,c+dy*W);p.arc(c+dx*W,c+dy*W,r*W,0,7);}
+    x.fillStyle="#ffffff";x.fill();x.fill(p);x.lineWidth=W*0.03;x.strokeStyle=INK;x.stroke();x.stroke(p);x.fillStyle="rgba(255,255,255,0.0)";},128,128);
+  // particle sheets (2x2, one shape per particle): paper sparks (stars and zigzags), confetti and torn scraps
+  const sheet4=(draw)=>spriteTex((x,W)=>{const T=W/2;x.clearRect(0,0,W,W);x.lineJoin="round";for(let k=0;k<4;k++){x.save();x.translate((k%2)*T,Math.floor(k/2)*T);draw(x,T,k);x.restore();}},128);
+  TX.star=sheet4((x,T,k)=>{x.beginPath();if(k<2){const n=k?4:5;for(let i=0;i<n*2;i++){const a=i/(n*2)*Math.PI*2-Math.PI/2,r=i%2?T*0.17:T*0.42;x.lineTo(T/2+Math.cos(a)*r,T/2+Math.sin(a)*r);}}
+    else{const P=k===2?[[0.2,0.15],[0.6,0.35],[0.42,0.48],[0.85,0.85],[0.38,0.6],[0.55,0.5]]:[[0.5,0.08],[0.62,0.4],[0.92,0.5],[0.62,0.6],[0.5,0.92],[0.38,0.6],[0.08,0.5],[0.38,0.4]];P.forEach(([a,b])=>x.lineTo(a*T,b*T));}
+    x.closePath();x.fillStyle="#ffffff";x.fill();x.lineWidth=T*0.07;x.strokeStyle=INK;x.stroke();});
+  TX.conf=sheet4((x,T,k)=>{x.beginPath();if(k===0)x.rect(T*0.3,T*0.18,T*0.4,T*0.64);else if(k===1){for(let i=0;i<10;i++){const a=i/10*Math.PI*2-Math.PI/2,r=i%2?T*0.16:T*0.38;x.lineTo(T/2+Math.cos(a)*r,T/2+Math.sin(a)*r);}}
+    else if(k===2)x.arc(T/2,T/2,T*0.3,0,7);else{[[0.15,0.35],[0.4,0.3],[0.55,0.4],[0.85,0.3],[0.8,0.62],[0.5,0.7],[0.3,0.62],[0.18,0.68]].forEach(([a,b])=>x.lineTo(a*T,b*T));}
+    x.closePath();x.fillStyle="#ffffff";x.fill();x.lineWidth=T*0.06;x.strokeStyle=INK;x.stroke();});
+  TX.pdrop=spriteTex((x,w)=>{x.clearRect(0,0,w,w);x.beginPath();x.moveTo(w/2,w*0.06);x.bezierCurveTo(w*0.82,w*0.5,w*0.78,w*0.92,w/2,w*0.92);x.bezierCurveTo(w*0.22,w*0.92,w*0.18,w*0.5,w/2,w*0.06);x.closePath();
+    x.fillStyle="#ffffff";x.fill();x.lineWidth=w*0.08;x.strokeStyle=INK;x.stroke();x.fillStyle="rgba(255,255,255,0.75)";x.beginPath();x.ellipse(w*0.42,w*0.62,w*0.06,w*0.12,0.3,0,7);x.fill();},48);
+  TX.feather=spriteTex((x,w)=>{x.clearRect(0,0,w,w);x.beginPath();x.moveTo(w*0.5,w*0.06);x.quadraticCurveTo(w*0.82,w*0.42,w*0.56,w*0.9);x.lineTo(w*0.44,w*0.9);x.quadraticCurveTo(w*0.18,w*0.42,w*0.5,w*0.06);x.closePath();
+    x.fillStyle="#ffffff";x.fill();x.lineWidth=w*0.06;x.strokeStyle=INK;x.stroke();x.beginPath();x.moveTo(w*0.5,w*0.12);x.lineTo(w*0.5,w*0.96);x.stroke();},64);
   // pooled camera-facing particles: soft smoke and steam, glowing fire, sparks, droplets, bale chips
   const PT={smoke:{map:TX.puff,blend:THREE.NormalBlending,grow:true,grav:-0.5,drag:0.5},steam:{map:TX.puff,blend:THREE.NormalBlending,grow:true,grav:-1.2,drag:0.4},
     fire:{map:TX.flame,blend:THREE.NormalBlending,grav:-3,tall:1.35,glow:true,sheet:!/[?&]softfire/.test(location.search)},spark:{map:TX.dot,blend:THREE.NormalBlending,grav:14,glow:true},
-    drop:{map:TX.drop,blend:THREE.NormalBlending,grav:16},paper:{map:TX.paper,blend:THREE.NormalBlending,grav:0,drag:0,paper:true},chip:{map:TX.chip,blend:THREE.NormalBlending,grav:12}};
+    drop:{map:TX.drop,blend:THREE.NormalBlending,grav:16},paper:{map:TX.paper,blend:THREE.NormalBlending,grav:0,drag:0,paper:true},chip:{map:TX.chip,blend:THREE.NormalBlending,grav:12},
+    // (t14 paper: a jet of paper cloud puffs that slows and swells; paper sparks; confetti and torn scraps; paper drops; feathers)
+    pjet:{map:TX.paper,grav:-1.2,drag:1.3,grow:true,flat:true,pfade:true},pspark:{map:TX.star,grav:14,tiles:true,spinK:3},conf:{map:TX.conf,grav:2.6,drag:1.8,tiles:true,spinK:5,keep:true},
+    pdrop:{map:TX.pdrop,grav:16},feather:{map:TX.feather,grav:1.4,drag:2.6,spinK:1.6,keep:true}};
   /* v4: particles are drawn as one instanced batch per look (puff, flame, dot, drop, chip) instead of one sprite and
      one draw call each. Each batch is a camera-facing quad with per-instance position, size, color, opacity and
      spin; puffs are depth-sorted so smoke still layers correctly. Same emit/update rules as before. */
@@ -78,14 +172,16 @@
       transparent:true,depthWrite:false,fog:!glow,toneMapped:!glow});m.uniforms.map.value=map;
     b.mesh=new THREE.Mesh(g,m);b.mesh.frustumCulled=false;b.mesh.renderOrder=order;scene.add(b.mesh);PB.set(map,b);return b;}
   // smoke/steam puffs are sorted back to front; flames and sparks glow over them
-  pBatch(TX.drop,false,false,1);pBatch(TX.chip,false,false,1);pBatch(TX.puff,false,true,2);pBatch(TX.paper,false,true,2).mesh.material.toneMapped=false;   /* (t12: paper white, like the cut-out people, not tone-mapped grey) */pBatch(TX.flame,true,false,3);pBatch(TX.dot,true,false,4);for(const k in PT)PT[k].b=PB.get(PT[k].map);   // (v5.2: each particle type knows its batch: no Map lookup per particle)
+  pBatch(TX.drop,false,false,1);pBatch(TX.chip,false,false,1);pBatch(TX.puff,false,true,2);pBatch(TX.paper,false,true,2).mesh.material.toneMapped=false;   /* (t12: paper white, like the cut-out people, not tone-mapped grey) */pBatch(TX.flame,true,false,3);pBatch(TX.dot,true,false,4);
+  for(const t of [TX.pdrop,TX.feather,TX.star,TX.conf])pBatch(t,false,false,t===TX.pdrop?1:4).mesh.material.toneMapped=false;   // (t14 paper particles: card white, like the people)
+  for(const k in PT)PT[k].b=PB.get(PT[k].map);   // (v5.2: each particle type knows its batch: no Map lookup per particle)
   const PCOL=new Map(),pcol=c=>{let v=PCOL.get(c);if(!v){v=lin(c);PCOL.set(c,v);}return v;};
   // background ambience (plume, aerators, outfall) is capped so it can never crowd out fires, sparks and disaster effects
   function emitA(type,x,y,z,vx,vy,vz,life,size,color,op){if(liveN<600)emit(type,x,y,z,vx,vy,vz,life,size,color,op);}   // (named arguments: a rest array per call was a steady allocation)
   function emit(type,x,y,z,vx,vy,vz,life,size,color,op=1){let p=pFree.pop();
     if(!p){if(parts.length>=PCAP)return;p={v:[0,0,0]};parts.push(p);}
     const c=pcol(color);p.type=type;p.t=PT[type];p.alive=true;p.x=x;p.y=y;p.z=z;p.v[0]=vx;p.v[1]=vy;p.v[2]=vz;p.life=p.max=life;p.size=size;p.op=op;
-    p.r=c.r;p.g=c.g;p.b=c.b;p.rot=Math.random()*6.28;p.spin=(Math.random()-0.5)*2;p.ph=Math.random()*6.28;if(type==="paper"){p.rot=(Math.random()-0.5)*0.5;p.r0=p.rot;p.fl=Math.random()<0.5?-1:1;}if(type==="fire"&&p.t.sheet){p.rot=(Math.random()-0.5)*0.3;p.spin=(Math.random()-0.5)*0.25;p.fl=Math.random()<0.5?-1:1;}liveN++;}
+    p.r=c.r;p.g=c.g;p.b=c.b;p.rot=Math.random()*6.28;p.spin=(Math.random()-0.5)*2;p.ph=Math.random()*6.28;p.fl=1;p.tile=p.t.tiles?(Math.random()*4)|0:-1;if(p.t.flat){p.rot=(Math.random()-0.5)*0.5;p.fl=Math.random()<0.5?-1:1;}if(type==="paper"){p.rot=(Math.random()-0.5)*0.5;p.r0=p.rot;p.fl=Math.random()<0.5?-1:1;}if(type==="fire"&&p.t.sheet){p.rot=(Math.random()-0.5)*0.3;p.spin=(Math.random()-0.5)*0.25;p.fl=Math.random()<0.5?-1:1;}liveN++;}
   // (v4.1 pass 3: no allocation per frame here: the per-batch lists keep their length and a count, the sort is an in-place
   // insertion sort over the live entries, and each attribute reuses one update-range object; the old version's list resets,
   // closures and range objects were a steady 0.3 MB/s on a phone)
@@ -99,8 +195,8 @@
         p.rot=p.r0+Math.sin(age*2.4+p.ph)*0.22;p.s1=p.size*(0.55+0.45*Math.min(1,age*1.5)+0.25*(1-f));p.a=p.op*Math.min(1,f/0.35)*Math.min(1,age*4);const b=t.b;b.list[b.n++]=p;continue;}
       p.v[1]-=t.grav*rdt;if(t.drag){p.v[0]*=1-t.drag*rdt;p.v[2]*=1-t.drag*rdt;}
       p.x+=p.v[0]*rdt;p.y+=p.v[1]*rdt;p.z+=p.v[2]*rdt;if(p.y<0.05&&p.v[1]<0){p.y=0.05;p.v[1]=0;p.v[0]*=0.5;p.v[2]*=0.5;}
-      p.s1=t.grow?p.size*(0.45+(1-f)*1.7):p.size*(0.35+0.65*f);
-      p.a=p.op*(t.grow?Math.min(1,(1-f)*5)*f:Math.min(1,f*1.6));p.rot+=p.spin*rdt*(t.grow?0.3:1);const b=t.b;b.list[b.n++]=p;}
+      p.s1=t.grow?p.size*(0.45+(1-f)*1.7):t.keep?p.size:p.size*(0.35+0.65*f);
+      p.a=p.op*(t.pfade?Math.min(1,f/0.35)*Math.min(1,(1-f)*p.max*6):t.grow?Math.min(1,(1-f)*5)*f:Math.min(1,f*1.6));p.rot+=p.spin*rdt*(t.grow?0.3:(t.spinK||1));const b=t.b;b.list[b.n++]=p;}
     const vm=camera.matrixWorldInverse.elements;
     for(let k=0;k<PBL.length;k++){const b=PBL[k],L=b.list,n=b.n;
       if(b.sort&&n>1){for(let i=0;i<n;i++){const p=L[i];p.d=vm[2]*p.x+vm[6]*p.y+vm[10]*p.z;}
@@ -111,7 +207,7 @@
           for(let i=0;i<n;i++)C[((L[i].d-lo)*sc)|0]++;for(let k2=1;k2<K;k2++)C[k2]+=C[k2-1];for(let i=n-1;i>=0;i--){const p=L[i];T[--C[((p.d-lo)*sc)|0]]=p;}for(let i=0;i<n;i++)L[i]=T[i];}}
       const D=b.ib.array;
       for(let i=0;i<n;i++){const p=L[i],o=i*11;D[o]=p.x;D[o+1]=p.y;D[o+2]=p.z;D[o+3]=p.s1*(p.fl||1);D[o+4]=p.s1*(p.t.tall||1);
-        D[o+5]=p.r;D[o+6]=p.g;D[o+7]=p.b;D[o+8]=p.a;D[o+9]=p.rot;D[o+10]=p.t.sheet?((((p.max-p.life)*7+p.ph*2)|0)%4):-1;}
+        D[o+5]=p.r;D[o+6]=p.g;D[o+7]=p.b;D[o+8]=p.a;D[o+9]=p.rot;D[o+10]=p.t.sheet?((((p.max-p.life)*7+p.ph*2)|0)%4):p.tile;}
       b.g.instanceCount=n;b.mesh.visible=n>0&&!(G3.EXP&&(G3.EXP.noParts||G3.EXP.hidePB===b));
       if(n){const r=b.rng;r.count=n*11;if(!b.ib.updateRanges.length)b.ib.updateRanges.push(r);b.ib.needsUpdate=true;}}}
   const R=()=>Math.random()-0.5,EZ=k=>k<=0?0:k>=1?1:k*k*(3-2*k);
@@ -248,19 +344,26 @@
   // stock prep breakdowns: hazard zone, a leak of stock from the unit and a small brown puddle
   function spFx(g,x,z,h,w){const zn=zone(g,x-w/2-1,x+w/2+1,z-2.6,z+2.6);const pud=new THREE.Mesh(new CircG(1,32),FM.pulp);pud.rotation.x=-Math.PI/2;pud.position.set(x,0.1,z+1.2);g.add(pud);
     return (now,rdt,inc)=>{zn(now);const k=Math.min(1,(1-inc.left/inc.total)*4);pud.scale.set(1+w*0.35*k,1+1.6*k,1);
+      if(!SOFTFX){if(Math.random()<rdt*14)emit("pdrop",x+R()*w*0.6,h,z+R(),R()*3,1+Math.random()*2,R()*3,1.0,0.42,"#8a6440",1);if(Math.random()<rdt*2.5)emit("paper",x+R(),h+0.4,z,R()*0.3,1.1,R()*0.3,2.4,1.3,"#c09a72",1);return;}   // (t14: paper drops and brown paper puffs)
       if(Math.random()<rdt*14)emit("drop",x+R()*w*0.6,h,z+R(),R()*3,1+Math.random()*2,R()*3,1.0,0.32,"#7a5636",0.9);if(Math.random()<rdt*3)emit("steam",x+R(),h+0.4,z,0,1.2,0,1.6,1.2,"#a4805c",0.35);};}
   const FXDEF={
     refclash:g=>{const z=zone(g,56,66,-16.4,-5.6);
       return (now,rdt,inc)=>{z(now);const zs=inc&&inc.both?[-14,-8]:[-14];zs.forEach(zz=>{if(Math.random()<rdt*10)emit("spark",60.6+0.95,2.0,zz+R()*1.2,R()*5+2,3+Math.random()*4,R()*5,0.5+Math.random()*0.3,0.3,"#ffb23e",1);
         if(Math.random()<rdt*4)emit("smoke",60.6,3.4,zz,R()*0.6,1.6,R()*0.6,2.6,1.6,"#7e848e",0.5);});};},
     shaft:g=>{const z=zone(g,4,20,12.9,16.6);const motor=box(2.2,1.8,1.8,M.steel,12,0.9,14.8,g);
-      const s1=cylZ(0.22,2.6,M.metal,10.6,1.0,14.0,12,g),s2=cylZ(0.22,2.6,M.metal,13.4,0.6,14.2,12,g);s1.rotation.y=0.5;s2.rotation.y=-0.7;s2.rotation.x=0.4;
-      return (now,rdt)=>{z(now);motor.rotation.y=Math.sin(now/40)*0.06;for(let k=0;k<4;k++)emit("spark",12,1.4,14.2,R()*9,4+Math.random()*6,R()*7+1.5,0.55+Math.random()*0.3,0.36,"#ff8a1f",1);
+      // (t14: the two broken halves are cut-out cards, and the sparks paper stars)
+      let s1,s2;if(shaftTex){s1=cardSprite(shaftTex,3.8,0.95);s2=cardSprite(mirrorTex(shaftTex),3.8,0.95);s1.position.set(9.6,1.2,14.0);s2.position.set(14.4,0.9,14.6);g.add(s1,s2);}
+      else{s1=cylZ(0.22,2.6,M.metal,10.6,1.0,14.0,12,g);s2=cylZ(0.22,2.6,M.metal,13.4,0.6,14.2,12,g);s1.rotation.y=0.5;s2.rotation.y=-0.7;s2.rotation.x=0.4;}
+      return (now,rdt)=>{z(now);motor.rotation.y=Math.sin(now/40)*0.06;
+        if(shaftTex){s1.material.rotation=0.32+Math.sin(now/45)*0.05;s2.material.rotation=-0.45+Math.sin(now/52+1)*0.06;s1.position.y=1.2+Math.abs(Math.sin(now/90))*0.08;
+          for(let k=0;k<2;k++)if(Math.random()<rdt*70)emit("pspark",12,1.4,14.2,R()*9,4+Math.random()*6,R()*7+1.5,0.6+Math.random()*0.3,0.55,k?"#ffd23f":"#ff8a1f",1);}
+        else for(let k=0;k<4;k++)emit("spark",12,1.4,14.2,R()*9,4+Math.random()*6,R()*7+1.5,0.55+Math.random()*0.3,0.36,"#ff8a1f",1);
         if(Math.random()<rdt*3)emit("smoke",12,2,14.5,R(),1.6,0.4,2.4,1.8,"#a0a6b2",0.5);};},
     dryerfire:g=>{const spots=[];for(let i=0;i<10;i++)spots.push([(872-i*32-600)/10,6.4,zc+(i%2?1.2:-1.2)]);const fire=fireAt(spots,22,2.9),smoke=smokeCol(-3,27,9,zc-2,zc+2,26,"#6f7684",0.62,5.2);const z=zone(g,-6,30,4.4,13.8);
       return (now,rdt,inc)=>{const k0=Math.max(0.2,Math.min(1,inc.left/inc.total*1.4));fire(rdt,k0);smoke(rdt);z(now);for(let k=0;k<3;k++)if(Math.random()<rdt*30)emit("drop",-4+Math.random()*32,12.6,zc+R()*6,0,-6,0,0.9,0.28,"#3d8fd6",0.85);};},
-    fabric:g=>{const z=zone(g,39,56,5,13.2);return now=>z(now);},
-    felt:g=>{const z=zone(g,29,40.5,5,13.2);return now=>z(now);},
+    // (t14: torn paper scraps flutter off the section while the cloth is off)
+    fabric:g=>{const z=zone(g,39,56,5,13.2);return (now,rdt)=>{z(now);if(!SOFTFX&&rdt>0&&Math.random()<rdt*9)emit("conf",40+Math.random()*15,1.5+Math.random()*2.5,zc+CD/2+R(),R()*2,1+Math.random()*2,1+Math.random()*2,2.4,0.55,Math.random()<0.6?"#8fa3ad":"#d9dfe2",1);};},
+    felt:g=>{const z=zone(g,29,40.5,5,13.2);return (now,rdt)=>{z(now);if(!SOFTFX&&rdt>0&&Math.random()<rdt*9)emit("conf",30+Math.random()*10,1.5+Math.random()*3,zc+CD/2+R(),R()*2,1+Math.random()*2,1+Math.random()*2,2.4,0.55,Math.random()<0.6?"#cdb98e":"#8a7a5c",1);};},
     slime:g=>{const blobs=[];for(let k=0;k<34;k++){const b=new THREE.Mesh(sphereG,FM.scab);const i=k%10,top=k%2;b.position.set((top?872:856)/10-60-i*3.2+R(),top?6.75:1.05,zc+R()*5.5);
         b.userData.s=0.18+Math.random()*0.3;b.scale.set(b.userData.s*1.4,b.userData.s*0.45,b.userData.s);g.add(b);blobs.push(b);}
       return now=>blobs.forEach((b,k)=>{const f=1+0.18*Math.sin(now/300+k);b.scale.set(b.userData.s*1.4*f,b.userData.s*0.45,b.userData.s*f);});},
@@ -305,6 +408,9 @@
     steamjoint:g=>{const JX=11.2,JY=5.4,JZ=5.72,z=zone(g,6.5,16,1.6,5.4);
       const ring=new THREE.Mesh(new CylG(0.24,0.24,0.12,12),new THREE.MeshBasicMaterial({color:lin0("#ff4b2b")}));ring.rotation.x=Math.PI/2;ring.position.set(JX,JY,JZ-0.18);g.add(ring);
       return (now,rdt,inc)=>{z(now);const k=inc&&inc.total?(inc.go?Math.max(0.15,Math.min(1,inc.left/inc.total*1.6)):1):1;ring.material.color.setRGB(1,0.25+0.2*Math.sin(now/120),0.1);
+        if(!SOFTFX){   // (t14: a jet of paper cloud puffs, and paper clouds billowing up over the hood)
+          for(let q=0;q<2;q++)if(Math.random()<rdt*30*k)emit("pjet",JX+R()*0.15,JY+R()*0.15,JZ-0.3,R()*1.4,R()*1.4+0.6,-(9+Math.random()*5)*k,1.5,0.9+Math.random()*0.6,"#ffffff",1);
+          if(Math.random()<rdt*7*k)emitA("paper",JX+R()*6,JY+Math.random()*3,JZ-2+R()*3,R()*0.6,1.2+Math.random(),-0.3+R()*0.6,4.5,3+Math.random()*2.5,Math.random()<0.5?"#eef1f4":"#dfe4ea",1);return;}
         for(let q=0;q<3;q++)if(Math.random()<rdt*55*k)emit("steam",JX+R()*0.15,JY+R()*0.15,JZ-0.3,R()*1.4,R()*1.4+0.6,-(7+Math.random()*4)*k,1.6,1.2+Math.random()*1.2,"#ffffff",0.85);
         // the billow: grey-white puffs that pile up over the drive side and roll up over the dryer hood
         for(let q=0;q<4;q++)if(Math.random()<rdt*24*k)emitA("smoke",JX+R()*6,JY+Math.random()*5,JZ-2+R()*3,R()*1.2,1.6+Math.random()*2.2,-0.3+R()*0.8,6,6+Math.random()*6,q&1?"#dfe4ea":"#c9d0d9",0.7);
@@ -312,10 +418,20 @@
     boiler:g=>{const z=zone(g,68,84,-18,-2),P=G3.POP;
       return (now,rdt,inc)=>{z(now);const k=inc&&inc.total?inc.left/inc.total:1,lift=k>0.35?1:k/0.35,flick=0.75+0.25*Math.sin(now/37)*Math.sin(now/91);
         P.lever.rotation.z=0.35*lift;if(lift<0.05)return;
+        if(!SOFTFX){for(let q=0;q<2;q++)if(Math.random()<rdt*26*lift)emit("pjet",P.x+0.75+R()*0.3,16.7,P.z+R()*0.3,R()*1.6,(7+Math.random()*4)*lift*flick,R()*1.6,2.2,1.6+Math.random()*1.2,"#ffffff",1);
+          if(Math.random()<rdt*5*lift)emitA("pjet",P.x+0.5,10.5,P.z,R()*2,1+Math.random(),R()*2,0.9,0.5,"#ffffff",1);return;}   // (t14: a jet of paper puffs)
         for(let q=0;q<3;q++)if(Math.random()<rdt*60*lift)emit("steam",P.x+0.75+R()*0.3,16.7,P.z+R()*0.3,R()*1.6,(5.5+Math.random()*3.5)*lift*flick,R()*1.6,2.6,2.6+Math.random()*2.0,"#ffffff",0.9);
         if(Math.random()<rdt*8*lift)emitA("steam",P.x+0.5,10.5,P.z,R()*2,1+Math.random(),R()*2,0.8,0.5,"#ffffff",0.5);};},
     permit:g=>{const W=LAYOUT.wx,z=zone(g,Math.min(W(1),W(46)),Math.max(W(1),W(46)),-49,-31),p0=Math.min(W(22),W(42));return (now,rdt)=>{z(now);if(Math.random()<rdt*10)emit("smoke",p0+Math.random()*20,1.2,-46+Math.random()*12,R(),0.6,R(),2.2,1.6,"#e9e2cf",0.7);};},
-    winderdown:g=>{const z=zone(g,-24.5,-13,4.6,13.6);return now=>z(now);},
+    // (t14: the failed slitter drive throws paper sparks in bursts and a little paper smoke)
+    winderdown:g=>{const z=zone(g,-24.5,-13,4.6,13.6);let nb=0;return (now,rdt)=>{z(now);if(SOFTFX||rdt<=0)return;
+      if(now>nb){nb=now+900+Math.random()*1400;for(let k=0;k<12;k++)emit("pspark",-18.7+R()*2,2.6,zc+R()*2,R()*7,3+Math.random()*5,R()*7,0.7+Math.random()*0.4,0.5,k%2?"#ffd23f":"#ff8a1f",1);}
+      if(Math.random()<rdt*2)emit("paper",-18.7+R()*2,3,zc+R(),R()*0.3,1,R()*0.3,2.6,1.4,"#9aa1ad",1);};},
+    // (t14) dye trouble: splats of dye on the floor along the tending side, and puffs of the colour coming off the sheet
+    dye:g=>{if(SOFTFX)return ()=>{};const sp=[];for(let k=0;k<12;k++){const m=new THREE.Mesh(new THREE.PlaneGeometry(1,1).rotateX(-Math.PI/2),new THREE.MeshBasicMaterial({map:splatTex,alphaTest:0.5,toneMapped:false,color:lin(DYE[k%DYE.length])}));
+        m.position.set(16+Math.random()*16,0.1+k*0.004,zc+CD/2+1.2+Math.random()*2.4);m.rotation.y=Math.random()*6;m.userData.s=1+Math.random()*1.4;m.userData.d=k*0.05;g.add(m);sp.push(m);}
+      return (now,rdt,inc)=>{const p=inc&&inc.total?1-inc.left/inc.total:0.5;sp.forEach(m=>{const k=EZ((p-m.userData.d)/0.12)*(p>0.9?1-EZ((p-0.9)/0.1):1);m.visible=k>0.02;m.scale.setScalar(Math.max(0.01,m.userData.s*k));});
+        if(rdt>0&&Math.random()<rdt*5)emit("paper",16+Math.random()*16,1.6,zc+CD/2,R()*0.4,1.2,0.4,2.4,1.3,DYE[((now/1400)|0)%DYE.length],1);};},
     runner:g=>()=>{if(FX.runner&&RUN.on)FX.runner.pinPos=[RUN.x,RUN.z];},
     chestover:g=>{const cr=chestR,cx=34.5,cz=-15;const pud=new THREE.Mesh(new RingG(cr*0.98,cr+6.5,48,6),FM.pulp);pud.rotation.x=-Math.PI/2;pud.position.set(cx,0.1,cz);g.add(pud);
       const top=new THREE.Mesh(new CircG(cr*0.95,40),FM.pulp);top.rotation.x=-Math.PI/2;top.position.set(cx,10.08,cz);g.add(top);
@@ -323,22 +439,24 @@
       const rp=ripples(g,7,cx-cr-5,cx+cr+5,cz+cr*0.3,cz+cr+5,0.14);
       return (now,rdt,inc)=>{rp(now);pud.scale.setScalar(0.55+0.45*Math.min(1,(1-inc.left/inc.total)*5));for(let k=0;k<4;k++)if(Math.random()<rdt*25){const a=Math.PI*(0.15+Math.random()*0.9)+Math.PI/2;
         emit("drop",cx+Math.sin(a)*cr*1.05,10.1,cz+Math.cos(a)*cr*1.05,Math.sin(a)*1.4,0.6,Math.cos(a)*1.4,1.2,0.34,"#7a5636",0.95);}};},
-    badocc:g=>{const m4=new THREE.Matrix4(),add=(geo,mt,n,sx,sy,sz)=>{const im=new THREE.InstancedMesh(geo,instMat(mt),n);for(let k=0;k<n;k++){const q=new THREE.Quaternion().setFromEuler(new THREE.Euler(Math.random()*3,Math.random()*3,Math.random()*3));
+    // (t14: the junk as cut-out cards: bottles, foam, bags and wire, lying through the bale yard)
+    badocc:g=>{if(junkTex){for(let k=0;k<24;k++){const t=k%4,sz=[1.0,1.2,1.3,1.1][t]*(0.85+Math.random()*0.3),s=cardSprite(junkTex[t],sz,sz);s.position.set(-30+Math.random()*19,0.4+sz*0.4+Math.random()*1.6,-17+Math.random()*10);g.add(s);}return ()=>{};}
+      const m4=new THREE.Matrix4(),add=(geo,mt,n,sx,sy,sz)=>{const im=new THREE.InstancedMesh(geo,instMat(mt),n);for(let k=0;k<n;k++){const q=new THREE.Quaternion().setFromEuler(new THREE.Euler(Math.random()*3,Math.random()*3,Math.random()*3));
         m4.compose(new THREE.Vector3(-30+Math.random()*19,1.1+Math.random()*2.4,-17+Math.random()*10),q,new THREE.Vector3(sx,sy,sz));im.setMatrixAt(k,m4);}im.castShadow=true;g.add(im);};
       add(new CylG(0.13,0.13,0.5,10),mat("water",{roughness:0.2}),24,1,1,1);add(rboxGeo(0.5,0.25,0.4),FM.white,18,1,1,1);add(sphereG,FM.slime,16,0.22,0.12,0.2);
       return ()=>{};},
     balefire:g=>{const spots=[];for(let k=0;k<10;k++)spots.push([-29+k*2,1.6+(k%3)*0.9,-7.5-(k%4)*3]);const fire=fireAt(spots,20,3.0),smoke=smokeCol(-30,-12,5,-18,-6,24,"#6f7684",0.62,5.4);
       return (now,rdt,inc)=>{fire(rdt,Math.max(0.2,Math.min(1,inc.left/inc.total*1.4)));smoke(rdt);if(Math.random()<rdt*12)emit("spark",-21+R()*14,2,-12+R()*8,R()*3,6+Math.random()*4,R()*3,0.8,0.3,"#ff8a1f",1);};},
     fight:g=>{const a=fxPerson(g,M.warn,-38.6,-21),b=fxPerson(g,M.stock,-37.2,-21);a.rotation.y=0;b.rotation.y=Math.PI;
-      const car=new THREE.Group();box(3.4,0.75,1.7,M.wall,0,0.62,0,car);box(1.9,0.62,1.5,M.wall,-0.25,1.3,0,car);box(1.8,0.42,1.52,M.wind,-0.25,1.36,0,car,false);box(3.42,0.22,1.72,M.ink,0,0.5,0,car,false);
-      [-1.1,1.1].forEach(x=>[-0.78,0.78].forEach(z=>cylZ(0.34,0.24,M.ink,x,0.34,z,16,car)));box(0.9,0.14,1.0,M.ink,-0.25,1.68,0,car,false);
+      const car=new THREE.Group();if(carTex){const cs=cardSprite(carTex,4.4,2.2,true);car.add(cs);}else{box(3.4,0.75,1.7,M.wall,0,0.62,0,car);box(1.9,0.62,1.5,M.wall,-0.25,1.3,0,car);box(1.8,0.42,1.52,M.wind,-0.25,1.36,0,car,false);box(3.42,0.22,1.72,M.ink,0,0.5,0,car,false);
+      [-1.1,1.1].forEach(x=>[-0.78,0.78].forEach(z=>cylZ(0.34,0.24,M.ink,x,0.34,z,16,car)));box(0.9,0.14,1.0,M.ink,-0.25,1.68,0,car,false);}   // (t14: the car is a cut-out card)
       const red=new THREE.Sprite(new THREE.SpriteMaterial({map:(/[?&]softfx/.test(location.search)?TX.dot:TX.disc),color:lin("#ff3b30"),transparent:true,depthWrite:false,toneMapped:false})),blue=new THREE.Sprite(new THREE.SpriteMaterial({map:(/[?&]softfx/.test(location.search)?TX.dot:TX.disc),color:lin("#2f6bff"),transparent:true,depthWrite:false,toneMapped:false}));
-      red.position.set(-0.25,1.85,-0.35);blue.position.set(-0.25,1.85,0.35);car.add(red,blue);car.position.set(-43,0,-15.5);car.rotation.y=0.6;g.add(car);
+      red.position.set(-0.25,1.85,-0.35);blue.position.set(-0.25,1.85,0.35);if(carTex){red.position.set(-0.25,1.9,0);blue.position.set(0.25,1.9,0);}car.add(red,blue);car.position.set(-43,0,-15.5);car.rotation.y=0.6;g.add(car);
       const bub=new THREE.Sprite(new THREE.SpriteMaterial({map:spriteTex((x,w,h)=>{x.fillStyle="#fff";x.strokeStyle="#1c2233";x.lineWidth=5;x.beginPath();x.roundRect(6,6,w-12,h-34,22);x.fill();x.stroke();
         x.beginPath();x.moveTo(w*0.42,h-29);x.lineTo(w*0.36,h-6);x.lineTo(w*0.56,h-29);x.fill();x.fillStyle="#d6382c";x.font="900 54px system-ui,sans-serif";x.textAlign="center";x.textBaseline="middle";x.fillText("#@%!",w/2,(h-28)/2+4);},192,128),transparent:true,depthTest:false,toneMapped:false}));
       bub.position.set(-37.9,3.6,-21);bub.scale.set(3.3,2.2,1);bub.renderOrder=9;g.add(bub);
       return (now,rdt)=>{const j=Math.sin(now/70)*0.25;a.position.x=-38.6+j;b.position.x=-37.2-j;pose(a,"rethread",now);pose(b,"rethread",now+300);
-        const on=((now/220)|0)%2;red.scale.setScalar(on?2.4:0.6);blue.scale.setScalar(on?0.6:2.4);bub.position.y=3.6+Math.sin(now/200)*0.15;};},
+        const on=((now/220)|0)%2,hi=carTex?0.85:2.4,lo=carTex?0.3:0.6;red.scale.setScalar(on?hi:lo);blue.scale.setScalar(on?lo:hi);bub.position.y=3.6+Math.sin(now/200)*0.15;};},
     // v5.2: the two yard upsets that had only a pin. Forklifts red-tagged: two lift trucks parked in a taped-off bay with
     // red tags swinging on the masts. Drivers call off: three lift trucks parked by the roll warehouse with nobody on them,
     // a supervisor on the phone trying to find drivers, and a "drivers needed" board.
@@ -351,10 +469,19 @@
       const t=new THREE.CanvasTexture(c);t.colorSpace=THREE.SRGBColorSpace;const bd=new THREE.Mesh(new THREE.PlaneGeometry(2.4,1.2),new THREE.MeshBasicMaterial({map:t,toneMapped:false}));bd.position.set(-58.6,1.6,33.4);g.add(bd);
       [-1,1].forEach(s=>box(0.08,1.6,0.08,M.ink,-58.6+s*1.05,0.8,33.3,g,false));
       return now=>{pose(sup,"phone",now);};},
-    roof:g=>{const drops=[];for(let k=0;k<90;k++){const d=new THREE.Mesh(cubeG,FM.rain);d.scale.set(0.05,0.7,0.05);d.position.set(-48+Math.random()*24,Math.random()*7,15.5+Math.random()*16);g.add(d);drops.push(d);}
+    roof:g=>{const drops=[];if(!SOFTFX){const pud=new THREE.Mesh(new CircG(5.5,40),FM.water);pud.rotation.x=-Math.PI/2;pud.position.set(-35,0.08,23);g.add(pud);const rp=ripples(g,6,-39,-31,20,26,0.1);
+        // (t14: paper drops falling through the leak instead of streaks)
+        return (now,rdt)=>{rp(now);if(rdt>0)for(let k=0;k<3;k++)if(Math.random()<rdt*14){const c=Math.random()<0.6;emit("pdrop",c?-35+R()*7:-48+Math.random()*24,7,c?23+R()*5:15.5+Math.random()*16,0,-3,0,1.0,0.45,"#8fb7dd",1);}};}
+      for(let k=0;k<90;k++){const d=new THREE.Mesh(cubeG,FM.rain);d.scale.set(0.05,0.7,0.05);d.position.set(-48+Math.random()*24,Math.random()*7,15.5+Math.random()*16);g.add(d);drops.push(d);}
       const pud=new THREE.Mesh(new CircG(5.5,40),FM.water);pud.rotation.x=-Math.PI/2;pud.position.set(-35,0.08,23);g.add(pud);const rp=ripples(g,6,-39,-31,20,26,0.1);
       return (now,rdt)=>{rp(now);drops.forEach(d=>{d.position.y-=rdt*16;if(d.position.y<0)d.position.y+=7;});};},
     highway:g=>{const bm=new StdMat({map:TX.barrier,roughness:0.6});const amb=[];
+      if(barrierTex){   // (t14: barriers, cones and the tipped tanker as cut-out cards; the amber lamps as before)
+        [[-72,-3.8],[-72,12.5]].forEach(([x,z])=>{const b=cardSprite(barrierTex,3.8,1.9,true);b.position.set(x,0,z);g.add(b);
+          [-2.3,2.3].forEach(dz=>{const c=cardSprite(coneTex,0.9,1.2,true);c.position.set(x+1.6,0,z+dz);g.add(c);});
+          [-1.4,1.4].forEach(dz=>{const s=new THREE.Sprite(new THREE.SpriteMaterial({map:TX.disc,color:lin("#ffb000"),transparent:true,depthWrite:false,toneMapped:false}));s.position.set(x,2.1,z+dz);g.add(s);amb.push(s);});});
+        const tk=cardSprite(tankerTex,10,5,true);tk.position.set(-84,0,4);g.add(tk);
+        return now=>amb.forEach((s,k)=>s.scale.setScalar(((now/300+k)|0)%2?1.8:0.4));}
       [[-72,-3.8],[-72,12.5]].forEach(([x,z])=>{const b=new THREE.Mesh(new THREE.BoxGeometry(0.5,0.75,3.6),bm);b.position.set(x,0.95,z);box(0.12,0.6,0.12,M.ink,x,0.3,z-1.5,g,false);box(0.12,0.6,0.12,M.ink,x,0.3,z+1.5,g,false);box(0.9,0.08,0.3,M.ink,x,0.04,z-1.5,g,false);box(0.9,0.08,0.3,M.ink,x,0.04,z+1.5,g,false);b.castShadow=true;g.add(b);
         [-2.3,2.3].forEach(dz=>{const c=new THREE.Mesh(new THREE.ConeGeometry(0.32,0.95,16),FM.cone);c.position.set(x+1.6,0.48,z+dz);c.castShadow=true;g.add(c);box(0.7,0.08,0.7,FM.cone,x+1.6,0.04,z+dz,g,false);});
         [-1.4,1.4].forEach(dz=>{const s=new THREE.Sprite(new THREE.SpriteMaterial({map:(/[?&]softfx/.test(location.search)?TX.dot:TX.disc),color:lin("#ffb000"),transparent:true,depthWrite:false,toneMapped:false}));s.position.set(x,1.5,z+dz);g.add(s);amb.push(s);});});
@@ -410,7 +537,11 @@
           if(G3.roofGust)G3.roofGust(fx,fz,14);}
         deb.forEach((d,k)=>{const a=now/170+k,rad=3+k*0.75;d.position.set(Math.cos(a)*rad,1.5+k*1.3,Math.sin(a)*rad);d.rotation.set(a,a*1.3,0);});
         if(fun.visible&&Math.random()<rdt*14)emit("smoke",fx+R()*6,0.3,fz+R()*6,R()*4,0.6,R()*4,1.6,3,"#c9ced8",0.6);if(age<1)shake=Math.max(shake,0.8);};},
-    beaver:g=>{const bv=new THREE.Group(),E=(sx,sy,sz,m,x,y,z)=>{const o=new THREE.Mesh(sphereG,m);o.scale.set(sx,sy,sz);o.position.set(x,y,z);o.castShadow=true;bv.add(o);return o;};
+    // (t14: a cut-out beaver, two drawings it swaps between as it chews the log, bobbing; the chips as before)
+    beaver:g=>{if(BEAV){const bv=animCard(BEAV,15,12,true);bv.position.set(-24,0,-12.5);g.add(bv);let dir=0;
+        return (now,rdt)=>{if(!dir)dir=screenDir(bv.position,new THREE.Vector3(1,0,0));bv.frame(((now/180)|0)%2,dir);bv.position.y=Math.abs(Math.sin(now/400))*0.4;bv.material.rotation=Math.sin(now/260)*0.03;
+          for(let k=0;k<2;k++)if(Math.random()<rdt*14)emit("chip",-18.5,4,-11.5,1+Math.random()*4,4+Math.random()*4,R()*5,1.3,0.55,"#ffffff",1);};}
+      const bv=new THREE.Group(),E=(sx,sy,sz,m,x,y,z)=>{const o=new THREE.Mesh(sphereG,m);o.scale.set(sx,sy,sz);o.position.set(x,y,z);o.castShadow=true;bv.add(o);return o;};
       E(4.2,3.2,3.4,FM.beaver,0,3,0);E(2.6,2.1,2.4,FM.belly,1.9,2.6,0);const head=E(2.2,2,2,FM.beaver,4.4,4.6,0);E(1.0,0.8,1.1,FM.belly,6.0,4.1,0);
       E(0.6,0.6,0.6,FM.beaver,3.8,6.5,-1.2);E(0.6,0.6,0.6,FM.beaver,3.8,6.5,1.2);
       [-0.8,0.8].forEach(z=>{E(0.42,0.42,0.42,FM.white,5.9,5.3,z);E(0.24,0.26,0.24,M.ink,6.25,5.35,z);});E(0.45,0.36,0.5,M.ink,6.75,4.6,0);
@@ -427,9 +558,12 @@
     // floes locking in, icicles hang off the outfall pipe and snow flurries come in; while maintenance works, chips fly
     // and a steam lance puffs; at the end the shelf breaks up and the floes drift off downstream and melt.
     icedintake:g=>{const IX=-30,IZ=-55.5,[rz,rhw]=riverAt(IX),BANK=rz+rhw,ice=new StdMat({color:lin0("#e8f3fb"),roughness:0.35});
-      const shelf=new THREE.Mesh(cubeG,new StdMat({color:lin0("#dfeef7"),roughness:0.25,metalness:0.05}));shelf.scale.set(26,0.22,1);shelf.position.set(IX,0.1,BANK);shelf.castShadow=true;g.add(shelf);
-      const floes=[...Array(16)].map(()=>{const m=new THREE.Mesh(cubeG,ice);const w=1.2+Math.random()*2.4,d=1+Math.random()*1.8;m.scale.set(w,0.26,d);m.castShadow=true;
-        m.userData={x:IX-12+Math.random()*24,z:BANK-3-Math.random()*8,r:Math.random()*3,v:0.6+Math.random()*0.8};g.add(m);return m;});
+      // (t14 paper ice: the shelf and the floes are flat cards of pale blue paper with ink cracks, lying on the water)
+      const PAPI=!!shelfTex,flatG=PAPI?new THREE.PlaneGeometry(1,1).rotateX(-Math.PI/2):null,iceT=PAPI?[0,1,2,3].map(iceTex):null;
+      const shelf=PAPI?new THREE.Mesh(flatG,new THREE.MeshBasicMaterial({map:shelfTex,alphaTest:0.5,toneMapped:false})):new THREE.Mesh(cubeG,new StdMat({color:lin0("#dfeef7"),roughness:0.25,metalness:0.05}));shelf.scale.set(26,0.22,1);shelf.position.set(IX,0.1,BANK);shelf.castShadow=!PAPI;g.add(shelf);
+      const iceM=PAPI?iceT.map(t=>new THREE.MeshBasicMaterial({map:t,alphaTest:0.5,toneMapped:false})):null;
+      const floes=[...Array(16)].map((_,fi)=>{const m=PAPI?new THREE.Mesh(flatG,iceM[fi%4]):new THREE.Mesh(cubeG,ice);const w=1.2+Math.random()*2.4,d=1+Math.random()*1.8;m.scale.set(w,0.26,d);m.castShadow=true;
+        m.userData={x:IX-12+Math.random()*24,z:BANK-3-Math.random()*8,r:Math.random()*3,v:0.6+Math.random()*0.8,w:w*1.3,d:d*1.3};g.add(m);return m;});
       const frost=new THREE.Mesh(new THREE.BoxGeometry(4.12,3.12,4.12),new StdMat({color:lin0("#ffffff"),transparent:true,opacity:0,roughness:0.95,depthWrite:false}));frost.position.set(IX,1.5,IZ);g.add(frost);
       const icM=new StdMat({color:lin0("#eaf6ff"),roughness:0.15,transparent:true,opacity:0.92}),icicles=[...Array(9)].map((_,i)=>{const m=new THREE.Mesh(new THREE.ConeGeometry(0.09,1,6),icM);m.rotation.x=Math.PI;
         m.position.set(IX-1.2+i*0.3,1.15,IZ-2.2-(i%2)*0.15);m.userData.l=0.4+((i*37)%5)*0.15;g.add(m);return m;});
@@ -437,11 +571,11 @@
       return (now,rdt,inc)=>{const k=inc&&inc.total?inc.left/inc.total:1,p=1-k,t=now/1000;
         const grow=EZ(p/0.15),brk=p<0.85?0:EZ((p-0.85)/0.15);G3.iceK=p<0.12?EZ(p/0.12):p<0.88?1:1-EZ((p-0.88)/0.12);
         frost.material.opacity=0.42*grow*(1-brk);frost.visible=frost.material.opacity>0.01;
-        shelf.visible=grow>0.02&&brk<0.98;shelf.scale.z=Math.max(0.01,9*grow*(1-brk));shelf.position.z=BANK-shelf.scale.z/2;shelf.position.y=0.08;
+        shelf.visible=grow>0.02&&brk<0.98;shelf.scale.z=Math.max(0.01,9*grow*(1-brk));shelf.position.z=BANK-shelf.scale.z/2;shelf.position.y=PAPI?0.11:0.08;
         icicles.forEach((m,i)=>{const L=m.userData.l*EZ(grow*1.4-i*0.04)*(1-brk);m.visible=L>0.02;m.scale.set(1,Math.max(0.01,L),1);m.position.y=1.15-L/2;});
         floes.forEach((m,i)=>{const u=m.userData,lock=EZ(grow*1.2-i*0.02);if(lock<0.01){m.visible=false;return;}m.visible=true;
           const drift=brk*brk*(18+u.v*12),melt=1-EZ((brk-0.5)/0.5);m.position.set(u.x+drift,0.06+Math.sin(t*0.9+i)*0.03*(brk>0?1:0.3),u.z-(1-lock)*6);m.rotation.y=u.r+brk*u.v*1.5;
-          m.scale.y=0.26*Math.max(0.05,melt);m.visible=melt>0.05;});
+          m.scale.y=0.26*Math.max(0.05,melt);m.visible=melt>0.05;if(PAPI){const mk=Math.max(0.05,melt);m.scale.set(u.w*mk,1,u.d*mk);m.position.y=0.12+i*0.003;}});
         if(inc&&inc.mGo&&rdt>0){if(Math.random()<rdt*10)emit("chip",IX+R()*3,1.0,BANK-1+R()*2,R()*3,2+Math.random()*3,R()*3,0.9,0.4,"#ffffff",1);
           if(Math.random()<rdt*6)emitA("steam",IX+2+R(),0.6,BANK-1.5+R(),R()*0.8,1.6+Math.random(),R()*0.8,2.2,1.6,"#ffffff",0.6);}};},
     // city: a grid brownout. An arc flash at the substation with a white flash of the screen opens it; during it the arcs
@@ -501,12 +635,13 @@
       const inHole=(x,z)=>HOLES.some(([x0,x1,z0,z1])=>x>x0-0.8&&x<x1+0.8&&z>z0-0.8&&z<z1+0.8);
       const geo=new THREE.ShapeGeometry(sh);geo.rotateX(Math.PI/2);geo.translate(0,0,-Z0);   // (north edge at z 0, so the sheet spreads south by scaling z)
       const wm=new StdMat({color:lin0("#7b6a47"),transparent:true,opacity:0,roughness:0.04,metalness:0.3,depthWrite:false,side:THREE.DoubleSide});
+      if(G3.papWater){const t=G3.paperWater(false);t.repeat.set(1/12,1/12);wm.map=t;wm.color.copy(lin0("#9a8a62"));wm.roughness=0.9;wm.metalness=0;}   // (t14: paper water, cut strips, nearly opaque)
       const w=new THREE.Mesh(geo,wm);w.position.set(0,0.09,Z0);w.renderOrder=1;g.add(w);
       const wetM=new THREE.MeshBasicMaterial({color:lin0("#3e3a2c"),transparent:true,opacity:0,depthWrite:false,side:THREE.DoubleSide});
       const wet=new THREE.Mesh(geo,wetM);wet.position.set(0,0.06,Z0);wet.renderOrder=1;g.add(wet);
       // the foam line at the front, and the swollen canal
       const foamM=new THREE.MeshBasicMaterial({color:0xffffff,transparent:true,opacity:0,depthWrite:false}),foam=new THREE.Mesh(new THREE.PlaneGeometry(X1-X0,3.2),foamM);foam.rotation.x=-Math.PI/2;foam.renderOrder=2;g.add(foam);
-      const [czc,chw]=riverAt(0),canalM=new StdMat({color:lin0("#6e6244"),transparent:true,opacity:0,roughness:0.1,metalness:0.2,depthWrite:false}),canal=new THREE.Mesh(new THREE.PlaneGeometry(700,chw*2+6),canalM);
+      const [czc,chw]=riverAt(0),canalM=new StdMat({color:lin0("#6e6244"),transparent:true,opacity:0,roughness:0.1,metalness:0.2,depthWrite:false}),canal=new THREE.Mesh(new THREE.PlaneGeometry(700,chw*2+6),canalM);if(G3.papWater){const t=G3.paperWater(false);t.repeat.set(60,1);canalM.map=t;canalM.roughness=0.9;canalM.metalness=0;}
       canal.rotation.x=-Math.PI/2;canal.position.set(0,0.1,czc+1);canal.renderOrder=1;g.add(canal);
       // ripples that only show on the water
       const RG=new RingG(0.85,1,36),rings=[...Array(36)].map(()=>{const r=new THREE.Mesh(RG,new THREE.MeshBasicMaterial({color:0xffffff,transparent:true,depthWrite:false,side:THREE.DoubleSide}));r.rotation.x=-Math.PI/2;r.userData.ph=Math.random();r.visible=false;g.add(r);return r;});
@@ -534,10 +669,10 @@
         let s,lv,cl,wt;if(!big){lv=k>0.85?(1-k)/0.15:k<0.25?k/0.25:1;s=1;cl=0;wt=0;}
         else{s=p<0.14?EZ(p/0.14):p<0.86?1:1-EZ((p-0.86)/0.1);lv=p<0.14?0.4+0.6*EZ(p/0.14):p<0.86?1:Math.max(0,1-(p-0.86)/0.1);cl=p<0.1?EZ(p/0.1):p<0.86?1:1-EZ((p-0.86)/0.12);wt=p<0.84?0:p<0.96?EZ((p-0.84)/0.06):1-EZ((p-0.96)/0.04);}
         const sz=Math.max(0.001,s),front=Z0+(Z1-Z0)*sz;
-        w.visible=s>0.002&&lv>0.01;w.scale.z=sz;wm.opacity=(big?0.88:0.72)*lv;w.position.y=0.03+0.07*lv;G3.floodK=big?Math.min(1,cl*1.2):0;
+        w.visible=s>0.002&&lv>0.01;w.scale.z=sz;wm.opacity=(G3.papWater?0.95:big?0.88:0.72)*lv;w.position.y=0.03+0.07*lv;G3.floodK=big?Math.min(1,cl*1.2):0;
         wet.visible=wt>0.01;wetM.opacity=0.32*wt;
         foam.visible=big&&s>0.01&&s<0.99;foam.position.set((X0+X1)/2,w.position.y+0.04,front);foamM.opacity=0.95*(0.75+0.25*Math.sin(now/180))*(p<0.5?1:0.5);if(rdt>0&&Math.random()<rdt*40)emitA("drop",X0+Math.random()*(X1-X0),0.3,front,R()*1.5,1+Math.random()*1.5,1+Math.random(),0.6,0.35,"#e6efe9",0.8);
-        canal.visible=big&&cl>0.01;canalM.opacity=0.55*cl;canal.position.y=0.05+0.25*cl;
+        canal.visible=big&&cl>0.01;canalM.opacity=(G3.papWater?0.9:0.55)*cl;canal.position.y=0.05+0.25*cl;
         for(const r of rings){const ph=(now/1500+r.userData.ph)%1;if(ph<0.03||!r.userData.p){r.userData.p=[X0+10+Math.random()*(X1-X0-20),Z0+2+Math.random()*(Z1-Z0-4)];}
           const [rx,rz]=r.userData.p,on=lv>0.2&&rz<front-1&&!inHole(rx,rz);r.visible=on;if(on){r.position.set(rx,w.position.y+0.02,rz);r.scale.setScalar(0.6+ph*5.5);r.material.opacity=0.75*(1-ph)*lv;}}
         stM.opacity=0.42*lv;for(const m of streaks){const u=m.userData,x=X0+((u.x*(X1-X0)+now/1000*u.v)%(X1-X0));const on=lv>0.2&&u.z<front-2&&!inHole(x,u.z)&&!inHole(x+u.l/2,u.z)&&!inHole(x-u.l/2,u.z);m.visible=on;if(on)m.position.set(x,w.position.y+0.02,u.z);}
@@ -562,10 +697,10 @@
      instanced mesh per shape and look instead of one draw each (the roof leak was ~100 draws, the tornado ~75). The effect
      code keeps animating its own objects; they sit on a hidden layer and each frame the instanced copy takes their world
      matrices, colours, opacities and visibility. A sprite becomes a camera-facing card (the camera never turns). */
-  const FXI_LAYER=27,_fm=new THREE.Matrix4(),_fq=new THREE.Quaternion(),_fp=new THREE.Vector3(),_fs=new THREE.Vector3(),_fc=new THREE.Color();
+  const FXI_LAYER=27,_fxu=new THREE.Vector3(),_fxr=new THREE.Vector3(),_fm=new THREE.Matrix4(),_fq=new THREE.Quaternion(),_fp=new THREE.Vector3(),_fs=new THREE.Vector3(),_fc=new THREE.Color();
   const geoSig=g=>g.type+":"+(g.parameters?JSON.stringify(g.parameters):g.uuid);
   const SPRG=new THREE.PlaneGeometry(1,1);
-  function fxMat(m,sprite){const c=sprite?new THREE.MeshBasicMaterial({map:m.map,transparent:m.transparent,depthWrite:m.depthWrite,depthTest:m.depthTest,blending:m.blending,toneMapped:m.toneMapped,fog:m.fog}):m.clone();
+  function fxMat(m,sprite){const c=sprite?new THREE.MeshBasicMaterial({map:m.map,alphaTest:m.alphaTest,transparent:m.transparent,depthWrite:m.depthWrite,depthTest:m.depthTest,blending:m.blending,toneMapped:m.toneMapped,fog:m.fog}):m.clone();
     c.color&&c.color.setRGB(1,1,1);c.opacity=1;if(m.transparent)c.transparent=true;
     c.onBeforeCompile=sh=>{sh.vertexShader="attribute float iAlpha;varying float vIA;\n"+sh.vertexShader.replace("#include <begin_vertex>","#include <begin_vertex>\nvIA=iAlpha;");
       sh.fragmentShader="varying float vIA;\n"+sh.fragmentShader.replace("vec4 diffuseColor = vec4( diffuse, opacity );","vec4 diffuseColor = vec4( diffuse, opacity*vIA );");};
@@ -586,7 +721,8 @@
   G3.fxSync=()=>{const q=camera.quaternion;for(const id in FX){const f=FX[id];if(!f.inst||!f.g.visible)continue;f.g.updateMatrixWorld();
       for(const e of f.inst){const {im,L,al}=e;for(let i=0;i<L.length;i++){const o=L[i];let v=true;for(let x=o;x&&x!==f.g;x=x.parent)if(!x.visible){v=false;break;}
           if(!v){_fm.makeScale(0,0,0);al.array[i]=0;}
-          else if(e.sprite){o.matrixWorld.decompose(_fp,_fq,_fs);_fm.compose(_fp,q,_fs);al.array[i]=o.material.opacity;}
+          else if(e.sprite){o.matrixWorld.decompose(_fp,_fq,_fs);const c=o.center;if(c.x!==0.5||c.y!==0.5){_fxu.set(0,1,0).applyQuaternion(q);_fxr.set(1,0,0).applyQuaternion(q);_fp.addScaledVector(_fxu,(0.5-c.y)*_fs.y).addScaledVector(_fxr,(0.5-c.x)*_fs.x);}   /* (t14: base-anchored cards) */
+            _fm.compose(_fp,q,_fs);al.array[i]=o.material.opacity;}
           else{_fm.copy(o.matrixWorld);al.array[i]=o.material.opacity;}
           im.setMatrixAt(i,_fm);const c=o.material.color;if(c)im.setColorAt(i,c);}
         im.instanceMatrix.needsUpdate=true;if(im.instanceColor)im.instanceColor.needsUpdate=true;al.needsUpdate=true;}}};

@@ -73,10 +73,20 @@
       wetAcc+=rdt;if(wetAcc>0.1){const dt2=wetAcc;wetAcc=0;wet.forEach((w,k)=>{w.t+=dt2;const k2=w.t<14?1-w.t/14:0;ps.set(w.x,0.045,w.z);sc.set(k2*(0.9+0.2*Math.sin(k)),k2*(1.3+0.2*Math.cos(k)),1);if(k2<=0){ps.y=-50;sc.set(0.001,0.001,1);}m4.compose(ps,wrot,sc);wetI.setMatrixAt(k,m4);});wetI.instanceMatrix.needsUpdate=true;}};}
   function ambUpdate(rdt,now){envUpdate(rdt,now);
     {const bi=S.inc.find(x=>x.id==="birdhay");if(bi&&bi.real!==PG.seen){PG.seen=bi.real;PG.t0=now;}
-      const u=(now-PG.t0)/1600;if(PG.seen&&u<=1){const s=u*u,x=-2+(-18.7+2)*s,y=10.5-8*s,z=zc+4-4*s;pigeon.visible=true;pigeon.position.set(x,y,z);pigeon.rotation.y=Math.PI;
-        const f=Math.sin(now/30)*0.9;pigeon.userData.p1.rotation.x=f;pigeon.userData.p2.rotation.x=-f;if(u>0.97){for(let k=0;k<14;k++)emit("chip",-18.7+R(),2.6,zc+R(),R()*4,2+Math.random()*3,R()*4,1.4,0.25,k%2?"#d7d9de":"#6b6f78",1);PG.seen="done";}}}
+      const u=(now-PG.t0)/1600;if(PG.seen&&u<=1){const s=u*u,x=-2+(-18.7+2)*s,y=10.5-8*s,z=zc+4-4*s;
+        // (t14: a cut-out pigeon flapping between two drawings, and paper feathers when it hits)
+        if(!PG.card&&G3.pigeonCard){PG.card=G3.pigeonCard();if(PG.card){PG.card.scale.set(2.2,1.7,1);PG.card.visible=false;scene.add(PG.card);}}
+        if(PG.card){const c=PG.card;c.visible=true;c.position.set(x,y,z);if(!PG.dir)PG.dir=screenDir(c.position,new THREE.Vector3(-16.7,-8,-4));c.frame(u>0.8?2:((now/70)|0)%2,PG.dir);c.material.rotation=-0.45*PG.dir;}
+        else{pigeon.visible=true;pigeon.position.set(x,y,z);pigeon.rotation.y=Math.PI;const f=Math.sin(now/30)*0.9;pigeon.userData.p1.rotation.x=f;pigeon.userData.p2.rotation.x=-f;}
+        if(u>0.97){for(let k=0;k<14;k++)emit(PG.card?"feather":"chip",-18.7+R(),2.6,zc+R(),R()*4,2+Math.random()*3,R()*4,PG.card?2.2:1.4,PG.card?0.5:0.25,k%2?"#d7d9de":"#8d93a0",1);PG.seen="done";if(PG.card)PG.card.visible=false;}}}
     {const fi=S.inc.find(x=>x.id==="flares");if(fi&&fi.real!==FL.seen){FL.seen=fi.real;FL.until=now+7000;}
-      if(now<FL.until&&rdt>0){const cols=["#ff3b3b","#ffd23f","#ff6bd6","#5dff8a","#ff8a1f"];
+      if(now<FL.until&&rdt>0&&!/[?&]softfx/.test(location.search)){const cols=["#ff3b3b","#ffd23f","#ff6bd6","#5dff8a","#ff8a1f","#3fb0ff"];
+        // (t14 paper fireworks: paper stars shoot up and burst into confetti, with pink paper puffs)
+        for(let k=0;k<2;k++)if(Math.random()<rdt*8)emit("pspark",16+R()*2,3.2,-13.5+R()*2,R()*4,10+Math.random()*8,R()*4,1.1,0.6,cols[(Math.random()*cols.length)|0],1);
+        if(Math.random()<rdt*2.4){const c=cols[(Math.random()*cols.length)|0],c2=cols[(Math.random()*cols.length)|0],h=9+Math.random()*5,bx=16+R()*6,bz=-13.5+R()*6;
+          for(let k=0;k<24;k++){const a=Math.random()*6.28,e=Math.random()*2-0.6,sp=4+Math.random()*4;emit("conf",bx,h,bz,Math.cos(a)*sp,e*3,Math.sin(a)*sp,2.2+Math.random(),0.5,k%3?c:c2,1);}}
+        if(Math.random()<rdt*4)emit("paper",16+R()*2,3.4,-13.5+R()*2,R()*0.5,1.4,R()*0.5,3.2,2.2,"#f2b8c8",1);}
+      else if(now<FL.until&&rdt>0){const cols=["#ff3b3b","#ffd23f","#ff6bd6","#5dff8a","#ff8a1f"];
         for(let k=0;k<3;k++)if(Math.random()<rdt*14){const c=cols[Math.floor(Math.random()*cols.length)];emit("spark",16+R()*2,3.2,-13.5+R()*2,R()*5,12+Math.random()*10,R()*5,1.8,0.6,c,1);}
         if(Math.random()<rdt*6)emit("smoke",16+R()*2,3.4,-13.5+R()*2,R(),2.2,R(),2.6,2.2,"#e9b8c8",0.5);}}if(rdt<=0){parties.forEach(P2=>P2.members.forEach(m=>pose(m,"idle",now)));return;}
     for(const k in ambT)ambT[k]-=rdt;

@@ -1,5 +1,22 @@
 # Changelog
 
+## v6.1.0-t14 (2026-10-18): paper upsets (test branch test/v6.1-iso)
+- **Cut-out props:** the giant beaver (chews a log, two drawings), the brawl car, the highway barriers, cones and tipped
+  tanker, the bad-OCC junk (bottles, foam, bags, wire) and the snapped driveshaft halves are drawn cards with an ink line
+  that face the camera.
+- **Cut-out pigeon:** bird in the winder and the bird-on-the-power-lines cut-scene use a paper pigeon (wings up, down and
+  folded for the dive) that faces the way it flies; paper feathers when it hits.
+- **Paper particles:** paper sparks (stars and zig-zags) for the driveshaft and a failed winder drive; paper steam jets
+  for the steam joint and boiler trip; paper fireworks for flares in a bale (stars that burst into confetti, pink paper
+  puffs); paper drops and brown paper puffs for the screens, cleaners, rotor trip and couch pit; paper drops for the
+  warehouse roof leak (were streaks).
+- **Paper ice and water:** the iced intake's shelf and floes are flat pale-blue card with ink cracks; the bayou flood and
+  swollen canal are paper water.
+- **New effects:** torn paper scraps flutter off the section when the fabric runs off or a press felt blows; dye trouble
+  splats dye across the tending-side floor and puffs the colour off the sheet.
+- Unchanged by choice: refiner clash, slime, ragger, dryer wrap, felt oscillator, fog fan, wastewater permit, brownout,
+  forklifts red-tagged, dust storm. ?softfx = the old props and particles.
+
 ## v6.1.0-t13 (2026-10-18): paper effects (test branch test/v6.1-iso)
 - **Weather visible again:** in the iso view snow and dust were sub-pixel dots, rain faint 1 px lines and fog never reached
   the mill. Flakes and dust are now 3-5 px dots, rain longer blue-grey streaks at 55%, the weather box scales with the zoom,

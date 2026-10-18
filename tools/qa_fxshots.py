@@ -5,7 +5,7 @@ exec(src.split("def stats")[0].split("from playwright.sync_api import sync_playw
 html = pathlib.Path(sys.argv[1]).read_text().replace("window.__PM={", "window.__PM={trigger:(i,q)=>trigger(i,q),", 1)
 if "window.__PM=" not in html:
     i = html.rindex("})();", 0, html.rindex("</script>")); html = html[:i] + HOOK + html[i:]
-SP="/tmp/claude-0/-home-claude/1d0fb052-7a76-5766-bfa8-faf7676d4b04/scratchpad/qa13/t13-"
+SP="/tmp/claude-0/-home-claude/1d0fb052-7a76-5766-bfa8-faf7676d4b04/scratchpad/qa15/t14-"
 shots = sys.argv[2].split(",")
 with sync_playwright() as pw:
     b = pw.chromium.launch(args=["--use-gl=angle", "--use-angle=swiftshader", "--enable-unsafe-swiftshader", "--ignore-gpu-blocklist"])
@@ -35,6 +35,26 @@ with sync_playwright() as pw:
       "flood": ([-62,4,127], "()=>{__PM.S.inc=[];__PM.trigger('flood',true);}", 7000),
       "overflow": ([-15,-12,95], "()=>{__PM.S.inc=[];__PM.trigger('overflow',true);}", 7000),
       "roofleak": ([-35,23,95], "()=>{__PM.S.inc=[];__PM.trigger('roof',true);}", 7000),
+      "shaft": ([12,14,63], "()=>{__PM.S.inc=[];__PM.trigger('shaft',true);}", 4000),
+      "steamjoint": ([11,5,95], "()=>{__PM.S.inc=[];__PM.trigger('steamjoint',true);}", 5000),
+      "boiler": ([74,-10,95], "()=>{__PM.S.inc=[];__PM.trigger('boiler',true);}", 5000),
+      "birdhay": ([-12,9,63], "()=>{__PM.S.inc=[];__PM.trigger('birdhay',true);}", 700),
+      "badocc": ([-20,-12,95], "()=>{__PM.S.inc=[];__PM.trigger('badocc',true);}", 3000),
+      "flares": ([16,-13,95], "()=>{__PM.S.inc=[];__PM.trigger('flares',true);}", 3000),
+      "iced": ([-30,-55,95], "()=>{__PM.S.inc=[];__PM.trigger('icedintake',true);__PM.C.simSpeed=30;}", 9000),
+      "beaver": ([-22,-12,95], "()=>{__PM.S.inc=[];__PM.trigger('beaver',true);}", 3000),
+      "cscreen": ([15,-23,63], "()=>{__PM.S.inc=[];__PM.trigger('cscreen',true);}", 4000),
+      "fight": ([-40,-18,63], "()=>{__PM.S.inc=[];__PM.trigger('fight',true);}", 3000),
+      "highway": ([-76,4,95], "()=>{__PM.S.inc=[];__PM.trigger('highway',true);}", 3000),
+      "fabric": ([47,10,95], "()=>{__PM.S.inc=[];__PM.trigger('fabric',true);}", 4000),
+      "winder": ([-18,9,63], "()=>{__PM.S.inc=[];__PM.trigger('winderdown',true);}", 4000),
+      "dye": ([24,12,95], "()=>{__PM.S.inc=[];__PM.trigger('dye',true);}", 6000),
+      "shaftclose": ([12,14,25], "()=>{__PM.S.inc=[];__PM.trigger('shaft',true);}", 2500),
+      "iced50": ([-30,-55,95], "()=>{__PM.S.inc=[];__PM.S.inc.push({id:'icedintake',left:600,total:1200,real:performance.now(),note:''});}", 3000),
+      "flood50": ([-62,4,127], "()=>{__PM.S.inc=[];__PM.S.inc.push({id:'flood',left:600,total:1200,real:performance.now(),note:''});}", 3000),
+      "dye50": ([24,12,63], "()=>{__PM.S.inc=[];__PM.trigger('dye',true);const i=__PM.S.inc.find(x=>x.id==='dye');i.left=i.total*0.5;}", 3000),
+      "birdline": ([10,5,190], "()=>{__PM.S.inc=[];__PM.trigger('birdline',true);}", 4000),
+      "birdline2": ([10,5,190], "()=>{}", 4500),
     }
     for n in shots:
         cam, setup, wait = SPEC[n]
