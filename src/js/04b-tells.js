@@ -8,8 +8,8 @@
    opening of a run pre-rolls one lead window on its own stream ("tell0") so the first upsets aren't held back by the lead.
    Seasons, survival and free play; not zen (tellsOn). Numbers are first guesses (no balancing yet).
    State: S.tell={q:[{id,due,born,area}], pre, day, n, saved, savedMin, cn:{id:n}, prep:{k,...}} (saved with the run). */
-const TELL={lead:1.5,step:0.1,min:1,          // lead time in days: seasons and free play; survival −step per wave, at least min
-  cut:0.4,                                    // planned repair: share of the upset's repair bill
+const TELL={lead:2.5,step:0.12,min:1,   /* (t20 balance: 2.5 days of warning, was 1.5: a daily round rotating the six areas catches more) */          // lead time in days: seasons and free play; survival −step per wave, at least min
+  cut:0.25,                                   // planned repair: share of the upset's repair bill (t20 balance: was 0.4)
   roundS:15,                                  // a Round's walk, real seconds
   catchCiv:{M:1,L:1/3},                       // caught: Machinery +3, Labor +1 (meter points = weight × CIV.unit)
   cleanCiv:{plant:{L:1/3},town:{C:1/3}},      // a clean walk: Labor +1 (plant areas) or Community +1 (yard, utilities)
