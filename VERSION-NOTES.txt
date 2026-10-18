@@ -64,3 +64,4 @@ One line per version, oldest first. Add a line here with every release: build.py
 6.1.0-t20  Balance: Rounds Pay More, Capacity and Maintenance Upgrades Re-Priced
 6.1.0      Paper Diorama: Isometric Paper Art Style, Cut-Out People and Upsets, Tilt-Shift, Rounds Pay More, Upgrades Re-Priced
 6.1.1      Phone Fixes: Gentler Tilt-Shift on Tall Screens, Cut-Out People No Longer Blank on iPhone
+6.1.2      iPhone: Cut-Out Self-Test Retries, People Keep Their Colours in the 3D Fallback

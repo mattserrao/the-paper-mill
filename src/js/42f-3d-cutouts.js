@@ -132,9 +132,17 @@
      sets.forEach(S2=>{S2.card.count=S2.shad.count=1;});
      // v6.1 t4 self-test: read back the centre of one warm-up picture (once, at start-up). Empty means this device can't
      // render the pictures: the cut-outs stay off and the 3D models are shown, rather than nothing at all.
-     try{const c=CUT.byK.get("person")||CUT.byK.get("lift")||CUT.byK.get("truck");if(c){const A=ATL[c.a],px=new Uint8Array(4*256);
-         const cx=Math.round((c.r[0]+c.r[2]/2)*AW),cy=Math.round((c.r[1]+c.r[3]*0.45)*A.h);renderer.readRenderTargetPixels(A.rt,cx-8,cy-8,16,16,px);
-         let a=0;for(let i=3;i<px.length;i+=4)a=Math.max(a,px[i]);CUT.selfTest=a;if(a===0){CUT.ok=false;CUT.actors.forEach(x=>{x.o.children.forEach(c=>{c.matrixWorldAutoUpdate=true;});hide(x,false);});   /* (t10 QA: and back on the drawn layer: they stayed hidden) */diag("cut-outs: pictures came out empty on this device; 3D models shown instead");}
+     /* (v6.1.2: a failed test is retried twice, 1.5 s and 5 s later, with a fresh picture: some iPhones read the first
+        pictures back empty while their shaders are still compiling, and the 3D fallback then showed every person
+        uncoloured. A pass on retry switches the cut-outs back on.) */
+     const readA=c=>{const A=ATL[c.a],px=new Uint8Array(4*256);const cx=Math.round((c.r[0]+c.r[2]/2)*AW),cy=Math.round((c.r[1]+c.r[3]*0.45)*A.h);renderer.readRenderTargetPixels(A.rt,cx-8,cy-8,16,16,px);
+       let a=0;for(let i=3;i<px.length;i+=4)a=Math.max(a,px[i]);return /[?&]cutfail/.test(location.search)?0:a;};   /* (?cutfail: test the 3D fallback) */
+     const retry=(n)=>setTimeout(()=>{if(CUT.ok)return;try{const a0=CUT.actors.find(x=>x.kind==="person")||CUT.actors[0];if(!a0)return;basis();
+         const c=capture(a0,"retest:"+n,0,ATL[a0.K.at],true);const a=c?readA(c):0;CUT.selfTest=a;
+         if(a>0){CUT.ok=true;CUT.actors.forEach(x=>{x.o.children.forEach(k=>{k.matrixWorldAutoUpdate=false;});hide(x,true);x.cell=null;});diag("cut-outs: self-test ok on retry "+n);}
+         else{diag("cut-outs: retry "+n+" empty");if(n<2)retry(n+1);}}catch(e){diag("cut-outs: retry failed "+String(e&&e.message||e).slice(0,80));}},n===1?1500:5000);
+     try{const c=CUT.byK.get("person")||CUT.byK.get("lift")||CUT.byK.get("truck");if(c){const a=readA(c);CUT.selfTest=a;
+         if(a===0){CUT.ok=false;CUT.actors.forEach(x=>{x.o.children.forEach(c=>{c.matrixWorldAutoUpdate=true;});hide(x,false);});   /* (t10 QA: and back on the drawn layer: they stayed hidden) */diag("cut-outs: pictures came out empty on this device; 3D models shown instead");retry(1);}
          else diag("cut-outs: self-test ok");}}catch(e){CUT.selfTest=-1;}
      /* v6.1 t12: every actor's look as it stands, at all 8 headings, is pictured now (behind the start-up screen, up to
         1.5 s), and the rest one a frame whenever no picture is wanted on screen: the season then mostly reuses them */

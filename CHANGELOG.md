@@ -1,5 +1,13 @@
 # Changelog
 
+## v6.1.2 (2026-10-18): iPhone people colours
+- People showing as uncoloured 3D figures on an iPhone: when the cut-out self-test reads its first picture back empty
+  (some iPhones do while shaders are still compiling), the game falls back to 3D people, and on iPhone the shared
+  moving batches lose per-object colours (the old iPhone colour bug). Now the self-test is retried with a fresh picture
+  1.5 s and 5 s later and switches the cut-outs back on if it passes; and on iPhone people and vehicles are never put
+  in the shared batches, so the 3D fallback keeps its colours. Diagnostics logs "cut-outs: ..." for each step.
+  ?cutfail forces the fallback for testing.
+
 ## v6.1.1 (2026-10-18): phone fixes
 - **Tilt-shift on phones:** on a tall screen the sharp band was a fixed share of the height, so it was a sliver and
   most of the view blurred. The band and its fall-off are now set against the screen's width (wider on tall screens),
