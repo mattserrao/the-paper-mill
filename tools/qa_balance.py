@@ -35,8 +35,10 @@ PLAY = r"""async ([style,seed])=>{const P=__PM,S=P.S,h=P.SIM_STEP||0.25,T=P.tell
   const R=style==='rounds'||style==='active',ACT=style==='active';
   // the active shop: the bottleneck fix, then value for money, one upgrade a day, keeping a reserve
   const ACTLIST=['sales','contract','apc','refiner','reliab','clean','detrash','stores','safety','fire','deckle','shoe','drive','monitor','sales','contract','apc','deckle','rcfa'];
-  const UPX=style.startsWith('up_')?style.slice(3):null;
-  const shop=()=>{if(P.upLocked&&P.upLocked())return;if(UPX){const u=P.UPS.find(q=>q.id===UPX);if(u&&lv(UPX)<u.lv.length){const l0=lv(UPX);P.buy(UPX);if(lv(UPX)>l0)L.bought.push(UPX);}return;}const fix=(P.BN[S.bn]?P.BN[S.bn].ups:[]).slice(0,1).filter(id=>!lv(id));
+  const UPX=style.startsWith('up_')?style.slice(3):style.startsWith('fx_')?style.slice(3):null;
+  const shop=()=>{if(P.upLocked&&P.upLocked())return;
+    if(style.startsWith('fx_')){const f=(P.BN[S.bn]?P.BN[S.bn].ups:[])[0];if(f&&!lv(f)){const u=P.UPS.find(q=>q.id===f);P.buy(f);if(lv(f))L.bought.push(f);return;}if(UPX==='none')return;}
+    if(UPX){const u=P.UPS.find(q=>q.id===UPX);if(u&&lv(UPX)<u.lv.length){const l0=lv(UPX);P.buy(UPX);if(lv(UPX)>l0)L.bought.push(UPX);}return;}const fix=(P.BN[S.bn]?P.BN[S.bn].ups:[]).slice(0,1).filter(id=>!lv(id));
     const order=ACT?fix.concat(ACTLIST):fix.concat(P.UPS.map(u=>u.id).filter(id=>!fix.includes(id)));
     for(const id of order){const u=P.UPS.find(q=>q.id===id);if(!u||lv(id)>=u.lv.length)continue;const c=P.upCost(u,lv(id));
       const keep=ACT?(fix.includes(id)?150e3:500e3):400e3;if(S.cash-c>=keep){const l0=lv(id);P.buy(id);if(lv(id)>l0)L.bought.push(id);return;}if(ACT)return;}};
@@ -47,10 +49,10 @@ PLAY = r"""async ([style,seed])=>{const P=__PM,S=P.S,h=P.SIM_STEP||0.25,T=P.tell
     if(!T.start(a))return;L.rounds++;const ids=(T.T.q||[]).filter(p=>p.area===a).map(p=>p.id);let n=0;for(const id of ids)if(T.catch(id))n++;L.caught+=n;const r=T.end(a,n);if(r&&r.clean)L.clean++;};
   const prep=()=>{const f=T.prepFor();if(!f)return;if(T.prepDo('parts','now'))L.prep++;if(T.prepDo('crew'))L.prep++;if(T.prepDo('contr','in'))L.prep++;if(T.prepDo('draw'))L.prep++;};
   const civPick=()=>{const d=S.civ.cur,id=d.id,bs=[...document.querySelectorAll('#civOv .civbtn')],u=P.CIVU[id];L.civ++;
-    let i=0;if(id.startsWith('r_'))i=(style==='handsoff'||style.startsWith('up_'))?1:0;
+    let i=0;if(id.startsWith('r_'))i=(style==='handsoff'||style.startsWith('up_')||style.startsWith('fx_'))?1:0;
     else if(u){const t=u.t||'';i=(style==='buyer'||ACT)?Math.max(0,t.indexOf('P')):Math.max(0,t.indexOf('Q'));
       if(style==='gambler'){const nb=u.ch.map((c,j)=>c[4]?j:-1).filter(j=>j>=0);if(nb.length)i=nb[Math.floor(rnd()*nb.length)];}
-      const box=document.getElementById('civ-ord');if(box)box.checked=style==='handsoff'||style==='rounds'||style.startsWith('up_');}
+      const box=document.getElementById('civ-ord');if(box)box.checked=style==='handsoff'||style==='rounds'||style.startsWith('up_')||style.startsWith('fx_');}
     if(i>=bs.length)i=0;const c0=S.cash;bs[i].click();L.civCost+=c0-S.cash;};
   let n=0,lastDay=-1;
   while(S.season&&S.season.on&&n<31*1440/h){P.step(h);n++;
