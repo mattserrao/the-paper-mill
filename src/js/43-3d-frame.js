@@ -104,7 +104,8 @@
         if(cut<1){wrapMesh.visible=true;const r=1.85-0.5*cut;wrapMesh.position.set(canX(k),5.4,zc);wrapMesh.scale.set(r,r,CD-0.3);wrapMesh.rotation.z=Math.sin(now/90)*0.02*(wi.go?1:0);}}
       // dye trouble: the sheet and the growing reel flash through colors
       const dyeOn=S.M.offSpec;if(dyeOn){const k=Math.floor(now/1400)%DYE.length;if(k!==dyeK){dyeK=k;dyeSheet.color.copy(lin0(DYE[k]));dyeReel.color.copy(lin0(DYE[(k+2)%DYE.length]));}}
-      sheetMesh.material=dyeOn?dyeSheet:sheetMat;reel.material=dyeOn?dyeReel:ROLLM;
+      sheetMesh.material=dyeOn?dyeSheet:sheetMat;{/* v6.1 t9: the reel's paper was split by material on the first frame (40c), so it takes one material, not the array */
+        const one=!reel.geometry.groups.length,rm=dyeOn?dyeReel:(one?ROLLM[0]:ROLLM);if(reel.material!==rm){reel.material=rm;if(one)for(const c of reel.children)if(c.isMesh)c.material=dyeOn?dyeReel:ROLLM[1];}}
       sheetMesh.visible=show;sheetMesh.geometry.setDrawRange(0,(sheetKey[Math.min(segs,sheetKey.length-1)]||0)*6);G3.sliceFrame(now,show&&segs>=2);}sheetTex.offset.x=-V.sheet/24*1.0;
     pm("paper machine, reel, crane, winder");
     // roll conveyor

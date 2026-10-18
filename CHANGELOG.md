@@ -1,5 +1,10 @@
 # Changelog
 
+## v6.1.0-t9 (2026-10-17): reel fix (test branch test/v6.1-iso)
+- **Reel paper was invisible:** the multi-material split (t2) left the growing reel with paper faces only, and the frame loop
+  put the three-material array back on it every frame, so the paper body drew nothing (only the end caps). It now takes
+  the single paper material (dye trouble still recolours it, caps included).
+
 ## v6.1.0-t8 (2026-10-17): paper palette and draw cut (test branch test/v6.1-iso)
 - **A deliberate palette:** 40 colours for the whole world (papers, krafts, slates and inks; greens, earths and waters;
   accents: safety yellow, orange, alarm red, pipe blue, brick). Every lit material, every scenery colour and the ground
