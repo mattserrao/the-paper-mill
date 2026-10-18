@@ -3,6 +3,7 @@
 ## v6.1.0-t12 (2026-10-18): polish round (test branch test/v6.1-iso)
 - **Paper smoke:** the smoke stack's plume is paper cut-out clouds (card fill, ink line, a fold of shade), fewer and
   bigger, that rise in little hops, sway and rock, swell a touch and fade out at the top. ?softplume = the old steam.
+  The fog elimination fan's vapour is the same paper clouds, smaller.
 - **Blinking lights in time:** a merged static object whose colour changes (beacons, alarm and status lights) is followed
   every frame from its first change on (the watch only looked twice a second).
 - **Stronger seasons:** spring is pale yellow-green with pink and cream blossom on a fifth of the trees; summer is deep,
