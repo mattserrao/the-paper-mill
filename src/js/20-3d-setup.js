@@ -93,6 +93,23 @@ function no3D(){G3.ok=false;$("no3d").hidden=false;$("no3d-retry").onclick=()=>l
   camera.isoFit=(rr)=>{const hh=rr*Math.tan(camera.fov*Math.PI/360),hw=hh*camera.aspect;
     if(camera.top!==hh||camera.right!==hw){camera.left=-hw;camera.right=hw;camera.top=hh;camera.bottom=-hh;camera.updateProjectionMatrix();}};
 
+  /* ---- v6.1 t8: the paper palette ----
+     One deliberate set of 40 colours for the whole mill and its scenery: a muted base of papers, krafts, slates and inks,
+     natural greens, earths and waters, and a few strong accents (safety yellow, orange, alarm red, pipe blue, brick) that
+     stand out because little else is saturated. Every lit material and every scenery colour snaps to its nearest swatch
+     (in Lab, so "nearest" is what the eye sees); the mill's brand colour is the one colour kept exactly as chosen. */
+  const PAPER_PAL=["#f6f1e6","#ece4d2","#d9cdb4","#c4b08c","#a8895f","#8a6a45","#e3e6ea","#c5cad1","#9aa2ad","#6f7884","#4a5260","#2f3540","#1f1a17",
+    "#a9c4cf","#8fb3c9","#5f8aa8","#3e6787","#b9cf8f","#8fb36e","#5f8f55","#3f6b48","#2c4a36",
+    "#f2c230","#e8823a","#d9534a","#a23b2e","#c98a4b","#e7b8a0",
+    "#e8dbb6","#d8c9a2","#b9a27a","#7f6a4f","#5a4a3a","#6fa3b8","#4a7f9e",
+    "#e9e7e1","#b8b4ab","#8c8a86","#6e6c69","#ffffff"];
+  const PALQ=(()=>{const lab=h=>{const c=new THREE.Color(h);const f=v=>v<=0.04045?v/12.92:Math.pow((v+0.055)/1.055,2.4);const r=f(c.r),g=f(c.g),b=f(c.b);
+      let X=(r*0.4124+g*0.3576+b*0.1805)/0.95047,Y=r*0.2126+g*0.7152+b*0.0722,Z=(r*0.0193+g*0.1192+b*0.9505)/1.08883;const t=v=>v>0.008856?Math.cbrt(v):7.787*v+16/116;
+      X=t(X);Y=t(Y);Z=t(Z);return [116*Y-16,500*(X-Y),200*(Y-Z)];};
+    const P=PAPER_PAL.map(h=>[h,lab(h)]),cache=new Map();
+    return hex=>{hex=String(hex).toLowerCase();let v=cache.get(hex);if(v)return v;const L=lab(hex);let best=P[0][0],bd=1e9;
+      for(const [h,q] of P){const d=(L[0]-q[0])**2+(L[1]-q[1])**2+(L[2]-q[2])**2;if(d<bd){bd=d;best=h;}}cache.set(hex,best);return best;};})();
+  G3.PAPER_PAL=PAPER_PAL;G3.palQ=PALQ;
   /* palette: every material is bound to a CSS token so theme switches recolor the scene */
   const MATS=[];
   // v2.9.0: phones get the much cheaper Lambert lighting model instead of physically based shading (same colours, flatter sheen)
@@ -329,8 +346,12 @@ function no3D(){G3.ok=false;$("no3d").hidden=false;$("no3d-retry").onclick=()=>l
      that reads false while the mesh is empty; the game's own true/false goes on underneath and shows again with the first
      instance. (G3.emptyHide also runs over any InstancedMesh added later: 43-3d-frame.js) */
   G3.emptyHide=o=>{if(!o.isInstancedMesh||o.__emptyHide)return;o.__emptyHide=true;let v=o.visible;Object.defineProperty(o,"visible",{get(){return v&&this.count>0;},set(x){v=!!x;},configurable:true,enumerable:true});};
-  function graded(geo,n,opts={}){const ms=M.baleG.map(m=>{const o=new THREE.InstancedMesh(geo,instMat(m),n);o.castShadow=true;if(opts.recv)o.receiveShadow=true;o.count=0;scene.add(o);G3.emptyHide(o);return o;});
-    const k=[0,0,0];return {reset(){k[0]=k[1]=k[2]=0;},put(g,m4){if(k[g]<n)ms[g].setMatrixAt(k[g]++,m4);},done(){ms.forEach((o,i)=>{o.count=k[i];o.instanceMatrix.needsUpdate=true;});}};}
+  // v6.1 t8: one instanced mesh per shape for all three grades (was one per grade, each with its own texture): the grade is
+  // the bale's palette colour (A kraft, B lighter mixed paper, C grey-brown junk)
+  const GRADE_COL=["#a8895f","#c4b08c","#7f6a4f"].map(h=>lin0(h));
+  function graded(geo,n,opts={}){const m=new StdMat({color:0xffffff,roughness:0.95});const o=new THREE.InstancedMesh(geo,m,n);o.castShadow=true;if(opts.recv)o.receiveShadow=true;o.count=0;
+    o.setColorAt(0,GRADE_COL[0]);scene.add(o);G3.emptyHide(o);let k=0;
+    return {reset(){k=0;},put(g,m4){if(k<n){o.setMatrixAt(k,m4);o.setColorAt(k,GRADE_COL[g]||GRADE_COL[0]);k++;}},done(){o.count=k;o.instanceMatrix.needsUpdate=true;if(o.instanceColor)o.instanceColor.needsUpdate=true;}};}
   const hsh2=n=>{const x=Math.sin(n*91.7+3.1)*43758.5453;return x-Math.floor(x);};
   // grade mix: mostly A and B; junk OCC deliveries swing it heavily toward C
   const gradeOf=(id,junk)=>{const r=hsh2(id);return junk?(r<0.2?0:r<0.5?1:2):(r<0.5?0:r<0.85?1:2);};
@@ -341,6 +362,8 @@ function no3D(){G3.ok=false;$("no3d").hidden=false;$("no3d-retry").onclick=()=>l
   const capTex=new THREE.CanvasTexture(capC);capTex.colorSpace=THREE.SRGBColorSpace;
   M.rollCap=mat("panel",{map:capTex,roughness:0.9});
   const ROLLM=[M.paper,M.rollCap,M.rollCap];
+  // v6.1 t8: the surface textures the paper look replaces with flat palette colour (40c paperize); animated or lettered ones are kept
+  G3.decorTex=new Set([floorTex,asphTex,roofTex,flatTex,canTex,tankTex,pipeTex,motorTex,ribTex,capTex,...M.baleG.map(m=>m.map),M.bale.map].filter(Boolean));
   // separate materials for instanced meshes that carry per-roll colors (a shared material can't serve meshes with and without instance colors)
   const ROLLC=()=>[M.paper.clone(),M.rollCap.clone(),M.rollCap.clone()];
   // trailer side graphics carry the mill name and brand color

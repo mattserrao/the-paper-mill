@@ -53,7 +53,7 @@
         if(nx*cx+ny*(cy-fix)+nz*cz<0)for(let k=0;k<3;k++){const s=a[t+3+k];a[t+3+k]=a[t+6+k];a[t+6+k]=s;}}
       return TPL[k]=a;}
     // add a template with a transform and colour; shade darkens toward the base for a little ambient occlusion
-    function add(arr,x,y,z,sx,sy,sz,ry,hex,shade=0.18,sec,rx=0,rz=0){const S2=SEC[sec==="near"?"near":secOf(x,z)];_col.set(hex).convertSRGBToLinear();y+=hAt(x,z);
+    function add(arr,x,y,z,sx,sy,sz,ry,hex,shade=0.18,sec,rx=0,rz=0){const S2=SEC[sec==="near"?"near":secOf(x,z)];_col.set(G3.palQ?G3.palQ(hex):hex).convertSRGBToLinear();y+=hAt(x,z);
       _e.set(rx,ry,rz);_q.setFromEuler(_e);_m.compose(_v.set(x,y,z),_q,_s.set(sx,sy,sz));const e=_m.elements;
       let lo=1e9,hi=-1e9;for(let i=1;i<arr.length;i+=3){lo=Math.min(lo,arr[i]);hi=Math.max(hi,arr[i]);}const span=Math.max(1e-6,hi-lo);
       for(let i=0;i<arr.length;i+=3){const ax=arr[i],ay=arr[i+1],az=arr[i+2];
@@ -129,7 +129,7 @@
        strip, a few triangles in the same vertex-coloured scenery mesh (lighter at the top, darker at the base), instead of a
        3D crown and trunk. CR/CU are the camera's right and the card's up (world up); cards wind toward the camera. */
     const CR=[Math.SQRT1_2,0,Math.SQRT1_2],_cc=new THREE.Color(),_cc2=new THREE.Color();
-    function card(x,y0,z,pts,hex,shade=0.3,fwd=0,hexLo){const S2=SEC[secOf(x,z)];const yb=y0+hAt(x,z);x-=Math.SQRT1_2*fwd;z+=Math.SQRT1_2*fwd;   /* (fwd: a crown sits a hair in front of its trunk) */_cc.set(hex).convertSRGBToLinear();_cc2.set(hexLo||hex).convertSRGBToLinear();
+    function card(x,y0,z,pts,hex,shade=0.3,fwd=0,hexLo){const S2=SEC[secOf(x,z)];const yb=y0+hAt(x,z);x-=Math.SQRT1_2*fwd;z+=Math.SQRT1_2*fwd;   /* (fwd: a crown sits a hair in front of its trunk) */_cc.set(G3.palQ(hex)).convertSRGBToLinear();_cc2.set(G3.palQ(hexLo||hex)).convertSRGBToLinear();
       let lo=1e9,hi=-1e9;for(const p of pts){lo=Math.min(lo,p[1]);hi=Math.max(hi,p[1]);}const span=Math.max(1e-6,hi-lo);
       const P=(u,v)=>[x+CR[0]*u,yb+v,z+CR[2]*u];
       for(let i=1;i<pts.length-1;i++)for(const p of [pts[0],pts[i],pts[i+1]]){const w=P(p[0],p[1]);S2.p.push(w[0],w[1],w[2]);const t=(p[1]-lo)/span,k=1-shade*(1-t);
@@ -604,6 +604,7 @@
         const df=dFence(x,z),near=sstep(16,60,df);tint.copy(base);
         if(near>0){for(const [hex,sc,th,k,ox,oz] of PATCH){const n=noise(x+ox,z+oz,sc);if(n>th)tint.lerp(mixc.set(hex).convertSRGBToLinear(),k*near*Math.min(1,(n-th)/0.12));}
           tint.multiplyScalar(1+(noise(x,z,70)-0.5)*0.16*near);}
+        if(G3.palQ){tint.convertLinearToSRGB();tint.set(G3.palQ("#"+tint.getHexString())).convertSRGBToLinear();}   // (v6.1 t8: palette patches, no gradients)
         col[i*3]=tint.r;col[i*3+1]=tint.g;col[i*3+2]=tint.b;}
       g.setAttribute("color",new THREE.BufferAttribute(col,3));g.computeVertexNormals();
       const uv=g.attributes.uv;for(let i=0;i<uv.count;i++)uv.setXY(i,uv.getX(i)*W/26,uv.getY(i)*D/26);

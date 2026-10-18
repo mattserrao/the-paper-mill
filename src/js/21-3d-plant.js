@@ -29,7 +29,7 @@
     [[Z0,-37.4],[-33.6,-31],[-27,-6],[-1.6,10.4],[14.6,Z1]].forEach(([a,b])=>run(W0,a,W0,b));
     [[Z0,30.5],[34.5,Z1]].forEach(([a,b])=>run(W1,a,W1,b));
     const pg=new CylG(0.08,0.08,2.6,6),pm=new THREE.InstancedMesh(pg,instMat(M.metal),posts.length),m4=new THREE.Matrix4();
-    posts.forEach((p,k)=>{m4.makeTranslation(p[0],1.3,p[1]);pm.setMatrixAt(k,m4);});scene.add(pm);}
+    posts.forEach((p,k)=>{m4.makeTranslation(p[0],1.3,p[1]);pm.setMatrixAt(k,m4);});pm.userData.bake=true;scene.add(pm);}
   // guard gate between the two roads, with boom barriers
   {const gx=FENCE.x0-1.5,gz=4.4;box(3,2.6,3,conc,gx,1.3,gz);box(3.4,0.25,3.4,M.roofFlat,gx,2.75,gz);box(3.02,0.8,2.2,M.wind,gx,1.75,gz,scene,false);
     const sc=document.createElement("canvas");sc.width=128;sc.height=8;const x=sc.getContext("2d");for(let i=0;i<8;i++){x.fillStyle=i%2?"#ffffff":"#e0343c";x.fillRect(i*16,0,16,8);}
@@ -117,7 +117,7 @@
     const drum=cylZ(1.1,5,M.steel,74,10.2,-10,16);drum.rotation.y=Math.PI/2;
     ENV.stack=[79,34.2,-6.5];}
   // rail spur along the back of receiving, with a train that drops off boxcars
-  {const tie=new THREE.InstancedMesh(new THREE.BoxGeometry(0.35,0.14,2.6),wood,170),m4=new THREE.Matrix4();let n=0;for(let x=-139;x<-9&&n<170;x+=0.8){m4.makeTranslation(x,0.07,-29);tie.setMatrixAt(n++,m4);}tie.count=n;scene.add(tie);
+  {const tie=new THREE.InstancedMesh(new THREE.BoxGeometry(0.35,0.14,2.6),wood,170),m4=new THREE.Matrix4();let n=0;for(let x=-139;x<-9&&n<170;x+=0.8){m4.makeTranslation(x,0.07,-29);tie.setMatrixAt(n++,m4);}tie.count=n;tie.userData.bake=true;scene.add(tie);
     [-29.7,-28.3].forEach(z=>box(131,0.16,0.12,M.metal,-74.5,0.2,z,scene,false));box(0.6,1.1,2.6,M.bad,-9,0.55,-29,scene,false);
     const T=new THREE.Group();scene.add(T);const TW=[];
     const wG=new CylG(0.42,0.42,0.16,14);wG.rotateX(Math.PI/2);
@@ -187,7 +187,7 @@
     const poolT=spriteTex((x,w)=>{const g=x.createRadialGradient(w/2,w/2,0,w/2,w/2,w/2);g.addColorStop(0,"rgba(255,255,255,1)");g.addColorStop(0.45,"rgba(255,255,255,0.6)");g.addColorStop(1,"rgba(255,255,255,0)");x.fillStyle=g;x.fillRect(0,0,w,w);});
     const poolM=new THREE.MeshBasicMaterial({map:poolT,color:lin0("#ffd98a"),transparent:true,opacity:0,depthWrite:false,polygonOffset:true,polygonOffsetFactor:-4,polygonOffsetUnits:-4,}),pools=new THREE.InstancedMesh(new THREE.PlaneGeometry(9,9),poolM,L.length);pools.renderOrder=3;
     const m4=new THREE.Matrix4(),rx=new THREE.Matrix4().makeRotationX(-Math.PI/2);
-    L.forEach(([x,z],k)=>{m4.makeTranslation(x,3,z);pole.setMatrixAt(k,m4);m4.makeTranslation(x,6,z);head.setMatrixAt(k,m4);m4.makeTranslation(x,0.1,z).multiply(rx);pools.setMatrixAt(k,m4);});
+    L.forEach(([x,z],k)=>{m4.makeTranslation(x,3,z);pole.setMatrixAt(k,m4);m4.makeTranslation(x,6,z);head.setMatrixAt(k,m4);m4.makeTranslation(x,0.1,z).multiply(rx);pools.setMatrixAt(k,m4);});pole.userData.bake=head.userData.bake=true;
     scene.add(pole,head,pools);ENV.lampHead=head.material;ENV.lampPool=poolM;ENV.lampPoolMesh=pools;}
   // puddles show up on the asphalt when it has been raining
   {ENV.pudM=new StdMat({color:lin0("#5d6a80"),roughness:0.05,metalness:0.3,transparent:true,opacity:0,depthWrite:false,polygonOffset:true,polygonOffsetFactor:-2,polygonOffsetUnits:-2});

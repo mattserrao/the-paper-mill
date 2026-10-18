@@ -127,7 +127,13 @@
         const p=new THREE.Mesh(new THREE.PlaneGeometry(D,D),new THREE.MeshBasicMaterial({map:gT,color:0xffd9a0,transparent:true,depthWrite:false,blending:THREE.AdditiveBlending,toneMapped:false,polygonOffset:true,polygonOffsetFactor:-4,polygonOffsetUnits:-4,opacity:0}));
         p.rotation.x=-Math.PI/2;p.position.set(x,fy,z);p.renderOrder=2;p.visible=false;scene.add(p);
         const f=new THREE.Mesh(new CylG(0.5,0.7,0.3,12),new THREE.MeshBasicMaterial({color:0xfff1cf}));f.position.set(x,y+0.2,z);f.visible=false;scene.add(f);return {p,f,k:deck?0.55:i<4?0.22:0.35};});}
-    G3.nightL.forEach(l=>{l.p.material.opacity=l.k*night*bk;l.p.visible=night>0.05;l.f.visible=night>0.2;});G3.nightK=night;
+    /* v6.1 t8: the ten pools of lamp light are one additive mesh (their strengths in the vertex colours), not ten draws */
+    if(!G3.nightPool){const pos=[],col=[],uv=[],c=new THREE.Color(0xffd9a0),v=new THREE.Vector3();
+      G3.nightL.forEach(l=>{l.p.updateMatrixWorld(true);const g=l.p.geometry,P=g.attributes.position,U=g.attributes.uv,I=g.index;
+        for(let j=0;j<I.count;j++){const i=I.getX(j);v.fromBufferAttribute(P,i).applyMatrix4(l.p.matrixWorld);pos.push(v.x,v.y,v.z);uv.push(U.getX(i),U.getY(i));col.push(c.r*l.k,c.g*l.k,c.b*l.k);}});
+      const pg=new THREE.BufferGeometry();pg.setAttribute("position",new THREE.Float32BufferAttribute(pos,3));pg.setAttribute("uv",new THREE.Float32BufferAttribute(uv,2));pg.setAttribute("color",new THREE.Float32BufferAttribute(col,3));pg.computeBoundingSphere();
+      const pm=G3.nightL[0].p.material.clone();pm.color.set(0xffffff);pm.vertexColors=true;const mesh=new THREE.Mesh(pg,pm);mesh.renderOrder=2;mesh.visible=false;mesh.userData.smBatch=true;scene.add(mesh);G3.nightPool=mesh;}
+    G3.nightPool.material.opacity=night*bk;G3.nightPool.visible=night>0.05;G3.nightL.forEach(l=>{l.p.visible=false;l.f.visible=night>0.2;});G3.nightK=night;
     // v3.2.0: red aviation beacons on top of the boiler stack and the fog fan stack; small lamps on the disk thickener
     if(!G3.beacons){const gl=spriteTex((x,w)=>{const g=x.createRadialGradient(w/2,w/2,0,w/2,w/2,w/2);g.addColorStop(0,"rgba(255,255,255,1)");g.addColorStop(0.3,"rgba(255,255,255,0.5)");g.addColorStop(1,"rgba(255,255,255,0)");x.fillStyle=g;x.fillRect(0,0,w,w);},64);
       const lamp=(x,y,z,col,rb,sz)=>{const b=new THREE.Mesh(new THREE.SphereGeometry(rb,10,8),new THREE.MeshBasicMaterial({color:col,toneMapped:false}));b.position.set(x,y,z);b.visible=false;scene.add(b);

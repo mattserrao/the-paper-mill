@@ -8,7 +8,7 @@
   {const PALS=["spring","summer","autumn","winter"];G3.PALS=PALS;
    const SEASON_TINT={spring:[0.97,1.0,0.95],summer:[1,1,1],autumn:[1.0,0.94,0.86],winter:[0.92,0.95,1.0]};
    const gq=new THREE.Mesh(new THREE.PlaneGeometry(2,2),new THREE.ShaderMaterial({vertexShader:"void main(){gl_Position=vec4(position.xy,0.0,1.0);}",
-     fragmentShader:"uniform vec3 uTint;void main(){gl_FragColor=vec4(uTint,1.0);}",uniforms:{uTint:{value:new THREE.Vector3(1,1,1)}},
+     fragmentShader:"uniform vec3 uTint;float h(vec2 p){return fract(sin(dot(p,vec2(12.9898,78.233)))*43758.5453);}float n(vec2 p){vec2 i=floor(p),f=fract(p);f=f*f*(3.0-2.0*f);return mix(mix(h(i),h(i+vec2(1,0)),f.x),mix(h(i+vec2(0,1)),h(i+vec2(1,1)),f.x),f.y);}void main(){vec2 q=gl_FragCoord.xy;float g=0.55*n(q*0.35)+0.3*n(q*vec2(0.08,0.9))+0.15*h(q);gl_FragColor=vec4(uTint*(0.955+0.06*g),1.0);}",uniforms:{uTint:{value:new THREE.Vector3(1,1,1)}},
      blending:THREE.MultiplyBlending,premultipliedAlpha:true,transparent:true,depthTest:false,depthWrite:false,fog:false,toneMapped:false}));
    gq.frustumCulled=false;gq.renderOrder=9995;gq.name="time of day grade";gq.userData.smBatch=true;scene.add(gq);(G3.dynLater||(G3.dynLater=[])).push(gq);
    const ut=gq.material.uniforms.uTint.value;
@@ -49,4 +49,4 @@
      g*=1-0.06*dawn;b*=1-0.14*dawn;      // dawn: peach
      g*=1-0.12*dusk;b*=1-0.04*dusk;     // dusk: rose
      r*=1-0.3*night;g*=1-0.22*night;b*=1-0.02*night;  // night: blue
-     ut.set(r,g,b);gq.visible=!(r>0.999&&g>0.999&&b>0.999);};}
+     ut.set(r,g,b);gq.visible=true;};}   // (v6.1 t8: always on: it carries the paper grain too)

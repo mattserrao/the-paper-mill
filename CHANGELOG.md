@@ -1,5 +1,21 @@
 # Changelog
 
+## v6.1.0-t8 (2026-10-17): paper palette and draw cut (test branch test/v6.1-iso)
+- **A deliberate palette:** 40 colours for the whole world (papers, krafts, slates and inks; greens, earths and waters;
+  accents: safety yellow, orange, alarm red, pipe blue, brick). Every lit material, every scenery colour and the ground
+  snap to their nearest swatch (Lab distance); the brand colour stays exactly as chosen. The ground becomes posterised
+  paper patches instead of smooth gradients. Theme and brand changes re-snap.
+- **Flat surfaces:** concrete, asphalt, roof sheet, tank and can metal, ribbed walls, motors, bales and roll ends lose
+  their textures for flat colour (the material keeps the texture's average tone). The animated felt, wire and rope and
+  the lettered signs keep theirs.
+- **Paper grain:** the full-screen colour grade now also lays a fine paper grain over everything (no texture, one pass
+  that was already drawn for time of day; now always on).
+- **Draws:** bales are one instanced mesh per shape for all three grades (grade = colour); rolls draw with one material;
+  static instanced sets (fence posts, rail ties, lamp poles and heads, pallets, extinguishers) are baked into the palette
+  batches; the soft floor-shading decals are gone (the drop shadows do that job); glass bands are solid; outlines are one
+  batch per line style; the ten lamp-light pools are one mesh. Mid zoom 134 → 90 draws, whole site 157 → 110 (main: 350
+  / 365).
+
 ## v6.1.0-t7 (2026-10-17): triangle cut (test branch test/v6.1-iso)
 - **Paper-card trees:** broadleaf, conifer, cypress and bushes are flat standees facing the camera (a crown polygon and a
   trunk strip, lighter at the top), 4-7 triangles instead of 8-26.

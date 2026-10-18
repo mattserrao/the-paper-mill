@@ -49,3 +49,4 @@ One line per version, oldest first. Add a line here with every release: build.py
 6.1.0-t5   Cut-Out Edge Artifact Fixed (Test)
 6.1.0-t6   Iso Optimization: Hidden Objects Cost Nothing, Lighter Moving Batches (Test)
 6.1.0-t7   Iso Triangle Cut: Paper-Card Trees, Flat Ground, Hidden Faces Gone, Plain Boxes (Test)
+6.1.0-t8   Paper Palette: 40 Colours, Flat Surfaces, Paper Grain, Fewer Draws (Test)

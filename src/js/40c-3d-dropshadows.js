@@ -105,3 +105,38 @@
       n0+=cnt/3;if(!sg){n1+=cnt/3;continue;}
       o.userData.fullGeo=g;o.geometry=sg;r.geo=sg;r.ver=sg.attributes.position.version;n1+=sg.index.count/3;objs++;}
     diag(`back faces stripped: ${objs} objects, ${Math.round(n0)} -> ${Math.round(n1)} triangles`);};
+  /* v6.1 t8 paperize, on the first frame before anything is merged:
+     - surface textures in G3.decorTex (concrete, asphalt, roof sheet, tank and can metal, ribbed walls, motors, bales, roll
+       ends) give way to flat colour: the material keeps its colour times the texture's average, so the tone is the same;
+     - every lit material's colour snaps to the paper palette (20), except the brand colour;
+     - repeated rolls draw with one material (the paper end caps were a second and third draw per roll mesh);
+     - the soft floor shading decals go: the drop shadows (above) do that job as solid paper.
+     Fewer looks means the static and moving batches merge further (40). Theme and brand changes re-snap (G3.rebrand). */
+  {const avgC=new Map(),cv=document.createElement("canvas");cv.width=cv.height=8;const cx=cv.getContext("2d",{willReadFrequently:true});
+   const avg=t=>{let c=avgC.get(t);if(c)return c;c=new THREE.Color(1,1,1);try{const im=t.image;if(im&&im.width){cx.clearRect(0,0,8,8);cx.drawImage(im,0,0,8,8);const d=cx.getImageData(0,0,8,8).data;let r=0,g=0,b=0,n=0;
+       for(let i=0;i<d.length;i+=4){if(d[i+3]<8)continue;r+=d[i];g+=d[i+1];b+=d[i+2];n++;}if(n)c.setRGB(r/n/255,g/n/255,b/n/255).convertSRGBToLinear();}}catch(e){}avgC.set(t,c);return c;};
+   const LITM=new Set(["MeshStandardMaterial","MeshLambertMaterial"]),done=new WeakSet(),_s=new THREE.Color();
+   const snap=m=>{if(!m||!LITM.has(m.type)||!m.color)return;if(m.userData&&m.userData.token==="brand")return;if(m.vertexColors&&m.color.getHex()===0xffffff)return;
+     _s.copy(m.color).convertLinearToSRGB();const q=G3.palQ("#"+_s.getHexString());m.color.set(q).convertSRGBToLinear();};
+   const flatten=m=>{if(!m||done.has(m))return;done.add(m);if(!LITM.has(m.type))return;
+     if(m.map&&G3.decorTex&&G3.decorTex.has(m.map)){m.color.multiply(avg(m.map));m.map=null;m.needsUpdate=true;}snap(m);};
+   // static instanced sets (fence posts, rail ties, lamp poles and heads, pallets, extinguishers) become plain meshes, so
+   // they join the palette batches instead of drawing on their own
+   function bakeInst(o){const g=o.geometry,n=o.count,P=g.attributes.position,N=g.attributes.normal,U=g.attributes.uv,I=g.index,nv=P.count,ni=I?I.count:nv;
+     const pos=new Float32Array(nv*n*3),nor=N?new Float32Array(nv*n*3):null,uv=U?new Float32Array(nv*n*2):null,idx=new Uint32Array(ni*n),m4=new THREE.Matrix4(),m3=new THREE.Matrix3(),v=new THREE.Vector3();
+     for(let k=0;k<n;k++){o.getMatrixAt(k,m4);m3.getNormalMatrix(m4);for(let i=0;i<nv;i++){v.fromBufferAttribute(P,i).applyMatrix4(m4);pos.set([v.x,v.y,v.z],(k*nv+i)*3);
+         if(nor){v.fromBufferAttribute(N,i).applyMatrix3(m3).normalize();nor.set([v.x,v.y,v.z],(k*nv+i)*3);}if(uv){uv[(k*nv+i)*2]=U.getX(i);uv[(k*nv+i)*2+1]=U.getY(i);}}
+       for(let j=0;j<ni;j++)idx[k*ni+j]=k*nv+(I?I.getX(j):j);}
+     const bg=new THREE.BufferGeometry();bg.setAttribute("position",new THREE.BufferAttribute(pos,3));if(nor)bg.setAttribute("normal",new THREE.BufferAttribute(nor,3));if(uv)bg.setAttribute("uv",new THREE.BufferAttribute(uv,2));
+     bg.setIndex(new THREE.BufferAttribute(idx,1));bg.computeBoundingSphere();bg.computeBoundingBox();
+     const mesh=new THREE.Mesh(bg,o.material);mesh.castShadow=o.castShadow;mesh.receiveShadow=o.receiveShadow;mesh.visible=o.visible;const par=o.parent||scene;par.remove(o);par.add(mesh);return mesh;}
+   G3.paperize=()=>{const t0=performance.now();let nm=0,nd=0,nb=0;
+     {const L=[];scene.traverse(o=>{if(o.isInstancedMesh&&o.userData.bake&&o.count>0)L.push(o);});L.forEach(o=>{try{bakeInst(o);nb++;}catch(e){}});}
+     scene.traverse(o=>{if(o.userData&&o.userData.aoDecal){o.visible=false;nd++;return;}if(!o.material)return;
+       if(o.isInstancedMesh&&Array.isArray(o.material))o.material=o.material[0];
+       (Array.isArray(o.material)?o.material:[o.material]).forEach(m=>{if(!done.has(m))nm++;flatten(m);});});
+     MATS.forEach(flatten);
+     if(G3.terrain&&G3.terrain.material&&G3.terrain.material.map){G3.terrain.material.map=null;G3.terrain.material.needsUpdate=true;}
+     diag(`paper palette: ${nm} materials flattened and snapped, ${nd} shading decals removed, ${nb} instanced sets baked, ${(performance.now()-t0).toFixed(0)} ms`);};
+   // theme or brand changes reset the token colours: snap them again
+   const rb=G3.rebrand;if(rb)G3.rebrand=()=>{rb();MATS.forEach(snap);};}
