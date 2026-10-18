@@ -32,10 +32,11 @@ PLAY = r"""async ([style,seed])=>{const P=__PM,S=P.S,h=P.SIM_STEP||0.25,T=P.tell
   const click=id=>{const b=document.getElementById(id);if(b&&!b.disabled){b.click();return true;}return false;};
   const vis=id=>{const e=document.getElementById(id);return !!e&&!e.hidden;};
   const lv=id=>(S.up&&S.up[id])||0,L={bought:[],rounds:0,caught:0,clean:0,prep:0,cards:0,acc:0,civ:0,civCost:0};
-  const R=style!=='handsoff'&&style!=='buyer'&&style!=='gambler',ACT=style==='active';
+  const R=style==='rounds'||style==='active',ACT=style==='active';
   // the active shop: the bottleneck fix, then value for money, one upgrade a day, keeping a reserve
   const ACTLIST=['sales','contract','apc','refiner','reliab','clean','detrash','stores','safety','fire','deckle','shoe','drive','monitor','sales','contract','apc','deckle','rcfa'];
-  const shop=()=>{if(P.upLocked&&P.upLocked())return;const fix=(P.BN[S.bn]?P.BN[S.bn].ups:[]).slice(0,1).filter(id=>!lv(id));
+  const UPX=style.startsWith('up_')?style.slice(3):null;
+  const shop=()=>{if(P.upLocked&&P.upLocked())return;if(UPX){const u=P.UPS.find(q=>q.id===UPX);if(u&&lv(UPX)<u.lv.length){const l0=lv(UPX);P.buy(UPX);if(lv(UPX)>l0)L.bought.push(UPX);}return;}const fix=(P.BN[S.bn]?P.BN[S.bn].ups:[]).slice(0,1).filter(id=>!lv(id));
     const order=ACT?fix.concat(ACTLIST):fix.concat(P.UPS.map(u=>u.id).filter(id=>!fix.includes(id)));
     for(const id of order){const u=P.UPS.find(q=>q.id===id);if(!u||lv(id)>=u.lv.length)continue;const c=P.upCost(u,lv(id));
       const keep=ACT?(fix.includes(id)?150e3:500e3):400e3;if(S.cash-c>=keep){const l0=lv(id);P.buy(id);if(lv(id)>l0)L.bought.push(id);return;}if(ACT)return;}};
@@ -46,10 +47,10 @@ PLAY = r"""async ([style,seed])=>{const P=__PM,S=P.S,h=P.SIM_STEP||0.25,T=P.tell
     if(!T.start(a))return;L.rounds++;const ids=(T.T.q||[]).filter(p=>p.area===a).map(p=>p.id);let n=0;for(const id of ids)if(T.catch(id))n++;L.caught+=n;const r=T.end(a,n);if(r&&r.clean)L.clean++;};
   const prep=()=>{const f=T.prepFor();if(!f)return;if(T.prepDo('parts','now'))L.prep++;if(T.prepDo('crew'))L.prep++;if(T.prepDo('contr','in'))L.prep++;if(T.prepDo('draw'))L.prep++;};
   const civPick=()=>{const d=S.civ.cur,id=d.id,bs=[...document.querySelectorAll('#civOv .civbtn')],u=P.CIVU[id];L.civ++;
-    let i=0;if(id.startsWith('r_'))i=style==='handsoff'?1:0;
+    let i=0;if(id.startsWith('r_'))i=(style==='handsoff'||style.startsWith('up_'))?1:0;
     else if(u){const t=u.t||'';i=(style==='buyer'||ACT)?Math.max(0,t.indexOf('P')):Math.max(0,t.indexOf('Q'));
       if(style==='gambler'){const nb=u.ch.map((c,j)=>c[4]?j:-1).filter(j=>j>=0);if(nb.length)i=nb[Math.floor(rnd()*nb.length)];}
-      const box=document.getElementById('civ-ord');if(box)box.checked=style==='handsoff'||style==='rounds';}
+      const box=document.getElementById('civ-ord');if(box)box.checked=style==='handsoff'||style==='rounds'||style.startsWith('up_');}
     if(i>=bs.length)i=0;const c0=S.cash;bs[i].click();L.civCost+=c0-S.cash;};
   let n=0,lastDay=-1;
   while(S.season&&S.season.on&&n<31*1440/h){P.step(h);n++;
