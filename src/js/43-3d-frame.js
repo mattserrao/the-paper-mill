@@ -223,6 +223,8 @@
     try{if(G3.knobFrame)G3.knobFrame(rdt,now);}catch(e){G3.fErr=(G3.fErr||0)+1;if(G3.fErr<6)console.error("knobs",e);}   // v5.6 fiddly knobs (40b)
     try{if(G3.tellFrame)G3.tellFrame(rdt,now);}catch(e){G3.fErr=(G3.fErr||0)+1;if(G3.fErr<6)console.error("tells",e);}   // v5.7 the daily round (33b)
     if(G3.dbTick)G3.dbTick();
+    if(G3.fxSync)G3.fxSync();   // v6.1 t12: upset effect parts drawn instanced (31)
+    if(G3.smColTick)G3.smColTick();   // v6.1 t12: blinking lights in the merged scenery, every frame (40)
     if(G3.cutTick)G3.cutTick(now);
     if(G3.palTick)G3.palTick(now);
     if(G3.lodSet){const R=G3.camR||999;G3.lodSet(R>=500?0:R>=180?1:-1);}   // v6.1 t10: detail per zoom step (40)   // v6.1 iso: season palette and time-of-day grade (36c)   // v6.1 iso: cut-out pictures and cards (42f)

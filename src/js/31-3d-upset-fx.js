@@ -12,6 +12,14 @@
       g.addColorStop(0.62,"rgba(244,104,30,0.8)");g.addColorStop(1,"rgba(244,104,30,0)");x.fillStyle=g;x.beginPath();x.moveTo(w/2,3);x.bezierCurveTo(w*0.98,h*0.45,w*0.92,h*0.97,w/2,h-3);x.bezierCurveTo(w*0.08,h*0.97,w*0.02,h*0.45,w/2,3);x.fill();},96,128),
     dot:spriteTex((x,w)=>{const g=x.createRadialGradient(w/2,w/2,0,w/2,w/2,w/2);g.addColorStop(0,"rgba(255,255,255,1)");g.addColorStop(0.45,"rgba(255,255,255,0.95)");g.addColorStop(0.7,"rgba(255,255,255,0.35)");g.addColorStop(1,"rgba(255,255,255,0)");x.fillStyle=g;x.fillRect(0,0,w,w);},32),
     drop:spriteTex((x,w)=>{x.fillStyle="#ffffff";x.beginPath();x.moveTo(w/2,2);x.bezierCurveTo(w*0.85,w*0.5,w*0.8,w*0.95,w/2,w-2);x.bezierCurveTo(w*0.2,w*0.95,w*0.15,w*0.5,w/2,2);x.fill();},32),
+    /* v6.1 t12: the smoke stack's plume as paper cut-outs: a cloud cut from card, ink line round the edge, a shaded lower
+       half like a fold, the same finish as the cut-out people */
+    paper:spriteTex((x,w)=>{const B=[[0.5,0.56,0.25],[0.3,0.6,0.18],[0.7,0.6,0.19],[0.4,0.4,0.19],[0.62,0.41,0.17],[0.5,0.7,0.17]];
+      const blob=(grow,fill)=>{x.fillStyle=fill;x.beginPath();for(const [cx,cy,r] of B){x.moveTo(cx*w+r*w+grow,cy*w);x.arc(cx*w,cy*w,r*w+grow,0,Math.PI*2);}x.fill();};
+      x.clearRect(0,0,w,w);blob(w*0.035,"#2b1d12");blob(0,"#fbf6ea");
+      x.save();x.globalCompositeOperation="source-atop";const g=x.createLinearGradient(0,w*0.35,0,w*0.9);g.addColorStop(0,"rgba(255,255,255,0)");g.addColorStop(0.55,"rgba(214,204,186,0.0)");g.addColorStop(0.56,"rgba(214,204,186,0.55)");g.addColorStop(1,"rgba(190,178,158,0.7)");
+      x.fillStyle=g;x.fillRect(0,0,w,w);x.restore();
+      x.save();x.globalCompositeOperation="source-atop";x.fillStyle="rgba(255,255,255,0.6)";x.beginPath();x.arc(w*0.38,w*0.36,w*0.06,0,Math.PI*2);x.fill();x.restore();},256),
     chip:spriteTex((x,w)=>{x.fillStyle="#b07a43";x.fillRect(w*0.15,w*0.15,w*0.7,w*0.7);x.fillStyle="#f4efe6";x.fillRect(w*0.4,w*0.15,w*0.08,w*0.7);},32),
     stripes:spriteTex((x,w)=>{x.clearRect(0,0,w,w);x.fillStyle="rgba(214,56,44,0.6)";for(let i=-w;i<w*2;i+=32){x.beginPath();x.moveTo(i,0);x.lineTo(i+15,0);x.lineTo(i+15-w,w);x.lineTo(i-w,w);x.fill();}}),
     barrier:spriteTex((x,w)=>{x.fillStyle="#ffffff";x.fillRect(0,0,w,w);x.fillStyle="#d6382c";for(let i=-w;i<w*2;i+=32){x.beginPath();x.moveTo(i,0);x.lineTo(i+16,0);x.lineTo(i+16-w,w);x.lineTo(i-w,w);x.fill();}}),
@@ -20,7 +28,7 @@
   // pooled camera-facing particles: soft smoke and steam, glowing fire, sparks, droplets, bale chips
   const PT={smoke:{map:TX.puff,blend:THREE.NormalBlending,grow:true,grav:-0.5,drag:0.5},steam:{map:TX.puff,blend:THREE.NormalBlending,grow:true,grav:-1.2,drag:0.4},
     fire:{map:TX.flame,blend:THREE.NormalBlending,grav:-3,tall:1.35,glow:true},spark:{map:TX.dot,blend:THREE.NormalBlending,grav:14,glow:true},
-    drop:{map:TX.drop,blend:THREE.NormalBlending,grav:16},chip:{map:TX.chip,blend:THREE.NormalBlending,grav:12}};
+    drop:{map:TX.drop,blend:THREE.NormalBlending,grav:16},paper:{map:TX.paper,blend:THREE.NormalBlending,grav:0,drag:0,paper:true},chip:{map:TX.chip,blend:THREE.NormalBlending,grav:12}};
   /* v4: particles are drawn as one instanced batch per look (puff, flame, dot, drop, chip) instead of one sprite and
      one draw call each. Each batch is a camera-facing quad with per-instance position, size, color, opacity and
      spin; puffs are depth-sorted so smoke still layers correctly. Same emit/update rules as before. */
@@ -52,14 +60,14 @@
       transparent:true,depthWrite:false,fog:!glow,toneMapped:!glow});m.uniforms.map.value=map;
     b.mesh=new THREE.Mesh(g,m);b.mesh.frustumCulled=false;b.mesh.renderOrder=order;scene.add(b.mesh);PB.set(map,b);return b;}
   // smoke/steam puffs are sorted back to front; flames and sparks glow over them
-  pBatch(TX.drop,false,false,1);pBatch(TX.chip,false,false,1);pBatch(TX.puff,false,true,2);pBatch(TX.flame,true,false,3);pBatch(TX.dot,true,false,4);for(const k in PT)PT[k].b=PB.get(PT[k].map);   // (v5.2: each particle type knows its batch: no Map lookup per particle)
+  pBatch(TX.drop,false,false,1);pBatch(TX.chip,false,false,1);pBatch(TX.puff,false,true,2);pBatch(TX.paper,false,true,2).mesh.material.toneMapped=false;   /* (t12: paper white, like the cut-out people, not tone-mapped grey) */pBatch(TX.flame,true,false,3);pBatch(TX.dot,true,false,4);for(const k in PT)PT[k].b=PB.get(PT[k].map);   // (v5.2: each particle type knows its batch: no Map lookup per particle)
   const PCOL=new Map(),pcol=c=>{let v=PCOL.get(c);if(!v){v=lin(c);PCOL.set(c,v);}return v;};
   // background ambience (plume, aerators, outfall) is capped so it can never crowd out fires, sparks and disaster effects
   function emitA(type,x,y,z,vx,vy,vz,life,size,color,op){if(liveN<600)emit(type,x,y,z,vx,vy,vz,life,size,color,op);}   // (named arguments: a rest array per call was a steady allocation)
   function emit(type,x,y,z,vx,vy,vz,life,size,color,op=1){let p=pFree.pop();
     if(!p){if(parts.length>=PCAP)return;p={v:[0,0,0]};parts.push(p);}
     const c=pcol(color);p.type=type;p.t=PT[type];p.alive=true;p.x=x;p.y=y;p.z=z;p.v[0]=vx;p.v[1]=vy;p.v[2]=vz;p.life=p.max=life;p.size=size;p.op=op;
-    p.r=c.r;p.g=c.g;p.b=c.b;p.rot=Math.random()*6.28;p.spin=(Math.random()-0.5)*2;liveN++;}
+    p.r=c.r;p.g=c.g;p.b=c.b;p.rot=Math.random()*6.28;p.spin=(Math.random()-0.5)*2;p.ph=Math.random()*6.28;if(type==="paper"){p.rot=(Math.random()-0.5)*0.5;p.r0=p.rot;p.fl=Math.random()<0.5?-1:1;}liveN++;}
   // (v4.1 pass 3: no allocation per frame here: the per-batch lists keep their length and a count, the sort is an in-place
   // insertion sort over the live entries, and each attribute reuses one update-range object; the old version's list resets,
   // closures and range objects were a steady 0.3 MB/s on a phone)
@@ -67,7 +75,11 @@
   const BKC=new Int32Array(48),BKT=[];
   function stepParts(rdt){liveN=0;for(let k=0;k<PBL.length;k++)PBL[k].n=0;
     for(let q=0;q<parts.length;q++){const p=parts[q];if(!p.alive)continue;p.life-=rdt;if(p.life<=0){p.alive=false;pFree.push(p);continue;}liveN++;
-      const t=p.t,f=p.life/p.max;p.v[1]-=t.grav*rdt;if(t.drag){p.v[0]*=1-t.drag*rdt;p.v[2]*=1-t.drag*rdt;}
+      const t=p.t,f=p.life/p.max;
+      // paper puffs: rise in little hops (bop), sway side to side, rock, swell a touch, and fade only at the end
+      if(t.paper){const age=p.max-p.life,hop=Math.max(0,Math.sin(age*4.2+p.ph));p.y+=p.v[1]*(0.25+1.9*hop*hop)*rdt;p.x+=(p.v[0]+Math.sin(age*1.3+p.ph)*0.9)*rdt;p.z+=(p.v[2]+Math.cos(age*1.1+p.ph)*0.5)*rdt;
+        p.rot=p.r0+Math.sin(age*2.4+p.ph)*0.22;p.s1=p.size*(0.55+0.45*Math.min(1,age*1.5)+0.25*(1-f));p.a=p.op*Math.min(1,f/0.35)*Math.min(1,age*4);const b=t.b;b.list[b.n++]=p;continue;}
+      p.v[1]-=t.grav*rdt;if(t.drag){p.v[0]*=1-t.drag*rdt;p.v[2]*=1-t.drag*rdt;}
       p.x+=p.v[0]*rdt;p.y+=p.v[1]*rdt;p.z+=p.v[2]*rdt;if(p.y<0.05&&p.v[1]<0){p.y=0.05;p.v[1]=0;p.v[0]*=0.5;p.v[2]*=0.5;}
       p.s1=t.grow?p.size*(0.45+(1-f)*1.7):p.size*(0.35+0.65*f);
       p.a=p.op*(t.grow?Math.min(1,(1-f)*5)*f:Math.min(1,f*1.6));p.rot+=p.spin*rdt*(t.grow?0.3:1);const b=t.b;b.list[b.n++]=p;}
@@ -80,7 +92,7 @@
         else{let lo=1e9,hi=-1e9;for(let i=0;i<n;i++){const d=L[i].d;if(d<lo)lo=d;if(d>hi)hi=d;}const K=48,sc=(K-1e-6)/Math.max(1e-6,hi-lo),C=BKC.fill(0),T=BKT;
           for(let i=0;i<n;i++)C[((L[i].d-lo)*sc)|0]++;for(let k2=1;k2<K;k2++)C[k2]+=C[k2-1];for(let i=n-1;i>=0;i--){const p=L[i];T[--C[((p.d-lo)*sc)|0]]=p;}for(let i=0;i<n;i++)L[i]=T[i];}}
       const D=b.ib.array;
-      for(let i=0;i<n;i++){const p=L[i],o=i*10;D[o]=p.x;D[o+1]=p.y;D[o+2]=p.z;D[o+3]=p.s1;D[o+4]=p.s1*(p.t.tall||1);
+      for(let i=0;i<n;i++){const p=L[i],o=i*10;D[o]=p.x;D[o+1]=p.y;D[o+2]=p.z;D[o+3]=p.s1*(p.fl||1);D[o+4]=p.s1*(p.t.tall||1);
         D[o+5]=p.r;D[o+6]=p.g;D[o+7]=p.b;D[o+8]=p.a;D[o+9]=p.rot;}
       b.g.instanceCount=n;b.mesh.visible=n>0&&!(G3.EXP&&(G3.EXP.noParts||G3.EXP.hidePB===b));
       if(n){const r=b.rng;r.count=n*10;if(!b.ib.updateRanges.length)b.ib.updateRanges.push(r);b.ib.needsUpdate=true;}}}
@@ -324,7 +336,7 @@
         flash.style.opacity=age<0.12?0.9:age<0.3?0.0:age<0.42?0.6:on&&age>1.4?0.35:0;beacons.forEach((s,k)=>s.scale.setScalar(1.2+2.2*Math.max(0,Math.sin(now/180+k))));
         if(age<0.4)shake=Math.max(shake,1.4);};},
     tornado:g=>{const fun=new THREE.Group();g.add(fun);const N=54,puffs=[];for(let k=0;k<N;k++){const s=new THREE.Sprite(new THREE.SpriteMaterial({map:TX.puff,transparent:true,depthWrite:false,color:lin("#b9bfcb"),opacity:0.6}));fun.add(s);puffs.push(s);}
-      const deb=[];for(let k=0;k<16;k++){const d=k%3===0?new THREE.Mesh(rollGeo,ROLLM):new THREE.Mesh(cubeG,k%3===1?M.bale:mat("kraft"));d.scale.setScalar(k%3===0?0.8:0.75);d.castShadow=true;fun.add(d);deb.push(d);}
+      const deb=[];for(let k=0;k<16;k++){const d=k%3===0?new THREE.Mesh(rollGeo,ROLLM[0]):new THREE.Mesh(cubeG,k%3===1?M.bale:mat("kraft"));d.scale.setScalar(k%3===0?0.8:0.75);d.castShadow=true;fun.add(d);deb.push(d);}   /* (t12: one material per roll, so the debris instances) */
       return (now,rdt,inc)=>{const age=(now-inc.real)/1000;fun.visible=age<12;const fx=-95+age/12*170,fz=-6+Math.sin(age*0.9)*10;fun.position.set(fx,0,fz);FX.tornado.pinPos=[fx,fz];
         puffs.forEach((s,k)=>{const h=(k/N)*30,a=now/160*(1.6-h/40)+k*2.4,r=1+h*0.5+Math.sin(now/400+k)*0.3;s.position.set(Math.cos(a)*r+Math.sin(now/300+h/6)*h*0.05,h,Math.sin(a)*r);s.scale.setScalar(3.4+h*0.22);});
         deb.forEach((d,k)=>{const a=now/170+k,rad=3+k*0.75;d.position.set(Math.cos(a)*rad,1.5+k*1.3,Math.sin(a)*rad);d.rotation.set(a,a*1.3,0);});
@@ -476,7 +488,39 @@
   function makeFX(id){const def=FXDEF[id];const g=new THREE.Group();scene.add(g);const pp=PINS[id]||[0,10,0,"!"];const f=FX[id]={g,up:null,pin:pinAt(g,pp[0],pp[1],pp[2],pp[3]),lb:lblNew(true,id)};
     // v5.7.3 bare: a token puff at the spot instead of the full effect (the red tag and label are as usual)
     if(G3.bare){const x=pp[0],z=pp[2];f.up=(now,rdt)=>{if(rdt>0&&Math.random()<rdt*2.5)emit("smoke",x+R()*1.5,2,z+R()*1.5,R()*0.3,1.4,R()*0.3,2.4,1.6,"#6b707a",0.65);};return f;}
-    f.up=def?def(g):()=>{};return f;}
+    f.up=def?def(g):()=>{};try{if(!/[?&]nofxinst/.test(location.search))f.inst=fxInst(g);}catch(e){console.error("effect instancing failed",id,e);}return f;}
+  /* v6.1 t12: an effect's many look-alike parts (rain streaks, ripples, splash blobs, tornado puffs and debris) draw as one
+     instanced mesh per shape and look instead of one draw each (the roof leak was ~100 draws, the tornado ~75). The effect
+     code keeps animating its own objects; they sit on a hidden layer and each frame the instanced copy takes their world
+     matrices, colours, opacities and visibility. A sprite becomes a camera-facing card (the camera never turns). */
+  const FXI_LAYER=27,_fm=new THREE.Matrix4(),_fq=new THREE.Quaternion(),_fp=new THREE.Vector3(),_fs=new THREE.Vector3(),_fc=new THREE.Color();
+  const geoSig=g=>g.type+":"+(g.parameters?JSON.stringify(g.parameters):g.uuid);
+  const SPRG=new THREE.PlaneGeometry(1,1);
+  function fxMat(m,sprite){const c=sprite?new THREE.MeshBasicMaterial({map:m.map,transparent:m.transparent,depthWrite:m.depthWrite,depthTest:m.depthTest,blending:m.blending,toneMapped:m.toneMapped,fog:m.fog}):m.clone();
+    c.color&&c.color.setRGB(1,1,1);c.opacity=1;if(m.transparent)c.transparent=true;
+    c.onBeforeCompile=sh=>{sh.vertexShader="attribute float iAlpha;varying float vIA;\n"+sh.vertexShader.replace("#include <begin_vertex>","#include <begin_vertex>\nvIA=iAlpha;");
+      sh.fragmentShader="varying float vIA;\n"+sh.fragmentShader.replace("vec4 diffuseColor = vec4( diffuse, opacity );","vec4 diffuseColor = vec4( diffuse, opacity*vIA );");};
+    c.customProgramCacheKey=()=>"fxinst";return c;}
+  function fxInst(g){const groups=new Map();
+    g.traverse(o=>{if(o===g||!(o.isMesh||o.isSprite)||o.isInstancedMesh||o.isBatchedMesh||o.isSkinnedMesh)return;const m=o.material;if(!m||Array.isArray(m))return;
+      if(o.isMesh&&!["MeshBasicMaterial","MeshLambertMaterial","MeshStandardMaterial"].includes(m.type))return;if(o.isMesh&&o.geometry.morphAttributes&&Object.keys(o.geometry.morphAttributes).length)return;
+      if(o.onBeforeRender!==THREE.Object3D.prototype.onBeforeRender||o.layers.mask!==1)return;
+      const k=[o.isSprite?"S":geoSig(o.geometry),m.type,m.map?m.map.uuid:"",m.blending,m.side,m.transparent?1:0,m.depthWrite?1:0,m.toneMapped?1:0,m.vertexColors?1:0,o.renderOrder].join("|");
+      let L=groups.get(k);if(!L)groups.set(k,L=[]);L.push(o);});
+    const out=[];
+    for(const L of groups.values()){if(L.length<4)continue;const o0=L[0],sprite=!!o0.isSprite,geo=sprite?SPRG:o0.geometry;
+      const im=new THREE.InstancedMesh(geo,fxMat(o0.material,sprite),L.length);const al=new THREE.InstancedBufferAttribute(new Float32Array(L.length).fill(1),1);al.setUsage(THREE.DynamicDrawUsage);
+      im.geometry=geo.clone();im.geometry.setAttribute("iAlpha",al);im.instanceMatrix.setUsage(THREE.DynamicDrawUsage);im.setColorAt(0,_fc.set(1,1,1));im.frustumCulled=false;im.renderOrder=o0.renderOrder;im.name="effect parts";im.userData.smBatch=true;
+      g.add(im);L.forEach(o=>o.layers.set(FXI_LAYER));out.push({im,L,al,sprite});}
+    return out.length?out:null;}
+  // each frame, for a showing effect: the instanced copies follow their originals
+  G3.fxSync=()=>{const q=camera.quaternion;for(const id in FX){const f=FX[id];if(!f.inst||!f.g.visible)continue;f.g.updateMatrixWorld();
+      for(const e of f.inst){const {im,L,al}=e;for(let i=0;i<L.length;i++){const o=L[i];let v=true;for(let x=o;x&&x!==f.g;x=x.parent)if(!x.visible){v=false;break;}
+          if(!v){_fm.makeScale(0,0,0);al.array[i]=0;}
+          else if(e.sprite){o.matrixWorld.decompose(_fp,_fq,_fs);_fm.compose(_fp,q,_fs);al.array[i]=o.material.opacity;}
+          else{_fm.copy(o.matrixWorld);al.array[i]=o.material.opacity;}
+          im.setMatrixAt(i,_fm);const c=o.material.color;if(c)im.setColorAt(i,c);}
+        im.instanceMatrix.needsUpdate=true;if(im.instanceColor)im.instanceColor.needsUpdate=true;al.needsUpdate=true;}}};
   /* v4: every upset effect is built, and every shader compiled, while the start menu is up: a few effects per frame
      (about 8 ms of work each frame), then one compileAsync pass, which compiles in parallel where the browser supports
      it. Nothing compiles mid-play. (r186's compile() walks the whole scene however much is hidden, so v3's

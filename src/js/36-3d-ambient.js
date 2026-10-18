@@ -156,7 +156,10 @@
     ENV.bridge.rotation.y-=rdt*0.12;
     // steam plume grows with production and dies when the boiler trips
     const boil=S.inc.some(i=>i.id==="boiler"),pr=clamp((S.rates.prod||0)/35,0,1.4);if(!boil&&G3.POP)G3.POP.lever.rotation.z=0;
-    if(!boil&&rdt>0&&Math.random()<rdt*(2+10*pr)*Math.min(1,G3.brownK==null?1:G3.brownK*G3.brownK))emitA("steam",ENV.stack[0]+R()*0.6,ENV.stack[1],ENV.stack[2]+R()*0.6,1.2+R(),2.5+Math.random()*1.5,R()*0.6,4+3*pr,3+4*pr,"#ffffff",0.55);
+    // (v6.1 t12: the plume is paper cut-out clouds, fewer and bigger, that hop upwards and fade; ?softplume = the old soft steam)
+    const pbk=Math.min(1,G3.brownK==null?1:G3.brownK*G3.brownK);
+    if(/[?&]softplume/.test(location.search)){if(!boil&&rdt>0&&Math.random()<rdt*(2+10*pr)*pbk)emitA("steam",ENV.stack[0]+R()*0.6,ENV.stack[1],ENV.stack[2]+R()*0.6,1.2+R(),2.5+Math.random()*1.5,R()*0.6,4+3*pr,3+4*pr,"#ffffff",0.55);}
+    else if(!boil&&rdt>0&&Math.random()<rdt*(0.45+1.1*pr)*pbk)emitA("paper",ENV.stack[0]+R()*0.8,ENV.stack[1]+1.5,ENV.stack[2]+R()*0.8,1.0+R()*0.6,2.6+Math.random()*1.2,R()*0.5,5.5+2.5*pr,4.5+3.5*pr+Math.random()*1.5,"#ffffff",1);
     if(rdt>0){for(const [x,z] of ENV.aer)if(Math.random()<rdt*6)emitA("steam",x+R()*0.6,1.4,z+R()*0.6,R()*1.5,1.5,R()*1.5,0.8,0.8,"#ffffff",0.6);
       if(Math.random()<rdt*8)emitA("drop",ENV.outfall[0]+R()*0.3,ENV.outfall[1]+0.5,ENV.outfall[2],R(),1.5,-1.5,0.6,0.28,"#9ec3d6",0.8);}
     const perm=S.inc.some(i=>i.id==="permit");ENV.wwM.color.copy(perm?ENV.wwBad:ENV.wwBase);if(ENV.wwM2)ENV.wwM2.color.copy(ENV.wwM.color);

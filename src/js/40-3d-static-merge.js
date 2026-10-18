@@ -18,7 +18,7 @@
   const SMHOLD=new THREE.Group();SMHOLD.name="parked originals";SM.holder=SMHOLD;
   const smPar=r=>(r.par&&r.o.parent===SMHOLD)?r.par:r.o.parent;
   function smShownR(r){const o=r.o;if(o.parent!==SMHOLD)return smShown(o);if(!o.visible)return false;const p=r.par;return p===scene?true:!!p&&smShown(p);}
-  function smExcluded(o){for(let x=o;x&&x!==scene;x=x.parent){if(roofs.includes(x)||SM.dyn.has(x))return true;}return false;}
+  function smExcluded(o){for(let x=o;x&&x!==scene;x=x.parent){if(roofs.includes(x)||SM.dyn.has(x)||x.userData.car||x.userData.act)return true;}return false;}   // (t12: parked cars and activity props move sooner or later: moving batches from the start)
   function smRecord(o){return {o,m:Float64Array.from(o.matrixWorld.elements),mat:o.material,geo:o.geometry,ver:o.geometry.attributes.position.version,key:null};}
   function smSame(r){const o=r.o;if(o.material!==r.mat||o.geometry!==r.geo||o.geometry.attributes.position.version!==r.ver||!smShownR(r))return false;
     if(r.frozen){if(!o.position.equals(r.fp)||!o.quaternion.equals(r.fq)||!o.scale.equals(r.fs))return false;
@@ -42,7 +42,7 @@
   function grpUnpark(e){const g=e.g;if(!g.__pg)return;SMHOLD.remove(g);delete g.__pg;delete g.add;scene.add(g);g.updateMatrixWorld(true);e.out=true;SM.pgOut=(SM.pgOut||0)+1;}
   function grpPark(){if(BQ.has("nogpark"))return;const rec=new Map();for(const r of SM.list)rec.set(r.o,r);let n=0,nodes=0;
     for(const g of [...scene.children]){if(g.isMesh||g.isLine||g.isLight||g.isCamera||g.isBatchedMesh||g.isInstancedMesh||g===SMHOLD||!g.children.length||!g.visible)continue;
-      if(SM.dyn.has(g)||roofs.includes(g)||g.userData.smBatch||g.userData.cut)continue;let ok=true,c=0;
+      if(SM.dyn.has(g)||roofs.includes(g)||g.userData.smBatch||g.userData.cut||g.userData.car||g.userData.act)continue;let ok=true,c=0;
       g.traverse(x=>{if(!ok)return;c++;if(x===g)return;
         if(SM.dyn.has(x)||roofs.includes(x)||x.isLight||x.isCamera||x.isSprite||x.isPoints||x.isInstancedMesh||x.isBatchedMesh||(x.userData&&(x.userData.cut||x.userData.smBatch))||!x.visible){ok=false;return;}
         if(x.isMesh||x.isLine){const r=rec.get(x);if(!r||!r.frozen||r.proxyOnly||r.single||!(r.bm||r.key)||x.layers.mask!==((1<<SMLAYER)>>>0))ok=false;}
@@ -241,10 +241,15 @@
     console.info(`scenery: ${inst} objects in ${SM.bms.length} batched meshes; ${baked} outlines/mirrored + ${SM.roofN} roof parts baked into ${SM.batches.size} batches; shadows: ${SH.meshes.length} proxies`);}
   // anything that changes is handed back (drawn on its own again): a batched instance is just hidden, a baked batch is rebuilt
   function vcRange(mesh,v0,n,c){const a=mesh.geometry.attributes.color;if(!a)return;const A=a.array,st=a.itemSize;for(let i=v0;i<v0+n;i++){A[i*st]=c.r;A[i*st+1]=c.g;A[i*st+2]=c.b;}a.addUpdateRange(v0*st,n*st);a.needsUpdate=true;}
+  /* v6.1 t12: an object whose colour has changed once (beacons, alarm and status lights) is followed every frame from then
+     on, so it blinks in time; the watch itself still runs twice a second */
+  SM.anim=new Set();
+  G3.smColTick=()=>{if(!SM.anim.size)return;for(const r of SM.anim){if(r.out){SM.anim.delete(r);continue;}const c=r.o.material.color,h=c.getHex();if(h===r.hex)continue;
+      if(r.bm&&r.bm.mrowCol&&!r.out){r.hex=h;r.bm.mrowCol(r.iid,c);}else if(r.bm&&!r.flatVC){r.hex=h;r.bm.setColorAt(r.iid,c);}else if(r.flatVC&&!r.bm&&r.bk&&r.bk.mesh&&r.v0!=null){r.hex=h;vcRange(r.bk.mesh,r.v0,r.vn,c);lvEach(r,(m,v0,n)=>vcRange(m,v0,n,c));}}};
   function smWatch(){const dirty=SM.dirty||(SM.dirty=new Set());
     const freeze=performance.now()-SM.t0>10000;
     // (v4.1 pass 3: compacted in place twice a second instead of filtered into a new 2,700-entry array)
-    const keep=r=>{let recol=false;if(r.flat&&smSame(r)){const h=r.o.material.color.getHex();if(h!==r.hex){if(r.flatVC&&!r.bm&&r.bk&&r.bk.mesh&&r.v0!=null){r.hex=h;vcRange(r.bk.mesh,r.v0,r.vn,r.o.material.color);lvEach(r,(m,v0,n)=>vcRange(m,v0,n,r.o.material.color));}else if(r.flatVC||!r.bm)recol=true;else{r.hex=h;if(r.bm.mrowCol)r.bm.mrowCol(r.iid,r.o.material.color);else r.bm.setColorAt(r.iid,r.o.material.color);}}}   // (v6.1 t2: a flat batch follows colour changes; t10: a baked one rewrites that object's vertex colours in place)
+    const keep=r=>{let recol=false;if(r.flat&&smSame(r)){const h=r.o.material.color.getHex();if(h!==r.hex){SM.anim.add(r);if(r.flatVC&&!r.bm&&r.bk&&r.bk.mesh&&r.v0!=null){r.hex=h;vcRange(r.bk.mesh,r.v0,r.vn,r.o.material.color);lvEach(r,(m,v0,n)=>vcRange(m,v0,n,r.o.material.color));}else if(r.flatVC||!r.bm)recol=true;else{r.hex=h;if(r.bm.mrowCol)r.bm.mrowCol(r.iid,r.o.material.color);else r.bm.setColorAt(r.iid,r.o.material.color);}}}   // (v6.1 t2: a flat batch follows colour changes; t10: a baked one rewrites that object's vertex colours in place)
       const bmat=r.bm?r.bm.material:r.bk?r.bk.mat:null;   // (t10: baked records have no BatchedMesh; reading r.bm.material threw and stopped the whole watch on iPhone)
       if(!recol&&smSame(r)&&!(r.shared&&!r.flat&&bmat&&!colorSame(r.o.material,bmat))&&!(r.flat&&bmat&&!emSame(r.o.material,bmat))){if(freeze&&(r.bm||r.key))smFreeze(r);return true;}
       smThaw(r);
@@ -259,7 +264,7 @@
         else dirty.add(r.key);}return false;};
     if(SPG.length)grpWatch();
     const L=SM.list;let w=0;for(let i=0;i<L.length;i++){const r=L[i];if(keep(r))L[w++]=r;}if(w<L.length)L.length=w;
-    if(freeze&&!SM.pgDone){SM.pgDone=true;try{grpPark();}catch(e){smErr("parking groups",e);}}
+    if(freeze&&!SM.pgDone&&performance.now()-SM.t0>30000){SM.pgDone=true;   /* (t12: parked after 30 s, once the start-of-play movers have shown themselves) */try{grpPark();}catch(e){smErr("parking groups",e);}}
     if(dirty.size){let n=0;for(const k of dirty){if(n++>=2)break;dirty.delete(k);smBuild(k);}}
     if(SH.dirty&&performance.now()>SH.t){SH.dirty=false;SH.t=performance.now()+5000;shBuild();}}
   /* ---- static shadow proxy (v4) ----

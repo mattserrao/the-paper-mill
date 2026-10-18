@@ -16,11 +16,11 @@
    const KIND={person:{R:1.3,cy:1.0,ppm:36,at:0},lift:{R:2.0,cy:1.1,ppm:34,at:1},truck:{R:4.2,cy:1.4,ppm:30,at:1}};
    const CUT=G3.CUT={actors:[],cells:new Map(),byKD:new Map(),byK:new Map(),queue:[],qset:new Set(),caps:0,full:0,resets:0,errs:0,t:0,ok:true,burst:0};
    // --- atlases: a shelf packer over a 2048 square each ---
-   function atlas(){const rt=new THREE.WebGLRenderTarget(AW,AH,{depthBuffer:false,generateMipmaps:true,minFilter:THREE.LinearMipmapLinearFilter,magFilter:THREE.LinearFilter});
-     rt.texture.anisotropy=4;rt.scissorTest=true;return {rt,tex:rt.texture,rows:[],nextY:0,full:false};}
+   function atlas(H=AH){const rt=new THREE.WebGLRenderTarget(AW,H,{depthBuffer:false,generateMipmaps:true,minFilter:THREE.LinearMipmapLinearFilter,magFilter:THREE.LinearFilter});
+     rt.texture.anisotropy=4;rt.scissorTest=true;return {rt,tex:rt.texture,rows:[],nextY:0,full:false,h:H};}
    function alloc(A,s){for(const r of A.rows)if(r.h===s&&r.x+s<=AW){const x=r.x;r.x+=s+PAD;return [x,r.y];}
-     if(A.nextY+s>AH){A.full=true;return null;}const r={y:A.nextY,h:s,x:s+PAD};A.nextY+=s+PAD;A.rows.push(r);return [0,r.y];}
-   const ATL=[atlas(),atlas()];CUT.atl=ATL;
+     if(A.nextY+s>A.h){A.full=true;return null;}const r={y:A.nextY,h:s,x:s+PAD};A.nextY+=s+PAD;A.rows.push(r);return [0,r.y];}
+   const ATL=[atlas(2048),atlas()];CUT.atl=ATL;   // (t12: people get a 2048 square: every look at every heading fits, no restarts)
    // --- the card material: atlas colour, cut at the paper edge; shadows are the same cards in dark paper ---
    const aa=renderer.getContext().getContextAttributes().antialias;
    const VS=`attribute vec4 aRect;varying vec2 vUv;void main(){vUv=vec2(aRect.x+uv.x*aRect.z,aRect.y+uv.y*aRect.w);
@@ -102,7 +102,7 @@
      }finally{   // put it back exactly as it was, and the renderer too
        renderer.setRenderTarget(rt0);renderer.setClearColor(cl,ca);renderer.autoClear=ac;
        if(par)par.add(o);else cs.remove(o);o.position.copy(p0);o.rotation.y=ry;o.visible=vis;o.updateMatrixWorld(true);o.children.forEach(c=>{c.matrixWorldAutoUpdate=false;});}
-     CUT.caps++;return {r:[at[0]/AW,at[1]/AH,px/AW,px/AH],a:K.at,w:2*K.R};}
+     CUT.caps++;return {r:[at[0]/AW,at[1]/A.h,px/AW,px/A.h],a:K.at,w:2*K.R};}
    // start-up: compile the picture shaders (the cut-outs' materials as drawn into RT_A) behind the "Getting the mill ready" screen
    G3.cutWarm=()=>{try{rescan();basis();const seen=new Set();for(const a of CUT.actors){const kk=a.kind;if(seen.size>40)break;
        let m=false;a.o.traverse(c=>{if(c.material&&!seen.has(c.material)){seen.add(c.material);m=true;}});if(m){const key="warm:"+CUT.caps;const c=capture(a,key,0,ATL[a.K.at]);if(c){CUT.cells.set(key,c);CUT.byKD.set(kk+"#0",c);CUT.byK.set(kk,c);}}}}
@@ -111,9 +111,16 @@
      // v6.1 t4 self-test: read back the centre of one warm-up picture (once, at start-up). Empty means this device can't
      // render the pictures: the cut-outs stay off and the 3D models are shown, rather than nothing at all.
      try{const c=CUT.byK.get("person")||CUT.byK.get("lift")||CUT.byK.get("truck");if(c){const A=ATL[c.a],px=new Uint8Array(4*256);
-         const cx=Math.round((c.r[0]+c.r[2]/2)*AW),cy=Math.round((c.r[1]+c.r[3]*0.45)*AH);renderer.readRenderTargetPixels(A.rt,cx-8,cy-8,16,16,px);
+         const cx=Math.round((c.r[0]+c.r[2]/2)*AW),cy=Math.round((c.r[1]+c.r[3]*0.45)*A.h);renderer.readRenderTargetPixels(A.rt,cx-8,cy-8,16,16,px);
          let a=0;for(let i=3;i<px.length;i+=4)a=Math.max(a,px[i]);CUT.selfTest=a;if(a===0){CUT.ok=false;CUT.actors.forEach(x=>{x.o.children.forEach(c=>{c.matrixWorldAutoUpdate=true;});hide(x,false);});   /* (t10 QA: and back on the drawn layer: they stayed hidden) */diag("cut-outs: pictures came out empty on this device; 3D models shown instead");}
-         else diag("cut-outs: self-test ok");}}catch(e){CUT.selfTest=-1;}};   // (one card each so the start-up compile sees their shaders; the next tick resets the counts)
+         else diag("cut-outs: self-test ok");}}catch(e){CUT.selfTest=-1;}
+     /* v6.1 t12: every actor's look as it stands, at all 8 headings, is pictured now (behind the start-up screen, up to
+        1.5 s), and the rest one a frame whenever no picture is wanted on screen: the season then mostly reuses them */
+     try{if(CUT.ok&&!/[?&]nopretake/.test(location.search)){const L=[],seenK=new Set();
+         for(const a of CUT.actors){const lk=lookKey(a);for(let d=0;d<8;d++){const key=lk+"#"+d;if(CUT.cells.has(key)||seenK.has(key))continue;seenK.add(key);L.push([a,key,d]);}}
+         CUT.pre=L;const t0=performance.now();basis();let n=0;
+         while(L.length&&performance.now()-t0<1500){const [a,key,d]=L.shift();const A=ATL[a.K.at];if(A.full||A.nextY>A.h*0.7)continue;   /* (leave 30% of each atlas for what play brings) */const c=capture(a,key,d,A,!L.length||performance.now()-t0>1400);n++;if(c){CUT.cells.set(key,c);CUT.byKD.set(a.kind+"#"+d,c);CUT.byK.set(a.kind,c);}}
+         diag(`cut-outs: ${n} pictures taken at start, ${L.length} to follow`);}}catch(e){CUT.errs++;console.error("cut-out pre-take failed",e);}};   // (one card each so the start-up compile sees their shaders; the next tick resets the counts)
    // --- every frame (43-3d-frame.js, after the moving batches, before the render) ---
    let scanT=0;
    // an atlas that fills up starts over: its pictures are dropped and retaken as they are needed again
@@ -136,6 +143,8 @@
        let A=ATL[a.K.at];if(A.full){CUT.full++;resetAtlas(a.K.at);A=ATL[a.K.at];}if(!n)basis();n++;
        const lastOne=n>=capN||!CUT.queue.length;let c=null;try{c=capture(a,key,dir,A,lastOne);}catch(e){CUT.errs++;if(CUT.errs<6)console.error("cut-out picture failed",e);}
        if(c){CUT.cells.set(key,c);CUT.byKD.set(a.kind+"#"+dir,c);CUT.byK.set(a.kind,c);}}
+     // (t12: the start-up pictures still to take, one a frame while nothing on screen is waiting for one)
+     if(!n&&CUT.pre&&CUT.pre.length){const [a,key,d]=CUT.pre.shift();const A=ATL[a.K.at];if(!CUT.cells.has(key)&&!A.full&&A.nextY<=A.h*0.7){basis();try{const c=capture(a,key,d,A,true);if(c){CUT.cells.set(key,c);CUT.byKD.set(a.kind+"#"+d,c);}}catch(e){CUT.errs++;}}}
      if(now<CUT.t)return;CUT.t=now+1000/FPS;CUT.tk=(CUT.tk||0)+1;basis();
      {const k=G3.nightK!=null?G3.nightK:0;lit.value=1-0.62*k;}
      const cnt=[0,0];

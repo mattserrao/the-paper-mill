@@ -1,5 +1,23 @@
 # Changelog
 
+## v6.1.0-t12 (2026-10-18): polish round (test branch test/v6.1-iso)
+- **Paper smoke:** the smoke stack's plume is paper cut-out clouds (card fill, ink line, a fold of shade), fewer and
+  bigger, that rise in little hops, sway and rock, swell a touch and fade out at the top. ?softplume = the old steam.
+- **Blinking lights in time:** a merged static object whose colour changes (beacons, alarm and status lights) is followed
+  every frame from its first change on (the watch only looked twice a second).
+- **Stronger seasons:** spring is pale yellow-green with pink and cream blossom on a fifth of the trees; summer is deep,
+  saturated green (it was the plain colours); slight seasonal tints. A season change recolours in a few frames (3 ms of
+  work a frame) instead of a slow wipe.
+- **Sharper on phones:** low tier 1.5x and medium 2x pixel ratio within a pixel budget (was 1x / 1.25x); the low-FPS
+  fallback still drops to 1x on a struggling device.
+- **Less parking churn:** parked cars and activity props go to the moving batches from the start; static groups are
+  parked after 30 s. Hand-backs in the first minute ~290 -> ~100, groups un-parked 37 -> 0.
+- **Upset effects instanced:** an effect's look-alike parts (rain streaks, ripples, splash blobs, tornado puffs and debris)
+  draw as one instanced mesh per shape and look; sprites become camera-facing cards. Roof leak ~100 draws -> 6, tornado
+  ~75 -> ~6, pulper overflow 19 -> 6. ?nofxinst = before.
+- **Cut-out pictures at start:** every actor's look at all 8 headings is pictured behind the start-up screen (up to
+  1.5 s), keeping 30% of each atlas free; people get a 2048 square atlas. Pictures taken during play ~35% fewer.
+
 ## v6.1.0-t11 (2026-10-18): QA fixes (test branch test/v6.1-iso)
 - **Cut-outs never drawn as loose 3D parts:** the moving batches picked up parts of cut-out actors (pooled trucks, new
   workers, loads added later) and drew them with the frozen world matrices the cut-out system leaves on them: bare red and
