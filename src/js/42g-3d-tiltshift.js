@@ -12,6 +12,7 @@
     TS.on=pref?pref==="on":!(G3.GFX&&(G3.GFX.tier==="low"||G3.GFX.tier==="bare"));
     G3.setTilt=on=>{TS.on=!!on;try{localStorage.setItem("paper-mill-tilt",on?"on":"off");}catch(e){}};
     let RT=null,RA=null,RB=null,W=0,H=0;const sz=new THREE.Vector2();
+    const MOB=/iPhone|iPad|iPod|Android/i.test(navigator.userAgent)||(/Macintosh/.test(navigator.userAgent)&&navigator.maxTouchPoints>1)||!!(G3.GFX&&(G3.GFX.tier==="low"||G3.GFX.tier==="medium"));
     const VS="varying vec2 vUv;void main(){vUv=uv;gl_Position=vec4(position.xy,0.0,1.0);}";
     const BL=new THREE.ShaderMaterial({uniforms:{src:{value:null},dir:{value:new THREE.Vector2(1,0)},px:{value:new THREE.Vector2()},fy:{value:0.5},band:{value:TS.band},ramp:{value:TS.ramp},r:{value:1}},
       vertexShader:VS,fragmentShader:`uniform sampler2D src;uniform vec2 dir;uniform vec2 px;uniform float fy;uniform float band;uniform float ramp;uniform float r;varying vec2 vUv;
@@ -26,14 +27,20 @@
     const tri=new THREE.BufferGeometry();tri.setAttribute("position",new THREE.Float32BufferAttribute([-1,-1,0,3,-1,0,-1,3,0],3));tri.setAttribute("uv",new THREE.Float32BufferAttribute([0,0,2,0,0,2],2));
     const quad=new THREE.Mesh(tri,BL);quad.frustumCulled=false;const qs=new THREE.Scene();qs.add(quad);const qc=new THREE.OrthographicCamera(-1,1,1,-1,0,1);
     function ensure(){renderer.getDrawingBufferSize(sz);if(RT&&sz.x===W&&sz.y===H)return;W=sz.x;H=sz.y;[RT,RA,RB].forEach(r=>r&&r.dispose());
-      const aa=renderer.getContext().getContextAttributes().antialias&&renderer.capabilities.isWebGL2!==false;
+      // (t21: no multisampling on phones: at 2-3x pixel ratio the 4x buffer was ~80 MB and starved the cut-out pictures,
+      // which came out as blank paper figures on an iPhone)
+      const aa=!MOB&&renderer.getContext().getContextAttributes().antialias&&renderer.capabilities.isWebGL2!==false;
       RT=new THREE.WebGLRenderTarget(W,H,{depthBuffer:true,stencilBuffer:true,samples:aa?4:0});RT.texture.colorSpace=THREE.SRGBColorSpace;RT.texture.internalFormat="RGBA8";RT.isXRRenderTarget=true;   // (drawn exactly as to the screen)
       const w2=Math.max(1,W>>1),h2=Math.max(1,H>>1);RA=new THREE.WebGLRenderTarget(w2,h2,{depthBuffer:false});RB=new THREE.WebGLRenderTarget(w2,h2,{depthBuffer:false});
       BL.uniforms.px.value.set(1/w2,1/h2);}
     const pass=(mat,to)=>{quad.material=mat;renderer.setRenderTarget(to);renderer.render(qs,qc);};
     // in place of renderer.render(scene,camera) (43-3d-frame.js): false if it didn't draw (off, or it failed and switched itself off)
     G3.tiltRender=()=>{if(!TS.on||G3.zenNoTilt)return false;const t0=performance.now();
-      try{ensure();const R=G3.camR||190,zk=Math.max(0.45,Math.min(1,(R-60)/320));
+      try{ensure();const R=G3.camR||190,zk=Math.max(0.45,Math.min(1,(R-60)/320))*(MOB?0.7:1);
+        /* (t21: the band is set against the screen's width: on a tall phone screen a fixed share of the height left a
+           sliver in focus and blurred most of the view) */
+        const asp=Math.max(1,Math.sqrt(H/Math.max(1,W))*1.15),bd=Math.min(0.3,TS.band*asp),rp=Math.min(0.45-bd*0.5,TS.ramp*asp);
+        BL.uniforms.band.value=CO.uniforms.band.value=bd;BL.uniforms.ramp.value=CO.uniforms.ramp.value=rp;
         renderer.setRenderTarget(RT);renderer.render(scene,camera);
         BL.uniforms.r.value=TS.maxR*zk;BL.uniforms.src.value=RT.texture;BL.uniforms.dir.value.set(1,0);pass(BL,RA);
         BL.uniforms.src.value=RA.texture;BL.uniforms.dir.value.set(0,1);pass(BL,RB);

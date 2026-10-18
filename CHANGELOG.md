@@ -1,5 +1,13 @@
 # Changelog
 
+## v6.1.1 (2026-10-18): phone fixes
+- **Tilt-shift on phones:** on a tall screen the sharp band was a fixed share of the height, so it was a sliver and
+  most of the view blurred. The band and its fall-off are now set against the screen's width (wider on tall screens),
+  and the blur is 30% softer on phones.
+- **Blank cut-out people on iPhone (technicians showing as plain paper figures):** the tilt-shift's offscreen picture
+  was 4x multisampled at the phone's full pixel ratio (~80 MB with its depth buffer), which starved the GPU memory the
+  cut-out pictures need. Phones now draw it without multisampling (~25 MB).
+
 ## v6.1.0 (2026-10-18): release of the isometric paper build (test/v6.1-iso t1-t20) to main
 - Everything in v6.1.0-t1 to t20 below: the fixed isometric camera and paper art style, cut-out people and vehicles,
   paper upsets, weather, night, water and rare sights, tilt-shift, performance work, and the t20 balance pass.
