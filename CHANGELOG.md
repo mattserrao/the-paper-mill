@@ -1,5 +1,23 @@
 # Changelog
 
+## v6.1.0-t20 (2026-10-18): balance (test branch test/v6.1-iso)
+Measured with tools/qa_balance.py: scripted testers play full 30-day seasons through the real dialogs (sim only), the
+same seeds for every tester, 10 seeds on each of the four maps (200 seasons per comparison), plus every upgrade measured
+alone and on top of the bottleneck fix (648 + 520 seasons).
+- **Rounds pay more:** problems show 2.5 days ahead (was 1.5; survival still shortens it each wave, now 0.12 days a
+  wave), and a problem caught on a round is fixed for 25% of its repair bill (was 40%). A daily round now catches about
+  13 problems a season (was 10).
+- **Capacity and maintenance upgrades re-priced:** they only pay once the machine is pushed harder, and at $1-3M they
+  could not pay back inside a season. Winder rebuild $300k / $550k (was $450k / $1M), pulper rotor $350k / $700k
+  ($600k / $1.4M), bigger chest $150k / $300k ($300k / $700k), electric forklifts $200k / $400k ($350k / $750k), extra
+  dock doors $180k / $350k ($250k / $600k), robotic roll handling $450k / $800k / $1.2M ($0.8M / $1.6M / $3M), warehouse
+  extension $200k / $400k ($500k / $1.1M), maintenance techs $120k / $220k / $350k ($250k / $500k / $900k) and they now
+  also cut repair bills 10% a level, preventive maintenance $120k / $250k / $400k ($200k / $450k / $800k) and $150/h a
+  level to run ($400/h), insurance premium $900/h ($1,500/h).
+- Season profit by tester (mean of 40 seasons, before -> after): hands-off +$0.40M -> +$0.65M; daily rounds and outage
+  prep +$1.12M -> +$1.59M; active (rounds, the bottleneck fix and value-for-money upgrades, proper fixes) +$5.79M ->
+  +$6.17M; buys everything -$1.06M -> -$0.69M; gambler -$1.04M -> -$0.23M.
+
 ## v6.1.0-t19 (2026-10-18): tilt-shift band, winder trash can (test branch test/v6.1-iso)
 - **Tilt-shift:** the sharp band across the middle is narrower (blur starts closer to the centre and reaches full
   strength sooner).

@@ -61,4 +61,4 @@ One line per version, oldest first. Add a line here with every release: build.py
 6.1.0-t17  Bird on the Power Lines Cut-Scene Plays When Set Off From the Upsets List (Test)
 6.1.0-t18  Zen Close-Ups Fixed, Rare Sights as Paper Cut-Outs, Tilt-Shift Diorama Look (Test)
 6.1.0-t19  Narrower Tilt-Shift Band, Winder Trash Can Out of the Broke Hole (Test)
-6.1.0-t20  Balance: Rounds Pay More, Upgrades Re-Priced (Test, work in progress)
+6.1.0-t20  Balance: Rounds Pay More, Capacity and Maintenance Upgrades Re-Priced
