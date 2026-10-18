@@ -621,11 +621,15 @@
       tm.polygonOffset=true;tm.polygonOffsetFactor=1;tm.polygonOffsetUnits=2;   // the ground sits a hair behind roads, lots and water drawn on it (no flicker)
       const terr=new THREE.Mesh(g,tm);terr.name="terrain";terr.receiveShadow=true;terr.userData.noNav=true;terr.userData.terrain=true;if(!new URLSearchParams(location.search).has("noterr"))scene.add(terr);G3.terrain=terr;}
     // lit windows (urban): one mesh of small quads facing out of each building, shown at night (envUpdate sets the opacity)
-    if(NW.length){const P3=[],I3=[];NW.forEach(([x,y,z,w,h,f],k)=>{const hw=w/2,hh=h/2,b=k*4;
+    if(NW.length){const P3=[],I3=[],U3=[];NW.forEach(([x,y,z,w,h,f],k)=>{const hw=w/2,hh=h/2,b=k*4;U3.push(0,0,1,0,1,1,0,1);
         if(f===0||f===2){P3.push(x,y-hh,z-hw, x,y-hh,z+hw, x,y+hh,z+hw, x,y+hh,z-hw);}else{P3.push(x-hw,y-hh,z, x+hw,y-hh,z, x+hw,y+hh,z, x-hw,y+hh,z);}
         if(f===0||f===3)I3.push(b,b+2,b+1,b,b+3,b+2);else I3.push(b,b+1,b+2,b,b+2,b+3);});
-      const g=new THREE.BufferGeometry();g.setAttribute("position",new THREE.Float32BufferAttribute(P3,3));g.setIndex(I3);g.computeVertexNormals();
-      const m=new THREE.Mesh(g,new THREE.MeshBasicMaterial({color:lin0("#ffd98a"),transparent:true,opacity:0,toneMapped:false,depthWrite:false}));m.visible=false;m.userData.noNav=true;scene.add(m);G3.nightWin=m;}
+      const g=new THREE.BufferGeometry();g.setAttribute("position",new THREE.Float32BufferAttribute(P3,3));g.setAttribute("uv",new THREE.Float32BufferAttribute(U3,2));g.setIndex(I3);g.computeVertexNormals();
+      // (v6.1 t13: each lit window is a yellow paper pane: a card with an ink frame and a cross of glazing bars)
+      const wt=/[?&]softnight/.test(location.search)?null:(()=>{const c=document.createElement("canvas");c.width=c.height=64;const x=c.getContext("2d");x.fillStyle="#ffe08a";x.fillRect(0,0,64,64);
+        x.fillStyle="#fff1c2";x.fillRect(8,8,22,22);x.strokeStyle="#3a2a1a";x.lineWidth=7;x.strokeRect(3.5,3.5,57,57);x.lineWidth=4;x.beginPath();x.moveTo(32,4);x.lineTo(32,60);x.moveTo(4,32);x.lineTo(60,32);x.stroke();
+        const t=new THREE.CanvasTexture(c);t.colorSpace=THREE.SRGBColorSpace;return t;})();
+      const m=new THREE.Mesh(g,new THREE.MeshBasicMaterial({color:wt?0xffffff:lin0("#ffd98a"),map:wt,transparent:true,opacity:0,toneMapped:false,depthWrite:false}));m.visible=false;m.userData.noNav=true;scene.add(m);G3.nightWin=m;}
     // name boards
     SIGNS.forEach(([x,z,ry,text,bg,fg])=>{const c=document.createElement("canvas");c.width=512;c.height=96;const X=c.getContext("2d");X.fillStyle=bg;X.fillRect(0,0,512,96);X.strokeStyle=fg;X.lineWidth=5;X.strokeRect(8,8,496,80);
       X.fillStyle=fg;X.textAlign="center";X.textBaseline="middle";let fs=46;do{X.font=`800 ${fs}px system-ui,sans-serif`;fs-=2;}while(X.measureText(text).width>470&&fs>18);X.fillText(text,256,50);

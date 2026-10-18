@@ -86,7 +86,7 @@
       return {spot:[x,z],tick(now,rdt,k,txt,o){const c=(o&&o.col)||"amber",C={amber:["#2a2f3c","#ffb020"],red:["#2a2f3c","#ff5a4d"],green:["#173d2a","#7fe0a3"]}[c];b.userData.set(txt||"ORDERS ▼",C[0],C[1],C[1]);}};},
     rival(g){const x=GATE[0]-16,z=29;[-3.6,3.6].forEach(s=>box(0.3,6.5,0.3,M.ink,x+s,3.2,z,g));const b=cvBoard(8.4,4.2,512);b.position.set(x,5.6,z+0.2);g.add(b);box(8.8,4.6,0.25,M.ink,x,5.6,z,g);
       b.userData.set("RIVERSIDE PAPER\nNOW 10% CHEAPER","#1d4f91","#ffffff","#ffd44a");return {spot:[x,z],tick(){}};},
-    beacons(g){const L=[];for(let i=0;i<6;i++){const s=new THREE.Sprite(new THREE.SpriteMaterial({map:TX.dot,color:lin("#ffffff"),transparent:true,depthWrite:false,toneMapped:false}));s.position.set(-8+i*11,10.6,i%2?2.6:15.4);g.add(s);
+    beacons(g){const L=[];for(let i=0;i<6;i++){const s=new THREE.Sprite(new THREE.SpriteMaterial({map:(/[?&]softfx/.test(location.search)?TX.dot:TX.disc),color:lin("#ffffff"),transparent:true,depthWrite:false,toneMapped:false}));s.position.set(-8+i*11,10.6,i%2?2.6:15.4);g.add(s);
         box(0.22,10,0.22,M.ink,s.position.x,5,s.position.z,g,false);box(0.5,0.4,0.5,M.ink,s.position.x,10.2,s.position.z,g,false);L.push(s);}
       const C={red:lin("#ff3b30"),amber:lin("#ffb020"),green:lin("#38d27a")};
       return {spot:[19,9],tick(now,rdt,k,txt,o){const c=(o&&o.col)||"amber",fast=c==="red"?180:c==="amber"?420:900;L.forEach((s,i)=>{s.material.color.copy(C[c]);const on=c==="green"?0.75+0.25*Math.sin(now/600+i):(((now/fast)|0)+i)%2;s.scale.setScalar(on?2.6:0.9);});}};},

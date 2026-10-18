@@ -226,6 +226,17 @@ function no3D(){G3.ok=false;$("no3d").hidden=false;$("no3d-retry").onclick=()=>l
     if(rep2){t.wrapS=t.wrapT=THREE.RepeatWrapping;}t.anisotropy=4;return t;};
   const rnd=(a,b)=>a+Math.random()*(b-a);
   // 1 + 4: concrete floor and pads. Speckle, soft mottling, saw-cut joints every 4 m, the odd oil drip and rust ring (one 8 m tile)
+  /* v6.1 t13 paper water: a white sheet (the material colour tints it) with wavy strips cut from lighter paper and a few
+     darker slivers, all with crisp edges; tiles. Rings = concentric strips, for round tanks. ?softwater = before */
+  const PAPW=!/[?&]softwater/.test(location.search);G3.papWater=PAPW;
+  const paperWater=(rings)=>texC(256,256,(x,W)=>{x.fillStyle="#ffffff";x.fillRect(0,0,W,W);let s=7;const rnd=()=>{s=(s*16807)%2147483647;return s/2147483647;};
+    const strip=(y,th,amp,ph,col,len0,len1)=>{x.fillStyle=col;x.beginPath();const n=24;for(let i=0;i<=n;i++){const t=len0+(len1-len0)*i/n,X=t*W,Y=y+Math.sin(t*Math.PI*4+ph)*amp;i?x.lineTo(X,Y):x.moveTo(X,Y);}
+      for(let i=n;i>=0;i--){const t=len0+(len1-len0)*i/n,X=t*W,Y=y+th*Math.sin(Math.PI*(t-len0)/(len1-len0||1))+Math.sin(t*Math.PI*4+ph)*amp;x.lineTo(X,Y);}x.closePath();x.fill();};
+    if(rings){const c=W/2;for(let k=0;k<7;k++){const r=18+k*15+rnd()*4;x.strokeStyle=k%2?"rgba(255,255,255,0.0)":"#e4f0ee";x.lineWidth=5+rnd()*3;x.beginPath();x.arc(c,c,r,rnd()*6,rnd()*6+4.2+rnd()*1.5);x.stroke();}
+      for(let k=0;k<4;k++){x.strokeStyle="#b9cfc9";x.lineWidth=3;x.beginPath();const r=30+rnd()*90,a=rnd()*6;x.arc(c,c,r,a,a+0.6+rnd()*0.6);x.stroke();}return;}
+    for(let k=0;k<8;k++){const y=(k+0.3)*W/8;const a=rnd()*0.4;strip(y,6+rnd()*5,4,rnd()*6,"#e6f0f5",a,a+0.35+rnd()*0.3);const b=0.5+rnd()*0.3;strip(y+W/16,5,3,rnd()*6,"#e6f0f5",b,Math.min(1,b+0.25+rnd()*0.2));}
+    for(let k=0;k<6;k++){const y=rnd()*W,a=rnd()*0.8;strip(y,3,2,rnd()*6,"#b7c9d4",a,a+0.12+rnd()*0.1);}},true);
+  G3.paperWater=paperWater;
   const floorTex=texC(256,256,(x,W)=>{x.fillStyle="#f2f2f0";x.fillRect(0,0,W,W);
     for(let k=0;k<14;k++){const g=x.createRadialGradient(rnd(0,W),rnd(0,W),0,rnd(0,W),rnd(0,W),rnd(30,90));const a=rnd(0.02,0.05);g.addColorStop(0,`rgba(120,118,110,${a})`);g.addColorStop(1,"rgba(120,118,110,0)");x.fillStyle=g;x.fillRect(0,0,W,W);}
     for(let k=0;k<2600;k++){const v=Math.random()<0.5?rnd(150,190):rnd(235,255);x.fillStyle=`rgba(${v},${v},${v-4},${rnd(0.15,0.4)})`;x.fillRect(rnd(0,W),rnd(0,W),1,1);}

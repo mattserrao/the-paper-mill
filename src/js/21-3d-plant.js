@@ -84,11 +84,12 @@
        for(let k=0;k<5;k++){const a=k/5*Math.PI*2+0.3;x.strokeStyle="rgba(70,60,45,0.12)";x.lineWidth=5;x.beginPath();x.moveTo(c0+Math.cos(a)*20,c0+Math.sin(a)*20);x.lineTo(c0+Math.cos(a+0.25)*124,c0+Math.sin(a+0.25)*124);x.stroke();}
        for(let k=0;k<40;k++){const a=Math.random()*6.28,rr=104+Math.random()*20,g=x.createRadialGradient(c0+Math.cos(a)*rr,c0+Math.sin(a)*rr,0,c0+Math.cos(a)*rr,c0+Math.sin(a)*rr,6+Math.random()*8);g.addColorStop(0,"rgba(120,100,70,0.3)");g.addColorStop(1,"rgba(120,100,70,0)");x.fillStyle=g;x.fillRect(0,0,W,W);}
        const g2=x.createRadialGradient(c0,c0,0,c0,c0,22);g2.addColorStop(0,"rgba(80,70,55,0.35)");g2.addColorStop(1,"rgba(80,70,55,0)");x.fillStyle=g2;x.fillRect(0,0,W,W);},false);
-     ENV.wwM2=new StdMat({color:lin0("#86b3a6"),roughness:0.2,map:t});}
+     ENV.wwM2=new StdMat({color:lin0("#86b3a6"),roughness:0.2,map:G3.papWater?G3.paperWater(true):t});}   // (t13: paper water)
     const wtr=new THREE.Mesh(new CircG(r-0.1,48),ENV.wwM2);wtr.rotation.x=-Math.PI/2;wtr.position.set(cx,1.9,cz);scene.add(wtr);
     const well=new THREE.Mesh(new CylG(1,1,2.4,20),M.steel);well.position.set(cx,1.3,cz);scene.add(well);
     ENV.bridge=new THREE.Group();ENV.bridge.position.set(cx,2.5,cz);scene.add(ENV.bridge);box(r,0.35,0.9,M.warn,r/2,0,0,ENV.bridge);box(0.1,1.2,0.6,M.ink,r-0.5,-0.6,0,ENV.bridge,false);
     const px0=Math.min(WX(22),WX(42)),px1=Math.max(WX(22),WX(42)),pz0=-46,pz1=-34;[[px0,px1,pz0,pz0],[px0,px1,pz1,pz1],[px0,px0,pz0,pz1],[px1,px1,pz0,pz1]].forEach(([a,b,c,d])=>box(Math.max(0.4,b-a),1.3,Math.max(0.4,d-c),conc,(a+b)/2,0.65,(c+d)/2));
+    if(G3.papWater){const pt=G3.paperWater(false);pt.repeat.set((px1-px0)/10,(pz1-pz0)/10);ENV.wwM.map=pt;ENV.wwM.needsUpdate=true;}   // (t13: paper water)
     const pond=new THREE.Mesh(new THREE.PlaneGeometry(px1-px0-0.4,pz1-pz0-0.4),ENV.wwM);pond.rotation.x=-Math.PI/2;pond.position.set((px0+px1)/2,1.0,(pz0+pz1)/2);scene.add(pond);
     ENV.aer=[[WX(27),-42],[WX(37),-42],[WX(27),-38],[WX(37),-38]];ENV.aer.forEach(([x,z])=>{const a=new THREE.Mesh(new CylG(0.7,0.7,0.4,12),M.warn);a.position.set(x,1.15,z);scene.add(a);});
     // effluent transfer tank and pump between stock prep and the clarifier (visual only)

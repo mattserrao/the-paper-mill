@@ -1,5 +1,23 @@
 # Changelog
 
+## v6.1.0-t13 (2026-10-18): paper effects (test branch test/v6.1-iso)
+- **Weather visible again:** in the iso view snow and dust were sub-pixel dots, rain faint 1 px lines and fog never reached
+  the mill. Flakes and dust are now 3-5 px dots, rain longer blue-grey streaks at 55%, the weather box scales with the zoom,
+  and fog, snow and dust storms lay a haze over the mill itself. (Plain particles, no paper styling.)
+- **Paper flames:** fires are cut-paper flames (red with an ink line, orange and yellow cut inside) that swap between four
+  shapes for a stop-motion flicker. Sparks unchanged. ?softfire = before.
+- **Tornado:** a paper cut-out a child might have made (wobbly grey bands, fat crayon outline, white scribbles, paper scraps)
+  that faces the camera, sways and boils between two drawings. Roofs it passes over blow off (the cutaway lift and fade)
+  and settle back down a couple of seconds after it passes. ?softtornado = before.
+- **Night:** lamp light is a crisp paper ellipse on the floor plus a see-through paper cone from each lamp; beacon and
+  status lamps are paper discs with an ink ring; lit house windows are yellow paper panes with an ink frame and glazing
+  bars. ?softnight = before.
+- **Incident flags:** the glossy map pins are paper flags on an ink stick (icon on a white disc), fluttering between two
+  cut shapes. Warning lamps on upsets (highway, lightning, police) are paper discs. ?softfx = before.
+- **Lightning:** a zig-zag bolt cut from yellow card with an ink line (was a white tube with glows).
+- **Paper water:** the aeration pond, clarifier, floods and spilled stock are flat paper with cut lighter strips and darker
+  slivers (concentric strips in the clarifier); flood and pulp sheets nearly opaque; wider paper ripple rings. ?softwater = before.
+
 ## v6.1.0-t12 (2026-10-18): polish round (test branch test/v6.1-iso)
 - **Paper smoke:** the smoke stack's plume is paper cut-out clouds (card fill, ink line, a fold of shade), fewer and
   bigger, that rise in little hops, sway and rock, swell a touch and fade out at the top. ?softplume = the old steam.

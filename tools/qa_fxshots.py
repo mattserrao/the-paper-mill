@@ -1,0 +1,43 @@
+import pathlib, sys
+from playwright.sync_api import sync_playwright
+src = open("bench.py").read()
+exec(src.split("def stats")[0].split("from playwright.sync_api import sync_playwright")[1])
+html = pathlib.Path(sys.argv[1]).read_text().replace("window.__PM={", "window.__PM={trigger:(i,q)=>trigger(i,q),", 1)
+if "window.__PM=" not in html:
+    i = html.rindex("})();", 0, html.rindex("</script>")); html = html[:i] + HOOK + html[i:]
+SP="/tmp/claude-0/-home-claude/1d0fb052-7a76-5766-bfa8-faf7676d4b04/scratchpad/qa13/t13-"
+shots = sys.argv[2].split(",")
+with sync_playwright() as pw:
+    b = pw.chromium.launch(args=["--use-gl=angle", "--use-angle=swiftshader", "--enable-unsafe-swiftshader", "--ignore-gpu-blocklist"])
+    pg = b.new_page(viewport={"width": 800, "height": 560}); errs=[]; pg.on("pageerror", lambda e: errs.append(str(e)[:200]))
+    pg.route("**/*", route_for(html)); pg.add_init_script(INIT); pg.goto("http://bench.local/?"+(sys.argv[3] if len(sys.argv)>3 else ""))
+    pg.wait_for_function("window.__PM&&(!__PM.G3.SM||__PM.G3.SM.done)&&(!__PM.G3.prewarm||__PM.G3.warm)", timeout=300000, polling=500)
+    pg.evaluate("()=>document.getElementById('v2go').click()"); pick_leader(pg)
+    def clear():
+        for _ in range(3):
+            pg.evaluate("()=>{document.querySelectorAll('#evc:not([hidden]) button').forEach((x,i)=>{if(i===0)x.click();});const c=document.querySelector('#civOv .civbtn');if(c&&!document.getElementById('civOv').hidden)c.click();const d=document.getElementById('dealOv');if(d&&!d.hidden){const n=document.getElementById('deal-no');if(n)n.click();}const o=document.getElementById('out-ok');if(o&&o.offsetParent)o.click();}"); pg.wait_for_timeout(300)
+        pg.evaluate("()=>{__PM.setRunning(true);}")
+    SPEC = {
+      "rain": ([10,5,190], "()=>{__PM.S.wx='rain';__PM.S.wxLeft=999;}", 7000),
+      "snow": ([10,5,190], "()=>{__PM.S.wx='snow';__PM.S.wxLeft=999;}", 7000),
+      "fog": ([10,5,190], "()=>{__PM.S.wx='fog';__PM.S.wxLeft=999;}", 8000),
+      "dust": ([-10,-10,190], "()=>{__PM.S.wx='clear';__PM.trigger('duststorm',true);}", 8000),
+      "clear": ([10,5,190], "()=>{__PM.S.wx='clear';__PM.S.inc=[];}", 6000),
+      "fire": ([30,-10,95], "()=>{__PM.S.inc=[];__PM.trigger('dryerfire',true);}", 6000),
+      "balefire": ([-25,-12,95], "()=>{__PM.S.inc=[];__PM.trigger('balefire',true);}", 6000),
+      "tornado": ([-40,-10,190], "()=>{__PM.S.inc=[];__PM.trigger('tornado',true);}", 9000),
+      "tornado2": ([10,-5,190], "()=>{}", 5000),
+      "lightning": ([40,-20,127], "()=>{__PM.S.inc=[];__PM.trigger('lightning',true);}", 900),
+      "night": ([10,5,190], "()=>{__PM.S.inc=[];const S=__PM.S;S.t=Math.floor(S.t/1440)*1440+16*60;}", 7000),
+      "nightclose": ([-20,20,95], "()=>{}", 3000),
+      "nightthk": ([34,-15,63], "()=>{}", 3000),
+      "basin": ([32,-40,95], "()=>{const S=__PM.S;S.t=Math.floor(S.t/1440)*1440+1440+7*60;}", 5000),
+      "flood": ([-62,4,127], "()=>{__PM.S.inc=[];__PM.trigger('flood',true);}", 7000),
+      "overflow": ([-15,-12,95], "()=>{__PM.S.inc=[];__PM.trigger('overflow',true);}", 7000),
+      "roofleak": ([-35,23,95], "()=>{__PM.S.inc=[];__PM.trigger('roof',true);}", 7000),
+    }
+    for n in shots:
+        cam, setup, wait = SPEC[n]
+        pg.evaluate(setup); clear(); pg.evaluate("v=>{__PM.C.simSpeed=1;__PM.G3.camSet([v[0],v[1],v[2],-0.785,0.955]);}", cam); pg.wait_for_timeout(wait); clear(); pg.wait_for_timeout(600)
+        pg.screenshot(path=SP+n+".jpg", type="jpeg", quality=80)
+    print("errors", errs[:3]); b.close()

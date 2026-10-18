@@ -97,10 +97,10 @@
   const pigeon=BIRDS[5],PG={seen:null,t0:0};
   // weather particles around the camera target
   const WXP=(()=>{const n=2600,g=new THREE.BufferGeometry(),pos=new Float32Array(n*3);for(let i=0;i<n;i++){pos[i*3]=R()*80;pos[i*3+1]=Math.random()*40;pos[i*3+2]=R()*80;}
-    g.setAttribute("position",new THREE.BufferAttribute(pos,3));const m=new THREE.PointsMaterial({color:0xffffff,size:0.7,transparent:true,opacity:0.8,depthWrite:false});
+    g.setAttribute("position",new THREE.BufferAttribute(pos,3));const m=new THREE.PointsMaterial({color:0xffffff,size:0.7,transparent:true,opacity:0.8,depthWrite:false});if(camera.isIso)m.sizeAttenuation=false;   // (v6.1 t13: in the iso view sizes are screen pixels)
     const p=new THREE.Points(g,m);p.frustumCulled=false;p.visible=false;scene.add(p);
     const rg=new THREE.BufferGeometry(),rp=new Float32Array(n*6);rg.setAttribute("position",new THREE.BufferAttribute(rp,3));
-    const rm=new THREE.LineBasicMaterial({color:lin0("#d6e2ee"),transparent:true,opacity:0.6,depthWrite:false});const rl=new THREE.LineSegments(rg,rm);rl.frustumCulled=false;rl.visible=false;scene.add(rl);
+    const rm=new THREE.LineBasicMaterial({color:lin0(camera.isIso?"#7f93ad":"#d6e2ee"),transparent:true,opacity:0.6,depthWrite:false});const rl=new THREE.LineSegments(rg,rm);rl.frustumCulled=false;rl.visible=false;scene.add(rl);
     const wxN=Math.min(n,G3.GFX&&G3.GFX.wx!=null?G3.GFX.wx:1000);g.setDrawRange(0,wxN);rg.setDrawRange(0,wxN*2);G3.wxRange=k=>{const q=Math.min(n,k);g.setDrawRange(0,q);rg.setDrawRange(0,q*2);WXP.k=q;};return {p,g,pos,m,n,rg,rp,rm,rl,k:wxN};})();   // (v5.2: k = points drawn; only those are moved and uploaded)
   scene.fog=new THREE.Fog(0xb3bbcb,600,3000);
   const SKY_DAY=new THREE.Color(),SKY_NIGHT=lin0("#232b44"),SKY_RAIN=lin0("#8c94a2"),SKY_FOG=lin0("#c9ced6"),SKY_DUST=lin0("#c9a86b"),tmpC=new THREE.Color(),WIN_EM=lin0("#ffcf7a"),LAMP_OFF=lin0("#9aa3b2"),LAMP_ON=lin0("#fff2c4");let skyLast=null;   // (v5.2: parsed once, not every frame)
@@ -117,27 +117,47 @@
       if(scene.background&&scene.background.isColor)scene.background.copy(tmpC);else scene.background=tmpC.clone();scene.fog.color.copy(tmpC);}
     if(G3.SKY&&G3.SKY.tick)G3.SKY.tick(rdt,now,day,scene.fog.color,dustK);
     if(G3.nightWin){const nw=G3.nightWin,on=(1-day)>0.03;if(nw.visible!==on)nw.visible=on;if(on)nw.material.opacity=0.9*(1-day)*bk*(G3.civWinK??1);}
-    {const d=G3.camDist||camera.position.distanceTo(target),d0=camera.isIso?camera.position.distanceTo(target)-d:0;scene.fog.near=d0+d*(0.9+4*(1-fogK))*(1-0.92*dustK);scene.fog.far=d0+d*(3.4+8*(1-fogK))*(1-0.86*dustK);   // (v6.1 iso: fog measured as if the camera stood at its zoom distance)
+    {const d=G3.camDist||camera.position.distanceTo(target),d0=camera.isIso?camera.position.distanceTo(target)-d:0;scene.fog.near=d0+d*(0.9+4*(1-fogK))*(1-0.92*dustK);scene.fog.far=d0+d*(3.4+8*(1-fogK))*(1-0.86*dustK);
+    // (v6.1 t13: in the iso view the whole mill is about one zoom-distance deep, so fog that starts at the zoom distance never showed:
+    // in fog, snow or a dust storm it now starts in front of the nearest building and thickens across the map)
+    if(camera.isIso){const f=Math.min(1,fogK/0.45),dd=Math.max(f,dustK);if(dd>0.01){const D=Math.max(d,120);scene.fog.near=Math.min(scene.fog.near,d0-D*0.4*dd);scene.fog.far=Math.min(scene.fog.far,d0+D*(3.2+3*(1-dd)));}}   // (v6.1 iso: fog measured as if the camera stood at its zoom distance)
     if(G3.zen&&document.body.dataset.zs!=="none"){scene.fog.near*=0.45;scene.fog.far*=0.55;}}
     const night=1-day;if(!G3.nightL){
       // v2.8.4: no point lights (every pixel paid for all 10 of them, day and night); each fixture throws a soft additive pool of light on the floor instead
-      const gT=spriteTex((x,w)=>{const g=x.createRadialGradient(w/2,w/2,0,w/2,w/2,w/2);g.addColorStop(0,"rgba(255,255,255,1)");g.addColorStop(0.35,"rgba(255,255,255,0.55)");g.addColorStop(1,"rgba(255,255,255,0)");x.fillStyle=g;x.fillRect(0,0,w,w);});
+      /* v6.1 t13: lamp light as cut paper: a crisp pale-yellow ellipse on the floor with a slightly deeper rim, laid over the
+         scene (not added as glow), and a see-through paper cone from each lamp down to it. ?softnight = the old glows */
+      const PAPN=!/[?&]softnight/.test(location.search);G3.papNight=PAPN;
+      const gT=PAPN?spriteTex((x,w)=>{x.clearRect(0,0,w,w);x.fillStyle="rgba(255,214,110,0.9)";x.beginPath();x.arc(w/2,w/2,w*0.46,0,7);x.fill();
+          x.strokeStyle="rgba(214,170,80,0.9)";x.lineWidth=w*0.035;x.beginPath();x.arc(w/2,w/2,w*0.44,0,7);x.stroke();
+          x.fillStyle="rgba(255,248,220,0.6)";x.beginPath();x.arc(w/2,w/2,w*0.26,0,7);x.fill();},128)
+        :spriteTex((x,w)=>{const g=x.createRadialGradient(w/2,w/2,0,w/2,w/2,w/2);g.addColorStop(0,"rgba(255,255,255,1)");g.addColorStop(0.35,"rgba(255,255,255,0.55)");g.addColorStop(1,"rgba(255,255,255,0)");x.fillStyle=g;x.fillRect(0,0,w,w);});
       G3.nightL=[[-10,11,9.1],[12,11,9.1],[34,11,9.1],[56,11,9.1],[31.2,PH+4.25,-17.5],[39,PH+4.25,-12.5],[16,9,-18],[-21,7,-13],[-36,7,23],[57,5,-22]].map(([x,y,z],i)=>{
         const deck=i===4||i===5,D=deck?11:i<4?16:13,fy=deck?PH+0.14:0.07;
-        const p=new THREE.Mesh(new THREE.PlaneGeometry(D,D),new THREE.MeshBasicMaterial({map:gT,color:0xffd9a0,transparent:true,depthWrite:false,blending:THREE.AdditiveBlending,toneMapped:false,polygonOffset:true,polygonOffsetFactor:-4,polygonOffsetUnits:-4,opacity:0}));
+        const p=new THREE.Mesh(new THREE.PlaneGeometry(D*(PAPN?0.8:1),D*(PAPN?0.8:1)),new THREE.MeshBasicMaterial({map:gT,color:0xffd9a0,transparent:true,depthWrite:false,blending:PAPN?THREE.NormalBlending:THREE.AdditiveBlending,toneMapped:false,polygonOffset:true,polygonOffsetFactor:-4,polygonOffsetUnits:-4,opacity:0}));
         p.rotation.x=-Math.PI/2;p.position.set(x,fy,z);p.renderOrder=2;p.visible=false;scene.add(p);
-        const f=new THREE.Mesh(new CylG(0.5,0.7,0.3,12),new THREE.MeshBasicMaterial({color:0xfff1cf}));f.position.set(x,y+0.2,z);f.visible=false;scene.add(f);return {p,f,k:deck?0.55:i<4?0.22:0.35};});}
+        const f=new THREE.Mesh(new CylG(0.5,0.7,0.3,12),new THREE.MeshBasicMaterial({color:0xfff1cf}));f.position.set(x,y+0.2,z);f.visible=false;scene.add(f);return {p,f,k:deck?0.55:i<4?0.22:0.35,x,y,z,fy,D:D*0.8};});
+      // the cones: one camera-facing paper trapezoid per lamp (the camera never turns), all in one mesh
+      if(G3.papNight){camera.updateMatrixWorld();const e=camera.matrixWorld.elements,rx=e[0],rz=e[2],pos=[],uv=[];
+        G3.nightL.forEach(l=>{const tw=0.5,bw=l.D*0.42,y0=l.y,y1=l.fy+0.05;const P=[[l.x-rx*tw,y0,l.z-rz*tw],[l.x+rx*tw,y0,l.z+rz*tw],[l.x+rx*bw,y1,l.z+rz*bw],[l.x-rx*bw,y1,l.z-rz*bw]];
+          [0,1,2,0,2,3].forEach(i=>{pos.push(...P[i]);uv.push([0,1,1,0][i],[1,1,0,0][i]);});});
+        const cg=new THREE.BufferGeometry();cg.setAttribute("position",new THREE.Float32BufferAttribute(pos,3));cg.setAttribute("uv",new THREE.Float32BufferAttribute(uv,2));cg.computeBoundingSphere();
+        const ct=spriteTex((x,w,h)=>{x.clearRect(0,0,w,h);x.fillStyle="rgba(255,214,110,0.6)";x.fillRect(0,0,w,h);x.fillStyle="rgba(255,236,170,0.4)";x.fillRect(w*0.3,0,w*0.4,h);
+          x.fillStyle="rgba(214,170,80,0.7)";x.fillRect(0,0,w*0.04,h);x.fillRect(w*0.96,0,w*0.04,h);},64,64);
+        const cm=new THREE.MeshBasicMaterial({map:ct,transparent:true,depthWrite:false,toneMapped:false,side:THREE.DoubleSide,opacity:0});
+        const cones=new THREE.Mesh(cg,cm);cones.renderOrder=3;cones.visible=false;cones.userData.smBatch=true;cones.name="lamp cones";scene.add(cones);G3.nightCones=cones;}}
     /* v6.1 t8: the ten pools of lamp light are one additive mesh (their strengths in the vertex colours), not ten draws */
     if(!G3.nightPool){const pos=[],col=[],uv=[],c=new THREE.Color(0xffd9a0),v=new THREE.Vector3();
       G3.nightL.forEach(l=>{l.p.updateMatrixWorld(true);const g=l.p.geometry,P=g.attributes.position,U=g.attributes.uv,I=g.index;
         for(let j=0;j<I.count;j++){const i=I.getX(j);v.fromBufferAttribute(P,i).applyMatrix4(l.p.matrixWorld);pos.push(v.x,v.y,v.z);uv.push(U.getX(i),U.getY(i));col.push(c.r*l.k,c.g*l.k,c.b*l.k);}});
       const pg=new THREE.BufferGeometry();pg.setAttribute("position",new THREE.Float32BufferAttribute(pos,3));pg.setAttribute("uv",new THREE.Float32BufferAttribute(uv,2));pg.setAttribute("color",new THREE.Float32BufferAttribute(col,3));pg.computeBoundingSphere();
+      if(G3.papNight)for(let q=0;q<col.length;q++)col[q]=[c.r,c.g,c.b][q%3];
       const pm=G3.nightL[0].p.material.clone();pm.color.set(0xffffff);pm.vertexColors=true;const mesh=new THREE.Mesh(pg,pm);mesh.renderOrder=2;mesh.visible=false;mesh.userData.smBatch=true;scene.add(mesh);G3.nightPool=mesh;}
-    G3.nightPool.material.opacity=night*bk;G3.nightPool.visible=night>0.05;G3.nightL.forEach(l=>{l.p.visible=false;l.f.visible=night>0.2;});G3.nightK=night;
+    G3.nightPool.material.opacity=night*bk*(G3.papNight?0.85:1);G3.nightPool.visible=night>0.05;if(G3.nightCones){G3.nightCones.material.opacity=night*bk*0.8;G3.nightCones.visible=night>0.05;}G3.nightL.forEach(l=>{l.p.visible=false;l.f.visible=night>0.2;});G3.nightK=night;
     // v3.2.0: red aviation beacons on top of the boiler stack and the fog fan stack; small lamps on the disk thickener
-    if(!G3.beacons){const gl=spriteTex((x,w)=>{const g=x.createRadialGradient(w/2,w/2,0,w/2,w/2,w/2);g.addColorStop(0,"rgba(255,255,255,1)");g.addColorStop(0.3,"rgba(255,255,255,0.5)");g.addColorStop(1,"rgba(255,255,255,0)");x.fillStyle=g;x.fillRect(0,0,w,w);},64);
+    if(!G3.beacons){const gl=G3.papNight?spriteTex((x,w)=>{x.clearRect(0,0,w,w);x.fillStyle="#ffffff";x.beginPath();x.arc(w/2,w/2,w*0.34,0,7);x.fill();x.strokeStyle="#2b1d12";x.lineWidth=w*0.07;x.beginPath();x.arc(w/2,w/2,w*0.36,0,7);x.stroke();
+        x.fillStyle="rgba(255,255,255,0.75)";x.beginPath();x.arc(w*0.42,w*0.42,w*0.09,0,7);x.fill();},64):spriteTex((x,w)=>{const g=x.createRadialGradient(w/2,w/2,0,w/2,w/2,w/2);g.addColorStop(0,"rgba(255,255,255,1)");g.addColorStop(0.3,"rgba(255,255,255,0.5)");g.addColorStop(1,"rgba(255,255,255,0)");x.fillStyle=g;x.fillRect(0,0,w,w);},64);
       const lamp=(x,y,z,col,rb,sz)=>{const b=new THREE.Mesh(new THREE.SphereGeometry(rb,10,8),new THREE.MeshBasicMaterial({color:col,toneMapped:false}));b.position.set(x,y,z);b.visible=false;scene.add(b);
-        const h=new THREE.Sprite(new THREE.SpriteMaterial({map:gl,color:col,transparent:true,depthWrite:false,blending:THREE.AdditiveBlending,toneMapped:false,opacity:0}));h.scale.set(sz,sz,1);h.position.set(x,y,z);h.visible=false;scene.add(h);return {b,h};};
+        const h=new THREE.Sprite(new THREE.SpriteMaterial({map:gl,color:col,transparent:true,depthWrite:false,blending:G3.papNight?THREE.NormalBlending:THREE.AdditiveBlending,toneMapped:false,opacity:0}));h.scale.set(G3.papNight?Math.max(1.1,sz*0.32):sz,G3.papNight?Math.max(1.1,sz*0.32):sz,1);   /* (t13: a paper disc the size of the lamp, not a glow round it) */h.position.set(x,y,z);h.visible=false;scene.add(h);return {b,h};};
       const fan=G3.fogFan?G3.fogFan.top:[49.5,20.2,-4.2];
       G3.beacons=[lamp(ENV.stack[0],ENV.stack[1]+0.25,ENV.stack[2],0xff1a10,0.3,6),lamp(fan[0],fan[1]-0.05,fan[2]+1.25,0xff1a10,0.2,4),lamp(fan[0],fan[1]-0.05,fan[2]-1.25,0xff1a10,0.2,4)];
       (G3.extraBeacons||[]).forEach(([x,y,z])=>G3.beacons.push(lamp(x,y,z,0xff1a10,0.22,5)));
@@ -182,11 +202,15 @@
     // weather particles
     const P2=WXP,snow=wx==="snow",dust=dustK>0.05&&!(wxK>0.05&&snow);   // (v4.1: the points double as blowing dust in a desert storm)
     P2.p.visible=(wxK>0.05&&snow)||dust;P2.rl.visible=wxK>0.05&&wx==="rain";
-    if(P2.dust!==dust){P2.dust=dust;P2.m.color.set(dust?0xd8b985:0xffffff);P2.m.size=dust?1.5:0.7;}
-    if((P2.p.visible||P2.rl.visible)&&rdt>0){P2.m.opacity=dust?0.42*dustK:0.45*wxK;P2.rm.opacity=0.25*wxK;P2.p.position.set(target.x,0,target.z);P2.rl.position.set(target.x,0,target.z);
+    // (v6.1 t13: weather made visible in the iso view: flakes and dust as 3-5 px dots (scaled with the screen's pixel ratio),
+    // rain as long blue-grey streaks at 55%, and the whole box scaled to the zoom, so the shown area is always covered)
+    const ISO=camera.isIso,prs=renderer.getPixelRatio(),zs=ISO?Math.max(1,(G3.camDist||190)/90):1;
+    if(P2.dust!==dust||P2.prs!==prs){P2.dust=dust;P2.prs=prs;P2.m.color.set(dust?0xc9a46a:0xffffff);P2.m.size=ISO?(dust?4.5:3.5)*prs:(dust?1.5:0.7);}
+    if((P2.p.visible||P2.rl.visible)&&rdt>0){P2.m.opacity=dust?(ISO?0.75:0.42)*dustK:(ISO?0.9:0.45)*wxK;P2.rm.opacity=(ISO?0.55:0.25)*wxK;P2.p.position.set(target.x,0,target.z);P2.rl.position.set(target.x,0,target.z);
+      P2.p.scale.set(zs,ISO?Math.max(1,zs*0.6):1,zs);P2.rl.scale.copy(P2.p.scale);
       const a=P2.pos,r=P2.rp;for(let i=0;i<P2.k;i++){const j=i*3;if(dust){a[j]+=rdt*(14+(i%7)*2);a[j+1]+=Math.sin(now/300+i)*rdt*2.5;if(a[j+1]>14||a[j+1]<0.2)a[j+1]=0.3+Math.random()*10;}else if(snow){a[j+1]-=rdt*(2.5+(i%5)*0.3);a[j]+=Math.sin(now/900+i)*rdt*0.8;}else{a[j+1]-=rdt*34;a[j]+=rdt*4;}
         if(a[j+1]<0){a[j+1]+=40;a[j]=R()*80;a[j+2]=R()*80;}if(a[j]>40)a[j]-=80;
-        if(P2.rl.visible){const k=i*6;r[k]=a[j];r[k+1]=a[j+1];r[k+2]=a[j+2];r[k+3]=a[j]-0.14;r[k+4]=a[j+1]+1.3;r[k+5]=a[j+2];}}
+        if(P2.rl.visible){const k=i*6,L=ISO?2.6:1.3;r[k]=a[j];r[k+1]=a[j+1];r[k+2]=a[j+2];r[k+3]=a[j]-0.14*L/1.3;r[k+4]=a[j+1]+L;r[k+5]=a[j+2];}}
       {const pa=P2.g.attributes.position;pa.clearUpdateRanges();pa.addUpdateRange(0,P2.k*3);pa.needsUpdate=true;}if(P2.rl.visible){const ra=P2.rg.attributes.position;ra.clearUpdateRanges();ra.addUpdateRange(0,P2.k*6);ra.needsUpdate=true;}}
     // slow-changing signs
     envAcc+=rdt;if(envAcc>1){envAcc=0;
