@@ -52,7 +52,7 @@
     BEAT.line=BEAT.line.filter(r=>{if(r.d>LEND+0.6){splashAt(cB.x+cH.x*0.6,cB.z+cH.z*0.6,1);return false;}return true;});
     BEAT.line.forEach(r=>{if(n>=10)return;if(r.d<=LEND){pathAt(r.d,v3);_bq.copy(_bz);if(r.d>PLEN[2])_bq.premultiply(beltQ);v3.y+=0.05;}else{const e=r.d-LEND;v3.set(cB.x+cH.x*e,cB.y+0.5-2.5*e*e,cB.z+cH.z*e);_bq.copy(_bz);}
       m4.compose(v3,_bq,_one);lineMesh.setMatrixAt(n,m4);lineMesh.setColorAt(n,_bc.set(r.col||"#fff"));n++;});
-    lineMesh.count=n;lineMesh.instanceMatrix.needsUpdate=true;if(lineMesh.instanceColor)lineMesh.instanceColor.needsUpdate=true;
+    lineMesh.count=n;G3.chg(lineMesh.instanceMatrix,n);G3.chg(lineMesh.instanceColor,n);
     bayDraw();}
   // warehouse clamp trucks. Lanes: aisle along the south wall (z 17) and a lane inside the shipping doors (x -47.5).
   // Truck 0 tends the roll conveyor (rolls into the stacks, beater rolls into the bay); the rest load trucks at the doors.

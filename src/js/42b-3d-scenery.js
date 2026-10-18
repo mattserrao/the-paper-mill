@@ -619,7 +619,7 @@
       // phones (Low/Medium) skip the tile: the vertex colours alone share the scenery's shader, so no extra program is compiled
       const tm=DEN>=1?new StdMat({map:gt,vertexColors:true,roughness:0.95}):new StdMat({vertexColors:true,roughness:0.95,flatShading:true});tm.color.set(0xffffff);
       tm.polygonOffset=true;tm.polygonOffsetFactor=1;tm.polygonOffsetUnits=2;   // the ground sits a hair behind roads, lots and water drawn on it (no flicker)
-      const terr=new THREE.Mesh(g,tm);terr.receiveShadow=true;terr.userData.noNav=true;terr.userData.terrain=true;if(!new URLSearchParams(location.search).has("noterr"))scene.add(terr);G3.terrain=terr;}
+      const terr=new THREE.Mesh(g,tm);terr.name="terrain";terr.receiveShadow=true;terr.userData.noNav=true;terr.userData.terrain=true;if(!new URLSearchParams(location.search).has("noterr"))scene.add(terr);G3.terrain=terr;}
     // lit windows (urban): one mesh of small quads facing out of each building, shown at night (envUpdate sets the opacity)
     if(NW.length){const P3=[],I3=[];NW.forEach(([x,y,z,w,h,f],k)=>{const hw=w/2,hh=h/2,b=k*4;
         if(f===0||f===2){P3.push(x,y-hh,z-hw, x,y-hh,z+hw, x,y+hh,z+hw, x,y+hh,z-hw);}else{P3.push(x-hw,y-hh,z, x+hw,y-hh,z, x+hw,y+hh,z, x-hw,y+hh,z);}
@@ -642,8 +642,11 @@
          if((uy*wz-uz*wy)*vx+(uz*wx-ux*wz)*vy+(ux*wy-uy*wx)*vz<=1e-7)continue;for(let q=0;q<9;q++){np.push(P[t+q]);nc.push(C[t+q]);}}
        before+=S2.n;S2.p=np;S2.c=nc;S2.n=np.length/9;after+=S2.n;}
      diag(`scenery back faces stripped: ${before} -> ${after} triangles`);}
+    // v6.1 t10 (?scnmerge): one mesh for every sector
+    if(/[?&]scnmerge/.test(location.search)){   /* (measured: one draw saved per sector, but the off-screen sectors' ~25k triangles then always drawn; off by default) */const P=[],C=[];let n=0;for(const k in SEC){const S2=SEC[k];if(!S2.n)continue;for(let i=0;i<S2.p.length;i++){P.push(S2.p[i]);C.push(S2.c[i]);}n+=S2.n;}
+      for(const k in SEC)if(SEC[k].n){SEC[k].n0=SEC[k].n;}const all={p:P,c:C,n};for(const k of Object.keys(SEC))if(k!=="near")SEC[k]={n:0,p:[],c:[],n0:SEC[k].n0};SEC.near=all;}
     for(const k in SEC){const S2=SEC[k];if(!S2.n)continue;const g=new THREE.BufferGeometry();g.setAttribute("position",new THREE.Float32BufferAttribute(S2.p,3));g.setAttribute("color",new THREE.Float32BufferAttribute(S2.c,3));
-      g.computeVertexNormals();g.computeBoundingSphere();const m=new THREE.Mesh(g,smat);m.castShadow=k==="near"||!!(G3.GFX&&G3.GFX.far);m.receiveShadow=k==="near";m.userData.scenery=k;m.userData.noNav=true;scene.add(m);parts.push(m);tris+=S2.n;}
+      g.computeVertexNormals();g.computeBoundingSphere();const m=new THREE.Mesh(g,smat);m.name="scenery "+k;m.castShadow=k==="near"||!!(G3.GFX&&G3.GFX.far);m.receiveShadow=k==="near";m.userData.scenery=k;m.userData.noNav=true;scene.add(m);parts.push(m);tris+=S2.n;}
     // v14: landmark names, shown only in the zoomed-out site view (43-3d-frame.js swaps them with the equipment labels)
     {const NM={timber:"Valley Timber Co.",occStore:"OCC bale store",farm:"Farm",orchard:"Orchard",lake:"Lake",mast:"Radio mast",substation:"Substation",deepwood:"Deep woods",
         railyard:"Rail yard",waterTower:"Water tower",recycler:"Recycling yard",pier:"Pier",port:"Container port",lighthouse:"Lighthouse",townWater:"Town water",beach:"Beach",

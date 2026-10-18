@@ -348,10 +348,14 @@ function no3D(){G3.ok=false;$("no3d").hidden=false;$("no3d-retry").onclick=()=>l
   G3.emptyHide=o=>{if(!o.isInstancedMesh||o.__emptyHide)return;o.__emptyHide=true;let v=o.visible;Object.defineProperty(o,"visible",{get(){return v&&this.count>0;},set(x){v=!!x;},configurable:true,enumerable:true});};
   // v6.1 t8: one instanced mesh per shape for all three grades (was one per grade, each with its own texture): the grade is
   // the bale's palette colour (A kraft, B lighter mixed paper, C grey-brown junk)
+  /* v6.1 t10: an instanced set's data goes to the GPU only when it actually changed since the last upload (most of them were
+     flagged every frame whether anything moved or not). n = instances in use. */
+  G3.chg=(a,n)=>{if(!a)return false;const len=Math.min(a.array.length,(n==null?a.count:n)*a.itemSize),A=a.array;let c=a.__c;if(!c||c.length!==A.length)c=a.__c=new Float32Array(A.length).fill(NaN);
+    let d=false;for(let i=0;i<len;i++)if(A[i]!==c[i]){d=true;break;}if(d){for(let i=0;i<len;i++)c[i]=A[i];a.needsUpdate=true;}return d;};
   const GRADE_COL=["#a8895f","#c4b08c","#7f6a4f"].map(h=>lin0(h));
   function graded(geo,n,opts={}){const m=new StdMat({color:0xffffff,roughness:0.95});const o=new THREE.InstancedMesh(geo,m,n);o.castShadow=true;if(opts.recv)o.receiveShadow=true;o.count=0;
     o.setColorAt(0,GRADE_COL[0]);scene.add(o);G3.emptyHide(o);let k=0;
-    return {reset(){k=0;},put(g,m4){if(k<n){o.setMatrixAt(k,m4);o.setColorAt(k,GRADE_COL[g]||GRADE_COL[0]);k++;}},done(){o.count=k;o.instanceMatrix.needsUpdate=true;if(o.instanceColor)o.instanceColor.needsUpdate=true;}};}
+    return {reset(){k=0;},put(g,m4){if(k<n){o.setMatrixAt(k,m4);o.setColorAt(k,GRADE_COL[g]||GRADE_COL[0]);k++;}},done(){o.count=k;G3.chg(o.instanceMatrix,k);G3.chg(o.instanceColor,k);}};}
   const hsh2=n=>{const x=Math.sin(n*91.7+3.1)*43758.5453;return x-Math.floor(x);};
   // grade mix: mostly A and B; junk OCC deliveries swing it heavily toward C
   const gradeOf=(id,junk)=>{const r=hsh2(id);return junk?(r<0.2?0:r<0.5?1:2):(r<0.5?0:r<0.85?1:2);};

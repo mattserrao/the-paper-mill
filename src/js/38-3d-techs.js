@@ -36,14 +36,15 @@
   // A* + line-of-sight smoothing; anything that can't be routed falls back to the old behaviour.
   const NAV={x0:-62,z0:-52,cs:0.5,nx:300,nz:210,g:null,inf:0.35},NAVW={x0:-62,z0:-52,cs:0.5,nx:300,nz:210,g:null,inf:0.22};
   function navBuild(G){const g=new Uint8Array(G.nx*G.nz),bb=new THREE.Box3(),INF=G.inf;scene.updateMatrixWorld(true);
-    scene.traverse(o=>{if(!o.isMesh||o.isInstancedMesh||o.userData.smBatch||!o.geometry)return;
+    const navCb=o=>{if(!o.isMesh||o.isInstancedMesh||o.userData.smBatch||!o.geometry)return;
       for(let x=o;x&&x!==scene;x=x.parent){const u=x.userData||{};if(!x.visible&&x!==o)return;if(u.legs||u.wheels||u.load||u.cj||u.trike||u.stack||u.noNav||u.mats)return;}
       if(!o.visible&&o.layers.mask===1)return;
       const gb=o.geometry.boundingBox||(o.geometry.computeBoundingBox(),o.geometry.boundingBox);bb.copy(gb).applyMatrix4(o.matrixWorld);
       if(bb.min.y>1.9||bb.max.y<0.25)return;if((bb.max.x-bb.min.x)*(bb.max.z-bb.min.z)>900)return;
       const i0=Math.max(0,Math.floor((bb.min.x-INF-G.x0)/G.cs)),i1=Math.min(G.nx-1,Math.floor((bb.max.x+INF-G.x0)/G.cs)),
         j0=Math.max(0,Math.floor((bb.min.z-INF-G.z0)/G.cs)),j1=Math.min(G.nz-1,Math.floor((bb.max.z+INF-G.z0)/G.cs));
-      for(let j=j0;j<=j1;j++)for(let i=i0;i<=i1;i++)g[j*G.nx+i]=1;});
+      for(let j=j0;j<=j1;j++)for(let i=i0;i<=i1;i++)g[j*G.nx+i]=1;};
+    scene.traverse(navCb);if(G3.SM&&G3.SM.holder)G3.SM.holder.traverse(navCb);   // (static things parked out of the scene graph (40) still block the way)
     // v4.1: scenery trunks and posts inside the yard (merged into one mesh, so not seen above)
     (G3.navBoxes||[]).forEach(([x0,x1,z0,z1])=>{const i0=Math.max(0,Math.floor((x0-INF-G.x0)/G.cs)),i1=Math.min(G.nx-1,Math.floor((x1+INF-G.x0)/G.cs)),
       j0=Math.max(0,Math.floor((z0-INF-G.z0)/G.cs)),j1=Math.min(G.nz-1,Math.floor((z1+INF-G.z0)/G.cs));for(let j=j0;j<=j1;j++)for(let i=i0;i<=i1;i++)g[j*G.nx+i]=1;});

@@ -68,7 +68,7 @@
             qB.setFromEuler(_eu.set(0,yaw,-e*2.6-(h1-0.5)));qB.premultiply(beltQ);}
           m4.compose(v3,qB,_sc.set(0.85+0.3*h3,1,0.8+0.3*h2));baleChunks.put(gr,m4);nc++;}}}
     splashTick(rdt);
-    beltBales.done();baleWires.count=nw;baleWires.instanceMatrix.needsUpdate=true;baleChunks.done();
+    beltBales.done();baleWires.count=nw;G3.chg(baleWires.instanceMatrix,nw);baleChunks.done();
     if(under&&run&&chop<=0)chop=1;if(chop>0){chop=Math.max(0,chop-rdt*2.2);if(chop>0.55&&chop-rdt*2.2<=0.55)for(let k=0;k<8;k++)emit("spark",CUTX,1.2,WFZ+(Math.random()-0.5)*1.6,(Math.random()-0.5)*3,2+Math.random()*2,(Math.random()-0.5)*3,0.5,0.2,"#e8ecf2",1);}
     const by=chop>0?1.55+2.2*(Math.abs(chop-0.55)/0.55):3.75;blade.position.y=by;rod.position.y=(by+4.3)/2;rod.scale.y=Math.max(0.1,4.3-by);
     rotor.rotation.y=-V.swirl;pulpStock.visible=R.feed>0.3||S.tank>0;G3.ragFrame(rdt,now,R.feed>0.3);
@@ -134,7 +134,7 @@
       else{const d=r.d,L1=19.4-zc-UPC;if(d<L1){x=UPX;z=zc+UPC+d;}else{x=UPX-(d-L1);z=19.4;}y=1.2;q4.identity();}
       if(r.wp){r.wp[0]=x;r.wp[1]=y;r.wp[2]=z;}else r.wp=[x,y,z];m4.compose(v3.set(x,y,z),q4,_one);if(r.col)_rc.set(r.col);else _rc.copy(M.paper.color);beltRolls.setColorAt(nr,_rc);beltRolls.setMatrixAt(nr++,m4);});
     upender.rotation.x=upA>0?upA:upender.rotation.x*Math.max(0,1-rdt*6);
-    beltRolls.count=nr;beltRolls.instanceMatrix.needsUpdate=true;if(beltRolls.instanceColor)beltRolls.instanceColor.needsUpdate=true;
+    beltRolls.count=nr;G3.chg(beltRolls.instanceMatrix,nr);G3.chg(beltRolls.instanceColor,nr);
     pm("roll conveyor");
     // forklifts (same paths as the 2D view). v2.9.14: their clock used to advance only in the retired 2D view, so in 3D
     // there were none at all; it now runs here. They also stay visible (stopped) when receiving is halted, and idle ones park in the bays.
@@ -224,13 +224,14 @@
     try{if(G3.tellFrame)G3.tellFrame(rdt,now);}catch(e){G3.fErr=(G3.fErr||0)+1;if(G3.fErr<6)console.error("tells",e);}   // v5.7 the daily round (33b)
     if(G3.dbTick)G3.dbTick();
     if(G3.cutTick)G3.cutTick(now);
-    if(G3.palTick)G3.palTick(now);   // v6.1 iso: season palette and time-of-day grade (36c)   // v6.1 iso: cut-out pictures and cards (42f)
+    if(G3.palTick)G3.palTick(now);
+    if(G3.lodSet){const R=G3.camR||999;G3.lodSet(R>=500?0:R>=180?1:-1);}   // v6.1 t10: detail per zoom step (40)   // v6.1 iso: season palette and time-of-day grade (36c)   // v6.1 iso: cut-out pictures and cards (42f)
     /* v5.5 perf: per-object frustum culling of the static batches (40-3d-static-merge.js) costs a pass over every batched
        instance, so it runs only on frames where the camera moved or the shadow map refreshes (the shadow pass builds its
        own list, and the main pass right after it leaves the list the still frames then reuse). */
     if(G3.SM&&G3.SM.bms&&G3.SM.bms.length&&!G3.SM.off){const C=G3.cullCam||(G3.cullCam=new Float64Array(23).fill(NaN)),p=camera.position,q=camera.quaternion,pm=camera.projectionMatrix.elements;
       let moved=false;const v=[p.x,p.y,p.z,q.x,q.y,q.z,q.w];for(let i=0;i<7;i++)if(C[i]!==v[i]){moved=true;C[i]=v[i];}for(let i=0;i<16;i++)if(C[7+i]!==pm[i]){moved=true;C[7+i]=pm[i];}
-      const on=!G3.cullOff&&(moved||renderer.shadowMap.needsUpdate||!!G3.cullAlways);for(const b of G3.SM.bms)b.perObjectFrustumCulled=on;}   // (G3.cullOff / cullAlways: A/B switches for the tools)
+      const on=!G3.cullOff&&(moved||(renderer.shadowMap.enabled&&renderer.shadowMap.needsUpdate)||!!G3.cullAlways);   /* (t10: needsUpdate stays set with shadow maps off: every batch was re-culled every frame) */if(on)G3.cullN=(G3.cullN||0)+1;for(const b of G3.SM.bms)b.perObjectFrustumCulled=on||(!G3.cullOff&&b._visibilityChanged);}   // (t10: a batch whose visibility changed rebuilds its list: culled, not everything)   // (G3.cullOff / cullAlways: A/B switches for the tools)
     if(!EXP.noRender){scene.matrixWorldAutoUpdate=!G3.DB||!G3.DB.n;renderer.render(scene,camera);scene.matrixWorldAutoUpdate=true;}
     if(hidM)hidM.forEach(o=>o.visible=true);
     // (v15: no counting when the render was skipped: renderer.info still holds the last real frame's numbers; and the moving

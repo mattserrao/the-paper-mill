@@ -20,6 +20,7 @@
     const ext=new THREE.Mesh(new CylG(0.17,0.17,0.62,14),M.bad);ext.position.set(0.48,0.42,0.22);ext.visible=false;torso.add(ext);
     const tool=new THREE.Mesh(new THREE.BoxGeometry(0.5,0.1,0.1),M.metal);tool.position.set(0.55,0.62,-0.3);tool.visible=false;torso.add(tool);
     p.userData={legs,arms,armM,hands,torso,armful,noz,ext,tool,body,ph:Math.random()*6,head:0};scene.add(p);cutMark(p,"person");return p;}
+  const sn=(v,s)=>Math.round(v/s)*s;
   function pose(p,mode,now){const u=p.userData,t=now/1000+u.ph;let leg=0,arm=[0,0],lean=0,bob=0,legB=null;u.armful.visible=false;u.noz.visible=u.ext.visible=u.tool.visible=false;
     if(mode==="run"||mode==="carry"){const s=Math.sin(t*15);leg=0.8*s;arm=mode==="carry"?[-1.3,-1.3]:[-0.9*s,0.9*s];lean=-0.22;bob=Math.abs(s)*0.14;u.armful.visible=mode==="carry";}
     else if(mode==="clean"){const s=Math.sin(t*5),c=Math.cos(t*5);lean=-0.85+0.08*c;arm=[-1.15+0.45*s,-1.0+0.45*s];leg=0.45;bob=-0.08;}
@@ -51,6 +52,9 @@
     else if(mode==="flail"){const s=Math.sin(t*17);leg=0.95*s;arm=[-2.6+0.9*s,-2.6-0.9*s];lean=-0.3;bob=Math.abs(s)*0.2;}
     else if(mode==="ride"){arm=[-1.15,-1.15];lean=-0.08;legB=-1.25;}
     else{arm=[0.08*Math.sin(t*1.7),-0.08*Math.sin(t*1.7)];}
+    /* v6.1 t10: drawn as cut-outs, a pose snaps to a few fixed frames (stop-motion), so each look needs a handful of pictures
+       that are then reused for good, instead of a new picture whenever a limb lands in a new position (42f) */
+    if(G3.CUT&&G3.CUT.ok&&!G3.CUT.free){const P=G3.CUT.POSE;leg=sn(leg,P.leg);if(legB!=null)legB=sn(legB,P.leg);arm[0]=sn(arm[0],P.arm);arm[1]=sn(arm[1],P.arm);lean=sn(lean,P.lean);if(u.tool.visible)u.tool.rotation.x=sn(u.tool.rotation.x,P.tool);}
     u.legs[0].rotation.z=legB!=null?-legB:leg;u.legs[1].rotation.z=legB!=null?-legB:-leg;u.arms[0].rotation.z=-arm[0];u.arms[1].rotation.z=-arm[1];
     // phone to the ear: fold the arm (shortened, swung in toward the head)
     {const c=!!u.call;u.call=false;const L=c?0.33:0.72;u.arms[1].rotation.x=c?2.69:0;u.armM[1].scale.y=L;u.armM[1].position.y=-L/2;u.hands[1].position.y=-L-0.05;}u.torso.rotation.z=lean;p.position.y=bob+(u.ry||0);}

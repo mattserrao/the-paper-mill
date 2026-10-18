@@ -13,7 +13,7 @@
         s.p[0]+=(s.v[0]+Math.sin(now/220+s.k))*rdt;s.p[1]=Math.max(0.05,s.p[1]+s.v[1]*rdt);s.p[2]+=(s.v[2]+Math.cos(now/260+s.k))*rdt;
         if(s.p[1]>0.05){s.r[0]+=s.sp[0]*rdt;s.r[1]+=s.sp[1]*rdt;s.r[2]+=s.sp[2]*rdt;}
         hE.set(s.r[0],s.r[1],s.r[2]);hQ.setFromEuler(hE);hP.set(s.p[0],s.p[1],s.p[2]);hM4.compose(hP,hQ,hSc);hayI.setMatrixAt(k,hM4);}
-      hayI.instanceMatrix.needsUpdate=true;}
+      G3.chg(hayI.instanceMatrix);}
     // heap: grows as the sheets land, shrinks to nothing as the crew clears it
     heap.visible=on&&age>0.5;
     if(heap.visible){const g=Math.min(1,(age-0.5)/1.5),sh=S.wd==="hayout"?Math.max(0.25,Math.min(1,(S.hayLeft||0)/Math.max(1,S.hayTotal||1))):Math.min(1,left/0.9),f=Math.max(0.01,g*sh);

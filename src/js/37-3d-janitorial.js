@@ -17,7 +17,7 @@
         const n=f>1.02?Math.min(LIT,Math.ceil((f-1.02)/0.33*LIT)):0;
         for(let k=0;k<LIT;k++){const a=c.seed+k*2.39,r=0.5+((k*37)%10)/14;if(k<n){q.setFromAxisAngle(_up,a*1.7);ps.set(c.x+Math.cos(a)*r,0.03,c.z+Math.sin(a)*r);sc.set(1,1,1);}else{ps.set(0,-50,0);sc.set(0.001,0.001,0.001);}
           m4.compose(ps,q,sc);litI.setMatrixAt(i*LIT+k,m4);}q.identity();});
-      fillI.instanceMatrix.needsUpdate=true;litI.instanceMatrix.needsUpdate=true;};
+      G3.chg(fillI.instanceMatrix);G3.chg(litI.instanceMatrix);};
     const _up=new THREE.Vector3(0,1,0);drawCans();
     // the janitor and the cart
     const jan=worker(cloth0b("#5b4b8a"),cloth0b("#2d2d3a"));jan.visible=false;

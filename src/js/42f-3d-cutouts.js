@@ -58,9 +58,9 @@
    const shown=o=>{for(let x=o;x;x=x.parent){if(!x.visible)return false;if(x===scene)return true;}return false;};
    function hide(a,on){a.o.traverse(c=>{if(c.isMesh||c.isLine||c.isPoints){const want=on?CUT_LAYER:0;if(on?c.layers.mask!==1<<CUT_LAYER:c.layers.mask===1<<CUT_LAYER)c.layers.set(want);}});a.hid=on;}
    // the look of one actor right now: every node's visibility and material, and its moving parts in coarse steps
-   const q=(v,s)=>Math.round(v/s);
+   const q=(v,s)=>Math.round(v/s);CUT.POSE={leg:0.8,arm:1.0,lean:0.5,tool:0.7};CUT.free=/[?&]cutfree/.test(location.search);   // (t10: pose frames, 33)
    function lookKey(a){const o=a.o,u=o.userData;let k=a.kind+":";o.traverse(c=>{if(c===o)return;const mt=c.material;k+=c.visible?(c.isMesh&&mt?(Array.isArray(mt)?mt.map(x=>x.id.toString(36)).join("."):mt.id.toString(36)):"v"):"-";});
-     if(a.kind==="person"&&u.legs){k+="|"+q(u.legs[0].rotation.z,0.6)+","+q(u.arms[0].rotation.z,0.8)+","+q(u.arms[1].rotation.z,0.8)+","+q(u.arms[1].rotation.x,0.9)+","+q(u.torso.rotation.z,0.4)+","+q(u.armM?u.armM[1].scale.y:1,0.3)+(u.tool&&u.tool.visible?","+q(u.tool.rotation.x,0.6):"");}
+     if(a.kind==="person"&&u.legs){const P=CUT.POSE;k+="|"+q(u.legs[0].rotation.z,P.leg)+","+q(u.arms[0].rotation.z,P.arm)+","+q(u.arms[1].rotation.z,P.arm)+","+q(u.arms[1].rotation.x,0.9)+","+q(u.torso.rotation.z,P.lean)+","+q(u.armM?u.armM[1].scale.y:1,0.3)+(u.tool&&u.tool.visible?","+q(u.tool.rotation.x,P.tool):"");}
      else if(a.kind==="lift"&&u.load)k+="|"+q(u.load.position.y,0.3);
      else if(a.kind==="truck")k+="|"+(u.doorL?q(u.doorL.rotation.y,0.6)+","+q(u.doorR.rotation.y,0.6):"");
      return k;}
@@ -146,7 +146,7 @@
        _m.makeRotationFromQuaternion(camera.quaternion).scale(_v3.set(c.w,c.w,1)).setPosition(_p);S2.card.setMatrixAt(i,_m);
        const off=c.w*0.05;_p.addScaledVector(cRight,off).addScaledVector(cUp,-off*0.8).addScaledVector(toCam,-0.02);_m.setPosition(_p);S2.shad.setMatrixAt(i,_m);
        S2.rect.setXYZW(i,c.r[0],c.r[1],c.r[2],c.r[3]);}catch(e){CUT.errs++;if(CUT.errs<6)console.error("cut-out failed",e);}}
-     sets.forEach((S2,i)=>{S2.card.count=S2.shad.count=cnt[i];S2.card.instanceMatrix.needsUpdate=S2.shad.instanceMatrix.needsUpdate=true;S2.rect.needsUpdate=true;S2.shad.visible=!G3.shadowsOff;});};
+     sets.forEach((S2,i)=>{S2.card.count=S2.shad.count=cnt[i];const n=cnt[i];G3.chg(S2.card.instanceMatrix,n);G3.chg(S2.shad.instanceMatrix,n);G3.chg(S2.rect,n);   /* (t10: only when something moved or changed picture) */S2.shad.visible=!G3.shadowsOff;});};
    const _v3=new THREE.Vector3();
    CUT.stats=()=>({actors:CUT.actors.length,cells:CUT.cells.size,caps:CUT.caps,queue:CUT.queue.length,full:CUT.full,resets:CUT.resets,errs:CUT.errs,rows:ATL.map(A=>A.nextY),
      shown3D:CUT.actors.filter(a=>shown(a.o)&&(!a.hid||(()=>{let l=0;a.o.traverse(c=>{if((c.isMesh||c.isLine)&&c.visible&&c.layers.mask!==1<<CUT_LAYER)l++;});return l;})())).length});

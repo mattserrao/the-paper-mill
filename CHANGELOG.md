@@ -1,5 +1,28 @@
 # Changelog
 
+## v6.1.0-t10 (2026-10-17): draw cut 2 (test branch test/v6.1-iso)
+- **Colour in the matrix:** batched objects carry their colour in the unused bottom row of their own instance matrix
+  (the per-object channel that works on iPhone). Moving things: one batch per look on every device (iPhone had one per
+  colour), shared geometry instead of a coloured copy each, and a move or colour change uploads only that object's 64
+  bytes. Static flat things: one BatchedMesh per look with per-object culling everywhere (iPhone used baked 90 m cells).
+  ?dbold = previous moving batches; ?flatbake = baked flat batches.
+- **Roofs:** each roof's plain parts in one vertex-coloured draw and its outlines in another (they still lift and fade);
+  all outline styles elsewhere share one draw (colour and opacity per vertex).
+- **Uploads only on change:** instanced sets (bales, rolls, wires, hay, janitorial, beater line) compare before uploading;
+  dryer cans no longer re-upload every frame (flat cylinders: the spin can't be seen; ?canspin); cut-out cards upload
+  only when something moved; particles use one interleaved buffer (one upload per batch, was five); the headbox jet only
+  when the lip moves; the wet line at 12 frames a second.
+- **Culling fix:** with shadow maps off, shadowMap.needsUpdate stayed set, so every static batch re-culled every instance
+  every frame (and re-uploaded its draw list). Now only when the camera moves or a batch's visibility changes; a batch
+  whose visibility changed is re-culled rather than drawn whole.
+- **Parked groups:** groups whose every part is a frozen, batched original are taken out of the scene graph (watched for
+  movement; anything that moves brings its group back). Pathfinding still sees them.
+- **Cut-out pose frames:** people snap to a few fixed pose frames (stop-motion), coarser look keys.
+- **Zoom detail:** at the whole-site and mid zoom steps, parts too small to cover a pixel are switched off in their batch.
+- **iPhone watch fix:** the static-merge watch read a missing BatchedMesh on baked records and threw on every pass, so
+  on iPhone nothing that moved was ever handed back.
+- Empty moving batches are skipped; growth check: the scene grows only while the truck and worker pools fill (bounded).
+
 ## v6.1.0-t9 (2026-10-17): reel fix (test branch test/v6.1-iso)
 - **Reel paper was invisible:** the multi-material split (t2) left the growing reel with paper faces only, and the frame loop
   put the three-material array back on it every frame, so the paper body drew nothing (only the end caps). It now takes

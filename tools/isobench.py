@@ -16,16 +16,18 @@ init = INIT + ("" if fl.get("--stopmo") != "off" else "\ntry{localStorage.setIte
 VIEWS = [("site", [-14, 5, 380]), ("mid", [10, 5, 190]), ("close", [-28, -6, 95])]
 with sync_playwright() as pw:
     b = pw.chromium.launch(args=["--use-gl=angle", "--use-angle=swiftshader", "--enable-unsafe-swiftshader", "--ignore-gpu-blocklist"])
-    ctx = b.new_context(viewport={"width": 390, "height": 844}, device_scale_factor=2, is_mobile=True, has_touch=True) if phone else b.new_context(viewport={"width": 800, "height": 450}, device_scale_factor=1)
+    UA = {"user_agent": "Mozilla/5.0 (iPhone; CPU iPhone OS 18_7 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/18.7 Mobile/15E148 Safari/604.1"} if "--ios" in sys.argv else {}
+    ctx = b.new_context(viewport={"width": 390, "height": 844}, device_scale_factor=2, is_mobile=True, has_touch=True, **UA) if phone else b.new_context(viewport={"width": 800, "height": 450}, device_scale_factor=1)
     pg = ctx.new_page(); errs = []
     pg.on("pageerror", lambda e: errs.append(str(e)[:200]))
-    pg.route("**/*", route_for(html)); pg.add_init_script(init); pg.goto("http://bench.local/")
+    pg.route("**/*", route_for(html)); pg.add_init_script(init); pg.goto("http://bench.local/"+fl.get("--q",""))
     pg.wait_for_function("window.__PM&&(!__PM.G3.SM||__PM.G3.SM.done)&&(!__PM.G3.prewarm||__PM.G3.warm)", timeout=300000, polling=500)
     pg.evaluate("()=>document.getElementById('v2go').click()"); pick_leader(pg)
     pg.evaluate("""()=>{const G=__PM.G3,R=G.renderer,r=R.render.bind(R);window.__IB={n:0,ms:0,calls:0,tris:0};
       R.render=(s,c)=>{const t=performance.now();r(s,c);__B.cur+=performance.now()-t;if(s===G.scene){const I=window.__IB;I.n++;I.ms+=performance.now()-t;I.calls+=R.info.render.calls;I.tris+=R.info.render.triangles;}};
       __PM.setFps('max');__PM.C.simSpeed=20;}""")
     out = {}
+    if fl.get("--warm"): pg.evaluate("v=>{__PM.G3.camSet([v[0],v[1],v[2],-0.785,0.955]);}", VIEWS[0][1]); pg.wait_for_timeout(int(fl["--warm"]) * 1000)
     for name, v in VIEWS:
         pg.evaluate("v=>{__PM.G3.camSet([v[0],v[1],v[2],-0.785,0.955]);}", v)
         pg.wait_for_timeout(4000)
