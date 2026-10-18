@@ -121,7 +121,7 @@
     // (v6.1 t13: in the iso view the whole mill is about one zoom-distance deep, so fog that starts at the zoom distance never showed:
     // in fog, snow or a dust storm it now starts in front of the nearest building and thickens across the map)
     if(camera.isIso){const f=Math.min(1,fogK/0.45),dd=Math.max(f,dustK);if(dd>0.01){const D=Math.max(d,120);scene.fog.near=Math.min(scene.fog.near,d0-D*0.4*dd);scene.fog.far=Math.min(scene.fog.far,d0+D*(3.2+3*(1-dd)));}}   // (v6.1 iso: fog measured as if the camera stood at its zoom distance)
-    if(G3.zen&&document.body.dataset.zs!=="none"){scene.fog.near*=0.45;scene.fog.far*=0.55;}}
+    if(G3.zen&&document.body.dataset.zs!=="none"){scene.fog.near=d0+(scene.fog.near-d0)*0.45;scene.fog.far=d0+(scene.fog.far-d0)*0.55;}}   // (t18: zen's thicker fog counts from the zoom distance, not the iso camera's 1.2 km stand-off, which fogged out every close shot)
     const night=1-day;if(!G3.nightL){
       // v2.8.4: no point lights (every pixel paid for all 10 of them, day and night); each fixture throws a soft additive pool of light on the floor instead
       /* v6.1 t13: lamp light as cut paper: a crisp pale-yellow ellipse on the floor with a slightly deeper rim, laid over the

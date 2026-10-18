@@ -131,6 +131,7 @@ function camPullOn(){try{return localStorage.getItem("paper-mill-campull")!=="of
       <div class="tsub">Play</div>${tog("tsCam","Fly to big moments","the camera visits major upsets and civics crises, then comes back",camPullOn())}
       ${tog("tsTut","Quick-start tutorial","shown when a season or survival run starts",tut)}
       <div class="tsub">Graphics</div>${tog("tsShadow","Shadows","",!sh||sh.checked)}
+      ${G3.TS?tog("tsTilt","Tilt-shift","miniature look: the middle of the view in focus, top and bottom softly blurred",G3.TS.on):""}
       ${G3.GFX?`<div class="trow tcol"><span><b>Graphics quality</b><small>Auto picks for your device (${gfxCap(G3.GFX.auto)})</small></span><div class="tseg tseg5 tseg6" role="group" aria-label="Graphics quality">${["auto","low","medium","high","ultra"].map(g=>`<button type="button" data-g="${g}" aria-pressed="${G3.GFX.pick===g}" title="${GFX_TIP[g]}">${g==="auto"?"Auto":gfxCap(g)}</button>`).join("")}</div>
         <div class="tgfxr" id="tsGfxR"${G3.GFX.tier===G3.GFX.loaded?" hidden":""}><small>Lighting and scenery detail change on the next load.</small><button type="button" id="tsGfxReload">Reload now</button></div></div>`:""}
       <div class="trow"><span><b>Appearance</b><small>Auto follows your device</small></span>${themeSegHTML("tseg")}</div>
@@ -142,6 +143,7 @@ function camPullOn(){try{return localStorage.getItem("paper-mill-campull")!=="of
     $t("tsCam").addEventListener("change",e=>{try{localStorage.setItem("paper-mill-campull",e.target.checked?"on":"off");}catch(_){}});
     $t("tsTut").addEventListener("change",e=>{try{localStorage.setItem("paper-mill-tutorial",e.target.checked?"on":"off");}catch(_){}});
     $t("tsShadow").addEventListener("change",e=>{if(sh&&sh.checked!==e.target.checked)sh.click();});
+    {const tt=$t("tsTilt");if(tt)tt.addEventListener("change",e=>{G3.setTilt(e.target.checked);});}
     $t("tSetBody").querySelectorAll(".tseg button[data-f]").forEach(b=>b.addEventListener("click",()=>{setFpsMode(b.dataset.f);$t("tSetBody").querySelectorAll(".tseg button[data-f]").forEach(x=>x.setAttribute("aria-pressed",String(x===b)));}));
     // v5.4.2: graphics quality on the title too (the same setting as in-game Settings → Graphics)
     $t("tSetBody").querySelectorAll(".tseg button[data-g]").forEach(b=>b.addEventListener("click",()=>{G3.setGfx(b.dataset.g);

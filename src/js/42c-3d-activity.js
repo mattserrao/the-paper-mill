@@ -79,8 +79,10 @@
       const walkP=(P,ph,k=1)=>{const w=Math.sin(ph);P.L[0].rotation.z=w*0.5*k;P.L[1].rotation.z=-w*0.5*k;P.K(P.L[0]).z=-Math.max(0,-w)*0.7*k;P.K(P.L[1]).z=-Math.max(0,w)*0.7*k;
         P.A[0].a.rotation.z=-w*0.4*k;P.A[1].a.rotation.z=w*0.4*k;P.hip.position.y=0.92+Math.abs(w)*0.03*k;};
       // a pool of soft puffs (dust, smoke) driven from a list of [age, x, y, z] each frame
-      function puffPool(n,hex,op){const out=[...Array(n)].map(()=>{const m=new THREE.Mesh(sphereG,new THREE.MeshBasicMaterial({color:lin0(hex),transparent:true,opacity:op,depthWrite:false}));m.visible=false;scene.add(m);return m;});
-        out.show=(list,life,s0,s1,op2=op)=>{let i=0;for(const [a,x,y,z] of list){if(i>=n)break;if(a<0||a>life)continue;const m=out[i++],k=a/life,s=s0+(s1-s0)*k;m.visible=true;m.position.set(x,y,z);m.scale.set(s,s*0.7,s);m.material.opacity=op2*(1-k);}for(;i<n;i++)out[i].visible=false;};
+      // (t18: the sights' dust and smoke are paper clouds, like the stack's plume; ?softfx = the old soft balls)
+      const PAPP=!/[?&]softfx/.test(location.search)&&TX&&TX.paper;
+      function puffPool(n,hex,op){const out=[...Array(n)].map(()=>{const m=PAPP?new THREE.Sprite(G3.papReg(new THREE.SpriteMaterial({map:TX.paper,color:lin0(hex),transparent:true,opacity:op,depthWrite:false,toneMapped:false}))):new THREE.Mesh(sphereG,new THREE.MeshBasicMaterial({color:lin0(hex),transparent:true,opacity:op,depthWrite:false}));m.visible=false;scene.add(m);return m;});
+        out.show=(list,life,s0,s1,op2=op)=>{let i=0;for(const [a,x,y,z] of list){if(i>=n)break;if(a<0||a>life)continue;const m=out[i++],k=a/life,s=s0+(s1-s0)*k;m.visible=true;m.position.set(x,y,z);if(PAPP){m.scale.set(s*1.5,s*1.5,1);m.material.opacity=Math.min(1,(1-k)*2.2);}else{m.scale.set(s,s*0.7,s);m.material.opacity=op2*(1-k);}}for(;i<n;i++)out[i].visible=false;};
         out.hide=()=>out.forEach(m=>m.visible=false);return out;}
       const SIGHTS={
         // v4.2.3 desert: a held shot of the mill from the flats to the south; three cowboys canter across the foreground,
@@ -101,7 +103,7 @@
             const rd=PIV(h.bd,-0.05,0.94,0),P=person(rd,{shirt:["#a8322c","#5b6270","#d9c49c"][k],legs:"#2f4a6b",hat:"cowboy",hatc:["#6b4a2f","#3a2a20","#efe2c2"][k],vest:k===1?"#6b4a2f":null,scarf:["#2a5aa8","#a8322c","#a8322c"][k]});
             P.L.forEach((l,i)=>{l.rotation.z=1.2;l.rotation.x=(i?1:-1)*0.42;P.K(l).z=-1.25;});P.up.rotation.z=-0.12;P.A.forEach(a=>a.a.rotation.z=0.9);
             let lasso=null;if(k===2){lasso=PIV(P.A[1].a,0,-0.7,0);const m=new THREE.Mesh(new THREE.TorusGeometry(0.9,0.025,4,28),am("rope","#c9a26a"));m.rotation.x=Math.PI/2;m.position.y=0.15;lasso.add(m);}
-            h.g.parent.visible=false;return {h,P,lasso,root:h.g.parent,off:[0,1.6,3.4][k],lat:[0,2.4,-1.8][k]};});
+            h.g.parent.visible=false;G3.liveMark&&G3.liveMark(h.g.parent,3.3,1.7);return {h,P,lasso,root:h.g.parent,off:[0,1.6,3.4][k],lat:[0,2.4,-1.8][k]};});
           const dust=puffPool(36,"#b89a6a",0.45);
           const at=(r,u)=>{const s=u*V-r.off*V*0.42;return [X0-s,Z0+r.lat];};
           return {t:0,tick(rdt){const u=(this.t+=rdt);const L=[];
@@ -122,7 +124,7 @@
           const hd=PIV(up,0.15,1.36,0);BX(hd,0.5,0.52,0.5,0,0.24,0,"bf",FUR);BX(hd,0.3,0.18,0.3,-0.08,0.56,0,"bfd",FD);BX(hd,0.06,0.3,0.36,0.26,0.18,0,"bfface",FACE);BX(hd,0.1,0.08,0.42,0.27,0.35,0,"bfd",FD);
           [-1,1].forEach(s=>BX(hd,0.03,0.05,0.07,0.3,0.27,s*0.09,"dark","#1e232b"));
           const A=[-1,1].map(s=>{const a=PIV(up,0.05,1.2,s*0.6);BX(a,0.27,0.66,0.27,0,-0.32,0,"bf",FUR);const e=PIV(a,0,-0.62,0);BX(e,0.23,0.62,0.23,0,-0.3,0,"bf",FUR);BX(e,0.2,0.26,0.15,0,-0.7,0,"bfface",FACE);a.userData.e=e;return a;});
-          g.visible=false;
+          g.visible=false;G3.liveMark&&G3.liveMark(root,2.3,1.6);
           // he wades the river below the mill, north to south, away from the camera on the far bank, and looks back
           const XB=4,[zc,hw]=riverAt(XB),Z0=zc-hw+1.5,Z1=zc+hw+1,END=11.5,V=(Z1-Z0)/END,hy=-Math.PI/2;
           const CAM=[XB+2,zc+3,60,Math.PI-0.3,1.3];   // [x,z,r,th,ph]: from the north bank, looking south across the river at the mill
@@ -157,7 +159,7 @@
           for(let i=0;i<4;i++)for(let j=0;j<2;j++)for(let k=0;k<2;k++){BX(bg,1.6,1.0,1.25,-5.4+i*3.6,1.2+k*1.02,(j-0.5)*2.8,"bale","#a7784a");BX(bg,1.62,0.06,1.27,-5.4+i*3.6,1.2+k*1.02,(j-0.5)*2.8,"dark","#2f3a49");}
           const line=new THREE.Mesh(CYLG,am("rope","#c9a26a"));scene.add(line);
           const wk=[...Array(3)].map((_,i)=>{const m=new THREE.Mesh(new THREE.PlaneGeometry(1,1),new THREE.MeshBasicMaterial({color:0xffffff,transparent:true,opacity:[0.5,0.35,0.3][i],depthWrite:false}));m.rotation.x=-Math.PI/2;scene.add(m);return m;});
-          const smoke=puffPool(9,"#c8ccd2",0.4);[tug,bg,line,...wk].forEach(o=>o.visible=false);
+          const smoke=puffPool(9,"#c8ccd2",0.4);[tug,bg,line,...wk].forEach(o=>o.visible=false);G3.liveMark&&(G3.liveMark(tug,6.4,2.6),G3.liveMark(bg,8.8,1.4));
           const Y=new THREE.Vector3(0,1,0),A0=new THREE.Vector3(),B0=new THREE.Vector3();
           return {t:0,tick(rdt){const u=(this.t+=rdt),x=X0-u*V,bx=x+4.5+TOW+8,bob=Math.sin(u*1.6)*0.1;
               [tug,bg,line,...wk].forEach(o=>o.visible=true);tug.position.set(x,0.05+bob,ZT);tug.rotation.set(0,Math.PI,Math.sin(u*1.1)*0.025);
@@ -209,11 +211,11 @@
               if(k<3)[-1,1].forEach(z=>bx(s,0.3,0.15,0.07,-0.4,0.22-k*0.03,z*w*0.24,"gatorD",GD));else bx(s,0.34,0.15,0.07,-0.4,0.18-k*0.03,0,"gatorD",GD);tail.push(s);tp=s;});}
           const legs=[[1.15,-1],[1.15,1],[-1.15,-1],[-1.15,1]].map(([lx,s])=>{const l=piv(gb,lx,-0.1,s*0.5);bx(l,0.24,0.2,0.5,0,0,s*0.22,"gatorS",GS);const f=piv(l,0,0,s*0.46);
             bx(f,0.2,0.34,0.2,0,-0.15,0,"gatorS",GS);bx(f,0.36,0.06,0.3,0.06,-0.32,0,"gatorS",GS);for(let q=0;q<3;q++)bx(f,0.12,0.04,0.05,0.28,-0.33,(q-1)*0.1,"gatorL",GL);l.userData.s=s;return l;});
-          gt.scale.setScalar(0.55);gt.visible=false;
+          gt.scale.setScalar(0.55);gt.visible=false;G3.liveMark&&G3.liveMark(gt,3.0,0.2);
           // ---- the one-armed Cajun in his pirogue, poling past on the far side ----
           const pr=grp();bx(pr,3.6,0.3,0.78,0,0.1,0,"pirogue","#6b4a2f");[-1,1].forEach(s=>{const m=bx(pr,0.56,0.3,0.56,s*1.8,0.1,0,"pirogue","#6b4a2f");m.rotation.y=Math.PI/4;m.scale.set(0.56,0.3,0.56);const n=bx(pr,0.3,0.26,0.3,s*2.1,0.14,0,"pirogue","#6b4a2f");n.rotation.y=Math.PI/4;});bx(pr,3.3,0.06,0.62,0,0.27,0,"pirogueIn","#4a3424");
           const cj=figure(pr,"#7a6a4a","#3a2a20","wide",0.28);cj.a[0].visible=false;
-          const pole=new THREE.Mesh(CYLG,am("pole","#8a6a4a"));pole.scale.set(0.04,5.2,0.04);const pp=piv(pr,0.1,1.15,0.38);pp.add(pole);pole.position.y=-1.6;pr.visible=false;
+          const pole=new THREE.Mesh(CYLG,am("pole","#8a6a4a"));pole.scale.set(0.04,5.2,0.04);const pp=piv(pr,0.1,1.15,0.38);pp.add(pole);pole.position.y=-1.6;pr.visible=false;G3.liveMark&&(G3.liveMark(pr,2.8,1.2),G3.liveMark(op,1.4,1.0));
           // ---- water: rings and droplets ----
           const RM=[...Array(7)].map(()=>{const m=new THREE.Mesh(new THREE.RingGeometry(0.8,1,28),new THREE.MeshBasicMaterial({color:0xffffff,transparent:true,opacity:0.5,depthWrite:false}));m.rotation.x=-Math.PI/2;m.visible=false;scene.add(m);return m;});
           const DM=new THREE.MeshBasicMaterial({color:lin0("#dfeee8"),transparent:true,opacity:0.8,depthWrite:false}),
@@ -267,6 +269,9 @@
             focus(){return [EX-2,7,bank+3,FOC_R,2.25,1.36];},
             stop(){op.visible=gt.visible=fb.visible=pr.visible=false;RM.forEach(m=>m.visible=false);DR.forEach(d=>d.m.visible=false);fit=null;}};}};
       // (built once at start-up, hidden, so nothing is created or compiled when one happens; rewound each time)
+      /* v6.1 t18: each figure of a sight is drawn as a live cut-out (42f): a picture of the model as it stands, retaken 8
+         times a second, with the paper edge. Marked here (R: radius of the picture, cy: its centre height); ?softfx = 3D */
+      const LIVEK=!/[?&]softfx/.test(location.search);G3.liveMark=(o,R,cy)=>{if(LIVEK&&o){o.userData.cut="live";o.userData.live={R,cy};G3.liveWant=(G3.liveWant||0)+1;}};
       const one=SIGHTS[SITE.env]?SIGHTS[SITE.env]():null;let wait=FAST?3:rr2(240,600),zenSeen=false;/* zen: one sight per map (the zen map rotation reloads the page) */G3.sight=()=>{wait=0;};G3.sightSeek=t=>{if(sight)sight.t=t;};   // (G3.sight(): show one now, for tests)
       if(one)ACT.push(rdt=>{G3.sightT=sight?sight.t:-1;if(sight){if(G3.sightHold!=null){sight.t=G3.sightHold;sight.tick(0);return;}if(!sight.tick(rdt)){if(G3.zen)zenSeen=true;sight.stop();sight=null;wait=FAST?40:rr2(240,600);}return;}if(G3.zen&&!FAST){if(zenSeen)return;if(wait>110)wait=rr2(50,110);}wait-=rdt;if(wait<=0){one.t=0;sight=one;}});
       // (zen: a sight every minute or two, and the zen camera cuts to it and follows it: 43-3d-frame.js)

@@ -20,7 +20,7 @@
      rt.texture.anisotropy=4;rt.scissorTest=true;return {rt,tex:rt.texture,rows:[],nextY:0,full:false,h:H};}
    function alloc(A,s){for(const r of A.rows)if(r.h===s&&r.x+s<=AW){const x=r.x;r.x+=s+PAD;return [x,r.y];}
      if(A.nextY+s>A.h){A.full=true;return evict(A,s);}const r={y:A.nextY,h:s,x:s+PAD};A.nextY+=s+PAD;A.rows.push(r);return [0,r.y];}
-   const ATL=[atlas(2048),atlas()];CUT.atl=ATL;
+   const ATL=[atlas(2048),atlas(),atlas(1024)];CUT.atl=ATL;   // (t18: the third, small, holds the rare sights' live pictures)
    /* v6.1 t16: a full atlas reuses the slot of the picture of that size least recently shown (not on screen for 3 s)
       instead of starting over, which dropped every picture and retook them all */
    function evict(A,s){const ai=ATL.indexOf(A),lim=performance.now()-3000;let best=null;
@@ -36,7 +36,7 @@
    const FSS=`uniform sampler2D map;uniform vec3 uCol;uniform float uA;varying vec2 vUv;void main(){vec4 c=texture2D(map,vUv);if(c.a<0.5)discard;gl_FragColor=vec4(uCol,uA);}`;
    const lit={value:1};
    const GEO=new THREE.PlaneGeometry(1,1);
-   const sets=ATL.map((A,i)=>{const N=i?96:420,rect=new THREE.InstancedBufferAttribute(new Float32Array(N*4),4);rect.setUsage(THREE.DynamicDrawUsage);
+   const sets=ATL.map((A,i)=>{const N=i===2?16:i?96:420,rect=new THREE.InstancedBufferAttribute(new Float32Array(N*4),4);rect.setUsage(THREE.DynamicDrawUsage);
      const g1=GEO.clone();g1.setAttribute("aRect",rect);const g2=GEO.clone();g2.setAttribute("aRect",rect);
      const m1=new THREE.ShaderMaterial({vertexShader:VS,fragmentShader:FS,uniforms:{map:{value:A.tex},uLit:lit,uCut:{value:aa?0.04:0.5}},alphaToCoverage:aa,fog:false,toneMapped:false});
      const dc=new THREE.Color(G3.DROP?G3.DROP.col:"#2e2433");
@@ -55,7 +55,16 @@
    const toCam=new THREE.Vector3(),cRight=new THREE.Vector3(),cUp=new THREE.Vector3();
    function basis(){camera.updateMatrixWorld();const e=camera.matrixWorld.elements;cRight.set(e[0],e[1],e[2]).normalize();cUp.set(e[4],e[5],e[6]).normalize();toCam.set(e[8],e[9],e[10]).normalize();}
    // --- finding them: anything built with userData.cut, rescanned every 2 s (pools grow during play) ---
-   function rescan(){const seen=new Set(CUT.actors.map(a=>a.o));scene.traverse(o=>{if(o.userData&&o.userData.cut&&KIND[o.userData.cut]&&!seen.has(o)){
+   /* v6.1 t18: live cut-outs. A rare sight's figure (42c: userData.live = {R, cy}) never repeats a pose, so instead of a
+      picture per look it is pictured again 8 times a second, as it stands and facing the way it faces, into two slots of
+      its own in the small atlas (one shown while the other is taken): the same paper finish, stop-motion movement. */
+   const LIVE=[],LFPS=8;CUT.live=LIVE;
+   function rescan(){if(LIVE.length<(G3.liveWant||0))scene.traverse(o=>{if(o.userData&&o.userData.live&&!LIVE.some(l=>l.o===o))liveAdd(o);});
+     rescan2();}
+   function liveAdd(o){{const L=o.userData.live,A=ATL[2],K={R:L.R,cy:L.cy,ppm:Math.min(40,(RTS-8)/(2*L.R)),at:2},px=Math.min(RTS-8,Math.round(2*K.R*K.ppm));
+       const s0=alloc(A,px),s1=s0&&alloc(A,px);if(!s0||!s1){G3.liveWant--;return;}LIVE.push({o,kind:"live",K,slots:[s0,s1],cur:0,t:0,cell:null,hid:false});}}
+   function rescan2(){
+     const seen=new Set(CUT.actors.map(a=>a.o));scene.traverse(o=>{if(o.userData&&o.userData.cut&&KIND[o.userData.cut]&&!seen.has(o)){
        let up=o.parent,nested=false;for(;up&&up!==scene;up=up.parent)if(up.userData&&up.userData.cut){nested=true;break;}   // (a driver inside a truck is part of the truck)
        if(!nested){const a={o,kind:o.userData.cut,K:KIND[o.userData.cut],cell:null,hid:false,hT:0};CUT.actors.push(a);if(CUT.ok)hide(a,true);   // (t6: hidden at once, so the moving batches never track them)
          // v6.1 t3: the hidden model's parts no longer get their world matrices every frame (about 2,000 nodes); a picture
@@ -98,12 +107,12 @@
          vec3 c=o.a>0.004?srgb(aces(o.rgb/o.a/0.5)):vec3(0.0);
          vec3 col=mix(mix(uInk,uPaper,pap),c,o.a);float A=max(max(ink,pap),o.a);gl_FragColor=vec4(A>0.0?col:vec3(0.0),A);}`}));
    fin.frustumCulled=false;const finS=new THREE.Scene();finS.add(fin);const finC=new THREE.OrthographicCamera(-1,1,1,-1,0,1);
-   function capture(a,key,dir,A,mips){const K=a.K,px=Math.min(RTS-8,Math.round(2*K.R*K.ppm));
-     const at=alloc(A,px);if(!at)return null;
+   function capture(a,key,dir,A,mips,fixedAt){const K=a.K,px=Math.min(RTS-8,Math.round(2*K.R*K.ppm));
+     const at=fixedAt||alloc(A,px);if(!at)return null;
      const o=a.o,par=o.parent,p0=o.position.clone(),ry=o.rotation.y,vis=o.visible;
      const cl=renderer.getClearColor(new THREE.Color()),ca=renderer.getClearAlpha(),ac=renderer.autoClear,rt0=renderer.getRenderTarget();
      o.children.forEach(c=>{c.matrixWorldAutoUpdate=true;});   // (t4: the frozen parts must follow the model into the picture; t3 drew them where they stood in the mill, so every picture came out empty)
-     try{cs.add(o);o.position.set(0,0,0);o.rotation.y=dir*Math.PI/4;o.visible=true;o.updateMatrixWorld(true);
+     try{cs.add(o);o.position.set(0,0,0);if(dir!=null)o.rotation.y=dir*Math.PI/4;o.visible=true;o.updateMatrixWorld(true);
        cs.fog=scene.fog;   // (the same fog object: fog is part of the shader, and the picture is far nearer than it starts)
        ch.color.copy(hemi.color);ch.groundColor.copy(hemi.groundColor);cd.color.copy(sun.color);cd.position.copy(sun.position).sub(sun.target.position);cd.target.position.set(0,0,0);cd.updateMatrixWorld();cd.target.updateMatrixWorld();
        cc.left=-K.R;cc.right=K.R;cc.top=K.R;cc.bottom=-K.R;cc.updateProjectionMatrix();cc.position.set(0,K.cy,0).addScaledVector(toCam,150);cc.quaternion.copy(camera.quaternion);cc.updateMatrixWorld();
@@ -171,9 +180,16 @@
        _m.makeRotationFromQuaternion(camera.quaternion).scale(_v3.set(c.w,c.w,1)).setPosition(_p);S2.card.setMatrixAt(i,_m);
        const off=c.w*0.05;_p.addScaledVector(cRight,off).addScaledVector(cUp,-off*0.8).addScaledVector(toCam,-0.02);_m.setPosition(_p);S2.shad.setMatrixAt(i,_m);
        S2.rect.setXYZW(i,c.r[0],c.r[1],c.r[2],c.r[3]);}catch(e){CUT.errs++;if(CUT.errs<6)console.error("cut-out failed",e);}}
+     cnt.push(0);for(const a of LIVE){const o=a.o;try{if(!shown(o)){a.cell=null;continue;}if(!a.hid){hide(a,true);a.hid=true;}
+       if(!a.cell||now>=a.t){a.t=now+1000/LFPS;basis();const nx=a.cell?1-a.cur:a.cur,c=capture(a,"live",null,ATL[2],true,a.slots[nx]);if(c){a.cur=nx;a.cell=c;}}
+       const c=a.cell;if(!c)continue;const S2=sets[2],i=cnt[2];if(i>=S2.N)continue;cnt[2]++;
+       o.getWorldPosition(_p);_p.y+=a.K.cy;_p.addScaledVector(toCam,a.K.R);
+       _m.makeRotationFromQuaternion(camera.quaternion).scale(_v3.set(c.w,c.w,1)).setPosition(_p);S2.card.setMatrixAt(i,_m);
+       const off=c.w*0.05;_p.addScaledVector(cRight,off).addScaledVector(cUp,-off*0.8).addScaledVector(toCam,-0.02);_m.setPosition(_p);S2.shad.setMatrixAt(i,_m);
+       S2.rect.setXYZW(i,c.r[0],c.r[1],c.r[2],c.r[3]);}catch(e){CUT.errs++;if(CUT.errs<6)console.error("live cut-out failed",e);}}
      sets.forEach((S2,i)=>{S2.card.count=S2.shad.count=cnt[i];const n=cnt[i];G3.chg(S2.card.instanceMatrix,n);G3.chg(S2.shad.instanceMatrix,n);G3.chg(S2.rect,n);   /* (t10: only when something moved or changed picture) */S2.shad.visible=!G3.shadowsOff;});};
    const _v3=new THREE.Vector3();
    CUT.stats=()=>({actors:CUT.actors.length,cells:CUT.cells.size,caps:CUT.caps,evicts:CUT.evicts||0,queue:CUT.queue.length,full:CUT.full,resets:CUT.resets,errs:CUT.errs,rows:ATL.map(A=>A.nextY),
      shown3D:CUT.actors.filter(a=>shown(a.o)&&(!a.hid||(()=>{let l=0;a.o.traverse(c=>{if((c.isMesh||c.isLine)&&c.visible&&c.layers.mask!==1<<CUT_LAYER)l++;});return l;})())).length});
    // a lost and restored graphics context empties the atlases: take every picture again
-   glc.addEventListener("webglcontextrestored",()=>{[0,1].forEach(resetAtlas);});}
+   glc.addEventListener("webglcontextrestored",()=>{[0,1].forEach(resetAtlas);for(const a of LIVE)a.cell=null;});}

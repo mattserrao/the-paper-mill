@@ -5,7 +5,8 @@ exec(src.split("def stats")[0].split("from playwright.sync_api import sync_playw
 html = pathlib.Path(sys.argv[1]).read_text().replace("window.__PM={", "window.__PM={trigger:(i,q)=>trigger(i,q),", 1)
 if "window.__PM=" not in html:
     i = html.rindex("})();", 0, html.rindex("</script>")); html = html[:i] + HOOK + html[i:]
-SP="/tmp/claude-0/-home-claude/1d0fb052-7a76-5766-bfa8-faf7676d4b04/scratchpad/qa18/v-"
+import os
+SP=os.environ.get("SHOTP","/tmp/claude-0/-home-claude/1d0fb052-7a76-5766-bfa8-faf7676d4b04/scratchpad/qa18/v-")
 shots = sys.argv[2].split(",")
 with sync_playwright() as pw:
     b = pw.chromium.launch(args=["--use-gl=angle", "--use-angle=swiftshader", "--enable-unsafe-swiftshader", "--ignore-gpu-blocklist"])
@@ -64,6 +65,9 @@ with sync_playwright() as pw:
       "lbl253": ([10,-5,253], "()=>{document.getElementById('labels3d').classList.remove('lbl-off','lbl-idle');}", 2500),
       "lbl190": ([10,-5,190], "()=>{document.getElementById('labels3d').classList.remove('lbl-off','lbl-idle');}", 2500),
       "lbl127": ([20,-10,127], "()=>{document.getElementById('labels3d').classList.remove('lbl-off','lbl-idle');__PM.trigger('cscreen',true);}", 2500),
+      "t380": ([-14,5,380], "()=>{__PM.S.inc=[];}", 2500),
+      "t190": ([10,-5,190], "()=>{}", 2500),
+      "t95": ([20,-10,95], "()=>{}", 2500),
       "birdline": ([10,5,190], "()=>{__PM.S.inc=[];__PM.trigger('birdline',true);}", 4000),
       "birdline2": ([10,5,190], "()=>{}", 4500),
     }

@@ -1,5 +1,18 @@
 # Changelog
 
+## v6.1.0-t18 (2026-10-18): zen fix, paper rare sights, tilt-shift (test branch test/v6.1-iso)
+- **Zen mode: the mill disappeared in close shots.** Zen thickens the fog by scaling its distances, but in the iso view
+  those distances include the camera's fixed 1.2 km stand-off, so every shot closer than the whole site was fogged out
+  completely: only the cut-out people (drawn without fog) were left on a plain background. The zen fog now thickens from
+  the zoom distance, as the normal fog does.
+- **Rare sights as paper cut-outs:** the cowboys and horses, Bigfoot, the tug and barge, and the gator, the operator and
+  the pirogue keep their full animation but are drawn as cut-out pictures with the paper edge (taken again 8 times a
+  second, stop-motion, in a small atlas of their own). Their dust and smoke are paper clouds. ?softfx = 3D.
+- **Tilt-shift (experiment):** the scene is drawn offscreen and mixed with a blurred half-size copy: a band across the
+  middle stays sharp and the top and bottom soften, strongest at the whole-site zoom, with a touch more colour, for a
+  photographed-miniature look. On by default except on the low tier; Settings > Graphics > Tilt-shift, ?tilt=0 / 1.
+  Costs one full-size and four half-size passes a frame (not yet measured on a phone).
+
 ## v6.1.0-t17 (2026-10-18): bird cut-scene fix (test branch test/v6.1-iso)
 - **Bird on the power lines:** set off from the Upsets list, the cut-scene was skipped (it never plays over an open sheet).
   Picking it now closes the list and the cut-scene plays; a bird that strikes while any sheet or the stats panel is open
