@@ -6,7 +6,7 @@
      touch more colour. The band sits across the middle of the view (where the camera looks); the blur is strongest at
      the whole-site zoom and softer close in. Settings > Graphics > Tilt-shift, ?tilt=0 / ?tilt=1. Off on the low tier
      by default (three extra passes). */
-  {const TS=G3.TS={on:false,band:0.13,ramp:0.30,maxR:1.7,sat:1.1,ms:0};
+  {const TS=G3.TS={on:false,band:0.06,ramp:0.24,maxR:1.7,sat:1.1,ms:0};
     let pref=null;try{pref=localStorage.getItem("paper-mill-tilt");}catch(e){}
     {const q=new URLSearchParams(location.search).get("tilt");if(q!=null)pref=q==="0"?"off":"on";}
     TS.on=pref?pref==="on":!(G3.GFX&&(G3.GFX.tier==="low"||G3.GFX.tier==="bare"));

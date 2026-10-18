@@ -2,7 +2,8 @@
   {const NIGHT=hr=>hr>=20.5||hr<5.5;
     // trash cans (instanced: bodies, contents, overflow litter); v20: the contents sit inside the tapered body (they were
     // wider than its base and showed through as a pale band round the bottom of every can)
-    const CANS=[[59.7,13.6],[27.7,13.6],[-3.3,13.6],[51.4,23.6],[64.0,21.2],[30.6,41.4],[35.4,41.4],[-12.6,15.6]].map(([x,z],i)=>({x,z,f:0.15+Math.random()*0.4,r:0.055+Math.random()*0.05,seed:i*7.3}));
+    // (t19: the winder can stood in the broke hole at -12, 15.6: moved off its corner)
+    const CANS=[[59.7,13.6],[27.7,13.6],[-3.3,13.6],[51.4,23.6],[64.0,21.2],[30.6,41.4],[35.4,41.4],[-14.1,17.3]].map(([x,z],i)=>({x,z,f:0.15+Math.random()*0.4,r:0.055+Math.random()*0.05,seed:i*7.3}));
     const NB=CANS.length,LIT=10;
     const bodyI=new THREE.InstancedMesh(new CylG(0.32,0.28,0.95,14),cloth0b("#3f6e57"),NB),rimI=new THREE.InstancedMesh(new CylG(0.34,0.34,0.07,14),instMat(M.ink),NB),
       fillI=new THREE.InstancedMesh(new CylG(0.26,0.245,1,10),cloth0b("#d9cbb0"),NB),litI=new THREE.InstancedMesh(new THREE.BoxGeometry(0.24,0.04,0.18),new StdMat({roughness:0.9}),NB*LIT);

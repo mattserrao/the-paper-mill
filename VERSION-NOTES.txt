@@ -60,3 +60,4 @@ One line per version, oldest first. Add a line here with every release: build.py
 6.1.0-t16  Paper Props Dim at Night, Labels Never Overlap, Fewer Cut-Out Pictures (Test)
 6.1.0-t17  Bird on the Power Lines Cut-Scene Plays When Set Off From the Upsets List (Test)
 6.1.0-t18  Zen Close-Ups Fixed, Rare Sights as Paper Cut-Outs, Tilt-Shift Diorama Look (Test)
+6.1.0-t19  Narrower Tilt-Shift Band, Winder Trash Can Out of the Broke Hole (Test)

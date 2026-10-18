@@ -1,5 +1,11 @@
 # Changelog
 
+## v6.1.0-t19 (2026-10-18): tilt-shift band, winder trash can (test branch test/v6.1-iso)
+- **Tilt-shift:** the sharp band across the middle is narrower (blur starts closer to the centre and reaches full
+  strength sooner).
+- **Winder trash can:** it stood inside the broke hole by the winder (the black square on the floor). Moved to the
+  hole's corner, on the floor.
+
 ## v6.1.0-t18 (2026-10-18): zen fix, paper rare sights, tilt-shift (test branch test/v6.1-iso)
 - **Zen mode: the mill disappeared in close shots.** Zen thickens the fog by scaling its distances, but in the iso view
   those distances include the camera's fixed 1.2 km stand-off, so every shot closer than the whole site was fogged out
