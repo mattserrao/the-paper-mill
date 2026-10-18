@@ -244,7 +244,7 @@
     // labels follow the 3D anchors
     const w=G3.vw||host.clientWidth,hh=G3.vh||host.clientHeight,doText=now-lastLabel>200;if(doText)lastLabel=now;
     // v14: zoomed out, only the area labels and the landmark names show; closer in, the equipment labels and no landmarks
-    const wide=(G3.camDist||camera.position.distanceTo(target))>400;
+    const wide=camera.isIso?(G3.camR||999)>=300:(G3.camDist||camera.position.distanceTo(target))>400;   // (t16: in the iso view the whole-site step (380) counts as zoomed out: area labels only)
     // (v5.2: no projecting or text building while the section labels can't show: zen, hidden view, labels off)
     if(G3.kvOn)LABELS.forEach(L=>{L.lb.vis=false;});   // v5.6: the fiddly knobs view shows only the knobs' labels (and upsets')
     else if(!(G3.zen||LB.hid||labelHost.classList.contains("lbl-off")))LABELS.forEach(L=>{const R=L.lb;if(L.land?!wide:(!L.area&&wide)){R.vis=false;return;}tmp.copy(L.v).project(camera);const vis=tmp.z<1&&Math.abs(tmp.x)<1.05&&Math.abs(tmp.y)<1.05;R.vis=vis;

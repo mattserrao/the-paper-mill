@@ -66,13 +66,20 @@
     sig=(sig*31+LB.gen)%2147483647;
     if(!LB.force&&sig===LB.sig)return;LB.force=false;LB.sig=sig;LB.nd++;
     lx.setTransform(1,0,0,1,0,0);lx.clearRect(0,0,lc.width,lc.height);let n=0;
-    for(let i=0;i<LREC.length;i++){const R=LREC[i];if(!R.on)continue;lx.globalAlpha=R.inc?1:LB.a;n++;
-      R.rx=R.x-R.W/2;R.ry=R.y-R.H;lx.drawImage(R.cv,0,0,R.sw,R.sh,Math.round((R.rx-R.m)*d),Math.round((R.ry-R.m)*d),R.sw,R.sh);}
+    /* v6.1 t16: no label is drawn over another. Placed in order of importance (upsets, then red ones such as the
+       bottleneck, then the area labels, then equipment), a label that would overlap one already placed is left out. */
+    const ord=LORD;ord.length=0;for(let i=0;i<LREC.length;i++){const R=LREC[i];R.cull=false;if(!R.on)continue;R.rx=R.x-R.W/2;R.ry=R.y-R.H;R.rk=R.inc?0:R.bad?1:R.area?2:3;ord.push(R);}
+    ord.sort((a,b)=>a.rk-b.rk);const PADL=3;
+    for(let i=0;i<ord.length;i++){const R=ord[i];for(let j=0;j<i;j++){const Q=ord[j];if(Q.cull)continue;
+        if(R.rx<Q.rx+Q.W+PADL&&R.rx+R.W+PADL>Q.rx&&R.ry<Q.ry+Q.H+PADL&&R.ry+R.H+PADL>Q.ry){R.cull=true;break;}}}
+    for(let i=0;i<LREC.length;i++){const R=LREC[i];if(!R.on||R.cull)continue;lx.globalAlpha=R.inc?1:LB.a;n++;
+      lx.drawImage(R.cv,0,0,R.sw,R.sh,Math.round((R.rx-R.m)*d),Math.round((R.ry-R.m)*d),R.sw,R.sh);}
     lx.globalAlpha=1;LB.shown=n;}
+  const LORD=[];
   // which incident label (topmost first) is under a pointer event on the 3D view; for taps and the hover cursor
   G3.lblAt=e=>{if(G3.zen||LB.hid||!LB.shown||labelHost.classList.contains("lbl-off"))return null;
     const r=glc.getBoundingClientRect(),px=e.clientX-r.left,py=e.clientY-r.top;
-    for(let i=LREC.length-1;i>=0;i--){const R=LREC[i];if(R.inc&&R.on&&px>=R.rx&&px<=R.rx+R.W&&py>=R.ry&&py<=R.ry+R.H)return R.id;}return null;};
+    for(let i=LREC.length-1;i>=0;i--){const R=LREC[i];if(R.inc&&R.on&&!R.cull&&px>=R.rx&&px<=R.rx+R.W&&py>=R.ry&&py<=R.ry+R.H)return R.id;}return null;};
   G3.lblCount=()=>[LREC.filter(R=>R.a!=null).length,LREC.filter(R=>R.on).length];
   const LABELS=[
     {area:1,p:[-70,0,-8],t:()=>["Inbound OCC",S.inQ.length?S.inQ.length+" trucks waiting":"road clear"]},
@@ -99,7 +106,7 @@
   {const BNL={recv:"Receiving",pulper:"Pulper",screens:"Fine screens",winder:"Winder",ship:"Roll warehouse"};
     LABELS.forEach(L=>{const t0=L.t,c0=L.cls,mine=()=>{const b=BNQ();return b&&BNL[b]&&L.tag===BNL[b]&&bnShort();};try{L.tag=Object.values(BNL).find(n=>t0()[0].startsWith(n))||null;}catch(e){L.tag=null;}
       if(!L.tag)return;L.t=()=>{const r=t0();return mine()?[r[0],"BOTTLENECK · "+r[1]]:r;};L.cls=()=>!!((c0&&c0())||mine());});}
-  LABELS.forEach(L=>{L.lb=lblNew(false);L.v=new THREE.Vector3(...L.p);});
+  LABELS.forEach(L=>{L.lb=lblNew(false);L.lb.area=!!L.area;L.v=new THREE.Vector3(...L.p);});
   const banner=$("banner3d"),chips=$("chips3d");
   // click a disaster (chip, breaking banner or its floating label) to fly the camera there
   G3.spotOf=id=>id==="hay"?[-17,7]:id==="brk"?[12,9]:PINS[id]?[PINS[id][0],PINS[id][2]]:null;

@@ -1336,7 +1336,7 @@ body.dark .kvchip{background:color-mix(in srgb,var(--panel) 96%,transparent)}
 <div class="btns"><button class="primary" id="no3d-retry">Try again</button></div></div></div>
 
 <script type="module">
-const APP_VER="v6.1.0-t15";   // shown in the menu and sent with leaderboard scores (max 12 characters)
+const APP_VER="v6.1.0-t16";   // shown in the menu and sent with leaderboard scores (max 12 characters)
 // TEST BUILDS ONLY (off in releases): turbo speeds 240/480/960 sim min/s for fast playtests. Above 120, crews and maintenance start jobs
 // without waiting for the 3D walk (as with the 3D view off) and outages keep the speed. Set false for a release.
 const TURBO=false,TURBO_FAST=s=>TURBO&&s>120;
@@ -6156,13 +6156,20 @@ function no3D(){G3.ok=false;$("no3d").hidden=false;$("no3d-retry").onclick=()=>l
     sig=(sig*31+LB.gen)%2147483647;
     if(!LB.force&&sig===LB.sig)return;LB.force=false;LB.sig=sig;LB.nd++;
     lx.setTransform(1,0,0,1,0,0);lx.clearRect(0,0,lc.width,lc.height);let n=0;
-    for(let i=0;i<LREC.length;i++){const R=LREC[i];if(!R.on)continue;lx.globalAlpha=R.inc?1:LB.a;n++;
-      R.rx=R.x-R.W/2;R.ry=R.y-R.H;lx.drawImage(R.cv,0,0,R.sw,R.sh,Math.round((R.rx-R.m)*d),Math.round((R.ry-R.m)*d),R.sw,R.sh);}
+    /* v6.1 t16: no label is drawn over another. Placed in order of importance (upsets, then red ones such as the
+       bottleneck, then the area labels, then equipment), a label that would overlap one already placed is left out. */
+    const ord=LORD;ord.length=0;for(let i=0;i<LREC.length;i++){const R=LREC[i];R.cull=false;if(!R.on)continue;R.rx=R.x-R.W/2;R.ry=R.y-R.H;R.rk=R.inc?0:R.bad?1:R.area?2:3;ord.push(R);}
+    ord.sort((a,b)=>a.rk-b.rk);const PADL=3;
+    for(let i=0;i<ord.length;i++){const R=ord[i];for(let j=0;j<i;j++){const Q=ord[j];if(Q.cull)continue;
+        if(R.rx<Q.rx+Q.W+PADL&&R.rx+R.W+PADL>Q.rx&&R.ry<Q.ry+Q.H+PADL&&R.ry+R.H+PADL>Q.ry){R.cull=true;break;}}}
+    for(let i=0;i<LREC.length;i++){const R=LREC[i];if(!R.on||R.cull)continue;lx.globalAlpha=R.inc?1:LB.a;n++;
+      lx.drawImage(R.cv,0,0,R.sw,R.sh,Math.round((R.rx-R.m)*d),Math.round((R.ry-R.m)*d),R.sw,R.sh);}
     lx.globalAlpha=1;LB.shown=n;}
+  const LORD=[];
   // which incident label (topmost first) is under a pointer event on the 3D view; for taps and the hover cursor
   G3.lblAt=e=>{if(G3.zen||LB.hid||!LB.shown||labelHost.classList.contains("lbl-off"))return null;
     const r=glc.getBoundingClientRect(),px=e.clientX-r.left,py=e.clientY-r.top;
-    for(let i=LREC.length-1;i>=0;i--){const R=LREC[i];if(R.inc&&R.on&&px>=R.rx&&px<=R.rx+R.W&&py>=R.ry&&py<=R.ry+R.H)return R.id;}return null;};
+    for(let i=LREC.length-1;i>=0;i--){const R=LREC[i];if(R.inc&&R.on&&!R.cull&&px>=R.rx&&px<=R.rx+R.W&&py>=R.ry&&py<=R.ry+R.H)return R.id;}return null;};
   G3.lblCount=()=>[LREC.filter(R=>R.a!=null).length,LREC.filter(R=>R.on).length];
   const LABELS=[
     {area:1,p:[-70,0,-8],t:()=>["Inbound OCC",S.inQ.length?S.inQ.length+" trucks waiting":"road clear"]},
@@ -6189,7 +6196,7 @@ function no3D(){G3.ok=false;$("no3d").hidden=false;$("no3d-retry").onclick=()=>l
   {const BNL={recv:"Receiving",pulper:"Pulper",screens:"Fine screens",winder:"Winder",ship:"Roll warehouse"};
     LABELS.forEach(L=>{const t0=L.t,c0=L.cls,mine=()=>{const b=BNQ();return b&&BNL[b]&&L.tag===BNL[b]&&bnShort();};try{L.tag=Object.values(BNL).find(n=>t0()[0].startsWith(n))||null;}catch(e){L.tag=null;}
       if(!L.tag)return;L.t=()=>{const r=t0();return mine()?[r[0],"BOTTLENECK · "+r[1]]:r;};L.cls=()=>!!((c0&&c0())||mine());});}
-  LABELS.forEach(L=>{L.lb=lblNew(false);L.v=new THREE.Vector3(...L.p);});
+  LABELS.forEach(L=>{L.lb=lblNew(false);L.lb.area=!!L.area;L.v=new THREE.Vector3(...L.p);});
   const banner=$("banner3d"),chips=$("chips3d");
   // click a disaster (chip, breaking banner or its floating label) to fly the camera there
   G3.spotOf=id=>id==="hay"?[-17,7]:id==="brk"?[12,9]:PINS[id]?[PINS[id][0],PINS[id][2]]:null;
@@ -6405,6 +6412,13 @@ function no3D(){G3.ok=false;$("no3d").hidden=false;$("no3d-retry").onclick=()=>l
      shade darker like a fold), shown as a camera-facing sprite; animated ones swap between two drawings (stop-motion) and
      have a mirrored copy so they face the way they move. ?softfx = the old 3D props and soft particles */
   const INK="#2b1d12",SOFTFX=/[?&]softfx/.test(location.search);
+  /* v6.1 t16: paper props dim at night like the cut-out people (to 38% at full night; flags to 55%): each registered
+     material keeps its own colour and is scaled from it whenever the night level moves. Flames, sparks, lamps and the
+     lightning bolt stay bright. */
+  const PAPM=[];let papL=-1;
+  function papReg(m,k=0.62){if(m&&m.color){m.userData.c0=m.color.clone();m.userData.dk=k;PAPM.push(m);papL=-1;}return m;}
+  function papTick(){const nk=G3.nightK||0;if(Math.abs(nk-papL)<0.004)return;papL=nk;for(const m of PAPM)m.color.copy(m.userData.c0).multiplyScalar(1-m.userData.dk*nk);}
+  G3.papReg=papReg;
   function cardTex(draw,w,h){return spriteTex((x,W,H)=>{x.clearRect(0,0,W,H);x.lineJoin="round";x.lineCap="round";draw(x,W,H);
       x.save();x.globalCompositeOperation="source-atop";x.fillStyle="rgba(70,45,20,0.11)";x.fillRect(0,H*0.64,W,H);x.restore();},w,h);}
   function mirrorTex(t){const s=t.image,c=document.createElement("canvas");c.width=s.width;c.height=s.height;const x=c.getContext("2d");x.translate(s.width,0);x.scale(-1,1);x.drawImage(s,0,0);
@@ -6413,7 +6427,7 @@ function no3D(){G3.ok=false;$("no3d").hidden=false;$("no3d-retry").onclick=()=>l
   function ink(x,path,fill,lw){path();if(fill){x.fillStyle=fill;x.fill();}x.lineWidth=lw;x.strokeStyle=INK;x.stroke();}
   const poly=(x,P,u)=>()=>{x.beginPath();P.forEach(([a,b],i)=>i?x.lineTo(a*u,b*u):x.moveTo(a*u,b*u));x.closePath();};
   const ell=(x,cx,cy,rx,ry,u,rot=0)=>()=>{x.beginPath();x.ellipse(cx*u,cy*u,rx*u,ry*u,rot,0,Math.PI*2);};
-  function cardSprite(tex,w,h,base){const s=new THREE.Sprite(new THREE.SpriteMaterial({map:tex,alphaTest:0.5,transparent:false,toneMapped:false}));s.scale.set(w,h,1);if(base)s.center.set(0.5,0);return s;}
+  function cardSprite(tex,w,h,base){const s=new THREE.Sprite(papReg(new THREE.SpriteMaterial({map:tex,alphaTest:0.5,transparent:false,toneMapped:false})));s.scale.set(w,h,1);if(base)s.center.set(0.5,0);return s;}
   // which way something moving along v from p goes across the screen (+1 right, -1 left)
   const _sa=new THREE.Vector3(),_sb=new THREE.Vector3();
   const screenDir=(p,v)=>{_sa.copy(p).project(camera);_sb.copy(p).add(v).project(camera);return _sb.x>=_sa.x?1:-1;};
@@ -6533,7 +6547,7 @@ function no3D(){G3.ok=false;$("no3d").hidden=false;$("no3d-retry").onclick=()=>l
     const IB=new THREE.InstancedInterleavedBuffer(new Float32Array(PCAP*11),11,1);IB.setUsage(THREE.DynamicDrawUsage);
     const at=(n,k,o)=>{const a=new THREE.InterleavedBufferAttribute(IB,k,o);g.setAttribute(n,a);return a;};
     at("iPos",3,0);at("iScl",2,3);at("iCol",3,5);at("iAlp",1,8);at("iRot",1,9);at("iVar",1,10);
-    const b={g,sort,ib:IB,rng:{start:0,count:0},list:[],n:0};g.instanceCount=0;
+    const b={g,sort,ib:IB,rng:{start:0,count:0},list:[],n:0,dim:!glow&&map!==TX.star};   // (t16: paper and smoke dim at night; flames, sparks and paper stars don't)g.instanceCount=0;
     const m=new THREE.ShaderMaterial({uniforms:THREE.UniformsUtils.merge([THREE.UniformsLib.fog,{map:{value:null}}]),vertexShader:PVS,fragmentShader:PFS,
       transparent:true,depthWrite:false,fog:!glow,toneMapped:!glow});m.uniforms.map.value=map;
     b.mesh=new THREE.Mesh(g,m);b.mesh.frustumCulled=false;b.mesh.renderOrder=order;scene.add(b.mesh);PB.set(map,b);return b;}
@@ -6563,8 +6577,8 @@ function no3D(){G3.ok=false;$("no3d").hidden=false;$("no3d-retry").onclick=()=>l
       p.x+=p.v[0]*rdt;p.y+=p.v[1]*rdt;p.z+=p.v[2]*rdt;if(p.y<0.05&&p.v[1]<0){p.y=0.05;p.v[1]=0;p.v[0]*=0.5;p.v[2]*=0.5;}
       p.s1=t.grow?p.size*(0.45+(1-f)*1.7):t.keep?p.size:p.size*(0.35+0.65*f);
       p.a=p.op*(t.pfade?Math.min(1,f/0.35)*Math.min(1,(1-f)*p.max*6):t.grow?Math.min(1,(1-f)*5)*f:Math.min(1,f*1.6));p.rot+=p.spin*rdt*(t.grow?0.3:(t.spinK||1));const b=t.b;b.list[b.n++]=p;}
-    const vm=camera.matrixWorldInverse.elements;
-    for(let k=0;k<PBL.length;k++){const b=PBL[k],L=b.list,n=b.n;
+    const vm=camera.matrixWorldInverse.elements,NL=1-0.62*(G3.nightK||0);
+    for(let k=0;k<PBL.length;k++){const b=PBL[k],L=b.list,n=b.n,lt=b.dim?NL:1;
       if(b.sort&&n>1){for(let i=0;i<n;i++){const p=L[i];p.d=vm[2]*p.x+vm[6]*p.y+vm[10]*p.z;}
         // (v15: big batches — fires, storms — go through 48 depth buckets instead: linear time, and back-to-front is only
         // needed to the nearest bucket for soft smoke; small ones keep the exact insertion sort)
@@ -6573,7 +6587,7 @@ function no3D(){G3.ok=false;$("no3d").hidden=false;$("no3d-retry").onclick=()=>l
           for(let i=0;i<n;i++)C[((L[i].d-lo)*sc)|0]++;for(let k2=1;k2<K;k2++)C[k2]+=C[k2-1];for(let i=n-1;i>=0;i--){const p=L[i];T[--C[((p.d-lo)*sc)|0]]=p;}for(let i=0;i<n;i++)L[i]=T[i];}}
       const D=b.ib.array;
       for(let i=0;i<n;i++){const p=L[i],o=i*11;D[o]=p.x;D[o+1]=p.y;D[o+2]=p.z;D[o+3]=p.s1*(p.fl||1);D[o+4]=p.s1*(p.t.tall||1);
-        D[o+5]=p.r;D[o+6]=p.g;D[o+7]=p.b;D[o+8]=p.a;D[o+9]=p.rot;D[o+10]=p.t.sheet?((((p.max-p.life)*7+p.ph*2)|0)%4):p.tile;}
+        D[o+5]=p.r*lt;D[o+6]=p.g*lt;D[o+7]=p.b*lt;D[o+8]=p.a;D[o+9]=p.rot;D[o+10]=p.t.sheet?((((p.max-p.life)*7+p.ph*2)|0)%4):p.tile;}
       b.g.instanceCount=n;b.mesh.visible=n>0&&!(G3.EXP&&(G3.EXP.noParts||G3.EXP.hidePB===b));
       if(n){const r=b.rng;r.count=n*11;if(!b.ib.updateRanges.length)b.ib.updateRanges.push(r);b.ib.needsUpdate=true;}}}
   const R=()=>Math.random()-0.5,EZ=k=>k<=0?0:k>=1?1:k*k*(3-2*k);
@@ -6626,7 +6640,7 @@ function no3D(){G3.ok=false;$("no3d").hidden=false;$("no3d-retry").onclick=()=>l
       x.save();x.clip();x.fillStyle="rgba(0,0,0,0.12)";x.fillRect(0,h*0.55,w,h);x.restore();
       const r=h*0.29,cx=w*0.36,cy=h*0.5+wav(0.36);x.fillStyle="#fbf6ea";x.beginPath();x.arc(cx,cy,r,0,7);x.fill();x.lineWidth=w*0.02;x.stroke();x.drawImage(ic,cx-r*0.86,cy-r*0.86,r*1.72,r*1.72);},128,80);}
   function pinAt(g,x,y,z,kind){const p=new THREE.Group();let head=null,flag=null,fm=null;
-    if(PAPF){fm=new THREE.MeshBasicMaterial({map:flagTex(kind,0),transparent:true,alphaTest:0.5,depthTest:false,toneMapped:false,side:THREE.DoubleSide});
+    if(PAPF){fm=papReg(new THREE.MeshBasicMaterial({map:flagTex(kind,0),transparent:true,alphaTest:0.5,depthTest:false,toneMapped:false,side:THREE.DoubleSide}),0.45);
       const fg=new THREE.PlaneGeometry(3.2,2);fg.translate(1.6,-1,0);flag=new THREE.Mesh(fg,fm);flag.renderOrder=10;flag.position.set(0,1.0,0);p.add(flag);
       flag.onBeforeRender=()=>{flag.quaternion.copy(camera.quaternion);if(p.parent)flag.quaternion.premultiply(_pq.copy(p.quaternion).invert());flag.updateMatrixWorld();};}
     else{head=new THREE.Mesh(pinGeo,pinMat);head.castShadow=true;p.add(head);
@@ -6794,7 +6808,7 @@ function no3D(){G3.ok=false;$("no3d").hidden=false;$("no3d-retry").onclick=()=>l
       if(now>nb){nb=now+900+Math.random()*1400;for(let k=0;k<12;k++)emit("pspark",-18.7+R()*2,2.6,zc+R()*2,R()*7,3+Math.random()*5,R()*7,0.7+Math.random()*0.4,0.5,k%2?"#ffd23f":"#ff8a1f",1);}
       if(Math.random()<rdt*2)emit("paper",-18.7+R()*2,3,zc+R(),R()*0.3,1,R()*0.3,2.6,1.4,"#9aa1ad",1);};},
     // (t14) dye trouble: splats of dye on the floor along the tending side, and puffs of the colour coming off the sheet
-    dye:g=>{if(SOFTFX)return ()=>{};const sp=[];for(let k=0;k<12;k++){const m=new THREE.Mesh(new THREE.PlaneGeometry(1,1).rotateX(-Math.PI/2),new THREE.MeshBasicMaterial({map:splatTex,alphaTest:0.5,toneMapped:false,color:lin(DYE[k%DYE.length])}));
+    dye:g=>{if(SOFTFX)return ()=>{};const sp=[];for(let k=0;k<12;k++){const m=new THREE.Mesh(new THREE.PlaneGeometry(1,1).rotateX(-Math.PI/2),papReg(new THREE.MeshBasicMaterial({map:splatTex,alphaTest:0.5,toneMapped:false,color:lin(DYE[k%DYE.length])})));
         m.position.set(16+Math.random()*16,0.1+k*0.004,zc+CD/2+1.2+Math.random()*2.4);m.rotation.y=Math.random()*6;m.userData.s=1+Math.random()*1.4;m.userData.d=k*0.05;g.add(m);sp.push(m);}
       return (now,rdt,inc)=>{const p=inc&&inc.total?1-inc.left/inc.total:0.5;sp.forEach(m=>{const k=EZ((p-m.userData.d)/0.12)*(p>0.9?1-EZ((p-0.9)/0.1):1);m.visible=k>0.02;m.scale.setScalar(Math.max(0.01,m.userData.s*k));});
         if(rdt>0&&Math.random()<rdt*5)emit("paper",16+Math.random()*16,1.6,zc+CD/2,R()*0.4,1.2,0.4,2.4,1.3,DYE[((now/1400)|0)%DYE.length],1);};},
@@ -6893,7 +6907,7 @@ function no3D(){G3.ok=false;$("no3d").hidden=false;$("no3d-retry").onclick=()=>l
         // a few paper scraps caught in it
         for(let k=0;k<6;k++){const t=0.15+rnd()*0.7,y=H*(0.06+t*0.84),hw=W*(0.44-0.36*Math.pow(t,0.8)),px=cx+(rnd()<0.5?-1:1)*hw*(1.05+rnd()*0.2);
           x.save();x.translate(px,y);x.rotate(rnd()*6);x.fillStyle=["#c8a879","#e9e2d0","#8c6a43"][k%3];x.fillRect(-W*0.025,-W*0.018,W*0.05,W*0.036);x.strokeStyle="#22181a";x.lineWidth=2;x.strokeRect(-W*0.025,-W*0.018,W*0.05,W*0.036);x.restore();}},256,384);
-      const TXS=[draw(11),draw(29)],cm=new THREE.MeshBasicMaterial({map:TXS[0],transparent:true,alphaTest:0.5,toneMapped:false,side:THREE.DoubleSide});
+      const TXS=[draw(11),draw(29)],cm=papReg(new THREE.MeshBasicMaterial({map:TXS[0],transparent:true,alphaTest:0.5,toneMapped:false,side:THREE.DoubleSide}));
       const card=new THREE.Mesh(new THREE.PlaneGeometry(22,33),cm);card.position.y=16.5;fun.add(card);
       const deb=[];for(let k=0;k<16;k++){const d=k%3===0?new THREE.Mesh(rollGeo,ROLLM[0]):new THREE.Mesh(cubeG,k%3===1?M.bale:mat("kraft"));d.scale.setScalar(k%3===0?0.8:0.75);fun.add(d);deb.push(d);}
       let swapT=0,cur=0;
@@ -6926,8 +6940,8 @@ function no3D(){G3.ok=false;$("no3d").hidden=false;$("no3d-retry").onclick=()=>l
     icedintake:g=>{const IX=-30,IZ=-55.5,[rz,rhw]=riverAt(IX),BANK=rz+rhw,ice=new StdMat({color:lin0("#e8f3fb"),roughness:0.35});
       // (t14 paper ice: the shelf and the floes are flat cards of pale blue paper with ink cracks, lying on the water)
       const PAPI=!!shelfTex,flatG=PAPI?new THREE.PlaneGeometry(1,1).rotateX(-Math.PI/2):null,iceT=PAPI?[0,1,2,3].map(iceTex):null;
-      const shelf=PAPI?new THREE.Mesh(flatG,new THREE.MeshBasicMaterial({map:shelfTex,alphaTest:0.5,toneMapped:false})):new THREE.Mesh(cubeG,new StdMat({color:lin0("#dfeef7"),roughness:0.25,metalness:0.05}));shelf.scale.set(26,0.22,1);shelf.position.set(IX,0.1,BANK);shelf.castShadow=!PAPI;g.add(shelf);
-      const iceM=PAPI?iceT.map(t=>new THREE.MeshBasicMaterial({map:t,alphaTest:0.5,toneMapped:false})):null;
+      const shelf=PAPI?new THREE.Mesh(flatG,papReg(new THREE.MeshBasicMaterial({map:shelfTex,alphaTest:0.5,toneMapped:false}))):new THREE.Mesh(cubeG,new StdMat({color:lin0("#dfeef7"),roughness:0.25,metalness:0.05}));shelf.scale.set(26,0.22,1);shelf.position.set(IX,0.1,BANK);shelf.castShadow=!PAPI;g.add(shelf);
+      const iceM=PAPI?iceT.map(t=>papReg(new THREE.MeshBasicMaterial({map:t,alphaTest:0.5,toneMapped:false}))):null;
       const floes=[...Array(16)].map((_,fi)=>{const m=PAPI?new THREE.Mesh(flatG,iceM[fi%4]):new THREE.Mesh(cubeG,ice);const w=1.2+Math.random()*2.4,d=1+Math.random()*1.8;m.scale.set(w,0.26,d);m.castShadow=true;
         m.userData={x:IX-12+Math.random()*24,z:BANK-3-Math.random()*8,r:Math.random()*3,v:0.6+Math.random()*0.8,w:w*1.3,d:d*1.3};g.add(m);return m;});
       const frost=new THREE.Mesh(new THREE.BoxGeometry(4.12,3.12,4.12),new StdMat({color:lin0("#ffffff"),transparent:true,opacity:0,roughness:0.95,depthWrite:false}));frost.position.set(IX,1.5,IZ);g.add(frost);
@@ -7174,7 +7188,7 @@ function no3D(){G3.ok=false;$("no3d").hidden=false;$("no3d-retry").onclick=()=>l
       if(vis){f.lb.x=Math.round((tmp.x+1)/2*w);f.lb.y=Math.round((1-tmp.y)/2*hh);
         if(doTxt||f.lb.a==null){const st=incState(inc),b=`${st?st+" · ":""}${(inc.left/60).toFixed(1)} h left${inc.note?" · "+inc.note.split(" · ")[0]:""}`;lblSet(f.lb,EV[inc.id].name,b,true);}}});
     for(const id in FX){const f=FX[id];if(!f.on)f.lb.vis=false;}
-    stepParts(rdt);fireLight.position.copy(fireLpos);fireFloorK=Math.max(0,fireFloorK-rdt*1.5);
+    papTick();stepParts(rdt);fireLight.position.copy(fireLpos);fireFloorK=Math.max(0,fireFloorK-rdt*1.5);
     {const fl=0.9*Math.sin(performance.now()/60)+0.6*Math.sin(performance.now()/23),on=fireFloor.userData.on||0;fireLight.intensity=fireL>0?LEG*0.75*fireL*(3.4+fl+fireFloorK*3):0;
       fireFloor.visible=on>0;if(on>0){fireFloor.material.opacity=Math.min(1,on*(0.42+0.1*fl+fireFloorK*0.25));}fireFloor.userData.on=0;}fireL=0;
     if(!S.inc.some(i=>i.id==="brownout")){G3.brownK=1;G3.bFlash=0;}{const el=$("tint3d"),T=S.inc.some(i=>i.id==="brownout"||i.id==="duststorm")&&G3.tint?G3.tint:null,c=T?T[0]:"#000",o=T?String(Math.round(T[1]*100)/100):"0";if(el){if(el.style.background!==c&&T)el.style.background=c;if(el.style.opacity!==o)el.style.opacity=o;}if(!T)G3.tint=null;}if(!S.inc.some(i=>i.id==="icedintake"))G3.iceK=0;if(!S.inc.some(i=>i.id==="duststorm"))G3.dustK=0;if(!S.inc.some(i=>i.id==="flood"))G3.floodK=0;
@@ -10904,8 +10918,14 @@ function no3D(){G3.ok=false;$("no3d").hidden=false;$("no3d-retry").onclick=()=>l
    function atlas(H=AH){const rt=new THREE.WebGLRenderTarget(AW,H,{depthBuffer:false,generateMipmaps:true,minFilter:THREE.LinearMipmapLinearFilter,magFilter:THREE.LinearFilter});
      rt.texture.anisotropy=4;rt.scissorTest=true;return {rt,tex:rt.texture,rows:[],nextY:0,full:false,h:H};}
    function alloc(A,s){for(const r of A.rows)if(r.h===s&&r.x+s<=AW){const x=r.x;r.x+=s+PAD;return [x,r.y];}
-     if(A.nextY+s>A.h){A.full=true;return null;}const r={y:A.nextY,h:s,x:s+PAD};A.nextY+=s+PAD;A.rows.push(r);return [0,r.y];}
-   const ATL=[atlas(2048),atlas()];CUT.atl=ATL;   // (t12: people get a 2048 square: every look at every heading fits, no restarts)
+     if(A.nextY+s>A.h){A.full=true;return evict(A,s);}const r={y:A.nextY,h:s,x:s+PAD};A.nextY+=s+PAD;A.rows.push(r);return [0,r.y];}
+   const ATL=[atlas(2048),atlas()];CUT.atl=ATL;
+   /* v6.1 t16: a full atlas reuses the slot of the picture of that size least recently shown (not on screen for 3 s)
+      instead of starting over, which dropped every picture and retook them all */
+   function evict(A,s){const ai=ATL.indexOf(A),lim=performance.now()-3000;let best=null;
+     for(const c of CUT.cells.values())if(c.a===ai&&c.px===s&&(c.u||0)<lim&&(!best||(c.u||0)<(best.u||0)))best=c;
+     if(!best)return null;CUT.cells.delete(best.key);for(const M2 of [CUT.byKD,CUT.byK])for(const [k,c] of M2)if(c===best)M2.delete(k);
+     for(const a of CUT.actors)if(a.cell===best)a.cell=null;CUT.evicts=(CUT.evicts||0)+1;return best.at;}   // (t12: people get a 2048 square: every look at every heading fits, no restarts)
    // --- the card material: atlas colour, cut at the paper edge; shadows are the same cards in dark paper ---
    const aa=renderer.getContext().getContextAttributes().antialias;
    const VS=`attribute vec4 aRect;varying vec2 vUv;void main(){vUv=vec2(aRect.x+uv.x*aRect.z,aRect.y+uv.y*aRect.w);
@@ -10944,7 +10964,14 @@ function no3D(){G3.ok=false;$("no3d").hidden=false;$("no3d-retry").onclick=()=>l
    function hide(a,on){a.o.traverse(c=>{if(c.isMesh||c.isLine||c.isPoints){const want=on?CUT_LAYER:0;if(on?c.layers.mask!==1<<CUT_LAYER:c.layers.mask===1<<CUT_LAYER)c.layers.set(want);}});a.hid=on;}
    // the look of one actor right now: every node's visibility and material, and its moving parts in coarse steps
    const q=(v,s)=>Math.round(v/s);CUT.POSE={leg:0.8,arm:1.0,lean:0.5,tool:0.7};CUT.free=/[?&]cutfree/.test(location.search);   // (t10: pose frames, 33)
-   function lookKey(a){const o=a.o,u=o.userData;let k=a.kind+":";o.traverse(c=>{if(c===o)return;const mt=c.material;k+=c.visible?(c.isMesh&&mt?(Array.isArray(mt)?mt.map(x=>x.id.toString(36)).join("."):mt.id.toString(36)):"v"):"-";});
+   const LT=[];
+   function lookKey(a){const o=a.o,u=o.userData;let k=a.kind+":";
+     if(a.kind==="person")o.traverse(c=>{if(c===o)return;const mt=c.material;k+=c.visible?(c.isMesh&&mt?(Array.isArray(mt)?mt.map(x=>x.id.toString(36)).join("."):mt.id.toString(36)):"v"):"-";});
+     else{   /* v6.1 t16: a truck's or lift's load (a run of 4+ parts of one look, each shown or not) counts in four steps
+                (empty, a third, two thirds, full) instead of part by part: unloading a truck took a picture per bale per heading */
+       LT.length=0;o.traverse(c=>{if(c===o)return;const mt=c.material;LT.push(c.visible?(c.isMesh&&mt?(Array.isArray(mt)?mt.map(x=>x.id.toString(36)).join("."):mt.id.toString(36)):"v"):"-");});
+       for(let i=0;i<LT.length;){let X=null,j=i,v=0;while(j<LT.length&&(LT[j]==="-"||X===null||LT[j]===X)){if(LT[j]!=="-"){if(X===null)X=LT[j];v++;}j++;}
+         if(X!==null&&X!=="v"&&j-i>=4){k+="L"+X+"."+Math.round(v/(j-i)*3)+";";i=j;}else{k+=LT[i];i++;}}}
      if(a.kind==="person"&&u.legs){const P=CUT.POSE;k+="|"+q(u.legs[0].rotation.z,P.leg)+","+q(u.arms[0].rotation.z,P.arm)+","+q(u.arms[1].rotation.z,P.arm)+","+q(u.arms[1].rotation.x,0.9)+","+q(u.torso.rotation.z,P.lean)+","+q(u.armM?u.armM[1].scale.y:1,0.3)+(u.tool&&u.tool.visible?","+q(u.tool.rotation.x,P.tool):"");}
      else if(a.kind==="lift"&&u.load)k+="|"+q(u.load.position.y,0.3);
      else if(a.kind==="truck")k+="|"+(u.doorL?q(u.doorL.rotation.y,0.6)+","+q(u.doorR.rotation.y,0.6):"");
@@ -10987,7 +11014,7 @@ function no3D(){G3.ok=false;$("no3d").hidden=false;$("no3d-retry").onclick=()=>l
      }finally{   // put it back exactly as it was, and the renderer too
        renderer.setRenderTarget(rt0);renderer.setClearColor(cl,ca);renderer.autoClear=ac;
        if(par)par.add(o);else cs.remove(o);o.position.copy(p0);o.rotation.y=ry;o.visible=vis;o.updateMatrixWorld(true);o.children.forEach(c=>{c.matrixWorldAutoUpdate=false;});}
-     CUT.caps++;return {r:[at[0]/AW,at[1]/A.h,px/AW,px/A.h],a:K.at,w:2*K.R};}
+     CUT.caps++;return {r:[at[0]/AW,at[1]/A.h,px/AW,px/A.h],a:K.at,w:2*K.R,px,at,key,u:performance.now()};}
    // start-up: compile the picture shaders (the cut-outs' materials as drawn into RT_A) behind the "Getting the mill ready" screen
    G3.cutWarm=()=>{try{rescan();basis();const seen=new Set();for(const a of CUT.actors){const kk=a.kind;if(seen.size>40)break;
        let m=false;a.o.traverse(c=>{if(c.material&&!seen.has(c.material)){seen.add(c.material);m=true;}});if(m){const key="warm:"+CUT.caps;const c=capture(a,key,0,ATL[a.K.at]);if(c){CUT.cells.set(key,c);CUT.byKD.set(kk+"#0",c);CUT.byK.set(kk,c);}}}}
@@ -11025,8 +11052,8 @@ function no3D(){G3.ok=false;$("no3d").hidden=false;$("no3d-retry").onclick=()=>l
      if(!CUT.burst)CUT.burst=now+6000;   // (the first seconds take pictures faster: everyone needs one)
      let n=0;const capN=now<CUT.burst?CAP_BURST:CAP_N;
      while(CUT.queue.length&&n<capN){const [a,key,dir]=CUT.queue.shift();CUT.qset.delete(key);if(CUT.cells.has(key)||!shown(a.o))continue;
-       let A=ATL[a.K.at];if(A.full){CUT.full++;resetAtlas(a.K.at);A=ATL[a.K.at];}if(!n)basis();n++;
-       const lastOne=n>=capN||!CUT.queue.length;let c=null;try{c=capture(a,key,dir,A,lastOne);}catch(e){CUT.errs++;if(CUT.errs<6)console.error("cut-out picture failed",e);}
+       const A=ATL[a.K.at];if(!n)basis();n++;
+       const lastOne=n>=capN||!CUT.queue.length;let c=null;try{c=capture(a,key,dir,A,lastOne);if(!c&&A.full){CUT.full++;resetAtlas(a.K.at);c=capture(a,key,dir,A,lastOne);}}catch(e){CUT.errs++;if(CUT.errs<6)console.error("cut-out picture failed",e);}
        if(c){CUT.cells.set(key,c);CUT.byKD.set(a.kind+"#"+dir,c);CUT.byK.set(a.kind,c);}}
      // (t12: the start-up pictures still to take, one a frame while nothing on screen is waiting for one)
      if(!n&&CUT.pre&&CUT.pre.length){const [a,key,d]=CUT.pre.shift();const A=ATL[a.K.at];if(!CUT.cells.has(key)&&!A.full&&A.nextY<=A.h*0.7){basis();try{const c=capture(a,key,d,A,true);if(c){CUT.cells.set(key,c);CUT.byKD.set(a.kind+"#"+d,c);}}catch(e){CUT.errs++;}}}
@@ -11037,7 +11064,7 @@ function no3D(){G3.ok=false;$("no3d").hidden=false;$("no3d-retry").onclick=()=>l
        if(!a.hid||now>a.hT){a.hT=now+300;hide(a,true);}   // (hidden at once; re-checked every second, pools add parts later)
        const dir=heading(o);if(!a.lk||((CUT.tk+(a.ix||(a.ix=CUT.actors.indexOf(a)+1)))&1))a.lk=lookKey(a);const key=a.lk+"#"+dir;   /* (t6: the look is re-read every other tick) */let c=CUT.cells.get(key);
        if(!c){want(a,key,dir,!a.cell);c=a.cell||CUT.byKD.get(a.kind+"#"+dir)||CUT.byK.get(a.kind);}
-       if(!c)continue;a.cell=c;
+       if(!c)continue;a.cell=c;c.u=now;
        const S2=sets[c.a],i=cnt[c.a];if(i>=S2.N)continue;cnt[c.a]++;
        o.getWorldPosition(_p);_p.y+=a.K.cy;_p.addScaledVector(toCam,a.K.R);
        _m.makeRotationFromQuaternion(camera.quaternion).scale(_v3.set(c.w,c.w,1)).setPosition(_p);S2.card.setMatrixAt(i,_m);
@@ -11045,7 +11072,7 @@ function no3D(){G3.ok=false;$("no3d").hidden=false;$("no3d-retry").onclick=()=>l
        S2.rect.setXYZW(i,c.r[0],c.r[1],c.r[2],c.r[3]);}catch(e){CUT.errs++;if(CUT.errs<6)console.error("cut-out failed",e);}}
      sets.forEach((S2,i)=>{S2.card.count=S2.shad.count=cnt[i];const n=cnt[i];G3.chg(S2.card.instanceMatrix,n);G3.chg(S2.shad.instanceMatrix,n);G3.chg(S2.rect,n);   /* (t10: only when something moved or changed picture) */S2.shad.visible=!G3.shadowsOff;});};
    const _v3=new THREE.Vector3();
-   CUT.stats=()=>({actors:CUT.actors.length,cells:CUT.cells.size,caps:CUT.caps,queue:CUT.queue.length,full:CUT.full,resets:CUT.resets,errs:CUT.errs,rows:ATL.map(A=>A.nextY),
+   CUT.stats=()=>({actors:CUT.actors.length,cells:CUT.cells.size,caps:CUT.caps,evicts:CUT.evicts||0,queue:CUT.queue.length,full:CUT.full,resets:CUT.resets,errs:CUT.errs,rows:ATL.map(A=>A.nextY),
      shown3D:CUT.actors.filter(a=>shown(a.o)&&(!a.hid||(()=>{let l=0;a.o.traverse(c=>{if((c.isMesh||c.isLine)&&c.visible&&c.layers.mask!==1<<CUT_LAYER)l++;});return l;})())).length});
    // a lost and restored graphics context empties the atlases: take every picture again
    glc.addEventListener("webglcontextrestored",()=>{[0,1].forEach(resetAtlas);});}
@@ -11295,7 +11322,7 @@ function no3D(){G3.ok=false;$("no3d").hidden=false;$("no3d-retry").onclick=()=>l
     // labels follow the 3D anchors
     const w=G3.vw||host.clientWidth,hh=G3.vh||host.clientHeight,doText=now-lastLabel>200;if(doText)lastLabel=now;
     // v14: zoomed out, only the area labels and the landmark names show; closer in, the equipment labels and no landmarks
-    const wide=(G3.camDist||camera.position.distanceTo(target))>400;
+    const wide=camera.isIso?(G3.camR||999)>=300:(G3.camDist||camera.position.distanceTo(target))>400;   // (t16: in the iso view the whole-site step (380) counts as zoomed out: area labels only)
     // (v5.2: no projecting or text building while the section labels can't show: zen, hidden view, labels off)
     if(G3.kvOn)LABELS.forEach(L=>{L.lb.vis=false;});   // v5.6: the fiddly knobs view shows only the knobs' labels (and upsets')
     else if(!(G3.zen||LB.hid||labelHost.classList.contains("lbl-off")))LABELS.forEach(L=>{const R=L.lb;if(L.land?!wide:(!L.area&&wide)){R.vis=false;return;}tmp.copy(L.v).project(camera);const vis=tmp.z<1&&Math.abs(tmp.x)<1.05&&Math.abs(tmp.y)<1.05;R.vis=vis;
@@ -12325,7 +12352,7 @@ function camPullOn(){try{return localStorage.getItem("paper-mill-campull")!=="of
    (within 700 ms per tap) and a list of every version's one-line note pops up, newest first. The list comes from
    VERSION-NOTES.txt at the repo root: build.py swaps it in for the placeholder below, so adding a line there with each
    release keeps the pop-up current (build.py warns when APP_VER has no line). ---------- */
-{const VNOTES=[["4.0.0", "Graphics Overhaul: 60 FPS on iPhone, ~80% Fewer Draw Calls"], ["4.0.1", "Performance Follow-Up, Show FPS Option and Device Autotest"], ["4.0.2", "Economy Rebalance and Smoother Upset Labels"], ["4.1.0", "Four Environments, Seeded Mills, Bottlenecks, Graphics Tiers and Site Music"], ["4.2.0", "New Site Maps, Rare Sights, Zen Map Rotation and Economics Fixes"], ["4.2.0-s", "Save and Continue Season (Test)"], ["4.2.1", "Save/Continue, Settings Panel and Outage Speed Fix"], ["4.2.2-t", "Bayou Gator Sight Reworked (Test)"], ["4.2.2-t2", "Gator Bass Riff (Test)"], ["4.2.2-t3", "Gator Riff Removed, Wide Camera Framing (Test)"], ["4.2.2-t4", "Gator Scene Shortened and Widened (Test)"], ["4.2.2-t5", "One Rare Sight per Map in Zen (Test)"], ["4.2.2", "Rare Sights Reworked, Bird Strike Upset, Mill Report Tab"], ["4.2.3-t", "Cowboys, Bigfoot and Tugboat Sights Reworked (Test)"], ["4.2.3", "Laptop Battery Saving (Default GPU)"], ["4.2.4", "$25M Goal Removed and Quick Fixes"], ["4.2.5", "Random Bottleneck per Season and Accessibility Improvements"], ["4.3.0-t1", "Survival Mode (Test)"], ["4.4.0-t1", "Mill Leaders in Survival (Test)"], ["4.4.0-t2", "Painted Leader Portraits (Test)"], ["4.4.0-t3", "Leader Redesign, 4-Day Waves and Fixes (Test)"], ["5.0.0", "Survival Mode Release with Mill Leaders"], ["5.0.1", "Results Dialog and Game Speed Fixes"], ["5.0.2", "Report Card Label Fixes"], ["5.0.3", "Survival Playtest Fixes (Test)"], ["5.0.4", "Playtest Review: Dot Auto-Fix and Shipping Fix (Test)"], ["5.0.5", "Polish Rounds from Survival Playtests"], ["5.0.6", "Survival QA Fixes, Opt-In Outage Watch, Leaderboard Filters"], ["5.1.0", "Civics Meters and Leaders in Seasons (Test)"], ["5.4.0", "Title Screen, Civics in the World and Dark Mode"], ["5.4.1", "Loading Splash, No Old-Menu Flash"], ["5.4.2", "Graphics Quality on the Title Screen"], ["5.5.0", "Performance Improvements"], ["5.6.0", "Fiddly Knobs, DCS/QCS Screens and Knobs View"], ["5.7.0", "Catching Failures Early: Tells, Daily Rounds, Vibration Report, Outage Prep"], ["5.7.1", "Bottom Menu Reorder, Settings Back on the Right"], ["5.7.2", "Help Page with Game Guide and Glossary"], ["5.7.3", "Bare Graphics Mode for Weak Phones"], ["5.7.4", "Version Notes Pop-Up (Triple-Tap the Version Number)"], ["6.1.0-t1", "Isometric Paper View: Fixed Camera, Cut-Outs, Drop Shadows, Cutaways, Season Palettes (Test)"], ["6.1.0-t2", "Iso Round 2: Cut-Outs Always Paper, GPU Pictures, Stop-Motion World, Fewer Draws (Test)"], ["6.1.0-t3", "Iso Round 3: iPhone Batching, Instanced Cans, Sign Atlas, Lighter Frames (Test)"], ["6.1.0-t4", "Iso Fixes: Operators and Fork-Trucks Back, Less Stutter (Test)"], ["6.1.0-t5", "Cut-Out Edge Artifact Fixed (Test)"], ["6.1.0-t6", "Iso Optimization: Hidden Objects Cost Nothing, Lighter Moving Batches (Test)"], ["6.1.0-t7", "Iso Triangle Cut: Paper-Card Trees, Flat Ground, Hidden Faces Gone, Plain Boxes (Test)"], ["6.1.0-t8", "Paper Palette: 40 Colours, Flat Surfaces, Paper Grain, Fewer Draws (Test)"], ["6.1.0-t9", "Reel Fix: Growing Reel Draws Again (Test)"], ["6.1.0-t10", "Draw Cut 2: Colour in the Matrix, Merged Roofs, Uploads on Change, Culling Fix, Parked Groups (Test)"], ["6.1.0-t11", "QA Fixes: Cut-Outs Never Drawn as Loose 3D Parts, Fallback Shows 3D, Roofs On or Off per Zoom Step (Test)"], ["6.1.0-t12", "Paper Smoke, Blinking Lights, Stronger Seasons, Sharper Phones, Instanced Upsets, Pictures at Start (Test)"], ["6.1.0-t13", "Paper Effects: Flames, Child-Made Tornado, Lamp Cones, Flags, Paper Water, Visible Weather (Test)"], ["6.1.0-t14", "Paper Upsets: Cut-Out Props, Paper Pigeon, Paper Sparks, Steam, Fireworks, Ice and Flood (Test)"], ["6.1.0-t15", "Beaver Reworked as One Smaller Cut-Out (Test)"]];
+{const VNOTES=[["4.0.0", "Graphics Overhaul: 60 FPS on iPhone, ~80% Fewer Draw Calls"], ["4.0.1", "Performance Follow-Up, Show FPS Option and Device Autotest"], ["4.0.2", "Economy Rebalance and Smoother Upset Labels"], ["4.1.0", "Four Environments, Seeded Mills, Bottlenecks, Graphics Tiers and Site Music"], ["4.2.0", "New Site Maps, Rare Sights, Zen Map Rotation and Economics Fixes"], ["4.2.0-s", "Save and Continue Season (Test)"], ["4.2.1", "Save/Continue, Settings Panel and Outage Speed Fix"], ["4.2.2-t", "Bayou Gator Sight Reworked (Test)"], ["4.2.2-t2", "Gator Bass Riff (Test)"], ["4.2.2-t3", "Gator Riff Removed, Wide Camera Framing (Test)"], ["4.2.2-t4", "Gator Scene Shortened and Widened (Test)"], ["4.2.2-t5", "One Rare Sight per Map in Zen (Test)"], ["4.2.2", "Rare Sights Reworked, Bird Strike Upset, Mill Report Tab"], ["4.2.3-t", "Cowboys, Bigfoot and Tugboat Sights Reworked (Test)"], ["4.2.3", "Laptop Battery Saving (Default GPU)"], ["4.2.4", "$25M Goal Removed and Quick Fixes"], ["4.2.5", "Random Bottleneck per Season and Accessibility Improvements"], ["4.3.0-t1", "Survival Mode (Test)"], ["4.4.0-t1", "Mill Leaders in Survival (Test)"], ["4.4.0-t2", "Painted Leader Portraits (Test)"], ["4.4.0-t3", "Leader Redesign, 4-Day Waves and Fixes (Test)"], ["5.0.0", "Survival Mode Release with Mill Leaders"], ["5.0.1", "Results Dialog and Game Speed Fixes"], ["5.0.2", "Report Card Label Fixes"], ["5.0.3", "Survival Playtest Fixes (Test)"], ["5.0.4", "Playtest Review: Dot Auto-Fix and Shipping Fix (Test)"], ["5.0.5", "Polish Rounds from Survival Playtests"], ["5.0.6", "Survival QA Fixes, Opt-In Outage Watch, Leaderboard Filters"], ["5.1.0", "Civics Meters and Leaders in Seasons (Test)"], ["5.4.0", "Title Screen, Civics in the World and Dark Mode"], ["5.4.1", "Loading Splash, No Old-Menu Flash"], ["5.4.2", "Graphics Quality on the Title Screen"], ["5.5.0", "Performance Improvements"], ["5.6.0", "Fiddly Knobs, DCS/QCS Screens and Knobs View"], ["5.7.0", "Catching Failures Early: Tells, Daily Rounds, Vibration Report, Outage Prep"], ["5.7.1", "Bottom Menu Reorder, Settings Back on the Right"], ["5.7.2", "Help Page with Game Guide and Glossary"], ["5.7.3", "Bare Graphics Mode for Weak Phones"], ["5.7.4", "Version Notes Pop-Up (Triple-Tap the Version Number)"], ["6.1.0-t1", "Isometric Paper View: Fixed Camera, Cut-Outs, Drop Shadows, Cutaways, Season Palettes (Test)"], ["6.1.0-t2", "Iso Round 2: Cut-Outs Always Paper, GPU Pictures, Stop-Motion World, Fewer Draws (Test)"], ["6.1.0-t3", "Iso Round 3: iPhone Batching, Instanced Cans, Sign Atlas, Lighter Frames (Test)"], ["6.1.0-t4", "Iso Fixes: Operators and Fork-Trucks Back, Less Stutter (Test)"], ["6.1.0-t5", "Cut-Out Edge Artifact Fixed (Test)"], ["6.1.0-t6", "Iso Optimization: Hidden Objects Cost Nothing, Lighter Moving Batches (Test)"], ["6.1.0-t7", "Iso Triangle Cut: Paper-Card Trees, Flat Ground, Hidden Faces Gone, Plain Boxes (Test)"], ["6.1.0-t8", "Paper Palette: 40 Colours, Flat Surfaces, Paper Grain, Fewer Draws (Test)"], ["6.1.0-t9", "Reel Fix: Growing Reel Draws Again (Test)"], ["6.1.0-t10", "Draw Cut 2: Colour in the Matrix, Merged Roofs, Uploads on Change, Culling Fix, Parked Groups (Test)"], ["6.1.0-t11", "QA Fixes: Cut-Outs Never Drawn as Loose 3D Parts, Fallback Shows 3D, Roofs On or Off per Zoom Step (Test)"], ["6.1.0-t12", "Paper Smoke, Blinking Lights, Stronger Seasons, Sharper Phones, Instanced Upsets, Pictures at Start (Test)"], ["6.1.0-t13", "Paper Effects: Flames, Child-Made Tornado, Lamp Cones, Flags, Paper Water, Visible Weather (Test)"], ["6.1.0-t14", "Paper Upsets: Cut-Out Props, Paper Pigeon, Paper Sparks, Steam, Fireworks, Ice and Flood (Test)"], ["6.1.0-t15", "Beaver Reworked as One Smaller Cut-Out (Test)"], ["6.1.0-t16", "Paper Props Dim at Night, Labels Never Overlap, Fewer Cut-Out Pictures (Test)"]];
   let ov=null,held=false;
   function render(){
     const cur=APP_VER.replace(/^v/i,""),rows=VNOTES.slice().reverse().map(([v,n])=>

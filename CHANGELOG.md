@@ -1,5 +1,17 @@
 # Changelog
 
+## v6.1.0-t16 (2026-10-18): polish from the t15 season QA (test branch test/v6.1-iso)
+- **Paper props dim at night** like the cut-out people (to 38% at full night): cut-out cards (beaver, car, highway props,
+  junk, shaft halves, pigeon), paper ice, dye splats, the tornado card, paper clouds, smoke, drops, confetti and feathers.
+  Incident flags dim to 55% so they still read. Flames, sparks, lamps and the lightning bolt stay bright.
+- **Labels never overlap:** placed in order (upsets, red/bottleneck labels, area labels, equipment) and any label that
+  would overlap one already placed is left out. In the iso view the whole-site zoom step counts as zoomed out, so only
+  the area labels show there.
+- **Fewer cut-out pictures:** a truck's or lift's load counts in four steps (empty, a third, two thirds, full) instead of
+  bale by bale; a full picture atlas reuses the slot of the picture least recently shown instead of starting over.
+  Probe (2.5 min of play at 20x, 7 views): new pictures 274 -> 226, truck pictures 46 -> 26, atlas restarts 1 -> 0
+  (109 slots reused). Most of what is left is people: new crews' outfits and walking frames.
+
 ## v6.1.0-t15 (2026-10-18): beaver rework (test branch test/v6.1-iso)
 - **Beaver:** one cut-out silhouette with a single ink line round the outside (no outlines between body, head, tail and
   log), about half the size (7 m long); its incident flag moved beside it so the stick no longer runs through it;

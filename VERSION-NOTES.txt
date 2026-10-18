@@ -57,3 +57,4 @@ One line per version, oldest first. Add a line here with every release: build.py
 6.1.0-t13  Paper Effects: Flames, Child-Made Tornado, Lamp Cones, Flags, Paper Water, Visible Weather (Test)
 6.1.0-t14  Paper Upsets: Cut-Out Props, Paper Pigeon, Paper Sparks, Steam, Fireworks, Ice and Flood (Test)
 6.1.0-t15  Beaver Reworked as One Smaller Cut-Out (Test)
+6.1.0-t16  Paper Props Dim at Night, Labels Never Overlap, Fewer Cut-Out Pictures (Test)

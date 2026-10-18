@@ -19,8 +19,14 @@
    function atlas(H=AH){const rt=new THREE.WebGLRenderTarget(AW,H,{depthBuffer:false,generateMipmaps:true,minFilter:THREE.LinearMipmapLinearFilter,magFilter:THREE.LinearFilter});
      rt.texture.anisotropy=4;rt.scissorTest=true;return {rt,tex:rt.texture,rows:[],nextY:0,full:false,h:H};}
    function alloc(A,s){for(const r of A.rows)if(r.h===s&&r.x+s<=AW){const x=r.x;r.x+=s+PAD;return [x,r.y];}
-     if(A.nextY+s>A.h){A.full=true;return null;}const r={y:A.nextY,h:s,x:s+PAD};A.nextY+=s+PAD;A.rows.push(r);return [0,r.y];}
-   const ATL=[atlas(2048),atlas()];CUT.atl=ATL;   // (t12: people get a 2048 square: every look at every heading fits, no restarts)
+     if(A.nextY+s>A.h){A.full=true;return evict(A,s);}const r={y:A.nextY,h:s,x:s+PAD};A.nextY+=s+PAD;A.rows.push(r);return [0,r.y];}
+   const ATL=[atlas(2048),atlas()];CUT.atl=ATL;
+   /* v6.1 t16: a full atlas reuses the slot of the picture of that size least recently shown (not on screen for 3 s)
+      instead of starting over, which dropped every picture and retook them all */
+   function evict(A,s){const ai=ATL.indexOf(A),lim=performance.now()-3000;let best=null;
+     for(const c of CUT.cells.values())if(c.a===ai&&c.px===s&&(c.u||0)<lim&&(!best||(c.u||0)<(best.u||0)))best=c;
+     if(!best)return null;CUT.cells.delete(best.key);for(const M2 of [CUT.byKD,CUT.byK])for(const [k,c] of M2)if(c===best)M2.delete(k);
+     for(const a of CUT.actors)if(a.cell===best)a.cell=null;CUT.evicts=(CUT.evicts||0)+1;return best.at;}   // (t12: people get a 2048 square: every look at every heading fits, no restarts)
    // --- the card material: atlas colour, cut at the paper edge; shadows are the same cards in dark paper ---
    const aa=renderer.getContext().getContextAttributes().antialias;
    const VS=`attribute vec4 aRect;varying vec2 vUv;void main(){vUv=vec2(aRect.x+uv.x*aRect.z,aRect.y+uv.y*aRect.w);
@@ -59,7 +65,14 @@
    function hide(a,on){a.o.traverse(c=>{if(c.isMesh||c.isLine||c.isPoints){const want=on?CUT_LAYER:0;if(on?c.layers.mask!==1<<CUT_LAYER:c.layers.mask===1<<CUT_LAYER)c.layers.set(want);}});a.hid=on;}
    // the look of one actor right now: every node's visibility and material, and its moving parts in coarse steps
    const q=(v,s)=>Math.round(v/s);CUT.POSE={leg:0.8,arm:1.0,lean:0.5,tool:0.7};CUT.free=/[?&]cutfree/.test(location.search);   // (t10: pose frames, 33)
-   function lookKey(a){const o=a.o,u=o.userData;let k=a.kind+":";o.traverse(c=>{if(c===o)return;const mt=c.material;k+=c.visible?(c.isMesh&&mt?(Array.isArray(mt)?mt.map(x=>x.id.toString(36)).join("."):mt.id.toString(36)):"v"):"-";});
+   const LT=[];
+   function lookKey(a){const o=a.o,u=o.userData;let k=a.kind+":";
+     if(a.kind==="person")o.traverse(c=>{if(c===o)return;const mt=c.material;k+=c.visible?(c.isMesh&&mt?(Array.isArray(mt)?mt.map(x=>x.id.toString(36)).join("."):mt.id.toString(36)):"v"):"-";});
+     else{   /* v6.1 t16: a truck's or lift's load (a run of 4+ parts of one look, each shown or not) counts in four steps
+                (empty, a third, two thirds, full) instead of part by part: unloading a truck took a picture per bale per heading */
+       LT.length=0;o.traverse(c=>{if(c===o)return;const mt=c.material;LT.push(c.visible?(c.isMesh&&mt?(Array.isArray(mt)?mt.map(x=>x.id.toString(36)).join("."):mt.id.toString(36)):"v"):"-");});
+       for(let i=0;i<LT.length;){let X=null,j=i,v=0;while(j<LT.length&&(LT[j]==="-"||X===null||LT[j]===X)){if(LT[j]!=="-"){if(X===null)X=LT[j];v++;}j++;}
+         if(X!==null&&X!=="v"&&j-i>=4){k+="L"+X+"."+Math.round(v/(j-i)*3)+";";i=j;}else{k+=LT[i];i++;}}}
      if(a.kind==="person"&&u.legs){const P=CUT.POSE;k+="|"+q(u.legs[0].rotation.z,P.leg)+","+q(u.arms[0].rotation.z,P.arm)+","+q(u.arms[1].rotation.z,P.arm)+","+q(u.arms[1].rotation.x,0.9)+","+q(u.torso.rotation.z,P.lean)+","+q(u.armM?u.armM[1].scale.y:1,0.3)+(u.tool&&u.tool.visible?","+q(u.tool.rotation.x,P.tool):"");}
      else if(a.kind==="lift"&&u.load)k+="|"+q(u.load.position.y,0.3);
      else if(a.kind==="truck")k+="|"+(u.doorL?q(u.doorL.rotation.y,0.6)+","+q(u.doorR.rotation.y,0.6):"");
@@ -102,7 +115,7 @@
      }finally{   // put it back exactly as it was, and the renderer too
        renderer.setRenderTarget(rt0);renderer.setClearColor(cl,ca);renderer.autoClear=ac;
        if(par)par.add(o);else cs.remove(o);o.position.copy(p0);o.rotation.y=ry;o.visible=vis;o.updateMatrixWorld(true);o.children.forEach(c=>{c.matrixWorldAutoUpdate=false;});}
-     CUT.caps++;return {r:[at[0]/AW,at[1]/A.h,px/AW,px/A.h],a:K.at,w:2*K.R};}
+     CUT.caps++;return {r:[at[0]/AW,at[1]/A.h,px/AW,px/A.h],a:K.at,w:2*K.R,px,at,key,u:performance.now()};}
    // start-up: compile the picture shaders (the cut-outs' materials as drawn into RT_A) behind the "Getting the mill ready" screen
    G3.cutWarm=()=>{try{rescan();basis();const seen=new Set();for(const a of CUT.actors){const kk=a.kind;if(seen.size>40)break;
        let m=false;a.o.traverse(c=>{if(c.material&&!seen.has(c.material)){seen.add(c.material);m=true;}});if(m){const key="warm:"+CUT.caps;const c=capture(a,key,0,ATL[a.K.at]);if(c){CUT.cells.set(key,c);CUT.byKD.set(kk+"#0",c);CUT.byK.set(kk,c);}}}}
@@ -140,8 +153,8 @@
      if(!CUT.burst)CUT.burst=now+6000;   // (the first seconds take pictures faster: everyone needs one)
      let n=0;const capN=now<CUT.burst?CAP_BURST:CAP_N;
      while(CUT.queue.length&&n<capN){const [a,key,dir]=CUT.queue.shift();CUT.qset.delete(key);if(CUT.cells.has(key)||!shown(a.o))continue;
-       let A=ATL[a.K.at];if(A.full){CUT.full++;resetAtlas(a.K.at);A=ATL[a.K.at];}if(!n)basis();n++;
-       const lastOne=n>=capN||!CUT.queue.length;let c=null;try{c=capture(a,key,dir,A,lastOne);}catch(e){CUT.errs++;if(CUT.errs<6)console.error("cut-out picture failed",e);}
+       const A=ATL[a.K.at];if(!n)basis();n++;
+       const lastOne=n>=capN||!CUT.queue.length;let c=null;try{c=capture(a,key,dir,A,lastOne);if(!c&&A.full){CUT.full++;resetAtlas(a.K.at);c=capture(a,key,dir,A,lastOne);}}catch(e){CUT.errs++;if(CUT.errs<6)console.error("cut-out picture failed",e);}
        if(c){CUT.cells.set(key,c);CUT.byKD.set(a.kind+"#"+dir,c);CUT.byK.set(a.kind,c);}}
      // (t12: the start-up pictures still to take, one a frame while nothing on screen is waiting for one)
      if(!n&&CUT.pre&&CUT.pre.length){const [a,key,d]=CUT.pre.shift();const A=ATL[a.K.at];if(!CUT.cells.has(key)&&!A.full&&A.nextY<=A.h*0.7){basis();try{const c=capture(a,key,d,A,true);if(c){CUT.cells.set(key,c);CUT.byKD.set(a.kind+"#"+d,c);}}catch(e){CUT.errs++;}}}
@@ -152,7 +165,7 @@
        if(!a.hid||now>a.hT){a.hT=now+300;hide(a,true);}   // (hidden at once; re-checked every second, pools add parts later)
        const dir=heading(o);if(!a.lk||((CUT.tk+(a.ix||(a.ix=CUT.actors.indexOf(a)+1)))&1))a.lk=lookKey(a);const key=a.lk+"#"+dir;   /* (t6: the look is re-read every other tick) */let c=CUT.cells.get(key);
        if(!c){want(a,key,dir,!a.cell);c=a.cell||CUT.byKD.get(a.kind+"#"+dir)||CUT.byK.get(a.kind);}
-       if(!c)continue;a.cell=c;
+       if(!c)continue;a.cell=c;c.u=now;
        const S2=sets[c.a],i=cnt[c.a];if(i>=S2.N)continue;cnt[c.a]++;
        o.getWorldPosition(_p);_p.y+=a.K.cy;_p.addScaledVector(toCam,a.K.R);
        _m.makeRotationFromQuaternion(camera.quaternion).scale(_v3.set(c.w,c.w,1)).setPosition(_p);S2.card.setMatrixAt(i,_m);
@@ -160,7 +173,7 @@
        S2.rect.setXYZW(i,c.r[0],c.r[1],c.r[2],c.r[3]);}catch(e){CUT.errs++;if(CUT.errs<6)console.error("cut-out failed",e);}}
      sets.forEach((S2,i)=>{S2.card.count=S2.shad.count=cnt[i];const n=cnt[i];G3.chg(S2.card.instanceMatrix,n);G3.chg(S2.shad.instanceMatrix,n);G3.chg(S2.rect,n);   /* (t10: only when something moved or changed picture) */S2.shad.visible=!G3.shadowsOff;});};
    const _v3=new THREE.Vector3();
-   CUT.stats=()=>({actors:CUT.actors.length,cells:CUT.cells.size,caps:CUT.caps,queue:CUT.queue.length,full:CUT.full,resets:CUT.resets,errs:CUT.errs,rows:ATL.map(A=>A.nextY),
+   CUT.stats=()=>({actors:CUT.actors.length,cells:CUT.cells.size,caps:CUT.caps,evicts:CUT.evicts||0,queue:CUT.queue.length,full:CUT.full,resets:CUT.resets,errs:CUT.errs,rows:ATL.map(A=>A.nextY),
      shown3D:CUT.actors.filter(a=>shown(a.o)&&(!a.hid||(()=>{let l=0;a.o.traverse(c=>{if((c.isMesh||c.isLine)&&c.visible&&c.layers.mask!==1<<CUT_LAYER)l++;});return l;})())).length});
    // a lost and restored graphics context empties the atlases: take every picture again
    glc.addEventListener("webglcontextrestored",()=>{[0,1].forEach(resetAtlas);});}

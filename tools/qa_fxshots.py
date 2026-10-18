@@ -5,7 +5,7 @@ exec(src.split("def stats")[0].split("from playwright.sync_api import sync_playw
 html = pathlib.Path(sys.argv[1]).read_text().replace("window.__PM={", "window.__PM={trigger:(i,q)=>trigger(i,q),", 1)
 if "window.__PM=" not in html:
     i = html.rindex("})();", 0, html.rindex("</script>")); html = html[:i] + HOOK + html[i:]
-SP="/tmp/claude-0/-home-claude/1d0fb052-7a76-5766-bfa8-faf7676d4b04/scratchpad/qa15/t15-"
+SP="/tmp/claude-0/-home-claude/1d0fb052-7a76-5766-bfa8-faf7676d4b04/scratchpad/qa18/v-"
 shots = sys.argv[2].split(",")
 with sync_playwright() as pw:
     b = pw.chromium.launch(args=["--use-gl=angle", "--use-angle=swiftshader", "--enable-unsafe-swiftshader", "--ignore-gpu-blocklist"])
@@ -53,6 +53,17 @@ with sync_playwright() as pw:
       "iced50": ([-30,-55,95], "()=>{__PM.S.inc=[];__PM.S.inc.push({id:'icedintake',left:600,total:1200,real:performance.now(),note:''});}", 3000),
       "flood50": ([-62,4,127], "()=>{__PM.S.inc=[];__PM.S.inc.push({id:'flood',left:600,total:1200,real:performance.now(),note:''});}", 3000),
       "dye50": ([24,12,63], "()=>{__PM.S.inc=[];__PM.trigger('dye',true);const i=__PM.S.inc.find(x=>x.id==='dye');i.left=i.total*0.5;}", 3000),
+      "beaverfar": ([-14,5,380], "()=>{__PM.S.inc=[];__PM.trigger('beaver',true);}", 3000),
+      "beavermid": ([-14,-5,190], "()=>{}", 1500),
+      "nightbeaver": ([-22,-12,95], "()=>{__PM.S.inc=[];const S=__PM.S;S.t=Math.floor(S.t/1440)*1440+16*60;__PM.trigger('beaver',true);}", 6000),
+      "nighthwy": ([-76,4,95], "()=>{__PM.S.inc=[];__PM.trigger('highway',true);}", 3000),
+      "nightfight": ([-40,-18,63], "()=>{__PM.S.inc=[];__PM.trigger('fight',true);}", 3000),
+      "nightflares": ([16,-13,95], "()=>{__PM.S.inc=[];__PM.trigger('flares',true);}", 3000),
+      "nightsteam": ([11,5,95], "()=>{__PM.S.inc=[];__PM.trigger('steamjoint',true);}", 4000),
+      "lbl380": ([-14,5,380], "()=>{__PM.S.inc=[];document.getElementById('labels3d').classList.remove('lbl-off','lbl-idle');}", 2500),
+      "lbl253": ([10,-5,253], "()=>{document.getElementById('labels3d').classList.remove('lbl-off','lbl-idle');}", 2500),
+      "lbl190": ([10,-5,190], "()=>{document.getElementById('labels3d').classList.remove('lbl-off','lbl-idle');}", 2500),
+      "lbl127": ([20,-10,127], "()=>{document.getElementById('labels3d').classList.remove('lbl-off','lbl-idle');__PM.trigger('cscreen',true);}", 2500),
       "birdline": ([10,5,190], "()=>{__PM.S.inc=[];__PM.trigger('birdline',true);}", 4000),
       "birdline2": ([10,5,190], "()=>{}", 4500),
     }

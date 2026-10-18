@@ -47,6 +47,13 @@
      shade darker like a fold), shown as a camera-facing sprite; animated ones swap between two drawings (stop-motion) and
      have a mirrored copy so they face the way they move. ?softfx = the old 3D props and soft particles */
   const INK="#2b1d12",SOFTFX=/[?&]softfx/.test(location.search);
+  /* v6.1 t16: paper props dim at night like the cut-out people (to 38% at full night; flags to 55%): each registered
+     material keeps its own colour and is scaled from it whenever the night level moves. Flames, sparks, lamps and the
+     lightning bolt stay bright. */
+  const PAPM=[];let papL=-1;
+  function papReg(m,k=0.62){if(m&&m.color){m.userData.c0=m.color.clone();m.userData.dk=k;PAPM.push(m);papL=-1;}return m;}
+  function papTick(){const nk=G3.nightK||0;if(Math.abs(nk-papL)<0.004)return;papL=nk;for(const m of PAPM)m.color.copy(m.userData.c0).multiplyScalar(1-m.userData.dk*nk);}
+  G3.papReg=papReg;
   function cardTex(draw,w,h){return spriteTex((x,W,H)=>{x.clearRect(0,0,W,H);x.lineJoin="round";x.lineCap="round";draw(x,W,H);
       x.save();x.globalCompositeOperation="source-atop";x.fillStyle="rgba(70,45,20,0.11)";x.fillRect(0,H*0.64,W,H);x.restore();},w,h);}
   function mirrorTex(t){const s=t.image,c=document.createElement("canvas");c.width=s.width;c.height=s.height;const x=c.getContext("2d");x.translate(s.width,0);x.scale(-1,1);x.drawImage(s,0,0);
@@ -55,7 +62,7 @@
   function ink(x,path,fill,lw){path();if(fill){x.fillStyle=fill;x.fill();}x.lineWidth=lw;x.strokeStyle=INK;x.stroke();}
   const poly=(x,P,u)=>()=>{x.beginPath();P.forEach(([a,b],i)=>i?x.lineTo(a*u,b*u):x.moveTo(a*u,b*u));x.closePath();};
   const ell=(x,cx,cy,rx,ry,u,rot=0)=>()=>{x.beginPath();x.ellipse(cx*u,cy*u,rx*u,ry*u,rot,0,Math.PI*2);};
-  function cardSprite(tex,w,h,base){const s=new THREE.Sprite(new THREE.SpriteMaterial({map:tex,alphaTest:0.5,transparent:false,toneMapped:false}));s.scale.set(w,h,1);if(base)s.center.set(0.5,0);return s;}
+  function cardSprite(tex,w,h,base){const s=new THREE.Sprite(papReg(new THREE.SpriteMaterial({map:tex,alphaTest:0.5,transparent:false,toneMapped:false})));s.scale.set(w,h,1);if(base)s.center.set(0.5,0);return s;}
   // which way something moving along v from p goes across the screen (+1 right, -1 left)
   const _sa=new THREE.Vector3(),_sb=new THREE.Vector3();
   const screenDir=(p,v)=>{_sa.copy(p).project(camera);_sb.copy(p).add(v).project(camera);return _sb.x>=_sa.x?1:-1;};
@@ -175,7 +182,7 @@
     const IB=new THREE.InstancedInterleavedBuffer(new Float32Array(PCAP*11),11,1);IB.setUsage(THREE.DynamicDrawUsage);
     const at=(n,k,o)=>{const a=new THREE.InterleavedBufferAttribute(IB,k,o);g.setAttribute(n,a);return a;};
     at("iPos",3,0);at("iScl",2,3);at("iCol",3,5);at("iAlp",1,8);at("iRot",1,9);at("iVar",1,10);
-    const b={g,sort,ib:IB,rng:{start:0,count:0},list:[],n:0};g.instanceCount=0;
+    const b={g,sort,ib:IB,rng:{start:0,count:0},list:[],n:0,dim:!glow&&map!==TX.star};   // (t16: paper and smoke dim at night; flames, sparks and paper stars don't)g.instanceCount=0;
     const m=new THREE.ShaderMaterial({uniforms:THREE.UniformsUtils.merge([THREE.UniformsLib.fog,{map:{value:null}}]),vertexShader:PVS,fragmentShader:PFS,
       transparent:true,depthWrite:false,fog:!glow,toneMapped:!glow});m.uniforms.map.value=map;
     b.mesh=new THREE.Mesh(g,m);b.mesh.frustumCulled=false;b.mesh.renderOrder=order;scene.add(b.mesh);PB.set(map,b);return b;}
@@ -205,8 +212,8 @@
       p.x+=p.v[0]*rdt;p.y+=p.v[1]*rdt;p.z+=p.v[2]*rdt;if(p.y<0.05&&p.v[1]<0){p.y=0.05;p.v[1]=0;p.v[0]*=0.5;p.v[2]*=0.5;}
       p.s1=t.grow?p.size*(0.45+(1-f)*1.7):t.keep?p.size:p.size*(0.35+0.65*f);
       p.a=p.op*(t.pfade?Math.min(1,f/0.35)*Math.min(1,(1-f)*p.max*6):t.grow?Math.min(1,(1-f)*5)*f:Math.min(1,f*1.6));p.rot+=p.spin*rdt*(t.grow?0.3:(t.spinK||1));const b=t.b;b.list[b.n++]=p;}
-    const vm=camera.matrixWorldInverse.elements;
-    for(let k=0;k<PBL.length;k++){const b=PBL[k],L=b.list,n=b.n;
+    const vm=camera.matrixWorldInverse.elements,NL=1-0.62*(G3.nightK||0);
+    for(let k=0;k<PBL.length;k++){const b=PBL[k],L=b.list,n=b.n,lt=b.dim?NL:1;
       if(b.sort&&n>1){for(let i=0;i<n;i++){const p=L[i];p.d=vm[2]*p.x+vm[6]*p.y+vm[10]*p.z;}
         // (v15: big batches — fires, storms — go through 48 depth buckets instead: linear time, and back-to-front is only
         // needed to the nearest bucket for soft smoke; small ones keep the exact insertion sort)
@@ -215,7 +222,7 @@
           for(let i=0;i<n;i++)C[((L[i].d-lo)*sc)|0]++;for(let k2=1;k2<K;k2++)C[k2]+=C[k2-1];for(let i=n-1;i>=0;i--){const p=L[i];T[--C[((p.d-lo)*sc)|0]]=p;}for(let i=0;i<n;i++)L[i]=T[i];}}
       const D=b.ib.array;
       for(let i=0;i<n;i++){const p=L[i],o=i*11;D[o]=p.x;D[o+1]=p.y;D[o+2]=p.z;D[o+3]=p.s1*(p.fl||1);D[o+4]=p.s1*(p.t.tall||1);
-        D[o+5]=p.r;D[o+6]=p.g;D[o+7]=p.b;D[o+8]=p.a;D[o+9]=p.rot;D[o+10]=p.t.sheet?((((p.max-p.life)*7+p.ph*2)|0)%4):p.tile;}
+        D[o+5]=p.r*lt;D[o+6]=p.g*lt;D[o+7]=p.b*lt;D[o+8]=p.a;D[o+9]=p.rot;D[o+10]=p.t.sheet?((((p.max-p.life)*7+p.ph*2)|0)%4):p.tile;}
       b.g.instanceCount=n;b.mesh.visible=n>0&&!(G3.EXP&&(G3.EXP.noParts||G3.EXP.hidePB===b));
       if(n){const r=b.rng;r.count=n*11;if(!b.ib.updateRanges.length)b.ib.updateRanges.push(r);b.ib.needsUpdate=true;}}}
   const R=()=>Math.random()-0.5,EZ=k=>k<=0?0:k>=1?1:k*k*(3-2*k);
@@ -268,7 +275,7 @@
       x.save();x.clip();x.fillStyle="rgba(0,0,0,0.12)";x.fillRect(0,h*0.55,w,h);x.restore();
       const r=h*0.29,cx=w*0.36,cy=h*0.5+wav(0.36);x.fillStyle="#fbf6ea";x.beginPath();x.arc(cx,cy,r,0,7);x.fill();x.lineWidth=w*0.02;x.stroke();x.drawImage(ic,cx-r*0.86,cy-r*0.86,r*1.72,r*1.72);},128,80);}
   function pinAt(g,x,y,z,kind){const p=new THREE.Group();let head=null,flag=null,fm=null;
-    if(PAPF){fm=new THREE.MeshBasicMaterial({map:flagTex(kind,0),transparent:true,alphaTest:0.5,depthTest:false,toneMapped:false,side:THREE.DoubleSide});
+    if(PAPF){fm=papReg(new THREE.MeshBasicMaterial({map:flagTex(kind,0),transparent:true,alphaTest:0.5,depthTest:false,toneMapped:false,side:THREE.DoubleSide}),0.45);
       const fg=new THREE.PlaneGeometry(3.2,2);fg.translate(1.6,-1,0);flag=new THREE.Mesh(fg,fm);flag.renderOrder=10;flag.position.set(0,1.0,0);p.add(flag);
       flag.onBeforeRender=()=>{flag.quaternion.copy(camera.quaternion);if(p.parent)flag.quaternion.premultiply(_pq.copy(p.quaternion).invert());flag.updateMatrixWorld();};}
     else{head=new THREE.Mesh(pinGeo,pinMat);head.castShadow=true;p.add(head);
@@ -436,7 +443,7 @@
       if(now>nb){nb=now+900+Math.random()*1400;for(let k=0;k<12;k++)emit("pspark",-18.7+R()*2,2.6,zc+R()*2,R()*7,3+Math.random()*5,R()*7,0.7+Math.random()*0.4,0.5,k%2?"#ffd23f":"#ff8a1f",1);}
       if(Math.random()<rdt*2)emit("paper",-18.7+R()*2,3,zc+R(),R()*0.3,1,R()*0.3,2.6,1.4,"#9aa1ad",1);};},
     // (t14) dye trouble: splats of dye on the floor along the tending side, and puffs of the colour coming off the sheet
-    dye:g=>{if(SOFTFX)return ()=>{};const sp=[];for(let k=0;k<12;k++){const m=new THREE.Mesh(new THREE.PlaneGeometry(1,1).rotateX(-Math.PI/2),new THREE.MeshBasicMaterial({map:splatTex,alphaTest:0.5,toneMapped:false,color:lin(DYE[k%DYE.length])}));
+    dye:g=>{if(SOFTFX)return ()=>{};const sp=[];for(let k=0;k<12;k++){const m=new THREE.Mesh(new THREE.PlaneGeometry(1,1).rotateX(-Math.PI/2),papReg(new THREE.MeshBasicMaterial({map:splatTex,alphaTest:0.5,toneMapped:false,color:lin(DYE[k%DYE.length])})));
         m.position.set(16+Math.random()*16,0.1+k*0.004,zc+CD/2+1.2+Math.random()*2.4);m.rotation.y=Math.random()*6;m.userData.s=1+Math.random()*1.4;m.userData.d=k*0.05;g.add(m);sp.push(m);}
       return (now,rdt,inc)=>{const p=inc&&inc.total?1-inc.left/inc.total:0.5;sp.forEach(m=>{const k=EZ((p-m.userData.d)/0.12)*(p>0.9?1-EZ((p-0.9)/0.1):1);m.visible=k>0.02;m.scale.setScalar(Math.max(0.01,m.userData.s*k));});
         if(rdt>0&&Math.random()<rdt*5)emit("paper",16+Math.random()*16,1.6,zc+CD/2,R()*0.4,1.2,0.4,2.4,1.3,DYE[((now/1400)|0)%DYE.length],1);};},
@@ -535,7 +542,7 @@
         // a few paper scraps caught in it
         for(let k=0;k<6;k++){const t=0.15+rnd()*0.7,y=H*(0.06+t*0.84),hw=W*(0.44-0.36*Math.pow(t,0.8)),px=cx+(rnd()<0.5?-1:1)*hw*(1.05+rnd()*0.2);
           x.save();x.translate(px,y);x.rotate(rnd()*6);x.fillStyle=["#c8a879","#e9e2d0","#8c6a43"][k%3];x.fillRect(-W*0.025,-W*0.018,W*0.05,W*0.036);x.strokeStyle="#22181a";x.lineWidth=2;x.strokeRect(-W*0.025,-W*0.018,W*0.05,W*0.036);x.restore();}},256,384);
-      const TXS=[draw(11),draw(29)],cm=new THREE.MeshBasicMaterial({map:TXS[0],transparent:true,alphaTest:0.5,toneMapped:false,side:THREE.DoubleSide});
+      const TXS=[draw(11),draw(29)],cm=papReg(new THREE.MeshBasicMaterial({map:TXS[0],transparent:true,alphaTest:0.5,toneMapped:false,side:THREE.DoubleSide}));
       const card=new THREE.Mesh(new THREE.PlaneGeometry(22,33),cm);card.position.y=16.5;fun.add(card);
       const deb=[];for(let k=0;k<16;k++){const d=k%3===0?new THREE.Mesh(rollGeo,ROLLM[0]):new THREE.Mesh(cubeG,k%3===1?M.bale:mat("kraft"));d.scale.setScalar(k%3===0?0.8:0.75);fun.add(d);deb.push(d);}
       let swapT=0,cur=0;
@@ -568,8 +575,8 @@
     icedintake:g=>{const IX=-30,IZ=-55.5,[rz,rhw]=riverAt(IX),BANK=rz+rhw,ice=new StdMat({color:lin0("#e8f3fb"),roughness:0.35});
       // (t14 paper ice: the shelf and the floes are flat cards of pale blue paper with ink cracks, lying on the water)
       const PAPI=!!shelfTex,flatG=PAPI?new THREE.PlaneGeometry(1,1).rotateX(-Math.PI/2):null,iceT=PAPI?[0,1,2,3].map(iceTex):null;
-      const shelf=PAPI?new THREE.Mesh(flatG,new THREE.MeshBasicMaterial({map:shelfTex,alphaTest:0.5,toneMapped:false})):new THREE.Mesh(cubeG,new StdMat({color:lin0("#dfeef7"),roughness:0.25,metalness:0.05}));shelf.scale.set(26,0.22,1);shelf.position.set(IX,0.1,BANK);shelf.castShadow=!PAPI;g.add(shelf);
-      const iceM=PAPI?iceT.map(t=>new THREE.MeshBasicMaterial({map:t,alphaTest:0.5,toneMapped:false})):null;
+      const shelf=PAPI?new THREE.Mesh(flatG,papReg(new THREE.MeshBasicMaterial({map:shelfTex,alphaTest:0.5,toneMapped:false}))):new THREE.Mesh(cubeG,new StdMat({color:lin0("#dfeef7"),roughness:0.25,metalness:0.05}));shelf.scale.set(26,0.22,1);shelf.position.set(IX,0.1,BANK);shelf.castShadow=!PAPI;g.add(shelf);
+      const iceM=PAPI?iceT.map(t=>papReg(new THREE.MeshBasicMaterial({map:t,alphaTest:0.5,toneMapped:false}))):null;
       const floes=[...Array(16)].map((_,fi)=>{const m=PAPI?new THREE.Mesh(flatG,iceM[fi%4]):new THREE.Mesh(cubeG,ice);const w=1.2+Math.random()*2.4,d=1+Math.random()*1.8;m.scale.set(w,0.26,d);m.castShadow=true;
         m.userData={x:IX-12+Math.random()*24,z:BANK-3-Math.random()*8,r:Math.random()*3,v:0.6+Math.random()*0.8,w:w*1.3,d:d*1.3};g.add(m);return m;});
       const frost=new THREE.Mesh(new THREE.BoxGeometry(4.12,3.12,4.12),new StdMat({color:lin0("#ffffff"),transparent:true,opacity:0,roughness:0.95,depthWrite:false}));frost.position.set(IX,1.5,IZ);g.add(frost);
@@ -816,7 +823,7 @@
       if(vis){f.lb.x=Math.round((tmp.x+1)/2*w);f.lb.y=Math.round((1-tmp.y)/2*hh);
         if(doTxt||f.lb.a==null){const st=incState(inc),b=`${st?st+" · ":""}${(inc.left/60).toFixed(1)} h left${inc.note?" · "+inc.note.split(" · ")[0]:""}`;lblSet(f.lb,EV[inc.id].name,b,true);}}});
     for(const id in FX){const f=FX[id];if(!f.on)f.lb.vis=false;}
-    stepParts(rdt);fireLight.position.copy(fireLpos);fireFloorK=Math.max(0,fireFloorK-rdt*1.5);
+    papTick();stepParts(rdt);fireLight.position.copy(fireLpos);fireFloorK=Math.max(0,fireFloorK-rdt*1.5);
     {const fl=0.9*Math.sin(performance.now()/60)+0.6*Math.sin(performance.now()/23),on=fireFloor.userData.on||0;fireLight.intensity=fireL>0?LEG*0.75*fireL*(3.4+fl+fireFloorK*3):0;
       fireFloor.visible=on>0;if(on>0){fireFloor.material.opacity=Math.min(1,on*(0.42+0.1*fl+fireFloorK*0.25));}fireFloor.userData.on=0;}fireL=0;
     if(!S.inc.some(i=>i.id==="brownout")){G3.brownK=1;G3.bFlash=0;}{const el=$("tint3d"),T=S.inc.some(i=>i.id==="brownout"||i.id==="duststorm")&&G3.tint?G3.tint:null,c=T?T[0]:"#000",o=T?String(Math.round(T[1]*100)/100):"0";if(el){if(el.style.background!==c&&T)el.style.background=c;if(el.style.opacity!==o)el.style.opacity=o;}if(!T)G3.tint=null;}if(!S.inc.some(i=>i.id==="icedintake"))G3.iceK=0;if(!S.inc.some(i=>i.id==="duststorm"))G3.dustK=0;if(!S.inc.some(i=>i.id==="flood"))G3.floodK=0;
