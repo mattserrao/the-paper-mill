@@ -74,14 +74,22 @@
   const PIG=SOFTFX?null:[pigeonTex(0),pigeonTex(1),pigeonTex(2)];
   G3.pigeonCard=()=>PIG?animCard(PIG,1.0,0.78):null;
   // the beaver, side on, facing right, holding a log: 0 teeth down, 1 chewing (mouth open)
-  const beaverTex=open=>cardTex((x,W)=>{const u=W/320,lw=6*u;
-    ink(x,ell(x,52,196,52,19,u,-0.28),"#4a3a2e",lw);x.strokeStyle="rgba(255,255,255,0.35)";x.lineWidth=3*u;for(let k=0;k<4;k++){x.beginPath();x.moveTo((22+k*18)*u,(196-k*3)*u);x.lineTo((36+k*18)*u,(214-k*3)*u);x.stroke();}
-    ink(x,ell(x,118,218,24,12,u),"#5e3d22",lw);ink(x,ell(x,154,150,96,72,u),"#8a5a32",lw);ink(x,ell(x,180,178,54,40,u),"#b98a5a",lw);ink(x,ell(x,206,222,24,12,u),"#5e3d22",lw);
-    ink(x,ell(x,232,62,13,13,u),"#8a5a32",lw);ink(x,ell(x,250,108,50,46,u),"#8a5a32",lw);ink(x,ell(x,290,128,27,21,u),"#b98a5a",lw);
-    if(open){x.fillStyle=INK;x.beginPath();x.ellipse(290*u,150*u,15*u,9*u,0,0,7);x.fill();}
-    ink(x,poly(x,open?[[278,140],[298,140],[298,174],[278,174]]:[[278,144],[298,144],[298,166],[278,166]],u),"#fbf6ea",4*u);x.strokeStyle=INK;x.lineWidth=3*u;x.beginPath();x.moveTo(288*u,(open?140:144)*u);x.lineTo(288*u,(open?174:166)*u);x.stroke();
-    ink(x,ell(x,310,118,10,8,u),INK,2*u);ink(x,ell(x,262,94,11,11,u),"#fbf6ea",4*u);x.fillStyle=INK;x.beginPath();x.arc(265*u,95*u,5*u,0,7);x.fill();
-    ink(x,poly(x,[[244,182],[316,176],[318,200],[246,206]],u),"#c8a070",lw);ink(x,ell(x,316,188,7,12,u,-0.08),"#e9d2a8",4*u);ink(x,ell(x,236,192,16,11,u),"#8a5a32",lw);},320,256);
+  /* the beaver, side on, facing right, holding a log: 0 teeth down, 1 chewing. (t14 rework) One cut-out: every part is
+     drawn as a single silhouette with one ink line round the outside (no outlines between the parts), the details
+     drawn on top: the belly, the tail's crosshatch, the eye, nose and teeth. */
+  const beaverTex=open=>cardTex((x,W)=>{const u=W/320,E=(cx,cy,rx,ry,r=0)=>{x.ellipse(cx*u,cy*u,rx*u,ry*u,r,0,Math.PI*2);x.closePath();};
+    const sil=()=>{x.beginPath();E(56,190,54,20,-0.28);E(154,150,96,72);E(118,218,24,12);E(206,222,24,12);E(232,62,13,13);E(250,108,50,46);E(290,128,27,21);E(236,192,16,11);
+      x.moveTo(244*u,182*u);x.lineTo(316*u,176*u);x.lineTo(318*u,200*u);x.lineTo(246*u,206*u);x.closePath();E(316,188,7,12,-0.08);};
+    // the one outline: the whole silhouette stroked fat, then filled body colour over its inner half
+    sil();x.lineWidth=14*u;x.strokeStyle=INK;x.stroke();x.fillStyle="#8a5a32";x.fill("nonzero");
+    const F=(c,f)=>{x.fillStyle=c;x.beginPath();f();x.fill();};
+    F("#4a3a2e",()=>E(56,190,54,20,-0.28));x.strokeStyle="rgba(255,255,255,0.3)";x.lineWidth=3*u;for(let k=0;k<4;k++){x.beginPath();x.moveTo((26+k*18)*u,(190-k*3)*u);x.lineTo((40+k*18)*u,(208-k*3)*u);x.stroke();}
+    F("#5e3d22",()=>{E(118,218,24,12);E(206,222,24,12);});F("#b98a5a",()=>E(182,180,52,36));F("#b98a5a",()=>E(292,130,24,18));F("#6e4626",()=>E(232,62,7,7));
+    F("#c8a070",()=>{x.moveTo(244*u,182*u);x.lineTo(316*u,176*u);x.lineTo(318*u,200*u);x.lineTo(246*u,206*u);x.closePath();});F("#e9d2a8",()=>E(316,188,6,10,-0.08));
+    x.strokeStyle="#8a6a44";x.lineWidth=2.5*u;x.beginPath();x.arc(316*u,188*u,4*u,0,7);x.stroke();
+    F("#8a5a32",()=>E(236,192,15,10));
+    if(open)F(INK,()=>E(290,150,13,8));F("#fbf6ea",()=>x.rect(279*u,(open?140:144)*u,18*u,(open?32:22)*u));x.strokeStyle=INK;x.lineWidth=3*u;x.beginPath();x.moveTo(288*u,(open?140:144)*u);x.lineTo(288*u,(open?172:166)*u);x.stroke();
+    F(INK,()=>E(310,118,9,7));F("#fbf6ea",()=>E(262,94,9,9));F(INK,()=>E(264,95,5,5));},320,256);
   const BEAV=SOFTFX?null:[beaverTex(0),beaverTex(1)];
   // the car at the brawl (a white car with a light bar), side on
   const carTex=SOFTFX?null:cardTex((x,W)=>{const u=W/320,lw=6*u;
@@ -274,7 +282,7 @@
   const _pq=new THREE.Quaternion();
   const PINS={icedintake:[-30,6,-55.5,"!"],duststorm:[-21,12,-13,"!"],flood:[-62,7,4,"water"],refclash:[60.6,8,-11,"!"],steamjoint:[11.2,9.5,4.6,"!"],fogfan:[49.5,22,-4.2,"!"],shaft:[12,10,15.6,"!"],dryerfire:[12,13,zc,"fire"],fabric:[48,9,zc,"!"],felt:[34.5,11,zc,"!"],slime:[4,11,zc,"!"],ragger:[16,9,-13.5,"!"],overflow:[-21,10,-13,"water"],chestover:[34.5,21,-15,"water"],lwplug:[11.2,9,ZL,"!"],cscreen:[15.2,8,ZL,"!"],fscreen:[19.2,9,ZL,"!"],lcplug:[26.6,8,ZL,"water"],hdblow:[25.8,13,-10.6,"water"],boiler:[76,14,-10,"!"],permit:[LAYOUT.wx(22),10,-40,"water"],thkblow:[34.5,22,-15,"water"],birdhay:[-18.7,9,zc,"!"],wrap:[12,12,zc,"!"],flares:[16,10,-13.5,"fire"],dye:[24,11,zc,"!"],winderdown:[-18.7,9,zc,"!"],
     badocc:[-17,10,-11,"!"],balefire:[-25,11,-12,"fire"],fleet:[-29,10,-16,"!"],calloff:[-36,10,23,"!"],fight:[-38,7,-21,"!"],roof:[-32,10,24,"water"],highway:[-72,7,4,"!"],
-    lightning:[34.5,16,-15,"bolt"],tornado:[0,26,0,"!"],beaver:[-24,12,-12.5,"!"]};
+    lightning:[34.5,16,-15,"bolt"],tornado:[0,26,0,"!"],beaver:[-30,10,-16.5,"!"]};
   // a small lift truck (counterbalance forklift) for the yard upsets: body, overhead guard, mast and forks, nobody aboard
   function liftTruck(group,x,z,ry){const f=new THREE.Group();f.position.set(x,0,z);f.rotation.y=ry;group.add(f);box(1.8,0.9,1.1,M.warn,0,0.75,0,f);box(0.7,0.7,1.0,M.ink,-0.75,0.85,0,f);
     [[-0.3,0.5],[-0.3,-0.5],[0.6,0.5],[0.6,-0.5]].forEach(([a,b])=>box(0.06,1.3,0.06,M.ink,a,1.85,b,f,false));box(1.0,0.06,1.06,M.ink,0.15,2.5,0,f,false);
@@ -538,9 +546,9 @@
         deb.forEach((d,k)=>{const a=now/170+k,rad=3+k*0.75;d.position.set(Math.cos(a)*rad,1.5+k*1.3,Math.sin(a)*rad);d.rotation.set(a,a*1.3,0);});
         if(fun.visible&&Math.random()<rdt*14)emit("smoke",fx+R()*6,0.3,fz+R()*6,R()*4,0.6,R()*4,1.6,3,"#c9ced8",0.6);if(age<1)shake=Math.max(shake,0.8);};},
     // (t14: a cut-out beaver, two drawings it swaps between as it chews the log, bobbing; the chips as before)
-    beaver:g=>{if(BEAV){const bv=animCard(BEAV,15,12,true);bv.position.set(-24,0,-12.5);g.add(bv);let dir=0;
-        return (now,rdt)=>{if(!dir)dir=screenDir(bv.position,new THREE.Vector3(1,0,0));bv.frame(((now/180)|0)%2,dir);bv.position.y=Math.abs(Math.sin(now/400))*0.4;bv.material.rotation=Math.sin(now/260)*0.03;
-          for(let k=0;k<2;k++)if(Math.random()<rdt*14)emit("chip",-18.5,4,-11.5,1+Math.random()*4,4+Math.random()*4,R()*5,1.3,0.55,"#ffffff",1);};}
+    beaver:g=>{if(BEAV){const bv=animCard(BEAV,7,5.6,true);bv.position.set(-24,0,-12.5);g.add(bv);let dir=0;
+        return (now,rdt)=>{if(!dir)dir=screenDir(bv.position,new THREE.Vector3(1,0,0));bv.frame(((now/180)|0)%2,dir);bv.position.y=Math.abs(Math.sin(now/400))*0.25;bv.material.rotation=Math.sin(now/260)*0.03;
+          for(let k=0;k<2;k++)if(Math.random()<rdt*14)emit("chip",-21.1,2.6,-12.5,1+Math.random()*3,3+Math.random()*3,R()*4,1.1,0.4,"#ffffff",1);};}
       const bv=new THREE.Group(),E=(sx,sy,sz,m,x,y,z)=>{const o=new THREE.Mesh(sphereG,m);o.scale.set(sx,sy,sz);o.position.set(x,y,z);o.castShadow=true;bv.add(o);return o;};
       E(4.2,3.2,3.4,FM.beaver,0,3,0);E(2.6,2.1,2.4,FM.belly,1.9,2.6,0);const head=E(2.2,2,2,FM.beaver,4.4,4.6,0);E(1.0,0.8,1.1,FM.belly,6.0,4.1,0);
       E(0.6,0.6,0.6,FM.beaver,3.8,6.5,-1.2);E(0.6,0.6,0.6,FM.beaver,3.8,6.5,1.2);

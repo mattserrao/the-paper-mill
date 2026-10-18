@@ -1,5 +1,10 @@
 # Changelog
 
+## v6.1.0-t15 (2026-10-18): beaver rework (test branch test/v6.1-iso)
+- **Beaver:** one cut-out silhouette with a single ink line round the outside (no outlines between body, head, tail and
+  log), about half the size (7 m long); its incident flag moved beside it so the stick no longer runs through it;
+  smaller bob and wood chips.
+
 ## v6.1.0-t14 (2026-10-18): paper upsets (test branch test/v6.1-iso)
 - **Cut-out props:** the giant beaver (chews a log, two drawings), the brawl car, the highway barriers, cones and tipped
   tanker, the bad-OCC junk (bottles, foam, bags, wire) and the snapped driveshaft halves are drawn cards with an ink line
