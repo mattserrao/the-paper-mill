@@ -84,7 +84,7 @@ function no3D(){G3.ok=false;$("no3d").hidden=false;$("no3d-retry").onclick=()=>l
   renderer.outputColorSpace=THREE.SRGBColorSpace;renderer.toneMapping=THREE.ACESFilmicToneMapping;renderer.toneMappingExposure=1.12;
   const scene=new THREE.Scene();G3.scene=scene;G3.renderer=renderer;
   // v6.1 iso: workers, fork-trucks and delivery trucks are drawn as 2D cut-outs (42f); they stay out of the static merge
-  const cutMark=(g,kind)=>{g.userData.cut=kind;if(G3.SM&&G3.SM.dyn)G3.SM.dyn.add(g);else (G3.dynLater||(G3.dynLater=[])).push(g);return g;};
+  const cutMark=(g,kind)=>{g.userData.cut=kind;if(G3.CUT&&G3.CUT.adopt)G3.CUT.adopt(g);if(G3.SM&&G3.SM.dyn)G3.SM.dyn.add(g);else (G3.dynLater||(G3.dynLater=[])).push(g);return g;};
   /* v6.1 iso: a fixed isometric orthographic camera. cam.r (29) still means "how far out": the view is as tall as a
      perspective camera with an 18 degree field would see at that distance, so every zoom number in the game keeps its meaning.
      The camera itself sits ISO_D back along the view line; fov and aspect are kept for the code that reads them. */

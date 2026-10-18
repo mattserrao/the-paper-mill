@@ -112,7 +112,7 @@
      // render the pictures: the cut-outs stay off and the 3D models are shown, rather than nothing at all.
      try{const c=CUT.byK.get("person")||CUT.byK.get("lift")||CUT.byK.get("truck");if(c){const A=ATL[c.a],px=new Uint8Array(4*256);
          const cx=Math.round((c.r[0]+c.r[2]/2)*AW),cy=Math.round((c.r[1]+c.r[3]*0.45)*AH);renderer.readRenderTargetPixels(A.rt,cx-8,cy-8,16,16,px);
-         let a=0;for(let i=3;i<px.length;i+=4)a=Math.max(a,px[i]);CUT.selfTest=a;if(a===0){CUT.ok=false;CUT.actors.forEach(x=>x.o.children.forEach(c=>{c.matrixWorldAutoUpdate=true;}));diag("cut-outs: pictures came out empty on this device; 3D models shown instead");}
+         let a=0;for(let i=3;i<px.length;i+=4)a=Math.max(a,px[i]);CUT.selfTest=a;if(a===0){CUT.ok=false;CUT.actors.forEach(x=>{x.o.children.forEach(c=>{c.matrixWorldAutoUpdate=true;});hide(x,false);});   /* (t10 QA: and back on the drawn layer: they stayed hidden) */diag("cut-outs: pictures came out empty on this device; 3D models shown instead");}
          else diag("cut-outs: self-test ok");}}catch(e){CUT.selfTest=-1;}};   // (one card each so the start-up compile sees their shaders; the next tick resets the counts)
    // --- every frame (43-3d-frame.js, after the moving batches, before the render) ---
    let scanT=0;
@@ -120,6 +120,9 @@
    function resetAtlas(i){const A=ATL[i];A.rows=[];A.nextY=0;A.full=false;CUT.resets++;
      for(const [k,c] of CUT.cells)if(c.a===i)CUT.cells.delete(k);for(const M2 of [CUT.byKD,CUT.byK])for(const [k,c] of M2)if(c.a===i)M2.delete(k);
      for(const a of CUT.actors)if(a.cell&&a.cell.a===i)a.cell=null;diag(`cut-outs: atlas ${i} full, starting it over`);}
+   /* t10 QA: an actor made mid-play (a new worker, a pooled truck) is hidden the moment it is built and picked up on the
+      next frame, instead of showing as a 3D model until the next 2 s scan */
+   CUT.adopt=g=>{if(!CUT.ok)return;g.traverse(c=>{if(c.isMesh||c.isLine||c.isPoints)c.layers.set(CUT_LAYER);});scanT=0;};
    const want=(a,key,dir,first)=>{if(CUT.qset.has(key))return;CUT.qset.add(key);if(first)CUT.queue.unshift([a,key,dir]);else CUT.queue.push([a,key,dir]);};
    /* v6.1 t2: the paper always wins. A cut-out is hidden from the first frame it is seen, never shown in 3D again: until its
       own picture exists it borrows the nearest one (its last picture, else the last of its kind at that heading, else any of

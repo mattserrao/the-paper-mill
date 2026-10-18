@@ -131,7 +131,7 @@
   const LIFT=9;
   let rfT=0;
   G3.roofFade=r=>{if(cutMode==="on")r=0;else if(cutMode==="off")r=1e9;const now=performance.now(),ek=rfT?1-Math.exp(-Math.min(0.25,(now-rfT)/1000)*11):1;rfT=now;
-    roofs.forEach(g=>{const f=g.userData.fade||[170,70],aT=clamp((r-f[0])/f[1],0,1);
+    roofs.forEach(g=>{const f=g.userData.fade||[170,70],aT=r>=f[0]+f[1]/2?1:0;   /* (t11 QA: on or off per zoom step, the ramp's midpoint as the switch: at step 190 the ramp left every roof stuck at 29%, lifted 4.6 m) */
     let a=g.userData.aa;a=a===undefined?aT:Math.abs(aT-a)<0.004?aT:a+(aT-a)*ek;g.userData.aa=a;const solid=a>0.995;g.visible=a>0.02;
     {const y=(1-a)*(1-a)*LIFT;if(g.position.y!==y)g.position.y=y;}
     if(g.userData.a!==undefined&&Math.abs(g.userData.a-a)<0.002)return;g.userData.a=a;

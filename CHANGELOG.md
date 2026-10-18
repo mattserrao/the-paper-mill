@@ -1,5 +1,14 @@
 # Changelog
 
+## v6.1.0-t11 (2026-10-18): QA fixes (test branch test/v6.1-iso)
+- **Cut-outs never drawn as loose 3D parts:** the moving batches picked up parts of cut-out actors (pooled trucks, new
+  workers, loads added later) and drew them with the frozen world matrices the cut-out system leaves on them: bare red and
+  blue boxes near the reel (a truck's trailer and cab) and floating limbs. Batches now skip anything under an actor, and an
+  actor built mid-play is hidden the moment it is made (picked up on the next frame, not the next 2 s scan).
+- **Cut-out fallback:** when the picture self-test fails, actors go back to the drawn layer (they stayed hidden).
+- **Roofs per zoom step:** on or off at each step (the fade ramp's midpoint is the switch), eased as before; at step 190 every
+  roof but the machine hall was stuck at 29% opacity, lifted 4.6 m.
+
 ## v6.1.0-t10 (2026-10-17): draw cut 2 (test branch test/v6.1-iso)
 - **Colour in the matrix:** batched objects carry their colour in the unused bottom row of their own instance matrix
   (the per-object channel that works on iPhone). Moving things: one batch per look on every device (iPhone had one per

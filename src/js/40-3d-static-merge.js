@@ -362,6 +362,9 @@
   const DBOFF=!MROW&&!BQ.get("dbcol")&&!DBMAT&&(IOS||(!BPR.vc&&!BPR.tex));G3.DBCOL=DBCOL;G3.DBMAT=DBMAT;
   diag(`batch colours: vertex ${BPR.vc===undefined?"-":BPR.vc?"ok":"FAIL ("+BPR.vcpx+")"}, texture ${BPR.tex===undefined?"-":BPR.tex?"ok":"FAIL ("+BPR.texpx+")"}${BPR.err?" error "+BPR.err:""} -> ${MROW?"colour in the matrix":DBOFF?(IOS?"iOS: ":"")+"moving things drawn one by one":DBMAT?"iOS: colour-keyed batches":DBCOL?"texture":"vertex"}`);const DBLAYER=30,DBOK=new Set(["MeshStandardMaterial","MeshLambertMaterial","MeshBasicMaterial","MeshPhongMaterial","MeshMatcapMaterial"]);
   function dbOK(o){if(!o.isMesh||o.isInstancedMesh||o.isBatchedMesh||o.isSkinnedMesh||o.userData.smBatch||o.renderOrder)return false;
+    // (t10 QA: never a part of a cut-out actor: their parts keep frozen world matrices, so a batch drew them where the
+    // picture was last taken: floating limbs, and trucks as bare red and blue boxes in the wrong place)
+    if(G3.CUT&&G3.CUT.ok)for(let x=o;x;x=x.parent)if(x.userData&&x.userData.cut)return false;
     const m=o.material,g=o.geometry;if(!m||Array.isArray(m)||!DBOK.has(m.type)||m.transparent||m.opacity<1||!g||!g.isBufferGeometry)return false;
     if(o.onBeforeRender!==THREE.Object3D.prototype.onBeforeRender)return false;const a=g.attributes;if(!a.position||!a.normal)return false;
     for(const k in a)if(k!=="position"&&k!=="normal"&&k!=="uv")return false;if(g.morphAttributes&&Object.keys(g.morphAttributes).length)return false;
