@@ -99,7 +99,7 @@ function knobAlarms(a,r){const L=[],al=(on,txt,hi)=>{if(on)L.push([txt,hi]);};co
     al(r.gap<0.25,"REFINER GAP LO",r.gap<0.18);al(Math.abs(r.mcCons-3.2)>0.35,"MACHINE CHEST CONS DEV",Math.abs(r.mcCons-3.2)>0.6);}
   else if(a==="WET"){al(r.vac<18,"FORMER VACUUM LO",r.vac<12);al(Math.abs(r.edge)>12,"FABRIC EDGE DEV",Math.abs(r.edge)>35);al(r.gm&&r.gtrav>0.85,"GUIDE AT END OF TRAVEL",r.gtrav>=1);
     al(r.cs>0.6&&S.pm!=="run","COUCH PIT LEVEL HI",r.cs>1.2);al(r.pl>125,"PRESS LOAD HI",r.pl>135);al(r.couchSol<16,"COUCH SOLIDS LO",r.couchSol<14);al(K&&K.F&&K.F.cd>0,"CD PROFILE OUT",true);}
-  else if(a==="DET"&&r.run){al(r.st3>150,"3RD SECTION STEAM HI",r.st3>=155);al(r.boiler<0.8,"STEAM HEADER LO",r.boiler<0.7);al(r.run&&r.moist>9.5,"REEL MOISTURE HI",r.moist>11);al(r.run&&r.moist<4.5,"REEL MOISTURE LO",r.moist<3.5);
+  else if(a==="DET"&&r.run){al(S.dry&&r.st3>=dryCeil(S.dry)-1,"3RD SECTION STEAM AT MAX",true);al(r.boiler<0.8,"STEAM HEADER LO",r.boiler<0.7);al(r.run&&r.moist>9.5,"REEL MOISTURE HI",r.moist>11);al(r.run&&r.moist<4.5,"REEL MOISTURE LO",r.moist<3.5);
     al(r.run&&r.tension>1.3,"DRAW TENSION HI",r.tension>1.5);al(r.run&&r.tension<0.85,"DRAW TENSION LO",r.tension<0.7);}
   else if(a==="DET")al(r.boiler<0.8,"STEAM HEADER LO",r.boiler<0.7);
   dcsAlarms(a,r,L);   // v6.5 b3: upsets on the screen of the equipment they hit, motors, purges, the dry end's states (50d)

@@ -16,6 +16,7 @@ function step(dt){
   autoControl(dt);
   knobTick(dt);   // v5.6 fiddly knobs (returns at once unless a knob was moved)
   dcsTick(dt);   // v6.5 b3 DCS motors and reject purges (07c; nothing until the DCS is used)
+  dryTick(dt);   // v6.5 b5 the dryer limit: water, steam, moisture (07d)
   const g=GRADES[C.grade];
   // 1 inbound arrivals
   // weather: changes every few hours; snow and fog slow the trucks, rain soaks bales
@@ -77,7 +78,7 @@ function step(dt){
   if(prod>0){{const ec=prod*energyCost();spend(ec,"energy");pfEnergy(prod,ec);}knobSteamCost(prod);S.q.made+=prod;
     let off=0;if(M.offSpec)off=prod;
     else if(S.chg){off=Math.min(prod,S.chg.left);S.chg.left-=off;if(S.chg.left<=1e-6){log(`Grade change to ${S.chg.to} complete: back on spec`,"ok");S.chg=null;}}
-    {const kf=knobOff();if(kf>0)off=Math.min(prod,off+(prod-off)*kf);}   // v5.6: a moved knob sending part of the reel to the beater
+    {const kf=Math.max(knobOff(),dryOff());if(kf>0)off=Math.min(prod,off+(prod-off)*kf);}   // (v6.5 b5: a wet sheet from the dryer limit, 07d)   // v5.6: a moved knob sending part of the reel to the beater
     if(off>0){pfW("broke",off);S.tot.broke+=off;S.tot.beater=(S.tot.beater||0)+off;S.q.off+=off;S.q.bank+=off;prod-=off;}
     if(S.plan.hot&&C.grade==="33HT")S.plan.hot.made+=prod;
     if(S.pf&&prod>0)pfW("val",prod*priceOf(C.grade));}

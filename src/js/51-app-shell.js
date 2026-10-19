@@ -9,7 +9,7 @@
     const steps=[
       {k:"Receiving",cap:Math.min(C.drivers.v*P.driverRate/2,C.inRate.v*P.truckLoad)*yl*(M.recvMul??1),act:(R.unload||0)*yl,down:M.noIn||M.docksClosed||M.recvMul===0},
       {k:"Pulper",cap:P.pulperMax*yl*(M.feedMul||1),act:(R.feed||0)*yl,down:!!M.pulperDown},
-      {k:"Machine",cap:P.K*(3300+P.spBonus)*g.bw*(M.speedCap||1),act:R.prod||0,down:!!M.pmDown||S.pm==="break",lab:S.pm==="break"&&!M.pmDown?"sheet break":"down"},
+      {k:dryCapTph()<P.K*(3300+P.spBonus)*g.bw*(M.speedCap||1)?"Machine (dryers)":"Machine",cap:Math.min(P.K*(3300+P.spBonus)*g.bw*(M.speedCap||1),dryCapTph()),   /* (v6.5 b5: the dryer limit, 07d) */act:R.prod||0,down:!!M.pmDown||S.pm==="break",lab:S.pm==="break"&&!M.pmDown?"sheet break":"down"},
       {k:"Winder",cap:P.winderMax,act:R.cut||0,down:!!M.winderDown||S.wd==="hayout",lab:S.wd==="hayout"&&!M.winderDown?"hayout":"down"},
       {k:"Shipping",cap:ld*(M.clampMul??1),act:(R.load||0)*rw,down:!!M.noOut||M.clampMul===0}];
     const bufs=[["Bale yard",S.yard/P.yardCap],["Stock chest",S.tank/P.tankCap],["Reel storage",Math.min(1,Math.max(0,reelsAtWinder()-1)/Math.max(1,P.storeReels))],["Warehouse",S.fg/P.fgCap]];

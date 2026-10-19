@@ -19,9 +19,9 @@ const MAINT=["birdline","steamjoint","fogfan","shaft","fabric","felt","winderdow
 // v4.1 v19: prices reset after the payback review (most upgrades now pay back within days, not months)
 // t20 balance: the capacity and maintenance upgrades re-priced (40-60% cheaper) so they can pay back inside a season
 const UPS=[
- {id:"drive",g:"machine",name:"Drive & gearbox rebuild",lv:[120e3,105e3,95e3],desc:"+150 fpm max speed per level."},
+ {id:"drive",g:"machine",name:"Drive & gearbox rebuild",lv:[90e3,80e3,70e3],desc:"+150 fpm max speed per level, if the dryers can keep up (heavy grades and a wet sheet reach their limit first)."},   // (v6.5 b5: 25% cheaper: the dryer limit can cap it)
  {id:"deckle",g:"machine",name:"Wider trim (deckle)",lv:[125e3,105e3],desc:"+6% tons at the same speed per level."},
- {id:"shoe",g:"machine",name:"Shoe press",lv:[140e3],desc:"+100 fpm and 12% less energy per ton."},
+ {id:"shoe",g:"machine",name:"Shoe press",lv:[140e3],desc:"+100 fpm and 12% less energy per ton. A drier sheet into the dryers: about 16% more drying headroom."},
  {id:"winder",g:"machine",name:"Winder rebuild",lv:[300e3,550e3],desc:"+30 t/h winder speed and 40% fewer hayouts per level."},
  {id:"monitor",g:"machine",name:"Fabric & felt monitoring",lv:[170e3,115e3],desc:"Machine failures 40% rarer and fewer sheet breaks, per level."},
  {id:"refiner",g:"machine",name:"Refiner power upgrade",lv:[110e3],desc:"Bigger motors and new plates on the twin refiners between the chest and the headbox. Stronger bonding: $22/t less energy and chemicals."},

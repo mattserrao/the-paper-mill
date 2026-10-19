@@ -1,6 +1,30 @@
 # Changelog
 
 
+## v6.5.0-b5 (2026-10-19): the dryer limit (test branch test/v6.5-twin)
+From claude/dryer-limit-spec.md and its review answers.
+- **Speed, grade and the wet end now load the dryers** (07d-dryer.js). Water to dry = paper t/h x water per ton (1.11 t/t
+  at 44% press solids; the shoe press makes it 48%) x the wet end's water factor (the fiddly knobs). The 3rd section's
+  demand is calibrated on PM3 data: each grade's median pressure at its standard rate (23m 122, 26m 126, 30m 138,
+  33HT 135 kPa), +3.0 kPa per extra t/h on 23m, scaled by basis weight for the other grades.
+- **Ceiling 180 kPa** (PM3's 3rd section tops out at 171; raised so the game runs: hands-off seasons peak at 139, a
+  fully upgraded mill with the shoe press at 170). Below it the auto loop holds 7% moisture; above it the sheet goes wet
+  (+0.15% per kPa short). Without the shoe press, heavy grades at full speed run damp but inside spec.
+- **A wet sheet fails the moisture spec (10%):** the paper goes to the beater and the crew slows the machine (1% a
+  minute) until it's back under 9%, then lets the speed recover (0.5% a minute) while there's headroom. No speed trim
+  ahead of time. Above 13% the sheet can break in the dryers. In every mode but zen.
+- **Boiler limit:** steam = 1.3 t per t of water (~50 t/h at standard); past 62 t/h the header sags and lowers the ceiling.
+- **Shown:** DET DRYER LOAD and STEAM tags, the 2nd/3rd section pictogram amber near the limit and red when at it with a
+  wet sheet, the boiler amber when steam is high; alarms DRYERS AT LIMIT · SHEET WET, DRYER LOAD HI, SPEED TRIMMED,
+  BOILER STEAM HI, 3RD SECTION STEAM AT MAX (was STEAM HI at 150 kPa). QCS gives "sheet too wet" as the reject reason.
+  Process flow: paper machine trends for dryer load and speed trim, a "Dryer-limited" lamp; the Mill report's flow view
+  caps the machine at what the dryers can take ("Machine (dryers)" when that's the bottleneck). History v3.
+- **Drive & gearbox rebuild 25% cheaper** ($90k / $80k / $70k): the dryer limit can cap it. Shoe press text mentions
+  the drying headroom.
+- Hands-off seasons: no change (the limit never binds; rural +0.9% vs v6.4.0, as in b2).
+- `tools/dryercheck.py`: standard running, slope, wet sheet past the ceiling, the crew's slowdown and recovery,
+  off-spec to the beater, the shoe press.
+
 ## v6.5.0-b4 (2026-10-19): DCS pictograms (test branch test/v6.5-twin)
 - Every box on SPOT, WET, DET and UTIL is now drawn as its equipment in the classic coloured DCS style: steel
   vessels and machines, brown stock, blue water, cream paper, green motors (conveyor with bales, pulper tub with rotor,

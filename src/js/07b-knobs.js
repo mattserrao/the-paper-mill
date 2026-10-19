@@ -126,10 +126,11 @@ function knobTick(dt){const K=S.knob;if(!K||!K.any||S.zen)return;
   // (only the refiner can make it drier than normal, and then only the moisture moves: no knob ever saves steam)
   const W=1+Math.max(0,0.5-x.fr)*1.0-Math.max(0,x.fr-0.5)*0.4+Math.max(0,30-x.vac)*0.015+Math.max(0,100-x.pl)*0.012;
   x.d1=L(x.d1,(v.st1-70)/130*0.35,8);
-  const a=clamp(W-x.d1,0.7,1.3);K.W=W;K.a=a;
-  x.m=Math.max(0.5,L(x.m,7+20*(W-x.d1-a),10));                                        // reel moisture (%)
-  K.sf=Math.max(1,a+Math.max(0,x.d1));                                  // steam load (1 = normal, never less)
-  x.bs=L(x.bs,K.sf>=1.29?1:0,40);                                       // boiler header sagging under the load
+  // v6.5 b5: moisture, the 3rd section and the boiler header come from the dryer model (07d), which now also sees speed
+  const a0=clamp(W-x.d1,0.7,1.3),Dr=dryState();K.W=W;K.d1x=x.d1;K.a=Dr.st3/(DRY.base[C.grade]||122);
+  x.m=Dr.m;                                                             // reel moisture (%)
+  K.sf=Math.max(1,a0+Math.max(0,x.d1));                                 // steam load per ton (1 = normal, never less): the cost side
+  x.bs=clamp((1-Dr.hdr)/0.45,0,1);                                      // boiler header sagging under the load
   x.dl1=L(x.dl1||0,Math.max(0,1.0-v.draw),10);x.dl=L(x.dl,x.dl1,10);   // (two stages: the reel has to build a few wraps before the wrinkles show)
   x.cr1=L(x.cr1||0,Math.max(0,x.pl-115)/30,10);x.cr=L(x.cr||0,x.cr1,10);x.dt=L(x.dt,Math.max(0,v.draw-2.4),10);
   // ---- consequences: off-spec ----
@@ -183,16 +184,16 @@ function knobSteamCulprits(){const K=S.knob;if(!K)return [];const v=K.v,c=[];
 function knobRead(){const K=S.knob,x=K?K.x:null,g=GRADES[C.grade]||GRADES["23m"],bw=g.bw,run=S.pm==="run";
   const z=x?x.z:new Array(KZONES).fill(0),sw=x?x.sw:0,t=S.t;
   const wob=(f,k)=>Math.sin(t*f+k)*0.6+Math.sin(t*f*2.7+k*2)*0.4;   // smooth stand-in for process noise (no dice)
-  const st3=(C.grade==="33HT"?135:C.grade==="30m"?128:121)*(K?K.a:1);
-  const m=x?x.m:7,cp=x?x.cp:5;
+  const Dr=S.dry,st3=Dr?Dr.st3:(DRY.base[C.grade]||122);   // (v6.5 b5: the dryer model, 07d)
+  const m=Dr?Dr.m:7,cp=x?x.cp:5;
   return {run,cp,amps:410*(0.55+cp/5*0.45)*(S.M.pulperDown?0:1),pulpLvl:clamp(62+(5-cp)*9+wob(0.05,1)*1.5,0,110),
     gap:x?x.fr:0.5,refkw:run?2100*(1+Math.max(0,0.5-(x?x.fr:0.5))*1.6-Math.max(0,(x?x.fr:0.5)-0.5)*0.8):0,csf:450+((x?x.fr:0.5)-0.5)*380,
     mcLvl:69+wob(0.02,2)*3,mcCons:3.2+sw*0.9*wob(0.21,3),agit:knobVal("agit"),
     vac:x?x.vac:30,couchSol:19+((x?x.vac:30)-30)*0.18,pl:x?x.pl:100,pressSol:44+((x?x.pl:100)-100)*0.09,
     edge:K?K.edge:0,gtrav:K?K.gtrav:0,gm:knobVal("gm"),stripes:x?x.st:0,cs:K?K.cs:0,couch:knobVal("couch"),osc:knobVal("osc"),wear:K?K.wear:0,
-    st1:knobVal("st1"),st3,steam:run?50.5*(K?K.sf:1)*S.pmSpeed/2736:0,boiler:1-(x?x.bs:0)*0.45,moist:run?m+wob(0.13,4)*0.25:0,
+    st1:knobVal("st1"),st3,steam:run?(Dr?Dr.steam:50.5*S.pmSpeed/2736):0,boiler:Dr?Dr.hdr:1,moist:run?m+wob(0.13,4)*0.25:0,
     bw:run?bw*(1+sw*0.08*wob(0.21,3))+wob(0.11,5)*0.12:0,draw:knobVal("draw"),tension:run?1.0+(knobVal("draw")-1.5)*0.42:0,
-    zones:z.map((v,i)=>m+v*0.35+Math.sin(i*1.7+t*0.01)*0.12),off:K?K.off:0,why:K?K.offWhy:"",F:K&&K.F||{},speed:S.pmSpeed};}
+    zones:z.map((v,i)=>m+v*0.35+Math.sin(i*1.7+t*0.01)*0.12),off:K&&K.any?K.off:dryOff(),why:K&&K.any?K.offWhy:dryOff()>0?(Dr&&Dr.m<4?"dry":"wet"):"",F:K&&K.F||{},speed:S.pmSpeed};}
 // DCS / QCS trend history: a reading every 2 sim minutes, 6 hours kept. Read-only on the sim (it never writes S), kept
 // outside S so saves don't grow; a new game or a loaded save starts it fresh.
 const KHIST={S:null,t:-1,a:[]};

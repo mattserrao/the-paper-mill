@@ -37,11 +37,11 @@ function pfClose(){pfCtlHome();G3.pfCtlOn=false;const o=$("pfOv");if(o)o.hidden=
 const pfVert=()=>window.matchMedia("(max-width:760px)").matches;
 
 /* ---- status of each area right now (today only) ---- */
-const PF_LAMP={run:["#4fd18b","Running"],upset:["#ffb02e","Upset"],brk:["#ffb02e","Sheet break"],hay:["#ffb02e","Hayout"],down:["#ff6b5e","Down"],held:["#8ea4c4","Held back"]};
+const PF_LAMP={dry:["#ffb02e","Dryer-limited"],run:["#4fd18b","Running"],upset:["#ffb02e","Upset"],brk:["#ffb02e","Sheet break"],hay:["#ffb02e","Hayout"],down:["#ff6b5e","Down"],held:["#8ea4c4","Held back"]};
 function pfLamp(a){const M=S.M||{},up=(S.inc||[]).some(i=>pfRepArea(i.id)===a);
   switch(a){case "yard":return M.docksClosed?"down":up?"upset":"run";
     case "pulper":return M.pulperDown?"down":up?"upset":"run";
-    case "pm":return S.pm==="run"?(up?"upset":"run"):S.pm==="break"?"brk":S.pm==="spools"||S.pm==="full"?"held":"down";
+    case "pm":return S.pm==="run"?(up?"upset":dryLimited()||(S.dry&&S.dry.trim>0.001)?"dry":"run"):S.pm==="break"?"brk":S.pm==="spools"||S.pm==="full"?"held":"down";
     case "winder":return S.wd==="hayout"?"hay":M.winderDown?"down":S.wdBlocked?"held":"run";
     case "site":return null;default:return up?"upset":"run";}}
 // tons through each area: now (t/h) for today, the day's tons for yesterday
@@ -139,7 +139,8 @@ const PF_TR={
     {t:"Refiners",u:"kW",k:"line",s:[["Load",C_.mt,V_("a.refkw")]],ev:1},{t:"Freeness",u:"mL CSF",k:"line",s:[["CSF",C_.lab,V_("a.csf")]]}],
   pm:[{t:"Reel speed",u:"fpm",k:"line",s:[["Speed",C_.bl,V_("a.speed")]],ev:1},{t:"Paper made",u:"t",k:"bar",s:[["Made",C_.lab,V_("made")]]},
     {t:"Basis weight",u:"lb/1000 ft²",k:"line",s:[["BW",C_.en,V_("a.bw")]]},{t:"Reel moisture",u:"%",k:"line",s:[["Moisture",C_.ch,V_("a.moist")]]},
-    {t:"Dryer steam",u:"t/h",k:"line",s:[["Steam",C_.wh,V_("a.steam")]]},{t:"Energy",u:"$/t",k:"line",s:[["Energy",C_.en,V_("a.energyt")]]}],
+    {t:"Dryer steam",u:"t/h",k:"line",s:[["Steam",C_.wh,V_("a.steam")]]},{t:"Dryer load",u:"% of the 3rd section's limit",k:"line",s:[["Load",C_.en,V_("a.dryl")]]},
+    {t:"Speed trimmed for a wet sheet",u:"fpm",k:"line",s:[["Trim",C_.mt,V_("a.trim")]]},{t:"Energy",u:"$/t",k:"line",s:[["Energy",C_.en,V_("a.energyt")]]}],
   winder:[{t:"Winder",u:"t/h",k:"line",s:[["Cut",C_.bl,V_("a.cut")]],ev:1},{t:"Paper waiting at the winder",u:"t",k:"line",s:[["Reel store",C_.wh,V_("a.reel")]]},{t:"Hayouts",u:"",k:"bar",s:[["Hayouts",C_.en,V_("n.hay")]]}],
   ship:[{t:"Warehouse",u:"% full",k:"line",s:[["Warehouse",C_.wh,V_("a.fgp")]]},{t:"Paper shipped",u:"t",k:"bar",s:[["Shipped",C_.lab,V_("ship")]]},
     {t:"Trucks out",u:"trucks",k:"bar",s:[["Trucks",C_.bl,V_("n.out")]]},{t:"Outbound freight",u:"$/t",k:"line",s:[["Freight",C_.fo,V_("a.frout")]]},{t:"Paper price (grade on the machine)",u:"$/t",k:"line",s:[["Price",C_.lab,V_("a.price")]]}],

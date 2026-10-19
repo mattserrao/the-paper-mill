@@ -104,6 +104,7 @@ function mods(){const m=baseMods();
   if(S.wx==="rain")m.yieldMul*=0.97;
   if(S.pm==="break"&&S.brkType!=="reel"&&working("brk")){m.recvMul=0;m.clampMul=0;m.crewAtPM=true;}
   knobMods(m);   // v5.6 fiddly knobs (nothing unless a knob was moved)
+  dryMods(m);   // v6.5 b5 the dryer limit: the crew's speed trim for a wet sheet (07d)
   return m;}
 // any stop that takes the sheet off the reel (boiler trip, felt or fabric change, no stock...) must be followed by a full
 // rethread once the cause is fixed: the machine goes into a press-section break and the crew threads it back to the reel
