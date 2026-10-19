@@ -2,7 +2,7 @@
 
 
 
-## v6.4.0-zs1 (2026-10-18): zen shot review (test branch test/v6.4-zenshots)
+## v6.4.0 (2026-10-19): zen shot review released to main (was test build zs1)
 All four maps reviewed shot by shot under the free zen camera; fixes:
 - **Shot order:** a shuffle bag: every everyday shot of a map plays once before any repeats (the old random pick with an
   8-shot memory hit the 15-minute map cut with about 10% of shots unseen). Free shots run 8-11 s (were 6-10).

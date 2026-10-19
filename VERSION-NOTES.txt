@@ -71,4 +71,4 @@ One line per version, oldest first. Add a line here with every release: build.py
 6.3.0-f1   Process Flow Overview (Test): Inputs, Mill Areas and Outputs for the Mill Day, in Settings
 6.3.0-f2   Process Flow: the Game Keeps Running While It's Open (Test)
 6.3.0      Process Flow Overview: Inputs, Mill Areas and Outputs for the Mill Day (Settings > View)
-6.4.0-zs1  Zen Shots Review (Test): Shuffle-Bag Shot Order, Landscape Shots Rebuilt, Close Rare Sights
+6.4.0      Zen Shots Review: Shuffle-Bag Shot Order, Landscape Shots Rebuilt, Close Rare Sights
