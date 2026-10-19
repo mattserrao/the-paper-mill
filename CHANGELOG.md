@@ -1,6 +1,22 @@
 # Changelog
 
 
+## v6.5.2 (2026-10-19): knob fixes
+Built on test/v6.5.2-knobs, merged into main.
+- **Fiddly knobs bite again under the dryer limit** (07d-dryer.js, 07b-knobs.js). Since b5 the knobs added kPa to the 3rd
+  section's demand, and the whole range up to the 180 kPa ceiling soaked them up: on a mill with headroom, press loading
+  and the 1st section did nothing but cost steam, while 1st section steam turned up alone over-dried the sheet. Now the
+  knobs' load is a ratio of the knob-free demand: the auto loop takes up to ±30% of it, and past that the knobs move
+  the moisture (20 points per unit, the v5.6 model). Speed and grade still hit the ceiling as before; the speed floor
+  no longer stops a knob from taking load off. The crew's speed trim only answers the part slowing down can fix.
+- **Boiler trips on knob overload again**: the dryers' total steam per ton from the knobs (3rd section share plus 1st,
+  a0 + d1) held at its 30% top for a while trips it. Turning the 1st section down alone moves load to the 3rd, so it
+  doesn't.
+- **DCS titles use the machine's name** (Settings, default PM1), as the process flow and the 3D label do; it was a
+  hard-coded PM3.
+- `tools/knobcheck.py` passes in full again (the three b5 failures: press loading low, 1st section low + refiner tight,
+  1st section high alone). Untouched seasons take the same code path as before (no knob state); not re-measured.
+
 ## v6.5.1 (2026-10-19): second screen
 Built on test/v6.5.1-dual, merged into main.
 - **Pop-out window for a second monitor** (desktop only: a mouse and a screen 1100 px or wider; `?popout` forces it).
