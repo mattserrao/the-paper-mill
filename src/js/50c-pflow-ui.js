@@ -207,12 +207,14 @@ function pfDraw(cv,spec,W0){const dpr=Math.min(2,window.devicePixelRatio||1),cw=
   for(let d=Math.ceil(h0/24);d*24<h1;d++){const xx=X(d*24);x.strokeStyle=d===0?"rgba(79,209,139,.5)":"rgba(140,170,210,.12)";x.beginPath();x.moveTo(xx,T);x.lineTo(xx,Bm);x.stroke();
     if(((d%step)+step)%step===0||nd<=2)x.fillText(nd<=2?clockOf(0)+" "+pfDayLbl(d*24).replace("Day ","D"):pfDayLbl(d*24).replace("Day ","D"),xx,ch-4);}
   if(nd<=2){for(let h=Math.ceil(h0/6)*6;h<h1;h+=6)if(h%24){x.fillText(clockOf(((h%24)+24)%24*60).replace(":00",""),X(h),ch-4);}}
-  // marks
+  // marks (clipped to the plot)
+  x.save();x.beginPath();x.rect(L,0,R-L,ch);x.clip();
   if(bar){const nS=spec.s.length,bw=Math.max(1,(X(h0+(daily?24:1))-X(h0))-(daily?3:1));
     for(const p of pts){const x0=X(p.h)+(daily?1.5:0.5);if(stack){let acc=0;p.v.forEach((v,i)=>{if(!v)return;x.fillStyle=spec.s[i][1];const y0=Y(acc),y1=Y(acc+v);x.fillRect(x0,y1,bw,y0-y1);acc+=v;});}
       else{const w=nS>1?bw/nS:bw;p.v.forEach((v,i)=>{if(v==null)return;x.fillStyle=spec.pn&&v<0?"#ff6b5e":spec.s[i][1];const y0=Y(0),y1=Y(v);x.fillRect(x0+i*w,Math.min(y0,y1),Math.max(1,w-(nS>1?1:0)),Math.abs(y0-y1));});}}}
   else spec.s.forEach((sr,i)=>{x.strokeStyle=sr[1];x.lineWidth=1.8;x.beginPath();let on=false;
     for(const p of pts){const v=p.v[i];if(v==null){on=false;continue;}const xx=X(p.h+(p.w/2)),y=Y(v);if(!on){x.moveTo(xx,y);on=true;}else x.lineTo(xx,y);}x.stroke();});
+  x.restore();
   // bills as markers along the top
   if(spec.ev&&S.hist){x.fillStyle="#ff7a8a";for(const [t,id] of S.hist.ev){const h=t/60;if(h<h0||h>=h1)continue;if(spec.ev===1&&id!=="outage"&&pfRepArea(id)!==PFUI.area)continue;const xx=X(h);x.beginPath();x.moveTo(xx-4,T);x.lineTo(xx+4,T);x.lineTo(xx,T+6);x.fill();}}
   // the crosshair

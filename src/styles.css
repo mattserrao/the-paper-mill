@@ -1180,7 +1180,7 @@ body.dark .kvchip{background:color-mix(in srgb,var(--panel) 96%,transparent)}
 .pftabs button{background:none;border:0;border-bottom:2px solid transparent;color:#8ea4c4;font:700 12px var(--f-body,system-ui);padding:7px 10px;cursor:pointer}
 .pftabs button[aria-selected="true"]{color:#fff;border-bottom-color:#4fd18b}.pftabs button[hidden]{display:none}
 .pfpb{overflow:auto;padding:8px 10px 14px;display:flex;flex-direction:column;gap:8px;flex:1;-webkit-overflow-scrolling:touch}
-.pfzoom{align-self:flex-start}.pfzoom button{padding:3px 10px;font-size:12px}
+.pfpb>*{flex-shrink:0}.pfzoom{align-self:flex-start}.pfzoom button{padding:3px 10px;font-size:12px}
 .pfch{background:#16233a;border:1px solid #2c3e5c;border-radius:8px;padding:6px 8px 4px}
 .pfcht{display:flex;align-items:baseline;gap:8px;flex-wrap:wrap}.pfcht b{color:#fff;font-size:12.5px}.pfcht small{color:#8ea4c4;font-size:11px}
 .pfleg{display:flex;flex-wrap:wrap;gap:2px 10px;margin-left:auto;color:#c3d3ea;font-size:10.5px}.pfleg i{display:inline-block;width:9px;height:9px;border-radius:2px;margin-right:4px;vertical-align:-1px}
