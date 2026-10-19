@@ -148,9 +148,9 @@ const PF_TR={
     {t:"Civics meters",u:"0–100",k:"line",s:[["Economy",C_.en,V_("a.civE")],["Labor",C_.lab,V_("a.civL")],["Machinery",C_.bl,V_("a.civM")],["Community",C_.pu,V_("a.civC")]],opt:1}],
   "cat:fiber":[{t:"OCC price and haul",u:"$/t",k:"line",s:[["OCC",C_.occ,V_("a.occp")],["Haul",C_.fi,V_("a.haul")],["Delivered",C_.wh,r=>{const a=hv(r,"a.occp"),b=hv(r,"a.haul");return a==null||b==null?null:a+b;}]]},{t:"Fiber spend",u:"$",k:"bar",s:[["Fiber",C_.occ,V_("c.fiber")]]},{t:"Bales fed",u:"t",k:"bar",s:[["Bales",C_.occ,V_("w.feed")]]},
     {t:"OCC market",u:"$/t vs normal",k:"line",s:[["Market",C_.wh,V_("a.mkt")]]}],
-  "cat:frin":[{t:"Inbound haul",u:"$/t",k:"line",s:[["Haul",C_.fi,V_("a.haul")]]},{t:"Diesel index",u:"× normal",k:"line",s:[["Diesel",C_.wh,V_("a.fuel")]]},
+  "cat:frin":[{t:"Inbound haul",u:"$/t",k:"line",s:[["Haul",C_.fi,V_("a.haul")]]},{t:"Diesel",u:"$/gal",k:"line",s:[["Diesel",C_.wh,r=>{const v=hv(r,"a.fuel");return v==null?null:v*FR.dieselBase;}]]},
     {t:"Inbound freight spend",u:"$",k:"bar",s:[["Freight in",C_.fi,V_("c.frin")]]},{t:"Trucks in",u:"trucks",k:"bar",s:[["Trucks",C_.bl,V_("n.in")]]}],
-  "cat:frout":[{t:"Outbound freight",u:"$/t",k:"line",s:[["Freight",C_.fo,V_("a.frout")]]},{t:"Diesel index",u:"× normal",k:"line",s:[["Diesel",C_.wh,V_("a.fuel")]]},
+  "cat:frout":[{t:"Outbound freight",u:"$/t",k:"line",s:[["Freight",C_.fo,V_("a.frout")]]},{t:"Diesel",u:"$/gal",k:"line",s:[["Diesel",C_.wh,r=>{const v=hv(r,"a.fuel");return v==null?null:v*FR.dieselBase;}]]},
     {t:"Outbound freight spend",u:"$",k:"bar",s:[["Freight out",C_.fo,V_("c.frout")]]},{t:"Paper shipped",u:"t",k:"bar",s:[["Shipped",C_.lab,V_("ship")]]}],
   "cat:energy":[{t:"Energy per ton",u:"$/t",k:"line",s:[["Energy",C_.en,V_("a.energyt")]]},{t:"Energy spend",u:"$",k:"stack",s:[["Steam",C_.en,V_("s.steam")],["Power",C_.bl,V_("s.power")]]},
     {t:"Dryer steam",u:"t/h",k:"line",s:[["Steam",C_.wh,V_("a.steam")]]}],
@@ -252,7 +252,7 @@ function pfBreak(D,live){const s=PFUI.sel;const [kind,a,b]=s.split(":"),t=D.made
       if(c==="energy")rows.push(["Now","","hd"],["Energy per ton",money(Math.max(0,energyCost()-pfChemT()))+"/t"],["Grade steam","×"+(P.steamMul||1).toFixed(2)],["Shoe press and APC","×"+(P.energyMul||1).toFixed(2)],P.siteEnergy?["Site",(P.siteEnergy-(P.siteChem||0)>=0?"+":"−")+money(Math.abs(P.siteEnergy-(P.siteChem||0)))+"/t"]:null,cm!==1?["Survival costs","×"+cm.toFixed(2)]:null);
       if(c==="chem")rows.push(["Now","","hd"],["Chemicals and water per ton",money(pfChemT())+"/t"],P.refSave?["Refiner upgrade","−"+money(P.refSave)+"/t"]:null,P.siteChem?["Site",(P.siteChem>=0?"+":"−")+money(Math.abs(P.siteChem))+"/t"]:null,cm!==1?["Survival costs","×"+cm.toFixed(2)]:null);
       if(c==="frin"||c==="frout"){const base=c==="frin"?FR.inBase+(P.siteHaul||0):FR.outBase+(P.siteFreight||0),fx=c==="frout"?frFx():0;
-        rows.push(["Now","","hd"],[c==="frin"?"Haul per ton of bales":"Freight per ton shipped",money(c==="frin"?frInRate():frOutRate())+"/t"],["Site base",money(base)+"/t"],["Diesel index","×"+fuelIdx().toFixed(2)],
+        rows.push(["Now","","hd"],[c==="frin"?"Haul per ton of bales":"Freight per ton shipped",money(c==="frin"?frInRate():frOutRate())+"/t"],["Site base",money(base)+"/t"],["Diesel",`$${(fuelIdx()*FR.dieselBase).toFixed(2)}/gal · rate ×${frFuel().toFixed(2)}`],
           ["Weather",`${(WXN[S.wx]||S.wx||"clear").toLowerCase()} ×${frWx().toFixed(2)}`],frEv()>1?["Detours","×"+frEv().toFixed(2),"bad"]:null,fx?["Deals and events",(fx>0?"+":"−")+money(Math.abs(fx))+"/t",fx>0?"bad":"ok"]:null,
           c==="frin"&&cm!==1?["Survival costs","×"+cm.toFixed(2)]:null);}
       if(c==="labor")rows.push(["Now","","hd"],["Drivers on shift",String(Math.round(C.drivers.v))],["Loaders on shift",String(Math.round(C.loaders.v))],P.robots?["Robot loaders",String(P.robots)]:null);}

@@ -478,5 +478,5 @@ const GRADES={ "23m":{sp:2736,bw:24.55}, "26m":{sp:2433,bw:26.06}, "30m":{sp:222
 // mix = campaign size range in tons; the market-driven planner runs the real grade wheel at roughly the PM3 grade mix.
 const GCOST={"23m":{dlk:0,steam:1,chem:0,brk:1.15,mix:[2600,3600]},"26m":{dlk:0.1,steam:1.02,chem:0,brk:1.25,mix:[80,160]},
   "30m":{dlk:0.25,steam:1.14,chem:10,brk:0.75,mix:[150,350]},"33HT":{dlk:0.55,steam:1.11,chem:75,brk:0.55,mix:[800,1300]}};
-const OCCG={occ11:{p:142,y:0.88},dlk:{p:197,y:0.93}}   // (v6.5: $18/t less: the haul is its own cost now, FR);
+const OCCG={occ11:{p:95,y:0.88},dlk:{p:150,y:0.93}}   // (v6.5: $18/t less: the haul is its own cost now, FR; b2: 2026 market level, was $142 / $197: claude/market-cost-benchmarks.md);
 const WHEEL=["23m","26m","30m","33HT","30m"];

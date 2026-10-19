@@ -145,7 +145,7 @@ function planTick(dt,good){const pl=S.plan;
     else{if(pl.cur&&pl.cur.i!==undefined)pl.i=pl.cur.i;pl.cur=null;pl.i=(pl.i+1)%WHEEL.length;const g=WHEEL[pl.i],c=GCOST[g];nx={g,t:c.mix[0]+rand("plan")*(c.mix[1]-c.mix[0])};}
     pl.left=nx.t;setGrade(nx.g);}
   pl.mktLeft-=dt;
-  if(pl.mktLeft<=0){pl.mktLeft=7*1440;const d=Math.round((rand("plan")*2-1)*15),m=clamp(pl.mkt+d,-30,30),ch=m-pl.mkt;pl.mkt=m;applyUpgrades();
+  if(pl.mktLeft<=0){pl.mktLeft=7*1440;const d=Math.round((rand("plan")*2-1)*25),m=clamp(pl.mkt+d,-50,50),ch=m-pl.mkt;pl.mkt=m;applyUpgrades();
     if(ch)log(`OCC market: ${ch>0?"up":"down"} $${Math.abs(ch)}/t this week`,ch>0?"warn":"ok");}}
 
 initCtrl(); initState();

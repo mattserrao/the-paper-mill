@@ -1974,7 +1974,7 @@ const GRADES={ "23m":{sp:2736,bw:24.55}, "26m":{sp:2433,bw:26.06}, "30m":{sp:222
 // mix = campaign size range in tons; the market-driven planner runs the real grade wheel at roughly the PM3 grade mix.
 const GCOST={"23m":{dlk:0,steam:1,chem:0,brk:1.15,mix:[2600,3600]},"26m":{dlk:0.1,steam:1.02,chem:0,brk:1.25,mix:[80,160]},
   "30m":{dlk:0.25,steam:1.14,chem:10,brk:0.75,mix:[150,350]},"33HT":{dlk:0.55,steam:1.11,chem:75,brk:0.55,mix:[800,1300]}};
-const OCCG={occ11:{p:142,y:0.88},dlk:{p:197,y:0.93}}   // (v6.5: $18/t less: the haul is its own cost now, FR);
+const OCCG={occ11:{p:95,y:0.88},dlk:{p:150,y:0.93}}   // (v6.5: $18/t less: the haul is its own cost now, FR; b2: 2026 market level, was $142 / $197: claude/market-cost-benchmarks.md);
 const WHEEL=["23m","26m","30m","33HT","30m"];
 // seeded random streams (plan, cards) so every player in the same season week sees the same market and the same cards
 function rand(k){const r=S.rng;r[k]=(r[k]+0x6D2B79F5)|0;let t=r[k];t=Math.imul(t^(t>>>15),t|1);t^=t+Math.imul(t^(t>>>7),t|61);return ((t^(t>>>14))>>>0)/4294967296;}
@@ -1988,8 +1988,9 @@ const AUTOKEYS=["inRate","drivers","pulper","pmSp","wdr","loaders","outRate"];
 
 let C,S;
 const BASE={...P};
-const ECON={price:{"23m":743,"26m":763,"30m":783,"33HT":843},   // (v6.5: +$30/t: outbound freight is its own cost now, FR)
-  energy:95,chem:25,wage:45,robot:15,overhead:3400,start:2e6,bankrupt:-1.5e6};
+const ECON={price:{"23m":661,"26m":681,"30m":699,"33HT":760},   // (v6.5: +$30/t: outbound freight is its own cost now, FR; b2: less what the cheaper OCC and energy save per ton, ~$82-84)
+  energy:68,   // (b2: was 95; a recycled mill buying its power, 2026 prices)
+  chem:25,wage:45,robot:15,overhead:3400,start:2e6,bankrupt:-1.5e6};
 const REPAIR={rotortrip:20e3,oscfail:12e3,couchpit:25e3,birdline:200e3,refclash:140e3,steamjoint:90e3,fogfan:35e3,shaft:250e3,dryerfire:400e3,fabric:90e3,felt:45e3,slime:30e3,ragger:15e3,overflow:120e3,chestover:60e3,lwplug:25e3,cscreen:45e3,fscreen:60e3,lcplug:30e3,hdblow:55e3,boiler:60e3,permit:120e3,thkblow:70e3,birdhay:0,wrap:15e3,dye:20e3,flares:0,winderdown:40e3,runner:0,badocc:0,balefire:150e3,fleet:40e3,calloff:10e3,fight:5e3,roof:80e3,highway:0,lightning:200e3,tornado:500e3,beaver:25e3,icedintake:20e3,brownout:10e3,duststorm:25e3,flood:60e3};
 const UGROUPS=[["machine","Paper machine"],["stock","Stock prep"],["yard","Warehouse & logistics"],["maint","Maintenance"],["mgmt","Management"]];
 const MAINT=["birdline","steamjoint","fogfan","shaft","fabric","felt","winderdown","hdblow","lwplug","cscreen","fscreen","lcplug","boiler","thkblow","ragger","overflow","fleet","roof","lightning","icedintake"];
@@ -2049,22 +2050,23 @@ function applyGrade(){const g=(typeof C!=="undefined"&&C&&C.grade)||"23m",c=GCOS
   P.blendP=OCCG.occ11.p*(1-d)+OCCG.dlk.p*d;P.blendY=OCCG.occ11.y*(1-d)+OCCG.dlk.y*d;
   P.steamMul=c.steam;P.chemAdd=c.chem-((S&&S.perk)?S.perk.chem:0);P.gradeBrk=c.brk;}
 function energyCost(){return Math.max(0,ECON.energy*P.steamMul*P.energyMul*leadEnergy()+ECON.chem+P.chemAdd+(P.siteEnergy||0)-(P.refSave||0)-((S&&S.perk&&S.perk.energy)||0)+civEnergy())*(P.costMul||1);}
-/* ---- v6.5 freight: inbound haul per ton of bales unloaded, outbound freight per ton shipped. Each = (base + site) x a
-   weekly diesel index (seeded walk, 0.85-1.15) x weather (normalised so the site's average weather is 1) x detours (flood,
+/* ---- v6.5 freight: inbound haul per ton of bales unloaded, outbound freight per ton shipped. Each = (base + site) x the
+   diesel share of a truck rate (26%; diesel a weekly seeded walk, $2.40-6.80/gal, b2) x weather (normalised so the site's average weather is 1) x detours (flood,
    dust storm), plus card and civics effects (fx.fr, $/t on outbound). Survival's cost multiplier and the leader's fiber factor
    apply to the haul. */
-const FR={inBase:18,outBase:30,outK:1.065,wx:{clear:1,rain:1.03,fog:1.05,snow:1.15},ev:{flood:1.25,duststorm:1.2}};
-const fuelIdx=()=>(S&&S.fuel)||1;
+const FR={inBase:18,outBase:30,outK:1.065,fuelSh:0.26,dieselBase:4.0,wx:{clear:1,rain:1.03,fog:1.05,snow:1.15},ev:{flood:1.25,duststorm:1.2}};
+const fuelIdx=()=>(S&&S.fuel)||1;   // diesel against normal ($4.00/gal = 1)
+const frFuel=()=>1-FR.fuelSh+FR.fuelSh*fuelIdx();   // what diesel does to a truck rate: fuel is ~26% of it (DAT, Sep 2026)
 function frWx(){const w=P.siteWx||[0.55,0.75,0.87],E=w[0]+(w[1]-w[0])*FR.wx.rain+(w[2]-w[1])*FR.wx.fog+(1-w[2])*FR.wx.snow;return (FR.wx[(S&&S.wx)||"clear"]||1)/E;}
 function frEv(){let m=1;if(S&&S.inc)for(const i of S.inc)if(FR.ev[i.id])m=Math.max(m,FR.ev[i.id]);return m;}
 function frFx(){let v=0;if(S&&S.fx)for(const f of S.fx)if(f.fr)v+=f.fr;return v;}
-function frInRate(){return Math.max(0,(FR.inBase+(P.siteHaul||0))*fuelIdx()*frWx()*frEv())*(P.costMul||1)*leadFibre();}   // (the leader's fiber factor, as when the haul was in the OCC price)
-function frOutRate(){return Math.max(0,(FR.outBase+(P.siteFreight||0))*FR.outK*fuelIdx()*frWx()*frEv()+frFx());}
+function frInRate(){return Math.max(0,(FR.inBase+(P.siteHaul||0))*frFuel()*frWx()*frEv())*(P.costMul||1)*leadFibre();}   // (the leader's fiber factor, as when the haul was in the OCC price)
+function frOutRate(){return Math.max(0,(FR.outBase+(P.siteFreight||0))*FR.outK*frFuel()*frWx()*frEv()+frFx());}
 // (outK: trucks ship less in snow and fog, when the rate is highest, so the shipped average ran ~6% under the base; measured on 12 hands-off seasons)
 // the diesel index moves once a game week: a walk that is a fixed function of the run's seed and the week, so the 14
 // prior days (weeks -2 and -1, 11c) lead into the run's own weeks, and seasons replay identically (no stream is drawn)
 function fuelAt(seed,wk){let x=1;for(let w=-3;w<=wk;w++){let h=Math.imul((seed>>>0)^Math.imul(w+101,0x9e3779b1),0x85ebca6b);h^=h>>>13;h=Math.imul(h,0xc2b2ae35);h^=h>>>16;
-  x=clamp(1+(x-1)*0.6+((h>>>0)/4294967296-0.5)*0.24,0.85,1.15);}return x;}
+  x=clamp(1+(x-1)*0.7+((h>>>0)/4294967296-0.5)*0.5,0.6,1.7);}return x;}   // (b2: diesel itself, $2.40-6.80/gal; it rose 68% in the year to Sep 2026)
 function fuelTick(){const wk=Math.floor(S.t/10080)+(S.fuelOff||0);if(S.fuelW===wk)return;S.fuelW=wk;S.fuel=fuelAt(S.fuelSeed!=null?S.fuelSeed:S.seed,wk);}
 function priceOf(g){let v=ECON.price[g]+P.priceAdd;if(g==="33HT"&&P.costMul>1)v+=(ECON.price["33HT"]-ECON.price["23m"])*(P.costMul-1);/* v5.0.5: survival only (costMul is 1 elsewhere) */if(S&&S.perk)v+=S.perk.price[g]||0;if(S&&S.fx)for(const f of S.fx)if(f.price)v+=(f.price[g]||0)+(f.price.all||0);return v;}
 // (v5.2: the id lists are Sets built once; freqMul runs for every upset on every sim step)
@@ -2116,8 +2118,8 @@ const ENVS={
     freq:{permit:0.6,beaver:2,birdhay:2}},
   desert:{name:"Desert flats",short:"Desert",blurb:"A dry, sunny site beside a concrete canal and a solar farm. Power is cheap and the trucks always get through; water is precious and dust gets into everything.",
     pros:["Solar farm next door: energy $12/t cheaper","Dry and clear: trucks almost never slowed by weather","Cheap land: overhead $250/h lower"],
-    cons:["Scarce water: chemicals and water $9/t dearer","Long haul to customers: outbound freight $7/t dearer","Dust: screens and cleaners plug 50% more often","Tinder-dry bale yard: bale fires twice as often"],
-    occ:0,price:-7,energy:-12,wage:0,over:-250,chem:9,wx:[0.88,0.94,0.985],inMul:1,
+    cons:["Scarce water: chemicals and water $9/t dearer","Long haul to customers: outbound freight $27/t dearer","Dust: screens and cleaners plug 50% more often","Tinder-dry bale yard: bale fires twice as often"],
+    occ:0,price:-27,energy:-12,wage:0,over:-250,chem:9,wx:[0.88,0.94,0.985],inMul:1,
     freq:{cscreen:1.5,fscreen:1.5,lwplug:1.5,lcplug:1.5,balefire:2}},
   swamp:{name:"Bayou",short:"Swamp",blurb:"Low, wet ground on a slow bayou. Water and land cost next to nothing and barges bring cheap cardboard, but the humidity, storms and soft roads take their toll.",
     pros:["Endless water: chemicals $5/t cheaper","Cheap land: overhead $190/h lower","Barge cardboard: OCC haul $3/t cheaper"],
@@ -3247,7 +3249,7 @@ function planTick(dt,good){const pl=S.plan;
     else{if(pl.cur&&pl.cur.i!==undefined)pl.i=pl.cur.i;pl.cur=null;pl.i=(pl.i+1)%WHEEL.length;const g=WHEEL[pl.i],c=GCOST[g];nx={g,t:c.mix[0]+rand("plan")*(c.mix[1]-c.mix[0])};}
     pl.left=nx.t;setGrade(nx.g);}
   pl.mktLeft-=dt;
-  if(pl.mktLeft<=0){pl.mktLeft=7*1440;const d=Math.round((rand("plan")*2-1)*15),m=clamp(pl.mkt+d,-30,30),ch=m-pl.mkt;pl.mkt=m;applyUpgrades();
+  if(pl.mktLeft<=0){pl.mktLeft=7*1440;const d=Math.round((rand("plan")*2-1)*25),m=clamp(pl.mkt+d,-50,50),ch=m-pl.mkt;pl.mkt=m;applyUpgrades();
     if(ch)log(`OCC market: ${ch>0?"up":"down"} $${Math.abs(ch)}/t this week`,ch>0?"warn":"ok");}}
 
 initCtrl(); initState();
@@ -3619,7 +3621,7 @@ function knobRead(){const K=S.knob,x=K?K.x:null,g=GRADES[C.grade]||GRADES["23m"]
     mcLvl:69+wob(0.02,2)*3,mcCons:3.2+sw*0.9*wob(0.21,3),agit:knobVal("agit"),
     vac:x?x.vac:30,couchSol:19+((x?x.vac:30)-30)*0.18,pl:x?x.pl:100,pressSol:44+((x?x.pl:100)-100)*0.09,
     edge:K?K.edge:0,gtrav:K?K.gtrav:0,gm:knobVal("gm"),stripes:x?x.st:0,cs:K?K.cs:0,couch:knobVal("couch"),osc:knobVal("osc"),wear:K?K.wear:0,
-    st1:knobVal("st1"),st3,steam:run?38*(K?K.sf:1)*S.pmSpeed/2736:0,boiler:1-(x?x.bs:0)*0.45,moist:run?m+wob(0.13,4)*0.25:0,
+    st1:knobVal("st1"),st3,steam:run?50.5*(K?K.sf:1)*S.pmSpeed/2736:0,boiler:1-(x?x.bs:0)*0.45,moist:run?m+wob(0.13,4)*0.25:0,
     bw:run?bw*(1+sw*0.08*wob(0.21,3))+wob(0.11,5)*0.12:0,draw:knobVal("draw"),tension:run?1.0+(knobVal("draw")-1.5)*0.42:0,
     zones:z.map((v,i)=>m+v*0.35+Math.sin(i*1.7+t*0.01)*0.12),off:K?K.off:0,why:K?K.offWhy:"",F:K&&K.F||{},speed:S.pmSpeed};}
 // DCS / QCS trend history: a reading every 2 sim minutes, 6 hours kept. Read-only on the sim (it never writes S), kept
@@ -12099,9 +12101,9 @@ const PF_TR={
     {t:"Civics meters",u:"0–100",k:"line",s:[["Economy",C_.en,V_("a.civE")],["Labor",C_.lab,V_("a.civL")],["Machinery",C_.bl,V_("a.civM")],["Community",C_.pu,V_("a.civC")]],opt:1}],
   "cat:fiber":[{t:"OCC price and haul",u:"$/t",k:"line",s:[["OCC",C_.occ,V_("a.occp")],["Haul",C_.fi,V_("a.haul")],["Delivered",C_.wh,r=>{const a=hv(r,"a.occp"),b=hv(r,"a.haul");return a==null||b==null?null:a+b;}]]},{t:"Fiber spend",u:"$",k:"bar",s:[["Fiber",C_.occ,V_("c.fiber")]]},{t:"Bales fed",u:"t",k:"bar",s:[["Bales",C_.occ,V_("w.feed")]]},
     {t:"OCC market",u:"$/t vs normal",k:"line",s:[["Market",C_.wh,V_("a.mkt")]]}],
-  "cat:frin":[{t:"Inbound haul",u:"$/t",k:"line",s:[["Haul",C_.fi,V_("a.haul")]]},{t:"Diesel index",u:"× normal",k:"line",s:[["Diesel",C_.wh,V_("a.fuel")]]},
+  "cat:frin":[{t:"Inbound haul",u:"$/t",k:"line",s:[["Haul",C_.fi,V_("a.haul")]]},{t:"Diesel",u:"$/gal",k:"line",s:[["Diesel",C_.wh,r=>{const v=hv(r,"a.fuel");return v==null?null:v*FR.dieselBase;}]]},
     {t:"Inbound freight spend",u:"$",k:"bar",s:[["Freight in",C_.fi,V_("c.frin")]]},{t:"Trucks in",u:"trucks",k:"bar",s:[["Trucks",C_.bl,V_("n.in")]]}],
-  "cat:frout":[{t:"Outbound freight",u:"$/t",k:"line",s:[["Freight",C_.fo,V_("a.frout")]]},{t:"Diesel index",u:"× normal",k:"line",s:[["Diesel",C_.wh,V_("a.fuel")]]},
+  "cat:frout":[{t:"Outbound freight",u:"$/t",k:"line",s:[["Freight",C_.fo,V_("a.frout")]]},{t:"Diesel",u:"$/gal",k:"line",s:[["Diesel",C_.wh,r=>{const v=hv(r,"a.fuel");return v==null?null:v*FR.dieselBase;}]]},
     {t:"Outbound freight spend",u:"$",k:"bar",s:[["Freight out",C_.fo,V_("c.frout")]]},{t:"Paper shipped",u:"t",k:"bar",s:[["Shipped",C_.lab,V_("ship")]]}],
   "cat:energy":[{t:"Energy per ton",u:"$/t",k:"line",s:[["Energy",C_.en,V_("a.energyt")]]},{t:"Energy spend",u:"$",k:"stack",s:[["Steam",C_.en,V_("s.steam")],["Power",C_.bl,V_("s.power")]]},
     {t:"Dryer steam",u:"t/h",k:"line",s:[["Steam",C_.wh,V_("a.steam")]]}],
@@ -12203,7 +12205,7 @@ function pfBreak(D,live){const s=PFUI.sel;const [kind,a,b]=s.split(":"),t=D.made
       if(c==="energy")rows.push(["Now","","hd"],["Energy per ton",money(Math.max(0,energyCost()-pfChemT()))+"/t"],["Grade steam","×"+(P.steamMul||1).toFixed(2)],["Shoe press and APC","×"+(P.energyMul||1).toFixed(2)],P.siteEnergy?["Site",(P.siteEnergy-(P.siteChem||0)>=0?"+":"−")+money(Math.abs(P.siteEnergy-(P.siteChem||0)))+"/t"]:null,cm!==1?["Survival costs","×"+cm.toFixed(2)]:null);
       if(c==="chem")rows.push(["Now","","hd"],["Chemicals and water per ton",money(pfChemT())+"/t"],P.refSave?["Refiner upgrade","−"+money(P.refSave)+"/t"]:null,P.siteChem?["Site",(P.siteChem>=0?"+":"−")+money(Math.abs(P.siteChem))+"/t"]:null,cm!==1?["Survival costs","×"+cm.toFixed(2)]:null);
       if(c==="frin"||c==="frout"){const base=c==="frin"?FR.inBase+(P.siteHaul||0):FR.outBase+(P.siteFreight||0),fx=c==="frout"?frFx():0;
-        rows.push(["Now","","hd"],[c==="frin"?"Haul per ton of bales":"Freight per ton shipped",money(c==="frin"?frInRate():frOutRate())+"/t"],["Site base",money(base)+"/t"],["Diesel index","×"+fuelIdx().toFixed(2)],
+        rows.push(["Now","","hd"],[c==="frin"?"Haul per ton of bales":"Freight per ton shipped",money(c==="frin"?frInRate():frOutRate())+"/t"],["Site base",money(base)+"/t"],["Diesel",`$${(fuelIdx()*FR.dieselBase).toFixed(2)}/gal · rate ×${frFuel().toFixed(2)}`],
           ["Weather",`${(WXN[S.wx]||S.wx||"clear").toLowerCase()} ×${frWx().toFixed(2)}`],frEv()>1?["Detours","×"+frEv().toFixed(2),"bad"]:null,fx?["Deals and events",(fx>0?"+":"−")+money(Math.abs(fx))+"/t",fx>0?"bad":"ok"]:null,
           c==="frin"&&cm!==1?["Survival costs","×"+cm.toFixed(2)]:null);}
       if(c==="labor")rows.push(["Now","","hd"],["Drivers on shift",String(Math.round(C.drivers.v))],["Loaders on shift",String(Math.round(C.loaders.v))],P.robots?["Robot loaders",String(P.robots)]:null);}

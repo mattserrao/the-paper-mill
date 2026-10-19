@@ -10,8 +10,9 @@ const AUTOKEYS=["inRate","drivers","pulper","pmSp","wdr","loaders","outRate"];
 
 let C,S;
 const BASE={...P};
-const ECON={price:{"23m":743,"26m":763,"30m":783,"33HT":843},   // (v6.5: +$30/t: outbound freight is its own cost now, FR)
-  energy:95,chem:25,wage:45,robot:15,overhead:3400,start:2e6,bankrupt:-1.5e6};
+const ECON={price:{"23m":661,"26m":681,"30m":699,"33HT":760},   // (v6.5: +$30/t: outbound freight is its own cost now, FR; b2: less what the cheaper OCC and energy save per ton, ~$82-84)
+  energy:68,   // (b2: was 95; a recycled mill buying its power, 2026 prices)
+  chem:25,wage:45,robot:15,overhead:3400,start:2e6,bankrupt:-1.5e6};
 const REPAIR={rotortrip:20e3,oscfail:12e3,couchpit:25e3,birdline:200e3,refclash:140e3,steamjoint:90e3,fogfan:35e3,shaft:250e3,dryerfire:400e3,fabric:90e3,felt:45e3,slime:30e3,ragger:15e3,overflow:120e3,chestover:60e3,lwplug:25e3,cscreen:45e3,fscreen:60e3,lcplug:30e3,hdblow:55e3,boiler:60e3,permit:120e3,thkblow:70e3,birdhay:0,wrap:15e3,dye:20e3,flares:0,winderdown:40e3,runner:0,badocc:0,balefire:150e3,fleet:40e3,calloff:10e3,fight:5e3,roof:80e3,highway:0,lightning:200e3,tornado:500e3,beaver:25e3,icedintake:20e3,brownout:10e3,duststorm:25e3,flood:60e3};
 const UGROUPS=[["machine","Paper machine"],["stock","Stock prep"],["yard","Warehouse & logistics"],["maint","Maintenance"],["mgmt","Management"]];
 const MAINT=["birdline","steamjoint","fogfan","shaft","fabric","felt","winderdown","hdblow","lwplug","cscreen","fscreen","lcplug","boiler","thkblow","ragger","overflow","fleet","roof","lightning","icedintake"];
@@ -71,22 +72,23 @@ function applyGrade(){const g=(typeof C!=="undefined"&&C&&C.grade)||"23m",c=GCOS
   P.blendP=OCCG.occ11.p*(1-d)+OCCG.dlk.p*d;P.blendY=OCCG.occ11.y*(1-d)+OCCG.dlk.y*d;
   P.steamMul=c.steam;P.chemAdd=c.chem-((S&&S.perk)?S.perk.chem:0);P.gradeBrk=c.brk;}
 function energyCost(){return Math.max(0,ECON.energy*P.steamMul*P.energyMul*leadEnergy()+ECON.chem+P.chemAdd+(P.siteEnergy||0)-(P.refSave||0)-((S&&S.perk&&S.perk.energy)||0)+civEnergy())*(P.costMul||1);}
-/* ---- v6.5 freight: inbound haul per ton of bales unloaded, outbound freight per ton shipped. Each = (base + site) x a
-   weekly diesel index (seeded walk, 0.85-1.15) x weather (normalised so the site's average weather is 1) x detours (flood,
+/* ---- v6.5 freight: inbound haul per ton of bales unloaded, outbound freight per ton shipped. Each = (base + site) x the
+   diesel share of a truck rate (26%; diesel a weekly seeded walk, $2.40-6.80/gal, b2) x weather (normalised so the site's average weather is 1) x detours (flood,
    dust storm), plus card and civics effects (fx.fr, $/t on outbound). Survival's cost multiplier and the leader's fiber factor
    apply to the haul. */
-const FR={inBase:18,outBase:30,outK:1.065,wx:{clear:1,rain:1.03,fog:1.05,snow:1.15},ev:{flood:1.25,duststorm:1.2}};
-const fuelIdx=()=>(S&&S.fuel)||1;
+const FR={inBase:18,outBase:30,outK:1.065,fuelSh:0.26,dieselBase:4.0,wx:{clear:1,rain:1.03,fog:1.05,snow:1.15},ev:{flood:1.25,duststorm:1.2}};
+const fuelIdx=()=>(S&&S.fuel)||1;   // diesel against normal ($4.00/gal = 1)
+const frFuel=()=>1-FR.fuelSh+FR.fuelSh*fuelIdx();   // what diesel does to a truck rate: fuel is ~26% of it (DAT, Sep 2026)
 function frWx(){const w=P.siteWx||[0.55,0.75,0.87],E=w[0]+(w[1]-w[0])*FR.wx.rain+(w[2]-w[1])*FR.wx.fog+(1-w[2])*FR.wx.snow;return (FR.wx[(S&&S.wx)||"clear"]||1)/E;}
 function frEv(){let m=1;if(S&&S.inc)for(const i of S.inc)if(FR.ev[i.id])m=Math.max(m,FR.ev[i.id]);return m;}
 function frFx(){let v=0;if(S&&S.fx)for(const f of S.fx)if(f.fr)v+=f.fr;return v;}
-function frInRate(){return Math.max(0,(FR.inBase+(P.siteHaul||0))*fuelIdx()*frWx()*frEv())*(P.costMul||1)*leadFibre();}   // (the leader's fiber factor, as when the haul was in the OCC price)
-function frOutRate(){return Math.max(0,(FR.outBase+(P.siteFreight||0))*FR.outK*fuelIdx()*frWx()*frEv()+frFx());}
+function frInRate(){return Math.max(0,(FR.inBase+(P.siteHaul||0))*frFuel()*frWx()*frEv())*(P.costMul||1)*leadFibre();}   // (the leader's fiber factor, as when the haul was in the OCC price)
+function frOutRate(){return Math.max(0,(FR.outBase+(P.siteFreight||0))*FR.outK*frFuel()*frWx()*frEv()+frFx());}
 // (outK: trucks ship less in snow and fog, when the rate is highest, so the shipped average ran ~6% under the base; measured on 12 hands-off seasons)
 // the diesel index moves once a game week: a walk that is a fixed function of the run's seed and the week, so the 14
 // prior days (weeks -2 and -1, 11c) lead into the run's own weeks, and seasons replay identically (no stream is drawn)
 function fuelAt(seed,wk){let x=1;for(let w=-3;w<=wk;w++){let h=Math.imul((seed>>>0)^Math.imul(w+101,0x9e3779b1),0x85ebca6b);h^=h>>>13;h=Math.imul(h,0xc2b2ae35);h^=h>>>16;
-  x=clamp(1+(x-1)*0.6+((h>>>0)/4294967296-0.5)*0.24,0.85,1.15);}return x;}
+  x=clamp(1+(x-1)*0.7+((h>>>0)/4294967296-0.5)*0.5,0.6,1.7);}return x;}   // (b2: diesel itself, $2.40-6.80/gal; it rose 68% in the year to Sep 2026)
 function fuelTick(){const wk=Math.floor(S.t/10080)+(S.fuelOff||0);if(S.fuelW===wk)return;S.fuelW=wk;S.fuel=fuelAt(S.fuelSeed!=null?S.fuelSeed:S.seed,wk);}
 function priceOf(g){let v=ECON.price[g]+P.priceAdd;if(g==="33HT"&&P.costMul>1)v+=(ECON.price["33HT"]-ECON.price["23m"])*(P.costMul-1);/* v5.0.5: survival only (costMul is 1 elsewhere) */if(S&&S.perk)v+=S.perk.price[g]||0;if(S&&S.fx)for(const f of S.fx)if(f.price)v+=(f.price[g]||0)+(f.price.all||0);return v;}
 // (v5.2: the id lists are Sets built once; freqMul runs for every upset on every sim step)
