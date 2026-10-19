@@ -2051,14 +2051,16 @@ function applyGrade(){const g=(typeof C!=="undefined"&&C&&C.grade)||"23m",c=GCOS
 function energyCost(){return Math.max(0,ECON.energy*P.steamMul*P.energyMul*leadEnergy()+ECON.chem+P.chemAdd+(P.siteEnergy||0)-(P.refSave||0)-((S&&S.perk&&S.perk.energy)||0)+civEnergy())*(P.costMul||1);}
 /* ---- v6.5 freight: inbound haul per ton of bales unloaded, outbound freight per ton shipped. Each = (base + site) x a
    weekly diesel index (seeded walk, 0.85-1.15) x weather (normalised so the site's average weather is 1) x detours (flood,
-   dust storm), plus card and civics effects (fx.fr, $/t on outbound). Survival's cost multiplier applies to the haul. */
-const FR={inBase:18,outBase:30,wx:{clear:1,rain:1.03,fog:1.05,snow:1.15},ev:{flood:1.25,duststorm:1.2}};
+   dust storm), plus card and civics effects (fx.fr, $/t on outbound). Survival's cost multiplier and the leader's fiber factor
+   apply to the haul. */
+const FR={inBase:18,outBase:30,outK:1.065,wx:{clear:1,rain:1.03,fog:1.05,snow:1.15},ev:{flood:1.25,duststorm:1.2}};
 const fuelIdx=()=>(S&&S.fuel)||1;
 function frWx(){const w=P.siteWx||[0.55,0.75,0.87],E=w[0]+(w[1]-w[0])*FR.wx.rain+(w[2]-w[1])*FR.wx.fog+(1-w[2])*FR.wx.snow;return (FR.wx[(S&&S.wx)||"clear"]||1)/E;}
 function frEv(){let m=1;if(S&&S.inc)for(const i of S.inc)if(FR.ev[i.id])m=Math.max(m,FR.ev[i.id]);return m;}
 function frFx(){let v=0;if(S&&S.fx)for(const f of S.fx)if(f.fr)v+=f.fr;return v;}
-function frInRate(){return Math.max(0,(FR.inBase+(P.siteHaul||0))*fuelIdx()*frWx()*frEv())*(P.costMul||1);}
-function frOutRate(){return Math.max(0,(FR.outBase+(P.siteFreight||0))*fuelIdx()*frWx()*frEv()+frFx());}
+function frInRate(){return Math.max(0,(FR.inBase+(P.siteHaul||0))*fuelIdx()*frWx()*frEv())*(P.costMul||1)*leadFibre();}   // (the leader's fiber factor, as when the haul was in the OCC price)
+function frOutRate(){return Math.max(0,(FR.outBase+(P.siteFreight||0))*FR.outK*fuelIdx()*frWx()*frEv()+frFx());}
+// (outK: trucks ship less in snow and fog, when the rate is highest, so the shipped average ran ~6% under the base; measured on 12 hands-off seasons)
 // the diesel index moves once a game week: a walk that is a fixed function of the run's seed and the week, so the 14
 // prior days (weeks -2 and -1, 11c) lead into the run's own weeks, and seasons replay identically (no stream is drawn)
 function fuelAt(seed,wk){let x=1;for(let w=-3;w<=wk;w++){let h=Math.imul((seed>>>0)^Math.imul(w+101,0x9e3779b1),0x85ebca6b);h^=h>>>13;h=Math.imul(h,0xc2b2ae35);h^=h>>>16;
