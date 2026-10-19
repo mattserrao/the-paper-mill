@@ -53,12 +53,16 @@ def catch_round(pg, area, ids, how):
         pg.wait_for_timeout(300); got.append(xy)
     return got
 
+# the tells' tuning (TELL in src/js/04b-tells.js, v6.5 balance): lead time in days, a survival wave's step, the floor,
+# and a caught tell's planned repair as a share of the bill. Update these with TELL.
+T_LEAD, T_STEP, T_MIN, T_CUT = 3.5, 0.12, 1, 0.1
+
 with sync_playwright() as pw:
     # ================= SEASON =================
     b, pg, errs = boot(pw, "season")
     pg.evaluate(CLR)
     ok("season: tells on", pg.evaluate("()=>__PM.tell.on()"))
-    ok("season: lead 1.5 days", pg.evaluate("()=>__PM.tell.lead()") == 2160)
+    ok(f"season: lead {T_LEAD} days", pg.evaluate("()=>__PM.tell.lead()") == T_LEAD * 1440)
     try: pg.wait_for_function("()=>!document.getElementById('v2round').hidden", timeout=15000)
     except Exception: pass
     ok("round button shown", pg.evaluate("()=>!document.getElementById('v2round').hidden"))
@@ -74,7 +78,7 @@ with sync_playwright() as pw:
     late = [f for f in r["fired"] if f[3] - f[2] > 600]
     ok("pre-roll: fired at its due time (or after a block)", all(f[3] >= f[2] for f in r["fired"]), f"{r['fired'][:4]}; held back >10h: {len(late)}")
     leads = sorted(set(f[2] - f[1] for f in r["fired"] if f[1] > 0))
-    ok("pre-roll: lead time is 1.5 days for dice-rolled ones", any(abs(l - 2160) < 1 for l in leads), leads[:6])
+    ok(f"pre-roll: lead time is {T_LEAD} days for dice-rolled ones", any(abs(l - T_LEAD * 1440) < 1 for l in leads), leads[:6])
     # once a day
     r = pg.evaluate("""()=>{const P=__PM,S=P.S;S.tell.day=-1;const a=P.tell.start("util"),b=P.tell.start("wet"),c=P.tell.can();return [a,b,c];}""")
     ok("round: one a day", r == [True, False, False], r)
@@ -101,7 +105,7 @@ with sync_playwright() as pw:
     bill = pg.evaluate("()=>{return 45e3*(function(){return 1})()}")
     rep_cut = after["rep"] - before["rep"]
     ok("catch (click): caught and out of the queue", after["n"] == before["n"] + 1 and "felt" not in after["q"], after)
-    ok("catch: planned repair is 40% of the bill", abs(rep_cut / (rep_cut + after["saved"]) - 0.4) < 0.01 if rep_cut > 0 else False, f"paid {rep_cut:.0f}, saved {after['saved']:.0f}")
+    ok(f"catch: planned repair is {T_CUT:.0%} of the bill", abs(rep_cut / (rep_cut + after["saved"]) - T_CUT) < 0.01 if rep_cut > 0 else False, f"paid {rep_cut:.0f}, saved {after['saved']:.0f}")
     ok("catch: Machinery +3 and Labor +1", abs(after["M"] - before["M"] - 3) < 0.6 and abs(after["L"] - before["L"] - 1) < 0.6, f"M {after['M']-before['M']:.2f} L {after['L']-before['L']:.2f}")
     ok("catch: logged and bannered", pg.evaluate("()=>__PM.S.feed.some(f=>f.text.startsWith('Caught early:'))"))
     pg.evaluate("()=>__PM.G3.tellSeek(1)"); pg.wait_for_function("()=>!__PM.G3.tellRoundOn()", timeout=30000)
@@ -192,7 +196,8 @@ with sync_playwright() as pw:
     # ================= SURVIVAL =================
     b, pg, errs = boot(pw, "surv")
     r = pg.evaluate("()=>{const P=__PM,S=P.S,o=S.outg.k,a=P.tell.lead();S.outg.k=6;const b=P.tell.lead();S.outg.k=12;const c=P.tell.lead();S.outg.k=o;return [a,b,c]}")
-    ok("survival: lead 1.5 d at wave 1, 1 d from wave 6", r == [2160, 1440, 1440], r)
+    want = [round(max(T_MIN, T_LEAD - T_STEP * (w - 1)) * 1440, 1) for w in (1, 6, 12)]
+    ok(f"survival: lead {T_LEAD} d at wave 1, less {T_STEP} d a wave (at least {T_MIN} d)", [round(x, 1) for x in r] == want, (r, want))
     pg.evaluate(STEPTO, 3 * 1440 + 5)
     ok("survival: the prep checklist opens before outage 1", pg.evaluate("()=>!!__PM.tell.prepFor()"))
     ok("survival: no page errors", not errs, errs[:3]); b.close()

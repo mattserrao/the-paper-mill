@@ -1,8 +1,8 @@
 # Changelog
 
 
-## v6.5.7-t1 (2026-10-19): winder pass (test)
-Built on test/v6.5.7-winder.
+## v6.5.7 (2026-10-19): winder pass
+Built on test/v6.5.7-winder (as 6.5.7-t1), merged into main.
 - **Reel storage: four stands.** `P.storeReels` was 1, so only the first of the four storage stands ever held a reel and
   the machine backed up ("down: winder backed up") with three stands empty. It's 4 now: when the winder is down the
   crane parks full reels on all four stands before the machine holds back, and feeds them to the unwind one by one once
@@ -28,6 +28,12 @@ Built on test/v6.5.7-winder.
   and UTIL shows a STEAM VENTING alarm.
 - Help glossary: winder sets and storage, sheet-break steam, tied rolls.
 - `tools/windercheck.py`: storage fill and drain against the stands, pairs, tied rolls, steam on a break.
+- Out-of-date tests brought up to date: `tellcheck.py` (lead time 3.5 d, survival step 0.12 d a wave, planned repair 10%,
+  from the v6.5 balance; now one set of constants at the top), `dcscheck.py` (box counts after the v6.5.4/v6.5.6 DCS
+  changes), `dryercheck.py` (8% moisture setpoint), `qualcheck.py` ("beater paper isn't counted as good paper" compared
+  two runs that differ from launch to launch and flaked on main too; it now checks that nothing is booked as good while
+  the spec is out). Smoke, civics, DCS, dryer, water, quality, save, knobs, process flow, tells, determinism and
+  windercheck all pass.
 
 ## v6.5.6 (2026-10-19): mass balance
 Built on test/v6.5.6-balance (as 6.5.6-t1), merged into main.

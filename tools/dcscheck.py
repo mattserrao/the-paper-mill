@@ -23,7 +23,7 @@ with sync_playwright() as pw:
     pg.evaluate("()=>document.getElementById('v2go').click()"); pick_leader(pg); pg.wait_for_timeout(500)
     pg.evaluate("()=>{__PM.setRunning(false);if(__PM.S.cards)__PM.S.cards.open=null;for(let i=0;i<4*120;i++)__PM.step(0.25)}")
     steps = lambda m: pg.evaluate("m=>{for(let i=0;i<m*4;i++){if(__PM.S.cards)__PM.S.cards.open=null;__PM.step(0.25)}}", m)
-    want = {"SPOT": 15, "WET": 7, "DET": 8, "UTIL": 6}
+    want = {"SPOT": 16, "WET": 7, "DET": 6, "UTIL": 8}   # (v6.5.4: boiler and power moved from DET to UTIL; v6.5.6: the white water chest on SPOT)
     for a, n in want.items():
         pg.evaluate(f"()=>__PM.G3.openStation('{a}','dcs')"); pg.wait_for_timeout(400)
         st = pg.evaluate("()=>{const o=document.getElementById('dcsOv');const tags=[...o.querySelectorAll('[data-tag]')].map(t=>t.textContent);return {eq:o.querySelectorAll('.mimic .pg-bg').length,tags:tags.length,bad:tags.filter(t=>/undefined|NaN|^–?$/.test(t)&&t!=='–')}}")
