@@ -1,6 +1,18 @@
 # Changelog
 
 
+## v6.5.0-b4 (2026-10-19): DCS pictograms (test branch test/v6.5-twin)
+- Every box on SPOT, WET, DET and UTIL is now drawn as its equipment in the classic coloured DCS style: steel
+  vessels and machines, brown stock, blue water, cream paper, green motors (conveyor with bales, pulper tub with rotor,
+  ragger drum, junk hopper, HD cleaner cone, pressure screens with baskets, cleaner banks (2 rows with the upgrade),
+  disk thickener, double-disc refiners, chests, dye tote and pump, fan pump, headbox, forming table with foils, couch
+  roll, felt loop, press nip (shoe once bought), fog fan, open draw, dryer cans, reel spool, winder, roll conveyor
+  (filled by the rolls on it), grid pylon, boiler, river intake, water tower, mill, clarifier, outfall, landfill).
+- States: grey outline when normal; amber when warning (cleaner ΔP high, chest level high, junk OCC, reel held,
+  winder blocked or hayout, effluent TSS high); red when tripped by an upset or a sheet break at that spot; faded with a
+  dashed edge when stopped by the operator or idle. Static: nothing moves; vessels show their real level.
+- The name sits small along the bottom of each pictogram (hover for a tooltip); tags are where they were.
+
 ## v6.5.0-b3 (2026-10-19): DCS expansion (test branch test/v6.5-twin)
 From claude/dcs-expansion-spec.md (decided item by item).
 - **SPOT** now draws the whole line: bale conveyor, pulper (ragger and junk trap above it), HD cleaner, coarse screen,

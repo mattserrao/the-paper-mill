@@ -26,7 +26,7 @@ with sync_playwright() as pw:
     want = {"SPOT": 15, "WET": 7, "DET": 8, "UTIL": 6}
     for a, n in want.items():
         pg.evaluate(f"()=>__PM.G3.openStation('{a}','dcs')"); pg.wait_for_timeout(400)
-        st = pg.evaluate("()=>{const o=document.getElementById('dcsOv');const tags=[...o.querySelectorAll('[data-tag]')].map(t=>t.textContent);return {eq:o.querySelectorAll('.mimic rect').length,tags:tags.length,bad:tags.filter(t=>/undefined|NaN|^–?$/.test(t)&&t!=='–')}}")
+        st = pg.evaluate("()=>{const o=document.getElementById('dcsOv');const tags=[...o.querySelectorAll('[data-tag]')].map(t=>t.textContent);return {eq:o.querySelectorAll('.mimic .pg-bg').length,tags:tags.length,bad:tags.filter(t=>/undefined|NaN|^–?$/.test(t)&&t!=='–')}}")
         ok(f"{a}: {n} boxes drawn", st["eq"] == n, str(st["eq"]))
         ok(f"{a}: every tag has a value", st["tags"] >= 6 and not st["bad"], str(st))
         if shot: pg.screenshot(path=f"{shot}-{a}.png", full_page=False)

@@ -131,3 +131,89 @@ function dcsSync(){const o=$("dcsOv");if(!o||o.hidden||!KUI.st)return;const a=KU
     row.querySelector("[data-pp]").disabled=m!=="manual"||S.zen;const t=`ΔP ${Math.round(dp)} kPa · plugs at ${PURGE.trip[k]}`+(m==="manual"?" · purge before it plugs":""),s=row.querySelector("[data-dps]");if(s.textContent!==t)s.textContent=t;
     row.classList.toggle("bad",dp>PURGE.base[k]+(PURGE.trip[k]-PURGE.base[k])*0.6);});}
 G3.dcs={motSet,purgeSet,purgeNow,motStatus,dcsArea};   // (tests: tools/dcscheck.py)
+
+/* ---- v6.5 b4 pictograms: each box is drawn as its equipment, in the classic coloured DCS style (steel vessels, blue
+   water, brown stock, cream paper). Grey outline when normal; colour only when it isn't: amber = warning, red = tripped
+   or down by an upset, faded = stopped by the operator or idle. Static (no motion); vessels show their real level. The
+   name sits small along the bottom of the box, so the tags keep their places. ---- */
+const PG_ST=s=>({off:"st-off",trip:"st-trip",warn:"st-warn"})[s]||"st-ok";
+const stM=id=>{const s=motStatus(id);return s==="off"?"off":s==="trip"?"trip":"ok";};
+const stI=(...ids)=>ids.some(dcsOn)?"trip":"ok";
+const stDp=k=>purgeDp(k)>PURGE.base[k]+(PURGE.trip[k]-PURGE.base[k])*0.6?"warn":"ok";
+const stBrk=w=>S.pm==="break"&&S.brkType===w?"trip":"ok";
+const or=(...s)=>s.includes("trip")?"trip":s.includes("off")?"off":s.includes("warn")?"warn":"ok";
+// drawing helpers: (x,y,w,h) is the drawing area (the box less the name strip)
+const P_={
+  tank:(x,y,w,h,lv,media)=>{const tw=Math.min(w*0.62,h*1.1),tx=x+(w-tw)/2,r=tw/2,ry=Math.min(5,h*0.12);
+    return `<path class="pe pg-steel" d="M${tx} ${y+ry} V${y+h-ry} A${r} ${ry} 0 0 0 ${tx+tw} ${y+h-ry} V${y+ry} A${r} ${ry} 0 0 0 ${tx} ${y+ry}Z"/>`+
+      `<rect class="pg-${media||"stock"}" data-lv="${lv}" x="${tx+2}" y="${y+ry}" width="${tw-4}" height="${h-2*ry}" data-y0="${y+ry}" data-h0="${h-2*ry}"/>`+
+      `<ellipse class="pe pg-top" cx="${x+w/2}" cy="${y+ry}" rx="${r}" ry="${ry}"/>`;},
+  pump:(cx,cy,r)=>`<circle class="pe pg-motor" cx="${cx}" cy="${cy}" r="${r}"/><path class="pg-mark" d="M${cx-r*0.45} ${cy-r*0.55} L${cx+r*0.6} ${cy} L${cx-r*0.45} ${cy+r*0.55}Z"/>`,
+  motor:(x,y,w,h)=>`<rect class="pe pg-motor" x="${x}" y="${y}" width="${w}" height="${h}" rx="2"/><line class="pg-fin" x1="${x+w*0.3}" y1="${y+1}" x2="${x+w*0.3}" y2="${y+h-1}"/><line class="pg-fin" x1="${x+w*0.6}" y1="${y+1}" x2="${x+w*0.6}" y2="${y+h-1}"/>`,
+  roll:(cx,cy,r,cls)=>`<circle class="pe ${cls||"pg-steel"}" cx="${cx}" cy="${cy}" r="${r}"/><circle class="pg-hub" cx="${cx}" cy="${cy}" r="${Math.max(1,r*0.25)}"/>`};
+const PIC={
+  conveyor:(x,y,w,h)=>{const x0=x+4,y0=y+h-4,x1=x+w-6,y1=y+4;let s=`<path class="pe pg-belt" d="M${x0} ${y0} L${x1} ${y1}"/>`+P_.roll(x0,y0,3)+P_.roll(x1,y1,3);
+    for(let k=0;k<3;k++){const t=0.2+k*0.28,bx=x0+(x1-x0)*t,by=y0+(y1-y0)*t;s+=`<rect class="pe pg-bale" x="${bx-5}" y="${by-9}" width="10" height="8" transform="rotate(${Math.atan2(y1-y0,x1-x0)*57.3} ${bx} ${by})"/>`;}return s;},
+  pulper:(x,y,w,h,lv)=>{const t=y+2,b=y+h-8,l=x+w*0.15,r=x+w*0.85;return `<path class="pe pg-steel" d="M${l} ${t} L${l+6} ${b} H${r-6} L${r} ${t}"/>`+
+      `<path class="pg-stock" data-lvp="${lv}" d="M${l+3} ${t+(b-t)*0.4} L${l+7} ${b-2} H${r-7} L${r-3} ${t+(b-t)*0.4}Z"/>`+`<path class="pg-mark" d="M${x+w/2-6} ${b-5} l6 -4 l6 4"/>`+P_.motor(x+w/2-7,b+1,14,6);},
+  winch:(x,y,w,h)=>P_.roll(x+w/2,y+h*0.45,Math.min(w,h)*0.32)+`<path class="pe pg-rope" d="M${x+w/2+Math.min(w,h)*0.32} ${y+h*0.45} V${y+h}"/>`,
+  hopper:(x,y,w,h)=>`<path class="pe pg-steel" d="M${x+w*0.2} ${y+1} H${x+w*0.8} L${x+w*0.58} ${y+h-1} H${x+w*0.42}Z"/>`,
+  cyclone:(x,y,w,h)=>{const cx=x+w/2,cw=Math.min(w*0.32,h*0.5);return `<path class="pe pg-steel" d="M${cx-cw/2} ${y+1} H${cx+cw/2} V${y+h*0.42} L${cx+2} ${y+h-1} H${cx-2} L${cx-cw/2} ${y+h*0.42}Z"/><path class="pe pg-pipe" d="M${cx-cw/2-8} ${y+5} H${cx-cw/2}"/>`;},
+  screen:(x,y,w,h)=>{const cx=x+w/2,cw=Math.min(w*0.34,h*0.9);return `<rect class="pe pg-steel" x="${cx-cw/2}" y="${y+1}" width="${cw}" height="${h-8}" rx="4"/><rect class="pg-basket" x="${cx-cw/2+4}" y="${y+5}" width="${cw-8}" height="${h-16}"/>`+P_.motor(cx-6,y+h-7,12,6);},
+  cleaners:(x,y,w,h,rows)=>{let s="";const n=6,dw=w*0.7/n,x0=x+w*0.15;rows=rows||1;const rh=(h-2)/rows;
+    for(let r=0;r<rows;r++)for(let k=0;k<n;k++){const cx=x0+dw*(k+0.5),t=y+1+r*rh;s+=`<path class="pe pg-steel" d="M${cx-dw*0.35} ${t} H${cx+dw*0.35} L${cx+0.8} ${t+rh-2} H${cx-0.8}Z"/>`;}
+    return s+`<path class="pe pg-pipe" d="M${x+w*0.1} ${y+3} H${x+w*0.9}"/>`;},
+  thickener:(x,y,w,h)=>{let s=`<rect class="pe pg-steel" x="${x+w*0.1}" y="${y+h*0.3}" width="${w*0.8}" height="${h*0.65}" rx="5"/>`;
+    for(let k=0;k<5;k++)s+=`<ellipse class="pe pg-disk" cx="${x+w*0.2+k*w*0.15}" cy="${y+h*0.45}" rx="3" ry="${h*0.42}"/>`;return s+`<path class="pg-mark2" d="M${x+w*0.12} ${y+h*0.45} H${x+w*0.88}"/>`;},
+  refiner:(x,y,w,h)=>{const cy=y+h/2;return `<rect class="pe pg-steel" x="${x+w*0.18}" y="${cy-h*0.42}" width="${w*0.34}" height="${h*0.84}" rx="3"/><rect class="pg-disk" x="${x+w*0.31}" y="${cy-h*0.36}" width="3" height="${h*0.72}"/><rect class="pg-disk" x="${x+w*0.37}" y="${cy-h*0.36}" width="3" height="${h*0.72}"/>`+
+    `<line class="pe pg-pipe" x1="${x+w*0.52}" y1="${cy}" x2="${x+w*0.6}" y2="${cy}"/>`+P_.motor(x+w*0.6,cy-h*0.3,w*0.24,h*0.6);},
+  drum:(x,y,w,h)=>{const dw=Math.min(w*0.32,h*1.1);return `<rect class="pe pg-dye" x="${x+w*0.2}" y="${y+1}" width="${dw}" height="${h-2}" rx="3"/>`+P_.pump(x+w*0.72,y+h/2,Math.min(h*0.42,7));},
+  pumpBox:(x,y,w,h)=>P_.pump(x+w*0.38,y+h/2,Math.min(h*0.42,13))+P_.motor(x+w*0.38+Math.min(h*0.42,13)+3,y+h/2-5,w*0.22,10),
+  headbox:(x,y,w,h)=>`<path class="pe pg-steel" d="M${x+6} ${y+3} H${x+w*0.62} L${x+w-6} ${y+h*0.55} L${x+w-6} ${y+h*0.7} L${x+w*0.62} ${y+h-3} H${x+6}Z"/><path class="pg-water2" d="M${x+w-6} ${y+h*0.62} H${x+w}"/>`,
+  table:(x,y,w,h)=>{let s=`<path class="pe pg-wire" d="M${x+6} ${y+h*0.35} H${x+w-6}"/>`+P_.roll(x+6,y+h*0.35+3,4)+P_.roll(x+w-6,y+h*0.35+3,4);
+    for(let k=1;k<9;k++)s+=`<path class="pg-foil" d="M${x+6+k*(w-12)/9-4} ${y+h*0.35+3} h8 l-4 4z"/>`;return s;},
+  roll1:(x,y,w,h)=>P_.roll(x+w/2,y+h/2,Math.min(w,h)*0.42)+`<path class="pe pg-steel" d="M${x+w/2-6} ${y+h-2} h12 v-4 h-12z"/>`,
+  felt:(x,y,w,h)=>{const r=Math.min(h*0.22,7);return `<rect class="pe pg-felt" x="${x+r}" y="${y+2}" width="${w-2*r}" height="${h-4}" rx="${r}" fill-opacity="0"/>`+P_.roll(x+r+2,y+2+r,r,"pg-steel")+P_.roll(x+w-r-2,y+2+r,r)+P_.roll(x+w/2,y+h-2-r,r);},
+  press:(x,y,w,h)=>{const r=Math.min(w*0.2,h*0.24),cx=x+w/2;return P_.roll(cx,y+h/2-r,r)+(LV("shoe")?`<path class="pe pg-steel" d="M${cx-r*1.4} ${y+h/2} Q${cx} ${y+h/2+r*0.5} ${cx+r*1.4} ${y+h/2} V${y+h/2+r*1.2} H${cx-r*1.4}Z"/>`:P_.roll(cx,y+h/2+r,r));},
+  fan:(x,y,w,h)=>{const cx=x+w*0.3,cy=y+h/2,r=Math.min(h*0.45,10);let s=`<circle class="pe pg-steel" cx="${cx}" cy="${cy}" r="${r}"/>`;for(let k=0;k<3;k++){const a=k*2.094;s+=`<path class="pg-mark" d="M${cx} ${cy} L${cx+Math.cos(a)*r*0.9} ${cy+Math.sin(a)*r*0.9} L${cx+Math.cos(a+0.6)*r*0.8} ${cy+Math.sin(a+0.6)*r*0.8}Z"/>`;}
+    return s+`<path class="pe pg-pipe" d="M${cx+r} ${cy} H${x+w-6} V${y+2}"/>`;},
+  draw:(x,y,w,h)=>P_.roll(x+w*0.2,y+h*0.6,6)+P_.roll(x+w*0.8,y+h*0.4,6)+`<path class="pg-sheet" d="M${x+w*0.2} ${y+h*0.6-6} L${x+w*0.8} ${y+h*0.4-6}"/>`,
+  dryers:(x,y,w,h,n)=>{let s="";n=n||4;const r=Math.min((w-12)/(n*2.3),h*0.2),st=(w-12-2*r)/(n-0.5);
+    for(let k=0;k<n;k++){const cx=x+6+r+k*st;s+=P_.roll(cx,y+h*0.3,r)+P_.roll(cx+st/2,y+h*0.72,r);}
+    return `<rect class="pe pg-hood" x="${x+2}" y="${y+1}" width="${w-4}" height="${h-2}" rx="4"/>`+s;},
+  reel:(x,y,w,h)=>P_.roll(x+w*0.3,y+h*0.62,Math.min(h*0.22,8))+`<circle class="pe pg-paper" data-spool="1" cx="${x+w*0.65}" cy="${y+h*0.42}" r="${Math.min(h*0.38,w*0.3)}"/><circle class="pg-hub" cx="${x+w*0.65}" cy="${y+h*0.42}" r="2"/>`,
+  winder:(x,y,w,h)=>P_.roll(x+w*0.36,y+h*0.72,Math.min(h*0.2,7))+P_.roll(x+w*0.64,y+h*0.72,Math.min(h*0.2,7))+`<circle class="pe pg-paper" cx="${x+w/2}" cy="${y+h*0.38}" r="${Math.min(h*0.3,10)}"/>`,
+  rollconv:(x,y,w,h)=>{let s=`<path class="pe pg-belt" d="M${x+4} ${y+h-3} H${x+w-4}"/>`;const n=Math.round(S.conv||0);for(let k=0;k<3;k++)s+=`<circle class="pe ${k<n?"pg-paper":"pg-empty"}" cx="${x+w*0.25+k*w*0.25}" cy="${y+h-3-Math.min(h*0.38,7)}" r="${Math.min(h*0.38,7)}"/>`;return s;},
+  grid:(x,y,w,h)=>{const cx=x+w*0.32;return `<path class="pe pg-pylon" d="M${cx-6} ${y+h-1} L${cx} ${y+2} L${cx+6} ${y+h-1} M${cx-5} ${y+h*0.35} H${cx+5} M${cx-3.5} ${y+h*0.6} H${cx+3.5}"/><path class="pg-bolt" d="M${x+w*0.68} ${y+2} l-6 ${h*0.5} h5 l-4 ${h*0.45} l9 -${h*0.6} h-5z"/>`;},
+  boiler:(x,y,w,h)=>`<rect class="pe pg-steel" x="${x+w*0.15}" y="${y+2}" width="${w*0.5}" height="${h-4}" rx="4"/><path class="pg-flame" d="M${x+w*0.4} ${y+h-4} q-6 -6 0 -${h*0.55} q6 ${h*0.3} 0 ${h*0.55}z"/><path class="pe pg-pipe" d="M${x+w*0.65} ${y+6} H${x+w-6}"/>`,
+  intake:(x,y,w,h)=>`<path class="pg-water2" d="M${x+4} ${y+h*0.7} q6 -4 12 0 t12 0 t12 0 t12 0"/><path class="pe pg-pipe" d="M${x+w*0.35} ${y+h*0.7} V${y+h*0.3} H${x+w-6}"/>`+P_.pump(x+w*0.62,y+h*0.3,Math.min(h*0.22,8)),
+  tower:(x,y,w,h,lv)=>P_.tank(x+w*0.2,y,w*0.6,h*0.6,lv,"water")+`<path class="pe pg-pylon" d="M${x+w*0.38} ${y+h*0.6} L${x+w*0.32} ${y+h} M${x+w*0.62} ${y+h*0.6} L${x+w*0.68} ${y+h}"/>`,
+  mill:(x,y,w,h)=>`<path class="pe pg-steel" d="M${x+w*0.1} ${y+h-1} V${y+h*0.4} L${x+w*0.3} ${y+h*0.15} V${y+h*0.4} L${x+w*0.5} ${y+h*0.15} V${y+h*0.4} L${x+w*0.7} ${y+h*0.15} V${y+h*0.4} H${x+w*0.9} V${y+h-1}Z"/><rect class="pe pg-steel" x="${x+w*0.78}" y="${y+1}" width="5" height="${h*0.45}"/>`,
+  clarifier:(x,y,w,h)=>`<ellipse class="pe pg-steel" cx="${x+w/2}" cy="${y+h/2}" rx="${Math.min(w*0.32,h*0.9)}" ry="${h*0.42}"/><ellipse class="pg-water" cx="${x+w/2}" cy="${y+h/2}" rx="${Math.min(w*0.32,h*0.9)-4}" ry="${h*0.42-3}"/><path class="pg-mark2" d="M${x+w/2} ${y+h/2} L${x+w/2+Math.min(w*0.3,h*0.8)} ${y+h/2-3}"/>`,
+  outfall:(x,y,w,h)=>`<path class="pe pg-pipe" d="M${x+4} ${y+h*0.3} H${x+w*0.55} V${y+h*0.55}"/><path class="pg-water2" d="M${x+w*0.3} ${y+h*0.75} q6 -4 12 0 t12 0 t12 0 t12 0"/>`,
+  landfill:(x,y,w,h)=>`<path class="pe pg-stock" d="M${x+w*0.12} ${y+h-1} Q${x+w*0.5} ${y-2} ${x+w*0.88} ${y+h-1}Z"/>`};
+// per screen, in the order of MIMIC[a].eq: [pictogram, state, extra]
+const PGX={
+  SPOT:[["conveyor",()=>stM("conv")],["pulper",()=>or(stI("overflow","rotortrip","flares"),G3.dcs&&knobRead().pulpLvl>92?"warn":"ok",motStatus("ragger")==="off"?"off":"ok"),"pulp"],["winch",()=>or(stM("ragger"),stI("ragger"))],["hopper",()=>or(stM("junk"),dcsOn("badocc")?"warn":"ok")],
+    ["cyclone",()=>or(stI("hdblow"),stDp("hd"))],["screen",()=>or(stM("cscr"),stI("cscreen"))],["cleaners",()=>or(stI("lwplug"),stDp("lw"))],["thickener",()=>or(stI("thkblow"),G3.SPD&&G3.SPD.strain>0.05?"warn":"ok")],
+    ["tank",()=>or(stI("chestover"),S.tank/P.tankCap>0.92?"warn":"ok"),"chest"],["refiner",()=>stI("refclash")],["tank",()=>"ok","mc"],["drum",()=>or(stM("dye"),stI("dye"))],
+    ["cleaners",()=>or(stI("lcplug"),stDp("lc")),"lcrows"],["screen",()=>or(stM("fscr"),stI("fscreen"))],["pumpBox",()=>S.pm==="run"?"ok":"off"]],
+  WET:[["fan",()=>or(stM("fog"),stI("fogfan"))],["headbox",()=>"ok"],["table",()=>or(stI("fabric"),dcsOn("slime")?"warn":"ok",stBrk("press"))],["tank",()=>"ok","silo"],
+    ["roll1",()=>stI("couchpit")],["felt",()=>stI("felt","oscfail")],["press",()=>stBrk("press")]],
+  DET:[["grid",()=>stI("brownout")],["boiler",()=>stI("boiler")],["draw",()=>stBrk("dryer")],["dryers",()=>stI("shaft","dryerfire","wrap","steamjoint"),"d4"],["dryers",()=>stI("shaft","dryerfire","wrap","steamjoint"),"d6"],
+    ["reel",()=>or(stBrk("reel"),S.pm==="spools"?"warn":"ok")],["winder",()=>or(stI("winderdown","birdhay"),S.wd==="hayout"?"warn":"ok")],["rollconv",()=>S.wdBlocked?"warn":"ok"]],
+  UTIL:[["intake",()=>stI("icedintake")],["tower",()=>dcsOn("icedintake")?"warn":"ok","tower"],["mill",()=>S.pm==="run"?"ok":"off"],["clarifier",()=>or(stI("permit"),tssNow()>45?"warn":"ok")],["outfall",()=>"ok"],["landfill",()=>"ok"]]};
+// levels (0-1) for the vessels
+const PG_LV={pulp:()=>clamp(knobRead().pulpLvl/100,0,1),chest:()=>clamp(S.tank/P.tankCap,0,1),mc:()=>clamp(knobRead().mcLvl/100,0,1),silo:()=>clamp(parseFloat(DV.wwl())/100,0,1),tower:()=>clamp(parseFloat(DV.twl())/100,0,1)};
+function dcsPic(a,e,i){const pg=PGX[a]&&PGX[a][i];if(!pg)return null;const [x,y,w,h,t,sm]=e,lab=typeof t==="function"?t():t,nh=sm?9:11,dh=h-nh,ex=pg[2];
+  let body;const [k]=pg;
+  if(k==="tank")body=P_.tank(x,y+1,w,dh-1,ex,ex==="silo"||ex==="tower"?"water":"stock");
+  else if(k==="cleaners")body=PIC.cleaners(x,y,w,dh,ex==="lcrows"&&LV("clean")>0?2:1);
+  else if(k==="dryers")body=PIC.dryers(x,y,w,dh,ex==="d6"?6:4);
+  else body=PIC[k](x,y,w,dh,ex);
+  return `<g class="pg ${PG_ST(pg[1]())}" data-pg="${i}"><title>${lab}</title><rect class="pg-bg" x="${x}" y="${y}" width="${w}" height="${h}" rx="5"/>${body}<text x="${x+w/2}" y="${y+h-2.5}" class="pgn">${lab}</text></g>`;}
+// each refresh: state classes and vessel levels
+function dcsPicSync(a){const o=$("dcsOv");if(!o||!PGX[a])return;
+  o.querySelectorAll(".mimic [data-pg]").forEach(g=>{const pg=PGX[a][+g.dataset.pg];if(!pg)return;let s;try{s=PG_ST(pg[1]());}catch(e){s="st-ok";}if(g.dataset.s!==s){g.dataset.s=s;g.setAttribute("class","pg "+s);}
+    g.querySelectorAll("[data-lv]").forEach(r=>{const f=PG_LV[r.dataset.lv];if(!f)return;const v=f(),h0=+r.dataset.h0,y0=+r.dataset.y0,hh=Math.max(0,h0*v);r.setAttribute("y",(y0+h0-hh).toFixed(1));r.setAttribute("height",hh.toFixed(1));});
+    g.querySelectorAll("[data-lvp]").forEach(p=>{const f=PG_LV[p.dataset.lvp];if(f)p.style.opacity=(0.35+0.65*f()).toFixed(2);});});}

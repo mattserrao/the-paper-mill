@@ -1220,3 +1220,18 @@ body.season-lock #pfCtl .card .row[data-key] input,body.season-lock #pfCtl .card
 .dcsrow.dcsm{grid-template-columns:minmax(0,1fr) auto auto}.dcsrow.dcsm.bad{border-color:#7a1f1a}.dcsrow.dcsm.bad .dcsn small{color:#ff8b7f}
 .dcs .kseg button[aria-pressed="true"][data-mv="off"]{background:#ff6b5e;color:#0f1b2d}
 @media (max-width:560px){.dcsrow.dcsx{grid-template-columns:1fr auto}.dcsrow.dcsx .dcsn{grid-column:1 / -1}.dcsrow.dcsx .spis{grid-column:1 / -1}}
+/* v6.5 b4 DCS pictograms (50d): classic colours; grey outline normal, amber warning, red tripped, faded stopped */
+.mimic .pg-bg{fill:#132138;stroke:#2c3e5c;stroke-width:1}
+.mimic .pe{stroke:#9fb0c8;stroke-width:1.4}
+.mimic .pg-steel{fill:#4d6a92}.mimic .pg-top{fill:#6483ad}.mimic .pg-stock{fill:#8a6644}.mimic .pg-water{fill:#3f8fc0}.mimic .pg-water2{fill:none;stroke:#3f8fc0;stroke-width:2}
+.mimic .pg-motor{fill:#3f8f5f}.mimic .pg-mark{fill:#d6e2f2}.mimic .pg-mark2{stroke:#d6e2f2;stroke-width:1.4;fill:none}.mimic .pg-fin{stroke:#2a5a3c;stroke-width:1}
+.mimic .pg-belt{fill:none;stroke-width:2.4}.mimic .pg-bale{fill:#b8875a}.mimic .pg-rope{fill:none;stroke:#c9a46a;stroke-dasharray:3 2}
+.mimic .pg-pipe{fill:none;stroke:#6f8fbf;stroke-width:3}.mimic .pg-basket{fill:none;stroke:#c3d3ea;stroke-dasharray:2 2;stroke-width:1}
+.mimic .pg-disk{fill:#8fa3c0}.mimic .pg-dye{fill:#7a4a2a}.mimic .pg-wire{fill:none;stroke:#c3d3ea;stroke-width:2}.mimic .pg-foil{fill:#6f8fbf}
+.mimic .pg-felt{fill:none;stroke:#9b8fd6;stroke-width:3}.mimic .pg-hub{fill:#0f1b2d}.mimic .pg-sheet{fill:none;stroke:#e8e1cf;stroke-width:2}
+.mimic .pg-hood{fill:#1c2b45}.mimic .pg-paper{fill:#e8e1cf}.mimic .pg-empty{fill:none;stroke-dasharray:2 2}.mimic .pg-pylon{fill:none}
+.mimic .pg-bolt{fill:#ffd23f}.mimic .pg-flame{fill:#ff9a3c}
+.mimic .pgn{fill:#c3d3ea;font:700 8.5px system-ui,sans-serif;text-anchor:middle;letter-spacing:.04em}
+.mimic .pg.st-warn .pg-bg{stroke:#ffb02e;stroke-width:2.2}.mimic .pg.st-warn .pe{stroke:#ffb02e}.mimic .pg.st-warn .pgn{fill:#ffd77a}
+.mimic .pg.st-trip .pg-bg{stroke:#ff4d42;stroke-width:2.6;fill:#2a1420}.mimic .pg.st-trip .pe{stroke:#ff6b5e}.mimic .pg.st-trip .pgn{fill:#ff8b7f}
+.mimic .pg.st-off>*:not(.pg-bg):not(.pgn):not(title){opacity:.3}.mimic .pg.st-off .pgn{fill:#8ea4c4}.mimic .pg.st-off .pg-bg{stroke-dasharray:4 3}
