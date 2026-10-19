@@ -11,7 +11,8 @@ From claude/market-cost-benchmarks.md (OCC indexes, DAT truckload, EIA power and
   rate (DAT's fuel share), so freight rates swing about ±18%. The twin shows diesel in $/gal.
 - **Desert** long haul to customers is +$20/t outbound freight (was +$7); cheap land now saves $480/h (was $250).
 - **Steam display** at the TAPPI dryer norm (~1.45 t steam per t of paper; was ~1.09). Display only.
-- Hands-off seasons (3 seeds per site) against v6.4.0: see the results line below.
+- Hands-off seasons (3 seeds per site, Hank, same bottleneck) against v6.4.0 finishing cash: rural +1.1%, urban −0.1%,
+  desert −2.0%, swamp +0.8%. Smoke, determinism, save and tools/pflowcheck.py pass.
 
 ## v6.5.0-b1 (2026-10-19): digital twin, part B (test branch test/v6.5-twin)
 - **Freight is a real cost:** inbound haul per ton of bales unloaded and outbound freight per ton shipped, each (base +
