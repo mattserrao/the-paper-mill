@@ -1,6 +1,11 @@
 # Changelog
 
 
+## v6.3.0 (2026-10-18): process flow overview released to main (was test builds f1 and f2)
+- Settings → View → Process flow: today's (or yesterday's) mill day as inputs, areas and outputs, live while the game runs.
+- Regression: smoke, save, settings, help (22/22), determinism and tools/pflowcheck.py pass. survcheck's two fails
+  (Chip's sales push, survival continue) fail the same way on v6.2.0 and are unrelated.
+
 ## v6.3.0-f2 (2026-10-18): process flow runs live (test branch test/v6.3-flow)
 - The game keeps running at the player's speed while the process flow screen is open (f1 slowed it to 1 min/s), so
   the numbers and lamps update live.

@@ -70,3 +70,4 @@ One line per version, oldest first. Add a line here with every release: build.py
 6.2.0      Zen Free Camera: Perspective Zen Shots, 3D People in Zen, Cleaner River Water
 6.3.0-f1   Process Flow Overview (Test): Inputs, Mill Areas and Outputs for the Mill Day, in Settings
 6.3.0-f2   Process Flow: the Game Keeps Running While It's Open (Test)
+6.3.0      Process Flow Overview: Inputs, Mill Areas and Outputs for the Mill Day (Settings > View)
