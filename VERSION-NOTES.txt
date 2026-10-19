@@ -92,3 +92,4 @@ One line per version, oldest first. Add a line here with every release: build.py
 6.6.0-t1   Orders and Bales (Test): Customer Order Book and Spot Market, Idle Energy While Stopped, Bale Grading at the Gate
 6.6.0      Orders and Bales: Customer Order Book and Spot Market, Idle Energy While Stopped, Bale Grading at the Gate
 6.7.0-t1   Control Room (Test): Planning, Water and Quality Screens, Split-Screen Trends of Anything, What Moves With What, Process Flow Views
+6.7.0      Control Room: Planning, Water and Quality Screens, Split-Screen Trends of Anything, What Moves With What, Process Flow Views

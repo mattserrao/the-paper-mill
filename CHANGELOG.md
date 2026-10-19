@@ -1,8 +1,8 @@
 # Changelog
 
 
-## v6.7.0-t1 (2026-10-19): control room (test)
-Built on test/v6.7-control. New code: `src/js/11d-tags.js` (the tag list and its history), `src/js/50f-control.js` (the
+## v6.7.0 (2026-10-19): control room
+Built on test/v6.7-control (as 6.7.0-t1), merged into main. New code: `src/js/11d-tags.js` (the tag list and its history), `src/js/50f-control.js` (the
 trend pane, relationship analysis, the QCS, PLAN and WATER screens), `src/js/50h-pflow-more.js` (the process flow
 additions) and `src/js/51i-control-room.js` (the Report tab strip). All read-only: the sim and its dice are unchanged
 (determinism matches v6.6.0 to the dollar).
