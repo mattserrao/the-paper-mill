@@ -1,6 +1,30 @@
 # Changelog
 
 
+## v6.5.0-b3 (2026-10-19): DCS expansion (test branch test/v6.5-twin)
+From claude/dcs-expansion-spec.md (decided item by item).
+- **SPOT** now draws the whole line: bale conveyor, pulper (ragger and junk trap above it), HD cleaner, coarse screen,
+  lightweight cleaners, disk thickener, stock chest, refiners, machine chest (dye pump), LC cleaners (1 or 2 rows),
+  fine screens, fan pump, with pressure drops, reject rates, screen load and filtrate. Setpoints: bale conveyor speed
+  (= pulper feed), stock chest level target and "PM slows below", spider valve (remote; the field panel still works),
+  paper colour. Alarms: pulper and chest overflows, chest level high, junk load high, cleaner ΔP high.
+- **WET**: headbox slice opening and lip (remote; the field panel still works), jet/wire ratio, wire and press speeds,
+  machine speed set at the wire (the reel follows by the section draws), grade (read-only: the planner sets it),
+  SHOE PRESS label once bought, white water silo level, fog fan and machine-room humidity, slime alarm.
+- **DET**: grid and boiler status, drive load per dryer section, dryer section speed, reel spool weight / spools at the
+  winder / turn-ups, winder (speed setpoint, cut, hayouts) and roll conveyor; alarms for sheet break with its location,
+  reel store full, winder blocked, hayout, driveshaft, boiler trip, brownout.
+- **UTIL** (new screen): river intake (iced on rural), water tower, water use, wastewater TSS and permit, outfall, rejects.
+- **Motors** (07c-motors.js): bale conveyor, ragger, junk trap, coarse and fine screen rotors, dye pump, fog fan:
+  ON / OFF / AUTO. OFF stops that step like its upset (its own upset, never rolled at random, own dice stream) and
+  the operators start it again after 30 min. Free in every mode but zen, like the fiddly knobs.
+- **Reject purges** (HD cleaner, LC and lightweight cleaners): AUTO / MANUAL with a PURGE button; left in MANUAL the
+  pressure drop climbs until the cleaner plugs (its upset and bill), then the crew puts it back in AUTO.
+- Upsets now show on the screen of the equipment they hit (UTIL for the permit and river intake).
+- Fixed: an upset multiplier of 0 was ignored (mods merge); needed for the stopped bale conveyor.
+- `tools/dcscheck.py`: every screen and tag, motors stop and restart, purges plug, setpoints follow Process flow and
+  lock in a season, upsets on the right screen.
+
 ## v6.5.0-b2 (2026-10-19): costs aligned with the 2026 market (test branch test/v6.5-twin)
 From claude/market-cost-benchmarks.md (OCC indexes, DAT truckload, EIA power and gas, Smurfit/FEFCO mill energy).
 - **OCC** at 2026 levels: OCC #11 $95/t (was $142 + haul), double-lined kraft $150 (was $197). The weekly OCC market

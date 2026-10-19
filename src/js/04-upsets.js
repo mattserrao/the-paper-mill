@@ -96,7 +96,7 @@ function crewState(k){const q=S.crewQ||[],i=q.findIndex(x=>x.k===k);if(i<0)retur
 function baseMods(){return {pmDown:null,pulperDown:false,speedCap:1,breakMul:1,yieldMul:1,recvMul:1,clampMul:1,drvCap:99,ldrCap:99,docksClosed:false,noIn:false,noOut:false,yardEat:0,hayMul:1,crewAtPM:false,winderDown:false,offSpec:false,feedMul:1};}
 function mods(){const m=baseMods();
   for(const i of S.inc){const e=i.mods||EV[i.id].mods||{};
-    if(e.pmDown)m.pmDown=e.pmDown; if(e.winderDown)m.winderDown=true; if(e.offSpec)m.offSpec=true; if(e.feedMul)m.feedMul*=e.feedMul; if(e.pulperDown)m.pulperDown=true; if(e.docksClosed)m.docksClosed=true; if(e.noIn)m.noIn=true; if(e.noOut)m.noOut=true;
+    if(e.pmDown)m.pmDown=e.pmDown; if(e.winderDown)m.winderDown=true; if(e.offSpec)m.offSpec=true; if(e.feedMul!==undefined)m.feedMul*=e.feedMul; if(e.pulperDown)m.pulperDown=true; if(e.docksClosed)m.docksClosed=true; if(e.noIn)m.noIn=true; if(e.noOut)m.noOut=true;
     if(e.hayMul)m.hayMul*=e.hayMul; if(e.speedCap)m.speedCap=Math.min(m.speedCap,e.speedCap); if(e.breakMul)m.breakMul*=e.breakMul; if(e.yieldMul)m.yieldMul*=(i.id==="badocc"&&LV("detrash"))?0.9:e.yieldMul;
     if(e.recvMul!==undefined)m.recvMul*=e.recvMul; if(e.clampMul!==undefined)m.clampMul*=e.clampMul; if(e.yardEat)m.yardEat+=e.yardEat;
     if(i.drvCap!==undefined)m.drvCap=Math.min(m.drvCap,i.drvCap); if(i.ldrCap!==undefined)m.ldrCap=Math.min(m.ldrCap,i.ldrCap);}

@@ -704,7 +704,7 @@
             if(!q||z>front||inHole(x,z))continue;const mv=Math.hypot(x-q[0],z-q[1]);if(mv>0.004&&Math.random()<rdt*24)emitA("drop",x+R()*1.2,0.35,z+R()*1.2,R()*2,1.2+Math.random()*1.4,R()*2,0.55,0.3,"#dfe9e6",0.85);}}};},
   };
   const blackEl=$("blackout3d");let lastIncTxt=0;
-  function makeFX(id){const def=FXDEF[id];const g=new THREE.Group();scene.add(g);const pp=PINS[id]||[0,10,0,"!"];const f=FX[id]={g,up:null,pin:pinAt(g,pp[0],pp[1],pp[2],pp[3]),lb:lblNew(true,id)};
+  function makeFX(id){const def=FXDEF[id]||FXDEF[MOT_FXDEF[id]];const g=new THREE.Group();scene.add(g);const pp=PINS[id]||PINS[MOT_PIN[id]]||[0,10,0,"!"];/* (v6.5 b3: a stopped DCS motor uses its upset's spot, 07c) */const f=FX[id]={g,up:null,pin:pinAt(g,pp[0],pp[1],pp[2],pp[3]),lb:lblNew(true,id)};
     // v5.7.3 bare: a token puff at the spot instead of the full effect (the red tag and label are as usual)
     if(G3.bare){const x=pp[0],z=pp[2];f.up=(now,rdt)=>{if(rdt>0&&Math.random()<rdt*2.5)emit("smoke",x+R()*1.5,2,z+R()*1.5,R()*0.3,1.4,R()*0.3,2.4,1.6,"#6b707a",0.65);};return f;}
     f.up=def?def(g):()=>{};try{if(!/[?&]nofxinst/.test(location.search))f.inst=fxInst(g);}catch(e){console.error("effect instancing failed",id,e);}return f;}

@@ -1210,3 +1210,13 @@ body.dark .kvchip{background:color-mix(in srgb,var(--panel) 96%,transparent)}
 body.season-lock #pfCtl .card .row[data-key] input,body.season-lock #pfCtl .card .row[data-key] button.auto{opacity:.5;cursor:not-allowed}
 .pflock{margin:0}.pflock b{color:#ffd77a}
 .pfctlnote{display:flex;align-items:center;gap:10px;flex-wrap:wrap;margin-top:24px;padding-top:16px;border-top:1px solid var(--line)}.pfctlnote span{flex:1;min-width:200px;color:var(--muted)}
+/* v6.5 b3 DCS expansion (50d): small boxes, setpoint / motor / purge rows */
+.mimic .meq.sm{fill:#22324f}.mimic .mtl.sm{font-size:9.5px}
+.dcsrow.dcsx{grid-template-columns:170px minmax(0,1fr) auto auto;grid-template-areas:none;align-items:center}
+.dcsrow.dcsx>*{grid-area:auto}.dcsrow.dcsx .spis{display:flex;align-items:center}.dcsrow.dcsx .spis input{width:100%}
+.dcsrow.dcsx .kval b{color:#fff;font-variant-numeric:tabular-nums;white-space:nowrap}
+.dcsrow.dcsx select{background:#22324f;color:#c3d3ea;border:1px solid #33476a;border-radius:6px;padding:4px 6px;max-width:100%}
+.dcsrow.dcsx.locked .spis,.dcsrow.dcsx.locked .kval{opacity:.55}
+.dcsrow.dcsm{grid-template-columns:minmax(0,1fr) auto auto}.dcsrow.dcsm.bad{border-color:#7a1f1a}.dcsrow.dcsm.bad .dcsn small{color:#ff8b7f}
+.dcs .kseg button[aria-pressed="true"][data-mv="off"]{background:#ff6b5e;color:#0f1b2d}
+@media (max-width:560px){.dcsrow.dcsx{grid-template-columns:1fr auto}.dcsrow.dcsx .dcsn{grid-column:1 / -1}.dcsrow.dcsx .spis{grid-column:1 / -1}}

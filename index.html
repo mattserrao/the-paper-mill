@@ -1229,6 +1229,16 @@ body.dark .kvchip{background:color-mix(in srgb,var(--panel) 96%,transparent)}
 body.season-lock #pfCtl .card .row[data-key] input,body.season-lock #pfCtl .card .row[data-key] button.auto{opacity:.5;cursor:not-allowed}
 .pflock{margin:0}.pflock b{color:#ffd77a}
 .pfctlnote{display:flex;align-items:center;gap:10px;flex-wrap:wrap;margin-top:24px;padding-top:16px;border-top:1px solid var(--line)}.pfctlnote span{flex:1;min-width:200px;color:var(--muted)}
+/* v6.5 b3 DCS expansion (50d): small boxes, setpoint / motor / purge rows */
+.mimic .meq.sm{fill:#22324f}.mimic .mtl.sm{font-size:9.5px}
+.dcsrow.dcsx{grid-template-columns:170px minmax(0,1fr) auto auto;grid-template-areas:none;align-items:center}
+.dcsrow.dcsx>*{grid-area:auto}.dcsrow.dcsx .spis{display:flex;align-items:center}.dcsrow.dcsx .spis input{width:100%}
+.dcsrow.dcsx .kval b{color:#fff;font-variant-numeric:tabular-nums;white-space:nowrap}
+.dcsrow.dcsx select{background:#22324f;color:#c3d3ea;border:1px solid #33476a;border-radius:6px;padding:4px 6px;max-width:100%}
+.dcsrow.dcsx.locked .spis,.dcsrow.dcsx.locked .kval{opacity:.55}
+.dcsrow.dcsm{grid-template-columns:minmax(0,1fr) auto auto}.dcsrow.dcsm.bad{border-color:#7a1f1a}.dcsrow.dcsm.bad .dcsn small{color:#ff8b7f}
+.dcs .kseg button[aria-pressed="true"][data-mv="off"]{background:#ff6b5e;color:#0f1b2d}
+@media (max-width:560px){.dcsrow.dcsx{grid-template-columns:1fr auto}.dcsrow.dcsx .dcsn{grid-column:1 / -1}.dcsrow.dcsx .spis{grid-column:1 / -1}}
 </style>
 </head>
 <body class="app">
@@ -1411,7 +1421,7 @@ body.season-lock #pfCtl .card .row[data-key] input,body.season-lock #pfCtl .card
 <div class="btns"><button class="primary" id="no3d-retry">Try again</button></div></div></div>
 
 <script type="module">
-const APP_VER="v6.5.0-b2";   // shown in the menu and sent with leaderboard scores (max 12 characters)
+const APP_VER="v6.5.0-b3";   // shown in the menu and sent with leaderboard scores (max 12 characters)
 // TEST BUILDS ONLY (off in releases): turbo speeds 240/480/960 sim min/s for fast playtests. Above 120, crews and maintenance start jobs
 // without waiting for the 3D walk (as with the 3D view off) and outages keep the speed. Set false for a release.
 const TURBO=false,TURBO_FAST=s=>TURBO&&s>120;
@@ -2496,7 +2506,7 @@ function crewState(k){const q=S.crewQ||[],i=q.findIndex(x=>x.k===k);if(i<0)retur
 function baseMods(){return {pmDown:null,pulperDown:false,speedCap:1,breakMul:1,yieldMul:1,recvMul:1,clampMul:1,drvCap:99,ldrCap:99,docksClosed:false,noIn:false,noOut:false,yardEat:0,hayMul:1,crewAtPM:false,winderDown:false,offSpec:false,feedMul:1};}
 function mods(){const m=baseMods();
   for(const i of S.inc){const e=i.mods||EV[i.id].mods||{};
-    if(e.pmDown)m.pmDown=e.pmDown; if(e.winderDown)m.winderDown=true; if(e.offSpec)m.offSpec=true; if(e.feedMul)m.feedMul*=e.feedMul; if(e.pulperDown)m.pulperDown=true; if(e.docksClosed)m.docksClosed=true; if(e.noIn)m.noIn=true; if(e.noOut)m.noOut=true;
+    if(e.pmDown)m.pmDown=e.pmDown; if(e.winderDown)m.winderDown=true; if(e.offSpec)m.offSpec=true; if(e.feedMul!==undefined)m.feedMul*=e.feedMul; if(e.pulperDown)m.pulperDown=true; if(e.docksClosed)m.docksClosed=true; if(e.noIn)m.noIn=true; if(e.noOut)m.noOut=true;
     if(e.hayMul)m.hayMul*=e.hayMul; if(e.speedCap)m.speedCap=Math.min(m.speedCap,e.speedCap); if(e.breakMul)m.breakMul*=e.breakMul; if(e.yieldMul)m.yieldMul*=(i.id==="badocc"&&LV("detrash"))?0.9:e.yieldMul;
     if(e.recvMul!==undefined)m.recvMul*=e.recvMul; if(e.clampMul!==undefined)m.clampMul*=e.clampMul; if(e.yardEat)m.yardEat+=e.yardEat;
     if(i.drvCap!==undefined)m.drvCap=Math.min(m.drvCap,i.drvCap); if(i.ldrCap!==undefined)m.ldrCap=Math.min(m.ldrCap,i.ldrCap);}
@@ -3308,6 +3318,7 @@ function step(dt){
   const M=S.M=mods();
   autoControl(dt);
   knobTick(dt);   // v5.6 fiddly knobs (returns at once unless a knob was moved)
+  dcsTick(dt);   // v6.5 b3 DCS motors and reject purges (07c; nothing until the DCS is used)
   const g=GRADES[C.grade];
   // 1 inbound arrivals
   // weather: changes every few hours; snow and fog slow the trucks, rain soaks bales
@@ -3631,6 +3642,55 @@ function knobHist(){if(KHIST.S!==S){KHIST.S=S;KHIST.a.length=0;KHIST.t=-1;}const
   const r=knobRead(),u=v=>r.run?v:null,row=KHIST.a.length>=180?KHIST.a.shift():[];row.length=0;   // (readings that only exist with a sheet on are left blank while the machine is down)
   row.push(S.t,r.cp,r.amps,r.gap,u(r.refkw),r.mcCons,r.vac,u(r.couchSol),r.pl,u(r.pressSol),r.edge,r.st1,u(r.st3),u(r.steam),r.boiler,u(r.moist),u(r.bw),u(r.tension),r.pulpLvl,r.stripes,r.off);KHIST.a.push(row);}   // (rows reused once 6 h are full)
 const KH_COL={cp:1,amps:2,gap:3,refkw:4,mcCons:5,vac:6,couchSol:7,pl:8,pressSol:9,edge:10,st1:11,st3:12,steam:13,boiler:14,moist:15,bw:16,tension:17,pulpLvl:18,stripes:19,off:20};
+/* ---- v6.5 b3 DCS motors and reject purges (the DCS expansion, claude/dcs-expansion-spec.md) ----
+   Motors: On / Off / Auto from the DCS. On and Auto both run (On is the operator's hand, Auto the mill's logic); Off
+   stops that step the way its upset does (a motor upset, m_*, with the same mods), and the operators start it again
+   after MOT_RESTART sim-minutes (the upset's countdown); starting it sooner from the DCS clears it at once. Free in every
+   mode except zen, like the fiddly knobs: the cost is the lost production.
+   Purges (HD cleaner, LC and lightweight cleaner reject flush): Auto keeps the pressure drop at its normal level; in
+   Manual it climbs until someone purges, and past PURGE.trip the cleaner plugs (its own upset, with its bill). The crew
+   puts it back in Auto when they clear it. No dice: the run replays identically. */
+const MOT_RESTART=30;
+const MOTORS=[
+  {id:"conv",a:"SPOT",name:"Bale conveyor",ev:"m_conv",like:"rotortrip",pin:"rotortrip",mods:{feedMul:0},head:"The bale conveyor is stopped: no bales to the pulper."},
+  {id:"ragger",a:"SPOT",name:"Ragger",ev:"m_ragger",like:"ragger",mods:{pulperDown:1},head:"The ragger is stopped: the pulper is shut down until it runs."},
+  {id:"junk",a:"SPOT",name:"Junk trap",ev:"m_junk",like:"badocc",pin:"ragger",mods:{yieldMul:0.8,breakMul:2},head:"The junk trap is stopped: junk is reaching the screens."},
+  {id:"cscr",a:"SPOT",name:"Coarse screen rotor",ev:"m_cscr",like:"cscreen",mods:{pulperDown:1},head:"The coarse screen rotor is stopped: stock prep is down."},
+  {id:"fscr",a:"SPOT",name:"Fine screen rotor",ev:"m_fscr",like:"fscreen",mods:{pulperDown:1},head:"The fine screen rotor is stopped: stock prep is down."},
+  {id:"dye",a:"SPOT",name:"Dye pump",ev:"m_dye",like:"dye",mods:{offSpec:1},head:"The dye pump is stopped: the shade is off and paper goes to the beater."},
+  {id:"fog",a:"WET",name:"Fog fan",ev:"m_fog",like:"fogfan",mods:{},head:"The fog fan is stopped: fog is building in the machine room."}];
+const MOTN=Object.fromEntries(MOTORS.map(m=>[m.id,m])),MOTEV=Object.fromEntries(MOTORS.map(m=>[m.ev,m]));
+// where each stopped motor's tag shows in 3D: its upset's spot (31-3d-upset-fx.js); the fog fan also shows the fog
+const MOT_PIN=Object.fromEntries(MOTORS.map(m=>[m.ev,m.pin||m.like])),MOT_FXDEF={m_fog:"fogfan"};
+const PURGE={base:{hd:35,lc:60,lw:45},rise:0.15,trip:{hd:95,lc:120,lw:105},up:{hd:"hdblow",lc:"lcplug",lw:"lwplug"},
+  name:{hd:"HD cleaner reject purge",lc:"LC cleaner reject flush",lw:"Lightweight cleaner reject flush"}};
+// the motor upsets join EVENTS (03/04 load order: this file runs after 04-upsets.js, so they are added here). Never rolled
+// at random: their own dice stream ("motor") and an endless MTBF, so every other upset keeps its timing; knob:true keeps
+// them out of the Upsets panel, the tornado and the crew queue.
+MOTORS.forEach(m=>{const e={id:m.ev,g:m.a==="SPOT"?"stock":"machine",knob:true,stream:"motor",name:m.name+" stopped",head:m.head,dur:[MOT_RESTART,MOT_RESTART],mtbf:1e12,mods:m.mods,
+  end:()=>{const D=S.dcs;if(D&&D.mot[m.id]==="off"){D.mot[m.id]="auto";log(`Operators started the ${m.name.toLowerCase()} again`,"ok");}}};
+  EVENTS.push(e);EV[e.id]=e;CH.en[e.id]=true;});
+function dcsState(){if(!S.dcs){S.dcs={mot:{},pg:{}};MOTORS.forEach(m=>S.dcs.mot[m.id]="auto");["hd","lc","lw"].forEach(k=>S.dcs.pg[k]={m:"auto",dp:PURGE.base[k]});}
+  if(S.rng&&S.rng.motor==null)S.rng.motor=(S.seed^0x4cf5ad43)|0;return S.dcs;}
+const motState=id=>(S.dcs&&S.dcs.mot[id])||"auto";
+// running, stopped by the operator, or tripped (its own upset is on)
+function motStatus(id){const m=MOTN[id];if(motState(id)==="off")return "off";if(active(m.like)&&m.like!=="rotortrip")return "trip";return "run";}
+function motSet(id,v){if(S.zen)return;const D=dcsState(),m=MOTN[id],was=D.mot[id];if(was===v)return;D.mot[id]=v;
+  if(v==="off"){if(!active(m.ev)){S.inc.push({id:m.ev,left:MOT_RESTART,total:MOT_RESTART,real:performance.now(),note:"stopped from the DCS",motor:1});S.lastInc=S.t;}
+    log(`${m.name} stopped from the DCS. The operators will start it again in ${MOT_RESTART} min.`,"warn");}
+  else if(was==="off"){const i=S.inc.find(x=>x.id===m.ev);if(i)i.left=0;log(`${m.name} started from the DCS`,"ok");}
+  S.M=mods();}
+function purgeSet(k,mode){if(S.zen)return;const p=dcsState().pg[k];p.m=mode;}
+function purgeNow(k){if(S.zen)return;const p=dcsState().pg[k];p.dp=PURGE.base[k];log(`${PURGE.name[k]}: purged by hand`,"ok");}
+// every step (07-sim-step.js): cheap, and nothing at all until the DCS has been touched
+function dcsTick(dt){const D=S.dcs;if(!D||S.zen)return;
+  for(const k in D.pg){const p=D.pg[k],up=PURGE.up[k];
+    if(active(up)){p.m="auto";p.dp=PURGE.base[k];continue;}   // the crew clears it and puts it back in Auto
+    if(p.m==="auto"){p.dp+=(PURGE.base[k]-p.dp)*Math.min(1,dt/30);continue;}
+    if(!S.M.pulperDown)p.dp+=PURGE.rise*dt;
+    if(p.dp>=PURGE.trip[k]){p.dp=PURGE.base[k];log(`${PURGE.name[k]} was left in manual: the rejects plugged`,"bad");trigger(up);}}}
+const purgeDp=k=>{const p=S.dcs&&S.dcs.pg[k];if(p)return p.dp;return PURGE.base[k];};
+const purgeMode=k=>(S.dcs&&S.dcs.pg[k]&&S.dcs.pg[k].m)||"auto";
 /* ---------- UI wiring ---------- */
 const $=id=>document.getElementById(id);
 const gradeSel=$("grade");
@@ -7349,7 +7409,7 @@ function no3D(){G3.ok=false;$("no3d").hidden=false;$("no3d-retry").onclick=()=>l
             if(!q||z>front||inHole(x,z))continue;const mv=Math.hypot(x-q[0],z-q[1]);if(mv>0.004&&Math.random()<rdt*24)emitA("drop",x+R()*1.2,0.35,z+R()*1.2,R()*2,1.2+Math.random()*1.4,R()*2,0.55,0.3,"#dfe9e6",0.85);}}};},
   };
   const blackEl=$("blackout3d");let lastIncTxt=0;
-  function makeFX(id){const def=FXDEF[id];const g=new THREE.Group();scene.add(g);const pp=PINS[id]||[0,10,0,"!"];const f=FX[id]={g,up:null,pin:pinAt(g,pp[0],pp[1],pp[2],pp[3]),lb:lblNew(true,id)};
+  function makeFX(id){const def=FXDEF[id]||FXDEF[MOT_FXDEF[id]];const g=new THREE.Group();scene.add(g);const pp=PINS[id]||PINS[MOT_PIN[id]]||[0,10,0,"!"];/* (v6.5 b3: a stopped DCS motor uses its upset's spot, 07c) */const f=FX[id]={g,up:null,pin:pinAt(g,pp[0],pp[1],pp[2],pp[3]),lb:lblNew(true,id)};
     // v5.7.3 bare: a token puff at the spot instead of the full effect (the red tag and label are as usual)
     if(G3.bare){const x=pp[0],z=pp[2];f.up=(now,rdt)=>{if(rdt>0&&Math.random()<rdt*2.5)emit("smoke",x+R()*1.5,2,z+R()*1.5,R()*0.3,1.4,R()*0.3,2.4,1.6,"#6b707a",0.65);};return f;}
     f.up=def?def(g):()=>{};try{if(!/[?&]nofxinst/.test(location.search))f.inst=fxInst(g);}catch(e){console.error("effect instancing failed",id,e);}return f;}
@@ -11835,7 +11895,7 @@ function closeKnob(){const p=$("knobP");if(p)p.hidden=true;KUI.panel=null;kuiSyn
 function stationOv(){let o=$("dcsOv");if(o)return o;
   o=kEl("div","overlay top dcsov");o.id="dcsOv";o.hidden=true;
   o.innerHTML=`<div class="dcs" role="dialog" aria-modal="true" aria-labelledby="dcs-h"><div class="dcsh"><b id="dcs-h"></b><div class="seg dcstab" role="group" aria-label="Screen"><button type="button" data-t="dcs">DCS</button><button type="button" data-t="qcs">QCS</button></div>
-    <div class="dcsst" role="group" aria-label="Area"><button type="button" data-a="SPOT">SPOT</button><button type="button" data-a="WET">WET</button><button type="button" data-a="DET">DET</button></div><button aria-label="Close" class="dcsx" id="dcsClose">✕</button></div>
+    <div class="dcsst" role="group" aria-label="Area"><button type="button" data-a="SPOT">SPOT</button><button type="button" data-a="WET">WET</button><button type="button" data-a="DET">DET</button><button type="button" data-a="UTIL">UTIL</button></div><button aria-label="Close" class="dcsx" id="dcsClose">✕</button></div>
     <div class="dcsb" id="dcsBody"></div><div class="dcsf"><span id="dcsClock"></span><span>Game slowed to 1 min/s while this screen is open</span></div></div>`;
   document.body.appendChild(o);
   $("dcsClose").addEventListener("click",()=>closeStation());
@@ -11867,10 +11927,10 @@ function knobAlarms(a,r){const L=[],al=(on,txt,hi)=>{if(on)L.push([txt,hi]);};co
     al(r.gap<0.25,"REFINER GAP LO",r.gap<0.18);al(Math.abs(r.mcCons-3.2)>0.35,"MACHINE CHEST CONS DEV",Math.abs(r.mcCons-3.2)>0.6);}
   else if(a==="WET"){al(r.vac<18,"FORMER VACUUM LO",r.vac<12);al(Math.abs(r.edge)>12,"FABRIC EDGE DEV",Math.abs(r.edge)>35);al(r.gm&&r.gtrav>0.85,"GUIDE AT END OF TRAVEL",r.gtrav>=1);
     al(r.cs>0.6&&S.pm!=="run","COUCH PIT LEVEL HI",r.cs>1.2);al(r.pl>125,"PRESS LOAD HI",r.pl>135);al(r.couchSol<16,"COUCH SOLIDS LO",r.couchSol<14);al(K&&K.F&&K.F.cd>0,"CD PROFILE OUT",true);}
-  else if(r.run){al(r.st3>150,"3RD SECTION STEAM HI",r.st3>=155);al(r.boiler<0.8,"STEAM HEADER LO",r.boiler<0.7);al(r.run&&r.moist>9.5,"REEL MOISTURE HI",r.moist>11);al(r.run&&r.moist<4.5,"REEL MOISTURE LO",r.moist<3.5);
+  else if(a==="DET"&&r.run){al(r.st3>150,"3RD SECTION STEAM HI",r.st3>=155);al(r.boiler<0.8,"STEAM HEADER LO",r.boiler<0.7);al(r.run&&r.moist>9.5,"REEL MOISTURE HI",r.moist>11);al(r.run&&r.moist<4.5,"REEL MOISTURE LO",r.moist<3.5);
     al(r.run&&r.tension>1.3,"DRAW TENSION HI",r.tension>1.5);al(r.run&&r.tension<0.85,"DRAW TENSION LO",r.tension<0.7);}
-  else al(r.boiler<0.8,"STEAM HEADER LO",r.boiler<0.7);
-  if(S.inc.length)S.inc.forEach(i=>{const g=EV[i.id].g;if((a==="SPOT"&&g==="stock")||(a!=="SPOT"&&g==="machine"))L.push([EV[i.id].name.toUpperCase(),true]);});
+  else if(a==="DET")al(r.boiler<0.8,"STEAM HEADER LO",r.boiler<0.7);
+  dcsAlarms(a,r,L);   // v6.5 b3: upsets on the screen of the equipment they hit, motors, purges, the dry end's states (50d)
   return L;}
 function stationBuild(){const o=$("dcsOv");if(!o||!KUI.st)return;const a=KUI.st,M2=MIMIC[a],b=$("dcsBody");
   $("dcs-h").textContent=M2.title+(KUI.tab==="qcs"?" · QCS":" · DCS");
@@ -11878,21 +11938,22 @@ function stationBuild(){const o=$("dcsOv");if(!o||!KUI.st)return;const a=KUI.st,
   o.querySelectorAll("[data-a]").forEach(x=>x.setAttribute("aria-pressed",String(x.dataset.a===a)));
   b.replaceChildren();
   if(KUI.tab==="dcs"){
-    const svg=['<svg viewBox="0 0 640 210" class="mimic" role="img" aria-label="Process picture">'];
-    for(let i=0;i<M2.eq.length-1;i++){const e=M2.eq[i],n=M2.eq[i+1];if(a==="DET"&&i===3)continue;svg.push(`<line x1="${e[0]+e[2]}" y1="${e[1]+e[3]/2}" x2="${n[0]}" y2="${n[1]+n[3]/2}" class="mln"/>`);}
-    if(a==="DET")svg.push(`<path d="M586 60 V 66 H 177 V 75 M345 66 V 75" class="mln st"/>`);
-    M2.eq.forEach(([x,y,w,h,t])=>svg.push(`<rect x="${x}" y="${y}" width="${w}" height="${h}" rx="6" class="meq"/><text x="${x+w/2}" y="${y+h/2+4}" class="mtl">${t}</text>`));
+    const svg=[`<svg viewBox="0 0 640 ${M2.h||210}" class="mimic" role="img" aria-label="Process picture">`];
+    if(M2.ln)M2.ln.forEach(([d,st])=>svg.push(`<path d="${d}" class="mln${st?" st":""}"/>`));   // (v6.5 b3: the pictures draw their own lines, 50d)
+    else{for(let i=0;i<M2.eq.length-1;i++){const e=M2.eq[i],n=M2.eq[i+1];if(a==="DET"&&i===3)continue;svg.push(`<line x1="${e[0]+e[2]}" y1="${e[1]+e[3]/2}" x2="${n[0]}" y2="${n[1]+n[3]/2}" class="mln"/>`);}
+      if(a==="DET")svg.push(`<path d="M586 60 V 66 H 177 V 75 M345 66 V 75" class="mln st"/>`);}
+    M2.eq.forEach(([x,y,w,h,t,sm])=>svg.push(`<rect x="${x}" y="${y}" width="${w}" height="${h}" rx="6" class="meq${sm?" sm":""}"/><text x="${x+w/2}" y="${y+h/2+4}" class="mtl${sm?" sm":""}">${typeof t==="function"?t():t}</text>`));
     M2.tags.forEach(([x,y,k,t])=>svg.push(`<text x="${x}" y="${y}" class="mtg"><tspan class="mtk">${t} </tspan><tspan data-tag="${k}">–</tspan></text>`));
     svg.push("</svg>");b.appendChild(kEl("div","mimicw",svg.join("")));
     b.appendChild(kEl("div","dcsal",`<b>Alarms</b><ul id="dcsAl"></ul>`));
     const ids=KNOBS.filter(k=>k.area===a&&(k.dcs||KREMOTE.has(k.id))).map(k=>k.id),fld=KNOBS.filter(k=>k.area===a&&k.field&&!KREMOTE.has(k.id));
-    const cs=kEl("div","dcsctl");cs.appendChild(kEl("div","dcssub","Setpoints"));
+    const cs=kEl("div","dcsctl");cs.appendChild(kEl("div","dcssub","Setpoints"));dcsSetRows(a,cs);
     ids.forEach(id=>{const row=kEl("div","dcsrow"+(id==="zones"?" wide":""));row.appendChild(kEl("div","dcsn",`<b>${KNOBN[id].name}</b><small>${KNOBN[id].field?"remote from the DCS":"DCS"}</small>`));row.appendChild(knobCtl(id,"d"));
       const rd=kEl("div","spir krd");rd.dataset.rd=id;row.appendChild(rd);row.appendChild(kEl("button","reroll kstd","Standard")).addEventListener("click",()=>{knobReset(id);kuiRefresh();});cs.appendChild(row);});
     if(fld.length)cs.appendChild(kEl("p","dcsfield",`Set at the machine, not from here: ${fld.map(k=>`<button type="button" class="linkb" data-fk="${k.id}">${k.name.toLowerCase()}</button>`).join(", ")}. Look for the red knobs on the floor.`));
     cs.querySelectorAll("[data-fk]").forEach(x=>x.addEventListener("click",()=>{const id=x.dataset.fk;closeStation();if(G3.knobFly)G3.knobFly(id);openKnob(id);}));
-    b.appendChild(cs);
-    const tw=kEl("div","dcstr");tw.innerHTML=`<div class="dcssub">Trends · last 6 h</div><canvas width="640" height="220" id="dcsTr"></canvas><div class="dcsleg">${M2.trends.map(t=>`<span><i style="background:${t[2]}"></i>${t[1]}</span>`).join("")}</div>`;b.appendChild(tw);}
+    b.appendChild(cs);dcsMotRows(a,b);
+    if(M2.trends.length){const tw=kEl("div","dcstr");tw.innerHTML=`<div class="dcssub">Trends · last 6 h</div><canvas width="640" height="220" id="dcsTr"></canvas><div class="dcsleg">${M2.trends.map(t=>`<span><i style="background:${t[2]}"></i>${t[1]}</span>`).join("")}</div>`;b.appendChild(tw);}}
   else{
     b.appendChild(kEl("div","qcshead",`<div class="qcsst" id="qcsSt"></div><div class="qcsv" id="qcsV"></div>`));
     b.appendChild(kEl("div","dcstr",`<div class="dcssub">Reel · last 6 h</div><canvas width="640" height="200" id="qcsTr"></canvas><div class="dcsleg"><span><i style="background:#4fd18b"></i>Moisture %</span><span><i style="background:#ffb02e"></i>Basis weight (lb/1000 ft²)</span><span><i style="background:#ff7a8a"></i>Rejected share</span></div>`));
@@ -11916,7 +11977,7 @@ function kuiRefresh(){if(!KUI.panel&&!KUI.st)return;const r=knobRead();
     if(KUI.tab==="dcs"){o.querySelectorAll("[data-tag]").forEach(t=>{const g=M2.tags.find(q=>q[2]===t.dataset.tag);if(g){const v=g[4](r);if(t.textContent!==v)t.textContent=v;}});
       o.querySelectorAll(".dcsctl .kctl").forEach(knobCtlSync);o.querySelectorAll("[data-rd]").forEach(d=>{const h=knobReadout(d.dataset.rd,r);if(d._h!==h){d._h=h;d.innerHTML=h;}});
       const al=knobAlarms(a,r),ul=$("dcsAl"),h=al.length?al.map(([t,hi])=>`<li class="${hi?"hi":""}">${t}</li>`).join(""):'<li class="none">No alarms</li>';if(ul._h!==h){ul._h=h;ul.innerHTML=h;}
-      o.querySelectorAll(".dcsrow canvas[data-cd]").forEach(c=>kuiCd(c,r));drawTrend6($("dcsTr"),M2.trends);}
+      o.querySelectorAll(".dcsrow canvas[data-cd]").forEach(c=>kuiCd(c,r));if(M2.trends.length)drawTrend6($("dcsTr"),M2.trends);dcsSync();}
     else{const K=S.knob,F=(K&&K.F)||{},off=r.off,st=$("qcsSt");
       const sh=!r.run?["MACHINE DOWN","down"]:off>0.02?[`REJECTING · ${KOFFN[r.why]||"off spec"} · ${Math.round(off*100)}% to the beater`,"bad"]:S.chg?["GRADE CHANGE · to the beater","warn"]:S.M.offSpec?["REJECTING · off spec","bad"]:["ON SPEC","ok"];
       if(st._h!==sh[0]){st._h=sh[0];st.textContent=sh[0];st.className="qcsst "+sh[1];}
@@ -12295,6 +12356,137 @@ UI_TICKS.push(n=>{if(!PFUI.open)return;const m=$("v2menu");if(m&&!m.hidden){pfCl
 G3.pfSel=(k,tab,zoom)=>{PFUI.sel=k;PFUI.tab=tab||null;if(zoom)PFUI.zoom=zoom;pfRender(true);};G3.pfMode=m=>{PFUI.mode=m;pfRender(true);};G3.histSum=histSum;G3.histRows=histRows;   // (tests)
 addEventListener("resize",()=>{if(PFUI.open)pfRender(true);});
 G3.pfOpenUI=pfOpen;G3.pfCloseUI=pfClose;G3.pfCalc=pfCalc;G3.simRate=simRate;   // (tests: tools/pflowcheck.py)
+/* ---- v6.5 b3 the DCS expansion (claude/dcs-expansion-spec.md): bigger SPOT / WET / DET pictures and a UTIL screen ----
+   The pictures (MIMIC, 50b) are replaced here: every box the game has an upset or a control for. Readings only read the
+   sim (no dice). Setpoints that exist in Process flow > Controls are driven through those same controls (the card inputs),
+   so the two stay in step and keep their season lock; the fiddly knobs' field panels (slice, spider valve) still work.
+   Motors and reject purges: 07c-motors.js. */
+const DCS_DRAW=()=>1.015*(1+knobVal("draw")/100)*1.01;   // wire -> presses, press-to-dryer draw (the knob), dryers -> reel
+const wob2=(f,k)=>Math.sin(S.t*f+k)*0.6+Math.sin(S.t*f*2.7+k*2)*0.4;
+const dcsOn=id=>active(id);
+const DV={
+  cvsp:()=>Math.round(C.pulper.v/Math.max(1,P.pulperMax)*100)+"%",cvst:()=>({run:C.pulper.auto?"AUTO":"HAND",off:"STOP",trip:"TRIP"})[motStatus("conv")],
+  hddp:()=>Math.round(purgeDp("hd")+(dcsOn("hdblow")?40:0)+wob2(0.07,1))+" kPa",lcdp:()=>Math.round(purgeDp("lc")+(dcsOn("lcplug")?50:0)+wob2(0.05,2))+" kPa",
+  lwdp:()=>Math.round(purgeDp("lw")+(dcsOn("lwplug")?45:0)+wob2(0.06,3))+" kPa",lcrow:()=>(LV("clean")>0?2:1)+" of "+(LV("clean")>0?2:1),
+  csdp:()=>motStatus("cscr")!=="run"?"0 kPa":Math.round(18+S.rates.feed/Math.max(1,P.pulperMax)*14+wob2(0.08,4))+" kPa",csrj:()=>(2.5+(dcsOn("badocc")?2:0)+wob2(0.03,5)*0.3).toFixed(1)+"%",
+  fsdp:()=>motStatus("fscr")!=="run"?"0 kPa":Math.round(22+S.rates.fiberIn/Math.max(1,P.screenMax)*20+wob2(0.09,6))+" kPa",fsld:()=>Math.round(S.rates.fiberIn/Math.max(1,P.screenMax)*100)+"%",
+  thf:()=>{const D=G3.SPD;return D?(D.tl>150?"DIRTY":"CLEAR")+" "+Math.round(D.tl):"–";},thv:()=>{const D=G3.SPD;return D?Math.round(D.v*100)+"%":"–";},
+  lvsp:()=>Math.round(C.lvlTarget.v)+"%",dyef:()=>{const b=document.querySelector('#paperColor button[aria-pressed="true"]');return motStatus("dye")!=="run"||(b&&b.dataset.c==="white")?"0%":"62%";},
+  jw:()=>{const D=G3.SLC;return D?(0.985+0.02*D.v).toFixed(3):"–";},slc:()=>{const D=G3.SLC;return D?(12+3*D.v).toFixed(1)+" mm":"–";},
+  wsp:()=>Math.round(S.pmSpeed/DCS_DRAW())+" fpm",psp:()=>Math.round(S.pmSpeed/DCS_DRAW()*1.015)+" fpm",dsp:()=>Math.round(S.pmSpeed/1.01)+" fpm",
+  wwl:()=>Math.round(clamp(68+(S.pm==="run"?0:14)+wob2(0.02,7)*3,0,100))+"%",hum:()=>Math.round(clamp(62+(motStatus("fog")!=="run"||dcsOn("fogfan")?24:0)+wob2(0.01,8)*3,0,100))+"%",
+  dr1:()=>S.pm==="run"&&!dcsOn("shaft")?Math.round(48+S.pmSpeed/3300*34+wob2(0.12,9)*1.5)+"%":"0%",dr2:()=>S.pm==="run"&&!dcsOn("shaft")?Math.round(52+S.pmSpeed/3300*36+wob2(0.11,10)*1.5)+"%":"0%",
+  spool:()=>Math.round(S.reel)+" / "+P.jumbo+" t",store:()=>reelsAtWinder()+" of "+P.storeReels,tu:()=>String(S.tot.turnups||0),
+  wdr:()=>Math.round(C.wdr.v)+" t/h",wdt:()=>Math.round(S.rates.cut||0)+" t/h",hay:()=>String(S.tot.hayouts||0),rolls:()=>Math.round(S.conv||0)+" of "+P.convCap,
+  grid:()=>SITE.env==="urban"&&dcsOn("brownout")?"BROWNOUT":"NORMAL",
+  ifl:()=>Math.round((S.rates.prod||0)*9.9)+" m³/h",ice:()=>SITE.env!=="rural"?"–":dcsOn("icedintake")?"ICED":"CLEAR",twl:()=>Math.round(clamp(82+wob2(0.004,11)*6-(dcsOn("icedintake")?25:0),0,100))+"%",
+  wuse:()=>"9.9 m³/t",tss:()=>Math.round(tssNow())+" mg/L",perm:()=>dcsOn("permit")?"EXCEEDED":"OK",ofl:()=>Math.round((S.rates.prod||0)*8.4)+" m³/h",
+  rej:()=>((S.rates.feed||0)*(1-P.yieldF*((S.M&&S.M.yieldMul)||1))).toFixed(1)+" t/h"};
+// effluent suspended solids: fiber lost to the white water and broke push it up; 50 mg/L is the permit
+function tssNow(){return clamp(28+(S.knob&&S.knob.off?S.knob.off*30:0)+(S.pm==="run"?0:6)+(dcsOn("permit")?30:0)+wob2(0.015,12)*3,5,120);}
+const MIMIC_KNOB={SPOT:MIMIC.SPOT,WET:MIMIC.WET,DET:MIMIC.DET};
+const MT=(x,y,k,t,f)=>[x,y,k,t,f];
+MIMIC.SPOT={title:"PM3 · STOCK PREP",h:300,trends:MIMIC_KNOB.SPOT.trends,
+  eq:[[8,66,76,40,"CONVEYOR"],[100,56,110,60,"PULPER"],[100,8,52,26,"RAGGER","s"],[158,8,52,26,"JUNK","s"],[228,66,78,40,"HD CLEANER"],[324,66,78,40,"COARSE SCR"],[420,66,88,40,"LW CLEANERS"],
+    [524,66,86,40,"THICKENER"],[525,196,80,60,"STOCK CHEST"],[430,206,80,40,"REFINERS"],[320,196,90,60,"MACHINE CHEST"],[330,160,70,24,"DYE","s"],[212,206,90,40,"LC CLEANERS"],[104,206,90,40,"FINE SCR"],[8,206,80,40,"FAN PUMP"]],
+  ln:[["M84 86 H100"],["M210 86 H228"],["M306 86 H324"],["M402 86 H420"],["M508 86 H524"],["M565 106 V196"],["M525 226 H510"],["M430 226 H410"],["M320 226 H302"],["M212 226 H194"],["M104 226 H88"],["M8 226 H0"],
+    ["M126 34 V56",1],["M184 34 V56",1],["M365 184 V196",1]],
+  tags:[MT(46,124,"cvsp","SPD",DV.cvsp),MT(46,138,"cvst","",DV.cvst),MT(155,124,"cp","CONS",r=>kf(r.cp)+"%"),MT(155,138,"amps","ROTOR",r=>Math.round(r.amps)+" A"),MT(155,152,"pulpLvl","LEVEL",r=>Math.round(r.pulpLvl)+"%"),
+    MT(267,124,"hddp","ΔP",DV.hddp),MT(363,124,"csdp","ΔP",DV.csdp),MT(363,138,"csrj","REJ",DV.csrj),MT(461,124,"lwdp","ΔP",DV.lwdp),MT(575,124,"thf","FILT",DV.thf),MT(575,138,"thv","SPIDER",DV.thv),
+    MT(565,272,"lvl","LEVEL",()=>Math.round(S.tank/P.tankCap*100)+"%"),MT(565,286,"lvsp","SP",DV.lvsp),MT(470,190,"csf","CSF",r=>Math.round(r.csf)+" mL"),MT(470,262,"gap","GAP",r=>kf(r.gap,2)+" mm"),MT(470,276,"refkw","LOAD",r=>Math.round(r.refkw)+" kW"),
+    MT(365,272,"mcCons","CONS",r=>kf(r.mcCons,2)+"%"),MT(365,286,"agit","AGIT",r=>r.agit+"%"),MT(445,176,"dyef","DYE",DV.dyef),MT(257,262,"lcdp","ΔP",DV.lcdp),MT(257,276,"lcrow","ROWS",DV.lcrow),
+    MT(149,262,"fsdp","ΔP",DV.fsdp),MT(149,276,"fsld","LOAD",DV.fsld),MT(48,262,"flow","FLOW",()=>S.pm==="run"?Math.round(S.pmSpeed*1.9)+" L/s":"0 L/s")]};
+MIMIC.WET={title:"PM3 · WET END",h:260,trends:MIMIC_KNOB.WET.trends,
+  eq:[[520,8,104,30,"FOG FAN"],[14,80,74,70,"HEADBOX"],[104,105,190,25,"FORMING TABLE"],[110,214,100,26,"WW SILO","s"],[308,90,64,50,"COUCH"],[388,90,104,50,"PICK-UP FELT"],[508,80,118,70,()=>LV("shoe")?"SHOE PRESS":"TWIN PRESS"]],
+  ln:[["M88 115 H104"],["M294 117 H308"],["M372 115 H388"],["M492 115 H508"],["M160 130 V214",1]],
+  tags:[MT(51,172,"zones","ZONES",()=>(S.knob?S.knob.z.filter(v=>v).length:0)+"/12"),MT(51,194,"slc","SLICE",DV.slc),MT(51,70,"jw","J/W",DV.jw),MT(140,72,"wsp","WIRE",DV.wsp),
+    MT(240,172,"vac","VAC",r=>kf(r.vac)+" kPa"),MT(240,88,"edge","EDGE",r=>(r.edge>=0?"+":"")+Math.round(r.edge)+" mm"),MT(240,194,"gtrav","GUIDE",r=>r.gm?"AUTO "+Math.round(Math.min(1,r.gtrav)*100)+"%":"MAN"),
+    MT(340,172,"couchSol","SOL",r=>kf(r.couchSol)+"%"),MT(340,194,"cs","PIT",r=>r.couch?"RUN":"STOP"),MT(440,172,"osc","OSC",r=>Math.round(r.osc)+"%"),
+    MT(567,172,"pl","LOAD",r=>Math.round(r.pl)+" kN/m"),MT(567,194,"pressSol","SOL",r=>kf(r.pressSol)+"%"),MT(567,66,"psp","SPD",DV.psp),MT(260,232,"wwl","LEVEL",DV.wwl),MT(572,54,"hum","RH",DV.hum)]};
+MIMIC.DET={title:"PM3 · DRY END",h:280,trends:MIMIC_KNOB.DET.trends,
+  eq:[[440,10,90,36,"GRID"],[546,10,80,36,"BOILER"],[14,96,80,50,"OPEN DRAW"],[112,80,130,80,"1ST SECTION"],[260,80,170,80,"2ND / 3RD SECTION"],[448,90,74,60,"REEL"],[546,90,84,60,"WINDER"],[546,214,84,30,"ROLL CONV","s"]],
+  ln:[["M94 121 H112"],["M242 120 H260"],["M430 120 H448"],["M522 120 H546"],["M630 120 H636 V229 H630"],["M620 46 V66 H177 V80 M345 66 V80",1]],
+  tags:[MT(54,172,"draw","DRAW",r=>kf(r.draw)+"%"),MT(54,194,"tension","TENS",r=>r.run?kf(r.tension,2):"–"),MT(177,176,"st1","STEAM",r=>Math.round(r.st1)+" kPa"),MT(177,192,"dr1","DRV",DV.dr1),MT(177,208,"dsp","SPD",DV.dsp),
+    MT(345,176,"st3","AUTO",r=>Math.round(r.st3)+" kPa"),MT(345,192,"steam","FLOW",r=>r.run?kf(r.steam)+" t/h":"–"),MT(345,208,"dr2","DRV",DV.dr2),
+    MT(485,166,"moist","MOIST",r=>r.run?kf(r.moist)+"%":"–"),MT(485,180,"bw","BW",r=>r.run?kf(r.bw,2):"–"),MT(485,194,"spool","SPOOL",DV.spool),MT(485,208,"store","STORE",DV.store),MT(485,222,"tu","TURN-UPS",DV.tu),MT(485,84,"speed","SPEED",r=>Math.round(r.speed)+" fpm"),
+    MT(588,166,"wdr","SP",DV.wdr),MT(588,180,"wdt","CUT",DV.wdt),MT(588,194,"hay","HAYOUTS",DV.hay),MT(588,262,"rolls","ROLLS",DV.rolls),MT(485,58,"grid","",DV.grid),MT(586,60,"boiler","HDR",r=>Math.round(r.boiler*100)+"%")]};
+MIMIC.UTIL={title:"PM3 · UTILITIES",h:210,trends:[],
+  eq:[[14,60,96,50,"RIVER INTAKE"],[134,60,96,50,"WATER TOWER"],[254,60,110,50,"MILL"],[388,60,110,50,"WASTEWATER"],[522,60,100,50,"OUTFALL"],[254,150,110,36,"LANDFILL","s"]],
+  ln:[["M110 85 H134"],["M230 85 H254"],["M364 85 H388"],["M498 85 H522"],["M309 110 V150",1]],
+  tags:[MT(62,128,"ifl","FLOW",DV.ifl),MT(62,142,"ice","ICE",DV.ice),MT(182,128,"twl","LEVEL",DV.twl),MT(309,44,"wuse","USE",DV.wuse),MT(443,128,"tss","TSS",DV.tss),MT(443,142,"perm","PERMIT",DV.perm),
+    MT(572,128,"ofl","FLOW",DV.ofl),MT(436,172,"rej","REJECTS",DV.rej)]};
+AREA_N.UTIL="Utilities";
+
+/* ---- alarms by area (an upset shows on the screen of the equipment it hits) ---- */
+const DCS_WET=new Set(["fabric","felt","slime","fogfan","oscfail","couchpit","runner"]),DCS_UTIL=new Set(["permit","icedintake"]);
+function dcsArea(id){if(MOTEV[id])return MOTEV[id].a;if(DCS_UTIL.has(id))return "UTIL";const g=EV[id]&&EV[id].g;if(g==="stock")return "SPOT";if(g==="machine")return DCS_WET.has(id)?"WET":"DET";return null;}
+function dcsAlarms(a,r,L){const al=(on,txt,hi)=>{if(on)L.push([txt,hi]);};
+  for(const i of S.inc){if(dcsArea(i.id)!==a)continue;const m=MOTEV[i.id];L.push([m?`${m.name.toUpperCase()} STOPPED · RESTART IN ${Math.ceil(i.left)} MIN`:EV[i.id].name.toUpperCase(),true]);}
+  if(a==="SPOT"){al(S.tank/P.tankCap>0.92,"STOCK CHEST LEVEL HI",S.tank/P.tankCap>0.98);al(dcsOn("badocc"),"JUNK LOAD HIGH",true);
+    for(const k of ["hd","lc","lw"]){const dp=purgeDp(k);al(dp>PURGE.base[k]+(PURGE.trip[k]-PURGE.base[k])*0.6,{hd:"HD CLEANER ΔP HI",lc:"LC CLEANERS ΔP HI",lw:"LW CLEANERS ΔP HI"}[k],dp>PURGE.base[k]+(PURGE.trip[k]-PURGE.base[k])*0.85);}}
+  else if(a==="WET"){al(motStatus("fog")!=="run","MACHINE ROOM HUMIDITY HI",false);}
+  else if(a==="DET"){al(S.pm==="break",`SHEET BREAK · ${({reel:"REEL",dryer:"DRYERS",press:"PRESSES"})[S.brkType]||"MACHINE"}`,true);al(S.pm==="spools","REEL STORE FULL: MACHINE HELD BACK",true);
+    al(!!S.wdBlocked,"WINDER BLOCKED: CONVEYOR FULL",true);al(S.wd==="hayout","WINDER HAYOUT",true);}
+  else if(a==="UTIL"){al(tssNow()>45&&!dcsOn("permit"),"EFFLUENT TSS HI",false);}}
+
+/* ---- setpoint, motor and purge rows ---- */
+const DCARD=k=>{const r=document.querySelector(`#cards .row[data-key="${k}"]`);return r?{inp:r.querySelector("input"),btn:r.querySelector(".auto")}:null;};
+function dcsCardSet(k,v){const c=DCARD(k);if(!c||c.inp.disabled)return;c.inp.value=v;c.inp.dispatchEvent(new Event("input",{bubbles:true}));}
+function dcsCardAuto(k){const c=DCARD(k);if(c&&c.btn&&!c.btn.disabled)c.btn.click();}
+// each setpoint: [key, name, where, min, max, step, get, set, unit, card key for AUTO and the lock (or null), field note]
+function dcsSetDefs(a){const D=()=>DCS_DRAW();
+  if(a==="SPOT")return [
+    ["cvsp","Bale conveyor speed","drives the pulper feed",0,100,1,()=>C.pulper.v/Math.max(1,P.pulperMax)*100,v=>dcsCardSet("pulper",v/100*P.pulperMax),"%","pulper"],
+    ["lvt","Stock chest level target","the auto pulper aims here",20,95,1,()=>C.lvlTarget.v,v=>dcsCardSet("lvlTarget",v),"%","lvlTarget"],
+    ["lvl","PM slows below","stock chest level",10,60,1,()=>C.lowLevel.v,v=>dcsCardSet("lowLevel",v),"%","lowLevel"],
+    ["spi","Disk thickener spider valve","remote from the DCS · % to the clear side",0,100,1,()=>G3.SPD?G3.SPD.v*100:50,v=>{if(G3.SPD){G3.SPD.v=v/100;}},"%",null,1]];
+  if(a==="WET")return [
+    ["wsp","Machine speed (wire)","sets the reel by the section draws",Math.round(1200/D()),Math.round((3300+P.spBonus)/D()),5,()=>C.pmSp.v/D(),v=>dcsCardSet("pmSp",Math.round(v*D()/10)*10),"fpm","pmSp"],
+    ["slv","Slice opening","remote from the DCS · B",-100,100,1,()=>G3.SLC?G3.SLC.v*100:0,v=>dcsSlice("v",v),"",null,1],
+    ["slh","Slice lip position","remote from the DCS · L",-100,100,1,()=>G3.SLC?G3.SLC.h*100:0,v=>dcsSlice("h",v),"",null,1]];
+  if(a==="DET")return [
+    ["wsp","Machine speed (wire)","same setpoint as on WET",Math.round(1200/D()),Math.round((3300+P.spBonus)/D()),5,()=>C.pmSp.v/D(),v=>dcsCardSet("pmSp",Math.round(v*D()/10)*10),"fpm","pmSp"],
+    ["wdr","Winder speed","",0,P.winderMax,1,()=>C.wdr.v,v=>dcsCardSet("wdr",v),"t/h","wdr"]];
+  return [];}
+function dcsSlice(k,v){const D=G3.SLC;if(!D||G3.slcFix||S.zen)return;D[k]=v/100;D.dirty=true;const g=D.geo();if(g.lipX-g.wet>=6.8&&typeof slcBreak==="function")slcBreak();}
+function dcsSetRows(a,cs){const defs=dcsSetDefs(a);
+  if(a==="UTIL")cs.appendChild(kEl("p","dcsfield","Monitoring only: water, effluent and rejects. The permit and the river intake show here when they act up."));
+  if(a==="SPOT"||a==="WET"){const row=kEl("div","dcsrow dcsx");
+    if(a==="SPOT"){row.innerHTML=`<div class="dcsn"><b>Dye: paper colour</b><small>dye pump on the machine chest</small></div><div class="seg kseg" role="group" aria-label="Paper colour"><button type="button" data-dye="brown">BROWN</button><button type="button" data-dye="white">WHITE</button></div>`;
+      row.querySelectorAll("[data-dye]").forEach(b=>b.addEventListener("click",()=>{const pc=document.querySelector(`#paperColor button[data-c="${b.dataset.dye}"]`);if(pc)pc.click();dcsSync();}));}
+    else{row.innerHTML=`<div class="dcsn"><b>Grade</b><small>set by the market planner from customer orders</small></div><select disabled data-dgrade aria-label="Grade">${Object.keys(GRADES).map(g=>`<option value="${g}">${g} · ${GRADES[g].bw} lb</option>`).join("")}</select>`;}
+    cs.appendChild(row);}
+  for(const d of defs){const [k,name,where,mn,mx,st,,,unit,card,field]=d,row=kEl("div","dcsrow dcsx");row.dataset.ds=k;
+    row.innerHTML=`<div class="dcsn"><b>${name}</b><small>${where}</small></div><label class="spis"><input type="range" min="${mn}" max="${mx}" step="${st}" data-dsv aria-label="${name}"/></label><div class="kval"><b data-dsb></b></div>${card?`<button type="button" class="reroll kstd" data-dsa>AUTO</button>`:""}`;
+    row.querySelector("[data-dsv]").addEventListener("input",e=>{d[7](+e.target.value);dcsSync();});
+    if(card)row.querySelector("[data-dsa]").addEventListener("click",()=>{dcsCardAuto(card);dcsSync();});
+    cs.appendChild(row);}}
+function dcsMotRows(a,b){const ms=MOTORS.filter(m=>m.a===a),pg=a==="SPOT"?["hd","lc","lw"]:[];if(!ms.length&&!pg.length)return;
+  const box=kEl("div","dcsctl");box.appendChild(kEl("div","dcssub","Motors"+(pg.length?" and reject purges":"")));
+  ms.forEach(m=>{const row=kEl("div","dcsrow dcsx dcsm");row.dataset.dm=m.id;
+    row.innerHTML=`<div class="dcsn"><b>${m.name}</b><small data-dms></small></div><div class="seg kseg" role="group" aria-label="${m.name}"><button type="button" data-mv="on">ON</button><button type="button" data-mv="off">OFF</button><button type="button" data-mv="auto">AUTO</button></div>`;
+    row.querySelectorAll("[data-mv]").forEach(x=>x.addEventListener("click",()=>{motSet(m.id,x.dataset.mv);kuiRefresh();}));box.appendChild(row);});
+  pg.forEach(k=>{const row=kEl("div","dcsrow dcsx dcsm");row.dataset.dp=k;
+    row.innerHTML=`<div class="dcsn"><b>${PURGE.name[k]}</b><small data-dps></small></div><div class="seg kseg" role="group" aria-label="${PURGE.name[k]}"><button type="button" data-pv="auto">AUTO</button><button type="button" data-pv="manual">MANUAL</button></div><button type="button" class="reroll kstd" data-pp>PURGE</button>`;
+    row.querySelectorAll("[data-pv]").forEach(x=>x.addEventListener("click",()=>{purgeSet(k,x.dataset.pv);kuiRefresh();}));row.querySelector("[data-pp]").addEventListener("click",()=>{purgeNow(k);kuiRefresh();});box.appendChild(row);});
+  if(a==="SPOT")box.appendChild(kEl("p","dcsfield",`OFF stops that step like a breakdown; the operators start it again after ${MOT_RESTART} min. A purge left in MANUAL builds pressure until the rejects plug.`));
+  b.appendChild(box);}
+// keep every row on this screen in step with the sim and the Process flow controls
+function dcsSync(){const o=$("dcsOv");if(!o||o.hidden||!KUI.st)return;const a=KUI.st,defs=dcsSetDefs(a);
+  o.querySelectorAll("[data-ds]").forEach(row=>{const d=defs.find(x=>x[0]===row.dataset.ds);if(!d)return;const inp=row.querySelector("[data-dsv]"),c=d[9]?DCARD(d[9]):null,lock=!!(c&&c.inp.disabled)||S.zen;
+    if(inp.max!==String(d[4]))inp.max=d[4];if(inp.min!==String(d[3]))inp.min=d[3];if(document.activeElement!==inp)inp.value=d[6]();inp.disabled=lock||(d[10]&&!G3[d[0]==="spi"?"SPD":"SLC"]);
+    const bv=row.querySelector("[data-dsb]"),t=`${(+d[6]()).toFixed(d[5]<1?1:0)} ${d[8]}`;if(bv.textContent!==t)bv.textContent=t;
+    const ab=row.querySelector("[data-dsa]");if(ab&&c){const au=C[d[9]].auto,txt=c.btn?(au?"AUTO":"MANUAL"):"";ab.hidden=!c.btn;ab.textContent=txt;ab.setAttribute("aria-pressed",String(!!au));ab.disabled=lock;}
+    row.classList.toggle("locked",lock);});
+  const pc=(document.querySelector('#paperColor button[aria-pressed="true"]')||{}).dataset;o.querySelectorAll("[data-dye]").forEach(b=>b.setAttribute("aria-pressed",String(!!pc&&b.dataset.dye===pc.c)));
+  const gs=o.querySelector("[data-dgrade]");if(gs&&gs.value!==C.grade)gs.value=C.grade;
+  o.querySelectorAll("[data-dm]").forEach(row=>{const id=row.dataset.dm,st=motState(id),ms=motStatus(id),i=S.inc.find(x=>x.id===MOTN[id].ev);
+    row.querySelectorAll("[data-mv]").forEach(x=>{x.setAttribute("aria-pressed",String(x.dataset.mv===st));x.disabled=S.zen;});
+    const t=ms==="off"?`STOPPED · operators restart in ${i?Math.ceil(i.left):0} min`:ms==="trip"?"TRIPPED · "+EV[MOTN[id].like].name.toLowerCase():st==="on"?"RUNNING · hand":"RUNNING · auto",s=row.querySelector("[data-dms]");if(s.textContent!==t)s.textContent=t;row.classList.toggle("bad",ms!=="run");});
+  o.querySelectorAll("[data-dp]").forEach(row=>{const k=row.dataset.dp,m=purgeMode(k),dp=purgeDp(k);row.querySelectorAll("[data-pv]").forEach(x=>{x.setAttribute("aria-pressed",String(x.dataset.pv===m));x.disabled=S.zen;});
+    row.querySelector("[data-pp]").disabled=m!=="manual"||S.zen;const t=`ΔP ${Math.round(dp)} kPa · plugs at ${PURGE.trip[k]}`+(m==="manual"?" · purge before it plugs":""),s=row.querySelector("[data-dps]");if(s.textContent!==t)s.textContent=t;
+    row.classList.toggle("bad",dp>PURGE.base[k]+(PURGE.trip[k]-PURGE.base[k])*0.6);});}
+G3.dcs={motSet,purgeSet,purgeNow,motStatus,dcsArea};   // (tests: tools/dcscheck.py)
 
 /* =========================== v2 app shell wiring =========================== */
 (function(){
@@ -12964,7 +13156,7 @@ function camPullOn(){try{return localStorage.getItem("paper-mill-campull")!=="of
     <li><b>Felicity Fourdrinier</b> (engineer): capacity projects that stay with the mill; outages overrun.</li><li><b>Hank Headbox</b> (operator): fewer breaks and less steam; runs the sheet heavy.</li></ul>
     <p>At each outage the leader makes one pick that stays with the mill. You can change leader once per run, in an outage budget dialog.</p>`],
   ["Fiddly knobs","knobs",`<p>Red knobs around the mill do nothing until you touch them. Move one and trouble may turn up later, sometimes somewhere else. The crew traces it back in the end.</p>
-    <ul><li>Tap the red hardware, or open the <b>DCS screens</b> from the operator consoles (SPOT for stock prep, WET and DET on the machine floor).</li><li>The game slows to 1 min/s while a knob panel or DCS screen is open.</li><li><b>Settings → View → Fiddly knobs view</b> greys out the mill and shows only the knobs.</li></ul>`],
+    <ul><li>Tap the red hardware, or open the <b>DCS screens</b> from the operator consoles (SPOT for stock prep, WET and DET on the machine floor).</li><li>The game slows to 1 min/s while a knob panel or DCS screen is open.</li><li>The DCS covers the whole machine: SPOT (stock prep, from the bale conveyor to the fan pump), WET, DET (through the winder and roll conveyor) and UTIL (water, effluent, rejects). Setpoints there are the same as Process flow's controls: AUTO and locked in a season.</li><li><b>Motors</b> (bale conveyor, ragger, junk trap, screen rotors, dye pump, fog fan): OFF stops that step like a breakdown, and the operators start it again after 30 minutes. <b>Reject purges</b> left in MANUAL build pressure until the cleaners plug.</li><li><b>Settings → View → Fiddly knobs view</b> greys out the mill and shows only the knobs.</li></ul>`],
   ["Process flow","pflow",`<p><b>Settings → View → Process flow</b> draws the whole mill for today's mill day (6am to 6am), or yesterday: what goes in (fiber, energy, chemicals and water, labor, maintenance, overhead), the areas it passes through, and what comes out (paper, waste, profit).</p>
     <ul><li>The blue band grows as money is spent, area by area, and meets the day's revenue at the end.</li><li>Waste is in tons: rejects to landfill, fiber lost in the effluent, and broke that goes round again.</li><li>Today, Yesterday, 7 d or Run: the run includes the 14 days before you took over (switch them off with Prior days).</li><li>Tap any area, input or output for its panel: trends over time (24 h, 7 d or the whole run; tap a chart to read it), costs, and for areas uptime and quality.</li><li>Each area's controls (truck arrivals, crews, pulper feed, machine speed and grade, winder, loaders) are in its panel under <b>Controls</b>: AUTO and locked in a season or survival run, yours in Free Play.</li><li>Freight in and Freight out move with a weekly diesel price, the weather and detours.</li><li>Tap any box or band for its breakdown. The mill keeps running while it's open, so the numbers update live.</li></ul>`],
   ["Controls","controls",`<ul><li><b>Speed:</b> tap the top bar to open it, then − and +. Pause is the button on the far left.</li><li><b>Camera:</b> a fixed isometric view. Drag to pan; pinch, scroll or + and − to zoom one step at a time. On a keyboard: arrows or WASD to move. Roofs lift off as you zoom in (Settings → View → Cutaway).</li>
@@ -13061,7 +13253,7 @@ function camPullOn(){try{return localStorage.getItem("paper-mill-campull")!=="of
    (within 700 ms per tap) and a list of every version's one-line note pops up, newest first. The list comes from
    VERSION-NOTES.txt at the repo root: build.py swaps it in for the placeholder below, so adding a line there with each
    release keeps the pop-up current (build.py warns when APP_VER has no line). ---------- */
-{const VNOTES=[["4.0.0", "Graphics Overhaul: 60 FPS on iPhone, ~80% Fewer Draw Calls"], ["4.0.1", "Performance Follow-Up, Show FPS Option and Device Autotest"], ["4.0.2", "Economy Rebalance and Smoother Upset Labels"], ["4.1.0", "Four Environments, Seeded Mills, Bottlenecks, Graphics Tiers and Site Music"], ["4.2.0", "New Site Maps, Rare Sights, Zen Map Rotation and Economics Fixes"], ["4.2.0-s", "Save and Continue Season (Test)"], ["4.2.1", "Save/Continue, Settings Panel and Outage Speed Fix"], ["4.2.2-t", "Bayou Gator Sight Reworked (Test)"], ["4.2.2-t2", "Gator Bass Riff (Test)"], ["4.2.2-t3", "Gator Riff Removed, Wide Camera Framing (Test)"], ["4.2.2-t4", "Gator Scene Shortened and Widened (Test)"], ["4.2.2-t5", "One Rare Sight per Map in Zen (Test)"], ["4.2.2", "Rare Sights Reworked, Bird Strike Upset, Mill Report Tab"], ["4.2.3-t", "Cowboys, Bigfoot and Tugboat Sights Reworked (Test)"], ["4.2.3", "Laptop Battery Saving (Default GPU)"], ["4.2.4", "$25M Goal Removed and Quick Fixes"], ["4.2.5", "Random Bottleneck per Season and Accessibility Improvements"], ["4.3.0-t1", "Survival Mode (Test)"], ["4.4.0-t1", "Mill Leaders in Survival (Test)"], ["4.4.0-t2", "Painted Leader Portraits (Test)"], ["4.4.0-t3", "Leader Redesign, 4-Day Waves and Fixes (Test)"], ["5.0.0", "Survival Mode Release with Mill Leaders"], ["5.0.1", "Results Dialog and Game Speed Fixes"], ["5.0.2", "Report Card Label Fixes"], ["5.0.3", "Survival Playtest Fixes (Test)"], ["5.0.4", "Playtest Review: Dot Auto-Fix and Shipping Fix (Test)"], ["5.0.5", "Polish Rounds from Survival Playtests"], ["5.0.6", "Survival QA Fixes, Opt-In Outage Watch, Leaderboard Filters"], ["5.1.0", "Civics Meters and Leaders in Seasons (Test)"], ["5.4.0", "Title Screen, Civics in the World and Dark Mode"], ["5.4.1", "Loading Splash, No Old-Menu Flash"], ["5.4.2", "Graphics Quality on the Title Screen"], ["5.5.0", "Performance Improvements"], ["5.6.0", "Fiddly Knobs, DCS/QCS Screens and Knobs View"], ["5.7.0", "Catching Failures Early: Tells, Daily Rounds, Vibration Report, Outage Prep"], ["5.7.1", "Bottom Menu Reorder, Settings Back on the Right"], ["5.7.2", "Help Page with Game Guide and Glossary"], ["5.7.3", "Bare Graphics Mode for Weak Phones"], ["5.7.4", "Version Notes Pop-Up (Triple-Tap the Version Number)"], ["6.1.0-t1", "Isometric Paper View: Fixed Camera, Cut-Outs, Drop Shadows, Cutaways, Season Palettes (Test)"], ["6.1.0-t2", "Iso Round 2: Cut-Outs Always Paper, GPU Pictures, Stop-Motion World, Fewer Draws (Test)"], ["6.1.0-t3", "Iso Round 3: iPhone Batching, Instanced Cans, Sign Atlas, Lighter Frames (Test)"], ["6.1.0-t4", "Iso Fixes: Operators and Fork-Trucks Back, Less Stutter (Test)"], ["6.1.0-t5", "Cut-Out Edge Artifact Fixed (Test)"], ["6.1.0-t6", "Iso Optimization: Hidden Objects Cost Nothing, Lighter Moving Batches (Test)"], ["6.1.0-t7", "Iso Triangle Cut: Paper-Card Trees, Flat Ground, Hidden Faces Gone, Plain Boxes (Test)"], ["6.1.0-t8", "Paper Palette: 40 Colours, Flat Surfaces, Paper Grain, Fewer Draws (Test)"], ["6.1.0-t9", "Reel Fix: Growing Reel Draws Again (Test)"], ["6.1.0-t10", "Draw Cut 2: Colour in the Matrix, Merged Roofs, Uploads on Change, Culling Fix, Parked Groups (Test)"], ["6.1.0-t11", "QA Fixes: Cut-Outs Never Drawn as Loose 3D Parts, Fallback Shows 3D, Roofs On or Off per Zoom Step (Test)"], ["6.1.0-t12", "Paper Smoke, Blinking Lights, Stronger Seasons, Sharper Phones, Instanced Upsets, Pictures at Start (Test)"], ["6.1.0-t13", "Paper Effects: Flames, Child-Made Tornado, Lamp Cones, Flags, Paper Water, Visible Weather (Test)"], ["6.1.0-t14", "Paper Upsets: Cut-Out Props, Paper Pigeon, Paper Sparks, Steam, Fireworks, Ice and Flood (Test)"], ["6.1.0-t15", "Beaver Reworked as One Smaller Cut-Out (Test)"], ["6.1.0-t16", "Paper Props Dim at Night, Labels Never Overlap, Fewer Cut-Out Pictures (Test)"], ["6.1.0-t17", "Bird on the Power Lines Cut-Scene Plays When Set Off From the Upsets List (Test)"], ["6.1.0-t18", "Zen Close-Ups Fixed, Rare Sights as Paper Cut-Outs, Tilt-Shift Diorama Look (Test)"], ["6.1.0-t19", "Narrower Tilt-Shift Band, Winder Trash Can Out of the Broke Hole (Test)"], ["6.1.0-t20", "Balance: Rounds Pay More, Capacity and Maintenance Upgrades Re-Priced"], ["6.1.0", "Paper Diorama: Isometric Paper Art Style, Cut-Out People and Upsets, Tilt-Shift, Rounds Pay More, Upgrades Re-Priced"], ["6.1.1", "Phone Fixes: Gentler Tilt-Shift on Tall Screens, Cut-Out People No Longer Blank on iPhone"], ["6.1.2", "iPhone: Cut-Out Self-Test Retries, People Keep Their Colours in the 3D Fallback"], ["6.1.3", "Broke Hole by the Winder Looks Like a Floor Opening (Was a Black Square)"], ["6.1.4", "Tilt-Shift Removed"], ["6.2.0", "Zen Free Camera: Perspective Zen Shots, 3D People in Zen, Cleaner River Water"], ["6.3.0-f1", "Process Flow Overview (Test): Inputs, Mill Areas and Outputs for the Mill Day, in Settings"], ["6.3.0-f2", "Process Flow: the Game Keeps Running While It's Open (Test)"], ["6.3.0", "Process Flow Overview: Inputs, Mill Areas and Outputs for the Mill Day (Settings > View)"], ["6.4.0", "Zen Shots Review: Shuffle-Bag Shot Order, Landscape Shots Rebuilt, Close Rare Sights"], ["6.5.0-a1", "Digital Twin A (Test): Hourly History, 14 Prior Days, 7 d / Run Ranges, Area Trends and Uptime"], ["6.5.0-b1", "Digital Twin B (Test): Real Freight Costs with a Diesel Index, Area Controls Moved into Process Flow"], ["6.5.0-b2", "Market Pricing (Test): 2026 OCC and Energy Costs, Diesel in $/gal, Desert Long Haul, Real Steam Rates"]];
+{const VNOTES=[["4.0.0", "Graphics Overhaul: 60 FPS on iPhone, ~80% Fewer Draw Calls"], ["4.0.1", "Performance Follow-Up, Show FPS Option and Device Autotest"], ["4.0.2", "Economy Rebalance and Smoother Upset Labels"], ["4.1.0", "Four Environments, Seeded Mills, Bottlenecks, Graphics Tiers and Site Music"], ["4.2.0", "New Site Maps, Rare Sights, Zen Map Rotation and Economics Fixes"], ["4.2.0-s", "Save and Continue Season (Test)"], ["4.2.1", "Save/Continue, Settings Panel and Outage Speed Fix"], ["4.2.2-t", "Bayou Gator Sight Reworked (Test)"], ["4.2.2-t2", "Gator Bass Riff (Test)"], ["4.2.2-t3", "Gator Riff Removed, Wide Camera Framing (Test)"], ["4.2.2-t4", "Gator Scene Shortened and Widened (Test)"], ["4.2.2-t5", "One Rare Sight per Map in Zen (Test)"], ["4.2.2", "Rare Sights Reworked, Bird Strike Upset, Mill Report Tab"], ["4.2.3-t", "Cowboys, Bigfoot and Tugboat Sights Reworked (Test)"], ["4.2.3", "Laptop Battery Saving (Default GPU)"], ["4.2.4", "$25M Goal Removed and Quick Fixes"], ["4.2.5", "Random Bottleneck per Season and Accessibility Improvements"], ["4.3.0-t1", "Survival Mode (Test)"], ["4.4.0-t1", "Mill Leaders in Survival (Test)"], ["4.4.0-t2", "Painted Leader Portraits (Test)"], ["4.4.0-t3", "Leader Redesign, 4-Day Waves and Fixes (Test)"], ["5.0.0", "Survival Mode Release with Mill Leaders"], ["5.0.1", "Results Dialog and Game Speed Fixes"], ["5.0.2", "Report Card Label Fixes"], ["5.0.3", "Survival Playtest Fixes (Test)"], ["5.0.4", "Playtest Review: Dot Auto-Fix and Shipping Fix (Test)"], ["5.0.5", "Polish Rounds from Survival Playtests"], ["5.0.6", "Survival QA Fixes, Opt-In Outage Watch, Leaderboard Filters"], ["5.1.0", "Civics Meters and Leaders in Seasons (Test)"], ["5.4.0", "Title Screen, Civics in the World and Dark Mode"], ["5.4.1", "Loading Splash, No Old-Menu Flash"], ["5.4.2", "Graphics Quality on the Title Screen"], ["5.5.0", "Performance Improvements"], ["5.6.0", "Fiddly Knobs, DCS/QCS Screens and Knobs View"], ["5.7.0", "Catching Failures Early: Tells, Daily Rounds, Vibration Report, Outage Prep"], ["5.7.1", "Bottom Menu Reorder, Settings Back on the Right"], ["5.7.2", "Help Page with Game Guide and Glossary"], ["5.7.3", "Bare Graphics Mode for Weak Phones"], ["5.7.4", "Version Notes Pop-Up (Triple-Tap the Version Number)"], ["6.1.0-t1", "Isometric Paper View: Fixed Camera, Cut-Outs, Drop Shadows, Cutaways, Season Palettes (Test)"], ["6.1.0-t2", "Iso Round 2: Cut-Outs Always Paper, GPU Pictures, Stop-Motion World, Fewer Draws (Test)"], ["6.1.0-t3", "Iso Round 3: iPhone Batching, Instanced Cans, Sign Atlas, Lighter Frames (Test)"], ["6.1.0-t4", "Iso Fixes: Operators and Fork-Trucks Back, Less Stutter (Test)"], ["6.1.0-t5", "Cut-Out Edge Artifact Fixed (Test)"], ["6.1.0-t6", "Iso Optimization: Hidden Objects Cost Nothing, Lighter Moving Batches (Test)"], ["6.1.0-t7", "Iso Triangle Cut: Paper-Card Trees, Flat Ground, Hidden Faces Gone, Plain Boxes (Test)"], ["6.1.0-t8", "Paper Palette: 40 Colours, Flat Surfaces, Paper Grain, Fewer Draws (Test)"], ["6.1.0-t9", "Reel Fix: Growing Reel Draws Again (Test)"], ["6.1.0-t10", "Draw Cut 2: Colour in the Matrix, Merged Roofs, Uploads on Change, Culling Fix, Parked Groups (Test)"], ["6.1.0-t11", "QA Fixes: Cut-Outs Never Drawn as Loose 3D Parts, Fallback Shows 3D, Roofs On or Off per Zoom Step (Test)"], ["6.1.0-t12", "Paper Smoke, Blinking Lights, Stronger Seasons, Sharper Phones, Instanced Upsets, Pictures at Start (Test)"], ["6.1.0-t13", "Paper Effects: Flames, Child-Made Tornado, Lamp Cones, Flags, Paper Water, Visible Weather (Test)"], ["6.1.0-t14", "Paper Upsets: Cut-Out Props, Paper Pigeon, Paper Sparks, Steam, Fireworks, Ice and Flood (Test)"], ["6.1.0-t15", "Beaver Reworked as One Smaller Cut-Out (Test)"], ["6.1.0-t16", "Paper Props Dim at Night, Labels Never Overlap, Fewer Cut-Out Pictures (Test)"], ["6.1.0-t17", "Bird on the Power Lines Cut-Scene Plays When Set Off From the Upsets List (Test)"], ["6.1.0-t18", "Zen Close-Ups Fixed, Rare Sights as Paper Cut-Outs, Tilt-Shift Diorama Look (Test)"], ["6.1.0-t19", "Narrower Tilt-Shift Band, Winder Trash Can Out of the Broke Hole (Test)"], ["6.1.0-t20", "Balance: Rounds Pay More, Capacity and Maintenance Upgrades Re-Priced"], ["6.1.0", "Paper Diorama: Isometric Paper Art Style, Cut-Out People and Upsets, Tilt-Shift, Rounds Pay More, Upgrades Re-Priced"], ["6.1.1", "Phone Fixes: Gentler Tilt-Shift on Tall Screens, Cut-Out People No Longer Blank on iPhone"], ["6.1.2", "iPhone: Cut-Out Self-Test Retries, People Keep Their Colours in the 3D Fallback"], ["6.1.3", "Broke Hole by the Winder Looks Like a Floor Opening (Was a Black Square)"], ["6.1.4", "Tilt-Shift Removed"], ["6.2.0", "Zen Free Camera: Perspective Zen Shots, 3D People in Zen, Cleaner River Water"], ["6.3.0-f1", "Process Flow Overview (Test): Inputs, Mill Areas and Outputs for the Mill Day, in Settings"], ["6.3.0-f2", "Process Flow: the Game Keeps Running While It's Open (Test)"], ["6.3.0", "Process Flow Overview: Inputs, Mill Areas and Outputs for the Mill Day (Settings > View)"], ["6.4.0", "Zen Shots Review: Shuffle-Bag Shot Order, Landscape Shots Rebuilt, Close Rare Sights"], ["6.5.0-a1", "Digital Twin A (Test): Hourly History, 14 Prior Days, 7 d / Run Ranges, Area Trends and Uptime"], ["6.5.0-b1", "Digital Twin B (Test): Real Freight Costs with a Diesel Index, Area Controls Moved into Process Flow"], ["6.5.0-b2", "Market Pricing (Test): 2026 OCC and Energy Costs, Diesel in $/gal, Desert Long Haul, Real Steam Rates"], ["6.5.0-b3", "DCS Expansion (Test): Full SPOT, WET and DET Pictures, a UTIL Screen, Motors and Reject Purges"]];
   let ov=null,held=false;
   function render(){
     const cur=APP_VER.replace(/^v/i,""),rows=VNOTES.slice().reverse().map(([v,n])=>

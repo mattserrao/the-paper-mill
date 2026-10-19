@@ -75,3 +75,4 @@ One line per version, oldest first. Add a line here with every release: build.py
 6.5.0-a1   Digital Twin A (Test): Hourly History, 14 Prior Days, 7 d / Run Ranges, Area Trends and Uptime
 6.5.0-b1   Digital Twin B (Test): Real Freight Costs with a Diesel Index, Area Controls Moved into Process Flow
 6.5.0-b2   Market Pricing (Test): 2026 OCC and Energy Costs, Diesel in $/gal, Desert Long Haul, Real Steam Rates
+6.5.0-b3   DCS Expansion (Test): Full SPOT, WET and DET Pictures, a UTIL Screen, Motors and Reject Purges

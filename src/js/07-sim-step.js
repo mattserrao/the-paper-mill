@@ -15,6 +15,7 @@ function step(dt){
   const M=S.M=mods();
   autoControl(dt);
   knobTick(dt);   // v5.6 fiddly knobs (returns at once unless a knob was moved)
+  dcsTick(dt);   // v6.5 b3 DCS motors and reject purges (07c; nothing until the DCS is used)
   const g=GRADES[C.grade];
   // 1 inbound arrivals
   // weather: changes every few hours; snow and fog slow the trucks, rain soaks bales
