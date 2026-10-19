@@ -1,5 +1,14 @@
 # Changelog
 
+## v6.2.0-z1 (2026-10-18): zen free camera (test branch test/v6.2-zenfree)
+- **Zen mode gets a free camera again:** a perspective camera that follows the zen shots as written (orbits, tilt-ups,
+  low dollies, flyovers, ride-alongs), with the sky dome back; the game itself keeps the fixed iso view. The camera
+  swaps on entering zen and back on leaving it (to the nearest zoom step). ?zeniso = zen stays isometric.
+- While the free camera is on, people and vehicles are their 3D models (the paper pictures are taken from the iso
+  direction and would show the wrong side); they go back to paper when zen ends.
+- Measured (desktop, software rendering, 10 zen shots each): free camera 126-410 draws, 44-92k triangles; isometric zen
+  47-82 draws, 33-58k triangles. Normal play: 6 regression plays clean.
+
 ## v6.1.4 (2026-10-18): tilt-shift removed
 - The tilt-shift blur (t18 experiment) is gone: the scene draws straight to the screen again, and the Settings switch is
   removed.

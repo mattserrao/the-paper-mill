@@ -37,10 +37,18 @@
   G3.following=()=>FOL.on;
   // camera, every frame: ride along with Uncle Brian if following, glide toward a camera goal if one is set,
   // then place the orbit camera around its target (one function; v3 built this by wrapping it twice)
+  // swap the live camera; leaving zen goes back to the iso view where the shot left off, on the nearest zoom step
+  function camSwap(free){camera=free?camPersp:camIso;if(free){camPersp.aspect=(G3.vw||host.clientWidth)/Math.max(1,G3.vh||host.clientHeight);camPersp.updateProjectionMatrix();}
+    else{cam.r=rStep(clamp(cam.r,R_STEPS[R_STEPS.length-1],R_MAX));rShown=cam.r;}G3.camFree=free;G3.lastMove=performance.now();if(G3.onCamSwap)G3.onCamSwap(free);}
   function placeCam(){if(FOL.on){const R=G3.scrubbers&&G3.scrubbers[0];if(goal||(S&&S.zen)||!R)folEnd();
       else{const g=R.g.position;target.x+=(g.x-target.x)*0.1;target.z+=(g.z-target.z)*0.1;cam.r+=(FOL.r-cam.r)*0.08;if(FOL.n++<90)cam.ph+=(0.62-cam.ph)*0.06;G3.lastMove=performance.now();}}
     if(goal){G3.lastMove=performance.now();target.lerp(goal.t,0.12);cam.r+=(goal.r-cam.r)*0.12;cam.th=lerpAng(cam.th,goal.th,0.12);cam.ph+=(goal.ph-cam.ph)*0.12;
-      goal.n=(goal.n||0)+1;if(goal.n>150||target.distanceTo(goal.t)<0.2&&Math.abs(goal.r-cam.r)<0.5){goal=null;cam.r=rStep(cam.r);}}
+      goal.n=(goal.n||0)+1;if(goal.n>150||target.distanceTo(goal.t)<0.2&&Math.abs(goal.r-cam.r)<0.5){goal=null;if(!(G3.zenFree&&S&&S.zen))cam.r=rStep(cam.r);}}
+    // v6.2 test: zen with the free camera: the shot's angles and distance as they are, through the perspective camera
+    const free=!!(G3.zenFree&&S&&S.zen);if(free!==(camera===camPersp))camSwap(free);
+    if(free){cam.r=clamp(cam.r,4,900);rShown=cam.r;G3.camR=cam.r;G3.camDist=cam.r;const sp=Math.sin(cam.ph);
+      camPersp.position.set(target.x+cam.r*sp*Math.sin(cam.th),target.y+cam.r*Math.cos(cam.ph),target.z+cam.r*sp*Math.cos(cam.th));
+      if(camPersp.position.y<0.4)camPersp.position.y=0.4;camPersp.lookAt(target);return;}
     // v6.1 iso: angles pinned; the shown zoom eases to the nearest whole-number step of whatever cam.r asks for
     cam.th=ISO_TH;cam.ph=ISO_PH;cam.r=clamp(cam.r,R_STEPS[R_STEPS.length-1]*0.8,R_MAX);
     {const want=goal?cam.r:rStep(cam.r);const k=Math.abs(Math.log(want/rShown));rShown=k<0.004?want:Math.exp(Math.log(rShown)+(Math.log(want)-Math.log(rShown))*0.35);}
@@ -112,6 +120,6 @@
     document.querySelectorAll("#gfxSeg button").forEach(b=>b.setAttribute("aria-pressed",String(b.dataset.g===pick)));};
 
   function resize(){G3.lastMove=performance.now();const w=host.clientWidth,h=host.clientHeight;G3.vw=w;G3.vh=h;   // v4.0.1: cached for the label code
-  host.classList.toggle("compact",w<640);if(!w||!h)return;{const pr=G3.prFor(w,h);if(Math.abs(pr-renderer.getPixelRatio())>0.01)renderer.setPixelRatio(pr);}renderer.setSize(w,h,false);camera.aspect=w/h;camera.top=NaN;camera.isoFit(G3.camDist||DEF.r);}
+  host.classList.toggle("compact",w<640);if(!w||!h)return;{const pr=G3.prFor(w,h);if(Math.abs(pr-renderer.getPixelRatio())>0.01)renderer.setPixelRatio(pr);}renderer.setSize(w,h,false);camIso.aspect=w/h;camIso.top=NaN;camIso.isoFit(camera===camIso?(G3.camDist||DEF.r):rStep(cam.r));camPersp.aspect=w/h;camPersp.updateProjectionMatrix();}
   new ResizeObserver(resize).observe(host);
 

@@ -12,9 +12,9 @@ with sync_playwright() as pw:
     pg.on("console", lambda m: errs.append("console:"+m.text[:200]) if m.type=="error" else None)
     pg.route("**/*", route_for(html)); pg.add_init_script(INIT); pg.goto("http://bench.local/?"+q)
     pg.wait_for_function("window.__PM&&(!__PM.G3.SM||__PM.G3.SM.done)&&(!__PM.G3.prewarm||__PM.G3.warm)", timeout=300000, polling=500)
-    pg.evaluate("()=>document.getElementById('v2zen').click()")
+    pg.evaluate("()=>{__PM.G3.noFallback=true;document.getElementById('v2zen').click()}")
     for k in range(int(sys.argv[4]) if len(sys.argv)>4 else 8):
         pg.wait_for_timeout(5000)
-        info=pg.evaluate("()=>{const G=__PM.G3,c=G.diagScene().camera;return {iso:!!c.isIso,camR:G.camR|0,pos:[c.position.x|0,c.position.y|0,c.position.z|0],calls:G.diagScene().renderer.info.render.calls}}")
+        info=pg.evaluate("()=>{const G=__PM.G3,c=G.diagScene().camera;return {iso:!!c.isIso,free:!!G.camFree,camR:G.camR|0,pos:[c.position.x|0,c.position.y|0,c.position.z|0],calls:G.diagScene().renderer.info.render.calls,tris:G.diagScene().renderer.info.render.triangles,shot:G.zenLast}}")
         print(k,json.dumps(info)); pg.screenshot(path=f"{out}-{k}.jpg",type="jpeg",quality=75)
     print("errors",errs[:4]); b.close()

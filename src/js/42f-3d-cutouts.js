@@ -165,7 +165,13 @@
       own picture exists it borrows the nearest one (its last picture, else the last of its kind at that heading, else any of
       its kind), and one with no picture at all goes to the front of the queue. Errors are counted per picture or per
       actor and never switch the cut-outs off. */
-   G3.cutTick=now=>{if(!CUT.ok)return;
+   /* v6.2 test: with zen's free camera the pictures (taken looking from the iso direction) would show the wrong side, so
+      the people and vehicles are shown as their 3D models while it is on, and go back to paper when zen ends */
+   const freeMode=on=>{if(!CUT.ok||CUT.free===on)return;CUT.free=on;const all=CUT.actors.concat(LIVE);
+     for(const a of all){a.o.children.forEach(c=>{c.matrixWorldAutoUpdate=on;});hide(a,!on);a.cell=null;a.hid=!on;}
+     sets.forEach(S2=>{S2.card.count=S2.shad.count=0;});};
+   G3.onCamSwap=on=>freeMode(on);
+   G3.cutTick=now=>{if(!CUT.ok)return;if(CUT.free){if(now>scanT){scanT=now+2000;try{rescan();for(const a of CUT.actors.concat(LIVE))if(a.hid){a.o.children.forEach(c=>{c.matrixWorldAutoUpdate=true;});hide(a,false);a.hid=false;}}catch(e){}}return;}
      if(now>scanT){scanT=now+2000;try{rescan();}catch(e){CUT.errs++;}}
      if(!CUT.burst)CUT.burst=now+6000;   // (the first seconds take pictures faster: everyone needs one)
      let n=0;const capN=now<CUT.burst?CAP_BURST:CAP_N;

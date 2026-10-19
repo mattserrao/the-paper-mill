@@ -91,9 +91,15 @@ function no3D(){G3.ok=false;$("no3d").hidden=false;$("no3d-retry").onclick=()=>l
      perspective camera with an 18 degree field would see at that distance, so every zoom number in the game keeps its meaning.
      The camera itself sits ISO_D back along the view line; fov and aspect are kept for the code that reads them. */
   const ISO_D=1200;
-  const camera=new THREE.OrthographicCamera(-1,1,1,-1,1,ISO_D*2.6);camera.fov=18;camera.aspect=16/9;camera.isIso=true;
-  camera.isoFit=(rr)=>{const hh=rr*Math.tan(camera.fov*Math.PI/360),hw=hh*camera.aspect;
-    if(camera.top!==hh||camera.right!==hw){camera.left=-hw;camera.right=hw;camera.top=hh;camera.bottom=-hh;camera.updateProjectionMatrix();}};
+  const camIso=new THREE.OrthographicCamera(-1,1,1,-1,1,ISO_D*2.6);camIso.fov=18;camIso.aspect=16/9;camIso.isIso=true;
+  camIso.isoFit=(rr)=>{const C=camIso,hh=rr*Math.tan(C.fov*Math.PI/360),hw=hh*C.aspect;
+    if(C.top!==hh||C.right!==hw){C.left=-hw;C.right=hw;C.top=hh;C.bottom=-hh;C.updateProjectionMatrix();}};
+  /* v6.2 test (zen free camera): zen mode gets a perspective camera that moves freely (the pre-iso zen shots: orbits,
+     tilt-ups, low dollies, flyovers); the game itself keeps the fixed iso view. `camera` is whichever is live, swapped
+     by placeCam (29). ?zeniso = zen stays isometric. */
+  const camPersp=new THREE.PerspectiveCamera(40,16/9,0.5,5000);camPersp.isoFit=()=>{};
+  let camera=camIso;G3.camIso=camIso;G3.camPersp=camPersp;
+  G3.zenFree=!/[?&]zeniso/.test(location.search);
 
   /* ---- v6.1 t8: the paper palette ----
      One deliberate set of 40 colours for the whole mill and its scenery: a muted base of papers, krafts, slates and inks,
