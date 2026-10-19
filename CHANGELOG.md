@@ -1,7 +1,8 @@
 # Changelog
 
 
-## v6.5.5-t1 (2026-10-19): the dewatering chain (test branch test/v6.5.5-dewater, on top of v6.5.4)
+## v6.5.5 (2026-10-19): the dewatering chain
+Built on test/v6.5.5-dewater (as 6.5.5-t1), merged into main with v6.5.4.
 One chain from the headbox to the dryers (`dewater()`, 07b-knobs.js), replacing the old water factor:
 - **Jet (slice)**: the slice opening (J/W) and the lip position (jet angle) are best at standard; either way less water
   comes off the table (couch solids −1.7 points at ±0.6 opening, −1.0 at ±0.6 lip). The slice now lives in the saved
@@ -19,7 +20,8 @@ One chain from the headbox to the dryers (`dewater()`, 07b-knobs.js), replacing 
   the boiler trip and the wet sheet.
 - `tools/dewatercheck.py` (13 checks); `knobcheck.py` passes unchanged.
 
-## v6.5.4 (2026-10-19): DCS fixes (test branch test/v6.5.4-dcs)
+## v6.5.4 (2026-10-19): DCS fixes
+Built on test/v6.5.4-dcs, merged into main with v6.5.5.
 - **Making-beater alert**: when the reel starts going to the beater (a spec violation or a knob defect) a banner goes up
   over the mill ("Making beater: …"), the WET DCS shows a red alert right under the headbox dilution zones, and every
   DCS screen's alarm list leads with MAKING BEATER · what's wrong.
