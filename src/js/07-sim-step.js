@@ -75,25 +75,36 @@ function step(dt){
     }
   }
   if(S.pm!=="run") S.pmSpeed=ease(S.pmSpeed,0,dt,3);
+  let beat=0;
   if(prod>0){{const ec=prod*energyCost();spend(ec,"energy");pfEnergy(prod,ec);}knobSteamCost(prod);S.q.made+=prod;
-    let off=0;if(M.offSpec)off=prod;
+    // v6.5.3: the spec check (07e): weight, moisture or color out and the whole reel is beater; then a grade change's
+    // transition tons; then the other knob defects' share
+    let off=0;if(qualTick().off)off=prod;
     else if(S.chg){off=Math.min(prod,S.chg.left);S.chg.left-=off;if(S.chg.left<=1e-6){log(`Grade change to ${S.chg.to} complete: back on spec`,"ok");S.chg=null;}}
-    {const kf=Math.max(knobOff(),dryOff());if(kf>0)off=Math.min(prod,off+(prod-off)*kf);}   // (v6.5 b5: a wet sheet from the dryer limit, 07d)   // v5.6: a moved knob sending part of the reel to the beater
-    if(off>0){pfW("broke",off);S.tot.broke+=off;S.tot.beater=(S.tot.beater||0)+off;S.q.off+=off;S.q.bank+=off;prod-=off;}
+    {const kf=knobOff();if(kf>0)off=Math.min(prod,off+(prod-off)*kf);}   // v5.6: a moved knob sending part of the reel to the beater (defects other than weight and moisture)
+    // (v6.5.3: off-spec paper stays on the reel as beater and is wound into beater rolls; before, it vanished here)
+    if(off>0){pfW("broke",off);S.tot.broke+=off;S.q.off+=off;prod-=off;beat=off;}
     if(S.plan.hot&&C.grade==="33HT")S.plan.hot.made+=prod;
     if(S.pf&&prod>0)pfW("val",prod*priceOf(C.grade));}
-  S.reel+=prod;lotPut(S.lots.reel,C.grade,prod); S.tot.prodT+=prod; S.tot.pot+=P.K*C.pmSp.v*g.bw*dt/60;
+  S.reel+=prod+beat;lotPut(S.lots.reel,C.grade,prod);lotPut(S.lots.reel,"beater",beat); S.tot.prodT+=prod; S.tot.pot+=P.K*C.pmSp.v*g.bw*dt/60;
   planTick(dt,prod);
   if(S.reel>=P.jumbo&&reelsAtWinder()<=P.storeReels){S.winderBuf+=S.reel;lotTake(S.lots.reel,S.reel,S.lots.buf);S.reel=0;S.lots.reel.length=0;S.tot.turnups++;}
   // 6 winder
   if(S.wd==="hayout"){if(working("hay"))S.hayLeft-=dt*leadRethread();S.tot.hayMin+=dt;if(S.hayLeft<=0){S.wd="run";log("Winder cleaned up and running again","ok");}}
   if(S.conv===undefined)S.conv=0;const convFull=S.conv>=P.convCap-1e-6;S.wdBlocked=convFull;
-  const cut=S.wd==="hayout"||M.winderDown||convFull?0:Math.min(S.winderBuf,C.wdr.v*dt/60); S.winderBuf-=cut; S.winderAcc+=cut;lotTake(S.lots.buf,cut,S.lots.acc);
+  const cut=S.wd==="hayout"||M.winderDown||convFull?0:Math.min(S.winderBuf,C.wdr.v*dt/60); S.winderBuf-=cut;
+  // v6.5.3: the winder splices the off-spec sections out of the set and winds them onto beater rolls of their own
+  {const T=[];lotTake(S.lots.buf,cut,T);let bt=0;for(const [k,q] of T){if(k==="beater")bt+=q;else lotPut(S.lots.acc,k,q);}S.winderAcc+=cut-bt;S.beatAcc=(S.beatAcc||0)+bt;S.beatEnd=cut>0&&bt<=1e-9;}
   if(cut>0&&L.hay<dt/720*0.75*P.hayBase*outRel("dry")*((C.hays?1:0)+(M.hayMul-1)))hayout(L.hayLen,L.hayLoss);
   let rollsMade=0;
   // (a roll takes the grade that makes up most of its paper: one roll at a grade change is part old, part new)
   while(S.winderAcc>=C.rollW.v){S.winderAcc-=C.rollW.v;const T=[];lotTake(S.lots.acc,C.rollW.v,T);let g=C.grade,best=-1;for(const [k,q] of T)if(q>best){best=q;g=k;}
     lotPut(S.lots.conv,g,1);S.conv+=1;rollsMade++;S.tot.rolls++;}
+  // v6.5.3: a beater roll goes to the beater bay (27-3d draws it there from S.tot.beater) and round to the pulper
+  // (full rolls while the off-spec section lasts; when good paper comes through again the rest goes on a short roll)
+  while((S.beatAcc||0)>=C.rollW.v-1e-6||(S.beatEnd&&(S.beatAcc||0)>0.05)){const q=Math.min(S.beatAcc,C.rollW.v);S.beatAcc=Math.max(0,S.beatAcc-q);
+    S.tot.beater=(S.tot.beater||0)+C.rollW.v;S.tot.beatRolls=(S.tot.beatRolls||0)+1;S.q.bank+=q;}
+  beaterTick(dt);
   // 6 outbound
   if(!M.noOut) S.outPhase+=dt*C.outRate.v/60*S.outJit*wxTruck;
   while(S.outPhase>=1){S.outPhase-=1;S.outJit=0.6+rand("flow")*0.8;

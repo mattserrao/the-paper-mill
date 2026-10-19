@@ -44,7 +44,7 @@ RUN = """(a)=>{const P=__PM,[name,set,mins]=a,G=P.G3;G.save.restore(JSON.parse(w
     if(set._break&&!forced&&dt>=set._break&&S.pm==="run"){forced=true;S.pm="break";S.brkType="press";S.breakLeft=60;S.breakTotal=60;S.tot.breaks++;}
     for(const i of S.inc)if(!seen.some(x=>x.real===i.real)){seen.push({id:i.id,real:i.real,t:Math.round(dt),knob:i.knob||null});if(first===null)first=dt;}
     if(S.tot.breaks>bk){bk=S.tot.breaks;brks.push(Math.round(dt));if(first===null&&!(forced&&brks.length===1))first=dt;}
-    const K=S.knob;if(K){if(K.off>maxOff){maxOff=K.off;if(first===null&&K.off>0.02)first=dt;}maxSf=Math.max(maxSf,K.sf);if(K.any){minM=Math.min(minM,K.x.m);maxM=Math.max(maxM,K.x.m);}}}
+    const K=S.knob;if(K){const ko=Math.max(K.off,S.pm==="run"&&G.qual().out.length?1:0);if(ko>maxOff){maxOff=ko;if(first===null&&ko>0.02)first=dt;}maxSf=Math.max(maxSf,K.sf);if(K.any){minM=Math.min(minM,K.x.m);maxM=Math.max(maxM,K.x.m);}}}
   const logs=S.feed.slice(0,Math.max(0,S.feed.length-feed0)).map(f=>Math.round(f.t-t0)+": "+f.text).reverse();
   return {name,hasKnob,first:first==null?null:Math.round(first),inc:seen,breaks:brks,maxOff:+maxOff.toFixed(3),maxSf:+maxSf.toFixed(3),minM:+minM.toFixed(2),maxM:+maxM.toFixed(2),
     cash:S.cash,good:S.tot.prodT,beater:+((S.tot.beater||0)-beat0).toFixed(1),off:P.knob.off(),any:!!(S.knob&&S.knob.any),

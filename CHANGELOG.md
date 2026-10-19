@@ -1,6 +1,23 @@
 # Changelog
 
 
+## v6.5.3 (2026-10-19): quality specs (test branch test/v6.5.3-specs)
+- **A spec sheet for every grade** (`QSPEC`, new 07e-quality.js): basis weight target ±3% (23m 23.81–25.29, 26m
+  25.28–26.84, 30m 29.15–30.95, 33HT 32.09–34.07 lb/1000 ft²), reel moisture 4.0–10.0%, and the mill's color.
+- **The QCS checks the reel every step**: weight from the grade and the machine chest's consistency swings, moisture from
+  the dryers, color from the dye system (dye trouble, or the dye pump stopped). While any is out, everything made is
+  off spec. A grade change's transition tons count as weight. The other knob defects (CD streaks, crush marks, felt
+  stripes, wrinkles) still send their share on top. Before, each source sent its own partial share and wet/dry was a
+  sliding scale; now a violated spec rejects the whole reel while it lasts.
+- **Off-spec paper becomes beater rolls**: it stays on the reel, the winder splices it out of the set and winds it onto
+  beater rolls of its own (a short roll at the end of a spell), so finished rolls are always on spec. Beater rolls wait
+  in the warehouse bay (the 3D beater flow already drew this), then the broke pulper repulps them into the stock chest
+  at about 25 t/h while there's room: the fiber comes back, the energy, machine time and winder time don't. Before,
+  off-spec tons simply vanished. The broker's "seconds" card buys what's waiting in the bay.
+- **QCS screen** shows each reading against its spec (red when out) and names the violation; the dry end DCS alarms
+  BASIS WEIGHT / MOISTURE / COLOR OFF SPEC. The help glossary's "Off-spec" explains it.
+- `tools/qualcheck.py` (18 checks); `tools/knobcheck.py` reads off-spec from the spec check for weight and moisture.
+
 ## v6.5.2 (2026-10-19): knob fixes
 Built on test/v6.5.2-knobs, merged into main.
 - **Fiddly knobs bite again under the dryer limit** (07d-dryer.js, 07b-knobs.js). Since b5 the knobs added kPa to the 3rd

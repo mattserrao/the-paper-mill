@@ -139,7 +139,9 @@ function knobTick(dt){const K=S.knob;if(!K||!K.any||S.zen)return;
   // ---- consequences: off-spec ----
   const nz=x.z.filter(z=>Math.abs(z)>4).length;
   const F={wet:x.m>10?(x.m-10)/4:0,dry:x.m<4?(4-x.m)/2:0,cd:nz/3,bw:x.sw>0.3?(x.sw-0.3)/0.6:0,crush:x.cr>0.05?(x.cr-0.05)/0.6:0,stripes:x.st>0.4?(x.st-0.4)/0.4:0,wrinkles:x.dl>0.15?(x.dl-0.15)/0.6:0};
-  let keep=1,top="",tv=0;for(const k in F){const f=clamp(F[k],0,1);F[k]=f;keep*=1-f;if(f>tv){tv=f;top=k;}}
+  // (v6.5.3: weight and moisture are judged against the grade's spec by the QCS check, 07e; F.wet, dry and bw stay for
+  // the screens and the crew's tracing, and only the other defects send a share of the reel to the beater from here)
+  let keep=1,top="",tv=0;for(const k in F){const f=clamp(F[k],0,1);F[k]=f;if(k==="wet"||k==="dry"||k==="bw")continue;keep*=1-f;if(f>tv){tv=f;top=k;}}
   const off=1-keep;
   if(off>0.02&&K.off<=0.02&&run)log(`QCS: the reel is going to the beater (${KOFFN[top]}).`,"warn");
   if(off<=0.02&&K.off>0.02)log("QCS: the reel is back on spec.","ok");
@@ -196,7 +198,7 @@ function knobRead(){const K=S.knob,x=K?K.x:null,g=GRADES[C.grade]||GRADES["23m"]
     edge:K?K.edge:0,gtrav:K?K.gtrav:0,gm:knobVal("gm"),stripes:x?x.st:0,cs:K?K.cs:0,couch:knobVal("couch"),osc:knobVal("osc"),wear:K?K.wear:0,
     st1:knobVal("st1"),st3,steam:run?(Dr?Dr.steam:50.5*S.pmSpeed/2736):0,boiler:Dr?Dr.hdr:1,moist:run?m+wob(0.13,4)*0.25:0,
     bw:run?bw*(1+sw*0.08*wob(0.21,3))+wob(0.11,5)*0.12:0,draw:knobVal("draw"),tension:run?1.0+(knobVal("draw")-1.5)*0.42:0,
-    zones:z.map((v,i)=>m+v*0.35+Math.sin(i*1.7+t*0.01)*0.12),off:K&&K.any?K.off:dryOff(),why:K&&K.any?K.offWhy:dryOff()>0?(Dr&&Dr.m<4?"dry":"wet"):"",F:K&&K.F||{},speed:S.pmSpeed};}
+    zones:z.map((v,i)=>m+v*0.35+Math.sin(i*1.7+t*0.01)*0.12),off:qualStatus().off,why:qualStatus().why,F:K&&K.F||{},speed:S.pmSpeed};}
 // DCS / QCS trend history: a reading every 2 sim minutes, 6 hours kept. Read-only on the sim (it never writes S), kept
 // outside S so saves don't grow; a new game or a loaded save starts it fresh.
 const KHIST={S:null,t:-1,a:[]};

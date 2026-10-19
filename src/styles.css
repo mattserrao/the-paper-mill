@@ -1261,3 +1261,5 @@ body.pmpop .popmain[data-v="dcs"] #dcsOv .dcs{max-width:1180px;margin:0 auto}
 /* (side by side, the flow takes its narrow-screen layout: inputs beside the picture, outputs in a row underneath) */
 .popmain[data-v="both"] .pfb{grid-template-columns:200px minmax(0,1fr)}
 .popmain[data-v="both"] .pfout{grid-column:1 / -1;display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr))}.popmain[data-v="both"] .pfout .dcssub{grid-column:1 / -1}
+/* v6.5.3 QCS: a reading outside its grade's spec */
+.qcsv div.qout{border-color:#ff6b5e;background:#2a1420}.qcsv div.qout b{color:#ff8b7f}

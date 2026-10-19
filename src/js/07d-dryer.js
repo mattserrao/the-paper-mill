@@ -49,6 +49,5 @@ function dryTick(dt){const D=dryState(),g=C.grade,b=DRY.base[g]||122,run=S.pm===
 // mods (04-upsets mods()): the crew's speed trim, and wet-sheet breaks in the dryers when the knob model isn't running
 function dryMods(m){const D=S.dry;if(!D||S.zen)return;if(D.trim>0)m.speedCap=Math.min(m.speedCap,1-D.trim);
   const K=S.knob;if(!(K&&K.any)&&D.m>13)m.breakMul*=1+(D.m-13)*0.8;}
-// paper sent to the beater for moisture when the knob model isn't running (it handles it when it is)
-function dryOff(){const D=S.dry,K=S.knob;if(!D||S.zen||(K&&K.any))return 0;return D.m>DRY.spec?clamp((D.m-DRY.spec)/4,0,1):D.m<4?clamp((4-D.m)/2,0,1):0;}
+// (v6.5.3: whether the reel is in spec on moisture is the QCS spec check's call now, 07e-quality.js)
 const dryLimited=()=>!!(S.dry&&S.pm==="run"&&S.dry.dem>=dryCeil(S.dry)-0.5);

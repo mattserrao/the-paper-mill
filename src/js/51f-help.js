@@ -67,7 +67,7 @@
     ["Machine chest","The chest that feeds the paper machine with pulp at a steady consistency."],
     ["Mill leader","The person in charge of your run: Chip, Dot, Felicity or Hank."],
     ["OCC","Old corrugated containers: used cardboard boxes, the mill's raw material."],
-    ["Off-spec","Paper that doesn't meet its specification (moisture, weight, streaks) and goes to the beater."],
+    ["Off-spec","Paper outside its grade's spec (basis weight ±3%, moisture 4–10%, the mill's color) or with defects like streaks and crush marks. It's wound into beater rolls, which go back to the pulper to be repulped (the QCS screen shows the spec)."],
     ["Outage","A planned shutdown for maintenance, every 7 days in a season and every 4 days in survival."],
     ["Outage prep","The four-item checklist before an outage that shortens and cheapens it."],
     ["Press section","Rolls that squeeze water out of the wet sheet through the felts."],
