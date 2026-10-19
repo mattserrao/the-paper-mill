@@ -1,9 +1,12 @@
 # Changelog
 
 
-## v6.5.3 (2026-10-19): quality specs (test branch test/v6.5.3-specs)
+## v6.5.3 (2026-10-19): quality specs
+Built on test/v6.5.3-specs, merged into main.
 - **A spec sheet for every grade** (`QSPEC`, new 07e-quality.js): basis weight target ±3% (23m 23.81–25.29, 26m
-  25.28–26.84, 30m 29.15–30.95, 33HT 32.09–34.07 lb/1000 ft²), reel moisture 4.0–10.0%, and the mill's color.
+  25.28–26.84, 30m 29.15–30.95, 33HT 32.09–34.07 lb/1000 ft²), reel moisture 8 ±2% (6.0–10.0%), and the mill's
+  color. The dryers' auto loop now holds 8% (was 7%), the middle of the spec; the DCS low-moisture alarm and the QCS
+  and CD profile targets follow it.
 - **The QCS checks the reel every step**: weight from the grade and the machine chest's consistency swings, moisture from
   the dryers, color from the dye system (dye trouble, or the dye pump stopped). While any is out, everything made is
   off spec. A grade change's transition tons count as weight. The other knob defects (CD streaks, crush marks, felt

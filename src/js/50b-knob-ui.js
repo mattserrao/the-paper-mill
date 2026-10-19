@@ -102,7 +102,7 @@ function knobAlarms(a,r){const L=[],al=(on,txt,hi)=>{if(on)L.push([txt,hi]);};co
     al(r.gap<0.25,"REFINER GAP LO",r.gap<0.18);al(Math.abs(r.mcCons-3.2)>0.35,"MACHINE CHEST CONS DEV",Math.abs(r.mcCons-3.2)>0.6);}
   else if(a==="WET"){al(r.vac<18,"FORMER VACUUM LO",r.vac<12);al(Math.abs(r.edge)>12,"FABRIC EDGE DEV",Math.abs(r.edge)>35);al(r.gm&&r.gtrav>0.85,"GUIDE AT END OF TRAVEL",r.gtrav>=1);
     al(r.cs>0.6&&S.pm!=="run","COUCH PIT LEVEL HI",r.cs>1.2);al(r.pl>125,"PRESS LOAD HI",r.pl>135);al(r.couchSol<16,"COUCH SOLIDS LO",r.couchSol<14);al(K&&K.F&&K.F.cd>0,"CD PROFILE OUT",true);}
-  else if(a==="DET"&&r.run){al(S.dry&&r.st3>=dryCeil(S.dry)-1,"3RD SECTION STEAM AT MAX",true);al(r.boiler<0.8,"STEAM HEADER LO",r.boiler<0.7);al(r.run&&r.moist>9.5,"REEL MOISTURE HI",r.moist>11);al(r.run&&r.moist<4.5,"REEL MOISTURE LO",r.moist<3.5);
+  else if(a==="DET"&&r.run){al(S.dry&&r.st3>=dryCeil(S.dry)-1,"3RD SECTION STEAM AT MAX",true);al(r.boiler<0.8,"STEAM HEADER LO",r.boiler<0.7);al(r.run&&r.moist>9.5,"REEL MOISTURE HI",r.moist>11);al(r.run&&r.moist<6.5,"REEL MOISTURE LO",r.moist<6);
     al(r.run&&r.tension>1.3,"DRAW TENSION HI",r.tension>1.5);al(r.run&&r.tension<0.85,"DRAW TENSION LO",r.tension<0.7);
     al(QNOW.out.includes("bw"),"BASIS WEIGHT OFF SPEC",true);al(QNOW.out.includes("m"),"MOISTURE OFF SPEC",true);al(QNOW.out.includes("shade"),"COLOR OFF SPEC",true);}   // (v6.5.3: the QCS spec check)
   else if(a==="DET")al(r.boiler<0.8,"STEAM HEADER LO",r.boiler<0.7);
@@ -163,19 +163,19 @@ function kuiRefresh(){if(!KUI.panel&&!KUI.st)return;const r=knobRead();
       // v6.5.3: each reading against the grade's spec (QSPEC, 07e); red when it's out
       const g=GRADES[C.grade],sp=QSPEC[C.grade]||QSPEC["23m"],qv=$("qcsV"),qo=k=>r.run&&QNOW.out.includes(k)?' class="qout"':"",rg=(a,d)=>`spec ${a[0].toFixed(d)}–${a[1].toFixed(d)}`;
       const shn=((document.querySelector('#paperColor button[aria-pressed="true"]')||{}).dataset||{}).c==="white"?"white":"brown";
-      const qh=`<div><small>Grade</small><b>${C.grade}</b><small>target ${g.bw} lb · 7.0 %</small></div><div${qo("bw")}><small>Basis weight</small><b>${r.run?kf(QNOW.bw,2):"–"}</b><small>${rg(sp.bw,2)}</small></div><div${qo("m")}><small>Moisture</small><b>${r.run?kf(r.moist):"–"} %</b><small>${rg(sp.m,1)}</small></div><div${qo("shade")}><small>Color</small><b>${QNOW.shade?"ON SHADE":"OFF SHADE"}</b><small>spec ${shn}</small></div><div><small>Reel speed</small><b>${Math.round(r.speed)}</b><small>fpm</small></div>`;if(qv._h!==qh){qv._h=qh;qv.innerHTML=qh;}
+      const qh=`<div><small>Grade</small><b>${C.grade}</b><small>target ${g.bw} lb · ${DRY.m0.toFixed(1)} %</small></div><div${qo("bw")}><small>Basis weight</small><b>${r.run?kf(QNOW.bw,2):"–"}</b><small>${rg(sp.bw,2)}</small></div><div${qo("m")}><small>Moisture</small><b>${r.run?kf(r.moist):"–"} %</b><small>${rg(sp.m,1)}</small></div><div${qo("shade")}><small>Color</small><b>${QNOW.shade?"ON SHADE":"OFF SHADE"}</b><small>spec ${shn}</small></div><div><small>Reel speed</small><b>${Math.round(r.speed)}</b><small>fpm</small></div>`;if(qv._h!==qh){qv._h=qh;qv.innerHTML=qh;}
       drawTrend6($("qcsTr"),[["moist","","#4fd18b",0,14],["bw","","#ffb02e",(g.bw-3),(g.bw+3)],["off","","#ff7a8a",0,1]]);kuiCd($("qcsCd"),r);
       const D=[["Wrinkles",F.wrinkles],["Crush marks",F.crush],["Felt stripes",F.stripes],["CD streaks",F.cd],["Weight swings",F.bw],["Wet sheet",F.wet],["Dry sheet",F.dry]];
       const h=D.map(([n,v])=>{const c=v>0.01?Math.round(4+v*80):0;return `<div class="${c?"hit":""}"><small>${n}</small><b>${c}</b><small>/ reel</small></div>`;}).join("");const dd=$("qcsDef");if(dd._h!==h){dd._h=h;dd.innerHTML=h;}}}}
-// CD moisture profile: a bar per zone up from 3 %, the ±1.5 % spec band round the reel average, the 7 % target
+// CD moisture profile: a bar per zone up from 3 %, the ±1.5 % spec band round the reel average, the 8 % target
 function kuiCd(cv,r){if(!cv)return;const x=cv.getContext("2d"),W=cv.width,H=cv.height,z=r.zones,lo=3,hi=11,Y=v=>H-18-clamp((v-lo)/(hi-lo),0,1)*(H-30);
   x.fillStyle="#0f1b2d";x.fillRect(0,0,W,H);
   if(!r.run){x.fillStyle="rgba(190,205,230,.8)";x.font="600 18px system-ui,sans-serif";x.textAlign="center";x.fillText("Scanner parked: no sheet",W/2,H/2);x.textAlign="left";return;}
   const m=r.moist;x.fillStyle="rgba(79,209,139,.16)";x.fillRect(0,Y(m+1.5),W,Y(m-1.5)-Y(m+1.5));
   const bw=W/z.length;z.forEach((v,i)=>{const bad=Math.abs(v-m)>1.5;x.fillStyle=bad?"#ff6b5e":"#5f8fd8";const y=Y(v);x.fillRect(i*bw+6,y,bw-12,H-18-y);
     x.fillStyle="rgba(190,205,230,.75)";x.font="600 13px system-ui,sans-serif";x.textAlign="center";x.fillText(String(i+1),i*bw+bw/2,H-3);});
-  x.strokeStyle="rgba(79,209,139,.85)";x.setLineDash([6,6]);x.lineWidth=1.5;x.beginPath();x.moveTo(0,Y(7));x.lineTo(W,Y(7));x.stroke();x.setLineDash([]);
-  x.textAlign="left";x.fillStyle="rgba(190,205,230,.8)";x.font="600 12px system-ui,sans-serif";x.fillText("7 % target",6,Y(7)-4);}
+  x.strokeStyle="rgba(79,209,139,.85)";x.setLineDash([6,6]);x.lineWidth=1.5;x.beginPath();x.moveTo(0,Y(DRY.m0));x.lineTo(W,Y(DRY.m0));x.stroke();x.setLineDash([]);
+  x.textAlign="left";x.fillStyle="rgba(190,205,230,.8)";x.font="600 12px system-ui,sans-serif";x.fillText(DRY.m0+" % target",6,Y(DRY.m0)-4);}
 function clockOf(t){const m=((Math.floor(t)+360)%1440+1440)%1440,h=Math.floor(m/60),mm=m%60;return `${(h%12)||12}:${String(mm).padStart(2,"0")} ${h<12?"AM":"PM"}`;}
 // Escape closes the DCS or the knob panel and nothing else (capture phase: the sheet and fullscreen handlers don't see it)
 document.addEventListener("keydown",e=>{if(e.key!=="Escape"||!(KUI.st||KUI.panel))return;e.preventDefault();e.stopPropagation();if(KUI.st)closeStation();else closeKnob();},true);

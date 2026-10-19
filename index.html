@@ -3536,7 +3536,7 @@ const KNOBS=[
 const KNOBN=Object.fromEntries(KNOBS.map(k=>[k.id,k]));
 const KZONES=12;
 function knobState(){if(!S.knob){S.knob={v:Object.assign({},KNOB_IDEAL),z:new Array(KZONES).fill(0),
-    x:{cp:5,fr:0.5,ch:0,sw:0,vac:30,pl:100,st:0,d1:0,m:7,dl:0,dt:0,bs:0,z:new Array(KZONES).fill(0)},
+    x:{cp:5,fr:0.5,ch:0,sw:0,vac:30,pl:100,st:0,d1:0,m:8,dl:0,dt:0,bs:0,z:new Array(KZONES).fill(0)},
     any:false,cs:0,wear:0,gacc:0,gm0:0,H:{},harm:{},off:0,offWhy:"",sf:1,a:1,W:1,feed:1,brk:1,edge:0,gtrav:0,inc:[],warned:{},moved:{}};}
   if(S.knob.pmPrev==null)S.knob.pmPrev=S.pm;if(S.rng&&S.rng.knob==null)S.rng.knob=(S.seed^0x6b9f3c21)|0;return S.knob;}
 function knobVal(id){const K=S.knob;return K?K.v[id]:KNOB_IDEAL[id];}
@@ -3636,7 +3636,7 @@ function knobTick(dt){const K=S.knob;if(!K||!K.any||S.zen)return;
   x.cr1=L(x.cr1||0,Math.max(0,x.pl-115)/30,10);x.cr=L(x.cr||0,x.cr1,10);x.dt=L(x.dt,Math.max(0,v.draw-2.4),10);
   // ---- consequences: off-spec ----
   const nz=x.z.filter(z=>Math.abs(z)>4).length;
-  const F={wet:x.m>10?(x.m-10)/4:0,dry:x.m<4?(4-x.m)/2:0,cd:nz/3,bw:x.sw>0.3?(x.sw-0.3)/0.6:0,crush:x.cr>0.05?(x.cr-0.05)/0.6:0,stripes:x.st>0.4?(x.st-0.4)/0.4:0,wrinkles:x.dl>0.15?(x.dl-0.15)/0.6:0};
+  const F={wet:x.m>10?(x.m-10)/4:0,dry:x.m<6?(6-x.m)/2:0,cd:nz/3,bw:x.sw>0.3?(x.sw-0.3)/0.6:0,crush:x.cr>0.05?(x.cr-0.05)/0.6:0,stripes:x.st>0.4?(x.st-0.4)/0.4:0,wrinkles:x.dl>0.15?(x.dl-0.15)/0.6:0};
   // (v6.5.3: weight and moisture are judged against the grade's spec by the QCS check, 07e; F.wet, dry and bw stay for
   // the screens and the crew's tracing, and only the other defects send a share of the reel to the beater from here)
   let keep=1,top="",tv=0;for(const k in F){const f=clamp(F[k],0,1);F[k]=f;if(k==="wet"||k==="dry"||k==="bw")continue;keep*=1-f;if(f>tv){tv=f;top=k;}}
@@ -3674,7 +3674,7 @@ function knobTick(dt){const K=S.knob;if(!K||!K.any||S.zen)return;
   tr("feed",K.feed<0.95,480,()=>["pulp"],"Stock prep can't keep the chest up: the pulper is running thin.","Stock prep");
   tr("moist",F.wet>0||F.dry>0||(K.harm.moist&&K.harm.moist.n>0),180,()=>F.wet>0?knobSteamCulprits():["st1","ref"].filter(i=>!knobAt(i)),F.wet>0?"QCS: the sheet is coming off the reel wet.":"QCS: the sheet is coming off the reel over-dried.","The process engineer");
   // ---- all back at ideal and settled: stop running ----
-  if(!knobsOff().length&&!K.inc.length&&K.cs<0.01&&K.wear<0.001&&Math.abs(x.cp-5)<0.02&&Math.abs(x.fr-0.5)<0.002&&x.ch<0.01&&x.sw<0.005&&Math.abs(x.vac-30)<0.05&&Math.abs(x.pl-100)<0.05&&x.st<0.005&&Math.abs(x.d1)<0.001&&Math.abs(x.m-7)<0.02&&x.bs<0.01&&x.dl<0.002&&(x.dl1||0)<0.002&&(x.cr||0)<0.002&&(x.cr1||0)<0.002&&x.dt<0.002&&x.z.every(z=>Math.abs(z)<0.02)&&K.off===0){
+  if(!knobsOff().length&&!K.inc.length&&K.cs<0.01&&K.wear<0.001&&Math.abs(x.cp-5)<0.02&&Math.abs(x.fr-0.5)<0.002&&x.ch<0.01&&x.sw<0.005&&Math.abs(x.vac-30)<0.05&&Math.abs(x.pl-100)<0.05&&x.st<0.005&&Math.abs(x.d1)<0.001&&Math.abs(x.m-DRY.m0)<0.02&&x.bs<0.01&&x.dl<0.002&&(x.dl1||0)<0.002&&(x.cr||0)<0.002&&(x.cr1||0)<0.002&&x.dt<0.002&&x.z.every(z=>Math.abs(z)<0.02)&&K.off===0){
     K.any=false;K.off=0;K.sf=1;K.feed=1;K.brk=1;K.edge=0;K.gtrav=0;K.H={};K.harm={};S.M=mods();}
 }
 const KOFFN={wet:"sheet too wet",dry:"sheet over-dried",cd:"CD moisture streaks",bw:"basis weight swings",crush:"crush marks",stripes:"stripes from the pick-up felt",wrinkles:"wrinkles in the reel"};
@@ -3688,7 +3688,7 @@ function knobRead(){const K=S.knob,x=K?K.x:null,g=GRADES[C.grade]||GRADES["23m"]
   const z=x?x.z:new Array(KZONES).fill(0),sw=x?x.sw:0,t=S.t;
   const wob=(f,k)=>Math.sin(t*f+k)*0.6+Math.sin(t*f*2.7+k*2)*0.4;   // smooth stand-in for process noise (no dice)
   const Dr=S.dry,st3=Dr?Dr.st3:(DRY.base[C.grade]||122);   // (v6.5 b5: the dryer model, 07d)
-  const m=Dr?Dr.m:7,cp=x?x.cp:5;
+  const m=Dr?Dr.m:DRY.m0,cp=x?x.cp:5;
   return {run,cp,amps:410*(0.55+cp/5*0.45)*(S.M.pulperDown?0:1),pulpLvl:clamp(62+(5-cp)*9+wob(0.05,1)*1.5,0,110),
     gap:x?x.fr:0.5,refkw:run?2100*(1+Math.max(0,0.5-(x?x.fr:0.5))*1.6-Math.max(0,(x?x.fr:0.5)-0.5)*0.8):0,csf:450+((x?x.fr:0.5)-0.5)*380,
     mcLvl:69+wob(0.02,2)*3,mcCons:3.2+sw*0.9*wob(0.21,3),agit:knobVal("agit"),
@@ -3758,7 +3758,7 @@ const purgeMode=k=>(S.dcs&&S.dcs.pg[k]&&S.dcs.pg[k].m)||"auto";
    48%, -16%), times the wet end's water factor (the fiddly knobs' K.W: refiner gap, forming vacuum, press load). The 3rd
    section's demand is calibrated on PM3 data: the grade's own median pressure at its median rate, +3.0 kPa per extra t/h
    on 23m, scaled by basis weight for the other grades; the 1st section knob takes some of it (K's d1). The auto loop holds
-   7% reel moisture while demand is between its floor (70% of the grade's base) and the ceiling (DRY.ceil). Above the
+   8% reel moisture (DRY.m0; 7% before v6.5.3) while demand is between its floor (70% of the grade's base) and the ceiling (DRY.ceil). Above the
    ceiling the sheet goes wet (+0.15% per kPa short; below the floor it over-dries the same way). Past the moisture spec
    (10%) the paper fails on quality and goes to the beater, and the crew slows the machine (1% a minute) until it's back
    under 9%, then lets the speed recover (0.5% a minute) while there's headroom. In every mode but zen; AUTO doesn't trim
@@ -3766,9 +3766,9 @@ const purgeMode=k=>(S.dcs&&S.dcs.pg[k]&&S.dcs.pg[k].m)||"auto";
    ceiling with it. No dice: seasons replay identically. The knob model (07b) reads its moisture from here. */
 // ceil: PM3's 3rd section tops out at 171 kPa; the game's ceiling is 180 so a fully upgraded mill (with the shoe press)
 // runs clean (peak 170 in hands-off seasons); without the shoe press, heavy grades at full speed run damp (to ~9.4%)
-const DRY={ceil:180,ceilFloor:0.7,perKpa:0.15,spec:10,back:9,slope23:3.0,wpt0:0.93/0.44-1,boiler:62,stPerW:1.3,
+const DRY={m0:8,ceil:180,ceilFloor:0.7,perKpa:0.15,spec:10,back:9,slope23:3.0,wpt0:0.93/0.44-1,boiler:62,stPerW:1.3,
   base:{"23m":122,"26m":126,"30m":138,"33HT":135}};   // (median 3rd-section kPa by grade, PM3 Sep 2025 - Mar 2026)
-function dryState(){if(!S.dry)S.dry={m:7,st3:DRY.base[C.grade]||122,dem:122,trim:0,steam:0,hdr:1,load:0.7,maxDem:0,wet:false};return S.dry;}
+function dryState(){if(!S.dry)S.dry={m:DRY.m0,st3:DRY.base[C.grade]||122,dem:122,trim:0,steam:0,hdr:1,load:0.7,maxDem:0,wet:false};return S.dry;}
 const dryWpt=()=>0.93/(0.44+0.04*LV("shoe"))-1;   // water per ton of paper into the dryers
 const drySlope=g=>DRY.slope23*(GRADES[g].bw/GRADES["23m"].bw);
 const dryRef=g=>BASE.K*GRADES[g].sp*GRADES[g].bw;   // the grade's standard t/h (what the base pressure was measured at)
@@ -3794,7 +3794,7 @@ function dryTick(dt){const D=dryState(),g=C.grade,b=DRY.base[g]||122,run=S.pm===
   D.hdr=ease(D.hdr,D.steam>DRY.boiler?Math.max(0.6,1-(D.steam-DRY.boiler)/DRY.boiler*1.5):1,dt,20);
   // the floor is speed's (a slow machine over-dries); a knob that takes load off can take the 3rd section under it
   const ceil=dryCeil(D),floor=b*DRY.ceilFloor,under=D.dem0<floor;D.st3=run?clamp(D.dem,under?floor:0,ceil):b;D.load=D.dem/ceil;
-  const tgt=run?7+D.km+(D.dem>ceil?(D.dem-ceil)*DRY.perKpa:under?(D.dem0-floor)*DRY.perKpa:0):7;D.m=Math.max(0.5,ease(D.m,tgt,dt,10));
+  const tgt=run?DRY.m0+D.km+(D.dem>ceil?(D.dem-ceil)*DRY.perKpa:under?(D.dem0-floor)*DRY.perKpa:0):DRY.m0;D.m=Math.max(0.5,ease(D.m,tgt,dt,10));
   // a wet sheet fails the moisture spec: the crew slows the machine until it's back in spec, then lets it recover.
   // (v6.5.2: only for the part slowing down can fix; what the knobs put past the auto loop waits for the knob to be traced)
   const wasWet=D.wet,ms=D.m-Math.max(0,D.km);if(!S.zen&&run&&ms>DRY.spec)D.wet=true;else if(ms<DRY.back)D.wet=false;
@@ -3814,14 +3814,14 @@ const dryLimited=()=>!!(S.dry&&S.pm==="run"&&S.dry.dem>=dryCeil(S.dry)-0.5);
    bay, trucked back to receiving and repulped into the stock chest (the fiber comes back; the energy, time and winder
    capacity don't). A grade change's transition tons count as a weight violation the same way. The other fiddly-knob
    defects (CD streaks, crush marks, felt stripes, wrinkles) still send their share to the beater on top (07b knobOff). */
-const QSPEC={   // basis weight lb/1000 ft² (target ±3%), reel moisture %, shade
-  "23m": {bw:[23.81,25.29],m:[4.0,10.0],shade:"mill shade"},
-  "26m": {bw:[25.28,26.84],m:[4.0,10.0],shade:"mill shade"},
-  "30m": {bw:[29.15,30.95],m:[4.0,10.0],shade:"mill shade"},
-  "33HT":{bw:[32.09,34.07],m:[4.0,10.0],shade:"mill shade"}};
+const QSPEC={   // basis weight lb/1000 ft² (target ±3%), reel moisture % (8 ±2), shade
+  "23m": {bw:[23.81,25.29],m:[6.0,10.0],shade:"mill shade"},
+  "26m": {bw:[25.28,26.84],m:[6.0,10.0],shade:"mill shade"},
+  "30m": {bw:[29.15,30.95],m:[6.0,10.0],shade:"mill shade"},
+  "33HT":{bw:[32.09,34.07],m:[6.0,10.0],shade:"mill shade"}};
 const QWHY={bw:"weight",m:"moisture",shade:"color",chg:"weight (grade change)"};
 // the latest check (derived each step, not saved): measured values, what's out, the share of production going to the beater
-const QNOW={bw:0,m:7,shade:true,out:[],why:"",off:0};
+const QNOW={bw:0,m:8,shade:true,out:[],why:"",off:0};
 // what the scanner reads now (no dice: the swings are smooth functions of time, like the DCS readings)
 function qualMeasure(){const g=C.grade,G=GRADES[g]||GRADES["23m"],K=S.knob,t=S.t;
   const wob=(f,k)=>Math.sin(t*f+k)*0.6+Math.sin(t*f*2.7+k*2)*0.4,sw=K&&K.any&&K.x?K.x.sw:0;
@@ -12099,7 +12099,7 @@ function knobAlarms(a,r){const L=[],al=(on,txt,hi)=>{if(on)L.push([txt,hi]);};co
     al(r.gap<0.25,"REFINER GAP LO",r.gap<0.18);al(Math.abs(r.mcCons-3.2)>0.35,"MACHINE CHEST CONS DEV",Math.abs(r.mcCons-3.2)>0.6);}
   else if(a==="WET"){al(r.vac<18,"FORMER VACUUM LO",r.vac<12);al(Math.abs(r.edge)>12,"FABRIC EDGE DEV",Math.abs(r.edge)>35);al(r.gm&&r.gtrav>0.85,"GUIDE AT END OF TRAVEL",r.gtrav>=1);
     al(r.cs>0.6&&S.pm!=="run","COUCH PIT LEVEL HI",r.cs>1.2);al(r.pl>125,"PRESS LOAD HI",r.pl>135);al(r.couchSol<16,"COUCH SOLIDS LO",r.couchSol<14);al(K&&K.F&&K.F.cd>0,"CD PROFILE OUT",true);}
-  else if(a==="DET"&&r.run){al(S.dry&&r.st3>=dryCeil(S.dry)-1,"3RD SECTION STEAM AT MAX",true);al(r.boiler<0.8,"STEAM HEADER LO",r.boiler<0.7);al(r.run&&r.moist>9.5,"REEL MOISTURE HI",r.moist>11);al(r.run&&r.moist<4.5,"REEL MOISTURE LO",r.moist<3.5);
+  else if(a==="DET"&&r.run){al(S.dry&&r.st3>=dryCeil(S.dry)-1,"3RD SECTION STEAM AT MAX",true);al(r.boiler<0.8,"STEAM HEADER LO",r.boiler<0.7);al(r.run&&r.moist>9.5,"REEL MOISTURE HI",r.moist>11);al(r.run&&r.moist<6.5,"REEL MOISTURE LO",r.moist<6);
     al(r.run&&r.tension>1.3,"DRAW TENSION HI",r.tension>1.5);al(r.run&&r.tension<0.85,"DRAW TENSION LO",r.tension<0.7);
     al(QNOW.out.includes("bw"),"BASIS WEIGHT OFF SPEC",true);al(QNOW.out.includes("m"),"MOISTURE OFF SPEC",true);al(QNOW.out.includes("shade"),"COLOR OFF SPEC",true);}   // (v6.5.3: the QCS spec check)
   else if(a==="DET")al(r.boiler<0.8,"STEAM HEADER LO",r.boiler<0.7);
@@ -12160,19 +12160,19 @@ function kuiRefresh(){if(!KUI.panel&&!KUI.st)return;const r=knobRead();
       // v6.5.3: each reading against the grade's spec (QSPEC, 07e); red when it's out
       const g=GRADES[C.grade],sp=QSPEC[C.grade]||QSPEC["23m"],qv=$("qcsV"),qo=k=>r.run&&QNOW.out.includes(k)?' class="qout"':"",rg=(a,d)=>`spec ${a[0].toFixed(d)}–${a[1].toFixed(d)}`;
       const shn=((document.querySelector('#paperColor button[aria-pressed="true"]')||{}).dataset||{}).c==="white"?"white":"brown";
-      const qh=`<div><small>Grade</small><b>${C.grade}</b><small>target ${g.bw} lb · 7.0 %</small></div><div${qo("bw")}><small>Basis weight</small><b>${r.run?kf(QNOW.bw,2):"–"}</b><small>${rg(sp.bw,2)}</small></div><div${qo("m")}><small>Moisture</small><b>${r.run?kf(r.moist):"–"} %</b><small>${rg(sp.m,1)}</small></div><div${qo("shade")}><small>Color</small><b>${QNOW.shade?"ON SHADE":"OFF SHADE"}</b><small>spec ${shn}</small></div><div><small>Reel speed</small><b>${Math.round(r.speed)}</b><small>fpm</small></div>`;if(qv._h!==qh){qv._h=qh;qv.innerHTML=qh;}
+      const qh=`<div><small>Grade</small><b>${C.grade}</b><small>target ${g.bw} lb · ${DRY.m0.toFixed(1)} %</small></div><div${qo("bw")}><small>Basis weight</small><b>${r.run?kf(QNOW.bw,2):"–"}</b><small>${rg(sp.bw,2)}</small></div><div${qo("m")}><small>Moisture</small><b>${r.run?kf(r.moist):"–"} %</b><small>${rg(sp.m,1)}</small></div><div${qo("shade")}><small>Color</small><b>${QNOW.shade?"ON SHADE":"OFF SHADE"}</b><small>spec ${shn}</small></div><div><small>Reel speed</small><b>${Math.round(r.speed)}</b><small>fpm</small></div>`;if(qv._h!==qh){qv._h=qh;qv.innerHTML=qh;}
       drawTrend6($("qcsTr"),[["moist","","#4fd18b",0,14],["bw","","#ffb02e",(g.bw-3),(g.bw+3)],["off","","#ff7a8a",0,1]]);kuiCd($("qcsCd"),r);
       const D=[["Wrinkles",F.wrinkles],["Crush marks",F.crush],["Felt stripes",F.stripes],["CD streaks",F.cd],["Weight swings",F.bw],["Wet sheet",F.wet],["Dry sheet",F.dry]];
       const h=D.map(([n,v])=>{const c=v>0.01?Math.round(4+v*80):0;return `<div class="${c?"hit":""}"><small>${n}</small><b>${c}</b><small>/ reel</small></div>`;}).join("");const dd=$("qcsDef");if(dd._h!==h){dd._h=h;dd.innerHTML=h;}}}}
-// CD moisture profile: a bar per zone up from 3 %, the ±1.5 % spec band round the reel average, the 7 % target
+// CD moisture profile: a bar per zone up from 3 %, the ±1.5 % spec band round the reel average, the 8 % target
 function kuiCd(cv,r){if(!cv)return;const x=cv.getContext("2d"),W=cv.width,H=cv.height,z=r.zones,lo=3,hi=11,Y=v=>H-18-clamp((v-lo)/(hi-lo),0,1)*(H-30);
   x.fillStyle="#0f1b2d";x.fillRect(0,0,W,H);
   if(!r.run){x.fillStyle="rgba(190,205,230,.8)";x.font="600 18px system-ui,sans-serif";x.textAlign="center";x.fillText("Scanner parked: no sheet",W/2,H/2);x.textAlign="left";return;}
   const m=r.moist;x.fillStyle="rgba(79,209,139,.16)";x.fillRect(0,Y(m+1.5),W,Y(m-1.5)-Y(m+1.5));
   const bw=W/z.length;z.forEach((v,i)=>{const bad=Math.abs(v-m)>1.5;x.fillStyle=bad?"#ff6b5e":"#5f8fd8";const y=Y(v);x.fillRect(i*bw+6,y,bw-12,H-18-y);
     x.fillStyle="rgba(190,205,230,.75)";x.font="600 13px system-ui,sans-serif";x.textAlign="center";x.fillText(String(i+1),i*bw+bw/2,H-3);});
-  x.strokeStyle="rgba(79,209,139,.85)";x.setLineDash([6,6]);x.lineWidth=1.5;x.beginPath();x.moveTo(0,Y(7));x.lineTo(W,Y(7));x.stroke();x.setLineDash([]);
-  x.textAlign="left";x.fillStyle="rgba(190,205,230,.8)";x.font="600 12px system-ui,sans-serif";x.fillText("7 % target",6,Y(7)-4);}
+  x.strokeStyle="rgba(79,209,139,.85)";x.setLineDash([6,6]);x.lineWidth=1.5;x.beginPath();x.moveTo(0,Y(DRY.m0));x.lineTo(W,Y(DRY.m0));x.stroke();x.setLineDash([]);
+  x.textAlign="left";x.fillStyle="rgba(190,205,230,.8)";x.font="600 12px system-ui,sans-serif";x.fillText(DRY.m0+" % target",6,Y(DRY.m0)-4);}
 function clockOf(t){const m=((Math.floor(t)+360)%1440+1440)%1440,h=Math.floor(m/60),mm=m%60;return `${(h%12)||12}:${String(mm).padStart(2,"0")} ${h<12?"AM":"PM"}`;}
 // Escape closes the DCS or the knob panel and nothing else (capture phase: the sheet and fullscreen handlers don't see it)
 document.addEventListener("keydown",e=>{if(e.key!=="Escape"||!(KUI.st||KUI.panel))return;e.preventDefault();e.stopPropagation();if(KUI.st)closeStation();else closeKnob();},true);
@@ -13537,7 +13537,7 @@ function camPullOn(){try{return localStorage.getItem("paper-mill-campull")!=="of
     ["Machine chest","The chest that feeds the paper machine with pulp at a steady consistency."],
     ["Mill leader","The person in charge of your run: Chip, Dot, Felicity or Hank."],
     ["OCC","Old corrugated containers: used cardboard boxes, the mill's raw material."],
-    ["Off-spec","Paper outside its grade's spec (basis weight ±3%, moisture 4–10%, the mill's color) or with defects like streaks and crush marks. It's wound into beater rolls, which go back to the pulper to be repulped (the QCS screen shows the spec)."],
+    ["Off-spec","Paper outside its grade's spec (basis weight ±3%, moisture 8 ±2%, the mill's color) or with defects like streaks and crush marks. It's wound into beater rolls, which go back to the pulper to be repulped (the QCS screen shows the spec)."],
     ["Outage","A planned shutdown for maintenance, every 7 days in a season and every 4 days in survival."],
     ["Outage prep","The four-item checklist before an outage that shortens and cheapens it."],
     ["Press section","Rolls that squeeze water out of the wet sheet through the felts."],

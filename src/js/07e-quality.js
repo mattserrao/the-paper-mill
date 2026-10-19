@@ -6,14 +6,14 @@
    bay, trucked back to receiving and repulped into the stock chest (the fiber comes back; the energy, time and winder
    capacity don't). A grade change's transition tons count as a weight violation the same way. The other fiddly-knob
    defects (CD streaks, crush marks, felt stripes, wrinkles) still send their share to the beater on top (07b knobOff). */
-const QSPEC={   // basis weight lb/1000 ft² (target ±3%), reel moisture %, shade
-  "23m": {bw:[23.81,25.29],m:[4.0,10.0],shade:"mill shade"},
-  "26m": {bw:[25.28,26.84],m:[4.0,10.0],shade:"mill shade"},
-  "30m": {bw:[29.15,30.95],m:[4.0,10.0],shade:"mill shade"},
-  "33HT":{bw:[32.09,34.07],m:[4.0,10.0],shade:"mill shade"}};
+const QSPEC={   // basis weight lb/1000 ft² (target ±3%), reel moisture % (8 ±2), shade
+  "23m": {bw:[23.81,25.29],m:[6.0,10.0],shade:"mill shade"},
+  "26m": {bw:[25.28,26.84],m:[6.0,10.0],shade:"mill shade"},
+  "30m": {bw:[29.15,30.95],m:[6.0,10.0],shade:"mill shade"},
+  "33HT":{bw:[32.09,34.07],m:[6.0,10.0],shade:"mill shade"}};
 const QWHY={bw:"weight",m:"moisture",shade:"color",chg:"weight (grade change)"};
 // the latest check (derived each step, not saved): measured values, what's out, the share of production going to the beater
-const QNOW={bw:0,m:7,shade:true,out:[],why:"",off:0};
+const QNOW={bw:0,m:8,shade:true,out:[],why:"",off:0};
 // what the scanner reads now (no dice: the swings are smooth functions of time, like the DCS readings)
 function qualMeasure(){const g=C.grade,G=GRADES[g]||GRADES["23m"],K=S.knob,t=S.t;
   const wob=(f,k)=>Math.sin(t*f+k)*0.6+Math.sin(t*f*2.7+k*2)*0.4,sw=K&&K.any&&K.x?K.x.sw:0;

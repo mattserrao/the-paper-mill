@@ -3,7 +3,7 @@
    48%, -16%), times the wet end's water factor (the fiddly knobs' K.W: refiner gap, forming vacuum, press load). The 3rd
    section's demand is calibrated on PM3 data: the grade's own median pressure at its median rate, +3.0 kPa per extra t/h
    on 23m, scaled by basis weight for the other grades; the 1st section knob takes some of it (K's d1). The auto loop holds
-   7% reel moisture while demand is between its floor (70% of the grade's base) and the ceiling (DRY.ceil). Above the
+   8% reel moisture (DRY.m0; 7% before v6.5.3) while demand is between its floor (70% of the grade's base) and the ceiling (DRY.ceil). Above the
    ceiling the sheet goes wet (+0.15% per kPa short; below the floor it over-dries the same way). Past the moisture spec
    (10%) the paper fails on quality and goes to the beater, and the crew slows the machine (1% a minute) until it's back
    under 9%, then lets the speed recover (0.5% a minute) while there's headroom. In every mode but zen; AUTO doesn't trim
@@ -11,9 +11,9 @@
    ceiling with it. No dice: seasons replay identically. The knob model (07b) reads its moisture from here. */
 // ceil: PM3's 3rd section tops out at 171 kPa; the game's ceiling is 180 so a fully upgraded mill (with the shoe press)
 // runs clean (peak 170 in hands-off seasons); without the shoe press, heavy grades at full speed run damp (to ~9.4%)
-const DRY={ceil:180,ceilFloor:0.7,perKpa:0.15,spec:10,back:9,slope23:3.0,wpt0:0.93/0.44-1,boiler:62,stPerW:1.3,
+const DRY={m0:8,ceil:180,ceilFloor:0.7,perKpa:0.15,spec:10,back:9,slope23:3.0,wpt0:0.93/0.44-1,boiler:62,stPerW:1.3,
   base:{"23m":122,"26m":126,"30m":138,"33HT":135}};   // (median 3rd-section kPa by grade, PM3 Sep 2025 - Mar 2026)
-function dryState(){if(!S.dry)S.dry={m:7,st3:DRY.base[C.grade]||122,dem:122,trim:0,steam:0,hdr:1,load:0.7,maxDem:0,wet:false};return S.dry;}
+function dryState(){if(!S.dry)S.dry={m:DRY.m0,st3:DRY.base[C.grade]||122,dem:122,trim:0,steam:0,hdr:1,load:0.7,maxDem:0,wet:false};return S.dry;}
 const dryWpt=()=>0.93/(0.44+0.04*LV("shoe"))-1;   // water per ton of paper into the dryers
 const drySlope=g=>DRY.slope23*(GRADES[g].bw/GRADES["23m"].bw);
 const dryRef=g=>BASE.K*GRADES[g].sp*GRADES[g].bw;   // the grade's standard t/h (what the base pressure was measured at)
@@ -39,7 +39,7 @@ function dryTick(dt){const D=dryState(),g=C.grade,b=DRY.base[g]||122,run=S.pm===
   D.hdr=ease(D.hdr,D.steam>DRY.boiler?Math.max(0.6,1-(D.steam-DRY.boiler)/DRY.boiler*1.5):1,dt,20);
   // the floor is speed's (a slow machine over-dries); a knob that takes load off can take the 3rd section under it
   const ceil=dryCeil(D),floor=b*DRY.ceilFloor,under=D.dem0<floor;D.st3=run?clamp(D.dem,under?floor:0,ceil):b;D.load=D.dem/ceil;
-  const tgt=run?7+D.km+(D.dem>ceil?(D.dem-ceil)*DRY.perKpa:under?(D.dem0-floor)*DRY.perKpa:0):7;D.m=Math.max(0.5,ease(D.m,tgt,dt,10));
+  const tgt=run?DRY.m0+D.km+(D.dem>ceil?(D.dem-ceil)*DRY.perKpa:under?(D.dem0-floor)*DRY.perKpa:0):DRY.m0;D.m=Math.max(0.5,ease(D.m,tgt,dt,10));
   // a wet sheet fails the moisture spec: the crew slows the machine until it's back in spec, then lets it recover.
   // (v6.5.2: only for the part slowing down can fix; what the knobs put past the auto loop waits for the knob to be traced)
   const wasWet=D.wet,ms=D.m-Math.max(0,D.km);if(!S.zen&&run&&ms>DRY.spec)D.wet=true;else if(ms<DRY.back)D.wet=false;
