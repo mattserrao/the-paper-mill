@@ -71,7 +71,7 @@ with sync_playwright() as pw:
         if only and only not in name: continue
         if mins not in ctrl: ctrl[mins] = pg.evaluate(RUN, ["control", {}, mins])
         r = pg.evaluate(RUN, [name, setv, mins])
-        # against the same stretch with nothing touched: cash out (repairs, steam) plus good paper not made (at the 23m price)
+        # against the same stretch with nothing touched: cash out (repairs, steam) plus good paper not made (at the 24 price)
         r["cost"] = round(ctrl[mins]["cash"] - r["cash"] + (ctrl[mins]["good"] - r["good"]) * 713)
         bad = []
         ids = [x["id"] for x in r["inc"]]

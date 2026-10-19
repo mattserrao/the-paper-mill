@@ -60,7 +60,7 @@
     ["Forming fabric (wire)","The moving mesh the pulp lands on; water drains through it and the sheet forms on top."],
     ["fpm","Feet per minute: paper machine speed."],
     ["GEMBA","Going to where the work is done to see it for yourself. The daily round is a GEMBA walk."],
-    ["Grade","The product on the machine: 23m, 26m and 30m are corrugating medium of different weights; 33HT is high-test liner. The market sets which grade runs."],
+    ["Grade","The product on the machine: grades 24, 28 and 31 are corrugating medium of different weights; 34Super is high-test liner. The market sets which grade runs."],
     ["Hayout","A winder blow-up: the set of rolls tears apart and paper flies everywhere."],
     ["Headbox","Sprays an even jet of pulp across the full width of the forming fabric."],
     ["Headbox slice","The adjustable lip of the headbox that sets the jet across the machine."],

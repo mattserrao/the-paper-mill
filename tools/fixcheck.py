@@ -72,7 +72,7 @@ with sync_playwright() as pw:
     ok("customer walks B: one grade at −$5/t", cw and len(cw) == 1 and list(cw.values())[0] == -5, cw)
     # bug 8: rush order creates an order
     ro = ev("()=>{const S=__PM.S;S.plan.hot=null;__PM.civQueue('rush','new');__PM.civNext();document.querySelectorAll('#civOv .civbtn')[0].click();return {hot:!!S.plan.hot,q:S.plan.q[0],pend:S.cards.pend.some(p=>p.h==='rush')};}")
-    ok("rush order A: 900 t of 33HT queued with a pending outcome", ro["hot"] and ro["q"]["t"] == 900 and ro["pend"], ro)
+    ok("rush order A: 900 t of 34Super queued with a pending outcome", ro["hot"] and ro["q"]["t"] == 900 and ro["pend"], ro)
     # bug 12
     ms = ev("()=>__PM.maintState({id:'felt'})")
     ok("no 'undefined' in the maintenance label", "undefined" not in ms, ms)

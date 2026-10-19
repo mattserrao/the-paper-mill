@@ -18,13 +18,16 @@
           MILL:{name:MILL.name,brand:MILL.brand},day:Math.floor(S.t/1440)+1,cash:S.cash};
         localStorage.setItem(KEY,JSON.stringify(data));lastSave=performance.now();G3.saveMs=lastSave-t0;return true;}
       catch(e){diag("save failed: "+String(e&&e.message||e).slice(0,80));return false;}}
-    function read(){if(OFF)return null;try{const d=JSON.parse(localStorage.getItem(KEY)||"null");
+    // v6.7.1: saves from before the grade set changed carry the old grade ids; they're mapped to the new ones on load
+    const GMIG=[["23m","24"],["26m","28"],["30m","31"],["33HT","34Super"]];
+    const gmig=t=>t&&GMIG.reduce((a,[o,n])=>a.split('"'+o+'"').join('"'+n+'"'),t);
+    function read(){if(OFF)return null;try{const d=JSON.parse(gmig(localStorage.getItem(KEY))||"null");
         if(!d||d.v!==VER||!d.S||Date.now()-d.at>MAXAGE)return null;
         // v4.2.4: a save without the parts restore() needs is thrown away instead of breaking Continue
         const o=x=>!!x&&typeof x==="object";if(!(typeof d.S.t==="number"&&o(d.S.season)&&o(d.S.cards)&&o(d.C)&&o(d.CH))){clear();return null;}
         return d;}catch(e){clear();return null;}}
     function clear(){try{localStorage.removeItem(KEY);localStorage.removeItem(KEY+"-hist");}catch(e){}lastHist="";}
-    function restore(d){S=d.S;try{const hh=JSON.parse(localStorage.getItem(KEY+"-hist")||"null");S.hist=hh&&hh.id===d.S.histId?hh:null;}catch(e){S.hist=null;}   // (v6.5: no history, or another run's: the prior days are made again)
+    function restore(d){S=d.S;try{const hh=JSON.parse(gmig(localStorage.getItem(KEY+"-hist"))||"null");S.hist=hh&&hh.id===d.S.histId?hh:null;}catch(e){S.hist=null;}   // (v6.5: no history, or another run's: the prior days are made again)
       for(const k in d.C){if(C[k]&&typeof C[k]==="object"&&d.C[k]&&typeof d.C[k]==="object")Object.assign(C[k],d.C[k]);else C[k]=d.C[k];}
       if(C.spdPref){C.simSpeed=C.spdPref;}else if(S.outg&&S.outg.on&&S.outg.spd){C.simSpeed=S.outg.spd;}delete C.spdPref;   // (v5.0.1: older saves: the player's speed)
       CH.on=d.CH.on;CH.lvl=d.CH.lvl;Object.assign(CH.en,d.CH.en||{});

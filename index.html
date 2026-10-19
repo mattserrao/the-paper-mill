@@ -1541,7 +1541,7 @@ body.pmpop .popmain[data-v="dcs"] #dcsOv .dcs{max-width:1180px;margin:0 auto}
 <div class="btns"><button class="primary" id="no3d-retry">Try again</button></div></div></div>
 
 <script type="module">
-const APP_VER="v6.7.0";   // shown in the menu and sent with leaderboard scores (max 12 characters)
+const APP_VER="v6.7.1-t1";   // shown in the menu and sent with leaderboard scores (max 12 characters)
 // TEST BUILDS ONLY (off in releases): turbo speeds 240/480/960 sim min/s for fast playtests. Above 120, crews and maintenance start jobs
 // without waiting for the 3D walk (as with the 3D view off) and outages keep the speed. Set false for a release.
 const TURBO=false,TURBO_FAST=s=>TURBO&&s>120;
@@ -2098,19 +2098,19 @@ const AUDIO=(()=>{
   return {setOn,setVol,update,sfx,ambient,cine,title,event:id=>sfx(EVSFX[id]||"alarm"),selfTest,level,get ctx(){return ctx;},get master(){return master;},get on(){return on;},get now(){return target==="title"?"Morning at the Mill":target==="intense"?"upset: "+(seqs.intense.cur?seqs.intense.cur.name:"")+" / "+AUDIO_NOW:AUDIO_NOW;},get info(){return ctx?ctx.state+" t="+ctx.currentTime.toFixed(1)+(stuckSince?" (clock stuck)":"")+(hurt?" (needs a tap)":"")+(unlocked?" unlocked "+((performance.now()-unlocked)/1000).toFixed(0)+"s ago":" never unlocked"):"none";}};
 })();
 
-const GRADES={ "23m":{sp:2736,bw:24.55}, "26m":{sp:2433,bw:26.06}, "30m":{sp:2222,bw:30.05}, "33HT":{sp:2084,bw:33.08} };
-// cost mix per grade: heavier, high-test grades need more strong DLK fiber, more starch and more drying steam (steam from PM3
-// 3rd-section steam by grade), and break less. Balanced so no grade earns more than ~5% over another at base level.
-// mix = campaign size range in tons; the market-driven planner runs the real grade wheel at roughly the PM3 grade mix.
-const GCOST={"23m":{dlk:0,steam:1,chem:0,brk:1.15,mix:[2600,3600]},"26m":{dlk:0.1,steam:1.02,chem:0,brk:1.25,mix:[80,160]},
-  "30m":{dlk:0.25,steam:1.14,chem:10,brk:0.75,mix:[150,350]},"33HT":{dlk:0.55,steam:1.11,chem:75,brk:0.55,mix:[800,1300]}};
+const GRADES={ "24":{sp:2632,bw:25.52}, "28":{sp:2262,bw:28.03}, "31":{sp:2147,bw:31.10}, "34Super":{sp:2027,bw:34.01} };   // (v6.7.1: speed x weight per grade, so t/h, is as before)
+// cost mix per grade: heavier, high-test grades need more strong DLK fiber, more starch and more drying steam (in line with
+// the dryers' 3rd-section base by grade), and break less. Balanced so no grade earns more than ~5% over another at base level.
+// mix = campaign size range in tons; the market-driven planner runs the real grade wheel at a typical containerboard grade mix.
+const GCOST={"24":{dlk:0,steam:1,chem:0,brk:1.15,mix:[2600,3600]},"28":{dlk:0.1,steam:1.02,chem:0,brk:1.25,mix:[80,160]},
+  "31":{dlk:0.25,steam:1.14,chem:10,brk:0.75,mix:[150,350]},"34Super":{dlk:0.55,steam:1.11,chem:75,brk:0.55,mix:[800,1300]}};
 const OCCG={occ11:{p:95,y:0.88},dlk:{p:150,y:0.93}}   // (v6.5: $18/t less: the haul is its own cost now, FR; b2: 2026 market level, was $142 / $197: claude/market-cost-benchmarks.md);
-const WHEEL=["23m","26m","30m","33HT","30m"];
+const WHEEL=["24","28","31","34Super","31"];
 // seeded random streams (plan, cards) so every player in the same season week sees the same market and the same cards
 function rand(k){const r=S.rng;r[k]=(r[k]+0x6D2B79F5)|0;let t=r[k];t=Math.imul(t^(t>>>15),t|1);t^=t+Math.imul(t^(t>>>7),t|61);return ((t^(t>>>14))>>>0)/4294967296;}
 const P={truckLoad:220,doors:3,driverRate:30,doorRate:450,yieldF:0.88,tankCap:300,yardCap:2000,yardTarget:800,
   fgCap:225,fgTarget:40,convCap:3,jumbo:100,storeReels:4,rollsPerReel:8,loaderRate:9,truckRolls:20,doorRolls:112.5,shipDoors:3,
-  K:34.8/(2736*24.55),minSpeed:1200,ramp:150,pmLoss:0.98,maxQueue:8};
+  K:34.8/(GRADES["24"].sp*GRADES["24"].bw),minSpeed:1200,ramp:150,pmLoss:0.98,maxQueue:8};
 const UNITS={inRate:v=>v.toFixed(1)+" trucks/h",drivers:v=>Math.round(v)+" drivers",pulper:v=>v.toFixed(1)+" t/h",
   lvlTarget:v=>Math.round(v)+" %",lowLevel:v=>Math.round(v)+" %",pmSp:v=>Math.round(v).toLocaleString()+" fpm",
   rollW:v=>v.toFixed(1)+" t",wdr:v=>Math.round(v)+" t/h",loaders:v=>Math.round(v)+" loaders",outRate:v=>v.toFixed(1)+" trucks/h"};
@@ -2118,7 +2118,7 @@ const AUTOKEYS=["inRate","drivers","pulper","pmSp","wdr","loaders","outRate"];
 
 let C,S;
 const BASE={...P};
-const ECON={price:{"23m":642,"26m":662,"30m":680,"33HT":741},   /* (v6.5 balance: -$15/t, inactive play is punished most) */   // (v6.5: +$30/t: outbound freight is its own cost now, FR; b2: less what the cheaper OCC and energy save per ton, ~$82-84, and $4 for paper made but not yet sold; measured on 12 hands-off seasons)
+const ECON={price:{"24":642,"28":662,"31":680,"34Super":741},   /* (v6.5 balance: -$15/t, inactive play is punished most) */   // (v6.5: +$30/t: outbound freight is its own cost now, FR; b2: less what the cheaper OCC and energy save per ton, ~$82-84, and $4 for paper made but not yet sold; measured on 12 hands-off seasons)
   energy:68,   // (b2: was 95; a recycled mill buying its power, 2026 prices)
   chem:25,wage:45,robot:15,overhead:3400,start:2e6,bankrupt:-1.5e6};
 const REPAIR={rotortrip:20e3,oscfail:12e3,couchpit:25e3,birdline:200e3,refclash:140e3,steamjoint:90e3,fogfan:35e3,shaft:250e3,dryerfire:400e3,fabric:90e3,felt:45e3,slime:30e3,ragger:15e3,overflow:120e3,chestover:60e3,lwplug:25e3,cscreen:45e3,fscreen:60e3,lcplug:30e3,hdblow:55e3,boiler:60e3,permit:120e3,thkblow:70e3,birdhay:0,wrap:15e3,dye:20e3,flares:0,winderdown:40e3,runner:0,badocc:0,balefire:150e3,fleet:40e3,calloff:10e3,fight:5e3,roof:80e3,highway:0,lightning:200e3,tornado:500e3,beaver:25e3,icedintake:20e3,brownout:10e3,duststorm:25e3,flood:60e3};
@@ -2176,7 +2176,7 @@ function applyUpgrades(){
   lim("s-wdr",P.winderMax);lim("s-pmSp",3300+P.spBonus);lim("s-pulper",Math.floor(Math.min(P.pulperMax,P.screenMax/P.yieldF)));
 }
 // the OCC blend, energy, chemicals and break rate follow the grade on the machine
-function applyGrade(){const g=(typeof C!=="undefined"&&C&&C.grade)||"23m",c=GCOST[g],d=c.dlk;
+function applyGrade(){const g=(typeof C!=="undefined"&&C&&C.grade)||"24",c=GCOST[g],d=c.dlk;
   P.blendP=OCCG.occ11.p*(1-d)+OCCG.dlk.p*d;P.blendY=OCCG.occ11.y*(1-d)+OCCG.dlk.y*d;
   P.steamMul=c.steam;P.chemAdd=c.chem-((S&&S.perk)?S.perk.chem:0);P.gradeBrk=c.brk;}
 function energyCost(){return Math.max(0,ECON.energy*P.steamMul*P.energyMul*leadEnergy()+ECON.chem+P.chemAdd+(P.siteEnergy||0)-(P.refSave||0)-((S&&S.perk&&S.perk.energy)||0)+civEnergy())*(P.costMul||1);}
@@ -2198,7 +2198,7 @@ function frOutRate(){return Math.max(0,(FR.outBase+(P.siteFreight||0))*FR.outK*f
 function fuelAt(seed,wk){let x=1;for(let w=-3;w<=wk;w++){let h=Math.imul((seed>>>0)^Math.imul(w+101,0x9e3779b1),0x85ebca6b);h^=h>>>13;h=Math.imul(h,0xc2b2ae35);h^=h>>>16;
   x=clamp(1+(x-1)*0.7+((h>>>0)/4294967296-0.5)*0.5,0.6,1.7);}return x;}   // (b2: diesel itself, $2.40-6.80/gal; it rose 68% in the year to Sep 2026)
 function fuelTick(){const wk=Math.floor(S.t/10080)+(S.fuelOff||0);if(S.fuelW===wk)return;S.fuelW=wk;S.fuel=fuelAt(S.fuelSeed!=null?S.fuelSeed:S.seed,wk);}
-function priceOf(g){let v=ECON.price[g]+P.priceAdd;if(g==="33HT"&&P.costMul>1)v+=(ECON.price["33HT"]-ECON.price["23m"])*(P.costMul-1);/* v5.0.5: survival only (costMul is 1 elsewhere) */if(S&&S.perk)v+=S.perk.price[g]||0;if(S&&S.fx)for(const f of S.fx)if(f.price)v+=(f.price[g]||0)+(f.price.all||0);return v;}
+function priceOf(g){let v=ECON.price[g]+P.priceAdd;if(g==="34Super"&&P.costMul>1)v+=(ECON.price["34Super"]-ECON.price["24"])*(P.costMul-1);/* v5.0.5: survival only (costMul is 1 elsewhere) */if(S&&S.perk)v+=S.perk.price[g]||0;if(S&&S.fx)for(const f of S.fx)if(f.price)v+=(f.price[g]||0)+(f.price.all||0);return v;}
 // (v5.2: the id lists are Sets built once; freqMul runs for every upset on every sim step)
 const FM_CLEAN=new Set(["lwplug","cscreen","fscreen","lcplug"]),FM_REL=new Set(["shaft","felt","fabric"]),FM_MON=new Set(["shaft","fabric","felt","dryerfire","slime"]);let FM_MAINT=null;
 function freqMul(id){let m=1;const MS=FM_MAINT||(FM_MAINT=new Set(MAINT));
@@ -2300,7 +2300,7 @@ function siteSave(env){try{localStorage.setItem("paper-mill-site",JSON.stringify
 // gameplay effect of the environment (sim; applied in applyUpgrades). The site of the loaded scene is the one in play.
 const ENVX=()=>ENVS[SITE.env]||ENVS.rural;
 // ---- bottleneck: one area starts well short of the paper machine's rate. Its capacity is BNK[area] of what the machine
-// needs on 23m at standard speed (set per area so a hands-off season loses about the same with each); the upgrades for
+// needs on 24 at standard speed (set per area so a hands-off season loses about the same with each); the upgrades for
 // that area are 25% off and fix it (BN[].ups)
 const BNK={recv:0.70,pulper:0.82,screens:0.81,winder:0.80,ship:0.80},BN_DISC=0.25;
 const BN={
@@ -2318,12 +2318,12 @@ const BN_IDS=["recv","pulper","screens","winder","ship"];
 // the run's bottleneck follows from its seed (a hash, so no sim stream is drawn)
 function bnFor(seed){let h=(seed>>>0)^0x2545f491;h=Math.imul(h^(h>>>16),0x45d9f3b);h=Math.imul(h^(h>>>16),0x45d9f3b);h^=h>>>16;return BN_IDS[(h>>>0)%BN_IDS.length];}
 const BNQ=()=>(S&&BN[S.bn])?S.bn:null;
-// what the machine needs at standard speed on 23m (t/h of paper), the yardstick for every capacity
-const NEED23=()=>BASE.K*GRADES["23m"].sp*GRADES["23m"].bw;
+// what the machine needs at standard speed on 24 (t/h of paper), the yardstick for every capacity
+const NEEDREF=()=>BASE.K*GRADES["24"].sp*GRADES["24"].bw;
 function upCost(u,l){const c=u.lv[l];const b=BNQ();return b&&BN[b].ups.includes(u.id)?Math.round(c*(1-BN_DISC)/1000)*1000:c;}
 function upFix(u){const b=BNQ();return !!(b&&BN[b].ups.includes(u.id));}
 // capacities that a bottleneck can cut (called from applyUpgrades)
-function applySite(){const E=ENVX(),b=BNQ(),need=NEED23(),fiber=need/P.pmLoss,feed=fiber/OCCG.occ11.y;
+function applySite(){const E=ENVX(),b=BNQ(),need=NEEDREF(),fiber=need/P.pmLoss,feed=fiber/OCCG.occ11.y;
   P.siteOcc=0;P.sitePrice=0;P.siteHaul=E.occ;P.siteFreight=-E.price;   // v6.5: the site's OCC and price adders are now its freight (haul in, freight out)
   P.siteEnergy=E.energy+E.chem;P.siteChem=E.chem;P.siteWage=E.wage;P.siteOver=E.over;P.siteWx=E.wx;P.siteIn=E.inMul;
   // receiving: unloading per door (t/h); normal docks never limit
@@ -2842,9 +2842,9 @@ const CARDS=[
   win:()=>"+$81k premium if all 900 t are made on time",lose:()=>"Every ton short costs $40",
   odds:()=>clamp(Math.round(50+(effNow()-0.87)*300),10,95),why:"Depends on how well the machine runs: breaks and downtime cost tons.",
   ok:()=>!S.plan.hot&&!(typeof civOn==="function"&&civOn()),   // v5.1 civics: the Rush order upset replaces this card
-  accept(){S.plan.q.unshift({g:"33HT",t:900,i:3});S.plan.left=0;S.plan.hot={made:0};
+  accept(){S.plan.q.unshift({g:"34Super",t:900,i:3});S.plan.left=0;S.plan.hot={made:0};
     pend("hot",30*60,"hot");
-    return "33HT jumps to the front of the queue. Delivery due in 30 hours.";}},
+    return "34Super jumps to the front of the queue. Delivery due in 30 hours.";}},
  {id:"chem",area:"Stock prep · Paper machine",title:"Chemical trial",
   story:()=>"A vendor offers a free 3-day trial of a new strength additive.",
   win:()=>"Chemical costs drop $12/t for good",lose:()=>"Deposits: scabs 3× as likely and 1.5× sheet breaks during the trial",
@@ -2857,7 +2857,7 @@ const CARDS=[
   story:()=>"Your process engineer has a new steam profile that could lift heavy-medium machine speed by 120 fpm. Engineering time costs $60k.",
   win:()=>"+120 fpm on heavy medium, permanently",lose:()=>"$60k spent and sheet breaks 2× for a day",
   odds:()=>Math.min(95,70+10*LV("rcfa")),why:"Root cause analysis (RCFA) makes trials safer.",
-  ok:()=>!pending("eng")&&(S.perk.sp["30m"]||0)<360,
+  ok:()=>!pending("eng")&&(S.perk.sp["31"]||0)<360,
   accept(c){deal(-60000);const w=rand("card")*100<c.o;if(!w)addFx({id:"eng",left:1440,mods:{breakMul:2}});
     pend("eng",1440,"eng",{w});
     return "Trial running for a day. $60k spent.";}},
@@ -2889,7 +2889,7 @@ const CARDS=[
   story:()=>"Your biggest high-strength board customer will audit your quality for the next 3 days. They want 99% on-spec paper.",
   win:()=>"+$15/t on high-strength board for the rest of the game",lose:()=>"−⁠$10/t on high-strength board for 7 days",
   odds:()=>clamp(Math.round(70+(qualNow()-0.99)*2000),10,95),why:"Passes if 99% of paper made is on spec: dye trouble and grade changes cost quality.",
-  ok:()=>!pending("audit")&&(S.perk.price["33HT"]||0)<45,
+  ok:()=>!pending("audit")&&(S.perk.price["34Super"]||0)<45,
   accept(){const m0=S.q.made,o0=S.q.off;
     pend("audit",3*1440,"audit",{m0,o0});
     return "Audit running for 3 days.";}},
@@ -2903,10 +2903,10 @@ const CARDS=[
     pend("seconds",w?1:3*1440,"seconds",{w});
     return w?`${money(v)} paid. Clean deal.`:`${money(v)} paid, but customers found prime-labeled seconds: −⁠$5/t for 3 days.`;}},
  {id:"intern",area:"Paper machine",title:"Intern project",
-  story:()=>"Your summer intern has a plan to retune the 23m speed profile. It costs nothing to try.",
-  win:()=>"+60 fpm on 23m, permanently",lose:()=>"The intern trips the machine: 2 hours down",
+  story:()=>"Your summer intern has a plan to retune the grade 24 speed profile. It costs nothing to try.",
+  win:()=>"+60 fpm on grade 24, permanently",lose:()=>"The intern trips the machine: 2 hours down",
   odds:()=>75,why:"Fixed odds.",
-  ok:()=>!pending("intern")&&(S.perk.sp["23m"]||0)<180,
+  ok:()=>!pending("intern")&&(S.perk.sp["24"]||0)<180,
   accept(c){const w=rand("card")*100<c.o;
     pend("intern",12*60,"intern",{w});
     return "Intern trial running for 12 hours.";}},
@@ -3072,8 +3072,8 @@ const CARDS=[
     pend("basket",(6+rand("card")*18)*60,"basket");
     return "Trial basket in.";}},
  {id:"vip",area:"Sales · Paper machine",title:"VIP customer tour",
-  story:()=>"A big 23m buyer wants to tour the mill tomorrow. Catering and a fresh coat of paint: $8k.",
-  win:()=>"+$10/t on 23m, permanently",lose:()=>"They see a sheet break: −⁠$8/t on 23m for 5 days",
+  story:()=>"A big grade 24 buyer wants to tour the mill tomorrow. Catering and a fresh coat of paint: $8k.",
+  win:()=>"+$10/t on grade 24, permanently",lose:()=>"They see a sheet break: −⁠$8/t on grade 24 for 5 days",
   odds:()=>clamp(Math.round(55+(effNow()-0.87)*300),10,95),why:"Depends on how well the machine is running.",
   ok:()=>!pending("vip")&&!S.perk.vip,   // v5.0.6: once won it stays won (the survival deck reshuffles, and the bonus used to stack)
   accept(c){deal(-8000);const w=rand("card")*100<c.o;
@@ -3193,17 +3193,17 @@ const PENDH={
       else{const sh=900-m;deal(-sh*40);cardBanner(`Hot order short by ${Math.round(sh)} t: ${money(sh*40)} penalty.`,false);}},
  "chem":({w})=>{if(w){S.perk.chem+=12;applyUpgrades();cardBanner("Chemical trial worked: chemicals now $12/t cheaper.",true);}
       else cardBanner("Chemical trial failed: the additive left deposits. Back to the old recipe.",false);},
- "eng":({w})=>{if(w){S.perk.sp["30m"]=(S.perk.sp["30m"]||0)+120;cardBanner("Engineer's steam profile works: heavy medium runs 120 fpm faster.",true);}
+ "eng":({w})=>{if(w){S.perk.sp["31"]=(S.perk.sp["31"]||0)+120;cardBanner("Engineer's steam profile works: heavy medium runs 120 fpm faster.",true);}
       else cardBanner("Engineer's trial didn't hold up: back to the old steam profile.",false);},
  "cheap":({w})=>{if(w)cardBanner("Cheap OCC checks out: clean bales, about $27k saved.",true);
       else{trigger("badocc");cardBanner("The cheap OCC was junk: wax, plastic and wet bales in the pulper.",false);}},
  "grid":({w})=>cardBanner(w?"Demand response over: full speed again.":"Demand response ran 8 hours. Full speed again.",w),
  "outage":({w})=>{addFx({id:"care",left:7*1440,freq:0.5});cardBanner(w?"Planned outage finished on time. Breakdowns halved for 7 days.":"Planned outage overran by 4 hours. Breakdowns halved for 7 days.",w);},
  "audit":({m0,o0})=>{const m=S.q.made-m0,q=m>0?1-(S.q.off-o0)/m:0;
-      if(q>=0.99){S.perk.price["33HT"]=(S.perk.price["33HT"]||0)+15;cardBanner(`Customer audit passed at ${(q*100).toFixed(1)}% on spec: +$15/t on high-strength board.`,true);}
-      else{addFx({id:"auditfail",left:7*1440,price:{"33HT":-10}});cardBanner(`Customer audit failed at ${(q*100).toFixed(1)}% on spec: −⁠$10/t on high-strength board for 7 days.`,false);}},
+      if(q>=0.99){S.perk.price["34Super"]=(S.perk.price["34Super"]||0)+15;cardBanner(`Customer audit passed at ${(q*100).toFixed(1)}% on spec: +$15/t on high-strength board.`,true);}
+      else{addFx({id:"auditfail",left:7*1440,price:{"34Super":-10}});cardBanner(`Customer audit failed at ${(q*100).toFixed(1)}% on spec: −⁠$10/t on high-strength board for 7 days.`,false);}},
  "seconds":({w})=>{if(!w)cardBanner("Seconds resold as prime: prices back to normal.",true);},
- "intern":({w})=>{if(w){S.perk.sp["23m"]=(S.perk.sp["23m"]||0)+60;cardBanner("The intern's speed profile works: 23m runs 60 fpm faster.",true);}
+ "intern":({w})=>{if(w){S.perk.sp["24"]=(S.perk.sp["24"]||0)+60;cardBanner("The intern's speed profile works: grade 24 runs 60 fpm faster.",true);}
       else{addFx({id:"intern",left:120,mods:{pmDown:"intern tripped the machine"}});cardBanner("The intern tripped the machine: 2 hours down.",false);}},
  "traps":({w})=>{if(w){S.perk.energy+=6;cardBanner("Steam trap survey paid off: energy $6/t cheaper.",true);}else cardBanner("Steam trap survey found nothing worth fixing.",false);},
  "wdrive":({w})=>{if(w){S.perk.winder=15;applyUpgrades();cardBanner("Used winder drive installed: +15 t/h winder capacity.",true);}
@@ -3230,12 +3230,12 @@ const PENDH={
       else{addFx({id:"film",left:240,mods:{winderDown:1}});cardBanner("The new film jammed the wrapper: winder down 4 hours.",false);}},
  "rotor":({w})=>{addFx({id:"rotorok",left:14*1440,evf:{ragger:0.4,lcplug:0.4,hdblow:0.4}});cardBanner(w?"Pulper rotor rebuilt on time: plugs 60% rarer for 14 days.":"Pulper rebuild overran to 8 hours, but it's done: plugs 60% rarer for 14 days.",w);},
  "basket":()=>{trigger("fscreen");cardBanner("The trial basket cracked: fine screen down.",false);},
- "vip":({w})=>{if(w){S.perk.vip=1;S.perk.price["23m"]=(S.perk.price["23m"]||0)+10;cardBanner("The VIP tour went great: +$10/t on 23m.",true);}
-      else{addFx({id:"vipx",left:5*1440,price:{"23m":-8}});cardBanner("The VIPs watched a sheet break: −⁠$8/t on 23m for 5 days.",false);}},
+ "vip":({w})=>{if(w){S.perk.vip=1;S.perk.price["24"]=(S.perk.price["24"]||0)+10;cardBanner("The VIP tour went great: +$10/t on grade 24.",true);}
+      else{addFx({id:"vipx",left:5*1440,price:{"24":-8}});cardBanner("The VIPs watched a sheet break: −⁠$8/t on grade 24 for 5 days.",false);}},
  "millwright":()=>cardBanner("The millwright went home early after a row with the foreman.",false),
  "tax":({w})=>{if(w){deal(60000);cardBanner("Tax appeal won: +$60k refund.",true);}else cardBanner("Tax appeal denied.",false);},
  "backhaul":()=>cardBanner("Outbound trucks are back on schedule.",true),
- "starch":({w})=>{if(w){S.perk.price["33HT"]=(S.perk.price["33HT"]||0)+12;cardBanner("New starch recipe works: +$12/t on high-strength board.",true);}else cardBanner("Starch trial over: back to the old recipe.",false);},
+ "starch":({w})=>{if(w){S.perk.price["34Super"]=(S.perk.price["34Super"]||0)+12;cardBanner("New starch recipe works: +$12/t on high-strength board.",true);}else cardBanner("Starch trial over: back to the old recipe.",false);},
  "scrap":()=>cardBanner("Scrap truck gone: docks open again.",true),
  "boilertune":({w})=>{if(w){S.perk.energy+=4;addFx({id:"boilertune",left:14*1440,evf:{boiler:0.5}});cardBanner("Boiler tuned: energy $4/t cheaper, trips halved for 14 days.",true);}
       else{trigger("boiler");cardBanner("The boiler tripped during tuning!",false);}},
@@ -3486,7 +3486,7 @@ function hayout(a=rand("upx"),b=rand("upx")){AUDIO.sfx("hayout",600);S.wd="hayou
   log(`Winder hayout: ${loss.toFixed(1)} t of paper to the beater`,"bad");}
 function initCtrl(){
   C={inRate:{v:1.8,auto:true},drivers:{v:3,auto:true},pulper:{v:40,auto:true},lvlTarget:{v:69},lowLevel:{v:30},
-     pmSp:{v:2736,auto:true},rollW:{v:100/8},loaders:{v:2,auto:true},outRate:{v:1,auto:true},grade:"23m",breaks:true,hays:true,wdr:{v:45,auto:true},simSpeed:10};
+     pmSp:{v:2632,auto:true},rollW:{v:100/8},loaders:{v:2,auto:true},outRate:{v:1,auto:true},grade:"24",breaks:true,hays:true,wdr:{v:45,auto:true},simSpeed:10};
 }
 function initState(){
   S={date0:new Date().setHours(0,0,0,0),wx:"clear",wxLeft:360,wet:0,crewQ:[],brkType:"dryer",breakTotal:1,hayTotal:1,t:0,yard:700,tank:0.69*P.tankCap,fg:40,pmSpeed:C.pmSp.v,pm:"run",breakLeft:0,reel:8,winderBuf:0,winderAcc:0,
@@ -3512,7 +3512,7 @@ function initState(){
 // season week face the same dice at the same sim time: upsets, sheet breaks, hayouts, weather, truck timing
 function seedRun(seed){S.seed=seed>>>0;const k=S.seed;S.bn=bnFor(S.seed);S.rng={plan:k^0x9e3779b9,card:k^0x85ebca6b,up:k^0x27d4eb2f,upx:k^0x165667b1,
     brk:k^0xd3a2646c,brkx:k^0xfd7046c5,hay:k^0xb55a4f09,wx:k^0x7feb352d,flow:k^0x846ca68b,lead:k^0x2c1b3c6d};
-  C.grade="23m";const c=GCOST["23m"];
+  C.grade="24";const c=GCOST["24"];
   S.plan={i:0,q:[],cur:null,left:c.mix[0]+rand("plan")*(c.mix[1]-c.mix[0]),mkt:0,mktLeft:7*1440,disc:null,hot:null};
   S.cards={next:1440*(1+0.5*rand("card")),open:null,pend:[],seen:{}};applyUpgrades();
   ordInit();}   // v6.6: the order book for the run (its own dice streams, ord and bale; 05b)
@@ -3660,7 +3660,7 @@ function step(dt){
     {const kf=knobOff();if(kf>0)off=Math.min(prod,off+(prod-off)*kf);}   // v5.6: a moved knob sending part of the reel to the beater (defects other than weight and moisture)
     // (v6.5.3: off-spec paper stays on the reel as beater and is wound into beater rolls; before, it vanished here)
     if(off>0){pfW("broke",off);S.tot.broke+=off;S.q.off+=off;prod-=off;beat=off;}
-    if(S.plan.hot&&C.grade==="33HT")S.plan.hot.made+=prod;
+    if(S.plan.hot&&C.grade==="34Super")S.plan.hot.made+=prod;
     if(S.pf&&prod>0)pfW("val",prod*priceOf(C.grade));}
   qLog(dt,beat);   // v6.7 the off-spec log (07e)
   S.reel+=prod+beat;lotPut(S.lots.reel,C.grade,prod);lotPut(S.lots.reel,"beater",beat); S.tot.prodT+=prod; {const pt=P.K*C.pmSp.v*g.bw*dt/60;S.tot.pot+=pt;pfW("pot",pt);}   // (v6.7: potential tons at the setpoint speed, by the hour, for the process flow)
@@ -3885,7 +3885,7 @@ function knobTick(dt){const K=S.knob;if(!K||!K.any||S.zen)return;
   const Dw=dewater(x.fr,x.vac,x.pl,x.jv,x.jh),W=Dw.W;x.cs=Dw.cs;x.ps=Dw.ps;
   x.d1=L(x.d1,(v.st1-70)/130*0.35,8);
   // v6.5 b5: moisture, the 3rd section and the boiler header come from the dryer model (07d), which now also sees speed
-  const a0=clamp(W-x.d1,0.7,1.3),Dr=dryState();K.W=W;K.d1x=x.d1;K.a=Dr.st3/(DRY.base[C.grade]||122);
+  const a0=clamp(W-x.d1,0.7,1.3),Dr=dryState();K.W=W;K.d1x=x.d1;K.a=Dr.st3/(DRY.base[C.grade]||DRY.base["24"]);
   x.m=Dr.m;                                                             // reel moisture (%)
   K.sf=a0+Math.max(0,x.d1);                                             // steam load per ton (1 = normal): the cost side (v6.5.5: a drier sheet saves steam)
   // boiler header sagging under the load: the boiler's own limit (07d), or (v6.5.2) the knobs holding the dryers' total
@@ -3946,18 +3946,18 @@ function knobSteamCulprits(){const K=S.knob;if(!K)return [];const v=K.v,c=[];
   if(v.st1!==70)c.push(["st1",Math.abs(v.st1-70)/130*0.35]);
   c.sort((a,b)=>b[1]-a[1]);return c.filter(r=>r[1]>0.02).map(r=>r[0]);}
 // readings for the DCS and QCS screens. With S.knob missing everything reads at its standard value.
-// Base values follow PM3's own run data: reel speed, basis weight and 3rd section steam by grade, the stock prep level.
-function knobRead(){const K=S.knob,x=K?K.x:null,g=GRADES[C.grade]||GRADES["23m"],bw=g.bw,run=S.pm==="run";
+// Base values follow each grade's standard: reel speed, basis weight and 3rd section steam, and the stock prep level.
+function knobRead(){const K=S.knob,x=K?K.x:null,g=GRADES[C.grade]||GRADES["24"],bw=g.bw,run=S.pm==="run";
   const z=x?x.z:new Array(KZONES).fill(0),sw=x?x.sw:0,t=S.t;
   const wob=(f,k)=>Math.sin(t*f+k)*0.6+Math.sin(t*f*2.7+k*2)*0.4;   // smooth stand-in for process noise (no dice)
-  const Dr=S.dry,st3=Dr?Dr.st3:(DRY.base[C.grade]||122);   // (v6.5 b5: the dryer model, 07d)
+  const Dr=S.dry,st3=Dr?Dr.st3:(DRY.base[C.grade]||DRY.base["24"]);   // (v6.5 b5: the dryer model, 07d)
   const m=Dr?Dr.m:DRY.m0,cp=x?x.cp:5;
   return {run,cp,amps:410*(0.55+cp/5*0.45)*(S.M.pulperDown?0:1),pulpLvl:clamp(62+(5-cp)*9+wob(0.05,1)*1.5,0,110),
     gap:x?x.fr:0.5,refkw:run?2100*(1+Math.max(0,0.5-(x?x.fr:0.5))*1.6-Math.max(0,(x?x.fr:0.5)-0.5)*0.8):0,csf:450+((x?x.fr:0.5)-0.5)*380,
     mcLvl:69+wob(0.02,2)*3,mcCons:3.2+sw*0.9*wob(0.21,3)+(S.wat?S.wat.shortK*0.6:0),agit:knobVal("agit"),
     vac:x?x.vac:30,couchSol:x&&x.cs!=null?x.cs:19,pl:x?x.pl:100,pressSol:x&&x.ps!=null?x.ps:44+4*LV("shoe"),
     edge:K?K.edge:0,gtrav:K?K.gtrav:0,gm:knobVal("gm"),stripes:x?x.st:0,cs:K?K.cs:0,couch:knobVal("couch"),osc:knobVal("osc"),wear:K?K.wear:0,
-    st1:knobVal("st1"),st3,steam:run?(Dr?Dr.steam:50.5*S.pmSpeed/2736):S.pm==="break"&&Dr?Dr.steam:0,boiler:Dr?Dr.hdr:1,moist:run?m+wob(0.13,4)*0.25:0,
+    st1:knobVal("st1"),st3,steam:run?(Dr?Dr.steam:50.5*P.K*S.pmSpeed*bw/34.8):S.pm==="break"&&Dr?Dr.steam:0,boiler:Dr?Dr.hdr:1,moist:run?m+wob(0.13,4)*0.25:0,
     bw:run?bw*(1+sw*0.08*wob(0.21,3))+wob(0.11,5)*0.12:0,draw:knobVal("draw"),tension:run?1.0+(knobVal("draw")-1.5)*0.42:0,
     zones:z.map((v,i)=>m+v*0.35+Math.sin(i*1.7+t*0.01)*0.12),off:qualStatus().off,why:qualStatus().why,F:K&&K.F||{},speed:S.pmSpeed};}
 // DCS / QCS trend history: a reading every 2 sim minutes, 6 hours kept. Read-only on the sim (it never writes S), kept
@@ -4019,27 +4019,27 @@ const purgeMode=k=>(S.dcs&&S.dcs.pg[k]&&S.dcs.pg[k].m)||"auto";
 /* ---- v6.5 b5 the dryer limit (claude/dryer-limit-spec.md): speed, water and steam, live ----
    Water to evaporate = paper t/h x water per ton (0.93 / press-out solids - 1 = 1.11 t/t at 44%; the shoe press makes it
    48%, -16%), times the wet end's water factor (the fiddly knobs' K.W: refiner gap, forming vacuum, press load). The 3rd
-   section's demand is calibrated on PM3 data: the grade's own median pressure at its median rate, +3.0 kPa per extra t/h
-   on 23m, scaled by basis weight for the other grades; the 1st section knob takes some of it (K's d1). The auto loop holds
+   section's demand starts at the grade's base pressure at its standard rate (DRY.base), +2.9 kPa per extra t/h
+   on 24, scaled by basis weight for the other grades; the 1st section knob takes some of it (K's d1). The auto loop holds
    8% reel moisture (DRY.m0; 7% before v6.5.3) while demand is between its floor (70% of the grade's base) and the ceiling (DRY.ceil). Above the
    ceiling the sheet goes wet (+0.15% per kPa short; below the floor it over-dries the same way). Past the moisture spec
    (10%) the paper fails on quality and goes to the beater, and the crew slows the machine (1% a minute) until it's back
    under 9%, then lets the speed recover (0.5% a minute) while there's headroom. In every mode but zen; AUTO doesn't trim
    ahead of time. Steam = 1.3 t per t of water (TAPPI dryer norm); past the boiler's 62 t/h the header sags and the
    ceiling with it. On a sheet break the steam keeps flowing and the surplus is vented (v6.5.7). No dice: seasons replay identically. The knob model (07b) reads its moisture from here. */
-// ceil: PM3's 3rd section tops out at 171 kPa; the game's ceiling is 180 so a fully upgraded mill (with the shoe press)
+// ceil: 180 kPa, set so a fully upgraded mill (with the shoe press)
 // runs clean (peak 170 in hands-off seasons); without the shoe press, heavy grades at full speed run damp (to ~9.4%)
-const DRY={hold:0.3,m0:8,ceil:180,ceilFloor:0.7,perKpa:0.15,spec:10,back:9,slope23:3.0,wpt0:0,boiler:62,stPerW:1.3,
-  base:{"23m":122,"26m":126,"30m":138,"33HT":135}};   // (median 3rd-section kPa by grade, PM3 Sep 2025 - Mar 2026)
+const DRY={hold:0.3,m0:8,ceil:180,ceilFloor:0.7,perKpa:0.15,spec:10,back:9,slopeRef:2.9,wpt0:0,boiler:62,stPerW:1.3,
+  base:{"24":120,"28":127,"31":136,"34Super":133}};   // (3rd-section kPa by grade at its standard rate; v6.7.1 grade set)
 DRY.wpt0=(1-DRY.m0/100)/0.44-1;   // water evaporated per ton of paper at standard press solids
-function dryState(){if(!S.dry)S.dry={m:DRY.m0,st3:DRY.base[C.grade]||122,dem:122,trim:0,steam:0,hdr:1,load:0.7,maxDem:0,wet:false};return S.dry;}
+function dryState(){if(!S.dry)S.dry={m:DRY.m0,st3:DRY.base[C.grade]||DRY.base["24"],dem:DRY.base["24"],trim:0,steam:0,hdr:1,load:0.7,maxDem:0,wet:false};return S.dry;}
 const dryWpt=()=>(1-DRY.m0/100)/(0.44+0.04*LV("shoe"))-1;   // (v6.5.6: on the 8% setpoint; it assumed 7%)   // water per ton of paper into the dryers
-const drySlope=g=>DRY.slope23*(GRADES[g].bw/GRADES["23m"].bw);
+const drySlope=g=>DRY.slopeRef*(GRADES[g].bw/GRADES["24"].bw);
 const dryRef=g=>BASE.K*GRADES[g].sp*GRADES[g].bw;   // the grade's standard t/h (what the base pressure was measured at)
 // the ceiling, less what a sagging boiler header takes off it
 const dryCeil=D=>DRY.ceil-60*Math.max(0,1-D.hdr);
 // 3rd-section demand (kPa) at a given paper rate, before the fiddly knobs
-function dryDemand0(tph){const g=C.grade,b=DRY.base[g]||122;return b+drySlope(g)/DRY.wpt0*(tph*dryWpt()-dryRef(g)*DRY.wpt0);}
+function dryDemand0(tph){const g=C.grade,b=DRY.base[g]||DRY.base["24"];return b+drySlope(g)/DRY.wpt0*(tph*dryWpt()-dryRef(g)*DRY.wpt0);}
 // v6.5.2: the fiddly knobs' load on the dryers is a ratio of that (r = the wet end's water factor less the 1st section's
 // share, 1 = normal). The 3rd section's auto loop takes up to ±30% of it (a); past that the knobs move the moisture
 // (20 points of moisture per unit of r, the v5.6 knob model). Before v6.5.2 the knobs added kPa to the demand and the
@@ -4047,9 +4047,9 @@ function dryDemand0(tph){const g=C.grade,b=DRY.base[g]||122;return b+drySlope(g)
 function dryKnob(){const K=S.knob;if(!(K&&K.any))return {r:1,a:1};const r=(K.W||1)-(K.d1x||0);return {r,a:clamp(r,0.7,1.3)};}
 function dryDemand(tph){return dryDemand0(tph)*dryKnob().a;}
 // the paper rate the dryers can take before the sheet goes wet (for the bottleneck view)
-function dryCapTph(){const D=dryState(),g=C.grade,b=DRY.base[g]||122,s=drySlope(g)/DRY.wpt0,k=s*dryWpt();
+function dryCapTph(){const D=dryState(),g=C.grade,b=DRY.base[g]||DRY.base["24"],s=drySlope(g)/DRY.wpt0,k=s*dryWpt();
   return k>0?Math.max(0,(dryCeil(D)/dryKnob().a-b+s*dryRef(g)*DRY.wpt0)/k):1e9;}
-function dryTick(dt){const D=dryState(),g=C.grade,b=DRY.base[g]||122,run=S.pm==="run";
+function dryTick(dt){const D=dryState(),g=C.grade,b=DRY.base[g]||DRY.base["24"],run=S.pm==="run";
   const tph=run?P.K*S.pmSpeed*GRADES[g].bw:0;
   const A=dryKnob(),dem0=run?dryDemand0(tph):b*0.5,dem=run?dem0*A.a:b*0.5;D.dem=ease(D.dem,dem,dt,3);D.dem0=ease(D.dem0==null?dem0:D.dem0,dem0,dt,3);if(run&&!S.zen&&D.dem>D.maxDem)D.maxDem=D.dem;
   D.km=ease(D.km||0,run?20*(A.r-A.a):0,dt,10);   // (v6.5.2: moisture the knobs put past the auto loop's reach)
@@ -4088,22 +4088,22 @@ const dryLimited=()=>!!(S.dry&&S.pm==="run"&&S.dry.dem>=dryCeil(S.dry)-0.5);
    capacity don't). A grade change's transition tons count as a weight violation the same way. The other fiddly-knob
    defects (CD streaks, crush marks, felt stripes, wrinkles) still send their share to the beater on top (07b knobOff). */
 const QSPEC={   // basis weight lb/1000 ft² (target ±3%), reel moisture % (8 ±2), shade
-  "23m": {bw:[23.81,25.29],m:[6.0,10.0],shade:"mill shade"},
-  "26m": {bw:[25.28,26.84],m:[6.0,10.0],shade:"mill shade"},
-  "30m": {bw:[29.15,30.95],m:[6.0,10.0],shade:"mill shade"},
-  "33HT":{bw:[32.09,34.07],m:[6.0,10.0],shade:"mill shade"}};
+  "24": {bw:[24.75,26.29],m:[6.0,10.0],shade:"mill shade"},
+  "28": {bw:[27.19,28.87],m:[6.0,10.0],shade:"mill shade"},
+  "31": {bw:[30.17,32.03],m:[6.0,10.0],shade:"mill shade"},
+  "34Super":{bw:[32.99,35.03],m:[6.0,10.0],shade:"mill shade"}};
 const QWHY={bw:"weight",m:"moisture",shade:"color",chg:"weight (grade change)"};
 // the latest check (derived each step, not saved): measured values, what's out, the share of production going to the beater
 const QNOW={bw:0,m:8,shade:true,out:[],why:"",off:0};
 // what the scanner reads now (no dice: the swings are smooth functions of time, like the DCS readings)
-function qualMeasure(){const g=C.grade,G=GRADES[g]||GRADES["23m"],K=S.knob,t=S.t;
+function qualMeasure(){const g=C.grade,G=GRADES[g]||GRADES["24"],K=S.knob,t=S.t;
   const wob=(f,k)=>Math.sin(t*f+k)*0.6+Math.sin(t*f*2.7+k*2)*0.4,sw=K&&K.any&&K.x?K.x.sw:0;
   const bw=G.bw*(1+sw*0.08*wob(0.21,3)+0.05*(S.wat?S.wat.shortK:0))+wob(0.11,5)*0.12;   // (v6.5.6: no dilution water, thick stock)
   const m=S.dry?S.dry.m:DRY.m0;
   // shade: the dye system is in trouble (an upset, or the dye pump stopped from the DCS)
   const shade=!(active("dye")||active("m_dye")||motState("dye")==="off");
   return {bw,m,shade};}
-function qualTick(){const Q=QNOW,sp=QSPEC[C.grade]||QSPEC["23m"];if(Q.S!==S){Q.S=S;Q.out=[];Q.why="";Q.logT=Q.endT=null;}
+function qualTick(){const Q=QNOW,sp=QSPEC[C.grade]||QSPEC["24"];if(Q.S!==S){Q.S=S;Q.out=[];Q.why="";Q.logT=Q.endT=null;}
   const r=qualMeasure();Q.bw=r.bw;Q.m=r.m;Q.shade=r.shade;
   if(S.pm!=="run"||S.zen){Q.off=0;return Q;}   // (no sheet, nothing to judge: the last verdict stands until it runs again)
   const out=[];if(r.bw<sp.bw[0]||r.bw>sp.bw[1])out.push("bw");
@@ -4188,7 +4188,7 @@ const POP={w:null,on:false,view:"dcs"};
 const $=id=>{const e=document.getElementById(id);if(e||!POP.on)return e;try{return POP.w&&!POP.w.closed?POP.w.document.getElementById(id):null;}catch(_){return null;}};
 const actEl=el=>el&&el.ownerDocument?el.ownerDocument.activeElement:document.activeElement;
 const gradeSel=$("grade");
-const GRADE_PLAIN={"23m":"light medium","26m":"medium","30m":"heavy medium","33HT":"high-strength board"};   // v5.1 QA2: the plain names cards use
+const GRADE_PLAIN={"24":"light medium","28":"medium","31":"heavy medium","34Super":"high-strength board"};   // v5.1 QA2: the plain names cards use
 Object.keys(GRADES).forEach(k=>{const o=document.createElement("option");o.value=k;o.textContent=`${k} · ${GRADE_PLAIN[k]||""} · ${GRADES[k].bw} lb · $${ECON.price[k]}/t`;gradeSel.appendChild(o);});
 gradeSel.disabled=true;gradeSel.title="Set by the market: the planner schedules grades from customer orders";
 const rows=[...document.querySelectorAll(".row[data-key]")];
@@ -4743,7 +4743,7 @@ function civApply(d,i,auto){const V=S.civ,id=d.id;V.seen[id]=1;if(d.kind!=="mete
   if(fx.warranty){if(civRng()<0.5)log("The vendor gave in: a free felt.","ok");else civFxAdd("civwarranty",{left:2880,mods:{breakMul:1.3}});}
   if(fx.grade)civFxAdd("civgrade",{left:fx.grade,mods:{pmDown:"squeezed-in grade change"}});
   if(id==="rush"&&i<2&&!S.plan.hot){const t=i===0?900:450,prem=i===0?90:60,pen=i===0?40:0;   // (v5.1 QA: a real order, like the old Hot order card)
-    S.plan.q.unshift({g:"33HT",t,i:3});S.plan.left=0;S.plan.hot={made:0};pend("rush",30*60,"rush",{t,prem,pen});civBanner(`Rush order: ${t} t of high-strength board due in 30 hours.`,true,"ORDER");}
+    S.plan.q.unshift({g:"34Super",t,i:3});S.plan.left=0;S.plan.hot={made:0};pend("rush",30*60,"rush",{t,prem,pen});civBanner(`Rush order: ${t} t of high-strength board due in 30 hours.`,true,"ORDER");}
   if(fx.posts)civFxAdd("civposts",{left:fx.posts,mods:{speedCap:0.9}});
   // the new upsets' base effect: a proper fix ends it, a cheap fix halves it, a shortcut leaves it
   if(CIVNEW[id]&&civFxGet(id)){if(tag==="P")civFxEnd(id);else if(tag==="Q")civFxGet(id).left/=2;}
@@ -12629,7 +12629,7 @@ function kuiRefresh(){if(!KUI.panel&&!KUI.st)return;const r=knobRead();
       const qs=qualStatus(),sh=!r.run?["MACHINE DOWN","down"]:QNOW.out.length?[`OFF SPEC · ${qs.why} · rolls to the beater`,"bad"]:S.chg?["GRADE CHANGE · weight in transition · rolls to the beater","warn"]:qs.off>0.02?[`REJECTING · ${qs.why} · ${Math.round(qs.off*100)}% to the beater`,"bad"]:["ON SPEC","ok"];
       if(st._h!==sh[0]){st._h=sh[0];st.textContent=sh[0];st.className="qcsst "+sh[1];}
       // v6.5.3: each reading against the grade's spec (QSPEC, 07e); red when it's out
-      const g=GRADES[C.grade],sp=QSPEC[C.grade]||QSPEC["23m"],qv=$("qcsV"),qo=k=>r.run&&QNOW.out.includes(k)?' class="qout"':"",rg=(a,d)=>`spec ${a[0].toFixed(d)}–${a[1].toFixed(d)}`;
+      const g=GRADES[C.grade],sp=QSPEC[C.grade]||QSPEC["24"],qv=$("qcsV"),qo=k=>r.run&&QNOW.out.includes(k)?' class="qout"':"",rg=(a,d)=>`spec ${a[0].toFixed(d)}–${a[1].toFixed(d)}`;
       const shn=((document.querySelector('#paperColor button[aria-pressed="true"]')||{}).dataset||{}).c==="white"?"white":"brown";
       const qh=`<div><small>Grade</small><b>${C.grade}</b><small>target ${g.bw} lb · ${DRY.m0.toFixed(1)} %</small></div><div${qo("bw")}><small>Basis weight</small><b>${r.run?kf(QNOW.bw,2):"–"}</b><small>${rg(sp.bw,2)}</small></div><div${qo("m")}><small>Moisture</small><b>${r.run?kf(r.moist):"–"} %</b><small>${rg(sp.m,1)}</small></div><div${qo("shade")}><small>Color</small><b>${QNOW.shade?"ON SHADE":"OFF SHADE"}</b><small>spec ${shn}</small></div><div><small>Reel speed</small><b>${Math.round(r.speed)}</b><small>fpm</small></div>`;if(qv._h!==qh){qv._h=qh;qv.innerHTML=qh;}
       kuiCd($("qcsCd"),r);
@@ -13904,13 +13904,16 @@ function pfSVGt(D,live){const vert=pfVert(),NU=104,NV=112,GAP=30,PAD=vert?24:10,
           MILL:{name:MILL.name,brand:MILL.brand},day:Math.floor(S.t/1440)+1,cash:S.cash};
         localStorage.setItem(KEY,JSON.stringify(data));lastSave=performance.now();G3.saveMs=lastSave-t0;return true;}
       catch(e){diag("save failed: "+String(e&&e.message||e).slice(0,80));return false;}}
-    function read(){if(OFF)return null;try{const d=JSON.parse(localStorage.getItem(KEY)||"null");
+    // v6.7.1: saves from before the grade set changed carry the old grade ids; they're mapped to the new ones on load
+    const GMIG=[["23m","24"],["26m","28"],["30m","31"],["33HT","34Super"]];
+    const gmig=t=>t&&GMIG.reduce((a,[o,n])=>a.split('"'+o+'"').join('"'+n+'"'),t);
+    function read(){if(OFF)return null;try{const d=JSON.parse(gmig(localStorage.getItem(KEY))||"null");
         if(!d||d.v!==VER||!d.S||Date.now()-d.at>MAXAGE)return null;
         // v4.2.4: a save without the parts restore() needs is thrown away instead of breaking Continue
         const o=x=>!!x&&typeof x==="object";if(!(typeof d.S.t==="number"&&o(d.S.season)&&o(d.S.cards)&&o(d.C)&&o(d.CH))){clear();return null;}
         return d;}catch(e){clear();return null;}}
     function clear(){try{localStorage.removeItem(KEY);localStorage.removeItem(KEY+"-hist");}catch(e){}lastHist="";}
-    function restore(d){S=d.S;try{const hh=JSON.parse(localStorage.getItem(KEY+"-hist")||"null");S.hist=hh&&hh.id===d.S.histId?hh:null;}catch(e){S.hist=null;}   // (v6.5: no history, or another run's: the prior days are made again)
+    function restore(d){S=d.S;try{const hh=JSON.parse(gmig(localStorage.getItem(KEY+"-hist"))||"null");S.hist=hh&&hh.id===d.S.histId?hh:null;}catch(e){S.hist=null;}   // (v6.5: no history, or another run's: the prior days are made again)
       for(const k in d.C){if(C[k]&&typeof C[k]==="object"&&d.C[k]&&typeof d.C[k]==="object")Object.assign(C[k],d.C[k]);else C[k]=d.C[k];}
       if(C.spdPref){C.simSpeed=C.spdPref;}else if(S.outg&&S.outg.on&&S.outg.spd){C.simSpeed=S.outg.spd;}delete C.spdPref;   // (v5.0.1: older saves: the player's speed)
       CH.on=d.CH.on;CH.lvl=d.CH.lvl;Object.assign(CH.en,d.CH.en||{});
@@ -14349,7 +14352,7 @@ function camPullOn(){try{return localStorage.getItem("paper-mill-campull")!=="of
     ["Forming fabric (wire)","The moving mesh the pulp lands on; water drains through it and the sheet forms on top."],
     ["fpm","Feet per minute: paper machine speed."],
     ["GEMBA","Going to where the work is done to see it for yourself. The daily round is a GEMBA walk."],
-    ["Grade","The product on the machine: 23m, 26m and 30m are corrugating medium of different weights; 33HT is high-test liner. The market sets which grade runs."],
+    ["Grade","The product on the machine: grades 24, 28 and 31 are corrugating medium of different weights; 34Super is high-test liner. The market sets which grade runs."],
     ["Hayout","A winder blow-up: the set of rolls tears apart and paper flies everywhere."],
     ["Headbox","Sprays an even jet of pulp across the full width of the forming fabric."],
     ["Headbox slice","The adjustable lip of the headbox that sets the jet across the machine."],
@@ -14429,7 +14432,7 @@ function camPullOn(){try{return localStorage.getItem("paper-mill-campull")!=="of
    (within 700 ms per tap) and a list of every version's one-line note pops up, newest first. The list comes from
    VERSION-NOTES.txt at the repo root: build.py swaps it in for the placeholder below, so adding a line there with each
    release keeps the pop-up current (build.py warns when APP_VER has no line). ---------- */
-{const VNOTES=[["4.0.0", "Graphics Overhaul: 60 FPS on iPhone, ~80% Fewer Draw Calls"], ["4.0.1", "Performance Follow-Up, Show FPS Option and Device Autotest"], ["4.0.2", "Economy Rebalance and Smoother Upset Labels"], ["4.1.0", "Four Environments, Seeded Mills, Bottlenecks, Graphics Tiers and Site Music"], ["4.2.0", "New Site Maps, Rare Sights, Zen Map Rotation and Economics Fixes"], ["4.2.0-s", "Save and Continue Season (Test)"], ["4.2.1", "Save/Continue, Settings Panel and Outage Speed Fix"], ["4.2.2-t", "Bayou Gator Sight Reworked (Test)"], ["4.2.2-t2", "Gator Bass Riff (Test)"], ["4.2.2-t3", "Gator Riff Removed, Wide Camera Framing (Test)"], ["4.2.2-t4", "Gator Scene Shortened and Widened (Test)"], ["4.2.2-t5", "One Rare Sight per Map in Zen (Test)"], ["4.2.2", "Rare Sights Reworked, Bird Strike Upset, Mill Report Tab"], ["4.2.3-t", "Cowboys, Bigfoot and Tugboat Sights Reworked (Test)"], ["4.2.3", "Laptop Battery Saving (Default GPU)"], ["4.2.4", "$25M Goal Removed and Quick Fixes"], ["4.2.5", "Random Bottleneck per Season and Accessibility Improvements"], ["4.3.0-t1", "Survival Mode (Test)"], ["4.4.0-t1", "Mill Leaders in Survival (Test)"], ["4.4.0-t2", "Painted Leader Portraits (Test)"], ["4.4.0-t3", "Leader Redesign, 4-Day Waves and Fixes (Test)"], ["5.0.0", "Survival Mode Release with Mill Leaders"], ["5.0.1", "Results Dialog and Game Speed Fixes"], ["5.0.2", "Report Card Label Fixes"], ["5.0.3", "Survival Playtest Fixes (Test)"], ["5.0.4", "Playtest Review: Dot Auto-Fix and Shipping Fix (Test)"], ["5.0.5", "Polish Rounds from Survival Playtests"], ["5.0.6", "Survival QA Fixes, Opt-In Outage Watch, Leaderboard Filters"], ["5.1.0", "Civics Meters and Leaders in Seasons (Test)"], ["5.4.0", "Title Screen, Civics in the World and Dark Mode"], ["5.4.1", "Loading Splash, No Old-Menu Flash"], ["5.4.2", "Graphics Quality on the Title Screen"], ["5.5.0", "Performance Improvements"], ["5.6.0", "Fiddly Knobs, DCS/QCS Screens and Knobs View"], ["5.7.0", "Catching Failures Early: Tells, Daily Rounds, Vibration Report, Outage Prep"], ["5.7.1", "Bottom Menu Reorder, Settings Back on the Right"], ["5.7.2", "Help Page with Game Guide and Glossary"], ["5.7.3", "Bare Graphics Mode for Weak Phones"], ["5.7.4", "Version Notes Pop-Up (Triple-Tap the Version Number)"], ["6.1.0-t1", "Isometric Paper View: Fixed Camera, Cut-Outs, Drop Shadows, Cutaways, Season Palettes (Test)"], ["6.1.0-t2", "Iso Round 2: Cut-Outs Always Paper, GPU Pictures, Stop-Motion World, Fewer Draws (Test)"], ["6.1.0-t3", "Iso Round 3: iPhone Batching, Instanced Cans, Sign Atlas, Lighter Frames (Test)"], ["6.1.0-t4", "Iso Fixes: Operators and Fork-Trucks Back, Less Stutter (Test)"], ["6.1.0-t5", "Cut-Out Edge Artifact Fixed (Test)"], ["6.1.0-t6", "Iso Optimization: Hidden Objects Cost Nothing, Lighter Moving Batches (Test)"], ["6.1.0-t7", "Iso Triangle Cut: Paper-Card Trees, Flat Ground, Hidden Faces Gone, Plain Boxes (Test)"], ["6.1.0-t8", "Paper Palette: 40 Colours, Flat Surfaces, Paper Grain, Fewer Draws (Test)"], ["6.1.0-t9", "Reel Fix: Growing Reel Draws Again (Test)"], ["6.1.0-t10", "Draw Cut 2: Colour in the Matrix, Merged Roofs, Uploads on Change, Culling Fix, Parked Groups (Test)"], ["6.1.0-t11", "QA Fixes: Cut-Outs Never Drawn as Loose 3D Parts, Fallback Shows 3D, Roofs On or Off per Zoom Step (Test)"], ["6.1.0-t12", "Paper Smoke, Blinking Lights, Stronger Seasons, Sharper Phones, Instanced Upsets, Pictures at Start (Test)"], ["6.1.0-t13", "Paper Effects: Flames, Child-Made Tornado, Lamp Cones, Flags, Paper Water, Visible Weather (Test)"], ["6.1.0-t14", "Paper Upsets: Cut-Out Props, Paper Pigeon, Paper Sparks, Steam, Fireworks, Ice and Flood (Test)"], ["6.1.0-t15", "Beaver Reworked as One Smaller Cut-Out (Test)"], ["6.1.0-t16", "Paper Props Dim at Night, Labels Never Overlap, Fewer Cut-Out Pictures (Test)"], ["6.1.0-t17", "Bird on the Power Lines Cut-Scene Plays When Set Off From the Upsets List (Test)"], ["6.1.0-t18", "Zen Close-Ups Fixed, Rare Sights as Paper Cut-Outs, Tilt-Shift Diorama Look (Test)"], ["6.1.0-t19", "Narrower Tilt-Shift Band, Winder Trash Can Out of the Broke Hole (Test)"], ["6.1.0-t20", "Balance: Rounds Pay More, Capacity and Maintenance Upgrades Re-Priced"], ["6.1.0", "Paper Diorama: Isometric Paper Art Style, Cut-Out People and Upsets, Tilt-Shift, Rounds Pay More, Upgrades Re-Priced"], ["6.1.1", "Phone Fixes: Gentler Tilt-Shift on Tall Screens, Cut-Out People No Longer Blank on iPhone"], ["6.1.2", "iPhone: Cut-Out Self-Test Retries, People Keep Their Colours in the 3D Fallback"], ["6.1.3", "Broke Hole by the Winder Looks Like a Floor Opening (Was a Black Square)"], ["6.1.4", "Tilt-Shift Removed"], ["6.2.0", "Zen Free Camera: Perspective Zen Shots, 3D People in Zen, Cleaner River Water"], ["6.3.0-f1", "Process Flow Overview (Test): Inputs, Mill Areas and Outputs for the Mill Day, in Settings"], ["6.3.0-f2", "Process Flow: the Game Keeps Running While It's Open (Test)"], ["6.3.0", "Process Flow Overview: Inputs, Mill Areas and Outputs for the Mill Day (Settings > View)"], ["6.4.0", "Zen Shots Review: Shuffle-Bag Shot Order, Landscape Shots Rebuilt, Close Rare Sights"], ["6.5.0-a1", "Digital Twin A (Test): Hourly History, 14 Prior Days, 7 d / Run Ranges, Area Trends and Uptime"], ["6.5.0-b1", "Digital Twin B (Test): Real Freight Costs with a Diesel Index, Area Controls Moved into Process Flow"], ["6.5.0-b2", "Market Pricing (Test): 2026 OCC and Energy Costs, Diesel in $/gal, Desert Long Haul, Real Steam Rates"], ["6.5.0-b3", "DCS Expansion (Test): Full SPOT, WET and DET Pictures, a UTIL Screen, Motors and Reject Purges"], ["6.5.0-b4", "DCS Pictograms (Test): Equipment Drawn as Classic DCS Symbols, Colour Only When Something's Wrong"], ["6.5.0-b5", "The Dryer Limit (Test): Speed and Grade Load the Dryers, a Wet Sheet Fails Spec and Slows the Machine"], ["6.5.0", "Digital Twin: Process Flow Trends and Controls, Real Freight and Market Costs, Full DCS, Dryer Limit, Rebalance"], ["6.5.1", "Second Screen: Pop the DCS and Process Flow Out to Their Own Window for a Second Monitor (Desktop)"], ["6.5.2", "Knob Fixes: Wet-End and Steam Knobs Bite Again Under the Dryer Limit, DCS Uses the Machine's Name"], ["6.5.3", "Quality Specs: Weight, Moisture and Color Specs per Grade, Off-Spec Paper Wound into Beater Rolls and Repulped"], ["6.5.4", "DCS Fixes: Making-Beater Alerts, SPOT in Process Order, Boiler and Power on Utilities, 2nd/3rd Section Steam Control"], ["6.5.5-t1", "Dewatering Chain (Test): Jet and Vacuum Optimums, Couch to Press Solids, Press Solids Set the Dryer Steam Both Ways"], ["6.5.5", "The Dewatering Chain: Jet and Vacuum Optimums, Couch to Press Solids, Press Solids Set the Dryer Steam Both Ways"], ["6.5.6-t1", "Mass Balance (Test): A Real Water Balance and White Water Chest, Hayout Broke Repulped, Every Fiber Loss Booked"], ["6.5.6", "Mass Balance: A Real Water Balance and White Water Chest, Hayout Broke Repulped, Every Fiber Loss Booked"], ["6.5.7-t1", "Winder Pass (Test): Four Reel Storage Stands, Two-Roll Sets, Rolls Tied Together, Steam Vented on a Sheet Break"], ["6.5.7", "Winder Pass: Four Reel Storage Stands, Two-Roll Sets, Rolls Tied Together, Steam Vented on a Sheet Break"], ["6.6.0-t1", "Orders and Bales (Test): Customer Order Book and Spot Market, Idle Energy While Stopped, Bale Grading at the Gate"], ["6.6.0", "Orders and Bales: Customer Order Book and Spot Market, Idle Energy While Stopped, Bale Grading at the Gate"], ["6.7.0-t1", "Control Room (Test): Planning, Water and Quality Screens, Split-Screen Trends of Anything, What Moves With What, Process Flow Views"], ["6.7.0", "Control Room: Planning, Water and Quality Screens, Split-Screen Trends of Anything, What Moves With What, Process Flow Views"]];
+{const VNOTES=[["4.0.0", "Graphics Overhaul: 60 FPS on iPhone, ~80% Fewer Draw Calls"], ["4.0.1", "Performance Follow-Up, Show FPS Option and Device Autotest"], ["4.0.2", "Economy Rebalance and Smoother Upset Labels"], ["4.1.0", "Four Environments, Seeded Mills, Bottlenecks, Graphics Tiers and Site Music"], ["4.2.0", "New Site Maps, Rare Sights, Zen Map Rotation and Economics Fixes"], ["4.2.0-s", "Save and Continue Season (Test)"], ["4.2.1", "Save/Continue, Settings Panel and Outage Speed Fix"], ["4.2.2-t", "Bayou Gator Sight Reworked (Test)"], ["4.2.2-t2", "Gator Bass Riff (Test)"], ["4.2.2-t3", "Gator Riff Removed, Wide Camera Framing (Test)"], ["4.2.2-t4", "Gator Scene Shortened and Widened (Test)"], ["4.2.2-t5", "One Rare Sight per Map in Zen (Test)"], ["4.2.2", "Rare Sights Reworked, Bird Strike Upset, Mill Report Tab"], ["4.2.3-t", "Cowboys, Bigfoot and Tugboat Sights Reworked (Test)"], ["4.2.3", "Laptop Battery Saving (Default GPU)"], ["4.2.4", "$25M Goal Removed and Quick Fixes"], ["4.2.5", "Random Bottleneck per Season and Accessibility Improvements"], ["4.3.0-t1", "Survival Mode (Test)"], ["4.4.0-t1", "Mill Leaders in Survival (Test)"], ["4.4.0-t2", "Painted Leader Portraits (Test)"], ["4.4.0-t3", "Leader Redesign, 4-Day Waves and Fixes (Test)"], ["5.0.0", "Survival Mode Release with Mill Leaders"], ["5.0.1", "Results Dialog and Game Speed Fixes"], ["5.0.2", "Report Card Label Fixes"], ["5.0.3", "Survival Playtest Fixes (Test)"], ["5.0.4", "Playtest Review: Dot Auto-Fix and Shipping Fix (Test)"], ["5.0.5", "Polish Rounds from Survival Playtests"], ["5.0.6", "Survival QA Fixes, Opt-In Outage Watch, Leaderboard Filters"], ["5.1.0", "Civics Meters and Leaders in Seasons (Test)"], ["5.4.0", "Title Screen, Civics in the World and Dark Mode"], ["5.4.1", "Loading Splash, No Old-Menu Flash"], ["5.4.2", "Graphics Quality on the Title Screen"], ["5.5.0", "Performance Improvements"], ["5.6.0", "Fiddly Knobs, DCS/QCS Screens and Knobs View"], ["5.7.0", "Catching Failures Early: Tells, Daily Rounds, Vibration Report, Outage Prep"], ["5.7.1", "Bottom Menu Reorder, Settings Back on the Right"], ["5.7.2", "Help Page with Game Guide and Glossary"], ["5.7.3", "Bare Graphics Mode for Weak Phones"], ["5.7.4", "Version Notes Pop-Up (Triple-Tap the Version Number)"], ["6.1.0-t1", "Isometric Paper View: Fixed Camera, Cut-Outs, Drop Shadows, Cutaways, Season Palettes (Test)"], ["6.1.0-t2", "Iso Round 2: Cut-Outs Always Paper, GPU Pictures, Stop-Motion World, Fewer Draws (Test)"], ["6.1.0-t3", "Iso Round 3: iPhone Batching, Instanced Cans, Sign Atlas, Lighter Frames (Test)"], ["6.1.0-t4", "Iso Fixes: Operators and Fork-Trucks Back, Less Stutter (Test)"], ["6.1.0-t5", "Cut-Out Edge Artifact Fixed (Test)"], ["6.1.0-t6", "Iso Optimization: Hidden Objects Cost Nothing, Lighter Moving Batches (Test)"], ["6.1.0-t7", "Iso Triangle Cut: Paper-Card Trees, Flat Ground, Hidden Faces Gone, Plain Boxes (Test)"], ["6.1.0-t8", "Paper Palette: 40 Colours, Flat Surfaces, Paper Grain, Fewer Draws (Test)"], ["6.1.0-t9", "Reel Fix: Growing Reel Draws Again (Test)"], ["6.1.0-t10", "Draw Cut 2: Colour in the Matrix, Merged Roofs, Uploads on Change, Culling Fix, Parked Groups (Test)"], ["6.1.0-t11", "QA Fixes: Cut-Outs Never Drawn as Loose 3D Parts, Fallback Shows 3D, Roofs On or Off per Zoom Step (Test)"], ["6.1.0-t12", "Paper Smoke, Blinking Lights, Stronger Seasons, Sharper Phones, Instanced Upsets, Pictures at Start (Test)"], ["6.1.0-t13", "Paper Effects: Flames, Child-Made Tornado, Lamp Cones, Flags, Paper Water, Visible Weather (Test)"], ["6.1.0-t14", "Paper Upsets: Cut-Out Props, Paper Pigeon, Paper Sparks, Steam, Fireworks, Ice and Flood (Test)"], ["6.1.0-t15", "Beaver Reworked as One Smaller Cut-Out (Test)"], ["6.1.0-t16", "Paper Props Dim at Night, Labels Never Overlap, Fewer Cut-Out Pictures (Test)"], ["6.1.0-t17", "Bird on the Power Lines Cut-Scene Plays When Set Off From the Upsets List (Test)"], ["6.1.0-t18", "Zen Close-Ups Fixed, Rare Sights as Paper Cut-Outs, Tilt-Shift Diorama Look (Test)"], ["6.1.0-t19", "Narrower Tilt-Shift Band, Winder Trash Can Out of the Broke Hole (Test)"], ["6.1.0-t20", "Balance: Rounds Pay More, Capacity and Maintenance Upgrades Re-Priced"], ["6.1.0", "Paper Diorama: Isometric Paper Art Style, Cut-Out People and Upsets, Tilt-Shift, Rounds Pay More, Upgrades Re-Priced"], ["6.1.1", "Phone Fixes: Gentler Tilt-Shift on Tall Screens, Cut-Out People No Longer Blank on iPhone"], ["6.1.2", "iPhone: Cut-Out Self-Test Retries, People Keep Their Colours in the 3D Fallback"], ["6.1.3", "Broke Hole by the Winder Looks Like a Floor Opening (Was a Black Square)"], ["6.1.4", "Tilt-Shift Removed"], ["6.2.0", "Zen Free Camera: Perspective Zen Shots, 3D People in Zen, Cleaner River Water"], ["6.3.0-f1", "Process Flow Overview (Test): Inputs, Mill Areas and Outputs for the Mill Day, in Settings"], ["6.3.0-f2", "Process Flow: the Game Keeps Running While It's Open (Test)"], ["6.3.0", "Process Flow Overview: Inputs, Mill Areas and Outputs for the Mill Day (Settings > View)"], ["6.4.0", "Zen Shots Review: Shuffle-Bag Shot Order, Landscape Shots Rebuilt, Close Rare Sights"], ["6.5.0-a1", "Digital Twin A (Test): Hourly History, 14 Prior Days, 7 d / Run Ranges, Area Trends and Uptime"], ["6.5.0-b1", "Digital Twin B (Test): Real Freight Costs with a Diesel Index, Area Controls Moved into Process Flow"], ["6.5.0-b2", "Market Pricing (Test): 2026 OCC and Energy Costs, Diesel in $/gal, Desert Long Haul, Real Steam Rates"], ["6.5.0-b3", "DCS Expansion (Test): Full SPOT, WET and DET Pictures, a UTIL Screen, Motors and Reject Purges"], ["6.5.0-b4", "DCS Pictograms (Test): Equipment Drawn as Classic DCS Symbols, Colour Only When Something's Wrong"], ["6.5.0-b5", "The Dryer Limit (Test): Speed and Grade Load the Dryers, a Wet Sheet Fails Spec and Slows the Machine"], ["6.5.0", "Digital Twin: Process Flow Trends and Controls, Real Freight and Market Costs, Full DCS, Dryer Limit, Rebalance"], ["6.5.1", "Second Screen: Pop the DCS and Process Flow Out to Their Own Window for a Second Monitor (Desktop)"], ["6.5.2", "Knob Fixes: Wet-End and Steam Knobs Bite Again Under the Dryer Limit, DCS Uses the Machine's Name"], ["6.5.3", "Quality Specs: Weight, Moisture and Color Specs per Grade, Off-Spec Paper Wound into Beater Rolls and Repulped"], ["6.5.4", "DCS Fixes: Making-Beater Alerts, SPOT in Process Order, Boiler and Power on Utilities, 2nd/3rd Section Steam Control"], ["6.5.5-t1", "Dewatering Chain (Test): Jet and Vacuum Optimums, Couch to Press Solids, Press Solids Set the Dryer Steam Both Ways"], ["6.5.5", "The Dewatering Chain: Jet and Vacuum Optimums, Couch to Press Solids, Press Solids Set the Dryer Steam Both Ways"], ["6.5.6-t1", "Mass Balance (Test): A Real Water Balance and White Water Chest, Hayout Broke Repulped, Every Fiber Loss Booked"], ["6.5.6", "Mass Balance: A Real Water Balance and White Water Chest, Hayout Broke Repulped, Every Fiber Loss Booked"], ["6.5.7-t1", "Winder Pass (Test): Four Reel Storage Stands, Two-Roll Sets, Rolls Tied Together, Steam Vented on a Sheet Break"], ["6.5.7", "Winder Pass: Four Reel Storage Stands, Two-Roll Sets, Rolls Tied Together, Steam Vented on a Sheet Break"], ["6.6.0-t1", "Orders and Bales (Test): Customer Order Book and Spot Market, Idle Energy While Stopped, Bale Grading at the Gate"], ["6.6.0", "Orders and Bales: Customer Order Book and Spot Market, Idle Energy While Stopped, Bale Grading at the Gate"], ["6.7.0-t1", "Control Room (Test): Planning, Water and Quality Screens, Split-Screen Trends of Anything, What Moves With What, Process Flow Views"], ["6.7.0", "Control Room: Planning, Water and Quality Screens, Split-Screen Trends of Anything, What Moves With What, Process Flow Views"], ["6.7.1-t1", "New Grade Set (Test): Grades 24, 28, 31 and 34Super, Same Tons per Hour"]];
   let ov=null,held=false;
   function render(){
     const cur=APP_VER.replace(/^v/i,""),rows=VNOTES.slice().reverse().map(([v,n])=>

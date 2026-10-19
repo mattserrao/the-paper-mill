@@ -106,12 +106,12 @@ with sync_playwright() as pw:
     # --- quality: spec sheet, off-spec log, grade changes
     pg.evaluate("()=>__PM.trigger('dye')"); run(60)
     pg.evaluate("()=>{const i=__PM.S.inc.find(x=>x.id==='dye');if(i)i.left=0;}"); run(40)
-    pg.evaluate("()=>__PM.CX.setGrade('30m')"); run(10)
+    pg.evaluate("()=>__PM.CX.setGrade('31')"); run(10)
     pg.evaluate("()=>document.querySelector('#dcsOv [data-a=QCS]').click()"); pg.wait_for_timeout(500)
     r = pg.evaluate("()=>({spec:document.querySelectorAll('#qcsSpec tbody tr').length,log:document.getElementById('qcsLog').textContent,gc:document.getElementById('qcsGc').textContent,q:__PM.S.q.log||[]})")
     ok("spec sheet lists the four grades", r["spec"] == 4, r["spec"])
     ok("the color spell is in the off-spec log", any("color" in x["why"] for x in r["q"]) and "color" in r["log"], r["q"][-3:])
-    ok("the grade change is logged with its transition tons", "→ 30m" in r["gc"], r["gc"][:120])
+    ok("the grade change is logged with its transition tons", "→ 31" in r["gc"], r["gc"][:120])
     if shot: pg.screenshot(path=f"{shot}-qcs.png")
 
     # --- planning and water

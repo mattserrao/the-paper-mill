@@ -30,12 +30,12 @@ with sync_playwright() as pw:
       window.__SNAP=JSON.stringify({v:1,S,C:P.C,CH:{on:false,lvl:P.CH.lvl,en:P.CH.en},MILL:null,day:2,cash:S.cash});}""")
 
     # ---- the spec sheet ----
-    spec = pg.evaluate("()=>{const out={};for(const g of ['23m','26m','30m','33HT']){__PM.C.grade=g;const q=__PM.G3.qual();out[g]=q.spec;}return out}")
+    spec = pg.evaluate("()=>{const out={};for(const g of ['24','28','31','34Super']){__PM.C.grade=g;const q=__PM.G3.qual();out[g]=q.spec;}return out}")
     ok("a spec for every grade (weight, moisture, color)", all(spec[g] and len(spec[g]["bw"]) == 2 and len(spec[g]["m"]) == 2 and spec[g]["shade"] for g in spec), json.dumps(spec))
-    ok("weight specs bracket each grade's target", pg.evaluate("()=>{const G={'23m':24.55,'26m':26.06,'30m':30.05,'33HT':33.08};return Object.entries(G).every(([g,v])=>{__PM.C.grade=g;const s=__PM.G3.qual().spec.bw;return s[0]<v&&v<s[1]&&Math.abs((s[1]-s[0])/2/v-0.03)<0.002})}"))
+    ok("weight specs bracket each grade's target", pg.evaluate("()=>{const G={'24':25.52,'28':28.03,'31':31.10,'34Super':34.01};return Object.entries(G).every(([g,v])=>{__PM.C.grade=g;const s=__PM.G3.qual().spec.bw;return s[0]<v&&v<s[1]&&Math.abs((s[1]-s[0])/2/v-0.03)<0.002})}"))
 
     # ---- untouched: in spec on every grade, no beater rolls ----
-    for g in ["23m", "26m", "30m", "33HT"]:
+    for g in ["24", "28", "31", "34Super"]:
         r = pg.evaluate(RUN, [f"P.C.grade='{g}';", 240])
         ok(f"untouched {g}: in spec, no beater rolls", r["outMin"] == 0 and r["beatRolls"] == 0 and r["rolls"] > 0, json.dumps({k: r[k] for k in ("outMin", "rolls", "beatRolls", "why")}))
 

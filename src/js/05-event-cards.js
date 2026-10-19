@@ -17,9 +17,9 @@ const CARDS=[
   win:()=>"+$81k premium if all 900 t are made on time",lose:()=>"Every ton short costs $40",
   odds:()=>clamp(Math.round(50+(effNow()-0.87)*300),10,95),why:"Depends on how well the machine runs: breaks and downtime cost tons.",
   ok:()=>!S.plan.hot&&!(typeof civOn==="function"&&civOn()),   // v5.1 civics: the Rush order upset replaces this card
-  accept(){S.plan.q.unshift({g:"33HT",t:900,i:3});S.plan.left=0;S.plan.hot={made:0};
+  accept(){S.plan.q.unshift({g:"34Super",t:900,i:3});S.plan.left=0;S.plan.hot={made:0};
     pend("hot",30*60,"hot");
-    return "33HT jumps to the front of the queue. Delivery due in 30 hours.";}},
+    return "34Super jumps to the front of the queue. Delivery due in 30 hours.";}},
  {id:"chem",area:"Stock prep · Paper machine",title:"Chemical trial",
   story:()=>"A vendor offers a free 3-day trial of a new strength additive.",
   win:()=>"Chemical costs drop $12/t for good",lose:()=>"Deposits: scabs 3× as likely and 1.5× sheet breaks during the trial",
@@ -32,7 +32,7 @@ const CARDS=[
   story:()=>"Your process engineer has a new steam profile that could lift heavy-medium machine speed by 120 fpm. Engineering time costs $60k.",
   win:()=>"+120 fpm on heavy medium, permanently",lose:()=>"$60k spent and sheet breaks 2× for a day",
   odds:()=>Math.min(95,70+10*LV("rcfa")),why:"Root cause analysis (RCFA) makes trials safer.",
-  ok:()=>!pending("eng")&&(S.perk.sp["30m"]||0)<360,
+  ok:()=>!pending("eng")&&(S.perk.sp["31"]||0)<360,
   accept(c){deal(-60000);const w=rand("card")*100<c.o;if(!w)addFx({id:"eng",left:1440,mods:{breakMul:2}});
     pend("eng",1440,"eng",{w});
     return "Trial running for a day. $60k spent.";}},
@@ -64,7 +64,7 @@ const CARDS=[
   story:()=>"Your biggest high-strength board customer will audit your quality for the next 3 days. They want 99% on-spec paper.",
   win:()=>"+$15/t on high-strength board for the rest of the game",lose:()=>"−⁠$10/t on high-strength board for 7 days",
   odds:()=>clamp(Math.round(70+(qualNow()-0.99)*2000),10,95),why:"Passes if 99% of paper made is on spec: dye trouble and grade changes cost quality.",
-  ok:()=>!pending("audit")&&(S.perk.price["33HT"]||0)<45,
+  ok:()=>!pending("audit")&&(S.perk.price["34Super"]||0)<45,
   accept(){const m0=S.q.made,o0=S.q.off;
     pend("audit",3*1440,"audit",{m0,o0});
     return "Audit running for 3 days.";}},
@@ -78,10 +78,10 @@ const CARDS=[
     pend("seconds",w?1:3*1440,"seconds",{w});
     return w?`${money(v)} paid. Clean deal.`:`${money(v)} paid, but customers found prime-labeled seconds: −⁠$5/t for 3 days.`;}},
  {id:"intern",area:"Paper machine",title:"Intern project",
-  story:()=>"Your summer intern has a plan to retune the 23m speed profile. It costs nothing to try.",
-  win:()=>"+60 fpm on 23m, permanently",lose:()=>"The intern trips the machine: 2 hours down",
+  story:()=>"Your summer intern has a plan to retune the grade 24 speed profile. It costs nothing to try.",
+  win:()=>"+60 fpm on grade 24, permanently",lose:()=>"The intern trips the machine: 2 hours down",
   odds:()=>75,why:"Fixed odds.",
-  ok:()=>!pending("intern")&&(S.perk.sp["23m"]||0)<180,
+  ok:()=>!pending("intern")&&(S.perk.sp["24"]||0)<180,
   accept(c){const w=rand("card")*100<c.o;
     pend("intern",12*60,"intern",{w});
     return "Intern trial running for 12 hours.";}},
@@ -247,8 +247,8 @@ const CARDS=[
     pend("basket",(6+rand("card")*18)*60,"basket");
     return "Trial basket in.";}},
  {id:"vip",area:"Sales · Paper machine",title:"VIP customer tour",
-  story:()=>"A big 23m buyer wants to tour the mill tomorrow. Catering and a fresh coat of paint: $8k.",
-  win:()=>"+$10/t on 23m, permanently",lose:()=>"They see a sheet break: −⁠$8/t on 23m for 5 days",
+  story:()=>"A big grade 24 buyer wants to tour the mill tomorrow. Catering and a fresh coat of paint: $8k.",
+  win:()=>"+$10/t on grade 24, permanently",lose:()=>"They see a sheet break: −⁠$8/t on grade 24 for 5 days",
   odds:()=>clamp(Math.round(55+(effNow()-0.87)*300),10,95),why:"Depends on how well the machine is running.",
   ok:()=>!pending("vip")&&!S.perk.vip,   // v5.0.6: once won it stays won (the survival deck reshuffles, and the bonus used to stack)
   accept(c){deal(-8000);const w=rand("card")*100<c.o;
@@ -368,17 +368,17 @@ const PENDH={
       else{const sh=900-m;deal(-sh*40);cardBanner(`Hot order short by ${Math.round(sh)} t: ${money(sh*40)} penalty.`,false);}},
  "chem":({w})=>{if(w){S.perk.chem+=12;applyUpgrades();cardBanner("Chemical trial worked: chemicals now $12/t cheaper.",true);}
       else cardBanner("Chemical trial failed: the additive left deposits. Back to the old recipe.",false);},
- "eng":({w})=>{if(w){S.perk.sp["30m"]=(S.perk.sp["30m"]||0)+120;cardBanner("Engineer's steam profile works: heavy medium runs 120 fpm faster.",true);}
+ "eng":({w})=>{if(w){S.perk.sp["31"]=(S.perk.sp["31"]||0)+120;cardBanner("Engineer's steam profile works: heavy medium runs 120 fpm faster.",true);}
       else cardBanner("Engineer's trial didn't hold up: back to the old steam profile.",false);},
  "cheap":({w})=>{if(w)cardBanner("Cheap OCC checks out: clean bales, about $27k saved.",true);
       else{trigger("badocc");cardBanner("The cheap OCC was junk: wax, plastic and wet bales in the pulper.",false);}},
  "grid":({w})=>cardBanner(w?"Demand response over: full speed again.":"Demand response ran 8 hours. Full speed again.",w),
  "outage":({w})=>{addFx({id:"care",left:7*1440,freq:0.5});cardBanner(w?"Planned outage finished on time. Breakdowns halved for 7 days.":"Planned outage overran by 4 hours. Breakdowns halved for 7 days.",w);},
  "audit":({m0,o0})=>{const m=S.q.made-m0,q=m>0?1-(S.q.off-o0)/m:0;
-      if(q>=0.99){S.perk.price["33HT"]=(S.perk.price["33HT"]||0)+15;cardBanner(`Customer audit passed at ${(q*100).toFixed(1)}% on spec: +$15/t on high-strength board.`,true);}
-      else{addFx({id:"auditfail",left:7*1440,price:{"33HT":-10}});cardBanner(`Customer audit failed at ${(q*100).toFixed(1)}% on spec: −⁠$10/t on high-strength board for 7 days.`,false);}},
+      if(q>=0.99){S.perk.price["34Super"]=(S.perk.price["34Super"]||0)+15;cardBanner(`Customer audit passed at ${(q*100).toFixed(1)}% on spec: +$15/t on high-strength board.`,true);}
+      else{addFx({id:"auditfail",left:7*1440,price:{"34Super":-10}});cardBanner(`Customer audit failed at ${(q*100).toFixed(1)}% on spec: −⁠$10/t on high-strength board for 7 days.`,false);}},
  "seconds":({w})=>{if(!w)cardBanner("Seconds resold as prime: prices back to normal.",true);},
- "intern":({w})=>{if(w){S.perk.sp["23m"]=(S.perk.sp["23m"]||0)+60;cardBanner("The intern's speed profile works: 23m runs 60 fpm faster.",true);}
+ "intern":({w})=>{if(w){S.perk.sp["24"]=(S.perk.sp["24"]||0)+60;cardBanner("The intern's speed profile works: grade 24 runs 60 fpm faster.",true);}
       else{addFx({id:"intern",left:120,mods:{pmDown:"intern tripped the machine"}});cardBanner("The intern tripped the machine: 2 hours down.",false);}},
  "traps":({w})=>{if(w){S.perk.energy+=6;cardBanner("Steam trap survey paid off: energy $6/t cheaper.",true);}else cardBanner("Steam trap survey found nothing worth fixing.",false);},
  "wdrive":({w})=>{if(w){S.perk.winder=15;applyUpgrades();cardBanner("Used winder drive installed: +15 t/h winder capacity.",true);}
@@ -405,12 +405,12 @@ const PENDH={
       else{addFx({id:"film",left:240,mods:{winderDown:1}});cardBanner("The new film jammed the wrapper: winder down 4 hours.",false);}},
  "rotor":({w})=>{addFx({id:"rotorok",left:14*1440,evf:{ragger:0.4,lcplug:0.4,hdblow:0.4}});cardBanner(w?"Pulper rotor rebuilt on time: plugs 60% rarer for 14 days.":"Pulper rebuild overran to 8 hours, but it's done: plugs 60% rarer for 14 days.",w);},
  "basket":()=>{trigger("fscreen");cardBanner("The trial basket cracked: fine screen down.",false);},
- "vip":({w})=>{if(w){S.perk.vip=1;S.perk.price["23m"]=(S.perk.price["23m"]||0)+10;cardBanner("The VIP tour went great: +$10/t on 23m.",true);}
-      else{addFx({id:"vipx",left:5*1440,price:{"23m":-8}});cardBanner("The VIPs watched a sheet break: −⁠$8/t on 23m for 5 days.",false);}},
+ "vip":({w})=>{if(w){S.perk.vip=1;S.perk.price["24"]=(S.perk.price["24"]||0)+10;cardBanner("The VIP tour went great: +$10/t on grade 24.",true);}
+      else{addFx({id:"vipx",left:5*1440,price:{"24":-8}});cardBanner("The VIPs watched a sheet break: −⁠$8/t on grade 24 for 5 days.",false);}},
  "millwright":()=>cardBanner("The millwright went home early after a row with the foreman.",false),
  "tax":({w})=>{if(w){deal(60000);cardBanner("Tax appeal won: +$60k refund.",true);}else cardBanner("Tax appeal denied.",false);},
  "backhaul":()=>cardBanner("Outbound trucks are back on schedule.",true),
- "starch":({w})=>{if(w){S.perk.price["33HT"]=(S.perk.price["33HT"]||0)+12;cardBanner("New starch recipe works: +$12/t on high-strength board.",true);}else cardBanner("Starch trial over: back to the old recipe.",false);},
+ "starch":({w})=>{if(w){S.perk.price["34Super"]=(S.perk.price["34Super"]||0)+12;cardBanner("New starch recipe works: +$12/t on high-strength board.",true);}else cardBanner("Starch trial over: back to the old recipe.",false);},
  "scrap":()=>cardBanner("Scrap truck gone: docks open again.",true),
  "boilertune":({w})=>{if(w){S.perk.energy+=4;addFx({id:"boilertune",left:14*1440,evf:{boiler:0.5}});cardBanner("Boiler tuned: energy $4/t cheaper, trips halved for 14 days.",true);}
       else{trigger("boiler");cardBanner("The boiler tripped during tuning!",false);}},

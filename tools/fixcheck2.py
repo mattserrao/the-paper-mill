@@ -84,8 +84,8 @@ with sync_playwright() as pw:
     r = E("()=>{const n=__PM.MILL.name;const a=__PM.renameMill('<img src=x>'),b=__PM.renameMill('Nip & Tuck Paper Co.'),c=__PM.MILL.name;__PM.renameMill(n);return [a,b===undefined,c]}")
     ok("mill names limited to letters, numbers and . _ ' - &", r[0] == "chars" and r[1] and r[2] == "Nip & Tuck Paper Co.", r)
     # jargon
-    r = E("()=>[__PM.CIVU.slime.n,__PM.EVENTS.find(e=>e.id==='slime').name,JSON.stringify(__PM.CIVU.rush.ch).includes('33HT')]")
-    ok("jargon replaced: 'Slime build-up', no 33HT on the rush card", r == ["Slime build-up", "Slime build-up", False], r)
+    r = E("()=>[__PM.CIVU.slime.n,__PM.EVENTS.find(e=>e.id==='slime').name,JSON.stringify(__PM.CIVU.rush.ch).includes('34Super')]")
+    ok("jargon replaced: 'Slime build-up', no 34Super on the rush card", r == ["Slime build-up", "Slime build-up", False], r)
     # price lever text matches band
     E("()=>{__PM.S.civ.m.E=46}")
     # bird cut-scene: stays paused with a card open

@@ -6,7 +6,7 @@ const POP={w:null,on:false,view:"dcs"};
 const $=id=>{const e=document.getElementById(id);if(e||!POP.on)return e;try{return POP.w&&!POP.w.closed?POP.w.document.getElementById(id):null;}catch(_){return null;}};
 const actEl=el=>el&&el.ownerDocument?el.ownerDocument.activeElement:document.activeElement;
 const gradeSel=$("grade");
-const GRADE_PLAIN={"23m":"light medium","26m":"medium","30m":"heavy medium","33HT":"high-strength board"};   // v5.1 QA2: the plain names cards use
+const GRADE_PLAIN={"24":"light medium","28":"medium","31":"heavy medium","34Super":"high-strength board"};   // v5.1 QA2: the plain names cards use
 Object.keys(GRADES).forEach(k=>{const o=document.createElement("option");o.value=k;o.textContent=`${k} · ${GRADE_PLAIN[k]||""} · ${GRADES[k].bw} lb · $${ECON.price[k]}/t`;gradeSel.appendChild(o);});
 gradeSel.disabled=true;gradeSel.title="Set by the market: the planner schedules grades from customer orders";
 const rows=[...document.querySelectorAll(".row[data-key]")];
