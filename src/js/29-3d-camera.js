@@ -39,7 +39,10 @@
   // then place the orbit camera around its target (one function; v3 built this by wrapping it twice)
   // swap the live camera; leaving zen goes back to the iso view where the shot left off, on the nearest zoom step
   function camSwap(free){camera=free?camPersp:camIso;if(free){camPersp.aspect=(G3.vw||host.clientWidth)/Math.max(1,G3.vh||host.clientHeight);camPersp.updateProjectionMatrix();}
-    else{cam.r=rStep(clamp(cam.r,R_STEPS[R_STEPS.length-1],R_MAX));rShown=cam.r;}G3.camFree=free;G3.lastMove=performance.now();if(G3.onCamSwap)G3.onCamSwap(free);}
+    else{cam.r=rStep(clamp(cam.r,R_STEPS[R_STEPS.length-1],R_MAX));rShown=cam.r;}G3.camFree=free;G3.lastMove=performance.now();if(G3.onCamSwap)G3.onCamSwap(free);
+    // (v6.2 z2: the river's ripple lines are packed for the iso view; seen in perspective they alias into streaks, so the free camera
+    // gets wider ripples and anisotropic filtering)
+    const RT=ENV.riverTex;if(RT){RT.repeat.x=free?6:40;RT.repeat.y=free?0.45:1.5;RT.anisotropy=free?8:1;RT.needsUpdate=true;}}
   function placeCam(){if(FOL.on){const R=G3.scrubbers&&G3.scrubbers[0];if(goal||(S&&S.zen)||!R)folEnd();
       else{const g=R.g.position;target.x+=(g.x-target.x)*0.1;target.z+=(g.z-target.z)*0.1;cam.r+=(FOL.r-cam.r)*0.08;if(FOL.n++<90)cam.ph+=(0.62-cam.ph)*0.06;G3.lastMove=performance.now();}}
     if(goal){G3.lastMove=performance.now();target.lerp(goal.t,0.12);cam.r+=(goal.r-cam.r)*0.12;cam.th=lerpAng(cam.th,goal.th,0.12);cam.ph+=(goal.ph-cam.ph)*0.12;

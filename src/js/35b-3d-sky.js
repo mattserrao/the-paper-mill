@@ -42,6 +42,7 @@
       for(let k=0;k<5;k++){const x=-200+k*100+(Math.random()-0.5)*20;it.push({x,y:2.4,z:riverAt(x)[0]+(Math.random()-0.5)*6,w:115+Math.random()*30,h:9,ph:Math.random()*6});}
       if(SITE.env==="swamp"&&G3.ponds&&G3.ponds.length){G3.ponds.slice().sort((a,b)=>Math.hypot(a[0],a[1])-Math.hypot(b[0],b[1])).slice(0,3).forEach(([x,z,r])=>it.push({x,y:2.2,z,w:r*2.6+20,h:7+r*0.2,ph:Math.random()*6}));}
       for(let k=it.length;k<8;k++){const x=-320+k*90+Math.random()*40;it.push({x,y:2.4,z:riverAt(x)[0]+(Math.random()-0.5)*6,w:70+Math.random()*40,h:8,ph:Math.random()*6});}};
+    // (v6.2 z2: the mist banks are upright strips: shown only when the camera looks near level, else they cut screen-wide bands)
     SKY.tick=(rdt,now,day,skyC,dustK)=>{const u=uni,dawn=1-Math.abs(day*2-1);
       // zenith: the fog/sky colour; horizon: paler by day, warm at dawn and dusk, dark blue at night; dust turns everything tan
       u.top.value.copy(skyC);
@@ -55,5 +56,5 @@
       if(nCloud&&clouds.mesh){clouds.mesh.visible=topEl>0.15;if(clouds.mesh.visible){clouds.mesh.material.opacity=(0.8*day+0.12)*(1-dustK);clouds.mesh.material.color.setScalar(0.55+0.45*day);
         for(const c of clouds.items){c.x+=rdt*c.v;if(c.x>560)c.x-=1120;}clouds.update();}}
       if(SKY.mistOn){SKY.placeMist();const hr=((S.t+360)/60)%24,k=Math.max(0,1-Math.abs(hr-6.3)/2.4)*0.85+Math.max(0,1-Math.abs(hr-19.6)/1.6)*0.35,wet=S.wx==="fog"?0.6:S.wx==="rain"?0.2:0;
-        const op=Math.min(1,k+wet)*(SITE.env==="swamp"?0.85:0.5);mist.mesh.visible=op>0.02;if(op>0.02){mist.mesh.material.opacity=op;for(const m of mist.items){m.x+=rdt*0.6;if(m.zr===undefined)m.zr=m.z-riverAt(m.x)[0];if(SITE.env==='rural')m.z=riverAt(m.x)[0]+m.zr;m.y=2.2+0.4*Math.sin(now/4000+m.ph);}mist.update();}}};
+        const lv=camera.isIso?1:Math.max(0,Math.min(1,(_fw.y+0.5)/0.2)),op=Math.min(1,k+wet)*(SITE.env==="swamp"?0.85:0.5)*lv;mist.mesh.visible=op>0.02;if(op>0.02){mist.mesh.material.opacity=op;for(const m of mist.items){m.x+=rdt*0.6;if(m.zr===undefined)m.zr=m.z-riverAt(m.x)[0];if(SITE.env==='rural')m.z=riverAt(m.x)[0]+m.zr;m.y=2.2+0.4*Math.sin(now/4000+m.ph);}mist.update();}}};
     const _c1=new THREE.Color(),_c2=new THREE.Color(),_c3=new THREE.Color(),_c4=new THREE.Color(),_fw=new THREE.Vector3();}

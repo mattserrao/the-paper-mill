@@ -67,4 +67,5 @@ One line per version, oldest first. Add a line here with every release: build.py
 6.1.2      iPhone: Cut-Out Self-Test Retries, People Keep Their Colours in the 3D Fallback
 6.1.3      Broke Hole by the Winder Looks Like a Floor Opening (Was a Black Square)
 6.1.4      Tilt-Shift Removed
+6.2.0-z2   Zen Free Camera (Test): Cleaner River Water, River Mist Only at Low Angles
 6.2.0-z1   Zen Free Camera (Test): Perspective Zen Shots, 3D People in Zen

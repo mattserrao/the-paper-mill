@@ -1,5 +1,10 @@
 # Changelog
 
+
+## v6.2.0-z2 (test)
+- Zen free camera: the river no longer streaks. The water was 6 mm above the bank sand, which z-fought under the perspective depth buffer; the water now has a depth offset.
+- Zen free camera: wider river ripples with anisotropic filtering (iso view unchanged).
+- River mist banks only show when the camera looks near level; from above they cut pale bands across the screen.
 ## v6.2.0-z1 (2026-10-18): zen free camera (test branch test/v6.2-zenfree)
 - **Zen mode gets a free camera again:** a perspective camera that follows the zen shots as written (orbits, tilt-ups,
   low dollies, flyovers, ride-alongs), with the sky dome back; the game itself keeps the fixed iso view. The camera
