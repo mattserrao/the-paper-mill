@@ -107,9 +107,10 @@ function mods(){const m=baseMods();
     if(e.recvMul!==undefined)m.recvMul*=e.recvMul; if(e.clampMul!==undefined)m.clampMul*=e.clampMul; if(e.yardEat)m.yardEat+=e.yardEat;
     if(i.drvCap!==undefined)m.drvCap=Math.min(m.drvCap,i.drvCap); if(i.ldrCap!==undefined)m.ldrCap=Math.min(m.ldrCap,i.ldrCap);}
   for(const f of (S.fx||[])){const e=f.mods||{};if(e.pmDown)m.pmDown=e.pmDown;if(e.speedCap)m.speedCap=Math.min(m.speedCap,e.speedCap);if(e.breakMul)m.breakMul*=e.breakMul;if(e.winderDown)m.winderDown=true;if(e.recvMul!==undefined)m.recvMul*=e.recvMul;if(e.pulperDown)m.pulperDown=true;if(e.docksClosed)m.docksClosed=true;if(e.noOut)m.noOut=true;if(e.noIn)m.noIn=true;if(e.yieldMul)m.yieldMul*=e.yieldMul;if(e.feedMul)m.feedMul*=e.feedMul;if(e.clampMul!==undefined)m.clampMul*=e.clampMul;if(e.offSpec)m.offSpec=true;if(e.hayMul)m.hayMul*=e.hayMul;}   // (v5.1: civics fx use these too)
-  if(S.wx==="rain")m.yieldMul*=0.97;
+  if(S.wx==="rain"&&!baleOn())m.yieldMul*=0.97;   // (v6.6: outside zen the yard's moisture does this, 05b)
   if(S.pm==="break"&&S.brkType!=="reel"&&working("brk")){m.recvMul=0;m.clampMul=0;m.crewAtPM=true;}
   knobMods(m);   // v5.6 fiddly knobs (nothing unless a knob was moved)
+  bqMods(m);   // v6.6 stickies from contaminated bales (05b)
   dryMods(m);   // v6.5 b5 the dryer limit: the crew's speed trim for a wet sheet (07d)
   return m;}
 // any stop that takes the sheet off the reel (boiler trip, felt or fabric change, no stock...) must be followed by a full

@@ -8,7 +8,7 @@
    a slice at a time between frames. Its rows are kept at hours -336..-1 and the sandbox is thrown away; the real run
    doesn't step until it's done (52-main-loop.js). The run's own dice, cash and day 1 are untouched.
    Saves: S.hist is kept under its own key, written only when a row was added (51c-save.js). */
-const HIST_V=3,HIST_PRIOR=14,HIST_MAX=60*24+HIST_PRIOR*24;   // survival keeps a rolling 60 days (plus the prior ones)
+const HIST_V=4,HIST_PRIOR=14,HIST_MAX=60*24+HIST_PRIOR*24;   // survival keeps a rolling 60 days (plus the prior ones)
 const HC=["h"];const HCI={};
 {const add=(...k)=>k.forEach(x=>HC.push(x));
   PF_CATS.forEach(([c])=>add("c."+c));PF_AREAS.forEach(([a])=>PF_CATS.forEach(([c])=>add("b."+a+"."+c)));
@@ -26,7 +26,9 @@ const HA=[["yard",()=>S.yard],["yardp",()=>S.yard/P.yardCap*100],["wet",()=>S.we
   ["fgp",()=>S.fg/P.fgCap*100],["price",()=>priceOf(C.grade)],["load",()=>S.rates.load],["crew",()=>C.drivers.v+C.loaders.v+P.techs],
   ["wage",()=>(ECON.wage+(P.siteWage||0))*(P.costMul||1)*leadWage()*civWage()],
   ["civE",()=>civOn()?S.civ.m.E:null],["civL",()=>civOn()?S.civ.m.L:null],["civM",()=>civOn()?S.civ.m.M:null],["civC",()=>civOn()?S.civ.m.C:null],
-  ["mkt",()=>S.plan?S.plan.mkt:0],["haul",()=>frInRate()],["dryl",()=>S.dry&&S.pm==="run"?S.dry.load*100:null],["trim",()=>S.dry?S.dry.trim*C.pmSp.v:0],["moistd",()=>S.dry&&S.pm==="run"?S.dry.m:null],["frout",()=>frOutRate()],["fuel",()=>fuelIdx()],["grade",()=>GRADE_IDS.indexOf(C.grade)]];
+  ["mkt",()=>S.plan?S.plan.mkt:0],["haul",()=>frInRate()],["dryl",()=>S.dry&&S.pm==="run"?S.dry.load*100:null],["trim",()=>S.dry?S.dry.trim*C.pmSp.v:0],["moistd",()=>S.dry&&S.pm==="run"?S.dry.m:null],["frout",()=>frOutRate()],["fuel",()=>fuelIdx()],["grade",()=>GRADE_IDS.indexOf(C.grade)],
+  ["balem",()=>S.bq&&!S.zen?S.bq.m*100:null],["stk",()=>S.bq&&!S.zen?S.bq.ck*100:null],["openo",()=>S.ord&&!S.zen?S.ord.list.filter(o=>o.st==="open").length:null],
+  ["lateo",()=>S.ord&&!S.zen?S.ord.list.filter(o=>o.st==="open"&&S.t>o.due+ORD.grace).length:null]];   // (v6.6; HIST_V 4)
 const GRADE_IDS=Object.keys(GRADES);
 HA.forEach(([k])=>{HCI["a."+k]=HC.length;HC.push("a."+k);});
 const histR=v=>v==null||v!==v?null:Math.abs(v)>=100?Math.round(v):Math.round(v*100)/100;

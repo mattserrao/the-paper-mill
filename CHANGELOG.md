@@ -1,6 +1,40 @@
 # Changelog
 
 
+## v6.6.0 (2026-10-19): orders and bales
+Built on test/v6.6-orders (as 6.6.0-t1), merged into main. Three realism gaps from the business and process review. All three run in Season, Survival
+and Free Play; Zen keeps the old behaviour. New code: `src/js/05b-orders.js` (model) and `src/js/51h-orders-ui.js` (panel).
+- **Order book.** Each production campaign books customer orders for 92% of its tons (6–36 rolls each, eight invented
+  customers), each due when its rolls should be made plus 0.8–2.2 days. An outbound truck now docks only with a job: the
+  earliest-due order whose rolls are in the warehouse (a part load once that grade is off the machine), else a spot load
+  of unsold paper (a full truck of one grade, or a part load once the warehouse is 80% full). Every truck carries one
+  grade (they used to take any mix, first in first out). Invoices: list price; late orders less $15/t per day late after
+  a 2 h grace (capped at $60/t); not shipped 4 days after the due date, the order is cancelled and its paper goes to the
+  spot market at $45/t under list. A truck that waits 6 h with nothing to load leaves empty and is billed a $300 dry run
+  (freight out). The auto truck rate now calls trucks for what's ready to ship. Report → **Orders & bales**: on-time
+  delivery, open orders with their status, spot tons, chargebacks, dry runs.
+- **Idle energy.** While the machine isn't making paper it still draws a share of its running power by area (pulper,
+  stock prep, machine) and keeps the boiler banked: a sheet break 59% of running power (the break's steam was already
+  paid as venting); any other stop 31% of power plus 15% of steam; a planned outage 13% of power plus 5% of steam.
+  Booked to energy and placed by area in the process flow.
+- **Bale grading.** Every inbound load is graded at the gate (A 69%, B 27% with plastic, wax and tape, C 4% heavy
+  contamination) and gets a moisture (8.5–12.5%, more in rain and snow). C loads are rejected and sent back (no cost, no
+  fiber). Loads over 12% moisture are paid at air-dry weight. The yard is the tonnage mix of what was unloaded; bales in
+  the open soak up rain (toward 20%) and dry slowly. At the pulper, water over 10% isn't fiber (it goes into the water
+  balance) and contamination costs up to 5% yield; once it has worked through the stock chest it raises sheet breaks
+  (stickies, up to +80% at the worst). Replaces the old flat 3% yield loss while raining. Process flow → Fiber: a bale
+  yard quality trend (moisture, stickies). History rows gain bale moisture, stickies, open and late orders (HIST_V 4, so
+  older saved history is made again).
+- Help glossary: order book, spot market, dry run, idle energy, bale grading.
+- `tools/ordercheck.py` (new): orders booked, one grade per truck, invoice arithmetic (late, spot, on time),
+  cancellation, dry run, idle energy by state, bale grade mix, gate rejects, air-dry payment, fiber and yield effects,
+  stickies and breaks, the panel, zen unchanged. Smoke, determinism, water, quality, save, process flow, winder, dryer,
+  knobs and tells pass. `civcheck.py` test 9 and `survcheck.py` fail the same way on main (out of date, not this change).
+- **Economy (not rebalanced).** 8 seeds per style, all four maps: season profit vs v6.5.7 hands-off −$343k
+  ($719k → $376k), rounds −$471k ($2.01M → $1.54M), active −$422k ($4.05M → $3.63M); survival (rounds, 4 seeds) 35.6 →
+  32.8 days. Most of it is fewer tons shipped (paper waiting for its order), wetter bales (more OCC a ton), late
+  chargebacks and idle energy.
+
 ## v6.5.7 (2026-10-19): winder pass
 Built on test/v6.5.7-winder (as 6.5.7-t1), merged into main.
 - **Reel storage: four stands.** `P.storeReels` was 1, so only the first of the four storage stands ever held a reel and

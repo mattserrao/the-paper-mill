@@ -135,7 +135,8 @@ function seedRun(seed){S.seed=seed>>>0;const k=S.seed;S.bn=bnFor(S.seed);S.rng={
     brk:k^0xd3a2646c,brkx:k^0xfd7046c5,hay:k^0xb55a4f09,wx:k^0x7feb352d,flow:k^0x846ca68b,lead:k^0x2c1b3c6d};
   C.grade="23m";const c=GCOST["23m"];
   S.plan={i:0,q:[],cur:null,left:c.mix[0]+rand("plan")*(c.mix[1]-c.mix[0]),mkt:0,mktLeft:7*1440,disc:null,hot:null};
-  S.cards={next:1440*(1+0.5*rand("card")),open:null,pend:[],seen:{}};applyUpgrades();}
+  S.cards={next:1440*(1+0.5*rand("card")),open:null,pend:[],seen:{}};applyUpgrades();
+  ordInit();}   // v6.6: the order book for the run (its own dice streams, ord and bale; 05b)
 function setGrade(to){const from=C.grade;if(to===from)return;
   const off=4+2*Math.abs(GRADES[to].bw-GRADES[from].bw);S.chg={left:off,total:off,from,to};C.grade=to;applyUpgrades();
   log(`Grade change ${from} → ${to} (market orders): about ${off.toFixed(0)} t to the beater during the transition`,"warn");}
@@ -144,7 +145,7 @@ function planTick(dt,good){const pl=S.plan;
   if(pl.left<=0){let nx;
     if(pl.q.length){nx=pl.q.shift();pl.cur=nx;}
     else{if(pl.cur&&pl.cur.i!==undefined)pl.i=pl.cur.i;pl.cur=null;pl.i=(pl.i+1)%WHEEL.length;const g=WHEEL[pl.i],c=GCOST[g];nx={g,t:c.mix[0]+rand("plan")*(c.mix[1]-c.mix[0])};}
-    pl.left=nx.t;setGrade(nx.g);}
+    pl.left=nx.t;setGrade(nx.g);if(ordOn())ordCampaign(nx.g,nx.t,S.t);}   // v6.6: customers order most of the campaign
   pl.mktLeft-=dt;
   if(pl.mktLeft<=0){pl.mktLeft=7*1440;const d=Math.round((rand("plan")*2-1)*25),m=clamp(pl.mkt+d,-50,50),ch=m-pl.mkt;pl.mkt=m;applyUpgrades();
     if(ch)log(`OCC market: ${ch>0?"up":"down"} $${Math.abs(ch)}/t this week`,ch>0?"warn":"ok");}}
@@ -173,7 +174,8 @@ function autoControl(dt){
     else if(need<C.drivers.v-1.3) C.drivers.v=Math.max(1,C.drivers.v-1);
   }
   const rph=Math.max(S.rates.prod, S.pm==="run"?P.K*C.pmSp.v*g.bw*0.9:0)/C.rollW.v;
-  if(C.outRate.auto){
+  if(C.outRate.auto&&ordOn()){C.outRate.v=ease(C.outRate.v,ordAutoRate(),dt,10);}   // v6.6: trucks for what is ready to ship
+  else if(C.outRate.auto){
     const r=rph/P.truckRolls+(S.fg-P.fgTarget)/(P.truckRolls*8)-S.outQ.length*0.01;
     C.outRate.v=ease(C.outRate.v,clamp(r,0,10),dt,10);
   }

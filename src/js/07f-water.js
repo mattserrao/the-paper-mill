@@ -16,7 +16,7 @@
      paper, zero whenever the machine stopped. */
 const WAT={cap:2000,lo:0.4,hi:0.7,shower:8.0,base:60,cs:4.2,makeMax:1000,baleW:0.10,rejS:0.5,sludgeS:0.3,clar:0.988};
 WAT.sw=100/WAT.cs-1;   // water a ton of fiber carries at storage consistency
-const WQ={f:0,fi:0,rej:0,u:0,p:0,rep:0,spill:0,clip:0};   // this step's flows (t)
+const WQ={f:0,fi:0,rej:0,u:0,p:0,rep:0,spill:0,clip:0,bw:0};   // (v6.6 bw: bale water over the standard 10%)   // this step's flows (t)
 function watState(){if(!S.wat)S.wat={L:WAT.cap*0.55,short:0,shortK:0,r:{fresh:0,out:0,evap:0,over:0,make:0,p:0,eff:0},
     tot:{fresh:0,bale:0,rep:0,short:0,evap:0,prod:0,rej:0,sludge:0,out:0,paper:0}};return S.wat;}
 // stock that leaves the storage chest any other way (a spill to the floor drains) goes to the sewer with its water
@@ -24,7 +24,7 @@ function wSpill(t){if(t>0)WQ.spill+=t;}
 function waterTick(dt){const W=watState(),h=dt/60,T=W.tot,q=WQ;
   const K=S.knob,ps=K&&K.any&&K.x&&K.x.ps!=null?K.x.ps:44+4*LV("shoe"),dry=1-DRY.m0/100,m=(S.dry?S.dry.m:DRY.m0)/100;
   const wIn=q.p*dry*(100/ps-1),prodW=Math.min(wIn,q.p*m),evap=wIn-prodW;   // the sheet's water into the dryers: most of it goes up the stack
-  const rejW=q.rej*(1-WAT.rejS)/WAT.rejS,baleW=q.f*WAT.baleW,repW=q.rep*DRY.m0/100,shw=q.p*WAT.shower,base=WAT.base*h;
+  const rejW=q.rej*(1-WAT.rejS)/WAT.rejS,baleW=q.f*WAT.baleW+q.bw,repW=q.rep*DRY.m0/100,shw=q.p*WAT.shower,base=WAT.base*h;
   // the white water chest: the machine's return, less stock prep's draw (net per ton of fiber to and from storage)
   let L=W.L+shw+baleW+repW-wIn-rejW-WAT.sw*(q.fi+q.rep-q.u)-WAT.sw*q.clip;
   const over=Math.max(0,L-WAT.cap*WAT.hi);L-=over;
@@ -39,6 +39,6 @@ function waterTick(dt){const W=watState(),h=dt/60,T=W.tot,q=WQ;
   T.paper=(T.paper||0)+q.p;T.fresh+=fresh;T.bale+=baleW;T.rep+=repW;T.short+=short;T.evap+=evap;T.prod+=prodW;T.rej+=rejW;T.sludge+=Math.min(sludge,sewer);T.out+=out;
   const R=W.r,k=v=>v/h;R.fresh=ease(R.fresh,k(fresh),dt,6);R.out=ease(R.out,k(out),dt,6);R.evap=ease(R.evap,k(evap),dt,6);R.over=ease(R.over,k(over),dt,6);R.make=ease(R.make,k(make),dt,6);
   R.p=ease(R.p,k(q.p),dt,6);R.eff=ease(R.eff,k(fib),dt,6);
-  q.f=q.fi=q.rej=q.u=q.p=q.rep=q.spill=q.clip=0;}
+  q.f=q.fi=q.rej=q.u=q.p=q.rep=q.spill=q.clip=q.bw=0;}
 // effluent suspended solids after the clarifier (mg/L), from the fiber actually going to the sewer and the flow it's in
 function tssWater(){const W=S.wat;if(!W||W.r.out<1)return 28;return W.r.eff*(1-WAT.clar)/W.r.out*1e6;}

@@ -1265,3 +1265,11 @@ body.pmpop .popmain[data-v="dcs"] #dcsOv .dcs{max-width:1180px;margin:0 auto}
 .qcsv div.qout{border-color:#ff6b5e;background:#2a1420}.qcsv div.qout b{color:#ff8b7f}
 /* v6.5.4: making-beater alert under the headbox dilution zones (WET DCS) */
 .dcsbeat{margin:-2px 0 4px;padding:8px 10px;border-radius:8px;background:#7a1f1a;color:#ffd0cb;font:800 12.5px var(--f-body);letter-spacing:.04em}.dcsbeat[hidden]{display:none}
+
+/* v6.6 orders & bales panel */
+#repOrd{margin-bottom:10px}#repOrd .rq{margin-top:6px}
+.ordl{display:flex;flex-direction:column;gap:4px}
+.ordr{display:flex;align-items:center;justify-content:space-between;gap:8px;padding:6px 9px;border-radius:10px;background:var(--chip)}
+.ordr span{display:flex;flex-direction:column;min-width:0}.ordr b{font-size:13px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.ordr small{font-size:12px;color:var(--muted)}
+.ordr em{font-style:normal;font-size:12px;color:var(--muted);white-space:nowrap}.ordr em.ok{color:var(--ok)}.ordr em.bad{color:var(--bad)}
+.ordr.late{box-shadow:inset 3px 0 0 var(--bad)}.ordr.risk{box-shadow:inset 3px 0 0 var(--warn)}

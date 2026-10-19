@@ -1284,6 +1284,14 @@ body.pmpop .popmain[data-v="dcs"] #dcsOv .dcs{max-width:1180px;margin:0 auto}
 .qcsv div.qout{border-color:#ff6b5e;background:#2a1420}.qcsv div.qout b{color:#ff8b7f}
 /* v6.5.4: making-beater alert under the headbox dilution zones (WET DCS) */
 .dcsbeat{margin:-2px 0 4px;padding:8px 10px;border-radius:8px;background:#7a1f1a;color:#ffd0cb;font:800 12.5px var(--f-body);letter-spacing:.04em}.dcsbeat[hidden]{display:none}
+
+/* v6.6 orders & bales panel */
+#repOrd{margin-bottom:10px}#repOrd .rq{margin-top:6px}
+.ordl{display:flex;flex-direction:column;gap:4px}
+.ordr{display:flex;align-items:center;justify-content:space-between;gap:8px;padding:6px 9px;border-radius:10px;background:var(--chip)}
+.ordr span{display:flex;flex-direction:column;min-width:0}.ordr b{font-size:13px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.ordr small{font-size:12px;color:var(--muted)}
+.ordr em{font-style:normal;font-size:12px;color:var(--muted);white-space:nowrap}.ordr em.ok{color:var(--ok)}.ordr em.bad{color:var(--bad)}
+.ordr.late{box-shadow:inset 3px 0 0 var(--bad)}.ordr.risk{box-shadow:inset 3px 0 0 var(--warn)}
 </style>
 </head>
 <body class="app">
@@ -1406,7 +1414,7 @@ body.pmpop .popmain[data-v="dcs"] #dcsOv .dcs{max-width:1180px;margin:0 auto}
 <div class="row" data-key="outRate"><label for="s-outRate">Outbound truck arrivals</label><span class="val"></span><div class="ctl"><input id="s-outRate" max="10" min="0" step="0.1" type="range"/><button aria-pressed="true" class="auto">AUTO</button></div></div>
 <div class="read" id="r-ship">–</div></div>
 </section></details></div>
-<div class="v2pane" data-pane="stats"><div class="rep" id="rep"></div><details class="replive" id="repLive"><summary><b>Live mill</b><small>Flow &amp; bottleneck · right now · last 24 h</small></summary><div class="v2sub">Flow &amp; bottleneck</div><div class="flowbox" id="v2flow"></div><div class="v2sub">Right now</div><section aria-label="Key figures" class="kpis">
+<div class="v2pane" data-pane="stats"><div class="rep" id="rep"></div><details class="replive" id="repOrd"><summary><b>Orders &amp; bales</b><small>Customer orders · spot sales · bale yard</small></summary><div id="ordBox"></div></details><details class="replive" id="repLive"><summary><b>Live mill</b><small>Flow &amp; bottleneck · right now · last 24 h</small></summary><div class="v2sub">Flow &amp; bottleneck</div><div class="flowbox" id="v2flow"></div><div class="v2sub">Right now</div><section aria-label="Key figures" class="kpis">
 <div class="kpi money" id="k-cash-box"><div class="k">Cash</div><div class="v" id="k-cash">–</div><div class="s" id="k-cash-s"> </div></div>
 <div class="kpi"><div class="k">Profit</div><div class="v" id="k-profit">–</div><div class="s" id="k-profit-s"> </div></div>
 <div class="kpi"><div class="k">Sim clock</div><div class="v" id="k-clock">Day 1 00:00</div><div class="s" id="k-clock-s"> </div></div>
@@ -1466,7 +1474,7 @@ body.pmpop .popmain[data-v="dcs"] #dcsOv .dcs{max-width:1180px;margin:0 auto}
 <div class="btns"><button class="primary" id="no3d-retry">Try again</button></div></div></div>
 
 <script type="module">
-const APP_VER="v6.5.7";   // shown in the menu and sent with leaderboard scores (max 12 characters)
+const APP_VER="v6.6.0";   // shown in the menu and sent with leaderboard scores (max 12 characters)
 // TEST BUILDS ONLY (off in releases): turbo speeds 240/480/960 sim min/s for fast playtests. Above 120, crews and maintenance start jobs
 // without waiting for the 3D walk (as with the 3D view off) and outages keep the speed. Set false for a release.
 const TURBO=false,TURBO_FAST=s=>TURBO&&s>120;
@@ -2562,9 +2570,10 @@ function mods(){const m=baseMods();
     if(e.recvMul!==undefined)m.recvMul*=e.recvMul; if(e.clampMul!==undefined)m.clampMul*=e.clampMul; if(e.yardEat)m.yardEat+=e.yardEat;
     if(i.drvCap!==undefined)m.drvCap=Math.min(m.drvCap,i.drvCap); if(i.ldrCap!==undefined)m.ldrCap=Math.min(m.ldrCap,i.ldrCap);}
   for(const f of (S.fx||[])){const e=f.mods||{};if(e.pmDown)m.pmDown=e.pmDown;if(e.speedCap)m.speedCap=Math.min(m.speedCap,e.speedCap);if(e.breakMul)m.breakMul*=e.breakMul;if(e.winderDown)m.winderDown=true;if(e.recvMul!==undefined)m.recvMul*=e.recvMul;if(e.pulperDown)m.pulperDown=true;if(e.docksClosed)m.docksClosed=true;if(e.noOut)m.noOut=true;if(e.noIn)m.noIn=true;if(e.yieldMul)m.yieldMul*=e.yieldMul;if(e.feedMul)m.feedMul*=e.feedMul;if(e.clampMul!==undefined)m.clampMul*=e.clampMul;if(e.offSpec)m.offSpec=true;if(e.hayMul)m.hayMul*=e.hayMul;}   // (v5.1: civics fx use these too)
-  if(S.wx==="rain")m.yieldMul*=0.97;
+  if(S.wx==="rain"&&!baleOn())m.yieldMul*=0.97;   // (v6.6: outside zen the yard's moisture does this, 05b)
   if(S.pm==="break"&&S.brkType!=="reel"&&working("brk")){m.recvMul=0;m.clampMul=0;m.crewAtPM=true;}
   knobMods(m);   // v5.6 fiddly knobs (nothing unless a knob was moved)
+  bqMods(m);   // v6.6 stickies from contaminated bales (05b)
   dryMods(m);   // v6.5 b5 the dryer limit: the crew's speed trim for a wet sheet (07d)
   return m;}
 // any stop that takes the sheet off the reel (boiler trip, felt or fabric change, no stock...) must be followed by a full
@@ -3164,6 +3173,143 @@ const PENDH={
  "boilertune":({w})=>{if(w){S.perk.energy+=4;addFx({id:"boilertune",left:14*1440,evf:{boiler:0.5}});cardBanner("Boiler tuned: energy $4/t cheaper, trips halved for 14 days.",true);}
       else{trigger("boiler");cardBanner("The boiler tripped during tuning!",false);}},
 };
+/* ---- v6.6 realism pass: the order book, base-load energy while the machine is stopped, and bale grading at receiving ----
+   All three run in Season, Survival and Free Play; Zen keeps the old behaviour (every roll sells at list, no idle energy,
+   every bale the same). Dice come from two new streams ("ord", "bale"), so every other stream keeps its timing.
+
+   ORDER BOOK. Customers order paper by the roll. Each production campaign the planner starts (06 planTick) books orders
+   for ORD.cover of its tons, split into orders of ORD.minR-ORD.maxR rolls, each due when its rolls should be made (at
+   ORD.eff of the grade's standard rate) plus 0.8-2.2 days to ship. The rest of the campaign is unsold and goes to the
+   spot market. An outbound truck docks only when it has a job: the earliest-due open order with its rolls in the
+   warehouse (a part load when that grade isn't on the machine any more), or else a spot load of surplus paper (a full
+   truck of one grade, or a part load once the warehouse is 80% full). A truck carries one grade. On departure:
+     order:  list price (each grade's own) less a late chargeback of ORD.late $/t per day late (after a 2 h grace,
+             capped at ORD.lateCap); an order still not shipped ORD.cancel days after its due date is cancelled and its
+             paper goes to the spot market;
+     spot:   list less ORD.spot $/t.
+   A truck that waits ORD.dryWait in the queue with nothing to load leaves empty and the carrier bills a dry run (freight
+   out). The auto truck rate calls trucks for what is ready to ship, so dry runs come from calling trucks by hand.
+
+   BASE LOAD. A stopped machine isn't free: vacuum pumps, agitators, fans and drives keep turning and the boiler is kept
+   banked. Every step the machine isn't making paper, a share of the running power bill (by area, PF_POWER) and of the
+   steam bill is charged: BASEL.brk on a sheet break (the machine still turning; the break's steam is already paid as
+   venting, 07d), BASEL.stop for any other stop (no stock, warehouse full, winder backed up, an upset), BASEL.out during a
+   planned outage (locked out).
+
+   BALE GRADING. Every inbound load gets a grade at the gate (A clean, B some prohibitives: plastic, wax, tape; C heavy
+   contamination) and a moisture. C loads are rejected and go back to the supplier (no fiber, no cost). The mill pays for
+   air-dry weight: a load over BALE.allow moisture is paid as if it were dry to that level. The yard is a mix: its
+   moisture and contamination are the tonnage-weighted mix of what was unloaded, and bales in the open soak up rain and
+   dry out slowly. At the pulper, water over the standard 10% is not fiber (it goes into the water balance, 07f), and
+   contamination costs yield (more rejects) and, once it has worked through the stock chest, sheet breaks (stickies). */
+const ORD={cover:0.92,minR:6,maxR:36,slack:[0.8,2.2],eff:0.85,spot:45,late:15,lateCap:60,grace:120,cancel:4,dryRun:300,dryWait:6*60,full:0.8,keep:40};
+const CUST=["Harbor Corrugated","Tri-County Box","Midvale Packaging","Northgate Containers","Keystone Sheet Plant","Prairie Box Works","Lakeshore Display","Summit Carton"];
+const BALE={m0:0.085,mSpread:0.04,rain:0.06,snow:0.025,allow:0.12,std:0.10,pB:0.27,pC:0.04,ky:0.05,kb:0.8,wetMax:0.20,snowMax:0.14,tauRain:900,tauSnow:2880,tauDry:2880};
+const BASEL={brk:{pm:0.7,stock:0.5,pulper:0.5,steam:0},stop:{pm:0.25,stock:0.35,pulper:0.35,steam:0.15},out:{pm:0.1,stock:0.15,pulper:0.15,steam:0.05}};
+const ordOn=()=>!!(S&&!S.zen);
+const baleOn=ordOn;
+
+// ---------- the order book ----------
+function ordState(){if(!S.ord){S.ord={n:0,list:[],k:{ship:0,onT:0,lateT:0,late:0,chg:0,spot:0,spotV:0,canc:0,dry:0,done:0,doneOn:0}};
+    if(S.rng&&S.rng.ord==null)S.rng.ord=((S.seed||1)^0x51ed270b)>>>0;   // (a save from before v6.6)
+    if(S.plan)ordCampaign(C.grade,Math.max(0,S.plan.left||0),S.t);ordCarry();}
+  return S.ord;}
+// called from seedRun: a fresh book for the run (the warehouse's opening stock already has buyers)
+function ordInit(){S.ord=null;S.rng.ord=(S.seed^0x51ed270b)>>>0;S.rng.bale=(S.seed^0x7a3c5e91)>>>0;S.bq=null;ordState();}
+function ordCarry(){const O=S.ord;let r=Math.floor(S.fg||0);while(r>=ORD.minR){const n=Math.min(r,P.truckRolls);r-=n;
+    O.list.push({id:++O.n,c:Math.floor(rand("ord")*CUST.length),g:C.grade,r:n,ld:0,sh:0,due:Math.round(S.t+(0.4+rand("ord")*0.8)*1440),t0:Math.round(S.t),st:"open"});}}
+// a production campaign of `tons` of grade g starting now: book its orders
+function ordCampaign(g,tons,t0){const O=S.ord;if(!O)return;const rw=C.rollW.v||12.5,G=GRADES[g],tph=Math.max(5,P.K*G.sp*G.bw)*ORD.eff;
+  let rolls=Math.floor(tons*ORD.cover/rw),made=0;
+  while(rolls>=ORD.minR){let n=Math.round(ORD.minR+rand("ord")*(ORD.maxR-ORD.minR));if(rolls-n<ORD.minR)n=rolls;rolls-=n;made+=n;
+    const due=t0+made*rw/tph*60+(ORD.slack[0]+rand("ord")*(ORD.slack[1]-ORD.slack[0]))*1440;
+    O.list.push({id:++O.n,c:Math.floor(rand("ord")*CUST.length),g,r:n,ld:0,sh:0,due:Math.round(due),t0:Math.round(t0),st:"open"});}
+  ordPrune();}
+function ordPrune(){const L=S.ord.list;let closed=0;for(let i=L.length-1;i>=0;i--)if(L[i].st!=="open"&&++closed>ORD.keep)L.splice(i,1);}
+const ordGet=id=>S.ord&&S.ord.list.find(o=>o.id===id);
+const ordCust=o=>CUST[o.c]||"Customer";
+// rolls of grade g in the warehouse, and what isn't already promised to a truck at a door
+function fgOf(g){let s=0;for(const l of S.lots.fg)if(l[0]===g)s+=l[1];return s;}
+function ordFree(g){let r=fgOf(g);for(const tr of S.outDock)if(tr&&tr.g===g)r-=Math.max(0,tr.want-tr.load);return Math.max(0,r);}
+function ordNeed(g){let n=0;for(const o of S.ord.list)if(o.st==="open"&&o.g===g)n+=o.r-o.ld;return n;}
+// take q rolls of grade g from lots L, oldest first
+function lotTakeG(L,g,q,out){let got=0;for(let i=0;i<L.length&&q>1e-9;){const h=L[i];if(h[0]!==g){i++;continue;}const k=Math.min(h[1],q);h[1]-=k;q-=k;got+=k;if(out)lotPut(out,g,k);if(h[1]<=1e-9)L.splice(i,1);else i++;}return got;}
+// give a truck at the door a job: an order, else a spot load; false if there's nothing to load
+function ordAssign(tr){const O=ordState();let best=null,bw=0;
+  for(const o of O.list){if(o.st!=="open")continue;const left=o.r-o.ld;if(left<=0)continue;const want=Math.min(P.truckRolls,left),free=Math.floor(ordFree(o.g)+1e-6);
+    // a full load, or a part load once that grade is off the machine (the next run of it may be days away)
+    const w=free>=want?want:(C.grade!==o.g&&free>=4)?free:0;if(!w)continue;if(!best||o.due<best.due){best=o;bw=w;}}
+  if(best){best.ld+=bw;Object.assign(tr,{oid:best.id,g:best.g,want:bw,spot:false,wait:0});return true;}
+  const sp=ordSpot();if(sp){Object.assign(tr,{oid:0,g:sp[0],want:sp[1],spot:true,wait:0});return true;}
+  return false;}
+function ordSpot(){let sg=null,sv=0;for(const g of GRADE_IDS){const s=Math.floor(ordFree(g)-ordNeed(g)+1e-6);if(s>sv){sv=s;sg=g;}}
+  if(sg&&(sv>=P.truckRolls||(S.fg>=P.fgCap*ORD.full&&sv>=4)))return [sg,Math.min(P.truckRolls,sv)];return null;}
+// rolls that could leave now (what the auto truck rate calls trucks for)
+function ordReady(){let n=0;const full=S.fg>=P.fgCap*ORD.full;for(const g of GRADE_IDS){const f=ordFree(g),need=ordNeed(g),s=f-need;n+=Math.min(f,need);if(s>=P.truckRolls||(full&&s>=4))n+=s;}return n;}
+function ordAutoRate(){return clamp(ordReady()/P.truckRolls/3-S.outQ.length*0.15,0,10);}
+const ordLateD=o=>Math.max(0,(S.t-o.due-ORD.grace)/1440);
+// a loaded truck leaves: the invoice, the chargeback, the order's progress
+function ordDepart(tr){const O=ordState(),K=O.k,rw=C.rollW.v,tons=tr.load*rw,pr=priceOf(tr.g);let v;
+  if(tr.load<=1e-9)return;
+  if(tr.spot){v=tons*(pr-ORD.spot);K.spot+=tons;K.spotV+=tons*ORD.spot;}
+  else{const o=ordGet(tr.oid),ld=o?ordLateD(o):0,chg=ld>0?Math.min(ORD.lateCap,ORD.late*Math.ceil(ld)):0;v=tons*(pr-chg);K.chg+=tons*chg;
+    if(ld>0)K.lateT+=tons;else K.onT+=tons;
+    if(o){o.sh+=tr.load;o.ld-=Math.max(0,tr.want-tr.load);if(o.st==="open"&&o.sh>=o.r-1e-6){o.st="done";o.done=Math.round(S.t);K.done++;if(!(ld>0))K.doneOn++;
+        log(`Order #${o.id} for ${ordCust(o)} delivered: ${o.r} rolls of ${o.g}${ld>0?`, ${Math.ceil(ld)} day${Math.ceil(ld)===1?"":"s"} late (−$${chg}/t)`:" on time"}`,ld>0?"warn":"ok");}}}
+  K.ship+=tons;earn(v);}
+// every step: late orders, cancellations, dry runs (cheap: the book is a few dozen orders)
+function ordTick(dt){if(!ordOn())return;const O=ordState(),K=O.k;
+  for(const o of O.list){if(o.st!=="open")continue;
+    if(!o.lw&&S.t>o.due+ORD.grace){o.lw=true;K.late++;log(`Order #${o.id} for ${ordCust(o)} is late: ${Math.round(o.sh)} of ${o.r} rolls of ${o.g} shipped`,"warn");}
+    if(S.t>o.due+ORD.cancel*1440){o.st="cancelled";o.done=Math.round(S.t);K.canc++;
+      for(const tr of S.outDock)if(tr&&tr.oid===o.id)tr.spot=true;   // a truck already loading it takes it to the spot market
+      log(`Order #${o.id} cancelled by ${ordCust(o)}: ${o.r-Math.round(o.sh)} rolls of ${o.g} never shipped. They go to the spot market.`,"bad");
+      BANNERS.push({text:`Order cancelled: ${ordCust(o)} gave up waiting for ${o.g}`,t:null,tag:"ORDER"});while(BANNERS.length>3)BANNERS.splice(1,1);}}
+  for(let i=S.outQ.length-1;i>=0;i--){const tr=S.outQ[i];if(tr.tq==null)tr.tq=S.t;if(S.t-tr.tq>ORD.dryWait){S.outQ.splice(i,1);spend(ORD.dryRun,"frout");K.dry++;
+      S.leaving.push({...tr,ty:outY(0),kind:"out"});if(S.leaving.length>24)S.leaving.shift();
+      if(K.dry===1||K.dry%5===0)log(`A truck waited ${Math.round(ORD.dryWait/60)} h with nothing to load and left empty: dry-run fee ${money(ORD.dryRun)}`,"warn");}}}
+// the outbound docks in order mode (replaces the old any-roll loading in step; zen keeps it)
+function ordDocks(dt,lcap){let loaded=0;
+  for(let d=0;d<P.shipDoors;d++)if(!S.outDock[d]&&S.outQ.length){const tr=S.outQ[0];if(!ordAssign(tr))break;S.outQ.shift();S.outDock[d]=tr;}
+  let pool=S.bn==="ship"?P.shipDoors*P.doorRolls*dt/60:Infinity;
+  for(let d=0;d<P.shipDoors;d++){const tr=S.outDock[d];if(!tr)continue;
+    const have=fgOf(tr.g),l=Math.max(0,Math.min(tr.want-tr.load,pool===Infinity?P.doorRolls*dt/60:pool,lcap,have));
+    if(l>0){pool-=l;lcap-=l;loaded+=l;tr.load+=l;S.fg-=lotTakeG(S.lots.fg,tr.g,l,tr.lots||(tr.lots=[]));tr.wait=0;}else tr.wait=(tr.wait||0)+dt;
+    const done=tr.load>=tr.want-1e-6,stuck=tr.wait>90&&have<0.5;
+    if(done||(stuck&&tr.load>0.5)){S.leaving.push({...tr,ty:outY(d),kind:"out"});if(S.leaving.length>24)S.leaving.shift();S.outDock[d]=null;
+      S.tot.shipped+=tr.load;const tons=tr.load*C.rollW.v;S.shipT+=tons;spend(tons*frOutRate(),"frout");ordDepart(tr);}
+    else if(stuck){const o=!tr.spot&&ordGet(tr.oid);if(o)o.ld-=tr.want;S.outDock[d]=null;tr.oid=0;tr.g=null;tr.want=0;S.outQ.unshift(tr);}}   // nothing to load after all: back to the queue
+  return loaded;}
+
+// ---------- base load while the machine is stopped ----------
+function baseLoadTick(dt){if(S.zen||S.pm==="run")return;const g=GRADES[C.grade],tph=P.K*g.sp*g.bw,en=Math.max(0,energyCost()-pfChemT());if(!(en>0&&tph>0))return;
+  const B=outOn()?BASEL.out:S.pm==="break"?BASEL.brk:BASEL.stop,h=dt/60,pw=en*(1-PF_STEAMSH)*tph*h,st=en*PF_STEAMSH*tph*h*B.steam;let v=st;
+  for(const a in PF_POWER){const x=pw*PF_POWER[a]*B[a];v+=x;pfAdd("power",a,x);}if(st>0)pfAdd("steam","pm",st);
+  if(v>0){spend(v,"energy");S.tot.idleE=(S.tot.idleE||0)+v;}}
+
+// ---------- bale grading ----------
+function bqState(){if(!S.bq)S.bq={m:BALE.std,k:0.1,ck:0.1,rej:0,rejT:0,ded:0,A:0,B:0,C:0,day:-1,dRej:0};return S.bq;}
+// an inbound load's grade and moisture (drawn when the truck arrives)
+function baleGrade(tr){const r=rand("bale"),a=rand("bale"),b=rand("bale"),q=r<BALE.pC?"C":r<BALE.pC+BALE.pB?"B":"A";
+  let m=BALE.m0+BALE.mSpread*a+(S.wx==="rain"?BALE.rain*(0.5+0.5*S.wet):S.wx==="snow"?BALE.snow:0)+(q==="A"?0:0.01);
+  tr.q=q;tr.m=m;tr.k=q==="A"?0:q==="B"?0.4+0.6*b:1;tr.pf=m>BALE.allow?(1-m)/(1-BALE.allow):1;return tr;}
+// the gate: true if the load is turned away
+function baleGate(tr){if(!baleOn())return false;const Q=bqState();Q[tr.q]=(Q[tr.q]||0)+1;if(tr.q!=="C")return false;
+  Q.rej++;Q.rejT+=tr.load;const d=Math.floor(S.t/1440);if(Q.day!==d){Q.day=d;Q.dRej=0;}Q.dRej++;
+  if(Q.dRej<=2)log(`Gate: load #${tr.id} rejected (plastic, wax and wet trash). Sent back to the supplier.`,"warn");return true;}
+// u tons unloaded from truck tr into the yard (y0 tons were there): returns the tons paid for
+function baleUnload(tr,u,y0){if(!baleOn()||tr.m==null)return u;const Q=bqState(),w=y0+u;if(w>1e-9){Q.m=(Q.m*y0+tr.m*u)/w;Q.k=(Q.k*y0+tr.k*u)/w;}
+  const paid=u*tr.pf;Q.ded+=(u-paid)*P.occPrice;return paid;}
+// the pulper's view of the yard: solids factor (water over the standard 10% isn't fiber) and the contamination yield factor
+function baleFeed(){if(!baleOn())return {sf:1,yk:1,e:0};const Q=bqState(),e=Math.max(0,Q.m-BALE.std);return {sf:1-e,yk:1-BALE.ky*Q.k,e};}
+function baleTick(dt,fiberIn){if(!baleOn())return;const Q=bqState();
+  if(S.wx==="rain")Q.m+=(BALE.wetMax-Q.m)*Math.min(1,dt*(0.3+S.wet)/BALE.tauRain);
+  else if(S.wx==="snow"&&Q.m<BALE.snowMax)Q.m+=(BALE.snowMax-Q.m)*Math.min(1,dt/BALE.tauSnow);
+  else if(Q.m>BALE.m0+0.02)Q.m-=(Q.m-BALE.m0-0.02)*Math.min(1,dt/BALE.tauDry);
+  // stickies reach the machine through the stock chest (its residence time)
+  if(fiberIn>0){const tau=Math.max(60,S.tank/Math.max(1,(S.rates.fiberUse||30))*60);Q.ck=ease(Q.ck,Q.k,dt,tau);}}
+function bqMods(m){if(!baleOn()||!S.bq)return;m.breakMul*=1+BALE.kb*S.bq.ck;}
+const bqBand=k=>k<0.08?"clean":k<0.2?"fair":k<0.35?"poor":"bad";
 /* ---------- v3.0.0: planned outages (season mode) ----------
    Every 7th season day (days 7, 14, 21, 28) the mill takes a controlled 4-hour shutdown starting 8 AM. 24 h ahead the
    player sets a maintenance budget per area: $20k = 10% less reliable, $70k = no change, $170k = 20% more reliable
@@ -3301,7 +3447,8 @@ function seedRun(seed){S.seed=seed>>>0;const k=S.seed;S.bn=bnFor(S.seed);S.rng={
     brk:k^0xd3a2646c,brkx:k^0xfd7046c5,hay:k^0xb55a4f09,wx:k^0x7feb352d,flow:k^0x846ca68b,lead:k^0x2c1b3c6d};
   C.grade="23m";const c=GCOST["23m"];
   S.plan={i:0,q:[],cur:null,left:c.mix[0]+rand("plan")*(c.mix[1]-c.mix[0]),mkt:0,mktLeft:7*1440,disc:null,hot:null};
-  S.cards={next:1440*(1+0.5*rand("card")),open:null,pend:[],seen:{}};applyUpgrades();}
+  S.cards={next:1440*(1+0.5*rand("card")),open:null,pend:[],seen:{}};applyUpgrades();
+  ordInit();}   // v6.6: the order book for the run (its own dice streams, ord and bale; 05b)
 function setGrade(to){const from=C.grade;if(to===from)return;
   const off=4+2*Math.abs(GRADES[to].bw-GRADES[from].bw);S.chg={left:off,total:off,from,to};C.grade=to;applyUpgrades();
   log(`Grade change ${from} → ${to} (market orders): about ${off.toFixed(0)} t to the beater during the transition`,"warn");}
@@ -3310,7 +3457,7 @@ function planTick(dt,good){const pl=S.plan;
   if(pl.left<=0){let nx;
     if(pl.q.length){nx=pl.q.shift();pl.cur=nx;}
     else{if(pl.cur&&pl.cur.i!==undefined)pl.i=pl.cur.i;pl.cur=null;pl.i=(pl.i+1)%WHEEL.length;const g=WHEEL[pl.i],c=GCOST[g];nx={g,t:c.mix[0]+rand("plan")*(c.mix[1]-c.mix[0])};}
-    pl.left=nx.t;setGrade(nx.g);}
+    pl.left=nx.t;setGrade(nx.g);if(ordOn())ordCampaign(nx.g,nx.t,S.t);}   // v6.6: customers order most of the campaign
   pl.mktLeft-=dt;
   if(pl.mktLeft<=0){pl.mktLeft=7*1440;const d=Math.round((rand("plan")*2-1)*25),m=clamp(pl.mkt+d,-50,50),ch=m-pl.mkt;pl.mkt=m;applyUpgrades();
     if(ch)log(`OCC market: ${ch>0?"up":"down"} $${Math.abs(ch)}/t this week`,ch>0?"warn":"ok");}}
@@ -3339,7 +3486,8 @@ function autoControl(dt){
     else if(need<C.drivers.v-1.3) C.drivers.v=Math.max(1,C.drivers.v-1);
   }
   const rph=Math.max(S.rates.prod, S.pm==="run"?P.K*C.pmSp.v*g.bw*0.9:0)/C.rollW.v;
-  if(C.outRate.auto){
+  if(C.outRate.auto&&ordOn()){C.outRate.v=ease(C.outRate.v,ordAutoRate(),dt,10);}   // v6.6: trucks for what is ready to ship
+  else if(C.outRate.auto){
     const r=rph/P.truckRolls+(S.fg-P.fgTarget)/(P.truckRolls*8)-S.outQ.length*0.01;
     C.outRate.v=ease(C.outRate.v,clamp(r,0,10),dt,10);
   }
@@ -3382,7 +3530,7 @@ function step(dt){
   const wxTruck=S.wx==="snow"?0.7:S.wx==="fog"?0.85:1,siteIn=P.siteIn||1;
   if(!M.noIn) S.inPhase+=dt*C.inRate.v/60*S.inJit*wxTruck*siteIn;
   while(S.inPhase>=1){S.inPhase-=1;S.inJit=0.6+rand("flow")*0.8;
-    if(S.inQ.length<P.maxQueue){S.inQ.push(newTruck("in"));S.tot.inTrucks++;} else S.tot.turned++;}
+    if(S.inQ.length<P.maxQueue){const tr=baleGrade(newTruck("in"));if(!baleGate(tr))S.inQ.push(tr);S.tot.inTrucks++;} else S.tot.turned++;}
   if(!M.docksClosed) for(let d=0;d<P.doors;d++) if(!S.inDock[d]&&S.inQ.length) S.inDock[d]=S.inQ.shift();
   // 2 receiving: drivers split between pulper feed and unloading
   const level0=S.tank/P.tankCap;
@@ -3395,13 +3543,15 @@ function step(dt){
   let unloaded=0;
   for(let d=0;d<P.doors;d++){const tr=S.inDock[d]; if(!tr||M.docksClosed)continue;
     const u=Math.min(tr.load,P.doorRate*dt/60,cap,Math.max(0,P.yardCap-S.yard));
+    const paid=baleUnload(tr,u,S.yard);   // v6.6: paid as air-dry weight; the yard mix
     tr.load-=u;cap-=u;S.yard+=u;unloaded+=u;S.tot.inTons+=u;
-    {const dc=S.plan.disc,dt2=dc?Math.min(u,dc.t):0;spend(u*P.occPrice-dt2*(dc?dc.v:0),"occ");spend(u*frInRate(),"frin");if(dc){dc.t-=dt2;if(dc.t<=1e-6)S.plan.disc=null;}}
+    {const dc=S.plan.disc,dt2=dc?Math.min(paid,dc.t):0;spend(paid*P.occPrice-dt2*(dc?dc.v:0),"occ");spend(u*frInRate(),"frin");if(dc){dc.t-=dt2;if(dc.t<=1e-6)S.plan.disc=null;}}
     if(tr.load<=0.001){S.leaving.push({...tr,ty:inY(d),kind:"in"});if(S.leaving.length>24)S.leaving.shift();S.inDock[d]=null;}}
   const feed=Math.min(feedRes,S.yard); S.yard-=feed;WQ.f+=feed;
   // 3 pulper → chest
   if(M.yardEat){const y0=S.yard;S.yard=Math.max(0,S.yard-M.yardEat*dt/60);pfW("bale",y0-S.yard);}
-  const fiberIn=feed*P.yieldF*M.yieldMul;pfW("feed",feed);pfW("rej",feed-fiberIn);WQ.rej+=feed-fiberIn;
+  const BF=baleFeed(),fiberIn=feed*BF.sf*P.yieldF*M.yieldMul*BF.yk,rejT=feed*BF.sf-fiberIn;pfW("feed",feed);pfW("rej",rejT);WQ.rej+=rejT;WQ.bw+=feed*BF.e;   // v6.6: water over 10% isn't fiber; contamination is rejects
+  baleTick(dt,fiberIn);
   // (v6.5.6: stock the chest has no room for goes over the top to the sewer, and is booked as spilled; it used to vanish)
   {const t1=S.tank+fiberIn,cl=Math.max(0,t1-P.tankCap);S.tank=t1-cl;if(cl>0){pfW("spill",cl);WQ.clip+=cl;}WQ.fi+=fiberIn-cl;}
   // 5 paper machine
@@ -3433,6 +3583,7 @@ function step(dt){
     }
   }
   if(S.pm!=="run") S.pmSpeed=ease(S.pmSpeed,0,dt,3);
+  baseLoadTick(dt);   // v6.6: a stopped machine still draws power and keeps the boiler banked
   let beat=0;
   if(prod>0){{const ec=prod*energyCost();spend(ec,"energy");pfEnergy(prod,ec);}knobSteamCost(prod);S.q.made+=prod;
     // v6.5.3: the spec check (07e): weight, moisture or color out and the whole reel is beater; then a grade change's
@@ -3469,12 +3620,14 @@ function step(dt){
   if(!M.noOut) S.outPhase+=dt*C.outRate.v/60*S.outJit*wxTruck;
   while(S.outPhase>=1){S.outPhase-=1;S.outJit=0.6+rand("flow")*0.8;
     if(S.outQ.length<P.maxQueue){S.outQ.push(newTruck("out"));S.tot.outTrucks++;}}
-  for(let d=0;d<P.shipDoors;d++) if(!S.outDock[d]&&S.outQ.length) S.outDock[d]=S.outQ.shift();
+  if(!ordOn())for(let d=0;d<P.shipDoors;d++) if(!S.outDock[d]&&S.outQ.length) S.outDock[d]=S.outQ.shift();   // (v6.6: with the order book a truck docks only with a job, ordDocks)
   const effHum=Math.min(C.loaders.v,M.ldrCap); S.effHum=effHum; const effLd=effHum+P.robots; S.effLd=effLd;
   let lcap=effLd*P.loaderRate*dt/60*M.clampMul, loaded=0;
   // clamp trucks first clear the roll conveyor into the warehouse (more urgently as it fills), then load trucks
   {const u=S.conv/P.convCap,docked=S.outDock.some(Boolean),share=docked?(u>0.6?0.9:0.5):1;
     const put=Math.max(0,Math.min(S.conv,P.fgCap-S.fg,lcap*share));S.conv-=put;S.fg+=put;lotTake(S.lots.conv,put,S.lots.fg);lcap-=put;S.rates.put=ease(S.rates.put||0,put*60/dt,dt,6);}
+  if(ordOn()){loaded=ordDocks(dt,lcap);}   // v6.6 the order book (05b)
+  else{
   // v5.0.4: with a shipping bottleneck the doors' combined rate fills one truck at a time (door by door), so trucks leave
   // through the day instead of every truck crawling for a day; capacity (doors x rate) and the dock-door upgrade are unchanged
   let pool=S.bn==="ship"?P.shipDoors*P.doorRolls*dt/60:Infinity;
@@ -3482,6 +3635,8 @@ function step(dt){
     const l=Math.min(P.truckRolls-tr.load,pool===Infinity?P.doorRolls*dt/60:pool,lcap,S.fg);pool-=l;
     tr.load+=l;lcap-=l;S.fg-=l;loaded+=l;lotTake(S.lots.fg,l,tr.lots||(tr.lots=[]));
     if(tr.load>=P.truckRolls-1e-6){S.leaving.push({...tr,ty:outY(d),kind:"out"});if(S.leaving.length>24)S.leaving.shift();S.outDock[d]=null;S.tot.shipped+=P.truckRolls;const tons=P.truckRolls*C.rollW.v;S.shipT+=tons;spend(tons*frOutRate(),"frout");earn(lotValue(tr.lots||[[C.grade,P.truckRolls]],C.rollW.v));}}   // (v16: each roll at its own grade's price)
+  }
+  ordTick(dt);
   spend(((C.drivers.v+C.loaders.v+P.techs)*(ECON.wage+(P.siteWage||0))*(P.costMul||1)*leadWage()*civWage()+P.robots*ECON.robot+P.pmCost)*dt/60,"labor");
   pfLabor(dt);
   spend((ECON.overhead+(P.siteOver||0))*dt/60,"overhead"); if(P.premium)spend(P.premium*dt/60,"premium");
@@ -3926,7 +4081,7 @@ function beaterTick(dt){const b=S.q.bank||0;if(b<=1e-6)return;const room=P.tankC
      paper, zero whenever the machine stopped. */
 const WAT={cap:2000,lo:0.4,hi:0.7,shower:8.0,base:60,cs:4.2,makeMax:1000,baleW:0.10,rejS:0.5,sludgeS:0.3,clar:0.988};
 WAT.sw=100/WAT.cs-1;   // water a ton of fiber carries at storage consistency
-const WQ={f:0,fi:0,rej:0,u:0,p:0,rep:0,spill:0,clip:0};   // this step's flows (t)
+const WQ={f:0,fi:0,rej:0,u:0,p:0,rep:0,spill:0,clip:0,bw:0};   // (v6.6 bw: bale water over the standard 10%)   // this step's flows (t)
 function watState(){if(!S.wat)S.wat={L:WAT.cap*0.55,short:0,shortK:0,r:{fresh:0,out:0,evap:0,over:0,make:0,p:0,eff:0},
     tot:{fresh:0,bale:0,rep:0,short:0,evap:0,prod:0,rej:0,sludge:0,out:0,paper:0}};return S.wat;}
 // stock that leaves the storage chest any other way (a spill to the floor drains) goes to the sewer with its water
@@ -3934,7 +4089,7 @@ function wSpill(t){if(t>0)WQ.spill+=t;}
 function waterTick(dt){const W=watState(),h=dt/60,T=W.tot,q=WQ;
   const K=S.knob,ps=K&&K.any&&K.x&&K.x.ps!=null?K.x.ps:44+4*LV("shoe"),dry=1-DRY.m0/100,m=(S.dry?S.dry.m:DRY.m0)/100;
   const wIn=q.p*dry*(100/ps-1),prodW=Math.min(wIn,q.p*m),evap=wIn-prodW;   // the sheet's water into the dryers: most of it goes up the stack
-  const rejW=q.rej*(1-WAT.rejS)/WAT.rejS,baleW=q.f*WAT.baleW,repW=q.rep*DRY.m0/100,shw=q.p*WAT.shower,base=WAT.base*h;
+  const rejW=q.rej*(1-WAT.rejS)/WAT.rejS,baleW=q.f*WAT.baleW+q.bw,repW=q.rep*DRY.m0/100,shw=q.p*WAT.shower,base=WAT.base*h;
   // the white water chest: the machine's return, less stock prep's draw (net per ton of fiber to and from storage)
   let L=W.L+shw+baleW+repW-wIn-rejW-WAT.sw*(q.fi+q.rep-q.u)-WAT.sw*q.clip;
   const over=Math.max(0,L-WAT.cap*WAT.hi);L-=over;
@@ -3949,7 +4104,7 @@ function waterTick(dt){const W=watState(),h=dt/60,T=W.tot,q=WQ;
   T.paper=(T.paper||0)+q.p;T.fresh+=fresh;T.bale+=baleW;T.rep+=repW;T.short+=short;T.evap+=evap;T.prod+=prodW;T.rej+=rejW;T.sludge+=Math.min(sludge,sewer);T.out+=out;
   const R=W.r,k=v=>v/h;R.fresh=ease(R.fresh,k(fresh),dt,6);R.out=ease(R.out,k(out),dt,6);R.evap=ease(R.evap,k(evap),dt,6);R.over=ease(R.over,k(over),dt,6);R.make=ease(R.make,k(make),dt,6);
   R.p=ease(R.p,k(q.p),dt,6);R.eff=ease(R.eff,k(fib),dt,6);
-  q.f=q.fi=q.rej=q.u=q.p=q.rep=q.spill=q.clip=0;}
+  q.f=q.fi=q.rej=q.u=q.p=q.rep=q.spill=q.clip=q.bw=0;}
 // effluent suspended solids after the clarifier (mg/L), from the fiber actually going to the sewer and the flow it's in
 function tssWater(){const W=S.wat;if(!W||W.r.out<1)return 28;return W.r.eff*(1-WAT.clar)/W.r.out*1e6;}
 /* ---------- UI wiring ---------- */
@@ -5003,7 +5158,7 @@ function pfCalc(f,whole){const L=S.ledger,d=k=>(L[k]||0)-(f.L0[k]||0),A=f.A,sum=
    a slice at a time between frames. Its rows are kept at hours -336..-1 and the sandbox is thrown away; the real run
    doesn't step until it's done (52-main-loop.js). The run's own dice, cash and day 1 are untouched.
    Saves: S.hist is kept under its own key, written only when a row was added (51c-save.js). */
-const HIST_V=3,HIST_PRIOR=14,HIST_MAX=60*24+HIST_PRIOR*24;   // survival keeps a rolling 60 days (plus the prior ones)
+const HIST_V=4,HIST_PRIOR=14,HIST_MAX=60*24+HIST_PRIOR*24;   // survival keeps a rolling 60 days (plus the prior ones)
 const HC=["h"];const HCI={};
 {const add=(...k)=>k.forEach(x=>HC.push(x));
   PF_CATS.forEach(([c])=>add("c."+c));PF_AREAS.forEach(([a])=>PF_CATS.forEach(([c])=>add("b."+a+"."+c)));
@@ -5021,7 +5176,9 @@ const HA=[["yard",()=>S.yard],["yardp",()=>S.yard/P.yardCap*100],["wet",()=>S.we
   ["fgp",()=>S.fg/P.fgCap*100],["price",()=>priceOf(C.grade)],["load",()=>S.rates.load],["crew",()=>C.drivers.v+C.loaders.v+P.techs],
   ["wage",()=>(ECON.wage+(P.siteWage||0))*(P.costMul||1)*leadWage()*civWage()],
   ["civE",()=>civOn()?S.civ.m.E:null],["civL",()=>civOn()?S.civ.m.L:null],["civM",()=>civOn()?S.civ.m.M:null],["civC",()=>civOn()?S.civ.m.C:null],
-  ["mkt",()=>S.plan?S.plan.mkt:0],["haul",()=>frInRate()],["dryl",()=>S.dry&&S.pm==="run"?S.dry.load*100:null],["trim",()=>S.dry?S.dry.trim*C.pmSp.v:0],["moistd",()=>S.dry&&S.pm==="run"?S.dry.m:null],["frout",()=>frOutRate()],["fuel",()=>fuelIdx()],["grade",()=>GRADE_IDS.indexOf(C.grade)]];
+  ["mkt",()=>S.plan?S.plan.mkt:0],["haul",()=>frInRate()],["dryl",()=>S.dry&&S.pm==="run"?S.dry.load*100:null],["trim",()=>S.dry?S.dry.trim*C.pmSp.v:0],["moistd",()=>S.dry&&S.pm==="run"?S.dry.m:null],["frout",()=>frOutRate()],["fuel",()=>fuelIdx()],["grade",()=>GRADE_IDS.indexOf(C.grade)],
+  ["balem",()=>S.bq&&!S.zen?S.bq.m*100:null],["stk",()=>S.bq&&!S.zen?S.bq.ck*100:null],["openo",()=>S.ord&&!S.zen?S.ord.list.filter(o=>o.st==="open").length:null],
+  ["lateo",()=>S.ord&&!S.zen?S.ord.list.filter(o=>o.st==="open"&&S.t>o.due+ORD.grace).length:null]];   // (v6.6; HIST_V 4)
 const GRADE_IDS=Object.keys(GRADES);
 HA.forEach(([k])=>{HCI["a."+k]=HC.length;HC.push("a."+k);});
 const histR=v=>v==null||v!==v?null:Math.abs(v)>=100?Math.round(v):Math.round(v*100)/100;
@@ -12492,7 +12649,7 @@ const PF_TR={
   site:[{t:"Admin costs",u:"$",k:"stack",s:[["Overhead",C_.ov,V_("s.ovh")],["Insurance",C_.pu,V_("s.prem")],["Civics",C_.ch,V_("s.civ")],["Maintenance crew",C_.mt,V_("s.tech")],["PM program",C_.en,V_("s.pmp")]]},
     {t:"Crew on site",u:"people",k:"line",s:[["Crew",C_.lab,V_("a.crew")]]},{t:"Wage",u:"$/h per worker",k:"line",s:[["Wage",C_.lab,V_("a.wage")]]},
     {t:"Civics meters",u:"0–100",k:"line",s:[["Economy",C_.en,V_("a.civE")],["Labor",C_.lab,V_("a.civL")],["Machinery",C_.bl,V_("a.civM")],["Community",C_.pu,V_("a.civC")]],opt:1}],
-  "cat:fiber":[{t:"OCC price and haul",u:"$/t",k:"line",s:[["OCC",C_.occ,V_("a.occp")],["Haul",C_.fi,V_("a.haul")],["Delivered",C_.wh,r=>{const a=hv(r,"a.occp"),b=hv(r,"a.haul");return a==null||b==null?null:a+b;}]]},{t:"Fiber spend",u:"$",k:"bar",s:[["Fiber",C_.occ,V_("c.fiber")]]},{t:"Bales fed",u:"t",k:"bar",s:[["Bales",C_.occ,V_("w.feed")]]},
+  "cat:fiber":[{t:"OCC price and haul",u:"$/t",k:"line",s:[["OCC",C_.occ,V_("a.occp")],["Haul",C_.fi,V_("a.haul")],["Delivered",C_.wh,r=>{const a=hv(r,"a.occp"),b=hv(r,"a.haul");return a==null||b==null?null:a+b;}]]},{t:"Fiber spend",u:"$",k:"bar",s:[["Fiber",C_.occ,V_("c.fiber")]]},{t:"Bales fed",u:"t",k:"bar",s:[["Bales",C_.occ,V_("w.feed")]]},{t:"Bale yard quality",u:"%",k:"line",s:[["Moisture",C_.bl,V_("a.balem")],["Stickies",C_.mt,V_("a.stk")]]},
     {t:"OCC market",u:"$/t vs normal",k:"line",s:[["Market",C_.wh,V_("a.mkt")]]}],
   "cat:frin":[{t:"Inbound haul",u:"$/t",k:"line",s:[["Haul",C_.fi,V_("a.haul")]]},{t:"Diesel",u:"$/gal",k:"line",s:[["Diesel",C_.wh,r=>{const v=hv(r,"a.fuel");return v==null?null:v*FR.dieselBase;}]]},
     {t:"Inbound freight spend",u:"$",k:"bar",s:[["Freight in",C_.fi,V_("c.frin")]]},{t:"Trucks in",u:"trucks",k:"bar",s:[["Trucks",C_.bl,V_("n.in")]]}],
@@ -13724,6 +13881,11 @@ function camPullOn(){try{return localStorage.getItem("paper-mill-campull")!=="of
     ["Stock chest","A big tank of clean pulp between stock prep and the paper machine. A full chest keeps the machine running when stock prep stops."],
     ["t/h","Tons per hour."],
     ["Tell","The visible sign that a piece of equipment is about to fail. Only seen on a Round."],
+    ["Order book","Customers order paper by the roll, with a ship-by date. A truck carries one order's grade; late orders are charged back $15/t a day (up to $60) and cancelled after 4 days. Report → Orders & bales."],
+    ["Spot market","Paper nobody ordered. A broker truck takes it once there's a full load of one grade (or the warehouse is 80% full), at $45/t under list."],
+    ["Dry run","A truck that waits 6 hours with nothing to load leaves empty, and the carrier bills you for it."],
+    ["Idle energy","A stopped machine still runs its vacuum pumps, agitators, fans and drives, and the boiler stays banked. Breaks and stops cost energy too."],
+    ["Bale grading","Every OCC load is graded at the gate: A clean, B some plastic and wax, C rejected and sent back. Loads over 12% moisture are paid at air-dry weight; wet bales give less fiber and contamination raises rejects and sheet breaks (stickies)."],
     ["Tied rolls","A set that comes off the winder with its two rolls stuck together where the slitter didn't cut clean. They're sawn apart and both go to the beater."],
     ["Upset","Anything that goes wrong: a breakdown, a break, a storm, a fine."],
     ["Vibration Report","The Round card's trend arrows: which areas have something about to fail."],
@@ -13768,7 +13930,7 @@ function camPullOn(){try{return localStorage.getItem("paper-mill-campull")!=="of
    (within 700 ms per tap) and a list of every version's one-line note pops up, newest first. The list comes from
    VERSION-NOTES.txt at the repo root: build.py swaps it in for the placeholder below, so adding a line there with each
    release keeps the pop-up current (build.py warns when APP_VER has no line). ---------- */
-{const VNOTES=[["4.0.0", "Graphics Overhaul: 60 FPS on iPhone, ~80% Fewer Draw Calls"], ["4.0.1", "Performance Follow-Up, Show FPS Option and Device Autotest"], ["4.0.2", "Economy Rebalance and Smoother Upset Labels"], ["4.1.0", "Four Environments, Seeded Mills, Bottlenecks, Graphics Tiers and Site Music"], ["4.2.0", "New Site Maps, Rare Sights, Zen Map Rotation and Economics Fixes"], ["4.2.0-s", "Save and Continue Season (Test)"], ["4.2.1", "Save/Continue, Settings Panel and Outage Speed Fix"], ["4.2.2-t", "Bayou Gator Sight Reworked (Test)"], ["4.2.2-t2", "Gator Bass Riff (Test)"], ["4.2.2-t3", "Gator Riff Removed, Wide Camera Framing (Test)"], ["4.2.2-t4", "Gator Scene Shortened and Widened (Test)"], ["4.2.2-t5", "One Rare Sight per Map in Zen (Test)"], ["4.2.2", "Rare Sights Reworked, Bird Strike Upset, Mill Report Tab"], ["4.2.3-t", "Cowboys, Bigfoot and Tugboat Sights Reworked (Test)"], ["4.2.3", "Laptop Battery Saving (Default GPU)"], ["4.2.4", "$25M Goal Removed and Quick Fixes"], ["4.2.5", "Random Bottleneck per Season and Accessibility Improvements"], ["4.3.0-t1", "Survival Mode (Test)"], ["4.4.0-t1", "Mill Leaders in Survival (Test)"], ["4.4.0-t2", "Painted Leader Portraits (Test)"], ["4.4.0-t3", "Leader Redesign, 4-Day Waves and Fixes (Test)"], ["5.0.0", "Survival Mode Release with Mill Leaders"], ["5.0.1", "Results Dialog and Game Speed Fixes"], ["5.0.2", "Report Card Label Fixes"], ["5.0.3", "Survival Playtest Fixes (Test)"], ["5.0.4", "Playtest Review: Dot Auto-Fix and Shipping Fix (Test)"], ["5.0.5", "Polish Rounds from Survival Playtests"], ["5.0.6", "Survival QA Fixes, Opt-In Outage Watch, Leaderboard Filters"], ["5.1.0", "Civics Meters and Leaders in Seasons (Test)"], ["5.4.0", "Title Screen, Civics in the World and Dark Mode"], ["5.4.1", "Loading Splash, No Old-Menu Flash"], ["5.4.2", "Graphics Quality on the Title Screen"], ["5.5.0", "Performance Improvements"], ["5.6.0", "Fiddly Knobs, DCS/QCS Screens and Knobs View"], ["5.7.0", "Catching Failures Early: Tells, Daily Rounds, Vibration Report, Outage Prep"], ["5.7.1", "Bottom Menu Reorder, Settings Back on the Right"], ["5.7.2", "Help Page with Game Guide and Glossary"], ["5.7.3", "Bare Graphics Mode for Weak Phones"], ["5.7.4", "Version Notes Pop-Up (Triple-Tap the Version Number)"], ["6.1.0-t1", "Isometric Paper View: Fixed Camera, Cut-Outs, Drop Shadows, Cutaways, Season Palettes (Test)"], ["6.1.0-t2", "Iso Round 2: Cut-Outs Always Paper, GPU Pictures, Stop-Motion World, Fewer Draws (Test)"], ["6.1.0-t3", "Iso Round 3: iPhone Batching, Instanced Cans, Sign Atlas, Lighter Frames (Test)"], ["6.1.0-t4", "Iso Fixes: Operators and Fork-Trucks Back, Less Stutter (Test)"], ["6.1.0-t5", "Cut-Out Edge Artifact Fixed (Test)"], ["6.1.0-t6", "Iso Optimization: Hidden Objects Cost Nothing, Lighter Moving Batches (Test)"], ["6.1.0-t7", "Iso Triangle Cut: Paper-Card Trees, Flat Ground, Hidden Faces Gone, Plain Boxes (Test)"], ["6.1.0-t8", "Paper Palette: 40 Colours, Flat Surfaces, Paper Grain, Fewer Draws (Test)"], ["6.1.0-t9", "Reel Fix: Growing Reel Draws Again (Test)"], ["6.1.0-t10", "Draw Cut 2: Colour in the Matrix, Merged Roofs, Uploads on Change, Culling Fix, Parked Groups (Test)"], ["6.1.0-t11", "QA Fixes: Cut-Outs Never Drawn as Loose 3D Parts, Fallback Shows 3D, Roofs On or Off per Zoom Step (Test)"], ["6.1.0-t12", "Paper Smoke, Blinking Lights, Stronger Seasons, Sharper Phones, Instanced Upsets, Pictures at Start (Test)"], ["6.1.0-t13", "Paper Effects: Flames, Child-Made Tornado, Lamp Cones, Flags, Paper Water, Visible Weather (Test)"], ["6.1.0-t14", "Paper Upsets: Cut-Out Props, Paper Pigeon, Paper Sparks, Steam, Fireworks, Ice and Flood (Test)"], ["6.1.0-t15", "Beaver Reworked as One Smaller Cut-Out (Test)"], ["6.1.0-t16", "Paper Props Dim at Night, Labels Never Overlap, Fewer Cut-Out Pictures (Test)"], ["6.1.0-t17", "Bird on the Power Lines Cut-Scene Plays When Set Off From the Upsets List (Test)"], ["6.1.0-t18", "Zen Close-Ups Fixed, Rare Sights as Paper Cut-Outs, Tilt-Shift Diorama Look (Test)"], ["6.1.0-t19", "Narrower Tilt-Shift Band, Winder Trash Can Out of the Broke Hole (Test)"], ["6.1.0-t20", "Balance: Rounds Pay More, Capacity and Maintenance Upgrades Re-Priced"], ["6.1.0", "Paper Diorama: Isometric Paper Art Style, Cut-Out People and Upsets, Tilt-Shift, Rounds Pay More, Upgrades Re-Priced"], ["6.1.1", "Phone Fixes: Gentler Tilt-Shift on Tall Screens, Cut-Out People No Longer Blank on iPhone"], ["6.1.2", "iPhone: Cut-Out Self-Test Retries, People Keep Their Colours in the 3D Fallback"], ["6.1.3", "Broke Hole by the Winder Looks Like a Floor Opening (Was a Black Square)"], ["6.1.4", "Tilt-Shift Removed"], ["6.2.0", "Zen Free Camera: Perspective Zen Shots, 3D People in Zen, Cleaner River Water"], ["6.3.0-f1", "Process Flow Overview (Test): Inputs, Mill Areas and Outputs for the Mill Day, in Settings"], ["6.3.0-f2", "Process Flow: the Game Keeps Running While It's Open (Test)"], ["6.3.0", "Process Flow Overview: Inputs, Mill Areas and Outputs for the Mill Day (Settings > View)"], ["6.4.0", "Zen Shots Review: Shuffle-Bag Shot Order, Landscape Shots Rebuilt, Close Rare Sights"], ["6.5.0-a1", "Digital Twin A (Test): Hourly History, 14 Prior Days, 7 d / Run Ranges, Area Trends and Uptime"], ["6.5.0-b1", "Digital Twin B (Test): Real Freight Costs with a Diesel Index, Area Controls Moved into Process Flow"], ["6.5.0-b2", "Market Pricing (Test): 2026 OCC and Energy Costs, Diesel in $/gal, Desert Long Haul, Real Steam Rates"], ["6.5.0-b3", "DCS Expansion (Test): Full SPOT, WET and DET Pictures, a UTIL Screen, Motors and Reject Purges"], ["6.5.0-b4", "DCS Pictograms (Test): Equipment Drawn as Classic DCS Symbols, Colour Only When Something's Wrong"], ["6.5.0-b5", "The Dryer Limit (Test): Speed and Grade Load the Dryers, a Wet Sheet Fails Spec and Slows the Machine"], ["6.5.0", "Digital Twin: Process Flow Trends and Controls, Real Freight and Market Costs, Full DCS, Dryer Limit, Rebalance"], ["6.5.1", "Second Screen: Pop the DCS and Process Flow Out to Their Own Window for a Second Monitor (Desktop)"], ["6.5.2", "Knob Fixes: Wet-End and Steam Knobs Bite Again Under the Dryer Limit, DCS Uses the Machine's Name"], ["6.5.3", "Quality Specs: Weight, Moisture and Color Specs per Grade, Off-Spec Paper Wound into Beater Rolls and Repulped"], ["6.5.4", "DCS Fixes: Making-Beater Alerts, SPOT in Process Order, Boiler and Power on Utilities, 2nd/3rd Section Steam Control"], ["6.5.5-t1", "Dewatering Chain (Test): Jet and Vacuum Optimums, Couch to Press Solids, Press Solids Set the Dryer Steam Both Ways"], ["6.5.5", "The Dewatering Chain: Jet and Vacuum Optimums, Couch to Press Solids, Press Solids Set the Dryer Steam Both Ways"], ["6.5.6-t1", "Mass Balance (Test): A Real Water Balance and White Water Chest, Hayout Broke Repulped, Every Fiber Loss Booked"], ["6.5.6", "Mass Balance: A Real Water Balance and White Water Chest, Hayout Broke Repulped, Every Fiber Loss Booked"], ["6.5.7-t1", "Winder Pass (Test): Four Reel Storage Stands, Two-Roll Sets, Rolls Tied Together, Steam Vented on a Sheet Break"], ["6.5.7", "Winder Pass: Four Reel Storage Stands, Two-Roll Sets, Rolls Tied Together, Steam Vented on a Sheet Break"]];
+{const VNOTES=[["4.0.0", "Graphics Overhaul: 60 FPS on iPhone, ~80% Fewer Draw Calls"], ["4.0.1", "Performance Follow-Up, Show FPS Option and Device Autotest"], ["4.0.2", "Economy Rebalance and Smoother Upset Labels"], ["4.1.0", "Four Environments, Seeded Mills, Bottlenecks, Graphics Tiers and Site Music"], ["4.2.0", "New Site Maps, Rare Sights, Zen Map Rotation and Economics Fixes"], ["4.2.0-s", "Save and Continue Season (Test)"], ["4.2.1", "Save/Continue, Settings Panel and Outage Speed Fix"], ["4.2.2-t", "Bayou Gator Sight Reworked (Test)"], ["4.2.2-t2", "Gator Bass Riff (Test)"], ["4.2.2-t3", "Gator Riff Removed, Wide Camera Framing (Test)"], ["4.2.2-t4", "Gator Scene Shortened and Widened (Test)"], ["4.2.2-t5", "One Rare Sight per Map in Zen (Test)"], ["4.2.2", "Rare Sights Reworked, Bird Strike Upset, Mill Report Tab"], ["4.2.3-t", "Cowboys, Bigfoot and Tugboat Sights Reworked (Test)"], ["4.2.3", "Laptop Battery Saving (Default GPU)"], ["4.2.4", "$25M Goal Removed and Quick Fixes"], ["4.2.5", "Random Bottleneck per Season and Accessibility Improvements"], ["4.3.0-t1", "Survival Mode (Test)"], ["4.4.0-t1", "Mill Leaders in Survival (Test)"], ["4.4.0-t2", "Painted Leader Portraits (Test)"], ["4.4.0-t3", "Leader Redesign, 4-Day Waves and Fixes (Test)"], ["5.0.0", "Survival Mode Release with Mill Leaders"], ["5.0.1", "Results Dialog and Game Speed Fixes"], ["5.0.2", "Report Card Label Fixes"], ["5.0.3", "Survival Playtest Fixes (Test)"], ["5.0.4", "Playtest Review: Dot Auto-Fix and Shipping Fix (Test)"], ["5.0.5", "Polish Rounds from Survival Playtests"], ["5.0.6", "Survival QA Fixes, Opt-In Outage Watch, Leaderboard Filters"], ["5.1.0", "Civics Meters and Leaders in Seasons (Test)"], ["5.4.0", "Title Screen, Civics in the World and Dark Mode"], ["5.4.1", "Loading Splash, No Old-Menu Flash"], ["5.4.2", "Graphics Quality on the Title Screen"], ["5.5.0", "Performance Improvements"], ["5.6.0", "Fiddly Knobs, DCS/QCS Screens and Knobs View"], ["5.7.0", "Catching Failures Early: Tells, Daily Rounds, Vibration Report, Outage Prep"], ["5.7.1", "Bottom Menu Reorder, Settings Back on the Right"], ["5.7.2", "Help Page with Game Guide and Glossary"], ["5.7.3", "Bare Graphics Mode for Weak Phones"], ["5.7.4", "Version Notes Pop-Up (Triple-Tap the Version Number)"], ["6.1.0-t1", "Isometric Paper View: Fixed Camera, Cut-Outs, Drop Shadows, Cutaways, Season Palettes (Test)"], ["6.1.0-t2", "Iso Round 2: Cut-Outs Always Paper, GPU Pictures, Stop-Motion World, Fewer Draws (Test)"], ["6.1.0-t3", "Iso Round 3: iPhone Batching, Instanced Cans, Sign Atlas, Lighter Frames (Test)"], ["6.1.0-t4", "Iso Fixes: Operators and Fork-Trucks Back, Less Stutter (Test)"], ["6.1.0-t5", "Cut-Out Edge Artifact Fixed (Test)"], ["6.1.0-t6", "Iso Optimization: Hidden Objects Cost Nothing, Lighter Moving Batches (Test)"], ["6.1.0-t7", "Iso Triangle Cut: Paper-Card Trees, Flat Ground, Hidden Faces Gone, Plain Boxes (Test)"], ["6.1.0-t8", "Paper Palette: 40 Colours, Flat Surfaces, Paper Grain, Fewer Draws (Test)"], ["6.1.0-t9", "Reel Fix: Growing Reel Draws Again (Test)"], ["6.1.0-t10", "Draw Cut 2: Colour in the Matrix, Merged Roofs, Uploads on Change, Culling Fix, Parked Groups (Test)"], ["6.1.0-t11", "QA Fixes: Cut-Outs Never Drawn as Loose 3D Parts, Fallback Shows 3D, Roofs On or Off per Zoom Step (Test)"], ["6.1.0-t12", "Paper Smoke, Blinking Lights, Stronger Seasons, Sharper Phones, Instanced Upsets, Pictures at Start (Test)"], ["6.1.0-t13", "Paper Effects: Flames, Child-Made Tornado, Lamp Cones, Flags, Paper Water, Visible Weather (Test)"], ["6.1.0-t14", "Paper Upsets: Cut-Out Props, Paper Pigeon, Paper Sparks, Steam, Fireworks, Ice and Flood (Test)"], ["6.1.0-t15", "Beaver Reworked as One Smaller Cut-Out (Test)"], ["6.1.0-t16", "Paper Props Dim at Night, Labels Never Overlap, Fewer Cut-Out Pictures (Test)"], ["6.1.0-t17", "Bird on the Power Lines Cut-Scene Plays When Set Off From the Upsets List (Test)"], ["6.1.0-t18", "Zen Close-Ups Fixed, Rare Sights as Paper Cut-Outs, Tilt-Shift Diorama Look (Test)"], ["6.1.0-t19", "Narrower Tilt-Shift Band, Winder Trash Can Out of the Broke Hole (Test)"], ["6.1.0-t20", "Balance: Rounds Pay More, Capacity and Maintenance Upgrades Re-Priced"], ["6.1.0", "Paper Diorama: Isometric Paper Art Style, Cut-Out People and Upsets, Tilt-Shift, Rounds Pay More, Upgrades Re-Priced"], ["6.1.1", "Phone Fixes: Gentler Tilt-Shift on Tall Screens, Cut-Out People No Longer Blank on iPhone"], ["6.1.2", "iPhone: Cut-Out Self-Test Retries, People Keep Their Colours in the 3D Fallback"], ["6.1.3", "Broke Hole by the Winder Looks Like a Floor Opening (Was a Black Square)"], ["6.1.4", "Tilt-Shift Removed"], ["6.2.0", "Zen Free Camera: Perspective Zen Shots, 3D People in Zen, Cleaner River Water"], ["6.3.0-f1", "Process Flow Overview (Test): Inputs, Mill Areas and Outputs for the Mill Day, in Settings"], ["6.3.0-f2", "Process Flow: the Game Keeps Running While It's Open (Test)"], ["6.3.0", "Process Flow Overview: Inputs, Mill Areas and Outputs for the Mill Day (Settings > View)"], ["6.4.0", "Zen Shots Review: Shuffle-Bag Shot Order, Landscape Shots Rebuilt, Close Rare Sights"], ["6.5.0-a1", "Digital Twin A (Test): Hourly History, 14 Prior Days, 7 d / Run Ranges, Area Trends and Uptime"], ["6.5.0-b1", "Digital Twin B (Test): Real Freight Costs with a Diesel Index, Area Controls Moved into Process Flow"], ["6.5.0-b2", "Market Pricing (Test): 2026 OCC and Energy Costs, Diesel in $/gal, Desert Long Haul, Real Steam Rates"], ["6.5.0-b3", "DCS Expansion (Test): Full SPOT, WET and DET Pictures, a UTIL Screen, Motors and Reject Purges"], ["6.5.0-b4", "DCS Pictograms (Test): Equipment Drawn as Classic DCS Symbols, Colour Only When Something's Wrong"], ["6.5.0-b5", "The Dryer Limit (Test): Speed and Grade Load the Dryers, a Wet Sheet Fails Spec and Slows the Machine"], ["6.5.0", "Digital Twin: Process Flow Trends and Controls, Real Freight and Market Costs, Full DCS, Dryer Limit, Rebalance"], ["6.5.1", "Second Screen: Pop the DCS and Process Flow Out to Their Own Window for a Second Monitor (Desktop)"], ["6.5.2", "Knob Fixes: Wet-End and Steam Knobs Bite Again Under the Dryer Limit, DCS Uses the Machine's Name"], ["6.5.3", "Quality Specs: Weight, Moisture and Color Specs per Grade, Off-Spec Paper Wound into Beater Rolls and Repulped"], ["6.5.4", "DCS Fixes: Making-Beater Alerts, SPOT in Process Order, Boiler and Power on Utilities, 2nd/3rd Section Steam Control"], ["6.5.5-t1", "Dewatering Chain (Test): Jet and Vacuum Optimums, Couch to Press Solids, Press Solids Set the Dryer Steam Both Ways"], ["6.5.5", "The Dewatering Chain: Jet and Vacuum Optimums, Couch to Press Solids, Press Solids Set the Dryer Steam Both Ways"], ["6.5.6-t1", "Mass Balance (Test): A Real Water Balance and White Water Chest, Hayout Broke Repulped, Every Fiber Loss Booked"], ["6.5.6", "Mass Balance: A Real Water Balance and White Water Chest, Hayout Broke Repulped, Every Fiber Loss Booked"], ["6.5.7-t1", "Winder Pass (Test): Four Reel Storage Stands, Two-Roll Sets, Rolls Tied Together, Steam Vented on a Sheet Break"], ["6.5.7", "Winder Pass: Four Reel Storage Stands, Two-Roll Sets, Rolls Tied Together, Steam Vented on a Sheet Break"], ["6.6.0-t1", "Orders and Bales (Test): Customer Order Book and Spot Market, Idle Energy While Stopped, Bale Grading at the Gate"], ["6.6.0", "Orders and Bales: Customer Order Book and Spot Market, Idle Energy While Stopped, Bale Grading at the Gate"]];
   let ov=null,held=false;
   function render(){
     const cur=APP_VER.replace(/^v/i,""),rows=VNOTES.slice().reverse().map(([v,n])=>
@@ -13789,6 +13951,30 @@ function camPullOn(){try{return localStorage.getItem("paper-mill-campull")!=="of
     let n=0,last=0;const hit=()=>{const t=performance.now();n=t-last<700?n+1:1;last=t;if(n>=3){n=0;open();}};
     v.addEventListener("click",hit);v.addEventListener("keydown",e=>{if(e.key==="Enter"||e.key===" "){e.preventDefault();hit();}});}
 }
+/* ---- v6.6 the Orders & bales panel (Report tab): the order book, the bale yard's grade, idle energy. Display only. ---- */
+{const box=()=>$("ordBox");let last="";
+  const hrsTo=m=>{const a=Math.abs(m),s=a<90?Math.round(a)+" min":a<2880?Math.round(a/60)+" h":(a/1440).toFixed(1)+" d";return m>=0?"due in "+s:s+" late";};
+  const pc=v=>Math.round(v*100)+"%";
+  function html(){if(!ordOn())return `<p class="rnone">Zen mode: no orders and every bale is the same. The order book runs in Season, Survival and Free Play.</p>`;
+    const O=ordState(),K=O.k,Q=bqState(),open=O.list.filter(o=>o.st==="open").sort((a,b)=>a.due-b.due);
+    const tons=K.onT+K.lateT,otd=tons>0?K.onT/tons:null,lateN=open.filter(o=>S.t>o.due+ORD.grace).length;
+    const row=o=>{const left=o.r-Math.round(o.sh),inStock=Math.floor(ordFree(o.g)),late=S.t>o.due+ORD.grace,risk=!late&&o.due-S.t<360&&inStock<left;
+      const st=late?["bad","late"]:o.ld>o.sh+0.5?["ok","loading"]:inStock>=Math.min(left,P.truckRolls)?["ok","ready"]:C.grade===o.g?["","on the machine"]:["","waiting for "+o.g];
+      return `<div class="ordr${late?" late":risk?" risk":""}"><span><b>#${o.id} ${ordCust(o)}</b><small>${o.g} · ${Math.round(o.sh)}/${o.r} rolls · ${hrsTo(o.due-S.t)}</small></span><em class="${st[0]}">${st[1]}</em></div>`;};
+    const pend=open.slice(0,8).map(row).join("")||`<p class="rnone">No open orders.</p>`;
+    const qa=(Q.A||0)+(Q.B||0)+(Q.C||0);
+    return `<div class="rq"><div><small>On-time delivery</small><b class="mono">${otd==null?"–":pc(otd)}</b><small>${Math.round(tons)} t on orders</small></div>
+      <div><small>Open orders</small><b class="mono">${open.length}</b><small>${lateN?lateN+" late":"none late"}${K.canc?" · "+K.canc+" cancelled":""}</small></div>
+      <div><small>Spot market</small><b class="mono">${Math.round(K.spot)} t</b><small>${K.spot?"−"+money(K.spotV)+" under list":"surplus paper"}</small></div></div>
+      <p class="rnote">Late chargebacks ${money(K.chg)}${K.dry?" · "+K.dry+" dry run"+(K.dry===1?"":"s")+" ("+money(K.dry*ORD.dryRun)+")":""}. Customers pay list less $${ORD.late}/t a day late (up to $${ORD.lateCap}); after ${ORD.cancel} days they cancel. Unsold paper goes for $${ORD.spot}/t under list.</p>
+      <div class="v2sub">Due next</div><div class="ordl">${pend}</div>${open.length>8?`<p class="rnote">+${open.length-8} more</p>`:""}
+      <div class="v2sub">Bale yard</div>
+      <div class="rq"><div><small>Moisture</small><b class="mono">${(Q.m*100).toFixed(1)}%</b><small>${Q.m>BALE.allow?"wet: less fiber a ton":"paid to "+Math.round(BALE.allow*100)+"%"}</small></div>
+      <div><small>Contamination</small><b class="mono">${bqBand(Q.k)}</b><small>stickies at the machine ${pc(Q.ck)}</small></div>
+      <div><small>Loads rejected</small><b class="mono">${Q.rej}</b><small>of ${qa} graded</small></div></div>
+      <p class="rnote">Graded A ${Q.A||0} · B ${Q.B||0} · C ${Q.C||0} (sent back). Moisture claims saved ${money(Q.ded)}. Idle energy while the machine was stopped ${money(S.tot.idleE||0)}.</p>`;}
+  UI_TICKS.push(n=>{const b=box(),d=$("repOrd");if(!b||!d||!d.open||!paneShown(b)||n%5)return;const h=html();if(h!==last){last=h;b.innerHTML=h;}});
+  document.addEventListener("toggle",e=>{if(e.target&&e.target.id==="repOrd"&&e.target.open){last="";const b=box();if(b){last=html();b.innerHTML=last;}}},true);}
 // frame rate is a player choice (Controls): Battery saver = 30 fps, Smooth = 60 fps (v15 default: a 120 Hz screen no longer
 // draws twice as many frames), Max = the display's rate; remembered. (true/false still mean Max/saver for the test tools)
 const FPS_CAPS={saver:30,smooth:60,max:0};let FPS_MODE="smooth";try{const v=localStorage.getItem("paper-mill-fps");if(FPS_CAPS[v]!==undefined)FPS_MODE=v;}catch(e){}
