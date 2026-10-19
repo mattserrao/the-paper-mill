@@ -95,7 +95,7 @@ function knobMods(m){const K=S.knob;if(!K||!K.any||S.zen)return;if(K.feed<1)m.fe
 // share of production going to the beater because of a knob (07-sim-step.js)
 function knobOff(){const K=S.knob;return K&&K.any&&!S.zen?K.off:0;}
 // extra dryer steam per ton (more water into the dryers, or 1st section steam turned up), as energy cost (07-sim-step.js)
-function knobSteamCost(prod){const K=S.knob;if(!K||!K.any||S.zen||K.sf===1)return;spend(prod*ECON.energy*P.energyMul*0.6*(K.sf-1)*(P.costMul||1),"energy");}
+function knobSteamCost(prod){const K=S.knob;if(!K||!K.any||S.zen||K.sf===1)return;{const v=prod*ECON.energy*P.energyMul*0.6*(K.sf-1)*(P.costMul||1);spend(v,"energy");pfAdd("steam","pm",v);}}
 
 function knobTick(dt){const K=S.knob;if(!K||!K.any||S.zen)return;
   const v=K.v,x=K.x,L=(a,t,tau)=>kLag(a,t,tau,dt),H=K.H,run=S.pm==="run";

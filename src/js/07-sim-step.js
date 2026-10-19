@@ -5,6 +5,7 @@ function step(dt){
   // v2.9.13: daily production (a mill day runs 6am to 6am, and S.t=0 is 6am) and the best day so far
   {const di=Math.floor(S.t/1440);if(!S.pd)S.pd={i:di,start:S.tot.prodT,rec:0};
     if(di>S.pd.i){const made=S.tot.prodT-S.pd.start;if(made>S.pd.rec)S.pd.rec=made;S.pd.i=di;S.pd.start=S.tot.prodT;}}
+  pfDay();   // v6.3 process flow: the mill day's books (11b)
 
   chaosTick(dt);
   cardTick(dt);
@@ -40,8 +41,8 @@ function step(dt){
     if(tr.load<=0.001){S.leaving.push({...tr,ty:inY(d),kind:"in"});if(S.leaving.length>24)S.leaving.shift();S.inDock[d]=null;}}
   const feed=Math.min(feedRes,S.yard); S.yard-=feed;
   // 3 pulper → chest
-  if(M.yardEat) S.yard=Math.max(0,S.yard-M.yardEat*dt/60);
-  const fiberIn=feed*P.yieldF*M.yieldMul; S.tank=Math.min(P.tankCap,S.tank+fiberIn);
+  if(M.yardEat){const y0=S.yard;S.yard=Math.max(0,S.yard-M.yardEat*dt/60);pfW("bale",y0-S.yard);}
+  const fiberIn=feed*P.yieldF*M.yieldMul; S.tank=Math.min(P.tankCap,S.tank+fiberIn);pfW("feed",feed);pfW("rej",feed-fiberIn);
   // 5 paper machine
   const level=S.tank/P.tankCap*100, low=C.lowLevel.v;
   if(M.pmDown){ if(S.pm!=="incident"){ S.pm="incident"; S.lastDown=M.pmDown; } }
@@ -67,16 +68,17 @@ function step(dt){
       prod=P.K*S.pmSpeed*g.bw*dt/60;
       const use=prod/P.pmLoss;
       if(use>S.tank){prod=S.tank*P.pmLoss;}
-      S.tank-=prod/P.pmLoss;
+      S.tank-=prod/P.pmLoss;pfW("eff",prod/P.pmLoss-prod);
     }
   }
   if(S.pm!=="run") S.pmSpeed=ease(S.pmSpeed,0,dt,3);
-  if(prod>0){spend(prod*energyCost(),"energy");knobSteamCost(prod);S.q.made+=prod;
+  if(prod>0){{const ec=prod*energyCost();spend(ec,"energy");pfEnergy(prod,ec);}knobSteamCost(prod);S.q.made+=prod;
     let off=0;if(M.offSpec)off=prod;
     else if(S.chg){off=Math.min(prod,S.chg.left);S.chg.left-=off;if(S.chg.left<=1e-6){log(`Grade change to ${S.chg.to} complete: back on spec`,"ok");S.chg=null;}}
     {const kf=knobOff();if(kf>0)off=Math.min(prod,off+(prod-off)*kf);}   // v5.6: a moved knob sending part of the reel to the beater
-    if(off>0){S.tot.broke+=off;S.tot.beater=(S.tot.beater||0)+off;S.q.off+=off;S.q.bank+=off;prod-=off;}
-    if(S.plan.hot&&C.grade==="33HT")S.plan.hot.made+=prod;}
+    if(off>0){pfW("broke",off);S.tot.broke+=off;S.tot.beater=(S.tot.beater||0)+off;S.q.off+=off;S.q.bank+=off;prod-=off;}
+    if(S.plan.hot&&C.grade==="33HT")S.plan.hot.made+=prod;
+    if(S.pf&&prod>0)pfW("val",prod*priceOf(C.grade));}
   S.reel+=prod;lotPut(S.lots.reel,C.grade,prod); S.tot.prodT+=prod; S.tot.pot+=P.K*C.pmSp.v*g.bw*dt/60;
   planTick(dt,prod);
   if(S.reel>=P.jumbo&&reelsAtWinder()<=P.storeReels){S.winderBuf+=S.reel;lotTake(S.lots.reel,S.reel,S.lots.buf);S.reel=0;S.lots.reel.length=0;S.tot.turnups++;}
@@ -107,6 +109,7 @@ function step(dt){
     tr.load+=l;lcap-=l;S.fg-=l;loaded+=l;lotTake(S.lots.fg,l,tr.lots||(tr.lots=[]));
     if(tr.load>=P.truckRolls-1e-6){S.leaving.push({...tr,ty:outY(d),kind:"out"});if(S.leaving.length>24)S.leaving.shift();S.outDock[d]=null;S.tot.shipped+=P.truckRolls;const tons=P.truckRolls*C.rollW.v;S.shipT+=tons;earn(lotValue(tr.lots||[[C.grade,P.truckRolls]],C.rollW.v));}}   // (v16: each roll at its own grade's price)
   spend(((C.drivers.v+C.loaders.v+P.techs)*(ECON.wage+(P.siteWage||0))*(P.costMul||1)*leadWage()*civWage()+P.robots*ECON.robot+P.pmCost)*dt/60,"labor");
+  pfLabor(dt);
   spend((ECON.overhead+(P.siteOver||0))*dt/60,"overhead"); if(P.premium)spend(P.premium*dt/60,"premium");
   // v3.1.2: profit/day is OPERATING profit over the last 12 game hours: good paper is valued as it comes off the machine (tons x price),
   // less OCC, energy, labor, overhead and insurance. One-offs (upgrades, outage budgets, repair bills, card deals) are left out,

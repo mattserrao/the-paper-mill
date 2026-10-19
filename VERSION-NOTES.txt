@@ -68,3 +68,4 @@ One line per version, oldest first. Add a line here with every release: build.py
 6.1.3      Broke Hole by the Winder Looks Like a Floor Opening (Was a Black Square)
 6.1.4      Tilt-Shift Removed
 6.2.0      Zen Free Camera: Perspective Zen Shots, 3D People in Zen, Cleaner River Water
+6.3.0-f1   Process Flow Overview (Test): Inputs, Mill Areas and Outputs for the Mill Day, in Settings

@@ -91,7 +91,7 @@ function upCost(u,l){const c=u.lv[l];const b=BNQ();return b&&BN[b].ups.includes(
 function upFix(u){const b=BNQ();return !!(b&&BN[b].ups.includes(u.id));}
 // capacities that a bottleneck can cut (called from applyUpgrades)
 function applySite(){const E=ENVX(),b=BNQ(),need=NEED23(),fiber=need/P.pmLoss,feed=fiber/OCCG.occ11.y;
-  P.siteOcc=E.occ;P.sitePrice=E.price;P.siteEnergy=E.energy+E.chem;P.siteWage=E.wage;P.siteOver=E.over;P.siteWx=E.wx;P.siteIn=E.inMul;
+  P.siteOcc=E.occ;P.sitePrice=E.price;P.siteEnergy=E.energy+E.chem;P.siteChem=E.chem;P.siteWage=E.wage;P.siteOver=E.over;P.siteWx=E.wx;P.siteIn=E.inMul;
   // receiving: unloading per door (t/h); normal docks never limit
   P.doorRate=b==="recv"?BNK.recv*feed/3*(1+0.25*LV("forklift")):BASE.doorRate;
   // pulper feed (t/h of bales)

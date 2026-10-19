@@ -1,6 +1,23 @@
 # Changelog
 
 
+## v6.3.0-f1 (2026-10-18): process flow overview (test branch test/v6.3-flow)
+- **Settings → View → Process flow:** a control-room picture of the whole mill for today's mill day (6am to 6am), with a
+  Yesterday view after the first full day. Inputs on the left (fiber, energy, chemicals and water, labor, maintenance,
+  overhead, each with $ and $/t), the seven areas in a row (bale yard, pulper, stock prep, paper machine, winder,
+  warehouse and shipping, site and admin), outputs on the right (paper shipped and made, waste, profit).
+- Value build-up Sankey: the band through the areas is as wide as the money spent so far; each input drops in where it's
+  spent; site-wide costs join at Site & admin. Waste (rejects to landfill, effluent fiber, bales lost, broke repulped) is
+  drawn in tons, not to scale. Status lamps and t/h on each area.
+- Tap an input, area, band or output for its breakdown (cost parts, where it went, today's repair bills, current rates).
+- The game runs at 1 min/s while it's open (like the DCS screens); Escape or ✕ closes. All four modes. On narrow screens
+  the picture runs top to bottom.
+- No economy change: the books are read from the ledger; the screen only notes where money went (`S.pf`, 11b-pflow.js) and
+  splits the per-ton energy charge into energy and chemicals and water. Steam is 60% of energy (as the knobs use);
+  power splits pulper 20% / stock prep 35% / machine 45%; chemicals split stock prep / wet end.
+- `tools/pflowcheck.py`: the day's profit on the screen equals the cash change plus upgrades (to the cent), the areas add
+  up to the cost, the day roll keeps yesterday, taps, Escape, slowdown, save round trip, phone layout, free play and zen.
+
 ## v6.2.0 (2026-10-18): zen free camera released to main (was test builds z1 and z2)
 
 ### z2
