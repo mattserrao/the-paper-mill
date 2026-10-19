@@ -1,6 +1,25 @@
 # Changelog
 
 
+## v6.5.1 (2026-10-19): second screen
+Built on test/v6.5.1-dual, merged into main.
+- **Pop-out window for a second monitor** (desktop only: a mouse and a screen 1100 px or wider; `?popout` forces it).
+  A **⧉ Second screen** button in the DCS and process flow headers, and in Settings > View, opens one window with a bar:
+  **DCS**, **Process flow** or **Both** side by side, **Move to other monitor** (Chrome/Edge, asks for permission) and
+  **Dock back**.
+- **Nothing is synced**: the game writes the window and moves the two screens' elements into it. The same code runs them
+  from the game page, on the same state, on the same UI ticks. `$()` looks in the window for ids the page doesn't have,
+  and focus checks use the input's own window (`actEl`, 08-ui-wiring.js). New file `50e-popout.js`.
+- **While popped out**: the DCS no longer slows the game to 1 min/s; neither screen closes (the ✕ is hidden); a console
+  tap or Settings > Process flow switches the window to that screen (Both stays Both); the pause menu leaves the flow up;
+  knob moves, DCS setpoints and the flow's Controls tab (the area cards move with it) work in the window; Escape there
+  closes the flow's details. Zen keeps the window on the flow.
+- **Docking**: closing the window, Dock back, or leaving the game page puts both screens and the area controls back in the
+  game window, with the old behaviour (the DCS slows the game again while it's open there).
+- A blocked pop-up shows a banner and changes nothing. Phones and tablets never see the button.
+- `tools/popoutcheck.py`: 43 checks (opening, refresh, knob and control writes from the window, console taps, Both,
+  pause menu, close and Dock back, zen, leaving the page, phone, blocked pop-up).
+
 ## v6.5.0 (2026-10-19): the digital twin release
 Merges test/v6.5-twin (b1-b5 below) with an economy rebalance for the new realism (claude/balance-v65.md).
 - **Baseline** (`tools/qa_balance.py`, 50 seeds per mode over the 4 maps, every tester on the same dice): rounds added

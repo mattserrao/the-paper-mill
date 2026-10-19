@@ -15,7 +15,7 @@ function pfOv(){let o=$("pfOv");if(o)return o;
   o.innerHTML=`<div class="dcs pf" role="dialog" aria-modal="true" aria-labelledby="pf-h"><div class="dcsh"><b id="pf-h"></b>
     <div class="seg pfrange" role="group" aria-label="Range"><button type="button" data-pd="t">Today</button><button type="button" data-pd="y">Yesterday</button><button type="button" data-pd="w">7 d</button><button type="button" data-pd="r">Run</button></div>
     <label class="pfprior" title="Include the ${HIST_PRIOR} days before you took over"><input type="checkbox" id="pfPrior" checked/> Prior days</label>
-    <button aria-label="Close" class="dcsx" id="pfClose">✕</button></div>
+    <button type="button" class="dcspop" data-popout="pf"${POPOK()&&!POP.on?"":" hidden"} title="Open in its own window, for a second monitor">⧉ Second screen</button><button aria-label="Close" class="dcsx" id="pfClose">✕</button></div>
     <div class="dcsb pfb" id="pfBody"><div class="pfcol pfin" id="pfIn"></div><div class="pfmap mimicw" id="pfMap"></div><div class="pfcol pfout" id="pfOut"></div></div>
     <div class="pfpanel" id="pfPanel" hidden role="region" aria-label="Details"></div>
     <div class="dcsf"><span id="pfClock"></span><span id="pfNote">Live: the mill keeps running</span></div></div>`;
@@ -28,13 +28,15 @@ function pfOv(){let o=$("pfOv");if(o)return o;
     const zm=e.target.closest("[data-pz]");if(zm){PFUI.zoom=zm.dataset.pz;pfRender(true);return;}
     const t=e.target.closest("[data-pf]");if(t){let k=t.dataset.pf;if(k.startsWith("drop:"))k="node:"+k.split(":")[1];if(PFUI.sel!==k)PFUI.tab=null;PFUI.sel=PFUI.sel===k?null:k;pfRender(true);}});
   o.querySelector("#pfPrior").addEventListener("change",e=>{PFUI.prior=e.target.checked;pfRender(true);});
-  o.addEventListener("keydown",e=>{if((e.key==="Enter"||e.key===" ")&&e.target.matches("[data-pf][tabindex]")){e.preventDefault();e.target.dispatchEvent(new MouseEvent("click",{bubbles:true}));}});
+  o.addEventListener("keydown",e=>{if((e.key==="Enter"||e.key===" ")&&e.target.matches("[data-pf][tabindex]")){e.preventDefault();e.target.dispatchEvent(new (e.target.ownerDocument.defaultView||window).MouseEvent("click",{bubbles:true}));}});
   return o;}
-function pfOpen(){const o=pfOv();if(G3.closeKnobUI)G3.closeKnobUI();PFUI.open=true;G3.pfOpen=true;PFUI.sel=null;PFUI.mode="t";o.hidden=false;pfRender(true);kuiSync();
+function pfOpen(){if(POP.on){PFUI.open=true;G3.pfOpen=true;popShow("pf");pfRender(true);return;}   // v6.5.1: popped out, it switches the second screen to the flow
+  const o=pfOv();if(G3.closeKnobUI)G3.closeKnobUI();PFUI.open=true;G3.pfOpen=true;PFUI.sel=null;PFUI.mode="t";o.hidden=false;pfRender(true);kuiSync();
   setTimeout(()=>{try{$("pfClose").focus({preventScroll:true});}catch(_){}},0);}
-function pfClose(){pfCtlHome();G3.pfCtlOn=false;const o=$("pfOv");if(o)o.hidden=true;const was=PFUI.open;PFUI.open=false;G3.pfOpen=false;kuiSync();if(was)try{$("gl").focus({preventScroll:true});}catch(_){}}
+function pfClose(){if(POP.on)return;   // (v6.5.1: a popped-out flow stays up until docked)
+  pfCtlHome();G3.pfCtlOn=false;const o=$("pfOv");if(o)o.hidden=true;const was=PFUI.open;PFUI.open=false;G3.pfOpen=false;kuiSync();if(was)try{$("gl").focus({preventScroll:true});}catch(_){}}
 // the picture runs top to bottom on narrow screens
-const pfVert=()=>window.matchMedia("(max-width:760px)").matches;
+const pfVert=()=>{const o=$("pfOv"),w=(o&&o.ownerDocument.defaultView)||window;return w.matchMedia("(max-width:760px)").matches;};   // (v6.5.1: of the window it is in)
 
 /* ---- status of each area right now (today only) ---- */
 const PF_LAMP={dry:["#ffb02e","Dryer-limited"],run:["#4fd18b","Running"],upset:["#ffb02e","Upset"],brk:["#ffb02e","Sheet break"],hay:["#ffb02e","Hayout"],down:["#ff6b5e","Down"],held:["#8ea4c4","Held back"]};
@@ -194,7 +196,7 @@ function pfSeries(spec,rows){const daily=PFUI.zoom!=="24h"&&spec.k!=="line",B=ne
 const pfFmt=(v,u)=>v==null?"–":u==="$"?money(v):Math.abs(v)>=1000?Math.round(v).toLocaleString():Math.abs(v)>=100?Math.round(v)+"":Math.abs(v)>=10?v.toFixed(1):v.toFixed(2);
 function pfChartHTML(spec,i){const leg=spec.s.length>1?`<span class="pfleg">${spec.s.map(x=>`<span><i style="background:${x[1]}"></i>${x[0]}</span>`).join("")}</span>`:"";
   return `<div class="pfch"><div class="pfcht"><b>${spec.t}</b><small>${spec.u}${spec.k!=="line"&&spec.k!=="pct"&&spec.u!=="h"?"":""}</small>${leg}</div><canvas data-ch="${i}" height="120"></canvas><div class="pfchr" data-chr="${i}">&nbsp;</div></div>`;}
-function pfDraw(cv,spec,W0){const dpr=Math.min(2,window.devicePixelRatio||1),cw=cv.clientWidth||400,ch=120;if(cv.width!==Math.round(cw*dpr)){cv.width=Math.round(cw*dpr);cv.height=ch*dpr;}
+function pfDraw(cv,spec,W0){const dpr=Math.min(2,(cv.ownerDocument.defaultView||window).devicePixelRatio||1),cw=cv.clientWidth||400,ch=120;if(cv.width!==Math.round(cw*dpr)){cv.width=Math.round(cw*dpr);cv.height=ch*dpr;}
   const x=cv.getContext("2d");x.setTransform(dpr,0,0,dpr,0,0);x.fillStyle="#0f1b2d";x.fillRect(0,0,cw,ch);
   const [h0,h1]=W0,{rows}=PFUI.win,{pts,daily}=pfSeries(spec,rows),L=40,R=cw-6,T=8,Bm=ch-16,X=h=>L+(h-h0)/Math.max(1,h1-h0)*(R-L);
   // prior hours shaded
@@ -225,20 +227,23 @@ function pfDraw(cv,spec,W0){const dpr=Math.min(2,window.devicePixelRatio||1),cw=
   // the crosshair
   const hx=PFUI.hx[cv.dataset.ch];if(hx!=null){const h=h0+hx*(h1-h0);x.strokeStyle="rgba(255,255,255,.55)";x.lineWidth=1;x.beginPath();x.moveTo(X(h),T);x.lineTo(X(h),Bm);x.stroke();}
   cv._g={h0,h1,L,R};return pts;}
-function pfReadout(spec,pts,i){const el=document.querySelector(`[data-chr="${i}"]`);if(!el)return;const hx=PFUI.hx[i];
+const pfQ=sel=>{const o=$("pfOv");return o?o.querySelector(sel):null;};
+function pfReadout(spec,pts,i){const el=pfQ(`[data-chr="${i}"]`);if(!el)return;const hx=PFUI.hx[i];
   if(hx==null||!pts.length){const last=pts[pts.length-1];const t=last?`${PFUI.zoom==="24h"||spec.k==="line"?"Latest":"Today"}: `+spec.s.map((s,j)=>(spec.s.length>1?s[0]+" ":"")+pfFmt(last.v[j],spec.u)+(spec.u&&spec.u!=="$"?" "+spec.u:"")).join(" · "):"";if(el.textContent!==t)el.textContent=t||" ";return;}
-  const cv=document.querySelector(`canvas[data-ch="${i}"]`),g=cv&&cv._g;if(!g)return;const h=g.h0+hx*(g.h1-g.h0);let p=null;for(const q of pts)if(q.h<=h)p=q;if(!p)return;
+  const cv=pfQ(`canvas[data-ch="${i}"]`),g=cv&&cv._g;if(!g)return;const h=g.h0+hx*(g.h1-g.h0);let p=null;for(const q of pts)if(q.h<=h)p=q;if(!p)return;
   let t=(p.w===24?pfDayLbl(p.h):pfHourLbl(p.h))+": "+spec.s.map((s,j)=>(spec.s.length>1?s[0]+" ":"")+pfFmt(p.v[j],spec.u)+(spec.u&&spec.u!=="$"?" "+spec.u:"")).join(" · ");
   if(S.hist){const evs=S.hist.ev.filter(([tt,id])=>tt/60>=p.h&&tt/60<p.h+p.w&&(spec.ev===2||id==="outage"||pfRepArea(id)===PFUI.area));if(evs.length&&spec.ev)t+=" · "+evs.slice(0,3).map(([,id,v])=>(id==="outage"?"Outage budget":EV[id]?EV[id].name:id)+" "+money(v)).join(", ");}
   el.textContent=t;}
 function pfCharts(){const P2=$("pfPanel");if(!P2||P2.hidden)return;PFUI.win=histWin(...pfWin());const W0=pfWin();
   P2.querySelectorAll("canvas[data-ch]").forEach(cv=>{const i=cv.dataset.ch,spec=PFUI.specs[i];if(!spec)return;const pts=pfDraw(cv,spec,W0);pfReadout(spec,pts||[],i);});}
 // tap or drag on a chart reads it out; leaving clears it (desktop)
-document.addEventListener("pointermove",e=>{const cv=e.target.closest&&e.target.closest("#pfPanel canvas[data-ch]");if(!cv||!cv._g)return;const r=cv.getBoundingClientRect(),g=cv._g;
+// (v6.5.1: bound on the main page here, and on the second screen when the flow pops out, 50e)
+function pfPtr(doc){doc.addEventListener("pointermove",e=>{const cv=e.target.closest&&e.target.closest("#pfPanel canvas[data-ch]");if(!cv||!cv._g)return;const r=cv.getBoundingClientRect(),g=cv._g;
   PFUI.hx[cv.dataset.ch]=clamp((e.clientX-r.left-g.L)/(g.R-g.L),0,0.9999);pfCharts();});
-document.addEventListener("pointerdown",e=>{const cv=e.target.closest&&e.target.closest("#pfPanel canvas[data-ch]");if(!cv)return;const r=cv.getBoundingClientRect(),g=cv._g;if(!g)return;
+doc.addEventListener("pointerdown",e=>{const cv=e.target.closest&&e.target.closest("#pfPanel canvas[data-ch]");if(!cv)return;const r=cv.getBoundingClientRect(),g=cv._g;if(!g)return;
   PFUI.hx[cv.dataset.ch]=clamp((e.clientX-r.left-g.L)/(g.R-g.L),0,0.9999);pfCharts();});
-document.addEventListener("pointerout",e=>{const cv=e.target.closest&&e.target.closest("#pfPanel canvas[data-ch]");if(!cv||e.pointerType!=="mouse")return;delete PFUI.hx[cv.dataset.ch];pfCharts();});
+doc.addEventListener("pointerout",e=>{const cv=e.target.closest&&e.target.closest("#pfPanel canvas[data-ch]");if(!cv||e.pointerType!=="mouse")return;delete PFUI.hx[cv.dataset.ch];pfCharts();});}
+pfPtr(document);
 
 /* ---- the panel: tabs for the thing tapped ---- */
 function pfRows(rows){return rows.filter(Boolean).map(([k,v,c])=>`<div class="${c||""}"><span>${k}</span><b>${v}</b></div>`).join("");}
@@ -339,7 +344,7 @@ function pfRender(force){if(!PFUI.open)return;const o=$("pfOv");if(!o)return;
 {const row=$("v2viewrow"),b=kEl("button","pfopen","Process flow");b.type="button";b.id="pfBtn";b.title="Inputs, process and outputs for today's mill day";row.appendChild(b);
   b.addEventListener("click",()=>{const x=document.querySelector('#v2sheet header button[aria-label="Close panel"]');if(x)x.click();pfOpen();});}
 document.addEventListener("keydown",e=>{if(e.key!=="Escape"||!PFUI.open)return;e.preventDefault();e.stopPropagation();if(PFUI.sel){PFUI.sel=null;pfRender(true);}else pfClose();},true);
-UI_TICKS.push(n=>{if(!PFUI.open)return;const m=$("v2menu");if(m&&!m.hidden){pfClose();return;}if(n%5===0)pfRender();});
+UI_TICKS.push(n=>{if(!PFUI.open)return;const m=$("v2menu");if(m&&!m.hidden&&!POP.on){pfClose();return;}if(n%5===0)pfRender();});
 G3.pfSel=(k,tab,zoom)=>{PFUI.sel=k;PFUI.tab=tab||null;if(zoom)PFUI.zoom=zoom;pfRender(true);};G3.pfMode=m=>{PFUI.mode=m;pfRender(true);};G3.histSum=histSum;G3.histRows=histRows;   // (tests)
 addEventListener("resize",()=>{if(PFUI.open)pfRender(true);});
 G3.pfOpenUI=pfOpen;G3.pfCloseUI=pfClose;G3.pfCalc=pfCalc;G3.simRate=simRate;   // (tests: tools/pflowcheck.py)

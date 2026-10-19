@@ -77,7 +77,7 @@ function dcsAlarms(a,r,L){const al=(on,txt,hi)=>{if(on)L.push([txt,hi]);};
   else if(a==="UTIL"){al(tssNow()>45&&!dcsOn("permit"),"EFFLUENT TSS HI",false);}}
 
 /* ---- setpoint, motor and purge rows ---- */
-const DCARD=k=>{const r=document.querySelector(`#cards .row[data-key="${k}"]`);return r?{inp:r.querySelector("input"),btn:r.querySelector(".auto")}:null;};
+const DCARD=k=>{const cs=$("cards"),r=cs&&cs.querySelector(`.row[data-key="${k}"]`);return r?{inp:r.querySelector("input"),btn:r.querySelector(".auto")}:null;};
 function dcsCardSet(k,v){const c=DCARD(k);if(!c||c.inp.disabled)return;c.inp.value=v;c.inp.dispatchEvent(new Event("input",{bubbles:true}));}
 function dcsCardAuto(k){const c=DCARD(k);if(c&&c.btn&&!c.btn.disabled)c.btn.click();}
 // each setpoint: [key, name, where, min, max, step, get, set, unit, card key for AUTO and the lock (or null), field note]
@@ -121,7 +121,7 @@ function dcsMotRows(a,b){const ms=MOTORS.filter(m=>m.a===a),pg=a==="SPOT"?["hd",
 // keep every row on this screen in step with the sim and the Process flow controls
 function dcsSync(){const o=$("dcsOv");if(!o||o.hidden||!KUI.st)return;const a=KUI.st,defs=dcsSetDefs(a);
   o.querySelectorAll("[data-ds]").forEach(row=>{const d=defs.find(x=>x[0]===row.dataset.ds);if(!d)return;const inp=row.querySelector("[data-dsv]"),c=d[9]?DCARD(d[9]):null,lock=!!(c&&c.inp.disabled)||S.zen;
-    if(inp.max!==String(d[4]))inp.max=d[4];if(inp.min!==String(d[3]))inp.min=d[3];if(document.activeElement!==inp)inp.value=d[6]();inp.disabled=lock||(d[10]&&!G3[d[0]==="spi"?"SPD":"SLC"]);
+    if(inp.max!==String(d[4]))inp.max=d[4];if(inp.min!==String(d[3]))inp.min=d[3];if(actEl(inp)!==inp)inp.value=d[6]();inp.disabled=lock||(d[10]&&!G3[d[0]==="spi"?"SPD":"SLC"]);
     const bv=row.querySelector("[data-dsb]"),t=`${(+d[6]()).toFixed(d[5]<1?1:0)} ${d[8]}`;if(bv.textContent!==t)bv.textContent=t;
     const ab=row.querySelector("[data-dsa]");if(ab&&c){const au=C[d[9]].auto,txt=c.btn?(au?"AUTO":"MANUAL"):"";ab.hidden=!c.btn;ab.textContent=txt;ab.setAttribute("aria-pressed",String(!!au));ab.disabled=lock;}
     row.classList.toggle("locked",lock);});

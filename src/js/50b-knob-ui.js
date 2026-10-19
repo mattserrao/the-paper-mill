@@ -7,7 +7,7 @@ const KUI={panel:null,st:null,tab:"dcs",built:{}};
 const AREA_N={SPOT:"Stock prep",WET:"Wet end",DET:"Dry end"};
 // field knobs the DCS can also set remotely; the guide roll and the oscillator are set at the machine only
 const KREMOTE=new Set(["pulp","ref","agit","couch"]);
-function kuiSync(){G3.knobUI=!S.zen&&!!(KUI.panel||KUI.st||!$("spider").hidden||!$("slice").hidden);}
+function kuiSync(){G3.knobUI=!S.zen&&!!(KUI.panel||(KUI.st&&!POP.on)||!$("spider").hidden||!$("slice").hidden);}
 function kEl(tag,cls,html){const e=document.createElement(tag);if(cls)e.className=cls;if(html!=null)e.innerHTML=html;return e;}
 const kf=(v,d=1)=>(+v).toFixed(d);
 
@@ -29,9 +29,9 @@ function knobCtl(id,where){const d=KNOBN[id],w=kEl("div","kctl"),key=where+"-"+i
 function knobCtlSync(w){const id=w.dataset.k,K=S.knob;
   if(id==="zones"){const z=K?K.z:[];w.querySelectorAll("[data-zv]").forEach(b=>{const v=z[+b.dataset.zv]||0;b.textContent=(v>0?"+":"")+v;b.classList.toggle("moved",v!==0);});}
   else if(id==="guide"){const v=K?K.v:KNOB_IDEAL;w.querySelectorAll("[data-gm]").forEach(b=>b.setAttribute("aria-pressed",String(+b.dataset.gm===v.gm)));
-    const r=w.querySelector("[data-gt]");if(document.activeElement!==r)r.value=v.gt;w.querySelector("[data-gtv]").textContent=(v.gt>0?"+":"")+v.gt+" mm";}
+    const r=w.querySelector("[data-gt]");if(actEl(r)!==r)r.value=v.gt;w.querySelector("[data-gtv]").textContent=(v.gt>0?"+":"")+v.gt+" mm";}
   else if(id==="couch"){const v=knobVal("couch");w.querySelectorAll("[data-cv]").forEach(b=>b.setAttribute("aria-pressed",String(+b.dataset.cv===v)));}
-  else{const d=KNOBN[id],v=knobVal(id),r=w.querySelector("[data-kv]");if(document.activeElement!==r)r.value=v;const b=w.querySelector("[data-kvv]");b.textContent=`${v.toFixed(d.dp||0)} ${d.unit}`;b.classList.toggle("moved",!knobAt(id));}}
+  else{const d=KNOBN[id],v=knobVal(id),r=w.querySelector("[data-kv]");if(actEl(r)!==r)r.value=v;const b=w.querySelector("[data-kvv]");b.textContent=`${v.toFixed(d.dp||0)} ${d.unit}`;b.classList.toggle("moved",!knobAt(id));}}
 // a knob's own readings (process values an operator would see; no hints about what will go wrong)
 function knobReadout(id,r){const R=(k,v)=>`<div><small>${k}</small><b>${v}</b></div>`;
   switch(id){
@@ -67,8 +67,8 @@ function closeKnob(){const p=$("knobP");if(p)p.hidden=true;KUI.panel=null;kuiSyn
 function stationOv(){let o=$("dcsOv");if(o)return o;
   o=kEl("div","overlay top dcsov");o.id="dcsOv";o.hidden=true;
   o.innerHTML=`<div class="dcs" role="dialog" aria-modal="true" aria-labelledby="dcs-h"><div class="dcsh"><b id="dcs-h"></b><div class="seg dcstab" role="group" aria-label="Screen"><button type="button" data-t="dcs">DCS</button><button type="button" data-t="qcs">QCS</button></div>
-    <div class="dcsst" role="group" aria-label="Area"><button type="button" data-a="SPOT">SPOT</button><button type="button" data-a="WET">WET</button><button type="button" data-a="DET">DET</button><button type="button" data-a="UTIL">UTIL</button></div><button aria-label="Close" class="dcsx" id="dcsClose">✕</button></div>
-    <div class="dcsb" id="dcsBody"></div><div class="dcsf"><span id="dcsClock"></span><span>Game slowed to 1 min/s while this screen is open</span></div></div>`;
+    <div class="dcsst" role="group" aria-label="Area"><button type="button" data-a="SPOT">SPOT</button><button type="button" data-a="WET">WET</button><button type="button" data-a="DET">DET</button><button type="button" data-a="UTIL">UTIL</button></div><button type="button" class="dcspop" data-popout="dcs"${POPOK()&&!POP.on?"":" hidden"} title="Open in its own window, for a second monitor">⧉ Second screen</button><button aria-label="Close" class="dcsx" id="dcsClose">✕</button></div>
+    <div class="dcsb" id="dcsBody"></div><div class="dcsf"><span id="dcsClock"></span><span id="dcsSlow">Game slowed to 1 min/s while this screen is open</span></div></div>`;
   document.body.appendChild(o);
   $("dcsClose").addEventListener("click",()=>closeStation());
   o.addEventListener("click",e=>{if(e.target===o)closeStation();});
@@ -76,9 +76,12 @@ function stationOv(){let o=$("dcsOv");if(o)return o;
   o.querySelectorAll("[data-a]").forEach(b=>b.addEventListener("click",()=>{KUI.st=b.dataset.a;stationBuild();}));
 
   return o;}
-function openStation(a,tab){if(S.zen||!AREA_N[a])return;closeKnob();["spider","slice","brian"].forEach(k=>$(k).hidden=true);const o=stationOv();KUI.st=a;if(tab)KUI.tab=tab;o.hidden=false;stationBuild();kuiSync();
+function openStation(a,tab){if(S.zen||!AREA_N[a])return;
+  if(POP.on){KUI.st=a;if(tab)KUI.tab=tab;popShow("dcs");stationBuild();kuiSync();return;}   // v6.5.1: popped out, it just switches the second screen to this area
+  closeKnob();["spider","slice","brian"].forEach(k=>$(k).hidden=true);const o=stationOv();KUI.st=a;if(tab)KUI.tab=tab;o.hidden=false;stationBuild();kuiSync();
   setTimeout(()=>{try{$("dcsClose").focus({preventScroll:true});}catch(_){}},0);}
-function closeStation(quiet){const o=$("dcsOv"),was=o&&!o.hidden;if(o)o.hidden=true;KUI.st=null;if(!quiet){kuiSync();if(was)try{$("gl").focus({preventScroll:true});}catch(_){}}}
+function closeStation(quiet){if(POP.on)return;   // (v6.5.1: a popped-out DCS stays up until docked)
+  const o=$("dcsOv"),was=o&&!o.hidden;if(o)o.hidden=true;KUI.st=null;if(!quiet){kuiSync();if(was)try{$("gl").focus({preventScroll:true});}catch(_){}}}
 // the process picture for each area: equipment boxes and live tags. Coordinates in a 640 x 230 view box.
 const MIMIC={
   SPOT:{title:"PM3 · STOCK PREP",eq:[[14,80,96,70,"PULPER"],[132,95,74,40,"SCREENS"],[228,80,80,70,"STOCK CHEST"],[330,95,78,40,"REFINERS"],[430,80,92,70,"MACHINE CHEST"],[546,100,80,30,"FAN PUMP"]],
@@ -106,6 +109,7 @@ function knobAlarms(a,r){const L=[],al=(on,txt,hi)=>{if(on)L.push([txt,hi]);};co
   return L;}
 function stationBuild(){const o=$("dcsOv");if(!o||!KUI.st)return;const a=KUI.st,M2=MIMIC[a],b=$("dcsBody");
   $("dcs-h").textContent=M2.title+(KUI.tab==="qcs"?" · QCS":" · DCS");
+  {const sl=$("dcsSlow");if(sl)sl.textContent=POP.on?"Second screen · the mill keeps running at your speed":"Game slowed to 1 min/s while this screen is open";}
   o.querySelectorAll("[data-t]").forEach(x=>x.setAttribute("aria-pressed",String(x.dataset.t===KUI.tab)));
   o.querySelectorAll("[data-a]").forEach(x=>x.setAttribute("aria-pressed",String(x.dataset.a===a)));
   b.replaceChildren();
@@ -170,7 +174,7 @@ function kuiCd(cv,r){if(!cv)return;const x=cv.getContext("2d"),W=cv.width,H=cv.h
 function clockOf(t){const m=((Math.floor(t)+360)%1440+1440)%1440,h=Math.floor(m/60),mm=m%60;return `${(h%12)||12}:${String(mm).padStart(2,"0")} ${h<12?"AM":"PM"}`;}
 // Escape closes the DCS or the knob panel and nothing else (capture phase: the sheet and fullscreen handlers don't see it)
 document.addEventListener("keydown",e=>{if(e.key!=="Escape"||!(KUI.st||KUI.panel))return;e.preventDefault();e.stopPropagation();if(KUI.st)closeStation();else closeKnob();},true);
-UI_TICKS.push(()=>{if(S.zen&&(KUI.panel||KUI.st)){closeKnob();closeStation();}kuiSync();if(KUI.panel||KUI.st)kuiRefresh();});
+UI_TICKS.push(()=>{if(S.zen&&(KUI.panel||KUI.st)){closeKnob();closeStation();}kuiSync();if((KUI.panel||KUI.st)&&!(S.zen&&POP.on))kuiRefresh();});
 // taps in the 3D view (29-3d-camera.js) and labels in the knob view (40b)
 G3.knobTap=h=>{if(!h||S.zen)return;if(h.k==="knob")openKnob(h.id);else if(h.k==="station")openStation(h.a,"dcs");else if(h.k==="spider")openSpider();else if(h.k==="slice")openSlice();};
 G3.openKnob=openKnob;G3.openStation=openStation;G3.closeKnobUI=()=>{closeKnob();closeStation();};

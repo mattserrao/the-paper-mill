@@ -1254,6 +1254,32 @@ body.season-lock #pfCtl .card .row[data-key] input,body.season-lock #pfCtl .card
 .mimic .pg.st-warn .pg-bg{stroke:#ffb02e;stroke-width:2.2}.mimic .pg.st-warn .pe{stroke:#ffb02e}.mimic .pg.st-warn .pgn{fill:#ffd77a}
 .mimic .pg.st-trip .pg-bg{stroke:#ff4d42;stroke-width:2.6;fill:#2a1420}.mimic .pg.st-trip .pe{stroke:#ff6b5e}.mimic .pg.st-trip .pgn{fill:#ff8b7f}
 .mimic .pg.st-off>*:not(.pg-bg):not(.pgn):not(title){opacity:.3}.mimic .pg.st-off .pgn{fill:#8ea4c4}.mimic .pg.st-off .pg-bg{stroke-dasharray:4 3}
+
+/* ---------- v6.5.1 second screen: the DCS and the process flow in their own window (50e-popout.js) ----------
+   The window is written by the game and gets a copy of this stylesheet; the two screens move into it as they are. */
+.dcspop{background:#22324f;color:#c3d3ea;border:1px solid #33476a;border-radius:6px;padding:4px 10px;font-weight:700}
+.dcspop:hover{color:#fff;border-color:#4a6390}.dcspop[hidden]{display:none}
+body.pmpop{margin:0;height:100vh;overflow:hidden;display:flex;flex-direction:column;background:#0b1422;color:#dbe6f6}
+body.pmpop [data-popout],body.pmpop #dcsClose,body.pmpop #pfClose{display:none}
+.popbar{display:flex;align-items:center;gap:10px;padding:8px 12px;background:#0f1b2d;border-bottom:1px solid #2c3e5c;flex-wrap:wrap}
+.popbar>b{font:700 14px var(--f-body);letter-spacing:.06em;color:#dbe6f6}
+.popbar .seg{border-color:#33476a}.popbar .seg button{background:transparent;color:#c3d3ea;font-weight:700;padding:5px 14px}
+.popbar .seg button[aria-pressed="true"]{background:#4fd18b;color:#0f1b2d}.popbar .seg button:disabled{opacity:.4;cursor:default}
+.popbar .pb{background:#22324f;color:#dbe6f6;border:1px solid #33476a;border-radius:6px;padding:5px 12px;font-weight:700}
+.popbar .pb:hover{border-color:#4a6390}.popbar .pb[hidden]{display:none}
+.popbar .sp{flex:1}.popbar #popMsg{color:#8ea4c4;font-size:12px}
+.popmain{flex:1;min-height:0;display:grid;gap:10px;padding:10px;grid-template-columns:minmax(0,1fr)}
+.popmain[data-v="both"]{grid-template-columns:minmax(0,5fr) minmax(0,7fr)}
+.popmain[data-v="dcs"] #pfOv,.popmain[data-v="pf"] #dcsOv,.popmain #popZen{display:none}
+body.pmpop.zen .popmain #dcsOv{display:none}body.pmpop.zen .popmain[data-v="dcs"] #popZen{display:grid}
+#popZen{place-items:center;color:#8ea4c4;font-size:14px;border:1px dashed #2c3e5c;border-radius:12px}
+body.pmpop .overlay{position:static;inset:auto;z-index:auto;padding:0;background:none;display:flex;min-height:0;min-width:0}
+body.pmpop .overlay[hidden]{display:none}
+body.pmpop .dcs{width:100%;max-width:none;max-height:none;height:100%;box-shadow:none}
+body.pmpop .popmain[data-v="dcs"] #dcsOv .dcs{max-width:1180px;margin:0 auto}
+/* (side by side, the flow takes its narrow-screen layout: inputs beside the picture, outputs in a row underneath) */
+.popmain[data-v="both"] .pfb{grid-template-columns:200px minmax(0,1fr)}
+.popmain[data-v="both"] .pfout{grid-column:1 / -1;display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr))}.popmain[data-v="both"] .pfout .dcssub{grid-column:1 / -1}
 </style>
 </head>
 <body class="app">
@@ -1436,7 +1462,7 @@ body.season-lock #pfCtl .card .row[data-key] input,body.season-lock #pfCtl .card
 <div class="btns"><button class="primary" id="no3d-retry">Try again</button></div></div></div>
 
 <script type="module">
-const APP_VER="v6.5.0";   // shown in the menu and sent with leaderboard scores (max 12 characters)
+const APP_VER="v6.5.1";   // shown in the menu and sent with leaderboard scores (max 12 characters)
 // TEST BUILDS ONLY (off in releases): turbo speeds 240/480/960 sim min/s for fast playtests. Above 120, crews and maintenance start jobs
 // without waiting for the 3D walk (as with the 3D view off) and outages keep the speed. Set false for a release.
 const TURBO=false,TURBO_FAST=s=>TURBO&&s>120;
@@ -3757,7 +3783,12 @@ function dryMods(m){const D=S.dry;if(!D||S.zen)return;if(D.trim>0)m.speedCap=Mat
 function dryOff(){const D=S.dry,K=S.knob;if(!D||S.zen||(K&&K.any))return 0;return D.m>DRY.spec?clamp((D.m-DRY.spec)/4,0,1):D.m<4?clamp((4-D.m)/2,0,1):0;}
 const dryLimited=()=>!!(S.dry&&S.pm==="run"&&S.dry.dem>=dryCeil(S.dry)-0.5);
 /* ---------- UI wiring ---------- */
-const $=id=>document.getElementById(id);
+// v6.5.1 second screen: the DCS and the process flow can live in a pop-out window (50e-popout.js). Their elements are then
+// in that window's document, so $() looks there when the main page doesn't have the id; actEl() is the focused element
+// of whichever window an input is in.
+const POP={w:null,on:false,view:"dcs"};
+const $=id=>{const e=document.getElementById(id);if(e||!POP.on)return e;try{return POP.w&&!POP.w.closed?POP.w.document.getElementById(id):null;}catch(_){return null;}};
+const actEl=el=>el&&el.ownerDocument?el.ownerDocument.activeElement:document.activeElement;
 const gradeSel=$("grade");
 const GRADE_PLAIN={"23m":"light medium","26m":"medium","30m":"heavy medium","33HT":"high-strength board"};   // v5.1 QA2: the plain names cards use
 Object.keys(GRADES).forEach(k=>{const o=document.createElement("option");o.value=k;o.textContent=`${k} · ${GRADE_PLAIN[k]||""} · ${GRADES[k].bw} lb · $${ECON.price[k]}/t`;gradeSel.appendChild(o);});
@@ -3774,7 +3805,7 @@ rows.forEach(r=>{
 });
 function syncControls(){
   rows.forEach(r=>{const key=r.dataset.key, inp=r.querySelector("input"), btn=r.querySelector(".auto");
-    if(dragging!==key && document.activeElement!==inp) inp.value=C[key].v;
+    if(dragging!==key && actEl(inp)!==inp) inp.value=C[key].v;
     else if(C[key].auto) inp.value=C[key].v;
     r.querySelector(".val").textContent=UNITS[key](C[key].v);
     if(btn){btn.setAttribute("aria-pressed",C[key].auto?"true":"false");btn.textContent=C[key].auto?"AUTO":"MANUAL";}
@@ -11900,7 +11931,7 @@ const KUI={panel:null,st:null,tab:"dcs",built:{}};
 const AREA_N={SPOT:"Stock prep",WET:"Wet end",DET:"Dry end"};
 // field knobs the DCS can also set remotely; the guide roll and the oscillator are set at the machine only
 const KREMOTE=new Set(["pulp","ref","agit","couch"]);
-function kuiSync(){G3.knobUI=!S.zen&&!!(KUI.panel||KUI.st||!$("spider").hidden||!$("slice").hidden);}
+function kuiSync(){G3.knobUI=!S.zen&&!!(KUI.panel||(KUI.st&&!POP.on)||!$("spider").hidden||!$("slice").hidden);}
 function kEl(tag,cls,html){const e=document.createElement(tag);if(cls)e.className=cls;if(html!=null)e.innerHTML=html;return e;}
 const kf=(v,d=1)=>(+v).toFixed(d);
 
@@ -11922,9 +11953,9 @@ function knobCtl(id,where){const d=KNOBN[id],w=kEl("div","kctl"),key=where+"-"+i
 function knobCtlSync(w){const id=w.dataset.k,K=S.knob;
   if(id==="zones"){const z=K?K.z:[];w.querySelectorAll("[data-zv]").forEach(b=>{const v=z[+b.dataset.zv]||0;b.textContent=(v>0?"+":"")+v;b.classList.toggle("moved",v!==0);});}
   else if(id==="guide"){const v=K?K.v:KNOB_IDEAL;w.querySelectorAll("[data-gm]").forEach(b=>b.setAttribute("aria-pressed",String(+b.dataset.gm===v.gm)));
-    const r=w.querySelector("[data-gt]");if(document.activeElement!==r)r.value=v.gt;w.querySelector("[data-gtv]").textContent=(v.gt>0?"+":"")+v.gt+" mm";}
+    const r=w.querySelector("[data-gt]");if(actEl(r)!==r)r.value=v.gt;w.querySelector("[data-gtv]").textContent=(v.gt>0?"+":"")+v.gt+" mm";}
   else if(id==="couch"){const v=knobVal("couch");w.querySelectorAll("[data-cv]").forEach(b=>b.setAttribute("aria-pressed",String(+b.dataset.cv===v)));}
-  else{const d=KNOBN[id],v=knobVal(id),r=w.querySelector("[data-kv]");if(document.activeElement!==r)r.value=v;const b=w.querySelector("[data-kvv]");b.textContent=`${v.toFixed(d.dp||0)} ${d.unit}`;b.classList.toggle("moved",!knobAt(id));}}
+  else{const d=KNOBN[id],v=knobVal(id),r=w.querySelector("[data-kv]");if(actEl(r)!==r)r.value=v;const b=w.querySelector("[data-kvv]");b.textContent=`${v.toFixed(d.dp||0)} ${d.unit}`;b.classList.toggle("moved",!knobAt(id));}}
 // a knob's own readings (process values an operator would see; no hints about what will go wrong)
 function knobReadout(id,r){const R=(k,v)=>`<div><small>${k}</small><b>${v}</b></div>`;
   switch(id){
@@ -11960,8 +11991,8 @@ function closeKnob(){const p=$("knobP");if(p)p.hidden=true;KUI.panel=null;kuiSyn
 function stationOv(){let o=$("dcsOv");if(o)return o;
   o=kEl("div","overlay top dcsov");o.id="dcsOv";o.hidden=true;
   o.innerHTML=`<div class="dcs" role="dialog" aria-modal="true" aria-labelledby="dcs-h"><div class="dcsh"><b id="dcs-h"></b><div class="seg dcstab" role="group" aria-label="Screen"><button type="button" data-t="dcs">DCS</button><button type="button" data-t="qcs">QCS</button></div>
-    <div class="dcsst" role="group" aria-label="Area"><button type="button" data-a="SPOT">SPOT</button><button type="button" data-a="WET">WET</button><button type="button" data-a="DET">DET</button><button type="button" data-a="UTIL">UTIL</button></div><button aria-label="Close" class="dcsx" id="dcsClose">✕</button></div>
-    <div class="dcsb" id="dcsBody"></div><div class="dcsf"><span id="dcsClock"></span><span>Game slowed to 1 min/s while this screen is open</span></div></div>`;
+    <div class="dcsst" role="group" aria-label="Area"><button type="button" data-a="SPOT">SPOT</button><button type="button" data-a="WET">WET</button><button type="button" data-a="DET">DET</button><button type="button" data-a="UTIL">UTIL</button></div><button type="button" class="dcspop" data-popout="dcs"${POPOK()&&!POP.on?"":" hidden"} title="Open in its own window, for a second monitor">⧉ Second screen</button><button aria-label="Close" class="dcsx" id="dcsClose">✕</button></div>
+    <div class="dcsb" id="dcsBody"></div><div class="dcsf"><span id="dcsClock"></span><span id="dcsSlow">Game slowed to 1 min/s while this screen is open</span></div></div>`;
   document.body.appendChild(o);
   $("dcsClose").addEventListener("click",()=>closeStation());
   o.addEventListener("click",e=>{if(e.target===o)closeStation();});
@@ -11969,9 +12000,12 @@ function stationOv(){let o=$("dcsOv");if(o)return o;
   o.querySelectorAll("[data-a]").forEach(b=>b.addEventListener("click",()=>{KUI.st=b.dataset.a;stationBuild();}));
 
   return o;}
-function openStation(a,tab){if(S.zen||!AREA_N[a])return;closeKnob();["spider","slice","brian"].forEach(k=>$(k).hidden=true);const o=stationOv();KUI.st=a;if(tab)KUI.tab=tab;o.hidden=false;stationBuild();kuiSync();
+function openStation(a,tab){if(S.zen||!AREA_N[a])return;
+  if(POP.on){KUI.st=a;if(tab)KUI.tab=tab;popShow("dcs");stationBuild();kuiSync();return;}   // v6.5.1: popped out, it just switches the second screen to this area
+  closeKnob();["spider","slice","brian"].forEach(k=>$(k).hidden=true);const o=stationOv();KUI.st=a;if(tab)KUI.tab=tab;o.hidden=false;stationBuild();kuiSync();
   setTimeout(()=>{try{$("dcsClose").focus({preventScroll:true});}catch(_){}},0);}
-function closeStation(quiet){const o=$("dcsOv"),was=o&&!o.hidden;if(o)o.hidden=true;KUI.st=null;if(!quiet){kuiSync();if(was)try{$("gl").focus({preventScroll:true});}catch(_){}}}
+function closeStation(quiet){if(POP.on)return;   // (v6.5.1: a popped-out DCS stays up until docked)
+  const o=$("dcsOv"),was=o&&!o.hidden;if(o)o.hidden=true;KUI.st=null;if(!quiet){kuiSync();if(was)try{$("gl").focus({preventScroll:true});}catch(_){}}}
 // the process picture for each area: equipment boxes and live tags. Coordinates in a 640 x 230 view box.
 const MIMIC={
   SPOT:{title:"PM3 · STOCK PREP",eq:[[14,80,96,70,"PULPER"],[132,95,74,40,"SCREENS"],[228,80,80,70,"STOCK CHEST"],[330,95,78,40,"REFINERS"],[430,80,92,70,"MACHINE CHEST"],[546,100,80,30,"FAN PUMP"]],
@@ -11999,6 +12033,7 @@ function knobAlarms(a,r){const L=[],al=(on,txt,hi)=>{if(on)L.push([txt,hi]);};co
   return L;}
 function stationBuild(){const o=$("dcsOv");if(!o||!KUI.st)return;const a=KUI.st,M2=MIMIC[a],b=$("dcsBody");
   $("dcs-h").textContent=M2.title+(KUI.tab==="qcs"?" · QCS":" · DCS");
+  {const sl=$("dcsSlow");if(sl)sl.textContent=POP.on?"Second screen · the mill keeps running at your speed":"Game slowed to 1 min/s while this screen is open";}
   o.querySelectorAll("[data-t]").forEach(x=>x.setAttribute("aria-pressed",String(x.dataset.t===KUI.tab)));
   o.querySelectorAll("[data-a]").forEach(x=>x.setAttribute("aria-pressed",String(x.dataset.a===a)));
   b.replaceChildren();
@@ -12063,7 +12098,7 @@ function kuiCd(cv,r){if(!cv)return;const x=cv.getContext("2d"),W=cv.width,H=cv.h
 function clockOf(t){const m=((Math.floor(t)+360)%1440+1440)%1440,h=Math.floor(m/60),mm=m%60;return `${(h%12)||12}:${String(mm).padStart(2,"0")} ${h<12?"AM":"PM"}`;}
 // Escape closes the DCS or the knob panel and nothing else (capture phase: the sheet and fullscreen handlers don't see it)
 document.addEventListener("keydown",e=>{if(e.key!=="Escape"||!(KUI.st||KUI.panel))return;e.preventDefault();e.stopPropagation();if(KUI.st)closeStation();else closeKnob();},true);
-UI_TICKS.push(()=>{if(S.zen&&(KUI.panel||KUI.st)){closeKnob();closeStation();}kuiSync();if(KUI.panel||KUI.st)kuiRefresh();});
+UI_TICKS.push(()=>{if(S.zen&&(KUI.panel||KUI.st)){closeKnob();closeStation();}kuiSync();if((KUI.panel||KUI.st)&&!(S.zen&&POP.on))kuiRefresh();});
 // taps in the 3D view (29-3d-camera.js) and labels in the knob view (40b)
 G3.knobTap=h=>{if(!h||S.zen)return;if(h.k==="knob")openKnob(h.id);else if(h.k==="station")openStation(h.a,"dcs");else if(h.k==="spider")openSpider();else if(h.k==="slice")openSlice();};
 G3.openKnob=openKnob;G3.openStation=openStation;G3.closeKnobUI=()=>{closeKnob();closeStation();};
@@ -12095,7 +12130,7 @@ function pfOv(){let o=$("pfOv");if(o)return o;
   o.innerHTML=`<div class="dcs pf" role="dialog" aria-modal="true" aria-labelledby="pf-h"><div class="dcsh"><b id="pf-h"></b>
     <div class="seg pfrange" role="group" aria-label="Range"><button type="button" data-pd="t">Today</button><button type="button" data-pd="y">Yesterday</button><button type="button" data-pd="w">7 d</button><button type="button" data-pd="r">Run</button></div>
     <label class="pfprior" title="Include the ${HIST_PRIOR} days before you took over"><input type="checkbox" id="pfPrior" checked/> Prior days</label>
-    <button aria-label="Close" class="dcsx" id="pfClose">✕</button></div>
+    <button type="button" class="dcspop" data-popout="pf"${POPOK()&&!POP.on?"":" hidden"} title="Open in its own window, for a second monitor">⧉ Second screen</button><button aria-label="Close" class="dcsx" id="pfClose">✕</button></div>
     <div class="dcsb pfb" id="pfBody"><div class="pfcol pfin" id="pfIn"></div><div class="pfmap mimicw" id="pfMap"></div><div class="pfcol pfout" id="pfOut"></div></div>
     <div class="pfpanel" id="pfPanel" hidden role="region" aria-label="Details"></div>
     <div class="dcsf"><span id="pfClock"></span><span id="pfNote">Live: the mill keeps running</span></div></div>`;
@@ -12108,13 +12143,15 @@ function pfOv(){let o=$("pfOv");if(o)return o;
     const zm=e.target.closest("[data-pz]");if(zm){PFUI.zoom=zm.dataset.pz;pfRender(true);return;}
     const t=e.target.closest("[data-pf]");if(t){let k=t.dataset.pf;if(k.startsWith("drop:"))k="node:"+k.split(":")[1];if(PFUI.sel!==k)PFUI.tab=null;PFUI.sel=PFUI.sel===k?null:k;pfRender(true);}});
   o.querySelector("#pfPrior").addEventListener("change",e=>{PFUI.prior=e.target.checked;pfRender(true);});
-  o.addEventListener("keydown",e=>{if((e.key==="Enter"||e.key===" ")&&e.target.matches("[data-pf][tabindex]")){e.preventDefault();e.target.dispatchEvent(new MouseEvent("click",{bubbles:true}));}});
+  o.addEventListener("keydown",e=>{if((e.key==="Enter"||e.key===" ")&&e.target.matches("[data-pf][tabindex]")){e.preventDefault();e.target.dispatchEvent(new (e.target.ownerDocument.defaultView||window).MouseEvent("click",{bubbles:true}));}});
   return o;}
-function pfOpen(){const o=pfOv();if(G3.closeKnobUI)G3.closeKnobUI();PFUI.open=true;G3.pfOpen=true;PFUI.sel=null;PFUI.mode="t";o.hidden=false;pfRender(true);kuiSync();
+function pfOpen(){if(POP.on){PFUI.open=true;G3.pfOpen=true;popShow("pf");pfRender(true);return;}   // v6.5.1: popped out, it switches the second screen to the flow
+  const o=pfOv();if(G3.closeKnobUI)G3.closeKnobUI();PFUI.open=true;G3.pfOpen=true;PFUI.sel=null;PFUI.mode="t";o.hidden=false;pfRender(true);kuiSync();
   setTimeout(()=>{try{$("pfClose").focus({preventScroll:true});}catch(_){}},0);}
-function pfClose(){pfCtlHome();G3.pfCtlOn=false;const o=$("pfOv");if(o)o.hidden=true;const was=PFUI.open;PFUI.open=false;G3.pfOpen=false;kuiSync();if(was)try{$("gl").focus({preventScroll:true});}catch(_){}}
+function pfClose(){if(POP.on)return;   // (v6.5.1: a popped-out flow stays up until docked)
+  pfCtlHome();G3.pfCtlOn=false;const o=$("pfOv");if(o)o.hidden=true;const was=PFUI.open;PFUI.open=false;G3.pfOpen=false;kuiSync();if(was)try{$("gl").focus({preventScroll:true});}catch(_){}}
 // the picture runs top to bottom on narrow screens
-const pfVert=()=>window.matchMedia("(max-width:760px)").matches;
+const pfVert=()=>{const o=$("pfOv"),w=(o&&o.ownerDocument.defaultView)||window;return w.matchMedia("(max-width:760px)").matches;};   // (v6.5.1: of the window it is in)
 
 /* ---- status of each area right now (today only) ---- */
 const PF_LAMP={dry:["#ffb02e","Dryer-limited"],run:["#4fd18b","Running"],upset:["#ffb02e","Upset"],brk:["#ffb02e","Sheet break"],hay:["#ffb02e","Hayout"],down:["#ff6b5e","Down"],held:["#8ea4c4","Held back"]};
@@ -12274,7 +12311,7 @@ function pfSeries(spec,rows){const daily=PFUI.zoom!=="24h"&&spec.k!=="line",B=ne
 const pfFmt=(v,u)=>v==null?"–":u==="$"?money(v):Math.abs(v)>=1000?Math.round(v).toLocaleString():Math.abs(v)>=100?Math.round(v)+"":Math.abs(v)>=10?v.toFixed(1):v.toFixed(2);
 function pfChartHTML(spec,i){const leg=spec.s.length>1?`<span class="pfleg">${spec.s.map(x=>`<span><i style="background:${x[1]}"></i>${x[0]}</span>`).join("")}</span>`:"";
   return `<div class="pfch"><div class="pfcht"><b>${spec.t}</b><small>${spec.u}${spec.k!=="line"&&spec.k!=="pct"&&spec.u!=="h"?"":""}</small>${leg}</div><canvas data-ch="${i}" height="120"></canvas><div class="pfchr" data-chr="${i}">&nbsp;</div></div>`;}
-function pfDraw(cv,spec,W0){const dpr=Math.min(2,window.devicePixelRatio||1),cw=cv.clientWidth||400,ch=120;if(cv.width!==Math.round(cw*dpr)){cv.width=Math.round(cw*dpr);cv.height=ch*dpr;}
+function pfDraw(cv,spec,W0){const dpr=Math.min(2,(cv.ownerDocument.defaultView||window).devicePixelRatio||1),cw=cv.clientWidth||400,ch=120;if(cv.width!==Math.round(cw*dpr)){cv.width=Math.round(cw*dpr);cv.height=ch*dpr;}
   const x=cv.getContext("2d");x.setTransform(dpr,0,0,dpr,0,0);x.fillStyle="#0f1b2d";x.fillRect(0,0,cw,ch);
   const [h0,h1]=W0,{rows}=PFUI.win,{pts,daily}=pfSeries(spec,rows),L=40,R=cw-6,T=8,Bm=ch-16,X=h=>L+(h-h0)/Math.max(1,h1-h0)*(R-L);
   // prior hours shaded
@@ -12305,20 +12342,23 @@ function pfDraw(cv,spec,W0){const dpr=Math.min(2,window.devicePixelRatio||1),cw=
   // the crosshair
   const hx=PFUI.hx[cv.dataset.ch];if(hx!=null){const h=h0+hx*(h1-h0);x.strokeStyle="rgba(255,255,255,.55)";x.lineWidth=1;x.beginPath();x.moveTo(X(h),T);x.lineTo(X(h),Bm);x.stroke();}
   cv._g={h0,h1,L,R};return pts;}
-function pfReadout(spec,pts,i){const el=document.querySelector(`[data-chr="${i}"]`);if(!el)return;const hx=PFUI.hx[i];
+const pfQ=sel=>{const o=$("pfOv");return o?o.querySelector(sel):null;};
+function pfReadout(spec,pts,i){const el=pfQ(`[data-chr="${i}"]`);if(!el)return;const hx=PFUI.hx[i];
   if(hx==null||!pts.length){const last=pts[pts.length-1];const t=last?`${PFUI.zoom==="24h"||spec.k==="line"?"Latest":"Today"}: `+spec.s.map((s,j)=>(spec.s.length>1?s[0]+" ":"")+pfFmt(last.v[j],spec.u)+(spec.u&&spec.u!=="$"?" "+spec.u:"")).join(" · "):"";if(el.textContent!==t)el.textContent=t||" ";return;}
-  const cv=document.querySelector(`canvas[data-ch="${i}"]`),g=cv&&cv._g;if(!g)return;const h=g.h0+hx*(g.h1-g.h0);let p=null;for(const q of pts)if(q.h<=h)p=q;if(!p)return;
+  const cv=pfQ(`canvas[data-ch="${i}"]`),g=cv&&cv._g;if(!g)return;const h=g.h0+hx*(g.h1-g.h0);let p=null;for(const q of pts)if(q.h<=h)p=q;if(!p)return;
   let t=(p.w===24?pfDayLbl(p.h):pfHourLbl(p.h))+": "+spec.s.map((s,j)=>(spec.s.length>1?s[0]+" ":"")+pfFmt(p.v[j],spec.u)+(spec.u&&spec.u!=="$"?" "+spec.u:"")).join(" · ");
   if(S.hist){const evs=S.hist.ev.filter(([tt,id])=>tt/60>=p.h&&tt/60<p.h+p.w&&(spec.ev===2||id==="outage"||pfRepArea(id)===PFUI.area));if(evs.length&&spec.ev)t+=" · "+evs.slice(0,3).map(([,id,v])=>(id==="outage"?"Outage budget":EV[id]?EV[id].name:id)+" "+money(v)).join(", ");}
   el.textContent=t;}
 function pfCharts(){const P2=$("pfPanel");if(!P2||P2.hidden)return;PFUI.win=histWin(...pfWin());const W0=pfWin();
   P2.querySelectorAll("canvas[data-ch]").forEach(cv=>{const i=cv.dataset.ch,spec=PFUI.specs[i];if(!spec)return;const pts=pfDraw(cv,spec,W0);pfReadout(spec,pts||[],i);});}
 // tap or drag on a chart reads it out; leaving clears it (desktop)
-document.addEventListener("pointermove",e=>{const cv=e.target.closest&&e.target.closest("#pfPanel canvas[data-ch]");if(!cv||!cv._g)return;const r=cv.getBoundingClientRect(),g=cv._g;
+// (v6.5.1: bound on the main page here, and on the second screen when the flow pops out, 50e)
+function pfPtr(doc){doc.addEventListener("pointermove",e=>{const cv=e.target.closest&&e.target.closest("#pfPanel canvas[data-ch]");if(!cv||!cv._g)return;const r=cv.getBoundingClientRect(),g=cv._g;
   PFUI.hx[cv.dataset.ch]=clamp((e.clientX-r.left-g.L)/(g.R-g.L),0,0.9999);pfCharts();});
-document.addEventListener("pointerdown",e=>{const cv=e.target.closest&&e.target.closest("#pfPanel canvas[data-ch]");if(!cv)return;const r=cv.getBoundingClientRect(),g=cv._g;if(!g)return;
+doc.addEventListener("pointerdown",e=>{const cv=e.target.closest&&e.target.closest("#pfPanel canvas[data-ch]");if(!cv)return;const r=cv.getBoundingClientRect(),g=cv._g;if(!g)return;
   PFUI.hx[cv.dataset.ch]=clamp((e.clientX-r.left-g.L)/(g.R-g.L),0,0.9999);pfCharts();});
-document.addEventListener("pointerout",e=>{const cv=e.target.closest&&e.target.closest("#pfPanel canvas[data-ch]");if(!cv||e.pointerType!=="mouse")return;delete PFUI.hx[cv.dataset.ch];pfCharts();});
+doc.addEventListener("pointerout",e=>{const cv=e.target.closest&&e.target.closest("#pfPanel canvas[data-ch]");if(!cv||e.pointerType!=="mouse")return;delete PFUI.hx[cv.dataset.ch];pfCharts();});}
+pfPtr(document);
 
 /* ---- the panel: tabs for the thing tapped ---- */
 function pfRows(rows){return rows.filter(Boolean).map(([k,v,c])=>`<div class="${c||""}"><span>${k}</span><b>${v}</b></div>`).join("");}
@@ -12419,7 +12459,7 @@ function pfRender(force){if(!PFUI.open)return;const o=$("pfOv");if(!o)return;
 {const row=$("v2viewrow"),b=kEl("button","pfopen","Process flow");b.type="button";b.id="pfBtn";b.title="Inputs, process and outputs for today's mill day";row.appendChild(b);
   b.addEventListener("click",()=>{const x=document.querySelector('#v2sheet header button[aria-label="Close panel"]');if(x)x.click();pfOpen();});}
 document.addEventListener("keydown",e=>{if(e.key!=="Escape"||!PFUI.open)return;e.preventDefault();e.stopPropagation();if(PFUI.sel){PFUI.sel=null;pfRender(true);}else pfClose();},true);
-UI_TICKS.push(n=>{if(!PFUI.open)return;const m=$("v2menu");if(m&&!m.hidden){pfClose();return;}if(n%5===0)pfRender();});
+UI_TICKS.push(n=>{if(!PFUI.open)return;const m=$("v2menu");if(m&&!m.hidden&&!POP.on){pfClose();return;}if(n%5===0)pfRender();});
 G3.pfSel=(k,tab,zoom)=>{PFUI.sel=k;PFUI.tab=tab||null;if(zoom)PFUI.zoom=zoom;pfRender(true);};G3.pfMode=m=>{PFUI.mode=m;pfRender(true);};G3.histSum=histSum;G3.histRows=histRows;   // (tests)
 addEventListener("resize",()=>{if(PFUI.open)pfRender(true);});
 G3.pfOpenUI=pfOpen;G3.pfCloseUI=pfClose;G3.pfCalc=pfCalc;G3.simRate=simRate;   // (tests: tools/pflowcheck.py)
@@ -12502,7 +12542,7 @@ function dcsAlarms(a,r,L){const al=(on,txt,hi)=>{if(on)L.push([txt,hi]);};
   else if(a==="UTIL"){al(tssNow()>45&&!dcsOn("permit"),"EFFLUENT TSS HI",false);}}
 
 /* ---- setpoint, motor and purge rows ---- */
-const DCARD=k=>{const r=document.querySelector(`#cards .row[data-key="${k}"]`);return r?{inp:r.querySelector("input"),btn:r.querySelector(".auto")}:null;};
+const DCARD=k=>{const cs=$("cards"),r=cs&&cs.querySelector(`.row[data-key="${k}"]`);return r?{inp:r.querySelector("input"),btn:r.querySelector(".auto")}:null;};
 function dcsCardSet(k,v){const c=DCARD(k);if(!c||c.inp.disabled)return;c.inp.value=v;c.inp.dispatchEvent(new Event("input",{bubbles:true}));}
 function dcsCardAuto(k){const c=DCARD(k);if(c&&c.btn&&!c.btn.disabled)c.btn.click();}
 // each setpoint: [key, name, where, min, max, step, get, set, unit, card key for AUTO and the lock (or null), field note]
@@ -12546,7 +12586,7 @@ function dcsMotRows(a,b){const ms=MOTORS.filter(m=>m.a===a),pg=a==="SPOT"?["hd",
 // keep every row on this screen in step with the sim and the Process flow controls
 function dcsSync(){const o=$("dcsOv");if(!o||o.hidden||!KUI.st)return;const a=KUI.st,defs=dcsSetDefs(a);
   o.querySelectorAll("[data-ds]").forEach(row=>{const d=defs.find(x=>x[0]===row.dataset.ds);if(!d)return;const inp=row.querySelector("[data-dsv]"),c=d[9]?DCARD(d[9]):null,lock=!!(c&&c.inp.disabled)||S.zen;
-    if(inp.max!==String(d[4]))inp.max=d[4];if(inp.min!==String(d[3]))inp.min=d[3];if(document.activeElement!==inp)inp.value=d[6]();inp.disabled=lock||(d[10]&&!G3[d[0]==="spi"?"SPD":"SLC"]);
+    if(inp.max!==String(d[4]))inp.max=d[4];if(inp.min!==String(d[3]))inp.min=d[3];if(actEl(inp)!==inp)inp.value=d[6]();inp.disabled=lock||(d[10]&&!G3[d[0]==="spi"?"SPD":"SLC"]);
     const bv=row.querySelector("[data-dsb]"),t=`${(+d[6]()).toFixed(d[5]<1?1:0)} ${d[8]}`;if(bv.textContent!==t)bv.textContent=t;
     const ab=row.querySelector("[data-dsa]");if(ab&&c){const au=C[d[9]].auto,txt=c.btn?(au?"AUTO":"MANUAL"):"";ab.hidden=!c.btn;ab.textContent=txt;ab.setAttribute("aria-pressed",String(!!au));ab.disabled=lock;}
     row.classList.toggle("locked",lock);});
@@ -12645,6 +12685,76 @@ function dcsPicSync(a){const o=$("dcsOv");if(!o||!PGX[a])return;
   o.querySelectorAll(".mimic [data-pg]").forEach(g=>{const pg=PGX[a][+g.dataset.pg];if(!pg)return;let s;try{s=PG_ST(pg[1]());}catch(e){s="st-ok";}if(g.dataset.s!==s){g.dataset.s=s;g.setAttribute("class","pg "+s);}
     g.querySelectorAll("[data-lv]").forEach(r=>{const f=PG_LV[r.dataset.lv];if(!f)return;const v=f(),h0=+r.dataset.h0,y0=+r.dataset.y0,hh=Math.max(0,h0*v);r.setAttribute("y",(y0+h0-hh).toFixed(1));r.setAttribute("height",hh.toFixed(1));});
     g.querySelectorAll("[data-lvp]").forEach(p=>{const f=PG_LV[p.dataset.lvp];if(f)p.style.opacity=(0.35+0.65*f()).toFixed(2);});});}
+/* ---- v6.5.1 second screen: the DCS and the process flow pop out into their own window, for a second monitor ----
+   Desktop only (a mouse and a big screen; ?popout forces it for tests). Nothing is copied or synced: the game writes the
+   window itself (a copy of the stylesheet, a bar, an empty main) and moves the two screens' elements into it. The same
+   code keeps running them from this page, on the same S, refreshed by the same UI ticks; $() looks in the second window
+   for ids this page doesn't have (08-ui-wiring.js). While popped out the DCS doesn't slow the game (kuiSync), neither
+   screen closes (closeStation / pfClose do nothing), and opening either from the mill (an operator console, Settings)
+   switches the second screen to it. Closing the window, Dock back, or leaving this page puts both screens back here. */
+const POPOK=()=>{try{if(new URLSearchParams(location.search).has("popout"))return true;
+    return matchMedia("(hover:hover) and (pointer:fine)").matches&&Math.max(window.screen.width,window.screen.height)>=1100;}catch(_){return false;}};
+const POPV={dcs:"DCS",pf:"Process flow",both:"Both"};
+try{const v=localStorage.getItem("paper-mill-popview");if(POPV[v])POP.view=v;}catch(_){}
+// which screen shows: an area or the flow opened from the mill shows its own screen, unless both are up side by side
+function popShow(v,force){if(!POP.on)return;if(S.zen&&v==="dcs")v="pf";if(POP.view==="both"&&!force)v="both";
+  POP.view=v;try{localStorage.setItem("paper-mill-popview",v);}catch(_){}
+  const d=POP.w.document,m=d.getElementById("popMain");if(m)m.dataset.v=v;
+  d.querySelectorAll("[data-pv]").forEach(b=>b.setAttribute("aria-pressed",String(b.dataset.pv===v)));
+  if(v!=="pf"){if(!KUI.st)KUI.st="SPOT";stationBuild();}if(v!=="dcs")pfRender(true);}
+// the window takes the page's look: light or dark, the brand colour, season locks, zen
+const POPCLS=["dark","season-lock","zen","surv","app"];
+function popSkin(){const d=POP.w.document,b=d.body,want="pmpop "+POPCLS.filter(c=>document.body.classList.contains(c)).join(" ");
+  if(b.className!==want.trim())b.className=want.trim();
+  const st=document.documentElement.style.cssText;if(d.documentElement.style.cssText!==st)d.documentElement.style.cssText=st;
+  const t=`${MILL.name||"The Paper Mill"} · Second screen`;if(d.title!==t)d.title=t;const h=d.getElementById("popT");if(h&&h.textContent!==t.toUpperCase())h.textContent=t.toUpperCase();
+  d.querySelectorAll('[data-pv="dcs"],[data-pv="both"]').forEach(x=>x.disabled=!!S.zen);if(S.zen&&POP.view!=="pf")popShow("pf",true);}
+function popMsg(t){const e=POP.w&&POP.w.document.getElementById("popMsg");if(e)e.textContent=t||"";}
+function popOpen(v){v=POPV[v]?v:POP.view;
+  if(POP.on){let ok=false;try{ok=POP.w&&!POP.w.closed;}catch(_){}if(ok){popShow(v,true);try{POP.w.focus();}catch(_){}return true;}popDock();}
+  const sw=window.screen,W=Math.min(1600,(sw.availWidth||1440)-40),H=Math.min(1000,(sw.availHeight||900)-60);
+  let w=null;try{w=window.open("","pmSecondScreen",`popup=yes,width=${W},height=${H}`);}catch(_){}
+  if(!w){BANNERS.push({text:"The browser blocked the second screen. Allow pop-ups for this page, then try again.",t:null,tag:"WINDOW"});while(BANNERS.length>3)BANNERS.splice(1,1);diag("popout: blocked");return false;}
+  const d=w.document;d.open();d.write('<!doctype html><html lang="en"><head><meta charset="utf-8"><title>The Paper Mill · Second screen</title></head><body class="pmpop"></body></html>');d.close();
+  document.querySelectorAll('head style,head link[rel="stylesheet"]').forEach(n=>d.head.appendChild(d.importNode(n,true)));
+  d.body.innerHTML=`<header class="popbar"><b id="popT"></b><div class="seg" role="group" aria-label="Show">${Object.entries(POPV).map(([k,l])=>`<button type="button" data-pv="${k}">${l}</button>`).join("")}</div>
+    <span class="sp"></span><span id="popMsg"></span><button type="button" class="pb" id="popMove" hidden title="Move this window to the screen the game isn't on">Move to other monitor</button>
+    <button type="button" class="pb" id="popDock" title="Put the DCS and process flow back in the game window">Dock back</button></header><main class="popmain" id="popMain"><div id="popZen">No DCS in Zen mode: the process flow keeps running.</div></main>`;
+  POP.w=w;POP.on=true;
+  const so=stationOv(),po=pfOv(),m=d.getElementById("popMain");m.append(so,po);so.hidden=false;po.hidden=false;
+  if(!KUI.st)KUI.st="SPOT";if(!PFUI.open){PFUI.sel=null;PFUI.mode="t";}PFUI.open=true;G3.pfOpen=true;
+  pfPtr(d);
+  d.querySelectorAll("[data-pv]").forEach(b=>b.addEventListener("click",()=>popShow(b.dataset.pv,true)));
+  d.getElementById("popDock").addEventListener("click",()=>popDock());
+  const mv=d.getElementById("popMove");if("getScreenDetails" in w){mv.hidden=false;mv.addEventListener("click",()=>popMove());}
+  w.addEventListener("pagehide",()=>{if(POP.w===w)popDock(true);});
+  w.addEventListener("resize",()=>{if(POP.on&&POP.view!=="dcs")pfRender(true);});
+  d.addEventListener("keydown",e=>{if(e.key==="Escape"&&PFUI.sel){e.preventDefault();PFUI.sel=null;pfRender(true);}});
+  popSkin();popShow(v,true);kuiSync();try{w.focus();}catch(_){}
+  diag("popout: opened ("+v+")");return true;}
+// on to another monitor, where the browser can say which (Chrome and Edge, with the person's permission)
+async function popMove(){const w=POP.w;if(!w)return;try{const sd=await w.getScreenDetails(),cx=window.screenX+window.outerWidth/2,cy=window.screenY+window.outerHeight/2;
+    const s=sd.screens.find(s=>!(cx>=s.left&&cx<s.left+s.width&&cy>=s.top&&cy<s.top+s.height));
+    if(!s){popMsg("Only one monitor found");return;}w.moveTo(s.availLeft,s.availTop);w.resizeTo(s.availWidth,s.availHeight);popMsg("");}
+  catch(e){popMsg("Drag this window to your other monitor");}}
+// back into the game window: both screens closed, the area controls home (they may be in the flow's Controls tab)
+function popDock(closing){if(!POP.on)return;const so=$("dcsOv"),po=$("pfOv"),w=POP.w;
+  try{pfCtlHome();}catch(_){}
+  POP.on=false;POP.w=null;
+  [so,po].forEach(o=>{if(o){o.hidden=true;try{document.body.appendChild(o);}catch(_){}}});
+  KUI.st=null;PFUI.open=false;G3.pfOpen=false;G3.pfCtlOn=false;kuiSync();
+  if(!closing)try{if(w&&!w.closed)w.close();}catch(_){}
+  diag("popout: docked");}
+G3.popOpen=popOpen;G3.popDock=popDock;G3.popState=()=>({on:POP.on,view:POP.view,st:KUI.st,pf:PFUI.open});   // (tests: tools/popoutcheck.py)
+// the Second screen buttons (DCS and process flow headers, Settings > View): desktop only, hidden once popped out
+document.addEventListener("click",e=>{const b=e.target.closest&&e.target.closest("[data-popout]");if(b){e.preventDefault();popOpen(b.dataset.popout);}});
+{const row=$("v2viewrow");if(row){const b=kEl("button","pfopen","⧉ Second screen");b.type="button";b.id="popBtn";b.dataset.popout="both";b.hidden=true;
+    b.title="DCS and process flow in their own window, for a second monitor";row.appendChild(b);
+    b.addEventListener("click",()=>{const x=document.querySelector('#v2sheet header button[aria-label="Close panel"]');if(x)x.click();},true);}}
+UI_TICKS.push(()=>{const ok=POPOK();
+  if(POP.on){let gone=true;try{gone=!POP.w||POP.w.closed;}catch(_){}if(gone){popDock(true);return;}popSkin();}
+  [$("popBtn"),...(POP.on?[]:[$("dcsOv"),$("pfOv")].filter(Boolean).map(o=>o.querySelector("[data-popout]")))].forEach(b=>{if(b){const h=!ok||POP.on;if(b.hidden!==h)b.hidden=h;}});});
+addEventListener("pagehide",()=>{try{if(POP.w&&!POP.w.closed)POP.w.close();}catch(_){}});
 
 /* =========================== v2 app shell wiring =========================== */
 (function(){
@@ -13411,7 +13521,7 @@ function camPullOn(){try{return localStorage.getItem("paper-mill-campull")!=="of
    (within 700 ms per tap) and a list of every version's one-line note pops up, newest first. The list comes from
    VERSION-NOTES.txt at the repo root: build.py swaps it in for the placeholder below, so adding a line there with each
    release keeps the pop-up current (build.py warns when APP_VER has no line). ---------- */
-{const VNOTES=[["4.0.0", "Graphics Overhaul: 60 FPS on iPhone, ~80% Fewer Draw Calls"], ["4.0.1", "Performance Follow-Up, Show FPS Option and Device Autotest"], ["4.0.2", "Economy Rebalance and Smoother Upset Labels"], ["4.1.0", "Four Environments, Seeded Mills, Bottlenecks, Graphics Tiers and Site Music"], ["4.2.0", "New Site Maps, Rare Sights, Zen Map Rotation and Economics Fixes"], ["4.2.0-s", "Save and Continue Season (Test)"], ["4.2.1", "Save/Continue, Settings Panel and Outage Speed Fix"], ["4.2.2-t", "Bayou Gator Sight Reworked (Test)"], ["4.2.2-t2", "Gator Bass Riff (Test)"], ["4.2.2-t3", "Gator Riff Removed, Wide Camera Framing (Test)"], ["4.2.2-t4", "Gator Scene Shortened and Widened (Test)"], ["4.2.2-t5", "One Rare Sight per Map in Zen (Test)"], ["4.2.2", "Rare Sights Reworked, Bird Strike Upset, Mill Report Tab"], ["4.2.3-t", "Cowboys, Bigfoot and Tugboat Sights Reworked (Test)"], ["4.2.3", "Laptop Battery Saving (Default GPU)"], ["4.2.4", "$25M Goal Removed and Quick Fixes"], ["4.2.5", "Random Bottleneck per Season and Accessibility Improvements"], ["4.3.0-t1", "Survival Mode (Test)"], ["4.4.0-t1", "Mill Leaders in Survival (Test)"], ["4.4.0-t2", "Painted Leader Portraits (Test)"], ["4.4.0-t3", "Leader Redesign, 4-Day Waves and Fixes (Test)"], ["5.0.0", "Survival Mode Release with Mill Leaders"], ["5.0.1", "Results Dialog and Game Speed Fixes"], ["5.0.2", "Report Card Label Fixes"], ["5.0.3", "Survival Playtest Fixes (Test)"], ["5.0.4", "Playtest Review: Dot Auto-Fix and Shipping Fix (Test)"], ["5.0.5", "Polish Rounds from Survival Playtests"], ["5.0.6", "Survival QA Fixes, Opt-In Outage Watch, Leaderboard Filters"], ["5.1.0", "Civics Meters and Leaders in Seasons (Test)"], ["5.4.0", "Title Screen, Civics in the World and Dark Mode"], ["5.4.1", "Loading Splash, No Old-Menu Flash"], ["5.4.2", "Graphics Quality on the Title Screen"], ["5.5.0", "Performance Improvements"], ["5.6.0", "Fiddly Knobs, DCS/QCS Screens and Knobs View"], ["5.7.0", "Catching Failures Early: Tells, Daily Rounds, Vibration Report, Outage Prep"], ["5.7.1", "Bottom Menu Reorder, Settings Back on the Right"], ["5.7.2", "Help Page with Game Guide and Glossary"], ["5.7.3", "Bare Graphics Mode for Weak Phones"], ["5.7.4", "Version Notes Pop-Up (Triple-Tap the Version Number)"], ["6.1.0-t1", "Isometric Paper View: Fixed Camera, Cut-Outs, Drop Shadows, Cutaways, Season Palettes (Test)"], ["6.1.0-t2", "Iso Round 2: Cut-Outs Always Paper, GPU Pictures, Stop-Motion World, Fewer Draws (Test)"], ["6.1.0-t3", "Iso Round 3: iPhone Batching, Instanced Cans, Sign Atlas, Lighter Frames (Test)"], ["6.1.0-t4", "Iso Fixes: Operators and Fork-Trucks Back, Less Stutter (Test)"], ["6.1.0-t5", "Cut-Out Edge Artifact Fixed (Test)"], ["6.1.0-t6", "Iso Optimization: Hidden Objects Cost Nothing, Lighter Moving Batches (Test)"], ["6.1.0-t7", "Iso Triangle Cut: Paper-Card Trees, Flat Ground, Hidden Faces Gone, Plain Boxes (Test)"], ["6.1.0-t8", "Paper Palette: 40 Colours, Flat Surfaces, Paper Grain, Fewer Draws (Test)"], ["6.1.0-t9", "Reel Fix: Growing Reel Draws Again (Test)"], ["6.1.0-t10", "Draw Cut 2: Colour in the Matrix, Merged Roofs, Uploads on Change, Culling Fix, Parked Groups (Test)"], ["6.1.0-t11", "QA Fixes: Cut-Outs Never Drawn as Loose 3D Parts, Fallback Shows 3D, Roofs On or Off per Zoom Step (Test)"], ["6.1.0-t12", "Paper Smoke, Blinking Lights, Stronger Seasons, Sharper Phones, Instanced Upsets, Pictures at Start (Test)"], ["6.1.0-t13", "Paper Effects: Flames, Child-Made Tornado, Lamp Cones, Flags, Paper Water, Visible Weather (Test)"], ["6.1.0-t14", "Paper Upsets: Cut-Out Props, Paper Pigeon, Paper Sparks, Steam, Fireworks, Ice and Flood (Test)"], ["6.1.0-t15", "Beaver Reworked as One Smaller Cut-Out (Test)"], ["6.1.0-t16", "Paper Props Dim at Night, Labels Never Overlap, Fewer Cut-Out Pictures (Test)"], ["6.1.0-t17", "Bird on the Power Lines Cut-Scene Plays When Set Off From the Upsets List (Test)"], ["6.1.0-t18", "Zen Close-Ups Fixed, Rare Sights as Paper Cut-Outs, Tilt-Shift Diorama Look (Test)"], ["6.1.0-t19", "Narrower Tilt-Shift Band, Winder Trash Can Out of the Broke Hole (Test)"], ["6.1.0-t20", "Balance: Rounds Pay More, Capacity and Maintenance Upgrades Re-Priced"], ["6.1.0", "Paper Diorama: Isometric Paper Art Style, Cut-Out People and Upsets, Tilt-Shift, Rounds Pay More, Upgrades Re-Priced"], ["6.1.1", "Phone Fixes: Gentler Tilt-Shift on Tall Screens, Cut-Out People No Longer Blank on iPhone"], ["6.1.2", "iPhone: Cut-Out Self-Test Retries, People Keep Their Colours in the 3D Fallback"], ["6.1.3", "Broke Hole by the Winder Looks Like a Floor Opening (Was a Black Square)"], ["6.1.4", "Tilt-Shift Removed"], ["6.2.0", "Zen Free Camera: Perspective Zen Shots, 3D People in Zen, Cleaner River Water"], ["6.3.0-f1", "Process Flow Overview (Test): Inputs, Mill Areas and Outputs for the Mill Day, in Settings"], ["6.3.0-f2", "Process Flow: the Game Keeps Running While It's Open (Test)"], ["6.3.0", "Process Flow Overview: Inputs, Mill Areas and Outputs for the Mill Day (Settings > View)"], ["6.4.0", "Zen Shots Review: Shuffle-Bag Shot Order, Landscape Shots Rebuilt, Close Rare Sights"], ["6.5.0-a1", "Digital Twin A (Test): Hourly History, 14 Prior Days, 7 d / Run Ranges, Area Trends and Uptime"], ["6.5.0-b1", "Digital Twin B (Test): Real Freight Costs with a Diesel Index, Area Controls Moved into Process Flow"], ["6.5.0-b2", "Market Pricing (Test): 2026 OCC and Energy Costs, Diesel in $/gal, Desert Long Haul, Real Steam Rates"], ["6.5.0-b3", "DCS Expansion (Test): Full SPOT, WET and DET Pictures, a UTIL Screen, Motors and Reject Purges"], ["6.5.0-b4", "DCS Pictograms (Test): Equipment Drawn as Classic DCS Symbols, Colour Only When Something's Wrong"], ["6.5.0-b5", "The Dryer Limit (Test): Speed and Grade Load the Dryers, a Wet Sheet Fails Spec and Slows the Machine"], ["6.5.0", "Digital Twin: Process Flow Trends and Controls, Real Freight and Market Costs, Full DCS, Dryer Limit, Rebalance"]];
+{const VNOTES=[["4.0.0", "Graphics Overhaul: 60 FPS on iPhone, ~80% Fewer Draw Calls"], ["4.0.1", "Performance Follow-Up, Show FPS Option and Device Autotest"], ["4.0.2", "Economy Rebalance and Smoother Upset Labels"], ["4.1.0", "Four Environments, Seeded Mills, Bottlenecks, Graphics Tiers and Site Music"], ["4.2.0", "New Site Maps, Rare Sights, Zen Map Rotation and Economics Fixes"], ["4.2.0-s", "Save and Continue Season (Test)"], ["4.2.1", "Save/Continue, Settings Panel and Outage Speed Fix"], ["4.2.2-t", "Bayou Gator Sight Reworked (Test)"], ["4.2.2-t2", "Gator Bass Riff (Test)"], ["4.2.2-t3", "Gator Riff Removed, Wide Camera Framing (Test)"], ["4.2.2-t4", "Gator Scene Shortened and Widened (Test)"], ["4.2.2-t5", "One Rare Sight per Map in Zen (Test)"], ["4.2.2", "Rare Sights Reworked, Bird Strike Upset, Mill Report Tab"], ["4.2.3-t", "Cowboys, Bigfoot and Tugboat Sights Reworked (Test)"], ["4.2.3", "Laptop Battery Saving (Default GPU)"], ["4.2.4", "$25M Goal Removed and Quick Fixes"], ["4.2.5", "Random Bottleneck per Season and Accessibility Improvements"], ["4.3.0-t1", "Survival Mode (Test)"], ["4.4.0-t1", "Mill Leaders in Survival (Test)"], ["4.4.0-t2", "Painted Leader Portraits (Test)"], ["4.4.0-t3", "Leader Redesign, 4-Day Waves and Fixes (Test)"], ["5.0.0", "Survival Mode Release with Mill Leaders"], ["5.0.1", "Results Dialog and Game Speed Fixes"], ["5.0.2", "Report Card Label Fixes"], ["5.0.3", "Survival Playtest Fixes (Test)"], ["5.0.4", "Playtest Review: Dot Auto-Fix and Shipping Fix (Test)"], ["5.0.5", "Polish Rounds from Survival Playtests"], ["5.0.6", "Survival QA Fixes, Opt-In Outage Watch, Leaderboard Filters"], ["5.1.0", "Civics Meters and Leaders in Seasons (Test)"], ["5.4.0", "Title Screen, Civics in the World and Dark Mode"], ["5.4.1", "Loading Splash, No Old-Menu Flash"], ["5.4.2", "Graphics Quality on the Title Screen"], ["5.5.0", "Performance Improvements"], ["5.6.0", "Fiddly Knobs, DCS/QCS Screens and Knobs View"], ["5.7.0", "Catching Failures Early: Tells, Daily Rounds, Vibration Report, Outage Prep"], ["5.7.1", "Bottom Menu Reorder, Settings Back on the Right"], ["5.7.2", "Help Page with Game Guide and Glossary"], ["5.7.3", "Bare Graphics Mode for Weak Phones"], ["5.7.4", "Version Notes Pop-Up (Triple-Tap the Version Number)"], ["6.1.0-t1", "Isometric Paper View: Fixed Camera, Cut-Outs, Drop Shadows, Cutaways, Season Palettes (Test)"], ["6.1.0-t2", "Iso Round 2: Cut-Outs Always Paper, GPU Pictures, Stop-Motion World, Fewer Draws (Test)"], ["6.1.0-t3", "Iso Round 3: iPhone Batching, Instanced Cans, Sign Atlas, Lighter Frames (Test)"], ["6.1.0-t4", "Iso Fixes: Operators and Fork-Trucks Back, Less Stutter (Test)"], ["6.1.0-t5", "Cut-Out Edge Artifact Fixed (Test)"], ["6.1.0-t6", "Iso Optimization: Hidden Objects Cost Nothing, Lighter Moving Batches (Test)"], ["6.1.0-t7", "Iso Triangle Cut: Paper-Card Trees, Flat Ground, Hidden Faces Gone, Plain Boxes (Test)"], ["6.1.0-t8", "Paper Palette: 40 Colours, Flat Surfaces, Paper Grain, Fewer Draws (Test)"], ["6.1.0-t9", "Reel Fix: Growing Reel Draws Again (Test)"], ["6.1.0-t10", "Draw Cut 2: Colour in the Matrix, Merged Roofs, Uploads on Change, Culling Fix, Parked Groups (Test)"], ["6.1.0-t11", "QA Fixes: Cut-Outs Never Drawn as Loose 3D Parts, Fallback Shows 3D, Roofs On or Off per Zoom Step (Test)"], ["6.1.0-t12", "Paper Smoke, Blinking Lights, Stronger Seasons, Sharper Phones, Instanced Upsets, Pictures at Start (Test)"], ["6.1.0-t13", "Paper Effects: Flames, Child-Made Tornado, Lamp Cones, Flags, Paper Water, Visible Weather (Test)"], ["6.1.0-t14", "Paper Upsets: Cut-Out Props, Paper Pigeon, Paper Sparks, Steam, Fireworks, Ice and Flood (Test)"], ["6.1.0-t15", "Beaver Reworked as One Smaller Cut-Out (Test)"], ["6.1.0-t16", "Paper Props Dim at Night, Labels Never Overlap, Fewer Cut-Out Pictures (Test)"], ["6.1.0-t17", "Bird on the Power Lines Cut-Scene Plays When Set Off From the Upsets List (Test)"], ["6.1.0-t18", "Zen Close-Ups Fixed, Rare Sights as Paper Cut-Outs, Tilt-Shift Diorama Look (Test)"], ["6.1.0-t19", "Narrower Tilt-Shift Band, Winder Trash Can Out of the Broke Hole (Test)"], ["6.1.0-t20", "Balance: Rounds Pay More, Capacity and Maintenance Upgrades Re-Priced"], ["6.1.0", "Paper Diorama: Isometric Paper Art Style, Cut-Out People and Upsets, Tilt-Shift, Rounds Pay More, Upgrades Re-Priced"], ["6.1.1", "Phone Fixes: Gentler Tilt-Shift on Tall Screens, Cut-Out People No Longer Blank on iPhone"], ["6.1.2", "iPhone: Cut-Out Self-Test Retries, People Keep Their Colours in the 3D Fallback"], ["6.1.3", "Broke Hole by the Winder Looks Like a Floor Opening (Was a Black Square)"], ["6.1.4", "Tilt-Shift Removed"], ["6.2.0", "Zen Free Camera: Perspective Zen Shots, 3D People in Zen, Cleaner River Water"], ["6.3.0-f1", "Process Flow Overview (Test): Inputs, Mill Areas and Outputs for the Mill Day, in Settings"], ["6.3.0-f2", "Process Flow: the Game Keeps Running While It's Open (Test)"], ["6.3.0", "Process Flow Overview: Inputs, Mill Areas and Outputs for the Mill Day (Settings > View)"], ["6.4.0", "Zen Shots Review: Shuffle-Bag Shot Order, Landscape Shots Rebuilt, Close Rare Sights"], ["6.5.0-a1", "Digital Twin A (Test): Hourly History, 14 Prior Days, 7 d / Run Ranges, Area Trends and Uptime"], ["6.5.0-b1", "Digital Twin B (Test): Real Freight Costs with a Diesel Index, Area Controls Moved into Process Flow"], ["6.5.0-b2", "Market Pricing (Test): 2026 OCC and Energy Costs, Diesel in $/gal, Desert Long Haul, Real Steam Rates"], ["6.5.0-b3", "DCS Expansion (Test): Full SPOT, WET and DET Pictures, a UTIL Screen, Motors and Reject Purges"], ["6.5.0-b4", "DCS Pictograms (Test): Equipment Drawn as Classic DCS Symbols, Colour Only When Something's Wrong"], ["6.5.0-b5", "The Dryer Limit (Test): Speed and Grade Load the Dryers, a Wet Sheet Fails Spec and Slows the Machine"], ["6.5.0", "Digital Twin: Process Flow Trends and Controls, Real Freight and Market Costs, Full DCS, Dryer Limit, Rebalance"], ["6.5.1", "Second Screen: Pop the DCS and Process Flow Out to Their Own Window for a Second Monitor (Desktop)"]];
   let ov=null,held=false;
   function render(){
     const cur=APP_VER.replace(/^v/i,""),rows=VNOTES.slice().reverse().map(([v,n])=>

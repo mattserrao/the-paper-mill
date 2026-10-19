@@ -1235,3 +1235,29 @@ body.season-lock #pfCtl .card .row[data-key] input,body.season-lock #pfCtl .card
 .mimic .pg.st-warn .pg-bg{stroke:#ffb02e;stroke-width:2.2}.mimic .pg.st-warn .pe{stroke:#ffb02e}.mimic .pg.st-warn .pgn{fill:#ffd77a}
 .mimic .pg.st-trip .pg-bg{stroke:#ff4d42;stroke-width:2.6;fill:#2a1420}.mimic .pg.st-trip .pe{stroke:#ff6b5e}.mimic .pg.st-trip .pgn{fill:#ff8b7f}
 .mimic .pg.st-off>*:not(.pg-bg):not(.pgn):not(title){opacity:.3}.mimic .pg.st-off .pgn{fill:#8ea4c4}.mimic .pg.st-off .pg-bg{stroke-dasharray:4 3}
+
+/* ---------- v6.5.1 second screen: the DCS and the process flow in their own window (50e-popout.js) ----------
+   The window is written by the game and gets a copy of this stylesheet; the two screens move into it as they are. */
+.dcspop{background:#22324f;color:#c3d3ea;border:1px solid #33476a;border-radius:6px;padding:4px 10px;font-weight:700}
+.dcspop:hover{color:#fff;border-color:#4a6390}.dcspop[hidden]{display:none}
+body.pmpop{margin:0;height:100vh;overflow:hidden;display:flex;flex-direction:column;background:#0b1422;color:#dbe6f6}
+body.pmpop [data-popout],body.pmpop #dcsClose,body.pmpop #pfClose{display:none}
+.popbar{display:flex;align-items:center;gap:10px;padding:8px 12px;background:#0f1b2d;border-bottom:1px solid #2c3e5c;flex-wrap:wrap}
+.popbar>b{font:700 14px var(--f-body);letter-spacing:.06em;color:#dbe6f6}
+.popbar .seg{border-color:#33476a}.popbar .seg button{background:transparent;color:#c3d3ea;font-weight:700;padding:5px 14px}
+.popbar .seg button[aria-pressed="true"]{background:#4fd18b;color:#0f1b2d}.popbar .seg button:disabled{opacity:.4;cursor:default}
+.popbar .pb{background:#22324f;color:#dbe6f6;border:1px solid #33476a;border-radius:6px;padding:5px 12px;font-weight:700}
+.popbar .pb:hover{border-color:#4a6390}.popbar .pb[hidden]{display:none}
+.popbar .sp{flex:1}.popbar #popMsg{color:#8ea4c4;font-size:12px}
+.popmain{flex:1;min-height:0;display:grid;gap:10px;padding:10px;grid-template-columns:minmax(0,1fr)}
+.popmain[data-v="both"]{grid-template-columns:minmax(0,5fr) minmax(0,7fr)}
+.popmain[data-v="dcs"] #pfOv,.popmain[data-v="pf"] #dcsOv,.popmain #popZen{display:none}
+body.pmpop.zen .popmain #dcsOv{display:none}body.pmpop.zen .popmain[data-v="dcs"] #popZen{display:grid}
+#popZen{place-items:center;color:#8ea4c4;font-size:14px;border:1px dashed #2c3e5c;border-radius:12px}
+body.pmpop .overlay{position:static;inset:auto;z-index:auto;padding:0;background:none;display:flex;min-height:0;min-width:0}
+body.pmpop .overlay[hidden]{display:none}
+body.pmpop .dcs{width:100%;max-width:none;max-height:none;height:100%;box-shadow:none}
+body.pmpop .popmain[data-v="dcs"] #dcsOv .dcs{max-width:1180px;margin:0 auto}
+/* (side by side, the flow takes its narrow-screen layout: inputs beside the picture, outputs in a row underneath) */
+.popmain[data-v="both"] .pfb{grid-template-columns:200px minmax(0,1fr)}
+.popmain[data-v="both"] .pfout{grid-column:1 / -1;display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr))}.popmain[data-v="both"] .pfout .dcssub{grid-column:1 / -1}

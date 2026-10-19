@@ -1,5 +1,10 @@
 /* ---------- UI wiring ---------- */
-const $=id=>document.getElementById(id);
+// v6.5.1 second screen: the DCS and the process flow can live in a pop-out window (50e-popout.js). Their elements are then
+// in that window's document, so $() looks there when the main page doesn't have the id; actEl() is the focused element
+// of whichever window an input is in.
+const POP={w:null,on:false,view:"dcs"};
+const $=id=>{const e=document.getElementById(id);if(e||!POP.on)return e;try{return POP.w&&!POP.w.closed?POP.w.document.getElementById(id):null;}catch(_){return null;}};
+const actEl=el=>el&&el.ownerDocument?el.ownerDocument.activeElement:document.activeElement;
 const gradeSel=$("grade");
 const GRADE_PLAIN={"23m":"light medium","26m":"medium","30m":"heavy medium","33HT":"high-strength board"};   // v5.1 QA2: the plain names cards use
 Object.keys(GRADES).forEach(k=>{const o=document.createElement("option");o.value=k;o.textContent=`${k} · ${GRADE_PLAIN[k]||""} · ${GRADES[k].bw} lb · $${ECON.price[k]}/t`;gradeSel.appendChild(o);});
@@ -16,7 +21,7 @@ rows.forEach(r=>{
 });
 function syncControls(){
   rows.forEach(r=>{const key=r.dataset.key, inp=r.querySelector("input"), btn=r.querySelector(".auto");
-    if(dragging!==key && document.activeElement!==inp) inp.value=C[key].v;
+    if(dragging!==key && actEl(inp)!==inp) inp.value=C[key].v;
     else if(C[key].auto) inp.value=C[key].v;
     r.querySelector(".val").textContent=UNITS[key](C[key].v);
     if(btn){btn.setAttribute("aria-pressed",C[key].auto?"true":"false");btn.textContent=C[key].auto?"AUTO":"MANUAL";}

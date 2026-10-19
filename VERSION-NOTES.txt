@@ -79,3 +79,4 @@ One line per version, oldest first. Add a line here with every release: build.py
 6.5.0-b4   DCS Pictograms (Test): Equipment Drawn as Classic DCS Symbols, Colour Only When Something's Wrong
 6.5.0-b5   The Dryer Limit (Test): Speed and Grade Load the Dryers, a Wet Sheet Fails Spec and Slows the Machine
 6.5.0      Digital Twin: Process Flow Trends and Controls, Real Freight and Market Costs, Full DCS, Dryer Limit, Rebalance
+6.5.1      Second Screen: Pop the DCS and Process Flow Out to Their Own Window for a Second Monitor (Desktop)
