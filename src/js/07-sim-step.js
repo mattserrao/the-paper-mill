@@ -26,7 +26,7 @@ function step(dt){
   const wxTruck=S.wx==="snow"?0.7:S.wx==="fog"?0.85:1,siteIn=P.siteIn||1;
   if(!M.noIn) S.inPhase+=dt*C.inRate.v/60*S.inJit*wxTruck*siteIn;
   while(S.inPhase>=1){S.inPhase-=1;S.inJit=0.6+rand("flow")*0.8;
-    if(S.inQ.length<P.maxQueue){S.inQ.push(newTruck("in"));S.tot.inTrucks++;} else S.tot.turned++;}
+    if(S.inQ.length<P.maxQueue){const tr=baleGrade(newTruck("in"));if(!baleGate(tr))S.inQ.push(tr);S.tot.inTrucks++;} else S.tot.turned++;}
   if(!M.docksClosed) for(let d=0;d<P.doors;d++) if(!S.inDock[d]&&S.inQ.length) S.inDock[d]=S.inQ.shift();
   // 2 receiving: drivers split between pulper feed and unloading
   const level0=S.tank/P.tankCap;
@@ -39,13 +39,15 @@ function step(dt){
   let unloaded=0;
   for(let d=0;d<P.doors;d++){const tr=S.inDock[d]; if(!tr||M.docksClosed)continue;
     const u=Math.min(tr.load,P.doorRate*dt/60,cap,Math.max(0,P.yardCap-S.yard));
+    const paid=baleUnload(tr,u,S.yard);   // v6.6: paid as air-dry weight; the yard mix
     tr.load-=u;cap-=u;S.yard+=u;unloaded+=u;S.tot.inTons+=u;
-    {const dc=S.plan.disc,dt2=dc?Math.min(u,dc.t):0;spend(u*P.occPrice-dt2*(dc?dc.v:0),"occ");spend(u*frInRate(),"frin");if(dc){dc.t-=dt2;if(dc.t<=1e-6)S.plan.disc=null;}}
+    {const dc=S.plan.disc,dt2=dc?Math.min(paid,dc.t):0;spend(paid*P.occPrice-dt2*(dc?dc.v:0),"occ");spend(u*frInRate(),"frin");if(dc){dc.t-=dt2;if(dc.t<=1e-6)S.plan.disc=null;}}
     if(tr.load<=0.001){S.leaving.push({...tr,ty:inY(d),kind:"in"});if(S.leaving.length>24)S.leaving.shift();S.inDock[d]=null;}}
   const feed=Math.min(feedRes,S.yard); S.yard-=feed;WQ.f+=feed;
   // 3 pulper → chest
   if(M.yardEat){const y0=S.yard;S.yard=Math.max(0,S.yard-M.yardEat*dt/60);pfW("bale",y0-S.yard);}
-  const fiberIn=feed*P.yieldF*M.yieldMul;pfW("feed",feed);pfW("rej",feed-fiberIn);WQ.rej+=feed-fiberIn;
+  const BF=baleFeed(),fiberIn=feed*BF.sf*P.yieldF*M.yieldMul*BF.yk,rejT=feed*BF.sf-fiberIn;pfW("feed",feed);pfW("rej",rejT);WQ.rej+=rejT;WQ.bw+=feed*BF.e;   // v6.6: water over 10% isn't fiber; contamination is rejects
+  baleTick(dt,fiberIn);
   // (v6.5.6: stock the chest has no room for goes over the top to the sewer, and is booked as spilled; it used to vanish)
   {const t1=S.tank+fiberIn,cl=Math.max(0,t1-P.tankCap);S.tank=t1-cl;if(cl>0){pfW("spill",cl);WQ.clip+=cl;}WQ.fi+=fiberIn-cl;}
   // 5 paper machine
@@ -77,6 +79,7 @@ function step(dt){
     }
   }
   if(S.pm!=="run") S.pmSpeed=ease(S.pmSpeed,0,dt,3);
+  baseLoadTick(dt);   // v6.6: a stopped machine still draws power and keeps the boiler banked
   let beat=0;
   if(prod>0){{const ec=prod*energyCost();spend(ec,"energy");pfEnergy(prod,ec);}knobSteamCost(prod);S.q.made+=prod;
     // v6.5.3: the spec check (07e): weight, moisture or color out and the whole reel is beater; then a grade change's
@@ -113,12 +116,14 @@ function step(dt){
   if(!M.noOut) S.outPhase+=dt*C.outRate.v/60*S.outJit*wxTruck;
   while(S.outPhase>=1){S.outPhase-=1;S.outJit=0.6+rand("flow")*0.8;
     if(S.outQ.length<P.maxQueue){S.outQ.push(newTruck("out"));S.tot.outTrucks++;}}
-  for(let d=0;d<P.shipDoors;d++) if(!S.outDock[d]&&S.outQ.length) S.outDock[d]=S.outQ.shift();
+  if(!ordOn())for(let d=0;d<P.shipDoors;d++) if(!S.outDock[d]&&S.outQ.length) S.outDock[d]=S.outQ.shift();   // (v6.6: with the order book a truck docks only with a job, ordDocks)
   const effHum=Math.min(C.loaders.v,M.ldrCap); S.effHum=effHum; const effLd=effHum+P.robots; S.effLd=effLd;
   let lcap=effLd*P.loaderRate*dt/60*M.clampMul, loaded=0;
   // clamp trucks first clear the roll conveyor into the warehouse (more urgently as it fills), then load trucks
   {const u=S.conv/P.convCap,docked=S.outDock.some(Boolean),share=docked?(u>0.6?0.9:0.5):1;
     const put=Math.max(0,Math.min(S.conv,P.fgCap-S.fg,lcap*share));S.conv-=put;S.fg+=put;lotTake(S.lots.conv,put,S.lots.fg);lcap-=put;S.rates.put=ease(S.rates.put||0,put*60/dt,dt,6);}
+  if(ordOn()){loaded=ordDocks(dt,lcap);}   // v6.6 the order book (05b)
+  else{
   // v5.0.4: with a shipping bottleneck the doors' combined rate fills one truck at a time (door by door), so trucks leave
   // through the day instead of every truck crawling for a day; capacity (doors x rate) and the dock-door upgrade are unchanged
   let pool=S.bn==="ship"?P.shipDoors*P.doorRolls*dt/60:Infinity;
@@ -126,6 +131,8 @@ function step(dt){
     const l=Math.min(P.truckRolls-tr.load,pool===Infinity?P.doorRolls*dt/60:pool,lcap,S.fg);pool-=l;
     tr.load+=l;lcap-=l;S.fg-=l;loaded+=l;lotTake(S.lots.fg,l,tr.lots||(tr.lots=[]));
     if(tr.load>=P.truckRolls-1e-6){S.leaving.push({...tr,ty:outY(d),kind:"out"});if(S.leaving.length>24)S.leaving.shift();S.outDock[d]=null;S.tot.shipped+=P.truckRolls;const tons=P.truckRolls*C.rollW.v;S.shipT+=tons;spend(tons*frOutRate(),"frout");earn(lotValue(tr.lots||[[C.grade,P.truckRolls]],C.rollW.v));}}   // (v16: each roll at its own grade's price)
+  }
+  ordTick(dt);
   spend(((C.drivers.v+C.loaders.v+P.techs)*(ECON.wage+(P.siteWage||0))*(P.costMul||1)*leadWage()*civWage()+P.robots*ECON.robot+P.pmCost)*dt/60,"labor");
   pfLabor(dt);
   spend((ECON.overhead+(P.siteOver||0))*dt/60,"overhead"); if(P.premium)spend(P.premium*dt/60,"premium");
