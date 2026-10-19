@@ -287,7 +287,7 @@
     const o={p,ring,stem,x,y,z,move(nx,nz){this.x=nx;this.z=nz;},update(now){const b=PAPF?0:Math.sin(now/320)*0.35;p.position.set(this.x,this.y+b,this.z);if(!PAPF)p.rotation.y=now/1500;else{const v=((now/260)|0)%2;fm.map=flagTex(kind,v);}
       const ph=(now/1600)%1;ring.position.set(this.x,0.13,this.z);ring.scale.setScalar(1+ph*5);rm.opacity=0.85*(1-ph);stem.position.set(this.x,(this.y+b+(PAPF?1:0))/2,this.z);stem.scale.y=this.y+b+(PAPF?1:0);}};return o;}
   const _pq=new THREE.Quaternion();
-  const PINS={icedintake:[-30,6,-55.5,"!"],duststorm:[-21,12,-13,"!"],flood:[-62,7,4,"water"],refclash:[60.6,8,-11,"!"],steamjoint:[11.2,9.5,4.6,"!"],fogfan:[49.5,22,-4.2,"!"],shaft:[12,10,15.6,"!"],dryerfire:[12,13,zc,"fire"],fabric:[48,9,zc,"!"],felt:[34.5,11,zc,"!"],slime:[4,11,zc,"!"],ragger:[16,9,-13.5,"!"],overflow:[-21,10,-13,"water"],chestover:[34.5,21,-15,"water"],lwplug:[11.2,9,ZL,"!"],cscreen:[15.2,8,ZL,"!"],fscreen:[19.2,9,ZL,"!"],lcplug:[26.6,8,ZL,"water"],hdblow:[25.8,13,-10.6,"water"],boiler:[76,14,-10,"!"],permit:[LAYOUT.wx(22),10,-40,"water"],thkblow:[34.5,22,-15,"water"],birdhay:[-18.7,9,zc,"!"],wrap:[12,12,zc,"!"],flares:[16,10,-13.5,"fire"],dye:[24,11,zc,"!"],winderdown:[-18.7,9,zc,"!"],
+  const PINS={icedintake:[-30,6,-55.5,"!"],duststorm:[-21,12,-13,"!"],flood:[-62,7,4,"water"],refclash:[60.6,8,-11,"!"],steamjoint:[11.2,9.5,4.6,"!"],fogfan:[49.5,22,-4.2,"!"],shaft:[12,10,15.6,"!"],dryerfire:[12,13,zc,"fire"],fabric:[48,9,zc,"!"],felt:[34.5,11,zc,"!"],slime:[4,11,zc,"!"],ragger:[16,9,-13.5,"!"],overflow:[-21,10,-13,"water"],chestover:[34.5,21,-15,"water"],lwplug:[11.2,9,ZL,"!"],cscreen:[15.2,8,ZL,"!"],fscreen:[19.2,9,ZL,"!"],lcplug:[26.6,8,ZL,"water"],hdblow:[25.8,13,-10.6,"water"],boiler:[76,14,-10,"!"],permit:[LAYOUT.wx(22),10,-40,"water"],thkblow:[34.5,22,-15,"water"],birdhay:[-18.7,9,zc,"!"],wrap:[12,12,zc,"!"],flares:[16,10,-13.5,"fire"],dye:[24,11,zc,"!"],winderdown:[-18.7,9,zc,"!"],tiedrolls:[-22.9,5,zc-0.7,"!"],
     badocc:[-17,10,-11,"!"],balefire:[-25,11,-12,"fire"],fleet:[-29,10,-16,"!"],calloff:[-36,10,23,"!"],fight:[-38,7,-21,"!"],roof:[-32,10,24,"water"],highway:[-72,7,4,"!"],
     lightning:[34.5,16,-15,"bolt"],tornado:[0,26,0,"!"],beaver:[-30,10,-16.5,"!"]};
   // a small lift truck (counterbalance forklift) for the yard upsets: body, overhead guard, mast and forks, nobody aboard
@@ -442,6 +442,26 @@
     winderdown:g=>{const z=zone(g,-24.5,-13,4.6,13.6);let nb=0;return (now,rdt)=>{z(now);if(SOFTFX||rdt<=0)return;
       if(now>nb){nb=now+900+Math.random()*1400;for(let k=0;k<12;k++)emit("pspark",-18.7+R()*2,2.6,zc+R()*2,R()*7,3+Math.random()*5,R()*7,0.7+Math.random()*0.4,0.5,k%2?"#ffd23f":"#ff8a1f",1);}
       if(Math.random()<rdt*2)emit("paper",-18.7+R()*2,3,zc+R(),R()*0.3,1,R()*0.3,2.6,1.4,"#9aa1ad",1);};},
+    // v6.5.7 rolls tied together: the set lies on the upender and the transfer table with the two rolls stuck at the join
+    // (a ragged band of paper wrapped across both). Once the crew is working, a portable band saw feeds down through the
+    // join, throwing paper dust; when it's through the two rolls go off to the beater as a set (27-3d starts them here).
+    tiedrolls:g=>{const z=zone(g,-25.4,-21.4,zc-2.5,zc+1.1),X=-22.9,Y=0.5+0.62,ZJ=zc-0.725;
+      const tm=new StdMat({color:lin0("#cdbf9f"),roughness:0.85});
+      [zc,zc-1.45].forEach(zz=>{const r=new THREE.Mesh(rollGeo,tm);r.rotation.x=Math.PI/2;r.position.set(X,Y,zz);r.castShadow=true;g.add(r);});
+      const band=cylZ(0.66,0.42,M.paper,X,Y,ZJ,20,g);band.rotation.z=0.3;   // the web that wound across the slit
+      for(let k=0;k<5;k++){const t=box(0.34,0.03,0.22,M.paper,X+Math.cos(k*1.3)*0.66,Y+Math.sin(k*1.3)*0.66,ZJ+(k%2?0.24:-0.24),g,false);t.rotation.z=k*1.3+0.4;}   // torn tails
+      const kerf=box(1.3,1,0.05,M.ink,X,Y,ZJ,g,false);kerf.visible=false;
+      // the band saw: a C-frame on a carriage, the blade running down the open side, two handles out to the operators
+      const saw=new THREE.Group();g.add(saw);
+      box(0.18,0.18,0.2,M.warn,-0.95,0,0,saw);box(0.18,0.18,0.2,M.warn,0.95,0,0,saw);box(2.08,0.2,0.2,M.warn,0,0.62,0,saw);
+      box(0.18,0.62,0.2,M.warn,-0.95,0.31,0,saw,false);box(0.18,0.62,0.2,M.warn,0.95,0.31,0,saw,false);
+      const blade=box(1.72,0.03,0.02,M.metal,0,0,0,saw,false);box(0.4,0.3,0.34,M.ink,-0.95,0.62,0,saw,false);
+      [-0.45,0.45].forEach(dz=>{box(0.5,0.06,0.06,M.ink,-1.24,0.5,dz*0.7,saw,false);});
+      return (now,rdt,inc)=>{z(now);G3.tiedSeen=performance.now();const go=!!(inc&&inc.go),p=go&&inc.total?clamp(1-inc.left/inc.total,0,1):0;
+        const top=Y+0.7,bot=Y-0.66,yb=go?top+(bot-top)*p:top+0.25;saw.position.set(X-0.1,yb,ZJ);saw.rotation.z=go?0.03*Math.sin(now/45):0;
+        blade.position.x=go?0.02*Math.sin(now/12):0;kerf.visible=go&&p>0.02;if(kerf.visible){const h=Math.max(0.02,top-yb);kerf.scale.y=h;kerf.position.y=top-h/2;}
+        if(go&&rdt>0&&!SOFTFX)for(let q=0;q<2;q++)if(Math.random()<rdt*14)emit("chip",X+0.65*(Math.random()<0.5?-1:1),yb,ZJ+R()*0.2,R()*2.2,1+Math.random()*1.6,R()*1.4,1.1,0.22,"#efe7d4",1);
+        if(go&&rdt>0&&Math.random()<rdt*6)emit("paper",X+R()*0.8,yb,ZJ,R()*0.6,0.6,R()*0.6,1.8,0.9,"#e9e2cf",0.9);};},
     // (t14) dye trouble: splats of dye on the floor along the tending side, and puffs of the colour coming off the sheet
     dye:g=>{if(SOFTFX)return ()=>{};const sp=[];for(let k=0;k<12;k++){const m=new THREE.Mesh(new THREE.PlaneGeometry(1,1).rotateX(-Math.PI/2),papReg(new THREE.MeshBasicMaterial({map:splatTex,alphaTest:0.5,toneMapped:false,color:lin(DYE[k%DYE.length])})));
         m.position.set(16+Math.random()*16,0.1+k*0.004,zc+CD/2+1.2+Math.random()*2.4);m.rotation.y=Math.random()*6;m.userData.s=1+Math.random()*1.4;m.userData.d=k*0.05;g.add(m);sp.push(m);}

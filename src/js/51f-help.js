@@ -79,18 +79,19 @@
     ["Rethread","Feeding the sheet back through the machine after a break."],
     ["Round","Your once-a-day walk through one area to catch tells before they fail."],
     ["Screens (coarse, fine)","Pressurized baskets with holes or slots that let fiber through and hold back trash."],
-    ["Sheet break","The paper tears on the machine. Nothing is made until the crew rethreads it."],
+    ["Sheet break","The paper tears on the machine. Nothing is made until the crew rethreads it. The boiler stays at load and the steam the dryers don't need is vented through the roof, so a break still costs steam."],
     ["Standing order","A rule you set for how upsets in an area are handled, so you aren't asked every time."],
     ["Steam joint","The rotating seal that brings steam into a dryer can."],
     ["Stock","Pulp: fiber in water."],
     ["Stock chest","A big tank of clean pulp between stock prep and the paper machine. A full chest keeps the machine running when stock prep stops."],
     ["t/h","Tons per hour."],
     ["Tell","The visible sign that a piece of equipment is about to fail. Only seen on a Round."],
+    ["Tied rolls","A set that comes off the winder with its two rolls stuck together where the slitter didn't cut clean. They're sawn apart and both go to the beater."],
     ["Upset","Anything that goes wrong: a breakdown, a break, a storm, a fine."],
     ["Vibration Report","The Round card's trend arrows: which areas have something about to fail."],
     ["Wave","In survival, the stretch between planned outages. Each wave is rougher and costlier than the last."],
     ["Wet end / dry end","The wet end is the headbox, forming section and presses; the dry end is the dryers, reel and winder."],
-    ["Winder","Unwinds each reel and slits and rewinds it into customer rolls."]];
+    ["Winder","Unwinds each reel and slits and rewinds it into customer rolls, two side by side in each set. Up to four full reels wait on the storage stands when it falls behind."]];
   let ov=null,tab="guide";
   function render(){const q=(ov.querySelector("#helpQ")||{value:""}).value||"";
     ov.innerHTML=`<div class="modal help" role="dialog" aria-modal="true" aria-labelledby="help-h">

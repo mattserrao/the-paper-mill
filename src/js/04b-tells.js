@@ -20,7 +20,7 @@ const TAREAS=[
   {k:"pulp",n:"Pulper & cleaners",j:"pulp",ids:["ragger","overflow","hdblow","lwplug","lcplug"],cv:"plant"},
   {k:"scr",n:"Screens & refiners",j:"pulp",ids:["cscreen","fscreen","refclash","thkblow","dye"],cv:"plant"},
   {k:"wet",n:"Wet end",j:"pm",ids:["fabric","felt","slime","fogfan"],cv:"plant"},
-  {k:"dry",n:"Dry end & winder",j:"pm",ids:["shaft","dryerfire","wrap","steamjoint","winderdown"],cv:"plant"},
+  {k:"dry",n:"Dry end & winder",j:"pm",ids:["shaft","dryerfire","wrap","steamjoint","winderdown","tiedrolls"],cv:"plant"},
   {k:"util",n:"Utilities",j:"shop",ids:["boiler","permit","icedintake","brownout"],cv:"town"}];
 const TAREA={},TELLABLE=new Set();TAREAS.forEach(a=>a.ids.forEach(id=>{TAREA[id]=a.k;TELLABLE.add(id);}));
 const TAREAK=Object.fromEntries(TAREAS.map(a=>[a.k,a]));
@@ -29,7 +29,7 @@ const TELLTXT={balefire:"pallets stacked against a space heater at the bale yard
   ragger:"the ragger winch smoking and the rope fraying",overflow:"the pulper level probe stuck and the floor already wet",hdblow:"a weeping flange on the HD cleaner",lwplug:"the lightweight cleaner reject line backing up",lcplug:"sand pouring out of the LC cleaner rejects",
   cscreen:"the coarse screen rotor shaking on its base",fscreen:"a fine screen basket rattling",refclash:"the refiner motor surging and the housing shaking",thkblow:"the disk thickener leaking at the vat seal",dye:"off-color stock in the dye pump sight glass",
   fabric:"a forming fabric guide roll bearing glowing hot",felt:"a press felt seam starting to lift",slime:"slime streaks building on the forming board",fogfan:"the fog fan motor smoking",
-  shaft:"the dryer driveshaft wobbling at the coupling",dryerfire:"lint and broke piled under the dryer hood",wrap:"a doctor blade chattering on a dryer can",steamjoint:"a dryer steam joint hissing",winderdown:"a slitter drive overheating on the winder",
+  shaft:"the dryer driveshaft wobbling at the coupling",dryerfire:"lint and broke piled under the dryer hood",wrap:"a doctor blade chattering on a dryer can",steamjoint:"a dryer steam joint hissing",winderdown:"a slitter drive overheating on the winder",tiedrolls:"a dull bottom slitter blade leaving the set's middle edge torn and fuzzy",
   boiler:"the boiler feed pump shaking and smoking",permit:"the wastewater outfall running discolored",icedintake:"ice building up on the river intake screen",brownout:"the substation panel flickering"};
 // v5.7: tells only in a running season, survival run or free play; never in zen, a lost run or the start menu
 const tellsOn=()=>!!(S&&!S.zen&&!S.over&&((S.season&&S.season.on)||S.free));

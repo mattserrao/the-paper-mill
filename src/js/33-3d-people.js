@@ -33,6 +33,7 @@
       if(ph===0){const s=Math.sin(t*6);lean=-0.62;arm=[-1.35+0.22*s,-1.3+0.22*s];leg=0.42;u.tool.rotation.x=s*0.7;bob=-0.05;}            // two-handed ratchet on a bolt
       else if(ph===1){lean=-0.55;arm=[-1.55+0.08*Math.sin(t*2),-0.35];leg=0.62;bob=-0.26;}                                           // crouch and look in
       else{const k=Math.max(0,Math.sin(t*8));lean=-0.5-0.18*k;arm=[-2.5+1.5*k,-1.0];leg=0.4;u.tool.rotation.x=0;}}                 // tap it home
+    else if(mode==="saw"){const s=Math.sin(t*3.2);lean=-0.32+0.04*s;arm=[-1.5+0.1*s,-1.5+0.1*s];leg=0.5;bob=-0.08;}   // v6.5.7: both hands on the band saw's handles, feeding it down
     else if(mode==="relax"){arm=[2.7,2.7];lean=0.5;legB=-1.85;bob=-0.36;}
     else if(mode==="sit"){arm=[-0.9+0.1*Math.sin(t*2),-0.6];lean=0.05;legB=-1.5;bob=-0.36;}
     else if(mode==="smoke"){const s=Math.sin(t*0.9);arm=[s>0.3?-2.5:-0.5,0.05];lean=0.04;}
@@ -141,7 +142,9 @@
   const spears=[0,1,2].map(()=>{const m=new THREE.Mesh(new CylG(0.07,0.07,1,6),M.ink);m.visible=false;scene.add(m);return m;});
   const canX=k=>(872-k*32-600)/10;
   const SITES={shaft:{c:[12,zc],a:"fix",p:[[10,14.4],[12,14.4],[14,14.4],[11,15.4]]},slime:{c:[10,zc],a:"clean",p:[[2,14.2],[8,14.2],[14,14.2],[20,14.2]]},
-    winderdown:{c:[-18.7,9.4],a:"fix",p:[[-16.6,12.4],[-16.4,10.4],[-20.9,12.4],[-21,10.4]]}};
+    winderdown:{c:[-18.7,9.4],a:"fix",p:[[-16.6,12.4],[-16.4,10.4],[-20.9,12.4],[-21,10.4]]},
+    // v6.5.7 tied rolls: two operators on the band saw at the join between the two rolls on the upender (the rest stay put)
+    tiedrolls:{c:[-22.9,zc-0.725],a:"saw",p:[[-24.35,zc-1.45],[-24.35,zc]]}};
   const RTY=[];for(let k=0;k<24;k++)RTY.push([29-(k%12)*2.6,k<12?15.4:3.2]);
   // grawlix speech bubble for the operator who gets the slice wrong
   const slcBubble=(()=>{const c=document.createElement("canvas");c.width=256;c.height=140;const x=c.getContext("2d");

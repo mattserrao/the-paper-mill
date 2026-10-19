@@ -177,7 +177,12 @@
     if(ENV.spark){ENV.sparkTex.offset.x=(ENV.sparkTex.offset.x+rdt*0.013)%1;ENV.spark.material.opacity=0.35*day*(1-0.6*(fogK+wxK));}
     ENV.bridge.rotation.y-=rdt*0.12;
     // steam plume grows with production and dies when the boiler trips
-    const boil=S.inc.some(i=>i.id==="boiler"),pr=clamp((S.rates.prod||0)/35,0,1.4);if(!boil&&G3.POP)G3.POP.lever.rotation.z=0;
+    const boil=S.inc.some(i=>i.id==="boiler"),pr=clamp(Math.max((S.rates.prod||0)/35,(S.dry&&S.pm==="break"?S.dry.steam:0)/45),0,1.4);   // (v6.5.7: the boiler stays fired through a sheet break)
+    // v6.5.7: on a sheet break the surplus steam blows out of the header vent above the machine hall roof (24-3d)
+    {const V=G3.VENT,vk=S.dry&&S.dry.vent>0.5?clamp(S.dry.vent/30,0.25,1.5):0;if(V&&vk>0&&rdt>0){
+      if(!SOFTFX){for(let q=0;q<2;q++)if(Math.random()<rdt*16*vk)emit("pjet",V.x+R()*0.3,V.y,V.z+R()*0.3,R()*1.2,(7+Math.random()*4)*vk,R()*1.2,2.0,1.5+Math.random()*1.2,"#ffffff",1);
+        if(Math.random()<rdt*2.2*vk)emitA("paper",V.x+R()*0.8,V.y+1.2+Math.random()*2,V.z+R()*0.8,0.8+R()*0.6,2.4+Math.random()*1.2,R()*0.5,5,4+3*vk+Math.random()*1.5,"#ffffff",1);}
+      else for(let q=0;q<3;q++)if(Math.random()<rdt*45*vk)emit("steam",V.x+R()*0.3,V.y,V.z+R()*0.3,R()*1.4,(5+Math.random()*3)*vk,R()*1.4,2.4,2.2+Math.random()*1.8,"#ffffff",0.85);}}if(!boil&&G3.POP)G3.POP.lever.rotation.z=0;
     // (v6.1 t12: the plume is paper cut-out clouds, fewer and bigger, that hop upwards and fade; ?softplume = the old soft steam)
     const pbk=Math.min(1,G3.brownK==null?1:G3.brownK*G3.brownK);
     if(/[?&]softplume/.test(location.search)){if(!boil&&rdt>0&&Math.random()<rdt*(2+10*pr)*pbk)emitA("steam",ENV.stack[0]+R()*0.6,ENV.stack[1],ENV.stack[2]+R()*0.6,1.2+R(),2.5+Math.random()*1.5,R()*0.6,4+3*pr,3+4*pr,"#ffffff",0.55);}

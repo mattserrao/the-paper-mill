@@ -72,7 +72,7 @@
             else pose(w,"rethread",now);}
           else pose(w,"run",now);return;}}
       if(SITES[hk]){const order=HOME.map((h,j)=>[Math.hypot(h[0]-SITES[hk].c[0],h[1]-SITES[hk].c[1]),j]).sort((a,b)=>a[0]-b[0]).map(a=>a[1]),r=order.indexOf(i);
-        if(r<4){const st=SITES[hk],sp2=st.p[r];const arrived=moveP(w,sp2[0],sp2[1],9,rdt);if(arrived){face(w,st.c[0],st.c[1],rdt);here=true;}pose(w,arrived?st.a:"run",now);
+        if(r<SITES[hk].p.length){const st=SITES[hk],sp2=st.p[r];const arrived=moveP(w,sp2[0],sp2[1],9,rdt);if(arrived){face(w,st.c[0],st.c[1],rdt);here=true;}pose(w,arrived?st.a:"run",now);
           if(arrived&&st.a==="fix"&&Math.random()<rdt*3){const [nx,,nz]=nozzlePos(w);emit("spark",nx,1.1,nz,R()*3,2+Math.random()*2,R()*3,0.4,0.2,"#ff8a1f",1);}return;}}
       const job=(hk==="felt"||hk==="fabric")&&JOBS[hk]&&CLOTH[hk].ep&&now-JOBS[hk].t<1500?JOBS[hk]:null;
       if(job){const order=HOME.map((h,j)=>[Math.abs(h[0]-job.x),j]).sort((a,b)=>a[0]-b[0]).map(a=>a[1]),r=order.indexOf(i);
@@ -176,10 +176,10 @@
     const cutting=S.rates.cut>0.5&&S.wd!=="hayout"&&!CR.hideUnwind;
     const nP0=craneUpdate(rdt);
     const ur=0.35+1.65*Math.sqrt(Math.min(S.winderBuf,P.jumbo)/P.jumbo);unwind.scale.set(ur,ur,1);unwind.visible=S.winderBuf>0.2&&!CR.hideUnwind;
-    const sr=0.25+0.75*Math.min(1,S.winderAcc/C.rollW.v),RR=0.62*sr;setRolls.forEach(r=>{r.scale.set(RR,RR,1);r.position.y=0.75+Math.sqrt(Math.max(0.01,(0.5+RR)*(0.5+RR)-0.3025));r.visible=S.wd!=="hayout";if(cutting)r.rotation.z-=rdt*10/Math.max(0.3,sr);});
+    const sr=0.25+0.75*Math.min(1,S.winderAcc/(2*C.rollW.v)),RR=0.62*sr;/* (v6.5.7: a set of two) */setRolls.forEach(r=>{r.scale.set(RR,RR,1);r.position.y=0.75+Math.sqrt(Math.max(0.01,(0.5+RR)*(0.5+RR)-0.3025));r.visible=S.wd!=="hayout";if(cutting)r.rotation.z-=rdt*10/Math.max(0.3,sr);});
     if(cutting){unwind.rotation.z+=rdt*6;drums.forEach(d=>d.rotation.z+=rdt*12);}
     web.visible=cutting&&unwind.visible;
-    const inFlight=[CR.j,...CR.jobs].filter(Boolean),nPark=clamp(nP0-inFlight.filter(j=>j.kind==="park"&&!j.dropped).length+inFlight.filter(j=>j.fromPark&&!j.picked).length,0,parked.length);parked.forEach((g,k)=>g.children[2].visible=g.children[3].visible=k<nPark);
+    const inFlight=[CR.j,...CR.jobs].filter(Boolean),nPark=clamp(nP0-inFlight.filter(j=>j.kind==="park"&&!j.dropped).length+inFlight.filter(j=>j.fromPark&&!j.picked).length,0,parked.length);parked.forEach((g,k)=>g.children[2].visible=g.children[3].visible=k<nPark);G3.parkedN=nPark;
     hayFx(rdt,now);
   }
 
