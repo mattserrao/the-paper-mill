@@ -19,23 +19,30 @@ const drySlope=g=>DRY.slope23*(GRADES[g].bw/GRADES["23m"].bw);
 const dryRef=g=>BASE.K*GRADES[g].sp*GRADES[g].bw;   // the grade's standard t/h (what the base pressure was measured at)
 // the ceiling, less what a sagging boiler header takes off it
 const dryCeil=D=>DRY.ceil-60*Math.max(0,1-D.hdr);
-// 3rd-section demand (kPa) at a given paper rate
-function dryDemand(tph){const g=C.grade,K=S.knob,W=K&&K.any?(K.W||1):1,d1=K&&K.any?(K.d1x||0):0,b=DRY.base[g]||122;
-  const water=tph*dryWpt()*W,water0=dryRef(g)*DRY.wpt0;
-  return b+drySlope(g)/DRY.wpt0*(water-water0)-b*d1;}
+// 3rd-section demand (kPa) at a given paper rate, before the fiddly knobs
+function dryDemand0(tph){const g=C.grade,b=DRY.base[g]||122;return b+drySlope(g)/DRY.wpt0*(tph*dryWpt()-dryRef(g)*DRY.wpt0);}
+// v6.5.2: the fiddly knobs' load on the dryers is a ratio of that (r = the wet end's water factor less the 1st section's
+// share, 1 = normal). The 3rd section's auto loop takes up to ±30% of it (a); past that the knobs move the moisture
+// (20 points of moisture per unit of r, the v5.6 knob model). Before v6.5.2 the knobs added kPa to the demand and the
+// whole range up to the ceiling soaked them up, so on a mill with headroom the wet-end knobs did nothing but cost steam.
+function dryKnob(){const K=S.knob;if(!(K&&K.any))return {r:1,a:1};const r=(K.W||1)-(K.d1x||0);return {r,a:clamp(r,0.7,1.3)};}
+function dryDemand(tph){return dryDemand0(tph)*dryKnob().a;}
 // the paper rate the dryers can take before the sheet goes wet (for the bottleneck view)
-function dryCapTph(){const D=dryState(),g=C.grade,K=S.knob,W=K&&K.any?(K.W||1):1,d1=K&&K.any?(K.d1x||0):0,b=DRY.base[g]||122,s=drySlope(g)/DRY.wpt0,k=s*dryWpt()*W;
-  return k>0?Math.max(0,(dryCeil(D)-b+b*d1+s*dryRef(g)*DRY.wpt0)/k):1e9;}
+function dryCapTph(){const D=dryState(),g=C.grade,b=DRY.base[g]||122,s=drySlope(g)/DRY.wpt0,k=s*dryWpt();
+  return k>0?Math.max(0,(dryCeil(D)/dryKnob().a-b+s*dryRef(g)*DRY.wpt0)/k):1e9;}
 function dryTick(dt){const D=dryState(),g=C.grade,b=DRY.base[g]||122,run=S.pm==="run";
   const tph=run?P.K*S.pmSpeed*GRADES[g].bw:0;
-  const dem=run?dryDemand(tph):b*0.5;D.dem=ease(D.dem,dem,dt,3);if(run&&!S.zen&&D.dem>D.maxDem)D.maxDem=D.dem;
+  const A=dryKnob(),dem0=run?dryDemand0(tph):b*0.5,dem=run?dem0*A.a:b*0.5;D.dem=ease(D.dem,dem,dt,3);D.dem0=ease(D.dem0==null?dem0:D.dem0,dem0,dt,3);if(run&&!S.zen&&D.dem>D.maxDem)D.maxDem=D.dem;
+  D.km=ease(D.km||0,run?20*(A.r-A.a):0,dt,10);   // (v6.5.2: moisture the knobs put past the auto loop's reach)
   // steam and the boiler (a boiler trip still stops the machine on its own; 04-upsets)
   const water=tph*dryWpt()*((S.knob&&S.knob.any&&S.knob.W)||1);D.steam=ease(D.steam,run?water*DRY.stPerW:0,dt,4);
   D.hdr=ease(D.hdr,D.steam>DRY.boiler?Math.max(0.6,1-(D.steam-DRY.boiler)/DRY.boiler*1.5):1,dt,20);
-  const ceil=dryCeil(D),floor=b*DRY.ceilFloor;D.st3=run?clamp(D.dem,floor,ceil):b;D.load=D.dem/ceil;
-  const tgt=run?7+(D.dem>ceil?(D.dem-ceil)*DRY.perKpa:D.dem<floor?(D.dem-floor)*DRY.perKpa:0):7;D.m=Math.max(0.5,ease(D.m,tgt,dt,10));
-  // a wet sheet fails the moisture spec: the crew slows the machine until it's back in spec, then lets it recover
-  const wasWet=D.wet;if(!S.zen&&run&&D.m>DRY.spec)D.wet=true;else if(D.m<DRY.back)D.wet=false;
+  // the floor is speed's (a slow machine over-dries); a knob that takes load off can take the 3rd section under it
+  const ceil=dryCeil(D),floor=b*DRY.ceilFloor,under=D.dem0<floor;D.st3=run?clamp(D.dem,under?floor:0,ceil):b;D.load=D.dem/ceil;
+  const tgt=run?7+D.km+(D.dem>ceil?(D.dem-ceil)*DRY.perKpa:under?(D.dem0-floor)*DRY.perKpa:0):7;D.m=Math.max(0.5,ease(D.m,tgt,dt,10));
+  // a wet sheet fails the moisture spec: the crew slows the machine until it's back in spec, then lets it recover.
+  // (v6.5.2: only for the part slowing down can fix; what the knobs put past the auto loop waits for the knob to be traced)
+  const wasWet=D.wet,ms=D.m-Math.max(0,D.km);if(!S.zen&&run&&ms>DRY.spec)D.wet=true;else if(ms<DRY.back)D.wet=false;
   if(D.wet&&!wasWet)log("QCS: the sheet is coming off the reel wet. The crew is slowing the machine to dry it.","warn");
   if(D.wet)D.trim=Math.min(0.4,D.trim+0.01*dt);else if(D.trim>0&&D.dem<ceil-4)D.trim=Math.max(0,D.trim-0.005*dt);
   if(!D.wet&&wasWet)log("QCS: moisture back in spec. The machine is coming back up to speed.","ok");}

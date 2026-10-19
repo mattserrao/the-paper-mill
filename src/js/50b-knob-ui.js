@@ -84,15 +84,15 @@ function closeStation(quiet){if(POP.on)return;   // (v6.5.1: a popped-out DCS st
   const o=$("dcsOv"),was=o&&!o.hidden;if(o)o.hidden=true;KUI.st=null;if(!quiet){kuiSync();if(was)try{$("gl").focus({preventScroll:true});}catch(_){}}}
 // the process picture for each area: equipment boxes and live tags. Coordinates in a 640 x 230 view box.
 const MIMIC={
-  SPOT:{title:"PM3 · STOCK PREP",eq:[[14,80,96,70,"PULPER"],[132,95,74,40,"SCREENS"],[228,80,80,70,"STOCK CHEST"],[330,95,78,40,"REFINERS"],[430,80,92,70,"MACHINE CHEST"],[546,100,80,30,"FAN PUMP"]],
+  SPOT:{title:"STOCK PREP",eq:[[14,80,96,70,"PULPER"],[132,95,74,40,"SCREENS"],[228,80,80,70,"STOCK CHEST"],[330,95,78,40,"REFINERS"],[430,80,92,70,"MACHINE CHEST"],[546,100,80,30,"FAN PUMP"]],
     tags:[[62,172,"cp","CONS",r=>kf(r.cp)+"%"],[62,194,"amps","ROTOR",r=>Math.round(r.amps)+" A"],[62,66,"pulpLvl","LEVEL",r=>Math.round(r.pulpLvl)+"%"],[268,172,"lvl","LEVEL",()=>Math.round(S.tank/P.tankCap*100)+"%"],
       [369,172,"gap","GAP",r=>kf(r.gap,2)+" mm"],[369,194,"refkw","LOAD",r=>Math.round(r.refkw)+" kW"],[369,80,"csf","CSF",r=>Math.round(r.csf)+" mL"],[476,172,"mcCons","CONS",r=>kf(r.mcCons,2)+"%"],[476,194,"agit","AGIT",r=>r.agit+"%"],[586,150,"flow","FLOW",()=>S.pm==="run"?Math.round(S.pmSpeed*1.9)+" L/s":"0 L/s"]],
     trends:[["cp","Pulper consistency %","#ffb02e",0,10],["amps","Rotor A","#4fd18b",0,700],["mcCons","Machine chest cons %","#7fb2ff",2.4,4.0],["refkw","Refiner kW","#ff7a8a",0,4000]]},
-  WET:{title:"PM3 · WET END",eq:[[14,80,74,70,"HEADBOX"],[104,105,190,25,"FORMING TABLE"],[308,90,64,50,"COUCH"],[388,90,104,50,"PICK-UP FELT"],[508,80,118,70,"TWIN PRESS"]],
+  WET:{title:"WET END",eq:[[14,80,74,70,"HEADBOX"],[104,105,190,25,"FORMING TABLE"],[308,90,64,50,"COUCH"],[388,90,104,50,"PICK-UP FELT"],[508,80,118,70,"TWIN PRESS"]],
     tags:[[51,172,"zones","ZONES",r=>(S.knob?S.knob.z.filter(v=>v).length:0)+"/12"],[199,172,"vac","VAC",r=>kf(r.vac)+" kPa"],[199,88,"edge","EDGE",r=>(r.edge>=0?"+":"")+Math.round(r.edge)+" mm"],[199,194,"gtrav","GUIDE",r=>r.gm?"AUTO "+Math.round(Math.min(1,r.gtrav)*100)+"%":"MAN"],
       [340,172,"couchSol","SOL",r=>kf(r.couchSol)+"%"],[340,194,"cs","PIT",r=>r.couch?"RUN":"STOP"],[440,172,"osc","OSC",r=>Math.round(r.osc)+"%"],[567,172,"pl","LOAD",r=>Math.round(r.pl)+" kN/m"],[567,194,"pressSol","SOL",r=>kf(r.pressSol)+"%"]],
     trends:[["vac","Vacuum kPa","#7fb2ff",0,60],["couchSol","Couch solids %","#4fd18b",12,24],["pl","Press load kN/m","#ffb02e",40,160],["pressSol","Press solids %","#ff7a8a",38,50]]},
-  DET:{title:"PM3 · DRY END",eq:[[14,90,80,50,"OPEN DRAW"],[112,75,130,80,"1ST SECTION"],[260,75,170,80,"2ND / 3RD SECTION"],[448,85,74,60,"REEL"],[546,20,80,40,"BOILER"]],
+  DET:{title:"DRY END",eq:[[14,90,80,50,"OPEN DRAW"],[112,75,130,80,"1ST SECTION"],[260,75,170,80,"2ND / 3RD SECTION"],[448,85,74,60,"REEL"],[546,20,80,40,"BOILER"]],
     tags:[[54,172,"draw","DRAW",r=>kf(r.draw)+"%"],[54,194,"tension","TENS",r=>r.run?kf(r.tension,2):"–"],[177,172,"st1","STEAM",r=>Math.round(r.st1)+" kPa"],[345,172,"st3","AUTO",r=>Math.round(r.st3)+" kPa"],[345,194,"steam","FLOW",r=>r.run?kf(r.steam)+" t/h":"–"],
       [485,172,"moist","MOIST",r=>r.run?kf(r.moist)+"%":"–"],[485,194,"bw","BW",r=>r.run?kf(r.bw,2):"–"],[586,78,"boiler","HEADER",r=>Math.round(r.boiler*100)+"%"],[485,72,"speed","SPEED",r=>Math.round(r.speed)+" fpm"]],
     trends:[["st3","3rd section steam kPa","#ffb02e",40,200],["steam","Steam flow t/h","#7fb2ff",0,70],["moist","Reel moisture %","#4fd18b",0,14],["tension","Draw tension kN/m","#ff7a8a",0,2.5]]}};
@@ -108,7 +108,7 @@ function knobAlarms(a,r){const L=[],al=(on,txt,hi)=>{if(on)L.push([txt,hi]);};co
   dcsAlarms(a,r,L);   // v6.5 b3: upsets on the screen of the equipment they hit, motors, purges, the dry end's states (50d)
   return L;}
 function stationBuild(){const o=$("dcsOv");if(!o||!KUI.st)return;const a=KUI.st,M2=MIMIC[a],b=$("dcsBody");
-  $("dcs-h").textContent=M2.title+(KUI.tab==="qcs"?" · QCS":" · DCS");
+  $("dcs-h").textContent=`${(typeof NAME==="string"&&NAME)||"PM1"} · `+M2.title+(KUI.tab==="qcs"?" · QCS":" · DCS");   // (v6.5.2: the machine's own name, as on the process flow and the 3D label)
   {const sl=$("dcsSlow");if(sl)sl.textContent=POP.on?"Second screen · the mill keeps running at your speed":"Game slowed to 1 min/s while this screen is open";}
   o.querySelectorAll("[data-t]").forEach(x=>x.setAttribute("aria-pressed",String(x.dataset.t===KUI.tab)));
   o.querySelectorAll("[data-a]").forEach(x=>x.setAttribute("aria-pressed",String(x.dataset.a===a)));

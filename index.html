@@ -3554,7 +3554,7 @@ function knobFix(ids,head,who){const K=S.knob;if(!K)return;ids=ids.filter(id=>!k
   BANNERS.push({text:`Traced: ${ids.map(i=>KNOBN[i].name).join(", ")}`,t:null,kind:"good",tag:"FIXED"});while(BANNERS.length>3)BANNERS.splice(1,1);}
 // the crew fixed the root cause: the process it drove is flushed back to normal (stripes on the felt and streaks already
 // in the chest still have to work their way out)
-function knobSettle(id){const K=S.knob,x=K.x;x.bs=0;K.H={};
+function knobSettle(id){const K=S.knob,x=K.x;x.bs=0;x.bk=0;K.H={};
   if(id==="pulp")x.cp=5;else if(id==="ref"){x.fr=0.5;x.ch=0;}else if(id==="vac"){x.vac=30;K.wear=0;}else if(id==="press"){x.pl=100;x.cr1=x.cr=0;}
   else if(id==="draw"){x.dl1=x.dl=x.dt=0;}else if(id==="st1")x.d1=0;else if(id==="agit")x.sw*=0.3;else if(id==="guide"){K.edge=0;K.gacc=0;}else if(id==="couch")K.cs=0;}
 // a knob-caused breakdown. Like trigger() but with the "knob" dice for its length, no civics card and no leader auto-fix
@@ -3615,7 +3615,10 @@ function knobTick(dt){const K=S.knob;if(!K||!K.any||S.zen)return;
   const a0=clamp(W-x.d1,0.7,1.3),Dr=dryState();K.W=W;K.d1x=x.d1;K.a=Dr.st3/(DRY.base[C.grade]||122);
   x.m=Dr.m;                                                             // reel moisture (%)
   K.sf=Math.max(1,a0+Math.max(0,x.d1));                                 // steam load per ton (1 = normal, never less): the cost side
-  x.bs=clamp((1-Dr.hdr)/0.45,0,1);                                      // boiler header sagging under the load
+  // boiler header sagging under the load: the boiler's own limit (07d), or (v6.5.2) the knobs holding the dryers' total
+  // steam per ton (the 3rd section's share plus the 1st's, a0 + d1) at its 30% top for a while. With the 1st section
+  // turned down the 3rd takes its share over, which isn't more steam, so that alone doesn't trip it.
+  x.bk=L(x.bk||0,a0+x.d1>=1.29?1:0,40);x.bs=Math.max(clamp((1-Dr.hdr)/0.45,0,1),x.bk);
   x.dl1=L(x.dl1||0,Math.max(0,1.0-v.draw),10);x.dl=L(x.dl,x.dl1,10);   // (two stages: the reel has to build a few wraps before the wrinkles show)
   x.cr1=L(x.cr1||0,Math.max(0,x.pl-115)/30,10);x.cr=L(x.cr||0,x.cr1,10);x.dt=L(x.dt,Math.max(0,v.draw-2.4),10);
   // ---- consequences: off-spec ----
@@ -3640,7 +3643,7 @@ function knobTick(dt){const K=S.knob;if(!K||!K.any||S.zen)return;
   if(x.cp>7.5&&!active("rotortrip")&&!S.M.pulperDown){if(knobTrig("rotortrip",["pulp"],"The pulper rotor tripped out on high amps! The tub is too thick to turn."))x.cp=5;}
   if(x.cp<2.2&&!active("overflow")){if(knobTrig("overflow",["pulp"],"The pulper is overflowing! Too much water in the tub, and it is pouring over the rim."))x.cp=5;}
   if(x.ch>0.8&&!active("refclash")){if(knobTrig("refclash",["ref"],"Refiner plates clashed! The gap was run in until metal met metal."))x.ch=0;}
-  if(x.bs>0.85&&!active("boiler")){const c=knobSteamCulprits();if(knobTrig("boiler",c,"The boiler tripped! The dryers were pulling more steam than it could make."))x.bs=0;}
+  if(x.bs>0.85&&!active("boiler")){const c=knobSteamCulprits();if(knobTrig("boiler",c,"The boiler tripped! The dryers were pulling more steam than it could make.")){x.bs=0;x.bk=0;}}
   if(Math.abs(K.edge)>50&&!active("fabric")){if(knobTrig("fabric",["guide"],"The forming fabric ran off the rolls! It tracked off the tending side and folded up."))K.edge=0;}
   if(K.wear>=1&&!active("fabric")){if(knobTrig("fabric",["vac"],"The forming fabric failed: worn through over the vacuum boxes."))K.wear=0;}
   if(x.st>0.6&&v.osc<40&&!active("oscfail")){knobTrig("oscfail",["osc"],"Stripes on the pick-up felt! Maintenance called to the felt showers.");}
@@ -3756,23 +3759,30 @@ const drySlope=g=>DRY.slope23*(GRADES[g].bw/GRADES["23m"].bw);
 const dryRef=g=>BASE.K*GRADES[g].sp*GRADES[g].bw;   // the grade's standard t/h (what the base pressure was measured at)
 // the ceiling, less what a sagging boiler header takes off it
 const dryCeil=D=>DRY.ceil-60*Math.max(0,1-D.hdr);
-// 3rd-section demand (kPa) at a given paper rate
-function dryDemand(tph){const g=C.grade,K=S.knob,W=K&&K.any?(K.W||1):1,d1=K&&K.any?(K.d1x||0):0,b=DRY.base[g]||122;
-  const water=tph*dryWpt()*W,water0=dryRef(g)*DRY.wpt0;
-  return b+drySlope(g)/DRY.wpt0*(water-water0)-b*d1;}
+// 3rd-section demand (kPa) at a given paper rate, before the fiddly knobs
+function dryDemand0(tph){const g=C.grade,b=DRY.base[g]||122;return b+drySlope(g)/DRY.wpt0*(tph*dryWpt()-dryRef(g)*DRY.wpt0);}
+// v6.5.2: the fiddly knobs' load on the dryers is a ratio of that (r = the wet end's water factor less the 1st section's
+// share, 1 = normal). The 3rd section's auto loop takes up to ±30% of it (a); past that the knobs move the moisture
+// (20 points of moisture per unit of r, the v5.6 knob model). Before v6.5.2 the knobs added kPa to the demand and the
+// whole range up to the ceiling soaked them up, so on a mill with headroom the wet-end knobs did nothing but cost steam.
+function dryKnob(){const K=S.knob;if(!(K&&K.any))return {r:1,a:1};const r=(K.W||1)-(K.d1x||0);return {r,a:clamp(r,0.7,1.3)};}
+function dryDemand(tph){return dryDemand0(tph)*dryKnob().a;}
 // the paper rate the dryers can take before the sheet goes wet (for the bottleneck view)
-function dryCapTph(){const D=dryState(),g=C.grade,K=S.knob,W=K&&K.any?(K.W||1):1,d1=K&&K.any?(K.d1x||0):0,b=DRY.base[g]||122,s=drySlope(g)/DRY.wpt0,k=s*dryWpt()*W;
-  return k>0?Math.max(0,(dryCeil(D)-b+b*d1+s*dryRef(g)*DRY.wpt0)/k):1e9;}
+function dryCapTph(){const D=dryState(),g=C.grade,b=DRY.base[g]||122,s=drySlope(g)/DRY.wpt0,k=s*dryWpt();
+  return k>0?Math.max(0,(dryCeil(D)/dryKnob().a-b+s*dryRef(g)*DRY.wpt0)/k):1e9;}
 function dryTick(dt){const D=dryState(),g=C.grade,b=DRY.base[g]||122,run=S.pm==="run";
   const tph=run?P.K*S.pmSpeed*GRADES[g].bw:0;
-  const dem=run?dryDemand(tph):b*0.5;D.dem=ease(D.dem,dem,dt,3);if(run&&!S.zen&&D.dem>D.maxDem)D.maxDem=D.dem;
+  const A=dryKnob(),dem0=run?dryDemand0(tph):b*0.5,dem=run?dem0*A.a:b*0.5;D.dem=ease(D.dem,dem,dt,3);D.dem0=ease(D.dem0==null?dem0:D.dem0,dem0,dt,3);if(run&&!S.zen&&D.dem>D.maxDem)D.maxDem=D.dem;
+  D.km=ease(D.km||0,run?20*(A.r-A.a):0,dt,10);   // (v6.5.2: moisture the knobs put past the auto loop's reach)
   // steam and the boiler (a boiler trip still stops the machine on its own; 04-upsets)
   const water=tph*dryWpt()*((S.knob&&S.knob.any&&S.knob.W)||1);D.steam=ease(D.steam,run?water*DRY.stPerW:0,dt,4);
   D.hdr=ease(D.hdr,D.steam>DRY.boiler?Math.max(0.6,1-(D.steam-DRY.boiler)/DRY.boiler*1.5):1,dt,20);
-  const ceil=dryCeil(D),floor=b*DRY.ceilFloor;D.st3=run?clamp(D.dem,floor,ceil):b;D.load=D.dem/ceil;
-  const tgt=run?7+(D.dem>ceil?(D.dem-ceil)*DRY.perKpa:D.dem<floor?(D.dem-floor)*DRY.perKpa:0):7;D.m=Math.max(0.5,ease(D.m,tgt,dt,10));
-  // a wet sheet fails the moisture spec: the crew slows the machine until it's back in spec, then lets it recover
-  const wasWet=D.wet;if(!S.zen&&run&&D.m>DRY.spec)D.wet=true;else if(D.m<DRY.back)D.wet=false;
+  // the floor is speed's (a slow machine over-dries); a knob that takes load off can take the 3rd section under it
+  const ceil=dryCeil(D),floor=b*DRY.ceilFloor,under=D.dem0<floor;D.st3=run?clamp(D.dem,under?floor:0,ceil):b;D.load=D.dem/ceil;
+  const tgt=run?7+D.km+(D.dem>ceil?(D.dem-ceil)*DRY.perKpa:under?(D.dem0-floor)*DRY.perKpa:0):7;D.m=Math.max(0.5,ease(D.m,tgt,dt,10));
+  // a wet sheet fails the moisture spec: the crew slows the machine until it's back in spec, then lets it recover.
+  // (v6.5.2: only for the part slowing down can fix; what the knobs put past the auto loop waits for the knob to be traced)
+  const wasWet=D.wet,ms=D.m-Math.max(0,D.km);if(!S.zen&&run&&ms>DRY.spec)D.wet=true;else if(ms<DRY.back)D.wet=false;
   if(D.wet&&!wasWet)log("QCS: the sheet is coming off the reel wet. The crew is slowing the machine to dry it.","warn");
   if(D.wet)D.trim=Math.min(0.4,D.trim+0.01*dt);else if(D.trim>0&&D.dem<ceil-4)D.trim=Math.max(0,D.trim-0.005*dt);
   if(!D.wet&&wasWet)log("QCS: moisture back in spec. The machine is coming back up to speed.","ok");}
@@ -12008,15 +12018,15 @@ function closeStation(quiet){if(POP.on)return;   // (v6.5.1: a popped-out DCS st
   const o=$("dcsOv"),was=o&&!o.hidden;if(o)o.hidden=true;KUI.st=null;if(!quiet){kuiSync();if(was)try{$("gl").focus({preventScroll:true});}catch(_){}}}
 // the process picture for each area: equipment boxes and live tags. Coordinates in a 640 x 230 view box.
 const MIMIC={
-  SPOT:{title:"PM3 · STOCK PREP",eq:[[14,80,96,70,"PULPER"],[132,95,74,40,"SCREENS"],[228,80,80,70,"STOCK CHEST"],[330,95,78,40,"REFINERS"],[430,80,92,70,"MACHINE CHEST"],[546,100,80,30,"FAN PUMP"]],
+  SPOT:{title:"STOCK PREP",eq:[[14,80,96,70,"PULPER"],[132,95,74,40,"SCREENS"],[228,80,80,70,"STOCK CHEST"],[330,95,78,40,"REFINERS"],[430,80,92,70,"MACHINE CHEST"],[546,100,80,30,"FAN PUMP"]],
     tags:[[62,172,"cp","CONS",r=>kf(r.cp)+"%"],[62,194,"amps","ROTOR",r=>Math.round(r.amps)+" A"],[62,66,"pulpLvl","LEVEL",r=>Math.round(r.pulpLvl)+"%"],[268,172,"lvl","LEVEL",()=>Math.round(S.tank/P.tankCap*100)+"%"],
       [369,172,"gap","GAP",r=>kf(r.gap,2)+" mm"],[369,194,"refkw","LOAD",r=>Math.round(r.refkw)+" kW"],[369,80,"csf","CSF",r=>Math.round(r.csf)+" mL"],[476,172,"mcCons","CONS",r=>kf(r.mcCons,2)+"%"],[476,194,"agit","AGIT",r=>r.agit+"%"],[586,150,"flow","FLOW",()=>S.pm==="run"?Math.round(S.pmSpeed*1.9)+" L/s":"0 L/s"]],
     trends:[["cp","Pulper consistency %","#ffb02e",0,10],["amps","Rotor A","#4fd18b",0,700],["mcCons","Machine chest cons %","#7fb2ff",2.4,4.0],["refkw","Refiner kW","#ff7a8a",0,4000]]},
-  WET:{title:"PM3 · WET END",eq:[[14,80,74,70,"HEADBOX"],[104,105,190,25,"FORMING TABLE"],[308,90,64,50,"COUCH"],[388,90,104,50,"PICK-UP FELT"],[508,80,118,70,"TWIN PRESS"]],
+  WET:{title:"WET END",eq:[[14,80,74,70,"HEADBOX"],[104,105,190,25,"FORMING TABLE"],[308,90,64,50,"COUCH"],[388,90,104,50,"PICK-UP FELT"],[508,80,118,70,"TWIN PRESS"]],
     tags:[[51,172,"zones","ZONES",r=>(S.knob?S.knob.z.filter(v=>v).length:0)+"/12"],[199,172,"vac","VAC",r=>kf(r.vac)+" kPa"],[199,88,"edge","EDGE",r=>(r.edge>=0?"+":"")+Math.round(r.edge)+" mm"],[199,194,"gtrav","GUIDE",r=>r.gm?"AUTO "+Math.round(Math.min(1,r.gtrav)*100)+"%":"MAN"],
       [340,172,"couchSol","SOL",r=>kf(r.couchSol)+"%"],[340,194,"cs","PIT",r=>r.couch?"RUN":"STOP"],[440,172,"osc","OSC",r=>Math.round(r.osc)+"%"],[567,172,"pl","LOAD",r=>Math.round(r.pl)+" kN/m"],[567,194,"pressSol","SOL",r=>kf(r.pressSol)+"%"]],
     trends:[["vac","Vacuum kPa","#7fb2ff",0,60],["couchSol","Couch solids %","#4fd18b",12,24],["pl","Press load kN/m","#ffb02e",40,160],["pressSol","Press solids %","#ff7a8a",38,50]]},
-  DET:{title:"PM3 · DRY END",eq:[[14,90,80,50,"OPEN DRAW"],[112,75,130,80,"1ST SECTION"],[260,75,170,80,"2ND / 3RD SECTION"],[448,85,74,60,"REEL"],[546,20,80,40,"BOILER"]],
+  DET:{title:"DRY END",eq:[[14,90,80,50,"OPEN DRAW"],[112,75,130,80,"1ST SECTION"],[260,75,170,80,"2ND / 3RD SECTION"],[448,85,74,60,"REEL"],[546,20,80,40,"BOILER"]],
     tags:[[54,172,"draw","DRAW",r=>kf(r.draw)+"%"],[54,194,"tension","TENS",r=>r.run?kf(r.tension,2):"–"],[177,172,"st1","STEAM",r=>Math.round(r.st1)+" kPa"],[345,172,"st3","AUTO",r=>Math.round(r.st3)+" kPa"],[345,194,"steam","FLOW",r=>r.run?kf(r.steam)+" t/h":"–"],
       [485,172,"moist","MOIST",r=>r.run?kf(r.moist)+"%":"–"],[485,194,"bw","BW",r=>r.run?kf(r.bw,2):"–"],[586,78,"boiler","HEADER",r=>Math.round(r.boiler*100)+"%"],[485,72,"speed","SPEED",r=>Math.round(r.speed)+" fpm"]],
     trends:[["st3","3rd section steam kPa","#ffb02e",40,200],["steam","Steam flow t/h","#7fb2ff",0,70],["moist","Reel moisture %","#4fd18b",0,14],["tension","Draw tension kN/m","#ff7a8a",0,2.5]]}};
@@ -12032,7 +12042,7 @@ function knobAlarms(a,r){const L=[],al=(on,txt,hi)=>{if(on)L.push([txt,hi]);};co
   dcsAlarms(a,r,L);   // v6.5 b3: upsets on the screen of the equipment they hit, motors, purges, the dry end's states (50d)
   return L;}
 function stationBuild(){const o=$("dcsOv");if(!o||!KUI.st)return;const a=KUI.st,M2=MIMIC[a],b=$("dcsBody");
-  $("dcs-h").textContent=M2.title+(KUI.tab==="qcs"?" · QCS":" · DCS");
+  $("dcs-h").textContent=`${(typeof NAME==="string"&&NAME)||"PM1"} · `+M2.title+(KUI.tab==="qcs"?" · QCS":" · DCS");   // (v6.5.2: the machine's own name, as on the process flow and the 3D label)
   {const sl=$("dcsSlow");if(sl)sl.textContent=POP.on?"Second screen · the mill keeps running at your speed":"Game slowed to 1 min/s while this screen is open";}
   o.querySelectorAll("[data-t]").forEach(x=>x.setAttribute("aria-pressed",String(x.dataset.t===KUI.tab)));
   o.querySelectorAll("[data-a]").forEach(x=>x.setAttribute("aria-pressed",String(x.dataset.a===a)));
@@ -12496,7 +12506,7 @@ const DV={
 function tssNow(){return clamp(28+(S.knob&&S.knob.off?S.knob.off*30:0)+(S.pm==="run"?0:6)+(dcsOn("permit")?30:0)+wob2(0.015,12)*3,5,120);}
 const MIMIC_KNOB={SPOT:MIMIC.SPOT,WET:MIMIC.WET,DET:MIMIC.DET};
 const MT=(x,y,k,t,f)=>[x,y,k,t,f];
-MIMIC.SPOT={title:"PM3 · STOCK PREP",h:300,trends:MIMIC_KNOB.SPOT.trends,
+MIMIC.SPOT={title:"STOCK PREP",h:300,trends:MIMIC_KNOB.SPOT.trends,
   eq:[[8,66,76,40,"CONVEYOR"],[100,56,110,60,"PULPER"],[100,8,52,26,"RAGGER","s"],[158,8,52,26,"JUNK","s"],[228,66,78,40,"HD CLEANER"],[324,66,78,40,"COARSE SCR"],[420,66,88,40,"LW CLEANERS"],
     [524,66,86,40,"THICKENER"],[525,196,80,60,"STOCK CHEST"],[430,206,80,40,"REFINERS"],[320,196,90,60,"MACHINE CHEST"],[330,160,70,24,"DYE","s"],[212,206,90,40,"LC CLEANERS"],[104,206,90,40,"FINE SCR"],[8,206,80,40,"FAN PUMP"]],
   ln:[["M84 86 H100"],["M210 86 H228"],["M306 86 H324"],["M402 86 H420"],["M508 86 H524"],["M565 106 V196"],["M525 226 H510"],["M430 226 H410"],["M320 226 H302"],["M212 226 H194"],["M104 226 H88"],["M8 226 H0"],
@@ -12506,21 +12516,21 @@ MIMIC.SPOT={title:"PM3 · STOCK PREP",h:300,trends:MIMIC_KNOB.SPOT.trends,
     MT(565,272,"lvl","LEVEL",()=>Math.round(S.tank/P.tankCap*100)+"%"),MT(565,286,"lvsp","SP",DV.lvsp),MT(470,190,"csf","CSF",r=>Math.round(r.csf)+" mL"),MT(470,262,"gap","GAP",r=>kf(r.gap,2)+" mm"),MT(470,276,"refkw","LOAD",r=>Math.round(r.refkw)+" kW"),
     MT(365,272,"mcCons","CONS",r=>kf(r.mcCons,2)+"%"),MT(365,286,"agit","AGIT",r=>r.agit+"%"),MT(445,176,"dyef","DYE",DV.dyef),MT(257,262,"lcdp","ΔP",DV.lcdp),MT(257,276,"lcrow","ROWS",DV.lcrow),
     MT(149,262,"fsdp","ΔP",DV.fsdp),MT(149,276,"fsld","LOAD",DV.fsld),MT(48,262,"flow","FLOW",()=>S.pm==="run"?Math.round(S.pmSpeed*1.9)+" L/s":"0 L/s")]};
-MIMIC.WET={title:"PM3 · WET END",h:260,trends:MIMIC_KNOB.WET.trends,
+MIMIC.WET={title:"WET END",h:260,trends:MIMIC_KNOB.WET.trends,
   eq:[[520,8,104,30,"FOG FAN"],[14,80,74,70,"HEADBOX"],[104,105,190,25,"FORMING TABLE"],[110,214,100,26,"WW SILO","s"],[308,90,64,50,"COUCH"],[388,90,104,50,"PICK-UP FELT"],[508,80,118,70,()=>LV("shoe")?"SHOE PRESS":"TWIN PRESS"]],
   ln:[["M88 115 H104"],["M294 117 H308"],["M372 115 H388"],["M492 115 H508"],["M160 130 V214",1]],
   tags:[MT(51,172,"zones","ZONES",()=>(S.knob?S.knob.z.filter(v=>v).length:0)+"/12"),MT(51,194,"slc","SLICE",DV.slc),MT(51,70,"jw","J/W",DV.jw),MT(140,72,"wsp","WIRE",DV.wsp),
     MT(240,172,"vac","VAC",r=>kf(r.vac)+" kPa"),MT(240,88,"edge","EDGE",r=>(r.edge>=0?"+":"")+Math.round(r.edge)+" mm"),MT(240,194,"gtrav","GUIDE",r=>r.gm?"AUTO "+Math.round(Math.min(1,r.gtrav)*100)+"%":"MAN"),
     MT(340,172,"couchSol","SOL",r=>kf(r.couchSol)+"%"),MT(340,194,"cs","PIT",r=>r.couch?"RUN":"STOP"),MT(440,172,"osc","OSC",r=>Math.round(r.osc)+"%"),
     MT(567,172,"pl","LOAD",r=>Math.round(r.pl)+" kN/m"),MT(567,194,"pressSol","SOL",r=>kf(r.pressSol)+"%"),MT(567,66,"psp","SPD",DV.psp),MT(260,232,"wwl","LEVEL",DV.wwl),MT(572,54,"hum","RH",DV.hum)]};
-MIMIC.DET={title:"PM3 · DRY END",h:280,trends:MIMIC_KNOB.DET.trends,
+MIMIC.DET={title:"DRY END",h:280,trends:MIMIC_KNOB.DET.trends,
   eq:[[440,10,90,36,"GRID"],[546,10,80,36,"BOILER"],[14,96,80,50,"OPEN DRAW"],[112,80,130,80,"1ST SECTION"],[260,80,170,80,"2ND / 3RD SECTION"],[448,90,74,60,"REEL"],[546,90,84,60,"WINDER"],[546,214,84,30,"ROLL CONV","s"]],
   ln:[["M94 121 H112"],["M242 120 H260"],["M430 120 H448"],["M522 120 H546"],["M630 120 H636 V229 H630"],["M620 46 V66 H177 V80 M345 66 V80",1]],
   tags:[MT(54,172,"draw","DRAW",r=>kf(r.draw)+"%"),MT(54,194,"tension","TENS",r=>r.run?kf(r.tension,2):"–"),MT(177,176,"st1","STEAM",r=>Math.round(r.st1)+" kPa"),MT(177,192,"dr1","DRV",DV.dr1),MT(177,208,"dsp","SPD",DV.dsp),
     MT(345,176,"st3","AUTO",r=>Math.round(r.st3)+" kPa"),MT(345,192,"steam","FLOW",r=>r.run?kf(r.steam)+" t/h":"–"),MT(345,208,"dr2","DRV",DV.dr2),MT(345,224,"dryl","LOAD",DV.dryl),MT(380,40,"stm","STEAM",DV.stm),
     MT(485,166,"moist","MOIST",r=>r.run?kf(r.moist)+"%":"–"),MT(485,180,"bw","BW",r=>r.run?kf(r.bw,2):"–"),MT(485,194,"spool","SPOOL",DV.spool),MT(485,208,"store","STORE",DV.store),MT(485,222,"tu","TURN-UPS",DV.tu),MT(485,84,"speed","SPEED",r=>Math.round(r.speed)+" fpm"),
     MT(588,166,"wdr","SP",DV.wdr),MT(588,180,"wdt","CUT",DV.wdt),MT(588,194,"hay","HAYOUTS",DV.hay),MT(588,262,"rolls","ROLLS",DV.rolls),MT(485,58,"grid","",DV.grid),MT(586,60,"boiler","HDR",r=>Math.round(r.boiler*100)+"%")]};
-MIMIC.UTIL={title:"PM3 · UTILITIES",h:210,trends:[],
+MIMIC.UTIL={title:"UTILITIES",h:210,trends:[],
   eq:[[14,60,96,50,"RIVER INTAKE"],[134,60,96,50,"WATER TOWER"],[254,60,110,50,"MILL"],[388,60,110,50,"WASTEWATER"],[522,60,100,50,"OUTFALL"],[254,150,110,36,"LANDFILL","s"]],
   ln:[["M110 85 H134"],["M230 85 H254"],["M364 85 H388"],["M498 85 H522"],["M309 110 V150",1]],
   tags:[MT(62,128,"ifl","FLOW",DV.ifl),MT(62,142,"ice","ICE",DV.ice),MT(182,128,"twl","LEVEL",DV.twl),MT(309,44,"wuse","USE",DV.wuse),MT(443,128,"tss","TSS",DV.tss),MT(443,142,"perm","PERMIT",DV.perm),

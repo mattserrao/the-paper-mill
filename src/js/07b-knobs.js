@@ -69,7 +69,7 @@ function knobFix(ids,head,who){const K=S.knob;if(!K)return;ids=ids.filter(id=>!k
   BANNERS.push({text:`Traced: ${ids.map(i=>KNOBN[i].name).join(", ")}`,t:null,kind:"good",tag:"FIXED"});while(BANNERS.length>3)BANNERS.splice(1,1);}
 // the crew fixed the root cause: the process it drove is flushed back to normal (stripes on the felt and streaks already
 // in the chest still have to work their way out)
-function knobSettle(id){const K=S.knob,x=K.x;x.bs=0;K.H={};
+function knobSettle(id){const K=S.knob,x=K.x;x.bs=0;x.bk=0;K.H={};
   if(id==="pulp")x.cp=5;else if(id==="ref"){x.fr=0.5;x.ch=0;}else if(id==="vac"){x.vac=30;K.wear=0;}else if(id==="press"){x.pl=100;x.cr1=x.cr=0;}
   else if(id==="draw"){x.dl1=x.dl=x.dt=0;}else if(id==="st1")x.d1=0;else if(id==="agit")x.sw*=0.3;else if(id==="guide"){K.edge=0;K.gacc=0;}else if(id==="couch")K.cs=0;}
 // a knob-caused breakdown. Like trigger() but with the "knob" dice for its length, no civics card and no leader auto-fix
@@ -130,7 +130,10 @@ function knobTick(dt){const K=S.knob;if(!K||!K.any||S.zen)return;
   const a0=clamp(W-x.d1,0.7,1.3),Dr=dryState();K.W=W;K.d1x=x.d1;K.a=Dr.st3/(DRY.base[C.grade]||122);
   x.m=Dr.m;                                                             // reel moisture (%)
   K.sf=Math.max(1,a0+Math.max(0,x.d1));                                 // steam load per ton (1 = normal, never less): the cost side
-  x.bs=clamp((1-Dr.hdr)/0.45,0,1);                                      // boiler header sagging under the load
+  // boiler header sagging under the load: the boiler's own limit (07d), or (v6.5.2) the knobs holding the dryers' total
+  // steam per ton (the 3rd section's share plus the 1st's, a0 + d1) at its 30% top for a while. With the 1st section
+  // turned down the 3rd takes its share over, which isn't more steam, so that alone doesn't trip it.
+  x.bk=L(x.bk||0,a0+x.d1>=1.29?1:0,40);x.bs=Math.max(clamp((1-Dr.hdr)/0.45,0,1),x.bk);
   x.dl1=L(x.dl1||0,Math.max(0,1.0-v.draw),10);x.dl=L(x.dl,x.dl1,10);   // (two stages: the reel has to build a few wraps before the wrinkles show)
   x.cr1=L(x.cr1||0,Math.max(0,x.pl-115)/30,10);x.cr=L(x.cr||0,x.cr1,10);x.dt=L(x.dt,Math.max(0,v.draw-2.4),10);
   // ---- consequences: off-spec ----
@@ -155,7 +158,7 @@ function knobTick(dt){const K=S.knob;if(!K||!K.any||S.zen)return;
   if(x.cp>7.5&&!active("rotortrip")&&!S.M.pulperDown){if(knobTrig("rotortrip",["pulp"],"The pulper rotor tripped out on high amps! The tub is too thick to turn."))x.cp=5;}
   if(x.cp<2.2&&!active("overflow")){if(knobTrig("overflow",["pulp"],"The pulper is overflowing! Too much water in the tub, and it is pouring over the rim."))x.cp=5;}
   if(x.ch>0.8&&!active("refclash")){if(knobTrig("refclash",["ref"],"Refiner plates clashed! The gap was run in until metal met metal."))x.ch=0;}
-  if(x.bs>0.85&&!active("boiler")){const c=knobSteamCulprits();if(knobTrig("boiler",c,"The boiler tripped! The dryers were pulling more steam than it could make."))x.bs=0;}
+  if(x.bs>0.85&&!active("boiler")){const c=knobSteamCulprits();if(knobTrig("boiler",c,"The boiler tripped! The dryers were pulling more steam than it could make.")){x.bs=0;x.bk=0;}}
   if(Math.abs(K.edge)>50&&!active("fabric")){if(knobTrig("fabric",["guide"],"The forming fabric ran off the rolls! It tracked off the tending side and folded up."))K.edge=0;}
   if(K.wear>=1&&!active("fabric")){if(knobTrig("fabric",["vac"],"The forming fabric failed: worn through over the vacuum boxes."))K.wear=0;}
   if(x.st>0.6&&v.osc<40&&!active("oscfail")){knobTrig("oscfail",["osc"],"Stripes on the pick-up felt! Maintenance called to the felt showers.");}

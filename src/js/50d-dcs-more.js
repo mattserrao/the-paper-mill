@@ -31,7 +31,7 @@ const DV={
 function tssNow(){return clamp(28+(S.knob&&S.knob.off?S.knob.off*30:0)+(S.pm==="run"?0:6)+(dcsOn("permit")?30:0)+wob2(0.015,12)*3,5,120);}
 const MIMIC_KNOB={SPOT:MIMIC.SPOT,WET:MIMIC.WET,DET:MIMIC.DET};
 const MT=(x,y,k,t,f)=>[x,y,k,t,f];
-MIMIC.SPOT={title:"PM3 · STOCK PREP",h:300,trends:MIMIC_KNOB.SPOT.trends,
+MIMIC.SPOT={title:"STOCK PREP",h:300,trends:MIMIC_KNOB.SPOT.trends,
   eq:[[8,66,76,40,"CONVEYOR"],[100,56,110,60,"PULPER"],[100,8,52,26,"RAGGER","s"],[158,8,52,26,"JUNK","s"],[228,66,78,40,"HD CLEANER"],[324,66,78,40,"COARSE SCR"],[420,66,88,40,"LW CLEANERS"],
     [524,66,86,40,"THICKENER"],[525,196,80,60,"STOCK CHEST"],[430,206,80,40,"REFINERS"],[320,196,90,60,"MACHINE CHEST"],[330,160,70,24,"DYE","s"],[212,206,90,40,"LC CLEANERS"],[104,206,90,40,"FINE SCR"],[8,206,80,40,"FAN PUMP"]],
   ln:[["M84 86 H100"],["M210 86 H228"],["M306 86 H324"],["M402 86 H420"],["M508 86 H524"],["M565 106 V196"],["M525 226 H510"],["M430 226 H410"],["M320 226 H302"],["M212 226 H194"],["M104 226 H88"],["M8 226 H0"],
@@ -41,21 +41,21 @@ MIMIC.SPOT={title:"PM3 · STOCK PREP",h:300,trends:MIMIC_KNOB.SPOT.trends,
     MT(565,272,"lvl","LEVEL",()=>Math.round(S.tank/P.tankCap*100)+"%"),MT(565,286,"lvsp","SP",DV.lvsp),MT(470,190,"csf","CSF",r=>Math.round(r.csf)+" mL"),MT(470,262,"gap","GAP",r=>kf(r.gap,2)+" mm"),MT(470,276,"refkw","LOAD",r=>Math.round(r.refkw)+" kW"),
     MT(365,272,"mcCons","CONS",r=>kf(r.mcCons,2)+"%"),MT(365,286,"agit","AGIT",r=>r.agit+"%"),MT(445,176,"dyef","DYE",DV.dyef),MT(257,262,"lcdp","ΔP",DV.lcdp),MT(257,276,"lcrow","ROWS",DV.lcrow),
     MT(149,262,"fsdp","ΔP",DV.fsdp),MT(149,276,"fsld","LOAD",DV.fsld),MT(48,262,"flow","FLOW",()=>S.pm==="run"?Math.round(S.pmSpeed*1.9)+" L/s":"0 L/s")]};
-MIMIC.WET={title:"PM3 · WET END",h:260,trends:MIMIC_KNOB.WET.trends,
+MIMIC.WET={title:"WET END",h:260,trends:MIMIC_KNOB.WET.trends,
   eq:[[520,8,104,30,"FOG FAN"],[14,80,74,70,"HEADBOX"],[104,105,190,25,"FORMING TABLE"],[110,214,100,26,"WW SILO","s"],[308,90,64,50,"COUCH"],[388,90,104,50,"PICK-UP FELT"],[508,80,118,70,()=>LV("shoe")?"SHOE PRESS":"TWIN PRESS"]],
   ln:[["M88 115 H104"],["M294 117 H308"],["M372 115 H388"],["M492 115 H508"],["M160 130 V214",1]],
   tags:[MT(51,172,"zones","ZONES",()=>(S.knob?S.knob.z.filter(v=>v).length:0)+"/12"),MT(51,194,"slc","SLICE",DV.slc),MT(51,70,"jw","J/W",DV.jw),MT(140,72,"wsp","WIRE",DV.wsp),
     MT(240,172,"vac","VAC",r=>kf(r.vac)+" kPa"),MT(240,88,"edge","EDGE",r=>(r.edge>=0?"+":"")+Math.round(r.edge)+" mm"),MT(240,194,"gtrav","GUIDE",r=>r.gm?"AUTO "+Math.round(Math.min(1,r.gtrav)*100)+"%":"MAN"),
     MT(340,172,"couchSol","SOL",r=>kf(r.couchSol)+"%"),MT(340,194,"cs","PIT",r=>r.couch?"RUN":"STOP"),MT(440,172,"osc","OSC",r=>Math.round(r.osc)+"%"),
     MT(567,172,"pl","LOAD",r=>Math.round(r.pl)+" kN/m"),MT(567,194,"pressSol","SOL",r=>kf(r.pressSol)+"%"),MT(567,66,"psp","SPD",DV.psp),MT(260,232,"wwl","LEVEL",DV.wwl),MT(572,54,"hum","RH",DV.hum)]};
-MIMIC.DET={title:"PM3 · DRY END",h:280,trends:MIMIC_KNOB.DET.trends,
+MIMIC.DET={title:"DRY END",h:280,trends:MIMIC_KNOB.DET.trends,
   eq:[[440,10,90,36,"GRID"],[546,10,80,36,"BOILER"],[14,96,80,50,"OPEN DRAW"],[112,80,130,80,"1ST SECTION"],[260,80,170,80,"2ND / 3RD SECTION"],[448,90,74,60,"REEL"],[546,90,84,60,"WINDER"],[546,214,84,30,"ROLL CONV","s"]],
   ln:[["M94 121 H112"],["M242 120 H260"],["M430 120 H448"],["M522 120 H546"],["M630 120 H636 V229 H630"],["M620 46 V66 H177 V80 M345 66 V80",1]],
   tags:[MT(54,172,"draw","DRAW",r=>kf(r.draw)+"%"),MT(54,194,"tension","TENS",r=>r.run?kf(r.tension,2):"–"),MT(177,176,"st1","STEAM",r=>Math.round(r.st1)+" kPa"),MT(177,192,"dr1","DRV",DV.dr1),MT(177,208,"dsp","SPD",DV.dsp),
     MT(345,176,"st3","AUTO",r=>Math.round(r.st3)+" kPa"),MT(345,192,"steam","FLOW",r=>r.run?kf(r.steam)+" t/h":"–"),MT(345,208,"dr2","DRV",DV.dr2),MT(345,224,"dryl","LOAD",DV.dryl),MT(380,40,"stm","STEAM",DV.stm),
     MT(485,166,"moist","MOIST",r=>r.run?kf(r.moist)+"%":"–"),MT(485,180,"bw","BW",r=>r.run?kf(r.bw,2):"–"),MT(485,194,"spool","SPOOL",DV.spool),MT(485,208,"store","STORE",DV.store),MT(485,222,"tu","TURN-UPS",DV.tu),MT(485,84,"speed","SPEED",r=>Math.round(r.speed)+" fpm"),
     MT(588,166,"wdr","SP",DV.wdr),MT(588,180,"wdt","CUT",DV.wdt),MT(588,194,"hay","HAYOUTS",DV.hay),MT(588,262,"rolls","ROLLS",DV.rolls),MT(485,58,"grid","",DV.grid),MT(586,60,"boiler","HDR",r=>Math.round(r.boiler*100)+"%")]};
-MIMIC.UTIL={title:"PM3 · UTILITIES",h:210,trends:[],
+MIMIC.UTIL={title:"UTILITIES",h:210,trends:[],
   eq:[[14,60,96,50,"RIVER INTAKE"],[134,60,96,50,"WATER TOWER"],[254,60,110,50,"MILL"],[388,60,110,50,"WASTEWATER"],[522,60,100,50,"OUTFALL"],[254,150,110,36,"LANDFILL","s"]],
   ln:[["M110 85 H134"],["M230 85 H254"],["M364 85 H388"],["M498 85 H522"],["M309 110 V150",1]],
   tags:[MT(62,128,"ifl","FLOW",DV.ifl),MT(62,142,"ice","ICE",DV.ice),MT(182,128,"twl","LEVEL",DV.twl),MT(309,44,"wuse","USE",DV.wuse),MT(443,128,"tss","TSS",DV.tss),MT(443,142,"perm","PERMIT",DV.perm),
