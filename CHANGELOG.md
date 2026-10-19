@@ -1,6 +1,18 @@
 # Changelog
 
 
+## v6.5.0-b2 (2026-10-19): costs aligned with the 2026 market (test branch test/v6.5-twin)
+From claude/market-cost-benchmarks.md (OCC indexes, DAT truckload, EIA power and gas, Smurfit/FEFCO mill energy).
+- **OCC** at 2026 levels: OCC #11 $95/t (was $142 + haul), double-lined kraft $150 (was $197). The weekly OCC market
+  moves up to ±$25 a week within ±$50 (was ±$15 within ±$30): 2026 indexes moved $30-45/t.
+- **Energy** $68/t base (was $95): a recycled mill buying its power at 2026 rates. Site, grade and upgrade effects as before.
+- **Paper prices** lowered by what that saves per ton, so profit is unchanged: 23m $657, 26m $677, 30m $695, 33HT $756.
+- **Diesel** is now diesel: a weekly walk of $2.40-6.80/gal (it rose 68% in the year to Sep 2026), worth 26% of a truck
+  rate (DAT's fuel share), so freight rates swing about ±18%. The twin shows diesel in $/gal.
+- **Desert** long haul to customers is +$20/t outbound freight (was +$7); cheap land now saves $480/h (was $250).
+- **Steam display** at the TAPPI dryer norm (~1.45 t steam per t of paper; was ~1.09). Display only.
+- Hands-off seasons (3 seeds per site) against v6.4.0: see the results line below.
+
 ## v6.5.0-b1 (2026-10-19): digital twin, part B (test branch test/v6.5-twin)
 - **Freight is a real cost:** inbound haul per ton of bales unloaded and outbound freight per ton shipped, each (base +
   site) × a weekly diesel index (0.85-1.15, a fixed walk from the run's seed, so the 14 prior days lead into the run) ×
