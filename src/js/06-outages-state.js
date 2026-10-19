@@ -114,7 +114,7 @@ function initState(){
      rates:{feed:0,unload:0,fiberIn:0,prod:0,fiberUse:0,load:0,rolls:0,cut:0},
      tot:{inTrucks:0,inTons:0,turned:0,prodT:0,rolls:0,shipped:0,outTrucks:0,breaks:0,breakMin:0,turnups:0,pot:0,incidents:0,hayouts:0,hayMin:0,broke:0},wd:"run",hayLeft:0,
      trend:[],trendAcc:0,conv:0,inc:[],lastInc:0,feed:[],M:baseMods(),effDrv:C.drivers.v,effLd:C.loaders.v,effHum:C.loaders.v};
-  S.up={};S.cash=ECON.start;S.ledger={rev:0,occ:0,energy:0,labor:0,overhead:0,repairs:0,premium:0,upgrades:0,deals:0};
+  S.up={};S.cash=ECON.start;S.ledger={rev:0,occ:0,frin:0,frout:0,energy:0,labor:0,overhead:0,repairs:0,premium:0,upgrades:0,deals:0};
   // v4.1 v16: paper keeps the grade it was made as all the way to the truck: each stage holds lots [grade, amount] in
   // order (reel and winder stores in t, conveyor and warehouse in rolls) that move first-in first-out with the scalars
   S.lots={reel:[[C.grade,S.reel]],buf:[],acc:[],conv:[],fg:[[C.grade,S.fg]]};

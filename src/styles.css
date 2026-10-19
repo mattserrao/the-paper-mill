@@ -1197,3 +1197,16 @@ body.dark .kvchip{background:color-mix(in srgb,var(--panel) 96%,transparent)}
   .pfpanel .pfph::before{content:"";position:absolute;left:50%;top:5px;width:40px;height:4px;margin-left:-20px;border-radius:2px;background:#33476a}
   .dcsh .pfrange{order:5;width:100%;display:flex}.dcsh .pfrange button{flex:1}
 }
+/* v6.5 the area controls in the process flow panel (only the tapped area's cards; the DCS look) */
+#pfCtl .cards{display:flex;flex-direction:column;gap:8px}
+#pfCtl .cards>.card{display:none}
+#cards[data-area="yard"]>.card[data-a="yard"],#cards[data-area="pulper"]>.card[data-a="pulper"],#cards[data-area="stock"]>.card[data-a="stock"],
+#cards[data-area="pm"]>.card[data-a="pm"],#cards[data-area="winder"]>.card[data-a="winder"],#cards[data-area="ship"]>.card[data-a="ship"]{display:block}
+#pfCtl .card{background:#16233a;color:#dbe6f6;border:1px solid #2c3e5c;border-radius:8px;box-shadow:none;padding:10px 12px;width:auto;max-height:none}
+#pfCtl .card h2{color:#fff;font:700 14px var(--f-body,system-ui)}#pfCtl .card h2 .n{display:none}
+#pfCtl .card .row label,#pfCtl .card .check,#pfCtl .card .val{color:#c3d3ea}#pfCtl .card .read{color:#8ea4c4}
+#pfCtl .card select{background:#22324f;color:#fff;border:1px solid #33476a}
+#pfCtl .card .auto{background:#22324f;color:#c3d3ea;border:1px solid #33476a}#pfCtl .card .auto[aria-pressed="true"]{background:#4fd18b;color:#0f1b2d}
+body.season-lock #pfCtl .card .row[data-key] input,body.season-lock #pfCtl .card .row[data-key] button.auto{opacity:.5;cursor:not-allowed}
+.pflock{margin:0}.pflock b{color:#ffd77a}
+.pfctlnote{display:flex;align-items:center;gap:10px;flex-wrap:wrap;margin-top:24px;padding-top:16px;border-top:1px solid var(--line)}.pfctlnote span{flex:1;min-width:200px;color:var(--muted)}

@@ -49,7 +49,7 @@ with sync_playwright() as pw:
         if r: worst = max(worst, abs(r["p"] - r["c"]), abs(r["sumBy"] - r["cost"]))
     ok("today's profit = cash change + upgrades, and areas add up to the cost (worst $ off)", worst < 1.0, f"{worst:.4f}")
     # ---- v6.5: the hourly history adds up to the books since day 1 (rows are rounded to the dollar) ----
-    hr = pg.evaluate("()=>{const S=__PM.S,D=__PM.G3.histSum(__PM.G3.histRows(0,1e9,false),0,1e9),L=S.ledger,cost=L.occ+L.energy+L.labor+L.overhead+L.repairs+L.premium+(L.civ||0),rows=S.hist.rows.filter(r=>r[0]>=0).length;return {d:D.cost-cost,r:D.revenue-(L.rev+L.deals),rows,h:Math.floor(S.t/60)}}")
+    hr = pg.evaluate("()=>{const S=__PM.S,D=__PM.G3.histSum(__PM.G3.histRows(0,1e9,false),0,1e9),L=S.ledger,cost=L.occ+(L.frin||0)+(L.frout||0)+L.energy+L.labor+L.overhead+L.repairs+L.premium+(L.civ||0),rows=S.hist.rows.filter(r=>r[0]>=0).length;return {d:D.cost-cost,r:D.revenue-(L.rev+L.deals),rows,h:Math.floor(S.t/60)}}")
     ok("history since day 1 = the ledger (within rounding)", abs(hr["d"]) < hr["rows"] * 6 + 5 and abs(hr["r"]) < hr["rows"] * 2 + 5, str(hr))
     ok("one row per finished hour", hr["rows"] == hr["h"], str(hr))
     y = pg.evaluate("()=>{const p=__PM.S.pf.prev;return p?{p:p.profit,c:p.cashChg+p.upg,h:p.h,made:p.made,rej:p.W.rej,day:p.day}:null}")
@@ -66,7 +66,7 @@ with sync_playwright() as pw:
     ok("screen opens", vis("#pfOv"))
     v = pg.evaluate("()=>[__PM.running,__PM.G3.simRate(),__PM.C.simSpeed,!!__PM.S.cards.open]"); ok("game keeps running at the player's speed while open", (v[0] or v[3]) and v[1] == v[2], str(v))   # (an event card may hold the game, as it always does)
     ok("diagram drawn with 7 areas", pg.evaluate("()=>document.querySelectorAll('#pfMap [data-pf^=\"node:\"]').length") == 7)
-    ok("inputs list has 6 inputs", pg.evaluate("()=>document.querySelectorAll('#pfIn [data-pf^=\"cat:\"]').length") == 6)
+    ok("inputs list has 8 inputs (freight in and out)", pg.evaluate("()=>document.querySelectorAll('#pfIn [data-pf^=\"cat:\"]').length") == 8)
     if shot: pg.screenshot(path=f"{shot}-desktop.png")
     nodata = "()=>[...document.querySelectorAll('#pfPanel canvas[data-ch]')].length"
     for sel in ['[data-pf="cat:energy"]', '[data-pf="node:pm"]', '#pfMap [data-pf^="drop:"]', '[data-pf="out:paper"]', '[data-pf="out:waste"]', '[data-pf="out:profit"]', '[data-pf="cat:maint"]']:
@@ -74,7 +74,7 @@ with sync_playwright() as pw:
         click(sel); pg.wait_for_timeout(400)
         ok(f"tap {sel} opens the panel with charts", vis("#pfPanel") and pg.evaluate(nodata) >= 1, str(pg.evaluate(nodata)))
         click('#pfPanel [data-ptab]:not([data-ptab="tr"])'); pg.wait_for_timeout(300)
-        ok(f"  {sel}: second tab shows", pg.evaluate("()=>document.querySelectorAll('#pfPanel .pfpr div, #pfPanel canvas').length") >= 2)
+        ok(f"  {sel}: second tab shows", pg.evaluate("()=>document.querySelectorAll('#pfPanel .pfpr div, #pfPanel canvas, #pfPanel #pfCtl .card').length") >= 2)
     for a in ["yard", "pulper", "stock", "pm", "winder", "ship", "site"]:
         for tab in ["tr", "co", "uq"]:
             if a == "site" and tab == "uq": continue
@@ -85,6 +85,24 @@ with sync_playwright() as pw:
             if shot and (a, tab) in [("pm", "tr"), ("pm", "uq"), ("site", "tr"), ("yard", "co")]:
                 pg.evaluate("()=>__PM.G3.pfSel(null)"); pg.evaluate(f"()=>__PM.G3.pfSel('node:{a}','{tab}','run')"); pg.wait_for_timeout(300)
                 pg.mouse.move(900, 300); pg.wait_for_timeout(200); pg.screenshot(path=f"{shot}-{a}-{tab}.png")
+    # ---- v6.5 B: the area controls live in the panel; locked in a season ----
+    for a, want in [("yard", 2), ("pulper", 1), ("stock", 1), ("pm", 1), ("winder", 1), ("ship", 1)]:
+        pg.evaluate(f"()=>__PM.G3.pfSel('node:{a}','ct')"); pg.wait_for_timeout(150)
+        n = pg.evaluate("()=>[...document.querySelectorAll('#pfCtl .card')].filter(c=>getComputedStyle(c).display!=='none').length")
+        ok(f"controls {a}: its cards show", n == want, str(n))
+    pg.evaluate("()=>__PM.G3.pfSel('node:pm','ct')"); pg.wait_for_timeout(300)
+    lk = pg.evaluate("()=>{const i=document.getElementById('s-pmSp');return {dis:i.disabled,lock:document.body.classList.contains('season-lock'),inPanel:!!i.closest('#pfPanel')}}")
+    ok("controls: speed slider in the panel, locked in a season", lk["dis"] and lk["lock"] and lk["inPanel"], str(lk))
+    if shot: pg.screenshot(path=f"{shot}-controls.png")
+    pg.evaluate("()=>__PM.G3.pfSel('node:site','tr')"); pg.wait_for_timeout(200)
+    ok("controls go home when another tab shows", pg.evaluate("()=>!!document.querySelector('#pfHold #cards')"))
+    ok("Settings has the pointer, not the old controls", pg.evaluate("()=>!!document.getElementById('pfCtlGo')&&!document.querySelector('.v2pane #cards')"))
+    fr = pg.evaluate("()=>{const L=__PM.S.ledger;return {frin:Math.round(L.frin),frout:Math.round(L.frout),fuel:__PM.S.fuel}}")
+    ok("freight booked (in and out)", fr["frin"] > 0 and fr["frout"] > 0, str(fr))
+    pg.evaluate("()=>__PM.G3.pfSel('cat:frin','tr','run')"); pg.wait_for_timeout(300)
+    if shot: pg.screenshot(path=f"{shot}-freight.png")
+    pg.evaluate("()=>__PM.G3.pfSel('cat:fiber','tr','run')"); pg.wait_for_timeout(300)
+    if shot: pg.screenshot(path=f"{shot}-fiber.png")
     for m in ["w", "r", "t"]:
         pg.evaluate(f"()=>__PM.G3.pfMode('{m}')"); pg.wait_for_timeout(200)
         ok(f"range {m}: flow draws", pg.evaluate("()=>document.querySelectorAll('#pfMap [data-pf^=\"node:\"]').length") == 7)

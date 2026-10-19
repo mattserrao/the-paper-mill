@@ -7,6 +7,7 @@ function step(dt){
     if(di>S.pd.i){const made=S.tot.prodT-S.pd.start;if(made>S.pd.rec)S.pd.rec=made;S.pd.i=di;S.pd.start=S.tot.prodT;}}
   pfDay();pfHour();   // v6.3 process flow: the mill day's books (11b); v6.5 the hour's history row (11c)
 
+  fuelTick();   // v6.5 freight: the weekly diesel index
   chaosTick(dt);
   cardTick(dt);
   civTick(dt);   // v5.1 civics
@@ -37,7 +38,7 @@ function step(dt){
   for(let d=0;d<P.doors;d++){const tr=S.inDock[d]; if(!tr||M.docksClosed)continue;
     const u=Math.min(tr.load,P.doorRate*dt/60,cap,Math.max(0,P.yardCap-S.yard));
     tr.load-=u;cap-=u;S.yard+=u;unloaded+=u;S.tot.inTons+=u;
-    {const dc=S.plan.disc,dt2=dc?Math.min(u,dc.t):0;spend(u*P.occPrice-dt2*(dc?dc.v:0),"occ");if(dc){dc.t-=dt2;if(dc.t<=1e-6)S.plan.disc=null;}}
+    {const dc=S.plan.disc,dt2=dc?Math.min(u,dc.t):0;spend(u*P.occPrice-dt2*(dc?dc.v:0),"occ");spend(u*frInRate(),"frin");if(dc){dc.t-=dt2;if(dc.t<=1e-6)S.plan.disc=null;}}
     if(tr.load<=0.001){S.leaving.push({...tr,ty:inY(d),kind:"in"});if(S.leaving.length>24)S.leaving.shift();S.inDock[d]=null;}}
   const feed=Math.min(feedRes,S.yard); S.yard-=feed;
   // 3 pulper → chest
@@ -107,7 +108,7 @@ function step(dt){
   for(let d=0;d<P.shipDoors;d++){const tr=S.outDock[d]; if(!tr)continue;
     const l=Math.min(P.truckRolls-tr.load,pool===Infinity?P.doorRolls*dt/60:pool,lcap,S.fg);pool-=l;
     tr.load+=l;lcap-=l;S.fg-=l;loaded+=l;lotTake(S.lots.fg,l,tr.lots||(tr.lots=[]));
-    if(tr.load>=P.truckRolls-1e-6){S.leaving.push({...tr,ty:outY(d),kind:"out"});if(S.leaving.length>24)S.leaving.shift();S.outDock[d]=null;S.tot.shipped+=P.truckRolls;const tons=P.truckRolls*C.rollW.v;S.shipT+=tons;earn(lotValue(tr.lots||[[C.grade,P.truckRolls]],C.rollW.v));}}   // (v16: each roll at its own grade's price)
+    if(tr.load>=P.truckRolls-1e-6){S.leaving.push({...tr,ty:outY(d),kind:"out"});if(S.leaving.length>24)S.leaving.shift();S.outDock[d]=null;S.tot.shipped+=P.truckRolls;const tons=P.truckRolls*C.rollW.v;S.shipT+=tons;spend(tons*frOutRate(),"frout");earn(lotValue(tr.lots||[[C.grade,P.truckRolls]],C.rollW.v));}}   // (v16: each roll at its own grade's price)
   spend(((C.drivers.v+C.loaders.v+P.techs)*(ECON.wage+(P.siteWage||0))*(P.costMul||1)*leadWage()*civWage()+P.robots*ECON.robot+P.pmCost)*dt/60,"labor");
   pfLabor(dt);
   spend((ECON.overhead+(P.siteOver||0))*dt/60,"overhead"); if(P.premium)spend(P.premium*dt/60,"premium");
@@ -123,7 +124,7 @@ function step(dt){
   R.prod=ease(R.prod,k(prod),dt,6);R.fiberUse=ease(R.fiberUse,k(prod/P.pmLoss),dt,6);R.load=ease(R.load,k(loaded),dt,6);R.rolls=ease(R.rolls,k(rollsMade),dt,10);R.cut=ease(R.cut,k(cut),dt,6);
   // v5.0.4: profit per day is the real cash change (sales and deals in, every cost out, repairs and outage budgets too); only
   // upgrades are left out, as they're a choice. Read from the ledger, so money moved between steps (a budget approved) counts too.
-  {const L1=S.ledger,T=L1.rev+(L1.deals||0)-(L1.occ+L1.energy+L1.labor+L1.overhead+L1.premium+L1.repairs),op=S.opLast==null?0:T-S.opLast;S.opLast=T;const NB=432,B=S.opb&&S.opb.b.length===NB?S.opb:(S.opb={b:new Array(NB).fill(0),i:-1,sum:0});if(B.sum==null)B.sum=B.b.reduce((a,v)=>a+v,0);
+  {const L1=S.ledger,T=L1.rev+(L1.deals||0)-(L1.occ+(L1.frin||0)+(L1.frout||0)+L1.energy+L1.labor+L1.overhead+L1.premium+L1.repairs),op=S.opLast==null?0:T-S.opLast;S.opLast=T;const NB=432,B=S.opb&&S.opb.b.length===NB?S.opb:(S.opb={b:new Array(NB).fill(0),i:-1,sum:0});if(B.sum==null)B.sum=B.b.reduce((a,v)=>a+v,0);
     // v4.4.0-t3: profit per day is the last 24 game hours (144 ten-minute buckets); shown from the end of the first day
     // v5.0.5: averaged over the last 3 days (432 ten-minute buckets, with a running sum), so one truck or one repair bill doesn't flip it
     const bi=Math.floor(S.t/10);if(bi!==B.i){for(let j=Math.max(B.i+1,bi-NB+1);j<=bi;j++){const k=((j%NB)+NB)%NB;B.sum-=B.b[k];B.b[k]=0;}B.i=bi;}

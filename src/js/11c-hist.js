@@ -8,7 +8,7 @@
    a slice at a time between frames. Its rows are kept at hours -336..-1 and the sandbox is thrown away; the real run
    doesn't step until it's done (52-main-loop.js). The run's own dice, cash and day 1 are untouched.
    Saves: S.hist is kept under its own key, written only when a row was added (51c-save.js). */
-const HIST_PRIOR=14,HIST_MAX=60*24+HIST_PRIOR*24;   // survival keeps a rolling 60 days (plus the prior ones)
+const HIST_V=2,HIST_PRIOR=14,HIST_MAX=60*24+HIST_PRIOR*24;   // survival keeps a rolling 60 days (plus the prior ones)
 const HC=["h"];const HCI={};
 {const add=(...k)=>k.forEach(x=>HC.push(x));
   PF_CATS.forEach(([c])=>add("c."+c));PF_AREAS.forEach(([a])=>PF_CATS.forEach(([c])=>add("b."+a+"."+c)));
@@ -25,14 +25,14 @@ const HA=[["yard",()=>S.yard],["yardp",()=>S.yard/P.yardCap*100],["wet",()=>S.we
   ["fgp",()=>S.fg/P.fgCap*100],["price",()=>priceOf(C.grade)],["load",()=>S.rates.load],["crew",()=>C.drivers.v+C.loaders.v+P.techs],
   ["wage",()=>(ECON.wage+(P.siteWage||0))*(P.costMul||1)*leadWage()*civWage()],
   ["civE",()=>civOn()?S.civ.m.E:null],["civL",()=>civOn()?S.civ.m.L:null],["civM",()=>civOn()?S.civ.m.M:null],["civC",()=>civOn()?S.civ.m.C:null],
-  ["mkt",()=>S.plan?S.plan.mkt:0],["grade",()=>GRADE_IDS.indexOf(C.grade)]];
+  ["mkt",()=>S.plan?S.plan.mkt:0],["haul",()=>frInRate()],["frout",()=>frOutRate()],["fuel",()=>fuelIdx()],["grade",()=>GRADE_IDS.indexOf(C.grade)]];
 const GRADE_IDS=Object.keys(GRADES);
 HA.forEach(([k])=>{HCI["a."+k]=HC.length;HC.push("a."+k);});
 const histR=v=>v==null||v!==v?null:Math.abs(v)>=100?Math.round(v):Math.round(v*100)/100;
 
 function histNew(){const T=S.tot;return Object.assign(pfNew(),{T:{in:T.inTrucks,out:T.outTrucks,brk:T.breaks,hay:T.hayouts||0,rolls:T.rolls},
   m:{},sa:new Array(HA.length).fill(0),sn:new Array(HA.length).fill(0),s2:-1,dn:{}});}
-function histInit(){if(!S.hist)S.hist={rows:[],dn:[],ev:[],bf:false,id:Math.floor(Math.random()*1e9)};return S.hist;}
+function histInit(){if(!S.hist||S.hist.v!==HIST_V)S.hist={v:HIST_V,rows:[],dn:[],ev:[],bf:false,id:Math.floor(Math.random()*1e9)};return S.hist;}   // (v2: freight columns; older history is made again)
 // called at the top of step(), after pfDay
 function pfHour(){histInit();const h=Math.floor(S.t/60);if(!S.ph){S.ph=histNew();return;}if(h===S.ph.h)return;
   histPush(histRow(S.ph),S.ph.dn);S.ph=histNew();}
@@ -68,7 +68,7 @@ function histRows(h0,h1,prior){const H=S.hist;if(!H)return [];const out=[];
 // a range of rows summed into the same shape pfCalc gives the screen (cat, sub, by, W, rep, totals)
 function histSum(rows,t0,t1){const s=k=>rows.reduce((a,r)=>a+(r[HCI[k]]||0),0);
   const cat={};PF_CATS.forEach(([c])=>cat[c]=s("c."+c));const by={};PF_AREAS.forEach(([a])=>{by[a]={};PF_CATS.forEach(([c])=>{const v=s("b."+a+"."+c);if(v)by[a][c]=v;});});
-  const sub={energy:{Steam:s("s.steam"),Power:s("s.power")},chem:{"Stock prep":s("s.chs"),"Wet end":s("s.chp")},labor:{"Forklift drivers":s("s.drv"),"Loaders and robots":s("s.ldr")},
+  const sub={frin:{"Inbound haul":cat.frin},frout:{"Outbound freight":cat.frout},energy:{Steam:s("s.steam"),Power:s("s.power")},chem:{"Stock prep":s("s.chs"),"Wet end":s("s.chp")},labor:{"Forklift drivers":s("s.drv"),"Loaders and robots":s("s.ldr")},
     maint:{"Repair bills and outage budgets":s("s.rep"),"Maintenance techs":s("s.tech"),"Preventive maintenance program":s("s.pmp"),"Insurance premium":s("s.prem")},
     over:{"Site overhead":s("s.ovh"),"Civics":s("s.civ")},fiber:{"OCC bales":cat.fiber}};
   const W={};["feed","rej","bale","eff","broke","val","fine","fines"].forEach(k=>W[k]=s("w."+k));
@@ -79,13 +79,13 @@ function histSum(rows,t0,t1){const s=k=>rows.reduce((a,r)=>a+(r[HCI[k]]||0),0);
 /* ---- prior history: 14 days in a sandbox, a slice at a time ---- */
 const BF={busy:false,p:0,sb:null,real:null,stepT:0,ms:0};
 const bfLive=()=>!!(S&&((S.season&&S.season.on)||S.free||S.zen));
-function bfNeed(){return !BF.busy&&bfLive()&&!(S.hist&&S.hist.bf)&&!(typeof location!=="undefined"&&/[?&]nobf\b/.test(location.search));}
+function bfNeed(){return !BF.busy&&bfLive()&&!(S.hist&&S.hist.bf&&S.hist.v===HIST_V)&&!(typeof location!=="undefined"&&/[?&]nobf\b/.test(location.search));}
 // swap the sandbox in (its S, C, chaos settings; P is rebuilt from it) and out again, quietly: no sound, no 3D cut-scenes
 function bfIn(){const R=BF.real={S,C,P:Object.assign({},P),CH:{on:CH.on,lvl:CH.lvl},nb:BANNERS.length,ev:AUDIO.event,sfx:AUDIO.sfx,bird:G3.birdCine};
   AUDIO.event=AUDIO.sfx=()=>{};G3.birdCine=undefined;CH.on=true;CH.lvl=1;
   if(!BF.sb){C=JSON.parse(JSON.stringify(R.C));AUTOKEYS.forEach(k=>{if(C[k])C[k].auto=true;});C.breaks=true;C.hays=true;
-    initState();seedRun(((R.S.seed||1)^0x5bd1e995)>>>0);S.bn=R.S.bn;S.cards=null;S.season=null;S.free=true;S.zen=false;S.lead=null;S.civ=null;S.outg=null;
-    S.hist={rows:[],dn:[],ev:[],bf:true,id:0};applyUpgrades();S.M=mods();BF.sb={S,C};}
+    initState();seedRun(((R.S.seed||1)^0x5bd1e995)>>>0);S.bn=R.S.bn;S.fuelSeed=R.S.seed;S.fuelOff=-HIST_PRIOR/7;S.cards=null;S.season=null;S.free=true;S.zen=false;S.lead=null;S.civ=null;S.outg=null;
+    S.hist={v:HIST_V,rows:[],dn:[],ev:[],bf:true,id:0};applyUpgrades();S.M=mods();BF.sb={S,C};}
   else{S=BF.sb.S;C=BF.sb.C;applyUpgrades();S.M=mods();}}
 function bfOut(){const R=BF.real;BF.sb.S=S;BF.sb.C=C;S=R.S;C=R.C;Object.assign(P,R.P);CH.on=R.CH.on;CH.lvl=R.CH.lvl;BANNERS.length=Math.min(BANNERS.length,R.nb);
   AUDIO.event=R.ev;AUDIO.sfx=R.sfx;G3.birdCine=R.bird;BF.real=null;}

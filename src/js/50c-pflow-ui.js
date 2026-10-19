@@ -32,7 +32,7 @@ function pfOv(){let o=$("pfOv");if(o)return o;
   return o;}
 function pfOpen(){const o=pfOv();if(G3.closeKnobUI)G3.closeKnobUI();PFUI.open=true;G3.pfOpen=true;PFUI.sel=null;PFUI.mode="t";o.hidden=false;pfRender(true);kuiSync();
   setTimeout(()=>{try{$("pfClose").focus({preventScroll:true});}catch(_){}},0);}
-function pfClose(){const o=$("pfOv");if(o)o.hidden=true;const was=PFUI.open;PFUI.open=false;G3.pfOpen=false;kuiSync();if(was)try{$("gl").focus({preventScroll:true});}catch(_){}}
+function pfClose(){pfCtlHome();G3.pfCtlOn=false;const o=$("pfOv");if(o)o.hidden=true;const was=PFUI.open;PFUI.open=false;G3.pfOpen=false;kuiSync();if(was)try{$("gl").focus({preventScroll:true});}catch(_){}}
 // the picture runs top to bottom on narrow screens
 const pfVert=()=>window.matchMedia("(max-width:760px)").matches;
 
@@ -128,11 +128,11 @@ const pfHourLbl=h=>`${pfDayLbl(h)} · ${clockOf(((h%24)+24)%24*60)}`;
    hourly bars over 24 h or daily bars over 7 days and the run), stack (summed bars stacked), pct (sum of a / sum of b) ---- */
 const V_=k=>r=>r[HCI[k]];
 const HSUM=k=>k.reduce?(r=>k.reduce((a,x)=>a+(r[HCI[x]]||0),0)):V_(k);
-const C_={occ:"#c08a4a",en:"#ffb02e",ch:"#3fc6d6",lab:"#4fd18b",mt:"#ff7a8a",ov:"#a7b4cf",bl:"#7fb2ff",pu:"#c08bff",wh:"#dbe6f6"};
+const C_={fi:"#e07b39",fo:"#9b7fd6",occ:"#c08a4a",en:"#ffb02e",ch:"#3fc6d6",lab:"#4fd18b",mt:"#ff7a8a",ov:"#a7b4cf",bl:"#7fb2ff",pu:"#c08bff",wh:"#dbe6f6"};
 const UPK={yard:"m.yard",pulper:"m.pulp",stock:"m.pulp",pm:"m.pmrun",winder:"m.wdrun",ship:"m.ship"};
 const PF_TR={
   yard:[{t:"Bale yard inventory",u:"t",k:"line",s:[["Yard",C_.occ,V_("a.yard")]]},{t:"Trucks in",u:"trucks",k:"bar",s:[["Trucks",C_.bl,V_("n.in")]]},
-    {t:"OCC price",u:"$/t",k:"line",s:[["OCC",C_.occ,V_("a.occp")]],ev:1},{t:"Unloading",u:"t/h",k:"line",s:[["Unloaded",C_.bl,V_("a.unload")]]}],
+    {t:"OCC price",u:"$/t",k:"line",s:[["OCC",C_.occ,V_("a.occp")]],ev:1},{t:"Inbound haul",u:"$/t",k:"line",s:[["Haul",C_.fi,V_("a.haul")]]},{t:"Unloading",u:"t/h",k:"line",s:[["Unloaded",C_.bl,V_("a.unload")]]}],
   pulper:[{t:"Pulper feed and fiber out",u:"t/h",k:"line",s:[["Bales fed",C_.occ,V_("a.feed")],["Fiber out",C_.bl,V_("a.fiber")]]},{t:"Yield",u:"%",k:"line",s:[["Yield",C_.lab,V_("a.yield")]]},
     {t:"Rotor",u:"A",k:"line",s:[["Rotor",C_.en,V_("a.amps")]],ev:1}],
   stock:[{t:"Fiber to the machine chest",u:"t/h",k:"line",s:[["Fiber",C_.bl,V_("a.fiber")]]},{t:"Stock chest level",u:"%",k:"line",s:[["Chest",C_.ch,V_("a.chest")]]},
@@ -142,12 +142,16 @@ const PF_TR={
     {t:"Dryer steam",u:"t/h",k:"line",s:[["Steam",C_.wh,V_("a.steam")]]},{t:"Energy",u:"$/t",k:"line",s:[["Energy",C_.en,V_("a.energyt")]]}],
   winder:[{t:"Winder",u:"t/h",k:"line",s:[["Cut",C_.bl,V_("a.cut")]],ev:1},{t:"Paper waiting at the winder",u:"t",k:"line",s:[["Reel store",C_.wh,V_("a.reel")]]},{t:"Hayouts",u:"",k:"bar",s:[["Hayouts",C_.en,V_("n.hay")]]}],
   ship:[{t:"Warehouse",u:"% full",k:"line",s:[["Warehouse",C_.wh,V_("a.fgp")]]},{t:"Paper shipped",u:"t",k:"bar",s:[["Shipped",C_.lab,V_("ship")]]},
-    {t:"Trucks out",u:"trucks",k:"bar",s:[["Trucks",C_.bl,V_("n.out")]]},{t:"Paper price (grade on the machine)",u:"$/t",k:"line",s:[["Price",C_.lab,V_("a.price")]]}],
+    {t:"Trucks out",u:"trucks",k:"bar",s:[["Trucks",C_.bl,V_("n.out")]]},{t:"Outbound freight",u:"$/t",k:"line",s:[["Freight",C_.fo,V_("a.frout")]]},{t:"Paper price (grade on the machine)",u:"$/t",k:"line",s:[["Price",C_.lab,V_("a.price")]]}],
   site:[{t:"Admin costs",u:"$",k:"stack",s:[["Overhead",C_.ov,V_("s.ovh")],["Insurance",C_.pu,V_("s.prem")],["Civics",C_.ch,V_("s.civ")],["Maintenance crew",C_.mt,V_("s.tech")],["PM program",C_.en,V_("s.pmp")]]},
     {t:"Crew on site",u:"people",k:"line",s:[["Crew",C_.lab,V_("a.crew")]]},{t:"Wage",u:"$/h per worker",k:"line",s:[["Wage",C_.lab,V_("a.wage")]]},
     {t:"Civics meters",u:"0–100",k:"line",s:[["Economy",C_.en,V_("a.civE")],["Labor",C_.lab,V_("a.civL")],["Machinery",C_.bl,V_("a.civM")],["Community",C_.pu,V_("a.civC")]],opt:1}],
-  "cat:fiber":[{t:"OCC price",u:"$/t",k:"line",s:[["OCC",C_.occ,V_("a.occp")]]},{t:"Fiber spend",u:"$",k:"bar",s:[["Fiber",C_.occ,V_("c.fiber")]]},{t:"Bales fed",u:"t",k:"bar",s:[["Bales",C_.occ,V_("w.feed")]]},
+  "cat:fiber":[{t:"OCC price and haul",u:"$/t",k:"line",s:[["OCC",C_.occ,V_("a.occp")],["Haul",C_.fi,V_("a.haul")],["Delivered",C_.wh,r=>{const a=hv(r,"a.occp"),b=hv(r,"a.haul");return a==null||b==null?null:a+b;}]]},{t:"Fiber spend",u:"$",k:"bar",s:[["Fiber",C_.occ,V_("c.fiber")]]},{t:"Bales fed",u:"t",k:"bar",s:[["Bales",C_.occ,V_("w.feed")]]},
     {t:"OCC market",u:"$/t vs normal",k:"line",s:[["Market",C_.wh,V_("a.mkt")]]}],
+  "cat:frin":[{t:"Inbound haul",u:"$/t",k:"line",s:[["Haul",C_.fi,V_("a.haul")]]},{t:"Diesel index",u:"× normal",k:"line",s:[["Diesel",C_.wh,V_("a.fuel")]]},
+    {t:"Inbound freight spend",u:"$",k:"bar",s:[["Freight in",C_.fi,V_("c.frin")]]},{t:"Trucks in",u:"trucks",k:"bar",s:[["Trucks",C_.bl,V_("n.in")]]}],
+  "cat:frout":[{t:"Outbound freight",u:"$/t",k:"line",s:[["Freight",C_.fo,V_("a.frout")]]},{t:"Diesel index",u:"× normal",k:"line",s:[["Diesel",C_.wh,V_("a.fuel")]]},
+    {t:"Outbound freight spend",u:"$",k:"bar",s:[["Freight out",C_.fo,V_("c.frout")]]},{t:"Paper shipped",u:"t",k:"bar",s:[["Shipped",C_.lab,V_("ship")]]}],
   "cat:energy":[{t:"Energy per ton",u:"$/t",k:"line",s:[["Energy",C_.en,V_("a.energyt")]]},{t:"Energy spend",u:"$",k:"stack",s:[["Steam",C_.en,V_("s.steam")],["Power",C_.bl,V_("s.power")]]},
     {t:"Dryer steam",u:"t/h",k:"line",s:[["Steam",C_.wh,V_("a.steam")]]}],
   "cat:chem":[{t:"Chemicals and water per ton",u:"$/t",k:"line",s:[["Chemicals",C_.ch,V_("a.chemt")]]},{t:"Chemicals spend",u:"$",k:"stack",s:[["Stock prep",C_.ch,V_("s.chs")],["Wet end",C_.bl,V_("s.chp")]]}],
@@ -247,6 +251,10 @@ function pfBreak(D,live){const s=PFUI.sel;const [kind,a,b]=s.split(":"),t=D.made
       if(c==="fiber")rows.push(["Now","","hd"],["OCC price",money(P.occPrice)+"/t"],["Bales fed, "+PF_RNAME[PFUI.mode],pfT(D.W.feed)],["Pulper yield",Math.round(P.yieldF*100)+" %"]);
       if(c==="energy")rows.push(["Now","","hd"],["Energy per ton",money(Math.max(0,energyCost()-pfChemT()))+"/t"],["Grade steam","×"+(P.steamMul||1).toFixed(2)],["Shoe press and APC","×"+(P.energyMul||1).toFixed(2)],P.siteEnergy?["Site",(P.siteEnergy-(P.siteChem||0)>=0?"+":"−")+money(Math.abs(P.siteEnergy-(P.siteChem||0)))+"/t"]:null,cm!==1?["Survival costs","×"+cm.toFixed(2)]:null);
       if(c==="chem")rows.push(["Now","","hd"],["Chemicals and water per ton",money(pfChemT())+"/t"],P.refSave?["Refiner upgrade","−"+money(P.refSave)+"/t"]:null,P.siteChem?["Site",(P.siteChem>=0?"+":"−")+money(Math.abs(P.siteChem))+"/t"]:null,cm!==1?["Survival costs","×"+cm.toFixed(2)]:null);
+      if(c==="frin"||c==="frout"){const base=c==="frin"?FR.inBase+(P.siteHaul||0):FR.outBase+(P.siteFreight||0),fx=c==="frout"?frFx():0;
+        rows.push(["Now","","hd"],[c==="frin"?"Haul per ton of bales":"Freight per ton shipped",money(c==="frin"?frInRate():frOutRate())+"/t"],["Site base",money(base)+"/t"],["Diesel index","×"+fuelIdx().toFixed(2)],
+          ["Weather",`${(WXN[S.wx]||S.wx||"clear").toLowerCase()} ×${frWx().toFixed(2)}`],frEv()>1?["Detours","×"+frEv().toFixed(2),"bad"]:null,fx?["Deals and events",(fx>0?"+":"−")+money(Math.abs(fx))+"/t",fx>0?"bad":"ok"]:null,
+          c==="frin"&&cm!==1?["Survival costs","×"+cm.toFixed(2)]:null);}
       if(c==="labor")rows.push(["Now","","hd"],["Drivers on shift",String(Math.round(C.drivers.v))],["Loaders on shift",String(Math.round(C.loaders.v))],P.robots?["Robot loaders",String(P.robots)]:null);}
     if(c==="maint"){const r=Object.entries(D.rep).map(([id,v])=>[id==="outage"?"Outage budget":EV[id]?EV[id].name:id,money(v)]);if(r.length)rows.push(["Bills, "+PF_RNAME[PFUI.mode],"","hd"],...r);}
     if(c==="over")note="Site-wide costs: they join the flow at Site & admin.";}
@@ -274,13 +282,24 @@ function pfBreak(D,live){const s=PFUI.sel;const [kind,a,b]=s.split(":"),t=D.made
     note=`Operating money for ${PF_RNAME[PFUI.mode]}. Upgrades are a choice, so they're left out.`;}
   return {title,rows,note};}
 
-function pfTabs(sel){const [kind]=sel.split(":");return kind==="node"?[["tr","Trends"],["co","Costs"],["uq","Uptime & quality"]]:[["tr","Trends"],["bk","Breakdown"]];}
+function pfTabs(sel){const [kind,a]=sel.split(":");return kind==="node"?[["tr","Trends"],...(a==="site"?[]:[["ct","Controls"]]),["co","Costs"],["uq","Uptime & quality"]]:[["tr","Trends"],["bk","Breakdown"]];}
+/* ---- v6.5 the area controls live here (they were Settings > Area controls). The #cards section moves between a hidden
+   holder and the Controls tab; CSS shows only this area's cards. Same rules as before: on AUTO and locked in a season
+   or survival run (09-season-leaderboard.js seasonLocks), free in Free Play. ---- */
+const PF_CARDA=["yard","yard","pulper","stock","pm","winder","ship"];
+function pfCtlHome(){const cs=$("cards"),h=$("pfHold");if(cs&&h&&cs.parentNode!==h)h.appendChild(cs);}
+function pfCtlMount(a){const cs=$("cards"),t=$("pfCtl");if(!cs||!t)return;cs.dataset.area=a;if(cs.parentNode!==t)t.appendChild(cs);G3.pfCtlOn=true;}
+{const cs=$("cards"),d=$("areactl");if(cs){const h=kEl("div","pfhold");h.id="pfHold";h.hidden=true;document.body.appendChild(h);
+    cs.querySelectorAll(":scope > .card").forEach((c,i)=>c.dataset.a=PF_CARDA[i]||"site");h.appendChild(cs);}
+  if(d){const n=kEl("div","setgrp pfctlnote",`<span>Area controls are in <b>Process flow</b>: tap an area, then <b>Controls</b>.</span><button type="button" id="pfCtlGo">Open process flow</button>`);n.id="areactl";d.replaceWith(n);
+    $("pfCtlGo").addEventListener("click",()=>{const x=document.querySelector('#v2sheet header button[aria-label="Close panel"]');if(x)x.click();pfOpen();});}}
 function pfPanelHTML(D,live){const sel=PFUI.sel,[kind,a]=sel.split(":"),tabs=pfTabs(sel);if(!PFUI.tab||!tabs.some(t=>t[0]===PFUI.tab))PFUI.tab="tr";
   if(a==="site"&&PFUI.tab==="uq")PFUI.tab="tr";
   PFUI.area=kind==="node"?a:null;const B=pfBreak(D,live),specs=[];let body="";
   const zoom=`<div class="seg pfzoom" role="group" aria-label="Chart range">${[["24h","24 h"],["7d","7 d"],["run","Run"]].map(([k,l])=>`<button type="button" data-pz="${k}" aria-pressed="${PFUI.zoom===k}">${l}</button>`).join("")}</div>`;
   const charts=list=>list.filter(c=>!c.opt||(S.hist&&S.hist.rows.some(r=>hv(r,"a.civE")!=null))).map(c=>{specs.push(c);return pfChartHTML(c,specs.length-1);}).join("");
   if(PFUI.tab==="tr"){body=zoom+charts(kind==="node"?PF_TR[a]:PF_TR[sel]||[]);if(S.zen&&kind!=="node")body=zoom+charts((PF_TR[sel]||[]).filter(c=>c.u!=="$"));}
+  else if(PFUI.tab==="ct")body=`<p class="pfpn pflock">${document.body.classList.contains("season-lock")?"<b>AUTO · locked during a season or survival run.</b> The mill runs these itself; Free Play lets you run them by hand.":"Free play: move a slider, or tap AUTO to hand it back to the mill."}</p><div id="pfCtl"></div>`;
   else if(PFUI.tab==="bk")body=`<div class="pfpr">${pfRows(B.rows)}</div>${B.note?`<p class="pfpn">${B.note}</p>`:""}`;
   else if(PFUI.tab==="co"){const W=histWin(...pfWin()),all=histWin(-1e9,pfNowH()+1);
     const sp={t:"Cost added here",u:"$",k:"stack",s:PF_CATS.filter(([c])=>[...all.rows].some(r=>hv(r,"b."+a+"."+c))).map(([c,n,col])=>[n,col,V_("b."+a+"."+c)])};
@@ -311,7 +330,9 @@ function pfRender(force){if(!PFUI.open)return;const o=$("pfOv");if(!o)return;
   const put=(id,h)=>{const e=$(id);if(e._h!==h){e._h=h;e.innerHTML=h;}};
   put("pfIn",pfInputs(D));put("pfMap",pfSVG(D,live));put("pfOut",pfOutputs(D));
   const pp=$("pfPanel");pp.hidden=!PFUI.sel;$("pfOv").querySelector(".dcs").classList.toggle("panel",!!PFUI.sel);
-  if(PFUI.sel){const b0=pp.querySelector(".pfpb");pp._sc=b0?b0.scrollTop:0;const h=pfPanelHTML(D,live);if(force||pp._k!==skey||PFUI.tab==="bk"||PFUI.tab==="co"){const same=pp._k&&pp._k.split("|").slice(0,2).join()===skey.split("|").slice(0,2).join();put("pfPanel",h);pp._k=skey;const b=pp.querySelector(".pfpb"),b0=pp._sc||0;if(b)b.scrollTop=same?b0:0;}pfCharts();}}
+  G3.pfCtlOn=false;
+  if(!PFUI.sel)pfCtlHome();
+  if(PFUI.sel){const b0=pp.querySelector(".pfpb");pp._sc=b0?b0.scrollTop:0;const h=pfPanelHTML(D,live);if(force||pp._k!==skey||PFUI.tab==="bk"||PFUI.tab==="co"){const same=pp._k&&pp._k.split("|").slice(0,2).join()===skey.split("|").slice(0,2).join();if(pp._h!==h)pfCtlHome();put("pfPanel",h);pp._k=skey;const b=pp.querySelector(".pfpb"),b0=pp._sc||0;if(b)b.scrollTop=same?b0:0;}if(PFUI.tab==="ct"&&PFUI.area)pfCtlMount(PFUI.area);else pfCtlHome();pfCharts();}}
 
 // Settings > View: the button that opens it (next to the fiddly knobs view switch)
 {const row=$("v2viewrow"),b=kEl("button","pfopen","Process flow");b.type="button";b.id="pfBtn";b.title="Inputs, process and outputs for today's mill day";row.appendChild(b);

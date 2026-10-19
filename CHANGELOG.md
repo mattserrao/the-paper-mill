@@ -1,6 +1,20 @@
 # Changelog
 
 
+## v6.5.0-b1 (2026-10-19): digital twin, part B (test branch test/v6.5-twin)
+- **Freight is a real cost:** inbound haul per ton of bales unloaded and outbound freight per ton shipped, each (base +
+  site) × a weekly diesel index (0.85-1.15, a fixed walk from the run's seed, so the 14 prior days lead into the run) ×
+  weather (normalised to the site's average) × detours (flood, dust storm). Survival's cost multiplier applies to the haul.
+  Site bases: haul 18 + the site's old OCC adder (urban 13, rural 30, desert 18, swamp 15); outbound 30 − the site's old
+  price adder (urban 26, desert 37, rural and swamp 30). The backhaul card is now −$6/t freight; "freight rates jumped" +$8/t.
+- **Cost-neutral on average:** OCC grades $18/t cheaper (the haul came out), paper +$30/t (the freight went in). The
+  rail car costs the same as before. New ledger lines Inbound / Outbound freight; report cards fold them into Freight.
+- **Process flow:** Freight in (joins at the bale yard) and Freight out (warehouse & shipping) as inputs, with trends
+  (haul or freight $/t, diesel index, spend) and a breakdown of what sets today's rate. Fiber's trend shows OCC, haul
+  and delivered $/t together; the bale yard and warehouse trends show their freight rate.
+- **Area controls moved** from Settings into the process flow: tap an area, then Controls. Same rules: AUTO and locked
+  in a season or survival run, free in Free Play. Settings keeps a pointer with an "Open process flow" button.
+
 ## v6.5.0-a1 (2026-10-19): digital twin, part A (test branch test/v6.5-twin)
 - **History:** one row per game hour for the whole run (11c-hist.js): money by input and by area (from the same notes
   as the day books, so any range adds up to the ledger), tons and waste, trucks, breaks and hayouts, minutes by machine

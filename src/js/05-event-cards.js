@@ -276,7 +276,7 @@ const CARDS=[
   odds:()=>70,why:"Fixed odds.",
   ok:()=>true,
   accept(c){const w=rand("card")*100<c.o;
-    if(w){addFx({id:"backhaul",left:10*1440,price:{all:6}});return "+$6/t on every grade for 10 days.";}
+    if(w){addFx({id:"backhaul",left:10*1440,fr:-6});return "Outbound freight $6/t cheaper for 10 days.";}
     addFx({id:"backhaul",left:6*60,mods:{noOut:true}});pend("backhaul",6*60,"backhaul");
     return "The carrier's trucks didn't show: no shipping for 6 hours.";}},
  {id:"starch",area:"Paper machine",title:"Surface starch upgrade",
@@ -314,7 +314,7 @@ const CARDS=[
     return w?"Apprentices are a help: sheet breaks 20% rarer for 14 days.":"Apprentices are still learning: sheet breaks 1.3× for 5 days.";}},
 ];
 function cardTick(dt){const cs=S.cards;if(!cs)return;
-  for(const f of S.fx){f.left-=dt;if(f.rail>0){const u=Math.min(f.rail,50*dt/60,Math.max(0,P.yardCap-S.yard));S.yard+=u;S.tot.inTons+=u;spend(u*Math.max(0,P.occPrice-30),"occ");f.rail-=u;if(f.rail<=1e-6){f.left=0;if(f.done==="rail"){const w=f.w;if(!w)deal(-20000);cardBanner(w?"Railcar unloaded: 900 t of OCC at $30/t off.":"Railcar unloaded, but it came in late: $20k demurrage.",w);}}}}
+  for(const f of S.fx){f.left-=dt;if(f.rail>0){const u=Math.min(f.rail,50*dt/60,Math.max(0,P.yardCap-S.yard));S.yard+=u;S.tot.inTons+=u;spend(u*Math.max(0,P.occPrice+(FR.inBase+(P.siteHaul||0))*(P.costMul||1)-30),"occ");f.rail-=u;if(f.rail<=1e-6){f.left=0;if(f.done==="rail"){const w=f.w;if(!w)deal(-20000);cardBanner(w?"Railcar unloaded: 900 t of OCC at $30/t off.":"Railcar unloaded, but it came in late: $20k demurrage.",w);}}}}
   if(S.fx.some(f=>f.left<=0)){S.fx=S.fx.filter(f=>f.left>0);}
   // due callbacks are removed before they run, so one can never fire twice (or forever, if it throws)
   const due=cs.pend.filter(p=>(p.left-=dt)<=0);cs.pend=cs.pend.filter(p=>p.left>0);

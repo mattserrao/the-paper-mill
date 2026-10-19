@@ -31,7 +31,7 @@ const CIVNEW={
   inspector:{head:"A state safety inspector has arrived."},
   dcs:{head:"The control system crashed! The machine is down.",fx:{left:90,mods:{pmDown:"control system crash"}}},
   moisture:{head:"Moisture is drifting off spec on the reel.",fx:{left:180,mods:{offSpec:1}}},
-  freight:{head:"Freight rates just jumped.",fx:{left:3*1440,price:{all:-8}}},
+  freight:{head:"Freight rates just jumped.",fx:{left:3*1440,fr:8}},
   noise:{head:"The neighbors are complaining about night noise from the yard."},
   fishkill:{head:"Dead fish downstream, and people are blaming the mill."}};
 // meter-triggered warnings and crises: the meter, the base effect, and what each choice (A, B, C) does beyond cost and civics
@@ -65,7 +65,7 @@ const civAreaWord=a=>a==="Customers"?"customer":a==="Stock prep"?"stock prep":a.
 const civHead=id=>CIVNEW[id]?CIVNEW[id].head:CIVMETER[id]?CIVMETER[id].head:CIVREWARD[id]?CIVREWARD[id].head:EV[id]?EV[id].head:"";
 const civName=id=>CIVREWARD[id]?CIVREWARD[id].n:CIVU[id]?CIVU[id].n:id;
 const civUntilOutage=()=>{const o=S.outg;if(!o)return 3*1440;const end=outStart(o.k)+OUT.len;return end>S.t&&end<=S.season.end?end-S.t:3*1440;};
-function civFxAdd(id,f){const left=f.left==="outage"?civUntilOutage():f.left;const x={id,left,civ:1};if(f.mods)x.mods=f.mods;if(f.price)x.price=f.price;if(f.energy)x.energy=f.energy;
+function civFxAdd(id,f){const left=f.left==="outage"?civUntilOutage():f.left;const x={id,left,civ:1};if(f.mods)x.mods=f.mods;if(f.price)x.price=f.price;if(f.fr)x.fr=f.fr;if(f.energy)x.energy=f.energy;
   if(f.grade)x.price={[C.grade]:f.grade};S.fx=S.fx.filter(q=>q.id!==id);S.fx.push(x);S.M=mods();applyUpgrades();return x;}
 const civFxGet=id=>S.fx.find(f=>f.id===id);
 function civFxEnd(id){S.fx=S.fx.filter(f=>f.id!==id);S.M=mods();applyUpgrades();}

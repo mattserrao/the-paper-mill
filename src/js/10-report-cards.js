@@ -34,7 +34,7 @@ function rcLimit(){const M=S.M||{},starved=()=>S.yard<P.yardCap*0.04||M.noIn||M.
   if(S.pmSpeed<C.pmSp.v*0.97*(M.speedCap||1)&&S.tank<P.tankCap*0.3)return starved();return "Machine at full speed";}
 function rcGrade(v,cut){return ["A","B","C","D","F"][cut.findIndex(c=>v>=c)<0?4:cut.findIndex(c=>v>=c)];}
 function rcSum(a){const L=S.ledger,d=k=>(L[k]||0)-(a.L0[k]||0),prod=S.tot.prodT-a.prod0,ship=(S.shipT||0)-a.ship0,run=Math.max(1,a.min-a.plan),days=Math.max(0.1,a.min/1440);
-  const ops=["occ","energy","labor","overhead","premium"].reduce((t,k)=>t+d(k),0),spent={Fiber:d("occ"),Energy:d("energy"),Labour:d("labor"),Overhead:d("overhead"),"Freight & insurance":d("premium"),"Repairs & outages":d("repairs"),Upgrades:d("upgrades")};
+  const ops=["occ","frin","frout","energy","labor","overhead","premium"].reduce((t,k)=>t+d(k),0),spent={Fiber:d("occ"),Energy:d("energy"),Labour:d("labor"),Overhead:d("overhead"),"Freight & insurance":d("premium")+d("frin")+d("frout"),"Repairs & outages":d("repairs"),Upgrades:d("upgrades")};
   const rev=d("rev"),deals=d("deals");spent["Deals & trials"]=Math.max(0,-deals);const cv=d("civ");spent.Civics=Math.max(0,cv);   // v5.0.6: a net cost from event cards gets its own row, so the rows add up to Net
   const earned=rev+Math.max(0,deals)+Math.max(0,-cv),spentT=Object.values(spent).reduce((t,v)=>t+v,0),net=earned-spentT;
   const rel={};RC_SEC.forEach(([k])=>rel[k]=a.up[k]/run);const relAvg=RC_SEC.reduce((t,[k])=>t+rel[k],0)/RC_SEC.length;
@@ -225,7 +225,7 @@ function hhmm(t){t+=360;const day=Math.floor(t/1440),h=Math.floor((t%1440)/60),b
 
 function updateText(){
   // v5.2: compare before writing, and only fill what is on screen: the top bar's mirrored figures always (51-app-shell
-  // copies them), the Stats pane's figures while it is open, the area cards while Settings > Area controls is open
+  // copies them), the Stats pane's figures while it is open, the area cards while they show in the process flow Controls tab (v6.5)
   const R=S.rates,level=S.tank/P.tankCap*100,days=Math.max(S.t/1440,1/1440);
   const txt=(id,v)=>{const e=$(id);if(e.textContent!==v)e.textContent=v;};
   txt("k-prod",f1(R.prod)+" t/h");
@@ -248,7 +248,7 @@ function updateText(){
   txt("k-fg",f0(S.fg)+" rolls");
   txt("k-fg-s",`${f0(S.tot.shipped)} shipped`);
 
-  if(!(paneShown($("cards"))&&$("areactl").open))return;
+  if(!G3.pfCtlOn)return;   // v6.5: the area cards refresh while they show in the process flow Controls tab
   // pills + readouts
   pill("p-in",S.tot.turned?`${S.tot.turned} turned away`:S.inQ.length>2?`${S.inQ.length} waiting`:"flowing",S.tot.turned?"bad":S.inQ.length>2?"warn":"ok");
   txt("r-in",`${S.tot.inTrucks} trucks · ${f0(S.tot.inTons)} t received · queue ${S.inQ.length} · at doors ${S.inDock.filter(Boolean).length}/${P.doors}`);

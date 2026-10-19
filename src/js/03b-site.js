@@ -4,22 +4,22 @@
 // Each run also has one bottleneck area (BN), picked from the run's seed: a season week gives every player the same one.
 const ENVS={
   urban:{name:"City mill",short:"Urban",blurb:"An old seaside mill wedged between the city and the harbour. Cardboard and customers are next door and the port is a short haul away; power, labour and the coastal water board are not cheap.",
-    pros:["City cardboard next door: OCC $5/t cheaper","Customers close by: paper sells for $4/t more"],
+    pros:["City cardboard next door: OCC haul $5/t cheaper","Customers close by: outbound freight $4/t cheaper"],
     cons:["Peak-rate power: energy $8/t dearer","City wages: $4/h more per worker","Strict sea-outfall permit: wastewater fines 60% more often","City life: highway closures twice as often, dock fights 20% more often"],
     occ:-5,price:4,energy:8,wage:4,over:0,chem:0,wx:[0.55,0.76,0.9],inMul:1,
     freq:{permit:1.6,highway:2,fight:1.2}},
   rural:{name:"Forest valley",short:"Rural",blurb:"A mill on a clean river in wooded hills. Quiet, local crews and hydro power, but the cardboard has a long haul and winters bite.",
     pros:["Clean river water: wastewater fines 40% rarer","Local crews: wages $4/h lower","Hydro power: energy $8/t cheaper"],
-    cons:["Long OCC haul: $12/t dearer","Hard winters: snow twice as often","Wildlife: beavers and birds in the mill twice as often"],
+    cons:["Long OCC haul: inbound freight $12/t dearer","Hard winters: snow twice as often","Wildlife: beavers and birds in the mill twice as often"],
     occ:12,price:0,energy:-8,wage:-4,over:0,chem:0,wx:[0.5,0.66,0.78],inMul:1,
     freq:{permit:0.6,beaver:2,birdhay:2}},
   desert:{name:"Desert flats",short:"Desert",blurb:"A dry, sunny site beside a concrete canal and a solar farm. Power is cheap and the trucks always get through; water is precious and dust gets into everything.",
     pros:["Solar farm next door: energy $12/t cheaper","Dry and clear: trucks almost never slowed by weather","Cheap land: overhead $250/h lower"],
-    cons:["Scarce water: chemicals and water $9/t dearer","Long haul to customers: paper sells for $7/t less","Dust: screens and cleaners plug 50% more often","Tinder-dry bale yard: bale fires twice as often"],
+    cons:["Scarce water: chemicals and water $9/t dearer","Long haul to customers: outbound freight $7/t dearer","Dust: screens and cleaners plug 50% more often","Tinder-dry bale yard: bale fires twice as often"],
     occ:0,price:-7,energy:-12,wage:0,over:-250,chem:9,wx:[0.88,0.94,0.985],inMul:1,
     freq:{cscreen:1.5,fscreen:1.5,lwplug:1.5,lcplug:1.5,balefire:2}},
   swamp:{name:"Bayou",short:"Swamp",blurb:"Low, wet ground on a slow bayou. Water and land cost next to nothing and barges bring cheap cardboard, but the humidity, storms and soft roads take their toll.",
-    pros:["Endless water: chemicals $5/t cheaper","Cheap land: overhead $190/h lower","Barge cardboard: OCC $3/t cheaper"],
+    pros:["Endless water: chemicals $5/t cheaper","Cheap land: overhead $190/h lower","Barge cardboard: OCC haul $3/t cheaper"],
     cons:["Humid: slime breaks 80% more often, more rain and fog","Soft roads: inbound trucks 12% slower","Storms: lightning and roof leaks 60% more often","Beavers: three times as often"],
     occ:-3,price:0,energy:0,wage:0,over:-190,chem:-5,wx:[0.4,0.7,0.92],inMul:0.88,
     freq:{slime:1.8,lightning:1.6,roof:1.6,beaver:3}}};
@@ -91,7 +91,8 @@ function upCost(u,l){const c=u.lv[l];const b=BNQ();return b&&BN[b].ups.includes(
 function upFix(u){const b=BNQ();return !!(b&&BN[b].ups.includes(u.id));}
 // capacities that a bottleneck can cut (called from applyUpgrades)
 function applySite(){const E=ENVX(),b=BNQ(),need=NEED23(),fiber=need/P.pmLoss,feed=fiber/OCCG.occ11.y;
-  P.siteOcc=E.occ;P.sitePrice=E.price;P.siteEnergy=E.energy+E.chem;P.siteChem=E.chem;P.siteWage=E.wage;P.siteOver=E.over;P.siteWx=E.wx;P.siteIn=E.inMul;
+  P.siteOcc=0;P.sitePrice=0;P.siteHaul=E.occ;P.siteFreight=-E.price;   // v6.5: the site's OCC and price adders are now its freight (haul in, freight out)
+  P.siteEnergy=E.energy+E.chem;P.siteChem=E.chem;P.siteWage=E.wage;P.siteOver=E.over;P.siteWx=E.wx;P.siteIn=E.inMul;
   // receiving: unloading per door (t/h); normal docks never limit
   P.doorRate=b==="recv"?BNK.recv*feed/3*(1+0.25*LV("forklift")):BASE.doorRate;
   // pulper feed (t/h of bales)

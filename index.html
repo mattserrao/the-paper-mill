@@ -1216,6 +1216,19 @@ body.dark .kvchip{background:color-mix(in srgb,var(--panel) 96%,transparent)}
   .pfpanel .pfph::before{content:"";position:absolute;left:50%;top:5px;width:40px;height:4px;margin-left:-20px;border-radius:2px;background:#33476a}
   .dcsh .pfrange{order:5;width:100%;display:flex}.dcsh .pfrange button{flex:1}
 }
+/* v6.5 the area controls in the process flow panel (only the tapped area's cards; the DCS look) */
+#pfCtl .cards{display:flex;flex-direction:column;gap:8px}
+#pfCtl .cards>.card{display:none}
+#cards[data-area="yard"]>.card[data-a="yard"],#cards[data-area="pulper"]>.card[data-a="pulper"],#cards[data-area="stock"]>.card[data-a="stock"],
+#cards[data-area="pm"]>.card[data-a="pm"],#cards[data-area="winder"]>.card[data-a="winder"],#cards[data-area="ship"]>.card[data-a="ship"]{display:block}
+#pfCtl .card{background:#16233a;color:#dbe6f6;border:1px solid #2c3e5c;border-radius:8px;box-shadow:none;padding:10px 12px;width:auto;max-height:none}
+#pfCtl .card h2{color:#fff;font:700 14px var(--f-body,system-ui)}#pfCtl .card h2 .n{display:none}
+#pfCtl .card .row label,#pfCtl .card .check,#pfCtl .card .val{color:#c3d3ea}#pfCtl .card .read{color:#8ea4c4}
+#pfCtl .card select{background:#22324f;color:#fff;border:1px solid #33476a}
+#pfCtl .card .auto{background:#22324f;color:#c3d3ea;border:1px solid #33476a}#pfCtl .card .auto[aria-pressed="true"]{background:#4fd18b;color:#0f1b2d}
+body.season-lock #pfCtl .card .row[data-key] input,body.season-lock #pfCtl .card .row[data-key] button.auto{opacity:.5;cursor:not-allowed}
+.pflock{margin:0}.pflock b{color:#ffd77a}
+.pfctlnote{display:flex;align-items:center;gap:10px;flex-wrap:wrap;margin-top:24px;padding-top:16px;border-top:1px solid var(--line)}.pfctlnote span{flex:1;min-width:200px;color:var(--muted)}
 </style>
 </head>
 <body class="app">
@@ -1398,7 +1411,7 @@ body.dark .kvchip{background:color-mix(in srgb,var(--panel) 96%,transparent)}
 <div class="btns"><button class="primary" id="no3d-retry">Try again</button></div></div></div>
 
 <script type="module">
-const APP_VER="v6.5.0-a1";   // shown in the menu and sent with leaderboard scores (max 12 characters)
+const APP_VER="v6.5.0-b1";   // shown in the menu and sent with leaderboard scores (max 12 characters)
 // TEST BUILDS ONLY (off in releases): turbo speeds 240/480/960 sim min/s for fast playtests. Above 120, crews and maintenance start jobs
 // without waiting for the 3D walk (as with the 3D view off) and outages keep the speed. Set false for a release.
 const TURBO=false,TURBO_FAST=s=>TURBO&&s>120;
@@ -1961,7 +1974,7 @@ const GRADES={ "23m":{sp:2736,bw:24.55}, "26m":{sp:2433,bw:26.06}, "30m":{sp:222
 // mix = campaign size range in tons; the market-driven planner runs the real grade wheel at roughly the PM3 grade mix.
 const GCOST={"23m":{dlk:0,steam:1,chem:0,brk:1.15,mix:[2600,3600]},"26m":{dlk:0.1,steam:1.02,chem:0,brk:1.25,mix:[80,160]},
   "30m":{dlk:0.25,steam:1.14,chem:10,brk:0.75,mix:[150,350]},"33HT":{dlk:0.55,steam:1.11,chem:75,brk:0.55,mix:[800,1300]}};
-const OCCG={occ11:{p:160,y:0.88},dlk:{p:215,y:0.93}};
+const OCCG={occ11:{p:142,y:0.88},dlk:{p:197,y:0.93}}   // (v6.5: $18/t less: the haul is its own cost now, FR);
 const WHEEL=["23m","26m","30m","33HT","30m"];
 // seeded random streams (plan, cards) so every player in the same season week sees the same market and the same cards
 function rand(k){const r=S.rng;r[k]=(r[k]+0x6D2B79F5)|0;let t=r[k];t=Math.imul(t^(t>>>15),t|1);t^=t+Math.imul(t^(t>>>7),t|61);return ((t^(t>>>14))>>>0)/4294967296;}
@@ -1975,7 +1988,8 @@ const AUTOKEYS=["inRate","drivers","pulper","pmSp","wdr","loaders","outRate"];
 
 let C,S;
 const BASE={...P};
-const ECON={price:{"23m":713,"26m":733,"30m":753,"33HT":813},energy:95,chem:25,wage:45,robot:15,overhead:3400,start:2e6,bankrupt:-1.5e6};
+const ECON={price:{"23m":743,"26m":763,"30m":783,"33HT":843},   // (v6.5: +$30/t: outbound freight is its own cost now, FR)
+  energy:95,chem:25,wage:45,robot:15,overhead:3400,start:2e6,bankrupt:-1.5e6};
 const REPAIR={rotortrip:20e3,oscfail:12e3,couchpit:25e3,birdline:200e3,refclash:140e3,steamjoint:90e3,fogfan:35e3,shaft:250e3,dryerfire:400e3,fabric:90e3,felt:45e3,slime:30e3,ragger:15e3,overflow:120e3,chestover:60e3,lwplug:25e3,cscreen:45e3,fscreen:60e3,lcplug:30e3,hdblow:55e3,boiler:60e3,permit:120e3,thkblow:70e3,birdhay:0,wrap:15e3,dye:20e3,flares:0,winderdown:40e3,runner:0,badocc:0,balefire:150e3,fleet:40e3,calloff:10e3,fight:5e3,roof:80e3,highway:0,lightning:200e3,tornado:500e3,beaver:25e3,icedintake:20e3,brownout:10e3,duststorm:25e3,flood:60e3};
 const UGROUPS=[["machine","Paper machine"],["stock","Stock prep"],["yard","Warehouse & logistics"],["maint","Maintenance"],["mgmt","Management"]];
 const MAINT=["birdline","steamjoint","fogfan","shaft","fabric","felt","winderdown","hdblow","lwplug","cscreen","fscreen","lcplug","boiler","thkblow","ragger","overflow","fleet","roof","lightning","icedintake"];
@@ -2035,6 +2049,21 @@ function applyGrade(){const g=(typeof C!=="undefined"&&C&&C.grade)||"23m",c=GCOS
   P.blendP=OCCG.occ11.p*(1-d)+OCCG.dlk.p*d;P.blendY=OCCG.occ11.y*(1-d)+OCCG.dlk.y*d;
   P.steamMul=c.steam;P.chemAdd=c.chem-((S&&S.perk)?S.perk.chem:0);P.gradeBrk=c.brk;}
 function energyCost(){return Math.max(0,ECON.energy*P.steamMul*P.energyMul*leadEnergy()+ECON.chem+P.chemAdd+(P.siteEnergy||0)-(P.refSave||0)-((S&&S.perk&&S.perk.energy)||0)+civEnergy())*(P.costMul||1);}
+/* ---- v6.5 freight: inbound haul per ton of bales unloaded, outbound freight per ton shipped. Each = (base + site) x a
+   weekly diesel index (seeded walk, 0.85-1.15) x weather (normalised so the site's average weather is 1) x detours (flood,
+   dust storm), plus card and civics effects (fx.fr, $/t on outbound). Survival's cost multiplier applies to the haul. */
+const FR={inBase:18,outBase:30,wx:{clear:1,rain:1.03,fog:1.05,snow:1.15},ev:{flood:1.25,duststorm:1.2}};
+const fuelIdx=()=>(S&&S.fuel)||1;
+function frWx(){const w=P.siteWx||[0.55,0.75,0.87],E=w[0]+(w[1]-w[0])*FR.wx.rain+(w[2]-w[1])*FR.wx.fog+(1-w[2])*FR.wx.snow;return (FR.wx[(S&&S.wx)||"clear"]||1)/E;}
+function frEv(){let m=1;if(S&&S.inc)for(const i of S.inc)if(FR.ev[i.id])m=Math.max(m,FR.ev[i.id]);return m;}
+function frFx(){let v=0;if(S&&S.fx)for(const f of S.fx)if(f.fr)v+=f.fr;return v;}
+function frInRate(){return Math.max(0,(FR.inBase+(P.siteHaul||0))*fuelIdx()*frWx()*frEv())*(P.costMul||1);}
+function frOutRate(){return Math.max(0,(FR.outBase+(P.siteFreight||0))*fuelIdx()*frWx()*frEv()+frFx());}
+// the diesel index moves once a game week: a walk that is a fixed function of the run's seed and the week, so the 14
+// prior days (weeks -2 and -1, 11c) lead into the run's own weeks, and seasons replay identically (no stream is drawn)
+function fuelAt(seed,wk){let x=1;for(let w=-3;w<=wk;w++){let h=Math.imul((seed>>>0)^Math.imul(w+101,0x9e3779b1),0x85ebca6b);h^=h>>>13;h=Math.imul(h,0xc2b2ae35);h^=h>>>16;
+  x=clamp(1+(x-1)*0.6+((h>>>0)/4294967296-0.5)*0.24,0.85,1.15);}return x;}
+function fuelTick(){const wk=Math.floor(S.t/10080)+(S.fuelOff||0);if(S.fuelW===wk)return;S.fuelW=wk;S.fuel=fuelAt(S.fuelSeed!=null?S.fuelSeed:S.seed,wk);}
 function priceOf(g){let v=ECON.price[g]+P.priceAdd;if(g==="33HT"&&P.costMul>1)v+=(ECON.price["33HT"]-ECON.price["23m"])*(P.costMul-1);/* v5.0.5: survival only (costMul is 1 elsewhere) */if(S&&S.perk)v+=S.perk.price[g]||0;if(S&&S.fx)for(const f of S.fx)if(f.price)v+=(f.price[g]||0)+(f.price.all||0);return v;}
 // (v5.2: the id lists are Sets built once; freqMul runs for every upset on every sim step)
 const FM_CLEAN=new Set(["lwplug","cscreen","fscreen","lcplug"]),FM_REL=new Set(["shaft","felt","fabric"]),FM_MON=new Set(["shaft","fabric","felt","dryerfire","slime"]);let FM_MAINT=null;
@@ -2074,22 +2103,22 @@ const GROUPS=[["machine","Paper machine"],["stock","Stock prep"],["yard","Wareho
 // Each run also has one bottleneck area (BN), picked from the run's seed: a season week gives every player the same one.
 const ENVS={
   urban:{name:"City mill",short:"Urban",blurb:"An old seaside mill wedged between the city and the harbour. Cardboard and customers are next door and the port is a short haul away; power, labour and the coastal water board are not cheap.",
-    pros:["City cardboard next door: OCC $5/t cheaper","Customers close by: paper sells for $4/t more"],
+    pros:["City cardboard next door: OCC haul $5/t cheaper","Customers close by: outbound freight $4/t cheaper"],
     cons:["Peak-rate power: energy $8/t dearer","City wages: $4/h more per worker","Strict sea-outfall permit: wastewater fines 60% more often","City life: highway closures twice as often, dock fights 20% more often"],
     occ:-5,price:4,energy:8,wage:4,over:0,chem:0,wx:[0.55,0.76,0.9],inMul:1,
     freq:{permit:1.6,highway:2,fight:1.2}},
   rural:{name:"Forest valley",short:"Rural",blurb:"A mill on a clean river in wooded hills. Quiet, local crews and hydro power, but the cardboard has a long haul and winters bite.",
     pros:["Clean river water: wastewater fines 40% rarer","Local crews: wages $4/h lower","Hydro power: energy $8/t cheaper"],
-    cons:["Long OCC haul: $12/t dearer","Hard winters: snow twice as often","Wildlife: beavers and birds in the mill twice as often"],
+    cons:["Long OCC haul: inbound freight $12/t dearer","Hard winters: snow twice as often","Wildlife: beavers and birds in the mill twice as often"],
     occ:12,price:0,energy:-8,wage:-4,over:0,chem:0,wx:[0.5,0.66,0.78],inMul:1,
     freq:{permit:0.6,beaver:2,birdhay:2}},
   desert:{name:"Desert flats",short:"Desert",blurb:"A dry, sunny site beside a concrete canal and a solar farm. Power is cheap and the trucks always get through; water is precious and dust gets into everything.",
     pros:["Solar farm next door: energy $12/t cheaper","Dry and clear: trucks almost never slowed by weather","Cheap land: overhead $250/h lower"],
-    cons:["Scarce water: chemicals and water $9/t dearer","Long haul to customers: paper sells for $7/t less","Dust: screens and cleaners plug 50% more often","Tinder-dry bale yard: bale fires twice as often"],
+    cons:["Scarce water: chemicals and water $9/t dearer","Long haul to customers: outbound freight $7/t dearer","Dust: screens and cleaners plug 50% more often","Tinder-dry bale yard: bale fires twice as often"],
     occ:0,price:-7,energy:-12,wage:0,over:-250,chem:9,wx:[0.88,0.94,0.985],inMul:1,
     freq:{cscreen:1.5,fscreen:1.5,lwplug:1.5,lcplug:1.5,balefire:2}},
   swamp:{name:"Bayou",short:"Swamp",blurb:"Low, wet ground on a slow bayou. Water and land cost next to nothing and barges bring cheap cardboard, but the humidity, storms and soft roads take their toll.",
-    pros:["Endless water: chemicals $5/t cheaper","Cheap land: overhead $190/h lower","Barge cardboard: OCC $3/t cheaper"],
+    pros:["Endless water: chemicals $5/t cheaper","Cheap land: overhead $190/h lower","Barge cardboard: OCC haul $3/t cheaper"],
     cons:["Humid: slime breaks 80% more often, more rain and fog","Soft roads: inbound trucks 12% slower","Storms: lightning and roof leaks 60% more often","Beavers: three times as often"],
     occ:-3,price:0,energy:0,wage:0,over:-190,chem:-5,wx:[0.4,0.7,0.92],inMul:0.88,
     freq:{slime:1.8,lightning:1.6,roof:1.6,beaver:3}}};
@@ -2161,7 +2190,8 @@ function upCost(u,l){const c=u.lv[l];const b=BNQ();return b&&BN[b].ups.includes(
 function upFix(u){const b=BNQ();return !!(b&&BN[b].ups.includes(u.id));}
 // capacities that a bottleneck can cut (called from applyUpgrades)
 function applySite(){const E=ENVX(),b=BNQ(),need=NEED23(),fiber=need/P.pmLoss,feed=fiber/OCCG.occ11.y;
-  P.siteOcc=E.occ;P.sitePrice=E.price;P.siteEnergy=E.energy+E.chem;P.siteChem=E.chem;P.siteWage=E.wage;P.siteOver=E.over;P.siteWx=E.wx;P.siteIn=E.inMul;
+  P.siteOcc=0;P.sitePrice=0;P.siteHaul=E.occ;P.siteFreight=-E.price;   // v6.5: the site's OCC and price adders are now its freight (haul in, freight out)
+  P.siteEnergy=E.energy+E.chem;P.siteChem=E.chem;P.siteWage=E.wage;P.siteOver=E.over;P.siteWx=E.wx;P.siteIn=E.inMul;
   // receiving: unloading per door (t/h); normal docks never limit
   P.doorRate=b==="recv"?BNK.recv*feed/3*(1+0.25*LV("forklift")):BASE.doorRate;
   // pulper feed (t/h of bales)
@@ -2929,7 +2959,7 @@ const CARDS=[
   odds:()=>70,why:"Fixed odds.",
   ok:()=>true,
   accept(c){const w=rand("card")*100<c.o;
-    if(w){addFx({id:"backhaul",left:10*1440,price:{all:6}});return "+$6/t on every grade for 10 days.";}
+    if(w){addFx({id:"backhaul",left:10*1440,fr:-6});return "Outbound freight $6/t cheaper for 10 days.";}
     addFx({id:"backhaul",left:6*60,mods:{noOut:true}});pend("backhaul",6*60,"backhaul");
     return "The carrier's trucks didn't show: no shipping for 6 hours.";}},
  {id:"starch",area:"Paper machine",title:"Surface starch upgrade",
@@ -2967,7 +2997,7 @@ const CARDS=[
     return w?"Apprentices are a help: sheet breaks 20% rarer for 14 days.":"Apprentices are still learning: sheet breaks 1.3× for 5 days.";}},
 ];
 function cardTick(dt){const cs=S.cards;if(!cs)return;
-  for(const f of S.fx){f.left-=dt;if(f.rail>0){const u=Math.min(f.rail,50*dt/60,Math.max(0,P.yardCap-S.yard));S.yard+=u;S.tot.inTons+=u;spend(u*Math.max(0,P.occPrice-30),"occ");f.rail-=u;if(f.rail<=1e-6){f.left=0;if(f.done==="rail"){const w=f.w;if(!w)deal(-20000);cardBanner(w?"Railcar unloaded: 900 t of OCC at $30/t off.":"Railcar unloaded, but it came in late: $20k demurrage.",w);}}}}
+  for(const f of S.fx){f.left-=dt;if(f.rail>0){const u=Math.min(f.rail,50*dt/60,Math.max(0,P.yardCap-S.yard));S.yard+=u;S.tot.inTons+=u;spend(u*Math.max(0,P.occPrice+(FR.inBase+(P.siteHaul||0))*(P.costMul||1)-30),"occ");f.rail-=u;if(f.rail<=1e-6){f.left=0;if(f.done==="rail"){const w=f.w;if(!w)deal(-20000);cardBanner(w?"Railcar unloaded: 900 t of OCC at $30/t off.":"Railcar unloaded, but it came in late: $20k demurrage.",w);}}}}
   if(S.fx.some(f=>f.left<=0)){S.fx=S.fx.filter(f=>f.left>0);}
   // due callbacks are removed before they run, so one can never fire twice (or forever, if it throws)
   const due=cs.pend.filter(p=>(p.left-=dt)<=0);cs.pend=cs.pend.filter(p=>p.left>0);
@@ -3184,7 +3214,7 @@ function initState(){
      rates:{feed:0,unload:0,fiberIn:0,prod:0,fiberUse:0,load:0,rolls:0,cut:0},
      tot:{inTrucks:0,inTons:0,turned:0,prodT:0,rolls:0,shipped:0,outTrucks:0,breaks:0,breakMin:0,turnups:0,pot:0,incidents:0,hayouts:0,hayMin:0,broke:0},wd:"run",hayLeft:0,
      trend:[],trendAcc:0,conv:0,inc:[],lastInc:0,feed:[],M:baseMods(),effDrv:C.drivers.v,effLd:C.loaders.v,effHum:C.loaders.v};
-  S.up={};S.cash=ECON.start;S.ledger={rev:0,occ:0,energy:0,labor:0,overhead:0,repairs:0,premium:0,upgrades:0,deals:0};
+  S.up={};S.cash=ECON.start;S.ledger={rev:0,occ:0,frin:0,frout:0,energy:0,labor:0,overhead:0,repairs:0,premium:0,upgrades:0,deals:0};
   // v4.1 v16: paper keeps the grade it was made as all the way to the truck: each stage holds lots [grade, amount] in
   // order (reel and winder stores in t, conveyor and warehouse in rolls) that move first-in first-out with the scalars
   S.lots={reel:[[C.grade,S.reel]],buf:[],acc:[],conv:[],fg:[[C.grade,S.fg]]};
@@ -3266,6 +3296,7 @@ function step(dt){
     if(di>S.pd.i){const made=S.tot.prodT-S.pd.start;if(made>S.pd.rec)S.pd.rec=made;S.pd.i=di;S.pd.start=S.tot.prodT;}}
   pfDay();pfHour();   // v6.3 process flow: the mill day's books (11b); v6.5 the hour's history row (11c)
 
+  fuelTick();   // v6.5 freight: the weekly diesel index
   chaosTick(dt);
   cardTick(dt);
   civTick(dt);   // v5.1 civics
@@ -3296,7 +3327,7 @@ function step(dt){
   for(let d=0;d<P.doors;d++){const tr=S.inDock[d]; if(!tr||M.docksClosed)continue;
     const u=Math.min(tr.load,P.doorRate*dt/60,cap,Math.max(0,P.yardCap-S.yard));
     tr.load-=u;cap-=u;S.yard+=u;unloaded+=u;S.tot.inTons+=u;
-    {const dc=S.plan.disc,dt2=dc?Math.min(u,dc.t):0;spend(u*P.occPrice-dt2*(dc?dc.v:0),"occ");if(dc){dc.t-=dt2;if(dc.t<=1e-6)S.plan.disc=null;}}
+    {const dc=S.plan.disc,dt2=dc?Math.min(u,dc.t):0;spend(u*P.occPrice-dt2*(dc?dc.v:0),"occ");spend(u*frInRate(),"frin");if(dc){dc.t-=dt2;if(dc.t<=1e-6)S.plan.disc=null;}}
     if(tr.load<=0.001){S.leaving.push({...tr,ty:inY(d),kind:"in"});if(S.leaving.length>24)S.leaving.shift();S.inDock[d]=null;}}
   const feed=Math.min(feedRes,S.yard); S.yard-=feed;
   // 3 pulper → chest
@@ -3366,7 +3397,7 @@ function step(dt){
   for(let d=0;d<P.shipDoors;d++){const tr=S.outDock[d]; if(!tr)continue;
     const l=Math.min(P.truckRolls-tr.load,pool===Infinity?P.doorRolls*dt/60:pool,lcap,S.fg);pool-=l;
     tr.load+=l;lcap-=l;S.fg-=l;loaded+=l;lotTake(S.lots.fg,l,tr.lots||(tr.lots=[]));
-    if(tr.load>=P.truckRolls-1e-6){S.leaving.push({...tr,ty:outY(d),kind:"out"});if(S.leaving.length>24)S.leaving.shift();S.outDock[d]=null;S.tot.shipped+=P.truckRolls;const tons=P.truckRolls*C.rollW.v;S.shipT+=tons;earn(lotValue(tr.lots||[[C.grade,P.truckRolls]],C.rollW.v));}}   // (v16: each roll at its own grade's price)
+    if(tr.load>=P.truckRolls-1e-6){S.leaving.push({...tr,ty:outY(d),kind:"out"});if(S.leaving.length>24)S.leaving.shift();S.outDock[d]=null;S.tot.shipped+=P.truckRolls;const tons=P.truckRolls*C.rollW.v;S.shipT+=tons;spend(tons*frOutRate(),"frout");earn(lotValue(tr.lots||[[C.grade,P.truckRolls]],C.rollW.v));}}   // (v16: each roll at its own grade's price)
   spend(((C.drivers.v+C.loaders.v+P.techs)*(ECON.wage+(P.siteWage||0))*(P.costMul||1)*leadWage()*civWage()+P.robots*ECON.robot+P.pmCost)*dt/60,"labor");
   pfLabor(dt);
   spend((ECON.overhead+(P.siteOver||0))*dt/60,"overhead"); if(P.premium)spend(P.premium*dt/60,"premium");
@@ -3382,7 +3413,7 @@ function step(dt){
   R.prod=ease(R.prod,k(prod),dt,6);R.fiberUse=ease(R.fiberUse,k(prod/P.pmLoss),dt,6);R.load=ease(R.load,k(loaded),dt,6);R.rolls=ease(R.rolls,k(rollsMade),dt,10);R.cut=ease(R.cut,k(cut),dt,6);
   // v5.0.4: profit per day is the real cash change (sales and deals in, every cost out, repairs and outage budgets too); only
   // upgrades are left out, as they're a choice. Read from the ledger, so money moved between steps (a budget approved) counts too.
-  {const L1=S.ledger,T=L1.rev+(L1.deals||0)-(L1.occ+L1.energy+L1.labor+L1.overhead+L1.premium+L1.repairs),op=S.opLast==null?0:T-S.opLast;S.opLast=T;const NB=432,B=S.opb&&S.opb.b.length===NB?S.opb:(S.opb={b:new Array(NB).fill(0),i:-1,sum:0});if(B.sum==null)B.sum=B.b.reduce((a,v)=>a+v,0);
+  {const L1=S.ledger,T=L1.rev+(L1.deals||0)-(L1.occ+(L1.frin||0)+(L1.frout||0)+L1.energy+L1.labor+L1.overhead+L1.premium+L1.repairs),op=S.opLast==null?0:T-S.opLast;S.opLast=T;const NB=432,B=S.opb&&S.opb.b.length===NB?S.opb:(S.opb={b:new Array(NB).fill(0),i:-1,sum:0});if(B.sum==null)B.sum=B.b.reduce((a,v)=>a+v,0);
     // v4.4.0-t3: profit per day is the last 24 game hours (144 ten-minute buckets); shown from the end of the first day
     // v5.0.5: averaged over the last 3 days (432 ten-minute buckets, with a running sum), so one truck or one repair bill doesn't flip it
     const bi=Math.floor(S.t/10);if(bi!==B.i){for(let j=Math.max(B.i+1,bi-NB+1);j<=bi;j++){const k=((j%NB)+NB)%NB;B.sum-=B.b[k];B.b[k]=0;}B.i=bi;}
@@ -3695,7 +3726,7 @@ function buy(id){const u=UP[id],l=LV(id);if(l>=u.lv.length)return;const cost=upC
   if(id==="reliab"&&l===0&&civOn())civAdd(TELL.relCiv,"Reliability program");   // v5.7: monitoring raises Machinery (and unlocks the Vibration Report)
   BANNERS.push({text:`${u.name}${u.lv.length>1?" level "+(l+1):""} is online.`,t:null,kind:"good"});while(BANNERS.length>3)BANNERS.splice(1,1);
   log(`Installed ${u.name}${u.lv.length>1?" level "+(l+1):""} (${money(cost)})`,"ok");updateShop();}
-const LEDGER=[["rev","Paper sales",1],["occ","OCC purchases",-1],["energy","Energy & chemicals",-1],["labor","Wages & robots",-1],["overhead","Mill overhead",-1],["repairs","Upset repairs",-1],["premium","Insurance premium",-1],["upgrades","Upgrades bought",-1],["deals","Deals & trials",1],["civ","Civics",-1]];
+const LEDGER=[["rev","Paper sales",1],["occ","OCC purchases",-1],["frin","Inbound freight",-1],["frout","Outbound freight",-1],["energy","Energy & chemicals",-1],["labor","Wages & robots",-1],["overhead","Mill overhead",-1],["repairs","Upset repairs",-1],["premium","Insurance premium",-1],["upgrades","Upgrades bought",-1],["deals","Deals & trials",1],["civ","Civics",-1]];
 function updateRel(){const tg=$("relnow"),out=document.createElement("div");const pct=v=>(v>=0?"+":"")+Math.round(v*100)+"%";
     [["stock","Stock prep"],["wet","Wet end"],["dry","Dry end"]].forEach(([a,n])=>{const r=areaRel(a),d=document.createElement("div"),sum=[r.up,r.out,r.fx,r.site||1,r.lead||1].reduce((t,v)=>t+(Math.abs(v-1)>0.005?v-1:0),0);d.className="stat "+(sum>0.005?"pos":sum<-0.005?"neg":"");
       const bits=[["upgrades",r.up],["outage budget",r.out],["events",r.fx],["site",r.site||1],["leader",r.lead||1]].filter(([,v])=>Math.abs(v-1)>0.005).map(([k,v])=>k+" "+pct(v-1));
@@ -4023,7 +4054,7 @@ const CIVNEW={
   inspector:{head:"A state safety inspector has arrived."},
   dcs:{head:"The control system crashed! The machine is down.",fx:{left:90,mods:{pmDown:"control system crash"}}},
   moisture:{head:"Moisture is drifting off spec on the reel.",fx:{left:180,mods:{offSpec:1}}},
-  freight:{head:"Freight rates just jumped.",fx:{left:3*1440,price:{all:-8}}},
+  freight:{head:"Freight rates just jumped.",fx:{left:3*1440,fr:8}},
   noise:{head:"The neighbors are complaining about night noise from the yard."},
   fishkill:{head:"Dead fish downstream, and people are blaming the mill."}};
 // meter-triggered warnings and crises: the meter, the base effect, and what each choice (A, B, C) does beyond cost and civics
@@ -4057,7 +4088,7 @@ const civAreaWord=a=>a==="Customers"?"customer":a==="Stock prep"?"stock prep":a.
 const civHead=id=>CIVNEW[id]?CIVNEW[id].head:CIVMETER[id]?CIVMETER[id].head:CIVREWARD[id]?CIVREWARD[id].head:EV[id]?EV[id].head:"";
 const civName=id=>CIVREWARD[id]?CIVREWARD[id].n:CIVU[id]?CIVU[id].n:id;
 const civUntilOutage=()=>{const o=S.outg;if(!o)return 3*1440;const end=outStart(o.k)+OUT.len;return end>S.t&&end<=S.season.end?end-S.t:3*1440;};
-function civFxAdd(id,f){const left=f.left==="outage"?civUntilOutage():f.left;const x={id,left,civ:1};if(f.mods)x.mods=f.mods;if(f.price)x.price=f.price;if(f.energy)x.energy=f.energy;
+function civFxAdd(id,f){const left=f.left==="outage"?civUntilOutage():f.left;const x={id,left,civ:1};if(f.mods)x.mods=f.mods;if(f.price)x.price=f.price;if(f.fr)x.fr=f.fr;if(f.energy)x.energy=f.energy;
   if(f.grade)x.price={[C.grade]:f.grade};S.fx=S.fx.filter(q=>q.id!==id);S.fx.push(x);S.M=mods();applyUpgrades();return x;}
 const civFxGet=id=>S.fx.find(f=>f.id===id);
 function civFxEnd(id){S.fx=S.fx.filter(f=>f.id!==id);S.M=mods();applyUpgrades();}
@@ -4317,7 +4348,7 @@ function rcLimit(){const M=S.M||{},starved=()=>S.yard<P.yardCap*0.04||M.noIn||M.
   if(S.pmSpeed<C.pmSp.v*0.97*(M.speedCap||1)&&S.tank<P.tankCap*0.3)return starved();return "Machine at full speed";}
 function rcGrade(v,cut){return ["A","B","C","D","F"][cut.findIndex(c=>v>=c)<0?4:cut.findIndex(c=>v>=c)];}
 function rcSum(a){const L=S.ledger,d=k=>(L[k]||0)-(a.L0[k]||0),prod=S.tot.prodT-a.prod0,ship=(S.shipT||0)-a.ship0,run=Math.max(1,a.min-a.plan),days=Math.max(0.1,a.min/1440);
-  const ops=["occ","energy","labor","overhead","premium"].reduce((t,k)=>t+d(k),0),spent={Fiber:d("occ"),Energy:d("energy"),Labour:d("labor"),Overhead:d("overhead"),"Freight & insurance":d("premium"),"Repairs & outages":d("repairs"),Upgrades:d("upgrades")};
+  const ops=["occ","frin","frout","energy","labor","overhead","premium"].reduce((t,k)=>t+d(k),0),spent={Fiber:d("occ"),Energy:d("energy"),Labour:d("labor"),Overhead:d("overhead"),"Freight & insurance":d("premium")+d("frin")+d("frout"),"Repairs & outages":d("repairs"),Upgrades:d("upgrades")};
   const rev=d("rev"),deals=d("deals");spent["Deals & trials"]=Math.max(0,-deals);const cv=d("civ");spent.Civics=Math.max(0,cv);   // v5.0.6: a net cost from event cards gets its own row, so the rows add up to Net
   const earned=rev+Math.max(0,deals)+Math.max(0,-cv),spentT=Object.values(spent).reduce((t,v)=>t+v,0),net=earned-spentT;
   const rel={};RC_SEC.forEach(([k])=>rel[k]=a.up[k]/run);const relAvg=RC_SEC.reduce((t,[k])=>t+rel[k],0)/RC_SEC.length;
@@ -4508,7 +4539,7 @@ function hhmm(t){t+=360;const day=Math.floor(t/1440),h=Math.floor((t%1440)/60),b
 
 function updateText(){
   // v5.2: compare before writing, and only fill what is on screen: the top bar's mirrored figures always (51-app-shell
-  // copies them), the Stats pane's figures while it is open, the area cards while Settings > Area controls is open
+  // copies them), the Stats pane's figures while it is open, the area cards while they show in the process flow Controls tab (v6.5)
   const R=S.rates,level=S.tank/P.tankCap*100,days=Math.max(S.t/1440,1/1440);
   const txt=(id,v)=>{const e=$(id);if(e.textContent!==v)e.textContent=v;};
   txt("k-prod",f1(R.prod)+" t/h");
@@ -4531,7 +4562,7 @@ function updateText(){
   txt("k-fg",f0(S.fg)+" rolls");
   txt("k-fg-s",`${f0(S.tot.shipped)} shipped`);
 
-  if(!(paneShown($("cards"))&&$("areactl").open))return;
+  if(!G3.pfCtlOn)return;   // v6.5: the area cards refresh while they show in the process flow Controls tab
   // pills + readouts
   pill("p-in",S.tot.turned?`${S.tot.turned} turned away`:S.inQ.length>2?`${S.inQ.length} waiting`:"flowing",S.tot.turned?"bad":S.inQ.length>2?"warn":"ok");
   txt("r-in",`${S.tot.inTrucks} trucks · ${f0(S.tot.inTons)} t received · queue ${S.inQ.length} · at doors ${S.inDock.filter(Boolean).length}/${P.doors}`);
@@ -4589,7 +4620,7 @@ function drawTrend(){if(!col.muted)readColors();if(tc.width<4||(tc.clientWidth>0
    anything the tracker didn't place lands on "Site & admin". At the day roll the finished day is kept as S.pf.prev. */
 const PF_AREAS=[["yard","Bale yard","Receiving & bale yard"],["pulper","Pulper","Pulper"],["stock","Stock prep","Stock prep"],["pm","Paper machine","Paper machine"],
   ["winder","Winder","Winder"],["ship","Warehouse","Warehouse & shipping"],["site","Site & admin","Site & admin"]];
-const PF_CATS=[["fiber","Fiber (OCC)","#c08a4a"],["energy","Energy","#ffb02e"],["chem","Chemicals & water","#3fc6d6"],["labor","Labor","#4fd18b"],
+const PF_CATS=[["fiber","Fiber (OCC)","#c08a4a"],["frin","Freight in","#e07b39"],["frout","Freight out","#9b7fd6"],["energy","Energy","#ffb02e"],["chem","Chemicals & water","#3fc6d6"],["labor","Labor","#4fd18b"],
   ["maint","Maintenance","#ff7a8a"],["over","Overhead","#a7b4cf"]];
 const PF_POWER={pulper:0.2,stock:0.35,pm:0.45};   // electricity by area: pulper rotor; refiners, screens and pumps; the machine's drives, vacuum and fans
 const PF_STEAMSH=0.6;   // steam's share of the energy bill (the same share the knobs' extra dryer steam uses, 07b)
@@ -4614,15 +4645,15 @@ function pfRepair(id,bill){if(!bill)return;pfAdd("rep",pfRepArea(id),bill);pfAdd
 // the day's numbers as plain data (also what is kept for yesterday)
 function pfCalc(f,whole){const L=S.ledger,d=k=>(L[k]||0)-(f.L0[k]||0),A=f.A,sum=o=>o?Object.values(o).reduce((s,v)=>s+v,0):0;
   const chem=sum(A.chem),steam=sum(A.steam),power=sum(A.power),energy=d("energy")-chem,mlab=sum(A.mlab),repairs=d("repairs"),premium=d("premium");
-  const cat={fiber:d("occ"),energy,chem,labor:d("labor")-mlab,maint:mlab+repairs+premium,over:d("overhead")+d("civ")};
+  const cat={fiber:d("occ"),frin:d("frin"),frout:d("frout"),energy,chem,labor:d("labor")-mlab,maint:mlab+repairs+premium,over:d("overhead")+d("civ")};
   const et=steam+power,es=et>0?energy/et:0;
   const sub={energy:{Steam:steam*es,Power:power*es},chem:{"Stock prep":(A.chem&&A.chem.stock)||0,"Wet end":(A.chem&&A.chem.pm)||0},
     labor:{"Forklift drivers":(A.labor&&A.labor.yard)||0,"Loaders and robots":(A.labor&&A.labor.ship)||0},
     maint:{"Repair bills and outage budgets":repairs,"Maintenance techs":(A.mlab&&A.mlab.techs)||0,"Preventive maintenance program":(A.mlab&&A.mlab.pmprog)||0,"Insurance premium":premium},
-    over:{"Site overhead":d("overhead"),"Civics":d("civ")},fiber:{"OCC bales":d("occ")}};
+    over:{"Site overhead":d("overhead"),"Civics":d("civ")},fiber:{"OCC bales":d("occ")},frin:{"Inbound haul":d("frin")},frout:{"Outbound freight":d("frout")}};
   // by area: what each input added there today
   const by={};PF_AREAS.forEach(([a])=>by[a]={});const put=(c,a,v)=>{if(v)by[a][c]=(by[a][c]||0)+v;};
-  put("fiber","yard",cat.fiber);
+  put("fiber","yard",cat.fiber);put("frin","yard",cat.frin);put("frout","ship",cat.frout);
   if(et>0){for(const a in A.steam||{})put("energy",a,A.steam[a]*es);for(const a in A.power||{})put("energy",a,A.power[a]*es);}else put("energy","pm",energy);
   let c0=0;for(const a in A.chem||{}){put("chem",a,A.chem[a]);c0+=A.chem[a];}put("chem","site",chem-c0);
   let l0=0;for(const a in A.labor||{}){put("labor",a,A.labor[a]);l0+=A.labor[a];}put("labor","site",cat.labor-l0);
@@ -4642,7 +4673,7 @@ function pfCalc(f,whole){const L=S.ledger,d=k=>(L[k]||0)-(f.L0[k]||0),A=f.A,sum=
    a slice at a time between frames. Its rows are kept at hours -336..-1 and the sandbox is thrown away; the real run
    doesn't step until it's done (52-main-loop.js). The run's own dice, cash and day 1 are untouched.
    Saves: S.hist is kept under its own key, written only when a row was added (51c-save.js). */
-const HIST_PRIOR=14,HIST_MAX=60*24+HIST_PRIOR*24;   // survival keeps a rolling 60 days (plus the prior ones)
+const HIST_V=2,HIST_PRIOR=14,HIST_MAX=60*24+HIST_PRIOR*24;   // survival keeps a rolling 60 days (plus the prior ones)
 const HC=["h"];const HCI={};
 {const add=(...k)=>k.forEach(x=>HC.push(x));
   PF_CATS.forEach(([c])=>add("c."+c));PF_AREAS.forEach(([a])=>PF_CATS.forEach(([c])=>add("b."+a+"."+c)));
@@ -4659,14 +4690,14 @@ const HA=[["yard",()=>S.yard],["yardp",()=>S.yard/P.yardCap*100],["wet",()=>S.we
   ["fgp",()=>S.fg/P.fgCap*100],["price",()=>priceOf(C.grade)],["load",()=>S.rates.load],["crew",()=>C.drivers.v+C.loaders.v+P.techs],
   ["wage",()=>(ECON.wage+(P.siteWage||0))*(P.costMul||1)*leadWage()*civWage()],
   ["civE",()=>civOn()?S.civ.m.E:null],["civL",()=>civOn()?S.civ.m.L:null],["civM",()=>civOn()?S.civ.m.M:null],["civC",()=>civOn()?S.civ.m.C:null],
-  ["mkt",()=>S.plan?S.plan.mkt:0],["grade",()=>GRADE_IDS.indexOf(C.grade)]];
+  ["mkt",()=>S.plan?S.plan.mkt:0],["haul",()=>frInRate()],["frout",()=>frOutRate()],["fuel",()=>fuelIdx()],["grade",()=>GRADE_IDS.indexOf(C.grade)]];
 const GRADE_IDS=Object.keys(GRADES);
 HA.forEach(([k])=>{HCI["a."+k]=HC.length;HC.push("a."+k);});
 const histR=v=>v==null||v!==v?null:Math.abs(v)>=100?Math.round(v):Math.round(v*100)/100;
 
 function histNew(){const T=S.tot;return Object.assign(pfNew(),{T:{in:T.inTrucks,out:T.outTrucks,brk:T.breaks,hay:T.hayouts||0,rolls:T.rolls},
   m:{},sa:new Array(HA.length).fill(0),sn:new Array(HA.length).fill(0),s2:-1,dn:{}});}
-function histInit(){if(!S.hist)S.hist={rows:[],dn:[],ev:[],bf:false,id:Math.floor(Math.random()*1e9)};return S.hist;}
+function histInit(){if(!S.hist||S.hist.v!==HIST_V)S.hist={v:HIST_V,rows:[],dn:[],ev:[],bf:false,id:Math.floor(Math.random()*1e9)};return S.hist;}   // (v2: freight columns; older history is made again)
 // called at the top of step(), after pfDay
 function pfHour(){histInit();const h=Math.floor(S.t/60);if(!S.ph){S.ph=histNew();return;}if(h===S.ph.h)return;
   histPush(histRow(S.ph),S.ph.dn);S.ph=histNew();}
@@ -4702,7 +4733,7 @@ function histRows(h0,h1,prior){const H=S.hist;if(!H)return [];const out=[];
 // a range of rows summed into the same shape pfCalc gives the screen (cat, sub, by, W, rep, totals)
 function histSum(rows,t0,t1){const s=k=>rows.reduce((a,r)=>a+(r[HCI[k]]||0),0);
   const cat={};PF_CATS.forEach(([c])=>cat[c]=s("c."+c));const by={};PF_AREAS.forEach(([a])=>{by[a]={};PF_CATS.forEach(([c])=>{const v=s("b."+a+"."+c);if(v)by[a][c]=v;});});
-  const sub={energy:{Steam:s("s.steam"),Power:s("s.power")},chem:{"Stock prep":s("s.chs"),"Wet end":s("s.chp")},labor:{"Forklift drivers":s("s.drv"),"Loaders and robots":s("s.ldr")},
+  const sub={frin:{"Inbound haul":cat.frin},frout:{"Outbound freight":cat.frout},energy:{Steam:s("s.steam"),Power:s("s.power")},chem:{"Stock prep":s("s.chs"),"Wet end":s("s.chp")},labor:{"Forklift drivers":s("s.drv"),"Loaders and robots":s("s.ldr")},
     maint:{"Repair bills and outage budgets":s("s.rep"),"Maintenance techs":s("s.tech"),"Preventive maintenance program":s("s.pmp"),"Insurance premium":s("s.prem")},
     over:{"Site overhead":s("s.ovh"),"Civics":s("s.civ")},fiber:{"OCC bales":cat.fiber}};
   const W={};["feed","rej","bale","eff","broke","val","fine","fines"].forEach(k=>W[k]=s("w."+k));
@@ -4713,13 +4744,13 @@ function histSum(rows,t0,t1){const s=k=>rows.reduce((a,r)=>a+(r[HCI[k]]||0),0);
 /* ---- prior history: 14 days in a sandbox, a slice at a time ---- */
 const BF={busy:false,p:0,sb:null,real:null,stepT:0,ms:0};
 const bfLive=()=>!!(S&&((S.season&&S.season.on)||S.free||S.zen));
-function bfNeed(){return !BF.busy&&bfLive()&&!(S.hist&&S.hist.bf)&&!(typeof location!=="undefined"&&/[?&]nobf\b/.test(location.search));}
+function bfNeed(){return !BF.busy&&bfLive()&&!(S.hist&&S.hist.bf&&S.hist.v===HIST_V)&&!(typeof location!=="undefined"&&/[?&]nobf\b/.test(location.search));}
 // swap the sandbox in (its S, C, chaos settings; P is rebuilt from it) and out again, quietly: no sound, no 3D cut-scenes
 function bfIn(){const R=BF.real={S,C,P:Object.assign({},P),CH:{on:CH.on,lvl:CH.lvl},nb:BANNERS.length,ev:AUDIO.event,sfx:AUDIO.sfx,bird:G3.birdCine};
   AUDIO.event=AUDIO.sfx=()=>{};G3.birdCine=undefined;CH.on=true;CH.lvl=1;
   if(!BF.sb){C=JSON.parse(JSON.stringify(R.C));AUTOKEYS.forEach(k=>{if(C[k])C[k].auto=true;});C.breaks=true;C.hays=true;
-    initState();seedRun(((R.S.seed||1)^0x5bd1e995)>>>0);S.bn=R.S.bn;S.cards=null;S.season=null;S.free=true;S.zen=false;S.lead=null;S.civ=null;S.outg=null;
-    S.hist={rows:[],dn:[],ev:[],bf:true,id:0};applyUpgrades();S.M=mods();BF.sb={S,C};}
+    initState();seedRun(((R.S.seed||1)^0x5bd1e995)>>>0);S.bn=R.S.bn;S.fuelSeed=R.S.seed;S.fuelOff=-HIST_PRIOR/7;S.cards=null;S.season=null;S.free=true;S.zen=false;S.lead=null;S.civ=null;S.outg=null;
+    S.hist={v:HIST_V,rows:[],dn:[],ev:[],bf:true,id:0};applyUpgrades();S.M=mods();BF.sb={S,C};}
   else{S=BF.sb.S;C=BF.sb.C;applyUpgrades();S.M=mods();}}
 function bfOut(){const R=BF.real;BF.sb.S=S;BF.sb.C=C;S=R.S;C=R.C;Object.assign(P,R.P);CH.on=R.CH.on;CH.lvl=R.CH.lvl;BANNERS.length=Math.min(BANNERS.length,R.nb);
   AUDIO.event=R.ev;AUDIO.sfx=R.sfx;G3.birdCine=R.bird;BF.real=null;}
@@ -11950,7 +11981,7 @@ function pfOv(){let o=$("pfOv");if(o)return o;
   return o;}
 function pfOpen(){const o=pfOv();if(G3.closeKnobUI)G3.closeKnobUI();PFUI.open=true;G3.pfOpen=true;PFUI.sel=null;PFUI.mode="t";o.hidden=false;pfRender(true);kuiSync();
   setTimeout(()=>{try{$("pfClose").focus({preventScroll:true});}catch(_){}},0);}
-function pfClose(){const o=$("pfOv");if(o)o.hidden=true;const was=PFUI.open;PFUI.open=false;G3.pfOpen=false;kuiSync();if(was)try{$("gl").focus({preventScroll:true});}catch(_){}}
+function pfClose(){pfCtlHome();G3.pfCtlOn=false;const o=$("pfOv");if(o)o.hidden=true;const was=PFUI.open;PFUI.open=false;G3.pfOpen=false;kuiSync();if(was)try{$("gl").focus({preventScroll:true});}catch(_){}}
 // the picture runs top to bottom on narrow screens
 const pfVert=()=>window.matchMedia("(max-width:760px)").matches;
 
@@ -12046,11 +12077,11 @@ const pfHourLbl=h=>`${pfDayLbl(h)} · ${clockOf(((h%24)+24)%24*60)}`;
    hourly bars over 24 h or daily bars over 7 days and the run), stack (summed bars stacked), pct (sum of a / sum of b) ---- */
 const V_=k=>r=>r[HCI[k]];
 const HSUM=k=>k.reduce?(r=>k.reduce((a,x)=>a+(r[HCI[x]]||0),0)):V_(k);
-const C_={occ:"#c08a4a",en:"#ffb02e",ch:"#3fc6d6",lab:"#4fd18b",mt:"#ff7a8a",ov:"#a7b4cf",bl:"#7fb2ff",pu:"#c08bff",wh:"#dbe6f6"};
+const C_={fi:"#e07b39",fo:"#9b7fd6",occ:"#c08a4a",en:"#ffb02e",ch:"#3fc6d6",lab:"#4fd18b",mt:"#ff7a8a",ov:"#a7b4cf",bl:"#7fb2ff",pu:"#c08bff",wh:"#dbe6f6"};
 const UPK={yard:"m.yard",pulper:"m.pulp",stock:"m.pulp",pm:"m.pmrun",winder:"m.wdrun",ship:"m.ship"};
 const PF_TR={
   yard:[{t:"Bale yard inventory",u:"t",k:"line",s:[["Yard",C_.occ,V_("a.yard")]]},{t:"Trucks in",u:"trucks",k:"bar",s:[["Trucks",C_.bl,V_("n.in")]]},
-    {t:"OCC price",u:"$/t",k:"line",s:[["OCC",C_.occ,V_("a.occp")]],ev:1},{t:"Unloading",u:"t/h",k:"line",s:[["Unloaded",C_.bl,V_("a.unload")]]}],
+    {t:"OCC price",u:"$/t",k:"line",s:[["OCC",C_.occ,V_("a.occp")]],ev:1},{t:"Inbound haul",u:"$/t",k:"line",s:[["Haul",C_.fi,V_("a.haul")]]},{t:"Unloading",u:"t/h",k:"line",s:[["Unloaded",C_.bl,V_("a.unload")]]}],
   pulper:[{t:"Pulper feed and fiber out",u:"t/h",k:"line",s:[["Bales fed",C_.occ,V_("a.feed")],["Fiber out",C_.bl,V_("a.fiber")]]},{t:"Yield",u:"%",k:"line",s:[["Yield",C_.lab,V_("a.yield")]]},
     {t:"Rotor",u:"A",k:"line",s:[["Rotor",C_.en,V_("a.amps")]],ev:1}],
   stock:[{t:"Fiber to the machine chest",u:"t/h",k:"line",s:[["Fiber",C_.bl,V_("a.fiber")]]},{t:"Stock chest level",u:"%",k:"line",s:[["Chest",C_.ch,V_("a.chest")]]},
@@ -12060,12 +12091,16 @@ const PF_TR={
     {t:"Dryer steam",u:"t/h",k:"line",s:[["Steam",C_.wh,V_("a.steam")]]},{t:"Energy",u:"$/t",k:"line",s:[["Energy",C_.en,V_("a.energyt")]]}],
   winder:[{t:"Winder",u:"t/h",k:"line",s:[["Cut",C_.bl,V_("a.cut")]],ev:1},{t:"Paper waiting at the winder",u:"t",k:"line",s:[["Reel store",C_.wh,V_("a.reel")]]},{t:"Hayouts",u:"",k:"bar",s:[["Hayouts",C_.en,V_("n.hay")]]}],
   ship:[{t:"Warehouse",u:"% full",k:"line",s:[["Warehouse",C_.wh,V_("a.fgp")]]},{t:"Paper shipped",u:"t",k:"bar",s:[["Shipped",C_.lab,V_("ship")]]},
-    {t:"Trucks out",u:"trucks",k:"bar",s:[["Trucks",C_.bl,V_("n.out")]]},{t:"Paper price (grade on the machine)",u:"$/t",k:"line",s:[["Price",C_.lab,V_("a.price")]]}],
+    {t:"Trucks out",u:"trucks",k:"bar",s:[["Trucks",C_.bl,V_("n.out")]]},{t:"Outbound freight",u:"$/t",k:"line",s:[["Freight",C_.fo,V_("a.frout")]]},{t:"Paper price (grade on the machine)",u:"$/t",k:"line",s:[["Price",C_.lab,V_("a.price")]]}],
   site:[{t:"Admin costs",u:"$",k:"stack",s:[["Overhead",C_.ov,V_("s.ovh")],["Insurance",C_.pu,V_("s.prem")],["Civics",C_.ch,V_("s.civ")],["Maintenance crew",C_.mt,V_("s.tech")],["PM program",C_.en,V_("s.pmp")]]},
     {t:"Crew on site",u:"people",k:"line",s:[["Crew",C_.lab,V_("a.crew")]]},{t:"Wage",u:"$/h per worker",k:"line",s:[["Wage",C_.lab,V_("a.wage")]]},
     {t:"Civics meters",u:"0–100",k:"line",s:[["Economy",C_.en,V_("a.civE")],["Labor",C_.lab,V_("a.civL")],["Machinery",C_.bl,V_("a.civM")],["Community",C_.pu,V_("a.civC")]],opt:1}],
-  "cat:fiber":[{t:"OCC price",u:"$/t",k:"line",s:[["OCC",C_.occ,V_("a.occp")]]},{t:"Fiber spend",u:"$",k:"bar",s:[["Fiber",C_.occ,V_("c.fiber")]]},{t:"Bales fed",u:"t",k:"bar",s:[["Bales",C_.occ,V_("w.feed")]]},
+  "cat:fiber":[{t:"OCC price and haul",u:"$/t",k:"line",s:[["OCC",C_.occ,V_("a.occp")],["Haul",C_.fi,V_("a.haul")],["Delivered",C_.wh,r=>{const a=hv(r,"a.occp"),b=hv(r,"a.haul");return a==null||b==null?null:a+b;}]]},{t:"Fiber spend",u:"$",k:"bar",s:[["Fiber",C_.occ,V_("c.fiber")]]},{t:"Bales fed",u:"t",k:"bar",s:[["Bales",C_.occ,V_("w.feed")]]},
     {t:"OCC market",u:"$/t vs normal",k:"line",s:[["Market",C_.wh,V_("a.mkt")]]}],
+  "cat:frin":[{t:"Inbound haul",u:"$/t",k:"line",s:[["Haul",C_.fi,V_("a.haul")]]},{t:"Diesel index",u:"× normal",k:"line",s:[["Diesel",C_.wh,V_("a.fuel")]]},
+    {t:"Inbound freight spend",u:"$",k:"bar",s:[["Freight in",C_.fi,V_("c.frin")]]},{t:"Trucks in",u:"trucks",k:"bar",s:[["Trucks",C_.bl,V_("n.in")]]}],
+  "cat:frout":[{t:"Outbound freight",u:"$/t",k:"line",s:[["Freight",C_.fo,V_("a.frout")]]},{t:"Diesel index",u:"× normal",k:"line",s:[["Diesel",C_.wh,V_("a.fuel")]]},
+    {t:"Outbound freight spend",u:"$",k:"bar",s:[["Freight out",C_.fo,V_("c.frout")]]},{t:"Paper shipped",u:"t",k:"bar",s:[["Shipped",C_.lab,V_("ship")]]}],
   "cat:energy":[{t:"Energy per ton",u:"$/t",k:"line",s:[["Energy",C_.en,V_("a.energyt")]]},{t:"Energy spend",u:"$",k:"stack",s:[["Steam",C_.en,V_("s.steam")],["Power",C_.bl,V_("s.power")]]},
     {t:"Dryer steam",u:"t/h",k:"line",s:[["Steam",C_.wh,V_("a.steam")]]}],
   "cat:chem":[{t:"Chemicals and water per ton",u:"$/t",k:"line",s:[["Chemicals",C_.ch,V_("a.chemt")]]},{t:"Chemicals spend",u:"$",k:"stack",s:[["Stock prep",C_.ch,V_("s.chs")],["Wet end",C_.bl,V_("s.chp")]]}],
@@ -12165,6 +12200,10 @@ function pfBreak(D,live){const s=PFUI.sel;const [kind,a,b]=s.split(":"),t=D.made
       if(c==="fiber")rows.push(["Now","","hd"],["OCC price",money(P.occPrice)+"/t"],["Bales fed, "+PF_RNAME[PFUI.mode],pfT(D.W.feed)],["Pulper yield",Math.round(P.yieldF*100)+" %"]);
       if(c==="energy")rows.push(["Now","","hd"],["Energy per ton",money(Math.max(0,energyCost()-pfChemT()))+"/t"],["Grade steam","×"+(P.steamMul||1).toFixed(2)],["Shoe press and APC","×"+(P.energyMul||1).toFixed(2)],P.siteEnergy?["Site",(P.siteEnergy-(P.siteChem||0)>=0?"+":"−")+money(Math.abs(P.siteEnergy-(P.siteChem||0)))+"/t"]:null,cm!==1?["Survival costs","×"+cm.toFixed(2)]:null);
       if(c==="chem")rows.push(["Now","","hd"],["Chemicals and water per ton",money(pfChemT())+"/t"],P.refSave?["Refiner upgrade","−"+money(P.refSave)+"/t"]:null,P.siteChem?["Site",(P.siteChem>=0?"+":"−")+money(Math.abs(P.siteChem))+"/t"]:null,cm!==1?["Survival costs","×"+cm.toFixed(2)]:null);
+      if(c==="frin"||c==="frout"){const base=c==="frin"?FR.inBase+(P.siteHaul||0):FR.outBase+(P.siteFreight||0),fx=c==="frout"?frFx():0;
+        rows.push(["Now","","hd"],[c==="frin"?"Haul per ton of bales":"Freight per ton shipped",money(c==="frin"?frInRate():frOutRate())+"/t"],["Site base",money(base)+"/t"],["Diesel index","×"+fuelIdx().toFixed(2)],
+          ["Weather",`${(WXN[S.wx]||S.wx||"clear").toLowerCase()} ×${frWx().toFixed(2)}`],frEv()>1?["Detours","×"+frEv().toFixed(2),"bad"]:null,fx?["Deals and events",(fx>0?"+":"−")+money(Math.abs(fx))+"/t",fx>0?"bad":"ok"]:null,
+          c==="frin"&&cm!==1?["Survival costs","×"+cm.toFixed(2)]:null);}
       if(c==="labor")rows.push(["Now","","hd"],["Drivers on shift",String(Math.round(C.drivers.v))],["Loaders on shift",String(Math.round(C.loaders.v))],P.robots?["Robot loaders",String(P.robots)]:null);}
     if(c==="maint"){const r=Object.entries(D.rep).map(([id,v])=>[id==="outage"?"Outage budget":EV[id]?EV[id].name:id,money(v)]);if(r.length)rows.push(["Bills, "+PF_RNAME[PFUI.mode],"","hd"],...r);}
     if(c==="over")note="Site-wide costs: they join the flow at Site & admin.";}
@@ -12192,13 +12231,24 @@ function pfBreak(D,live){const s=PFUI.sel;const [kind,a,b]=s.split(":"),t=D.made
     note=`Operating money for ${PF_RNAME[PFUI.mode]}. Upgrades are a choice, so they're left out.`;}
   return {title,rows,note};}
 
-function pfTabs(sel){const [kind]=sel.split(":");return kind==="node"?[["tr","Trends"],["co","Costs"],["uq","Uptime & quality"]]:[["tr","Trends"],["bk","Breakdown"]];}
+function pfTabs(sel){const [kind,a]=sel.split(":");return kind==="node"?[["tr","Trends"],...(a==="site"?[]:[["ct","Controls"]]),["co","Costs"],["uq","Uptime & quality"]]:[["tr","Trends"],["bk","Breakdown"]];}
+/* ---- v6.5 the area controls live here (they were Settings > Area controls). The #cards section moves between a hidden
+   holder and the Controls tab; CSS shows only this area's cards. Same rules as before: on AUTO and locked in a season
+   or survival run (09-season-leaderboard.js seasonLocks), free in Free Play. ---- */
+const PF_CARDA=["yard","yard","pulper","stock","pm","winder","ship"];
+function pfCtlHome(){const cs=$("cards"),h=$("pfHold");if(cs&&h&&cs.parentNode!==h)h.appendChild(cs);}
+function pfCtlMount(a){const cs=$("cards"),t=$("pfCtl");if(!cs||!t)return;cs.dataset.area=a;if(cs.parentNode!==t)t.appendChild(cs);G3.pfCtlOn=true;}
+{const cs=$("cards"),d=$("areactl");if(cs){const h=kEl("div","pfhold");h.id="pfHold";h.hidden=true;document.body.appendChild(h);
+    cs.querySelectorAll(":scope > .card").forEach((c,i)=>c.dataset.a=PF_CARDA[i]||"site");h.appendChild(cs);}
+  if(d){const n=kEl("div","setgrp pfctlnote",`<span>Area controls are in <b>Process flow</b>: tap an area, then <b>Controls</b>.</span><button type="button" id="pfCtlGo">Open process flow</button>`);n.id="areactl";d.replaceWith(n);
+    $("pfCtlGo").addEventListener("click",()=>{const x=document.querySelector('#v2sheet header button[aria-label="Close panel"]');if(x)x.click();pfOpen();});}}
 function pfPanelHTML(D,live){const sel=PFUI.sel,[kind,a]=sel.split(":"),tabs=pfTabs(sel);if(!PFUI.tab||!tabs.some(t=>t[0]===PFUI.tab))PFUI.tab="tr";
   if(a==="site"&&PFUI.tab==="uq")PFUI.tab="tr";
   PFUI.area=kind==="node"?a:null;const B=pfBreak(D,live),specs=[];let body="";
   const zoom=`<div class="seg pfzoom" role="group" aria-label="Chart range">${[["24h","24 h"],["7d","7 d"],["run","Run"]].map(([k,l])=>`<button type="button" data-pz="${k}" aria-pressed="${PFUI.zoom===k}">${l}</button>`).join("")}</div>`;
   const charts=list=>list.filter(c=>!c.opt||(S.hist&&S.hist.rows.some(r=>hv(r,"a.civE")!=null))).map(c=>{specs.push(c);return pfChartHTML(c,specs.length-1);}).join("");
   if(PFUI.tab==="tr"){body=zoom+charts(kind==="node"?PF_TR[a]:PF_TR[sel]||[]);if(S.zen&&kind!=="node")body=zoom+charts((PF_TR[sel]||[]).filter(c=>c.u!=="$"));}
+  else if(PFUI.tab==="ct")body=`<p class="pfpn pflock">${document.body.classList.contains("season-lock")?"<b>AUTO · locked during a season or survival run.</b> The mill runs these itself; Free Play lets you run them by hand.":"Free play: move a slider, or tap AUTO to hand it back to the mill."}</p><div id="pfCtl"></div>`;
   else if(PFUI.tab==="bk")body=`<div class="pfpr">${pfRows(B.rows)}</div>${B.note?`<p class="pfpn">${B.note}</p>`:""}`;
   else if(PFUI.tab==="co"){const W=histWin(...pfWin()),all=histWin(-1e9,pfNowH()+1);
     const sp={t:"Cost added here",u:"$",k:"stack",s:PF_CATS.filter(([c])=>[...all.rows].some(r=>hv(r,"b."+a+"."+c))).map(([c,n,col])=>[n,col,V_("b."+a+"."+c)])};
@@ -12229,7 +12279,9 @@ function pfRender(force){if(!PFUI.open)return;const o=$("pfOv");if(!o)return;
   const put=(id,h)=>{const e=$(id);if(e._h!==h){e._h=h;e.innerHTML=h;}};
   put("pfIn",pfInputs(D));put("pfMap",pfSVG(D,live));put("pfOut",pfOutputs(D));
   const pp=$("pfPanel");pp.hidden=!PFUI.sel;$("pfOv").querySelector(".dcs").classList.toggle("panel",!!PFUI.sel);
-  if(PFUI.sel){const b0=pp.querySelector(".pfpb");pp._sc=b0?b0.scrollTop:0;const h=pfPanelHTML(D,live);if(force||pp._k!==skey||PFUI.tab==="bk"||PFUI.tab==="co"){const same=pp._k&&pp._k.split("|").slice(0,2).join()===skey.split("|").slice(0,2).join();put("pfPanel",h);pp._k=skey;const b=pp.querySelector(".pfpb"),b0=pp._sc||0;if(b)b.scrollTop=same?b0:0;}pfCharts();}}
+  G3.pfCtlOn=false;
+  if(!PFUI.sel)pfCtlHome();
+  if(PFUI.sel){const b0=pp.querySelector(".pfpb");pp._sc=b0?b0.scrollTop:0;const h=pfPanelHTML(D,live);if(force||pp._k!==skey||PFUI.tab==="bk"||PFUI.tab==="co"){const same=pp._k&&pp._k.split("|").slice(0,2).join()===skey.split("|").slice(0,2).join();if(pp._h!==h)pfCtlHome();put("pfPanel",h);pp._k=skey;const b=pp.querySelector(".pfpb"),b0=pp._sc||0;if(b)b.scrollTop=same?b0:0;}if(PFUI.tab==="ct"&&PFUI.area)pfCtlMount(PFUI.area);else pfCtlHome();pfCharts();}}
 
 // Settings > View: the button that opens it (next to the fiddly knobs view switch)
 {const row=$("v2viewrow"),b=kEl("button","pfopen","Process flow");b.type="button";b.id="pfBtn";b.title="Inputs, process and outputs for today's mill day";row.appendChild(b);
@@ -12910,7 +12962,7 @@ function camPullOn(){try{return localStorage.getItem("paper-mill-campull")!=="of
   ["Fiddly knobs","knobs",`<p>Red knobs around the mill do nothing until you touch them. Move one and trouble may turn up later, sometimes somewhere else. The crew traces it back in the end.</p>
     <ul><li>Tap the red hardware, or open the <b>DCS screens</b> from the operator consoles (SPOT for stock prep, WET and DET on the machine floor).</li><li>The game slows to 1 min/s while a knob panel or DCS screen is open.</li><li><b>Settings → View → Fiddly knobs view</b> greys out the mill and shows only the knobs.</li></ul>`],
   ["Process flow","pflow",`<p><b>Settings → View → Process flow</b> draws the whole mill for today's mill day (6am to 6am), or yesterday: what goes in (fiber, energy, chemicals and water, labor, maintenance, overhead), the areas it passes through, and what comes out (paper, waste, profit).</p>
-    <ul><li>The blue band grows as money is spent, area by area, and meets the day's revenue at the end.</li><li>Waste is in tons: rejects to landfill, fiber lost in the effluent, and broke that goes round again.</li><li>Today, Yesterday, 7 d or Run: the run includes the 14 days before you took over (switch them off with Prior days).</li><li>Tap any area, input or output for its panel: trends over time (24 h, 7 d or the whole run; tap a chart to read it), costs, and for areas uptime and quality.</li><li>Tap any box or band for its breakdown. The mill keeps running while it's open, so the numbers update live.</li></ul>`],
+    <ul><li>The blue band grows as money is spent, area by area, and meets the day's revenue at the end.</li><li>Waste is in tons: rejects to landfill, fiber lost in the effluent, and broke that goes round again.</li><li>Today, Yesterday, 7 d or Run: the run includes the 14 days before you took over (switch them off with Prior days).</li><li>Tap any area, input or output for its panel: trends over time (24 h, 7 d or the whole run; tap a chart to read it), costs, and for areas uptime and quality.</li><li>Each area's controls (truck arrivals, crews, pulper feed, machine speed and grade, winder, loaders) are in its panel under <b>Controls</b>: AUTO and locked in a season or survival run, yours in Free Play.</li><li>Freight in and Freight out move with a weekly diesel price, the weather and detours.</li><li>Tap any box or band for its breakdown. The mill keeps running while it's open, so the numbers update live.</li></ul>`],
   ["Controls","controls",`<ul><li><b>Speed:</b> tap the top bar to open it, then − and +. Pause is the button on the far left.</li><li><b>Camera:</b> a fixed isometric view. Drag to pan; pinch, scroll or + and − to zoom one step at a time. On a keyboard: arrows or WASD to move. Roofs lift off as you zoom in (Settings → View → Cutaway).</li>
     <li><b>Go to:</b> the buttons above the dock fly to each area. Tap a label or a red tag to fly to it.</li><li><b>Labels</b> in the top bar shows or hides equipment labels.</li><li>The game pauses while a bottom panel is open.</li></ul>`],
   ["Scores and saving","score",`<ul><li>A season or survival run saves on this device as you play; <b>Continue</b> on the title screen picks it up.</li><li>Season and survival each have their own leaderboard. The end screen also shows your grade, civics and upsets caught early.</li></ul>`]];
@@ -13005,7 +13057,7 @@ function camPullOn(){try{return localStorage.getItem("paper-mill-campull")!=="of
    (within 700 ms per tap) and a list of every version's one-line note pops up, newest first. The list comes from
    VERSION-NOTES.txt at the repo root: build.py swaps it in for the placeholder below, so adding a line there with each
    release keeps the pop-up current (build.py warns when APP_VER has no line). ---------- */
-{const VNOTES=[["4.0.0", "Graphics Overhaul: 60 FPS on iPhone, ~80% Fewer Draw Calls"], ["4.0.1", "Performance Follow-Up, Show FPS Option and Device Autotest"], ["4.0.2", "Economy Rebalance and Smoother Upset Labels"], ["4.1.0", "Four Environments, Seeded Mills, Bottlenecks, Graphics Tiers and Site Music"], ["4.2.0", "New Site Maps, Rare Sights, Zen Map Rotation and Economics Fixes"], ["4.2.0-s", "Save and Continue Season (Test)"], ["4.2.1", "Save/Continue, Settings Panel and Outage Speed Fix"], ["4.2.2-t", "Bayou Gator Sight Reworked (Test)"], ["4.2.2-t2", "Gator Bass Riff (Test)"], ["4.2.2-t3", "Gator Riff Removed, Wide Camera Framing (Test)"], ["4.2.2-t4", "Gator Scene Shortened and Widened (Test)"], ["4.2.2-t5", "One Rare Sight per Map in Zen (Test)"], ["4.2.2", "Rare Sights Reworked, Bird Strike Upset, Mill Report Tab"], ["4.2.3-t", "Cowboys, Bigfoot and Tugboat Sights Reworked (Test)"], ["4.2.3", "Laptop Battery Saving (Default GPU)"], ["4.2.4", "$25M Goal Removed and Quick Fixes"], ["4.2.5", "Random Bottleneck per Season and Accessibility Improvements"], ["4.3.0-t1", "Survival Mode (Test)"], ["4.4.0-t1", "Mill Leaders in Survival (Test)"], ["4.4.0-t2", "Painted Leader Portraits (Test)"], ["4.4.0-t3", "Leader Redesign, 4-Day Waves and Fixes (Test)"], ["5.0.0", "Survival Mode Release with Mill Leaders"], ["5.0.1", "Results Dialog and Game Speed Fixes"], ["5.0.2", "Report Card Label Fixes"], ["5.0.3", "Survival Playtest Fixes (Test)"], ["5.0.4", "Playtest Review: Dot Auto-Fix and Shipping Fix (Test)"], ["5.0.5", "Polish Rounds from Survival Playtests"], ["5.0.6", "Survival QA Fixes, Opt-In Outage Watch, Leaderboard Filters"], ["5.1.0", "Civics Meters and Leaders in Seasons (Test)"], ["5.4.0", "Title Screen, Civics in the World and Dark Mode"], ["5.4.1", "Loading Splash, No Old-Menu Flash"], ["5.4.2", "Graphics Quality on the Title Screen"], ["5.5.0", "Performance Improvements"], ["5.6.0", "Fiddly Knobs, DCS/QCS Screens and Knobs View"], ["5.7.0", "Catching Failures Early: Tells, Daily Rounds, Vibration Report, Outage Prep"], ["5.7.1", "Bottom Menu Reorder, Settings Back on the Right"], ["5.7.2", "Help Page with Game Guide and Glossary"], ["5.7.3", "Bare Graphics Mode for Weak Phones"], ["5.7.4", "Version Notes Pop-Up (Triple-Tap the Version Number)"], ["6.1.0-t1", "Isometric Paper View: Fixed Camera, Cut-Outs, Drop Shadows, Cutaways, Season Palettes (Test)"], ["6.1.0-t2", "Iso Round 2: Cut-Outs Always Paper, GPU Pictures, Stop-Motion World, Fewer Draws (Test)"], ["6.1.0-t3", "Iso Round 3: iPhone Batching, Instanced Cans, Sign Atlas, Lighter Frames (Test)"], ["6.1.0-t4", "Iso Fixes: Operators and Fork-Trucks Back, Less Stutter (Test)"], ["6.1.0-t5", "Cut-Out Edge Artifact Fixed (Test)"], ["6.1.0-t6", "Iso Optimization: Hidden Objects Cost Nothing, Lighter Moving Batches (Test)"], ["6.1.0-t7", "Iso Triangle Cut: Paper-Card Trees, Flat Ground, Hidden Faces Gone, Plain Boxes (Test)"], ["6.1.0-t8", "Paper Palette: 40 Colours, Flat Surfaces, Paper Grain, Fewer Draws (Test)"], ["6.1.0-t9", "Reel Fix: Growing Reel Draws Again (Test)"], ["6.1.0-t10", "Draw Cut 2: Colour in the Matrix, Merged Roofs, Uploads on Change, Culling Fix, Parked Groups (Test)"], ["6.1.0-t11", "QA Fixes: Cut-Outs Never Drawn as Loose 3D Parts, Fallback Shows 3D, Roofs On or Off per Zoom Step (Test)"], ["6.1.0-t12", "Paper Smoke, Blinking Lights, Stronger Seasons, Sharper Phones, Instanced Upsets, Pictures at Start (Test)"], ["6.1.0-t13", "Paper Effects: Flames, Child-Made Tornado, Lamp Cones, Flags, Paper Water, Visible Weather (Test)"], ["6.1.0-t14", "Paper Upsets: Cut-Out Props, Paper Pigeon, Paper Sparks, Steam, Fireworks, Ice and Flood (Test)"], ["6.1.0-t15", "Beaver Reworked as One Smaller Cut-Out (Test)"], ["6.1.0-t16", "Paper Props Dim at Night, Labels Never Overlap, Fewer Cut-Out Pictures (Test)"], ["6.1.0-t17", "Bird on the Power Lines Cut-Scene Plays When Set Off From the Upsets List (Test)"], ["6.1.0-t18", "Zen Close-Ups Fixed, Rare Sights as Paper Cut-Outs, Tilt-Shift Diorama Look (Test)"], ["6.1.0-t19", "Narrower Tilt-Shift Band, Winder Trash Can Out of the Broke Hole (Test)"], ["6.1.0-t20", "Balance: Rounds Pay More, Capacity and Maintenance Upgrades Re-Priced"], ["6.1.0", "Paper Diorama: Isometric Paper Art Style, Cut-Out People and Upsets, Tilt-Shift, Rounds Pay More, Upgrades Re-Priced"], ["6.1.1", "Phone Fixes: Gentler Tilt-Shift on Tall Screens, Cut-Out People No Longer Blank on iPhone"], ["6.1.2", "iPhone: Cut-Out Self-Test Retries, People Keep Their Colours in the 3D Fallback"], ["6.1.3", "Broke Hole by the Winder Looks Like a Floor Opening (Was a Black Square)"], ["6.1.4", "Tilt-Shift Removed"], ["6.2.0", "Zen Free Camera: Perspective Zen Shots, 3D People in Zen, Cleaner River Water"], ["6.3.0-f1", "Process Flow Overview (Test): Inputs, Mill Areas and Outputs for the Mill Day, in Settings"], ["6.3.0-f2", "Process Flow: the Game Keeps Running While It's Open (Test)"], ["6.3.0", "Process Flow Overview: Inputs, Mill Areas and Outputs for the Mill Day (Settings > View)"], ["6.4.0", "Zen Shots Review: Shuffle-Bag Shot Order, Landscape Shots Rebuilt, Close Rare Sights"], ["6.5.0-a1", "Digital Twin A (Test): Hourly History, 14 Prior Days, 7 d / Run Ranges, Area Trends and Uptime"]];
+{const VNOTES=[["4.0.0", "Graphics Overhaul: 60 FPS on iPhone, ~80% Fewer Draw Calls"], ["4.0.1", "Performance Follow-Up, Show FPS Option and Device Autotest"], ["4.0.2", "Economy Rebalance and Smoother Upset Labels"], ["4.1.0", "Four Environments, Seeded Mills, Bottlenecks, Graphics Tiers and Site Music"], ["4.2.0", "New Site Maps, Rare Sights, Zen Map Rotation and Economics Fixes"], ["4.2.0-s", "Save and Continue Season (Test)"], ["4.2.1", "Save/Continue, Settings Panel and Outage Speed Fix"], ["4.2.2-t", "Bayou Gator Sight Reworked (Test)"], ["4.2.2-t2", "Gator Bass Riff (Test)"], ["4.2.2-t3", "Gator Riff Removed, Wide Camera Framing (Test)"], ["4.2.2-t4", "Gator Scene Shortened and Widened (Test)"], ["4.2.2-t5", "One Rare Sight per Map in Zen (Test)"], ["4.2.2", "Rare Sights Reworked, Bird Strike Upset, Mill Report Tab"], ["4.2.3-t", "Cowboys, Bigfoot and Tugboat Sights Reworked (Test)"], ["4.2.3", "Laptop Battery Saving (Default GPU)"], ["4.2.4", "$25M Goal Removed and Quick Fixes"], ["4.2.5", "Random Bottleneck per Season and Accessibility Improvements"], ["4.3.0-t1", "Survival Mode (Test)"], ["4.4.0-t1", "Mill Leaders in Survival (Test)"], ["4.4.0-t2", "Painted Leader Portraits (Test)"], ["4.4.0-t3", "Leader Redesign, 4-Day Waves and Fixes (Test)"], ["5.0.0", "Survival Mode Release with Mill Leaders"], ["5.0.1", "Results Dialog and Game Speed Fixes"], ["5.0.2", "Report Card Label Fixes"], ["5.0.3", "Survival Playtest Fixes (Test)"], ["5.0.4", "Playtest Review: Dot Auto-Fix and Shipping Fix (Test)"], ["5.0.5", "Polish Rounds from Survival Playtests"], ["5.0.6", "Survival QA Fixes, Opt-In Outage Watch, Leaderboard Filters"], ["5.1.0", "Civics Meters and Leaders in Seasons (Test)"], ["5.4.0", "Title Screen, Civics in the World and Dark Mode"], ["5.4.1", "Loading Splash, No Old-Menu Flash"], ["5.4.2", "Graphics Quality on the Title Screen"], ["5.5.0", "Performance Improvements"], ["5.6.0", "Fiddly Knobs, DCS/QCS Screens and Knobs View"], ["5.7.0", "Catching Failures Early: Tells, Daily Rounds, Vibration Report, Outage Prep"], ["5.7.1", "Bottom Menu Reorder, Settings Back on the Right"], ["5.7.2", "Help Page with Game Guide and Glossary"], ["5.7.3", "Bare Graphics Mode for Weak Phones"], ["5.7.4", "Version Notes Pop-Up (Triple-Tap the Version Number)"], ["6.1.0-t1", "Isometric Paper View: Fixed Camera, Cut-Outs, Drop Shadows, Cutaways, Season Palettes (Test)"], ["6.1.0-t2", "Iso Round 2: Cut-Outs Always Paper, GPU Pictures, Stop-Motion World, Fewer Draws (Test)"], ["6.1.0-t3", "Iso Round 3: iPhone Batching, Instanced Cans, Sign Atlas, Lighter Frames (Test)"], ["6.1.0-t4", "Iso Fixes: Operators and Fork-Trucks Back, Less Stutter (Test)"], ["6.1.0-t5", "Cut-Out Edge Artifact Fixed (Test)"], ["6.1.0-t6", "Iso Optimization: Hidden Objects Cost Nothing, Lighter Moving Batches (Test)"], ["6.1.0-t7", "Iso Triangle Cut: Paper-Card Trees, Flat Ground, Hidden Faces Gone, Plain Boxes (Test)"], ["6.1.0-t8", "Paper Palette: 40 Colours, Flat Surfaces, Paper Grain, Fewer Draws (Test)"], ["6.1.0-t9", "Reel Fix: Growing Reel Draws Again (Test)"], ["6.1.0-t10", "Draw Cut 2: Colour in the Matrix, Merged Roofs, Uploads on Change, Culling Fix, Parked Groups (Test)"], ["6.1.0-t11", "QA Fixes: Cut-Outs Never Drawn as Loose 3D Parts, Fallback Shows 3D, Roofs On or Off per Zoom Step (Test)"], ["6.1.0-t12", "Paper Smoke, Blinking Lights, Stronger Seasons, Sharper Phones, Instanced Upsets, Pictures at Start (Test)"], ["6.1.0-t13", "Paper Effects: Flames, Child-Made Tornado, Lamp Cones, Flags, Paper Water, Visible Weather (Test)"], ["6.1.0-t14", "Paper Upsets: Cut-Out Props, Paper Pigeon, Paper Sparks, Steam, Fireworks, Ice and Flood (Test)"], ["6.1.0-t15", "Beaver Reworked as One Smaller Cut-Out (Test)"], ["6.1.0-t16", "Paper Props Dim at Night, Labels Never Overlap, Fewer Cut-Out Pictures (Test)"], ["6.1.0-t17", "Bird on the Power Lines Cut-Scene Plays When Set Off From the Upsets List (Test)"], ["6.1.0-t18", "Zen Close-Ups Fixed, Rare Sights as Paper Cut-Outs, Tilt-Shift Diorama Look (Test)"], ["6.1.0-t19", "Narrower Tilt-Shift Band, Winder Trash Can Out of the Broke Hole (Test)"], ["6.1.0-t20", "Balance: Rounds Pay More, Capacity and Maintenance Upgrades Re-Priced"], ["6.1.0", "Paper Diorama: Isometric Paper Art Style, Cut-Out People and Upsets, Tilt-Shift, Rounds Pay More, Upgrades Re-Priced"], ["6.1.1", "Phone Fixes: Gentler Tilt-Shift on Tall Screens, Cut-Out People No Longer Blank on iPhone"], ["6.1.2", "iPhone: Cut-Out Self-Test Retries, People Keep Their Colours in the 3D Fallback"], ["6.1.3", "Broke Hole by the Winder Looks Like a Floor Opening (Was a Black Square)"], ["6.1.4", "Tilt-Shift Removed"], ["6.2.0", "Zen Free Camera: Perspective Zen Shots, 3D People in Zen, Cleaner River Water"], ["6.3.0-f1", "Process Flow Overview (Test): Inputs, Mill Areas and Outputs for the Mill Day, in Settings"], ["6.3.0-f2", "Process Flow: the Game Keeps Running While It's Open (Test)"], ["6.3.0", "Process Flow Overview: Inputs, Mill Areas and Outputs for the Mill Day (Settings > View)"], ["6.4.0", "Zen Shots Review: Shuffle-Bag Shot Order, Landscape Shots Rebuilt, Close Rare Sights"], ["6.5.0-a1", "Digital Twin A (Test): Hourly History, 14 Prior Days, 7 d / Run Ranges, Area Trends and Uptime"], ["6.5.0-b1", "Digital Twin B (Test): Real Freight Costs with a Diesel Index, Area Controls Moved into Process Flow"]];
   let ov=null,held=false;
   function render(){
     const cur=APP_VER.replace(/^v/i,""),rows=VNOTES.slice().reverse().map(([v,n])=>

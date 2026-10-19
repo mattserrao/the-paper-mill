@@ -97,7 +97,7 @@ function buy(id){const u=UP[id],l=LV(id);if(l>=u.lv.length)return;const cost=upC
   if(id==="reliab"&&l===0&&civOn())civAdd(TELL.relCiv,"Reliability program");   // v5.7: monitoring raises Machinery (and unlocks the Vibration Report)
   BANNERS.push({text:`${u.name}${u.lv.length>1?" level "+(l+1):""} is online.`,t:null,kind:"good"});while(BANNERS.length>3)BANNERS.splice(1,1);
   log(`Installed ${u.name}${u.lv.length>1?" level "+(l+1):""} (${money(cost)})`,"ok");updateShop();}
-const LEDGER=[["rev","Paper sales",1],["occ","OCC purchases",-1],["energy","Energy & chemicals",-1],["labor","Wages & robots",-1],["overhead","Mill overhead",-1],["repairs","Upset repairs",-1],["premium","Insurance premium",-1],["upgrades","Upgrades bought",-1],["deals","Deals & trials",1],["civ","Civics",-1]];
+const LEDGER=[["rev","Paper sales",1],["occ","OCC purchases",-1],["frin","Inbound freight",-1],["frout","Outbound freight",-1],["energy","Energy & chemicals",-1],["labor","Wages & robots",-1],["overhead","Mill overhead",-1],["repairs","Upset repairs",-1],["premium","Insurance premium",-1],["upgrades","Upgrades bought",-1],["deals","Deals & trials",1],["civ","Civics",-1]];
 function updateRel(){const tg=$("relnow"),out=document.createElement("div");const pct=v=>(v>=0?"+":"")+Math.round(v*100)+"%";
     [["stock","Stock prep"],["wet","Wet end"],["dry","Dry end"]].forEach(([a,n])=>{const r=areaRel(a),d=document.createElement("div"),sum=[r.up,r.out,r.fx,r.site||1,r.lead||1].reduce((t,v)=>t+(Math.abs(v-1)>0.005?v-1:0),0);d.className="stat "+(sum>0.005?"pos":sum<-0.005?"neg":"");
       const bits=[["upgrades",r.up],["outage budget",r.out],["events",r.fx],["site",r.site||1],["leader",r.lead||1]].filter(([,v])=>Math.abs(v-1)>0.005).map(([k,v])=>k+" "+pct(v-1));
