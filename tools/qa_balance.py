@@ -11,6 +11,10 @@ Usage: python3 qa_balance.py <index.html> <styles> <seeds> [--seed0=1000] [--env
               a cash reserve) and the "proper fix" answer on choice cards
     buyer     buys everything in list order with $400k spare, proper fixes, accepts half the deals
     gambler   accepts every deal, Low outages, picks the gamble on choice cards
+    shop      the active tester's shop and choice-card answers, without rounds (v6.5: upgrades alone vs rounds alone)
+  --mode=survival  play survival runs to bankruptcy (or --maxdays, default 150) instead of 30-day seasons
+  --patch=f.json   [[old,new],...] text replacements applied to the page first (each must match once)
+  --split=1        with --env=cycle, the seeds are shared out over the maps (seed k on map k%4) instead of N per map
   seeds: number of seasons per style (the same seeds for every style)
 Prints one JSON line per season and a summary per style (mean / median / SD of profit, ledger means)."""
 import json, pathlib, sys, statistics as st, time
@@ -21,18 +25,23 @@ exec(src.split("def stats")[0].split("from playwright.sync_api import sync_playw
 args = [a for a in sys.argv[1:] if not a.startswith("--")]
 fl = {a.split("=")[0]: a.split("=", 1)[1] for a in sys.argv[1:] if a.startswith("--") and "=" in a}
 path, styles, N = args[0], args[1].split(","), int(args[2])
-seed0 = int(fl.get("--seed0", 1000)); envf = fl.get("--env", "rural"); out = fl.get("--out"); leadf = fl.get("--lead", "cycle")
+seed0 = int(fl.get("--seed0", 1000)); mode = fl.get("--mode", "season"); maxdays = int(fl.get("--maxdays", 150)); split = fl.get("--split") == "1"; envf = fl.get("--env", "rural"); out = fl.get("--out"); leadf = fl.get("--lead", "cycle")
 ENVS = ["rural", "urban", "desert", "swamp"]; LEADS = ["chip", "dot", "fel", "hank"]
 html = pathlib.Path(path).read_text()
+# --patch=file.json: [[old, new], ...] text replacements in the built page (balance experiments without a rebuild)
+if "--patch" in fl:
+    for o, nw in json.loads(pathlib.Path(fl["--patch"]).read_text()):
+        assert html.count(o) == 1, f"patch: {o!r} found {html.count(o)} times"
+        html = html.replace(o, nw)
 if "window.__PM=" not in html:
     i = html.rindex("})();", 0, html.rindex("</script>")); html = html[:i] + HOOK + html[i:]
 html = html.replace("window.__PM={", "window.__PM={get ECON(){return ECON},get CIV(){return CIV},get TELL(){return TELL},get PREP(){return PREP},get UPS(){return UPS},get BN(){return BN},upCost:(u,l)=>upCost(u,l),buy:id=>buy(id),upLocked:()=>upLocked(),get CIVU(){return CIVU},civCost:t=>civCost(t),civCommit:()=>civCommit(),get UP(){return UP},", 1) if "get UPS(){return UPS}" not in html else html
 
-PLAY = r"""async ([style,seed])=>{const P=__PM,S=P.S,h=P.SIM_STEP||0.25,T=P.tell;let x=seed>>>0;const rnd=()=>{x=(x*1664525+1013904223)>>>0;return x/4294967296;};
+PLAY = r"""async ([style,seed,maxdays])=>{const P=__PM,S=P.S,h=P.SIM_STEP||0.25,T=P.tell;let x=seed>>>0;const rnd=()=>{x=(x*1664525+1013904223)>>>0;return x/4294967296;};
   const click=id=>{const b=document.getElementById(id);if(b&&!b.disabled){b.click();return true;}return false;};
   const vis=id=>{const e=document.getElementById(id);return !!e&&!e.hidden;};
   const lv=id=>(S.up&&S.up[id])||0,L={bought:[],rounds:0,caught:0,clean:0,prep:0,cards:0,acc:0,civ:0,civCost:0};
-  const R=style==='rounds'||style==='active',ACT=style==='active';
+  const R=style==='rounds'||style==='active',ACT=style==='active'||style==='shop';
   // the active shop: the bottleneck fix, then value for money, one upgrade a day, keeping a reserve
   const ACTLIST=['sales','contract','apc','refiner','reliab','clean','detrash','stores','safety','fire','deckle','shoe','drive','monitor','sales','contract','apc','deckle','rcfa'];
   const UPX=style.startsWith('up_')?style.slice(3):style.startsWith('fx_')?style.slice(3):null;
@@ -55,7 +64,7 @@ PLAY = r"""async ([style,seed])=>{const P=__PM,S=P.S,h=P.SIM_STEP||0.25,T=P.tell
       const box=document.getElementById('civ-ord');if(box)box.checked=style==='handsoff'||style==='rounds'||style.startsWith('up_')||style.startsWith('fx_');}
     if(i>=bs.length)i=0;const c0=S.cash;bs[i].click();L.civCost+=c0-S.cash;};
   let n=0,lastDay=-1;
-  while(S.season&&S.season.on&&n<31*1440/h){P.step(h);n++;
+  const cap=(S.season&&S.season.surv?maxdays:31)*1440/h;while(S.season&&S.season.on&&n<cap){P.step(h);n++;
     if(S.civ&&S.civ.pending)P.civCommit();
     const civOpen=S.civ&&S.civ.cur&&vis('civOv');if(civOpen){try{civPick();}catch(e){L.err=String(e).slice(0,120);}}
     const o=S.cards&&S.cards.open;
@@ -69,17 +78,23 @@ PLAY = r"""async ([style,seed])=>{const P=__PM,S=P.S,h=P.SIM_STEP||0.25,T=P.tell
     const d=Math.floor(S.t/1440);if(d!==lastDay){lastDay=d;if(style!=='handsoff'&&style!=='rounds')shop();}
     P.setRunning(false);if(n%6000===0)await new Promise(r=>setTimeout(r,0));}
   const LG=S.ledger||{};const res=S.season&&S.season.result||{};
-  return Object.assign(L,{day:+(S.t/1440).toFixed(2),score:res.score,cash:Math.round(S.cash),bn:S.bn,lead:S.lead&&S.lead.id,tons:res.tons,incidents:res.incidents,
+  return Object.assign(L,{surv:!!(S.season&&S.season.surv),alive:!!(S.season&&S.season.on),wave:S.outg&&S.outg.k,day:+(S.t/1440).toFixed(2),score:res.score,cash:Math.round(S.cash),bn:S.bn,lead:S.lead&&S.lead.id,tons:res.tons,incidents:res.incidents,
     tells:T.T?{n:T.T.n,saved:Math.round(T.T.saved||0)}:null,meters:S.civ?Object.fromEntries(Object.entries(S.civ.m).map(([k,v])=>[k,Math.round(v)])):null,
     ledger:Object.fromEntries(Object.entries(LG).map(([k,v])=>[k,Math.round(v)]))});}"""
 
-def season(pg, style, seed, lead):
-    pg.evaluate("()=>{['seasonOv','dealOv','outOv','civOv'].forEach(i=>{const e=document.getElementById(i);if(e)e.hidden=true;});if(!window.__started){window.__started=1;document.getElementById('v2go').click();}else if(__PM.G3.goSeason)__PM.G3.goSeason();else document.getElementById('v2season').click();}")
+def pick(pg, lead):
     pg.wait_for_function("()=>{const o=document.getElementById('leadOv');return o&&!o.hidden}", timeout=60000)
     pg.evaluate("w=>{document.querySelector('#leadOv .ldcard[data-l=\"'+w+'\"]').click();document.getElementById('ld-go').click()}", lead)
     pg.wait_for_function("__PM.S.season&&__PM.S.season.on", timeout=60000, polling=50)
+
+def season(pg, style, seed, lead):
+    first = pg.evaluate("()=>{['seasonOv','dealOv','outOv','civOv','rcOv'].forEach(i=>{const e=document.getElementById(i);if(e)e.hidden=true;});if(!window.__started){window.__started=1;document.getElementById('v2go').click();return true}return false}")
+    if first: pick(pg, lead)
+    if mode == "survival": pg.evaluate("()=>__PM.G3.goSurv()")
+    elif not first: pg.evaluate("()=>{if(__PM.G3.goSeason)__PM.G3.goSeason();else document.getElementById('v2season').click();}")
+    if mode == "survival" or not first: pick(pg, lead)
     pg.evaluate("s=>{__PM.setRunning(false);const t=document.getElementById('tut');if(t)t.hidden=true;__PM.reseed(s);const G=__PM.G3;if(G&&G.EXP)G.EXP.noRender=true;if(G)G.on=false;}", seed)
-    return pg.evaluate(PLAY, [style, seed])
+    return pg.evaluate(PLAY, [style, seed, maxdays])
 
 res = []
 with sync_playwright() as pw:
@@ -88,9 +103,10 @@ with sync_playwright() as pw:
     for env in envs:
         pg = b.new_page(viewport={"width": 900, "height": 640}); errs = []
         pg.on("pageerror", lambda e: errs.append(str(e)[:200]))
-        pg.route("**/*", route_for(html)); pg.add_init_script(INIT); pg.goto(f"http://bench.local/?env={env}&tilt=0")
+        pg.route("**/*", route_for(html)); pg.add_init_script(INIT); pg.goto(f"http://bench.local/?env={env}&tilt=0&nobf")
         pg.wait_for_function("window.__PM&&window.__B&&__B.first!==null", timeout=300000)
         for k in range(N):
+            if split and k % len(envs) != envs.index(env): continue
             seed = seed0 + k * 7919; lead = LEADS[k % 4] if leadf == "cycle" else leadf
             for style in styles:
                 t0 = time.time()
@@ -103,8 +119,14 @@ with sync_playwright() as pw:
         pg.close()
     b.close()
 for style in styles:
-    R = [r for r in res if r.get("style") == style and r.get("score") is not None]
+    R = [r for r in res if r.get("style") == style and (r.get("day") if mode == "survival" else r.get("score")) is not None]
     if not R: continue
+    if mode == "survival":
+        d = [r["day"] for r in R]
+        print("SUMMARY", style, json.dumps({"n": len(R), "days_mean": round(st.fmean(d), 1), "days_median": round(st.median(d), 1), "sd": round(st.stdev(d), 1) if len(d) > 1 else 0,
+            "min": min(d), "max": max(d), "alive": sum(r["alive"] for r in R), "wave": round(st.fmean(r["wave"] for r in R), 1), "rounds": round(st.fmean(r["rounds"] for r in R), 1),
+            "bought": round(st.fmean(len(r["bought"]) for r in R), 1)}))
+        continue
     s = [r["score"] for r in R]
     led = {k: round(st.fmean(r["ledger"].get(k, 0) for r in R)) for k in R[0]["ledger"]}
     print("SUMMARY", style, json.dumps({"n": len(R), "mean": round(st.fmean(s)), "median": round(st.median(s)), "sd": round(st.stdev(s)) if len(s) > 1 else 0,

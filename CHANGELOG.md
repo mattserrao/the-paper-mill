@@ -1,6 +1,24 @@
 # Changelog
 
 
+## v6.5.0 (2026-10-19): the digital twin release
+Merges test/v6.5-twin (b1-b5 below) with an economy rebalance for the new realism (claude/balance-v65.md).
+- **Baseline** (`tools/qa_balance.py`, 50 seeds per mode over the 4 maps, every tester on the same dice): rounds added
+  +$0.92M a season over hands-off, smart upgrades +$4.17M; buying everything (-$0.74M) and gambling (-$0.44M) did worse
+  than doing nothing (+$0.44M). Survival: hands-off 27.6 days, rounds +2.7, smart upgrades +32.8.
+- **Per-ton upgrades halved** (they paid back 3-4x in one season): Sales team +$12/t a level (was $25), OCC contract
+  -$10/t (was $20), refiner -$10/t (was $22), APC 4% less energy a level (was 8%).
+- **Big-ticket upgrades ~30% cheaper**: robots $300k/$550k/$800k, warehouse $150k/$300k, pulper $250k/$450k, winder
+  $220k/$400k, chest $100k/$200k, forklifts $150k/$300k, maintenance techs $100k/$180k/$260k, preventive maintenance
+  $90k/$180k/$280k.
+- **Paper sells for $15/t less** (23m $642, 26m $662, 30m $680, 33HT $741): inactive play is punished most.
+- **Rounds worth more**: 3.5 days of warning (was 2.5; survival still loses 0.12 a wave), a caught repair costs 10% of
+  the bill (was 25%).
+- Applied on the user's go-ahead; the confirming re-run was stopped early. A partial run (6 seeds) had rounds +$1.35M,
+  smart upgrades +$2.33M, hands-off +$0.29M; survival smart upgrades +14 days, rounds +3.2.
+- `tools/qa_balance.py`: `--mode=survival`, a `shop` tester (smart upgrades without rounds), `--split=1` (seeds shared
+  over the maps), `--patch` (text replacements for experiments), `?nobf`.
+
 ## v6.5.0-b5 (2026-10-19): the dryer limit (test branch test/v6.5-twin)
 From claude/dryer-limit-spec.md and its review answers.
 - **Speed, grade and the wet end now load the dryers** (07d-dryer.js). Water to dry = paper t/h x water per ton (1.11 t/t
