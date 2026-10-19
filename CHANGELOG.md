@@ -1,6 +1,27 @@
 # Changelog
 
 
+## v6.5.6-t1 (2026-10-19): mass balance (test branch test/v6.5.6-balance)
+From the fiber and water audit: fiber closed at every stage, but some losses vanished without being booked, and water
+wasn't modelled at all.
+- **Water balance** (new 07f-water.js). In: fresh water (machine showers 8 m³/t, seal water 60 m³/h, makeup), the
+  bales' own water, the water in repulped beater paper. Out: dryer evaporation (from the press solids), the water in
+  the paper, rejects and clarifier sludge to landfill, and the outfall. It closes exactly (`tools/watercheck.py`):
+  hands-off it lands at about 9.7–10.3 m³/t fresh and 8.7–9.1 out, where the old fixed 9.9 / 8.4 were. Intake and
+  outfall keep flowing when the machine stops or makes beater (they dropped to zero before).
+- **White water chest in stock prep** (SPOT DCS, top right): collects the machine's white water and supplies the dilution
+  for the pulper, thickener and machine chest. Running steady it sits at its overflow and sends the excess to the
+  sewer; when the machine stops and stock prep keeps pulping it draws down and fresh water makes up. With the river
+  intake iced as well it can run dry: stock prep can't dilute, the storage chest fills with thick stock, and when the
+  machine restarts the basis weight runs high (weight spec) until it has worked through it. Alarms: LEVEL LO, EMPTY.
+- **Effluent TSS** now follows the fiber actually going to the sewer and the flow carrying it (clarifier 98.8%).
+- **Fiber losses booked**: winder hayout broke goes to the beater bay and is repulped (it vanished before); soaked and
+  burned bales show as bales lost; chest spills and stock with no room in the chest show as "Stock spilled" (to the
+  sewer, with its water); scrapped finished rolls show as "Rolls scrapped". New process-flow waste rows and history
+  columns (appended, so saved history keeps its columns).
+- **Dryer basis**: the dryers' water and steam use the 8% moisture setpoint (they assumed 7%).
+- UTIL DCS: fresh water per ton, intake, outfall and dryer evaporation are live.
+
 ## v6.5.5 (2026-10-19): the dewatering chain
 Built on test/v6.5.5-dewater (as 6.5.5-t1), merged into main with v6.5.4.
 One chain from the headbox to the dryers (`dewater()`, 07b-knobs.js), replacing the old water factor:

@@ -105,7 +105,7 @@ function pfOutputs(D){const W=D.W,mx=Math.max(D.revenue,D.cost,1),pos=D.profit>=
       <div><span>Made</span><em>${pfT(D.made)}</em><em>worth ${money(W.val)}</em></div></button>
     <button type="button" class="pfbox${PFUI.sel==="out:waste"?" sel":""}" data-pf="out:waste"><b>Waste</b>
       <div><span>Rejects → landfill</span><em>${pfT(W.rej)}</em></div><div><span>Effluent fiber</span><em>${pfT(W.eff)}</em></div>
-      ${W.bale>0.05?`<div><span>Bales lost</span><em>${pfT(W.bale)}</em></div>`:""}<div><span>Broke (repulped)</span><em>${pfT(W.broke)}</em></div>
+      ${W.bale>0.05?`<div><span>Bales lost</span><em>${pfT(W.bale)}</em></div>`:""}${W.spill>0.05?`<div><span>Stock spilled</span><em>${pfT(W.spill)}</em></div>`:""}${W.scrap>0.05?`<div><span>Rolls scrapped</span><em>${pfT(W.scrap)}</em></div>`:""}<div><span>Broke (repulped)</span><em>${pfT(W.broke)}</em></div>
       ${W.fine>0?`<div class="bad"><span>Permit fines</span><em>${money(W.fine)}</em></div>`:""}</button>
     <button type="button" class="pfbox pfprof${PFUI.sel==="out:profit"?" sel":""}" data-pf="out:profit"><b>${pos?"Profit":"Loss"}</b>
       <div class="pfbar"><span>Revenue</span><i style="width:${(D.revenue/mx*100).toFixed(1)}%" class="r"></i></div>
@@ -164,7 +164,7 @@ const PF_TR={
   "cat:over":[{t:"Overhead and civics",u:"$",k:"stack",s:[["Overhead",C_.ov,V_("s.ovh")],["Civics",C_.ch,V_("s.civ")]]}],
   "out:paper":[{t:"Paper made and shipped",u:"t",k:"bar",s:[["Made",C_.lab,V_("made")],["Shipped",C_.bl,V_("ship")]]},{t:"Revenue",u:"$",k:"bar",s:[["Sales and deals",C_.bl,HSUM(["rev","deals"])],["Worth as made",C_.lab,V_("w.val")]]},
     {t:"Price (grade on the machine)",u:"$/t",k:"line",s:[["Price",C_.lab,V_("a.price")]]}],
-  "out:waste":[{t:"Waste",u:"t",k:"stack",s:[["Rejects → landfill",C_.occ,V_("w.rej")],["Effluent fiber",C_.ch,V_("w.eff")],["Bales lost",C_.mt,V_("w.bale")]]},
+  "out:waste":[{t:"Waste",u:"t",k:"stack",s:[["Rejects → landfill",C_.occ,V_("w.rej")],["Effluent fiber",C_.ch,V_("w.eff")],["Bales lost",C_.mt,V_("w.bale")],["Stock spilled",C_.pu,V_("w.spill")],["Rolls scrapped",C_.ov,V_("w.scrap")]]},
     {t:"Broke repulped",u:"t",k:"bar",s:[["Broke",C_.en,V_("w.broke")]]},{t:"Reject share of bales",u:"%",k:"pct",s:[["Rejects",C_.occ,r=>[hv(r,"w.rej"),hv(r,"w.feed")]]]}],
   "out:profit":[{t:"Operating profit",u:"$",k:"bar",pn:1,s:[["Profit",C_.lab,r=>hv(r,"rev")+hv(r,"deals")-PF_CATS.reduce((a,[c])=>a+hv(r,"c."+c),0)]]},
     {t:"Revenue and cost",u:"$",k:"bar",s:[["Revenue",C_.bl,HSUM(["rev","deals"])],["Cost",C_.ov,HSUM(PF_CATS.map(([c])=>"c."+c))]]},
@@ -279,7 +279,7 @@ function pfBreak(D,live){const s=PFUI.sel;const [kind,a,b]=s.split(":"),t=D.made
     note="Revenue lands when a truck leaves, so it comes in lumps. \"Worth\" values the paper as it comes off the reel.";}
   else if(a==="waste"){title="Waste";const W=D.W;
     rows=[["Bales fed",pfT(W.feed)],["Rejects → landfill",pfT(W.rej)],["Share of bales",W.feed>0.5?Math.round(W.rej/W.feed*100)+" %":"–"],W.bale>0.05?["Bales lost (fire, rain, beavers)",pfT(W.bale)]:null,
-      ["Effluent fiber (white water)",pfT(W.eff)],["Broke, back to the pulper",pfT(W.broke)],W.fine>0?["Wastewater permit fines",money(W.fine)+(W.fines>1?" ("+W.fines+")":""),"bad"]:null];
+      ["Effluent fiber (white water)",pfT(W.eff)],["Broke, back to the pulper",pfT(W.broke)],W.spill>0.05?["Stock spilled (chest overflow, to the sewer)",pfT(W.spill),"bad"]:null,W.scrap>0.05?["Finished rolls scrapped (fire, wind)",pfT(W.scrap),"bad"]:null,W.fine>0?["Wastewater permit fines",money(W.fine)+(W.fines>1?" ("+W.fines+")":""),"bad"]:null];
     note="Waste is tons, shown for interest: landfill and effluent don't cost anything on their own. Broke isn't lost; it goes round again.";}
   else if(a==="profit"){title=D.profit>=0?"Profit":"Loss";rows=[["Revenue",money(D.revenue),"tot"]];
     PF_CATS.forEach(([c,name])=>rows.push([name,"−"+money(D.cat[c])]));

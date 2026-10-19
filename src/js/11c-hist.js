@@ -15,7 +15,8 @@ const HC=["h"];const HCI={};
   add("rev","deals","s.steam","s.power","s.chs","s.chp","s.drv","s.ldr","s.rep","s.tech","s.pmp","s.prem","s.ovh","s.civ",
     "w.feed","w.rej","w.bale","w.eff","w.broke","w.val","w.fine","w.fines","made","ship",
     "n.in","n.out","n.brk","n.hay","n.rolls",
-    "m.yard","m.pulp","m.pmrun","m.pmbrk","m.pmdown","m.pmheld","m.wdrun","m.wdhay","m.wddown","m.wdblk","m.ship","m.out");
+    "m.yard","m.pulp","m.pmrun","m.pmbrk","m.pmdown","m.pmheld","m.wdrun","m.wdhay","m.wddown","m.wdblk","m.ship","m.out",
+    "w.spill","w.scrap");   // (v6.5.6: appended, so older saved rows keep their columns)
   HC.forEach((k,i)=>HCI[k]=i);}
 // readings averaged over the hour (sampled every 2 sim minutes); r: only while the machine runs (blank otherwise)
 const HA=[["yard",()=>S.yard],["yardp",()=>S.yard/P.yardCap*100],["wet",()=>S.wet*100],["occp",()=>P.occPrice],["unload",()=>S.rates.unload],
@@ -71,7 +72,7 @@ function histSum(rows,t0,t1){const s=k=>rows.reduce((a,r)=>a+(r[HCI[k]]||0),0);
   const sub={frin:{"Inbound haul":cat.frin},frout:{"Outbound freight":cat.frout},energy:{Steam:s("s.steam"),Power:s("s.power")},chem:{"Stock prep":s("s.chs"),"Wet end":s("s.chp")},labor:{"Forklift drivers":s("s.drv"),"Loaders and robots":s("s.ldr")},
     maint:{"Repair bills and outage budgets":s("s.rep"),"Maintenance techs":s("s.tech"),"Preventive maintenance program":s("s.pmp"),"Insurance premium":s("s.prem")},
     over:{"Site overhead":s("s.ovh"),"Civics":s("s.civ")},fiber:{"OCC bales":cat.fiber}};
-  const W={};["feed","rej","bale","eff","broke","val","fine","fines"].forEach(k=>W[k]=s("w."+k));
+  const W={};["feed","rej","bale","eff","broke","val","fine","fines","spill","scrap"].forEach(k=>W[k]=s("w."+k));
   const rep={};if(S.hist)for(const [t,id,v] of S.hist.ev)if(t>=t0&&t<t1)rep[id]=(rep[id]||0)+v;
   const cost=PF_CATS.reduce((a,[c])=>a+cat[c],0),rev=s("rev"),deals=s("deals"),revenue=rev+deals;
   return {h:rows.length,day:Math.floor(t1/1440),cat,sub,by,cost,rev,deals,revenue,profit:revenue-cost,shipT:s("ship"),made:s("made"),W,rep,cashChg:revenue-cost,upg:0,range:true};}

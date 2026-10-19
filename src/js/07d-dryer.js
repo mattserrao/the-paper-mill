@@ -11,10 +11,11 @@
    ceiling with it. No dice: seasons replay identically. The knob model (07b) reads its moisture from here. */
 // ceil: PM3's 3rd section tops out at 171 kPa; the game's ceiling is 180 so a fully upgraded mill (with the shoe press)
 // runs clean (peak 170 in hands-off seasons); without the shoe press, heavy grades at full speed run damp (to ~9.4%)
-const DRY={m0:8,ceil:180,ceilFloor:0.7,perKpa:0.15,spec:10,back:9,slope23:3.0,wpt0:0.93/0.44-1,boiler:62,stPerW:1.3,
+const DRY={m0:8,ceil:180,ceilFloor:0.7,perKpa:0.15,spec:10,back:9,slope23:3.0,wpt0:0,boiler:62,stPerW:1.3,
   base:{"23m":122,"26m":126,"30m":138,"33HT":135}};   // (median 3rd-section kPa by grade, PM3 Sep 2025 - Mar 2026)
+DRY.wpt0=(1-DRY.m0/100)/0.44-1;   // water evaporated per ton of paper at standard press solids
 function dryState(){if(!S.dry)S.dry={m:DRY.m0,st3:DRY.base[C.grade]||122,dem:122,trim:0,steam:0,hdr:1,load:0.7,maxDem:0,wet:false};return S.dry;}
-const dryWpt=()=>0.93/(0.44+0.04*LV("shoe"))-1;   // water per ton of paper into the dryers
+const dryWpt=()=>(1-DRY.m0/100)/(0.44+0.04*LV("shoe"))-1;   // (v6.5.6: on the 8% setpoint; it assumed 7%)   // water per ton of paper into the dryers
 const drySlope=g=>DRY.slope23*(GRADES[g].bw/GRADES["23m"].bw);
 const dryRef=g=>BASE.K*GRADES[g].sp*GRADES[g].bw;   // the grade's standard t/h (what the base pressure was measured at)
 // the ceiling, less what a sagging boiler header takes off it

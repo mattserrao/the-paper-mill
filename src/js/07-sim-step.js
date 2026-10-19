@@ -42,10 +42,12 @@ function step(dt){
     tr.load-=u;cap-=u;S.yard+=u;unloaded+=u;S.tot.inTons+=u;
     {const dc=S.plan.disc,dt2=dc?Math.min(u,dc.t):0;spend(u*P.occPrice-dt2*(dc?dc.v:0),"occ");spend(u*frInRate(),"frin");if(dc){dc.t-=dt2;if(dc.t<=1e-6)S.plan.disc=null;}}
     if(tr.load<=0.001){S.leaving.push({...tr,ty:inY(d),kind:"in"});if(S.leaving.length>24)S.leaving.shift();S.inDock[d]=null;}}
-  const feed=Math.min(feedRes,S.yard); S.yard-=feed;
+  const feed=Math.min(feedRes,S.yard); S.yard-=feed;WQ.f+=feed;
   // 3 pulper → chest
   if(M.yardEat){const y0=S.yard;S.yard=Math.max(0,S.yard-M.yardEat*dt/60);pfW("bale",y0-S.yard);}
-  const fiberIn=feed*P.yieldF*M.yieldMul; S.tank=Math.min(P.tankCap,S.tank+fiberIn);pfW("feed",feed);pfW("rej",feed-fiberIn);
+  const fiberIn=feed*P.yieldF*M.yieldMul;pfW("feed",feed);pfW("rej",feed-fiberIn);WQ.rej+=feed-fiberIn;
+  // (v6.5.6: stock the chest has no room for goes over the top to the sewer, and is booked as spilled; it used to vanish)
+  {const t1=S.tank+fiberIn,cl=Math.max(0,t1-P.tankCap);S.tank=t1-cl;if(cl>0){pfW("spill",cl);WQ.clip+=cl;}WQ.fi+=fiberIn-cl;}
   // 5 paper machine
   const level=S.tank/P.tankCap*100, low=C.lowLevel.v;
   if(M.pmDown){ if(S.pm!=="incident"){ S.pm="incident"; S.lastDown=M.pmDown; } }
@@ -71,7 +73,7 @@ function step(dt){
       prod=P.K*S.pmSpeed*g.bw*dt/60;
       const use=prod/P.pmLoss;
       if(use>S.tank){prod=S.tank*P.pmLoss;}
-      S.tank-=prod/P.pmLoss;pfW("eff",prod/P.pmLoss-prod);
+      S.tank-=prod/P.pmLoss;pfW("eff",prod/P.pmLoss-prod);WQ.u+=prod/P.pmLoss;WQ.p+=prod;
     }
   }
   if(S.pm!=="run") S.pmSpeed=ease(S.pmSpeed,0,dt,3);
@@ -104,7 +106,7 @@ function step(dt){
   // (full rolls while the off-spec section lasts; when good paper comes through again the rest goes on a short roll)
   while((S.beatAcc||0)>=C.rollW.v-1e-6||(S.beatEnd&&(S.beatAcc||0)>0.05)){const q=Math.min(S.beatAcc,C.rollW.v);S.beatAcc=Math.max(0,S.beatAcc-q);
     S.tot.beater=(S.tot.beater||0)+C.rollW.v;S.tot.beatRolls=(S.tot.beatRolls||0)+1;S.q.bank+=q;}
-  beaterTick(dt);
+  beaterTick(dt);waterTick(dt);   // (v6.5.6: the water that went with all of that, 07f)
   // 6 outbound
   if(!M.noOut) S.outPhase+=dt*C.outRate.v/60*S.outJit*wxTruck;
   while(S.outPhase>=1){S.outPhase-=1;S.outJit=0.6+rand("flow")*0.8;

@@ -101,9 +101,10 @@ function lotTake(L,q,out){let got=0;while(q>1e-9&&L.length){const h=L[0],k=Math.
 const lotValue=(L,tPerRoll,add=0)=>L.reduce((s,[g,q])=>s+q*tPerRoll*(priceOf(g)+add),0);
 function reelsAtWinder(){return Math.max(0,Math.ceil(S.winderBuf/P.jumbo-0.005));}
 function hayout(a=rand("upx"),b=rand("upx")){AUDIO.sfx("hayout",600);S.wd="hayout";S.hayLeft=40+a*40;S.hayTotal=S.hayLeft;enqueue("hay");
-  const extra=Math.min(S.winderBuf,2+b*4),wraps=Math.min(S.winderAcc,P.jumbo/32),loss=extra+wraps;S.winderBuf-=extra;S.winderAcc-=wraps;lotTake(S.lots.buf,extra);lotTake(S.lots.acc,wraps);S.tot.broke+=loss;S.tot.hayouts++;
+  const extra=Math.min(S.winderBuf,2+b*4),wraps=Math.min(S.winderAcc,P.jumbo/32),loss=extra+wraps;S.winderBuf-=extra;S.winderAcc-=wraps;lotTake(S.lots.buf,extra);lotTake(S.lots.acc,wraps);S.tot.broke+=loss;S.tot.hayouts++;S.q.bank+=loss;pfW("broke",loss);   // (v6.5.6: hayout broke goes to the beater bay and is repulped; it used to vanish)
+ 
   BANNERS.push({text:HAYLINES[Math.floor(Math.random()*HAYLINES.length)],t:null,id:"hay"});while(BANNERS.length>3)BANNERS.splice(1,1);
-  log(`Winder hayout: ${loss.toFixed(1)} t of paper to broke`,"bad");}
+  log(`Winder hayout: ${loss.toFixed(1)} t of paper to the beater`,"bad");}
 function initCtrl(){
   C={inRate:{v:1.8,auto:true},drivers:{v:3,auto:true},pulper:{v:40,auto:true},lvlTarget:{v:69},lowLevel:{v:30},
      pmSp:{v:2736,auto:true},rollW:{v:100/8},loaders:{v:2,auto:true},outRate:{v:1,auto:true},grade:"23m",breaks:true,hays:true,wdr:{v:45,auto:true},simSpeed:10};

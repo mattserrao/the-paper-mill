@@ -17,7 +17,7 @@ const QNOW={bw:0,m:8,shade:true,out:[],why:"",off:0};
 // what the scanner reads now (no dice: the swings are smooth functions of time, like the DCS readings)
 function qualMeasure(){const g=C.grade,G=GRADES[g]||GRADES["23m"],K=S.knob,t=S.t;
   const wob=(f,k)=>Math.sin(t*f+k)*0.6+Math.sin(t*f*2.7+k*2)*0.4,sw=K&&K.any&&K.x?K.x.sw:0;
-  const bw=G.bw*(1+sw*0.08*wob(0.21,3))+wob(0.11,5)*0.12;
+  const bw=G.bw*(1+sw*0.08*wob(0.21,3)+0.05*(S.wat?S.wat.shortK:0))+wob(0.11,5)*0.12;   // (v6.5.6: no dilution water, thick stock)
   const m=S.dry?S.dry.m:DRY.m0;
   // shade: the dye system is in trouble (an upset, or the dye pump stopped from the DCS)
   const shade=!(active("dye")||active("m_dye")||motState("dye")==="off");
@@ -50,4 +50,4 @@ function qualStatus(){const K=S.knob,ko=K&&K.any?K.off:0;
 // it's clean paper). A broker can buy what's waiting in the bay instead (05-event-cards.js "seconds").
 const QBEAT={rate:25};   // t/h repulped
 function beaterTick(dt){const b=S.q.bank||0;if(b<=1e-6)return;const room=P.tankCap*0.98-S.tank;if(room<=0)return;
-  const t=Math.min(b,QBEAT.rate*dt/60,room);S.q.bank=b-t;S.tank+=t;S.tot.repulped=(S.tot.repulped||0)+t;}
+  const t=Math.min(b,QBEAT.rate*dt/60,room);S.q.bank=b-t;S.tank+=t;WQ.rep+=t;S.tot.repulped=(S.tot.repulped||0)+t;}

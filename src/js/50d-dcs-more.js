@@ -24,26 +24,28 @@ const DV={
   wdr:()=>Math.round(C.wdr.v)+" t/h",wdt:()=>Math.round(S.rates.cut||0)+" t/h",hay:()=>String(S.tot.hayouts||0),rolls:()=>Math.round(S.conv||0)+" of "+P.convCap,
   dryl:()=>S.dry?Math.round(S.dry.load*100)+"%":"–",stm:()=>S.dry?Math.round(S.dry.steam/DRY.boiler*100)+"%":"–",
   grid:()=>SITE.env==="urban"&&dcsOn("brownout")?"BROWNOUT":"NORMAL",
-  ifl:()=>Math.round((S.rates.prod||0)*9.9)+" m³/h",ice:()=>SITE.env!=="rural"?"–":dcsOn("icedintake")?"ICED":"CLEAR",twl:()=>Math.round(clamp(82+wob2(0.004,11)*6-(dcsOn("icedintake")?25:0),0,100))+"%",
-  wuse:()=>"9.9 m³/t",tss:()=>Math.round(tssNow())+" mg/L",perm:()=>dcsOn("permit")?"EXCEEDED":"OK",ofl:()=>Math.round((S.rates.prod||0)*8.4)+" m³/h",
+  ifl:()=>Math.round(S.wat?S.wat.r.fresh:0)+" m³/h",evap:()=>Math.round(S.wat?S.wat.r.evap:0)+" m³/h",wcl:()=>S.wat?Math.round(S.wat.L/WAT.cap*100)+"%":"–",
+  wcf:()=>{const W=S.wat;if(!W)return "–";return W.short>0?"EMPTY":W.r.make>5?"MAKEUP "+Math.round(W.r.make):W.r.over>5?"TO SEWER "+Math.round(W.r.over):"BALANCED";},ice:()=>SITE.env!=="rural"?"–":dcsOn("icedintake")?"ICED":"CLEAR",twl:()=>Math.round(clamp(82+wob2(0.004,11)*6-(dcsOn("icedintake")?25:0),0,100))+"%",
+  wuse:()=>{const W=S.wat;return W&&W.r.p>1?(W.r.fresh/W.r.p).toFixed(1)+" m³/t":"– m³/t";},tss:()=>Math.round(tssNow())+" mg/L",perm:()=>dcsOn("permit")?"EXCEEDED":"OK",ofl:()=>Math.round(S.wat?S.wat.r.out:0)+" m³/h",
   rej:()=>((S.rates.feed||0)*(1-P.yieldF*((S.M&&S.M.yieldMul)||1))).toFixed(1)+" t/h"};
 // effluent suspended solids: fiber lost to the white water and broke push it up; 50 mg/L is the permit
-function tssNow(){return clamp(28+(S.knob&&S.knob.off?S.knob.off*30:0)+(S.pm==="run"?0:6)+(dcsOn("permit")?30:0)+wob2(0.015,12)*3,5,120);}
+// (v6.5.6: from the fiber actually going to the sewer and the flow carrying it, 07f; it was 28 plus the knobs' off-spec)
+function tssNow(){return clamp(tssWater()+(dcsOn("permit")?30:0)+wob2(0.015,12)*3,5,120);}
 const MIMIC_KNOB={SPOT:MIMIC.SPOT,WET:MIMIC.WET,DET:MIMIC.DET};
 const MT=(x,y,k,t,f)=>[x,y,k,t,f];
 MIMIC.SPOT={title:"STOCK PREP",h:300,trends:MIMIC_KNOB.SPOT.trends,
   // (v6.5.4: in process order. Top row left to right: conveyor, pulper, HD cleaner, coarse screens, LC cleaners, fine
   // screens. Down, then right to left: LW cleaners, thickener, stock storage chest, refiners, machine chest, fan pump)
   eq:[[8,66,76,40,"CONVEYOR"],[100,56,110,60,"PULPER"],[100,8,52,26,"RAGGER","s"],[158,8,52,26,"JUNK","s"],[228,66,78,40,"HD CLEANER"],[324,66,78,40,"COARSE SCR"],[420,66,88,40,"LC CLEANERS"],
-    [524,66,86,40,"FINE SCR"],[525,206,86,40,"LW CLEANERS"],[420,206,88,40,"THICKENER"],[316,196,88,60,"STOCK CHEST"],[212,206,86,40,"REFINERS"],[104,196,92,60,"MACHINE CHEST"],[114,160,70,24,"DYE","s"],[8,206,80,40,"FAN PUMP"]],
+    [524,66,86,40,"FINE SCR"],[525,206,86,40,"LW CLEANERS"],[420,206,88,40,"THICKENER"],[316,196,88,60,"STOCK CHEST"],[212,206,86,40,"REFINERS"],[104,196,92,60,"MACHINE CHEST"],[114,160,70,24,"DYE","s"],[8,206,80,40,"FAN PUMP"],[452,8,104,28,"WATER CHEST","s"]],
   ln:[["M84 86 H100"],["M210 86 H228"],["M306 86 H324"],["M402 86 H420"],["M508 86 H524"],["M610 86 H622 V226 H611"],["M525 226 H508"],["M420 226 H404"],["M316 226 H298"],["M212 226 H196"],["M104 226 H88"],["M8 226 H0"],
-    ["M126 34 V56",1],["M184 34 V56",1],["M149 184 V196",1]],
+    ["M126 34 V56",1],["M184 34 V56",1],["M149 184 V196",1],["M452 22 H330 V66",1]],
   tags:[MT(48,22,"rgt","TENS",DV.rgt),MT(244,22,"jdc","DUMPS",DV.jdc),MT(46,124,"cvsp","SPD",DV.cvsp),MT(46,138,"cvst","",DV.cvst),MT(155,124,"cp","CONS",r=>kf(r.cp)+"%"),MT(155,138,"amps","ROTOR",r=>Math.round(r.amps)+" A"),MT(155,152,"pulpLvl","LEVEL",r=>Math.round(r.pulpLvl)+"%"),
     MT(267,124,"hddp","ΔP",DV.hddp),MT(363,124,"csdp","ΔP",DV.csdp),MT(363,138,"csrj","REJ",DV.csrj),MT(464,124,"lcdp","ΔP",DV.lcdp),MT(464,138,"lcrow","ROWS",DV.lcrow),MT(567,124,"fsdp","ΔP",DV.fsdp),MT(567,138,"fsld","LOAD",DV.fsld),
     MT(568,262,"lwdp","ΔP",DV.lwdp),MT(464,262,"thf","FILT",DV.thf),MT(464,276,"thv","SPIDER",DV.thv),MT(464,290,"thl","VAT",DV.thl),
     MT(360,186,"stc","CONS",DV.stc),MT(360,272,"lvl","LEVEL",()=>Math.round(S.tank/P.tankCap*100)+"%"),MT(360,286,"lvsp","SP",DV.lvsp),
     MT(255,196,"csf","CSF",r=>Math.round(r.csf)+" mL"),MT(255,262,"gap","GAP",r=>kf(r.gap,2)+" mm"),MT(255,276,"refkw","LOAD",r=>Math.round(r.refkw)+" kW"),
-    MT(150,272,"mcCons","CONS",r=>kf(r.mcCons,2)+"%"),MT(150,286,"agit","AGIT",r=>r.agit+"%"),MT(212,176,"dyef","DYE",DV.dyef),MT(48,262,"flow","FLOW",()=>S.pm==="run"?Math.round(S.pmSpeed*1.9)+" L/s":"0 L/s")]};
+    MT(150,272,"mcCons","CONS",r=>kf(r.mcCons,2)+"%"),MT(150,286,"agit","AGIT",r=>r.agit+"%"),MT(212,176,"dyef","DYE",DV.dyef),MT(600,16,"wcl","LVL",DV.wcl),MT(600,30,"wcf","",DV.wcf),MT(48,262,"flow","FLOW",()=>S.pm==="run"?Math.round(S.pmSpeed*1.9)+" L/s":"0 L/s")]};
 MIMIC.WET={title:"WET END",h:260,trends:MIMIC_KNOB.WET.trends,
   eq:[[520,8,104,30,"FOG FAN"],[14,80,74,70,"HEADBOX"],[104,105,190,25,"FORMING TABLE"],[110,214,100,26,"WW SILO","s"],[308,90,64,50,"COUCH"],[388,90,104,50,"PICK-UP FELT"],[508,80,118,70,()=>LV("shoe")?"SHOE PRESS":"TWIN PRESS"]],
   ln:[["M88 115 H104"],["M294 117 H308"],["M372 115 H388"],["M492 115 H508"],["M160 130 V214",1]],
@@ -63,7 +65,7 @@ MIMIC.UTIL={title:"UTILITIES",h:270,trends:[["steam","Steam flow t/h","#7fb2ff",
   eq:[[14,60,96,50,"RIVER INTAKE"],[134,60,96,50,"WATER TOWER"],[254,60,110,50,"MILL"],[388,60,110,50,"WASTEWATER"],[522,60,100,50,"OUTFALL"],[254,196,110,36,"LANDFILL","s"],
     [14,170,96,44,"GRID"],[134,170,96,44,"BOILER"]],
   ln:[["M110 85 H134"],["M230 85 H254"],["M364 85 H388"],["M498 85 H522"],["M309 110 V196",1],["M182 170 V164 H280 V110",1],["M62 170 V156 H270 V110",1]],
-  tags:[MT(62,128,"ifl","FLOW",DV.ifl),MT(62,142,"ice","ICE",DV.ice),MT(182,128,"twl","LEVEL",DV.twl),MT(309,44,"wuse","USE",DV.wuse),MT(443,128,"tss","TSS",DV.tss),MT(443,142,"perm","PERMIT",DV.perm),
+  tags:[MT(62,128,"ifl","FLOW",DV.ifl),MT(62,142,"ice","ICE",DV.ice),MT(182,128,"twl","LEVEL",DV.twl),MT(309,30,"wuse","FRESH",DV.wuse),MT(309,44,"evap","EVAP",DV.evap),MT(443,128,"tss","TSS",DV.tss),MT(443,142,"perm","PERMIT",DV.perm),
     MT(572,128,"ofl","FLOW",DV.ofl),MT(309,250,"rej","REJECTS",DV.rej),
     MT(62,232,"grid","POWER",DV.grid),MT(182,232,"boiler","HDR",r=>Math.round(r.boiler*100)+"%"),MT(182,246,"stm","STEAM",DV.stm),MT(182,260,"steam","FLOW",r=>r.run?kf(r.steam)+" t/h":"–")]};
 AREA_N.UTIL="Utilities";
@@ -74,6 +76,7 @@ function dcsArea(id){if(MOTEV[id])return MOTEV[id].a;if(DCS_UTIL.has(id))return 
 function dcsAlarms(a,r,L){const al=(on,txt,hi)=>{if(on)L.push([txt,hi]);};
   for(const i of S.inc){if(dcsArea(i.id)!==a)continue;const m=MOTEV[i.id];L.push([m?`${m.name.toUpperCase()} STOPPED · RESTART IN ${Math.ceil(i.left)} MIN`:EV[i.id].name.toUpperCase(),true]);}
   if(a==="SPOT"){al(S.tank/P.tankCap>0.92,"STOCK CHEST LEVEL HI",S.tank/P.tankCap>0.98);al(dcsOn("badocc"),"JUNK LOAD HIGH",true);
+    {const Wt=S.wat;al(!!(Wt&&Wt.L<WAT.cap*0.25),Wt&&Wt.short>0?"WHITE WATER CHEST EMPTY · STOCK THICK":"WHITE WATER CHEST LEVEL LO",!!(Wt&&Wt.short>0));}
     for(const k of ["hd","lc","lw"]){const dp=purgeDp(k);al(dp>PURGE.base[k]+(PURGE.trip[k]-PURGE.base[k])*0.6,{hd:"HD CLEANER ΔP HI",lc:"LC CLEANERS ΔP HI",lw:"LW CLEANERS ΔP HI"}[k],dp>PURGE.base[k]+(PURGE.trip[k]-PURGE.base[k])*0.85);}}
   else if(a==="WET"){al(motStatus("fog")!=="run","MACHINE ROOM HUMIDITY HI",false);}
   else if(a==="DET"){al(S.pm==="break",`SHEET BREAK · ${({reel:"REEL",dryer:"DRYERS",press:"PRESSES"})[S.brkType]||"MACHINE"}`,true);al(S.pm==="spools","REEL STORE FULL: MACHINE HELD BACK",true);
@@ -213,7 +216,8 @@ const PGX={
     // (v6.5.4: in the picture's new process order, index for index with MIMIC.SPOT.eq)
     ["cyclone",()=>or(stI("hdblow"),stDp("hd"))],["screen",()=>or(stM("cscr"),stI("cscreen"))],["cleaners",()=>or(stI("lcplug"),stDp("lc")),"lcrows"],["screen",()=>or(stM("fscr"),stI("fscreen"))],
     ["cleaners",()=>or(stI("lwplug"),stDp("lw"))],["thickener",()=>or(stI("thkblow"),G3.SPD&&G3.SPD.strain>0.05?"warn":"ok")],
-    ["tank",()=>or(stI("chestover"),S.tank/P.tankCap>0.92?"warn":"ok"),"chest"],["refiner",()=>stI("refclash")],["tank",()=>"ok","mc"],["drum",()=>or(stM("dye"),stI("dye"))],["pumpBox",()=>S.pm==="run"?"ok":"off"]],
+    ["tank",()=>or(stI("chestover"),S.tank/P.tankCap>0.92?"warn":"ok"),"chest"],["refiner",()=>stI("refclash")],["tank",()=>"ok","mc"],["drum",()=>or(stM("dye"),stI("dye"))],["pumpBox",()=>S.pm==="run"?"ok":"off"],
+    ["tank",()=>S.wat&&S.wat.short>0?"trip":S.wat&&S.wat.L<WAT.cap*0.25?"warn":"ok","wwc"]],
   WET:[["fan",()=>or(stM("fog"),stI("fogfan"))],["headbox",()=>"ok"],["table",()=>or(stI("fabric"),dcsOn("slime")?"warn":"ok",stBrk("press"))],["tank",()=>"ok","silo"],
     ["roll1",()=>stI("couchpit")],["felt",()=>stI("felt","oscfail")],["press",()=>stBrk("press")]],
   DET:[["draw",()=>stBrk("dryer")],["dryers",()=>stI("shaft","dryerfire","wrap","steamjoint"),"d4"],["dryers",()=>or(stI("shaft","dryerfire","wrap","steamjoint"),dryLimited()&&S.dry.m>DRY.m0+0.5?"trip":S.dry&&S.pm==="run"&&S.dry.load>0.95?"warn":"ok"),"d6"],
@@ -221,10 +225,10 @@ const PGX={
   UTIL:[["intake",()=>stI("icedintake")],["tower",()=>dcsOn("icedintake")?"warn":"ok","tower"],["mill",()=>S.pm==="run"?"ok":"off"],["clarifier",()=>or(stI("permit"),tssNow()>45?"warn":"ok")],["outfall",()=>"ok"],["landfill",()=>"ok"],
     ["grid",()=>stI("brownout")],["boiler",()=>or(stI("boiler"),S.dry&&S.dry.steam>DRY.boiler*0.95?"warn":"ok")]]};   // (v6.5.4: moved from DET)
 // levels (0-1) for the vessels
-const PG_LV={pulp:()=>clamp(knobRead().pulpLvl/100,0,1),chest:()=>clamp(S.tank/P.tankCap,0,1),mc:()=>clamp(knobRead().mcLvl/100,0,1),silo:()=>clamp(parseFloat(DV.wwl())/100,0,1),tower:()=>clamp(parseFloat(DV.twl())/100,0,1)};
+const PG_LV={pulp:()=>clamp(knobRead().pulpLvl/100,0,1),chest:()=>clamp(S.tank/P.tankCap,0,1),mc:()=>clamp(knobRead().mcLvl/100,0,1),silo:()=>clamp(parseFloat(DV.wwl())/100,0,1),wwc:()=>S.wat?clamp(S.wat.L/WAT.cap,0,1):0.55,tower:()=>clamp(parseFloat(DV.twl())/100,0,1)};
 function dcsPic(a,e,i){const pg=PGX[a]&&PGX[a][i];if(!pg)return null;const [x,y,w,h,t,sm]=e,lab=typeof t==="function"?t():t,nh=sm?9:11,dh=h-nh,ex=pg[2];
   let body;const [k]=pg;
-  if(k==="tank")body=P_.tank(x,y+1,w,dh-1,ex,ex==="silo"||ex==="tower"?"water":"stock");
+  if(k==="tank")body=P_.tank(x,y+1,w,dh-1,ex,ex==="silo"||ex==="tower"||ex==="wwc"?"water":"stock");
   else if(k==="cleaners")body=PIC.cleaners(x,y,w,dh,ex==="lcrows"&&LV("clean")>0?2:1);
   else if(k==="dryers")body=PIC.dryers(x,y,w,dh,ex==="d6"?6:4);
   else body=PIC[k](x,y,w,dh,ex);

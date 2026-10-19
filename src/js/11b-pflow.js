@@ -12,7 +12,7 @@ const PF_STEAMSH=0.6;   // steam's share of the energy bill (the same share the 
 const PF_RA={balefire:"yard",badocc:"yard",ragger:"pulper",rotortrip:"pulper",winderdown:"winder",wrap:"winder",birdhay:"winder"};
 function pfRepArea(id){if(PF_RA[id])return PF_RA[id];const g=EV[id]&&EV[id].g;return g==="stock"?"stock":g==="machine"?"pm":g==="yard"?"ship":"site";}
 function pfNew(){return {d:Math.floor(S.t/1440),h:Math.floor(S.t/60),L0:Object.assign({},S.ledger),cash0:S.cash,ship0:S.shipT||0,prod0:S.tot.prodT,A:{},
-  W:{feed:0,rej:0,bale:0,eff:0,broke:0,val:0,fine:0,fines:0}};}
+  W:{feed:0,rej:0,bale:0,eff:0,broke:0,val:0,fine:0,fines:0,spill:0,scrap:0}};}
 // (v6.5: every note goes to the day (S.pf) and to the hour (S.ph, 11c-hist.js) alike)
 function pfAdd(k,a,v){if(!v)return;for(const f of [S.pf,S.ph]){if(!f)continue;const o=f.A[k]||(f.A[k]={});o[a]=(o[a]||0)+v;}}
 function pfW(k,v){if(!v)return;if(S.pf)S.pf.W[k]+=v;if(S.ph)S.ph.W[k]+=v;}
