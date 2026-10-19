@@ -1,7 +1,9 @@
 # Changelog
 
 
-## v6.2.0-z2 (test)
+## v6.2.0 (2026-10-18): zen free camera released to main (was test builds z1 and z2)
+
+### z2
 - Zen free camera: the river no longer streaks. The water was 6 mm above the bank sand, which z-fought under the perspective depth buffer; the water now has a depth offset.
 - Zen free camera: wider river ripples with anisotropic filtering (iso view unchanged).
 - River mist banks only show when the camera looks near level; from above they cut pale bands across the screen.
