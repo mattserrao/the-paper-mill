@@ -1263,3 +1263,5 @@ body.pmpop .popmain[data-v="dcs"] #dcsOv .dcs{max-width:1180px;margin:0 auto}
 .popmain[data-v="both"] .pfout{grid-column:1 / -1;display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr))}.popmain[data-v="both"] .pfout .dcssub{grid-column:1 / -1}
 /* v6.5.3 QCS: a reading outside its grade's spec */
 .qcsv div.qout{border-color:#ff6b5e;background:#2a1420}.qcsv div.qout b{color:#ff8b7f}
+/* v6.5.4: making-beater alert under the headbox dilution zones (WET DCS) */
+.dcsbeat{margin:-2px 0 4px;padding:8px 10px;border-radius:8px;background:#7a1f1a;color:#ffd0cb;font:800 12.5px var(--f-body);letter-spacing:.04em}.dcsbeat[hidden]{display:none}

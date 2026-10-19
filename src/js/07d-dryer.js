@@ -39,7 +39,10 @@ function dryTick(dt){const D=dryState(),g=C.grade,b=DRY.base[g]||122,run=S.pm===
   D.hdr=ease(D.hdr,D.steam>DRY.boiler?Math.max(0.6,1-(D.steam-DRY.boiler)/DRY.boiler*1.5):1,dt,20);
   // the floor is speed's (a slow machine over-dries); a knob that takes load off can take the 3rd section under it
   const ceil=dryCeil(D),floor=b*DRY.ceilFloor,under=D.dem0<floor;D.st3=run?clamp(D.dem,under?floor:0,ceil):b;D.load=D.dem/ceil;
-  const tgt=run?DRY.m0+D.km+(D.dem>ceil?(D.dem-ceil)*DRY.perKpa:under?(D.dem0-floor)*DRY.perKpa:0):DRY.m0;D.m=Math.max(0.5,ease(D.m,tgt,dt,10));
+  let tgt=run?DRY.m0+D.km+(D.dem>ceil?(D.dem-ceil)*DRY.perKpa:under?(D.dem0-floor)*DRY.perKpa:0):DRY.m0;
+  // v6.5.4: the 2nd/3rd section on MANUAL (DET DCS) holds the operator's pressure instead of the moisture: less than
+  // the load needs and the sheet comes off wetter, more and it over-dries (0.15% a kPa either way)
+  if(D.man!=null&&run){D.st3=Math.min(D.man,ceil);tgt=DRY.m0+D.km+(D.dem-D.st3)*DRY.perKpa;}D.m=Math.max(0.5,ease(D.m,tgt,dt,10));
   // a wet sheet fails the moisture spec: the crew slows the machine until it's back in spec, then lets it recover.
   // (v6.5.2: only for the part slowing down can fix; what the knobs put past the auto loop waits for the knob to be traced)
   const wasWet=D.wet,ms=D.m-Math.max(0,D.km);if(!S.zen&&run&&ms>DRY.spec)D.wet=true;else if(ms<DRY.back)D.wet=false;

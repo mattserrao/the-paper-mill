@@ -18,7 +18,7 @@ const QNOW={bw:0,m:8,shade:true,out:[],why:"",off:0};
 function qualMeasure(){const g=C.grade,G=GRADES[g]||GRADES["23m"],K=S.knob,t=S.t;
   const wob=(f,k)=>Math.sin(t*f+k)*0.6+Math.sin(t*f*2.7+k*2)*0.4,sw=K&&K.any&&K.x?K.x.sw:0;
   const bw=G.bw*(1+sw*0.08*wob(0.21,3))+wob(0.11,5)*0.12;
-  const m=S.dry?S.dry.m:7;
+  const m=S.dry?S.dry.m:DRY.m0;
   // shade: the dye system is in trouble (an upset, or the dye pump stopped from the DCS)
   const shade=!(active("dye")||active("m_dye")||motState("dye")==="off");
   return {bw,m,shade};}
@@ -31,10 +31,14 @@ function qualTick(){const Q=QNOW,sp=QSPEC[C.grade]||QSPEC["23m"];if(Q.S!==S){Q.S
   if(!r.shade)out.push("shade");
   const was=Q.out.length>0,why=out.map(k=>QWHY[k]).join(", ");Q.out=out;Q.why=why;Q.off=out.length?1:0;
   // the log notes each spell once (a swinging weight dips in and out; it's noted again after a quiet half hour)
-  if(out.length){if(!was&&!(S.t-(Q.logT??-1e9)<30))log(`QCS: ${why} out of spec on ${C.grade}. The reel is going to the beater.`,"warn");Q.logT=S.t;}
+  if(out.length){if(!was&&!(S.t-(Q.logT??-1e9)<30))qualAlert(`${why} out of spec on ${C.grade}`);Q.logT=S.t;}
   else if(was)Q.endT=S.t;
   if(!out.length&&Q.endT!=null&&S.t-Q.endT>=30&&Q.logT!=null&&Q.logT<Q.endT){log(`QCS: ${C.grade} back in spec (weight, moisture, color).`,"ok");Q.endT=null;Q.logT=null;}
   return Q;}
+// v6.5.4: the alert when the reel starts going to the beater: a banner over the mill, the log, and the DCS (WET under
+// the headbox dilution zones, and every screen's alarm list)
+function qualAlert(what){log(`QCS: ${what}. The reel is going to the beater.`,"warn");
+  BANNERS.push({text:`Making beater: ${what}. The rolls are going back to the pulper.`,t:null,tag:"BEATER"});while(BANNERS.length>3)BANNERS.splice(1,1);}
 // the reel's status for the QCS screen: the spec check first, then the grade change, then the other knob defects
 function qualStatus(){const K=S.knob,ko=K&&K.any?K.off:0;
   if(QNOW.out.length)return {off:1,why:QNOW.why};

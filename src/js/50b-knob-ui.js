@@ -106,6 +106,7 @@ function knobAlarms(a,r){const L=[],al=(on,txt,hi)=>{if(on)L.push([txt,hi]);};co
     al(r.run&&r.tension>1.3,"DRAW TENSION HI",r.tension>1.5);al(r.run&&r.tension<0.85,"DRAW TENSION LO",r.tension<0.7);
     al(QNOW.out.includes("bw"),"BASIS WEIGHT OFF SPEC",true);al(QNOW.out.includes("m"),"MOISTURE OFF SPEC",true);al(QNOW.out.includes("shade"),"COLOR OFF SPEC",true);}   // (v6.5.3: the QCS spec check)
   else if(a==="DET")al(r.boiler<0.8,"STEAM HEADER LO",r.boiler<0.7);
+  {const q=qualStatus();if(r.run&&q.off>0.02)L.unshift([`MAKING BEATER · ${q.why.toUpperCase()}`,true]);}   // (v6.5.4: on every screen, first)
   dcsAlarms(a,r,L);   // v6.5 b3: upsets on the screen of the equipment they hit, motors, purges, the dry end's states (50d)
   return L;}
 function stationBuild(){const o=$("dcsOv");if(!o||!KUI.st)return;const a=KUI.st,M2=MIMIC[a],b=$("dcsBody");
@@ -127,7 +128,8 @@ function stationBuild(){const o=$("dcsOv");if(!o||!KUI.st)return;const a=KUI.st,
     const ids=KNOBS.filter(k=>k.area===a&&(k.dcs||KREMOTE.has(k.id))).map(k=>k.id),fld=KNOBS.filter(k=>k.area===a&&k.field&&!KREMOTE.has(k.id));
     const cs=kEl("div","dcsctl");cs.appendChild(kEl("div","dcssub","Setpoints"));dcsSetRows(a,cs);
     ids.forEach(id=>{const row=kEl("div","dcsrow"+(id==="zones"?" wide":""));row.appendChild(kEl("div","dcsn",`<b>${KNOBN[id].name}</b><small>${KNOBN[id].field?"remote from the DCS":"DCS"}</small>`));row.appendChild(knobCtl(id,"d"));
-      const rd=kEl("div","spir krd");rd.dataset.rd=id;row.appendChild(rd);row.appendChild(kEl("button","reroll kstd","Standard")).addEventListener("click",()=>{knobReset(id);kuiRefresh();});cs.appendChild(row);});
+      const rd=kEl("div","spir krd");rd.dataset.rd=id;row.appendChild(rd);row.appendChild(kEl("button","reroll kstd","Standard")).addEventListener("click",()=>{knobReset(id);kuiRefresh();});cs.appendChild(row);
+      if(id==="zones"){const bt=kEl("div","dcsbeat","");bt.id="dcsBeat";bt.hidden=true;bt.setAttribute("role","status");cs.appendChild(bt);}});   // v6.5.4: making-beater alert under the dilution zones
     if(fld.length)cs.appendChild(kEl("p","dcsfield",`Set at the machine, not from here: ${fld.map(k=>`<button type="button" class="linkb" data-fk="${k.id}">${k.name.toLowerCase()}</button>`).join(", ")}. Look for the red knobs on the floor.`));
     cs.querySelectorAll("[data-fk]").forEach(x=>x.addEventListener("click",()=>{const id=x.dataset.fk;closeStation();if(G3.knobFly)G3.knobFly(id);openKnob(id);}));
     b.appendChild(cs);dcsMotRows(a,b);
@@ -155,6 +157,7 @@ function kuiRefresh(){if(!KUI.panel&&!KUI.st)return;const r=knobRead();
     if(KUI.tab==="dcs"){o.querySelectorAll("[data-tag]").forEach(t=>{const g=M2.tags.find(q=>q[2]===t.dataset.tag);if(g){const v=g[4](r);if(t.textContent!==v)t.textContent=v;}});
       o.querySelectorAll(".dcsctl .kctl").forEach(knobCtlSync);o.querySelectorAll("[data-rd]").forEach(d=>{const h=knobReadout(d.dataset.rd,r);if(d._h!==h){d._h=h;d.innerHTML=h;}});
       const al=knobAlarms(a,r),ul=$("dcsAl"),h=al.length?al.map(([t,hi])=>`<li class="${hi?"hi":""}">${t}</li>`).join(""):'<li class="none">No alarms</li>';if(ul._h!==h){ul._h=h;ul.innerHTML=h;}
+      {const bt=$("dcsBeat");if(bt){const q=qualStatus(),on=r.run&&q.off>0.02,t=on?`⚠ MAKING BEATER · ${q.why.toUpperCase()} · ${q.off>=0.99?"the whole reel":Math.round(q.off*100)+"% of the reel"} to the beater`:"";if(bt.hidden===on)bt.hidden=!on;if(bt.textContent!==t)bt.textContent=t;}}
       o.querySelectorAll(".dcsrow canvas[data-cd]").forEach(c=>kuiCd(c,r));if(M2.trends.length)drawTrend6($("dcsTr"),M2.trends);dcsSync();dcsPicSync(a);}
     else{const K=S.knob,F=(K&&K.F)||{},off=r.off,st=$("qcsSt");
       // v6.5.3: the spec check (07e) names what's out; the grade change and the other knob defects after it

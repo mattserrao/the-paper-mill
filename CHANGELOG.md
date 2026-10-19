@@ -1,6 +1,22 @@
 # Changelog
 
 
+## v6.5.4 (2026-10-19): DCS fixes (test branch test/v6.5.4-dcs)
+- **Making-beater alert**: when the reel starts going to the beater (a spec violation or a knob defect) a banner goes up
+  over the mill ("Making beater: …"), the WET DCS shows a red alert right under the headbox dilution zones, and every
+  DCS screen's alarm list leads with MAKING BEATER · what's wrong.
+- **SPOT picture in process order**: pulper → HD cleaner → coarse screens → LC cleaners → fine screens → LW cleaners →
+  thickener → stock storage chest → refiners → machine chest → fan pump (the stock chest now feeds the refiners). The
+  stock storage chest shows its consistency (about 4.2%, following the pulper's).
+- **Boiler and power moved to UTIL** with steam header, steam load and steam flow readings, a steam trend, and the
+  boiler, steam header and brownout alarms. DET keeps a STEAM HDR reading where the header comes in.
+- **2nd / 3rd section steam control** on DET: AUTO is the moisture loop (holds the reel at 8%); moving the slider puts it
+  on MANUAL, holding that pressure, so the moisture follows the load (0.15% per kPa short or over). AUTO hands it back.
+  The 1st section steam stays where it was (a fiddly knob on DET). An alarm shows while it's on MANUAL.
+- **Fixed: DCS setpoint rows flickering.** A row with no area-control card (the spider valve) toggled its "locked"
+  styling on every refresh, so the rows around it seemed to flash.
+- `tools/dcs654check.py` (17 checks).
+
 ## v6.5.3 (2026-10-19): quality specs
 Built on test/v6.5.3-specs, merged into main.
 - **A spec sheet for every grade** (`QSPEC`, new 07e-quality.js): basis weight target ±3% (23m 23.81–25.29, 26m

@@ -143,7 +143,7 @@ function knobTick(dt){const K=S.knob;if(!K||!K.any||S.zen)return;
   // the screens and the crew's tracing, and only the other defects send a share of the reel to the beater from here)
   let keep=1,top="",tv=0;for(const k in F){const f=clamp(F[k],0,1);F[k]=f;if(k==="wet"||k==="dry"||k==="bw")continue;keep*=1-f;if(f>tv){tv=f;top=k;}}
   const off=1-keep;
-  if(off>0.02&&K.off<=0.02&&run)log(`QCS: the reel is going to the beater (${KOFFN[top]}).`,"warn");
+  if(off>0.02&&K.off<=0.02&&run)qualAlert(KOFFN[top]);   // (v6.5.4: banner too, 07e)
   if(off<=0.02&&K.off>0.02)log("QCS: the reel is back on spec.","ok");
   K.off=off>0.005?off:0;K.offWhy=tv>0.005?top:"";K.F=F;
   K.feed=x.cp<4?clamp(x.cp/4,0.5,1):1;
