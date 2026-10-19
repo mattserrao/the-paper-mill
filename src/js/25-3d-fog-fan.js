@@ -181,7 +181,7 @@
     [[-22.15,(zc+19.4)/2],[-23.65,(zc+19.4)/2]].forEach(([x,z])=>box(0.08,0.25,19.4-zc,M.warn,x,0.6,z+0.3,scene,false));
     box(0.3,0.9,1.6,M.bad,-30.5,0.45,19.4,scene,false);}
   const rollGeo=new CylG(0.62,0.62,1.4,24);
-  const _rc=new THREE.Color(),_one=new THREE.Vector3(1,1,1),qB=new THREE.Quaternion(),_yAx=new THREE.Vector3(0,1,0),_eu=new THREE.Euler(),_sc=new THREE.Vector3();const beltRolls=new THREE.InstancedMesh(rollGeo,ROLLC(),16);{const c=new THREE.Color(1,1,1);for(let k=0;k<16;k++)beltRolls.setColorAt(k,c);}beltRolls.castShadow=true;scene.add(beltRolls);
+  const _rc=new THREE.Color(),_one=new THREE.Vector3(1,1,1),qB=new THREE.Quaternion(),_yAx=new THREE.Vector3(0,1,0),_eu=new THREE.Euler(),_sc=new THREE.Vector3();const beltRolls=new THREE.InstancedMesh(rollGeo,ROLLC(),16);{const c=new THREE.Color(1,1,1);for(let k=0;k<16;k++)beltRolls.setColorAt(k,c);}beltRolls.castShadow=true;beltRolls.frustumCulled=false;scene.add(beltRolls);   // (v6.5.7: its bounds were taken once, before any roll was placed, so it vanished whenever the origin was off screen)
 
   // sheet ribbon along the machine
   const tc=document.createElement("canvas");tc.width=64;tc.height=4;const tx=tc.getContext("2d");tx.fillStyle="#fff";tx.fillRect(0,0,64,4);tx.fillStyle="#c8c8c8";tx.fillRect(0,0,6,4);

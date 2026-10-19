@@ -1,7 +1,7 @@
 // seeded random streams (plan, cards) so every player in the same season week sees the same market and the same cards
 function rand(k){const r=S.rng;r[k]=(r[k]+0x6D2B79F5)|0;let t=r[k];t=Math.imul(t^(t>>>15),t|1);t^=t+Math.imul(t^(t>>>7),t|61);return ((t^(t>>>14))>>>0)/4294967296;}
 const P={truckLoad:220,doors:3,driverRate:30,doorRate:450,yieldF:0.88,tankCap:300,yardCap:2000,yardTarget:800,
-  fgCap:225,fgTarget:40,convCap:3,jumbo:100,storeReels:1,rollsPerReel:8,loaderRate:9,truckRolls:20,doorRolls:112.5,shipDoors:3,
+  fgCap:225,fgTarget:40,convCap:3,jumbo:100,storeReels:4,rollsPerReel:8,loaderRate:9,truckRolls:20,doorRolls:112.5,shipDoors:3,
   K:34.8/(2736*24.55),minSpeed:1200,ramp:150,pmLoss:0.98,maxQueue:8};
 const UNITS={inRate:v=>v.toFixed(1)+" trucks/h",drivers:v=>Math.round(v)+" drivers",pulper:v=>v.toFixed(1)+" t/h",
   lvlTarget:v=>Math.round(v)+" %",lowLevel:v=>Math.round(v)+" %",pmSp:v=>Math.round(v).toLocaleString()+" fpm",

@@ -22,7 +22,7 @@ const HC=["h"];const HCI={};
 const HA=[["yard",()=>S.yard],["yardp",()=>S.yard/P.yardCap*100],["wet",()=>S.wet*100],["occp",()=>P.occPrice],["unload",()=>S.rates.unload],
   ["feed",()=>S.rates.feed],["fiber",()=>S.rates.fiberIn],["yield",()=>P.yieldF*((S.M&&S.M.yieldMul)||1)*100],["amps",r=>r.amps],["chest",()=>S.tank/P.tankCap*100],
   ["refkw",r=>r.run?r.refkw:null],["csf",r=>r.csf],["speed",()=>S.pmSpeed],["prod",()=>S.rates.prod],["bw",r=>r.run?r.bw:null],["moist",r=>r.run?r.moist:null],
-  ["steam",r=>r.run?r.steam:null],["energyt",()=>Math.max(0,energyCost()-pfChemT())],["chemt",()=>pfChemT()],["cut",()=>S.rates.cut],["reel",()=>S.winderBuf+S.reel],
+  ["steam",r=>r.steam>0.5?r.steam:null],["energyt",()=>Math.max(0,energyCost()-pfChemT())],["chemt",()=>pfChemT()],["cut",()=>S.rates.cut],["reel",()=>S.winderBuf+S.reel],
   ["fgp",()=>S.fg/P.fgCap*100],["price",()=>priceOf(C.grade)],["load",()=>S.rates.load],["crew",()=>C.drivers.v+C.loaders.v+P.techs],
   ["wage",()=>(ECON.wage+(P.siteWage||0))*(P.costMul||1)*leadWage()*civWage()],
   ["civE",()=>civOn()?S.civ.m.E:null],["civL",()=>civOn()?S.civ.m.L:null],["civM",()=>civOn()?S.civ.m.M:null],["civC",()=>civOn()?S.civ.m.C:null],

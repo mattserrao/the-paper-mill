@@ -15,9 +15,9 @@ def ok(name, cond, extra=""):
 RUN = """(a)=>{const P=__PM,[setup,mins]=a,G=P.G3;G.save.restore(JSON.parse(window.__SNAP));P.setRunning(false);P.CH.on=false;P.C.breaks=false;P.C.hays=false;
   const S=P.S,t0=S.t,good0=S.tot.prodT,rolls0=S.tot.rolls,br0=S.tot.beatRolls||0,rep0=S.tot.repulped||0,off0=S.q.off;
   (new Function('P','S','G',setup))(P,S,G);let outMin=0,maxBank=0,why={};
-  while(S.t-t0<mins){P.step(P.SIM_STEP);const q=G.qual();if(S.pm==="run"&&q.out.length){outMin+=P.SIM_STEP;q.out.forEach(k=>why[k]=1);}maxBank=Math.max(maxBank,S.q.bank);}
+  let leak=0;while(S.t-t0<mins){const g1=S.tot.prodT;P.step(P.SIM_STEP);const q=G.qual();if(S.pm==="run"&&q.out.length){outMin+=P.SIM_STEP;q.out.forEach(k=>why[k]=1);leak+=S.tot.prodT-g1;}maxBank=Math.max(maxBank,S.q.bank);}
   return {good:+(S.tot.prodT-good0).toFixed(1),rolls:S.tot.rolls-rolls0,beatRolls:(S.tot.beatRolls||0)-br0,repulped:+((S.tot.repulped||0)-rep0).toFixed(1),
-    off:+(S.q.off-off0).toFixed(1),outMin:Math.round(outMin),why:Object.keys(why),maxBank:+maxBank.toFixed(1),bank:+S.q.bank.toFixed(1),grade:P.C.grade,q:G.qual()};}"""
+    off:+(S.q.off-off0).toFixed(1),outMin:Math.round(outMin),why:Object.keys(why),maxBank:+maxBank.toFixed(1),bank:+S.q.bank.toFixed(1),grade:P.C.grade,q:G.qual(),leak:+leak.toFixed(2)};}"""
 
 with sync_playwright() as pw:
     b = pw.chromium.launch(args=["--use-gl=angle", "--use-angle=swiftshader", "--enable-unsafe-swiftshader"])
@@ -44,7 +44,9 @@ with sync_playwright() as pw:
     ok("dye trouble: color out of spec", "shade" in r["why"] and r["outMin"] >= 50, json.dumps({k: r[k] for k in ("why", "outMin")}))
     ok("dye trouble: wound into beater rolls", r["beatRolls"] >= 3, f'{r["beatRolls"]} beater rolls, {r["off"]} t off spec')
     ok("beater rolls go through the bay and are repulped into the chest", r["maxBank"] >= 12 and r["repulped"] >= 12, json.dumps({k: r[k] for k in ("maxBank", "repulped", "bank")}))
-    ok("beater paper isn't counted as good paper", r["good"] < pg.evaluate(RUN, ["", 720])["good"] - 20)
+    # (v6.5.7: was a comparison against a second 720-min run, which flaked: the runs aren't identical from one launch to
+    # the next. Now: while the spec is out, no paper at all is booked as good)
+    ok("beater paper isn't counted as good paper", r["off"] > 20 and r["leak"] < 0.05, f'{r["off"]} t off spec, {r["leak"]} t booked as good while out of spec')
 
     # ---- color: dye pump stopped from the DCS ----
     r = pg.evaluate(RUN, ["if(__PM.G3.dcsMot)__PM.G3.dcsMot('dye','off');else{S.dcs=S.dcs||{mot:{}};S.dcs.mot=S.dcs.mot||{};S.dcs.mot.dye='off';}", 60])

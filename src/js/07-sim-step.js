@@ -93,19 +93,21 @@ function step(dt){
   if(S.reel>=P.jumbo&&reelsAtWinder()<=P.storeReels){S.winderBuf+=S.reel;lotTake(S.lots.reel,S.reel,S.lots.buf);S.reel=0;S.lots.reel.length=0;S.tot.turnups++;}
   // 6 winder
   if(S.wd==="hayout"){if(working("hay"))S.hayLeft-=dt*leadRethread();S.tot.hayMin+=dt;if(S.hayLeft<=0){S.wd="run";log("Winder cleaned up and running again","ok");}}
-  if(S.conv===undefined)S.conv=0;const convFull=S.conv>=P.convCap-1e-6;S.wdBlocked=convFull;
+  if(S.conv===undefined)S.conv=0;const convFull=S.conv>P.convCap-2+1e-6;S.wdBlocked=convFull;   // (v6.5.7: a set is two rolls, so the conveyor needs room for both)
   const cut=S.wd==="hayout"||M.winderDown||convFull?0:Math.min(S.winderBuf,C.wdr.v*dt/60); S.winderBuf-=cut;
   // v6.5.3: the winder splices the off-spec sections out of the set and winds them onto beater rolls of their own
   {const T=[];lotTake(S.lots.buf,cut,T);let bt=0;for(const [k,q] of T){if(k==="beater")bt+=q;else lotPut(S.lots.acc,k,q);}S.winderAcc+=cut-bt;S.beatAcc=(S.beatAcc||0)+bt;S.beatEnd=cut>0&&bt<=1e-9;}
   if(cut>0&&L.hay<dt/720*0.75*P.hayBase*outRel("dry")*((C.hays?1:0)+(M.hayMul-1)))hayout(L.hayLen,L.hayLoss);
   let rollsMade=0;
   // (a roll takes the grade that makes up most of its paper: one roll at a grade change is part old, part new)
-  while(S.winderAcc>=C.rollW.v){S.winderAcc-=C.rollW.v;const T=[];lotTake(S.lots.acc,C.rollW.v,T);let g=C.grade,best=-1;for(const [k,q] of T)if(q>best){best=q;g=k;}
-    lotPut(S.lots.conv,g,1);S.conv+=1;rollsMade++;S.tot.rolls++;}
+  // v6.5.7: the winder winds a set of two rolls side by side (the reel is slit in two); both come off together
+  while(S.winderAcc>=2*C.rollW.v-1e-9){for(let k=0;k<2;k++){const w=Math.min(S.winderAcc,C.rollW.v);S.winderAcc-=w;const T=[];lotTake(S.lots.acc,w,T);let g=C.grade,best=-1;for(const [k2,q] of T)if(q>best){best=q;g=k2;}
+    lotPut(S.lots.conv,g,1);S.conv+=1;rollsMade++;S.tot.rolls++;}}
   // v6.5.3: a beater roll goes to the beater bay (27-3d draws it there from S.tot.beater) and round to the pulper
   // (full rolls while the off-spec section lasts; when good paper comes through again the rest goes on a short roll)
-  while((S.beatAcc||0)>=C.rollW.v-1e-6||(S.beatEnd&&(S.beatAcc||0)>0.05)){const q=Math.min(S.beatAcc,C.rollW.v);S.beatAcc=Math.max(0,S.beatAcc-q);
-    S.tot.beater=(S.tot.beater||0)+C.rollW.v;S.tot.beatRolls=(S.tot.beatRolls||0)+1;S.q.bank+=q;}
+  // (v6.5.7: in sets of two, like the good rolls)
+  while((S.beatAcc||0)>=2*C.rollW.v-1e-6||(S.beatEnd&&(S.beatAcc||0)>0.05)){const q=Math.min(S.beatAcc,2*C.rollW.v);S.beatAcc=Math.max(0,S.beatAcc-q);
+    S.tot.beater=(S.tot.beater||0)+2*C.rollW.v;S.tot.beatRolls=(S.tot.beatRolls||0)+2;S.q.bank+=q;}
   beaterTick(dt);waterTick(dt);   // (v6.5.6: the water that went with all of that, 07f)
   // 6 outbound
   if(!M.noOut) S.outPhase+=dt*C.outRate.v/60*S.outJit*wxTruck;

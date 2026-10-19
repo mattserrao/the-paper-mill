@@ -21,7 +21,9 @@
   function btGo(legs,st){BT.legs=legs;BT.st=st;}
   function beaterUpdate(rdt){if(rdt<=0)return;
     const per=P.jumbo/8,made=Math.floor((S.tot.beater||0)/per);if(BEAT.seen===null)BEAT.seen=made;
-    if(made>BEAT.seen){const RV=G3.rollVis;for(let k=0;k<Math.min(4,made-BEAT.seen);k++)if(RV)RV.list.push({d:-3.2-k*1.5,spin:0,col:"#"+dyeReel.color.clone().convertLinearToSRGB().getHexString()});BEAT.seen=made;}
+    // (v6.5.7: in sets of two side by side, like the good rolls; a tied set that was just sawn apart starts on the upender)
+    if(made>BEAT.seen){const RV=G3.rollVis,tied=performance.now()-(G3.tiedSeen||-1e9)<1500,col=tied?"#cdbf9f":"#"+dyeReel.color.clone().convertLinearToSRGB().getHexString();
+      for(let k=0;k<Math.min(4,made-BEAT.seen);k++)if(RV){if(k%2===0)RV.pr=(RV.pr||0)+1;RV.list.push({d:tied?(k%2?-2.0:-1.0):-4-Math.floor(k/2)*1.5,spin:0,side:k%2,pair:RV.pr,col});}BEAT.seen=made;}
     if(!BT.g)BT.g=btTruck();const g=BT.g,u=g.userData;
     // drive the current list of legs (rev = backing up)
     if(BT.legs.length){const w=BT.legs[0];if(driveTo(g,w,(w.rev?3:8)*TSC(),rdt))BT.legs.shift();u.wheels.forEach(wh=>wh.rotation.z=-(u.spin||0));

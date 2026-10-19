@@ -1,5 +1,5 @@
 """v6.5 b5 dryer limit check (claude/dryer-limit-spec.md): at standard running the 3rd section sits at the grade's base
-and moisture is 7%; more speed raises demand ~3 kPa per t/h (23m); past the ceiling the sheet goes wet, fails the spec
+and moisture is 8%; more speed raises demand ~3 kPa per t/h (23m); past the ceiling the sheet goes wet, fails the spec
 (paper to the beater), the crew slows the machine until it's back in spec, then speed recovers; the shoe press gives
 ~16% of the water term back; the DET screen shows it. Usage: python3 dryercheck.py <index.html> [screenshot_prefix]"""
 import pathlib, sys
@@ -21,7 +21,7 @@ with sync_playwright() as pw:
     steps = lambda m: pg.evaluate("m=>{__PM.setRunning(false);for(let i=0;i<m*4;i++){if(__PM.S.cards)__PM.S.cards.open=null;__PM.S.inc.length=0;__PM.step(0.25)}}", m)
     D = lambda: pg.evaluate("()=>{const D=__PM.S.dry;return {dem:+D.dem.toFixed(1),m:+D.m.toFixed(2),trim:+D.trim.toFixed(3),wet:D.wet,sp:Math.round(__PM.S.pmSpeed),g:__PM.C.grade,steam:+D.steam.toFixed(1),pm:__PM.S.pm}}")
     pg.evaluate("()=>{__PM.C.grade='23m';__PM.CH.on=false;}"); steps(120)
-    d = D(); ok("standard 23m: 3rd section at its base (~122 kPa), 7% moisture", abs(d["dem"] - 122) < 4 and abs(d["m"] - 7) < 0.2, str(d))
+    d = D(); ok("standard 23m: 3rd section at its base (~122 kPa), 8% moisture", abs(d["dem"] - 122) < 4 and abs(d["m"] - 8) < 0.2, str(d))   # (v6.5.3: the setpoint is 8%, was 7%)
     ok("steam ~50 t/h at standard (1.3 t per t of water)", 45 < d["steam"] < 56, str(d))
     pg.evaluate("()=>{__PM.C.pmSp.auto=false;__PM.C.pmSp.v=3300;}"); steps(60)
     d2 = D(); slope = (d2["dem"] - d["dem"]) / ((d2["sp"] - d["sp"]) / 2736 * 34.8)

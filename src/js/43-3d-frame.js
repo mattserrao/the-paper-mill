@@ -112,23 +112,29 @@
     // each finished roll is kicked off the winder, rolls down the ramp, is upended and rides the conveyor to the warehouse;
     // it queues at the end until a clamp truck takes it (the sim's conveyor count)
     const RV=G3.rollVis||(G3.rollVis={list:[],seen:-1});if(RV.seen<0)RV.seen=S.tot.rolls;
-    // v2.9.7: d -3.2..-1 rolling down the kick-off ramp (single file), -1..0 tipping up on the upender, >=0 standing on the conveyor.
-    // Everything speeds up with the game speed, and if rolls pile up waiting to leave the winder the extra plain ones are skipped.
+    // v6.5.7: the winder kicks off a SET of two rolls side by side (side 0 nearest the upender line, side 1 beside it).
+    // d -4..-2.6 the pair rolls down the kick-off ramp together; -2.6..-1 side 0 waits on the upender while side 1 waits on
+    // the transfer table beside it and slides across (-1.6..-1) once the upender is free; -1..0 tipping up on the upender
+    // (one roll, then the other); >=0 standing on the conveyor. Everything speeds up with the game speed, and if sets pile up
+    // waiting to leave the winder the extra plain ones are skipped.
     const fac=clamp(simRate()/20,1,4);
-    if(S.tot.rolls>RV.seen){const n=Math.min(4,S.tot.rolls-RV.seen);RV.seen=S.tot.rolls;for(let k=0;k<n;k++)RV.list.push({d:-3.2-k*1.5,spin:0});
-      while(RV.list.filter(r=>r.d<-1&&!r.col).length>2){const k=RV.list.findIndex(r=>r.d<-1&&!r.col);RV.list.splice(k,1);}
+    if(S.tot.rolls>RV.seen){const n=Math.min(4,S.tot.rolls-RV.seen);RV.seen=S.tot.rolls;for(let k=0;k<n;k++){RV.pr=(RV.pr||0)+(k%2?0:1);RV.list.push({d:-4-Math.floor(k/2)*1.5,spin:0,side:k%2,pair:RV.pr});}
+      for(let guard=0;guard<8&&RV.list.filter(r=>r.d<-2.6&&!r.col).length>4;guard++){let k=-1;for(let j=RV.list.length-1;j>=0;j--)if(RV.list[j].d<-2.6&&!RV.list[j].col){k=j;break;}if(k<0)break;RV.list.splice(k,1);}
       while(RV.list.length>24){const k=RV.list.findIndex(r=>!r.col);if(k<0)break;RV.list.splice(k,1);}}
-    {const L1=19.4-zc-UPC,CL=L1+(29.9-22.9),qn=Math.max(0,Math.ceil(S.conv||0)),sp=3*fac;RV.list.sort((a,b)=>b.d-a.d);
-      RV.list.forEach((r,k)=>{const lim=k===0?CL:Math.min(CL,RV.list[k-1].d-1.45);const v=r.d<-1?2.6*fac:r.d<0?1.7*fac:sp;
-        const nd=Math.max(r.d,Math.min(lim,r.d+rdt*v));if(r.d<-1&&nd>r.d)r.spin+=(nd-r.d)*2.4;r.d=nd;});
+    {const L1=19.4-zc-UPC,CL=L1+(29.9-22.9),qn=Math.max(0,Math.ceil(S.conv||0)),sp=3*fac;RV.list.sort((a,b)=>b.d-a.d||(a.side||0)-(b.side||0));
+      RV.list.forEach((r,k)=>{const pv=k?RV.list[k-1]:null;let lim=k===0?CL:Math.min(CL,pv.d-1.45);
+        if(pv&&r.side===1&&pv.pair===r.pair)lim=Math.min(CL,Math.max(Math.min(pv.d,-2.6),pv.d-1.45));   // (rides down beside its partner, then waits its turn)
+        const v=r.d<-2.6?2.6*fac:r.d<-1?2.2*fac:r.d<0?1.7*fac:sp;
+        const nd=Math.max(r.d,Math.min(lim,r.d+rdt*v));if(r.d<-2.6&&nd>r.d)r.spin+=(Math.min(nd,-2.6)-r.d)*2.4;r.d=nd;});
       // the clamp tender lifts rolls off the end; if the visual queue runs ahead of the sim, drop plain rolls (never the beater ones)
       while(RV.list.length&&RV.list[0].d>=CL-0.01&&!RV.list[0].col&&RV.list.filter(r=>r.d>=CL-1.45*(qn+3)-0.2).length>qn+3)RV.list.shift();
       if(RV.list.length&&RV.list[0].col&&RV.list[0].d>=CL-0.01&&Math.floor(S.effHum+1e-9)<1){BEAT.bay.push(RV.list.shift().col);}
       RV.CL=CL;}
     let nr=0;
     let upA=0;
-    RV.list.forEach(r=>{if(nr>=16)return;let x,y,z;
-      if(r.d<-1){const f=clamp((r.d+3.2)/2.2,0,1);x=-20.55+(UPX+20.55)*f;y=1.726+(UPY+0.62-1.726)*f*f;z=zc;q4.setFromEuler(_eu.set(Math.PI/2,0,-r.spin));}
+    RV.list.forEach(r=>{if(nr>=16)return;let x,y,z;const sd=r.side||0;
+      if(r.d<-2.6){const f=clamp((r.d+4)/1.4,0,1);x=-20.55+(UPX+20.55)*f;y=1.726+(UPY+0.62-1.726)*f*f;z=zc+0.725-(sd?1.45:0)-0.725*f;q4.setFromEuler(_eu.set(Math.PI/2,0,-r.spin));}
+      else if(r.d<-1){const f=sd?sm((r.d+1.6)/0.6):1;x=UPX;y=UPY+0.62;z=zc-1.45*(1-f);q4.setFromEuler(_eu.set(Math.PI/2,0,-r.spin));/* (slides across along its own axis: the transfer table pushes it) */}
       else if(r.d<0){const a=(r.d+1)*Math.PI/2,c=Math.cos(a),sn=Math.sin(a);upA=Math.max(upA,a);   // tip 90 deg about the plate's hinge
         x=UPX;y=UPY+0.62*c+0.7*sn;z=UPZ-0.7*c+0.62*sn;q4.setFromEuler(_eu.set(Math.PI/2+a,0,0));}
       else{const d=r.d,L1=19.4-zc-UPC;if(d<L1){x=UPX;z=zc+UPC+d;}else{x=UPX-(d-L1);z=19.4;}y=1.2;q4.identity();}

@@ -5,13 +5,15 @@
   [-2.7,2.7].forEach(z=>{box(0.5,3.8,0.5,M.steel,-2.6,1.9,z,wd);box(0.5,3.8,0.5,M.steel,3.4,1.9,z,wd);box(6.5,0.4,0.5,M.steel,0.4,3.9,z,wd);});
   const unwind=cylZ(1,4.8,M.paper,2.6,2.4,0,22,wd);cylZ(0.22,5.8,M.steel,2.6,2.4,0,8,wd);
   const drums=[cylZ(0.5,5,M.metal,-1.3,0.75,0,12,wd),cylZ(0.5,5,M.metal,-2.4,0.75,0,12,wd)];
-  // v2.9.7: the winder builds ONE roll at a time (the sim's roll), the same size as the rolls on the conveyor
-  const setRolls=[cylZ(1,1.4,M.paper,-1.85,1.75,0,24,wd)];
+  // v6.5.7: the winder builds a SET of two rolls side by side on the drums (the sim's set), each the size of a roll on the conveyor
+  const setRolls=[0.725,-0.725].map(z=>cylZ(1,1.4,M.paper,-1.85,1.75,z,24,wd));
   // upender: a hinged plate at the head of the roll conveyor that tips each roll from lying down to standing up
   const UPX=-22.9,UPZ=zc+0.7,UPY=0.5,UPC=1.32;
   const upender=new THREE.Group();upender.position.set(UPX,UPY,UPZ);scene.add(upender);
   box(1.5,0.08,1.45,M.steel,0,0.04,-0.72,upender,false);box(1.5,1.1,0.08,M.steel,0,0.55,0.0,upender,false);
   box(0.25,0.5,0.25,M.ink,-0.9,-0.25,0,scene,false);
+  // v6.5.7: transfer table beside the upender: the second roll of a set waits here, then slides across onto the plate
+  box(1.5,0.48,1.5,M.steel,UPX,0.24,zc-1.45,scene);box(0.12,0.5,1.5,M.brand,UPX-0.8,0.25,zc-1.45,scene,false);
   const web=new THREE.Mesh(new THREE.PlaneGeometry(4.6,4.6),paperDS);web.rotation.x=-Math.PI/2;web.position.set(0.4,2.2,0);wd.add(web);
   box(1.2,1.2,0.8,M.steel,0,0.6,4.3,wd);box(1.1,0.5,0.1,M.robot,0,1.25,3.95,wd,false);
   const SPR={x:-13.4,z:3.6};
@@ -21,7 +23,7 @@
     box(0.35,1.1,4.6,M.steel,-1.3,0.55,0,g);box(0.35,1.1,4.6,M.steel,1.3,0.55,0,g);cylZ(2,5.2,M.paper,0,2.15,0,22,g);cylZ(0.22,6.2,M.steel,0,2.15,0,8,g);return g;});
   // overhead crane: carries full reels from the reel to storage and from storage to the winder unwind
   const CR={x:-8,z:zc,y:9.6,jobs:[],j:null,t:0,hidePark:0,hideUnwind:false,lastTurn:-1,lastBuf:0,lastPark:0};
-  const crane=new THREE.Group();scene.add(crane);
+  const crane=new THREE.Group();scene.add(crane);G3.CR=CR;   // (tests)
   {[-2.4,13.4].forEach(z=>{box(21.4,0.35,0.4,M.warn,-15.9,11.4,z,scene,false);for(let x=-26;x<=-6;x+=10)box(0.2,1.6,0.2,M.metal,x,12.2,z,scene,false);});}
   const crBridge=new THREE.Group();scene.add(crBridge);box(0.7,0.7,16.4,M.warn,0,11,5.5,crBridge);box(0.9,0.5,0.9,M.ink,0,11.6,-2.4,crBridge,false);box(0.9,0.5,0.9,M.ink,0,11.6,13.4,crBridge,false);
   const crTrolley=box(1.6,0.7,1.4,M.ink,0,10.45,0,crBridge);
@@ -41,8 +43,10 @@
     // never one or the other, so the storage rail always matches the sim
     let parksAdded=0;
     if(S.tot.turnups>CR.lastTurn){const n=Math.min(2,S.tot.turnups-CR.lastTurn);CR.lastTurn=S.tot.turnups;
-      for(let i=0;i<n;i++){if(i===0&&CR.lastBuf<0.3){CR.jobs.push({a:REELP,b:UNW,kind:"unw",fromReel:true,delay:0.8});CR.hideUnwind=true;}
-        else{CR.jobs.push({a:REELP,b:parkP(Math.max(0,nPark-1)),kind:"park",fromReel:true,delay:0.8});parksAdded++;}}
+      // (v6.5.7: each reel going to storage takes its own stand; two in one frame used to be sent to the same one)
+      const toUnw=CR.lastBuf<0.3?1:0,nParks=n-toUnw;
+      for(let i=0;i<n;i++){if(i<toUnw){CR.jobs.push({a:REELP,b:UNW,kind:"unw",fromReel:true,delay:0.8});CR.hideUnwind=true;}
+        else{CR.jobs.push({a:REELP,b:parkP(clamp(nPark-nParks+parksAdded,0,parked.length-1)),kind:"park",fromReel:true,delay:0.8});parksAdded++;}}
       CR.jobs.push({a:SPOOLP(),b:ARMP(),kind:"spool"});}
     {const moved=Math.min(2,CR.lastPark+parksAdded-nPark);for(let i=0;i<moved;i++)if(S.winderBuf>0.3){CR.jobs.unshift({a:parkP(nPark+i),b:UNW,kind:"unw",fromPark:true});CR.hideUnwind=true;}}
     CR.lastPark=nPark;CR.lastBuf=S.winderBuf;

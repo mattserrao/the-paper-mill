@@ -93,7 +93,7 @@ const MIMIC={
       [340,172,"couchSol","SOL",r=>kf(r.couchSol)+"%"],[340,194,"cs","PIT",r=>r.couch?"RUN":"STOP"],[440,172,"osc","OSC",r=>Math.round(r.osc)+"%"],[567,172,"pl","LOAD",r=>Math.round(r.pl)+" kN/m"],[567,194,"pressSol","SOL",r=>kf(r.pressSol)+"%"]],
     trends:[["vac","Vacuum kPa","#7fb2ff",0,60],["couchSol","Couch solids %","#4fd18b",12,24],["pl","Press load kN/m","#ffb02e",40,160],["pressSol","Press solids %","#ff7a8a",38,50]]},
   DET:{title:"DRY END",eq:[[14,90,80,50,"OPEN DRAW"],[112,75,130,80,"1ST SECTION"],[260,75,170,80,"2ND / 3RD SECTION"],[448,85,74,60,"REEL"],[546,20,80,40,"BOILER"]],
-    tags:[[54,172,"draw","DRAW",r=>kf(r.draw)+"%"],[54,194,"tension","TENS",r=>r.run?kf(r.tension,2):"–"],[177,172,"st1","STEAM",r=>Math.round(r.st1)+" kPa"],[345,172,"st3","AUTO",r=>Math.round(r.st3)+" kPa"],[345,194,"steam","FLOW",r=>r.run?kf(r.steam)+" t/h":"–"],
+    tags:[[54,172,"draw","DRAW",r=>kf(r.draw)+"%"],[54,194,"tension","TENS",r=>r.run?kf(r.tension,2):"–"],[177,172,"st1","STEAM",r=>Math.round(r.st1)+" kPa"],[345,172,"st3","AUTO",r=>Math.round(r.st3)+" kPa"],[345,194,"steam","FLOW",r=>r.steam>0.5?kf(r.steam)+" t/h":"–"],
       [485,172,"moist","MOIST",r=>r.run?kf(r.moist)+"%":"–"],[485,194,"bw","BW",r=>r.run?kf(r.bw,2):"–"],[586,78,"boiler","HEADER",r=>Math.round(r.boiler*100)+"%"],[485,72,"speed","SPEED",r=>Math.round(r.speed)+" fpm"]],
     trends:[["st3","3rd section steam kPa","#ffb02e",40,200],["steam","Steam flow t/h","#7fb2ff",0,70],["moist","Reel moisture %","#4fd18b",0,14],["tension","Draw tension kN/m","#ff7a8a",0,2.5]]}};
 // alarms from the current readings: what a DCS would flash. They point at symptoms, not at the knob behind them.

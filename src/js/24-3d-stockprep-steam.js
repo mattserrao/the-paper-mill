@@ -19,6 +19,14 @@
     // a drop and rotary joint to the drive-side journal of every dryer can
     for(let i=0;i<10;i++)[[(872-i*32-600)/10,5.4],[(856-i*32-600)/10,2.4]].forEach(([x,y])=>{pipe([[x,Y,ZH],[x,y,ZH],[x,y,5.62]],0.07,ins);
       cylZ(0.17,0.32,M.brand,x,y,5.72,10);});}
+  // v6.5.7: header vent: a riser off the dryer steam header up through the machine hall roof, with a red control valve and a
+  // silencer. On a sheet break the boiler stays at load and the steam the cans don't need roars out of it (36-3d plumes)
+  {const VX=20.6,Y=10.6,ZH=4.9,TOP=17.6;pipe([[VX,Y,ZH],[VX,Y+0.9,ZH],[VX,Y+0.9,ZH-1.6],[VX,TOP-0.8,ZH-1.6]],0.22,M.steel);
+    const vb=new THREE.Mesh(new CylG(0.32,0.32,0.62,14),M.bad);vb.rotation.x=Math.PI/2;vb.position.set(VX,Y+0.9,ZH-0.8);scene.add(vb);
+    const act=new THREE.Mesh(new CylG(0.24,0.24,0.34,12),M.bad);act.position.set(VX,Y+1.35,ZH-0.8);scene.add(act);box(0.05,0.3,0.05,M.ink,VX,Y+1.12,ZH-0.8,scene,false);
+    const sil=new THREE.Mesh(new CylG(0.5,0.5,1.4,16,1,true),M.steel);sil.position.set(VX,TOP-0.1,ZH-1.6);sil.castShadow=true;scene.add(sil);
+    const lip=new THREE.Mesh(new THREE.TorusGeometry(0.5,0.06,6,18),M.ink);lip.rotation.x=Math.PI/2;lip.position.set(VX,TOP+0.6,ZH-1.6);scene.add(lip);
+    G3.VENT={x:VX,y:TOP+0.6,z:ZH-1.6};}
   // boiler safety (pop-off) valve on the power house roof, with a vent stack and silencer; it lifts and roars during a boiler trip
   const POP={x:72,z:-7,lever:null};
   {pipe([[POP.x,9.2,POP.z],[POP.x,10.1,POP.z]],0.2,M.steel);const vb=new THREE.Mesh(new CylG(0.34,0.38,0.7,14),M.bad);vb.position.set(POP.x,10.45,POP.z);vb.castShadow=true;scene.add(vb);

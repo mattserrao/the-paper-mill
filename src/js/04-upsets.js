@@ -22,6 +22,12 @@ const EVENTS=[
  {id:"fogfan",g:"machine",name:"Fog fan down",head:"The fog remediation fan tripped! The machine keeps running, but the machine room is filling with wet-end fog.",dur:[150,300],mtbf:300,mods:{},fx:"fogfan"},
  {id:"thkblow",g:"stock",name:"Thickener blowout",head:"The disk thickener blew out! Stock is spraying all over stock prep. Nothing reaches the chest until it's fixed.",dur:[120,240],mtbf:280,mods:{pulperDown:1},fx:"thkblow"},
  {id:"birdhay",g:"machine",name:"Bird in the winder",head:"A pigeon flew straight into the winder!",dur:[15,25],mtbf:420,mods:{},fx:"birdhay",end:()=>{if(S.wd!=="hayout")hayout();}},
+ // v6.5.7: the set comes off the winder with the two rolls stuck together (a slitter not cutting clean). The winder stops;
+ // two operators go over with a band saw, cut them apart, and both rolls go to the beater. Own dice stream ("tie").
+ {id:"tiedrolls",g:"machine",stream:"tie",name:"Rolls tied together",head:"The set came off the winder with both rolls tied together! Two operators are on their way with a band saw. Both rolls go to the beater.",dur:[20,35],mtbf:300,mods:{winderDown:1},fx:"tiedrolls",
+   start:i=>{const W=2*C.rollW.v,a=Math.min(S.winderAcc,W),b=Math.min(S.winderBuf,W-a),q=a+b;S.winderAcc-=a;S.winderBuf-=b;lotTake(S.lots.acc,a);lotTake(S.lots.buf,b);
+     i.q=q;i.note=`${q.toFixed(1)} t of rolls to the beater`;},
+   end:i=>{if(!(i.q>0))return;S.tot.beater=(S.tot.beater||0)+2*C.rollW.v;S.tot.beatRolls=(S.tot.beatRolls||0)+2;S.q.bank+=i.q;S.tot.broke+=i.q;pfW("broke",i.q);S.tot.tied=(S.tot.tied||0)+1;i.q=0;}},
  {id:"steamjoint",g:"machine",name:"Steam joint leak",head:"A dryer steam joint blew out on the drive side! Sheet off back to the wet end until maintenance repacks it.",dur:[150,270],mtbf:320,mods:{pmDown:"steam joint leak"},fx:"steamjoint"},
  {id:"boiler",g:"machine",name:"Boiler trip",head:"The boiler tripped! No steam for the dryers. Machine down.",dur:[90,180],mtbf:260,mods:{pmDown:"no steam"},fx:"boiler"},
  {id:"permit",g:"stock",name:"Wastewater permit exceeded",head:"Effluent over the permit limit! The state fines the mill and stock prep throttles back.",dur:[180,300],mtbf:380,mods:{feedMul:0.7},fx:"permit"},
@@ -66,13 +72,13 @@ const WXN={clear:"Clear",rain:"Rain",fog:"Fog",snow:"Snow"};
 function active(id){const a=S.inc;for(let k=0;k<a.length;k++)if(a[k].id===id)return true;return false;}
 // machine and winder upsets go to the crew one at a time, in the order they happen; nothing gets fixed until a crew is there
 const QSET=new Set(EVENTS.map(e=>e.id).filter(id=>(EV[id].g==="machine"&&!EV[id].knob&&id!=="runner"&&id!=="birdhay"&&id!=="boiler"&&id!=="fogfan"&&id!=="steamjoint"&&id!=="brownout")||id==="ragger")),QINC=id=>QSET.has(id);   // (v5.2: a Set, built once)
-const RESP={ragger:6,wrap:4,hay:4,brk:2,dryerfire:3,shaft:8,fabric:6,felt:6,slime:5,winderdown:6};
+const RESP={ragger:6,wrap:4,hay:4,brk:2,dryerfire:3,shaft:8,fabric:6,felt:6,slime:5,winderdown:6,tiedrolls:4};
 function enqueue(k){if(!S.crewQ)S.crewQ=[];if(S.crewQ.some(q=>q.k===k))return;S.crewQ.push({k,resp:RESP[k]||6,since:0,here:false,go:false});}
 function crewTick(dt){if(!S.crewQ)S.crewQ=[];if(!S.crewQ.length)return;   // (v5.2: nothing queued, nothing to do)
   S.crewQ=S.crewQ.filter(q=>q.k==="hay"?S.wd==="hayout":q.k==="brk"?S.pm==="break":active(q.k));
   // v3.2.2: the paper machine comes first. Winder jobs (hayouts, winder down) wait behind any machine job, including the rethread,
   // and if a machine job turns up while the crew is at the winder they leave it and come back to the winder afterwards
-  {const WIND=k=>k==="hay"||k==="winderdown",prev=S.crewQ[0];S.crewQ.sort((a,b)=>(WIND(a.k)?1:0)-(WIND(b.k)?1:0));
+  {const WIND=k=>k==="hay"||k==="winderdown"||k==="tiedrolls",prev=S.crewQ[0];S.crewQ.sort((a,b)=>(WIND(a.k)?1:0)-(WIND(b.k)?1:0));
    if(prev&&S.crewQ[0]!==prev&&WIND(prev.k)){prev.go=false;prev.here=false;prev.since=0;prev.resp=RESP[prev.k]||6;}}   // (v16: and walk back later)
   // v16: the job starts when the crew's travel time (sim minutes) has run out: no wall clock, no waiting on the 3D crew,
   // so game speed and graphics can't change downtime (the 3D crew walks over meanwhile)
@@ -139,7 +145,7 @@ function chaosTick(dt){
   const um=upsetMul()*(busy>=2?0.25:1);
   {const r=rand("up");if(CH.on&&um>0&&CH.en.chestover&&!active("chestover")&&S.tank>=P.tankCap*0.995&&r<dt/60/25)trigger("chestover");}
   const roll=CH.on&&um>0&&!outOn();
-  if(S.rng.bird==null)S.rng.bird=(S.seed^0x5bd1e995)|0;if(S.rng.knob==null)S.rng.knob=(S.seed^0x6b9f3c21)|0;
+  if(S.rng.bird==null)S.rng.bird=(S.seed^0x5bd1e995)|0;if(S.rng.tie==null)S.rng.tie=(S.seed^0x7f4a7c15)|0;if(S.rng.knob==null)S.rng.knob=(S.seed^0x6b9f3c21)|0;
   // v5.7: tellable upsets are queued with a lead time instead of firing (04b-tells.js); they may roll during an outage
   // (just not into one), and not while the same upset is already waiting. The dice drawn are the same as before.
   const tl=tellsOn();if(tl)tellTick(um);

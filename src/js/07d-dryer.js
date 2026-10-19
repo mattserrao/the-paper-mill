@@ -8,10 +8,10 @@
    (10%) the paper fails on quality and goes to the beater, and the crew slows the machine (1% a minute) until it's back
    under 9%, then lets the speed recover (0.5% a minute) while there's headroom. In every mode but zen; AUTO doesn't trim
    ahead of time. Steam = 1.3 t per t of water (TAPPI dryer norm); past the boiler's 62 t/h the header sags and the
-   ceiling with it. No dice: seasons replay identically. The knob model (07b) reads its moisture from here. */
+   ceiling with it. On a sheet break the steam keeps flowing and the surplus is vented (v6.5.7). No dice: seasons replay identically. The knob model (07b) reads its moisture from here. */
 // ceil: PM3's 3rd section tops out at 171 kPa; the game's ceiling is 180 so a fully upgraded mill (with the shoe press)
 // runs clean (peak 170 in hands-off seasons); without the shoe press, heavy grades at full speed run damp (to ~9.4%)
-const DRY={m0:8,ceil:180,ceilFloor:0.7,perKpa:0.15,spec:10,back:9,slope23:3.0,wpt0:0,boiler:62,stPerW:1.3,
+const DRY={hold:0.3,m0:8,ceil:180,ceilFloor:0.7,perKpa:0.15,spec:10,back:9,slope23:3.0,wpt0:0,boiler:62,stPerW:1.3,
   base:{"23m":122,"26m":126,"30m":138,"33HT":135}};   // (median 3rd-section kPa by grade, PM3 Sep 2025 - Mar 2026)
 DRY.wpt0=(1-DRY.m0/100)/0.44-1;   // water evaporated per ton of paper at standard press solids
 function dryState(){if(!S.dry)S.dry={m:DRY.m0,st3:DRY.base[C.grade]||122,dem:122,trim:0,steam:0,hdr:1,load:0.7,maxDem:0,wet:false};return S.dry;}
@@ -36,7 +36,13 @@ function dryTick(dt){const D=dryState(),g=C.grade,b=DRY.base[g]||122,run=S.pm===
   const A=dryKnob(),dem0=run?dryDemand0(tph):b*0.5,dem=run?dem0*A.a:b*0.5;D.dem=ease(D.dem,dem,dt,3);D.dem0=ease(D.dem0==null?dem0:D.dem0,dem0,dt,3);if(run&&!S.zen&&D.dem>D.maxDem)D.maxDem=D.dem;
   D.km=ease(D.km||0,run?20*(A.r-A.a):0,dt,10);   // (v6.5.2: moisture the knobs put past the auto loop's reach)
   // steam and the boiler (a boiler trip still stops the machine on its own; 04-upsets)
-  const water=tph*dryWpt()*((S.knob&&S.knob.any&&S.knob.W)||1);D.steam=ease(D.steam,run?water*DRY.stPerW:0,dt,4);
+  const water=tph*dryWpt()*((S.knob&&S.knob.any&&S.knob.W)||1);
+  // v6.5.7: on a sheet break the boiler isn't backed down: steam keeps flowing at the running rate, the cans condense a share
+  // to stay hot (DRY.hold) and the rest is vented to atmosphere through the header vent on the roof (24-3d), and paid for
+  const brk=S.pm==="break";if(run)D.runSt=D.steam;
+  D.steam=ease(D.steam,run?water*DRY.stPerW:brk?(D.runSt||0):0,dt,4);D.vent=ease(D.vent||0,brk?D.steam*(1-DRY.hold):0,dt,0.5);
+  if(brk&&!S.zen&&D.steam>0.5){const en=Math.max(0,energyCost()-pfChemT()),wpt=dryWpt()*DRY.stPerW,v=wpt>0?D.steam*dt/60*en*PF_STEAMSH/wpt:0;
+    if(v>0){spend(v,"energy");pfAdd("steam","pm",v);D.ventT=(D.ventT||0)+D.vent*dt/60;D.ventC=(D.ventC||0)+v*(1-DRY.hold);}}
   D.hdr=ease(D.hdr,D.steam>DRY.boiler?Math.max(0.6,1-(D.steam-DRY.boiler)/DRY.boiler*1.5):1,dt,20);
   // the floor is speed's (a slow machine over-dries); a knob that takes load off can take the 3rd section under it
   const ceil=dryCeil(D),floor=b*DRY.ceilFloor,under=D.dem0<floor;D.st3=run?clamp(D.dem,under?floor:0,ceil):b;D.load=D.dem/ceil;

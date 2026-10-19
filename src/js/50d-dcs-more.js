@@ -20,7 +20,7 @@ const DV={
   wsp:()=>Math.round(S.pmSpeed/DCS_DRAW())+" fpm",psp:()=>Math.round(S.pmSpeed/DCS_DRAW()*1.015)+" fpm",dsp:()=>Math.round(S.pmSpeed/1.01)+" fpm",
   wwl:()=>Math.round(clamp(68+(S.pm==="run"?0:14)+wob2(0.02,7)*3,0,100))+"%",hum:()=>Math.round(clamp(62+(motStatus("fog")!=="run"||dcsOn("fogfan")?24:0)+wob2(0.01,8)*3,0,100))+"%",
   dr1:()=>S.pm==="run"&&!dcsOn("shaft")?Math.round(48+S.pmSpeed/3300*34+wob2(0.12,9)*1.5)+"%":"0%",dr2:()=>S.pm==="run"&&!dcsOn("shaft")?Math.round(52+S.pmSpeed/3300*36+wob2(0.11,10)*1.5)+"%":"0%",
-  spool:()=>Math.round(S.reel)+" / "+P.jumbo+" t",store:()=>reelsAtWinder()+" of "+P.storeReels,tu:()=>String(S.tot.turnups||0),
+  spool:()=>Math.round(S.reel)+" / "+P.jumbo+" t",store:()=>Math.max(0,reelsAtWinder()-1)+" of "+P.storeReels,tu:()=>String(S.tot.turnups||0),
   wdr:()=>Math.round(C.wdr.v)+" t/h",wdt:()=>Math.round(S.rates.cut||0)+" t/h",hay:()=>String(S.tot.hayouts||0),rolls:()=>Math.round(S.conv||0)+" of "+P.convCap,
   dryl:()=>S.dry?Math.round(S.dry.load*100)+"%":"–",stm:()=>S.dry?Math.round(S.dry.steam/DRY.boiler*100)+"%":"–",
   grid:()=>SITE.env==="urban"&&dcsOn("brownout")?"BROWNOUT":"NORMAL",
@@ -57,7 +57,7 @@ MIMIC.DET={title:"DRY END",h:280,trends:MIMIC_KNOB.DET.trends,
   eq:[[14,96,80,50,"OPEN DRAW"],[112,80,130,80,"1ST SECTION"],[260,80,170,80,"2ND / 3RD SECTION"],[448,90,74,60,"REEL"],[546,90,84,60,"WINDER"],[546,214,84,30,"ROLL CONV","s"]],
   ln:[["M94 121 H112"],["M242 120 H260"],["M430 120 H448"],["M522 120 H546"],["M630 120 H636 V229 H630"],["M640 66 H177 V80 M345 66 V80",1]],   // (v6.5.4: the steam header comes in from the boiler house, UTIL)
   tags:[MT(54,172,"draw","DRAW",r=>kf(r.draw)+"%"),MT(54,194,"tension","TENS",r=>r.run?kf(r.tension,2):"–"),MT(177,176,"st1","STEAM",r=>Math.round(r.st1)+" kPa"),MT(177,192,"dr1","DRV",DV.dr1),MT(177,208,"dsp","SPD",DV.dsp),
-    MT(345,176,"st3","STEAM",r=>Math.round(r.st3)+" kPa "+(S.dry&&S.dry.man!=null?"MAN":"AUTO")),MT(345,192,"steam","FLOW",r=>r.run?kf(r.steam)+" t/h":"–"),MT(345,208,"dr2","DRV",DV.dr2),MT(345,224,"dryl","LOAD",DV.dryl),MT(560,58,"hdr","STEAM HDR",r=>Math.round(r.boiler*100)+"%"),
+    MT(345,176,"st3","STEAM",r=>Math.round(r.st3)+" kPa "+(S.dry&&S.dry.man!=null?"MAN":"AUTO")),MT(345,192,"steam","FLOW",r=>r.steam>0.5?kf(r.steam)+" t/h":"–"),MT(345,208,"dr2","DRV",DV.dr2),MT(345,224,"dryl","LOAD",DV.dryl),MT(560,58,"hdr","STEAM HDR",r=>Math.round(r.boiler*100)+"%"),
     MT(485,166,"moist","MOIST",r=>r.run?kf(r.moist)+"%":"–"),MT(485,180,"bw","BW",r=>r.run?kf(r.bw,2):"–"),MT(485,194,"spool","SPOOL",DV.spool),MT(485,208,"store","STORE",DV.store),MT(485,222,"tu","TURN-UPS",DV.tu),MT(485,84,"speed","SPEED",r=>Math.round(r.speed)+" fpm"),
     MT(588,166,"wdr","SP",DV.wdr),MT(588,180,"wdt","CUT",DV.wdt),MT(588,194,"hay","HAYOUTS",DV.hay),MT(588,262,"rolls","ROLLS",DV.rolls)]};
 MIMIC.UTIL={title:"UTILITIES",h:270,trends:[["steam","Steam flow t/h","#7fb2ff",0,70],["boiler","Steam header (1 = full)","#ffb02e",0.5,1.05]],
@@ -67,7 +67,7 @@ MIMIC.UTIL={title:"UTILITIES",h:270,trends:[["steam","Steam flow t/h","#7fb2ff",
   ln:[["M110 85 H134"],["M230 85 H254"],["M364 85 H388"],["M498 85 H522"],["M309 110 V196",1],["M182 170 V164 H280 V110",1],["M62 170 V156 H270 V110",1]],
   tags:[MT(62,128,"ifl","FLOW",DV.ifl),MT(62,142,"ice","ICE",DV.ice),MT(182,128,"twl","LEVEL",DV.twl),MT(309,30,"wuse","FRESH",DV.wuse),MT(309,44,"evap","EVAP",DV.evap),MT(443,128,"tss","TSS",DV.tss),MT(443,142,"perm","PERMIT",DV.perm),
     MT(572,128,"ofl","FLOW",DV.ofl),MT(309,250,"rej","REJECTS",DV.rej),
-    MT(62,232,"grid","POWER",DV.grid),MT(182,232,"boiler","HDR",r=>Math.round(r.boiler*100)+"%"),MT(182,246,"stm","STEAM",DV.stm),MT(182,260,"steam","FLOW",r=>r.run?kf(r.steam)+" t/h":"–")]};
+    MT(62,232,"grid","POWER",DV.grid),MT(182,232,"boiler","HDR",r=>Math.round(r.boiler*100)+"%"),MT(182,246,"stm","STEAM",DV.stm),MT(182,260,"steam","FLOW",r=>r.steam>0.5?kf(r.steam)+" t/h":"–")]};
 AREA_N.UTIL="Utilities";
 
 /* ---- alarms by area (an upset shows on the screen of the equipment it hits) ---- */
@@ -83,7 +83,7 @@ function dcsAlarms(a,r,L){const al=(on,txt,hi)=>{if(on)L.push([txt,hi]);};
     al(!!S.wdBlocked,"WINDER BLOCKED: CONVEYOR FULL",true);al(S.wd==="hayout","WINDER HAYOUT",true);
     const Dr=S.dry;if(Dr&&S.pm==="run"){al(dryLimited()&&Dr.m>DRY.m0+0.5,"DRYERS AT LIMIT · SHEET WET",true);al(!dryLimited()&&Dr.load>0.95,"DRYER LOAD HI",false);}
     al(!!(Dr&&Dr.trim>0.001),`SPEED TRIMMED ${Dr?Math.round(Dr.trim*100):0}% · DRYING THE SHEET`,!!(Dr&&Dr.wet));al(!!(Dr&&Dr.man!=null),"2ND / 3RD SECTION STEAM ON MANUAL",false);}
-  else if(a==="UTIL"){const Dr=S.dry;al(tssNow()>45&&!dcsOn("permit"),"EFFLUENT TSS HI",false);al(!!(Dr&&Dr.steam>DRY.boiler*0.95),"BOILER STEAM HI",!!(Dr&&Dr.hdr<0.97));al(!!(Dr&&Dr.hdr<0.8),"STEAM HEADER LO",!!(Dr&&Dr.hdr<0.7));}}
+  else if(a==="UTIL"){const Dr=S.dry;al(!!(Dr&&Dr.vent>1),"STEAM VENTING (SHEET BREAK)",false);al(tssNow()>45&&!dcsOn("permit"),"EFFLUENT TSS HI",false);al(!!(Dr&&Dr.steam>DRY.boiler*0.95),"BOILER STEAM HI",!!(Dr&&Dr.hdr<0.97));al(!!(Dr&&Dr.hdr<0.8),"STEAM HEADER LO",!!(Dr&&Dr.hdr<0.7));}}
 
 /* ---- setpoint, motor and purge rows ---- */
 const DCARD=k=>{const cs=$("cards"),r=cs&&cs.querySelector(`.row[data-key="${k}"]`);return r?{inp:r.querySelector("input"),btn:r.querySelector(".auto")}:null;};
@@ -221,7 +221,7 @@ const PGX={
   WET:[["fan",()=>or(stM("fog"),stI("fogfan"))],["headbox",()=>"ok"],["table",()=>or(stI("fabric"),dcsOn("slime")?"warn":"ok",stBrk("press"))],["tank",()=>"ok","silo"],
     ["roll1",()=>stI("couchpit")],["felt",()=>stI("felt","oscfail")],["press",()=>stBrk("press")]],
   DET:[["draw",()=>stBrk("dryer")],["dryers",()=>stI("shaft","dryerfire","wrap","steamjoint"),"d4"],["dryers",()=>or(stI("shaft","dryerfire","wrap","steamjoint"),dryLimited()&&S.dry.m>DRY.m0+0.5?"trip":S.dry&&S.pm==="run"&&S.dry.load>0.95?"warn":"ok"),"d6"],
-    ["reel",()=>or(stBrk("reel"),S.pm==="spools"?"warn":"ok")],["winder",()=>or(stI("winderdown","birdhay"),S.wd==="hayout"?"warn":"ok")],["rollconv",()=>S.wdBlocked?"warn":"ok"]],
+    ["reel",()=>or(stBrk("reel"),S.pm==="spools"?"warn":"ok")],["winder",()=>or(stI("winderdown","birdhay","tiedrolls"),S.wd==="hayout"?"warn":"ok")],["rollconv",()=>S.wdBlocked?"warn":"ok"]],
   UTIL:[["intake",()=>stI("icedintake")],["tower",()=>dcsOn("icedintake")?"warn":"ok","tower"],["mill",()=>S.pm==="run"?"ok":"off"],["clarifier",()=>or(stI("permit"),tssNow()>45?"warn":"ok")],["outfall",()=>"ok"],["landfill",()=>"ok"],
     ["grid",()=>stI("brownout")],["boiler",()=>or(stI("boiler"),S.dry&&S.dry.steam>DRY.boiler*0.95?"warn":"ok")]]};   // (v6.5.4: moved from DET)
 // levels (0-1) for the vessels

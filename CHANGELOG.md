@@ -1,6 +1,40 @@
 # Changelog
 
 
+## v6.5.7 (2026-10-19): winder pass
+Built on test/v6.5.7-winder (as 6.5.7-t1), merged into main.
+- **Reel storage: four stands.** `P.storeReels` was 1, so only the first of the four storage stands ever held a reel and
+  the machine backed up ("down: winder backed up") with three stands empty. It's 4 now: when the winder is down the
+  crane parks full reels on all four stands before the machine holds back, and feeds them to the unwind one by one once
+  the winder runs again. Two turn-ups landing in the same frame each get their own stand (both were sent to the same
+  one). Long-run throughput on a winder-bottleneck mill is unchanged (the winder still caps it); the buffer is just deeper.
+- **Two rolls per set.** The winder winds a set of two rolls side by side on the drums (the reel is slit in two) and
+  kicks both off together. The first lands on the upender and is stood up; the second waits on a new transfer table
+  beside it, slides across, and is stood up after it. In the sim rolls are made in pairs (the conveyor needs room for
+  both); beater rolls come in pairs too.
+- **Finished rolls were invisible close up**: the roll conveyor's instanced mesh took its bounds once, before any roll
+  was placed, so the rolls on the ramp, upender and conveyor disappeared whenever the camera was zoomed in away from the
+  map origin. Fixed (never culled; 16 instances).
+- **New upset: rolls tied together** (machine, own dice stream "tie", so every other upset keeps its timing; MTBF 300).
+  The set comes off with both rolls stuck at the slit: the winder stops, two operators go over with a band saw and cut
+  them apart (20–35 min of crew time), and both rolls go to the beater bay and round to the pulper. 3D: the tied pair on
+  the upender with a ragged band of paper across the join, the band saw feeding down through it, paper dust. Civics card
+  (new slitter blades / swap the bottom blade / saw and keep winding), a tell on the Round (dry end: a dull bottom slitter
+  blade), outage prep area "dry", DCS winder trip, process-flow winder area.
+- **Sheet breaks keep the steam on.** The boiler isn't backed down on a break: steam keeps flowing at the running rate,
+  the cans take 30% to stay hot and the rest is vented through a new header vent (riser, red control valve and silencer
+  through the machine hall roof), which blows a plume for the whole break. The steam is paid for (booked to steam in the
+  process flow). The boiler stack keeps its plume, the DCS FLOW tags and the steam trend keep reading through the break,
+  and UTIL shows a STEAM VENTING alarm.
+- Help glossary: winder sets and storage, sheet-break steam, tied rolls.
+- `tools/windercheck.py`: storage fill and drain against the stands, pairs, tied rolls, steam on a break.
+- Out-of-date tests brought up to date: `tellcheck.py` (lead time 3.5 d, survival step 0.12 d a wave, planned repair 10%,
+  from the v6.5 balance; now one set of constants at the top), `dcscheck.py` (box counts after the v6.5.4/v6.5.6 DCS
+  changes), `dryercheck.py` (8% moisture setpoint), `qualcheck.py` ("beater paper isn't counted as good paper" compared
+  two runs that differ from launch to launch and flaked on main too; it now checks that nothing is booked as good while
+  the spec is out). Smoke, civics, DCS, dryer, water, quality, save, knobs, process flow, tells, determinism and
+  windercheck all pass.
+
 ## v6.5.6 (2026-10-19): mass balance
 Built on test/v6.5.6-balance (as 6.5.6-t1), merged into main.
 From the fiber and water audit: fiber closed at every stage, but some losses vanished without being booked, and water

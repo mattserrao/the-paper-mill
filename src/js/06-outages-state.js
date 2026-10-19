@@ -14,7 +14,7 @@ const OUT={get every(){return survRun()?SURV.every:7;},   // v4.4.0-t3: survival
  
   jobs:["1st press roll change","Forming fabric (wire) change","Pulper rotor and extraction plate change","Refiner plate change"],
   areas:[["stock","Stock prep","pulper, cleaners, screens, refiners, thickener"],["wet","Wet end","headbox, forming fabric, press felts"],["dry","Dry end","dryers, steam joints, reel, winder"]],
-  ev:{stock:["refclash","ragger","overflow","dye","hdblow","lwplug","cscreen","fscreen","lcplug","thkblow","chestover"],wet:["fabric","felt","slime","fogfan"],dry:["shaft","dryerfire","wrap","steamjoint","winderdown","boiler"]},area:{}};
+  ev:{stock:["refclash","ragger","overflow","dye","hdblow","lwplug","cscreen","fscreen","lcplug","thkblow","chestover"],wet:["fabric","felt","slime","fogfan"],dry:["shaft","dryerfire","wrap","steamjoint","winderdown","tiedrolls","boiler"]},area:{}};
 for(const a in OUT.ev)OUT.ev[a].forEach(id=>OUT.area[id]=a);
 const outStart=k=>(OUT.every*k-1)*1440+(OUT.hour-6)*60;
 // v4.3: which of the four major jobs outage k does (1-4). A season has four outages; in survival they go round again.
