@@ -51,3 +51,7 @@ function qualStatus(){const K=S.knob,ko=K&&K.any?K.off:0;
 const QBEAT={rate:25};   // t/h repulped
 function beaterTick(dt){const b=S.q.bank||0;if(b<=1e-6)return;const room=P.tankCap*0.98-S.tank;if(room<=0)return;
   const t=Math.min(b,QBEAT.rate*dt/60,room);S.q.bank=b-t;S.tank+=t;WQ.rep+=t;S.tot.repulped=(S.tot.repulped||0)+t;}
+// ---- v6.7 the off-spec log (the quality screen): a spell starts with the first beater ton and ends after 10 quiet minutes ----
+function qLog(dt,beat){const Q=S.q;if(!Q)return;
+  if(beat>0){if(!Q.cur){const q=qualStatus();Q.cur={t0:Math.round(S.t),t1:Math.round(S.t),why:q.why||"off spec",g:C.grade,tons:0,quiet:0};}Q.cur.tons+=beat;Q.cur.t1=Math.round(S.t);Q.cur.quiet=0;}
+  else if(Q.cur){Q.cur.quiet+=dt;if(Q.cur.quiet>=10){const c=Q.cur;delete c.quiet;c.tons=Math.round(c.tons*10)/10;(Q.log||(Q.log=[])).push(c);if(Q.log.length>40)Q.log.shift();Q.cur=null;}}}

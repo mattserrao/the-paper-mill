@@ -138,7 +138,7 @@ function seedRun(seed){S.seed=seed>>>0;const k=S.seed;S.bn=bnFor(S.seed);S.rng={
   S.cards={next:1440*(1+0.5*rand("card")),open:null,pend:[],seen:{}};applyUpgrades();
   ordInit();}   // v6.6: the order book for the run (its own dice streams, ord and bale; 05b)
 function setGrade(to){const from=C.grade;if(to===from)return;
-  const off=4+2*Math.abs(GRADES[to].bw-GRADES[from].bw);S.chg={left:off,total:off,from,to};C.grade=to;applyUpgrades();
+  const off=4+2*Math.abs(GRADES[to].bw-GRADES[from].bw);S.chg={left:off,total:off,from,to};C.grade=to;applyUpgrades();{const L=S.q.gc||(S.q.gc=[]);L.push({t:Math.round(S.t),from,to,tons:Math.round(off*10)/10});if(L.length>20)L.shift();}   // (v6.7: for the quality screen)
   log(`Grade change ${from} → ${to} (market orders): about ${off.toFixed(0)} t to the beater during the transition`,"warn");}
 function planTick(dt,good){const pl=S.plan;
   pl.left-=good;

@@ -7,7 +7,9 @@ const KUI={panel:null,st:null,tab:"dcs",built:{}};
 const AREA_N={SPOT:"Stock prep",WET:"Wet end",DET:"Dry end"};
 // field knobs the DCS can also set remotely; the guide roll and the oscillator are set at the machine only
 const KREMOTE=new Set(["pulp","ref","agit","couch"]);
-function kuiSync(){G3.knobUI=!S.zen&&!!(KUI.panel||(KUI.st&&!POP.on)||!$("spider").hidden||!$("slice").hidden);}
+function kuiSync(){G3.knobUI=!S.zen&&!!(KUI.panel||(KUI.st&&DCS_SLOW.has(KUI.st)&&!POP.on)||!$("spider").hidden||!$("slice").hidden);}
+// (v6.7: only the screens with controls slow the game; the read-only ones run at the player's speed)
+const DCS_SLOW=new Set(["SPOT","WET","DET"]);
 function kEl(tag,cls,html){const e=document.createElement(tag);if(cls)e.className=cls;if(html!=null)e.innerHTML=html;return e;}
 const kf=(v,d=1)=>(+v).toFixed(d);
 
@@ -66,17 +68,22 @@ function closeKnob(){const p=$("knobP");if(p)p.hidden=true;KUI.panel=null;kuiSyn
 /* ---- the DCS / QCS screens ---- */
 function stationOv(){let o=$("dcsOv");if(o)return o;
   o=kEl("div","overlay top dcsov");o.id="dcsOv";o.hidden=true;
-  o.innerHTML=`<div class="dcs" role="dialog" aria-modal="true" aria-labelledby="dcs-h"><div class="dcsh"><b id="dcs-h"></b><div class="seg dcstab" role="group" aria-label="Screen"><button type="button" data-t="dcs">DCS</button><button type="button" data-t="qcs">QCS</button></div>
-    <div class="dcsst" role="group" aria-label="Area"><button type="button" data-a="SPOT">SPOT</button><button type="button" data-a="WET">WET</button><button type="button" data-a="DET">DET</button><button type="button" data-a="UTIL">UTIL</button></div><button type="button" class="dcspop" data-popout="dcs"${POPOK()&&!POP.on?"":" hidden"} title="Open in its own window, for a second monitor">⧉ Second screen</button><button aria-label="Close" class="dcsx" id="dcsClose">✕</button></div>
-    <div class="dcsb" id="dcsBody"></div><div class="dcsf"><span id="dcsClock"></span><span id="dcsSlow">Game slowed to 1 min/s while this screen is open</span></div></div>`;
+  o.innerHTML=`<div class="dcs" role="dialog" aria-modal="true" aria-labelledby="dcs-h"><div class="dcsh"><b id="dcs-h"></b>
+    <div class="dcsst" role="group" aria-label="Screen">${DCS_SCREENS.map(([k,l,t])=>`<button type="button" data-a="${k}" title="${t}">${l}</button>`).join("")}</div>
+    <div class="seg dcsview" role="group" aria-label="Show"><button type="button" data-trv="pic">Picture</button><button type="button" data-trv="trend">Trend</button></div>
+    <button type="button" class="dcspop dcstrt" data-trt aria-pressed="true" title="Show or hide the trend beside the picture">Trend ▸</button>
+    <button type="button" class="dcspop" data-popout="dcs"${POPOK()&&!POP.on?"":" hidden"} title="Open in its own window, for a second monitor">⧉ Second screen</button><button aria-label="Close" class="dcsx" id="dcsClose">✕</button></div>
+    <div class="dcsb" id="dcsBody"><div class="dcsmain" id="dcsMain"></div><aside class="dcstrp" id="dcsTrp" aria-label="Trend"></aside></div><div class="dcsf"><span id="dcsClock"></span><span id="dcsSlow"></span></div></div>`;
   document.body.appendChild(o);
   $("dcsClose").addEventListener("click",()=>closeStation());
   o.addEventListener("click",e=>{if(e.target===o)closeStation();});
-  o.querySelectorAll("[data-t]").forEach(b=>b.addEventListener("click",()=>{KUI.tab=b.dataset.t;stationBuild();}));
-  o.querySelectorAll("[data-a]").forEach(b=>b.addEventListener("click",()=>{KUI.st=b.dataset.a;stationBuild();}));
+  o.querySelectorAll("[data-a]").forEach(b=>b.addEventListener("click",()=>{KUI.st=b.dataset.a;KUI.tab=b.dataset.a==="QCS"?"qcs":"dcs";stationBuild();kuiSync();}));
+  o.querySelectorAll("[data-trv]").forEach(b=>b.addEventListener("click",()=>{TRUI.view=b.dataset.trv;trLayout();}));
+  o.querySelector("[data-trt]").addEventListener("click",()=>{TRUI.show=!TRUI.show;trLayout();});
+  trWire(o);
 
   return o;}
-function openStation(a,tab){if(S.zen||!AREA_N[a])return;
+function openStation(a,tab){if(tab==="qcs")a="QCS";if(S.zen||!DCS_SCR[a])return;tab=a==="QCS"?"qcs":"dcs";
   if(POP.on){KUI.st=a;if(tab)KUI.tab=tab;popShow("dcs");stationBuild();kuiSync();return;}   // v6.5.1: popped out, it just switches the second screen to this area
   closeKnob();["spider","slice","brian"].forEach(k=>$(k).hidden=true);const o=stationOv();KUI.st=a;if(tab)KUI.tab=tab;o.hidden=false;stationBuild();kuiSync();
   setTimeout(()=>{try{$("dcsClose").focus({preventScroll:true});}catch(_){}},0);}
@@ -109,22 +116,23 @@ function knobAlarms(a,r){const L=[],al=(on,txt,hi)=>{if(on)L.push([txt,hi]);};co
   {const q=qualStatus();if(r.run&&q.off>0.02)L.unshift([`MAKING BEATER · ${q.why.toUpperCase()}`,true]);}   // (v6.5.4: on every screen, first)
   dcsAlarms(a,r,L);   // v6.5 b3: upsets on the screen of the equipment they hit, motors, purges, the dry end's states (50d)
   return L;}
-function stationBuild(){const o=$("dcsOv");if(!o||!KUI.st)return;const a=KUI.st,M2=MIMIC[a],b=$("dcsBody");
-  $("dcs-h").textContent=`${(typeof NAME==="string"&&NAME)||"PM1"} · `+M2.title+(KUI.tab==="qcs"?" · QCS":" · DCS");   // (v6.5.2: the machine's own name, as on the process flow and the 3D label)
-  {const sl=$("dcsSlow");if(sl)sl.textContent=POP.on?"Second screen · the mill keeps running at your speed":"Game slowed to 1 min/s while this screen is open";}
-  o.querySelectorAll("[data-t]").forEach(x=>x.setAttribute("aria-pressed",String(x.dataset.t===KUI.tab)));
+function stationBuild(){const o=$("dcsOv");if(!o||!KUI.st)return;const a=KUI.st,M2=MIMIC[a],b=$("dcsMain");KUI.tab=a==="QCS"?"qcs":"dcs";if(a!=="PLAN"&&a!=="QCS"&&a!=="TREND"&&a!=="WATER")KUI.last=a;
+  $("dcs-h").textContent=`${(typeof NAME==="string"&&NAME)||"PM1"} · `+DCS_SCR[a].title;   // (v6.5.2: the machine's own name, as on the process flow and the 3D label)
+  {const sl=$("dcsSlow");if(sl)sl.textContent=POP.on?"Second screen · the mill keeps running at your speed":DCS_SLOW.has(a)?"Game slowed to 1 min/s while this screen is open":"Live: the mill keeps running at your speed";}
   o.querySelectorAll("[data-a]").forEach(x=>x.setAttribute("aria-pressed",String(x.dataset.a===a)));
   b.replaceChildren();
-  if(KUI.tab==="dcs"){
+  if(M2){
     const svg=[`<svg viewBox="0 0 640 ${M2.h||210}" class="mimic" role="img" aria-label="Process picture">`];
     if(M2.ln)M2.ln.forEach(([d,st])=>svg.push(`<path d="${d}" class="mln${st?" st":""}"/>`));   // (v6.5 b3: the pictures draw their own lines, 50d)
     else{for(let i=0;i<M2.eq.length-1;i++){const e=M2.eq[i],n=M2.eq[i+1];if(a==="DET"&&i===3)continue;svg.push(`<line x1="${e[0]+e[2]}" y1="${e[1]+e[3]/2}" x2="${n[0]}" y2="${n[1]+n[3]/2}" class="mln"/>`);}
       if(a==="DET")svg.push(`<path d="M586 60 V 66 H 177 V 75 M345 66 V 75" class="mln st"/>`);}
     M2.eq.forEach((e,i)=>{const pic=dcsPic(a,e,i);if(pic){svg.push(pic);return;}const [x,y,w,h,t,sm]=e;   /* (v6.5 b4: pictograms, 50d) */
       svg.push(`<rect x="${x}" y="${y}" width="${w}" height="${h}" rx="6" class="meq${sm?" sm":""}"/><text x="${x+w/2}" y="${y+h/2+4}" class="mtl${sm?" sm":""}">${typeof t==="function"?t():t}</text>`);});
-    M2.tags.forEach(([x,y,k,t])=>svg.push(`<text x="${x}" y="${y}" class="mtg"><tspan class="mtk">${t} </tspan><tspan data-tag="${k}">–</tspan></text>`));
+    // (v6.7: a tag that can be trended is a button: tap it to add it to the trend)
+    M2.tags.forEach(([x,y,k,t])=>{const tg=trTagOf(k);svg.push(`<text x="${x}" y="${y}" class="mtg${tg?" trk":""}"${tg?` data-trk="${tg}" role="button" tabindex="0"`:""}><title>${tg?"Trend "+tagName(tg):""}</title><tspan class="mtk">${t} </tspan><tspan data-tag="${k}">–</tspan></text>`);});
     svg.push("</svg>");b.appendChild(kEl("div","mimicw",svg.join("")));
     b.appendChild(kEl("div","dcsal",`<b>Alarms</b><ul id="dcsAl"></ul>`));
+    if(a==="WATER")b.appendChild(kEl("div","dcsctl",`<div class="dcssub">Water balance · the run so far</div><div class="wbal" id="wBal"></div>`));
     const ids=KNOBS.filter(k=>k.area===a&&(k.dcs||KREMOTE.has(k.id))).map(k=>k.id),fld=KNOBS.filter(k=>k.area===a&&k.field&&!KREMOTE.has(k.id));
     const cs=kEl("div","dcsctl");cs.appendChild(kEl("div","dcssub","Setpoints"));dcsSetRows(a,cs);
     ids.forEach(id=>{const row=kEl("div","dcsrow"+(id==="zones"?" wide":""));row.appendChild(kEl("div","dcsn",`<b>${KNOBN[id].name}</b><small>${KNOBN[id].field?"remote from the DCS":"DCS"}</small>`));row.appendChild(knobCtl(id,"d"));
@@ -132,14 +140,10 @@ function stationBuild(){const o=$("dcsOv");if(!o||!KUI.st)return;const a=KUI.st,
       if(id==="zones"){const bt=kEl("div","dcsbeat","");bt.id="dcsBeat";bt.hidden=true;bt.setAttribute("role","status");cs.appendChild(bt);}});   // v6.5.4: making-beater alert under the dilution zones
     if(fld.length)cs.appendChild(kEl("p","dcsfield",`Set at the machine, not from here: ${fld.map(k=>`<button type="button" class="linkb" data-fk="${k.id}">${k.name.toLowerCase()}</button>`).join(", ")}. Look for the red knobs on the floor.`));
     cs.querySelectorAll("[data-fk]").forEach(x=>x.addEventListener("click",()=>{const id=x.dataset.fk;closeStation();if(G3.knobFly)G3.knobFly(id);openKnob(id);}));
-    b.appendChild(cs);dcsMotRows(a,b);
-    if(M2.trends.length){const tw=kEl("div","dcstr");tw.innerHTML=`<div class="dcssub">Trends · last 6 h</div><canvas width="640" height="220" id="dcsTr"></canvas><div class="dcsleg">${M2.trends.map(t=>`<span><i style="background:${t[2]}"></i>${t[1]}</span>`).join("")}</div>`;b.appendChild(tw);}}
-  else{
-    b.appendChild(kEl("div","qcshead",`<div class="qcsst" id="qcsSt"></div><div class="qcsv" id="qcsV"></div>`));
-    b.appendChild(kEl("div","dcstr",`<div class="dcssub">Reel · last 6 h</div><canvas width="640" height="200" id="qcsTr"></canvas><div class="dcsleg"><span><i style="background:#4fd18b"></i>Moisture %</span><span><i style="background:#ffb02e"></i>Basis weight (lb/1000 ft²)</span><span><i style="background:#ff7a8a"></i>Rejected share</span></div>`));
-    b.appendChild(kEl("div","dcstr",`<div class="dcssub">CD moisture profile · 12 zones (spec ±1.5 %)</div><canvas width="640" height="170" id="qcsCd"></canvas>`));
-    b.appendChild(kEl("div","qcsdef",`<div class="dcssub">Web inspection</div><div class="qcsgrid" id="qcsDef"></div>`));}
-  kuiRefresh();}
+    b.appendChild(cs);dcsMotRows(a,b);}
+  else if(a==="QCS")qcsBuild(b);
+  else if(a==="PLAN")b.appendChild(kEl("div","plan","")).id="planBox";
+  trBuild();trLayout();kuiRefresh();}
 // the trend chart: up to four series on their own scales, newest at the right
 function drawTrend6(cv,series){if(!cv)return;const x=cv.getContext("2d"),W=cv.width,H=cv.height,a=KHIST.a,dk=document.body.classList.contains("dark");
   x.fillStyle="#0f1b2d";x.fillRect(0,0,W,H);x.strokeStyle="rgba(140,170,210,.18)";x.lineWidth=1;for(let k=1;k<6;k++){x.beginPath();x.moveTo(W*k/6,0);x.lineTo(W*k/6,H);x.stroke();}for(let k=1;k<4;k++){x.beginPath();x.moveTo(0,H*k/4);x.lineTo(W,H*k/4);x.stroke();}
@@ -154,12 +158,12 @@ function kuiRefresh(){if(!KUI.panel&&!KUI.st)return;const r=knobRead();
     n.textContent=busy?"A crew is working on trouble out here.":moved?`Moved off standard (${knobFmt(id)}). Things may take a while to show up, and not always here.`:"At standard.";
     $("kpReset").disabled=!moved;if(id==="zones")kuiCd(document.querySelector('#kpCtl canvas[data-cd]'),r);}
   if(KUI.st){const o=$("dcsOv"),a=KUI.st,M2=MIMIC[a];$("dcsClock").textContent=`Day ${Math.floor(S.t/1440)+1} · ${clockOf(S.t)}`;
-    if(KUI.tab==="dcs"){o.querySelectorAll("[data-tag]").forEach(t=>{const g=M2.tags.find(q=>q[2]===t.dataset.tag);if(g){const v=g[4](r);if(t.textContent!==v)t.textContent=v;}});
+    if(M2){o.querySelectorAll("[data-tag]").forEach(t=>{const g=M2.tags.find(q=>q[2]===t.dataset.tag);if(g){const v=g[4](r);if(t.textContent!==v)t.textContent=v;}});
       o.querySelectorAll(".dcsctl .kctl").forEach(knobCtlSync);o.querySelectorAll("[data-rd]").forEach(d=>{const h=knobReadout(d.dataset.rd,r);if(d._h!==h){d._h=h;d.innerHTML=h;}});
       const al=knobAlarms(a,r),ul=$("dcsAl"),h=al.length?al.map(([t,hi])=>`<li class="${hi?"hi":""}">${t}</li>`).join(""):'<li class="none">No alarms</li>';if(ul._h!==h){ul._h=h;ul.innerHTML=h;}
       {const bt=$("dcsBeat");if(bt){const q=qualStatus(),on=r.run&&q.off>0.02,t=on?`⚠ MAKING BEATER · ${q.why.toUpperCase()} · ${q.off>=0.99?"the whole reel":Math.round(q.off*100)+"% of the reel"} to the beater`:"";if(bt.hidden===on)bt.hidden=!on;if(bt.textContent!==t)bt.textContent=t;}}
-      o.querySelectorAll(".dcsrow canvas[data-cd]").forEach(c=>kuiCd(c,r));if(M2.trends.length)drawTrend6($("dcsTr"),M2.trends);dcsSync();dcsPicSync(a);}
-    else{const K=S.knob,F=(K&&K.F)||{},off=r.off,st=$("qcsSt");
+      o.querySelectorAll(".dcsrow canvas[data-cd]").forEach(c=>kuiCd(c,r));dcsSync();dcsPicSync(a);if(a==="WATER")waterRefresh();}
+    else if(a==="QCS"){const K=S.knob,F=(K&&K.F)||{},off=r.off,st=$("qcsSt");
       // v6.5.3: the spec check (07e) names what's out; the grade change and the other knob defects after it
       const qs=qualStatus(),sh=!r.run?["MACHINE DOWN","down"]:QNOW.out.length?[`OFF SPEC · ${qs.why} · rolls to the beater`,"bad"]:S.chg?["GRADE CHANGE · weight in transition · rolls to the beater","warn"]:qs.off>0.02?[`REJECTING · ${qs.why} · ${Math.round(qs.off*100)}% to the beater`,"bad"]:["ON SPEC","ok"];
       if(st._h!==sh[0]){st._h=sh[0];st.textContent=sh[0];st.className="qcsst "+sh[1];}
@@ -167,9 +171,11 @@ function kuiRefresh(){if(!KUI.panel&&!KUI.st)return;const r=knobRead();
       const g=GRADES[C.grade],sp=QSPEC[C.grade]||QSPEC["23m"],qv=$("qcsV"),qo=k=>r.run&&QNOW.out.includes(k)?' class="qout"':"",rg=(a,d)=>`spec ${a[0].toFixed(d)}–${a[1].toFixed(d)}`;
       const shn=((document.querySelector('#paperColor button[aria-pressed="true"]')||{}).dataset||{}).c==="white"?"white":"brown";
       const qh=`<div><small>Grade</small><b>${C.grade}</b><small>target ${g.bw} lb · ${DRY.m0.toFixed(1)} %</small></div><div${qo("bw")}><small>Basis weight</small><b>${r.run?kf(QNOW.bw,2):"–"}</b><small>${rg(sp.bw,2)}</small></div><div${qo("m")}><small>Moisture</small><b>${r.run?kf(r.moist):"–"} %</b><small>${rg(sp.m,1)}</small></div><div${qo("shade")}><small>Color</small><b>${QNOW.shade?"ON SHADE":"OFF SHADE"}</b><small>spec ${shn}</small></div><div><small>Reel speed</small><b>${Math.round(r.speed)}</b><small>fpm</small></div>`;if(qv._h!==qh){qv._h=qh;qv.innerHTML=qh;}
-      drawTrend6($("qcsTr"),[["moist","","#4fd18b",0,14],["bw","","#ffb02e",(g.bw-3),(g.bw+3)],["off","","#ff7a8a",0,1]]);kuiCd($("qcsCd"),r);
+      kuiCd($("qcsCd"),r);
       const D=[["Wrinkles",F.wrinkles],["Crush marks",F.crush],["Felt stripes",F.stripes],["CD streaks",F.cd],["Weight swings",F.bw],["Wet sheet",F.wet],["Dry sheet",F.dry]];
-      const h=D.map(([n,v])=>{const c=v>0.01?Math.round(4+v*80):0;return `<div class="${c?"hit":""}"><small>${n}</small><b>${c}</b><small>/ reel</small></div>`;}).join("");const dd=$("qcsDef");if(dd._h!==h){dd._h=h;dd.innerHTML=h;}}}}
+      const h=D.map(([n,v])=>{const c=v>0.01?Math.round(4+v*80):0;return `<div class="${c?"hit":""}"><small>${n}</small><b>${c}</b><small>/ reel</small></div>`;}).join("");const dd=$("qcsDef");if(dd._h!==h){dd._h=h;dd.innerHTML=h;}qcsRefresh();}
+    else if(a==="PLAN")planRefresh();
+    trDraw();}}
 // CD moisture profile: a bar per zone up from 3 %, the ±1.5 % spec band round the reel average, the 8 % target
 function kuiCd(cv,r){if(!cv)return;const x=cv.getContext("2d"),W=cv.width,H=cv.height,z=r.zones,lo=3,hi=11,Y=v=>H-18-clamp((v-lo)/(hi-lo),0,1)*(H-30);
   x.fillStyle="#0f1b2d";x.fillRect(0,0,W,H);

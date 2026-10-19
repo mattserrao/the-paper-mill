@@ -60,20 +60,20 @@ with sync_playwright() as pw:
 
     # ---- the screen ----
     pg.evaluate("()=>__PM.setRunning(true)")
-    click('.v2tabs button[data-tab="ctl"]'); pg.wait_for_timeout(500)
-    ok("Process flow button in Settings", vis("#pfBtn"))
-    click("#pfBtn"); pg.wait_for_timeout(1500)
+    click('.v2tabs button[data-tab="stats"]'); pg.wait_for_timeout(500)
+    ok("Process flow button in Report > Control room (v6.7)", vis("#ctlRoom [data-cr=pf]"))
+    click("#ctlRoom [data-cr=pf]"); pg.wait_for_timeout(1500)
     ok("screen opens", vis("#pfOv"))
     v = pg.evaluate("()=>[__PM.running,__PM.G3.simRate(),__PM.C.simSpeed,!!__PM.S.cards.open]"); ok("game keeps running at the player's speed while open", (v[0] or v[3]) and v[1] == v[2], str(v))   # (an event card may hold the game, as it always does)
     ok("diagram drawn with 7 areas", pg.evaluate("()=>document.querySelectorAll('#pfMap [data-pf^=\"node:\"]').length") == 7)
     ok("inputs list has 8 inputs (freight in and out)", pg.evaluate("()=>document.querySelectorAll('#pfIn [data-pf^=\"cat:\"]').length") == 8)
     if shot: pg.screenshot(path=f"{shot}-desktop.png")
-    nodata = "()=>[...document.querySelectorAll('#pfPanel canvas[data-ch]')].length"
+    nodata = "()=>[...document.querySelectorAll('#pfPanel canvas[data-ch]')].length+document.querySelectorAll('#pfPanel .wfr').length"   # (v6.7: Profit opens on its waterfall)
     for sel in ['[data-pf="cat:energy"]', '[data-pf="node:pm"]', '#pfMap [data-pf^="drop:"]', '[data-pf="out:paper"]', '[data-pf="out:waste"]', '[data-pf="out:profit"]', '[data-pf="cat:maint"]']:
         pg.evaluate("()=>__PM.G3.pfSel(null)")
         click(sel); pg.wait_for_timeout(400)
         ok(f"tap {sel} opens the panel with charts", vis("#pfPanel") and pg.evaluate(nodata) >= 1, str(pg.evaluate(nodata)))
-        click('#pfPanel [data-ptab]:not([data-ptab="tr"])'); pg.wait_for_timeout(300)
+        click('#pfPanel [data-ptab]:not([aria-selected="true"]):not([data-ptab="tr"])' if sel!='[data-pf="out:profit"]' else '#pfPanel [data-ptab="bk"]'); pg.wait_for_timeout(300)
         ok(f"  {sel}: second tab shows", pg.evaluate("()=>document.querySelectorAll('#pfPanel .pfpr div, #pfPanel canvas, #pfPanel #pfCtl .card').length") >= 2)
     for a in ["yard", "pulper", "stock", "pm", "winder", "ship", "site"]:
         for tab in ["tr", "co", "uq"]:

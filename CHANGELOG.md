@@ -1,6 +1,50 @@
 # Changelog
 
 
+## v6.7.0-t1 (2026-10-19): control room (test)
+Built on test/v6.7-control. New code: `src/js/11d-tags.js` (the tag list and its history), `src/js/50f-control.js` (the
+trend pane, relationship analysis, the QCS, PLAN and WATER screens), `src/js/50h-pflow-more.js` (the process flow
+additions) and `src/js/51i-control-room.js` (the Report tab strip). All read-only: the sim and its dice are unchanged
+(determinism matches v6.6.0 to the dollar).
+- **Report → Control room.** One strip at the top of the Report tab: Process flow, DCS, Planning, Quality, Water, Trends
+  (and Second screen on desktop). The DCS still opens from the operator consoles. The Process flow button left Settings
+  (the area-controls note there now points to the control room). Zen keeps the process flow only.
+- **One row of DCS screens:** SPOT, WET, DET, UTIL, WATER, QCS, PLAN, TREND (the DCS / QCS toggle is gone; QCS is a
+  screen). Only the screens with controls (SPOT, WET, DET) slow the game to 1 min/s; the read-only ones run at the
+  player's speed.
+- **Split-screen trends.** The trend sits beside the picture on desktop (Trend ◂ hides it) and switches with it on a
+  phone (Picture / Trend). Tap any reading on a picture to add it as a pen, or pick from all 73 tags; up to six pens,
+  each on its own scale, with its range and the value under the cursor. Ranges 1 h, 6 h, 24 h, 48 h (a reading every
+  2 game minutes, kept 48 h, outside the save) and 7 d / Run (the hourly history, for tags that have a column there).
+  TREND is the same pane full width.
+- **Relationship analysis.** X–Y: any two tags against each other, with r, the fitted line, and the delay at which they
+  line up best (up to an hour either way, 12 h on the long ranges). Moves with: every other tag ranked by how strongly
+  it rises or falls with the one picked, with its delay ("fan pump flow leads paper made by about 4 min"), and
+  + trend to put it on the trend. Same-reading-in-other-units pairs are left out.
+- **QCS (quality):** the spec check and readings as before, plus beater and on-spec totals, the spec sheet for all four
+  grades, an off-spec log (each spell: when, how long, grade, why, tons to the beater; kept in the save, last 40) and the
+  grade changes with their transition tons (last 20).
+- **PLAN (planning, read-only):** the production plan (campaign on the machine, tons and hours left, the next grades on
+  the wheel), the order book (on-time delivery, every open order with its status, recently closed), inventory (the
+  warehouse by grade against what open orders need, surplus or short; bale yard days of supply, bale quality, stock
+  chest hours, paper at the winder, beater bay) and trucks (inbound and outbound rates, queues, every door and its job).
+- **WATER:** a new picture of the water circuit (intake, fresh water, showers and seals, machine, dryer stack, white
+  water chest, stock prep dilution, clarifier, outfall, landfill) with its alarms, and the run's water balance in
+  gallons. Monitoring only.
+- **Units:** water and stock flows in gpm, chest and tank volumes in gallons, water use in gal/ton (UTIL, SPOT, WATER,
+  the spider valve panel). SPOT shows the stock chest, machine chest and white water chest volumes.
+- **Process flow:** each area shows its throughput against its capacity, with the bottleneck marked; areas with an
+  upset flash red; $, $/ton and Tons views (tons: bales in to paper out, waste, the broke loop and fresh water in
+  gallons); each input's cost per ton against the 7 days before (▲▼ chips, yesterday on hover); an OEE strip
+  (availability × performance × quality); Replay: drag or play the range hour by hour; Profit opens on "Where it went",
+  a waterfall from profit at full speed and on spec down through breaks, outages, downtime, held-back time, speed,
+  off-spec, repairs, idle energy, chargebacks and spot sales to the real profit; each area links to its DCS screens.
+  History rows gain bales in, fresh water, potential tons, chargebacks, spot discount and idle energy (HIST_V 5).
+- Help glossary: control room, trends, moves with, OEE, gallons and gpm.
+- `tools/controlcheck.py` (new). Updated for the new screen row and the control room: `knobcheck.py`,
+  `popoutcheck.py`, `pflowcheck.py`. Smoke, determinism, knobs, pop-out, process flow, DCS, quality, save, water,
+  orders, winder, dryer, tells and help checks pass.
+
 ## v6.6.0 (2026-10-19): orders and bales
 Built on test/v6.6-orders (as 6.6.0-t1), merged into main. Three realism gaps from the business and process review. All three run in Season, Survival
 and Free Play; Zen keeps the old behaviour. New code: `src/js/05b-orders.js` (model) and `src/js/51h-orders-ui.js` (panel).

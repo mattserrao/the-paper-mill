@@ -1,0 +1,87 @@
+/* ---- v6.7 the tag list: every reading the control room can show, with its area, units and history ----
+   One registry for the DCS pictures' trends, the Trends screen, relationship analysis and the planning, water and quality
+   screens. Each tag: [id, name, area, unit, reader(r) -> number or null, long-history column (11c HA, hourly) or ""].
+   r is knobRead() for the sample (one read per sample). History: a reading every 2 sim minutes for 48 h in ring buffers,
+   outside S (saves don't grow; a new game or a loaded save starts it fresh), read-only on the sim. Longer ranges use the
+   hourly history (S.hist) for tags that have a column there. Units: water and stock flows in US gallons a minute,
+   volumes in gallons (v6.7: they were m³/h, L/s and m³). */
+const GPM=m3h=>m3h*4.40287,GAL=m3=>m3*264.172,LS_GPM=ls=>ls*15.8503;
+const WAT_GAL=()=>GAL(WAT.cap);                       // the white water chest, full
+const CHEST_GAL=()=>GAL(P.tankCap/(WAT.cs/100));      // the stock storage chest, full (its tons of fiber at storage consistency)
+const MCHEST_GAL=60000;                                // the machine chest
+const fmtGal=g=>{const a=Math.abs(g),s=g<0?"−":"";return s+(a>=1e6?(a/1e6).toFixed(2)+"M gal":a>=1e4?Math.round(a/1e3)+"k gal":Math.round(a).toLocaleString()+" gal");};
+const fmtGpm=g=>(g>=1e4?(g/1e3).toFixed(1)+"k":Math.round(g).toLocaleString())+" gpm";
+const TAG_INT=new Set(["orders","trucks","rolls","t","A","kW","fpm","mL CSF"]);
+const TAG_AREA={SPOT:"Stock prep",WET:"Wet end",DET:"Dry end",UTIL:"Utilities",WATER:"Water",QCS:"Quality",PLAN:"Planning & yard"};
+const _R=()=>S.rates||{};
+const wr=()=>S.wat&&S.wat.r;
+const TAGS=[
+  // stock prep
+  ["feed","Bales fed","SPOT","t/h",()=>_R().feed,"a.feed"],["fiber","Fiber out of the pulper","SPOT","t/h",()=>_R().fiberIn,"a.fiber"],
+  ["yield","Pulper yield","SPOT","%",()=>P.yieldF*((S.M&&S.M.yieldMul)||1)*100,"a.yield"],["cp","Pulper consistency","SPOT","%",r=>r.cp,""],
+  ["amps","Pulper rotor","SPOT","A",r=>r.amps,"a.amps"],["pulpLvl","Pulper level","SPOT","%",r=>r.pulpLvl,""],
+  ["rejt","Rejects","SPOT","t/h",()=>(_R().feed||0)*(1-P.yieldF*((S.M&&S.M.yieldMul)||1)),""],
+  ["hddp","HD cleaner ΔP","SPOT","kPa",()=>purgeDp("hd")+(active("hdblow")?40:0),""],["lcdp","LC cleaners ΔP","SPOT","kPa",()=>purgeDp("lc")+(active("lcplug")?50:0),""],
+  ["lwdp","LW cleaners ΔP","SPOT","kPa",()=>purgeDp("lw")+(active("lwplug")?45:0),""],
+  ["fsld","Fine screen load","SPOT","%",()=>(_R().fiberIn||0)/Math.max(1,P.screenMax)*100,""],
+  ["chest","Stock chest level","SPOT","%",()=>S.tank/P.tankCap*100,"a.chest"],["chestg","Stock chest volume","SPOT","gal",()=>S.tank/(WAT.cs/100)*264.172,""],
+  ["refkw","Refiner load","SPOT","kW",r=>r.run?r.refkw:null,"a.refkw"],["gap","Refiner plate gap","SPOT","mm",r=>r.gap,""],["csf","Freeness","SPOT","mL CSF",r=>r.csf,"a.csf"],
+  ["mcLvl","Machine chest level","SPOT","%",r=>r.mcLvl,""],["mcg","Machine chest volume","SPOT","gal",r=>MCHEST_GAL*r.mcLvl/100,""],
+  ["mcCons","Machine chest consistency","SPOT","%",r=>r.mcCons,""],["agit","Machine chest agitator","SPOT","%",r=>r.agit,""],
+  ["fan","Fan pump flow","SPOT","gpm",()=>S.pm==="run"?LS_GPM(S.pmSpeed*1.9):0,""],
+  // wet end
+  ["wsp","Wire speed","WET","fpm",()=>S.pmSpeed/DCS_DRAW(),""],["vac","Forming vacuum","WET","kPa",r=>r.vac,""],["couchSol","Couch solids","WET","%",r=>r.run?r.couchSol:null,""],
+  ["pl","Press load","WET","kN/m",r=>r.pl,""],["pressSol","Press solids","WET","%",r=>r.run?r.pressSol:null,""],["edge","Fabric edge","WET","mm",r=>r.edge,""],
+  ["gtrav","Guide travel used","WET","%",r=>r.gm?Math.min(1,r.gtrav)*100:null,""],["osc","Felt shower oscillator","WET","%",r=>r.osc,""],
+  ["wwl","White water silo level","WET","%",()=>clamp(68+(S.pm==="run"?0:14)+wob2(0.02,7)*3,0,100),""],
+  ["hum","Machine room humidity","WET","%",()=>clamp(62+(motStatus("fog")!=="run"||active("fogfan")?24:0)+wob2(0.01,8)*3,0,100),""],
+  // dry end
+  ["speed","Reel speed","DET","fpm",r=>r.speed,"a.speed"],["prod","Paper made","DET","t/h",()=>_R().prod,"a.prod"],["st1","1st section steam","DET","kPa",r=>r.st1,""],
+  ["st3","3rd section steam","DET","kPa",r=>r.run?r.st3:null,""],["steam","Dryer steam flow","DET","t/h",r=>r.steam>0.5?r.steam:null,"a.steam"],
+  ["dryl","Dryer load","DET","% of limit",()=>S.dry&&S.pm==="run"?S.dry.load*100:null,"a.dryl"],["moist","Reel moisture","DET","%",r=>r.run?r.moist:null,"a.moist"],
+  ["bw","Basis weight","DET","lb/1000 ft²",r=>r.run?r.bw:null,"a.bw"],["tension","Draw tension","DET","kN/m",r=>r.run?r.tension:null,""],["draw","Open draw","DET","%",r=>r.draw,""],
+  ["reel","Paper waiting at the winder","DET","t",()=>S.winderBuf+S.reel,"a.reel"],["cut","Winder","DET","t/h",()=>_R().cut,"a.cut"],["conv","Rolls on the conveyor","DET","rolls",()=>S.conv||0,""],
+  // utilities
+  ["boiler","Steam header","UTIL","% of full",r=>r.boiler*100,""],["vent","Steam vented","UTIL","t/h",()=>S.dry&&S.dry.vent>0.05?S.dry.vent:0,""],
+  ["tss","Effluent TSS","UTIL","mg/L",()=>tssNow(),""],["energyt","Energy","UTIL","$/t",()=>Math.max(0,energyCost()-pfChemT()),"a.energyt"],
+  // water (v6.7 in gallons)
+  ["fresh","Fresh water","WATER","gpm",()=>wr()?GPM(wr().fresh):null,""],["evap","Dryer evaporation","WATER","gpm",()=>wr()?GPM(wr().evap):null,""],
+  ["outfall","Outfall","WATER","gpm",()=>wr()?GPM(wr().out):null,""],["wwover","White water to sewer","WATER","gpm",()=>wr()?GPM(wr().over):null,""],
+  ["makeup","Makeup water","WATER","gpm",()=>wr()?GPM(wr().make):null,""],["shower","Machine showers","WATER","gpm",()=>GPM((wr()?wr().p:_R().prod||0)*WAT.shower),""],
+  ["wcl","White water chest level","WATER","%",()=>S.wat?S.wat.L/WAT.cap*100:null,""],["wcg","White water chest volume","WATER","gal",()=>S.wat?GAL(S.wat.L):null,""],
+  ["wuse","Fresh water per ton","WATER","gal/ton",()=>{const W=wr();return W&&W.p>1?GAL(W.fresh/W.p):null;},""],
+  // quality
+  ["off","Reel to the beater","QCS","%",r=>r.run?r.off*100:null,""],["cdsp","CD moisture spread","QCS","%",r=>r.run?Math.max(...r.zones)-Math.min(...r.zones):null,""],
+  ["bank","Beater bay waiting","QCS","t",()=>S.q?S.q.bank||0:0,""],
+  // planning and the yard
+  ["yard","Bale yard","PLAN","t",()=>S.yard,"a.yard"],["unload","Unloading","PLAN","t/h",()=>_R().unload,"a.unload"],["occp","OCC price","PLAN","$/t",()=>P.occPrice,"a.occp"],
+  ["balem","Bale moisture","PLAN","%",()=>S.bq&&!S.zen?S.bq.m*100:null,"a.balem"],["stk","Stickies at the machine","PLAN","%",()=>S.bq&&!S.zen?S.bq.ck*100:null,"a.stk"],
+  ["inq","Trucks waiting to unload","PLAN","trucks",()=>S.inQ.length,""],["fg","Warehouse","PLAN","% full",()=>S.fg/P.fgCap*100,"a.fgp"],
+  ["load","Loading","PLAN","rolls/h",()=>_R().load,"a.load"],["outq","Trucks waiting to load","PLAN","trucks",()=>S.outQ.length,""],
+  ["openo","Open orders","PLAN","orders",()=>S.ord&&!S.zen?S.ord.list.filter(o=>o.st==="open").length:null,"a.openo"],
+  ["lateo","Late orders","PLAN","orders",()=>S.ord&&!S.zen?S.ord.list.filter(o=>o.st==="open"&&S.t>o.due+ORD.grace).length:null,"a.lateo"],
+  ["price","Paper price (grade on the machine)","PLAN","$/t",()=>priceOf(C.grade),"a.price"],["profit","Profit rate","PLAN","$/day",()=>S.profitRate||0,""]];
+const TAGI=Object.fromEntries(TAGS.map((t,i)=>[t[0],i]));
+const tagName=id=>{const t=TAGS[TAGI[id]];return t?t[1]:id;};
+const tagUnit=id=>{const t=TAGS[TAGI[id]];return t?t[3]:"";};
+// the ring: 48 h at 2 sim minutes
+const TG={S:null,n:1440,i:0,len:0,k:-1,t:new Float64Array(1440),v:TAGS.map(()=>new Float32Array(1440))};
+function tagTick(){if(S.zen||(typeof BF!=="undefined"&&BF.real))return;if(TG.S!==S){TG.S=S;TG.i=0;TG.len=0;TG.k=-1;}
+  const k=Math.floor(S.t/2);if(k===TG.k)return;TG.k=k;const r=knobRead(),i=TG.i;TG.t[i]=S.t;
+  for(let j=0;j<TAGS.length;j++){let v;try{v=TAGS[j][4](r);}catch(e){v=null;}TG.v[j][i]=v==null||v!==v?NaN:v;}
+  TG.i=(i+1)%TG.n;TG.len=Math.min(TG.n,TG.len+1);}
+// the latest reading (from the ring; live if nothing recorded yet)
+function tagNow(id){const j=TAGI[id];if(j==null)return null;if(TG.len&&TG.S===S){const v=TG.v[j][(TG.i-1+TG.n)%TG.n];return v!==v?null:v;}
+  try{const v=TAGS[j][4](knobRead());return v==null||v!==v?null:v;}catch(e){return null;}}
+// a tag's points in [t0, t1] (sim minutes): 2-minute readings where the ring has them, hourly history before that
+function tagSeries(id,t0,t1){const j=TAGI[id],out={t:[],v:[],hourly:false};if(j==null)return out;
+  const ringT0=TG.len&&TG.S===S?TG.t[(TG.i-TG.len+TG.n)%TG.n]:Infinity,col=TAGS[j][5];
+  if(t0<ringT0&&col&&S.hist&&HCI[col]!=null){const c=HCI[col];for(const r of S.hist.rows){const tm=r[0]*60+30;if(tm<t0||tm>t1||tm>=ringT0)continue;const v=r[c];if(v!=null&&v===v){out.t.push(tm);out.v.push(v);out.hourly=true;}}}
+  if(TG.S===S)for(let n=0;n<TG.len;n++){const i=(TG.i-TG.len+n+TG.n)%TG.n,tm=TG.t[i];if(tm<t0||tm>t1)continue;const v=TG.v[j][i];if(v===v){out.t.push(tm);out.v.push(v);}}
+  return out;}
+const tagHasLong=id=>{const t=TAGS[TAGI[id]];return !!(t&&t[5]);};
+// format a reading with its unit
+function tagFmt(id,v){if(v==null||v!==v)return "–";const u=tagUnit(id);
+  if(u==="gal")return fmtGal(v);if(u==="gpm")return fmtGpm(v);if(u==="$/day")return money(v)+"/day";if(u==="$/t")return money(v)+"/t";
+  if(TAG_INT.has(u))return Math.round(v).toLocaleString()+" "+u;
+  const a=Math.abs(v),s=a>=1000?Math.round(v).toLocaleString():a>=100?Math.round(v)+"":a>=10?v.toFixed(1):v.toFixed(2);return s+(u?" "+u:"");}

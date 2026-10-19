@@ -76,8 +76,8 @@ const ordLateD=o=>Math.max(0,(S.t-o.due-ORD.grace)/1440);
 // a loaded truck leaves: the invoice, the chargeback, the order's progress
 function ordDepart(tr){const O=ordState(),K=O.k,rw=C.rollW.v,tons=tr.load*rw,pr=priceOf(tr.g);let v;
   if(tr.load<=1e-9)return;
-  if(tr.spot){v=tons*(pr-ORD.spot);K.spot+=tons;K.spotV+=tons*ORD.spot;}
-  else{const o=ordGet(tr.oid),ld=o?ordLateD(o):0,chg=ld>0?Math.min(ORD.lateCap,ORD.late*Math.ceil(ld)):0;v=tons*(pr-chg);K.chg+=tons*chg;
+  if(tr.spot){v=tons*(pr-ORD.spot);K.spot+=tons;K.spotV+=tons*ORD.spot;pfW("spotd",tons*ORD.spot);}
+  else{const o=ordGet(tr.oid),ld=o?ordLateD(o):0,chg=ld>0?Math.min(ORD.lateCap,ORD.late*Math.ceil(ld)):0;v=tons*(pr-chg);K.chg+=tons*chg;if(chg)pfW("chg",tons*chg);
     if(ld>0)K.lateT+=tons;else K.onT+=tons;
     if(o){o.sh+=tr.load;o.ld-=Math.max(0,tr.want-tr.load);if(o.st==="open"&&o.sh>=o.r-1e-6){o.st="done";o.done=Math.round(S.t);K.done++;if(!(ld>0))K.doneOn++;
         log(`Order #${o.id} for ${ordCust(o)} delivered: ${o.r} rolls of ${o.g}${ld>0?`, ${Math.ceil(ld)} day${Math.ceil(ld)===1?"":"s"} late (−$${chg}/t)`:" on time"}`,ld>0?"warn":"ok");}}}
@@ -110,7 +110,7 @@ function ordDocks(dt,lcap){let loaded=0;
 function baseLoadTick(dt){if(S.zen||S.pm==="run")return;const g=GRADES[C.grade],tph=P.K*g.sp*g.bw,en=Math.max(0,energyCost()-pfChemT());if(!(en>0&&tph>0))return;
   const B=outOn()?BASEL.out:S.pm==="break"?BASEL.brk:BASEL.stop,h=dt/60,pw=en*(1-PF_STEAMSH)*tph*h,st=en*PF_STEAMSH*tph*h*B.steam;let v=st;
   for(const a in PF_POWER){const x=pw*PF_POWER[a]*B[a];v+=x;pfAdd("power",a,x);}if(st>0)pfAdd("steam","pm",st);
-  if(v>0){spend(v,"energy");S.tot.idleE=(S.tot.idleE||0)+v;}}
+  if(v>0){spend(v,"energy");S.tot.idleE=(S.tot.idleE||0)+v;pfW("idle",v);}}
 
 // ---------- bale grading ----------
 function bqState(){if(!S.bq)S.bq={m:BALE.std,k:0.1,ck:0.1,rej:0,rejT:0,ded:0,A:0,B:0,C:0,day:-1,dRej:0};return S.bq;}

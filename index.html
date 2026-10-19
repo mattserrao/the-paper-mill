@@ -1292,6 +1292,73 @@ body.pmpop .popmain[data-v="dcs"] #dcsOv .dcs{max-width:1180px;margin:0 auto}
 .ordr span{display:flex;flex-direction:column;min-width:0}.ordr b{font-size:13px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.ordr small{font-size:12px;color:var(--muted)}
 .ordr em{font-style:normal;font-size:12px;color:var(--muted);white-space:nowrap}.ordr em.ok{color:var(--ok)}.ordr em.bad{color:var(--bad)}
 .ordr.late{box-shadow:inset 3px 0 0 var(--bad)}.ordr.risk{box-shadow:inset 3px 0 0 var(--warn)}
+/* v6.7 control room: the DCS screens row, the trend pane beside the picture, the quality / planning / water screens */
+.dcsst{flex-wrap:wrap}
+.dcsmain{display:flex;flex-direction:column;gap:10px;min-width:0}
+.dcstrp{display:none;flex-direction:column;gap:8px;min-width:0}
+.dcs.split{width:min(1480px,100%)}
+.dcs.split .dcsb{display:grid;grid-template-columns:minmax(0,1fr) minmax(340px,.82fr);align-items:start}
+.dcs.split .dcstrp{display:flex;position:sticky;top:0;background:#16233a;z-index:1}
+.dcs.trendonly{width:min(1100px,100%)}.dcs.trendonly .dcsmain{display:none}.dcs.trendonly .dcstrp{display:flex}
+.dcsview{display:none}
+@media (max-width:1000px){.dcsview{display:inline-flex}.dcstrt{display:none}.dcs.v-trend .dcsmain{display:none}.dcs.v-trend .dcstrp{display:flex}}
+.dcsview[hidden],.dcstrt[hidden]{display:none}
+.mtg.trk{cursor:pointer}.mtg.trk:hover tspan,.mtg.trk:focus tspan{fill:#7fb2ff;text-decoration:underline}
+.trh{display:flex;flex-wrap:wrap;gap:6px;justify-content:space-between}.trh .seg button{padding:4px 8px;font-size:12px}
+.trcv{background:#0f1b2d;border:1px solid #2c3e5c;border-radius:8px;overflow:hidden}.trcv canvas{width:100%;display:block;touch-action:none}
+.trcur{color:#8ea4c4;font-size:11px;font-variant-numeric:tabular-nums}
+.trpens{display:flex;flex-direction:column;gap:4px}
+.trpen{display:grid;grid-template-columns:10px minmax(0,1fr) auto auto auto;gap:6px 8px;align-items:center;background:#1c2b45;border:1px solid #2c3e5c;border-radius:8px;padding:5px 8px}
+.trpen i{width:10px;height:10px;border-radius:2px}.trpen span{display:flex;flex-direction:column;min-width:0}.trpen span small{color:#8ea4c4;font-size:10.5px}
+.trpen b{font-variant-numeric:tabular-nums;color:#fff;white-space:nowrap}.trpen em{font-style:normal;color:#8ea4c4;font-size:10.5px;white-space:nowrap;font-variant-numeric:tabular-nums}
+.trpen button{background:#22324f;color:#c3d3ea;border:1px solid #33476a;border-radius:6px;padding:1px 7px}
+@media (max-width:560px){.trpen{grid-template-columns:10px minmax(0,1fr) auto auto}.trpen em{display:none}}
+.tradd{display:flex;gap:8px;align-items:center;flex-wrap:wrap}.tradd small{color:#8ea4c4;font-size:11px}
+.dcs select{background:#22324f;color:#dbe6f6;border:1px solid #33476a;border-radius:6px;padding:5px 6px;max-width:100%;font:inherit}
+.trsel{display:flex;gap:8px;flex-wrap:wrap}.trsel label{display:flex;gap:6px;align-items:center;color:#8ea4c4;font-size:12px;min-width:0}
+.trstat{margin:0;font-size:12.5px;color:#dbe6f6}
+.trrel{display:flex;flex-direction:column;gap:4px}
+.trrr{display:grid;grid-template-columns:minmax(0,1fr) 70px auto auto;gap:4px 8px;align-items:center;background:#1c2b45;border:1px solid #2c3e5c;border-radius:8px;padding:6px 8px}
+.trrr span{display:flex;flex-direction:column;min-width:0}.trrr small{color:#8ea4c4;font-size:11px}.trrr i{height:6px;background:#0f1b2d;border-radius:3px;overflow:hidden;display:block}.trrr s{display:block;height:100%}
+.trrr em{font-style:normal;font-variant-numeric:tabular-nums}.trrr button{background:#22324f;color:#c3d3ea;border:1px solid #33476a;border-radius:6px;padding:2px 8px;font-size:11.5px;white-space:nowrap}
+.qtab{overflow-x:auto}.qtab table,.plsec table{width:100%;border-collapse:collapse;font-size:12px;font-variant-numeric:tabular-nums}
+.qtab th,.plsec th{text-align:left;color:#8ea4c4;font-weight:700;font-size:11px;padding:4px 6px;border-bottom:1px solid #2c3e5c}
+.qtab td,.plsec td{padding:5px 6px;border-bottom:1px solid #22324f;vertical-align:top}
+.qtab tr.cur td,.plsec tr.cur td{background:#1d3550}.qtab tr.live td{color:#ff8b7f}.plsec tr.late td{background:#2a1420}
+.plsec td.bad,.plsec .bad{color:#ff8b7f}.plsec td.ok,.plsec .ok{color:#4fd18b}.plsec small{color:#8ea4c4}
+.plan{display:flex;flex-direction:column;gap:12px}.plsec{display:flex;flex-direction:column;gap:6px;background:#0f1b2d;border:1px solid #2c3e5c;border-radius:8px;padding:8px 10px;overflow-x:auto}
+.plcols{display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:10px}
+.wbal{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:8px}.wbal .dcsfield{grid-column:1 / -1}
+.wcol{background:#1c2b45;border:1px solid #2c3e5c;border-radius:8px;padding:6px 10px;display:flex;flex-direction:column;gap:3px}
+.wcol div{display:flex;justify-content:space-between;gap:8px;font-size:12px}.wcol em{font-style:normal;font-variant-numeric:tabular-nums}.wcol .tot{border-top:1px solid #2c3e5c;padding-top:3px;font-weight:700}
+/* v6.7 Report > Control room */
+.ctlroom{background:var(--panel);border:1px solid var(--line);border-radius:14px;padding:10px 12px;margin-bottom:10px;display:flex;flex-direction:column;gap:8px}
+.crh{display:flex;flex-direction:column;gap:2px}.crh b{font-size:14px}.crh small{color:var(--muted);font-size:12px}
+.crg{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:6px}
+.crg button{display:flex;flex-direction:column;align-items:flex-start;gap:2px;text-align:left;padding:9px 10px;border-radius:10px;border:1px solid #2c3e5c;background:#16233a;color:#dbe6f6;cursor:pointer;min-width:0}
+.crg button b{font-size:13.5px}.crg button small{font-size:11.5px;color:#8ea4c4}.crg button:hover{border-color:#4fd18b}.crg button:disabled{opacity:.45;cursor:default}
+.crg button[hidden]{display:none}
+/* v6.7 process flow: views, OEE, replay, capacity, upsets, compare, waterfall, DCS links */
+.pfmid{display:flex;flex-direction:column;gap:6px;min-width:0}
+.pfoeeb{display:flex;flex-wrap:wrap;align-items:baseline;gap:4px 10px;background:#0f1b2d;border:1px solid #2c3e5c;border-radius:8px;padding:6px 10px;font-size:12px;color:#c3d3ea}
+.pfoeeb b{font-size:14px;color:#fff}.pfoeeb em{font-style:normal;color:#fff;font-weight:700;font-variant-numeric:tabular-nums}.pfoeeb i{font-style:normal;color:#8ea4c4}.pfoeeb small{color:#8ea4c4;margin-left:auto}
+.pfrep{display:flex;align-items:center;gap:8px;flex-wrap:wrap;font-size:12px;color:#c3d3ea}.pfrep input{flex:1;min-width:140px}
+.pfrb{background:#22324f;color:#dbe6f6;border:1px solid #33476a;border-radius:6px;padding:4px 10px;font-weight:700}.pfrb[hidden]{display:none}
+.pfcapt{fill:#22324f}.pfbn{font:800 8.5px var(--f-body);fill:#ffb02e;letter-spacing:.06em}
+@keyframes pfup{0%,100%{stroke:#ff6b5e;stroke-width:3}50%{stroke:#ff6b5e;stroke-width:1;stroke-opacity:.35}}
+.pfnode.pfup{animation:pfup 1.1s ease-in-out infinite}
+@media (prefers-reduced-motion:reduce){.pfnode.pfup{animation:none;stroke:#ff6b5e;stroke-width:3}}
+.pfchip{font-style:normal;font-size:10.5px;font-weight:800;margin-left:4px;padding:0 4px;border-radius:4px}.pfchip.bad{color:#ffd0cb;background:#7a1f1a}.pfchip.ok{color:#c9f5dc;background:#1d5a3a}
+.pfcmp{margin:4px 0 0;color:#8ea4c4;font-size:11px}
+.pfbandt{fill:rgba(192,138,74,.45)}.pfwater{fill:none;stroke:#3fc6d6;stroke-width:2;stroke-dasharray:5 4}.pfwt{fill:#3fc6d6}
+.wf{display:flex;flex-direction:column;gap:3px}.wfr{display:grid;grid-template-columns:minmax(0,1.3fr) minmax(80px,1fr) auto;gap:8px;align-items:center;font-size:12px}
+.wfr i{position:relative;height:12px;background:#0f1b2d;border-radius:3px;display:block}.wfr s{position:absolute;top:0;bottom:0;border-radius:3px}
+.wfr s.pot{background:#7fb2ff}.wfr s.loss{background:#ff7a8a}.wfr s.gain{background:#4fd18b}.wfr s.act{background:#4fd18b}
+.wfr.pot,.wfr.act{font-weight:800}.wfr b{font-variant-numeric:tabular-nums;white-space:nowrap}.wfr.loss b{color:#ff8b7f}.wfr.gain b{color:#4fd18b}
+.pfdcs{background:#22324f;color:#c3d3ea;border:1px solid #33476a;border-radius:6px;padding:3px 8px;font-weight:700;font-size:11.5px;margin-left:6px}
+.pfview button{padding:5px 10px}
+@media (max-width:760px){.pfmid{width:100%;align-items:center}.pfoeeb,.pfrep{width:100%}}
+.wfr s.act.neg{background:#ff6b5e}.wfr.act.neg b{color:#ff8b7f}
 </style>
 </head>
 <body class="app">
@@ -1414,7 +1481,7 @@ body.pmpop .popmain[data-v="dcs"] #dcsOv .dcs{max-width:1180px;margin:0 auto}
 <div class="row" data-key="outRate"><label for="s-outRate">Outbound truck arrivals</label><span class="val"></span><div class="ctl"><input id="s-outRate" max="10" min="0" step="0.1" type="range"/><button aria-pressed="true" class="auto">AUTO</button></div></div>
 <div class="read" id="r-ship">–</div></div>
 </section></details></div>
-<div class="v2pane" data-pane="stats"><div class="rep" id="rep"></div><details class="replive" id="repOrd"><summary><b>Orders &amp; bales</b><small>Customer orders · spot sales · bale yard</small></summary><div id="ordBox"></div></details><details class="replive" id="repLive"><summary><b>Live mill</b><small>Flow &amp; bottleneck · right now · last 24 h</small></summary><div class="v2sub">Flow &amp; bottleneck</div><div class="flowbox" id="v2flow"></div><div class="v2sub">Right now</div><section aria-label="Key figures" class="kpis">
+<div class="v2pane" data-pane="stats"><section class="ctlroom" id="ctlRoom" aria-label="Control room"></section><div class="rep" id="rep"></div><details class="replive" id="repOrd"><summary><b>Orders &amp; bales</b><small>Customer orders · spot sales · bale yard</small></summary><div id="ordBox"></div></details><details class="replive" id="repLive"><summary><b>Live mill</b><small>Flow &amp; bottleneck · right now · last 24 h</small></summary><div class="v2sub">Flow &amp; bottleneck</div><div class="flowbox" id="v2flow"></div><div class="v2sub">Right now</div><section aria-label="Key figures" class="kpis">
 <div class="kpi money" id="k-cash-box"><div class="k">Cash</div><div class="v" id="k-cash">–</div><div class="s" id="k-cash-s"> </div></div>
 <div class="kpi"><div class="k">Profit</div><div class="v" id="k-profit">–</div><div class="s" id="k-profit-s"> </div></div>
 <div class="kpi"><div class="k">Sim clock</div><div class="v" id="k-clock">Day 1 00:00</div><div class="s" id="k-clock-s"> </div></div>
@@ -1474,7 +1541,7 @@ body.pmpop .popmain[data-v="dcs"] #dcsOv .dcs{max-width:1180px;margin:0 auto}
 <div class="btns"><button class="primary" id="no3d-retry">Try again</button></div></div></div>
 
 <script type="module">
-const APP_VER="v6.6.0";   // shown in the menu and sent with leaderboard scores (max 12 characters)
+const APP_VER="v6.7.0-t1";   // shown in the menu and sent with leaderboard scores (max 12 characters)
 // TEST BUILDS ONLY (off in releases): turbo speeds 240/480/960 sim min/s for fast playtests. Above 120, crews and maintenance start jobs
 // without waiting for the 3D walk (as with the 3D view off) and outages keep the speed. Set false for a release.
 const TURBO=false,TURBO_FAST=s=>TURBO&&s>120;
@@ -3251,8 +3318,8 @@ const ordLateD=o=>Math.max(0,(S.t-o.due-ORD.grace)/1440);
 // a loaded truck leaves: the invoice, the chargeback, the order's progress
 function ordDepart(tr){const O=ordState(),K=O.k,rw=C.rollW.v,tons=tr.load*rw,pr=priceOf(tr.g);let v;
   if(tr.load<=1e-9)return;
-  if(tr.spot){v=tons*(pr-ORD.spot);K.spot+=tons;K.spotV+=tons*ORD.spot;}
-  else{const o=ordGet(tr.oid),ld=o?ordLateD(o):0,chg=ld>0?Math.min(ORD.lateCap,ORD.late*Math.ceil(ld)):0;v=tons*(pr-chg);K.chg+=tons*chg;
+  if(tr.spot){v=tons*(pr-ORD.spot);K.spot+=tons;K.spotV+=tons*ORD.spot;pfW("spotd",tons*ORD.spot);}
+  else{const o=ordGet(tr.oid),ld=o?ordLateD(o):0,chg=ld>0?Math.min(ORD.lateCap,ORD.late*Math.ceil(ld)):0;v=tons*(pr-chg);K.chg+=tons*chg;if(chg)pfW("chg",tons*chg);
     if(ld>0)K.lateT+=tons;else K.onT+=tons;
     if(o){o.sh+=tr.load;o.ld-=Math.max(0,tr.want-tr.load);if(o.st==="open"&&o.sh>=o.r-1e-6){o.st="done";o.done=Math.round(S.t);K.done++;if(!(ld>0))K.doneOn++;
         log(`Order #${o.id} for ${ordCust(o)} delivered: ${o.r} rolls of ${o.g}${ld>0?`, ${Math.ceil(ld)} day${Math.ceil(ld)===1?"":"s"} late (−$${chg}/t)`:" on time"}`,ld>0?"warn":"ok");}}}
@@ -3285,7 +3352,7 @@ function ordDocks(dt,lcap){let loaded=0;
 function baseLoadTick(dt){if(S.zen||S.pm==="run")return;const g=GRADES[C.grade],tph=P.K*g.sp*g.bw,en=Math.max(0,energyCost()-pfChemT());if(!(en>0&&tph>0))return;
   const B=outOn()?BASEL.out:S.pm==="break"?BASEL.brk:BASEL.stop,h=dt/60,pw=en*(1-PF_STEAMSH)*tph*h,st=en*PF_STEAMSH*tph*h*B.steam;let v=st;
   for(const a in PF_POWER){const x=pw*PF_POWER[a]*B[a];v+=x;pfAdd("power",a,x);}if(st>0)pfAdd("steam","pm",st);
-  if(v>0){spend(v,"energy");S.tot.idleE=(S.tot.idleE||0)+v;}}
+  if(v>0){spend(v,"energy");S.tot.idleE=(S.tot.idleE||0)+v;pfW("idle",v);}}
 
 // ---------- bale grading ----------
 function bqState(){if(!S.bq)S.bq={m:BALE.std,k:0.1,ck:0.1,rej:0,rejT:0,ded:0,A:0,B:0,C:0,day:-1,dRej:0};return S.bq;}
@@ -3450,7 +3517,7 @@ function seedRun(seed){S.seed=seed>>>0;const k=S.seed;S.bn=bnFor(S.seed);S.rng={
   S.cards={next:1440*(1+0.5*rand("card")),open:null,pend:[],seen:{}};applyUpgrades();
   ordInit();}   // v6.6: the order book for the run (its own dice streams, ord and bale; 05b)
 function setGrade(to){const from=C.grade;if(to===from)return;
-  const off=4+2*Math.abs(GRADES[to].bw-GRADES[from].bw);S.chg={left:off,total:off,from,to};C.grade=to;applyUpgrades();
+  const off=4+2*Math.abs(GRADES[to].bw-GRADES[from].bw);S.chg={left:off,total:off,from,to};C.grade=to;applyUpgrades();{const L=S.q.gc||(S.q.gc=[]);L.push({t:Math.round(S.t),from,to,tons:Math.round(off*10)/10});if(L.length>20)L.shift();}   // (v6.7: for the quality screen)
   log(`Grade change ${from} → ${to} (market orders): about ${off.toFixed(0)} t to the beater during the transition`,"warn");}
 function planTick(dt,good){const pl=S.plan;
   pl.left-=good;
@@ -3544,7 +3611,7 @@ function step(dt){
   for(let d=0;d<P.doors;d++){const tr=S.inDock[d]; if(!tr||M.docksClosed)continue;
     const u=Math.min(tr.load,P.doorRate*dt/60,cap,Math.max(0,P.yardCap-S.yard));
     const paid=baleUnload(tr,u,S.yard);   // v6.6: paid as air-dry weight; the yard mix
-    tr.load-=u;cap-=u;S.yard+=u;unloaded+=u;S.tot.inTons+=u;
+    tr.load-=u;cap-=u;S.yard+=u;unloaded+=u;S.tot.inTons+=u;pfW("in",u);
     {const dc=S.plan.disc,dt2=dc?Math.min(paid,dc.t):0;spend(paid*P.occPrice-dt2*(dc?dc.v:0),"occ");spend(u*frInRate(),"frin");if(dc){dc.t-=dt2;if(dc.t<=1e-6)S.plan.disc=null;}}
     if(tr.load<=0.001){S.leaving.push({...tr,ty:inY(d),kind:"in"});if(S.leaving.length>24)S.leaving.shift();S.inDock[d]=null;}}
   const feed=Math.min(feedRes,S.yard); S.yard-=feed;WQ.f+=feed;
@@ -3595,7 +3662,8 @@ function step(dt){
     if(off>0){pfW("broke",off);S.tot.broke+=off;S.q.off+=off;prod-=off;beat=off;}
     if(S.plan.hot&&C.grade==="33HT")S.plan.hot.made+=prod;
     if(S.pf&&prod>0)pfW("val",prod*priceOf(C.grade));}
-  S.reel+=prod+beat;lotPut(S.lots.reel,C.grade,prod);lotPut(S.lots.reel,"beater",beat); S.tot.prodT+=prod; S.tot.pot+=P.K*C.pmSp.v*g.bw*dt/60;
+  qLog(dt,beat);   // v6.7 the off-spec log (07e)
+  S.reel+=prod+beat;lotPut(S.lots.reel,C.grade,prod);lotPut(S.lots.reel,"beater",beat); S.tot.prodT+=prod; {const pt=P.K*C.pmSp.v*g.bw*dt/60;S.tot.pot+=pt;pfW("pot",pt);}   // (v6.7: potential tons at the setpoint speed, by the hour, for the process flow)
   planTick(dt,prod);
   if(S.reel>=P.jumbo&&reelsAtWinder()<=P.storeReels){S.winderBuf+=S.reel;lotTake(S.lots.reel,S.reel,S.lots.buf);S.reel=0;S.lots.reel.length=0;S.tot.turnups++;}
   // 6 winder
@@ -3662,6 +3730,7 @@ function step(dt){
   if(S.trendAcc>=10){S.trendAcc-=10;S.trend.push([S.tank/P.tankCap,S.pmSpeed/3300,S.yard/P.yardCap,S.fg/P.fgCap]);if(S.trend.length>144)S.trend.shift();}
   histTick(dt);   // v6.5 history: the hour's readings and minutes (11c)
   if(!S.zen)knobHist();   // v5.6: DCS / QCS trends (reads only)
+  tagTick();   // v6.7 the control room's tag history (11d; reads only)
 }
 
 /* ---- v5.6 fiddly knobs ----
@@ -4063,6 +4132,10 @@ function qualStatus(){const K=S.knob,ko=K&&K.any?K.off:0;
 const QBEAT={rate:25};   // t/h repulped
 function beaterTick(dt){const b=S.q.bank||0;if(b<=1e-6)return;const room=P.tankCap*0.98-S.tank;if(room<=0)return;
   const t=Math.min(b,QBEAT.rate*dt/60,room);S.q.bank=b-t;S.tank+=t;WQ.rep+=t;S.tot.repulped=(S.tot.repulped||0)+t;}
+// ---- v6.7 the off-spec log (the quality screen): a spell starts with the first beater ton and ends after 10 quiet minutes ----
+function qLog(dt,beat){const Q=S.q;if(!Q)return;
+  if(beat>0){if(!Q.cur){const q=qualStatus();Q.cur={t0:Math.round(S.t),t1:Math.round(S.t),why:q.why||"off spec",g:C.grade,tons:0,quiet:0};}Q.cur.tons+=beat;Q.cur.t1=Math.round(S.t);Q.cur.quiet=0;}
+  else if(Q.cur){Q.cur.quiet+=dt;if(Q.cur.quiet>=10){const c=Q.cur;delete c.quiet;c.tons=Math.round(c.tons*10)/10;(Q.log||(Q.log=[])).push(c);if(Q.log.length>40)Q.log.shift();Q.cur=null;}}}
 /* ---- v6.5.6 the water balance, and the white water chest in stock prep that balances the consistencies ----
    Every step the sim notes what moved (WQ, filled in by step(), the beater and the upsets) and waterTick() moves the
    water that goes with it. Tons are t/h of water (m³). Nothing here uses dice.
@@ -4100,7 +4173,7 @@ function waterTick(dt){const W=watState(),h=dt/60,T=W.tot,q=WQ;
   if(short>0)W.shortK=ease(W.shortK,1,dt,6);else if(W.shortK>0){W.shortK*=Math.max(0,1-q.u/Math.max(30,S.tank));if(W.shortK<0.01)W.shortK=0;}
   // the sewer: the overflow, the seal water and any spilled stock, through the clarifier
   const fib=Math.max(0,q.u-q.p)+q.spill+q.clip,sewer=over+base+WAT.sw*(q.spill+q.clip),sludge=fib*(1-WAT.sludgeS)/WAT.sludgeS,out=Math.max(0,sewer-sludge);
-  const fresh=shw+base+make;
+  const fresh=shw+base+make;pfW("fw",fresh);   // (v6.7: m³ of fresh water, by the hour)
   T.paper=(T.paper||0)+q.p;T.fresh+=fresh;T.bale+=baleW;T.rep+=repW;T.short+=short;T.evap+=evap;T.prod+=prodW;T.rej+=rejW;T.sludge+=Math.min(sludge,sewer);T.out+=out;
   const R=W.r,k=v=>v/h;R.fresh=ease(R.fresh,k(fresh),dt,6);R.out=ease(R.out,k(out),dt,6);R.evap=ease(R.evap,k(evap),dt,6);R.over=ease(R.over,k(over),dt,6);R.make=ease(R.make,k(make),dt,6);
   R.p=ease(R.p,k(q.p),dt,6);R.eff=ease(R.eff,k(fib),dt,6);
@@ -5112,7 +5185,7 @@ const PF_STEAMSH=0.6;   // steam's share of the energy bill (the same share the 
 const PF_RA={balefire:"yard",badocc:"yard",ragger:"pulper",rotortrip:"pulper",winderdown:"winder",tiedrolls:"winder",wrap:"winder",birdhay:"winder"};
 function pfRepArea(id){if(PF_RA[id])return PF_RA[id];const g=EV[id]&&EV[id].g;return g==="stock"?"stock":g==="machine"?"pm":g==="yard"?"ship":"site";}
 function pfNew(){return {d:Math.floor(S.t/1440),h:Math.floor(S.t/60),L0:Object.assign({},S.ledger),cash0:S.cash,ship0:S.shipT||0,prod0:S.tot.prodT,A:{},
-  W:{feed:0,rej:0,bale:0,eff:0,broke:0,val:0,fine:0,fines:0,spill:0,scrap:0}};}
+  W:{feed:0,rej:0,bale:0,eff:0,broke:0,val:0,fine:0,fines:0,spill:0,scrap:0,in:0,fw:0,pot:0,chg:0,spotd:0,idle:0}};}   // (v6.7: in, fw, pot, chg, spotd, idle)
 // (v6.5: every note goes to the day (S.pf) and to the hour (S.ph, 11c-hist.js) alike)
 function pfAdd(k,a,v){if(!v)return;for(const f of [S.pf,S.ph]){if(!f)continue;const o=f.A[k]||(f.A[k]={});o[a]=(o[a]||0)+v;}}
 function pfW(k,v){if(!v)return;if(S.pf)S.pf.W[k]+=v;if(S.ph)S.ph.W[k]+=v;}
@@ -5158,7 +5231,7 @@ function pfCalc(f,whole){const L=S.ledger,d=k=>(L[k]||0)-(f.L0[k]||0),A=f.A,sum=
    a slice at a time between frames. Its rows are kept at hours -336..-1 and the sandbox is thrown away; the real run
    doesn't step until it's done (52-main-loop.js). The run's own dice, cash and day 1 are untouched.
    Saves: S.hist is kept under its own key, written only when a row was added (51c-save.js). */
-const HIST_V=4,HIST_PRIOR=14,HIST_MAX=60*24+HIST_PRIOR*24;   // survival keeps a rolling 60 days (plus the prior ones)
+const HIST_V=5,HIST_PRIOR=14,HIST_MAX=60*24+HIST_PRIOR*24;   // survival keeps a rolling 60 days (plus the prior ones)
 const HC=["h"];const HCI={};
 {const add=(...k)=>k.forEach(x=>HC.push(x));
   PF_CATS.forEach(([c])=>add("c."+c));PF_AREAS.forEach(([a])=>PF_CATS.forEach(([c])=>add("b."+a+"."+c)));
@@ -5166,7 +5239,7 @@ const HC=["h"];const HCI={};
     "w.feed","w.rej","w.bale","w.eff","w.broke","w.val","w.fine","w.fines","made","ship",
     "n.in","n.out","n.brk","n.hay","n.rolls",
     "m.yard","m.pulp","m.pmrun","m.pmbrk","m.pmdown","m.pmheld","m.wdrun","m.wdhay","m.wddown","m.wdblk","m.ship","m.out",
-    "w.spill","w.scrap");   // (v6.5.6: appended, so older saved rows keep their columns)
+    "w.spill","w.scrap","w.in","w.fw","w.pot","w.chg","w.spotd","w.idle");   // (v6.7: bales in, fresh water m³, potential tons, chargebacks, spot discount, idle energy; HIST_V 5)   // (v6.5.6: appended, so older saved rows keep their columns)
   HC.forEach((k,i)=>HCI[k]=i);}
 // readings averaged over the hour (sampled every 2 sim minutes); r: only while the machine runs (blank otherwise)
 const HA=[["yard",()=>S.yard],["yardp",()=>S.yard/P.yardCap*100],["wet",()=>S.wet*100],["occp",()=>P.occPrice],["unload",()=>S.rates.unload],
@@ -5224,7 +5297,7 @@ function histSum(rows,t0,t1){const s=k=>rows.reduce((a,r)=>a+(r[HCI[k]]||0),0);
   const sub={frin:{"Inbound haul":cat.frin},frout:{"Outbound freight":cat.frout},energy:{Steam:s("s.steam"),Power:s("s.power")},chem:{"Stock prep":s("s.chs"),"Wet end":s("s.chp")},labor:{"Forklift drivers":s("s.drv"),"Loaders and robots":s("s.ldr")},
     maint:{"Repair bills and outage budgets":s("s.rep"),"Maintenance techs":s("s.tech"),"Preventive maintenance program":s("s.pmp"),"Insurance premium":s("s.prem")},
     over:{"Site overhead":s("s.ovh"),"Civics":s("s.civ")},fiber:{"OCC bales":cat.fiber}};
-  const W={};["feed","rej","bale","eff","broke","val","fine","fines","spill","scrap"].forEach(k=>W[k]=s("w."+k));
+  const W={};["feed","rej","bale","eff","broke","val","fine","fines","spill","scrap","in","fw","pot","chg","spotd","idle"].forEach(k=>W[k]=s("w."+k));
   const rep={};if(S.hist)for(const [t,id,v] of S.hist.ev)if(t>=t0&&t<t1)rep[id]=(rep[id]||0)+v;
   const cost=PF_CATS.reduce((a,[c])=>a+cat[c],0),rev=s("rev"),deals=s("deals"),revenue=rev+deals;
   return {h:rows.length,day:Math.floor(t1/1440),cat,sub,by,cost,rev,deals,revenue,profit:revenue-cost,shipT:s("ship"),made:s("made"),W,rep,cashChg:revenue-cost,upg:0,range:true};}
@@ -5261,6 +5334,93 @@ function bfSlice(t0){if(!BF.busy)return;
 function bfChip(on){let c=$("bfChip");if(!c){if(!on)return;c=document.createElement("div");c.id="bfChip";c.className="bfchip";c.setAttribute("role","status");document.body.appendChild(c);}
   c.hidden=!on;if(on)c.innerHTML=`<b>Loading the mill's last ${HIST_PRIOR} days</b><i><s style="width:${Math.round(BF.p*100)}%"></s></i>`;}
 UI_TICKS.push(()=>{if(bfNeed())bfStart();});
+/* ---- v6.7 the tag list: every reading the control room can show, with its area, units and history ----
+   One registry for the DCS pictures' trends, the Trends screen, relationship analysis and the planning, water and quality
+   screens. Each tag: [id, name, area, unit, reader(r) -> number or null, long-history column (11c HA, hourly) or ""].
+   r is knobRead() for the sample (one read per sample). History: a reading every 2 sim minutes for 48 h in ring buffers,
+   outside S (saves don't grow; a new game or a loaded save starts it fresh), read-only on the sim. Longer ranges use the
+   hourly history (S.hist) for tags that have a column there. Units: water and stock flows in US gallons a minute,
+   volumes in gallons (v6.7: they were m³/h, L/s and m³). */
+const GPM=m3h=>m3h*4.40287,GAL=m3=>m3*264.172,LS_GPM=ls=>ls*15.8503;
+const WAT_GAL=()=>GAL(WAT.cap);                       // the white water chest, full
+const CHEST_GAL=()=>GAL(P.tankCap/(WAT.cs/100));      // the stock storage chest, full (its tons of fiber at storage consistency)
+const MCHEST_GAL=60000;                                // the machine chest
+const fmtGal=g=>{const a=Math.abs(g),s=g<0?"−":"";return s+(a>=1e6?(a/1e6).toFixed(2)+"M gal":a>=1e4?Math.round(a/1e3)+"k gal":Math.round(a).toLocaleString()+" gal");};
+const fmtGpm=g=>(g>=1e4?(g/1e3).toFixed(1)+"k":Math.round(g).toLocaleString())+" gpm";
+const TAG_INT=new Set(["orders","trucks","rolls","t","A","kW","fpm","mL CSF"]);
+const TAG_AREA={SPOT:"Stock prep",WET:"Wet end",DET:"Dry end",UTIL:"Utilities",WATER:"Water",QCS:"Quality",PLAN:"Planning & yard"};
+const _R=()=>S.rates||{};
+const wr=()=>S.wat&&S.wat.r;
+const TAGS=[
+  // stock prep
+  ["feed","Bales fed","SPOT","t/h",()=>_R().feed,"a.feed"],["fiber","Fiber out of the pulper","SPOT","t/h",()=>_R().fiberIn,"a.fiber"],
+  ["yield","Pulper yield","SPOT","%",()=>P.yieldF*((S.M&&S.M.yieldMul)||1)*100,"a.yield"],["cp","Pulper consistency","SPOT","%",r=>r.cp,""],
+  ["amps","Pulper rotor","SPOT","A",r=>r.amps,"a.amps"],["pulpLvl","Pulper level","SPOT","%",r=>r.pulpLvl,""],
+  ["rejt","Rejects","SPOT","t/h",()=>(_R().feed||0)*(1-P.yieldF*((S.M&&S.M.yieldMul)||1)),""],
+  ["hddp","HD cleaner ΔP","SPOT","kPa",()=>purgeDp("hd")+(active("hdblow")?40:0),""],["lcdp","LC cleaners ΔP","SPOT","kPa",()=>purgeDp("lc")+(active("lcplug")?50:0),""],
+  ["lwdp","LW cleaners ΔP","SPOT","kPa",()=>purgeDp("lw")+(active("lwplug")?45:0),""],
+  ["fsld","Fine screen load","SPOT","%",()=>(_R().fiberIn||0)/Math.max(1,P.screenMax)*100,""],
+  ["chest","Stock chest level","SPOT","%",()=>S.tank/P.tankCap*100,"a.chest"],["chestg","Stock chest volume","SPOT","gal",()=>S.tank/(WAT.cs/100)*264.172,""],
+  ["refkw","Refiner load","SPOT","kW",r=>r.run?r.refkw:null,"a.refkw"],["gap","Refiner plate gap","SPOT","mm",r=>r.gap,""],["csf","Freeness","SPOT","mL CSF",r=>r.csf,"a.csf"],
+  ["mcLvl","Machine chest level","SPOT","%",r=>r.mcLvl,""],["mcg","Machine chest volume","SPOT","gal",r=>MCHEST_GAL*r.mcLvl/100,""],
+  ["mcCons","Machine chest consistency","SPOT","%",r=>r.mcCons,""],["agit","Machine chest agitator","SPOT","%",r=>r.agit,""],
+  ["fan","Fan pump flow","SPOT","gpm",()=>S.pm==="run"?LS_GPM(S.pmSpeed*1.9):0,""],
+  // wet end
+  ["wsp","Wire speed","WET","fpm",()=>S.pmSpeed/DCS_DRAW(),""],["vac","Forming vacuum","WET","kPa",r=>r.vac,""],["couchSol","Couch solids","WET","%",r=>r.run?r.couchSol:null,""],
+  ["pl","Press load","WET","kN/m",r=>r.pl,""],["pressSol","Press solids","WET","%",r=>r.run?r.pressSol:null,""],["edge","Fabric edge","WET","mm",r=>r.edge,""],
+  ["gtrav","Guide travel used","WET","%",r=>r.gm?Math.min(1,r.gtrav)*100:null,""],["osc","Felt shower oscillator","WET","%",r=>r.osc,""],
+  ["wwl","White water silo level","WET","%",()=>clamp(68+(S.pm==="run"?0:14)+wob2(0.02,7)*3,0,100),""],
+  ["hum","Machine room humidity","WET","%",()=>clamp(62+(motStatus("fog")!=="run"||active("fogfan")?24:0)+wob2(0.01,8)*3,0,100),""],
+  // dry end
+  ["speed","Reel speed","DET","fpm",r=>r.speed,"a.speed"],["prod","Paper made","DET","t/h",()=>_R().prod,"a.prod"],["st1","1st section steam","DET","kPa",r=>r.st1,""],
+  ["st3","3rd section steam","DET","kPa",r=>r.run?r.st3:null,""],["steam","Dryer steam flow","DET","t/h",r=>r.steam>0.5?r.steam:null,"a.steam"],
+  ["dryl","Dryer load","DET","% of limit",()=>S.dry&&S.pm==="run"?S.dry.load*100:null,"a.dryl"],["moist","Reel moisture","DET","%",r=>r.run?r.moist:null,"a.moist"],
+  ["bw","Basis weight","DET","lb/1000 ft²",r=>r.run?r.bw:null,"a.bw"],["tension","Draw tension","DET","kN/m",r=>r.run?r.tension:null,""],["draw","Open draw","DET","%",r=>r.draw,""],
+  ["reel","Paper waiting at the winder","DET","t",()=>S.winderBuf+S.reel,"a.reel"],["cut","Winder","DET","t/h",()=>_R().cut,"a.cut"],["conv","Rolls on the conveyor","DET","rolls",()=>S.conv||0,""],
+  // utilities
+  ["boiler","Steam header","UTIL","% of full",r=>r.boiler*100,""],["vent","Steam vented","UTIL","t/h",()=>S.dry&&S.dry.vent>0.05?S.dry.vent:0,""],
+  ["tss","Effluent TSS","UTIL","mg/L",()=>tssNow(),""],["energyt","Energy","UTIL","$/t",()=>Math.max(0,energyCost()-pfChemT()),"a.energyt"],
+  // water (v6.7 in gallons)
+  ["fresh","Fresh water","WATER","gpm",()=>wr()?GPM(wr().fresh):null,""],["evap","Dryer evaporation","WATER","gpm",()=>wr()?GPM(wr().evap):null,""],
+  ["outfall","Outfall","WATER","gpm",()=>wr()?GPM(wr().out):null,""],["wwover","White water to sewer","WATER","gpm",()=>wr()?GPM(wr().over):null,""],
+  ["makeup","Makeup water","WATER","gpm",()=>wr()?GPM(wr().make):null,""],["shower","Machine showers","WATER","gpm",()=>GPM((wr()?wr().p:_R().prod||0)*WAT.shower),""],
+  ["wcl","White water chest level","WATER","%",()=>S.wat?S.wat.L/WAT.cap*100:null,""],["wcg","White water chest volume","WATER","gal",()=>S.wat?GAL(S.wat.L):null,""],
+  ["wuse","Fresh water per ton","WATER","gal/ton",()=>{const W=wr();return W&&W.p>1?GAL(W.fresh/W.p):null;},""],
+  // quality
+  ["off","Reel to the beater","QCS","%",r=>r.run?r.off*100:null,""],["cdsp","CD moisture spread","QCS","%",r=>r.run?Math.max(...r.zones)-Math.min(...r.zones):null,""],
+  ["bank","Beater bay waiting","QCS","t",()=>S.q?S.q.bank||0:0,""],
+  // planning and the yard
+  ["yard","Bale yard","PLAN","t",()=>S.yard,"a.yard"],["unload","Unloading","PLAN","t/h",()=>_R().unload,"a.unload"],["occp","OCC price","PLAN","$/t",()=>P.occPrice,"a.occp"],
+  ["balem","Bale moisture","PLAN","%",()=>S.bq&&!S.zen?S.bq.m*100:null,"a.balem"],["stk","Stickies at the machine","PLAN","%",()=>S.bq&&!S.zen?S.bq.ck*100:null,"a.stk"],
+  ["inq","Trucks waiting to unload","PLAN","trucks",()=>S.inQ.length,""],["fg","Warehouse","PLAN","% full",()=>S.fg/P.fgCap*100,"a.fgp"],
+  ["load","Loading","PLAN","rolls/h",()=>_R().load,"a.load"],["outq","Trucks waiting to load","PLAN","trucks",()=>S.outQ.length,""],
+  ["openo","Open orders","PLAN","orders",()=>S.ord&&!S.zen?S.ord.list.filter(o=>o.st==="open").length:null,"a.openo"],
+  ["lateo","Late orders","PLAN","orders",()=>S.ord&&!S.zen?S.ord.list.filter(o=>o.st==="open"&&S.t>o.due+ORD.grace).length:null,"a.lateo"],
+  ["price","Paper price (grade on the machine)","PLAN","$/t",()=>priceOf(C.grade),"a.price"],["profit","Profit rate","PLAN","$/day",()=>S.profitRate||0,""]];
+const TAGI=Object.fromEntries(TAGS.map((t,i)=>[t[0],i]));
+const tagName=id=>{const t=TAGS[TAGI[id]];return t?t[1]:id;};
+const tagUnit=id=>{const t=TAGS[TAGI[id]];return t?t[3]:"";};
+// the ring: 48 h at 2 sim minutes
+const TG={S:null,n:1440,i:0,len:0,k:-1,t:new Float64Array(1440),v:TAGS.map(()=>new Float32Array(1440))};
+function tagTick(){if(S.zen||(typeof BF!=="undefined"&&BF.real))return;if(TG.S!==S){TG.S=S;TG.i=0;TG.len=0;TG.k=-1;}
+  const k=Math.floor(S.t/2);if(k===TG.k)return;TG.k=k;const r=knobRead(),i=TG.i;TG.t[i]=S.t;
+  for(let j=0;j<TAGS.length;j++){let v;try{v=TAGS[j][4](r);}catch(e){v=null;}TG.v[j][i]=v==null||v!==v?NaN:v;}
+  TG.i=(i+1)%TG.n;TG.len=Math.min(TG.n,TG.len+1);}
+// the latest reading (from the ring; live if nothing recorded yet)
+function tagNow(id){const j=TAGI[id];if(j==null)return null;if(TG.len&&TG.S===S){const v=TG.v[j][(TG.i-1+TG.n)%TG.n];return v!==v?null:v;}
+  try{const v=TAGS[j][4](knobRead());return v==null||v!==v?null:v;}catch(e){return null;}}
+// a tag's points in [t0, t1] (sim minutes): 2-minute readings where the ring has them, hourly history before that
+function tagSeries(id,t0,t1){const j=TAGI[id],out={t:[],v:[],hourly:false};if(j==null)return out;
+  const ringT0=TG.len&&TG.S===S?TG.t[(TG.i-TG.len+TG.n)%TG.n]:Infinity,col=TAGS[j][5];
+  if(t0<ringT0&&col&&S.hist&&HCI[col]!=null){const c=HCI[col];for(const r of S.hist.rows){const tm=r[0]*60+30;if(tm<t0||tm>t1||tm>=ringT0)continue;const v=r[c];if(v!=null&&v===v){out.t.push(tm);out.v.push(v);out.hourly=true;}}}
+  if(TG.S===S)for(let n=0;n<TG.len;n++){const i=(TG.i-TG.len+n+TG.n)%TG.n,tm=TG.t[i];if(tm<t0||tm>t1)continue;const v=TG.v[j][i];if(v===v){out.t.push(tm);out.v.push(v);}}
+  return out;}
+const tagHasLong=id=>{const t=TAGS[TAGI[id]];return !!(t&&t[5]);};
+// format a reading with its unit
+function tagFmt(id,v){if(v==null||v!==v)return "–";const u=tagUnit(id);
+  if(u==="gal")return fmtGal(v);if(u==="gpm")return fmtGpm(v);if(u==="$/day")return money(v)+"/day";if(u==="$/t")return money(v)+"/t";
+  if(TAG_INT.has(u))return Math.round(v).toLocaleString()+" "+u;
+  const a=Math.abs(v),s=a>=1000?Math.round(v).toLocaleString():a>=100?Math.round(v)+"":a>=10?v.toFixed(1):v.toFixed(2);return s+(u?" "+u:"");}
 /* ---------- 3D view (three.js r186) ---------- */
 const G3={on:false,ok:false};
 // no WebGL: say so plainly instead of showing an empty page
@@ -12270,7 +12430,7 @@ function openSpider(){$("brian").hidden=true;$("slice").hidden=true;$("spider").
 $("spiClose").addEventListener("click",()=>$("spider").hidden=true);
 $("spiV").addEventListener("input",e=>{G3.SPD.v=+e.target.value/100;drawSpider();});
 function drawSpider(){const D=G3.SPD;if(!D||$("spider").hidden)return;
-  $("spiTc").textContent=f0(D.tc)+" mg/L";$("spiTl").textContent=f0(D.tl)+" mg/L";$("spiQc").textContent=f0(D.qc)+" L/s · "+f0(Math.min(100,D.lc*100))+"% full";$("spiQl").textContent=f0(D.ql)+" L/s · "+f0(Math.min(100,D.ll*100))+"% full";
+  $("spiTc").textContent=f0(D.tc)+" mg/L";$("spiTl").textContent=f0(D.tl)+" mg/L";$("spiQc").textContent=fmtGpm(LS_GPM(D.qc))+" · "+f0(Math.min(100,D.lc*100))+"% full";$("spiQl").textContent=fmtGpm(LS_GPM(D.ql))+" · "+f0(Math.min(100,D.ll*100))+"% full";
   const n=$("spiNote"),st=D.strain||0;n.className="spin"+(D.lc>=1||D.ll>=1||D.tl>150||st>0.05?" bad":"");
   if(D.reset){D.reset=false;$("spiV").value=Math.round(D.v*100);}
   n.textContent=st>0.05?`Dirty clear filtrate is loading up the disks: thickener struggling (${f0(st*100)}%). Send more filtrate to the cloudy side (slide right)!`:D.lc>=1?"Cloudy seal chest is overflowing.":D.ll>=1?"Clear seal chest is overflowing.":D.tl>200?"Fines are carrying over into the clear filtrate.":D.v>0.5?"Clear filtrate is very clean, but the cloudy chest is filling.":"Split looks healthy.";
@@ -12308,7 +12468,9 @@ const KUI={panel:null,st:null,tab:"dcs",built:{}};
 const AREA_N={SPOT:"Stock prep",WET:"Wet end",DET:"Dry end"};
 // field knobs the DCS can also set remotely; the guide roll and the oscillator are set at the machine only
 const KREMOTE=new Set(["pulp","ref","agit","couch"]);
-function kuiSync(){G3.knobUI=!S.zen&&!!(KUI.panel||(KUI.st&&!POP.on)||!$("spider").hidden||!$("slice").hidden);}
+function kuiSync(){G3.knobUI=!S.zen&&!!(KUI.panel||(KUI.st&&DCS_SLOW.has(KUI.st)&&!POP.on)||!$("spider").hidden||!$("slice").hidden);}
+// (v6.7: only the screens with controls slow the game; the read-only ones run at the player's speed)
+const DCS_SLOW=new Set(["SPOT","WET","DET"]);
 function kEl(tag,cls,html){const e=document.createElement(tag);if(cls)e.className=cls;if(html!=null)e.innerHTML=html;return e;}
 const kf=(v,d=1)=>(+v).toFixed(d);
 
@@ -12367,17 +12529,22 @@ function closeKnob(){const p=$("knobP");if(p)p.hidden=true;KUI.panel=null;kuiSyn
 /* ---- the DCS / QCS screens ---- */
 function stationOv(){let o=$("dcsOv");if(o)return o;
   o=kEl("div","overlay top dcsov");o.id="dcsOv";o.hidden=true;
-  o.innerHTML=`<div class="dcs" role="dialog" aria-modal="true" aria-labelledby="dcs-h"><div class="dcsh"><b id="dcs-h"></b><div class="seg dcstab" role="group" aria-label="Screen"><button type="button" data-t="dcs">DCS</button><button type="button" data-t="qcs">QCS</button></div>
-    <div class="dcsst" role="group" aria-label="Area"><button type="button" data-a="SPOT">SPOT</button><button type="button" data-a="WET">WET</button><button type="button" data-a="DET">DET</button><button type="button" data-a="UTIL">UTIL</button></div><button type="button" class="dcspop" data-popout="dcs"${POPOK()&&!POP.on?"":" hidden"} title="Open in its own window, for a second monitor">⧉ Second screen</button><button aria-label="Close" class="dcsx" id="dcsClose">✕</button></div>
-    <div class="dcsb" id="dcsBody"></div><div class="dcsf"><span id="dcsClock"></span><span id="dcsSlow">Game slowed to 1 min/s while this screen is open</span></div></div>`;
+  o.innerHTML=`<div class="dcs" role="dialog" aria-modal="true" aria-labelledby="dcs-h"><div class="dcsh"><b id="dcs-h"></b>
+    <div class="dcsst" role="group" aria-label="Screen">${DCS_SCREENS.map(([k,l,t])=>`<button type="button" data-a="${k}" title="${t}">${l}</button>`).join("")}</div>
+    <div class="seg dcsview" role="group" aria-label="Show"><button type="button" data-trv="pic">Picture</button><button type="button" data-trv="trend">Trend</button></div>
+    <button type="button" class="dcspop dcstrt" data-trt aria-pressed="true" title="Show or hide the trend beside the picture">Trend ▸</button>
+    <button type="button" class="dcspop" data-popout="dcs"${POPOK()&&!POP.on?"":" hidden"} title="Open in its own window, for a second monitor">⧉ Second screen</button><button aria-label="Close" class="dcsx" id="dcsClose">✕</button></div>
+    <div class="dcsb" id="dcsBody"><div class="dcsmain" id="dcsMain"></div><aside class="dcstrp" id="dcsTrp" aria-label="Trend"></aside></div><div class="dcsf"><span id="dcsClock"></span><span id="dcsSlow"></span></div></div>`;
   document.body.appendChild(o);
   $("dcsClose").addEventListener("click",()=>closeStation());
   o.addEventListener("click",e=>{if(e.target===o)closeStation();});
-  o.querySelectorAll("[data-t]").forEach(b=>b.addEventListener("click",()=>{KUI.tab=b.dataset.t;stationBuild();}));
-  o.querySelectorAll("[data-a]").forEach(b=>b.addEventListener("click",()=>{KUI.st=b.dataset.a;stationBuild();}));
+  o.querySelectorAll("[data-a]").forEach(b=>b.addEventListener("click",()=>{KUI.st=b.dataset.a;KUI.tab=b.dataset.a==="QCS"?"qcs":"dcs";stationBuild();kuiSync();}));
+  o.querySelectorAll("[data-trv]").forEach(b=>b.addEventListener("click",()=>{TRUI.view=b.dataset.trv;trLayout();}));
+  o.querySelector("[data-trt]").addEventListener("click",()=>{TRUI.show=!TRUI.show;trLayout();});
+  trWire(o);
 
   return o;}
-function openStation(a,tab){if(S.zen||!AREA_N[a])return;
+function openStation(a,tab){if(tab==="qcs")a="QCS";if(S.zen||!DCS_SCR[a])return;tab=a==="QCS"?"qcs":"dcs";
   if(POP.on){KUI.st=a;if(tab)KUI.tab=tab;popShow("dcs");stationBuild();kuiSync();return;}   // v6.5.1: popped out, it just switches the second screen to this area
   closeKnob();["spider","slice","brian"].forEach(k=>$(k).hidden=true);const o=stationOv();KUI.st=a;if(tab)KUI.tab=tab;o.hidden=false;stationBuild();kuiSync();
   setTimeout(()=>{try{$("dcsClose").focus({preventScroll:true});}catch(_){}},0);}
@@ -12410,22 +12577,23 @@ function knobAlarms(a,r){const L=[],al=(on,txt,hi)=>{if(on)L.push([txt,hi]);};co
   {const q=qualStatus();if(r.run&&q.off>0.02)L.unshift([`MAKING BEATER · ${q.why.toUpperCase()}`,true]);}   // (v6.5.4: on every screen, first)
   dcsAlarms(a,r,L);   // v6.5 b3: upsets on the screen of the equipment they hit, motors, purges, the dry end's states (50d)
   return L;}
-function stationBuild(){const o=$("dcsOv");if(!o||!KUI.st)return;const a=KUI.st,M2=MIMIC[a],b=$("dcsBody");
-  $("dcs-h").textContent=`${(typeof NAME==="string"&&NAME)||"PM1"} · `+M2.title+(KUI.tab==="qcs"?" · QCS":" · DCS");   // (v6.5.2: the machine's own name, as on the process flow and the 3D label)
-  {const sl=$("dcsSlow");if(sl)sl.textContent=POP.on?"Second screen · the mill keeps running at your speed":"Game slowed to 1 min/s while this screen is open";}
-  o.querySelectorAll("[data-t]").forEach(x=>x.setAttribute("aria-pressed",String(x.dataset.t===KUI.tab)));
+function stationBuild(){const o=$("dcsOv");if(!o||!KUI.st)return;const a=KUI.st,M2=MIMIC[a],b=$("dcsMain");KUI.tab=a==="QCS"?"qcs":"dcs";if(a!=="PLAN"&&a!=="QCS"&&a!=="TREND"&&a!=="WATER")KUI.last=a;
+  $("dcs-h").textContent=`${(typeof NAME==="string"&&NAME)||"PM1"} · `+DCS_SCR[a].title;   // (v6.5.2: the machine's own name, as on the process flow and the 3D label)
+  {const sl=$("dcsSlow");if(sl)sl.textContent=POP.on?"Second screen · the mill keeps running at your speed":DCS_SLOW.has(a)?"Game slowed to 1 min/s while this screen is open":"Live: the mill keeps running at your speed";}
   o.querySelectorAll("[data-a]").forEach(x=>x.setAttribute("aria-pressed",String(x.dataset.a===a)));
   b.replaceChildren();
-  if(KUI.tab==="dcs"){
+  if(M2){
     const svg=[`<svg viewBox="0 0 640 ${M2.h||210}" class="mimic" role="img" aria-label="Process picture">`];
     if(M2.ln)M2.ln.forEach(([d,st])=>svg.push(`<path d="${d}" class="mln${st?" st":""}"/>`));   // (v6.5 b3: the pictures draw their own lines, 50d)
     else{for(let i=0;i<M2.eq.length-1;i++){const e=M2.eq[i],n=M2.eq[i+1];if(a==="DET"&&i===3)continue;svg.push(`<line x1="${e[0]+e[2]}" y1="${e[1]+e[3]/2}" x2="${n[0]}" y2="${n[1]+n[3]/2}" class="mln"/>`);}
       if(a==="DET")svg.push(`<path d="M586 60 V 66 H 177 V 75 M345 66 V 75" class="mln st"/>`);}
     M2.eq.forEach((e,i)=>{const pic=dcsPic(a,e,i);if(pic){svg.push(pic);return;}const [x,y,w,h,t,sm]=e;   /* (v6.5 b4: pictograms, 50d) */
       svg.push(`<rect x="${x}" y="${y}" width="${w}" height="${h}" rx="6" class="meq${sm?" sm":""}"/><text x="${x+w/2}" y="${y+h/2+4}" class="mtl${sm?" sm":""}">${typeof t==="function"?t():t}</text>`);});
-    M2.tags.forEach(([x,y,k,t])=>svg.push(`<text x="${x}" y="${y}" class="mtg"><tspan class="mtk">${t} </tspan><tspan data-tag="${k}">–</tspan></text>`));
+    // (v6.7: a tag that can be trended is a button: tap it to add it to the trend)
+    M2.tags.forEach(([x,y,k,t])=>{const tg=trTagOf(k);svg.push(`<text x="${x}" y="${y}" class="mtg${tg?" trk":""}"${tg?` data-trk="${tg}" role="button" tabindex="0"`:""}><title>${tg?"Trend "+tagName(tg):""}</title><tspan class="mtk">${t} </tspan><tspan data-tag="${k}">–</tspan></text>`);});
     svg.push("</svg>");b.appendChild(kEl("div","mimicw",svg.join("")));
     b.appendChild(kEl("div","dcsal",`<b>Alarms</b><ul id="dcsAl"></ul>`));
+    if(a==="WATER")b.appendChild(kEl("div","dcsctl",`<div class="dcssub">Water balance · the run so far</div><div class="wbal" id="wBal"></div>`));
     const ids=KNOBS.filter(k=>k.area===a&&(k.dcs||KREMOTE.has(k.id))).map(k=>k.id),fld=KNOBS.filter(k=>k.area===a&&k.field&&!KREMOTE.has(k.id));
     const cs=kEl("div","dcsctl");cs.appendChild(kEl("div","dcssub","Setpoints"));dcsSetRows(a,cs);
     ids.forEach(id=>{const row=kEl("div","dcsrow"+(id==="zones"?" wide":""));row.appendChild(kEl("div","dcsn",`<b>${KNOBN[id].name}</b><small>${KNOBN[id].field?"remote from the DCS":"DCS"}</small>`));row.appendChild(knobCtl(id,"d"));
@@ -12433,14 +12601,10 @@ function stationBuild(){const o=$("dcsOv");if(!o||!KUI.st)return;const a=KUI.st,
       if(id==="zones"){const bt=kEl("div","dcsbeat","");bt.id="dcsBeat";bt.hidden=true;bt.setAttribute("role","status");cs.appendChild(bt);}});   // v6.5.4: making-beater alert under the dilution zones
     if(fld.length)cs.appendChild(kEl("p","dcsfield",`Set at the machine, not from here: ${fld.map(k=>`<button type="button" class="linkb" data-fk="${k.id}">${k.name.toLowerCase()}</button>`).join(", ")}. Look for the red knobs on the floor.`));
     cs.querySelectorAll("[data-fk]").forEach(x=>x.addEventListener("click",()=>{const id=x.dataset.fk;closeStation();if(G3.knobFly)G3.knobFly(id);openKnob(id);}));
-    b.appendChild(cs);dcsMotRows(a,b);
-    if(M2.trends.length){const tw=kEl("div","dcstr");tw.innerHTML=`<div class="dcssub">Trends · last 6 h</div><canvas width="640" height="220" id="dcsTr"></canvas><div class="dcsleg">${M2.trends.map(t=>`<span><i style="background:${t[2]}"></i>${t[1]}</span>`).join("")}</div>`;b.appendChild(tw);}}
-  else{
-    b.appendChild(kEl("div","qcshead",`<div class="qcsst" id="qcsSt"></div><div class="qcsv" id="qcsV"></div>`));
-    b.appendChild(kEl("div","dcstr",`<div class="dcssub">Reel · last 6 h</div><canvas width="640" height="200" id="qcsTr"></canvas><div class="dcsleg"><span><i style="background:#4fd18b"></i>Moisture %</span><span><i style="background:#ffb02e"></i>Basis weight (lb/1000 ft²)</span><span><i style="background:#ff7a8a"></i>Rejected share</span></div>`));
-    b.appendChild(kEl("div","dcstr",`<div class="dcssub">CD moisture profile · 12 zones (spec ±1.5 %)</div><canvas width="640" height="170" id="qcsCd"></canvas>`));
-    b.appendChild(kEl("div","qcsdef",`<div class="dcssub">Web inspection</div><div class="qcsgrid" id="qcsDef"></div>`));}
-  kuiRefresh();}
+    b.appendChild(cs);dcsMotRows(a,b);}
+  else if(a==="QCS")qcsBuild(b);
+  else if(a==="PLAN")b.appendChild(kEl("div","plan","")).id="planBox";
+  trBuild();trLayout();kuiRefresh();}
 // the trend chart: up to four series on their own scales, newest at the right
 function drawTrend6(cv,series){if(!cv)return;const x=cv.getContext("2d"),W=cv.width,H=cv.height,a=KHIST.a,dk=document.body.classList.contains("dark");
   x.fillStyle="#0f1b2d";x.fillRect(0,0,W,H);x.strokeStyle="rgba(140,170,210,.18)";x.lineWidth=1;for(let k=1;k<6;k++){x.beginPath();x.moveTo(W*k/6,0);x.lineTo(W*k/6,H);x.stroke();}for(let k=1;k<4;k++){x.beginPath();x.moveTo(0,H*k/4);x.lineTo(W,H*k/4);x.stroke();}
@@ -12455,12 +12619,12 @@ function kuiRefresh(){if(!KUI.panel&&!KUI.st)return;const r=knobRead();
     n.textContent=busy?"A crew is working on trouble out here.":moved?`Moved off standard (${knobFmt(id)}). Things may take a while to show up, and not always here.`:"At standard.";
     $("kpReset").disabled=!moved;if(id==="zones")kuiCd(document.querySelector('#kpCtl canvas[data-cd]'),r);}
   if(KUI.st){const o=$("dcsOv"),a=KUI.st,M2=MIMIC[a];$("dcsClock").textContent=`Day ${Math.floor(S.t/1440)+1} · ${clockOf(S.t)}`;
-    if(KUI.tab==="dcs"){o.querySelectorAll("[data-tag]").forEach(t=>{const g=M2.tags.find(q=>q[2]===t.dataset.tag);if(g){const v=g[4](r);if(t.textContent!==v)t.textContent=v;}});
+    if(M2){o.querySelectorAll("[data-tag]").forEach(t=>{const g=M2.tags.find(q=>q[2]===t.dataset.tag);if(g){const v=g[4](r);if(t.textContent!==v)t.textContent=v;}});
       o.querySelectorAll(".dcsctl .kctl").forEach(knobCtlSync);o.querySelectorAll("[data-rd]").forEach(d=>{const h=knobReadout(d.dataset.rd,r);if(d._h!==h){d._h=h;d.innerHTML=h;}});
       const al=knobAlarms(a,r),ul=$("dcsAl"),h=al.length?al.map(([t,hi])=>`<li class="${hi?"hi":""}">${t}</li>`).join(""):'<li class="none">No alarms</li>';if(ul._h!==h){ul._h=h;ul.innerHTML=h;}
       {const bt=$("dcsBeat");if(bt){const q=qualStatus(),on=r.run&&q.off>0.02,t=on?`⚠ MAKING BEATER · ${q.why.toUpperCase()} · ${q.off>=0.99?"the whole reel":Math.round(q.off*100)+"% of the reel"} to the beater`:"";if(bt.hidden===on)bt.hidden=!on;if(bt.textContent!==t)bt.textContent=t;}}
-      o.querySelectorAll(".dcsrow canvas[data-cd]").forEach(c=>kuiCd(c,r));if(M2.trends.length)drawTrend6($("dcsTr"),M2.trends);dcsSync();dcsPicSync(a);}
-    else{const K=S.knob,F=(K&&K.F)||{},off=r.off,st=$("qcsSt");
+      o.querySelectorAll(".dcsrow canvas[data-cd]").forEach(c=>kuiCd(c,r));dcsSync();dcsPicSync(a);if(a==="WATER")waterRefresh();}
+    else if(a==="QCS"){const K=S.knob,F=(K&&K.F)||{},off=r.off,st=$("qcsSt");
       // v6.5.3: the spec check (07e) names what's out; the grade change and the other knob defects after it
       const qs=qualStatus(),sh=!r.run?["MACHINE DOWN","down"]:QNOW.out.length?[`OFF SPEC · ${qs.why} · rolls to the beater`,"bad"]:S.chg?["GRADE CHANGE · weight in transition · rolls to the beater","warn"]:qs.off>0.02?[`REJECTING · ${qs.why} · ${Math.round(qs.off*100)}% to the beater`,"bad"]:["ON SPEC","ok"];
       if(st._h!==sh[0]){st._h=sh[0];st.textContent=sh[0];st.className="qcsst "+sh[1];}
@@ -12468,9 +12632,11 @@ function kuiRefresh(){if(!KUI.panel&&!KUI.st)return;const r=knobRead();
       const g=GRADES[C.grade],sp=QSPEC[C.grade]||QSPEC["23m"],qv=$("qcsV"),qo=k=>r.run&&QNOW.out.includes(k)?' class="qout"':"",rg=(a,d)=>`spec ${a[0].toFixed(d)}–${a[1].toFixed(d)}`;
       const shn=((document.querySelector('#paperColor button[aria-pressed="true"]')||{}).dataset||{}).c==="white"?"white":"brown";
       const qh=`<div><small>Grade</small><b>${C.grade}</b><small>target ${g.bw} lb · ${DRY.m0.toFixed(1)} %</small></div><div${qo("bw")}><small>Basis weight</small><b>${r.run?kf(QNOW.bw,2):"–"}</b><small>${rg(sp.bw,2)}</small></div><div${qo("m")}><small>Moisture</small><b>${r.run?kf(r.moist):"–"} %</b><small>${rg(sp.m,1)}</small></div><div${qo("shade")}><small>Color</small><b>${QNOW.shade?"ON SHADE":"OFF SHADE"}</b><small>spec ${shn}</small></div><div><small>Reel speed</small><b>${Math.round(r.speed)}</b><small>fpm</small></div>`;if(qv._h!==qh){qv._h=qh;qv.innerHTML=qh;}
-      drawTrend6($("qcsTr"),[["moist","","#4fd18b",0,14],["bw","","#ffb02e",(g.bw-3),(g.bw+3)],["off","","#ff7a8a",0,1]]);kuiCd($("qcsCd"),r);
+      kuiCd($("qcsCd"),r);
       const D=[["Wrinkles",F.wrinkles],["Crush marks",F.crush],["Felt stripes",F.stripes],["CD streaks",F.cd],["Weight swings",F.bw],["Wet sheet",F.wet],["Dry sheet",F.dry]];
-      const h=D.map(([n,v])=>{const c=v>0.01?Math.round(4+v*80):0;return `<div class="${c?"hit":""}"><small>${n}</small><b>${c}</b><small>/ reel</small></div>`;}).join("");const dd=$("qcsDef");if(dd._h!==h){dd._h=h;dd.innerHTML=h;}}}}
+      const h=D.map(([n,v])=>{const c=v>0.01?Math.round(4+v*80):0;return `<div class="${c?"hit":""}"><small>${n}</small><b>${c}</b><small>/ reel</small></div>`;}).join("");const dd=$("qcsDef");if(dd._h!==h){dd._h=h;dd.innerHTML=h;}qcsRefresh();}
+    else if(a==="PLAN")planRefresh();
+    trDraw();}}
 // CD moisture profile: a bar per zone up from 3 %, the ±1.5 % spec band round the reel average, the 8 % target
 function kuiCd(cv,r){if(!cv)return;const x=cv.getContext("2d"),W=cv.width,H=cv.height,z=r.zones,lo=3,hi=11,Y=v=>H-18-clamp((v-lo)/(hi-lo),0,1)*(H-30);
   x.fillStyle="#0f1b2d";x.fillRect(0,0,W,H);
@@ -12505,7 +12671,7 @@ G3.openKnob=openKnob;G3.openStation=openStation;G3.slcSet=slcSet;G3.hayout=()=>h
    Waste is tons, drawn as thin dashed lines (not to scale). Tap anything for its breakdown. Reads only (11b-pflow.js);
    the game keeps running at the player's speed while it's open (v6.3.0-f2; f1 slowed it to 1 min/s). On narrow screens the
    picture runs top to bottom. */
-const PFUI={open:false,mode:"t",sel:null,h:"",tab:null,zoom:"7d",prior:true,hx:{}};
+const PFUI={open:false,mode:"t",sel:null,h:"",tab:null,zoom:"7d",prior:true,hx:{},view:"$",rp:null,play:false,base:null};   // (v6.7: view $ / $/t / tons; rp: the replayed hour)
 const PF_LINES={yard:["Bale yard"],pulper:["Pulper"],stock:["Stock prep"],pm:["Paper","machine"],winder:["Winder"],ship:["Warehouse","& shipping"],site:["Site &","admin"]};
 const PF_CATN=Object.fromEntries(PF_CATS.map(c=>[c[0],c])),PF_AN=Object.fromEntries(PF_AREAS.map(a=>[a[0],a]));
 const pfT=v=>(Math.abs(v)>=100?Math.round(v).toLocaleString():(+v).toFixed(1))+" t";
@@ -12514,24 +12680,29 @@ function pfOv(){let o=$("pfOv");if(o)return o;
   o=kEl("div","overlay top dcsov pfov");o.id="pfOv";o.hidden=true;
   o.innerHTML=`<div class="dcs pf" role="dialog" aria-modal="true" aria-labelledby="pf-h"><div class="dcsh"><b id="pf-h"></b>
     <div class="seg pfrange" role="group" aria-label="Range"><button type="button" data-pd="t">Today</button><button type="button" data-pd="y">Yesterday</button><button type="button" data-pd="w">7 d</button><button type="button" data-pd="r">Run</button></div>
+    <div class="seg pfview" role="group" aria-label="Show">${[["$","$"],["pt","$/ton"],["t","Tons"]].map(([k,l])=>`<button type="button" data-pv2="${k}">${l}</button>`).join("")}</div>
     <label class="pfprior" title="Include the ${HIST_PRIOR} days before you took over"><input type="checkbox" id="pfPrior" checked/> Prior days</label>
     <button type="button" class="dcspop" data-popout="pf"${POPOK()&&!POP.on?"":" hidden"} title="Open in its own window, for a second monitor">⧉ Second screen</button><button aria-label="Close" class="dcsx" id="pfClose">✕</button></div>
-    <div class="dcsb pfb" id="pfBody"><div class="pfcol pfin" id="pfIn"></div><div class="pfmap mimicw" id="pfMap"></div><div class="pfcol pfout" id="pfOut"></div></div>
+    <div class="dcsb pfb" id="pfBody"><div class="pfcol pfin" id="pfIn"></div><div class="pfmid"><div class="pfoee" id="pfOee"></div><div class="pfmap mimicw" id="pfMap"></div><div class="pfrep" id="pfRep"></div></div><div class="pfcol pfout" id="pfOut"></div></div>
     <div class="pfpanel" id="pfPanel" hidden role="region" aria-label="Details"></div>
     <div class="dcsf"><span id="pfClock"></span><span id="pfNote">Live: the mill keeps running</span></div></div>`;
   document.body.appendChild(o);
   $("pfClose").addEventListener("click",()=>pfClose());
   o.addEventListener("click",e=>{if(e.target===o){pfClose();return;}
-    const pd=e.target.closest("[data-pd]");if(pd){if(pd.disabled)return;PFUI.mode=pd.dataset.pd;PFUI.sel=null;pfRender(true);return;}
+    const pd=e.target.closest("[data-pd]");if(pd){if(pd.disabled)return;PFUI.mode=pd.dataset.pd;PFUI.sel=null;PFUI.rp=null;PFUI.play=false;pfRender(true);return;}
+    const pv=e.target.closest("[data-pv2]");if(pv){PFUI.view=pv.dataset.pv2;pfRender(true);return;}
+    const rp=e.target.closest("[data-rp]");if(rp){const k=rp.dataset.rp,[h0,h1]=pfRpWin();if(k==="live"){PFUI.rp=null;PFUI.play=false;}else if(k==="play"){if(PFUI.rp==null||PFUI.rp>=h1-1)PFUI.rp=h0;PFUI.play=!PFUI.play;}pfRender(true);return;}
+    const dc=e.target.closest("[data-pfdcs]");if(dc){const a=dc.dataset.pfdcs;if(!POP.on)pfClose();openStation(a,"dcs");return;}
     if(e.target.closest("#pfPopX")){PFUI.sel=null;pfRender(true);return;}
     const tb=e.target.closest("[data-ptab]");if(tb){PFUI.tab=tb.dataset.ptab;pfRender(true);return;}
     const zm=e.target.closest("[data-pz]");if(zm){PFUI.zoom=zm.dataset.pz;pfRender(true);return;}
     const t=e.target.closest("[data-pf]");if(t){let k=t.dataset.pf;if(k.startsWith("drop:"))k="node:"+k.split(":")[1];if(PFUI.sel!==k)PFUI.tab=null;PFUI.sel=PFUI.sel===k?null:k;pfRender(true);}});
   o.querySelector("#pfPrior").addEventListener("change",e=>{PFUI.prior=e.target.checked;pfRender(true);});
+  o.addEventListener("input",e=>{if(e.target.id==="pfRpS"){PFUI.rp=+e.target.value;PFUI.play=false;pfRender(true);}});
   o.addEventListener("keydown",e=>{if((e.key==="Enter"||e.key===" ")&&e.target.matches("[data-pf][tabindex]")){e.preventDefault();e.target.dispatchEvent(new (e.target.ownerDocument.defaultView||window).MouseEvent("click",{bubbles:true}));}});
   return o;}
 function pfOpen(){if(POP.on){PFUI.open=true;G3.pfOpen=true;popShow("pf");pfRender(true);return;}   // v6.5.1: popped out, it switches the second screen to the flow
-  const o=pfOv();if(G3.closeKnobUI)G3.closeKnobUI();PFUI.open=true;G3.pfOpen=true;PFUI.sel=null;PFUI.mode="t";o.hidden=false;pfRender(true);kuiSync();
+  const o=pfOv();if(G3.closeKnobUI)G3.closeKnobUI();PFUI.open=true;G3.pfOpen=true;PFUI.sel=null;PFUI.mode="t";PFUI.rp=null;PFUI.play=false;o.hidden=false;pfRender(true);kuiSync();
   setTimeout(()=>{try{$("pfClose").focus({preventScroll:true});}catch(_){}},0);}
 function pfClose(){if(POP.on)return;   // (v6.5.1: a popped-out flow stays up until docked)
   pfCtlHome();G3.pfCtlOn=false;const o=$("pfOv");if(o)o.hidden=true;const was=PFUI.open;PFUI.open=false;G3.pfOpen=false;kuiSync();if(was)try{$("gl").focus({preventScroll:true});}catch(_){}}
@@ -12571,7 +12742,7 @@ function pfSVG(D,live){const vert=pfVert(),NU=104,NV=112,GAP=30,PAD=vert?24:10,n
   // the drops: each input coming in where it's spent
   PF_AREAS.forEach(([a],i)=>{let u=uOf(i)+6;adds[i].forEach(([c,v])=>{const w=Math.max(1.5,k*v);
       o.push(`<g data-pf="drop:${a}:${c}" class="pfhit">${rect(u,34,w,v0-34,`fill="${PF_CATN[c][2]}" class="pfdrop"`)}${rect(u-2,34,w+4,v0-34,`fill="transparent"`)}</g>`);u+=w;});
-    if(tot[i]>0){const [x,y]=vert?[4,uOf(i)-3]:[uOf(i)+NU/2,24];o.push(txt(x,y,"+"+money(tot[i]),"pfadd",vert?"start":"middle"));}});
+    if(tot[i]>0){const [x,y]=vert?[4,uOf(i)-3]:[uOf(i)+NU/2,24];o.push(txt(x,y,"+"+(PFUI.view==="pt"?pfPerT(tot[i],D.made):money(tot[i])),"pfadd",vert?"start":"middle"));}});
   // the waste: thin dashed lines off the bottom (tons, not to scale) and the broke loop back to the pulper
   const wl=(i,du,lines,cls)=>{const u=uOf(i)+du;o.push(`<polyline points="${poly([[u,v1],[u,wE]])}" class="pfwaste" marker-end="url(#pfArr)"/>`);
     lines.forEach((s,j)=>{const [x,y]=vert?[wE+6,u-4+j*17]:[u,wE+20+j*17];o.push(txt(x,y,s,j?"pfwv"+(cls?" "+cls:""):"pfwl",vert?"start":"middle"));});};
@@ -12585,18 +12756,21 @@ function pfSVG(D,live){const vert=pfVert(),NU=104,NV=112,GAP=30,PAD=vert?24:10,n
   o.push(`</g>`);
   // the areas (text in screen space, so it reads the same both ways)
   PF_AREAS.forEach(([a],i)=>{const u=uOf(i),[x,y]=X(u,v0),[w,h]=vert?[NV,NU]:[NU,NV],cx=x+w/2,cy=y+h/2,L=PF_LINES[a],lp=live?pfLamp(a):null,sel=PFUI.sel==="node:"+a;
-    let g=`<g data-pf="node:${a}" class="pfhit" tabindex="0" role="button" aria-label="${PF_AN[a][2]}"><rect x="${x}" y="${y}" width="${w}" height="${h}" rx="7" class="meq pfnode${sel?" sel":""}"/>`;
+    const up=live&&(S.inc||[]).some(q=>pfRepArea(q.id)===a);   // (v6.7: an area with an upset flashes red)
+    let g=`<g data-pf="node:${a}" class="pfhit" tabindex="0" role="button" aria-label="${PF_AN[a][2]}"><rect x="${x}" y="${y}" width="${w}" height="${h}" rx="7" class="meq pfnode${sel?" sel":""}${up?" pfup":""}"/>`;
     const top=cy-(L.length>1?32:24);L.forEach((s,j)=>g+=txt(cx,top+j*17,s,"mtl pfnl"));
-    g+=txt(cx,cy+(L.length>1?20:14),tot[i]>0?money(tot[i]):"–","pfnv");
-    const r=pfRate(a,D,live);if(r)g+=txt(cx,cy+(L.length>1?40:36),r,"pfnr");
+    g+=txt(cx,cy+(L.length>1?20:14),tot[i]>0?(PFUI.view==="pt"?pfPerT(tot[i],D.made):money(tot[i])):"–","pfnv");
+    const r=pfRate(a,D,live);if(r)g+=txt(cx,cy+(L.length>1?37:33),r,"pfnr");
+    g+=pfCapSVG(a,D,live,x,y,w,h);
     if(lp)g+=`<circle cx="${x+w-9}" cy="${y+9}" r="4.5" fill="${PF_LAMP[lp][0]}"><title>${PF_LAMP[lp][1]}</title></circle>`;
     o.push(g+"</g>");});
-  o.push("</svg>");o.push(`<p class="pfcap">The blue band is as wide as the money spent so far ${live?"today":"that day"}; each input drops in where it's spent. Waste is tons (not to scale). Tap anything for its breakdown.</p>`);return o.join("");}
+  o.push("</svg>");o.push(`<p class="pfcap">The blue band is as wide as the money spent so far ${live?"today":"that day"}${PFUI.view==="pt"?", shown per ton of paper made":""}; each input drops in where it's spent. Waste is tons (not to scale). The bar in each area is its throughput against what it can do. Tap anything for its breakdown.</p>`);return o.join("");}
 
 /* ---- inputs and outputs (HTML) ---- */
-function pfInputs(D){const t=D.made;let h=`<div class="dcssub">Inputs · ${PF_RNAME[PFUI.mode]}</div>`;
-  PF_CATS.forEach(([c,name,col])=>{const v=D.cat[c];h+=`<button type="button" class="pfrow${PFUI.sel==="cat:"+c?" sel":""}" data-pf="cat:${c}"><i style="background:${col}"></i><span>${name}</span><b>${money(v)}</b><small>${pfPerT(v,t)}</small></button>`;});
-  h+=`<div class="pfrow tot"><i></i><span>Total cost</span><b>${money(D.cost)}</b><small>${pfPerT(D.cost,t)}</small></div>`;
+function pfInputs(D){const t=D.made,pt=PFUI.view==="pt",B=pfBase(D);let h=`<div class="dcssub">Inputs · ${PFUI.rp!=null?"that hour":PF_RNAME[PFUI.mode]}</div>`;
+  PF_CATS.forEach(([c,name,col])=>{const v=D.cat[c];h+=`<button type="button" class="pfrow${PFUI.sel==="cat:"+c?" sel":""}" data-pf="cat:${c}"><i style="background:${col}"></i><span>${name}${pfChip(B,c,v,t)}</span><b>${pt?pfPerT(v,t):money(v)}</b><small>${pt?money(v):pfPerT(v,t)}</small></button>`;});
+  h+=`<div class="pfrow tot"><i></i><span>Total cost${pfChip(B,"cost",D.cost,t)}</span><b>${pt?pfPerT(D.cost,t):money(D.cost)}</b><small>${pt?money(D.cost):pfPerT(D.cost,t)}</small></div>`;
+  if(B)h+=`<p class="pfcmp">▲▼ per ton made against the 7 days before${B.y?"; hover for yesterday":""}.</p>`;
   return h;}
 function pfOutputs(D){const W=D.W,mx=Math.max(D.revenue,D.cost,1),pos=D.profit>=0;
   return `<div class="dcssub">Outputs</div>
@@ -12788,7 +12962,8 @@ function pfBreak(D,live){const s=PFUI.sel;const [kind,a,b]=s.split(":"),t=D.made
     note=`Operating money for ${PF_RNAME[PFUI.mode]}. Upgrades are a choice, so they're left out.`;}
   return {title,rows,note};}
 
-function pfTabs(sel){const [kind,a]=sel.split(":");return kind==="node"?[["tr","Trends"],...(a==="site"?[]:[["ct","Controls"]]),["co","Costs"],["uq","Uptime & quality"]]:[["tr","Trends"],["bk","Breakdown"]];}
+function pfTabs(sel){const [kind,a]=sel.split(":");return kind==="node"?[["tr","Trends"],...(a==="site"?[]:[["ct","Controls"]]),["co","Costs"],["uq","Uptime & quality"]]:sel==="out:profit"?[["wf","Where it went"],["tr","Trends"],["bk","Breakdown"]]:[["tr","Trends"],["bk","Breakdown"]];}
+const PF_DCS={yard:["PLAN"],pulper:["SPOT"],stock:["SPOT"],pm:["WET","DET","QCS"],winder:["DET"],ship:["PLAN"],site:["UTIL","WATER"]};
 /* ---- v6.5 the area controls live here (they were Settings > Area controls). The #cards section moves between a hidden
    holder and the Controls tab; CSS shows only this area's cards. Same rules as before: on AUTO and locked in a season
    or survival run (09-season-leaderboard.js seasonLocks), free in Free Play. ---- */
@@ -12797,9 +12972,9 @@ function pfCtlHome(){const cs=$("cards"),h=$("pfHold");if(cs&&h&&cs.parentNode!=
 function pfCtlMount(a){const cs=$("cards"),t=$("pfCtl");if(!cs||!t)return;cs.dataset.area=a;if(cs.parentNode!==t)t.appendChild(cs);G3.pfCtlOn=true;}
 {const cs=$("cards"),d=$("areactl");if(cs){const h=kEl("div","pfhold");h.id="pfHold";h.hidden=true;document.body.appendChild(h);
     cs.querySelectorAll(":scope > .card").forEach((c,i)=>c.dataset.a=PF_CARDA[i]||"site");h.appendChild(cs);}
-  if(d){const n=kEl("div","setgrp pfctlnote",`<span>Area controls are in <b>Process flow</b>: tap an area, then <b>Controls</b>.</span><button type="button" id="pfCtlGo">Open process flow</button>`);n.id="areactl";d.replaceWith(n);
+  if(d){const n=kEl("div","setgrp pfctlnote",`<span>Area controls are in <b>Report → Control room → Process flow</b>: tap an area, then <b>Controls</b>.</span><button type="button" id="pfCtlGo">Open process flow</button>`);n.id="areactl";d.replaceWith(n);
     $("pfCtlGo").addEventListener("click",()=>{const x=document.querySelector('#v2sheet header button[aria-label="Close panel"]');if(x)x.click();pfOpen();});}}
-function pfPanelHTML(D,live){const sel=PFUI.sel,[kind,a]=sel.split(":"),tabs=pfTabs(sel);if(!PFUI.tab||!tabs.some(t=>t[0]===PFUI.tab))PFUI.tab="tr";
+function pfPanelHTML(D,live){const sel=PFUI.sel,[kind,a]=sel.split(":"),tabs=pfTabs(sel);if(!PFUI.tab||!tabs.some(t=>t[0]===PFUI.tab))PFUI.tab=tabs[0][0];
   if(a==="site"&&PFUI.tab==="uq")PFUI.tab="tr";
   PFUI.area=kind==="node"?a:null;const B=pfBreak(D,live),specs=[];let body="";
   const zoom=`<div class="seg pfzoom" role="group" aria-label="Chart range">${[["24h","24 h"],["7d","7 d"],["run","Run"]].map(([k,l])=>`<button type="button" data-pz="${k}" aria-pressed="${PFUI.zoom===k}">${l}</button>`).join("")}</div>`;
@@ -12807,6 +12982,7 @@ function pfPanelHTML(D,live){const sel=PFUI.sel,[kind,a]=sel.split(":"),tabs=pfT
   if(PFUI.tab==="tr"){body=zoom+charts(kind==="node"?PF_TR[a]:PF_TR[sel]||[]);if(S.zen&&kind!=="node")body=zoom+charts((PF_TR[sel]||[]).filter(c=>c.u!=="$"));}
   else if(PFUI.tab==="ct")body=`<p class="pfpn pflock">${document.body.classList.contains("season-lock")?"<b>AUTO · locked during a season or survival run.</b> The mill runs these itself; Free Play lets you run them by hand.":"Free play: move a slider, or tap AUTO to hand it back to the mill."}</p><div id="pfCtl"></div>`;
   else if(PFUI.tab==="bk")body=`<div class="pfpr">${pfRows(B.rows)}</div>${B.note?`<p class="pfpn">${B.note}</p>`:""}`;
+  else if(PFUI.tab==="wf")body=pfWaterfall(D);
   else if(PFUI.tab==="co"){const W=histWin(...pfWin()),all=histWin(-1e9,pfNowH()+1);
     const sp={t:"Cost added here",u:"$",k:"stack",s:PF_CATS.filter(([c])=>[...all.rows].some(r=>hv(r,"b."+a+"."+c))).map(([c,n,col])=>[n,col,V_("b."+a+"."+c)])};
     const tot=(rows,c)=>rows.reduce((s,r)=>s+(hv(r,"b."+a+"."+c)||0),0),made=rows=>rows.reduce((s,r)=>s+(hv(r,"made")||0),0),mw=made(W.rows),ma=made(all.rows);
@@ -12818,7 +12994,8 @@ function pfPanelHTML(D,live){const sel=PFUI.sel,[kind,a]=sel.split(":"),tabs=pfT
     const cause=cs.length?cs.map(([k,m])=>`<div class="pfdn"><span>${PF_DNN[k]||(EV[k]?EV[k].name:k)}</span><i><s style="width:${(m/mx*100).toFixed(0)}%"></s></i><b>${m>=90?(m/60).toFixed(1)+" h":Math.round(m)+" min"}</b></div>`).join(""):`<p class="pfpn">No downtime in this range.</p>`;
     body=zoom+charts(PF_UQ[a]||[])+`<div class="dcssub pfsub">Downtime by cause · ${PFUI.zoom==="24h"?"last 24 h":PFUI.zoom==="7d"?"last 7 days":"the run"}</div>${cause}`;}
   PFUI.specs=specs;
-  return `<div class="pfph"><b>${B.title}</b><button type="button" class="dcsx" id="pfPopX" aria-label="Close details">✕</button></div>
+  const dl=kind==="node"&&!S.zen?(PF_DCS[a]||[]).map(x=>`<button type="button" class="pfdcs" data-pfdcs="${x}">${x}${x==="PLAN"||x==="QCS"?"":" DCS"} ↗</button>`).join(""):"";
+  return `<div class="pfph"><b>${B.title}</b>${dl}<button type="button" class="dcsx" id="pfPopX" aria-label="Close details">✕</button></div>
     <div class="pftabs" role="tablist">${tabs.map(([k,l])=>`<button type="button" role="tab" data-ptab="${k}" aria-selected="${PFUI.tab===k}"${a==="site"&&k==="uq"?" hidden":""}>${l}</button>`).join("")}</div><div class="pfpb">${body}</div>`;}
 
 /* ---- refresh: once a second while open (and at once on a tap) ---- */
@@ -12827,22 +13004,22 @@ function pfRender(force){if(!PFUI.open)return;const o=$("pfOv");if(!o)return;
   o.querySelectorAll("[data-pd]").forEach(b=>{b.setAttribute("aria-pressed",String(b.dataset.pd===PFUI.mode));if(b.dataset.pd==="y"){b.disabled=!prev;b.title=prev?"":"After the first full mill day";}if(b.dataset.pd==="w"||b.dataset.pd==="r")b.disabled=!hasH;});
   const pr=o.querySelector(".pfprior");pr.hidden=!(PFUI.mode==="w"||PFUI.mode==="r")||!(S.hist&&S.hist.bf);
   $("pf-h").textContent=`${(typeof NAME==="string"&&NAME)||"PM1"} · PROCESS FLOW`;
-  const live=PFUI.mode==="t",D=pfRangeD();
-  $("pfClock").textContent=D?(live?`Day ${D.day} · ${clockOf(S.t)} · ${D.h.toFixed(1)} h into the mill day (6am to 6am)`:PFUI.mode==="y"?`Day ${D.day} · the whole mill day`:`${pfHourLbl(D.h0)} to now · ${D.h} h`):"";
+  o.querySelectorAll("[data-pv2]").forEach(b=>b.setAttribute("aria-pressed",String(b.dataset.pv2===PFUI.view)));
+  if(PFUI.play&&PFUI.rp!=null){const [,h1]=pfRpWin();PFUI.rp=Math.min(h1-1,PFUI.rp+1);if(PFUI.rp>=h1-1)PFUI.play=false;}
+  const live=PFUI.mode==="t"&&PFUI.rp==null,D=PFUI.rp!=null?pfRpD():pfRangeD();
+  $("pfClock").textContent=D&&PFUI.rp!=null?`Replay · ${pfHourLbl(PFUI.rp)} · one hour`:D?(live?`Day ${D.day} · ${clockOf(S.t)} · ${D.h.toFixed(1)} h into the mill day (6am to 6am)`:PFUI.mode==="y"?`Day ${D.day} · the whole mill day`:`${pfHourLbl(D.h0)} to now · ${D.h} h`):"";
   $("pfNote").textContent=BF.busy?`Loading the last ${HIST_PRIOR} days… ${Math.round(BF.p*100)}%`:S.zen?"Zen: the books keep running, but money doesn't count here":"Live: the mill keeps running at your speed";
   if(!D){$("pfMap").innerHTML=`<p class="pfwait">The flow starts with the first game minute.</p>`;return;}
-  const key=[PFUI.mode,PFUI.prior,PFUI.sel,PFUI.tab,PFUI.zoom,pfVert()?1:0,Math.round(S.t*4)].join("|");if(!force&&key===PFUI.h){pfCharts();return;}
+  const key=[PFUI.mode,PFUI.prior,PFUI.sel,PFUI.tab,PFUI.zoom,pfVert()?1:0,Math.round(S.t*4),PFUI.view,PFUI.rp,PFUI.play].join("|");if(!force&&key===PFUI.h){pfCharts();return;}
   const skey=[PFUI.sel,PFUI.tab,PFUI.zoom,PFUI.mode].join("|");PFUI.h=key;
   const put=(id,h)=>{const e=$(id);if(e._h!==h){e._h=h;e.innerHTML=h;}};
-  put("pfIn",pfInputs(D));put("pfMap",pfSVG(D,live));put("pfOut",pfOutputs(D));
+  put("pfIn",PFUI.view==="t"?pfInputsT(D):pfInputs(D));put("pfMap",PFUI.view==="t"?pfSVGt(D,live):pfSVG(D,live));put("pfOut",pfOutputs(D));put("pfOee",pfOEE());pfRepHTML();
   const pp=$("pfPanel");pp.hidden=!PFUI.sel;$("pfOv").querySelector(".dcs").classList.toggle("panel",!!PFUI.sel);
   G3.pfCtlOn=false;
   if(!PFUI.sel)pfCtlHome();
   if(PFUI.sel){const b0=pp.querySelector(".pfpb");pp._sc=b0?b0.scrollTop:0;const h=pfPanelHTML(D,live);if(force||pp._k!==skey||PFUI.tab==="bk"||PFUI.tab==="co"){const same=pp._k&&pp._k.split("|").slice(0,2).join()===skey.split("|").slice(0,2).join();if(pp._h!==h)pfCtlHome();put("pfPanel",h);pp._k=skey;const b=pp.querySelector(".pfpb"),b0=pp._sc||0;if(b)b.scrollTop=same?b0:0;}if(PFUI.tab==="ct"&&PFUI.area)pfCtlMount(PFUI.area);else pfCtlHome();pfCharts();}}
 
-// Settings > View: the button that opens it (next to the fiddly knobs view switch)
-{const row=$("v2viewrow"),b=kEl("button","pfopen","Process flow");b.type="button";b.id="pfBtn";b.title="Inputs, process and outputs for today's mill day";row.appendChild(b);
-  b.addEventListener("click",()=>{const x=document.querySelector('#v2sheet header button[aria-label="Close panel"]');if(x)x.click();pfOpen();});}
+// (v6.7: the process flow opens from Report > Control room, 51i; it was a button in Settings > View)
 document.addEventListener("keydown",e=>{if(e.key!=="Escape"||!PFUI.open)return;e.preventDefault();e.stopPropagation();if(PFUI.sel){PFUI.sel=null;pfRender(true);}else pfClose();},true);
 UI_TICKS.push(n=>{if(!PFUI.open)return;const m=$("v2menu");if(m&&!m.hidden&&!POP.on){pfClose();return;}if(n%5===0)pfRender();});
 G3.pfSel=(k,tab,zoom)=>{PFUI.sel=k;PFUI.tab=tab||null;if(zoom)PFUI.zoom=zoom;pfRender(true);};G3.pfMode=m=>{PFUI.mode=m;pfRender(true);};G3.histSum=histSum;G3.histRows=histRows;   // (tests)
@@ -12874,16 +13051,16 @@ const DV={
   wdr:()=>Math.round(C.wdr.v)+" t/h",wdt:()=>Math.round(S.rates.cut||0)+" t/h",hay:()=>String(S.tot.hayouts||0),rolls:()=>Math.round(S.conv||0)+" of "+P.convCap,
   dryl:()=>S.dry?Math.round(S.dry.load*100)+"%":"–",stm:()=>S.dry?Math.round(S.dry.steam/DRY.boiler*100)+"%":"–",
   grid:()=>SITE.env==="urban"&&dcsOn("brownout")?"BROWNOUT":"NORMAL",
-  ifl:()=>Math.round(S.wat?S.wat.r.fresh:0)+" m³/h",evap:()=>Math.round(S.wat?S.wat.r.evap:0)+" m³/h",wcl:()=>S.wat?Math.round(S.wat.L/WAT.cap*100)+"%":"–",
-  wcf:()=>{const W=S.wat;if(!W)return "–";return W.short>0?"EMPTY":W.r.make>5?"MAKEUP "+Math.round(W.r.make):W.r.over>5?"TO SEWER "+Math.round(W.r.over):"BALANCED";},ice:()=>SITE.env!=="rural"?"–":dcsOn("icedintake")?"ICED":"CLEAR",twl:()=>Math.round(clamp(82+wob2(0.004,11)*6-(dcsOn("icedintake")?25:0),0,100))+"%",
-  wuse:()=>{const W=S.wat;return W&&W.r.p>1?(W.r.fresh/W.r.p).toFixed(1)+" m³/t":"– m³/t";},tss:()=>Math.round(tssNow())+" mg/L",perm:()=>dcsOn("permit")?"EXCEEDED":"OK",ofl:()=>Math.round(S.wat?S.wat.r.out:0)+" m³/h",
+  ifl:()=>fmtGpm(GPM(S.wat?S.wat.r.fresh:0)),evap:()=>fmtGpm(GPM(S.wat?S.wat.r.evap:0)),wcl:()=>S.wat?Math.round(S.wat.L/WAT.cap*100)+"%":"–",
+  wcf:()=>{const W=S.wat;if(!W)return "–";return W.short>0?"EMPTY":W.r.make>5?"MAKEUP "+fmtGpm(GPM(W.r.make)):W.r.over>5?"OVERFLOW "+fmtGpm(GPM(W.r.over)):"BALANCED";},ice:()=>SITE.env!=="rural"?"–":dcsOn("icedintake")?"ICED":"CLEAR",twl:()=>Math.round(clamp(82+wob2(0.004,11)*6-(dcsOn("icedintake")?25:0),0,100))+"%",
+  wuse:()=>{const W=S.wat;return W&&W.r.p>1?Math.round(GAL(W.r.fresh/W.r.p)).toLocaleString()+" gal/ton":"– gal/ton";},tss:()=>Math.round(tssNow())+" mg/L",perm:()=>dcsOn("permit")?"EXCEEDED":"OK",ofl:()=>fmtGpm(GPM(S.wat?S.wat.r.out:0)),wcv:()=>S.wat?fmtGal(GAL(S.wat.L)):"–",chv:()=>fmtGal(S.tank/(WAT.cs/100)*264.172),mcv:()=>fmtGal(MCHEST_GAL*knobRead().mcLvl/100),
   rej:()=>((S.rates.feed||0)*(1-P.yieldF*((S.M&&S.M.yieldMul)||1))).toFixed(1)+" t/h"};
 // effluent suspended solids: fiber lost to the white water and broke push it up; 50 mg/L is the permit
 // (v6.5.6: from the fiber actually going to the sewer and the flow carrying it, 07f; it was 28 plus the knobs' off-spec)
 function tssNow(){return clamp(tssWater()+(dcsOn("permit")?30:0)+wob2(0.015,12)*3,5,120);}
 const MIMIC_KNOB={SPOT:MIMIC.SPOT,WET:MIMIC.WET,DET:MIMIC.DET};
 const MT=(x,y,k,t,f)=>[x,y,k,t,f];
-MIMIC.SPOT={title:"STOCK PREP",h:300,trends:MIMIC_KNOB.SPOT.trends,
+MIMIC.SPOT={title:"STOCK PREP",h:312,trends:MIMIC_KNOB.SPOT.trends,
   // (v6.5.4: in process order. Top row left to right: conveyor, pulper, HD cleaner, coarse screens, LC cleaners, fine
   // screens. Down, then right to left: LW cleaners, thickener, stock storage chest, refiners, machine chest, fan pump)
   eq:[[8,66,76,40,"CONVEYOR"],[100,56,110,60,"PULPER"],[100,8,52,26,"RAGGER","s"],[158,8,52,26,"JUNK","s"],[228,66,78,40,"HD CLEANER"],[324,66,78,40,"COARSE SCR"],[420,66,88,40,"LC CLEANERS"],
@@ -12895,7 +13072,8 @@ MIMIC.SPOT={title:"STOCK PREP",h:300,trends:MIMIC_KNOB.SPOT.trends,
     MT(568,262,"lwdp","ΔP",DV.lwdp),MT(464,262,"thf","FILT",DV.thf),MT(464,276,"thv","SPIDER",DV.thv),MT(464,290,"thl","VAT",DV.thl),
     MT(360,186,"stc","CONS",DV.stc),MT(360,272,"lvl","LEVEL",()=>Math.round(S.tank/P.tankCap*100)+"%"),MT(360,286,"lvsp","SP",DV.lvsp),
     MT(255,196,"csf","CSF",r=>Math.round(r.csf)+" mL"),MT(255,262,"gap","GAP",r=>kf(r.gap,2)+" mm"),MT(255,276,"refkw","LOAD",r=>Math.round(r.refkw)+" kW"),
-    MT(150,272,"mcCons","CONS",r=>kf(r.mcCons,2)+"%"),MT(150,286,"agit","AGIT",r=>r.agit+"%"),MT(212,176,"dyef","DYE",DV.dyef),MT(600,16,"wcl","LVL",DV.wcl),MT(600,30,"wcf","",DV.wcf),MT(48,262,"flow","FLOW",()=>S.pm==="run"?Math.round(S.pmSpeed*1.9)+" L/s":"0 L/s")]};
+    MT(150,272,"mcCons","CONS",r=>kf(r.mcCons,2)+"%"),MT(150,286,"agit","AGIT",r=>r.agit+"%"),MT(212,176,"dyef","DYE",DV.dyef),MT(504,50,"wcl","LVL",DV.wcl),MT(56,262,"flow","FLOW",()=>fmtGpm(S.pm==="run"?LS_GPM(S.pmSpeed*1.9):0)),
+    MT(360,300,"chv","VOL",DV.chv),MT(150,300,"mcv","VOL",DV.mcv),MT(504,62,"wcv","VOL",DV.wcv)]};   // (v6.7: chest volumes in gallons)
 MIMIC.WET={title:"WET END",h:260,trends:MIMIC_KNOB.WET.trends,
   eq:[[520,8,104,30,"FOG FAN"],[14,80,74,70,"HEADBOX"],[104,105,190,25,"FORMING TABLE"],[110,214,100,26,"WW SILO","s"],[308,90,64,50,"COUCH"],[388,90,104,50,"PICK-UP FELT"],[508,80,118,70,()=>LV("shoe")?"SHOE PRESS":"TWIN PRESS"]],
   ln:[["M88 115 H104"],["M294 117 H308"],["M372 115 H388"],["M492 115 H508"],["M160 130 V214",1]],
@@ -12959,7 +13137,8 @@ function dcsSetDefs(a){const D=()=>DCS_DRAW();
   return [];}
 function dcsSlice(k,v){const D=G3.SLC;if(!D||G3.slcFix||S.zen)return;slcSet(k,v/100);const g=D.geo();if(g.lipX-g.wet>=6.8&&typeof slcBreak==="function")slcBreak();}
 function dcsSetRows(a,cs){const defs=dcsSetDefs(a);
-  if(a==="UTIL")cs.appendChild(kEl("p","dcsfield","Monitoring only: water, effluent and rejects. The permit and the river intake show here when they act up."));
+  if(a==="UTIL")cs.appendChild(kEl("p","dcsfield","Monitoring only: water, effluent and rejects. The permit and the river intake show here when they act up. The full water balance is on WATER."));
+  if(a==="WATER")cs.appendChild(kEl("p","dcsfield","Monitoring only: fresh water comes in for the showers and seal water and to top up the white water chest; the chest feeds stock prep's dilution; what's left goes through the clarifier to the outfall."));
   if(a==="SPOT"||a==="WET"){const row=kEl("div","dcsrow dcsx");
     if(a==="SPOT"){row.innerHTML=`<div class="dcsn"><b>Dye: paper colour</b><small>dye pump on the machine chest</small></div><div class="seg kseg" role="group" aria-label="Paper colour"><button type="button" data-dye="brown">BROWN</button><button type="button" data-dye="white">WHITE</button></div>`;
       row.querySelectorAll("[data-dye]").forEach(b=>b.addEventListener("click",()=>{const pc=document.querySelector(`#paperColor button[data-c="${b.dataset.dye}"]`);if(pc)pc.click();dcsSync();}));}
@@ -13158,6 +13337,321 @@ UI_TICKS.push(()=>{const ok=POPOK();
   if(POP.on){let gone=true;try{gone=!POP.w||POP.w.closed;}catch(_){}if(gone){popDock(true);return;}popSkin();}
   [$("popBtn"),...(POP.on?[]:[$("dcsOv"),$("pfOv")].filter(Boolean).map(o=>o.querySelector("[data-popout]")))].forEach(b=>{if(b){const h=!ok||POP.on;if(b.hidden!==h)b.hidden=h;}});});
 addEventListener("pagehide",()=>{try{if(POP.w&&!POP.w.closed)POP.w.close();}catch(_){}});
+/* ---- v6.7 the control room: the DCS screens' trend pane (beside the picture), trending any tag, relationship analysis,
+   and the new QCS (quality), PLAN (planning) and WATER screens. All read-only on the sim. The tags and their history:
+   11d-tags.js. The screens open from Report > Control room, the operator consoles in the mill, and the second screen. ---- */
+const DCS_SCREENS=[["SPOT","SPOT","Stock prep"],["WET","WET","Wet end"],["DET","DET","Dry end"],["UTIL","UTIL","Utilities"],["WATER","WATER","Water"],
+  ["QCS","QCS","Quality"],["PLAN","PLAN","Planning"],["TREND","TREND","Trends"]];
+const DCS_SCR={SPOT:{title:"STOCK PREP · DCS"},WET:{title:"WET END · DCS"},DET:{title:"DRY END · DCS"},UTIL:{title:"UTILITIES · DCS"},WATER:{title:"WATER · DCS"},
+  QCS:{title:"QUALITY · QCS"},PLAN:{title:"PLANNING"},TREND:{title:"TRENDS"}};
+AREA_N.WATER="Water";
+
+/* ---------- the trend pane ---------- */
+const TR_DEF={SPOT:["cp","amps","mcCons","refkw"],WET:["vac","couchSol","pl","pressSol"],DET:["st3","steam","moist","tension"],UTIL:["steam","boiler","tss"],
+  WATER:["fresh","evap","outfall","wcl"],QCS:["moist","bw","off"],PLAN:["yard","fg","openo","lateo"],TREND:["speed","prod","moist","steam"]};
+const TR_COL=["#7fb2ff","#ffb02e","#4fd18b","#ff7a8a","#c08bff","#3fc6d6"],TR_MAX=6;
+const TR_RNG=[["1h","1 h",60],["6h","6 h",360],["24h","24 h",1440],["48h","48 h",2880],["7d","7 d",10080],["run","Run",Infinity]];
+const TRUI={pens:{},rng:"6h",mode:"tr",hx:null,show:true,view:"pic",xy:{},rel:null,relRes:null,relKey:"",k:""};
+// the picture's tag keys that are a different tag id
+const TAGMAP={lvl:"chest",flow:"fan",hdr:"boiler",ifl:"fresh",ofl:"outfall",rej:"rejt",rolls:"conv",spool:"reel",wdt:"cut",stm:"boiler",chv:"chestg",mcv:"mcg",
+  wcv:"wcg",shw:"shower",mk:"makeup",ovr:"wwover",pw:null,wret:null,dil:null,seal:null};
+const trTagOf=k=>k in TAGMAP?TAGMAP[k]:TAGI[k]!=null?k:null;
+const trScr=()=>KUI.st||"TREND";
+const trPens=()=>{const a=trScr();if(!TRUI.pens[a])TRUI.pens[a]=(TR_DEF[a]||TR_DEF.TREND).slice();return TRUI.pens[a];};
+const trSpan=()=>(TR_RNG.find(r=>r[0]===TRUI.rng)||TR_RNG[1])[2];
+const trQ=sel=>{const o=$("dcsOv");return o?o.querySelector(sel):null;};
+function trToggle(id){const p=trPens(),i=p.indexOf(id);if(i>=0)p.splice(i,1);else{if(p.length>=TR_MAX)p.pop();p.push(id);}
+  if(TRUI.mode!=="tr")TRUI.mode="tr";trBuild();trDraw(true);}
+function trOptions(sel){return Object.entries(TAG_AREA).map(([a,n])=>`<optgroup label="${n}">${TAGS.filter(t=>t[2]===a).map(t=>`<option value="${t[0]}"${t[0]===sel?" selected":""}>${t[1]}${t[3]?" ("+t[3]+")":""}</option>`).join("")}</optgroup>`).join("");}
+function trBuild(){const el=$("dcsTrp");if(!el)return;const p=trPens();
+  const head=`<div class="trh"><div class="seg trr" role="group" aria-label="Range">${TR_RNG.map(([k,l])=>`<button type="button" data-trr="${k}" aria-pressed="${TRUI.rng===k}">${l}</button>`).join("")}</div>
+    <div class="seg trm" role="group" aria-label="View">${[["tr","Trend"],["xy","X–Y"],["rel","Moves with"]].map(([k,l])=>`<button type="button" data-trm="${k}" aria-pressed="${TRUI.mode===k}">${l}</button>`).join("")}</div></div>`;
+  let body="";
+  if(TRUI.mode==="tr")body=`<div class="trcv"><canvas id="trCv"></canvas></div><div class="trcur" id="trCur">&nbsp;</div>
+    <div class="trpens">${p.map((id,i)=>`<div class="trpen"><i style="background:${TR_COL[i]}"></i><span>${tagName(id)}<small>${tagUnit(id)}${!tagHasLong(id)&&trSpan()>2880?" · last 48 h only":""}</small></span><b data-trv="${i}">–</b><em data-trs="${i}"></em><button type="button" data-trx="${id}" aria-label="Remove ${tagName(id)}">✕</button></div>`).join("")||`<p class="dcsfield">No pens. Add one below.</p>`}</div>
+    <div class="tradd"><select id="trAdd" aria-label="Add a pen"${p.length>=TR_MAX?" disabled":""}><option value="">${p.length>=TR_MAX?"Six pens: remove one to add":"+ Add a pen…"}</option>${trOptions()}</select><small>${KUI.st&&MIMIC[KUI.st]?"or tap a reading on the picture":""}</small></div>`;
+  else if(TRUI.mode==="xy"){const X=TRUI.xy.x||p[0]||"speed",Y=TRUI.xy.y||p[1]||"prod";
+    body=`<div class="trsel"><label>X <select id="trX">${trOptions(X)}</select></label><label>Y <select id="trY">${trOptions(Y)}</select></label></div>
+      <div class="trcv"><canvas id="trXY"></canvas></div><p class="trstat" id="trXYs">&nbsp;</p>
+      <p class="dcsfield">Each dot is one reading (fainter is older). r near +1 or −1: the two move together; near 0: no straight-line link. A delay is checked up to ${trSpan()>2880?"12 hours":"an hour"} either way.</p>`;}
+  else{const T=TRUI.rel||p[0]||"speed";
+    body=`<div class="trsel"><label>What moves with <select id="trRelT">${trOptions(T)}</select></label></div><div class="trrel" id="trRel"></div>
+      <p class="dcsfield">Readings that rise and fall with this one over the range, strongest first, allowing a delay of up to ${trSpan()>2880?"12 hours":"an hour"} either way. Moving together isn't proof that one causes the other.</p>`;}
+  el.innerHTML=head+body;TRUI.k="";TRUI.relKey="";}
+function trLayout(){const o=$("dcsOv");if(!o)return;const d=o.querySelector(".dcs"),w=o.ownerDocument.defaultView||window,narrow=w.matchMedia("(max-width:1000px)").matches,a=KUI.st;
+  const only=a==="TREND",split=!narrow&&TRUI.show&&!only,vt=narrow&&!only&&TRUI.view==="trend";
+  d.classList.toggle("split",split);d.classList.toggle("trendonly",only);d.classList.toggle("v-trend",vt);
+  o.querySelectorAll("[data-trv]").forEach(b=>b.setAttribute("aria-pressed",String((b.dataset.trv==="trend")===(vt||only))));
+  const t=o.querySelector("[data-trt]");if(t){t.setAttribute("aria-pressed",String(TRUI.show));t.textContent=TRUI.show?"Trend ◂":"Trend ▸";t.hidden=only;}
+  {const v=o.querySelector(".dcsview");if(v)v.hidden=only;}
+  TRUI.k="";trDraw(true);}
+function trWire(o){
+  o.addEventListener("click",e=>{const t=e.target.closest&&e.target.closest("[data-trk],[data-trr],[data-trm],[data-trx],[data-tradd]");if(!t)return;
+    if(t.dataset.trk){trToggle(t.dataset.trk);const n=o.ownerDocument.defaultView.matchMedia("(max-width:1000px)").matches;if(n&&!o.querySelector(".dcs").classList.contains("v-trend")){const c=$("dcsClock");if(c)c.textContent=`${tagName(t.dataset.trk)}: ${trPens().includes(t.dataset.trk)?"added to":"taken off"} the trend`;}return;}
+    if(t.dataset.trr){TRUI.rng=t.dataset.trr;TRUI.hx=null;trBuild();trDraw(true);return;}
+    if(t.dataset.trm){TRUI.mode=t.dataset.trm;trBuild();trDraw(true);return;}
+    if(t.dataset.trx){const p=trPens(),i=p.indexOf(t.dataset.trx);if(i>=0)p.splice(i,1);trBuild();trDraw(true);return;}
+    if(t.dataset.tradd){const p=trPens();if(!p.includes(t.dataset.tradd)){if(p.length>=TR_MAX)p.pop();p.push(t.dataset.tradd);}TRUI.mode="tr";trBuild();trDraw(true);}});
+  o.addEventListener("keydown",e=>{if((e.key==="Enter"||e.key===" ")&&e.target.dataset&&e.target.dataset.trk){e.preventDefault();trToggle(e.target.dataset.trk);}});
+  o.addEventListener("change",e=>{const id=e.target.id;
+    if(id==="trAdd"&&e.target.value){const p=trPens();if(!p.includes(e.target.value)&&p.length<TR_MAX)p.push(e.target.value);trBuild();trDraw(true);}
+    else if(id==="trX"){TRUI.xy.x=e.target.value;trDraw(true);}else if(id==="trY"){TRUI.xy.y=e.target.value;trDraw(true);}
+    else if(id==="trRelT"){TRUI.rel=e.target.value;TRUI.relKey="";trDraw(true);}});
+  const pos=e=>{const cv=e.target.closest&&e.target.closest("#trCv");if(!cv||!cv._g)return;const r=cv.getBoundingClientRect(),g=cv._g;TRUI.hx=clamp((e.clientX-r.left-g.L)/(g.R-g.L),0,1);TRUI.k="";trDraw(true);};
+  o.addEventListener("pointermove",pos);o.addEventListener("pointerdown",pos);
+  o.addEventListener("pointerout",e=>{if(e.pointerType==="mouse"&&e.target.id==="trCv"){TRUI.hx=null;TRUI.k="";trDraw(true);}});
+  (o.ownerDocument.defaultView||window).addEventListener("resize",()=>{if(KUI.st)trLayout();});}
+// the time window: [t0, t1] in sim minutes, newest at the right
+function trWin(){const span=trSpan(),t1=S.t;if(span!==Infinity)return [t1-span,t1];
+  const H=S.hist,first=H&&H.rows.length?H.rows[0][0]*60:(TG.len?TG.t[(TG.i-TG.len+TG.n)%TG.n]:0);return [Math.min(first,t1-60),t1];}
+const trShown=()=>{const o=$("dcsOv");if(!o||o.hidden||!KUI.st)return false;const d=o.querySelector(".dcs");return d.classList.contains("split")||d.classList.contains("trendonly")||d.classList.contains("v-trend");};
+function trCanvas(cv,h){const w=cv.ownerDocument.defaultView||window,dpr=Math.min(2,w.devicePixelRatio||1),cw=cv.clientWidth||400;
+  if(cv.width!==Math.round(cw*dpr)||cv.height!==Math.round(h*dpr)){cv.width=Math.round(cw*dpr);cv.height=Math.round(h*dpr);cv.style.height=h+"px";}
+  const x=cv.getContext("2d");x.setTransform(dpr,0,0,dpr,0,0);x.fillStyle="#0f1b2d";x.fillRect(0,0,cw,h);return [x,cw];}
+const trTimeLbl=(t,span)=>span<=1440?clockOf(t):span<=2880?`D${Math.floor(t/1440)+1} ${clockOf(t).replace(":00","")}`:`Day ${Math.floor(t/1440)+1}`;
+function trDraw(force){if(!trShown())return;const key=[TRUI.mode,TRUI.rng,trPens().join(),TRUI.hx,Math.floor(S.t),TRUI.xy.x,TRUI.xy.y,TRUI.rel].join("|");
+  if(!force&&key===TRUI.k)return;TRUI.k=key;
+  if(TRUI.mode==="tr")trDrawLines();else if(TRUI.mode==="xy")trDrawXY();else trDrawRel();}
+function trDrawLines(){const cv=trQ("#trCv");if(!cv)return;const H=250,[x,cw]=trCanvas(cv,H),[t0,t1]=trWin(),L=8,R=cw-8,T=10,B=H-22,X=t=>L+(t-t0)/Math.max(1,t1-t0)*(R-L),span=t1-t0,pens=trPens();
+  x.strokeStyle="rgba(140,170,210,.15)";x.lineWidth=1;for(let k=1;k<4;k++){x.beginPath();x.moveTo(L,T+(B-T)*k/4);x.lineTo(R,T+(B-T)*k/4);x.stroke();}
+  // time labels and day lines
+  x.fillStyle="rgba(190,205,230,.75)";x.font="600 10px system-ui,sans-serif";x.textAlign="center";
+  const step=span<=60?15:span<=360?60:span<=1440?240:span<=2880?480:span<=10080?1440:Math.max(1440,Math.ceil(span/1440/8)*1440);
+  for(let t=Math.ceil(t0/step)*step;t<=t1;t+=step){const xx=X(t);x.strokeStyle=t%1440===0?"rgba(79,209,139,.35)":"rgba(140,170,210,.12)";x.beginPath();x.moveTo(xx,T);x.lineTo(xx,B);x.stroke();if(xx>L+20&&xx<R-20)x.fillText(trTimeLbl(t,span),xx,H-6);}
+  if(t0<0){x.fillStyle="rgba(142,164,196,.10)";x.fillRect(X(t0),T,X(Math.min(0,t1))-X(t0),B-T);}
+  const cur=TRUI.hx==null?null:t0+TRUI.hx*(t1-t0),vals=[];let any=false;
+  pens.forEach((id,i)=>{const sr=tagSeries(id,t0,t1);let lo=Infinity,hi=-Infinity;for(const v of sr.v){if(v<lo)lo=v;if(v>hi)hi=v;}
+    if(!(hi>-Infinity)){vals.push([null,null,null]);return;}any=true;
+    if(hi-lo<Math.max(Math.abs(hi)*0.02,1e-6)){const c=(hi+lo)/2,w=Math.max(Math.abs(c)*0.05,1);lo=c-w;hi=c+w;}const pad=(hi-lo)*0.08;lo-=pad;hi+=pad;
+    const Y=v=>B-(v-lo)/(hi-lo)*(B-T);x.strokeStyle=TR_COL[i];x.lineWidth=1.8;x.beginPath();let on=false,pt=-1e9;
+    for(let k=0;k<sr.t.length;k++){const t=sr.t[k],v=sr.v[k],gap=t-pt>(sr.hourly&&t<(TG.len?TG.t[(TG.i-TG.len+TG.n)%TG.n]:Infinity)?90:8);pt=t;const xx=X(t),y=Y(v);if(!on||gap){x.moveTo(xx,y);on=true;}else x.lineTo(xx,y);}x.stroke();
+    let cv0=sr.v.length?sr.v[sr.v.length-1]:null;if(cur!=null){let best=null,bd=1e9;for(let k=0;k<sr.t.length;k++){const d=Math.abs(sr.t[k]-cur);if(d<bd){bd=d;best=sr.v[k];}}cv0=bd<=(span>2880?90:6)?best:null;}
+    vals.push([cv0,lo+pad,hi-pad]);});
+  if(!any){x.fillStyle="rgba(190,205,230,.8)";x.font="600 13px system-ui,sans-serif";x.fillText(TG.len<2?"Collecting data… (a reading every 2 game minutes)":"No readings in this range",(L+R)/2,(T+B)/2);}
+  if(cur!=null){const xx=X(cur);x.strokeStyle="rgba(255,255,255,.55)";x.beginPath();x.moveTo(xx,T);x.lineTo(xx,B);x.stroke();}
+  cv._g={L,R};
+  {const c=trQ("#trCur"),t=cur!=null?`Day ${Math.floor(cur/1440)+1} · ${clockOf(cur)}`:`Now · Day ${Math.floor(S.t/1440)+1} · ${clockOf(S.t)}`;if(c&&c.textContent!==t)c.textContent=t;}
+  pens.forEach((id,i)=>{const b=trQ(`[data-trv="${i}"]`),s=trQ(`[data-trs="${i}"]`),[v,lo,hi]=vals[i]||[];if(b){const t=tagFmt(id,v);if(b.textContent!==t)b.textContent=t;}
+    if(s){const t=lo==null?"":`${tagFmt(id,lo).replace(" "+tagUnit(id),"")} – ${tagFmt(id,hi).replace(" "+tagUnit(id),"")}`;if(s.textContent!==t)s.textContent=t;}});}
+
+/* ---------- relationship analysis ---------- */
+// aligned readings over the window: 2-minute rows from the ring (48 h and less), else the hourly history
+function relData(){const [t0,t1]=trWin(),out={dt:2,n:0,col:{}};
+  if(t1-t0<=2880+1&&TG.len&&TG.S===S){const idx=[];for(let n=0;n<TG.len;n++){const i=(TG.i-TG.len+n+TG.n)%TG.n;if(TG.t[i]>=t0&&TG.t[i]<=t1)idx.push(i);}
+    out.n=idx.length;TAGS.forEach((t,j)=>{const a=new Float64Array(idx.length);for(let k=0;k<idx.length;k++)a[k]=TG.v[j][idx[k]];out.col[t[0]]=a;});return out;}
+  out.dt=60;const rows=S.hist?S.hist.rows.filter(r=>r[0]*60>=t0&&r[0]*60<=t1):[];out.n=rows.length;
+  TAGS.forEach(t=>{if(!t[5]||HCI[t[5]]==null)return;const c=HCI[t[5]],a=new Float64Array(rows.length);rows.forEach((r,k)=>{const v=r[c];a[k]=v==null?NaN:v;});out.col[t[0]]=a;});return out;}
+function pear(x,y,lag){let n=0,sx=0,sy=0,sxx=0,syy=0,sxy=0;const N=x.length;
+  for(let i=Math.max(0,-lag);i<N&&i+lag<N;i++){const a=x[i],b=y[i+lag];if(a!==a||b!==b)continue;n++;sx+=a;sy+=b;sxx+=a*a;syy+=b*b;sxy+=a*b;}
+  if(n<12)return {r:0,n};const vx=sxx-sx*sx/n,vy=syy-sy*sy/n;if(vx<=1e-9*Math.max(1,sxx)||vy<=1e-9*Math.max(1,syy))return {r:0,n,flat:true};
+  return {r:(sxy-sx*sy/n)/Math.sqrt(vx*vy),n,sl:(sxy-sx*sy/n)/vx,ic:(sy-((sxy-sx*sy/n)/vx)*sx)/n};}
+function bestLag(x,y,maxL){const r0=pear(x,y,0);let best={...r0,lag:0};for(let L=-maxL;L<=maxL;L++){if(!L)continue;const p=pear(x,y,L);if(p.n>=12&&Math.abs(p.r)>Math.abs(best.r)+0.02)best={...p,lag:L};}return {best,r0};}
+const lagTxt=(lag,dt,a,b)=>{if(!lag)return "at the same time";const m=Math.abs(lag)*dt,t=m>=90?(m/60).toFixed(m>=600?0:1)+" h":m+" min";return lag>0?`${b} follows ${a} by about ${t}`:`${b} leads ${a} by about ${t}`;};
+function trDrawXY(){const cv=trQ("#trXY"),st=trQ("#trXYs");if(!cv)return;const p=trPens(),X=TRUI.xy.x||p[0]||"speed",Y=TRUI.xy.y||p[1]||"prod",D=relData(),x0=D.col[X],y0=D.col[Y];
+  const H=260,[x,cw]=trCanvas(cv,H),L=46,R=cw-10,T=10,B=H-30;
+  if(!x0||!y0){x.fillStyle="rgba(190,205,230,.8)";x.font="600 12px system-ui,sans-serif";x.textAlign="center";x.fillText("One of these has no history this far back: pick 48 h or less",(L+R)/2,H/2);if(st)st.textContent=" ";return;}
+  let xl=Infinity,xh=-Infinity,yl=Infinity,yh=-Infinity,n=0;for(let i=0;i<x0.length;i++){const a=x0[i],b=y0[i];if(a!==a||b!==b)continue;n++;xl=Math.min(xl,a);xh=Math.max(xh,a);yl=Math.min(yl,b);yh=Math.max(yh,b);}
+  if(n<12){x.fillStyle="rgba(190,205,230,.8)";x.font="600 12px system-ui,sans-serif";x.textAlign="center";x.fillText("Not enough readings yet",(L+R)/2,H/2);if(st)st.textContent=" ";return;}
+  const fx=xh-xl||1,fy=yh-yl||1;xl-=fx*0.05;xh+=fx*0.05;yl-=fy*0.05;yh+=fy*0.05;const PX=v=>L+(v-xl)/(xh-xl)*(R-L),PY=v=>B-(v-yl)/(yh-yl)*(B-T);
+  x.strokeStyle="rgba(140,170,210,.18)";x.strokeRect(L,T,R-L,B-T);x.fillStyle="rgba(190,205,230,.75)";x.font="600 10px system-ui,sans-serif";
+  x.textAlign="right";[yl,(yl+yh)/2,yh].forEach(v=>x.fillText(tagFmt(Y,v).replace(" "+tagUnit(Y),""),L-4,PY(v)+3));x.textAlign="center";[xl,(xl+xh)/2,xh].forEach(v=>x.fillText(tagFmt(X,v).replace(" "+tagUnit(X),""),PX(v),B+13));
+  x.fillText(tagName(X)+(tagUnit(X)?" ("+tagUnit(X)+")":""),(L+R)/2,H-3);
+  for(let i=0;i<x0.length;i++){const a=x0[i],b=y0[i];if(a!==a||b!==b)continue;x.fillStyle=`rgba(127,178,255,${(0.15+0.75*i/x0.length).toFixed(2)})`;x.fillRect(PX(a)-1.5,PY(b)-1.5,3,3);}
+  const maxL=D.dt===2?30:12,{best,r0}=bestLag(x0,y0,maxL);
+  if(r0.sl!=null){x.strokeStyle="#ffb02e";x.lineWidth=1.5;x.beginPath();x.moveTo(PX(xl),PY(r0.ic+r0.sl*xl));x.lineTo(PX(xh),PY(r0.ic+r0.sl*xh));x.stroke();}
+  if(st){const t=r0.flat?"One of them doesn't move in this range, so there's nothing to compare.":`r = ${r0.r.toFixed(2)} over ${r0.n} readings (${Math.abs(r0.r)>=0.7?"strong":Math.abs(r0.r)>=0.4?"moderate":Math.abs(r0.r)>=0.2?"weak":"no clear"} link${r0.r<-0.2?", opposite ways":""}).`+(best.lag?` Strongest with a delay: ${lagTxt(best.lag,D.dt,tagName(X).toLowerCase(),tagName(Y).toLowerCase())} (r = ${best.r.toFixed(2)}).`:"");if(st.textContent!==t)st.textContent=t;}}
+function trDrawRel(){const el=trQ("#trRel");if(!el)return;const p=trPens(),T=TRUI.rel||p[0]||"speed",key=[T,TRUI.rng,Math.floor(S.t/30)].join("|");if(TRUI.relKey===key)return;TRUI.relKey=key;
+  const D=relData(),x0=D.col[T];if(!x0||D.n<12){el.innerHTML=`<p class="dcsfield">${!x0?"This reading has no history this far back: pick 48 h or less.":"Not enough readings yet: give it a little longer."}</p>`;return;}
+  const maxL=D.dt===2?30:12,res=[];
+  for(const t of TAGS){const id=t[0];if(id===T||!D.col[id])continue;const {best,r0}=bestLag(x0,D.col[id],maxL);if(r0.flat||!(Math.abs(best.r)>=0.3))continue;
+    if(Math.abs(r0.r)>0.995)continue;   // (the same reading in other units: chest level and volume)
+    res.push({id,r:best.r,lag:best.lag,n:best.n});}
+  res.sort((a,b)=>Math.abs(b.r)-Math.abs(a.r));
+  el.innerHTML=res.length?res.slice(0,8).map(o=>`<div class="trrr"><span><b>${tagName(o.id)}</b><small>${o.r>0?"rises with it":"falls as it rises"} · ${lagTxt(o.lag,D.dt,tagName(T).toLowerCase(),tagName(o.id).toLowerCase())}</small></span><i><s style="width:${Math.round(Math.abs(o.r)*100)}%;background:${o.r>0?"#4fd18b":"#ff7a8a"}"></s></i><em>${o.r.toFixed(2)}</em><button type="button" data-tradd="${o.id}" title="Trend it">+ trend</button></div>`).join("")
+    :`<p class="dcsfield">Nothing moves clearly with ${tagName(T).toLowerCase()} in this range.</p>`;}
+
+/* ---------- QCS: the quality screen ---------- */
+function qcsBuild(b){
+  b.appendChild(kEl("div","qcshead",`<div class="qcsst" id="qcsSt"></div><div class="qcsv" id="qcsV"></div>`));
+  b.appendChild(kEl("div","dcsctl",`<div class="dcssub">Beater &amp; on spec</div><div class="qcsv" id="qcsBk"></div>`));
+  b.appendChild(kEl("div","dcstr",`<div class="dcssub">CD moisture profile · 12 zones (spec ±1.5 %)</div><canvas width="640" height="170" id="qcsCd"></canvas>`));
+  b.appendChild(kEl("div","qcsdef",`<div class="dcssub">Web inspection</div><div class="qcsgrid" id="qcsDef"></div>`));
+  b.appendChild(kEl("div","dcsctl",`<div class="dcssub">Spec sheet</div><div class="qtab" id="qcsSpec"></div>`));
+  b.appendChild(kEl("div","dcsctl",`<div class="dcssub">Off-spec log · newest first</div><div class="qtab" id="qcsLog"></div>`));
+  b.appendChild(kEl("div","dcsctl",`<div class="dcssub">Grade changes</div><div class="qtab" id="qcsGc"></div>`));}
+const dhm=t=>`D${Math.floor(t/1440)+1} ${clockOf(t)}`;
+const durTxt=m=>m>=90?(m/60).toFixed(1)+" h":Math.max(1,Math.round(m))+" min";
+function qcsRefresh(){const Q=S.q||{},put=(id,h)=>{const e=$(id);if(e&&e._h!==h){e._h=h;e.innerHTML=h;}};
+  const made=Q.made||0,off=Q.off||0,today=S.pf&&S.pf.W?S.pf.W.broke:0;
+  put("qcsBk",`<div><small>On spec · the run</small><b>${made>0.5?((1-off/made)*100).toFixed(1)+" %":"–"}</b><small>${Math.round(made-off).toLocaleString()} t good</small></div>
+    <div><small>To the beater today</small><b>${Math.round(today)} t</b><small>${Math.round(S.tot.broke||0).toLocaleString()} t this run</small></div>
+    <div><small>Beater bay</small><b>${Math.round(Q.bank||0)} t</b><small>waiting to repulp</small></div><div><small>Repulped</small><b>${Math.round(S.tot.repulped||0).toLocaleString()} t</b><small>back to the stock chest</small></div>`);
+  put("qcsSpec",`<table><thead><tr><th>Grade</th><th>Basis weight</th><th>Moisture</th><th>Color</th></tr></thead><tbody>${Object.entries(QSPEC).map(([g,s])=>`<tr${g===C.grade?' class="cur"':""}><td>${g}${g===C.grade?" · on the machine":""}</td><td>${s.bw[0].toFixed(2)}–${s.bw[1].toFixed(2)} lb</td><td>${s.m[0]}–${s.m[1]} %</td><td>${s.shade}</td></tr>`).join("")}</tbody></table>`);
+  const L=(Q.log||[]).slice().reverse(),cur=Q.cur?[{...Q.cur,live:true}]:[];
+  put("qcsLog",cur.length||L.length?`<table><thead><tr><th>When</th><th>How long</th><th>Grade</th><th>Why</th><th>To beater</th></tr></thead><tbody>${cur.concat(L).slice(0,15).map(s=>`<tr${s.live?' class="live"':""}><td>${dhm(s.t0)}</td><td>${s.live?"now · ":""}${durTxt(s.t1-s.t0+1)}</td><td>${s.g}</td><td>${s.why}</td><td>${(Math.round(s.tons*10)/10)} t</td></tr>`).join("")}</tbody></table>`:`<p class="dcsfield">No off-spec paper yet this run.</p>`);
+  const G=(Q.gc||[]).slice().reverse();
+  put("qcsGc",G.length?`<table><thead><tr><th>When</th><th>Change</th><th>Transition</th></tr></thead><tbody>${G.slice(0,10).map(c=>`<tr><td>${dhm(c.t)}</td><td>${c.from} → ${c.to}</td><td>${c.tons} t to the beater</td></tr>`).join("")}</tbody></table>`:`<p class="dcsfield">No grade changes yet this run.</p>`);}
+
+/* ---------- PLAN: the planning screen (read only) ---------- */
+function planRefresh(){const el=$("planBox");if(!el)return;const R=S.rates||{},pl=S.plan||{},rw=C.rollW.v,O=ordOn()?ordState():null,Q=bqOn()?bqState():null;
+  const sec=(t,h)=>`<section class="plsec"><div class="dcssub">${t}</div>${h}</section>`;
+  // production plan
+  const tph=Math.max(1,R.prod||0),camp=[[C.grade,Math.max(0,pl.left||0),true]];
+  {const q=(pl.q||[]).map(x=>[x.g,x.t]);let i=pl.cur&&pl.cur.i!==undefined?pl.cur.i:pl.i;const nx=[];for(let k=0;k<4;k++){i=(i+1)%WHEEL.length;const g=WHEEL[i],c=GCOST[g];nx.push([g,(c.mix[0]+c.mix[1])/2]);}
+    q.concat(nx).slice(0,4).forEach(([g,t])=>camp.push([g,t,false]));}
+  let acc=0;const prodH=camp.map(([g,t,cur],k)=>{const h=t/tph;const st=acc;acc+=h;return `<tr${cur?' class="cur"':""}><td>${cur?"Now":k===1&&pl.q&&pl.q.length?"Next (rush)":"Then"}</td><td>${g}</td><td>${cur?Math.round(t).toLocaleString()+" t left":"~"+Math.round(t).toLocaleString()+" t"}</td><td>${cur?"~"+durTxt(h*60)+" more":"from ~"+durTxt(st*60)}</td></tr>`;}).join("");
+  const plan=`<p class="dcsfield">The market planner runs the grade wheel (${WHEEL.join(" → ")}) and books customer orders for each campaign. ${S.chg?`<b>Grade change to ${S.chg.to} in progress: ${S.chg.left.toFixed(1)} t of transition left.</b>`:""}</p>
+    <table><thead><tr><th></th><th>Grade</th><th>Tons</th><th>Time at ${Math.round(tph)} t/h</th></tr></thead><tbody>${prodH}</tbody></table>`;
+  // orders
+  let ord="<p class=\"dcsfield\">Zen mode: no order book.</p>";
+  if(O){const K=O.k,open=O.list.filter(o=>o.st==="open").sort((a,b)=>a.due-b.due),done=O.list.filter(o=>o.st!=="open").sort((a,b)=>b.done-a.done).slice(0,5),tons=K.onT+K.lateT;
+    const st=o=>{const left=o.r-Math.round(o.sh),late=S.t>o.due+ORD.grace;return late?["bad","late "+durTxt((S.t-o.due)).replace(" "," ")]:o.ld>o.sh+0.5?["ok","loading"]:Math.floor(ordFree(o.g))>=Math.min(left,P.truckRolls)?["ok","ready"]:C.grade===o.g?["","making"]:["","waiting for "+o.g];};
+    ord=`<div class="qcsv"><div><small>On-time delivery</small><b>${tons>0?Math.round(K.onT/tons*100)+" %":"–"}</b><small>${Math.round(tons).toLocaleString()} t on orders</small></div><div><small>Open orders</small><b>${open.length}</b><small>${open.filter(o=>S.t>o.due+ORD.grace).length} late · ${K.canc} cancelled</small></div>
+      <div><small>Spot market</small><b>${Math.round(K.spot)} t</b><small>−${money(K.spotV)} under list</small></div><div><small>Chargebacks</small><b>${money(K.chg)}</b><small>${K.dry} dry run${K.dry===1?"":"s"}</small></div></div>
+      <table><thead><tr><th>#</th><th>Customer</th><th>Grade</th><th>Rolls shipped</th><th>Due</th><th>Status</th></tr></thead><tbody>${open.map(o=>{const s=st(o);return `<tr class="${s[0]==="bad"?"late":""}"><td>${o.id}</td><td>${ordCust(o)}</td><td>${o.g}</td><td>${Math.round(o.sh)} / ${o.r}${o.ld>o.sh+0.5?` <small>(${Math.round(o.ld-o.sh)} loading)</small>`:""}</td><td>${dhm(o.due)}</td><td class="${s[0]}">${s[1]}</td></tr>`;}).join("")||`<tr><td colspan="6">No open orders.</td></tr>`}</tbody></table>
+      ${done.length?`<div class="dcssub">Recently closed</div><table><tbody>${done.map(o=>`<tr><td>${o.id}</td><td>${ordCust(o)}</td><td>${o.g}</td><td>${o.r} rolls</td><td>${o.st==="cancelled"?'<span class="bad">cancelled</span>':o.done>o.due+ORD.grace?'<span class="bad">late</span>':'<span class="ok">on time</span>'}</td><td>${dhm(o.done)}</td></tr>`).join("")}</tbody></table>`:""}`;}
+  // inventory
+  const grades=Object.keys(GRADES),inv=grades.map(g=>{const have=fgOf(g),need=O?ordNeed(g):0,onT=S.outDock.filter(t=>t&&t.g===g).reduce((a,t)=>a+Math.max(0,t.want-t.load),0),free=have-onT,s=free-need;
+    return `<tr${g===C.grade?' class="cur"':""}><td>${g}</td><td>${Math.round(have)} rolls · ${Math.round(have*rw)} t</td><td>${O?Math.round(need):"–"}</td><td class="${O&&s<-0.5?"bad":O&&s>=P.truckRolls?"ok":""}">${O?(s>=0?"+":"")+Math.round(s):"–"}</td></tr>`;}).join("");
+  const yd=(R.feed||0)>0.5?S.yard/(R.feed*24):null,ch=(R.fiberUse||0)>0.5?S.tank/R.fiberUse:null;
+  const invH=`<table><thead><tr><th>Warehouse</th><th>In stock</th><th>Open orders need</th><th>Surplus / short</th></tr></thead><tbody>${inv}</tbody></table>
+    <div class="qcsv"><div><small>Warehouse</small><b>${Math.round(S.fg/P.fgCap*100)} %</b><small>${Math.round(S.fg)} of ${Math.round(P.fgCap)} rolls</small></div>
+      <div><small>Bale yard</small><b>${Math.round(S.yard).toLocaleString()} t</b><small>${yd!=null?yd.toFixed(1)+" days at today's feed":"pulper idle"}</small></div>
+      ${Q?`<div><small>Bales</small><b>${(Q.m*100).toFixed(1)} %</b><small>moisture · ${bqBand(Q.k)} · stickies ${Math.round(Q.ck*100)} %</small></div>`:""}
+      <div><small>Stock chest</small><b>${Math.round(S.tank)} t</b><small>${ch!=null?durTxt(ch*60)+" of stock":"machine idle"}</small></div>
+      <div><small>Paper at the winder</small><b>${Math.round(S.winderBuf+S.reel)} t</b><small>reel and store</small></div><div><small>Beater bay</small><b>${Math.round((S.q&&S.q.bank)||0)} t</b><small>to repulp</small></div></div>`;
+  // trucks
+  const inD=S.inDock.slice(0,P.doors).map((t,d)=>`<tr><td>Door ${d+1}</td><td>${t?`${Math.round(t.load)} t left${t.q?` · grade ${t.q} · ${(t.m*100).toFixed(1)} % moisture`:""}`:"empty"}</td></tr>`).join("");
+  const outD=S.outDock.slice(0,P.shipDoors).map((t,d)=>{if(!t)return `<tr><td>Door ${d+1}</td><td>empty</td></tr>`;const o=!t.spot&&t.oid&&ordGet(t.oid);return `<tr><td>Door ${d+1}</td><td>${t.g?`${t.spot?"Spot load":o?`#${o.id} ${ordCust(o)}`:"Order"} · ${t.g} · ${Math.round(t.load)} of ${Math.round(t.want||P.truckRolls)} rolls`:`${Math.round(t.load)} rolls`}</td></tr>`;}).join("");
+  const trk=`<div class="plcols"><div><div class="dcssub">Inbound bales</div><p class="dcsfield">${C.inRate.v.toFixed(1)} trucks/h ${C.inRate.auto?"(auto)":"(hand)"} · ${S.inQ.length} waiting${Q?` · ${Q.rej} loads rejected at the gate`:""}</p><table><tbody>${inD}</tbody></table></div>
+    <div><div class="dcssub">Outbound paper</div><p class="dcsfield">${C.outRate.v.toFixed(2)} trucks/h ${C.outRate.auto?"(auto: called for what's ready)":"(hand)"} · ${S.outQ.length} waiting${O&&O.k.dry?` · ${O.k.dry} dry runs`:""}</p><table><tbody>${outD}</tbody></table></div></div>`;
+  const h=sec("Production plan",plan)+sec("Order book",ord)+sec("Inventory",invH)+sec("Trucks",trk);if(el._h!==h){el._h=h;el.innerHTML=h;}}
+const bqOn=()=>typeof baleOn==="function"&&baleOn();
+
+/* ---------- WATER: the water screen ---------- */
+const DW={shw:()=>fmtGpm(GPM((S.wat?S.wat.r.p:0)*WAT.shower)),seal:()=>fmtGpm(GPM(WAT.base)),pw:()=>fmtGpm(GPM((S.wat?S.wat.r.p:0)*((S.dry?S.dry.m:DRY.m0)/100))),
+  dil:()=>fmtGpm(GPM(WAT.sw*((S.rates&&S.rates.fiberIn)||0))),wret:()=>fmtGpm(GPM(WAT.sw*((S.rates&&S.rates.fiberUse)||0))),mk:()=>fmtGpm(GPM(S.wat?S.wat.r.make:0)),ovr:()=>fmtGpm(GPM(S.wat?S.wat.r.over:0))};
+MIMIC.WATER={title:"WATER",h:320,
+  eq:[[10,40,90,54,"RIVER INTAKE"],[116,40,90,54,"FRESH WATER"],[222,40,110,54,"SHOWERS & SEALS"],[350,40,120,54,"PAPER MACHINE"],[488,40,140,54,"DRYERS"],
+    [222,170,110,60,"STOCK PREP"],[350,170,120,60,"WW CHEST"],[488,170,140,60,"CLARIFIER"],[222,262,110,32,"LANDFILL","s"],[488,262,140,32,"OUTFALL","s"]],
+  ln:[["M100 67 H116"],["M206 67 H222"],["M332 67 H350"],["M470 67 H488"],["M410 94 V170"],["M350 200 H332"],["M277 170 V130 H380 V94"],["M161 94 V150 H392 V170",1],
+    ["M470 200 H488"],["M558 230 V262"],["M277 230 V262"],["M558 40 V22",1]],
+  tags:[MT(55,108,"ifl","FLOW",DV.ifl),MT(55,122,"ice","ICE",DV.ice),MT(161,108,"twl","LEVEL",DV.twl),MT(110,16,"wuse","FRESH WATER USE",DV.wuse),
+    MT(277,108,"shw","SHOWERS",DW.shw),MT(277,122,"seal","SEALS",DW.seal),MT(410,108,"pw","IN PAPER",DW.pw),MT(410,122,"wret","TO CHEST",DW.wret),
+    MT(558,108,"evap","EVAP",DV.evap),MT(558,16,"evap2","STACK",DV.evap),MT(165,188,"dil","DILUTION",DW.dil),MT(165,202,"rej","REJECTS",DV.rej),MT(270,146,"mk","MAKEUP",DW.mk),
+    MT(410,244,"wcl","LEVEL",DV.wcl),MT(410,258,"wcv","VOL",DV.wcv),MT(410,272,"wcf","",DV.wcf),
+    MT(558,128,"perm","PERMIT",DV.perm),MT(558,142,"ovr","TO SEWER",DW.ovr),MT(558,156,"tss","TSS",DV.tss),MT(558,308,"ofl","FLOW",DV.ofl)]};
+TAGMAP.evap2="evap";TAGMAP.twl=null;TAGMAP.ice=null;TAGMAP.perm=null;TAGMAP.wcf=null;
+PGX.WATER=[["intake",()=>stI("icedintake")],["tower",()=>active("icedintake")?"warn":"ok","tower"],["pumpBox",()=>"ok"],["headbox",()=>S.pm==="run"?"ok":"off"],["dryers",()=>S.pm==="run"?"ok":"off","d4"],
+  ["pulper",()=>S.M&&S.M.pulperDown?"off":"ok","pulp"],["tank",()=>S.wat&&S.wat.short>0?"trip":S.wat&&S.wat.L<WAT.cap*0.25?"warn":"ok","wwc"],["clarifier",()=>or(stI("permit"),tssNow()>45?"warn":"ok")],
+  ["landfill",()=>"ok"],["outfall",()=>"ok"]];
+// the water screen's alarms (the river intake and the permit show here as well as on UTIL)
+{const base=dcsAlarms;dcsAlarms=function(a,r,L){base(a,r,L);if(a!=="WATER")return;const al=(on,t,hi)=>{if(on)L.push([t,hi]);},W=S.wat;
+  al(active("icedintake"),"RIVER INTAKE ICED · NO MAKEUP WATER",true);al(active("permit"),"WASTEWATER PERMIT EXCEEDED",true);
+  al(!!(W&&W.short>0),"WHITE WATER CHEST EMPTY · STOCK THICK",true);al(!!(W&&W.short<=0&&W.L<WAT.cap*0.25),"WHITE WATER CHEST LEVEL LO",false);
+  al(!!(W&&W.r.over>50),"WHITE WATER OVERFLOWING TO THE SEWER",false);al(tssNow()>45&&!active("permit"),"EFFLUENT TSS HI",false);};}
+function waterRefresh(){const e=$("wBal");if(!e||!S.wat)return;const T=S.wat.tot,mg=v=>fmtGal(GAL(v||0)),paper=T.paper||0;
+  const inn=[["Fresh water",T.fresh],["Water in the bales",T.bale],["Water in repulped beater",T.rep]],out=[["Up the dryer stack",T.evap],["In the paper",T.prod],["With the rejects",T.rej],["With the clarifier sludge",T.sludge],["Treated outfall",T.out]];
+  const si=inn.reduce((a,x)=>a+(x[1]||0),0),so=out.reduce((a,x)=>a+(x[1]||0),0);
+  const h=`<div class="wcol"><b>In</b>${inn.map(([k,v])=>`<div><span>${k}</span><em>${mg(v)}</em></div>`).join("")}<div class="tot"><span>Total in</span><em>${mg(si)}</em></div></div>
+    <div class="wcol"><b>Out</b>${out.map(([k,v])=>`<div><span>${k}</span><em>${mg(v)}</em></div>`).join("")}<div class="tot"><span>Total out</span><em>${mg(so)}</em></div></div>
+    <p class="dcsfield">Fresh water per ton of paper: <b>${paper>1?Math.round(GAL(T.fresh/paper)).toLocaleString()+" gal/ton":"–"}</b>. In less out (${mg(si-so)}) is the change in the water held in the white water chest and in the stock (${si-so<0?"they hold less than when the run started":"they hold more than when the run started"}).</p>`;
+  if(e._h!==h){e._h=h;e.innerHTML=h;}}
+G3.ctl={trPens,trToggle,relData,bestLag,TRUI,tagSeries,tagNow};   // (tests: tools/controlcheck.py)
+/* ---- v6.7 process flow additions: each area's capacity against its throughput (the bottleneck marked), the $/ton and
+   tons views, today against the 7 days before, the OEE strip, replaying a range hour by hour, the "where the money went"
+   waterfall on Profit, and links from each area to its DCS screen (50c). Read-only: all from the hourly history (11c). ---- */
+const PF_CAPK={yard:"recv",pulper:"pulper",stock:"screens",pm:"pm",winder:"winder",ship:"ship"};
+// an area's throughput in paper tons an hour (the same measure lineCaps uses), now or averaged over the range
+function pfThru(a,D,live){const R=S.rates||{},y=P.yieldF,k=P.pmLoss,rw=C.rollW?C.rollW.v:12.5;
+  if(live)return {yard:(R.unload||0)*y*k,pulper:(R.feed||0)*y*k,stock:(R.fiberIn||0)*k,pm:R.prod||0,winder:R.cut||0,ship:(R.load||0)*rw}[a];
+  const W=D.W||{},h=Math.max(1,D.h||1);return {yard:(W.in||0)*y*k,pulper:(W.feed||0)*y*k,stock:((W.feed||0)-(W.rej||0))*k,pm:(D.made||0)+(W.broke||0),winder:D.made||0,ship:D.shipT||0}[a]/h;}
+function pfCapSVG(a,D,live,x,y,w,h){const ck=PF_CAPK[a];if(!ck)return "";const caps=lineCaps(),c=caps.find(q=>q[0]===ck);if(!c||!(c[2]>0))return "";
+  const bn=caps.reduce((m,q)=>q[2]<m[2]?q:m,caps[0])[0]===ck,u=pfThru(a,D,live)/c[2],bx=x+10,bw=w-20,by=y+h-11;
+  const col=u>0.95?"#ffb02e":u<0.5?"#8ea4c4":"#4fd18b";
+  return `<rect x="${bx}" y="${by}" width="${bw}" height="5" rx="2.5" class="pfcapt"/><rect x="${bx}" y="${by}" width="${(bw*clamp(u,0,1)).toFixed(1)}" height="5" rx="2.5" fill="${col}"/>`+
+    `<title>${Math.round(u*100)}% of what it can do (${Math.round(c[2])} t/h)${bn?" · the mill's bottleneck":""}</title>`+(bn?`<text x="${x+8}" y="${y+13}" class="pfbn">BOTTLENECK</text>`:"");}
+
+/* ---- the range's hourly rows (or the replayed hour) ---- */
+const pfDayN=()=>S.pf?S.pf.d:Math.floor(S.t/1440);
+function pfRpWin(){const n=pfNowH()+1,d=pfDayN(),H=S.hist,first=H&&H.rows.length?H.rows[0][0]:0,pr=PFUI.prior?first:Math.max(0,first);
+  if(PFUI.mode==="y")return [(d-1)*24,d*24];if(PFUI.mode==="w")return [Math.max(pr,n-168),n];if(PFUI.mode==="r")return [Math.min(pr,n-1),n];return [d*24,n];}
+function pfRangeRows(){if(PFUI.rp!=null)return histRows(PFUI.rp,PFUI.rp+1,true);const [h0,h1]=pfRpWin();return histRows(h0,h1,PFUI.mode==="w"||PFUI.mode==="r"?PFUI.prior:true);}
+function pfRpD(){const rows=histRows(PFUI.rp,PFUI.rp+1,true);if(!rows.length)return null;const D=histSum(rows,PFUI.rp*60,PFUI.rp*60+60);D.h=1;D.day=Math.floor(PFUI.rp/24)+1;return D;}
+// the replay bar: built once, then kept in step (a rebuilt slider would drop the drag)
+function pfRepHTML(){const el=$("pfRep");if(!el)return;const [h0,h1]=pfRpWin(),has=S.hist&&S.hist.rows.length&&h1-h0>1;
+  if(!has){if(el._h!=="none"){el._h="none";el.innerHTML="";}return;}
+  if(el._h!=="bar"){el._h="bar";el.innerHTML=`<button type="button" data-rp="play" class="pfrb"></button><input type="range" id="pfRpS" step="1" aria-label="Replay hour"/><span id="pfRpL"></span><button type="button" data-rp="live" class="pfrb" id="pfRpX">Back to live</button>`;}
+  const sl=el.querySelector("#pfRpS"),act=sl.ownerDocument.activeElement===sl;if(sl.min!==String(h0))sl.min=h0;if(sl.max!==String(h1-1))sl.max=h1-1;if(!act){const v=String(PFUI.rp!=null?PFUI.rp:h1-1);if(sl.value!==v)sl.value=v;}
+  const b=el.querySelector("[data-rp=play]"),t=PFUI.play?"❚❚ Pause":"▶ Replay";if(b.textContent!==t)b.textContent=t;
+  const l=el.querySelector("#pfRpL"),lt=PFUI.rp!=null?pfHourLbl(PFUI.rp):`Replay ${PF_RNAME[PFUI.mode]} hour by hour`;if(l.textContent!==lt)l.textContent=lt;
+  const x=el.querySelector("#pfRpX");if(x.hidden!==(PFUI.rp==null))x.hidden=PFUI.rp==null;}
+
+/* ---- OEE: availability x performance x quality for the machine ---- */
+function pfOEEcalc(rows){const s=k=>rows.reduce((a,r)=>a+(hv(r,k)||0),0),run=s("m.pmrun"),brk=s("m.pmbrk"),down=s("m.pmdown"),held=s("m.pmheld"),out=s("m.out"),made=s("made"),broke=s("w.broke"),pot=s("w.pot");
+  const total=run+brk+down+held,planned=Math.min(out,down);if(total<30||!(pot>0))return null;const rate=pot/total,potRun=rate*run;
+  const A=run/Math.max(1,total-planned),Pf=potRun>0?Math.min(1.2,(made+broke)/potRun):0,Q=made+broke>0?made/(made+broke):1;return {A,P:Pf,Q,O:A*Pf*Q,run,brk,down,held,planned,total};}
+function pfOEE(){const o=pfOEEcalc(pfRangeRows()),pc=v=>Math.round(v*100)+"%";
+  if(!o)return `<div class="pfoeeb"><b>OEE</b><small>collecting the first hour…</small></div>`;
+  return `<div class="pfoeeb" title="Availability: running time out of the time it should run (planned outages left out). Performance: tons made against the setpoint speed while running. Quality: good paper out of all paper made."><b>OEE ${pc(o.O)}</b><span>Availability <em>${pc(o.A)}</em></span><i>×</i><span>Performance <em>${pc(o.P)}</em></span><i>×</i><span>Quality <em>${pc(o.Q)}</em></span><small>${PFUI.rp!=null?"that hour":PF_RNAME[PFUI.mode]}</small></div>`;}
+
+/* ---- today (or yesterday) against the 7 days before it, per ton made ---- */
+function pfBase(D){if(PFUI.rp!=null||!(PFUI.mode==="t"||PFUI.mode==="y")||!(D.made>5))return null;const d=pfDayN()-(PFUI.mode==="y"?1:0),key=[d,PFUI.mode,Math.floor(S.t/60)].join("|");
+  if(PFUI.base&&PFUI.base.key===key)return PFUI.base.v;
+  const per=rows=>{if(!rows.length)return null;const X=histSum(rows,0,0);if(!(X.made>50))return null;const c={};PF_CATS.forEach(([k])=>c[k]=X.cat[k]/X.made);c.cost=X.cost/X.made;return c;};
+  const c=per(histRows(d*24-168,d*24,true)),y=PFUI.mode==="t"?per(histRows((d-1)*24,d*24,true)):null,v=c?{c,y:y?{c:y}:null}:null;PFUI.base={key,v};return v;}
+function pfChip(B,c,v,t){if(!B||!(t>5))return "";const cur=v/t,b=B.c[c];if(!(b>0.5))return "";const d=(cur-b)/b;if(Math.abs(d)<0.05)return "";
+  const yb=B.y&&B.y.c[c];return ` <em class="pfchip ${d>0?"bad":"ok"}" title="Per ton made: ${money(cur)} against ${money(b)} over the 7 days before${yb?`; yesterday ${money(yb)}`:""}">${d>0?"▲":"▼"}${Math.round(Math.abs(d)*100)}%</em>`;}
+
+/* ---- where the money went: from the profit at full speed and on spec down to the real profit ---- */
+function pfWaterfall(){const rows=pfRangeRows();if(!rows.length)return `<p class="pfpn">No history for this range yet.</p>`;
+  const s=k=>rows.reduce((a,r)=>a+(hv(r,k)||0),0),X=histSum(rows,0,0),o=pfOEEcalc(rows);if(!o)return `<p class="pfpn">Give it the first hour.</p>`;
+  const made=X.made,ship=X.shipT,pot=s("w.pot"),idle=s("w.idle"),chg=s("w.chg"),spotd=s("w.spotd"),rep=s("s.rep");
+  const price=made>1?s("w.val")/made:priceOf(C.grade),varT=made>1?(X.cat.fiber+X.cat.frin+X.cat.energy-idle+X.cat.chem)/made:P.occPrice/P.yieldF+frInRate()/P.yieldF+energyCost(),
+    frT=ship>1?X.cat.frout/ship:frOutRate(),cm=price-varT-frT,fixed=X.cat.labor+(X.cat.maint-rep)+X.cat.over,rate=pot/o.total;
+  const potP=pot*cm-fixed,L=[["Sheet breaks",o.brk*rate*cm],["Planned outages",o.planned*rate*cm],["Machine down (upsets, no stock)",(o.down-o.planned)*rate*cm],["Held back (winder or warehouse full)",o.held*rate*cm],
+    ["Below the setpoint speed",Math.max(0,o.run*rate-made-s("w.broke"))*cm],["Off-spec paper to the beater",s("w.broke")*cm],["Repair bills and outage budgets",rep],["Idle energy while stopped",idle],
+    ["Late delivery chargebacks",chg],["Spot sales under list",spotd]];
+  const act=X.profit,other=potP-L.reduce((a,x)=>a+x[1],0)-act;L.push([other>=0?"Paper not sold yet, deals and the rest":"Stock sold from before, deals and the rest",other]);
+  let run=potP,lo=Math.min(0,act,potP),hi=Math.max(potP,act,0);const steps=L.map(([n,v])=>{const a=run,b=run-v;run=b;lo=Math.min(lo,a,b);hi=Math.max(hi,a,b);return [n,v,a,b];});
+  const W=v=>((v-lo)/Math.max(1,hi-lo)*100).toFixed(2),bar=(a,b,cls)=>`<i><s class="${cls}" style="left:${W(Math.min(a,b))}%;width:${Math.max(0.4,W(Math.max(a,b))-W(Math.min(a,b)))}%"></s></i>`;
+  const row=(n,v,a,b,cls,sign)=>`<div class="wfr ${cls}"><span>${n}</span>${bar(a,b,cls)}<b>${sign}${money(Math.abs(v))}</b></div>`;
+  return `<div class="wf">${row("At full speed, all on spec",potP,0,potP,"pot","")}${steps.filter(x=>Math.abs(x[1])>=50).map(([n,v,a,b])=>row(n,v,a,b,v>=0?"loss":"gain",v>=0?"−":"+")).join("")}${row(act>=0?"Actual profit":"Actual loss",act,0,act,act>=0?"act":"act neg",act<0?"−":"")}</div>
+    <p class="pfpn">Lost tons are valued at the margin a ton made (${money(price)} paper less ${money(varT+frT)} of fiber, haul, energy, chemicals and freight: ${money(cm)}/t). Labor, overhead and the maintenance crew are fixed, so they come off the top. Revenue lands when trucks leave, so paper made but not shipped shows in the last line.</p>`;}
+
+/* ---- the tons view: what flows through each area, waste off the bottom, the broke loop, fresh water ---- */
+function pfInputsT(D){const W=D.W||{},rows=[["Bales unloaded",pfT(W.in||0)],["Bales fed",pfT(W.feed||0)],["Rejects to landfill",pfT(W.rej||0)],["Fiber to the stock chest",pfT((W.feed||0)-(W.rej||0))],
+    ["Good paper made",pfT(D.made||0)],["Broke, repulped",pfT(W.broke||0)],["Shipped",pfT(D.shipT||0)],["Fresh water",fmtGal(GAL(W.fw||0))],["Fresh water a ton",D.made>1?Math.round(GAL((W.fw||0)/D.made)).toLocaleString()+" gal":"–"]];
+  return `<div class="dcssub">Tons · ${PFUI.rp!=null?"that hour":PF_RNAME[PFUI.mode]}</div>`+rows.map(([k,v])=>`<div class="pfrow"><i></i><span>${k}</span><b>${v}</b><small></small></div>`).join("");}
+function pfSVGt(D,live){const vert=pfVert(),NU=104,NV=112,GAP=30,PAD=vert?24:10,n=PF_AREAS.length,U=PAD*2+n*NU+(n-1)*GAP+36,v0=vert?120:150,v1=v0+NV,vc=v0+NV/2,wE=v1+46,V=vert?wE+150:wE+66;
+  const X=(u,v)=>vert?[v,u]:[u,v],o=[],W=D.W||{};
+  const poly=pts=>pts.map(p=>X(p[0],p[1]).map(q=>q.toFixed(1)).join(",")).join(" ");
+  const txt=(x,y,s,cls,anc)=>`<text x="${x.toFixed(1)}" y="${y.toFixed(1)}" class="${cls}"${anc?` style="text-anchor:${anc}"`:""}>${s}</text>`;
+  const uOf=i=>PAD+i*(NU+GAP);
+  const stage=[W.in||0,W.feed||0,(W.feed||0)-(W.rej||0),(D.made||0)+(W.broke||0),D.made||0,D.shipT||0,0],flow=[W.feed||0,(W.feed||0)-(W.rej||0),(D.made||0)+(W.broke||0),D.made||0,D.made||0,D.shipT||0];
+  const k=(NV-20)/Math.max(1,...stage,...flow);
+  o.push(`<svg viewBox="0 0 ${vert?V:U} ${vert?U:V}" class="mimic pfsvg${vert?" vert":""}" role="img" aria-label="Tons through the mill">`);
+  o.push(`<defs><marker id="pfArr" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0 0 L10 5 L0 10 z" fill="#8ea4c4"/></marker></defs>`);
+  for(let i=0;i<n-1;i++){const w=k*flow[i];if(w<=0.05)continue;const a=uOf(i)+NU,b=i<n-2?uOf(i+1):U-14;
+    o.push(`<polygon points="${poly([[a,vc-w/2],[b,vc-w/2],[b,vc+w/2],[a,vc+w/2]])}" class="pfband pfbandt"/>`);
+    if(i===n-2)o.push(`<polygon points="${poly([[b,vc-w/2-5],[U-2,vc],[b,vc+w/2+5]])}" class="pfband pfbandt"/>`);}
+  // bales come in from the left; fresh water drops in at the machine (not to scale)
+  {const w=k*stage[0];o.push(`<polygon points="${poly([[2,vc-w/2],[uOf(0),vc-w/2],[uOf(0),vc+w/2],[2,vc+w/2]])}" class="pfband pfbandt"/>`);}
+  {const u=uOf(3)+NU/2;o.push(`<polyline points="${poly([[u,34],[u,v0]])}" class="pfwater" marker-end="url(#pfArr)"/>`);const [x,y]=vert?[4,u-6]:[u,24];o.push(txt(x,y,"Fresh water "+fmtGal(GAL(W.fw||0)),"pfadd pfwt",vert?"start":"middle"));}
+  const wl=(i,du,lines,cls)=>{const u=uOf(i)+du;o.push(`<polyline points="${poly([[u,v1],[u,wE]])}" class="pfwaste" marker-end="url(#pfArr)"/>`);
+    lines.forEach((s,j)=>{const [x,y]=vert?[wE+6,u-4+j*17]:[u,wE+20+j*17];o.push(txt(x,y,s,j?"pfwv"+(cls?" "+cls:""):"pfwl",vert?"start":"middle"));});};
+  wl(1,NU/2-14,["Rejects → landfill",pfT(W.rej||0)]);if((W.bale||0)>0.05)wl(0,NU/2,["Bales lost",pfT(W.bale)]);wl(3,NU-20,["Effluent fiber",pfT(W.eff||0)]);
+  {const a=uOf(3)+20,b=uOf(1)+NU-16,vv=v1+26;o.push(`<polyline points="${poly([[a,v1],[a,vv],[b,vv],[b,v1+2]])}" class="pfbroke" marker-end="url(#pfArr)"/>`);
+    const uc=uOf(2)+NU/2,[x,y]=vert?[vv+6,uc+4]:[uc,vv+18];o.push(txt(x,y,"Broke "+pfT(W.broke||0)+" repulped","pfwv",vert?"start":"middle"));}
+  const NAME={yard:"unloaded",pulper:"fed",stock:"fiber",pm:"made",winder:"wound",ship:"shipped",site:""};
+  PF_AREAS.forEach(([a],i)=>{const u=uOf(i),[x,y]=X(u,v0),[w,h]=vert?[NV,NU]:[NU,NV],cx=x+w/2,cy=y+h/2,L=PF_LINES[a],lp=live?pfLamp(a):null,sel=PFUI.sel==="node:"+a,up=live&&(S.inc||[]).some(q=>pfRepArea(q.id)===a);
+    let g=`<g data-pf="node:${a}" class="pfhit" tabindex="0" role="button" aria-label="${PF_AN[a][2]}"><rect x="${x}" y="${y}" width="${w}" height="${h}" rx="7" class="meq pfnode${sel?" sel":""}${up?" pfup":""}"/>`;
+    const top=cy-(L.length>1?32:24);L.forEach((s,j)=>g+=txt(cx,top+j*17,s,"mtl pfnl"));
+    g+=txt(cx,cy+(L.length>1?20:14),a==="site"?"–":pfT(stage[i]),"pfnv");if(NAME[a])g+=txt(cx,cy+(L.length>1?37:33),NAME[a],"pfnr");
+    g+=pfCapSVG(a,D,live,x,y,w,h);
+    if(lp)g+=`<circle cx="${x+w-9}" cy="${y+9}" r="4.5" fill="${PF_LAMP[lp][0]}"><title>${PF_LAMP[lp][1]}</title></circle>`;
+    o.push(g+"</g>");});
+  o.push("</svg>");o.push(`<p class="pfcap">The band is as wide as the tons going through ${live?"today":"that range"}: bales in at the left, paper out at the right. Waste and the broke loop are drawn thin (not to scale); fresh water is gallons.</p>`);return o.join("");}
 
 /* =========================== v2 app shell wiring =========================== */
 (function(){
@@ -13881,6 +14375,11 @@ function camPullOn(){try{return localStorage.getItem("paper-mill-campull")!=="of
     ["Stock chest","A big tank of clean pulp between stock prep and the paper machine. A full chest keeps the machine running when stock prep stops."],
     ["t/h","Tons per hour."],
     ["Tell","The visible sign that a piece of equipment is about to fail. Only seen on a Round."],
+    ["Control room","Report → Control room: the process flow, the DCS screens, planning, quality, water and trends in one place. The DCS screens also open from the operator consoles in the mill."],
+    ["Trends","Every DCS screen has a trend beside the picture (on a phone, switch between Picture and Trend). Tap a reading on the picture to add it; up to six pens, from 1 hour to the whole run."],
+    ["Moves with","On a trend, X–Y plots two readings against each other and Moves with ranks the readings that rise and fall with one you pick, with any delay between them. Moving together isn't proof that one causes the other."],
+    ["OEE","Overall equipment effectiveness: availability (running time, planned outages left out) × performance (tons against the setpoint speed) × quality (good paper out of all paper made)."],
+    ["Gallons and gpm","Water and stock flows are in US gallons a minute, chest and tank volumes in gallons, water use in gallons a ton."],
     ["Order book","Customers order paper by the roll, with a ship-by date. A truck carries one order's grade; late orders are charged back $15/t a day (up to $60) and cancelled after 4 days. Report → Orders & bales."],
     ["Spot market","Paper nobody ordered. A broker truck takes it once there's a full load of one grade (or the warehouse is 80% full), at $45/t under list."],
     ["Dry run","A truck that waits 6 hours with nothing to load leaves empty, and the carrier bills you for it."],
@@ -13930,7 +14429,7 @@ function camPullOn(){try{return localStorage.getItem("paper-mill-campull")!=="of
    (within 700 ms per tap) and a list of every version's one-line note pops up, newest first. The list comes from
    VERSION-NOTES.txt at the repo root: build.py swaps it in for the placeholder below, so adding a line there with each
    release keeps the pop-up current (build.py warns when APP_VER has no line). ---------- */
-{const VNOTES=[["4.0.0", "Graphics Overhaul: 60 FPS on iPhone, ~80% Fewer Draw Calls"], ["4.0.1", "Performance Follow-Up, Show FPS Option and Device Autotest"], ["4.0.2", "Economy Rebalance and Smoother Upset Labels"], ["4.1.0", "Four Environments, Seeded Mills, Bottlenecks, Graphics Tiers and Site Music"], ["4.2.0", "New Site Maps, Rare Sights, Zen Map Rotation and Economics Fixes"], ["4.2.0-s", "Save and Continue Season (Test)"], ["4.2.1", "Save/Continue, Settings Panel and Outage Speed Fix"], ["4.2.2-t", "Bayou Gator Sight Reworked (Test)"], ["4.2.2-t2", "Gator Bass Riff (Test)"], ["4.2.2-t3", "Gator Riff Removed, Wide Camera Framing (Test)"], ["4.2.2-t4", "Gator Scene Shortened and Widened (Test)"], ["4.2.2-t5", "One Rare Sight per Map in Zen (Test)"], ["4.2.2", "Rare Sights Reworked, Bird Strike Upset, Mill Report Tab"], ["4.2.3-t", "Cowboys, Bigfoot and Tugboat Sights Reworked (Test)"], ["4.2.3", "Laptop Battery Saving (Default GPU)"], ["4.2.4", "$25M Goal Removed and Quick Fixes"], ["4.2.5", "Random Bottleneck per Season and Accessibility Improvements"], ["4.3.0-t1", "Survival Mode (Test)"], ["4.4.0-t1", "Mill Leaders in Survival (Test)"], ["4.4.0-t2", "Painted Leader Portraits (Test)"], ["4.4.0-t3", "Leader Redesign, 4-Day Waves and Fixes (Test)"], ["5.0.0", "Survival Mode Release with Mill Leaders"], ["5.0.1", "Results Dialog and Game Speed Fixes"], ["5.0.2", "Report Card Label Fixes"], ["5.0.3", "Survival Playtest Fixes (Test)"], ["5.0.4", "Playtest Review: Dot Auto-Fix and Shipping Fix (Test)"], ["5.0.5", "Polish Rounds from Survival Playtests"], ["5.0.6", "Survival QA Fixes, Opt-In Outage Watch, Leaderboard Filters"], ["5.1.0", "Civics Meters and Leaders in Seasons (Test)"], ["5.4.0", "Title Screen, Civics in the World and Dark Mode"], ["5.4.1", "Loading Splash, No Old-Menu Flash"], ["5.4.2", "Graphics Quality on the Title Screen"], ["5.5.0", "Performance Improvements"], ["5.6.0", "Fiddly Knobs, DCS/QCS Screens and Knobs View"], ["5.7.0", "Catching Failures Early: Tells, Daily Rounds, Vibration Report, Outage Prep"], ["5.7.1", "Bottom Menu Reorder, Settings Back on the Right"], ["5.7.2", "Help Page with Game Guide and Glossary"], ["5.7.3", "Bare Graphics Mode for Weak Phones"], ["5.7.4", "Version Notes Pop-Up (Triple-Tap the Version Number)"], ["6.1.0-t1", "Isometric Paper View: Fixed Camera, Cut-Outs, Drop Shadows, Cutaways, Season Palettes (Test)"], ["6.1.0-t2", "Iso Round 2: Cut-Outs Always Paper, GPU Pictures, Stop-Motion World, Fewer Draws (Test)"], ["6.1.0-t3", "Iso Round 3: iPhone Batching, Instanced Cans, Sign Atlas, Lighter Frames (Test)"], ["6.1.0-t4", "Iso Fixes: Operators and Fork-Trucks Back, Less Stutter (Test)"], ["6.1.0-t5", "Cut-Out Edge Artifact Fixed (Test)"], ["6.1.0-t6", "Iso Optimization: Hidden Objects Cost Nothing, Lighter Moving Batches (Test)"], ["6.1.0-t7", "Iso Triangle Cut: Paper-Card Trees, Flat Ground, Hidden Faces Gone, Plain Boxes (Test)"], ["6.1.0-t8", "Paper Palette: 40 Colours, Flat Surfaces, Paper Grain, Fewer Draws (Test)"], ["6.1.0-t9", "Reel Fix: Growing Reel Draws Again (Test)"], ["6.1.0-t10", "Draw Cut 2: Colour in the Matrix, Merged Roofs, Uploads on Change, Culling Fix, Parked Groups (Test)"], ["6.1.0-t11", "QA Fixes: Cut-Outs Never Drawn as Loose 3D Parts, Fallback Shows 3D, Roofs On or Off per Zoom Step (Test)"], ["6.1.0-t12", "Paper Smoke, Blinking Lights, Stronger Seasons, Sharper Phones, Instanced Upsets, Pictures at Start (Test)"], ["6.1.0-t13", "Paper Effects: Flames, Child-Made Tornado, Lamp Cones, Flags, Paper Water, Visible Weather (Test)"], ["6.1.0-t14", "Paper Upsets: Cut-Out Props, Paper Pigeon, Paper Sparks, Steam, Fireworks, Ice and Flood (Test)"], ["6.1.0-t15", "Beaver Reworked as One Smaller Cut-Out (Test)"], ["6.1.0-t16", "Paper Props Dim at Night, Labels Never Overlap, Fewer Cut-Out Pictures (Test)"], ["6.1.0-t17", "Bird on the Power Lines Cut-Scene Plays When Set Off From the Upsets List (Test)"], ["6.1.0-t18", "Zen Close-Ups Fixed, Rare Sights as Paper Cut-Outs, Tilt-Shift Diorama Look (Test)"], ["6.1.0-t19", "Narrower Tilt-Shift Band, Winder Trash Can Out of the Broke Hole (Test)"], ["6.1.0-t20", "Balance: Rounds Pay More, Capacity and Maintenance Upgrades Re-Priced"], ["6.1.0", "Paper Diorama: Isometric Paper Art Style, Cut-Out People and Upsets, Tilt-Shift, Rounds Pay More, Upgrades Re-Priced"], ["6.1.1", "Phone Fixes: Gentler Tilt-Shift on Tall Screens, Cut-Out People No Longer Blank on iPhone"], ["6.1.2", "iPhone: Cut-Out Self-Test Retries, People Keep Their Colours in the 3D Fallback"], ["6.1.3", "Broke Hole by the Winder Looks Like a Floor Opening (Was a Black Square)"], ["6.1.4", "Tilt-Shift Removed"], ["6.2.0", "Zen Free Camera: Perspective Zen Shots, 3D People in Zen, Cleaner River Water"], ["6.3.0-f1", "Process Flow Overview (Test): Inputs, Mill Areas and Outputs for the Mill Day, in Settings"], ["6.3.0-f2", "Process Flow: the Game Keeps Running While It's Open (Test)"], ["6.3.0", "Process Flow Overview: Inputs, Mill Areas and Outputs for the Mill Day (Settings > View)"], ["6.4.0", "Zen Shots Review: Shuffle-Bag Shot Order, Landscape Shots Rebuilt, Close Rare Sights"], ["6.5.0-a1", "Digital Twin A (Test): Hourly History, 14 Prior Days, 7 d / Run Ranges, Area Trends and Uptime"], ["6.5.0-b1", "Digital Twin B (Test): Real Freight Costs with a Diesel Index, Area Controls Moved into Process Flow"], ["6.5.0-b2", "Market Pricing (Test): 2026 OCC and Energy Costs, Diesel in $/gal, Desert Long Haul, Real Steam Rates"], ["6.5.0-b3", "DCS Expansion (Test): Full SPOT, WET and DET Pictures, a UTIL Screen, Motors and Reject Purges"], ["6.5.0-b4", "DCS Pictograms (Test): Equipment Drawn as Classic DCS Symbols, Colour Only When Something's Wrong"], ["6.5.0-b5", "The Dryer Limit (Test): Speed and Grade Load the Dryers, a Wet Sheet Fails Spec and Slows the Machine"], ["6.5.0", "Digital Twin: Process Flow Trends and Controls, Real Freight and Market Costs, Full DCS, Dryer Limit, Rebalance"], ["6.5.1", "Second Screen: Pop the DCS and Process Flow Out to Their Own Window for a Second Monitor (Desktop)"], ["6.5.2", "Knob Fixes: Wet-End and Steam Knobs Bite Again Under the Dryer Limit, DCS Uses the Machine's Name"], ["6.5.3", "Quality Specs: Weight, Moisture and Color Specs per Grade, Off-Spec Paper Wound into Beater Rolls and Repulped"], ["6.5.4", "DCS Fixes: Making-Beater Alerts, SPOT in Process Order, Boiler and Power on Utilities, 2nd/3rd Section Steam Control"], ["6.5.5-t1", "Dewatering Chain (Test): Jet and Vacuum Optimums, Couch to Press Solids, Press Solids Set the Dryer Steam Both Ways"], ["6.5.5", "The Dewatering Chain: Jet and Vacuum Optimums, Couch to Press Solids, Press Solids Set the Dryer Steam Both Ways"], ["6.5.6-t1", "Mass Balance (Test): A Real Water Balance and White Water Chest, Hayout Broke Repulped, Every Fiber Loss Booked"], ["6.5.6", "Mass Balance: A Real Water Balance and White Water Chest, Hayout Broke Repulped, Every Fiber Loss Booked"], ["6.5.7-t1", "Winder Pass (Test): Four Reel Storage Stands, Two-Roll Sets, Rolls Tied Together, Steam Vented on a Sheet Break"], ["6.5.7", "Winder Pass: Four Reel Storage Stands, Two-Roll Sets, Rolls Tied Together, Steam Vented on a Sheet Break"], ["6.6.0-t1", "Orders and Bales (Test): Customer Order Book and Spot Market, Idle Energy While Stopped, Bale Grading at the Gate"], ["6.6.0", "Orders and Bales: Customer Order Book and Spot Market, Idle Energy While Stopped, Bale Grading at the Gate"]];
+{const VNOTES=[["4.0.0", "Graphics Overhaul: 60 FPS on iPhone, ~80% Fewer Draw Calls"], ["4.0.1", "Performance Follow-Up, Show FPS Option and Device Autotest"], ["4.0.2", "Economy Rebalance and Smoother Upset Labels"], ["4.1.0", "Four Environments, Seeded Mills, Bottlenecks, Graphics Tiers and Site Music"], ["4.2.0", "New Site Maps, Rare Sights, Zen Map Rotation and Economics Fixes"], ["4.2.0-s", "Save and Continue Season (Test)"], ["4.2.1", "Save/Continue, Settings Panel and Outage Speed Fix"], ["4.2.2-t", "Bayou Gator Sight Reworked (Test)"], ["4.2.2-t2", "Gator Bass Riff (Test)"], ["4.2.2-t3", "Gator Riff Removed, Wide Camera Framing (Test)"], ["4.2.2-t4", "Gator Scene Shortened and Widened (Test)"], ["4.2.2-t5", "One Rare Sight per Map in Zen (Test)"], ["4.2.2", "Rare Sights Reworked, Bird Strike Upset, Mill Report Tab"], ["4.2.3-t", "Cowboys, Bigfoot and Tugboat Sights Reworked (Test)"], ["4.2.3", "Laptop Battery Saving (Default GPU)"], ["4.2.4", "$25M Goal Removed and Quick Fixes"], ["4.2.5", "Random Bottleneck per Season and Accessibility Improvements"], ["4.3.0-t1", "Survival Mode (Test)"], ["4.4.0-t1", "Mill Leaders in Survival (Test)"], ["4.4.0-t2", "Painted Leader Portraits (Test)"], ["4.4.0-t3", "Leader Redesign, 4-Day Waves and Fixes (Test)"], ["5.0.0", "Survival Mode Release with Mill Leaders"], ["5.0.1", "Results Dialog and Game Speed Fixes"], ["5.0.2", "Report Card Label Fixes"], ["5.0.3", "Survival Playtest Fixes (Test)"], ["5.0.4", "Playtest Review: Dot Auto-Fix and Shipping Fix (Test)"], ["5.0.5", "Polish Rounds from Survival Playtests"], ["5.0.6", "Survival QA Fixes, Opt-In Outage Watch, Leaderboard Filters"], ["5.1.0", "Civics Meters and Leaders in Seasons (Test)"], ["5.4.0", "Title Screen, Civics in the World and Dark Mode"], ["5.4.1", "Loading Splash, No Old-Menu Flash"], ["5.4.2", "Graphics Quality on the Title Screen"], ["5.5.0", "Performance Improvements"], ["5.6.0", "Fiddly Knobs, DCS/QCS Screens and Knobs View"], ["5.7.0", "Catching Failures Early: Tells, Daily Rounds, Vibration Report, Outage Prep"], ["5.7.1", "Bottom Menu Reorder, Settings Back on the Right"], ["5.7.2", "Help Page with Game Guide and Glossary"], ["5.7.3", "Bare Graphics Mode for Weak Phones"], ["5.7.4", "Version Notes Pop-Up (Triple-Tap the Version Number)"], ["6.1.0-t1", "Isometric Paper View: Fixed Camera, Cut-Outs, Drop Shadows, Cutaways, Season Palettes (Test)"], ["6.1.0-t2", "Iso Round 2: Cut-Outs Always Paper, GPU Pictures, Stop-Motion World, Fewer Draws (Test)"], ["6.1.0-t3", "Iso Round 3: iPhone Batching, Instanced Cans, Sign Atlas, Lighter Frames (Test)"], ["6.1.0-t4", "Iso Fixes: Operators and Fork-Trucks Back, Less Stutter (Test)"], ["6.1.0-t5", "Cut-Out Edge Artifact Fixed (Test)"], ["6.1.0-t6", "Iso Optimization: Hidden Objects Cost Nothing, Lighter Moving Batches (Test)"], ["6.1.0-t7", "Iso Triangle Cut: Paper-Card Trees, Flat Ground, Hidden Faces Gone, Plain Boxes (Test)"], ["6.1.0-t8", "Paper Palette: 40 Colours, Flat Surfaces, Paper Grain, Fewer Draws (Test)"], ["6.1.0-t9", "Reel Fix: Growing Reel Draws Again (Test)"], ["6.1.0-t10", "Draw Cut 2: Colour in the Matrix, Merged Roofs, Uploads on Change, Culling Fix, Parked Groups (Test)"], ["6.1.0-t11", "QA Fixes: Cut-Outs Never Drawn as Loose 3D Parts, Fallback Shows 3D, Roofs On or Off per Zoom Step (Test)"], ["6.1.0-t12", "Paper Smoke, Blinking Lights, Stronger Seasons, Sharper Phones, Instanced Upsets, Pictures at Start (Test)"], ["6.1.0-t13", "Paper Effects: Flames, Child-Made Tornado, Lamp Cones, Flags, Paper Water, Visible Weather (Test)"], ["6.1.0-t14", "Paper Upsets: Cut-Out Props, Paper Pigeon, Paper Sparks, Steam, Fireworks, Ice and Flood (Test)"], ["6.1.0-t15", "Beaver Reworked as One Smaller Cut-Out (Test)"], ["6.1.0-t16", "Paper Props Dim at Night, Labels Never Overlap, Fewer Cut-Out Pictures (Test)"], ["6.1.0-t17", "Bird on the Power Lines Cut-Scene Plays When Set Off From the Upsets List (Test)"], ["6.1.0-t18", "Zen Close-Ups Fixed, Rare Sights as Paper Cut-Outs, Tilt-Shift Diorama Look (Test)"], ["6.1.0-t19", "Narrower Tilt-Shift Band, Winder Trash Can Out of the Broke Hole (Test)"], ["6.1.0-t20", "Balance: Rounds Pay More, Capacity and Maintenance Upgrades Re-Priced"], ["6.1.0", "Paper Diorama: Isometric Paper Art Style, Cut-Out People and Upsets, Tilt-Shift, Rounds Pay More, Upgrades Re-Priced"], ["6.1.1", "Phone Fixes: Gentler Tilt-Shift on Tall Screens, Cut-Out People No Longer Blank on iPhone"], ["6.1.2", "iPhone: Cut-Out Self-Test Retries, People Keep Their Colours in the 3D Fallback"], ["6.1.3", "Broke Hole by the Winder Looks Like a Floor Opening (Was a Black Square)"], ["6.1.4", "Tilt-Shift Removed"], ["6.2.0", "Zen Free Camera: Perspective Zen Shots, 3D People in Zen, Cleaner River Water"], ["6.3.0-f1", "Process Flow Overview (Test): Inputs, Mill Areas and Outputs for the Mill Day, in Settings"], ["6.3.0-f2", "Process Flow: the Game Keeps Running While It's Open (Test)"], ["6.3.0", "Process Flow Overview: Inputs, Mill Areas and Outputs for the Mill Day (Settings > View)"], ["6.4.0", "Zen Shots Review: Shuffle-Bag Shot Order, Landscape Shots Rebuilt, Close Rare Sights"], ["6.5.0-a1", "Digital Twin A (Test): Hourly History, 14 Prior Days, 7 d / Run Ranges, Area Trends and Uptime"], ["6.5.0-b1", "Digital Twin B (Test): Real Freight Costs with a Diesel Index, Area Controls Moved into Process Flow"], ["6.5.0-b2", "Market Pricing (Test): 2026 OCC and Energy Costs, Diesel in $/gal, Desert Long Haul, Real Steam Rates"], ["6.5.0-b3", "DCS Expansion (Test): Full SPOT, WET and DET Pictures, a UTIL Screen, Motors and Reject Purges"], ["6.5.0-b4", "DCS Pictograms (Test): Equipment Drawn as Classic DCS Symbols, Colour Only When Something's Wrong"], ["6.5.0-b5", "The Dryer Limit (Test): Speed and Grade Load the Dryers, a Wet Sheet Fails Spec and Slows the Machine"], ["6.5.0", "Digital Twin: Process Flow Trends and Controls, Real Freight and Market Costs, Full DCS, Dryer Limit, Rebalance"], ["6.5.1", "Second Screen: Pop the DCS and Process Flow Out to Their Own Window for a Second Monitor (Desktop)"], ["6.5.2", "Knob Fixes: Wet-End and Steam Knobs Bite Again Under the Dryer Limit, DCS Uses the Machine's Name"], ["6.5.3", "Quality Specs: Weight, Moisture and Color Specs per Grade, Off-Spec Paper Wound into Beater Rolls and Repulped"], ["6.5.4", "DCS Fixes: Making-Beater Alerts, SPOT in Process Order, Boiler and Power on Utilities, 2nd/3rd Section Steam Control"], ["6.5.5-t1", "Dewatering Chain (Test): Jet and Vacuum Optimums, Couch to Press Solids, Press Solids Set the Dryer Steam Both Ways"], ["6.5.5", "The Dewatering Chain: Jet and Vacuum Optimums, Couch to Press Solids, Press Solids Set the Dryer Steam Both Ways"], ["6.5.6-t1", "Mass Balance (Test): A Real Water Balance and White Water Chest, Hayout Broke Repulped, Every Fiber Loss Booked"], ["6.5.6", "Mass Balance: A Real Water Balance and White Water Chest, Hayout Broke Repulped, Every Fiber Loss Booked"], ["6.5.7-t1", "Winder Pass (Test): Four Reel Storage Stands, Two-Roll Sets, Rolls Tied Together, Steam Vented on a Sheet Break"], ["6.5.7", "Winder Pass: Four Reel Storage Stands, Two-Roll Sets, Rolls Tied Together, Steam Vented on a Sheet Break"], ["6.6.0-t1", "Orders and Bales (Test): Customer Order Book and Spot Market, Idle Energy While Stopped, Bale Grading at the Gate"], ["6.6.0", "Orders and Bales: Customer Order Book and Spot Market, Idle Energy While Stopped, Bale Grading at the Gate"], ["6.7.0-t1", "Control Room (Test): Planning, Water and Quality Screens, Split-Screen Trends of Anything, What Moves With What, Process Flow Views"]];
   let ov=null,held=false;
   function render(){
     const cur=APP_VER.replace(/^v/i,""),rows=VNOTES.slice().reverse().map(([v,n])=>
@@ -13975,6 +14474,19 @@ function camPullOn(){try{return localStorage.getItem("paper-mill-campull")!=="of
       <p class="rnote">Graded A ${Q.A||0} · B ${Q.B||0} · C ${Q.C||0} (sent back). Moisture claims saved ${money(Q.ded)}. Idle energy while the machine was stopped ${money(S.tot.idleE||0)}.</p>`;}
   UI_TICKS.push(n=>{const b=box(),d=$("repOrd");if(!b||!d||!d.open||!paneShown(b)||n%5)return;const h=html();if(h!==last){last=h;b.innerHTML=h;}});
   document.addEventListener("toggle",e=>{if(e.target&&e.target.id==="repOrd"&&e.target.open){last="";const b=box();if(b){last=html();b.innerHTML=last;}}},true);}
+/* ---- v6.7 Report > Control room: one place for the mill's screens (the process flow, the DCS, planning, quality, water
+   and trends). The DCS still opens from the operator consoles in the mill too; the process flow left Settings. ---- */
+{const CR=[["pf","Process flow","Money and tons through the mill"],["dcs","DCS","Stock prep, wet end, dry end, utilities"],["PLAN","Planning","Orders, inventory, trucks"],
+    ["QCS","Quality","Specs, off-spec log, beater"],["WATER","Water","Fresh water and the water balance"],["TREND","Trends","Trend anything, find what moves together"]];
+  const el=$("ctlRoom");
+  if(el){el.innerHTML=`<div class="crh"><b>Control room</b><small id="crNote">The mill's screens. The DCS screens also open from the operator consoles in the mill.</small></div>
+      <div class="crg">${CR.map(([k,l,d])=>`<button type="button" data-cr="${k}"><b>${l}</b><small>${d}</small></button>`).join("")}<button type="button" data-cr="pop" id="crPop" hidden><b>⧉ Second screen</b><small>DCS and process flow in their own window</small></button></div>`;
+    el.addEventListener("click",e=>{const b=e.target.closest("[data-cr]");if(!b||b.disabled)return;const k=b.dataset.cr;
+      const x=document.querySelector('#v2sheet header button[aria-label="Close panel"]');if(x)x.click();
+      if(k==="pf")pfOpen();else if(k==="pop")popOpen("both");else openStation(k==="dcs"?(KUI.last||"SPOT"):k,"dcs");});}
+  UI_TICKS.push(()=>{if(!el)return;const z=!!S.zen;el.querySelectorAll("[data-cr]").forEach(b=>{if(b.dataset.cr==="pf"||b.dataset.cr==="pop")return;if(b.disabled!==z)b.disabled=z;});
+    const n=$("crNote"),t=z?"Zen mode: the process flow only. The DCS, planning, quality, water and trend screens are in the other modes.":"The mill's screens. The DCS screens also open from the operator consoles in the mill.";if(n&&n.textContent!==t)n.textContent=t;
+    const p=$("crPop"),h=!POPOK()||POP.on;if(p&&p.hidden!==h)p.hidden=h;});}
 // frame rate is a player choice (Controls): Battery saver = 30 fps, Smooth = 60 fps (v15 default: a 120 Hz screen no longer
 // draws twice as many frames), Max = the display's rate; remembered. (true/false still mean Max/saver for the test tools)
 const FPS_CAPS={saver:30,smooth:60,max:0};let FPS_MODE="smooth";try{const v=localStorage.getItem("paper-mill-fps");if(FPS_CAPS[v]!==undefined)FPS_MODE=v;}catch(e){}

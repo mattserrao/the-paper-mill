@@ -35,7 +35,7 @@ function openSpider(){$("brian").hidden=true;$("slice").hidden=true;$("spider").
 $("spiClose").addEventListener("click",()=>$("spider").hidden=true);
 $("spiV").addEventListener("input",e=>{G3.SPD.v=+e.target.value/100;drawSpider();});
 function drawSpider(){const D=G3.SPD;if(!D||$("spider").hidden)return;
-  $("spiTc").textContent=f0(D.tc)+" mg/L";$("spiTl").textContent=f0(D.tl)+" mg/L";$("spiQc").textContent=f0(D.qc)+" L/s · "+f0(Math.min(100,D.lc*100))+"% full";$("spiQl").textContent=f0(D.ql)+" L/s · "+f0(Math.min(100,D.ll*100))+"% full";
+  $("spiTc").textContent=f0(D.tc)+" mg/L";$("spiTl").textContent=f0(D.tl)+" mg/L";$("spiQc").textContent=fmtGpm(LS_GPM(D.qc))+" · "+f0(Math.min(100,D.lc*100))+"% full";$("spiQl").textContent=fmtGpm(LS_GPM(D.ql))+" · "+f0(Math.min(100,D.ll*100))+"% full";
   const n=$("spiNote"),st=D.strain||0;n.className="spin"+(D.lc>=1||D.ll>=1||D.tl>150||st>0.05?" bad":"");
   if(D.reset){D.reset=false;$("spiV").value=Math.round(D.v*100);}
   n.textContent=st>0.05?`Dirty clear filtrate is loading up the disks: thickener struggling (${f0(st*100)}%). Send more filtrate to the cloudy side (slide right)!`:D.lc>=1?"Cloudy seal chest is overflowing.":D.ll>=1?"Clear seal chest is overflowing.":D.tl>200?"Fines are carrying over into the clear filtrate.":D.v>0.5?"Clear filtrate is very clean, but the cloudy chest is filling.":"Split looks healthy.";
