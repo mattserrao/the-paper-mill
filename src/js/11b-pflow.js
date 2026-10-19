@@ -11,20 +11,21 @@ const PF_POWER={pulper:0.2,stock:0.35,pm:0.45};   // electricity by area: pulper
 const PF_STEAMSH=0.6;   // steam's share of the energy bill (the same share the knobs' extra dryer steam uses, 07b)
 const PF_RA={balefire:"yard",badocc:"yard",ragger:"pulper",rotortrip:"pulper",winderdown:"winder",wrap:"winder",birdhay:"winder"};
 function pfRepArea(id){if(PF_RA[id])return PF_RA[id];const g=EV[id]&&EV[id].g;return g==="stock"?"stock":g==="machine"?"pm":g==="yard"?"ship":"site";}
-function pfNew(){return {d:Math.floor(S.t/1440),L0:Object.assign({},S.ledger),cash0:S.cash,ship0:S.shipT||0,prod0:S.tot.prodT,A:{},
+function pfNew(){return {d:Math.floor(S.t/1440),h:Math.floor(S.t/60),L0:Object.assign({},S.ledger),cash0:S.cash,ship0:S.shipT||0,prod0:S.tot.prodT,A:{},
   W:{feed:0,rej:0,bale:0,eff:0,broke:0,val:0,fine:0,fines:0}};}
-function pfAdd(k,a,v){const f=S.pf;if(!f||!v)return;const o=f.A[k]||(f.A[k]={});o[a]=(o[a]||0)+v;}
-function pfW(k,v){if(S.pf&&v)S.pf.W[k]+=v;}
+// (v6.5: every note goes to the day (S.pf) and to the hour (S.ph, 11c-hist.js) alike)
+function pfAdd(k,a,v){if(!v)return;for(const f of [S.pf,S.ph]){if(!f)continue;const o=f.A[k]||(f.A[k]={});o[a]=(o[a]||0)+v;}}
+function pfW(k,v){if(!v)return;if(S.pf)S.pf.W[k]+=v;if(S.ph)S.ph.W[k]+=v;}
 // called at the top of step(): the first call starts the day; a new mill day keeps the finished one as prev
 function pfDay(){const d=Math.floor(S.t/1440);if(!S.pf){S.pf=pfNew();return;}if(d!==S.pf.d){const y=pfCalc(S.pf,true);S.pf=pfNew();S.pf.prev=y;}}
 // the chemicals and water part of the per-ton energy bill (the rest is energy); refiner savings come off chemicals
 // (stronger bonding, less starch)
 function pfChemT(){return Math.max(0,ECON.chem+P.chemAdd+(P.siteChem||0)-(P.refSave||0))*(P.costMul||1);}
-function pfEnergy(prod,ec){if(!S.pf||!(ec>0))return;const ch=Math.min(ec,prod*pfChemT()),en=ec-ch;
+function pfEnergy(prod,ec){if(!(ec>0))return;const ch=Math.min(ec,prod*pfChemT()),en=ec-ch;
   pfAdd("chem","stock",ch*0.5);pfAdd("chem","pm",ch*0.5);pfAdd("steam","pm",en*PF_STEAMSH);for(const a in PF_POWER)pfAdd("power",a,en*(1-PF_STEAMSH)*PF_POWER[a]);}
-function pfLabor(dt){if(!S.pf)return;const w=(ECON.wage+(P.siteWage||0))*(P.costMul||1)*leadWage()*civWage(),m=dt/60;
+function pfLabor(dt){const w=(ECON.wage+(P.siteWage||0))*(P.costMul||1)*leadWage()*civWage(),m=dt/60;
   pfAdd("labor","yard",C.drivers.v*w*m);pfAdd("labor","ship",(C.loaders.v*w+P.robots*ECON.robot)*m);pfAdd("mlab","techs",P.techs*w*m);if(P.pmCost)pfAdd("mlab","pmprog",P.pmCost*m);}
-function pfRepair(id,bill){if(!S.pf||!bill)return;pfAdd("rep",pfRepArea(id),bill);pfAdd("repid",id,bill);if(id==="permit"){pfW("fine",bill);pfW("fines",1);}}
+function pfRepair(id,bill){if(!bill)return;pfAdd("rep",pfRepArea(id),bill);pfAdd("repid",id,bill);if(id==="permit"){pfW("fine",bill);pfW("fines",1);}histEv(id,bill);}
 
 // the day's numbers as plain data (also what is kept for yesterday)
 function pfCalc(f,whole){const L=S.ledger,d=k=>(L[k]||0)-(f.L0[k]||0),A=f.A,sum=o=>o?Object.values(o).reduce((s,v)=>s+v,0):0;

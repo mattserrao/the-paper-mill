@@ -1,6 +1,23 @@
 # Changelog
 
 
+## v6.5.0-a1 (2026-10-19): digital twin, part A (test branch test/v6.5-twin)
+- **History:** one row per game hour for the whole run (11c-hist.js): money by input and by area (from the same notes
+  as the day books, so any range adds up to the ledger), tons and waste, trucks, breaks and hayouts, minutes by machine
+  state, downtime by cause, and hourly averages of ~30 readings (yard, OCC $/t, pulper feed and yield, chest, refiners,
+  speed, BW, moisture, steam, energy and chemicals $/t, winder, warehouse, price, crew, wage, civics meters).
+- **14 prior days:** when a run starts (all four modes) the real sim runs 14 game days hands-off in a sandbox (own seed
+  from the run's, no season, cards, civics, leader, outages, sound or 3D) a slice at a time, while a small "Loading the
+  mill's last 14 days" chip shows; the run waits for it. ~2.5 s on desktop. Cash, day 1 and the run's dice are untouched.
+- **Process flow ranges:** Today / Yesterday / 7 d / Run, with a "Prior days" switch for 7 d and Run.
+- **Detail panel** (side panel; bottom sheet on phones) replaces the pop-up. Areas: Trends, Costs (cost added here over
+  time, this range against the run), Uptime & quality (machine/winder time, breaks, broke %, rejects %, downtime by
+  cause). Inputs and outputs: Trends and Breakdown (e.g. Fiber: OCC $/t, spend, bales fed, OCC market; Site & admin:
+  admin costs, crew, wage, civics). Charts zoom 24 h / 7 d / Run; tap or hover reads a point; bills show as markers;
+  the prior days are shaded "before you".
+- Saves: the history has its own localStorage key (paper-mill-save-hist), written only when an hour was added.
+- No economy change in this build (freight and the controls move are part B).
+
 
 ## v6.4.0 (2026-10-19): zen shot review released to main (was test build zs1)
 All four maps reviewed shot by shot under the free zen camera; fixes:

@@ -6,10 +6,12 @@
      Seasons only (not free play or zen); off in the autotest and with ?nosave. ---- */
   {const KEY="paper-mill-save",VER=1,MAXAGE=14*86400e3,Q=new URLSearchParams(location.search),OFF=Q.has("nosave")||Q.has("autotest");
     const live=()=>!!(S&&S.season&&S.season.on&&!S.season.done&&!S.free&&!S.zen&&!S.over);
-    let lastSave=0,lastDay=-1,lastUp=0;
+    let lastSave=0,lastDay=-1,lastUp=0,lastHist="";
     function save(why){if(OFF||G3.saveOff||!live())return false;   // (G3.saveOff: tests)
      const t0=performance.now();
       try{const S2=Object.assign({},S);
+        // v6.5: the twin's history has its own key, written only when an hour was added (it is the bulk of the save)
+        S2.hist=null;if(S.hist){S2.histId=S.hist.id;const hk=S.hist.id+"|"+(S.hist.n||0)+"|"+S.hist.bf;if(hk!==lastHist){localStorage.setItem(KEY+"-hist",JSON.stringify(S.hist));lastHist=hk;}}
         // the open card or dialog is kept by name (the card object holds functions); 3D-only fields are left out
         const op=S.cards&&S.cards.open;S2.cards=Object.assign({},S.cards,{open:op&&op.c?{cid:op.c.id}:op&&op.outage?{outage:true}:null});
         const data={v:VER,app:APP_VER,env:SITE.env,mill:SITE.seed,at:Date.now(),why,S:S2,C,CH:{on:CH.on,lvl:CH.lvl,en:CH.en},
@@ -21,8 +23,9 @@
         // v4.2.4: a save without the parts restore() needs is thrown away instead of breaking Continue
         const o=x=>!!x&&typeof x==="object";if(!(typeof d.S.t==="number"&&o(d.S.season)&&o(d.S.cards)&&o(d.C)&&o(d.CH))){clear();return null;}
         return d;}catch(e){clear();return null;}}
-    function clear(){try{localStorage.removeItem(KEY);}catch(e){}}
-    function restore(d){S=d.S;for(const k in d.C){if(C[k]&&typeof C[k]==="object"&&d.C[k]&&typeof d.C[k]==="object")Object.assign(C[k],d.C[k]);else C[k]=d.C[k];}
+    function clear(){try{localStorage.removeItem(KEY);localStorage.removeItem(KEY+"-hist");}catch(e){}lastHist="";}
+    function restore(d){S=d.S;try{const hh=JSON.parse(localStorage.getItem(KEY+"-hist")||"null");S.hist=hh&&hh.id===d.S.histId?hh:null;}catch(e){S.hist=null;}   // (v6.5: no history, or another run's: the prior days are made again)
+      for(const k in d.C){if(C[k]&&typeof C[k]==="object"&&d.C[k]&&typeof d.C[k]==="object")Object.assign(C[k],d.C[k]);else C[k]=d.C[k];}
       if(C.spdPref){C.simSpeed=C.spdPref;}else if(S.outg&&S.outg.on&&S.outg.spd){C.simSpeed=S.outg.spd;}delete C.spdPref;   // (v5.0.1: older saves: the player's speed)
       CH.on=d.CH.on;CH.lvl=d.CH.lvl;Object.assign(CH.en,d.CH.en||{});
       if(d.MILL){MILL.name=d.MILL.name;MILL.brand=d.MILL.brand;document.documentElement.style.setProperty("--brand",MILL.brand);PAL_V++;}

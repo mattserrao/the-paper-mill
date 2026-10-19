@@ -5,7 +5,7 @@ function step(dt){
   // v2.9.13: daily production (a mill day runs 6am to 6am, and S.t=0 is 6am) and the best day so far
   {const di=Math.floor(S.t/1440);if(!S.pd)S.pd={i:di,start:S.tot.prodT,rec:0};
     if(di>S.pd.i){const made=S.tot.prodT-S.pd.start;if(made>S.pd.rec)S.pd.rec=made;S.pd.i=di;S.pd.start=S.tot.prodT;}}
-  pfDay();   // v6.3 process flow: the mill day's books (11b)
+  pfDay();pfHour();   // v6.3 process flow: the mill day's books (11b); v6.5 the hour's history row (11c)
 
   chaosTick(dt);
   cardTick(dt);
@@ -131,6 +131,7 @@ function step(dt){
   // trend every 10 sim min
   S.trendAcc+=dt;
   if(S.trendAcc>=10){S.trendAcc-=10;S.trend.push([S.tank/P.tankCap,S.pmSpeed/3300,S.yard/P.yardCap,S.fg/P.fgCap]);if(S.trend.length>144)S.trend.shift();}
+  histTick(dt);   // v6.5 history: the hour's readings and minutes (11c)
   if(!S.zen)knobHist();   // v5.6: DCS / QCS trends (reads only)
 }
 

@@ -31,6 +31,13 @@ with sync_playwright() as pw:
     click = lambda sel: pg.evaluate("s=>{const e=document.querySelector(s);if(!e)throw new Error('missing '+s);e.dispatchEvent(new MouseEvent('click',{bubbles:true}))}", sel)
     vis = lambda sel: pg.evaluate(f"()=>{{const e=document.querySelector('{sel}');return !!e&&!e.hidden&&e.getClientRects().length>0}}")
     click("#v2go"); pick_leader(pg); pg.wait_for_timeout(800)
+    # ---- v6.5: the prior history loads before the run steps ----
+    pg.wait_for_function("()=>__PM.S.hist&&__PM.S.hist.bf", timeout=240000)
+    bf = pg.evaluate("()=>{const H=__PM.S.hist;return {n:H.rows.length,first:H.rows[0][0],ms:H.bfMs,cpu:H.bfCpu,ev:H.ev.length,kb:Math.round(JSON.stringify(H).length/1024),t:__PM.S.t,neg:H.rows.filter(r=>r[0]<0).length}}")
+    ok("14 prior days loaded (336 hours before day 1)", bf["neg"] == 336 and bf["first"] == -336, str(bf))
+    ok("prior history took under 10 s here", bf["ms"] < 10000, str(bf["ms"]) + " ms")
+    ok("prior history left the run at its start (cash, day 1)", pg.evaluate("()=>__PM.S.t<30&&Math.abs(__PM.S.cash-2e6)<20000"), str(pg.evaluate("()=>[__PM.S.t,__PM.S.cash]")))
+    ok("prior days made paper", pg.evaluate("()=>{const D=__PM.G3.histSum(__PM.G3.histRows(-336,0,true),-20160,0);return D.made>8000&&D.revenue>0}"), str(pg.evaluate("()=>{const D=__PM.G3.histSum(__PM.G3.histRows(-336,0,true),-20160,0);return [D.made,D.revenue,D.cost]}")))
     pg.evaluate("()=>{__PM.setRunning(false);if(__PM.S.cards)__PM.S.cards.open=null}")
 
     # ---- books: run 2.5 game days with upsets; check at several points and at the day roll ----
@@ -41,6 +48,10 @@ with sync_playwright() as pw:
         r = pg.evaluate(REC)
         if r: worst = max(worst, abs(r["p"] - r["c"]), abs(r["sumBy"] - r["cost"]))
     ok("today's profit = cash change + upgrades, and areas add up to the cost (worst $ off)", worst < 1.0, f"{worst:.4f}")
+    # ---- v6.5: the hourly history adds up to the books since day 1 (rows are rounded to the dollar) ----
+    hr = pg.evaluate("()=>{const S=__PM.S,D=__PM.G3.histSum(__PM.G3.histRows(0,1e9,false),0,1e9),L=S.ledger,cost=L.occ+L.energy+L.labor+L.overhead+L.repairs+L.premium+(L.civ||0),rows=S.hist.rows.filter(r=>r[0]>=0).length;return {d:D.cost-cost,r:D.revenue-(L.rev+L.deals),rows,h:Math.floor(S.t/60)}}")
+    ok("history since day 1 = the ledger (within rounding)", abs(hr["d"]) < hr["rows"] * 6 + 5 and abs(hr["r"]) < hr["rows"] * 2 + 5, str(hr))
+    ok("one row per finished hour", hr["rows"] == hr["h"], str(hr))
     y = pg.evaluate("()=>{const p=__PM.S.pf.prev;return p?{p:p.profit,c:p.cashChg+p.upg,h:p.h,made:p.made,rej:p.W.rej,day:p.day}:null}")
     ok("yesterday kept at the day roll and adds up", bool(y) and abs(y["p"] - y["c"]) < 1.0 and y["h"] == 24, str(y))
     ok("yesterday made paper and rejects", bool(y) and y["made"] > 200 and y["rej"] > 5, str(y))
@@ -57,10 +68,29 @@ with sync_playwright() as pw:
     ok("diagram drawn with 7 areas", pg.evaluate("()=>document.querySelectorAll('#pfMap [data-pf^=\"node:\"]').length") == 7)
     ok("inputs list has 6 inputs", pg.evaluate("()=>document.querySelectorAll('#pfIn [data-pf^=\"cat:\"]').length") == 6)
     if shot: pg.screenshot(path=f"{shot}-desktop.png")
+    nodata = "()=>[...document.querySelectorAll('#pfPanel canvas[data-ch]')].length"
     for sel in ['[data-pf="cat:energy"]', '[data-pf="node:pm"]', '#pfMap [data-pf^="drop:"]', '[data-pf="out:paper"]', '[data-pf="out:waste"]', '[data-pf="out:profit"]', '[data-pf="cat:maint"]']:
-        click(sel); pg.wait_for_timeout(300)
-        ok(f"tap {sel} opens a breakdown", vis("#pfPop") and pg.evaluate("()=>document.querySelectorAll('#pfPop .pfpr div').length") >= 2)
-        if shot and sel == '[data-pf="node:pm"]': pg.screenshot(path=f"{shot}-popup.png")
+        pg.evaluate("()=>__PM.G3.pfSel(null)")
+        click(sel); pg.wait_for_timeout(400)
+        ok(f"tap {sel} opens the panel with charts", vis("#pfPanel") and pg.evaluate(nodata) >= 1, str(pg.evaluate(nodata)))
+        click('#pfPanel [data-ptab]:not([data-ptab="tr"])'); pg.wait_for_timeout(300)
+        ok(f"  {sel}: second tab shows", pg.evaluate("()=>document.querySelectorAll('#pfPanel .pfpr div, #pfPanel canvas').length") >= 2)
+    for a in ["yard", "pulper", "stock", "pm", "winder", "ship", "site"]:
+        for tab in ["tr", "co", "uq"]:
+            if a == "site" and tab == "uq": continue
+            for z in ["24h", "7d", "run"]:
+                pg.evaluate(f"()=>__PM.G3.pfSel('node:{a}','{tab}','{z}')"); pg.wait_for_timeout(60)
+            n = pg.evaluate("()=>document.querySelectorAll('#pfPanel canvas[data-ch]').length")
+            ok(f"area {a} tab {tab}: charts drawn", n >= 1, str(n))
+            if shot and (a, tab) in [("pm", "tr"), ("pm", "uq"), ("site", "tr"), ("yard", "co")]:
+                pg.evaluate("()=>__PM.G3.pfSel(null)"); pg.evaluate(f"()=>__PM.G3.pfSel('node:{a}','{tab}','run')"); pg.wait_for_timeout(300)
+                pg.mouse.move(900, 300); pg.wait_for_timeout(200); pg.screenshot(path=f"{shot}-{a}-{tab}.png")
+    for m in ["w", "r", "t"]:
+        pg.evaluate(f"()=>__PM.G3.pfMode('{m}')"); pg.wait_for_timeout(200)
+        ok(f"range {m}: flow draws", pg.evaluate("()=>document.querySelectorAll('#pfMap [data-pf^=\"node:\"]').length") == 7)
+        if shot and m == "r": pg.evaluate("()=>__PM.G3.pfSel(null)"); pg.wait_for_timeout(200); pg.screenshot(path=f"{shot}-run.png")
+    pg.evaluate("()=>__PM.G3.pfSel('node:pm','tr','7d')"); pg.wait_for_timeout(200)
+    if shot: pg.screenshot(path=f"{shot}-popup.png")
     click('[data-pd="y"]'); pg.wait_for_timeout(400)
     ok("yesterday view", pg.evaluate("()=>document.querySelector('[data-pd=\"y\"]').getAttribute('aria-pressed')") == "true")
     if shot: pg.screenshot(path=f"{shot}-yesterday.png")
@@ -72,6 +102,8 @@ with sync_playwright() as pw:
     # ---- save round trip keeps the day's books ----
     sv = pg.evaluate("()=>{const a=JSON.parse(JSON.stringify(__PM.S.pf));return !!(a&&a.L0&&a.W&&a.prev)}")
     ok("day books survive JSON (save)", sv)
+    hs = pg.evaluate("()=>{if(!__PM.G3.save)return 'nosave';__PM.G3.save.save('test');const raw=localStorage.getItem('paper-mill-save-hist');const m=JSON.parse(localStorage.getItem('paper-mill-save')||'null');return raw?{kb:Math.round(raw.length/1024),match:JSON.parse(raw).id===(m&&m.S.histId),inMain:!!(m&&m.S.hist)}:'nohist'}")
+    ok("history saved under its own key, not inside the save", isinstance(hs, dict) and hs["match"] and not hs["inMain"], str(hs))
 
     # ---- phone width ----
     pg.set_viewport_size({"width": 390, "height": 844}); pg.wait_for_timeout(400)
@@ -81,7 +113,8 @@ with sync_playwright() as pw:
     if shot: pg.screenshot(path=f"{shot}-phone.png", full_page=False)
     pg.evaluate("()=>document.getElementById('pfBody').scrollTop=600"); pg.wait_for_timeout(200)
     if shot: pg.screenshot(path=f"{shot}-phone2.png")
-    click('[data-pf="node:stock"]'); pg.wait_for_timeout(300)
+    click('[data-pf="node:stock"]'); pg.wait_for_timeout(400)
+    ok("phone: the panel is a bottom sheet", pg.evaluate("()=>{const r=document.getElementById('pfPanel').getBoundingClientRect();return getComputedStyle(document.getElementById('pfPanel')).position==='fixed'&&Math.abs(r.bottom-innerHeight)<2&&r.width>=innerWidth-1}"))
     if shot: pg.screenshot(path=f"{shot}-phone-pop.png")
     pg.evaluate("()=>__PM.G3.pfCloseUI()")
     pg.set_viewport_size({"width": 1280, "height": 760}); pg.wait_for_timeout(300)
