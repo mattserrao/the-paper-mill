@@ -53,7 +53,7 @@ with sync_playwright() as pw:
     ok("Process flow button in Settings", vis("#pfBtn"))
     click("#pfBtn"); pg.wait_for_timeout(1500)
     ok("screen opens", vis("#pfOv"))
-    ok("game slowed to 1 min/s while open", pg.evaluate("()=>__PM.G3.simRate()") == 1)
+    v = pg.evaluate("()=>[__PM.running,__PM.G3.simRate(),__PM.C.simSpeed,!!__PM.S.cards.open]"); ok("game keeps running at the player's speed while open", (v[0] or v[3]) and v[1] == v[2], str(v))   # (an event card may hold the game, as it always does)
     ok("diagram drawn with 7 areas", pg.evaluate("()=>document.querySelectorAll('#pfMap [data-pf^=\"node:\"]').length") == 7)
     ok("inputs list has 6 inputs", pg.evaluate("()=>document.querySelectorAll('#pfIn [data-pf^=\"cat:\"]').length") == 6)
     if shot: pg.screenshot(path=f"{shot}-desktop.png")

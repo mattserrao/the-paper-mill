@@ -1,6 +1,10 @@
 # Changelog
 
 
+## v6.3.0-f2 (2026-10-18): process flow runs live (test branch test/v6.3-flow)
+- The game keeps running at the player's speed while the process flow screen is open (f1 slowed it to 1 min/s), so
+  the numbers and lamps update live.
+
 ## v6.3.0-f1 (2026-10-18): process flow overview (test branch test/v6.3-flow)
 - **Settings → View → Process flow:** a control-room picture of the whole mill for today's mill day (6am to 6am), with a
   Yesterday view after the first full day. Inputs on the left (fiber, energy, chemicals and water, labor, maintenance,

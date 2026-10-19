@@ -7,7 +7,7 @@ const KUI={panel:null,st:null,tab:"dcs",built:{}};
 const AREA_N={SPOT:"Stock prep",WET:"Wet end",DET:"Dry end"};
 // field knobs the DCS can also set remotely; the guide roll and the oscillator are set at the machine only
 const KREMOTE=new Set(["pulp","ref","agit","couch"]);
-function kuiSync(){G3.knobUI=!S.zen&&!!(KUI.panel||KUI.st||G3.pfOpen||!$("spider").hidden||!$("slice").hidden);}   // (v6.3: the process flow screen too, 50c)
+function kuiSync(){G3.knobUI=!S.zen&&!!(KUI.panel||KUI.st||!$("spider").hidden||!$("slice").hidden);}
 function kEl(tag,cls,html){const e=document.createElement(tag);if(cls)e.className=cls;if(html!=null)e.innerHTML=html;return e;}
 const kf=(v,d=1)=>(+v).toFixed(d);
 

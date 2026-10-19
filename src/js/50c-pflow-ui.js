@@ -3,7 +3,7 @@
    mill's areas in a row, outputs on the right. The band through the areas is drawn as wide as the money spent so far
    (a value build-up Sankey): each input drops in where it's spent, and what comes out the end meets the day's revenue.
    Waste is tons, drawn as thin dashed lines (not to scale). Tap anything for its breakdown. Reads only (11b-pflow.js);
-   while it's open the game runs at 1 min/s like the DCS screens (G3.pfOpen, kuiSync in 50b). On narrow screens the
+   the game keeps running at the player's speed while it's open (v6.3.0-f2; f1 slowed it to 1 min/s). On narrow screens the
    picture runs top to bottom. */
 const PFUI={open:false,mode:"t",sel:null,h:""};
 const PF_LINES={yard:["Bale yard"],pulper:["Pulper"],stock:["Stock prep"],pm:["Paper","machine"],winder:["Winder"],ship:["Warehouse","& shipping"],site:["Site &","admin"]};
@@ -17,7 +17,7 @@ function pfOv(){let o=$("pfOv");if(o)return o;
     <button aria-label="Close" class="dcsx" id="pfClose">✕</button></div>
     <div class="dcsb pfb" id="pfBody"><div class="pfcol pfin" id="pfIn"></div><div class="pfmap mimicw" id="pfMap"></div><div class="pfcol pfout" id="pfOut"></div></div>
     <div class="pfpop" id="pfPop" hidden></div>
-    <div class="dcsf"><span id="pfClock"></span><span id="pfNote">Game slowed to 1 min/s while this screen is open</span></div></div>`;
+    <div class="dcsf"><span id="pfClock"></span><span id="pfNote">Live: the mill keeps running</span></div></div>`;
   document.body.appendChild(o);
   $("pfClose").addEventListener("click",()=>pfClose());
   o.addEventListener("click",e=>{if(e.target===o){pfClose();return;}
@@ -152,7 +152,7 @@ function pfRender(force){if(!PFUI.open)return;const o=$("pfOv");if(!o)return;
   $("pf-h").textContent=`${(typeof NAME==="string"&&NAME)||"PM1"} · PROCESS FLOW`;
   const live=PFUI.mode==="t",D=S.pf?(live?pfCalc(S.pf):prev):null;
   $("pfClock").textContent=D?(live?`Day ${D.day} · ${clockOf(S.t)} · ${D.h.toFixed(1)} h into the mill day (6am to 6am)`:`Day ${D.day} · the whole mill day`):"";
-  $("pfNote").textContent=S.zen?"Zen: the books keep running, but money doesn't count here":"Game slowed to 1 min/s while this screen is open";
+  $("pfNote").textContent=S.zen?"Zen: the books keep running, but money doesn't count here":"Live: the mill keeps running at your speed";
   if(!D){$("pfMap").innerHTML=`<p class="pfwait">The flow starts with the first game minute.</p>`;return;}
   const key=[PFUI.mode,PFUI.sel,pfVert()?1:0,Math.round(S.t*4)].join("|");if(!force&&key===PFUI.h)return;PFUI.h=key;
   const put=(id,h)=>{const e=$(id);if(e._h!==h){e._h=h;e.innerHTML=h;}};
