@@ -1,7 +1,8 @@
 # Changelog
 
 
-## v6.5.6-t1 (2026-10-19): mass balance (test branch test/v6.5.6-balance)
+## v6.5.6 (2026-10-19): mass balance
+Built on test/v6.5.6-balance (as 6.5.6-t1), merged into main.
 From the fiber and water audit: fiber closed at every stage, but some losses vanished without being booked, and water
 wasn't modelled at all.
 - **Water balance** (new 07f-water.js). In: fresh water (machine showers 8 m³/t, seal water 60 m³/h, makeup), the
