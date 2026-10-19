@@ -104,7 +104,7 @@ function dcsSetDefs(a){const D=()=>DCS_DRAW();
     ["st3","2nd / 3rd section steam",S.dry&&S.dry.man!=null?"MANUAL · holds this pressure, the moisture follows the load":"AUTO · moisture control holds the reel at "+DRY.m0+"%",40,DRY.ceil,1,()=>S.dry?(S.dry.man??S.dry.st3):120,v=>{if(!S.zen)dryState().man=v;},"kPa",null,0,
       {on:()=>!(S.dry&&S.dry.man!=null),flip:()=>{if(S.zen)return;const D=dryState();D.man=D.man!=null?null:Math.round(D.st3);}}]];
   return [];}
-function dcsSlice(k,v){const D=G3.SLC;if(!D||G3.slcFix||S.zen)return;D[k]=v/100;D.dirty=true;const g=D.geo();if(g.lipX-g.wet>=6.8&&typeof slcBreak==="function")slcBreak();}
+function dcsSlice(k,v){const D=G3.SLC;if(!D||G3.slcFix||S.zen)return;slcSet(k,v/100);const g=D.geo();if(g.lipX-g.wet>=6.8&&typeof slcBreak==="function")slcBreak();}
 function dcsSetRows(a,cs){const defs=dcsSetDefs(a);
   if(a==="UTIL")cs.appendChild(kEl("p","dcsfield","Monitoring only: water, effluent and rejects. The permit and the river intake show here when they act up."));
   if(a==="SPOT"||a==="WET"){const row=kEl("div","dcsrow dcsx");

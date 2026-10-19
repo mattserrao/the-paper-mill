@@ -57,7 +57,7 @@
       if(G3.slcFix&&G3.slcFix.i===i){const F=G3.slcFix;F.t+=rdt;const B=slcBubble;
         if(F.ph==="swear"){pose(w,"flail",now);face(w,57.15,zc,rdt);if(F.t>2.2){F.ph="walk";F.t=0;}}
         else if(F.ph==="walk"){if(moveP(w,56.45,12.85,7,rdt)){F.ph="fix";F.t=0;}else pose(w,"run",now);}
-        else{face(w,57.15,12.3,rdt);pose(w,"type",now);if(F.t>2.6){G3.SLC.v=G3.SLC.h=0;G3.SLC.dirty=true;G3.slcFix=null;B.visible=false;G3.onSlcReset&&G3.onSlcReset();return;}}
+        else{face(w,57.15,12.3,rdt);pose(w,"type",now);if(F.t>2.6){if(S.knob)knobReset("slice",true);G3.SLC.v=G3.SLC.h=0;G3.SLC.dirty=true;G3.slcFix=null;B.visible=false;G3.onSlcReset&&G3.onSlcReset();return;}}
         B.visible=F.ph!=="fix"||F.t<0.6;B.position.set(w.position.x,2.75+0.06*Math.sin(now/120),w.position.z);B.material.opacity=F.ph==="swear"?1:Math.max(0,1-F.t/1.2);return;}
       if(brkOn){[tx,tz]=(BRKSPOT[S.brkType]||RT)[i];const arrived=moveP(w,tx,tz,10,rdt);if(arrived){face(w,tx,zc,rdt);here=true;}
         const air=arrived&&head.go&&tx>-4&&tx<28;pose(w,arrived?(air?"air":"rethread"):"run",now);

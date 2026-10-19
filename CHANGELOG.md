@@ -1,6 +1,24 @@
 # Changelog
 
 
+## v6.5.5-t1 (2026-10-19): the dewatering chain (test branch test/v6.5.5-dewater, on top of v6.5.4)
+One chain from the headbox to the dryers (`dewater()`, 07b-knobs.js), replacing the old water factor:
+- **Jet (slice)**: the slice opening (J/W) and the lip position (jet angle) are best at standard; either way less water
+  comes off the table (couch solids −1.7 points at ±0.6 opening, −1.0 at ±0.6 lip). The slice now lives in the saved
+  knob state (`sv` / `sh`), so it's saved and replayed and the crew can trace a wet sheet back to it. The 3D view
+  follows it.
+- **Forming vacuum**: best at the 30 kPa standard; below it couch solids drop fast (15 kPa: −2.7 points), above it more
+  gently (45: −0.7), and above 45 the fabric still wears.
+- **Couch solids**: 19% at standard, from the jet, the vacuum and the refining (tight plates drain slower, open a
+  little faster). Shown on the WET DCS and in the trends.
+- **Press solids**: start from the couch solids point for point on 44% (48% with the shoe press), +0.2 a kN/m of nip load
+  below the 100 standard, +0.08 above, and past 130 the nip crushes the sheet and solids fall (crush marks from 115
+  as before).
+- **Dryer steam**: water into the dryers per ton = 0.93 / press solids − 1, against standard. Drier in, less steam and
+  a lower 3rd section, and the steam bill goes down (before, no knob ever saved steam); wetter, the reverse, up to
+  the boiler trip and the wet sheet.
+- `tools/dewatercheck.py` (13 checks); `knobcheck.py` passes unchanged.
+
 ## v6.5.4 (2026-10-19): DCS fixes (test branch test/v6.5.4-dcs)
 - **Making-beater alert**: when the reel starts going to the beater (a spec violation or a knob defect) a banner goes up
   over the mill ("Making beater: …"), the WET DCS shows a red alert right under the headbox dilution zones, and every

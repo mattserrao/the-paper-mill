@@ -7,7 +7,7 @@ document.addEventListener("fullscreenchange",()=>{if(!document.fullscreenElement
 document.addEventListener("keydown",e=>{if(e.key==="Escape"&&ZEN){setZen(false);return;}if(e.key==="Escape"&&document.body.classList.contains("fs"))setFS(false);});
 function openSlice(){$("spider").hidden=true;$("brian").hidden=true;$("slice").hidden=false;$("slcV").value=Math.round(G3.SLC.v*100);$("slcH").value=Math.round(G3.SLC.h*100);drawSlice();}
 $("slcClose").addEventListener("click",()=>$("slice").hidden=true);
-["slcV","slcH"].forEach(id=>$(id).addEventListener("input",e=>{if(G3.slcFix)return;G3.SLC[id==="slcV"?"v":"h"]=+e.target.value/100;G3.SLC.dirty=true;
+["slcV","slcH"].forEach(id=>$(id).addEventListener("input",e=>{if(G3.slcFix)return;slcSet(id==="slcV"?"v":"h",+e.target.value/100);   // (v6.5.5: into the sim's knob state, 07b)
   const g=G3.SLC.geo();if(g.lipX-g.wet>=6.8)slcBreak();drawSlice();}));
 // v3.2.0: run the jet out to the couch and the sheet breaks; the wet-end operator comes over and puts the slice back
 function slcBreak(){if(G3.slcFix)return;G3.slcFix={i:0,ph:"swear",t:0};
@@ -15,7 +15,7 @@ function slcBreak(){if(G3.slcFix)return;G3.slcFix={i:0,ph:"swear",t:0};
   log("Sheet break! The slice was opened so far the wet line ran off the former. The wet-end operator is resetting it.","bad");
   ["slcV","slcH","slcReset"].forEach(id=>$(id).disabled=true);}
 G3.onSlcReset=()=>{["slcV","slcH","slcReset"].forEach(id=>$(id).disabled=false);$("slcV").value=0;$("slcH").value=0;log("Slice reset to standard. Wet line is back where it belongs.","ok");drawSlice();};
-$("slcReset").addEventListener("click",()=>{G3.SLC.v=G3.SLC.h=0;G3.SLC.dirty=true;$("slcV").value=0;$("slcH").value=0;drawSlice();});
+$("slcReset").addEventListener("click",()=>{if(S.knob&&!knobAt("slice"))knobReset("slice");$("slcV").value=0;$("slcH").value=0;drawSlice();});
 function drawSlice(){const D=G3.SLC;if(!D||$("slice").hidden)return;const g=D.geo(),wl=g.lipX-g.wet;
   $("slcVv").textContent="B "+(12+3*D.v).toFixed(1)+" mm";$("slcHv").textContent="L "+(D.h>=0?"+":"")+(4*D.h).toFixed(1)+" mm";
   $("slcJ").textContent=(54.5-g.land).toFixed(2)+" m past the breast roll";$("slcW").textContent=wl.toFixed(1)+" m";

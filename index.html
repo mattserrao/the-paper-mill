@@ -1466,7 +1466,7 @@ body.pmpop .popmain[data-v="dcs"] #dcsOv .dcs{max-width:1180px;margin:0 auto}
 <div class="btns"><button class="primary" id="no3d-retry">Try again</button></div></div></div>
 
 <script type="module">
-const APP_VER="v6.5.4";   // shown in the menu and sent with leaderboard scores (max 12 characters)
+const APP_VER="v6.5.5-t1";   // shown in the menu and sent with leaderboard scores (max 12 characters)
 // TEST BUILDS ONLY (off in releases): turbo speeds 240/480/960 sim min/s for fast playtests. Above 120, crews and maintenance start jobs
 // without waiting for the 3D walk (as with the 3D view off) and outages keep the speed. Set false for a release.
 const TURBO=false,TURBO_FAST=s=>TURBO&&s>120;
@@ -3536,25 +3536,46 @@ const KNOBS=[
     tip:"Steam pressure in the first dryer section. The 3rd section is on automatic moisture control. Standard is 70 kPa."},
 ];
 const KNOBN=Object.fromEntries(KNOBS.map(k=>[k.id,k]));
+// v6.5.5: the headbox slice (opening B and lip position L, -1..1, kept in the knob state as sv / sh so it's saved and
+// replayed) is a knob for the crew's tracing too; its own panel and the WET DCS set it (50-view-spider.js, 50d)
+KNOBN.slice={id:"slice",name:"Headbox slice",area:"WET",where:"Headbox L/B gauge"};
+function slcGet(){const K=S.knob;return {v:(K&&K.v.sv)||0,h:(K&&K.v.sh)||0};}
+function slcSet(k,val){if(S.zen)return;const K=knobState();K.v[k==="v"?"sv":"sh"]=clamp(+val,-1,1);K.any=true;K.moved.slice=S.t;
+  if(G3.SLC){G3.SLC[k]=K.v[k==="v"?"sv":"sh"];G3.SLC.dirty=true;}}
+/* ---- v6.5.5 the dewatering chain: jet → forming table → vacuum → couch → presses → dryers ----
+   Couch solids start from 19% and lose ground when the jet (J/W and its angle: the slice) is off its best point, when
+   the forming vacuum is off its best point either way (much more below it than above), or when tight refining slows
+   drainage (open refining drains a little faster). Press solids start from the couch solids (point for point) on
+   44% (48% with the shoe press) and rise with nip load: 0.2 a kN/m below the 100 standard, 0.08 above it, and past
+   130 the nip crushes the sheet and they fall away (crush marks already show from 115). Water into the dryers per ton is
+   0.93 / press solids - 1, against the standard's: W, the wet end's water factor the dryers use (07d). Drier in, less
+   steam; wetter, more, both ways (before v6.5.5 no knob ever saved steam). Untouched, every factor is exactly 1. */
+function dewater(fr,vac,pl,jv,jh){
+  const eJet=1-0.25*jv*jv-0.15*jh*jh,dv=(vac-30)/30,eVac=1-(dv<0?0.58:0.15)*dv*dv,eRef=fr<0.5?1-(0.5-fr):1+0.2*(fr-0.5);
+  const cs=clamp(19*eJet*eVac*eRef,8,26),pb=44+4*LV("shoe");
+  const lt=pl<100?0.2*(pl-100):pl<=130?0.08*(pl-100):2.4-0.3*(pl-130);
+  const ps=clamp(pb+(cs-19)+lt,30,56),wpt=p=>0.93/(p/100)-1;
+  return {cs,ps,W:wpt(ps)/wpt(pb),eJet,eVac,eRef};}
 const KZONES=12;
 function knobState(){if(!S.knob){S.knob={v:Object.assign({},KNOB_IDEAL),z:new Array(KZONES).fill(0),
     x:{cp:5,fr:0.5,ch:0,sw:0,vac:30,pl:100,st:0,d1:0,m:8,dl:0,dt:0,bs:0,z:new Array(KZONES).fill(0)},
     any:false,cs:0,wear:0,gacc:0,gm0:0,H:{},harm:{},off:0,offWhy:"",sf:1,a:1,W:1,feed:1,brk:1,edge:0,gtrav:0,inc:[],warned:{},moved:{}};}
   if(S.knob.pmPrev==null)S.knob.pmPrev=S.pm;if(S.rng&&S.rng.knob==null)S.rng.knob=(S.seed^0x6b9f3c21)|0;return S.knob;}
 function knobVal(id){const K=S.knob;return K?K.v[id]:KNOB_IDEAL[id];}
-function knobAt(id){const K=S.knob;if(!K)return true;if(id==="zones")return K.z.every(v=>v===0);if(id==="guide")return K.v.gm===1&&K.v.gt===0;return K.v[id]===KNOB_IDEAL[id];}
+function knobAt(id){const K=S.knob;if(!K)return true;if(id==="slice")return !K.v.sv&&!K.v.sh;if(id==="zones")return K.z.every(v=>v===0);if(id==="guide")return K.v.gm===1&&K.v.gt===0;return K.v[id]===KNOB_IDEAL[id];}
 // the player moves a knob (UI): v is the new value (zones: [i,v]; guide: {gm,gt})
 function knobSet(id,v){if(S.zen)return;const K=knobState();
   if(id==="zones"){const [i,z]=v;K.z[i]=clamp(Math.round(z),-10,10);}
   else if(id==="guide"){if(v.gm!=null&&v.gm!==K.v.gm){K.v.gm=v.gm;if(v.gm===0){K.gacc=0;K.gw0=knobWalk();}}if(v.gt!=null)K.v.gt=clamp(Math.round(v.gt),-40,40);}
   else{const d=KNOBN[id];K.v[id]=d&&d.min!=null?clamp(+v,d.min,d.max):+v;}
   K.any=true;K.moved[id]=S.t;}
-function knobFmt(id){const K=S.knob,d=KNOBN[id];if(id==="zones"){const z=K?K.z:[];const n=z.filter(v=>v!==0).length;return n?`${n} zone${n>1?"s":""} trimmed`:"all zones 0%";}
+function knobFmt(id){const K=S.knob,d=KNOBN[id];if(id==="slice"){const s=slcGet();return `B ${(12+3*s.v).toFixed(1)} mm · L ${s.h>=0?"+":""}${(4*s.h).toFixed(1)} mm`;}if(id==="zones"){const z=K?K.z:[];const n=z.filter(v=>v!==0).length;return n?`${n} zone${n>1?"s":""} trimmed`:"all zones 0%";}
   if(id==="guide"){const v=K?K.v:KNOB_IDEAL;return (v.gm?"AUTO":"MANUAL")+(v.gt?` · trim ${v.gt>0?"+":""}${v.gt} mm`:"");}
   if(id==="couch")return knobVal("couch")?"running":"stopped";
   const v=knobVal(id);return `${v.toFixed(d.dp||0)} ${d.unit}`;}
 function knobReset(id,quiet){const K=S.knob;if(!K)return;
-  if(id==="zones")K.z.fill(0);else if(id==="guide"){K.v.gm=1;K.v.gt=0;K.gacc=0;}else K.v[id]=KNOB_IDEAL[id];
+  if(id==="slice"){K.v.sv=K.v.sh=0;if(G3.SLC){G3.SLC.v=G3.SLC.h=0;G3.SLC.dirty=true;}}
+  else if(id==="zones")K.z.fill(0);else if(id==="guide"){K.v.gm=1;K.v.gt=0;K.gacc=0;}else K.v[id]=KNOB_IDEAL[id];
   if(!quiet)K.any=true;}
 // which knobs are off their ideal right now (for the knob view, the DCS and the crew's trace)
 function knobsOff(){return KNOBS.filter(k=>!knobAt(k.id)).map(k=>k.id);}
@@ -3571,7 +3592,7 @@ function knobFix(ids,head,who){const K=S.knob;if(!K)return;ids=ids.filter(id=>!k
 // in the chest still have to work their way out)
 function knobSettle(id){const K=S.knob,x=K.x;x.bs=0;x.bk=0;K.H={};
   if(id==="pulp")x.cp=5;else if(id==="ref"){x.fr=0.5;x.ch=0;}else if(id==="vac"){x.vac=30;K.wear=0;}else if(id==="press"){x.pl=100;x.cr1=x.cr=0;}
-  else if(id==="draw"){x.dl1=x.dl=x.dt=0;}else if(id==="st1")x.d1=0;else if(id==="agit")x.sw*=0.3;else if(id==="guide"){K.edge=0;K.gacc=0;}else if(id==="couch")K.cs=0;}
+  else if(id==="draw"){x.dl1=x.dl=x.dt=0;}else if(id==="st1")x.d1=0;else if(id==="agit")x.sw*=0.3;else if(id==="guide"){K.edge=0;K.gacc=0;}else if(id==="couch")K.cs=0;else if(id==="slice")x.jv=x.jh=0;}
 // a knob-caused breakdown. Like trigger() but with the "knob" dice for its length, no civics card and no leader auto-fix
 // (the knob is the root cause, and the crew resets it when the job is done). Uses the upset's own 3D effect and repair bill.
 function knobTrig(id,cause,why){if(active(id))return false;const K=S.knob,e=EV[id];if(S.rng.knob==null)S.rng.knob=(S.seed^0x6b9f3c21)|0;
@@ -3595,7 +3616,7 @@ function knobMods(m){const K=S.knob;if(!K||!K.any||S.zen)return;if(K.feed<1)m.fe
 // share of production going to the beater because of a knob (07-sim-step.js)
 function knobOff(){const K=S.knob;return K&&K.any&&!S.zen?K.off:0;}
 // extra dryer steam per ton (more water into the dryers, or 1st section steam turned up), as energy cost (07-sim-step.js)
-function knobSteamCost(prod){const K=S.knob;if(!K||!K.any||S.zen||K.sf===1)return;{const v=prod*ECON.energy*P.energyMul*0.6*(K.sf-1)*(P.costMul||1);spend(v,"energy");pfAdd("steam","pm",v);}}
+function knobSteamCost(prod){const K=S.knob;if(!K||!K.any||S.zen||Math.abs(K.sf-1)<1e-9)return;{const v=prod*ECON.energy*P.energyMul*0.6*(K.sf-1)*(P.costMul||1);spend(v,"energy");pfAdd("steam","pm",v);}}
 
 function knobTick(dt){const K=S.knob;if(!K||!K.any||S.zen)return;
   const v=K.v,x=K.x,L=(a,t,tau)=>kLag(a,t,tau,dt),H=K.H,run=S.pm==="run";
@@ -3624,12 +3645,14 @@ function knobTick(dt){const K=S.knob;if(!K||!K.any||S.zen)return;
     else{K.gacc+=dt/60*8;K.gtrav=0;K.edge=v.gt+(walk-(K.gw0||0))+K.gacc;}}
   // ---- water into the dryers and the steam that dries it ----
   // (only the refiner can make it drier than normal, and then only the moisture moves: no knob ever saves steam)
-  const W=1+Math.max(0,0.5-x.fr)*1.0-Math.max(0,x.fr-0.5)*0.4+Math.max(0,30-x.vac)*0.015+Math.max(0,100-x.pl)*0.012;
+  // v6.5.5: the dewatering chain (dewater(), above): the slice's jet, the table, the vacuum, the couch and the presses
+  {const s=slcGet();x.jv=L(x.jv||0,s.v,5);x.jh=L(x.jh||0,s.h,5);}
+  const Dw=dewater(x.fr,x.vac,x.pl,x.jv,x.jh),W=Dw.W;x.cs=Dw.cs;x.ps=Dw.ps;
   x.d1=L(x.d1,(v.st1-70)/130*0.35,8);
   // v6.5 b5: moisture, the 3rd section and the boiler header come from the dryer model (07d), which now also sees speed
   const a0=clamp(W-x.d1,0.7,1.3),Dr=dryState();K.W=W;K.d1x=x.d1;K.a=Dr.st3/(DRY.base[C.grade]||122);
   x.m=Dr.m;                                                             // reel moisture (%)
-  K.sf=Math.max(1,a0+Math.max(0,x.d1));                                 // steam load per ton (1 = normal, never less): the cost side
+  K.sf=a0+Math.max(0,x.d1);                                             // steam load per ton (1 = normal): the cost side (v6.5.5: a drier sheet saves steam)
   // boiler header sagging under the load: the boiler's own limit (07d), or (v6.5.2) the knobs holding the dryers' total
   // steam per ton (the 3rd section's share plus the 1st's, a0 + d1) at its 30% top for a while. With the 1st section
   // turned down the 3rd takes its share over, which isn't more steam, so that alone doesn't trip it.
@@ -3676,13 +3699,16 @@ function knobTick(dt){const K=S.knob;if(!K||!K.any||S.zen)return;
   tr("feed",K.feed<0.95,480,()=>["pulp"],"Stock prep can't keep the chest up: the pulper is running thin.","Stock prep");
   tr("moist",F.wet>0||F.dry>0||(K.harm.moist&&K.harm.moist.n>0),180,()=>F.wet>0?knobSteamCulprits():["st1","ref"].filter(i=>!knobAt(i)),F.wet>0?"QCS: the sheet is coming off the reel wet.":"QCS: the sheet is coming off the reel over-dried.","The process engineer");
   // ---- all back at ideal and settled: stop running ----
-  if(!knobsOff().length&&!K.inc.length&&K.cs<0.01&&K.wear<0.001&&Math.abs(x.cp-5)<0.02&&Math.abs(x.fr-0.5)<0.002&&x.ch<0.01&&x.sw<0.005&&Math.abs(x.vac-30)<0.05&&Math.abs(x.pl-100)<0.05&&x.st<0.005&&Math.abs(x.d1)<0.001&&Math.abs(x.m-DRY.m0)<0.02&&x.bs<0.01&&x.dl<0.002&&(x.dl1||0)<0.002&&(x.cr||0)<0.002&&(x.cr1||0)<0.002&&x.dt<0.002&&x.z.every(z=>Math.abs(z)<0.02)&&K.off===0){
+  if(!knobsOff().length&&!K.inc.length&&K.cs<0.01&&K.wear<0.001&&Math.abs(x.cp-5)<0.02&&Math.abs(x.fr-0.5)<0.002&&x.ch<0.01&&x.sw<0.005&&Math.abs(x.vac-30)<0.05&&Math.abs(x.pl-100)<0.05&&knobAt("slice")&&Math.abs(x.jv||0)<0.005&&Math.abs(x.jh||0)<0.005&&x.st<0.005&&Math.abs(x.d1)<0.001&&Math.abs(x.m-DRY.m0)<0.02&&x.bs<0.01&&x.dl<0.002&&(x.dl1||0)<0.002&&(x.cr||0)<0.002&&(x.cr1||0)<0.002&&x.dt<0.002&&x.z.every(z=>Math.abs(z)<0.02)&&K.off===0){
     K.any=false;K.off=0;K.sf=1;K.feed=1;K.brk=1;K.edge=0;K.gtrav=0;K.H={};K.harm={};S.M=mods();}
 }
 const KOFFN={wet:"sheet too wet",dry:"sheet over-dried",cd:"CD moisture streaks",bw:"basis weight swings",crush:"crush marks",stripes:"stripes from the pick-up felt",wrinkles:"wrinkles in the reel"};
 // what is putting the extra water into the dryers (or the extra steam on): the knobs the engineers will trace
 function knobSteamCulprits(){const K=S.knob;if(!K)return [];const v=K.v,c=[];
-  if(v.ref<0.5)c.push(["ref",(0.5-v.ref)*1.0]);if(v.vac<30)c.push(["vac",(30-v.vac)*0.015]);if(v.press<100)c.push(["press",(100-v.press)*0.012]);if(v.st1!==70)c.push(["st1",Math.abs(v.st1-70)/130*0.35]);
+  // (v6.5.5: each knob's share of the extra water, from the dewatering chain with that knob put back to standard)
+  const sl=slcGet(),W0=dewater(v.ref,v.vac,v.press,sl.v,sl.h).W,dW=(o)=>W0-dewater(o.fr??v.ref,o.vac??v.vac,o.pl??v.press,o.jv??sl.v,o.jh??sl.h).W;
+  if(!knobAt("ref"))c.push(["ref",dW({fr:0.5})]);if(!knobAt("vac"))c.push(["vac",dW({vac:30})]);if(!knobAt("press"))c.push(["press",dW({pl:100})]);if(!knobAt("slice"))c.push(["slice",dW({jv:0,jh:0})]);
+  if(v.st1!==70)c.push(["st1",Math.abs(v.st1-70)/130*0.35]);
   c.sort((a,b)=>b[1]-a[1]);return c.filter(r=>r[1]>0.02).map(r=>r[0]);}
 // readings for the DCS and QCS screens. With S.knob missing everything reads at its standard value.
 // Base values follow PM3's own run data: reel speed, basis weight and 3rd section steam by grade, the stock prep level.
@@ -3694,7 +3720,7 @@ function knobRead(){const K=S.knob,x=K?K.x:null,g=GRADES[C.grade]||GRADES["23m"]
   return {run,cp,amps:410*(0.55+cp/5*0.45)*(S.M.pulperDown?0:1),pulpLvl:clamp(62+(5-cp)*9+wob(0.05,1)*1.5,0,110),
     gap:x?x.fr:0.5,refkw:run?2100*(1+Math.max(0,0.5-(x?x.fr:0.5))*1.6-Math.max(0,(x?x.fr:0.5)-0.5)*0.8):0,csf:450+((x?x.fr:0.5)-0.5)*380,
     mcLvl:69+wob(0.02,2)*3,mcCons:3.2+sw*0.9*wob(0.21,3),agit:knobVal("agit"),
-    vac:x?x.vac:30,couchSol:19+((x?x.vac:30)-30)*0.18,pl:x?x.pl:100,pressSol:44+((x?x.pl:100)-100)*0.09,
+    vac:x?x.vac:30,couchSol:x&&x.cs!=null?x.cs:19,pl:x?x.pl:100,pressSol:x&&x.ps!=null?x.ps:44+4*LV("shoe"),
     edge:K?K.edge:0,gtrav:K?K.gtrav:0,gm:knobVal("gm"),stripes:x?x.st:0,cs:K?K.cs:0,couch:knobVal("couch"),osc:knobVal("osc"),wear:K?K.wear:0,
     st1:knobVal("st1"),st3,steam:run?(Dr?Dr.steam:50.5*S.pmSpeed/2736):0,boiler:Dr?Dr.hdr:1,moist:run?m+wob(0.13,4)*0.25:0,
     bw:run?bw*(1+sw*0.08*wob(0.21,3))+wob(0.11,5)*0.12:0,draw:knobVal("draw"),tension:run?1.0+(knobVal("draw")-1.5)*0.42:0,
@@ -6358,7 +6384,8 @@ function no3D(){G3.ok=false;$("no3d").hidden=false;$("no3d-retry").onclick=()=>l
   const jetPos=new Float32Array(12),jetG=new THREE.BufferGeometry();jetG.setAttribute("position",new THREE.BufferAttribute(jetPos,3));jetG.setIndex([0,1,2,1,3,2]);
   const jetMesh=new THREE.Mesh(jetG,wetM);jetMesh.renderOrder=3;jetMesh.frustumCulled=false;scene.add(jetMesh);
   const wetMesh=new THREE.Mesh(wetG,wetM),edgeMesh=new THREE.Mesh(edgeG,edgeM);wetMesh.renderOrder=3;edgeMesh.renderOrder=4;wetMesh.frustumCulled=edgeMesh.frustumCulled=false;scene.add(wetMesh);scene.add(edgeMesh);
-  let jetK="",wetT=0;G3.sliceFrame=(now,show)=>{const g=SLC.geo();
+  let jetK="",wetT=0;G3.sliceFrame=(now,show)=>{{const s=slcGet();if(SLC.v!==s.v||SLC.h!==s.h){SLC.v=s.v;SLC.h=s.h;SLC.dirty=true;}}   // (v6.5.5: the sim's knob state is the slice's truth: saves, restores, new games)
+    const g=SLC.geo();
     if(SLC.dirty){SLC.dirty=false;sheetPre[0][0]=g.lipX;sheetPre[0][1]=g.lipY-0.03;sheetPre[1][0]=g.land;buildSheet(sheetR);if(G3.HB&&G3.HB.lip)G3.HB.lip.position.set(g.lipX+0.21,g.lipY+0.03,zc);G3.drawLB&&G3.drawLB();}
     wetMesh.visible=edgeMesh.visible=jetMesh.visible=show;if(!show)return;
     {const zA=zc-CD/2+0.2,zB=zc+CD/2-0.2,y0=g.lipY-0.015,y1=2.97;jetPos[0]=g.lipX;jetPos[1]=y0;jetPos[2]=zA;jetPos[3]=g.lipX;jetPos[4]=y0;jetPos[5]=zB;jetPos[6]=g.land-0.05;jetPos[7]=y1;jetPos[8]=zA;jetPos[9]=g.land-0.05;jetPos[10]=y1;jetPos[11]=zB;const jk=g.lipX+"|"+g.lipY+"|"+g.land;if(jk!==jetK){jetK=jk;jetG.attributes.position.needsUpdate=true;}}if(now<wetT)return;wetT=now+83;   /* (t10: the wet line ripples at 12 frames a second, like the cut-outs) */const t=now/1000,Y=3.0,z0=zc-CD/2+0.2,z1=zc+CD/2-0.2;
@@ -8362,7 +8389,7 @@ function no3D(){G3.ok=false;$("no3d").hidden=false;$("no3d-retry").onclick=()=>l
       if(G3.slcFix&&G3.slcFix.i===i){const F=G3.slcFix;F.t+=rdt;const B=slcBubble;
         if(F.ph==="swear"){pose(w,"flail",now);face(w,57.15,zc,rdt);if(F.t>2.2){F.ph="walk";F.t=0;}}
         else if(F.ph==="walk"){if(moveP(w,56.45,12.85,7,rdt)){F.ph="fix";F.t=0;}else pose(w,"run",now);}
-        else{face(w,57.15,12.3,rdt);pose(w,"type",now);if(F.t>2.6){G3.SLC.v=G3.SLC.h=0;G3.SLC.dirty=true;G3.slcFix=null;B.visible=false;G3.onSlcReset&&G3.onSlcReset();return;}}
+        else{face(w,57.15,12.3,rdt);pose(w,"type",now);if(F.t>2.6){if(S.knob)knobReset("slice",true);G3.SLC.v=G3.SLC.h=0;G3.SLC.dirty=true;G3.slcFix=null;B.visible=false;G3.onSlcReset&&G3.onSlcReset();return;}}
         B.visible=F.ph!=="fix"||F.t<0.6;B.position.set(w.position.x,2.75+0.06*Math.sin(now/120),w.position.z);B.material.opacity=F.ph==="swear"?1:Math.max(0,1-F.t/1.2);return;}
       if(brkOn){[tx,tz]=(BRKSPOT[S.brkType]||RT)[i];const arrived=moveP(w,tx,tz,10,rdt);if(arrived){face(w,tx,zc,rdt);here=true;}
         const air=arrived&&head.go&&tx>-4&&tx<28;pose(w,arrived?(air?"air":"rethread"):"run",now);
@@ -11947,7 +11974,7 @@ document.addEventListener("fullscreenchange",()=>{if(!document.fullscreenElement
 document.addEventListener("keydown",e=>{if(e.key==="Escape"&&ZEN){setZen(false);return;}if(e.key==="Escape"&&document.body.classList.contains("fs"))setFS(false);});
 function openSlice(){$("spider").hidden=true;$("brian").hidden=true;$("slice").hidden=false;$("slcV").value=Math.round(G3.SLC.v*100);$("slcH").value=Math.round(G3.SLC.h*100);drawSlice();}
 $("slcClose").addEventListener("click",()=>$("slice").hidden=true);
-["slcV","slcH"].forEach(id=>$(id).addEventListener("input",e=>{if(G3.slcFix)return;G3.SLC[id==="slcV"?"v":"h"]=+e.target.value/100;G3.SLC.dirty=true;
+["slcV","slcH"].forEach(id=>$(id).addEventListener("input",e=>{if(G3.slcFix)return;slcSet(id==="slcV"?"v":"h",+e.target.value/100);   // (v6.5.5: into the sim's knob state, 07b)
   const g=G3.SLC.geo();if(g.lipX-g.wet>=6.8)slcBreak();drawSlice();}));
 // v3.2.0: run the jet out to the couch and the sheet breaks; the wet-end operator comes over and puts the slice back
 function slcBreak(){if(G3.slcFix)return;G3.slcFix={i:0,ph:"swear",t:0};
@@ -11955,7 +11982,7 @@ function slcBreak(){if(G3.slcFix)return;G3.slcFix={i:0,ph:"swear",t:0};
   log("Sheet break! The slice was opened so far the wet line ran off the former. The wet-end operator is resetting it.","bad");
   ["slcV","slcH","slcReset"].forEach(id=>$(id).disabled=true);}
 G3.onSlcReset=()=>{["slcV","slcH","slcReset"].forEach(id=>$(id).disabled=false);$("slcV").value=0;$("slcH").value=0;log("Slice reset to standard. Wet line is back where it belongs.","ok");drawSlice();};
-$("slcReset").addEventListener("click",()=>{G3.SLC.v=G3.SLC.h=0;G3.SLC.dirty=true;$("slcV").value=0;$("slcH").value=0;drawSlice();});
+$("slcReset").addEventListener("click",()=>{if(S.knob&&!knobAt("slice"))knobReset("slice");$("slcV").value=0;$("slcH").value=0;drawSlice();});
 function drawSlice(){const D=G3.SLC;if(!D||$("slice").hidden)return;const g=D.geo(),wl=g.lipX-g.wet;
   $("slcVv").textContent="B "+(12+3*D.v).toFixed(1)+" mm";$("slcHv").textContent="L "+(D.h>=0?"+":"")+(4*D.h).toFixed(1)+" mm";
   $("slcJ").textContent=(54.5-g.land).toFixed(2)+" m past the breast roll";$("slcW").textContent=wl.toFixed(1)+" m";
@@ -12191,7 +12218,7 @@ document.addEventListener("keydown",e=>{if(e.key!=="Escape"||!(KUI.st||KUI.panel
 UI_TICKS.push(()=>{if(S.zen&&(KUI.panel||KUI.st)){closeKnob();closeStation();}kuiSync();if((KUI.panel||KUI.st)&&!(S.zen&&POP.on))kuiRefresh();});
 // taps in the 3D view (29-3d-camera.js) and labels in the knob view (40b)
 G3.knobTap=h=>{if(!h||S.zen)return;if(h.k==="knob")openKnob(h.id);else if(h.k==="station")openStation(h.a,"dcs");else if(h.k==="spider")openSpider();else if(h.k==="slice")openSlice();};
-G3.openKnob=openKnob;G3.openStation=openStation;G3.qual=()=>({bw:QNOW.bw,m:QNOW.m,shade:QNOW.shade,out:[...QNOW.out],status:qualStatus(),spec:QSPEC[C.grade]});   // (v6.5.3: tests)G3.closeKnobUI=()=>{closeKnob();closeStation();};
+G3.openKnob=openKnob;G3.openStation=openStation;G3.slcSet=slcSet;G3.qual=()=>({bw:QNOW.bw,m:QNOW.m,shade:QNOW.shade,out:[...QNOW.out],status:qualStatus(),spec:QSPEC[C.grade]});   // (v6.5.3: tests)G3.closeKnobUI=()=>{closeKnob();closeStation();};
 ["spiClose","slcClose"].forEach(id=>$(id).addEventListener("click",()=>setTimeout(kuiSync,0)));
 // the spider valve and the slice are fiddly knobs too: their panels slow the game the same way (and close the others)
 {const o1=openSpider,o2=openSlice;openSpider=function(){closeKnob();closeStation(true);o1();kuiSync();};openSlice=function(){closeKnob();closeStation(true);o2();kuiSync();};}
@@ -12659,7 +12686,7 @@ function dcsSetDefs(a){const D=()=>DCS_DRAW();
     ["st3","2nd / 3rd section steam",S.dry&&S.dry.man!=null?"MANUAL · holds this pressure, the moisture follows the load":"AUTO · moisture control holds the reel at "+DRY.m0+"%",40,DRY.ceil,1,()=>S.dry?(S.dry.man??S.dry.st3):120,v=>{if(!S.zen)dryState().man=v;},"kPa",null,0,
       {on:()=>!(S.dry&&S.dry.man!=null),flip:()=>{if(S.zen)return;const D=dryState();D.man=D.man!=null?null:Math.round(D.st3);}}]];
   return [];}
-function dcsSlice(k,v){const D=G3.SLC;if(!D||G3.slcFix||S.zen)return;D[k]=v/100;D.dirty=true;const g=D.geo();if(g.lipX-g.wet>=6.8&&typeof slcBreak==="function")slcBreak();}
+function dcsSlice(k,v){const D=G3.SLC;if(!D||G3.slcFix||S.zen)return;slcSet(k,v/100);const g=D.geo();if(g.lipX-g.wet>=6.8&&typeof slcBreak==="function")slcBreak();}
 function dcsSetRows(a,cs){const defs=dcsSetDefs(a);
   if(a==="UTIL")cs.appendChild(kEl("p","dcsfield","Monitoring only: water, effluent and rejects. The permit and the river intake show here when they act up."));
   if(a==="SPOT"||a==="WET"){const row=kEl("div","dcsrow dcsx");
@@ -13625,7 +13652,7 @@ function camPullOn(){try{return localStorage.getItem("paper-mill-campull")!=="of
    (within 700 ms per tap) and a list of every version's one-line note pops up, newest first. The list comes from
    VERSION-NOTES.txt at the repo root: build.py swaps it in for the placeholder below, so adding a line there with each
    release keeps the pop-up current (build.py warns when APP_VER has no line). ---------- */
-{const VNOTES=[["4.0.0", "Graphics Overhaul: 60 FPS on iPhone, ~80% Fewer Draw Calls"], ["4.0.1", "Performance Follow-Up, Show FPS Option and Device Autotest"], ["4.0.2", "Economy Rebalance and Smoother Upset Labels"], ["4.1.0", "Four Environments, Seeded Mills, Bottlenecks, Graphics Tiers and Site Music"], ["4.2.0", "New Site Maps, Rare Sights, Zen Map Rotation and Economics Fixes"], ["4.2.0-s", "Save and Continue Season (Test)"], ["4.2.1", "Save/Continue, Settings Panel and Outage Speed Fix"], ["4.2.2-t", "Bayou Gator Sight Reworked (Test)"], ["4.2.2-t2", "Gator Bass Riff (Test)"], ["4.2.2-t3", "Gator Riff Removed, Wide Camera Framing (Test)"], ["4.2.2-t4", "Gator Scene Shortened and Widened (Test)"], ["4.2.2-t5", "One Rare Sight per Map in Zen (Test)"], ["4.2.2", "Rare Sights Reworked, Bird Strike Upset, Mill Report Tab"], ["4.2.3-t", "Cowboys, Bigfoot and Tugboat Sights Reworked (Test)"], ["4.2.3", "Laptop Battery Saving (Default GPU)"], ["4.2.4", "$25M Goal Removed and Quick Fixes"], ["4.2.5", "Random Bottleneck per Season and Accessibility Improvements"], ["4.3.0-t1", "Survival Mode (Test)"], ["4.4.0-t1", "Mill Leaders in Survival (Test)"], ["4.4.0-t2", "Painted Leader Portraits (Test)"], ["4.4.0-t3", "Leader Redesign, 4-Day Waves and Fixes (Test)"], ["5.0.0", "Survival Mode Release with Mill Leaders"], ["5.0.1", "Results Dialog and Game Speed Fixes"], ["5.0.2", "Report Card Label Fixes"], ["5.0.3", "Survival Playtest Fixes (Test)"], ["5.0.4", "Playtest Review: Dot Auto-Fix and Shipping Fix (Test)"], ["5.0.5", "Polish Rounds from Survival Playtests"], ["5.0.6", "Survival QA Fixes, Opt-In Outage Watch, Leaderboard Filters"], ["5.1.0", "Civics Meters and Leaders in Seasons (Test)"], ["5.4.0", "Title Screen, Civics in the World and Dark Mode"], ["5.4.1", "Loading Splash, No Old-Menu Flash"], ["5.4.2", "Graphics Quality on the Title Screen"], ["5.5.0", "Performance Improvements"], ["5.6.0", "Fiddly Knobs, DCS/QCS Screens and Knobs View"], ["5.7.0", "Catching Failures Early: Tells, Daily Rounds, Vibration Report, Outage Prep"], ["5.7.1", "Bottom Menu Reorder, Settings Back on the Right"], ["5.7.2", "Help Page with Game Guide and Glossary"], ["5.7.3", "Bare Graphics Mode for Weak Phones"], ["5.7.4", "Version Notes Pop-Up (Triple-Tap the Version Number)"], ["6.1.0-t1", "Isometric Paper View: Fixed Camera, Cut-Outs, Drop Shadows, Cutaways, Season Palettes (Test)"], ["6.1.0-t2", "Iso Round 2: Cut-Outs Always Paper, GPU Pictures, Stop-Motion World, Fewer Draws (Test)"], ["6.1.0-t3", "Iso Round 3: iPhone Batching, Instanced Cans, Sign Atlas, Lighter Frames (Test)"], ["6.1.0-t4", "Iso Fixes: Operators and Fork-Trucks Back, Less Stutter (Test)"], ["6.1.0-t5", "Cut-Out Edge Artifact Fixed (Test)"], ["6.1.0-t6", "Iso Optimization: Hidden Objects Cost Nothing, Lighter Moving Batches (Test)"], ["6.1.0-t7", "Iso Triangle Cut: Paper-Card Trees, Flat Ground, Hidden Faces Gone, Plain Boxes (Test)"], ["6.1.0-t8", "Paper Palette: 40 Colours, Flat Surfaces, Paper Grain, Fewer Draws (Test)"], ["6.1.0-t9", "Reel Fix: Growing Reel Draws Again (Test)"], ["6.1.0-t10", "Draw Cut 2: Colour in the Matrix, Merged Roofs, Uploads on Change, Culling Fix, Parked Groups (Test)"], ["6.1.0-t11", "QA Fixes: Cut-Outs Never Drawn as Loose 3D Parts, Fallback Shows 3D, Roofs On or Off per Zoom Step (Test)"], ["6.1.0-t12", "Paper Smoke, Blinking Lights, Stronger Seasons, Sharper Phones, Instanced Upsets, Pictures at Start (Test)"], ["6.1.0-t13", "Paper Effects: Flames, Child-Made Tornado, Lamp Cones, Flags, Paper Water, Visible Weather (Test)"], ["6.1.0-t14", "Paper Upsets: Cut-Out Props, Paper Pigeon, Paper Sparks, Steam, Fireworks, Ice and Flood (Test)"], ["6.1.0-t15", "Beaver Reworked as One Smaller Cut-Out (Test)"], ["6.1.0-t16", "Paper Props Dim at Night, Labels Never Overlap, Fewer Cut-Out Pictures (Test)"], ["6.1.0-t17", "Bird on the Power Lines Cut-Scene Plays When Set Off From the Upsets List (Test)"], ["6.1.0-t18", "Zen Close-Ups Fixed, Rare Sights as Paper Cut-Outs, Tilt-Shift Diorama Look (Test)"], ["6.1.0-t19", "Narrower Tilt-Shift Band, Winder Trash Can Out of the Broke Hole (Test)"], ["6.1.0-t20", "Balance: Rounds Pay More, Capacity and Maintenance Upgrades Re-Priced"], ["6.1.0", "Paper Diorama: Isometric Paper Art Style, Cut-Out People and Upsets, Tilt-Shift, Rounds Pay More, Upgrades Re-Priced"], ["6.1.1", "Phone Fixes: Gentler Tilt-Shift on Tall Screens, Cut-Out People No Longer Blank on iPhone"], ["6.1.2", "iPhone: Cut-Out Self-Test Retries, People Keep Their Colours in the 3D Fallback"], ["6.1.3", "Broke Hole by the Winder Looks Like a Floor Opening (Was a Black Square)"], ["6.1.4", "Tilt-Shift Removed"], ["6.2.0", "Zen Free Camera: Perspective Zen Shots, 3D People in Zen, Cleaner River Water"], ["6.3.0-f1", "Process Flow Overview (Test): Inputs, Mill Areas and Outputs for the Mill Day, in Settings"], ["6.3.0-f2", "Process Flow: the Game Keeps Running While It's Open (Test)"], ["6.3.0", "Process Flow Overview: Inputs, Mill Areas and Outputs for the Mill Day (Settings > View)"], ["6.4.0", "Zen Shots Review: Shuffle-Bag Shot Order, Landscape Shots Rebuilt, Close Rare Sights"], ["6.5.0-a1", "Digital Twin A (Test): Hourly History, 14 Prior Days, 7 d / Run Ranges, Area Trends and Uptime"], ["6.5.0-b1", "Digital Twin B (Test): Real Freight Costs with a Diesel Index, Area Controls Moved into Process Flow"], ["6.5.0-b2", "Market Pricing (Test): 2026 OCC and Energy Costs, Diesel in $/gal, Desert Long Haul, Real Steam Rates"], ["6.5.0-b3", "DCS Expansion (Test): Full SPOT, WET and DET Pictures, a UTIL Screen, Motors and Reject Purges"], ["6.5.0-b4", "DCS Pictograms (Test): Equipment Drawn as Classic DCS Symbols, Colour Only When Something's Wrong"], ["6.5.0-b5", "The Dryer Limit (Test): Speed and Grade Load the Dryers, a Wet Sheet Fails Spec and Slows the Machine"], ["6.5.0", "Digital Twin: Process Flow Trends and Controls, Real Freight and Market Costs, Full DCS, Dryer Limit, Rebalance"], ["6.5.1", "Second Screen: Pop the DCS and Process Flow Out to Their Own Window for a Second Monitor (Desktop)"], ["6.5.2", "Knob Fixes: Wet-End and Steam Knobs Bite Again Under the Dryer Limit, DCS Uses the Machine's Name"], ["6.5.3", "Quality Specs: Weight, Moisture and Color Specs per Grade, Off-Spec Paper Wound into Beater Rolls and Repulped"], ["6.5.4", "DCS Fixes: Making-Beater Alerts, SPOT in Process Order, Boiler and Power on Utilities, 2nd/3rd Section Steam Control"]];
+{const VNOTES=[["4.0.0", "Graphics Overhaul: 60 FPS on iPhone, ~80% Fewer Draw Calls"], ["4.0.1", "Performance Follow-Up, Show FPS Option and Device Autotest"], ["4.0.2", "Economy Rebalance and Smoother Upset Labels"], ["4.1.0", "Four Environments, Seeded Mills, Bottlenecks, Graphics Tiers and Site Music"], ["4.2.0", "New Site Maps, Rare Sights, Zen Map Rotation and Economics Fixes"], ["4.2.0-s", "Save and Continue Season (Test)"], ["4.2.1", "Save/Continue, Settings Panel and Outage Speed Fix"], ["4.2.2-t", "Bayou Gator Sight Reworked (Test)"], ["4.2.2-t2", "Gator Bass Riff (Test)"], ["4.2.2-t3", "Gator Riff Removed, Wide Camera Framing (Test)"], ["4.2.2-t4", "Gator Scene Shortened and Widened (Test)"], ["4.2.2-t5", "One Rare Sight per Map in Zen (Test)"], ["4.2.2", "Rare Sights Reworked, Bird Strike Upset, Mill Report Tab"], ["4.2.3-t", "Cowboys, Bigfoot and Tugboat Sights Reworked (Test)"], ["4.2.3", "Laptop Battery Saving (Default GPU)"], ["4.2.4", "$25M Goal Removed and Quick Fixes"], ["4.2.5", "Random Bottleneck per Season and Accessibility Improvements"], ["4.3.0-t1", "Survival Mode (Test)"], ["4.4.0-t1", "Mill Leaders in Survival (Test)"], ["4.4.0-t2", "Painted Leader Portraits (Test)"], ["4.4.0-t3", "Leader Redesign, 4-Day Waves and Fixes (Test)"], ["5.0.0", "Survival Mode Release with Mill Leaders"], ["5.0.1", "Results Dialog and Game Speed Fixes"], ["5.0.2", "Report Card Label Fixes"], ["5.0.3", "Survival Playtest Fixes (Test)"], ["5.0.4", "Playtest Review: Dot Auto-Fix and Shipping Fix (Test)"], ["5.0.5", "Polish Rounds from Survival Playtests"], ["5.0.6", "Survival QA Fixes, Opt-In Outage Watch, Leaderboard Filters"], ["5.1.0", "Civics Meters and Leaders in Seasons (Test)"], ["5.4.0", "Title Screen, Civics in the World and Dark Mode"], ["5.4.1", "Loading Splash, No Old-Menu Flash"], ["5.4.2", "Graphics Quality on the Title Screen"], ["5.5.0", "Performance Improvements"], ["5.6.0", "Fiddly Knobs, DCS/QCS Screens and Knobs View"], ["5.7.0", "Catching Failures Early: Tells, Daily Rounds, Vibration Report, Outage Prep"], ["5.7.1", "Bottom Menu Reorder, Settings Back on the Right"], ["5.7.2", "Help Page with Game Guide and Glossary"], ["5.7.3", "Bare Graphics Mode for Weak Phones"], ["5.7.4", "Version Notes Pop-Up (Triple-Tap the Version Number)"], ["6.1.0-t1", "Isometric Paper View: Fixed Camera, Cut-Outs, Drop Shadows, Cutaways, Season Palettes (Test)"], ["6.1.0-t2", "Iso Round 2: Cut-Outs Always Paper, GPU Pictures, Stop-Motion World, Fewer Draws (Test)"], ["6.1.0-t3", "Iso Round 3: iPhone Batching, Instanced Cans, Sign Atlas, Lighter Frames (Test)"], ["6.1.0-t4", "Iso Fixes: Operators and Fork-Trucks Back, Less Stutter (Test)"], ["6.1.0-t5", "Cut-Out Edge Artifact Fixed (Test)"], ["6.1.0-t6", "Iso Optimization: Hidden Objects Cost Nothing, Lighter Moving Batches (Test)"], ["6.1.0-t7", "Iso Triangle Cut: Paper-Card Trees, Flat Ground, Hidden Faces Gone, Plain Boxes (Test)"], ["6.1.0-t8", "Paper Palette: 40 Colours, Flat Surfaces, Paper Grain, Fewer Draws (Test)"], ["6.1.0-t9", "Reel Fix: Growing Reel Draws Again (Test)"], ["6.1.0-t10", "Draw Cut 2: Colour in the Matrix, Merged Roofs, Uploads on Change, Culling Fix, Parked Groups (Test)"], ["6.1.0-t11", "QA Fixes: Cut-Outs Never Drawn as Loose 3D Parts, Fallback Shows 3D, Roofs On or Off per Zoom Step (Test)"], ["6.1.0-t12", "Paper Smoke, Blinking Lights, Stronger Seasons, Sharper Phones, Instanced Upsets, Pictures at Start (Test)"], ["6.1.0-t13", "Paper Effects: Flames, Child-Made Tornado, Lamp Cones, Flags, Paper Water, Visible Weather (Test)"], ["6.1.0-t14", "Paper Upsets: Cut-Out Props, Paper Pigeon, Paper Sparks, Steam, Fireworks, Ice and Flood (Test)"], ["6.1.0-t15", "Beaver Reworked as One Smaller Cut-Out (Test)"], ["6.1.0-t16", "Paper Props Dim at Night, Labels Never Overlap, Fewer Cut-Out Pictures (Test)"], ["6.1.0-t17", "Bird on the Power Lines Cut-Scene Plays When Set Off From the Upsets List (Test)"], ["6.1.0-t18", "Zen Close-Ups Fixed, Rare Sights as Paper Cut-Outs, Tilt-Shift Diorama Look (Test)"], ["6.1.0-t19", "Narrower Tilt-Shift Band, Winder Trash Can Out of the Broke Hole (Test)"], ["6.1.0-t20", "Balance: Rounds Pay More, Capacity and Maintenance Upgrades Re-Priced"], ["6.1.0", "Paper Diorama: Isometric Paper Art Style, Cut-Out People and Upsets, Tilt-Shift, Rounds Pay More, Upgrades Re-Priced"], ["6.1.1", "Phone Fixes: Gentler Tilt-Shift on Tall Screens, Cut-Out People No Longer Blank on iPhone"], ["6.1.2", "iPhone: Cut-Out Self-Test Retries, People Keep Their Colours in the 3D Fallback"], ["6.1.3", "Broke Hole by the Winder Looks Like a Floor Opening (Was a Black Square)"], ["6.1.4", "Tilt-Shift Removed"], ["6.2.0", "Zen Free Camera: Perspective Zen Shots, 3D People in Zen, Cleaner River Water"], ["6.3.0-f1", "Process Flow Overview (Test): Inputs, Mill Areas and Outputs for the Mill Day, in Settings"], ["6.3.0-f2", "Process Flow: the Game Keeps Running While It's Open (Test)"], ["6.3.0", "Process Flow Overview: Inputs, Mill Areas and Outputs for the Mill Day (Settings > View)"], ["6.4.0", "Zen Shots Review: Shuffle-Bag Shot Order, Landscape Shots Rebuilt, Close Rare Sights"], ["6.5.0-a1", "Digital Twin A (Test): Hourly History, 14 Prior Days, 7 d / Run Ranges, Area Trends and Uptime"], ["6.5.0-b1", "Digital Twin B (Test): Real Freight Costs with a Diesel Index, Area Controls Moved into Process Flow"], ["6.5.0-b2", "Market Pricing (Test): 2026 OCC and Energy Costs, Diesel in $/gal, Desert Long Haul, Real Steam Rates"], ["6.5.0-b3", "DCS Expansion (Test): Full SPOT, WET and DET Pictures, a UTIL Screen, Motors and Reject Purges"], ["6.5.0-b4", "DCS Pictograms (Test): Equipment Drawn as Classic DCS Symbols, Colour Only When Something's Wrong"], ["6.5.0-b5", "The Dryer Limit (Test): Speed and Grade Load the Dryers, a Wet Sheet Fails Spec and Slows the Machine"], ["6.5.0", "Digital Twin: Process Flow Trends and Controls, Real Freight and Market Costs, Full DCS, Dryer Limit, Rebalance"], ["6.5.1", "Second Screen: Pop the DCS and Process Flow Out to Their Own Window for a Second Monitor (Desktop)"], ["6.5.2", "Knob Fixes: Wet-End and Steam Knobs Bite Again Under the Dryer Limit, DCS Uses the Machine's Name"], ["6.5.3", "Quality Specs: Weight, Moisture and Color Specs per Grade, Off-Spec Paper Wound into Beater Rolls and Repulped"], ["6.5.4", "DCS Fixes: Making-Beater Alerts, SPOT in Process Order, Boiler and Power on Utilities, 2nd/3rd Section Steam Control"], ["6.5.5-t1", "Dewatering Chain (Test): Jet and Vacuum Optimums, Couch to Press Solids, Press Solids Set the Dryer Steam Both Ways"]];
   let ov=null,held=false;
   function render(){
     const cur=APP_VER.replace(/^v/i,""),rows=VNOTES.slice().reverse().map(([v,n])=>

@@ -226,7 +226,8 @@
   const jetPos=new Float32Array(12),jetG=new THREE.BufferGeometry();jetG.setAttribute("position",new THREE.BufferAttribute(jetPos,3));jetG.setIndex([0,1,2,1,3,2]);
   const jetMesh=new THREE.Mesh(jetG,wetM);jetMesh.renderOrder=3;jetMesh.frustumCulled=false;scene.add(jetMesh);
   const wetMesh=new THREE.Mesh(wetG,wetM),edgeMesh=new THREE.Mesh(edgeG,edgeM);wetMesh.renderOrder=3;edgeMesh.renderOrder=4;wetMesh.frustumCulled=edgeMesh.frustumCulled=false;scene.add(wetMesh);scene.add(edgeMesh);
-  let jetK="",wetT=0;G3.sliceFrame=(now,show)=>{const g=SLC.geo();
+  let jetK="",wetT=0;G3.sliceFrame=(now,show)=>{{const s=slcGet();if(SLC.v!==s.v||SLC.h!==s.h){SLC.v=s.v;SLC.h=s.h;SLC.dirty=true;}}   // (v6.5.5: the sim's knob state is the slice's truth: saves, restores, new games)
+    const g=SLC.geo();
     if(SLC.dirty){SLC.dirty=false;sheetPre[0][0]=g.lipX;sheetPre[0][1]=g.lipY-0.03;sheetPre[1][0]=g.land;buildSheet(sheetR);if(G3.HB&&G3.HB.lip)G3.HB.lip.position.set(g.lipX+0.21,g.lipY+0.03,zc);G3.drawLB&&G3.drawLB();}
     wetMesh.visible=edgeMesh.visible=jetMesh.visible=show;if(!show)return;
     {const zA=zc-CD/2+0.2,zB=zc+CD/2-0.2,y0=g.lipY-0.015,y1=2.97;jetPos[0]=g.lipX;jetPos[1]=y0;jetPos[2]=zA;jetPos[3]=g.lipX;jetPos[4]=y0;jetPos[5]=zB;jetPos[6]=g.land-0.05;jetPos[7]=y1;jetPos[8]=zA;jetPos[9]=g.land-0.05;jetPos[10]=y1;jetPos[11]=zB;const jk=g.lipX+"|"+g.lipY+"|"+g.land;if(jk!==jetK){jetK=jk;jetG.attributes.position.needsUpdate=true;}}if(now<wetT)return;wetT=now+83;   /* (t10: the wet line ripples at 12 frames a second, like the cut-outs) */const t=now/1000,Y=3.0,z0=zc-CD/2+0.2,z1=zc+CD/2-0.2;
