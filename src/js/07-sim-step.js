@@ -40,7 +40,7 @@ function step(dt){
   for(let d=0;d<P.doors;d++){const tr=S.inDock[d]; if(!tr||M.docksClosed)continue;
     const u=Math.min(tr.load,P.doorRate*dt/60,cap,Math.max(0,P.yardCap-S.yard));
     const paid=baleUnload(tr,u,S.yard);   // v6.6: paid as air-dry weight; the yard mix
-    tr.load-=u;cap-=u;S.yard+=u;unloaded+=u;S.tot.inTons+=u;
+    tr.load-=u;cap-=u;S.yard+=u;unloaded+=u;S.tot.inTons+=u;pfW("in",u);
     {const dc=S.plan.disc,dt2=dc?Math.min(paid,dc.t):0;spend(paid*P.occPrice-dt2*(dc?dc.v:0),"occ");spend(u*frInRate(),"frin");if(dc){dc.t-=dt2;if(dc.t<=1e-6)S.plan.disc=null;}}
     if(tr.load<=0.001){S.leaving.push({...tr,ty:inY(d),kind:"in"});if(S.leaving.length>24)S.leaving.shift();S.inDock[d]=null;}}
   const feed=Math.min(feedRes,S.yard); S.yard-=feed;WQ.f+=feed;
@@ -91,7 +91,8 @@ function step(dt){
     if(off>0){pfW("broke",off);S.tot.broke+=off;S.q.off+=off;prod-=off;beat=off;}
     if(S.plan.hot&&C.grade==="33HT")S.plan.hot.made+=prod;
     if(S.pf&&prod>0)pfW("val",prod*priceOf(C.grade));}
-  S.reel+=prod+beat;lotPut(S.lots.reel,C.grade,prod);lotPut(S.lots.reel,"beater",beat); S.tot.prodT+=prod; S.tot.pot+=P.K*C.pmSp.v*g.bw*dt/60;
+  qLog(dt,beat);   // v6.7 the off-spec log (07e)
+  S.reel+=prod+beat;lotPut(S.lots.reel,C.grade,prod);lotPut(S.lots.reel,"beater",beat); S.tot.prodT+=prod; {const pt=P.K*C.pmSp.v*g.bw*dt/60;S.tot.pot+=pt;pfW("pot",pt);}   // (v6.7: potential tons at the setpoint speed, by the hour, for the process flow)
   planTick(dt,prod);
   if(S.reel>=P.jumbo&&reelsAtWinder()<=P.storeReels){S.winderBuf+=S.reel;lotTake(S.lots.reel,S.reel,S.lots.buf);S.reel=0;S.lots.reel.length=0;S.tot.turnups++;}
   // 6 winder
@@ -158,5 +159,6 @@ function step(dt){
   if(S.trendAcc>=10){S.trendAcc-=10;S.trend.push([S.tank/P.tankCap,S.pmSpeed/3300,S.yard/P.yardCap,S.fg/P.fgCap]);if(S.trend.length>144)S.trend.shift();}
   histTick(dt);   // v6.5 history: the hour's readings and minutes (11c)
   if(!S.zen)knobHist();   // v5.6: DCS / QCS trends (reads only)
+  tagTick();   // v6.7 the control room's tag history (11d; reads only)
 }
 

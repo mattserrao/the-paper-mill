@@ -55,7 +55,7 @@ with sync_playwright() as pw:
     c1 = pp.evaluate("()=>document.getElementById('dcsClock').textContent")
     ok("DCS keeps refreshing from the game", c0 != c1 and c1 != "", f"{c0} -> {c1}")
     ok("DCS tags show live values", pp.evaluate("()=>[...document.querySelectorAll('[data-tag]')].filter(t=>t.textContent!=='–').length>5"))
-    ok("DCS trend canvas drawn", pp.evaluate("()=>{const c=document.getElementById('dcsTr');if(!c)return false;const d=c.getContext('2d').getImageData(0,0,c.width,c.height).data;let n=0;for(let i=0;i<d.length;i+=4)if(d[i]>60)n++;return n>200}"))
+    ok("DCS trend canvas drawn (v6.7: the trend pane)", pp.evaluate("()=>{const c=document.getElementById('trCv');if(!c)return false;const d=c.getContext('2d').getImageData(0,0,c.width,c.height).data;let n=0;for(let i=0;i<d.length;i+=4)if(d[i]>60)n++;return n>200}"))
 
     # ---- a knob moved in the window moves the game's knob ----
     k0 = pg.evaluate("()=>__PM.S.knob?JSON.stringify(__PM.S.knob.v):null")
@@ -67,9 +67,9 @@ with sync_playwright() as pw:
     # ---- area tabs and QCS work in the window ----
     pp.evaluate("()=>document.querySelector('#dcsOv [data-a=\"DET\"]').click()"); pp.wait_for_timeout(300)
     ok("area tab click in the window switches to DET", "DRY END" in pp.evaluate("()=>document.getElementById('dcs-h').textContent"))
-    pp.evaluate("()=>document.querySelector('#dcsOv [data-t=\"qcs\"]').click()"); pp.wait_for_timeout(300)
+    pp.evaluate("()=>document.querySelector('#dcsOv [data-a=\"QCS\"]').click()"); pp.wait_for_timeout(300)
     ok("QCS tab in the window", pp.evaluate("()=>!!document.getElementById('qcsSt')&&document.getElementById('qcsSt').textContent.length>0"))
-    pp.evaluate("()=>document.querySelector('#dcsOv [data-t=\"dcs\"]').click()")
+    pp.evaluate("()=>document.querySelector('#dcsOv [data-a=\"DET\"]').click()")
 
     # ---- a console tap in the mill switches the second screen ----
     pg.evaluate("()=>__PM.G3.knobTap({k:'station',a:'WET'})"); pp.wait_for_timeout(300)
@@ -77,8 +77,8 @@ with sync_playwright() as pw:
     ok("still not slowed after the tap", pg.evaluate("()=>__PM.G3.simRate()===__PM.C.simSpeed"))
 
     # ---- process flow: Settings opens it on the second screen ----
-    pg.evaluate("()=>document.getElementById('pfBtn').click()"); pp.wait_for_timeout(600)
-    ok("Settings > Process flow switches the window to the flow", pp.evaluate("()=>document.getElementById('popMain').dataset.v")=="pf")
+    pg.evaluate("()=>document.querySelector('#ctlRoom [data-cr=pf]').click()"); pp.wait_for_timeout(600)
+    ok("Report > Control room > Process flow switches the window to the flow", pp.evaluate("()=>document.getElementById('popMain').dataset.v")=="pf")
     ok("flow picture drawn in the window", pp.evaluate("()=>!!document.querySelector('#pfMap svg')"))
     pp.evaluate("()=>document.querySelector('[data-pf=\"node:pm\"]').dispatchEvent(new MouseEvent('click',{bubbles:true}))"); pp.wait_for_timeout(500)
     ok("tap an area in the window opens its panel", pp.evaluate("()=>!document.getElementById('pfPanel').hidden&&document.querySelectorAll('#pfPanel canvas[data-ch]').length>0"))

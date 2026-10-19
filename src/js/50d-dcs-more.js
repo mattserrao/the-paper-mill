@@ -24,16 +24,16 @@ const DV={
   wdr:()=>Math.round(C.wdr.v)+" t/h",wdt:()=>Math.round(S.rates.cut||0)+" t/h",hay:()=>String(S.tot.hayouts||0),rolls:()=>Math.round(S.conv||0)+" of "+P.convCap,
   dryl:()=>S.dry?Math.round(S.dry.load*100)+"%":"–",stm:()=>S.dry?Math.round(S.dry.steam/DRY.boiler*100)+"%":"–",
   grid:()=>SITE.env==="urban"&&dcsOn("brownout")?"BROWNOUT":"NORMAL",
-  ifl:()=>Math.round(S.wat?S.wat.r.fresh:0)+" m³/h",evap:()=>Math.round(S.wat?S.wat.r.evap:0)+" m³/h",wcl:()=>S.wat?Math.round(S.wat.L/WAT.cap*100)+"%":"–",
-  wcf:()=>{const W=S.wat;if(!W)return "–";return W.short>0?"EMPTY":W.r.make>5?"MAKEUP "+Math.round(W.r.make):W.r.over>5?"TO SEWER "+Math.round(W.r.over):"BALANCED";},ice:()=>SITE.env!=="rural"?"–":dcsOn("icedintake")?"ICED":"CLEAR",twl:()=>Math.round(clamp(82+wob2(0.004,11)*6-(dcsOn("icedintake")?25:0),0,100))+"%",
-  wuse:()=>{const W=S.wat;return W&&W.r.p>1?(W.r.fresh/W.r.p).toFixed(1)+" m³/t":"– m³/t";},tss:()=>Math.round(tssNow())+" mg/L",perm:()=>dcsOn("permit")?"EXCEEDED":"OK",ofl:()=>Math.round(S.wat?S.wat.r.out:0)+" m³/h",
+  ifl:()=>fmtGpm(GPM(S.wat?S.wat.r.fresh:0)),evap:()=>fmtGpm(GPM(S.wat?S.wat.r.evap:0)),wcl:()=>S.wat?Math.round(S.wat.L/WAT.cap*100)+"%":"–",
+  wcf:()=>{const W=S.wat;if(!W)return "–";return W.short>0?"EMPTY":W.r.make>5?"MAKEUP "+fmtGpm(GPM(W.r.make)):W.r.over>5?"OVERFLOW "+fmtGpm(GPM(W.r.over)):"BALANCED";},ice:()=>SITE.env!=="rural"?"–":dcsOn("icedintake")?"ICED":"CLEAR",twl:()=>Math.round(clamp(82+wob2(0.004,11)*6-(dcsOn("icedintake")?25:0),0,100))+"%",
+  wuse:()=>{const W=S.wat;return W&&W.r.p>1?Math.round(GAL(W.r.fresh/W.r.p)).toLocaleString()+" gal/ton":"– gal/ton";},tss:()=>Math.round(tssNow())+" mg/L",perm:()=>dcsOn("permit")?"EXCEEDED":"OK",ofl:()=>fmtGpm(GPM(S.wat?S.wat.r.out:0)),wcv:()=>S.wat?fmtGal(GAL(S.wat.L)):"–",chv:()=>fmtGal(S.tank/(WAT.cs/100)*264.172),mcv:()=>fmtGal(MCHEST_GAL*knobRead().mcLvl/100),
   rej:()=>((S.rates.feed||0)*(1-P.yieldF*((S.M&&S.M.yieldMul)||1))).toFixed(1)+" t/h"};
 // effluent suspended solids: fiber lost to the white water and broke push it up; 50 mg/L is the permit
 // (v6.5.6: from the fiber actually going to the sewer and the flow carrying it, 07f; it was 28 plus the knobs' off-spec)
 function tssNow(){return clamp(tssWater()+(dcsOn("permit")?30:0)+wob2(0.015,12)*3,5,120);}
 const MIMIC_KNOB={SPOT:MIMIC.SPOT,WET:MIMIC.WET,DET:MIMIC.DET};
 const MT=(x,y,k,t,f)=>[x,y,k,t,f];
-MIMIC.SPOT={title:"STOCK PREP",h:300,trends:MIMIC_KNOB.SPOT.trends,
+MIMIC.SPOT={title:"STOCK PREP",h:312,trends:MIMIC_KNOB.SPOT.trends,
   // (v6.5.4: in process order. Top row left to right: conveyor, pulper, HD cleaner, coarse screens, LC cleaners, fine
   // screens. Down, then right to left: LW cleaners, thickener, stock storage chest, refiners, machine chest, fan pump)
   eq:[[8,66,76,40,"CONVEYOR"],[100,56,110,60,"PULPER"],[100,8,52,26,"RAGGER","s"],[158,8,52,26,"JUNK","s"],[228,66,78,40,"HD CLEANER"],[324,66,78,40,"COARSE SCR"],[420,66,88,40,"LC CLEANERS"],
@@ -45,7 +45,8 @@ MIMIC.SPOT={title:"STOCK PREP",h:300,trends:MIMIC_KNOB.SPOT.trends,
     MT(568,262,"lwdp","ΔP",DV.lwdp),MT(464,262,"thf","FILT",DV.thf),MT(464,276,"thv","SPIDER",DV.thv),MT(464,290,"thl","VAT",DV.thl),
     MT(360,186,"stc","CONS",DV.stc),MT(360,272,"lvl","LEVEL",()=>Math.round(S.tank/P.tankCap*100)+"%"),MT(360,286,"lvsp","SP",DV.lvsp),
     MT(255,196,"csf","CSF",r=>Math.round(r.csf)+" mL"),MT(255,262,"gap","GAP",r=>kf(r.gap,2)+" mm"),MT(255,276,"refkw","LOAD",r=>Math.round(r.refkw)+" kW"),
-    MT(150,272,"mcCons","CONS",r=>kf(r.mcCons,2)+"%"),MT(150,286,"agit","AGIT",r=>r.agit+"%"),MT(212,176,"dyef","DYE",DV.dyef),MT(600,16,"wcl","LVL",DV.wcl),MT(600,30,"wcf","",DV.wcf),MT(48,262,"flow","FLOW",()=>S.pm==="run"?Math.round(S.pmSpeed*1.9)+" L/s":"0 L/s")]};
+    MT(150,272,"mcCons","CONS",r=>kf(r.mcCons,2)+"%"),MT(150,286,"agit","AGIT",r=>r.agit+"%"),MT(212,176,"dyef","DYE",DV.dyef),MT(504,50,"wcl","LVL",DV.wcl),MT(56,262,"flow","FLOW",()=>fmtGpm(S.pm==="run"?LS_GPM(S.pmSpeed*1.9):0)),
+    MT(360,300,"chv","VOL",DV.chv),MT(150,300,"mcv","VOL",DV.mcv),MT(504,62,"wcv","VOL",DV.wcv)]};   // (v6.7: chest volumes in gallons)
 MIMIC.WET={title:"WET END",h:260,trends:MIMIC_KNOB.WET.trends,
   eq:[[520,8,104,30,"FOG FAN"],[14,80,74,70,"HEADBOX"],[104,105,190,25,"FORMING TABLE"],[110,214,100,26,"WW SILO","s"],[308,90,64,50,"COUCH"],[388,90,104,50,"PICK-UP FELT"],[508,80,118,70,()=>LV("shoe")?"SHOE PRESS":"TWIN PRESS"]],
   ln:[["M88 115 H104"],["M294 117 H308"],["M372 115 H388"],["M492 115 H508"],["M160 130 V214",1]],
@@ -109,7 +110,8 @@ function dcsSetDefs(a){const D=()=>DCS_DRAW();
   return [];}
 function dcsSlice(k,v){const D=G3.SLC;if(!D||G3.slcFix||S.zen)return;slcSet(k,v/100);const g=D.geo();if(g.lipX-g.wet>=6.8&&typeof slcBreak==="function")slcBreak();}
 function dcsSetRows(a,cs){const defs=dcsSetDefs(a);
-  if(a==="UTIL")cs.appendChild(kEl("p","dcsfield","Monitoring only: water, effluent and rejects. The permit and the river intake show here when they act up."));
+  if(a==="UTIL")cs.appendChild(kEl("p","dcsfield","Monitoring only: water, effluent and rejects. The permit and the river intake show here when they act up. The full water balance is on WATER."));
+  if(a==="WATER")cs.appendChild(kEl("p","dcsfield","Monitoring only: fresh water comes in for the showers and seal water and to top up the white water chest; the chest feeds stock prep's dilution; what's left goes through the clarifier to the outfall."));
   if(a==="SPOT"||a==="WET"){const row=kEl("div","dcsrow dcsx");
     if(a==="SPOT"){row.innerHTML=`<div class="dcsn"><b>Dye: paper colour</b><small>dye pump on the machine chest</small></div><div class="seg kseg" role="group" aria-label="Paper colour"><button type="button" data-dye="brown">BROWN</button><button type="button" data-dye="white">WHITE</button></div>`;
       row.querySelectorAll("[data-dye]").forEach(b=>b.addEventListener("click",()=>{const pc=document.querySelector(`#paperColor button[data-c="${b.dataset.dye}"]`);if(pc)pc.click();dcsSync();}));}

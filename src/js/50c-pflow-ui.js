@@ -5,7 +5,7 @@
    Waste is tons, drawn as thin dashed lines (not to scale). Tap anything for its breakdown. Reads only (11b-pflow.js);
    the game keeps running at the player's speed while it's open (v6.3.0-f2; f1 slowed it to 1 min/s). On narrow screens the
    picture runs top to bottom. */
-const PFUI={open:false,mode:"t",sel:null,h:"",tab:null,zoom:"7d",prior:true,hx:{}};
+const PFUI={open:false,mode:"t",sel:null,h:"",tab:null,zoom:"7d",prior:true,hx:{},view:"$",rp:null,play:false,base:null};   // (v6.7: view $ / $/t / tons; rp: the replayed hour)
 const PF_LINES={yard:["Bale yard"],pulper:["Pulper"],stock:["Stock prep"],pm:["Paper","machine"],winder:["Winder"],ship:["Warehouse","& shipping"],site:["Site &","admin"]};
 const PF_CATN=Object.fromEntries(PF_CATS.map(c=>[c[0],c])),PF_AN=Object.fromEntries(PF_AREAS.map(a=>[a[0],a]));
 const pfT=v=>(Math.abs(v)>=100?Math.round(v).toLocaleString():(+v).toFixed(1))+" t";
@@ -14,24 +14,29 @@ function pfOv(){let o=$("pfOv");if(o)return o;
   o=kEl("div","overlay top dcsov pfov");o.id="pfOv";o.hidden=true;
   o.innerHTML=`<div class="dcs pf" role="dialog" aria-modal="true" aria-labelledby="pf-h"><div class="dcsh"><b id="pf-h"></b>
     <div class="seg pfrange" role="group" aria-label="Range"><button type="button" data-pd="t">Today</button><button type="button" data-pd="y">Yesterday</button><button type="button" data-pd="w">7 d</button><button type="button" data-pd="r">Run</button></div>
+    <div class="seg pfview" role="group" aria-label="Show">${[["$","$"],["pt","$/ton"],["t","Tons"]].map(([k,l])=>`<button type="button" data-pv2="${k}">${l}</button>`).join("")}</div>
     <label class="pfprior" title="Include the ${HIST_PRIOR} days before you took over"><input type="checkbox" id="pfPrior" checked/> Prior days</label>
     <button type="button" class="dcspop" data-popout="pf"${POPOK()&&!POP.on?"":" hidden"} title="Open in its own window, for a second monitor">⧉ Second screen</button><button aria-label="Close" class="dcsx" id="pfClose">✕</button></div>
-    <div class="dcsb pfb" id="pfBody"><div class="pfcol pfin" id="pfIn"></div><div class="pfmap mimicw" id="pfMap"></div><div class="pfcol pfout" id="pfOut"></div></div>
+    <div class="dcsb pfb" id="pfBody"><div class="pfcol pfin" id="pfIn"></div><div class="pfmid"><div class="pfoee" id="pfOee"></div><div class="pfmap mimicw" id="pfMap"></div><div class="pfrep" id="pfRep"></div></div><div class="pfcol pfout" id="pfOut"></div></div>
     <div class="pfpanel" id="pfPanel" hidden role="region" aria-label="Details"></div>
     <div class="dcsf"><span id="pfClock"></span><span id="pfNote">Live: the mill keeps running</span></div></div>`;
   document.body.appendChild(o);
   $("pfClose").addEventListener("click",()=>pfClose());
   o.addEventListener("click",e=>{if(e.target===o){pfClose();return;}
-    const pd=e.target.closest("[data-pd]");if(pd){if(pd.disabled)return;PFUI.mode=pd.dataset.pd;PFUI.sel=null;pfRender(true);return;}
+    const pd=e.target.closest("[data-pd]");if(pd){if(pd.disabled)return;PFUI.mode=pd.dataset.pd;PFUI.sel=null;PFUI.rp=null;PFUI.play=false;pfRender(true);return;}
+    const pv=e.target.closest("[data-pv2]");if(pv){PFUI.view=pv.dataset.pv2;pfRender(true);return;}
+    const rp=e.target.closest("[data-rp]");if(rp){const k=rp.dataset.rp,[h0,h1]=pfRpWin();if(k==="live"){PFUI.rp=null;PFUI.play=false;}else if(k==="play"){if(PFUI.rp==null||PFUI.rp>=h1-1)PFUI.rp=h0;PFUI.play=!PFUI.play;}pfRender(true);return;}
+    const dc=e.target.closest("[data-pfdcs]");if(dc){const a=dc.dataset.pfdcs;if(!POP.on)pfClose();openStation(a,"dcs");return;}
     if(e.target.closest("#pfPopX")){PFUI.sel=null;pfRender(true);return;}
     const tb=e.target.closest("[data-ptab]");if(tb){PFUI.tab=tb.dataset.ptab;pfRender(true);return;}
     const zm=e.target.closest("[data-pz]");if(zm){PFUI.zoom=zm.dataset.pz;pfRender(true);return;}
     const t=e.target.closest("[data-pf]");if(t){let k=t.dataset.pf;if(k.startsWith("drop:"))k="node:"+k.split(":")[1];if(PFUI.sel!==k)PFUI.tab=null;PFUI.sel=PFUI.sel===k?null:k;pfRender(true);}});
   o.querySelector("#pfPrior").addEventListener("change",e=>{PFUI.prior=e.target.checked;pfRender(true);});
+  o.addEventListener("input",e=>{if(e.target.id==="pfRpS"){PFUI.rp=+e.target.value;PFUI.play=false;pfRender(true);}});
   o.addEventListener("keydown",e=>{if((e.key==="Enter"||e.key===" ")&&e.target.matches("[data-pf][tabindex]")){e.preventDefault();e.target.dispatchEvent(new (e.target.ownerDocument.defaultView||window).MouseEvent("click",{bubbles:true}));}});
   return o;}
 function pfOpen(){if(POP.on){PFUI.open=true;G3.pfOpen=true;popShow("pf");pfRender(true);return;}   // v6.5.1: popped out, it switches the second screen to the flow
-  const o=pfOv();if(G3.closeKnobUI)G3.closeKnobUI();PFUI.open=true;G3.pfOpen=true;PFUI.sel=null;PFUI.mode="t";o.hidden=false;pfRender(true);kuiSync();
+  const o=pfOv();if(G3.closeKnobUI)G3.closeKnobUI();PFUI.open=true;G3.pfOpen=true;PFUI.sel=null;PFUI.mode="t";PFUI.rp=null;PFUI.play=false;o.hidden=false;pfRender(true);kuiSync();
   setTimeout(()=>{try{$("pfClose").focus({preventScroll:true});}catch(_){}},0);}
 function pfClose(){if(POP.on)return;   // (v6.5.1: a popped-out flow stays up until docked)
   pfCtlHome();G3.pfCtlOn=false;const o=$("pfOv");if(o)o.hidden=true;const was=PFUI.open;PFUI.open=false;G3.pfOpen=false;kuiSync();if(was)try{$("gl").focus({preventScroll:true});}catch(_){}}
@@ -71,7 +76,7 @@ function pfSVG(D,live){const vert=pfVert(),NU=104,NV=112,GAP=30,PAD=vert?24:10,n
   // the drops: each input coming in where it's spent
   PF_AREAS.forEach(([a],i)=>{let u=uOf(i)+6;adds[i].forEach(([c,v])=>{const w=Math.max(1.5,k*v);
       o.push(`<g data-pf="drop:${a}:${c}" class="pfhit">${rect(u,34,w,v0-34,`fill="${PF_CATN[c][2]}" class="pfdrop"`)}${rect(u-2,34,w+4,v0-34,`fill="transparent"`)}</g>`);u+=w;});
-    if(tot[i]>0){const [x,y]=vert?[4,uOf(i)-3]:[uOf(i)+NU/2,24];o.push(txt(x,y,"+"+money(tot[i]),"pfadd",vert?"start":"middle"));}});
+    if(tot[i]>0){const [x,y]=vert?[4,uOf(i)-3]:[uOf(i)+NU/2,24];o.push(txt(x,y,"+"+(PFUI.view==="pt"?pfPerT(tot[i],D.made):money(tot[i])),"pfadd",vert?"start":"middle"));}});
   // the waste: thin dashed lines off the bottom (tons, not to scale) and the broke loop back to the pulper
   const wl=(i,du,lines,cls)=>{const u=uOf(i)+du;o.push(`<polyline points="${poly([[u,v1],[u,wE]])}" class="pfwaste" marker-end="url(#pfArr)"/>`);
     lines.forEach((s,j)=>{const [x,y]=vert?[wE+6,u-4+j*17]:[u,wE+20+j*17];o.push(txt(x,y,s,j?"pfwv"+(cls?" "+cls:""):"pfwl",vert?"start":"middle"));});};
@@ -85,18 +90,21 @@ function pfSVG(D,live){const vert=pfVert(),NU=104,NV=112,GAP=30,PAD=vert?24:10,n
   o.push(`</g>`);
   // the areas (text in screen space, so it reads the same both ways)
   PF_AREAS.forEach(([a],i)=>{const u=uOf(i),[x,y]=X(u,v0),[w,h]=vert?[NV,NU]:[NU,NV],cx=x+w/2,cy=y+h/2,L=PF_LINES[a],lp=live?pfLamp(a):null,sel=PFUI.sel==="node:"+a;
-    let g=`<g data-pf="node:${a}" class="pfhit" tabindex="0" role="button" aria-label="${PF_AN[a][2]}"><rect x="${x}" y="${y}" width="${w}" height="${h}" rx="7" class="meq pfnode${sel?" sel":""}"/>`;
+    const up=live&&(S.inc||[]).some(q=>pfRepArea(q.id)===a);   // (v6.7: an area with an upset flashes red)
+    let g=`<g data-pf="node:${a}" class="pfhit" tabindex="0" role="button" aria-label="${PF_AN[a][2]}"><rect x="${x}" y="${y}" width="${w}" height="${h}" rx="7" class="meq pfnode${sel?" sel":""}${up?" pfup":""}"/>`;
     const top=cy-(L.length>1?32:24);L.forEach((s,j)=>g+=txt(cx,top+j*17,s,"mtl pfnl"));
-    g+=txt(cx,cy+(L.length>1?20:14),tot[i]>0?money(tot[i]):"–","pfnv");
-    const r=pfRate(a,D,live);if(r)g+=txt(cx,cy+(L.length>1?40:36),r,"pfnr");
+    g+=txt(cx,cy+(L.length>1?20:14),tot[i]>0?(PFUI.view==="pt"?pfPerT(tot[i],D.made):money(tot[i])):"–","pfnv");
+    const r=pfRate(a,D,live);if(r)g+=txt(cx,cy+(L.length>1?37:33),r,"pfnr");
+    g+=pfCapSVG(a,D,live,x,y,w,h);
     if(lp)g+=`<circle cx="${x+w-9}" cy="${y+9}" r="4.5" fill="${PF_LAMP[lp][0]}"><title>${PF_LAMP[lp][1]}</title></circle>`;
     o.push(g+"</g>");});
-  o.push("</svg>");o.push(`<p class="pfcap">The blue band is as wide as the money spent so far ${live?"today":"that day"}; each input drops in where it's spent. Waste is tons (not to scale). Tap anything for its breakdown.</p>`);return o.join("");}
+  o.push("</svg>");o.push(`<p class="pfcap">The blue band is as wide as the money spent so far ${live?"today":"that day"}${PFUI.view==="pt"?", shown per ton of paper made":""}; each input drops in where it's spent. Waste is tons (not to scale). The bar in each area is its throughput against what it can do. Tap anything for its breakdown.</p>`);return o.join("");}
 
 /* ---- inputs and outputs (HTML) ---- */
-function pfInputs(D){const t=D.made;let h=`<div class="dcssub">Inputs · ${PF_RNAME[PFUI.mode]}</div>`;
-  PF_CATS.forEach(([c,name,col])=>{const v=D.cat[c];h+=`<button type="button" class="pfrow${PFUI.sel==="cat:"+c?" sel":""}" data-pf="cat:${c}"><i style="background:${col}"></i><span>${name}</span><b>${money(v)}</b><small>${pfPerT(v,t)}</small></button>`;});
-  h+=`<div class="pfrow tot"><i></i><span>Total cost</span><b>${money(D.cost)}</b><small>${pfPerT(D.cost,t)}</small></div>`;
+function pfInputs(D){const t=D.made,pt=PFUI.view==="pt",B=pfBase(D);let h=`<div class="dcssub">Inputs · ${PFUI.rp!=null?"that hour":PF_RNAME[PFUI.mode]}</div>`;
+  PF_CATS.forEach(([c,name,col])=>{const v=D.cat[c];h+=`<button type="button" class="pfrow${PFUI.sel==="cat:"+c?" sel":""}" data-pf="cat:${c}"><i style="background:${col}"></i><span>${name}${pfChip(B,c,v,t)}</span><b>${pt?pfPerT(v,t):money(v)}</b><small>${pt?money(v):pfPerT(v,t)}</small></button>`;});
+  h+=`<div class="pfrow tot"><i></i><span>Total cost${pfChip(B,"cost",D.cost,t)}</span><b>${pt?pfPerT(D.cost,t):money(D.cost)}</b><small>${pt?money(D.cost):pfPerT(D.cost,t)}</small></div>`;
+  if(B)h+=`<p class="pfcmp">▲▼ per ton made against the 7 days before${B.y?"; hover for yesterday":""}.</p>`;
   return h;}
 function pfOutputs(D){const W=D.W,mx=Math.max(D.revenue,D.cost,1),pos=D.profit>=0;
   return `<div class="dcssub">Outputs</div>
@@ -288,7 +296,8 @@ function pfBreak(D,live){const s=PFUI.sel;const [kind,a,b]=s.split(":"),t=D.made
     note=`Operating money for ${PF_RNAME[PFUI.mode]}. Upgrades are a choice, so they're left out.`;}
   return {title,rows,note};}
 
-function pfTabs(sel){const [kind,a]=sel.split(":");return kind==="node"?[["tr","Trends"],...(a==="site"?[]:[["ct","Controls"]]),["co","Costs"],["uq","Uptime & quality"]]:[["tr","Trends"],["bk","Breakdown"]];}
+function pfTabs(sel){const [kind,a]=sel.split(":");return kind==="node"?[["tr","Trends"],...(a==="site"?[]:[["ct","Controls"]]),["co","Costs"],["uq","Uptime & quality"]]:sel==="out:profit"?[["wf","Where it went"],["tr","Trends"],["bk","Breakdown"]]:[["tr","Trends"],["bk","Breakdown"]];}
+const PF_DCS={yard:["PLAN"],pulper:["SPOT"],stock:["SPOT"],pm:["WET","DET","QCS"],winder:["DET"],ship:["PLAN"],site:["UTIL","WATER"]};
 /* ---- v6.5 the area controls live here (they were Settings > Area controls). The #cards section moves between a hidden
    holder and the Controls tab; CSS shows only this area's cards. Same rules as before: on AUTO and locked in a season
    or survival run (09-season-leaderboard.js seasonLocks), free in Free Play. ---- */
@@ -297,9 +306,9 @@ function pfCtlHome(){const cs=$("cards"),h=$("pfHold");if(cs&&h&&cs.parentNode!=
 function pfCtlMount(a){const cs=$("cards"),t=$("pfCtl");if(!cs||!t)return;cs.dataset.area=a;if(cs.parentNode!==t)t.appendChild(cs);G3.pfCtlOn=true;}
 {const cs=$("cards"),d=$("areactl");if(cs){const h=kEl("div","pfhold");h.id="pfHold";h.hidden=true;document.body.appendChild(h);
     cs.querySelectorAll(":scope > .card").forEach((c,i)=>c.dataset.a=PF_CARDA[i]||"site");h.appendChild(cs);}
-  if(d){const n=kEl("div","setgrp pfctlnote",`<span>Area controls are in <b>Process flow</b>: tap an area, then <b>Controls</b>.</span><button type="button" id="pfCtlGo">Open process flow</button>`);n.id="areactl";d.replaceWith(n);
+  if(d){const n=kEl("div","setgrp pfctlnote",`<span>Area controls are in <b>Report → Control room → Process flow</b>: tap an area, then <b>Controls</b>.</span><button type="button" id="pfCtlGo">Open process flow</button>`);n.id="areactl";d.replaceWith(n);
     $("pfCtlGo").addEventListener("click",()=>{const x=document.querySelector('#v2sheet header button[aria-label="Close panel"]');if(x)x.click();pfOpen();});}}
-function pfPanelHTML(D,live){const sel=PFUI.sel,[kind,a]=sel.split(":"),tabs=pfTabs(sel);if(!PFUI.tab||!tabs.some(t=>t[0]===PFUI.tab))PFUI.tab="tr";
+function pfPanelHTML(D,live){const sel=PFUI.sel,[kind,a]=sel.split(":"),tabs=pfTabs(sel);if(!PFUI.tab||!tabs.some(t=>t[0]===PFUI.tab))PFUI.tab=tabs[0][0];
   if(a==="site"&&PFUI.tab==="uq")PFUI.tab="tr";
   PFUI.area=kind==="node"?a:null;const B=pfBreak(D,live),specs=[];let body="";
   const zoom=`<div class="seg pfzoom" role="group" aria-label="Chart range">${[["24h","24 h"],["7d","7 d"],["run","Run"]].map(([k,l])=>`<button type="button" data-pz="${k}" aria-pressed="${PFUI.zoom===k}">${l}</button>`).join("")}</div>`;
@@ -307,6 +316,7 @@ function pfPanelHTML(D,live){const sel=PFUI.sel,[kind,a]=sel.split(":"),tabs=pfT
   if(PFUI.tab==="tr"){body=zoom+charts(kind==="node"?PF_TR[a]:PF_TR[sel]||[]);if(S.zen&&kind!=="node")body=zoom+charts((PF_TR[sel]||[]).filter(c=>c.u!=="$"));}
   else if(PFUI.tab==="ct")body=`<p class="pfpn pflock">${document.body.classList.contains("season-lock")?"<b>AUTO · locked during a season or survival run.</b> The mill runs these itself; Free Play lets you run them by hand.":"Free play: move a slider, or tap AUTO to hand it back to the mill."}</p><div id="pfCtl"></div>`;
   else if(PFUI.tab==="bk")body=`<div class="pfpr">${pfRows(B.rows)}</div>${B.note?`<p class="pfpn">${B.note}</p>`:""}`;
+  else if(PFUI.tab==="wf")body=pfWaterfall(D);
   else if(PFUI.tab==="co"){const W=histWin(...pfWin()),all=histWin(-1e9,pfNowH()+1);
     const sp={t:"Cost added here",u:"$",k:"stack",s:PF_CATS.filter(([c])=>[...all.rows].some(r=>hv(r,"b."+a+"."+c))).map(([c,n,col])=>[n,col,V_("b."+a+"."+c)])};
     const tot=(rows,c)=>rows.reduce((s,r)=>s+(hv(r,"b."+a+"."+c)||0),0),made=rows=>rows.reduce((s,r)=>s+(hv(r,"made")||0),0),mw=made(W.rows),ma=made(all.rows);
@@ -318,7 +328,8 @@ function pfPanelHTML(D,live){const sel=PFUI.sel,[kind,a]=sel.split(":"),tabs=pfT
     const cause=cs.length?cs.map(([k,m])=>`<div class="pfdn"><span>${PF_DNN[k]||(EV[k]?EV[k].name:k)}</span><i><s style="width:${(m/mx*100).toFixed(0)}%"></s></i><b>${m>=90?(m/60).toFixed(1)+" h":Math.round(m)+" min"}</b></div>`).join(""):`<p class="pfpn">No downtime in this range.</p>`;
     body=zoom+charts(PF_UQ[a]||[])+`<div class="dcssub pfsub">Downtime by cause · ${PFUI.zoom==="24h"?"last 24 h":PFUI.zoom==="7d"?"last 7 days":"the run"}</div>${cause}`;}
   PFUI.specs=specs;
-  return `<div class="pfph"><b>${B.title}</b><button type="button" class="dcsx" id="pfPopX" aria-label="Close details">✕</button></div>
+  const dl=kind==="node"&&!S.zen?(PF_DCS[a]||[]).map(x=>`<button type="button" class="pfdcs" data-pfdcs="${x}">${x}${x==="PLAN"||x==="QCS"?"":" DCS"} ↗</button>`).join(""):"";
+  return `<div class="pfph"><b>${B.title}</b>${dl}<button type="button" class="dcsx" id="pfPopX" aria-label="Close details">✕</button></div>
     <div class="pftabs" role="tablist">${tabs.map(([k,l])=>`<button type="button" role="tab" data-ptab="${k}" aria-selected="${PFUI.tab===k}"${a==="site"&&k==="uq"?" hidden":""}>${l}</button>`).join("")}</div><div class="pfpb">${body}</div>`;}
 
 /* ---- refresh: once a second while open (and at once on a tap) ---- */
@@ -327,22 +338,22 @@ function pfRender(force){if(!PFUI.open)return;const o=$("pfOv");if(!o)return;
   o.querySelectorAll("[data-pd]").forEach(b=>{b.setAttribute("aria-pressed",String(b.dataset.pd===PFUI.mode));if(b.dataset.pd==="y"){b.disabled=!prev;b.title=prev?"":"After the first full mill day";}if(b.dataset.pd==="w"||b.dataset.pd==="r")b.disabled=!hasH;});
   const pr=o.querySelector(".pfprior");pr.hidden=!(PFUI.mode==="w"||PFUI.mode==="r")||!(S.hist&&S.hist.bf);
   $("pf-h").textContent=`${(typeof NAME==="string"&&NAME)||"PM1"} · PROCESS FLOW`;
-  const live=PFUI.mode==="t",D=pfRangeD();
-  $("pfClock").textContent=D?(live?`Day ${D.day} · ${clockOf(S.t)} · ${D.h.toFixed(1)} h into the mill day (6am to 6am)`:PFUI.mode==="y"?`Day ${D.day} · the whole mill day`:`${pfHourLbl(D.h0)} to now · ${D.h} h`):"";
+  o.querySelectorAll("[data-pv2]").forEach(b=>b.setAttribute("aria-pressed",String(b.dataset.pv2===PFUI.view)));
+  if(PFUI.play&&PFUI.rp!=null){const [,h1]=pfRpWin();PFUI.rp=Math.min(h1-1,PFUI.rp+1);if(PFUI.rp>=h1-1)PFUI.play=false;}
+  const live=PFUI.mode==="t"&&PFUI.rp==null,D=PFUI.rp!=null?pfRpD():pfRangeD();
+  $("pfClock").textContent=D&&PFUI.rp!=null?`Replay · ${pfHourLbl(PFUI.rp)} · one hour`:D?(live?`Day ${D.day} · ${clockOf(S.t)} · ${D.h.toFixed(1)} h into the mill day (6am to 6am)`:PFUI.mode==="y"?`Day ${D.day} · the whole mill day`:`${pfHourLbl(D.h0)} to now · ${D.h} h`):"";
   $("pfNote").textContent=BF.busy?`Loading the last ${HIST_PRIOR} days… ${Math.round(BF.p*100)}%`:S.zen?"Zen: the books keep running, but money doesn't count here":"Live: the mill keeps running at your speed";
   if(!D){$("pfMap").innerHTML=`<p class="pfwait">The flow starts with the first game minute.</p>`;return;}
-  const key=[PFUI.mode,PFUI.prior,PFUI.sel,PFUI.tab,PFUI.zoom,pfVert()?1:0,Math.round(S.t*4)].join("|");if(!force&&key===PFUI.h){pfCharts();return;}
+  const key=[PFUI.mode,PFUI.prior,PFUI.sel,PFUI.tab,PFUI.zoom,pfVert()?1:0,Math.round(S.t*4),PFUI.view,PFUI.rp,PFUI.play].join("|");if(!force&&key===PFUI.h){pfCharts();return;}
   const skey=[PFUI.sel,PFUI.tab,PFUI.zoom,PFUI.mode].join("|");PFUI.h=key;
   const put=(id,h)=>{const e=$(id);if(e._h!==h){e._h=h;e.innerHTML=h;}};
-  put("pfIn",pfInputs(D));put("pfMap",pfSVG(D,live));put("pfOut",pfOutputs(D));
+  put("pfIn",PFUI.view==="t"?pfInputsT(D):pfInputs(D));put("pfMap",PFUI.view==="t"?pfSVGt(D,live):pfSVG(D,live));put("pfOut",pfOutputs(D));put("pfOee",pfOEE());pfRepHTML();
   const pp=$("pfPanel");pp.hidden=!PFUI.sel;$("pfOv").querySelector(".dcs").classList.toggle("panel",!!PFUI.sel);
   G3.pfCtlOn=false;
   if(!PFUI.sel)pfCtlHome();
   if(PFUI.sel){const b0=pp.querySelector(".pfpb");pp._sc=b0?b0.scrollTop:0;const h=pfPanelHTML(D,live);if(force||pp._k!==skey||PFUI.tab==="bk"||PFUI.tab==="co"){const same=pp._k&&pp._k.split("|").slice(0,2).join()===skey.split("|").slice(0,2).join();if(pp._h!==h)pfCtlHome();put("pfPanel",h);pp._k=skey;const b=pp.querySelector(".pfpb"),b0=pp._sc||0;if(b)b.scrollTop=same?b0:0;}if(PFUI.tab==="ct"&&PFUI.area)pfCtlMount(PFUI.area);else pfCtlHome();pfCharts();}}
 
-// Settings > View: the button that opens it (next to the fiddly knobs view switch)
-{const row=$("v2viewrow"),b=kEl("button","pfopen","Process flow");b.type="button";b.id="pfBtn";b.title="Inputs, process and outputs for today's mill day";row.appendChild(b);
-  b.addEventListener("click",()=>{const x=document.querySelector('#v2sheet header button[aria-label="Close panel"]');if(x)x.click();pfOpen();});}
+// (v6.7: the process flow opens from Report > Control room, 51i; it was a button in Settings > View)
 document.addEventListener("keydown",e=>{if(e.key!=="Escape"||!PFUI.open)return;e.preventDefault();e.stopPropagation();if(PFUI.sel){PFUI.sel=null;pfRender(true);}else pfClose();},true);
 UI_TICKS.push(n=>{if(!PFUI.open)return;const m=$("v2menu");if(m&&!m.hidden&&!POP.on){pfClose();return;}if(n%5===0)pfRender();});
 G3.pfSel=(k,tab,zoom)=>{PFUI.sel=k;PFUI.tab=tab||null;if(zoom)PFUI.zoom=zoom;pfRender(true);};G3.pfMode=m=>{PFUI.mode=m;pfRender(true);};G3.histSum=histSum;G3.histRows=histRows;   // (tests)
