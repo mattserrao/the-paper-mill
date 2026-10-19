@@ -113,7 +113,7 @@
                 r.P.up.rotation.z=-0.12+Math.sin(ph)*0.05;if(r.lasso){r.P.A[1].a.rotation.z=2.9;r.P.A[1].a.rotation.x=-0.2;r.lasso.rotation.y=u*9;}
                 for(let a=0;a<2.4;a+=0.2){const [px,pz]=at(r,u-a);if(px<X0+2)L.push([a+((u*5)%0.2),px+1.2,H(px,pz)+0.3+a*0.3,pz]);}}
               dust.show(L,2.4,0.5,2.2);return u<END;},
-            focus(){return [CX,7,Z0-1,60,0.35,1.36];},stop(){rs.forEach(r=>r.root.visible=false);dust.hide();}};},
+            focus(){const v=rs.filter(r=>r.root.visible),c=v[Math.floor(v.length/2)]||rs[1];return [CX,7,Z0-1,60,0.35,1.36,c.root.position.x,1.6,c.root.position.z,30];},stop(){rs.forEach(r=>r.root.visible=false);dust.hide();}};},
         // v4.2.3 valley: a held shot of the mill from the far bank of the river. Bigfoot wades across below the mill, away
         // from the camera, rings spreading from his legs; mid-river he turns his head and shoulders to look back straight
         // down the lens without breaking stride (the famous film), then wades on. Two-tone fur, crest, brow, face, long
@@ -140,7 +140,7 @@
               // wading: rings spread from his legs
               let n=0;for(let a=0;a<2.4&&n<RG.length;a+=0.5){const a2=a+(u%0.5),zz=Z0+(u-a2)*V,q=(zz-zc)/hw;if(Math.abs(q)>0.97||u-a2<0)continue;const m=RG[n++],k=a2/2.4;
                 m.visible=true;m.position.set(x,0.08,zz);m.scale.set(0.6+k*3,0.6+k*3,1);m.material.opacity=0.5*(1-k);}for(;n<RG.length;n++)RG[n].visible=false;return u<END;},
-            focus(){return [CAM[0],6,CAM[1],CAM[2],CAM[3],CAM[4]];},stop(){g.visible=false;RG.forEach(m=>m.visible=false);}};},
+            focus(){return [CAM[0],6,CAM[1],CAM[2],CAM[3],CAM[4],root.position.x,1.6,root.position.z,24];},stop(){g.visible=false;RG.forEach(m=>m.visible=false);}};},
         // v4.2.3 city: a held shot of the waterfront mill from out in the bay. A harbour tug steams past in the foreground
         // towing a barge of bales toward the mill's quay: black hull and red boot-top, tyre fenders and a bow pudding,
         // white deckhouse and wheelhouse, mast and radar, buff stack with a red band puffing smoke, a deckhand aft, a
@@ -168,14 +168,15 @@
               wk[0].position.set(x+11,0.07,ZT);wk[0].scale.set(14,4.5,1);wk[1].position.set(x-5.4,0.07,ZT);wk[1].scale.set(1.6,4.2,1);wk[2].position.set(bx+12,0.07,ZT+0.4);wk[2].scale.set(10,6.5,1);
               const sm=[];for(let a=0;a<4.5;a+=0.5){const a2=a+(u%0.5),px=x+0.7+a2*V*0.85+a2*0.8;sm.push([a2,px,3.7+a2*1.4,ZT-a2*0.5]);}smoke.show(sm,4.5,0.5,2.6);
               walkP(dh,0,0);dh.A[0].a.rotation.z=0.5+Math.sin(u*2)*0.2;dh.hd.rotation.y=-0.8;return u<END;},
-            focus(){return [X0-22,7,ZT+6,64,Math.PI+0.3,1.36];},stop(){[tug,bg,line,...wk].forEach(o=>o.visible=false);smoke.hide();}};},
+            focus(){return [X0-22,7,ZT+6,64,Math.PI+0.3,1.36,tug.position.x-5,1.5,tug.position.z,40];},stop(){[tug,bg,line,...wk].forEach(o=>o.visible=false);smoke.hide();}};},
         // v4.2.2 (an Amos Moses nod): an operator in a hard hat and hi-vis walks the canal bank east of the intake with a
         // sample bottle, crouches at the edge and reaches down to fill it. A gator has been gliding in, eyes and back
-        // just breaking the surface; it lunges, jaws wide, and snaps off the operator's right hand (no gore, just gone),
-        // then death-rolls and sinks with it. The operator sits down hard, stares at the stump, throws the other arm up, gets up
-        // and runs off along the bank waving it; the bottle bobs off on the water. The gator surfaces again out in the canal, burps
-        // and slides away, while a one-armed Cajun poles his pirogue past up the canal. Everything is a function of the
-        // scene clock, so any moment can be shown (G3.sightSeek, tests and screenshots).
+        // just breaking the surface; it lunges, jaws wide, and snaps the bottle out of the operator's hand, then
+        // death-rolls and sinks with it (v6.4: the bottle, not the hand: no injuries in the game). The operator sits down
+        // hard, stares at the empty hand, throws an arm up, gets up and runs off along the bank waving it; the bottle pops
+        // back up and bobs off on the water. The gator surfaces again out in the canal, burps and slides away, while a
+        // Cajun poles his pirogue past up the canal. Everything is a function of the scene clock, so any moment can be
+        // shown (G3.sightSeek, tests and screenshots).
         swamp:()=>{const [zc,hw]=riverAt(50),bank=zc+hw,EX=48,EZ=bank+1.2,ez=k=>k<=0?0:k>=1?1:k*k*(3-2*k),cl=(t,a,b)=>ez((t-a)/(b-a)),
             bx=(p,w,h,d,x,y,z,k,hex)=>{const m=new THREE.Mesh(cubeG,am(k,hex));m.scale.set(w,h,d);m.position.set(x,y,z);m.castShadow=true;p.add(m);return m;},
             piv=(p,x,y,z)=>{const g=new THREE.Group();g.position.set(x,y,z);p.add(g);return g;},
@@ -206,15 +207,15 @@
           [-1,1].forEach(s=>{ball(uj,0.055,1.72,0.14,s*0.1,"gatorD",GD);for(let i=0;i<8;i++)bx(uj,0.05,0.1,0.05,0.15+i*0.2,-0.07,s*(i<6?0.25:0.19),"teeth",TE);});
           const lj=piv(hd2,0.62,-0.1,0);bx(lj,1.5,0.13,0.52,0.75,-0.04,0,"gatorL",GL);bx(lj,0.42,0.12,0.42,1.58,-0.04,0,"gatorL",GL);bx(lj,1.45,0.02,0.36,0.76,0.035,0,"gum","#c98473");
           [-1,1].forEach(s=>{for(let i=0;i<7;i++)bx(lj,0.05,0.09,0.05,0.25+i*0.2,0.07,s*(i<5?0.22:0.17),"teeth",TE);});
-          const mh=bx(uj,0.12,0.14,0.12,1.0,-0.12,0.08,"skin",SK);mh.visible=false;const bite=piv(uj,1.0,-0.1,0);
+          const mh=bx(uj,0.11,0.22,0.11,1.0,-0.12,0.08,"bottle","#eef2f4");mh.visible=false;const bite=piv(uj,1.0,-0.1,0);
           const tail=[];{let tp=gb;[0.82,0.66,0.52,0.38,0.25].forEach((w,k)=>{const s=piv(tp,k?-0.74:-1.9,0,0);bx(s,0.8,0.36-k*0.05,w,-0.4,0,0,"gator",GB);bx(s,0.78,0.08,w*0.9,-0.4,-0.17+k*0.02,0,"gatorL",GL);
               if(k<3)[-1,1].forEach(z=>bx(s,0.3,0.15,0.07,-0.4,0.22-k*0.03,z*w*0.24,"gatorD",GD));else bx(s,0.34,0.15,0.07,-0.4,0.18-k*0.03,0,"gatorD",GD);tail.push(s);tp=s;});}
           const legs=[[1.15,-1],[1.15,1],[-1.15,-1],[-1.15,1]].map(([lx,s])=>{const l=piv(gb,lx,-0.1,s*0.5);bx(l,0.24,0.2,0.5,0,0,s*0.22,"gatorS",GS);const f=piv(l,0,0,s*0.46);
             bx(f,0.2,0.34,0.2,0,-0.15,0,"gatorS",GS);bx(f,0.36,0.06,0.3,0.06,-0.32,0,"gatorS",GS);for(let q=0;q<3;q++)bx(f,0.12,0.04,0.05,0.28,-0.33,(q-1)*0.1,"gatorL",GL);l.userData.s=s;return l;});
           gt.scale.setScalar(0.55);gt.visible=false;G3.liveMark&&G3.liveMark(gt,3.0,0.2);
-          // ---- the one-armed Cajun in his pirogue, poling past on the far side ----
+          // ---- a Cajun in his pirogue, poling past on the far side ----
           const pr=grp();bx(pr,3.6,0.3,0.78,0,0.1,0,"pirogue","#6b4a2f");[-1,1].forEach(s=>{const m=bx(pr,0.56,0.3,0.56,s*1.8,0.1,0,"pirogue","#6b4a2f");m.rotation.y=Math.PI/4;m.scale.set(0.56,0.3,0.56);const n=bx(pr,0.3,0.26,0.3,s*2.1,0.14,0,"pirogue","#6b4a2f");n.rotation.y=Math.PI/4;});bx(pr,3.3,0.06,0.62,0,0.27,0,"pirogueIn","#4a3424");
-          const cj=figure(pr,"#7a6a4a","#3a2a20","wide",0.28);cj.a[0].visible=false;
+          const cj=figure(pr,"#7a6a4a","#3a2a20","wide",0.28);
           const pole=new THREE.Mesh(CYLG,am("pole","#8a6a4a"));pole.scale.set(0.04,5.2,0.04);const pp=piv(pr,0.1,1.15,0.38);pp.add(pole);pole.position.y=-1.6;pr.visible=false;G3.liveMark&&(G3.liveMark(pr,2.8,1.2),G3.liveMark(op,1.4,1.0));
           // ---- water: rings and droplets ----
           const RM=[...Array(7)].map(()=>{const m=new THREE.Mesh(new THREE.RingGeometry(0.8,1,28),new THREE.MeshBasicMaterial({color:0xffffff,transparent:true,opacity:0.5,depthWrite:false}));m.rotation.x=-Math.PI/2;m.visible=false;scene.add(m);return m;});
@@ -236,7 +237,7 @@
               hip.position.y=0.18+0.74*g;z=EZ+0.9;L.forEach(l=>{l.rotation.z=1.5*(1-g)+0.9*g*(1-cl(t,19.8,20.2));K(l).z=-1.6*g*(1-cl(t,19.8,20.2));});up.rotation.z=0.35*(1-g)+0.15*g;
               x=EX+dx*3.4*T;z+=dz*3.4*T;if(T>0){const w=Math.sin(T*11);L[0].rotation.z=w*0.8;L[1].rotation.z=-w*0.8;K(L[0]).z=-Math.max(0,-w)*1.2;K(L[1]).z=-Math.max(0,w)*1.2;al.rotation.z=-w*0.6;hip.position.y=0.92+Math.abs(w)*0.06;}
               ar.rotation.z=2.35*(1-g)+(2.95+Math.sin(t*9)*0.3)*g;hd.rotation.y=-0.45*(1-g);}
-            op.position.set(x,H(x,z),z);A[1].hand.visible=t<13.9;bt.visible=t<13.9;op.visible=t<29.5;}
+            op.position.set(x,H(x,z),z);A[1].hand.visible=true;bt.visible=t<13.9;op.visible=t<29.5;}
           function poseGator(t){gt.visible=true;gt.rotation.set(0,-Math.PI/2,0);gb.rotation.set(0,0,0);hd2.rotation.set(0,0,0);uj.rotation.z=0;lj.rotation.z=0;mh.visible=false;
             const tuck=k=>legs.forEach(l=>{l.rotation.y=-l.userData.s*1.0*k;});tail.forEach((s,k)=>{s.rotation.y=Math.sin(t*2.2-k*0.7)*(t<13.2||t>20?0.25:0.1);});
             if(t<13.2){const z=bank-18+13.4*ez(Math.min(1,t/12)),x=EX+0.3+Math.sin(t*0.4)*0.6*(1-cl(t,10,12));gt.position.set(x,-0.1,z);tuck(1);return;}
@@ -256,8 +257,8 @@
             for(;n<RM.length;n++)RM[n].visible=false;}
           function drops(t){const o=fit?fit.h:null;for(const d of DR){const dt=t-d.t0;if(!o||dt<0||dt>1.2){d.m.visible=false;continue;}const y=0.1+d.v[1]*dt-4.9*dt*dt;if(y<0){d.m.visible=false;continue;}
               d.m.visible=true;d.m.position.set(o.x+d.v[0]*dt,y,o.z-1+d.v[2]*dt);}}
-          function bottle(t){if(t<13.9||!fit){fb.visible=false;return;}fb.visible=t<31;const k=cl(t,13.9,14.3),T=Math.max(0,t-14.3);
-            fb.position.set(fit.h.x+T*0.18+Math.sin(t*1.3)*0.05,fit.h.y*(1-k)+0.03*k+Math.sin(t*2.6)*0.03*k,fit.h.z-0.4*k-T*0.12);fb.rotation.set(1.3*k+Math.sin(t*1.7)*0.2*k,0,0.4*k);}
+          function bottle(t){if(t<17.3||!fit){fb.visible=false;return;}fb.visible=t<31;const k=cl(t,17.3,17.8),T=Math.max(0,t-17.8);   // (v6.4: pops back up after the roll)
+            fb.position.set(P0.x+T*0.18+Math.sin(t*1.3)*0.05,-0.4*(1-k)+0.03*k+Math.sin(t*2.6)*0.03*k,P0.z+1-T*0.12);fb.rotation.set(1.3*k+Math.sin(t*1.7)*0.2*k,0,0.4*k);}
           function pirogue(t){pr.visible=true;const x=EX-6-20*t/11.5,z=zc+hw*0.1;pr.position.set(x,0.02+Math.sin(t*1.4)*0.04,z);pr.rotation.y=Math.PI;pr.rotation.x=Math.sin(t*1.1)*0.02;
             const c=Math.sin(t*1.2);pp.rotation.z=-0.35+c*0.35;cj.a[1].rotation.z=-0.5+c*0.4;}
           // v4.2.2 t4: the cut is short (11.5 s). The scene clock (tau) maps onto the choreography's clock (t): it opens with the
@@ -266,7 +267,7 @@
           return {t:0,tick(rdt){const u=(this.t+=rdt),t=tm(u);if(u<0.3)fit=null;poseOp(t);poseGator(t);rings(t);drops(t);bottle(t);pirogue(u);return u<END;},
             // a wide, low shot of the mill from across the canal, held still: the bite happens small in the lower third,
             // as if it were caught in frame by chance ([x,y,z,dist,orbit angle,elevation]: the zen camera keeps the angle)
-            focus(){return [EX-2,7,bank+3,FOC_R,2.25,1.36];},
+            focus(){const o=op.visible?op.position:null;return [EX-2,7,bank+3,FOC_R,2.25,1.36,o?o.x:EX,0.9,o?o.z-0.6:bank-1.5,16];},
             stop(){op.visible=gt.visible=fb.visible=pr.visible=false;RM.forEach(m=>m.visible=false);DR.forEach(d=>d.m.visible=false);fit=null;}};}};
       // (built once at start-up, hidden, so nothing is created or compiled when one happens; rewound each time)
       /* v6.1 t18: each figure of a sight is drawn as a live cut-out (42f): a picture of the model as it stands, retaken 8

@@ -1372,7 +1372,7 @@ body.dark .kvchip{background:color-mix(in srgb,var(--panel) 96%,transparent)}
 <div class="btns"><button class="primary" id="no3d-retry">Try again</button></div></div></div>
 
 <script type="module">
-const APP_VER="v6.3.0";   // shown in the menu and sent with leaderboard scores (max 12 characters)
+const APP_VER="v6.4.0-zs1";   // shown in the menu and sent with leaderboard scores (max 12 characters)
 // TEST BUILDS ONLY (off in releases): turbo speeds 240/480/960 sim min/s for fast playtests. Above 120, crews and maintenance start jobs
 // without waiting for the 3D walk (as with the 3D view off) and outages keep the speed. Set false for a release.
 const TURBO=false,TURBO_FAST=s=>TURBO&&s>120;
@@ -9831,24 +9831,45 @@ function no3D(){G3.ok=false;$("no3d").hidden=false;$("no3d-retry").onclick=()=>l
   let zenMovesCache=null;
   // v17 helpers for the landscape-and-mill shots: U(k) is a place from the scenery's list ([x, z, height]) or null
   const U=k=>(G3.scenery&&G3.scenery.util&&G3.scenery.util[k])||null,MILLC=[14,2,5];
-  // low from a place, looking across to the mill: the camera sits at the place and creeps toward the mill
-  const fromPlace=(name,k,look,h=1.3,dur=14)=>({name,look,dur,ok:()=>!!U(k),start:()=>{const p=U(k),d=Math.hypot(p[0]-MILLC[0],p[1]-MILLC[2]);return {th:Math.atan2(p[0]-MILLC[0],p[1]-MILLC[2]),d};},
-    at:(t,mv)=>{if(t>dur)return null;const u=ease(t/dur),st=mv.st;return [MILLC[0],MILLC[1],MILLC[2],Math.max(120,st.d*mix(1.0,0.85,u)),st.th+mix(-0.08,0.08,u),h];}});
+  // v6.4: from a place, with the place in the foreground and the mill beyond: the camera starts low behind the place
+  // (on the far side from the mill), looks past it toward the mill and creeps in. (Was: 120 m+ out and high, so the place
+  // itself was rarely in frame and every "from X" shot looked alike.)
+  const TH=(x,z)=>G3.terrainH?G3.terrainH(x,z):0;
+  const fromPlace=(name,k,look,h=1.3,dur=14)=>({name,look,dur,k,ok:()=>!!U(k),start:()=>{const p=U(k),dx=MILLC[0]-p[0],dz=MILLC[2]-p[1],d=Math.hypot(dx,dz);
+      return {p,ux:dx/d,uz:dz/d,d,back:28+p[2]*1.6,hc:Math.max(7,p[2]*0.85)};},
+    at:(t,mv)=>{if(t>dur)return null;const u=ease(t/dur),st=mv.st,p=st.p,b=st.back*mix(1,0.72,u),side=mix(-0.06,0.06,u),
+      cx=p[0]-st.ux*b-st.uz*b*side,cz=p[1]-st.uz*b+st.ux*b*side,cy=Math.max(TH(cx,cz),0)+st.hc,
+      lk=Math.min(st.d*0.45,90),tx=p[0]+st.ux*lk,tz=p[1]+st.uz*lk,ty=Math.max(1.5,p[2]*0.25),
+      ex=cx-tx,ez=cz-tz,ey=cy-ty,r=Math.hypot(ex,ey,ez);return [tx,ty,tz,r,Math.atan2(ex,ez),Math.acos(Math.max(-1,Math.min(1,ey/r)))];}});
   // start close on a place and pull back and up until the mill comes into the frame behind it
-  const reveal=(name,k,look,dur=16)=>({name,look,dur,ok:()=>!!U(k),start:()=>{const p=U(k);return {p,th:Math.atan2(MILLC[0]-p[0],MILLC[2]-p[1])+Math.PI};},
-    at:(t,mv)=>{if(t>dur)return null;const u=ease(t/dur),p=mv.st.p;return [mix(p[0],(p[0]+MILLC[0])/2,u),mix(Math.min(8,p[2]*0.3),2,u),mix(p[1],(p[1]+MILLC[2])/2,u),mix(45,260,u),mv.st.th+0.25*u,mix(1.1,0.92,u)];}});
+  const reveal=(name,k,look,dur=16)=>({name,look,dur,k,ok:()=>!!U(k),start:()=>{const p=U(k);return {p,th:Math.atan2(MILLC[0]-p[0],MILLC[2]-p[1])+Math.PI,flat:p[2]<5};},
+    at:(t,mv)=>{if(t>dur)return null;const u=ease(t/dur),p=mv.st.p,f=mv.st.flat;   // (v6.4: a flat place starts wider and lower, edge-on, not looking down on a flat shape)
+      return [mix(p[0],(p[0]+MILLC[0])/2,u),mix(Math.min(8,p[2]*0.3),2,u),mix(p[1],(p[1]+MILLC[2])/2,u),mix(f?90:45,260,u),mv.st.th+0.25*u,mix(f?1.3:1.1,0.92,u)];}});
+  // v6.4 per-map list, reviewed shot by shot on all four maps: each "from" shot keeps its place in the foreground; the
+  // empty or hidden ones (dry pad edge, bayou channels, ranch view, rural mast, bait shack, mesa to the
+  // mill) are gone
   function siteShots(){const E=SITE.env;
-    if(E==="rural")return [fromPlace("timber yard to the mill","timber",["gold","none"],1.25),reveal("bale store reveal","occStore",["airy","none"]),
+    if(E==="rural")return [fromPlace("timber yard to the mill","timber",["gold","none"]),reveal("bale store reveal","occStore",["airy","none"]),
       fromPlace("from the farm","farm",["gold","dusk"],1.3,16),reveal("lake reveal","lake",["airy","gold"]),
+      fromPlace("past the chip pile","chipPile",["hc","none"]),
       {name:"rapids to the mill",look:["airy","none"],dur:15,ok:()=>true,at:(t)=>{if(t>15)return null;const u=ease(t/15),x=mix(-205,-60,u),rv=riverAt(x);return [x,1,rv[0],mix(50,140,u),Math.PI+0.6-0.4*u,mix(1.28,1.05,u)];}}];
-    if(E==="urban")return [fromPlace("from the pier","pier",["gold","dusk"],1.3),reveal("container port reveal","port",["hc","none"]),fromPlace("lighthouse view","lighthouse",["dusk","gold"],1.25,16),
-      reveal("rail yard reveal","railyard",["bw","none"]),fromPlace("from the water tower","waterTower",["airy","none"],1.2)];
-    if(E==="desert")return [reveal("solar field reveal","solarFarm",["gold","none"]),fromPlace("from the stock pond","stockPond",["dusk","gold"],1.3,16),fromPlace("ranch view","ranch",["gold","none"],1.3),
-      reveal("water works reveal","waterTanks",["airy","none"]),
-      {name:"mesa to the mill",look:["dusk","gold"],dur:16,ok:()=>true,at:(t)=>{if(t>16)return null;const u=ease(t/16);return [mix(255,40,u),mix(30,4,u),mix(-245,-20,u),mix(140,230,u),2.3,mix(1.2,1.0,u)];}}];
+    if(E==="urban")return [fromPlace("from the pier","pier",["gold","dusk"]),reveal("container port reveal","port",["hc","none"]),fromPlace("lighthouse view","lighthouse",["dusk","gold"],1.25,16),
+      reveal("rail yard reveal","railyard",["bw","none"]),fromPlace("from the water tower","waterTower",["airy","none"]),fromPlace("from the beach","lifeguard",["gold","airy"])];
+    if(E==="desert")return [reveal("solar field reveal","solarFarm",["gold","none"]),fromPlace("from the windpump","windpump",["dusk","gold"],1.3,16),
+      reveal("water works reveal","waterTanks",["airy","none"])];
     return [reveal("barge dock reveal","bargeDock",["airy","none"]),fromPlace("from the boardwalk","boardwalk",["gold","dusk"],1.3,16),fromPlace("from the radio mast island","mast",["airy","gold"],1.2),
       {name:"bale route",look:["hc","none"],dur:12,ok:()=>true,at:(t)=>{if(t>12)return null;const u=ease(t/12);return [mix(-80,-60,u),1,mix(-55,-28,u),mix(45,60,u),-1.0+0.3*u,1.05];}},
-      reveal("dry pad edge","dryPad",["airy","none"])];}
+      fromPlace("past the moored barge","barge",["airy","none"],1.3,16)];}
+  // v6.4: the landmark shot's places: ones with some height that no map shot above already features
+  let lmCache=null;const landmarks=()=>{if(lmCache)return lmCache;const u=G3.scenery&&G3.scenery.util;if(!u)return [];const used=new Set(siteShots().map(m=>m.k).filter(Boolean));
+    return (lmCache=Object.keys(u).filter(k=>u[k][2]>=6&&k!=="substation"&&!used.has(k)));};
+  // v6.4: a side to look from with nothing solid between the camera and the subject (close shots clipped into walls):
+  // 8 directions, a ray from the subject out to the camera spot, the first clear one (from a random start), else the longest
+  const _zrc=new THREE.Raycaster(),_zo=new THREE.Vector3(),_zd=new THREE.Vector3();if(_zrc.layers)_zrc.layers.enableAll();
+  function clearSide(x,y,z,r,ph){const a0=Math.random()*6.28;let best=a0,bd=-1;_zo.set(x,y+0.3,z);
+    for(let i=0;i<8;i++){const a=a0+i*Math.PI/4;_zd.set(Math.sin(ph)*Math.sin(a),Math.cos(ph),Math.sin(ph)*Math.cos(a)).normalize();_zrc.set(_zo,_zd);_zrc.far=r;
+      let h=null;try{h=_zrc.intersectObjects(scene.children,true).find(q=>q.object.visible&&!q.object.isSprite&&!(q.object.material&&q.object.material.transparent));}catch(e){}
+      const dd=h?h.distance:r;if(dd>=r)return a;if(dd>bd){bd=dd;best=a;}}return best;}
   G3.zenMoves=()=>zenMoves();   // (tests: run every shot)
   function zenMoves(){if(zenMovesCache)return zenMovesCache;const LEND=PLEN[PLEN.length-1],TUB=[16,1.2,-13.5];
     zenMovesCache=[
@@ -9894,7 +9915,7 @@ function no3D(){G3.ok=false;$("no3d").hidden=false;$("no3d-retry").onclick=()=>l
         at:(t)=>{if(t>14)return null;const u=ease(t/14);return [mix(78,54,u),0,mix(47,25,u),mix(75,55,u),-0.5,0.9];}},
       // drift over the clarifier and transfer tank out toward the river
       {name:"clarifier to river",look:["airy","none"],dur:14,ok:()=>true,
-        at:(t)=>{if(t>14)return null;const u=ease(t/14);const wx=ENV.ww[0];return [mix(wx+2,wx-2,u),mix(1.5,0,u),mix(-38,-64,u),mix(70,95,u),mix(0.2,0.6,u),mix(0.85,1.05,u)];}},
+        at:(t)=>{if(t>14)return null;const u=ease(t/14);const wx=ENV.ww[0];return [mix(wx+2,wx-2,u),mix(1.5,0,u),mix(-38,-64,u),mix(70,90,u),mix(-0.35,-0.75,u),mix(0.95,1.12,u)];}},   // (v6.4: from the west, lower: the old east side ended inside the fog-fan plume)
       // v3.2.0 ----------------------------------------------------------------------------------------------
       // start high over the pulper and spiral down into the vortex
       {name:"pulper vortex dive",look:["hc","none"],dur:14,ok:()=>!S.M.pulperDown&&S.rates.feed>0.3,start:()=>({th:Math.random()*6.28}),
@@ -9943,39 +9964,36 @@ function no3D(){G3.ok=false;$("no3d").hidden=false;$("no3d-retry").onclick=()=>l
         at:(t,mv,rdt)=>{const {jan,J}=G3.janitor;if(t>8||!jan.visible)return null;const at=J.tgt&&J.tgt.c&&J.t>0;mv.st.r+=((at?8:13)-mv.st.r)*Math.min(1,rdt*1.2);
           return [jan.position.x,0.9,jan.position.z,mv.st.r,mv.st.th+t*0.08,1.08];}},
       // a slow push in on the fullest overflowing trash can
-      {name:"litter check",look:["airy","none"],rare:1,dur:6,ok:()=>!!(G3.janitor&&G3.janitor.cans.some(c=>c.f>1.1)),
-        start:()=>({c:G3.janitor.cans.slice().sort((a,b)=>b.f-a.f)[0],th:(Math.random()-0.5)*2}),
-        at:(t,mv)=>{if(t>6)return null;const u=ease(t/6),c=mv.st.c;return [c.x,0.5,c.z,mix(15,8,u),mv.st.th+u*0.3,mix(1.0,1.15,u)];}},
+      {name:"litter check",look:["airy","none"],rare:1,dur:8,ok:()=>!!(G3.janitor&&G3.janitor.cans.some(c=>c.f>1.1)),
+        start:()=>{const c=G3.janitor.cans.slice().sort((a,b)=>b.f-a.f)[0];return {c,th:clearSide(c.x,0.6,c.z,15,1.0)};},
+        at:(t,mv)=>{if(t>8)return null;const u=ease(t/8),c=mv.st.c;return [c.x,0.5,c.z,mix(15,8,u),mv.st.th+u*0.3,mix(1.0,1.15,u)];}},
       // lunch at the food truck and the picnic tables
       {name:"lunch rush",look:["gold","airy"],rare:1,dur:8,ok:()=>!!(G3.FOOD&&G3.FOOD.open&&G3.followable&&G3.followable().some(w=>w.userData.lunch)),
         at:(t)=>{if(t>8)return null;const u=ease(t/8);return [33,0.8,mix(34.2,35.4,u),mix(24,18,u),mix(0.35,0.75,u),mix(1.12,1.2,u)];}},
-      // floor-level dolly under the forming table, across the tiled white-water silo
-      {name:"under the wire",look:["hc","none"],dur:6,ok:()=>true,
-        at:(t)=>{if(t>6)return null;const u=ease(t/6);return [mix(53,43,u),0.6,9.1,9,mix(0.25,-0.1,u),1.45];}},
       // follow the feed: fan pump, up, over the hall wall and down into the headbox header
       {name:"fan pump to headbox",look:["none","airy"],dur:8,ok:()=>true,
         at:(t)=>{if(t>8)return null;const P=[[47.6,1.5,-9.3],[47.6,7.6,-9.3],[47.6,7.6,3.6],[60.75,7.6,3.6],[60.75,2.2,5.85]],L=[0];for(let i=1;i<P.length;i++)L.push(L[i-1]+Math.hypot(P[i][0]-P[i-1][0],P[i][1]-P[i-1][1],P[i][2]-P[i-1][2]));
           const d=ease(t/8)*L[L.length-1];let i=1;while(i<L.length-1&&L[i]<d)i++;const k=(d-L[i-1])/(L[i]-L[i-1]),a=P[i-1],b=P[i];
           return [mix(a[0],b[0],k),mix(a[1],b[1],k),mix(a[2],b[2],k),17,mix(-0.95,-0.5,t/8),1.0];}},
-      // tight on the dryer can heads turning, manways sweeping round
-      {name:"can heads",look:["hc","none"],dur:5,ok:()=>S.pm==="run",
-        at:(t)=>{if(t>5)return null;const u=ease(t/5);return [mix(23,17.5,u),2.5,12.4,9,0.15,1.43];}},
       // the L/B gauge, then out to the jet and the wavy wet line on the wire
-      {name:"slice and wet line",look:["airy","none"],dur:7,ok:()=>S.pm==="run",
-        at:(t)=>{if(t>7)return null;const u=ease(Math.max(0,(t-2.2)/4.8)),g=G3.SLC?G3.SLC.geo():{wet:50};
+      {name:"slice and wet line",look:["airy","none"],dur:9,ok:()=>S.pm==="run",
+        at:(t)=>{if(t>9)return null;const u=ease(Math.max(0,(t-2.6)/6.4)),g=G3.SLC?G3.SLC.geo():{wet:50};
           return [mix(57.15,mix(g.wet,54,0.35),u),mix(2.95,2.9,u),mix(12.4,9.1,u),mix(5.5,15,u),mix(0.08,0.55,u),mix(1.5,0.92,u)];}},
       // v4.1: the land around the mill (environment and mill seed) ----------------------------------------------
       // a long approach from a random direction over the land, settling on the mill
       {name:{rural:"over the forest",urban:"over the rooftops",desert:"across the flats",swamp:"over the bayou"}[SITE.env]||"approach",look:["dusk","airy"],dur:18,ok:()=>true,
-        start:()=>({a:Math.random()*6.28}),
-        at:(t,mv)=>{if(t>18)return null;const u=ease(t/18),a=mv.st.a;return [mix(14+Math.sin(a)*190,14,u),mix(10,4,u),mix(5+Math.cos(a)*190,5,u),mix(330,175,u),a,mix(1.08,0.9,u)];}},
+        start:()=>{const W=SITE.env==="rural"&&U("deepwood");return {a:W?Math.atan2(W[0]-14,W[1]-5)+(Math.random()-0.5)*0.5:Math.random()*6.28};},
+        // (v6.4: starts 110 m out and nearer the ground, so the far edge of the map stays out of frame)
+        at:(t,mv)=>{if(t>18)return null;const u=ease(t/18),a=mv.st.a;return [mix(14+Math.sin(a)*110,14,u),mix(6,4,u),mix(5+Math.cos(a)*110,5,u),mix(150,175,u),a,mix(1.3,0.95,u)];}},
       // a slow half-orbit of one of the landmarks the seed placed (water tower, solar farm, lake, village, barge dock...)
-      {name:"landmark",look:["gold","none"],dur:15,ok:()=>!!(G3.scenery&&G3.scenery.util&&Object.keys(G3.scenery.util).length),
-        start:()=>{const U=G3.scenery.util,ks=Object.keys(U),k=ks[Math.floor(Math.random()*ks.length)],[x,z,h]=U[k];return {x,z,h,th:Math.atan2(x-14,z-5)+(Math.random()-0.5)*1.2,k};},
-        at:(t,mv)=>{if(t>15)return null;const s=mv.st,u=ease(t/15);return [s.x,Math.min(12,s.h*0.35),s.z,Math.max(45,s.h*2.2+30),s.th+u*1.3,mix(1.0,0.92,u)];}},
+      {name:"landmark",look:["gold","none"],dur:15,ok:()=>landmarks().length>0,
+        start:()=>{const U=G3.scenery.util,ks=landmarks(),k=ks[Math.floor(Math.random()*ks.length)],[x,z,h]=U[k];return {x,z,h,th:Math.atan2(x-14,z-5)+(Math.random()-0.5)*1.2,k};},
+        at:(t,mv)=>{if(t>15)return null;const s=mv.st,u=ease(t/15);return [s.x,Math.min(18,s.h*0.45),s.z,Math.max(45,s.h*1.6+30),s.th+u*1.1,mix(1.22,1.14,u)];}},   // (v6.4: lower and closer: from above a mast was a red line over trees)
       // the highway bridge over the river, trucks coming and going
       {name:SITE.env==="urban"?"seafront boulevard":"highway bridge",look:["bw","dusk"],dur:12,ok:()=>true,start:()=>({d:Math.random()<0.5?1:-1}),
-        at:(t,mv)=>{if(t>12)return null;const u=ease(t/12),rv=riverAt(-158),rz=RIVERS[SITE.env].kind==="sea"?rv[0]+rv[1]+12:rv[0];return [-158,2,mix(rz-18*mv.st.d,rz+6*mv.st.d,u),mix(80,62,u),Math.PI/2+0.55*mv.st.d-0.5*mv.st.d*u,mix(1.02,0.96,u)];}},
+        at:(t,mv)=>{if(t>12)return null;const u=ease(t/12),rv=riverAt(-158),rz=RIVERS[SITE.env].kind==="sea"?rv[0]+rv[1]+12:rv[0];if(RIVERS[SITE.env].kind==="sea")return [-158,2,mix(rz-18*mv.st.d,rz+6*mv.st.d,u),mix(80,62,u),Math.PI/2+0.55*mv.st.d-0.5*mv.st.d*u,mix(1.02,0.96,u)];
+          // (v6.4) low over the water west of the bridge, looking upstream under it toward the mill
+          return [mix(-150,-130,u),3,rz,mix(70,58,u),-Math.PI/2+0.25*mv.st.d,mix(1.38,1.32,u)];}},
       // low along the water: the far bank, the intake and the outfall, out past the mill
       {name:{urban:"seafront run",desert:"canal run",swamp:"bayou drift"}[SITE.env]||"river drift",look:["airy","gold"],dur:16,ok:()=>true,
         at:(t)=>{if(t>16)return null;const u=ease(t/16),x=mix(-120,70,u),rv=riverAt(x);return [x,0,RIVERS[SITE.env].kind==="sea"?rv[0]+rv[1]-10:rv[0]+6,mix(60,52,u),Math.PI+0.35-0.5*u,mix(1.08,1.0,u)];}},
@@ -9989,9 +10007,8 @@ function no3D(){G3.ok=false;$("no3d").hidden=false;$("no3d-retry").onclick=()=>l
         at:(t,mv)=>{if(t>16)return null;const u=ease(t/16);return [14,20,5,mix(300,255,u),mv.st.th+u*0.5,1.14];}}]:
         SITE.env==="desert"?[{name:"mesa horizon",look:["gold","dusk"],dur:14,ok:()=>true,start:()=>({th:Math.random()*6.28}),
         at:(t,mv)=>{if(t>14)return null;const u=ease(t/14);return [14,12,5,mix(420,300,u),mv.st.th+u*0.15,mix(1.3,1.2,u)];}}]:
-        // (v17: the bayou mist is gone; low along a slough instead, toward the mill on its dry pad)
-        [{name:"bayou channels",look:["airy","gold"],dur:14,ok:()=>true,
-        at:(t)=>{if(t>14)return null;const u=ease(t/14);return [mix(-235,-200,u),1.5,mix(-200,-110,u),mix(60,90,u),Math.PI+0.5-0.3*u,mix(1.3,1.18,u)];}}]),
+        // (v6.4: the swamp's own shot, bayou channels, was empty land: gone)
+        []),
       // v17: landscape and mill together, map by map: from each site's own places, looking back at the mill, or starting on
       // a place and pulling back until the mill is in the frame
       ...siteShots()];
@@ -10774,7 +10791,7 @@ function no3D(){G3.ok=false;$("no3d").hidden=false;$("no3d-retry").onclick=()=>l
                 r.P.up.rotation.z=-0.12+Math.sin(ph)*0.05;if(r.lasso){r.P.A[1].a.rotation.z=2.9;r.P.A[1].a.rotation.x=-0.2;r.lasso.rotation.y=u*9;}
                 for(let a=0;a<2.4;a+=0.2){const [px,pz]=at(r,u-a);if(px<X0+2)L.push([a+((u*5)%0.2),px+1.2,H(px,pz)+0.3+a*0.3,pz]);}}
               dust.show(L,2.4,0.5,2.2);return u<END;},
-            focus(){return [CX,7,Z0-1,60,0.35,1.36];},stop(){rs.forEach(r=>r.root.visible=false);dust.hide();}};},
+            focus(){const v=rs.filter(r=>r.root.visible),c=v[Math.floor(v.length/2)]||rs[1];return [CX,7,Z0-1,60,0.35,1.36,c.root.position.x,1.6,c.root.position.z,30];},stop(){rs.forEach(r=>r.root.visible=false);dust.hide();}};},
         // v4.2.3 valley: a held shot of the mill from the far bank of the river. Bigfoot wades across below the mill, away
         // from the camera, rings spreading from his legs; mid-river he turns his head and shoulders to look back straight
         // down the lens without breaking stride (the famous film), then wades on. Two-tone fur, crest, brow, face, long
@@ -10801,7 +10818,7 @@ function no3D(){G3.ok=false;$("no3d").hidden=false;$("no3d-retry").onclick=()=>l
               // wading: rings spread from his legs
               let n=0;for(let a=0;a<2.4&&n<RG.length;a+=0.5){const a2=a+(u%0.5),zz=Z0+(u-a2)*V,q=(zz-zc)/hw;if(Math.abs(q)>0.97||u-a2<0)continue;const m=RG[n++],k=a2/2.4;
                 m.visible=true;m.position.set(x,0.08,zz);m.scale.set(0.6+k*3,0.6+k*3,1);m.material.opacity=0.5*(1-k);}for(;n<RG.length;n++)RG[n].visible=false;return u<END;},
-            focus(){return [CAM[0],6,CAM[1],CAM[2],CAM[3],CAM[4]];},stop(){g.visible=false;RG.forEach(m=>m.visible=false);}};},
+            focus(){return [CAM[0],6,CAM[1],CAM[2],CAM[3],CAM[4],root.position.x,1.6,root.position.z,24];},stop(){g.visible=false;RG.forEach(m=>m.visible=false);}};},
         // v4.2.3 city: a held shot of the waterfront mill from out in the bay. A harbour tug steams past in the foreground
         // towing a barge of bales toward the mill's quay: black hull and red boot-top, tyre fenders and a bow pudding,
         // white deckhouse and wheelhouse, mast and radar, buff stack with a red band puffing smoke, a deckhand aft, a
@@ -10829,14 +10846,15 @@ function no3D(){G3.ok=false;$("no3d").hidden=false;$("no3d-retry").onclick=()=>l
               wk[0].position.set(x+11,0.07,ZT);wk[0].scale.set(14,4.5,1);wk[1].position.set(x-5.4,0.07,ZT);wk[1].scale.set(1.6,4.2,1);wk[2].position.set(bx+12,0.07,ZT+0.4);wk[2].scale.set(10,6.5,1);
               const sm=[];for(let a=0;a<4.5;a+=0.5){const a2=a+(u%0.5),px=x+0.7+a2*V*0.85+a2*0.8;sm.push([a2,px,3.7+a2*1.4,ZT-a2*0.5]);}smoke.show(sm,4.5,0.5,2.6);
               walkP(dh,0,0);dh.A[0].a.rotation.z=0.5+Math.sin(u*2)*0.2;dh.hd.rotation.y=-0.8;return u<END;},
-            focus(){return [X0-22,7,ZT+6,64,Math.PI+0.3,1.36];},stop(){[tug,bg,line,...wk].forEach(o=>o.visible=false);smoke.hide();}};},
+            focus(){return [X0-22,7,ZT+6,64,Math.PI+0.3,1.36,tug.position.x-5,1.5,tug.position.z,40];},stop(){[tug,bg,line,...wk].forEach(o=>o.visible=false);smoke.hide();}};},
         // v4.2.2 (an Amos Moses nod): an operator in a hard hat and hi-vis walks the canal bank east of the intake with a
         // sample bottle, crouches at the edge and reaches down to fill it. A gator has been gliding in, eyes and back
-        // just breaking the surface; it lunges, jaws wide, and snaps off the operator's right hand (no gore, just gone),
-        // then death-rolls and sinks with it. The operator sits down hard, stares at the stump, throws the other arm up, gets up
-        // and runs off along the bank waving it; the bottle bobs off on the water. The gator surfaces again out in the canal, burps
-        // and slides away, while a one-armed Cajun poles his pirogue past up the canal. Everything is a function of the
-        // scene clock, so any moment can be shown (G3.sightSeek, tests and screenshots).
+        // just breaking the surface; it lunges, jaws wide, and snaps the bottle out of the operator's hand, then
+        // death-rolls and sinks with it (v6.4: the bottle, not the hand: no injuries in the game). The operator sits down
+        // hard, stares at the empty hand, throws an arm up, gets up and runs off along the bank waving it; the bottle pops
+        // back up and bobs off on the water. The gator surfaces again out in the canal, burps and slides away, while a
+        // Cajun poles his pirogue past up the canal. Everything is a function of the scene clock, so any moment can be
+        // shown (G3.sightSeek, tests and screenshots).
         swamp:()=>{const [zc,hw]=riverAt(50),bank=zc+hw,EX=48,EZ=bank+1.2,ez=k=>k<=0?0:k>=1?1:k*k*(3-2*k),cl=(t,a,b)=>ez((t-a)/(b-a)),
             bx=(p,w,h,d,x,y,z,k,hex)=>{const m=new THREE.Mesh(cubeG,am(k,hex));m.scale.set(w,h,d);m.position.set(x,y,z);m.castShadow=true;p.add(m);return m;},
             piv=(p,x,y,z)=>{const g=new THREE.Group();g.position.set(x,y,z);p.add(g);return g;},
@@ -10867,15 +10885,15 @@ function no3D(){G3.ok=false;$("no3d").hidden=false;$("no3d-retry").onclick=()=>l
           [-1,1].forEach(s=>{ball(uj,0.055,1.72,0.14,s*0.1,"gatorD",GD);for(let i=0;i<8;i++)bx(uj,0.05,0.1,0.05,0.15+i*0.2,-0.07,s*(i<6?0.25:0.19),"teeth",TE);});
           const lj=piv(hd2,0.62,-0.1,0);bx(lj,1.5,0.13,0.52,0.75,-0.04,0,"gatorL",GL);bx(lj,0.42,0.12,0.42,1.58,-0.04,0,"gatorL",GL);bx(lj,1.45,0.02,0.36,0.76,0.035,0,"gum","#c98473");
           [-1,1].forEach(s=>{for(let i=0;i<7;i++)bx(lj,0.05,0.09,0.05,0.25+i*0.2,0.07,s*(i<5?0.22:0.17),"teeth",TE);});
-          const mh=bx(uj,0.12,0.14,0.12,1.0,-0.12,0.08,"skin",SK);mh.visible=false;const bite=piv(uj,1.0,-0.1,0);
+          const mh=bx(uj,0.11,0.22,0.11,1.0,-0.12,0.08,"bottle","#eef2f4");mh.visible=false;const bite=piv(uj,1.0,-0.1,0);
           const tail=[];{let tp=gb;[0.82,0.66,0.52,0.38,0.25].forEach((w,k)=>{const s=piv(tp,k?-0.74:-1.9,0,0);bx(s,0.8,0.36-k*0.05,w,-0.4,0,0,"gator",GB);bx(s,0.78,0.08,w*0.9,-0.4,-0.17+k*0.02,0,"gatorL",GL);
               if(k<3)[-1,1].forEach(z=>bx(s,0.3,0.15,0.07,-0.4,0.22-k*0.03,z*w*0.24,"gatorD",GD));else bx(s,0.34,0.15,0.07,-0.4,0.18-k*0.03,0,"gatorD",GD);tail.push(s);tp=s;});}
           const legs=[[1.15,-1],[1.15,1],[-1.15,-1],[-1.15,1]].map(([lx,s])=>{const l=piv(gb,lx,-0.1,s*0.5);bx(l,0.24,0.2,0.5,0,0,s*0.22,"gatorS",GS);const f=piv(l,0,0,s*0.46);
             bx(f,0.2,0.34,0.2,0,-0.15,0,"gatorS",GS);bx(f,0.36,0.06,0.3,0.06,-0.32,0,"gatorS",GS);for(let q=0;q<3;q++)bx(f,0.12,0.04,0.05,0.28,-0.33,(q-1)*0.1,"gatorL",GL);l.userData.s=s;return l;});
           gt.scale.setScalar(0.55);gt.visible=false;G3.liveMark&&G3.liveMark(gt,3.0,0.2);
-          // ---- the one-armed Cajun in his pirogue, poling past on the far side ----
+          // ---- a Cajun in his pirogue, poling past on the far side ----
           const pr=grp();bx(pr,3.6,0.3,0.78,0,0.1,0,"pirogue","#6b4a2f");[-1,1].forEach(s=>{const m=bx(pr,0.56,0.3,0.56,s*1.8,0.1,0,"pirogue","#6b4a2f");m.rotation.y=Math.PI/4;m.scale.set(0.56,0.3,0.56);const n=bx(pr,0.3,0.26,0.3,s*2.1,0.14,0,"pirogue","#6b4a2f");n.rotation.y=Math.PI/4;});bx(pr,3.3,0.06,0.62,0,0.27,0,"pirogueIn","#4a3424");
-          const cj=figure(pr,"#7a6a4a","#3a2a20","wide",0.28);cj.a[0].visible=false;
+          const cj=figure(pr,"#7a6a4a","#3a2a20","wide",0.28);
           const pole=new THREE.Mesh(CYLG,am("pole","#8a6a4a"));pole.scale.set(0.04,5.2,0.04);const pp=piv(pr,0.1,1.15,0.38);pp.add(pole);pole.position.y=-1.6;pr.visible=false;G3.liveMark&&(G3.liveMark(pr,2.8,1.2),G3.liveMark(op,1.4,1.0));
           // ---- water: rings and droplets ----
           const RM=[...Array(7)].map(()=>{const m=new THREE.Mesh(new THREE.RingGeometry(0.8,1,28),new THREE.MeshBasicMaterial({color:0xffffff,transparent:true,opacity:0.5,depthWrite:false}));m.rotation.x=-Math.PI/2;m.visible=false;scene.add(m);return m;});
@@ -10897,7 +10915,7 @@ function no3D(){G3.ok=false;$("no3d").hidden=false;$("no3d-retry").onclick=()=>l
               hip.position.y=0.18+0.74*g;z=EZ+0.9;L.forEach(l=>{l.rotation.z=1.5*(1-g)+0.9*g*(1-cl(t,19.8,20.2));K(l).z=-1.6*g*(1-cl(t,19.8,20.2));});up.rotation.z=0.35*(1-g)+0.15*g;
               x=EX+dx*3.4*T;z+=dz*3.4*T;if(T>0){const w=Math.sin(T*11);L[0].rotation.z=w*0.8;L[1].rotation.z=-w*0.8;K(L[0]).z=-Math.max(0,-w)*1.2;K(L[1]).z=-Math.max(0,w)*1.2;al.rotation.z=-w*0.6;hip.position.y=0.92+Math.abs(w)*0.06;}
               ar.rotation.z=2.35*(1-g)+(2.95+Math.sin(t*9)*0.3)*g;hd.rotation.y=-0.45*(1-g);}
-            op.position.set(x,H(x,z),z);A[1].hand.visible=t<13.9;bt.visible=t<13.9;op.visible=t<29.5;}
+            op.position.set(x,H(x,z),z);A[1].hand.visible=true;bt.visible=t<13.9;op.visible=t<29.5;}
           function poseGator(t){gt.visible=true;gt.rotation.set(0,-Math.PI/2,0);gb.rotation.set(0,0,0);hd2.rotation.set(0,0,0);uj.rotation.z=0;lj.rotation.z=0;mh.visible=false;
             const tuck=k=>legs.forEach(l=>{l.rotation.y=-l.userData.s*1.0*k;});tail.forEach((s,k)=>{s.rotation.y=Math.sin(t*2.2-k*0.7)*(t<13.2||t>20?0.25:0.1);});
             if(t<13.2){const z=bank-18+13.4*ez(Math.min(1,t/12)),x=EX+0.3+Math.sin(t*0.4)*0.6*(1-cl(t,10,12));gt.position.set(x,-0.1,z);tuck(1);return;}
@@ -10917,8 +10935,8 @@ function no3D(){G3.ok=false;$("no3d").hidden=false;$("no3d-retry").onclick=()=>l
             for(;n<RM.length;n++)RM[n].visible=false;}
           function drops(t){const o=fit?fit.h:null;for(const d of DR){const dt=t-d.t0;if(!o||dt<0||dt>1.2){d.m.visible=false;continue;}const y=0.1+d.v[1]*dt-4.9*dt*dt;if(y<0){d.m.visible=false;continue;}
               d.m.visible=true;d.m.position.set(o.x+d.v[0]*dt,y,o.z-1+d.v[2]*dt);}}
-          function bottle(t){if(t<13.9||!fit){fb.visible=false;return;}fb.visible=t<31;const k=cl(t,13.9,14.3),T=Math.max(0,t-14.3);
-            fb.position.set(fit.h.x+T*0.18+Math.sin(t*1.3)*0.05,fit.h.y*(1-k)+0.03*k+Math.sin(t*2.6)*0.03*k,fit.h.z-0.4*k-T*0.12);fb.rotation.set(1.3*k+Math.sin(t*1.7)*0.2*k,0,0.4*k);}
+          function bottle(t){if(t<17.3||!fit){fb.visible=false;return;}fb.visible=t<31;const k=cl(t,17.3,17.8),T=Math.max(0,t-17.8);   // (v6.4: pops back up after the roll)
+            fb.position.set(P0.x+T*0.18+Math.sin(t*1.3)*0.05,-0.4*(1-k)+0.03*k+Math.sin(t*2.6)*0.03*k,P0.z+1-T*0.12);fb.rotation.set(1.3*k+Math.sin(t*1.7)*0.2*k,0,0.4*k);}
           function pirogue(t){pr.visible=true;const x=EX-6-20*t/11.5,z=zc+hw*0.1;pr.position.set(x,0.02+Math.sin(t*1.4)*0.04,z);pr.rotation.y=Math.PI;pr.rotation.x=Math.sin(t*1.1)*0.02;
             const c=Math.sin(t*1.2);pp.rotation.z=-0.35+c*0.35;cj.a[1].rotation.z=-0.5+c*0.4;}
           // v4.2.2 t4: the cut is short (11.5 s). The scene clock (tau) maps onto the choreography's clock (t): it opens with the
@@ -10927,7 +10945,7 @@ function no3D(){G3.ok=false;$("no3d").hidden=false;$("no3d-retry").onclick=()=>l
           return {t:0,tick(rdt){const u=(this.t+=rdt),t=tm(u);if(u<0.3)fit=null;poseOp(t);poseGator(t);rings(t);drops(t);bottle(t);pirogue(u);return u<END;},
             // a wide, low shot of the mill from across the canal, held still: the bite happens small in the lower third,
             // as if it were caught in frame by chance ([x,y,z,dist,orbit angle,elevation]: the zen camera keeps the angle)
-            focus(){return [EX-2,7,bank+3,FOC_R,2.25,1.36];},
+            focus(){const o=op.visible?op.position:null;return [EX-2,7,bank+3,FOC_R,2.25,1.36,o?o.x:EX,0.9,o?o.z-0.6:bank-1.5,16];},
             stop(){op.visible=gt.visible=fb.visible=pr.visible=false;RM.forEach(m=>m.visible=false);DR.forEach(d=>d.m.visible=false);fit=null;}};}};
       // (built once at start-up, hidden, so nothing is created or compiled when one happens; rewound each time)
       /* v6.1 t18: each figure of a sight is drawn as a live cut-out (42f): a picture of the model as it stands, retaken 8
@@ -11194,8 +11212,13 @@ function no3D(){G3.ok=false;$("no3d").hidden=false;$("no3d-retry").onclick=()=>l
    const freeMode=on=>{if(!CUT.ok||CUT.free===on)return;CUT.free=on;const all=CUT.actors.concat(LIVE);
      for(const a of all){a.o.children.forEach(c=>{c.matrixWorldAutoUpdate=on;});hide(a,!on);a.cell=null;a.hid=!on;}
      sets.forEach(S2=>{S2.card.count=S2.shad.count=0;});};
-   G3.onCamSwap=on=>freeMode(on);
-   G3.cutTick=now=>{if(!CUT.ok)return;if(CUT.free){if(now>scanT){scanT=now+2000;try{rescan();for(const a of CUT.actors.concat(LIVE))if(a.hid){a.o.children.forEach(c=>{c.matrixWorldAutoUpdate=true;});hide(a,false);a.hid=false;}}catch(e){}}return;}
+   let farT=0;G3.onCamSwap=on=>{if(!on)for(const a of CUT.actors.concat(LIVE))a.zfar=false;freeMode(on);};
+   G3.cutTick=now=>{if(!CUT.ok)return;if(CUT.free){if(now>scanT){scanT=now+2000;try{rescan();for(const a of CUT.actors.concat(LIVE))if(a.hid){a.o.children.forEach(c=>{c.matrixWorldAutoUpdate=true;});hide(a,false);a.hid=false;a.zfar=false;}}catch(e){}}
+     /* v6.4: in zen's free camera every person and vehicle part is its own draw (~300 draws in a whole-site shot); the
+        ones over 130 m from the camera are a few pixels, so they are left out (and their matrices not updated) */
+     if(now>farT){farT=now+250;const cp=camera.position,F2=130*130;for(const a of CUT.actors.concat(LIVE)){const e=a.o.matrixWorld.elements,dx=e[12]-cp.x,dy=e[13]-cp.y,dz=e[14]-cp.z,far=dx*dx+dy*dy+dz*dz>F2;
+       if(far!==!!a.zfar){a.zfar=far;hide(a,far);a.hid=false;a.o.children.forEach(c=>{c.matrixWorldAutoUpdate=!far;});if(!far)a.o.updateMatrixWorld(true);}}}
+     return;}
      if(now>scanT){scanT=now+2000;try{rescan();}catch(e){CUT.errs++;}}
      if(!CUT.burst)CUT.burst=now+6000;   // (the first seconds take pictures faster: everyone needs one)
      let n=0;const capN=now<CUT.burst?CAP_BURST:CAP_N;
@@ -11406,36 +11429,45 @@ function no3D(){G3.ok=false;$("no3d").hidden=false;$("no3d-retry").onclick=()=>l
       // v17: a rare sight (cowboys, Bigfoot, the tug, the gator) takes over the camera: cut to it and follow it, slowly
       // circling, until it is over
       {const f=G3.sightFocus&&G3.sightFocus();if(f&&!(Z.mv&&Z.mv.m.sight)){Z.who=null;Z.goto=null;Z.t=0;Z.len=999;document.body.dataset.zs=Math.random()<0.5?"none":"gold";
-        Z.mv={t:0,st:{th:-0.4+(Math.random()-0.5)*1.2},m:{name:"rare sight",sight:1,at:(t,mv,rdt2)=>{const q=G3.sightFocus&&G3.sightFocus();if(!q)return null;if(q[4]!=null)return [q[0],q[1],q[2],q[3],q[4]+Math.sin(t*0.12)*0.1,q[5]];mv.st.th+=rdt2*0.05;return [q[0],q[1],q[2],q[3],mv.st.th,1.02];}}};}}
-      const POI=[[-14,5,300,-0.2],[20,9,120,-0.5],[24,-10,95,0.4],[-20,14,80,-1.2],[-25,-18,110,0.9],[20,-40,120,2.6],[70,-10,110,-2.2],[-60,10,130,0.1],[10,9,170,2.9],[40,10,70,0.6],[-36,24,90,-0.8]];
+        Z.mv={t:0,st:{th:-0.4+(Math.random()-0.5)*1.2},m:{name:"rare sight",sight:1,at:(t,mv,rdt2)=>{const q=G3.sightFocus&&G3.sightFocus();if(!q)return null;if(q[4]!=null){
+          // v6.4: zen holds close on the subject (it was 60 m out: a few pixels on a phone), from the sight's own angle
+          if(q[6]!=null){const k=Math.min(1,rdt2*(mv.st.s?1.5:99));mv.st.s=mv.st.s||[q[6],q[7],q[8]];for(let i=0;i<3;i++)mv.st.s[i]+=(q[6+i]-mv.st.s[i])*k;
+            return [mv.st.s[0],mv.st.s[1],mv.st.s[2],q[9],q[4]+Math.sin(t*0.12)*0.08,Math.min(q[5],1.32)];}
+          return [q[0],q[1],q[2],q[3],q[4]+Math.sin(t*0.12)*0.1,q[5]];}mv.st.th+=rdt2*0.05;return [q[0],q[1],q[2],q[3],mv.st.th,1.02];}}};}}
+      // [x, z, distance, orbit angle, elevation] (v6.4: each its own elevation, low to near top-down; all were 0.8, the iso game view again)
+      const POI=[[-14,5,300,-0.2,0.75],[20,9,120,-0.5,1.18],[24,-10,95,0.4,0.55],[-20,14,80,-1.2,1.22],[-25,-18,110,0.9,0.9],[20,-40,120,2.6,1.25],[70,-10,110,-2.2,0.65],[-60,10,130,0.1,1.12],[10,9,170,2.9,0.42],[40,10,70,0.6,1.26],[-36,24,90,-0.8,0.95]];
       // v3.3: each shot sets its own length (Z.len); free shots run 6-10 s, scripted shots run their own course
-      if(Z.t>(Z.len||10)){Z.t=0;Z.len=6+Math.random()*4;Z.mv=null;const ops=G3.followable?G3.followable().filter(w=>w.visible):[];
+      if(Z.t>(Z.len||10)){Z.t=0;Z.len=8+Math.random()*3;   // (v6.4: free shots 8-11 s, was 6-10: short holds between hard cuts felt like flashes)
+        Z.mv=null;const ops=G3.followable?G3.followable().filter(w=>w.visible):[];
         const MV=zenMoves();
         // v17: once every everyday scripted shot of this map has played (or 15 minutes have passed and most have), zen moves
         // on to the next map: the page reloads on it and goes straight back into zen (?zen=1). ?zenstay keeps one map.
         {const need=MV.filter(m=>!m.rare).map(m=>m.name),D=Z.done||(Z.done=new Set());
           if(G3.zenNextMap&&!/[?&]zenstay/.test(location.search)&&(need.every(n=>D.has(n))||(Z.age>900&&D.size>=need.length*0.75))){G3.zenNextMap();Z.t=-1e9;}}
         if(!Z.goto&&Math.random()<0.55){const H=Z.hist||(Z.hist=[]);let ok=MV.filter(m=>{try{return m.ok();}catch(e){return false;}});
-          // v3.2.0 variety: skip shots played recently; if every ready shot is recent, take the one played longest ago
-          const fresh=ok.filter(m=>!H.includes(m.name));if(fresh.length)ok=fresh;else if(ok.length)ok=[ok.reduce((a,b)=>H.indexOf(a.name)<=H.indexOf(b.name)?a:b)];
+          // v6.4 shuffle bag: every everyday shot of the map plays once before any repeats (the old random pick with an
+          // 8-shot memory hit the 15-minute map cut with ~10% unseen). Rare shots join whenever they are ready and not recent.
+          if(!Z.bag||!Z.bag.length){const ev=MV.filter(m=>!m.rare);Z.bag=ev.filter(m=>!(Z.done&&Z.done.has(m.name))).map(m=>m.name);if(!Z.bag.length)Z.bag=ev.map(m=>m.name);}
+          const inBag=ok.filter(m=>(!m.rare&&Z.bag.includes(m.name))||(m.rare&&!H.includes(m.name)));
+          if(inBag.length)ok=inBag;else{const fresh=ok.filter(m=>!H.includes(m.name));if(fresh.length)ok=fresh;else if(ok.length)ok=[ok.reduce((a,b)=>H.indexOf(a.name)<=H.indexOf(b.name)?a:b)];}
           if(ok.length){let tw=0;ok.forEach(m=>tw+=m.rare?2.5:1);let r=Math.random()*tw,m=ok[0];for(const c of ok){r-=c.rare?2.5:1;if(r<=0){m=c;break;}}
-            Z.mv={m,t:0,st:m.start?m.start():null};Z.who=null;Z.len=m.dur+1;H.push(m.name);Z.done&&Z.done.add(m.name);while(H.length>Math.min(8,MV.length-4))H.shift();G3.zenLast=m.name;
+            Z.mv={m,t:0,st:m.start?m.start():null};Z.who=null;Z.len=m.dur+1;H.push(m.name);if(Z.bag){const bi=Z.bag.indexOf(m.name);if(bi>=0)Z.bag.splice(bi,1);}Z.done&&Z.done.add(m.name);while(H.length>Math.min(8,MV.length-4))H.shift();G3.zenLast=m.name;
             // v3.2.0: each shot has its own paired looks
             const lk=m.look||["none"],cur2=document.body.dataset.zs,pl2=lk.length>1?lk.filter(l=>l!==cur2):lk;document.body.dataset.zs=pl2[Math.floor(Math.random()*pl2.length)];}}
         if(Z.mv){}
         else if(Z.goto){const g2=Z.goto;Z.goto=null;Z.who=null;const from={x:target.x,y:target.y,z:target.z,r:cam.r,th:cam.th,ph:cam.ph};
           Z.len=11;Z.mv={t:0,st:null,m:{name:"upset swoop",at:(t)=>{if(t>10)return null;const u=ease(t/4);return [mix(from.x,g2[0],u),mix(from.y,0,u),mix(from.z,g2[1],u),mix(from.r,55,u),from.th+(lerpAng(from.th,-0.3,1)-from.th)*u,mix(from.ph,0.85,u)];}}};}
-        else if(ops.length&&Math.random()<0.45){Z.who=ops[Math.floor(Math.random()*ops.length)];Z.fo=Z.len;Z.r=34+Math.random()*14;Z.th=(Math.random()-0.5)*2.4;Z.tg.set(Z.who.position.x,0,Z.who.position.z);}
-        else{Z.who=null;Z.i=(Z.i+1+Math.floor(Math.random()*(POI.length-1)))%POI.length;const q=POI[Z.i];Z.tg.set(q[0],0,q[1]);Z.r=q[2];Z.th=q[3];}
+        else if(ops.length&&Math.random()<0.45){Z.who=ops[Math.floor(Math.random()*ops.length)];Z.fo=Z.len;Z.ph=1.02;Z.r=34+Math.random()*14;Z.th=(Math.random()-0.5)*2.4;Z.tg.set(Z.who.position.x,0,Z.who.position.z);}
+        else{Z.who=null;Z.i=(Z.i+1+Math.floor(Math.random()*(POI.length-1)))%POI.length;const q=POI[Z.i];Z.tg.set(q[0],0,q[1]);Z.r=q[2];Z.th=q[3];Z.ph=q[4];}
         // hard cut: jump the camera straight to the new shot
-        target.copy(Z.tg);cam.r=Z.r;cam.th=Z.th;cam.ph=0.8;
+        target.copy(Z.tg);cam.r=Z.r;cam.th=Z.th;cam.ph=Z.ph||0.8;
         // v3.2.0: a scripted shot keeps its own paired look; free shots (viewpoints, operator follows) pick at random
         if(!Z.mv){const looks=["dusk","gold","airy","hc","bw"],cur=document.body.dataset.zs,pool=looks.filter(l=>l!==cur);
           document.body.dataset.zs=Math.random()<0.5?"none":pool[Math.floor(Math.random()*pool.length)];}}
       Z.dis=(Z.dis??40)-rdt;if(Z.dis<=0){Z.dis=60+Math.random()*60;const safe=["fogfan","flares","runner"].filter(id=>!S.inc.some(i=>i.id===id));if(safe.length){const id=safe[Math.floor(Math.random()*safe.length)];trigger(id,true);Z.goto=G3.spotOf(id);Z.t=99;}}
       if(Z.who){Z.fo-=rdt;if(Z.fo<=0){Z.who=null;Z.r=Math.min(140,Z.r*2.6);}else{const p=Z.who.position;Z.tg.set(p.x,0,p.z);}}
       if(Z.mv){goal=null;Z.mv.t+=rdt;const f=Z.mv.m.at(Z.mv.t,Z.mv,rdt);if(!f){Z.mv=null;Z.t=99;Z.len=0;}else{target.set(f[0],f[1],f[2]);cam.r=f[3];cam.th=f[4];cam.ph=f[5];Z.tg.copy(target);Z.r=f[3];Z.th=f[4];}}
-      else{const k=Math.min(1,rdt*(Z.who?0.6:0.1));goal=null;target.lerp(Z.tg,k);cam.r+=(Z.r-cam.r)*k*0.5;cam.th=lerpAng(cam.th,Z.th+Math.sin(now/26000)*0.3,k*0.5)+rdt*0.015;cam.ph+=(0.8+0.08*Math.sin(now/31000)-cam.ph)*k;}}
+      else{const k=Math.min(1,rdt*(Z.who?0.6:0.1));goal=null;target.lerp(Z.tg,k);cam.r+=(Z.r-cam.r)*k*0.5;cam.th=lerpAng(cam.th,Z.th+Math.sin(now/26000)*0.3,k*0.5)+rdt*0.015;cam.ph+=((Z.ph||0.8)+0.06*Math.sin(now/31000)-cam.ph)*k;}}
     pm("zen / camera shots");
     if(!G3.zenNextMap)G3.zenNextMap=()=>{const order=["rural","urban","desert","swamp"],nx=order[(order.indexOf(SITE.env)+1)%order.length],q=new URLSearchParams(location.search);
       q.set("env",nx);q.delete("mill");q.set("zen","1");diag("zen: on to "+nx);document.body.classList.add("zen-out");setTimeout(()=>{location.href=location.pathname+"?"+q.toString()+location.hash;},900);};G3.padTick(rdt);if(G3.tutTick)G3.tutTick(now);G3.labelIdle(now);upUpdate(now);pm("upgrade visuals");fxUpdate(rdt,now);if(G3.civTick)G3.civTick(rdt,now);pm("upset effects + particles");
@@ -12677,7 +12709,7 @@ function camPullOn(){try{return localStorage.getItem("paper-mill-campull")!=="of
    (within 700 ms per tap) and a list of every version's one-line note pops up, newest first. The list comes from
    VERSION-NOTES.txt at the repo root: build.py swaps it in for the placeholder below, so adding a line there with each
    release keeps the pop-up current (build.py warns when APP_VER has no line). ---------- */
-{const VNOTES=[["4.0.0", "Graphics Overhaul: 60 FPS on iPhone, ~80% Fewer Draw Calls"], ["4.0.1", "Performance Follow-Up, Show FPS Option and Device Autotest"], ["4.0.2", "Economy Rebalance and Smoother Upset Labels"], ["4.1.0", "Four Environments, Seeded Mills, Bottlenecks, Graphics Tiers and Site Music"], ["4.2.0", "New Site Maps, Rare Sights, Zen Map Rotation and Economics Fixes"], ["4.2.0-s", "Save and Continue Season (Test)"], ["4.2.1", "Save/Continue, Settings Panel and Outage Speed Fix"], ["4.2.2-t", "Bayou Gator Sight Reworked (Test)"], ["4.2.2-t2", "Gator Bass Riff (Test)"], ["4.2.2-t3", "Gator Riff Removed, Wide Camera Framing (Test)"], ["4.2.2-t4", "Gator Scene Shortened and Widened (Test)"], ["4.2.2-t5", "One Rare Sight per Map in Zen (Test)"], ["4.2.2", "Rare Sights Reworked, Bird Strike Upset, Mill Report Tab"], ["4.2.3-t", "Cowboys, Bigfoot and Tugboat Sights Reworked (Test)"], ["4.2.3", "Laptop Battery Saving (Default GPU)"], ["4.2.4", "$25M Goal Removed and Quick Fixes"], ["4.2.5", "Random Bottleneck per Season and Accessibility Improvements"], ["4.3.0-t1", "Survival Mode (Test)"], ["4.4.0-t1", "Mill Leaders in Survival (Test)"], ["4.4.0-t2", "Painted Leader Portraits (Test)"], ["4.4.0-t3", "Leader Redesign, 4-Day Waves and Fixes (Test)"], ["5.0.0", "Survival Mode Release with Mill Leaders"], ["5.0.1", "Results Dialog and Game Speed Fixes"], ["5.0.2", "Report Card Label Fixes"], ["5.0.3", "Survival Playtest Fixes (Test)"], ["5.0.4", "Playtest Review: Dot Auto-Fix and Shipping Fix (Test)"], ["5.0.5", "Polish Rounds from Survival Playtests"], ["5.0.6", "Survival QA Fixes, Opt-In Outage Watch, Leaderboard Filters"], ["5.1.0", "Civics Meters and Leaders in Seasons (Test)"], ["5.4.0", "Title Screen, Civics in the World and Dark Mode"], ["5.4.1", "Loading Splash, No Old-Menu Flash"], ["5.4.2", "Graphics Quality on the Title Screen"], ["5.5.0", "Performance Improvements"], ["5.6.0", "Fiddly Knobs, DCS/QCS Screens and Knobs View"], ["5.7.0", "Catching Failures Early: Tells, Daily Rounds, Vibration Report, Outage Prep"], ["5.7.1", "Bottom Menu Reorder, Settings Back on the Right"], ["5.7.2", "Help Page with Game Guide and Glossary"], ["5.7.3", "Bare Graphics Mode for Weak Phones"], ["5.7.4", "Version Notes Pop-Up (Triple-Tap the Version Number)"], ["6.1.0-t1", "Isometric Paper View: Fixed Camera, Cut-Outs, Drop Shadows, Cutaways, Season Palettes (Test)"], ["6.1.0-t2", "Iso Round 2: Cut-Outs Always Paper, GPU Pictures, Stop-Motion World, Fewer Draws (Test)"], ["6.1.0-t3", "Iso Round 3: iPhone Batching, Instanced Cans, Sign Atlas, Lighter Frames (Test)"], ["6.1.0-t4", "Iso Fixes: Operators and Fork-Trucks Back, Less Stutter (Test)"], ["6.1.0-t5", "Cut-Out Edge Artifact Fixed (Test)"], ["6.1.0-t6", "Iso Optimization: Hidden Objects Cost Nothing, Lighter Moving Batches (Test)"], ["6.1.0-t7", "Iso Triangle Cut: Paper-Card Trees, Flat Ground, Hidden Faces Gone, Plain Boxes (Test)"], ["6.1.0-t8", "Paper Palette: 40 Colours, Flat Surfaces, Paper Grain, Fewer Draws (Test)"], ["6.1.0-t9", "Reel Fix: Growing Reel Draws Again (Test)"], ["6.1.0-t10", "Draw Cut 2: Colour in the Matrix, Merged Roofs, Uploads on Change, Culling Fix, Parked Groups (Test)"], ["6.1.0-t11", "QA Fixes: Cut-Outs Never Drawn as Loose 3D Parts, Fallback Shows 3D, Roofs On or Off per Zoom Step (Test)"], ["6.1.0-t12", "Paper Smoke, Blinking Lights, Stronger Seasons, Sharper Phones, Instanced Upsets, Pictures at Start (Test)"], ["6.1.0-t13", "Paper Effects: Flames, Child-Made Tornado, Lamp Cones, Flags, Paper Water, Visible Weather (Test)"], ["6.1.0-t14", "Paper Upsets: Cut-Out Props, Paper Pigeon, Paper Sparks, Steam, Fireworks, Ice and Flood (Test)"], ["6.1.0-t15", "Beaver Reworked as One Smaller Cut-Out (Test)"], ["6.1.0-t16", "Paper Props Dim at Night, Labels Never Overlap, Fewer Cut-Out Pictures (Test)"], ["6.1.0-t17", "Bird on the Power Lines Cut-Scene Plays When Set Off From the Upsets List (Test)"], ["6.1.0-t18", "Zen Close-Ups Fixed, Rare Sights as Paper Cut-Outs, Tilt-Shift Diorama Look (Test)"], ["6.1.0-t19", "Narrower Tilt-Shift Band, Winder Trash Can Out of the Broke Hole (Test)"], ["6.1.0-t20", "Balance: Rounds Pay More, Capacity and Maintenance Upgrades Re-Priced"], ["6.1.0", "Paper Diorama: Isometric Paper Art Style, Cut-Out People and Upsets, Tilt-Shift, Rounds Pay More, Upgrades Re-Priced"], ["6.1.1", "Phone Fixes: Gentler Tilt-Shift on Tall Screens, Cut-Out People No Longer Blank on iPhone"], ["6.1.2", "iPhone: Cut-Out Self-Test Retries, People Keep Their Colours in the 3D Fallback"], ["6.1.3", "Broke Hole by the Winder Looks Like a Floor Opening (Was a Black Square)"], ["6.1.4", "Tilt-Shift Removed"], ["6.2.0", "Zen Free Camera: Perspective Zen Shots, 3D People in Zen, Cleaner River Water"], ["6.3.0-f1", "Process Flow Overview (Test): Inputs, Mill Areas and Outputs for the Mill Day, in Settings"], ["6.3.0-f2", "Process Flow: the Game Keeps Running While It's Open (Test)"], ["6.3.0", "Process Flow Overview: Inputs, Mill Areas and Outputs for the Mill Day (Settings > View)"]];
+{const VNOTES=[["4.0.0", "Graphics Overhaul: 60 FPS on iPhone, ~80% Fewer Draw Calls"], ["4.0.1", "Performance Follow-Up, Show FPS Option and Device Autotest"], ["4.0.2", "Economy Rebalance and Smoother Upset Labels"], ["4.1.0", "Four Environments, Seeded Mills, Bottlenecks, Graphics Tiers and Site Music"], ["4.2.0", "New Site Maps, Rare Sights, Zen Map Rotation and Economics Fixes"], ["4.2.0-s", "Save and Continue Season (Test)"], ["4.2.1", "Save/Continue, Settings Panel and Outage Speed Fix"], ["4.2.2-t", "Bayou Gator Sight Reworked (Test)"], ["4.2.2-t2", "Gator Bass Riff (Test)"], ["4.2.2-t3", "Gator Riff Removed, Wide Camera Framing (Test)"], ["4.2.2-t4", "Gator Scene Shortened and Widened (Test)"], ["4.2.2-t5", "One Rare Sight per Map in Zen (Test)"], ["4.2.2", "Rare Sights Reworked, Bird Strike Upset, Mill Report Tab"], ["4.2.3-t", "Cowboys, Bigfoot and Tugboat Sights Reworked (Test)"], ["4.2.3", "Laptop Battery Saving (Default GPU)"], ["4.2.4", "$25M Goal Removed and Quick Fixes"], ["4.2.5", "Random Bottleneck per Season and Accessibility Improvements"], ["4.3.0-t1", "Survival Mode (Test)"], ["4.4.0-t1", "Mill Leaders in Survival (Test)"], ["4.4.0-t2", "Painted Leader Portraits (Test)"], ["4.4.0-t3", "Leader Redesign, 4-Day Waves and Fixes (Test)"], ["5.0.0", "Survival Mode Release with Mill Leaders"], ["5.0.1", "Results Dialog and Game Speed Fixes"], ["5.0.2", "Report Card Label Fixes"], ["5.0.3", "Survival Playtest Fixes (Test)"], ["5.0.4", "Playtest Review: Dot Auto-Fix and Shipping Fix (Test)"], ["5.0.5", "Polish Rounds from Survival Playtests"], ["5.0.6", "Survival QA Fixes, Opt-In Outage Watch, Leaderboard Filters"], ["5.1.0", "Civics Meters and Leaders in Seasons (Test)"], ["5.4.0", "Title Screen, Civics in the World and Dark Mode"], ["5.4.1", "Loading Splash, No Old-Menu Flash"], ["5.4.2", "Graphics Quality on the Title Screen"], ["5.5.0", "Performance Improvements"], ["5.6.0", "Fiddly Knobs, DCS/QCS Screens and Knobs View"], ["5.7.0", "Catching Failures Early: Tells, Daily Rounds, Vibration Report, Outage Prep"], ["5.7.1", "Bottom Menu Reorder, Settings Back on the Right"], ["5.7.2", "Help Page with Game Guide and Glossary"], ["5.7.3", "Bare Graphics Mode for Weak Phones"], ["5.7.4", "Version Notes Pop-Up (Triple-Tap the Version Number)"], ["6.1.0-t1", "Isometric Paper View: Fixed Camera, Cut-Outs, Drop Shadows, Cutaways, Season Palettes (Test)"], ["6.1.0-t2", "Iso Round 2: Cut-Outs Always Paper, GPU Pictures, Stop-Motion World, Fewer Draws (Test)"], ["6.1.0-t3", "Iso Round 3: iPhone Batching, Instanced Cans, Sign Atlas, Lighter Frames (Test)"], ["6.1.0-t4", "Iso Fixes: Operators and Fork-Trucks Back, Less Stutter (Test)"], ["6.1.0-t5", "Cut-Out Edge Artifact Fixed (Test)"], ["6.1.0-t6", "Iso Optimization: Hidden Objects Cost Nothing, Lighter Moving Batches (Test)"], ["6.1.0-t7", "Iso Triangle Cut: Paper-Card Trees, Flat Ground, Hidden Faces Gone, Plain Boxes (Test)"], ["6.1.0-t8", "Paper Palette: 40 Colours, Flat Surfaces, Paper Grain, Fewer Draws (Test)"], ["6.1.0-t9", "Reel Fix: Growing Reel Draws Again (Test)"], ["6.1.0-t10", "Draw Cut 2: Colour in the Matrix, Merged Roofs, Uploads on Change, Culling Fix, Parked Groups (Test)"], ["6.1.0-t11", "QA Fixes: Cut-Outs Never Drawn as Loose 3D Parts, Fallback Shows 3D, Roofs On or Off per Zoom Step (Test)"], ["6.1.0-t12", "Paper Smoke, Blinking Lights, Stronger Seasons, Sharper Phones, Instanced Upsets, Pictures at Start (Test)"], ["6.1.0-t13", "Paper Effects: Flames, Child-Made Tornado, Lamp Cones, Flags, Paper Water, Visible Weather (Test)"], ["6.1.0-t14", "Paper Upsets: Cut-Out Props, Paper Pigeon, Paper Sparks, Steam, Fireworks, Ice and Flood (Test)"], ["6.1.0-t15", "Beaver Reworked as One Smaller Cut-Out (Test)"], ["6.1.0-t16", "Paper Props Dim at Night, Labels Never Overlap, Fewer Cut-Out Pictures (Test)"], ["6.1.0-t17", "Bird on the Power Lines Cut-Scene Plays When Set Off From the Upsets List (Test)"], ["6.1.0-t18", "Zen Close-Ups Fixed, Rare Sights as Paper Cut-Outs, Tilt-Shift Diorama Look (Test)"], ["6.1.0-t19", "Narrower Tilt-Shift Band, Winder Trash Can Out of the Broke Hole (Test)"], ["6.1.0-t20", "Balance: Rounds Pay More, Capacity and Maintenance Upgrades Re-Priced"], ["6.1.0", "Paper Diorama: Isometric Paper Art Style, Cut-Out People and Upsets, Tilt-Shift, Rounds Pay More, Upgrades Re-Priced"], ["6.1.1", "Phone Fixes: Gentler Tilt-Shift on Tall Screens, Cut-Out People No Longer Blank on iPhone"], ["6.1.2", "iPhone: Cut-Out Self-Test Retries, People Keep Their Colours in the 3D Fallback"], ["6.1.3", "Broke Hole by the Winder Looks Like a Floor Opening (Was a Black Square)"], ["6.1.4", "Tilt-Shift Removed"], ["6.2.0", "Zen Free Camera: Perspective Zen Shots, 3D People in Zen, Cleaner River Water"], ["6.3.0-f1", "Process Flow Overview (Test): Inputs, Mill Areas and Outputs for the Mill Day, in Settings"], ["6.3.0-f2", "Process Flow: the Game Keeps Running While It's Open (Test)"], ["6.3.0", "Process Flow Overview: Inputs, Mill Areas and Outputs for the Mill Day (Settings > View)"], ["6.4.0-zs1", "Zen Shots Review (Test): Shuffle-Bag Shot Order, Landscape Shots Rebuilt, Close Rare Sights"]];
   let ov=null,held=false;
   function render(){
     const cur=APP_VER.replace(/^v/i,""),rows=VNOTES.slice().reverse().map(([v,n])=>

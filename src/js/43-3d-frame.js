@@ -173,36 +173,45 @@
       // v17: a rare sight (cowboys, Bigfoot, the tug, the gator) takes over the camera: cut to it and follow it, slowly
       // circling, until it is over
       {const f=G3.sightFocus&&G3.sightFocus();if(f&&!(Z.mv&&Z.mv.m.sight)){Z.who=null;Z.goto=null;Z.t=0;Z.len=999;document.body.dataset.zs=Math.random()<0.5?"none":"gold";
-        Z.mv={t:0,st:{th:-0.4+(Math.random()-0.5)*1.2},m:{name:"rare sight",sight:1,at:(t,mv,rdt2)=>{const q=G3.sightFocus&&G3.sightFocus();if(!q)return null;if(q[4]!=null)return [q[0],q[1],q[2],q[3],q[4]+Math.sin(t*0.12)*0.1,q[5]];mv.st.th+=rdt2*0.05;return [q[0],q[1],q[2],q[3],mv.st.th,1.02];}}};}}
-      const POI=[[-14,5,300,-0.2],[20,9,120,-0.5],[24,-10,95,0.4],[-20,14,80,-1.2],[-25,-18,110,0.9],[20,-40,120,2.6],[70,-10,110,-2.2],[-60,10,130,0.1],[10,9,170,2.9],[40,10,70,0.6],[-36,24,90,-0.8]];
+        Z.mv={t:0,st:{th:-0.4+(Math.random()-0.5)*1.2},m:{name:"rare sight",sight:1,at:(t,mv,rdt2)=>{const q=G3.sightFocus&&G3.sightFocus();if(!q)return null;if(q[4]!=null){
+          // v6.4: zen holds close on the subject (it was 60 m out: a few pixels on a phone), from the sight's own angle
+          if(q[6]!=null){const k=Math.min(1,rdt2*(mv.st.s?1.5:99));mv.st.s=mv.st.s||[q[6],q[7],q[8]];for(let i=0;i<3;i++)mv.st.s[i]+=(q[6+i]-mv.st.s[i])*k;
+            return [mv.st.s[0],mv.st.s[1],mv.st.s[2],q[9],q[4]+Math.sin(t*0.12)*0.08,Math.min(q[5],1.32)];}
+          return [q[0],q[1],q[2],q[3],q[4]+Math.sin(t*0.12)*0.1,q[5]];}mv.st.th+=rdt2*0.05;return [q[0],q[1],q[2],q[3],mv.st.th,1.02];}}};}}
+      // [x, z, distance, orbit angle, elevation] (v6.4: each its own elevation, low to near top-down; all were 0.8, the iso game view again)
+      const POI=[[-14,5,300,-0.2,0.75],[20,9,120,-0.5,1.18],[24,-10,95,0.4,0.55],[-20,14,80,-1.2,1.22],[-25,-18,110,0.9,0.9],[20,-40,120,2.6,1.25],[70,-10,110,-2.2,0.65],[-60,10,130,0.1,1.12],[10,9,170,2.9,0.42],[40,10,70,0.6,1.26],[-36,24,90,-0.8,0.95]];
       // v3.3: each shot sets its own length (Z.len); free shots run 6-10 s, scripted shots run their own course
-      if(Z.t>(Z.len||10)){Z.t=0;Z.len=6+Math.random()*4;Z.mv=null;const ops=G3.followable?G3.followable().filter(w=>w.visible):[];
+      if(Z.t>(Z.len||10)){Z.t=0;Z.len=8+Math.random()*3;   // (v6.4: free shots 8-11 s, was 6-10: short holds between hard cuts felt like flashes)
+        Z.mv=null;const ops=G3.followable?G3.followable().filter(w=>w.visible):[];
         const MV=zenMoves();
         // v17: once every everyday scripted shot of this map has played (or 15 minutes have passed and most have), zen moves
         // on to the next map: the page reloads on it and goes straight back into zen (?zen=1). ?zenstay keeps one map.
         {const need=MV.filter(m=>!m.rare).map(m=>m.name),D=Z.done||(Z.done=new Set());
           if(G3.zenNextMap&&!/[?&]zenstay/.test(location.search)&&(need.every(n=>D.has(n))||(Z.age>900&&D.size>=need.length*0.75))){G3.zenNextMap();Z.t=-1e9;}}
         if(!Z.goto&&Math.random()<0.55){const H=Z.hist||(Z.hist=[]);let ok=MV.filter(m=>{try{return m.ok();}catch(e){return false;}});
-          // v3.2.0 variety: skip shots played recently; if every ready shot is recent, take the one played longest ago
-          const fresh=ok.filter(m=>!H.includes(m.name));if(fresh.length)ok=fresh;else if(ok.length)ok=[ok.reduce((a,b)=>H.indexOf(a.name)<=H.indexOf(b.name)?a:b)];
+          // v6.4 shuffle bag: every everyday shot of the map plays once before any repeats (the old random pick with an
+          // 8-shot memory hit the 15-minute map cut with ~10% unseen). Rare shots join whenever they are ready and not recent.
+          if(!Z.bag||!Z.bag.length){const ev=MV.filter(m=>!m.rare);Z.bag=ev.filter(m=>!(Z.done&&Z.done.has(m.name))).map(m=>m.name);if(!Z.bag.length)Z.bag=ev.map(m=>m.name);}
+          const inBag=ok.filter(m=>(!m.rare&&Z.bag.includes(m.name))||(m.rare&&!H.includes(m.name)));
+          if(inBag.length)ok=inBag;else{const fresh=ok.filter(m=>!H.includes(m.name));if(fresh.length)ok=fresh;else if(ok.length)ok=[ok.reduce((a,b)=>H.indexOf(a.name)<=H.indexOf(b.name)?a:b)];}
           if(ok.length){let tw=0;ok.forEach(m=>tw+=m.rare?2.5:1);let r=Math.random()*tw,m=ok[0];for(const c of ok){r-=c.rare?2.5:1;if(r<=0){m=c;break;}}
-            Z.mv={m,t:0,st:m.start?m.start():null};Z.who=null;Z.len=m.dur+1;H.push(m.name);Z.done&&Z.done.add(m.name);while(H.length>Math.min(8,MV.length-4))H.shift();G3.zenLast=m.name;
+            Z.mv={m,t:0,st:m.start?m.start():null};Z.who=null;Z.len=m.dur+1;H.push(m.name);if(Z.bag){const bi=Z.bag.indexOf(m.name);if(bi>=0)Z.bag.splice(bi,1);}Z.done&&Z.done.add(m.name);while(H.length>Math.min(8,MV.length-4))H.shift();G3.zenLast=m.name;
             // v3.2.0: each shot has its own paired looks
             const lk=m.look||["none"],cur2=document.body.dataset.zs,pl2=lk.length>1?lk.filter(l=>l!==cur2):lk;document.body.dataset.zs=pl2[Math.floor(Math.random()*pl2.length)];}}
         if(Z.mv){}
         else if(Z.goto){const g2=Z.goto;Z.goto=null;Z.who=null;const from={x:target.x,y:target.y,z:target.z,r:cam.r,th:cam.th,ph:cam.ph};
           Z.len=11;Z.mv={t:0,st:null,m:{name:"upset swoop",at:(t)=>{if(t>10)return null;const u=ease(t/4);return [mix(from.x,g2[0],u),mix(from.y,0,u),mix(from.z,g2[1],u),mix(from.r,55,u),from.th+(lerpAng(from.th,-0.3,1)-from.th)*u,mix(from.ph,0.85,u)];}}};}
-        else if(ops.length&&Math.random()<0.45){Z.who=ops[Math.floor(Math.random()*ops.length)];Z.fo=Z.len;Z.r=34+Math.random()*14;Z.th=(Math.random()-0.5)*2.4;Z.tg.set(Z.who.position.x,0,Z.who.position.z);}
-        else{Z.who=null;Z.i=(Z.i+1+Math.floor(Math.random()*(POI.length-1)))%POI.length;const q=POI[Z.i];Z.tg.set(q[0],0,q[1]);Z.r=q[2];Z.th=q[3];}
+        else if(ops.length&&Math.random()<0.45){Z.who=ops[Math.floor(Math.random()*ops.length)];Z.fo=Z.len;Z.ph=1.02;Z.r=34+Math.random()*14;Z.th=(Math.random()-0.5)*2.4;Z.tg.set(Z.who.position.x,0,Z.who.position.z);}
+        else{Z.who=null;Z.i=(Z.i+1+Math.floor(Math.random()*(POI.length-1)))%POI.length;const q=POI[Z.i];Z.tg.set(q[0],0,q[1]);Z.r=q[2];Z.th=q[3];Z.ph=q[4];}
         // hard cut: jump the camera straight to the new shot
-        target.copy(Z.tg);cam.r=Z.r;cam.th=Z.th;cam.ph=0.8;
+        target.copy(Z.tg);cam.r=Z.r;cam.th=Z.th;cam.ph=Z.ph||0.8;
         // v3.2.0: a scripted shot keeps its own paired look; free shots (viewpoints, operator follows) pick at random
         if(!Z.mv){const looks=["dusk","gold","airy","hc","bw"],cur=document.body.dataset.zs,pool=looks.filter(l=>l!==cur);
           document.body.dataset.zs=Math.random()<0.5?"none":pool[Math.floor(Math.random()*pool.length)];}}
       Z.dis=(Z.dis??40)-rdt;if(Z.dis<=0){Z.dis=60+Math.random()*60;const safe=["fogfan","flares","runner"].filter(id=>!S.inc.some(i=>i.id===id));if(safe.length){const id=safe[Math.floor(Math.random()*safe.length)];trigger(id,true);Z.goto=G3.spotOf(id);Z.t=99;}}
       if(Z.who){Z.fo-=rdt;if(Z.fo<=0){Z.who=null;Z.r=Math.min(140,Z.r*2.6);}else{const p=Z.who.position;Z.tg.set(p.x,0,p.z);}}
       if(Z.mv){goal=null;Z.mv.t+=rdt;const f=Z.mv.m.at(Z.mv.t,Z.mv,rdt);if(!f){Z.mv=null;Z.t=99;Z.len=0;}else{target.set(f[0],f[1],f[2]);cam.r=f[3];cam.th=f[4];cam.ph=f[5];Z.tg.copy(target);Z.r=f[3];Z.th=f[4];}}
-      else{const k=Math.min(1,rdt*(Z.who?0.6:0.1));goal=null;target.lerp(Z.tg,k);cam.r+=(Z.r-cam.r)*k*0.5;cam.th=lerpAng(cam.th,Z.th+Math.sin(now/26000)*0.3,k*0.5)+rdt*0.015;cam.ph+=(0.8+0.08*Math.sin(now/31000)-cam.ph)*k;}}
+      else{const k=Math.min(1,rdt*(Z.who?0.6:0.1));goal=null;target.lerp(Z.tg,k);cam.r+=(Z.r-cam.r)*k*0.5;cam.th=lerpAng(cam.th,Z.th+Math.sin(now/26000)*0.3,k*0.5)+rdt*0.015;cam.ph+=((Z.ph||0.8)+0.06*Math.sin(now/31000)-cam.ph)*k;}}
     pm("zen / camera shots");
     if(!G3.zenNextMap)G3.zenNextMap=()=>{const order=["rural","urban","desert","swamp"],nx=order[(order.indexOf(SITE.env)+1)%order.length],q=new URLSearchParams(location.search);
       q.set("env",nx);q.delete("mill");q.set("zen","1");diag("zen: on to "+nx);document.body.classList.add("zen-out");setTimeout(()=>{location.href=location.pathname+"?"+q.toString()+location.hash;},900);};G3.padTick(rdt);if(G3.tutTick)G3.tutTick(now);G3.labelIdle(now);upUpdate(now);pm("upgrade visuals");fxUpdate(rdt,now);if(G3.civTick)G3.civTick(rdt,now);pm("upset effects + particles");

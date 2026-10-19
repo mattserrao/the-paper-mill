@@ -1,6 +1,28 @@
 # Changelog
 
 
+
+## v6.4.0-zs1 (2026-10-18): zen shot review (test branch test/v6.4-zenshots)
+All four maps reviewed shot by shot under the free zen camera; fixes:
+- **Shot order:** a shuffle bag: every everyday shot of a map plays once before any repeats (the old random pick with an
+  8-shot memory hit the 15-minute map cut with about 10% of shots unseen). Free shots run 8-11 s (were 6-10).
+- **"From" shots:** the camera starts low behind the place, with the place in the foreground and the mill beyond (they
+  were 120 m+ out and high, the place rarely in frame, and the desert ones near-identical).
+- **Per-map lists:** rural adds past the chip pile; city adds from the beach; desert swaps the stock pond for the windpump
+  and drops ranch view and mesa to the mill (neither showed its place); swamp drops dry pad edge and bayou channels (empty
+  land) and adds past the moored barge.
+- **Generic shots:** the approach starts inside the map (it opened past the edge), and over the forest heads in from the deep
+  wood; highway bridge is low over the river, bridge in the foreground, mill beyond; landmark only picks places with height
+  that no map shot already features; lake and pond reveals start edge-on; clarifier to river comes from the west (it ended
+  inside the fog-fan plume); under the wire and can heads removed (wall and octagonal cans up close); litter check picks a
+  side with a clear line to the can (it clipped into the office wall); slice and wet line 9 s, litter check 8 s.
+- **Viewpoints:** the 11 free viewpoints each have their own elevation (all were 46 degrees, the iso game view again).
+- **Rare sights:** zen holds close on the subject (16-40 m, was 60 m: a few pixels on a phone), from the sight's own angle.
+- **Swamp sight:** the gator snaps the sample bottle out of the operator's hand, not the hand (no injuries in the game);
+  the bottle pops back up after the roll; the Cajun has both arms.
+- **Performance:** in zen, people and vehicles over 130 m from the camera are left out (each 3D part is its own draw).
+  Whole-site shots drop from about 380-410 draws to about 110-120 (desktop, software rendering).
+
 ## v6.3.0 (2026-10-18): process flow overview released to main (was test builds f1 and f2)
 - Settings → View → Process flow: today's (or yesterday's) mill day as inputs, areas and outputs, live while the game runs.
 - Regression: smoke, save, settings, help (22/22), determinism and tools/pflowcheck.py pass. survcheck's two fails
