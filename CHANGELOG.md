@@ -1,8 +1,8 @@
 # Changelog
 
 
-## v6.6.0-t1 (2026-10-19): orders and bales (test)
-Built on test/v6.6-orders. Three realism gaps from the business and process review. All three run in Season, Survival
+## v6.6.0 (2026-10-19): orders and bales
+Built on test/v6.6-orders (as 6.6.0-t1), merged into main. Three realism gaps from the business and process review. All three run in Season, Survival
 and Free Play; Zen keeps the old behaviour. New code: `src/js/05b-orders.js` (model) and `src/js/51h-orders-ui.js` (panel).
 - **Order book.** Each production campaign books customer orders for 92% of its tons (6–36 rolls each, eight invented
   customers), each due when its rolls should be made plus 0.8–2.2 days. An outbound truck now docks only with a job: the
