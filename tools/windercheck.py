@@ -44,7 +44,11 @@ with sync_playwright() as pw:
     mx = max(s["stored"] for s in seen)
     ok("four reels stored before the machine backs up", mx >= 4, mx)
     ok("machine stops on spools only with storage full", all(s["stored"] >= 4 for s in seen if s["pm"] == "spools"))
-    ok("stands match the sim at rest", seen[-1]["vis"] == seen[-1]["stored"], seen[-1])
+    # (the crane animates in real frame time: under load it can still be carrying the last reel, so let it finish first)
+    try: pg.wait_for_function("()=>{const C=__PM.G3.CR;return !C.j&&!C.jobs.length}", timeout=30000, polling=250)
+    except Exception: pass
+    rest = pg.evaluate("()=>({stored:Math.max(0,Math.ceil(__PM.S.winderBuf/100-0.005)-1),vis:(__PM.G3.parkedN??-1),pm:__PM.S.pm})")
+    ok("stands match the sim at rest", rest["vis"] == rest["stored"], rest)
     pg.wait_for_timeout(5000)
     r = pg.evaluate("()=>({stored:Math.max(0,Math.ceil(__PM.S.winderBuf/100-0.005)-1),vis:(__PM.G3.parkedN??-1)})")
     ok("stands match the sim after the crane settles", r["vis"] == r["stored"], r)
@@ -59,7 +63,7 @@ with sync_playwright() as pw:
         if r["stored"] <= 1 and k > 4: break
         if k % 8 == 0 and r["vis"] != r["stored"]: print("  (crane catching up)", r)
     print("drain:", json.dumps(drained[-1]))
-    ok("storage drains after the winder is fixed", drained[-1]["stored"] < mx)
+    ok("storage drains after the winder is fixed", min(d["stored"] for d in drained) < mx, [d["stored"] for d in drained][-12:])   # (it refills while the machine runs, so the low point, not the last reading)
     if shot:
         pg.evaluate("()=>{__PM.C.simSpeed=1;__PM.G3.camSet([-21,8,16,-0.9,0.7,1])}")
         r0 = pg.evaluate("()=>__PM.S.tot.rolls")

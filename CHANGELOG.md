@@ -7,8 +7,12 @@ refining energy (kWh/t) with freeness-driven drainage and a ring crush spec, the
 premium, the basis weight loop with QCS dead time, the headbox at 0.8% with fan pump dilution, the white water silo,
 machine water to the silo, seal pit and save-all, bale water in the pulper, cleaner and screen pressure drop costing
 yield, and Report → Control room → Relationship map. Checks: `tools/relcheck.py`, `tools/relmapcheck.py`.
-Not balanced yet. `tools/windercheck.py` and `tools/survcheck.py` fail the same way on v6.7.1 (out of date, not caused
-by this release).
+Not balanced yet.
+- **Out-of-date checks updated (tools only, after the release):** `tools/survcheck.py` now runs with civics off (its
+  meters move wages, bills, prices and costs, and its choices hold the outages; `civcheck.py` covers civics), answers
+  civics choices while stepping, checks the leader's own price push (`leadPrice`), Chip's pay settlements at +10% (QA2),
+  seasons with a leader (v5.1), and waits a full UI tick before reading the bar. `tools/windercheck.py` waits for the
+  crane to finish before comparing the storage stands, and judges draining by the low point. Both pass under load.
 
 ## v6.8.0-t2 (2026-10-19): relationship map in the control room (test)
 On test/v6.8-relations, not merged. New code: `src/js/50j-relmap.js`. Check: `tools/relmapcheck.py` (15 checks).

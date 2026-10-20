@@ -26,7 +26,7 @@ shots = pathlib.Path(sys.argv[2]) if len(sys.argv) > 2 else None
 if shots: shots.mkdir(parents=True, exist_ok=True)
 if "window.__PM=" not in html:
     i = html.rindex("})();", 0, html.rindex("</script>")); html = html[:i] + HOOK + html[i:]
-html = html.replace("window.__PM={", "window.__PM={get P(){return P},get SURV(){return SURV},get OUT(){return OUT},energyCost:()=>energyCost(),upsetMul:()=>upsetMul(),get LEAD(){return LEAD},leadFixReady:()=>leadFixReady(),leadFix:id=>leadFix(id),leadFixable:id=>leadFixable(id),freq:id=>freqMul(id),wage:()=>leadWage(),", 1)
+html = html.replace("window.__PM={", "window.__PM={leadPrice:()=>leadPrice(),civBill:()=>civBill(),get P(){return P},get SURV(){return SURV},get OUT(){return OUT},energyCost:()=>energyCost(),upsetMul:()=>upsetMul(),get LEAD(){return LEAD},leadFixReady:()=>leadFixReady(),leadFix:id=>leadFix(id),leadFixable:id=>leadFixable(id),freq:id=>freqMul(id),wage:()=>leadWage(),", 1)
 fails = []
 def ok(name, cond, got=None):
     print(("ok   " if cond else "FAIL ") + name + ("" if cond else f"   got: {json.dumps(got)[:300]}"))
@@ -34,11 +34,11 @@ def ok(name, cond, got=None):
 
 # the sim, stepped by hand with the 3D view off; stops when `until` (a JS expression over S, P) is true. Event cards are declined.
 RUNTO = r"""([until,max])=>{const P=__PM,S=P.S,G=P.G3,f=new Function('S','P','return '+until);let n=0;P.setRunning(false);
-  while(n<max&&!f(S,P)){G.on=false;P.step(0.25);n++;const o=S.cards.open;if(o&&o.c){document.getElementById('deal-no').click();}P.setRunning(false);}
+  while(n<max&&!f(S,P)){G.on=false;P.step(0.25);n++;const o=S.cards.open;if(o&&o.c){document.getElementById('deal-no').click();}if(o&&o.civ){const b=document.querySelector('#civOv:not([hidden]) .civbtn');if(b)b.click();}P.setRunning(false);}   // (v5.1: a civics choice holds the outages until it is answered)
   G.on=true;return {n,t:S.t,day:Math.floor(S.t/1440)+1,k:S.outg.k,cash:Math.round(S.cash),open:S.cards.open?Object.keys(S.cards.open).join():null};}"""
 STATE = r"""()=>{const P=__PM,S=P.S,t=id=>{const e=document.getElementById(id);return e?e.textContent:null};
   return {surv:!!(S.season&&S.season.surv),on:!!(S.season&&S.season.on),k:S.outg&&S.outg.k,t:S.t,cash:Math.round(S.cash),costMul:P.P.costMul,occ:P.P.occPrice,occBase:P.P.blendP+S.plan.mkt+P.P.siteOcc,energy:P.energyCost(),up:P.upsetMul(),
-    lead:S.lead?JSON.parse(JSON.stringify(S.lead)):null,price:P.P.priceAdd,rep:P.P.repairMul,face:!document.getElementById('svL').hidden,fixTxt:t('svF'),
+    lead:S.lead?JSON.parse(JSON.stringify(S.lead)):null,price:P.P.priceAdd,lp:P.leadPrice(),rep:P.P.repairMul,face:!document.getElementById('svL').hidden,fixTxt:t('svF'),
     chip:!document.getElementById('survChip').hidden,svW:t('svW'),svU:t('svU'),svC:t('svC'),clock:t('v2clockL'),lock:document.body.classList.contains('season-lock')};}"""
 
 with sync_playwright() as pw:
@@ -54,6 +54,9 @@ with sync_playwright() as pw:
         pg.goto("http://bench.local/"); pg.wait_for_function("window.__PM&&window.__B&&__B.first!==null", timeout=300000); pg.wait_for_timeout(500)
     # the top bar and the chip are written by the UI tick (every 0.2 s of frames): let a few frames pass before reading them
     def state():
+        # (the bar's labels redraw on the UI tick, every 0.4 s of frame time; under software rendering a frame can take
+        # 100-300 ms, so give it well over one tick before reading them)
+        pg.wait_for_timeout(1200)
         pg.evaluate("()=>new Promise(r=>{let n=0;const f=()=>{if(++n>=6)r();else requestAnimationFrame(f);};requestAnimationFrame(f);})"); return pg.evaluate(STATE)
     def shot(n):
         if shots: pg.screenshot(path=str(shots / (n + ".png")))
@@ -70,10 +73,13 @@ with sync_playwright() as pw:
     r = pick("v2surv", "chip")
     ok("picker: four leaders, Start waits for a pick, then names the leader", r["n"] == 4 and r["dis"] and r["sel"] is None and "Chip" in r["go"], r)
     pg.wait_for_function("__PM.S.season&&__PM.S.season.on", timeout=300000, polling=200); pg.wait_for_timeout(700); pg.evaluate("()=>__PM.setRunning(false)")
+    # (civics, v5.1, is switched off for this run: its meters move wages, repair bills, prices and costs, and its choices
+    # hold the outages, so the exact wave and leader numbers below would drift with them. tools/civcheck.py covers civics)
+    pg.evaluate("()=>{__PM.S.civ=null;}")
     s = state()
     ok("start: a survival run, wave 1, locked like a season", s["surv"] and s["on"] and s["k"] == 1 and s["lock"], s)
     ok("start: Chip is the leader, nothing built, his face on the chip", s["lead"] and s["lead"]["id"] == "chip" and not any(s["lead"]["st"].values()) and s["face"], s)
-    price1 = s["price"]
+    price1 = s["lp"]   # (the leader's own price push: priceAdd also moves with the civics Economy meter since v5.1)
     ok("start: chip shows wave 1 at ×1.00", s["chip"] and s["svW"] == "Wave 1" and s["svU"] == "×1.00" and s["svC"] == "×1.00", s)
     ok("start: clock says Wave 1 · Day 1", s["clock"] == "Wave 1 · Day 1", s)
     ok("start: costs are exactly ×1", s["costMul"] == 1, s)
@@ -98,7 +104,7 @@ with sync_playwright() as pw:
     # 3 wave 2: applied and shown
     pg.wait_for_timeout(500); s = state()
     ok("wave 2: costs ×1.10 applied", abs(s["costMul"] - 1.1) < 1e-9, s)
-    ok("wave 2: Chip's sales push is part of the mill (+$7/t)", s["lead"]["st"]["sales"] == 1 and s["lead"]["st"]["fibre"] == 0 and abs(s["price"] - price1 - 7) < 1e-9, s)
+    ok("wave 2: Chip's sales push is part of the mill (+$7/t)", s["lead"]["st"]["sales"] == 1 and s["lead"]["st"]["fibre"] == 0 and abs(s["lp"] - price1 - 7) < 1e-9, s)
     ok("wave 2: chip shows ×1.20 and ×1.10", s["svW"] == "Wave 2" and s["svU"] == "×1.20" and s["svC"] == "×1.10", s)
     ok("wave 2: upset rate is base 0.5 × 1.20 after the first week (wave 2 set)", abs(pg.evaluate("()=>{const S=__PM.S,t=S.t;S.t=8*1440;const v=__PM.upsetMul();S.t=t;return v;}") - 0.6) < 1e-9)
     cash2 = s["cash"]; t2 = s["t"]
@@ -111,7 +117,7 @@ with sync_playwright() as pw:
     pg.evaluate("()=>document.getElementById('v2cont').click()")
     pg.wait_for_function("__PM.S.season&&__PM.S.season.on", timeout=300000, polling=200); pg.evaluate("()=>__PM.setRunning(false)"); pg.wait_for_timeout(500)
     s = state()
-    ok("continue: the same run (survival, wave 2, cash, costs ×1.10)", s["surv"] and s["k"] == 2 and abs(s["cash"] - cash2) < 2000 and abs(s["costMul"] - 1.1) < 1e-9 and s["chip"] and s["lead"]["id"] == "chip" and s["lead"]["st"]["sales"] == 1 and abs(s["price"] - price1 - 7) < 1e-9, s)
+    ok("continue: the same run (survival, wave 2, cash, costs ×1.10)", s["surv"] and s["k"] == 2 and abs(s["cash"] - cash2) < 2000 and abs(s["costMul"] - 1.1) < 1e-9 and s["chip"] and s["lead"]["id"] == "chip" and s["lead"]["st"]["sales"] == 1 and abs(s["lp"] - price1 - 7) < 1e-9, s)
 
     # 5 outages 2-5; the jobs go round again
     jobs = []
@@ -135,11 +141,11 @@ with sync_playwright() as pw:
         if k < 5:
             pg.evaluate(RUNTO, ["S.cards.open&&S.cards.open.report", 400000]); pg.evaluate("()=>{document.getElementById('rc-ok').click();__PM.setRunning(false);}")
         if k == 2:
-            s = state(); ok("wave 3: the fibre lock holds fibre at wave 2's price (×1/1.1 on top of the wave), wages +5% twice", s["lead"]["st"]["fibre"] == 1 and abs(s["costMul"] - 1.21) < 1e-9 and abs(s["occ"] / (s["occBase"] * s["costMul"]) - 1 / 1.1) < 1e-9 and abs(pg.evaluate("()=>__PM.wage()") - 1.05 ** 2) < 1e-9 and abs(pg.evaluate("()=>__PM.freq('calloff')") / 2 - pg.evaluate("()=>__PM.freq('highway')")) < 1e-9, s)
+            s = state(); ok("wave 3: the fibre lock holds fibre at wave 2's price (×1/1.1 on top of the wave), wages +10% twice (QA2)", s["lead"]["st"]["fibre"] == 1 and abs(s["costMul"] - 1.21) < 1e-9 and abs(s["occ"] / (s["occBase"] * s["costMul"]) - 1 / 1.1) < 1e-9 and abs(pg.evaluate("()=>__PM.wage()") - 1.1 ** 2) < 1e-9 and abs(pg.evaluate("()=>__PM.freq('calloff')") / 2 - pg.evaluate("()=>__PM.freq('highway')")) < 1e-9, s)
         if k == 3:
             s = state()
             ok("wave 4: Dot runs the mill; Chip's push and pay settlements stay, his lock was for wave 3 only, his call-offs leave with him", s["lead"]["id"] == "dot" and s["lead"]["changed"] and s["lead"]["was"] == "chip" and s["lead"]["st"]["fibre"] == 1 and s["lead"]["st"]["sales"] == 1
-               and abs(s["price"] - price1 - 7) < 1e-9 and abs(s["costMul"] - 1.331) < 1e-9 and abs(s["occ"] / (s["occBase"] * s["costMul"]) - 1) < 1e-9 and abs(pg.evaluate("()=>__PM.wage()") - 1.05 ** 2) < 1e-9 and abs(pg.evaluate("()=>__PM.freq('calloff')") - pg.evaluate("()=>__PM.freq('highway')")) < 1e-9, s)
+               and abs(s["lp"] - price1 - 7) < 1e-9 and abs(s["costMul"] - 1.331) < 1e-9 and abs(s["occ"] / (s["occBase"] * s["costMul"]) - 1) < 1e-9 and abs(pg.evaluate("()=>__PM.wage()") - 1.1 ** 2) < 1e-9 and abs(pg.evaluate("()=>__PM.freq('calloff')") - pg.evaluate("()=>__PM.freq('highway')")) < 1e-9, s)
             ok("wave 4: Dot's repair bills cost 5% more", abs(s["rep"] - 1.05) < 1e-9, s["rep"])
             # v5.0.4 Dot's fix is automatic: a driveshaft snaps and (odds forced to 100% here) she fixes it on the spot; once per cycle
             f0 = pg.evaluate("()=>__PM.freq('shaft')"); cashF = pg.evaluate("()=>__PM.S.cash")
@@ -149,7 +155,9 @@ with sync_playwright() as pw:
               return {cash:cashA,left:inc.left,bill:inc.bill,ready:__PM.leadFixReady(),other,secondFixed:n1>n0,freq:__PM.freq('shaft'),fixed:S.lead.fixed.join()};}""")
             b0 = f["bill"] / (1 - 0.6) if f["bill"] else 0
             ok("Dot's fix: the breakdown ends on the spot, 60% of its bill comes back, the fix is used, the breakdown is half as likely", f["left"] <= 0 and b0 > 0 and abs((cashF - f["cash"]) - round(b0 * 0.4)) <= 1 and not f["ready"] and not f["secondFixed"] and abs(f["freq"] - f0 / 2) < 1e-9 and f["fixed"] == "shaft", f)
-            pg.evaluate("()=>__PM.setRunning(true)"); pg.wait_for_timeout(500); pg.evaluate("()=>__PM.setRunning(false)"); s = state()
+            # (run a moment at 1 sim min/s so the bar's UI tick redraws; at full speed the outage could start, which readies the fix again)
+            pg.evaluate("()=>{const C=__PM.C;window.__spd=C.simSpeed;C.simSpeed=1;__PM.setRunning(true);}"); pg.wait_for_timeout(500)
+            pg.evaluate("()=>{__PM.setRunning(false);__PM.C.simSpeed=window.__spd;}"); s = state()
             ok("Dot's fix: the chip says it is used", s["fixTxt"] == "Fix used", s["fixTxt"])
             pg.evaluate("()=>document.getElementById('survChip').click()"); pg.wait_for_timeout(300); shot("4b-leader-card")
             c = pg.evaluate("()=>({card:!document.getElementById('leadCard').hidden,btn:!!document.querySelector('[data-fix]'),txt:document.getElementById('leadCard').innerText})")
@@ -207,13 +215,15 @@ with sync_playwright() as pw:
     r = pick("so-new", "fel"); pg.evaluate("()=>__PM.setRunning(false)"); pg.wait_for_timeout(600); s = state()
     ok("new run: the picker offers the last leader started with", r["sel"] == "chip" and not r["dis"], r)
     ok("new survival run: clean start with Felicity (wave 1, ×1, $2.0M, nothing built)", s["surv"] and s["on"] and s["k"] == 1 and s["costMul"] == 1 and abs(s["cash"] - 2000000) < 5000 and s["t"] < 60 and abs(s["occ"] - occ1) < 1e-9
-       and s["lead"]["id"] == "fel" and not s["lead"]["changed"] and not any(s["lead"]["st"].values()) and abs(s["price"] - price1) < 1e-9 and s["rep"] == 1, s)
+       and s["lead"]["id"] == "fel" and not s["lead"]["changed"] and not any(s["lead"]["st"].values()) and abs(s["lp"] - price1) < 1e-9 and abs(s["rep"] - pg.evaluate("()=>__PM.civBill()")) < 0.005, s)   # (repairs: the civics meters only, which drift a little: a leader nudges them at the start)
     pg.evaluate("()=>{__PM.S.outg.k=4;__PM.setBn(__PM.S.bn);}"); s = state()
     ok("costs follow the wave (wave 4 = ×1.331 on fibre and energy)", abs(s["costMul"] - 1.331) < 1e-9 and abs(s["occ"] / occ1 - 1.331) < 1e-9 and abs(s["energy"] / en1 - 1.331) < 1e-9, s)
     pg.evaluate("()=>{document.getElementById('v2pause').click();document.getElementById('v2free').click();__PM.setRunning(false);}"); pg.wait_for_timeout(600); s = state()
     ok("free play abandons the run: no wave costs, no leader, no chip, no locks", not s["surv"] and s["costMul"] == 1 and s["lead"] is None and not s["chip"] and not s["lock"], s)
-    pg.evaluate("()=>{document.getElementById('v2pause').click();document.getElementById('v2free').click();document.getElementById('v2pause').click();document.getElementById('v2season').click();__PM.setRunning(false);}"); pg.wait_for_timeout(600); s = state()
-    ok("a season is still a season (30 days, no leader, no chip, ×1)", s["on"] and not s["surv"] and s["lead"] is None and s["clock"] == "Day 1 of 30" and not s["chip"] and s["costMul"] == 1 and pg.evaluate("()=>__PM.S.season.end") == 30 * 1440, s)
+    # (v5.1: seasons have leaders too, picked the same way)
+    pg.evaluate("()=>{document.getElementById('v2pause').click();document.getElementById('v2free').click();document.getElementById('v2pause').click();}"); pick("v2season", "fel")
+    pg.wait_for_function("__PM.S.season&&__PM.S.season.on", timeout=300000, polling=200); pg.evaluate("()=>__PM.setRunning(false)"); pg.wait_for_timeout(600); s = state()
+    ok("a season is still a season (30 days, its leader, no waves, ×1)", s["on"] and not s["surv"] and s["lead"] and s["lead"]["id"] == "fel" and s["clock"] == "Day 1 of 30" and s["costMul"] == 1 and pg.evaluate("()=>__PM.S.season.end") == 30 * 1440, s)
     pg.evaluate("()=>{document.getElementById('v2pause').click();}"); pg.wait_for_timeout(400)
     ok("pause menu: New season, New survival, Reset; no big Survival button", pg.evaluate("()=>document.getElementById('v2surv').hidden&&!document.getElementById('v2sub').hidden&&!!document.getElementById('v2survNew')")); shot("9-pause-menu")
     pg.evaluate("()=>document.getElementById('v2survNew').click()"); pg.wait_for_function("!!document.querySelector('#leadOv:not([hidden]) .ldcard')", timeout=60000)
