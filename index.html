@@ -1359,6 +1359,33 @@ body.pmpop .popmain[data-v="dcs"] #dcsOv .dcs{max-width:1180px;margin:0 auto}
 .pfview button{padding:5px 10px}
 @media (max-width:760px){.pfmid{width:100%;align-items:center}.pfoeeb,.pfrep{width:100%}}
 .wfr s.act.neg{background:#ff6b5e}.wfr.act.neg b{color:#ff8b7f}
+
+/* v6.8 relationship map (50j) */
+.rmov .rmw{width:min(1280px,100%);height:calc(100dvh - 20px)}
+.rmleg{display:flex;flex-wrap:wrap;gap:4px 14px;padding:6px 10px;color:#8ea4c4;font-size:11px;border-bottom:1px solid #2c3e5c}
+.rmleg i{display:inline-block;width:20px;border-top:2px solid;vertical-align:middle;margin-right:5px}
+.rmb{flex:1;min-height:0;display:grid;grid-template-columns:minmax(0,1fr) 300px}
+.rmmap{overflow:auto;min-height:0;-webkit-overflow-scrolling:touch}
+.rmside{overflow:auto;min-height:0;padding:10px 12px;border-left:1px solid #2c3e5c;background:#132037;display:flex;flex-direction:column;gap:8px}
+@media (max-width:760px){.rmb{grid-template-columns:minmax(0,1fr);grid-template-rows:minmax(0,1fr) minmax(0,42%)}.rmside{border-left:0;border-top:1px solid #2c3e5c}}
+#rmSvg{display:block}
+#rmSvg .rmch{font:700 10.5px var(--f-body);letter-spacing:.09em;fill:#8ea4c4}
+#rmSvg .rme{fill:none;stroke-width:1.2;opacity:.3}
+#rmSvg .rm-p{stroke:#4fd18b}#rmSvg .rm-n{stroke:#ff7a6e}#rmSvg .rm-x{stroke:#ffb02e}#rmSvg .rm-s{stroke:#8a9a96;stroke-dasharray:3 3}
+#rmSvg.dim .rme{opacity:.05}#rmSvg.dim .rme.on{opacity:.95;stroke-width:2}
+#rmSvg .rmn{cursor:pointer}#rmSvg .rmn rect{fill:#1d2c47;stroke:#33476a}#rmSvg .rmn .rmbar{stroke:none}
+#rmSvg .rmn.ext rect:first-child{stroke-dasharray:3 2;fill:#172438}
+#rmSvg .rmn text{font:600 11.5px var(--f-body);fill:#dbe6f6}#rmSvg .rmn .rmv{font:500 10px ui-monospace,Menlo,monospace;fill:#4fd18b}#rmSvg .rmn.ext .rmv{fill:#8ea4c4}
+#rmSvg .rmn .rmhl{font:700 10px var(--f-body);fill:#7fb2ff}
+#rmSvg.dim .rmn{opacity:.25}#rmSvg.dim .rmn.on{opacity:1}#rmSvg .rmn.sel rect:first-child{stroke:#4fd18b;stroke-width:2}
+#rmSvg .rmn:focus-visible{outline:none}#rmSvg .rmn:focus-visible rect:first-child{stroke:#ffb02e;stroke-width:2}
+.rmhd{display:flex;flex-direction:column;gap:6px}.rmhd>b{font-size:15px}
+.rmpills{display:flex;flex-wrap:wrap;gap:5px}.rmpills span{font-size:10.5px;padding:1px 7px;border-radius:999px;border:1px solid #33476a;color:#8ea4c4}
+.rmnow{display:flex;align-items:baseline;gap:8px}.rmnow small{color:#8ea4c4}.rmnow b{font:600 14px ui-monospace,Menlo,monospace;color:#4fd18b}.rmnow button{margin-left:auto}
+.rmrel{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:6px}
+.rmrel li{display:grid;grid-template-columns:16px minmax(0,1fr);gap:6px}.rmrel small{display:block;color:#8ea4c4;font-size:11.5px}
+.rmsg{font:700 12px ui-monospace,Menlo,monospace;text-align:center}
+.rmrel .linkb{color:#dbe6f6;font-weight:600;text-decoration-color:#5b6f90}
 </style>
 </head>
 <body class="app">
@@ -1541,7 +1568,7 @@ body.pmpop .popmain[data-v="dcs"] #dcsOv .dcs{max-width:1180px;margin:0 auto}
 <div class="btns"><button class="primary" id="no3d-retry">Try again</button></div></div></div>
 
 <script type="module">
-const APP_VER="v6.8.0-t1";   // shown in the menu and sent with leaderboard scores (max 12 characters)
+const APP_VER="v6.8.0-t2";   // shown in the menu and sent with leaderboard scores (max 12 characters)
 // TEST BUILDS ONLY (off in releases): turbo speeds 240/480/960 sim min/s for fast playtests. Above 120, crews and maintenance start jobs
 // without waiting for the 3D walk (as with the 3D view off) and outages keep the speed. Set false for a release.
 const TURBO=false,TURBO_FAST=s=>TURBO&&s>120;
@@ -13795,6 +13822,284 @@ function pfSVGt(D,live){const vert=pfVert(),NU=104,NV=112,GAP=30,PAD=vert?24:10,
     if(lp)g+=`<circle cx="${x+w-9}" cy="${y+9}" r="4.5" fill="${PF_LAMP[lp][0]}"><title>${PF_LAMP[lp][1]}</title></circle>`;
     o.push(g+"</g>");});
   o.push("</svg>");o.push(`<p class="pfcap">The band is as wide as the tons going through ${live?"today":"that range"}: bales in at the left, paper out at the right. Waste and the broke loop are drawn thin (not to scale); fresh water is gallons.</p>`);return o.join("");}
+/* ---- v6.8 Report > Control room > Relationship map: every trendable tag (11d TAGS) wired cause → effect by how the sim
+   computes it (07, 07b-07g, 05b), drawn as a process map left to right. Tap a tag to light up what drives it and what it
+   moves, with the mechanism; "Full chain" follows the links all the way up and down. Live readings on each box. Read
+   only: the sim and its dice are untouched, and the game keeps running at the player's speed while it is open.
+   Keep RM_E in step with the sim when a relationship changes (tools/relmapcheck.py fails on a tag with no entry). ---- */
+const RM_DRV=[["x:weather","Weather",""],["x:bales","Bale grade mix",""],["x:pulpset","Pulper feed setpoint",""],["x:dilv","Pulper dilution valve","knob"],["x:slice","Headbox slice","knob"],["x:guide","Fabric guide roll","knob"],["x:zones","Headbox dilution zones","knob"],["x:spset","Machine speed setpoint",""],["x:grade","Grade on the machine",""],["x:dye","Dye system",""],["x:market","Market & leader effects",""],["x:orders","Customer orders",""],["x:upsets","Upsets & DCS motors",""]];
+const RM_COL={"YARD":["inq","unload","yard","balem","stk","occp"],"SPOT":["feed","cp","amps","pulpLvl","yield","fiber","rejt","hddp","lcdp","lwdp","fsld","fsdp","kwh","dil","chest","chestg","gap","refkw","csf","agit","mcCons","mcLvl","mcg","fan"],"WET":["wsp","vac","couchSol","pl","pressSol","gtrav","edge","osc","hbc","bwv","bwsp","drain","seal","pressw","wwl","wwg","wwov","hum"],"DET":["speed","prod","st1","st3","steam","dryl","moist","bw","draw","tension"],"QCS":["off","rct","prem","cdsp","bank","reel","cut","conv"],"UTIL":["boiler","vent","energyt","shower","evap","wcl","wcg","makeup","fresh","wuse","wwover","outfall","tss"],"SHIP":["fg","load","outq","openo","lateo","price","profit"]};
+const RM_E=[
+ ["x:weather","balem","p","Rain and snow soak the bales in the yard and on inbound loads"],
+ ["x:weather","unload","n","Snow and fog slow inbound trucks"],
+ ["x:bales","stk","p","Grade B/C loads carry contamination that reaches the machine as stickies"],
+ ["x:bales","fiber","n","Contamination is rejected instead of making fiber"],
+ ["inq","unload","p","Queued trucks dock and unload"],
+ ["unload","yard","p","Unloaded bales go to the yard"],
+ ["yard","unload","n","A full yard stops unloading"],
+ ["unload","profit","n","OCC and inbound freight are paid as bales are unloaded"],
+ ["occp","profit","n","Fiber cost per ton"],
+ ["x:market","occp","p","Blend price, leader fiber deals, contracts"],
+ ["x:pulpset","feed","p","Pulper feed rate setpoint"],
+ ["yard","feed","p","An empty yard starves the pulper"],
+ ["chest","feed","n","Over 97% the pulper is throttled to what the machine uses"],
+ ["fsld","feed","n","Fine screens cap the fiber the pulper can send"],
+ ["cp","feed","p","Below 4% the thin pulper feeds less"],
+ ["feed","yard","n","Bales fed come out of the yard"],
+ ["feed","fiber","p","Fiber = bales fed × yield"],
+ ["yield","fiber","p","Fiber = bales fed × yield"],
+ ["balem","fiber","n","Bale water over 10% isn't fiber"],
+ ["x:upsets","yield","x","Upsets and upgrades change the yield multiplier"],
+ ["feed","rejt","p","Rejects = bales fed − fiber"],
+ ["yield","rejt","n","Better yield, fewer rejects"],
+ ["fiber","fsld","p","Screen load = fiber ÷ screen capacity"],
+ ["fiber","chest","p","Fiber fills the stock chest"],
+ ["prod","chest","n","The machine draws stock from the chest"],
+ ["bank","chest","p","Beater rolls are repulped back into the chest"],
+ ["chest","chestg","s","Same chest, in gallons"],
+ ["chest","stk","x","Chest residence time delays how fast stickies reach the machine"],
+ ["stk","speed","n","Stickies raise the sheet-break rate"],
+ ["x:dilv","cp","x","Dilution valve sets pulper consistency (lagged)"],
+ ["cp","amps","p","Thicker tub, more rotor amps (trips over 7.5%)"],
+ ["cp","pulpLvl","n","More dilution water, higher tub level (overflows under 2.2%)"],
+ ["x:upsets","amps","x","Pulper down reads zero amps"],
+ ["x:upsets","hddp","x","Purges and cleaner upsets"],
+ ["x:upsets","lcdp","x","Purges and plugged cleaners"],
+ ["x:upsets","lwdp","x","Purges and plugged cleaners"],
+ ["gap","csf","p","Tighter gap, lower freeness"],
+ ["kwh","gap","n","The plate gap closes to put the energy in (clash near 120 kWh/t)"],
+ ["kwh","refkw","p","Refiner power = kWh/t × fiber through the refiners"],
+ ["prod","refkw","p","More fiber through, more power at the same kWh/t"],
+ ["kwh","profit","n","Refining power above standard is billed as energy"],
+ ["csf","couchSol","p","Freer stock drains faster on the table; low freeness, lower couch solids"],
+ ["kwh","rct","p","More refining, stronger fibers, more ring crush"],
+ ["bw","rct","p","Ring crush scales with the weight"],
+ ["stk","rct","n","Stickies weaken the sheet a little"],
+ ["rct","off","x","Under the grade's ring crush minimum the reel goes to the beater"],
+ ["bwsp","off","x","Weight spec is ±3% around the setpoint"],
+ ["bwsp","prem","n","Under the grade's target, on spec: half the trim as a price premium (max 5%)"],
+ ["prem","profit","p","Premium paid as on-spec paper is made"],
+ ["bwsp","bwv","p","AUTO feed-forward: the valve follows the setpoint"],
+ ["speed","bwv","p","AUTO feed-forward: the valve follows speed"],
+ ["bw","bwv","x","AUTO trims the valve on the QCS reading, 3 minutes late"],
+ ["bwv","hbc","p","More thick stock, more fiber in the headbox"],
+ ["mcCons","hbc","p","Thicker machine chest stock delivers more fiber through the same valve"],
+ ["dil","hbc","n","Dilution brings the thick stock down to 0.8%"],
+ ["hbc","bw","p","Headbox consistency × jet ÷ wire sets the weight"],
+ ["hbc","prod","p","Fiber delivered sets the tons made"],
+ ["bwsp","prod","p","Tons = K × speed × weight"],
+ ["speed","fan","p","Headbox flow follows speed (jet-to-wire ratio)"],
+ ["bwsp","fan","p","Headbox flow is sized for the setpoint at 0.8%"],
+ ["fan","dil","p","Dilution = headbox flow − thick stock"],
+ ["mcCons","dil","n","Thicker stock, less thick-stock water, more dilution needed"],
+ ["fan","drain","p","Drainage = headbox water − sheet water at the couch"],
+ ["couchSol","drain","p","Drier at the couch, more drained"],
+ ["vac","seal","p","More vacuum, more of the drainage to the seal pit"],
+ ["drain","seal","p","The vacuum boxes' share of the drainage"],
+ ["couchSol","pressw","n","Press water = couch to press solids"],
+ ["pressSol","pressw","p","Press water = couch to press solids"],
+ ["drain","wwl","p","Table and couch drainage fall to the silo"],
+ ["seal","wwl","n","Seal pit water bypasses the silo"],
+ ["dil","wwl","n","The fan pump draws dilution from the silo"],
+ ["wwl","dil","x","Empty silo starves the dilution"],
+ ["wwl","hbc","x","Under 15% the fan pump cavitates: consistency and weight swing"],
+ ["wwl","speed","n","Held under 8% the sheet breaks at the wet end"],
+ ["wwl","wwov","p","Over 85% it overflows to the white water chest"],
+ ["wwl","wwg","s","Same silo, in gallons"],
+ ["wwl","wcl","x","Under 25% the silo makes up from the white water chest"],
+ ["wwov","wcl","p","Silo overflow goes to the white water chest"],
+ ["seal","wcl","p","Seal pit water returns to the white water chest"],
+ ["pressw","wcl","p","Press water via the save-all to the white water chest"],
+ ["balem","cp","n","Wet bales thin the pulper; dilution control takes it back out over ~20 min"],
+ ["x:bales","hddp","p","Dirty bales build pressure drop"],
+ ["x:bales","lcdp","p","Dirty bales build pressure drop"],
+ ["x:bales","lwdp","p","Dirty bales build pressure drop"],
+ ["x:bales","fsdp","p","Dirty bales build pressure drop"],
+ ["fiber","fsdp","p","Screen load raises its pressure drop"],
+ ["hddp","yield","n","Over 10% above clean, rejects carry good fiber"],
+ ["lcdp","yield","n","Over 10% above clean, rejects carry good fiber"],
+ ["lwdp","yield","n","Over 10% above clean, rejects carry good fiber"],
+ ["fsdp","yield","n","Over 10% above clean, rejects carry good fiber"],
+ ["gap","speed","n","Gap over 0.6 mm raises breaks; under 0.15 mm the plates clash"],
+ ["agit","mcCons","x","Under 70% the chest stops mixing and consistency swings"],
+ ["wcl","mcCons","n","Empty white water chest: no dilution, thick stock"],
+ ["mcCons","speed","n","Heavy swings tear the sheet at the couch"],
+ ["mcLvl","mcg","s","Same chest, in gallons"],
+ ["speed","wsp","p","Wire speed = reel speed ÷ machine draw"],
+ ["draw","wsp","n","More draw, slower wire for the same reel speed"],
+ ["vac","couchSol","x","Best at 30 kPa; losses either side, worse below"],
+ ["x:slice","couchSol","x","Jet off its best angle or ratio loses couch solids"],
+ ["couchSol","pressSol","p","Press solids start from couch solids, point for point"],
+ ["pl","pressSol","x","Rises with load to 130 kN/m, then the nip crushes"],
+ ["pl","off","p","Crush marks above 115 kN/m"],
+ ["pl","speed","n","Nip crush breaks above 130 kN/m"],
+ ["vac","speed","n","Under 15 kPa the sheet leaves the couch too wet (breaks); over 45 kPa wears the fabric out"],
+ ["x:guide","gtrav","x","AUTO trim and the fabric's slow walk use up guide travel"],
+ ["x:guide","edge","x","MANUAL holds still while the fabric drifts"],
+ ["gtrav","edge","p","Past full travel the fabric walks off center"],
+ ["edge","speed","n","Over 50 mm the fabric runs off the rolls: machine down"],
+ ["osc","off","n","Under 40% the pick-up felt stripes the sheet"],
+ ["x:upsets","hum","x","Fog fan off or failed"],
+ ["x:spset","speed","p","Speed setpoint"],
+ ["chest","speed","p","Below the low-level setpoint the machine slows to supply; under 5% it stops"],
+ ["moist","speed","n","Over 10% the crew slows the machine until it's back under 9%"],
+ ["fg","speed","n","A full warehouse stops the machine"],
+ ["reel","speed","n","Winder backed up: the machine stops on spools"],
+ ["speed","prod","p","Paper = K × speed × basis weight"],
+ ["x:grade","prod","p","Grade basis weight sets tons per foot"],
+ ["off","prod","n","Off-spec tons go to the beater, not paper made"],
+ ["speed","steam","p","More tons, more water to evaporate"],
+ ["pressSol","steam","n","Drier off the presses, less steam (and more when wetter)"],
+ ["st1","steam","p","1st section above 70 kPa adds steam cost"],
+ ["speed","st3","p","3rd section demand rises with t/h"],
+ ["pressSol","st3","n","Wet end water factor scales demand"],
+ ["st1","st3","n","1st section takes part of the 3rd's load"],
+ ["x:grade","st3","x","Base pressure per grade"],
+ ["speed","dryl","p","Load = demand ÷ ceiling"],
+ ["pressSol","dryl","n","Wetter sheet, higher load"],
+ ["steam","boiler","n","Above 62 t/h the header sags"],
+ ["boiler","dryl","n","A sagging header lowers the dryer ceiling"],
+ ["dryl","moist","p","Past 100% of the limit the sheet comes off wet"],
+ ["st1","moist","n","More 1st section steam dries the sheet"],
+ ["speed","moist","x","Below the floor a slow machine over-dries"],
+ ["steam","vent","p","On a sheet break the running steam is vented"],
+ ["steam","profit","n","Extra steam per ton is billed as energy"],
+ ["moist","off","x","Outside the grade's moisture spec the reel goes to the beater"],
+ ["bw","off","x","Outside the grade's weight spec"],
+ ["x:dye","off","p","Dye trouble fails color"],
+ ["x:grade","off","p","Grade-change transition tons"],
+ ["x:zones","cdsp","x","Trimmed zones put streaks in the CD profile"],
+ ["moist","cdsp","p","Zone readings ride on reel moisture"],
+ ["cdsp","off","p","More than 3 zones out sends part of the reel to the beater"],
+ ["draw","tension","p","Tension follows draw"],
+ ["draw","off","x","Under 1% the reel wrinkles"],
+ ["draw","speed","n","Over 2.4% the sheet snaps in the open draw"],
+ ["prod","reel","p","Good paper builds on the reel"],
+ ["off","reel","p","Beater paper is wound too"],
+ ["cut","reel","n","The winder takes it off"],
+ ["reel","cut","p","Winder runs while there's paper"],
+ ["conv","cut","n","A full conveyor blocks the winder"],
+ ["cut","conv","p","Each set puts two rolls on the conveyor"],
+ ["conv","fg","p","Clamp trucks move rolls into the warehouse"],
+ ["fg","conv","n","A full warehouse can't take rolls"],
+ ["off","bank","p","Beater rolls wait in the bay"],
+ ["prod","shower","p","Showers = gallons per ton of paper"],
+ ["shower","fresh","p","Fresh water = showers + seals + makeup"],
+ ["makeup","fresh","p","Fresh water = showers + seals + makeup"],
+ ["wcl","makeup","n","Below 40% fresh water makes up (not with the intake iced)"],
+ ["wcl","wwover","p","Above 70% the chest overflows to the sewer"],
+ ["wwover","outfall","p","Overflow goes through the clarifier to the outfall"],
+ ["outfall","tss","n","More flow dilutes the suspended solids"],
+ ["prod","tss","p","Machine fiber losses reach the sewer"],
+ ["prod","evap","p","Water into the dryers per ton"],
+ ["pressSol","evap","n","Drier off the presses, less to evaporate"],
+ ["moist","evap","n","Water left in the paper isn't evaporated"],
+ ["fiber","wcl","n","Stock prep draws dilution water"],
+ ["prod","wcl","p","The machine returns white water"],
+ ["shower","wcl","p","Shower water joins the white water"],
+ ["evap","wcl","n","Water leaving with the sheet doesn't come back"],
+ ["wcl","wcg","s","Same chest, in gallons"],
+ ["fresh","wuse","p","Fresh water ÷ paper"],
+ ["prod","wuse","n","Fresh water ÷ paper"],
+ ["x:market","energyt","p","Energy prices, leader, civics, upgrades"],
+ ["x:market","price","p","List price, survival multiplier, perks"],
+ ["x:grade","price","x","Price of the grade on the machine"],
+ ["x:orders","openo","p","New orders booked per campaign"],
+ ["x:orders","outq","p","Trucks called for orders"],
+ ["fg","load","p","Rolls in stock to load"],
+ ["outq","load","p","A docked truck to load"],
+ ["openo","load","p","With the order book, trucks dock only for an order"],
+ ["load","fg","n","Loaded rolls leave the warehouse"],
+ ["load","openo","n","Shipped orders close"],
+ ["openo","lateo","p","Open orders past due + grace are late"],
+ ["fg","lateo","n","Short stock makes orders late"],
+ ["price","profit","p","Revenue per ton"],
+ ["load","profit","p","Revenue is booked as trucks leave"],
+ ["energyt","profit","n","Energy is paid per ton made"],
+ ["lateo","profit","n","Late chargebacks and cancellations"]];
+const RM_AREA={IN:["Inputs","#a99ad6"],YARD:["Bale yard","#d0a66a"],SPOT:["Stock prep","#5fc497"],WET:["Wet end","#6db2e6"],DET:["Dry end","#ee9667"],
+  QCS:["Quality & winding","#e07fb0"],UTIL:["Water & utilities","#8fb3c4"],SHIP:["Shipping & money","#b5c46a"]};
+const RM_ORDER=["IN","YARD","SPOT","WET","DET","QCS","UTIL","SHIP"];
+const RM_SG={p:"+",n:"−",x:"~",s:"="},RM_SC={p:"#4fd18b",n:"#ff7a6e",x:"#ffb02e",s:"#8a9a96"};
+const RMUI={open:false,sel:null,mode:"direct",ext:true,P:null};
+// the graph: tags from the registry (names and units live), drivers from RM_DRV
+const RM_N=(()=>{const n={};for(const [id,name,unit] of RM_DRV)n[id]={id,name,unit,col:"IN",ext:true,ins:[],outs:[]};
+  for(const c in RM_COL)for(const id of RM_COL[c])if(TAGI[id]!=null)n[id]={id,col:c,ext:false,ins:[],outs:[]};
+  for(const t of TAGS)if(!n[t[0]])n[t[0]]={id:t[0],col:"UTIL",ext:false,ins:[],outs:[]};   // (a tag added later and not placed yet)
+  for(const [a,b,s,h] of RM_E)if(n[a]&&n[b]){n[a].outs.push({o:b,s,h});n[b].ins.push({o:a,s,h});}
+  return n;})();
+const rmName=id=>{const n=RM_N[id];return n.ext?n.name:tagName(id);};
+function rmOv(){let o=$("rmOv");if(o)return o;
+  o=kEl("div","overlay top dcsov rmov");o.id="rmOv";o.hidden=true;
+  o.innerHTML=`<div class="dcs rmw" role="dialog" aria-modal="true" aria-labelledby="rm-h"><div class="dcsh"><b id="rm-h">RELATIONSHIP MAP</b>
+    <div class="seg" role="group" aria-label="Highlight"><button type="button" data-rmm="direct">Direct</button><button type="button" data-rmm="chain">Full chain</button></div>
+    <div class="seg" role="group" aria-label="Drivers"><button type="button" data-rmx="1">Drivers</button><button type="button" data-rmx="0">Tags only</button></div>
+    <button aria-label="Close" class="dcsx" id="rmClose">✕</button></div>
+    <div class="rmleg"><span><i style="border-color:${RM_SC.p}"></i>+ rises with</span><span><i style="border-color:${RM_SC.n}"></i>− falls as it rises</span><span><i style="border-color:${RM_SC.x}"></i>~ optimum, limit or swing</span><span><i style="border-color:${RM_SC.s};border-top-style:dashed"></i>= same reading</span><span>dashed box: a driver, not a tag · H: hourly history</span></div>
+    <div class="rmb"><div class="rmmap" id="rmMap"><svg id="rmSvg" role="img" aria-label="Relationship map of the mill's readings"></svg></div><aside class="rmside" id="rmSide" aria-live="polite"></aside></div>
+    <div class="dcsf"><span>Structural links from the sim, not measured correlation: Trends → Moves with measures what moved together in this run.</span><span id="rmCnt"></span></div></div>`;
+  document.body.appendChild(o);
+  $("rmClose").addEventListener("click",()=>rmClose());o.addEventListener("click",e=>{if(e.target===o)rmClose();});
+  o.querySelectorAll("[data-rmm]").forEach(b=>b.addEventListener("click",()=>{RMUI.mode=b.dataset.rmm;rmSync();rmLight();rmSide();}));
+  o.querySelectorAll("[data-rmx]").forEach(b=>b.addEventListener("click",()=>{RMUI.ext=b.dataset.rmx==="1";if(!RMUI.ext&&RMUI.sel&&RM_N[RMUI.sel].ext)RMUI.sel=null;rmSync();rmDraw();rmSide();}));
+  $("rmSvg").addEventListener("click",e=>{const g=e.target.closest(".rmn");if(g)rmPick(g.dataset.id,false);});
+  $("rmSvg").addEventListener("keydown",e=>{const g=e.target.closest&&e.target.closest(".rmn");if(g&&(e.key==="Enter"||e.key===" ")){e.preventDefault();rmPick(g.dataset.id,false);}});
+  $("rmSide").addEventListener("click",e=>{const b=e.target.closest("[data-rmgo],[data-rmtr]");if(!b)return;if(b.dataset.rmgo)rmPick(b.dataset.rmgo,true);else rmTrend(b.dataset.rmtr);});
+  return o;}
+function rmSync(){const o=$("rmOv");if(!o)return;o.querySelectorAll("[data-rmm]").forEach(b=>b.setAttribute("aria-pressed",String(b.dataset.rmm===RMUI.mode)));
+  o.querySelectorAll("[data-rmx]").forEach(b=>b.setAttribute("aria-pressed",String((b.dataset.rmx==="1")===RMUI.ext)));}
+function rmOpen(){const o=rmOv();if(G3.closeKnobUI)G3.closeKnobUI();RMUI.open=true;o.hidden=false;if(!RMUI.sel)RMUI.sel="moist";rmSync();rmDraw();rmSide();
+  setTimeout(()=>{try{$("rmClose").focus({preventScroll:true});rmScroll(RMUI.sel);}catch(_){}},0);}
+function rmClose(){const o=$("rmOv");if(o)o.hidden=true;RMUI.open=false;}
+document.addEventListener("keydown",e=>{if(e.key!=="Escape"||!RMUI.open)return;e.preventDefault();e.stopPropagation();rmClose();},true);
+// columns in process order, each ordered by its neighbours' rows (a few sweeps cut the crossings)
+function rmLayout(){const cols=RM_ORDER.filter(c=>RMUI.ext||c!=="IN").map(c=>Object.values(RM_N).filter(n=>n.col===c&&(RMUI.ext||!n.ext)));
+  const pos={};cols.forEach(c=>c.forEach((n,i)=>pos[n.id]=i));
+  for(let it=0;it<8;it++)cols.forEach(c=>{for(const n of c){const nb=[...n.ins,...n.outs].map(r=>pos[r.o]).filter(v=>v!=null);n._k=nb.length?nb.reduce((a,b)=>a+b,0)/nb.length:pos[n.id];}
+    c.sort((a,b)=>a._k-b._k);c.forEach((n,i)=>pos[n.id]=i);});
+  return cols;}
+const RM_W=168,RM_H=32;
+function rmDraw(){const svg=$("rmSvg");if(!svg)return;const cols=rmLayout(),CW=208,GY=9,TOP=34,maxN=Math.max(...cols.map(c=>c.length)),H=TOP+maxN*(RM_H+GY)+16,W=cols.length*CW+16,P={};
+  cols.forEach((c,ci)=>{const off=(maxN-c.length)*(RM_H+GY)/2;c.forEach((n,i)=>P[n.id]={x:12+ci*CW,y:TOP+off+i*(RM_H+GY),ci});});RMUI.P=P;
+  svg.setAttribute("viewBox",`0 0 ${W} ${H}`);svg.setAttribute("width",W);svg.setAttribute("height",H);
+  const esc=t=>String(t).replace(/&/g,"&amp;").replace(/</g,"&lt;");let h="";
+  cols.forEach((c,ci)=>{if(c.length)h+=`<text class="rmch" x="${12+ci*CW}" y="20">${RM_AREA[c[0].col][0].toUpperCase()}</text>`;});
+  for(const [a,b,s] of RM_E){const A=P[a],B=P[b];if(!A||!B)continue;const y1=A.y+RM_H/2,y2=B.y+RM_H/2;let d;
+    if(B.ci>A.ci){const x1=A.x+RM_W,x2=B.x,m=(x2-x1)/2;d=`M${x1} ${y1}C${x1+m} ${y1} ${x2-m} ${y2} ${x2} ${y2}`;}
+    else if(B.ci<A.ci){const x1=A.x,x2=B.x+RM_W,dy=Math.max(30,Math.abs(y2-y1)*0.2);d=`M${x1} ${y1}C${x1-60} ${y1+dy} ${x2+60} ${y2+dy} ${x2} ${y2}`;}
+    else{const x=A.x+RM_W,bw=Math.min(70,18+Math.abs(y2-y1)*0.25);d=`M${x} ${y1}C${x+bw} ${y1} ${x+bw} ${y2} ${x} ${y2}`;}
+    h+=`<path class="rme rm-${s}" data-a="${a}" data-b="${b}" d="${d}" marker-end="url(#rmk${s})"/>`;}
+  for(const id in P){const n=RM_N[id],p=P[id],nm=rmName(id),t=nm.length>23?nm.slice(0,22)+"…":nm;
+    h+=`<g class="rmn${n.ext?" ext":""}" data-id="${id}" tabindex="0" role="button" aria-label="${esc(nm)}" transform="translate(${p.x},${p.y})"><rect width="${RM_W}" height="${RM_H}" rx="4"/><rect class="rmbar" width="4" height="${RM_H}" style="fill:${RM_AREA[n.col][1]}"/>
+      <text x="10" y="13">${esc(t)}</text><text class="rmv" x="10" y="26" data-v="${id}">${n.ext?"driver":""}</text>${!n.ext&&tagHasLong(id)?`<text class="rmhl" x="${RM_W-7}" y="13" text-anchor="end">H</text>`:""}</g>`;}
+  const mk=s=>`<marker id="rmk${s}" viewBox="0 0 8 8" refX="7" refY="4" markerWidth="6" markerHeight="6" orient="auto"><path d="M0 0L8 4L0 8z" fill="${RM_SC[s]}"/></marker>`;
+  svg.innerHTML=`<defs>${mk("p")}${mk("n")}${mk("x")}${mk("s")}</defs>`+h;
+  const c=$("rmCnt");if(c)c.textContent=`${TAGS.length} tags · ${RM_DRV.length} drivers · ${RM_E.length} links`;
+  rmLive(true);rmLight();}
+function rmReach(id,dir){const seen=new Set([id]),st=[id];while(st.length){const c=st.pop();for(const r of RM_N[c][dir]){if(!RMUI.ext&&RM_N[r.o].ext)continue;if(!seen.has(r.o)){seen.add(r.o);st.push(r.o);}}}return seen;}
+function rmLight(){const svg=$("rmSvg");if(!svg)return;const sel=RMUI.sel;svg.classList.toggle("dim",!!sel);
+  svg.querySelectorAll(".rmn").forEach(g=>g.classList.remove("on","sel"));svg.querySelectorAll(".rme").forEach(e=>e.classList.remove("on"));if(!sel)return;
+  const ch=RMUI.mode==="chain",up=ch?rmReach(sel,"ins"):new Set([sel,...RM_N[sel].ins.map(r=>r.o)]),dn=ch?rmReach(sel,"outs"):new Set([sel,...RM_N[sel].outs.map(r=>r.o)]),on=new Set([...up,...dn]);
+  svg.querySelectorAll(".rmn").forEach(g=>{if(on.has(g.dataset.id))g.classList.add("on");if(g.dataset.id===sel)g.classList.add("sel");});
+  svg.querySelectorAll(".rme").forEach(e=>{const a=e.dataset.a,b=e.dataset.b;if((up.has(a)&&up.has(b))||(dn.has(a)&&dn.has(b))){if(!ch&&a!==sel&&b!==sel)return;e.classList.add("on");}});}
+function rmSide(){const el=$("rmSide");if(!el)return;const sel=RMUI.sel;
+  if(!sel){el.innerHTML=`<p class="dcsfield">Tap a reading on the map to see what drives it and what it moves.</p>`;return;}
+  const n=RM_N[sel],a=RM_AREA[n.col],z=!!S.zen;
+  const li=arr=>arr.length?`<ul class="rmrel">${arr.filter(r=>RMUI.ext||!RM_N[r.o].ext).map(r=>`<li><span class="rmsg" style="color:${RM_SC[r.s]}">${RM_SG[r.s]}</span><span><button type="button" class="linkb" data-rmgo="${r.o}">${rmName(r.o)}</button><small>${r.h}</small></span></li>`).join("")}</ul>`:`<p class="dcsfield">Nothing in the sim.</p>`;
+  const ch=RMUI.mode==="chain"?`<p class="dcsfield">Full chain: ${rmReach(sel,"ins").size-1} upstream · ${rmReach(sel,"outs").size-1} downstream</p>`:"";
+  el.innerHTML=`<div class="rmhd"><b>${rmName(sel)}</b><div class="rmpills"><span style="color:${a[1]};border-color:${a[1]}">${a[0]}</span>${n.ext?"<span>driver, not a tag</span>":`<span>${tagUnit(sel)||"–"}</span><span>${tagHasLong(sel)?"48 h + hourly":"48 h"}</span>`}</div>
+    ${n.ext?"":`<div class="rmnow"><small>Now</small><b data-rmnow>${tagFmt(sel,tagNow(sel))}</b>${z?"":`<button type="button" class="reroll kstd" data-rmtr="${sel}">Trend it</button>`}</div>`}</div>${ch}
+    <div class="dcssub">Driven by</div>${li(n.ins)}<div class="dcssub">Moves</div>${li(n.outs)}`;}
+function rmPick(id,scroll){if(!RM_N[id])return;if(!RMUI.ext&&RM_N[id].ext){RMUI.ext=true;rmSync();rmDraw();}RMUI.sel=RMUI.sel===id&&!scroll?null:id;rmLight();rmSide();if(RMUI.sel&&scroll)rmScroll(id);}
+function rmScroll(id){const box=$("rmMap"),p=RMUI.P&&RMUI.P[id];if(!box||!p)return;box.scrollTo({left:Math.max(0,p.x+RM_W/2-box.clientWidth/2),top:Math.max(0,p.y-box.clientHeight/2),behavior:"smooth"});}
+// a tag onto the trend screen (the pen list, as "+ trend" does in Moves with)
+function rmTrend(id){if(S.zen||TAGI[id]==null)return;rmClose();openStation("TREND","dcs");const p=trPens();if(!p.includes(id)){if(p.length>=TR_MAX)p.pop();p.push(id);}TRUI.mode="tr";trBuild();trDraw(true);}
+// live readings on the boxes and the side panel (5 a second while open)
+function rmLive(force){if(!RMUI.open)return;const svg=$("rmSvg");if(!svg)return;
+  svg.querySelectorAll("[data-v]").forEach(t=>{const id=t.dataset.v;if(RM_N[id].ext)return;const v=tagFmt(id,tagNow(id));if(force||t.textContent!==v)t.textContent=v;});
+  const nw=$("rmSide")&&$("rmSide").querySelector("[data-rmnow]");if(nw&&RMUI.sel&&!RM_N[RMUI.sel].ext){const v=tagFmt(RMUI.sel,tagNow(RMUI.sel));if(nw.textContent!==v)nw.textContent=v;}}
+UI_TICKS.push(k=>{if(RMUI.open&&k%2===0)rmLive(false);});
+G3.rm={open:()=>rmOpen(),close:()=>rmClose(),N:RM_N,E:RM_E,pick:id=>rmPick(id,true),ui:RMUI};   // (tests: tools/relmapcheck.py)
 
 /* =========================== v2 app shell wiring =========================== */
 (function(){
@@ -14575,7 +14880,7 @@ function camPullOn(){try{return localStorage.getItem("paper-mill-campull")!=="of
    (within 700 ms per tap) and a list of every version's one-line note pops up, newest first. The list comes from
    VERSION-NOTES.txt at the repo root: build.py swaps it in for the placeholder below, so adding a line there with each
    release keeps the pop-up current (build.py warns when APP_VER has no line). ---------- */
-{const VNOTES=[["4.0.0", "Graphics Overhaul: 60 FPS on iPhone, ~80% Fewer Draw Calls"], ["4.0.1", "Performance Follow-Up, Show FPS Option and Device Autotest"], ["4.0.2", "Economy Rebalance and Smoother Upset Labels"], ["4.1.0", "Four Environments, Seeded Mills, Bottlenecks, Graphics Tiers and Site Music"], ["4.2.0", "New Site Maps, Rare Sights, Zen Map Rotation and Economics Fixes"], ["4.2.0-s", "Save and Continue Season (Test)"], ["4.2.1", "Save/Continue, Settings Panel and Outage Speed Fix"], ["4.2.2-t", "Bayou Gator Sight Reworked (Test)"], ["4.2.2-t2", "Gator Bass Riff (Test)"], ["4.2.2-t3", "Gator Riff Removed, Wide Camera Framing (Test)"], ["4.2.2-t4", "Gator Scene Shortened and Widened (Test)"], ["4.2.2-t5", "One Rare Sight per Map in Zen (Test)"], ["4.2.2", "Rare Sights Reworked, Bird Strike Upset, Mill Report Tab"], ["4.2.3-t", "Cowboys, Bigfoot and Tugboat Sights Reworked (Test)"], ["4.2.3", "Laptop Battery Saving (Default GPU)"], ["4.2.4", "$25M Goal Removed and Quick Fixes"], ["4.2.5", "Random Bottleneck per Season and Accessibility Improvements"], ["4.3.0-t1", "Survival Mode (Test)"], ["4.4.0-t1", "Mill Leaders in Survival (Test)"], ["4.4.0-t2", "Painted Leader Portraits (Test)"], ["4.4.0-t3", "Leader Redesign, 4-Day Waves and Fixes (Test)"], ["5.0.0", "Survival Mode Release with Mill Leaders"], ["5.0.1", "Results Dialog and Game Speed Fixes"], ["5.0.2", "Report Card Label Fixes"], ["5.0.3", "Survival Playtest Fixes (Test)"], ["5.0.4", "Playtest Review: Dot Auto-Fix and Shipping Fix (Test)"], ["5.0.5", "Polish Rounds from Survival Playtests"], ["5.0.6", "Survival QA Fixes, Opt-In Outage Watch, Leaderboard Filters"], ["5.1.0", "Civics Meters and Leaders in Seasons (Test)"], ["5.4.0", "Title Screen, Civics in the World and Dark Mode"], ["5.4.1", "Loading Splash, No Old-Menu Flash"], ["5.4.2", "Graphics Quality on the Title Screen"], ["5.5.0", "Performance Improvements"], ["5.6.0", "Fiddly Knobs, DCS/QCS Screens and Knobs View"], ["5.7.0", "Catching Failures Early: Tells, Daily Rounds, Vibration Report, Outage Prep"], ["5.7.1", "Bottom Menu Reorder, Settings Back on the Right"], ["5.7.2", "Help Page with Game Guide and Glossary"], ["5.7.3", "Bare Graphics Mode for Weak Phones"], ["5.7.4", "Version Notes Pop-Up (Triple-Tap the Version Number)"], ["6.1.0-t1", "Isometric Paper View: Fixed Camera, Cut-Outs, Drop Shadows, Cutaways, Season Palettes (Test)"], ["6.1.0-t2", "Iso Round 2: Cut-Outs Always Paper, GPU Pictures, Stop-Motion World, Fewer Draws (Test)"], ["6.1.0-t3", "Iso Round 3: iPhone Batching, Instanced Cans, Sign Atlas, Lighter Frames (Test)"], ["6.1.0-t4", "Iso Fixes: Operators and Fork-Trucks Back, Less Stutter (Test)"], ["6.1.0-t5", "Cut-Out Edge Artifact Fixed (Test)"], ["6.1.0-t6", "Iso Optimization: Hidden Objects Cost Nothing, Lighter Moving Batches (Test)"], ["6.1.0-t7", "Iso Triangle Cut: Paper-Card Trees, Flat Ground, Hidden Faces Gone, Plain Boxes (Test)"], ["6.1.0-t8", "Paper Palette: 40 Colours, Flat Surfaces, Paper Grain, Fewer Draws (Test)"], ["6.1.0-t9", "Reel Fix: Growing Reel Draws Again (Test)"], ["6.1.0-t10", "Draw Cut 2: Colour in the Matrix, Merged Roofs, Uploads on Change, Culling Fix, Parked Groups (Test)"], ["6.1.0-t11", "QA Fixes: Cut-Outs Never Drawn as Loose 3D Parts, Fallback Shows 3D, Roofs On or Off per Zoom Step (Test)"], ["6.1.0-t12", "Paper Smoke, Blinking Lights, Stronger Seasons, Sharper Phones, Instanced Upsets, Pictures at Start (Test)"], ["6.1.0-t13", "Paper Effects: Flames, Child-Made Tornado, Lamp Cones, Flags, Paper Water, Visible Weather (Test)"], ["6.1.0-t14", "Paper Upsets: Cut-Out Props, Paper Pigeon, Paper Sparks, Steam, Fireworks, Ice and Flood (Test)"], ["6.1.0-t15", "Beaver Reworked as One Smaller Cut-Out (Test)"], ["6.1.0-t16", "Paper Props Dim at Night, Labels Never Overlap, Fewer Cut-Out Pictures (Test)"], ["6.1.0-t17", "Bird on the Power Lines Cut-Scene Plays When Set Off From the Upsets List (Test)"], ["6.1.0-t18", "Zen Close-Ups Fixed, Rare Sights as Paper Cut-Outs, Tilt-Shift Diorama Look (Test)"], ["6.1.0-t19", "Narrower Tilt-Shift Band, Winder Trash Can Out of the Broke Hole (Test)"], ["6.1.0-t20", "Balance: Rounds Pay More, Capacity and Maintenance Upgrades Re-Priced"], ["6.1.0", "Paper Diorama: Isometric Paper Art Style, Cut-Out People and Upsets, Tilt-Shift, Rounds Pay More, Upgrades Re-Priced"], ["6.1.1", "Phone Fixes: Gentler Tilt-Shift on Tall Screens, Cut-Out People No Longer Blank on iPhone"], ["6.1.2", "iPhone: Cut-Out Self-Test Retries, People Keep Their Colours in the 3D Fallback"], ["6.1.3", "Broke Hole by the Winder Looks Like a Floor Opening (Was a Black Square)"], ["6.1.4", "Tilt-Shift Removed"], ["6.2.0", "Zen Free Camera: Perspective Zen Shots, 3D People in Zen, Cleaner River Water"], ["6.3.0-f1", "Process Flow Overview (Test): Inputs, Mill Areas and Outputs for the Mill Day, in Settings"], ["6.3.0-f2", "Process Flow: the Game Keeps Running While It's Open (Test)"], ["6.3.0", "Process Flow Overview: Inputs, Mill Areas and Outputs for the Mill Day (Settings > View)"], ["6.4.0", "Zen Shots Review: Shuffle-Bag Shot Order, Landscape Shots Rebuilt, Close Rare Sights"], ["6.5.0-a1", "Digital Twin A (Test): Hourly History, 14 Prior Days, 7 d / Run Ranges, Area Trends and Uptime"], ["6.5.0-b1", "Digital Twin B (Test): Real Freight Costs with a Diesel Index, Area Controls Moved into Process Flow"], ["6.5.0-b2", "Market Pricing (Test): 2026 OCC and Energy Costs, Diesel in $/gal, Desert Long Haul, Real Steam Rates"], ["6.5.0-b3", "DCS Expansion (Test): Full SPOT, WET and DET Pictures, a UTIL Screen, Motors and Reject Purges"], ["6.5.0-b4", "DCS Pictograms (Test): Equipment Drawn as Classic DCS Symbols, Colour Only When Something's Wrong"], ["6.5.0-b5", "The Dryer Limit (Test): Speed and Grade Load the Dryers, a Wet Sheet Fails Spec and Slows the Machine"], ["6.5.0", "Digital Twin: Process Flow Trends and Controls, Real Freight and Market Costs, Full DCS, Dryer Limit, Rebalance"], ["6.5.1", "Second Screen: Pop the DCS and Process Flow Out to Their Own Window for a Second Monitor (Desktop)"], ["6.5.2", "Knob Fixes: Wet-End and Steam Knobs Bite Again Under the Dryer Limit, DCS Uses the Machine's Name"], ["6.5.3", "Quality Specs: Weight, Moisture and Color Specs per Grade, Off-Spec Paper Wound into Beater Rolls and Repulped"], ["6.5.4", "DCS Fixes: Making-Beater Alerts, SPOT in Process Order, Boiler and Power on Utilities, 2nd/3rd Section Steam Control"], ["6.5.5-t1", "Dewatering Chain (Test): Jet and Vacuum Optimums, Couch to Press Solids, Press Solids Set the Dryer Steam Both Ways"], ["6.5.5", "The Dewatering Chain: Jet and Vacuum Optimums, Couch to Press Solids, Press Solids Set the Dryer Steam Both Ways"], ["6.5.6-t1", "Mass Balance (Test): A Real Water Balance and White Water Chest, Hayout Broke Repulped, Every Fiber Loss Booked"], ["6.5.6", "Mass Balance: A Real Water Balance and White Water Chest, Hayout Broke Repulped, Every Fiber Loss Booked"], ["6.5.7-t1", "Winder Pass (Test): Four Reel Storage Stands, Two-Roll Sets, Rolls Tied Together, Steam Vented on a Sheet Break"], ["6.5.7", "Winder Pass: Four Reel Storage Stands, Two-Roll Sets, Rolls Tied Together, Steam Vented on a Sheet Break"], ["6.6.0-t1", "Orders and Bales (Test): Customer Order Book and Spot Market, Idle Energy While Stopped, Bale Grading at the Gate"], ["6.6.0", "Orders and Bales: Customer Order Book and Spot Market, Idle Energy While Stopped, Bale Grading at the Gate"], ["6.7.0-t1", "Control Room (Test): Planning, Water and Quality Screens, Split-Screen Trends of Anything, What Moves With What, Process Flow Views"], ["6.7.0", "Control Room: Planning, Water and Quality Screens, Split-Screen Trends of Anything, What Moves With What, Process Flow Views"], ["6.7.1-t1", "New Grade Set (Test): Grades 24, 28, 31 and 34Super, Same Tons per Hour"], ["6.7.1", "New Grade Set: Grades 24, 28, 31 and 34Super, Same Tons per Hour"], ["6.8.0-t1", "Process Relationships (Test): Refining Energy and Ring Crush, Basis Weight Loop, Headbox at 0.8%, White Water Silo, Bale Water and Screen Pressure Drop"]];
+{const VNOTES=[["4.0.0", "Graphics Overhaul: 60 FPS on iPhone, ~80% Fewer Draw Calls"], ["4.0.1", "Performance Follow-Up, Show FPS Option and Device Autotest"], ["4.0.2", "Economy Rebalance and Smoother Upset Labels"], ["4.1.0", "Four Environments, Seeded Mills, Bottlenecks, Graphics Tiers and Site Music"], ["4.2.0", "New Site Maps, Rare Sights, Zen Map Rotation and Economics Fixes"], ["4.2.0-s", "Save and Continue Season (Test)"], ["4.2.1", "Save/Continue, Settings Panel and Outage Speed Fix"], ["4.2.2-t", "Bayou Gator Sight Reworked (Test)"], ["4.2.2-t2", "Gator Bass Riff (Test)"], ["4.2.2-t3", "Gator Riff Removed, Wide Camera Framing (Test)"], ["4.2.2-t4", "Gator Scene Shortened and Widened (Test)"], ["4.2.2-t5", "One Rare Sight per Map in Zen (Test)"], ["4.2.2", "Rare Sights Reworked, Bird Strike Upset, Mill Report Tab"], ["4.2.3-t", "Cowboys, Bigfoot and Tugboat Sights Reworked (Test)"], ["4.2.3", "Laptop Battery Saving (Default GPU)"], ["4.2.4", "$25M Goal Removed and Quick Fixes"], ["4.2.5", "Random Bottleneck per Season and Accessibility Improvements"], ["4.3.0-t1", "Survival Mode (Test)"], ["4.4.0-t1", "Mill Leaders in Survival (Test)"], ["4.4.0-t2", "Painted Leader Portraits (Test)"], ["4.4.0-t3", "Leader Redesign, 4-Day Waves and Fixes (Test)"], ["5.0.0", "Survival Mode Release with Mill Leaders"], ["5.0.1", "Results Dialog and Game Speed Fixes"], ["5.0.2", "Report Card Label Fixes"], ["5.0.3", "Survival Playtest Fixes (Test)"], ["5.0.4", "Playtest Review: Dot Auto-Fix and Shipping Fix (Test)"], ["5.0.5", "Polish Rounds from Survival Playtests"], ["5.0.6", "Survival QA Fixes, Opt-In Outage Watch, Leaderboard Filters"], ["5.1.0", "Civics Meters and Leaders in Seasons (Test)"], ["5.4.0", "Title Screen, Civics in the World and Dark Mode"], ["5.4.1", "Loading Splash, No Old-Menu Flash"], ["5.4.2", "Graphics Quality on the Title Screen"], ["5.5.0", "Performance Improvements"], ["5.6.0", "Fiddly Knobs, DCS/QCS Screens and Knobs View"], ["5.7.0", "Catching Failures Early: Tells, Daily Rounds, Vibration Report, Outage Prep"], ["5.7.1", "Bottom Menu Reorder, Settings Back on the Right"], ["5.7.2", "Help Page with Game Guide and Glossary"], ["5.7.3", "Bare Graphics Mode for Weak Phones"], ["5.7.4", "Version Notes Pop-Up (Triple-Tap the Version Number)"], ["6.1.0-t1", "Isometric Paper View: Fixed Camera, Cut-Outs, Drop Shadows, Cutaways, Season Palettes (Test)"], ["6.1.0-t2", "Iso Round 2: Cut-Outs Always Paper, GPU Pictures, Stop-Motion World, Fewer Draws (Test)"], ["6.1.0-t3", "Iso Round 3: iPhone Batching, Instanced Cans, Sign Atlas, Lighter Frames (Test)"], ["6.1.0-t4", "Iso Fixes: Operators and Fork-Trucks Back, Less Stutter (Test)"], ["6.1.0-t5", "Cut-Out Edge Artifact Fixed (Test)"], ["6.1.0-t6", "Iso Optimization: Hidden Objects Cost Nothing, Lighter Moving Batches (Test)"], ["6.1.0-t7", "Iso Triangle Cut: Paper-Card Trees, Flat Ground, Hidden Faces Gone, Plain Boxes (Test)"], ["6.1.0-t8", "Paper Palette: 40 Colours, Flat Surfaces, Paper Grain, Fewer Draws (Test)"], ["6.1.0-t9", "Reel Fix: Growing Reel Draws Again (Test)"], ["6.1.0-t10", "Draw Cut 2: Colour in the Matrix, Merged Roofs, Uploads on Change, Culling Fix, Parked Groups (Test)"], ["6.1.0-t11", "QA Fixes: Cut-Outs Never Drawn as Loose 3D Parts, Fallback Shows 3D, Roofs On or Off per Zoom Step (Test)"], ["6.1.0-t12", "Paper Smoke, Blinking Lights, Stronger Seasons, Sharper Phones, Instanced Upsets, Pictures at Start (Test)"], ["6.1.0-t13", "Paper Effects: Flames, Child-Made Tornado, Lamp Cones, Flags, Paper Water, Visible Weather (Test)"], ["6.1.0-t14", "Paper Upsets: Cut-Out Props, Paper Pigeon, Paper Sparks, Steam, Fireworks, Ice and Flood (Test)"], ["6.1.0-t15", "Beaver Reworked as One Smaller Cut-Out (Test)"], ["6.1.0-t16", "Paper Props Dim at Night, Labels Never Overlap, Fewer Cut-Out Pictures (Test)"], ["6.1.0-t17", "Bird on the Power Lines Cut-Scene Plays When Set Off From the Upsets List (Test)"], ["6.1.0-t18", "Zen Close-Ups Fixed, Rare Sights as Paper Cut-Outs, Tilt-Shift Diorama Look (Test)"], ["6.1.0-t19", "Narrower Tilt-Shift Band, Winder Trash Can Out of the Broke Hole (Test)"], ["6.1.0-t20", "Balance: Rounds Pay More, Capacity and Maintenance Upgrades Re-Priced"], ["6.1.0", "Paper Diorama: Isometric Paper Art Style, Cut-Out People and Upsets, Tilt-Shift, Rounds Pay More, Upgrades Re-Priced"], ["6.1.1", "Phone Fixes: Gentler Tilt-Shift on Tall Screens, Cut-Out People No Longer Blank on iPhone"], ["6.1.2", "iPhone: Cut-Out Self-Test Retries, People Keep Their Colours in the 3D Fallback"], ["6.1.3", "Broke Hole by the Winder Looks Like a Floor Opening (Was a Black Square)"], ["6.1.4", "Tilt-Shift Removed"], ["6.2.0", "Zen Free Camera: Perspective Zen Shots, 3D People in Zen, Cleaner River Water"], ["6.3.0-f1", "Process Flow Overview (Test): Inputs, Mill Areas and Outputs for the Mill Day, in Settings"], ["6.3.0-f2", "Process Flow: the Game Keeps Running While It's Open (Test)"], ["6.3.0", "Process Flow Overview: Inputs, Mill Areas and Outputs for the Mill Day (Settings > View)"], ["6.4.0", "Zen Shots Review: Shuffle-Bag Shot Order, Landscape Shots Rebuilt, Close Rare Sights"], ["6.5.0-a1", "Digital Twin A (Test): Hourly History, 14 Prior Days, 7 d / Run Ranges, Area Trends and Uptime"], ["6.5.0-b1", "Digital Twin B (Test): Real Freight Costs with a Diesel Index, Area Controls Moved into Process Flow"], ["6.5.0-b2", "Market Pricing (Test): 2026 OCC and Energy Costs, Diesel in $/gal, Desert Long Haul, Real Steam Rates"], ["6.5.0-b3", "DCS Expansion (Test): Full SPOT, WET and DET Pictures, a UTIL Screen, Motors and Reject Purges"], ["6.5.0-b4", "DCS Pictograms (Test): Equipment Drawn as Classic DCS Symbols, Colour Only When Something's Wrong"], ["6.5.0-b5", "The Dryer Limit (Test): Speed and Grade Load the Dryers, a Wet Sheet Fails Spec and Slows the Machine"], ["6.5.0", "Digital Twin: Process Flow Trends and Controls, Real Freight and Market Costs, Full DCS, Dryer Limit, Rebalance"], ["6.5.1", "Second Screen: Pop the DCS and Process Flow Out to Their Own Window for a Second Monitor (Desktop)"], ["6.5.2", "Knob Fixes: Wet-End and Steam Knobs Bite Again Under the Dryer Limit, DCS Uses the Machine's Name"], ["6.5.3", "Quality Specs: Weight, Moisture and Color Specs per Grade, Off-Spec Paper Wound into Beater Rolls and Repulped"], ["6.5.4", "DCS Fixes: Making-Beater Alerts, SPOT in Process Order, Boiler and Power on Utilities, 2nd/3rd Section Steam Control"], ["6.5.5-t1", "Dewatering Chain (Test): Jet and Vacuum Optimums, Couch to Press Solids, Press Solids Set the Dryer Steam Both Ways"], ["6.5.5", "The Dewatering Chain: Jet and Vacuum Optimums, Couch to Press Solids, Press Solids Set the Dryer Steam Both Ways"], ["6.5.6-t1", "Mass Balance (Test): A Real Water Balance and White Water Chest, Hayout Broke Repulped, Every Fiber Loss Booked"], ["6.5.6", "Mass Balance: A Real Water Balance and White Water Chest, Hayout Broke Repulped, Every Fiber Loss Booked"], ["6.5.7-t1", "Winder Pass (Test): Four Reel Storage Stands, Two-Roll Sets, Rolls Tied Together, Steam Vented on a Sheet Break"], ["6.5.7", "Winder Pass: Four Reel Storage Stands, Two-Roll Sets, Rolls Tied Together, Steam Vented on a Sheet Break"], ["6.6.0-t1", "Orders and Bales (Test): Customer Order Book and Spot Market, Idle Energy While Stopped, Bale Grading at the Gate"], ["6.6.0", "Orders and Bales: Customer Order Book and Spot Market, Idle Energy While Stopped, Bale Grading at the Gate"], ["6.7.0-t1", "Control Room (Test): Planning, Water and Quality Screens, Split-Screen Trends of Anything, What Moves With What, Process Flow Views"], ["6.7.0", "Control Room: Planning, Water and Quality Screens, Split-Screen Trends of Anything, What Moves With What, Process Flow Views"], ["6.7.1-t1", "New Grade Set (Test): Grades 24, 28, 31 and 34Super, Same Tons per Hour"], ["6.7.1", "New Grade Set: Grades 24, 28, 31 and 34Super, Same Tons per Hour"], ["6.8.0-t1", "Process Relationships (Test): Refining Energy and Ring Crush, Basis Weight Loop, Headbox at 0.8%, White Water Silo, Bale Water and Screen Pressure Drop"], ["6.8.0-t2", "Relationship Map in the Control Room (Test): What Drives Each Reading and What It Moves, Live"]];
   let ov=null,held=false;
   function render(){
     const cur=APP_VER.replace(/^v/i,""),rows=VNOTES.slice().reverse().map(([v,n])=>
@@ -14623,15 +14928,15 @@ function camPullOn(){try{return localStorage.getItem("paper-mill-campull")!=="of
 /* ---- v6.7 Report > Control room: one place for the mill's screens (the process flow, the DCS, planning, quality, water
    and trends). The DCS still opens from the operator consoles in the mill too; the process flow left Settings. ---- */
 {const CR=[["pf","Process flow","Money and tons through the mill"],["dcs","DCS","Stock prep, wet end, dry end, utilities"],["PLAN","Planning","Orders, inventory, trucks"],
-    ["QCS","Quality","Specs, off-spec log, beater"],["WATER","Water","Fresh water and the water balance"],["TREND","Trends","Trend anything, find what moves together"]];
+    ["QCS","Quality","Specs, off-spec log, beater"],["WATER","Water","Fresh water and the water balance"],["TREND","Trends","Trend anything, find what moves together"],["rm","Relationship map","What drives each reading, and what it moves"]];
   const el=$("ctlRoom");
   if(el){el.innerHTML=`<div class="crh"><b>Control room</b><small id="crNote">The mill's screens. The DCS screens also open from the operator consoles in the mill.</small></div>
       <div class="crg">${CR.map(([k,l,d])=>`<button type="button" data-cr="${k}"><b>${l}</b><small>${d}</small></button>`).join("")}<button type="button" data-cr="pop" id="crPop" hidden><b>⧉ Second screen</b><small>DCS and process flow in their own window</small></button></div>`;
     el.addEventListener("click",e=>{const b=e.target.closest("[data-cr]");if(!b||b.disabled)return;const k=b.dataset.cr;
       const x=document.querySelector('#v2sheet header button[aria-label="Close panel"]');if(x)x.click();
-      if(k==="pf")pfOpen();else if(k==="pop")popOpen("both");else openStation(k==="dcs"?(KUI.last||"SPOT"):k,"dcs");});}
-  UI_TICKS.push(()=>{if(!el)return;const z=!!S.zen;el.querySelectorAll("[data-cr]").forEach(b=>{if(b.dataset.cr==="pf"||b.dataset.cr==="pop")return;if(b.disabled!==z)b.disabled=z;});
-    const n=$("crNote"),t=z?"Zen mode: the process flow only. The DCS, planning, quality, water and trend screens are in the other modes.":"The mill's screens. The DCS screens also open from the operator consoles in the mill.";if(n&&n.textContent!==t)n.textContent=t;
+      if(k==="pf")pfOpen();else if(k==="rm")rmOpen();else if(k==="pop")popOpen("both");else openStation(k==="dcs"?(KUI.last||"SPOT"):k,"dcs");});}
+  UI_TICKS.push(()=>{if(!el)return;const z=!!S.zen;el.querySelectorAll("[data-cr]").forEach(b=>{if(b.dataset.cr==="pf"||b.dataset.cr==="pop"||b.dataset.cr==="rm")return;if(b.disabled!==z)b.disabled=z;});
+    const n=$("crNote"),t=z?"Zen mode: the process flow and the relationship map. The DCS, planning, quality, water and trend screens are in the other modes.":"The mill's screens. The DCS screens also open from the operator consoles in the mill.";if(n&&n.textContent!==t)n.textContent=t;
     const p=$("crPop"),h=!POPOK()||POP.on;if(p&&p.hidden!==h)p.hidden=h;});}
 // frame rate is a player choice (Controls): Battery saver = 30 fps, Smooth = 60 fps (v15 default: a 120 Hz screen no longer
 // draws twice as many frames), Max = the display's rate; remembered. (true/false still mean Max/saver for the test tools)

@@ -1,6 +1,17 @@
 # Changelog
 
 
+## v6.8.0-t2 (2026-10-19): relationship map in the control room (test)
+On test/v6.8-relations, not merged. New code: `src/js/50j-relmap.js`. Check: `tools/relmapcheck.py` (15 checks).
+- **Report → Control room → Relationship map.** All 86 trendable readings and 13 drivers (weather, grade, knobs, market,
+  orders, upsets) in a DCS-style process map, left to right from inputs to shipping and money, with 187 cause → effect
+  links from the sim: + rises with, − falls as it rises, ~ optimum, limit or swing, = same reading.
+- **Tap a reading** to light its links and list what drives it and what it moves, each with the mechanism. "Full chain"
+  follows the links all the way up and down. Each box shows its live reading; H marks readings with hourly history.
+- **Trend it** sends the reading to the trend screen. The game keeps running at the player's speed while the map is open.
+  Escape closes it. Zen keeps it. On a phone the details sit under the map.
+- Keep `RM_E` in step with the sim when a relationship changes; relmapcheck fails on a tag with no links.
+
 ## v6.8.0-t1 (2026-10-19): process relationships (test)
 On test/v6.8-relations, not merged. New code: `src/js/07g-wetend.js`. Check: `tools/relcheck.py` (20 checks). Functionality
 only, no balancing; a hands-off 12-day seeded run is within 0.2% of v6.7.1 on paper made. No new dice: runs replay identically.
