@@ -55,7 +55,7 @@ def catch_round(pg, area, ids, how):
 
 # the tells' tuning (TELL in src/js/04b-tells.js, v6.5 balance): lead time in days, a survival wave's step, the floor,
 # and a caught tell's planned repair as a share of the bill. Update these with TELL.
-T_LEAD, T_STEP, T_MIN, T_CUT = 3.5, 0.12, 1, 0.1
+T_LEAD, T_STEP, T_MIN, T_CUT = 4.5, 0.12, 1, 0.05   # (v6.9.2 balance: 4.5 days, 5%)
 
 with sync_playwright() as pw:
     # ================= SEASON =================
@@ -93,7 +93,7 @@ with sync_playwright() as pw:
     r = pg.evaluate("""()=>{const P=__PM,S=P.S;S.cash=5e6;S.upDay=-1;const m0=S.civ.m.M;document.getElementById('buy-reliab').click();return {m:S.civ.m.M-m0,rep:P.tell.rep(),lv:S.up.reliab};}""")
     ok("report: Reliability program L1 unlocks it, Machinery +6", r["rep"] and abs(r["m"] - 6) < 0.01 and r["lv"] == 1, r)
     # arrows follow the queue
-    r = pg.evaluate("""()=>{const P=__PM,S=P.S,T=S.tell;T.day=-1;T.q=[{id:"shaft",due:S.t+600,born:S.t,area:"dry"},{id:"ragger",due:S.t+2000,born:S.t,area:"pulp"}];
+    r = pg.evaluate("""()=>{const P=__PM,S=P.S,T=S.tell;T.day=-1;if(S.rel)S.rel.a&&Object.values(S.rel.a).forEach(a=>{a.lv=null;a.la=null;});T.q=[{id:"shaft",due:S.t+600,born:S.t,area:"dry"},{id:"ragger",due:S.t+2000,born:S.t,area:"pulp"}];
       P.G3.tellOpen();const o={};document.querySelectorAll('#tellOv .tarea').forEach(b=>{const e=b.querySelector('.tv');o[b.dataset.a]=e?e.className:null;});return o;}""")
     ok("report: arrows (dry fast, pulp climbing, wet steady)", "tv2" in r["dry"] and "tv1" in r["pulp"] and "tv0" in r["wet"], r)
     pg.evaluate("()=>{document.getElementById('tellOv').hidden=true;__PM.S.tell.q=[];}")

@@ -1488,6 +1488,33 @@ body.pmpop .popmain[data-v="dcs"] #dcsOv .dcs{max-width:1180px;margin:0 auto}
 .vlvrow{display:flex;gap:8px;align-items:center;flex:1 1 220px;background:#1c2b45;border:1px solid #2c3e5c;border-radius:8px;padding:7px 10px;color:#dbe6f6;text-align:left;min-height:40px}
 .vlvrow b{color:#7fb2ff;font:700 12px ui-monospace,Menlo,monospace}.vlvrow span{flex:1;color:#c3d3ea;font-size:12px}.vlvrow i{font:700 12px ui-monospace,Menlo,monospace;font-style:normal;color:#4fd18b;white-space:nowrap}
 .vlvrow i.st-man{color:#ffd77a}.vlvrow i.st-bad{color:#ff8b7f}
+/* ---- v6.10 reliability: the RELIAB and DRIVES screens, the outage changeouts, the card's reliability line ---- */
+.rch{display:inline-flex;flex-direction:column;gap:1px;border-left:3px solid #4a5d7e;padding:1px 0 1px 7px;line-height:1.2}
+.rch b{font-size:12.5px;color:#dbe6f6}.rch small{font-size:11px;color:#8ea4c4;font-variant-numeric:tabular-nums}
+.rch.ok{border-color:#4fd18b}.rch.ok b{color:#9fe8bf}.rch.warn{border-color:#ffb02e}.rch.warn b{color:#ffcf7a}.rch.bad{border-color:#ff6b5e}.rch.bad b{color:#ff8b7f}
+.rch.stale{border-color:#4a5d7e;opacity:.6}.rch.unk{border-color:#4a5d7e;border-left-style:dashed}.rch.unk b{color:#8ea4c4}
+.rlytab tr{cursor:pointer}.rlytab tr:hover td{background:#1a2b47}.rlytab td small{display:block;color:#8ea4c4;font-size:11px}.rlytab td b{font-size:12.5px}.rbk{color:#ffcf7a!important}
+.rlyrd{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:4px}
+.rrd{display:grid;grid-template-columns:auto 1fr;gap:0 8px;background:#1c2b45;border:1px solid #2c3e5c;border-radius:8px;padding:5px 8px;font-size:12px}
+.rrd b{color:#dbe6f6}.rrd span{color:#8ea4c4;text-align:right}.rrd em{grid-column:1 / -1;font-style:normal;color:#c3d3ea}.rrd em.ok{color:#4fd18b}.rrd em.bad{color:#ff8b7f}.rrd.go{border-color:#4fd18b}
+.rdh b{font-size:16px;color:#fff;display:block}.rdh small{color:#8ea4c4}
+.rdg{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:8px}
+.rhist{display:flex;flex-direction:column;gap:1px;font-size:11.5px;font-variant-numeric:tabular-nums}.rhist div{display:flex;justify-content:space-between;gap:8px}.rhist span{color:#8ea4c4}.rhist em{font-style:normal}
+.rhist em.ok{color:#9fe8bf}.rhist em.warn{color:#ffcf7a}.rhist em.bad{color:#ff8b7f}
+.ract{display:flex;flex-wrap:wrap;gap:6px}.dcs .kstd[aria-pressed="true"]{border-color:#4fd18b;color:#9fe8bf}
+.rfix{background:#ff6b5e;color:#0f1b2d;border:0;border-radius:8px;padding:6px 10px;font-weight:800;text-align:left;display:flex;flex-direction:column}.rfix small{font-weight:600;font-size:11px}.rfix:disabled{opacity:.5}
+.rchg{display:grid;grid-template-columns:repeat(3,1fr);gap:6px}.rchg button{background:#22324f;color:#dbe6f6;border:1px solid #33476a;border-radius:8px;padding:6px 8px;text-align:left}
+.rchg button small{display:block;color:#8ea4c4;font-size:11px}.rchg button[aria-pressed="true"]{border-color:#ffb02e;background:#3a2f17}.rchg button[aria-pressed="true"] b::before{content:"✓ "}
+.drvw{display:flex;flex-direction:column;gap:8px}.drvw table td small{display:block;color:#8ea4c4;font-size:11px}
+.dst{font-weight:800;font-size:11px;letter-spacing:.06em;color:#8ea4c4}.dst.ok{color:#4fd18b}.dst.bad{color:#ff8b7f}
+.dbar{position:relative;display:block;width:100%;min-width:120px;height:22px;background:#0b1424;border:1px solid #2c3e5c;border-radius:5px;padding:0;overflow:hidden;cursor:pointer}
+.dbar i{position:absolute;left:0;top:0;bottom:0;background:#2f7d5a}.dbar i.warn{background:#9a6a12}.dbar i.bad{background:#a3352d}
+.dbar::after{content:"";position:absolute;left:76.9%;top:0;bottom:0;border-left:1px dashed rgba(255,255,255,.35)}
+.dbar em{position:relative;font-style:normal;font-weight:800;font-size:12px;color:#fff;line-height:20px;padding-left:6px;font-variant-numeric:tabular-nums}
+.drvsub p{margin:0}.drvsub .bad{color:#ff8b7f}
+.cvrly{margin:0;font:500 13px var(--f-body);padding:6px 10px;border-left:3px solid var(--warn);background:color-mix(in srgb,var(--warn) 8%,var(--panel));border-radius:6px}.cvrly b{display:block;font:700 11px var(--f-body);letter-spacing:.06em;text-transform:uppercase;color:var(--warn)}
+.rplan .prow{grid-template-columns:1fr}.rplan .seg button{font-size:12px;padding:6px 6px}.rplan .linkb{color:var(--brand);margin-top:6px;align-self:flex-start}
+@media (max-width:560px){.rchg{grid-template-columns:1fr}.rlytab td:nth-child(4){display:none}.rlytab th:nth-child(4){display:none}}
 </style>
 </head>
 <body class="app">
@@ -1662,7 +1689,7 @@ body.pmpop .popmain[data-v="dcs"] #dcsOv .dcs{max-width:1180px;margin:0 auto}
 <div class="btns"><button class="primary" id="no3d-retry">Try again</button></div></div></div>
 
 <script type="module">
-const APP_VER="v6.9.2";   // shown in the menu and sent with leaderboard scores (max 12 characters)
+const APP_VER="v6.10.0-t1";   // shown in the menu and sent with leaderboard scores (max 12 characters)
 // TEST BUILDS ONLY (off in releases): turbo speeds 240/480/960 sim min/s for fast playtests. Above 120, crews and maintenance start jobs
 // without waiting for the 3D walk (as with the 3D view off) and outages keep the speed. Set false for a release.
 const TURBO=false,TURBO_FAST=s=>TURBO&&s>120;
@@ -2267,9 +2294,9 @@ const UPS=[
  {id:"agv",g:"yard",name:"Robotic roll handling",lv:[390e3,715e3,1040e3],desc:"+2 robot loaders per level. $15/h each, never call off."},
  {id:"wh",g:"yard",name:"Warehouse extension",lv:[195e3,390e3],desc:"+112 rolls (1,400 t) of storage per level."},
  {id:"safety",g:"yard",name:"Safety & HR program",lv:[15e3],desc:"Dock fights and call-offs half as often."},
- {id:"maintcrew",g:"maint",name:"Maintenance techs",lv:[130e3,235e3,340e3],desc:"+2 techs on yellow scooters per level. Repairs finish 20% faster and repair bills are 10% lower per level (in-house work instead of contractors)."},
+ {id:"maintcrew",g:"maint",name:"Maintenance techs",lv:[130e3,235e3,340e3],desc:"+2 techs on yellow scooters per level. Repairs finish 20% faster and repair bills are 10% lower per level (in-house work instead of contractors). Every tech also does a vibration round each shift when not called to an upset."},
  {id:"rcfa",g:"maint",name:"Root cause analysis (RCFA)",lv:[200e3,100e3],desc:"Every breakdown is investigated: repeat failures 25% rarer per level."},
- {id:"reliab",g:"maint",name:"Reliability program",lv:[255e3,160e3],desc:"Vibration and oil analysis: drive, felt and fabric failures 40% rarer and repair bills 15% lower per level. Level 1 adds the Vibration Report to your daily rounds."},
+ {id:"reliab",g:"maint",name:"Reliability program",lv:[255e3,160e3],desc:"Vibration and oil analysis: drive, felt and fabric failures 40% rarer and repair bills 15% lower per level. Level 1 adds the Vibration Report to your daily rounds. Covers the new bearing and motor failures too."},
  {id:"pmprog",g:"maint",name:"Preventive maintenance",lv:[115e3,235e3,365e3],desc:"Planned shutdown work: all breakdowns 20% rarer and fewer sheet breaks per level. Costs $150/h per level."},
  {id:"stores",g:"maint",name:"Spare parts storeroom",lv:[45e3],desc:"Parts on the shelf: repairs finish 25% faster."},
  {id:"apc",g:"mgmt",name:"Advanced process control",lv:[105e3,105e3],desc:"+2% tons and 4% less energy per level."},
@@ -2291,7 +2318,7 @@ function applyUpgrades(){
   P.doorRate*=civRecv();   // v5.1 civics: a low Community limits truck hours
   P.costMul=survOn()?survCost():1;   // v4.3 survival: fiber, energy and chemicals, and wages cost more every wave (exactly 1 otherwise)
   P.occPrice=(P.blendP+((S&&S.plan)?leadMkt(S.plan.mkt):0)-10*LV("contract")+P.siteOcc)*P.costMul*leadFibre();   // (v4.4: the leader's fiber deals; Hank runs heavy)
-  P.priceAdd=12*LV("sales")+P.sitePrice+leadPrice()+civPrice(); P.repairMul=REPAIR_K*(LV("insure")?0.4:1)*(1-0.15*LV("reliab"))*(1-0.1*LV("maintcrew"))*leadBill()*civBill();P.techs=2+2*LV("maintcrew");P.pmCost=150*LV("pmprog"); P.premium=LV("insure")?900:0;   // (t20 balance: $400/h and $1,500/h)
+  P.priceAdd=12*LV("sales")+P.sitePrice+leadPrice()+civPrice(); P.repairMul=REPAIR_K*(LV("insure")?0.4:1)*(1-0.15*LV("reliab"))*(1-0.1*LV("maintcrew"))*leadBill()*civBill();P.techs=2+2*LV("maintcrew");P.elec=1;P.pmCost=150*LV("pmprog"); P.premium=LV("insure")?900:0;   // (t20 balance: $400/h and $1,500/h)
   P.breakBase=Math.pow(0.7,LV("monitor"))*Math.pow(0.9,LV("pmprog"))*leadClean()*civBreak();
   P.hayBase=Math.pow(0.6,LV("winder"))*leadClean()*civBreak();
   // the sliders' limits follow the upgrades (v5.2: written only when they change; this runs hourly from the sim)
@@ -2336,6 +2363,7 @@ function freqMul(id){let m=1;const MS=FM_MAINT||(FM_MAINT=new Set(MAINT));
   if(OUT.area[id])m*=outRel(OUT.area[id]);
   m*=siteFreq(id);
   m*=civFreq(id);   // v5.1 civics: each choice's odds, and the meters
+  m*=rlyLinkMul(id);   // v6.10: the upsets tied to an asset's bearings wear with them (07i)
   m*=leadFreq(id);   // v4.4 survival leaders: Chip's labour trouble, Felicity's projects, the upset Dot just fixed
   if(S&&S.fx)for(const f of S.fx){if(f.freq&&EV[id]&&(EV[id].g==="machine"||EV[id].g==="stock"))m*=f.freq;if(f.scab&&id==="slime")m*=f.scab;if(f.evf&&f.evf[id])m*=f.evf[id];}
   return m;}
@@ -2673,9 +2701,10 @@ function manH(...a){let h=0x811c9dc5;for(const v of a){const s=String(v);for(let
   return ()=>{h=(h+0x6D2B79F5)|0;let t=h;t=Math.imul(t^(t>>>15),t|1);t^=t+Math.imul(t^(t>>>7),t|61);return ((t^(t>>>14))>>>0)/4294967296;};}
 function manRoster(){const sd=(S&&S.seed)>>>0;if(MAN.ros&&MAN.seed===sd)return MAN.ros;MAN.seed=sd;MAN.cache.clear();
   const r=manH("roster",sd),used=new Set(),ros={};
-  MAN.TEAMS.forEach(T=>{const mk=(role,k)=>{let n;do{n=MAN_FIRST[Math.floor(r()*MAN_FIRST.length)]+" "+MAN_INIT[Math.floor(r()*MAN_INIT.length)]+".";}while(used.has(n));used.add(n);
+  const mk=(T,role,k)=>{let n;do{n=MAN_FIRST[Math.floor(r()*MAN_FIRST.length)]+" "+MAN_INIT[Math.floor(r()*MAN_INIT.length)]+".";}while(used.has(n));used.add(n);
       return {id:T+role+k,team:T,role,k,name:n};};
-    ros[T]={t:Array.from({length:MAN.NT},(_,k)=>mk("t",k)),o:Array.from({length:MAN.NO},(_,k)=>mk("o",k))};});
+  MAN.TEAMS.forEach(T=>{ros[T]={t:Array.from({length:MAN.NT},(_,k)=>mk(T,"t",k)),o:Array.from({length:MAN.NO},(_,k)=>mk(T,"o",k))};});
+  MAN.TEAMS.forEach(T=>{ros[T].e=[mk(T,"e",0)];});   // v6.10: each team's electrical tech, named after everyone else so the others keep their names
   return MAN.ros=ros;}
 const manCyc=(T,d)=>(((d+MAN.ANCH-MAN.OFF[T])%28)+28)%28;
 const manKind=s=>(((s%2)+2)%2)?"N":"D";
@@ -2696,7 +2725,7 @@ function manShift(s){manRoster();const nt=Math.max(1,Math.min(MAN.NT,P.techs|0))
     if(tech&&rc()<MAN.SHORT){row.who=null;short++;continue;}
     const from=free.length?free[Math.floor(rc()*free.length)]:MAN.TEAMS[(MAN.TEAMS.indexOf(T)+2)%4],list=MAN.ros[from][tech?"t":"o"];
     row.who=list[Math.floor(rc()*list.length)];row.cover={type:rc()<MAN.SWAP?"swap":"OT",from};}
-  m={s,d,K,team:T,techs,ops,short,nt};if(MAN.cache.size>96)MAN.cache.clear();MAN.cache.set(key,m);return m;}
+  m={s,d,K,team:T,techs,ops,short,nt,elec:{home:R.e[0],who:R.e[0],vac:false,cover:null}};   /* (v6.10: the electrical tech is always on: no vacations modelled) */if(MAN.cache.size>96)MAN.cache.clear();MAN.cache.set(key,m);return m;}
 const manIdx=()=>Math.floor((S&&S.t||0)/720);
 function manNow(){return manShift(manIdx());}
 // maintenance repair rate this shift (chaosTick, 04): slower when a tech's vacation went unfilled
@@ -2804,7 +2833,7 @@ function maintTick(dt){if(!S.inc.length)return;const crews=Math.max(1,Math.floor
   list.forEach((i,k)=>{i.mQ=k-crews+1;if(k>=crews){if(i.mSlot>=0){i.mSince=0;i.mHere=false;i.mGo=false;}i.mSlot=-1;return;}i.mSlot=k;if(!i.mSince){i.mSince=1;i.mResp=8;}
     if(i.mResp>0)i.mResp-=dt;if(i.mResp<=0)i.mGo=i.mHere=true;});}
 function maintState(i){if(!MNEED(i.id))return "";if(i.mGo)return "maintenance working";if(i.mSlot>=0)return "maintenance on the way";return i.mQ>0?`waiting for maintenance (${i.mQ} ahead)`:"waiting for maintenance";}   // (v5.1 QA: mQ is unset until the next tick)
-function incState(i){const a=QINC(i.id)&&!working(i.id)?crewState(i.id):"",b=MNEED(i.id)&&!i.mGo?maintState(i):"";return [a,b].filter(Boolean).join(" · ");}
+function incState(i){const a=QINC(i.id)&&!working(i.id)?crewState(i.id):"",b=MNEED(i.id)&&!i.mGo?maintState(i):"",c=ENEED(i.id)&&!i.eGo?elecState(i):"";return [a,b,c].filter(Boolean).join(" · ");}   // (v6.10: c, the electrical tech, 07i)
 function working(k){const h=S.crewQ&&S.crewQ[0];return !!(h&&h.k===k&&h.go);}
 function crewState(k){const q=S.crewQ||[],i=q.findIndex(x=>x.k===k);if(i<0)return "";if(i>0)return `waiting for crew (${i} ahead)`;return q[0].go?"crew working":"crew on the way";}
 function baseMods(){return {pmDown:null,pulperDown:false,speedCap:1,breakMul:1,yieldMul:1,recvMul:1,clampMul:1,drvCap:99,ldrCap:99,docksClosed:false,noIn:false,noOut:false,yardEat:0,hayMul:1,crewAtPM:false,winderDown:false,offSpec:false,feedMul:1};}
@@ -2838,6 +2867,7 @@ function trigger(id,quiet){
   log(e.head+(inc.note?` (${inc.note})`:""),"bad");
   S.M=mods();
   leadAuto(inc);   // v5.0.4: Dot may fix it on the spot
+  rlyOnTrigger(inc);   // v6.10: the card's reliability line; a blackout hits the drives (07i)
   civOnUpset(inc);   // v5.1 civics: the upset's choices (or a standing order)
 }
 function clearIncident(id){const i=S.inc.find(x=>x.id===id);if(i)i.left=0;}
@@ -2845,7 +2875,8 @@ function chaosTick(dt){
   manTick();   // v6.9 manning: the shift change (03f)
   crewTick(dt);
   maintTick(dt);
-  for(const i of S.inc){if(QINC(i.id)&&!working(i.id))continue;if(MNEED(i.id)&&!i.mGo)continue;if(QINC(i.id)||MNEED(i.id))i.go=true;i.left-=dt*((QINC(i.id)||MNEED(i.id))?repRate()*leadRep()*civRepair()*(MNEED(i.id)?manRep():1):1);}
+  rlyElecTick(dt);   // v6.10: the electrical tech's job (07i)
+  for(const i of S.inc){if(QINC(i.id)&&!working(i.id))continue;if(MNEED(i.id)&&!i.mGo)continue;if(ENEED(i.id)&&!i.eGo)continue;const w=QINC(i.id)||MNEED(i.id)||ENEED(i.id);if(w)i.go=true;i.left-=dt*(w?repRate()*leadRep()*civRepair()*(MNEED(i.id)?manRep():1):1);}
   for(const i of S.inc)if(i.left<=0&&EV[i.id].end)EV[i.id].end(i);
   for(const i of S.inc)if(i.left<=0)log(`${EV[i.id].name}: cleared, back to normal`,"ok");
   // (v4.1 pass 7: compacted in place and counted with a loop: this runs every sim step, and the two filters made new arrays each time)
@@ -2943,7 +2974,7 @@ function tellRoundEnd(a,caught){const T=tellState(),left=T.q.filter(p=>p.area===
 // the Vibration Report: the Reliability program (vibration and oil analysis) or Dot's own kit
 const tellRep=()=>LV("reliab")>=1||leadIs("dot");
 // per area: 0 steady, 1 climbing (something pending), 2 climbing fast (due within 24 h)
-function tellTrend(a){const q=(S.tell&&S.tell.q)||[];let v=0;for(const p of q)if(p.area===a)v=Math.max(v,p.due-S.t<1440?2:1);return v;}
+function tellTrend(a){const q=(S.tell&&S.tell.q)||[];let v=0;for(const p of q)if(p.area===a)v=Math.max(v,p.due-S.t<1440?2:1);return Math.max(v,rlyTellTrend(a));}   // (v6.10: and what the shift rounds found, 07i)
 // in the visible list: only tells the dice actually rolled (the 3D shows them during a Round)
 const tellIn=a=>((S.tell&&S.tell.q)||[]).filter(p=>p.area===a);
 const tellSummary=()=>{const T=S&&S.tell;if(!T||!T.n)return "";return `Upsets caught early: ${T.n} — saved ${money(T.saved)} and ${tellHrs(T.savedMin)} of downtime.`;};
@@ -3641,21 +3672,21 @@ function openOutagePlan(){if(G3.yieldUI)G3.yieldUI();const o=S.outg,st=outStart(
     <h2 id="out-h">${first?"Your first planned outage":"Outage in 24 hours"}</h2>
     ${first?`<div class="intro"><p><b>What's an outage?</b> Planned downtime. Every ${OUT.every} days the mill comes down on purpose for a controlled 4-hour shutdown, so crews can inspect, clean, repair and replace worn parts before they fail.</p>
       <p><b>Why it matters:</b> well-maintained equipment breaks down less and runs better, with fewer sheet breaks and hayouts. Your budget for each area sets its reliability until the next outage.</p></div>`:""}
-    <p class="when">Starts <b>${outTime(st)}</b>, back up by <b>${hourOf(st+OUT.len)}</b> (4 hours, machine and stock prep down).<br>Major job: <b>${OUT.jobs[outJob(o.k)-1]||"inspections"}</b>, plus new press felts.</p>${survOn()?survPlanNote(o.k):""}<div id="out-lead"></div><div id="out-prep"></div>${typeof civPlanHTML==="function"?civPlanHTML():""}
+    <p class="when">Starts <b>${outTime(st)}</b>, back up by <b>${hourOf(st+OUT.len)}</b> (4 hours, machine and stock prep down).<br>Major job: <b>${OUT.jobs[outJob(o.k)-1]||"inspections"}</b>, plus new press felts.</p>${survOn()?survPlanNote(o.k):""}<div id="out-lead"></div><div id="out-prep"></div><div id="out-rly"></div>${typeof civPlanHTML==="function"?civPlanHTML():""}
     <div>${OUT.areas.map(([a,n,d])=>`<div class="orow" data-a="${a}"><div><b>${n}</b><small>${d}</small></div><div class="seg">${COST.map((c,i)=>`<button data-v="${i}" aria-pressed="${i===d0}">${k(c)}</button>`).join("")}</div><em class="eff"></em></div>`).join("")}</div>
     <div class="otot"><div><span>Outage budget</span><small id="out-cash"></small></div><b id="out-tot"></b></div>
     <div class="btns"><button class="primary" id="out-ok" style="flex:1">Approve budget</button></div></div>`;
   const paint=()=>{el.querySelectorAll(".orow").forEach(r=>{const a=r.dataset.a,v=pick[a];r.querySelectorAll(".seg button").forEach(b=>b.setAttribute("aria-pressed",String(+b.dataset.v===v)));
       const [c,t]=effTxt(v,a),e=r.querySelector(".eff");e.className="eff "+c;e.textContent=t;});
-    const tot=Object.values(pick).reduce((s,v)=>s+COST[v],0)+civPlanCost(o._civ&&o._civ.civ);document.getElementById("out-tot").textContent=money(tot);
+    const tot=Object.values(pick).reduce((s,v)=>s+COST[v],0)+civPlanCost(o._civ&&o._civ.civ)+rlyPlanCost();document.getElementById("out-tot").textContent=money(tot);
     document.getElementById("out-cash").textContent="Cash on hand "+money(S.cash);document.getElementById("out-ok").textContent=`Approve ${money(tot)} budget`;};
   el.querySelectorAll(".orow").forEach(r=>r.querySelectorAll(".seg button").forEach(b=>b.addEventListener("click",()=>{pick[r.dataset.a]=+b.dataset.v;paint();})));
   document.getElementById("out-ok").addEventListener("click",()=>{const tot=Object.values(pick).reduce((s,v)=>s+COST[v],0);spend(tot,"repairs");OUT.areas.forEach(([a])=>pfAdd("rep",a==="stock"?"stock":"pm",COST[pick[a]]));pfAdd("repid","outage",tot);histEv("outage",tot);
     const cpc=o._civ&&o._civ.civ;if(cpc&&civPlanCost(cpc))civPay(civPlanCost(cpc));   // v5.1 civics levers
-    o.plan={...pick};if(cpc)o.plan.civ=cpc;delete o._civ;if(lp)o.plan.lead={to:lp.to,pick:lp.pick};log(`Outage ${o.k} budget approved: ${money(tot)} (${OUT.areas.map(([a,n])=>n+" "+k(COST[pick[a]])).join(", ")})`,"warn");
+    o.plan={...pick};if(cpc)o.plan.civ=cpc;delete o._civ;rlyPlanBook(o);   /* v6.10 changeouts (07i) */if(lp)o.plan.lead={to:lp.to,pick:lp.pick};log(`Outage ${o.k} budget approved: ${money(tot)} (${OUT.areas.map(([a,n])=>n+" "+k(COST[pick[a]])).join(", ")})`,"warn");
     el.hidden=true;closeCard(true);});
   o._civ={};if(civOn()){civPlanWire(el,o._civ);el.querySelectorAll(".civplan .seg button").forEach(b=>b.addEventListener("click",()=>paint()));}
-  paint();if(lp)leadPlanMount(document.getElementById("out-lead"),lp);if(G3.prepMount)G3.prepMount(document.getElementById("out-prep"));   /* v5.7 outage prep */el.hidden=false;AUDIO.sfx("cash",150);document.getElementById("out-ok").focus({preventScroll:true});el.querySelector(".modal").scrollTop=0;}   // v5.0.4: opens at the top
+  paint();if(lp)leadPlanMount(document.getElementById("out-lead"),lp);if(G3.prepMount)G3.prepMount(document.getElementById("out-prep"));if(G3.rlyPlanMount)G3.rlyPlanMount(document.getElementById("out-rly"),paint);   /* v5.7 outage prep */el.hidden=false;AUDIO.sfx("cash",150);document.getElementById("out-ok").focus({preventScroll:true});el.querySelector(".modal").scrollTop=0;}   // v5.0.4: opens at the top
 function outNote(head,body,ms,btn){   // v5.0.5: with an event card open, the notice waits until the card is answered, so it never covers the card's buttons
   // v5.0.6: it also waits while the card's result toast is showing, so it never lands on top of it
   {const d=document.getElementById("dealOv"),busy=()=>!!(d&&!d.hidden&&((S.cards&&S.cards.open&&S.cards.open.c)||d.classList.contains("dealres")));clearInterval(outNote._w);
@@ -3675,6 +3706,7 @@ function beginOutage(){const o=S.outg,st=S.t;if(!o.plan)o.plan={stock:1,wet:1,dr
   addFx({id:"pout",left:OUT.len,mods:{pmDown:"planned outage",pulperDown:1}});AUDIO.sfx("clunk",400);
   if(typeof civOutageBegin==="function")civOutageBegin(o,st);   // v5.1 civics: Labor sets how long it runs
   prepBegin(o,st);   // v5.7 outage prep: completed checklist items take minutes off
+  rlyOutageBegin(o);   // v6.10: booked changeouts add minutes (07i)
   log(`Planned outage ${o.k} has begun: down until ${hourOf(o.end)}`,"warn");BANNERS.push({text:`Planned outage: the mill is down until ${hourOf(o.end)}.`,t:null,kind:"good",tag:"OUTAGE"});
   const canWatch=C.simSpeed>OUT.simCap&&!TURBO_FAST(C.simSpeed);   // (at 5 min/s or slower there is nothing to slow down)
   outNote("Outage has begun",`The mill is down for planned maintenance: ${(OUT.jobs[outJob(o.k)-1]||"inspections").toLowerCase()} and new press felts. Started ${hourOf(st)}, ends ${outTime(o.end)}.${o.prep?`<br><b>${prepLine(o.prep.n,o.prep.m)}.</b>`:""}`,canWatch?7000:5000,canWatch?{label:"Watch the crews",on:outWatch}:null);}
@@ -3690,6 +3722,7 @@ function endOutage(){const o=S.outg,pl=o.plan||{stock:1,wet:1,dry:1};o.on=false;
   if(S.lead&&leadOverrun()>0){const m=leadOverrun();addFx({id:"felrun",left:m,mods:{pmDown:"project tie-ins"}});   // v4.4.0-t3: Felicity's projects make outages overrun
     log(`Project tie-ins: the machine stays down ${m>=60?(m/60).toFixed(m%60?1:0)+" h":m+" min"} longer.`,"warn");}
   if(typeof civOutageEnd==="function")civOutageEnd(o,pl);   // v5.1 civics: the levers, an overrun
+  rlyOutageEnd(o,pl);   // v6.10: the major job and the booked changeouts renew their equipment (07i)
   prepEnd(o,OUT.areas.reduce((s,[a])=>s+(OUT.cost[pl[a]]||0),0));o.prep=null;   // v5.7 outage prep: part of the budget back
   o.k++;o.noticed=false;o.plan=null;if(survOn())survWaveStart();}
 const HAYLINES=["HAYOUT! Paper is shooting to the roof!","Winder hayout! Every PM hand to the dry end!","Hayout! It's snowing paper in the winder aisle.","Hayout! The set exploded off the drums."];
@@ -3734,7 +3767,7 @@ function initState(){
 // v4: every source of luck has its own stream, drawn on a fixed schedule (see step), so all players in the same
 // season week face the same dice at the same sim time: upsets, sheet breaks, hayouts, weather, truck timing
 function seedRun(seed){S.seed=seed>>>0;const k=S.seed;S.bn=bnFor(S.seed);S.rng={plan:k^0x9e3779b9,card:k^0x85ebca6b,up:k^0x27d4eb2f,upx:k^0x165667b1,
-    brk:k^0xd3a2646c,brkx:k^0xfd7046c5,hay:k^0xb55a4f09,wx:k^0x7feb352d,flow:k^0x846ca68b,lead:k^0x2c1b3c6d};
+    brk:k^0xd3a2646c,brkx:k^0xfd7046c5,hay:k^0xb55a4f09,wx:k^0x7feb352d,flow:k^0x846ca68b,lead:k^0x2c1b3c6d,rel:k^0x2545f491,relx:k^0x632be5ab};   // (v6.10: rel, relx for the reliability model, 07i)
   C.grade="24";const c=GCOST["24"];
   S.plan={i:0,q:[],cur:null,left:c.mix[0]+rand("plan")*(c.mix[1]-c.mix[0]),mkt:0,mktLeft:7*1440,disc:null,hot:null};
   S.cards={next:1440*(1+0.5*rand("card")),open:null,pend:[],seen:{}};applyUpgrades();
@@ -3806,6 +3839,7 @@ function step(dt){
   cardTick(dt);
   civTick(dt);   // v5.1 civics
   outageTick();
+  rlyTick(dt);   // v6.10 reliability: shift rounds, wear, faults (07i)
   const M=S.M=mods();
   autoControl(dt);
   vlvTick(dt);   // v6.9 the control valves (07h; nothing until a loop is touched)
@@ -3936,7 +3970,7 @@ function step(dt){
     if(tr.load>=P.truckRolls-1e-6){S.leaving.push({...tr,ty:outY(d),kind:"out"});if(S.leaving.length>24)S.leaving.shift();S.outDock[d]=null;S.tot.shipped+=P.truckRolls;const tons=P.truckRolls*C.rollW.v;S.shipT+=tons;spend(tons*frOutRate(),"frout");earn(lotValue(tr.lots||[[C.grade,P.truckRolls]],C.rollW.v));}}   // (v16: each roll at its own grade's price)
   }
   ordTick(dt);
-  spend(((C.drivers.v+C.loaders.v+P.techs)*(ECON.wage+(P.siteWage||0))*(P.costMul||1)*leadWage()*civWage()+P.robots*ECON.robot+P.pmCost)*dt/60,"labor");
+  spend(((C.drivers.v+C.loaders.v+P.techs+(P.elec||0))*(ECON.wage+(P.siteWage||0))*(P.costMul||1)*leadWage()*civWage()+P.robots*ECON.robot+P.pmCost)*dt/60,"labor");
   pfLabor(dt);
   spend((ECON.overhead+(P.siteOver||0))*dt/60,"overhead"); if(P.premium)spend(P.premium*dt/60,"premium");
   // v3.1.2: profit/day is OPERATING profit over the last 12 game hours: good paper is valued as it comes off the machine (tons x price),
@@ -4908,6 +4942,217 @@ function vlvMigrate(){if(!S||S.zen)return;const D=S.dry,We=S.we;
   if(D&&D.man!=null){const p=D.man;D.man=null;vlvTouch("QC-300");const W=S.vlv;W.lp["PV-303"].m="AUTO";W.lp["PV-303"].sp=p;W.lp["PV-302"].m="AUTO";W.lp["PV-302"].sp=p*0.8;W.lp["QC-300"].bump=1;}
   if(We&&We.m==="manual"&&!We.vl){const v=We.v;We.m="auto";const L=vlvTouch("FV-201");L.m="MAN";L.op=v;L.bump=1;}
   const K=S.knob;if(K&&K.v&&K.v.pulp!==KNOB_IDEAL.pulp){const v=K.v.pulp;K.v.pulp=KNOB_IDEAL.pulp;vlvSetOP("NV-101",v);}}
+/* ---- v6.10 The Reliability and Electrical Update (plan: claude/reliability-v610-plan.md) ----
+   Ten critical VFD motors, each fed from a drive in one of three lineups in the MCC (the substation feeds the MCC). Each
+   asset carries three healths, 0-100: its bearings (vib), its motor (adx) and its drive (dh). They wear while the asset
+   runs, faster when it's pushed (refining energy, press load, a thick pulper, a drive over 100% load). Health raises the
+   odds of a failure but never sets its time: the dice still decide.
+   A bearing or motor fault, once rolled, develops for a lead time (RLY.leadB / leadM) before it fails. Only the shift
+   rounds see it: every maintenance tech does one vibration round a shift (two assets, most overdue first) and the
+   electrical tech one ADX motor-test round (two motors), unless they're called to an upset first; then the round is
+   skipped and that data goes stale (Unknown after RLY.unknown). A round that finds a fault puts it on the Reliability
+   screen, where a planned repair costs RLY.fix of the bill with no downtime. Missed, it fails: bearingfail (maintenance
+   pair), motorfail (electrical tech). Drives fail with no warning (drivefail, electrical tech), likelier when loaded over
+   ~95% or after lightning. Changeouts can be booked for a planned outage (cost and minutes; health back to new).
+   The existing upsets tied to an asset (refiner clash, felt, fabric, driveshaft, wrap, winder) get likelier as its
+   bearings wear (rlyLinkMul, in freqMul).
+   Dice: their own streams ("rel" for the wear ticks and faults, "relx" for chaosTick's per-event draw), three draws an
+   asset every RLY.tick sim minutes, so every other upset keeps its timing. Seasons, survival and free play (not zen).
+   State: S.rel (saved with the run). ---- */
+const RLY={tick:15,leadB:36*60,leadM:72*60,baseB:0.03,baseM:0.02,baseD:1/150,
+  stale:24*60,unknown:72*60,
+  vib:{at:60,len:120,n:2,stag:12},adx:{at:90,len:150,n:2},
+  plan:{b:{cost:15e3,min:15,n:"Bearings"},m:{cost:60e3,min:30,n:"Motor"},d:{cost:25e3,min:10,n:"Drive"}},planCap:90,
+  fix:0.2,elecResp:10,dur:{vib:[150,270],adx:[240,420],drv:[60,120]},drvBill:35e3};
+const LINEUPS=[["SP","Stock prep lineup","MCC-1"],["PM","Machine sectional lineup","MCC-2"],["WD","Winder lineup","MCC-3"]];
+const LINEN=Object.fromEntries(LINEUPS.map(l=>[l[0],l]));
+// kw: rated power; stop: what the failure does, in words; ta: the Round area its tell shows in; k: a phase for the load wobble
+const ASSETS=[
+  {id:"pulp",n:"Pulper rotor",ln:"SP",kw:1100,ta:"pulp",k:1,mods:{pulperDown:1},stop:"The pulper is stopped; the stock chest is draining.",bb:45e3,mb:160e3},
+  {id:"refA",n:"Refiner A",ln:"SP",kw:1500,ta:"scr",k:2,mods:{speedCap:0.75},stop:"One refiner left: the machine slows to 75%.",bb:40e3,mb:180e3},
+  {id:"refB",n:"Refiner B",ln:"SP",kw:1500,ta:"scr",k:3,mods:{speedCap:0.75},stop:"One refiner left: the machine slows to 75%.",bb:40e3,mb:180e3},
+  {id:"fan",n:"Fan pump",ln:"SP",kw:900,ta:"scr",k:4,mods:{pmDown:"fan pump down"},stop:"No stock to the headbox: the machine is down.",bb:35e3,mb:140e3},
+  {id:"couch",n:"Couch roll",ln:"PM",kw:600,ta:"wet",k:5,mods:{pmDown:"couch drive down"},stop:"The machine is down.",bb:50e3,mb:120e3},
+  {id:"pr1",n:"1st press",ln:"PM",kw:700,ta:"wet",k:6,mods:{pmDown:"1st press drive down"},stop:"The machine is down.",bb:50e3,mb:130e3},
+  {id:"pr2",n:"2nd press",ln:"PM",kw:700,ta:"wet",k:7,mods:{pmDown:"2nd press drive down"},stop:"The machine is down.",bb:50e3,mb:130e3},
+  {id:"dry",n:"Dryer section",ln:"PM",kw:800,ta:"dry",k:8,mods:{pmDown:"dryer drive down"},stop:"The machine is down.",bb:55e3,mb:150e3},
+  {id:"reel",n:"Reel drum",ln:"PM",kw:400,ta:"dry",k:9,mods:{pmDown:"reel drive down"},stop:"The machine is down.",bb:35e3,mb:100e3},
+  {id:"wind",n:"Winder drum",ln:"WD",kw:600,ta:"dry",k:10,mods:{winderDown:1},stop:"The winder is down; reels are stacking up.",bb:35e3,mb:110e3}];
+const ASSETN=Object.fromEntries(ASSETS.map(a=>[a.id,a]));
+const VIBST={good:["Good","ok","Smooth: nothing in the spectrum"],imbal:["Imbalance","warn","1× running speed peak: imbalance; it loads the bearings"],misal:["Misalignment","warn","2× running speed and axial peaks: the coupling is out of line"],
+  outer:["Outer race defect","warn","Bearing defect peaks (BPFO): a spall on the outer race; weeks to months left"],inner:["Inner race defect","bad","Inner race defect (BPFI) with sidebands: the bearing is wearing fast"],
+  imm:["Imminent failure","bad","Broadband noise and harmonics everywhere: the bearing is failing; days left"]};
+const ADXST={good:["Good","ok"],watch:["Watch","warn"],alarm:["Alarm","bad"],imm:["Imminent failure","bad"]};
+const ADXMODE={ins:"insulation resistance to ground falling",bar:"a broken rotor bar signature",con:"phase resistance imbalance at a connection"},
+  ADXFAIL={ins:"a winding shorted to ground",bar:"broken rotor bars",con:"a connection burnt open"};
+// the upsets that wear with an asset's bearings
+const RLY_LINK={refclash:["refA","refB"],felt:["pr1","pr2"],fabric:["couch"],shaft:["dry"],wrap:["dry"],winderdown:["wind"],tiedrolls:["wind"]};
+const RLY_EV={bearingfail:{k:"vib",name:"Bearing failure"},motorfail:{k:"adx",name:"Motor failure"},drivefail:{k:"drv",name:"Drive failure"}};
+const RLY_ID={vib:"bearingfail",adx:"motorfail",drv:"drivefail"};
+// the three failures join EVENTS (never rolled by chaosTick: an endless MTBF on their own stream; knob:true keeps them out
+// of the Upsets panel's switches, the tornado and the machine crew's queue)
+for(const id in RLY_EV){const d=RLY_EV[id];const e={id,g:"machine",knob:true,stream:"relx",name:d.name,dur:[60,60],mtbf:1e12,mods:{},rly:d.k,end:i=>rlyFixed(i)};
+  Object.defineProperty(e,"head",{get:()=>rlyHead(id),enumerable:true});EVENTS.push(e);EV[id]=e;CH.en[id]=true;}
+// bearings go to a maintenance pair; motors, drives and the blackouts to the electrical tech (v6.10: lightning and the
+// bird on the line were maintenance jobs)
+MSET.delete("lightning");MSET.delete("birdline");MSET.add("bearingfail");
+const ESET=new Set(["motorfail","drivefail","lightning","birdline"]),ENEED=id=>ESET.has(id);
+MAINT.push("bearingfail","motorfail","drivefail");FM_MAINT=null;FM_REL.add("bearingfail");FM_REL.add("motorfail");   // (RCFA, PM and the Reliability program cut them too)
+
+const rlyOn=()=>!!(S&&!S.zen&&!S.over&&((S.season&&S.season.on)||S.free));
+function rlyState(){if(S.rel&&S.rel.v===1)return S.rel;const sd=S.seed>>>0,R={v:1,a:{},pend:[],rd:{s:null,list:[]},hist:[],k:-1,caught:0,saved:0,fails:0,done:0,skip:0,chg:{},next:null};
+  for(const A of ASSETS){const h=manH("rly",sd,A.id);R.a[A.id]={vib:55+h()*40,adx:60+h()*37,dh:75+h()*25,wv:1.0+h()*1.4,wm:0.4+h()*0.7,vm:h()<0.5?"imbal":"misal",am:["ins","bar","con"][Math.floor(h()*3)],lv:null,la:null,hv:[],ha:[],pin:""};}
+  if(S.rng&&S.rng.rel==null)S.rng.rel=(S.seed^0x2545f491)|0;
+  return S.rel=R;}
+const rlyPend=(id,k)=>{const q=S.rel&&S.rel.pend;if(!q)return false;for(const p of q)if(p.a===id&&p.k===k)return true;return false;};
+const rlyF=h=>0.08+2.6*Math.pow(1-clamp(h,0,100)/100,2);   // fault odds against health: ~0.1 new, 1 at 40, 2.7 worn out
+const rlyIncOf=id=>{for(const i of S.inc)if(i.asset===id&&i.kind)return i;return null;};
+const rlyBill=(id,k)=>((k==="vib"?ASSETN[id].bb:k==="adx"?ASSETN[id].mb:RLY.drvBill)||0)*P.repairMul;
+
+/* ---- drive loads (% of rated), from the process; read-only on the sim ---- */
+function rlyLoad(id,r){if(!S||outOn()||rlyIncOf(id))return 0;r=r||knobRead();const A=ASSETN[id],run=S.pm==="run",M=S.M||{},w=Math.sin(S.t*0.021+A.k)*0.7+Math.sin(S.t*0.057+A.k*2)*0.5;
+  switch(id){
+    case "pulp":return M.pulperDown?0:r.amps/500*100+w;
+    case "refA":case "refB":return r.refkw>0?r.refkw/2/A.kw*100*(id==="refB"?0.97:1.03)+w:0;
+    case "fan":return run?48+30*S.pmSpeed/3000+w:M.pmDown?0:30+w;
+    case "couch":return run?38+r.vac*1.05+w:M.pmDown?0:12;
+    case "pr1":return run?42+r.pl*0.27+w:M.pmDown?0:12;
+    case "pr2":return run?38+r.pl*0.24+w:M.pmDown?0:12;
+    case "dry":return run?46+S.pmSpeed/3000*26+w:M.pmDown?0:14;
+    case "reel":return run?34+r.tension*26+w:M.pmDown?0:8;
+    case "wind":{const c=(S.rates&&S.rates.cut)||0;return M.winderDown||c<0.5?(S.wd==="run"?6:0):28+c/Math.max(1,P.winderMax)*62+w;}}
+  return 0;}
+// drive status: run, idle (stopped by the process), trip (its motor or bearing failed), fault (the drive itself), off (outage)
+function rlyDrvSt(id,L){if(outOn())return "off";const i=rlyIncOf(id);if(i)return i.kind==="drv"?"fault":"trip";return (L!=null?L:rlyLoad(id))>3?"run":"idle";}
+const rlyTemp=(id,L)=>{const a=S.rel&&S.rel.a[id];return 27+(L||0)*0.38+(a?(100-a.dh)*0.12:0);};
+function rlyMccKw(r){r=r||knobRead();let k=0;for(const A of ASSETS)k+=Math.max(0,rlyLoad(A.id,r))/100*A.kw;return k;}
+function rlyStressV(id,r,L){let s=1;if(id==="pulp"&&r.amps>460)s+=(r.amps-460)/40;if((id==="refA"||id==="refB")&&r.kwh>80)s+=(r.kwh-80)/25;if((id==="pr1"||id==="pr2")&&r.pl>120)s+=(r.pl-120)/15;if(L>100)s+=(L-100)/20;return Math.min(4,s);}
+const rlyStressM=L=>L>100?Math.min(4,1+(L-100)/15):1;
+
+/* ---- every step (07): the rounds, then wear and the dice every RLY.tick minutes ---- */
+function rlyTick(dt){if(!rlyOn())return;const R=rlyState();rlyRounds(R);
+  const k=Math.floor(S.t/RLY.tick);if(k===R.k)return;const first=R.k<0;R.k=k;if(first)return;
+  if(S.rng.rel==null)S.rng.rel=(S.seed^0x2545f491)|0;
+  const r=knobRead(),out=outOn(),um=upsetMul(),live=CH.on&&um>0&&!out,h=RLY.tick/1440,u=um*2*CH.lvl;
+  for(const A of ASSETS){const a=R.a[A.id],L=rlyLoad(A.id,r);
+    const r1=rand("rel"),r2=rand("rel"),r3=rand("rel");   // (three draws an asset a tick, whatever happens)
+    if(!out&&L>5){a.vib=Math.max(0,a.vib-a.wv*h*rlyStressV(A.id,r,L));a.adx=Math.max(0,a.adx-a.wm*h*rlyStressM(L));a.dh=Math.max(0,a.dh-0.25*h*(L>100?1+(L-100)/10:1));}
+    if(!live)continue;
+    if(CH.en.bearingfail&&!rlyPend(A.id,"vib")&&!rlyIncOf(A.id)&&r1<RLY.baseB*h*rlyF(a.vib)*freqMul("bearingfail")*u)R.pend.push({a:A.id,k:"vib",due:S.t+RLY.leadB,born:S.t});
+    if(CH.en.motorfail&&!rlyPend(A.id,"adx")&&!rlyIncOf(A.id)&&r2<RLY.baseM*h*rlyF(a.adx)*freqMul("motorfail")*u)R.pend.push({a:A.id,k:"adx",due:S.t+RLY.leadM,born:S.t});
+    if(CH.en.drivefail&&L>5&&!rlyIncOf(A.id)&&r3<RLY.baseD*h*(1+Math.max(0,L-95)/10)*(1+(100-a.dh)/50)*freqMul("drivefail")*u)rlyFail(A.id,"drv");}
+  if(!live)return;
+  for(let i=0;i<R.pend.length;i++){const p=R.pend[i];if(p.due>S.t)continue;if(active(RLY_ID[p.k])||rlyIncOf(p.a))continue;R.pend.splice(i--,1);rlyFail(p.a,p.k);}}
+// a failure: like trigger() (04), without its dice (their own stream sets the length)
+function rlyFail(a,kind){const id=RLY_ID[kind];if(active(id)||rlyIncOf(a))return false;
+  const A=ASSETN[a],R=rlyState(),d0=RLY.dur[kind];R.next={a,kind};
+  const dur=(d0[0]+rand("rel")*(d0[1]-d0[0]))*durMul(id),inc={id,left:dur,total:dur,real:performance.now(),note:"",asset:a,kind,mods:A.mods};
+  S.inc.push(inc);(S.evc||(S.evc={}))[id]=(S.evc[id]||0)+1;S.lastInc=S.t;S.tot.incidents++;AUDIO.event(id);
+  inc.cite=rlyCite(id,inc);const head=rlyHead(id,inc);BANNERS.push({text:head,t:null,id});while(BANNERS.length>3)BANNERS.splice(1,1);
+  const bill=S.zen?0:rlyBill(a,kind);if(bill>0){spend(bill,"repairs");pfRepair(id,bill);inc.bill=bill;inc.note=`repair bill ${money(bill)}`;}
+  log(head+(inc.note?` (${inc.note})`:""),"bad");R.next=null;R.fails++;
+  S.M=mods();leadAuto(inc);civOnUpset(inc);return true;}
+function rlyHead(id,inc){inc=inc||(S&&S.inc?S.inc.find(x=>x.id===id):null);const a=(inc&&inc.asset)||(S&&S.rel&&S.rel.next&&S.rel.next.a),A=ASSETN[a];
+  if(!A)return {bearingfail:"A bearing failed on one of the critical drives.",motorfail:"One of the critical motors failed.",drivefail:"A drive in the MCC faulted and won't reset."}[id];
+  if(id==="bearingfail")return `${A.n}: a motor bearing has failed. ${A.stop} Maintenance is changing it.`;
+  if(id==="motorfail")return `${A.n}: the motor has failed (${ADXFAIL[S.rel.a[a].am]}). ${A.stop} The electrical tech is fitting the spare.`;
+  return `${A.n}: its drive faulted in the ${LINEN[A.ln][1].toLowerCase()}. ${A.stop} The electrical tech is changing the drive.`;}
+// fixed: the failed part is new
+function rlyFixed(i){const R=S.rel;if(!R||!i.asset)return;const a=R.a[i.asset];if(!a)return;
+  if(i.kind==="vib"){a.vib=96;a.lv={t:S.t,st:"good",v:1.0,by:"new"};R.pend=R.pend.filter(p=>!(p.a===i.asset&&p.k==="vib"));}
+  else if(i.kind==="adx"){a.adx=97;a.la={t:S.t,st:"good",h:97,by:"new"};R.pend=R.pend.filter(p=>!(p.a===i.asset&&p.k==="adx"));}
+  else a.dh=100;}
+// the upset card's line: what the rounds last said about it
+function rlyCite(id,inc){const R=S.rel;if(!R)return "";const ago=t=>{const m=S.t-t;return m<90?Math.round(m)+" min ago":m<2880?(m/60).toFixed(m<600?1:0)+" h ago":(m/1440).toFixed(1)+" days ago";};
+  const vib=a=>{const x=R.a[a],v=x.lv;return !v?`${ASSETN[a].n}: no vibration reading this run`:S.t-v.t>RLY.unknown?`${ASSETN[a].n}: last vibration reading ${ago(v.t)} (rounds skipped since)`:`${ASSETN[a].n}: ${VIBST[v.st][0].toLowerCase()} on the last vibration round, ${ago(v.t)} (${v.v} mm/s)`;};
+  const adx=a=>{const v=R.a[a].la;return !v?`${ASSETN[a].n}: never ADX tested this run`:S.t-v.t>RLY.unknown?`${ASSETN[a].n}: last ADX test ${ago(v.t)}`:`${ASSETN[a].n}: ADX ${ADXST[v.st][0].toLowerCase()} (motor health ${Math.round(v.h)}%), ${ago(v.t)}`;};
+  if(inc&&inc.kind==="vib")return vib(inc.asset);
+  if(inc&&inc.kind==="adx")return adx(inc.asset);
+  if(inc&&inc.kind==="drv"){const a=R.a[inc.asset];return `${ASSETN[inc.asset].n} drive: ${a.dh<60?"its health was low (heat and past lightning)":"no warning: drives fail suddenly"}`;}
+  const L=RLY_LINK[id];return L?L.map(vib).join(" · "):"";}
+
+/* ---- the shift rounds ---- */
+function rlyRounds(R){const s=manIdx(),st=s*720,D=R.rd;
+  if(D.s!==s){if(D.s!=null)rlyShiftEnd(R);D.s=s;D.list=[];const m=manNow();
+    for(let k=0;k<m.nt;k++)D.list.push({who:"t"+k,k:"vib",t0:st+RLY.vib.at+k*RLY.vib.stag,len:RLY.vib.len,st:"plan",a:[],why:""});
+    D.list.push({who:"e",k:"adx",t0:st+RLY.adx.at,len:RLY.adx.len,st:"plan",a:[],why:""});}
+  for(const x of D.list){
+    if(x.st==="plan"&&S.t>=x.t0){const b=rlyBusy(x);if(b){x.st="skip";x.why=b;R.skip++;}else{x.st="go";x.a=rlyPick(R,x.k,RLY[x.k].n);x.t1=x.t0+x.len;if(!x.a.length){x.st="done";}}}
+    if(x.st==="go"){const b=rlyBusy(x);if(b){x.st="abandon";x.why=b;R.skip++;}else if(S.t>=x.t1){x.st="done";R.done++;rlyRead(R,x);}}}}
+function rlyShiftEnd(R){const D=R.rd,c=k=>D.list.filter(x=>x.k===k);
+  R.hist.push({s:D.s,vd:c("vib").filter(x=>x.st==="done").length,vn:c("vib").length,ad:c("adx").filter(x=>x.st==="done").length,an:c("adx").length});while(R.hist.length>14)R.hist.shift();}
+// why a round can't happen (empty: it can)
+function rlyBusy(x){if(outOn())return "on the outage";
+  if(x.who==="e"){const j=S.inc.find(i=>ENEED(i.id));return j?`called to ${EV[j.id].name.toLowerCase()}`:"";}
+  const k=+x.who.slice(1),m=manNow(),row=m.techs[k];if(row&&!row.who)return "on vacation, not covered";
+  const pair=Math.floor(k/2),j=S.inc.find(i=>MNEED(i.id)&&i.mSlot===pair);return j?`called to ${EV[j.id].name.toLowerCase()}`:"";}
+// the most overdue assets of that kind first (pinned ones ahead of everything), not already on another round
+function rlyPick(R,k,n){const key=k==="vib"?"lv":"la",taken=new Set();for(const x of R.rd.list)if(x.st==="go"&&x.k===k)x.a.forEach(id=>taken.add(id));
+  const L=ASSETS.filter(A=>!taken.has(A.id)).map((A,i)=>{const a=R.a[A.id];return {id:A.id,pin:a.pin===k?1:0,t:a[key]?a[key].t:-1e9,i};}).sort((p,q)=>q.pin-p.pin||p.t-q.t||p.i-q.i).slice(0,n);
+  return L.map(o=>{const a=R.a[o.id];if(a.pin===k)a.pin="";return o.id;});}
+const rlyHash=(...x)=>manH("rlyv",(S.seed>>>0),...x)();
+function rlyVibSt(id){const a=S.rel.a[id];if(rlyPend(id,"vib"))return "imm";const h=a.vib;return h>=75?"good":h>=60?a.vm:h>=40?"outer":"inner";}
+function rlyVibV(st,h,id){const b={good:1.0+(100-h)*0.06,imbal:3+(75-h)*0.1,misal:3.2+(75-h)*0.1,outer:4.6+(60-h)*0.12,inner:6.8+(40-h)*0.06,imm:9.5}[st]||1;return Math.round((b+rlyHash(id,Math.floor(S.t))*0.6)*10)/10;}
+function rlyAdxSt(id){if(rlyPend(id,"adx"))return "imm";const h=S.rel.a[id].adx;return h>=75?"good":h>=55?"watch":"alarm";}
+function rlyRead(R,x){const who=x.who==="e"?"the electrical tech":"a maintenance tech";
+  for(const id of x.a){const a=R.a[id],A=ASSETN[id];
+    if(x.k==="vib"){const st=rlyVibSt(id),v=rlyVibV(st,a.vib,id);a.lv={t:S.t,st,v,by:x.who};a.hv.push([Math.round(S.t),v,st]);if(a.hv.length>8)a.hv.shift();
+      if(st==="imm"){BANNERS.push({text:`Vibration round: the ${A.n.toLowerCase()} bearing is failing. Plan the repair on the Reliability screen.`,t:null,tag:"RELIAB"});while(BANNERS.length>3)BANNERS.splice(1,1);log(`Vibration round (${who}): ${A.n} bearing failing (${v} mm/s). Plan the repair in Report → Control room → Reliability.`,"warn");}
+      else if(st==="inner")log(`Vibration round: ${A.n}, inner race defect (${v} mm/s).`,"warn");}
+    else{const st=rlyAdxSt(id),hh=clamp(a.adx+(rlyHash(id,Math.floor(S.t),1)-0.5)*4,0,100);a.la={t:S.t,st,h:Math.round(hh),by:"e"};a.ha.push([Math.round(S.t),Math.round(hh),st]);if(a.ha.length>8)a.ha.shift();
+      if(st==="imm"){BANNERS.push({text:`ADX test: the ${A.n.toLowerCase()} motor is about to fail. Plan the repair on the Reliability screen.`,t:null,tag:"RELIAB"});while(BANNERS.length>3)BANNERS.splice(1,1);log(`ADX test: ${A.n} motor about to fail (${ADXMODE[a.am]}). Plan the repair in Report → Control room → Reliability.`,"warn");}
+      else if(st==="alarm")log(`ADX test: ${A.n} motor in alarm (${ADXMODE[a.am]}).`,"warn");}}}
+// the player's actions (the Reliability screen)
+function rlyPin(id,k){const R=rlyState(),a=R.a[id];if(!a)return;a.pin=a.pin===k?"":k;}
+// a planned repair of a fault the rounds found: a share of the bill, no downtime
+function rlyFix(id,k){if(!rlyOn())return false;const R=rlyState(),a=R.a[id],A=ASSETN[id],v=k==="vib"?a.lv:a.la;if(!v||v.st!=="imm"||rlyIncOf(id))return false;
+  const bill=rlyBill(id,k),cost=bill*RLY.fix,p=R.pend.findIndex(x=>x.a===id&&x.k===k);spend(cost,"repairs");pfRepair(RLY_ID[k],cost);
+  if(p>=0){R.pend.splice(p,1);R.caught++;R.saved+=bill-cost;if(civOn())civAdd(TELL.catchCiv,"Caught early");}
+  if(k==="vib"){a.vib=95;a.lv={t:S.t,st:"good",v:1.1,by:"fix"};}else{a.adx=96;a.la={t:S.t,st:"good",h:96,by:"fix"};}
+  log(`Planned repair: ${A.n} ${k==="vib"?"bearings changed":"motor swapped for the spare"} for ${money(cost)}, no downtime (a ${money(bill)} failure avoided).`,"ok");return true;}
+const rlyFixCost=(id,k)=>rlyBill(id,k)*RLY.fix;
+
+/* ---- outage changeouts: booked on the outage plan (24 h before), done during the outage ---- */
+function rlyChg(id,k){const R=rlyState(),o=R.chg[id]||(R.chg[id]={});if(o[k])delete o[k];else o[k]=1;if(!Object.keys(o).length)delete R.chg[id];}
+function rlyPlanTally(chg){let c=0,m=0,n=0;for(const id in chg||{})for(const k in chg[id])if(chg[id][k]&&RLY.plan[k]){c+=RLY.plan[k].cost;m+=RLY.plan[k].min;n++;}return {c,m:Math.min(RLY.planCap,m),n};}
+const rlyPlanCost=()=>S&&S.rel?rlyPlanTally(S.rel.chg).c:0;
+// approved: the list goes on the outage's plan and the wish list is cleared
+function rlyPlanBook(o){const R=S.rel;if(!R)return 0;const t=rlyPlanTally(R.chg);if(!t.n)return 0;o.plan.rly=JSON.parse(JSON.stringify(R.chg));R.chg={};spend(t.c,"repairs");
+  log(`Outage ${o.k}: ${t.n} changeout${t.n>1?"s":""} booked (${money(t.c)}, +${t.m} min).`,"warn");return t.c;}
+function rlyOutageBegin(o){const t=rlyPlanTally(o.plan&&o.plan.rly);if(!t.m)return;o.end+=t.m;const p=S.fx.find(f=>f.id==="pout");if(p)p.left+=t.m;log(`Changeouts: the outage runs ${t.m} min longer.`,"warn");}
+function rlyOutageEnd(o,pl){const R=S.rel;if(!R)return;const done=[];
+  // the outage's major job renews what it touches
+  const J={1:[["pr1",100]],2:[["couch",25]],3:[["pulp",100]],4:[["refA",20],["refB",20]]}[outJob(o.k)]||[];
+  for(const [id,v] of J){const a=R.a[id];a.vib=v>=100?100:Math.min(100,a.vib+v);if(v>=100){R.pend=R.pend.filter(p=>!(p.a===id&&p.k==="vib"));a.lv={t:S.t,st:"good",v:0.9,by:"new"};}}
+  for(const id in (pl&&pl.rly)||{}){const a=R.a[id],c=pl.rly[id];if(!a)continue;
+    if(c.b){a.vib=100;a.lv={t:S.t,st:"good",v:0.9,by:"new"};R.pend=R.pend.filter(p=>!(p.a===id&&p.k==="vib"));done.push(ASSETN[id].n+" bearings");}
+    if(c.m){a.adx=100;a.la={t:S.t,st:"good",h:100,by:"new"};R.pend=R.pend.filter(p=>!(p.a===id&&p.k==="adx"));done.push(ASSETN[id].n+" motor");}
+    if(c.d){a.dh=100;done.push(ASSETN[id].n+" drive");}}
+  if(done.length)log(`Outage ${o.k} changeouts done: ${done.join(", ")}.`,"ok");}
+
+/* ---- the electrical tech: one job at a time, the blackouts first ---- */
+function rlyElecTick(dt){let L=null;for(const i of S.inc)if(ENEED(i.id))(L||(L=[])).push(i);if(!L)return;
+  const pri=id=>id==="lightning"||id==="birdline"?0:1;L.sort((a,b)=>pri(a.id)-pri(b.id));
+  L.forEach((i,k)=>{i.eQ=k;if(k>0){if(i.eSlot===0){i.eSince=0;i.eGo=false;}i.eSlot=-1;return;}i.eSlot=0;if(!i.eSince){i.eSince=1;i.eResp=RLY.elecResp;}if(i.eResp>0)i.eResp-=dt;if(i.eResp<=0)i.eGo=true;});}
+function elecState(i){if(!ENEED(i.id))return "";if(i.eGo)return "electrician working";if(i.eSlot===0)return "electrician on the way";return i.eQ>0?`waiting for the electrician (${i.eQ} ahead)`:"waiting for the electrician";}
+// trigger() (04) calls this for every upset: the card's reliability line, and what a blackout does to the drives
+function rlyOnTrigger(inc){if(!S.rel||!rlyOn())return;const R=S.rel;
+  if(RLY_LINK[inc.id])inc.cite=rlyCite(inc.id,inc);
+  const hit=inc.id==="lightning"||inc.id==="birdline"?[8,18]:inc.id==="brownout"?[3,6]:null;
+  if(hit)for(const A of ASSETS){const a=R.a[A.id];a.dh=Math.max(0,a.dh-hit[0]-rlyHash(A.id,Math.floor(S.t),inc.id)*hit[1]);}}
+// freqMul (03): the upsets tied to an asset get likelier as its bearings wear (about 0.6 new, 1 at 50, 2 worn out)
+function rlyLinkMul(id){const L=RLY_LINK[id];if(!L||!S||!S.rel||!rlyOn())return 1;let h=0;for(const a of L)h+=S.rel.a[a].vib;h/=L.length;return 0.55+1.6*Math.pow(1-h/100,1.6);}
+// the Round card's Vibration Report arrows (04b tellTrend): a known fault in the area counts too
+function rlyTellTrend(area){const R=S&&S.rel;if(!R)return 0;let v=0;for(const A of ASSETS){if(A.ta!==area)continue;const a=R.a[A.id],f=x=>x&&S.t-x.t<RLY.unknown?x.st:"";
+  const s=f(a.lv),t=f(a.la);if(s==="imm"||t==="imm")v=2;else if(s==="inner"||s==="outer"||t==="alarm")v=Math.max(v,1);}return v;}
+// end screens: "Reliability rounds" line
+const rlyEndStat=()=>{const R=S&&S.rel;if(!R||!(R.done+R.skip))return null;return ["Reliability rounds",`${R.done} done, ${R.skip} skipped · ${R.caught} fault${R.caught===1?"":"s"} caught, ${R.fails} failure${R.fails===1?"":"s"}`,"wide"];};
+// how old a reading is, and whether it still counts
+function rlyAge(x){if(!x)return {cls:"unk",txt:"never"};const m=S.t-x.t,txt=m<90?Math.max(0,Math.round(m))+" min":m<2880?(m/60).toFixed(m<600?1:0)+" h":(m/1440).toFixed(1)+" d";return {cls:m>RLY.unknown?"unk":m>RLY.stale?"stale":"",txt};}
+// the civics choices for the three failures (03e's format: [label, cost tier, odds step, civics, note]; tags P proper, Q cheap, S shortcut)
+CIVU.bearingfail={n:"Bearing failure",a:"Machine",ch:[["New bearings and a vibration route review",2,-1,{M:2}],["Swap the bearing, nothing more",1,0,{}],["Grease the new one and restart cold",0,1,{M:-1,L:-1}]],t:"PQS"};
+CIVU.motorfail={n:"Motor failure",a:"Machine",ch:[["New motor from the vendor, with an ADX baseline",3,-1,{M:2}],["Rewind the old one as the spare",1,0,{M:1}],["Run a borrowed motor",0,1,{M:-1,E:1}]],t:"PQS"};
+CIVU.drivefail={n:"Drive failure",a:"Machine",ch:[["New drive and a lineup cooling check",2,-1,{M:1,L:1}],["Fit the spare drive",1,0,{}],["Reset it and run it hot",0,1,{M:-1}]],t:"PQS"};
 /* ---------- UI wiring ---------- */
 // v6.5.1 second screen: the DCS and the process flow can live in a pop-out window (50e-popout.js). Their elements are then
 // in that window's document, so $() looks there when the main page doesn't have the id; actEl() is the focused element
@@ -5137,7 +5382,7 @@ function endSurvival(){civDrop();const se=S.season,r=survResult(),w=r.wave;se.do
     ["Upsets by the end",xf(survUp(w))],["Costs by the end",xf(survCost(w))],["Tons shipped",f0(r.tons)+" t"],["Upsets survived",String(r.incidents)]];
   if(S.lead)st.splice(3,0,["Mill leader",LEADERS[S.lead.id].name+(S.lead.was?" (after "+LEADERS[S.lead.was].name+")":""),"wide"]);
   if(S.civ&&S.civ.m)st.push(["Civics",civSummary(S.civ.m),"wide"]);   // v5.1 QA2
-  {const ts=tellEndStat();if(ts)st.push(ts);}   // v5.7 catching failures early
+  {const ts=tellEndStat();if(ts)st.push(ts);}{const rs=rlyEndStat();if(rs)st.push(rs);}   // v5.7 catching failures early
   if(S.lead&&S.lead.saved)st.splice(4,0,["Dot saved",money(S.lead.saved)+" in repairs ("+S.lead.fixed.length+" fixed)","wide"]);   // v5.0.5
   $("so-stats").replaceChildren(...st.map(([k,v,c])=>{const d=document.createElement("div");if(c)d.className=c;const a=document.createElement("span");a.textContent=k;const b=document.createElement("b");b.textContent=v;d.append(a,b);return d;}));
   {const box=$("so-rc");if(box)box.hidden=true;}soMode(true);
@@ -5506,7 +5751,7 @@ function civOpen(){const V=S.civ,d=V.cur;if(!d||typeof document==="undefined")re
   if(!civEl){civEl=document.createElement("div");civEl.className="overlay";civEl.id="civOv";civEl.hidden=true;document.body.appendChild(civEl);}
   const id=d.id,rw=CIVREWARD[id],u=CIVU[id],mt=CIVMETER[id],area=civArea(id),ord=V.orders[area];
   const kind=rw?"Reward · "+CIV.names[rw.k]:mt?(id.startsWith("c_")?"Crisis · ":"Warning · ")+CIV.names[mt.k]:"Upset · "+area,cls=rw?" cvr":mt?(id.startsWith("c_")?" cvx":" cvw"):"";
-  const inc=EV[id]&&S.inc.find(x=>x.id===id),bill=inc&&inc.bill>0?`<p class="cvbill">Repair bill ${money(inc.bill)} already paid</p>`:"";
+  const inc=EV[id]&&S.inc.find(x=>x.id===id),bill=(inc&&inc.bill>0?`<p class="cvbill">Repair bill ${money(inc.bill)} already paid</p>`:"")+(inc&&inc.cite?`<p class="cvrly"><b>Reliability data</b> ${escHTML(inc.cite)}</p>`:"");   // (v6.10: what the rounds last said, 07i)
   const choices=rw?[["Accept",0,0,null,rw.win],["Decline",0,0,null,"Nothing changes."]]:u.ch;
   civEl.innerHTML=`<div class="modal deal civ${cls}" role="dialog" aria-modal="true" aria-labelledby="civ-h"><span class="dk">${escHTML(kind)} · sim paused</span>
     <h2 id="civ-h">${escHTML(civName(id))}</h2><p>${escHTML(civHead(id))}</p>${bill}
@@ -5707,7 +5952,7 @@ function endSeason(bust){const se=S.season;civDrop();se.done=true;se.on=false;ru
   const st=[["Net profit",money(r.score),"big"],["Tons shipped",f0(r.tons)+" t"],["Upsets survived",String(r.incidents)],["Rolls made",String(S.tot.rolls)],["Season grade",g[1]+" · "+g[2]],["Output",Math.round(eff*100)+"% of max-speed tons"]];
   if(S.civ&&S.civ.m&&!S.free&&civSummary(S.civ.m))st.push(["Civics",civSummary(S.civ.m),"wide"]);   // v5.1 QA2
   if(S.lead)st.push(["Mill leader",LEADERS[S.lead.id].name+(S.lead.was?" (after "+LEADERS[S.lead.was].name+")":""),"wide"]);   // v5.1: seasons have leaders too
-  {const ts=tellEndStat();if(ts)st.push(ts);}   // v5.7 catching failures early
+  {const ts=tellEndStat();if(ts)st.push(ts);}{const rs=rlyEndStat();if(rs)st.push(rs);}   // v5.7 catching failures early
   $("so-stats").replaceChildren(...st.map(([k,v,c])=>{const d=document.createElement("div");if(c)d.className=c;const a=document.createElement("span");a.textContent=k;const b=document.createElement("b");b.textContent=v;d.append(a,b);return d;}));
   {const c=bust?null:rcFinal(),box=$("so-rc");if(box){if(c){box.hidden=false;box.innerHTML=`<div class="rcmini"><div class="rcg g${c.overall}">${c.overall}</div><div><b><span class="nw">Days ${c.from}–${c.to}</span> report card</b><small>${Object.entries(c.g).map(([k,v])=>k+" "+v).join(" · ")}</small><p>${c.tip}</p></div></div><button id="so-rcbtn" class="ghost">Open the full report card</button>`;
       $("so-rcbtn").addEventListener("click",()=>rcOpen(c,true));}else box.hidden=true;}}
@@ -6063,7 +6308,7 @@ const MCHEST_GAL=60000;                                // the machine chest
 const fmtGal=g=>{const a=Math.abs(g),s=g<0?"−":"";return s+(a>=1e6?(a/1e6).toFixed(2)+"M gal":a>=1e4?Math.round(a/1e3)+"k gal":Math.round(a).toLocaleString()+" gal");};
 const fmtGpm=g=>(g>=1e4?(g/1e3).toFixed(1)+"k":Math.round(g).toLocaleString())+" gpm";
 const TAG_INT=new Set(["orders","trucks","rolls","t","A","kW","fpm","mL CSF"]);
-const TAG_AREA={SPOT:"Stock prep",WET:"Wet end",DET:"Dry end",UTIL:"Utilities",WATER:"Water",QCS:"Quality",PLAN:"Planning & yard"};
+const TAG_AREA={SPOT:"Stock prep",WET:"Wet end",DET:"Dry end",UTIL:"Utilities",WATER:"Water",QCS:"Quality",PLAN:"Planning & yard",DRV:"Drives (MCC)"};
 const _R=()=>S.rates||{};
 const wr=()=>S.wat&&S.wat.r;
 const TAGS=[
@@ -6123,7 +6368,12 @@ const TAGS=[
   ["lv202pv","LV-202 white water silo level (PV)","WET","%",()=>vlvView("LV-202").pv,""],["lv202op","LV-202 silo makeup valve","WET","% open",()=>vlvView("LV-202").pos,"a.v202"],
   ["qc300pv","QC-300 reel moisture (PV)","DET","%",()=>S.pm==="run"?vlvView("QC-300").pv:null,""],["qc300op","QC-300 steam setpoint out","DET","kPa",()=>vlvView("QC-300").op*3,""],
   ["pv302pv","PV-302 2nd section steam (PV)","DET","kPa",()=>vlvView("PV-302").pv,""],["pv302op","PV-302 steam valve","DET","% open",()=>vlvView("PV-302").pos,"a.v302"],
-  ["pv303pv","PV-303 3rd section steam (PV)","DET","kPa",()=>vlvView("PV-303").pv,""],["pv303op","PV-303 steam valve","DET","% open",()=>vlvView("PV-303").pos,"a.v303"]];
+  ["pv303pv","PV-303 3rd section steam (PV)","DET","kPa",()=>vlvView("PV-303").pv,""],["pv303op","PV-303 steam valve","DET","% open",()=>vlvView("PV-303").pos,"a.v303"],
+  // v6.10 the drives in the MCC (07i): each one's load, % of its rated power, and the MCC's total
+  ["dl_pulp","Pulper rotor drive load","DRV","%",r=>rlyLoad("pulp",r),""],["dl_refA","Refiner A drive load","DRV","%",r=>rlyLoad("refA",r),""],["dl_refB","Refiner B drive load","DRV","%",r=>rlyLoad("refB",r),""],
+  ["dl_fan","Fan pump drive load","DRV","%",r=>rlyLoad("fan",r),""],["dl_couch","Couch roll drive load","DRV","%",r=>rlyLoad("couch",r),""],["dl_pr1","1st press drive load","DRV","%",r=>rlyLoad("pr1",r),""],
+  ["dl_pr2","2nd press drive load","DRV","%",r=>rlyLoad("pr2",r),""],["dl_dry","Dryer section drive load","DRV","%",r=>rlyLoad("dry",r),""],["dl_reel","Reel drum drive load","DRV","%",r=>rlyLoad("reel",r),""],
+  ["dl_wind","Winder drum drive load","DRV","%",r=>rlyLoad("wind",r),""],["mcckw","MCC drive power","DRV","kW",r=>rlyMccKw(r),""]];
 const TAGI=Object.fromEntries(TAGS.map((t,i)=>[t[0],i]));
 const tagName=id=>{const t=TAGS[TAGI[id]];return t?t[1]:id;};
 const tagUnit=id=>{const t=TAGS[TAGI[id]];return t?t[3]:"";};
@@ -7850,6 +8100,7 @@ function no3D(){G3.ok=false;$("no3d").hidden=false;$("no3d-retry").onclick=()=>l
     {p:[-10,9.2,zc],t:()=>["Reel",f1(S.reel)+" / "+P.jumbo+" t"]},
     {area:1,p:[-20,1.5,zc+4],t:()=>["Winder"+(S.wd==="hayout"?" · HAYOUT!":""),S.wd==="hayout"?"crew cleaning up":Math.max(0,reelsAtWinder()-1)+"/"+P.storeReels+" reels stored · "+f1(S.rates.cut)+" t/h"],cls:()=>S.wd==="hayout"},
     {area:1,p:[-36.4,3.2,14.8],t:()=>["Roll warehouse",f0(S.fg)+" rolls"]},
+    {area:1,p:[11,5.6,27.5],t:()=>{const f=S.rel?ASSETS.filter(A=>{const s=rlyDrvSt(A.id);return s==="fault"||s==="trip";}).length:0;return ["MCC",f?f+" drive"+(f>1?"s":"")+" down":S.rel?f0(rlyMccKw())+" kW":"drive lineups"];},cls:()=>!!(S.rel&&ASSETS.some(A=>rlyDrvSt(A.id)==="fault"))},   // v6.10
   ];
   // v4.1: the run's bottleneck area says so on its label (red outline) until it keeps up with the machine
   {const BNL={recv:"Receiving",pulper:"Pulper",screens:"Fine screens",winder:"Winder",ship:"Roll warehouse"};
@@ -7858,7 +8109,7 @@ function no3D(){G3.ok=false;$("no3d").hidden=false;$("no3d-retry").onclick=()=>l
   LABELS.forEach(L=>{L.lb=lblNew(false);L.lb.area=!!L.area;L.v=new THREE.Vector3(...L.p);});
   const banner=$("banner3d"),chips=$("chips3d");
   // click a disaster (chip, breaking banner or its floating label) to fly the camera there
-  G3.spotOf=id=>id==="hay"?[-17,7]:id==="brk"?[12,9]:PINS[id]?[PINS[id][0],PINS[id][2]]:null;
+  G3.spotOf=id=>{if(id==="bearingfail"||id==="motorfail"){const i=S.inc.find(x=>x.id===id),q=i&&G3.ASPOT&&G3.ASPOT[i.asset];if(q)return [q[2],q[3]];}return id==="hay"?[-17,7]:id==="brk"?[12,9]:PINS[id]?[PINS[id][0],PINS[id][2]]:null;};   // (v6.10: at the failed machine)
   G3.flyTo=id=>{const sp=G3.spotOf(id);if(!sp)return;goal={t:new THREE.Vector3(sp[0],0,sp[1]),r:62,th:DEF.th,ph:0.88};};
   chips.addEventListener("click",e=>{const b=e.target.closest("button");if(b)G3.flyTo(b.dataset.id);});
   banner.addEventListener("click",()=>{const b=BANNERS[0];if(b&&b.id)G3.flyTo(b.id);});
@@ -7956,7 +8207,7 @@ function no3D(){G3.ok=false;$("no3d").hidden=false;$("no3d-retry").onclick=()=>l
   // v6.1 t2: is the camera moving (or about to)? The stop-motion world (52) draws every frame only then
   G3.camBusy=()=>!!goal||FOL.on||ptrs.size>0||!!padDir||Math.abs(rShown-(goal?cam.r:rStep(cam.r)))>0.01||performance.now()-(G3.lastMove||0)<300||!!G3.cineHold;   // (v6.1 t3: zen is stop-motion too)
   G3.padTick=rdt=>{if(padDir)panBy(-padDir[0]*500*rdt,-padDir[1]*500*rdt);};
-  const JUMPS={site:[0,30,700,0.62],trucks:[-62,2,118],recv:[-21,-13,100],pulp:[24,-15,100],pm:[22,9,130],wd:[-17,7,72],wh:[-37,24,105],shop:[57,-21,48]};
+  const JUMPS={site:[0,30,700,0.62],trucks:[-62,2,118],recv:[-21,-13,100],pulp:[24,-15,100],pm:[22,9,130],wd:[-17,7,72],wh:[-37,24,105],shop:[57,-21,48],mcc:[11,27,52]};   // (v6.10: mcc)
   // section labels: Auto fades them out after a few idle seconds, On keeps them, Off hides them
   let lblMode="auto";try{lblMode=localStorage.getItem("paper-mill-labels")||"auto";}catch(e){}
   G3.lastMove=performance.now();
@@ -8324,7 +8575,7 @@ function no3D(){G3.ok=false;$("no3d").hidden=false;$("no3d-retry").onclick=()=>l
   const _pq=new THREE.Quaternion();
   const PINS={icedintake:[-30,6,-55.5,"!"],duststorm:[-21,12,-13,"!"],flood:[-62,7,4,"water"],refclash:[60.6,8,-11,"!"],steamjoint:[11.2,9.5,4.6,"!"],fogfan:[49.5,22,-4.2,"!"],shaft:[12,10,15.6,"!"],dryerfire:[12,13,zc,"fire"],fabric:[48,9,zc,"!"],felt:[34.5,11,zc,"!"],slime:[4,11,zc,"!"],ragger:[16,9,-13.5,"!"],overflow:[-21,10,-13,"water"],chestover:[34.5,21,-15,"water"],lwplug:[11.2,9,ZL,"!"],cscreen:[15.2,8,ZL,"!"],fscreen:[19.2,9,ZL,"!"],lcplug:[26.6,8,ZL,"water"],hdblow:[25.8,13,-10.6,"water"],boiler:[76,14,-10,"!"],permit:[LAYOUT.wx(22),10,-40,"water"],thkblow:[34.5,22,-15,"water"],birdhay:[-18.7,9,zc,"!"],wrap:[12,12,zc,"!"],flares:[16,10,-13.5,"fire"],dye:[24,11,zc,"!"],winderdown:[-18.7,9,zc,"!"],tiedrolls:[-22.9,5,zc-0.7,"!"],
     badocc:[-17,10,-11,"!"],balefire:[-25,11,-12,"fire"],fleet:[-29,10,-16,"!"],calloff:[-36,10,23,"!"],fight:[-38,7,-21,"!"],roof:[-32,10,24,"water"],highway:[-72,7,4,"!"],
-    lightning:[34.5,16,-15,"bolt"],tornado:[0,26,0,"!"],beaver:[-30,10,-16.5,"!"]};
+    lightning:[34.5,16,-15,"bolt"],bearingfail:[40,8,0,"!"],motorfail:[40,8,0,"!"],drivefail:[11,9,27.5,"bolt"],tornado:[0,26,0,"!"],beaver:[-30,10,-16.5,"!"]};
   // a small lift truck (counterbalance forklift) for the yard upsets: body, overhead guard, mast and forks, nobody aboard
   function liftTruck(group,x,z,ry){const f=new THREE.Group();f.position.set(x,0,z);f.rotation.y=ry;group.add(f);box(1.8,0.9,1.1,M.warn,0,0.75,0,f);box(0.7,0.7,1.0,M.ink,-0.75,0.85,0,f);
     [[-0.3,0.5],[-0.3,-0.5],[0.6,0.5],[0.6,-0.5]].forEach(([a,b])=>box(0.06,1.3,0.06,M.ink,a,1.85,b,f,false));box(1.0,0.06,1.06,M.ink,0.15,2.5,0,f,false);
@@ -8397,6 +8648,12 @@ function no3D(){G3.ok=false;$("no3d").hidden=false;$("no3d-retry").onclick=()=>l
       if(!SOFTFX){if(Math.random()<rdt*14)emit("pdrop",x+R()*w*0.6,h,z+R(),R()*3,1+Math.random()*2,R()*3,1.0,0.42,"#8a6440",1);if(Math.random()<rdt*2.5)emit("paper",x+R(),h+0.4,z,R()*0.3,1.1,R()*0.3,2.4,1.3,"#c09a72",1);return;}   // (t14: paper drops and brown paper puffs)
       if(Math.random()<rdt*14)emit("drop",x+R()*w*0.6,h,z+R(),R()*3,1+Math.random()*2,R()*3,1.0,0.32,"#7a5636",0.9);if(Math.random()<rdt*3)emit("steam",x+R(),h+0.4,z,0,1.2,0,1.6,1.2,"#a4805c",0.35);};}
   const FXDEF={
+    // v6.10 (07i): a failed bearing smokes and screeches sparks at its machine; a burnt motor smokes; a faulted drive flickers in the MCC
+    bearingfail:g=>(now,rdt,inc)=>{const s=inc&&G3.ASPOT&&G3.ASPOT[inc.asset];if(!s||rdt<=0)return;const x=s[2],z=s[3];
+      if(Math.random()<rdt*7)emit("spark",x+R(),1.2,z+R(),R()*4,2+Math.random()*3,R()*4,0.4,0.22,"#ffb23e",1);if(Math.random()<rdt*3)emit("smoke",x,1.8,z,R()*0.5,1.4,R()*0.5,2.4,1.4,"#5b5f66",0.55);},
+    motorfail:g=>(now,rdt,inc)=>{const s=inc&&G3.ASPOT&&G3.ASPOT[inc.asset];if(!s||rdt<=0)return;const x=s[2],z=s[3];
+      if(Math.random()<rdt*5)emit("smoke",x+R(),1.6,z+R(),R()*0.6,1.6,R()*0.6,3.0,1.8,"#3e4148",0.7);if(Math.random()<rdt*1.5)emit("spark",x,1.3,z,R()*3,2,R()*3,0.3,0.2,"#7fd0ff",1);},
+    drivefail:g=>(now,rdt,inc)=>{const M2=G3.MCC;if(!M2||rdt<=0)return;if(Math.random()<rdt*2)emit("smoke",(M2.x0+M2.x1)/2+R()*3,M2.h+0.6,(M2.z0+M2.z1)/2+R()*2,R()*0.4,1.2,R()*0.4,2.2,1.4,"#6b707a",0.45);},
     refclash:g=>{const z=zone(g,56,66,-16.4,-5.6);
       return (now,rdt,inc)=>{z(now);const zs=inc&&inc.both?[-14,-8]:[-14];zs.forEach(zz=>{if(Math.random()<rdt*10)emit("spark",60.6+0.95,2.0,zz+R()*1.2,R()*5+2,3+Math.random()*4,R()*5,0.5+Math.random()*0.3,0.3,"#ffb23e",1);
         if(Math.random()<rdt*4)emit("smoke",60.6,3.4,zz,R()*0.6,1.6,R()*0.6,2.6,1.6,"#7e848e",0.5);});};},
@@ -8872,7 +9129,7 @@ function no3D(){G3.ok=false;$("no3d").hidden=false;$("no3d-retry").onclick=()=>l
     S.inc.forEach((inc,i)=>{let f=FX[inc.id];
       if(!f)f=makeFX(inc.id);
       if(G3.EXP&&G3.EXP.hideFX===inc.id){f.g.visible=false;return;}   // autotest GPU probe: this effect off (no drawing, no new particles)
-      f.g.visible=true;f.on=true;f.up(now,rdt,inc);if(f.pinPos)f.pin.move(f.pinPos[0],f.pinPos[1]);f.pin.update(now);
+      f.g.visible=true;f.on=true;f.up(now,rdt,inc);if(inc.asset&&inc.kind!=="drv"&&G3.ASPOT&&G3.ASPOT[inc.asset]){const q=G3.ASPOT[inc.asset];f.pinPos=[q[2],q[3]];}   /* (v6.10: the failed machine, 07i) */if(f.pinPos)f.pin.move(f.pinPos[0],f.pinPos[1]);f.pin.update(now);
       {const zp=!G3.zen&&!G3.cineOn;f.pin.p.visible=f.pin.ring.visible=f.pin.stem.visible=zp;}   // v3.0.1: zen mode shows events without the red pins
       tmp.set(f.pin.x,f.pin.p.position.y+3.4,f.pin.z).project(camera);const vis=!G3.zen&&tmp.z<1&&Math.abs(tmp.x)<1.1&&Math.abs(tmp.y)<1.1;f.lb.vis=vis;
       if(vis){f.lb.x=Math.round((tmp.x+1)/2*w);f.lb.y=Math.round((1-tmp.y)/2*hh);
@@ -9655,7 +9912,7 @@ function no3D(){G3.ok=false;$("no3d").hidden=false;$("no3d-retry").onclick=()=>l
       else{const [fx2,fz]=h.userData.from;if(moveP(h,fx2,fz,11,rdt)){h.visible=false;h.userData.out=false;}else pose(h,"run",now);}});
     if(!yardBrk)EP.brk=null;
     G3.yardFrozen=away;
-    brigadeUpdate(rdt,now);techUpdate(rdt,now);if(G3.outageVis)try{G3.outageVis(rdt,now);}catch(e){if(!G3.ovErr){G3.ovErr=1;console.error("outage visuals",e);}}ambUpdate(rdt,now);if(G3.janUpdate)G3.janUpdate(rdt,now);if(G3.shiftUpdate)G3.shiftUpdate(rdt,now);
+    brigadeUpdate(rdt,now);techUpdate(rdt,now);if(G3.elecUpdate)try{G3.elecUpdate(rdt,now);}catch(e){if(!G3.elErr){G3.elErr=1;console.error("electrical tech",e);}}if(G3.outageVis)try{G3.outageVis(rdt,now);}catch(e){if(!G3.ovErr){G3.ovErr=1;console.error("outage visuals",e);}}ambUpdate(rdt,now);if(G3.janUpdate)G3.janUpdate(rdt,now);if(G3.shiftUpdate)G3.shiftUpdate(rdt,now);
     // winder machinery
     const cutting=S.rates.cut>0.5&&S.wd!=="hayout"&&!CR.hideUnwind;
     const nP0=craneUpdate(rdt);
@@ -10299,12 +10556,16 @@ function no3D(){G3.ok=false;$("no3d").hidden=false;$("no3d-retry").onclick=()=>l
     if(d>0.05){T.t.position.x+=dx/d*s;T.t.position.z+=dz/d*s;T.t.rotation.y=lerpAng(T.t.rotation.y,Math.atan2(-dz,dx),Math.min(1,rdt*10));}
     if(d<0.25)T.path.shift();
     const a=T.t.rotation.y;T.w.position.set(T.t.position.x-Math.cos(a)*0.15,0,T.t.position.z+Math.sin(a)*0.15);T.w.rotation.y=a;return T.path.length===0;}
+  // v6.10: a job's spot (a bearing failure is at its machine, 38c ASPOT) and, for a tech on a vibration round, the machine they're at now
+  const mSpot=i=>i.asset&&ASPOT[i.asset]?ASPOT[i.asset]:MAINT_SPOT[i.id];
+  const rndAt=k=>{const R=S.rel;if(!R||!R.rd)return null;for(const x of R.rd.list)if(x.who==="t"+k&&x.st==="go"&&x.a.length){const f=(S.t-x.t0)/Math.max(1,x.len),a=x.a[f<0.5?0:Math.min(1,x.a.length-1)];return ASPOT[a]?{x,a}:null;}return null;};
   function techUpdate(rdt,now){ensureTechs();
-    const MI=S.inc.filter(i=>MAINT_SPOT[i.id]&&i.mSlot>=0).sort((a,b)=>a.mSlot-b.mSlot);
-    techs.forEach((T,k)=>{const want=k<P.techs&&MI[Math.floor(k/2)]?MI[Math.floor(k/2)]:null,active=T.inc&&S.inc.some(i=>i.id===T.inc);
+    const MI=S.inc.filter(i=>mSpot(i)&&i.mSlot>=0).sort((a,b)=>a.mSlot-b.mSlot);
+    techs.forEach((T,k)=>{const want=k<P.techs&&MI[Math.floor(k/2)]?MI[Math.floor(k/2)]:null,rnd=!want&&k<P.techs?rndAt(k):null,active=T.inc?S.inc.some(i=>i.id===T.inc):!!(T.rnd&&rnd&&rnd.a===T.rnd);
       switch(T.state){
         case "home":{T.w.visible=k<P.techs;const b=T.bench;
-          if(want){T.inc=want.id;T.state="exit";T.next="mount";T.walk=[[SHOP.door[0],-20.1],[SHOP.door[0],-18.1]];break;}
+          if(want){T.inc=want.id;T.rnd=null;T.spot=mSpot(want);T.state="exit";T.next="mount";T.walk=[[SHOP.door[0],-20.1],[SHOP.door[0],-18.1]];break;}
+          if(rnd){T.inc=null;T.rnd=rnd.a;T.spot=ASPOT[rnd.a];T.state="exit";T.next="mount";T.walk=[[SHOP.door[0],-20.1],[SHOP.door[0],-18.1]];break;}   // v6.10 a vibration round
           if(RUN.on&&k<2&&k<P.techs&&T.ran!==RUN.t0){T.ran=RUN.t0;T.state="exit";T.next="cmount";T.walk=[[SHOP.door[0],-20.1],[SHOP.door[0],-18.1]];break;}
           if(moveP(T.w,b.p[0],b.p[1],3,rdt)){face(T.w,b.l[0],b.l[1],rdt);pose(T.w,"fix",now);T.w.userData.armful.visible=false;
             if(Math.random()<rdt*1.2){const [nx,,nz]=nozzlePos(T.w);for(let j=0;j<2;j++)emit("spark",nx,1.1,nz,R()*2,1.5+Math.random()*2,R()*2,0.3,0.18,"#ff8a1f",1);}}
@@ -10315,16 +10576,24 @@ function no3D(){G3.ok=false;$("no3d").hidden=false;$("no3d-retry").onclick=()=>l
           if(!RUN.on){T.state="home2";T.path=route([T.t.position.x,T.t.position.z],T.slot);break;}
           if(T.path.length<=1&&T.t.position.z>15)T.path=[[clamp(RUN.x-RUN.dir*(3.5+k*2.6),-22,66),17.6]];
           if(T.path.length)drive(T,rdt);break;
-        case "mount":if(moveP(T.w,T.slot[0]+0.2,T.slot[1]+0.7,6,rdt)){T.state="out";T.path=route(T.slot,(()=>{const s=MAINT_SPOT[T.inc];return [s[0]+((k%3)-1)*1.6,s[1]+(k>2?1.4:0)];})());}else pose(T.w,"run",now);break;
+        case "mount":if(moveP(T.w,T.slot[0]+0.2,T.slot[1]+0.7,6,rdt)){T.state="out";T.path=route(T.slot,(()=>{const s=T.spot||MAINT_SPOT[T.inc];return T.rnd?[s[0]-1.4,s[1]]:[s[0]+((k%3)-1)*1.6,s[1]+(k>2?1.4:0)];})());}else pose(T.w,"run",now);break;
         case "out":pose(T.w,"ride",now);T.w.position.y=0.12;if(drive(T,rdt)){T.state="walk";T.onSite=now;}break;
-        case "walk":{const s=MAINT_SPOT[T.inc],fx=s[0]+((k%3)-1)*1.1,fz=s[1]+(lane(s)==="F"?-1.6:1.4)*(k%2?1:-1)*0.6-(lane(s)==="F"?1.0:0);
+        case "walk":{const s=T.spot||MAINT_SPOT[T.inc];
+          if(T.rnd){   // v6.10: a vibration round: stand at the machine with the analyser's probe on the bearing housing
+            if(!active&&now-T.onSite>1500){T.state="back";break;}
+            if(moveP(T.w,s[0],s[1],4,rdt)){if(s.length>2)face(T.w,s[2],s[3],rdt);pose(T.w,"inspect",now);T.w.userData.tool.visible=true;}else pose(T.w,"walk",now);break;}
+          const fx=s[0]+((k%3)-1)*1.1,fz=s[1]+(lane(s)==="F"?-1.6:1.4)*(k%2?1:-1)*0.6-(lane(s)==="F"?1.0:0);
           if(!active&&now-T.onSite>2500){T.state="back";break;}
           if(moveP(T.w,fx,fz,5,rdt)){face(T.w,s[0],lane(s)==="F"?zc:s[1]-3,rdt);pose(T.w,"fix",now);{const ii=S.inc.find(x=>x.id===T.inc);if(ii)ii.mHere=true;}
             if(Math.random()<rdt*6){const [nx,,nz]=nozzlePos(T.w);for(let j=0;j<3;j++)emit("spark",nx,0.9,nz,R()*4,2+Math.random()*3,R()*4,0.4,0.22,"#ff8a1f",1);}}
           else pose(T.w,"run",now);break;}
-        case "back":{const a=T.t.rotation.y;if(moveP(T.w,T.t.position.x-Math.cos(a)*0.15,T.t.position.z+Math.sin(a)*0.15,5,rdt)){T.state="home2";T.path=route([T.t.position.x,T.t.position.z],T.slot);}else pose(T.w,"run",now);break;}
+        case "back":{const a=T.t.rotation.y;if(moveP(T.w,T.t.position.x-Math.cos(a)*0.15,T.t.position.z+Math.sin(a)*0.15,5,rdt)){
+            // v6.10: called to a job, or the round moves on to its next machine: ride straight there instead of going home first
+            const nx=want?{i:want,s:mSpot(want)}:rnd&&rnd.a!==T.rnd?{r:rnd.a,s:ASPOT[rnd.a]}:null;
+            if(nx){T.inc=nx.i?nx.i.id:null;T.rnd=nx.r||null;T.spot=nx.s;T.state="out";const from=[T.t.position.x,T.t.position.z];T.path=route(from,T.rnd?[nx.s[0]-1.4,nx.s[1]]:[nx.s[0]+((k%3)-1)*1.6,nx.s[1]+(k>2?1.4:0)]);break;}
+            T.state="home2";T.rnd=null;T.path=route([T.t.position.x,T.t.position.z],T.slot);}else pose(T.w,"run",now);break;}
         case "home2":pose(T.w,"ride",now);T.w.position.y=0.12;if(drive(T,rdt)){T.t.rotation.y=Math.PI/2;T.state="inside";}break;
-        case "inside":if(!T.walk)T.walk=[[SHOP.door[0],-18.1],[SHOP.door[0],-20.1],T.bench.p];if(walkTo(T,null,5,rdt,now)){T.walk=null;T.state="home";T.inc=null;}break;
+        case "inside":if(!T.walk)T.walk=[[SHOP.door[0],-18.1],[SHOP.door[0],-20.1],T.bench.p];if(walkTo(T,null,5,rdt,now)){T.walk=null;T.state="home";T.inc=null;T.rnd=null;}break;
       }
       T.t.visible=k<P.techs;});}
 
@@ -10370,6 +10639,118 @@ function no3D(){G3.ok=false;$("no3d").hidden=false;$("no3d-retry").onclick=()=>l
       else if(L.st==="talk"){face(c,L.f.w.position.x,L.f.w.position.z,rdt);pose(c,"idle",now);L.talk-=rdt;
         if(L.talk<=0){setHat(L.f.w,L.newM);setHat(c,L.oldM);c.userData.wp=null;c.userData.wpKey=null;L.st="out";}}
       else if(L.st==="out"){if(moveP(c,SHC.PARK[0],SHC.PARK[1],sp,rdt)){shcDone(L);SHC.live.splice(k,1);}else pose(c,"walk",now);}}};
+  /* ---- v6.10 the MCC (motor control centre) and the electrical tech ----
+     A brick-and-block electrical building on the lawn south of the machine hall, the same pop-away roof as the shop:
+     inside, the three drive lineups (MCC-1 stock prep, MCC-2 the machine's sectional drives, MCC-3 the winder) and the
+     incoming switchgear, a status light on every drive, a desk and a rack of spare drives. Outside on its pad, the
+     transformer; a duct bank runs south to the riser pole at the fence, where the overhead feeder from the substation
+     comes in (the poles outside the fence are scenery, 42b: LM.feeder). The electrical tech (03f manning, 07i model)
+     works from here: drive changeouts at the lineup, motor jobs and ADX rounds out at the machines with a test cart,
+     breaker resets after a blackout. The model decides everything; this only shows it. ---- */
+  const MCC={x0:4,x1:18,z0:24,z1:31,h:4.4,door:[4,27.5],desk:[15.4,29.7],riser:[20,62],tx:[20.2,27]};G3.MCC=MCC;
+  // where the rounds and the repairs happen at each critical machine (walkable spots, checked against the nav grid), and what to face
+  const ASPOT={pulp:[14,-8,16,-14],refA:[56.5,-12.2,60,-14],refB:[57.2,-8.8,60,-8.5],fan:[52,-6.5,51,-9.3],couch:[50,15.2,50,9],pr1:[39,15.2,39,9],pr2:[34.5,15.2,34.5,9],
+    dry:[14,16.4,14,9],reel:[-3,16.4,-4,9],wind:[-14.6,14.6,-16,9]};G3.ASPOT=ASPOT;
+  // ---- the building: the lineups stand along the north wall facing the camera; the door is in the west wall; the south
+  // wall above knee height lifts off with the roof (like the machine hall's shell), so the room shows in a close cutaway ----
+  slab(MCC.x0-2,MCC.x1+4,MCC.z0-1,MCC.z1+1,M.slab,0.03);box2(MCC.x0,MCC.x1,MCC.z0,MCC.z1,1.2);
+  {const W=MCC.x1-MCC.x0,D=MCC.z1-MCC.z0,H=MCC.h,cx=(MCC.x0+MCC.x1)/2,cz=(MCC.z0+MCC.z1)/2,dz=MCC.door[1];
+    ribWall(W,H,0.3,cx,H/2,MCC.z0);ribWall(0.3,H,D,MCC.x1,H/2,cz);ribWall(W,1.1,0.3,cx,0.55,MCC.z1);
+    ribWall(0.3,H,dz-0.9-MCC.z0,MCC.x0,H/2,(MCC.z0+dz-0.9)/2);ribWall(0.3,H,MCC.z1-(dz+0.9),MCC.x0,H/2,(dz+0.9+MCC.z1)/2);ribWall(0.3,H-2.4,1.8,MCC.x0,2.4+(H-2.4)/2,dz);
+    const rm=mat("brand",{transparent:true,roughness:0.55}),wm=mat("g-wall",{transparent:true,roughness:0.7}),rg=new THREE.Group();scene.add(rg);
+    const roof=new THREE.Mesh(new THREE.BoxGeometry(W+0.6,0.35,D+0.6),rm);roof.position.set(cx,H+0.17,cz);roof.castShadow=true;rg.add(roof);
+    const sw=new THREE.Mesh(new THREE.BoxGeometry(W+0.3,H-1.1,0.3),wm);sw.position.set(cx,1.1+(H-1.1)/2,MCC.z1);sw.castShadow=true;sw.receiveShadow=true;rg.add(sw);
+    const gl=mat("g-glass",{transparent:true,roughness:0.12,metalness:0.45});[6.5,9.8,13.1,16.0].forEach(x=>{const g=new THREE.Mesh(new THREE.BoxGeometry(1.5,1.0,0.08),gl);g.position.set(x,2.4,MCC.z1+0.17);rg.add(g);});
+    // rooftop: the drive room's cooling units (the drives make heat)
+    const ac=mat("g-metal",{transparent:true,metalness:0.35,roughness:0.5});[7,15].forEach(x=>{const u=new THREE.Mesh(new THREE.BoxGeometry(1.8,0.9,1.4),ac);u.position.set(x,H+0.8,cz+1.2);u.castShadow=true;rg.add(u);});
+    rg.userData.mats=[rm,wm,gl,ac];roofs.push(rg);
+    // toward the hall: windows and the sign; the west end: the door, its canopy and the danger sign
+    const fw=[2.0,4.6,9.4,12.0].map(v=>[v,1.4,1.4,1.0]);const fs=facade(W,H-0.1,fw.map(([c,...r])=>[W-c,...r]),[W-7.0,3.05,4.6,0.7,"MCC · ELECTRICAL"]);fs.rotation.y=Math.PI;fs.position.set(cx,(H-0.1)/2,MCC.z0-0.17);scene.add(fs);
+    const fe=facade(D,H-0.1,[[1.4,1.4,1.2,1.0],[5.7,1.4,1.0,1.0]],null,dz-MCC.z0);fe.rotation.y=-Math.PI/2;fe.position.set(MCC.x0-0.17,(H-0.1)/2,cz);scene.add(fe);
+    box(0.12,2.3,1.6,M.ink,MCC.x0-0.05,1.15,dz,scene,false).userData.noNav=true;   /* (an open doorway to the walkers) */box(1.0,0.12,2.2,M.brand,MCC.x0-0.55,2.6,dz,scene,false);
+    {const c=document.createElement("canvas");c.width=128;c.height=96;const g=c.getContext("2d");g.fillStyle="#ffffff";g.fillRect(0,0,128,96);g.fillStyle="#c8281e";g.fillRect(0,0,128,30);
+      g.fillStyle="#ffffff";g.font="900 22px system-ui,sans-serif";g.textAlign="center";g.fillText("DANGER",64,23);g.fillStyle="#1c2233";g.font="800 15px system-ui,sans-serif";g.fillText("HIGH VOLTAGE",64,55);g.fillText("480 V",64,78);
+      const t=new THREE.CanvasTexture(c);t.colorSpace=THREE.SRGBColorSpace;const p=new THREE.Mesh(new THREE.PlaneGeometry(0.8,0.6),new THREE.MeshBasicMaterial({map:t}));p.rotation.y=-Math.PI/2;p.position.set(MCC.x0-0.19,1.6,dz+1.6);scene.add(p);}
+    blob(cx,cz,9);}
+  // ---- the lineups: a cabinet per drive along the back wall, facing the door; the incoming section at the east end ----
+  const LEDM={run:new THREE.MeshBasicMaterial({color:lin0("#3fe08a")}),idle:new THREE.MeshBasicMaterial({color:lin0("#e8b23a")}),fault:new THREE.MeshBasicMaterial({color:lin0("#ff3b2f")}),off:new THREE.MeshBasicMaterial({color:lin0("#4a5262")})};
+  const cabM=mat("g-frame",{metalness:0.2,roughness:0.6}),modM={old:M.bad,new:M.ok};
+  const CAB={},CABZ=MCC.z0+0.55,dynMark=o=>{if(G3.SM&&G3.SM.dyn)G3.SM.dyn.add(o);else (G3.dynLater||(G3.dynLater=[])).push(o);return o;};
+  function mccPlate(txt,x,y,z){const c=document.createElement("canvas");c.width=192;c.height=40;const g=c.getContext("2d");g.fillStyle="#1c2233";g.fillRect(0,0,192,40);g.fillStyle="#ffffff";g.font="800 24px system-ui,sans-serif";g.textAlign="center";g.fillText(txt,96,29);
+    const t=new THREE.CanvasTexture(c);t.colorSpace=THREE.SRGBColorSpace;const p=new THREE.Mesh(new THREE.PlaneGeometry(1.2,0.25),new THREE.MeshBasicMaterial({map:t}));p.position.set(x,y,z);scene.add(p);return p;}
+  {let x=MCC.x0+1.0;LINEUPS.forEach(([ln,,tag])=>{const list=ASSETS.filter(A=>A.ln===ln),x0=x;
+      list.forEach(A=>{const g=new THREE.Group();g.position.set(x+0.42,0,CABZ);g.rotation.y=Math.PI;scene.add(g);
+        box(0.84,2.3,0.6,cabM,0,1.15,0,g);box(0.84,0.12,0.64,M.ink,0,2.36,0,g,false);
+        // the door, hinged on its west edge, with a light and a keypad; the drive module behind it
+        const hinge=new THREE.Group();hinge.position.set(-0.4,0,-0.31);g.add(hinge);dynMark(hinge);const dr=box(0.8,2.1,0.04,cabM,0.4,1.1,0,hinge,false);dr.userData.noNav=true;
+        const led=new THREE.Mesh(new THREE.BoxGeometry(0.1,0.1,0.03),LEDM.run);led.position.set(0.62,1.85,-0.03);hinge.add(led);box(0.22,0.16,0.03,M.ink,0.4,1.55,-0.03,hinge,false);
+        const mod=dynMark(box(0.6,0.7,0.4,modM.new,0,1.1,0.02,g,false));mod.visible=false;
+        CAB[A.id]={g,hinge,led,mod,home:[x+0.42,CABZ],stand:[x+0.42,CABZ+1.3],open:0};x+=0.9;});
+      mccPlate(tag,(x0+x-0.08)/2,2.65,CABZ+0.32);x+=0.45;});
+    // incoming: the main breaker and the 480 V bus, two wider sections
+    [0,1].forEach(k=>{box(1.1,2.4,0.7,cabM,x+0.55+k*1.15,1.2,CABZ-0.05,scene);box(0.18,0.18,0.03,LEDM.run,x+0.85+k*1.15,1.95,CABZ+0.31,scene,false);});
+    mccPlate("MAIN 480 V",x+1.1,2.75,CABZ+0.3);CAB.main={stand:[x+1.1,CABZ+1.35]};
+    // the desk with the tester's laptop, and the rack of spare drives
+    box(1.6,0.08,0.8,M.kraft,MCC.desk[0],0.78,MCC.desk[1]-0.45,scene,false);[-0.7,0.7].forEach(s=>box(0.08,0.74,0.7,M.steel,MCC.desk[0]+s,0.37,MCC.desk[1]-0.45,scene,false));
+    box(0.42,0.03,0.3,M.ink,MCC.desk[0],0.84,MCC.desk[1]-0.5,scene,false);
+    box(0.5,2.0,1.8,M.steel,MCC.x1-0.6,1.0,MCC.z1-3.3,scene);for(let k=0;k<3;k++)box(0.42,0.36,0.5,M.ok,MCC.x1-0.85,0.5+k*0.62,MCC.z1-3.7+(k%2)*0.6,scene,false);}
+  // ---- the transformer on its pad, and the duct bank to the riser pole at the fence ----
+  {const [tx,tz]=MCC.tx;slab(tx-1.6,tx+1.6,tz-1.8,tz+1.8,M.slab,0.05);box(2.2,2.2,2.6,M.steel,tx,1.1,tz);for(let k=0;k<6;k++)box(0.3,1.6,0.06,M.metal,tx+1.24,1.0,tz-1+k*0.4,scene,false);
+    [-0.6,0,0.6].forEach(o=>{const b=new THREE.Mesh(new CylG(0.09,0.12,0.6,8),M.wind);b.position.set(tx,2.5,tz+o);scene.add(b);});
+    box(1.2,0.25,0.25,M.ink,(tx+MCC.x1)/2-0.5,2.6,tz,scene,false);   // the cable bus into the building
+    const [rx,rz]=MCC.riser,dm=mat("g-slab",{roughness:0.9});slab(rx-0.5,rx+0.5,tz+1.8,rz,dm,0.045);
+    for(let z=tz+6;z<rz-2;z+=8)box(0.14,0.7,0.14,M.warn,rx+0.75,0.35,z,scene,false);
+    const pole=new THREE.Mesh(new CylG(0.16,0.2,10,8),M.kraft);pole.position.set(rx,5,rz);pole.castShadow=true;scene.add(pole);
+    box(2.6,0.16,0.16,M.kraft,rx,9.4,rz,scene,false);[-1.1,0,1.1].forEach(o=>{const n=new THREE.Mesh(new CylG(0.06,0.08,0.3,6),M.wind);n.position.set(rx+o,9.65,rz);scene.add(n);});
+    box(0.18,9,0.18,M.ink,rx+0.24,4.5,rz,scene,false);   // the riser conduit down the pole
+    {const c=document.createElement("canvas");c.width=64;c.height=64;const g=c.getContext("2d");g.fillStyle="#f2b807";g.beginPath();g.moveTo(32,4);g.lineTo(62,60);g.lineTo(2,60);g.closePath();g.fill();g.fillStyle="#1c2233";g.font="900 34px system-ui";g.textAlign="center";g.fillText("⚡",32,54);
+      const t=new THREE.CanvasTexture(c);t.colorSpace=THREE.SRGBColorSpace;const p=new THREE.Mesh(new THREE.PlaneGeometry(0.6,0.6),new THREE.MeshBasicMaterial({map:t,transparent:true}));p.position.set(tx,1.5,tz-1.32);p.rotation.y=Math.PI;scene.add(p);}}
+
+  // ---- the electrical tech: hard hat by team, orange vest, radio; a test cart for the ADX rounds ----
+  const elecM=mat("g-tech");const ET={w:null,cart:null,st:"home",tgt:null,ph:0,job:null};G3.ET=ET;
+  function elecBuild(){if(ET.w)return;const w=worker(elecM,M.hatTeam.A,{vest:HIVIS.orange,radio:true});w.position.set(MCC.desk[0],0,MCC.desk[1]);ET.w=w;
+    const c=new THREE.Group();box(0.8,0.7,0.5,M.ink,0,0.55,0,c);box(0.5,0.32,0.08,M.ok,0.05,1.06,-0.05,c,false);box(0.06,0.7,0.5,M.steel,-0.43,1.0,0,c,false);
+    [[-0.3,-0.2],[-0.3,0.2],[0.3,-0.2],[0.3,0.2]].forEach(([a,b])=>cylZ(0.09,0.06,M.ink,a,0.09,b,8,c));c.userData.load=true;c.position.set(MCC.desk[0]-1.8,0,MCC.desk[1]+0.6);scene.add(c);dynMark(c);ET.cart=c;}
+  elecBuild();   // (built with the scene, so the start-up precompile sees it)
+  const rlyJob=()=>{if(!S||!S.inc)return null;for(const i of S.inc)if(ENEED(i.id)&&i.eSlot===0)return i;return null;};
+  const rlyRnd=(who)=>{const R=S&&S.rel;if(!R||!R.rd)return null;for(const x of R.rd.list)if(x.who===who&&x.st==="go")return x;return null;};
+  // where the tech should be now, and doing what: [x, z, faceX, faceZ, pose, what]
+  function elecWant(){const j=rlyJob();
+    if(j){const p=1-j.left/Math.max(1,j.total);
+      if(j.id==="drivefail"&&CAB[j.asset]){const c=CAB[j.asset];return [c.stand[0],c.stand[1],c.home[0],c.home[1],j.eGo?"fix":"run","cab",j,p];}
+      if(j.id==="motorfail"&&ASPOT[j.asset]){const s=ASPOT[j.asset];return [s[0],s[1],s[2],s[3],j.eGo?"fix":"run","motor",j,p];}
+      return [CAB.main.stand[0],CAB.main.stand[1],CAB.main.stand[0],CABZ,j.eGo?"fix":"run","main",j,p];}
+    const x=rlyRnd("e");if(x&&x.a.length){const f=(S.t-x.t0)/Math.max(1,x.len),a=x.a[f<0.5?0:Math.min(x.a.length-1,1)],s=ASPOT[a];if(s)return [s[0]+0.8,s[1]+(s[1]>5?0:0.9),s[2],s[3],"type","adx",null,0];}
+    return [MCC.desk[0],MCC.desk[1],MCC.desk[0],MCC.desk[1]-1,"type","home",null,0];}
+  function elecUpdate(rdt,now){if(!S)return;elecBuild();const w=ET.w,want=elecWant(),[tx,tz,fx,fz,ps,what,job,p]=want;
+    {const m=manNow&&manNow(),T=m&&m.elec&&m.elec.who&&m.elec.who.team,hm=T&&M.hatTeam[T];if(hm&&w.userData.hats[0].material!==hm)for(const h of w.userData.hats)h.material=hm;}
+    const sp=4.2*clamp(simRate()/20,1,3.5);
+    // the cart goes along on ADX rounds (pushed in front), otherwise it waits by the desk
+    const cartOut=what==="adx";
+    // in and out through the west door (the room is walled off from the walkers' grid): scripted legs between the room,
+    // the door and the building's north-west corner, then the walkers' path-finding for the rest of the way
+    const q=w.position,dz=MCC.door[1],inR=(x,z)=>x>MCC.x0-0.05&&x<MCC.x1&&z>MCC.z0&&z<MCC.z1,ti=inR(tx,tz),ri=inR(q.x,q.z),
+      nearW=q.x<=MCC.x0-0.05&&q.x>MCC.x0-3.2&&q.z>MCC.z0-1.5&&q.z<MCC.z1+1,dIn=[MCC.x0+1.0,dz],dOut=[MCC.x0-1.4,dz],C1=[MCC.x0-1.6,MCC.z0-1.7];
+    const line=(x,z)=>{const dx=x-q.x,dzz=z-q.z,d=Math.hypot(dx,dzz);if(d<0.06){q.x=x;q.z=z;return true;}const st=Math.min(d,sp*rdt);q.x+=dx/d*st;q.z+=dzz/d*st;w.rotation.y=Math.atan2(-dzz,dx);return false;};
+    const onDoor=Math.abs(q.z-dz)<0.08&&q.x>MCC.x0-1.45&&q.x<MCC.x0+1.05;let scripted=true;
+    if(ti&&!ri){if(onDoor)line(dIn[0],dIn[1]);else if(nearW)line(dOut[0],dOut[1]);else scripted=false;}
+    else if(!ti&&ri){if(onDoor)line(dOut[0],dOut[1]);else line(dIn[0],dIn[1]);}
+    else if(!ti&&nearW){if(onDoor&&q.x>dOut[0]+0.05)line(dOut[0],dOut[1]);else line(C1[0],C1[1]);}
+    else scripted=false;
+    if(scripted){w.userData.wp=null;w.userData.wpKey=null;pose(w,"walk",now);}
+    else if(ti&&!ri&&moveP(w,C1[0],C1[1],sp,rdt)){q.x=C1[0]+0.01;q.z=C1[1]+0.4;}   // (back from a job: to the corner, then the scripted legs)
+    else if(ti&&!ri)pose(w,"walk",now);
+    else if(moveP(w,tx,tz,what==="adx"?sp*0.75:sp,rdt)){face(w,fx,fz,rdt);pose(w,ps==="run"?"idle":ps,now);
+      if(ps==="fix"&&Math.random()<rdt*4){const a=w.rotation.y;for(let j=0;j<2;j++)emit("spark",w.position.x+Math.cos(a)*0.8,1.3,w.position.z-Math.sin(a)*0.8,R()*3,1.5+Math.random()*2,R()*3,0.3,0.18,"#7fd0ff",1);}}
+    else pose(w,what==="adx"?"pull":"walk",now);
+    {const c=ET.cart,a=w.rotation.y;if(cartOut){c.position.x=w.position.x+Math.cos(a)*0.95;c.position.z=w.position.z-Math.sin(a)*0.95;c.rotation.y=a;}
+      else if(Math.hypot(c.position.x-(MCC.desk[0]-1.8),c.position.z-(MCC.desk[1]+0.6))>0.05){c.position.set(MCC.desk[0]-1.8,0,MCC.desk[1]+0.6);c.rotation.y=0;}}
+    // the cabinets: lights follow each drive; the one being changed has its door open and the module coming out and going in
+    for(const A of ASSETS){const c=CAB[A.id];if(!c)continue;const st=S.rel?rlyDrvSt(A.id):"run",m=st==="run"?LEDM.run:st==="idle"?LEDM.idle:st==="off"?LEDM.off:LEDM.fault;if(c.led.material!==m)c.led.material=m;
+      const busy=job&&job.id==="drivefail"&&job.asset===A.id&&job.eGo,tgt=busy&&p>0.08&&p<0.92?1:0;c.open+=(tgt-c.open)*Math.min(1,rdt*3);c.hinge.rotation.y=-c.open*1.7;
+      if(busy&&p>0.2&&p<0.85){c.mod.visible=true;const k=p<0.5?(p-0.2)/0.3:1-(p-0.55)/0.3,kk=clamp(k,0,1);c.mod.material=p<0.5?modM.old:modM.new;c.mod.position.set(-0.55*kk,1.1-0.3*kk,0.02-1.0*kk);}
+      else if(c.mod.visible)c.mod.visible=false;}}
+  G3.elecUpdate=elecUpdate;
   /* ---- step 4: upgrades you can see ---- */
     function upg(id,build){const g=new THREE.Group();scene.add(g);build(g);return g;}
   const motors=upg("drive",g=>{for(let k=0;k<3;k++){const m=new THREE.Group();box(1.6,1.4,1.4,M.stock,0,0.7,0,m);cylZ(0.25,1.2,M.metal,0,0.7,-1,8,m);m.position.set(2+k*9,0,zc-CD/2-2.2);g.add(m);}});
@@ -10443,7 +10824,7 @@ function no3D(){G3.ok=false;$("no3d").hidden=false;$("no3d-retry").onclick=()=>l
   function drawSigns(){const x=SC.getContext("2d");x.clearRect(0,0,1024,300);signDraws.forEach(f=>f(x));signTex.needsUpdate=true;}
   {const rb0=G3.rebrand;G3.rebrand=()=>{rb0&&rb0();drawSigns();};}
   // the water tower: four legs, a riser, a tank with the mill name round it, a conical roof, a catwalk and a beacon
-  {const TX=-2,TZ=46,H=21,R=4.3;YP.tower=[TX,TZ,H+9.5];
+  {const TX=84,TZ=-24,H=21,R=4.3;YP.tower=[TX,TZ,H+9.5];
     const legM=M.steel;[[-1,-1],[1,-1],[-1,1],[1,1]].forEach(([a,b])=>{box(0.42,H,0.42,legM,TX+a*3.1,H/2,TZ+b*3.1);
       box(0.9,0.12,0.9,M.ink,TX+a*3.1,0.06,TZ+b*3.1,scene,false);});
     [6,12.5,19].forEach((y,i)=>{box(6.6,0.18,0.18,legM,TX,y,TZ-3.1,scene,false);box(6.6,0.18,0.18,legM,TX,y,TZ+3.1,scene,false);box(0.18,0.18,6.6,legM,TX-3.1,y,TZ,scene,false);box(0.18,0.18,6.6,legM,TX+3.1,y,TZ,scene,false);
@@ -11877,6 +12258,15 @@ function no3D(){G3.ok=false;$("no3d").hidden=false;$("no3d-retry").onclick=()=>l
         add(T.box,x+6,0,z+4,4,2.6,3,0,"#c9c4ba",0.15);
         [[-9,-7],[9,-7],[-9,7],[9,7]].forEach(([a,b])=>add(T.box,x+a,0,z+b,0.3,6,0.3,0,"#8d939c",0.1));add(T.box,x,5.8,z-7,18,0.3,0.3,0,"#8d939c",0);add(T.box,x,5.8,z+7,18,0.3,0.3,0,"#8d939c",0);
         [[0,-9,22,0.1],[0,9,22,0.1],[-11,0,0.1,18],[11,0,0.1,18]].forEach(([a,b,w,d])=>add(T.box,x+a,0,z+b,w,2.2,d,0,"#a8b0b8",0.3));claim(x,z,12,7,0);note("substation",x,z,7);return [x,z];},
+      // v6.10: the mill's own feeder, wood poles with three wires from the substation to the riser pole at the fence (38c MCC.riser)
+      feeder(sub){const M2=G3.MCC;if(!M2||!sub)return;const [rx,rz]=M2.riser,zo=F.z1+8,pts=[[sub[0]+(sub[0]<rx?11:-11),sub[1]]];
+        if(Math.abs(sub[1]-zo)>12)pts.push([sub[0]+(sub[0]<rx?11:-11),zo]);pts.push([rx,zo],[rx,rz]);
+        const P2=[];for(let i=0;i<pts.length-1;i++){const a=pts[i],b=pts[i+1],L=Math.hypot(b[0]-a[0],b[1]-a[1]),n=Math.max(1,Math.round(L/34));for(let k=i?1:0;k<=n;k++)P2.push([a[0]+(b[0]-a[0])*k/n,a[1]+(b[1]-a[1])*k/n]);}
+        const H=9.4;P2.forEach(([x,z],k)=>{if(k===P2.length-1)return;if(onRiver(x,z,1)||inside(x,z,2))return;add(T.cyl6,x,0,z,0.2,H+0.4,0.2,0,"#7b5d42",0.12);
+          const nx=P2[k+1]||P2[k-1],ry=Math.atan2(-(nx[1]-z),nx[0]-x)+Math.PI/2;add(T.box,x,H,z,0.14,0.14,2.6,ry,"#7b5d42",0);claim(x,z,0.8,H,0);});
+        for(let k=0;k<P2.length-1;k++){const [ax,az]=P2[k],[bx,bz]=P2[k+1],L=Math.hypot(bx-ax,bz-az),ry=Math.atan2(-(bz-az),bx-ax);
+          [-1.1,0,1.1].forEach(o=>add(T.box,(ax+bx)/2+Math.cos(ry+Math.PI/2)*o,H+0.1,(az+bz)/2-Math.sin(ry+Math.PI/2)*o,L,0.05,0.05,ry,"#2b2f36",0,"near"));}
+        note("feeder",rx,rz,H);},
       // a line of pylons; never inside the fence or on the water
       pylons(from,to){const n=Math.max(2,Math.round(Math.hypot(to[0]-from[0],to[1]-from[1])/55));for(let k=1;k<=n;k++){const x=from[0]+(to[0]-from[0])*k/n,z=from[1]+(to[1]-from[1])*k/n;if(inside(x,z,-8)||onRiver(x,z)||!place(x,z,2.5))continue;
           const ry=Math.atan2(-(to[1]-from[1]),to[0]-from[0])+Math.PI/2;add(T.cone4,x,0,z,1.5,24,1.5,ry,"#7d838c",0.15);add(T.box,x,17,z,0.25,0.35,9,ry,"#7d838c",0);add(T.box,x,20.5,z,0.25,0.3,6,ry,"#7d838c",0);claim(x,z,2,24,0);}},
@@ -12010,7 +12400,7 @@ function no3D(){G3.ok=false;$("no3d").hidden=false;$("no3d-retry").onclick=()=>l
         [[-1.4,-9],[1.4,-9],[-1.4,4],[1.4,4],[-1.4,7],[1.4,7]].forEach(([a,b])=>add(T.cyl10,tx+a,0.5,tz+b,0.5,0.4,0.5,0,"#2f3a49",0,undefined,0,Math.PI/2));
         add(T.box,tx-4.5,0.3,tz,1.4,1.6,2.2,0,"#e2c230",0.15);add(T.box,tx-3.4,0.4,tz,0.2,2.2,1.2,0,"#4a4f58",0);add(T.box,tx-3.0,0.9,tz,1.6,1.1,1.25,0,"#a7784a",0.15);
         sign(x0+16,z0-1.5,0,"OCC BALE STORE","#f2efe6","#2f3a49");hMark(cx,sz,40,10);note("occStore",sx,sz,10);}
-      LM.substation(-121,96,2);LM.pylons([-121,96],[-420,150]);LM.pylons([F.x1+40,-40],[F.x1+250,-300]);
+      LM.feeder(LM.substation(-121,96,2));LM.pylons([-121,96],[-420,150]);LM.pylons([F.x1+40,-40],[F.x1+250,-300]);
       LM.farm(-30,214,0);LM.field(-92,190,52,40,"#a6c46a",false);LM.field(-92,250,52,46,"#d6c27a",true);LM.field(-28,268,44,34,"#8fb85c",false);
       LM.orchard(118,236,10,9);LM.lake(246,104,26);LM.mast(-262,128,48);
       track([[-30,196],[-30,160],[-30,146]]);track([[-118,214],[HXr+5,214]]);track([[104,108],[EX-4,108]]);track([[HXr-5,120],[-200,126],[-245,128]]);road([[-84,100],[HXr,100]],5,false);
@@ -12131,7 +12521,7 @@ function no3D(){G3.ok=false;$("no3d").hidden=false;$("no3d-retry").onclick=()=>l
       [[-90,shore-300,150,0.15],[260,shore-380,190,-0.1],[-330,shore-430,120,0.3]].forEach(([x,z,L2,ry])=>{add(T.box,x,-1.6,z,L2,2.2,L2*0.14,ry,"#a8322c",0.1);add(T.box,x,0.6,z,L2,5.5,L2*0.14,ry,pick(["#1f2d44","#2f3a49","#4a2f2f"]),0.15);
         add(T.box,x+Math.cos(ry)*L2*0.38,6.1,z-Math.sin(ry)*L2*0.38,L2*0.07,10,L2*0.13,ry,"#f2f2f2",0.15);for(let b=0;b<6;b++)add(T.box,x+Math.cos(ry)*(-L2*0.38+b*L2*0.11),6.1,z-Math.sin(ry)*(-L2*0.38+b*L2*0.11),L2*0.09,2.6*(1+Math.floor(RNG()*2)),L2*0.12,ry,pick(["#d6382c","#2a5aa8","#1f9254","#e2c230","#e9ecef"]),0.15);});
       // landmark blocks
-      LM.railyard(-415,HXr-10);LM.waterTower(-1,104);LM.recycler(-91,104);LM.substation(89,104,3);LM.mast(44,150,46);
+      LM.railyard(-415,HXr-10);LM.waterTower(-1,104);LM.recycler(-91,104);LM.feeder(LM.substation(89,104,3));LM.mast(44,150,46);
       // a trailer lot between the highway and the gate
       {add(T.quad,-130,0.022,46,40,1,44,0,"#9a9ea6",0);for(let i=0;i<5;i++)for(let j=0;j<2;j++)add(T.box,-142+i*6,0,36+j*20,2.6,3.4,13,0,pick(["#e9ecef","#d6382c","#2a5aa8","#e9ecef"]),0.15);kMark(-150,-110,24,68,3);hMark(-130,46,22,4);}
       // the blocks: houses round the edge with gardens, small apartment blocks, corner shops, a park here and there
@@ -12168,7 +12558,7 @@ function no3D(){G3.ok=false;$("no3d").hidden=false;$("no3d-retry").onclick=()=>l
       // Desert flats: a concrete canal past the mill; red mesas on every side, dry washes and dirt tracks across the
       // flats; the solar farm, water tanks and a reservoir east, a windpump and the substation west, an oasis, a ranch
       LM.solarFarm(206,86,10,7);LM.waterTanks(64,117);LM.reservoir(104,120,18,24);LM.reservoir(112,4,14,34);LM.windpump(-207,109);LM.stockPond(98,196);LM.mast(240,156,44);LM.ranch(232,-14);
-      const sub=LM.substation(-88,156,2);LM.pylons(sub,[-420,250]);LM.pylons([F.x1+30,60],G3.solarTx||[200,46]);
+      const sub=LM.substation(-88,156,2);LM.feeder(sub);LM.pylons(sub,[-420,250]);LM.pylons([F.x1+30,60],G3.solarTx||[200,46]);
       [[-300,-205,130,82,38,0.3],[255,-245,112,72,32,-0.4],[368,12,92,74,30,0.9],[-362,122,96,86,34,0.2],[208,284,120,72,36,-0.2],[395,-150,46,40,22,0.5],[-402,-40,40,44,18,0],[-240,300,60,30,20,0.1]].forEach(m=>LM.mesa(...m));
       // a tank-car siding off the main line by the highway, a trailer lot by the gate
       {[-36.4,-35].forEach(z=>add(T.box,-192,0.14,z,56,0.16,0.12,0,"#8d939c",0,"w"));for(let k=0;k<4;k++)add(T.cyl10,-212+k*13.5,1.0,-35.7,1.4,12,1.4,0,"#e9ecef",0.15,"w",0,Math.PI/2);kMark(-222,-164,-40,-32,3);
@@ -12208,7 +12598,7 @@ function no3D(){G3.ok=false;$("no3d").hidden=false;$("no3d-retry").onclick=()=>l
       const [czc,chw]=RZ(0);
       LM.bargeDock(-74,czc+chw+2);LM.barge(-245,czc-1,44);LM.shack(-9,czc-chw-7);LM.shack(-44,czc-chw-6);
       {const x=-200,z=czc+chw+8;add(T.box,x,0,z,8,3.2,6,0,"#c9c4ba",0.15);add(T.gable,x,3.2,z,8.4,1.6,6.6,0,"#5b6270",0);add(T.box,x,0.6,z-7,4,0.3,8,0,"#7b5d42",0.1);claim(x,z,6,5,0);}
-      const sub=LM.substation(122,-14,2);LM.pylons([EX+6,-14],[420,-20]);LM.pylons([F.x1+20,-40],[sub[0],sub[1]]);
+      const sub=LM.substation(122,-14,2);LM.feeder(sub);LM.pylons([EX+6,-14],[420,-20]);LM.pylons([F.x1+20,-40],[sub[0],sub[1]]);
       LM.mast(-20,148,46);{const pts=[];for(let k=0;k<16;k++){const a=k/16*6.283;pts.push([-20+Math.cos(a)*24,148+Math.sin(a)*22]);}poly(pts,0.02,"#a3b487");track(pts.concat([pts[0]]),3);OPEN.push([-20,148,30]);}
       LM.boardwalk([[-4,168],[20,196],[56,224],[100,228],[138,226]]);
       // the dry pad's graded edge: riprap on the slope, a drainage swale at its foot (culverted under the two roads)
@@ -13373,7 +13763,7 @@ function knobAlarms(a,r){const L=[],al=(on,txt,hi)=>{if(on)L.push([txt,hi]);};co
   {const q=qualStatus();if(r.run&&q.off>0.02)L.unshift([`MAKING BEATER · ${q.why.toUpperCase()}`,true]);}   // (v6.5.4: on every screen, first)
   dcsAlarms(a,r,L);   // v6.5 b3: upsets on the screen of the equipment they hit, motors, purges, the dry end's states (50d)
   return L;}
-function stationBuild(){const o=$("dcsOv");if(!o||!KUI.st)return;const a=KUI.st,M2=MIMIC[a],b=$("dcsMain");KUI.tab=a==="QCS"?"qcs":"dcs";if(a!=="PLAN"&&a!=="QCS"&&a!=="TREND"&&a!=="WATER")KUI.last=a;
+function stationBuild(){const o=$("dcsOv");if(!o||!KUI.st)return;const a=KUI.st,M2=MIMIC[a],b=$("dcsMain");KUI.tab=a==="QCS"?"qcs":"dcs";if(a!=="PLAN"&&a!=="QCS"&&a!=="TREND"&&a!=="WATER"&&a!=="DRV"&&a!=="REL")KUI.last=a;
   $("dcs-h").textContent=`${(typeof NAME==="string"&&NAME)||"PM1"} · `+DCS_SCR[a].title;   // (v6.5.2: the machine's own name, as on the process flow and the 3D label)
   {const sl=$("dcsSlow");if(sl)sl.textContent=POP.on?"Second screen · the mill keeps running at your speed":DCS_SLOW.has(a)?"Game slowed to 1 min/s while this screen is open":"Live: the mill keeps running at your speed";}
   o.querySelectorAll("[data-a]").forEach(x=>x.setAttribute("aria-pressed",String(x.dataset.a===a)));
@@ -13401,6 +13791,7 @@ function stationBuild(){const o=$("dcsOv");if(!o||!KUI.st)return;const a=KUI.st,
     b.appendChild(cs);dcsMotRows(a,b);}
   else if(a==="QCS")qcsBuild(b);
   else if(a==="PLAN")b.appendChild(kEl("div","plan","")).id="planBox";
+  else if(a==="DRV")drvBuild(b);else if(a==="REL")rlyBuild(b);   // v6.10 (50l)
   trBuild();trLayout();kuiRefresh();}
 // the trend chart: up to four series on their own scales, newest at the right
 function drawTrend6(cv,series){if(!cv)return;const x=cv.getContext("2d"),W=cv.width,H=cv.height,a=KHIST.a,dk=document.body.classList.contains("dark");
@@ -13433,6 +13824,7 @@ function kuiRefresh(){if(!KUI.panel&&!KUI.st)return;const r=knobRead();
       const D=[["Wrinkles",F.wrinkles],["Crush marks",F.crush],["Felt stripes",F.stripes],["CD streaks",F.cd],["Weight swings",F.bw],["Wet sheet",F.wet],["Dry sheet",F.dry]];
       const h=D.map(([n,v])=>{const c=v>0.01?Math.round(4+v*80):0;return `<div class="${c?"hit":""}"><small>${n}</small><b>${c}</b><small>/ reel</small></div>`;}).join("");const dd=$("qcsDef");if(dd._h!==h){dd._h=h;dd.innerHTML=h;}qcsRefresh();}
     else if(a==="PLAN")planRefresh();
+    else if(a==="DRV")drvRefresh();else if(a==="REL")rlyRefresh();   // v6.10 (50l)
     trDraw();}}
 // CD moisture profile: a bar per zone up from 3 %, the ±1.5 % spec band round the reel average, the 8 % target
 function kuiCd(cv,r){if(!cv)return;const x=cv.getContext("2d"),W=cv.width,H=cv.height,z=r.zones,lo=3,hi=11,Y=v=>H-18-clamp((v-lo)/(hi-lo),0,1)*(H-30);
@@ -14093,13 +14485,13 @@ const POPOK=()=>{try{if(new URLSearchParams(location.search).has("popout"))retur
 const POPV={home:1,pf:1,dcs:1,rm:1,man:1};
 const POP_APPS=[["pf","Process flow","Money and tons through the mill"],["dcs","DCS","Stock prep, wet end, dry end, utilities"],["PLAN","Planning","Orders, inventory, trucks, OCC recipe"],
   ["QCS","Quality","Specs, off-spec log, beater"],["WATER","Water","Fresh water and the water balance"],["TREND","Trends","Trend anything, find what moves together"],
-  ["rm","Relationship map","What drives each reading, and what it moves"],["man","Manning","Who's on shift, vacations and cover"]];
-const POP_DCS=new Set(["dcs","PLAN","QCS","WATER","TREND"]);
+  ["REL","Reliability","Rounds, vibration and ADX motor tests"],["DRV","Drives","The MCC lineups: each drive's load"],["rm","Relationship map","What drives each reading, and what it moves"],["man","Manning","Who's on shift, vacations and cover"]];
+const POP_DCS=new Set(["dcs","PLAN","QCS","WATER","TREND","REL","DRV"]);
 const popApp=k=>POP_APPS.find(a=>a[0]===k);
 // the bar's title for a view
 function popTitle(v){if(v==="dcs"){const a=popApp(KUI.st);return a?a[1]:"DCS · "+(KUI.st||"SPOT");}const a=popApp(v);return a?a[1]:"";}
 // a tile (or a button elsewhere) asked for k: a view, or one of the DCS's own screens
-function popGo(k){if(POP_DCS.has(k)){if(S.zen)return;if(k==="dcs"){POP.inApp=true;try{openStation(KUI.st&&!["PLAN","QCS","WATER","TREND"].includes(KUI.st)?KUI.st:(KUI.last||"SPOT"),"dcs");}finally{POP.inApp=false;}}
+function popGo(k){if(POP_DCS.has(k)){if(S.zen)return;if(k==="dcs"){POP.inApp=true;try{openStation(KUI.st&&!["PLAN","QCS","WATER","TREND","DRV","REL"].includes(KUI.st)?KUI.st:(KUI.last||"SPOT"),"dcs");}finally{POP.inApp=false;}}
     else{POP.inApp=true;try{openStation(k,"dcs");}finally{POP.inApp=false;}}popShow("dcs");return;}
   popShow(k);}
 try{const v=localStorage.getItem("paper-mill-popview");if(POPV[v])POP.view=v;}catch(_){}
@@ -14513,8 +14905,8 @@ function pfSVGt(D,live){const vert=pfVert(),NU=104,NV=112,GAP=30,PAD=vert?24:10,
    moves, with the mechanism; "Full chain" follows the links all the way up and down. Live readings on each box. Read
    only: the sim and its dice are untouched, and the game keeps running at the player's speed while it is open.
    Keep RM_E in step with the sim when a relationship changes (tools/relmapcheck.py fails on a tag with no entry). ---- */
-const RM_DRV=[["x:weather","Weather",""],["x:bales","Bale grade mix",""],["x:pulpset","Pulper feed setpoint",""],["x:dilv","Pulper dilution valve","knob"],["x:slice","Headbox slice","knob"],["x:guide","Fabric guide roll","knob"],["x:zones","Headbox dilution zones","knob"],["x:spset","Machine speed setpoint",""],["x:grade","Grade on the machine",""],["x:dye","Dye system",""],["x:market","Market & leader effects",""],["x:orders","Customer orders",""],["x:upsets","Upsets & DCS motors",""]];
-const RM_COL={"YARD":["inq","unload","yard","balem","stk","occp"],"SPOT":["feed","cp","nv101pv","nv101op","amps","pulpLvl","yield","fiber","rejt","hddp","lcdp","lwdp","fsld","fsdp","kwh","dil","chest","chestg","gap","refkw","csf","agit","refq","mcCons","mcLvl","lv104pv","lv104op","mcg","fan"],"WET":["wsp","jw","rd","vac","couchSol","pl","pressSol","gtrav","edge","osc","hbc","bwv","fv201pv","fv201op","bwsp","drain","seal","pressw","wwl","lv202pv","lv202op","wwg","wwov","hum"],"DET":["speed","prod","st1","st3","pv302pv","pv302op","pv303pv","pv303op","steam","dryl","moist","qc300pv","qc300op","bw","draw","tension"],"QCS":["off","rct","prem","cdsp","bank","reel","cut","conv"],"UTIL":["boiler","vent","energyt","shower","evap","wcl","wcg","makeup","fresh","wuse","wwover","outfall","tss"],"SHIP":["fg","load","outq","openo","lateo","price","profit"]};
+const RM_DRV=[["x:weather","Weather",""],["x:bales","Bale grade mix",""],["x:pulpset","Pulper feed setpoint",""],["x:dilv","Pulper dilution valve","knob"],["x:slice","Headbox slice","knob"],["x:guide","Fabric guide roll","knob"],["x:zones","Headbox dilution zones","knob"],["x:spset","Machine speed setpoint",""],["x:grade","Grade on the machine",""],["x:dye","Dye system",""],["x:market","Market & leader effects",""],["x:power","Substation power",""],["x:orders","Customer orders",""],["x:upsets","Upsets & DCS motors",""]];
+const RM_COL={"YARD":["inq","unload","yard","balem","stk","occp"],"SPOT":["feed","cp","nv101pv","nv101op","amps","pulpLvl","yield","fiber","rejt","hddp","lcdp","lwdp","fsld","fsdp","kwh","dil","chest","chestg","gap","refkw","csf","agit","refq","mcCons","mcLvl","lv104pv","lv104op","mcg","fan"],"WET":["wsp","jw","rd","vac","couchSol","pl","pressSol","gtrav","edge","osc","hbc","bwv","fv201pv","fv201op","bwsp","drain","seal","pressw","wwl","lv202pv","lv202op","wwg","wwov","hum"],"DET":["speed","prod","st1","st3","pv302pv","pv302op","pv303pv","pv303op","steam","dryl","moist","qc300pv","qc300op","bw","draw","tension"],"QCS":["off","rct","prem","cdsp","bank","reel","cut","conv"],"UTIL":["boiler","vent","energyt","shower","evap","wcl","wcg","makeup","fresh","wuse","wwover","outfall","tss"],"SHIP":["fg","load","outq","openo","lateo","price","profit"],"DRV":["dl_pulp","dl_refA","dl_refB","dl_fan","dl_couch","dl_pr1","dl_pr2","dl_dry","dl_reel","dl_wind","mcckw"]};
 const RM_E=[
  ["x:weather","balem","p","Rain and snow soak the bales in the yard and on inbound loads"],
  ["x:weather","unload","n","Snow and fog slow inbound trucks"],
@@ -14746,10 +15138,26 @@ const RM_E=[
  ["price","profit","p","Revenue per ton"],
  ["load","profit","p","Revenue is booked as trucks leave"],
  ["energyt","profit","n","Energy is paid per ton made"],
- ["lateo","profit","n","Late chargebacks and cancellations"]];
+ ["lateo","profit","n","Late chargebacks and cancellations"],
+ // v6.10 the drives (07i): the substation feeds the MCC; each drive's load follows the work its motor does
+ ["x:power","mcckw","x","The substation feeds the MCC; lightning, a bird on the line or a brownout knock the drives' health down"],
+ ["amps","dl_pulp","p","Rotor amps are the pulper drive's load (a thick tub works it harder)"],
+ ["refkw","dl_refA","p","Refiner power, split across the two refiner drives"],["refkw","dl_refB","p","Refiner power, split across the two refiner drives"],
+ ["kwh","dl_refA","p","More refining energy, more load: over about 85 kWh/t the refiner drives run past 100%"],["kwh","dl_refB","p","More refining energy, more load: over about 85 kWh/t the refiner drives run past 100%"],
+ ["speed","dl_fan","p","Headbox flow follows speed: the fan pump works harder"],["vac","dl_couch","p","More forming vacuum, more drag on the couch roll"],
+ ["pl","dl_pr1","p","Press load is torque on the press drives"],["pl","dl_pr2","p","Press load is torque on the press drives"],
+ ["speed","dl_dry","p","The dryer section drive's load rises with speed"],["tension","dl_reel","p","Draw tension is torque on the reel drum"],["cut","dl_wind","p","Winding faster loads the winder drum"],
+ ["x:upsets","dl_pulp","x","A failed bearing, motor or drive (or the pulper down) reads zero"],["x:upsets","dl_dry","x","A failed bearing, motor or drive, or the machine down, reads zero"],
+ ["dl_pulp","mcckw","p","The MCC's power is the drives' loads × their ratings"],["dl_refA","mcckw","p","The MCC's power is the drives' loads × their ratings"],["dl_refB","mcckw","p","The MCC's power is the drives' loads × their ratings"],
+ ["dl_fan","mcckw","p","The MCC's power is the drives' loads × their ratings"],["dl_couch","mcckw","p","The MCC's power is the drives' loads × their ratings"],["dl_pr1","mcckw","p","The MCC's power is the drives' loads × their ratings"],
+ ["dl_pr2","mcckw","p","The MCC's power is the drives' loads × their ratings"],["dl_dry","mcckw","p","The MCC's power is the drives' loads × their ratings"],["dl_reel","mcckw","p","The MCC's power is the drives' loads × their ratings"],
+ ["dl_wind","mcckw","p","The MCC's power is the drives' loads × their ratings"],
+ ["dl_refA","speed","x","A drive past ~95% load trips more often; a tripped refiner drive leaves one refiner and the machine slows to 75%"],
+ ["dl_pr1","speed","x","Over 100% load wears the motor and the drive faster; a failed press drive stops the machine"],
+ ["dl_pulp","feed","x","Over 100% load wears the rotor motor faster; a failed pulper drive stops the pulper"]];
 const RM_AREA={IN:["Inputs","#a99ad6"],YARD:["Bale yard","#d0a66a"],SPOT:["Stock prep","#5fc497"],WET:["Wet end","#6db2e6"],DET:["Dry end","#ee9667"],
-  QCS:["Quality & winding","#e07fb0"],UTIL:["Water & utilities","#8fb3c4"],SHIP:["Shipping & money","#b5c46a"]};
-const RM_ORDER=["IN","YARD","SPOT","WET","DET","QCS","UTIL","SHIP"];
+  QCS:["Quality & winding","#e07fb0"],UTIL:["Water & utilities","#8fb3c4"],SHIP:["Shipping & money","#b5c46a"],DRV:["Drives (MCC)","#d9c25a"]};
+const RM_ORDER=["IN","YARD","SPOT","WET","DET","DRV","QCS","UTIL","SHIP"];
 const RM_SG={p:"+",n:"−",x:"~",s:"="},RM_SC={p:"#4fd18b",n:"#ff7a6e",x:"#ffb02e",s:"#8a9a96"};
 const RMUI={open:false,sel:null,mode:"direct",ext:true,P:null,z:1,W:0,H:0};   // (v6.8.3 z: zoom, 0.3-2; W/H: the map at 100%)
 // the graph: tags from the registry (names and units live), drivers from RM_DRV
@@ -15168,6 +15576,110 @@ G3.vlvOpen=openVlv;G3.vlvClose=closeVlv;G3.VUI=VUI;   // (tests)
 // Escape closes the faceplate first (window capture runs before the DCS's own document handler)
 window.addEventListener("keydown",e=>{if(e.key==="Escape"&&VUI.id){e.preventDefault();e.stopPropagation();closeVlv();}},true);
 G3.vlvRm=id=>{RMUI.sel=id;rmOpen();};   // (tests: the relationship map on a loop)
+/* ---- v6.10 the Reliability screen (RELIAB) and the drive load page (DRIVES) in the control room, the changeouts on the
+   outage plan, and the reliability line on the upset cards. The model is 07i-assets.js. Both screens are live (the mill
+   keeps running at your speed) and sit with the DCS screens, so the trend pane works beside them. ---- */
+DCS_SCREENS.splice(4,0,["DRV","DRIVES","Drives: each drive's load, trended"],["REL","RELIAB","Reliability: rounds, vibration, ADX motor tests"]);
+DCS_SCR.DRV={title:"DRIVES · MCC"};DCS_SCR.REL={title:"RELIABILITY"};
+TR_DEF.DRV=["dl_pulp","dl_refA","dl_refB","dl_dry"];TR_DEF.REL=["dl_refA","dl_pr1","mcckw"];
+AREA_N.DRV="Drives";AREA_N.REL="Reliability";
+const RUI={sel:"refA",key:""};
+const rlyChip=(t,cls,sub,extra)=>`<span class="rch ${cls||""}"${extra||""}><b>${t}</b>${sub?`<small>${sub}</small>`:""}</span>`;
+const rlyWho=x=>{if(x.who==="e"){const m=manNow();return (m.elec&&m.elec.who&&m.elec.who.name)||"Electrical tech";}const m=manNow(),r=m.techs[+x.who.slice(1)];return r&&r.who?r.who.name:(r?r.home.name:"Tech");};
+
+/* ---------- DRIVES: the MCC lineups ---------- */
+function drvBuild(b){b.appendChild(kEl("div","dcsal",`<b>Alarms</b><ul id="dcsAl"></ul>`));
+  b.appendChild(kEl("div","drvw",`<div class="qcsv" id="drvTop"></div><div id="drvL"></div>`));
+  b.appendChild(kEl("p","dcsfield","Load is the drive's output against its rated power. Tap a load to trend it. Over about 95% a drive trips more often; over 100% it also wears its motor and bearings faster. A tripped drive reads zero until the electrical tech changes it."));}
+function drvRefresh(){const el=$("drvL");if(!el)return;const r=knobRead(),R=S.rel;let kw=0,run=0,flt=0;const al=[];
+  const rows=LINEUPS.map(([ln,name,tag])=>{const list=ASSETS.filter(A=>A.ln===ln).map(A=>{const L=Math.max(0,rlyLoad(A.id,r)),st=rlyDrvSt(A.id,L),T=rlyTemp(A.id,L);kw+=L/100*A.kw;if(st==="run")run++;if(st==="fault"||st==="trip")flt++;
+      if(st==="fault")al.push([`DRIVE FAULT · ${A.n.toUpperCase()}`,true]);else if(st==="trip")al.push([`MOTOR TRIPPED · ${A.n.toUpperCase()}`,true]);
+      else if(L>100)al.push([`DRIVE OVERLOAD · ${A.n.toUpperCase()} ${Math.round(L)}%`,L>110]);else if(L>95)al.push([`DRIVE LOAD HI · ${A.n.toUpperCase()}`,false]);
+      if(T>72)al.push([`DRIVE TEMP HI · ${A.n.toUpperCase()} ${Math.round(T)} °C`,T>78]);
+      const cls=L>100?"bad":L>95?"warn":"",stc={run:"ok",idle:"",off:"",fault:"bad",trip:"bad"}[st],stn={run:"RUN",idle:"IDLE",off:"OFF · OUTAGE",fault:"FAULT",trip:"TRIPPED"}[st];
+      return `<tr><td><b>${A.n}</b><small>${A.kw.toLocaleString()} kW VFD</small></td><td><span class="dst ${stc}">${stn}</span></td>
+        <td><button type="button" class="dbar trk" data-trk="dl_${A.id}" title="Trend ${A.n} drive load"><i style="width:${clamp(L,0,130)/1.3}%" class="${cls}"></i><em>${Math.round(L)} %</em></button></td><td class="${T>72?"bad":""}">${Math.round(T)} °C</td></tr>`;}).join("");
+    return `<section class="plsec"><div class="dcssub">${tag} · ${name}</div><table><thead><tr><th>Drive</th><th>Status</th><th>Load</th><th>Heat sink</th></tr></thead><tbody>${list}</tbody></table></section>`;}).join("");
+  const h=`<section class="plsec drvsub"><div class="dcssub">Substation → MCC</div><p class="dcsfield">${outOn()?"Planned outage: the lineups are locked out.":active("lightning")||active("birdline")?"<span class=\"bad\">Blackout: no power from the substation.</span>":active("brownout")?"The utility has cut the mill back (brownout).":"13.8 kV from the substation, stepped down to 480 V for the drives."}</p></section>`+rows;
+  if(el._h!==h){el._h=h;el.innerHTML=h;}
+  const top=`<div><small>MCC power</small><b>${Math.round(kw).toLocaleString()} kW</b><small>10 drives</small></div><div><small>Running</small><b>${run}</b><small>of ${ASSETS.length}</small></div><div><small>Faulted</small><b class="${flt?"bad":""}">${flt}</b><small>${flt?"electrical tech called":"none"}</small></div><div><small>Electrical tech</small><b>${rlyElecNow()}</b><small>${(manNow().elec&&manNow().elec.who.name)||""}</small></div>`;
+  const t=$("drvTop");if(t&&t._h!==top){t._h=top;t.innerHTML=top;}
+  const ul=$("dcsAl"),ah=al.length?al.map(([x,hi])=>`<li class="${hi?"hi":""}">${x}</li>`).join(""):'<li class="none">No alarms</li>';if(ul&&ul._h!==ah){ul._h=ah;ul.innerHTML=ah;}}
+function rlyElecNow(){const j=S.inc.find(i=>ENEED(i.id)&&i.eSlot===0);if(j)return j.eGo?"On a job":"On the way";const R=S.rel,x=R&&R.rd.list.find(q=>q.who==="e"&&q.st==="go");return x?"ADX round":"In the MCC";}
+
+/* ---------- RELIAB: rounds, vibration, ADX, drives, actions ---------- */
+function rlyBuild(b){
+  b.appendChild(kEl("div","dcsctl",`<div class="dcssub">This shift's rounds</div><div class="qcsv" id="rlyTop"></div><div class="rlyrd" id="rlyRd"></div>`));
+  b.appendChild(kEl("div","dcsctl",`<div class="dcssub">Equipment · tap a row for its readings</div><div class="qtab rlytab" id="rlyTab"></div>`));
+  b.appendChild(kEl("div","dcsctl rlydet",`<div id="rlyDet"></div>`));
+  b.appendChild(kEl("p","dcsfield",`Every maintenance tech does one vibration round a shift (two machines, the most overdue first) and the electrical tech one ADX motor-test round, unless they're called to an upset first: then the round is skipped. Readings go grey after a day and Unknown after three. A round that finds a failing bearing or motor shows it here: plan the repair before it fails. More maintenance techs (Upgrades → Maintenance) means more rounds.`));
+  const el=$("dcsOv");if(el&&!el._rly){el._rly=1;el.addEventListener("click",e=>{const t=e.target.closest&&e.target.closest("[data-rsel],[data-rpin],[data-rfix],[data-rchg]");if(!t)return;
+    if(t.dataset.rsel){RUI.sel=t.dataset.rsel;}
+    else if(t.dataset.rpin){const [id,k]=t.dataset.rpin.split(":");rlyPin(id,k);}
+    else if(t.dataset.rfix){const [id,k]=t.dataset.rfix.split(":");if(rlyFix(id,k))AUDIO.sfx("cash",120);}
+    else if(t.dataset.rchg){const [id,k]=t.dataset.rchg.split(":");rlyChg(id,k);}
+    RUI.key="";rlyRefresh();});}}
+function rlyVibCell(a){const v=a.lv,g=rlyAge(v);if(!v||g.cls==="unk")return rlyChip("Unknown","unk",v?"last "+g.txt+" ago":"never measured");
+  const s=VIBST[v.st];return rlyChip(s[0],g.cls==="stale"?"stale":s[1],`${v.v} mm/s · ${g.txt} ago`);}
+function rlyAdxCell(a){const v=a.la,g=rlyAge(v);if(!v||g.cls==="unk")return rlyChip("Unknown","unk",v?"last "+g.txt+" ago":"never tested");
+  const s=ADXST[v.st];return rlyChip(s[0],g.cls==="stale"?"stale":s[1],`health ${v.h}% · ${g.txt} ago`);}
+function rlyRefresh(){const tb=$("rlyTab");if(!tb)return;const R=rlyState(),D=R.rd,on=rlyOn(),r=knobRead();
+  // the shift: rounds planned, walking, done, skipped
+  const vib=D.list.filter(x=>x.k==="vib"),adx=D.list.filter(x=>x.k==="adx"),n=st=>x=>x.st===st,awaiting=ASSETS.filter(A=>{const a=R.a[A.id];return (a.lv&&a.lv.st==="imm"&&rlyPend(A.id,"vib"))||(a.la&&a.la.st==="imm"&&rlyPend(A.id,"adx"));}).length;
+  const H=R.hist.slice(-14),hv=H.reduce((s,x)=>s+x.vd,0),hn=H.reduce((s,x)=>s+x.vn,0),ha=H.reduce((s,x)=>s+x.ad,0),han=H.reduce((s,x)=>s+x.an,0);
+  const top=on?`<div><small>Vibration rounds</small><b>${vib.filter(n("done")).length} / ${vib.length}</b><small>${vib.filter(x=>x.st==="skip"||x.st==="abandon").length} skipped this shift</small></div>
+    <div><small>ADX motor tests</small><b>${adx.filter(n("done")).length} / ${adx.length}</b><small>${adx.filter(x=>x.st==="skip"||x.st==="abandon").length?"skipped this shift":"electrical tech"}</small></div>
+    <div><small>Last 7 days</small><b>${hn+han?Math.round((hv+ha)/(hn+han)*100):"–"} %</b><small>of rounds done</small></div>
+    <div${awaiting?' class="qout"':""}><small>Faults found</small><b>${awaiting}</b><small>${awaiting?"plan the repair below":"none waiting"}</small></div>
+    <div><small>This run</small><b>${R.caught} caught</b><small>${R.fails} failure${R.fails===1?"":"s"}</small></div>`:`<div><small>Rounds</small><b>–</b><small>${S.zen?"not in zen mode":"start a run"}</small></div>`;
+  {const e=$("rlyTop");if(e&&e._h!==top){e._h=top;e.innerHTML=top;}}
+  const rd=on?D.list.map(x=>{const w=rlyWho(x),k=x.k==="vib"?"Vibration":"ADX",when=clockOf(x.t0),
+      what=x.st==="plan"?`<em>${when}</em>`:x.st==="go"?`<em class="ok">walking: ${x.a.map(id=>ASSETN[id].n).join(", ")}</em>`:x.st==="done"?`<em>done: ${x.a.map(id=>ASSETN[id].n).join(", ")||"nothing due"}</em>`:`<em class="bad">${x.st==="abandon"?"abandoned":"skipped"}: ${x.why}</em>`;
+      return `<div class="rrd ${x.st}"><b>${k}</b><span>${escHTML(w)}</span>${what}</div>`;}).join(""):"";
+  {const e=$("rlyRd");if(e&&e._h!==rd){e._h=rd;e.innerHTML=rd;}}
+  // the table
+  const outg=!!(S.outg&&S.season&&S.season.on&&!S.free);
+  const rows=ASSETS.map(A=>{const a=R.a[A.id],L=Math.max(0,rlyLoad(A.id,r)),st=rlyDrvSt(A.id,L),c=R.chg[A.id]||{},cq=Object.keys(c).map(k=>RLY.plan[k].n).join(", ");
+    const dcls={fault:"bad",trip:"bad",run:L>100?"bad":L>95?"warn":"ok",idle:"",off:""}[st];
+    return `<tr data-rsel="${A.id}" class="${RUI.sel===A.id?"cur":""}"><td><b>${A.n}</b><small>${LINEN[A.ln][2]}${a.pin?` · next ${a.pin==="vib"?"vibration":"ADX"} round`:""}</small></td><td>${rlyVibCell(a)}</td><td>${rlyAdxCell(a)}</td>
+      <td>${rlyChip(st==="fault"?"Fault":st==="trip"?"Tripped":st==="off"?"Off":Math.round(L)+" %",dcls,st==="run"?Math.round(rlyTemp(A.id,L))+" °C":st==="idle"?"idle":"")}</td>${outg?`<td>${cq?`<small class="rbk">${cq}</small>`:"<small>–</small>"}</td>`:""}</tr>`;}).join("");
+  const h=`<table><thead><tr><th>Equipment</th><th>Vibration</th><th>ADX motor</th><th>Drive</th>${outg?"<th>Next outage</th>":""}</tr></thead><tbody>${rows}</tbody></table>`;
+  if(tb._h!==h){tb._h=h;tb.innerHTML=h;}
+  // the selected asset
+  const A=ASSETN[RUI.sel],a=R.a[RUI.sel],dt=$("rlyDet");if(!A||!dt)return;
+  const v=a.lv,x=a.la,vg=rlyAge(v),xg=rlyAge(x),vimm=v&&v.st==="imm"&&vg.cls!=="unk"&&rlyPend(A.id,"vib"),ximm=x&&x.st==="imm"&&xg.cls!=="unk"&&rlyPend(A.id,"adx"),busy=!!rlyIncOf(A.id);
+  const hist=(L,f)=>L.length?`<div class="rhist">${L.slice().reverse().map(f).join("")}</div>`:"";
+  const c=R.chg[A.id]||{},booked=S.outg&&S.outg.plan&&S.outg.plan.rly&&S.outg.plan.rly[A.id];
+  const chg=!outg?`<p class="dcsfield">Changeouts are booked for planned outages; ${S.free?"free play has none":"there are none in this mode"}.</p>`:
+    `<div class="rchg">${["b","m","d"].map(k=>`<button type="button" data-rchg="${A.id}:${k}" aria-pressed="${!!c[k]}"><b>${RLY.plan[k].n}</b><small>${money(RLY.plan[k].cost)} · +${RLY.plan[k].min} min</small></button>`).join("")}</div>
+     <p class="dcsfield">${booked?`Booked for outage ${S.outg.k}: ${Object.keys(booked).map(k=>RLY.plan[k].n.toLowerCase()).join(", ")}. `:""}Ticked items go on the next outage plan (24 h before it) and are paid when you approve it. New parts come back at full health.</p>`;
+  const L=Math.max(0,rlyLoad(A.id,r)),st=rlyDrvSt(A.id,L);
+  const det=`<div class="rdh"><b>${A.n}</b><small>${LINEN[A.ln][1]} (${LINEN[A.ln][2]}) · ${A.kw.toLocaleString()} kW VFD · if it fails: ${A.stop.toLowerCase().replace(/\.$/,"")}</small></div>
+    <div class="rdg"><section class="plsec"><div class="dcssub">Vibration (maintenance)</div>${rlyVibCell(a)}<p class="dcsfield">${v&&vg.cls!=="unk"?VIBST[v.st][2]+".":"No recent reading: the last rounds didn't get to it, or were skipped."}</p>
+      ${hist(a.hv,([t,mm,s])=>`<div><span>${dhm(t)}</span><em class="${VIBST[s][1]}">${mm} mm/s · ${VIBST[s][0]}</em></div>`)}
+      <div class="ract"><button type="button" class="kstd" data-rpin="${A.id}:vib" aria-pressed="${a.pin==="vib"}"${on?"":" disabled"}>${a.pin==="vib"?"Pinned for the next round":"Pin to the next vibration round"}</button>
+      ${vimm?`<button type="button" class="rfix" data-rfix="${A.id}:vib"${busy?" disabled":""}>Plan repair · ${money(rlyFixCost(A.id,"vib"))}<small>change the bearing now, no downtime</small></button>`:""}</div></section>
+    <section class="plsec"><div class="dcssub">ADX motor test (electrical)</div>${rlyAdxCell(a)}<p class="dcsfield">${x&&xg.cls!=="unk"?(x.st==="good"?"Winding, insulation and rotor all healthy.":`Finding: ${ADXMODE[a.am]}.`):"No recent test."}</p>
+      ${hist(a.ha,([t,hh,s])=>`<div><span>${dhm(t)}</span><em class="${ADXST[s][1]}">health ${hh}% · ${ADXST[s][0]}</em></div>`)}
+      <div class="ract"><button type="button" class="kstd" data-rpin="${A.id}:adx" aria-pressed="${a.pin==="adx"}"${on?"":" disabled"}>${a.pin==="adx"?"Pinned for the next test":"Pin to the next ADX test"}</button>
+      ${ximm?`<button type="button" class="rfix" data-rfix="${A.id}:adx"${busy?" disabled":""}>Plan repair · ${money(rlyFixCost(A.id,"adx"))}<small>swap in the spare motor now, no downtime</small></button>`:""}</div></section>
+    <section class="plsec"><div class="dcssub">Drive</div>${rlyChip(st==="fault"?"Fault":st==="trip"?"Tripped":st==="off"?"Off":Math.round(L)+" % load",{fault:"bad",trip:"bad",run:L>100?"bad":L>95?"warn":"ok"}[st]||"",st==="run"||st==="idle"?Math.round(rlyTemp(A.id,L))+" °C heat sink":"")}
+      <p class="dcsfield">Drives fail without warning. Keep them under about 95% load; lightning and brownouts shorten their lives. <button type="button" class="linkb" data-trk="dl_${A.id}">Trend its load</button></p></section></div>
+    <div class="dcssub">Changeout at the next planned outage</div>${chg}`;
+  const key=det;if(dt._h!==key){if(!dt.contains(document.activeElement)||RUI.key===""){dt._h=key;dt.innerHTML=det;}}RUI.key="x";}
+
+/* ---------- the outage plan: changeouts ---------- */
+G3.rlyPlanMount=function(host,paint){if(!host)return;if(!rlyOn()||!S.rel){host.innerHTML="";return;}const R=S.rel;
+  const draw=()=>{const flag=ASSETS.filter(A=>{const a=R.a[A.id],v=a.lv,x=a.la;return R.chg[A.id]||(v&&v.st!=="good"&&S.t-v.t<RLY.unknown)||(x&&x.st!=="good"&&S.t-x.t<RLY.unknown)||!v||S.t-v.t>RLY.unknown;});
+    const show=host._all?ASSETS:flag,t=rlyPlanTally(R.chg);
+    host.innerHTML=`<div class="prep rplan"><div class="phead"><b>Equipment changeouts</b><span>${t.n?`${t.n} booked · ${money(t.c)} · +${t.m} min`:"none booked"}</span></div>
+      <div class="psub">From the Reliability screen: what the rounds flagged, and anything not measured lately. New parts come back at full health; each adds time to the outage (at most ${RLY.planCap} min).</div>
+      ${show.map(A=>{const a=R.a[A.id],c=R.chg[A.id]||{},v=a.lv,x=a.la,ag=rlyAge(v);const why=!v||ag.cls==="unk"?"vibration unknown":VIBST[v.st][0].toLowerCase()+(x?" · ADX "+ADXST[x.st][0].toLowerCase():"");
+        return `<div class="prow"><div><b>${A.n}</b><small>${why}</small></div><div class="pact"><div class="seg">${["b","m","d"].map(k=>`<button type="button" data-rpc="${A.id}:${k}" aria-pressed="${!!c[k]}">${RLY.plan[k].n} ${money(RLY.plan[k].cost)}</button>`).join("")}</div></div></div>`;}).join("")||`<div class="prow"><small>Nothing flagged. Every machine measured lately reads good.</small></div>`}
+      <button type="button" class="linkb" data-rpall>${host._all?"Show only what's flagged":"Show all ten"}</button></div>`;
+    host.querySelectorAll("[data-rpc]").forEach(b=>b.addEventListener("click",()=>{const [id,k]=b.dataset.rpc.split(":");rlyChg(id,k);draw();if(paint)paint();}));
+    const all=host.querySelector("[data-rpall]");if(all)all.addEventListener("click",()=>{host._all=!host._all;draw();});};
+  draw();};
 
 /* =========================== v2 app shell wiring =========================== */
 (function(){
@@ -15822,15 +16334,23 @@ function camPullOn(){try{return localStorage.getItem("paper-mill-campull")!=="of
   ["The bottleneck and upgrades","up",`<p>The mill can only run as fast as its narrowest step. Every mill starts with one bottleneck: the <b>Upgrades</b> tab names it, and upgrades that fix it are 25% off. Fix it first.</p>
     <ul><li>One upgrade a day in a season or survival run; the day turns over at 6 AM. Free play has no limit.</li><li>The bottleneck card at the top of Upgrades shows its tons per hour against the machine's. <b>Report → Live mill → Flow &amp; bottleneck</b> draws every step as wide as it can run, so you can see what holds the mill back next.</li></ul>`],
   ["Upsets","upsets",`<p>Breakdowns, sheet breaks, hayouts, storms and the odd pigeon. Each costs a repair bill and often downtime.</p>
-    <ul><li>A red tag marks each one; tap it to fly there. The <b>Upsets</b> tab lists what's down.</li><li>Paper machine jobs go to the machine crew one at a time. Maintenance techs work in pairs. More techs and spare parts make repairs faster.</li>
+    <ul><li>A red tag marks each one; tap it to fly there. The <b>Upsets</b> tab lists what's down.</li><li>Paper machine jobs go to the machine crew one at a time. Maintenance techs work in pairs; the electrical tech takes motors, drives and blackouts. More techs and spare parts make repairs faster.</li>
     <li>In a season or survival run, many upsets ask you to choose how to deal with them (see Civics).</li><li>Event cards offer deals and trials: a cost now for a chance at a gain.</li></ul>`],
   ["Daily rounds and tells","rounds",`<p>Failures show before they happen. Equipment that is about to fail has a <b>tell</b> in its area for 4.5 in-game days (in survival, a little less each wave, never under a day): a red-hot motor, a pump shaking loose, a leaking flange, a hissing steam joint, pallets against a heater.</p>
     <ul><li>Tap <b>Round</b> in the dock once a day and pick an area. An operator walks it for about 15 seconds while the game keeps running.</li><li>Tap anything failing. Caught: a planned repair at 5% of the bill, no downtime, and in a season or survival run Machinery and Labor go up. Missed: it breaks down as usual.</li>
     <li>An area with nothing wrong still nudges Labor or Community.</li><li>The <b>Vibration Report</b> shows which areas are climbing. It comes with the Reliability program (Upgrades → Maintenance) or with Dot.</li>
     <li>Acts of nature, people problems and supply trouble come without warning.</li></ul>`],
+  ["Reliability and electrical","reliab",`<p>Ten critical machines run on variable-speed drives (VFDs): the pulper rotor, refiners A and B, the fan pump, the couch roll, both presses, the dryer section, the reel drum and the winder drum. Their drives sit in three lineups in the <b>MCC</b>, the electrical building beside the machine hall, fed from the substation.</p>
+    <ul><li><b>Wear:</b> each machine's bearings and motor wear while it runs, faster when you push it (refining energy, press load, a thick pulper, a drive over 100% load). Worn equipment fails more often, but the dice still decide when.</li>
+    <li><b>Shift rounds:</b> every maintenance tech does one <b>vibration round</b> a shift (two machines, most overdue first), and the <b>electrical tech</b> one <b>ADX motor test</b> round. A tech called to an upset first skips the round, and that data goes stale. More techs (Upgrades → Maintenance) means more rounds.</li>
+    <li><b>Faults:</b> a failing bearing shows on a vibration round about a day and a half before it fails; a failing motor shows on an ADX test about three days ahead. Found in time, plan the repair on the Reliability screen: a fifth of the bill, no downtime. Missed, it fails: a bearing failure (maintenance) or a motor failure (the electrical tech).</li>
+    <li><b>Drives</b> fail with no warning, more often above about 95% load and after lightning or a brownout. The electrical tech changes the drive in the MCC.</li>
+    <li><b>Report → Control room → Reliability</b> shows every machine's vibration state (good, imbalance, misalignment, outer race, inner race, imminent failure), its ADX health, its drive, and when each was last measured. Pin a machine to the next round, plan repairs, and tick changeouts for the next planned outage. <b>Drives</b> shows each drive's load, trendable.</li>
+    <li>Upset cards quote what the rounds last said about the machine that broke.</li></ul>`],
   ["Planned outages","outages",`<p>The mill comes down on purpose for a 4-hour shutdown: in a season on days 7, 14, 21 and 28, in survival every 4 days.</p>
     <ul><li>24 hours before, you set a maintenance budget for stock prep, the wet end and the dry end. More money means fewer breakdowns until the next outage.</li>
     <li><b>Outage prep checklist</b> (3 days before; tap the outage countdown under the clock, or open it from the Round card): four items unlock at 72, 48, 24 and 8 hours out. Each one done shortens the outage and returns 5% of the budget.</li>
+    <li><b>Changeouts:</b> the outage plan lists machines the rounds flagged (and any not measured lately). Tick new bearings, a new motor or a new drive: each adds cost and outage time and comes back at full health.</li>
     <li>"Watch the crews" on the outage notice slows the clock so you can see the work.</li></ul>`],
   ["Civics","civics",`<p>Four meters under the top bar, 0 to 100: <b>Economy</b> (customers and prices), <b>Labor</b> (the crew), <b>Machinery</b> (the equipment) and <b>Community</b> (the town and permits).</p>
     <ul><li>Bands: Crisis (under 20), Strained, Steady, Strong and Excellent (over 80). Low meters hurt more than high ones help.</li>
@@ -15917,6 +16437,18 @@ function camPullOn(){try{return localStorage.getItem("paper-mill-campull")!=="of
     ["Press section","Rolls that squeeze water out of the wet sheet through the felts."],
     ["Pulper","A giant blender that turns bales and water into pulp."],
     ["QCS","Quality control system: scanners that measure the sheet's weight, moisture, ring crush and color; the Quality screen shows the spec sheet, the off-spec log and grade changes."],
+    ["ADX test","A motor test the electrical tech runs with a portable tester (ADX): insulation to ground, winding resistance and a rotor bar check. It finds a failing motor about three days before it fails. One round a shift, two motors."],
+    ["MCC","Motor control centre: the electrical building beside the machine hall. It holds the three drive lineups (MCC-1 stock prep, MCC-2 the machine's sectional drives, MCC-3 the winder) and the 480 V incoming section, fed from the substation."],
+    ["VFD (drive)","Variable-frequency drive: runs a motor at the speed the process wants. Load is its output against its rated power; over about 95% it trips more often, and over 100% it wears its motor faster."],
+    ["Drive lineup","A row of drive cabinets in the MCC, one per motor, with a status light each: green running, amber idle, red faulted."],
+    ["Electrical tech","One per shift, working from the MCC: drive changeouts, motor failures, resetting the mill after a blackout, and the ADX motor tests. Busy on a job, the ADX round is skipped."],
+    ["Vibration round","Each maintenance tech's once-a-shift walk with a vibration analyser, two machines at a time, most overdue first. Skipped when the tech is called to an upset."],
+    ["Vibration states","What the spectrum says about a bearing: good; imbalance or misalignment (1× or 2× running speed: they load the bearing); outer race defect (weeks left); inner race defect (wearing fast); imminent failure (days)."],
+    ["Bearing failure","A motor bearing that failed in service: the machine stops until maintenance changes it. A vibration round finds it about a day and a half ahead."],
+    ["Motor failure","A motor that burnt out (a winding to ground, broken rotor bars or a burnt connection): the electrical tech fits the spare. An ADX test finds it about three days ahead."],
+    ["Drive failure","A drive that faults and won't reset: the machine it runs stops until the electrical tech changes the drive in the MCC. No warning."],
+    ["Reliability screen","Report → Control room → Reliability: this shift's rounds, every critical machine's vibration, ADX and drive readings with their age, planned repairs, pins and outage changeouts."],
+    ["Changeout","Replacing a worn part at a planned outage (bearings, a motor or a drive): booked on the outage plan, it adds cost and minutes and the part comes back at full health."],
     ["Ragger","A rope that collects wire, plastic and string from the pulper. If its tail breaks, the pulper stops."],
     ["Reel","The giant roll the paper machine winds up (about 100 tons)."],
     ["Refiner","Grinds fibers between plates so they bond into stronger paper. The refiners take stock from the stock chest and feed the machine chest. Refining energy (kWh/t, standard 60) closes the plate gap; around 120 kWh/t the plates clash, the refiners trip and nothing goes forward until they are re-plated."],
@@ -15930,11 +16462,11 @@ function camPullOn(){try{return localStorage.getItem("paper-mill-campull")!=="of
     ["Stock chest","A big tank of clean pulp between stock prep and the paper machine. A full chest keeps the machine running when stock prep stops."],
     ["t/h","Tons per hour."],
     ["Tell","The visible sign that a piece of equipment is about to fail. Only seen on a Round."],
-    ["Control room","Report → Control room: the process flow, the DCS screens, planning (with the OCC recipe), quality, water, trends, the relationship map and manning in one place. The DCS screens also open from the operator consoles in the mill."],
+    ["Control room","Report → Control room: the process flow, the DCS screens, planning (with the OCC recipe), quality, water, trends, reliability, drives, the relationship map and manning in one place. The DCS screens also open from the operator consoles in the mill."],
     ["Let the mill run","Free play only (Settings → Run the mill): event cards are declined for you and logged, and nothing pauses the mill, so you can leave it running. Keep the game's tab in front: browsers slow a hidden tab."],
     ["Second screen","On a desktop, the control room in its own window for another monitor: tiles for each screen, and ← Control room to come back. Report → Control room or Settings → View."],
     ["Relationship map","Report → Control room: every reading, what drives it and what it moves. Tap one to light up its links; −, Fit and + zoom."],
-    ["Manning","Report → Control room: the team on shift, every tech and operator with their hard hat, who is covering a vacation (overtime or a swap, and from which team), any unfilled gap and the time to the next shift change."],
+    ["Manning","Report → Control room: the team on shift, every tech, the electrical tech and every operator with their hard hat, who is covering a vacation (overtime or a swap, and from which team), any unfilled gap and the time to the next shift change."],
     ["DuPont 12","The 12-hour shift rotation the crews work: a 28-day cycle of 4 nights, 3 off, 3 days, 1 off, 3 nights, 3 off, 4 days and 7 off, with four teams each a week apart. Shifts change at 6 AM and 6 PM."],
     ["Hard hats","Techs and operators wear their team's color: A blue, B green, C orange, D white. Someone covering from another team keeps their own color."],
     ["Ring crush","The board's strength test (QCS). More refining raises it; stickies, a light sheet and too much open draw lower it. Under the grade's spec the reel goes to the beater."],
@@ -15951,7 +16483,7 @@ function camPullOn(){try{return localStorage.getItem("paper-mill-campull")!=="of
     ["Wet bales","Loads over 12% moisture are paid at air-dry weight; wet bales give less fiber, and contamination raises rejects and sheet breaks (stickies)."],
     ["Tied rolls","A set that comes off the winder with its two rolls stuck together where the slitter didn't cut clean. They're sawn apart and both go to the beater."],
     ["Upset","Anything that goes wrong: a breakdown, a break, a storm, a fine."],
-    ["Vibration Report","The Round card's trend arrows: which areas have something about to fail."],
+    ["Vibration Report","The Round card's trend arrows: which areas have something about to fail, including faults the shift rounds found."],
     ["Wave","In survival, the stretch between planned outages. Each wave is rougher and costlier than the last."],
     ["Wet end / dry end","The wet end is the headbox, forming section and presses; the dry end is the dryers, reel and winder."],
     ["Freeness (CSF)","How fast water drains out of the stock, in mL CSF. About 450 at the standard refining; more refining lowers it and the sheet drains slower on the table. On the SPOT DCS."],
@@ -16042,7 +16574,7 @@ function camPullOn(){try{return localStorage.getItem("paper-mill-campull")!=="of
    (within 700 ms per tap) and a list of every version's one-line note pops up, newest first. The list comes from
    VERSION-NOTES.txt at the repo root: build.py swaps it in for the placeholder below, so adding a line there with each
    release keeps the pop-up current (build.py warns when APP_VER has no line). ---------- */
-{const VNOTES=[["4.0.0", "Graphics Overhaul: 60 FPS on iPhone, ~80% Fewer Draw Calls"], ["4.0.1", "Performance Follow-Up, Show FPS Option and Device Autotest"], ["4.0.2", "Economy Rebalance and Smoother Upset Labels"], ["4.1.0", "Four Environments, Seeded Mills, Bottlenecks, Graphics Tiers and Site Music"], ["4.2.0", "New Site Maps, Rare Sights, Zen Map Rotation and Economics Fixes"], ["4.2.0-s", "Save and Continue Season (Test)"], ["4.2.1", "Save/Continue, Settings Panel and Outage Speed Fix"], ["4.2.2-t", "Bayou Gator Sight Reworked (Test)"], ["4.2.2-t2", "Gator Bass Riff (Test)"], ["4.2.2-t3", "Gator Riff Removed, Wide Camera Framing (Test)"], ["4.2.2-t4", "Gator Scene Shortened and Widened (Test)"], ["4.2.2-t5", "One Rare Sight per Map in Zen (Test)"], ["4.2.2", "Rare Sights Reworked, Bird Strike Upset, Mill Report Tab"], ["4.2.3-t", "Cowboys, Bigfoot and Tugboat Sights Reworked (Test)"], ["4.2.3", "Laptop Battery Saving (Default GPU)"], ["4.2.4", "$25M Goal Removed and Quick Fixes"], ["4.2.5", "Random Bottleneck per Season and Accessibility Improvements"], ["4.3.0-t1", "Survival Mode (Test)"], ["4.4.0-t1", "Mill Leaders in Survival (Test)"], ["4.4.0-t2", "Painted Leader Portraits (Test)"], ["4.4.0-t3", "Leader Redesign, 4-Day Waves and Fixes (Test)"], ["5.0.0", "Survival Mode Release with Mill Leaders"], ["5.0.1", "Results Dialog and Game Speed Fixes"], ["5.0.2", "Report Card Label Fixes"], ["5.0.3", "Survival Playtest Fixes (Test)"], ["5.0.4", "Playtest Review: Dot Auto-Fix and Shipping Fix (Test)"], ["5.0.5", "Polish Rounds from Survival Playtests"], ["5.0.6", "Survival QA Fixes, Opt-In Outage Watch, Leaderboard Filters"], ["5.1.0", "Civics Meters and Leaders in Seasons (Test)"], ["5.4.0", "Title Screen, Civics in the World and Dark Mode"], ["5.4.1", "Loading Splash, No Old-Menu Flash"], ["5.4.2", "Graphics Quality on the Title Screen"], ["5.5.0", "Performance Improvements"], ["5.6.0", "Fiddly Knobs, DCS/QCS Screens and Knobs View"], ["5.7.0", "Catching Failures Early: Tells, Daily Rounds, Vibration Report, Outage Prep"], ["5.7.1", "Bottom Menu Reorder, Settings Back on the Right"], ["5.7.2", "Help Page with Game Guide and Glossary"], ["5.7.3", "Bare Graphics Mode for Weak Phones"], ["5.7.4", "Version Notes Pop-Up (Triple-Tap the Version Number)"], ["6.1.0-t1", "Isometric Paper View: Fixed Camera, Cut-Outs, Drop Shadows, Cutaways, Season Palettes (Test)"], ["6.1.0-t2", "Iso Round 2: Cut-Outs Always Paper, GPU Pictures, Stop-Motion World, Fewer Draws (Test)"], ["6.1.0-t3", "Iso Round 3: iPhone Batching, Instanced Cans, Sign Atlas, Lighter Frames (Test)"], ["6.1.0-t4", "Iso Fixes: Operators and Fork-Trucks Back, Less Stutter (Test)"], ["6.1.0-t5", "Cut-Out Edge Artifact Fixed (Test)"], ["6.1.0-t6", "Iso Optimization: Hidden Objects Cost Nothing, Lighter Moving Batches (Test)"], ["6.1.0-t7", "Iso Triangle Cut: Paper-Card Trees, Flat Ground, Hidden Faces Gone, Plain Boxes (Test)"], ["6.1.0-t8", "Paper Palette: 40 Colours, Flat Surfaces, Paper Grain, Fewer Draws (Test)"], ["6.1.0-t9", "Reel Fix: Growing Reel Draws Again (Test)"], ["6.1.0-t10", "Draw Cut 2: Colour in the Matrix, Merged Roofs, Uploads on Change, Culling Fix, Parked Groups (Test)"], ["6.1.0-t11", "QA Fixes: Cut-Outs Never Drawn as Loose 3D Parts, Fallback Shows 3D, Roofs On or Off per Zoom Step (Test)"], ["6.1.0-t12", "Paper Smoke, Blinking Lights, Stronger Seasons, Sharper Phones, Instanced Upsets, Pictures at Start (Test)"], ["6.1.0-t13", "Paper Effects: Flames, Child-Made Tornado, Lamp Cones, Flags, Paper Water, Visible Weather (Test)"], ["6.1.0-t14", "Paper Upsets: Cut-Out Props, Paper Pigeon, Paper Sparks, Steam, Fireworks, Ice and Flood (Test)"], ["6.1.0-t15", "Beaver Reworked as One Smaller Cut-Out (Test)"], ["6.1.0-t16", "Paper Props Dim at Night, Labels Never Overlap, Fewer Cut-Out Pictures (Test)"], ["6.1.0-t17", "Bird on the Power Lines Cut-Scene Plays When Set Off From the Upsets List (Test)"], ["6.1.0-t18", "Zen Close-Ups Fixed, Rare Sights as Paper Cut-Outs, Tilt-Shift Diorama Look (Test)"], ["6.1.0-t19", "Narrower Tilt-Shift Band, Winder Trash Can Out of the Broke Hole (Test)"], ["6.1.0-t20", "Balance: Rounds Pay More, Capacity and Maintenance Upgrades Re-Priced"], ["6.1.0", "Paper Diorama: Isometric Paper Art Style, Cut-Out People and Upsets, Tilt-Shift, Rounds Pay More, Upgrades Re-Priced"], ["6.1.1", "Phone Fixes: Gentler Tilt-Shift on Tall Screens, Cut-Out People No Longer Blank on iPhone"], ["6.1.2", "iPhone: Cut-Out Self-Test Retries, People Keep Their Colours in the 3D Fallback"], ["6.1.3", "Broke Hole by the Winder Looks Like a Floor Opening (Was a Black Square)"], ["6.1.4", "Tilt-Shift Removed"], ["6.2.0", "Zen Free Camera: Perspective Zen Shots, 3D People in Zen, Cleaner River Water"], ["6.3.0-f1", "Process Flow Overview (Test): Inputs, Mill Areas and Outputs for the Mill Day, in Settings"], ["6.3.0-f2", "Process Flow: the Game Keeps Running While It's Open (Test)"], ["6.3.0", "Process Flow Overview: Inputs, Mill Areas and Outputs for the Mill Day (Settings > View)"], ["6.4.0", "Zen Shots Review: Shuffle-Bag Shot Order, Landscape Shots Rebuilt, Close Rare Sights"], ["6.5.0-a1", "Digital Twin A (Test): Hourly History, 14 Prior Days, 7 d / Run Ranges, Area Trends and Uptime"], ["6.5.0-b1", "Digital Twin B (Test): Real Freight Costs with a Diesel Index, Area Controls Moved into Process Flow"], ["6.5.0-b2", "Market Pricing (Test): 2026 OCC and Energy Costs, Diesel in $/gal, Desert Long Haul, Real Steam Rates"], ["6.5.0-b3", "DCS Expansion (Test): Full SPOT, WET and DET Pictures, a UTIL Screen, Motors and Reject Purges"], ["6.5.0-b4", "DCS Pictograms (Test): Equipment Drawn as Classic DCS Symbols, Colour Only When Something's Wrong"], ["6.5.0-b5", "The Dryer Limit (Test): Speed and Grade Load the Dryers, a Wet Sheet Fails Spec and Slows the Machine"], ["6.5.0", "Digital Twin: Process Flow Trends and Controls, Real Freight and Market Costs, Full DCS, Dryer Limit, Rebalance"], ["6.5.1", "Second Screen: Pop the DCS and Process Flow Out to Their Own Window for a Second Monitor (Desktop)"], ["6.5.2", "Knob Fixes: Wet-End and Steam Knobs Bite Again Under the Dryer Limit, DCS Uses the Machine's Name"], ["6.5.3", "Quality Specs: Weight, Moisture and Color Specs per Grade, Off-Spec Paper Wound into Beater Rolls and Repulped"], ["6.5.4", "DCS Fixes: Making-Beater Alerts, SPOT in Process Order, Boiler and Power on Utilities, 2nd/3rd Section Steam Control"], ["6.5.5-t1", "Dewatering Chain (Test): Jet and Vacuum Optimums, Couch to Press Solids, Press Solids Set the Dryer Steam Both Ways"], ["6.5.5", "The Dewatering Chain: Jet and Vacuum Optimums, Couch to Press Solids, Press Solids Set the Dryer Steam Both Ways"], ["6.5.6-t1", "Mass Balance (Test): A Real Water Balance and White Water Chest, Hayout Broke Repulped, Every Fiber Loss Booked"], ["6.5.6", "Mass Balance: A Real Water Balance and White Water Chest, Hayout Broke Repulped, Every Fiber Loss Booked"], ["6.5.7-t1", "Winder Pass (Test): Four Reel Storage Stands, Two-Roll Sets, Rolls Tied Together, Steam Vented on a Sheet Break"], ["6.5.7", "Winder Pass: Four Reel Storage Stands, Two-Roll Sets, Rolls Tied Together, Steam Vented on a Sheet Break"], ["6.6.0-t1", "Orders and Bales (Test): Customer Order Book and Spot Market, Idle Energy While Stopped, Bale Grading at the Gate"], ["6.6.0", "Orders and Bales: Customer Order Book and Spot Market, Idle Energy While Stopped, Bale Grading at the Gate"], ["6.7.0-t1", "Control Room (Test): Planning, Water and Quality Screens, Split-Screen Trends of Anything, What Moves With What, Process Flow Views"], ["6.7.0", "Control Room: Planning, Water and Quality Screens, Split-Screen Trends of Anything, What Moves With What, Process Flow Views"], ["6.7.1-t1", "New Grade Set (Test): Grades 24, 28, 31 and 34Super, Same Tons per Hour"], ["6.7.1", "New Grade Set: Grades 24, 28, 31 and 34Super, Same Tons per Hour"], ["6.8.0-t1", "Process Relationships (Test): Refining Energy and Ring Crush, Basis Weight Loop, Headbox at 0.8%, White Water Silo, Bale Water and Screen Pressure Drop"], ["6.8.0-t2", "Relationship Map in the Control Room (Test): What Drives Each Reading and What It Moves, Live"], ["6.8.0", "Process Relationships: Refining Energy and Ring Crush, Basis Weight Loop, Headbox at 0.8%, White Water Silo, Bale Water, Screen Pressure Drop and the Relationship Map"], ["6.8.1", "Report Tab Tidy: Live Mill First, Last-24-Hours Chart, Quality & Fiber and Orders & Bales Removed"], ["6.8.2", "Manning: DuPont 12 Shifts for Techs and Operators, Team Hard Hats, Shift Change Walk-In, Vacations Covered Across Teams"], ["6.8.3", "OCC Recipe (A Bales, C Bales, Mixed Waste), Relationship Map Zoom and 3D Light Cones at Night"], ["6.9.0-t1", "The Valves Update (Test): Six Control Loops on the DCS with Real Valves, Faceplates, PID Tuning, Bump Tests, a Tuning Clock and Tuning Challenges"], ["6.9.0", "The Valves Update: Six Control Loops on the DCS with Real Valves, Faceplates, PID Tuning, Bump Tests, a Tuning Clock, Tuning Challenges and Their Links on the Relationship Map"], ["6.9.1", "Wet End Controls: Rush / Drag in fpm on the WET DCS"], ["6.9.2", "Release Review: Help and Glossary Brought Up to Date, Nine Bug Fixes, Refiners Feed the Machine Chest (a Clash Trips the Machine on Low Level) and an Economy Rebalance Where the Daily Round Is the Biggest Boost"]];
+{const VNOTES=[["4.0.0", "Graphics Overhaul: 60 FPS on iPhone, ~80% Fewer Draw Calls"], ["4.0.1", "Performance Follow-Up, Show FPS Option and Device Autotest"], ["4.0.2", "Economy Rebalance and Smoother Upset Labels"], ["4.1.0", "Four Environments, Seeded Mills, Bottlenecks, Graphics Tiers and Site Music"], ["4.2.0", "New Site Maps, Rare Sights, Zen Map Rotation and Economics Fixes"], ["4.2.0-s", "Save and Continue Season (Test)"], ["4.2.1", "Save/Continue, Settings Panel and Outage Speed Fix"], ["4.2.2-t", "Bayou Gator Sight Reworked (Test)"], ["4.2.2-t2", "Gator Bass Riff (Test)"], ["4.2.2-t3", "Gator Riff Removed, Wide Camera Framing (Test)"], ["4.2.2-t4", "Gator Scene Shortened and Widened (Test)"], ["4.2.2-t5", "One Rare Sight per Map in Zen (Test)"], ["4.2.2", "Rare Sights Reworked, Bird Strike Upset, Mill Report Tab"], ["4.2.3-t", "Cowboys, Bigfoot and Tugboat Sights Reworked (Test)"], ["4.2.3", "Laptop Battery Saving (Default GPU)"], ["4.2.4", "$25M Goal Removed and Quick Fixes"], ["4.2.5", "Random Bottleneck per Season and Accessibility Improvements"], ["4.3.0-t1", "Survival Mode (Test)"], ["4.4.0-t1", "Mill Leaders in Survival (Test)"], ["4.4.0-t2", "Painted Leader Portraits (Test)"], ["4.4.0-t3", "Leader Redesign, 4-Day Waves and Fixes (Test)"], ["5.0.0", "Survival Mode Release with Mill Leaders"], ["5.0.1", "Results Dialog and Game Speed Fixes"], ["5.0.2", "Report Card Label Fixes"], ["5.0.3", "Survival Playtest Fixes (Test)"], ["5.0.4", "Playtest Review: Dot Auto-Fix and Shipping Fix (Test)"], ["5.0.5", "Polish Rounds from Survival Playtests"], ["5.0.6", "Survival QA Fixes, Opt-In Outage Watch, Leaderboard Filters"], ["5.1.0", "Civics Meters and Leaders in Seasons (Test)"], ["5.4.0", "Title Screen, Civics in the World and Dark Mode"], ["5.4.1", "Loading Splash, No Old-Menu Flash"], ["5.4.2", "Graphics Quality on the Title Screen"], ["5.5.0", "Performance Improvements"], ["5.6.0", "Fiddly Knobs, DCS/QCS Screens and Knobs View"], ["5.7.0", "Catching Failures Early: Tells, Daily Rounds, Vibration Report, Outage Prep"], ["5.7.1", "Bottom Menu Reorder, Settings Back on the Right"], ["5.7.2", "Help Page with Game Guide and Glossary"], ["5.7.3", "Bare Graphics Mode for Weak Phones"], ["5.7.4", "Version Notes Pop-Up (Triple-Tap the Version Number)"], ["6.1.0-t1", "Isometric Paper View: Fixed Camera, Cut-Outs, Drop Shadows, Cutaways, Season Palettes (Test)"], ["6.1.0-t2", "Iso Round 2: Cut-Outs Always Paper, GPU Pictures, Stop-Motion World, Fewer Draws (Test)"], ["6.1.0-t3", "Iso Round 3: iPhone Batching, Instanced Cans, Sign Atlas, Lighter Frames (Test)"], ["6.1.0-t4", "Iso Fixes: Operators and Fork-Trucks Back, Less Stutter (Test)"], ["6.1.0-t5", "Cut-Out Edge Artifact Fixed (Test)"], ["6.1.0-t6", "Iso Optimization: Hidden Objects Cost Nothing, Lighter Moving Batches (Test)"], ["6.1.0-t7", "Iso Triangle Cut: Paper-Card Trees, Flat Ground, Hidden Faces Gone, Plain Boxes (Test)"], ["6.1.0-t8", "Paper Palette: 40 Colours, Flat Surfaces, Paper Grain, Fewer Draws (Test)"], ["6.1.0-t9", "Reel Fix: Growing Reel Draws Again (Test)"], ["6.1.0-t10", "Draw Cut 2: Colour in the Matrix, Merged Roofs, Uploads on Change, Culling Fix, Parked Groups (Test)"], ["6.1.0-t11", "QA Fixes: Cut-Outs Never Drawn as Loose 3D Parts, Fallback Shows 3D, Roofs On or Off per Zoom Step (Test)"], ["6.1.0-t12", "Paper Smoke, Blinking Lights, Stronger Seasons, Sharper Phones, Instanced Upsets, Pictures at Start (Test)"], ["6.1.0-t13", "Paper Effects: Flames, Child-Made Tornado, Lamp Cones, Flags, Paper Water, Visible Weather (Test)"], ["6.1.0-t14", "Paper Upsets: Cut-Out Props, Paper Pigeon, Paper Sparks, Steam, Fireworks, Ice and Flood (Test)"], ["6.1.0-t15", "Beaver Reworked as One Smaller Cut-Out (Test)"], ["6.1.0-t16", "Paper Props Dim at Night, Labels Never Overlap, Fewer Cut-Out Pictures (Test)"], ["6.1.0-t17", "Bird on the Power Lines Cut-Scene Plays When Set Off From the Upsets List (Test)"], ["6.1.0-t18", "Zen Close-Ups Fixed, Rare Sights as Paper Cut-Outs, Tilt-Shift Diorama Look (Test)"], ["6.1.0-t19", "Narrower Tilt-Shift Band, Winder Trash Can Out of the Broke Hole (Test)"], ["6.1.0-t20", "Balance: Rounds Pay More, Capacity and Maintenance Upgrades Re-Priced"], ["6.1.0", "Paper Diorama: Isometric Paper Art Style, Cut-Out People and Upsets, Tilt-Shift, Rounds Pay More, Upgrades Re-Priced"], ["6.1.1", "Phone Fixes: Gentler Tilt-Shift on Tall Screens, Cut-Out People No Longer Blank on iPhone"], ["6.1.2", "iPhone: Cut-Out Self-Test Retries, People Keep Their Colours in the 3D Fallback"], ["6.1.3", "Broke Hole by the Winder Looks Like a Floor Opening (Was a Black Square)"], ["6.1.4", "Tilt-Shift Removed"], ["6.2.0", "Zen Free Camera: Perspective Zen Shots, 3D People in Zen, Cleaner River Water"], ["6.3.0-f1", "Process Flow Overview (Test): Inputs, Mill Areas and Outputs for the Mill Day, in Settings"], ["6.3.0-f2", "Process Flow: the Game Keeps Running While It's Open (Test)"], ["6.3.0", "Process Flow Overview: Inputs, Mill Areas and Outputs for the Mill Day (Settings > View)"], ["6.4.0", "Zen Shots Review: Shuffle-Bag Shot Order, Landscape Shots Rebuilt, Close Rare Sights"], ["6.5.0-a1", "Digital Twin A (Test): Hourly History, 14 Prior Days, 7 d / Run Ranges, Area Trends and Uptime"], ["6.5.0-b1", "Digital Twin B (Test): Real Freight Costs with a Diesel Index, Area Controls Moved into Process Flow"], ["6.5.0-b2", "Market Pricing (Test): 2026 OCC and Energy Costs, Diesel in $/gal, Desert Long Haul, Real Steam Rates"], ["6.5.0-b3", "DCS Expansion (Test): Full SPOT, WET and DET Pictures, a UTIL Screen, Motors and Reject Purges"], ["6.5.0-b4", "DCS Pictograms (Test): Equipment Drawn as Classic DCS Symbols, Colour Only When Something's Wrong"], ["6.5.0-b5", "The Dryer Limit (Test): Speed and Grade Load the Dryers, a Wet Sheet Fails Spec and Slows the Machine"], ["6.5.0", "Digital Twin: Process Flow Trends and Controls, Real Freight and Market Costs, Full DCS, Dryer Limit, Rebalance"], ["6.5.1", "Second Screen: Pop the DCS and Process Flow Out to Their Own Window for a Second Monitor (Desktop)"], ["6.5.2", "Knob Fixes: Wet-End and Steam Knobs Bite Again Under the Dryer Limit, DCS Uses the Machine's Name"], ["6.5.3", "Quality Specs: Weight, Moisture and Color Specs per Grade, Off-Spec Paper Wound into Beater Rolls and Repulped"], ["6.5.4", "DCS Fixes: Making-Beater Alerts, SPOT in Process Order, Boiler and Power on Utilities, 2nd/3rd Section Steam Control"], ["6.5.5-t1", "Dewatering Chain (Test): Jet and Vacuum Optimums, Couch to Press Solids, Press Solids Set the Dryer Steam Both Ways"], ["6.5.5", "The Dewatering Chain: Jet and Vacuum Optimums, Couch to Press Solids, Press Solids Set the Dryer Steam Both Ways"], ["6.5.6-t1", "Mass Balance (Test): A Real Water Balance and White Water Chest, Hayout Broke Repulped, Every Fiber Loss Booked"], ["6.5.6", "Mass Balance: A Real Water Balance and White Water Chest, Hayout Broke Repulped, Every Fiber Loss Booked"], ["6.5.7-t1", "Winder Pass (Test): Four Reel Storage Stands, Two-Roll Sets, Rolls Tied Together, Steam Vented on a Sheet Break"], ["6.5.7", "Winder Pass: Four Reel Storage Stands, Two-Roll Sets, Rolls Tied Together, Steam Vented on a Sheet Break"], ["6.6.0-t1", "Orders and Bales (Test): Customer Order Book and Spot Market, Idle Energy While Stopped, Bale Grading at the Gate"], ["6.6.0", "Orders and Bales: Customer Order Book and Spot Market, Idle Energy While Stopped, Bale Grading at the Gate"], ["6.7.0-t1", "Control Room (Test): Planning, Water and Quality Screens, Split-Screen Trends of Anything, What Moves With What, Process Flow Views"], ["6.7.0", "Control Room: Planning, Water and Quality Screens, Split-Screen Trends of Anything, What Moves With What, Process Flow Views"], ["6.7.1-t1", "New Grade Set (Test): Grades 24, 28, 31 and 34Super, Same Tons per Hour"], ["6.7.1", "New Grade Set: Grades 24, 28, 31 and 34Super, Same Tons per Hour"], ["6.8.0-t1", "Process Relationships (Test): Refining Energy and Ring Crush, Basis Weight Loop, Headbox at 0.8%, White Water Silo, Bale Water and Screen Pressure Drop"], ["6.8.0-t2", "Relationship Map in the Control Room (Test): What Drives Each Reading and What It Moves, Live"], ["6.8.0", "Process Relationships: Refining Energy and Ring Crush, Basis Weight Loop, Headbox at 0.8%, White Water Silo, Bale Water, Screen Pressure Drop and the Relationship Map"], ["6.8.1", "Report Tab Tidy: Live Mill First, Last-24-Hours Chart, Quality & Fiber and Orders & Bales Removed"], ["6.8.2", "Manning: DuPont 12 Shifts for Techs and Operators, Team Hard Hats, Shift Change Walk-In, Vacations Covered Across Teams"], ["6.8.3", "OCC Recipe (A Bales, C Bales, Mixed Waste), Relationship Map Zoom and 3D Light Cones at Night"], ["6.9.0-t1", "The Valves Update (Test): Six Control Loops on the DCS with Real Valves, Faceplates, PID Tuning, Bump Tests, a Tuning Clock and Tuning Challenges"], ["6.9.0", "The Valves Update: Six Control Loops on the DCS with Real Valves, Faceplates, PID Tuning, Bump Tests, a Tuning Clock, Tuning Challenges and Their Links on the Relationship Map"], ["6.9.1", "Wet End Controls: Rush / Drag in fpm on the WET DCS"], ["6.9.2", "Release Review: Help and Glossary Brought Up to Date, Nine Bug Fixes, Refiners Feed the Machine Chest (a Clash Trips the Machine on Low Level) and an Economy Rebalance Where the Daily Round Is the Biggest Boost"], ["6.10.0-t1", "The Reliability and Electrical Update (Test): Ten VFD Motors with Health, an MCC Building with Three Drive Lineups Fed from the Substation, an Electrical Tech on Every Shift, Shift Vibration and ADX Rounds That Get Skipped When Techs Are Busy, Reliability and Drives Screens, Bearing, Motor and Drive Failures, Outage Changeouts and the Water Tower Moved to the North-East Corner"]];
   let ov=null,held=false;
   function render(){
     const cur=APP_VER.replace(/^v/i,""),rows=VNOTES.slice().reverse().map(([v,n])=>
@@ -16066,7 +16598,7 @@ function camPullOn(){try{return localStorage.getItem("paper-mill-campull")!=="of
 /* ---- v6.7 Report > Control room: one place for the mill's screens (the process flow, the DCS, planning, quality, water
    and trends). The DCS still opens from the operator consoles in the mill too; the process flow left Settings. ---- */
 {const CR=[["pf","Process flow","Money and tons through the mill"],["dcs","DCS","Stock prep, wet end, dry end, utilities"],["PLAN","Planning","Orders, inventory, trucks, OCC recipe"],
-    ["QCS","Quality","Specs, off-spec log, beater"],["WATER","Water","Fresh water and the water balance"],["TREND","Trends","Trend anything, find what moves together"],["rm","Relationship map","What drives each reading, and what it moves"],["man","Manning","Who's on shift, vacations and cover"]];
+    ["QCS","Quality","Specs, off-spec log, beater"],["WATER","Water","Fresh water and the water balance"],["TREND","Trends","Trend anything, find what moves together"],["REL","Reliability","Rounds, vibration and ADX motor tests"],["DRV","Drives","The MCC lineups: each drive's load"],["rm","Relationship map","What drives each reading, and what it moves"],["man","Manning","Who's on shift, vacations and cover"]];
   const el=$("ctlRoom");
   if(el){el.innerHTML=`<div class="crh"><b>Control room</b><small id="crNote">The mill's screens. The DCS screens also open from the operator consoles in the mill.</small></div>
       <div class="crg">${CR.map(([k,l,d])=>`<button type="button" data-cr="${k}"><b>${l}</b><small>${d}</small></button>`).join("")}<button type="button" data-cr="pop" id="crPop" hidden><b>⧉ Second screen</b><small>The whole control room in its own window</small></button></div>`;
@@ -16109,6 +16641,7 @@ function manDraw(){if(!MANUI.open||!S)return;const s=manIdx(),m=manShift(s),key=
       <small>${cov?`${cov} covering from other teams`:"Everyone on their own shift"} · next on: ${nxt.team} team</small></div></div>
     ${m.short?`<p class="manwarn">One tech short this shift: maintenance repairs run at ${Math.round(MAN.SLOW*100)}% speed until the next shift change.</p>`:""}
     <h4>Maintenance techs <span>${m.nt-m.short} of ${m.nt}</span></h4><ul class="manl">${m.techs.map(r=>manRow(r,"Maintenance")).join("")}</ul>
+    <h4>Electrical <span>1</span></h4><ul class="manl">${manRow(m.elec,"Electrical tech · MCC")}</ul>
     <h4>Operators <span>${m.ops.length}</span></h4><ul class="manl">${m.ops.map((r,k)=>manRow(r,MAN_SEAT(k))).join("")}</ul>
     <div class="manleg">${MAN.TEAMS.map(T=>`<span>${manHat(T)}${T} team</span>`).join("")}</div>`;}
 UI_TICKS.push(()=>{if(MANUI.open)manDraw();});
@@ -16479,7 +17012,7 @@ requestAnimationFrame(frame);
   window.__openDiag=open;})();
 // test and benchmark hook (read-only views plus a few controls); used by the benchmark harness and smoke tests
 window.__PM={get THREE(){return THREE},get S(){return S},get C(){return C},get G3(){return G3},get EVENTS(){return EVENTS},get CH(){return CH},SIM_STEP,
-  trigger:(...a)=>trigger(...a),step:h=>step(h),reseed:k=>seedRun(k),manShift:k=>manShift(k),bq:()=>bqState(),get MAN(){return MAN},manOpen:()=>manOpen(),lineCaps:()=>lineCaps(),get SITE(){return SITE},get LAYOUT(){return LAYOUT},get AUDIO(){return AUDIO},get DIAG(){return DIAG},setBn:b=>{S.bn=b;applyUpgrades();},knob:{set:(i,v)=>knobSet(i,v),read:()=>knobRead(),off:()=>knobsOff(),reset:i=>knobReset(i),list:KNOBS,get K(){return S.knob},open:(a,t)=>G3.openStation&&G3.openStation(a,t),panel:i=>G3.openKnob&&G3.openKnob(i),close:()=>G3.closeKnobUI&&G3.closeKnobUI()},tell:{get T(){return S.tell},on:()=>tellsOn(),lead:()=>tellLead(),catch:id=>tellCatch(id),start:a=>tellRoundStart(a),end:(a,n)=>tellRoundEnd(a,n),trend:a=>tellTrend(a),rep:()=>tellRep(),can:()=>tellCan(),summary:()=>tellSummary(),areas:TAREAS,prepFor:()=>prepFor(),prepDo:(i,c)=>prepDo(i,c),prepTally:()=>prepTally(S.tell&&S.tell.prep),round:a=>G3.tellRound&&G3.tellRound(a),open:()=>G3.tellOpen&&G3.tellOpen(),prepOpen:()=>G3.prepOpen&&G3.prepOpen()},simRate:()=>simRate(),setFps:v=>setFpsMode(v),setRunning:v=>{running=v},get running(){return running}};
+  trigger:(...a)=>trigger(...a),step:h=>step(h),reseed:k=>seedRun(k),manShift:k=>manShift(k),bq:()=>bqState(),get MAN(){return MAN},manOpen:()=>manOpen(),lineCaps:()=>lineCaps(),get SITE(){return SITE},get LAYOUT(){return LAYOUT},get AUDIO(){return AUDIO},get DIAG(){return DIAG},setBn:b=>{S.bn=b;applyUpgrades();},knob:{set:(i,v)=>knobSet(i,v),read:()=>knobRead(),off:()=>knobsOff(),reset:i=>knobReset(i),list:KNOBS,get K(){return S.knob},open:(a,t)=>G3.openStation&&G3.openStation(a,t),panel:i=>G3.openKnob&&G3.openKnob(i),close:()=>G3.closeKnobUI&&G3.closeKnobUI()},tell:{get T(){return S.tell},on:()=>tellsOn(),lead:()=>tellLead(),catch:id=>tellCatch(id),start:a=>tellRoundStart(a),end:(a,n)=>tellRoundEnd(a,n),trend:a=>tellTrend(a),rep:()=>tellRep(),can:()=>tellCan(),summary:()=>tellSummary(),areas:TAREAS,prepFor:()=>prepFor(),prepDo:(i,c)=>prepDo(i,c),prepTally:()=>prepTally(S.tell&&S.tell.prep),round:a=>G3.tellRound&&G3.tellRound(a),open:()=>G3.tellOpen&&G3.tellOpen(),prepOpen:()=>G3.prepOpen&&G3.prepOpen()},rly:{get R(){return S.rel},state:()=>rlyState(),on:()=>rlyOn(),fix:(i,k)=>rlyFix(i,k),pin:(i,k)=>rlyPin(i,k),chg:(i,k)=>rlyChg(i,k),fail:(a,k)=>rlyFail(a,k),load:i=>rlyLoad(i),drv:i=>rlyDrvSt(i),kw:()=>rlyMccKw(),cite:(id,i)=>rlyCite(id,i),tally:()=>rlyPlanTally(S.rel&&S.rel.chg),ASSETS,RLY,ENEED:id=>ENEED(id),MNEED:id=>MNEED(id)},simRate:()=>simRate(),setFps:v=>setFpsMode(v),setRunning:v=>{running=v},get running(){return running}};
 })();
 </script>
 
