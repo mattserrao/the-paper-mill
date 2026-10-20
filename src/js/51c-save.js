@@ -27,7 +27,7 @@
         const o=x=>!!x&&typeof x==="object";if(!(typeof d.S.t==="number"&&o(d.S.season)&&o(d.S.cards)&&o(d.C)&&o(d.CH))){clear();return null;}
         return d;}catch(e){clear();return null;}}
     function clear(){try{localStorage.removeItem(KEY);localStorage.removeItem(KEY+"-hist");}catch(e){}lastHist="";}
-    function restore(d){S=d.S;try{const hh=JSON.parse(gmig(localStorage.getItem(KEY+"-hist"))||"null");S.hist=hh&&hh.id===d.S.histId?hh:null;}catch(e){S.hist=null;}   // (v6.5: no history, or another run's: the prior days are made again)
+    function restore(d){S=d.S;weMigrate();try{const hh=JSON.parse(gmig(localStorage.getItem(KEY+"-hist"))||"null");S.hist=hh&&hh.id===d.S.histId?hh:null;}catch(e){S.hist=null;}   // (v6.5: no history, or another run's: the prior days are made again)
       for(const k in d.C){if(C[k]&&typeof C[k]==="object"&&d.C[k]&&typeof d.C[k]==="object")Object.assign(C[k],d.C[k]);else C[k]=d.C[k];}
       if(C.spdPref){C.simSpeed=C.spdPref;}else if(S.outg&&S.outg.on&&S.outg.spd){C.simSpeed=S.outg.spd;}delete C.spdPref;   // (v5.0.1: older saves: the player's speed)
       CH.on=d.CH.on;CH.lvl=d.CH.lvl;Object.assign(CH.en,d.CH.en||{});

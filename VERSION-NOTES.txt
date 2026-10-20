@@ -95,3 +95,5 @@ One line per version, oldest first. Add a line here with every release: build.py
 6.7.0      Control Room: Planning, Water and Quality Screens, Split-Screen Trends of Anything, What Moves With What, Process Flow Views
 6.7.1-t1   New Grade Set (Test): Grades 24, 28, 31 and 34Super, Same Tons per Hour
 6.7.1      New Grade Set: Grades 24, 28, 31 and 34Super, Same Tons per Hour
+6.8.0-t1   Process Relationships (Test): Refining Energy and Ring Crush, Basis Weight Loop, Headbox at 0.8%, White Water Silo, Bale Water and Screen Pressure Drop
+6.8.0-t2   Relationship Map in the Control Room (Test): What Drives Each Reading and What It Moves, Live

@@ -26,7 +26,9 @@ function waterTick(dt){const W=watState(),h=dt/60,T=W.tot,q=WQ;
   const wIn=q.p*dry*(100/ps-1),prodW=Math.min(wIn,q.p*m),evap=wIn-prodW;   // the sheet's water into the dryers: most of it goes up the stack
   const rejW=q.rej*(1-WAT.rejS)/WAT.rejS,baleW=q.f*WAT.baleW+q.bw,repW=q.rep*DRY.m0/100,shw=q.p*WAT.shower,base=WAT.base*h;
   // the white water chest: the machine's return, less stock prep's draw (net per ton of fiber to and from storage)
-  let L=W.L+shw+baleW+repW-wIn-rejW-WAT.sw*(q.fi+q.rep-q.u)-WAT.sw*q.clip;
+  // v6.8: the silo's water (07g) is held out of (or given back to) the long circuit; its overflow, the seal pit and the press water are the return
+  const dSilo=weFlow(dt,q.u);T.silo=(T.silo||0)+dSilo;
+  let L=W.L+shw+baleW+repW-wIn-rejW-WAT.sw*(q.fi+q.rep-q.u)-WAT.sw*q.clip-dSilo;
   const over=Math.max(0,L-WAT.cap*WAT.hi);L-=over;
   const iced=active("icedintake"),make=!iced&&L<WAT.cap*WAT.lo?Math.min(WAT.cap*WAT.lo-L,WAT.makeMax*h):0;L+=make;
   const short=L<0?-L:0;if(short>0)L=0;W.L=L;W.short=short;

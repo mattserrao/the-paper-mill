@@ -17,23 +17,23 @@ SC = [
  ("untouched", {}, 600, {"none": True}),
  ("pulper too thick", {"pulp": 5}, 240, {"inc": "rotortrip", "after": 15, "fixed": ["pulp"]}),
  ("pulper too thin", {"pulp": 98}, 520, {"inc": "overflow", "after": 15, "fixed": ["pulp"]}),
- ("refiner clash", {"ref": 0.12}, 600, {"inc": "refclash", "after": 8, "fixed": ["ref"]}),
+ ("refiner clash", {"ref": 125}, 600, {"inc": "refclash", "after": 8, "fixed": ["ref"]}),
  ("press loading low", {"press": 55}, 600, {"inc": "boiler", "off": 0.05, "after": 20, "fixed": ["press"]}),
  ("press loading high", {"press": 145}, 600, {"off": 0.3, "brk": 1, "after": 10, "fixed": ["press"]}),
  ("chest agitator off", {"agit": 0}, 600, {"off": 0.3, "brk": 1, "after": 15, "fixed": ["agit"]}),
  ("oscillator off", {"osc": 0}, 600, {"inc": "oscfail", "off": 0.05, "after": 30, "fixed": ["osc"]}),
  ("vacuum low", {"vac": 6}, 720, {"brk": 1, "steam": 1.15, "after": 20, "fixed": ["vac"]}),
- ("vacuum high", {"vac": 60}, 720, {"inc": "fabric", "after": 120, "fixed": ["vac"]}),
+ ("vacuum high", {"vac": 60}, 720, {"brk": 1, "after": 10, "fixed": ["vac"]}),   # (v6.8: the silo runs low before the fabric wears)
  ("draw tight", {"draw": 3.6}, 600, {"brk": 1, "after": 10, "fixed": ["draw"]}),
  ("draw loose", {"draw": 0.3}, 600, {"off": 0.3, "after": 5, "fixed": ["draw"]}),
  ("dilution zones", {"zones": [[4, 9], [5, 8]]}, 400, {"off": 0.3, "after": 5, "fixed": ["zones"]}),
  ("guide manual", {"guide": {"gm": 0, "gt": 10}}, 900, {"inc": "fabric", "after": 60, "fixed": ["guide"]}),
  ("guide trimmed on auto", {"guide": {"gm": 1, "gt": 28}}, 1600, {"inc": "fabric", "after": 60, "fixed": ["guide"]}),
  ("couch agitator off + break", {"couch": 0, "_break": 90}, 400, {"inc": "couchpit", "after": 60, "fixed": ["couch"]}),
- ("steam1 high + refiner open (dry)", {"st1": 250, "ref": 0.95}, 600, {"off": 0.2, "dry": True, "after": 5, "fixed": ["st1"]}),
- ("steam1 low + refiner tight (wet)", {"st1": 0, "ref": 0.2}, 600, {"off": 0.05, "wet": True, "after": 10}),
+ ("steam1 high + refiner open (dry)", {"st1": 250, "ref": 20}, 600, {"off": 0.2, "dry": True, "after": 5, "fixed": ["st1"]}),
+ ("steam1 low + refiner tight (wet)", {"st1": 0, "ref": 111}, 600, {"off": 0.05, "wet": True, "after": 10}),
  ("steam1 high alone (no off-spec)", {"st1": 200}, 400, {"maxoff": 0.0, "steam": 1.05}),
- ("refiner tight alone (steam only)", {"ref": 0.3}, 400, {"maxoff": 0.0, "steam": 1.1}),
+ ("refiner tight alone (steam only)", {"ref": 94}, 400, {"maxoff": 0.0, "steam": 1.1}),
 ]
 RUN = """(a)=>{const P=__PM,[name,set,mins]=a,G=P.G3;G.save.restore(JSON.parse(window.__SNAP));P.setRunning(false);P.CH.on=false;P.C.breaks=false;P.C.hays=false;
   const S=P.S,t0=S.t,cash0=S.cash,inc0=S.tot.incidents,brk0=S.tot.breaks,beat0=S.tot.beater||0,feed0=S.feed.length;

@@ -1,6 +1,51 @@
 # Changelog
 
 
+## v6.8.0-t2 (2026-10-19): relationship map in the control room (test)
+On test/v6.8-relations, not merged. New code: `src/js/50j-relmap.js`. Check: `tools/relmapcheck.py` (15 checks).
+- **Report → Control room → Relationship map.** All 86 trendable readings and 13 drivers (weather, grade, knobs, market,
+  orders, upsets) in a DCS-style process map, left to right from inputs to shipping and money, with 187 cause → effect
+  links from the sim: + rises with, − falls as it rises, ~ optimum, limit or swing, = same reading.
+- **Tap a reading** to light its links and list what drives it and what it moves, each with the mechanism. "Full chain"
+  follows the links all the way up and down. Each box shows its live reading; H marks readings with hourly history.
+- **Trend it** sends the reading to the trend screen. The game keeps running at the player's speed while the map is open.
+  Escape closes it. Zen keeps it. On a phone the details sit under the map.
+- Keep `RM_E` in step with the sim when a relationship changes; relmapcheck fails on a tag with no links.
+
+## v6.8.0-t1 (2026-10-19): process relationships (test)
+On test/v6.8-relations, not merged. New code: `src/js/07g-wetend.js`. Check: `tools/relcheck.py` (20 checks). Functionality
+only, no balancing; a hands-off 12-day seeded run is within 0.2% of v6.7.1 on paper made. No new dice: runs replay identically.
+- **Refining is specific energy now (kWh/t, standard 60).** The refiner knob (field and SPOT DCS) sets kWh/t and the plate
+  gap follows (clash at about 120). More energy: lower freeness, slower drainage (freeness drives couch solids in the
+  dewatering chain), more refiner kW, billed as energy above or below standard, and more ring crush.
+- **Ring crush spec per grade** (24 58.2, 28 65.0, 31 72.8, 34Super 81.5 lbf/6 in minimum). Ring crush scales with the
+  measured weight and refining (stickies take a little off). Under spec, the reel goes to the beater like any other spec.
+- **Basis weight setpoint and the lightweight premium.** The WET DCS sets the BW setpoint from 10% under to 5% over the
+  grade's target; the weight spec is ±3% around the setpoint. On-spec paper under the target earns half the trim as a
+  price premium (capped at 5%), paid as it is made. A lighter sheet needs more refining to pass ring crush.
+- **Basis weight loop with dead time.** The basis weight valve feeds thick stock from the machine chest. AUTO follows speed
+  and the setpoint and trims on the QCS reading, which is 3 minutes late, so thick stock or swings show as a weight
+  excursion before it is corrected. MANUAL holds the valve %: speed and stock consistency move the weight.
+- **Headbox at 0.8%.** The fan pump's flow is sized to carry the setpoint's fiber at 0.8%; white water from the silo
+  dilutes the thick stock down to it. Headbox consistency moves with the delivered fiber and drives the weight.
+- **Machine water.** Table and couch drainage go to the white water silo, the vacuum boxes' share (more with more
+  vacuum) to the seal pit, press water to the save-all and the white water chest. New flows trend in gpm.
+- **White water silo is a real level** (60,000 gal). It runs full and overflows to the white water chest; dilution
+  demand above what drains in draws it down (high vacuum, thick stock). Under 25% it makes up from the white water
+  chest, under 15% the fan pump cavitates (headbox consistency and weight swing), held under 8% the sheet breaks at the
+  wet end. The crew traces a low silo to raised vacuum. Refills to 60% while the machine is down.
+- **Bale water thins the pulper:** wet bales drop pulper consistency (amps, tub level follow) and the dilution loop takes
+  it back out over about 20 minutes.
+- **Cleaner and fine screen pressure drop** build with dirty bales (and the screen with its load). Past 10% over clean,
+  the rejects carry good fiber: pulper yield falls. A purge left on manual costs yield as it builds. Fine screen ΔP is real.
+- **New tags:** refining energy, fine screen ΔP, fan pump dilution, headbox consistency, BW valve, BW setpoint, table and
+  couch drainage, seal pit water, press water, silo overflow, silo volume, ring crush, lightweight premium. Fan pump
+  flow and silo level are real now. Hourly history adds refining energy, headbox consistency, silo level and ring crush.
+- **QCS:** ring crush reading and spec, weight spec around the setpoint, premium shown. WET alarms: silo low or
+  cavitating, BW on manual. "Moves with" lists up to 14.
+- Saves: an older save's refiner gap converts to kWh/t. Tests updated: knobcheck (refiner in kWh/t, high vacuum now
+  breaks through the silo), watercheck (silo in the inventory).
+
 ## v6.7.1 (2026-10-19): new grade set
 Built on test/v6.7.1-grades (as 6.7.1-t1), merged into main. Check: `tools/migcheck.py` (an older build's save continues on the new grades).
 - **Four new grades replace the old set, one for one:** 24 (light medium, 25.52 lb, 2,632 fpm), 28 (medium, 28.03 lb,

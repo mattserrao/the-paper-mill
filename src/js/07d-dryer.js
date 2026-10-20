@@ -32,7 +32,7 @@ function dryDemand(tph){return dryDemand0(tph)*dryKnob().a;}
 function dryCapTph(){const D=dryState(),g=C.grade,b=DRY.base[g]||DRY.base["24"],s=drySlope(g)/DRY.wpt0,k=s*dryWpt();
   return k>0?Math.max(0,(dryCeil(D)/dryKnob().a-b+s*dryRef(g)*DRY.wpt0)/k):1e9;}
 function dryTick(dt){const D=dryState(),g=C.grade,b=DRY.base[g]||DRY.base["24"],run=S.pm==="run";
-  const tph=run?P.K*S.pmSpeed*GRADES[g].bw:0;
+  const tph=run?P.K*S.pmSpeed*(S.we&&S.we.bw||GRADES[g].bw):0;   // (v6.8: the weight being made, 07g)
   const A=dryKnob(),dem0=run?dryDemand0(tph):b*0.5,dem=run?dem0*A.a:b*0.5;D.dem=ease(D.dem,dem,dt,3);D.dem0=ease(D.dem0==null?dem0:D.dem0,dem0,dt,3);if(run&&!S.zen&&D.dem>D.maxDem)D.maxDem=D.dem;
   D.km=ease(D.km||0,run?20*(A.r-A.a):0,dt,10);   // (v6.5.2: moisture the knobs put past the auto loop's reach)
   // steam and the boiler (a boiler trip still stops the machine on its own; 04-upsets)

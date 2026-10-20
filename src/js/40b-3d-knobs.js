@@ -113,7 +113,7 @@
         if(Math.random()<rdt*10*k)emit("steam",2+Math.random()*24,14.6,zc+R()*4,R()*0.6+0.4,2.6+Math.random()*1.6,R()*0.6,3.4,2.2+Math.random()*1.6,"#f4f6f8",0.55);
         if(K.x.bs>0.2&&Math.random()<rdt*6*K.x.bs)emit("steam",76+R(),15,-10+R(),R()*0.5,3+Math.random()*2,R()*0.5,3,2.4,"#eef1f5",0.6);}
       // a thick pulper: the handwheel turned shut; a thin one, wide open (just the wheel's angle)
-      if(K){const turn=(w,a)=>{if(Math.abs(w.rotation.y-a)>1e-4){w.rotation.y=a;w.updateMatrixWorld(true);}};turn(KX.pulp.w,(K.v.pulp-50)/50*Math.PI);turn(KX.ref.w,(K.v.ref-0.5)*Math.PI*3);}
+      if(K){const turn=(w,a)=>{if(Math.abs(w.rotation.y-a)>1e-4){w.rotation.y=a;w.updateMatrixWorld(true);}};turn(KX.pulp.w,(K.v.pulp-50)/50*Math.PI);turn(KX.ref.w,(gapOf(K.v.ref)-0.5)*Math.PI*3);}
       kvFrame(now);};
     // ---- breakdowns only a knob causes: their effects and pins (31-3d-upset-fx.js builds and precompiles them) ----
     FXDEF.rotortrip=g=>spFx(g,16,-13.5,2.6,8);

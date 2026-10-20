@@ -11,21 +11,24 @@ const QSPEC={   // basis weight lb/1000 ft² (target ±3%), reel moisture % (8 �
   "28": {bw:[27.19,28.87],m:[6.0,10.0],shade:"mill shade"},
   "31": {bw:[30.17,32.03],m:[6.0,10.0],shade:"mill shade"},
   "34Super":{bw:[32.99,35.03],m:[6.0,10.0],shade:"mill shade"}};
-const QWHY={bw:"weight",m:"moisture",shade:"color",chg:"weight (grade change)"};
+const QWHY={bw:"weight",m:"moisture",shade:"color",chg:"weight (grade change)",rct:"ring crush"};
+// v6.8: the weight spec is ±3% around the basis weight setpoint (the grade's target unless trimmed on the WET DCS), and
+// every grade has a ring crush minimum (07g RCT0, 97% of it). More refining raises ring crush, so a lighter setpoint can pass.
+const qBw=g=>{const s=(QSPEC[g]||QSPEC["24"]).bw,f=g===C.grade?bwSp()/bwStd():1;return [s[0]*f,s[1]*f];};
 // the latest check (derived each step, not saved): measured values, what's out, the share of production going to the beater
-const QNOW={bw:0,m:8,shade:true,out:[],why:"",off:0};
+const QNOW={bw:0,m:8,shade:true,rct:60,out:[],why:"",off:0};
 // what the scanner reads now (no dice: the swings are smooth functions of time, like the DCS readings)
 function qualMeasure(){const g=C.grade,G=GRADES[g]||GRADES["24"],K=S.knob,t=S.t;
   const wob=(f,k)=>Math.sin(t*f+k)*0.6+Math.sin(t*f*2.7+k*2)*0.4,sw=K&&K.any&&K.x?K.x.sw:0;
-  const bw=G.bw*(1+sw*0.08*wob(0.21,3)+0.05*(S.wat?S.wat.shortK:0))+wob(0.11,5)*0.12;   // (v6.5.6: no dilution water, thick stock)
+  const bw=bwMeas()+wob(0.11,5)*0.12;   // (v6.8: the BW loop's weight as the scanner saw it WE.dead minutes ago, 07g; thick stock and swings come through it)
   const m=S.dry?S.dry.m:DRY.m0;
   // shade: the dye system is in trouble (an upset, or the dye pump stopped from the DCS)
   const shade=!(active("dye")||active("m_dye")||motState("dye")==="off");
-  return {bw,m,shade};}
+  return {bw,m,shade,rct:rctNow(bw)};}
 function qualTick(){const Q=QNOW,sp=QSPEC[C.grade]||QSPEC["24"];if(Q.S!==S){Q.S=S;Q.out=[];Q.why="";Q.logT=Q.endT=null;}
-  const r=qualMeasure();Q.bw=r.bw;Q.m=r.m;Q.shade=r.shade;
+  const r=qualMeasure();Q.bw=r.bw;Q.m=r.m;Q.shade=r.shade;Q.rct=r.rct;
   if(S.pm!=="run"||S.zen){Q.off=0;return Q;}   // (no sheet, nothing to judge: the last verdict stands until it runs again)
-  const out=[];if(r.bw<sp.bw[0]||r.bw>sp.bw[1])out.push("bw");
+  const out=[],bb=qBw(C.grade);if(r.bw<bb[0]||r.bw>bb[1])out.push("bw");if(r.rct<rctSpec())out.push("rct");
   // (any other off-spec spell, like civics' "moisture drifting", is a moisture violation whatever the dryers say)
   if(r.m<sp.m[0]||r.m>sp.m[1]||(S.M&&S.M.offSpec&&r.shade))out.push("m");
   if(!r.shade)out.push("shade");
