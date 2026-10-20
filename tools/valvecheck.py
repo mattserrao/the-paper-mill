@@ -54,7 +54,7 @@ with sync_playwright() as pw:
        json.dumps({"untouched": eu, "touched": et}))
 
     # hand-back: standard tuning and settled for 10 min returns the loop to the game's model
-    hb = R("V.touch('LV-104');V.touch('NV-101');V.touch('FV-201');", 40, "const s=V.state();return {lp:Object.keys(s.lp),any:s.any};")
+    hb = R("V.touch('LV-104');V.touch('NV-101');V.touch('FV-201');", 90, "const s=V.state();return {lp:Object.keys(s.lp),any:s.any};")
     ok("settled on standard tuning: the game's own model takes the loops back", not hb["lp"] and not hb["any"], json.dumps(hb))
     ht = R("V.touch('LV-104');V.setTune('LV-104',{kc:2});", 40, "return Object.keys(V.state().lp);")
     ok("off standard tuning: the loop stays with the valve model", "LV-104" in ht, json.dumps(ht))
@@ -78,7 +78,7 @@ with sync_playwright() as pw:
     ok("valve settings can't be changed outside free play", nv is None or nv == 0.5, str(nv))
 
     # ---- health ----
-    os_ = R("V.setTune('NV-101',{kc:6,ti:0.5});V.setSP('NV-101',5.3);", 40, "return V.health('NV-101',V.trace('NV-101',20));")
+    os_ = R("V.setTune('NV-101',{kc:20,ti:0.5});V.setSP('NV-101',5.3);", 30, "return V.health('NV-101',V.trace('NV-101',20));")
     ok("too much gain: the health check says oscillating", os_["k"] == "osc", json.dumps(os_))
     sl = R("V.setTune('LV-104',{kc:0.1,ti:200});V.setSP('LV-104',50);", 20, "return V.health('LV-104',V.trace('LV-104',10));")
     ok("too little gain: the health check says sluggish", sl["k"] == "slow", json.dumps(sl))
@@ -86,14 +86,14 @@ with sync_playwright() as pw:
     ok("dead-time loop tuned hard: fighting the past", dt["k"] in ("dead",), json.dumps(dt))
 
     # ---- bump tests recover the process ----
-    PRE = {"LV-202": "P.knob.set('vac',45);V.touch('LV-202');V.setSP('LV-202',50);for(let i=0;i<4*80;i++)P.step(P.SIM_STEP);"}   # (the vacuum's lag settles first)
-    TRUTH = {"NV-101": ("fo", -0.8, 4.0, 0.5), "FV-201": ("fo", 1.0, 0.33, 3.0), "PV-303": ("fo", 1.6, 0.5, 0.03), "LV-104": ("int", 0.25, None, 0.08), "LV-202": ("int", 0.0176, None, 0.05)}
+    PRE = {"NV-101": "V.touch('NV-101');for(let i=0;i<4*100;i++)P.step(P.SIM_STEP);", "LV-202": "P.knob.set('vac',45);V.touch('LV-202');V.setSP('LV-202',50);for(let i=0;i<4*80;i++)P.step(P.SIM_STEP);"}   # (the vacuum's lag settles first)
+    TRUTH = {"NV-101": ("fo", -0.8, 20.0, 0.5), "FV-201": ("fo", 1.0, 0.33, 3.0), "PV-303": ("fo", 1.6, 0.5, 0.03), "LV-104": ("int", 0.25, None, 0.08), "LV-202": ("int", 0.0176, None, 0.05)}
     for lid, (ty, k, tau, th) in TRUTH.items():
-        dur = {"NV-101": 30, "FV-201": 10, "PV-303": 4, "LV-104": 8, "LV-202": 24}[lid]
+        dur = {"NV-101": 120, "FV-201": 10, "PV-303": 4, "LV-104": 8, "LV-202": 24}[lid]
         bt = R(PRE.get(lid, f"V.touch('{lid}');") + f"for(let i=0;i<4*40;i++)P.step(P.SIM_STEP);V.bump('{lid}');ctx.t0=S.t;", dur, f"const s=V.state();return {{res:s.btRes,bt:!!s.bt,m:V.view('{lid}').m}};")
         res = bt["res"] or {}
         if ty == "fo":
-            good = res.get("type") == "fo" and abs(res["K"] - k) / abs(k) < 0.25 and abs(res["tau"] - tau) / tau < 0.35 and abs(res["th"] - th) < max(0.35, th * 0.25)
+            good = res.get("type") == "fo" and abs(res["K"] - k) / abs(k) < 0.25 and abs(res["tau"] - tau) / tau < 0.35 and abs(res["th"] - th) < max(0.35, th * 0.25, tau * 0.05)
         else:
             good = res.get("type") == "int" and abs(res["Ki"] - k) / k < 0.2
         ok(f"bump test {lid}: fitted model close to the truth", good and not bt["bt"], json.dumps(res) + f' truth {ty} {k} {tau} {th}')
@@ -110,8 +110,8 @@ with sync_playwright() as pw:
     ok("LV-104 shut on MAN: the machine chest empties, the machine slows, then breaks", ch["min"] < 1 and ch["brk"] >= 1 and ch["cap"] < 0.8, json.dumps(ch))
     ov = R("V.setOP('LV-104',100);P.C.pmSp.auto=false;", 30, "return {lvl:V.state().lp['LV-104'].y,over:V.state().mcOver||0};")
     ok("LV-104 wide open: the chest overflows and fiber goes to the sewer", ov["lvl"] > 99 and ov["over"] > 1, json.dumps(ov))
-    nb = R("V.setOP('NV-101',5);", 120, "return {cp:P.knob.read().cp,inc:S.inc.map(i=>i.id),beat:(S.tot.beater||0)-ctx.beat0};")
-    ok("NV-101 shut on MAN: the tub thickens and the rotor trips (the knob model's consequence)", "rotortrip" in nb["inc"] or nb["cp"] > 7, json.dumps(nb))
+    nb = R("V.setOP('NV-101',5);ctx.e0=(S.evc&&S.evc.rotortrip)||0;", 120, "return {cp:P.knob.read().cp,trips:((S.evc&&S.evc.rotortrip)||0)-ctx.e0,t:V.T('NV-101'),feed:S.feed.slice(0,30).map(f=>f.text).filter(t=>/pulper/i.test(t)).slice(0,3)};")
+    ok("NV-101 shut on MAN: the tub thickens, the rotor trips, the crew resets the valve", nb["trips"] >= 1 and not nb["t"], json.dumps(nb))
     cr = R("V.setOP('FV-201',58);", 400, "const s=V.state();return {lp:s?Object.keys(s.lp):[],kc:s&&s.lp['FV-201']?s.lp['FV-201'].kc:null,feed:S.feed.slice(0,40).map(f=>f.text).filter(t=>/traced the trouble/.test(t))};")
     ok("the BW valve left on MAN making off-spec: the crew traces it and puts it back", (cr["kc"] in (None, 0.06)) and len(cr["feed"]) >= 1, json.dumps(cr))
     fp = R("S.free=true;V.setTune('FV-201',{kc:0.6,ti:0.2});", 400, "const s=V.state();return {kc:s&&s.lp['FV-201']?s.lp['FV-201'].kc:null};")

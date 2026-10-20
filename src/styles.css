@@ -1408,3 +1408,64 @@ body.pmpop .popmain[data-v="dcs"] #dcsOv .dcs{max-width:1180px;margin:0 auto}
 @media (max-width:520px){.rect td,.rect th{padding-left:4px;padding-right:4px}.rect td small{margin-left:2px}.recst button{min-width:26px;padding:2px 6px}}
 .manov .dcsh{flex-wrap:nowrap}.manov .manclk{white-space:nowrap}
 #qcsV{grid-template-columns:repeat(3,minmax(0,1fr))}
+/* ---- v6.9 the control valves: symbols on the DCS pictures, the faceplate and tuning panel (50k) ---- */
+.mimic .vsym{cursor:pointer}.mimic .vsym:focus{outline:none}.mimic .vsym:focus-visible .vbody,.mimic .vsym:focus-visible .vbub{stroke:#fff;stroke-width:2.5}
+.mimic .vhit{fill:transparent}.mimic .vld{stroke:#5c7398;stroke-width:1;stroke-dasharray:2 2}
+.mimic .vbody{fill:#4fd18b;stroke:#c3d3ea;stroke-width:1.4}.mimic .vstem{stroke:#c3d3ea;stroke-width:1.4}.mimic .vact{fill:#2b3b57;stroke:#c3d3ea;stroke-width:1.4}
+.mimic .vsym.st-tch .vact{fill:#3f6aa8}.mimic .vsym.st-man .vbody{fill:#ffb02e}.mimic .vsym.st-man .vact{fill:#7a5a12}.mimic .vsym.st-bad .vbody{fill:#ff6b5e}.mimic .vsym.st-bad .vact{fill:#7a1f1a}
+.mimic .vlab{fill:#e8eef8;font:700 10.5px ui-monospace,SFMono-Regular,Menlo,monospace}.mimic .vlab2{fill:#8ea4c4;font:600 10px ui-monospace,SFMono-Regular,Menlo,monospace}
+.mimic .vsym.st-man .vlab{fill:#ffd77a}.mimic .vsym.st-bad .vlab{fill:#ff8b7f}
+.mimic .vbub{fill:#16233a;stroke:#c3d3ea;stroke-width:1.4}.mimic .vbubl{stroke:#c3d3ea;stroke-width:1}.mimic .vbt{fill:#e8eef8;font:700 8.5px system-ui,sans-serif;text-anchor:middle}
+.mimic .vsym.st-tch .vbub{stroke:#7fb2ff}.mimic .vsym.st-man .vbub{stroke:#ffb02e}.mimic .vsym.st-bad .vbub{stroke:#ff6b5e}
+.vlvov{z-index:170!important}
+.vlvp{width:min(980px,100%);height:min(660px,calc(100dvh - 20px))}.vlvp .vlvb{flex:1;min-height:0}.vlvp .vlvwin[hidden]{display:none}
+.vlvp .dcsh{row-gap:6px}.vlvwh{color:#8ea4c4;font-size:12px}
+.vlvtabs{display:flex;gap:4px;flex-wrap:wrap;width:100%}.vlvtabs button{background:#22324f;color:#c3d3ea;border:1px solid #33476a;border-radius:6px;padding:6px 11px;font-weight:700;font-size:12px}
+.vlvtabs button[aria-selected="true"]{background:#c3d3ea;color:#0f1b2d}
+.vlvb{overflow:auto;padding:10px;display:grid;grid-template-columns:minmax(0,1.25fr) minmax(0,1fr);gap:12px;align-items:start;align-content:start}
+.vlvtr{background:#0f1b2d;border:1px solid #2c3e5c;border-radius:8px;padding:6px;position:sticky;top:0}
+.vlvtrh{display:flex;justify-content:space-between;align-items:center;gap:6px;flex-wrap:wrap}.vlvtrh .dcsleg{margin:0}
+.vlvwin button{padding:3px 8px!important;font-size:11px}
+#vlvCv{width:100%;height:auto;display:block;margin-top:6px;border-radius:6px}
+.vlvpane{display:flex;flex-direction:column;gap:8px;min-width:0}
+.vhealth{background:#1c2b45;border:1px solid #2c3e5c;border-left-width:4px;border-radius:8px;padding:6px 10px;display:flex;flex-direction:column;gap:2px}
+.vhealth b{font-size:14px;color:#4fd18b}.vhealth span{color:#dbe6f6}.vhealth small{color:#8ea4c4}
+.vhealth b.vh-osc,.vhealth b.vh-stick,.vhealth b.vh-dead{color:#ff8b7f}.vhealth b.vh-slow,.vhealth b.vh-sat,.vhealth b.vh-man{color:#ffd77a}
+.vrow{display:flex;align-items:center;gap:8px;flex-wrap:wrap}.vk{color:#8ea4c4;font-size:12px;min-width:74px;display:inline-flex;align-items:center;gap:4px}
+.vbig{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:6px}.vbig>div{background:#1c2b45;border:1px solid #2c3e5c;border-radius:8px;padding:6px 8px;display:flex;flex-direction:column;gap:3px;min-width:0}
+.vbig small{color:#8ea4c4;font-size:11px;display:flex;align-items:center;gap:4px}.vbig b{font-size:20px;color:#4fd18b;font-variant-numeric:tabular-nums}
+.vnum{display:flex;align-items:stretch;gap:3px}.vnum input{flex:1 1 0;width:0}.vnum1 input{width:100%}.vnum input,.vnum1 input{min-width:0;background:#0f1b2d;color:#fff;border:1px solid #33476a;border-radius:6px;padding:4px 6px;font:700 15px ui-monospace,Menlo,monospace}
+.vnum input:disabled,.vnum input:read-only{color:#8ea4c4;background:#16233a}
+.vnum button,.vglq{background:#22324f;color:#dbe6f6;border:1px solid #33476a;border-radius:6px;min-width:24px;font-weight:800;padding:0 5px}
+.vglq{min-width:0;width:18px;height:18px;border-radius:50%;padding:0;font-size:11px;line-height:16px;color:#7fb2ff}
+.vglpop{background:#22324f;border:1px solid #33476a;border-radius:8px;padding:6px 9px;color:#dbe6f6;font-size:12px;line-height:1.4}.vglpop b{color:#7fb2ff}
+.vpos .vbar{position:relative;flex:1;min-width:120px;height:14px;background:#0f1b2d;border:1px solid #33476a;border-radius:7px;overflow:hidden}
+.vbar #vBarA{position:absolute;left:0;top:0;bottom:0;background:#3f6aa8}.vbar #vBarC{position:absolute;top:-2px;bottom:-2px;width:3px;margin-left:-1px;background:#ffb02e}
+#vPos{font:700 12px ui-monospace,Menlo,monospace;color:#c3d3ea;min-width:90px}
+.vnote{margin:0;color:#c3d3ea;font-size:12px;line-height:1.4}.vnote.vsm{color:#8ea4c4;font-size:11px;margin-top:-4px}.vwhat{margin:0;color:#8ea4c4;font-size:12px;line-height:1.45}
+.vbtns{display:flex;gap:6px;flex-wrap:wrap}.vlvp .reroll{background:#22324f;color:#dbe6f6;border:1px solid #33476a;border-radius:6px;padding:6px 12px;font-weight:700}
+.vlvp .reroll.vpri{background:#4fd18b;color:#0f1b2d;border-color:#4fd18b}.vlvp .reroll:disabled{opacity:.45}
+.vsub{color:#8ea4c4;font-size:11px;letter-spacing:.08em;text-transform:uppercase;font-weight:700;display:flex;align-items:center;gap:6px;margin-top:2px}
+.vtn{display:grid;grid-template-columns:92px 1fr 104px;gap:8px;align-items:center}.vtn input[type=range]{width:100%;accent-color:#4fd18b}
+.vnum1{display:flex;align-items:center;gap:4px}.vnum1 b{font:700 14px ui-monospace,Menlo,monospace;color:#fff}.vnum1 small{color:#8ea4c4;font-size:11px;min-width:22px}
+.vscore b,.vbres .qcsgrid b{font-size:16px}
+.vsteps{margin:0;padding-left:18px;color:#c3d3ea;font-size:12px;line-height:1.5}
+.vmodel{margin:0;color:#dbe6f6;font-size:12.5px;line-height:1.5}.vmodel i{color:#ffd77a;font-style:normal}
+.vrow .vnum{width:130px}.vchar{display:grid;grid-template-columns:200px 1fr;gap:10px;align-items:center}.vchar svg{width:100%;background:#0f1b2d;border:1px solid #2c3e5c;border-radius:8px}
+.vchar .vax{fill:none;stroke:#5c7398;stroke-width:1}.vchar .vref{fill:none;stroke:#33476a;stroke-dasharray:3 3}.vchar .vcur{fill:none;stroke:#4fd18b;stroke-width:2.2}
+.vchar .vpt{fill:#ffb02e}.vchar .vat{fill:#8ea4c4;font:600 9px system-ui,sans-serif;text-anchor:middle}.vchar .vptl{fill:#ffd77a}
+.vgls{display:grid;grid-template-columns:1fr 1fr;gap:6px}.vgls div{background:#1c2b45;border:1px solid #2c3e5c;border-radius:8px;padding:6px 8px;font-size:12px;line-height:1.4;color:#c3d3ea}.vgls b{display:block;color:#7fb2ff}
+.vchl{display:flex;flex-direction:column;gap:6px}.vchc{display:grid;grid-template-columns:1fr auto;grid-template-areas:"t s" "l s";text-align:left;background:#1c2b45;color:#dbe6f6;border:1px solid #2c3e5c;border-radius:8px;padding:8px 10px}
+.vchc b{grid-area:t}.vchc span{grid-area:l;color:#8ea4c4;font-size:11px}.vchc i{grid-area:s;font-style:normal;color:#ffd77a;font-size:16px;letter-spacing:2px;align-self:center}
+.vstar{color:#ffd77a!important;letter-spacing:2px}
+.vlvf{align-items:center}.vlvclk{display:inline-flex;align-items:center;gap:6px}.vlvclk .seg button{padding:3px 9px;font-size:11px}
+@media (max-width:760px){
+  .vlvb{grid-template-columns:1fr}.vlvtr{position:static}
+  .vbig{grid-template-columns:1fr 1fr}.vbig>div:first-child{grid-column:1/-1}
+  .vtn{grid-template-columns:76px 1fr 92px}.vchar{grid-template-columns:1fr}.vchar svg{max-width:260px}.vgls{grid-template-columns:1fr}
+}
+@media (max-width:560px){.vlvov{padding:0}.vlvp{border-radius:0;max-height:100dvh;height:100dvh;width:100%}.vlvtabs button{padding:6px 8px;flex:1 1 auto}}
+.vlvrows{display:flex;flex-wrap:wrap;gap:6px;align-items:stretch}.vlvrows .dcssub{width:100%}
+.vlvrow{display:flex;gap:8px;align-items:center;flex:1 1 220px;background:#1c2b45;border:1px solid #2c3e5c;border-radius:8px;padding:7px 10px;color:#dbe6f6;text-align:left;min-height:40px}
+.vlvrow b{color:#7fb2ff;font:700 12px ui-monospace,Menlo,monospace}.vlvrow span{flex:1;color:#c3d3ea;font-size:12px}.vlvrow i{font:700 12px ui-monospace,Menlo,monospace;font-style:normal;color:#4fd18b;white-space:nowrap}
+.vlvrow i.st-man{color:#ffd77a}.vlvrow i.st-bad{color:#ff8b7f}

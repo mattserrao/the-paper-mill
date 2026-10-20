@@ -21,8 +21,8 @@ const vchInv=(v,f)=>{f=clamp(f,0,1);if(v.ch!=="eq")return f;const R=v.R||50;retu
 const VDEF=[
   {id:"NV-101",name:"Pulper consistency",area:"SPOT",medium:"dilution water",where:"Pulper, stock prep",
     what:"Dilution water into the pulper tub holds its consistency. Thick stock trips the rotor; thin stock overflows the tub and starves the chest.",
-    pv:{n:"Pulper consistency",u:"%",lo:0,hi:10,dp:2},sp0:5,spLim:[3,7],act:-1,tune:{kc:1.1,ti:4,td:0},
-    valve:{ch:"lin",R:50,stroke:10,db:0.4,hys:0.3,stick:0.5},proc:{type:"fo",th:30,tau:240},noise:0.02,lam:4,tol:0.1,bump:1500},
+    pv:{n:"Pulper consistency",u:"%",lo:0,hi:10,dp:2},sp0:5,spLim:[3,7],act:-1,tune:{kc:1.2,ti:20,td:0},
+    valve:{ch:"lin",R:50,stroke:10,db:0.4,hys:0.3,stick:0.5},proc:{type:"fo",th:30,tau:1200},noise:0.02,lam:20,tol:0.1,bump:6000},
   {id:"LV-104",name:"Machine chest level",area:"SPOT",medium:"refined stock",where:"Stock chest pump to the refiners",
     what:"Refined stock from the storage chest fills the machine chest. Run it empty and the machine starves; overfill it and stock goes to the sewer.",
     pv:{n:"Machine chest level",u:"%",lo:0,hi:100,dp:0},sp0:69,spLim:[30,90],act:1,tune:{kc:1.0,ti:16,td:0},
@@ -76,7 +76,7 @@ function vAct(L){const v=L.v,bl=((v.db||0)+(v.hys||0))/2,c=L.op;
   if(L.mv){const s=clamp(g,-r,r);L.pos=clamp(L.pos+s,0,100);if(Math.abs(g)<=r)L.mv=0;}}
 // the processes (1 s): B is the boundary from the game, W the world
 const VP={
-  "NV-101":(L,B)=>{if(B.pd)return;const yss=5-8*(vch(L.v,L.pos/100)-0.5)+(B.cd||0);L.y+=(yss-L.y)*(1-Math.exp(-1/240));},
+  "NV-101":(L,B)=>{if(B.pd)return;const yss=5-8*(vch(L.v,L.pos/100)-0.5)+(B.cd||0);L.y+=(yss-L.y)*(1-Math.exp(-1/1200));},   // (a 20-minute tub: the knobs' rule that trouble takes a while to show)
   "LV-104":(L,B,W)=>{let y=L.y+VLV.mcK/60*(vch(L.v,L.pos/100)/VLV.mcStd-B.qo);if(y>100){W.acc.mco+=y-100;y=100;}L.y=Math.max(0,y);},
   "FV-201":(L,B)=>{if(!B.run)return;const yss=B.bsp*B.ustd*vch(L.v,L.pos/100)*2*B.mr*B.cv/B.u0;L.y+=(yss-L.y)*(1-Math.exp(-1/20));},
   "LV-202":(L,B,W)=>{const cap=WE.silo,mk=VLV.siloQ*vch(L.v,L.pos/100)/3600;W.acc.make+=mk;let t=L.y/100*cap+(B.net||0)/3600+mk;const top=cap*WE.over;
@@ -234,7 +234,6 @@ function vFit(d,rec,base,dop){const [lo,hi]=vSpan(d),span=hi-lo,toP=v=>v/span*10
     // (dead time: where the new slope's line leaves the old baseline)
     const kx=Math.abs(s1-s0)>1e-9?(y0-ym+s1*km)/(s1-s0):0;
     return {type:"int",Ki,th:clamp(kx,0,n)/60,sub:"integrating",dy:toP(s1*60)};}
-  for(let i=0;i<n;i++)aft[i]-=s0*(i+1);   // (take out the drift the process had before the step)
   const yEnd=vAvg(aft.slice(-Math.max(5,Math.floor(n*0.1)))),dy=yEnd-y0,K=toP(dy)/dop;
   const tAt=f=>{for(let i=0;i<n;i++)if((aft[i]-y0)/(dy||1e-9)>=f)return i;return n;};
   const t28=tAt(0.283),t63=tAt(0.632),tau=Math.max(1,1.5*(t63-t28)),th=Math.max(0,t63-tau);
@@ -244,9 +243,11 @@ function vFit(d,rec,base,dop){const [lo,hi]=vSpan(d),span=hi-lo,toP=v=>v/span*10
 function vLambda(d,f,speed,form){const r3=v=>+(+v).toPrecision(3);
   if(f.type==="int"){const Ki=Math.max(1e-6,Math.abs(f.Ki)),th=f.th,lam=[2,1,0.5][speed]*d.lam;
     return {kc:r3((2*lam+th)/(Ki*(lam+th)*(lam+th))),ti:r3(2*lam+th),td:0,lam:r3(lam)};}
-  const K=Math.max(1e-6,Math.abs(f.K)),tau=Math.max(f.tau,0.01),th=f.th,m=Math.max(tau,th),lam=[2*m,m,Math.max(th,0.5*tau)][speed];
-  if(form==="PID")return {kc:r3((tau+th/2)/(K*(lam+th/2))),ti:r3(tau+th/2),td:r3(tau*th/(2*tau+th)),lam:r3(lam)};
-  return {kc:r3(tau/(K*(lam+th))),ti:r3(tau),td:0,lam:r3(lam)};}
+  // (self-regulating: λ from the dead time, or a quarter of τ on a lag-dominant loop; Ti = τ, but never more than
+  // 4(λ + θ), so a slow process still gets rid of a disturbance in good time: Skogestad's SIMC refinement of Lambda)
+  const K=Math.max(1e-6,Math.abs(f.K)),tau=Math.max(f.tau,0.01),th=f.th,m=Math.max(th,tau/4),lam=[2*m,m,Math.max(th,m/2)][speed];
+  if(form==="PID")return {kc:r3((tau+th/2)/(K*(lam+th/2))),ti:r3(Math.min(tau+th/2,4*(lam+th))),td:r3(tau*th/(2*tau+th)),lam:r3(lam)};
+  return {kc:r3(tau/(K*(lam+th))),ti:r3(Math.min(tau,4*(lam+th))),td:0,lam:r3(lam)};}
 
 /* ---- the trend: 1 s points while the model has a loop, a point a step while the game's model has it (outside S) ---- */
 const VT={S:null,n:3600,b:{}};
@@ -274,9 +275,9 @@ function vlvHealth(id,tr){const d=VD[id],v=vlvView(id),tol=vTol(d),n=tr?tr.t.len
   const amp=(Math.max(...e)-Math.min(...e))/2,span=(tr.t[n-1]-tr.t[0])||1,per=cr>1?2*span/cr:0;
   if(cr>=4&&amp>tol*0.75){
     // stick-slip: the valve sits still most of the time and moves in jumps while the output ramps
-    let flat=0,jumps=0;for(let i=1;i<n;i++){const dp=Math.abs(tr.pos[i]-tr.pos[i-1]);if(dp<0.02)flat++;else if(dp>0.25)jumps++;}
-    const L=S.vlv&&S.vlv.lp[id];
-    if(d.valve&&flat/n>0.6&&jumps>=4&&L&&L.v.stick>=0.5)return H("stick","Valve sticking","Sawtooth output, square valve moves: the stem sticks, the output winds up until it breaks free, and it overshoots. Tuning can't fix friction.","Lower the gain and lengthen Ti to slow the cycle down; in the mill you'd call maintenance to repack or rebuild the valve.");
+    let flat=0,jumps=0;const gap=[];for(let i=1;i<n;i++){const dp=Math.abs(tr.pos[i]-tr.pos[i-1]);if(dp<0.02)flat++;else if(dp>0.25)jumps++;gap.push(Math.abs(tr.op[i]-tr.pos[i]));}
+    gap.sort((a,b)=>a-b);const g90=gap[Math.floor(gap.length*0.9)]||0;
+    if(d.valve&&flat/n>0.5&&jumps>=4&&g90>1.2)return H("stick","Valve sticking","Sawtooth output, square valve moves: the stem sticks, the output winds up until it breaks free, and it overshoots. Tuning can't fix friction.","Lower the gain and lengthen Ti to slow the cycle down; in the mill you'd call maintenance to repack or rebuild the valve.");
     if(d.proc.th>=60&&per>0&&per<6*d.proc.th/60)return H("dead","Fighting the past",`It swings every ${per.toFixed(1)} min against ${(d.proc.th/60).toFixed(0)} min of dead time: the controller keeps correcting things it can't see yet.`,"Less gain and more patience: Lambda tuning with λ at least the dead time.");
     return H("osc","Oscillating",`Swinging ±${amp.toFixed(d.pv.dp)} ${d.pv.u} every ${per.toFixed(1)} min: too much gain, or too little Ti.`,"Halve Kc, or double Ti. A bump test gives you a starting point.");}
   const one=e.filter(x=>x>tol).length,oth=e.filter(x=>x<-tol).length;
@@ -285,11 +286,11 @@ function vlvHealth(id,tr){const d=VD[id],v=vlvView(id),tol=vTol(d),n=tr?tr.t.len
 
 /* ---- tuning challenges: a sandbox copy of a loop, run headless (the mill is untouched) ---- */
 const VCHAL=[
-  {id:"shake",title:"Tame the shake",loops:["NV-101"],min:30,start:{"NV-101":{kc:8,ti:0.5,td:0}},ev:[[2,"cd",-0.6],[15,"sp","NV-101",5.5]],
-    brief:"The pulper consistency loop is swinging. Bale water hits at 2 min and the setpoint steps to 5.5% at 15 min. Calm it down without making it sluggish."},
+  {id:"shake",title:"Tame the shake",loops:["NV-101"],min:120,start:{"NV-101":{kc:25,ti:0.6,td:0}},ev:[[2,"cd",-0.6],[60,"sp","NV-101",5.5]],
+    brief:"The pulper consistency loop is swinging. Bale water hits at 2 min and the setpoint steps to 5.5% at 60 min. Calm it down without making it sluggish."},
   {id:"wake",title:"Wake it up",loops:["LV-104"],min:40,start:{"LV-104":{kc:0.15,ti:60,td:0}},ev:[[2,"qo",1.25],[20,"qo",0.9]],
     brief:"The machine chest level loop barely moves. The machine speeds up at 2 min and slows at 20 min. A level is an integrating process: Ti works differently here."},
-  {id:"stick",title:"It's not you, it's the valve",loops:["NV-101"],min:40,start:{"NV-101":{kc:4,ti:0.6,td:0}},valve:{"NV-101":{stick:2.5}},ev:[[2,"cd",-0.4],[20,"cd",0]],trW:0,rvW:1.5,
+  {id:"stick",title:"It's not you, it's the valve",loops:["NV-101"],min:120,start:{"NV-101":{kc:10,ti:1,td:0}},valve:{"NV-101":{stick:2.5}},ev:[[2,"cd",-0.4],[60,"cd",0]],trW:0,rvW:1.5,
     brief:"This dilution valve sticks (2.5% stiction). No tuning makes it steady: every reversal of the valve is a jump. Find the calmest response with the fewest valve reversals."},
   {id:"inner",title:"Inner first",loops:["QC-300","PV-303"],min:30,start:{"QC-300":{kc:0.24,ti:3,td:0},"PV-303":{kc:2.6,ti:0.12,td:0}},ev:[[3,"dem",15],[18,"dem",-10]],
     brief:"The moisture loop (outer) sets the 3rd section steam (inner) on CAS. The drying load rises at 3 min and falls at 18 min. Tune the inner loop first."},
@@ -308,20 +309,25 @@ function vlvChallenge(cid,tune){const c=VCH[cid],B=vSbB(),W={lp:{},B,acc:{mco:0,
   const ev=c.ev.map(e=>e.slice());
   for(let s=1;s<=N;s++){const tm=s/60;
     for(const e of ev)if(!e.done&&tm>=e[0]){e.done=1;if(e[1]==="sp")W.lp[e[2]].sp=e[3];else if(e[1]==="dem")B.dem+=e[2];else B[e[1]]=e[2];}
-    const p0=W.lp[main].pos;vSub(W,s);const L=W.lp[main];
+    const vm=c.loops.find(i=>!VD[i].ctl),p0=W.lp[vm].pos;vSub(W,s);const L=W.lp[main];
     const er=Math.abs(L.sp-L.pvm)/(hi-lo)*100;iae+=er/60;if(s>N*0.8)late=Math.max(late,er);else if(s>N*0.4&&s<=N*0.6)early=Math.max(early,er);
-    if(!VD[main].ctl){const dp=L.pos-p0;trav+=Math.abs(dp);if(dp&&ld&&Math.sign(dp)!==ld)rev++;if(dp)ld=Math.sign(dp);}
+    {const dp=W.lp[vm].pos-p0;trav+=Math.abs(dp);if(dp&&ld&&Math.sign(dp)!==ld)rev++;if(dp)ld=Math.sign(dp);}   // (the valve: the inner loop's, under a master)
     if(s%2===0){o.t.push(tm);o.sp.push(L.sp);o.pv.push(L.pvm);o.op.push(L.op);o.pos.push(VD[main].ctl?L.op:L.pos);
       const In=c.loops[1]&&W.lp[c.loops[1]];if(In){o.in.sp.push(In.sp);o.in.pv.push(In.pvm);}}}
-  const score=iae+trav*(c.trW!=null?c.trW:0.004)+rev*(c.rvW||0),unstable=late>Math.max(early*1.3,1)&&late>8;
+  const score=iae+trav*(c.trW!=null?c.trW:0.015)+rev*(c.rvW||0),unstable=late>Math.max(early*1.3,1)&&late>8;
   return {trace:o,iae,trav,rev,score:unstable?Infinity:score,unstable};}
-// the reference: the best of the three Lambda tunings from the true model (what a careful engineer gets)
+// the reference: what a careful engineer gets. Lambda (moderate) from the true model, then a coarse search around it,
+// loop by loop, inner loops first (headless; once per challenge, cached)
 const VCHREF={};
-function vlvChRef(cid){if(VCHREF[cid]!=null)return VCHREF[cid];const c=VCH[cid];let best=Infinity;
-  const fit={"NV-101":{type:"fo",K:-0.8,tau:4,th:0.5},"LV-104":{type:"int",Ki:0.25,th:0.08},"FV-201":{type:"fo",K:1,tau:0.33,th:3},"QC-300":{type:"fo",K:-2.25,tau:3,th:1.3},"PV-303":{type:"fo",K:1.68,tau:0.5,th:0.04}};
-  for(let sp=0;sp<3;sp++){const t={};for(const id of c.loops)t[id]=vLambda(VD[id],fit[id],sp,"PI");const r=vlvChallenge(cid,t);if(r.score<best)best=r.score;}
+function vlvChRef(cid){if(VCHREF[cid]!=null)return VCHREF[cid];const c=VCH[cid];
+  const fit={"NV-101":{type:"fo",K:-0.8,tau:20,th:0.5},"LV-104":{type:"int",Ki:0.25,th:0.08},"FV-201":{type:"fo",K:1,tau:0.33,th:3},"QC-300":{type:"fo",K:-2.25,tau:3,th:1.3},"PV-303":{type:"fo",K:1.68,tau:0.5,th:0.04}};
+  const t={};for(const id of c.loops)t[id]=vLambda(VD[id],fit[id],1,"PI");let best=vlvChallenge(cid,t).score;
+  const order=c.loops.slice().reverse();
+  for(let pass=0;pass<2;pass++)for(const id of order){const b0=Object.assign({},t[id]);let bt=b0;
+    for(const km of [0.25,0.5,1,2,4])for(const tm of [0.1,0.25,0.5,1,2]){if(km===1&&tm===1)continue;const tr=Object.assign({},t,{[id]:{kc:b0.kc*km,ti:b0.ti*tm,td:0}}),s=vlvChallenge(cid,tr).score;if(s<best){best=s;bt=tr[id];}}
+    t[id]=bt;}
   return VCHREF[cid]=best;}
-function vlvStars(cid,score){if(!isFinite(score))return 0;const r=vlvChRef(cid);return score<=r*1.15?3:score<=r*1.6?2:score<=r*3?1:0;}
+function vlvStars(cid,score){if(!isFinite(score))return 0;const r=vlvChRef(cid);return score<=r*1.2?3:score<=r*1.7?2:score<=r*3?1:0;}
 // best stars per mill (saved with the run; nothing to do with the mill's own loops)
 function vlvChSave(cid,st){const c=S.vlvc||(S.vlvc={});if(st>(c[cid]||0))c[cid]=st;}
 // v6.9: older saves: the 2nd/3rd section steam held on MANUAL (D.man) and the basis weight valve on MANUAL are the new loops

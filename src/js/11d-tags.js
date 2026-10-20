@@ -64,7 +64,15 @@ const TAGS=[
   ["load","Loading","PLAN","rolls/h",()=>_R().load,"a.load"],["outq","Trucks waiting to load","PLAN","trucks",()=>S.outQ.length,""],
   ["openo","Open orders","PLAN","orders",()=>S.ord&&!S.zen?S.ord.list.filter(o=>o.st==="open").length:null,"a.openo"],
   ["lateo","Late orders","PLAN","orders",()=>S.ord&&!S.zen?S.ord.list.filter(o=>o.st==="open"&&S.t>o.due+ORD.grace).length:null,"a.lateo"],
-  ["price","Paper price (grade on the machine)","PLAN","$/t",()=>priceOf(C.grade),"a.price"],["profit","Profit rate","PLAN","$/day",()=>S.profitRate||0,""]];
+  ["price","Paper price (grade on the machine)","PLAN","$/t",()=>priceOf(C.grade),"a.price"],["profit","Profit rate","PLAN","$/day",()=>S.profitRate||0,""],
+  // v6.9 the control loops (07h): each one's PV and output, and the moisture controller's steam setpoint
+  ["nv101pv","NV-101 pulper consistency (PV)","SPOT","%",()=>vlvView("NV-101").pv,""],["nv101op","NV-101 dilution valve","SPOT","% open",()=>vlvView("NV-101").pos,"a.v101"],
+  ["lv104pv","LV-104 machine chest level (PV)","SPOT","%",()=>vlvView("LV-104").pv,""],["lv104op","LV-104 machine chest valve","SPOT","% open",()=>vlvView("LV-104").pos,"a.v104"],
+  ["fv201pv","FV-201 basis weight (PV)","WET","lb",()=>S.pm==="run"?vlvView("FV-201").pv:null,""],["fv201op","FV-201 basis weight valve","WET","% open",()=>vlvView("FV-201").pos,"a.v201"],
+  ["lv202pv","LV-202 white water silo level (PV)","WET","%",()=>vlvView("LV-202").pv,""],["lv202op","LV-202 silo makeup valve","WET","% open",()=>vlvView("LV-202").pos,"a.v202"],
+  ["qc300pv","QC-300 reel moisture (PV)","DET","%",()=>S.pm==="run"?vlvView("QC-300").pv:null,""],["qc300op","QC-300 steam setpoint out","DET","kPa",()=>vlvView("QC-300").op*3,""],
+  ["pv302pv","PV-302 2nd section steam (PV)","DET","kPa",()=>vlvView("PV-302").pv,""],["pv302op","PV-302 steam valve","DET","% open",()=>vlvView("PV-302").pos,"a.v302"],
+  ["pv303pv","PV-303 3rd section steam (PV)","DET","kPa",()=>vlvView("PV-303").pv,""],["pv303op","PV-303 steam valve","DET","% open",()=>vlvView("PV-303").pos,"a.v303"]];
 const TAGI=Object.fromEntries(TAGS.map((t,i)=>[t[0],i]));
 const tagName=id=>{const t=TAGS[TAGI[id]];return t?t[1]:id;};
 const tagUnit=id=>{const t=TAGS[TAGI[id]];return t?t[3]:"";};

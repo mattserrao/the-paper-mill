@@ -55,7 +55,7 @@ MIMIC.WET={title:"WET END",h:282,trends:MIMIC_KNOB.WET.trends,
     MT(240,172,"vac","VAC",r=>kf(r.vac)+" kPa"),MT(240,88,"edge","EDGE",r=>(r.edge>=0?"+":"")+Math.round(r.edge)+" mm"),MT(240,194,"gtrav","GUIDE",r=>r.gm?"AUTO "+Math.round(Math.min(1,r.gtrav)*100)+"%":"MAN"),
     MT(340,172,"couchSol","SOL",r=>kf(r.couchSol)+"%"),MT(340,194,"cs","PIT",r=>r.couch?"RUN":"STOP"),MT(440,172,"osc","OSC",r=>Math.round(r.osc)+"%"),
     MT(567,172,"pl","LOAD",r=>Math.round(r.pl)+" kN/m"),MT(567,194,"pressSol","SOL",r=>kf(r.pressSol)+"%"),MT(567,66,"psp","SPD",DV.psp),MT(260,232,"wwl","LEVEL",DV.wwl),MT(260,246,"wwg","VOL",DV.wwg),MT(370,232,"drain","DRAIN",DV.drn),MT(560,232,"pressw","PRESS",DV.pw),
-    MT(60,216,"hbc","HBC",DV.hbc),MT(60,230,"bwv","VLV",DV.bwv),MT(572,54,"hum","RH",DV.hum)]};
+    MT(60,216,"hbc","HBC",DV.hbc),MT(572,54,"hum","RH",DV.hum)]};   // (v6.9: the basis weight valve is FV-201, drawn by 50k)
 MIMIC.DET={title:"DRY END",h:280,trends:MIMIC_KNOB.DET.trends,
   eq:[[14,96,80,50,"OPEN DRAW"],[112,80,130,80,"1ST SECTION"],[260,80,170,80,"2ND / 3RD SECTION"],[448,90,74,60,"REEL"],[546,90,84,60,"WINDER"],[546,214,84,30,"ROLL CONV","s"]],
   ln:[["M94 121 H112"],["M242 120 H260"],["M430 120 H448"],["M522 120 H546"],["M630 120 H636 V229 H630"],["M640 66 H177 V80 M345 66 V80",1]],   // (v6.5.4: the steam header comes in from the boiler house, UTIL)
@@ -76,7 +76,7 @@ AREA_N.UTIL="Utilities";
 /* ---- alarms by area (an upset shows on the screen of the equipment it hits) ---- */
 const DCS_WET=new Set(["fabric","felt","slime","fogfan","oscfail","couchpit","runner"]),DCS_UTIL=new Set(["permit","icedintake","boiler","brownout"]);
 function dcsArea(id){if(MOTEV[id])return MOTEV[id].a;if(DCS_UTIL.has(id))return "UTIL";const g=EV[id]&&EV[id].g;if(g==="stock")return "SPOT";if(g==="machine")return DCS_WET.has(id)?"WET":"DET";return null;}
-function dcsAlarms(a,r,L){const al=(on,txt,hi)=>{if(on)L.push([txt,hi]);};
+function dcsAlarms(a,r,L){const al=(on,txt,hi)=>{if(on)L.push([txt,hi]);};vlvAlarms(a,L);   // (v6.9: the control valves, 50k)
   for(const i of S.inc){if(dcsArea(i.id)!==a)continue;const m=MOTEV[i.id];L.push([m?`${m.name.toUpperCase()} STOPPED · RESTART IN ${Math.ceil(i.left)} MIN`:EV[i.id].name.toUpperCase(),true]);}
   if(a==="SPOT"){al(S.tank/P.tankCap>0.92,"STOCK CHEST LEVEL HI",S.tank/P.tankCap>0.98);al(dcsOn("badocc"),"JUNK LOAD HIGH",true);
     {const Wt=S.wat;al(!!(Wt&&Wt.L<WAT.cap*0.25),Wt&&Wt.short>0?"WHITE WATER CHEST EMPTY · STOCK THICK":"WHITE WATER CHEST LEVEL LO",!!(Wt&&Wt.short>0));}
@@ -105,15 +105,10 @@ function dcsSetDefs(a){const D=()=>DCS_DRAW();
     ["slv","Slice opening","remote from the DCS · B",-100,100,1,()=>G3.SLC?G3.SLC.v*100:0,v=>dcsSlice("v",v),"",null,1],
     ["slh","Slice lip position","remote from the DCS · L",-100,100,1,()=>G3.SLC?G3.SLC.h*100:0,v=>dcsSlice("h",v),"",null,1],
     // v6.8 the basis weight loop (07g): the setpoint (the grade's target, trimmed lighter if the strength will carry it) and the valve
-    ["bws","Basis weight setpoint",`grade ${C.grade} target ${bwStd().toFixed(2)} lb · ring crush spec ${rctSpec()} lbf`,+(bwStd()*(1+WE.trimMin)).toFixed(2),+(bwStd()*(1+WE.trimMax)).toFixed(2),0.05,()=>bwSp(),v=>bwSetTrim(v),"lb",null,0],
-    ["bwv","Basis weight valve",S.we&&S.we.m==="manual"?"MANUAL · holds the valve, speed and stock move the weight":"AUTO · trims the thick stock to hold the setpoint (QCS reads "+WE.dead+" min late)",0,WE.valveMax,1,()=>S.we?S.we.v:50,v=>bwSetValve(v),"%",null,0,
-      {on:()=>!(S.we&&S.we.m==="manual"),flip:()=>{const W=weState();bwSetMode(W.m==="auto"?"manual":"auto");}}]];
+    ["bws","Basis weight setpoint",`grade ${C.grade} target ${bwStd().toFixed(2)} lb · ring crush spec ${rctSpec()} lbf`,+(bwStd()*(1+WE.trimMin)).toFixed(2),+(bwStd()*(1+WE.trimMax)).toFixed(2),0.05,()=>bwSp(),v=>bwSetTrim(v),"lb",null,0]];
   if(a==="DET")return [
     ["wsp","Machine speed (wire)","same setpoint as on WET",Math.round(1200/D()),Math.round((3300+P.spBonus)/D()),5,()=>C.pmSp.v/D(),v=>dcsCardSet("pmSp",Math.round(v*D()/10)*10),"fpm","pmSp"],
-    ["wdr","Winder speed","",0,P.winderMax,1,()=>C.wdr.v,v=>dcsCardSet("wdr",v),"t/h","wdr"],
-    // v6.5.4: the 2nd/3rd section steam: AUTO is the moisture loop (holds the reel at 8%); moving it holds that pressure
-    ["st3","2nd / 3rd section steam",S.dry&&S.dry.man!=null?"MANUAL · holds this pressure, the moisture follows the load":"AUTO · moisture control holds the reel at "+DRY.m0+"%",40,DRY.ceil,1,()=>S.dry?(S.dry.man??S.dry.st3):120,v=>{if(!S.zen)dryState().man=v;},"kPa",null,0,
-      {on:()=>!(S.dry&&S.dry.man!=null),flip:()=>{if(S.zen)return;const D=dryState();D.man=D.man!=null?null:Math.round(D.st3);}}]];
+    ["wdr","Winder speed","",0,P.winderMax,1,()=>C.wdr.v,v=>dcsCardSet("wdr",v),"t/h","wdr"]];   // (v6.9: the 2nd / 3rd section steam is PV-302 / PV-303 under QC-300: tap them on the picture, 50k)
   return [];}
 function dcsSlice(k,v){const D=G3.SLC;if(!D||G3.slcFix||S.zen)return;slcSet(k,v/100);const g=D.geo();if(g.lipX-g.wet>=6.8&&typeof slcBreak==="function")slcBreak();}
 function dcsSetRows(a,cs){const defs=dcsSetDefs(a);
