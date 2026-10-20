@@ -94,3 +94,4 @@ One line per version, oldest first. Add a line here with every release: build.py
 6.7.0-t1   Control Room (Test): Planning, Water and Quality Screens, Split-Screen Trends of Anything, What Moves With What, Process Flow Views
 6.7.0      Control Room: Planning, Water and Quality Screens, Split-Screen Trends of Anything, What Moves With What, Process Flow Views
 6.7.1-t1   New Grade Set (Test): Grades 24, 28, 31 and 34Super, Same Tons per Hour
+6.7.1      New Grade Set: Grades 24, 28, 31 and 34Super, Same Tons per Hour

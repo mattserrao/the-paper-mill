@@ -1,7 +1,8 @@
 # Changelog
 
 
-## v6.7.1-t1 (2026-10-19): new grade set (test branch test/v6.7.1-grades)
+## v6.7.1 (2026-10-19): new grade set
+Built on test/v6.7.1-grades (as 6.7.1-t1), merged into main. Check: `tools/migcheck.py` (an older build's save continues on the new grades).
 - **Four new grades replace the old set, one for one:** 24 (light medium, 25.52 lb, 2,632 fpm), 28 (medium, 28.03 lb,
   2,262 fpm), 31 (heavy medium, 31.10 lb, 2,147 fpm) and 34Super (high-strength board, 34.01 lb, 2,027 fpm). Each is a
   little heavier than the grade it replaces and runs slower by the same fraction, so tons per hour are unchanged
