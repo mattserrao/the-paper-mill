@@ -1417,6 +1417,16 @@ body.pmpop .popmain[data-v="dcs"] #dcsOv .dcs{max-width:1180px;margin:0 auto}
 .recA{background:#b98a52}.recC{background:#a3906e}.recM{background:#727986}
 .recseq{display:flex;flex-wrap:wrap;gap:4px;margin:8px 0}.recb{font:700 10.5px var(--f-body);font-style:normal;color:#fff;min-width:26px;text-align:center;padding:3px 4px;border-radius:4px;opacity:.75}
 .recb.on{opacity:1;outline:2px solid #4fd18b;outline-offset:1px}
+/* v6.8.3 free play "Let the mill run" (Settings > Run the mill) */
+.setgrp .check.afk{align-items:center;min-height:40px}.setgrp .check.afk>span{display:flex;flex-direction:column;line-height:1.2}
+.setgrp .check.afk small{font-size:11.5px;color:var(--muted)}
+/* v6.8.3 menu tidy */
+.seg>span{display:flex;align-items:center;padding:0 10px;font-size:12.5px;color:var(--muted);border-right:1px solid var(--line);white-space:nowrap}
+.rect .recy{white-space:nowrap}.rect .recy small{display:block;margin-left:0}
+.rect th{white-space:nowrap}
+@media (max-width:520px){.rect td,.rect th{padding-left:4px;padding-right:4px}.rect td small{margin-left:2px}.recst button{min-width:26px;padding:2px 6px}}
+.manov .dcsh{flex-wrap:nowrap}.manov .manclk{white-space:nowrap}
+#qcsV{grid-template-columns:repeat(3,minmax(0,1fr))}
 </style>
 </head>
 <body class="app">
@@ -1509,7 +1519,7 @@ body.pmpop .popmain[data-v="dcs"] #dcsOv .dcs{max-width:1180px;margin:0 auto}
 <p class="trignote" id="trignote">Pick an upset to set it off now, or tap a running one to clear it.</p><p class="trignote locked" id="trignoteLock">Setting off upsets by hand is locked during a season or a survival run. Try them in free play.</p><div class="groups" id="chaosgrid"></div>
 </div>
 </section></div>
-<div class="v2pane" data-pane="ctl"><div class="v2sub">Run the mill</div><div class="setgrp end" id="v2ctlrow"><label class="setfield setname"><span class="setlbl">Machine name</span><input autocomplete="off" id="pmname" maxlength="14" spellcheck="false" value="PM1"/></label><button hidden id="balance">Balance all</button></div><div class="v2sub">View</div><div class="setgrp" id="v2viewrow"><button id="viewReset">Whole mill</button><label class="check"><input checked id="viewShadows" type="checkbox"/> Drop shadows</label><div aria-label="Cutaway buildings" class="seg" id="cutMode" role="group"><span>Cutaway</span><button aria-pressed="true" data-c="auto" title="Roofs lift off as you zoom in">Auto</button><button aria-pressed="false" data-c="on" title="Roofs always off">On</button><button aria-pressed="false" data-c="off" title="Roofs always on">Off</button></div><div aria-label="Section labels" class="seg lblseg" hidden id="lblMode" role="group"><span>Labels</span><button aria-pressed="true" data-m="auto" title="Labels fade out when you stop moving the view">Auto</button><button aria-pressed="false" data-m="on">On</button><button aria-pressed="false" data-m="off">Off</button></div></div><div class="v2sub">Performance</div><div class="setstack" id="v2perfrow"></div><details class="areactl" id="areactl"><summary class="v2sub">Area controls<span class="lockn">Auto · locked during a season</span></summary><section class="cards" id="cards">
+<div class="v2pane" data-pane="ctl"><div class="v2sub">Run the mill</div><div class="setgrp end" id="v2ctlrow"><label class="setfield setname"><span class="setlbl">Machine name</span><input autocomplete="off" id="pmname" maxlength="14" spellcheck="false" value="PM1"/></label><button hidden id="balance">Balance all</button><label class="check afk" hidden id="afkRow" title="Free play: event cards are declined for you and nothing pauses the mill, so you can leave it running"><input id="afk" type="checkbox"/><span>Let the mill run<small>Declines pop-ups for you</small></span></label></div><div class="v2sub">View</div><div class="setgrp" id="v2viewrow"><button id="viewReset">Whole mill</button><label class="check"><input checked id="viewShadows" type="checkbox"/> Drop shadows</label><div aria-label="Cutaway buildings" class="seg" id="cutMode" role="group"><span>Cutaway</span><button aria-pressed="true" data-c="auto" title="Roofs lift off as you zoom in">Auto</button><button aria-pressed="false" data-c="on" title="Roofs always off">On</button><button aria-pressed="false" data-c="off" title="Roofs always on">Off</button></div><div aria-label="Section labels" class="seg lblseg" hidden id="lblMode" role="group"><span>Labels</span><button aria-pressed="true" data-m="auto" title="Labels fade out when you stop moving the view">Auto</button><button aria-pressed="false" data-m="on">On</button><button aria-pressed="false" data-m="off">Off</button></div></div><div class="v2sub">Performance</div><div class="setstack" id="v2perfrow"></div><details class="areactl" id="areactl"><summary class="v2sub">Area controls<span class="lockn">Auto · locked during a season</span></summary><section class="cards" id="cards">
 <div class="card"><h2><span class="n">1</span>Inbound OCC trucks<span class="pill" id="p-in">–</span></h2>
 <div class="row" data-key="inRate"><label for="s-inRate">Truck arrivals</label><span class="val"></span><div class="ctl"><input id="s-inRate" max="8" min="0" step="0.1" type="range"/><button aria-pressed="true" class="auto">AUTO</button></div></div>
 <div class="read" id="r-in">–</div></div>
@@ -3262,7 +3272,10 @@ function cardHave(c){const ids=[...new Set([...String(c.odds).matchAll(/LV\("(\w
   if(ids.length===1)return has.length?"You have it.":"You don't have it yet.";
   return !no.length?"You have both.":!has.length?"You have neither yet.":`You have ${nm(has[0])}, not ${nm(no[0])}.`;}
 let cardEl=null;
-function openCard(c){const o=c.odds();S.cards.open={c,o};running=false;
+// v6.8.3 free play "Let the mill run" (Settings): the card is declined on the spot and the sim doesn't pause
+const afkOn=()=>!!(S&&S.free&&S.afk);
+function openCard(c){if(afkOn()){log(`Declined for you: ${c.title}`,"");if(typeof civCardDecline==="function")civCardDecline(c);return;}
+  const o=c.odds();S.cards.open={c,o};running=false;
   if(!cardEl){cardEl=document.createElement("div");cardEl.className="overlay";cardEl.id="dealOv";cardEl.hidden=true;document.body.appendChild(cardEl);
     // v5.0.4: while a card waits for an answer, Tab cycles through its own buttons only
     document.addEventListener("keydown",e=>{if(e.key!=="Tab"||cardEl.hidden||cardEl.classList.contains("dealres")||!(S.cards&&S.cards.open&&S.cards.open.c))return;
@@ -5322,7 +5335,7 @@ async function openBoard(tab){if(tab!=="season"&&tab!=="surv")tab=survRun()?"sur
   {const se=S.season,rk=se&&se.rank,res=se&&se.result;if(rk&&res&&se.submitted&&(tab==="surv")===!!se.surv){if(rk.rank<=rows.length){const row=L.children[rk.rank-1];if(row){row.classList.add("me","mine");row.scrollIntoView({block:"center"});}}
     else{const d=document.createElement("div");d.className="lbrow me mine pin";const mk=(c,t)=>Object.assign(document.createElement("span"),{className:c,textContent:t});
       d.append(mk("r",rk.rank),mk("n",se.submitted),mk("sc",sv?survTime(res.minutes):money(res.score)),mk("m",[sv?"wave "+res.wave:"",f0(res.tons)+" t shipped",res.incidents+" upsets",new Date().toLocaleDateString(undefined,{month:"short",day:"numeric"}),"your run",res.mill].filter(Boolean).join(" · ")));L.append(d);d.scrollIntoView({block:"center"});}}}}
-function setFree(on){S.free=on;if(on)civDrop();   // (v5.1 QA: a choice card would otherwise keep the game paused)
+function setFree(on){S.free=on;if(!on)S.afk=false;if(on)civDrop();   // (v5.1 QA: a choice card would otherwise keep the game paused)
   if(on&&S.season&&S.season.on){const sv=survRun();if(G3.save&&G3.save.drop)G3.save.drop();S.season=null;S.lead=null;applyUpgrades();seasonLocks(false);BANNERS.push({text:(sv?"Survival run":"Season")+" abandoned: free play scores can't go on the leaderboard.",t:null});}
   if(on)BANNERS.push({text:"Free play: upgrades are free and you can't go bankrupt. No leaderboard.",t:null,kind:"good"});
   if(on&&G3.labelIntro)G3.labelIntro();
@@ -12196,7 +12209,7 @@ function no3D(){G3.ok=false;$("no3d").hidden=false;$("no3d-retry").onclick=()=>l
     /* v6.1 t17: set off while a sheet or the stats panel is open (the Upsets list), the cut-scene waits and plays the
        moment it closes, if the bird is still on the lines (it used to be skipped) */
     let pend=0;const SHEETS=".v2sheet.open,.v2top.open";
-    G3.birdCine=()=>{if(NOCINE||!G3.on||S.zen||document.hidden||C)return;if(document.querySelector(SHEETS)){pend=performance.now();return;}pend=0;   // v5.0.6: not over an open sheet or the stats panel (it hid the panel and ate the clicks); the upset itself still happens
+    G3.birdCine=()=>{if(NOCINE||!G3.on||S.zen||document.hidden||C||afkOn())return;   // (v6.8.3: no cut-scene while the mill is left to run)if(document.querySelector(SHEETS)){pend=performance.now();return;}pend=0;   // v5.0.6: not over an open sheet or the stats panel (it hid the panel and ate the clicks); the upset itself still happens
       try{start();}catch(e){console.error("bird cut-scene",e);finish();}};
     const v=new THREE.Vector3();
     G3.cineTick=now=>{if(!C){if(pend&&!document.querySelector(SHEETS)){const t0=pend;pend=0;if(performance.now()-t0<120000&&S.inc.some(i=>i.id==="birdline"))G3.birdCine();}return;}try{const c=C,dt=Math.min(0.1,(now-c.last)/1000);c.last=now;c.t+=dt;const t=c.t;G3.lastMove=performance.now();
@@ -13894,13 +13907,13 @@ const bqOn=()=>typeof baleOn==="function"&&baleOn();
 function recHtml(Q){const r=Q.rec,N=recN(r),Y=recPiles(),R=S.rates||{},sq=recSeqC(r),cur=Math.floor(Q.fed+1e-9)%N,feed=R.feed||0;
   const rows=BTK.map(q=>{const b=BT[q],sh=r[q]/N,dy=feed>0.5?Y[q]/(feed*sh*24):null;
     return `<tr><td><i class="recsw rec${q}"></i>${b.n}</td><td>${money(btPrice(q))}/t <small>${b.dp>0?"+":b.dp<0?"−":"±"}$${Math.abs(b.dp)}</small></td><td>${Math.round(b.rej*100)} %</td>
-      <td>${Math.round(Y[q]).toLocaleString()} t${dy!=null?` <small>${dy.toFixed(1)} d</small>`:""}</td>
+      <td class="recy">${Math.round(Y[q]).toLocaleString()} t${dy!=null?`<small>${dy.toFixed(1)} d</small>`:""}</td>
       <td class="recst"><button type="button" data-rec="${q}-" aria-label="One fewer ${b.n}"${r[q]<=1?" disabled":""}>−</button><b>${r[q]}</b><button type="button" data-rec="${q}+" aria-label="One more ${b.n}"${r[q]>=RECMAX?" disabled":""}>+</button></td></tr>`;}).join("");
   const cost=BTK.reduce((a,q)=>a+r[q]*btPrice(q),0)/N,rj=1-recY(r),rate=recRate(),slow=rate<P.pulperMax-0.05;
   const chips=sq.map((q,i)=>`<i class="recb rec${q}${i===cur?" on":""}" title="${BT[q].n}">${BT[q].s}</i>`).join("");
   const mw=Y.M<=0.5&&r.M>0,out=BTK.filter(q=>Y[q]<=0.5).map(q=>BT[q].n);
   return `<p class="dcsfield">The pulper is fed in this order, bale by bale, and the trucks bring whichever kind is short. A bales cost more and pulp clean; Mixed Waste is cheap but a quarter of it goes to landfill.</p>
-    <table class="rect"><thead><tr><th>Bale</th><th>Price</th><th>Rejects</th><th>In the yard</th><th>Per cycle</th></tr></thead><tbody>${rows}</tbody></table>
+    <table class="rect"><thead><tr><th>Bale</th><th>Price</th><th>Rejects</th><th>Yard</th><th>Per cycle</th></tr></thead><tbody>${rows}</tbody></table>
     <div class="recseq" aria-label="Feed sequence">${chips}</div>
     <div class="qcsv"><div><small>Recipe cost</small><b>${money(cost)}/t</b><small>${N} bales a cycle</small></div>
       <div><small>Pulper rejects</small><b>${(rj*100).toFixed(1)} %</b><small>now ${((1-Q.fy)*100).toFixed(1)} % · landfill $${LANDFILL}/t</small></div>
@@ -14500,6 +14513,10 @@ G3.rm={open:()=>rmOpen(),close:()=>rmClose(),N:RM_N,E:RM_E,pick:id=>rmPick(id,tr
   $("v2home").addEventListener("click",()=>{if(G3.titleShow){menu.hidden=true;G3.titleShow();}});
   $("v2survNew").addEventListener("click",goSurv);
   $("v2free").addEventListener("click",()=>{setFree(!S.free);play();});
+  // v6.8.3 "Let the mill run" (free play only): an event card waiting when it's switched on is declined too
+  {const cb=$("afk"),row=$("afkRow");if(cb&&row){cb.addEventListener("change",()=>{S.afk=!!cb.checked&&!!S.free;
+      if(S.afk&&S.cards&&S.cards.open&&S.cards.open.c){const nb=document.getElementById("deal-no");if(nb)nb.click();}});
+    UI_TICKS.push(()=>{const f=!!(S&&S.free&&!S.zen);if(row.hidden===f)row.hidden=!f;const v=!!(S&&S.afk);if(cb.checked!==v)cb.checked=v;});}}
   $("v2board").addEventListener("click",openBoard);
   // v5.0.4: zen ends a season or survival run, so with one on it asks first (tap again within 3 s), like Reset mill
   {let arm=0;$("v2zen").addEventListener("click",()=>{const b=$("v2zen"),sm=b.querySelector("small"),run=S.season&&S.season.on;
@@ -14964,7 +14981,7 @@ function camPullOn(){try{return localStorage.getItem("paper-mill-campull")!=="of
   ["The goal","goal",`<p>Your mill turns old corrugated boxes (OCC) into new paperboard. Trucks bring bales in, the paper machine makes giant reels, the winder cuts them into rolls and trucks take them away. You earn money on every ton shipped.</p>
     <ul><li><b>Season:</b> 30 days. Make as much profit as you can. Your profit is your score on the season leaderboard.</li>
     <li><b>Survival:</b> no last day. Each wave (4 days, ending with a planned outage) brings more upsets and higher costs. The run ends when cash falls below −$1.5M; your time survived is your score.</li>
-    <li><b>Free Play:</b> no clock, free upgrades and no leaderboard. Good for trying things out.</li>
+    <li><b>Free Play:</b> no clock, free upgrades and no leaderboard. Good for trying things out. <b>Settings → Let the mill run</b> declines event cards for you, so the mill keeps running while you're away.</li>
     <li><b>Zen Mode:</b> sit back and watch the mill run.</li></ul>`],
   ["Fiber in, paper out","flow",`<ol><li><b>Receiving:</b> trucks unload bales of OCC into the bale yard: A bales, C bales and Mixed Waste, each on its own pile, fed to the pulper in the order of your recipe (Planning).</li><li><b>Stock prep:</b> the pulper turns bales back into pulp; cleaners, screens and the disk thickener strip out sand, staples and plastic; the stock chest stores clean pulp; the refiners strengthen the fibers.</li>
     <li><b>Paper machine:</b> the headbox sprays pulp onto the forming fabric, the presses squeeze water out, the dryer cans dry the sheet and the reel winds it up.</li><li><b>Winder:</b> cuts each reel into customer rolls.</li><li><b>Warehouse and shipping:</b> rolls are stored, then loaded onto trucks.</li></ol>
@@ -15055,6 +15072,7 @@ function camPullOn(){try{return localStorage.getItem("paper-mill-campull")!=="of
     ["t/h","Tons per hour."],
     ["Tell","The visible sign that a piece of equipment is about to fail. Only seen on a Round."],
     ["Control room","Report → Control room: the process flow, the DCS screens, planning (with the OCC recipe), quality, water, trends, the relationship map and manning in one place. The DCS screens also open from the operator consoles in the mill."],
+    ["Let the mill run","Free play only (Settings → Run the mill): event cards are declined for you and logged, and nothing pauses the mill, so you can leave it running. Keep the game's tab in front: browsers slow a hidden tab."],
     ["Second screen","On a desktop, the control room in its own window for another monitor: tiles for each screen, and ← Control room to come back. Report → Control room or Settings → View."],
     ["Relationship map","Report → Control room: every reading, what drives it and what it moves. Tap one to light up its links; −, Fit and + zoom."],
     ["Manning","Report → Control room: the team on shift, every tech and operator with their hard hat, who is covering a vacation (overtime or a swap, and from which team), any unfilled gap and the time to the next shift change."],
@@ -15090,7 +15108,9 @@ function camPullOn(){try{return localStorage.getItem("paper-mill-campull")!=="of
     const qi=ov.querySelector("#helpQ");if(qi){qi.value=q;qi.addEventListener("input",()=>{ov.querySelector("#helpList").innerHTML=glossRows(qi.value);});}
     ov.querySelector("#helpTut").addEventListener("click",tutorial);}
   const guide=()=>HG.map(([h,id,b],i)=>`<details class="hsec"${i===0?" open":""} id="hg-${id}"><summary>${h}</summary><div class="hsb">${b}</div></details>`).join("");
-  const glossRows=q=>{const k=q.trim().toLowerCase(),rows=GL.filter(([t,d])=>!k||t.toLowerCase().includes(k)||d.toLowerCase().includes(k));
+  // (v6.8.3: listed A to Z, whatever order the terms were added in)
+  const GLS=GL.slice().sort((a,b)=>a[0].localeCompare(b[0],"en",{sensitivity:"base"}));
+  const glossRows=q=>{const k=q.trim().toLowerCase(),rows=GLS.filter(([t,d])=>!k||t.toLowerCase().includes(k)||d.toLowerCase().includes(k));
     return rows.length?rows.map(([t,d])=>`<div class="hterm"><dt>${escHTML(t)}</dt><dd>${escHTML(d)}</dd></div>`).join(""):`<p class="hnone">No terms match “${escHTML(q)}”.</p>`;};
   const glossary=q=>`<input type="search" id="helpQ" class="hq" placeholder="Filter terms" aria-label="Filter the glossary" autocomplete="off"><dl class="hgl" id="helpList">${glossRows(q)}</dl>`;
   // a run is going (or paused behind the menu) and the 3D mill is there to tour
@@ -15139,7 +15159,7 @@ function camPullOn(){try{return localStorage.getItem("paper-mill-campull")!=="of
 }
 /* ---- v6.7 Report > Control room: one place for the mill's screens (the process flow, the DCS, planning, quality, water
    and trends). The DCS still opens from the operator consoles in the mill too; the process flow left Settings. ---- */
-{const CR=[["pf","Process flow","Money and tons through the mill"],["dcs","DCS","Stock prep, wet end, dry end, utilities"],["PLAN","Planning","Orders, inventory, trucks"],
+{const CR=[["pf","Process flow","Money and tons through the mill"],["dcs","DCS","Stock prep, wet end, dry end, utilities"],["PLAN","Planning","Orders, inventory, trucks, OCC recipe"],
     ["QCS","Quality","Specs, off-spec log, beater"],["WATER","Water","Fresh water and the water balance"],["TREND","Trends","Trend anything, find what moves together"],["rm","Relationship map","What drives each reading, and what it moves"],["man","Manning","Who's on shift, vacations and cover"]];
   const el=$("ctlRoom");
   if(el){el.innerHTML=`<div class="crh"><b>Control room</b><small id="crNote">The mill's screens. The DCS screens also open from the operator consoles in the mill.</small></div>
@@ -15175,7 +15195,7 @@ function manRow(r,seat){const h=r.home,w=r.who;
   const note=r.cover?`${seat} · covering for ${h.name}, on vacation`:seat,tag=r.cover?`<em>${r.cover.type==="swap"?"Swap":"Overtime"} · ${w.team} team</em>`:"";
   return `<li${r.cover?' class="mancov"':""}>${manHat(w.team)}<span><b>${w.name}</b><small>${note}</small></span>${tag}</li>`;}
 function manDraw(){if(!MANUI.open||!S)return;const s=manIdx(),m=manShift(s),key=s+"|"+m.nt;
-  const left=Math.max(0,(s+1)*720-S.t),hh=Math.floor(left/60),mm=Math.floor(left%60),clk=`Next shift change in ${hh} h ${String(mm).padStart(2,"0")} m`;
+  const left=Math.max(0,(s+1)*720-S.t),hh=Math.floor(left/60),mm=Math.floor(left%60),clk=`Shift change in ${hh}:${String(mm).padStart(2,"0")}`;
   const c=$("manClk");if(c&&c.textContent!==clk)c.textContent=clk;
   if(MANUI.key===key)return;MANUI.key=key;
   const nxt=manShift(s+1),cov=[...m.techs,...m.ops].filter(r=>r.cover).length;

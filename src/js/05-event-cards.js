@@ -332,7 +332,10 @@ function cardHave(c){const ids=[...new Set([...String(c.odds).matchAll(/LV\("(\w
   if(ids.length===1)return has.length?"You have it.":"You don't have it yet.";
   return !no.length?"You have both.":!has.length?"You have neither yet.":`You have ${nm(has[0])}, not ${nm(no[0])}.`;}
 let cardEl=null;
-function openCard(c){const o=c.odds();S.cards.open={c,o};running=false;
+// v6.8.3 free play "Let the mill run" (Settings): the card is declined on the spot and the sim doesn't pause
+const afkOn=()=>!!(S&&S.free&&S.afk);
+function openCard(c){if(afkOn()){log(`Declined for you: ${c.title}`,"");if(typeof civCardDecline==="function")civCardDecline(c);return;}
+  const o=c.odds();S.cards.open={c,o};running=false;
   if(!cardEl){cardEl=document.createElement("div");cardEl.className="overlay";cardEl.id="dealOv";cardEl.hidden=true;document.body.appendChild(cardEl);
     // v5.0.4: while a card waits for an answer, Tab cycles through its own buttons only
     document.addEventListener("keydown",e=>{if(e.key!=="Tab"||cardEl.hidden||cardEl.classList.contains("dealres")||!(S.cards&&S.cards.open&&S.cards.open.c))return;

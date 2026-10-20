@@ -175,6 +175,10 @@
   $("v2home").addEventListener("click",()=>{if(G3.titleShow){menu.hidden=true;G3.titleShow();}});
   $("v2survNew").addEventListener("click",goSurv);
   $("v2free").addEventListener("click",()=>{setFree(!S.free);play();});
+  // v6.8.3 "Let the mill run" (free play only): an event card waiting when it's switched on is declined too
+  {const cb=$("afk"),row=$("afkRow");if(cb&&row){cb.addEventListener("change",()=>{S.afk=!!cb.checked&&!!S.free;
+      if(S.afk&&S.cards&&S.cards.open&&S.cards.open.c){const nb=document.getElementById("deal-no");if(nb)nb.click();}});
+    UI_TICKS.push(()=>{const f=!!(S&&S.free&&!S.zen);if(row.hidden===f)row.hidden=!f;const v=!!(S&&S.afk);if(cb.checked!==v)cb.checked=v;});}}
   $("v2board").addEventListener("click",openBoard);
   // v5.0.4: zen ends a season or survival run, so with one on it asks first (tap again within 3 s), like Reset mill
   {let arm=0;$("v2zen").addEventListener("click",()=>{const b=$("v2zen"),sm=b.querySelector("small"),run=S.season&&S.season.on;

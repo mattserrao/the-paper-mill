@@ -193,13 +193,13 @@ const bqOn=()=>typeof baleOn==="function"&&baleOn();
 function recHtml(Q){const r=Q.rec,N=recN(r),Y=recPiles(),R=S.rates||{},sq=recSeqC(r),cur=Math.floor(Q.fed+1e-9)%N,feed=R.feed||0;
   const rows=BTK.map(q=>{const b=BT[q],sh=r[q]/N,dy=feed>0.5?Y[q]/(feed*sh*24):null;
     return `<tr><td><i class="recsw rec${q}"></i>${b.n}</td><td>${money(btPrice(q))}/t <small>${b.dp>0?"+":b.dp<0?"−":"±"}$${Math.abs(b.dp)}</small></td><td>${Math.round(b.rej*100)} %</td>
-      <td>${Math.round(Y[q]).toLocaleString()} t${dy!=null?` <small>${dy.toFixed(1)} d</small>`:""}</td>
+      <td class="recy">${Math.round(Y[q]).toLocaleString()} t${dy!=null?`<small>${dy.toFixed(1)} d</small>`:""}</td>
       <td class="recst"><button type="button" data-rec="${q}-" aria-label="One fewer ${b.n}"${r[q]<=1?" disabled":""}>−</button><b>${r[q]}</b><button type="button" data-rec="${q}+" aria-label="One more ${b.n}"${r[q]>=RECMAX?" disabled":""}>+</button></td></tr>`;}).join("");
   const cost=BTK.reduce((a,q)=>a+r[q]*btPrice(q),0)/N,rj=1-recY(r),rate=recRate(),slow=rate<P.pulperMax-0.05;
   const chips=sq.map((q,i)=>`<i class="recb rec${q}${i===cur?" on":""}" title="${BT[q].n}">${BT[q].s}</i>`).join("");
   const mw=Y.M<=0.5&&r.M>0,out=BTK.filter(q=>Y[q]<=0.5).map(q=>BT[q].n);
   return `<p class="dcsfield">The pulper is fed in this order, bale by bale, and the trucks bring whichever kind is short. A bales cost more and pulp clean; Mixed Waste is cheap but a quarter of it goes to landfill.</p>
-    <table class="rect"><thead><tr><th>Bale</th><th>Price</th><th>Rejects</th><th>In the yard</th><th>Per cycle</th></tr></thead><tbody>${rows}</tbody></table>
+    <table class="rect"><thead><tr><th>Bale</th><th>Price</th><th>Rejects</th><th>Yard</th><th>Per cycle</th></tr></thead><tbody>${rows}</tbody></table>
     <div class="recseq" aria-label="Feed sequence">${chips}</div>
     <div class="qcsv"><div><small>Recipe cost</small><b>${money(cost)}/t</b><small>${N} bales a cycle</small></div>
       <div><small>Pulper rejects</small><b>${(rj*100).toFixed(1)} %</b><small>now ${((1-Q.fy)*100).toFixed(1)} % · landfill $${LANDFILL}/t</small></div>

@@ -5,7 +5,7 @@
   ["The goal","goal",`<p>Your mill turns old corrugated boxes (OCC) into new paperboard. Trucks bring bales in, the paper machine makes giant reels, the winder cuts them into rolls and trucks take them away. You earn money on every ton shipped.</p>
     <ul><li><b>Season:</b> 30 days. Make as much profit as you can. Your profit is your score on the season leaderboard.</li>
     <li><b>Survival:</b> no last day. Each wave (4 days, ending with a planned outage) brings more upsets and higher costs. The run ends when cash falls below −$1.5M; your time survived is your score.</li>
-    <li><b>Free Play:</b> no clock, free upgrades and no leaderboard. Good for trying things out.</li>
+    <li><b>Free Play:</b> no clock, free upgrades and no leaderboard. Good for trying things out. <b>Settings → Let the mill run</b> declines event cards for you, so the mill keeps running while you're away.</li>
     <li><b>Zen Mode:</b> sit back and watch the mill run.</li></ul>`],
   ["Fiber in, paper out","flow",`<ol><li><b>Receiving:</b> trucks unload bales of OCC into the bale yard: A bales, C bales and Mixed Waste, each on its own pile, fed to the pulper in the order of your recipe (Planning).</li><li><b>Stock prep:</b> the pulper turns bales back into pulp; cleaners, screens and the disk thickener strip out sand, staples and plastic; the stock chest stores clean pulp; the refiners strengthen the fibers.</li>
     <li><b>Paper machine:</b> the headbox sprays pulp onto the forming fabric, the presses squeeze water out, the dryer cans dry the sheet and the reel winds it up.</li><li><b>Winder:</b> cuts each reel into customer rolls.</li><li><b>Warehouse and shipping:</b> rolls are stored, then loaded onto trucks.</li></ol>
@@ -96,6 +96,7 @@
     ["t/h","Tons per hour."],
     ["Tell","The visible sign that a piece of equipment is about to fail. Only seen on a Round."],
     ["Control room","Report → Control room: the process flow, the DCS screens, planning (with the OCC recipe), quality, water, trends, the relationship map and manning in one place. The DCS screens also open from the operator consoles in the mill."],
+    ["Let the mill run","Free play only (Settings → Run the mill): event cards are declined for you and logged, and nothing pauses the mill, so you can leave it running. Keep the game's tab in front: browsers slow a hidden tab."],
     ["Second screen","On a desktop, the control room in its own window for another monitor: tiles for each screen, and ← Control room to come back. Report → Control room or Settings → View."],
     ["Relationship map","Report → Control room: every reading, what drives it and what it moves. Tap one to light up its links; −, Fit and + zoom."],
     ["Manning","Report → Control room: the team on shift, every tech and operator with their hard hat, who is covering a vacation (overtime or a swap, and from which team), any unfilled gap and the time to the next shift change."],
@@ -131,7 +132,9 @@
     const qi=ov.querySelector("#helpQ");if(qi){qi.value=q;qi.addEventListener("input",()=>{ov.querySelector("#helpList").innerHTML=glossRows(qi.value);});}
     ov.querySelector("#helpTut").addEventListener("click",tutorial);}
   const guide=()=>HG.map(([h,id,b],i)=>`<details class="hsec"${i===0?" open":""} id="hg-${id}"><summary>${h}</summary><div class="hsb">${b}</div></details>`).join("");
-  const glossRows=q=>{const k=q.trim().toLowerCase(),rows=GL.filter(([t,d])=>!k||t.toLowerCase().includes(k)||d.toLowerCase().includes(k));
+  // (v6.8.3: listed A to Z, whatever order the terms were added in)
+  const GLS=GL.slice().sort((a,b)=>a[0].localeCompare(b[0],"en",{sensitivity:"base"}));
+  const glossRows=q=>{const k=q.trim().toLowerCase(),rows=GLS.filter(([t,d])=>!k||t.toLowerCase().includes(k)||d.toLowerCase().includes(k));
     return rows.length?rows.map(([t,d])=>`<div class="hterm"><dt>${escHTML(t)}</dt><dd>${escHTML(d)}</dd></div>`).join(""):`<p class="hnone">No terms match “${escHTML(q)}”.</p>`;};
   const glossary=q=>`<input type="search" id="helpQ" class="hq" placeholder="Filter terms" aria-label="Filter the glossary" autocomplete="off"><dl class="hgl" id="helpList">${glossRows(q)}</dl>`;
   // a run is going (or paused behind the menu) and the 3D mill is there to tour

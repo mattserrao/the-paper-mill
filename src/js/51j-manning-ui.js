@@ -22,7 +22,7 @@ function manRow(r,seat){const h=r.home,w=r.who;
   const note=r.cover?`${seat} · covering for ${h.name}, on vacation`:seat,tag=r.cover?`<em>${r.cover.type==="swap"?"Swap":"Overtime"} · ${w.team} team</em>`:"";
   return `<li${r.cover?' class="mancov"':""}>${manHat(w.team)}<span><b>${w.name}</b><small>${note}</small></span>${tag}</li>`;}
 function manDraw(){if(!MANUI.open||!S)return;const s=manIdx(),m=manShift(s),key=s+"|"+m.nt;
-  const left=Math.max(0,(s+1)*720-S.t),hh=Math.floor(left/60),mm=Math.floor(left%60),clk=`Next shift change in ${hh} h ${String(mm).padStart(2,"0")} m`;
+  const left=Math.max(0,(s+1)*720-S.t),hh=Math.floor(left/60),mm=Math.floor(left%60),clk=`Shift change in ${hh}:${String(mm).padStart(2,"0")}`;
   const c=$("manClk");if(c&&c.textContent!==clk)c.textContent=clk;
   if(MANUI.key===key)return;MANUI.key=key;
   const nxt=manShift(s+1),cov=[...m.techs,...m.ops].filter(r=>r.cover).length;

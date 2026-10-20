@@ -11,6 +11,12 @@
   takes 4 % off ring crush (less draw adds it). Under 1.5 % the sheet flutters into the dryers and breaks come more
   often (×1.5 at 1.0 %, ×2.2 at 0.5 %). The wrinkles under 1 % and the snap over 2.4 % are as before. Both links are on
   the relationship map.
+- **Let the mill run** (free play, Settings → Run the mill): event cards are declined for you (logged as "Declined for
+  you") and the bird cut-scene is skipped, so nothing pauses the mill and you can leave it. Off again when free play ends.
+- **Menu tidy, desktop and phone:** the glossary is A to Z; the Cutaway label sits in its own cell of the switch; the
+  OCC recipe table no longer wraps on a phone (Yard column: tons with days of feed under them); Manning's header keeps
+  the close button on its row ("Shift change in 11:53"); the Quality screen's six headline tiles are 3 × 2 at every
+  width (Reel speed sat alone on a row); the Planning tile mentions the OCC recipe.
 - **Help brought up to date** (`51f-help.js`). New guide pages: Control room and second screen (with the OCC recipe and
   map zoom) and Shifts and the crew (DuPont 12, team hard hats, vacation cover, short shifts). New glossary terms:
   A bales / C bales / Mixed Waste, Second screen, Relationship map, Manning, DuPont 12, Hard hats, Ring crush, Showers.
