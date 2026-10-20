@@ -1,6 +1,30 @@
 # Changelog
 
 
+## v6.10.0-t1 (2026-10-20): The Reliability and Electrical Update (test build)
+Built on test/v6.10-reliability. Plan: claude/reliability-v610-plan.md. Seasons, survival and free play (not zen). Functionality first; no balancing yet.
+- **Ten critical VFD motors** (`07i-assets.js`): pulper rotor, refiners A and B, fan pump, couch roll, 1st and 2nd press, dryer section, reel drum,
+  winder drum. Each has bearing (vibration), motor (ADX) and drive health that wear while it runs, faster when pushed (refining energy, press load,
+  a thick pulper, a drive over 100%). Health raises the odds of a fault; the dice decide when. Own dice streams (`rel`, `relx`), so every other upset keeps its timing.
+- **Shift rounds:** each maintenance tech does one vibration round a shift (two machines, most overdue first); the new **electrical tech** does one
+  ADX motor-test round. A tech called to an upset skips or abandons it and that data goes stale (grey after a day, Unknown after three).
+- **Faults found early:** a failing bearing shows on a vibration round ~36 h ahead, a failing motor on an ADX test ~72 h ahead. Planned repair from
+  the Reliability screen: 20% of the bill, no downtime. Missed: **bearing failure** (maintenance pair) or **motor failure** (electrical tech).
+  **Drive failure** comes with no warning (likelier over ~95% load and after lightning or a brownout). Each has civics choices and a 3D effect.
+- **Electrical tech** (manning `03f`, 3D `38c`): one per shift with a team hat and a wage; takes motor and drive failures, lightning and the bird on
+  the line (moved off the maintenance queue); walks ADX rounds with a test cart; changes drives at the lineup (the faulted module comes out red, the spare goes in).
+- **MCC building** (`38c-3d-mcc.js`): south of the machine hall with the shop's pop-away roof (the south wall lifts with it); three drive lineups
+  with live status lights, the 480 V incoming section, a desk and spare drives; a transformer pad, a duct bank to a riser pole, and an overhead feeder from each map's substation (`42b` `LM.feeder`).
+- **Reliability screen** (Report → Control room, and on the DCS bar): this shift's rounds and who walks them, every machine's vibration state
+  (good, imbalance, misalignment, outer race, inner race, imminent), ADX health, drive load and the reading's age; history, pins, planned repairs and outage changeouts.
+- **Drives screen:** each lineup's drives with status, load bar and heat-sink temperature, alarms, MCC power; every drive load is a trend tag (`dl_*`, `mcckw`).
+- **Upset cards** quote what the rounds last said about the failed machine (the new failures, and refiner clash, felt, fabric, driveshaft, wrap, winder),
+  and those linked upsets get likelier as that machine's bearings wear. The Vibration Report arrows include faults the rounds found.
+- **Outage changeouts:** the outage plan lists flagged machines; tick bearings, motor or drive (cost and minutes, back to full health). The outage's major job renews what it touches.
+- **Relationship map:** a Drives column and a Substation power driver, linked from rotor amps, refiner power, speed, vacuum, press load, tension and the winder.
+- **Help and glossary:** a Reliability and electrical page, outage changeouts, and 12 new terms. End screens show rounds done and skipped, faults caught and failures.
+- **Water tower** moved to the north-east corner (84, −24), clear of the new building on all four maps.
+
 ## v6.9.2 (2026-10-20): Release review
 Built and tested on test/v6.9.2-release.
 - **Help and glossary** (`51f-help.js`): about 30 outdated statements corrected (tell lead and caught-repair share, area

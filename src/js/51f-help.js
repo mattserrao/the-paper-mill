@@ -13,15 +13,23 @@
   ["The bottleneck and upgrades","up",`<p>The mill can only run as fast as its narrowest step. Every mill starts with one bottleneck: the <b>Upgrades</b> tab names it, and upgrades that fix it are 25% off. Fix it first.</p>
     <ul><li>One upgrade a day in a season or survival run; the day turns over at 6 AM. Free play has no limit.</li><li>The bottleneck card at the top of Upgrades shows its tons per hour against the machine's. <b>Report → Live mill → Flow &amp; bottleneck</b> draws every step as wide as it can run, so you can see what holds the mill back next.</li></ul>`],
   ["Upsets","upsets",`<p>Breakdowns, sheet breaks, hayouts, storms and the odd pigeon. Each costs a repair bill and often downtime.</p>
-    <ul><li>A red tag marks each one; tap it to fly there. The <b>Upsets</b> tab lists what's down.</li><li>Paper machine jobs go to the machine crew one at a time. Maintenance techs work in pairs. More techs and spare parts make repairs faster.</li>
+    <ul><li>A red tag marks each one; tap it to fly there. The <b>Upsets</b> tab lists what's down.</li><li>Paper machine jobs go to the machine crew one at a time. Maintenance techs work in pairs; the electrical tech takes motors, drives and blackouts. More techs and spare parts make repairs faster.</li>
     <li>In a season or survival run, many upsets ask you to choose how to deal with them (see Civics).</li><li>Event cards offer deals and trials: a cost now for a chance at a gain.</li></ul>`],
   ["Daily rounds and tells","rounds",`<p>Failures show before they happen. Equipment that is about to fail has a <b>tell</b> in its area for 4.5 in-game days (in survival, a little less each wave, never under a day): a red-hot motor, a pump shaking loose, a leaking flange, a hissing steam joint, pallets against a heater.</p>
     <ul><li>Tap <b>Round</b> in the dock once a day and pick an area. An operator walks it for about 15 seconds while the game keeps running.</li><li>Tap anything failing. Caught: a planned repair at 5% of the bill, no downtime, and in a season or survival run Machinery and Labor go up. Missed: it breaks down as usual.</li>
     <li>An area with nothing wrong still nudges Labor or Community.</li><li>The <b>Vibration Report</b> shows which areas are climbing. It comes with the Reliability program (Upgrades → Maintenance) or with Dot.</li>
     <li>Acts of nature, people problems and supply trouble come without warning.</li></ul>`],
+  ["Reliability and electrical","reliab",`<p>Ten critical machines run on variable-speed drives (VFDs): the pulper rotor, refiners A and B, the fan pump, the couch roll, both presses, the dryer section, the reel drum and the winder drum. Their drives sit in three lineups in the <b>MCC</b>, the electrical building beside the machine hall, fed from the substation.</p>
+    <ul><li><b>Wear:</b> each machine's bearings and motor wear while it runs, faster when you push it (refining energy, press load, a thick pulper, a drive over 100% load). Worn equipment fails more often, but the dice still decide when.</li>
+    <li><b>Shift rounds:</b> every maintenance tech does one <b>vibration round</b> a shift (two machines, most overdue first), and the <b>electrical tech</b> one <b>ADX motor test</b> round. A tech called to an upset first skips the round, and that data goes stale. More techs (Upgrades → Maintenance) means more rounds.</li>
+    <li><b>Faults:</b> a failing bearing shows on a vibration round about a day and a half before it fails; a failing motor shows on an ADX test about three days ahead. Found in time, plan the repair on the Reliability screen: a fifth of the bill, no downtime. Missed, it fails: a bearing failure (maintenance) or a motor failure (the electrical tech).</li>
+    <li><b>Drives</b> fail with no warning, more often above about 95% load and after lightning or a brownout. The electrical tech changes the drive in the MCC.</li>
+    <li><b>Report → Control room → Reliability</b> shows every machine's vibration state (good, imbalance, misalignment, outer race, inner race, imminent failure), its ADX health, its drive, and when each was last measured. Pin a machine to the next round, plan repairs, and tick changeouts for the next planned outage. <b>Drives</b> shows each drive's load, trendable.</li>
+    <li>Upset cards quote what the rounds last said about the machine that broke.</li></ul>`],
   ["Planned outages","outages",`<p>The mill comes down on purpose for a 4-hour shutdown: in a season on days 7, 14, 21 and 28, in survival every 4 days.</p>
     <ul><li>24 hours before, you set a maintenance budget for stock prep, the wet end and the dry end. More money means fewer breakdowns until the next outage.</li>
     <li><b>Outage prep checklist</b> (3 days before; tap the outage countdown under the clock, or open it from the Round card): four items unlock at 72, 48, 24 and 8 hours out. Each one done shortens the outage and returns 5% of the budget.</li>
+    <li><b>Changeouts:</b> the outage plan lists machines the rounds flagged (and any not measured lately). Tick new bearings, a new motor or a new drive: each adds cost and outage time and comes back at full health.</li>
     <li>"Watch the crews" on the outage notice slows the clock so you can see the work.</li></ul>`],
   ["Civics","civics",`<p>Four meters under the top bar, 0 to 100: <b>Economy</b> (customers and prices), <b>Labor</b> (the crew), <b>Machinery</b> (the equipment) and <b>Community</b> (the town and permits).</p>
     <ul><li>Bands: Crisis (under 20), Strained, Steady, Strong and Excellent (over 80). Low meters hurt more than high ones help.</li>
@@ -108,6 +116,18 @@
     ["Press section","Rolls that squeeze water out of the wet sheet through the felts."],
     ["Pulper","A giant blender that turns bales and water into pulp."],
     ["QCS","Quality control system: scanners that measure the sheet's weight, moisture, ring crush and color; the Quality screen shows the spec sheet, the off-spec log and grade changes."],
+    ["ADX test","A motor test the electrical tech runs with a portable tester (ADX): insulation to ground, winding resistance and a rotor bar check. It finds a failing motor about three days before it fails. One round a shift, two motors."],
+    ["MCC","Motor control centre: the electrical building beside the machine hall. It holds the three drive lineups (MCC-1 stock prep, MCC-2 the machine's sectional drives, MCC-3 the winder) and the 480 V incoming section, fed from the substation."],
+    ["VFD (drive)","Variable-frequency drive: runs a motor at the speed the process wants. Load is its output against its rated power; over about 95% it trips more often, and over 100% it wears its motor faster."],
+    ["Drive lineup","A row of drive cabinets in the MCC, one per motor, with a status light each: green running, amber idle, red faulted."],
+    ["Electrical tech","One per shift, working from the MCC: drive changeouts, motor failures, resetting the mill after a blackout, and the ADX motor tests. Busy on a job, the ADX round is skipped."],
+    ["Vibration round","Each maintenance tech's once-a-shift walk with a vibration analyser, two machines at a time, most overdue first. Skipped when the tech is called to an upset."],
+    ["Vibration states","What the spectrum says about a bearing: good; imbalance or misalignment (1× or 2× running speed: they load the bearing); outer race defect (weeks left); inner race defect (wearing fast); imminent failure (days)."],
+    ["Bearing failure","A motor bearing that failed in service: the machine stops until maintenance changes it. A vibration round finds it about a day and a half ahead."],
+    ["Motor failure","A motor that burnt out (a winding to ground, broken rotor bars or a burnt connection): the electrical tech fits the spare. An ADX test finds it about three days ahead."],
+    ["Drive failure","A drive that faults and won't reset: the machine it runs stops until the electrical tech changes the drive in the MCC. No warning."],
+    ["Reliability screen","Report → Control room → Reliability: this shift's rounds, every critical machine's vibration, ADX and drive readings with their age, planned repairs, pins and outage changeouts."],
+    ["Changeout","Replacing a worn part at a planned outage (bearings, a motor or a drive): booked on the outage plan, it adds cost and minutes and the part comes back at full health."],
     ["Ragger","A rope that collects wire, plastic and string from the pulper. If its tail breaks, the pulper stops."],
     ["Reel","The giant roll the paper machine winds up (about 100 tons)."],
     ["Refiner","Grinds fibers between plates so they bond into stronger paper. The refiners take stock from the stock chest and feed the machine chest. Refining energy (kWh/t, standard 60) closes the plate gap; around 120 kWh/t the plates clash, the refiners trip and nothing goes forward until they are re-plated."],
@@ -121,11 +141,11 @@
     ["Stock chest","A big tank of clean pulp between stock prep and the paper machine. A full chest keeps the machine running when stock prep stops."],
     ["t/h","Tons per hour."],
     ["Tell","The visible sign that a piece of equipment is about to fail. Only seen on a Round."],
-    ["Control room","Report → Control room: the process flow, the DCS screens, planning (with the OCC recipe), quality, water, trends, the relationship map and manning in one place. The DCS screens also open from the operator consoles in the mill."],
+    ["Control room","Report → Control room: the process flow, the DCS screens, planning (with the OCC recipe), quality, water, trends, reliability, drives, the relationship map and manning in one place. The DCS screens also open from the operator consoles in the mill."],
     ["Let the mill run","Free play only (Settings → Run the mill): event cards are declined for you and logged, and nothing pauses the mill, so you can leave it running. Keep the game's tab in front: browsers slow a hidden tab."],
     ["Second screen","On a desktop, the control room in its own window for another monitor: tiles for each screen, and ← Control room to come back. Report → Control room or Settings → View."],
     ["Relationship map","Report → Control room: every reading, what drives it and what it moves. Tap one to light up its links; −, Fit and + zoom."],
-    ["Manning","Report → Control room: the team on shift, every tech and operator with their hard hat, who is covering a vacation (overtime or a swap, and from which team), any unfilled gap and the time to the next shift change."],
+    ["Manning","Report → Control room: the team on shift, every tech, the electrical tech and every operator with their hard hat, who is covering a vacation (overtime or a swap, and from which team), any unfilled gap and the time to the next shift change."],
     ["DuPont 12","The 12-hour shift rotation the crews work: a 28-day cycle of 4 nights, 3 off, 3 days, 1 off, 3 nights, 3 off, 4 days and 7 off, with four teams each a week apart. Shifts change at 6 AM and 6 PM."],
     ["Hard hats","Techs and operators wear their team's color: A blue, B green, C orange, D white. Someone covering from another team keeps their own color."],
     ["Ring crush","The board's strength test (QCS). More refining raises it; stickies, a light sheet and too much open draw lower it. Under the grade's spec the reel goes to the beater."],
@@ -142,7 +162,7 @@
     ["Wet bales","Loads over 12% moisture are paid at air-dry weight; wet bales give less fiber, and contamination raises rejects and sheet breaks (stickies)."],
     ["Tied rolls","A set that comes off the winder with its two rolls stuck together where the slitter didn't cut clean. They're sawn apart and both go to the beater."],
     ["Upset","Anything that goes wrong: a breakdown, a break, a storm, a fine."],
-    ["Vibration Report","The Round card's trend arrows: which areas have something about to fail."],
+    ["Vibration Report","The Round card's trend arrows: which areas have something about to fail, including faults the shift rounds found."],
     ["Wave","In survival, the stretch between planned outages. Each wave is rougher and costlier than the last."],
     ["Wet end / dry end","The wet end is the headbox, forming section and presses; the dry end is the dryers, reel and winder."],
     ["Freeness (CSF)","How fast water drains out of the stock, in mL CSF. About 450 at the standard refining; more refining lowers it and the sheet drains slower on the table. On the SPOT DCS."],
