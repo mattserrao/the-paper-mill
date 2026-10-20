@@ -14,13 +14,13 @@ const POPOK=()=>{try{if(new URLSearchParams(location.search).has("popout"))retur
 const POPV={home:1,pf:1,dcs:1,rm:1,man:1};
 const POP_APPS=[["pf","Process flow","Money and tons through the mill"],["dcs","DCS","Stock prep, wet end, dry end, utilities"],["PLAN","Planning","Orders, inventory, trucks, OCC recipe"],
   ["QCS","Quality","Specs, off-spec log, beater"],["WATER","Water","Fresh water and the water balance"],["TREND","Trends","Trend anything, find what moves together"],
-  ["rm","Relationship map","What drives each reading, and what it moves"],["man","Manning","Who's on shift, vacations and cover"]];
-const POP_DCS=new Set(["dcs","PLAN","QCS","WATER","TREND"]);
+  ["REL","Reliability","Rounds, vibration and ADX motor tests"],["DRV","Drives","The MCC lineups: each drive's load"],["rm","Relationship map","What drives each reading, and what it moves"],["man","Manning","Who's on shift, vacations and cover"]];
+const POP_DCS=new Set(["dcs","PLAN","QCS","WATER","TREND","REL","DRV"]);
 const popApp=k=>POP_APPS.find(a=>a[0]===k);
 // the bar's title for a view
 function popTitle(v){if(v==="dcs"){const a=popApp(KUI.st);return a?a[1]:"DCS · "+(KUI.st||"SPOT");}const a=popApp(v);return a?a[1]:"";}
 // a tile (or a button elsewhere) asked for k: a view, or one of the DCS's own screens
-function popGo(k){if(POP_DCS.has(k)){if(S.zen)return;if(k==="dcs"){POP.inApp=true;try{openStation(KUI.st&&!["PLAN","QCS","WATER","TREND"].includes(KUI.st)?KUI.st:(KUI.last||"SPOT"),"dcs");}finally{POP.inApp=false;}}
+function popGo(k){if(POP_DCS.has(k)){if(S.zen)return;if(k==="dcs"){POP.inApp=true;try{openStation(KUI.st&&!["PLAN","QCS","WATER","TREND","DRV","REL"].includes(KUI.st)?KUI.st:(KUI.last||"SPOT"),"dcs");}finally{POP.inApp=false;}}
     else{POP.inApp=true;try{openStation(k,"dcs");}finally{POP.inApp=false;}}popShow("dcs");return;}
   popShow(k);}
 try{const v=localStorage.getItem("paper-mill-popview");if(POPV[v])POP.view=v;}catch(_){}

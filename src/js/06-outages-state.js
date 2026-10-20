@@ -40,21 +40,21 @@ function openOutagePlan(){if(G3.yieldUI)G3.yieldUI();const o=S.outg,st=outStart(
     <h2 id="out-h">${first?"Your first planned outage":"Outage in 24 hours"}</h2>
     ${first?`<div class="intro"><p><b>What's an outage?</b> Planned downtime. Every ${OUT.every} days the mill comes down on purpose for a controlled 4-hour shutdown, so crews can inspect, clean, repair and replace worn parts before they fail.</p>
       <p><b>Why it matters:</b> well-maintained equipment breaks down less and runs better, with fewer sheet breaks and hayouts. Your budget for each area sets its reliability until the next outage.</p></div>`:""}
-    <p class="when">Starts <b>${outTime(st)}</b>, back up by <b>${hourOf(st+OUT.len)}</b> (4 hours, machine and stock prep down).<br>Major job: <b>${OUT.jobs[outJob(o.k)-1]||"inspections"}</b>, plus new press felts.</p>${survOn()?survPlanNote(o.k):""}<div id="out-lead"></div><div id="out-prep"></div>${typeof civPlanHTML==="function"?civPlanHTML():""}
+    <p class="when">Starts <b>${outTime(st)}</b>, back up by <b>${hourOf(st+OUT.len)}</b> (4 hours, machine and stock prep down).<br>Major job: <b>${OUT.jobs[outJob(o.k)-1]||"inspections"}</b>, plus new press felts.</p>${survOn()?survPlanNote(o.k):""}<div id="out-lead"></div><div id="out-prep"></div><div id="out-rly"></div>${typeof civPlanHTML==="function"?civPlanHTML():""}
     <div>${OUT.areas.map(([a,n,d])=>`<div class="orow" data-a="${a}"><div><b>${n}</b><small>${d}</small></div><div class="seg">${COST.map((c,i)=>`<button data-v="${i}" aria-pressed="${i===d0}">${k(c)}</button>`).join("")}</div><em class="eff"></em></div>`).join("")}</div>
     <div class="otot"><div><span>Outage budget</span><small id="out-cash"></small></div><b id="out-tot"></b></div>
     <div class="btns"><button class="primary" id="out-ok" style="flex:1">Approve budget</button></div></div>`;
   const paint=()=>{el.querySelectorAll(".orow").forEach(r=>{const a=r.dataset.a,v=pick[a];r.querySelectorAll(".seg button").forEach(b=>b.setAttribute("aria-pressed",String(+b.dataset.v===v)));
       const [c,t]=effTxt(v,a),e=r.querySelector(".eff");e.className="eff "+c;e.textContent=t;});
-    const tot=Object.values(pick).reduce((s,v)=>s+COST[v],0)+civPlanCost(o._civ&&o._civ.civ);document.getElementById("out-tot").textContent=money(tot);
+    const tot=Object.values(pick).reduce((s,v)=>s+COST[v],0)+civPlanCost(o._civ&&o._civ.civ)+rlyPlanCost();document.getElementById("out-tot").textContent=money(tot);
     document.getElementById("out-cash").textContent="Cash on hand "+money(S.cash);document.getElementById("out-ok").textContent=`Approve ${money(tot)} budget`;};
   el.querySelectorAll(".orow").forEach(r=>r.querySelectorAll(".seg button").forEach(b=>b.addEventListener("click",()=>{pick[r.dataset.a]=+b.dataset.v;paint();})));
   document.getElementById("out-ok").addEventListener("click",()=>{const tot=Object.values(pick).reduce((s,v)=>s+COST[v],0);spend(tot,"repairs");OUT.areas.forEach(([a])=>pfAdd("rep",a==="stock"?"stock":"pm",COST[pick[a]]));pfAdd("repid","outage",tot);histEv("outage",tot);
     const cpc=o._civ&&o._civ.civ;if(cpc&&civPlanCost(cpc))civPay(civPlanCost(cpc));   // v5.1 civics levers
-    o.plan={...pick};if(cpc)o.plan.civ=cpc;delete o._civ;if(lp)o.plan.lead={to:lp.to,pick:lp.pick};log(`Outage ${o.k} budget approved: ${money(tot)} (${OUT.areas.map(([a,n])=>n+" "+k(COST[pick[a]])).join(", ")})`,"warn");
+    o.plan={...pick};if(cpc)o.plan.civ=cpc;delete o._civ;rlyPlanBook(o);   /* v6.10 changeouts (07i) */if(lp)o.plan.lead={to:lp.to,pick:lp.pick};log(`Outage ${o.k} budget approved: ${money(tot)} (${OUT.areas.map(([a,n])=>n+" "+k(COST[pick[a]])).join(", ")})`,"warn");
     el.hidden=true;closeCard(true);});
   o._civ={};if(civOn()){civPlanWire(el,o._civ);el.querySelectorAll(".civplan .seg button").forEach(b=>b.addEventListener("click",()=>paint()));}
-  paint();if(lp)leadPlanMount(document.getElementById("out-lead"),lp);if(G3.prepMount)G3.prepMount(document.getElementById("out-prep"));   /* v5.7 outage prep */el.hidden=false;AUDIO.sfx("cash",150);document.getElementById("out-ok").focus({preventScroll:true});el.querySelector(".modal").scrollTop=0;}   // v5.0.4: opens at the top
+  paint();if(lp)leadPlanMount(document.getElementById("out-lead"),lp);if(G3.prepMount)G3.prepMount(document.getElementById("out-prep"));if(G3.rlyPlanMount)G3.rlyPlanMount(document.getElementById("out-rly"),paint);   /* v5.7 outage prep */el.hidden=false;AUDIO.sfx("cash",150);document.getElementById("out-ok").focus({preventScroll:true});el.querySelector(".modal").scrollTop=0;}   // v5.0.4: opens at the top
 function outNote(head,body,ms,btn){   // v5.0.5: with an event card open, the notice waits until the card is answered, so it never covers the card's buttons
   // v5.0.6: it also waits while the card's result toast is showing, so it never lands on top of it
   {const d=document.getElementById("dealOv"),busy=()=>!!(d&&!d.hidden&&((S.cards&&S.cards.open&&S.cards.open.c)||d.classList.contains("dealres")));clearInterval(outNote._w);
@@ -74,6 +74,7 @@ function beginOutage(){const o=S.outg,st=S.t;if(!o.plan)o.plan={stock:1,wet:1,dr
   addFx({id:"pout",left:OUT.len,mods:{pmDown:"planned outage",pulperDown:1}});AUDIO.sfx("clunk",400);
   if(typeof civOutageBegin==="function")civOutageBegin(o,st);   // v5.1 civics: Labor sets how long it runs
   prepBegin(o,st);   // v5.7 outage prep: completed checklist items take minutes off
+  rlyOutageBegin(o);   // v6.10: booked changeouts add minutes (07i)
   log(`Planned outage ${o.k} has begun: down until ${hourOf(o.end)}`,"warn");BANNERS.push({text:`Planned outage: the mill is down until ${hourOf(o.end)}.`,t:null,kind:"good",tag:"OUTAGE"});
   const canWatch=C.simSpeed>OUT.simCap&&!TURBO_FAST(C.simSpeed);   // (at 5 min/s or slower there is nothing to slow down)
   outNote("Outage has begun",`The mill is down for planned maintenance: ${(OUT.jobs[outJob(o.k)-1]||"inspections").toLowerCase()} and new press felts. Started ${hourOf(st)}, ends ${outTime(o.end)}.${o.prep?`<br><b>${prepLine(o.prep.n,o.prep.m)}.</b>`:""}`,canWatch?7000:5000,canWatch?{label:"Watch the crews",on:outWatch}:null);}
@@ -89,6 +90,7 @@ function endOutage(){const o=S.outg,pl=o.plan||{stock:1,wet:1,dry:1};o.on=false;
   if(S.lead&&leadOverrun()>0){const m=leadOverrun();addFx({id:"felrun",left:m,mods:{pmDown:"project tie-ins"}});   // v4.4.0-t3: Felicity's projects make outages overrun
     log(`Project tie-ins: the machine stays down ${m>=60?(m/60).toFixed(m%60?1:0)+" h":m+" min"} longer.`,"warn");}
   if(typeof civOutageEnd==="function")civOutageEnd(o,pl);   // v5.1 civics: the levers, an overrun
+  rlyOutageEnd(o,pl);   // v6.10: the major job and the booked changeouts renew their equipment (07i)
   prepEnd(o,OUT.areas.reduce((s,[a])=>s+(OUT.cost[pl[a]]||0),0));o.prep=null;   // v5.7 outage prep: part of the budget back
   o.k++;o.noticed=false;o.plan=null;if(survOn())survWaveStart();}
 const HAYLINES=["HAYOUT! Paper is shooting to the roof!","Winder hayout! Every PM hand to the dry end!","Hayout! It's snowing paper in the winder aisle.","Hayout! The set exploded off the drums."];
@@ -133,7 +135,7 @@ function initState(){
 // v4: every source of luck has its own stream, drawn on a fixed schedule (see step), so all players in the same
 // season week face the same dice at the same sim time: upsets, sheet breaks, hayouts, weather, truck timing
 function seedRun(seed){S.seed=seed>>>0;const k=S.seed;S.bn=bnFor(S.seed);S.rng={plan:k^0x9e3779b9,card:k^0x85ebca6b,up:k^0x27d4eb2f,upx:k^0x165667b1,
-    brk:k^0xd3a2646c,brkx:k^0xfd7046c5,hay:k^0xb55a4f09,wx:k^0x7feb352d,flow:k^0x846ca68b,lead:k^0x2c1b3c6d};
+    brk:k^0xd3a2646c,brkx:k^0xfd7046c5,hay:k^0xb55a4f09,wx:k^0x7feb352d,flow:k^0x846ca68b,lead:k^0x2c1b3c6d,rel:k^0x2545f491,relx:k^0x632be5ab};   // (v6.10: rel, relx for the reliability model, 07i)
   C.grade="24";const c=GCOST["24"];
   S.plan={i:0,q:[],cur:null,left:c.mix[0]+rand("plan")*(c.mix[1]-c.mix[0]),mkt:0,mktLeft:7*1440,disc:null,hot:null};
   S.cards={next:1440*(1+0.5*rand("card")),open:null,pend:[],seen:{}};applyUpgrades();

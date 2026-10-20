@@ -30,6 +30,7 @@ function manDraw(){if(!MANUI.open||!S)return;const s=manIdx(),m=manShift(s),key=
       <small>${cov?`${cov} covering from other teams`:"Everyone on their own shift"} · next on: ${nxt.team} team</small></div></div>
     ${m.short?`<p class="manwarn">One tech short this shift: maintenance repairs run at ${Math.round(MAN.SLOW*100)}% speed until the next shift change.</p>`:""}
     <h4>Maintenance techs <span>${m.nt-m.short} of ${m.nt}</span></h4><ul class="manl">${m.techs.map(r=>manRow(r,"Maintenance")).join("")}</ul>
+    <h4>Electrical <span>1</span></h4><ul class="manl">${manRow(m.elec,"Electrical tech · MCC")}</ul>
     <h4>Operators <span>${m.ops.length}</span></h4><ul class="manl">${m.ops.map((r,k)=>manRow(r,MAN_SEAT(k))).join("")}</ul>
     <div class="manleg">${MAN.TEAMS.map(T=>`<span>${manHat(T)}${T} team</span>`).join("")}</div>`;}
 UI_TICKS.push(()=>{if(MANUI.open)manDraw();});

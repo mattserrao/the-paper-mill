@@ -12,7 +12,7 @@ const MCHEST_GAL=60000;                                // the machine chest
 const fmtGal=g=>{const a=Math.abs(g),s=g<0?"−":"";return s+(a>=1e6?(a/1e6).toFixed(2)+"M gal":a>=1e4?Math.round(a/1e3)+"k gal":Math.round(a).toLocaleString()+" gal");};
 const fmtGpm=g=>(g>=1e4?(g/1e3).toFixed(1)+"k":Math.round(g).toLocaleString())+" gpm";
 const TAG_INT=new Set(["orders","trucks","rolls","t","A","kW","fpm","mL CSF"]);
-const TAG_AREA={SPOT:"Stock prep",WET:"Wet end",DET:"Dry end",UTIL:"Utilities",WATER:"Water",QCS:"Quality",PLAN:"Planning & yard"};
+const TAG_AREA={SPOT:"Stock prep",WET:"Wet end",DET:"Dry end",UTIL:"Utilities",WATER:"Water",QCS:"Quality",PLAN:"Planning & yard",DRV:"Drives (MCC)"};
 const _R=()=>S.rates||{};
 const wr=()=>S.wat&&S.wat.r;
 const TAGS=[
@@ -72,7 +72,12 @@ const TAGS=[
   ["lv202pv","LV-202 white water silo level (PV)","WET","%",()=>vlvView("LV-202").pv,""],["lv202op","LV-202 silo makeup valve","WET","% open",()=>vlvView("LV-202").pos,"a.v202"],
   ["qc300pv","QC-300 reel moisture (PV)","DET","%",()=>S.pm==="run"?vlvView("QC-300").pv:null,""],["qc300op","QC-300 steam setpoint out","DET","kPa",()=>vlvView("QC-300").op*3,""],
   ["pv302pv","PV-302 2nd section steam (PV)","DET","kPa",()=>vlvView("PV-302").pv,""],["pv302op","PV-302 steam valve","DET","% open",()=>vlvView("PV-302").pos,"a.v302"],
-  ["pv303pv","PV-303 3rd section steam (PV)","DET","kPa",()=>vlvView("PV-303").pv,""],["pv303op","PV-303 steam valve","DET","% open",()=>vlvView("PV-303").pos,"a.v303"]];
+  ["pv303pv","PV-303 3rd section steam (PV)","DET","kPa",()=>vlvView("PV-303").pv,""],["pv303op","PV-303 steam valve","DET","% open",()=>vlvView("PV-303").pos,"a.v303"],
+  // v6.10 the drives in the MCC (07i): each one's load, % of its rated power, and the MCC's total
+  ["dl_pulp","Pulper rotor drive load","DRV","%",r=>rlyLoad("pulp",r),""],["dl_refA","Refiner A drive load","DRV","%",r=>rlyLoad("refA",r),""],["dl_refB","Refiner B drive load","DRV","%",r=>rlyLoad("refB",r),""],
+  ["dl_fan","Fan pump drive load","DRV","%",r=>rlyLoad("fan",r),""],["dl_couch","Couch roll drive load","DRV","%",r=>rlyLoad("couch",r),""],["dl_pr1","1st press drive load","DRV","%",r=>rlyLoad("pr1",r),""],
+  ["dl_pr2","2nd press drive load","DRV","%",r=>rlyLoad("pr2",r),""],["dl_dry","Dryer section drive load","DRV","%",r=>rlyLoad("dry",r),""],["dl_reel","Reel drum drive load","DRV","%",r=>rlyLoad("reel",r),""],
+  ["dl_wind","Winder drum drive load","DRV","%",r=>rlyLoad("wind",r),""],["mcckw","MCC drive power","DRV","kW",r=>rlyMccKw(r),""]];
 const TAGI=Object.fromEntries(TAGS.map((t,i)=>[t[0],i]));
 const tagName=id=>{const t=TAGS[TAGI[id]];return t?t[1]:id;};
 const tagUnit=id=>{const t=TAGS[TAGI[id]];return t?t[3]:"";};

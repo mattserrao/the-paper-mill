@@ -77,7 +77,7 @@ function tellRoundEnd(a,caught){const T=tellState(),left=T.q.filter(p=>p.area===
 // the Vibration Report: the Reliability program (vibration and oil analysis) or Dot's own kit
 const tellRep=()=>LV("reliab")>=1||leadIs("dot");
 // per area: 0 steady, 1 climbing (something pending), 2 climbing fast (due within 24 h)
-function tellTrend(a){const q=(S.tell&&S.tell.q)||[];let v=0;for(const p of q)if(p.area===a)v=Math.max(v,p.due-S.t<1440?2:1);return v;}
+function tellTrend(a){const q=(S.tell&&S.tell.q)||[];let v=0;for(const p of q)if(p.area===a)v=Math.max(v,p.due-S.t<1440?2:1);return Math.max(v,rlyTellTrend(a));}   // (v6.10: and what the shift rounds found, 07i)
 // in the visible list: only tells the dice actually rolled (the 3D shows them during a Round)
 const tellIn=a=>((S.tell&&S.tell.q)||[]).filter(p=>p.area===a);
 const tellSummary=()=>{const T=S&&S.tell;if(!T||!T.n)return "";return `Upsets caught early: ${T.n} — saved ${money(T.saved)} and ${tellHrs(T.savedMin)} of downtime.`;};

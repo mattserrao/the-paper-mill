@@ -101,6 +101,7 @@
     {p:[-10,9.2,zc],t:()=>["Reel",f1(S.reel)+" / "+P.jumbo+" t"]},
     {area:1,p:[-20,1.5,zc+4],t:()=>["Winder"+(S.wd==="hayout"?" · HAYOUT!":""),S.wd==="hayout"?"crew cleaning up":Math.max(0,reelsAtWinder()-1)+"/"+P.storeReels+" reels stored · "+f1(S.rates.cut)+" t/h"],cls:()=>S.wd==="hayout"},
     {area:1,p:[-36.4,3.2,14.8],t:()=>["Roll warehouse",f0(S.fg)+" rolls"]},
+    {area:1,p:[11,5.6,27.5],t:()=>{const f=S.rel?ASSETS.filter(A=>{const s=rlyDrvSt(A.id);return s==="fault"||s==="trip";}).length:0;return ["MCC",f?f+" drive"+(f>1?"s":"")+" down":S.rel?f0(rlyMccKw())+" kW":"drive lineups"];},cls:()=>!!(S.rel&&ASSETS.some(A=>rlyDrvSt(A.id)==="fault"))},   // v6.10
   ];
   // v4.1: the run's bottleneck area says so on its label (red outline) until it keeps up with the machine
   {const BNL={recv:"Receiving",pulper:"Pulper",screens:"Fine screens",winder:"Winder",ship:"Roll warehouse"};
@@ -109,7 +110,7 @@
   LABELS.forEach(L=>{L.lb=lblNew(false);L.lb.area=!!L.area;L.v=new THREE.Vector3(...L.p);});
   const banner=$("banner3d"),chips=$("chips3d");
   // click a disaster (chip, breaking banner or its floating label) to fly the camera there
-  G3.spotOf=id=>id==="hay"?[-17,7]:id==="brk"?[12,9]:PINS[id]?[PINS[id][0],PINS[id][2]]:null;
+  G3.spotOf=id=>{if(id==="bearingfail"||id==="motorfail"){const i=S.inc.find(x=>x.id===id),q=i&&G3.ASPOT&&G3.ASPOT[i.asset];if(q)return [q[2],q[3]];}return id==="hay"?[-17,7]:id==="brk"?[12,9]:PINS[id]?[PINS[id][0],PINS[id][2]]:null;};   // (v6.10: at the failed machine)
   G3.flyTo=id=>{const sp=G3.spotOf(id);if(!sp)return;goal={t:new THREE.Vector3(sp[0],0,sp[1]),r:62,th:DEF.th,ph:0.88};};
   chips.addEventListener("click",e=>{const b=e.target.closest("button");if(b)G3.flyTo(b.dataset.id);});
   banner.addEventListener("click",()=>{const b=BANNERS[0];if(b&&b.id)G3.flyTo(b.id);});

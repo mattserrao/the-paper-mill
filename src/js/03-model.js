@@ -62,7 +62,7 @@ function applyUpgrades(){
   P.doorRate*=civRecv();   // v5.1 civics: a low Community limits truck hours
   P.costMul=survOn()?survCost():1;   // v4.3 survival: fiber, energy and chemicals, and wages cost more every wave (exactly 1 otherwise)
   P.occPrice=(P.blendP+((S&&S.plan)?leadMkt(S.plan.mkt):0)-10*LV("contract")+P.siteOcc)*P.costMul*leadFibre();   // (v4.4: the leader's fiber deals; Hank runs heavy)
-  P.priceAdd=12*LV("sales")+P.sitePrice+leadPrice()+civPrice(); P.repairMul=REPAIR_K*(LV("insure")?0.4:1)*(1-0.15*LV("reliab"))*(1-0.1*LV("maintcrew"))*leadBill()*civBill();P.techs=2+2*LV("maintcrew");P.pmCost=150*LV("pmprog"); P.premium=LV("insure")?900:0;   // (t20 balance: $400/h and $1,500/h)
+  P.priceAdd=12*LV("sales")+P.sitePrice+leadPrice()+civPrice(); P.repairMul=REPAIR_K*(LV("insure")?0.4:1)*(1-0.15*LV("reliab"))*(1-0.1*LV("maintcrew"))*leadBill()*civBill();P.techs=2+2*LV("maintcrew");P.elec=1;P.pmCost=150*LV("pmprog"); P.premium=LV("insure")?900:0;   // (t20 balance: $400/h and $1,500/h)
   P.breakBase=Math.pow(0.7,LV("monitor"))*Math.pow(0.9,LV("pmprog"))*leadClean()*civBreak();
   P.hayBase=Math.pow(0.6,LV("winder"))*leadClean()*civBreak();
   // the sliders' limits follow the upgrades (v5.2: written only when they change; this runs hourly from the sim)
@@ -107,6 +107,7 @@ function freqMul(id){let m=1;const MS=FM_MAINT||(FM_MAINT=new Set(MAINT));
   if(OUT.area[id])m*=outRel(OUT.area[id]);
   m*=siteFreq(id);
   m*=civFreq(id);   // v5.1 civics: each choice's odds, and the meters
+  m*=rlyLinkMul(id);   // v6.10: the upsets tied to an asset's bearings wear with them (07i)
   m*=leadFreq(id);   // v4.4 survival leaders: Chip's labour trouble, Felicity's projects, the upset Dot just fixed
   if(S&&S.fx)for(const f of S.fx){if(f.freq&&EV[id]&&(EV[id].g==="machine"||EV[id].g==="stock"))m*=f.freq;if(f.scab&&id==="slime")m*=f.scab;if(f.evf&&f.evf[id])m*=f.evf[id];}
   return m;}

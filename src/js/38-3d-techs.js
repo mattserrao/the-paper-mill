@@ -118,12 +118,16 @@
     if(d>0.05){T.t.position.x+=dx/d*s;T.t.position.z+=dz/d*s;T.t.rotation.y=lerpAng(T.t.rotation.y,Math.atan2(-dz,dx),Math.min(1,rdt*10));}
     if(d<0.25)T.path.shift();
     const a=T.t.rotation.y;T.w.position.set(T.t.position.x-Math.cos(a)*0.15,0,T.t.position.z+Math.sin(a)*0.15);T.w.rotation.y=a;return T.path.length===0;}
+  // v6.10: a job's spot (a bearing failure is at its machine, 38c ASPOT) and, for a tech on a vibration round, the machine they're at now
+  const mSpot=i=>i.asset&&ASPOT[i.asset]?ASPOT[i.asset]:MAINT_SPOT[i.id];
+  const rndAt=k=>{const R=S.rel;if(!R||!R.rd)return null;for(const x of R.rd.list)if(x.who==="t"+k&&x.st==="go"&&x.a.length){const f=(S.t-x.t0)/Math.max(1,x.len),a=x.a[f<0.5?0:Math.min(1,x.a.length-1)];return ASPOT[a]?{x,a}:null;}return null;};
   function techUpdate(rdt,now){ensureTechs();
-    const MI=S.inc.filter(i=>MAINT_SPOT[i.id]&&i.mSlot>=0).sort((a,b)=>a.mSlot-b.mSlot);
-    techs.forEach((T,k)=>{const want=k<P.techs&&MI[Math.floor(k/2)]?MI[Math.floor(k/2)]:null,active=T.inc&&S.inc.some(i=>i.id===T.inc);
+    const MI=S.inc.filter(i=>mSpot(i)&&i.mSlot>=0).sort((a,b)=>a.mSlot-b.mSlot);
+    techs.forEach((T,k)=>{const want=k<P.techs&&MI[Math.floor(k/2)]?MI[Math.floor(k/2)]:null,rnd=!want&&k<P.techs?rndAt(k):null,active=T.inc?S.inc.some(i=>i.id===T.inc):!!(T.rnd&&rnd&&rnd.a===T.rnd);
       switch(T.state){
         case "home":{T.w.visible=k<P.techs;const b=T.bench;
-          if(want){T.inc=want.id;T.state="exit";T.next="mount";T.walk=[[SHOP.door[0],-20.1],[SHOP.door[0],-18.1]];break;}
+          if(want){T.inc=want.id;T.rnd=null;T.spot=mSpot(want);T.state="exit";T.next="mount";T.walk=[[SHOP.door[0],-20.1],[SHOP.door[0],-18.1]];break;}
+          if(rnd){T.inc=null;T.rnd=rnd.a;T.spot=ASPOT[rnd.a];T.state="exit";T.next="mount";T.walk=[[SHOP.door[0],-20.1],[SHOP.door[0],-18.1]];break;}   // v6.10 a vibration round
           if(RUN.on&&k<2&&k<P.techs&&T.ran!==RUN.t0){T.ran=RUN.t0;T.state="exit";T.next="cmount";T.walk=[[SHOP.door[0],-20.1],[SHOP.door[0],-18.1]];break;}
           if(moveP(T.w,b.p[0],b.p[1],3,rdt)){face(T.w,b.l[0],b.l[1],rdt);pose(T.w,"fix",now);T.w.userData.armful.visible=false;
             if(Math.random()<rdt*1.2){const [nx,,nz]=nozzlePos(T.w);for(let j=0;j<2;j++)emit("spark",nx,1.1,nz,R()*2,1.5+Math.random()*2,R()*2,0.3,0.18,"#ff8a1f",1);}}
@@ -134,16 +138,24 @@
           if(!RUN.on){T.state="home2";T.path=route([T.t.position.x,T.t.position.z],T.slot);break;}
           if(T.path.length<=1&&T.t.position.z>15)T.path=[[clamp(RUN.x-RUN.dir*(3.5+k*2.6),-22,66),17.6]];
           if(T.path.length)drive(T,rdt);break;
-        case "mount":if(moveP(T.w,T.slot[0]+0.2,T.slot[1]+0.7,6,rdt)){T.state="out";T.path=route(T.slot,(()=>{const s=MAINT_SPOT[T.inc];return [s[0]+((k%3)-1)*1.6,s[1]+(k>2?1.4:0)];})());}else pose(T.w,"run",now);break;
+        case "mount":if(moveP(T.w,T.slot[0]+0.2,T.slot[1]+0.7,6,rdt)){T.state="out";T.path=route(T.slot,(()=>{const s=T.spot||MAINT_SPOT[T.inc];return T.rnd?[s[0]-1.4,s[1]]:[s[0]+((k%3)-1)*1.6,s[1]+(k>2?1.4:0)];})());}else pose(T.w,"run",now);break;
         case "out":pose(T.w,"ride",now);T.w.position.y=0.12;if(drive(T,rdt)){T.state="walk";T.onSite=now;}break;
-        case "walk":{const s=MAINT_SPOT[T.inc],fx=s[0]+((k%3)-1)*1.1,fz=s[1]+(lane(s)==="F"?-1.6:1.4)*(k%2?1:-1)*0.6-(lane(s)==="F"?1.0:0);
+        case "walk":{const s=T.spot||MAINT_SPOT[T.inc];
+          if(T.rnd){   // v6.10: a vibration round: stand at the machine with the analyser's probe on the bearing housing
+            if(!active&&now-T.onSite>1500){T.state="back";break;}
+            if(moveP(T.w,s[0],s[1],4,rdt)){if(s.length>2)face(T.w,s[2],s[3],rdt);pose(T.w,"inspect",now);T.w.userData.tool.visible=true;}else pose(T.w,"walk",now);break;}
+          const fx=s[0]+((k%3)-1)*1.1,fz=s[1]+(lane(s)==="F"?-1.6:1.4)*(k%2?1:-1)*0.6-(lane(s)==="F"?1.0:0);
           if(!active&&now-T.onSite>2500){T.state="back";break;}
           if(moveP(T.w,fx,fz,5,rdt)){face(T.w,s[0],lane(s)==="F"?zc:s[1]-3,rdt);pose(T.w,"fix",now);{const ii=S.inc.find(x=>x.id===T.inc);if(ii)ii.mHere=true;}
             if(Math.random()<rdt*6){const [nx,,nz]=nozzlePos(T.w);for(let j=0;j<3;j++)emit("spark",nx,0.9,nz,R()*4,2+Math.random()*3,R()*4,0.4,0.22,"#ff8a1f",1);}}
           else pose(T.w,"run",now);break;}
-        case "back":{const a=T.t.rotation.y;if(moveP(T.w,T.t.position.x-Math.cos(a)*0.15,T.t.position.z+Math.sin(a)*0.15,5,rdt)){T.state="home2";T.path=route([T.t.position.x,T.t.position.z],T.slot);}else pose(T.w,"run",now);break;}
+        case "back":{const a=T.t.rotation.y;if(moveP(T.w,T.t.position.x-Math.cos(a)*0.15,T.t.position.z+Math.sin(a)*0.15,5,rdt)){
+            // v6.10: called to a job, or the round moves on to its next machine: ride straight there instead of going home first
+            const nx=want?{i:want,s:mSpot(want)}:rnd&&rnd.a!==T.rnd?{r:rnd.a,s:ASPOT[rnd.a]}:null;
+            if(nx){T.inc=nx.i?nx.i.id:null;T.rnd=nx.r||null;T.spot=nx.s;T.state="out";const from=[T.t.position.x,T.t.position.z];T.path=route(from,T.rnd?[nx.s[0]-1.4,nx.s[1]]:[nx.s[0]+((k%3)-1)*1.6,nx.s[1]+(k>2?1.4:0)]);break;}
+            T.state="home2";T.rnd=null;T.path=route([T.t.position.x,T.t.position.z],T.slot);}else pose(T.w,"run",now);break;}
         case "home2":pose(T.w,"ride",now);T.w.position.y=0.12;if(drive(T,rdt)){T.t.rotation.y=Math.PI/2;T.state="inside";}break;
-        case "inside":if(!T.walk)T.walk=[[SHOP.door[0],-18.1],[SHOP.door[0],-20.1],T.bench.p];if(walkTo(T,null,5,rdt,now)){T.walk=null;T.state="home";T.inc=null;}break;
+        case "inside":if(!T.walk)T.walk=[[SHOP.door[0],-18.1],[SHOP.door[0],-20.1],T.bench.p];if(walkTo(T,null,5,rdt,now)){T.walk=null;T.state="home";T.inc=null;T.rnd=null;}break;
       }
       T.t.visible=k<P.techs;});}
 

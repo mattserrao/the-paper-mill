@@ -171,7 +171,7 @@
       else{const [fx2,fz]=h.userData.from;if(moveP(h,fx2,fz,11,rdt)){h.visible=false;h.userData.out=false;}else pose(h,"run",now);}});
     if(!yardBrk)EP.brk=null;
     G3.yardFrozen=away;
-    brigadeUpdate(rdt,now);techUpdate(rdt,now);if(G3.outageVis)try{G3.outageVis(rdt,now);}catch(e){if(!G3.ovErr){G3.ovErr=1;console.error("outage visuals",e);}}ambUpdate(rdt,now);if(G3.janUpdate)G3.janUpdate(rdt,now);if(G3.shiftUpdate)G3.shiftUpdate(rdt,now);
+    brigadeUpdate(rdt,now);techUpdate(rdt,now);if(G3.elecUpdate)try{G3.elecUpdate(rdt,now);}catch(e){if(!G3.elErr){G3.elErr=1;console.error("electrical tech",e);}}if(G3.outageVis)try{G3.outageVis(rdt,now);}catch(e){if(!G3.ovErr){G3.ovErr=1;console.error("outage visuals",e);}}ambUpdate(rdt,now);if(G3.janUpdate)G3.janUpdate(rdt,now);if(G3.shiftUpdate)G3.shiftUpdate(rdt,now);
     // winder machinery
     const cutting=S.rates.cut>0.5&&S.wd!=="hayout"&&!CR.hideUnwind;
     const nP0=craneUpdate(rdt);
