@@ -11,6 +11,8 @@
   takes 4 % off ring crush (less draw adds it). Under 1.5 % the sheet flutters into the dryers and breaks come more
   often (×1.5 at 1.0 %, ×2.2 at 0.5 %). The wrinkles under 1 % and the snap over 2.4 % are as before. Both links are on
   the relationship map.
+- **Machine hall lights moved over the operators' floor:** the four hall lights slide from over the machine (z 9.1) to
+  the tending-side aisle (z 15) where the operators stand and walk; same lights, height and size.
 - **Let the mill run** (free play, Settings → Run the mill): event cards are declined for you (logged as "Declined for
   you") and the bird cut-scene is skipped, so nothing pauses the mill and you can leave it. Off again when free play ends.
 - **Menu tidy, desktop and phone:** the glossary is A to Z; the Cutaway label sits in its own cell of the switch; the
