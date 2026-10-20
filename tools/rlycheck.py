@@ -116,6 +116,45 @@ with sync_playwright() as pw:
       return {from:[x0,z0].map(Math.round),to:[E.w.position.x,E.w.position.z].map(Math.round),cart:Math.hypot(E.cart.position.x-E.w.position.x,E.cart.position.z-E.w.position.z)<1.5}}""")
     ok("the electrical tech walks out of the MCC to the ADX round with the cart", r["to"][1] < 20 and r["cart"], json.dumps(r))
 
+    # v6.10 t2: drive fault decisions
+    r = J("""()=>{const P=__PM,S=P.S;S.inc.forEach(i=>i.left=0);P.step(P.SIM_STEP);S.rel.a.pr2.dh=20;P.rly.fail('pr2','drv');const i=S.inc.find(x=>x.id==='drivefail');
+      const held=i.stage;for(let k=0;k<400;k++)P.step(P.SIM_STEP);const still=S.inc.some(x=>x.id==='drivefail'&&x.stage==='wait');
+      P.rly.decide('pr2','inv');let n=0;while(S.inc.some(x=>x.id==='drivefail'&&x.stage==='inv')&&n++<8000)P.step(P.SIM_STEP);const j=S.inc.find(x=>x.id==='drivefail');
+      const found=j&&j.stage,cause=j&&j.cause;P.rly.decide('pr2','patch');n=0;while(S.inc.some(x=>x.id==='drivefail')&&n++<8000)P.step(P.SIM_STEP);
+      return {held,still,found,cause,patch:S.rel.a.pr2.patch,booked:!!(S.rel.chg.pr2&&S.rel.chg.pr2.d),q:S.rel.q.length,cur:!!S.rel.cur}}""")
+    ok("a drive fault waits on the player's call; Investigate finds a cause; Run to outage patches it and books the replacement", r["held"] == "wait" and r["still"] and r["found"] == "found" and r["cause"] and r["patch"] and r["booked"], json.dumps(r))
+    J("()=>{const R=__PM.S.rel;R.q.length=0;R.cur=null;const o=document.getElementById('rlyOv');if(o)o.hidden=true;__PM.S.cards.open=null;}")
+    r = J("""()=>{const P=__PM,S=P.S;S.rel.rep.length=0;S.rel.a.reel.dh=5;let rep=0;for(let k=0;k<6;k++){P.rly.fail('reel','drv');P.rly.decide('reel','reset');let n=0;while(S.inc.some(x=>x.id==='drivefail')&&n++<2000)P.step(P.SIM_STEP);}
+      rep=S.rel.rep.filter(p=>p.a==='reel').length;const r2=S.rel.rep.length;S.rel.rep.length=0;S.rel.q.length=0;S.rel.cur=null;S.cards.open=null;
+      P.rly.fail('wind','drv');P.rly.decide('wind','repl');let n=0;while(S.inc.some(x=>x.id==='drivefail')&&n++<8000)P.step(P.SIM_STEP);return {rep,dh:Math.round(S.rel.a.wind.dh)}}""")
+    ok("Reset and go on a worn drive sets up repeats; Replace now makes the drive new", r["rep"] >= 2 and r["dh"] == 100, json.dumps(r))
+    J("()=>{const R=__PM.S.rel;R.q.length=0;R.cur=null;const o=document.getElementById('rlyOv');if(o)o.hidden=true;__PM.S.cards.open=null;}")
+
+    # the power chain and a rectifier fault
+    r = J("""()=>{const P=__PM,S=P.S,T=P.G3.ctl;for(let k=0;k<20;k++)P.step(P.SIM_STEP);const mv=T.tagNow('mvkv'),dc=T.tagNow('dc_PM');P.rly.fail(null,'rect',{ln:'PM'});for(let k=0;k<20;k++)P.step(P.SIM_STEP);
+      const r={mv,dc,dc2:T.tagNow('dc_PM'),dcSP:T.tagNow('dc_SP'),pm:S.M.pmDown,st:P.rly.drv('dry'),ne:P.rly.ENEED('rectfail')};S.inc.forEach(i=>{if(i.id==='rectfail')i.left=0});P.step(P.SIM_STEP);return r}""")
+    ok("13.8 kV feeder and ~650 V DC buses; a rectifier fault drops its lineup's bus and stops the machine (electrical tech)", abs(r["mv"] - 13.8) < 0.3 and 620 < r["dc"] < 680 and r["dc2"] == 0 and r["dcSP"] > 600 and r["pm"] and r["st"] == "nodc" and r["ne"], json.dumps(r))
+    answer()
+
+    # AUTO-LW: more refining, the weight comes down; back to standard, it goes back up
+    r = J("""()=>{const P=__PM,S=P.S;S.inc.forEach(i=>i.left=0);P.CH.on=false;const t0=S.t;P.knob.set('ref',85);while(S.t<t0+600)P.step(P.SIM_STEP);const lo=S.we.trim;P.knob.set('ref',60);while(S.t<t0+1300)P.step(P.SIM_STEP);return {lo,back:S.we.trim}}""")
+    ok("AUTO-LW trims the weight down with ring crush to spare and back up without it", r["lo"] < -0.05 and r["back"] > -0.01 and r["back"] <= 0, json.dumps(r))
+
+    # click for info
+    r = J("""()=>{const D=__PM.G3.diagScene(),T=__PM.THREE,rc=D.renderer.domElement.getBoundingClientRect(),sc=(x,y,z)=>{const v=new T.Vector3(x,y,z).project(D.camera);return [rc.left+(v.x+1)/2*rc.width,rc.top+(1-v.y)/2*rc.height];};
+      const g=__PM.G3.camGet();__PM.G3.camSet([20,0,90,g[3],g[4]]);return 1}""")
+    pg.wait_for_timeout(1500)
+    r = J("""()=>{const D=__PM.G3.diagScene(),T=__PM.THREE,rc=D.renderer.domElement.getBoundingClientRect(),sc=(x,y,z)=>{const v=new T.Vector3(x,y,z).project(D.camera);return {clientX:rc.left+(v.x+1)/2*rc.width,clientY:rc.top+(1-v.y)/2*rc.height};};
+      const f=__PM.G3.followable()[0];__PM.G3.infoTap(sc(f.position.x,1.1,f.position.z));const a=document.getElementById('infoPop').textContent;
+      __PM.G3.infoTap(sc(60.6,3,-11));const b=document.getElementById('infoPop').textContent;return {a:a.slice(0,90),b:b.slice(0,120)}}""")
+    ok("click for info: an operator (name, team) and the refiners (readings and reliability)", "operator" in r["a"] and "team" in r["a"] and "Refiner" in r["b"] and "kWh/t" in r["b"], json.dumps(r))
+    if shot: pg.screenshot(path=f"{shot}-info.png")
+
+    # arc-flash PPE: the electrical tech walks in from outside and is suited inside the MCC
+    r = J("""()=>{const P=__PM,E=P.G3.ET;P.G3.elecSuit(false);E.w.position.set(2,0,20);let now=performance.now();for(let i=0;i<500;i++){now+=100;P.G3.navPump&&P.G3.navPump();P.G3.elecUpdate(0.1,now);}
+      return {in:E.w.position.x>4&&E.w.position.z>24,suit:!!E.suited}}""")
+    ok("arc-flash PPE goes on at the MCC door", r["in"] and r["suit"], json.dumps(r))
+
     # zen: none of it
     r = J("()=>{const P=__PM;P.S.zen=true;const on=P.rly.on();P.S.zen=false;return on}")
     ok("zen has no reliability rounds", r is False)

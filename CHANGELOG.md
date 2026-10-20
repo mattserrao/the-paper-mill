@@ -1,7 +1,7 @@
 # Changelog
 
 
-## v6.10.0-t1 (2026-10-20): The Reliability and Electrical Update (test build)
+## v6.10.0-t2 (2026-10-20): The Reliability and Electrical Update (test build)
 Built on test/v6.10-reliability. Plan: claude/reliability-v610-plan.md. Seasons, survival and free play (not zen). Functionality first; no balancing yet.
 - **Ten critical VFD motors** (`07i-assets.js`): pulper rotor, refiners A and B, fan pump, couch roll, 1st and 2nd press, dryer section, reel drum,
   winder drum. Each has bearing (vibration), motor (ADX) and drive health that wear while it runs, faster when pushed (refining energy, press load,
@@ -24,6 +24,18 @@ Built on test/v6.10-reliability. Plan: claude/reliability-v610-plan.md. Seasons,
 - **Relationship map:** a Drives column and a Substation power driver, linked from rotor amps, refiner power, speed, vacuum, press load, tension and the winder.
 - **Help and glossary:** a Reliability and electrical page, outage changeouts, and 12 new terms. End screens show rounds done and skipped, faults caught and failures.
 - **Water tower** moved to the north-east corner (84, −24), clear of the new building on all four maps.
+- **Power chain:** 115 kV utility → substation (13.8 kV) → feeder → MCC transformer (480 V) → a rectifier per lineup → ~650 V DC bus → the drives' inverters.
+  The Drives screen draws it as a live single-line diagram; tags for the 13.8 kV feeder and each DC bus; the voltages follow blackouts, brownouts and outages.
+  **Rectifier fault** (new upset, electrical tech): its lineup's DC bus drops and every drive on it stops. Rectifiers and copper DC busbars in the 3D lineups.
+- **Drive fault decisions** (replace the civics card): *Reset and go* (back in ~5 min; repeat odds scale with drive health, a repeat runs 1.5× longer) or
+  *Investigate* (45–90 min: the cause, a cooling fan, DC bus capacitor, IGBT or loose connection), then *Run it to the outage* (patched, 3× fault odds, replacement
+  auto-booked on the outage plan) or *Replace it now* (spare drive, 60–90 min). Free play's Let the mill run picks Investigate → Replace.
+- **Arc-flash PPE:** the electrical tech puts on an arc-rated suit, hood and face shield at the MCC door (and takes it off on the way out); +3 min to every MCC job.
+- **AUTO-LW basis weight:** the WET DCS setpoint's new default mode trims the weight lighter while ring crush has room, holding it 3% over spec, and back up
+  to the grade target when strength falls (slow, through the QCS dead time). Moving the setpoint puts it on MANUAL. On the relationship map.
+- **Click for info:** tap a person (name, team, role, what they're doing, covering), a forklift, clamp truck or truck (load, order), or equipment
+  (live readings; the ten critical machines add vibration, ADX and drive readings and a link to Reliability).
+- **Lights:** the receiving, roll warehouse and shop lamps hung above their roofs; they now hang under them.
 
 ## v6.9.2 (2026-10-20): Release review
 Built and tested on test/v6.9.2-release.
