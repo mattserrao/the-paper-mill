@@ -47,6 +47,7 @@ const baleOn=ordOn;
 // ---------- the order book ----------
 function ordState(){if(!S.ord){S.ord={n:0,list:[],k:{ship:0,onT:0,lateT:0,late:0,chg:0,spot:0,spotV:0,canc:0,dry:0,done:0,doneOn:0}};
     if(S.rng&&S.rng.ord==null)S.rng.ord=((S.seed||1)^0x51ed270b)>>>0;   // (a save from before v6.6)
+    for(const tr of (S.outDock||[]))if(tr&&tr.want==null){const g=(tr.lots&&tr.lots.length&&tr.lots[0][0])||C.grade;Object.assign(tr,{g,want:Math.max(tr.load||0,P.truckRolls),spot:true,oid:0,wait:0});}   // (v6.9.2: a docked truck from a pre-v6.6 save)
     if(S.plan)ordCampaign(C.grade,Math.max(0,S.plan.left||0),S.t);ordCarry();}
   return S.ord;}
 // called from seedRun: a fresh book for the run (the warehouse's opening stock already has buyers)
@@ -85,7 +86,7 @@ function ordAutoRate(){return clamp(ordReady()/P.truckRolls/3-S.outQ.length*0.15
 const ordLateD=o=>Math.max(0,(S.t-o.due-ORD.grace)/1440);
 // a loaded truck leaves: the invoice, the chargeback, the order's progress
 function ordDepart(tr){const O=ordState(),K=O.k,rw=C.rollW.v,tons=tr.load*rw,pr=priceOf(tr.g);let v;
-  if(tr.load<=1e-9)return;
+  if(tr.load<=1e-9||!(pr===pr))return;
   if(tr.spot){v=tons*(pr-ORD.spot);K.spot+=tons;K.spotV+=tons*ORD.spot;pfW("spotd",tons*ORD.spot);}
   else{const o=ordGet(tr.oid),ld=o?ordLateD(o):0,chg=ld>0?Math.min(ORD.lateCap,ORD.late*Math.ceil(ld)):0;v=tons*(pr-chg);K.chg+=tons*chg;if(chg)pfW("chg",tons*chg);
     if(ld>0)K.lateT+=tons;else K.onT+=tons;

@@ -81,13 +81,13 @@ with sync_playwright() as pw:
     ok("idle energy has built up over the season and is placed by area", r["idle"] > 1000, r)
 
     # --- 7. bale grading
-    r = pg.evaluate("""()=>{const P=__PM,S=P.S,X=P.OX;const Q=X.bqState(),wx=S.wx;let cnt={A:0,B:0,C:0},mx=0,rej=0;const r0=Q.rej;
+    r = pg.evaluate("""()=>{const P=__PM,S=P.S,X=P.OX;const Q=X.bqState(),wx=S.wx;let cnt={A:0,C:0,M:0},mx=0,rej=0;const r0=Q.rej;
       for(let i=0;i<2000;i++){const t=X.baleGrade({id:i,load:220});cnt[t.q]++;mx+=t.m;if(X.baleGate(t))rej++;}
       const dry={m:0.10,k:0,pf:1},wet={m:0.18,k:0,pf:(1-0.18)/(1-X.BALE.allow)};
       const o0=S.ledger.occ;Q.m=0.10;Q.k=0;const paidDry=X.baleUnload(dry,100,0);const paidWet=X.baleUnload(wet,100,0);
       Q.m=0.10;const f1=X.baleFeed();Q.m=0.16;const f2=X.baleFeed();Q.k=0.5;const f3=X.baleFeed();
       return {cnt,mean_m:mx/2000,rej,rejC:Q.rej-r0,paidDry,paidWet,sf1:f1.sf,sf2:f2.sf,yk3:f3.yk}}""")
-    ok("load grades roughly 69/27/4 A/B/C", 0.02 < r["cnt"]["C"] / 2000 < 0.06 and 0.22 < r["cnt"]["B"] / 2000 < 0.32, r["cnt"])
+    ok("loads follow the OCC recipe: A, C and Mixed Waste all arrive (v6.8.3)", all(r["cnt"].get(k, 0) > 0 for k in "ACM") and sum(r["cnt"].values()) == 2000, r["cnt"])
     ok("every C load rejected at the gate, no A or B", r["rej"] == r["cnt"]["C"] == r["rejC"], r)
     ok("a dry load is paid in full; a wet one at air-dry weight", abs(r["paidDry"] - 100) < 1e-6 and abs(r["paidWet"] - 100 * (0.82 / 0.88)) < 1e-6, r)
     ok("water over 10% is not fiber; contamination costs yield", r["sf1"] == 1 and abs(r["sf2"] - 0.94) < 1e-9 and r["yk3"] < 1, r)

@@ -116,7 +116,7 @@ with sync_playwright() as pw:
 
     # --- planning and water
     pg.evaluate("()=>document.querySelector('#dcsOv [data-a=PLAN]').click()"); pg.wait_for_timeout(600)
-    r = pg.evaluate("()=>{const S=__PM.S,open=S.ord.list.filter(o=>o.st==='open').length,secs=[...document.querySelectorAll('#planBox .plsec .dcssub')].map(e=>e.textContent);const tb=document.querySelectorAll('#planBox .plsec')[1].querySelector('table tbody');return {open,rows:tb?[...tb.rows].filter(r=>r.cells.length===6).length:0,secs}}")
+    r = pg.evaluate("()=>{const S=__PM.S,open=S.ord.list.filter(o=>o.st==='open').length,secs=[...document.querySelectorAll('#planBox .plsec .dcssub')].map(e=>e.textContent);const ob=[...document.querySelectorAll('#planBox .plsec')].find(x=>/Order book/.test((x.querySelector('.dcssub')||{}).textContent||'')),tb=ob&&ob.querySelector('table tbody');return {open,rows:tb?[...tb.rows].filter(r=>r.cells.length===6).length:0,secs}}")
     ok("planning has its four sections", all(s in " ".join(r["secs"]) for s in ["Production plan", "Order book", "Inventory", "Trucks"]), r["secs"])
     ok("every open order is listed", r["rows"] == r["open"], r)
     pg.evaluate("()=>document.querySelector('#dcsOv [data-a=WATER]').click()"); pg.wait_for_timeout(600)

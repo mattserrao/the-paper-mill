@@ -95,6 +95,7 @@ with sync_playwright() as pw:
     pg.route("**/*", route_for(html)); pg.add_init_script(INIT); pg.goto("http://bench.local/" + (f"?env={env}" if env else ""))
     pg.wait_for_function("window.__PM&&window.__B&&__B.first!==null", timeout=300000)
     pg.evaluate("()=>document.getElementById('v2go').click()")   # leaves the menu once the start-up precompile is done; each run then starts its own survival run
+    pick_leader(pg)   # (v6.9.2: the leader picker comes before the run starts, v5.6)
     pg.wait_for_function("__PM.S.season&&__PM.S.season.on", timeout=300000, polling=200); pg.wait_for_timeout(300)
     pg.evaluate("()=>{const G=__PM.G3;if(G&&G.EXP)G.EXP.noRender=true;}")   # sim only
     res = []

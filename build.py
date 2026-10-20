@@ -33,3 +33,11 @@ if shutil.which("node"):
     with tempfile.NamedTemporaryFile("w", suffix=".mjs", delete=False) as f: f.write(js)
     r = subprocess.run(["node", "--check", f.name], capture_output=True, text=True); pathlib.Path(f.name).unlink()
     print("syntax check: ok" if r.returncode == 0 else "SYNTAX ERROR in the game script:\n" + (r.stderr or r.stdout)[:600])
+# v6.9.2: code glued onto the end of a "//" comment is still valid JS, so the syntax check can't see it (four such bugs
+# shipped: S.q.made, G3.closeKnobUI, the bird cut-scene's sheet check, the outage notice). Warn on a comment that runs
+# straight into an assignment, call or declaration.
+_glued = re.compile(r"//[^\n]*?(?:[a-z\)](?:S|G3|C|P|W|K)\.[A-Za-z_][\w.]*\s*(?:\+?=[^=]|\()|[\);](?:const|let|if|for)\s*[\(\w])")
+for f in sorted((S / "js").glob("*.js")):
+    for n, l in enumerate(f.read_text().split("\n"), 1):
+        m = _glued.search(l)
+        if m: print(f"WARNING: {f.name}:{n}: code after a // comment never runs: …{m.group(0)[-70:]}")

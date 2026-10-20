@@ -49,7 +49,8 @@
     /* v6.1 t17: set off while a sheet or the stats panel is open (the Upsets list), the cut-scene waits and plays the
        moment it closes, if the bird is still on the lines (it used to be skipped) */
     let pend=0;const SHEETS=".v2sheet.open,.v2top.open";
-    G3.birdCine=()=>{if(NOCINE||!G3.on||S.zen||document.hidden||C||afkOn())return;   // (v6.8.3: no cut-scene while the mill is left to run)if(document.querySelector(SHEETS)){pend=performance.now();return;}pend=0;   // v5.0.6: not over an open sheet or the stats panel (it hid the panel and ate the clicks); the upset itself still happens
+    G3.birdCine=()=>{if(NOCINE||!G3.on||S.zen||document.hidden||C||afkOn())return;   // (v6.8.3: no cut-scene while the mill is left to run)
+  if(document.querySelector(SHEETS)){pend=performance.now();return;}pend=0;   // v5.0.6: not over an open sheet or the stats panel (it hid the panel and ate the clicks); the upset itself still happens
       try{start();}catch(e){console.error("bird cut-scene",e);finish();}};
     const v=new THREE.Vector3();
     G3.cineTick=now=>{if(!C){if(pend&&!document.querySelector(SHEETS)){const t0=pend;pend=0;if(performance.now()-t0<120000&&S.inc.some(i=>i.id==="birdline"))G3.birdCine();}return;}try{const c=C,dt=Math.min(0.1,(now-c.last)/1000);c.last=now;c.t+=dt;const t=c.t;G3.lastMove=performance.now();

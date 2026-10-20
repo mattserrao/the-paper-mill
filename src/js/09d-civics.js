@@ -192,7 +192,7 @@ function civReward(id,yes){const V=S.civ,r=CIVREWARD[id];if(!yes){log(`Declined:
 let civEl=null;
 const civOdds=s=>s<=-2?"much rarer":s<0?"rarer":s>0?"more often":"";
 const civChips=d=>CIVK.filter(k=>d&&d[k]).map(k=>`<span class="cvc ${d[k]>0?"up":"dn"}">${CIV.names[k]} ${d[k]>0?"+":"−"}${Math.abs(d[k]*CIV.unit)}</span>`).join("");   // (v5.1 QA: meter points, as the bar moves)
-function civOpen(){const V=S.civ,d=V.cur;if(!d||typeof document==="undefined")return;running=false;S.cards.open={civ:true};
+function civOpen(){const V=S.civ,d=V.cur;if(!d||typeof document==="undefined")return;if(G3.yieldUI)G3.yieldUI();running=false;S.cards.open={civ:true};
   if(!civEl){civEl=document.createElement("div");civEl.className="overlay";civEl.id="civOv";civEl.hidden=true;document.body.appendChild(civEl);}
   const id=d.id,rw=CIVREWARD[id],u=CIVU[id],mt=CIVMETER[id],area=civArea(id),ord=V.orders[area];
   const kind=rw?"Reward · "+CIV.names[rw.k]:mt?(id.startsWith("c_")?"Crisis · ":"Warning · ")+CIV.names[mt.k]:"Upset · "+area,cls=rw?" cvr":mt?(id.startsWith("c_")?" cvx":" cvw"):"";

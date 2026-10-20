@@ -86,7 +86,8 @@ function step(dt){
   baseLoadTick(dt);   // v6.6: a stopped machine still draws power and keeps the boiler banked
   let beat=0;
   if(prod>0){{const ec=prod*energyCost();spend(ec,"energy");pfEnergy(prod,ec);}knobSteamCost(prod);
-    {const de=kwhNow()-WE.kwh0;if(de&&!S.zen){const v=de*prod/P.pmLoss*WE.kwhCost*P.energyMul*(P.costMul||1);spend(v,"energy");pfAdd("power","stock",v);}}   // v6.8 refining power above (or below) standardS.q.made+=prod;
+    {const de=kwhNow()-WE.kwh0;if(de&&!S.zen){const v=de*prod/P.pmLoss*WE.kwhCost*P.energyMul*(P.costMul||1);spend(v,"energy");pfAdd("power","stock",v);}}   // v6.8 refining power above (or below) standard
+  S.q.made+=prod;
     // v6.5.3: the spec check (07e): weight, moisture or color out and the whole reel is beater; then a grade change's
     // transition tons; then the other knob defects' share
     let off=0;if(qualTick().off)off=prod;

@@ -3335,7 +3335,7 @@ function cardHave(c){const ids=[...new Set([...String(c.odds).matchAll(/LV\("(\w
 let cardEl=null;
 // v6.8.3 free play "Let the mill run" (Settings): the card is declined on the spot and the sim doesn't pause
 const afkOn=()=>!!(S&&S.free&&S.afk);
-function openCard(c){if(afkOn()){log(`Declined for you: ${c.title}`,"");if(typeof civCardDecline==="function")civCardDecline(c);return;}
+function openCard(c){if(afkOn()){log(`Declined for you: ${c.title}`,"");if(typeof civCardDecline==="function")civCardDecline(c);return;}if(G3.yieldUI)G3.yieldUI();   // (v6.9.2: a card draws under the DCS and faceplate; close them so it isn't hidden)
   const o=c.odds();S.cards.open={c,o};running=false;
   if(!cardEl){cardEl=document.createElement("div");cardEl.className="overlay";cardEl.id="dealOv";cardEl.hidden=true;document.body.appendChild(cardEl);
     // v5.0.4: while a card waits for an answer, Tab cycles through its own buttons only
@@ -3468,6 +3468,7 @@ const baleOn=ordOn;
 // ---------- the order book ----------
 function ordState(){if(!S.ord){S.ord={n:0,list:[],k:{ship:0,onT:0,lateT:0,late:0,chg:0,spot:0,spotV:0,canc:0,dry:0,done:0,doneOn:0}};
     if(S.rng&&S.rng.ord==null)S.rng.ord=((S.seed||1)^0x51ed270b)>>>0;   // (a save from before v6.6)
+    for(const tr of (S.outDock||[]))if(tr&&tr.want==null){const g=(tr.lots&&tr.lots.length&&tr.lots[0][0])||C.grade;Object.assign(tr,{g,want:Math.max(tr.load||0,P.truckRolls),spot:true,oid:0,wait:0});}   // (v6.9.2: a docked truck from a pre-v6.6 save)
     if(S.plan)ordCampaign(C.grade,Math.max(0,S.plan.left||0),S.t);ordCarry();}
   return S.ord;}
 // called from seedRun: a fresh book for the run (the warehouse's opening stock already has buyers)
@@ -3506,7 +3507,7 @@ function ordAutoRate(){return clamp(ordReady()/P.truckRolls/3-S.outQ.length*0.15
 const ordLateD=o=>Math.max(0,(S.t-o.due-ORD.grace)/1440);
 // a loaded truck leaves: the invoice, the chargeback, the order's progress
 function ordDepart(tr){const O=ordState(),K=O.k,rw=C.rollW.v,tons=tr.load*rw,pr=priceOf(tr.g);let v;
-  if(tr.load<=1e-9)return;
+  if(tr.load<=1e-9||!(pr===pr))return;
   if(tr.spot){v=tons*(pr-ORD.spot);K.spot+=tons;K.spotV+=tons*ORD.spot;pfW("spotd",tons*ORD.spot);}
   else{const o=ordGet(tr.oid),ld=o?ordLateD(o):0,chg=ld>0?Math.min(ORD.lateCap,ORD.late*Math.ceil(ld)):0;v=tons*(pr-chg);K.chg+=tons*chg;if(chg)pfW("chg",tons*chg);
     if(ld>0)K.lateT+=tons;else K.onT+=tons;
@@ -3627,7 +3628,7 @@ let outEl=null;
 function outShell(){if(!outEl){outEl=document.createElement("div");outEl.className="overlay";outEl.id="outOv";outEl.hidden=true;document.body.appendChild(outEl);}clearTimeout(outEl._t);outEl.classList.remove("note");return outEl;}
 const outTime=t=>hhmm(t).replace(" · "," at ");
 const hourOf=t=>{const h=Math.floor(((t+360)%1440)/60);return `${h%12||12} ${h<12?"AM":"PM"}`;};
-function openOutagePlan(){const o=S.outg,st=outStart(o.k),first=o.k===1,d0=S.cash<0?0:1,pick={stock:d0,wet:d0,dry:d0};   // v5.0.4: in the red, the budgets start at the cheapest
+function openOutagePlan(){if(G3.yieldUI)G3.yieldUI();const o=S.outg,st=outStart(o.k),first=o.k===1,d0=S.cash<0?0:1,pick={stock:d0,wet:d0,dry:d0};   // v5.0.4: in the red, the budgets start at the cheapest
   const COST=OUT.cost,lp=leadPlanNew();   // v4.4 survival leaders: lp is the leader's pick for this outage (and the run's one change of leader)
   running=false;S.cards.open={outage:true};
   const el=outShell(),k=n=>"$"+Math.round(n/1e3)+"k";
@@ -3674,7 +3675,8 @@ function beginOutage(){const o=S.outg,st=S.t;if(!o.plan)o.plan={stock:1,wet:1,dr
   log(`Planned outage ${o.k} has begun: down until ${hourOf(o.end)}`,"warn");BANNERS.push({text:`Planned outage: the mill is down until ${hourOf(o.end)}.`,t:null,kind:"good",tag:"OUTAGE"});
   const canWatch=C.simSpeed>OUT.simCap&&!TURBO_FAST(C.simSpeed);   // (at 5 min/s or slower there is nothing to slow down)
   outNote("Outage has begun",`The mill is down for planned maintenance: ${(OUT.jobs[outJob(o.k)-1]||"inspections").toLowerCase()} and new press felts. Started ${hourOf(st)}, ends ${outTime(o.end)}.${o.prep?`<br><b>${prepLine(o.prep.n,o.prep.m)}.</b>`:""}`,canWatch?7000:5000,canWatch?{label:"Watch the crews",on:outWatch}:null);}
-function endOutage(){const o=S.outg,pl=o.plan||{stock:1,wet:1,dry:1};o.on=false;o.watch=false;outNoteHide();   // v5.0.6: at the player's speed the outage can end before its 7 s notice doesS.fx=S.fx.filter(f=>f.id!=="pout");S.M=mods();
+function endOutage(){const o=S.outg,pl=o.plan||{stock:1,wet:1,dry:1};o.on=false;o.watch=false;outNoteHide();   // v5.0.6: at the player's speed the outage can end before its 7 s notice does
+  S.fx=S.fx.filter(f=>f.id!=="pout");S.M=mods();
   o.spd=null;   // (v5.0.1: nothing to restore: the outage only capped the running speed, see simRate)
   o.rel={stock:OUT.rel[pl.stock],wet:OUT.rel[pl.wet],dry:OUT.rel[pl.dry]};
   const rp=v=>Math.round(Math.abs(1-OUT.rel[v])*100),txt=OUT.areas.map(([a,n])=>`${n} ${pl[a]===2?"+"+rp(2)+"%":pl[a]===0?"−"+rp(0)+"%":"±0%"}`).join(" · ");
@@ -3875,7 +3877,8 @@ function step(dt){
   baseLoadTick(dt);   // v6.6: a stopped machine still draws power and keeps the boiler banked
   let beat=0;
   if(prod>0){{const ec=prod*energyCost();spend(ec,"energy");pfEnergy(prod,ec);}knobSteamCost(prod);
-    {const de=kwhNow()-WE.kwh0;if(de&&!S.zen){const v=de*prod/P.pmLoss*WE.kwhCost*P.energyMul*(P.costMul||1);spend(v,"energy");pfAdd("power","stock",v);}}   // v6.8 refining power above (or below) standardS.q.made+=prod;
+    {const de=kwhNow()-WE.kwh0;if(de&&!S.zen){const v=de*prod/P.pmLoss*WE.kwhCost*P.energyMul*(P.costMul||1);spend(v,"energy");pfAdd("power","stock",v);}}   // v6.8 refining power above (or below) standard
+  S.q.made+=prod;
     // v6.5.3: the spec check (07e): weight, moisture or color out and the whole reel is beater; then a grade change's
     // transition tons; then the other knob defects' share
     let off=0;if(qualTick().off)off=prod;
@@ -4758,7 +4761,7 @@ function vlvSettle(id){if(vlvT(id)){if(S.vlv.bt&&S.vlv.bt.id===id)S.vlv.bt=null;
 const vlvPulpOP=()=>S.vlv&&S.vlv.lp["NV-101"]?Math.round(S.vlv.lp["NV-101"].op):null;
 
 /* ---- bump test: MAN, wait for a baseline, step the output, record, fit a model, put the loop back ---- */
-function vlvBump(id,size){const d=VD[id];if(!d||!vlvOn())return false;const L=vlvTouch(id),W=S.vlv;if(W.bt)return false;
+function vlvBump(id,size){const d=VD[id];if(!d||!vlvOn())return false;if(S.vlv&&S.vlv.bt)return false;const L=vlvTouch(id),W=S.vlv;
   if(d.ctl&&!vCasOK(W,d))return false;const prev=d.ctl?(L.m==="MAN"?"MAN":"AUTO"):L.m,op0=L.op;size=+size||d.bsz||5;
   const dop=op0+size>100?-Math.abs(size):op0-size<0?Math.abs(size):size;
   if(L.m!=="MAN"){L.m="MAN";L.bump=1;}W.bt={id,t:0,base:clamp(Math.round(d.bump*0.15),30,240),dur:d.bump,op0,dop,prev,rec:[]};W.btRes=null;return true;}
@@ -4862,7 +4865,7 @@ function vlvChallenge(cid,tune){const c=VCH[cid],B=vSbB(),W={lp:{},B,acc:{mco:0,
   return {trace:o,iae,trav,rev,score:unstable?Infinity:score,unstable};}
 // the reference: what a careful engineer gets. Lambda (moderate) from the true model, then a coarse search around it,
 // loop by loop, inner loops first (headless; once per challenge, cached)
-const VCHREF={};
+const VCHREF={shake:45.41,wake:13.50,stick:34.87,inner:24.90,patience:16.69};   // (v6.9.2: precomputed, the same within 1% on every grade; the search below froze the first Run for ~0.5 s, more on a phone)
 function vlvChRef(cid){if(VCHREF[cid]!=null)return VCHREF[cid];const c=VCH[cid];
   const fit={"NV-101":{type:"fo",K:-0.8,tau:20,th:0.5},"LV-104":{type:"int",Ki:0.25,th:0.08},"FV-201":{type:"fo",K:1,tau:0.33,th:3},"QC-300":{type:"fo",K:-2.25,tau:3,th:1.3},"PV-303":{type:"fo",K:1.68,tau:0.5,th:0.04}};
   const t={};for(const id of c.loops)t[id]=vLambda(VD[id],fit[id],1,"PI");let best=vlvChallenge(cid,t).score;
@@ -5053,7 +5056,8 @@ function startSeason(surv){newGame();S.season=surv?{on:true,surv:true,end:1e12,d
   // stream: the week's dice are unchanged. It is saved with the season (S.bn).
   S.bn=BN_IDS[Math.floor(Math.random()*BN_IDS.length)];applyUpgrades();
   S.pal=Math.floor(Math.random()*4);   // v6.1 iso: the season's palette (spring, summer, autumn, winter; 36c), cosmetic like the bottleneck
-  if(typeof civStart==="function")civStart();   // v5.1 civics: the four meters start (the leader, picked next, sets their values)C.breaks=true;
+  if(typeof civStart==="function")civStart();   // v5.1 civics: the four meters start (the leader, picked next, sets their values)
+  C.breaks=true;
   CH.on=true;$("chaosOn").checked=true;CH.lvl=1;$("chaosLvl").value=1;$("chaosLvlv").textContent="1×";
   EVENTS.forEach(e=>{CH.en[e.id]=true;const c=$("en-"+e.id);if(c)c.checked=true;});seasonLocks(true);
   S.rc={i:0,p:rcAcc(),s:rcAcc(),cards:[]};   // v5.0.4: the first report card starts with the run, so upgrades bought before the first step count (it used to start at the first step)
@@ -5472,7 +5476,7 @@ function civReward(id,yes){const V=S.civ,r=CIVREWARD[id];if(!yes){log(`Declined:
 let civEl=null;
 const civOdds=s=>s<=-2?"much rarer":s<0?"rarer":s>0?"more often":"";
 const civChips=d=>CIVK.filter(k=>d&&d[k]).map(k=>`<span class="cvc ${d[k]>0?"up":"dn"}">${CIV.names[k]} ${d[k]>0?"+":"−"}${Math.abs(d[k]*CIV.unit)}</span>`).join("");   // (v5.1 QA: meter points, as the bar moves)
-function civOpen(){const V=S.civ,d=V.cur;if(!d||typeof document==="undefined")return;running=false;S.cards.open={civ:true};
+function civOpen(){const V=S.civ,d=V.cur;if(!d||typeof document==="undefined")return;if(G3.yieldUI)G3.yieldUI();running=false;S.cards.open={civ:true};
   if(!civEl){civEl=document.createElement("div");civEl.className="overlay";civEl.id="civOv";civEl.hidden=true;document.body.appendChild(civEl);}
   const id=d.id,rw=CIVREWARD[id],u=CIVU[id],mt=CIVMETER[id],area=civArea(id),ord=V.orders[area];
   const kind=rw?"Reward · "+CIV.names[rw.k]:mt?(id.startsWith("c_")?"Crisis · ":"Warning · ")+CIV.names[mt.k]:"Upset · "+area,cls=rw?" cvr":mt?(id.startsWith("c_")?" cvx":" cvw"):"";
@@ -5755,6 +5759,7 @@ let grainDone=false;function makeGrain(){if(grainDone)return;grainDone=true;cons
 function setZen(on){if(on===!!ZEN)return;
   if(on){makeGrain();civDrop();if(S.season&&S.season.on){if(G3.save&&G3.save.drop)G3.save.drop();S.season=null;S.lead=null;applyUpgrades();seasonLocks(false);}
     ZEN={speed:C.simSpeed,chaos:CH.on,hays:C.hays,breaks:C.breaks,view:G3.on};
+    if(S.vlv){if(S.vlv.any)vUntouch(Object.keys(S.vlv.lp));S.vlv.cpl=null;S.vlv.bt=null;if(S.vlv.acc)S.vlv.acc={mco:0,make:0,over:0,dL:0};}   // (v6.9.2: valve state left touched kept re-booking its water in zen)
     S.inc=[];if(S.wd==="hayout")S.wd="run";if(S.pm==="break"){S.pm="run";}BANNERS.length=0;S.zen=true;
     CH.on=false;$("chaosOn").checked=false;C.hays=false;C.breaks=false;
     document.body.dataset.zs="none";document.body.classList.add("zen");setFS(true);G3.zen=true;G3.zenS=null;
@@ -10446,7 +10451,8 @@ function no3D(){G3.ok=false;$("no3d").hidden=false;$("no3d-retry").onclick=()=>l
   {const kraft=M.kraft;[[-44,36],[-41.5,36],[-39,36.4]].forEach(([x,z],k)=>{for(let l=0;l<7+(k%2)*3;l++){box(1.2,0.1,1.0,kraft,x,0.07+l*0.16,z,scene,false);[-0.45,0,0.45].forEach(dx=>box(0.1,0.08,1.0,M.ink,x+dx,0.11+l*0.16+0.02,z,scene,false));}});
     for(let r=0;r<3;r++)for(let c=0;c<4-r;c++){const core=cylZ(0.17,2.4,M.kraft,-34+c*0.36+r*0.18,0.17+r*0.3,36.2,10);core.rotation.y=0;}
     YP.dumpster=(x,z,ry=0)=>{const g=new THREE.Group();g.position.set(x,0,z);g.rotation.y=ry;scene.add(g);const dm=M.ok;
-      const body=new THREE.Mesh(new THREE.BoxGeometry(2.4,1.3,1.4),dm);body.position.y=0.75;body.castShadow=true;body.receiveShadow=true;g.add(body);box(1.15,0.1,1.42,dm,-0.6,1.42,0,g,false);   // (a plain box: the one green rounded box would be a batch of its own)const lid=box(1.15,0.1,1.42,dm,0.6,1.5,0,g,false);lid.rotation.z=-0.35;lid.position.y=1.6;
+      const body=new THREE.Mesh(new THREE.BoxGeometry(2.4,1.3,1.4),dm);body.position.y=0.75;body.castShadow=true;body.receiveShadow=true;g.add(body);box(1.15,0.1,1.42,dm,-0.6,1.42,0,g,false);   // (a plain box: the one green rounded box would be a batch of its own)
+  const lid=box(1.15,0.1,1.42,dm,0.6,1.5,0,g,false);lid.rotation.z=-0.35;lid.position.y=1.6;
       [[-0.9,-0.55],[0.9,-0.55],[-0.9,0.55],[0.9,0.55]].forEach(([a,b])=>cylZ(0.09,0.08,M.ink,a,0.09,b,8,g));box(0.08,0.9,1.2,M.ink,-1.22,0.75,0,g,false);return g;};
     YP.dumpster(-27.5,36.5,0.1);}
   // by the office: an OCC compactor and its dumpster, a vending-machine-sized recycling cage
@@ -12628,7 +12634,8 @@ function no3D(){G3.ok=false;$("no3d").hidden=false;$("no3d-retry").onclick=()=>l
     /* v6.1 t17: set off while a sheet or the stats panel is open (the Upsets list), the cut-scene waits and plays the
        moment it closes, if the bird is still on the lines (it used to be skipped) */
     let pend=0;const SHEETS=".v2sheet.open,.v2top.open";
-    G3.birdCine=()=>{if(NOCINE||!G3.on||S.zen||document.hidden||C||afkOn())return;   // (v6.8.3: no cut-scene while the mill is left to run)if(document.querySelector(SHEETS)){pend=performance.now();return;}pend=0;   // v5.0.6: not over an open sheet or the stats panel (it hid the panel and ate the clicks); the upset itself still happens
+    G3.birdCine=()=>{if(NOCINE||!G3.on||S.zen||document.hidden||C||afkOn())return;   // (v6.8.3: no cut-scene while the mill is left to run)
+  if(document.querySelector(SHEETS)){pend=performance.now();return;}pend=0;   // v5.0.6: not over an open sheet or the stats panel (it hid the panel and ate the clicks); the upset itself still happens
       try{start();}catch(e){console.error("bird cut-scene",e);finish();}};
     const v=new THREE.Vector3();
     G3.cineTick=now=>{if(!C){if(pend&&!document.querySelector(SHEETS)){const t0=pend;pend=0;if(performance.now()-t0<120000&&S.inc.some(i=>i.id==="birdline"))G3.birdCine();}return;}try{const c=C,dt=Math.min(0.1,(now-c.last)/1000);c.last=now;c.t+=dt;const t=c.t;G3.lastMove=performance.now();
@@ -13416,7 +13423,9 @@ document.addEventListener("keydown",e=>{if(e.key!=="Escape"||!(KUI.st||KUI.panel
 UI_TICKS.push(()=>{if(S.zen&&(KUI.panel||KUI.st)){closeKnob();closeStation();}kuiSync();if((KUI.panel||KUI.st)&&!(S.zen&&POP.on))kuiRefresh();});
 // taps in the 3D view (29-3d-camera.js) and labels in the knob view (40b)
 G3.knobTap=h=>{if(!h||S.zen)return;if(h.k==="knob")openKnob(h.id);else if(h.k==="station")openStation(h.a,"dcs");else if(h.k==="spider")openSpider();else if(h.k==="slice")openSlice();};
-G3.openKnob=openKnob;G3.openStation=openStation;G3.slcSet=slcSet;G3.hayout=()=>hayout();G3.qual=()=>({bw:QNOW.bw,m:QNOW.m,shade:QNOW.shade,out:[...QNOW.out],status:qualStatus(),spec:QSPEC[C.grade]});   // (v6.5.3: tests)G3.closeKnobUI=()=>{closeKnob();closeStation();};
+G3.openKnob=openKnob;G3.openStation=openStation;G3.slcSet=slcSet;G3.hayout=()=>hayout();G3.qual=()=>({bw:QNOW.bw,m:QNOW.m,shade:QNOW.shade,out:[...QNOW.out],status:qualStatus(),spec:QSPEC[C.grade]});   // (v6.5.3: tests)
+  G3.yieldUI=()=>{try{if(G3.VUI&&G3.VUI.id&&G3.vlvClose&&!POP.on)G3.vlvClose();if(!POP.on){closeKnob();closeStation();}else if(KUI.panel)closeKnob();}catch(_){}};   // (v6.9.2: cards, the outage plan and the pause menu draw under these)
+  G3.closeKnobUI=()=>{closeKnob();closeStation();};
 ["spiClose","slcClose"].forEach(id=>$(id).addEventListener("click",()=>setTimeout(kuiSync,0)));
 // the spider valve and the slice are fiddly knobs too: their panels slow the game the same way (and close the others)
 {const o1=openSpider,o2=openSlice;openSpider=function(){closeKnob();closeStation(true);o1();kuiSync();};openSlice=function(){closeKnob();closeStation(true);o2();kuiSync();};}
@@ -13643,7 +13652,8 @@ function pfDraw(cv,spec,W0){const dpr=Math.min(2,(cv.ownerDocument.defaultView||
   for(const p of pts){if(stack){let s=0;p.v.forEach(v=>s+=v||0);hi=Math.max(hi,s);lo=Math.min(lo,0);}else p.v.forEach(v=>{if(v!=null){lo=Math.min(lo,v);hi=Math.max(hi,v);}});}
   if(!(hi>-Infinity)){x.fillStyle="rgba(190,205,230,.7)";x.font="600 12px system-ui,sans-serif";x.fillText("No data yet",L+8,ch/2);return pts;}
   if(bar||spec.k==="pct"||spec.pn){lo=Math.min(0,lo);hi=Math.max(0,hi);}
-  {const m=Math.max(Math.abs(hi),Math.abs(lo));if(hi-lo<Math.max(m*0.04,1e-6)){const c=(hi+lo)/2,w=Math.max(m*0.05,1);hi=c+w;lo=bar?Math.min(0,lo):c-w;}}   // (a flat line gets a sensible scale, not ±0.5)const pad=(hi-lo)*0.08,pos=lo>=0;if(!bar&&spec.k!=="pct")lo-=pad;if(pos)lo=Math.max(0,lo);hi+=pad;
+  {const m=Math.max(Math.abs(hi),Math.abs(lo));if(hi-lo<Math.max(m*0.04,1e-6)){const c=(hi+lo)/2,w=Math.max(m*0.05,1);hi=c+w;lo=bar?Math.min(0,lo):c-w;}}   // (a flat line gets a sensible scale, not ±0.5)
+  const pad=(hi-lo)*0.08,pos=lo>=0;if(!bar&&spec.k!=="pct")lo-=pad;if(pos)lo=Math.max(0,lo);hi+=pad;
   const Y=v=>Bm-(v-lo)/(hi-lo)*(Bm-T);
   x.strokeStyle="rgba(140,170,210,.16)";x.lineWidth=1;x.fillStyle="rgba(190,205,230,.75)";x.font="600 10px system-ui,sans-serif";x.textAlign="right";
   for(let k=0;k<=2;k++){const v=lo+(hi-lo)*k/2,y=Y(v);x.beginPath();x.moveTo(L,y);x.lineTo(R,y);x.stroke();x.fillText(pfFmt(v,spec.u).replace("$",""),L-3,y+3);}
@@ -14108,7 +14118,7 @@ function popOpen(v){v=v==="both"||!v?"home":v;
   w.addEventListener("pagehide",()=>{if(POP.w===w)popDock(true);});
   w.addEventListener("resize",()=>{if(POP.on&&POP.view!=="dcs")pfRender(true);});
   // Escape: first clears a selection in the flow, then goes back to the control room
-  d.addEventListener("keydown",e=>{if(e.key!=="Escape")return;if(PFUI.sel&&POP.view==="pf"){e.preventDefault();PFUI.sel=null;pfRender(true);return;}
+  d.addEventListener("keydown",e=>{if(e.key!=="Escape")return;if(G3.VUI&&G3.VUI.id&&G3.vlvClose){e.preventDefault();G3.vlvClose();return;}if(PFUI.sel&&POP.view==="pf"){e.preventDefault();PFUI.sel=null;pfRender(true);return;}
     if(POP.view!=="home"){e.preventDefault();popShow("home");}});
   popSkin();POP.view="home";popGo(v);kuiSync();try{w.focus();}catch(_){}
   diag("popout: opened ("+v+")");return true;}
@@ -14121,8 +14131,9 @@ async function popMove(){const w=POP.w;if(!w)return;try{const sd=await w.getScre
 function popDock(closing){if(!POP.on)return;const so=$("dcsOv"),po=$("pfOv"),ro=$("rmOv"),mo=$("manOv"),w=POP.w;
   try{pfCtlHome();}catch(_){}
   POP.inApp=true;try{if(RMUI.open)rmClose();if(MANUI.open)manClose();}catch(_){}POP.inApp=false;
+  try{if(G3.vlvClose&&G3.VUI&&G3.VUI.id)G3.vlvClose();}catch(_){}
   POP.on=false;POP.w=null;
-  [so,po,ro,mo].forEach(o=>{if(o){o.hidden=true;try{document.body.appendChild(o);}catch(_){}}});
+  [so,po,ro,mo,document.getElementById("vlvOv")||(w&&!w.closed?w.document.getElementById("vlvOv"):null)].forEach(o=>{if(o){o.hidden=true;try{document.body.appendChild(o);}catch(_){}}});
   KUI.st=null;PFUI.open=false;G3.pfOpen=false;G3.pfCtlOn=false;kuiSync();
   if(!closing)try{if(w&&!w.closed)w.close();}catch(_){}
   diag("popout: docked");}
@@ -14879,7 +14890,8 @@ function vlvAlarms(a,L){if(S.zen)return;for(const d of VDEF){if(d.area!==a)conti
   const h=vlvAlarm(d.id);if(h)L.push([`${d.id} ${({osc:"OSCILLATING",stick:"VALVE STICKING",dead:"CYCLING",sat:"VALVE AT LIMIT"})[h.k]}`,h.k!=="sat"]);}}
 
 /* ---- the panel ---- */
-function vlvOv(){let o=$("vlvOv");if(o)return o;
+const vlvHost=()=>{try{if(POP.on&&POP.w&&!POP.w.closed){const m=POP.w.document.getElementById("popMain");if(m)return m;}}catch(_){}return document.body;};
+function vlvOv(){let o=$("vlvOv");if(o){const h=vlvHost();if(o.parentNode!==h)h.appendChild(o);return o;}
   o=kEl("div","overlay top vlvov");o.id="vlvOv";o.hidden=true;
   o.innerHTML=`<div class="dcs vlvp" role="dialog" aria-modal="true" aria-labelledby="vlv-h"><div class="dcsh"><b id="vlv-h"></b><span class="vlvwh" id="vlvWh"></span>
       <button type="button" class="dcsx" id="vlvClose" aria-label="Close">✕</button>
@@ -14888,7 +14900,7 @@ function vlvOv(){let o=$("vlvOv");if(o)return o;
       <canvas id="vlvCv" width="760" height="300" aria-label="Trend of setpoint, process value and output"></canvas><div class="vlvhl" id="vlvHl"></div></div>
       <div class="vlvpane" id="vlvPane"></div></div>
     <div class="dcsf vlvf"><span id="vlvSt"></span><span class="vlvclk">Tuning clock <span class="seg" role="group" aria-label="Tuning clock">${[[1,"Real time"],[5,"5×"],[20,"20×"],[60,"60×"]].map(([c,l])=>`<button type="button" data-ck="${c}">${l}</button>`).join("")}</span></span></div></div>`;
-  document.body.appendChild(o);
+  vlvHost().appendChild(o);
   $("vlvClose").addEventListener("click",()=>closeVlv());
   o.addEventListener("click",e=>{if(e.target===o){closeVlv();return;}
     const t=e.target.closest("[data-vt],[data-vw],[data-ck],[data-gl]");if(!t)return;
@@ -15047,7 +15059,7 @@ function vpCh(p,d){const sv=S.vlvc||{};
     stick:"Every reversal is a stick-slip jump. A slower, gentler loop reverses less: lower Kc, Ti about the tub's 20 minutes.",
     inner:"The inner steam loop rings at this tuning. Calm PV-303 first (Kc about 0.5, Ti 0.5 min); then the moisture loop can be quicker.",
     patience:"3 minutes of dead time. Lambda with λ = 3 min: Kc about 0.05, Ti about the 0.33-minute lag. Mostly integral, very little gain."})[c.id];});
-  $("vChGo").addEventListener("click",()=>{const r=vlvChallenge(c.id,VUI.chT),st=vlvStars(c.id,r.score);vlvChSave(c.id,st);VUI.chRes=Object.assign(r,{st,ref:vlvChRef(c.id)});VUI.chPlay=performance.now();vChScore();vlvRefresh(true);});
+  $("vChGo").addEventListener("click",()=>{const r=vlvChallenge(c.id,VUI.chT),st=vlvStars(c.id,r.score);vlvChSave(c.id,st);VUI.chRes=Object.assign(r,{st,ref:vlvChRef(c.id)});VUI.chPlay=performance.now();if(G3.vlvRaf)G3.vlvRaf();vChScore();vlvRefresh(true);});
   sync();vChScore();}
 function vChScore(){const b=$("vChSc"),r=VUI.chRes;if(!b)return;if(!r){b.innerHTML="";return;}
   b.innerHTML=`<div><small>Stars</small><b class="vstar">${"★".repeat(r.st)}${"☆".repeat(3-r.st)}</b><small>${r.unstable?"unstable":r.st===3?"as good as a careful engineer":"keep tuning"}</small></div><div><small>Score</small><b>${isFinite(r.score)?vfx(r.score,1):"∞"}</b><small>engineer ${vfx(r.ref,1)} (lower is better)</small></div><div><small>IAE</small><b>${vfx(r.iae,1)}</b><small>% of span × min</small></div><div><small>Valve</small><b>${Math.round(r.trav)}%</b><small>travel · ${r.rev} reversals</small></div>`;}
@@ -15117,7 +15129,8 @@ function vlvDraw(tr,d){const cv=$("vlvCv");if(!cv)return;const box=cv.getBoundin
   if(tr&&tr.t.length<2){x.fillStyle="#c3d3ea";x.textAlign="center";x.fillText("Collecting the trend…",W/2,H/2);}}
 UI_TICKS.push(()=>{if(VUI.id){const o=$("vlvOv");if(!o||o.hidden)return;if(S.zen){closeVlv();return;}vlvRefresh(false);if(VUI.chPlay&&performance.now()-VUI.chPlay>5200)VUI.chPlay=0;}});
 // smoother trend while the challenge plays back or the clock runs fast
-{let raf=0;const tick=()=>{raf=requestAnimationFrame(tick);if(VUI.id&&VUI.tab==="ch"&&VUI.chPlay){const t=performance.now();if(t-(tick.l||0)>60){tick.l=t;vlvRefresh(false);}}};raf=requestAnimationFrame(tick);}
+{let raf=0;const tick=()=>{raf=0;if(!(VUI.id&&VUI.tab==="ch"&&VUI.chPlay))return;raf=requestAnimationFrame(tick);const t=performance.now();if(t-(tick.l||0)>60){tick.l=t;vlvRefresh(false);}};
+  G3.vlvRaf=()=>{if(!raf)raf=requestAnimationFrame(tick);};}   // (v6.9.2: only while a challenge plays back)
 G3.vlvUI=()=>VUI.id?VUI.clk/60:0;   // (kuiSync, 50b: the tuning clock while a faceplate is open)
 G3.vlvOpen=openVlv;G3.vlvClose=closeVlv;G3.VUI=VUI;   // (tests)
 // Escape closes the faceplate first (window capture runs before the DCS's own document handler)
@@ -15219,7 +15232,7 @@ G3.vlvRm=id=>{RMUI.sel=id;rmOpen();};   // (tests: the relationship map on a loo
   UI_TICKS.push(sync);sync();
   // ---- menu: shown on load and whenever the game is paused ----
   const menu=$("v2menu");let first=true;
-  function showMenu(){running=false;closeSheet("menu");closeMore();
+  function showMenu(){running=false;if(G3.yieldUI)G3.yieldUI();closeSheet("menu");closeMore();
     const go=$("v2go"),se=S.season&&S.season.on;go.querySelector("b").textContent=first?"Season":"Resume";go.classList.toggle("alt",first);go.classList.toggle("primary",!first);
     go.querySelector("small").textContent=first?"30 days · most profit · leaderboard":se?(S.season.surv?`Survival · wave ${survWave()} · day ${Math.floor(S.t/1440)+1}`:`Season · day ${Math.min(30,Math.floor(S.t/1440)+1)} of 30`):S.free?"Free play":"Back to the mill";
     $("v2sub").hidden=first;$("v2surv").hidden=!first;$("v2nameRow").hidden=true;   // (Survival sits under Season on the first menu; once a run is on, "New survival" is with "New season")

@@ -30,7 +30,7 @@ let outEl=null;
 function outShell(){if(!outEl){outEl=document.createElement("div");outEl.className="overlay";outEl.id="outOv";outEl.hidden=true;document.body.appendChild(outEl);}clearTimeout(outEl._t);outEl.classList.remove("note");return outEl;}
 const outTime=t=>hhmm(t).replace(" · "," at ");
 const hourOf=t=>{const h=Math.floor(((t+360)%1440)/60);return `${h%12||12} ${h<12?"AM":"PM"}`;};
-function openOutagePlan(){const o=S.outg,st=outStart(o.k),first=o.k===1,d0=S.cash<0?0:1,pick={stock:d0,wet:d0,dry:d0};   // v5.0.4: in the red, the budgets start at the cheapest
+function openOutagePlan(){if(G3.yieldUI)G3.yieldUI();const o=S.outg,st=outStart(o.k),first=o.k===1,d0=S.cash<0?0:1,pick={stock:d0,wet:d0,dry:d0};   // v5.0.4: in the red, the budgets start at the cheapest
   const COST=OUT.cost,lp=leadPlanNew();   // v4.4 survival leaders: lp is the leader's pick for this outage (and the run's one change of leader)
   running=false;S.cards.open={outage:true};
   const el=outShell(),k=n=>"$"+Math.round(n/1e3)+"k";
@@ -77,7 +77,8 @@ function beginOutage(){const o=S.outg,st=S.t;if(!o.plan)o.plan={stock:1,wet:1,dr
   log(`Planned outage ${o.k} has begun: down until ${hourOf(o.end)}`,"warn");BANNERS.push({text:`Planned outage: the mill is down until ${hourOf(o.end)}.`,t:null,kind:"good",tag:"OUTAGE"});
   const canWatch=C.simSpeed>OUT.simCap&&!TURBO_FAST(C.simSpeed);   // (at 5 min/s or slower there is nothing to slow down)
   outNote("Outage has begun",`The mill is down for planned maintenance: ${(OUT.jobs[outJob(o.k)-1]||"inspections").toLowerCase()} and new press felts. Started ${hourOf(st)}, ends ${outTime(o.end)}.${o.prep?`<br><b>${prepLine(o.prep.n,o.prep.m)}.</b>`:""}`,canWatch?7000:5000,canWatch?{label:"Watch the crews",on:outWatch}:null);}
-function endOutage(){const o=S.outg,pl=o.plan||{stock:1,wet:1,dry:1};o.on=false;o.watch=false;outNoteHide();   // v5.0.6: at the player's speed the outage can end before its 7 s notice doesS.fx=S.fx.filter(f=>f.id!=="pout");S.M=mods();
+function endOutage(){const o=S.outg,pl=o.plan||{stock:1,wet:1,dry:1};o.on=false;o.watch=false;outNoteHide();   // v5.0.6: at the player's speed the outage can end before its 7 s notice does
+  S.fx=S.fx.filter(f=>f.id!=="pout");S.M=mods();
   o.spd=null;   // (v5.0.1: nothing to restore: the outage only capped the running speed, see simRate)
   o.rel={stock:OUT.rel[pl.stock],wet:OUT.rel[pl.wet],dry:OUT.rel[pl.dry]};
   const rp=v=>Math.round(Math.abs(1-OUT.rel[v])*100),txt=OUT.areas.map(([a,n])=>`${n} ${pl[a]===2?"+"+rp(2)+"%":pl[a]===0?"−"+rp(0)+"%":"±0%"}`).join(" · ");

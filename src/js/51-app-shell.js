@@ -94,7 +94,7 @@
   UI_TICKS.push(sync);sync();
   // ---- menu: shown on load and whenever the game is paused ----
   const menu=$("v2menu");let first=true;
-  function showMenu(){running=false;closeSheet("menu");closeMore();
+  function showMenu(){running=false;if(G3.yieldUI)G3.yieldUI();closeSheet("menu");closeMore();
     const go=$("v2go"),se=S.season&&S.season.on;go.querySelector("b").textContent=first?"Season":"Resume";go.classList.toggle("alt",first);go.classList.toggle("primary",!first);
     go.querySelector("small").textContent=first?"30 days · most profit · leaderboard":se?(S.season.surv?`Survival · wave ${survWave()} · day ${Math.floor(S.t/1440)+1}`:`Season · day ${Math.min(30,Math.floor(S.t/1440)+1)} of 30`):S.free?"Free play":"Back to the mill";
     $("v2sub").hidden=first;$("v2surv").hidden=!first;$("v2nameRow").hidden=true;   // (Survival sits under Season on the first menu; once a run is on, "New survival" is with "New season")

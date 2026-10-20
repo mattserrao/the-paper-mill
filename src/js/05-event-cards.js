@@ -334,7 +334,7 @@ function cardHave(c){const ids=[...new Set([...String(c.odds).matchAll(/LV\("(\w
 let cardEl=null;
 // v6.8.3 free play "Let the mill run" (Settings): the card is declined on the spot and the sim doesn't pause
 const afkOn=()=>!!(S&&S.free&&S.afk);
-function openCard(c){if(afkOn()){log(`Declined for you: ${c.title}`,"");if(typeof civCardDecline==="function")civCardDecline(c);return;}
+function openCard(c){if(afkOn()){log(`Declined for you: ${c.title}`,"");if(typeof civCardDecline==="function")civCardDecline(c);return;}if(G3.yieldUI)G3.yieldUI();   // (v6.9.2: a card draws under the DCS and faceplate; close them so it isn't hidden)
   const o=c.odds();S.cards.open={c,o};running=false;
   if(!cardEl){cardEl=document.createElement("div");cardEl.className="overlay";cardEl.id="dealOv";cardEl.hidden=true;document.body.appendChild(cardEl);
     // v5.0.4: while a card waits for an answer, Tab cycles through its own buttons only

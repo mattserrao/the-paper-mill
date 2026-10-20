@@ -65,7 +65,7 @@ function popOpen(v){v=v==="both"||!v?"home":v;
   w.addEventListener("pagehide",()=>{if(POP.w===w)popDock(true);});
   w.addEventListener("resize",()=>{if(POP.on&&POP.view!=="dcs")pfRender(true);});
   // Escape: first clears a selection in the flow, then goes back to the control room
-  d.addEventListener("keydown",e=>{if(e.key!=="Escape")return;if(PFUI.sel&&POP.view==="pf"){e.preventDefault();PFUI.sel=null;pfRender(true);return;}
+  d.addEventListener("keydown",e=>{if(e.key!=="Escape")return;if(G3.VUI&&G3.VUI.id&&G3.vlvClose){e.preventDefault();G3.vlvClose();return;}if(PFUI.sel&&POP.view==="pf"){e.preventDefault();PFUI.sel=null;pfRender(true);return;}
     if(POP.view!=="home"){e.preventDefault();popShow("home");}});
   popSkin();POP.view="home";popGo(v);kuiSync();try{w.focus();}catch(_){}
   diag("popout: opened ("+v+")");return true;}
@@ -78,8 +78,9 @@ async function popMove(){const w=POP.w;if(!w)return;try{const sd=await w.getScre
 function popDock(closing){if(!POP.on)return;const so=$("dcsOv"),po=$("pfOv"),ro=$("rmOv"),mo=$("manOv"),w=POP.w;
   try{pfCtlHome();}catch(_){}
   POP.inApp=true;try{if(RMUI.open)rmClose();if(MANUI.open)manClose();}catch(_){}POP.inApp=false;
+  try{if(G3.vlvClose&&G3.VUI&&G3.VUI.id)G3.vlvClose();}catch(_){}
   POP.on=false;POP.w=null;
-  [so,po,ro,mo].forEach(o=>{if(o){o.hidden=true;try{document.body.appendChild(o);}catch(_){}}});
+  [so,po,ro,mo,document.getElementById("vlvOv")||(w&&!w.closed?w.document.getElementById("vlvOv"):null)].forEach(o=>{if(o){o.hidden=true;try{document.body.appendChild(o);}catch(_){}}});
   KUI.st=null;PFUI.open=false;G3.pfOpen=false;G3.pfCtlOn=false;kuiSync();
   if(!closing)try{if(w&&!w.closed)w.close();}catch(_){}
   diag("popout: docked");}

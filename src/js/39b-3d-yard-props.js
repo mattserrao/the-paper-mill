@@ -44,7 +44,8 @@
   {const kraft=M.kraft;[[-44,36],[-41.5,36],[-39,36.4]].forEach(([x,z],k)=>{for(let l=0;l<7+(k%2)*3;l++){box(1.2,0.1,1.0,kraft,x,0.07+l*0.16,z,scene,false);[-0.45,0,0.45].forEach(dx=>box(0.1,0.08,1.0,M.ink,x+dx,0.11+l*0.16+0.02,z,scene,false));}});
     for(let r=0;r<3;r++)for(let c=0;c<4-r;c++){const core=cylZ(0.17,2.4,M.kraft,-34+c*0.36+r*0.18,0.17+r*0.3,36.2,10);core.rotation.y=0;}
     YP.dumpster=(x,z,ry=0)=>{const g=new THREE.Group();g.position.set(x,0,z);g.rotation.y=ry;scene.add(g);const dm=M.ok;
-      const body=new THREE.Mesh(new THREE.BoxGeometry(2.4,1.3,1.4),dm);body.position.y=0.75;body.castShadow=true;body.receiveShadow=true;g.add(body);box(1.15,0.1,1.42,dm,-0.6,1.42,0,g,false);   // (a plain box: the one green rounded box would be a batch of its own)const lid=box(1.15,0.1,1.42,dm,0.6,1.5,0,g,false);lid.rotation.z=-0.35;lid.position.y=1.6;
+      const body=new THREE.Mesh(new THREE.BoxGeometry(2.4,1.3,1.4),dm);body.position.y=0.75;body.castShadow=true;body.receiveShadow=true;g.add(body);box(1.15,0.1,1.42,dm,-0.6,1.42,0,g,false);   // (a plain box: the one green rounded box would be a batch of its own)
+  const lid=box(1.15,0.1,1.42,dm,0.6,1.5,0,g,false);lid.rotation.z=-0.35;lid.position.y=1.6;
       [[-0.9,-0.55],[0.9,-0.55],[-0.9,0.55],[0.9,0.55]].forEach(([a,b])=>cylZ(0.09,0.08,M.ink,a,0.09,b,8,g));box(0.08,0.9,1.2,M.ink,-1.22,0.75,0,g,false);return g;};
     YP.dumpster(-27.5,36.5,0.1);}
   // by the office: an OCC compactor and its dumpster, a vending-machine-sized recycling cage

@@ -214,7 +214,7 @@ function vlvSettle(id){if(vlvT(id)){if(S.vlv.bt&&S.vlv.bt.id===id)S.vlv.bt=null;
 const vlvPulpOP=()=>S.vlv&&S.vlv.lp["NV-101"]?Math.round(S.vlv.lp["NV-101"].op):null;
 
 /* ---- bump test: MAN, wait for a baseline, step the output, record, fit a model, put the loop back ---- */
-function vlvBump(id,size){const d=VD[id];if(!d||!vlvOn())return false;const L=vlvTouch(id),W=S.vlv;if(W.bt)return false;
+function vlvBump(id,size){const d=VD[id];if(!d||!vlvOn())return false;if(S.vlv&&S.vlv.bt)return false;const L=vlvTouch(id),W=S.vlv;
   if(d.ctl&&!vCasOK(W,d))return false;const prev=d.ctl?(L.m==="MAN"?"MAN":"AUTO"):L.m,op0=L.op;size=+size||d.bsz||5;
   const dop=op0+size>100?-Math.abs(size):op0-size<0?Math.abs(size):size;
   if(L.m!=="MAN"){L.m="MAN";L.bump=1;}W.bt={id,t:0,base:clamp(Math.round(d.bump*0.15),30,240),dur:d.bump,op0,dop,prev,rec:[]};W.btRes=null;return true;}
@@ -318,7 +318,7 @@ function vlvChallenge(cid,tune){const c=VCH[cid],B=vSbB(),W={lp:{},B,acc:{mco:0,
   return {trace:o,iae,trav,rev,score:unstable?Infinity:score,unstable};}
 // the reference: what a careful engineer gets. Lambda (moderate) from the true model, then a coarse search around it,
 // loop by loop, inner loops first (headless; once per challenge, cached)
-const VCHREF={};
+const VCHREF={shake:45.41,wake:13.50,stick:34.87,inner:24.90,patience:16.69};   // (v6.9.2: precomputed, the same within 1% on every grade; the search below froze the first Run for ~0.5 s, more on a phone)
 function vlvChRef(cid){if(VCHREF[cid]!=null)return VCHREF[cid];const c=VCH[cid];
   const fit={"NV-101":{type:"fo",K:-0.8,tau:20,th:0.5},"LV-104":{type:"int",Ki:0.25,th:0.08},"FV-201":{type:"fo",K:1,tau:0.33,th:3},"QC-300":{type:"fo",K:-2.25,tau:3,th:1.3},"PV-303":{type:"fo",K:1.68,tau:0.5,th:0.04}};
   const t={};for(const id of c.loops)t[id]=vLambda(VD[id],fit[id],1,"PI");let best=vlvChallenge(cid,t).score;
