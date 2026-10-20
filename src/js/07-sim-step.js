@@ -14,6 +14,7 @@ function step(dt){
   outageTick();
   const M=S.M=mods();
   autoControl(dt);
+  vlvTick(dt);   // v6.9 the control valves (07h; nothing until a loop is touched)
   knobTick(dt);   // v5.6 fiddly knobs (returns at once unless a knob was moved)
   dcsTick(dt);   // v6.5 b3 DCS motors and reject purges (07c; nothing until the DCS is used)
   dryTick(dt);   // v6.5 b5 the dryer limit: water, steam, moisture (07d)
@@ -162,6 +163,7 @@ function step(dt){
   // trend every 10 sim min
   S.trendAcc+=dt;
   if(S.trendAcc>=10){S.trendAcc-=10;S.trend.push([S.tank/P.tankCap,S.pmSpeed/3300,S.yard/P.yardCap,S.fg/P.fgCap]);if(S.trend.length>144)S.trend.shift();}
+  vlvCapture();   // v6.9 the valves' boundary for the next 15 s, and their trend points (07h)
   histTick(dt);   // v6.5 history: the hour's readings and minutes (11c)
   if(!S.zen)knobHist();   // v5.6: DCS / QCS trends (reads only)
   tagTick();   // v6.7 the control room's tag history (11d; reads only)

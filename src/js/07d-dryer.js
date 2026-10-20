@@ -49,7 +49,9 @@ function dryTick(dt){const D=dryState(),g=C.grade,b=DRY.base[g]||DRY.base["24"],
   let tgt=run?DRY.m0+D.km+(D.dem>ceil?(D.dem-ceil)*DRY.perKpa:under?(D.dem0-floor)*DRY.perKpa:0):DRY.m0;
   // v6.5.4: the 2nd/3rd section on MANUAL (DET DCS) holds the operator's pressure instead of the moisture: less than
   // the load needs and the sheet comes off wetter, more and it over-dries (0.15% a kPa either way)
-  if(D.man!=null&&run){D.st3=Math.min(D.man,ceil);tgt=DRY.m0+D.km+(D.dem-D.st3)*DRY.perKpa;}D.m=Math.max(0.5,ease(D.m,tgt,dt,10));
+  // v6.9: once the steam cascade is touched (QC-300 / PV-302 / PV-303, 07h) its valves set the pressures and its model the moisture
+  if(vlvT("QC-300")){const V=S.vlv;D.st3=Math.min(V.st3!=null?V.st3:D.st3,ceil);D.m=V.lp["QC-300"].y;}
+  else{if(D.man!=null&&run){D.st3=Math.min(D.man,ceil);tgt=DRY.m0+D.km+(D.dem-D.st3)*DRY.perKpa;}D.m=Math.max(0.5,ease(D.m,tgt,dt,10));}
   // a wet sheet fails the moisture spec: the crew slows the machine until it's back in spec, then lets it recover.
   // (v6.5.2: only for the part slowing down can fix; what the knobs put past the auto loop waits for the knob to be traced)
   const wasWet=D.wet,ms=D.m-Math.max(0,D.km);if(!S.zen&&run&&ms>DRY.spec)D.wet=true;else if(ms<DRY.back)D.wet=false;

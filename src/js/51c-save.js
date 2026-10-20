@@ -35,6 +35,7 @@
       // the open dialog: a card comes back up; an outage plan is asked again
       const op=S.cards.open;S.cards.open=null;
       if(op&&op.outage&&S.outg)S.outg.noticed=false;
+      try{vlvMigrate();}catch(e){diag("valves migrate: "+String(e&&e.message||e).slice(0,80));}   // v6.9: manual steam / BW valve / pulper valve from older saves are the new loops
       applyUpgrades();S.M=mods();BANNERS.length=0;seasonLocks(true);
       try{syncControls();}catch(e){}try{updateShop();}catch(e){}try{if(G3.rebrand)G3.rebrand();}catch(e){}
       try{UI_TICKS.forEach(f=>f(0));}catch(e){}   // v5.0.6: the top bar (speed, wave, cash) is right from the first frame, not one UI tick later

@@ -49,7 +49,7 @@ const bwSp=()=>bwStd()*(1+(S.we?S.we.trim:0));
 // refining energy the stock on the machine has had (lagged through the chest by the knob model)
 const kwhNow=()=>{const K=S.knob;return K&&K.any&&K.x?eOfGap(K.x.fr):(K?knobVal("ref"):WE.kwh0);};
 // machine chest consistency (07b knobRead shows it): the agitator's swings, thick stock from an empty water chest
-function mcCons(){const K=S.knob,sw=K&&K.any&&!S.zen&&K.x?K.x.sw:0,t=S.t;return WE.mc0+sw*0.9*(Math.sin(t*0.21+3)*0.6+Math.sin(t*0.21*2.7+6)*0.4)+(S.wat?S.wat.shortK*0.6:0);}
+function mcCons(){const K=S.knob,sw=K&&K.any&&!S.zen&&K.x?K.x.sw:0,t=S.t;return WE.mc0+sw*0.9*(Math.sin(t*0.21+3)*0.6+Math.sin(t*0.21*2.7+6)*0.4)+(S.wat?S.wat.shortK*0.6:0)+vlvMc();}   // (v6.9: + pulper consistency swings, NV-101, 07h)
 // fiber t/h the design headbox flow is sized for (the setpoint at this speed)
 const weU0=sp=>P.K*Math.max(sp,1)*bwSp()/P.pmLoss;
 const weUstd=()=>{const g=GRADES[C.grade]||GRADES["24"];return P.K*g.sp*g.bw/P.pmLoss;};
@@ -57,7 +57,8 @@ const wobW=(f,k)=>Math.sin(S.t*f+k)*0.6+Math.sin(S.t*f*2.7+k*2)*0.4;
 // the basis weight valve (%) the AUTO loop asks for at this speed
 const weValveAuto=sp=>50*weU0(sp)/weUstd()*S.we.c;
 // the basis weight the machine is actually making (the loop's process value, before the QCS sees it)
-function bwTrue(){const W=weState();if(S.pm!=="run")return bwSp();const mr=mcCons()/WE.mc0,cv=1+W.cav*0.06*wobW(0.9,17);
+function bwTrue(){const W=weState();if(S.pm!=="run")return bwSp();if(vlvT("FV-201"))return S.vlv.lp["FV-201"].y;   // (v6.9: FV-201's model once touched, 07h)
+ const mr=mcCons()/WE.mc0,cv=1+W.cav*0.06*wobW(0.9,17);
   if(W.m==="auto")return bwSp()*W.c*mr*cv;   // (the valve's feed-forward cancels speed exactly; written this way so untouched it is exactly the setpoint)
   const sp=Math.max(S.pmSpeed,P.minSpeed*0.5);return bwSp()*weUstd()*(W.v/50)*mr/weU0(sp)*cv;}
 // what the QCS reads: the weight WE.dead minutes ago
@@ -68,15 +69,15 @@ function weTick(dt){const W=weState(),run=S.pm==="run";
   // a grade change: the scanner's last readings were on the old grade's weight; carry them over so the loop doesn't chase the step
   if(W.g!==C.grade){if(W.g&&GRADES[W.g]){const f=bwStd()/GRADES[W.g].bw;for(const r of W.q)r[1]*=f;}W.g=C.grade;}
   W.bw=bwTrue();W.q.push([S.t,W.bw]);while(W.q.length>2&&W.q[1][0]<=S.t-WE.dead-0.5)W.q.shift();
-  if(run&&W.m==="auto"){const e=(bwSp()-bwMeas())/bwSp();W.c=clamp(W.c+dt/WE.tauI*e,0.5,1.6);}
-  if(W.m==="auto")W.v=clamp(weValveAuto(Math.max(S.pmSpeed,P.minSpeed*0.5)),0,WE.valveMax);
+  if(run&&W.m==="auto"&&!W.vl){const e=(bwSp()-bwMeas())/bwSp();W.c=clamp(W.c+dt/WE.tauI*e,0.5,1.6);}
+  if(W.m==="auto"&&!W.vl)W.v=clamp(weValveAuto(Math.max(S.pmSpeed,P.minSpeed*0.5)),0,WE.valveMax);
   // bale water in the pulper: a step in bale moisture thins the tub, and the dilution loop takes it back out
   if(baleOn()&&S.bq){const d=-WE.cpK*Math.max(0,S.bq.m-BALE.std)*100;W.cpd=d;W.cpc=ease(W.cpc||0,d,dt,WE.cpTau);}else{W.cpd=0;W.cpc=0;}
   // fine screen pressure drop: its load and the dirt in the stock
   {const ld=(S.rates.fiberIn||0)/Math.max(1,P.screenMax),on=motStatus("fscr")==="run"&&!(S.M&&S.M.pulperDown);
     W.fs=ease(W.fs,on?WE.fs0*(0.55+0.45*ld)*weDirt()+(active("fscreen")?30:0):0,dt,10);}}
 // the pulper's consistency dip from bale water (% points, negative while the loop catches up)
-const cpBale=()=>S.we&&!S.zen?(S.we.cpd||0)-(S.we.cpc||0):0;
+const cpBale=()=>S.we&&!S.zen&&!vlvT("NV-101")?(S.we.cpd||0)-(S.we.cpc||0):0;   // (v6.9: once touched, NV-101's model carries the bale water, 07h)
 // how dirty the stock is: the yard mix's contamination (A bales clean, B and C dirty)
 const weDirt=()=>baleOn()&&S.bq?1+WE.dirt*Math.max(0,S.bq.k-WE.dirtRef):1;
 // pulper yield after the rejects that high pressure drop carries out with good fiber
@@ -98,10 +99,12 @@ function weFlow(dt,u){const W=weState(),h=dt/60,F=W.f,run=S.pm==="run"&&u>0;
     // the fan pump: full dilution while the silo has water; with it empty, only what drains in and the makeup (t/h)
     const avail=W.L/h+siloIn(Ft+Dd)+(W.L<WE.silo*WE.makeL?WE.make:0),D=Math.min(Dd,avail);
     const Q=Ft+D;hb=Q;dil=D;hbc=U/Q*100*(1+W.cav*0.12*wobW(1.3,19));drain=Math.max(0,Q-U*100/cs);seal=drain*s;press=U*Math.max(0,100/cs-100/ps);
-    let L=W.L+(drain-seal-D)*h;
+    if(vlvT("LV-202")){const A=S.vlv.acc;make=A.make;over=A.over;W.net=drain-seal-D;}   // (v6.9: LV-202's sub-steps moved the level and booked the makeup and overflow; W.net is what they integrate next, 07h)   // (its sub-steps moved the level and booked the makeup and overflow)
+    else{let L=W.L+(drain-seal-D)*h;
     if(L<WE.silo*WE.makeL){make=Math.min(WE.make*h,WE.silo*WE.makeL-L);L+=make;}
     if(L>WE.silo*WE.over){over=L-WE.silo*WE.over;L-=over;}
-    W.L=Math.max(0,L);}
+    W.L=Math.max(0,L);}}
+  else if(vlvT("LV-202")){W.net=0;make=S.vlv.acc.make;over=S.vlv.acc.over;}
   else if(W.L<WE.silo*WE.refill){make=Math.min(WE.make*h,WE.silo*WE.refill-W.L);W.L+=make;}
   W.hbc=run?hbc:WE.hbc;
   W.cav=run?clamp((WE.cav-W.L/WE.silo)/WE.cav,0,1):0;
@@ -109,7 +112,7 @@ function weFlow(dt,u){const W=weState(),h=dt/60,F=W.f,run=S.pm==="run"&&u>0;
   if(run&&!S.zen&&W.L/WE.silo<WE.trip){W.H+=dt/WE.tripMin;if(W.H>=1){W.H=0;weBreak();}}else W.H=Math.max(0,W.H-dt/120);
   const k=v=>v/h;F.hb=ease(F.hb||0,k(hb*h),dt,4);F.dil=ease(F.dil||0,k(dil*h),dt,4);F.drain=ease(F.drain||0,k(drain*h),dt,4);F.seal=ease(F.seal||0,k(seal*h),dt,4);
   F.press=ease(F.press||0,k(press*h),dt,4);F.over=ease(F.over||0,k(over),dt,4);F.make=ease(F.make||0,k(make),dt,4);
-  return W.L-L0;}
+  return W.L-L0+(vlvT("LV-202")?S.vlv.acc.dL||0:0);}
 // a sheet break from the fan pump cavitating (no dice: a fixed rethread at the wet end)
 function weBreak(){if(S.pm!=="run")return;S.pm="break";S.brkType="press";S.breakLeft=2*36;S.breakTotal=S.breakLeft;S.tot.breaks++;enqueue("brk");AUDIO.sfx("snap",2500);
   log("Sheet break at the wet end: the white water silo ran low and the fan pump cavitated.","warn");brkNote();}

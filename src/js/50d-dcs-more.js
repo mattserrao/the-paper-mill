@@ -248,3 +248,5 @@ function dcsPicSync(a){const o=$("dcsOv");if(!o||!PGX[a])return;
   o.querySelectorAll(".mimic [data-pg]").forEach(g=>{const pg=PGX[a][+g.dataset.pg];if(!pg)return;let s;try{s=PG_ST(pg[1]());}catch(e){s="st-ok";}if(g.dataset.s!==s){g.dataset.s=s;g.setAttribute("class","pg "+s);}
     g.querySelectorAll("[data-lv]").forEach(r=>{const f=PG_LV[r.dataset.lv];if(!f)return;const v=f(),h0=+r.dataset.h0,y0=+r.dataset.y0,hh=Math.max(0,h0*v);r.setAttribute("y",(y0+h0-hh).toFixed(1));r.setAttribute("height",hh.toFixed(1));});
     g.querySelectorAll("[data-lvp]").forEach(p=>{const f=PG_LV[p.dataset.lvp];if(f)p.style.opacity=(0.35+0.65*f()).toFixed(2);});});}
+G3.vlv={view:vlvView,touch:vlvTouch,setMode:vlvSetMode,setSP:vlvSetSP,setOP:vlvSetOP,setTune:vlvSetTune,setValve:vlvSetValve,revert:vlvRevert,bump:vlvBump,bumpStop:vlvBumpStop,
+  fit:vFit,lambda:vLambda,health:vlvHealth,trace:vlvTrace,challenge:vlvChallenge,chRef:vlvChRef,stars:vlvStars,isDef:vIsDef,T:vlvT,DEF:VD,CH:VCH,state:()=>S.vlv,catchUp:vlvCatch};   // v6.9 tests (tools/valvecheck.py)

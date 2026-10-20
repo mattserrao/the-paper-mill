@@ -40,7 +40,7 @@ function frame(now){
   const rdt=Math.max(0,Math.min(0.1,(now-last)/1000));last=now;
   // schedule the next frame first: a bug in one frame must never stop the game loop (v2.8.5: the sim step too)
   requestAnimationFrame(frame);
-  if(running&&!BF.busy){try{simAcc=Math.min(simAcc+rdt*simRate(),60);while(simAcc>=SIM_STEP&&running){step(SIM_STEP);simAcc-=SIM_STEP;}}catch(e){if(!frame.serr)frame.serr=0;if(frame.serr++<5)console.error("sim error",e);}}
+  if(running&&!BF.busy){try{simAcc=Math.min(simAcc+rdt*simRate(),60);while(simAcc>=SIM_STEP&&running){step(SIM_STEP);simAcc-=SIM_STEP;}if(G3.vlvClk)vlvCatch(simAcc);}catch(e){if(!frame.serr)frame.serr=0;if(frame.serr++<5)console.error("sim error",e);}}
   if(PFo&&PFo.on)PFo.acc["SIM (game logic step)"]=(PFo.acc["SIM (game logic step)"]||0)+(performance.now()-fT0);
   if(G3.cineTick)G3.cineTick(now);   // (v4.2.4: the bird cut-scene runs on real time while the game is paused)
   // v5.2: nothing is drawn behind the opaque title screen once the start-up precompile is done (it needs its frames until then)

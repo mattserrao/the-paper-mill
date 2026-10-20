@@ -13,7 +13,7 @@
 const KNOB_IDEAL={pulp:50,ref:60,agit:100,vac:30,press:100,osc:100,couch:1,draw:1.5,st1:70,gm:1,gt:0};
 const KNOBS=[
   {id:"pulp",name:"Pulper dilution valve",area:"SPOT",where:"Pulper, stock prep",field:true,unit:"% open",min:0,max:100,step:1,
-    tip:"Dilution water into the pulper tub. Operators leave it at 50% open."},
+    tip:"Dilution water into the pulper tub: NV-101, which holds the consistency on AUTO. Moving it here puts NV-101 on MAN at that opening."},
   {id:"ref",name:"Refining energy",area:"SPOT",where:"Twin refiners, behind the headbox",field:true,unit:"kWh/t",min:20,max:130,step:1,
     tip:"Specific refining energy: the plate gap closes to put it in. More refining makes stronger paper (so a lighter sheet can pass on strength) but it drains slower on the table. Standard is 60 kWh/t."},
   {id:"agit",name:"Machine chest agitator",area:"SPOT",where:"Machine chest, stock prep",field:true,unit:"% speed",min:0,max:100,step:5,
@@ -61,12 +61,13 @@ function knobState(){if(!S.knob){S.knob={v:Object.assign({},KNOB_IDEAL),z:new Ar
     x:{cp:5,fr:0.5,ch:0,sw:0,vac:30,pl:100,st:0,d1:0,m:8,dl:0,dt:0,bs:0,z:new Array(KZONES).fill(0)},
     any:false,cs:0,wear:0,gacc:0,gm0:0,H:{},harm:{},off:0,offWhy:"",sf:1,a:1,W:1,feed:1,brk:1,edge:0,gtrav:0,inc:[],warned:{},moved:{}};}
   if(S.knob.pmPrev==null)S.knob.pmPrev=S.pm;if(S.rng&&S.rng.knob==null)S.rng.knob=(S.seed^0x6b9f3c21)|0;return S.knob;}
-function knobVal(id){const K=S.knob;return K?K.v[id]:KNOB_IDEAL[id];}
-function knobAt(id){const K=S.knob;if(!K)return true;if(id==="slice")return !K.v.sv&&!K.v.sh;if(id==="zones")return K.z.every(v=>v===0);if(id==="guide")return K.v.gm===1&&K.v.gt===0;return K.v[id]===KNOB_IDEAL[id];}
+function knobVal(id){if(id==="pulp"){const o=vlvPulpOP();if(o!=null)return o;}const K=S.knob;return K?K.v[id]:KNOB_IDEAL[id];}   // (v6.9: the pulper dilution valve is NV-101's)
+function knobAt(id){const K=S.knob;if(!K)return true;if(id==="pulp"&&vlvT("NV-101"))return false;if(id==="slice")return !K.v.sv&&!K.v.sh;if(id==="zones")return K.z.every(v=>v===0);if(id==="guide")return K.v.gm===1&&K.v.gt===0;return K.v[id]===KNOB_IDEAL[id];}
 // the player moves a knob (UI): v is the new value (zones: [i,v]; guide: {gm,gt})
 function knobSet(id,v){if(S.zen)return;const K=knobState();
   if(id==="zones"){const [i,z]=v;K.z[i]=clamp(Math.round(z),-10,10);}
   else if(id==="guide"){if(v.gm!=null&&v.gm!==K.v.gm){K.v.gm=v.gm;if(v.gm===0){K.gacc=0;K.gw0=knobWalk();}}if(v.gt!=null)K.v.gt=clamp(Math.round(v.gt),-40,40);}
+  else if(id==="pulp"){vlvSetOP("NV-101",clamp(+v,0,100));}   // (v6.9: the field valve puts NV-101 on MAN)
   else{const d=KNOBN[id];K.v[id]=d&&d.min!=null?clamp(+v,d.min,d.max):+v;}
   K.any=true;K.moved[id]=S.t;}
 function knobFmt(id){const K=S.knob,d=KNOBN[id];if(id==="slice"){const s=slcGet();return `B ${(12+3*s.v).toFixed(1)} mm · L ${s.h>=0?"+":""}${(4*s.h).toFixed(1)} mm`;}if(id==="zones"){const z=K?K.z:[];const n=z.filter(v=>v!==0).length;return n?`${n} zone${n>1?"s":""} trimmed`:"all zones 0%";}
@@ -76,6 +77,7 @@ function knobFmt(id){const K=S.knob,d=KNOBN[id];if(id==="slice"){const s=slcGet(
 function knobReset(id,quiet){const K=S.knob;if(!K)return;
   if(id==="slice"){K.v.sv=K.v.sh=0;if(G3.SLC){G3.SLC.v=G3.SLC.h=0;G3.SLC.dirty=true;}}
   else if(id==="zones")K.z.fill(0);else if(id==="guide"){K.v.gm=1;K.v.gt=0;K.gacc=0;}else K.v[id]=KNOB_IDEAL[id];
+  if(id==="pulp")vlvRevert("NV-101",quiet);   // (v6.9)
   if(!quiet)K.any=true;}
 // which knobs are off their ideal right now (for the knob view, the DCS and the crew's trace)
 function knobsOff(){return KNOBS.filter(k=>!knobAt(k.id)).map(k=>k.id);}
@@ -91,7 +93,7 @@ function knobFix(ids,head,who){const K=S.knob;if(!K)return;ids=ids.filter(id=>!k
 // the crew fixed the root cause: the process it drove is flushed back to normal (stripes on the felt and streaks already
 // in the chest still have to work their way out)
 function knobSettle(id){const K=S.knob,x=K.x;x.bs=0;x.bk=0;K.H={};
-  if(id==="pulp")x.cp=5;else if(id==="ref"){x.fr=0.5;x.ch=0;}else if(id==="vac"){x.vac=30;K.wear=0;}else if(id==="press"){x.pl=100;x.cr1=x.cr=0;}
+  if(id==="pulp"){x.cp=5;vlvSettle("NV-101");}else if(id==="ref"){x.fr=0.5;x.ch=0;}else if(id==="vac"){x.vac=30;K.wear=0;}else if(id==="press"){x.pl=100;x.cr1=x.cr=0;}
   else if(id==="draw"){x.dl1=x.dl=x.dt=0;}else if(id==="st1")x.d1=0;else if(id==="agit")x.sw*=0.3;else if(id==="guide"){K.edge=0;K.gacc=0;}else if(id==="couch")K.cs=0;else if(id==="slice")x.jv=x.jh=0;}
 // a knob-caused breakdown. Like trigger() but with the "knob" dice for its length, no civics card and no leader auto-fix
 // (the knob is the root cause, and the crew resets it when the job is done). Uses the upset's own 3D effect and repair bill.
@@ -127,7 +129,7 @@ function knobTick(dt){const K=S.knob;if(!K||!K.any||S.zen)return;
     if(ki.id==="couchpit")K.cs=0;
     knobFix(ki.cause,head,who);}
   // ---- stock prep ----
-  x.cp=L(x.cp,5+(50-v.pulp)*0.08,25);                                  // pulper consistency (%)
+  x.cp=vlvT("NV-101")?S.vlv.lp["NV-101"].y:L(x.cp,5+(50-v.pulp)*0.08,25);   // pulper consistency (%) (v6.9: NV-101's model once touched, 07h)
   x.fr=L(x.fr,gapOf(v.ref),40);                                         // refining the stock in the chest has seen (gap, mm; v6.8: the gap follows the energy)
   x.ch=L(x.ch,gapOf(v.ref)<=0.15?1:0,10);                                      // plates heating up as they run together
   x.sw=L(x.sw,v.agit>=70?0:(70-v.agit)/70,60);                          // machine chest consistency swings (0..1)
@@ -222,7 +224,7 @@ function knobRead(){const K=S.knob,x=K?K.x:null,g=GRADES[C.grade]||GRADES["24"],
   const cpb=cpBale();cp+=cpb;
   return {run,cp,amps:410*(0.55+cp/5*0.45)*(S.M.pulperDown?0:1),pulpLvl:clamp(62+(5-cp)*9+wob(0.05,1)*1.5,0,110),
     gap:x?x.fr:gapOf(knobVal("ref")),refkw:run?kwhNow()*Math.max(0,S.rates.fiberUse||0):0,kwh:kwhNow(),csf:csfOf(x?x.fr:gapOf(knobVal("ref"))),   // (v6.8: refiner power = specific energy x fiber)
-    mcLvl:69+wob(0.02,2)*3,mcCons:mcCons(),agit:knobVal("agit"),
+    mcLvl:vlvT("LV-104")?S.vlv.lp["LV-104"].pvm:69+wob(0.02,2)*3,mcCons:mcCons(),agit:knobVal("agit"),
     vac:x?x.vac:30,couchSol:x&&x.cs!=null?x.cs:19,pl:x?x.pl:100,pressSol:x&&x.ps!=null?x.ps:44+4*LV("shoe"),
     edge:K?K.edge:0,gtrav:K?K.gtrav:0,gm:knobVal("gm"),stripes:x?x.st:0,cs:K?K.cs:0,couch:knobVal("couch"),osc:knobVal("osc"),wear:K?K.wear:0,
     st1:knobVal("st1"),st3,steam:run?(Dr?Dr.steam:50.5*P.K*S.pmSpeed*bw/34.8):S.pm==="break"&&Dr?Dr.steam:0,boiler:Dr?Dr.hdr:1,moist:run?m+wob(0.13,4)*0.25:0,

@@ -7,7 +7,8 @@ const KUI={panel:null,st:null,tab:"dcs",built:{}};
 const AREA_N={SPOT:"Stock prep",WET:"Wet end",DET:"Dry end"};
 // field knobs the DCS can also set remotely; the guide roll and the oscillator are set at the machine only
 const KREMOTE=new Set(["pulp","ref","agit","couch"]);
-function kuiSync(){G3.knobUI=!S.zen&&!!(KUI.panel||(KUI.st&&DCS_SLOW.has(KUI.st)&&!POP.on)||!$("spider").hidden||!$("slice").hidden);}
+function kuiSync(){const fp=typeof VUI!=="undefined"&&VUI.id&&!S.zen;G3.vlvClk=fp?VUI.clk/60:0;   // (v6.9: a valve faceplate runs the game on its tuning clock, 50k)
+  G3.knobUI=!S.zen&&!!(fp||KUI.panel||(KUI.st&&DCS_SLOW.has(KUI.st)&&!POP.on)||!$("spider").hidden||!$("slice").hidden);}
 // (v6.7: only the screens with controls slow the game; the read-only ones run at the player's speed)
 const DCS_SLOW=new Set(["SPOT","WET","DET"]);
 function kEl(tag,cls,html){const e=document.createElement(tag);if(cls)e.className=cls;if(html!=null)e.innerHTML=html;return e;}
