@@ -104,9 +104,12 @@ with sync_playwright() as pw:
     ok("approved: the motor changeout is paid, the outage runs longer, the fan pump motor comes back new", r["pl"] and r["pl"].get("fan", {}).get("m") and r["len"] > 240 and r["adx"] >= 99 and r["chg"] == "{}", json.dumps(r))
 
     # the upset card quotes the reliability data
-    r = J("""()=>{const P=__PM,S=P.S;P.setRunning(false);P.rly.fail('pulp','drv');return new Promise(res=>setTimeout(()=>{const c=document.querySelector('#civOv:not([hidden]) .cvrly');res({card:!!document.querySelector('#civOv:not([hidden])'),rly:c?c.textContent:''});},600));}""")
-    ok("the upset card quotes the reliability data", r["card"] and "Reliability data" in r["rly"], json.dumps(r))
-    J("()=>{const b=document.querySelector('#civOv:not([hidden]) .civbtn');if(b)b.click();}")
+    J("()=>{const P=__PM;P.setRunning(false);P.rly.fail('pulp','drv');}")
+    try: pg.wait_for_function("()=>!!document.querySelector('#rlyOv:not([hidden]) [data-rc=reset]')", timeout=15000)
+    except Exception: pass
+    r = J("()=>{const c=document.querySelector('#rlyOv:not([hidden]) .cvrly');return {card:!!document.querySelector('#rlyOv:not([hidden]) [data-rc=reset]'),rly:c?c.textContent:''}}")
+    ok("a drive fault opens its own card (Reset and go / Investigate) with the reliability data", r["card"] and "Reliability data" in r["rly"], json.dumps(r))
+    J("()=>{const b=document.querySelector('#rlyOv:not([hidden]) [data-rc=reset]');if(b)b.click();}")
 
     # 3D: the MCC, its cabinets and the electrical tech
     r = J("()=>{const G=__PM.G3;return {mcc:!!G.MCC,et:!!(G.ET&&G.ET.w),spots:Object.keys(G.ASPOT||{}).length,bad:Object.values(G.ASPOT).map(s=>G.navCheck([[s[0],s[1]],[s[0]+0.01,s[1]]],G.NAVW)).filter(v=>v>0).length}}")
@@ -118,13 +121,14 @@ with sync_playwright() as pw:
 
     # v6.10 t2: drive fault decisions
     r = J("""()=>{const P=__PM,S=P.S;S.inc.forEach(i=>i.left=0);P.step(P.SIM_STEP);S.rel.a.pr2.dh=20;P.rly.fail('pr2','drv');const i=S.inc.find(x=>x.id==='drivefail');
-      const held=i.stage;for(let k=0;k<400;k++)P.step(P.SIM_STEP);const still=S.inc.some(x=>x.id==='drivefail'&&x.stage==='wait');
+      const held=i.stage;for(let k=0;k<160;k++)P.step(P.SIM_STEP);const still=S.inc.some(x=>x.id==='drivefail'&&x.stage==='wait');
       P.rly.decide('pr2','inv');let n=0;while(S.inc.some(x=>x.id==='drivefail'&&x.stage==='inv')&&n++<8000)P.step(P.SIM_STEP);const j=S.inc.find(x=>x.id==='drivefail');
       const found=j&&j.stage,cause=j&&j.cause;P.rly.decide('pr2','patch');n=0;while(S.inc.some(x=>x.id==='drivefail')&&n++<8000)P.step(P.SIM_STEP);
       return {held,still,found,cause,patch:S.rel.a.pr2.patch,booked:!!(S.rel.chg.pr2&&S.rel.chg.pr2.d),q:S.rel.q.length,cur:!!S.rel.cur}}""")
-    ok("a drive fault waits on the player's call; Investigate finds a cause; Run to outage patches it and books the replacement", r["held"] == "wait" and r["still"] and r["found"] == "found" and r["cause"] and r["patch"] and r["booked"], json.dumps(r))
+    J("()=>{__PM.CH.en.drivefail=false}")
+    ok("a drive fault waits on the player's call (an hour, then the crew decides); Investigate finds a cause; Run to outage patches it and books the replacement", r["held"] == "wait" and r["still"] and r["found"] == "found" and r["cause"] and r["patch"] and r["booked"], json.dumps(r))
     J("()=>{const R=__PM.S.rel;R.q.length=0;R.cur=null;const o=document.getElementById('rlyOv');if(o)o.hidden=true;__PM.S.cards.open=null;}")
-    r = J("""()=>{const P=__PM,S=P.S;S.rel.rep.length=0;S.rel.a.reel.dh=5;let rep=0;for(let k=0;k<6;k++){P.rly.fail('reel','drv');P.rly.decide('reel','reset');let n=0;while(S.inc.some(x=>x.id==='drivefail')&&n++<2000)P.step(P.SIM_STEP);}
+    r = J("""()=>{const P=__PM,S=P.S;S.inc.forEach(i=>{if(i.id==='drivefail')i.left=0});P.step(P.SIM_STEP);let k=0;while(S.inc.some(i=>i.id==='drivefail'||i.id==='bearingfail'||i.id==='motorfail')&&k++<9000)P.step(P.SIM_STEP);P.CH.en.drivefail=false;S.rel.rep.length=0;S.rel.a.reel.dh=5;let rep=0;for(let k=0;k<6;k++){P.rly.fail('reel','drv');P.rly.decide('reel','reset');let n=0;while(S.inc.some(x=>x.id==='drivefail')&&n++<2000)P.step(P.SIM_STEP);}
       rep=S.rel.rep.filter(p=>p.a==='reel').length;const r2=S.rel.rep.length;S.rel.rep.length=0;S.rel.q.length=0;S.rel.cur=null;S.cards.open=null;
       P.rly.fail('wind','drv');P.rly.decide('wind','repl');let n=0;while(S.inc.some(x=>x.id==='drivefail')&&n++<8000)P.step(P.SIM_STEP);return {rep,dh:Math.round(S.rel.a.wind.dh)}}""")
     ok("Reset and go on a worn drive sets up repeats; Replace now makes the drive new", r["rep"] >= 2 and r["dh"] == 100, json.dumps(r))

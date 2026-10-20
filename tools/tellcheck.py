@@ -13,7 +13,7 @@ RES = []
 def ok(name, cond, info=""):
     RES.append((name, bool(cond), info)); print(("PASS " if cond else "FAIL ") + name + (("  " + str(info)) if info != "" else ""), flush=True)
 
-CLR = """()=>{const P=__PM,S=P.S;if(S.civ){S.civ.q=[];S.civ.cur=null;S.civ.pending=null;}if(S.cards){S.cards.open=null;S.cards.next=1e12;}
+CLR = """()=>{const P=__PM,S=P.S;if(S.civ){S.civ.q=[];S.civ.cur=null;S.civ.pending=null;}if(S.rel){S.rel.q=[];S.rel.cur=null;S.rel.pend=[];S.rel.rep=[];S.inc=S.inc.filter(i=>!i.kind);const o=document.getElementById("rlyOv");if(o)o.hidden=true;}P.CH.en.drivefail=false;P.CH.en.bearingfail=false;P.CH.en.motorfail=false;P.CH.en.rectfail=false;if(S.cards){S.cards.open=null;S.cards.next=1e12;}
   document.querySelectorAll('.overlay').forEach(o=>{if(o.id!=='prepOv'&&o.id!=='tellOv')o.hidden=true});}"""
 # step the sim to minute t, answering anything that would block it (civics cards, event cards, the outage budget at its defaults)
 STEPTO = """t=>{const P=__PM,S=P.S;let n=0;while(S.t<t&&n<4e6){P.step(P.SIM_STEP);n++;
