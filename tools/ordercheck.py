@@ -65,9 +65,13 @@ with sync_playwright() as pw:
     # --- 5. a truck with nothing to load waits in the queue and leaves on a dry run
     r = pg.evaluate("""()=>{const P=__PM,S=P.S,X=P.OX,O=X.ordState();P.C.outRate.auto=false;P.C.outRate.v=0;
       const keep=S.lots.fg.map(l=>l.slice()),fg=S.fg;S.lots.fg.length=0;S.fg=0;S.outDock.fill(null);S.outQ.length=0;
-      const fr0=S.ledger.frout,d0=O.k.dry;S.outQ.push({id:99901,load:0});__run(X.ORD.dryWait+30);
-      const res={dry:O.k.dry-d0,fee:S.ledger.frout-fr0,q:S.outQ.length};S.lots.fg=keep;S.fg=fg;P.C.outRate.auto=true;return res}""")
-    ok("an empty-handed truck leaves after the wait with a dry-run fee", r["dry"] == 1 and r["fee"] >= 299, r)
+      // (the machine keeps making paper while the truck waits: since the order book (v6.6) a truck in the queue is sent to a
+      //  door as soon as an order or a spot load is ready, so a 6.5 h wait at full speed found a load (or was still loading)
+      //  and never ran dry. The warehouse is kept empty for the whole wait; made counts the rolls that would have loaded it)
+      let made=0;const fr0=S.ledger.frout,d0=O.k.dry;S.outQ.push({id:99901,load:0});
+      __run(X.ORD.dryWait+30,()=>{if(S.fg>0){made+=S.fg;S.lots.fg.length=0;S.fg=0;}});
+      const res={dry:O.k.dry-d0,fee:S.ledger.frout-fr0,q:S.outQ.length,made:Math.round(made)};S.lots.fg=keep;S.fg=fg;P.C.outRate.auto=true;return res}""")
+    ok("an empty-handed truck leaves after the wait with a dry-run fee", r["dry"] == 1 and r["fee"] >= 299 and r["q"] == 0, r)
 
     # --- 6. base load: charged while stopped, not while running
     r = pg.evaluate("""()=>{const P=__PM,S=P.S,X=P.OX;const pm=S.pm;
@@ -82,13 +86,18 @@ with sync_playwright() as pw:
 
     # --- 7. bale grading
     r = pg.evaluate("""()=>{const P=__PM,S=P.S,X=P.OX;const Q=X.bqState(),wx=S.wx;let cnt={A:0,C:0,M:0},mx=0,rej=0;const r0=Q.rej;
-      for(let i=0;i<2000;i++){const t=X.baleGrade({id:i,load:220});cnt[t.q]++;mx+=t.m;if(X.baleGate(t))rej++;}
+      // (v6.8.3: baleGrade picks the kind furthest below its recipe share, counting the piles and the trucks already in
+      //  S.inQ, so each graded load is queued as the game would before the next is drawn; the queue is put back after)
+      const q0=S.inQ.length;
+      for(let i=0;i<2000;i++){const t=X.baleGrade({id:i,load:220});S.inQ.push(t);cnt[t.q]++;mx+=t.m;if(X.baleGate(t))rej++;}
+      S.inQ.length=q0;const rec={...Q.rec},n=rec.A+rec.C+rec.M,dev=Math.max(...['A','C','M'].map(k=>Math.abs(cnt[k]/2000-rec[k]/n)));
       const dry={m:0.10,k:0,pf:1},wet={m:0.18,k:0,pf:(1-0.18)/(1-X.BALE.allow)};
       const o0=S.ledger.occ;Q.m=0.10;Q.k=0;const paidDry=X.baleUnload(dry,100,0);const paidWet=X.baleUnload(wet,100,0);
       Q.m=0.10;const f1=X.baleFeed();Q.m=0.16;const f2=X.baleFeed();Q.k=0.5;const f3=X.baleFeed();
-      return {cnt,mean_m:mx/2000,rej,rejC:Q.rej-r0,paidDry,paidWet,sf1:f1.sf,sf2:f2.sf,yk3:f3.yk}}""")
-    ok("loads follow the OCC recipe: A, C and Mixed Waste all arrive (v6.8.3)", all(r["cnt"].get(k, 0) > 0 for k in "ACM") and sum(r["cnt"].values()) == 2000, r["cnt"])
-    ok("every C load rejected at the gate, no A or B", r["rej"] == r["cnt"]["C"] == r["rejC"], r)
+      return {cnt,rec,dev,mean_m:mx/2000,rej,rejC:Q.rej-r0,paidDry,paidWet,sf1:f1.sf,sf2:f2.sf,yk3:f3.yk}}""")
+    ok("loads follow the OCC recipe: A, C and Mixed Waste all arrive in the recipe's shares (v6.8.3)", all(r["cnt"].get(k, 0) > 0 for k in "ACM") and sum(r["cnt"].values()) == 2000 and r["dev"] < 0.03, {"cnt": r["cnt"], "rec": r["rec"], "dev": r["dev"]})
+    # (v6.8.3: Mixed Waste replaced the old junk C grade and is bought on purpose; baleGate turns nothing away)
+    ok("no load turned away at the gate (v6.8.3)", r["rej"] == 0 and r["rejC"] == 0, r)
     ok("a dry load is paid in full; a wet one at air-dry weight", abs(r["paidDry"] - 100) < 1e-6 and abs(r["paidWet"] - 100 * (0.82 / 0.88)) < 1e-6, r)
     ok("water over 10% is not fiber; contamination costs yield", r["sf1"] == 1 and abs(r["sf2"] - 0.94) < 1e-9 and r["yk3"] < 1, r)
     # stickies raise the break odds: compare the mods with clean and dirty stock in the chest

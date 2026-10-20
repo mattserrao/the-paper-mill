@@ -19,7 +19,10 @@ def route(r):
         rows = [{"name": "QA Check" if i % 3 == 0 else "Tester", "minutes": 90000 - i * 500, "wave": 9, "tons": 20000, "incidents": 50, "mill": "Old Mill", "created_at": "2026-10-01T00:00:00Z"} for i in range(30)]
         return r.fulfill(status=200, body=json.dumps(rows), headers={"Content-Type": "application/json", "Access-Control-Allow-Origin": "*"})
     return route_for(html)(r)
-STEP = "async n=>{const P=__PM;for(let i=0;i<n;i++){P.step(0.25);const o=P.S.cards.open;if(o){if(o.c)document.getElementById('deal-no').click();else if(o.outage)document.getElementById('out-ok').click();else if(o.report)document.getElementById('rc-ok').click();}if(P.S.outg.on)return true;if(i%4000===0)await new Promise(r=>setTimeout(r,0));}P.setRunning(false);return false}"
+# (v5.1 civics: an open civics choice holds the next outage until it's answered, so STEP answers it, as survcheck.py does;
+#  and rc-ok is only clicked while a report card is actually open: clicking the hidden one cleared a civics card's hold
+#  on S.cards.open and left the outages waiting on a choice that was never shown again)
+STEP = "async n=>{const P=__PM;for(let i=0;i<n;i++){P.step(0.25);const o=P.S.cards.open;if(o){if(o.c)document.getElementById('deal-no').click();else if(o.outage)document.getElementById('out-ok').click();else if(o.report)document.getElementById('rc-ok').click();else if(o.civ){const b=document.querySelector('#civOv .civbtn');if(b)b.click();}}if(P.S.outg.on)return true;if(i%4000===0)await new Promise(r=>setTimeout(r,0));}P.setRunning(false);return false}"
 with sync_playwright() as pw:
     b = pw.chromium.launch(args=["--use-gl=angle", "--use-angle=swiftshader", "--enable-unsafe-swiftshader", "--ignore-gpu-blocklist"])
     pg = b.new_page(viewport={"width": 1280, "height": 800}); errs = []
@@ -51,16 +54,16 @@ with sync_playwright() as pw:
     st = pg.evaluate("()=>({on:__PM.S.outg.on,w:__PM.S.outg.watch,rate:__PM.simRate()})")
     ok(not st["on"] and not st["w"] and st["rate"] == 60, f"watch ends with the outage ({st})")
     # second outage: notice shown again, then it closes when the outage ends even inside 7 s
-    pg.evaluate("()=>{const r=document.getElementById('rc-ok');if(r)r.click()}")
+    pg.evaluate("()=>{const r=document.getElementById('rc-ok'),o=__PM.S.cards.open;if(r&&o&&o.report)r.click()}")
     on = pg.evaluate(STEP, 40000); vis = pg.evaluate("()=>!document.getElementById('outOv').hidden&&!!document.getElementById('out-watch')")
     ok(on and vis, "second outage shows the notice again")
     pg.evaluate("()=>{const P=__PM;for(let i=0;i<2000&&P.S.outg.on;i++)P.step(0.25);P.setRunning(false)}")
     ok(pg.evaluate("()=>document.getElementById('outOv').hidden||!document.getElementById('outOv').classList.contains('note')"), "the notice is gone once the outage ends (well inside its 7 s)")
     # at 5 min/s there's nothing to slow: no button
-    pg.evaluate("()=>{const r=document.getElementById('rc-ok');if(r)r.click();__PM.C.simSpeed=5}")
+    pg.evaluate("()=>{const r=document.getElementById('rc-ok'),o=__PM.S.cards.open;if(r&&o&&o.report)r.click();__PM.C.simSpeed=5}")
     on = pg.evaluate(STEP, 40000)
     ok(on and not pg.evaluate("()=>!!document.getElementById('out-watch')"), "no Watch button when the player's speed is already 5")
-    pg.evaluate("()=>{const P=__PM;for(let i=0;i<2000&&P.S.outg.on;i++)P.step(0.25);P.setRunning(false);P.C.simSpeed=60;const r=document.getElementById('rc-ok');if(r)r.click()}")
+    pg.evaluate("()=>{const P=__PM;for(let i=0;i<2000&&P.S.outg.on;i++)P.step(0.25);P.setRunning(false);P.C.simSpeed=60;const r=document.getElementById('rc-ok'),o=__PM.S.cards.open;if(r&&o&&o.report)r.click()}")
     # report card: a paid card adds a Deals & trials row and the rows add up
     s = pg.evaluate("""()=>{const P=__PM,L=JSON.parse(JSON.stringify(P.S.ledger));const a={L0:L,min:1440,plan:0,up:{},dn:{},bn:{},prod0:P.S.tot.prodT,ship0:P.S.shipT||0,brk0:0,hay0:0,rolls0:0,off0:0,occ:0,fib:0};
       for(const k of ['machine','stock','dry','wet','fin','recv','ship'])a.up[k]=0;P.S.ledger.deals=(P.S.ledger.deals||0)-20000;const r=P.rcSum(a);P.S.ledger.deals+=20000;
