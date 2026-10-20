@@ -14,10 +14,10 @@ errs, log = [], []
 def ok(name, cond, extra=""):
     log.append(("PASS " if cond else "FAIL ") + name + (f"  ({extra})" if extra else ""))
 SNAPRUN = """(a)=>{const P=__PM,[setup,mins,chaos]=a,G=P.G3;G.save.restore(JSON.parse(window.__SNAP));P.setRunning(false);P.CH.on=!!chaos;P.C.breaks=!!chaos;P.C.hays=!!chaos;
-  const S=P.S;(new Function('P','S','G',setup))(P,S,G);const w0=JSON.parse(JSON.stringify(S.wat||null)),sw=100/4.2-1,inv0=(S.wat?S.wat.L:0)+sw*S.tank,t0=S.t,good0=S.tot.prodT;
+  const S=P.S;(new Function('P','S','G',setup))(P,S,G);const w0=JSON.parse(JSON.stringify(S.wat||null)),sw=100/4.2-1,inv0=(S.wat?S.wat.L:0)+sw*S.tank+(S.we?S.we.L:0),t0=S.t,good0=S.tot.prodT;
   let minL=1e9,maxShort=0,bwOut=0,maxFresh=0;
   while(S.t-t0<mins){P.step(P.SIM_STEP);if(S.cards&&S.cards.open)S.cards.open=null;const W=S.wat;minL=Math.min(minL,W.L);maxShort=Math.max(maxShort,W.shortK);maxFresh=Math.max(maxFresh,W.r.fresh);if(S.pm==="run"&&G.qual().out.includes("bw"))bwOut+=P.SIM_STEP;}
-  const W=S.wat,T=W.tot,T0=w0?w0.tot:{},d=k=>T[k]-(T0[k]||0),inv1=W.L+sw*S.tank;
+  const W=S.wat,T=W.tot,T0=w0?w0.tot:{},d=k=>T[k]-(T0[k]||0),inv1=W.L+sw*S.tank+(S.we?S.we.L:0);   // (v6.8: and the white water silo, 07g)
   return {in:d("fresh")+d("bale")+d("rep")+d("short"),out:d("evap")+d("prod")+d("rej")+d("sludge")+d("out"),dinv:inv1-inv0,parts:Object.fromEntries(Object.keys(T).map(k=>[k,+d(k).toFixed(1)])),
     good:S.tot.prodT-good0,minL,maxShort,bwOut,maxFresh,L:W.L,r:W.r,bank:S.q.bank,W:S.pf?S.pf.W:null};}"""
 with sync_playwright() as pw:

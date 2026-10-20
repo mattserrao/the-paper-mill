@@ -128,7 +128,7 @@ function trDrawRel(){const el=trQ("#trRel");if(!el)return;const p=trPens(),T=TRU
     if(Math.abs(r0.r)>0.995)continue;   // (the same reading in other units: chest level and volume)
     res.push({id,r:best.r,lag:best.lag,n:best.n});}
   res.sort((a,b)=>Math.abs(b.r)-Math.abs(a.r));
-  el.innerHTML=res.length?res.slice(0,8).map(o=>`<div class="trrr"><span><b>${tagName(o.id)}</b><small>${o.r>0?"rises with it":"falls as it rises"} · ${lagTxt(o.lag,D.dt,tagName(T).toLowerCase(),tagName(o.id).toLowerCase())}</small></span><i><s style="width:${Math.round(Math.abs(o.r)*100)}%;background:${o.r>0?"#4fd18b":"#ff7a8a"}"></s></i><em>${o.r.toFixed(2)}</em><button type="button" data-tradd="${o.id}" title="Trend it">+ trend</button></div>`).join("")
+  el.innerHTML=res.length?res.slice(0,14).map(o=>`<div class="trrr"><span><b>${tagName(o.id)}</b><small>${o.r>0?"rises with it":"falls as it rises"} · ${lagTxt(o.lag,D.dt,tagName(T).toLowerCase(),tagName(o.id).toLowerCase())}</small></span><i><s style="width:${Math.round(Math.abs(o.r)*100)}%;background:${o.r>0?"#4fd18b":"#ff7a8a"}"></s></i><em>${o.r.toFixed(2)}</em><button type="button" data-tradd="${o.id}" title="Trend it">+ trend</button></div>`).join("")
     :`<p class="dcsfield">Nothing moves clearly with ${tagName(T).toLowerCase()} in this range.</p>`;}
 
 /* ---------- QCS: the quality screen ---------- */
@@ -147,7 +147,7 @@ function qcsRefresh(){const Q=S.q||{},put=(id,h)=>{const e=$(id);if(e&&e._h!==h)
   put("qcsBk",`<div><small>On spec · the run</small><b>${made>0.5?((1-off/made)*100).toFixed(1)+" %":"–"}</b><small>${Math.round(made-off).toLocaleString()} t good</small></div>
     <div><small>To the beater today</small><b>${Math.round(today)} t</b><small>${Math.round(S.tot.broke||0).toLocaleString()} t this run</small></div>
     <div><small>Beater bay</small><b>${Math.round(Q.bank||0)} t</b><small>waiting to repulp</small></div><div><small>Repulped</small><b>${Math.round(S.tot.repulped||0).toLocaleString()} t</b><small>back to the stock chest</small></div>`);
-  put("qcsSpec",`<table><thead><tr><th>Grade</th><th>Basis weight</th><th>Moisture</th><th>Color</th></tr></thead><tbody>${Object.entries(QSPEC).map(([g,s])=>`<tr${g===C.grade?' class="cur"':""}><td>${g}${g===C.grade?" · on the machine":""}</td><td>${s.bw[0].toFixed(2)}–${s.bw[1].toFixed(2)} lb</td><td>${s.m[0]}–${s.m[1]} %</td><td>${s.shade}</td></tr>`).join("")}</tbody></table>`);
+  put("qcsSpec",`<table><thead><tr><th>Grade</th><th>Basis weight</th><th>Ring crush</th><th>Moisture</th><th>Color</th></tr></thead><tbody>${Object.entries(QSPEC).map(([g,s])=>{const b=qBw(g);return `<tr${g===C.grade?' class="cur"':""}><td>${g}${g===C.grade?" · on the machine":""}</td><td>${b[0].toFixed(2)}–${b[1].toFixed(2)} lb</td><td>min ${Math.round((RCT0[g]||60)*WE.rctSpec*10)/10} lbf</td><td>${s.m[0]}–${s.m[1]} %</td><td>${s.shade}</td></tr>`;}).join("")}</tbody></table>`);
   const L=(Q.log||[]).slice().reverse(),cur=Q.cur?[{...Q.cur,live:true}]:[];
   put("qcsLog",cur.length||L.length?`<table><thead><tr><th>When</th><th>How long</th><th>Grade</th><th>Why</th><th>To beater</th></tr></thead><tbody>${cur.concat(L).slice(0,15).map(s=>`<tr${s.live?' class="live"':""}><td>${dhm(s.t0)}</td><td>${s.live?"now · ":""}${durTxt(s.t1-s.t0+1)}</td><td>${s.g}</td><td>${s.why}</td><td>${(Math.round(s.tons*10)/10)} t</td></tr>`).join("")}</tbody></table>`:`<p class="dcsfield">No off-spec paper yet this run.</p>`);
   const G=(Q.gc||[]).slice().reverse();

@@ -42,8 +42,8 @@ function purgeNow(k){if(S.zen)return;const p=dcsState().pg[k];p.dp=PURGE.base[k]
 function dcsTick(dt){const D=S.dcs;if(!D||S.zen)return;
   for(const k in D.pg){const p=D.pg[k],up=PURGE.up[k];
     if(active(up)){p.m="auto";p.dp=PURGE.base[k];continue;}   // the crew clears it and puts it back in Auto
-    if(p.m==="auto"){p.dp+=(PURGE.base[k]-p.dp)*Math.min(1,dt/30);continue;}
-    if(!S.M.pulperDown)p.dp+=PURGE.rise*dt;
+    if(p.m==="auto"){p.dp+=(PURGE.base[k]*weDirt()-p.dp)*Math.min(1,dt/30);continue;}   // (v6.8: dirty bales run it higher between purges, 07g)
+    if(!S.M.pulperDown)p.dp+=PURGE.rise*dt*weDirt();
     if(p.dp>=PURGE.trip[k]){p.dp=PURGE.base[k];log(`${PURGE.name[k]} was left in manual: the rejects plugged`,"bad");trigger(up);}}}
-const purgeDp=k=>{const p=S.dcs&&S.dcs.pg[k];if(p)return p.dp;return PURGE.base[k];};
-const purgeMode=k=>(S.dcs&&S.dcs.pg[k]&&S.dcs.pg[k].m)||"auto";
+const purgeDp=k=>{const p=S.dcs&&S.dcs.pg&&S.dcs.pg[k];if(p)return p.dp;return PURGE.base[k]*weDirt();};
+const purgeMode=k=>(S.dcs&&S.dcs.pg&&S.dcs.pg[k]&&S.dcs.pg[k].m)||"auto";

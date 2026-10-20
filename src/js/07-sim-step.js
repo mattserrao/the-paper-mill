@@ -17,6 +17,7 @@ function step(dt){
   knobTick(dt);   // v5.6 fiddly knobs (returns at once unless a knob was moved)
   dcsTick(dt);   // v6.5 b3 DCS motors and reject purges (07c; nothing until the DCS is used)
   dryTick(dt);   // v6.5 b5 the dryer limit: water, steam, moisture (07d)
+  weTick(dt);   // v6.8 the basis weight loop, bale water in the pulper, screen pressure drop (07g)
   const g=GRADES[C.grade];
   // 1 inbound arrivals
   // weather: changes every few hours; snow and fog slow the trucks, rain soaks bales
@@ -46,7 +47,7 @@ function step(dt){
   const feed=Math.min(feedRes,S.yard); S.yard-=feed;WQ.f+=feed;
   // 3 pulper → chest
   if(M.yardEat){const y0=S.yard;S.yard=Math.max(0,S.yard-M.yardEat*dt/60);pfW("bale",y0-S.yard);}
-  const BF=baleFeed(),fiberIn=feed*BF.sf*P.yieldF*M.yieldMul*BF.yk,rejT=feed*BF.sf-fiberIn;pfW("feed",feed);pfW("rej",rejT);WQ.rej+=rejT;WQ.bw+=feed*BF.e;   // v6.6: water over 10% isn't fiber; contamination is rejects
+  const BF=baleFeed(),fiberIn=feed*BF.sf*P.yieldF*M.yieldMul*BF.yk*dpYield(),rejT=feed*BF.sf-fiberIn;pfW("feed",feed);pfW("rej",rejT);WQ.rej+=rejT;WQ.bw+=feed*BF.e;   // v6.6: water over 10% isn't fiber; contamination is rejects
   baleTick(dt,fiberIn);
   // (v6.5.6: stock the chest has no room for goes over the top to the sewer, and is booked as spilled; it used to vanish)
   {const t1=S.tank+fiberIn,cl=Math.max(0,t1-P.tankCap);S.tank=t1-cl;if(cl>0){pfW("spill",cl);WQ.clip+=cl;}WQ.fi+=fiberIn-cl;}
@@ -62,7 +63,7 @@ function step(dt){
   if(S.pm==="run"){
     let tgt=C.pmSp.v*M.speedCap;
     if(level<low){const f=clamp((level-5)/(low-5),0,1);
-      const supply=(S.rates.fiberIn*P.pmLoss)/(P.K*g.bw);
+      const supply=(S.rates.fiberIn*P.pmLoss)/(P.K*bwSp());
       tgt=Math.min(C.pmSp.v,Math.max(supply,C.pmSp.v*f));}
     tgt=Math.max(Math.min(tgt,C.pmSp.v*M.speedCap),P.minSpeed);
     const r=P.ramp*dt; S.pmSpeed+=clamp(tgt-S.pmSpeed,-r*2,r);
@@ -72,7 +73,7 @@ function step(dt){
       S.breakLeft=2*(S.brkType==="reel"?4+L.brkLen*6:S.brkType==="dryer"?12+L.brkLen*14:26+L.brkLen*20);S.breakTotal=S.breakLeft;S.tot.breaks++;enqueue("brk");AUDIO.sfx("snap",2500);
       log(`Sheet break ${S.brkType==="reel"?"at the reel (short)":S.brkType==="dryer"?"before the dryers":"before the presses (long)"}`,"warn");brkNote();}
     if(S.pm==="run"){
-      prod=P.K*S.pmSpeed*g.bw*dt/60;
+      prod=P.K*S.pmSpeed*S.we.bw*dt/60;   // (v6.8: the weight the BW loop is making, 07g)
       const use=prod/P.pmLoss;
       if(use>S.tank){prod=S.tank*P.pmLoss;}
       S.tank-=prod/P.pmLoss;pfW("eff",prod/P.pmLoss-prod);WQ.u+=prod/P.pmLoss;WQ.p+=prod;
@@ -81,7 +82,8 @@ function step(dt){
   if(S.pm!=="run") S.pmSpeed=ease(S.pmSpeed,0,dt,3);
   baseLoadTick(dt);   // v6.6: a stopped machine still draws power and keeps the boiler banked
   let beat=0;
-  if(prod>0){{const ec=prod*energyCost();spend(ec,"energy");pfEnergy(prod,ec);}knobSteamCost(prod);S.q.made+=prod;
+  if(prod>0){{const ec=prod*energyCost();spend(ec,"energy");pfEnergy(prod,ec);}knobSteamCost(prod);
+    {const de=kwhNow()-WE.kwh0;if(de&&!S.zen){const v=de*prod/P.pmLoss*WE.kwhCost*P.energyMul*(P.costMul||1);spend(v,"energy");pfAdd("power","stock",v);}}   // v6.8 refining power above (or below) standardS.q.made+=prod;
     // v6.5.3: the spec check (07e): weight, moisture or color out and the whole reel is beater; then a grade change's
     // transition tons; then the other knob defects' share
     let off=0;if(qualTick().off)off=prod;
@@ -90,9 +92,10 @@ function step(dt){
     // (v6.5.3: off-spec paper stays on the reel as beater and is wound into beater rolls; before, it vanished here)
     if(off>0){pfW("broke",off);S.tot.broke+=off;S.q.off+=off;prod-=off;beat=off;}
     if(S.plan.hot&&C.grade==="34Super")S.plan.hot.made+=prod;
-    if(S.pf&&prod>0)pfW("val",prod*priceOf(C.grade));}
+    {const ps=premShare();if(ps>0&&prod>0&&!S.zen){const v=prod*priceOf(C.grade)*ps;earn(v);S.tot.prem=(S.tot.prem||0)+v;}}   // v6.8 the lightweight premium, paid as the on-spec paper is made
+    if(S.pf&&prod>0)pfW("val",prod*priceOf(C.grade)*(1+premShare()));}
   qLog(dt,beat);   // v6.7 the off-spec log (07e)
-  S.reel+=prod+beat;lotPut(S.lots.reel,C.grade,prod);lotPut(S.lots.reel,"beater",beat); S.tot.prodT+=prod; {const pt=P.K*C.pmSp.v*g.bw*dt/60;S.tot.pot+=pt;pfW("pot",pt);}   // (v6.7: potential tons at the setpoint speed, by the hour, for the process flow)
+  S.reel+=prod+beat;lotPut(S.lots.reel,C.grade,prod);lotPut(S.lots.reel,"beater",beat); S.tot.prodT+=prod; {const pt=P.K*C.pmSp.v*bwSp()*dt/60;S.tot.pot+=pt;pfW("pot",pt);}   // (v6.7: potential tons at the setpoint speed, by the hour, for the process flow)
   planTick(dt,prod);
   if(S.reel>=P.jumbo&&reelsAtWinder()<=P.storeReels){S.winderBuf+=S.reel;lotTake(S.lots.reel,S.reel,S.lots.buf);S.reel=0;S.lots.reel.length=0;S.tot.turnups++;}
   // 6 winder

@@ -10,12 +10,12 @@
    Rules: S.knob does not exist until the player changes a knob, and knobTick() returns at once while every knob is at
    its ideal and the process has settled, so an untouched game draws no dice and changes nothing (same checksum).
    Incident durations use their own dice stream ("knob"); the shared upset streams are never touched. Zen: no knobs. */
-const KNOB_IDEAL={pulp:50,ref:0.5,agit:100,vac:30,press:100,osc:100,couch:1,draw:1.5,st1:70,gm:1,gt:0};
+const KNOB_IDEAL={pulp:50,ref:60,agit:100,vac:30,press:100,osc:100,couch:1,draw:1.5,st1:70,gm:1,gt:0};
 const KNOBS=[
   {id:"pulp",name:"Pulper dilution valve",area:"SPOT",where:"Pulper, stock prep",field:true,unit:"% open",min:0,max:100,step:1,
     tip:"Dilution water into the pulper tub. Operators leave it at 50% open."},
-  {id:"ref",name:"Refiner plate gap",area:"SPOT",where:"Twin refiners, behind the headbox",field:true,unit:"mm",min:0.1,max:1.0,step:0.01,dp:2,
-    tip:"How close the refiner plates run. Standard gap is 0.50 mm."},
+  {id:"ref",name:"Refining energy",area:"SPOT",where:"Twin refiners, behind the headbox",field:true,unit:"kWh/t",min:20,max:130,step:1,
+    tip:"Specific refining energy: the plate gap closes to put it in. More refining makes stronger paper (so a lighter sheet can pass on strength) but it drains slower on the table. Standard is 60 kWh/t."},
   {id:"agit",name:"Machine chest agitator",area:"SPOT",where:"Machine chest, stock prep",field:true,unit:"% speed",min:0,max:100,step:5,
     tip:"Keeps the refined stock in the machine chest mixed. Normally runs flat out."},
   {id:"zones",name:"Headbox dilution zones",area:"WET",where:"Wet end DCS",dcs:true,
@@ -51,7 +51,7 @@ function slcSet(k,val){if(S.zen)return;const K=knobState();K.v[k==="v"?"sv":"sh"
    0.93 / press solids - 1, against the standard's: W, the wet end's water factor the dryers use (07d). Drier in, less
    steam; wetter, more, both ways (before v6.5.5 no knob ever saved steam). Untouched, every factor is exactly 1. */
 function dewater(fr,vac,pl,jv,jh){
-  const eJet=1-0.25*jv*jv-0.15*jh*jh,dv=(vac-30)/30,eVac=1-(dv<0?0.58:0.15)*dv*dv,eRef=fr<0.5?1-(0.5-fr):1+0.2*(fr-0.5);
+  const eJet=1-0.25*jv*jv-0.15*jh*jh,dv=(vac-30)/30,eVac=1-(dv<0?0.58:0.15)*dv*dv,eRef=eDrain(csfOf(fr));   // (v6.8: drainage follows freeness, 07g)
   const cs=clamp(19*eJet*eVac*eRef,8,26),pb=44+4*LV("shoe");
   const lt=pl<100?0.2*(pl-100):pl<=130?0.08*(pl-100):2.4-0.3*(pl-130);
   const ps=clamp(pb+(cs-19)+lt,30,56),wpt=p=>(1-DRY.m0/100)/(p/100)-1;
@@ -128,8 +128,8 @@ function knobTick(dt){const K=S.knob;if(!K||!K.any||S.zen)return;
     knobFix(ki.cause,head,who);}
   // ---- stock prep ----
   x.cp=L(x.cp,5+(50-v.pulp)*0.08,25);                                  // pulper consistency (%)
-  x.fr=L(x.fr,v.ref,40);                                                // refining the stock in the chest has seen (gap, mm)
-  x.ch=L(x.ch,v.ref<=0.15?1:0,10);                                      // plates heating up as they run together
+  x.fr=L(x.fr,gapOf(v.ref),40);                                         // refining the stock in the chest has seen (gap, mm; v6.8: the gap follows the energy)
+  x.ch=L(x.ch,gapOf(v.ref)<=0.15?1:0,10);                                      // plates heating up as they run together
   x.sw=L(x.sw,v.agit>=70?0:(70-v.agit)/70,60);                          // machine chest consistency swings (0..1)
   // ---- wet end ----
   for(let i=0;i<KZONES;i++)x.z[i]=L(x.z[i],K.z[i],20);
@@ -195,6 +195,7 @@ function knobTick(dt){const K=S.knob;if(!K||!K.any||S.zen)return;
   tr("wrinkles",F.wrinkles>0,180,()=>["draw"],"Wrinkles in the reel.","The dry-end operator");
   tr("draw",(K.harm.draw&&K.harm.draw.n>0)||(H.draw||0)>0.2,240,()=>["draw"],"Breaks going into the dryers.","The dry-end operator");
   tr("vac",(H.vac||0)>0.2,240,()=>["vac"],"Wet-end breaks.","The wet-end operator");
+  tr("silo",v.vac>30&&!!S.we&&S.we.L<WE.silo*WE.makeL,120,()=>["vac"],"The white water silo keeps running low: the vacuum boxes are pulling too much to the seal pit.","The wet-end operator");   // (v6.8, 07g)
   tr("steam",K.sf>1.08,720,()=>knobSteamCulprits(),"The steam bill is well up on the week.","The energy engineer");
   tr("feed",K.feed<0.95,480,()=>["pulp"],"Stock prep can't keep the chest up: the pulper is running thin.","Stock prep");
   tr("moist",F.wet>0||F.dry>0||(K.harm.moist&&K.harm.moist.n>0),180,()=>F.wet>0?knobSteamCulprits():["st1","ref"].filter(i=>!knobAt(i)),F.wet>0?"QCS: the sheet is coming off the reel wet.":"QCS: the sheet is coming off the reel over-dried.","The process engineer");
@@ -206,7 +207,7 @@ const KOFFN={wet:"sheet too wet",dry:"sheet over-dried",cd:"CD moisture streaks"
 // what is putting the extra water into the dryers (or the extra steam on): the knobs the engineers will trace
 function knobSteamCulprits(){const K=S.knob;if(!K)return [];const v=K.v,c=[];
   // (v6.5.5: each knob's share of the extra water, from the dewatering chain with that knob put back to standard)
-  const sl=slcGet(),W0=dewater(v.ref,v.vac,v.press,sl.v,sl.h).W,dW=(o)=>W0-dewater(o.fr??v.ref,o.vac??v.vac,o.pl??v.press,o.jv??sl.v,o.jh??sl.h).W;
+  const sl=slcGet(),W0=dewater(gapOf(v.ref),v.vac,v.press,sl.v,sl.h).W,dW=(o)=>W0-dewater(o.fr??gapOf(v.ref),o.vac??v.vac,o.pl??v.press,o.jv??sl.v,o.jh??sl.h).W;
   if(!knobAt("ref"))c.push(["ref",dW({fr:0.5})]);if(!knobAt("vac"))c.push(["vac",dW({vac:30})]);if(!knobAt("press"))c.push(["press",dW({pl:100})]);if(!knobAt("slice"))c.push(["slice",dW({jv:0,jh:0})]);
   if(v.st1!==70)c.push(["st1",Math.abs(v.st1-70)/130*0.35]);
   c.sort((a,b)=>b[1]-a[1]);return c.filter(r=>r[1]>0.02).map(r=>r[0]);}
@@ -216,14 +217,15 @@ function knobRead(){const K=S.knob,x=K?K.x:null,g=GRADES[C.grade]||GRADES["24"],
   const z=x?x.z:new Array(KZONES).fill(0),sw=x?x.sw:0,t=S.t;
   const wob=(f,k)=>Math.sin(t*f+k)*0.6+Math.sin(t*f*2.7+k*2)*0.4;   // smooth stand-in for process noise (no dice)
   const Dr=S.dry,st3=Dr?Dr.st3:(DRY.base[C.grade]||DRY.base["24"]);   // (v6.5 b5: the dryer model, 07d)
-  const m=Dr?Dr.m:DRY.m0,cp=x?x.cp:5;
+  const m=Dr?Dr.m:DRY.m0;let cp=x?x.cp:5;
+  const cpb=cpBale();cp+=cpb;
   return {run,cp,amps:410*(0.55+cp/5*0.45)*(S.M.pulperDown?0:1),pulpLvl:clamp(62+(5-cp)*9+wob(0.05,1)*1.5,0,110),
-    gap:x?x.fr:0.5,refkw:run?2100*(1+Math.max(0,0.5-(x?x.fr:0.5))*1.6-Math.max(0,(x?x.fr:0.5)-0.5)*0.8):0,csf:450+((x?x.fr:0.5)-0.5)*380,
-    mcLvl:69+wob(0.02,2)*3,mcCons:3.2+sw*0.9*wob(0.21,3)+(S.wat?S.wat.shortK*0.6:0),agit:knobVal("agit"),
+    gap:x?x.fr:gapOf(knobVal("ref")),refkw:run?kwhNow()*Math.max(0,S.rates.fiberUse||0):0,kwh:kwhNow(),csf:csfOf(x?x.fr:gapOf(knobVal("ref"))),   // (v6.8: refiner power = specific energy x fiber)
+    mcLvl:69+wob(0.02,2)*3,mcCons:mcCons(),agit:knobVal("agit"),
     vac:x?x.vac:30,couchSol:x&&x.cs!=null?x.cs:19,pl:x?x.pl:100,pressSol:x&&x.ps!=null?x.ps:44+4*LV("shoe"),
     edge:K?K.edge:0,gtrav:K?K.gtrav:0,gm:knobVal("gm"),stripes:x?x.st:0,cs:K?K.cs:0,couch:knobVal("couch"),osc:knobVal("osc"),wear:K?K.wear:0,
     st1:knobVal("st1"),st3,steam:run?(Dr?Dr.steam:50.5*P.K*S.pmSpeed*bw/34.8):S.pm==="break"&&Dr?Dr.steam:0,boiler:Dr?Dr.hdr:1,moist:run?m+wob(0.13,4)*0.25:0,
-    bw:run?bw*(1+sw*0.08*wob(0.21,3))+wob(0.11,5)*0.12:0,draw:knobVal("draw"),tension:run?1.0+(knobVal("draw")-1.5)*0.42:0,
+    bw:run?qualMeasure().bw:0,hbc:S.we?S.we.hbc:WE.hbc,draw:knobVal("draw"),tension:run?1.0+(knobVal("draw")-1.5)*0.42:0,
     zones:z.map((v,i)=>m+v*0.35+Math.sin(i*1.7+t*0.01)*0.12),off:qualStatus().off,why:qualStatus().why,F:K&&K.F||{},speed:S.pmSpeed};}
 // DCS / QCS trend history: a reading every 2 sim minutes, 6 hours kept. Read-only on the sim (it never writes S), kept
 // outside S so saves don't grow; a new game or a loaded save starts it fresh.
