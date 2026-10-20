@@ -1,7 +1,8 @@
 const EVENTS=[
- {id:"refclash",g:"stock",name:"Refiner plates clash",head:"Refiner plates clashed! Maintenance called to the refiners.",dur:[180,300],mtbf:420,mods:{speedCap:0.75},fx:"refclash",
-   // one set clashing slows the machine; both sets clashing takes it down until maintenance has re-plated them
-   start:inc=>{inc.both=rand("upx")<0.3;if(inc.both){inc.mods={pmDown:"both refiners clashed"};inc.left=inc.total=inc.left*1.8;inc.note="both refiners: machine down";}else{inc.mods={speedCap:0.75};inc.billMul=0.5;inc.note="one refiner out: machine slowed";}}},
+ {id:"refclash",g:"stock",name:"Refiner plates clash",head:"Refiner plates clashed! The refiners tripped: no stock is going forward to the machine chest.",dur:[180,300],mtbf:420,mods:{refOut:"refiner plates clashed"},fx:"refclash",
+   // (v6.9.2: the refiners feed the machine chest; clashed, nothing goes forward, the machine runs the chest down and trips
+   // on its low level (07g mcTick), and comes back once maintenance has re-plated them and the chest has refilled)
+   start:inc=>{rand("upx");inc.note="refiners down: the machine chest is running down";}},
  {id:"shaft",g:"machine",name:"Driveshaft snaps",head:"Dryer driveshaft snaps. Millwrights called in.",dur:[240,480],mtbf:160,mods:{pmDown:"driveshaft"},fx:"shaft"},
  {id:"dryerfire",g:"machine",name:"Fire in the dryers",head:"Fire in the dryer hood! Deluge on, sheet off.",dur:[180,360],mtbf:260,mods:{pmDown:"dryer fire"},fx:"dryerfire"},
  {id:"fabric",g:"machine",name:"Fabric runs off",head:"Forming fabric tracked off the rolls and folded up.",dur:[150,300],mtbf:180,mods:{pmDown:"fabric change"},fx:"fabric"},
@@ -102,7 +103,7 @@ function crewState(k){const q=S.crewQ||[],i=q.findIndex(x=>x.k===k);if(i<0)retur
 function baseMods(){return {pmDown:null,pulperDown:false,speedCap:1,breakMul:1,yieldMul:1,recvMul:1,clampMul:1,drvCap:99,ldrCap:99,docksClosed:false,noIn:false,noOut:false,yardEat:0,hayMul:1,crewAtPM:false,winderDown:false,offSpec:false,feedMul:1};}
 function mods(){const m=baseMods();
   for(const i of S.inc){const e=i.mods||EV[i.id].mods||{};
-    if(e.pmDown)m.pmDown=e.pmDown; if(e.winderDown)m.winderDown=true; if(e.offSpec)m.offSpec=true; if(e.feedMul!==undefined)m.feedMul*=e.feedMul; if(e.pulperDown)m.pulperDown=true; if(e.docksClosed)m.docksClosed=true; if(e.noIn)m.noIn=true; if(e.noOut)m.noOut=true;
+    if(e.pmDown)m.pmDown=e.pmDown; if(e.refOut)m.refOut=e.refOut; if(e.winderDown)m.winderDown=true; if(e.offSpec)m.offSpec=true; if(e.feedMul!==undefined)m.feedMul*=e.feedMul; if(e.pulperDown)m.pulperDown=true; if(e.docksClosed)m.docksClosed=true; if(e.noIn)m.noIn=true; if(e.noOut)m.noOut=true;
     if(e.hayMul)m.hayMul*=e.hayMul; if(e.speedCap)m.speedCap=Math.min(m.speedCap,e.speedCap); if(e.breakMul)m.breakMul*=e.breakMul; if(e.yieldMul)m.yieldMul*=(i.id==="badocc"&&LV("detrash"))?0.9:e.yieldMul;
     if(e.recvMul!==undefined)m.recvMul*=e.recvMul; if(e.clampMul!==undefined)m.clampMul*=e.clampMul; if(e.yardEat)m.yardEat+=e.yardEat;
     if(i.drvCap!==undefined)m.drvCap=Math.min(m.drvCap,i.drvCap); if(i.ldrCap!==undefined)m.ldrCap=Math.min(m.ldrCap,i.ldrCap);}

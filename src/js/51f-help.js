@@ -7,7 +7,7 @@
     <li><b>Survival:</b> no last day. Each wave (4 days, ending with a planned outage) brings more upsets and higher costs. The run ends when cash falls below −$1.5M; your time survived is your score.</li>
     <li><b>Free Play:</b> no clock, free upgrades and no leaderboard. Good for trying things out. <b>Settings → Run the mill → Let the mill run</b> declines event cards for you, so the mill keeps running while you're away.</li>
     <li><b>Zen Mode:</b> sit back and watch the mill run.</li></ul>`],
-  ["Fiber in, paper out","flow",`<ol><li><b>Receiving:</b> trucks unload bales of OCC into the bale yard: A bales, C bales and Mixed Waste, each on its own pile, fed to the pulper in the order of your recipe (Planning).</li><li><b>Stock prep:</b> the pulper turns bales back into pulp; cleaners and screens strip out sand, staples and plastic; the disk thickener takes out water; the stock chest stores clean pulp; the refiners strengthen the fibers; the machine chest and fan pump feed the headbox.</li>
+  ["Fiber in, paper out","flow",`<ol><li><b>Receiving:</b> trucks unload bales of OCC into the bale yard: A bales, C bales and Mixed Waste, each on its own pile, fed to the pulper in the order of your recipe (Planning).</li><li><b>Stock prep:</b> the pulper turns bales back into pulp; cleaners and screens strip out sand, staples and plastic; the disk thickener takes out water; the stock chest stores clean pulp; the refiners take it from there, strengthen the fibers and feed the machine chest; the fan pump feeds the headbox from the machine chest. If the refiners trip, the machine runs the machine chest down and shuts down on low level.</li>
     <li><b>Paper machine:</b> the headbox sprays pulp onto the forming fabric, the presses squeeze water out, the dryer cans dry the sheet and the reel winds it up.</li><li><b>Winder:</b> cuts each reel into customer rolls.</li><li><b>Warehouse and shipping:</b> rolls are stored, then loaded onto trucks.</li></ol>
     <p>In a season or survival run the area controls run on AUTO; in free play you set them yourself in <b>Report → Control room → Process flow</b> (tap an area, then <b>Controls</b>).</p>`],
   ["The bottleneck and upgrades","up",`<p>The mill can only run as fast as its narrowest step. Every mill starts with one bottleneck: the <b>Upgrades</b> tab names it, and upgrades that fix it are 25% off. Fix it first.</p>
@@ -99,7 +99,7 @@
     ["Hayout","A winder blow-up: the set of rolls tears apart and paper flies everywhere."],
     ["Headbox","Sprays an even jet of pulp across the full width of the forming fabric."],
     ["Headbox slice","The adjustable lip of the headbox that sets the jet across the machine."],
-    ["Machine chest","The chest that feeds the paper machine with pulp at a steady consistency."],
+    ["Machine chest","The chest between the refiners and the paper machine: it holds about 7 minutes of refined stock at a steady consistency. If the refiners stop, the machine runs it down and trips at 10%; it restarts once the chest is back over 35%."],
     ["Mill leader","The person in charge of your run: Chip, Dot, Felicity or Hank."],
     ["OCC","Old corrugated containers: used cardboard boxes, the mill's raw material."],
     ["Off-spec","Paper outside its grade's spec (basis weight ±3% around the setpoint, moisture 8 ±2%, ring crush minimum, the mill's color; a grade change's transition tons count too) or with defects like streaks and crush marks. It's wound into beater rolls, which go back to the pulper to be repulped (the QCS screen shows the spec)."],
@@ -110,7 +110,7 @@
     ["QCS","Quality control system: scanners that measure the sheet's weight, moisture, ring crush and color; the Quality screen shows the spec sheet, the off-spec log and grade changes."],
     ["Ragger","A rope that collects wire, plastic and string from the pulper. If its tail breaks, the pulper stops."],
     ["Reel","The giant roll the paper machine winds up (about 100 tons)."],
-    ["Refiner","Grinds fibers between plates so they bond into stronger paper. Refining energy (kWh/t, standard 60) closes the plate gap; around 120 kWh/t the plates clash."],
+    ["Refiner","Grinds fibers between plates so they bond into stronger paper. The refiners take stock from the stock chest and feed the machine chest. Refining energy (kWh/t, standard 60) closes the plate gap; around 120 kWh/t the plates clash, the refiners trip and nothing goes forward until they are re-plated."],
     ["Rethread","Feeding the sheet back through the machine after a break."],
     ["Round","Your once-a-day walk through one area to catch tells before they fail."],
     ["Screens (coarse, fine)","Pressurized baskets with holes or slots that let fiber through and hold back trash."],
@@ -146,7 +146,7 @@
     ["Wave","In survival, the stretch between planned outages. Each wave is rougher and costlier than the last."],
     ["Wet end / dry end","The wet end is the headbox, forming section and presses; the dry end is the dryers, reel and winder."],
     ["Freeness (CSF)","How fast water drains out of the stock, in mL CSF. About 450 at the standard refining; more refining lowers it and the sheet drains slower on the table. On the SPOT DCS."],
-    ["Refining energy","The power the refiners put into each ton of fiber, in kWh/t (standard 60). More makes stronger paper (ring crush) but drains slower and costs power; around 120 the plates clash. One of the fiddly knobs."],
+    ["Refining energy","The power the refiners put into each ton of fiber, in kWh/t (standard 60). The trade-off: more refining means higher ring crush, but the stock drains slower on the table (lower couch solids, more steam) and the power costs more. Around 120 the plates clash. One of the fiddly knobs."],
     ["Basis weight setpoint","The weight the machine aims for, set on the WET DCS from 10% under to 5% over the grade's target. The weight spec is ±3% around it."],
     ["Lightweight premium","On-spec paper made under the grade's target weight earns half the trim as extra price, up to 5%. A lighter sheet needs more refining to pass ring crush."],
     ["Headbox consistency (HBC)","Fiber in the headbox jet: about 0.8%. The fan pump thins the machine chest's stock (about 3.2%) down to it with white water."],

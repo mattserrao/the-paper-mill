@@ -2704,9 +2704,10 @@ function manRep(){return manNow().short?MAN.SLOW:1;}
 function manTick(){const s=manIdx();if(s===MAN.seen)return;const prev=MAN.seen;MAN.seen=s;if(prev!==s-1||S.zen)return;
   const m=manNow();if(m.short)log(`Shift change: ${m.team} team on ${m.K==="D"?"days":"nights"}, one tech short (a vacation went unfilled). Maintenance repairs are slower until the next shift.`,"warn");}
 const EVENTS=[
- {id:"refclash",g:"stock",name:"Refiner plates clash",head:"Refiner plates clashed! Maintenance called to the refiners.",dur:[180,300],mtbf:420,mods:{speedCap:0.75},fx:"refclash",
-   // one set clashing slows the machine; both sets clashing takes it down until maintenance has re-plated them
-   start:inc=>{inc.both=rand("upx")<0.3;if(inc.both){inc.mods={pmDown:"both refiners clashed"};inc.left=inc.total=inc.left*1.8;inc.note="both refiners: machine down";}else{inc.mods={speedCap:0.75};inc.billMul=0.5;inc.note="one refiner out: machine slowed";}}},
+ {id:"refclash",g:"stock",name:"Refiner plates clash",head:"Refiner plates clashed! The refiners tripped: no stock is going forward to the machine chest.",dur:[180,300],mtbf:420,mods:{refOut:"refiner plates clashed"},fx:"refclash",
+   // (v6.9.2: the refiners feed the machine chest; clashed, nothing goes forward, the machine runs the chest down and trips
+   // on its low level (07g mcTick), and comes back once maintenance has re-plated them and the chest has refilled)
+   start:inc=>{rand("upx");inc.note="refiners down: the machine chest is running down";}},
  {id:"shaft",g:"machine",name:"Driveshaft snaps",head:"Dryer driveshaft snaps. Millwrights called in.",dur:[240,480],mtbf:160,mods:{pmDown:"driveshaft"},fx:"shaft"},
  {id:"dryerfire",g:"machine",name:"Fire in the dryers",head:"Fire in the dryer hood! Deluge on, sheet off.",dur:[180,360],mtbf:260,mods:{pmDown:"dryer fire"},fx:"dryerfire"},
  {id:"fabric",g:"machine",name:"Fabric runs off",head:"Forming fabric tracked off the rolls and folded up.",dur:[150,300],mtbf:180,mods:{pmDown:"fabric change"},fx:"fabric"},
@@ -2807,7 +2808,7 @@ function crewState(k){const q=S.crewQ||[],i=q.findIndex(x=>x.k===k);if(i<0)retur
 function baseMods(){return {pmDown:null,pulperDown:false,speedCap:1,breakMul:1,yieldMul:1,recvMul:1,clampMul:1,drvCap:99,ldrCap:99,docksClosed:false,noIn:false,noOut:false,yardEat:0,hayMul:1,crewAtPM:false,winderDown:false,offSpec:false,feedMul:1};}
 function mods(){const m=baseMods();
   for(const i of S.inc){const e=i.mods||EV[i.id].mods||{};
-    if(e.pmDown)m.pmDown=e.pmDown; if(e.winderDown)m.winderDown=true; if(e.offSpec)m.offSpec=true; if(e.feedMul!==undefined)m.feedMul*=e.feedMul; if(e.pulperDown)m.pulperDown=true; if(e.docksClosed)m.docksClosed=true; if(e.noIn)m.noIn=true; if(e.noOut)m.noOut=true;
+    if(e.pmDown)m.pmDown=e.pmDown; if(e.refOut)m.refOut=e.refOut; if(e.winderDown)m.winderDown=true; if(e.offSpec)m.offSpec=true; if(e.feedMul!==undefined)m.feedMul*=e.feedMul; if(e.pulperDown)m.pulperDown=true; if(e.docksClosed)m.docksClosed=true; if(e.noIn)m.noIn=true; if(e.noOut)m.noOut=true;
     if(e.hayMul)m.hayMul*=e.hayMul; if(e.speedCap)m.speedCap=Math.min(m.speedCap,e.speedCap); if(e.breakMul)m.breakMul*=e.breakMul; if(e.yieldMul)m.yieldMul*=(i.id==="badocc"&&LV("detrash"))?0.9:e.yieldMul;
     if(e.recvMul!==undefined)m.recvMul*=e.recvMul; if(e.clampMul!==undefined)m.clampMul*=e.clampMul; if(e.yardEat)m.yardEat+=e.yardEat;
     if(i.drvCap!==undefined)m.drvCap=Math.min(m.drvCap,i.drvCap); if(i.ldrCap!==undefined)m.ldrCap=Math.min(m.ldrCap,i.ldrCap);}
@@ -3847,7 +3848,8 @@ function step(dt){
   {const t1=S.tank+fiberIn,cl=Math.max(0,t1-P.tankCap);S.tank=t1-cl;if(cl>0){pfW("spill",cl);WQ.clip+=cl;}WQ.fi+=fiberIn-cl;}
   // 5 paper machine
   const level=S.tank/P.tankCap*100, low=C.lowLevel.v;
-  if(M.pmDown){ if(S.pm!=="incident"){ S.pm="incident"; S.lastDown=M.pmDown; } }
+  const pmDn=mcTick(dt,M)?"machine chest low level, refiners down":M.pmDown,fromMc=!!M.refOut&&!vlvT("LV-104");   // v6.9.2: refiners down, the machine runs on what's in the machine chest (07g)
+  if(pmDn){ if(S.pm!=="incident"){ S.pm="incident"; S.lastDown=pmDn; } }
   else if(S.pm==="incident"){ if(level>8)rethread("after the shutdown"+(S.lastDown?" ("+S.lastDown+")":"")); else S.pm="down"; S.pmSpeed=Math.min(S.pmSpeed,P.minSpeed); }
   if(S.pm==="break"){if(working("brk"))S.breakLeft-=dt*leadRethread();S.tot.breakMin+=dt;if(S.breakLeft<=0&&level>8){S.pm="run";S.pmSpeed=Math.min(C.pmSp.v,P.minSpeed+300);}}
   else if(S.pm==="down"){if(level>=Math.max(20,low*0.8)){rethread("after running out of stock");S.pmSpeed=P.minSpeed;}}
@@ -3869,8 +3871,8 @@ function step(dt){
     if(S.pm==="run"){
       prod=P.K*S.pmSpeed*S.we.bw*dt/60;   // (v6.8: the weight the BW loop is making, 07g)
       const use=prod/P.pmLoss;
-      if(use>S.tank){prod=S.tank*P.pmLoss;}
-      S.tank-=prod/P.pmLoss;pfW("eff",prod/P.pmLoss-prod);WQ.u+=prod/P.pmLoss;WQ.p+=prod;
+      if(!fromMc&&use>S.tank){prod=S.tank*P.pmLoss;}
+      if(!fromMc)S.tank-=prod/P.pmLoss;pfW("eff",prod/P.pmLoss-prod);WQ.u+=prod/P.pmLoss;WQ.p+=prod;
     }
   }
   if(S.pm!=="run") S.pmSpeed=ease(S.pmSpeed,0,dt,3);
@@ -4063,7 +4065,7 @@ function knobSettle(id){const K=S.knob,x=K.x;x.bs=0;x.bk=0;K.H={};
 function knobTrig(id,cause,why){if(active(id))return false;const K=S.knob,e=EV[id];if(S.rng.knob==null)S.rng.knob=(S.seed^0x6b9f3c21)|0;
   const dur=(e.dur[0]+rand("knob")*(e.dur[1]-e.dur[0]))*durMul(id);
   const inc={id,left:dur,total:dur,real:performance.now(),note:"",knob:cause};
-  if(id==="refclash"){inc.mods={speedCap:0.75};inc.billMul=0.5;inc.note="one refiner out: machine slowed";}
+  if(id==="refclash"){inc.billMul=0.5;inc.note="refiners down: the machine chest is running down";}   // (v6.9.2: no forward flow, 07g mcTick)
   S.inc.push(inc);(S.evc||(S.evc={}))[id]=(S.evc[id]||0)+1;if(QINC(id))enqueue(id);S.lastInc=S.t;S.tot.incidents++;try{AUDIO.event(id);}catch(_){}
   BANNERS.push({text:why||e.head,t:null,id});while(BANNERS.length>3)BANNERS.splice(1,1);
   if(e.start&&id!=="refclash")e.start(inc);
@@ -4186,8 +4188,8 @@ function knobRead(){const K=S.knob,x=K?K.x:null,g=GRADES[C.grade]||GRADES["24"],
   const m=Dr?Dr.m:DRY.m0;let cp=x?x.cp:5;
   const cpb=cpBale();cp+=cpb;
   return {run,cp,amps:410*(0.55+cp/5*0.45)*(S.M.pulperDown?0:1),pulpLvl:clamp(62+(5-cp)*9+wob(0.05,1)*1.5,0,110),
-    gap:x?x.fr:gapOf(knobVal("ref")),refkw:run?kwhNow()*Math.max(0,S.rates.fiberUse||0):0,kwh:kwhNow(),csf:csfOf(x?x.fr:gapOf(knobVal("ref"))),   // (v6.8: refiner power = specific energy x fiber)
-    mcLvl:vlvT("LV-104")?S.vlv.lp["LV-104"].pvm:69+wob(0.02,2)*3,mcCons:mcCons(),agit:knobVal("agit"),
+    gap:x?x.fr:gapOf(knobVal("ref")),refkw:run&&!(S.M&&S.M.refOut)?kwhNow()*Math.max(0,S.rates.fiberUse||0):0,kwh:kwhNow(),csf:csfOf(x?x.fr:gapOf(knobVal("ref"))),   // (v6.8: refiner power = specific energy x fiber)
+    mcLvl:vlvT("LV-104")?S.vlv.lp["LV-104"].pvm:S.mcl!=null?S.mcl:69+wob(0.02,2)*3,refq:!run&&S.refq==null?0:S.refq==null?100*Math.max(0,S.rates.fiberUse||0)/Math.max(1e-6,weUstd()):S.refq*100,mcCons:mcCons(),agit:knobVal("agit"),
     vac:x?x.vac:30,couchSol:x&&x.cs!=null?x.cs:19,pl:x?x.pl:100,pressSol:x&&x.ps!=null?x.ps:44+4*LV("shoe"),
     edge:K?K.edge:0,gtrav:K?K.gtrav:0,gm:knobVal("gm"),stripes:x?x.st:0,cs:K?K.cs:0,couch:knobVal("couch"),osc:knobVal("osc"),wear:K?K.wear:0,
     st1:knobVal("st1"),st3,steam:run?(Dr?Dr.steam:50.5*P.K*S.pmSpeed*bw/34.8):S.pm==="break"&&Dr?Dr.steam:0,boiler:Dr?Dr.hdr:1,moist:run?m+wob(0.13,4)*0.25:0,
@@ -4545,6 +4547,27 @@ function bwSetMode(m){if(S.zen)return;const W=weState();if(m===W.m)return;
   W.m=m;log(`Basis weight control to ${m==="auto"?"AUTO":"MANUAL"}`,"ok");}
 function bwSetValve(v){if(S.zen)return;const W=weState();W.m="manual";W.v=clamp(+v,0,WE.valveMax);}
 function bwSetTrim(lb){if(S.zen)return;const W=weState();W.trim=clamp(+lb/bwStd()-1,WE.trimMin,WE.trimMax);}
+
+/* ---------- v6.9.2 the refiners and the machine chest: the refiners take stock from the stock (storage) chest and feed the
+   machine chest; the machine draws the machine chest. With the refiner plates clashed (an upset's refOut) nothing goes
+   forward: the machine runs the chest down at its draw (the LV-104 model's 13.75 %/min at standard) and trips on low
+   level; back on line the refiners refill it at twice the standard flow, out of the stock chest, and the machine rethreads
+   once it's back over the restart level. Untouched and undisturbed the level is LV-104's steady 69 % (S.mcl null). With
+   LV-104 on the valve model (07h) the valve model owns the level and its inflow stops instead. ---------- */
+const MCH={sp:69,trip:10,restart:35,k:13.75,fill:2};
+const mcLvlNow=()=>vlvT("LV-104")?S.vlv.lp["LV-104"].y:(S.mcl==null?MCH.sp:S.mcl);
+function mcTick(dt,M){if(S.zen){S.mcl=null;S.mcTrip=false;S.refq=null;return false;}
+  const out=!!M.refOut,own=vlvT("LV-104"),ustd=Math.max(1e-6,weUstd()),q=S.pm==="run"?(S.rates.fiberUse||0)/ustd:0;
+  S.refq=out?0:null;   // (null: the refiners pass what the machine draws; the reading works it out)
+  if(!own){let y=S.mcl==null?MCH.sp:S.mcl;
+    if(out)y=Math.max(0,y-MCH.k*q*dt);
+    else if(y<MCH.sp){const dy=Math.min(MCH.sp-y,MCH.k*Math.max(0,MCH.fill-q)*dt),tk=dy*ustd/60/MCH.k,got=Math.min(S.tank,tk);
+      S.tank-=got;y+=tk>0?dy*got/tk:0;S.refq=MCH.fill;}
+    S.mcl=(!out&&y>=MCH.sp-1e-6)?null:y;}
+  const y=mcLvlNow();
+  if(!S.mcTrip&&out&&y<=MCH.trip){S.mcTrip=true;log("Machine chest low level: with the refiners down nothing is coming forward. The paper machine is shut down.","bad");}
+  else if(S.mcTrip&&!out&&y>=MCH.restart){S.mcTrip=false;log("The refiners are back and the machine chest is filling: the machine is coming back up.","ok");}
+  return !!S.mcTrip;}
 /* ---- v6.9 The Valves Update: six control loops with real valves and PID tuning (claude/valves-v69-plan.md) ----
    NV-101 pulper consistency, LV-104 machine chest level, FV-201 basis weight, LV-202 white water silo level, and the dryer
    steam cascade: QC-300 reel moisture setting PV-302 / PV-303, the 2nd and 3rd section steam pressures.
@@ -4624,7 +4647,7 @@ function vAct(L){const v=L.v,bl=((v.db||0)+(v.hys||0))/2,c=L.op;
 // the processes (1 s): B is the boundary from the game, W the world
 const VP={
   "NV-101":(L,B)=>{if(B.pd)return;const yss=5-8*(vch(L.v,L.pos/100)-0.5)+(B.cd||0);L.y+=(yss-L.y)*(1-Math.exp(-1/1200));},   // (a 20-minute tub: the knobs' rule that trouble takes a while to show)
-  "LV-104":(L,B,W)=>{let y=L.y+VLV.mcK/60*(vch(L.v,L.pos/100)/VLV.mcStd-B.qo);if(y>100){W.acc.mco+=y-100;y=100;}L.y=Math.max(0,y);},
+  "LV-104":(L,B,W)=>{let y=L.y+VLV.mcK/60*(vch(L.v,L.pos/100)/VLV.mcStd*(B.ref==null?1:B.ref)-B.qo);if(y>100){W.acc.mco+=y-100;y=100;}L.y=Math.max(0,y);},
   "FV-201":(L,B)=>{if(!B.run)return;const yss=B.bsp*B.ustd*vch(L.v,L.pos/100)*2*B.mr*B.cv/B.u0;L.y+=(yss-L.y)*(1-Math.exp(-1/20));},
   "LV-202":(L,B,W)=>{const cap=WE.silo,mk=VLV.siloQ*vch(L.v,L.pos/100)/3600;W.acc.make+=mk;let t=L.y/100*cap+(B.net||0)/3600+mk;const top=cap*WE.over;
     if(t>top){W.acc.over+=t-top;t=top;}L.y=Math.max(0,t)/cap*100;},
@@ -4659,7 +4682,8 @@ function vlvView(id){const d=VD[id],W=S.vlv,L=W&&W.lp[id];
   const run=S.pm==="run",We=S.we,D=S.dry;
   switch(id){
     case "NV-101":{const K=S.knob,cp=(K&&K.any&&K.x?K.x.cp:5)+cpBale(),op=clamp(knobVal("pulp")+((We&&We.cpc)||0)/0.08,0,100);return {m:"AUTO",sp:5,pv:cp,y:cp,op,pos:op};}
-    case "LV-104":{const lv=69+vwob(S.t,0.02,2)*3,q=run?(S.rates.fiberUse||0)/Math.max(1e-6,weUstd()):0,op=clamp(VLV.mcStd*100*q+vwob(S.t,0.05,21)*1.2,0,100);return {m:"AUTO",sp:69,pv:lv,y:lv,op,pos:op};}
+    case "LV-104":{if(S.mcl!=null){const out=!!(S.M&&S.M.refOut),op=out?100:clamp(VLV.mcStd*100*MCH.fill,0,100);return {m:"AUTO",sp:69,pv:S.mcl,y:S.mcl,op,pos:op};}   // (v6.9.2: refiners down or refilling: the real level; AUTO opens the valve)
+      const lv=69+vwob(S.t,0.02,2)*3,q=run?(S.rates.fiberUse||0)/Math.max(1e-6,weUstd()):0,op=clamp(VLV.mcStd*100*q+vwob(S.t,0.05,21)*1.2,0,100);return {m:"AUTO",sp:69,pv:lv,y:lv,op,pos:op};}
     case "FV-201":{const pv=run&&We?bwMeas():bwSp(),y=We&&We.bw!=null?We.bw:pv,op=We?We.v:50;return {m:We&&We.m==="manual"?"MAN":"AUTO",sp:bwSp(),pv,y,op,pos:op};}
     case "LV-202":{const lv=We?We.L/WE.silo*100:WE.over*100,op=clamp(((We&&We.f.make)||0)/VLV.siloQ*100,0,100);return {m:"AUTO",sp:WE.makeL*100,pv:lv,y:lv,op,pos:op};}
     case "QC-300":{const m=D?D.m:DRY.m0,st=D?D.st3:(DRY.base[C.grade]||120),pv=run?m+vwob(S.t,0.13,4)*0.25:m;return {m:"AUTO",sp:DRY.m0,pv,y:m,op:st/d.out.k,pos:st/d.out.k};}
@@ -4668,7 +4692,7 @@ function vlvView(id){const d=VD[id],W=S.vlv,L=W&&W.lp[id];
 function vlvState(){if(!S.vlv)S.vlv={lp:{},any:false,sub:0,w0:S.t,B:null,acc:{mco:0,make:0,over:0},calm:{},harm:{},lg:{},bt:null,btRes:null};return S.vlv;}
 // the boundary for the next window of sub-steps (end of each sim step)
 function vCap(){const W=S.vlv;if(!W)return;const B=W.B||(W.B={}),run=S.pm==="run",g=C.grade,D=S.dry||dryState(),We=weState(),b=DRY.base[g]||120;
-  B.run=run;B.pd=!!(S.M&&S.M.pulperDown);B.cd=We.cpd||0;B.qo=run?(S.rates.fiberUse||0)/Math.max(1e-6,weUstd()):0;
+  B.run=run;B.pd=!!(S.M&&S.M.pulperDown);B.ref=S.M&&S.M.refOut?0:1;B.cd=We.cpd||0;B.qo=run?(S.rates.fiberUse||0)/Math.max(1e-6,weUstd()):0;
   const sp=Math.max(S.pmSpeed,P.minSpeed*0.5);B.bsp=bwSp();B.ustd=weUstd();B.u0=weU0(sp);B.mr=mcCons()/WE.mc0;B.cv=1+We.cav*0.06*wobW(0.9,17);B.ff=50*B.u0/B.ustd-50;
   B.net=run?(We.net||0):0;B.dem=D.dem;B.km=D.km||0;B.ceil=dryCeil(D);B.hdr=D.hdr;B.lf=Math.sqrt(Math.max(0.3*b,D.dem)/b);B.st3=D.st3;
   // the basis weight setpoint is the grade's (and the lightweight trim); a grade change rescales what the scanner has seen
@@ -5335,7 +5359,7 @@ const CIVREWARD={
   r_E:{k:"E",n:"Long-term contract",head:"A big customer offers a long-term contract.",win:"+$8/t on every grade for 14 days. You must hit a weekly tonnage target or pay $40 per ton short."},
   r_M:{k:"M",n:"Record run week",head:"The machine is in great shape. Push it for a record week?",win:"Top speed +4% for 7 days, then Machinery −15 from the wear."}};
 // special effects of particular choices ("id:index")
-const CIVFX={"shaft:0":{ext:180},"fabric:0":{ext:120},"hdblow:0":{ext:60},"cscreen:0":{ext:60},"fscreen:0":{ext:60},"boiler:0":{ext:180},"chestover:0":{ext:60},
+const CIVFX={"refclash:2":{band:"ref"},"shaft:0":{ext:180},"fabric:0":{ext:120},"hdblow:0":{ext:60},"cscreen:0":{ext:60},"fscreen:0":{ext:60},"boiler:0":{ext:180},"chestover:0":{ext:60},
   "hdblow:2":{band:"stock"},"fscreen:2":{band:"stock"},"thkblow:2":{band:"stock"},"steamjoint:2":{band:"dry"},"nearmiss:2":{band:"dock"},
   "shaft:2":{retry:1/3},"fabric:2":{favor:30e3},"felt:2":{warranty:1},"cscreen:2":{slow:2},
   "rush:1":{grade:60},"runner:2":{posts:60},"reporter:1":{gamble:1},"energyspike:0":{hedge:1}};
@@ -5439,7 +5463,7 @@ function civApply(d,i,auto){const V=S.civ,id=d.id;V.seen[id]=1;if(d.kind!=="mete
   // special effects
   if(fx.ext&&inc&&!dot){inc.left+=fx.ext;inc.total+=fx.ext;}
   if(fx.slow&&inc){inc.left*=fx.slow;inc.total*=fx.slow;}
-  if(fx.band){if(inc)clearIncident(id);const m=fx.band==="stock"?{feedMul:0.85}:fx.band==="dry"?{speedCap:0.85}:{clampMul:0.85};civFxAdd("band_"+id,{left:"outage",mods:m});}
+  if(fx.band){if(inc)clearIncident(id);const m=fx.band==="ref"?{speedCap:0.75}:fx.band==="stock"?{feedMul:0.85}:fx.band==="dry"?{speedCap:0.85}:{clampMul:0.85};civFxAdd("band_"+id,{left:"outage",mods:m});}
   if(fx.band&&CIVNEW[id])civFxEnd(id);
   if(fx.retry&&civRng()<fx.retry)civTimer({act:"retrigger",id,left:360+civRng()*720});
   if(fx.favor)civTimer({act:"favor",v:fx.favor,left:5*1440});
@@ -6051,7 +6075,7 @@ const TAGS=[
   ["fsld","Fine screen load","SPOT","%",()=>(_R().fiberIn||0)/Math.max(1,P.screenMax)*100,""],["fsdp","Fine screen ΔP","SPOT","kPa",()=>S.we?S.we.fs:null,""],
   ["chest","Stock chest level","SPOT","%",()=>S.tank/P.tankCap*100,"a.chest"],["chestg","Stock chest volume","SPOT","gal",()=>S.tank/(WAT.cs/100)*264.172,""],
   ["kwh","Refining energy","SPOT","kWh/t",r=>r.kwh,"a.kwh"],["refkw","Refiner load","SPOT","kW",r=>r.run?r.refkw:null,"a.refkw"],["gap","Refiner plate gap","SPOT","mm",r=>r.gap,""],["csf","Freeness","SPOT","mL CSF",r=>r.csf,"a.csf"],
-  ["mcLvl","Machine chest level","SPOT","%",r=>r.mcLvl,""],["mcg","Machine chest volume","SPOT","gal",r=>MCHEST_GAL*r.mcLvl/100,""],
+  ["refq","Refined stock flow","SPOT","% of std",r=>r.refq,""],["mcLvl","Machine chest level","SPOT","%",r=>r.mcLvl,""],["mcg","Machine chest volume","SPOT","gal",r=>MCHEST_GAL*r.mcLvl/100,""],
   ["mcCons","Machine chest consistency","SPOT","%",r=>r.mcCons,""],["agit","Machine chest agitator","SPOT","%",r=>r.agit,""],
   ["fan","Fan pump flow (headbox)","SPOT","gpm",()=>S.we?GPM(S.we.f.hb||0):0,""],["dil","Fan pump dilution","SPOT","gpm",()=>S.we?GPM(S.we.f.dil||0):0,""],
   // wet end
@@ -14027,7 +14051,7 @@ const PGX={
     // (v6.5.4: in the picture's new process order, index for index with MIMIC.SPOT.eq)
     ["cyclone",()=>or(stI("hdblow"),stDp("hd"))],["screen",()=>or(stM("cscr"),stI("cscreen"))],["cleaners",()=>or(stI("lcplug"),stDp("lc")),"lcrows"],["screen",()=>or(stM("fscr"),stI("fscreen"))],
     ["cleaners",()=>or(stI("lwplug"),stDp("lw"))],["thickener",()=>or(stI("thkblow"),G3.SPD&&G3.SPD.strain>0.05?"warn":"ok")],
-    ["tank",()=>or(stI("chestover"),S.tank/P.tankCap>0.92?"warn":"ok"),"chest"],["refiner",()=>stI("refclash")],["tank",()=>"ok","mc"],["drum",()=>or(stM("dye"),stI("dye"))],["pumpBox",()=>S.pm==="run"?"ok":"off"],
+    ["tank",()=>or(stI("chestover"),S.tank/P.tankCap>0.92?"warn":"ok"),"chest"],["refiner",()=>stI("refclash")],["tank",()=>{const y=mcLvlNow();return y<MCH.trip+5?"bad":y<40?"warn":"ok";},"mc"],["drum",()=>or(stM("dye"),stI("dye"))],["pumpBox",()=>S.pm==="run"?"ok":"off"],
     ["tank",()=>S.wat&&S.wat.short>0?"trip":S.wat&&S.wat.L<WAT.cap*0.25?"warn":"ok","wwc"]],
   WET:[["fan",()=>or(stM("fog"),stI("fogfan"))],["headbox",()=>"ok"],["table",()=>or(stI("fabric"),dcsOn("slime")?"warn":"ok",stBrk("press"))],["tank",()=>"ok","silo"],
     ["roll1",()=>stI("couchpit")],["felt",()=>stI("felt","oscfail")],["press",()=>stBrk("press")]],
@@ -14488,7 +14512,7 @@ function pfSVGt(D,live){const vert=pfVert(),NU=104,NV=112,GAP=30,PAD=vert?24:10,
    only: the sim and its dice are untouched, and the game keeps running at the player's speed while it is open.
    Keep RM_E in step with the sim when a relationship changes (tools/relmapcheck.py fails on a tag with no entry). ---- */
 const RM_DRV=[["x:weather","Weather",""],["x:bales","Bale grade mix",""],["x:pulpset","Pulper feed setpoint",""],["x:dilv","Pulper dilution valve","knob"],["x:slice","Headbox slice","knob"],["x:guide","Fabric guide roll","knob"],["x:zones","Headbox dilution zones","knob"],["x:spset","Machine speed setpoint",""],["x:grade","Grade on the machine",""],["x:dye","Dye system",""],["x:market","Market & leader effects",""],["x:orders","Customer orders",""],["x:upsets","Upsets & DCS motors",""]];
-const RM_COL={"YARD":["inq","unload","yard","balem","stk","occp"],"SPOT":["feed","cp","nv101pv","nv101op","amps","pulpLvl","yield","fiber","rejt","hddp","lcdp","lwdp","fsld","fsdp","kwh","dil","chest","chestg","gap","refkw","csf","agit","mcCons","mcLvl","lv104pv","lv104op","mcg","fan"],"WET":["wsp","jw","rd","vac","couchSol","pl","pressSol","gtrav","edge","osc","hbc","bwv","fv201pv","fv201op","bwsp","drain","seal","pressw","wwl","lv202pv","lv202op","wwg","wwov","hum"],"DET":["speed","prod","st1","st3","pv302pv","pv302op","pv303pv","pv303op","steam","dryl","moist","qc300pv","qc300op","bw","draw","tension"],"QCS":["off","rct","prem","cdsp","bank","reel","cut","conv"],"UTIL":["boiler","vent","energyt","shower","evap","wcl","wcg","makeup","fresh","wuse","wwover","outfall","tss"],"SHIP":["fg","load","outq","openo","lateo","price","profit"]};
+const RM_COL={"YARD":["inq","unload","yard","balem","stk","occp"],"SPOT":["feed","cp","nv101pv","nv101op","amps","pulpLvl","yield","fiber","rejt","hddp","lcdp","lwdp","fsld","fsdp","kwh","dil","chest","chestg","gap","refkw","csf","agit","refq","mcCons","mcLvl","lv104pv","lv104op","mcg","fan"],"WET":["wsp","jw","rd","vac","couchSol","pl","pressSol","gtrav","edge","osc","hbc","bwv","fv201pv","fv201op","bwsp","drain","seal","pressw","wwl","lv202pv","lv202op","wwg","wwov","hum"],"DET":["speed","prod","st1","st3","pv302pv","pv302op","pv303pv","pv303op","steam","dryl","moist","qc300pv","qc300op","bw","draw","tension"],"QCS":["off","rct","prem","cdsp","bank","reel","cut","conv"],"UTIL":["boiler","vent","energyt","shower","evap","wcl","wcg","makeup","fresh","wuse","wwover","outfall","tss"],"SHIP":["fg","load","outq","openo","lateo","price","profit"]};
 const RM_E=[
  ["x:weather","balem","p","Rain and snow soak the bales in the yard and on inbound loads"],
  ["x:weather","unload","n","Snow and fog slow inbound trucks"],
@@ -14526,11 +14550,16 @@ const RM_E=[
  ["cp","nv101pv","s","NV-101 measures the pulper consistency, 30 s late"],
  ["nv101pv","nv101op","x","AUTO: thick tub, open the dilution valve (PID)"],
  ["cp","mcCons","x","Pulper consistency swings reach the machine chest through the storage chest (about an hour)"],
- ["lv104op","mcLvl","p","Refined stock in through LV-104 fills the machine chest"],
+ ["chest","refq","p","The refiners are fed from the stock (storage) chest"],
+ ["x:upsets","refq","x","Refiner plates clash: the refiners trip until maintenance re-plates them"],
+ ["lv104op","refq","p","LV-104, on the stock chest pump, sets the flow through the refiners"],
+ ["refq","mcLvl","p","The refiners feed the machine chest"],
+ ["gap","refq","x","Plates clashed: the refiners trip and no stock goes forward to the machine chest"],
+ ["refq","refkw","p","No flow through the refiners, no refiner load"],
  ["prod","mcLvl","n","The machine draws the chest down"],
  ["mcLvl","lv104pv","s","LV-104 measures the machine chest level"],
  ["lv104pv","lv104op","x","AUTO: low chest, open the valve (PID on an integrating level)"],
- ["mcLvl","speed","x","Under 15% the machine slows; held empty the sheet breaks at the wet end"],
+ ["mcLvl","speed","x","With the refiners down the machine trips at 10% and comes back over 35%; on LV-104's own model, under 15% it slows and held empty the sheet breaks"],
  ["mcLvl","chest","x","Over 100% refined stock overflows to the sewer and is lost from the chest"],
  ["bwv","fv201op","s","The basis weight valve is FV-201"],
  ["bw","fv201pv","s","FV-201 reads the QCS weight, 3 minutes late"],
@@ -14567,6 +14596,7 @@ const RM_E=[
  ["kwh","profit","n","Refining power above standard is billed as energy"],
  ["csf","couchSol","p","Freer stock drains faster on the table; low freeness, lower couch solids"],
  ["kwh","rct","p","More refining, stronger fibers, more ring crush"],
+ ["kwh","couchSol","n","The price of refining: more ring crush, but slower drainage and lower couch solids"],
  ["bw","rct","p","Ring crush scales with the weight"],
  ["stk","rct","n","Stickies weaken the sheet a little"],
  ["rct","off","x","Under the grade's ring crush minimum the reel goes to the beater"],
@@ -15784,7 +15814,7 @@ function camPullOn(){try{return localStorage.getItem("paper-mill-campull")!=="of
     <li><b>Survival:</b> no last day. Each wave (4 days, ending with a planned outage) brings more upsets and higher costs. The run ends when cash falls below −$1.5M; your time survived is your score.</li>
     <li><b>Free Play:</b> no clock, free upgrades and no leaderboard. Good for trying things out. <b>Settings → Run the mill → Let the mill run</b> declines event cards for you, so the mill keeps running while you're away.</li>
     <li><b>Zen Mode:</b> sit back and watch the mill run.</li></ul>`],
-  ["Fiber in, paper out","flow",`<ol><li><b>Receiving:</b> trucks unload bales of OCC into the bale yard: A bales, C bales and Mixed Waste, each on its own pile, fed to the pulper in the order of your recipe (Planning).</li><li><b>Stock prep:</b> the pulper turns bales back into pulp; cleaners and screens strip out sand, staples and plastic; the disk thickener takes out water; the stock chest stores clean pulp; the refiners strengthen the fibers; the machine chest and fan pump feed the headbox.</li>
+  ["Fiber in, paper out","flow",`<ol><li><b>Receiving:</b> trucks unload bales of OCC into the bale yard: A bales, C bales and Mixed Waste, each on its own pile, fed to the pulper in the order of your recipe (Planning).</li><li><b>Stock prep:</b> the pulper turns bales back into pulp; cleaners and screens strip out sand, staples and plastic; the disk thickener takes out water; the stock chest stores clean pulp; the refiners take it from there, strengthen the fibers and feed the machine chest; the fan pump feeds the headbox from the machine chest. If the refiners trip, the machine runs the machine chest down and shuts down on low level.</li>
     <li><b>Paper machine:</b> the headbox sprays pulp onto the forming fabric, the presses squeeze water out, the dryer cans dry the sheet and the reel winds it up.</li><li><b>Winder:</b> cuts each reel into customer rolls.</li><li><b>Warehouse and shipping:</b> rolls are stored, then loaded onto trucks.</li></ol>
     <p>In a season or survival run the area controls run on AUTO; in free play you set them yourself in <b>Report → Control room → Process flow</b> (tap an area, then <b>Controls</b>).</p>`],
   ["The bottleneck and upgrades","up",`<p>The mill can only run as fast as its narrowest step. Every mill starts with one bottleneck: the <b>Upgrades</b> tab names it, and upgrades that fix it are 25% off. Fix it first.</p>
@@ -15876,7 +15906,7 @@ function camPullOn(){try{return localStorage.getItem("paper-mill-campull")!=="of
     ["Hayout","A winder blow-up: the set of rolls tears apart and paper flies everywhere."],
     ["Headbox","Sprays an even jet of pulp across the full width of the forming fabric."],
     ["Headbox slice","The adjustable lip of the headbox that sets the jet across the machine."],
-    ["Machine chest","The chest that feeds the paper machine with pulp at a steady consistency."],
+    ["Machine chest","The chest between the refiners and the paper machine: it holds about 7 minutes of refined stock at a steady consistency. If the refiners stop, the machine runs it down and trips at 10%; it restarts once the chest is back over 35%."],
     ["Mill leader","The person in charge of your run: Chip, Dot, Felicity or Hank."],
     ["OCC","Old corrugated containers: used cardboard boxes, the mill's raw material."],
     ["Off-spec","Paper outside its grade's spec (basis weight ±3% around the setpoint, moisture 8 ±2%, ring crush minimum, the mill's color; a grade change's transition tons count too) or with defects like streaks and crush marks. It's wound into beater rolls, which go back to the pulper to be repulped (the QCS screen shows the spec)."],
@@ -15887,7 +15917,7 @@ function camPullOn(){try{return localStorage.getItem("paper-mill-campull")!=="of
     ["QCS","Quality control system: scanners that measure the sheet's weight, moisture, ring crush and color; the Quality screen shows the spec sheet, the off-spec log and grade changes."],
     ["Ragger","A rope that collects wire, plastic and string from the pulper. If its tail breaks, the pulper stops."],
     ["Reel","The giant roll the paper machine winds up (about 100 tons)."],
-    ["Refiner","Grinds fibers between plates so they bond into stronger paper. Refining energy (kWh/t, standard 60) closes the plate gap; around 120 kWh/t the plates clash."],
+    ["Refiner","Grinds fibers between plates so they bond into stronger paper. The refiners take stock from the stock chest and feed the machine chest. Refining energy (kWh/t, standard 60) closes the plate gap; around 120 kWh/t the plates clash, the refiners trip and nothing goes forward until they are re-plated."],
     ["Rethread","Feeding the sheet back through the machine after a break."],
     ["Round","Your once-a-day walk through one area to catch tells before they fail."],
     ["Screens (coarse, fine)","Pressurized baskets with holes or slots that let fiber through and hold back trash."],
@@ -15923,7 +15953,7 @@ function camPullOn(){try{return localStorage.getItem("paper-mill-campull")!=="of
     ["Wave","In survival, the stretch between planned outages. Each wave is rougher and costlier than the last."],
     ["Wet end / dry end","The wet end is the headbox, forming section and presses; the dry end is the dryers, reel and winder."],
     ["Freeness (CSF)","How fast water drains out of the stock, in mL CSF. About 450 at the standard refining; more refining lowers it and the sheet drains slower on the table. On the SPOT DCS."],
-    ["Refining energy","The power the refiners put into each ton of fiber, in kWh/t (standard 60). More makes stronger paper (ring crush) but drains slower and costs power; around 120 the plates clash. One of the fiddly knobs."],
+    ["Refining energy","The power the refiners put into each ton of fiber, in kWh/t (standard 60). The trade-off: more refining means higher ring crush, but the stock drains slower on the table (lower couch solids, more steam) and the power costs more. Around 120 the plates clash. One of the fiddly knobs."],
     ["Basis weight setpoint","The weight the machine aims for, set on the WET DCS from 10% under to 5% over the grade's target. The weight spec is ±3% around it."],
     ["Lightweight premium","On-spec paper made under the grade's target weight earns half the trim as extra price, up to 5%. A lighter sheet needs more refining to pass ring crush."],
     ["Headbox consistency (HBC)","Fiber in the headbox jet: about 0.8%. The fan pump thins the machine chest's stock (about 3.2%) down to it with white water."],

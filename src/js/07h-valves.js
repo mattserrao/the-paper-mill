@@ -77,7 +77,7 @@ function vAct(L){const v=L.v,bl=((v.db||0)+(v.hys||0))/2,c=L.op;
 // the processes (1 s): B is the boundary from the game, W the world
 const VP={
   "NV-101":(L,B)=>{if(B.pd)return;const yss=5-8*(vch(L.v,L.pos/100)-0.5)+(B.cd||0);L.y+=(yss-L.y)*(1-Math.exp(-1/1200));},   // (a 20-minute tub: the knobs' rule that trouble takes a while to show)
-  "LV-104":(L,B,W)=>{let y=L.y+VLV.mcK/60*(vch(L.v,L.pos/100)/VLV.mcStd-B.qo);if(y>100){W.acc.mco+=y-100;y=100;}L.y=Math.max(0,y);},
+  "LV-104":(L,B,W)=>{let y=L.y+VLV.mcK/60*(vch(L.v,L.pos/100)/VLV.mcStd*(B.ref==null?1:B.ref)-B.qo);if(y>100){W.acc.mco+=y-100;y=100;}L.y=Math.max(0,y);},
   "FV-201":(L,B)=>{if(!B.run)return;const yss=B.bsp*B.ustd*vch(L.v,L.pos/100)*2*B.mr*B.cv/B.u0;L.y+=(yss-L.y)*(1-Math.exp(-1/20));},
   "LV-202":(L,B,W)=>{const cap=WE.silo,mk=VLV.siloQ*vch(L.v,L.pos/100)/3600;W.acc.make+=mk;let t=L.y/100*cap+(B.net||0)/3600+mk;const top=cap*WE.over;
     if(t>top){W.acc.over+=t-top;t=top;}L.y=Math.max(0,t)/cap*100;},
@@ -112,7 +112,8 @@ function vlvView(id){const d=VD[id],W=S.vlv,L=W&&W.lp[id];
   const run=S.pm==="run",We=S.we,D=S.dry;
   switch(id){
     case "NV-101":{const K=S.knob,cp=(K&&K.any&&K.x?K.x.cp:5)+cpBale(),op=clamp(knobVal("pulp")+((We&&We.cpc)||0)/0.08,0,100);return {m:"AUTO",sp:5,pv:cp,y:cp,op,pos:op};}
-    case "LV-104":{const lv=69+vwob(S.t,0.02,2)*3,q=run?(S.rates.fiberUse||0)/Math.max(1e-6,weUstd()):0,op=clamp(VLV.mcStd*100*q+vwob(S.t,0.05,21)*1.2,0,100);return {m:"AUTO",sp:69,pv:lv,y:lv,op,pos:op};}
+    case "LV-104":{if(S.mcl!=null){const out=!!(S.M&&S.M.refOut),op=out?100:clamp(VLV.mcStd*100*MCH.fill,0,100);return {m:"AUTO",sp:69,pv:S.mcl,y:S.mcl,op,pos:op};}   // (v6.9.2: refiners down or refilling: the real level; AUTO opens the valve)
+      const lv=69+vwob(S.t,0.02,2)*3,q=run?(S.rates.fiberUse||0)/Math.max(1e-6,weUstd()):0,op=clamp(VLV.mcStd*100*q+vwob(S.t,0.05,21)*1.2,0,100);return {m:"AUTO",sp:69,pv:lv,y:lv,op,pos:op};}
     case "FV-201":{const pv=run&&We?bwMeas():bwSp(),y=We&&We.bw!=null?We.bw:pv,op=We?We.v:50;return {m:We&&We.m==="manual"?"MAN":"AUTO",sp:bwSp(),pv,y,op,pos:op};}
     case "LV-202":{const lv=We?We.L/WE.silo*100:WE.over*100,op=clamp(((We&&We.f.make)||0)/VLV.siloQ*100,0,100);return {m:"AUTO",sp:WE.makeL*100,pv:lv,y:lv,op,pos:op};}
     case "QC-300":{const m=D?D.m:DRY.m0,st=D?D.st3:(DRY.base[C.grade]||120),pv=run?m+vwob(S.t,0.13,4)*0.25:m;return {m:"AUTO",sp:DRY.m0,pv,y:m,op:st/d.out.k,pos:st/d.out.k};}
@@ -121,7 +122,7 @@ function vlvView(id){const d=VD[id],W=S.vlv,L=W&&W.lp[id];
 function vlvState(){if(!S.vlv)S.vlv={lp:{},any:false,sub:0,w0:S.t,B:null,acc:{mco:0,make:0,over:0},calm:{},harm:{},lg:{},bt:null,btRes:null};return S.vlv;}
 // the boundary for the next window of sub-steps (end of each sim step)
 function vCap(){const W=S.vlv;if(!W)return;const B=W.B||(W.B={}),run=S.pm==="run",g=C.grade,D=S.dry||dryState(),We=weState(),b=DRY.base[g]||120;
-  B.run=run;B.pd=!!(S.M&&S.M.pulperDown);B.cd=We.cpd||0;B.qo=run?(S.rates.fiberUse||0)/Math.max(1e-6,weUstd()):0;
+  B.run=run;B.pd=!!(S.M&&S.M.pulperDown);B.ref=S.M&&S.M.refOut?0:1;B.cd=We.cpd||0;B.qo=run?(S.rates.fiberUse||0)/Math.max(1e-6,weUstd()):0;
   const sp=Math.max(S.pmSpeed,P.minSpeed*0.5);B.bsp=bwSp();B.ustd=weUstd();B.u0=weU0(sp);B.mr=mcCons()/WE.mc0;B.cv=1+We.cav*0.06*wobW(0.9,17);B.ff=50*B.u0/B.ustd-50;
   B.net=run?(We.net||0):0;B.dem=D.dem;B.km=D.km||0;B.ceil=dryCeil(D);B.hdr=D.hdr;B.lf=Math.sqrt(Math.max(0.3*b,D.dem)/b);B.st3=D.st3;
   // the basis weight setpoint is the grade's (and the lightweight trim); a grade change rescales what the scanner has seen
