@@ -1,6 +1,14 @@
 # Changelog
 
 
+## v6.8.3 (2026-10-20): map zoom and night light cones
+- **Relationship map zoom:** −, Fit and + buttons in the map's header (30% to 200%). Fit shows the whole map; zooming
+  keeps the middle of the view where it is, and the zoom holds when the map redraws (`50j-relmap.js`).
+- **3D light cones at night.** The flat, camera-facing paper wedges under each mill lamp are replaced by real cones
+  (one merged mesh, one draw) whose sides fade toward their edges and toward the floor. They're depth-tested, so
+  equipment in front of a lamp now hides its light instead of a wedge cutting through it. The floor pools are soft
+  gradients. `?papernight` brings back the v6.1 cut-paper look; `?softnight` the older glows (`36-3d-ambient.js`).
+
 ## v6.8.2 (2026-10-20): manning
 - **DuPont 12 shifts.** The maintenance techs and the operators (7 machine floor, 2 stock prep) work in four teams
   on the mill-shifts rotation: 28 days of 4 nights, 3 off, 3 days, 1 off, 3 nights, 3 off, 4 days, 7 off, with

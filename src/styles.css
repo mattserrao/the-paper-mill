@@ -1382,3 +1382,5 @@ body.pmpop .popmain[data-v="dcs"] #dcsOv .dcs{max-width:1180px;margin:0 auto}
 .manhat{flex:none;display:inline-block;width:16px;height:16px;border-radius:50% 50% 3px 3px;border:1px solid rgba(0,0,0,.35);box-shadow:inset 0 -3px 0 rgba(0,0,0,.18)}
 .manhat.manno{background:transparent;border:1.5px dashed #d6382c;box-shadow:none}
 .manleg{display:flex;gap:14px;flex-wrap:wrap;font-size:11.5px;color:#8ea4c4;padding-top:4px}.manleg span{display:flex;gap:6px;align-items:center}
+/* v6.8.3 relationship map zoom (50j) */
+.rmzoom{border-color:#33476a}.rmzoom button{background:#22324f;color:#fff;padding:4px 10px;min-width:34px;font-weight:700}.rmzoom button:disabled{opacity:.4}

@@ -126,18 +126,30 @@
       // v2.8.4: no point lights (every pixel paid for all 10 of them, day and night); each fixture throws a soft additive pool of light on the floor instead
       /* v6.1 t13: lamp light as cut paper: a crisp pale-yellow ellipse on the floor with a slightly deeper rim, laid over the
          scene (not added as glow), and a see-through paper cone from each lamp down to it. ?softnight = the old glows */
-      const PAPN=!/[?&]softnight/.test(location.search);G3.papNight=PAPN;
-      const gT=PAPN?spriteTex((x,w)=>{x.clearRect(0,0,w,w);x.fillStyle="rgba(255,214,110,0.9)";x.beginPath();x.arc(w/2,w/2,w*0.46,0,7);x.fill();
+      /* v6.8.3: 3D light cones by default. Each lamp's light is a real open cone (merged into one mesh) whose sides fade
+         where they turn away from the camera and toward the floor, depth-tested so equipment in front hides it, over a
+         soft pool of light. ?papernight = the v6.1 cut-paper cones and ellipses; ?softnight = the old glows */
+      const CONEN=!/[?&](softnight|papernight)/.test(location.search),PAPN=/[?&]papernight/.test(location.search);G3.papNight=PAPN||CONEN;G3.coneNight=CONEN;
+      const gT=CONEN?spriteTex((x,w)=>{const g=x.createRadialGradient(w/2,w/2,0,w/2,w/2,w/2);g.addColorStop(0,"rgba(255,226,150,0.85)");g.addColorStop(0.45,"rgba(255,214,120,0.5)");g.addColorStop(0.8,"rgba(255,200,100,0.12)");g.addColorStop(1,"rgba(255,200,100,0)");x.fillStyle=g;x.fillRect(0,0,w,w);},128)
+        :PAPN?spriteTex((x,w)=>{x.clearRect(0,0,w,w);x.fillStyle="rgba(255,214,110,0.9)";x.beginPath();x.arc(w/2,w/2,w*0.46,0,7);x.fill();
           x.strokeStyle="rgba(214,170,80,0.9)";x.lineWidth=w*0.035;x.beginPath();x.arc(w/2,w/2,w*0.44,0,7);x.stroke();
           x.fillStyle="rgba(255,248,220,0.6)";x.beginPath();x.arc(w/2,w/2,w*0.26,0,7);x.fill();},128)
         :spriteTex((x,w)=>{const g=x.createRadialGradient(w/2,w/2,0,w/2,w/2,w/2);g.addColorStop(0,"rgba(255,255,255,1)");g.addColorStop(0.35,"rgba(255,255,255,0.55)");g.addColorStop(1,"rgba(255,255,255,0)");x.fillStyle=g;x.fillRect(0,0,w,w);});
       G3.nightL=[[-10,11,9.1],[12,11,9.1],[34,11,9.1],[56,11,9.1],[31.2,PH+4.25,-17.5],[39,PH+4.25,-12.5],[16,9,-18],[-21,7,-13],[-36,7,23],[57,5,-22]].map(([x,y,z],i)=>{
         const deck=i===4||i===5,D=deck?11:i<4?16:13,fy=deck?PH+0.14:0.07;
-        const p=new THREE.Mesh(new THREE.PlaneGeometry(D*(PAPN?0.8:1),D*(PAPN?0.8:1)),new THREE.MeshBasicMaterial({map:gT,color:0xffd9a0,transparent:true,depthWrite:false,blending:PAPN?THREE.NormalBlending:THREE.AdditiveBlending,toneMapped:false,polygonOffset:true,polygonOffsetFactor:-4,polygonOffsetUnits:-4,opacity:0}));
+        const p=new THREE.Mesh(new THREE.PlaneGeometry(D*(PAPN?0.8:1),D*(PAPN?0.8:1)),new THREE.MeshBasicMaterial({map:gT,color:0xffd9a0,transparent:true,depthWrite:false,blending:PAPN||CONEN?THREE.NormalBlending:THREE.AdditiveBlending,toneMapped:false,polygonOffset:true,polygonOffsetFactor:-4,polygonOffsetUnits:-4,opacity:0}));
         p.rotation.x=-Math.PI/2;p.position.set(x,fy,z);p.renderOrder=2;p.visible=false;scene.add(p);
         const f=new THREE.Mesh(new CylG(0.5,0.7,0.3,12),new THREE.MeshBasicMaterial({color:0xfff1cf}));f.position.set(x,y+0.2,z);f.visible=false;scene.add(f);return {p,f,k:deck?0.55:i<4?0.22:0.35,x,y,z,fy,D:D*0.8};});
+      if(CONEN){const parts=[],m4=new THREE.Matrix4();
+        G3.nightL.forEach(l=>{const h=l.y-(l.fy+0.05),g=new CylG(0.45,l.D*0.42,h,28,1,true);g.applyMatrix4(m4.makeTranslation(l.x,l.fy+0.05+h/2,l.z));parts.push(g.index?g.toNonIndexed():g);});
+        const cg=new THREE.BufferGeometry();["position","normal","uv"].forEach(a=>{const n=parts[0].attributes[a].itemSize,arr=[];parts.forEach(g=>arr.push(...g.attributes[a].array));cg.setAttribute(a,new THREE.Float32BufferAttribute(arr,n));});cg.computeBoundingSphere();
+        // alpha: strongest along the line of sight through the cone's middle, gone at its silhouette; bright at the lamp, faint at the floor
+        const cm=new THREE.ShaderMaterial({uniforms:{op:{value:0},col:{value:lin0("#ffe2a0")}},transparent:true,depthWrite:false,side:THREE.DoubleSide,blending:THREE.AdditiveBlending,toneMapped:false,fog:false,
+          vertexShader:"varying vec3 vN;varying float vY;void main(){vN=normalize(normalMatrix*normal);vY=uv.y;gl_Position=projectionMatrix*modelViewMatrix*vec4(position,1.0);}",
+          fragmentShader:"uniform float op;uniform vec3 col;varying vec3 vN;varying float vY;void main(){float e=pow(abs(normalize(vN).z),1.2);float a=op*e*(0.2+0.8*vY*vY)*0.85;gl_FragColor=vec4(col*a,a);}"});
+        const cones=new THREE.Mesh(cg,cm);cones.renderOrder=3;cones.visible=false;cones.userData.smBatch=true;cones.userData.noNav=true;cones.name="lamp cones";scene.add(cones);G3.nightCones=cones;}
       // the cones: one camera-facing paper trapezoid per lamp (the camera never turns), all in one mesh
-      if(G3.papNight){camera.updateMatrixWorld();const e=camera.matrixWorld.elements,rx=e[0],rz=e[2],pos=[],uv=[];
+      else if(PAPN){camera.updateMatrixWorld();const e=camera.matrixWorld.elements,rx=e[0],rz=e[2],pos=[],uv=[];
         G3.nightL.forEach(l=>{const tw=0.5,bw=l.D*0.42,y0=l.y,y1=l.fy+0.05;const P=[[l.x-rx*tw,y0,l.z-rz*tw],[l.x+rx*tw,y0,l.z+rz*tw],[l.x+rx*bw,y1,l.z+rz*bw],[l.x-rx*bw,y1,l.z-rz*bw]];
           [0,1,2,0,2,3].forEach(i=>{pos.push(...P[i]);uv.push([0,1,1,0][i],[1,1,0,0][i]);});});
         const cg=new THREE.BufferGeometry();cg.setAttribute("position",new THREE.Float32BufferAttribute(pos,3));cg.setAttribute("uv",new THREE.Float32BufferAttribute(uv,2));cg.computeBoundingSphere();
@@ -152,7 +164,7 @@
       const pg=new THREE.BufferGeometry();pg.setAttribute("position",new THREE.Float32BufferAttribute(pos,3));pg.setAttribute("uv",new THREE.Float32BufferAttribute(uv,2));pg.setAttribute("color",new THREE.Float32BufferAttribute(col,3));pg.computeBoundingSphere();
       if(G3.papNight)for(let q=0;q<col.length;q++)col[q]=[c.r,c.g,c.b][q%3];
       const pm=G3.nightL[0].p.material.clone();pm.color.set(0xffffff);pm.vertexColors=true;const mesh=new THREE.Mesh(pg,pm);mesh.renderOrder=2;mesh.visible=false;mesh.userData.smBatch=true;scene.add(mesh);G3.nightPool=mesh;}
-    G3.nightPool.material.opacity=night*bk*(G3.papNight?0.85:1);G3.nightPool.visible=night>0.05;if(G3.nightCones){G3.nightCones.material.opacity=night*bk*0.8;G3.nightCones.visible=night>0.05;}G3.nightL.forEach(l=>{l.p.visible=false;l.f.visible=night>0.2;});G3.nightK=night;
+    G3.nightPool.material.opacity=night*bk*(G3.papNight?0.85:1);G3.nightPool.visible=night>0.05;if(G3.nightCones){const o=night*bk*(G3.coneNight?1:0.8);if(G3.coneNight)G3.nightCones.material.uniforms.op.value=o;else G3.nightCones.material.opacity=o;G3.nightCones.visible=night>0.05;}G3.nightL.forEach(l=>{l.p.visible=false;l.f.visible=night>0.2;});G3.nightK=night;
     // v3.2.0: red aviation beacons on top of the boiler stack and the fog fan stack; small lamps on the disk thickener
     if(!G3.beacons){const gl=G3.papNight?spriteTex((x,w)=>{x.clearRect(0,0,w,w);x.fillStyle="#ffffff";x.beginPath();x.arc(w/2,w/2,w*0.34,0,7);x.fill();x.strokeStyle="#2b1d12";x.lineWidth=w*0.07;x.beginPath();x.arc(w/2,w/2,w*0.36,0,7);x.stroke();
         x.fillStyle="rgba(255,255,255,0.75)";x.beginPath();x.arc(w*0.42,w*0.42,w*0.09,0,7);x.fill();},64):spriteTex((x,w)=>{const g=x.createRadialGradient(w/2,w/2,0,w/2,w/2,w/2);g.addColorStop(0,"rgba(255,255,255,1)");g.addColorStop(0.3,"rgba(255,255,255,0.5)");g.addColorStop(1,"rgba(255,255,255,0)");x.fillStyle=g;x.fillRect(0,0,w,w);},64);

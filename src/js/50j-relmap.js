@@ -197,7 +197,7 @@ const RM_AREA={IN:["Inputs","#a99ad6"],YARD:["Bale yard","#d0a66a"],SPOT:["Stock
   QCS:["Quality & winding","#e07fb0"],UTIL:["Water & utilities","#8fb3c4"],SHIP:["Shipping & money","#b5c46a"]};
 const RM_ORDER=["IN","YARD","SPOT","WET","DET","QCS","UTIL","SHIP"];
 const RM_SG={p:"+",n:"−",x:"~",s:"="},RM_SC={p:"#4fd18b",n:"#ff7a6e",x:"#ffb02e",s:"#8a9a96"};
-const RMUI={open:false,sel:null,mode:"direct",ext:true,P:null};
+const RMUI={open:false,sel:null,mode:"direct",ext:true,P:null,z:1,W:0,H:0};   // (v6.8.3 z: zoom, 0.3-2; W/H: the map at 100%)
 // the graph: tags from the registry (names and units live), drivers from RM_DRV
 const RM_N=(()=>{const n={};for(const [id,name,unit] of RM_DRV)n[id]={id,name,unit,col:"IN",ext:true,ins:[],outs:[]};
   for(const c in RM_COL)for(const id of RM_COL[c])if(TAGI[id]!=null)n[id]={id,col:c,ext:false,ins:[],outs:[]};
@@ -210,6 +210,7 @@ function rmOv(){let o=$("rmOv");if(o)return o;
   o.innerHTML=`<div class="dcs rmw" role="dialog" aria-modal="true" aria-labelledby="rm-h"><div class="dcsh"><b id="rm-h">RELATIONSHIP MAP</b>
     <div class="seg" role="group" aria-label="Highlight"><button type="button" data-rmm="direct">Direct</button><button type="button" data-rmm="chain">Full chain</button></div>
     <div class="seg" role="group" aria-label="Drivers"><button type="button" data-rmx="1">Drivers</button><button type="button" data-rmx="0">Tags only</button></div>
+    <div class="seg rmzoom" role="group" aria-label="Zoom"><button type="button" data-rmz="-" aria-label="Zoom out">−</button><button type="button" data-rmz="fit" title="Show the whole map">Fit</button><button type="button" data-rmz="+" aria-label="Zoom in">+</button></div>
     <button aria-label="Close" class="dcsx" id="rmClose">✕</button></div>
     <div class="rmleg"><span><i style="border-color:${RM_SC.p}"></i>+ rises with</span><span><i style="border-color:${RM_SC.n}"></i>− falls as it rises</span><span><i style="border-color:${RM_SC.x}"></i>~ optimum, limit or swing</span><span><i style="border-color:${RM_SC.s};border-top-style:dashed"></i>= same reading</span><span>dashed box: a driver, not a tag · H: hourly history</span></div>
     <div class="rmb"><div class="rmmap" id="rmMap"><svg id="rmSvg" role="img" aria-label="Relationship map of the mill's readings"></svg></div><aside class="rmside" id="rmSide" aria-live="polite"></aside></div>
@@ -218,6 +219,7 @@ function rmOv(){let o=$("rmOv");if(o)return o;
   $("rmClose").addEventListener("click",()=>rmClose());o.addEventListener("click",e=>{if(e.target===o)rmClose();});
   o.querySelectorAll("[data-rmm]").forEach(b=>b.addEventListener("click",()=>{RMUI.mode=b.dataset.rmm;rmSync();rmLight();rmSide();}));
   o.querySelectorAll("[data-rmx]").forEach(b=>b.addEventListener("click",()=>{RMUI.ext=b.dataset.rmx==="1";if(!RMUI.ext&&RMUI.sel&&RM_N[RMUI.sel].ext)RMUI.sel=null;rmSync();rmDraw();rmSide();}));
+  o.querySelectorAll("[data-rmz]").forEach(b=>b.addEventListener("click",()=>{const k=b.dataset.rmz;rmZoom(k==="fit"?rmFitZ():RMUI.z*(k==="+"?1.25:0.8));}));
   $("rmSvg").addEventListener("click",e=>{const g=e.target.closest(".rmn");if(g)rmPick(g.dataset.id,false);});
   $("rmSvg").addEventListener("keydown",e=>{const g=e.target.closest&&e.target.closest(".rmn");if(g&&(e.key==="Enter"||e.key===" ")){e.preventDefault();rmPick(g.dataset.id,false);}});
   $("rmSide").addEventListener("click",e=>{const b=e.target.closest("[data-rmgo],[data-rmtr]");if(!b)return;if(b.dataset.rmgo)rmPick(b.dataset.rmgo,true);else rmTrend(b.dataset.rmtr);});
@@ -237,7 +239,7 @@ function rmLayout(){const cols=RM_ORDER.filter(c=>RMUI.ext||c!=="IN").map(c=>Obj
 const RM_W=168,RM_H=32;
 function rmDraw(){const svg=$("rmSvg");if(!svg)return;const cols=rmLayout(),CW=208,GY=9,TOP=34,maxN=Math.max(...cols.map(c=>c.length)),H=TOP+maxN*(RM_H+GY)+16,W=cols.length*CW+16,P={};
   cols.forEach((c,ci)=>{const off=(maxN-c.length)*(RM_H+GY)/2;c.forEach((n,i)=>P[n.id]={x:12+ci*CW,y:TOP+off+i*(RM_H+GY),ci});});RMUI.P=P;
-  svg.setAttribute("viewBox",`0 0 ${W} ${H}`);svg.setAttribute("width",W);svg.setAttribute("height",H);
+  svg.setAttribute("viewBox",`0 0 ${W} ${H}`);RMUI.W=W;RMUI.H=H;rmSize();
   const esc=t=>String(t).replace(/&/g,"&amp;").replace(/</g,"&lt;");let h="";
   cols.forEach((c,ci)=>{if(c.length)h+=`<text class="rmch" x="${12+ci*CW}" y="20">${RM_AREA[c[0].col][0].toUpperCase()}</text>`;});
   for(const [a,b,s] of RM_E){const A=P[a],B=P[b];if(!A||!B)continue;const y1=A.y+RM_H/2,y2=B.y+RM_H/2;let d;
@@ -267,7 +269,14 @@ function rmSide(){const el=$("rmSide");if(!el)return;const sel=RMUI.sel;
     ${n.ext?"":`<div class="rmnow"><small>Now</small><b data-rmnow>${tagFmt(sel,tagNow(sel))}</b>${z?"":`<button type="button" class="reroll kstd" data-rmtr="${sel}">Trend it</button>`}</div>`}</div>${ch}
     <div class="dcssub">Driven by</div>${li(n.ins)}<div class="dcssub">Moves</div>${li(n.outs)}`;}
 function rmPick(id,scroll){if(!RM_N[id])return;if(!RMUI.ext&&RM_N[id].ext){RMUI.ext=true;rmSync();rmDraw();}RMUI.sel=RMUI.sel===id&&!scroll?null:id;rmLight();rmSide();if(RMUI.sel&&scroll)rmScroll(id);}
-function rmScroll(id){const box=$("rmMap"),p=RMUI.P&&RMUI.P[id];if(!box||!p)return;box.scrollTo({left:Math.max(0,p.x+RM_W/2-box.clientWidth/2),top:Math.max(0,p.y-box.clientHeight/2),behavior:"smooth"});}
+function rmScroll(id){const box=$("rmMap"),p=RMUI.P&&RMUI.P[id],z=RMUI.z;if(!box||!p)return;box.scrollTo({left:Math.max(0,(p.x+RM_W/2)*z-box.clientWidth/2),top:Math.max(0,p.y*z-box.clientHeight/2),behavior:"smooth"});}
+// v6.8.3 zoom: the SVG's drawn size is the map's size times RMUI.z (its viewBox stays the same, so nothing is re-laid out).
+// Zooming keeps the point at the middle of the view where it is; Fit shows the whole map.
+function rmSize(){const svg=$("rmSvg");if(!svg||!RMUI.W)return;svg.setAttribute("width",Math.round(RMUI.W*RMUI.z));svg.setAttribute("height",Math.round(RMUI.H*RMUI.z));
+  const o=$("rmOv");if(o)o.querySelectorAll("[data-rmz]").forEach(b=>{const k=b.dataset.rmz;b.disabled=k==="+"?RMUI.z>=2-1e-6:k==="-"?RMUI.z<=0.3+1e-6:false;});}
+function rmFitZ(){const box=$("rmMap");if(!box||!RMUI.W)return 1;return Math.min(1,(box.clientWidth-4)/RMUI.W,(box.clientHeight-4)/RMUI.H);}
+function rmZoom(z){const box=$("rmMap");z=clamp(z,0.3,2);if(!box){RMUI.z=z;return;}const z0=RMUI.z,cx=(box.scrollLeft+box.clientWidth/2)/z0,cy=(box.scrollTop+box.clientHeight/2)/z0;
+  RMUI.z=z;rmSize();box.scrollLeft=Math.max(0,cx*z-box.clientWidth/2);box.scrollTop=Math.max(0,cy*z-box.clientHeight/2);}
 // a tag onto the trend screen (the pen list, as "+ trend" does in Moves with)
 function rmTrend(id){if(S.zen||TAGI[id]==null)return;rmClose();openStation("TREND","dcs");const p=trPens();if(!p.includes(id)){if(p.length>=TR_MAX)p.pop();p.push(id);}TRUI.mode="tr";trBuild();trDraw(true);}
 // live readings on the boxes and the side panel (5 a second while open)
