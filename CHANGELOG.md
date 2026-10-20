@@ -1,6 +1,15 @@
 # Changelog
 
 
+## v6.8.0 (2026-10-19): process relationships
+Built on test/v6.8-relations (as 6.8.0-t1 and t2), merged into main. Everything in the two test entries below:
+refining energy (kWh/t) with freeness-driven drainage and a ring crush spec, the basis weight setpoint and lightweight
+premium, the basis weight loop with QCS dead time, the headbox at 0.8% with fan pump dilution, the white water silo,
+machine water to the silo, seal pit and save-all, bale water in the pulper, cleaner and screen pressure drop costing
+yield, and Report → Control room → Relationship map. Checks: `tools/relcheck.py`, `tools/relmapcheck.py`.
+Not balanced yet. `tools/windercheck.py` and `tools/survcheck.py` fail the same way on v6.7.1 (out of date, not caused
+by this release).
+
 ## v6.8.0-t2 (2026-10-19): relationship map in the control room (test)
 On test/v6.8-relations, not merged. New code: `src/js/50j-relmap.js`. Check: `tools/relmapcheck.py` (15 checks).
 - **Report → Control room → Relationship map.** All 86 trendable readings and 13 drivers (weather, grade, knobs, market,
