@@ -1,6 +1,21 @@
 # Changelog
 
 
+## v6.9.0-t1 (2026-10-20): manning (test branch)
+- **DuPont 12 shifts.** The maintenance techs and the operators (7 machine floor, 2 stock prep) work in four teams
+  on the mill-shifts rotation: 28 days of 4 nights, 3 off, 3 days, 1 off, 3 nights, 3 off, 4 days, 7 off, with
+  B/C/D running 7/14/21 days behind A. Shifts change at 6 a.m. and 6 p.m. (`03f-manning.js`).
+- **Team hard hats:** A blue, B green, C orange, D white. Someone covering from another team wears their own colour.
+- **Vacations and cover.** About half of all shifts have someone away (booked for the whole run of days or nights),
+  covered by someone from an off team who isn't working the shift before or after: mostly overtime pickups, sometimes
+  swaps. Now and then a tech's vacation goes unfilled: that shift runs a tech short, maintenance repairs go at 75%
+  speed until the next change, and the upset feed says so. Everything follows from the run's seed through its own
+  hash, so seasons still replay identically (`tools/determinism.py`).
+- **Shift change in the mill** (`38b-3d-shifts.js`): the incoming crew walks in from the parking lot to the person
+  they relieve, has a word, and the outgoing person walks out. A tech on a job is relieved back at the shop.
+- **Report > Control room > Manning** (`51j-manning-ui.js`): the team on now, every tech and operator with their hat,
+  who is covering for whom (overtime or swap, and which team), any unfilled gap, and the time to the next change.
+
 ## v6.8.1 (2026-10-20): report tab tidy
 Formatting only; the sim and the control room screens are unchanged.
 - **Live mill moves to the top of the Report tab**, above the control room and the season report. Its "Last 24 hours"

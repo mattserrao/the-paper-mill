@@ -134,9 +134,10 @@ function trigger(id,quiet){
 }
 function clearIncident(id){const i=S.inc.find(x=>x.id===id);if(i)i.left=0;}
 function chaosTick(dt){
+  manTick();   // v6.9 manning: the shift change (03f)
   crewTick(dt);
   maintTick(dt);
-  for(const i of S.inc){if(QINC(i.id)&&!working(i.id))continue;if(MNEED(i.id)&&!i.mGo)continue;if(QINC(i.id)||MNEED(i.id))i.go=true;i.left-=dt*((QINC(i.id)||MNEED(i.id))?repRate()*leadRep()*civRepair():1);}
+  for(const i of S.inc){if(QINC(i.id)&&!working(i.id))continue;if(MNEED(i.id)&&!i.mGo)continue;if(QINC(i.id)||MNEED(i.id))i.go=true;i.left-=dt*((QINC(i.id)||MNEED(i.id))?repRate()*leadRep()*civRepair()*(MNEED(i.id)?manRep():1):1);}
   for(const i of S.inc)if(i.left<=0&&EV[i.id].end)EV[i.id].end(i);
   for(const i of S.inc)if(i.left<=0)log(`${EV[i.id].name}: cleared, back to normal`,"ok");
   // (v4.1 pass 7: compacted in place and counted with a loop: this runs every sim step, and the two filters made new arrays each time)

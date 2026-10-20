@@ -19,7 +19,7 @@
     const noz=new THREE.Mesh(new CylG(0.07,0.11,0.75,10),M.ink);noz.rotation.z=-Math.PI/2;noz.position.set(0.72,0.62,0);noz.visible=false;torso.add(noz);
     const ext=new THREE.Mesh(new CylG(0.17,0.17,0.62,14),M.bad);ext.position.set(0.48,0.42,0.22);ext.visible=false;torso.add(ext);
     const tool=new THREE.Mesh(new THREE.BoxGeometry(0.5,0.1,0.1),M.metal);tool.position.set(0.55,0.62,-0.3);tool.visible=false;torso.add(tool);
-    p.userData={legs,arms,armM,hands,torso,armful,noz,ext,tool,body,ph:Math.random()*6,head:0};scene.add(p);cutMark(p,"person");return p;}
+    p.userData={legs,arms,armM,hands,torso,armful,noz,ext,tool,body,hats:[hat,brim,ridge],ph:Math.random()*6,head:0};scene.add(p);cutMark(p,"person");return p;}
   const sn=(v,s)=>Math.round(v/s)*s;
   function pose(p,mode,now){const u=p.userData,t=now/1000+u.ph;let leg=0,arm=[0,0],lean=0,bob=0,legB=null;u.armful.visible=false;u.noz.visible=u.ext.visible=u.tool.visible=false;
     if(mode==="run"||mode==="carry"){const s=Math.sin(t*15);leg=0.8*s;arm=mode==="carry"?[-1.3,-1.3]:[-0.9*s,0.9*s];lean=-0.22;bob=Math.abs(s)*0.14;u.armful.visible=mode==="carry";}

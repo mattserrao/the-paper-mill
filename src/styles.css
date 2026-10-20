@@ -1366,3 +1366,19 @@ body.pmpop .popmain[data-v="dcs"] #dcsOv .dcs{max-width:1180px;margin:0 auto}
 .rmrel li{display:grid;grid-template-columns:16px minmax(0,1fr);gap:6px}.rmrel small{display:block;color:#8ea4c4;font-size:11.5px}
 .rmsg{font:700 12px ui-monospace,Menlo,monospace;text-align:center}
 .rmrel .linkb{color:#dbe6f6;font-weight:600;text-decoration-color:#5b6f90}
+/* v6.9 Report > Control room > Manning (51j) */
+.manov .manw{width:min(560px,100%)}
+.manclk{font-size:12px;color:#8ea4c4;font-variant-numeric:tabular-nums}
+.manb{overflow:auto;padding:10px 12px 14px;display:flex;flex-direction:column;gap:8px}
+.manteam{display:flex;gap:10px;align-items:center;padding:8px 10px;border-radius:10px;background:#1d2d48}
+.manteam .manhat{width:22px;height:22px}.manteam b{display:block;font-size:14px}.manteam small{color:#8ea4c4}
+.manwarn{margin:0;padding:8px 10px;border-radius:8px;background:rgba(214,56,44,.18);border-left:3px solid #d6382c;color:#ffd9d4}
+.manb h4{margin:6px 0 0;font-size:11px;letter-spacing:.08em;text-transform:uppercase;color:#8ea4c4;display:flex;justify-content:space-between}
+.manl{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:2px}
+.manl li{display:flex;align-items:center;gap:10px;padding:6px 8px;border-radius:8px;background:#1a2944}
+.manl li>span{flex:1;min-width:0;display:flex;flex-direction:column}.manl li small{color:#8ea4c4;font-size:11.5px}
+.manl li em{font-style:normal;font-size:11px;font-weight:700;padding:2px 8px;border-radius:999px;background:#2c3e5c;white-space:nowrap}
+.manl li.mancov{background:#213457}.manl li.mangap{background:rgba(214,56,44,.12)}.manl em.manbad{background:#d6382c;color:#fff}
+.manhat{flex:none;display:inline-block;width:16px;height:16px;border-radius:50% 50% 3px 3px;border:1px solid rgba(0,0,0,.35);box-shadow:inset 0 -3px 0 rgba(0,0,0,.18)}
+.manhat.manno{background:transparent;border:1.5px dashed #d6382c;box-shadow:none}
+.manleg{display:flex;gap:14px;flex-wrap:wrap;font-size:11.5px;color:#8ea4c4;padding-top:4px}.manleg span{display:flex;gap:6px;align-items:center}

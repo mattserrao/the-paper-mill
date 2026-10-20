@@ -224,6 +224,9 @@ function no3D(){G3.ok=false;$("no3d").hidden=false;$("no3d-retry").onclick=()=>l
   M.skin=mat("g-skin");M.hatBlue=M.stock;M.hatGreen=M.ok;   // (shared materials: no new batch looks)
   // (the orange keeps mat()'s roughness and metalness: a moving batch's look leaves out colour, so the vests share a batch)
   const HIVIS={orange:new StdMat({color:lin0("#ff7a1a"),roughness:0.72,metalness:0.04}),yellow:M.warn,band:M.metal};
+  // v6.9 manning: team hard hats for techs and operators (03f MAN.HAT): A blue, B green, C orange, D white. Three reuse
+  // existing materials and the white one is made here, before the first frame, so no shader is compiled mid-play
+  M.hatTeam={A:M.hatBlue,B:M.hatGreen,C:HIVIS.orange,D:new StdMat({color:lin0("#f2f0ea"),roughness:0.72,metalness:0.04})};
   // one shared amber beacon material and the driver's head/hat shapes: a new material per vehicle would mean a new moving batch each
   M.beacon=new THREE.MeshBasicMaterial({color:lin0("#ff8a1f")});const DRV_HEAD=new SphG(1,8,6),DRV_HAT=new SphG(1,8,4,0,Math.PI*2,0,Math.PI/2);
   const HAT_DOME=new SphG(1,12,5,0,Math.PI*2,0,Math.PI/2),HAT_BRIM=new CylG(1,1,1,16);   // workers' hard hats (33)
