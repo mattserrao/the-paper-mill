@@ -97,13 +97,15 @@ with sync_playwright() as pw:
 
     # --- 8. the rest of the season plays out, the panel renders
     r = pg.evaluate("""()=>{const S=__PM.S;__run(Math.max(0,S.season.end-S.t-30));const O=S.ord,K=O.k;
-      const d=document.getElementById('repOrd');d.open=true;document.body.classList.add('sheet-open');document.querySelector('.v2pane[data-pane=stats]').classList.add('on');
       return {day:S.t/1440,done:K.done,onTime:K.onT/Math.max(1,K.onT+K.lateT),spot:K.spot,canc:K.canc,dry:K.dry,fg:S.fg,cash:S.cash}}""")
     pg.wait_for_timeout(1500)
     ok("season played to the last day", r["day"] > 29, r)
     ok("on-time delivery for a hands-off mill is high but not perfect", 0.6 < r["onTime"] <= 1, r)
-    h = pg.evaluate("()=>document.getElementById('ordBox').innerText")
-    ok("Orders & bales panel renders", "on-time delivery" in h.lower() and "bale yard" in h.lower(), h[:120])
+    # (v6.8.1: the Report tab's Orders & bales panel is retired; the control room's Planning screen shows the order book)
+    pg.evaluate("()=>__PM.G3.openStation('PLAN')"); pg.wait_for_timeout(1500)
+    h = pg.evaluate("()=>{const b=document.getElementById('planBox');return b?b.innerText:''}")
+    pg.evaluate("()=>{const x=document.getElementById('dcsClose');if(x)x.click();}")
+    ok("Planning screen shows the order book and the bale yard", "on-time delivery" in h.lower() and "bale yard" in h.lower(), h[:120])
 
     # --- 9. zen: no orders, no idle energy, no bale effects
     r = pg.evaluate("""()=>{const P=__PM,S=P.S,X=P.OX;S.zen=true;const e0=S.ledger.energy,pm=S.pm;S.pm='down';X.baseLoadTick(60);const idle=S.ledger.energy-e0;S.pm=pm;

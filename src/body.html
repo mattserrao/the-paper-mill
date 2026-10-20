@@ -120,7 +120,7 @@
 <div class="row" data-key="outRate"><label for="s-outRate">Outbound truck arrivals</label><span class="val"></span><div class="ctl"><input id="s-outRate" max="10" min="0" step="0.1" type="range"/><button aria-pressed="true" class="auto">AUTO</button></div></div>
 <div class="read" id="r-ship">–</div></div>
 </section></details></div>
-<div class="v2pane" data-pane="stats"><section class="ctlroom" id="ctlRoom" aria-label="Control room"></section><div class="rep" id="rep"></div><details class="replive" id="repOrd"><summary><b>Orders &amp; bales</b><small>Customer orders · spot sales · bale yard</small></summary><div id="ordBox"></div></details><details class="replive" id="repLive"><summary><b>Live mill</b><small>Flow &amp; bottleneck · right now · last 24 h</small></summary><div class="v2sub">Flow &amp; bottleneck</div><div class="flowbox" id="v2flow"></div><div class="v2sub">Right now</div><section aria-label="Key figures" class="kpis">
+<div class="v2pane" data-pane="stats"><details class="replive" id="repLive"><summary><b>Live mill</b><small>Flow &amp; bottleneck · right now · reliability</small></summary><div class="v2sub">Flow &amp; bottleneck</div><div class="flowbox" id="v2flow"></div><div class="v2sub">Right now</div><section aria-label="Key figures" class="kpis">
 <div class="kpi money" id="k-cash-box"><div class="k">Cash</div><div class="v" id="k-cash">–</div><div class="s" id="k-cash-s"> </div></div>
 <div class="kpi"><div class="k">Profit</div><div class="v" id="k-profit">–</div><div class="s" id="k-profit-s"> </div></div>
 <div class="kpi"><div class="k">Sim clock</div><div class="v" id="k-clock">Day 1 00:00</div><div class="s" id="k-clock-s"> </div></div>
@@ -129,15 +129,7 @@
 <div class="kpi"><div class="k">Stock chest</div><div class="v" id="k-tank">–</div><div class="s" id="k-tank-s"> </div></div>
 <div class="kpi"><div class="k">OCC bale yard</div><div class="v" id="k-yard">–</div><div class="s" id="k-yard-s"> </div></div>
 <div class="kpi"><div class="k">Roll warehouse</div><div class="v" id="k-fg">–</div><div class="s" id="k-fg-s"> </div></div>
-</section><div class="v2sub">Reliability now</div><div class="ledger" id="relnow"></div><div class="v2sub">Last 24 hours</div><section class="trendbox">
-<div class="trendhead"><b>Last 24<span class="dl"> </span>h</b>
-<span><i class="sw" style="background:var(--stock)"></i>Chest<span class="dl"> level %</span></span>
-<span><i class="sw" style="background:var(--machine)"></i>Reel speed<span class="dl"> % of 3,300 fpm</span></span>
-<span><i class="sw" style="background:var(--kraft)"></i>Bale yard<span class="dl"> % full</span></span>
-<span><i class="sw" style="background:var(--ok)"></i><span class="dm">Rolls</span><span class="dl">Roll warehouse % full</span></span>
-</div>
-<canvas height="150" id="trend" width="1200"></canvas>
-</section></details></div>
+</section><div class="v2sub">Reliability now</div><div class="ledger" id="relnow"></div></details><section class="ctlroom" id="ctlRoom" aria-label="Control room"></section><div class="rep" id="rep"></div></div>
 </div></aside>
 <div class="v2menu" id="v2menu"><div aria-labelledby="v2mt" aria-modal="true" class="card" role="dialog">
 <div class="ttl"><i>⚙</i><div><small>The Paper Mill</small><b id="v2mt">Mill</b><div class="state" id="v2state"></div></div></div>

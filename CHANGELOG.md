@@ -1,6 +1,14 @@
 # Changelog
 
 
+## v6.8.1 (2026-10-20): report tab tidy
+Formatting only; the sim and the control room screens are unchanged.
+- **Live mill moves to the top of the Report tab**, above the control room and the season report. Its "Last 24 hours"
+  chart is removed (its summary now reads flow & bottleneck · right now · reliability).
+- **Quality & fiber card removed** from the report. On-spec, the beater and the specs are on the Quality screen.
+- **Orders & bales panel removed** (`51h-orders-ui.js` deleted). The order book, inventory and bale yard are on the
+  Planning screen; the help's Order book entry points there. `tools/ordercheck.py` checks the Planning screen instead.
+
 ## v6.8.0 (2026-10-19): process relationships
 Built on test/v6.8-relations (as 6.8.0-t1 and t2), merged into main. Everything in the two test entries below:
 refining energy (kWh/t) with freeness-driven drainage and a ring crush spec, the basis weight setpoint and lightweight

@@ -39,10 +39,6 @@
       return `<div class="rhd"><h3>Uptime</h3><small>this period · outages left out</small></div><div class="rup">${RC_SEC.map(([k,n])=>{const v=p.rel[k]||0,w=v<0.9;
         return `<span${w?' class="w"':""}>${n}</span><div><i style="width:${(v*100).toFixed(1)}%;background:${v<0.9?"var(--warn)":"var(--ok)"}"></i></div><b class="mono${w?" w":""}">${pc(v)}</b>`;}).join("")}</div>
         <p class="rnote">${top?"Biggest losses: "+top+" · ":""}${p.breaks} sheet break${p.breaks===1?"":"s"} · ${p.hay} hayout${p.hay===1?"":"s"}</p>`;}
-    function qualBlock(p,season){const eff=S.tot.pot>0?S.tot.prodT/S.tot.pot:1;
-      return `<h3>Quality &amp; fiber</h3><div class="rq"><div><small>On spec</small><b class="mono">${(p.onspec*100).toFixed(1)}%</b><small>${Math.round(p.off)} t to the beater</small></div>
-        <div><small>Fiber yield</small><b class="mono">${p.yld?pc(p.yld):"–"}</b><small>${p.yld?(1/p.yld).toFixed(2)+" t OCC per t":season?"collecting":"in a season"}</small></div>
-        <div><small>Output</small><b class="mono">${pc(eff)}</b><small>of max-speed tons</small></div></div>`;}
     function daysBlock(d){const D=(d.R.days||[]).filter(x=>x.d>3);if(!D.length)return "";
       const sv=!!S.season.surv,d0=sv?Math.max(0,D[D.length-1].d-30):0;   // v4.3 survival: the last 30 days, with a line at each outage
       const X=v=>22+(v-d0-1)*(326/29),Y=L=>20+(4-GP[L])*28,pts=D.map(x=>`${X(x.d).toFixed(1)},${Y(x.o)}`).join(" ");
@@ -72,7 +68,7 @@
       else h+=`<section class="rcard"><p class="rnone">Grades, uptime and report cards run during a 30-day season or a survival run. Here are your totals since the start.</p></section>`;
       h+=`<section class="rcard">${costBlock(p)}</section>`;
       {const T=S.tell;if(T&&T.pre)h+=`<section class="rcard"><div class="rhd"><h3>Caught early</h3><small>daily rounds</small></div><p class="rnote">${T.n?`${T.n} upset${T.n>1?"s":""} caught before ${T.n>1?"they":"it"} happened: saved ${money(T.saved)} and ${tellHrs(T.savedMin)} of downtime.`:"Nothing caught yet. Walk an area with the Round button once a day: a tell spotted early is a planned repair at a fraction of the bill, with no downtime."}</p></section>`;}   // v5.7if(d.season)h+=`<section class="rcard">${upBlock(p)}</section>`;
-      h+=`<section class="rcard">${qualBlock(p,d.season)}</section><section class="rcard">${moneyBlock(d)}</section>`;
+      h+=`<section class="rcard">${moneyBlock(d)}</section>`;   // (v6.8.1: Quality & fiber moved out; the Quality screen in the control room has it)
       if(h!==el._h){el._h=h;el.innerHTML=h;}}   // (v5.2: unchanged report, no rebuild)
     el.addEventListener("click",e=>{const b=e.target.closest("[data-card]");if(b&&S.rc){const c=S.rc.cards[+b.dataset.card];if(c)rcOpen(c,true);}});
     el.addEventListener("toggle",e=>{if(e.target.id==="repDays")openDays=e.target.open;if(e.target.id==="repMoney")openMoney=e.target.open;},true);

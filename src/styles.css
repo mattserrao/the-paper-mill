@@ -569,7 +569,7 @@ button.rpt{cursor:pointer}.rpt.cur{border:2px solid var(--brand);background:var(
 .rsub>summary::-webkit-details-marker,.replive>summary::-webkit-details-marker{display:none}
 .rsub>summary b,.replive>summary b{font-size:13.5px}.rsub>summary small,.replive>summary small{font-size:12px;color:var(--muted)}
 .rsub>summary b::after,.replive>summary b::after{content:" ▾";color:var(--muted)}.rsub[open]>summary b::after,.replive[open]>summary b::after{content:" ▴"}
-.replive{background:var(--panel);border:1px solid var(--line);border-radius:14px;padding:8px 14px}
+.replive{background:var(--panel);border:1px solid var(--line);border-radius:14px;padding:8px 14px;margin-bottom:10px}
 .rchart{width:100%;height:auto;max-width:420px}.rchart .ax text{font:12px var(--f-mono);fill:var(--muted)}.rchart .ax line{stroke:var(--line)}
 .rchart .pd{stroke:var(--muted);stroke-dasharray:3 3;opacity:.5}.rchart .ln{fill:none;stroke:var(--brand);stroke-width:2.5;stroke-linejoin:round}.rchart .pt{fill:var(--brand)}.rchart .drop{fill:var(--bad)}
 .rstrips{display:grid;grid-template-columns:82px minmax(0,1fr) 22px;gap:7px 8px;align-items:center;font-size:12px}
@@ -1267,7 +1267,6 @@ body.pmpop .popmain[data-v="dcs"] #dcsOv .dcs{max-width:1180px;margin:0 auto}
 .dcsbeat{margin:-2px 0 4px;padding:8px 10px;border-radius:8px;background:#7a1f1a;color:#ffd0cb;font:800 12.5px var(--f-body);letter-spacing:.04em}.dcsbeat[hidden]{display:none}
 
 /* v6.6 orders & bales panel */
-#repOrd{margin-bottom:10px}#repOrd .rq{margin-top:6px}
 .ordl{display:flex;flex-direction:column;gap:4px}
 .ordr{display:flex;align-items:center;justify-content:space-between;gap:8px;padding:6px 9px;border-radius:10px;background:var(--chip)}
 .ordr span{display:flex;flex-direction:column;min-width:0}.ordr b{font-size:13px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.ordr small{font-size:12px;color:var(--muted)}
