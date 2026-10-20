@@ -1,7 +1,7 @@
 # Changelog
 
 
-## v6.9.0-t1 (2026-10-20): manning (test branch)
+## v6.8.2 (2026-10-20): manning
 - **DuPont 12 shifts.** The maintenance techs and the operators (7 machine floor, 2 stock prep) work in four teams
   on the mill-shifts rotation: 28 days of 4 nights, 3 off, 3 days, 1 off, 3 nights, 3 off, 4 days, 7 off, with
   B/C/D running 7/14/21 days behind A. Shifts change at 6 a.m. and 6 p.m. (`03f-manning.js`).
