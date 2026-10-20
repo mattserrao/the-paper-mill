@@ -192,7 +192,7 @@ function rlyOutageEnd(o,pl){const R=S.rel;if(!R)return;const done=[];
   for(const id in (pl&&pl.rly)||{}){const a=R.a[id],c=pl.rly[id];if(!a)continue;
     if(c.b){a.vib=100;a.lv={t:S.t,st:"good",v:0.9,by:"new"};R.pend=R.pend.filter(p=>!(p.a===id&&p.k==="vib"));done.push(ASSETN[id].n+" bearings");}
     if(c.m){a.adx=100;a.la={t:S.t,st:"good",h:100,by:"new"};R.pend=R.pend.filter(p=>!(p.a===id&&p.k==="adx"));done.push(ASSETN[id].n+" motor");}
-    if(c.d){a.dh=100;done.push(ASSETN[id].n+" drive");}}
+    if(c.d){a.dh=100;a.patch=false;done.push(ASSETN[id].n+" drive");}}
   if(done.length)log(`Outage ${o.k} changeouts done: ${done.join(", ")}.`,"ok");}
 
 /* ---- the electrical tech: one job at a time, the blackouts first ---- */
@@ -256,7 +256,7 @@ function rlyAsk(inc,step){const R=rlyState(),a=inc.asset;if(R.q.some(q=>q.a===a&
   R.q.push({a,step});}
 const rlyDrvInc=a=>S.inc.find(i=>i.id==="drivefail"&&i.asset===a);
 function rlyDecide(inc,ch,auto){const A=ASSETN[inc.asset],R=rlyState(),a=R.a[inc.asset];if(!A||!active("drivefail"))return;
-  const go=(st,m)=>{inc.stage=st;inc.left=inc.total=m;};let txt="";
+  const go=(st,m)=>{if(inc.rep&&st!=="patch")m*=1.5;inc.stage=st;inc.left=inc.total=m;};/* a repeat fault: half as long again */let txt="";
   if(ch==="reset"){go("reset",5);const p=rlyRepOdds(inc.asset);if(rand("rel")<p)R.rep.push({a:inc.asset,due:S.t+30+rand("rel")*1380});txt=`reset and run (repeat odds ${Math.round(p*100)}%)`;}
   else if(ch==="inv"){const d=RLY.inv;go("inv",d[0]+rand("rel")*(d[1]-d[0]));spend(2e3,"repairs");txt="investigate";}
   else if(ch==="patch"){go("patch",15);spend(4e3,"repairs");txt="patch it and run to the outage (replacement booked)";}

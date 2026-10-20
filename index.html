@@ -5148,7 +5148,7 @@ function rlyOutageEnd(o,pl){const R=S.rel;if(!R)return;const done=[];
   for(const id in (pl&&pl.rly)||{}){const a=R.a[id],c=pl.rly[id];if(!a)continue;
     if(c.b){a.vib=100;a.lv={t:S.t,st:"good",v:0.9,by:"new"};R.pend=R.pend.filter(p=>!(p.a===id&&p.k==="vib"));done.push(ASSETN[id].n+" bearings");}
     if(c.m){a.adx=100;a.la={t:S.t,st:"good",h:100,by:"new"};R.pend=R.pend.filter(p=>!(p.a===id&&p.k==="adx"));done.push(ASSETN[id].n+" motor");}
-    if(c.d){a.dh=100;done.push(ASSETN[id].n+" drive");}}
+    if(c.d){a.dh=100;a.patch=false;done.push(ASSETN[id].n+" drive");}}
   if(done.length)log(`Outage ${o.k} changeouts done: ${done.join(", ")}.`,"ok");}
 
 /* ---- the electrical tech: one job at a time, the blackouts first ---- */
@@ -5212,7 +5212,7 @@ function rlyAsk(inc,step){const R=rlyState(),a=inc.asset;if(R.q.some(q=>q.a===a&
   R.q.push({a,step});}
 const rlyDrvInc=a=>S.inc.find(i=>i.id==="drivefail"&&i.asset===a);
 function rlyDecide(inc,ch,auto){const A=ASSETN[inc.asset],R=rlyState(),a=R.a[inc.asset];if(!A||!active("drivefail"))return;
-  const go=(st,m)=>{inc.stage=st;inc.left=inc.total=m;};let txt="";
+  const go=(st,m)=>{if(inc.rep&&st!=="patch")m*=1.5;inc.stage=st;inc.left=inc.total=m;};/* a repeat fault: half as long again */let txt="";
   if(ch==="reset"){go("reset",5);const p=rlyRepOdds(inc.asset);if(rand("rel")<p)R.rep.push({a:inc.asset,due:S.t+30+rand("rel")*1380});txt=`reset and run (repeat odds ${Math.round(p*100)}%)`;}
   else if(ch==="inv"){const d=RLY.inv;go("inv",d[0]+rand("rel")*(d[1]-d[0]));spend(2e3,"repairs");txt="investigate";}
   else if(ch==="patch"){go("patch",15);spend(4e3,"repairs");txt="patch it and run to the outage (replacement booked)";}
@@ -6219,7 +6219,7 @@ function pfChemT(){return Math.max(0,ECON.chem+P.chemAdd+(P.siteChem||0)-(P.refS
 function pfEnergy(prod,ec){if(!(ec>0))return;const ch=Math.min(ec,prod*pfChemT()),en=ec-ch;
   pfAdd("chem","stock",ch*0.5);pfAdd("chem","pm",ch*0.5);pfAdd("steam","pm",en*PF_STEAMSH);for(const a in PF_POWER)pfAdd("power",a,en*(1-PF_STEAMSH)*PF_POWER[a]);}
 function pfLabor(dt){const w=(ECON.wage+(P.siteWage||0))*(P.costMul||1)*leadWage()*civWage(),m=dt/60;
-  pfAdd("labor","yard",C.drivers.v*w*m);pfAdd("labor","ship",(C.loaders.v*w+P.robots*ECON.robot)*m);pfAdd("mlab","techs",P.techs*w*m);if(P.pmCost)pfAdd("mlab","pmprog",P.pmCost*m);}
+  pfAdd("labor","yard",C.drivers.v*w*m);pfAdd("labor","ship",(C.loaders.v*w+P.robots*ECON.robot)*m);pfAdd("mlab","techs",(P.techs+(P.elec||0))*w*m);if(P.pmCost)pfAdd("mlab","pmprog",P.pmCost*m);}
 function pfRepair(id,bill){if(!bill)return;pfAdd("rep",pfRepArea(id),bill);pfAdd("repid",id,bill);if(id==="permit"){pfW("fine",bill);pfW("fines",1);}histEv(id,bill);}
 
 // the day's numbers as plain data (also what is kept for yesterday)
@@ -6229,7 +6229,7 @@ function pfCalc(f,whole){const L=S.ledger,d=k=>(L[k]||0)-(f.L0[k]||0),A=f.A,sum=
   const et=steam+power,es=et>0?energy/et:0;
   const sub={energy:{Steam:steam*es,Power:power*es},chem:{"Stock prep":(A.chem&&A.chem.stock)||0,"Wet end":(A.chem&&A.chem.pm)||0},
     labor:{"Forklift drivers":(A.labor&&A.labor.yard)||0,"Loaders and robots":(A.labor&&A.labor.ship)||0},
-    maint:{"Repair bills and outage budgets":repairs,"Maintenance techs":(A.mlab&&A.mlab.techs)||0,"Preventive maintenance program":(A.mlab&&A.mlab.pmprog)||0,"Insurance premium":premium},
+    maint:{"Repair bills and outage budgets":repairs,"Maintenance and electrical techs":(A.mlab&&A.mlab.techs)||0,"Preventive maintenance program":(A.mlab&&A.mlab.pmprog)||0,"Insurance premium":premium},
     over:{"Site overhead":d("overhead"),"Civics":d("civ")},fiber:{"OCC bales":d("occ")},frin:{"Inbound haul":d("frin")},frout:{"Outbound freight":d("frout")}};
   // by area: what each input added there today
   const by={};PF_AREAS.forEach(([a])=>by[a]={});const put=(c,a,v)=>{if(v)by[a][c]=(by[a][c]||0)+v;};

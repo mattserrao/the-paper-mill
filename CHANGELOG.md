@@ -4,6 +4,9 @@
 ## v6.10.0-t3 (2026-10-20): QA fixes and balance (test build)
 100 live QA runs (50 seasons, 50 survival) on t2, then matched balance runs against main.
 - **Fix:** a drive fault card nobody answers no longer holds the machine down. After an hour the default is taken (investigate, then replace) and the card closes.
+- **Fix (QA Agent B):** an outage drive changeout clears the patch, so a replaced drive no longer faults 3× as often for the rest of the run.
+- **Fix (QA Agent B):** a repeat drive fault takes half as long again to deal with, as its card says (the longer time was worked out but never used).
+- **Fix (QA Agent B):** the process-flow labor line includes the electrical tech's wage ("Maintenance and electrical techs").
 - **Fix (QA Agent D):** the Drives power diagram labels were centred by a style rule, so "UTILITY" and "115 kV" were cut off and the lineup labels sat on the bus lines.
 - **Fix (QA Agent D):** in a rectifier fault, the Drives "Faulted" count includes drives with no DC bus, and the Reliability screen shows them as "No DC" (it showed a plain 0 %).
 - **Fix (QA Agent D):** a planned repair removes the same part's changeout from the outage wish list, so it isn't paid for twice.
