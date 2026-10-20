@@ -140,4 +140,4 @@ function rlyCardOpen(){const R=S.rel,q=R&&R.cur;if(!q)return;const inc=rlyDrvInc
 UI_TICKS.push(()=>{const R=S&&S.rel;if(!R||!R.q)return;
   if(R.cur&&!(S.cards&&S.cards.open)){rlyCardOpen();return;}   // (a reload: the card comes back)
   if(!R.cur&&R.q.length&&S.cards&&!S.cards.open&&!(S.civ&&(S.civ.cur||S.civ.pending))&&!S.over){R.cur=R.q.shift();rlyCardOpen();}
-  if(rlyCardEl&&!rlyCardEl.hidden&&!R.cur)rlyCardEl.hidden=true;});
+  if(rlyCardEl&&!rlyCardEl.hidden&&!R.cur){rlyCardEl.hidden=true;if(S.cards&&S.cards.open&&S.cards.open.rly)S.cards.open=null;}});

@@ -197,7 +197,9 @@ function rlyOutageEnd(o,pl){const R=S.rel;if(!R)return;const done=[];
 /* ---- the electrical tech: one job at a time, the blackouts first ---- */
 function rlyElecTick(dt){
   // a drive fault waits on the player's call (held, not counting down); an investigation that's done waits on the next one
-  for(const i of S.inc){if(i.kind!=="drv"||!i.stage)continue;if(i.stage==="wait"||i.stage==="found")i.left=Math.max(i.left,30);
+  for(const i of S.inc){if(i.kind!=="drv"||!i.stage)continue;if(i.stage==="wait"||i.stage==="found"){i.left=Math.max(i.left,30);
+      // the card pauses the game; if the sim runs on without an answer for an hour (no screen to show it on), the crew decides: investigate, then replace
+      i.waitT=(i.waitT||0)+dt;if(i.waitT>60){const st=i.stage;i.waitT=0;const R=S.rel;if(R){R.q=R.q.filter(q=>q.a!==i.asset);if(R.cur&&R.cur.a===i.asset)R.cur=null;}rlyDecide(i,st==="wait"?"inv":"repl",true);continue;}}
     else if(i.stage==="inv"&&i.eGo&&i.left<=dt*3){i.stage="found";i.left=30;rlyAsk(i,"found");}}
   let L=null;for(const i of S.inc)if(ENEED(i.id))(L||(L=[])).push(i);if(!L)return;
   const pri=id=>id==="lightning"||id==="birdline"?0:1;L.sort((a,b)=>pri(a.id)-pri(b.id));
@@ -258,4 +260,4 @@ function rlyDecide(inc,ch,auto){const A=ASSETN[inc.asset],R=rlyState(),a=R.a[inc
   else if(ch==="inv"){const d=RLY.inv;go("inv",d[0]+rand("rel")*(d[1]-d[0]));spend(2e3,"repairs");txt="investigate";}
   else if(ch==="patch"){go("patch",15);spend(4e3,"repairs");txt="patch it and run to the outage (replacement booked)";}
   else if(ch==="repl"){const d=RLY.repl;go("repl",d[0]+rand("rel")*(d[1]-d[0]));const b=RLY.drvBill*P.repairMul;spend(b,"repairs");pfRepair("drivefail",b);txt=`replace the drive now (${money(b)})`;}
-  log(`${auto?"Let the mill run":"Decision"} · ${A.n} drive: ${txt}.`,"warn");S.M=mods();}
+  inc.waitT=0;log(`${auto?"The crew's call":"Decision"} · ${A.n} drive: ${txt}.`,"warn");S.M=mods();}
