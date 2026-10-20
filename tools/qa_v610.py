@@ -79,7 +79,7 @@ PLAY = r"""async ([style,seed,swap,surv])=>{const P=__PM,S=P.S,h=P.SIM_STEP||0.2
         if(style==='active'){const bs=[...document.querySelectorAll('#out-rly [data-rpc$=":b"]')].slice(0,2);bs.forEach(b=>{b.click();log.chg++;});}
         leadPlan();if(!click('out-ok'))log.ovs.noOutOk=(log.ovs.noOutOk||0)+1;}
       else if(o.report){log.rcs++;if(!click('rc-ok'))log.ovs.noRcOk=(log.ovs.noRcOk||0)+1;}
-      if(S.cards.open&&!S.cards.open.rly){log.stuckClosed++;log.stuckWhat=Object.keys(S.cards.open).join();S.cards.open=null;}}
+      if(S.cards.open&&!S.cards.open.rly&&!(S.cards.open.civ&&S.civ&&S.civ.cur)&&S.cards.open!==o){}else if(S.cards.open&&S.cards.open===o&&!S.cards.open.rly){log.stuckClosed++;log.stuckWhat=Object.keys(S.cards.open).join();S.cards.open=null;}}
     if(surv&&S.lead&&S.lead.id==='dot'&&n%8===0&&S.inc&&S.inc.length&&P.leadFixReady()){const c=S.inc.filter(i=>P.leadFixable(i.id)&&i.left>30&&(i.bill||0)>=120e3)[0];if(c&&P.leadFix(c.id))log.fixes++;}
     if(surv&&S.outg.k!==wk){P.setRunning(false);await new Promise(r=>setTimeout(r,0));const Ld=S.ledger,dl=k=>Math.round(((Ld[k]||0)-(L0[k]||0))/1e3);
       log.waves.push({w:wk,net_k:Math.round((S.cash-c0)/1e3),inc:S.tot.incidents-i0,rev_k:dl('rev'),occ_k:dl('occ'),energy_k:dl('energy'),labor_k:dl('labor'),repairs_k:dl('repairs'),upMul:+P.survUp(S.outg.k).toFixed(3),costMul:+P.survCost(S.outg.k).toFixed(3)});
