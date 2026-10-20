@@ -1,6 +1,14 @@
 # Changelog
 
 
+## v6.10.0-t3 (2026-10-20): QA fixes and balance (test build)
+100 live QA runs (50 seasons, 50 survival) on t2, then matched balance runs against main.
+- **Fix:** a drive fault card nobody answers no longer holds the machine down. After an hour the default is taken (investigate, then replace) and the card closes.
+- **Fix:** the drive fault card shows the drive's load at the moment it tripped (it showed 0%).
+- **Balance:** bearing, motor and drive failures about half as often; rectifier faults a quarter as often; rectifier bill $60k to $40k; motor bills about 25% lower.
+  Result (24 seasons per build, same seeds): doing rounds +$2.53M vs main +$2.68M; hands-off -$72k vs main +$551k (7 of 12 still profit).
+  Survival: rounds 35.5 days vs main 37.0; hands-off 26.3 vs 28.7.
+
 ## v6.10.0-t2 (2026-10-20): The Reliability and Electrical Update (test build)
 Built on test/v6.10-reliability. Plan: claude/reliability-v610-plan.md. Seasons, survival and free play (not zen). Functionality first; no balancing yet.
 - **Ten critical VFD motors** (`07i-assets.js`): pulper rotor, refiners A and B, fan pump, couch roll, 1st and 2nd press, dryer section, reel drum,

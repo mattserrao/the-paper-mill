@@ -141,7 +141,7 @@ with sync_playwright() as pw:
     answer()
 
     # AUTO-LW: more refining, the weight comes down; back to standard, it goes back up
-    r = J("""()=>{const P=__PM,S=P.S;S.inc.forEach(i=>i.left=0);P.CH.on=false;const t0=S.t;P.knob.set('ref',85);while(S.t<t0+600)P.step(P.SIM_STEP);const lo=S.we.trim;P.knob.set('ref',60);while(S.t<t0+1300)P.step(P.SIM_STEP);return {lo,back:S.we.trim}}""")
+    r = J("""()=>{const P=__PM,S=P.S;S.inc.forEach(i=>i.left=0);P.CH.on=false;let w=0;while(S.chg&&w++<40000)P.step(P.SIM_STEP);const t0=S.t;P.knob.set('ref',85);while(S.t<t0+600)P.step(P.SIM_STEP);const chg=!!S.chg,lo=S.we.trim;P.knob.set('ref',60);while(S.t<t0+1300)P.step(P.SIM_STEP);return {lo,back:S.we.trim,chg}}""")
     ok("AUTO-LW trims the weight down with ring crush to spare and back up without it", r["lo"] < -0.05 and r["back"] > -0.01 and r["back"] <= 0, json.dumps(r))
 
     # click for info
