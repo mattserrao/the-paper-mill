@@ -323,3 +323,4 @@ G3.vlvUI=()=>VUI.id?VUI.clk/60:0;   // (kuiSync, 50b: the tuning clock while a f
 G3.vlvOpen=openVlv;G3.vlvClose=closeVlv;G3.VUI=VUI;   // (tests)
 // Escape closes the faceplate first (window capture runs before the DCS's own document handler)
 window.addEventListener("keydown",e=>{if(e.key==="Escape"&&VUI.id){e.preventDefault();e.stopPropagation();closeVlv();}},true);
+G3.vlvRm=id=>{RMUI.sel=id;rmOpen();};   // (tests: the relationship map on a loop)

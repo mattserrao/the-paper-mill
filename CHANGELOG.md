@@ -32,6 +32,10 @@ it hands back.
   tuning puzzles on a sandbox copy of a loop, scored against a careful engineer's tuning, best stars saved per mill).
   **Tuning clock** while it's open: real time, 5×, 20× or 60× (remembered).
 - **Trends and history:** PV and output tags for every loop (Report → Control room → Trends), hourly valve openings.
+- **Relationship map:** every loop's PV and output wired in (`50j-relmap.js`, 33 links): the valve → process → PV →
+  controller → valve circle for each loop, the CAS link from QC-300 to PV-302/303, the field dilution valve as NV-101,
+  machine chest level → speed and sewer, makeup out of the white water chest, the steam header capping the pressures,
+  and 2nd/3rd section pressure → reel moisture.
 - **Help:** a "Control valves and tuning" guide page and glossary terms. Older saves: manual 2nd/3rd section steam, a
   manual BW valve and a moved pulper dilution knob come back as the new loops.
 - **Tests:** `tools/valvecheck.py` (52 checks).

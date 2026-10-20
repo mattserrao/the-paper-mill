@@ -14471,7 +14471,7 @@ function pfSVGt(D,live){const vert=pfVert(),NU=104,NV=112,GAP=30,PAD=vert?24:10,
    only: the sim and its dice are untouched, and the game keeps running at the player's speed while it is open.
    Keep RM_E in step with the sim when a relationship changes (tools/relmapcheck.py fails on a tag with no entry). ---- */
 const RM_DRV=[["x:weather","Weather",""],["x:bales","Bale grade mix",""],["x:pulpset","Pulper feed setpoint",""],["x:dilv","Pulper dilution valve","knob"],["x:slice","Headbox slice","knob"],["x:guide","Fabric guide roll","knob"],["x:zones","Headbox dilution zones","knob"],["x:spset","Machine speed setpoint",""],["x:grade","Grade on the machine",""],["x:dye","Dye system",""],["x:market","Market & leader effects",""],["x:orders","Customer orders",""],["x:upsets","Upsets & DCS motors",""]];
-const RM_COL={"YARD":["inq","unload","yard","balem","stk","occp"],"SPOT":["feed","cp","amps","pulpLvl","yield","fiber","rejt","hddp","lcdp","lwdp","fsld","fsdp","kwh","dil","chest","chestg","gap","refkw","csf","agit","mcCons","mcLvl","mcg","fan"],"WET":["wsp","vac","couchSol","pl","pressSol","gtrav","edge","osc","hbc","bwv","bwsp","drain","seal","pressw","wwl","wwg","wwov","hum"],"DET":["speed","prod","st1","st3","steam","dryl","moist","bw","draw","tension"],"QCS":["off","rct","prem","cdsp","bank","reel","cut","conv"],"UTIL":["boiler","vent","energyt","shower","evap","wcl","wcg","makeup","fresh","wuse","wwover","outfall","tss"],"SHIP":["fg","load","outq","openo","lateo","price","profit"]};
+const RM_COL={"YARD":["inq","unload","yard","balem","stk","occp"],"SPOT":["feed","cp","nv101pv","nv101op","amps","pulpLvl","yield","fiber","rejt","hddp","lcdp","lwdp","fsld","fsdp","kwh","dil","chest","chestg","gap","refkw","csf","agit","mcCons","mcLvl","lv104pv","lv104op","mcg","fan"],"WET":["wsp","vac","couchSol","pl","pressSol","gtrav","edge","osc","hbc","bwv","fv201pv","fv201op","bwsp","drain","seal","pressw","wwl","lv202pv","lv202op","wwg","wwov","hum"],"DET":["speed","prod","st1","st3","pv302pv","pv302op","pv303pv","pv303op","steam","dryl","moist","qc300pv","qc300op","bw","draw","tension"],"QCS":["off","rct","prem","cdsp","bank","reel","cut","conv"],"UTIL":["boiler","vent","energyt","shower","evap","wcl","wcg","makeup","fresh","wuse","wwover","outfall","tss"],"SHIP":["fg","load","outq","openo","lateo","price","profit"]};
 const RM_E=[
  ["x:weather","balem","p","Rain and snow soak the bales in the yard and on inbound loads"],
  ["x:weather","unload","n","Snow and fog slow inbound trucks"],
@@ -14502,6 +14502,40 @@ const RM_E=[
  ["chest","chestg","s","Same chest, in gallons"],
  ["chest","stk","x","Chest residence time delays how fast stickies reach the machine"],
  ["stk","speed","n","Stickies raise the sheet-break rate"],
+ ["x:dilv","nv101op","x","The field dilution valve is NV-101's: moving it there puts the loop on MAN"],
+ // v6.9 the control loops (07h). Untouched each loop is the game's own model; these are the links once a player touches one
+ ["nv101op","cp","n","More dilution water thins the tub (a 20-minute tub)"],
+ ["balem","cp","n","Wet bales thin the tub; NV-101 closes to take the water back out"],
+ ["cp","nv101pv","s","NV-101 measures the pulper consistency, 30 s late"],
+ ["nv101pv","nv101op","x","AUTO: thick tub, open the dilution valve (PID)"],
+ ["cp","mcCons","x","Pulper consistency swings reach the machine chest through the storage chest (about an hour)"],
+ ["lv104op","mcLvl","p","Refined stock in through LV-104 fills the machine chest"],
+ ["prod","mcLvl","n","The machine draws the chest down"],
+ ["mcLvl","lv104pv","s","LV-104 measures the machine chest level"],
+ ["lv104pv","lv104op","x","AUTO: low chest, open the valve (PID on an integrating level)"],
+ ["mcLvl","speed","x","Under 15% the machine slows; held empty the sheet breaks at the wet end"],
+ ["mcLvl","chest","x","Over 100% refined stock overflows to the sewer and is lost from the chest"],
+ ["bwv","fv201op","s","The basis weight valve is FV-201"],
+ ["bw","fv201pv","s","FV-201 reads the QCS weight, 3 minutes late"],
+ ["fv201pv","fv201op","x","AUTO: PID on the scanner's weight, on top of the speed feed-forward"],
+ ["bwsp","fv201pv","x","FV-201's setpoint is the grade's weight (or the lighter trim)"],
+ ["lv202op","wwl","p","Makeup through LV-202 fills the silo"],
+ ["lv202op","wcl","n","The makeup comes out of the white water chest"],
+ ["wwl","lv202pv","s","LV-202 measures the silo level"],
+ ["lv202pv","lv202op","x","AUTO: under its setpoint the makeup opens; overflowing, it sits shut"],
+ ["moist","qc300pv","s","QC-300 reads reel moisture from the scanner, a minute late"],
+ ["qc300pv","qc300op","x","AUTO: wet reel, raise the steam setpoints (PID)"],
+ ["qc300op","pv303pv","p","CAS: QC-300's output is PV-303's setpoint"],
+ ["qc300op","pv302pv","p","CAS: PV-302's setpoint is 80% of it"],
+ ["pv303op","pv303pv","p","Open the steam valve, the section pressure rises (equal-% trim)"],
+ ["pv302op","pv302pv","p","Open the steam valve, the section pressure rises (equal-% trim)"],
+ ["pv303pv","pv303op","x","AUTO / CAS: low pressure, open the valve (PID)"],
+ ["pv302pv","pv302op","x","AUTO / CAS: low pressure, open the valve (PID)"],
+ ["dryl","pv303op","p","A heavier drying load needs the valves further open for the same pressure"],
+ ["boiler","pv303pv","x","A sagging steam header caps what the valves can make"],
+ ["pv303pv","st3","p","The 2nd/3rd section pressure is the two valves' (half each)"],
+ ["pv302pv","st3","p","The 2nd/3rd section pressure is the two valves' (half each)"],
+ ["st3","moist","n","More pressure than the load needs dries the sheet; less leaves it wet"],
  ["x:dilv","cp","x","Dilution valve sets pulper consistency (lagged)"],
  ["cp","amps","p","Thicker tub, more rotor amps (trips over 7.5%)"],
  ["cp","pulpLvl","n","More dilution water, higher tub level (overflows under 2.2%)"],
@@ -14549,7 +14583,7 @@ const RM_E=[
  ["wwl","speed","n","Held under 8% the sheet breaks at the wet end"],
  ["wwl","wwov","p","Over 85% it overflows to the white water chest"],
  ["wwl","wwg","s","Same silo, in gallons"],
- ["wwl","wcl","x","Under 25% the silo makes up from the white water chest"],
+ ["wwl","wcl","x","Under 25% the silo makes up from the white water chest (LV-202)"],
  ["wwov","wcl","p","Silo overflow goes to the white water chest"],
  ["seal","wcl","p","Seal pit water returns to the white water chest"],
  ["pressw","wcl","p","Press water via the save-all to the white water chest"],
@@ -15079,6 +15113,7 @@ G3.vlvUI=()=>VUI.id?VUI.clk/60:0;   // (kuiSync, 50b: the tuning clock while a f
 G3.vlvOpen=openVlv;G3.vlvClose=closeVlv;G3.VUI=VUI;   // (tests)
 // Escape closes the faceplate first (window capture runs before the DCS's own document handler)
 window.addEventListener("keydown",e=>{if(e.key==="Escape"&&VUI.id){e.preventDefault();e.stopPropagation();closeVlv();}},true);
+G3.vlvRm=id=>{RMUI.sel=id;rmOpen();};   // (tests: the relationship map on a loop)
 
 /* =========================== v2 app shell wiring =========================== */
 (function(){
