@@ -12,39 +12,41 @@ let C,S;
 const BASE={...P};
 const ECON={price:{"24":642,"28":662,"31":680,"34Super":741},   /* (v6.5 balance: -$15/t, inactive play is punished most) */   // (v6.5: +$30/t: outbound freight is its own cost now, FR; b2: less what the cheaper OCC and energy save per ton, ~$82-84, and $4 for paper made but not yet sold; measured on 12 hands-off seasons)
   energy:68,   // (b2: was 95; a recycled mill buying its power, 2026 prices)
-  chem:25,wage:45,robot:15,overhead:3400,start:2e6,bankrupt:-1.5e6};
+  chem:25,wage:45,robot:15,overhead:2400,start:2e6,bankrupt:-1.5e6};
 const REPAIR={rotortrip:20e3,oscfail:12e3,couchpit:25e3,birdline:200e3,refclash:140e3,steamjoint:90e3,fogfan:35e3,shaft:250e3,dryerfire:400e3,fabric:90e3,felt:45e3,slime:30e3,ragger:15e3,overflow:120e3,chestover:60e3,lwplug:25e3,cscreen:45e3,fscreen:60e3,lcplug:30e3,hdblow:55e3,boiler:60e3,permit:120e3,thkblow:70e3,birdhay:0,wrap:15e3,dye:20e3,flares:0,winderdown:40e3,runner:0,badocc:0,balefire:150e3,fleet:40e3,calloff:10e3,fight:5e3,roof:80e3,highway:0,lightning:200e3,tornado:500e3,beaver:25e3,icedintake:20e3,brownout:10e3,duststorm:25e3,flood:60e3};
 const UGROUPS=[["machine","Paper machine"],["stock","Stock prep"],["yard","Warehouse & logistics"],["maint","Maintenance"],["mgmt","Management"]];
 const MAINT=["birdline","steamjoint","fogfan","shaft","fabric","felt","winderdown","hdblow","lwplug","cscreen","fscreen","lcplug","boiler","thkblow","ragger","overflow","fleet","roof","lightning","icedintake"];
 // v4.1 v19: prices reset after the payback review (most upgrades now pay back within days, not months)
 // t20 balance: the capacity and maintenance upgrades re-priced (40-60% cheaper) so they can pay back inside a season
+// v6.9.2 balance: every upgrade 30% dearer (rounded to $5k) so the daily Round is the biggest boost; missed failures 20% dearer (REPAIR_K); overhead $2,400/h (was $3,400) so most mills still profit
+const REPAIR_K=1.2;
 const UPS=[
- {id:"drive",g:"machine",name:"Drive & gearbox rebuild",lv:[90e3,80e3,70e3],desc:"+150 fpm max speed per level, if the dryers can keep up (heavy grades and a wet sheet reach their limit first)."},   // (v6.5 b5: 25% cheaper: the dryer limit can cap it)
- {id:"deckle",g:"machine",name:"Wider trim (deckle)",lv:[125e3,105e3],desc:"+6% tons at the same speed per level."},
- {id:"shoe",g:"machine",name:"Shoe press",lv:[140e3],desc:"+100 fpm and 12% less energy per ton. A drier sheet into the dryers: about 16% more drying headroom."},
- {id:"winder",g:"machine",name:"Winder rebuild",lv:[220e3,400e3],desc:"+30 t/h winder speed and 40% fewer hayouts per level."},
- {id:"monitor",g:"machine",name:"Fabric & felt monitoring",lv:[170e3,115e3],desc:"Machine failures 40% rarer and fewer sheet breaks, per level."},
- {id:"refiner",g:"machine",name:"Refiner power upgrade",lv:[110e3],desc:"Bigger motors and new plates on the twin refiners between the chest and the headbox. Stronger bonding: $10/t less energy and chemicals."},
- {id:"fire",g:"machine",name:"Fire suppression",lv:[90e3],desc:"Dryer and bale yard fires 60% rarer and half as long."},
- {id:"pulper",g:"stock",name:"Pulper rotor upgrade",lv:[250e3,450e3],desc:"+25 t/h pulper capacity per level."},
- {id:"clean",g:"stock",name:"Screens & cleaners",lv:[60e3,60e3],desc:"+3 points of pulper yield and 40% fewer screen and cleaner breakdowns per level. Adds a second row of LC cleaners."},
- {id:"chest",g:"stock",name:"Bigger stock chest",lv:[100e3,200e3],desc:"+150 t of chest storage per level."},
- {id:"detrash",g:"stock",name:"Detrashing automation",lv:[30e3],desc:"Ragger and overflow upsets 60% rarer. Junk OCC hurts half as much."},
- {id:"feedconv",g:"stock",name:"Automatic bale feed",lv:[30e3],desc:"The conveyor feeds itself. Drivers only unload trucks."},
- {id:"forklift",g:"yard",name:"Electric forklift fleet",lv:[150e3,300e3],desc:"+25% tons per driver-hour per level. Red-tag outages rarer."},
- {id:"docks",g:"yard",name:"Extra dock doors",lv:[180e3,350e3],desc:"+1 receiving and +1 shipping door per level."},
- {id:"agv",g:"yard",name:"Robotic roll handling",lv:[300e3,550e3,800e3],desc:"+2 robot loaders per level. $15/h each, never call off."},
- {id:"wh",g:"yard",name:"Warehouse extension",lv:[150e3,300e3],desc:"+112 rolls (1,400 t) of storage per level."},
- {id:"safety",g:"yard",name:"Safety & HR program",lv:[10e3],desc:"Dock fights and call-offs half as often."},
- {id:"maintcrew",g:"maint",name:"Maintenance techs",lv:[100e3,180e3,260e3],desc:"+2 techs on yellow scooters per level. Repairs finish 20% faster and repair bills are 10% lower per level (in-house work instead of contractors)."},
- {id:"rcfa",g:"maint",name:"Root cause analysis (RCFA)",lv:[155e3,75e3],desc:"Every breakdown is investigated: repeat failures 25% rarer per level."},
- {id:"reliab",g:"maint",name:"Reliability program",lv:[195e3,125e3],desc:"Vibration and oil analysis: drive, felt and fabric failures 40% rarer and repair bills 15% lower per level. Level 1 adds the Vibration Report to your daily rounds."},
- {id:"pmprog",g:"maint",name:"Preventive maintenance",lv:[90e3,180e3,280e3],desc:"Planned shutdown work: all breakdowns 20% rarer and fewer sheet breaks per level. Costs $150/h per level."},
- {id:"stores",g:"maint",name:"Spare parts storeroom",lv:[35e3],desc:"Parts on the shelf: repairs finish 25% faster."},
- {id:"apc",g:"mgmt",name:"Advanced process control",lv:[80e3,80e3],desc:"+2% tons and 4% less energy per level."},
- {id:"contract",g:"mgmt",name:"Long-term OCC contract",lv:[120e3,120e3],desc:"OCC costs $10/t less per level."},
- {id:"sales",g:"mgmt",name:"Sales team",lv:[120e3,120e3],desc:"Paper sells for $12/t more per level."},
- {id:"insure",g:"mgmt",name:"Insurance policy",lv:[150e3],desc:"Repair bills cut 60%. Premium $900/h."},
+ {id:"drive",g:"machine",name:"Drive & gearbox rebuild",lv:[115e3,105e3,90e3],desc:"+150 fpm max speed per level, if the dryers can keep up (heavy grades and a wet sheet reach their limit first)."},   // (v6.5 b5: 25% cheaper: the dryer limit can cap it)
+ {id:"deckle",g:"machine",name:"Wider trim (deckle)",lv:[160e3,135e3],desc:"+6% tons at the same speed per level."},
+ {id:"shoe",g:"machine",name:"Shoe press",lv:[180e3],desc:"+100 fpm and 12% less energy per ton. A drier sheet into the dryers: about 16% more drying headroom."},
+ {id:"winder",g:"machine",name:"Winder rebuild",lv:[285e3,520e3],desc:"+30 t/h winder speed and 40% fewer hayouts per level."},
+ {id:"monitor",g:"machine",name:"Fabric & felt monitoring",lv:[220e3,150e3],desc:"Machine failures 40% rarer and fewer sheet breaks, per level."},
+ {id:"refiner",g:"machine",name:"Refiner power upgrade",lv:[145e3],desc:"Bigger motors and new plates on the twin refiners between the chest and the headbox. Stronger bonding: $10/t less energy and chemicals."},
+ {id:"fire",g:"machine",name:"Fire suppression",lv:[115e3],desc:"Dryer and bale yard fires 60% rarer and half as long."},
+ {id:"pulper",g:"stock",name:"Pulper rotor upgrade",lv:[325e3,585e3],desc:"+25 t/h pulper capacity per level."},
+ {id:"clean",g:"stock",name:"Screens & cleaners",lv:[80e3,80e3],desc:"+3 points of pulper yield and 40% fewer screen and cleaner breakdowns per level. Adds a second row of LC cleaners."},
+ {id:"chest",g:"stock",name:"Bigger stock chest",lv:[130e3,260e3],desc:"+150 t of chest storage per level."},
+ {id:"detrash",g:"stock",name:"Detrashing automation",lv:[40e3],desc:"Ragger and overflow upsets 60% rarer. Junk OCC hurts half as much."},
+ {id:"feedconv",g:"stock",name:"Automatic bale feed",lv:[40e3],desc:"The conveyor feeds itself. Drivers only unload trucks."},
+ {id:"forklift",g:"yard",name:"Electric forklift fleet",lv:[195e3,390e3],desc:"+25% tons per driver-hour per level. Red-tag outages rarer."},
+ {id:"docks",g:"yard",name:"Extra dock doors",lv:[235e3,455e3],desc:"+1 receiving and +1 shipping door per level."},
+ {id:"agv",g:"yard",name:"Robotic roll handling",lv:[390e3,715e3,1040e3],desc:"+2 robot loaders per level. $15/h each, never call off."},
+ {id:"wh",g:"yard",name:"Warehouse extension",lv:[195e3,390e3],desc:"+112 rolls (1,400 t) of storage per level."},
+ {id:"safety",g:"yard",name:"Safety & HR program",lv:[15e3],desc:"Dock fights and call-offs half as often."},
+ {id:"maintcrew",g:"maint",name:"Maintenance techs",lv:[130e3,235e3,340e3],desc:"+2 techs on yellow scooters per level. Repairs finish 20% faster and repair bills are 10% lower per level (in-house work instead of contractors)."},
+ {id:"rcfa",g:"maint",name:"Root cause analysis (RCFA)",lv:[200e3,100e3],desc:"Every breakdown is investigated: repeat failures 25% rarer per level."},
+ {id:"reliab",g:"maint",name:"Reliability program",lv:[255e3,160e3],desc:"Vibration and oil analysis: drive, felt and fabric failures 40% rarer and repair bills 15% lower per level. Level 1 adds the Vibration Report to your daily rounds."},
+ {id:"pmprog",g:"maint",name:"Preventive maintenance",lv:[115e3,235e3,365e3],desc:"Planned shutdown work: all breakdowns 20% rarer and fewer sheet breaks per level. Costs $150/h per level."},
+ {id:"stores",g:"maint",name:"Spare parts storeroom",lv:[45e3],desc:"Parts on the shelf: repairs finish 25% faster."},
+ {id:"apc",g:"mgmt",name:"Advanced process control",lv:[105e3,105e3],desc:"+2% tons and 4% less energy per level."},
+ {id:"contract",g:"mgmt",name:"Long-term OCC contract",lv:[155e3,155e3],desc:"OCC costs $10/t less per level."},
+ {id:"sales",g:"mgmt",name:"Sales team",lv:[155e3,155e3],desc:"Paper sells for $12/t more per level."},
+ {id:"insure",g:"mgmt",name:"Insurance policy",lv:[195e3],desc:"Repair bills cut 60%. Premium $900/h."},
 ];
 const UP=Object.fromEntries(UPS.map(u=>[u.id,u]));
 const LV=id=>(S&&S.up&&S.up[id])||0;
@@ -60,7 +62,7 @@ function applyUpgrades(){
   P.doorRate*=civRecv();   // v5.1 civics: a low Community limits truck hours
   P.costMul=survOn()?survCost():1;   // v4.3 survival: fiber, energy and chemicals, and wages cost more every wave (exactly 1 otherwise)
   P.occPrice=(P.blendP+((S&&S.plan)?leadMkt(S.plan.mkt):0)-10*LV("contract")+P.siteOcc)*P.costMul*leadFibre();   // (v4.4: the leader's fiber deals; Hank runs heavy)
-  P.priceAdd=12*LV("sales")+P.sitePrice+leadPrice()+civPrice(); P.repairMul=(LV("insure")?0.4:1)*(1-0.15*LV("reliab"))*(1-0.1*LV("maintcrew"))*leadBill()*civBill();P.techs=2+2*LV("maintcrew");P.pmCost=150*LV("pmprog"); P.premium=LV("insure")?900:0;   // (t20 balance: $400/h and $1,500/h)
+  P.priceAdd=12*LV("sales")+P.sitePrice+leadPrice()+civPrice(); P.repairMul=REPAIR_K*(LV("insure")?0.4:1)*(1-0.15*LV("reliab"))*(1-0.1*LV("maintcrew"))*leadBill()*civBill();P.techs=2+2*LV("maintcrew");P.pmCost=150*LV("pmprog"); P.premium=LV("insure")?900:0;   // (t20 balance: $400/h and $1,500/h)
   P.breakBase=Math.pow(0.7,LV("monitor"))*Math.pow(0.9,LV("pmprog"))*leadClean()*civBreak();
   P.hayBase=Math.pow(0.6,LV("winder"))*leadClean()*civBreak();
   // the sliders' limits follow the upgrades (v5.2: written only when they change; this runs hourly from the sim)
