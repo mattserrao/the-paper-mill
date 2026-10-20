@@ -6,50 +6,53 @@
      comes in (the poles outside the fence are scenery, 42b: LM.feeder). The electrical tech (03f manning, 07i model)
      works from here: drive changeouts at the lineup, motor jobs and ADX rounds out at the machines with a test cart,
      breaker resets after a blackout. The model decides everything; this only shows it. ---- */
-  const MCC={x0:4,x1:18,z0:24,z1:31,h:4.4,door:[11,24],desk:[6.4,25.6],riser:[20,62],tx:[20.2,27]};G3.MCC=MCC;
+  const MCC={x0:4,x1:18,z0:24,z1:31,h:4.4,door:[4,27.5],desk:[15.4,29.7],riser:[20,62],tx:[20.2,27]};G3.MCC=MCC;
   // where the rounds and the repairs happen at each critical machine (walkable spots, checked against the nav grid), and what to face
   const ASPOT={pulp:[14,-8,16,-14],refA:[56.5,-12.2,60,-14],refB:[57.2,-8.8,60,-8.5],fan:[52,-6.5,51,-9.3],couch:[50,15.2,50,9],pr1:[39,15.2,39,9],pr2:[34.5,15.2,34.5,9],
     dry:[14,16.4,14,9],reel:[-3,16.4,-4,9],wind:[-14.6,14.6,-16,9]};G3.ASPOT=ASPOT;
-  // ---- the building ----
-  slab(MCC.x0-1,MCC.x1+4,MCC.z0-1.2,MCC.z1+1,M.slab,0.03);box2(MCC.x0,MCC.x1,MCC.z0,MCC.z1,1.2);
-  {const W=MCC.x1-MCC.x0,D=MCC.z1-MCC.z0,H=MCC.h,cx=(MCC.x0+MCC.x1)/2,cz=(MCC.z0+MCC.z1)/2,dx=MCC.door[0];
-    ribWall(W,H,0.3,cx,H/2,MCC.z1);ribWall(0.3,H,D,MCC.x0,H/2,cz);ribWall(0.3,H,D,MCC.x1,H/2,cz);
-    ribWall(dx-0.9-MCC.x0,H,0.3,(MCC.x0+dx-0.9)/2,H/2,MCC.z0);ribWall(MCC.x1-(dx+0.9),H,0.3,(dx+0.9+MCC.x1)/2,H/2,MCC.z0);ribWall(1.8,H-2.4,0.3,dx,2.4+(H-2.4)/2,MCC.z0);
-    const rm=mat("brand",{transparent:true,roughness:0.55}),rg=new THREE.Group();scene.add(rg);
+  // ---- the building: the lineups stand along the north wall facing the camera; the door is in the west wall; the south
+  // wall above knee height lifts off with the roof (like the machine hall's shell), so the room shows in a close cutaway ----
+  slab(MCC.x0-2,MCC.x1+4,MCC.z0-1,MCC.z1+1,M.slab,0.03);box2(MCC.x0,MCC.x1,MCC.z0,MCC.z1,1.2);
+  {const W=MCC.x1-MCC.x0,D=MCC.z1-MCC.z0,H=MCC.h,cx=(MCC.x0+MCC.x1)/2,cz=(MCC.z0+MCC.z1)/2,dz=MCC.door[1];
+    ribWall(W,H,0.3,cx,H/2,MCC.z0);ribWall(0.3,H,D,MCC.x1,H/2,cz);ribWall(W,1.1,0.3,cx,0.55,MCC.z1);
+    ribWall(0.3,H,dz-0.9-MCC.z0,MCC.x0,H/2,(MCC.z0+dz-0.9)/2);ribWall(0.3,H,MCC.z1-(dz+0.9),MCC.x0,H/2,(dz+0.9+MCC.z1)/2);ribWall(0.3,H-2.4,1.8,MCC.x0,2.4+(H-2.4)/2,dz);
+    const rm=mat("brand",{transparent:true,roughness:0.55}),wm=mat("g-wall",{transparent:true,roughness:0.7}),rg=new THREE.Group();scene.add(rg);
     const roof=new THREE.Mesh(new THREE.BoxGeometry(W+0.6,0.35,D+0.6),rm);roof.position.set(cx,H+0.17,cz);roof.castShadow=true;rg.add(roof);
+    const sw=new THREE.Mesh(new THREE.BoxGeometry(W+0.3,H-1.1,0.3),wm);sw.position.set(cx,1.1+(H-1.1)/2,MCC.z1);sw.castShadow=true;sw.receiveShadow=true;rg.add(sw);
+    const gl=mat("g-glass",{transparent:true,roughness:0.12,metalness:0.45});[6.5,9.8,13.1,16.0].forEach(x=>{const g=new THREE.Mesh(new THREE.BoxGeometry(1.5,1.0,0.08),gl);g.position.set(x,2.4,MCC.z1+0.17);rg.add(g);});
     // rooftop: the drive room's cooling units (the drives make heat)
     const ac=mat("g-metal",{transparent:true,metalness:0.35,roughness:0.5});[7,15].forEach(x=>{const u=new THREE.Mesh(new THREE.BoxGeometry(1.8,0.9,1.4),ac);u.position.set(x,H+0.8,cz+1.2);u.castShadow=true;rg.add(u);});
-    rg.userData.mats=[rm,ac];roofs.push(rg);
-    // the front, toward the hall: windows, the sign and the door
-    const fw=[5.6,8.2,14.2,16.4].map(v=>[MCC.x1-v,1.4,1.4,1.0]);const fs=facade(W,H-0.1,fw,[MCC.x1-13.6,3.05,4.2,0.7,"MCC · ELECTRICAL"],MCC.x1-dx);fs.rotation.y=Math.PI;fs.position.set(cx,(H-0.1)/2,MCC.z0-0.17);scene.add(fs);
-    box(1.6,2.3,0.12,M.ink,dx,1.15,MCC.z0-0.05,scene,false);box(2.2,0.12,1.0,M.brand,dx,2.6,MCC.z0-0.55,scene,false);
-    // the danger sign by the door
+    rg.userData.mats=[rm,wm,gl,ac];roofs.push(rg);
+    // toward the hall: windows and the sign; the west end: the door, its canopy and the danger sign
+    const fw=[2.0,4.6,9.4,12.0].map(v=>[v,1.4,1.4,1.0]);const fs=facade(W,H-0.1,fw.map(([c,...r])=>[W-c,...r]),[W-7.0,3.05,4.6,0.7,"MCC · ELECTRICAL"]);fs.rotation.y=Math.PI;fs.position.set(cx,(H-0.1)/2,MCC.z0-0.17);scene.add(fs);
+    const fe=facade(D,H-0.1,[[1.4,1.4,1.2,1.0],[5.7,1.4,1.0,1.0]],null,dz-MCC.z0);fe.rotation.y=-Math.PI/2;fe.position.set(MCC.x0-0.17,(H-0.1)/2,cz);scene.add(fe);
+    box(0.12,2.3,1.6,M.ink,MCC.x0-0.05,1.15,dz,scene,false).userData.noNav=true;   /* (an open doorway to the walkers) */box(1.0,0.12,2.2,M.brand,MCC.x0-0.55,2.6,dz,scene,false);
     {const c=document.createElement("canvas");c.width=128;c.height=96;const g=c.getContext("2d");g.fillStyle="#ffffff";g.fillRect(0,0,128,96);g.fillStyle="#c8281e";g.fillRect(0,0,128,30);
       g.fillStyle="#ffffff";g.font="900 22px system-ui,sans-serif";g.textAlign="center";g.fillText("DANGER",64,23);g.fillStyle="#1c2233";g.font="800 15px system-ui,sans-serif";g.fillText("HIGH VOLTAGE",64,55);g.fillText("480 V",64,78);
-      const t=new THREE.CanvasTexture(c);t.colorSpace=THREE.SRGBColorSpace;const p=new THREE.Mesh(new THREE.PlaneGeometry(0.8,0.6),new THREE.MeshBasicMaterial({map:t}));p.rotation.y=Math.PI;p.position.set(dx+1.4,1.6,MCC.z0-0.19);scene.add(p);}
+      const t=new THREE.CanvasTexture(c);t.colorSpace=THREE.SRGBColorSpace;const p=new THREE.Mesh(new THREE.PlaneGeometry(0.8,0.6),new THREE.MeshBasicMaterial({map:t}));p.rotation.y=-Math.PI/2;p.position.set(MCC.x0-0.19,1.6,dz+1.6);scene.add(p);}
     blob(cx,cz,9);}
   // ---- the lineups: a cabinet per drive along the back wall, facing the door; the incoming section at the east end ----
   const LEDM={run:new THREE.MeshBasicMaterial({color:lin0("#3fe08a")}),idle:new THREE.MeshBasicMaterial({color:lin0("#e8b23a")}),fault:new THREE.MeshBasicMaterial({color:lin0("#ff3b2f")}),off:new THREE.MeshBasicMaterial({color:lin0("#4a5262")})};
   const cabM=mat("g-frame",{metalness:0.2,roughness:0.6}),modM={old:M.bad,new:M.ok};
-  const CAB={},CABZ=MCC.z1-0.55,dynMark=o=>{if(G3.SM&&G3.SM.dyn)G3.SM.dyn.add(o);else (G3.dynLater||(G3.dynLater=[])).push(o);return o;};
+  const CAB={},CABZ=MCC.z0+0.55,dynMark=o=>{if(G3.SM&&G3.SM.dyn)G3.SM.dyn.add(o);else (G3.dynLater||(G3.dynLater=[])).push(o);return o;};
   function mccPlate(txt,x,y,z){const c=document.createElement("canvas");c.width=192;c.height=40;const g=c.getContext("2d");g.fillStyle="#1c2233";g.fillRect(0,0,192,40);g.fillStyle="#ffffff";g.font="800 24px system-ui,sans-serif";g.textAlign="center";g.fillText(txt,96,29);
-    const t=new THREE.CanvasTexture(c);t.colorSpace=THREE.SRGBColorSpace;const p=new THREE.Mesh(new THREE.PlaneGeometry(1.2,0.25),new THREE.MeshBasicMaterial({map:t}));p.rotation.y=Math.PI;p.position.set(x,y,z);scene.add(p);return p;}
+    const t=new THREE.CanvasTexture(c);t.colorSpace=THREE.SRGBColorSpace;const p=new THREE.Mesh(new THREE.PlaneGeometry(1.2,0.25),new THREE.MeshBasicMaterial({map:t}));p.position.set(x,y,z);scene.add(p);return p;}
   {let x=MCC.x0+1.0;LINEUPS.forEach(([ln,,tag])=>{const list=ASSETS.filter(A=>A.ln===ln),x0=x;
-      list.forEach(A=>{const g=new THREE.Group();g.position.set(x+0.42,0,CABZ);scene.add(g);
+      list.forEach(A=>{const g=new THREE.Group();g.position.set(x+0.42,0,CABZ);g.rotation.y=Math.PI;scene.add(g);
         box(0.84,2.3,0.6,cabM,0,1.15,0,g);box(0.84,0.12,0.64,M.ink,0,2.36,0,g,false);
         // the door, hinged on its west edge, with a light and a keypad; the drive module behind it
         const hinge=new THREE.Group();hinge.position.set(-0.4,0,-0.31);g.add(hinge);dynMark(hinge);const dr=box(0.8,2.1,0.04,cabM,0.4,1.1,0,hinge,false);dr.userData.noNav=true;
         const led=new THREE.Mesh(new THREE.BoxGeometry(0.1,0.1,0.03),LEDM.run);led.position.set(0.62,1.85,-0.03);hinge.add(led);box(0.22,0.16,0.03,M.ink,0.4,1.55,-0.03,hinge,false);
         const mod=dynMark(box(0.6,0.7,0.4,modM.new,0,1.1,0.02,g,false));mod.visible=false;
-        CAB[A.id]={g,hinge,led,mod,home:[x+0.42,CABZ],stand:[x+0.42,CABZ-1.25],open:0};x+=0.9;});
-      mccPlate(tag,(x0+x-0.08)/2,2.65,CABZ-0.32);x+=0.45;});
+        CAB[A.id]={g,hinge,led,mod,home:[x+0.42,CABZ],stand:[x+0.42,CABZ+1.3],open:0};x+=0.9;});
+      mccPlate(tag,(x0+x-0.08)/2,2.65,CABZ+0.32);x+=0.45;});
     // incoming: the main breaker and the 480 V bus, two wider sections
-    [0,1].forEach(k=>{box(1.1,2.4,0.7,cabM,x+0.55+k*1.15,1.2,CABZ+0.05,scene);box(0.18,0.18,0.03,LEDM.run,x+0.85+k*1.15,1.95,CABZ-0.31,scene,false);});
-    mccPlate("MAIN 480 V",x+1.1,2.75,CABZ-0.3);CAB.main={stand:[x+1.1,CABZ-1.3]};
+    [0,1].forEach(k=>{box(1.1,2.4,0.7,cabM,x+0.55+k*1.15,1.2,CABZ-0.05,scene);box(0.18,0.18,0.03,LEDM.run,x+0.85+k*1.15,1.95,CABZ+0.31,scene,false);});
+    mccPlate("MAIN 480 V",x+1.1,2.75,CABZ+0.3);CAB.main={stand:[x+1.1,CABZ+1.35]};
     // the desk with the tester's laptop, and the rack of spare drives
     box(1.6,0.08,0.8,M.kraft,MCC.desk[0],0.78,MCC.desk[1]-0.45,scene,false);[-0.7,0.7].forEach(s=>box(0.08,0.74,0.7,M.steel,MCC.desk[0]+s,0.37,MCC.desk[1]-0.45,scene,false));
     box(0.42,0.03,0.3,M.ink,MCC.desk[0],0.84,MCC.desk[1]-0.5,scene,false);
-    box(0.5,2.0,1.8,M.steel,MCC.x1-0.6,1.0,MCC.z0+1.4,scene);for(let k=0;k<3;k++)box(0.42,0.36,0.5,M.ok,MCC.x1-0.6,0.5+k*0.62,MCC.z0+1.0+(k%2)*0.6,scene,false);}
+    box(0.5,2.0,1.8,M.steel,MCC.x1-0.6,1.0,MCC.z1-3.3,scene);for(let k=0;k<3;k++)box(0.42,0.36,0.5,M.ok,MCC.x1-0.85,0.5+k*0.62,MCC.z1-3.7+(k%2)*0.6,scene,false);}
   // ---- the transformer on its pad, and the duct bank to the riser pole at the fence ----
   {const [tx,tz]=MCC.tx;slab(tx-1.6,tx+1.6,tz-1.8,tz+1.8,M.slab,0.05);box(2.2,2.2,2.6,M.steel,tx,1.1,tz);for(let k=0;k<6;k++)box(0.3,1.6,0.06,M.metal,tx+1.24,1.0,tz-1+k*0.4,scene,false);
     [-0.6,0,0.6].forEach(o=>{const b=new THREE.Mesh(new CylG(0.09,0.12,0.6,8),M.wind);b.position.set(tx,2.5,tz+o);scene.add(b);});
@@ -66,7 +69,7 @@
   const elecM=mat("g-tech");const ET={w:null,cart:null,st:"home",tgt:null,ph:0,job:null};G3.ET=ET;
   function elecBuild(){if(ET.w)return;const w=worker(elecM,M.hatTeam.A,{vest:HIVIS.orange,radio:true});w.position.set(MCC.desk[0],0,MCC.desk[1]);ET.w=w;
     const c=new THREE.Group();box(0.8,0.7,0.5,M.ink,0,0.55,0,c);box(0.5,0.32,0.08,M.ok,0.05,1.06,-0.05,c,false);box(0.06,0.7,0.5,M.steel,-0.43,1.0,0,c,false);
-    [[-0.3,-0.2],[-0.3,0.2],[0.3,-0.2],[0.3,0.2]].forEach(([a,b])=>cylZ(0.09,0.06,M.ink,a,0.09,b,8,c));c.userData.load=true;c.position.set(MCC.desk[0]+1.6,0,MCC.desk[1]+0.6);scene.add(c);dynMark(c);ET.cart=c;}
+    [[-0.3,-0.2],[-0.3,0.2],[0.3,-0.2],[0.3,0.2]].forEach(([a,b])=>cylZ(0.09,0.06,M.ink,a,0.09,b,8,c));c.userData.load=true;c.position.set(MCC.desk[0]-1.8,0,MCC.desk[1]+0.6);scene.add(c);dynMark(c);ET.cart=c;}
   elecBuild();   // (built with the scene, so the start-up precompile sees it)
   const rlyJob=()=>{if(!S||!S.inc)return null;for(const i of S.inc)if(ENEED(i.id)&&i.eSlot===0)return i;return null;};
   const rlyRnd=(who)=>{const R=S&&S.rel;if(!R||!R.rd)return null;for(const x of R.rd.list)if(x.who===who&&x.st==="go")return x;return null;};
@@ -83,11 +86,24 @@
     const sp=4.2*clamp(simRate()/20,1,3.5);
     // the cart goes along on ADX rounds (pushed in front), otherwise it waits by the desk
     const cartOut=what==="adx";
-    if(moveP(w,tx,tz,what==="adx"?sp*0.75:sp,rdt)){face(w,fx,fz,rdt);pose(w,ps==="run"?"idle":ps,now);
+    // in and out through the west door (the room is walled off from the walkers' grid): scripted legs between the room,
+    // the door and the building's north-west corner, then the walkers' path-finding for the rest of the way
+    const q=w.position,dz=MCC.door[1],inR=(x,z)=>x>MCC.x0-0.05&&x<MCC.x1&&z>MCC.z0&&z<MCC.z1,ti=inR(tx,tz),ri=inR(q.x,q.z),
+      nearW=q.x<=MCC.x0-0.05&&q.x>MCC.x0-3.2&&q.z>MCC.z0-1.5&&q.z<MCC.z1+1,dIn=[MCC.x0+1.0,dz],dOut=[MCC.x0-1.4,dz],C1=[MCC.x0-1.6,MCC.z0-1.7];
+    const line=(x,z)=>{const dx=x-q.x,dzz=z-q.z,d=Math.hypot(dx,dzz);if(d<0.06){q.x=x;q.z=z;return true;}const st=Math.min(d,sp*rdt);q.x+=dx/d*st;q.z+=dzz/d*st;w.rotation.y=Math.atan2(-dzz,dx);return false;};
+    const onDoor=Math.abs(q.z-dz)<0.08&&q.x>MCC.x0-1.45&&q.x<MCC.x0+1.05;let scripted=true;
+    if(ti&&!ri){if(onDoor)line(dIn[0],dIn[1]);else if(nearW)line(dOut[0],dOut[1]);else scripted=false;}
+    else if(!ti&&ri){if(onDoor)line(dOut[0],dOut[1]);else line(dIn[0],dIn[1]);}
+    else if(!ti&&nearW){if(onDoor&&q.x>dOut[0]+0.05)line(dOut[0],dOut[1]);else line(C1[0],C1[1]);}
+    else scripted=false;
+    if(scripted){w.userData.wp=null;w.userData.wpKey=null;pose(w,"walk",now);}
+    else if(ti&&!ri&&moveP(w,C1[0],C1[1],sp,rdt)){q.x=C1[0]+0.01;q.z=C1[1]+0.4;}   // (back from a job: to the corner, then the scripted legs)
+    else if(ti&&!ri)pose(w,"walk",now);
+    else if(moveP(w,tx,tz,what==="adx"?sp*0.75:sp,rdt)){face(w,fx,fz,rdt);pose(w,ps==="run"?"idle":ps,now);
       if(ps==="fix"&&Math.random()<rdt*4){const a=w.rotation.y;for(let j=0;j<2;j++)emit("spark",w.position.x+Math.cos(a)*0.8,1.3,w.position.z-Math.sin(a)*0.8,R()*3,1.5+Math.random()*2,R()*3,0.3,0.18,"#7fd0ff",1);}}
     else pose(w,what==="adx"?"pull":"walk",now);
     {const c=ET.cart,a=w.rotation.y;if(cartOut){c.position.x=w.position.x+Math.cos(a)*0.95;c.position.z=w.position.z-Math.sin(a)*0.95;c.rotation.y=a;}
-      else if(Math.hypot(c.position.x-(MCC.desk[0]+1.6),c.position.z-(MCC.desk[1]+0.6))>0.05){c.position.set(MCC.desk[0]+1.6,0,MCC.desk[1]+0.6);c.rotation.y=0;}}
+      else if(Math.hypot(c.position.x-(MCC.desk[0]-1.8),c.position.z-(MCC.desk[1]+0.6))>0.05){c.position.set(MCC.desk[0]-1.8,0,MCC.desk[1]+0.6);c.rotation.y=0;}}
     // the cabinets: lights follow each drive; the one being changed has its door open and the module coming out and going in
     for(const A of ASSETS){const c=CAB[A.id];if(!c)continue;const st=S.rel?rlyDrvSt(A.id):"run",m=st==="run"?LEDM.run:st==="idle"?LEDM.idle:st==="off"?LEDM.off:LEDM.fault;if(c.led.material!==m)c.led.material=m;
       const busy=job&&job.id==="drivefail"&&job.asset===A.id&&job.eGo,tgt=busy&&p>0.08&&p<0.92?1:0;c.open+=(tgt-c.open)*Math.min(1,rdt*3);c.hinge.rotation.y=-c.open*1.7;
