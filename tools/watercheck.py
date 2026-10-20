@@ -1,6 +1,6 @@
 """v6.5.6 mass balance check. Water: over a season stretch with upsets on, fresh + bale water + beater water (+ any
 shortfall) = evaporation + paper + rejects + sludge + outfall + the change in the white water chest and the storage
-chest's water; the per-ton numbers sit where the old fixed ones did (≈9.9 in, ≈8.4 out). The white water chest: a
+chest's water; the per-ton numbers (v6.8.3, showers 1.65 m³/t: ≈3.9 in, ≈2.7 out; before, ≈9.9 / 8.4). The white water chest: a
 machine stop draws it down and fresh water makes up; with the intake iced as well it runs dry and the stock runs thick
 (weight off spec). Fiber: hayout broke goes to the beater bay; soaked or burned bales, chest spills and scrapped rolls
 show in the process flow's waste. Fails on any page error.
@@ -36,13 +36,13 @@ with sync_playwright() as pw:
     res = r["in"] - r["out"] - r["dinv"]
     ok("water balance closes over 6 days with upsets (in − out − Δinventory ≈ 0)", abs(res) < 1e-3 * max(1, r["in"]), f'in {r["in"]:.0f} out {r["out"]:.0f} Δinv {r["dinv"]:.0f} residual {res:.3f}; {json.dumps(r["parts"])}')
     per = lambda k: r["parts"][k] / max(1, r["parts"]["paper"])   # (a ton of paper made, beater included)
-    ok("fresh water near 9.9 m³ a ton (was the fixed figure)", 8.5 < per("fresh") < 11.5, f'{per("fresh"):.2f} m³/t')
-    ok("outfall near 8.4 m³ a ton", 7.0 < per("out") < 10.0, f'{per("out"):.2f} m³/t')
+    ok("fresh water 3-6 m³ a ton (v6.8.3: showers 1.65 m³/t; was ~9.9 with 8)", 3.0 < per("fresh") < 6.0, f'{per("fresh"):.2f} m³/t')
+    ok("outfall 2-5 m³ a ton (v6.8.3; was ~8.4)", 2.0 < per("out") < 5.0, f'{per("out"):.2f} m³/t')
     ok("dryer evaporation about 1.1 m³ a ton", 0.95 < per("evap") < 1.25, f'{per("evap"):.2f} m³/t')
 
     # ---- steady running: chest overflows a little to the sewer, no makeup ----
     s = R("", 240)
-    ok("steady: the white water chest sits at its overflow, no fresh makeup", s["r"]["make"] < 1 and s["r"]["over"] > 50 and abs(s["L"] / 2000 - 0.7) < 0.02, json.dumps({k: round(v) for k, v in s["r"].items()}))
+    ok("steady: the white water chest sits at its overflow, no fresh makeup", s["r"]["make"] < 1 and s["r"]["over"] > 5 and abs(s["L"] / 2000 - 0.7) < 0.02, json.dumps({k: round(v) for k, v in s["r"].items()}))
 
     # ---- a machine stop: stock prep keeps pulping, the chest draws down, fresh water makes up ----
     d = R("S.tank=60;P.trigger('shaft');", 120)   # (a low storage chest, so stock prep keeps pulping)
