@@ -1496,3 +1496,10 @@ body.pmpop .popmain[data-v="dcs"] #dcsOv .dcs{max-width:1180px;margin:0 auto}
 .cvrly{margin:0;font:500 13px var(--f-body);padding:6px 10px;border-left:3px solid var(--warn);background:color-mix(in srgb,var(--warn) 8%,var(--panel));border-radius:6px}.cvrly b{display:block;font:700 11px var(--f-body);letter-spacing:.06em;text-transform:uppercase;color:var(--warn)}
 .rplan .prow{grid-template-columns:1fr}.rplan .seg button{font-size:12px;padding:6px 6px}.rplan .linkb{color:var(--brand);margin-top:6px;align-self:flex-start}
 @media (max-width:560px){.rchg{grid-template-columns:1fr}.rlytab td:nth-child(4){display:none}.rlytab th:nth-child(4){display:none}}
+/* ---- v6.10 click for info ---- */
+.infopop{position:fixed;z-index:150;background:var(--panel);color:var(--ink);border:1px solid var(--line);border-radius:12px;box-shadow:0 10px 30px rgba(0,0,0,.18);padding:10px 12px;font:500 13px var(--f-body);display:flex;flex-direction:column;gap:4px}
+.infopop .iph{display:flex;align-items:center;justify-content:space-between;gap:8px}.infopop .iph b{font:700 15px var(--f-body);display:flex;align-items:center;gap:6px}
+.infopop .ipx{border:0;background:none;color:var(--muted);font:700 14px var(--f-body);width:28px;height:28px;border-radius:50%}
+.infopop small{color:var(--muted);font-size:12px}.infopop p{margin:2px 0 0}.infopop .ipc{color:var(--warn);font-size:12px}
+.infopop .iprel{margin-top:4px;padding:8px;border-radius:8px;background:#16233a;display:flex;flex-wrap:wrap;gap:6px 10px;align-items:center}.infopop .iprel>b{width:100%;color:#dbe6f6;font-size:12px}
+.infopop .iprel .linkb{color:#7fb2ff;font-size:12px}

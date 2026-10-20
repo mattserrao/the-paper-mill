@@ -11,7 +11,7 @@ const CHEST_GAL=()=>GAL(P.tankCap/(WAT.cs/100));      // the stock storage chest
 const MCHEST_GAL=60000;                                // the machine chest
 const fmtGal=g=>{const a=Math.abs(g),s=g<0?"−":"";return s+(a>=1e6?(a/1e6).toFixed(2)+"M gal":a>=1e4?Math.round(a/1e3)+"k gal":Math.round(a).toLocaleString()+" gal");};
 const fmtGpm=g=>(g>=1e4?(g/1e3).toFixed(1)+"k":Math.round(g).toLocaleString())+" gpm";
-const TAG_INT=new Set(["orders","trucks","rolls","t","A","kW","fpm","mL CSF"]);
+const TAG_INT=new Set(["orders","trucks","rolls","t","A","kW","fpm","mL CSF","V"]);
 const TAG_AREA={SPOT:"Stock prep",WET:"Wet end",DET:"Dry end",UTIL:"Utilities",WATER:"Water",QCS:"Quality",PLAN:"Planning & yard",DRV:"Drives (MCC)"};
 const _R=()=>S.rates||{};
 const wr=()=>S.wat&&S.wat.r;
@@ -77,7 +77,8 @@ const TAGS=[
   ["dl_pulp","Pulper rotor drive load","DRV","%",r=>rlyLoad("pulp",r),""],["dl_refA","Refiner A drive load","DRV","%",r=>rlyLoad("refA",r),""],["dl_refB","Refiner B drive load","DRV","%",r=>rlyLoad("refB",r),""],
   ["dl_fan","Fan pump drive load","DRV","%",r=>rlyLoad("fan",r),""],["dl_couch","Couch roll drive load","DRV","%",r=>rlyLoad("couch",r),""],["dl_pr1","1st press drive load","DRV","%",r=>rlyLoad("pr1",r),""],
   ["dl_pr2","2nd press drive load","DRV","%",r=>rlyLoad("pr2",r),""],["dl_dry","Dryer section drive load","DRV","%",r=>rlyLoad("dry",r),""],["dl_reel","Reel drum drive load","DRV","%",r=>rlyLoad("reel",r),""],
-  ["dl_wind","Winder drum drive load","DRV","%",r=>rlyLoad("wind",r),""],["mcckw","MCC drive power","DRV","kW",r=>rlyMccKw(r),""]];
+  ["dl_wind","Winder drum drive load","DRV","%",r=>rlyLoad("wind",r),""],["mcckw","MCC drive power","DRV","kW",r=>rlyMccKw(r),""],
+  ["mvkv","13.8 kV feeder","DRV","kV",()=>rlyMV(),""],["dc_SP","MCC-1 DC bus","DRV","V",()=>rlyDC("SP"),""],["dc_PM","MCC-2 DC bus","DRV","V",()=>rlyDC("PM"),""],["dc_WD","MCC-3 DC bus","DRV","V",()=>rlyDC("WD"),""]];
 const TAGI=Object.fromEntries(TAGS.map((t,i)=>[t[0],i]));
 const tagName=id=>{const t=TAGS[TAGI[id]];return t?t[1]:id;};
 const tagUnit=id=>{const t=TAGS[TAGI[id]];return t?t[3]:"";};

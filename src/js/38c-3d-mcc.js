@@ -34,21 +34,30 @@
   // ---- the lineups: a cabinet per drive along the back wall, facing the door; the incoming section at the east end ----
   const LEDM={run:new THREE.MeshBasicMaterial({color:lin0("#3fe08a")}),idle:new THREE.MeshBasicMaterial({color:lin0("#e8b23a")}),fault:new THREE.MeshBasicMaterial({color:lin0("#ff3b2f")}),off:new THREE.MeshBasicMaterial({color:lin0("#4a5262")})};
   const cabM=mat("g-frame",{metalness:0.2,roughness:0.6}),modM={old:M.bad,new:M.ok};
-  const CAB={},CABZ=MCC.z0+0.55,dynMark=o=>{if(G3.SM&&G3.SM.dyn)G3.SM.dyn.add(o);else (G3.dynLater||(G3.dynLater=[])).push(o);return o;};
+  let RECT3={};const CAB={},CABZ=MCC.z0+0.55,dynMark=o=>{if(G3.SM&&G3.SM.dyn)G3.SM.dyn.add(o);else (G3.dynLater||(G3.dynLater=[])).push(o);return o;};
   function mccPlate(txt,x,y,z){const c=document.createElement("canvas");c.width=192;c.height=40;const g=c.getContext("2d");g.fillStyle="#1c2233";g.fillRect(0,0,192,40);g.fillStyle="#ffffff";g.font="800 24px system-ui,sans-serif";g.textAlign="center";g.fillText(txt,96,29);
     const t=new THREE.CanvasTexture(c);t.colorSpace=THREE.SRGBColorSpace;const p=new THREE.Mesh(new THREE.PlaneGeometry(1.2,0.25),new THREE.MeshBasicMaterial({map:t}));p.position.set(x,y,z);scene.add(p);return p;}
-  {let x=MCC.x0+1.0;LINEUPS.forEach(([ln,,tag])=>{const list=ASSETS.filter(A=>A.ln===ln),x0=x;
-      list.forEach(A=>{const g=new THREE.Group();g.position.set(x+0.42,0,CABZ);g.rotation.y=Math.PI;scene.add(g);
-        box(0.84,2.3,0.6,cabM,0,1.15,0,g);box(0.84,0.12,0.64,M.ink,0,2.36,0,g,false);
-        // the door, hinged on its west edge, with a light and a keypad; the drive module behind it
-        const hinge=new THREE.Group();hinge.position.set(-0.4,0,-0.31);g.add(hinge);dynMark(hinge);const dr=box(0.8,2.1,0.04,cabM,0.4,1.1,0,hinge,false);dr.userData.noNav=true;
-        const led=new THREE.Mesh(new THREE.BoxGeometry(0.1,0.1,0.03),LEDM.run);led.position.set(0.62,1.85,-0.03);hinge.add(led);box(0.22,0.16,0.03,M.ink,0.4,1.55,-0.03,hinge,false);
-        const mod=dynMark(box(0.6,0.7,0.4,modM.new,0,1.1,0.02,g,false));mod.visible=false;
-        CAB[A.id]={g,hinge,led,mod,home:[x+0.42,CABZ],stand:[x+0.42,CABZ+1.3],open:0};x+=0.9;});
-      mccPlate(tag,(x0+x-0.08)/2,2.65,CABZ+0.32);x+=0.45;});
-    // incoming: the main breaker and the 480 V bus, two wider sections
-    [0,1].forEach(k=>{box(1.1,2.4,0.7,cabM,x+0.55+k*1.15,1.2,CABZ-0.05,scene);box(0.18,0.18,0.03,LEDM.run,x+0.85+k*1.15,1.95,CABZ+0.31,scene,false);});
-    mccPlate("MAIN 480 V",x+1.1,2.75,CABZ+0.3);CAB.main={stand:[x+1.1,CABZ+1.35]};
+  // v6.10 the power chain inside: the incoming 480 V section (from the transformer outside), then each lineup: its rectifier
+  // (AC to ~650 V DC, a grey cabinet with a heat-sink grille) and its drives (inverters) on a copper DC busbar along the top
+  const rectM=mat("g-metal",{metalness:0.3,roughness:0.5}),cuM=new StdMat({color:lin0("#c47a3a"),roughness:0.35,metalness:0.6});RECT3={};
+  {let x=MCC.x0+0.6;
+    [0,1].forEach(k=>{box(0.78,2.4,0.7,cabM,x+0.39+k*0.8,1.2,CABZ-0.05,scene);box(0.16,0.16,0.03,LEDM.run,x+0.6+k*0.8,1.95,CABZ+0.31,scene,false);});
+    mccPlate("MAIN 480 V",x+0.8,2.75,CABZ+0.3);CAB.main={stand:[x+0.8,CABZ+1.35]};x+=1.9;
+    LINEUPS.forEach(([ln,,tag])=>{const list=ASSETS.filter(A=>A.ln===ln),x0=x;
+      // the rectifier
+      box(0.86,2.4,0.68,rectM,x+0.43,1.2,CABZ-0.02,scene);for(let k=0;k<6;k++)box(0.6,0.05,0.03,M.ink,x+0.43,0.5+k*0.12,CABZ+0.33,scene,false);
+      const rl=new THREE.Mesh(new THREE.BoxGeometry(0.12,0.12,0.03),LEDM.run);rl.position.set(x+0.68,1.95,CABZ+0.34);scene.add(rl);dynMark(rl);
+      RECT3[ln]={led:rl,stand:[x+0.43,CABZ+1.3],home:[x+0.43,CABZ]};x+=0.92;
+      list.forEach(A=>{const g=new THREE.Group();g.position.set(x+0.34,0,CABZ);g.rotation.y=Math.PI;scene.add(g);
+        box(0.68,2.3,0.6,cabM,0,1.15,0,g);box(0.68,0.12,0.64,M.ink,0,2.36,0,g,false);
+        // the door, hinged on one edge, with a light and a keypad; the drive (inverter) module behind it
+        const hinge=new THREE.Group();hinge.position.set(-0.32,0,-0.31);g.add(hinge);dynMark(hinge);const dr=box(0.64,2.1,0.04,cabM,0.32,1.1,0,hinge,false);dr.userData.noNav=true;
+        const led=new THREE.Mesh(new THREE.BoxGeometry(0.1,0.1,0.03),LEDM.run);led.position.set(0.5,1.85,-0.03);hinge.add(led);box(0.2,0.16,0.03,M.ink,0.32,1.55,-0.03,hinge,false);
+        const mod=dynMark(box(0.5,0.7,0.4,modM.new,0,1.1,0.02,g,false));mod.visible=false;
+        CAB[A.id]={g,hinge,led,mod,home:[x+0.34,CABZ],stand:[x+0.34,CABZ+1.3],open:0};x+=0.72;});
+      // the DC bus: a copper bar over the rectifier and its drives
+      box(x-x0-0.06,0.08,0.1,cuM,(x0+x-0.04)/2,2.5,CABZ+0.2,scene,false);
+      mccPlate(tag+" · DC",(x0+x-0.04)/2,2.72,CABZ+0.32);x+=0.3;});
     // the desk with the tester's laptop, and the rack of spare drives
     box(1.6,0.08,0.8,M.kraft,MCC.desk[0],0.78,MCC.desk[1]-0.45,scene,false);[-0.7,0.7].forEach(s=>box(0.08,0.74,0.7,M.steel,MCC.desk[0]+s,0.37,MCC.desk[1]-0.45,scene,false));
     box(0.42,0.03,0.3,M.ink,MCC.desk[0],0.84,MCC.desk[1]-0.5,scene,false);
@@ -67,7 +76,15 @@
 
   // ---- the electrical tech: hard hat by team, orange vest, radio; a test cart for the ADX rounds ----
   const elecM=mat("g-tech");const ET={w:null,cart:null,st:"home",tgt:null,ph:0,job:null};G3.ET=ET;
+  // v6.10 arc-flash PPE: an arc-rated suit (navy coverall and hood) with a tinted face shield, put on at the MCC door
+  const arcM=new StdMat({color:lin0("#2a3f63"),roughness:0.8,metalness:0.02}),shieldM=new StdMat({color:lin0("#3a2a12"),roughness:0.15,metalness:0.4});
+  function elecSuit(on){const w=ET.w,u=w.userData;if(!u||!!ET.suited===on)return;ET.suited=on;
+    if(!u.suit0)u.suit0={body:u.body.material,arm:u.armM[0].material};
+    u.body.material=on?arcM:u.suit0.body;u.armM.forEach(m=>m.material=on?arcM:u.suit0.arm);u.hood.visible=on;if(u.vestM)u.vestM.visible=!on;}
   function elecBuild(){if(ET.w)return;const w=worker(elecM,M.hatTeam.A,{vest:HIVIS.orange,radio:true});w.position.set(MCC.desk[0],0,MCC.desk[1]);ET.w=w;
+    {const u=w.userData,hood=new THREE.Group();const hb=new THREE.Mesh(new THREE.BoxGeometry(0.5,0.42,0.5),arcM);hb.position.set(0,1.1,0);hood.add(hb);
+      const sh=new THREE.Mesh(new THREE.BoxGeometry(0.06,0.24,0.38),shieldM);sh.position.set(0.25,1.1,0);hood.add(sh);hood.visible=false;u.torso.add(hood);u.hood=hood;
+      u.torso.children.forEach(c=>{if(c.isMesh&&c.material===HIVIS.orange)u.vestM=c;});}
     const c=new THREE.Group();box(0.8,0.7,0.5,M.ink,0,0.55,0,c);box(0.5,0.32,0.08,M.ok,0.05,1.06,-0.05,c,false);box(0.06,0.7,0.5,M.steel,-0.43,1.0,0,c,false);
     [[-0.3,-0.2],[-0.3,0.2],[0.3,-0.2],[0.3,0.2]].forEach(([a,b])=>cylZ(0.09,0.06,M.ink,a,0.09,b,8,c));c.userData.load=true;c.position.set(MCC.desk[0]-1.8,0,MCC.desk[1]+0.6);scene.add(c);dynMark(c);ET.cart=c;}
   elecBuild();   // (built with the scene, so the start-up precompile sees it)
@@ -76,7 +93,8 @@
   // where the tech should be now, and doing what: [x, z, faceX, faceZ, pose, what]
   function elecWant(){const j=rlyJob();
     if(j){const p=1-j.left/Math.max(1,j.total);
-      if(j.id==="drivefail"&&CAB[j.asset]){const c=CAB[j.asset];return [c.stand[0],c.stand[1],c.home[0],c.home[1],j.eGo?"fix":"run","cab",j,p];}
+      if(j.id==="drivefail"&&CAB[j.asset]){const c=CAB[j.asset];return [c.stand[0],c.stand[1],c.home[0],c.home[1],!j.eGo?"run":j.stage==="inv"||j.stage==="wait"||j.stage==="found"?"type":"fix","cab",j,p];}
+      if(j.id==="rectfail"&&RECT3[j.line]){const r=RECT3[j.line];return [r.stand[0],r.stand[1],r.home[0],r.home[1],j.eGo?"fix":"run","rect",j,p];}
       if(j.id==="motorfail"&&ASPOT[j.asset]){const s=ASPOT[j.asset];return [s[0],s[1],s[2],s[3],j.eGo?"fix":"run","motor",j,p];}
       return [CAB.main.stand[0],CAB.main.stand[1],CAB.main.stand[0],CABZ,j.eGo?"fix":"run","main",j,p];}
     const x=rlyRnd("e");if(x&&x.a.length){const f=(S.t-x.t0)/Math.max(1,x.len),a=x.a[f<0.5?0:Math.min(x.a.length-1,1)],s=ASPOT[a];if(s)return [s[0]+0.8,s[1]+(s[1]>5?0:0.9),s[2],s[3],"type","adx",null,0];}
@@ -92,7 +110,10 @@
       nearW=q.x<=MCC.x0-0.05&&q.x>MCC.x0-3.2&&q.z>MCC.z0-1.5&&q.z<MCC.z1+1,dIn=[MCC.x0+1.0,dz],dOut=[MCC.x0-1.4,dz],C1=[MCC.x0-1.6,MCC.z0-1.7];
     const line=(x,z)=>{const dx=x-q.x,dzz=z-q.z,d=Math.hypot(dx,dzz);if(d<0.06){q.x=x;q.z=z;return true;}const st=Math.min(d,sp*rdt);q.x+=dx/d*st;q.z+=dzz/d*st;w.rotation.y=Math.atan2(-dzz,dx);return false;};
     const onDoor=Math.abs(q.z-dz)<0.08&&q.x>MCC.x0-1.45&&q.x<MCC.x0+1.05;let scripted=true;
-    if(ti&&!ri){if(onDoor)line(dIn[0],dIn[1]);else if(nearW)line(dOut[0],dOut[1]);else scripted=false;}
+    const donning=()=>{if(!ET.donT)ET.donT=now;w.rotation.y=Math.PI;if(now-ET.donT<1800){pose(w,(((now-ET.donT)/450)|0)%2?"pull":"inspect",now);return true;}ET.donT=0;return false;};
+    if(ti&&!ri){if(onDoor&&!ET.suited&&Math.abs(q.x-dOut[0])<0.08){if(!donning())elecSuit(true);else{w.userData.wp=null;return elecLights(job,p,rdt);}}   // (at the door: the suit and hood go on)
+      if(onDoor)line(dIn[0],dIn[1]);else if(nearW)line(dOut[0],dOut[1]);else scripted=false;}
+    else if(!ti&&ri&&ET.suited&&onDoor&&Math.abs(q.x-dIn[0])<0.08){if(!donning())elecSuit(false);else return elecLights(job,p,rdt);}   // (and come off on the way out)
     else if(!ti&&ri){if(onDoor)line(dOut[0],dOut[1]);else line(dIn[0],dIn[1]);}
     else if(!ti&&nearW){if(onDoor&&q.x>dOut[0]+0.05)line(dOut[0],dOut[1]);else line(C1[0],C1[1]);}
     else scripted=false;
@@ -104,9 +125,12 @@
     else pose(w,what==="adx"?"pull":"walk",now);
     {const c=ET.cart,a=w.rotation.y;if(cartOut){c.position.x=w.position.x+Math.cos(a)*0.95;c.position.z=w.position.z-Math.sin(a)*0.95;c.rotation.y=a;}
       else if(Math.hypot(c.position.x-(MCC.desk[0]-1.8),c.position.z-(MCC.desk[1]+0.6))>0.05){c.position.set(MCC.desk[0]-1.8,0,MCC.desk[1]+0.6);c.rotation.y=0;}}
-    // the cabinets: lights follow each drive; the one being changed has its door open and the module coming out and going in
-    for(const A of ASSETS){const c=CAB[A.id];if(!c)continue;const st=S.rel?rlyDrvSt(A.id):"run",m=st==="run"?LEDM.run:st==="idle"?LEDM.idle:st==="off"?LEDM.off:LEDM.fault;if(c.led.material!==m)c.led.material=m;
-      const busy=job&&job.id==="drivefail"&&job.asset===A.id&&job.eGo,tgt=busy&&p>0.08&&p<0.92?1:0;c.open+=(tgt-c.open)*Math.min(1,rdt*3);c.hinge.rotation.y=-c.open*1.7;
-      if(busy&&p>0.2&&p<0.85){c.mod.visible=true;const k=p<0.5?(p-0.2)/0.3:1-(p-0.55)/0.3,kk=clamp(k,0,1);c.mod.material=p<0.5?modM.old:modM.new;c.mod.position.set(-0.55*kk,1.1-0.3*kk,0.02-1.0*kk);}
+    elecLights(job,p,rdt);}
+  // the cabinets: lights follow each drive and rectifier; the drive being replaced has its door open and the module coming out and going in
+  function elecLights(job,p,rdt){
+    for(const [ln] of LINEUPS){const r=RECT3[ln];if(!r)continue;const m=outOn()?LEDM.off:rlyRectDown(ln)?LEDM.fault:rlyBlack()?LEDM.off:LEDM.run;if(r.led.material!==m)r.led.material=m;}
+    for(const A of ASSETS){const c=CAB[A.id];if(!c)continue;const st=S.rel?rlyDrvSt(A.id):"run",m=st==="run"?LEDM.run:st==="idle"?LEDM.idle:st==="off"?LEDM.off:st==="nodc"?LEDM.off:LEDM.fault;if(c.led.material!==m)c.led.material=m;
+      const busy=job&&job.id==="drivefail"&&job.asset===A.id&&job.eGo&&job.stage!=="reset",tgt=busy&&p>0.08&&p<0.92?1:0;c.open+=(tgt-c.open)*Math.min(1,rdt*3);c.hinge.rotation.y=-c.open*1.7;
+      if(busy&&job.stage==="repl"&&p>0.2&&p<0.85){c.mod.visible=true;const k=p<0.5?(p-0.2)/0.3:1-(p-0.55)/0.3,kk=clamp(k,0,1);c.mod.material=p<0.5?modM.old:modM.new;c.mod.position.set(-0.55*kk,1.1-0.3*kk,0.02-1.0*kk);}
       else if(c.mod.visible)c.mod.visible=false;}}
-  G3.elecUpdate=elecUpdate;
+  G3.elecUpdate=elecUpdate;G3.elecSuit=on=>elecSuit(on);

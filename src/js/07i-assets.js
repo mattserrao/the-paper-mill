@@ -19,7 +19,7 @@ const RLY={tick:15,leadB:36*60,leadM:72*60,baseB:0.03,baseM:0.02,baseD:1/150,
   stale:24*60,unknown:72*60,
   vib:{at:60,len:120,n:2,stag:12},adx:{at:90,len:150,n:2},
   plan:{b:{cost:15e3,min:15,n:"Bearings"},m:{cost:60e3,min:30,n:"Motor"},d:{cost:25e3,min:10,n:"Drive"}},planCap:90,
-  fix:0.2,elecResp:10,dur:{vib:[150,270],adx:[240,420],drv:[60,120]},drvBill:35e3};
+  fix:0.2,elecResp:10,ppe:3,rectBase:1/60,rectBill:60e3,drvCall:0.1,rep:[0.08,0.8],inv:[45,90],repl:[60,90],patch:3,dur:{vib:[150,270],adx:[240,420],drv:[60,120]},drvBill:35e3};
 const LINEUPS=[["SP","Stock prep lineup","MCC-1"],["PM","Machine sectional lineup","MCC-2"],["WD","Winder lineup","MCC-3"]];
 const LINEN=Object.fromEntries(LINEUPS.map(l=>[l[0],l]));
 // kw: rated power; stop: what the failure does, in words; ta: the Round area its tell shows in; k: a phase for the load wobble
@@ -43,8 +43,8 @@ const ADXMODE={ins:"insulation resistance to ground falling",bar:"a broken rotor
   ADXFAIL={ins:"a winding shorted to ground",bar:"broken rotor bars",con:"a connection burnt open"};
 // the upsets that wear with an asset's bearings
 const RLY_LINK={refclash:["refA","refB"],felt:["pr1","pr2"],fabric:["couch"],shaft:["dry"],wrap:["dry"],winderdown:["wind"],tiedrolls:["wind"]};
-const RLY_EV={bearingfail:{k:"vib",name:"Bearing failure"},motorfail:{k:"adx",name:"Motor failure"},drivefail:{k:"drv",name:"Drive failure"}};
-const RLY_ID={vib:"bearingfail",adx:"motorfail",drv:"drivefail"};
+const RLY_EV={bearingfail:{k:"vib",name:"Bearing failure"},motorfail:{k:"adx",name:"Motor failure"},drivefail:{k:"drv",name:"Drive failure"},rectfail:{k:"rect",name:"Rectifier fault"}};
+const RLY_ID={vib:"bearingfail",adx:"motorfail",drv:"drivefail",rect:"rectfail"};
 // the three failures join EVENTS (never rolled by chaosTick: an endless MTBF on their own stream; knob:true keeps them out
 // of the Upsets panel's switches, the tornado and the machine crew's queue)
 for(const id in RLY_EV){const d=RLY_EV[id];const e={id,g:"machine",knob:true,stream:"relx",name:d.name,dur:[60,60],mtbf:1e12,mods:{},rly:d.k,end:i=>rlyFixed(i)};
@@ -52,21 +52,22 @@ for(const id in RLY_EV){const d=RLY_EV[id];const e={id,g:"machine",knob:true,str
 // bearings go to a maintenance pair; motors, drives and the blackouts to the electrical tech (v6.10: lightning and the
 // bird on the line were maintenance jobs)
 MSET.delete("lightning");MSET.delete("birdline");MSET.add("bearingfail");
-const ESET=new Set(["motorfail","drivefail","lightning","birdline"]),ENEED=id=>ESET.has(id);
+const ESET=new Set(["motorfail","drivefail","rectfail","lightning","birdline"]),ENEED=id=>ESET.has(id),EMCC=new Set(["drivefail","rectfail","lightning","birdline"]);   // (EMCC: jobs in the MCC: arc-flash PPE at the door first)
 MAINT.push("bearingfail","motorfail","drivefail");FM_MAINT=null;FM_REL.add("bearingfail");FM_REL.add("motorfail");   // (RCFA, PM and the Reliability program cut them too)
 
 const rlyOn=()=>!!(S&&!S.zen&&!S.over&&((S.season&&S.season.on)||S.free));
-function rlyState(){if(S.rel&&S.rel.v===1)return S.rel;const sd=S.seed>>>0,R={v:1,a:{},pend:[],rd:{s:null,list:[]},hist:[],k:-1,caught:0,saved:0,fails:0,done:0,skip:0,chg:{},next:null};
+function rlyState(){if(S.rel&&S.rel.v===1){if(!S.rel.rf)rlyState2(S.rel);return S.rel;}const sd=S.seed>>>0,R={v:1,a:{},pend:[],rd:{s:null,list:[]},hist:[],k:-1,caught:0,saved:0,fails:0,done:0,skip:0,chg:{},next:null};
   for(const A of ASSETS){const h=manH("rly",sd,A.id);R.a[A.id]={vib:55+h()*40,adx:60+h()*37,dh:75+h()*25,wv:1.0+h()*1.4,wm:0.4+h()*0.7,vm:h()<0.5?"imbal":"misal",am:["ins","bar","con"][Math.floor(h()*3)],lv:null,la:null,hv:[],ha:[],pin:""};}
-  if(S.rng&&S.rng.rel==null)S.rng.rel=(S.seed^0x2545f491)|0;
+  if(S.rng&&S.rng.rel==null)S.rng.rel=(S.seed^0x2545f491)|0;rlyState2(R);
   return S.rel=R;}
+function rlyState2(R){const h=manH("rlyrf",S.seed>>>0);R.rf={};for(const [ln] of LINEUPS)R.rf[ln]=80+h()*20;R.rep=[];R.q=[];R.cur=null;}
 const rlyPend=(id,k)=>{const q=S.rel&&S.rel.pend;if(!q)return false;for(const p of q)if(p.a===id&&p.k===k)return true;return false;};
 const rlyF=h=>0.08+2.6*Math.pow(1-clamp(h,0,100)/100,2);   // fault odds against health: ~0.1 new, 1 at 40, 2.7 worn out
 const rlyIncOf=id=>{for(const i of S.inc)if(i.asset===id&&i.kind)return i;return null;};
 const rlyBill=(id,k)=>((k==="vib"?ASSETN[id].bb:k==="adx"?ASSETN[id].mb:RLY.drvBill)||0)*P.repairMul;
 
 /* ---- drive loads (% of rated), from the process; read-only on the sim ---- */
-function rlyLoad(id,r){if(!S||outOn()||rlyIncOf(id))return 0;r=r||knobRead();const A=ASSETN[id],run=S.pm==="run",M=S.M||{},w=Math.sin(S.t*0.021+A.k)*0.7+Math.sin(S.t*0.057+A.k*2)*0.5;
+function rlyLoad(id,r){if(!S||outOn()||rlyIncOf(id)||rlyRectDown(ASSETN[id].ln))return 0;r=r||knobRead();const A=ASSETN[id],run=S.pm==="run",M=S.M||{},w=Math.sin(S.t*0.021+A.k)*0.7+Math.sin(S.t*0.057+A.k*2)*0.5;
   switch(id){
     case "pulp":return M.pulperDown?0:r.amps/500*100+w;
     case "refA":case "refB":return r.refkw>0?r.refkw/2/A.kw*100*(id==="refB"?0.97:1.03)+w:0;
@@ -79,7 +80,7 @@ function rlyLoad(id,r){if(!S||outOn()||rlyIncOf(id))return 0;r=r||knobRead();con
     case "wind":{const c=(S.rates&&S.rates.cut)||0;return M.winderDown||c<0.5?(S.wd==="run"?6:0):28+c/Math.max(1,P.winderMax)*62+w;}}
   return 0;}
 // drive status: run, idle (stopped by the process), trip (its motor or bearing failed), fault (the drive itself), off (outage)
-function rlyDrvSt(id,L){if(outOn())return "off";const i=rlyIncOf(id);if(i)return i.kind==="drv"?"fault":"trip";return (L!=null?L:rlyLoad(id))>3?"run":"idle";}
+function rlyDrvSt(id,L){if(outOn())return "off";if(rlyRectDown(ASSETN[id].ln))return "nodc";const i=rlyIncOf(id);if(i)return i.kind==="drv"?"fault":"trip";return (L!=null?L:rlyLoad(id))>3?"run":"idle";}
 const rlyTemp=(id,L)=>{const a=S.rel&&S.rel.a[id];return 27+(L||0)*0.38+(a?(100-a.dh)*0.12:0);};
 function rlyMccKw(r){r=r||knobRead();let k=0;for(const A of ASSETS)k+=Math.max(0,rlyLoad(A.id,r))/100*A.kw;return k;}
 function rlyStressV(id,r,L){let s=1;if(id==="pulp"&&r.amps>460)s+=(r.amps-460)/40;if((id==="refA"||id==="refB")&&r.kwh>80)s+=(r.kwh-80)/25;if((id==="pr1"||id==="pr2")&&r.pl>120)s+=(r.pl-120)/15;if(L>100)s+=(L-100)/20;return Math.min(4,s);}
@@ -96,28 +97,35 @@ function rlyTick(dt){if(!rlyOn())return;const R=rlyState();rlyRounds(R);
     if(!live)continue;
     if(CH.en.bearingfail&&!rlyPend(A.id,"vib")&&!rlyIncOf(A.id)&&r1<RLY.baseB*h*rlyF(a.vib)*freqMul("bearingfail")*u)R.pend.push({a:A.id,k:"vib",due:S.t+RLY.leadB,born:S.t});
     if(CH.en.motorfail&&!rlyPend(A.id,"adx")&&!rlyIncOf(A.id)&&r2<RLY.baseM*h*rlyF(a.adx)*freqMul("motorfail")*u)R.pend.push({a:A.id,k:"adx",due:S.t+RLY.leadM,born:S.t});
-    if(CH.en.drivefail&&L>5&&!rlyIncOf(A.id)&&r3<RLY.baseD*h*(1+Math.max(0,L-95)/10)*(1+(100-a.dh)/50)*freqMul("drivefail")*u)rlyFail(A.id,"drv");}
+    if(CH.en.drivefail&&L>5&&!rlyIncOf(A.id)&&r3<RLY.baseD*h*(1+Math.max(0,L-95)/10)*(1+(100-a.dh)/50)*(a.patch?RLY.patch:1)*freqMul("drivefail")*u)rlyFail(A.id,"drv");}
+  // v6.10 the rectifiers (one per lineup): slow wear while their lineup runs, a fault takes the lineup's DC bus down
+  for(const [ln] of LINEUPS){const x=rand("rel"),f=R.rf[ln];if(!out)R.rf[ln]=Math.max(0,f-0.15*h);
+    if(live&&CH.en.rectfail&&!active("rectfail")&&x<RLY.rectBase*h*(1+(100-f)/40)*freqMul("rectfail")*u)rlyFail(null,"rect",{ln});}
   if(!live)return;
+  for(let i=0;i<R.rep.length;i++){const p=R.rep[i];if(p.due>S.t)continue;if(rlyIncOf(p.a))continue;R.rep.splice(i--,1);rlyFail(p.a,"drv",{rep:1});}
   for(let i=0;i<R.pend.length;i++){const p=R.pend[i];if(p.due>S.t)continue;if(active(RLY_ID[p.k])||rlyIncOf(p.a))continue;R.pend.splice(i--,1);rlyFail(p.a,p.k);}}
 // a failure: like trigger() (04), without its dice (their own stream sets the length)
-function rlyFail(a,kind){const id=RLY_ID[kind];if(active(id)||rlyIncOf(a))return false;
+function rlyFail(a,kind,o){const id=RLY_ID[kind];if(active(id)||(a&&rlyIncOf(a)))return false;o=o||{};
+  if(kind==="rect")return rlyRectFail(o.ln);
   const A=ASSETN[a],R=rlyState(),d0=RLY.dur[kind];R.next={a,kind};
-  const dur=(d0[0]+rand("rel")*(d0[1]-d0[0]))*durMul(id),inc={id,left:dur,total:dur,real:performance.now(),note:"",asset:a,kind,mods:A.mods};
+  const dur=(d0[0]+rand("rel")*(d0[1]-d0[0]))*durMul(id)*(o.rep?1.5:1),inc={id,left:dur,total:dur,real:performance.now(),note:"",asset:a,kind,mods:A.mods};
+  if(kind==="drv"){inc.load=Math.max(0,rlyLoad(a));inc.stage="wait";inc.rep=!!o.rep;inc.dur=dur;inc.left=inc.total=Math.max(30,RLY.elecResp+RLY.ppe+5);}   // (the player decides: reset or investigate, rlyDecide)
   S.inc.push(inc);(S.evc||(S.evc={}))[id]=(S.evc[id]||0)+1;S.lastInc=S.t;S.tot.incidents++;AUDIO.event(id);
   inc.cite=rlyCite(id,inc);const head=rlyHead(id,inc);BANNERS.push({text:head,t:null,id});while(BANNERS.length>3)BANNERS.splice(1,1);
-  const bill=S.zen?0:rlyBill(a,kind);if(bill>0){spend(bill,"repairs");pfRepair(id,bill);inc.bill=bill;inc.note=`repair bill ${money(bill)}`;}
+  const bill=S.zen?0:rlyBill(a,kind)*(kind==="drv"?RLY.drvCall:1);if(bill>0){spend(bill,"repairs");pfRepair(id,bill);inc.bill=bill;inc.note=`repair bill ${money(bill)}`;}
   log(head+(inc.note?` (${inc.note})`:""),"bad");R.next=null;R.fails++;
-  S.M=mods();leadAuto(inc);civOnUpset(inc);return true;}
-function rlyHead(id,inc){inc=inc||(S&&S.inc?S.inc.find(x=>x.id===id):null);const a=(inc&&inc.asset)||(S&&S.rel&&S.rel.next&&S.rel.next.a),A=ASSETN[a];
+  S.M=mods();leadAuto(inc);if(kind==="drv"){if(active(id))rlyAsk(inc,"fault");}else civOnUpset(inc);return true;}
+function rlyHead(id,inc){inc=inc||(S&&S.inc?S.inc.find(x=>x.id===id):null);if(id==="rectfail"){const l=inc&&LINEN[inc.line];return l?`${l[2]} rectifier faulted: the ${l[1].toLowerCase()}'s DC bus is down.`:"A rectifier in the MCC faulted: its lineup's DC bus is down.";}const a=(inc&&inc.asset)||(S&&S.rel&&S.rel.next&&S.rel.next.a),A=ASSETN[a];
   if(!A)return {bearingfail:"A bearing failed on one of the critical drives.",motorfail:"One of the critical motors failed.",drivefail:"A drive in the MCC faulted and won't reset."}[id];
   if(id==="bearingfail")return `${A.n}: a motor bearing has failed. ${A.stop} Maintenance is changing it.`;
   if(id==="motorfail")return `${A.n}: the motor has failed (${ADXFAIL[S.rel.a[a].am]}). ${A.stop} The electrical tech is fitting the spare.`;
-  return `${A.n}: its drive faulted in the ${LINEN[A.ln][1].toLowerCase()}. ${A.stop} The electrical tech is changing the drive.`;}
+  return `${A.n}: its drive ${inc&&inc.rep?"faulted again":"faulted"} in the ${LINEN[A.ln][1].toLowerCase()}. ${A.stop}`;}
 // fixed: the failed part is new
 function rlyFixed(i){const R=S.rel;if(!R||!i.asset)return;const a=R.a[i.asset];if(!a)return;
   if(i.kind==="vib"){a.vib=96;a.lv={t:S.t,st:"good",v:1.0,by:"new"};R.pend=R.pend.filter(p=>!(p.a===i.asset&&p.k==="vib"));}
   else if(i.kind==="adx"){a.adx=97;a.la={t:S.t,st:"good",h:97,by:"new"};R.pend=R.pend.filter(p=>!(p.a===i.asset&&p.k==="adx"));}
-  else a.dh=100;}
+  else if(i.kind==="drv"){if(i.stage==="repl"){a.dh=100;a.patch=false;}else if(i.stage==="patch"){a.patch=true;const c=S.rel.chg[i.asset]||(S.rel.chg[i.asset]={});c.d=1;}else if(i.stage==="reset")a.dh=Math.max(0,a.dh-4);}
+  else if(i.kind==="rect"&&i.line)S.rel.rf[i.line]=100;}
 // the upset card's line: what the rounds last said about it
 function rlyCite(id,inc){const R=S.rel;if(!R)return "";const ago=t=>{const m=S.t-t;return m<90?Math.round(m)+" min ago":m<2880?(m/60).toFixed(m<600?1:0)+" h ago":(m/1440).toFixed(1)+" days ago";};
   const vib=a=>{const x=R.a[a],v=x.lv;return !v?`${ASSETN[a].n}: no vibration reading this run`:S.t-v.t>RLY.unknown?`${ASSETN[a].n}: last vibration reading ${ago(v.t)} (rounds skipped since)`:`${ASSETN[a].n}: ${VIBST[v.st][0].toLowerCase()} on the last vibration round, ${ago(v.t)} (${v.v} mm/s)`;};
@@ -187,10 +195,14 @@ function rlyOutageEnd(o,pl){const R=S.rel;if(!R)return;const done=[];
   if(done.length)log(`Outage ${o.k} changeouts done: ${done.join(", ")}.`,"ok");}
 
 /* ---- the electrical tech: one job at a time, the blackouts first ---- */
-function rlyElecTick(dt){let L=null;for(const i of S.inc)if(ENEED(i.id))(L||(L=[])).push(i);if(!L)return;
+function rlyElecTick(dt){
+  // a drive fault waits on the player's call (held, not counting down); an investigation that's done waits on the next one
+  for(const i of S.inc){if(i.kind!=="drv"||!i.stage)continue;if(i.stage==="wait"||i.stage==="found")i.left=Math.max(i.left,30);
+    else if(i.stage==="inv"&&i.eGo&&i.left<=dt*3){i.stage="found";i.left=30;rlyAsk(i,"found");}}
+  let L=null;for(const i of S.inc)if(ENEED(i.id))(L||(L=[])).push(i);if(!L)return;
   const pri=id=>id==="lightning"||id==="birdline"?0:1;L.sort((a,b)=>pri(a.id)-pri(b.id));
-  L.forEach((i,k)=>{i.eQ=k;if(k>0){if(i.eSlot===0){i.eSince=0;i.eGo=false;}i.eSlot=-1;return;}i.eSlot=0;if(!i.eSince){i.eSince=1;i.eResp=RLY.elecResp;}if(i.eResp>0)i.eResp-=dt;if(i.eResp<=0)i.eGo=true;});}
-function elecState(i){if(!ENEED(i.id))return "";if(i.eGo)return "electrician working";if(i.eSlot===0)return "electrician on the way";return i.eQ>0?`waiting for the electrician (${i.eQ} ahead)`:"waiting for the electrician";}
+  L.forEach((i,k)=>{i.eQ=k;if(k>0){if(i.eSlot===0){i.eSince=0;i.eGo=false;}i.eSlot=-1;return;}i.eSlot=0;if(!i.eSince){i.eSince=1;i.eResp=RLY.elecResp+(EMCC.has(i.id)?RLY.ppe:0);}if(i.eResp>0)i.eResp-=dt;if(i.eResp<=0)i.eGo=true;});}
+function elecState(i){if(!ENEED(i.id))return "";if(i.stage==="wait")return "your call: reset or investigate";if(i.stage==="found")return "investigated: your call";if(i.stage==="inv"&&i.eGo)return "electrician reading the fault log";if(i.eGo)return "electrician working";if(i.eSlot===0)return "electrician on the way";return i.eQ>0?`waiting for the electrician (${i.eQ} ahead)`:"waiting for the electrician";}
 // trigger() (04) calls this for every upset: the card's reliability line, and what a blackout does to the drives
 function rlyOnTrigger(inc){if(!S.rel||!rlyOn())return;const R=S.rel;
   if(RLY_LINK[inc.id])inc.cite=rlyCite(inc.id,inc);
@@ -209,3 +221,41 @@ function rlyAge(x){if(!x)return {cls:"unk",txt:"never"};const m=S.t-x.t,txt=m<90
 CIVU.bearingfail={n:"Bearing failure",a:"Machine",ch:[["New bearings and a vibration route review",2,-1,{M:2}],["Swap the bearing, nothing more",1,0,{}],["Grease the new one and restart cold",0,1,{M:-1,L:-1}]],t:"PQS"};
 CIVU.motorfail={n:"Motor failure",a:"Machine",ch:[["New motor from the vendor, with an ADX baseline",3,-1,{M:2}],["Rewind the old one as the spare",1,0,{M:1}],["Run a borrowed motor",0,1,{M:-1,E:1}]],t:"PQS"};
 CIVU.drivefail={n:"Drive failure",a:"Machine",ch:[["New drive and a lineup cooling check",2,-1,{M:1,L:1}],["Fit the spare drive",1,0,{}],["Reset it and run it hot",0,1,{M:-1}]],t:"PQS"};
+
+/* ---- v6.10 the power chain: 115 kV utility -> the substation transformer -> 13.8 kV feeder -> the MCC transformer (13.8 kV
+   to 480 V) -> a rectifier per lineup -> a ~650 V DC common bus -> each drive's inverter -> its motor. The voltages follow
+   the upsets (a blackout drops them all, a brownout sags them); a rectifier fault drops its lineup's DC bus. ---- */
+const PWR={util:115,mv:13.8,lv:480,dcK:1.35};
+const rlyRectDown=ln=>{if(!S||!S.inc)return false;for(const i of S.inc)if(i.id==="rectfail"&&i.line===ln)return true;return false;};
+const rlyBlack=()=>!!(S&&(active("lightning")||active("birdline")));
+function rlyMV(){if(rlyBlack())return 0;return PWR.mv*(active("brownout")?0.92:1)*(1+Math.sin(S.t*0.013)*0.004);}
+function rlyLV(){return rlyMV()/PWR.mv*PWR.lv;}
+function rlyDC(ln){if(outOn()||rlyRectDown(ln))return 0;const v=rlyLV()*PWR.dcK;return v>0?v+Math.sin(S.t*0.05+ln.length)*2:0;}
+const RECT_MODS={SP:{pmDown:"MCC-1 DC bus down",pulperDown:1},PM:{pmDown:"MCC-2 DC bus down"},WD:{winderDown:1}};
+function rlyRectFail(ln){if(!ln||active("rectfail"))return false;const R=rlyState(),id="rectfail",d0=[120,240],dur=(d0[0]+rand("rel")*(d0[1]-d0[0]))*durMul(id);
+  const inc={id,left:dur,total:dur,real:performance.now(),note:"",line:ln,kind:"rect",mods:RECT_MODS[ln]};S.inc.push(inc);(S.evc||(S.evc={}))[id]=(S.evc[id]||0)+1;S.lastInc=S.t;S.tot.incidents++;AUDIO.event(id);
+  const head=`${LINEN[ln][2]} rectifier faulted: the ${LINEN[ln][1].toLowerCase()}'s DC bus is down and every drive on it stopped. The electrical tech is on the way.`;
+  inc.cite=`${LINEN[ln][2]} rectifier health was ${Math.round(R.rf[ln])}%`;BANNERS.push({text:head,t:null,id});while(BANNERS.length>3)BANNERS.splice(1,1);
+  const bill=S.zen?0:RLY.rectBill*P.repairMul;if(bill>0){spend(bill,"repairs");pfRepair(id,bill);inc.bill=bill;inc.note=`repair bill ${money(bill)}`;}
+  log(head+(inc.note?` (${inc.note})`:""),"bad");R.fails++;S.M=mods();leadAuto(inc);civOnUpset(inc);return true;}
+CIVU.rectfail={n:"Rectifier fault",a:"Machine",ch:[["New rectifier module and a thermal scan of the lineup",2,-1,{M:2}],["Swap the failed diode bridge",1,0,{}],["Bypass the snubber and restart",0,1,{M:-1,L:-1}]],t:"PQS"};
+delete CIVU.drivefail;   // (v6.10: a drive fault has its own card instead: reset or investigate, rlyAsk)
+
+/* ---- v6.10 drive faults: the player's call. Reset and go (back in ~5 min, but a weak drive may fault again within a day;
+   the odds scale with the drive's health), or Investigate (45-90 min with the fault log and a meter: the cause, then Run
+   to the outage (patched, likelier to fault, its replacement booked on the next outage plan) or Replace now). ---- */
+const DRVCAUSE=[["fan","a seized cooling fan","the heat sink ran hot until the drive tripped on overtemperature"],["cap","a failing DC bus capacitor","ripple on the DC bus is tripping it on overvoltage"],
+  ["igbt","a failing IGBT module","one output phase is shorting to ground under load"],["con","a loose power connection","a hot spot on a motor lead lug is tripping it on phase loss"]];
+const rlyRepOdds=id=>{const a=S.rel.a[id];return clamp(RLY.rep[0]+RLY.rep[1]*(1-a.dh/100),RLY.rep[0],0.85);};
+function rlyAsk(inc,step){const R=rlyState(),a=inc.asset;if(R.q.some(q=>q.a===a&&q.step===step)||(R.cur&&R.cur.a===a&&R.cur.step===step))return;
+  if(step==="found"&&!inc.cause){const k=Math.floor(rand("rel")*DRVCAUSE.length);inc.cause=DRVCAUSE[k][0];}
+  if(typeof afkOn==="function"&&afkOn()){rlyDecide(inc,step==="fault"?"inv":"repl",true);return;}   // (free play's Let the mill run: the careful choice)
+  R.q.push({a,step});}
+const rlyDrvInc=a=>S.inc.find(i=>i.id==="drivefail"&&i.asset===a);
+function rlyDecide(inc,ch,auto){const A=ASSETN[inc.asset],R=rlyState(),a=R.a[inc.asset];if(!A||!active("drivefail"))return;
+  const go=(st,m)=>{inc.stage=st;inc.left=inc.total=m;};let txt="";
+  if(ch==="reset"){go("reset",5);const p=rlyRepOdds(inc.asset);if(rand("rel")<p)R.rep.push({a:inc.asset,due:S.t+30+rand("rel")*1380});txt=`reset and run (repeat odds ${Math.round(p*100)}%)`;}
+  else if(ch==="inv"){const d=RLY.inv;go("inv",d[0]+rand("rel")*(d[1]-d[0]));spend(2e3,"repairs");txt="investigate";}
+  else if(ch==="patch"){go("patch",15);spend(4e3,"repairs");txt="patch it and run to the outage (replacement booked)";}
+  else if(ch==="repl"){const d=RLY.repl;go("repl",d[0]+rand("rel")*(d[1]-d[0]));const b=RLY.drvBill*P.repairMul;spend(b,"repairs");pfRepair("drivefail",b);txt=`replace the drive now (${money(b)})`;}
+  log(`${auto?"Let the mill run":"Decision"} · ${A.n} drive: ${txt}.`,"warn");S.M=mods();}
