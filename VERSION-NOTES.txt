@@ -103,3 +103,4 @@ One line per version, oldest first. Add a line here with every release: build.py
 6.8.3      OCC Recipe (A Bales, C Bales, Mixed Waste), Relationship Map Zoom and 3D Light Cones at Night
 6.9.0-t1   The Valves Update (Test): Six Control Loops on the DCS with Real Valves, Faceplates, PID Tuning, Bump Tests, a Tuning Clock and Tuning Challenges
 6.9.0      The Valves Update: Six Control Loops on the DCS with Real Valves, Faceplates, PID Tuning, Bump Tests, a Tuning Clock, Tuning Challenges and Their Links on the Relationship Map
+6.9.1      Wet End Controls: Rush / Drag in fpm on the WET DCS

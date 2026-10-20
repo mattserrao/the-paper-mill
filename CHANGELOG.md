@@ -1,6 +1,12 @@
 # Changelog
 
 
+## v6.9.1 (2026-10-20): Wet End Controls
+- **Rush / drag on the WET DCS** (`50d-dcs-more.js`): R/D = (J/W − 1) × wire speed, in fpm, under the wire speed
+  ("−38 fpm DRAG" at the standard 0.985 J/W; "RUSH" when the jet is faster than the wire). The jet-to-wire ratio now
+  reads from the saved slice, so J/W and R/D read the same without the 3D view. Both are trend tags (R/D has hourly
+  history) and on the relationship map (slice → J/W → R/D, wire speed → R/D). Glossary: Rush / drag.
+
 ## v6.9.0 (2026-10-20): The Valves Update (built and tested on test/v6.9-valves as 6.9.0-t1)
 Plan: `claude/valves-v69-plan.md` (project doc). Six control loops with real valves and PID tuning, as a toy model for
 learning loop tuning. Untouched, every loop is the game's own v6.8 model and the mill plays and checksums exactly as

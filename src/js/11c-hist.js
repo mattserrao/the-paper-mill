@@ -30,7 +30,8 @@ const HA=[["yard",()=>S.yard],["yardp",()=>S.yard/P.yardCap*100],["wet",()=>S.we
   ["balem",()=>S.bq&&!S.zen?S.bq.m*100:null],["stk",()=>S.bq&&!S.zen?S.bq.ck*100:null],["openo",()=>S.ord&&!S.zen?S.ord.list.filter(o=>o.st==="open").length:null],
   ["lateo",()=>S.ord&&!S.zen?S.ord.list.filter(o=>o.st==="open"&&S.t>o.due+ORD.grace).length:null],   // (v6.6; HIST_V 4)
   ["kwh",r=>r.kwh],["hbc",()=>S.pm==="run"&&S.we?S.we.hbc:null],["wwl",()=>S.we?S.we.L/WE.silo*100:null],["rct",()=>S.pm==="run"?QNOW.rct:null],   // (v6.8: appended, older rows read blank)
-  ["v101",()=>vlvView("NV-101").pos],["v104",()=>vlvView("LV-104").pos],["v201",()=>vlvView("FV-201").pos],["v202",()=>vlvView("LV-202").pos],["v302",()=>vlvView("PV-302").pos],["v303",()=>vlvView("PV-303").pos]];   // (v6.9: valve openings, appended)
+  ["v101",()=>vlvView("NV-101").pos],["v104",()=>vlvView("LV-104").pos],["v201",()=>vlvView("FV-201").pos],["v202",()=>vlvView("LV-202").pos],["v302",()=>vlvView("PV-302").pos],["v303",()=>vlvView("PV-303").pos],
+  ["rd",()=>S.pm==="run"?dcsRD():null]];   // (v6.9.1: rush / drag, appended)   // (v6.9: valve openings, appended)
 const GRADE_IDS=Object.keys(GRADES);
 HA.forEach(([k])=>{HCI["a."+k]=HC.length;HC.push("a."+k);});
 const histR=v=>v==null||v!==v?null:Math.abs(v)>=100?Math.round(v):Math.round(v*100)/100;

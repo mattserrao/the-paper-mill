@@ -69,6 +69,7 @@
     ["DCS","Distributed control system: the operator screens (SPOT, WET, DET and UTIL) with live readings, alarms and trends."],
     ["Control loop (PV, SP, OP)","A controller that measures a process value (PV), compares it with its setpoint (SP) and moves a valve (its output, OP) to close the gap. MAN: the operator sets the output; AUTO: the controller does; CAS: another controller sets its setpoint."],
     ["PID tuning (Kc, Ti, Td)","How a controller reacts: Kc is its gain, Ti (minutes) how quickly the integral removes an offset, Td (minutes) how much it reacts to the rate of change. Too much gain rings; too little is lazy."],
+    ["Rush / drag","How much faster (rush) or slower (drag) the jet from the headbox lands than the forming fabric runs, in fpm: (jet-to-wire ratio − 1) × wire speed. Shown on the WET DCS; the slice opening sets it."],
     ["Bump test","Step a loop's output on manual and watch the PV: its gain, dead time and time constant give the tuning (Lambda tuning picks how fast the loop should be)."],
     ["Stiction","Sticky valve packing: the stem holds until the output has moved far enough, then jumps. It makes a sawtooth cycle no tuning can remove."],
     ["Deckle / trim","The usable width of the sheet. A wider trim makes more tons at the same speed."],

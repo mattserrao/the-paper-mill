@@ -4,7 +4,7 @@
    only: the sim and its dice are untouched, and the game keeps running at the player's speed while it is open.
    Keep RM_E in step with the sim when a relationship changes (tools/relmapcheck.py fails on a tag with no entry). ---- */
 const RM_DRV=[["x:weather","Weather",""],["x:bales","Bale grade mix",""],["x:pulpset","Pulper feed setpoint",""],["x:dilv","Pulper dilution valve","knob"],["x:slice","Headbox slice","knob"],["x:guide","Fabric guide roll","knob"],["x:zones","Headbox dilution zones","knob"],["x:spset","Machine speed setpoint",""],["x:grade","Grade on the machine",""],["x:dye","Dye system",""],["x:market","Market & leader effects",""],["x:orders","Customer orders",""],["x:upsets","Upsets & DCS motors",""]];
-const RM_COL={"YARD":["inq","unload","yard","balem","stk","occp"],"SPOT":["feed","cp","nv101pv","nv101op","amps","pulpLvl","yield","fiber","rejt","hddp","lcdp","lwdp","fsld","fsdp","kwh","dil","chest","chestg","gap","refkw","csf","agit","mcCons","mcLvl","lv104pv","lv104op","mcg","fan"],"WET":["wsp","vac","couchSol","pl","pressSol","gtrav","edge","osc","hbc","bwv","fv201pv","fv201op","bwsp","drain","seal","pressw","wwl","lv202pv","lv202op","wwg","wwov","hum"],"DET":["speed","prod","st1","st3","pv302pv","pv302op","pv303pv","pv303op","steam","dryl","moist","qc300pv","qc300op","bw","draw","tension"],"QCS":["off","rct","prem","cdsp","bank","reel","cut","conv"],"UTIL":["boiler","vent","energyt","shower","evap","wcl","wcg","makeup","fresh","wuse","wwover","outfall","tss"],"SHIP":["fg","load","outq","openo","lateo","price","profit"]};
+const RM_COL={"YARD":["inq","unload","yard","balem","stk","occp"],"SPOT":["feed","cp","nv101pv","nv101op","amps","pulpLvl","yield","fiber","rejt","hddp","lcdp","lwdp","fsld","fsdp","kwh","dil","chest","chestg","gap","refkw","csf","agit","mcCons","mcLvl","lv104pv","lv104op","mcg","fan"],"WET":["wsp","jw","rd","vac","couchSol","pl","pressSol","gtrav","edge","osc","hbc","bwv","fv201pv","fv201op","bwsp","drain","seal","pressw","wwl","lv202pv","lv202op","wwg","wwov","hum"],"DET":["speed","prod","st1","st3","pv302pv","pv302op","pv303pv","pv303op","steam","dryl","moist","qc300pv","qc300op","bw","draw","tension"],"QCS":["off","rct","prem","cdsp","bank","reel","cut","conv"],"UTIL":["boiler","vent","energyt","shower","evap","wcl","wcg","makeup","fresh","wuse","wwover","outfall","tss"],"SHIP":["fg","load","outq","openo","lateo","price","profit"]};
 const RM_E=[
  ["x:weather","balem","p","Rain and snow soak the bales in the yard and on inbound loads"],
  ["x:weather","unload","n","Snow and fog slow inbound trucks"],
@@ -137,6 +137,9 @@ const RM_E=[
  ["mcLvl","mcg","s","Same chest, in gallons"],
  ["speed","wsp","p","Wire speed = reel speed ÷ machine draw"],
  ["draw","wsp","n","More draw, slower wire for the same reel speed"],
+ ["x:slice","jw","x","Slice opening sets the jet speed: J/W 0.965 to 1.005, 0.985 standard"],
+ ["jw","rd","p","Rush / drag = (J/W − 1) × wire speed"],
+ ["wsp","rd","x","Same J/W, bigger rush or drag in fpm at a faster wire"],
  ["vac","couchSol","x","Best at 30 kPa; losses either side, worse below"],
  ["x:slice","couchSol","x","Jet off its best angle or ratio loses couch solids"],
  ["couchSol","pressSol","p","Press solids start from couch solids, point for point"],

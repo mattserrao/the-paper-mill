@@ -6,6 +6,9 @@
 const DCS_DRAW=()=>1.015*(1+knobVal("draw")/100)*1.01;   // wire -> presses, press-to-dryer draw (the knob), dryers -> reel
 const wob2=(f,k)=>Math.sin(S.t*f+k)*0.6+Math.sin(S.t*f*2.7+k*2)*0.4;
 const dcsOn=id=>active(id);
+// jet-to-wire ratio from the slice opening (the saved slice, so it reads the same with or without the 3D view)
+const dcsJw=()=>0.985+0.02*slcGet().v;
+const dcsRD=()=>(dcsJw()-1)*S.pmSpeed/DCS_DRAW();
 const DV={
   rgt:()=>motStatus("ragger")!=="run"?"0 kN":(14+wob2(0.05,13)*1.5+(S.rates.feed||0)/10).toFixed(1)+" kN",jdc:()=>String(Math.floor(((S.pf&&S.pf.W.feed)||0)/40)),
   thl:()=>{const D=G3.SPD;return D?Math.round(clamp(55+(D.lc||0)*20+wob2(0.03,14)*2,0,100))+"%":"–";},
@@ -16,7 +19,9 @@ const DV={
   fsdp:()=>motStatus("fscr")!=="run"?"0 kPa":Math.round((S.we?S.we.fs:WE.fs0)+wob2(0.09,6))+" kPa",fsld:()=>Math.round(S.rates.fiberIn/Math.max(1,P.screenMax)*100)+"%",
   thf:()=>{const D=G3.SPD;return D?(D.tl>150?"DIRTY":"CLEAR")+" "+Math.round(D.tl):"–";},thv:()=>{const D=G3.SPD;return D?Math.round(D.v*100)+"%":"–";},
   lvsp:()=>Math.round(C.lvlTarget.v)+"%",stc:()=>(4.2+((S.knob&&S.knob.any&&S.knob.x?S.knob.x.cp:5)-5)*0.12+wob2(0.04,15)*0.06).toFixed(2)+"%",dyef:()=>{const b=document.querySelector('#paperColor button[aria-pressed="true"]');return motStatus("dye")!=="run"||(b&&b.dataset.c==="white")?"0%":"62%";},
-  jw:()=>{const D=G3.SLC;return D?(0.985+0.02*D.v).toFixed(3):"–";},slc:()=>{const D=G3.SLC;return D?(12+3*D.v).toFixed(1)+" mm":"–";},
+  jw:()=>dcsJw().toFixed(3),
+  // v6.9.1: rush / drag, fpm: (jet-to-wire - 1) x wire speed. Jet faster than the wire is rush, slower is drag
+  rd:()=>{if(S.pm!=="run")return "–";const v=dcsRD(),a=Math.round(Math.abs(v));return a<0.5?"0 fpm SQUARE":(v>0?"+":"−")+a+" fpm "+(v>0?"RUSH":"DRAG");},slc:()=>{const D=G3.SLC;return D?(12+3*D.v).toFixed(1)+" mm":"–";},
   wsp:()=>Math.round(S.pmSpeed/DCS_DRAW())+" fpm",psp:()=>Math.round(S.pmSpeed/DCS_DRAW()*1.015)+" fpm",dsp:()=>Math.round(S.pmSpeed/1.01)+" fpm",
   wwl:()=>S.we?Math.round(S.we.L/WE.silo*100)+"%":"–",wwg:()=>S.we?fmtGal(GAL(S.we.L)):"–",hbc:()=>S.pm==="run"&&S.we?S.we.hbc.toFixed(2)+"%":"–",
   bwv:()=>S.we?Math.round(S.we.v)+"% "+(S.we.m==="auto"?"AUTO":"MAN"):"–",dil:()=>fmtGpm(GPM(S.we?S.we.f.dil||0:0)),drn:()=>fmtGpm(GPM(S.we?S.we.f.drain||0:0)),pw:()=>fmtGpm(GPM(S.we?S.we.f.press||0:0)),hum:()=>Math.round(clamp(62+(motStatus("fog")!=="run"||dcsOn("fogfan")?24:0)+wob2(0.01,8)*3,0,100))+"%",
@@ -51,7 +56,7 @@ MIMIC.SPOT={title:"STOCK PREP",h:312,trends:MIMIC_KNOB.SPOT.trends,
 MIMIC.WET={title:"WET END",h:282,trends:MIMIC_KNOB.WET.trends,
   eq:[[520,8,104,30,"FOG FAN"],[14,80,74,70,"HEADBOX"],[104,105,190,25,"FORMING TABLE"],[110,214,100,26,"WW SILO","s"],[308,90,64,50,"COUCH"],[388,90,104,50,"PICK-UP FELT"],[508,80,118,70,()=>LV("shoe")?"SHOE PRESS":"TWIN PRESS"]],
   ln:[["M88 115 H104"],["M294 117 H308"],["M372 115 H388"],["M492 115 H508"],["M160 130 V214",1]],
-  tags:[MT(51,172,"zones","ZONES",()=>(S.knob?S.knob.z.filter(v=>v).length:0)+"/12"),MT(51,194,"slc","SLICE",DV.slc),MT(51,70,"jw","J/W",DV.jw),MT(140,72,"wsp","WIRE",DV.wsp),
+  tags:[MT(51,172,"zones","ZONES",()=>(S.knob?S.knob.z.filter(v=>v).length:0)+"/12"),MT(51,194,"slc","SLICE",DV.slc),MT(51,70,"jw","J/W",DV.jw),MT(140,72,"wsp","WIRE",DV.wsp),MT(126,88,"rd","R/D",DV.rd),
     MT(240,172,"vac","VAC",r=>kf(r.vac)+" kPa"),MT(240,88,"edge","EDGE",r=>(r.edge>=0?"+":"")+Math.round(r.edge)+" mm"),MT(240,194,"gtrav","GUIDE",r=>r.gm?"AUTO "+Math.round(Math.min(1,r.gtrav)*100)+"%":"MAN"),
     MT(340,172,"couchSol","SOL",r=>kf(r.couchSol)+"%"),MT(340,194,"cs","PIT",r=>r.couch?"RUN":"STOP"),MT(440,172,"osc","OSC",r=>Math.round(r.osc)+"%"),
     MT(567,172,"pl","LOAD",r=>Math.round(r.pl)+" kN/m"),MT(567,194,"pressSol","SOL",r=>kf(r.pressSol)+"%"),MT(567,66,"psp","SPD",DV.psp),MT(260,232,"wwl","LEVEL",DV.wwl),MT(260,246,"wwg","VOL",DV.wwg),MT(370,232,"drain","DRAIN",DV.drn),MT(560,232,"pressw","PRESS",DV.pw),

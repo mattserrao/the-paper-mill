@@ -34,7 +34,7 @@ const TAGS=[
   ["bwsp","Basis weight setpoint","WET","lb/1000 ft²",()=>bwSp(),""],
   ["drain","Table and couch drainage","WET","gpm",()=>S.we?GPM(S.we.f.drain||0):0,""],["seal","Vacuum box water (seal pit)","WET","gpm",()=>S.we?GPM(S.we.f.seal||0):0,""],
   ["pressw","Press water (to the save-all)","WET","gpm",()=>S.we?GPM(S.we.f.press||0):0,""],["wwov","White water silo overflow","WET","gpm",()=>S.we?GPM(S.we.f.over||0):0,""],
-  ["wsp","Wire speed","WET","fpm",()=>S.pmSpeed/DCS_DRAW(),""],["vac","Forming vacuum","WET","kPa",r=>r.vac,""],["couchSol","Couch solids","WET","%",r=>r.run?r.couchSol:null,""],
+  ["wsp","Wire speed","WET","fpm",()=>S.pmSpeed/DCS_DRAW(),""],["jw","Jet-to-wire ratio","WET","",()=>dcsJw(),""],["rd","Rush / drag (+ rush, − drag)","WET","fpm",()=>S.pm==="run"?dcsRD():null,"a.rd"],["vac","Forming vacuum","WET","kPa",r=>r.vac,""],["couchSol","Couch solids","WET","%",r=>r.run?r.couchSol:null,""],
   ["pl","Press load","WET","kN/m",r=>r.pl,""],["pressSol","Press solids","WET","%",r=>r.run?r.pressSol:null,""],["edge","Fabric edge","WET","mm",r=>r.edge,""],
   ["gtrav","Guide travel used","WET","%",r=>r.gm?Math.min(1,r.gtrav)*100:null,""],["osc","Felt shower oscillator","WET","%",r=>r.osc,""],
   ["wwl","White water silo level","WET","%",()=>S.we?S.we.L/WE.silo*100:null,"a.wwl"],["wwg","White water silo volume","WET","gal",()=>S.we?GAL(S.we.L):null,""],
