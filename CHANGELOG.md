@@ -11,6 +11,11 @@
   takes 4 % off ring crush (less draw adds it). Under 1.5 % the sheet flutters into the dryers and breaks come more
   often (×1.5 at 1.0 %, ×2.2 at 0.5 %). The wrinkles under 1 % and the snap over 2.4 % are as before. Both links are on
   the relationship map.
+- **Help brought up to date** (`51f-help.js`). New guide pages: Control room and second screen (with the OCC recipe and
+  map zoom) and Shifts and the crew (DuPont 12, team hard hats, vacation cover, short shifts). New glossary terms:
+  A bales / C bales / Mixed Waste, Second screen, Relationship map, Manning, DuPont 12, Hard hats, Ring crush, Showers.
+  Updated: Draw (ring crush and breaks), Bale yard, DCS, Control room, Off-spec (ring crush), Fiber in, paper out.
+  Fixed: Process flow is under Report → Control room, not Settings.
 - **Machine showers 1.65 m³ a ton of paper** (about 250 gpm at 35 t/h), down from 8 (over 1,000 gpm, `07f-water.js`).
 - **OCC recipe** (`05b-orders.js`, Planning screen in `50f-control.js`). Three kinds of bale replace the gate grading:
   A bales ($25/t over market, ~5 % pulper rejects), C bales (market, ~11 %) and Mixed Waste ($45/t under, ~24 %).

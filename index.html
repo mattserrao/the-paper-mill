@@ -14966,7 +14966,7 @@ function camPullOn(){try{return localStorage.getItem("paper-mill-campull")!=="of
     <li><b>Survival:</b> no last day. Each wave (4 days, ending with a planned outage) brings more upsets and higher costs. The run ends when cash falls below −$1.5M; your time survived is your score.</li>
     <li><b>Free Play:</b> no clock, free upgrades and no leaderboard. Good for trying things out.</li>
     <li><b>Zen Mode:</b> sit back and watch the mill run.</li></ul>`],
-  ["Fiber in, paper out","flow",`<ol><li><b>Receiving:</b> trucks unload bales of OCC into the bale yard.</li><li><b>Stock prep:</b> the pulper turns bales back into pulp; cleaners, screens and the disk thickener strip out sand, staples and plastic; the stock chest stores clean pulp; the refiners strengthen the fibers.</li>
+  ["Fiber in, paper out","flow",`<ol><li><b>Receiving:</b> trucks unload bales of OCC into the bale yard: A bales, C bales and Mixed Waste, each on its own pile, fed to the pulper in the order of your recipe (Planning).</li><li><b>Stock prep:</b> the pulper turns bales back into pulp; cleaners, screens and the disk thickener strip out sand, staples and plastic; the stock chest stores clean pulp; the refiners strengthen the fibers.</li>
     <li><b>Paper machine:</b> the headbox sprays pulp onto the forming fabric, the presses squeeze water out, the dryer cans dry the sheet and the reel winds it up.</li><li><b>Winder:</b> cuts each reel into customer rolls.</li><li><b>Warehouse and shipping:</b> rolls are stored, then loaded onto trucks.</li></ol>
     <p>In a season or survival run the controls run on AUTO; in free play you can set them yourself in Settings.</p>`],
   ["The bottleneck and upgrades","up",`<p>The mill can only run as fast as its narrowest step. Every mill starts with one bottleneck: the <b>Upgrades</b> tab names it, and upgrades that fix it are 25% off. Fix it first.</p>
@@ -14992,28 +14992,37 @@ function camPullOn(){try{return localStorage.getItem("paper-mill-campull")!=="of
     <p>At each outage the leader makes one pick that stays with the mill. You can change leader once per run, in an outage budget dialog.</p>`],
   ["Fiddly knobs","knobs",`<p>Red knobs around the mill do nothing until you touch them. Move one and trouble may turn up later, sometimes somewhere else. The crew traces it back in the end.</p>
     <ul><li>Tap the red hardware, or open the <b>DCS screens</b> from the operator consoles (SPOT for stock prep, WET and DET on the machine floor).</li><li>The game slows to 1 min/s while a knob panel or DCS screen is open.</li><li>The DCS covers the whole machine: SPOT (stock prep, from the bale conveyor to the fan pump), WET, DET (through the winder and roll conveyor) and UTIL (water, effluent, rejects). Setpoints there are the same as Process flow's controls: AUTO and locked in a season.</li><li><b>Motors</b> (bale conveyor, ragger, junk trap, screen rotors, dye pump, fog fan): OFF stops that step like a breakdown, and the operators start it again after 30 minutes. <b>Reject purges</b> left in MANUAL build pressure until the cleaners plug.</li><li><b>Settings → View → Fiddly knobs view</b> greys out the mill and shows only the knobs.</li></ul>`],
-  ["Process flow","pflow",`<p><b>Settings → View → Process flow</b> draws the whole mill for today's mill day (6am to 6am), or yesterday: what goes in (fiber, energy, chemicals and water, labor, maintenance, overhead), the areas it passes through, and what comes out (paper, waste, profit).</p>
+  ["Process flow","pflow",`<p><b>Report → Control room → Process flow</b> draws the whole mill for today's mill day (6am to 6am), or yesterday: what goes in (fiber, energy, chemicals and water, labor, maintenance, overhead), the areas it passes through, and what comes out (paper, waste, profit).</p>
     <ul><li>The blue band grows as money is spent, area by area, and meets the day's revenue at the end.</li><li>Waste is in tons: rejects to landfill, fiber lost in the effluent, and broke that goes round again.</li><li>Today, Yesterday, 7 d or Run: the run includes the 14 days before you took over (switch them off with Prior days).</li><li>Tap any area, input or output for its panel: trends over time (24 h, 7 d or the whole run; tap a chart to read it), costs, and for areas uptime and quality.</li><li><b>The dryers have a limit.</b> More speed, a heavier grade or a wetter sheet from the wet end means more water to dry. Past the 3rd section's limit the sheet comes off wet, fails the moisture spec and goes to the beater, and the crew slows the machine until it's dry again. The shoe press gives the dryers more headroom. Watch DRYER LOAD on the DET screen.</li><li>Each area's controls (truck arrivals, crews, pulper feed, machine speed and grade, winder, loaders) are in its panel under <b>Controls</b>: AUTO and locked in a season or survival run, yours in Free Play.</li><li>Freight in and Freight out move with a weekly diesel price, the weather and detours.</li><li>Tap any box or band for its breakdown. The mill keeps running while it's open, so the numbers update live.</li></ul>`],
   ["Controls","controls",`<ul><li><b>Speed:</b> tap the top bar to open it, then − and +. Pause is the button on the far left.</li><li><b>Camera:</b> a fixed isometric view. Drag to pan; pinch, scroll or + and − to zoom one step at a time. On a keyboard: arrows or WASD to move. Roofs lift off as you zoom in (Settings → View → Cutaway).</li>
     <li><b>Go to:</b> the buttons above the dock fly to each area. Tap a label or a red tag to fly to it.</li><li><b>Labels</b> in the top bar shows or hides equipment labels.</li><li>The game pauses while a bottom panel is open.</li></ul>`],
+  ["Control room and second screen","croom",`<p><b>Report → Control room</b> has the mill's screens: Process flow, DCS, Planning, Quality, Water, Trends, Relationship map and Manning.</p>
+    <ul><li><b>Planning</b> also sets the <b>OCC recipe</b>: how many A bales, C bales and Mixed Waste go into the pulper each feed cycle (1 to 10 of each). A bales cost more and pulp clean; Mixed Waste is cheap, but about a quarter of it goes to landfill at $30/t, and more than 2 in 10 slows the pulper.</li>
+    <li><b>Relationship map:</b> what drives each reading and what it moves. −, Fit and + zoom it; Fit shows the whole map.</li>
+    <li><b>Second screen</b> (desktop): opens the control room in its own window for another monitor. Pick a screen from the tiles; <b>← Control room</b> or Escape comes back. Opening a screen from the game (a console in the mill, a tile) shows it there. Dock back returns everything to the game window.</li></ul>`],
+  ["Shifts and the crew","crew",`<p>The maintenance techs and the operators work 12-hour shifts, 6 to 6, in four teams on a DuPont 12 rotation. Each team wears its own hard hat: <b>A blue, B green, C orange, D white</b>.</p>
+    <ul><li>At each shift change the incoming crew walks in from the parking lot and takes over from the outgoing one; a tech out on a job is relieved back at the shop.</li>
+    <li>Vacations are covered by someone from a team that's off, on overtime or a swap, so you'll often see a different hat on a crew. Report → Control room → Manning shows who's on and who's covering.</li>
+    <li>Now and then a tech's vacation isn't covered: that shift runs a tech short and repairs are slower until the next shift change.</li></ul>`],
   ["Scores and saving","score",`<ul><li>A season or survival run saves on this device as you play; <b>Continue</b> on the title screen picks it up.</li><li>Season and survival each have their own leaderboard. The end screen also shows your grade, civics and upsets caught early.</li></ul>`]];
   // glossary: [term, definition]  (kept in plain words; the game's own names where it has them)
   const GL=[
     ["Agitator","A mixer in a chest or pit that keeps fiber from settling. One of the fiddly knobs."],
     ["Basis weight","How heavy the paper is per area (lb per 1,000 ft²). Each grade has a target; running heavy wastes fiber."],
     ["Beater / broke","Paper that didn't make it (off-spec, trimmed, or lost in a break or hayout), sent back to be repulped."],
-    ["Bale yard","Where OCC bales are stored before the pulper."],
+    ["Bale yard","Where OCC bales are stored before the pulper: one pile each of A bales, C bales and Mixed Waste."],
+    ["A bales / C bales / Mixed Waste","The three kinds of OCC bale. A bales: clean boxes, $25/t over market, about 5% rejects. C bales: market OCC, about 11%. Mixed Waste: $45/t under market, about 24% rejects (plastic, wax and trash). See OCC recipe."],
     ["Bottleneck","The slowest step in the mill. It sets how much the whole mill can make."],
     ["Civics","The four meters: Economy, Labor, Machinery and Community."],
     ["Clamp truck","A lift truck that grips paper rolls from the sides, used in the warehouse and at the shipping docks."],
     ["Cleaners (HD, LC, lightweight)","Cone-shaped separators that spin out heavy dirt (high-density), sand (low-consistency) and light plastic and wax (lightweight)."],
     ["Consistency","How much fiber is in the water, as a percentage. Pulp is mostly water."],
     ["Couch pit","The pit under the end of the forming section that catches trimmed and broken sheet."],
-    ["DCS","Distributed control system: the operator screens (SPOT, WET, DET) with live readings, alarms and trends."],
+    ["DCS","Distributed control system: the operator screens (SPOT, WET, DET and UTIL) with live readings, alarms and trends."],
     ["Deckle / trim","The usable width of the sheet. A wider trim makes more tons at the same speed."],
     ["Disk thickener","Removes water from the pulp before it goes to the stock chest."],
     ["DLK","Double-lined kraft clippings: stronger, dearer fiber used in heavier grades."],
-    ["Draw","The small speed difference between sections that keeps the sheet tight. Too tight snaps it; too slack wrinkles it."],
+    ["Draw","The small speed difference between sections that keeps the sheet tight; the press-to-dryer (open) draw's standard is 1.5%. More draw stretches the sheet and lowers ring crush (about 4% for each % over), and past 2.4% it snaps. Less draw lets the sheet flutter: breaks come more often below 1.5%, and under 1% the reel wrinkles."],
     ["Dryer cans","Steam-heated cylinders that dry the sheet."],
     ["Felt","A fabric belt that carries the sheet through the presses and soaks up the water squeezed out."],
     ["Forming fabric (wire)","The moving mesh the pulp lands on; water drains through it and the sheet forms on top."],
@@ -15026,7 +15035,7 @@ function camPullOn(){try{return localStorage.getItem("paper-mill-campull")!=="of
     ["Machine chest","The chest that feeds the paper machine with pulp at a steady consistency."],
     ["Mill leader","The person in charge of your run: Chip, Dot, Felicity or Hank."],
     ["OCC","Old corrugated containers: used cardboard boxes, the mill's raw material."],
-    ["Off-spec","Paper outside its grade's spec (basis weight ±3%, moisture 8 ±2%, the mill's color) or with defects like streaks and crush marks. It's wound into beater rolls, which go back to the pulper to be repulped (the QCS screen shows the spec)."],
+    ["Off-spec","Paper outside its grade's spec (basis weight ±3%, moisture 8 ±2%, ring crush, the mill's color) or with defects like streaks and crush marks. It's wound into beater rolls, which go back to the pulper to be repulped (the QCS screen shows the spec)."],
     ["Outage","A planned shutdown for maintenance, every 7 days in a season and every 4 days in survival."],
     ["Outage prep","The four-item checklist before an outage that shortens and cheapens it."],
     ["Press section","Rolls that squeeze water out of the wet sheet through the felts."],
@@ -15045,7 +15054,14 @@ function camPullOn(){try{return localStorage.getItem("paper-mill-campull")!=="of
     ["Stock chest","A big tank of clean pulp between stock prep and the paper machine. A full chest keeps the machine running when stock prep stops."],
     ["t/h","Tons per hour."],
     ["Tell","The visible sign that a piece of equipment is about to fail. Only seen on a Round."],
-    ["Control room","Report → Control room: the process flow, the DCS screens, planning, quality, water and trends in one place. The DCS screens also open from the operator consoles in the mill."],
+    ["Control room","Report → Control room: the process flow, the DCS screens, planning (with the OCC recipe), quality, water, trends, the relationship map and manning in one place. The DCS screens also open from the operator consoles in the mill."],
+    ["Second screen","On a desktop, the control room in its own window for another monitor: tiles for each screen, and ← Control room to come back. Report → Control room or Settings → View."],
+    ["Relationship map","Report → Control room: every reading, what drives it and what it moves. Tap one to light up its links; −, Fit and + zoom."],
+    ["Manning","Report → Control room: the team on shift, every tech and operator with their hard hat, who is covering a vacation (overtime or a swap, and from which team), any unfilled gap and the time to the next shift change."],
+    ["DuPont 12","The 12-hour shift rotation the crews work: a 28-day cycle of 4 nights, 3 off, 3 days, 1 off, 3 nights, 3 off, 4 days and 7 off, with four teams each a week apart. Shifts change at 6 AM and 6 PM."],
+    ["Hard hats","Techs and operators wear their team's colour: A blue, B green, C orange, D white. Someone covering from another team keeps their own colour."],
+    ["Ring crush","The board's strength test (QCS). More refining raises it; stickies, a light sheet and too much open draw lower it. Under the grade's spec the reel goes to the beater."],
+    ["Showers","Fresh water sprayed on the forming fabric and felts to keep them clean: about 1.65 m³ a ton of paper, roughly 250 gpm at full rate. It ends up in the white water."],
     ["Trends","Every DCS screen has a trend beside the picture (on a phone, switch between Picture and Trend). Tap a reading on the picture to add it; up to six pens, from 1 hour to the whole run."],
     ["Moves with","On a trend, X–Y plots two readings against each other and Moves with ranks the readings that rise and fall with one you pick, with any delay between them. Moving together isn't proof that one causes the other."],
     ["OEE","Overall equipment effectiveness: availability (running time, planned outages left out) × performance (tons against the setpoint speed) × quality (good paper out of all paper made)."],
