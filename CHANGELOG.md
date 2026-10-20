@@ -4,6 +4,9 @@
 ## v6.10.0-t3 (2026-10-20): QA fixes and balance (test build)
 100 live QA runs (50 seasons, 50 survival) on t2, then matched balance runs against main.
 - **Fix:** a drive fault card nobody answers no longer holds the machine down. After an hour the default is taken (investigate, then replace) and the card closes.
+- **Fix (QA Agent D):** the Drives power diagram labels were centred by a style rule, so "UTILITY" and "115 kV" were cut off and the lineup labels sat on the bus lines.
+- **Fix (QA Agent D):** in a rectifier fault, the Drives "Faulted" count includes drives with no DC bus, and the Reliability screen shows them as "No DC" (it showed a plain 0 %).
+- **Fix (QA Agent D):** a planned repair removes the same part's changeout from the outage wish list, so it isn't paid for twice.
 - **Fix:** the drive fault card shows the drive's load at the moment it tripped (it showed 0%).
 - **Balance:** bearing, motor and drive failures about half as often; rectifier faults a quarter as often; rectifier bill $60k to $40k; motor bills about 25% lower.
   Result (24 seasons per build, same seeds): doing rounds +$2.53M vs main +$2.68M; hands-off -$72k vs main +$551k (7 of 12 still profit).

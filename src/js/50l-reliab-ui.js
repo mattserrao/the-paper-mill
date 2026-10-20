@@ -15,7 +15,7 @@ function drvBuild(b){b.appendChild(kEl("div","dcsal",`<b>Alarms</b><ul id="dcsAl
   b.appendChild(kEl("div","drvw",`<div class="qcsv" id="drvTop"></div><div id="drvL"></div>`));
   b.appendChild(kEl("p","dcsfield","Load is the drive's output against its rated power. Tap a load to trend it. Over about 95% a drive trips more often; over 100% it also wears its motor and bearings faster. A tripped drive reads zero until the electrical tech changes it."));}
 function drvRefresh(){const el=$("drvL");if(!el)return;const r=knobRead(),R=S.rel;let kw=0,run=0,flt=0;const al=[];
-  const rows=LINEUPS.map(([ln,name,tag])=>{const list=ASSETS.filter(A=>A.ln===ln).map(A=>{const L=Math.max(0,rlyLoad(A.id,r)),st=rlyDrvSt(A.id,L),T=rlyTemp(A.id,L);kw+=L/100*A.kw;if(st==="run")run++;if(st==="fault"||st==="trip")flt++;
+  const rows=LINEUPS.map(([ln,name,tag])=>{const list=ASSETS.filter(A=>A.ln===ln).map(A=>{const L=Math.max(0,rlyLoad(A.id,r)),st=rlyDrvSt(A.id,L),T=rlyTemp(A.id,L);kw+=L/100*A.kw;if(st==="run")run++;if(st==="fault"||st==="trip"||st==="nodc")flt++;
       if(st==="nodc"){}else if(st==="fault")al.push([`DRIVE FAULT · ${A.n.toUpperCase()}`,true]);else if(st==="trip")al.push([`MOTOR TRIPPED · ${A.n.toUpperCase()}`,true]);
       else if(L>100)al.push([`DRIVE OVERLOAD · ${A.n.toUpperCase()} ${Math.round(L)}%`,L>110]);else if(L>95)al.push([`DRIVE LOAD HI · ${A.n.toUpperCase()}`,false]);
       if(T>72)al.push([`DRIVE TEMP HI · ${A.n.toUpperCase()} ${Math.round(T)} °C`,T>78]);
@@ -65,9 +65,9 @@ function rlyRefresh(){const tb=$("rlyTab");if(!tb)return;const R=rlyState(),D=R.
   // the table
   const outg=!!(S.outg&&S.season&&S.season.on&&!S.free);
   const rows=ASSETS.map(A=>{const a=R.a[A.id],L=Math.max(0,rlyLoad(A.id,r)),st=rlyDrvSt(A.id,L),c=R.chg[A.id]||{},cq=Object.keys(c).map(k=>RLY.plan[k].n).join(", ");
-    const dcls={fault:"bad",trip:"bad",run:L>100?"bad":L>95?"warn":"ok",idle:"",off:""}[st];
+    const dcls={fault:"bad",trip:"bad",nodc:"bad",run:L>100?"bad":L>95?"warn":"ok",idle:"",off:""}[st];
     return `<tr data-rsel="${A.id}" class="${RUI.sel===A.id?"cur":""}"><td><b>${A.n}</b><small>${LINEN[A.ln][2]}${a.pin?` · next ${a.pin==="vib"?"vibration":"ADX"} round`:""}</small></td><td>${rlyVibCell(a)}</td><td>${rlyAdxCell(a)}</td>
-      <td>${rlyChip(st==="fault"?"Fault":st==="trip"?"Tripped":st==="off"?"Off":Math.round(L)+" %",dcls,st==="run"?Math.round(rlyTemp(A.id,L))+" °C":st==="idle"?"idle":"")}</td>${outg?`<td>${cq?`<small class="rbk">${cq}</small>`:"<small>–</small>"}</td>`:""}</tr>`;}).join("");
+      <td>${rlyChip(st==="fault"?"Fault":st==="trip"?"Tripped":st==="nodc"?"No DC":st==="off"?"Off":Math.round(L)+" %",dcls,st==="run"?Math.round(rlyTemp(A.id,L))+" °C":st==="idle"?"idle":"")}</td>${outg?`<td>${cq?`<small class="rbk">${cq}</small>`:"<small>–</small>"}</td>`:""}</tr>`;}).join("");
   const h=`<table><thead><tr><th>Equipment</th><th>Vibration</th><th>ADX motor</th><th>Drive</th>${outg?"<th>Next outage</th>":""}</tr></thead><tbody>${rows}</tbody></table>`;
   if(tb._h!==h){tb._h=h;tb.innerHTML=h;}
   // the selected asset
@@ -88,7 +88,7 @@ function rlyRefresh(){const tb=$("rlyTab");if(!tb)return;const R=rlyState(),D=R.
       ${hist(a.ha,([t,hh,s])=>`<div><span>${dhm(t)}</span><em class="${ADXST[s][1]}">health ${hh}% · ${ADXST[s][0]}</em></div>`)}
       <div class="ract"><button type="button" class="kstd" data-rpin="${A.id}:adx" aria-pressed="${a.pin==="adx"}"${on?"":" disabled"}>${a.pin==="adx"?"Pinned for the next test":"Pin to the next ADX test"}</button>
       ${ximm?`<button type="button" class="rfix" data-rfix="${A.id}:adx"${busy?" disabled":""}>Plan repair · ${money(rlyFixCost(A.id,"adx"))}<small>swap in the spare motor now, no downtime</small></button>`:""}</div></section>
-    <section class="plsec"><div class="dcssub">Drive</div>${rlyChip(st==="fault"?"Fault":st==="trip"?"Tripped":st==="off"?"Off":Math.round(L)+" % load",{fault:"bad",trip:"bad",run:L>100?"bad":L>95?"warn":"ok"}[st]||"",st==="run"||st==="idle"?Math.round(rlyTemp(A.id,L))+" °C heat sink":"")}
+    <section class="plsec"><div class="dcssub">Drive</div>${rlyChip(st==="fault"?"Fault":st==="trip"?"Tripped":st==="nodc"?"No DC":st==="off"?"Off":Math.round(L)+" % load",{fault:"bad",trip:"bad",nodc:"bad",run:L>100?"bad":L>95?"warn":"ok"}[st]||"",st==="run"||st==="idle"?Math.round(rlyTemp(A.id,L))+" °C heat sink":"")}
       <p class="dcsfield">Drives fail without warning. Keep them under about 95% load; lightning and brownouts shorten their lives. <button type="button" class="linkb" data-trk="dl_${A.id}">Trend its load</button></p></section></div>
     <div class="dcssub">Changeout at the next planned outage</div>${chg}`;
   const key=det;if(dt._h!==key){if(!dt.contains(document.activeElement)||RUI.key===""){dt._h=key;dt.innerHTML=det;}}RUI.key="x";}
@@ -107,7 +107,7 @@ G3.rlyPlanMount=function(host,paint){if(!host)return;if(!rlyOn()||!S.rel){host.i
   draw();};
 
 // the single-line diagram: utility -> substation transformer -> 13.8 kV feeder -> MCC transformer -> rectifiers -> DC buses -> drives
-function drvSL(){const g=$("drvSL");if(!g)return;const mv=rlyMV(),lv=rlyLV(),blk=mv<=0,c=on=>on?"#4fd18b":"#ff6b5e",t=(x,y,s,cl,a)=>`<text x="${x}" y="${y}" class="mtg" text-anchor="${a||"start"}"${cl?` style="fill:${cl}"`:""}>${s}</text>`;
+function drvSL(){const g=$("drvSL");if(!g)return;const mv=rlyMV(),lv=rlyLV(),blk=mv<=0,c=on=>on?"#4fd18b":"#ff6b5e",t=(x,y,s,cl,a)=>`<text x="${x}" y="${y}" class="mtg" style="text-anchor:${a||"start"}${cl?`;fill:${cl}`:""}">${s}</text>`;
   const xf=(x,y,on)=>`<circle cx="${x}" cy="${y-7}" r="9" fill="none" stroke="${c(on)}" stroke-width="2"/><circle cx="${x}" cy="${y+7}" r="9" fill="none" stroke="${c(on)}" stroke-width="2"/>`;
   let h=`<path d="M18 40 H62" stroke="${c(!blk)}" stroke-width="3"/>`+t(18,28,"UTILITY")+t(18,58,`${blk?0:PWR.util} kV`,"");
   h+=xf(76,40,!blk)+t(76,72,"SUBSTATION","","middle")+t(76,84,"115/13.8 kV","","middle");

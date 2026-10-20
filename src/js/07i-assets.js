@@ -173,6 +173,7 @@ function rlyFix(id,k){if(!rlyOn())return false;const R=rlyState(),a=R.a[id],A=AS
   const bill=rlyBill(id,k),cost=bill*RLY.fix,p=R.pend.findIndex(x=>x.a===id&&x.k===k);spend(cost,"repairs");pfRepair(RLY_ID[k],cost);
   if(p>=0){R.pend.splice(p,1);R.caught++;R.saved+=bill-cost;if(civOn())civAdd(TELL.catchCiv,"Caught early");}
   if(k==="vib"){a.vib=95;a.lv={t:S.t,st:"good",v:1.1,by:"fix"};}else{a.adx=96;a.la={t:S.t,st:"good",h:96,by:"fix"};}
+  const ck=k==="vib"?"b":"m",co=R.chg[id];if(co&&co[ck]){delete co[ck];if(!Object.keys(co).length)delete R.chg[id];}   // the part is new: no outage changeout for it
   log(`Planned repair: ${A.n} ${k==="vib"?"bearings changed":"motor swapped for the spare"} for ${money(cost)}, no downtime (a ${money(bill)} failure avoided).`,"ok");return true;}
 const rlyFixCost=(id,k)=>rlyBill(id,k)*RLY.fix;
 
