@@ -1,7 +1,7 @@
 # Changelog
 
 
-## v6.9.0-t1 (2026-10-20): The Valves Update (test build, test/v6.9-valves)
+## v6.9.0 (2026-10-20): The Valves Update (built and tested on test/v6.9-valves as 6.9.0-t1)
 Plan: `claude/valves-v69-plan.md` (project doc). Six control loops with real valves and PID tuning, as a toy model for
 learning loop tuning. Untouched, every loop is the game's own v6.8 model and the mill plays and checksums exactly as
 before; the first change to a loop hands it to the valve model, and back on standard tuning and settled for 10 minutes
