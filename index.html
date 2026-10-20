@@ -1427,6 +1427,67 @@ body.pmpop .popmain[data-v="dcs"] #dcsOv .dcs{max-width:1180px;margin:0 auto}
 @media (max-width:520px){.rect td,.rect th{padding-left:4px;padding-right:4px}.rect td small{margin-left:2px}.recst button{min-width:26px;padding:2px 6px}}
 .manov .dcsh{flex-wrap:nowrap}.manov .manclk{white-space:nowrap}
 #qcsV{grid-template-columns:repeat(3,minmax(0,1fr))}
+/* ---- v6.9 the control valves: symbols on the DCS pictures, the faceplate and tuning panel (50k) ---- */
+.mimic .vsym{cursor:pointer}.mimic .vsym:focus{outline:none}.mimic .vsym:focus-visible .vbody,.mimic .vsym:focus-visible .vbub{stroke:#fff;stroke-width:2.5}
+.mimic .vhit{fill:transparent}.mimic .vld{stroke:#5c7398;stroke-width:1;stroke-dasharray:2 2}
+.mimic .vbody{fill:#4fd18b;stroke:#c3d3ea;stroke-width:1.4}.mimic .vstem{stroke:#c3d3ea;stroke-width:1.4}.mimic .vact{fill:#2b3b57;stroke:#c3d3ea;stroke-width:1.4}
+.mimic .vsym.st-tch .vact{fill:#3f6aa8}.mimic .vsym.st-man .vbody{fill:#ffb02e}.mimic .vsym.st-man .vact{fill:#7a5a12}.mimic .vsym.st-bad .vbody{fill:#ff6b5e}.mimic .vsym.st-bad .vact{fill:#7a1f1a}
+.mimic .vlab{fill:#e8eef8;font:700 10.5px ui-monospace,SFMono-Regular,Menlo,monospace}.mimic .vlab2{fill:#8ea4c4;font:600 10px ui-monospace,SFMono-Regular,Menlo,monospace}
+.mimic .vsym.st-man .vlab{fill:#ffd77a}.mimic .vsym.st-bad .vlab{fill:#ff8b7f}
+.mimic .vbub{fill:#16233a;stroke:#c3d3ea;stroke-width:1.4}.mimic .vbubl{stroke:#c3d3ea;stroke-width:1}.mimic .vbt{fill:#e8eef8;font:700 8.5px system-ui,sans-serif;text-anchor:middle}
+.mimic .vsym.st-tch .vbub{stroke:#7fb2ff}.mimic .vsym.st-man .vbub{stroke:#ffb02e}.mimic .vsym.st-bad .vbub{stroke:#ff6b5e}
+.vlvov{z-index:170!important}
+.vlvp{width:min(980px,100%);height:min(660px,calc(100dvh - 20px))}.vlvp .vlvb{flex:1;min-height:0}.vlvp .vlvwin[hidden]{display:none}
+.vlvp .dcsh{row-gap:6px}.vlvwh{color:#8ea4c4;font-size:12px}
+.vlvtabs{display:flex;gap:4px;flex-wrap:wrap;width:100%}.vlvtabs button{background:#22324f;color:#c3d3ea;border:1px solid #33476a;border-radius:6px;padding:6px 11px;font-weight:700;font-size:12px}
+.vlvtabs button[aria-selected="true"]{background:#c3d3ea;color:#0f1b2d}
+.vlvb{overflow:auto;padding:10px;display:grid;grid-template-columns:minmax(0,1.25fr) minmax(0,1fr);gap:12px;align-items:start;align-content:start}
+.vlvtr{background:#0f1b2d;border:1px solid #2c3e5c;border-radius:8px;padding:6px;position:sticky;top:0}
+.vlvtrh{display:flex;justify-content:space-between;align-items:center;gap:6px;flex-wrap:wrap}.vlvtrh .dcsleg{margin:0}
+.vlvwin button{padding:3px 8px!important;font-size:11px}
+#vlvCv{width:100%;height:auto;display:block;margin-top:6px;border-radius:6px}
+.vlvpane{display:flex;flex-direction:column;gap:8px;min-width:0}
+.vhealth{background:#1c2b45;border:1px solid #2c3e5c;border-left-width:4px;border-radius:8px;padding:6px 10px;display:flex;flex-direction:column;gap:2px}
+.vhealth b{font-size:14px;color:#4fd18b}.vhealth span{color:#dbe6f6}.vhealth small{color:#8ea4c4}
+.vhealth b.vh-osc,.vhealth b.vh-stick,.vhealth b.vh-dead{color:#ff8b7f}.vhealth b.vh-slow,.vhealth b.vh-sat,.vhealth b.vh-man{color:#ffd77a}
+.vrow{display:flex;align-items:center;gap:8px;flex-wrap:wrap}.vk{color:#8ea4c4;font-size:12px;min-width:74px;display:inline-flex;align-items:center;gap:4px}
+.vbig{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:6px}.vbig>div{background:#1c2b45;border:1px solid #2c3e5c;border-radius:8px;padding:6px 8px;display:flex;flex-direction:column;gap:3px;min-width:0}
+.vbig small{color:#8ea4c4;font-size:11px;display:flex;align-items:center;gap:4px}.vbig b{font-size:20px;color:#4fd18b;font-variant-numeric:tabular-nums}
+.vnum{display:flex;align-items:stretch;gap:3px}.vnum input{flex:1 1 0;width:0}.vnum1 input{width:100%}.vnum input,.vnum1 input{min-width:0;background:#0f1b2d;color:#fff;border:1px solid #33476a;border-radius:6px;padding:4px 6px;font:700 15px ui-monospace,Menlo,monospace}
+.vnum input:disabled,.vnum input:read-only{color:#8ea4c4;background:#16233a}
+.vnum button,.vglq{background:#22324f;color:#dbe6f6;border:1px solid #33476a;border-radius:6px;min-width:24px;font-weight:800;padding:0 5px}
+.vglq{min-width:0;width:18px;height:18px;border-radius:50%;padding:0;font-size:11px;line-height:16px;color:#7fb2ff}
+.vglpop{background:#22324f;border:1px solid #33476a;border-radius:8px;padding:6px 9px;color:#dbe6f6;font-size:12px;line-height:1.4}.vglpop b{color:#7fb2ff}
+.vpos .vbar{position:relative;flex:1;min-width:120px;height:14px;background:#0f1b2d;border:1px solid #33476a;border-radius:7px;overflow:hidden}
+.vbar #vBarA{position:absolute;left:0;top:0;bottom:0;background:#3f6aa8}.vbar #vBarC{position:absolute;top:-2px;bottom:-2px;width:3px;margin-left:-1px;background:#ffb02e}
+#vPos{font:700 12px ui-monospace,Menlo,monospace;color:#c3d3ea;min-width:90px}
+.vnote{margin:0;color:#c3d3ea;font-size:12px;line-height:1.4}.vnote.vsm{color:#8ea4c4;font-size:11px;margin-top:-4px}.vwhat{margin:0;color:#8ea4c4;font-size:12px;line-height:1.45}
+.vbtns{display:flex;gap:6px;flex-wrap:wrap}.vlvp .reroll{background:#22324f;color:#dbe6f6;border:1px solid #33476a;border-radius:6px;padding:6px 12px;font-weight:700}
+.vlvp .reroll.vpri{background:#4fd18b;color:#0f1b2d;border-color:#4fd18b}.vlvp .reroll:disabled{opacity:.45}
+.vsub{color:#8ea4c4;font-size:11px;letter-spacing:.08em;text-transform:uppercase;font-weight:700;display:flex;align-items:center;gap:6px;margin-top:2px}
+.vtn{display:grid;grid-template-columns:92px 1fr 104px;gap:8px;align-items:center}.vtn input[type=range]{width:100%;accent-color:#4fd18b}
+.vnum1{display:flex;align-items:center;gap:4px}.vnum1 b{font:700 14px ui-monospace,Menlo,monospace;color:#fff}.vnum1 small{color:#8ea4c4;font-size:11px;min-width:22px}
+.vscore b,.vbres .qcsgrid b{font-size:16px}
+.vsteps{margin:0;padding-left:18px;color:#c3d3ea;font-size:12px;line-height:1.5}
+.vmodel{margin:0;color:#dbe6f6;font-size:12.5px;line-height:1.5}.vmodel i{color:#ffd77a;font-style:normal}
+.vrow .vnum{width:130px}.vchar{display:grid;grid-template-columns:200px 1fr;gap:10px;align-items:center}.vchar svg{width:100%;background:#0f1b2d;border:1px solid #2c3e5c;border-radius:8px}
+.vchar .vax{fill:none;stroke:#5c7398;stroke-width:1}.vchar .vref{fill:none;stroke:#33476a;stroke-dasharray:3 3}.vchar .vcur{fill:none;stroke:#4fd18b;stroke-width:2.2}
+.vchar .vpt{fill:#ffb02e}.vchar .vat{fill:#8ea4c4;font:600 9px system-ui,sans-serif;text-anchor:middle}.vchar .vptl{fill:#ffd77a}
+.vgls{display:grid;grid-template-columns:1fr 1fr;gap:6px}.vgls div{background:#1c2b45;border:1px solid #2c3e5c;border-radius:8px;padding:6px 8px;font-size:12px;line-height:1.4;color:#c3d3ea}.vgls b{display:block;color:#7fb2ff}
+.vchl{display:flex;flex-direction:column;gap:6px}.vchc{display:grid;grid-template-columns:1fr auto;grid-template-areas:"t s" "l s";text-align:left;background:#1c2b45;color:#dbe6f6;border:1px solid #2c3e5c;border-radius:8px;padding:8px 10px}
+.vchc b{grid-area:t}.vchc span{grid-area:l;color:#8ea4c4;font-size:11px}.vchc i{grid-area:s;font-style:normal;color:#ffd77a;font-size:16px;letter-spacing:2px;align-self:center}
+.vstar{color:#ffd77a!important;letter-spacing:2px}
+.vlvf{align-items:center}.vlvclk{display:inline-flex;align-items:center;gap:6px}.vlvclk .seg button{padding:3px 9px;font-size:11px}
+@media (max-width:760px){
+  .vlvb{grid-template-columns:1fr}.vlvtr{position:static}
+  .vbig{grid-template-columns:1fr 1fr}.vbig>div:first-child{grid-column:1/-1}
+  .vtn{grid-template-columns:76px 1fr 92px}.vchar{grid-template-columns:1fr}.vchar svg{max-width:260px}.vgls{grid-template-columns:1fr}
+}
+@media (max-width:560px){.vlvov{padding:0}.vlvp{border-radius:0;max-height:100dvh;height:100dvh;width:100%}.vlvtabs button{padding:6px 8px;flex:1 1 auto}}
+.vlvrows{display:flex;flex-wrap:wrap;gap:6px;align-items:stretch}.vlvrows .dcssub{width:100%}
+.vlvrow{display:flex;gap:8px;align-items:center;flex:1 1 220px;background:#1c2b45;border:1px solid #2c3e5c;border-radius:8px;padding:7px 10px;color:#dbe6f6;text-align:left;min-height:40px}
+.vlvrow b{color:#7fb2ff;font:700 12px ui-monospace,Menlo,monospace}.vlvrow span{flex:1;color:#c3d3ea;font-size:12px}.vlvrow i{font:700 12px ui-monospace,Menlo,monospace;font-style:normal;color:#4fd18b;white-space:nowrap}
+.vlvrow i.st-man{color:#ffd77a}.vlvrow i.st-bad{color:#ff8b7f}
 </style>
 </head>
 <body class="app">
@@ -1601,7 +1662,7 @@ body.pmpop .popmain[data-v="dcs"] #dcsOv .dcs{max-width:1180px;margin:0 auto}
 <div class="btns"><button class="primary" id="no3d-retry">Try again</button></div></div></div>
 
 <script type="module">
-const APP_VER="v6.8.3";   // shown in the menu and sent with leaderboard scores (max 12 characters)
+const APP_VER="v6.9.0-t1";   // shown in the menu and sent with leaderboard scores (max 12 characters)
 // TEST BUILDS ONLY (off in releases): turbo speeds 240/480/960 sim min/s for fast playtests. Above 120, crews and maintenance start jobs
 // without waiting for the 3D walk (as with the 3D view off) and outages keep the speed. Set false for a release.
 const TURBO=false,TURBO_FAST=s=>TURBO&&s>120;
@@ -2753,7 +2814,7 @@ function mods(){const m=baseMods();
   for(const f of (S.fx||[])){const e=f.mods||{};if(e.pmDown)m.pmDown=e.pmDown;if(e.speedCap)m.speedCap=Math.min(m.speedCap,e.speedCap);if(e.breakMul)m.breakMul*=e.breakMul;if(e.winderDown)m.winderDown=true;if(e.recvMul!==undefined)m.recvMul*=e.recvMul;if(e.pulperDown)m.pulperDown=true;if(e.docksClosed)m.docksClosed=true;if(e.noOut)m.noOut=true;if(e.noIn)m.noIn=true;if(e.yieldMul)m.yieldMul*=e.yieldMul;if(e.feedMul)m.feedMul*=e.feedMul;if(e.clampMul!==undefined)m.clampMul*=e.clampMul;if(e.offSpec)m.offSpec=true;if(e.hayMul)m.hayMul*=e.hayMul;}   // (v5.1: civics fx use these too)
   if(S.wx==="rain"&&!baleOn())m.yieldMul*=0.97;   // (v6.6: outside zen the yard's moisture does this, 05b)
   if(S.pm==="break"&&S.brkType!=="reel"&&working("brk")){m.recvMul=0;m.clampMul=0;m.crewAtPM=true;}
-  knobMods(m);   // v5.6 fiddly knobs (nothing unless a knob was moved)
+  knobMods(m);vlvMods(m);   // v5.6 / v6.9 fiddly knobs (nothing unless a knob was moved)
   bqMods(m);   // v6.6 stickies from contaminated bales (05b)
   dryMods(m);   // v6.5 b5 the dryer limit: the crew's speed trim for a wet sheet (07d)
   return m;}
@@ -3742,6 +3803,7 @@ function step(dt){
   outageTick();
   const M=S.M=mods();
   autoControl(dt);
+  vlvTick(dt);   // v6.9 the control valves (07h; nothing until a loop is touched)
   knobTick(dt);   // v5.6 fiddly knobs (returns at once unless a knob was moved)
   dcsTick(dt);   // v6.5 b3 DCS motors and reject purges (07c; nothing until the DCS is used)
   dryTick(dt);   // v6.5 b5 the dryer limit: water, steam, moisture (07d)
@@ -3890,6 +3952,7 @@ function step(dt){
   // trend every 10 sim min
   S.trendAcc+=dt;
   if(S.trendAcc>=10){S.trendAcc-=10;S.trend.push([S.tank/P.tankCap,S.pmSpeed/3300,S.yard/P.yardCap,S.fg/P.fgCap]);if(S.trend.length>144)S.trend.shift();}
+  vlvCapture();   // v6.9 the valves' boundary for the next 15 s, and their trend points (07h)
   histTick(dt);   // v6.5 history: the hour's readings and minutes (11c)
   if(!S.zen)knobHist();   // v5.6: DCS / QCS trends (reads only)
   tagTick();   // v6.7 the control room's tag history (11d; reads only)
@@ -3910,7 +3973,7 @@ function step(dt){
 const KNOB_IDEAL={pulp:50,ref:60,agit:100,vac:30,press:100,osc:100,couch:1,draw:1.5,st1:70,gm:1,gt:0};
 const KNOBS=[
   {id:"pulp",name:"Pulper dilution valve",area:"SPOT",where:"Pulper, stock prep",field:true,unit:"% open",min:0,max:100,step:1,
-    tip:"Dilution water into the pulper tub. Operators leave it at 50% open."},
+    tip:"Dilution water into the pulper tub: NV-101, which holds the consistency on AUTO. Moving it here puts NV-101 on MAN at that opening."},
   {id:"ref",name:"Refining energy",area:"SPOT",where:"Twin refiners, behind the headbox",field:true,unit:"kWh/t",min:20,max:130,step:1,
     tip:"Specific refining energy: the plate gap closes to put it in. More refining makes stronger paper (so a lighter sheet can pass on strength) but it drains slower on the table. Standard is 60 kWh/t."},
   {id:"agit",name:"Machine chest agitator",area:"SPOT",where:"Machine chest, stock prep",field:true,unit:"% speed",min:0,max:100,step:5,
@@ -3958,12 +4021,13 @@ function knobState(){if(!S.knob){S.knob={v:Object.assign({},KNOB_IDEAL),z:new Ar
     x:{cp:5,fr:0.5,ch:0,sw:0,vac:30,pl:100,st:0,d1:0,m:8,dl:0,dt:0,bs:0,z:new Array(KZONES).fill(0)},
     any:false,cs:0,wear:0,gacc:0,gm0:0,H:{},harm:{},off:0,offWhy:"",sf:1,a:1,W:1,feed:1,brk:1,edge:0,gtrav:0,inc:[],warned:{},moved:{}};}
   if(S.knob.pmPrev==null)S.knob.pmPrev=S.pm;if(S.rng&&S.rng.knob==null)S.rng.knob=(S.seed^0x6b9f3c21)|0;return S.knob;}
-function knobVal(id){const K=S.knob;return K?K.v[id]:KNOB_IDEAL[id];}
-function knobAt(id){const K=S.knob;if(!K)return true;if(id==="slice")return !K.v.sv&&!K.v.sh;if(id==="zones")return K.z.every(v=>v===0);if(id==="guide")return K.v.gm===1&&K.v.gt===0;return K.v[id]===KNOB_IDEAL[id];}
+function knobVal(id){if(id==="pulp"){const o=vlvPulpOP();if(o!=null)return o;}const K=S.knob;return K?K.v[id]:KNOB_IDEAL[id];}   // (v6.9: the pulper dilution valve is NV-101's)
+function knobAt(id){const K=S.knob;if(!K)return true;if(id==="pulp"&&vlvT("NV-101"))return false;if(id==="slice")return !K.v.sv&&!K.v.sh;if(id==="zones")return K.z.every(v=>v===0);if(id==="guide")return K.v.gm===1&&K.v.gt===0;return K.v[id]===KNOB_IDEAL[id];}
 // the player moves a knob (UI): v is the new value (zones: [i,v]; guide: {gm,gt})
 function knobSet(id,v){if(S.zen)return;const K=knobState();
   if(id==="zones"){const [i,z]=v;K.z[i]=clamp(Math.round(z),-10,10);}
   else if(id==="guide"){if(v.gm!=null&&v.gm!==K.v.gm){K.v.gm=v.gm;if(v.gm===0){K.gacc=0;K.gw0=knobWalk();}}if(v.gt!=null)K.v.gt=clamp(Math.round(v.gt),-40,40);}
+  else if(id==="pulp"){vlvSetOP("NV-101",clamp(+v,0,100));}   // (v6.9: the field valve puts NV-101 on MAN)
   else{const d=KNOBN[id];K.v[id]=d&&d.min!=null?clamp(+v,d.min,d.max):+v;}
   K.any=true;K.moved[id]=S.t;}
 function knobFmt(id){const K=S.knob,d=KNOBN[id];if(id==="slice"){const s=slcGet();return `B ${(12+3*s.v).toFixed(1)} mm · L ${s.h>=0?"+":""}${(4*s.h).toFixed(1)} mm`;}if(id==="zones"){const z=K?K.z:[];const n=z.filter(v=>v!==0).length;return n?`${n} zone${n>1?"s":""} trimmed`:"all zones 0%";}
@@ -3973,6 +4037,7 @@ function knobFmt(id){const K=S.knob,d=KNOBN[id];if(id==="slice"){const s=slcGet(
 function knobReset(id,quiet){const K=S.knob;if(!K)return;
   if(id==="slice"){K.v.sv=K.v.sh=0;if(G3.SLC){G3.SLC.v=G3.SLC.h=0;G3.SLC.dirty=true;}}
   else if(id==="zones")K.z.fill(0);else if(id==="guide"){K.v.gm=1;K.v.gt=0;K.gacc=0;}else K.v[id]=KNOB_IDEAL[id];
+  if(id==="pulp")vlvRevert("NV-101",quiet);   // (v6.9)
   if(!quiet)K.any=true;}
 // which knobs are off their ideal right now (for the knob view, the DCS and the crew's trace)
 function knobsOff(){return KNOBS.filter(k=>!knobAt(k.id)).map(k=>k.id);}
@@ -3988,7 +4053,7 @@ function knobFix(ids,head,who){const K=S.knob;if(!K)return;ids=ids.filter(id=>!k
 // the crew fixed the root cause: the process it drove is flushed back to normal (stripes on the felt and streaks already
 // in the chest still have to work their way out)
 function knobSettle(id){const K=S.knob,x=K.x;x.bs=0;x.bk=0;K.H={};
-  if(id==="pulp")x.cp=5;else if(id==="ref"){x.fr=0.5;x.ch=0;}else if(id==="vac"){x.vac=30;K.wear=0;}else if(id==="press"){x.pl=100;x.cr1=x.cr=0;}
+  if(id==="pulp"){x.cp=5;vlvSettle("NV-101");}else if(id==="ref"){x.fr=0.5;x.ch=0;}else if(id==="vac"){x.vac=30;K.wear=0;}else if(id==="press"){x.pl=100;x.cr1=x.cr=0;}
   else if(id==="draw"){x.dl1=x.dl=x.dt=0;}else if(id==="st1")x.d1=0;else if(id==="agit")x.sw*=0.3;else if(id==="guide"){K.edge=0;K.gacc=0;}else if(id==="couch")K.cs=0;else if(id==="slice")x.jv=x.jh=0;}
 // a knob-caused breakdown. Like trigger() but with the "knob" dice for its length, no civics card and no leader auto-fix
 // (the knob is the root cause, and the crew resets it when the job is done). Uses the upset's own 3D effect and repair bill.
@@ -4024,7 +4089,7 @@ function knobTick(dt){const K=S.knob;if(!K||!K.any||S.zen)return;
     if(ki.id==="couchpit")K.cs=0;
     knobFix(ki.cause,head,who);}
   // ---- stock prep ----
-  x.cp=L(x.cp,5+(50-v.pulp)*0.08,25);                                  // pulper consistency (%)
+  x.cp=vlvT("NV-101")?S.vlv.lp["NV-101"].y:L(x.cp,5+(50-v.pulp)*0.08,25);   // pulper consistency (%) (v6.9: NV-101's model once touched, 07h)
   x.fr=L(x.fr,gapOf(v.ref),40);                                         // refining the stock in the chest has seen (gap, mm; v6.8: the gap follows the energy)
   x.ch=L(x.ch,gapOf(v.ref)<=0.15?1:0,10);                                      // plates heating up as they run together
   x.sw=L(x.sw,v.agit>=70?0:(70-v.agit)/70,60);                          // machine chest consistency swings (0..1)
@@ -4119,7 +4184,7 @@ function knobRead(){const K=S.knob,x=K?K.x:null,g=GRADES[C.grade]||GRADES["24"],
   const cpb=cpBale();cp+=cpb;
   return {run,cp,amps:410*(0.55+cp/5*0.45)*(S.M.pulperDown?0:1),pulpLvl:clamp(62+(5-cp)*9+wob(0.05,1)*1.5,0,110),
     gap:x?x.fr:gapOf(knobVal("ref")),refkw:run?kwhNow()*Math.max(0,S.rates.fiberUse||0):0,kwh:kwhNow(),csf:csfOf(x?x.fr:gapOf(knobVal("ref"))),   // (v6.8: refiner power = specific energy x fiber)
-    mcLvl:69+wob(0.02,2)*3,mcCons:mcCons(),agit:knobVal("agit"),
+    mcLvl:vlvT("LV-104")?S.vlv.lp["LV-104"].pvm:69+wob(0.02,2)*3,mcCons:mcCons(),agit:knobVal("agit"),
     vac:x?x.vac:30,couchSol:x&&x.cs!=null?x.cs:19,pl:x?x.pl:100,pressSol:x&&x.ps!=null?x.ps:44+4*LV("shoe"),
     edge:K?K.edge:0,gtrav:K?K.gtrav:0,gm:knobVal("gm"),stripes:x?x.st:0,cs:K?K.cs:0,couch:knobVal("couch"),osc:knobVal("osc"),wear:K?K.wear:0,
     st1:knobVal("st1"),st3,steam:run?(Dr?Dr.steam:50.5*P.K*S.pmSpeed*bw/34.8):S.pm==="break"&&Dr?Dr.steam:0,boiler:Dr?Dr.hdr:1,moist:run?m+wob(0.13,4)*0.25:0,
@@ -4232,7 +4297,9 @@ function dryTick(dt){const D=dryState(),g=C.grade,b=DRY.base[g]||DRY.base["24"],
   let tgt=run?DRY.m0+D.km+(D.dem>ceil?(D.dem-ceil)*DRY.perKpa:under?(D.dem0-floor)*DRY.perKpa:0):DRY.m0;
   // v6.5.4: the 2nd/3rd section on MANUAL (DET DCS) holds the operator's pressure instead of the moisture: less than
   // the load needs and the sheet comes off wetter, more and it over-dries (0.15% a kPa either way)
-  if(D.man!=null&&run){D.st3=Math.min(D.man,ceil);tgt=DRY.m0+D.km+(D.dem-D.st3)*DRY.perKpa;}D.m=Math.max(0.5,ease(D.m,tgt,dt,10));
+  // v6.9: once the steam cascade is touched (QC-300 / PV-302 / PV-303, 07h) its valves set the pressures and its model the moisture
+  if(vlvT("QC-300")){const V=S.vlv;D.st3=Math.min(V.st3!=null?V.st3:D.st3,ceil);D.m=V.lp["QC-300"].y;}
+  else{if(D.man!=null&&run){D.st3=Math.min(D.man,ceil);tgt=DRY.m0+D.km+(D.dem-D.st3)*DRY.perKpa;}D.m=Math.max(0.5,ease(D.m,tgt,dt,10));}
   // a wet sheet fails the moisture spec: the crew slows the machine until it's back in spec, then lets it recover.
   // (v6.5.2: only for the part slowing down can fix; what the knobs put past the auto loop waits for the knob to be traced)
   const wasWet=D.wet,ms=D.m-Math.max(0,D.km);if(!S.zen&&run&&ms>DRY.spec)D.wet=true;else if(ms<DRY.back)D.wet=false;
@@ -4402,7 +4469,7 @@ const bwSp=()=>bwStd()*(1+(S.we?S.we.trim:0));
 // refining energy the stock on the machine has had (lagged through the chest by the knob model)
 const kwhNow=()=>{const K=S.knob;return K&&K.any&&K.x?eOfGap(K.x.fr):(K?knobVal("ref"):WE.kwh0);};
 // machine chest consistency (07b knobRead shows it): the agitator's swings, thick stock from an empty water chest
-function mcCons(){const K=S.knob,sw=K&&K.any&&!S.zen&&K.x?K.x.sw:0,t=S.t;return WE.mc0+sw*0.9*(Math.sin(t*0.21+3)*0.6+Math.sin(t*0.21*2.7+6)*0.4)+(S.wat?S.wat.shortK*0.6:0);}
+function mcCons(){const K=S.knob,sw=K&&K.any&&!S.zen&&K.x?K.x.sw:0,t=S.t;return WE.mc0+sw*0.9*(Math.sin(t*0.21+3)*0.6+Math.sin(t*0.21*2.7+6)*0.4)+(S.wat?S.wat.shortK*0.6:0)+vlvMc();}   // (v6.9: + pulper consistency swings, NV-101, 07h)
 // fiber t/h the design headbox flow is sized for (the setpoint at this speed)
 const weU0=sp=>P.K*Math.max(sp,1)*bwSp()/P.pmLoss;
 const weUstd=()=>{const g=GRADES[C.grade]||GRADES["24"];return P.K*g.sp*g.bw/P.pmLoss;};
@@ -4410,7 +4477,8 @@ const wobW=(f,k)=>Math.sin(S.t*f+k)*0.6+Math.sin(S.t*f*2.7+k*2)*0.4;
 // the basis weight valve (%) the AUTO loop asks for at this speed
 const weValveAuto=sp=>50*weU0(sp)/weUstd()*S.we.c;
 // the basis weight the machine is actually making (the loop's process value, before the QCS sees it)
-function bwTrue(){const W=weState();if(S.pm!=="run")return bwSp();const mr=mcCons()/WE.mc0,cv=1+W.cav*0.06*wobW(0.9,17);
+function bwTrue(){const W=weState();if(S.pm!=="run")return bwSp();if(vlvT("FV-201"))return S.vlv.lp["FV-201"].y;   // (v6.9: FV-201's model once touched, 07h)
+ const mr=mcCons()/WE.mc0,cv=1+W.cav*0.06*wobW(0.9,17);
   if(W.m==="auto")return bwSp()*W.c*mr*cv;   // (the valve's feed-forward cancels speed exactly; written this way so untouched it is exactly the setpoint)
   const sp=Math.max(S.pmSpeed,P.minSpeed*0.5);return bwSp()*weUstd()*(W.v/50)*mr/weU0(sp)*cv;}
 // what the QCS reads: the weight WE.dead minutes ago
@@ -4421,15 +4489,15 @@ function weTick(dt){const W=weState(),run=S.pm==="run";
   // a grade change: the scanner's last readings were on the old grade's weight; carry them over so the loop doesn't chase the step
   if(W.g!==C.grade){if(W.g&&GRADES[W.g]){const f=bwStd()/GRADES[W.g].bw;for(const r of W.q)r[1]*=f;}W.g=C.grade;}
   W.bw=bwTrue();W.q.push([S.t,W.bw]);while(W.q.length>2&&W.q[1][0]<=S.t-WE.dead-0.5)W.q.shift();
-  if(run&&W.m==="auto"){const e=(bwSp()-bwMeas())/bwSp();W.c=clamp(W.c+dt/WE.tauI*e,0.5,1.6);}
-  if(W.m==="auto")W.v=clamp(weValveAuto(Math.max(S.pmSpeed,P.minSpeed*0.5)),0,WE.valveMax);
+  if(run&&W.m==="auto"&&!W.vl){const e=(bwSp()-bwMeas())/bwSp();W.c=clamp(W.c+dt/WE.tauI*e,0.5,1.6);}
+  if(W.m==="auto"&&!W.vl)W.v=clamp(weValveAuto(Math.max(S.pmSpeed,P.minSpeed*0.5)),0,WE.valveMax);
   // bale water in the pulper: a step in bale moisture thins the tub, and the dilution loop takes it back out
   if(baleOn()&&S.bq){const d=-WE.cpK*Math.max(0,S.bq.m-BALE.std)*100;W.cpd=d;W.cpc=ease(W.cpc||0,d,dt,WE.cpTau);}else{W.cpd=0;W.cpc=0;}
   // fine screen pressure drop: its load and the dirt in the stock
   {const ld=(S.rates.fiberIn||0)/Math.max(1,P.screenMax),on=motStatus("fscr")==="run"&&!(S.M&&S.M.pulperDown);
     W.fs=ease(W.fs,on?WE.fs0*(0.55+0.45*ld)*weDirt()+(active("fscreen")?30:0):0,dt,10);}}
 // the pulper's consistency dip from bale water (% points, negative while the loop catches up)
-const cpBale=()=>S.we&&!S.zen?(S.we.cpd||0)-(S.we.cpc||0):0;
+const cpBale=()=>S.we&&!S.zen&&!vlvT("NV-101")?(S.we.cpd||0)-(S.we.cpc||0):0;   // (v6.9: once touched, NV-101's model carries the bale water, 07h)
 // how dirty the stock is: the yard mix's contamination (A bales clean, B and C dirty)
 const weDirt=()=>baleOn()&&S.bq?1+WE.dirt*Math.max(0,S.bq.k-WE.dirtRef):1;
 // pulper yield after the rejects that high pressure drop carries out with good fiber
@@ -4451,10 +4519,12 @@ function weFlow(dt,u){const W=weState(),h=dt/60,F=W.f,run=S.pm==="run"&&u>0;
     // the fan pump: full dilution while the silo has water; with it empty, only what drains in and the makeup (t/h)
     const avail=W.L/h+siloIn(Ft+Dd)+(W.L<WE.silo*WE.makeL?WE.make:0),D=Math.min(Dd,avail);
     const Q=Ft+D;hb=Q;dil=D;hbc=U/Q*100*(1+W.cav*0.12*wobW(1.3,19));drain=Math.max(0,Q-U*100/cs);seal=drain*s;press=U*Math.max(0,100/cs-100/ps);
-    let L=W.L+(drain-seal-D)*h;
+    if(vlvT("LV-202")){const A=S.vlv.acc;make=A.make;over=A.over;W.net=drain-seal-D;}   // (v6.9: LV-202's sub-steps moved the level and booked the makeup and overflow; W.net is what they integrate next, 07h)   // (its sub-steps moved the level and booked the makeup and overflow)
+    else{let L=W.L+(drain-seal-D)*h;
     if(L<WE.silo*WE.makeL){make=Math.min(WE.make*h,WE.silo*WE.makeL-L);L+=make;}
     if(L>WE.silo*WE.over){over=L-WE.silo*WE.over;L-=over;}
-    W.L=Math.max(0,L);}
+    W.L=Math.max(0,L);}}
+  else if(vlvT("LV-202")){W.net=0;make=S.vlv.acc.make;over=S.vlv.acc.over;}
   else if(W.L<WE.silo*WE.refill){make=Math.min(WE.make*h,WE.silo*WE.refill-W.L);W.L+=make;}
   W.hbc=run?hbc:WE.hbc;
   W.cav=run?clamp((WE.cav-W.L/WE.silo)/WE.cav,0,1):0;
@@ -4462,7 +4532,7 @@ function weFlow(dt,u){const W=weState(),h=dt/60,F=W.f,run=S.pm==="run"&&u>0;
   if(run&&!S.zen&&W.L/WE.silo<WE.trip){W.H+=dt/WE.tripMin;if(W.H>=1){W.H=0;weBreak();}}else W.H=Math.max(0,W.H-dt/120);
   const k=v=>v/h;F.hb=ease(F.hb||0,k(hb*h),dt,4);F.dil=ease(F.dil||0,k(dil*h),dt,4);F.drain=ease(F.drain||0,k(drain*h),dt,4);F.seal=ease(F.seal||0,k(seal*h),dt,4);
   F.press=ease(F.press||0,k(press*h),dt,4);F.over=ease(F.over||0,k(over),dt,4);F.make=ease(F.make||0,k(make),dt,4);
-  return W.L-L0;}
+  return W.L-L0+(vlvT("LV-202")?S.vlv.acc.dL||0:0);}
 // a sheet break from the fan pump cavitating (no dice: a fixed rethread at the wet end)
 function weBreak(){if(S.pm!=="run")return;S.pm="break";S.brkType="press";S.breakLeft=2*36;S.breakTotal=S.breakLeft;S.tot.breaks++;enqueue("brk");AUDIO.sfx("snap",2500);
   log("Sheet break at the wet end: the white water silo ran low and the fan pump cavitated.","warn");brkNote();}
@@ -4472,6 +4542,343 @@ function bwSetMode(m){if(S.zen)return;const W=weState();if(m===W.m)return;
   W.m=m;log(`Basis weight control to ${m==="auto"?"AUTO":"MANUAL"}`,"ok");}
 function bwSetValve(v){if(S.zen)return;const W=weState();W.m="manual";W.v=clamp(+v,0,WE.valveMax);}
 function bwSetTrim(lb){if(S.zen)return;const W=weState();W.trim=clamp(+lb/bwStd()-1,WE.trimMin,WE.trimMax);}
+/* ---- v6.9 The Valves Update: six control loops with real valves and PID tuning (claude/valves-v69-plan.md) ----
+   NV-101 pulper consistency, LV-104 machine chest level, FV-201 basis weight, LV-202 white water silo level, and the dryer
+   steam cascade: QC-300 reel moisture setting PV-302 / PV-303, the 2nd and 3rd section steam pressures.
+   Untouched (S.vlv missing, or a loop not in it) every loop is the game's own v6.8 model: the faceplates only read it, so
+   an untouched mill plays and checksums exactly as before. The first change the player makes to a loop (mode, setpoint,
+   output, tuning, valve settings, a bump test) hands that loop to this model, from where it is (bumpless). Put back on
+   its standard tuning and settled for VLV.hold minutes, it hands back to the game's model.
+   The loops run on 1 s sub-steps, 15 to each 15 s sim step, with the boundary conditions (speed, load, flows) taken at
+   the end of the step before. While a faceplate is open the main loop runs the sub-steps as the game clock reaches them
+   (vlvCatch), so the trend moves second by second; the step finishes the rest. Same sub-steps either way: deterministic,
+   no dice.
+   Each loop: ISA PID (Kc, Ti and Td in minutes, derivative on PV with a filter, conditional anti-windup, bumpless
+   transfer and tuning changes), a positioner with deadband and hysteresis, an actuator with a stroke time and
+   stick-slip friction, a linear or equal-% trim, a first-order or integrating process with dead time, and a little
+   deterministic measurement noise. */
+const VLV={sub:15,Pmax:700,siloQ:240,mcK:13.75,mcStd:0.55,hold:10,harm:240,cpTau:60,cpK:0.06};
+const vwob=(t,f,k)=>Math.sin(t*f+k)*0.6+Math.sin(t*f*2.7+k*2)*0.4;
+// valve characteristic: flow fraction at a stem position x (0..1); and the stem position for a flow fraction
+const vch=(v,x)=>{x=clamp(x,0,1);if(v.ch!=="eq")return x;const R=v.R||50;return (Math.pow(R,x-1)-1/R)/(1-1/R);};
+const vchInv=(v,f)=>{f=clamp(f,0,1);if(v.ch!=="eq")return f;const R=v.R||50;return clamp(1+Math.log(f*(1-1/R)+1/R)/Math.log(R),0,1);};
+const VDEF=[
+  {id:"NV-101",name:"Pulper consistency",area:"SPOT",medium:"dilution water",where:"Pulper, stock prep",
+    what:"Dilution water into the pulper tub holds its consistency. Thick stock trips the rotor; thin stock overflows the tub and starves the chest.",
+    pv:{n:"Pulper consistency",u:"%",lo:0,hi:10,dp:2},sp0:5,spLim:[3,7],act:-1,tune:{kc:1.2,ti:20,td:0},
+    valve:{ch:"lin",R:50,stroke:10,db:0.4,hys:0.3,stick:0.5},proc:{type:"fo",th:30,tau:1200},noise:0.02,lam:20,tol:0.1,bump:6000},
+  {id:"LV-104",name:"Machine chest level",area:"SPOT",medium:"refined stock",where:"Stock chest pump to the refiners",
+    what:"Refined stock from the storage chest fills the machine chest. Run it empty and the machine starves; overfill it and stock goes to the sewer.",
+    pv:{n:"Machine chest level",u:"%",lo:0,hi:100,dp:0},sp0:69,spLim:[30,90],act:1,tune:{kc:1.0,ti:16,td:0},
+    valve:{ch:"lin",R:50,stroke:12,db:0.5,hys:0.3,stick:0.5},proc:{type:"int",th:5},noise:0.25,lam:8,tol:2,bump:360},
+  {id:"FV-201",name:"Basis weight",area:"WET",medium:"thick stock",where:"Thick stock to the fan pump",ff:true,
+    what:"The basis weight valve meters thick stock to the fan pump. The scanner reads the weight 3 minutes later, so this loop always looks at the past.",
+    pv:{n:"Basis weight (QCS)",u:"lb",lo:0,hi:()=>2*bwStd(),dp:2},sp0:()=>bwSp(),spLim:()=>[+(bwStd()*(1+WE.trimMin)).toFixed(2),+(bwStd()*(1+WE.trimMax)).toFixed(2)],act:1,tune:{kc:0.06,ti:0.35,td:0},
+    valve:{ch:"lin",R:50,stroke:8,db:0.3,hys:0.2,stick:0.3},proc:{type:"fo",th:180,tau:20},noise:0.04,lam:3,tol:()=>bwSp()*0.01,bump:480},
+  {id:"LV-202",name:"White water silo level",area:"WET",medium:"white water makeup",where:"White water chest to the silo",
+    what:"Makeup from the white water chest keeps the silo from running low. Normally the table drains more than the fan pump takes, the silo overflows and this valve sits shut.",
+    pv:{n:"WW silo level",u:"%",lo:0,hi:100,dp:0},sp0:25,spLim:[10,80],act:1,tune:{kc:11,ti:20,td:0},
+    valve:{ch:"lin",R:50,stroke:15,db:0.5,hys:0.3,stick:0.5},proc:{type:"int",th:3},noise:0.08,lam:10,tol:2,bump:1200,bsz:15,shutOK:true},
+  {id:"QC-300",ctl:true,name:"Reel moisture",area:"DET",where:"QCS scanner at the reel",slaves:["PV-302","PV-303"],
+    what:"The moisture controller sets the 2nd and 3rd section steam pressures (PV-302 and PV-303 on CAS) to hold the reel at 8%. Tune the steam loops first: the inner loops must be quick for the outer one to work.",
+    pv:{n:"Reel moisture (QCS)",u:"%",lo:0,hi:20,dp:2},sp0:8,spLim:[5,11],act:-1,tune:{kc:0.24,ti:3,td:0},out:{u:"kPa",k:3},proc:{type:"fo",th:60,tau:180},noise:0.05,lam:4,tol:0.3,bump:900},
+  {id:"PV-302",name:"2nd section steam",area:"DET",medium:"steam",where:"Steam header to the 2nd dryer section",cas:true,master:"QC-300",ratio:0.8,
+    what:"Steam pressure in the 2nd dryer section. On CAS its setpoint comes from the moisture controller (80% of the 3rd section's).",
+    pv:{n:"2nd section pressure",u:"kPa",lo:0,hi:300,dp:0},sp0:96,spLim:[0,250],act:1,tune:{kc:0.7,ti:0.5,td:0},
+    valve:{ch:"eq",R:50,stroke:6,db:0.3,hys:0.2,stick:0.4},proc:{type:"fo",th:2,tau:30},noise:0.4,lam:0.5,tol:3,bump:180},
+  {id:"PV-303",name:"3rd section steam",area:"DET",medium:"steam",where:"Steam header to the 3rd dryer section",cas:true,master:"QC-300",ratio:1,
+    what:"Steam pressure in the 3rd dryer section, the main drying load. On CAS its setpoint comes from the moisture controller.",
+    pv:{n:"3rd section pressure",u:"kPa",lo:0,hi:300,dp:0},sp0:120,spLim:[0,250],act:1,tune:{kc:0.6,ti:0.5,td:0},
+    valve:{ch:"eq",R:50,stroke:6,db:0.3,hys:0.2,stick:0.4},proc:{type:"fo",th:2,tau:30},noise:0.5,lam:0.5,tol:3,bump:180}];
+const VD=Object.fromEntries(VDEF.map(d=>[d.id,d]));
+const VGRP=id=>VD[id].master||VD[id].slaves?["QC-300","PV-302","PV-303"]:[id];
+const vF=(x,...a)=>typeof x==="function"?x(...a):x;
+const vSpan=d=>[vF(d.pv.lo),vF(d.pv.hi)];
+const vTol=d=>vF(d.tol);
+const vSp0=d=>vF(d.sp0);
+const vDefMode=d=>d.cas?"CAS":"AUTO";
+const vlvOn=()=>!!(S&&!S.zen);
+const vlvT=id=>!!(S&&S.vlv&&S.vlv.lp[id]);
+
+/* ---- the engine: one world (the live mill's S.vlv, or a challenge sandbox) ---- */
+function vNew(d,vw){const L={m:vw.m==="IMAN"?"AUTO":vw.m,sp:vw.sp,op:vw.op,pos:vw.pos,tgt:vw.pos,mv:0,I:0,Dd:0,pvp:null,bump:1,
+    y:vw.y,pvm:vw.pv,pvf:vw.pv,dq:[],kc:d.tune.kc,ti:d.tune.ti,td:d.tune.td,pf:0,v:Object.assign({},d.valve||{}),e:0,P:0,Dv:0};
+  const n=Math.max(1,Math.round(d.proc.th));for(let i=0;i<n;i++)L.dq.push(vw.y);return L;}
+// ISA PID on % of span: e = action x (SP - PV); OP = Kc e + I + D + feed-forward
+function vPid(d,L,pv,ff){const [lo,hi]=vSpan(d),sp=Math.max(1e-9,hi-lo),dtm=1/60,e=d.act*(L.sp-pv)/sp*100,x=d.act*(pv-lo)/sp*100;
+  const P=L.kc*e;let D=0;
+  if(L.td>0){const tf=Math.max(L.td*0.1,dtm);if(L.pvp==null)L.pvp=x;L.Dd=(tf*L.Dd-L.kc*L.td*(x-L.pvp))/(tf+dtm);D=L.Dd;}else L.Dd=0;L.pvp=x;
+  if(L.bump){L.I=L.op-ff-P-D;L.bump=0;}
+  const Ii=L.ti>0?L.I+L.kc*dtm/L.ti*e:L.I,u=P+Ii+D+ff;
+  if(!((u>100&&e>0)||(u<0&&e<0)))L.I=Ii;   // (conditional integration: no windup against a stop)
+  L.op=clamp(P+L.I+D+ff,0,100);L.P=P;L.Dv=D;L.e=e;}
+// positioner (deadband + hysteresis as backlash) and the actuator (stroke time, stick-slip)
+function vAct(L){const v=L.v,bl=((v.db||0)+(v.hys||0))/2,c=L.op;
+  if(c>=99.9)L.tgt=100;else if(c<=0.1)L.tgt=0;else if(c>L.tgt+bl)L.tgt=c-bl;else if(c<L.tgt-bl)L.tgt=c+bl;
+  const g=L.tgt-L.pos,r=100/Math.max(1,v.stroke||1);
+  if(!L.mv&&Math.abs(g)>Math.max(0.01,v.stick||0))L.mv=1;
+  if(L.mv){const s=clamp(g,-r,r);L.pos=clamp(L.pos+s,0,100);if(Math.abs(g)<=r)L.mv=0;}}
+// the processes (1 s): B is the boundary from the game, W the world
+const VP={
+  "NV-101":(L,B)=>{if(B.pd)return;const yss=5-8*(vch(L.v,L.pos/100)-0.5)+(B.cd||0);L.y+=(yss-L.y)*(1-Math.exp(-1/1200));},   // (a 20-minute tub: the knobs' rule that trouble takes a while to show)
+  "LV-104":(L,B,W)=>{let y=L.y+VLV.mcK/60*(vch(L.v,L.pos/100)/VLV.mcStd-B.qo);if(y>100){W.acc.mco+=y-100;y=100;}L.y=Math.max(0,y);},
+  "FV-201":(L,B)=>{if(!B.run)return;const yss=B.bsp*B.ustd*vch(L.v,L.pos/100)*2*B.mr*B.cv/B.u0;L.y+=(yss-L.y)*(1-Math.exp(-1/20));},
+  "LV-202":(L,B,W)=>{const cap=WE.silo,mk=VLV.siloQ*vch(L.v,L.pos/100)/3600;W.acc.make+=mk;let t=L.y/100*cap+(B.net||0)/3600+mk;const top=cap*WE.over;
+    if(t>top){W.acc.over+=t-top;t=top;}L.y=Math.max(0,t)/cap*100;},
+  "QC-300":(L,B,W)=>{const a=W.lp["PV-302"],b=W.lp["PV-303"],p3=b?b.y:B.st3,p2=a?a.y/0.8:p3,eff=0.5*p2+0.5*p3;W.st3=eff;
+    const mss=B.run?DRY.m0+(B.km||0)+(B.dem-eff)*DRY.perKpa:DRY.m0;L.y=Math.max(0.5,L.y+(mss-L.y)*(1-Math.exp(-1/180)));},
+  "PV-302":(L,B)=>{const p=Math.min(B.ceil,VLV.Pmax*0.8*vch(L.v,L.pos/100)*B.hdr/B.lf);L.y+=(p-L.y)*(1-Math.exp(-1/30));},
+  "PV-303":(L,B)=>{const p=Math.min(B.ceil,VLV.Pmax*vch(L.v,L.pos/100)*B.hdr/B.lf);L.y+=(p-L.y)*(1-Math.exp(-1/30));}};
+// a master's slaves are all on CAS (and present): otherwise the master tracks them (IMAN)
+function vCasOK(W,d){const sl=d.slaves.filter(s=>W.lp[s]);return sl.length>0&&sl.every(s=>W.lp[s].m==="CAS");}
+// one 1 s sub-step of the whole world. ts: time in seconds (noise only)
+function vSub(W,ts){const B=W.B;
+  // controllers: masters first, then the slaves they set
+  for(const d of VDEF){const L=W.lp[d.id];if(!L)continue;const pv=L.pf>0?L.pvf:L.pvm;
+    if(d.ctl){const ok=vCasOK(W,d),[lo,hi]=vSpan(d);L.e=d.act*(L.sp-pv)/(hi-lo)*100;
+      if(!ok){const sid=[...d.slaves].reverse().find(s=>W.lp[s]);if(sid)L.op=clamp(W.lp[sid].sp/(d.out.k*VD[sid].ratio),0,100);L.bump=1;}
+      else if(L.m==="MAN")L.bump=1;else vPid(d,L,pv,0);
+      if(ok)for(const s of d.slaves){const Ls=W.lp[s];if(Ls&&Ls.m==="CAS")Ls.sp=L.op*d.out.k*VD[s].ratio;}
+      continue;}
+    const ff=d.ff?(B.ff||0):0;
+    if(L.m==="MAN"){L.bump=1;const [lo,hi]=vSpan(d);L.e=d.act*(L.sp-pv)/(hi-lo)*100;}else vPid(d,L,pv,ff);}
+  for(const d of VDEF){const L=W.lp[d.id];if(L&&!d.ctl)vAct(L);}
+  for(const d of VDEF){const L=W.lp[d.id];if(L)VP[d.id](L,B,W);}
+  // measurement: dead time, noise and the PV filter
+  for(const d of VDEF){const L=W.lp[d.id];if(!L)continue;const n=Math.max(1,Math.round(d.proc.th));L.dq.push(L.y);while(L.dq.length>n)L.dq.shift();
+    const [lo,hi]=vSpan(d),k=VDEF.indexOf(d)*1.7;L.pvm=clamp(L.dq[0]+d.noise*(vwob(ts,0.21,k)*0.7+Math.sin(ts*1.9+k*3)*0.3),lo,hi);
+    L.pvf=L.pf>0?L.pvf+(L.pvm-L.pvf)/(L.pf+1):L.pvm;}}
+
+/* ---- the live mill ---- */
+// what each loop reads now: from this model when it has the loop, else from the game's own (read only)
+function vlvView(id){const d=VD[id],W=S.vlv,L=W&&W.lp[id];
+  if(L){const m=d.ctl&&!vCasOK(W,d)?"IMAN":L.m;return {t:1,m,sp:L.sp,pv:L.pvm,y:L.y,op:L.op,pos:d.ctl?L.op:L.pos,e:L.e};}
+  const run=S.pm==="run",We=S.we,D=S.dry;
+  switch(id){
+    case "NV-101":{const K=S.knob,cp=(K&&K.any&&K.x?K.x.cp:5)+cpBale(),op=clamp(knobVal("pulp")+((We&&We.cpc)||0)/0.08,0,100);return {m:"AUTO",sp:5,pv:cp,y:cp,op,pos:op};}
+    case "LV-104":{const lv=69+vwob(S.t,0.02,2)*3,q=run?(S.rates.fiberUse||0)/Math.max(1e-6,weUstd()):0,op=clamp(VLV.mcStd*100*q+vwob(S.t,0.05,21)*1.2,0,100);return {m:"AUTO",sp:69,pv:lv,y:lv,op,pos:op};}
+    case "FV-201":{const pv=run&&We?bwMeas():bwSp(),y=We&&We.bw!=null?We.bw:pv,op=We?We.v:50;return {m:We&&We.m==="manual"?"MAN":"AUTO",sp:bwSp(),pv,y,op,pos:op};}
+    case "LV-202":{const lv=We?We.L/WE.silo*100:WE.over*100,op=clamp(((We&&We.f.make)||0)/VLV.siloQ*100,0,100);return {m:"AUTO",sp:WE.makeL*100,pv:lv,y:lv,op,pos:op};}
+    case "QC-300":{const m=D?D.m:DRY.m0,st=D?D.st3:(DRY.base[C.grade]||120),pv=run?m+vwob(S.t,0.13,4)*0.25:m;return {m:"AUTO",sp:DRY.m0,pv,y:m,op:st/d.out.k,pos:st/d.out.k};}
+    default:{const st=(D?D.st3:(DRY.base[C.grade]||120))*d.ratio,b=DRY.base[C.grade]||120,dem=D?D.dem:b,lf=Math.sqrt(Math.max(0.3*b,dem)/b),hdr=D?D.hdr:1;
+      const op=vchInv(d.valve,st*lf/(VLV.Pmax*d.ratio*hdr))*100;return {m:"CAS",sp:st,pv:st,y:st,op,pos:op};}}}
+function vlvState(){if(!S.vlv)S.vlv={lp:{},any:false,sub:0,w0:S.t,B:null,acc:{mco:0,make:0,over:0},calm:{},harm:{},lg:{},bt:null,btRes:null};return S.vlv;}
+// the boundary for the next window of sub-steps (end of each sim step)
+function vCap(){const W=S.vlv;if(!W)return;const B=W.B||(W.B={}),run=S.pm==="run",g=C.grade,D=S.dry||dryState(),We=weState(),b=DRY.base[g]||120;
+  B.run=run;B.pd=!!(S.M&&S.M.pulperDown);B.cd=We.cpd||0;B.qo=run?(S.rates.fiberUse||0)/Math.max(1e-6,weUstd()):0;
+  const sp=Math.max(S.pmSpeed,P.minSpeed*0.5);B.bsp=bwSp();B.ustd=weUstd();B.u0=weU0(sp);B.mr=mcCons()/WE.mc0;B.cv=1+We.cav*0.06*wobW(0.9,17);B.ff=50*B.u0/B.ustd-50;
+  B.net=run?(We.net||0):0;B.dem=D.dem;B.km=D.km||0;B.ceil=dryCeil(D);B.hdr=D.hdr;B.lf=Math.sqrt(Math.max(0.3*b,D.dem)/b);B.st3=D.st3;
+  // the basis weight setpoint is the grade's (and the lightweight trim); a grade change rescales what the scanner has seen
+  const L=W.lp["FV-201"];if(L){if(W.g&&W.g!==g&&GRADES[W.g]){const f=bwStd()/GRADES[W.g].bw;L.y*=f;L.pvm*=f;L.pvf*=f;for(let i=0;i<L.dq.length;i++)L.dq[i]*=f;}L.sp=bwSp();}
+  W.g=g;W.sub=0;W.w0=S.t;W.acc.mco=0;W.acc.make=0;W.acc.over=0;W.acc.dL=0;}
+// run the window's sub-steps up to n (of 15)
+function vlvRun(n){const W=S.vlv;if(!W||!W.B)return;n=Math.min(VLV.sub,n);
+  while(W.sub<n){const t=W.w0+(W.sub+1)/60;vSub(W,t*60);W.sub++;vBtRec(W,t);vTrRec(W,t);}}
+// with a faceplate open: run the sub-steps the clock has reached (the step finishes the window; same result)
+function vlvCatch(acc){const W=S.vlv;if(!W||!W.any||S.zen||!W.B)return;vlvRun(Math.floor(acc*60+1e-6));}
+// every step (07-sim-step.js), before the knobs and the machine: finish the window, hand the results to the game
+function vlvTick(dt){const W=S.vlv;if(!W||!W.any||S.zen)return;if(!W.B)vCap();vlvRun(VLV.sub);
+  const K=S.knob;if(W.lp["NV-101"]){const k=knobState();k.any=true;
+    // pulper consistency swings reach the machine chest through the storage chest (an hour of stock)
+    W.cpl=ease(W.cpl==null?5:W.cpl,W.lp["NV-101"].y,dt,VLV.cpTau);}
+  else if(W.cpl!=null){W.cpl=ease(W.cpl,5,dt,VLV.cpTau);if(Math.abs(W.cpl-5)<0.005)W.cpl=null;}
+  if(W.lp["FV-201"]){const We=weState();We.v=W.lp["FV-201"].pos;We.vl=true;}
+  if(W.lp["LV-202"]){const We=weState(),L1=W.lp["LV-202"].y/100*WE.silo;W.acc.dL=L1-We.L;We.L=L1;}
+  vConseq(dt);vCrew(dt);vHand(dt);}
+// end of every step: the boundary for the next window, and the trend points of the loops still on the game's model
+function vlvCapture(){if(S.zen)return;const W=S.vlv;if(W&&W.any)vCap();vTrStep();}
+// machine chest consistency from pulper swings (07g mcCons adds this; 0 untouched)
+const vlvMc=()=>S.vlv&&S.vlv.cpl!=null?VLV.cpK*(S.vlv.cpl-5):0;
+// what a loop being off does to the mill (the others act through the game's own models: the knobs, the QCS spec, the silo)
+function vConseq(dt){const W=S.vlv,L=W.lp["LV-104"];
+  if(L){const y=L.y;W.mcLow=y<15?(15-y)/15:0;
+    if(y<15&&!W.lg.mcl){W.lg.mcl=1;log("Machine chest level low: the machine is slowing down so it doesn't run out of stock.","warn");}else if(y>25)W.lg.mcl=0;
+    if(y<0.5&&S.pm==="run"){W.mcH=(W.mcH||0)+dt/3;if(W.mcH>=1){W.mcH=0;vBreak("Sheet break at the wet end: the machine chest ran empty and the fan pump lost its stock.");}}else W.mcH=Math.max(0,(W.mcH||0)-dt/10);
+    if(W.acc.mco>0){const t=Math.min(S.tank,W.acc.mco*weUstd()/60/VLV.mcK);if(t>0){S.tank-=t;wSpill(t);W.mcOver=(W.mcOver||0)+t;}
+      if(!W.lg.mco){W.lg.mco=1;log("The machine chest is overflowing: refined stock is going to the sewer.","bad");}W.acc.mco=0;}else if(y<95)W.lg.mco=0;}
+  else W.mcLow=0;}
+function vBreak(why){if(S.pm!=="run")return;S.pm="break";S.brkType="press";S.breakLeft=2*36;S.breakTotal=S.breakLeft;S.tot.breaks++;enqueue("brk");AUDIO.sfx("snap",2500);log(why,"warn");brkNote();}
+function vlvMods(m){const W=S.vlv;if(!W||!W.any||S.zen)return;if(W.mcLow>0)m.speedCap=Math.min(m.speedCap,1-0.5*W.mcLow);}
+// a loop that keeps hurting the mill: the crew finds it and puts it back on standard tuning (seasons and survival, not free play)
+function vCrew(dt){const W=S.vlv;if(S.free)return;
+  const bad={"LV-104":L=>L.y<15||L.y>97,"FV-201":()=>S.pm==="run"&&QNOW.out.includes("bw"),"LV-202":L=>S.pm==="run"&&L.y<WE.cav*100,"QC-300":()=>S.pm==="run"&&QNOW.out.includes("m")};
+  for(const id in bad){const L=W.lp[id];if(!L){W.harm[id]=0;continue;}const g=VGRP(id);
+    if(bad[id](L)&&!g.every(x=>vIsDef(x))){W.harm[id]=(W.harm[id]||0)+dt;if(W.harm[id]>=VLV.harm){W.harm[id]=0;
+      const who={"LV-104":"Stock prep","FV-201":"The wet-end operator","LV-202":"The wet-end operator","QC-300":"The process engineer"}[id];
+      const man=g.some(x=>W.lp[x]&&W.lp[x].m==="MAN");g.forEach(x=>vlvRevert(x,true));
+      log(`${who} traced the trouble to ${g.join(" / ")} ${man?"left on MAN":"tuned off standard"} and put ${g.length>1?"them":"it"} back on standard tuning.`,"ok");
+      BANNERS.push({text:`Traced: ${g.join(", ")} tuning`,t:null,kind:"good",tag:"FIXED"});while(BANNERS.length>3)BANNERS.splice(1,1);}}
+    else W.harm[id]=Math.max(0,(W.harm[id]||0)-dt*0.5);}}
+// is a loop back on everything standard?
+function vIsDef(id){const d=VD[id],L=S.vlv&&S.vlv.lp[id];if(!L)return true;const T=d.tune;
+  if(L.kc!==T.kc||L.ti!==T.ti||L.td!==T.td||(L.pf||0)!==0||L.m!==vDefMode(d))return false;
+  if(d.valve)for(const k of ["ch","stroke","db","hys","stick"])if(L.v[k]!==d.valve[k])return false;
+  if(!d.cas&&id!=="FV-201"&&Math.abs(L.sp-vSp0(d))>1e-9)return false;return true;}
+// standard and settled: the game's own model takes the loop back, from where it is
+function vHand(dt){const W=S.vlv;const done=new Set();
+  for(const d of VDEF){if(done.has(d.id)||!W.lp[d.id])continue;const g=VGRP(d.id);g.forEach(x=>done.add(x));
+    if(W.bt&&g.includes(W.bt.id)){W.calm[d.id]=0;continue;}
+    if(!g.every(x=>vIsDef(x))){W.calm[d.id]=0;continue;}
+    const head=W.lp[g[0]],hd=VD[g[0]],tol=vTol(hd),e=Math.abs(head.pvm-head.sp);
+    const ok=e<tol||(hd.shutOK&&head.pos<0.5&&head.y>=head.sp-tol);
+    W.calm[d.id]=ok?(W.calm[d.id]||0)+dt:0;if(W.calm[d.id]>=VLV.hold){W.calm[d.id]=0;vUntouch(g);}}}
+function vUntouch(g){const W=S.vlv,We=weState();
+  for(const id of g){const L=W.lp[id];if(!L)continue;
+    if(id==="NV-101"){const K=knobState();K.x.cp=5;We.cpc=(We.cpd||0)-(L.y-5);}
+    if(id==="FV-201"){We.vl=false;We.m="auto";const sp=Math.max(S.pmSpeed,P.minSpeed*0.5);We.c=1;const base=weValveAuto(sp);We.c=clamp(base>0?We.v/base:1,0.5,1.6);}
+    if(id==="LV-202")We.L=L.y/100*WE.silo;
+    if(id==="QC-300"&&S.dry)S.dry.m=L.y;
+    delete W.lp[id];W.calm[id]=0;W.harm[id]=0;}
+  W.any=Object.keys(W.lp).length>0;if(!W.any){W.B=null;W.mcLow=0;}}
+// hand a loop (its whole group) to this model, from where the game has it
+function vlvTouch(id){if(!vlvOn()||!VD[id])return null;const fresh=!S.vlv||!S.vlv.any,W=vlvState();
+  for(const x of VGRP(id))if(!W.lp[x]){const d=VD[x];W.lp[x]=vNew(d,vlvView(x));
+    if(x==="NV-101")knobState().any=true;if(x==="FV-201")weState().vl=true;}
+  W.any=true;if(fresh||!W.B){W.sub=0;W.w0=S.t;vCap();}return W.lp[id];}
+
+/* ---- what the player can do (the faceplate and the tuning panel; tests drive these too) ---- */
+function vlvSetMode(id,m){const d=VD[id];if(!d||!vlvOn())return;if(m==="CAS"&&!d.cas)return;const L=vlvTouch(id);if(!L||L.m===m)return;
+  if(S.vlv.bt&&S.vlv.bt.id===id)vlvBumpStop(true);L.m=m;L.bump=1;log(`${id} ${d.name.toLowerCase()} to ${m}`,"ok");}
+function vlvSetSP(id,v){const d=VD[id];if(!d||!vlvOn())return;const [a,b]=vF(d.spLim);v=clamp(+v,a,b);
+  if(id==="FV-201"){bwSetTrim(v);const L=S.vlv&&S.vlv.lp[id];if(L)L.sp=bwSp();return;}
+  const L=vlvTouch(id);if(L.m==="CAS")return;L.sp=v;}
+function vlvSetOP(id,v){const d=VD[id];if(!d||!vlvOn())return;const L=vlvTouch(id);if(L.m!=="MAN"){if(S.vlv.bt&&S.vlv.bt.id===id)vlvBumpStop(true);L.m="MAN";L.bump=1;}L.op=clamp(+v,0,100);}
+function vlvSetTune(id,o){const d=VD[id];if(!d||!vlvOn())return;const L=vlvTouch(id);
+  if(o.kc!=null)L.kc=clamp(+o.kc,0,50);if(o.ti!=null)L.ti=clamp(+o.ti,0.02,999);if(o.td!=null)L.td=clamp(+o.td,0,30);if(o.pf!=null)L.pf=clamp(+o.pf,0,60);L.bump=1;}
+// the valve itself: free play only (in a season the valves are what they are)
+function vlvSetValve(id,o){const d=VD[id];if(!d||!d.valve||!vlvOn()||!S.free)return false;const L=vlvTouch(id);
+  if(o.ch)L.v.ch=o.ch==="eq"?"eq":"lin";if(o.stroke!=null)L.v.stroke=clamp(+o.stroke,2,60);if(o.db!=null)L.v.db=clamp(+o.db,0,5);if(o.hys!=null)L.v.hys=clamp(+o.hys,0,5);if(o.stick!=null)L.v.stick=clamp(+o.stick,0,10);return true;}
+// back on standard (the whole group): tuning, valve, mode and setpoint
+function vlvRevert(id,quiet){const W=S.vlv;if(!W)return;for(const x of VGRP(id)){const L=W.lp[x],d=VD[x];if(!L)continue;
+    Object.assign(L,{kc:d.tune.kc,ti:d.tune.ti,td:d.tune.td,pf:0,m:vDefMode(d),bump:1});if(d.valve)L.v=Object.assign({},d.valve);if(!d.cas&&x!=="FV-201")L.sp=vSp0(d);if(x==="FV-201")L.sp=bwSp();}
+  if(W.bt&&VGRP(id).includes(W.bt.id))W.bt=null;if(!quiet)log(`${VGRP(id).join(" / ")} back on standard tuning`,"ok");}
+// the crew's hard reset after a knob incident on the pulper (07b knobSettle): the game's model takes the loop straight back
+function vlvSettle(id){if(vlvT(id)){if(S.vlv.bt&&S.vlv.bt.id===id)S.vlv.bt=null;const L=S.vlv.lp[id];if(id==="NV-101")L.y=5;vUntouch(VGRP(id));}}
+// the field knob for the pulper dilution valve drives NV-101 (manual at the valve)
+const vlvPulpOP=()=>S.vlv&&S.vlv.lp["NV-101"]?Math.round(S.vlv.lp["NV-101"].op):null;
+
+/* ---- bump test: MAN, wait for a baseline, step the output, record, fit a model, put the loop back ---- */
+function vlvBump(id,size){const d=VD[id];if(!d||!vlvOn())return false;const L=vlvTouch(id),W=S.vlv;if(W.bt)return false;
+  if(d.ctl&&!vCasOK(W,d))return false;const prev=d.ctl?(L.m==="MAN"?"MAN":"AUTO"):L.m,op0=L.op;size=+size||d.bsz||5;
+  const dop=op0+size>100?-Math.abs(size):op0-size<0?Math.abs(size):size;
+  if(L.m!=="MAN"){L.m="MAN";L.bump=1;}W.bt={id,t:0,base:clamp(Math.round(d.bump*0.15),30,240),dur:d.bump,op0,dop,prev,rec:[]};W.btRes=null;return true;}
+function vlvBumpStop(quiet){const W=S.vlv;if(!W||!W.bt)return;const b=W.bt,L=W.lp[b.id];W.bt=null;if(L&&!quiet){L.m=b.prev;L.bump=1;}}
+function vBtRec(W,t){const b=W.bt;if(!b)return;const L=W.lp[b.id],d=VD[b.id];if(!L||L.m!=="MAN"){W.bt=null;return;}
+  b.rec.push(L.pvm);b.t++;if(b.t===b.base)L.op=clamp(b.op0+b.dop,0,100);
+  const [lo,hi]=vSpan(d),f=(L.pvm-lo)/(hi-lo),runaway=d.proc.type==="int"&&b.t>b.base&&(f<0.06||f>0.94);
+  if(b.t>=b.base+b.dur||runaway){W.btRes=Object.assign(vFit(d,b.rec,b.base,b.dop),{id:b.id,at:t,cut:runaway});W.bt=null;L.m=b.prev;L.bump=1;}}
+const vAvg=a=>a.length?a.reduce((s,v)=>s+v,0)/a.length:0;
+function vSlope(a){const n=a.length;if(n<2)return 0;const mx=(n-1)/2,my=vAvg(a);let sxy=0,sxx=0;for(let i=0;i<n;i++){sxy+=(i-mx)*(a[i]-my);sxx+=(i-mx)*(i-mx);}return sxy/sxx;}
+// fit a process model to a bump test: rec = PV each second, step at index base, dop = the output step (%)
+function vFit(d,rec,base,dop){const [lo,hi]=vSpan(d),span=hi-lo,toP=v=>v/span*100;
+  const sm=rec.map((_,i)=>vAvg(rec.slice(Math.max(0,i-4),i+5)));   // (5 s either side: the noise out)
+  const pre=sm.slice(0,base),y0=vAvg(pre.slice(-15)),s0=vSlope(pre),aft=sm.slice(base),n=aft.length;
+  if(d.proc.type==="int"){const half=aft.slice(Math.floor(n/2)),s1=vSlope(half),km=Math.floor(n/2)+(half.length-1)/2,ym=vAvg(half);
+    const Ki=toP(s1-s0)*60/dop;   // %span per minute per % output
+    // (dead time: where the new slope's line leaves the old baseline)
+    const kx=Math.abs(s1-s0)>1e-9?(y0-ym+s1*km)/(s1-s0):0;
+    return {type:"int",Ki,th:clamp(kx,0,n)/60,sub:"integrating",dy:toP(s1*60)};}
+  const yEnd=vAvg(aft.slice(-Math.max(5,Math.floor(n*0.1)))),dy=yEnd-y0,K=toP(dy)/dop;
+  const tAt=f=>{for(let i=0;i<n;i++)if((aft[i]-y0)/(dy||1e-9)>=f)return i;return n;};
+  const t28=tAt(0.283),t63=tAt(0.632),tau=Math.max(1,1.5*(t63-t28)),th=Math.max(0,t63-tau);
+  const late=aft.slice(-Math.floor(n*0.2)),settled=Math.abs(vSlope(late))*late.length<Math.abs(dy)*0.05;
+  return {type:"fo",K,tau:tau/60,th:th/60,settled,sub:"self-regulating"};}
+// Lambda tuning from a fitted model: speed 0 conservative, 1 moderate, 2 aggressive; form "PI" or "PID"
+function vLambda(d,f,speed,form){const r3=v=>+(+v).toPrecision(3);
+  if(f.type==="int"){const Ki=Math.max(1e-6,Math.abs(f.Ki)),th=f.th,lam=[2,1,0.5][speed]*d.lam;
+    return {kc:r3((2*lam+th)/(Ki*(lam+th)*(lam+th))),ti:r3(2*lam+th),td:0,lam:r3(lam)};}
+  // (self-regulating: λ from the dead time, or a quarter of τ on a lag-dominant loop; Ti = τ, but never more than
+  // 4(λ + θ), so a slow process still gets rid of a disturbance in good time: Skogestad's SIMC refinement of Lambda)
+  const K=Math.max(1e-6,Math.abs(f.K)),tau=Math.max(f.tau,0.01),th=f.th,m=Math.max(th,tau/4),lam=[2*m,m,Math.max(th,m/2)][speed];
+  if(form==="PID")return {kc:r3((tau+th/2)/(K*(lam+th/2))),ti:r3(Math.min(tau+th/2,4*(lam+th))),td:r3(tau*th/(2*tau+th)),lam:r3(lam)};
+  return {kc:r3(tau/(K*(lam+th))),ti:r3(Math.min(tau,4*(lam+th))),td:0,lam:r3(lam)};}
+
+/* ---- the trend: 1 s points while the model has a loop, a point a step while the game's model has it (outside S) ---- */
+const VT={S:null,n:3600,b:{}};
+function vTrBuf(id){if(VT.S!==S){VT.S=S;VT.b={};}return VT.b[id]||(VT.b[id]={i:0,len:0,t:new Float64Array(VT.n),sp:new Float32Array(VT.n),pv:new Float32Array(VT.n),op:new Float32Array(VT.n),pos:new Float32Array(VT.n)});}
+function vTrPush(id,t,sp,pv,op,pos){const B=vTrBuf(id),i=B.i;B.t[i]=t;B.sp[i]=sp;B.pv[i]=pv;B.op[i]=op;B.pos[i]=pos;B.i=(i+1)%VT.n;B.len=Math.min(VT.n,B.len+1);}
+function vTrRec(W,t){for(const d of VDEF){const L=W.lp[d.id];if(!L)continue;const v=vlvView(d.id);vTrPush(d.id,t,v.sp,v.pv,v.op,v.pos);}}
+function vTrStep(){const W=S.vlv;for(const d of VDEF){if(W&&W.lp[d.id])continue;const v=vlvView(d.id);vTrPush(d.id,S.t,v.sp,v.pv,v.op,v.pos);}}
+// points in the last `min` minutes: {t,sp,pv,op,pos} arrays, oldest first
+function vlvTrace(id,min){const B=vTrBuf(id),o={t:[],sp:[],pv:[],op:[],pos:[]};if(!B.len)return o;const tn=B.t[(B.i-1+VT.n)%VT.n],t0=tn-min;
+  for(let k=0;k<B.len;k++){const i=(B.i-B.len+k+VT.n)%VT.n;if(B.t[i]<t0)continue;o.t.push(B.t[i]);o.sp.push(B.sp[i]);o.pv.push(B.pv[i]);o.op.push(B.op[i]);o.pos.push(B.pos[i]);}return o;}
+
+/* ---- loop health in plain words, from the trend ---- */
+function vlvHealth(id,tr){const d=VD[id],v=vlvView(id),tol=vTol(d),n=tr?tr.t.length:0;
+  const H=(k,txt,why,tip)=>({k,txt,why,tip});
+  if(v.m==="MAN")return H("man","In MAN","The controller isn't moving the valve: it holds where the operator put it.","Switch to AUTO when the process is steady; the change is bumpless.");
+  if(v.m==="IMAN")return H("man","Waiting for CAS","The steam loops aren't on CAS, so this controller's output just follows their setpoints.","Put PV-302 and PV-303 on CAS to close the moisture loop.");
+  if(S.pm!=="run"&&(id==="FV-201"||id==="QC-300"))return H("man","Machine down","No sheet: the scanner has nothing to read.","It picks up again when the sheet is back on.");
+  if(n<8)return H("steady","Collecting","Not enough trend yet to judge the loop.","Give it a minute.");
+  const e=tr.pv.map((p,i)=>p-tr.sp[i]),ae=e.map(Math.abs),mae=vAvg(ae);
+  const sat=tr.pos.filter(p=>p<0.5||p>99.5).length/n;
+  if(d.shutOK&&vAvg(tr.pos)<0.5&&vAvg(e)>-tol)return H("steady","Steady · valve shut","The silo is overflowing: the table drains more than the fan pump takes, so there's nothing to make up.","Normal. The valve opens if vacuum or thick stock draws the silo down.");
+  if(sat>0.5&&mae>tol)return H("sat",vAvg(tr.pos)>50?"Saturated · wide open":"Saturated · shut","The valve is at its stop and still can't hold the setpoint. More gain won't help: it can't open any further.","Look at the setpoint or the load, not the tuning.");
+  // oscillation: crossings of the setpoint with a little hysteresis
+  let cr=0,s=0;for(const x of e){const q=x>tol*0.5?1:x<-tol*0.5?-1:0;if(q&&q!==s){if(s)cr++;s=q;}}
+  const amp=(Math.max(...e)-Math.min(...e))/2,span=(tr.t[n-1]-tr.t[0])||1,per=cr>1?2*span/cr:0;
+  if(cr>=4&&amp>tol*0.75){
+    // stick-slip: the valve sits still most of the time and moves in jumps while the output ramps
+    let flat=0,jumps=0;const gap=[];for(let i=1;i<n;i++){const dp=Math.abs(tr.pos[i]-tr.pos[i-1]);if(dp<0.02)flat++;else if(dp>0.25)jumps++;gap.push(Math.abs(tr.op[i]-tr.pos[i]));}
+    gap.sort((a,b)=>a-b);const g90=gap[Math.floor(gap.length*0.9)]||0;
+    if(d.valve&&flat/n>0.5&&jumps>=4&&g90>1.2)return H("stick","Valve sticking","Sawtooth output, square valve moves: the stem sticks, the output winds up until it breaks free, and it overshoots. Tuning can't fix friction.","Lower the gain and lengthen Ti to slow the cycle down; in the mill you'd call maintenance to repack or rebuild the valve.");
+    if(d.proc.th>=60&&per>0&&per<6*d.proc.th/60)return H("dead","Fighting the past",`It swings every ${per.toFixed(1)} min against ${(d.proc.th/60).toFixed(0)} min of dead time: the controller keeps correcting things it can't see yet.`,"Less gain and more patience: Lambda tuning with λ at least the dead time.");
+    return H("osc","Oscillating",`Swinging ±${amp.toFixed(d.pv.dp)} ${d.pv.u} every ${per.toFixed(1)} min: too much gain, or too little Ti.`,"Halve Kc, or double Ti. A bump test gives you a starting point.");}
+  const one=e.filter(x=>x>tol).length,oth=e.filter(x=>x<-tol).length;
+  if(mae>tol&&Math.max(one,oth)/n>0.6&&cr<=1)return H("slow","Sluggish","The PV is a long way off the setpoint and creeping back slowly.","More gain, or a shorter Ti. Mind the dead time.");
+  return H("steady","Steady",`Within ±${(+tol).toFixed(d.pv.dp)} ${d.pv.u} of the setpoint.`,"Try a setpoint step to see how it responds.");}
+
+/* ---- tuning challenges: a sandbox copy of a loop, run headless (the mill is untouched) ---- */
+const VCHAL=[
+  {id:"shake",title:"Tame the shake",loops:["NV-101"],min:120,start:{"NV-101":{kc:25,ti:0.6,td:0}},ev:[[2,"cd",-0.6],[60,"sp","NV-101",5.5]],
+    brief:"The pulper consistency loop is swinging. Bale water hits at 2 min and the setpoint steps to 5.5% at 60 min. Calm it down without making it sluggish."},
+  {id:"wake",title:"Wake it up",loops:["LV-104"],min:40,start:{"LV-104":{kc:0.15,ti:60,td:0}},ev:[[2,"qo",1.25],[20,"qo",0.9]],
+    brief:"The machine chest level loop barely moves. The machine speeds up at 2 min and slows at 20 min. A level is an integrating process: Ti works differently here."},
+  {id:"stick",title:"It's not you, it's the valve",loops:["NV-101"],min:120,start:{"NV-101":{kc:10,ti:1,td:0}},valve:{"NV-101":{stick:2.5}},ev:[[2,"cd",-0.4],[60,"cd",0]],trW:0,rvW:1.5,
+    brief:"This dilution valve sticks (2.5% stiction). No tuning makes it steady: every reversal of the valve is a jump. Find the calmest response with the fewest valve reversals."},
+  {id:"inner",title:"Inner first",loops:["QC-300","PV-303"],min:30,start:{"QC-300":{kc:0.24,ti:3,td:0},"PV-303":{kc:2.6,ti:0.12,td:0}},ev:[[3,"dem",15],[18,"dem",-10]],
+    brief:"The moisture loop (outer) sets the 3rd section steam (inner) on CAS. The drying load rises at 3 min and falls at 18 min. Tune the inner loop first."},
+  {id:"patience",title:"Patience",loops:["FV-201"],min:40,start:{"FV-201":{kc:0.5,ti:0.25,td:0}},ev:[[2,"mr",1.04]],
+    brief:"The basis weight loop reads 3 minutes late. The machine chest thickens 4% at 2 min. Aggressive tuning goes unstable: find the fastest calm response."}];
+const VCH=Object.fromEntries(VCHAL.map(c=>[c.id,c]));
+function vSbB(){return {run:true,pd:false,cd:0,qo:1,bsp:bwStd(),ustd:1,u0:1,mr:1,cv:1,ff:0,net:0,dem:120,km:0,ceil:180,hdr:1,lf:1,st3:120};}
+// a challenge run: tune = {loopId:{kc,ti,td}}; returns the trace (per second) and the score
+function vlvChallenge(cid,tune){const c=VCH[cid],B=vSbB(),W={lp:{},B,acc:{mco:0,make:0,over:0}};
+  const fsp={"NV-101":5,"LV-104":69,"FV-201":B.bsp,"QC-300":8,"PV-303":120};
+  const fsy={"NV-101":[50,5],"LV-104":[55,69],"FV-201":[50,B.bsp],"QC-300":[40,8],"PV-303":[vchInv(VD["PV-303"].valve,120/VLV.Pmax)*100,120]};
+  for(const id of c.loops){const d=VD[id],[op,y]=fsy[id];const L=vNew(Object.assign({},d,{tune:Object.assign({},d.tune,c.start[id],tune&&tune[id])}),{m:d.cas?"CAS":"AUTO",sp:fsp[id],op,pos:op,y,pv:y});
+    if(c.valve&&c.valve[id])Object.assign(L.v,c.valve[id]);W.lp[id]=L;}
+  const main=c.loops[0],[lo,hi]=vSpan(VD[main]);
+  const N=c.min*60,o={t:[],sp:[],pv:[],op:[],pos:[],in:{sp:[],pv:[]}};let iae=0,trav=0,rev=0,ld=0,early=0,late=0;
+  const ev=c.ev.map(e=>e.slice());
+  for(let s=1;s<=N;s++){const tm=s/60;
+    for(const e of ev)if(!e.done&&tm>=e[0]){e.done=1;if(e[1]==="sp")W.lp[e[2]].sp=e[3];else if(e[1]==="dem")B.dem+=e[2];else B[e[1]]=e[2];}
+    const vm=c.loops.find(i=>!VD[i].ctl),p0=W.lp[vm].pos;vSub(W,s);const L=W.lp[main];
+    const er=Math.abs(L.sp-L.pvm)/(hi-lo)*100;iae+=er/60;if(s>N*0.8)late=Math.max(late,er);else if(s>N*0.4&&s<=N*0.6)early=Math.max(early,er);
+    {const dp=W.lp[vm].pos-p0;trav+=Math.abs(dp);if(dp&&ld&&Math.sign(dp)!==ld)rev++;if(dp)ld=Math.sign(dp);}   // (the valve: the inner loop's, under a master)
+    if(s%2===0){o.t.push(tm);o.sp.push(L.sp);o.pv.push(L.pvm);o.op.push(L.op);o.pos.push(VD[main].ctl?L.op:L.pos);
+      const In=c.loops[1]&&W.lp[c.loops[1]];if(In){o.in.sp.push(In.sp);o.in.pv.push(In.pvm);}}}
+  const score=iae+trav*(c.trW!=null?c.trW:0.015)+rev*(c.rvW||0),unstable=late>Math.max(early*1.3,1)&&late>8;
+  return {trace:o,iae,trav,rev,score:unstable?Infinity:score,unstable};}
+// the reference: what a careful engineer gets. Lambda (moderate) from the true model, then a coarse search around it,
+// loop by loop, inner loops first (headless; once per challenge, cached)
+const VCHREF={};
+function vlvChRef(cid){if(VCHREF[cid]!=null)return VCHREF[cid];const c=VCH[cid];
+  const fit={"NV-101":{type:"fo",K:-0.8,tau:20,th:0.5},"LV-104":{type:"int",Ki:0.25,th:0.08},"FV-201":{type:"fo",K:1,tau:0.33,th:3},"QC-300":{type:"fo",K:-2.25,tau:3,th:1.3},"PV-303":{type:"fo",K:1.68,tau:0.5,th:0.04}};
+  const t={};for(const id of c.loops)t[id]=vLambda(VD[id],fit[id],1,"PI");let best=vlvChallenge(cid,t).score;
+  const order=c.loops.slice().reverse();
+  for(let pass=0;pass<2;pass++)for(const id of order){const b0=Object.assign({},t[id]);let bt=b0;
+    for(const km of [0.25,0.5,1,2,4])for(const tm of [0.1,0.25,0.5,1,2]){if(km===1&&tm===1)continue;const tr=Object.assign({},t,{[id]:{kc:b0.kc*km,ti:b0.ti*tm,td:0}}),s=vlvChallenge(cid,tr).score;if(s<best){best=s;bt=tr[id];}}
+    t[id]=bt;}
+  return VCHREF[cid]=best;}
+function vlvStars(cid,score){if(!isFinite(score))return 0;const r=vlvChRef(cid);return score<=r*1.2?3:score<=r*1.7?2:score<=r*3?1:0;}
+// best stars per mill (saved with the run; nothing to do with the mill's own loops)
+function vlvChSave(cid,st){const c=S.vlvc||(S.vlvc={});if(st>(c[cid]||0))c[cid]=st;}
+// v6.9: older saves: the 2nd/3rd section steam held on MANUAL (D.man) and the basis weight valve on MANUAL are the new loops
+function vlvMigrate(){if(!S||S.zen)return;const D=S.dry,We=S.we;
+  if(D&&D.man!=null){const p=D.man;D.man=null;vlvTouch("QC-300");const W=S.vlv;W.lp["PV-303"].m="AUTO";W.lp["PV-303"].sp=p;W.lp["PV-302"].m="AUTO";W.lp["PV-302"].sp=p*0.8;W.lp["QC-300"].bump=1;}
+  if(We&&We.m==="manual"&&!We.vl){const v=We.v;We.m="auto";const L=vlvTouch("FV-201");L.m="MAN";L.op=v;L.bump=1;}
+  const K=S.knob;if(K&&K.v&&K.v.pulp!==KNOB_IDEAL.pulp){const v=K.v.pulp;K.v.pulp=KNOB_IDEAL.pulp;vlvSetOP("NV-101",v);}}
 /* ---------- UI wiring ---------- */
 // v6.5.1 second screen: the DCS and the process flow can live in a pop-out window (50e-popout.js). Their elements are then
 // in that window's document, so $() looks there when the main page doesn't have the id; actEl() is the focused element
@@ -4535,7 +4942,7 @@ function setSimSpeed(v){C.simSpeed=Math.max(1,Math.min(TURBO?960:120,Math.round(
 const outCapped=()=>!!(S&&S.outg&&S.outg.on&&S.outg.watch&&S.season&&S.season.on&&!S.zen&&C.simSpeed>OUT.simCap&&!TURBO_FAST(C.simSpeed));
 // v5.6: a knob panel or a DCS / QCS screen open runs the game at 1 min/s (G3.knobUI), and closing it is back at the
 // player's speed (their choice is never touched)
-function simRate(){return S&&S.zen?1:G3.knobUI?1:outCapped()?OUT.simCap:C.simSpeed;}
+function simRate(){return S&&S.zen?1:G3.knobUI?(G3.vlvClk||1):outCapped()?OUT.simCap:C.simSpeed;}
 
 const cgrid=$("chaosgrid");
 GROUPS.forEach(([g,lab])=>{const d=document.createElement("div");d.className="grp";const h=document.createElement("h3");h.textContent=lab;d.appendChild(h);
@@ -5526,7 +5933,8 @@ const HA=[["yard",()=>S.yard],["yardp",()=>S.yard/P.yardCap*100],["wet",()=>S.we
   ["mkt",()=>S.plan?S.plan.mkt:0],["haul",()=>frInRate()],["dryl",()=>S.dry&&S.pm==="run"?S.dry.load*100:null],["trim",()=>S.dry?S.dry.trim*C.pmSp.v:0],["moistd",()=>S.dry&&S.pm==="run"?S.dry.m:null],["frout",()=>frOutRate()],["fuel",()=>fuelIdx()],["grade",()=>GRADE_IDS.indexOf(C.grade)],
   ["balem",()=>S.bq&&!S.zen?S.bq.m*100:null],["stk",()=>S.bq&&!S.zen?S.bq.ck*100:null],["openo",()=>S.ord&&!S.zen?S.ord.list.filter(o=>o.st==="open").length:null],
   ["lateo",()=>S.ord&&!S.zen?S.ord.list.filter(o=>o.st==="open"&&S.t>o.due+ORD.grace).length:null],   // (v6.6; HIST_V 4)
-  ["kwh",r=>r.kwh],["hbc",()=>S.pm==="run"&&S.we?S.we.hbc:null],["wwl",()=>S.we?S.we.L/WE.silo*100:null],["rct",()=>S.pm==="run"?QNOW.rct:null]];   // (v6.8: appended, older rows read blank)
+  ["kwh",r=>r.kwh],["hbc",()=>S.pm==="run"&&S.we?S.we.hbc:null],["wwl",()=>S.we?S.we.L/WE.silo*100:null],["rct",()=>S.pm==="run"?QNOW.rct:null],   // (v6.8: appended, older rows read blank)
+  ["v101",()=>vlvView("NV-101").pos],["v104",()=>vlvView("LV-104").pos],["v201",()=>vlvView("FV-201").pos],["v202",()=>vlvView("LV-202").pos],["v302",()=>vlvView("PV-302").pos],["v303",()=>vlvView("PV-303").pos]];   // (v6.9: valve openings, appended)
 const GRADE_IDS=Object.keys(GRADES);
 HA.forEach(([k])=>{HCI["a."+k]=HC.length;HC.push("a."+k);});
 const histR=v=>v==null||v!==v?null:Math.abs(v)>=100?Math.round(v):Math.round(v*100)/100;
@@ -5675,7 +6083,15 @@ const TAGS=[
   ["load","Loading","PLAN","rolls/h",()=>_R().load,"a.load"],["outq","Trucks waiting to load","PLAN","trucks",()=>S.outQ.length,""],
   ["openo","Open orders","PLAN","orders",()=>S.ord&&!S.zen?S.ord.list.filter(o=>o.st==="open").length:null,"a.openo"],
   ["lateo","Late orders","PLAN","orders",()=>S.ord&&!S.zen?S.ord.list.filter(o=>o.st==="open"&&S.t>o.due+ORD.grace).length:null,"a.lateo"],
-  ["price","Paper price (grade on the machine)","PLAN","$/t",()=>priceOf(C.grade),"a.price"],["profit","Profit rate","PLAN","$/day",()=>S.profitRate||0,""]];
+  ["price","Paper price (grade on the machine)","PLAN","$/t",()=>priceOf(C.grade),"a.price"],["profit","Profit rate","PLAN","$/day",()=>S.profitRate||0,""],
+  // v6.9 the control loops (07h): each one's PV and output, and the moisture controller's steam setpoint
+  ["nv101pv","NV-101 pulper consistency (PV)","SPOT","%",()=>vlvView("NV-101").pv,""],["nv101op","NV-101 dilution valve","SPOT","% open",()=>vlvView("NV-101").pos,"a.v101"],
+  ["lv104pv","LV-104 machine chest level (PV)","SPOT","%",()=>vlvView("LV-104").pv,""],["lv104op","LV-104 machine chest valve","SPOT","% open",()=>vlvView("LV-104").pos,"a.v104"],
+  ["fv201pv","FV-201 basis weight (PV)","WET","lb",()=>S.pm==="run"?vlvView("FV-201").pv:null,""],["fv201op","FV-201 basis weight valve","WET","% open",()=>vlvView("FV-201").pos,"a.v201"],
+  ["lv202pv","LV-202 white water silo level (PV)","WET","%",()=>vlvView("LV-202").pv,""],["lv202op","LV-202 silo makeup valve","WET","% open",()=>vlvView("LV-202").pos,"a.v202"],
+  ["qc300pv","QC-300 reel moisture (PV)","DET","%",()=>S.pm==="run"?vlvView("QC-300").pv:null,""],["qc300op","QC-300 steam setpoint out","DET","kPa",()=>vlvView("QC-300").op*3,""],
+  ["pv302pv","PV-302 2nd section steam (PV)","DET","kPa",()=>vlvView("PV-302").pv,""],["pv302op","PV-302 steam valve","DET","% open",()=>vlvView("PV-302").pos,"a.v302"],
+  ["pv303pv","PV-303 3rd section steam (PV)","DET","kPa",()=>vlvView("PV-303").pv,""],["pv303op","PV-303 steam valve","DET","% open",()=>vlvView("PV-303").pos,"a.v303"]];
 const TAGI=Object.fromEntries(TAGS.map((t,i)=>[t[0],i]));
 const tagName=id=>{const t=TAGS[TAGI[id]];return t?t[1]:id;};
 const tagUnit=id=>{const t=TAGS[TAGI[id]];return t?t[3]:"";};
@@ -12812,7 +13228,8 @@ const KUI={panel:null,st:null,tab:"dcs",built:{}};
 const AREA_N={SPOT:"Stock prep",WET:"Wet end",DET:"Dry end"};
 // field knobs the DCS can also set remotely; the guide roll and the oscillator are set at the machine only
 const KREMOTE=new Set(["pulp","ref","agit","couch"]);
-function kuiSync(){G3.knobUI=!S.zen&&!!(KUI.panel||(KUI.st&&DCS_SLOW.has(KUI.st)&&!POP.on)||!$("spider").hidden||!$("slice").hidden);}
+function kuiSync(){const vc=G3.vlvUI&&!S.zen?G3.vlvUI():0;G3.vlvClk=vc;   // (v6.9: a valve faceplate runs the game on its tuning clock, 50k)
+  G3.knobUI=!S.zen&&!!(vc||KUI.panel||(KUI.st&&DCS_SLOW.has(KUI.st)&&!POP.on)||!$("spider").hidden||!$("slice").hidden);}
 // (v6.7: only the screens with controls slow the game; the read-only ones run at the player's speed)
 const DCS_SLOW=new Set(["SPOT","WET","DET"]);
 function kEl(tag,cls,html){const e=document.createElement(tag);if(cls)e.className=cls;if(html!=null)e.innerHTML=html;return e;}
@@ -12881,7 +13298,8 @@ function stationOv(){let o=$("dcsOv");if(o)return o;
     <div class="dcsb" id="dcsBody"><div class="dcsmain" id="dcsMain"></div><aside class="dcstrp" id="dcsTrp" aria-label="Trend"></aside></div><div class="dcsf"><span id="dcsClock"></span><span id="dcsSlow"></span></div></div>`;
   document.body.appendChild(o);
   $("dcsClose").addEventListener("click",()=>closeStation());
-  o.addEventListener("click",e=>{if(e.target===o)closeStation();});
+  o.addEventListener("click",e=>{if(e.target===o)closeStation();const v=e.target.closest&&e.target.closest("[data-vlv]");if(v)openVlv(v.dataset.vlv);});   // (v6.9: tap a valve for its faceplate, 50k)
+  o.addEventListener("keydown",e=>{const v=(e.key==="Enter"||e.key===" ")&&e.target.closest&&e.target.closest("[data-vlv]");if(v){e.preventDefault();openVlv(v.dataset.vlv);}});
   o.querySelectorAll("[data-a]").forEach(b=>b.addEventListener("click",()=>{KUI.st=b.dataset.a;KUI.tab=b.dataset.a==="QCS"?"qcs":"dcs";stationBuild();kuiSync();}));
   o.querySelectorAll("[data-trv]").forEach(b=>b.addEventListener("click",()=>{TRUI.view=b.dataset.trv;trLayout();}));
   o.querySelector("[data-trt]").addEventListener("click",()=>{TRUI.show=!TRUI.show;trLayout();});
@@ -12935,10 +13353,11 @@ function stationBuild(){const o=$("dcsOv");if(!o||!KUI.st)return;const a=KUI.st,
       svg.push(`<rect x="${x}" y="${y}" width="${w}" height="${h}" rx="6" class="meq${sm?" sm":""}"/><text x="${x+w/2}" y="${y+h/2+4}" class="mtl${sm?" sm":""}">${typeof t==="function"?t():t}</text>`);});
     // (v6.7: a tag that can be trended is a button: tap it to add it to the trend)
     M2.tags.forEach(([x,y,k,t])=>{const tg=trTagOf(k);svg.push(`<text x="${x}" y="${y}" class="mtg${tg?" trk":""}"${tg?` data-trk="${tg}" role="button" tabindex="0"`:""}><title>${tg?"Trend "+tagName(tg):""}</title><tspan class="mtk">${t} </tspan><tspan data-tag="${k}">–</tspan></text>`);});
+    svg.push(vlvDcsSvg(a));   // v6.9: the control valves (50k)
     svg.push("</svg>");b.appendChild(kEl("div","mimicw",svg.join("")));
-    b.appendChild(kEl("div","dcsal",`<b>Alarms</b><ul id="dcsAl"></ul>`));
+    b.appendChild(kEl("div","dcsal",`<b>Alarms</b><ul id="dcsAl"></ul>`));vlvDcsRows(a,b);   // (v6.9: the area's control valves as buttons too, 50k)
     if(a==="WATER")b.appendChild(kEl("div","dcsctl",`<div class="dcssub">Water balance · the run so far</div><div class="wbal" id="wBal"></div>`));
-    const ids=KNOBS.filter(k=>k.area===a&&(k.dcs||KREMOTE.has(k.id))).map(k=>k.id),fld=KNOBS.filter(k=>k.area===a&&k.field&&!KREMOTE.has(k.id));
+    const ids=KNOBS.filter(k=>k.area===a&&(k.dcs||KREMOTE.has(k.id))&&k.id!=="pulp").map(k=>k.id),fld=KNOBS.filter(k=>k.area===a&&k.field&&!KREMOTE.has(k.id));   // (v6.9: the pulper dilution valve is NV-101, on the picture)
     const cs=kEl("div","dcsctl");cs.appendChild(kEl("div","dcssub","Setpoints"));dcsSetRows(a,cs);
     ids.forEach(id=>{const row=kEl("div","dcsrow"+(id==="zones"?" wide":""));row.appendChild(kEl("div","dcsn",`<b>${KNOBN[id].name}</b><small>${KNOBN[id].field?"remote from the DCS":"DCS"}</small>`));row.appendChild(knobCtl(id,"d"));
       const rd=kEl("div","spir krd");rd.dataset.rd=id;row.appendChild(rd);row.appendChild(kEl("button","reroll kstd","Standard")).addEventListener("click",()=>{knobReset(id);kuiRefresh();});cs.appendChild(row);
@@ -12967,7 +13386,7 @@ function kuiRefresh(){if(!KUI.panel&&!KUI.st)return;const r=knobRead();
       o.querySelectorAll(".dcsctl .kctl").forEach(knobCtlSync);o.querySelectorAll("[data-rd]").forEach(d=>{const h=knobReadout(d.dataset.rd,r);if(d._h!==h){d._h=h;d.innerHTML=h;}});
       const al=knobAlarms(a,r),ul=$("dcsAl"),h=al.length?al.map(([t,hi])=>`<li class="${hi?"hi":""}">${t}</li>`).join(""):'<li class="none">No alarms</li>';if(ul._h!==h){ul._h=h;ul.innerHTML=h;}
       {const bt=$("dcsBeat");if(bt){const q=qualStatus(),on=r.run&&q.off>0.02,t=on?`⚠ MAKING BEATER · ${q.why.toUpperCase()} · ${q.off>=0.99?"the whole reel":Math.round(q.off*100)+"% of the reel"} to the beater`:"";if(bt.hidden===on)bt.hidden=!on;if(bt.textContent!==t)bt.textContent=t;}}
-      o.querySelectorAll(".dcsrow canvas[data-cd]").forEach(c=>kuiCd(c,r));dcsSync();dcsPicSync(a);if(a==="WATER")waterRefresh();}
+      o.querySelectorAll(".dcsrow canvas[data-cd]").forEach(c=>kuiCd(c,r));dcsSync();dcsPicSync(a);vlvDcsSync(o);if(a==="WATER")waterRefresh();}
     else if(a==="QCS"){const K=S.knob,F=(K&&K.F)||{},off=r.off,st=$("qcsSt");
       // v6.5.3: the spec check (07e) names what's out; the grade change and the other knob defects after it
       const qs=qualStatus(),sh=!r.run?["MACHINE DOWN","down"]:QNOW.out.length?[`OFF SPEC · ${qs.why} · rolls to the beater`,"bad"]:S.chg?["GRADE CHANGE · weight in transition · rolls to the beater","warn"]:qs.off>0.02?[`REJECTING · ${qs.why} · ${Math.round(qs.off*100)}% to the beater`,"bad"]:["ON SPEC","ok"];
@@ -13426,7 +13845,7 @@ MIMIC.WET={title:"WET END",h:282,trends:MIMIC_KNOB.WET.trends,
     MT(240,172,"vac","VAC",r=>kf(r.vac)+" kPa"),MT(240,88,"edge","EDGE",r=>(r.edge>=0?"+":"")+Math.round(r.edge)+" mm"),MT(240,194,"gtrav","GUIDE",r=>r.gm?"AUTO "+Math.round(Math.min(1,r.gtrav)*100)+"%":"MAN"),
     MT(340,172,"couchSol","SOL",r=>kf(r.couchSol)+"%"),MT(340,194,"cs","PIT",r=>r.couch?"RUN":"STOP"),MT(440,172,"osc","OSC",r=>Math.round(r.osc)+"%"),
     MT(567,172,"pl","LOAD",r=>Math.round(r.pl)+" kN/m"),MT(567,194,"pressSol","SOL",r=>kf(r.pressSol)+"%"),MT(567,66,"psp","SPD",DV.psp),MT(260,232,"wwl","LEVEL",DV.wwl),MT(260,246,"wwg","VOL",DV.wwg),MT(370,232,"drain","DRAIN",DV.drn),MT(560,232,"pressw","PRESS",DV.pw),
-    MT(60,216,"hbc","HBC",DV.hbc),MT(60,230,"bwv","VLV",DV.bwv),MT(572,54,"hum","RH",DV.hum)]};
+    MT(60,216,"hbc","HBC",DV.hbc),MT(572,54,"hum","RH",DV.hum)]};   // (v6.9: the basis weight valve is FV-201, drawn by 50k)
 MIMIC.DET={title:"DRY END",h:280,trends:MIMIC_KNOB.DET.trends,
   eq:[[14,96,80,50,"OPEN DRAW"],[112,80,130,80,"1ST SECTION"],[260,80,170,80,"2ND / 3RD SECTION"],[448,90,74,60,"REEL"],[546,90,84,60,"WINDER"],[546,214,84,30,"ROLL CONV","s"]],
   ln:[["M94 121 H112"],["M242 120 H260"],["M430 120 H448"],["M522 120 H546"],["M630 120 H636 V229 H630"],["M640 66 H177 V80 M345 66 V80",1]],   // (v6.5.4: the steam header comes in from the boiler house, UTIL)
@@ -13447,7 +13866,7 @@ AREA_N.UTIL="Utilities";
 /* ---- alarms by area (an upset shows on the screen of the equipment it hits) ---- */
 const DCS_WET=new Set(["fabric","felt","slime","fogfan","oscfail","couchpit","runner"]),DCS_UTIL=new Set(["permit","icedintake","boiler","brownout"]);
 function dcsArea(id){if(MOTEV[id])return MOTEV[id].a;if(DCS_UTIL.has(id))return "UTIL";const g=EV[id]&&EV[id].g;if(g==="stock")return "SPOT";if(g==="machine")return DCS_WET.has(id)?"WET":"DET";return null;}
-function dcsAlarms(a,r,L){const al=(on,txt,hi)=>{if(on)L.push([txt,hi]);};
+function dcsAlarms(a,r,L){const al=(on,txt,hi)=>{if(on)L.push([txt,hi]);};vlvAlarms(a,L);   // (v6.9: the control valves, 50k)
   for(const i of S.inc){if(dcsArea(i.id)!==a)continue;const m=MOTEV[i.id];L.push([m?`${m.name.toUpperCase()} STOPPED · RESTART IN ${Math.ceil(i.left)} MIN`:EV[i.id].name.toUpperCase(),true]);}
   if(a==="SPOT"){al(S.tank/P.tankCap>0.92,"STOCK CHEST LEVEL HI",S.tank/P.tankCap>0.98);al(dcsOn("badocc"),"JUNK LOAD HIGH",true);
     {const Wt=S.wat;al(!!(Wt&&Wt.L<WAT.cap*0.25),Wt&&Wt.short>0?"WHITE WATER CHEST EMPTY · STOCK THICK":"WHITE WATER CHEST LEVEL LO",!!(Wt&&Wt.short>0));}
@@ -13476,15 +13895,10 @@ function dcsSetDefs(a){const D=()=>DCS_DRAW();
     ["slv","Slice opening","remote from the DCS · B",-100,100,1,()=>G3.SLC?G3.SLC.v*100:0,v=>dcsSlice("v",v),"",null,1],
     ["slh","Slice lip position","remote from the DCS · L",-100,100,1,()=>G3.SLC?G3.SLC.h*100:0,v=>dcsSlice("h",v),"",null,1],
     // v6.8 the basis weight loop (07g): the setpoint (the grade's target, trimmed lighter if the strength will carry it) and the valve
-    ["bws","Basis weight setpoint",`grade ${C.grade} target ${bwStd().toFixed(2)} lb · ring crush spec ${rctSpec()} lbf`,+(bwStd()*(1+WE.trimMin)).toFixed(2),+(bwStd()*(1+WE.trimMax)).toFixed(2),0.05,()=>bwSp(),v=>bwSetTrim(v),"lb",null,0],
-    ["bwv","Basis weight valve",S.we&&S.we.m==="manual"?"MANUAL · holds the valve, speed and stock move the weight":"AUTO · trims the thick stock to hold the setpoint (QCS reads "+WE.dead+" min late)",0,WE.valveMax,1,()=>S.we?S.we.v:50,v=>bwSetValve(v),"%",null,0,
-      {on:()=>!(S.we&&S.we.m==="manual"),flip:()=>{const W=weState();bwSetMode(W.m==="auto"?"manual":"auto");}}]];
+    ["bws","Basis weight setpoint",`grade ${C.grade} target ${bwStd().toFixed(2)} lb · ring crush spec ${rctSpec()} lbf`,+(bwStd()*(1+WE.trimMin)).toFixed(2),+(bwStd()*(1+WE.trimMax)).toFixed(2),0.05,()=>bwSp(),v=>bwSetTrim(v),"lb",null,0]];
   if(a==="DET")return [
     ["wsp","Machine speed (wire)","same setpoint as on WET",Math.round(1200/D()),Math.round((3300+P.spBonus)/D()),5,()=>C.pmSp.v/D(),v=>dcsCardSet("pmSp",Math.round(v*D()/10)*10),"fpm","pmSp"],
-    ["wdr","Winder speed","",0,P.winderMax,1,()=>C.wdr.v,v=>dcsCardSet("wdr",v),"t/h","wdr"],
-    // v6.5.4: the 2nd/3rd section steam: AUTO is the moisture loop (holds the reel at 8%); moving it holds that pressure
-    ["st3","2nd / 3rd section steam",S.dry&&S.dry.man!=null?"MANUAL · holds this pressure, the moisture follows the load":"AUTO · moisture control holds the reel at "+DRY.m0+"%",40,DRY.ceil,1,()=>S.dry?(S.dry.man??S.dry.st3):120,v=>{if(!S.zen)dryState().man=v;},"kPa",null,0,
-      {on:()=>!(S.dry&&S.dry.man!=null),flip:()=>{if(S.zen)return;const D=dryState();D.man=D.man!=null?null:Math.round(D.st3);}}]];
+    ["wdr","Winder speed","",0,P.winderMax,1,()=>C.wdr.v,v=>dcsCardSet("wdr",v),"t/h","wdr"]];   // (v6.9: the 2nd / 3rd section steam is PV-302 / PV-303 under QC-300: tap them on the picture, 50k)
   return [];}
 function dcsSlice(k,v){const D=G3.SLC;if(!D||G3.slcFix||S.zen)return;slcSet(k,v/100);const g=D.geo();if(g.lipX-g.wet>=6.8&&typeof slcBreak==="function")slcBreak();}
 function dcsSetRows(a,cs){const defs=dcsSetDefs(a);
@@ -13619,6 +14033,8 @@ function dcsPicSync(a){const o=$("dcsOv");if(!o||!PGX[a])return;
   o.querySelectorAll(".mimic [data-pg]").forEach(g=>{const pg=PGX[a][+g.dataset.pg];if(!pg)return;let s;try{s=PG_ST(pg[1]());}catch(e){s="st-ok";}if(g.dataset.s!==s){g.dataset.s=s;g.setAttribute("class","pg "+s);}
     g.querySelectorAll("[data-lv]").forEach(r=>{const f=PG_LV[r.dataset.lv];if(!f)return;const v=f(),h0=+r.dataset.h0,y0=+r.dataset.y0,hh=Math.max(0,h0*v);r.setAttribute("y",(y0+h0-hh).toFixed(1));r.setAttribute("height",hh.toFixed(1));});
     g.querySelectorAll("[data-lvp]").forEach(p=>{const f=PG_LV[p.dataset.lvp];if(f)p.style.opacity=(0.35+0.65*f()).toFixed(2);});});}
+G3.vlv={view:vlvView,touch:vlvTouch,setMode:vlvSetMode,setSP:vlvSetSP,setOP:vlvSetOP,setTune:vlvSetTune,setValve:vlvSetValve,revert:vlvRevert,bump:vlvBump,bumpStop:vlvBumpStop,
+  fit:vFit,lambda:vLambda,health:vlvHealth,trace:vlvTrace,challenge:vlvChallenge,chRef:vlvChRef,stars:vlvStars,isDef:vIsDef,T:vlvT,DEF:VD,CH:VCH,state:()=>S.vlv,catchUp:vlvCatch};   // v6.9 tests (tools/valvecheck.py)
 /* ---- v6.5.1 second screen: the DCS and the process flow pop out into their own window, for a second monitor ----
    Desktop only (a mouse and a big screen; ?popout forces it for tests). Nothing is copied or synced: the game writes the
    window itself (a copy of the stylesheet, a bar, an empty main) and moves the two screens' elements into it. The same
@@ -14338,6 +14754,331 @@ function rmLive(force){if(!RMUI.open)return;const svg=$("rmSvg");if(!svg)return;
   const nw=$("rmSide")&&$("rmSide").querySelector("[data-rmnow]");if(nw&&RMUI.sel&&!RM_N[RMUI.sel].ext){const v=tagFmt(RMUI.sel,tagNow(RMUI.sel));if(nw.textContent!==v)nw.textContent=v;}}
 UI_TICKS.push(k=>{if(RMUI.open&&k%2===0)rmLive(false);});
 G3.rm={open:()=>rmOpen(),close:()=>rmClose(),N:RM_N,E:RM_E,pick:id=>rmPick(id,true),ui:RMUI};   // (tests: tools/relmapcheck.py)
+/* ---- v6.9 The Valves Update: the valves on the DCS pictures, the faceplate and the tuning panel (claude/valves-v69-plan.md) ----
+   Each loop's valve is drawn on its area's DCS picture (SPOT, WET, DET) with its % open and mode; tap it to open the
+   faceplate. One panel, six tabs: Operate (mode, setpoint, output, the valve, loop health), Tune (Kc / Ti / Td, live or
+   staged, a setpoint step with its scores and a ghost of the last one), Bump test (step the output, fit the process,
+   Lambda tuning from it), Valve (its trim, stroke, deadband and friction; editable in free play), Learn (the words) and
+   Challenges (five tuning puzzles on a sandbox copy of a loop; the mill is untouched).
+   While it's open the game runs on the tuning clock (real time, 5x, 20x or 60x: 60x is the knobs' 1 min/s): the loops
+   step second by second as the clock reaches them (vlvCatch, 07h), so the trend moves smoothly. Season, survival and
+   free play; not zen. */
+const VUI={id:null,tab:"op",clk:5,win:10,staged:null,live:true,step:null,ghost:null,lam:1,form:"PI",gl:null,ch:null,chT:{},chRes:null,chPlay:0,bsz:{}};
+try{const c=+localStorage.getItem("paper-mill-tclk");if([1,5,20,60].includes(c))VUI.clk=c;}catch(_){}
+const VTABS=[["op","Operate"],["tune","Tune"],["bump","Bump test"],["valve","Valve"],["learn","Learn"],["ch","Challenges"]];
+const VGLOSS={
+  pv:["PV","Process value: what the transmitter measures right now (a level, a pressure, a consistency)."],
+  sp:["SP","Setpoint: where you want the PV. In CAS another controller sets it."],
+  op:["OP","Output: what the controller asks the valve for, 0 to 100%. The valve may not get there at once (stroke time) or exactly (deadband, stiction)."],
+  man:["MAN","Manual: the operator sets the output, the controller watches. Switching back to AUTO is bumpless."],
+  auto:["AUTO","Automatic: the controller moves the output to hold the PV at the operator's setpoint."],
+  cas:["CAS","Cascade: this loop's setpoint comes from another controller (the master). The inner loop must be faster than the outer one."],
+  iman:["IMAN","Initialisation manual: a master whose slaves aren't on CAS. Its output just tracks their setpoints, so it's ready to take over without a bump."],
+  kc:["Kc","Controller gain: % of output per % of error (both as a share of the PV's span). Too high and the loop rings; too low and it's lazy."],
+  ti:["Ti","Integral time, minutes: how long the integral takes to repeat the proportional action. Shorter is stronger. It's what removes offset."],
+  td:["Td","Derivative time, minutes: reacts to how fast the PV is changing. Helps slow processes, amplifies noise. Most mill loops run PI (Td 0)."],
+  pf:["PV filter","Seconds of smoothing on the measurement before the controller sees it. Calms a noisy PV but adds lag the loop has to live with."],
+  dead:["Dead time","The delay before a move shows up at all: transport, a scanner's travel. Nothing the controller does can beat it."],
+  tau:["Time constant τ","For a self-regulating process: how long it takes to get 63% of the way to its new level after a step."],
+  int:["Integrating process","A level: a small imbalance between in and out never settles, it just keeps rising or falling. The controller has to find the exact balance."],
+  selfreg:["Self-regulating process","Settles at a new value after a step in the output (a consistency, a pressure)."],
+  bump:["Bump test","Put the loop in MAN, wait for it to settle, step the output, and watch: how much the PV moves (gain), how long before it starts (dead time) and how fast (τ)."],
+  lambda:["Lambda tuning","Pick how quickly the loop should respond (λ, minutes) and calculate Kc and Ti from the bump test. Bigger λ is calmer and more robust."],
+  windup:["Windup","The integral keeps growing while the valve is already at its stop, then overshoots when it comes off. These controllers stop integrating at a stop (anti-windup)."],
+  bumpless:["Bumpless transfer","Changing mode or tuning doesn't kick the valve: the integral is reset so the output carries on from where it was."],
+  db:["Deadband","How far the output has to change before the positioner moves the valve at all."],
+  hys:["Hysteresis","The valve lands a little short of where it was asked, depending on which way it came from."],
+  stick:["Stiction","Static friction in the packing: the stem sticks, the output builds until it breaks free, then it jumps. It makes a sawtooth cycle no tuning can remove."],
+  stroke:["Stroke time","Seconds for the actuator to go from shut to wide open. The valve can't move faster than this."],
+  cv:["Cv and trim","How much the valve passes, and how the flow follows the stem: linear (flow ∝ opening) or equal-% (each extra % of travel adds the same share of flow, so the gain rises as it opens)."],
+  ff:["Feed-forward","Moving the valve for a disturbance you can measure before it upsets the PV. FV-201 follows machine speed this way; the PID only trims."],
+  act:["Action","Reverse: the PV rises as the valve opens, so a high PV closes it. Direct: the opposite (more dilution water, lower consistency)."]};
+const vgl=k=>`<button type="button" class="vglq" data-gl="${k}" aria-label="What is ${VGLOSS[k][0]}?">?</button>`;
+const vfx=(v,d)=>(v==null||v!==v)?"–":(+v).toFixed(d);
+const vlvFmtPV=(d,v)=>vfx(v,d.pv.dp)+" "+d.pv.u;
+const vlvBlocked=()=>!S||S.zen||(G3.tut&&G3.tut.on);
+
+/* ---- the DCS pictures: where each valve sits and its symbol ----
+   {x, y, id, r: 90 for a vertical line, lx / ly / an: where its two-line tag sits, ld: a leader line to the tag} */
+MIMIC.SPOT.vlv=[{x:56,y:172,id:"NV-101",lx:56,ly:188,an:"middle"},{x:307,y:226,id:"LV-104",lx:307,ly:160,an:"middle",ld:[307,176,307,215]}];
+MIMIC.SPOT.ln.push(["M0 172 H104 V116",1]);   // (dilution water up into the pulper through NV-101)
+MIMIC.WET.vlv=[{x:30,y:30,id:"FV-201",r:-90,lx:44,ly:26,an:"start"},{x:80,y:236,id:"LV-202",lx:80,ly:259,an:"middle"}];
+MIMIC.WET.ln.push(["M30 0 V80"],["M0 236 H110",1]);   // (thick stock down into the headbox through FV-201; white water makeup into the silo through LV-202)
+MIMIC.DET.ln=MIMIC.DET.ln.map(l=>l[0].startsWith("M640 66 H177")?["M640 30 H177 V80 M300 30 V80 M390 30 V80",1]:l);   // (the steam header feeds the 2nd and 3rd sections through PV-302 and PV-303)
+MIMIC.DET.vlv=[{x:300,y:52,id:"PV-302",r:-90,lx:312,ly:49,an:"start"},{x:390,y:52,id:"PV-303",r:-90,lx:402,ly:49,an:"start"},{x:452,y:246,id:"QC-300",lx:470,ly:243,an:"start"}];
+function vlvSym(e){const {x,y,id}=e,d=VD[id],an=e.an||"middle";
+  const lab=`<text x="${e.lx}" y="${e.ly}" class="vlab" text-anchor="${an}" data-vl="${id}">${id}</text><text x="${e.lx}" y="${e.ly+12}" class="vlab2" text-anchor="${an}" data-vl2="${id}">–</text>`;
+  const ld=e.ld?`<line x1="${e.ld[0]}" y1="${e.ld[1]}" x2="${e.ld[2]}" y2="${e.ld[3]}" class="vld"/>`:"";
+  if(d.ctl)return `<g class="vsym vctl" data-vlv="${id}" role="button" tabindex="0" aria-label="${id} ${d.name}"><title>${id} · ${d.name}: tap for the faceplate</title><circle cx="${x}" cy="${y}" r="13" class="vbub"/><line x1="${x-13}" y1="${y}" x2="${x+13}" y2="${y}" class="vbubl"/>
+    <text x="${x}" y="${y-3}" class="vbt">QC</text><text x="${x}" y="${y+10}" class="vbt">300</text>${lab}</g>`;
+  const rot=e.r?` transform="rotate(${e.r} ${x} ${y})"`:"";
+  return `<g class="vsym" data-vlv="${id}" role="button" tabindex="0" aria-label="${id} ${d.name}"><title>${id} · ${d.name}: tap for the faceplate</title>${ld}<g${rot}><rect x="${x-14}" y="${y-20}" width="28" height="28" class="vhit"/>
+    <path d="M${x-10} ${y-6}L${x-10} ${y+6}L${x} ${y}Z M${x+10} ${y-6}L${x+10} ${y+6}L${x} ${y}Z" class="vbody" data-vb="${id}"/>
+    <line x1="${x}" y1="${y}" x2="${x}" y2="${y-10}" class="vstem"/><path d="M${x-7} ${y-10}A7 7 0 0 1 ${x+7} ${y-10}Z" class="vact"/></g>${lab}</g>`;}
+function vlvDcsSvg(a){const M=MIMIC[a];if(!M||!M.vlv||S.zen)return "";return M.vlv.map(vlvSym).join("");}
+// the area's loops as a row of buttons under the picture (big enough to tap on a phone)
+function vlvDcsRows(a,b){const M=MIMIC[a];if(!M||!M.vlv||S.zen)return;const w=kEl("div","vlvrows");w.appendChild(kEl("div","dcssub","Control loops · tap for the faceplate"));
+  for(const e of M.vlv){const d=VD[e.id],r=kEl("button","vlvrow",`<b>${e.id}</b><span>${d.name}</span><i data-vr="${e.id}">–</i>`);r.type="button";r.addEventListener("click",()=>openVlv(e.id));w.appendChild(r);}b.appendChild(w);}
+// a valve's look: the body fills with its opening; amber on MAN, red when its loop is in trouble
+function vlvDcsSync(o){o.querySelectorAll("[data-vlv]").forEach(g=>{const id=g.dataset.vlv,d=VD[id],v=vlvView(id);
+    const pos=v.pos,op=d.ctl?(v.op*d.out.k).toFixed(0)+" kPa":pos<0.5?"SHUT":pos>99.5?"OPEN":Math.round(pos)+"%",l2=`${op} ${v.m}`;
+    const b=g.querySelector("[data-vl2]");if(b.textContent!==l2)b.textContent=l2;
+    const tt=`${id} · ${d.name}: PV ${vfx(v.pv,d.pv.dp)} ${d.pv.u}, SP ${vfx(v.sp,d.pv.dp)}. Tap for the faceplate.`,ti=g.querySelector("title");if(ti.textContent!==tt)ti.textContent=tt;
+    const st=v.m==="MAN"?"man":vlvAlarm(id)?"bad":v.t?"tch":"ok";if(g.dataset.st!==st){g.dataset.st=st;g.setAttribute("class","vsym"+(d.ctl?" vctl":"")+" st-"+st);}
+    const bd=g.querySelector("[data-vb]");if(bd){const f=(0.12+0.88*clamp(pos/100,0,1)).toFixed(2);if(bd.dataset.f!==f){bd.dataset.f=f;bd.style.fillOpacity=f;}}
+    const r=o.querySelector(`[data-vr="${id}"]`);if(r){const t=`${l2} · ${vfx(v.pv,d.pv.dp)} ${d.pv.u}`;if(r.textContent!==t)r.textContent=t;r.className="st-"+st;}});}
+// is a loop in trouble right now (for the DCS alarm list and the symbol)? cached per UI tick
+const VAL={t:-1,h:{}};
+function vlvAlarm(id){if(VAL.t!==S.t){VAL.t=S.t;VAL.h={};}if(VAL.h[id]===undefined){const d=VD[id],h=vlvHealth(id,vlvTrace(id,Math.max(10,(d.proc.th/60+(d.proc.tau||0)/60)*6)));VAL.h[id]=["osc","stick","dead","sat"].includes(h.k)?h:null;}return VAL.h[id];}
+// the DCS alarm list (50d dcsAlarms calls this for its area)
+function vlvAlarms(a,L){if(S.zen)return;for(const d of VDEF){if(d.area!==a)continue;const v=vlvView(d.id);
+  if(v.m==="MAN")L.push([`${d.id} ${d.name.toUpperCase()} ON MANUAL`,false]);
+  const h=vlvAlarm(d.id);if(h)L.push([`${d.id} ${({osc:"OSCILLATING",stick:"VALVE STICKING",dead:"CYCLING",sat:"VALVE AT LIMIT"})[h.k]}`,h.k!=="sat"]);}}
+
+/* ---- the panel ---- */
+function vlvOv(){let o=$("vlvOv");if(o)return o;
+  o=kEl("div","overlay top vlvov");o.id="vlvOv";o.hidden=true;
+  o.innerHTML=`<div class="dcs vlvp" role="dialog" aria-modal="true" aria-labelledby="vlv-h"><div class="dcsh"><b id="vlv-h"></b><span class="vlvwh" id="vlvWh"></span>
+      <button type="button" class="dcsx" id="vlvClose" aria-label="Close">✕</button>
+      <div class="vlvtabs" role="tablist" aria-label="Faceplate">${VTABS.map(([k,l])=>`<button type="button" role="tab" data-vt="${k}">${l}</button>`).join("")}</div></div>
+    <div class="vlvb"><div class="vlvtr"><div class="vlvtrh"><span class="dcsleg" id="vlvLeg"></span><span class="seg vlvwin" role="group" aria-label="Trend window">${[2,10,30,60].map(m=>`<button type="button" data-vw="${m}">${m} min</button>`).join("")}</span></div>
+      <canvas id="vlvCv" width="760" height="300" aria-label="Trend of setpoint, process value and output"></canvas><div class="vlvhl" id="vlvHl"></div></div>
+      <div class="vlvpane" id="vlvPane"></div></div>
+    <div class="dcsf vlvf"><span id="vlvSt"></span><span class="vlvclk">Tuning clock <span class="seg" role="group" aria-label="Tuning clock">${[[1,"Real time"],[5,"5×"],[20,"20×"],[60,"60×"]].map(([c,l])=>`<button type="button" data-ck="${c}">${l}</button>`).join("")}</span></span></div></div>`;
+  document.body.appendChild(o);
+  $("vlvClose").addEventListener("click",()=>closeVlv());
+  o.addEventListener("click",e=>{if(e.target===o){closeVlv();return;}
+    const t=e.target.closest("[data-vt],[data-vw],[data-ck],[data-gl]");if(!t)return;
+    if(t.dataset.vt){VUI.tab=t.dataset.vt;vlvBuild();}
+    else if(t.dataset.vw){VUI.win=+t.dataset.vw;vlvRefresh();}
+    else if(t.dataset.ck){VUI.clk=+t.dataset.ck;try{localStorage.setItem("paper-mill-tclk",String(VUI.clk));}catch(_){}kuiSync();vlvRefresh();}
+    else if(t.dataset.gl){const k=t.dataset.gl,p=t.closest(".vlvpane,.vlvtr");VUI.gl=VUI.gl===k?null:k;vlvGloss(p);}});
+  return o;}
+function vlvGloss(p){document.querySelectorAll(".vglpop").forEach(x=>x.remove());const k=VUI.gl;if(!k||!p)return;const b=p.querySelector(`[data-gl="${k}"]`);if(!b)return;
+  const pop=kEl("div","vglpop",`<b>${VGLOSS[k][0]}</b> ${VGLOSS[k][1]}`);pop.setAttribute("role","note");(b.closest(".vrow,.vglh,label,div")||p).after(pop);}
+function openVlv(id,tab){if(vlvBlocked()||!VD[id])return;const o=vlvOv();if(VUI.id!==id){VUI.step=null;VUI.ghost=null;VUI.staged=null;VUI.gl=null;}
+  VUI.id=id;if(tab)VUI.tab=tab;if(VUI.tab==="ch"&&!VUI.ch)VUI.ch=null;o.hidden=false;vlvBuild();kuiSync();
+  setTimeout(()=>{try{$("vlvClose").focus({preventScroll:true});}catch(_){}},0);}
+function closeVlv(){const o=$("vlvOv");if(o)o.hidden=true;VUI.id=null;VUI.chPlay=0;document.querySelectorAll(".vglpop").forEach(x=>x.remove());kuiSync();}
+function vlvBuild(){const o=$("vlvOv");if(!o||!VUI.id)return;const id=VUI.id,d=VD[id];
+  $("vlv-h").textContent=`${id} · ${d.name}`;$("vlvWh").textContent=d.where;
+  o.querySelectorAll("[data-vt]").forEach(b=>{const on=b.dataset.vt===VUI.tab;b.setAttribute("aria-selected",String(on));b.setAttribute("aria-pressed",String(on));
+    b.hidden=b.dataset.vt==="valve"&&d.ctl;});
+  if(VUI.tab==="valve"&&d.ctl)VUI.tab="op";
+  const p=$("vlvPane");p.replaceChildren();p.dataset.tab=VUI.tab;
+  ({op:vpOp,tune:vpTune,bump:vpBump,valve:vpValve,learn:vpLearn,ch:vpCh})[VUI.tab](p,d);
+  vlvRefresh(true);}
+
+/* -- Operate -- */
+function vpOp(p,d){const id=d.id;
+  p.innerHTML=`<div class="vhealth" id="vH"></div>
+    <div class="vrow"><span class="vk">Mode ${vgl("man")}</span><span class="seg vmode" role="group" aria-label="Mode">${["MAN","AUTO"].concat(d.cas?["CAS"]:[]).map(m=>`<button type="button" data-m="${m}">${m}</button>`).join("")}</span></div>
+    <div class="vbig"><div><small>PV ${vgl("pv")}</small><b id="vPV">–</b><small>${d.pv.n}</small></div>
+      <div><small>SP ${vgl("sp")}</small><span class="vnum"><button type="button" data-spd="-1" aria-label="Setpoint down">−</button><input type="number" id="vSP" step="${vspStep(d)}" aria-label="Setpoint"/><button type="button" data-spd="1" aria-label="Setpoint up">+</button></span><small id="vSPn"></small></div>
+      <div><small>${d.ctl?"OUT":"OP"} ${vgl("op")}</small><span class="vnum"><button type="button" data-opd="-1" aria-label="Output down">−</button><input type="number" id="vOP" step="1" min="0" max="100" aria-label="Output"/><button type="button" data-opd="1" aria-label="Output up">+</button></span><small id="vOPn"></small></div></div>
+    ${d.ctl?"":`<div class="vrow vpos"><span class="vk">Valve</span><div class="vbar" aria-hidden="true"><i id="vBarC"></i><i id="vBarA"></i></div><span id="vPos"></span></div>`}
+    <p class="vnote" id="vNote"></p>
+    <p class="vwhat">${d.what}</p>
+    <div class="vbtns"><button type="button" class="reroll" data-go="tune">Tune ▸</button><button type="button" class="reroll" id="vRev">Standard tuning</button>${d.ctl?d.slaves.map(s=>`<button type="button" class="reroll" data-open="${s}">${s} ▸</button>`).join(""):d.master?`<button type="button" class="reroll" data-open="${d.master}">${d.master} ▸</button>`:""}</div>`;
+  p.querySelectorAll("[data-m]").forEach(b=>b.addEventListener("click",()=>{vlvSetMode(id,b.dataset.m);vlvRefresh(true);}));
+  const sp=$("vSP"),op=$("vOP");
+  sp.addEventListener("change",()=>{vlvSetSP(id,+sp.value);vlvRefresh(true);});
+  op.addEventListener("change",()=>{vlvSetOP(id,+op.value);vlvRefresh(true);});
+  p.querySelectorAll("[data-spd]").forEach(b=>b.addEventListener("click",()=>{const v=vlvView(id);vlvSetSP(id,v.sp+(+b.dataset.spd)*vspStep(d));vlvRefresh(true);}));
+  p.querySelectorAll("[data-opd]").forEach(b=>b.addEventListener("click",()=>{const v=vlvView(id);vlvSetOP(id,v.op+(+b.dataset.opd));vlvRefresh(true);}));
+  p.querySelector("[data-go]").addEventListener("click",()=>{VUI.tab="tune";vlvBuild();});
+  p.querySelectorAll("[data-open]").forEach(b=>b.addEventListener("click",()=>openVlv(b.dataset.open)));
+  $("vRev").addEventListener("click",()=>{vlvRevert(id);vlvRefresh(true);});}
+const vspStep=d=>d.pv.u==="kPa"?1:d.pv.u==="%"&&d.pv.hi>50?1:d.pv.dp>=2?0.05:0.1;
+
+/* -- Tune -- */
+const VTN={kc:[0.005,50,"","Kc"],ti:[0.02,200,"min","Ti"],td:[0,10,"min","Td"],pf:[0,60,"s","PV filter"]};
+// sliders on a log scale (Td and the filter: 0 at the left)
+const vToS=(k,v)=>{const [a,b]=VTN[k];if(k==="td"||k==="pf"){if(v<=0)return 0;const lo=k==="td"?0.005:0.5;return Math.round(1000*(0.05+0.95*Math.log(Math.max(v,lo)/lo)/Math.log(b/lo)));}return Math.round(1000*Math.log(v/a)/Math.log(b/a));};
+const vOfS=(k,s)=>{const [a,b]=VTN[k];const r3=x=>+(+x).toPrecision(3);if(k==="td"||k==="pf"){if(s<50)return 0;const lo=k==="td"?0.005:0.5;return r3(lo*Math.pow(b/lo,(s/1000-0.05)/0.95));}return r3(a*Math.pow(b/a,s/1000));};
+function vTuneNow(id){const L=S.vlv&&S.vlv.lp[id],d=VD[id];return L?{kc:L.kc,ti:L.ti,td:L.td,pf:L.pf||0}:{kc:d.tune.kc,ti:d.tune.ti,td:d.tune.td,pf:0};}
+function vpTune(p,d){const id=d.id,cas=()=>vlvView(id).m==="CAS";
+  p.innerHTML=`<div class="vhealth" id="vH"></div>
+    <div class="vrow"><span class="vk">Changes</span><span class="seg" role="group" aria-label="When changes apply"><button type="button" data-lv="1">Live</button><button type="button" data-lv="0">Apply button</button></span></div>
+    ${["kc","ti","td","pf"].map(k=>`<div class="vtn"><span class="vk">${VTN[k][3]} ${vgl(k)}</span><input type="range" min="0" max="1000" step="1" data-ts="${k}" aria-label="${VTN[k][3]}"/><span class="vnum1"><input type="number" step="any" data-tn="${k}" aria-label="${VTN[k][3]} value"/><small>${VTN[k][2]}</small></span></div>`).join("")}
+    <div class="vbtns"><button type="button" class="reroll vpri" id="vApply" hidden>Apply</button><button type="button" class="reroll" id="vStd">Standard ${vfx(d.tune.kc,3)} / ${vfx(d.tune.ti,2)}</button></div>
+    <div class="vsub">Setpoint step ${vgl("bumpless")}</div>
+    <div class="vbtns"><button type="button" class="reroll" data-st="-1">Step SP −${vstepSz(d)} ${d.pv.u}</button><button type="button" class="reroll" data-st="1">Step SP +${vstepSz(d)} ${d.pv.u}</button></div>
+    <p class="vnote" id="vStN"></p>
+    <div class="qcsgrid vscore" id="vSc"></div>`;
+  const get=()=>VUI.staged||vTuneNow(id);
+  const set=(k,v)=>{const t=Object.assign({},get(),{[k]:v});if(VUI.live){vlvSetTune(id,{[k]:v});VUI.staged=null;}else VUI.staged=t;vTuneSync(p,id);vlvRefresh(true);};
+  p.querySelectorAll("[data-ts]").forEach(r=>r.addEventListener("input",()=>set(r.dataset.ts,vOfS(r.dataset.ts,+r.value))));
+  p.querySelectorAll("[data-tn]").forEach(r=>r.addEventListener("change",()=>{const k=r.dataset.tn,[a,b]=VTN[k];set(k,clamp(+r.value||0,k==="td"||k==="pf"?0:a,b));}));
+  p.querySelectorAll("[data-lv]").forEach(b=>b.addEventListener("click",()=>{VUI.live=b.dataset.lv==="1";if(VUI.live&&VUI.staged){vlvSetTune(id,VUI.staged);VUI.staged=null;}vTuneSync(p,id);}));
+  $("vApply").addEventListener("click",()=>{if(VUI.staged){vlvSetTune(id,VUI.staged);VUI.staged=null;}vTuneSync(p,id);vlvRefresh(true);});
+  $("vStd").addEventListener("click",()=>{vlvSetTune(id,{kc:d.tune.kc,ti:d.tune.ti,td:d.tune.td,pf:0});VUI.staged=null;vTuneSync(p,id);vlvRefresh(true);});
+  p.querySelectorAll("[data-st]").forEach(b=>b.addEventListener("click",()=>{if(cas()||vlvView(id).m==="MAN")return;vStepGo(id,+b.dataset.st);vlvRefresh(true);}));
+  vTuneSync(p,id);}
+const vstepSz=d=>d.id==="FV-201"?0.25:d.pv.u==="kPa"?5:d.id==="QC-300"?0.5:d.pv.u==="%"&&d.pv.hi>50?5:0.2;
+function vTuneSync(p,id){const t=VUI.staged||vTuneNow(id);
+  p.querySelectorAll("[data-ts]").forEach(r=>{if(actEl(r)!==r)r.value=vToS(r.dataset.ts,t[r.dataset.ts]);});
+  p.querySelectorAll("[data-tn]").forEach(r=>{if(actEl(r)!==r)r.value=t[r.dataset.tn];});
+  p.querySelectorAll("[data-lv]").forEach(b=>b.setAttribute("aria-pressed",String((b.dataset.lv==="1")===VUI.live)));
+  const ap=$("vApply");if(ap)ap.hidden=!VUI.staged;}
+// a setpoint step: keep the response, score it, and keep the last one as a ghost on the trend
+function vStepGo(id,dir){const d=VD[id],v=vlvView(id);if(VUI.step&&VUI.step.id===id&&VUI.step.pts.length>5)VUI.ghost=VUI.step;
+  const sp1=v.sp+dir*vstepSz(d);vlvSetSP(id,sp1);const v2=vlvView(id);VUI.step={id,t0:S.t+(S.vlv&&S.vlv.sub?S.vlv.sub/60:0),sp0:v.sp,sp1:v2.sp,dir,pts:[],op0:v.pos};}
+// the step's scores: overshoot, settling time (inside 5% of the step), IAE and valve travel
+function vStepScore(st){const tr=vlvTrace(st.id,120),pts=[];let trav=0,lp=null;
+  for(let i=0;i<tr.t.length;i++){if(tr.t[i]<st.t0)continue;pts.push([tr.t[i]-st.t0,tr.pv[i]]);if(lp!=null)trav+=Math.abs(tr.pos[i]-lp);lp=tr.pos[i];}
+  st.pts=pts;const h=st.sp1-st.sp0;if(!h||pts.length<3)return null;
+  let peak=0,iae=0,settle=null;for(let i=0;i<pts.length;i++){const [t,y]=pts[i],f=(y-st.sp0)/h;peak=Math.max(peak,f);if(i)iae+=Math.abs(st.sp1-y)*(t-pts[i-1][0]);}
+  for(let i=pts.length-1;i>=0;i--){if(Math.abs((pts[i][1]-st.sp1)/h)>0.05){settle=i<pts.length-1?pts[i+1][0]:null;break;}if(i===0)settle=0;}
+  return {os:Math.max(0,(peak-1)*100),settle,iae,trav,el:pts[pts.length-1][0]};}
+
+/* -- Bump test -- */
+function vpBump(p,d){const id=d.id;VUI.bsz[id]=VUI.bsz[id]||d.bsz||5;
+  p.innerHTML=`<div class="vsub">How it works ${vgl("bump")}</div>
+    <ol class="vsteps"><li>The loop goes to MAN and holds its output while the PV settles a moment.</li><li>The output steps by the size below.</li><li>The PV is recorded until it settles (or, for a level, long enough to read its new slope).</li><li>A model is fitted and the loop goes back to its mode, bumpless.</li></ol>
+    ${d.ctl?`<p class="vnote">On QC-300 the step goes to the steam setpoints: PV-302 and PV-303 must be on CAS.</p>`:""}
+    <div class="vrow"><span class="vk">Step size</span><span class="vnum"><button type="button" data-bs="-1" aria-label="Smaller">−</button><input type="number" id="vBs" min="1" max="25" step="1" aria-label="Step size"/><button type="button" data-bs="1" aria-label="Bigger">+</button></span><small>% of output</small></div>
+    <div class="vbtns"><button type="button" class="reroll vpri" id="vBgo">Start bump test</button><button type="button" class="reroll" id="vBst" hidden>Stop</button></div>
+    <p class="vnote" id="vBn"></p><div class="vbres" id="vBr"></div>`;
+  const bs=$("vBs");bs.value=VUI.bsz[id];bs.addEventListener("change",()=>{VUI.bsz[id]=clamp(Math.round(+bs.value||5),1,25);bs.value=VUI.bsz[id];});
+  p.querySelectorAll("[data-bs]").forEach(b=>b.addEventListener("click",()=>{VUI.bsz[id]=clamp(VUI.bsz[id]+(+b.dataset.bs),1,25);bs.value=VUI.bsz[id];}));
+  $("vBgo").addEventListener("click",()=>{if(!vlvBump(id,VUI.bsz[id]))$("vBn").textContent=d.ctl?"Put PV-302 and PV-303 on CAS first.":"Another bump test is running.";vlvRefresh(true);});
+  $("vBst").addEventListener("click",()=>{vlvBumpStop();vlvRefresh(true);});
+  vBumpRes(d);}
+function vBumpRes(d){const box=$("vBr");if(!box)return;const W=S.vlv,r=W&&W.btRes&&W.btRes.id===d.id?W.btRes:null;if(box._r===r&&box._k===VUI.lam+VUI.form)return;box._r=r;box._k=VUI.lam+VUI.form;
+  if(!r){box.innerHTML="";return;}
+  const t=vLambda(d,r,VUI.lam,VUI.form),u=d.ctl?"%":"%";
+  const model=r.type==="int"?`<b>Integrating</b> ${vgl("int")}: the PV ramps at ${vfx(r.Ki,4)} % of span a minute for every 1% of output; dead time ${vfx(r.th,2)} min.`
+    :`<b>Self-regulating</b> ${vgl("selfreg")}: gain ${vfx(r.K,3)} (% of span per % ${u} output), time constant τ ${vfx(r.tau,2)} min ${vgl("tau")}, dead time θ ${vfx(r.th,2)} min ${vgl("dead")}.`+(r.settled===false?" <i>It hadn't quite settled: the gain may read low.</i>":"");
+  box.innerHTML=`<div class="vsub">Result</div><p class="vmodel">${model}${r.cut?" <i>Stopped early: the level was near its limit.</i>":""}</p>
+    <div class="vrow"><span class="vk">Lambda ${vgl("lambda")}</span><span class="seg" role="group" aria-label="Response">${["Conservative","Moderate","Aggressive"].map((l,i)=>`<button type="button" data-ls="${i}">${l}</button>`).join("")}</span>${r.type==="fo"?`<span class="seg" role="group" aria-label="Form">${["PI","PID"].map(f=>`<button type="button" data-lf="${f}">${f}</button>`).join("")}</span>`:""}</div>
+    <div class="qcsgrid"><div><small>λ</small><b>${vfx(t.lam,2)}</b><small>min</small></div><div><small>Kc</small><b>${t.kc}</b><small>now ${vfx(vTuneNow(d.id).kc,3)}</small></div><div><small>Ti</small><b>${t.ti}</b><small>min · now ${vfx(vTuneNow(d.id).ti,2)}</small></div><div><small>Td</small><b>${t.td}</b><small>min</small></div></div>
+    <div class="vbtns"><button type="button" class="reroll vpri" id="vUse">Use these</button></div>`;
+  box.querySelectorAll("[data-ls]").forEach(b=>{b.setAttribute("aria-pressed",String(+b.dataset.ls===VUI.lam));b.addEventListener("click",()=>{VUI.lam=+b.dataset.ls;vBumpRes(d);});});
+  box.querySelectorAll("[data-lf]").forEach(b=>{b.setAttribute("aria-pressed",String(b.dataset.lf===VUI.form));b.addEventListener("click",()=>{VUI.form=b.dataset.lf;vBumpRes(d);});});
+  $("vUse").addEventListener("click",()=>{vlvSetTune(d.id,{kc:t.kc,ti:t.ti,td:t.td});VUI.tab="tune";vlvBuild();});}
+
+/* -- Valve -- */
+function vpValve(p,d){const id=d.id,L=()=>S.vlv&&S.vlv.lp[id],vv=()=>(L()&&L().v)||d.valve,ed=!!S.free;
+  const row=(k,lab,u,min,max,step,note)=>`<div class="vtn"><span class="vk">${lab} ${vgl(k)}</span>${ed?`<input type="range" min="${min}" max="${max}" step="${step}" data-vv="${k}" aria-label="${lab}"/>`:"<span></span>"}<span class="vnum1"><b data-vvv="${k}"></b><small>${u}</small></span></div><p class="vnote vsm">${note}</p>`;
+  p.innerHTML=`<div class="vchar"><svg viewBox="0 0 220 150" id="vChr" role="img" aria-label="Valve characteristic"></svg><div><div class="vrow"><span class="vk">Trim ${vgl("cv")}</span>${ed?`<span class="seg" role="group" aria-label="Trim"><button type="button" data-ch="lin">Linear</button><button type="button" data-ch="eq">Equal-%</button></span>`:`<b id="vChN"></b>`}</div>
+      <p class="vnote vsm">Medium: ${d.medium}. Action: ${d.act>0?"reverse":"direct"} ${vgl("act")} (${d.act>0?"the PV rises as it opens":"the PV falls as it opens"}).</p></div></div>
+    ${row("stroke","Stroke time","s",2,60,1,"Shut to wide open. Slow valves can't follow a fast controller.")}
+    ${row("db","Deadband","%",0,5,0.1,"Output changes smaller than this don't move the valve.")}
+    ${row("hys","Hysteresis","%",0,5,0.1,"It lands short, depending on the direction it came from.")}
+    ${row("stick","Stiction","%",0,10,0.1,"The stem sticks until the output has moved this far, then jumps.")}
+    ${ed?`<div class="vbtns"><button type="button" class="reroll" id="vVstd">Valve back to standard</button></div>`:`<p class="vnote">In free play you can change these to see what a worn or sticky valve does to a loop.</p>`}`;
+  if(ed){p.querySelectorAll("[data-vv]").forEach(r=>r.addEventListener("input",()=>{vlvSetValve(id,{[r.dataset.vv]:+r.value});vValveSync(p,d);vlvRefresh(true);}));
+    p.querySelectorAll("[data-ch]").forEach(b=>b.addEventListener("click",()=>{vlvSetValve(id,{ch:b.dataset.ch});vValveSync(p,d);vlvRefresh(true);}));
+    $("vVstd").addEventListener("click",()=>{vlvSetValve(id,Object.assign({},d.valve));vValveSync(p,d);vlvRefresh(true);});}
+  vValveSync(p,d);}
+function vValveSync(p,d){const L=S.vlv&&S.vlv.lp[d.id],v=(L&&L.v)||d.valve,vw=vlvView(d.id);
+  p.querySelectorAll("[data-vv]").forEach(r=>{if(actEl(r)!==r)r.value=v[r.dataset.vv];});p.querySelectorAll("[data-vvv]").forEach(b=>{const k=b.dataset.vvv;b.textContent=k==="stroke"?String(v[k]):(+v[k]).toFixed(1);});
+  p.querySelectorAll("[data-ch]").forEach(b=>b.setAttribute("aria-pressed",String(b.dataset.ch===v.ch)));const cn=$("vChN");if(cn)cn.textContent=v.ch==="eq"?"Equal-% (R 50)":"Linear";
+  const sv=$("vChr");if(sv){let a="",b="";for(let i=0;i<=40;i++){const x=i/40;a+=(i?"L":"M")+(20+x*190).toFixed(1)+" "+(130-vch(v,x)*115).toFixed(1);b+=(i?"L":"M")+(20+x*190).toFixed(1)+" "+(130-x*115).toFixed(1);}
+    const px=20+clamp(vw.pos/100,0,1)*190,py=130-vch(v,vw.pos/100)*115;
+    sv.innerHTML=`<path d="M20 15V130H210" class="vax"/><path d="${b}" class="vref"/><path d="${a}" class="vcur"/><circle cx="${px.toFixed(1)}" cy="${py.toFixed(1)}" r="5" class="vpt"/><text x="115" y="146" class="vat">stem travel %</text><text x="8" y="72" class="vat" transform="rotate(-90 8 72)">flow</text><text x="${px.toFixed(0)}" y="${(py-9).toFixed(0)}" class="vat vptl">${Math.round(vw.pos)}%</text>`;}}
+
+/* -- Learn -- */
+function vpLearn(p,d){p.innerHTML=`<p class="vwhat">A control loop measures something (PV), compares it with where you want it (SP) and moves a valve (OP) to close the gap. Tuning is how hard and how patiently it does that. The game's loops start well tuned; break them, fix them, and watch what the mill does.</p>
+  <div class="vgls">${Object.keys(VGLOSS).map(k=>`<div><b>${VGLOSS[k][0]}</b><span>${VGLOSS[k][1]}</span></div>`).join("")}</div>
+  <p class="vnote">Rules of thumb: tune the inner loop of a cascade first; bump test from a steady process; on a dead-time loop keep λ at least the dead time; a level loop wants a long Ti (it's integrating already); if no tuning works, suspect the valve.</p>`;}
+
+/* -- Challenges -- */
+function vpCh(p,d){const sv=S.vlvc||{};
+  if(!VUI.ch){p.innerHTML=`<p class="vwhat">Five puzzles on a sandbox copy of a loop: the mill keeps running untouched. Set the tuning, run it, and beat a careful engineer's Lambda tuning for three stars.</p>
+      <div class="vchl">${VCHAL.map(c=>`<button type="button" class="vchc" data-c="${c.id}"><b>${c.title}</b><span>${c.loops.join(" + ")} · ${c.min} min</span><i aria-label="${sv[c.id]||0} of 3 stars">${"★".repeat(sv[c.id]||0)}${"☆".repeat(3-(sv[c.id]||0))}</i></button>`).join("")}</div>`;
+    p.querySelectorAll("[data-c]").forEach(b=>b.addEventListener("click",()=>{VUI.ch=b.dataset.c;VUI.chRes=null;VUI.chT={};vlvBuild();}));return;}
+  const c=VCH[VUI.ch];for(const id of c.loops)if(!VUI.chT[id])VUI.chT[id]=Object.assign({},VD[id].tune,c.start[id]);
+  p.innerHTML=`<div class="vbtns"><button type="button" class="linkb" id="vChBk">← All challenges</button></div><div class="vsub">${c.title}</div><p class="vwhat">${c.brief}</p>
+    ${c.loops.map(id=>`<div class="vsub">${id} · ${VD[id].name}</div>${["kc","ti","td"].map(k=>`<div class="vtn"><span class="vk">${VTN[k][3]} ${vgl(k)}</span><input type="range" min="0" max="1000" step="1" data-cs="${id}:${k}" aria-label="${id} ${VTN[k][3]}"/><span class="vnum1"><input type="number" step="any" data-cn="${id}:${k}" aria-label="${id} ${VTN[k][3]} value"/><small>${VTN[k][2]}</small></span></div>`).join("")}`).join("")}
+    <div class="vbtns"><button type="button" class="reroll vpri" id="vChGo">Run</button><button type="button" class="reroll" id="vChRs">Starting tuning</button><button type="button" class="reroll" id="vChHt">Hint</button></div>
+    <p class="vnote" id="vChHint" hidden></p><div class="qcsgrid" id="vChSc"></div>`;
+  const sync=()=>{p.querySelectorAll("[data-cs]").forEach(r=>{const [id,k]=r.dataset.cs.split(":");if(actEl(r)!==r)r.value=vToS(k,VUI.chT[id][k]);});p.querySelectorAll("[data-cn]").forEach(r=>{const [id,k]=r.dataset.cn.split(":");if(actEl(r)!==r)r.value=VUI.chT[id][k];});};
+  p.querySelectorAll("[data-cs]").forEach(r=>r.addEventListener("input",()=>{const [id,k]=r.dataset.cs.split(":");VUI.chT[id][k]=vOfS(k,+r.value);sync();}));
+  p.querySelectorAll("[data-cn]").forEach(r=>r.addEventListener("change",()=>{const [id,k]=r.dataset.cn.split(":"),[a,b]=VTN[k];VUI.chT[id][k]=clamp(+r.value||0,k==="td"?0:a,b);sync();}));
+  $("vChBk").addEventListener("click",()=>{VUI.ch=null;VUI.chRes=null;VUI.chPlay=0;vlvBuild();});
+  $("vChRs").addEventListener("click",()=>{VUI.chT={};vlvBuild();});
+  $("vChHt").addEventListener("click",()=>{const h=$("vChHint");h.hidden=!h.hidden;h.textContent=({shake:"Too much gain and too short a Ti. Bring Kc down a lot, then try Ti near the tub's 20-minute time constant.",
+    wake:"An integrating level needs a long Ti, but this Kc is tiny. Lambda for a level: Kc = (2λ+θ)/(Ki(λ+θ)²), Ti = 2λ+θ. The chest's Ki is about 0.25 %/min per % of output.",
+    stick:"Every reversal is a stick-slip jump. A slower, gentler loop reverses less: lower Kc, Ti about the tub's 20 minutes.",
+    inner:"The inner steam loop rings at this tuning. Calm PV-303 first (Kc about 0.5, Ti 0.5 min); then the moisture loop can be quicker.",
+    patience:"3 minutes of dead time. Lambda with λ = 3 min: Kc about 0.05, Ti about the 0.33-minute lag. Mostly integral, very little gain."})[c.id];});
+  $("vChGo").addEventListener("click",()=>{const r=vlvChallenge(c.id,VUI.chT),st=vlvStars(c.id,r.score);vlvChSave(c.id,st);VUI.chRes=Object.assign(r,{st,ref:vlvChRef(c.id)});VUI.chPlay=performance.now();vChScore();vlvRefresh(true);});
+  sync();vChScore();}
+function vChScore(){const b=$("vChSc"),r=VUI.chRes;if(!b)return;if(!r){b.innerHTML="";return;}
+  b.innerHTML=`<div><small>Stars</small><b class="vstar">${"★".repeat(r.st)}${"☆".repeat(3-r.st)}</b><small>${r.unstable?"unstable":r.st===3?"as good as a careful engineer":"keep tuning"}</small></div><div><small>Score</small><b>${isFinite(r.score)?vfx(r.score,1):"∞"}</b><small>engineer ${vfx(r.ref,1)} (lower is better)</small></div><div><small>IAE</small><b>${vfx(r.iae,1)}</b><small>% of span × min</small></div><div><small>Valve</small><b>${Math.round(r.trav)}%</b><small>travel · ${r.rev} reversals</small></div>`;}
+
+/* ---- refresh (5 a second) and the trend ---- */
+function vlvRefresh(force){const o=$("vlvOv");if(!o||o.hidden||!VUI.id)return;const id=VUI.id,d=VD[id],v=vlvView(id),tab=VUI.tab,W=S.vlv;
+  o.querySelectorAll("[data-vw]").forEach(b=>b.setAttribute("aria-pressed",String(+b.dataset.vw===VUI.win)));{const w=o.querySelector(".vlvwin"),h=tab==="ch"&&!!VUI.chRes;if(w.hidden!==h)w.hidden=h;}
+  o.querySelectorAll("[data-ck]").forEach(b=>b.setAttribute("aria-pressed",String(+b.dataset.ck===VUI.clk)));
+  {const t=v.t?"On the valve model · 1 s updates":"Standard tuning on the game's own model · a point every 15 s",s=`Day ${Math.floor(S.t/1440)+1} · ${clockOf(S.t)} · ${t}`,e=$("vlvSt");if(e.textContent!==s)e.textContent=s;}
+  const tr=vlvTrace(id,VUI.win);
+  if(tab!=="ch"){const h=vlvHealth(id,vlvTrace(id,Math.max(10,(d.proc.th+(d.proc.tau||0))/60*6))),hb=$("vH");
+    if(hb){const s=`<b class="vh-${h.k}">${h.txt}</b><span>${h.why}</span><small>${h.tip}</small>`;if(hb._h!==s){hb._h=s;hb.innerHTML=s;}}}
+  if(tab==="op"){o.querySelectorAll("[data-m]").forEach(b=>{b.setAttribute("aria-pressed",String(b.dataset.m===v.m));b.disabled=d.ctl&&b.dataset.m!=="MAN"&&b.dataset.m!=="AUTO";});
+    const pv=$("vPV"),sp=$("vSP"),op=$("vOP");pv.textContent=vlvFmtPV(d,v.pv);
+    if(actEl(sp)!==sp)sp.value=vfx(v.sp,d.pv.dp);sp.disabled=v.m==="CAS";$("vSPn").textContent=v.m==="CAS"?`from ${d.master} (CAS)`:d.id==="FV-201"?`grade ${C.grade} target ${bwStd().toFixed(2)} lb`:`${vF(d.spLim)[0]}–${vF(d.spLim)[1]} ${d.pv.u}`;
+    if(actEl(op)!==op)op.value=vfx(v.op,1);op.readOnly=v.m!=="MAN";$("vOPn").textContent=d.ctl?`→ ${Math.round(v.op*d.out.k)} kPa 3rd section`:v.m==="MAN"?"you set this":"the controller sets this";
+    if(!d.ctl){const L=W&&W.lp[id],tg=L?L.tgt:v.pos;$("vBarC").style.left=clamp(v.op,0,100)+"%";$("vBarA").style.width=clamp(v.pos,0,100)+"%";
+      $("vPos").textContent=v.pos<0.5?"SHUT":v.pos>99.5?"WIDE OPEN":`${vfx(v.pos,1)}% open`;}
+    const n=$("vNote"),ff=d.ff&&W&&W.B?W.B.ff:null;
+    const nt=v.m==="IMAN"?"PV-302 and PV-303 aren't on CAS: this controller is tracking them (IMAN).":d.id==="FV-201"?`Speed feed-forward ${vgl("ff")}: ${v.t&&ff!=null?(ff>=0?"+":"")+ff.toFixed(1)+"%":"built in"}. The scanner reads ${WE.dead} min late.`:d.cas&&v.m!=="CAS"?`Off CAS: QC-300 can't hold the moisture until this is back on CAS.`:"";
+    if(n._h!==nt){n._h=nt;n.innerHTML=nt;}
+    const rv=$("vRev");rv.disabled=!v.t||VGRP(id).every(x=>vIsDef(x));}
+  if(tab==="tune"){const st=VUI.step&&VUI.step.id===id?vStepScore(VUI.step):null,g=$("vSc"),n=$("vStN");
+    const nt=v.m==="CAS"?`On CAS: step the moisture setpoint on ${d.master}, or put this loop on AUTO to step it here.`:v.m==="MAN"?"On MAN: put it on AUTO to step the setpoint.":st?`Step ${st.el.toFixed(1)} min ago.`:"Step the setpoint to see the response; the last one stays on the trend as a ghost.";
+    if(n.textContent!==nt)n.textContent=nt;
+    const s=st?`<div><small>Overshoot</small><b>${vfx(st.os,0)}%</b><small>of the step</small></div><div><small>Settled</small><b>${st.settle!=null?vfx(st.settle,1):"–"}</b><small>min (to 5%)</small></div><div><small>IAE</small><b>${vfx(st.iae,2)}</b><small>${d.pv.u} × min</small></div><div><small>Valve travel</small><b>${vfx(st.trav,0)}%</b><small>since the step</small></div>`:"";
+    if(g._h!==s){g._h=s;g.innerHTML=s;}
+    if(force)vTuneSync($("vlvPane"),id);}
+  if(tab==="bump"){const b=W&&W.bt&&W.bt.id===id?W.bt:null,other=W&&W.bt&&W.bt.id!==id;$("vBgo").hidden=!!b;$("vBst").hidden=!b;$("vBgo").disabled=!!other||S.pm!=="run"&&(id==="FV-201"||id==="QC-300");
+    const n=$("vBn"),h=vlvHealth(id,vlvTrace(id,10));
+    const nt=b?`${b.t<b.base?"Settling":"Recording the response"} · ${Math.max(0,Math.ceil((b.base+b.dur-b.t)/60))} min of mill time left (${Math.ceil((b.base+b.dur-b.t)/VUI.clk)} s at ${VUI.clk===1?"real time":VUI.clk+"×"}).`
+      :other?`${W.bt.id} is bump testing; one at a time.`:S.pm!=="run"&&(id==="FV-201"||id==="QC-300")?"The machine is down: no sheet for the scanner.":h.k!=="steady"?`Heads up: the loop isn't steady (${h.txt.toLowerCase()}). A bump test from a moving process gives a poor model.`:d.shutOK&&v.pos<0.5?"The valve is shut and the silo overflowing: the level can't show the step. Draw the silo down first (more forming vacuum, or a higher setpoint).":"Ready. Faster on a quicker tuning clock.";
+    if(n.textContent!==nt)n.textContent=nt;vBumpRes(d);}
+  if(tab==="valve")vValveSync($("vlvPane"),d);
+  // legend and trend
+  const lg=tab==="ch"&&VUI.chRes?`<span><i style="background:#e8eef8"></i>SP</span><span><i style="background:#4fd18b"></i>PV</span><span><i style="background:#ffb02e"></i>${VD[VCH[VUI.ch].loops[0]].ctl?"OUT":"OP"}</span>${VCH[VUI.ch].loops[1]?`<span><i style="background:#c792ff"></i>${VCH[VUI.ch].loops[1]} PV</span>`:""}<span>sandbox</span>`
+    :`<span><i style="background:#e8eef8"></i>SP</span><span><i style="background:#4fd18b"></i>PV ${d.pv.u}</span><span><i style="background:#ffb02e"></i>${d.ctl?"OUT":"OP"} %</span>${d.ctl?"":`<span><i style="background:#7fb2ff"></i>valve %</span>`}${VUI.ghost&&VUI.ghost.id===id?`<span><i style="background:#8ea4c4"></i>last step</span>`:""}`;
+  const le=$("vlvLeg");if(le._h!==lg){le._h=lg;le.innerHTML=lg;}
+  vlvDraw(tab==="ch"&&VUI.chRes?null:tr,d);}
+function vlvDraw(tr,d){const cv=$("vlvCv");if(!cv)return;const box=cv.getBoundingClientRect(),dpr=Math.min(2,window.devicePixelRatio||1),cw=Math.max(280,box.width||560),Wc=Math.round(cw*dpr),Hc=Math.round(Math.max(190,cw*0.42)*dpr);
+  if(cv.width!==Wc||cv.height!==Hc){cv.width=Wc;cv.height=Hc;}const x=cv.getContext("2d"),W=cv.width,H=cv.height,f=dpr,L=42*f,R=W-30*f,T=22*f,B=H-22*f;
+  x.fillStyle="#0f1b2d";x.fillRect(0,0,W,H);x.font=`600 ${Math.round(11*f)}px system-ui,sans-serif`;
+  let ser;if(!tr){const r=VUI.chRes,c=VCH[VUI.ch],o=r.trace,el=VUI.chPlay?Math.min(1,(performance.now()-VUI.chPlay)/5000):1,n=Math.max(2,Math.floor(o.t.length*el));
+    ser={t:o.t.slice(0,n),sp:o.sp.slice(0,n),pv:o.pv.slice(0,n),op:o.op.slice(0,n),pos:VD[c.loops[0]].ctl?null:o.pos.slice(0,n),in:o.in.pv.length?o.in.pv.slice(0,n):null,t0:0,t1:c.min,d:VD[c.loops[0]]};d=ser.d;}
+  else{const tn=tr.t.length?tr.t[tr.t.length-1]:S.t;ser={t:tr.t,sp:tr.sp,pv:tr.pv,op:tr.op,pos:d.ctl?null:tr.pos,t0:tn-VUI.win,t1:tn,d};}
+  // PV scale: the data's range, never tighter than a few tolerances
+  const all=ser.sp.concat(ser.pv);let lo=Math.min(...all),hi=Math.max(...all);if(!all.length){lo=vSpan(d)[0];hi=vSpan(d)[1];}
+  const tol=vTol(d)*3,mid=(lo+hi)/2;if(hi-lo<tol*2){lo=mid-tol;hi=mid+tol;}const pad=(hi-lo)*0.1;lo-=pad;hi+=pad;
+  const X=t=>L+(t-ser.t0)/(ser.t1-ser.t0||1)*(R-L),Y=v=>B-(v-lo)/(hi-lo)*(B-T),Yo=v=>B-v/100*(B-T);
+  x.strokeStyle="rgba(140,170,210,.16)";x.lineWidth=1;for(let k=0;k<=4;k++){const y=T+(B-T)*k/4;x.beginPath();x.moveTo(L,y);x.lineTo(R,y);x.stroke();}
+  x.fillStyle="#8ea4c4";x.textAlign="right";for(let k=0;k<=4;k++){const v=hi-(hi-lo)*k/4;x.fillText(vfx(v,d.pv.dp),L-5*f,T+(B-T)*k/4+4*f);}
+  x.textAlign="left";for(let k=0;k<=4;k++)x.fillText(String(100-25*k),R+5*f,T+(B-T)*k/4+4*f);
+  x.textAlign="center";const span=ser.t1-ser.t0;for(let k=0;k<=4;k++){const t=ser.t0+span*k/4;x.fillText(tr?(k===4?"now":"−"+vfx(span*(4-k)/4,span<5?1:0)+" min"):vfx(t,0)+" min",L+(R-L)*k/4,H-6*f);}
+  const line=(ts,vs,col,w,yf,dash)=>{if(!vs||vs.length<2)return;x.strokeStyle=col;x.lineWidth=w*f;x.setLineDash(dash?dash.map(q=>q*f):[]);x.beginPath();let on=false;
+    for(let i=0;i<vs.length;i++){if(ts[i]<ser.t0)continue;const px=X(ts[i]),py=yf(vs[i]);if(!on){x.moveTo(px,py);on=true;}else x.lineTo(px,py);}x.stroke();x.setLineDash([]);};
+  x.save();x.beginPath();x.rect(L,T-2,R-L,B-T+4);x.clip();
+  // the ghost: the last setpoint step's response, laid over this one's start
+  if(tr&&VUI.ghost&&VUI.ghost.id===d.id&&VUI.step&&VUI.step.id===d.id){const g=VUI.ghost,s=VUI.step,k=(s.sp1-s.sp0)/((g.sp1-g.sp0)||1);
+    line(g.pts.map(p=>s.t0+p[0]),g.pts.map(p=>s.sp0+(p[1]-g.sp0)*k),"#8ea4c4",1.6,Y,[4,3]);}
+  line(ser.t,ser.op,"#ffb02e",1.6,Yo);if(ser.pos)line(ser.t,ser.pos,"#7fb2ff",1.2,Yo);
+  if(ser.in){const ip=ser.in;let a=Math.min(...ip),b=Math.max(...ip);if(b-a<10){const m=(a+b)/2;a=m-5;b=m+5;}line(ser.t,ip,"#c792ff",1.4,v=>B-(v-a)/(b-a)*(B-T));}
+  line(ser.t,ser.sp,"#e8eef8",1.6,Y,[6,4]);line(ser.t,ser.pv,"#4fd18b",2.4,Y);
+  // the bump test's step, marked
+  const bt=tr&&S.vlv&&S.vlv.bt&&S.vlv.bt.id===d.id?S.vlv.bt:null;if(bt&&bt.t>=bt.base){const ts=ser.t1-(bt.t-bt.base)/60;x.strokeStyle="#ffb02e";x.setLineDash([3*f,3*f]);x.beginPath();x.moveTo(X(ts),T);x.lineTo(X(ts),B);x.stroke();x.setLineDash([]);}
+  x.restore();
+  x.fillStyle="#8ea4c4";x.textAlign="left";x.fillText(d.pv.u,4*f,12*f);x.textAlign="right";x.fillText(tr||!VD[VCH[VUI.ch].loops[0]].ctl?"% open":"% out",W-4*f,12*f);
+  if(tr&&tr.t.length<2){x.fillStyle="#c3d3ea";x.textAlign="center";x.fillText("Collecting the trend…",W/2,H/2);}}
+UI_TICKS.push(()=>{if(VUI.id){const o=$("vlvOv");if(!o||o.hidden)return;if(S.zen){closeVlv();return;}vlvRefresh(false);if(VUI.chPlay&&performance.now()-VUI.chPlay>5200)VUI.chPlay=0;}});
+// smoother trend while the challenge plays back or the clock runs fast
+{let raf=0;const tick=()=>{raf=requestAnimationFrame(tick);if(VUI.id&&VUI.tab==="ch"&&VUI.chPlay){const t=performance.now();if(t-(tick.l||0)>60){tick.l=t;vlvRefresh(false);}}};raf=requestAnimationFrame(tick);}
+G3.vlvUI=()=>VUI.id?VUI.clk/60:0;   // (kuiSync, 50b: the tuning clock while a faceplate is open)
+G3.vlvOpen=openVlv;G3.vlvClose=closeVlv;G3.VUI=VUI;   // (tests)
+// Escape closes the faceplate first (window capture runs before the DCS's own document handler)
+window.addEventListener("keydown",e=>{if(e.key==="Escape"&&VUI.id){e.preventDefault();e.stopPropagation();closeVlv();}},true);
 
 /* =========================== v2 app shell wiring =========================== */
 (function(){
@@ -14428,7 +15169,7 @@ G3.rm={open:()=>rmOpen(),close:()=>rmClose(),N:RM_N,E:RM_E,pick:id=>rmPick(id,tr
     {const se=S.season,on=!!(se&&se.on),sv=!!(se&&se.surv),day=Math.floor(S.t/1440)+1,lab=on?(sv?(NARROW.matches?`W${survWave()} · D${day}`:`Wave ${survWave()} · Day ${day}`):(NARROW.matches?`Day ${Math.min(SEASON_DAYS,day)}/${SEASON_DAYS}`:`Day ${Math.min(SEASON_DAYS,day)} of ${SEASON_DAYS}`)):se&&se.done?(sv?"Run over":"Season over"):"Time";
      set("v2clockL",lab);$("v2clockL").classList.toggle("sday",on);$("v2clockL").title=on?(sv?"Survival: the wave you are in and the day of the run":"Season mode: day of the 30-day season"):"";}
     mirror.forEach(([d,s])=>{if(d.textContent!==s.textContent)d.textContent=s.textContent;});
-    const sp=G3.knobUI&&!S.zen?"Knob open · 1 min/s":outCapped()?`Watching crews · ${simRate()} min/s`:C.simSpeed+" min/s";if($("v2speed").textContent!==sp)$("v2speed").textContent=sp;$("v2speed").title=outCapped()?`Slowed to ${simRate()} min/s so you can watch the outage crews. Press − or + to go back to ${C.simSpeed} min/s; it also comes back when the outage ends.`:"";
+    const sp=G3.vlvClk&&!S.zen?`Tuning clock · ${VUI.clk===1?"real time":VUI.clk+"×"}`:G3.knobUI&&!S.zen?"Knob open · 1 min/s":outCapped()?`Watching crews · ${simRate()} min/s`:C.simSpeed+" min/s";if($("v2speed").textContent!==sp)$("v2speed").textContent=sp;$("v2speed").title=outCapped()?`Slowed to ${simRate()} min/s so you can watch the outage crews. Press − or + to go back to ${C.simSpeed} min/s; it also comes back when the outage ends.`:"";
     const n=S.inc.length,bd=$("v2bdg");bd.hidden=!n;if(bd.textContent!==String(n))bd.textContent=n;
   }
   UI_TICKS.push(sync);sync();
@@ -14611,6 +15352,7 @@ G3.rm={open:()=>rmOpen(),close:()=>rmClose(),N:RM_N,E:RM_E,pick:id=>rmPick(id,tr
       // the open dialog: a card comes back up; an outage plan is asked again
       const op=S.cards.open;S.cards.open=null;
       if(op&&op.outage&&S.outg)S.outg.noticed=false;
+      try{vlvMigrate();}catch(e){diag("valves migrate: "+String(e&&e.message||e).slice(0,80));}   // v6.9: manual steam / BW valve / pulper valve from older saves are the new loops
       applyUpgrades();S.M=mods();BANNERS.length=0;seasonLocks(true);
       try{syncControls();}catch(e){}try{updateShop();}catch(e){}try{if(G3.rebrand)G3.rebrand();}catch(e){}
       try{UI_TICKS.forEach(f=>f(0));}catch(e){}   // v5.0.6: the top bar (speed, wave, cash) is right from the first frame, not one UI tick later
@@ -15011,6 +15753,13 @@ function camPullOn(){try{return localStorage.getItem("paper-mill-campull")!=="of
     <p>At each outage the leader makes one pick that stays with the mill. You can change leader once per run, in an outage budget dialog.</p>`],
   ["Fiddly knobs","knobs",`<p>Red knobs around the mill do nothing until you touch them. Move one and trouble may turn up later, sometimes somewhere else. The crew traces it back in the end.</p>
     <ul><li>Tap the red hardware, or open the <b>DCS screens</b> from the operator consoles (SPOT for stock prep, WET and DET on the machine floor).</li><li>The game slows to 1 min/s while a knob panel or DCS screen is open.</li><li>The DCS covers the whole machine: SPOT (stock prep, from the bale conveyor to the fan pump), WET, DET (through the winder and roll conveyor) and UTIL (water, effluent, rejects). Setpoints there are the same as Process flow's controls: AUTO and locked in a season.</li><li><b>Motors</b> (bale conveyor, ragger, junk trap, screen rotors, dye pump, fog fan): OFF stops that step like a breakdown, and the operators start it again after 30 minutes. <b>Reject purges</b> left in MANUAL build pressure until the cleaners plug.</li><li><b>Settings → View → Fiddly knobs view</b> greys out the mill and shows only the knobs.</li></ul>`],
+  ["Control valves and tuning","valves",`<p>Six control loops run the mill's key valves, shown on the DCS pictures with their % open and mode: <b>NV-101</b> pulper consistency and <b>LV-104</b> machine chest level (SPOT), <b>FV-201</b> basis weight and <b>LV-202</b> white water silo level (WET), and the dryer steam cascade on DET, where <b>QC-300</b> reel moisture sets <b>PV-302</b> and <b>PV-303</b>, the 2nd and 3rd section pressures.</p>
+    <ul><li>They start well tuned on AUTO and play exactly as before until you change something. Tap a valve for its faceplate: <b>Operate</b> (MAN / AUTO / CAS, setpoint, output, the valve, loop health), <b>Tune</b> (Kc, Ti, Td and a PV filter, a setpoint step with its scores), <b>Bump test</b> (step the output, fit the process, get Lambda tuning), <b>Valve</b>, <b>Learn</b> and <b>Challenges</b>.</li>
+    <li>The valves behave like real ones: a stroke time, deadband, hysteresis and stiction, linear or equal-% trim. In free play you can change those too.</li>
+    <li>While a faceplate is open the game runs on the <b>tuning clock</b> (real time, 5×, 20× or 60×), so you can watch a loop respond second by second.</li>
+    <li>Bad tuning costs the mill through the process: a thick or thin pulper, an empty or overflowing machine chest, off-spec weight or moisture, a dry silo. In a season or survival run the crew traces a loop that keeps hurting and puts it back on standard tuning; free play leaves your experiments alone.</li>
+    <li>Put a loop back on <b>Standard tuning</b> and, once it settles, the mill takes it back.</li>
+    <li><b>Challenges</b> are five tuning puzzles on a sandbox copy of a loop: beat a careful engineer's Lambda tuning for three stars.</li></ul>`],
   ["Process flow","pflow",`<p><b>Report → Control room → Process flow</b> draws the whole mill for today's mill day (6am to 6am), or yesterday: what goes in (fiber, energy, chemicals and water, labor, maintenance, overhead), the areas it passes through, and what comes out (paper, waste, profit).</p>
     <ul><li>The blue band grows as money is spent, area by area, and meets the day's revenue at the end.</li><li>Waste is in tons: rejects to landfill, fiber lost in the effluent, and broke that goes round again.</li><li>Today, Yesterday, 7 d or Run: the run includes the 14 days before you took over (switch them off with Prior days).</li><li>Tap any area, input or output for its panel: trends over time (24 h, 7 d or the whole run; tap a chart to read it), costs, and for areas uptime and quality.</li><li><b>The dryers have a limit.</b> More speed, a heavier grade or a wetter sheet from the wet end means more water to dry. Past the 3rd section's limit the sheet comes off wet, fails the moisture spec and goes to the beater, and the crew slows the machine until it's dry again. The shoe press gives the dryers more headroom. Watch DRYER LOAD on the DET screen.</li><li>Each area's controls (truck arrivals, crews, pulper feed, machine speed and grade, winder, loaders) are in its panel under <b>Controls</b>: AUTO and locked in a season or survival run, yours in Free Play.</li><li>Freight in and Freight out move with a weekly diesel price, the weather and detours.</li><li>Tap any box or band for its breakdown. The mill keeps running while it's open, so the numbers update live.</li></ul>`],
   ["Controls","controls",`<ul><li><b>Speed:</b> tap the top bar to open it, then − and +. Pause is the button on the far left.</li><li><b>Camera:</b> a fixed isometric view. Drag to pan; pinch, scroll or + and − to zoom one step at a time. On a keyboard: arrows or WASD to move. Roofs lift off as you zoom in (Settings → View → Cutaway).</li>
@@ -15038,6 +15787,10 @@ function camPullOn(){try{return localStorage.getItem("paper-mill-campull")!=="of
     ["Consistency","How much fiber is in the water, as a percentage. Pulp is mostly water."],
     ["Couch pit","The pit under the end of the forming section that catches trimmed and broken sheet."],
     ["DCS","Distributed control system: the operator screens (SPOT, WET, DET and UTIL) with live readings, alarms and trends."],
+    ["Control loop (PV, SP, OP)","A controller that measures a process value (PV), compares it with its setpoint (SP) and moves a valve (its output, OP) to close the gap. MAN: the operator sets the output; AUTO: the controller does; CAS: another controller sets its setpoint."],
+    ["PID tuning (Kc, Ti, Td)","How a controller reacts: Kc is its gain, Ti (minutes) how quickly the integral removes an offset, Td (minutes) how much it reacts to the rate of change. Too much gain rings; too little is lazy."],
+    ["Bump test","Step a loop's output on manual and watch the PV: its gain, dead time and time constant give the tuning (Lambda tuning picks how fast the loop should be)."],
+    ["Stiction","Sticky valve packing: the stem holds until the output has moved far enough, then jumps. It makes a sawtooth cycle no tuning can remove."],
     ["Deckle / trim","The usable width of the sheet. A wider trim makes more tons at the same speed."],
     ["Disk thickener","Removes water from the pulp before it goes to the stock chest."],
     ["DLK","Double-lined kraft clippings: stronger, dearer fiber used in heavier grades."],
@@ -15138,7 +15891,7 @@ function camPullOn(){try{return localStorage.getItem("paper-mill-campull")!=="of
    (within 700 ms per tap) and a list of every version's one-line note pops up, newest first. The list comes from
    VERSION-NOTES.txt at the repo root: build.py swaps it in for the placeholder below, so adding a line there with each
    release keeps the pop-up current (build.py warns when APP_VER has no line). ---------- */
-{const VNOTES=[["4.0.0", "Graphics Overhaul: 60 FPS on iPhone, ~80% Fewer Draw Calls"], ["4.0.1", "Performance Follow-Up, Show FPS Option and Device Autotest"], ["4.0.2", "Economy Rebalance and Smoother Upset Labels"], ["4.1.0", "Four Environments, Seeded Mills, Bottlenecks, Graphics Tiers and Site Music"], ["4.2.0", "New Site Maps, Rare Sights, Zen Map Rotation and Economics Fixes"], ["4.2.0-s", "Save and Continue Season (Test)"], ["4.2.1", "Save/Continue, Settings Panel and Outage Speed Fix"], ["4.2.2-t", "Bayou Gator Sight Reworked (Test)"], ["4.2.2-t2", "Gator Bass Riff (Test)"], ["4.2.2-t3", "Gator Riff Removed, Wide Camera Framing (Test)"], ["4.2.2-t4", "Gator Scene Shortened and Widened (Test)"], ["4.2.2-t5", "One Rare Sight per Map in Zen (Test)"], ["4.2.2", "Rare Sights Reworked, Bird Strike Upset, Mill Report Tab"], ["4.2.3-t", "Cowboys, Bigfoot and Tugboat Sights Reworked (Test)"], ["4.2.3", "Laptop Battery Saving (Default GPU)"], ["4.2.4", "$25M Goal Removed and Quick Fixes"], ["4.2.5", "Random Bottleneck per Season and Accessibility Improvements"], ["4.3.0-t1", "Survival Mode (Test)"], ["4.4.0-t1", "Mill Leaders in Survival (Test)"], ["4.4.0-t2", "Painted Leader Portraits (Test)"], ["4.4.0-t3", "Leader Redesign, 4-Day Waves and Fixes (Test)"], ["5.0.0", "Survival Mode Release with Mill Leaders"], ["5.0.1", "Results Dialog and Game Speed Fixes"], ["5.0.2", "Report Card Label Fixes"], ["5.0.3", "Survival Playtest Fixes (Test)"], ["5.0.4", "Playtest Review: Dot Auto-Fix and Shipping Fix (Test)"], ["5.0.5", "Polish Rounds from Survival Playtests"], ["5.0.6", "Survival QA Fixes, Opt-In Outage Watch, Leaderboard Filters"], ["5.1.0", "Civics Meters and Leaders in Seasons (Test)"], ["5.4.0", "Title Screen, Civics in the World and Dark Mode"], ["5.4.1", "Loading Splash, No Old-Menu Flash"], ["5.4.2", "Graphics Quality on the Title Screen"], ["5.5.0", "Performance Improvements"], ["5.6.0", "Fiddly Knobs, DCS/QCS Screens and Knobs View"], ["5.7.0", "Catching Failures Early: Tells, Daily Rounds, Vibration Report, Outage Prep"], ["5.7.1", "Bottom Menu Reorder, Settings Back on the Right"], ["5.7.2", "Help Page with Game Guide and Glossary"], ["5.7.3", "Bare Graphics Mode for Weak Phones"], ["5.7.4", "Version Notes Pop-Up (Triple-Tap the Version Number)"], ["6.1.0-t1", "Isometric Paper View: Fixed Camera, Cut-Outs, Drop Shadows, Cutaways, Season Palettes (Test)"], ["6.1.0-t2", "Iso Round 2: Cut-Outs Always Paper, GPU Pictures, Stop-Motion World, Fewer Draws (Test)"], ["6.1.0-t3", "Iso Round 3: iPhone Batching, Instanced Cans, Sign Atlas, Lighter Frames (Test)"], ["6.1.0-t4", "Iso Fixes: Operators and Fork-Trucks Back, Less Stutter (Test)"], ["6.1.0-t5", "Cut-Out Edge Artifact Fixed (Test)"], ["6.1.0-t6", "Iso Optimization: Hidden Objects Cost Nothing, Lighter Moving Batches (Test)"], ["6.1.0-t7", "Iso Triangle Cut: Paper-Card Trees, Flat Ground, Hidden Faces Gone, Plain Boxes (Test)"], ["6.1.0-t8", "Paper Palette: 40 Colours, Flat Surfaces, Paper Grain, Fewer Draws (Test)"], ["6.1.0-t9", "Reel Fix: Growing Reel Draws Again (Test)"], ["6.1.0-t10", "Draw Cut 2: Colour in the Matrix, Merged Roofs, Uploads on Change, Culling Fix, Parked Groups (Test)"], ["6.1.0-t11", "QA Fixes: Cut-Outs Never Drawn as Loose 3D Parts, Fallback Shows 3D, Roofs On or Off per Zoom Step (Test)"], ["6.1.0-t12", "Paper Smoke, Blinking Lights, Stronger Seasons, Sharper Phones, Instanced Upsets, Pictures at Start (Test)"], ["6.1.0-t13", "Paper Effects: Flames, Child-Made Tornado, Lamp Cones, Flags, Paper Water, Visible Weather (Test)"], ["6.1.0-t14", "Paper Upsets: Cut-Out Props, Paper Pigeon, Paper Sparks, Steam, Fireworks, Ice and Flood (Test)"], ["6.1.0-t15", "Beaver Reworked as One Smaller Cut-Out (Test)"], ["6.1.0-t16", "Paper Props Dim at Night, Labels Never Overlap, Fewer Cut-Out Pictures (Test)"], ["6.1.0-t17", "Bird on the Power Lines Cut-Scene Plays When Set Off From the Upsets List (Test)"], ["6.1.0-t18", "Zen Close-Ups Fixed, Rare Sights as Paper Cut-Outs, Tilt-Shift Diorama Look (Test)"], ["6.1.0-t19", "Narrower Tilt-Shift Band, Winder Trash Can Out of the Broke Hole (Test)"], ["6.1.0-t20", "Balance: Rounds Pay More, Capacity and Maintenance Upgrades Re-Priced"], ["6.1.0", "Paper Diorama: Isometric Paper Art Style, Cut-Out People and Upsets, Tilt-Shift, Rounds Pay More, Upgrades Re-Priced"], ["6.1.1", "Phone Fixes: Gentler Tilt-Shift on Tall Screens, Cut-Out People No Longer Blank on iPhone"], ["6.1.2", "iPhone: Cut-Out Self-Test Retries, People Keep Their Colours in the 3D Fallback"], ["6.1.3", "Broke Hole by the Winder Looks Like a Floor Opening (Was a Black Square)"], ["6.1.4", "Tilt-Shift Removed"], ["6.2.0", "Zen Free Camera: Perspective Zen Shots, 3D People in Zen, Cleaner River Water"], ["6.3.0-f1", "Process Flow Overview (Test): Inputs, Mill Areas and Outputs for the Mill Day, in Settings"], ["6.3.0-f2", "Process Flow: the Game Keeps Running While It's Open (Test)"], ["6.3.0", "Process Flow Overview: Inputs, Mill Areas and Outputs for the Mill Day (Settings > View)"], ["6.4.0", "Zen Shots Review: Shuffle-Bag Shot Order, Landscape Shots Rebuilt, Close Rare Sights"], ["6.5.0-a1", "Digital Twin A (Test): Hourly History, 14 Prior Days, 7 d / Run Ranges, Area Trends and Uptime"], ["6.5.0-b1", "Digital Twin B (Test): Real Freight Costs with a Diesel Index, Area Controls Moved into Process Flow"], ["6.5.0-b2", "Market Pricing (Test): 2026 OCC and Energy Costs, Diesel in $/gal, Desert Long Haul, Real Steam Rates"], ["6.5.0-b3", "DCS Expansion (Test): Full SPOT, WET and DET Pictures, a UTIL Screen, Motors and Reject Purges"], ["6.5.0-b4", "DCS Pictograms (Test): Equipment Drawn as Classic DCS Symbols, Colour Only When Something's Wrong"], ["6.5.0-b5", "The Dryer Limit (Test): Speed and Grade Load the Dryers, a Wet Sheet Fails Spec and Slows the Machine"], ["6.5.0", "Digital Twin: Process Flow Trends and Controls, Real Freight and Market Costs, Full DCS, Dryer Limit, Rebalance"], ["6.5.1", "Second Screen: Pop the DCS and Process Flow Out to Their Own Window for a Second Monitor (Desktop)"], ["6.5.2", "Knob Fixes: Wet-End and Steam Knobs Bite Again Under the Dryer Limit, DCS Uses the Machine's Name"], ["6.5.3", "Quality Specs: Weight, Moisture and Color Specs per Grade, Off-Spec Paper Wound into Beater Rolls and Repulped"], ["6.5.4", "DCS Fixes: Making-Beater Alerts, SPOT in Process Order, Boiler and Power on Utilities, 2nd/3rd Section Steam Control"], ["6.5.5-t1", "Dewatering Chain (Test): Jet and Vacuum Optimums, Couch to Press Solids, Press Solids Set the Dryer Steam Both Ways"], ["6.5.5", "The Dewatering Chain: Jet and Vacuum Optimums, Couch to Press Solids, Press Solids Set the Dryer Steam Both Ways"], ["6.5.6-t1", "Mass Balance (Test): A Real Water Balance and White Water Chest, Hayout Broke Repulped, Every Fiber Loss Booked"], ["6.5.6", "Mass Balance: A Real Water Balance and White Water Chest, Hayout Broke Repulped, Every Fiber Loss Booked"], ["6.5.7-t1", "Winder Pass (Test): Four Reel Storage Stands, Two-Roll Sets, Rolls Tied Together, Steam Vented on a Sheet Break"], ["6.5.7", "Winder Pass: Four Reel Storage Stands, Two-Roll Sets, Rolls Tied Together, Steam Vented on a Sheet Break"], ["6.6.0-t1", "Orders and Bales (Test): Customer Order Book and Spot Market, Idle Energy While Stopped, Bale Grading at the Gate"], ["6.6.0", "Orders and Bales: Customer Order Book and Spot Market, Idle Energy While Stopped, Bale Grading at the Gate"], ["6.7.0-t1", "Control Room (Test): Planning, Water and Quality Screens, Split-Screen Trends of Anything, What Moves With What, Process Flow Views"], ["6.7.0", "Control Room: Planning, Water and Quality Screens, Split-Screen Trends of Anything, What Moves With What, Process Flow Views"], ["6.7.1-t1", "New Grade Set (Test): Grades 24, 28, 31 and 34Super, Same Tons per Hour"], ["6.7.1", "New Grade Set: Grades 24, 28, 31 and 34Super, Same Tons per Hour"], ["6.8.0-t1", "Process Relationships (Test): Refining Energy and Ring Crush, Basis Weight Loop, Headbox at 0.8%, White Water Silo, Bale Water and Screen Pressure Drop"], ["6.8.0-t2", "Relationship Map in the Control Room (Test): What Drives Each Reading and What It Moves, Live"], ["6.8.0", "Process Relationships: Refining Energy and Ring Crush, Basis Weight Loop, Headbox at 0.8%, White Water Silo, Bale Water, Screen Pressure Drop and the Relationship Map"], ["6.8.1", "Report Tab Tidy: Live Mill First, Last-24-Hours Chart, Quality & Fiber and Orders & Bales Removed"], ["6.8.2", "Manning: DuPont 12 Shifts for Techs and Operators, Team Hard Hats, Shift Change Walk-In, Vacations Covered Across Teams"], ["6.8.3", "OCC Recipe (A Bales, C Bales, Mixed Waste), Relationship Map Zoom and 3D Light Cones at Night"]];
+{const VNOTES=[["4.0.0", "Graphics Overhaul: 60 FPS on iPhone, ~80% Fewer Draw Calls"], ["4.0.1", "Performance Follow-Up, Show FPS Option and Device Autotest"], ["4.0.2", "Economy Rebalance and Smoother Upset Labels"], ["4.1.0", "Four Environments, Seeded Mills, Bottlenecks, Graphics Tiers and Site Music"], ["4.2.0", "New Site Maps, Rare Sights, Zen Map Rotation and Economics Fixes"], ["4.2.0-s", "Save and Continue Season (Test)"], ["4.2.1", "Save/Continue, Settings Panel and Outage Speed Fix"], ["4.2.2-t", "Bayou Gator Sight Reworked (Test)"], ["4.2.2-t2", "Gator Bass Riff (Test)"], ["4.2.2-t3", "Gator Riff Removed, Wide Camera Framing (Test)"], ["4.2.2-t4", "Gator Scene Shortened and Widened (Test)"], ["4.2.2-t5", "One Rare Sight per Map in Zen (Test)"], ["4.2.2", "Rare Sights Reworked, Bird Strike Upset, Mill Report Tab"], ["4.2.3-t", "Cowboys, Bigfoot and Tugboat Sights Reworked (Test)"], ["4.2.3", "Laptop Battery Saving (Default GPU)"], ["4.2.4", "$25M Goal Removed and Quick Fixes"], ["4.2.5", "Random Bottleneck per Season and Accessibility Improvements"], ["4.3.0-t1", "Survival Mode (Test)"], ["4.4.0-t1", "Mill Leaders in Survival (Test)"], ["4.4.0-t2", "Painted Leader Portraits (Test)"], ["4.4.0-t3", "Leader Redesign, 4-Day Waves and Fixes (Test)"], ["5.0.0", "Survival Mode Release with Mill Leaders"], ["5.0.1", "Results Dialog and Game Speed Fixes"], ["5.0.2", "Report Card Label Fixes"], ["5.0.3", "Survival Playtest Fixes (Test)"], ["5.0.4", "Playtest Review: Dot Auto-Fix and Shipping Fix (Test)"], ["5.0.5", "Polish Rounds from Survival Playtests"], ["5.0.6", "Survival QA Fixes, Opt-In Outage Watch, Leaderboard Filters"], ["5.1.0", "Civics Meters and Leaders in Seasons (Test)"], ["5.4.0", "Title Screen, Civics in the World and Dark Mode"], ["5.4.1", "Loading Splash, No Old-Menu Flash"], ["5.4.2", "Graphics Quality on the Title Screen"], ["5.5.0", "Performance Improvements"], ["5.6.0", "Fiddly Knobs, DCS/QCS Screens and Knobs View"], ["5.7.0", "Catching Failures Early: Tells, Daily Rounds, Vibration Report, Outage Prep"], ["5.7.1", "Bottom Menu Reorder, Settings Back on the Right"], ["5.7.2", "Help Page with Game Guide and Glossary"], ["5.7.3", "Bare Graphics Mode for Weak Phones"], ["5.7.4", "Version Notes Pop-Up (Triple-Tap the Version Number)"], ["6.1.0-t1", "Isometric Paper View: Fixed Camera, Cut-Outs, Drop Shadows, Cutaways, Season Palettes (Test)"], ["6.1.0-t2", "Iso Round 2: Cut-Outs Always Paper, GPU Pictures, Stop-Motion World, Fewer Draws (Test)"], ["6.1.0-t3", "Iso Round 3: iPhone Batching, Instanced Cans, Sign Atlas, Lighter Frames (Test)"], ["6.1.0-t4", "Iso Fixes: Operators and Fork-Trucks Back, Less Stutter (Test)"], ["6.1.0-t5", "Cut-Out Edge Artifact Fixed (Test)"], ["6.1.0-t6", "Iso Optimization: Hidden Objects Cost Nothing, Lighter Moving Batches (Test)"], ["6.1.0-t7", "Iso Triangle Cut: Paper-Card Trees, Flat Ground, Hidden Faces Gone, Plain Boxes (Test)"], ["6.1.0-t8", "Paper Palette: 40 Colours, Flat Surfaces, Paper Grain, Fewer Draws (Test)"], ["6.1.0-t9", "Reel Fix: Growing Reel Draws Again (Test)"], ["6.1.0-t10", "Draw Cut 2: Colour in the Matrix, Merged Roofs, Uploads on Change, Culling Fix, Parked Groups (Test)"], ["6.1.0-t11", "QA Fixes: Cut-Outs Never Drawn as Loose 3D Parts, Fallback Shows 3D, Roofs On or Off per Zoom Step (Test)"], ["6.1.0-t12", "Paper Smoke, Blinking Lights, Stronger Seasons, Sharper Phones, Instanced Upsets, Pictures at Start (Test)"], ["6.1.0-t13", "Paper Effects: Flames, Child-Made Tornado, Lamp Cones, Flags, Paper Water, Visible Weather (Test)"], ["6.1.0-t14", "Paper Upsets: Cut-Out Props, Paper Pigeon, Paper Sparks, Steam, Fireworks, Ice and Flood (Test)"], ["6.1.0-t15", "Beaver Reworked as One Smaller Cut-Out (Test)"], ["6.1.0-t16", "Paper Props Dim at Night, Labels Never Overlap, Fewer Cut-Out Pictures (Test)"], ["6.1.0-t17", "Bird on the Power Lines Cut-Scene Plays When Set Off From the Upsets List (Test)"], ["6.1.0-t18", "Zen Close-Ups Fixed, Rare Sights as Paper Cut-Outs, Tilt-Shift Diorama Look (Test)"], ["6.1.0-t19", "Narrower Tilt-Shift Band, Winder Trash Can Out of the Broke Hole (Test)"], ["6.1.0-t20", "Balance: Rounds Pay More, Capacity and Maintenance Upgrades Re-Priced"], ["6.1.0", "Paper Diorama: Isometric Paper Art Style, Cut-Out People and Upsets, Tilt-Shift, Rounds Pay More, Upgrades Re-Priced"], ["6.1.1", "Phone Fixes: Gentler Tilt-Shift on Tall Screens, Cut-Out People No Longer Blank on iPhone"], ["6.1.2", "iPhone: Cut-Out Self-Test Retries, People Keep Their Colours in the 3D Fallback"], ["6.1.3", "Broke Hole by the Winder Looks Like a Floor Opening (Was a Black Square)"], ["6.1.4", "Tilt-Shift Removed"], ["6.2.0", "Zen Free Camera: Perspective Zen Shots, 3D People in Zen, Cleaner River Water"], ["6.3.0-f1", "Process Flow Overview (Test): Inputs, Mill Areas and Outputs for the Mill Day, in Settings"], ["6.3.0-f2", "Process Flow: the Game Keeps Running While It's Open (Test)"], ["6.3.0", "Process Flow Overview: Inputs, Mill Areas and Outputs for the Mill Day (Settings > View)"], ["6.4.0", "Zen Shots Review: Shuffle-Bag Shot Order, Landscape Shots Rebuilt, Close Rare Sights"], ["6.5.0-a1", "Digital Twin A (Test): Hourly History, 14 Prior Days, 7 d / Run Ranges, Area Trends and Uptime"], ["6.5.0-b1", "Digital Twin B (Test): Real Freight Costs with a Diesel Index, Area Controls Moved into Process Flow"], ["6.5.0-b2", "Market Pricing (Test): 2026 OCC and Energy Costs, Diesel in $/gal, Desert Long Haul, Real Steam Rates"], ["6.5.0-b3", "DCS Expansion (Test): Full SPOT, WET and DET Pictures, a UTIL Screen, Motors and Reject Purges"], ["6.5.0-b4", "DCS Pictograms (Test): Equipment Drawn as Classic DCS Symbols, Colour Only When Something's Wrong"], ["6.5.0-b5", "The Dryer Limit (Test): Speed and Grade Load the Dryers, a Wet Sheet Fails Spec and Slows the Machine"], ["6.5.0", "Digital Twin: Process Flow Trends and Controls, Real Freight and Market Costs, Full DCS, Dryer Limit, Rebalance"], ["6.5.1", "Second Screen: Pop the DCS and Process Flow Out to Their Own Window for a Second Monitor (Desktop)"], ["6.5.2", "Knob Fixes: Wet-End and Steam Knobs Bite Again Under the Dryer Limit, DCS Uses the Machine's Name"], ["6.5.3", "Quality Specs: Weight, Moisture and Color Specs per Grade, Off-Spec Paper Wound into Beater Rolls and Repulped"], ["6.5.4", "DCS Fixes: Making-Beater Alerts, SPOT in Process Order, Boiler and Power on Utilities, 2nd/3rd Section Steam Control"], ["6.5.5-t1", "Dewatering Chain (Test): Jet and Vacuum Optimums, Couch to Press Solids, Press Solids Set the Dryer Steam Both Ways"], ["6.5.5", "The Dewatering Chain: Jet and Vacuum Optimums, Couch to Press Solids, Press Solids Set the Dryer Steam Both Ways"], ["6.5.6-t1", "Mass Balance (Test): A Real Water Balance and White Water Chest, Hayout Broke Repulped, Every Fiber Loss Booked"], ["6.5.6", "Mass Balance: A Real Water Balance and White Water Chest, Hayout Broke Repulped, Every Fiber Loss Booked"], ["6.5.7-t1", "Winder Pass (Test): Four Reel Storage Stands, Two-Roll Sets, Rolls Tied Together, Steam Vented on a Sheet Break"], ["6.5.7", "Winder Pass: Four Reel Storage Stands, Two-Roll Sets, Rolls Tied Together, Steam Vented on a Sheet Break"], ["6.6.0-t1", "Orders and Bales (Test): Customer Order Book and Spot Market, Idle Energy While Stopped, Bale Grading at the Gate"], ["6.6.0", "Orders and Bales: Customer Order Book and Spot Market, Idle Energy While Stopped, Bale Grading at the Gate"], ["6.7.0-t1", "Control Room (Test): Planning, Water and Quality Screens, Split-Screen Trends of Anything, What Moves With What, Process Flow Views"], ["6.7.0", "Control Room: Planning, Water and Quality Screens, Split-Screen Trends of Anything, What Moves With What, Process Flow Views"], ["6.7.1-t1", "New Grade Set (Test): Grades 24, 28, 31 and 34Super, Same Tons per Hour"], ["6.7.1", "New Grade Set: Grades 24, 28, 31 and 34Super, Same Tons per Hour"], ["6.8.0-t1", "Process Relationships (Test): Refining Energy and Ring Crush, Basis Weight Loop, Headbox at 0.8%, White Water Silo, Bale Water and Screen Pressure Drop"], ["6.8.0-t2", "Relationship Map in the Control Room (Test): What Drives Each Reading and What It Moves, Live"], ["6.8.0", "Process Relationships: Refining Energy and Ring Crush, Basis Weight Loop, Headbox at 0.8%, White Water Silo, Bale Water, Screen Pressure Drop and the Relationship Map"], ["6.8.1", "Report Tab Tidy: Live Mill First, Last-24-Hours Chart, Quality & Fiber and Orders & Bales Removed"], ["6.8.2", "Manning: DuPont 12 Shifts for Techs and Operators, Team Hard Hats, Shift Change Walk-In, Vacations Covered Across Teams"], ["6.8.3", "OCC Recipe (A Bales, C Bales, Mixed Waste), Relationship Map Zoom and 3D Light Cones at Night"], ["6.9.0-t1", "The Valves Update (Test): Six Control Loops on the DCS with Real Valves, Faceplates, PID Tuning, Bump Tests, a Tuning Clock and Tuning Challenges"]];
   let ov=null,held=false;
   function render(){
     const cur=APP_VER.replace(/^v/i,""),rows=VNOTES.slice().reverse().map(([v,n])=>
@@ -15250,7 +16003,7 @@ function frame(now){
   const rdt=Math.max(0,Math.min(0.1,(now-last)/1000));last=now;
   // schedule the next frame first: a bug in one frame must never stop the game loop (v2.8.5: the sim step too)
   requestAnimationFrame(frame);
-  if(running&&!BF.busy){try{simAcc=Math.min(simAcc+rdt*simRate(),60);while(simAcc>=SIM_STEP&&running){step(SIM_STEP);simAcc-=SIM_STEP;}}catch(e){if(!frame.serr)frame.serr=0;if(frame.serr++<5)console.error("sim error",e);}}
+  if(running&&!BF.busy){try{simAcc=Math.min(simAcc+rdt*simRate(),60);while(simAcc>=SIM_STEP&&running){step(SIM_STEP);simAcc-=SIM_STEP;}if(G3.vlvClk)vlvCatch(simAcc);}catch(e){if(!frame.serr)frame.serr=0;if(frame.serr++<5)console.error("sim error",e);}}
   if(PFo&&PFo.on)PFo.acc["SIM (game logic step)"]=(PFo.acc["SIM (game logic step)"]||0)+(performance.now()-fT0);
   if(G3.cineTick)G3.cineTick(now);   // (v4.2.4: the bird cut-scene runs on real time while the game is paused)
   // v5.2: nothing is drawn behind the opaque title screen once the start-up precompile is done (it needs its frames until then)

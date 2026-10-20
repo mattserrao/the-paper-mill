@@ -1,6 +1,41 @@
 # Changelog
 
 
+## v6.9.0-t1 (2026-10-20): The Valves Update (test build, test/v6.9-valves)
+Plan: `claude/valves-v69-plan.md` (project doc). Six control loops with real valves and PID tuning, as a toy model for
+learning loop tuning. Untouched, every loop is the game's own v6.8 model and the mill plays and checksums exactly as
+before; the first change to a loop hands it to the valve model, and back on standard tuning and settled for 10 minutes
+it hands back.
+- **The loops** (`07h-valves.js`): NV-101 pulper consistency (dilution water; the field "pulper dilution valve" knob is
+  now this valve: moving it puts NV-101 on MAN), LV-104 machine chest level (made real: it was a wobble), FV-201 basis
+  weight (the v6.8 loop as a PID with speed feed-forward and the scanner's 3 min dead time), LV-202 white water silo
+  level (makeup from the white water chest), and the dryer steam cascade: QC-300 reel moisture sets PV-302 / PV-303,
+  the 2nd and 3rd section pressures, on CAS (IMAN when they're not).
+- **Real valves:** ISA PID (Kc, Ti, Td in minutes, derivative on PV with a filter, a PV filter, conditional
+  anti-windup, bumpless mode and tuning changes), a positioner with deadband and hysteresis, an actuator with a stroke
+  time and stick-slip friction, linear or equal-% trim, first-order or integrating processes with dead time and a
+  little deterministic noise. 1 s sub-steps, 15 to each sim step, from the step before's boundary: deterministic.
+- **Consequences, only when touched:** the knob model's rotor trip / overflow / thin feed (NV-101; pulper swings reach
+  the machine chest through the storage chest), an empty machine chest slows then breaks the sheet and an overflowing
+  one sends refined stock to the sewer (LV-104), off-spec weight and moisture to the beater (FV-201, QC-300), a dry silo
+  cavitates the fan pump (LV-202). In a season or survival run the crew traces a loop that keeps hurting for 4 hours
+  and puts it back on standard tuning (free play leaves experiments alone).
+- **DCS** (`50k-valve-ui.js`, `50b`, `50d`): ISA valve symbols on SPOT, WET and DET (filled by % open, amber on MAN,
+  red when cycling) with their % open and mode, QC-300 as an instrument bubble, a "Control loops" row of buttons under
+  each picture, and valve alarms (on manual, oscillating, sticking, at limit). The BW valve and 2nd/3rd section steam
+  setpoint rows and the pulper dilution DCS row are replaced by the faceplates.
+- **Faceplate and tuning panel:** Operate (MAN / AUTO / CAS, SP, OP, the valve's commanded vs actual position, loop
+  health in plain words), Tune (Kc / Ti / Td / PV filter, live or with an Apply button, setpoint steps scored for
+  overshoot, settling, IAE and valve travel, with the last step as a ghost), Bump test (MAN, settle, step, fit a
+  self-regulating or integrating model, Lambda / SIMC tuning: conservative, moderate or aggressive, PI or PID, "Use
+  these"), Valve (characteristic curve and settings; editable in free play), Learn (glossary) and Challenges (five
+  tuning puzzles on a sandbox copy of a loop, scored against a careful engineer's tuning, best stars saved per mill).
+  **Tuning clock** while it's open: real time, 5×, 20× or 60× (remembered).
+- **Trends and history:** PV and output tags for every loop (Report → Control room → Trends), hourly valve openings.
+- **Help:** a "Control valves and tuning" guide page and glossary terms. Older saves: manual 2nd/3rd section steam, a
+  manual BW valve and a moved pulper dilution knob come back as the new loops.
+- **Tests:** `tools/valvecheck.py` (52 checks).
+
 ## v6.8.3 (2026-10-20): OCC recipe, second screen control room, open draw, map zoom and night light cones
 - **Second screen is the whole control room** (`50e-popout.js`). It opens on the same tiles as Report > Control room
   (process flow, DCS, planning, quality, water, trends, relationship map, manning); a tile fills the window with that

@@ -97,7 +97,6 @@ function vlvOv(){let o=$("vlvOv");if(o)return o;
     else if(t.dataset.vw){VUI.win=+t.dataset.vw;vlvRefresh();}
     else if(t.dataset.ck){VUI.clk=+t.dataset.ck;try{localStorage.setItem("paper-mill-tclk",String(VUI.clk));}catch(_){}kuiSync();vlvRefresh();}
     else if(t.dataset.gl){const k=t.dataset.gl,p=t.closest(".vlvpane,.vlvtr");VUI.gl=VUI.gl===k?null:k;vlvGloss(p);}});
-  o.addEventListener("keydown",e=>{if(e.key==="Escape"){e.stopPropagation();closeVlv();}});
   return o;}
 function vlvGloss(p){document.querySelectorAll(".vglpop").forEach(x=>x.remove());const k=VUI.gl;if(!k||!p)return;const b=p.querySelector(`[data-gl="${k}"]`);if(!b)return;
   const pop=kEl("div","vglpop",`<b>${VGLOSS[k][0]}</b> ${VGLOSS[k][1]}`);pop.setAttribute("role","note");(b.closest(".vrow,.vglh,label,div")||p).after(pop);}
@@ -322,3 +321,5 @@ UI_TICKS.push(()=>{if(VUI.id){const o=$("vlvOv");if(!o||o.hidden)return;if(S.zen
 {let raf=0;const tick=()=>{raf=requestAnimationFrame(tick);if(VUI.id&&VUI.tab==="ch"&&VUI.chPlay){const t=performance.now();if(t-(tick.l||0)>60){tick.l=t;vlvRefresh(false);}}};raf=requestAnimationFrame(tick);}
 G3.vlvUI=()=>VUI.id?VUI.clk/60:0;   // (kuiSync, 50b: the tuning clock while a faceplate is open)
 G3.vlvOpen=openVlv;G3.vlvClose=closeVlv;G3.VUI=VUI;   // (tests)
+// Escape closes the faceplate first (window capture runs before the DCS's own document handler)
+window.addEventListener("keydown",e=>{if(e.key==="Escape"&&VUI.id){e.preventDefault();e.stopPropagation();closeVlv();}},true);
