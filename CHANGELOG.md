@@ -1,7 +1,15 @@
 # Changelog
 
 
-## v6.8.3 (2026-10-20): map zoom and night light cones
+## v6.8.3 (2026-10-20): OCC recipe, map zoom and night light cones
+- **OCC recipe** (`05b-orders.js`, Planning screen in `50f-control.js`). Three kinds of bale replace the gate grading:
+  A bales ($25/t over market, ~5 % pulper rejects), C bales (market, ~11 %) and Mixed Waste ($45/t under, ~24 %).
+  The planner sets a recipe in bales per feed cycle (1–10 of each, default 3 : 5 : 2, which matches the old average
+  cost and rejects). The conveyor feeds them in that order, spread evenly, and the pulper's yield follows what went in.
+  Each kind has its own pile; inbound trucks bring whichever kind is furthest below its share, and a kind that runs
+  out is skipped until a truck brings more. Reject tons now cost $30/t to landfill, and Mixed Waste over 2 bales in 10
+  slows the pulper's top rate. No more loads turned away at the gate. In 3D, bales are tinted by kind: clean kraft
+  A bales, market C bales, grey-blue Mixed Waste, in the yard and on the conveyor. Help: "OCC recipe".
 - **Relationship map zoom:** −, Fit and + buttons in the map's header (30% to 200%). Fit shows the whole map; zooming
   keeps the middle of the view where it is, and the zoom holds when the map redraws (`50j-relmap.js`).
 - **3D light cones at night.** The flat, camera-facing paper wedges under each mill lamp are replaced by real cones

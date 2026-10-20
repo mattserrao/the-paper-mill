@@ -359,7 +359,7 @@ function no3D(){G3.ok=false;$("no3d").hidden=false;$("no3d-retry").onclick=()=>l
     if(g)bits.forEach(([col,n])=>{for(let k=0;k<n;k++){x.fillStyle=col;x.globalAlpha=0.75+Math.random()*0.25;const w=3+Math.random()*(g===2?9:7),h=2+Math.random()*5;x.fillRect(Math.random()*64,Math.random()*64,w,h);}});x.globalAlpha=1;
     if(g===2){x.strokeStyle="rgba(220,235,245,.7)";x.lineWidth=1;for(let k=0;k<6;k++){x.beginPath();x.moveTo(Math.random()*64,Math.random()*64);x.quadraticCurveTo(Math.random()*64,Math.random()*64,Math.random()*64,Math.random()*64);x.stroke();}}
     x.fillStyle="rgba(40,25,10,.35)";x.fillRect(19,0,1.2,64);x.fillRect(47,0,1.2,64);x.fillStyle="#d9d6cf";x.fillRect(16,0,3,64);x.fillRect(44,0,3,64);x.fillStyle="#ffffff";x.fillRect(16.5,0,1,64);x.fillRect(44.5,0,1,64);
-    x.fillStyle="rgba(28,34,51,.85)";x.fillRect(50,50,12,12);x.fillStyle="#ffffff";x.font="bold 11px system-ui,sans-serif";x.fillText("ABC"[g],52.5,60);
+    x.fillStyle="rgba(28,34,51,.85)";x.fillRect(50,50,12,12);x.fillStyle="#ffffff";x.font="bold 11px system-ui,sans-serif";x.fillText(["A","C","MW"][g],g===2?50.5:52.5,60);
     const t=new THREE.CanvasTexture(c);t.colorSpace=THREE.SRGBColorSpace;return t;}
   M.baleG=[0,1,2].map(g=>mat("panel",{map:g?gradeTex(g):(()=>{const t=gradeTex(0);return t;})(),roughness:0.95}));
   // three instanced meshes, one per grade, filled each frame through put(); counts follow automatically
@@ -374,7 +374,12 @@ function no3D(){G3.ok=false;$("no3d").hidden=false;$("no3d-retry").onclick=()=>l
      flagged every frame whether anything moved or not). n = instances in use. */
   G3.chg=(a,n)=>{if(!a)return false;const len=Math.min(a.array.length,(n==null?a.count:n)*a.itemSize),A=a.array;let c=a.__c;if(!c||c.length!==A.length)c=a.__c=new Float32Array(A.length).fill(NaN);
     let d=false;for(let i=0;i<len;i++)if(A[i]!==c[i]){d=true;break;}if(d){for(let i=0;i<len;i++)c[i]=A[i];a.needsUpdate=true;}return d;};
-  const GRADE_COL=["#a8895f","#c4b08c","#7f6a4f"].map(h=>lin0(h));
+  const GRADE_COL=["#b98a52","#a3906e","#727986"].map(h=>lin0(h));   // (v6.8.3: A bales clean kraft, C bales market OCC, Mixed Waste grey-blue)
+  // v6.8.3: which kind a bale is drawn as (0 A, 1 C, 2 MW). On the conveyor: the recipe's feed order; in the yard: the piles' shares
+  const BTI={A:0,C:1,M:2};
+  G3.recOn=()=>typeof baleOn==="function"&&baleOn()&&S&&S.bq&&S.bq.rec;
+  G3.recBelt=id=>{const sq=recSeqC(S.bq.rec),N=sq.length;return BTI[sq[((id%N)+N)%N]];};
+  G3.recYard=(i,n)=>{const Y=S.bq.y,t=Y.A+Y.C+Y.M;if(t<=0)return 1;const f=(i+0.5)/n;return f<Y.A/t?0:f<(Y.A+Y.C)/t?1:2;};
   function graded(geo,n,opts={}){const m=new StdMat({color:0xffffff,roughness:0.95});const o=new THREE.InstancedMesh(geo,m,n);o.castShadow=true;if(opts.recv)o.receiveShadow=true;o.count=0;
     o.setColorAt(0,GRADE_COL[0]);scene.add(o);G3.emptyHide(o);let k=0;
     return {reset(){k=0;},put(g,m4){if(k<n){o.setMatrixAt(k,m4);o.setColorAt(k,GRADE_COL[g]||GRADE_COL[0]);k++;}},done(){o.count=k;G3.chg(o.instanceMatrix,k);G3.chg(o.instanceColor,k);}};}

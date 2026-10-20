@@ -100,4 +100,4 @@ One line per version, oldest first. Add a line here with every release: build.py
 6.8.0      Process Relationships: Refining Energy and Ring Crush, Basis Weight Loop, Headbox at 0.8%, White Water Silo, Bale Water, Screen Pressure Drop and the Relationship Map
 6.8.1      Report Tab Tidy: Live Mill First, Last-24-Hours Chart, Quality & Fiber and Orders & Bales Removed
 6.8.2      Manning: DuPont 12 Shifts for Techs and Operators, Team Hard Hats, Shift Change Walk-In, Vacations Covered Across Teams
-6.8.3      Relationship Map Zoom (−, Fit, +) and 3D Light Cones at Night
+6.8.3      OCC Recipe (A Bales, C Bales, Mixed Waste), Relationship Map Zoom and 3D Light Cones at Night

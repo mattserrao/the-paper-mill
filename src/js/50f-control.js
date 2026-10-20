@@ -182,12 +182,32 @@ function planRefresh(){const el=$("planBox");if(!el)return;const R=S.rates||{},p
       <div><small>Stock chest</small><b>${Math.round(S.tank)} t</b><small>${ch!=null?durTxt(ch*60)+" of stock":"machine idle"}</small></div>
       <div><small>Paper at the winder</small><b>${Math.round(S.winderBuf+S.reel)} t</b><small>reel and store</small></div><div><small>Beater bay</small><b>${Math.round((S.q&&S.q.bank)||0)} t</b><small>to repulp</small></div></div>`;
   // trucks
-  const inD=S.inDock.slice(0,P.doors).map((t,d)=>`<tr><td>Door ${d+1}</td><td>${t?`${Math.round(t.load)} t left${t.q?` · grade ${t.q} · ${(t.m*100).toFixed(1)} % moisture`:""}`:"empty"}</td></tr>`).join("");
+  const inD=S.inDock.slice(0,P.doors).map((t,d)=>`<tr><td>Door ${d+1}</td><td>${t?`${Math.round(t.load)} t left${t.q?` · ${BT[t.q]?BT[t.q].n:t.q} · ${(t.m*100).toFixed(1)} % moisture`:""}`:"empty"}</td></tr>`).join("");
   const outD=S.outDock.slice(0,P.shipDoors).map((t,d)=>{if(!t)return `<tr><td>Door ${d+1}</td><td>empty</td></tr>`;const o=!t.spot&&t.oid&&ordGet(t.oid);return `<tr><td>Door ${d+1}</td><td>${t.g?`${t.spot?"Spot load":o?`#${o.id} ${ordCust(o)}`:"Order"} · ${t.g} · ${Math.round(t.load)} of ${Math.round(t.want||P.truckRolls)} rolls`:`${Math.round(t.load)} rolls`}</td></tr>`;}).join("");
-  const trk=`<div class="plcols"><div><div class="dcssub">Inbound bales</div><p class="dcsfield">${C.inRate.v.toFixed(1)} trucks/h ${C.inRate.auto?"(auto)":"(hand)"} · ${S.inQ.length} waiting${Q?` · ${Q.rej} loads rejected at the gate`:""}</p><table><tbody>${inD}</tbody></table></div>
+  const trk=`<div class="plcols"><div><div class="dcssub">Inbound bales</div><p class="dcsfield">${C.inRate.v.toFixed(1)} trucks/h ${C.inRate.auto?"(auto)":"(hand)"} · ${S.inQ.length} waiting${Q?` · loads in: ${Q.A} A · ${Q.C} C · ${Q.M} MW`:""}</p><table><tbody>${inD}</tbody></table></div>
     <div><div class="dcssub">Outbound paper</div><p class="dcsfield">${C.outRate.v.toFixed(2)} trucks/h ${C.outRate.auto?"(auto: called for what's ready)":"(hand)"} · ${S.outQ.length} waiting${O&&O.k.dry?` · ${O.k.dry} dry runs`:""}</p><table><tbody>${outD}</tbody></table></div></div>`;
-  const h=sec("Production plan",plan)+sec("Order book",ord)+sec("Inventory",invH)+sec("Trucks",trk);if(el._h!==h){el._h=h;el.innerHTML=h;}}
+  const h=sec("Production plan",plan)+(Q?sec("OCC recipe",recHtml(Q)):"")+sec("Order book",ord)+sec("Inventory",invH)+sec("Trucks",trk);if(el._h!==h){el._h=h;el.innerHTML=h;}}
 const bqOn=()=>typeof baleOn==="function"&&baleOn();
+/* v6.8.3 OCC recipe editor (05b): bales per feed cycle for each kind, with its price, rejects and pile, the feed sequence
+   with the bale going in now, and what the recipe costs. The buttons are handled by one listener on the document. */
+function recHtml(Q){const r=Q.rec,N=recN(r),Y=recPiles(),R=S.rates||{},sq=recSeqC(r),cur=Math.floor(Q.fed/BALE_T)%N,feed=R.feed||0;
+  const rows=BTK.map(q=>{const b=BT[q],sh=r[q]/N,dy=feed>0.5?Y[q]/(feed*sh*24):null;
+    return `<tr><td><i class="recsw rec${q}"></i>${b.n}</td><td>${money(btPrice(q))}/t <small>${b.dp>0?"+":b.dp<0?"−":"±"}$${Math.abs(b.dp)}</small></td><td>${Math.round(b.rej*100)} %</td>
+      <td>${Math.round(Y[q]).toLocaleString()} t${dy!=null?` <small>${dy.toFixed(1)} d</small>`:""}</td>
+      <td class="recst"><button type="button" data-rec="${q}-" aria-label="One fewer ${b.n}"${r[q]<=1?" disabled":""}>−</button><b>${r[q]}</b><button type="button" data-rec="${q}+" aria-label="One more ${b.n}"${r[q]>=RECMAX?" disabled":""}>+</button></td></tr>`;}).join("");
+  const cost=BTK.reduce((a,q)=>a+r[q]*btPrice(q),0)/N,rj=1-recY(r),rate=recRate(),slow=rate<P.pulperMax-0.05;
+  const chips=sq.map((q,i)=>`<i class="recb rec${q}${i===cur?" on":""}" title="${BT[q].n}">${BT[q].s}</i>`).join("");
+  const mw=Y.M<=0.5&&r.M>0,out=BTK.filter(q=>Y[q]<=0.5).map(q=>BT[q].n);
+  return `<p class="dcsfield">The pulper is fed in this order, bale by bale, and the trucks bring whichever kind is short. A bales cost more and pulp clean; Mixed Waste is cheap but a quarter of it goes to landfill.</p>
+    <table class="rect"><thead><tr><th>Bale</th><th>Price</th><th>Rejects</th><th>In the yard</th><th>Per cycle</th></tr></thead><tbody>${rows}</tbody></table>
+    <div class="recseq" aria-label="Feed sequence">${chips}</div>
+    <div class="qcsv"><div><small>Recipe cost</small><b>${money(cost)}/t</b><small>${N} bales a cycle</small></div>
+      <div><small>Pulper rejects</small><b>${(rj*100).toFixed(1)} %</b><small>now ${((1-Q.fy)*100).toFixed(1)} % · landfill $${LANDFILL}/t</small></div>
+      <div><small>Pulper top rate</small><b class="${slow?"bad":""}">${Math.round(rate)} t/h</b><small>${slow?"slowed by Mixed Waste":"full rate"}</small></div>
+      <div><small>Landfill so far</small><b>${money(Q.lf)}</b><small>this run</small></div></div>
+    ${out.length?`<p class="dcsfield bad">Out of ${out.join(" and ")}: the feed skips ${out.length>1?"them":"it"} until a truck brings more.</p>`:""}`;}
+document.addEventListener("click",e=>{const b=e.target.closest&&e.target.closest("[data-rec]");if(!b||b.disabled||!bqOn())return;const Q=bqState(),q=b.dataset.rec[0],d=b.dataset.rec[1]==="+"?1:-1;
+  Q.rec[q]=clamp(Q.rec[q]+d,1,RECMAX);planRefresh();});
 
 /* ---------- WATER: the water screen ---------- */
 const DW={shw:()=>fmtGpm(GPM((S.wat?S.wat.r.p:0)*WAT.shower)),seal:()=>fmtGpm(GPM(WAT.base)),pw:()=>fmtGpm(GPM((S.wat?S.wat.r.p:0)*((S.dry?S.dry.m:DRY.m0)/100))),

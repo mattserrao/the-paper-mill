@@ -1384,3 +1384,11 @@ body.pmpop .popmain[data-v="dcs"] #dcsOv .dcs{max-width:1180px;margin:0 auto}
 .manleg{display:flex;gap:14px;flex-wrap:wrap;font-size:11.5px;color:#8ea4c4;padding-top:4px}.manleg span{display:flex;gap:6px;align-items:center}
 /* v6.8.3 relationship map zoom (50j) */
 .rmzoom{border-color:#33476a}.rmzoom button{background:#22324f;color:#fff;padding:4px 10px;min-width:34px;font-weight:700}.rmzoom button:disabled{opacity:.4}
+/* v6.8.3 OCC recipe on the Planning screen (50f) */
+.rect td small{color:#8ea4c4;margin-left:4px}.rect td:first-child{white-space:nowrap}
+.recst{white-space:nowrap}.recst button{background:#22324f;color:#fff;border:1px solid #33476a;border-radius:6px;min-width:30px;padding:2px 8px;font-weight:700}.recst button:disabled{opacity:.35}
+.recst b{display:inline-block;min-width:26px;text-align:center;font-variant-numeric:tabular-nums}
+.recsw{display:inline-block;width:12px;height:12px;border-radius:3px;margin-right:6px;vertical-align:-1px}
+.recA{background:#b98a52}.recC{background:#a3906e}.recM{background:#727986}
+.recseq{display:flex;flex-wrap:wrap;gap:4px;margin:8px 0}.recb{font:700 10.5px var(--f-body);font-style:normal;color:#fff;min-width:26px;text-align:center;padding:3px 4px;border-radius:4px;opacity:.75}
+.recb.on{opacity:1;outline:2px solid #4fd18b;outline-offset:1px}

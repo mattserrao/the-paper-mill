@@ -30,6 +30,16 @@
 const ORD={cover:0.92,minR:6,maxR:36,slack:[0.8,2.2],eff:0.85,spot:45,late:15,lateCap:60,grace:120,cancel:4,dryRun:300,dryWait:6*60,full:0.8,keep:40};
 const CUST=["Harbor Corrugated","Tri-County Box","Midvale Packaging","Northgate Containers","Keystone Sheet Plant","Prairie Box Works","Lakeshore Display","Summit Carton"];
 const BALE={m0:0.085,mSpread:0.04,rain:0.06,snow:0.025,allow:0.12,std:0.10,pB:0.27,pC:0.04,ky:0.05,kb:0.8,wetMax:0.20,snowMax:0.14,tauRain:900,tauSnow:2880,tauDry:2880};
+/* v6.8.3 OCC recipe: three kinds of bale. A bales (clean, above market), C bales (market) and Mixed Waste (below market,
+   dirty). dp: $/t over the market OCC price; rej: the share of a bale the pulper rejects; k: contamination (stickies),
+   the same for all three. The planner sets a recipe in bales per feed cycle (at least one of each) and the conveyor
+   feeds them in that order, spread evenly; each kind has its own pile in the yard, and inbound trucks bring whichever
+   kind is furthest below its share. REC0 averages the same rejects (11.8 %) and price as before the recipe. */
+const BT={A:{n:"A bales",s:"A",dp:25,rej:0.05,k:0.1},C:{n:"C bales",s:"C",dp:0,rej:0.11,k:0.1},M:{n:"Mixed waste",s:"MW",dp:-45,rej:0.24,k:0.1}},BTK=["A","C","M"];
+const REC0={A:3,C:5,M:2},RECMAX=10,BALE_T=0.6,   // tons per bale on the conveyor
+  LANDFILL=30,   // $/t to haul the pulper's rejects to landfill
+  MW_RATE={ref:0.2,k:0.35};   // pulper rate: −35 % of capacity per unit of Mixed Waste share over 20 %
+const recY=r=>{const n=BTK.reduce((a,q)=>a+r[q],0);return BTK.reduce((a,q)=>a+r[q]*(1-BT[q].rej),0)/n;},REC_Y0=recY(REC0);
 const BASEL={brk:{pm:0.7,stock:0.5,pulper:0.5,steam:0},stop:{pm:0.25,stock:0.35,pulper:0.35,steam:0.15},out:{pm:0.1,stock:0.15,pulper:0.15,steam:0.05}};
 const ordOn=()=>!!(S&&!S.zen);
 const baleOn=ordOn;
@@ -113,20 +123,47 @@ function baseLoadTick(dt){if(S.zen||S.pm==="run")return;const g=GRADES[C.grade],
   if(v>0){spend(v,"energy");S.tot.idleE=(S.tot.idleE||0)+v;pfW("idle",v);}}
 
 // ---------- bale grading ----------
-function bqState(){if(!S.bq)S.bq={m:BALE.std,k:0.1,ck:0.1,rej:0,rejT:0,ded:0,A:0,B:0,C:0,day:-1,dRej:0};return S.bq;}
+function bqState(){if(!S.bq)S.bq={m:BALE.std,k:0.1,ck:0.1,rej:0,rejT:0,ded:0,A:0,C:0,M:0,day:-1,dRej:0,
+    rec:{...REC0},y:{A:0,C:0,M:0},fed:0,fy:REC_Y0,lf:0,bt:{A:0,C:0,M:0}};
+  else if(!S.bq.rec)Object.assign(S.bq,{rec:{...REC0},y:{A:0,C:0,M:0},fed:0,fy:REC_Y0,lf:0,bt:{A:0,C:0,M:0}});   // (a save from before v6.8.3)
+  return S.bq;}
+const recN=r=>BTK.reduce((a,q)=>a+r[q],0);
+const recShare=(r,q)=>r[q]/recN(r);
+// the feed cycle: the recipe's bales spread evenly (3 A : 5 C : 2 MW → C A C M C A C M C A ...)
+function recSeq(r){const N=recN(r),out=[],put={A:0,C:0,M:0};for(let j=0;j<N;j++){let best=null,bv=-1e9;for(const q of BTK){const v=r[q]*(j+1)/N-put[q];if(v>bv+1e-9){bv=v;best=q;}}put[best]++;out.push(best);}return out;}
+let REC_SQ=null,REC_SK="";
+function recSeqC(r){const k=r.A+"|"+r.C+"|"+r.M;if(k!==REC_SK){REC_SK=k;REC_SQ=recSeq(r);}return REC_SQ;}
+// the piles follow S.yard (rail deliveries, a bale fire, the opening stock and loads all change it outside the trucks):
+// tons that appear are split by the recipe, tons that vanish come off every pile in proportion
+function recPiles(){const Q=bqState(),Y=Q.y,sum=Y.A+Y.C+Y.M,d=S.yard-sum;if(Math.abs(d)<1e-6)return Y;
+  if(d>0)for(const q of BTK)Y[q]+=d*recShare(Q.rec,q);else if(sum>1e-9){const f=Math.max(0,S.yard)/sum;for(const q of BTK)Y[q]*=f;}else for(const q of BTK)Y[q]=0;return Y;}
+// take t tons from the piles in feed order (a kind that has run out is skipped); eases the pulper's yield to what went in
+function recTake(t,dt){if(!baleOn())return;const Q=bqState(),Y=recPiles(),sq=recSeqC(Q.rec),N=sq.length;let left=t,ys=0,tot=0,g=0;
+  while(left>1e-9&&g<N*2){const i=Math.floor(Q.fed/BALE_T)%N,q=sq[i],room=BALE_T-(Q.fed%BALE_T);
+    if(Y[q]<=1e-9){Q.fed=(Math.floor(Q.fed/BALE_T)+1)*BALE_T;g++;continue;}   // none of that kind: on to the next bale
+    const u=Math.min(left,room,Y[q]);Y[q]-=u;left-=u;Q.fed+=u;ys+=u*(1-BT[q].rej);tot+=u;Q.bt[q]+=u;g=0;}
+  if(tot>0)Q.fy=ease(Q.fy,ys/tot,dt,20);}
+// the pulper's top rate with this recipe (t/h)
+function recRate(){if(!baleOn())return Infinity;const sh=recShare(bqState().rec,"M");return P.pulperMax*(1-MW_RATE.k*Math.max(0,sh-MW_RATE.ref));}
 // an inbound load's grade and moisture (drawn when the truck arrives)
-function baleGrade(tr){const r=rand("bale"),a=rand("bale"),b=rand("bale"),q=r<BALE.pC?"C":r<BALE.pC+BALE.pB?"B":"A";
+// v6.8.3: the kind is the one furthest below its share of the recipe, counting the yard and the trucks already in
+function baleGrade(tr){const r=rand("bale"),a=rand("bale"),b=rand("bale");   // (three draws as before, so the bale stream is unchanged)
+  let q="C";if(baleOn()){const Q=bqState(),Y=recPiles(),have={A:Y.A,C:Y.C,M:Y.M};for(const t of S.inQ.concat(S.inDock))if(t&&t.q&&have[t.q]!=null)have[t.q]+=t.load;
+    const tot=have.A+have.C+have.M+tr.load;let bv=-1e9;for(const k of BTK){const v=recShare(Q.rec,k)*tot-have[k];if(v>bv){bv=v;q=k;}}}
   let m=BALE.m0+BALE.mSpread*a+(S.wx==="rain"?BALE.rain*(0.5+0.5*S.wet):S.wx==="snow"?BALE.snow:0)+(q==="A"?0:0.01);
-  tr.q=q;tr.m=m;tr.k=q==="A"?0:q==="B"?0.4+0.6*b:1;tr.pf=m>BALE.allow?(1-m)/(1-BALE.allow):1;return tr;}
+  tr.q=q;tr.m=m;tr.k=BT[q].k;tr.pf=m>BALE.allow?(1-m)/(1-BALE.allow):1;return tr;}
+// $/t for a kind of bale
+const btPrice=q=>Math.max(0,P.occPrice+(BT[q]?BT[q].dp:0)*(P.costMul||1));
 // the gate: true if the load is turned away
-function baleGate(tr){if(!baleOn())return false;const Q=bqState();Q[tr.q]=(Q[tr.q]||0)+1;if(tr.q!=="C")return false;
-  Q.rej++;Q.rejT+=tr.load;const d=Math.floor(S.t/1440);if(Q.day!==d){Q.day=d;Q.dRej=0;}Q.dRej++;
-  if(Q.dRej<=2)log(`Gate: load #${tr.id} rejected (plastic, wax and wet trash). Sent back to the supplier.`,"warn");return true;}
+// (v6.8.3: no more turning loads away: what was the junk grade is now Mixed Waste, bought on purpose. Counts loads by kind.)
+function baleGate(tr){if(!baleOn())return false;const Q=bqState();Q[tr.q]=(Q[tr.q]||0)+1;return false;}
 // u tons unloaded from truck tr into the yard (y0 tons were there): returns the tons paid for
+// (v6.8.3: the tons go on their kind's pile; what's returned is in market-price tons, so A bales count for more, Mixed Waste less)
 function baleUnload(tr,u,y0){if(!baleOn()||tr.m==null)return u;const Q=bqState(),w=y0+u;if(w>1e-9){Q.m=(Q.m*y0+tr.m*u)/w;Q.k=(Q.k*y0+tr.k*u)/w;}
-  const paid=u*tr.pf;Q.ded+=(u-paid)*P.occPrice;return paid;}
+  recPiles();if(tr.q&&Q.y[tr.q]!=null)Q.y[tr.q]+=u;
+  const paid=u*tr.pf;Q.ded+=(u-paid)*btPrice(tr.q);return P.occPrice>0?paid*btPrice(tr.q)/P.occPrice:paid;}
 // the pulper's view of the yard: solids factor (water over the standard 10% isn't fiber) and the contamination yield factor
-function baleFeed(){if(!baleOn())return {sf:1,yk:1,e:0};const Q=bqState(),e=Math.max(0,Q.m-BALE.std);return {sf:1-e,yk:1-BALE.ky*Q.k,e};}
+function baleFeed(){if(!baleOn())return {sf:1,yk:1,e:0};const Q=bqState(),e=Math.max(0,Q.m-BALE.std);return {sf:1-e,yk:(1-BALE.ky*Q.k)*Q.fy/REC_Y0,e};}
 function baleTick(dt,fiberIn){if(!baleOn())return;const Q=bqState();
   if(S.wx==="rain")Q.m+=(BALE.wetMax-Q.m)*Math.min(1,dt*(0.3+S.wet)/BALE.tauRain);
   else if(S.wx==="snow"&&Q.m<BALE.snowMax)Q.m+=(BALE.snowMax-Q.m)*Math.min(1,dt/BALE.tauSnow);

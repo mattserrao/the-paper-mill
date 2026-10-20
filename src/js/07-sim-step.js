@@ -34,6 +34,7 @@ function step(dt){
   let want=M.pulperDown?0:C.pulper.v*M.feedMul;
   if(level0>0.97) want=Math.min(want,S.rates.fiberUse/P.yieldF);
   want=Math.min(want,P.screenMax/(P.yieldF*M.yieldMul||1));   // v4.1: the screens pass at most screenMax t/h of fiber
+  want=Math.min(want,recRate());   // v6.8.3: Mixed Waste over its usual share slows the pulper
   const effDrv=Math.min(C.drivers.v,M.drvCap); S.effDrv=effDrv;
   let cap=effDrv*P.driverRate*dt/60*M.recvMul;
   const feedRes=P.autoFeed?(M.recvMul>0?want*dt/60:0):Math.min(want*dt/60,cap); if(!P.autoFeed)cap-=feedRes;
@@ -44,10 +45,11 @@ function step(dt){
     tr.load-=u;cap-=u;S.yard+=u;unloaded+=u;S.tot.inTons+=u;pfW("in",u);
     {const dc=S.plan.disc,dt2=dc?Math.min(paid,dc.t):0;spend(paid*P.occPrice-dt2*(dc?dc.v:0),"occ");spend(u*frInRate(),"frin");if(dc){dc.t-=dt2;if(dc.t<=1e-6)S.plan.disc=null;}}
     if(tr.load<=0.001){S.leaving.push({...tr,ty:inY(d),kind:"in"});if(S.leaving.length>24)S.leaving.shift();S.inDock[d]=null;}}
-  const feed=Math.min(feedRes,S.yard); S.yard-=feed;WQ.f+=feed;
+  const feed=Math.min(feedRes,S.yard);recTake(feed,dt);S.yard-=feed;WQ.f+=feed;   // (v6.8.3: off the piles in recipe order)
   // 3 pulper → chest
   if(M.yardEat){const y0=S.yard;S.yard=Math.max(0,S.yard-M.yardEat*dt/60);pfW("bale",y0-S.yard);}
-  const BF=baleFeed(),fiberIn=feed*BF.sf*P.yieldF*M.yieldMul*BF.yk*dpYield(),rejT=feed*BF.sf-fiberIn;pfW("feed",feed);pfW("rej",rejT);WQ.rej+=rejT;WQ.bw+=feed*BF.e;   // v6.6: water over 10% isn't fiber; contamination is rejects
+  const BF=baleFeed(),fiberIn=feed*BF.sf*P.yieldF*M.yieldMul*BF.yk*dpYield(),rejT=feed*BF.sf-fiberIn;pfW("feed",feed);pfW("rej",rejT);WQ.rej+=rejT;WQ.bw+=feed*BF.e;
+  if(baleOn()&&rejT>0){const lf=rejT*LANDFILL*(P.costMul||1);spend(lf,"occ");bqState().lf+=lf;}   // v6.8.3: rejects hauled to landfill   // v6.6: water over 10% isn't fiber; contamination is rejects
   baleTick(dt,fiberIn);
   // (v6.5.6: stock the chest has no room for goes over the top to the sewer, and is booked as spilled; it used to vanish)
   {const t1=S.tank+fiberIn,cl=Math.max(0,t1-P.tankCap);S.tank=t1-cl;if(cl>0){pfW("spill",cl);WQ.clip+=cl;}WQ.fi+=fiberIn-cl;}

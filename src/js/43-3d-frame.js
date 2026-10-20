@@ -49,13 +49,14 @@
     pm("trucks");chemUpdate(rdt);beaterUpdate(rdt);pm("tanker + beater trucks");
     {const n=clamp(9+S.inQ.length*3+Math.floor(S.yard/250),5,24);G3.yardTr.forEach((g,i)=>g.visible=i<n);}
     // stock
-    {const nB=Math.min(168,Math.ceil(S.yard/12));if(nB!==baleShown){baleShown=nB;bales.reset();for(let i=0;i<nB;i++)bales.put(gradeOf(i*7+1,false),baleM[i]);bales.done();}}
+    {const nB=Math.min(168,Math.ceil(S.yard/12)),rc=G3.recOn(),Y=rc&&S.bq.y,key=rc?nB*1e6+Math.round(Y.A/Math.max(1,S.yard)*40)*1e3+Math.round(Y.C/Math.max(1,S.yard)*40):nB;
+      if(key!==baleShown){baleShown=key;bales.reset();for(let i=0;i<nB;i++)bales.put(rc?G3.recYard(i,nB):gradeOf(i*7+1,false),baleM[i]);bales.done();}}
     // conveyor bales
     // bales ride the walking floor, lose their wires under the guillotine, then climb to the pulper
     const run=R.feed>0.3,GAP=2.6;if(run){const o=wfOff;wfOff=(wfOff+rdt*Math.min(2.2,0.35+R.feed*0.03))%GAP;if(wfOff<o)baleCyc++;}if(run&&G3.slats)G3.slats.offset.x=(G3.__sl=((G3.__sl||0)-rdt*Math.min(2.2,0.35+R.feed*0.03)/1.2)%1);
     const LEND=PLEN[PLEN.length-1];let nb=0,nw=0,nc=0,under=false;beltBales.reset();baleChunks.reset();const junk=S.inc.some(i=>i.id==="badocc");
     if(run||S.yard>0){let k=0;for(let d=wfOff;d<LEND+1.7&&nb<24;d+=GAP,k++){const id=baleCyc-k,cut=d-PLEN[1];if(!run&&cut>0)continue;
-        const gr=gradeOf(id,junk);
+        const gr=junk||!G3.recOn()?gradeOf(id,junk):G3.recBelt(id);
         if(cut<0.35){if(!pathAt(d,v3))break;m4.makeTranslation(v3.x,v3.y,v3.z);beltBales.put(gr,m4);nb++;if(Math.abs(v3.x-CUTX)<0.55&&d<PLEN[2])under=true;
           if(d<PLEN[1]-0.3)for(const dx of WDX){m4.makeTranslation(v3.x+dx,v3.y,v3.z);baleWires.setMatrixAt(nw++,m4);}continue;}
         const f=Math.pow(clamp((cut-0.35)/(LEND-PLEN[1]),0,1),0.65);

@@ -1403,6 +1403,14 @@ body.pmpop .popmain[data-v="dcs"] #dcsOv .dcs{max-width:1180px;margin:0 auto}
 .manleg{display:flex;gap:14px;flex-wrap:wrap;font-size:11.5px;color:#8ea4c4;padding-top:4px}.manleg span{display:flex;gap:6px;align-items:center}
 /* v6.8.3 relationship map zoom (50j) */
 .rmzoom{border-color:#33476a}.rmzoom button{background:#22324f;color:#fff;padding:4px 10px;min-width:34px;font-weight:700}.rmzoom button:disabled{opacity:.4}
+/* v6.8.3 OCC recipe on the Planning screen (50f) */
+.rect td small{color:#8ea4c4;margin-left:4px}.rect td:first-child{white-space:nowrap}
+.recst{white-space:nowrap}.recst button{background:#22324f;color:#fff;border:1px solid #33476a;border-radius:6px;min-width:30px;padding:2px 8px;font-weight:700}.recst button:disabled{opacity:.35}
+.recst b{display:inline-block;min-width:26px;text-align:center;font-variant-numeric:tabular-nums}
+.recsw{display:inline-block;width:12px;height:12px;border-radius:3px;margin-right:6px;vertical-align:-1px}
+.recA{background:#b98a52}.recC{background:#a3906e}.recM{background:#727986}
+.recseq{display:flex;flex-wrap:wrap;gap:4px;margin:8px 0}.recb{font:700 10.5px var(--f-body);font-style:normal;color:#fff;min-width:26px;text-align:center;padding:3px 4px;border-radius:4px;opacity:.75}
+.recb.on{opacity:1;outline:2px solid #4fd18b;outline-offset:1px}
 </style>
 </head>
 <body class="app">
@@ -3363,6 +3371,16 @@ const PENDH={
 const ORD={cover:0.92,minR:6,maxR:36,slack:[0.8,2.2],eff:0.85,spot:45,late:15,lateCap:60,grace:120,cancel:4,dryRun:300,dryWait:6*60,full:0.8,keep:40};
 const CUST=["Harbor Corrugated","Tri-County Box","Midvale Packaging","Northgate Containers","Keystone Sheet Plant","Prairie Box Works","Lakeshore Display","Summit Carton"];
 const BALE={m0:0.085,mSpread:0.04,rain:0.06,snow:0.025,allow:0.12,std:0.10,pB:0.27,pC:0.04,ky:0.05,kb:0.8,wetMax:0.20,snowMax:0.14,tauRain:900,tauSnow:2880,tauDry:2880};
+/* v6.8.3 OCC recipe: three kinds of bale. A bales (clean, above market), C bales (market) and Mixed Waste (below market,
+   dirty). dp: $/t over the market OCC price; rej: the share of a bale the pulper rejects; k: contamination (stickies),
+   the same for all three. The planner sets a recipe in bales per feed cycle (at least one of each) and the conveyor
+   feeds them in that order, spread evenly; each kind has its own pile in the yard, and inbound trucks bring whichever
+   kind is furthest below its share. REC0 averages the same rejects (11.8 %) and price as before the recipe. */
+const BT={A:{n:"A bales",s:"A",dp:25,rej:0.05,k:0.1},C:{n:"C bales",s:"C",dp:0,rej:0.11,k:0.1},M:{n:"Mixed waste",s:"MW",dp:-45,rej:0.24,k:0.1}},BTK=["A","C","M"];
+const REC0={A:3,C:5,M:2},RECMAX=10,BALE_T=0.6,   // tons per bale on the conveyor
+  LANDFILL=30,   // $/t to haul the pulper's rejects to landfill
+  MW_RATE={ref:0.2,k:0.35};   // pulper rate: −35 % of capacity per unit of Mixed Waste share over 20 %
+const recY=r=>{const n=BTK.reduce((a,q)=>a+r[q],0);return BTK.reduce((a,q)=>a+r[q]*(1-BT[q].rej),0)/n;},REC_Y0=recY(REC0);
 const BASEL={brk:{pm:0.7,stock:0.5,pulper:0.5,steam:0},stop:{pm:0.25,stock:0.35,pulper:0.35,steam:0.15},out:{pm:0.1,stock:0.15,pulper:0.15,steam:0.05}};
 const ordOn=()=>!!(S&&!S.zen);
 const baleOn=ordOn;
@@ -3446,20 +3464,47 @@ function baseLoadTick(dt){if(S.zen||S.pm==="run")return;const g=GRADES[C.grade],
   if(v>0){spend(v,"energy");S.tot.idleE=(S.tot.idleE||0)+v;pfW("idle",v);}}
 
 // ---------- bale grading ----------
-function bqState(){if(!S.bq)S.bq={m:BALE.std,k:0.1,ck:0.1,rej:0,rejT:0,ded:0,A:0,B:0,C:0,day:-1,dRej:0};return S.bq;}
+function bqState(){if(!S.bq)S.bq={m:BALE.std,k:0.1,ck:0.1,rej:0,rejT:0,ded:0,A:0,C:0,M:0,day:-1,dRej:0,
+    rec:{...REC0},y:{A:0,C:0,M:0},fed:0,fy:REC_Y0,lf:0,bt:{A:0,C:0,M:0}};
+  else if(!S.bq.rec)Object.assign(S.bq,{rec:{...REC0},y:{A:0,C:0,M:0},fed:0,fy:REC_Y0,lf:0,bt:{A:0,C:0,M:0}});   // (a save from before v6.8.3)
+  return S.bq;}
+const recN=r=>BTK.reduce((a,q)=>a+r[q],0);
+const recShare=(r,q)=>r[q]/recN(r);
+// the feed cycle: the recipe's bales spread evenly (3 A : 5 C : 2 MW → C A C M C A C M C A ...)
+function recSeq(r){const N=recN(r),out=[],put={A:0,C:0,M:0};for(let j=0;j<N;j++){let best=null,bv=-1e9;for(const q of BTK){const v=r[q]*(j+1)/N-put[q];if(v>bv+1e-9){bv=v;best=q;}}put[best]++;out.push(best);}return out;}
+let REC_SQ=null,REC_SK="";
+function recSeqC(r){const k=r.A+"|"+r.C+"|"+r.M;if(k!==REC_SK){REC_SK=k;REC_SQ=recSeq(r);}return REC_SQ;}
+// the piles follow S.yard (rail deliveries, a bale fire, the opening stock and loads all change it outside the trucks):
+// tons that appear are split by the recipe, tons that vanish come off every pile in proportion
+function recPiles(){const Q=bqState(),Y=Q.y,sum=Y.A+Y.C+Y.M,d=S.yard-sum;if(Math.abs(d)<1e-6)return Y;
+  if(d>0)for(const q of BTK)Y[q]+=d*recShare(Q.rec,q);else if(sum>1e-9){const f=Math.max(0,S.yard)/sum;for(const q of BTK)Y[q]*=f;}else for(const q of BTK)Y[q]=0;return Y;}
+// take t tons from the piles in feed order (a kind that has run out is skipped); eases the pulper's yield to what went in
+function recTake(t,dt){if(!baleOn())return;const Q=bqState(),Y=recPiles(),sq=recSeqC(Q.rec),N=sq.length;let left=t,ys=0,tot=0,g=0;
+  while(left>1e-9&&g<N*2){const i=Math.floor(Q.fed/BALE_T)%N,q=sq[i],room=BALE_T-(Q.fed%BALE_T);
+    if(Y[q]<=1e-9){Q.fed=(Math.floor(Q.fed/BALE_T)+1)*BALE_T;g++;continue;}   // none of that kind: on to the next bale
+    const u=Math.min(left,room,Y[q]);Y[q]-=u;left-=u;Q.fed+=u;ys+=u*(1-BT[q].rej);tot+=u;Q.bt[q]+=u;g=0;}
+  if(tot>0)Q.fy=ease(Q.fy,ys/tot,dt,20);}
+// the pulper's top rate with this recipe (t/h)
+function recRate(){if(!baleOn())return Infinity;const sh=recShare(bqState().rec,"M");return P.pulperMax*(1-MW_RATE.k*Math.max(0,sh-MW_RATE.ref));}
 // an inbound load's grade and moisture (drawn when the truck arrives)
-function baleGrade(tr){const r=rand("bale"),a=rand("bale"),b=rand("bale"),q=r<BALE.pC?"C":r<BALE.pC+BALE.pB?"B":"A";
+// v6.8.3: the kind is the one furthest below its share of the recipe, counting the yard and the trucks already in
+function baleGrade(tr){const r=rand("bale"),a=rand("bale"),b=rand("bale");   // (three draws as before, so the bale stream is unchanged)
+  let q="C";if(baleOn()){const Q=bqState(),Y=recPiles(),have={A:Y.A,C:Y.C,M:Y.M};for(const t of S.inQ.concat(S.inDock))if(t&&t.q&&have[t.q]!=null)have[t.q]+=t.load;
+    const tot=have.A+have.C+have.M+tr.load;let bv=-1e9;for(const k of BTK){const v=recShare(Q.rec,k)*tot-have[k];if(v>bv){bv=v;q=k;}}}
   let m=BALE.m0+BALE.mSpread*a+(S.wx==="rain"?BALE.rain*(0.5+0.5*S.wet):S.wx==="snow"?BALE.snow:0)+(q==="A"?0:0.01);
-  tr.q=q;tr.m=m;tr.k=q==="A"?0:q==="B"?0.4+0.6*b:1;tr.pf=m>BALE.allow?(1-m)/(1-BALE.allow):1;return tr;}
+  tr.q=q;tr.m=m;tr.k=BT[q].k;tr.pf=m>BALE.allow?(1-m)/(1-BALE.allow):1;return tr;}
+// $/t for a kind of bale
+const btPrice=q=>Math.max(0,P.occPrice+(BT[q]?BT[q].dp:0)*(P.costMul||1));
 // the gate: true if the load is turned away
-function baleGate(tr){if(!baleOn())return false;const Q=bqState();Q[tr.q]=(Q[tr.q]||0)+1;if(tr.q!=="C")return false;
-  Q.rej++;Q.rejT+=tr.load;const d=Math.floor(S.t/1440);if(Q.day!==d){Q.day=d;Q.dRej=0;}Q.dRej++;
-  if(Q.dRej<=2)log(`Gate: load #${tr.id} rejected (plastic, wax and wet trash). Sent back to the supplier.`,"warn");return true;}
+// (v6.8.3: no more turning loads away: what was the junk grade is now Mixed Waste, bought on purpose. Counts loads by kind.)
+function baleGate(tr){if(!baleOn())return false;const Q=bqState();Q[tr.q]=(Q[tr.q]||0)+1;return false;}
 // u tons unloaded from truck tr into the yard (y0 tons were there): returns the tons paid for
+// (v6.8.3: the tons go on their kind's pile; what's returned is in market-price tons, so A bales count for more, Mixed Waste less)
 function baleUnload(tr,u,y0){if(!baleOn()||tr.m==null)return u;const Q=bqState(),w=y0+u;if(w>1e-9){Q.m=(Q.m*y0+tr.m*u)/w;Q.k=(Q.k*y0+tr.k*u)/w;}
-  const paid=u*tr.pf;Q.ded+=(u-paid)*P.occPrice;return paid;}
+  recPiles();if(tr.q&&Q.y[tr.q]!=null)Q.y[tr.q]+=u;
+  const paid=u*tr.pf;Q.ded+=(u-paid)*btPrice(tr.q);return P.occPrice>0?paid*btPrice(tr.q)/P.occPrice:paid;}
 // the pulper's view of the yard: solids factor (water over the standard 10% isn't fiber) and the contamination yield factor
-function baleFeed(){if(!baleOn())return {sf:1,yk:1,e:0};const Q=bqState(),e=Math.max(0,Q.m-BALE.std);return {sf:1-e,yk:1-BALE.ky*Q.k,e};}
+function baleFeed(){if(!baleOn())return {sf:1,yk:1,e:0};const Q=bqState(),e=Math.max(0,Q.m-BALE.std);return {sf:1-e,yk:(1-BALE.ky*Q.k)*Q.fy/REC_Y0,e};}
 function baleTick(dt,fiberIn){if(!baleOn())return;const Q=bqState();
   if(S.wx==="rain")Q.m+=(BALE.wetMax-Q.m)*Math.min(1,dt*(0.3+S.wet)/BALE.tauRain);
   else if(S.wx==="snow"&&Q.m<BALE.snowMax)Q.m+=(BALE.snowMax-Q.m)*Math.min(1,dt/BALE.tauSnow);
@@ -3696,6 +3741,7 @@ function step(dt){
   let want=M.pulperDown?0:C.pulper.v*M.feedMul;
   if(level0>0.97) want=Math.min(want,S.rates.fiberUse/P.yieldF);
   want=Math.min(want,P.screenMax/(P.yieldF*M.yieldMul||1));   // v4.1: the screens pass at most screenMax t/h of fiber
+  want=Math.min(want,recRate());   // v6.8.3: Mixed Waste over its usual share slows the pulper
   const effDrv=Math.min(C.drivers.v,M.drvCap); S.effDrv=effDrv;
   let cap=effDrv*P.driverRate*dt/60*M.recvMul;
   const feedRes=P.autoFeed?(M.recvMul>0?want*dt/60:0):Math.min(want*dt/60,cap); if(!P.autoFeed)cap-=feedRes;
@@ -3706,10 +3752,11 @@ function step(dt){
     tr.load-=u;cap-=u;S.yard+=u;unloaded+=u;S.tot.inTons+=u;pfW("in",u);
     {const dc=S.plan.disc,dt2=dc?Math.min(paid,dc.t):0;spend(paid*P.occPrice-dt2*(dc?dc.v:0),"occ");spend(u*frInRate(),"frin");if(dc){dc.t-=dt2;if(dc.t<=1e-6)S.plan.disc=null;}}
     if(tr.load<=0.001){S.leaving.push({...tr,ty:inY(d),kind:"in"});if(S.leaving.length>24)S.leaving.shift();S.inDock[d]=null;}}
-  const feed=Math.min(feedRes,S.yard); S.yard-=feed;WQ.f+=feed;
+  const feed=Math.min(feedRes,S.yard);recTake(feed,dt);S.yard-=feed;WQ.f+=feed;   // (v6.8.3: off the piles in recipe order)
   // 3 pulper → chest
   if(M.yardEat){const y0=S.yard;S.yard=Math.max(0,S.yard-M.yardEat*dt/60);pfW("bale",y0-S.yard);}
-  const BF=baleFeed(),fiberIn=feed*BF.sf*P.yieldF*M.yieldMul*BF.yk*dpYield(),rejT=feed*BF.sf-fiberIn;pfW("feed",feed);pfW("rej",rejT);WQ.rej+=rejT;WQ.bw+=feed*BF.e;   // v6.6: water over 10% isn't fiber; contamination is rejects
+  const BF=baleFeed(),fiberIn=feed*BF.sf*P.yieldF*M.yieldMul*BF.yk*dpYield(),rejT=feed*BF.sf-fiberIn;pfW("feed",feed);pfW("rej",rejT);WQ.rej+=rejT;WQ.bw+=feed*BF.e;
+  if(baleOn()&&rejT>0){const lf=rejT*LANDFILL*(P.costMul||1);spend(lf,"occ");bqState().lf+=lf;}   // v6.8.3: rejects hauled to landfill   // v6.6: water over 10% isn't fiber; contamination is rejects
   baleTick(dt,fiberIn);
   // (v6.5.6: stock the chest has no room for goes over the top to the sewer, and is booked as spilled; it used to vanish)
   {const t1=S.tank+fiberIn,cl=Math.max(0,t1-P.tankCap);S.tank=t1-cl;if(cl>0){pfW("spill",cl);WQ.clip+=cl;}WQ.fi+=fiberIn-cl;}
@@ -5990,7 +6037,7 @@ function no3D(){G3.ok=false;$("no3d").hidden=false;$("no3d-retry").onclick=()=>l
     if(g)bits.forEach(([col,n])=>{for(let k=0;k<n;k++){x.fillStyle=col;x.globalAlpha=0.75+Math.random()*0.25;const w=3+Math.random()*(g===2?9:7),h=2+Math.random()*5;x.fillRect(Math.random()*64,Math.random()*64,w,h);}});x.globalAlpha=1;
     if(g===2){x.strokeStyle="rgba(220,235,245,.7)";x.lineWidth=1;for(let k=0;k<6;k++){x.beginPath();x.moveTo(Math.random()*64,Math.random()*64);x.quadraticCurveTo(Math.random()*64,Math.random()*64,Math.random()*64,Math.random()*64);x.stroke();}}
     x.fillStyle="rgba(40,25,10,.35)";x.fillRect(19,0,1.2,64);x.fillRect(47,0,1.2,64);x.fillStyle="#d9d6cf";x.fillRect(16,0,3,64);x.fillRect(44,0,3,64);x.fillStyle="#ffffff";x.fillRect(16.5,0,1,64);x.fillRect(44.5,0,1,64);
-    x.fillStyle="rgba(28,34,51,.85)";x.fillRect(50,50,12,12);x.fillStyle="#ffffff";x.font="bold 11px system-ui,sans-serif";x.fillText("ABC"[g],52.5,60);
+    x.fillStyle="rgba(28,34,51,.85)";x.fillRect(50,50,12,12);x.fillStyle="#ffffff";x.font="bold 11px system-ui,sans-serif";x.fillText(["A","C","MW"][g],g===2?50.5:52.5,60);
     const t=new THREE.CanvasTexture(c);t.colorSpace=THREE.SRGBColorSpace;return t;}
   M.baleG=[0,1,2].map(g=>mat("panel",{map:g?gradeTex(g):(()=>{const t=gradeTex(0);return t;})(),roughness:0.95}));
   // three instanced meshes, one per grade, filled each frame through put(); counts follow automatically
@@ -6005,7 +6052,12 @@ function no3D(){G3.ok=false;$("no3d").hidden=false;$("no3d-retry").onclick=()=>l
      flagged every frame whether anything moved or not). n = instances in use. */
   G3.chg=(a,n)=>{if(!a)return false;const len=Math.min(a.array.length,(n==null?a.count:n)*a.itemSize),A=a.array;let c=a.__c;if(!c||c.length!==A.length)c=a.__c=new Float32Array(A.length).fill(NaN);
     let d=false;for(let i=0;i<len;i++)if(A[i]!==c[i]){d=true;break;}if(d){for(let i=0;i<len;i++)c[i]=A[i];a.needsUpdate=true;}return d;};
-  const GRADE_COL=["#a8895f","#c4b08c","#7f6a4f"].map(h=>lin0(h));
+  const GRADE_COL=["#b98a52","#a3906e","#727986"].map(h=>lin0(h));   // (v6.8.3: A bales clean kraft, C bales market OCC, Mixed Waste grey-blue)
+  // v6.8.3: which kind a bale is drawn as (0 A, 1 C, 2 MW). On the conveyor: the recipe's feed order; in the yard: the piles' shares
+  const BTI={A:0,C:1,M:2};
+  G3.recOn=()=>typeof baleOn==="function"&&baleOn()&&S&&S.bq&&S.bq.rec;
+  G3.recBelt=id=>{const sq=recSeqC(S.bq.rec),N=sq.length;return BTI[sq[((id%N)+N)%N]];};
+  G3.recYard=(i,n)=>{const Y=S.bq.y,t=Y.A+Y.C+Y.M;if(t<=0)return 1;const f=(i+0.5)/n;return f<Y.A/t?0:f<(Y.A+Y.C)/t?1:2;};
   function graded(geo,n,opts={}){const m=new StdMat({color:0xffffff,roughness:0.95});const o=new THREE.InstancedMesh(geo,m,n);o.castShadow=true;if(opts.recv)o.receiveShadow=true;o.count=0;
     o.setColorAt(0,GRADE_COL[0]);scene.add(o);G3.emptyHide(o);let k=0;
     return {reset(){k=0;},put(g,m4){if(k<n){o.setMatrixAt(k,m4);o.setColorAt(k,GRADE_COL[g]||GRADE_COL[0]);k++;}},done(){o.count=k;G3.chg(o.instanceMatrix,k);G3.chg(o.instanceColor,k);}};}
@@ -12430,13 +12482,14 @@ function no3D(){G3.ok=false;$("no3d").hidden=false;$("no3d-retry").onclick=()=>l
     pm("trucks");chemUpdate(rdt);beaterUpdate(rdt);pm("tanker + beater trucks");
     {const n=clamp(9+S.inQ.length*3+Math.floor(S.yard/250),5,24);G3.yardTr.forEach((g,i)=>g.visible=i<n);}
     // stock
-    {const nB=Math.min(168,Math.ceil(S.yard/12));if(nB!==baleShown){baleShown=nB;bales.reset();for(let i=0;i<nB;i++)bales.put(gradeOf(i*7+1,false),baleM[i]);bales.done();}}
+    {const nB=Math.min(168,Math.ceil(S.yard/12)),rc=G3.recOn(),Y=rc&&S.bq.y,key=rc?nB*1e6+Math.round(Y.A/Math.max(1,S.yard)*40)*1e3+Math.round(Y.C/Math.max(1,S.yard)*40):nB;
+      if(key!==baleShown){baleShown=key;bales.reset();for(let i=0;i<nB;i++)bales.put(rc?G3.recYard(i,nB):gradeOf(i*7+1,false),baleM[i]);bales.done();}}
     // conveyor bales
     // bales ride the walking floor, lose their wires under the guillotine, then climb to the pulper
     const run=R.feed>0.3,GAP=2.6;if(run){const o=wfOff;wfOff=(wfOff+rdt*Math.min(2.2,0.35+R.feed*0.03))%GAP;if(wfOff<o)baleCyc++;}if(run&&G3.slats)G3.slats.offset.x=(G3.__sl=((G3.__sl||0)-rdt*Math.min(2.2,0.35+R.feed*0.03)/1.2)%1);
     const LEND=PLEN[PLEN.length-1];let nb=0,nw=0,nc=0,under=false;beltBales.reset();baleChunks.reset();const junk=S.inc.some(i=>i.id==="badocc");
     if(run||S.yard>0){let k=0;for(let d=wfOff;d<LEND+1.7&&nb<24;d+=GAP,k++){const id=baleCyc-k,cut=d-PLEN[1];if(!run&&cut>0)continue;
-        const gr=gradeOf(id,junk);
+        const gr=junk||!G3.recOn()?gradeOf(id,junk):G3.recBelt(id);
         if(cut<0.35){if(!pathAt(d,v3))break;m4.makeTranslation(v3.x,v3.y,v3.z);beltBales.put(gr,m4);nb++;if(Math.abs(v3.x-CUTX)<0.55&&d<PLEN[2])under=true;
           if(d<PLEN[1]-0.3)for(const dx of WDX){m4.makeTranslation(v3.x+dx,v3.y,v3.z);baleWires.setMatrixAt(nw++,m4);}continue;}
         const f=Math.pow(clamp((cut-0.35)/(LEND-PLEN[1]),0,1),0.65);
@@ -13794,12 +13847,32 @@ function planRefresh(){const el=$("planBox");if(!el)return;const R=S.rates||{},p
       <div><small>Stock chest</small><b>${Math.round(S.tank)} t</b><small>${ch!=null?durTxt(ch*60)+" of stock":"machine idle"}</small></div>
       <div><small>Paper at the winder</small><b>${Math.round(S.winderBuf+S.reel)} t</b><small>reel and store</small></div><div><small>Beater bay</small><b>${Math.round((S.q&&S.q.bank)||0)} t</b><small>to repulp</small></div></div>`;
   // trucks
-  const inD=S.inDock.slice(0,P.doors).map((t,d)=>`<tr><td>Door ${d+1}</td><td>${t?`${Math.round(t.load)} t left${t.q?` · grade ${t.q} · ${(t.m*100).toFixed(1)} % moisture`:""}`:"empty"}</td></tr>`).join("");
+  const inD=S.inDock.slice(0,P.doors).map((t,d)=>`<tr><td>Door ${d+1}</td><td>${t?`${Math.round(t.load)} t left${t.q?` · ${BT[t.q]?BT[t.q].n:t.q} · ${(t.m*100).toFixed(1)} % moisture`:""}`:"empty"}</td></tr>`).join("");
   const outD=S.outDock.slice(0,P.shipDoors).map((t,d)=>{if(!t)return `<tr><td>Door ${d+1}</td><td>empty</td></tr>`;const o=!t.spot&&t.oid&&ordGet(t.oid);return `<tr><td>Door ${d+1}</td><td>${t.g?`${t.spot?"Spot load":o?`#${o.id} ${ordCust(o)}`:"Order"} · ${t.g} · ${Math.round(t.load)} of ${Math.round(t.want||P.truckRolls)} rolls`:`${Math.round(t.load)} rolls`}</td></tr>`;}).join("");
-  const trk=`<div class="plcols"><div><div class="dcssub">Inbound bales</div><p class="dcsfield">${C.inRate.v.toFixed(1)} trucks/h ${C.inRate.auto?"(auto)":"(hand)"} · ${S.inQ.length} waiting${Q?` · ${Q.rej} loads rejected at the gate`:""}</p><table><tbody>${inD}</tbody></table></div>
+  const trk=`<div class="plcols"><div><div class="dcssub">Inbound bales</div><p class="dcsfield">${C.inRate.v.toFixed(1)} trucks/h ${C.inRate.auto?"(auto)":"(hand)"} · ${S.inQ.length} waiting${Q?` · loads in: ${Q.A} A · ${Q.C} C · ${Q.M} MW`:""}</p><table><tbody>${inD}</tbody></table></div>
     <div><div class="dcssub">Outbound paper</div><p class="dcsfield">${C.outRate.v.toFixed(2)} trucks/h ${C.outRate.auto?"(auto: called for what's ready)":"(hand)"} · ${S.outQ.length} waiting${O&&O.k.dry?` · ${O.k.dry} dry runs`:""}</p><table><tbody>${outD}</tbody></table></div></div>`;
-  const h=sec("Production plan",plan)+sec("Order book",ord)+sec("Inventory",invH)+sec("Trucks",trk);if(el._h!==h){el._h=h;el.innerHTML=h;}}
+  const h=sec("Production plan",plan)+(Q?sec("OCC recipe",recHtml(Q)):"")+sec("Order book",ord)+sec("Inventory",invH)+sec("Trucks",trk);if(el._h!==h){el._h=h;el.innerHTML=h;}}
 const bqOn=()=>typeof baleOn==="function"&&baleOn();
+/* v6.8.3 OCC recipe editor (05b): bales per feed cycle for each kind, with its price, rejects and pile, the feed sequence
+   with the bale going in now, and what the recipe costs. The buttons are handled by one listener on the document. */
+function recHtml(Q){const r=Q.rec,N=recN(r),Y=recPiles(),R=S.rates||{},sq=recSeqC(r),cur=Math.floor(Q.fed/BALE_T)%N,feed=R.feed||0;
+  const rows=BTK.map(q=>{const b=BT[q],sh=r[q]/N,dy=feed>0.5?Y[q]/(feed*sh*24):null;
+    return `<tr><td><i class="recsw rec${q}"></i>${b.n}</td><td>${money(btPrice(q))}/t <small>${b.dp>0?"+":b.dp<0?"−":"±"}$${Math.abs(b.dp)}</small></td><td>${Math.round(b.rej*100)} %</td>
+      <td>${Math.round(Y[q]).toLocaleString()} t${dy!=null?` <small>${dy.toFixed(1)} d</small>`:""}</td>
+      <td class="recst"><button type="button" data-rec="${q}-" aria-label="One fewer ${b.n}"${r[q]<=1?" disabled":""}>−</button><b>${r[q]}</b><button type="button" data-rec="${q}+" aria-label="One more ${b.n}"${r[q]>=RECMAX?" disabled":""}>+</button></td></tr>`;}).join("");
+  const cost=BTK.reduce((a,q)=>a+r[q]*btPrice(q),0)/N,rj=1-recY(r),rate=recRate(),slow=rate<P.pulperMax-0.05;
+  const chips=sq.map((q,i)=>`<i class="recb rec${q}${i===cur?" on":""}" title="${BT[q].n}">${BT[q].s}</i>`).join("");
+  const mw=Y.M<=0.5&&r.M>0,out=BTK.filter(q=>Y[q]<=0.5).map(q=>BT[q].n);
+  return `<p class="dcsfield">The pulper is fed in this order, bale by bale, and the trucks bring whichever kind is short. A bales cost more and pulp clean; Mixed Waste is cheap but a quarter of it goes to landfill.</p>
+    <table class="rect"><thead><tr><th>Bale</th><th>Price</th><th>Rejects</th><th>In the yard</th><th>Per cycle</th></tr></thead><tbody>${rows}</tbody></table>
+    <div class="recseq" aria-label="Feed sequence">${chips}</div>
+    <div class="qcsv"><div><small>Recipe cost</small><b>${money(cost)}/t</b><small>${N} bales a cycle</small></div>
+      <div><small>Pulper rejects</small><b>${(rj*100).toFixed(1)} %</b><small>now ${((1-Q.fy)*100).toFixed(1)} % · landfill $${LANDFILL}/t</small></div>
+      <div><small>Pulper top rate</small><b class="${slow?"bad":""}">${Math.round(rate)} t/h</b><small>${slow?"slowed by Mixed Waste":"full rate"}</small></div>
+      <div><small>Landfill so far</small><b>${money(Q.lf)}</b><small>this run</small></div></div>
+    ${out.length?`<p class="dcsfield bad">Out of ${out.join(" and ")}: the feed skips ${out.length>1?"them":"it"} until a truck brings more.</p>`:""}`;}
+document.addEventListener("click",e=>{const b=e.target.closest&&e.target.closest("[data-rec]");if(!b||b.disabled||!bqOn())return;const Q=bqState(),q=b.dataset.rec[0],d=b.dataset.rec[1]==="+"?1:-1;
+  Q.rec[q]=clamp(Q.rec[q]+d,1,RECMAX);planRefresh();});
 
 /* ---------- WATER: the water screen ---------- */
 const DW={shw:()=>fmtGpm(GPM((S.wat?S.wat.r.p:0)*WAT.shower)),seal:()=>fmtGpm(GPM(WAT.base)),pw:()=>fmtGpm(GPM((S.wat?S.wat.r.p:0)*((S.dry?S.dry.m:DRY.m0)/100))),
@@ -14943,7 +15016,8 @@ function camPullOn(){try{return localStorage.getItem("paper-mill-campull")!=="of
     ["Spot market","Paper nobody ordered. A broker truck takes it once there's a full load of one grade (or the warehouse is 80% full), at $45/t under list."],
     ["Dry run","A truck that waits 6 hours with nothing to load leaves empty, and the carrier bills you for it."],
     ["Idle energy","A stopped machine still runs its vacuum pumps, agitators, fans and drives, and the boiler stays banked. Breaks and stops cost energy too."],
-    ["Bale grading","Every OCC load is graded at the gate: A clean, B some plastic and wax, C rejected and sent back. Loads over 12% moisture are paid at air-dry weight; wet bales give less fiber and contamination raises rejects and sheet breaks (stickies)."],
+    ["OCC recipe","Three kinds of bale: A bales (clean, $25/t over market, about 5% rejects), C bales (market price, about 11%) and Mixed Waste ($45/t under market, about 24%). Set the recipe on Report > Control room > Planning in bales per feed cycle (at least one of each); the conveyor feeds them in that order and inbound trucks bring whichever kind is short. Every ton of rejects costs $30 to landfill, and more than 2 Mixed Waste bales in 10 slows the pulper."],
+    ["Wet bales","Loads over 12% moisture are paid at air-dry weight; wet bales give less fiber, and contamination raises rejects and sheet breaks (stickies)."],
     ["Tied rolls","A set that comes off the winder with its two rolls stuck together where the slitter didn't cut clean. They're sawn apart and both go to the beater."],
     ["Upset","Anything that goes wrong: a breakdown, a break, a storm, a fine."],
     ["Vibration Report","The Round card's trend arrows: which areas have something about to fail."],
@@ -15423,7 +15497,7 @@ requestAnimationFrame(frame);
   window.__openDiag=open;})();
 // test and benchmark hook (read-only views plus a few controls); used by the benchmark harness and smoke tests
 window.__PM={get THREE(){return THREE},get S(){return S},get C(){return C},get G3(){return G3},get EVENTS(){return EVENTS},get CH(){return CH},SIM_STEP,
-  trigger:(...a)=>trigger(...a),step:h=>step(h),reseed:k=>seedRun(k),manShift:k=>manShift(k),get MAN(){return MAN},manOpen:()=>manOpen(),lineCaps:()=>lineCaps(),get SITE(){return SITE},get LAYOUT(){return LAYOUT},get AUDIO(){return AUDIO},get DIAG(){return DIAG},setBn:b=>{S.bn=b;applyUpgrades();},knob:{set:(i,v)=>knobSet(i,v),read:()=>knobRead(),off:()=>knobsOff(),reset:i=>knobReset(i),list:KNOBS,get K(){return S.knob},open:(a,t)=>G3.openStation&&G3.openStation(a,t),panel:i=>G3.openKnob&&G3.openKnob(i),close:()=>G3.closeKnobUI&&G3.closeKnobUI()},tell:{get T(){return S.tell},on:()=>tellsOn(),lead:()=>tellLead(),catch:id=>tellCatch(id),start:a=>tellRoundStart(a),end:(a,n)=>tellRoundEnd(a,n),trend:a=>tellTrend(a),rep:()=>tellRep(),can:()=>tellCan(),summary:()=>tellSummary(),areas:TAREAS,prepFor:()=>prepFor(),prepDo:(i,c)=>prepDo(i,c),prepTally:()=>prepTally(S.tell&&S.tell.prep),round:a=>G3.tellRound&&G3.tellRound(a),open:()=>G3.tellOpen&&G3.tellOpen(),prepOpen:()=>G3.prepOpen&&G3.prepOpen()},simRate:()=>simRate(),setFps:v=>setFpsMode(v),setRunning:v=>{running=v},get running(){return running}};
+  trigger:(...a)=>trigger(...a),step:h=>step(h),reseed:k=>seedRun(k),manShift:k=>manShift(k),bq:()=>bqState(),get MAN(){return MAN},manOpen:()=>manOpen(),lineCaps:()=>lineCaps(),get SITE(){return SITE},get LAYOUT(){return LAYOUT},get AUDIO(){return AUDIO},get DIAG(){return DIAG},setBn:b=>{S.bn=b;applyUpgrades();},knob:{set:(i,v)=>knobSet(i,v),read:()=>knobRead(),off:()=>knobsOff(),reset:i=>knobReset(i),list:KNOBS,get K(){return S.knob},open:(a,t)=>G3.openStation&&G3.openStation(a,t),panel:i=>G3.openKnob&&G3.openKnob(i),close:()=>G3.closeKnobUI&&G3.closeKnobUI()},tell:{get T(){return S.tell},on:()=>tellsOn(),lead:()=>tellLead(),catch:id=>tellCatch(id),start:a=>tellRoundStart(a),end:(a,n)=>tellRoundEnd(a,n),trend:a=>tellTrend(a),rep:()=>tellRep(),can:()=>tellCan(),summary:()=>tellSummary(),areas:TAREAS,prepFor:()=>prepFor(),prepDo:(i,c)=>prepDo(i,c),prepTally:()=>prepTally(S.tell&&S.tell.prep),round:a=>G3.tellRound&&G3.tellRound(a),open:()=>G3.tellOpen&&G3.tellOpen(),prepOpen:()=>G3.prepOpen&&G3.prepOpen()},simRate:()=>simRate(),setFps:v=>setFpsMode(v),setRunning:v=>{running=v},get running(){return running}};
 })();
 </script>
 
