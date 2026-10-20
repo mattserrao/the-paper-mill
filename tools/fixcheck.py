@@ -12,7 +12,7 @@ with sync_playwright() as pw:
     b = pw.chromium.launch(args=["--use-gl=angle", "--use-angle=swiftshader", "--enable-unsafe-swiftshader", "--ignore-gpu-blocklist"])
     pg = b.new_page(viewport={"width": 1000, "height": 720}); errs = []
     pg.on("pageerror", lambda e: errs.append(str(e)[:200]))
-    pg.route("**/*", route_for(html)); pg.add_init_script(INIT); pg.goto("http://bench.local/?env=rural")
+    pg.route("**/*", route_for(html)); pg.add_init_script(INIT); pg.goto("http://bench.local/?env=rural&nobf")
     pg.wait_for_function("window.__PM&&__B.first!==null", timeout=300000)
     ev = pg.evaluate
     ev("()=>document.getElementById('v2go').click()"); pg.wait_for_function("!!document.querySelector('#leadOv:not([hidden]) .ldcard')", timeout=120000)
@@ -26,13 +26,13 @@ with sync_playwright() as pw:
     ok("chips show meter points (Machinery +3) and the bar moves the same", "Machinery +3" in c["chips"] and abs(c["dM"] - 3) < 0.01, c)
     ok("repair bill line on the card", bool(c["bill"]) and "already paid" in c["bill"], c)
     # bug 1: free play with a card open
-    fr = ev("()=>{const S=__PM.S;S.cards.next=1e12;S.inc=[];__PM.trigger('shaft');const open=!(document.getElementById('civOv')||{hidden:true}).hidden;document.getElementById('v2free').click();return new Promise(r=>setTimeout(()=>{const t0=S.t;setTimeout(()=>r({open,running:__PM.running,card:!(document.getElementById('civOv')||{hidden:true}).hidden,moved:S.t>t0,menu:!document.getElementById('v2menu').hidden}),4000)},300));}")
+    fr = ev("()=>{const S=__PM.S;S.cards.next=1e12;S.inc=[];__PM.trigger('shaft');const open=!!(S.cards.open&&S.cards.open.civ);   /* (v6.9.2: the card itself shows after the camera pull) */document.getElementById('v2free').click();return new Promise(r=>setTimeout(()=>{const t0=S.t;setTimeout(()=>r({open,running:__PM.running,card:!(document.getElementById('civOv')||{hidden:true}).hidden,moved:S.t>t0,menu:!document.getElementById('v2menu').hidden}),4000)},300));}")
     ok("free play with a choice card open: card gone, game runs on", fr["open"] and not fr["card"] and fr["moved"], fr)
     b.close()
     # fresh page for the rest
     b = pw.chromium.launch(args=["--use-gl=angle", "--use-angle=swiftshader", "--enable-unsafe-swiftshader", "--ignore-gpu-blocklist"])
     pg = b.new_page(viewport={"width": 1000, "height": 720}); pg.on("pageerror", lambda e: errs.append(str(e)[:200]))
-    pg.route("**/*", route_for(html)); pg.add_init_script(INIT); pg.goto("http://bench.local/?env=rural")
+    pg.route("**/*", route_for(html)); pg.add_init_script(INIT); pg.goto("http://bench.local/?env=rural&nobf")
     pg.wait_for_function("window.__PM&&__B.first!==null", timeout=300000); ev = pg.evaluate
     ev("()=>document.getElementById('v2go').click()"); pg.wait_for_function("!!document.querySelector('#leadOv:not([hidden]) .ldcard')", timeout=120000)
     ev("()=>{document.querySelector('#leadOv .ldcard[data-l=hank]').click();document.getElementById('ld-go').click();}")

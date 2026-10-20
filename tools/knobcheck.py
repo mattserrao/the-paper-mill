@@ -24,7 +24,7 @@ SC = [
  ("oscillator off", {"osc": 0}, 600, {"inc": "oscfail", "off": 0.05, "after": 30, "fixed": ["osc"]}),
  ("vacuum low", {"vac": 6}, 720, {"brk": 1, "steam": 1.15, "after": 20, "fixed": ["vac"]}),
  ("vacuum high", {"vac": 60}, 720, {"brk": 1, "after": 10, "fixed": ["vac"]}),   # (v6.8: the silo runs low before the fabric wears)
- ("draw tight", {"draw": 3.6}, 600, {"brk": 1, "after": 10, "fixed": ["draw"]}),
+ ("draw tight", {"draw": 3.6}, 600, {"brk": 1, "off": 0.3, "fixed": ["draw"]}),   # (v6.8.3: over-draw takes ring crush down at once, so no delay; the breaks still come later)
  ("draw loose", {"draw": 0.3}, 600, {"off": 0.3, "after": 5, "fixed": ["draw"]}),
  ("dilution zones", {"zones": [[4, 9], [5, 8]]}, 400, {"off": 0.3, "after": 5, "fixed": ["zones"]}),
  ("guide manual", {"guide": {"gm": 0, "gt": 10}}, 900, {"inc": "fabric", "after": 60, "fixed": ["guide"]}),

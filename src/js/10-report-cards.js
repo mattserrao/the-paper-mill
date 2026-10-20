@@ -184,6 +184,7 @@ let grainDone=false;function makeGrain(){if(grainDone)return;grainDone=true;cons
 function setZen(on){if(on===!!ZEN)return;
   if(on){makeGrain();civDrop();if(S.season&&S.season.on){if(G3.save&&G3.save.drop)G3.save.drop();S.season=null;S.lead=null;applyUpgrades();seasonLocks(false);}
     ZEN={speed:C.simSpeed,chaos:CH.on,hays:C.hays,breaks:C.breaks,view:G3.on};
+    if(S.vlv){if(S.vlv.any)vUntouch(Object.keys(S.vlv.lp));S.vlv.cpl=null;S.vlv.bt=null;if(S.vlv.acc)S.vlv.acc={mco:0,make:0,over:0,dL:0};}   // (v6.9.2: valve state left touched kept re-booking its water in zen)
     S.inc=[];if(S.wd==="hayout")S.wd="run";if(S.pm==="break"){S.pm="run";}BANNERS.length=0;S.zen=true;
     CH.on=false;$("chaosOn").checked=false;C.hays=false;C.breaks=false;
     document.body.dataset.zs="none";document.body.classList.add("zen");setFS(true);G3.zen=true;G3.zenS=null;

@@ -51,7 +51,7 @@ const CIVREWARD={
   r_E:{k:"E",n:"Long-term contract",head:"A big customer offers a long-term contract.",win:"+$8/t on every grade for 14 days. You must hit a weekly tonnage target or pay $40 per ton short."},
   r_M:{k:"M",n:"Record run week",head:"The machine is in great shape. Push it for a record week?",win:"Top speed +4% for 7 days, then Machinery −15 from the wear."}};
 // special effects of particular choices ("id:index")
-const CIVFX={"shaft:0":{ext:180},"fabric:0":{ext:120},"hdblow:0":{ext:60},"cscreen:0":{ext:60},"fscreen:0":{ext:60},"boiler:0":{ext:180},"chestover:0":{ext:60},
+const CIVFX={"refclash:2":{band:"ref"},"shaft:0":{ext:180},"fabric:0":{ext:120},"hdblow:0":{ext:60},"cscreen:0":{ext:60},"fscreen:0":{ext:60},"boiler:0":{ext:180},"chestover:0":{ext:60},
   "hdblow:2":{band:"stock"},"fscreen:2":{band:"stock"},"thkblow:2":{band:"stock"},"steamjoint:2":{band:"dry"},"nearmiss:2":{band:"dock"},
   "shaft:2":{retry:1/3},"fabric:2":{favor:30e3},"felt:2":{warranty:1},"cscreen:2":{slow:2},
   "rush:1":{grade:60},"runner:2":{posts:60},"reporter:1":{gamble:1},"energyspike:0":{hedge:1}};
@@ -155,7 +155,7 @@ function civApply(d,i,auto){const V=S.civ,id=d.id;V.seen[id]=1;if(d.kind!=="mete
   // special effects
   if(fx.ext&&inc&&!dot){inc.left+=fx.ext;inc.total+=fx.ext;}
   if(fx.slow&&inc){inc.left*=fx.slow;inc.total*=fx.slow;}
-  if(fx.band){if(inc)clearIncident(id);const m=fx.band==="stock"?{feedMul:0.85}:fx.band==="dry"?{speedCap:0.85}:{clampMul:0.85};civFxAdd("band_"+id,{left:"outage",mods:m});}
+  if(fx.band){if(inc)clearIncident(id);const m=fx.band==="ref"?{speedCap:0.75}:fx.band==="stock"?{feedMul:0.85}:fx.band==="dry"?{speedCap:0.85}:{clampMul:0.85};civFxAdd("band_"+id,{left:"outage",mods:m});}
   if(fx.band&&CIVNEW[id])civFxEnd(id);
   if(fx.retry&&civRng()<fx.retry)civTimer({act:"retrigger",id,left:360+civRng()*720});
   if(fx.favor)civTimer({act:"favor",v:fx.favor,left:5*1440});
@@ -192,7 +192,7 @@ function civReward(id,yes){const V=S.civ,r=CIVREWARD[id];if(!yes){log(`Declined:
 let civEl=null;
 const civOdds=s=>s<=-2?"much rarer":s<0?"rarer":s>0?"more often":"";
 const civChips=d=>CIVK.filter(k=>d&&d[k]).map(k=>`<span class="cvc ${d[k]>0?"up":"dn"}">${CIV.names[k]} ${d[k]>0?"+":"−"}${Math.abs(d[k]*CIV.unit)}</span>`).join("");   // (v5.1 QA: meter points, as the bar moves)
-function civOpen(){const V=S.civ,d=V.cur;if(!d||typeof document==="undefined")return;running=false;S.cards.open={civ:true};
+function civOpen(){const V=S.civ,d=V.cur;if(!d||typeof document==="undefined")return;if(G3.yieldUI)G3.yieldUI();running=false;S.cards.open={civ:true};
   if(!civEl){civEl=document.createElement("div");civEl.className="overlay";civEl.id="civOv";civEl.hidden=true;document.body.appendChild(civEl);}
   const id=d.id,rw=CIVREWARD[id],u=CIVU[id],mt=CIVMETER[id],area=civArea(id),ord=V.orders[area];
   const kind=rw?"Reward · "+CIV.names[rw.k]:mt?(id.startsWith("c_")?"Crisis · ":"Warning · ")+CIV.names[mt.k]:"Upset · "+area,cls=rw?" cvr":mt?(id.startsWith("c_")?" cvx":" cvw"):"";

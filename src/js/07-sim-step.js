@@ -56,7 +56,8 @@ function step(dt){
   {const t1=S.tank+fiberIn,cl=Math.max(0,t1-P.tankCap);S.tank=t1-cl;if(cl>0){pfW("spill",cl);WQ.clip+=cl;}WQ.fi+=fiberIn-cl;}
   // 5 paper machine
   const level=S.tank/P.tankCap*100, low=C.lowLevel.v;
-  if(M.pmDown){ if(S.pm!=="incident"){ S.pm="incident"; S.lastDown=M.pmDown; } }
+  const pmDn=mcTick(dt,M)?"machine chest low level, refiners down":M.pmDown,fromMc=!!M.refOut&&!vlvT("LV-104");   // v6.9.2: refiners down, the machine runs on what's in the machine chest (07g)
+  if(pmDn){ if(S.pm!=="incident"){ S.pm="incident"; S.lastDown=pmDn; } }
   else if(S.pm==="incident"){ if(level>8)rethread("after the shutdown"+(S.lastDown?" ("+S.lastDown+")":"")); else S.pm="down"; S.pmSpeed=Math.min(S.pmSpeed,P.minSpeed); }
   if(S.pm==="break"){if(working("brk"))S.breakLeft-=dt*leadRethread();S.tot.breakMin+=dt;if(S.breakLeft<=0&&level>8){S.pm="run";S.pmSpeed=Math.min(C.pmSp.v,P.minSpeed+300);}}
   else if(S.pm==="down"){if(level>=Math.max(20,low*0.8)){rethread("after running out of stock");S.pmSpeed=P.minSpeed;}}
@@ -78,15 +79,16 @@ function step(dt){
     if(S.pm==="run"){
       prod=P.K*S.pmSpeed*S.we.bw*dt/60;   // (v6.8: the weight the BW loop is making, 07g)
       const use=prod/P.pmLoss;
-      if(use>S.tank){prod=S.tank*P.pmLoss;}
-      S.tank-=prod/P.pmLoss;pfW("eff",prod/P.pmLoss-prod);WQ.u+=prod/P.pmLoss;WQ.p+=prod;
+      if(!fromMc&&use>S.tank){prod=S.tank*P.pmLoss;}
+      if(!fromMc)S.tank-=prod/P.pmLoss;pfW("eff",prod/P.pmLoss-prod);WQ.u+=prod/P.pmLoss;WQ.p+=prod;
     }
   }
   if(S.pm!=="run") S.pmSpeed=ease(S.pmSpeed,0,dt,3);
   baseLoadTick(dt);   // v6.6: a stopped machine still draws power and keeps the boiler banked
   let beat=0;
   if(prod>0){{const ec=prod*energyCost();spend(ec,"energy");pfEnergy(prod,ec);}knobSteamCost(prod);
-    {const de=kwhNow()-WE.kwh0;if(de&&!S.zen){const v=de*prod/P.pmLoss*WE.kwhCost*P.energyMul*(P.costMul||1);spend(v,"energy");pfAdd("power","stock",v);}}   // v6.8 refining power above (or below) standardS.q.made+=prod;
+    {const de=kwhNow()-WE.kwh0;if(de&&!S.zen){const v=de*prod/P.pmLoss*WE.kwhCost*P.energyMul*(P.costMul||1);spend(v,"energy");pfAdd("power","stock",v);}}   // v6.8 refining power above (or below) standard
+  S.q.made+=prod;
     // v6.5.3: the spec check (07e): weight, moisture or color out and the whole reel is beater; then a grade change's
     // transition tons; then the other knob defects' share
     let off=0;if(qualTick().off)off=prod;

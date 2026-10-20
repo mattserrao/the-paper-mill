@@ -80,7 +80,8 @@ function vlvAlarms(a,L){if(S.zen)return;for(const d of VDEF){if(d.area!==a)conti
   const h=vlvAlarm(d.id);if(h)L.push([`${d.id} ${({osc:"OSCILLATING",stick:"VALVE STICKING",dead:"CYCLING",sat:"VALVE AT LIMIT"})[h.k]}`,h.k!=="sat"]);}}
 
 /* ---- the panel ---- */
-function vlvOv(){let o=$("vlvOv");if(o)return o;
+const vlvHost=()=>{try{if(POP.on&&POP.w&&!POP.w.closed){const m=POP.w.document.getElementById("popMain");if(m)return m;}}catch(_){}return document.body;};
+function vlvOv(){let o=$("vlvOv");if(o){const h=vlvHost();if(o.parentNode!==h)h.appendChild(o);return o;}
   o=kEl("div","overlay top vlvov");o.id="vlvOv";o.hidden=true;
   o.innerHTML=`<div class="dcs vlvp" role="dialog" aria-modal="true" aria-labelledby="vlv-h"><div class="dcsh"><b id="vlv-h"></b><span class="vlvwh" id="vlvWh"></span>
       <button type="button" class="dcsx" id="vlvClose" aria-label="Close">✕</button>
@@ -89,7 +90,7 @@ function vlvOv(){let o=$("vlvOv");if(o)return o;
       <canvas id="vlvCv" width="760" height="300" aria-label="Trend of setpoint, process value and output"></canvas><div class="vlvhl" id="vlvHl"></div></div>
       <div class="vlvpane" id="vlvPane"></div></div>
     <div class="dcsf vlvf"><span id="vlvSt"></span><span class="vlvclk">Tuning clock <span class="seg" role="group" aria-label="Tuning clock">${[[1,"Real time"],[5,"5×"],[20,"20×"],[60,"60×"]].map(([c,l])=>`<button type="button" data-ck="${c}">${l}</button>`).join("")}</span></span></div></div>`;
-  document.body.appendChild(o);
+  vlvHost().appendChild(o);
   $("vlvClose").addEventListener("click",()=>closeVlv());
   o.addEventListener("click",e=>{if(e.target===o){closeVlv();return;}
     const t=e.target.closest("[data-vt],[data-vw],[data-ck],[data-gl]");if(!t)return;
@@ -248,7 +249,7 @@ function vpCh(p,d){const sv=S.vlvc||{};
     stick:"Every reversal is a stick-slip jump. A slower, gentler loop reverses less: lower Kc, Ti about the tub's 20 minutes.",
     inner:"The inner steam loop rings at this tuning. Calm PV-303 first (Kc about 0.5, Ti 0.5 min); then the moisture loop can be quicker.",
     patience:"3 minutes of dead time. Lambda with λ = 3 min: Kc about 0.05, Ti about the 0.33-minute lag. Mostly integral, very little gain."})[c.id];});
-  $("vChGo").addEventListener("click",()=>{const r=vlvChallenge(c.id,VUI.chT),st=vlvStars(c.id,r.score);vlvChSave(c.id,st);VUI.chRes=Object.assign(r,{st,ref:vlvChRef(c.id)});VUI.chPlay=performance.now();vChScore();vlvRefresh(true);});
+  $("vChGo").addEventListener("click",()=>{const r=vlvChallenge(c.id,VUI.chT),st=vlvStars(c.id,r.score);vlvChSave(c.id,st);VUI.chRes=Object.assign(r,{st,ref:vlvChRef(c.id)});VUI.chPlay=performance.now();if(G3.vlvRaf)G3.vlvRaf();vChScore();vlvRefresh(true);});
   sync();vChScore();}
 function vChScore(){const b=$("vChSc"),r=VUI.chRes;if(!b)return;if(!r){b.innerHTML="";return;}
   b.innerHTML=`<div><small>Stars</small><b class="vstar">${"★".repeat(r.st)}${"☆".repeat(3-r.st)}</b><small>${r.unstable?"unstable":r.st===3?"as good as a careful engineer":"keep tuning"}</small></div><div><small>Score</small><b>${isFinite(r.score)?vfx(r.score,1):"∞"}</b><small>engineer ${vfx(r.ref,1)} (lower is better)</small></div><div><small>IAE</small><b>${vfx(r.iae,1)}</b><small>% of span × min</small></div><div><small>Valve</small><b>${Math.round(r.trav)}%</b><small>travel · ${r.rev} reversals</small></div>`;}
@@ -318,7 +319,8 @@ function vlvDraw(tr,d){const cv=$("vlvCv");if(!cv)return;const box=cv.getBoundin
   if(tr&&tr.t.length<2){x.fillStyle="#c3d3ea";x.textAlign="center";x.fillText("Collecting the trend…",W/2,H/2);}}
 UI_TICKS.push(()=>{if(VUI.id){const o=$("vlvOv");if(!o||o.hidden)return;if(S.zen){closeVlv();return;}vlvRefresh(false);if(VUI.chPlay&&performance.now()-VUI.chPlay>5200)VUI.chPlay=0;}});
 // smoother trend while the challenge plays back or the clock runs fast
-{let raf=0;const tick=()=>{raf=requestAnimationFrame(tick);if(VUI.id&&VUI.tab==="ch"&&VUI.chPlay){const t=performance.now();if(t-(tick.l||0)>60){tick.l=t;vlvRefresh(false);}}};raf=requestAnimationFrame(tick);}
+{let raf=0;const tick=()=>{raf=0;if(!(VUI.id&&VUI.tab==="ch"&&VUI.chPlay))return;raf=requestAnimationFrame(tick);const t=performance.now();if(t-(tick.l||0)>60){tick.l=t;vlvRefresh(false);}};
+  G3.vlvRaf=()=>{if(!raf)raf=requestAnimationFrame(tick);};}   // (v6.9.2: only while a challenge plays back)
 G3.vlvUI=()=>VUI.id?VUI.clk/60:0;   // (kuiSync, 50b: the tuning clock while a faceplate is open)
 G3.vlvOpen=openVlv;G3.vlvClose=closeVlv;G3.VUI=VUI;   // (tests)
 // Escape closes the faceplate first (window capture runs before the DCS's own document handler)

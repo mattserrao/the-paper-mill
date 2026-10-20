@@ -1,6 +1,30 @@
 # Changelog
 
 
+## v6.9.2 (2026-10-20): Release review
+Built and tested on test/v6.9.2-release.
+- **Help and glossary** (`51f-help.js`): about 30 outdated statements corrected (tell lead and caught-repair share, area
+  controls now in Process flow, which screens slow the game, DCS row, grade set by the market, camera, save rules), new
+  guide pages (Quality and specs, Wet end and drying, Water), 47 new glossary terms (wet end, water, valves and tuning,
+  freight). The tutorial's upsets card introduces the daily Round. Rolls per reel label: 8 × 12.5 t.
+- **Bug fixes:** code stuck on the end of `//` comments now runs (`S.q.made`: the Customer audit always failed;
+  `G3.closeKnobUI`: a field knob panel left open kept the game at 1 min/s; the bird cut-scene's open-sheet check; the
+  outage notice cleared after an outage; chart padding; dumpster lid). `build.py` now warns on that pattern. A docked
+  truck from a pre-v6.6 save no longer turns cash into NaN. Zen hands touched valve loops back (the white water chest
+  drained in the screensaver). Valve faceplates open on the second screen when the DCS is popped out. Challenge reference
+  scores precomputed (the first Run froze for ~0.5 s). A refused bump test no longer takes the loop. Event cards,
+  choice cards, the outage plan and the pause menu close the DCS / faceplate they used to hide under.
+- **Refiners and the machine chest** (`07g` mcTick): the refiners take stock from the stock chest and feed the machine
+  chest. Plates clashed: no forward flow, the machine runs the chest down (about 5 min) and trips at 10%; re-plated, the
+  refiners refill it and the machine rethreads over 35%. "Run on one refiner until the outage" ends the trip with the
+  machine held at 75%. Relationship map: Refined stock flow, the refiner feed chain, the clash, and refining energy ->
+  couch solids (the drainage cost) beside -> ring crush. `tools/refcheck.py`.
+- **Economy:** tells 4.5 days ahead (was 3.5), a caught repair 5% of the bill (was 10%), missed repair bills +20%,
+  every upgrade 30% dearer, overhead $2,400/h (was $3,400). Seasons, 12 seeds a tester over the 4 maps, gain over
+  hands-off: rounds +$1.79M, smart upgrades +$1.27M, both +$3.11M, buy-everything -$1.50M; hands-off +$0.44M (58% of
+  seeds profit). Survival (10 seeds): rounds +7.4 days, smart upgrades +12.0, both +26.9 — upgrades still lead there.
+- **Tests:** controlcheck, fixcheck, ordercheck, knobcheck, v506check and survival.py updated for later versions.
+
 ## v6.9.1 (2026-10-20): Wet End Controls
 - **Rush / drag on the WET DCS** (`50d-dcs-more.js`): R/D = (J/W − 1) × wire speed, in fpm, under the wire speed
   ("−38 fpm DRAG" at the standard 0.985 J/W; "RUSH" when the jet is faster than the wire). The jet-to-wire ratio now

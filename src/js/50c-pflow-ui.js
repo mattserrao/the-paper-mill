@@ -213,7 +213,8 @@ function pfDraw(cv,spec,W0){const dpr=Math.min(2,(cv.ownerDocument.defaultView||
   for(const p of pts){if(stack){let s=0;p.v.forEach(v=>s+=v||0);hi=Math.max(hi,s);lo=Math.min(lo,0);}else p.v.forEach(v=>{if(v!=null){lo=Math.min(lo,v);hi=Math.max(hi,v);}});}
   if(!(hi>-Infinity)){x.fillStyle="rgba(190,205,230,.7)";x.font="600 12px system-ui,sans-serif";x.fillText("No data yet",L+8,ch/2);return pts;}
   if(bar||spec.k==="pct"||spec.pn){lo=Math.min(0,lo);hi=Math.max(0,hi);}
-  {const m=Math.max(Math.abs(hi),Math.abs(lo));if(hi-lo<Math.max(m*0.04,1e-6)){const c=(hi+lo)/2,w=Math.max(m*0.05,1);hi=c+w;lo=bar?Math.min(0,lo):c-w;}}   // (a flat line gets a sensible scale, not ±0.5)const pad=(hi-lo)*0.08,pos=lo>=0;if(!bar&&spec.k!=="pct")lo-=pad;if(pos)lo=Math.max(0,lo);hi+=pad;
+  {const m=Math.max(Math.abs(hi),Math.abs(lo));if(hi-lo<Math.max(m*0.04,1e-6)){const c=(hi+lo)/2,w=Math.max(m*0.05,1);hi=c+w;lo=bar?Math.min(0,lo):c-w;}}   // (a flat line gets a sensible scale, not ±0.5)
+  const pad=(hi-lo)*0.08,pos=lo>=0;if(!bar&&spec.k!=="pct")lo-=pad;if(pos)lo=Math.max(0,lo);hi+=pad;
   const Y=v=>Bm-(v-lo)/(hi-lo)*(Bm-T);
   x.strokeStyle="rgba(140,170,210,.16)";x.lineWidth=1;x.fillStyle="rgba(190,205,230,.75)";x.font="600 10px system-ui,sans-serif";x.textAlign="right";
   for(let k=0;k<=2;k++){const v=lo+(hi-lo)*k/2,y=Y(v);x.beginPath();x.moveTo(L,y);x.lineTo(R,y);x.stroke();x.fillText(pfFmt(v,spec.u).replace("$",""),L-3,y+3);}

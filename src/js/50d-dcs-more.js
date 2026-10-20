@@ -226,7 +226,7 @@ const PGX={
     // (v6.5.4: in the picture's new process order, index for index with MIMIC.SPOT.eq)
     ["cyclone",()=>or(stI("hdblow"),stDp("hd"))],["screen",()=>or(stM("cscr"),stI("cscreen"))],["cleaners",()=>or(stI("lcplug"),stDp("lc")),"lcrows"],["screen",()=>or(stM("fscr"),stI("fscreen"))],
     ["cleaners",()=>or(stI("lwplug"),stDp("lw"))],["thickener",()=>or(stI("thkblow"),G3.SPD&&G3.SPD.strain>0.05?"warn":"ok")],
-    ["tank",()=>or(stI("chestover"),S.tank/P.tankCap>0.92?"warn":"ok"),"chest"],["refiner",()=>stI("refclash")],["tank",()=>"ok","mc"],["drum",()=>or(stM("dye"),stI("dye"))],["pumpBox",()=>S.pm==="run"?"ok":"off"],
+    ["tank",()=>or(stI("chestover"),S.tank/P.tankCap>0.92?"warn":"ok"),"chest"],["refiner",()=>stI("refclash")],["tank",()=>{const y=mcLvlNow();return y<MCH.trip+5?"bad":y<40?"warn":"ok";},"mc"],["drum",()=>or(stM("dye"),stI("dye"))],["pumpBox",()=>S.pm==="run"?"ok":"off"],
     ["tank",()=>S.wat&&S.wat.short>0?"trip":S.wat&&S.wat.L<WAT.cap*0.25?"warn":"ok","wwc"]],
   WET:[["fan",()=>or(stM("fog"),stI("fogfan"))],["headbox",()=>"ok"],["table",()=>or(stI("fabric"),dcsOn("slime")?"warn":"ok",stBrk("press"))],["tank",()=>"ok","silo"],
     ["roll1",()=>stI("couchpit")],["felt",()=>stI("felt","oscfail")],["press",()=>stBrk("press")]],

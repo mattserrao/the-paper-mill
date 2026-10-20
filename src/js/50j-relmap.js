@@ -4,7 +4,7 @@
    only: the sim and its dice are untouched, and the game keeps running at the player's speed while it is open.
    Keep RM_E in step with the sim when a relationship changes (tools/relmapcheck.py fails on a tag with no entry). ---- */
 const RM_DRV=[["x:weather","Weather",""],["x:bales","Bale grade mix",""],["x:pulpset","Pulper feed setpoint",""],["x:dilv","Pulper dilution valve","knob"],["x:slice","Headbox slice","knob"],["x:guide","Fabric guide roll","knob"],["x:zones","Headbox dilution zones","knob"],["x:spset","Machine speed setpoint",""],["x:grade","Grade on the machine",""],["x:dye","Dye system",""],["x:market","Market & leader effects",""],["x:orders","Customer orders",""],["x:upsets","Upsets & DCS motors",""]];
-const RM_COL={"YARD":["inq","unload","yard","balem","stk","occp"],"SPOT":["feed","cp","nv101pv","nv101op","amps","pulpLvl","yield","fiber","rejt","hddp","lcdp","lwdp","fsld","fsdp","kwh","dil","chest","chestg","gap","refkw","csf","agit","mcCons","mcLvl","lv104pv","lv104op","mcg","fan"],"WET":["wsp","jw","rd","vac","couchSol","pl","pressSol","gtrav","edge","osc","hbc","bwv","fv201pv","fv201op","bwsp","drain","seal","pressw","wwl","lv202pv","lv202op","wwg","wwov","hum"],"DET":["speed","prod","st1","st3","pv302pv","pv302op","pv303pv","pv303op","steam","dryl","moist","qc300pv","qc300op","bw","draw","tension"],"QCS":["off","rct","prem","cdsp","bank","reel","cut","conv"],"UTIL":["boiler","vent","energyt","shower","evap","wcl","wcg","makeup","fresh","wuse","wwover","outfall","tss"],"SHIP":["fg","load","outq","openo","lateo","price","profit"]};
+const RM_COL={"YARD":["inq","unload","yard","balem","stk","occp"],"SPOT":["feed","cp","nv101pv","nv101op","amps","pulpLvl","yield","fiber","rejt","hddp","lcdp","lwdp","fsld","fsdp","kwh","dil","chest","chestg","gap","refkw","csf","agit","refq","mcCons","mcLvl","lv104pv","lv104op","mcg","fan"],"WET":["wsp","jw","rd","vac","couchSol","pl","pressSol","gtrav","edge","osc","hbc","bwv","fv201pv","fv201op","bwsp","drain","seal","pressw","wwl","lv202pv","lv202op","wwg","wwov","hum"],"DET":["speed","prod","st1","st3","pv302pv","pv302op","pv303pv","pv303op","steam","dryl","moist","qc300pv","qc300op","bw","draw","tension"],"QCS":["off","rct","prem","cdsp","bank","reel","cut","conv"],"UTIL":["boiler","vent","energyt","shower","evap","wcl","wcg","makeup","fresh","wuse","wwover","outfall","tss"],"SHIP":["fg","load","outq","openo","lateo","price","profit"]};
 const RM_E=[
  ["x:weather","balem","p","Rain and snow soak the bales in the yard and on inbound loads"],
  ["x:weather","unload","n","Snow and fog slow inbound trucks"],
@@ -42,11 +42,16 @@ const RM_E=[
  ["cp","nv101pv","s","NV-101 measures the pulper consistency, 30 s late"],
  ["nv101pv","nv101op","x","AUTO: thick tub, open the dilution valve (PID)"],
  ["cp","mcCons","x","Pulper consistency swings reach the machine chest through the storage chest (about an hour)"],
- ["lv104op","mcLvl","p","Refined stock in through LV-104 fills the machine chest"],
+ ["chest","refq","p","The refiners are fed from the stock (storage) chest"],
+ ["x:upsets","refq","x","Refiner plates clash: the refiners trip until maintenance re-plates them"],
+ ["lv104op","refq","p","LV-104, on the stock chest pump, sets the flow through the refiners"],
+ ["refq","mcLvl","p","The refiners feed the machine chest"],
+ ["gap","refq","x","Plates clashed: the refiners trip and no stock goes forward to the machine chest"],
+ ["refq","refkw","p","No flow through the refiners, no refiner load"],
  ["prod","mcLvl","n","The machine draws the chest down"],
  ["mcLvl","lv104pv","s","LV-104 measures the machine chest level"],
  ["lv104pv","lv104op","x","AUTO: low chest, open the valve (PID on an integrating level)"],
- ["mcLvl","speed","x","Under 15% the machine slows; held empty the sheet breaks at the wet end"],
+ ["mcLvl","speed","x","With the refiners down the machine trips at 10% and comes back over 35%; on LV-104's own model, under 15% it slows and held empty the sheet breaks"],
  ["mcLvl","chest","x","Over 100% refined stock overflows to the sewer and is lost from the chest"],
  ["bwv","fv201op","s","The basis weight valve is FV-201"],
  ["bw","fv201pv","s","FV-201 reads the QCS weight, 3 minutes late"],
@@ -83,6 +88,7 @@ const RM_E=[
  ["kwh","profit","n","Refining power above standard is billed as energy"],
  ["csf","couchSol","p","Freer stock drains faster on the table; low freeness, lower couch solids"],
  ["kwh","rct","p","More refining, stronger fibers, more ring crush"],
+ ["kwh","couchSol","n","The price of refining: more ring crush, but slower drainage and lower couch solids"],
  ["bw","rct","p","Ring crush scales with the weight"],
  ["stk","rct","n","Stickies weaken the sheet a little"],
  ["rct","off","x","Under the grade's ring crush minimum the reel goes to the beater"],
