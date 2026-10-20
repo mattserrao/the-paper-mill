@@ -4971,25 +4971,25 @@ function vlvMigrate(){if(!S||S.zen)return;const D=S.dry,We=S.we;
    Dice: their own streams ("rel" for the wear ticks and faults, "relx" for chaosTick's per-event draw), three draws an
    asset every RLY.tick sim minutes, so every other upset keeps its timing. Seasons, survival and free play (not zen).
    State: S.rel (saved with the run). ---- */
-const RLY={tick:15,leadB:36*60,leadM:72*60,baseB:0.03,baseM:0.02,baseD:1/150,
+const RLY={tick:15,leadB:36*60,leadM:72*60,baseB:0.016,baseM:0.009,baseD:1/300,   /* (v6.10 QA balance: were 0.03, 0.02, 1/150: 9 reliability failures a season cost ~$650k against v6.9.2) */
   stale:24*60,unknown:72*60,
   vib:{at:60,len:120,n:2,stag:12},adx:{at:90,len:150,n:2},
   plan:{b:{cost:15e3,min:15,n:"Bearings"},m:{cost:60e3,min:30,n:"Motor"},d:{cost:25e3,min:10,n:"Drive"}},planCap:90,
-  fix:0.2,elecResp:10,ppe:3,rectBase:1/60,rectBill:60e3,drvCall:0.1,rep:[0.08,0.8],inv:[45,90],repl:[60,90],patch:3,dur:{vib:[150,270],adx:[240,420],drv:[60,120]},drvBill:35e3};
+  fix:0.2,elecResp:10,ppe:3,rectBase:1/250,rectBill:40e3,drvCall:0.1,rep:[0.08,0.8],inv:[45,90],repl:[60,90],patch:3,dur:{vib:[150,270],adx:[240,420],drv:[60,120]},drvBill:35e3};
 const LINEUPS=[["SP","Stock prep lineup","MCC-1"],["PM","Machine sectional lineup","MCC-2"],["WD","Winder lineup","MCC-3"]];
 const LINEN=Object.fromEntries(LINEUPS.map(l=>[l[0],l]));
 // kw: rated power; stop: what the failure does, in words; ta: the Round area its tell shows in; k: a phase for the load wobble
 const ASSETS=[
-  {id:"pulp",n:"Pulper rotor",ln:"SP",kw:1100,ta:"pulp",k:1,mods:{pulperDown:1},stop:"The pulper is stopped; the stock chest is draining.",bb:45e3,mb:160e3},
-  {id:"refA",n:"Refiner A",ln:"SP",kw:1500,ta:"scr",k:2,mods:{speedCap:0.75},stop:"One refiner left: the machine slows to 75%.",bb:40e3,mb:180e3},
-  {id:"refB",n:"Refiner B",ln:"SP",kw:1500,ta:"scr",k:3,mods:{speedCap:0.75},stop:"One refiner left: the machine slows to 75%.",bb:40e3,mb:180e3},
-  {id:"fan",n:"Fan pump",ln:"SP",kw:900,ta:"scr",k:4,mods:{pmDown:"fan pump down"},stop:"No stock to the headbox: the machine is down.",bb:35e3,mb:140e3},
-  {id:"couch",n:"Couch roll",ln:"PM",kw:600,ta:"wet",k:5,mods:{pmDown:"couch drive down"},stop:"The machine is down.",bb:50e3,mb:120e3},
-  {id:"pr1",n:"1st press",ln:"PM",kw:700,ta:"wet",k:6,mods:{pmDown:"1st press drive down"},stop:"The machine is down.",bb:50e3,mb:130e3},
-  {id:"pr2",n:"2nd press",ln:"PM",kw:700,ta:"wet",k:7,mods:{pmDown:"2nd press drive down"},stop:"The machine is down.",bb:50e3,mb:130e3},
-  {id:"dry",n:"Dryer section",ln:"PM",kw:800,ta:"dry",k:8,mods:{pmDown:"dryer drive down"},stop:"The machine is down.",bb:55e3,mb:150e3},
-  {id:"reel",n:"Reel drum",ln:"PM",kw:400,ta:"dry",k:9,mods:{pmDown:"reel drive down"},stop:"The machine is down.",bb:35e3,mb:100e3},
-  {id:"wind",n:"Winder drum",ln:"WD",kw:600,ta:"dry",k:10,mods:{winderDown:1},stop:"The winder is down; reels are stacking up.",bb:35e3,mb:110e3}];
+  {id:"pulp",n:"Pulper rotor",ln:"SP",kw:1100,ta:"pulp",k:1,mods:{pulperDown:1},stop:"The pulper is stopped; the stock chest is draining.",bb:45e3,mb:120e3},
+  {id:"refA",n:"Refiner A",ln:"SP",kw:1500,ta:"scr",k:2,mods:{speedCap:0.75},stop:"One refiner left: the machine slows to 75%.",bb:40e3,mb:135e3},
+  {id:"refB",n:"Refiner B",ln:"SP",kw:1500,ta:"scr",k:3,mods:{speedCap:0.75},stop:"One refiner left: the machine slows to 75%.",bb:40e3,mb:135e3},
+  {id:"fan",n:"Fan pump",ln:"SP",kw:900,ta:"scr",k:4,mods:{pmDown:"fan pump down"},stop:"No stock to the headbox: the machine is down.",bb:35e3,mb:105e3},
+  {id:"couch",n:"Couch roll",ln:"PM",kw:600,ta:"wet",k:5,mods:{pmDown:"couch drive down"},stop:"The machine is down.",bb:50e3,mb:90e3},
+  {id:"pr1",n:"1st press",ln:"PM",kw:700,ta:"wet",k:6,mods:{pmDown:"1st press drive down"},stop:"The machine is down.",bb:50e3,mb:100e3},
+  {id:"pr2",n:"2nd press",ln:"PM",kw:700,ta:"wet",k:7,mods:{pmDown:"2nd press drive down"},stop:"The machine is down.",bb:50e3,mb:100e3},
+  {id:"dry",n:"Dryer section",ln:"PM",kw:800,ta:"dry",k:8,mods:{pmDown:"dryer drive down"},stop:"The machine is down.",bb:55e3,mb:110e3},
+  {id:"reel",n:"Reel drum",ln:"PM",kw:400,ta:"dry",k:9,mods:{pmDown:"reel drive down"},stop:"The machine is down.",bb:35e3,mb:75e3},
+  {id:"wind",n:"Winder drum",ln:"WD",kw:600,ta:"dry",k:10,mods:{winderDown:1},stop:"The winder is down; reels are stacking up.",bb:35e3,mb:80e3}];
 const ASSETN=Object.fromEntries(ASSETS.map(a=>[a.id,a]));
 const VIBST={good:["Good","ok","Smooth: nothing in the spectrum"],imbal:["Imbalance","warn","1× running speed peak: imbalance; it loads the bearings"],misal:["Misalignment","warn","2× running speed and axial peaks: the coupling is out of line"],
   outer:["Outer race defect","warn","Bearing defect peaks (BPFO): a spall on the outer race; weeks to months left"],inner:["Inner race defect","bad","Inner race defect (BPFI) with sidebands: the bearing is wearing fast"],
