@@ -149,7 +149,8 @@ const RM_E=[
  ["cdsp","off","p","More than 3 zones out sends part of the reel to the beater"],
  ["draw","tension","p","Tension follows draw"],
  ["draw","off","x","Under 1% the reel wrinkles"],
- ["draw","speed","n","Over 2.4% the sheet snaps in the open draw"],
+ ["draw","speed","x","Under 1.5% breaks come more often; over 2.4% the sheet snaps in the open draw"],
+ ["draw","rct","n","More draw stretches the sheet: lower ring crush"],
  ["prod","reel","p","Good paper builds on the reel"],
  ["off","reel","p","Beater paper is wound too"],
  ["cut","reel","n","The winder takes it off"],
@@ -216,7 +217,7 @@ function rmOv(){let o=$("rmOv");if(o)return o;
     <div class="rmb"><div class="rmmap" id="rmMap"><svg id="rmSvg" role="img" aria-label="Relationship map of the mill's readings"></svg></div><aside class="rmside" id="rmSide" aria-live="polite"></aside></div>
     <div class="dcsf"><span>Structural links from the sim, not measured correlation: Trends → Moves with measures what moved together in this run.</span><span id="rmCnt"></span></div></div>`;
   document.body.appendChild(o);
-  $("rmClose").addEventListener("click",()=>rmClose());o.addEventListener("click",e=>{if(e.target===o)rmClose();});
+  $("rmClose").addEventListener("click",()=>rmClose());o.addEventListener("click",e=>{if(e.target===o&&!POP.on)rmClose();});
   o.querySelectorAll("[data-rmm]").forEach(b=>b.addEventListener("click",()=>{RMUI.mode=b.dataset.rmm;rmSync();rmLight();rmSide();}));
   o.querySelectorAll("[data-rmx]").forEach(b=>b.addEventListener("click",()=>{RMUI.ext=b.dataset.rmx==="1";if(!RMUI.ext&&RMUI.sel&&RM_N[RMUI.sel].ext)RMUI.sel=null;rmSync();rmDraw();rmSide();}));
   o.querySelectorAll("[data-rmz]").forEach(b=>b.addEventListener("click",()=>{const k=b.dataset.rmz;rmZoom(k==="fit"?rmFitZ():RMUI.z*(k==="+"?1.25:0.8));}));
@@ -226,9 +227,10 @@ function rmOv(){let o=$("rmOv");if(o)return o;
   return o;}
 function rmSync(){const o=$("rmOv");if(!o)return;o.querySelectorAll("[data-rmm]").forEach(b=>b.setAttribute("aria-pressed",String(b.dataset.rmm===RMUI.mode)));
   o.querySelectorAll("[data-rmx]").forEach(b=>b.setAttribute("aria-pressed",String((b.dataset.rmx==="1")===RMUI.ext)));}
-function rmOpen(){const o=rmOv();if(G3.closeKnobUI)G3.closeKnobUI();RMUI.open=true;o.hidden=false;if(!RMUI.sel)RMUI.sel="moist";rmSync();rmDraw();rmSide();
+function rmOpen(){if(POP.on&&!POP.inApp){popShow("rm");return;}   // (v6.8.3: popped out, it opens on the second screen)
+  const o=rmOv();if(G3.closeKnobUI)G3.closeKnobUI();RMUI.open=true;o.hidden=false;if(!RMUI.sel)RMUI.sel="moist";rmSync();rmDraw();rmSide();
   setTimeout(()=>{try{$("rmClose").focus({preventScroll:true});rmScroll(RMUI.sel);}catch(_){}},0);}
-function rmClose(){const o=$("rmOv");if(o)o.hidden=true;RMUI.open=false;}
+function rmClose(){if(POP.on&&!POP.inApp){popShow("home");return;}const o=$("rmOv");if(o)o.hidden=true;RMUI.open=false;}
 document.addEventListener("keydown",e=>{if(e.key!=="Escape"||!RMUI.open)return;e.preventDefault();e.stopPropagation();rmClose();},true);
 // columns in process order, each ordered by its neighbours' rows (a few sweeps cut the crossings)
 function rmLayout(){const cols=RM_ORDER.filter(c=>RMUI.ext||c!=="IN").map(c=>Object.values(RM_N).filter(n=>n.col===c&&(RMUI.ext||!n.ext)));

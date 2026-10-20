@@ -44,7 +44,7 @@ with sync_playwright() as pw:
     ok("window opened with both screens in it", pp.evaluate("()=>!!document.getElementById('dcsOv')&&!!document.getElementById('pfOv')&&document.body.classList.contains('pmpop')"))
     ok("both screens left the game window", pg.evaluate("()=>!document.getElementById('dcsOv')&&!document.getElementById('pfOv')"))
     ok("stylesheet copied (DCS panel is dark blue)", pp.evaluate("()=>getComputedStyle(document.querySelector('.dcs')).backgroundColor")=="rgb(22, 35, 58)")
-    ok("opened on the DCS view", pp.evaluate("()=>document.getElementById('popMain').dataset.v")=="dcs")
+    ok("opened on the DCS view (from the DCS's own button)", pp.evaluate("()=>document.getElementById('popMain').dataset.v")=="dcs")
     ok("popped-out DCS doesn't slow the game", pg.evaluate("()=>__PM.G3.simRate()===__PM.C.simSpeed&&!__PM.G3.knobUI"), str(pg.evaluate("()=>[__PM.G3.simRate(),__PM.C.simSpeed]")))
     ok("footer says the mill keeps running", "keeps running" in pp.evaluate("()=>document.getElementById('dcsSlow').textContent"))
     ok("close buttons hidden in the window", pp.evaluate("()=>getComputedStyle(document.getElementById('dcsClose')).display==='none'&&getComputedStyle(document.getElementById('pfClose')).display==='none'"))
@@ -91,12 +91,23 @@ with sync_playwright() as pw:
     pp.keyboard.press("Escape"); pp.wait_for_timeout(300)
     ok("Escape in the window closes the details", pp.evaluate("()=>document.getElementById('pfPanel').hidden") and pg.evaluate("()=>!!document.getElementById('cards')"))
 
-    # ---- both side by side ----
-    pp.evaluate("()=>document.querySelector('[data-pv=\"both\"]').click()"); pp.wait_for_timeout(600)
-    ok("Both view shows the two screens side by side", pp.evaluate("()=>{const a=document.querySelector('#dcsOv').getBoundingClientRect(),b=document.querySelector('#pfOv').getBoundingClientRect();return a.width>200&&b.width>200&&b.left>=a.right-1}"))
+    # ---- v6.8.3: the window is the whole control room: home tiles, an app per view, "← Control room" back ----
+    pp.evaluate("()=>document.getElementById('popBack').click()"); pp.wait_for_timeout(400)
+    ok("back button returns to the control room home", pp.evaluate("()=>document.getElementById('popMain').dataset.v==='home'&&document.getElementById('popBack').hidden&&document.querySelectorAll('#popHome [data-pa]').length===8"))
+    if shot: pp.set_viewport_size({"width": 1600, "height": 900}); pp.wait_for_timeout(500); pp.screenshot(path=f"{shot}-home.png")
+    for k, v, title in (("QCS", "dcs", "Quality"), ("PLAN", "dcs", "Planning"), ("rm", "rm", "Relationship map"), ("man", "man", "Manning"), ("pf", "pf", "Process flow")):
+        pp.evaluate(f"()=>document.querySelector('[data-pa=\"{k}\"]').click()"); pp.wait_for_timeout(500)
+        ok(f"tile {k} opens {title} full window with the back button", pp.evaluate(f"()=>document.getElementById('popMain').dataset.v==='{v}'&&!document.getElementById('popBack').hidden&&document.getElementById('popApp').textContent==='{title}'"),
+           pp.evaluate("()=>document.getElementById('popMain').dataset.v+' / '+document.getElementById('popApp').textContent"))
+        if k == "rm": ok("relationship map drawn in the window", pp.evaluate("()=>document.querySelectorAll('#rmSvg .rmn').length>20"))
+        if k == "man": ok("manning list drawn in the window", pp.evaluate("()=>document.querySelectorAll('#manB .manl li').length>5"))
+        pp.evaluate("()=>document.getElementById('popBack').click()"); pp.wait_for_timeout(300)
+    pp.evaluate("()=>document.querySelector('[data-pa=\"rm\"]').click()"); pp.wait_for_timeout(300); pp.keyboard.press("Escape"); pp.wait_for_timeout(300)
+    ok("Escape in an app goes back to the control room", pp.evaluate("()=>document.getElementById('popMain').dataset.v")=="home")
+    pg.evaluate("()=>document.querySelector('#ctlRoom [data-cr=man]').click()"); pp.wait_for_timeout(500)
+    ok("Manning from the game's control room opens on the second screen", pp.evaluate("()=>document.getElementById('popMain').dataset.v")=="man" and pg.evaluate("()=>!document.getElementById('manOv')"))
     pg.evaluate("()=>__PM.G3.openStation('SPOT','dcs')"); pp.wait_for_timeout(300)
-    ok("a console tap keeps Both", pp.evaluate("()=>document.getElementById('popMain').dataset.v")=="both")
-    if shot: pp.set_viewport_size({"width": 1600, "height": 900}); pp.wait_for_timeout(800); pp.screenshot(path=f"{shot}-both.png")
+    ok("a console tap switches the window to the DCS", pp.evaluate("()=>document.getElementById('popMain').dataset.v")=="dcs")
 
     # ---- the pause menu doesn't close the flow ----
     pg.evaluate("()=>{const m=document.getElementById('v2menu');if(__PM.G3.showMenu)__PM.G3.showMenu();else m.hidden=false}"); pg.wait_for_timeout(1200)
@@ -129,13 +140,13 @@ with sync_playwright() as pw:
         pg.evaluate("()=>__PM.G3.popOpen('dcs')")
     pp = ev.value; watch(pp, "popup3"); pp.wait_for_timeout(600)
     pg.evaluate("()=>{__PM.S.zen=true;document.body.classList.add('zen')}")
-    try: pp.wait_for_function("()=>document.getElementById('popMain').dataset.v==='pf'", timeout=60000)
+    try: pp.wait_for_function("()=>document.getElementById('popMain').dataset.v==='home'", timeout=60000)
     except Exception: pass
-    ok("zen: window switches to the flow, DCS tab disabled", pp.evaluate("()=>document.getElementById('popMain').dataset.v==='pf'&&document.querySelector('[data-pv=\"dcs\"]').disabled"))
+    ok("zen: window leaves the DCS for the control room, DCS tiles disabled", pp.evaluate("()=>document.getElementById('popMain').dataset.v==='home'&&document.querySelector('[data-pa=\"dcs\"]').disabled&&!document.querySelector('[data-pa=\"pf\"]').disabled"))
     pg.evaluate("()=>{__PM.S.zen=false;document.body.classList.remove('zen')}")
-    try: pp.wait_for_function("()=>!document.querySelector('[data-pv=dcs]').disabled", timeout=60000)
+    try: pp.wait_for_function("()=>!document.querySelector('[data-pa=dcs]').disabled", timeout=60000)
     except Exception: pass
-    ok("zen off: DCS tab back", pp.evaluate("()=>!document.querySelector('[data-pv=\"dcs\"]').disabled"))
+    ok("zen off: DCS tiles back", pp.evaluate("()=>!document.querySelector('[data-pa=\"dcs\"]').disabled"))
 
     # ---- leaving the game page closes the window ----
     pg.goto("about:blank"); pg.wait_for_timeout(500)

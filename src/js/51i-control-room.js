@@ -4,8 +4,9 @@
     ["QCS","Quality","Specs, off-spec log, beater"],["WATER","Water","Fresh water and the water balance"],["TREND","Trends","Trend anything, find what moves together"],["rm","Relationship map","What drives each reading, and what it moves"],["man","Manning","Who's on shift, vacations and cover"]];
   const el=$("ctlRoom");
   if(el){el.innerHTML=`<div class="crh"><b>Control room</b><small id="crNote">The mill's screens. The DCS screens also open from the operator consoles in the mill.</small></div>
-      <div class="crg">${CR.map(([k,l,d])=>`<button type="button" data-cr="${k}"><b>${l}</b><small>${d}</small></button>`).join("")}<button type="button" data-cr="pop" id="crPop" hidden><b>⧉ Second screen</b><small>DCS and process flow in their own window</small></button></div>`;
+      <div class="crg">${CR.map(([k,l,d])=>`<button type="button" data-cr="${k}"><b>${l}</b><small>${d}</small></button>`).join("")}<button type="button" data-cr="pop" id="crPop" hidden><b>⧉ Second screen</b><small>The whole control room in its own window</small></button></div>`;
     el.addEventListener("click",e=>{const b=e.target.closest("[data-cr]");if(!b||b.disabled)return;const k=b.dataset.cr;
+      if(POP.on&&k!=="pop"){popOpen(k==="dcs"?"dcs":k);return;}   // (v6.8.3: popped out, every screen opens on the second screen)
       const x=document.querySelector('#v2sheet header button[aria-label="Close panel"]');if(x)x.click();
       if(k==="pf")pfOpen();else if(k==="rm")rmOpen();else if(k==="man")manOpen();else if(k==="pop")popOpen("both");else openStation(k==="dcs"?(KUI.last||"SPOT"):k,"dcs");});}
   UI_TICKS.push(()=>{if(!el)return;const z=!!S.zen;el.querySelectorAll("[data-cr]").forEach(b=>{if(b.dataset.cr==="pf"||b.dataset.cr==="pop"||b.dataset.cr==="rm"||b.dataset.cr==="man")return;if(b.disabled!==z)b.disabled=z;});

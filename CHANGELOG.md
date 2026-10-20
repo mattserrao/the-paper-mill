@@ -1,7 +1,17 @@
 # Changelog
 
 
-## v6.8.3 (2026-10-20): OCC recipe, map zoom and night light cones
+## v6.8.3 (2026-10-20): OCC recipe, second screen control room, open draw, map zoom and night light cones
+- **Second screen is the whole control room** (`50e-popout.js`). It opens on the same tiles as Report > Control room
+  (process flow, DCS, planning, quality, water, trends, relationship map, manning); a tile fills the window with that
+  app and "← Control room" in the bar (or Escape) comes back. Opening any of them from the game window while popped
+  out (a console in the mill, a control room tile) switches the second screen to it. The DCS + flow "Both" view is
+  gone. `tools/popoutcheck.py` checks the tiles, the back button and the routing.
+- **Open draw and strength** (`07g-wetend.js`, `07b-knobs.js`). Each % of press-to-dryer draw over the 1.5 % standard
+  takes 4 % off ring crush (less draw adds it). Under 1.5 % the sheet flutters into the dryers and breaks come more
+  often (×1.5 at 1.0 %, ×2.2 at 0.5 %). The wrinkles under 1 % and the snap over 2.4 % are as before. Both links are on
+  the relationship map.
+- **Machine showers 1.65 m³ a ton of paper** (about 250 gpm at 35 t/h), down from 8 (over 1,000 gpm, `07f-water.js`).
 - **OCC recipe** (`05b-orders.js`, Planning screen in `50f-control.js`). Three kinds of bale replace the gate grading:
   A bales ($25/t over market, ~5 % pulper rejects), C bales (market, ~11 %) and Mixed Waste ($45/t under, ~24 %).
   The planner sets a recipe in bales per feed cycle (1–10 of each, default 3 : 5 : 2, which matches the old average

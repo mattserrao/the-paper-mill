@@ -190,7 +190,7 @@ function planRefresh(){const el=$("planBox");if(!el)return;const R=S.rates||{},p
 const bqOn=()=>typeof baleOn==="function"&&baleOn();
 /* v6.8.3 OCC recipe editor (05b): bales per feed cycle for each kind, with its price, rejects and pile, the feed sequence
    with the bale going in now, and what the recipe costs. The buttons are handled by one listener on the document. */
-function recHtml(Q){const r=Q.rec,N=recN(r),Y=recPiles(),R=S.rates||{},sq=recSeqC(r),cur=Math.floor(Q.fed/BALE_T)%N,feed=R.feed||0;
+function recHtml(Q){const r=Q.rec,N=recN(r),Y=recPiles(),R=S.rates||{},sq=recSeqC(r),cur=Math.floor(Q.fed+1e-9)%N,feed=R.feed||0;
   const rows=BTK.map(q=>{const b=BT[q],sh=r[q]/N,dy=feed>0.5?Y[q]/(feed*sh*24):null;
     return `<tr><td><i class="recsw rec${q}"></i>${b.n}</td><td>${money(btPrice(q))}/t <small>${b.dp>0?"+":b.dp<0?"−":"±"}$${Math.abs(b.dp)}</small></td><td>${Math.round(b.rej*100)} %</td>
       <td>${Math.round(Y[q]).toLocaleString()} t${dy!=null?` <small>${dy.toFixed(1)} d</small>`:""}</td>

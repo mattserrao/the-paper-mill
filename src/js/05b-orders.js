@@ -138,10 +138,12 @@ function recSeqC(r){const k=r.A+"|"+r.C+"|"+r.M;if(k!==REC_SK){REC_SK=k;REC_SQ=r
 function recPiles(){const Q=bqState(),Y=Q.y,sum=Y.A+Y.C+Y.M,d=S.yard-sum;if(Math.abs(d)<1e-6)return Y;
   if(d>0)for(const q of BTK)Y[q]+=d*recShare(Q.rec,q);else if(sum>1e-9){const f=Math.max(0,S.yard)/sum;for(const q of BTK)Y[q]*=f;}else for(const q of BTK)Y[q]=0;return Y;}
 // take t tons from the piles in feed order (a kind that has run out is skipped); eases the pulper's yield to what went in
-function recTake(t,dt){if(!baleOn())return;const Q=bqState(),Y=recPiles(),sq=recSeqC(Q.rec),N=sq.length;let left=t,ys=0,tot=0,g=0;
-  while(left>1e-9&&g<N*2){const i=Math.floor(Q.fed/BALE_T)%N,q=sq[i],room=BALE_T-(Q.fed%BALE_T);
-    if(Y[q]<=1e-9){Q.fed=(Math.floor(Q.fed/BALE_T)+1)*BALE_T;g++;continue;}   // none of that kind: on to the next bale
-    const u=Math.min(left,room,Y[q]);Y[q]-=u;left-=u;Q.fed+=u;ys+=u*(1-BT[q].rej);tot+=u;Q.bt[q]+=u;g=0;}
+// (Q.fed counts bales: whole bales plus the part of the current one already fed, so it never sticks on a float boundary)
+function recTake(t,dt){if(!baleOn())return;const Q=bqState(),Y=recPiles(),sq=recSeqC(Q.rec),N=sq.length;let left=t,ys=0,tot=0,skip=0,it=0;
+  if(Q.fed>1e6)Q.fed%=N;
+  while(left>1e-9&&skip<N&&it++<64){const b=Math.floor(Q.fed+1e-9),q=sq[b%N],room=(b+1-Q.fed)*BALE_T;
+    if(Y[q]<=1e-9||room<1e-9){Q.fed=b+1;if(Y[q]<=1e-9)skip++;continue;}   // none of that kind (or this bale is done): on to the next bale
+    const u=Math.min(left,room,Y[q]);Y[q]-=u;left-=u;Q.fed=Math.min(b+1,Q.fed+u/BALE_T);ys+=u*(1-BT[q].rej);tot+=u;Q.bt[q]+=u;skip=0;}
   if(tot>0)Q.fy=ease(Q.fy,ys/tot,dt,20);}
 // the pulper's top rate with this recipe (t/h)
 function recRate(){if(!baleOn())return Infinity;const sh=recShare(bqState().rec,"M");return P.pulperMax*(1-MW_RATE.k*Math.max(0,sh-MW_RATE.ref));}

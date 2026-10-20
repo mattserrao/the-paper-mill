@@ -31,7 +31,7 @@ const KNOBS=[
   {id:"osc",name:"Pick-up felt oscillator",area:"WET",where:"Pick-up felt showers, 1st press top felt",field:true,unit:"% stroke speed",min:0,max:100,step:5,
     tip:"Sweeps the felt-cleaning shower back and forth across the pick-up felt. Normally 100%."},
   {id:"draw",name:"Press-to-dryer draw",area:"DET",where:"Dry end DCS",dcs:true,unit:"%",min:0,max:4,step:0.1,dp:1,
-    tip:"Speed difference between the presses and the first dryers, which keeps the open draw taut. Standard is 1.5%."},
+    tip:"Speed difference between the presses and the first dryers, which keeps the open draw taut. Standard is 1.5%. More draw stretches the sheet and lowers ring crush; less lets it flutter and break more often."},
   {id:"st1",name:"1st section steam",area:"DET",where:"Dry end DCS",dcs:true,unit:"kPa",min:0,max:250,step:5,
     tip:"Steam pressure in the first dryer section. The 3rd section is on automatic moisture control. Standard is 70 kPa."},
 ];
@@ -170,7 +170,8 @@ function knobTick(dt){const K=S.knob;if(!K||!K.any||S.zen)return;
   if(off<=0.02&&K.off>0.02)log("QCS: the reel is back on spec.","ok");
   K.off=off>0.005?off:0;K.offWhy=tv>0.005?top:"";K.F=F;
   K.feed=x.cp<4?clamp(x.cp/4,0.5,1):1;
-  K.brk=1+Math.max(0,x.fr-0.6)*4;
+  // (v6.8.3: a slack open draw lets the sheet flutter into the dryers: breaks come more often the further under 1.5 %)
+  K.brk=1+Math.max(0,x.fr-0.6)*4+1.2*Math.pow(Math.max(0,KNOB_IDEAL.draw-v.draw),1.3);
   // ---- consequences: breaks (deterministic: a hazard builds and the sheet goes when it is full) ----
   const haz=(k,rate,type,why,hk)=>{if(rate<=0){H[k]=Math.max(0,(H[k]||0)-dt/120);return;}H[k]=(H[k]||0)+dt/60*rate;if(H[k]>=1&&run){H[k]=0;knobBreak(type,why);const h=hk||k;(K.harm[h]||(K.harm[h]={t:0,n:0})).n++;}};
   haz("draw",x.dt*3,"dryer","Sheet break in the open draw: the sheet snapped going into the dryers.");

@@ -1250,17 +1250,23 @@ body.pmpop [data-popout],body.pmpop #dcsClose,body.pmpop #pfClose{display:none}
 .popbar .pb:hover{border-color:#4a6390}.popbar .pb[hidden]{display:none}
 .popbar .sp{flex:1}.popbar #popMsg{color:#8ea4c4;font-size:12px}
 .popmain{flex:1;min-height:0;display:grid;gap:10px;padding:10px;grid-template-columns:minmax(0,1fr)}
-.popmain[data-v="both"]{grid-template-columns:minmax(0,5fr) minmax(0,7fr)}
-.popmain[data-v="dcs"] #pfOv,.popmain[data-v="pf"] #dcsOv,.popmain #popZen{display:none}
-body.pmpop.zen .popmain #dcsOv{display:none}body.pmpop.zen .popmain[data-v="dcs"] #popZen{display:grid}
-#popZen{place-items:center;color:#8ea4c4;font-size:14px;border:1px dashed #2c3e5c;border-radius:12px}
+/* v6.8.3 second screen = the control room: one app at a time, or the home tiles */
+.popmain>#dcsOv,.popmain>#pfOv,.popmain>#rmOv,.popmain>#manOv,.popmain>#popHome{display:none!important}
+.popmain[data-v="home"]>#popHome,.popmain[data-v="dcs"]>#dcsOv,.popmain[data-v="pf"]>#pfOv,.popmain[data-v="rm"]>#rmOv,.popmain[data-v="man"]>#manOv{display:flex!important}
+.pophome{flex-direction:column;gap:12px;width:min(1100px,100%);margin:0 auto;padding:12px 4px;overflow:auto}
+.pophome .crh b{display:block;font:700 18px var(--f-body);color:#dbe6f6}.pophome .crh small{color:#8ea4c4}
+.pophome .crg{display:grid;grid-template-columns:repeat(auto-fill,minmax(230px,1fr));gap:10px}
+.pophome .crg button{display:flex;flex-direction:column;align-items:flex-start;gap:4px;text-align:left;padding:16px;border-radius:12px;background:#16233a;border:1px solid #2c3e5c;color:#dbe6f6;cursor:pointer}
+.pophome .crg button:hover{border-color:#4fd18b}.pophome .crg button b{font-size:15px}.pophome .crg button small{color:#8ea4c4;font-size:12.5px}.pophome .crg button:disabled{opacity:.4;cursor:default}
+.popbar .popback{background:#4fd18b;color:#0f1b2d;border-color:#4fd18b}.popbar .popapp{font:700 14px var(--f-body);color:#4fd18b;letter-spacing:.04em}.popbar .popapp:empty{display:none}
+.popbar .popapp::before{content:"· ";color:#8ea4c4}
+body.pmpop #rmClose,body.pmpop #manClose{display:none}
+body.pmpop .popmain #manOv .dcs{max-width:640px;margin:0 auto}
 body.pmpop .overlay{position:static;inset:auto;z-index:auto;padding:0;background:none;display:flex;min-height:0;min-width:0}
 body.pmpop .overlay[hidden]{display:none}
 body.pmpop .dcs{width:100%;max-width:none;max-height:none;height:100%;box-shadow:none}
 body.pmpop .popmain[data-v="dcs"] #dcsOv .dcs{max-width:1180px;margin:0 auto}
 /* (side by side, the flow takes its narrow-screen layout: inputs beside the picture, outputs in a row underneath) */
-.popmain[data-v="both"] .pfb{grid-template-columns:200px minmax(0,1fr)}
-.popmain[data-v="both"] .pfout{grid-column:1 / -1;display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr))}.popmain[data-v="both"] .pfout .dcssub{grid-column:1 / -1}
 /* v6.5.3 QCS: a reading outside its grade's spec */
 .qcsv div.qout{border-color:#ff6b5e;background:#2a1420}.qcsv div.qout b{color:#ff8b7f}
 /* v6.5.4: making-beater alert under the headbox dilution zones (WET DCS) */

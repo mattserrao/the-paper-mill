@@ -9,11 +9,12 @@ function manOv(){let o=$("manOv");if(o)return o;
     <button aria-label="Close" class="dcsx" id="manClose">✕</button></div><div class="manb" id="manB" aria-live="polite"></div>
     <div class="dcsf"><span>DuPont 12: four teams, 12-hour shifts, 6 to 6. Vacations are covered by someone off who isn't working the shift before or after.</span></div></div>`;
   document.body.appendChild(o);
-  $("manClose").addEventListener("click",()=>manClose());o.addEventListener("click",e=>{if(e.target===o)manClose();});
+  $("manClose").addEventListener("click",()=>manClose());o.addEventListener("click",e=>{if(e.target===o&&!POP.on)manClose();});
   return o;}
-function manOpen(){const o=manOv();if(G3.closeKnobUI)G3.closeKnobUI();MANUI.open=true;MANUI.key="";o.hidden=false;manDraw();
+function manOpen(){if(POP.on&&!POP.inApp){popShow("man");return;}   // (v6.8.3: popped out, it opens on the second screen)
+  const o=manOv();if(G3.closeKnobUI)G3.closeKnobUI();MANUI.open=true;MANUI.key="";o.hidden=false;manDraw();
   setTimeout(()=>{try{$("manClose").focus({preventScroll:true});}catch(_){}},0);}
-function manClose(){const o=$("manOv");if(o)o.hidden=true;MANUI.open=false;}
+function manClose(){if(POP.on&&!POP.inApp){popShow("home");return;}const o=$("manOv");if(o)o.hidden=true;MANUI.open=false;}
 document.addEventListener("keydown",e=>{if(e.key!=="Escape"||!MANUI.open)return;e.preventDefault();e.stopPropagation();manClose();},true);
 const manHat=T=>`<i class="manhat" style="background:${MAN.HAT[T]}" title="${T} team"></i>`;
 function manRow(r,seat){const h=r.home,w=r.who;
