@@ -60,7 +60,7 @@ then `tail.html`. All game code runs inside **one shared closure** (opened in `0
 - **Bottleneck:** `S.bn` comes from the run's seed (`bnFor`, a hash, no stream drawn). Seasons then re-roll it with
   `Math.random` in `startSeason()` (v4.2.5), so each season gets its own; the week's dice are unchanged.
   `applySite()` sets the capacities it can cut (`P.doorRate`, `pulperMax`, `screenMax`, `winderMax`, `doorRolls`) from
-  `BNK[area]` × what the machine needs on 23m. Upgrades that fix it (`BN[area].ups`) cost `upCost()` (25% off) and do
+  `BNK[area]` × what the machine needs on 24. Upgrades that fix it (`BN[area].ups`) cost `upCost()` (25% off) and do
   more for that area. `lineCaps()` gives every area's t/h (Line capacity chart, bottleneck card, labels).
 - **Scenery** (`42b-3d-scenery.js`) runs after every other static object exists: a 2 m keep-out grid from every mesh and
   instance, off-site roads and rail, then the environment kit and its utilities, merged into one vertex-coloured mesh per

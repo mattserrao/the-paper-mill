@@ -150,7 +150,7 @@ function knobTick(dt){const K=S.knob;if(!K||!K.any||S.zen)return;
   const Dw=dewater(x.fr,x.vac,x.pl,x.jv,x.jh),W=Dw.W;x.cs=Dw.cs;x.ps=Dw.ps;
   x.d1=L(x.d1,(v.st1-70)/130*0.35,8);
   // v6.5 b5: moisture, the 3rd section and the boiler header come from the dryer model (07d), which now also sees speed
-  const a0=clamp(W-x.d1,0.7,1.3),Dr=dryState();K.W=W;K.d1x=x.d1;K.a=Dr.st3/(DRY.base[C.grade]||122);
+  const a0=clamp(W-x.d1,0.7,1.3),Dr=dryState();K.W=W;K.d1x=x.d1;K.a=Dr.st3/(DRY.base[C.grade]||DRY.base["24"]);
   x.m=Dr.m;                                                             // reel moisture (%)
   K.sf=a0+Math.max(0,x.d1);                                             // steam load per ton (1 = normal): the cost side (v6.5.5: a drier sheet saves steam)
   // boiler header sagging under the load: the boiler's own limit (07d), or (v6.5.2) the knobs holding the dryers' total
@@ -211,18 +211,18 @@ function knobSteamCulprits(){const K=S.knob;if(!K)return [];const v=K.v,c=[];
   if(v.st1!==70)c.push(["st1",Math.abs(v.st1-70)/130*0.35]);
   c.sort((a,b)=>b[1]-a[1]);return c.filter(r=>r[1]>0.02).map(r=>r[0]);}
 // readings for the DCS and QCS screens. With S.knob missing everything reads at its standard value.
-// Base values follow PM3's own run data: reel speed, basis weight and 3rd section steam by grade, the stock prep level.
-function knobRead(){const K=S.knob,x=K?K.x:null,g=GRADES[C.grade]||GRADES["23m"],bw=g.bw,run=S.pm==="run";
+// Base values follow each grade's standard: reel speed, basis weight and 3rd section steam, and the stock prep level.
+function knobRead(){const K=S.knob,x=K?K.x:null,g=GRADES[C.grade]||GRADES["24"],bw=g.bw,run=S.pm==="run";
   const z=x?x.z:new Array(KZONES).fill(0),sw=x?x.sw:0,t=S.t;
   const wob=(f,k)=>Math.sin(t*f+k)*0.6+Math.sin(t*f*2.7+k*2)*0.4;   // smooth stand-in for process noise (no dice)
-  const Dr=S.dry,st3=Dr?Dr.st3:(DRY.base[C.grade]||122);   // (v6.5 b5: the dryer model, 07d)
+  const Dr=S.dry,st3=Dr?Dr.st3:(DRY.base[C.grade]||DRY.base["24"]);   // (v6.5 b5: the dryer model, 07d)
   const m=Dr?Dr.m:DRY.m0,cp=x?x.cp:5;
   return {run,cp,amps:410*(0.55+cp/5*0.45)*(S.M.pulperDown?0:1),pulpLvl:clamp(62+(5-cp)*9+wob(0.05,1)*1.5,0,110),
     gap:x?x.fr:0.5,refkw:run?2100*(1+Math.max(0,0.5-(x?x.fr:0.5))*1.6-Math.max(0,(x?x.fr:0.5)-0.5)*0.8):0,csf:450+((x?x.fr:0.5)-0.5)*380,
     mcLvl:69+wob(0.02,2)*3,mcCons:3.2+sw*0.9*wob(0.21,3)+(S.wat?S.wat.shortK*0.6:0),agit:knobVal("agit"),
     vac:x?x.vac:30,couchSol:x&&x.cs!=null?x.cs:19,pl:x?x.pl:100,pressSol:x&&x.ps!=null?x.ps:44+4*LV("shoe"),
     edge:K?K.edge:0,gtrav:K?K.gtrav:0,gm:knobVal("gm"),stripes:x?x.st:0,cs:K?K.cs:0,couch:knobVal("couch"),osc:knobVal("osc"),wear:K?K.wear:0,
-    st1:knobVal("st1"),st3,steam:run?(Dr?Dr.steam:50.5*S.pmSpeed/2736):S.pm==="break"&&Dr?Dr.steam:0,boiler:Dr?Dr.hdr:1,moist:run?m+wob(0.13,4)*0.25:0,
+    st1:knobVal("st1"),st3,steam:run?(Dr?Dr.steam:50.5*P.K*S.pmSpeed*bw/34.8):S.pm==="break"&&Dr?Dr.steam:0,boiler:Dr?Dr.hdr:1,moist:run?m+wob(0.13,4)*0.25:0,
     bw:run?bw*(1+sw*0.08*wob(0.21,3))+wob(0.11,5)*0.12:0,draw:knobVal("draw"),tension:run?1.0+(knobVal("draw")-1.5)*0.42:0,
     zones:z.map((v,i)=>m+v*0.35+Math.sin(i*1.7+t*0.01)*0.12),off:qualStatus().off,why:qualStatus().why,F:K&&K.F||{},speed:S.pmSpeed};}
 // DCS / QCS trend history: a reading every 2 sim minutes, 6 hours kept. Read-only on the sim (it never writes S), kept

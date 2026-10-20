@@ -2,7 +2,7 @@
 function rand(k){const r=S.rng;r[k]=(r[k]+0x6D2B79F5)|0;let t=r[k];t=Math.imul(t^(t>>>15),t|1);t^=t+Math.imul(t^(t>>>7),t|61);return ((t^(t>>>14))>>>0)/4294967296;}
 const P={truckLoad:220,doors:3,driverRate:30,doorRate:450,yieldF:0.88,tankCap:300,yardCap:2000,yardTarget:800,
   fgCap:225,fgTarget:40,convCap:3,jumbo:100,storeReels:4,rollsPerReel:8,loaderRate:9,truckRolls:20,doorRolls:112.5,shipDoors:3,
-  K:34.8/(2736*24.55),minSpeed:1200,ramp:150,pmLoss:0.98,maxQueue:8};
+  K:34.8/(GRADES["24"].sp*GRADES["24"].bw),minSpeed:1200,ramp:150,pmLoss:0.98,maxQueue:8};
 const UNITS={inRate:v=>v.toFixed(1)+" trucks/h",drivers:v=>Math.round(v)+" drivers",pulper:v=>v.toFixed(1)+" t/h",
   lvlTarget:v=>Math.round(v)+" %",lowLevel:v=>Math.round(v)+" %",pmSp:v=>Math.round(v).toLocaleString()+" fpm",
   rollW:v=>v.toFixed(1)+" t",wdr:v=>Math.round(v)+" t/h",loaders:v=>Math.round(v)+" loaders",outRate:v=>v.toFixed(1)+" trucks/h"};
@@ -10,7 +10,7 @@ const AUTOKEYS=["inRate","drivers","pulper","pmSp","wdr","loaders","outRate"];
 
 let C,S;
 const BASE={...P};
-const ECON={price:{"23m":642,"26m":662,"30m":680,"33HT":741},   /* (v6.5 balance: -$15/t, inactive play is punished most) */   // (v6.5: +$30/t: outbound freight is its own cost now, FR; b2: less what the cheaper OCC and energy save per ton, ~$82-84, and $4 for paper made but not yet sold; measured on 12 hands-off seasons)
+const ECON={price:{"24":642,"28":662,"31":680,"34Super":741},   /* (v6.5 balance: -$15/t, inactive play is punished most) */   // (v6.5: +$30/t: outbound freight is its own cost now, FR; b2: less what the cheaper OCC and energy save per ton, ~$82-84, and $4 for paper made but not yet sold; measured on 12 hands-off seasons)
   energy:68,   // (b2: was 95; a recycled mill buying its power, 2026 prices)
   chem:25,wage:45,robot:15,overhead:3400,start:2e6,bankrupt:-1.5e6};
 const REPAIR={rotortrip:20e3,oscfail:12e3,couchpit:25e3,birdline:200e3,refclash:140e3,steamjoint:90e3,fogfan:35e3,shaft:250e3,dryerfire:400e3,fabric:90e3,felt:45e3,slime:30e3,ragger:15e3,overflow:120e3,chestover:60e3,lwplug:25e3,cscreen:45e3,fscreen:60e3,lcplug:30e3,hdblow:55e3,boiler:60e3,permit:120e3,thkblow:70e3,birdhay:0,wrap:15e3,dye:20e3,flares:0,winderdown:40e3,runner:0,badocc:0,balefire:150e3,fleet:40e3,calloff:10e3,fight:5e3,roof:80e3,highway:0,lightning:200e3,tornado:500e3,beaver:25e3,icedintake:20e3,brownout:10e3,duststorm:25e3,flood:60e3};
@@ -68,7 +68,7 @@ function applyUpgrades(){
   lim("s-wdr",P.winderMax);lim("s-pmSp",3300+P.spBonus);lim("s-pulper",Math.floor(Math.min(P.pulperMax,P.screenMax/P.yieldF)));
 }
 // the OCC blend, energy, chemicals and break rate follow the grade on the machine
-function applyGrade(){const g=(typeof C!=="undefined"&&C&&C.grade)||"23m",c=GCOST[g],d=c.dlk;
+function applyGrade(){const g=(typeof C!=="undefined"&&C&&C.grade)||"24",c=GCOST[g],d=c.dlk;
   P.blendP=OCCG.occ11.p*(1-d)+OCCG.dlk.p*d;P.blendY=OCCG.occ11.y*(1-d)+OCCG.dlk.y*d;
   P.steamMul=c.steam;P.chemAdd=c.chem-((S&&S.perk)?S.perk.chem:0);P.gradeBrk=c.brk;}
 function energyCost(){return Math.max(0,ECON.energy*P.steamMul*P.energyMul*leadEnergy()+ECON.chem+P.chemAdd+(P.siteEnergy||0)-(P.refSave||0)-((S&&S.perk&&S.perk.energy)||0)+civEnergy())*(P.costMul||1);}
@@ -90,7 +90,7 @@ function frOutRate(){return Math.max(0,(FR.outBase+(P.siteFreight||0))*FR.outK*f
 function fuelAt(seed,wk){let x=1;for(let w=-3;w<=wk;w++){let h=Math.imul((seed>>>0)^Math.imul(w+101,0x9e3779b1),0x85ebca6b);h^=h>>>13;h=Math.imul(h,0xc2b2ae35);h^=h>>>16;
   x=clamp(1+(x-1)*0.7+((h>>>0)/4294967296-0.5)*0.5,0.6,1.7);}return x;}   // (b2: diesel itself, $2.40-6.80/gal; it rose 68% in the year to Sep 2026)
 function fuelTick(){const wk=Math.floor(S.t/10080)+(S.fuelOff||0);if(S.fuelW===wk)return;S.fuelW=wk;S.fuel=fuelAt(S.fuelSeed!=null?S.fuelSeed:S.seed,wk);}
-function priceOf(g){let v=ECON.price[g]+P.priceAdd;if(g==="33HT"&&P.costMul>1)v+=(ECON.price["33HT"]-ECON.price["23m"])*(P.costMul-1);/* v5.0.5: survival only (costMul is 1 elsewhere) */if(S&&S.perk)v+=S.perk.price[g]||0;if(S&&S.fx)for(const f of S.fx)if(f.price)v+=(f.price[g]||0)+(f.price.all||0);return v;}
+function priceOf(g){let v=ECON.price[g]+P.priceAdd;if(g==="34Super"&&P.costMul>1)v+=(ECON.price["34Super"]-ECON.price["24"])*(P.costMul-1);/* v5.0.5: survival only (costMul is 1 elsewhere) */if(S&&S.perk)v+=S.perk.price[g]||0;if(S&&S.fx)for(const f of S.fx)if(f.price)v+=(f.price[g]||0)+(f.price.all||0);return v;}
 // (v5.2: the id lists are Sets built once; freqMul runs for every upset on every sim step)
 const FM_CLEAN=new Set(["lwplug","cscreen","fscreen","lcplug"]),FM_REL=new Set(["shaft","felt","fabric"]),FM_MON=new Set(["shaft","fabric","felt","dryerfire","slime"]);let FM_MAINT=null;
 function freqMul(id){let m=1;const MS=FM_MAINT||(FM_MAINT=new Set(MAINT));

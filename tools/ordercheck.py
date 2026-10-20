@@ -58,7 +58,7 @@ with sync_playwright() as pw:
     ok("on-time order at list, and marked delivered", abs(r["ont"] - r["exp_ont"]) < 1 and r["st2"] == "done")
 
     # --- 4. cancellation: an order 4+ days late is cancelled
-    r = pg.evaluate("""()=>{const P=__PM,S=P.S,X=P.OX,O=X.ordState();const o={id:++O.n,c:2,g:'26m',r:20,ld:0,sh:0,due:S.t-4.2*1440,t0:S.t-6*1440,st:'open'};O.list.push(o);
+    r = pg.evaluate("""()=>{const P=__PM,S=P.S,X=P.OX,O=X.ordState();const o={id:++O.n,c:2,g:'28',r:20,ld:0,sh:0,due:S.t-4.2*1440,t0:S.t-6*1440,st:'open'};O.list.push(o);
       const c0=O.k.canc;__run(5);return {st:o.st,canc:O.k.canc-c0}}""")
     ok("an order 4 days late is cancelled", r["st"] == "cancelled" and r["canc"] == 1, r)
 

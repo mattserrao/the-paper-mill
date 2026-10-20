@@ -162,7 +162,7 @@ function civApply(d,i,auto){const V=S.civ,id=d.id;V.seen[id]=1;if(d.kind!=="mete
   if(fx.warranty){if(civRng()<0.5)log("The vendor gave in: a free felt.","ok");else civFxAdd("civwarranty",{left:2880,mods:{breakMul:1.3}});}
   if(fx.grade)civFxAdd("civgrade",{left:fx.grade,mods:{pmDown:"squeezed-in grade change"}});
   if(id==="rush"&&i<2&&!S.plan.hot){const t=i===0?900:450,prem=i===0?90:60,pen=i===0?40:0;   // (v5.1 QA: a real order, like the old Hot order card)
-    S.plan.q.unshift({g:"33HT",t,i:3});S.plan.left=0;S.plan.hot={made:0};pend("rush",30*60,"rush",{t,prem,pen});civBanner(`Rush order: ${t} t of high-strength board due in 30 hours.`,true,"ORDER");}
+    S.plan.q.unshift({g:"34Super",t,i:3});S.plan.left=0;S.plan.hot={made:0};pend("rush",30*60,"rush",{t,prem,pen});civBanner(`Rush order: ${t} t of high-strength board due in 30 hours.`,true,"ORDER");}
   if(fx.posts)civFxAdd("civposts",{left:fx.posts,mods:{speedCap:0.9}});
   // the new upsets' base effect: a proper fix ends it, a cheap fix halves it, a shortcut leaves it
   if(CIVNEW[id]&&civFxGet(id)){if(tag==="P")civFxEnd(id);else if(tag==="Q")civFxGet(id).left/=2;}

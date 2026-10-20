@@ -472,11 +472,11 @@ const AUDIO=(()=>{
   return {setOn,setVol,update,sfx,ambient,cine,title,event:id=>sfx(EVSFX[id]||"alarm"),selfTest,level,get ctx(){return ctx;},get master(){return master;},get on(){return on;},get now(){return target==="title"?"Morning at the Mill":target==="intense"?"upset: "+(seqs.intense.cur?seqs.intense.cur.name:"")+" / "+AUDIO_NOW:AUDIO_NOW;},get info(){return ctx?ctx.state+" t="+ctx.currentTime.toFixed(1)+(stuckSince?" (clock stuck)":"")+(hurt?" (needs a tap)":"")+(unlocked?" unlocked "+((performance.now()-unlocked)/1000).toFixed(0)+"s ago":" never unlocked"):"none";}};
 })();
 
-const GRADES={ "23m":{sp:2736,bw:24.55}, "26m":{sp:2433,bw:26.06}, "30m":{sp:2222,bw:30.05}, "33HT":{sp:2084,bw:33.08} };
-// cost mix per grade: heavier, high-test grades need more strong DLK fiber, more starch and more drying steam (steam from PM3
-// 3rd-section steam by grade), and break less. Balanced so no grade earns more than ~5% over another at base level.
-// mix = campaign size range in tons; the market-driven planner runs the real grade wheel at roughly the PM3 grade mix.
-const GCOST={"23m":{dlk:0,steam:1,chem:0,brk:1.15,mix:[2600,3600]},"26m":{dlk:0.1,steam:1.02,chem:0,brk:1.25,mix:[80,160]},
-  "30m":{dlk:0.25,steam:1.14,chem:10,brk:0.75,mix:[150,350]},"33HT":{dlk:0.55,steam:1.11,chem:75,brk:0.55,mix:[800,1300]}};
+const GRADES={ "24":{sp:2632,bw:25.52}, "28":{sp:2262,bw:28.03}, "31":{sp:2147,bw:31.10}, "34Super":{sp:2027,bw:34.01} };   // (v6.7.1: speed x weight per grade, so t/h, is as before)
+// cost mix per grade: heavier, high-test grades need more strong DLK fiber, more starch and more drying steam (in line with
+// the dryers' 3rd-section base by grade), and break less. Balanced so no grade earns more than ~5% over another at base level.
+// mix = campaign size range in tons; the market-driven planner runs the real grade wheel at a typical containerboard grade mix.
+const GCOST={"24":{dlk:0,steam:1,chem:0,brk:1.15,mix:[2600,3600]},"28":{dlk:0.1,steam:1.02,chem:0,brk:1.25,mix:[80,160]},
+  "31":{dlk:0.25,steam:1.14,chem:10,brk:0.75,mix:[150,350]},"34Super":{dlk:0.55,steam:1.11,chem:75,brk:0.55,mix:[800,1300]}};
 const OCCG={occ11:{p:95,y:0.88},dlk:{p:150,y:0.93}}   // (v6.5: $18/t less: the haul is its own cost now, FR; b2: 2026 market level, was $142 / $197: claude/market-cost-benchmarks.md);
-const WHEEL=["23m","26m","30m","33HT","30m"];
+const WHEEL=["24","28","31","34Super","31"];

@@ -1,6 +1,19 @@
 # Changelog
 
 
+## v6.7.1 (2026-10-19): new grade set
+Built on test/v6.7.1-grades (as 6.7.1-t1), merged into main. Check: `tools/migcheck.py` (an older build's save continues on the new grades).
+- **Four new grades replace the old set, one for one:** 24 (light medium, 25.52 lb, 2,632 fpm), 28 (medium, 28.03 lb,
+  2,262 fpm), 31 (heavy medium, 31.10 lb, 2,147 fpm) and 34Super (high-strength board, 34.01 lb, 2,027 fpm). Each is a
+  little heavier than the grade it replaces and runs slower by the same fraction, so tons per hour are unchanged
+  (within 0.001%). Prices, cost mix, campaign sizes, cards and civics carry over to the new names.
+- **Quality specs follow the new targets** (±3%: 24 24.75–26.29, 28 27.19–28.87, 31 30.17–32.03, 34Super
+  32.99–35.03 lb/1000 ft²).
+- **Dryer base pressures are game values now:** 24 120, 28 127, 31 136, 34Super 133 kPa at the standard rate, +2.9 kPa
+  per extra t/h on 24. Comments and notes describe the model's own values only.
+- **Saves carry over:** a season or survival run saved before the update loads with its grades mapped to the new ones.
+- The archived builds in `test/` use the same grade set.
+
 ## v6.7.0 (2026-10-19): control room
 Built on test/v6.7-control (as 6.7.0-t1), merged into main. New code: `src/js/11d-tags.js` (the tag list and its history), `src/js/50f-control.js` (the
 trend pane, relationship analysis, the QCS, PLAN and WATER screens), `src/js/50h-pflow-more.js` (the process flow
@@ -173,8 +186,8 @@ Built on test/v6.5.4-dcs, merged into main with v6.5.5.
 
 ## v6.5.3 (2026-10-19): quality specs
 Built on test/v6.5.3-specs, merged into main.
-- **A spec sheet for every grade** (`QSPEC`, new 07e-quality.js): basis weight target ±3% (23m 23.81–25.29, 26m
-  25.28–26.84, 30m 29.15–30.95, 33HT 32.09–34.07 lb/1000 ft²), reel moisture 8 ±2% (6.0–10.0%), and the mill's
+- **A spec sheet for every grade** (`QSPEC`, new 07e-quality.js): basis weight target ±3% (24 24.75–26.29, 28
+  27.19–28.87, 31 30.17–32.03, 34Super 32.99–35.03 lb/1000 ft²), reel moisture 8 ±2% (6.0–10.0%), and the mill's
   color. The dryers' auto loop now holds 8% (was 7%), the middle of the spec; the DCS low-moisture alarm and the QCS
   and CD profile targets follow it.
 - **The QCS checks the reel every step**: weight from the grade and the machine chest's consistency swings, moisture from
@@ -203,7 +216,7 @@ Built on test/v6.5.2-knobs, merged into main.
   a0 + d1) held at its 30% top for a while trips it. Turning the 1st section down alone moves load to the 3rd, so it
   doesn't.
 - **DCS titles use the machine's name** (Settings, default PM1), as the process flow and the 3D label do; it was a
-  hard-coded PM3.
+  hard-coded machine name.
 - `tools/knobcheck.py` passes in full again (the three b5 failures: press loading low, 1st section low + refiner tight,
   1st section high alone). Untouched seasons take the same code path as before (no knob state); not re-measured.
 
@@ -236,7 +249,7 @@ Merges test/v6.5-twin (b1-b5 below) with an economy rebalance for the new realis
 - **Big-ticket upgrades ~30% cheaper**: robots $300k/$550k/$800k, warehouse $150k/$300k, pulper $250k/$450k, winder
   $220k/$400k, chest $100k/$200k, forklifts $150k/$300k, maintenance techs $100k/$180k/$260k, preventive maintenance
   $90k/$180k/$280k.
-- **Paper sells for $15/t less** (23m $642, 26m $662, 30m $680, 33HT $741): inactive play is punished most.
+- **Paper sells for $15/t less** (24 $642, 28 $662, 31 $680, 34Super $741): inactive play is punished most.
 - **Rounds worth more**: 3.5 days of warning (was 2.5; survival still loses 0.12 a wave), a caught repair costs 10% of
   the bill (was 25%).
 - Applied on the user's go-ahead; the confirming re-run was stopped early. A partial run (6 seeds) had rounds +$1.35M,
@@ -248,9 +261,9 @@ Merges test/v6.5-twin (b1-b5 below) with an economy rebalance for the new realis
 From claude/dryer-limit-spec.md and its review answers.
 - **Speed, grade and the wet end now load the dryers** (07d-dryer.js). Water to dry = paper t/h x water per ton (1.11 t/t
   at 44% press solids; the shoe press makes it 48%) x the wet end's water factor (the fiddly knobs). The 3rd section's
-  demand is calibrated on PM3 data: each grade's median pressure at its standard rate (23m 122, 26m 126, 30m 138,
-  33HT 135 kPa), +3.0 kPa per extra t/h on 23m, scaled by basis weight for the other grades.
-- **Ceiling 180 kPa** (PM3's 3rd section tops out at 171; raised so the game runs: hands-off seasons peak at 139, a
+  demand starts at each grade's base pressure at its standard rate (24 120, 28 127, 31 136,
+  34Super 133 kPa; v6.7.1 values), +2.9 kPa per extra t/h on 24, scaled by basis weight for the other grades.
+- **Ceiling 180 kPa** (set so the game runs: hands-off seasons peak at 139, a
   fully upgraded mill with the shoe press at 170). Below it the auto loop holds 7% moisture; above it the sheet goes wet
   (+0.15% per kPa short). Without the shoe press, heavy grades at full speed run damp but inside spec.
 - **A wet sheet fails the moisture spec (10%):** the paper goes to the beater and the crew slows the machine (1% a
@@ -309,7 +322,7 @@ From claude/market-cost-benchmarks.md (OCC indexes, DAT truckload, EIA power and
 - **OCC** at 2026 levels: OCC #11 $95/t (was $142 + haul), double-lined kraft $150 (was $197). The weekly OCC market
   moves up to ±$25 a week within ±$50 (was ±$15 within ±$30): 2026 indexes moved $30-45/t.
 - **Energy** $68/t base (was $95): a recycled mill buying its power at 2026 rates. Site, grade and upgrade effects as before.
-- **Paper prices** lowered by what that saves per ton, so profit is unchanged: 23m $657, 26m $677, 30m $695, 33HT $756.
+- **Paper prices** lowered by what that saves per ton, so profit is unchanged: 24 $657, 28 $677, 31 $695, 34Super $756.
 - **Diesel** is now diesel: a weekly walk of $2.40-6.80/gal (it rose 68% in the year to Sep 2026), worth 26% of a truck
   rate (DAT's fuel share), so freight rates swing about ±18%. The twin shows diesel in $/gal.
 - **Desert** long haul to customers is +$20/t outbound freight (was +$7); cheap land now saves $480/h (was $250).
@@ -784,7 +797,7 @@ nobody touches them plays exactly as before (same seeded checksum `272b1f02`, de
   back at your speed when you close it.
 - **Fiddly knobs view** (Settings → View): the mill washes out and only the red knobs and their labels stay, including
   the spider valve and the headbox slice. Tap one to open it.
-- Base values on the screens follow PM3 run data (reel speed, basis weight and 3rd section steam by grade).
+- Base values on the screens follow each grade's standard (reel speed, basis weight and 3rd section steam).
 - Season, survival and free play; not in zen mode.
 - Tools: `knobcheck.py` (new); `smoke.py`, `settingscheck.py`, `savecheck.py`, `speedcheck.py` follow the v5.1 start
   flow again (leader picker; civics choices cleared while waiting for an outage).
@@ -834,7 +847,7 @@ Test branch only, not released. Four civics meters (Economy, Labor, Machinery, C
   - Bugs: the bird cut-scene stays paused if a card or dialog opened; phone meter chips show a ▲/▼ trend; Invest/Hold/Decline labels match the option names; renting forklifts is $10k; the survival picker words Chip's lock for waves; Chip's season fiber lock never costs more than the market and re-prices when it ends; version v5.1.0; phone cash and profit fit beside the grade badge.
   - Balance: price premium Economy −15, discount +9; warning fixes cost $35k; Chip's pay settlements +10% per deal; community choices give +6; an answered upset can't return for 2 days; a cheap fix always costs one tier less than the proper fix.
   - Screens: event cards and the outage plan draw under the pause menu, and its keys work over a card; the report card waits for a pending toast; a tutorial card for the leader and the meters; 44 px tap targets; the leader card and outage dialog list only the current or incoming leader's running cost; a Civics row and meter summary on report cards and the end screen; perks on the Change-leader panel; dock upgrade text once the bottleneck is fixed; mill names use letters, numbers, spaces and . _ ' - &.
-  - Wording: fiber lock line, price setting band, plant-manager note, season chip label, plain short labels on the chip, no line break after a minus sign, plain words for "Scabs", "30m" and "33HT" on cards (the grade picker shows both).
+  - Wording: fiber lock line, price setting band, plant-manager note, season chip label, plain short labels on the chip, no line break after a minus sign, plain words for "Scabs", "31" and "34Super" on cards (the grade picker shows both).
 
 ## v5.0.6 (release, 2026-10-14): fixes and polish from the 100-run survival QA
 From the v5.0.5 QA report (100 bot runs and four agent players). Online, run `supabase/name-filter-v2.sql` once so the boards fold look-alike names too.
@@ -875,7 +888,7 @@ The first feature-lock release: it gathers v5.0.3 and v5.0.4 below (not released
 - **Escape** closes the report card.
 - **Dot:** she only rolls on breakdowns with a repair bill of $100k or more (no dice drawn for cheaper ones), her FIXED banner replaces the breakdown's own, and what she saves shows on her card ("saving $179k") and the game-over screen. Weather and the roof leak say "repaired it and made it safer" instead of "fixed at the root".
 - **Hank:** dryer tunings after the 4th cut steam by half as much (2.75%); the outage dialog shows the current amount.
-- **33HT** no longer sells at a loss late in a survival run: its premium over 23m rises with the wave's cost multiplier (seasons unchanged).
+- **34Super** no longer sells at a loss late in a survival run: its premium over 24 rises with the wave's cost multiplier (seasons unchanged).
 - **Profit per day** is averaged over the last 3 days, and in survival the label turns into "~8d left" (days to bankruptcy at that rate) once it's under 15 days.
 - **Top-bar grade** shows the last report card's grade until the new period has a day of data.
 - **Desktop:** the mill name gives way, so the clock and wave/day are never cut off.
@@ -1122,7 +1135,7 @@ warehouse) is unchanged; everything around it now depends on where you build and
 ### Bottleneck
 - Every run has one **bottleneck area**, drawn from the run's seed (a season week gives every player the same one):
   receiving docks, pulper, screens & cleaners, winder or shipping docks. It starts at 70–82% of what the machine needs
-  (about 25–28 t/h against 35 t/h on 23m), set per area so a hands-off season loses about the same with each.
+  (about 25–28 t/h against 35 t/h on 24), set per area so a hands-off season loses about the same with each.
 - A banner names it at the start; its section label is outlined in red; Upgrades opens with a bottleneck card and a
   **Line capacity** chart (each area's t/h against the machine's).
 - The upgrades that fix it are 25% off and marked: pulper rotor (+30 t/h per level), screens & cleaners (+18 t/h of
@@ -1145,7 +1158,7 @@ warehouse) is unchanged; everything around it now depends on where you build and
   The camera is clamped above scenery, so a sweep over city blocks or mesas rises over them.
 
 ### Economy
-- Paper prices go back up to $713 / $733 / $753 / $813 per ton (23m / 26m / 30m / 33HT; v4.0.2: $625–725) because every
+- Paper prices go back up to $713 / $733 / $753 / $813 per ton (24 / 28 / 31 / 34Super; v4.0.2: $625–725) because every
   run now starts with a bottleneck. A hands-off season still breaks even with the environment upsets in: 15 seasons per
   environment average −$95k (rural), +$13k (urban), −$38k (desert), −$22k (swamp). No bankruptcies.
 - The seeded 3-day checksum changes to **`81890238`** (rural, mill #1; the default site and the autotest's). Other
@@ -1424,7 +1437,7 @@ Economy rebalance and smoother screens when many upsets happen at once.
 - A season played hands-off (every offer declined, standard outage budgets, no upgrades) now breaks even instead of
   making about $1.4M. Profit comes from running the mill well. Measured over 15 simulated seasons: average finish
   $2.00M from the $2.0M start (before: $3.43M over 10 seasons).
-- Paper sells for $89/t less: 23m $625, 26m $645, 30m $665, 33HT $725 per ton.
+- Paper sells for $89/t less: 24 $625, 28 $645, 31 $665, 34Super $725 per ton.
 - Outage budgets per area are $20k / $70k / $170k (were $50k / $100k / $200k), with the same reliability effects.
 - The seeded 3-day checksum changes to `810f617a` (cash is part of it); upsets, breaks and production are unchanged.
 

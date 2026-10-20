@@ -89,7 +89,7 @@ function step(dt){
     {const kf=knobOff();if(kf>0)off=Math.min(prod,off+(prod-off)*kf);}   // v5.6: a moved knob sending part of the reel to the beater (defects other than weight and moisture)
     // (v6.5.3: off-spec paper stays on the reel as beater and is wound into beater rolls; before, it vanished here)
     if(off>0){pfW("broke",off);S.tot.broke+=off;S.q.off+=off;prod-=off;beat=off;}
-    if(S.plan.hot&&C.grade==="33HT")S.plan.hot.made+=prod;
+    if(S.plan.hot&&C.grade==="34Super")S.plan.hot.made+=prod;
     if(S.pf&&prod>0)pfW("val",prod*priceOf(C.grade));}
   qLog(dt,beat);   // v6.7 the off-spec log (07e)
   S.reel+=prod+beat;lotPut(S.lots.reel,C.grade,prod);lotPut(S.lots.reel,"beater",beat); S.tot.prodT+=prod; {const pt=P.K*C.pmSp.v*g.bw*dt/60;S.tot.pot+=pt;pfW("pot",pt);}   // (v6.7: potential tons at the setpoint speed, by the hour, for the process flow)

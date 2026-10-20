@@ -67,7 +67,7 @@ function siteSave(env){try{localStorage.setItem("paper-mill-site",JSON.stringify
 // gameplay effect of the environment (sim; applied in applyUpgrades). The site of the loaded scene is the one in play.
 const ENVX=()=>ENVS[SITE.env]||ENVS.rural;
 // ---- bottleneck: one area starts well short of the paper machine's rate. Its capacity is BNK[area] of what the machine
-// needs on 23m at standard speed (set per area so a hands-off season loses about the same with each); the upgrades for
+// needs on 24 at standard speed (set per area so a hands-off season loses about the same with each); the upgrades for
 // that area are 25% off and fix it (BN[].ups)
 const BNK={recv:0.70,pulper:0.82,screens:0.81,winder:0.80,ship:0.80},BN_DISC=0.25;
 const BN={
@@ -85,12 +85,12 @@ const BN_IDS=["recv","pulper","screens","winder","ship"];
 // the run's bottleneck follows from its seed (a hash, so no sim stream is drawn)
 function bnFor(seed){let h=(seed>>>0)^0x2545f491;h=Math.imul(h^(h>>>16),0x45d9f3b);h=Math.imul(h^(h>>>16),0x45d9f3b);h^=h>>>16;return BN_IDS[(h>>>0)%BN_IDS.length];}
 const BNQ=()=>(S&&BN[S.bn])?S.bn:null;
-// what the machine needs at standard speed on 23m (t/h of paper), the yardstick for every capacity
-const NEED23=()=>BASE.K*GRADES["23m"].sp*GRADES["23m"].bw;
+// what the machine needs at standard speed on 24 (t/h of paper), the yardstick for every capacity
+const NEEDREF=()=>BASE.K*GRADES["24"].sp*GRADES["24"].bw;
 function upCost(u,l){const c=u.lv[l];const b=BNQ();return b&&BN[b].ups.includes(u.id)?Math.round(c*(1-BN_DISC)/1000)*1000:c;}
 function upFix(u){const b=BNQ();return !!(b&&BN[b].ups.includes(u.id));}
 // capacities that a bottleneck can cut (called from applyUpgrades)
-function applySite(){const E=ENVX(),b=BNQ(),need=NEED23(),fiber=need/P.pmLoss,feed=fiber/OCCG.occ11.y;
+function applySite(){const E=ENVX(),b=BNQ(),need=NEEDREF(),fiber=need/P.pmLoss,feed=fiber/OCCG.occ11.y;
   P.siteOcc=0;P.sitePrice=0;P.siteHaul=E.occ;P.siteFreight=-E.price;   // v6.5: the site's OCC and price adders are now its freight (haul in, freight out)
   P.siteEnergy=E.energy+E.chem;P.siteChem=E.chem;P.siteWage=E.wage;P.siteOver=E.over;P.siteWx=E.wx;P.siteIn=E.inMul;
   // receiving: unloading per door (t/h); normal docks never limit

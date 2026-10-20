@@ -107,7 +107,7 @@ function hayout(a=rand("upx"),b=rand("upx")){AUDIO.sfx("hayout",600);S.wd="hayou
   log(`Winder hayout: ${loss.toFixed(1)} t of paper to the beater`,"bad");}
 function initCtrl(){
   C={inRate:{v:1.8,auto:true},drivers:{v:3,auto:true},pulper:{v:40,auto:true},lvlTarget:{v:69},lowLevel:{v:30},
-     pmSp:{v:2736,auto:true},rollW:{v:100/8},loaders:{v:2,auto:true},outRate:{v:1,auto:true},grade:"23m",breaks:true,hays:true,wdr:{v:45,auto:true},simSpeed:10};
+     pmSp:{v:2632,auto:true},rollW:{v:100/8},loaders:{v:2,auto:true},outRate:{v:1,auto:true},grade:"24",breaks:true,hays:true,wdr:{v:45,auto:true},simSpeed:10};
 }
 function initState(){
   S={date0:new Date().setHours(0,0,0,0),wx:"clear",wxLeft:360,wet:0,crewQ:[],brkType:"dryer",breakTotal:1,hayTotal:1,t:0,yard:700,tank:0.69*P.tankCap,fg:40,pmSpeed:C.pmSp.v,pm:"run",breakLeft:0,reel:8,winderBuf:0,winderAcc:0,
@@ -133,7 +133,7 @@ function initState(){
 // season week face the same dice at the same sim time: upsets, sheet breaks, hayouts, weather, truck timing
 function seedRun(seed){S.seed=seed>>>0;const k=S.seed;S.bn=bnFor(S.seed);S.rng={plan:k^0x9e3779b9,card:k^0x85ebca6b,up:k^0x27d4eb2f,upx:k^0x165667b1,
     brk:k^0xd3a2646c,brkx:k^0xfd7046c5,hay:k^0xb55a4f09,wx:k^0x7feb352d,flow:k^0x846ca68b,lead:k^0x2c1b3c6d};
-  C.grade="23m";const c=GCOST["23m"];
+  C.grade="24";const c=GCOST["24"];
   S.plan={i:0,q:[],cur:null,left:c.mix[0]+rand("plan")*(c.mix[1]-c.mix[0]),mkt:0,mktLeft:7*1440,disc:null,hot:null};
   S.cards={next:1440*(1+0.5*rand("card")),open:null,pend:[],seen:{}};applyUpgrades();
   ordInit();}   // v6.6: the order book for the run (its own dice streams, ord and bale; 05b)

@@ -31,7 +31,7 @@ No condition had a bankruptcy. Worst single season in condition 3: finish −$65
 
 ## Reading
 
-- **Recommended setting: condition 3.** Sales prices −$89/t (23m $625, 26m $645, 30m $665, 33HT $725) and outage
+- **Recommended setting: condition 3.** Sales prices −$89/t (24 $625, 28 $645, 31 $665, 34Super $725) and outage
   budgets $20k / $70k / $170k per area. Over 15 seasons a hands-off player finishes at $2.00M: break-even.
 - Season-to-season luck is large (SD ≈ $0.9–1.1M per season), so a 5-run average carries about ±$400k of noise and a
   10-run average about ±$340k. ±$100k is only meaningful on the combined 15 runs; ±$500k is the realistic test for a
