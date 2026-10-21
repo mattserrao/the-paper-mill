@@ -193,7 +193,7 @@
   const nameCount=()=>{const i=$("v2name"),c=$("v2nameCount");if(!i||!c)return;const n=i.value.length;c.textContent=n+"/32";c.classList.toggle("full",n>=32);};   // v5.0.6
   $("v2name").addEventListener("input",nameCount);
   $("v2rename").addEventListener("click",()=>{$("v2nameRow").hidden=false;const i=$("v2name");i.value=MILL.name;nameCount();i.focus();i.select();});
-  const saveName=()=>{const i=$("v2name");{const r=renameMill(i.value);if(r===false||r==="chars"){i.value="";i.placeholder=r==="chars"?"Letters, numbers, spaces and . _ ' - & only":"That name is not allowed";i.focus();return;}}i.placeholder="";$("v2nameRow").hidden=true;sync();};
+  const saveName=()=>{const i=$("v2name");{const r=renameMill(i.value);if(r===false||r==="chars"||r==="empty"){i.value="";i.placeholder=r==="empty"?"Type a name for your mill":r==="chars"?"Letters, numbers, spaces and . _ ' - & only":"That name is not allowed";i.focus();return;}}i.placeholder="";$("v2nameRow").hidden=true;sync();};
   $("v2nameOk").addEventListener("click",saveName);$("v2name").addEventListener("keydown",e=>{if(e.key==="Enter")saveName();if(e.key==="Escape")$("v2nameRow").hidden=true;});
   {let arm=0;$("v2reset").addEventListener("click",()=>{const b=$("v2reset");if(Date.now()-arm<3000){newGame();arm=0;b.firstChild.textContent="Reset mill";play();return;}arm=Date.now();b.firstChild.textContent="Tap again to reset";setTimeout(()=>{b.firstChild.textContent="Reset mill";},3000);});}
   const fsEl=document.documentElement;

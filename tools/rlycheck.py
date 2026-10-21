@@ -32,6 +32,8 @@ with sync_playwright() as pw:
 
     r = J("()=>{const P=__PM,R=P.rly.state();return {n:P.rly.ASSETS.length,ok:P.rly.ASSETS.every(A=>{const a=R.a[A.id];return a.vib>0&&a.adx>0&&a.dh>0}),on:P.rly.on(),e:!!P.manShift(0).elec}}")
     ok("ten assets with bearing, motor and drive health; on in a season; an electrical tech on the roster", r["n"] == 10 and r["ok"] and r["on"] and r["e"], json.dumps(r))
+    r = J("()=>{const R=__PM.rly.state();return __PM.rly.ASSETS.map(A=>Math.round(R.a[A.id].dh))}")
+    ok("v6.10.1: three drives start part-worn (35-60%), the rest 75-100%", sum(1 for v in r if 35 <= v <= 60) == 3 and sum(1 for v in r if v >= 75) == 7, json.dumps(r))
 
     # one shift: every tech's vibration round and the ADX round run (nothing else going on)
     r = J("""()=>{const P=__PM,S=P.S;P.CH.on=false;while(S.t<720+400)P.step(P.SIM_STEP);const L=S.rel.rd.list;
@@ -181,6 +183,10 @@ with sync_playwright() as pw:
     ok("t5: opening the MCC main incomer draws an arc flash: every drive loses DC, the machine stops, the electrical tech resets it and the incomer is closed again", r["on"] and r["nodc"] == 10 and r["pm"] and r["ne"] and r["kw"] == 0 and r["cleared"] and r["closed"] == 1 and r["after"] == 0, json.dumps(r))
     r = J("()=>['bearingfail','motorfail','drivefail','rectfail','arcflash'].map(id=>!!document.getElementById('ev-'+id))")
     ok("t5: the new upsets are in the Upsets tab", all(r), json.dumps(r))
+
+    # v6.10.1: the refiner upgrade raises the refiner drives' rating; three drives start part-worn
+    r = J("""()=>{const P=__PM,S=P.S,k0=P.rly.kwOf('refA');S.up.refiner=1;const k1=P.rly.kwOf('refA');S.up.refiner=0;return {k0,k1,pulp:P.rly.kwOf('pulp')}}""")
+    ok("v6.10.1: the refiner upgrade fits refiner drives 30% bigger (other drives unchanged)", r["k0"] == 1500 and r["k1"] == 1950 and r["pulp"] == 1100, json.dumps(r))
 
     # zen: none of it
     r = J("()=>{const P=__PM;P.S.zen=true;const on=P.rly.on();P.S.zen=false;return on}")

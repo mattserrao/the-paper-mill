@@ -1,6 +1,14 @@
 # Changelog
 
 
+## v6.10.1-t1 (2026-10-21): polish (test build)
+Picked by the user from the post-release list.
+- **Drive wear:** drives wear slower (base wear 0.15 a day, was 0.25; lightning and the bird on the line knock 3–10% off each drive, was 8–26%; a brownout 1–4%, was 3–9%), so 0% means a drive near its end. Fault odds climb steeply when worn (about 2× at 40%, 4× at 20%, 11× at 0%). Three drives (picked by the run's seed) start part-worn at 35–60%.
+- **Refiner power upgrade** fits bigger refiner motors and drives: +30% rating, so the refiner drives run about 75% loaded instead of 93–99% after the throughput upgrades.
+- **Relationship map:** a new 480 V bus tag (the main incomer) between the 13.8 kV feeder and the three DC buses, and the main incomer as a knob driver.
+- A blank mill rename says "Type a name for your mill" instead of doing nothing.
+- civcheck waits for the civics meter bar to draw before checking it (it flaked under load).
+
 ## v6.10.0 (2026-10-20): The Reliability and Electrical Update
 Release of test builds t1–t5 (below). Plan: claude/reliability-v610-plan.md; QA: claude/qa-v610-t3.md.
 - Ten critical VFD motors with bearing, motor and drive health, fed from three drive lineups in a new MCC building (115 kV → 13.8 kV → 480 V → ~650 V DC).

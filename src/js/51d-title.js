@@ -151,7 +151,7 @@ function camPullOn(){try{return localStorage.getItem("paper-mill-campull")!=="of
     $t("tsBoard").addEventListener("click",()=>openBoard());
     $t("tsColors").addEventListener("click",()=>{rollMill();welcome();$t("tsNote").textContent="New colors: "+MILL.name;});
     $t("tsName").addEventListener("click",()=>{$t("tsNameRow").hidden=false;const i=$t("tsNameIn");i.value=MILL.name;i.focus();i.select();});
-    const saveName=()=>{const i=$t("tsNameIn"),r=renameMill(i.value);if(r===false||r==="chars"){i.value="";i.placeholder=r==="chars"?"Letters, numbers, spaces and . _ ' - & only":"That name is not allowed";i.focus();return;}
+    const saveName=()=>{const i=$t("tsNameIn"),r=renameMill(i.value);if(r===false||r==="chars"||r==="empty"){i.value="";i.placeholder=r==="empty"?"Type a name for your mill":r==="chars"?"Letters, numbers, spaces and . _ ' - & only":"That name is not allowed";i.focus();return;}
       $t("tsNameRow").hidden=true;welcome();$t("tsNote").textContent="Renamed: "+MILL.name;};
     $t("tsNameOk").addEventListener("click",saveName);$t("tsNameIn").addEventListener("keydown",e=>{if(e.key==="Enter")saveName();});
     $t("tsFs").addEventListener("click",()=>{const d=document.documentElement;if(document.fullscreenElement)document.exitFullscreen().catch(()=>{});else if(d.requestFullscreen)d.requestFullscreen().catch(()=>{});else $t("tsNote").textContent="On iPhone: tap Share, then Add to Home Screen to play fullscreen.";});}

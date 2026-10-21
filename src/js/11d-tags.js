@@ -78,7 +78,7 @@ const TAGS=[
   ["dl_fan","Fan pump drive load","DRV","%",r=>rlyLoad("fan",r),""],["dl_couch","Couch roll drive load","DRV","%",r=>rlyLoad("couch",r),""],["dl_pr1","1st press drive load","DRV","%",r=>rlyLoad("pr1",r),""],
   ["dl_pr2","2nd press drive load","DRV","%",r=>rlyLoad("pr2",r),""],["dl_dry","Dryer section drive load","DRV","%",r=>rlyLoad("dry",r),""],["dl_reel","Reel drum drive load","DRV","%",r=>rlyLoad("reel",r),""],
   ["dl_wind","Winder drum drive load","DRV","%",r=>rlyLoad("wind",r),""],["mcckw","MCC drive power","DRV","kW",r=>rlyMccKw(r),""],
-  ["mvkv","13.8 kV feeder","DRV","kV",()=>rlyMV(),""],["dc_SP","MCC-1 DC bus","DRV","V",()=>rlyDC("SP"),""],["dc_PM","MCC-2 DC bus","DRV","V",()=>rlyDC("PM"),""],["dc_WD","MCC-3 DC bus","DRV","V",()=>rlyDC("WD"),""]];
+  ["mvkv","13.8 kV feeder","DRV","kV",()=>rlyMV(),""],["lv480","MCC 480 V bus (main incomer)","DRV","V",()=>rlyLV(),""],["dc_SP","MCC-1 DC bus","DRV","V",()=>rlyDC("SP"),""],["dc_PM","MCC-2 DC bus","DRV","V",()=>rlyDC("PM"),""],["dc_WD","MCC-3 DC bus","DRV","V",()=>rlyDC("WD"),""]];
 const TAGI=Object.fromEntries(TAGS.map((t,i)=>[t[0],i]));
 const tagName=id=>{const t=TAGS[TAGI[id]];return t?t[1]:id;};
 const tagUnit=id=>{const t=TAGS[TAGI[id]];return t?t[3]:"";};
