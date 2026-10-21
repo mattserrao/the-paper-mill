@@ -123,7 +123,7 @@ function camPullOn(){try{return localStorage.getItem("paper-mill-campull")!=="of
     setTimeout(()=>{if(u===location.pathname+location.search+location.hash)location.reload();else location.href=u;},250);});
   // ---- settings ----
   const tog=(id,label,sub,on)=>`<label class="trow"><span><b>${label}</b>${sub?`<small>${sub}</small>`:""}</span><input type="checkbox" class="tsw" id="${id}"${on?" checked":""}/></label>`;
-  const gfxCap=g=>g[0].toUpperCase()+g.slice(1),GFX_TIP={auto:"Picked from your device",bare:"Bare bones: flat colours, no shadows, no scenery or ambient life, 30 FPS",low:"1024 shadows, 10 Hz, lighter scenery",medium:"1024 shadows, 15 Hz",high:"2048 softer shadows, 24 Hz, full scenery",ultra:"4096 softer shadows, every frame, dense scenery with far shadows"};
+  const gfxCap=g=>g[0].toUpperCase()+g.slice(1),GFX_TIP={auto:"Picked from your device",bare:"Bare bones: flat colors, no shadows, no scenery or ambient life, 30 FPS",low:"1024 shadows, 10 Hz, lighter scenery",medium:"1024 shadows, 15 Hz",high:"2048 softer shadows, 24 Hz, full scenery",ultra:"4096 softer shadows, every frame, dense scenery with far shadows"};
   function paintSet(){let vol=70;try{vol=+(localStorage.getItem("paper-mill-vol")||70);}catch(e){}
     const tut=(()=>{try{return localStorage.getItem("paper-mill-tutorial")!=="off";}catch(e){return true;}})(),sh=$("viewShadows");
     $t("tSetBody").innerHTML=`<div class="tsub">Sound</div>${tog("tsSound","Sound","music and mill sounds",soundPref==="on")}

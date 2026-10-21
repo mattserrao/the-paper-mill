@@ -34,7 +34,7 @@ function rcLimit(){const M=S.M||{},starved=()=>S.yard<P.yardCap*0.04||M.noIn||M.
   if(S.pmSpeed<C.pmSp.v*0.97*(M.speedCap||1)&&S.tank<P.tankCap*0.3)return starved();return "Machine at full speed";}
 function rcGrade(v,cut){return ["A","B","C","D","F"][cut.findIndex(c=>v>=c)<0?4:cut.findIndex(c=>v>=c)];}
 function rcSum(a){const L=S.ledger,d=k=>(L[k]||0)-(a.L0[k]||0),prod=S.tot.prodT-a.prod0,ship=(S.shipT||0)-a.ship0,run=Math.max(1,a.min-a.plan),days=Math.max(0.1,a.min/1440);
-  const ops=["occ","frin","frout","energy","labor","overhead","premium"].reduce((t,k)=>t+d(k),0),spent={Fiber:d("occ"),Energy:d("energy"),Labour:d("labor"),Overhead:d("overhead"),"Freight & insurance":d("premium")+d("frin")+d("frout"),"Repairs & outages":d("repairs"),Upgrades:d("upgrades")};
+  const ops=["occ","frin","frout","energy","labor","overhead","premium"].reduce((t,k)=>t+d(k),0),spent={Fiber:d("occ"),Energy:d("energy"),Labor:d("labor"),Overhead:d("overhead"),"Freight & insurance":d("premium")+d("frin")+d("frout"),"Repairs & outages":d("repairs"),Upgrades:d("upgrades")};
   const rev=d("rev"),deals=d("deals");spent["Deals & trials"]=Math.max(0,-deals);const cv=d("civ");spent.Civics=Math.max(0,cv);   // v5.0.6: a net cost from event cards gets its own row, so the rows add up to Net
   const earned=rev+Math.max(0,deals)+Math.max(0,-cv),spentT=Object.values(spent).reduce((t,v)=>t+v,0),net=earned-spentT;
   const rel={};RC_SEC.forEach(([k])=>rel[k]=a.up[k]/run);const relAvg=RC_SEC.reduce((t,[k])=>t+rel[k],0)/RC_SEC.length;
@@ -106,7 +106,7 @@ function endSeason(bust){const se=S.season;civDrop();se.done=true;se.on=false;ru
   const st=[["Net profit",money(r.score),"big"],["Tons shipped",f0(r.tons)+" t"],["Upsets survived",String(r.incidents)],["Rolls made",String(S.tot.rolls)],["Season grade",g[1]+" · "+g[2]],["Output",Math.round(eff*100)+"% of max-speed tons"]];
   if(S.civ&&S.civ.m&&!S.free&&civSummary(S.civ.m))st.push(["Civics",civSummary(S.civ.m),"wide"]);   // v5.1 QA2
   if(S.lead)st.push(["Mill leader",LEADERS[S.lead.id].name+(S.lead.was?" (after "+LEADERS[S.lead.was].name+")":""),"wide"]);   // v5.1: seasons have leaders too
-  {const ts=tellEndStat();if(ts)st.push(ts);}   // v5.7 catching failures early
+  {const ts=tellEndStat();if(ts)st.push(ts);}{const rs=rlyEndStat();if(rs)st.push(rs);}   // v5.7 catching failures early
   $("so-stats").replaceChildren(...st.map(([k,v,c])=>{const d=document.createElement("div");if(c)d.className=c;const a=document.createElement("span");a.textContent=k;const b=document.createElement("b");b.textContent=v;d.append(a,b);return d;}));
   {const c=bust?null:rcFinal(),box=$("so-rc");if(box){if(c){box.hidden=false;box.innerHTML=`<div class="rcmini"><div class="rcg g${c.overall}">${c.overall}</div><div><b><span class="nw">Days ${c.from}–${c.to}</span> report card</b><small>${Object.entries(c.g).map(([k,v])=>k+" "+v).join(" · ")}</small><p>${c.tip}</p></div></div><button id="so-rcbtn" class="ghost">Open the full report card</button>`;
       $("so-rcbtn").addEventListener("click",()=>rcOpen(c,true));}else box.hidden=true;}}
@@ -162,14 +162,18 @@ async function openBoard(tab){if(tab!=="season"&&tab!=="surv")tab=survRun()?"sur
   $("lb-sub").textContent=note||(sv?"Top 100 · survival runs · ranked by time survived":"Top 100 · 30-day seasons · ranked by net profit");
   if(!rows.length){L.replaceChildren(Object.assign(document.createElement("div"),{className:"lbempty",textContent:sv?"No scores yet. Start a survival run and set the bar.":"No scores yet. Start a season and set the bar."}));return;}
   let me="";try{me=localStorage.getItem("paper-mill-player")||"";}catch(e){}
-  const se0=S.season,thisRun=!!(se0&&se0.rank&&se0.result&&se0.submitted&&(tab==="surv")===!!se0.surv);   // v5.0.6: just submitted here → only that run's row is marked (below), not every row with the name
+  const se0=S.season,thisRun=!!(se0&&se0.result&&se0.submitted&&(tab==="surv")===!!se0.surv);   // v5.0.6: just submitted here → only that run's row is marked (below), not every row with the name
   L.replaceChildren(...rows.map((r,i)=>{const d=document.createElement("div");d.className="lbrow"+(!thisRun&&me&&r.name===me?" me":"");
     const mk=(c,t)=>Object.assign(document.createElement("span"),{className:c,textContent:t});
     const dt=r.created_at?new Date(r.created_at).toLocaleDateString(undefined,{month:"short",day:"numeric"}):"";
     d.append(mk("r",i+1),mk("n",r.name),mk("sc",sv?survTime(r.minutes):money(r.score)),mk("m",[sv?"wave "+r.wave:"",f0(r.tons)+" t shipped",(r.incidents??"")+" upsets",dt,r.mill].filter(Boolean).join(" · ")));return d;}));
   // v5.0.5: this run's row is marked and scrolled into view; outside the top 100 it is pinned at the bottom
-  {const se=S.season,rk=se&&se.rank,res=se&&se.result;if(rk&&res&&se.submitted&&(tab==="surv")===!!se.surv){if(rk.rank<=rows.length){const row=L.children[rk.rank-1];if(row){row.classList.add("me","mine");row.scrollIntoView({block:"center"});}}
-    else{const d=document.createElement("div");d.className="lbrow me mine pin";const mk=(c,t)=>Object.assign(document.createElement("span"),{className:c,textContent:t});
+  // (v6.10 t4: found by its own numbers, so a better older run under the same name isn't the one marked)
+  {const se=S.season,rk=se&&se.rank,res=se&&se.result;if(res&&se.submitted&&(tab==="surv")===!!se.surv){const near=(x,y)=>Math.abs((+x||0)-(+y||0))<1.01;
+    const idx=rows.findIndex(r=>r.name===se.submitted&&(sv?near(r.minutes,res.minutes):near(r.score,res.score))&&near(r.tons,res.tons));
+    if(idx>=0){const row=L.children[idx];if(row){row.classList.add("me","mine");row.scrollIntoView({block:"center"});}}
+    else if(rk&&rk.rank<=rows.length){const row=L.children[rk.rank-1];if(row){row.classList.add("me","mine");row.scrollIntoView({block:"center"});}}
+    else if(rk){const d=document.createElement("div");d.className="lbrow me mine pin";const mk=(c,t)=>Object.assign(document.createElement("span"),{className:c,textContent:t});
       d.append(mk("r",rk.rank),mk("n",se.submitted),mk("sc",sv?survTime(res.minutes):money(res.score)),mk("m",[sv?"wave "+res.wave:"",f0(res.tons)+" t shipped",res.incidents+" upsets",new Date().toLocaleDateString(undefined,{month:"short",day:"numeric"}),"your run",res.mill].filter(Boolean).join(" · ")));L.append(d);d.scrollIntoView({block:"center"});}}}}
 function setFree(on){S.free=on;if(!on)S.afk=false;if(on)civDrop();   // (v5.1 QA: a choice card would otherwise keep the game paused)
   if(on&&S.season&&S.season.on){const sv=survRun();if(G3.save&&G3.save.drop)G3.save.drop();S.season=null;S.lead=null;applyUpgrades();seasonLocks(false);BANNERS.push({text:(sv?"Survival run":"Season")+" abandoned: free play scores can't go on the leaderboard.",t:null});}
@@ -211,7 +215,7 @@ function updateChaos(){
   const act=$("c-active");act.replaceChildren();
   if(!S.inc.length){const s=document.createElement("span");s.className="none";s.textContent="No active upsets.";act.appendChild(s);}
   S.inc.forEach(i=>{const d=document.createElement("div");d.className="it";d.textContent=EV[i.id].name;const sm=document.createElement("small");
-    const cs=incState(i)||(MNEED(i.id)?"maintenance working":QINC(i.id)?crewState(i.id):"");sm.textContent=`${(i.left/60).toFixed(1)} h left${cs?" · "+cs:""}${i.note?" · "+i.note:""}`;d.appendChild(sm);act.appendChild(d);});
+    const cs=incState(i)||(MNEED(i.id)?"maintenance working":QINC(i.id)?crewState(i.id):"");sm.textContent=`${i.stage==="wait"||i.stage==="found"?"awaiting decision":(i.left/60).toFixed(1)+" h left"}${cs?" · "+cs:""}${i.note?" · "+i.note:""}`;d.appendChild(sm);act.appendChild(d);});
   EVENTS.forEach(e=>{const b=$("ev-"+e.id),i=S.inc.find(x=>x.id===e.id);if(!b)return;b.setAttribute("aria-pressed",i?"true":"false");
     b.querySelector("small").textContent=i?`${(i.left/60).toFixed(1)} h`:"";b.title=i?"Click to clear this upset":"Click to trigger now";});
   const k=S.feed.length+"|"+(S.feed[0]?S.feed[0].t:"");

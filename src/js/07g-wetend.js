@@ -29,7 +29,7 @@
    Bale water: wet bales thin the pulper; the dilution loop takes the water back out over WE.cpTau minutes.
    Cleaners and screens: pressure drop builds with dirty bales (and a fine screen with its load); past a clean level
    the rejects carry good fiber with them, so the yield falls. */
-const WE={hbc:0.8,mc0:3.2,dead:3,tauI:8,trimMin:-0.10,trimMax:0.05,valveMax:100,
+const WE={lwM:1.03,lwTau:45,hbc:0.8,mc0:3.2,dead:3,tauI:8,trimMin:-0.10,trimMax:0.05,valveMax:100,
   silo:60000/264.172,over:0.85,makeL:0.25,make:120,cav:0.15,trip:0.08,tripMin:30,refill:0.6,seal0:0.18,sealK:0.006,
   kwh0:60,kwhMin:20,kwhMax:130,rctK:0.0045,rctStk:0.05,rctDraw:0.04,rctSpec:0.97,prem:0.5,premMax:0.05,kwhCost:0.07,
   cpK:0.12,cpTau:20,dirt:0.8,dirtRef:0.1,rejOn:1.1,rejW:{hd:0.03,lc:0.04,lw:0.03,fs:0.05},fs0:30};
@@ -71,6 +71,12 @@ function weTick(dt){const W=weState(),run=S.pm==="run";
   W.bw=bwTrue();W.q.push([S.t,W.bw]);while(W.q.length>2&&W.q[1][0]<=S.t-WE.dead-0.5)W.q.shift();
   if(run&&W.m==="auto"&&!W.vl){const e=(bwSp()-bwMeas())/bwSp();W.c=clamp(W.c+dt/WE.tauI*e,0.5,1.6);}
   if(W.m==="auto"&&!W.vl)W.v=clamp(weValveAuto(Math.max(S.pmSpeed,P.minSpeed*0.5)),0,WE.valveMax);
+  // v6.10 AUTO-LW: the lightweight optimizer. With ring crush to spare (more refining, less draw, cleaner bales) it trims the
+  // basis weight setpoint down to hold the QCS's ring crush at WE.lwM over the grade's minimum; when strength falls it brings
+  // the weight back up, never over the grade's target. Slow (WE.lwTau minutes) to ride out the QCS dead time. Held during a
+  // grade change and while the sheet is off. On unless the player takes the setpoint to MANUAL (lw:false).
+  if(S.chg&&W.lw!==false&&W.trim!==0)W.trim=0;   /* (t4: a grade change starts AUTO-LW over from the new grade's target) */
+  if(run&&W.lw!==false&&!S.chg&&!S.zen&&QNOW.rct>0){const tg=rctSpec()*WE.lwM,e=(QNOW.rct-tg)/tg;W.trim=clamp(W.trim-dt/WE.lwTau*e,WE.trimMin,0);}
   // bale water in the pulper: a step in bale moisture thins the tub, and the dilution loop takes it back out
   if(baleOn()&&S.bq){const d=-WE.cpK*Math.max(0,S.bq.m-BALE.std)*100;W.cpd=d;W.cpc=ease(W.cpc||0,d,dt,WE.cpTau);}else{W.cpd=0;W.cpc=0;}
   // fine screen pressure drop: its load and the dirt in the stock
@@ -121,7 +127,7 @@ function bwSetMode(m){if(S.zen)return;const W=weState();if(m===W.m)return;
   if(m==="auto"){const sp=Math.max(S.pmSpeed,P.minSpeed*0.5),c0=W.c;W.c=1;const base=weValveAuto(sp);W.c=clamp(base>0?W.v/base:c0,0.5,1.6);}   // (bumpless: the trim takes over where the valve is)
   W.m=m;log(`Basis weight control to ${m==="auto"?"AUTO":"MANUAL"}`,"ok");}
 function bwSetValve(v){if(S.zen)return;const W=weState();W.m="manual";W.v=clamp(+v,0,WE.valveMax);}
-function bwSetTrim(lb){if(S.zen)return;const W=weState();W.trim=clamp(+lb/bwStd()-1,WE.trimMin,WE.trimMax);}
+function bwSetTrim(lb){if(S.zen)return;const W=weState();W.lw=false;W.trim=clamp(+lb/bwStd()-1,WE.trimMin,WE.trimMax);}
 
 /* ---------- v6.9.2 the refiners and the machine chest: the refiners take stock from the stock (storage) chest and feed the
    machine chest; the machine draws the machine chest. With the refiner plates clashed (an upset's refOut) nothing goes

@@ -97,7 +97,7 @@ function maintTick(dt){if(!S.inc.length)return;const crews=Math.max(1,Math.floor
   list.forEach((i,k)=>{i.mQ=k-crews+1;if(k>=crews){if(i.mSlot>=0){i.mSince=0;i.mHere=false;i.mGo=false;}i.mSlot=-1;return;}i.mSlot=k;if(!i.mSince){i.mSince=1;i.mResp=8;}
     if(i.mResp>0)i.mResp-=dt;if(i.mResp<=0)i.mGo=i.mHere=true;});}
 function maintState(i){if(!MNEED(i.id))return "";if(i.mGo)return "maintenance working";if(i.mSlot>=0)return "maintenance on the way";return i.mQ>0?`waiting for maintenance (${i.mQ} ahead)`:"waiting for maintenance";}   // (v5.1 QA: mQ is unset until the next tick)
-function incState(i){const a=QINC(i.id)&&!working(i.id)?crewState(i.id):"",b=MNEED(i.id)&&!i.mGo?maintState(i):"";return [a,b].filter(Boolean).join(" · ");}
+function incState(i){const a=QINC(i.id)&&!working(i.id)?crewState(i.id):"",b=MNEED(i.id)&&!i.mGo?maintState(i):"",c=ENEED(i.id)&&!i.eGo?elecState(i):"";return [a,b,c].filter(Boolean).join(" · ");}   // (v6.10: c, the electrical tech, 07i)
 function working(k){const h=S.crewQ&&S.crewQ[0];return !!(h&&h.k===k&&h.go);}
 function crewState(k){const q=S.crewQ||[],i=q.findIndex(x=>x.k===k);if(i<0)return "";if(i>0)return `waiting for crew (${i} ahead)`;return q[0].go?"crew working":"crew on the way";}
 function baseMods(){return {pmDown:null,pulperDown:false,speedCap:1,breakMul:1,yieldMul:1,recvMul:1,clampMul:1,drvCap:99,ldrCap:99,docksClosed:false,noIn:false,noOut:false,yardEat:0,hayMul:1,crewAtPM:false,winderDown:false,offSpec:false,feedMul:1};}
@@ -131,14 +131,16 @@ function trigger(id,quiet){
   log(e.head+(inc.note?` (${inc.note})`:""),"bad");
   S.M=mods();
   leadAuto(inc);   // v5.0.4: Dot may fix it on the spot
+  rlyOnTrigger(inc);   // v6.10: the card's reliability line; a blackout hits the drives (07i)
   civOnUpset(inc);   // v5.1 civics: the upset's choices (or a standing order)
 }
-function clearIncident(id){const i=S.inc.find(x=>x.id===id);if(i)i.left=0;}
+function clearIncident(id){const i=S.inc.find(x=>x.id===id);if(i){i.left=0;i.clr=true;}}   // (clr: a drive fault waiting on a call is held at 30 min, 07i: cleared by hand it goes)
 function chaosTick(dt){
   manTick();   // v6.9 manning: the shift change (03f)
   crewTick(dt);
   maintTick(dt);
-  for(const i of S.inc){if(QINC(i.id)&&!working(i.id))continue;if(MNEED(i.id)&&!i.mGo)continue;if(QINC(i.id)||MNEED(i.id))i.go=true;i.left-=dt*((QINC(i.id)||MNEED(i.id))?repRate()*leadRep()*civRepair()*(MNEED(i.id)?manRep():1):1);}
+  rlyElecTick(dt);   // v6.10: the electrical tech's job (07i)
+  for(const i of S.inc){if(QINC(i.id)&&!working(i.id))continue;if(MNEED(i.id)&&!i.mGo)continue;if(ENEED(i.id)&&!i.eGo)continue;const w=QINC(i.id)||MNEED(i.id)||ENEED(i.id);if(w)i.go=true;i.left-=dt*(w?repRate()*leadRep()*civRepair()*(MNEED(i.id)?manRep():1):1);}
   for(const i of S.inc)if(i.left<=0&&EV[i.id].end)EV[i.id].end(i);
   for(const i of S.inc)if(i.left<=0)log(`${EV[i.id].name}: cleared, back to normal`,"ok");
   // (v4.1 pass 7: compacted in place and counted with a loop: this runs every sim step, and the two filters made new arrays each time)

@@ -12,6 +12,7 @@ function step(dt){
   cardTick(dt);
   civTick(dt);   // v5.1 civics
   outageTick();
+  rlyTick(dt);   // v6.10 reliability: shift rounds, wear, faults (07i)
   const M=S.M=mods();
   autoControl(dt);
   vlvTick(dt);   // v6.9 the control valves (07h; nothing until a loop is touched)
@@ -142,7 +143,7 @@ function step(dt){
     if(tr.load>=P.truckRolls-1e-6){S.leaving.push({...tr,ty:outY(d),kind:"out"});if(S.leaving.length>24)S.leaving.shift();S.outDock[d]=null;S.tot.shipped+=P.truckRolls;const tons=P.truckRolls*C.rollW.v;S.shipT+=tons;spend(tons*frOutRate(),"frout");earn(lotValue(tr.lots||[[C.grade,P.truckRolls]],C.rollW.v));}}   // (v16: each roll at its own grade's price)
   }
   ordTick(dt);
-  spend(((C.drivers.v+C.loaders.v+P.techs)*(ECON.wage+(P.siteWage||0))*(P.costMul||1)*leadWage()*civWage()+P.robots*ECON.robot+P.pmCost)*dt/60,"labor");
+  spend(((C.drivers.v+C.loaders.v+P.techs+(P.elec||0))*(ECON.wage+(P.siteWage||0))*(P.costMul||1)*leadWage()*civWage()+P.robots*ECON.robot+P.pmCost)*dt/60,"labor");
   pfLabor(dt);
   spend((ECON.overhead+(P.siteOver||0))*dt/60,"overhead"); if(P.premium)spend(P.premium*dt/60,"premium");
   // v3.1.2: profit/day is OPERATING profit over the last 12 game hours: good paper is valued as it comes off the machine (tons x price),

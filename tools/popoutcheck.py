@@ -93,7 +93,7 @@ with sync_playwright() as pw:
 
     # ---- v6.8.3: the window is the whole control room: home tiles, an app per view, "← Control room" back ----
     pp.evaluate("()=>document.getElementById('popBack').click()"); pp.wait_for_timeout(400)
-    ok("back button returns to the control room home", pp.evaluate("()=>document.getElementById('popMain').dataset.v==='home'&&document.getElementById('popBack').hidden&&document.querySelectorAll('#popHome [data-pa]').length===8"))
+    ok("back button returns to the control room home", pp.evaluate("()=>document.getElementById('popMain').dataset.v==='home'&&document.getElementById('popBack').hidden&&document.querySelectorAll('#popHome [data-pa]').length===10"))   # (v6.10: + Reliability and Drives)
     if shot: pp.set_viewport_size({"width": 1600, "height": 900}); pp.wait_for_timeout(500); pp.screenshot(path=f"{shot}-home.png")
     for k, v, title in (("QCS", "dcs", "Quality"), ("PLAN", "dcs", "Planning"), ("rm", "rm", "Relationship map"), ("man", "man", "Manning"), ("pf", "pf", "Process flow")):
         pp.evaluate(f"()=>document.querySelector('[data-pa=\"{k}\"]').click()"); pp.wait_for_timeout(500)

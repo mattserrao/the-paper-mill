@@ -24,7 +24,7 @@ function pfChemT(){return Math.max(0,ECON.chem+P.chemAdd+(P.siteChem||0)-(P.refS
 function pfEnergy(prod,ec){if(!(ec>0))return;const ch=Math.min(ec,prod*pfChemT()),en=ec-ch;
   pfAdd("chem","stock",ch*0.5);pfAdd("chem","pm",ch*0.5);pfAdd("steam","pm",en*PF_STEAMSH);for(const a in PF_POWER)pfAdd("power",a,en*(1-PF_STEAMSH)*PF_POWER[a]);}
 function pfLabor(dt){const w=(ECON.wage+(P.siteWage||0))*(P.costMul||1)*leadWage()*civWage(),m=dt/60;
-  pfAdd("labor","yard",C.drivers.v*w*m);pfAdd("labor","ship",(C.loaders.v*w+P.robots*ECON.robot)*m);pfAdd("mlab","techs",P.techs*w*m);if(P.pmCost)pfAdd("mlab","pmprog",P.pmCost*m);}
+  pfAdd("labor","yard",C.drivers.v*w*m);pfAdd("labor","ship",(C.loaders.v*w+P.robots*ECON.robot)*m);pfAdd("mlab","techs",(P.techs+(P.elec||0))*w*m);if(P.pmCost)pfAdd("mlab","pmprog",P.pmCost*m);}
 function pfRepair(id,bill){if(!bill)return;pfAdd("rep",pfRepArea(id),bill);pfAdd("repid",id,bill);if(id==="permit"){pfW("fine",bill);pfW("fines",1);}histEv(id,bill);}
 
 // the day's numbers as plain data (also what is kept for yesterday)
@@ -34,7 +34,7 @@ function pfCalc(f,whole){const L=S.ledger,d=k=>(L[k]||0)-(f.L0[k]||0),A=f.A,sum=
   const et=steam+power,es=et>0?energy/et:0;
   const sub={energy:{Steam:steam*es,Power:power*es},chem:{"Stock prep":(A.chem&&A.chem.stock)||0,"Wet end":(A.chem&&A.chem.pm)||0},
     labor:{"Forklift drivers":(A.labor&&A.labor.yard)||0,"Loaders and robots":(A.labor&&A.labor.ship)||0},
-    maint:{"Repair bills and outage budgets":repairs,"Maintenance techs":(A.mlab&&A.mlab.techs)||0,"Preventive maintenance program":(A.mlab&&A.mlab.pmprog)||0,"Insurance premium":premium},
+    maint:{"Repair bills and outage budgets":repairs,"Maintenance and electrical techs":(A.mlab&&A.mlab.techs)||0,"Preventive maintenance program":(A.mlab&&A.mlab.pmprog)||0,"Insurance premium":premium},
     over:{"Site overhead":d("overhead"),"Civics":d("civ")},fiber:{"OCC bales":d("occ")},frin:{"Inbound haul":d("frin")},frout:{"Outbound freight":d("frout")}};
   // by area: what each input added there today
   const by={};PF_AREAS.forEach(([a])=>by[a]={});const put=(c,a,v)=>{if(v)by[a][c]=(by[a][c]||0)+v;};

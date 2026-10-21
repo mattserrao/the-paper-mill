@@ -4,7 +4,7 @@
    spider valve or slice panel, the game runs at 1 min/s (simRate, 08-ui-wiring.js) and is back at the player's speed on
    close. The screens only read the sim (knobRead / KHIST, 07b-knobs.js); the only writes are the player's knob moves. */
 const KUI={panel:null,st:null,tab:"dcs",built:{}};
-const AREA_N={SPOT:"Stock prep",WET:"Wet end",DET:"Dry end"};
+const AREA_N={SPOT:"Stock prep",WET:"Wet end",DET:"Dry end",DRV:"Drives"};
 // field knobs the DCS can also set remotely; the guide roll and the oscillator are set at the machine only
 const KREMOTE=new Set(["pulp","ref","agit","couch"]);
 function kuiSync(){const vc=G3.vlvUI&&!S.zen?G3.vlvUI():0;G3.vlvClk=vc;   // (v6.9: a valve faceplate runs the game on its tuning clock, 50k)
@@ -25,6 +25,8 @@ function knobCtl(id,where){const d=KNOBN[id],w=kEl("div","kctl"),key=where+"-"+i
     w.querySelector("[data-gt]").addEventListener("input",e=>{knobSet("guide",{gt:+e.target.value});kuiRefresh();});}
   else if(id==="couch"){w.innerHTML=`<div class="seg kseg" role="group" aria-label="Couch pit agitator"><button type="button" data-cv="1">RUN</button><button type="button" data-cv="0">STOP</button></div>`;
     w.querySelectorAll("[data-cv]").forEach(b=>b.addEventListener("click",()=>{knobSet("couch",+b.dataset.cv);kuiRefresh();}));}
+  else if(id==="incomer"){w.innerHTML=`<div class="seg kseg" role="group" aria-label="MCC main incomer"><button type="button" data-iv="1">CLOSED</button><button type="button" data-iv="0">OPEN</button></div>`;
+    w.querySelectorAll("[data-iv]").forEach(b=>b.addEventListener("click",()=>{knobSet("incomer",+b.dataset.iv);kuiRefresh();}));}
   else{w.innerHTML=`<label class="spis"><span>${d.min}</span><input type="range" min="${d.min}" max="${d.max}" step="${d.step}" data-kv aria-label="${d.name}"/><span>${d.max}</span></label>
       <div class="kval"><b data-kvv></b><small>standard ${KNOB_IDEAL[id].toFixed(d.dp||0)} ${d.unit}</small></div>`;
     w.querySelector("[data-kv]").addEventListener("input",e=>{knobSet(id,+e.target.value);kuiRefresh();});}
@@ -34,6 +36,7 @@ function knobCtlSync(w){const id=w.dataset.k,K=S.knob;
   else if(id==="guide"){const v=K?K.v:KNOB_IDEAL;w.querySelectorAll("[data-gm]").forEach(b=>b.setAttribute("aria-pressed",String(+b.dataset.gm===v.gm)));
     const r=w.querySelector("[data-gt]");if(actEl(r)!==r)r.value=v.gt;w.querySelector("[data-gtv]").textContent=(v.gt>0?"+":"")+v.gt+" mm";}
   else if(id==="couch"){const v=knobVal("couch");w.querySelectorAll("[data-cv]").forEach(b=>b.setAttribute("aria-pressed",String(+b.dataset.cv===v)));}
+  else if(id==="incomer"){const v=knobVal("incomer");w.querySelectorAll("[data-iv]").forEach(b=>b.setAttribute("aria-pressed",String(+b.dataset.iv===v)));}
   else{const d=KNOBN[id],v=knobVal(id),r=w.querySelector("[data-kv]");if(actEl(r)!==r)r.value=v;const b=w.querySelector("[data-kvv]");b.textContent=`${v.toFixed(d.dp||0)} ${d.unit}`;b.classList.toggle("moved",!knobAt(id));}}
 // a knob's own readings (process values an operator would see; no hints about what will go wrong)
 function knobReadout(id,r){const R=(k,v)=>`<div><small>${k}</small><b>${v}</b></div>`;
@@ -44,6 +47,7 @@ function knobReadout(id,r){const R=(k,v)=>`<div><small>${k}</small><b>${v}</b></
     case "vac":return R("Vacuum",kf(r.vac)+" kPa")+R("Couch solids",kf(r.couchSol)+" %");
     case "press":return R("Nip load",Math.round(r.pl)+" kN/m")+R("After the presses",kf(r.pressSol)+" % solids");
     case "guide":return R("Fabric edge",(r.edge>=0?"+":"")+Math.round(r.edge)+" mm")+R("Guide travel used",r.gm?Math.round(Math.min(1,r.gtrav)*100)+" %":"manual");
+    case "incomer":return R("Main breaker",knobVal("incomer")?"closed":"open")+R("480 V bus",Math.round(rlyLV())+" V")+R("Drive load",Math.round(rlyMccKw(r)).toLocaleString()+" kW");
     case "couch":return R("Agitator",r.couch?"running · 38 A":"stopped")+R("Pit level",Math.round(35+(S.pm==="run"?0:30)+r.cs*6)+" %");
     case "osc":return R("Shower stroke",Math.round(r.osc*0.14)+" /min")+R("Felt",r.stripes>0.15?"uneven":"clean");
     case "draw":return R("Open draw",kf(r.draw)+" %")+R("Sheet tension",r.run?kf(r.tension,2)+" kN/m":"–");
@@ -118,7 +122,7 @@ function knobAlarms(a,r){const L=[],al=(on,txt,hi)=>{if(on)L.push([txt,hi]);};co
   {const q=qualStatus();if(r.run&&q.off>0.02)L.unshift([`MAKING BEATER · ${q.why.toUpperCase()}`,true]);}   // (v6.5.4: on every screen, first)
   dcsAlarms(a,r,L);   // v6.5 b3: upsets on the screen of the equipment they hit, motors, purges, the dry end's states (50d)
   return L;}
-function stationBuild(){const o=$("dcsOv");if(!o||!KUI.st)return;const a=KUI.st,M2=MIMIC[a],b=$("dcsMain");KUI.tab=a==="QCS"?"qcs":"dcs";if(a!=="PLAN"&&a!=="QCS"&&a!=="TREND"&&a!=="WATER")KUI.last=a;
+function stationBuild(){const o=$("dcsOv");if(!o||!KUI.st)return;const a=KUI.st,M2=MIMIC[a],b=$("dcsMain");if(o._st!==a){o._st=a;o.querySelectorAll(".dcsb").forEach(e=>{e.scrollTop=0;});requestAnimationFrame(()=>o.querySelectorAll(".dcsb").forEach(e=>{e.scrollTop=0;}));}   /* (v6.10 t4: a new screen opens at the top) */KUI.tab=a==="QCS"?"qcs":"dcs";if(a!=="PLAN"&&a!=="QCS"&&a!=="TREND"&&a!=="WATER"&&a!=="DRV"&&a!=="REL")KUI.last=a;
   $("dcs-h").textContent=`${(typeof NAME==="string"&&NAME)||"PM1"} · `+DCS_SCR[a].title;   // (v6.5.2: the machine's own name, as on the process flow and the 3D label)
   {const sl=$("dcsSlow");if(sl)sl.textContent=POP.on?"Second screen · the mill keeps running at your speed":DCS_SLOW.has(a)?"Game slowed to 1 min/s while this screen is open":"Live: the mill keeps running at your speed";}
   o.querySelectorAll("[data-a]").forEach(x=>x.setAttribute("aria-pressed",String(x.dataset.a===a)));
@@ -146,6 +150,7 @@ function stationBuild(){const o=$("dcsOv");if(!o||!KUI.st)return;const a=KUI.st,
     b.appendChild(cs);dcsMotRows(a,b);}
   else if(a==="QCS")qcsBuild(b);
   else if(a==="PLAN")b.appendChild(kEl("div","plan","")).id="planBox";
+  else if(a==="DRV")drvBuild(b);else if(a==="REL")rlyBuild(b);   // v6.10 (50l)
   trBuild();trLayout();kuiRefresh();}
 // the trend chart: up to four series on their own scales, newest at the right
 function drawTrend6(cv,series){if(!cv)return;const x=cv.getContext("2d"),W=cv.width,H=cv.height,a=KHIST.a,dk=document.body.classList.contains("dark");
@@ -163,7 +168,7 @@ function kuiRefresh(){if(!KUI.panel&&!KUI.st)return;const r=knobRead();
   if(KUI.st){const o=$("dcsOv"),a=KUI.st,M2=MIMIC[a];$("dcsClock").textContent=`Day ${Math.floor(S.t/1440)+1} · ${clockOf(S.t)}`;
     if(M2){o.querySelectorAll("[data-tag]").forEach(t=>{const g=M2.tags.find(q=>q[2]===t.dataset.tag);if(g){const v=g[4](r);if(t.textContent!==v)t.textContent=v;}});
       o.querySelectorAll(".dcsctl .kctl").forEach(knobCtlSync);o.querySelectorAll("[data-rd]").forEach(d=>{const h=knobReadout(d.dataset.rd,r);if(d._h!==h){d._h=h;d.innerHTML=h;}});
-      const al=knobAlarms(a,r),ul=$("dcsAl"),h=al.length?al.map(([t,hi])=>`<li class="${hi?"hi":""}">${t}</li>`).join(""):'<li class="none">No alarms</li>';if(ul._h!==h){ul._h=h;ul.innerHTML=h;}
+      const al=knobAlarms(a,r),ul=$("dcsAl"),h=al.length?al.map(([t,hi])=>`<li class="${hi?"hi":""}">${t}</li>`).join(""):'<li class="none">No alarms</li>';if(ul&&ul._h!==h){ul._h=h;ul.innerHTML=h;}
       {const bt=$("dcsBeat");if(bt){const q=qualStatus(),on=r.run&&q.off>0.02,t=on?`⚠ MAKING BEATER · ${q.why.toUpperCase()} · ${q.off>=0.99?"the whole reel":Math.round(q.off*100)+"% of the reel"} to the beater`:"";if(bt.hidden===on)bt.hidden=!on;if(bt.textContent!==t)bt.textContent=t;}}
       o.querySelectorAll(".dcsrow canvas[data-cd]").forEach(c=>kuiCd(c,r));dcsSync();dcsPicSync(a);vlvDcsSync(o);if(a==="WATER")waterRefresh();}
     else if(a==="QCS"){const K=S.knob,F=(K&&K.F)||{},off=r.off,st=$("qcsSt");
@@ -178,6 +183,7 @@ function kuiRefresh(){if(!KUI.panel&&!KUI.st)return;const r=knobRead();
       const D=[["Wrinkles",F.wrinkles],["Crush marks",F.crush],["Felt stripes",F.stripes],["CD streaks",F.cd],["Weight swings",F.bw],["Wet sheet",F.wet],["Dry sheet",F.dry]];
       const h=D.map(([n,v])=>{const c=v>0.01?Math.round(4+v*80):0;return `<div class="${c?"hit":""}"><small>${n}</small><b>${c}</b><small>/ reel</small></div>`;}).join("");const dd=$("qcsDef");if(dd._h!==h){dd._h=h;dd.innerHTML=h;}qcsRefresh();}
     else if(a==="PLAN")planRefresh();
+    else if(a==="DRV")drvRefresh();else if(a==="REL")rlyRefresh();   // v6.10 (50l)
     trDraw();}}
 // CD moisture profile: a bar per zone up from 3 %, the ±1.5 % spec band round the reel average, the 8 % target
 function kuiCd(cv,r){if(!cv)return;const x=cv.getContext("2d"),W=cv.width,H=cv.height,z=r.zones,lo=3,hi=11,Y=v=>H-18-clamp((v-lo)/(hi-lo),0,1)*(H-30);

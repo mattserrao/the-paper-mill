@@ -1,4 +1,4 @@
-/* ---------- v5.7 Catching failures early: the model (tells, the daily Round, the Vibration Report, outage prep) ----------
+/* ---------- v5.7 Catching failures early: the model (tells, the daily Round, the Area Trend Report, outage prep) ----------
    Design: failures are visible before they occur. A tellable upset that the dice pick is not fired; it is queued with a
    lead time (TELL.lead days; survival loses TELL.step a wave down to TELL.min). Until it is due, its tell (an exaggerated,
    clearly failing piece of equipment, 31c-3d-tells.js) sits in its round area, visible only while an operator walks that
@@ -74,10 +74,10 @@ function tellRoundStart(a){if(!tellCan()||!TAREAK[a])return false;tellState().da
 function tellRoundEnd(a,caught){const T=tellState(),left=T.q.filter(p=>p.area===a).length;
   if(caught>0||left>0){if(!caught)log(`Round over: something in ${TAREAK[a].n.toLowerCase()} went unnoticed.`,"warn");return {clean:false,missed:left};}
   const d=TELL.cleanCiv[TAREAK[a].cv];if(civOn())civAdd(d,"Clean walk");else log("Clean walk.","");return {clean:true,missed:0,d};}
-// the Vibration Report: the Reliability program (vibration and oil analysis) or Dot's own kit
+// the Area Trend Report: the Reliability program (vibration and oil analysis) or Dot's own kit
 const tellRep=()=>LV("reliab")>=1||leadIs("dot");
 // per area: 0 steady, 1 climbing (something pending), 2 climbing fast (due within 24 h)
-function tellTrend(a){const q=(S.tell&&S.tell.q)||[];let v=0;for(const p of q)if(p.area===a)v=Math.max(v,p.due-S.t<1440?2:1);return v;}
+function tellTrend(a){const q=(S.tell&&S.tell.q)||[];let v=0;for(const p of q)if(p.area===a)v=Math.max(v,p.due-S.t<1440?2:1);return Math.max(v,rlyTellTrend(a));}   // (v6.10: and what the shift rounds found, 07i)
 // in the visible list: only tells the dice actually rolled (the 3D shows them during a Round)
 const tellIn=a=>((S.tell&&S.tell.q)||[]).filter(p=>p.area===a);
 const tellSummary=()=>{const T=S&&S.tell;if(!T||!T.n)return "";return `Upsets caught early: ${T.n} — saved ${money(T.saved)} and ${tellHrs(T.savedMin)} of downtime.`;};

@@ -196,7 +196,7 @@ function civOpen(){const V=S.civ,d=V.cur;if(!d||typeof document==="undefined")re
   if(!civEl){civEl=document.createElement("div");civEl.className="overlay";civEl.id="civOv";civEl.hidden=true;document.body.appendChild(civEl);}
   const id=d.id,rw=CIVREWARD[id],u=CIVU[id],mt=CIVMETER[id],area=civArea(id),ord=V.orders[area];
   const kind=rw?"Reward · "+CIV.names[rw.k]:mt?(id.startsWith("c_")?"Crisis · ":"Warning · ")+CIV.names[mt.k]:"Upset · "+area,cls=rw?" cvr":mt?(id.startsWith("c_")?" cvx":" cvw"):"";
-  const inc=EV[id]&&S.inc.find(x=>x.id===id),bill=inc&&inc.bill>0?`<p class="cvbill">Repair bill ${money(inc.bill)} already paid</p>`:"";
+  const inc=EV[id]&&S.inc.find(x=>x.id===id),bill=(inc&&inc.bill>0?`<p class="cvbill">Repair bill ${money(inc.bill)} already paid</p>`:"")+(inc&&inc.cite?`<p class="cvrly"><b>Reliability data</b> ${escHTML(inc.cite)}</p>`:"");   // (v6.10: what the rounds last said, 07i)
   const choices=rw?[["Accept",0,0,null,rw.win],["Decline",0,0,null,"Nothing changes."]]:u.ch;
   civEl.innerHTML=`<div class="modal deal civ${cls}" role="dialog" aria-modal="true" aria-labelledby="civ-h"><span class="dk">${escHTML(kind)} · sim paused</span>
     <h2 id="civ-h">${escHTML(civName(id))}</h2><p>${escHTML(civHead(id))}</p>${bill}

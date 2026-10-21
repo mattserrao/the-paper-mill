@@ -65,11 +65,11 @@ function simRate(){return S&&S.zen?1:G3.knobUI?(G3.vlvClk||1):outCapped()?OUT.si
 
 const cgrid=$("chaosgrid");
 GROUPS.forEach(([g,lab])=>{const d=document.createElement("div");d.className="grp";const h=document.createElement("h3");h.textContent=lab;d.appendChild(h);
-  EVENTS.filter(e=>e.g===g&&!e.knob&&(!e.env||e.env===SITE.env)).forEach(e=>{const r=document.createElement("div");r.className="ev";
-    r.innerHTML=`<button class="trig" id="ev-${e.id}" aria-pressed="false"><span>${e.name}${e.env?' <em class="envtag">'+ENVS[e.env].short+'</em>':""}</span><small></small></button><label><input type="checkbox" id="en-${e.id}" checked> random</label>`;
+  EVENTS.filter(e=>e.g===g&&(!e.knob||e.tab)&&(!e.env||e.env===SITE.env)).forEach(e=>{const r=document.createElement("div");r.className="ev";   // (v6.10 t5: tab: the reliability upsets and the arc flash, 07i)
+    r.innerHTML=`<button class="trig" id="ev-${e.id}" aria-pressed="false"><span>${e.name}${e.env?' <em class="envtag">'+ENVS[e.env].short+'</em>':""}</span><small></small></button>${e.noRandom?'<label class="knobonly">knob only</label>':`<label><input type="checkbox" id="en-${e.id}" checked> random</label>`}`;
     d.appendChild(r);
-    r.querySelector("button").addEventListener("click",()=>{if(S.season&&S.season.on)return;if(active(e.id))clearIncident(e.id);else{trigger(e.id);if(e.id==="birdline"&&typeof G3!=="undefined"&&G3.on&&$("v2close"))$("v2close").click();}updateChaos();});   // (t17: picking the bird closes the list so its cut-scene plays)
-    r.querySelector("input").addEventListener("change",ev=>{CH.en[e.id]=ev.target.checked;});});
+    r.querySelector("button").addEventListener("click",()=>{if(S.season&&S.season.on)return;if(active(e.id))clearIncident(e.id);else if(e.trig)e.trig();else{trigger(e.id);if(e.id==="birdline"&&typeof G3!=="undefined"&&G3.on&&$("v2close"))$("v2close").click();}updateChaos();});   // (t17: picking the bird closes the list so its cut-scene plays)
+    const cb=r.querySelector("input");if(cb)cb.addEventListener("change",ev=>{CH.en[e.id]=ev.target.checked;});});
   cgrid.appendChild(d);});
 $("chaosOn").addEventListener("change",e=>CH.on=e.target.checked);
 // collapsed by default: simple view first, "Show more" for fine control
@@ -98,8 +98,8 @@ const upDay=()=>Math.floor(S.t/1440),upLocked=()=>!S.free&&S.upDay===upDay();
 const UP_NARROW=matchMedia("(max-width:420px)");
 const upNext=()=>((S.t+360)/60)%24>=6?"tomorrow 6\u00a0AM":"at 6\u00a0AM";   // v5.0.6: "6 AM" never splits across lines
 function buy(id){const u=UP[id],l=LV(id);if(l>=u.lv.length)return;const cost=upCost(u,l);if(!S.free&&S.cash<cost)return;if(upLocked())return;
-  S.upDay=upDay();spend(cost,"upgrades");AUDIO.sfx("cash",150);S.up[id]=l+1;applyUpgrades();
-  if(id==="reliab"&&l===0&&civOn())civAdd(TELL.relCiv,"Reliability program");   // v5.7: monitoring raises Machinery (and unlocks the Vibration Report)
+  S.upDay=upDay();spend(cost,"upgrades");AUDIO.sfx("cash",150);S.up[id]=l+1;applyUpgrades();if(S.rel)S.rel.upChk=S.t+20;   // (v6.10 t4: check the refiner drives' load once the mill has settled, 07i)
+  if(id==="reliab"&&l===0&&civOn())civAdd(TELL.relCiv,"Reliability program");   // v5.7: monitoring raises Machinery (and unlocks the Area Trend Report)
   BANNERS.push({text:`${u.name}${u.lv.length>1?" level "+(l+1):""} is online.`,t:null,kind:"good"});while(BANNERS.length>3)BANNERS.splice(1,1);
   log(`Installed ${u.name}${u.lv.length>1?" level "+(l+1):""} (${money(cost)})`,"ok");updateShop();}
 const LEDGER=[["rev","Paper sales",1],["occ","OCC purchases",-1],["frin","Inbound freight",-1],["frout","Outbound freight",-1],["energy","Energy & chemicals",-1],["labor","Wages & robots",-1],["overhead","Mill overhead",-1],["repairs","Upset repairs",-1],["premium","Insurance premium",-1],["upgrades","Upgrades bought",-1],["deals","Deals & trials",1],["civ","Civics",-1]];

@@ -10,7 +10,7 @@
   function drawSigns(){const x=SC.getContext("2d");x.clearRect(0,0,1024,300);signDraws.forEach(f=>f(x));signTex.needsUpdate=true;}
   {const rb0=G3.rebrand;G3.rebrand=()=>{rb0&&rb0();drawSigns();};}
   // the water tower: four legs, a riser, a tank with the mill name round it, a conical roof, a catwalk and a beacon
-  {const TX=-2,TZ=46,H=21,R=4.3;YP.tower=[TX,TZ,H+9.5];
+  {const TX=84,TZ=-24,H=21,R=4.3;YP.tower=[TX,TZ,H+9.5];
     const legM=M.steel;[[-1,-1],[1,-1],[-1,1],[1,1]].forEach(([a,b])=>{box(0.42,H,0.42,legM,TX+a*3.1,H/2,TZ+b*3.1);
       box(0.9,0.12,0.9,M.ink,TX+a*3.1,0.06,TZ+b*3.1,scene,false);});
     [6,12.5,19].forEach((y,i)=>{box(6.6,0.18,0.18,legM,TX,y,TZ-3.1,scene,false);box(6.6,0.18,0.18,legM,TX,y,TZ+3.1,scene,false);box(0.18,0.18,6.6,legM,TX-3.1,y,TZ,scene,false);box(0.18,0.18,6.6,legM,TX+3.1,y,TZ,scene,false);

@@ -110,7 +110,8 @@ function dcsSetDefs(a){const D=()=>DCS_DRAW();
     ["slv","Slice opening","remote from the DCS · B",-100,100,1,()=>G3.SLC?G3.SLC.v*100:0,v=>dcsSlice("v",v),"",null,1],
     ["slh","Slice lip position","remote from the DCS · L",-100,100,1,()=>G3.SLC?G3.SLC.h*100:0,v=>dcsSlice("h",v),"",null,1],
     // v6.8 the basis weight loop (07g): the setpoint (the grade's target, trimmed lighter if the strength will carry it) and the valve
-    ["bws","Basis weight setpoint",`grade ${C.grade} target ${bwStd().toFixed(2)} lb · ring crush spec ${rctSpec()} lbf`,+(bwStd()*(1+WE.trimMin)).toFixed(2),+(bwStd()*(1+WE.trimMax)).toFixed(2),0.05,()=>bwSp(),v=>bwSetTrim(v),"lb",null,0]];
+    ["bws","Basis weight setpoint",(S.we&&S.we.lw===false)?`MANUAL · grade ${C.grade} target ${bwStd().toFixed(2)} lb · ring crush spec ${rctSpec()} lbf`:`AUTO-LW: holds ring crush ${Math.round((WE.lwM-1)*100)}% over spec (${(rctSpec()*WE.lwM).toFixed(1)} lbf) · grade target ${bwStd().toFixed(2)} lb`,+(bwStd()*(1+WE.trimMin)).toFixed(2),+(bwStd()*(1+WE.trimMax)).toFixed(2),0.05,()=>bwSp(),v=>bwSetTrim(v),"lb",null,0,
+      {on:()=>!(S.we&&S.we.lw===false),flip:()=>{if(S.zen)return;const W=weState();W.lw=W.lw===false?true:false;log(`Basis weight setpoint: ${W.lw?"AUTO-LW (the lightweight optimizer)":"MANUAL"}`,"");}}]];   // (v6.10 AUTO-LW, 07g)
   if(a==="DET")return [
     ["wsp","Machine speed (wire)","same setpoint as on WET",Math.round(1200/D()),Math.round((3300+P.spBonus)/D()),5,()=>C.pmSp.v/D(),v=>dcsCardSet("pmSp",Math.round(v*D()/10)*10),"fpm","pmSp"],
     ["wdr","Winder speed","",0,P.winderMax,1,()=>C.wdr.v,v=>dcsCardSet("wdr",v),"t/h","wdr"]];   // (v6.9: the 2nd / 3rd section steam is PV-302 / PV-303 under QC-300: tap them on the picture, 50k)
@@ -120,7 +121,7 @@ function dcsSetRows(a,cs){const defs=dcsSetDefs(a);
   if(a==="UTIL")cs.appendChild(kEl("p","dcsfield","Monitoring only: water, effluent and rejects. The permit and the river intake show here when they act up. The full water balance is on WATER."));
   if(a==="WATER")cs.appendChild(kEl("p","dcsfield","Monitoring only: fresh water comes in for the showers and seal water and to top up the white water chest; the chest feeds stock prep's dilution; what's left goes through the clarifier to the outfall."));
   if(a==="SPOT"||a==="WET"){const row=kEl("div","dcsrow dcsx");
-    if(a==="SPOT"){row.innerHTML=`<div class="dcsn"><b>Dye: paper colour</b><small>dye pump on the machine chest</small></div><div class="seg kseg" role="group" aria-label="Paper colour"><button type="button" data-dye="brown">BROWN</button><button type="button" data-dye="white">WHITE</button></div>`;
+    if(a==="SPOT"){row.innerHTML=`<div class="dcsn"><b>Dye: paper color</b><small>dye pump on the machine chest</small></div><div class="seg kseg" role="group" aria-label="Paper color"><button type="button" data-dye="brown">BROWN</button><button type="button" data-dye="white">WHITE</button></div>`;
       row.querySelectorAll("[data-dye]").forEach(b=>b.addEventListener("click",()=>{const pc=document.querySelector(`#paperColor button[data-c="${b.dataset.dye}"]`);if(pc)pc.click();dcsSync();}));}
     else{row.innerHTML=`<div class="dcsn"><b>Grade</b><small>set by the market planner from customer orders</small></div><select disabled data-dgrade aria-label="Grade">${Object.keys(GRADES).map(g=>`<option value="${g}">${g} · ${GRADES[g].bw} lb</option>`).join("")}</select>`;}
     cs.appendChild(row);}

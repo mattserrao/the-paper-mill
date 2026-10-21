@@ -210,6 +210,15 @@
         add(T.box,x+6,0,z+4,4,2.6,3,0,"#c9c4ba",0.15);
         [[-9,-7],[9,-7],[-9,7],[9,7]].forEach(([a,b])=>add(T.box,x+a,0,z+b,0.3,6,0.3,0,"#8d939c",0.1));add(T.box,x,5.8,z-7,18,0.3,0.3,0,"#8d939c",0);add(T.box,x,5.8,z+7,18,0.3,0.3,0,"#8d939c",0);
         [[0,-9,22,0.1],[0,9,22,0.1],[-11,0,0.1,18],[11,0,0.1,18]].forEach(([a,b,w,d])=>add(T.box,x+a,0,z+b,w,2.2,d,0,"#a8b0b8",0.3));claim(x,z,12,7,0);note("substation",x,z,7);return [x,z];},
+      // v6.10: the mill's own feeder, wood poles with three wires from the substation to the riser pole at the fence (38c MCC.riser)
+      feeder(sub){const M2=G3.MCC;if(!M2||!sub)return;const [rx,rz]=M2.riser,zo=F.z1+8,pts=[[sub[0]+(sub[0]<rx?11:-11),sub[1]]];
+        if(Math.abs(sub[1]-zo)>12)pts.push([sub[0]+(sub[0]<rx?11:-11),zo]);pts.push([rx,zo],[rx,rz]);
+        const P2=[];for(let i=0;i<pts.length-1;i++){const a=pts[i],b=pts[i+1],L=Math.hypot(b[0]-a[0],b[1]-a[1]),n=Math.max(1,Math.round(L/34));for(let k=i?1:0;k<=n;k++)P2.push([a[0]+(b[0]-a[0])*k/n,a[1]+(b[1]-a[1])*k/n]);}
+        const H=9.4;P2.forEach(([x,z],k)=>{if(k===P2.length-1)return;if(onRiver(x,z,1)||inside(x,z,2))return;add(T.cyl6,x,0,z,0.2,H+0.4,0.2,0,"#7b5d42",0.12);
+          const nx=P2[k+1]||P2[k-1],ry=Math.atan2(-(nx[1]-z),nx[0]-x)+Math.PI/2;add(T.box,x,H,z,0.14,0.14,2.6,ry,"#7b5d42",0);claim(x,z,0.8,H,0);});
+        for(let k=0;k<P2.length-1;k++){const [ax,az]=P2[k],[bx,bz]=P2[k+1],L=Math.hypot(bx-ax,bz-az),ry=Math.atan2(-(bz-az),bx-ax);
+          [-1.1,0,1.1].forEach(o=>add(T.box,(ax+bx)/2+Math.cos(ry+Math.PI/2)*o,H+0.1,(az+bz)/2-Math.sin(ry+Math.PI/2)*o,L,0.05,0.05,ry,"#2b2f36",0,"near"));}
+        note("feeder",rx,rz,H);},
       // a line of pylons; never inside the fence or on the water
       pylons(from,to){const n=Math.max(2,Math.round(Math.hypot(to[0]-from[0],to[1]-from[1])/55));for(let k=1;k<=n;k++){const x=from[0]+(to[0]-from[0])*k/n,z=from[1]+(to[1]-from[1])*k/n;if(inside(x,z,-8)||onRiver(x,z)||!place(x,z,2.5))continue;
           const ry=Math.atan2(-(to[1]-from[1]),to[0]-from[0])+Math.PI/2;add(T.cone4,x,0,z,1.5,24,1.5,ry,"#7d838c",0.15);add(T.box,x,17,z,0.25,0.35,9,ry,"#7d838c",0);add(T.box,x,20.5,z,0.25,0.3,6,ry,"#7d838c",0);claim(x,z,2,24,0);}},
@@ -343,7 +352,7 @@
         [[-1.4,-9],[1.4,-9],[-1.4,4],[1.4,4],[-1.4,7],[1.4,7]].forEach(([a,b])=>add(T.cyl10,tx+a,0.5,tz+b,0.5,0.4,0.5,0,"#2f3a49",0,undefined,0,Math.PI/2));
         add(T.box,tx-4.5,0.3,tz,1.4,1.6,2.2,0,"#e2c230",0.15);add(T.box,tx-3.4,0.4,tz,0.2,2.2,1.2,0,"#4a4f58",0);add(T.box,tx-3.0,0.9,tz,1.6,1.1,1.25,0,"#a7784a",0.15);
         sign(x0+16,z0-1.5,0,"OCC BALE STORE","#f2efe6","#2f3a49");hMark(cx,sz,40,10);note("occStore",sx,sz,10);}
-      LM.substation(-121,96,2);LM.pylons([-121,96],[-420,150]);LM.pylons([F.x1+40,-40],[F.x1+250,-300]);
+      LM.feeder(LM.substation(-121,96,2));LM.pylons([-121,96],[-420,150]);LM.pylons([F.x1+40,-40],[F.x1+250,-300]);
       LM.farm(-30,214,0);LM.field(-92,190,52,40,"#a6c46a",false);LM.field(-92,250,52,46,"#d6c27a",true);LM.field(-28,268,44,34,"#8fb85c",false);
       LM.orchard(118,236,10,9);LM.lake(246,104,26);LM.mast(-262,128,48);
       track([[-30,196],[-30,160],[-30,146]]);track([[-118,214],[HXr+5,214]]);track([[104,108],[EX-4,108]]);track([[HXr-5,120],[-200,126],[-245,128]]);road([[-84,100],[HXr,100]],5,false);
@@ -464,7 +473,7 @@
       [[-90,shore-300,150,0.15],[260,shore-380,190,-0.1],[-330,shore-430,120,0.3]].forEach(([x,z,L2,ry])=>{add(T.box,x,-1.6,z,L2,2.2,L2*0.14,ry,"#a8322c",0.1);add(T.box,x,0.6,z,L2,5.5,L2*0.14,ry,pick(["#1f2d44","#2f3a49","#4a2f2f"]),0.15);
         add(T.box,x+Math.cos(ry)*L2*0.38,6.1,z-Math.sin(ry)*L2*0.38,L2*0.07,10,L2*0.13,ry,"#f2f2f2",0.15);for(let b=0;b<6;b++)add(T.box,x+Math.cos(ry)*(-L2*0.38+b*L2*0.11),6.1,z-Math.sin(ry)*(-L2*0.38+b*L2*0.11),L2*0.09,2.6*(1+Math.floor(RNG()*2)),L2*0.12,ry,pick(["#d6382c","#2a5aa8","#1f9254","#e2c230","#e9ecef"]),0.15);});
       // landmark blocks
-      LM.railyard(-415,HXr-10);LM.waterTower(-1,104);LM.recycler(-91,104);LM.substation(89,104,3);LM.mast(44,150,46);
+      LM.railyard(-415,HXr-10);LM.waterTower(-1,104);LM.recycler(-91,104);LM.feeder(LM.substation(89,104,3));LM.mast(44,150,46);
       // a trailer lot between the highway and the gate
       {add(T.quad,-130,0.022,46,40,1,44,0,"#9a9ea6",0);for(let i=0;i<5;i++)for(let j=0;j<2;j++)add(T.box,-142+i*6,0,36+j*20,2.6,3.4,13,0,pick(["#e9ecef","#d6382c","#2a5aa8","#e9ecef"]),0.15);kMark(-150,-110,24,68,3);hMark(-130,46,22,4);}
       // the blocks: houses round the edge with gardens, small apartment blocks, corner shops, a park here and there
@@ -501,7 +510,7 @@
       // Desert flats: a concrete canal past the mill; red mesas on every side, dry washes and dirt tracks across the
       // flats; the solar farm, water tanks and a reservoir east, a windpump and the substation west, an oasis, a ranch
       LM.solarFarm(206,86,10,7);LM.waterTanks(64,117);LM.reservoir(104,120,18,24);LM.reservoir(112,4,14,34);LM.windpump(-207,109);LM.stockPond(98,196);LM.mast(240,156,44);LM.ranch(232,-14);
-      const sub=LM.substation(-88,156,2);LM.pylons(sub,[-420,250]);LM.pylons([F.x1+30,60],G3.solarTx||[200,46]);
+      const sub=LM.substation(-88,156,2);LM.feeder(sub);LM.pylons(sub,[-420,250]);LM.pylons([F.x1+30,60],G3.solarTx||[200,46]);
       [[-300,-205,130,82,38,0.3],[255,-245,112,72,32,-0.4],[368,12,92,74,30,0.9],[-362,122,96,86,34,0.2],[208,284,120,72,36,-0.2],[395,-150,46,40,22,0.5],[-402,-40,40,44,18,0],[-240,300,60,30,20,0.1]].forEach(m=>LM.mesa(...m));
       // a tank-car siding off the main line by the highway, a trailer lot by the gate
       {[-36.4,-35].forEach(z=>add(T.box,-192,0.14,z,56,0.16,0.12,0,"#8d939c",0,"w"));for(let k=0;k<4;k++)add(T.cyl10,-212+k*13.5,1.0,-35.7,1.4,12,1.4,0,"#e9ecef",0.15,"w",0,Math.PI/2);kMark(-222,-164,-40,-32,3);
@@ -541,7 +550,7 @@
       const [czc,chw]=RZ(0);
       LM.bargeDock(-74,czc+chw+2);LM.barge(-245,czc-1,44);LM.shack(-9,czc-chw-7);LM.shack(-44,czc-chw-6);
       {const x=-200,z=czc+chw+8;add(T.box,x,0,z,8,3.2,6,0,"#c9c4ba",0.15);add(T.gable,x,3.2,z,8.4,1.6,6.6,0,"#5b6270",0);add(T.box,x,0.6,z-7,4,0.3,8,0,"#7b5d42",0.1);claim(x,z,6,5,0);}
-      const sub=LM.substation(122,-14,2);LM.pylons([EX+6,-14],[420,-20]);LM.pylons([F.x1+20,-40],[sub[0],sub[1]]);
+      const sub=LM.substation(122,-14,2);LM.feeder(sub);LM.pylons([EX+6,-14],[420,-20]);LM.pylons([F.x1+20,-40],[sub[0],sub[1]]);
       LM.mast(-20,148,46);{const pts=[];for(let k=0;k<16;k++){const a=k/16*6.283;pts.push([-20+Math.cos(a)*24,148+Math.sin(a)*22]);}poly(pts,0.02,"#a3b487");track(pts.concat([pts[0]]),3);OPEN.push([-20,148,30]);}
       LM.boardwalk([[-4,168],[20,196],[56,224],[100,228],[138,226]]);
       // the dry pad's graded edge: riprap on the slope, a drainage swale at its foot (culverted under the two roads)

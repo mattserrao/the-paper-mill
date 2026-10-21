@@ -99,8 +99,8 @@ function ordTick(dt){if(!ordOn())return;const O=ordState(),K=O.k;
     if(!o.lw&&S.t>o.due+ORD.grace){o.lw=true;K.late++;log(`Order #${o.id} for ${ordCust(o)} is late: ${Math.round(o.sh)} of ${o.r} rolls of ${o.g} shipped`,"warn");}
     if(S.t>o.due+ORD.cancel*1440){o.st="cancelled";o.done=Math.round(S.t);K.canc++;
       for(const tr of S.outDock)if(tr&&tr.oid===o.id)tr.spot=true;   // a truck already loading it takes it to the spot market
-      log(`Order #${o.id} cancelled by ${ordCust(o)}: ${o.r-Math.round(o.sh)} rolls of ${o.g} never shipped. They go to the spot market.`,"bad");
-      BANNERS.push({text:`Order cancelled: ${ordCust(o)} gave up waiting for ${o.g}`,t:null,tag:"ORDER"});while(BANNERS.length>3)BANNERS.splice(1,1);}}
+      log(`Order #${o.id} canceled by ${ordCust(o)}: ${o.r-Math.round(o.sh)} rolls of ${o.g} never shipped. They go to the spot market.`,"bad");
+      BANNERS.push({text:`Order canceled: ${ordCust(o)} gave up waiting for ${o.g}`,t:null,tag:"ORDER"});while(BANNERS.length>3)BANNERS.splice(1,1);}}
   for(let i=S.outQ.length-1;i>=0;i--){const tr=S.outQ[i];if(tr.tq==null)tr.tq=S.t;if(S.t-tr.tq>ORD.dryWait){S.outQ.splice(i,1);spend(ORD.dryRun,"frout");K.dry++;
       S.leaving.push({...tr,ty:outY(0),kind:"out"});if(S.leaving.length>24)S.leaving.shift();
       if(K.dry===1||K.dry%5===0)log(`A truck waited ${Math.round(ORD.dryWait/60)} h with nothing to load and left empty: dry-run fee ${money(ORD.dryRun)}`,"warn");}}}

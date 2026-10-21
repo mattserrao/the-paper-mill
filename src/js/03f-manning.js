@@ -20,9 +20,10 @@ function manH(...a){let h=0x811c9dc5;for(const v of a){const s=String(v);for(let
   return ()=>{h=(h+0x6D2B79F5)|0;let t=h;t=Math.imul(t^(t>>>15),t|1);t^=t+Math.imul(t^(t>>>7),t|61);return ((t^(t>>>14))>>>0)/4294967296;};}
 function manRoster(){const sd=(S&&S.seed)>>>0;if(MAN.ros&&MAN.seed===sd)return MAN.ros;MAN.seed=sd;MAN.cache.clear();
   const r=manH("roster",sd),used=new Set(),ros={};
-  MAN.TEAMS.forEach(T=>{const mk=(role,k)=>{let n;do{n=MAN_FIRST[Math.floor(r()*MAN_FIRST.length)]+" "+MAN_INIT[Math.floor(r()*MAN_INIT.length)]+".";}while(used.has(n));used.add(n);
+  const mk=(T,role,k)=>{let n;do{n=MAN_FIRST[Math.floor(r()*MAN_FIRST.length)]+" "+MAN_INIT[Math.floor(r()*MAN_INIT.length)]+".";}while(used.has(n));used.add(n);
       return {id:T+role+k,team:T,role,k,name:n};};
-    ros[T]={t:Array.from({length:MAN.NT},(_,k)=>mk("t",k)),o:Array.from({length:MAN.NO},(_,k)=>mk("o",k))};});
+  MAN.TEAMS.forEach(T=>{ros[T]={t:Array.from({length:MAN.NT},(_,k)=>mk(T,"t",k)),o:Array.from({length:MAN.NO},(_,k)=>mk(T,"o",k))};});
+  MAN.TEAMS.forEach(T=>{ros[T].e=[mk(T,"e",0)];});   // v6.10: each team's electrical tech, named after everyone else so the others keep their names
   return MAN.ros=ros;}
 const manCyc=(T,d)=>(((d+MAN.ANCH-MAN.OFF[T])%28)+28)%28;
 const manKind=s=>(((s%2)+2)%2)?"N":"D";
@@ -43,7 +44,7 @@ function manShift(s){manRoster();const nt=Math.max(1,Math.min(MAN.NT,P.techs|0))
     if(tech&&rc()<MAN.SHORT){row.who=null;short++;continue;}
     const from=free.length?free[Math.floor(rc()*free.length)]:MAN.TEAMS[(MAN.TEAMS.indexOf(T)+2)%4],list=MAN.ros[from][tech?"t":"o"];
     row.who=list[Math.floor(rc()*list.length)];row.cover={type:rc()<MAN.SWAP?"swap":"OT",from};}
-  m={s,d,K,team:T,techs,ops,short,nt};if(MAN.cache.size>96)MAN.cache.clear();MAN.cache.set(key,m);return m;}
+  m={s,d,K,team:T,techs,ops,short,nt,elec:{home:R.e[0],who:R.e[0],vac:false,cover:null}};   /* (v6.10: the electrical tech is always on: no vacations modelled) */if(MAN.cache.size>96)MAN.cache.clear();MAN.cache.set(key,m);return m;}
 const manIdx=()=>Math.floor((S&&S.t||0)/720);
 function manNow(){return manShift(manIdx());}
 // maintenance repair rate this shift (chaosTick, 04): slower when a tech's vacation went unfilled

@@ -1,6 +1,96 @@
 # Changelog
 
 
+## v6.10.0 (2026-10-20): The Reliability and Electrical Update
+Release of test builds t1–t5 (below). Plan: claude/reliability-v610-plan.md; QA: claude/qa-v610-t3.md.
+- Ten critical VFD motors with bearing, motor and drive health, fed from three drive lineups in a new MCC building (115 kV → 13.8 kV → 480 V → ~650 V DC).
+- An electrical tech on every shift; each maintenance tech does a vibration round a shift and the electrical tech an ADX round, skipped when they're called to upsets.
+- Reliability and Drives screens in the control room; drive loads trendable; relationship map, help and glossary updated.
+- New upsets: bearing, motor and drive failures, rectifier faults, and the arc flash at the MCC main incomer (a new fiddly knob); all in the Upsets tab.
+- Drive fault decisions (reset and go, or investigate then run to the outage or replace), planned repairs with downtime, outage changeouts, arc-flash PPE, AUTO-LW basis weight, click for info, and the water tower in the north-east corner.
+- Balanced against v6.9.2 over 100 live QA runs and matched balance runs: doing the rounds is the biggest boost, hands-off play is punished harder, most seasons still profit.
+
+## v6.10.0-t5 (2026-10-20): main incomer and the Upsets tab (test build)
+- **New fiddly knob: the MCC main incomer.** A red breaker handle on the MCC's incoming 480 V section (tap it, or find it in the fiddly knobs view). Open it and it draws an **arc flash**: sparks and smoke at the MCC, no 480 V, every drive on all three lineups stops (the machine, the pulper and the winder), and a $30,000 bill. The electrical tech suits up, inspects, resets and closes it (about an hour), and the drives take a small knock in health. Drives shows "ARC FLASH · MAIN INCOMER OPEN".
+- **The incomer moved to the east end of the MCC** (beside the transformer it's fed from), so the doorway no longer hides it.
+- **A much bigger, electric arc flash:** a blinding blue-white fireball, thick jagged arcs crawling over the switchgear and bursting up through the roof, a shower of blue and white sparks, a blue flash over the whole screen while the MCC is in view, then re-strikes for several seconds and smoke out of the door and roof.
+- **The new upsets are in the Upsets tab:** bearing failure, motor failure, drive failure and rectifier fault (set off by hand on a machine picked at random, and the random box switches their own dice) and the arc flash (knob only).
+- A drive fault waiting on your call can be cleared by hand from the Upsets tab.
+- QA Agent C (t4): round banners keep the machine's name as written ("the Refiner A bearing"); Plan repair says what actually stops (a refiner slows the machine, the winder stops only the winder); a planned repair's stop reason names the planned work, not "drive down".
+- Help: the main incomer and arc flash on the Reliability and Fiddly knobs pages; glossary entries Main incomer and Arc flash.
+- qa_v610: the harness forwards Content-Range, so the leaderboard can pin a run outside the top 100.
+
+## v6.10.0-t4 (2026-10-20): QA review decisions (test build)
+Balance and polish the user picked from the t3 QA review (claude/qa-v610-t3.md).
+- **Balance:** each vibration round checks one machine (was two), so a full crew no longer sees everything every shift.
+- **Balance:** a planned repair takes the machine down 20–40 minutes while the crew works (new jobs: planned bearing change for maintenance, planned motor swap for the electrical tech). An outage changeout is now the no-downtime way. A motor in ADX alarm can be swapped early.
+- **Balance:** repeated drive resets get worse: each reset in the same day takes longer (5, 10, 15 min…), wears the drive more and is likelier to repeat; below 20% health a reset may not hold at all, and the card then offers only Investigate.
+- Rounds stopped by a planned outage aren't counted as skipped; repairs show as "Repaired" in the reading history.
+- Drive health (and patched/reset notes) on the Reliability detail and a Health column on Drives; rectifier health per lineup; brownout and loss-of-supply alarms on Drives.
+- A drive fault waiting on your call says "awaiting decision" instead of a frozen countdown; Investigate's cause follows the data (a hot or worn drive, a weak rectifier, a drive over its rating).
+- After an upgrade, a warning if the refiner drives now run near their rating; the relationship map's refiner-load note is corrected (energy × fiber rate).
+- Click for info: Refiner B and the 2nd press; the MCC can be tapped anywhere on its cabinets, wins over the electrician at a distance, and links to Drives; an MCC chip in Go to; emptied OCC trucks and customer truck grades read correctly; 3D labels stay on screen and clear of the Go to chips.
+- Drives load bars show which are trended; outage-plan changeouts are separate check toggles; exact prices on reliability buttons; DCS screens open at the top.
+- A tutorial card on rounds and the MCC; the daily card is the "Daily area round" with its "Area Trend Report" (not to be confused with shift vibration rounds); IGBT and Planned repair in the glossary; clearer drive card wording; US spelling throughout.
+- Outage complete says "breakdowns … the usual rate" instead of "±0%"; the outage start shows the exact end time; the pulper rotor rebuild deal renews its bearings and the used winder drive renews the winder drive; AUTO-LW starts over at a grade change; the leaderboard marks the run just submitted, not the best older one with the same name.
+
+## v6.10.0-t3 (2026-10-20): QA fixes and balance (test build)
+100 live QA runs (50 seasons, 50 survival) on t2, then matched balance runs against main.
+- **Fix:** a drive fault card nobody answers no longer holds the machine down. After an hour the default is taken (investigate, then replace) and the card closes.
+- **Fix (QA Agent A):** the electrical tech puts the arc-flash suit on for an MCC job that starts while he's already inside (paperwork at the desk), and takes it off back at the desk.
+- **Fix (QA Agent A):** changeouts already on an approved outage plan show in the Reliability table (✓) and detail; ticking more then says they go on the outage after.
+- **Fix (QA Agent A):** "MCC-3 · 1 drive"; the Control room help page lists the Reliability and Drives screens.
+- **Fix (QA Agent C):** a drive card can no longer open over the game-over screen or linger over the menu after a run ends.
+- **Fix (QA Agent C):** a faulted drive on a lineup whose DC bus is down shows as a fault, not just No DC.
+- **Fix (QA Agent C):** opening the second screen before picking a DCS screen no longer throws on every UI tick.
+- **Fix (QA Agent C):** the drive card names the machine as written ("The Refiner A drive", not "refiner a").
+- **Fix (QA Agent B):** an outage drive changeout clears the patch, so a replaced drive no longer faults 3× as often for the rest of the run.
+- **Fix (QA Agent B):** a repeat drive fault takes half as long again to deal with, as its card says (the longer time was worked out but never used).
+- **Fix (QA Agent B):** the process-flow labor line includes the electrical tech's wage ("Maintenance and electrical techs").
+- **Fix (QA Agent D):** the Drives power diagram labels were centred by a style rule, so "UTILITY" and "115 kV" were cut off and the lineup labels sat on the bus lines.
+- **Fix (QA Agent D):** in a rectifier fault, the Drives "Faulted" count includes drives with no DC bus, and the Reliability screen shows them as "No DC" (it showed a plain 0 %).
+- **Fix (QA Agent D):** a planned repair removes the same part's changeout from the outage wish list, so it isn't paid for twice.
+- **Fix:** the drive fault card shows the drive's load at the moment it tripped (it showed 0%).
+- **Balance:** bearing, motor and drive failures about half as often; rectifier faults a quarter as often; rectifier bill $60k to $40k; motor bills about 25% lower.
+  Result (24 seasons per build, same seeds): doing rounds +$2.53M vs main +$2.68M; hands-off -$72k vs main +$551k (7 of 12 still profit).
+  Survival: rounds 35.5 days vs main 37.0; hands-off 26.3 vs 28.7.
+
+## v6.10.0-t2 (2026-10-20): The Reliability and Electrical Update (test build)
+Built on test/v6.10-reliability. Plan: claude/reliability-v610-plan.md. Seasons, survival and free play (not zen). Functionality first; no balancing yet.
+- **Ten critical VFD motors** (`07i-assets.js`): pulper rotor, refiners A and B, fan pump, couch roll, 1st and 2nd press, dryer section, reel drum,
+  winder drum. Each has bearing (vibration), motor (ADX) and drive health that wear while it runs, faster when pushed (refining energy, press load,
+  a thick pulper, a drive over 100%). Health raises the odds of a fault; the dice decide when. Own dice streams (`rel`, `relx`), so every other upset keeps its timing.
+- **Shift rounds:** each maintenance tech does one vibration round a shift (two machines, most overdue first); the new **electrical tech** does one
+  ADX motor-test round. A tech called to an upset skips or abandons it and that data goes stale (grey after a day, Unknown after three).
+- **Faults found early:** a failing bearing shows on a vibration round ~36 h ahead, a failing motor on an ADX test ~72 h ahead. Planned repair from
+  the Reliability screen: 20% of the bill, no downtime. Missed: **bearing failure** (maintenance pair) or **motor failure** (electrical tech).
+  **Drive failure** comes with no warning (likelier over ~95% load and after lightning or a brownout). Each has civics choices and a 3D effect.
+- **Electrical tech** (manning `03f`, 3D `38c`): one per shift with a team hat and a wage; takes motor and drive failures, lightning and the bird on
+  the line (moved off the maintenance queue); walks ADX rounds with a test cart; changes drives at the lineup (the faulted module comes out red, the spare goes in).
+- **MCC building** (`38c-3d-mcc.js`): south of the machine hall with the shop's pop-away roof (the south wall lifts with it); three drive lineups
+  with live status lights, the 480 V incoming section, a desk and spare drives; a transformer pad, a duct bank to a riser pole, and an overhead feeder from each map's substation (`42b` `LM.feeder`).
+- **Reliability screen** (Report → Control room, and on the DCS bar): this shift's rounds and who walks them, every machine's vibration state
+  (good, imbalance, misalignment, outer race, inner race, imminent), ADX health, drive load and the reading's age; history, pins, planned repairs and outage changeouts.
+- **Drives screen:** each lineup's drives with status, load bar and heat-sink temperature, alarms, MCC power; every drive load is a trend tag (`dl_*`, `mcckw`).
+- **Upset cards** quote what the rounds last said about the failed machine (the new failures, and refiner clash, felt, fabric, driveshaft, wrap, winder),
+  and those linked upsets get likelier as that machine's bearings wear. The Vibration Report arrows include faults the rounds found.
+- **Outage changeouts:** the outage plan lists flagged machines; tick bearings, motor or drive (cost and minutes, back to full health). The outage's major job renews what it touches.
+- **Relationship map:** a Drives column and a Substation power driver, linked from rotor amps, refiner power, speed, vacuum, press load, tension and the winder.
+- **Help and glossary:** a Reliability and electrical page, outage changeouts, and 12 new terms. End screens show rounds done and skipped, faults caught and failures.
+- **Water tower** moved to the north-east corner (84, −24), clear of the new building on all four maps.
+- **Power chain:** 115 kV utility → substation (13.8 kV) → feeder → MCC transformer (480 V) → a rectifier per lineup → ~650 V DC bus → the drives' inverters.
+  The Drives screen draws it as a live single-line diagram; tags for the 13.8 kV feeder and each DC bus; the voltages follow blackouts, brownouts and outages.
+  **Rectifier fault** (new upset, electrical tech): its lineup's DC bus drops and every drive on it stops. Rectifiers and copper DC busbars in the 3D lineups.
+- **Drive fault decisions** (replace the civics card): *Reset and go* (back in ~5 min; repeat odds scale with drive health, a repeat runs 1.5× longer) or
+  *Investigate* (45–90 min: the cause, a cooling fan, DC bus capacitor, IGBT or loose connection), then *Run it to the outage* (patched, 3× fault odds, replacement
+  auto-booked on the outage plan) or *Replace it now* (spare drive, 60–90 min). Free play's Let the mill run picks Investigate → Replace.
+- **Arc-flash PPE:** the electrical tech puts on an arc-rated suit, hood and face shield at the MCC door (and takes it off on the way out); +3 min to every MCC job.
+- **AUTO-LW basis weight:** the WET DCS setpoint's new default mode trims the weight lighter while ring crush has room, holding it 3% over spec, and back up
+  to the grade target when strength falls (slow, through the QCS dead time). Moving the setpoint puts it on MANUAL. On the relationship map.
+- **Click for info:** tap a person (name, team, role, what they're doing, covering), a forklift, clamp truck or truck (load, order), or equipment
+  (live readings; the ten critical machines add vibration, ADX and drive readings and a link to Reliability).
+- **Lights:** the receiving, roll warehouse and shop lamps hung above their roofs; they now hang under them.
+
 ## v6.9.2 (2026-10-20): Release review
 Built and tested on test/v6.9.2-release.
 - **Help and glossary** (`51f-help.js`): about 30 outdated statements corrected (tell lead and caught-repair share, area

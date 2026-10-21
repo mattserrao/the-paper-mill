@@ -3,8 +3,8 @@
    moves, with the mechanism; "Full chain" follows the links all the way up and down. Live readings on each box. Read
    only: the sim and its dice are untouched, and the game keeps running at the player's speed while it is open.
    Keep RM_E in step with the sim when a relationship changes (tools/relmapcheck.py fails on a tag with no entry). ---- */
-const RM_DRV=[["x:weather","Weather",""],["x:bales","Bale grade mix",""],["x:pulpset","Pulper feed setpoint",""],["x:dilv","Pulper dilution valve","knob"],["x:slice","Headbox slice","knob"],["x:guide","Fabric guide roll","knob"],["x:zones","Headbox dilution zones","knob"],["x:spset","Machine speed setpoint",""],["x:grade","Grade on the machine",""],["x:dye","Dye system",""],["x:market","Market & leader effects",""],["x:orders","Customer orders",""],["x:upsets","Upsets & DCS motors",""]];
-const RM_COL={"YARD":["inq","unload","yard","balem","stk","occp"],"SPOT":["feed","cp","nv101pv","nv101op","amps","pulpLvl","yield","fiber","rejt","hddp","lcdp","lwdp","fsld","fsdp","kwh","dil","chest","chestg","gap","refkw","csf","agit","refq","mcCons","mcLvl","lv104pv","lv104op","mcg","fan"],"WET":["wsp","jw","rd","vac","couchSol","pl","pressSol","gtrav","edge","osc","hbc","bwv","fv201pv","fv201op","bwsp","drain","seal","pressw","wwl","lv202pv","lv202op","wwg","wwov","hum"],"DET":["speed","prod","st1","st3","pv302pv","pv302op","pv303pv","pv303op","steam","dryl","moist","qc300pv","qc300op","bw","draw","tension"],"QCS":["off","rct","prem","cdsp","bank","reel","cut","conv"],"UTIL":["boiler","vent","energyt","shower","evap","wcl","wcg","makeup","fresh","wuse","wwover","outfall","tss"],"SHIP":["fg","load","outq","openo","lateo","price","profit"]};
+const RM_DRV=[["x:weather","Weather",""],["x:bales","Bale grade mix",""],["x:pulpset","Pulper feed setpoint",""],["x:dilv","Pulper dilution valve","knob"],["x:slice","Headbox slice","knob"],["x:guide","Fabric guide roll","knob"],["x:zones","Headbox dilution zones","knob"],["x:spset","Machine speed setpoint",""],["x:grade","Grade on the machine",""],["x:dye","Dye system",""],["x:market","Market & leader effects",""],["x:power","Substation power",""],["x:orders","Customer orders",""],["x:upsets","Upsets & DCS motors",""]];
+const RM_COL={"YARD":["inq","unload","yard","balem","stk","occp"],"SPOT":["feed","cp","nv101pv","nv101op","amps","pulpLvl","yield","fiber","rejt","hddp","lcdp","lwdp","fsld","fsdp","kwh","dil","chest","chestg","gap","refkw","csf","agit","refq","mcCons","mcLvl","lv104pv","lv104op","mcg","fan"],"WET":["wsp","jw","rd","vac","couchSol","pl","pressSol","gtrav","edge","osc","hbc","bwv","fv201pv","fv201op","bwsp","drain","seal","pressw","wwl","lv202pv","lv202op","wwg","wwov","hum"],"DET":["speed","prod","st1","st3","pv302pv","pv302op","pv303pv","pv303op","steam","dryl","moist","qc300pv","qc300op","bw","draw","tension"],"QCS":["off","rct","prem","cdsp","bank","reel","cut","conv"],"UTIL":["boiler","vent","energyt","shower","evap","wcl","wcg","makeup","fresh","wuse","wwover","outfall","tss"],"SHIP":["fg","load","outq","openo","lateo","price","profit"],"DRV":["mvkv","dc_SP","dc_PM","dc_WD","dl_pulp","dl_refA","dl_refB","dl_fan","dl_couch","dl_pr1","dl_pr2","dl_dry","dl_reel","dl_wind","mcckw"]};
 const RM_E=[
  ["x:weather","balem","p","Rain and snow soak the bales in the yard and on inbound loads"],
  ["x:weather","unload","n","Snow and fog slow inbound trucks"],
@@ -93,6 +93,7 @@ const RM_E=[
  ["stk","rct","n","Stickies weaken the sheet a little"],
  ["rct","off","x","Under the grade's ring crush minimum the reel goes to the beater"],
  ["bwsp","off","x","Weight spec is ±3% around the setpoint"],
+ ["rct","bwsp","p","AUTO-LW: ring crush to spare over the spec + 3%, the optimizer trims the setpoint lighter; short of it, back up to the grade target (slowly, through the QCS dead time)"],
  ["bwsp","prem","n","Under the grade's target, on spec: half the trim as a price premium (max 5%)"],
  ["prem","profit","p","Premium paid as on-spec paper is made"],
  ["bwsp","bwv","p","AUTO feed-forward: the valve follows the setpoint"],
@@ -236,10 +237,32 @@ const RM_E=[
  ["price","profit","p","Revenue per ton"],
  ["load","profit","p","Revenue is booked as trucks leave"],
  ["energyt","profit","n","Energy is paid per ton made"],
- ["lateo","profit","n","Late chargebacks and cancellations"]];
+ ["lateo","profit","n","Late chargebacks and cancellations"],
+ // v6.10 the drives (07i): the substation feeds the MCC; each drive's load follows the work its motor does
+ ["x:power","mvkv","p","115 kV from the utility, stepped down to 13.8 kV at the substation; a blackout drops it to zero, a brownout sags it 8%"],
+ ["mvkv","dc_SP","p","The MCC transformer steps 13.8 kV down to 480 V; each lineup's rectifier makes about 650 V DC (1.35 × 480 V)"],["mvkv","dc_PM","p","13.8 kV → 480 V → rectifier → about 650 V DC"],["mvkv","dc_WD","p","13.8 kV → 480 V → rectifier → about 650 V DC"],
+ ["x:upsets","dc_SP","x","A rectifier fault drops its lineup's DC bus to zero; a planned outage locks the lineups out"],
+ ["dc_SP","dl_pulp","x","No DC bus, no drive: MCC-1 feeds the pulper, refiners and fan pump"],["dc_SP","dl_refA","x","No DC bus, no drive"],["dc_SP","dl_refB","x","No DC bus, no drive"],["dc_SP","dl_fan","x","No DC bus, no drive"],
+ ["dc_PM","dl_couch","x","No DC bus, no drive: MCC-2 is the machine's sectional drives"],["dc_PM","dl_pr1","x","No DC bus, no drive"],["dc_PM","dl_pr2","x","No DC bus, no drive"],["dc_PM","dl_dry","x","No DC bus, no drive"],["dc_PM","dl_reel","x","No DC bus, no drive"],
+ ["dc_WD","dl_wind","x","No DC bus, no drive: MCC-3 is the winder"],
+ ["x:power","mcckw","x","The substation feeds the MCC; lightning, a bird on the line or a brownout knock the drives' health down"],
+ ["amps","dl_pulp","p","Rotor amps are the pulper drive's load (a thick tub works it harder)"],
+ ["refkw","dl_refA","p","Refiner power, split across the two refiner drives"],["refkw","dl_refB","p","Refiner power, split across the two refiner drives"],
+ ["kwh","dl_refA","p","More refining energy or more fiber through them, more load: refining energy × fiber rate; 85 kWh/t at 35 t/h, or about 75 kWh/t at 40 t/h, runs them at 100%"],["kwh","dl_refB","p","More refining energy or more fiber through them, more load: refining energy × fiber rate; 85 kWh/t at 35 t/h, or about 75 kWh/t at 40 t/h, runs them at 100%"],
+ ["speed","dl_fan","p","Headbox flow follows speed: the fan pump works harder"],["vac","dl_couch","p","More forming vacuum, more drag on the couch roll"],
+ ["pl","dl_pr1","p","Press load is torque on the press drives"],["pl","dl_pr2","p","Press load is torque on the press drives"],
+ ["speed","dl_dry","p","The dryer section drive's load rises with speed"],["tension","dl_reel","p","Draw tension is torque on the reel drum"],["cut","dl_wind","p","Winding faster loads the winder drum"],
+ ["x:upsets","dl_pulp","x","A failed bearing, motor or drive (or the pulper down) reads zero"],["x:upsets","dl_dry","x","A failed bearing, motor or drive, or the machine down, reads zero"],
+ ["dl_pulp","mcckw","p","The MCC's power is the drives' loads × their ratings"],["dl_refA","mcckw","p","The MCC's power is the drives' loads × their ratings"],["dl_refB","mcckw","p","The MCC's power is the drives' loads × their ratings"],
+ ["dl_fan","mcckw","p","The MCC's power is the drives' loads × their ratings"],["dl_couch","mcckw","p","The MCC's power is the drives' loads × their ratings"],["dl_pr1","mcckw","p","The MCC's power is the drives' loads × their ratings"],
+ ["dl_pr2","mcckw","p","The MCC's power is the drives' loads × their ratings"],["dl_dry","mcckw","p","The MCC's power is the drives' loads × their ratings"],["dl_reel","mcckw","p","The MCC's power is the drives' loads × their ratings"],
+ ["dl_wind","mcckw","p","The MCC's power is the drives' loads × their ratings"],
+ ["dl_refA","speed","x","A drive past ~95% load trips more often; a tripped refiner drive leaves one refiner and the machine slows to 75%"],
+ ["dl_pr1","speed","x","Over 100% load wears the motor and the drive faster; a failed press drive stops the machine"],
+ ["dl_pulp","feed","x","Over 100% load wears the rotor motor faster; a failed pulper drive stops the pulper"]];
 const RM_AREA={IN:["Inputs","#a99ad6"],YARD:["Bale yard","#d0a66a"],SPOT:["Stock prep","#5fc497"],WET:["Wet end","#6db2e6"],DET:["Dry end","#ee9667"],
-  QCS:["Quality & winding","#e07fb0"],UTIL:["Water & utilities","#8fb3c4"],SHIP:["Shipping & money","#b5c46a"]};
-const RM_ORDER=["IN","YARD","SPOT","WET","DET","QCS","UTIL","SHIP"];
+  QCS:["Quality & winding","#e07fb0"],UTIL:["Water & utilities","#8fb3c4"],SHIP:["Shipping & money","#b5c46a"],DRV:["Drives (MCC)","#d9c25a"]};
+const RM_ORDER=["IN","YARD","SPOT","WET","DET","DRV","QCS","UTIL","SHIP"];
 const RM_SG={p:"+",n:"−",x:"~",s:"="},RM_SC={p:"#4fd18b",n:"#ff7a6e",x:"#ffb02e",s:"#8a9a96"};
 const RMUI={open:false,sel:null,mode:"direct",ext:true,P:null,z:1,W:0,H:0};   // (v6.8.3 z: zoom, 0.3-2; W/H: the map at 100%)
 // the graph: tags from the registry (names and units live), drivers from RM_DRV

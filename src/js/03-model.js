@@ -38,9 +38,9 @@ const UPS=[
  {id:"agv",g:"yard",name:"Robotic roll handling",lv:[390e3,715e3,1040e3],desc:"+2 robot loaders per level. $15/h each, never call off."},
  {id:"wh",g:"yard",name:"Warehouse extension",lv:[195e3,390e3],desc:"+112 rolls (1,400 t) of storage per level."},
  {id:"safety",g:"yard",name:"Safety & HR program",lv:[15e3],desc:"Dock fights and call-offs half as often."},
- {id:"maintcrew",g:"maint",name:"Maintenance techs",lv:[130e3,235e3,340e3],desc:"+2 techs on yellow scooters per level. Repairs finish 20% faster and repair bills are 10% lower per level (in-house work instead of contractors)."},
+ {id:"maintcrew",g:"maint",name:"Maintenance techs",lv:[130e3,235e3,340e3],desc:"+2 techs on yellow scooters per level. Repairs finish 20% faster and repair bills are 10% lower per level (in-house work instead of contractors). Every tech also does a vibration round each shift when not called to an upset."},
  {id:"rcfa",g:"maint",name:"Root cause analysis (RCFA)",lv:[200e3,100e3],desc:"Every breakdown is investigated: repeat failures 25% rarer per level."},
- {id:"reliab",g:"maint",name:"Reliability program",lv:[255e3,160e3],desc:"Vibration and oil analysis: drive, felt and fabric failures 40% rarer and repair bills 15% lower per level. Level 1 adds the Vibration Report to your daily rounds."},
+ {id:"reliab",g:"maint",name:"Reliability program",lv:[255e3,160e3],desc:"Vibration and oil analysis: drive, felt and fabric failures 40% rarer and repair bills 15% lower per level. Level 1 adds the Area Trend Report to your daily rounds. Covers the new bearing and motor failures too."},
  {id:"pmprog",g:"maint",name:"Preventive maintenance",lv:[115e3,235e3,365e3],desc:"Planned shutdown work: all breakdowns 20% rarer and fewer sheet breaks per level. Costs $150/h per level."},
  {id:"stores",g:"maint",name:"Spare parts storeroom",lv:[45e3],desc:"Parts on the shelf: repairs finish 25% faster."},
  {id:"apc",g:"mgmt",name:"Advanced process control",lv:[105e3,105e3],desc:"+2% tons and 4% less energy per level."},
@@ -62,7 +62,7 @@ function applyUpgrades(){
   P.doorRate*=civRecv();   // v5.1 civics: a low Community limits truck hours
   P.costMul=survOn()?survCost():1;   // v4.3 survival: fiber, energy and chemicals, and wages cost more every wave (exactly 1 otherwise)
   P.occPrice=(P.blendP+((S&&S.plan)?leadMkt(S.plan.mkt):0)-10*LV("contract")+P.siteOcc)*P.costMul*leadFibre();   // (v4.4: the leader's fiber deals; Hank runs heavy)
-  P.priceAdd=12*LV("sales")+P.sitePrice+leadPrice()+civPrice(); P.repairMul=REPAIR_K*(LV("insure")?0.4:1)*(1-0.15*LV("reliab"))*(1-0.1*LV("maintcrew"))*leadBill()*civBill();P.techs=2+2*LV("maintcrew");P.pmCost=150*LV("pmprog"); P.premium=LV("insure")?900:0;   // (t20 balance: $400/h and $1,500/h)
+  P.priceAdd=12*LV("sales")+P.sitePrice+leadPrice()+civPrice(); P.repairMul=REPAIR_K*(LV("insure")?0.4:1)*(1-0.15*LV("reliab"))*(1-0.1*LV("maintcrew"))*leadBill()*civBill();P.techs=2+2*LV("maintcrew");P.elec=1;P.pmCost=150*LV("pmprog"); P.premium=LV("insure")?900:0;   // (t20 balance: $400/h and $1,500/h)
   P.breakBase=Math.pow(0.7,LV("monitor"))*Math.pow(0.9,LV("pmprog"))*leadClean()*civBreak();
   P.hayBase=Math.pow(0.6,LV("winder"))*leadClean()*civBreak();
   // the sliders' limits follow the upgrades (v5.2: written only when they change; this runs hourly from the sim)
@@ -107,6 +107,7 @@ function freqMul(id){let m=1;const MS=FM_MAINT||(FM_MAINT=new Set(MAINT));
   if(OUT.area[id])m*=outRel(OUT.area[id]);
   m*=siteFreq(id);
   m*=civFreq(id);   // v5.1 civics: each choice's odds, and the meters
+  m*=rlyLinkMul(id);   // v6.10: the upsets tied to an asset's bearings wear with them (07i)
   m*=leadFreq(id);   // v4.4 survival leaders: Chip's labour trouble, Felicity's projects, the upset Dot just fixed
   if(S&&S.fx)for(const f of S.fx){if(f.freq&&EV[id]&&(EV[id].g==="machine"||EV[id].g==="stock"))m*=f.freq;if(f.scab&&id==="slime")m*=f.scab;if(f.evf&&f.evf[id])m*=f.evf[id];}
   return m;}
@@ -118,6 +119,7 @@ function areaRel(a){const ids=OUT.ev[a]||[];if(!ids.length)return {tot:1,up:1,ou
 function durMul(id){let d=(id==="dryerfire"||id==="balefire")&&LV("fire")?0.5:1;if(MAINT.includes(id))d*=Math.pow(0.8,LV("maintcrew"))*(LV("stores")?0.75:1);return d;}
 function spend(v,k){if(S.free&&k==="upgrades")return;S.cash-=v;S.ledger[k]+=v;}
 function earn(v){S.cash+=v;S.ledger.rev+=v;}
+function moneyX(v){const a=Math.abs(v);return `${v<0?"−":""}$${Math.round(a).toLocaleString()}`;}   // (exact, for prices on buttons)
 function money(v){const a=Math.abs(v),sg=v<0?"−":"";return a>=1e6?`${sg}$${(a/1e6).toFixed(2)}M`:a>=1e4?`${sg}$${Math.round(a/1e3)}k`:`${sg}$${Math.round(a).toLocaleString()}`;}
 function inY(d){const n=P.doors;return n<=3?[130,185,240][d]:118+d*150/(n-1);}
 function outY(d){const n=P.shipDoors;return n<=3?[500,555,610][d]:495+d*120/(n-1);}

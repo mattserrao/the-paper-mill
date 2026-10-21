@@ -137,7 +137,7 @@
         :spriteTex((x,w)=>{const g=x.createRadialGradient(w/2,w/2,0,w/2,w/2,w/2);g.addColorStop(0,"rgba(255,255,255,1)");g.addColorStop(0.35,"rgba(255,255,255,0.55)");g.addColorStop(1,"rgba(255,255,255,0)");x.fillStyle=g;x.fillRect(0,0,w,w);});
       // (v6.8.3: the four machine hall lights hang over the tending-side floor where the operators stand and walk, z 15,
       // not over the machine at z 9.1; same x, height and size)
-      G3.nightL=[[-10,11,15],[12,11,15],[34,11,15],[56,11,15],[31.2,PH+4.25,-17.5],[39,PH+4.25,-12.5],[16,9,-18],[-21,7,-13],[-36,7,23],[57,5,-22]].map(([x,y,z],i)=>{
+      G3.nightL=[[-10,11,15],[12,11,15],[34,11,15],[56,11,15],[31.2,PH+4.25,-17.5],[39,PH+4.25,-12.5],[16,9,-18],[-21,4.0,-13],[-36,4.0,23],[57,2.85,-22]].map(([x,y,z],i)=>{
         const deck=i===4||i===5,D=deck?11:i<4?16:13,fy=deck?PH+0.14:0.07;
         const p=new THREE.Mesh(new THREE.PlaneGeometry(D*(PAPN?0.8:1),D*(PAPN?0.8:1)),new THREE.MeshBasicMaterial({map:gT,color:0xffd9a0,transparent:true,depthWrite:false,blending:PAPN||CONEN?THREE.NormalBlending:THREE.AdditiveBlending,toneMapped:false,polygonOffset:true,polygonOffsetFactor:-4,polygonOffsetUnits:-4,opacity:0}));
         p.rotation.x=-Math.PI/2;p.position.set(x,fy,z);p.renderOrder=2;p.visible=false;scene.add(p);

@@ -146,7 +146,7 @@ with sync_playwright() as pw:
             s = state()
             ok("wave 4: Dot runs the mill; Chip's push and pay settlements stay, his lock was for wave 3 only, his call-offs leave with him", s["lead"]["id"] == "dot" and s["lead"]["changed"] and s["lead"]["was"] == "chip" and s["lead"]["st"]["fibre"] == 1 and s["lead"]["st"]["sales"] == 1
                and abs(s["lp"] - price1 - 7) < 1e-9 and abs(s["costMul"] - 1.331) < 1e-9 and abs(s["occ"] / (s["occBase"] * s["costMul"]) - 1) < 1e-9 and abs(pg.evaluate("()=>__PM.wage()") - 1.1 ** 2) < 1e-9 and abs(pg.evaluate("()=>__PM.freq('calloff')") - pg.evaluate("()=>__PM.freq('highway')")) < 1e-9, s)
-            ok("wave 4: Dot's repair bills cost 5% more", abs(s["rep"] - 1.05) < 1e-9, s["rep"])
+            ok("wave 4: Dot's repair bills cost 5% more", abs(s["rep"] / 1.2 - 1.05) < 1e-9, s["rep"])   # (v6.9.2: every bill carries REPAIR_K 1.2)
             # v5.0.4 Dot's fix is automatic: a driveshaft snaps and (odds forced to 100% here) she fixes it on the spot; once per cycle
             f0 = pg.evaluate("()=>__PM.freq('shaft')"); cashF = pg.evaluate("()=>__PM.S.cash")
             f = pg.evaluate("""()=>{const L=__PM.LEAD,a=L.autoFix;L.autoFix=1;__PM.trigger('shaft');const S=__PM.S,cashA=S.cash,inc=S.inc.find(i=>i.id==='shaft')||{left:-1,bill:0};
@@ -215,7 +215,7 @@ with sync_playwright() as pw:
     r = pick("so-new", "fel"); pg.evaluate("()=>__PM.setRunning(false)"); pg.wait_for_timeout(600); s = state()
     ok("new run: the picker offers the last leader started with", r["sel"] == "chip" and not r["dis"], r)
     ok("new survival run: clean start with Felicity (wave 1, ×1, $2.0M, nothing built)", s["surv"] and s["on"] and s["k"] == 1 and s["costMul"] == 1 and abs(s["cash"] - 2000000) < 5000 and s["t"] < 60 and abs(s["occ"] - occ1) < 1e-9
-       and s["lead"]["id"] == "fel" and not s["lead"]["changed"] and not any(s["lead"]["st"].values()) and abs(s["lp"] - price1) < 1e-9 and abs(s["rep"] - pg.evaluate("()=>__PM.civBill()")) < 0.005, s)   # (repairs: the civics meters only, which drift a little: a leader nudges them at the start)
+       and s["lead"]["id"] == "fel" and not s["lead"]["changed"] and not any(s["lead"]["st"].values()) and abs(s["lp"] - price1) < 1e-9 and abs(s["rep"] / 1.2 - pg.evaluate("()=>__PM.civBill()")) < 0.005, s)   # (repairs: the civics meters only, which drift a little: a leader nudges them at the start)
     pg.evaluate("()=>{__PM.S.outg.k=4;__PM.setBn(__PM.S.bn);}"); s = state()
     ok("costs follow the wave (wave 4 = ×1.331 on fibre and energy)", abs(s["costMul"] - 1.331) < 1e-9 and abs(s["occ"] / occ1 - 1.331) < 1e-9 and abs(s["energy"] / en1 - 1.331) < 1e-9, s)
     pg.evaluate("()=>{document.getElementById('v2pause').click();document.getElementById('v2free').click();__PM.setRunning(false);}"); pg.wait_for_timeout(600); s = state()

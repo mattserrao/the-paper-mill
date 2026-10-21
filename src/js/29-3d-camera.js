@@ -75,7 +75,7 @@
       if(G3.knobHit){const k=G3.knobHit(rc);if(k)return k;}   // v5.6 fiddly knobs and the DCS consoles (40b)
       if(G3.spiderHit&&rc.intersectObjects(G3.spiderHit,false).length)return "spider";if(G3.sliceHit&&rc.intersectObjects(G3.sliceHit,false).length)return "slice";if(G3.scrubbers&&rc.intersectObject(G3.scrubbers[0].hit,false).length)return "brian";return false;};
     glc.addEventListener("pointerdown",e=>{downAt=[e.clientX,e.clientY,performance.now()];});
-    glc.addEventListener("pointerup",e=>{if(!downAt)return;const m=Math.hypot(e.clientX-downAt[0],e.clientY-downAt[1]),t=performance.now()-downAt[2];downAt=null;if(m<6&&t<500){if(G3.tellTap&&G3.tellTap(e))return;   /* v5.7: a tell on a Round comes first */const li=G3.lblAt(e);if(li){if(G3.lblTap&&G3.lblTap(li))return;G3.flyTo(li);return;}const h=hit(e);if(h&&h.k)G3.knobTap(h);else if(h==="spider")openSpider();else if(h==="slice")openSlice();else if(h==="brian")openBrian();}});
+    glc.addEventListener("pointerup",e=>{if(!downAt)return;const m=Math.hypot(e.clientX-downAt[0],e.clientY-downAt[1]),t=performance.now()-downAt[2];downAt=null;if(m<6&&t<500){if(G3.tellTap&&G3.tellTap(e))return;   /* v5.7: a tell on a Round comes first */const li=G3.lblAt(e);if(li){if(G3.lblTap&&G3.lblTap(li))return;G3.flyTo(li);return;}const h=hit(e);if(h&&h.k)G3.knobTap(h);else if(h==="spider")openSpider();else if(h==="slice")openSlice();else if(h==="brian")openBrian();else if(G3.infoTap)G3.infoTap(e);}});   // (v6.10: click for info, 38d)
     glc.addEventListener("pointermove",e=>{const n=performance.now();if(n-hoverT<120||ptrs.size)return;hoverT=n;glc.style.cursor=G3.lblAt(e)||hit(e)?"pointer":"";});}
   let wAcc=0;glc.addEventListener("wheel",e=>{e.preventDefault();goal=null;if(e.shiftKey||Math.abs(e.deltaX)>Math.abs(e.deltaY)&&!e.ctrlKey)panBy(-e.deltaX||-e.deltaY,0);else if(FOL.on)FOL.r=clamp(FOL.r*Math.exp(e.deltaY*(e.ctrlKey?0.01:0.001)),10,120);else{wAcc+=e.deltaY*(e.ctrlKey?10:1);if(Math.abs(wAcc)>=60){cam.r=rNext(cam.r,wAcc>0?-1:1);wAcc=0;}}},{passive:false});   // (v6.1: one zoom step per wheel notch)
   // keyboard: arrows/WASD move, Q/E rotate, +/- zoom
@@ -91,7 +91,7 @@
   // v6.1 t2: is the camera moving (or about to)? The stop-motion world (52) draws every frame only then
   G3.camBusy=()=>!!goal||FOL.on||ptrs.size>0||!!padDir||Math.abs(rShown-(goal?cam.r:rStep(cam.r)))>0.01||performance.now()-(G3.lastMove||0)<300||!!G3.cineHold;   // (v6.1 t3: zen is stop-motion too)
   G3.padTick=rdt=>{if(padDir)panBy(-padDir[0]*500*rdt,-padDir[1]*500*rdt);};
-  const JUMPS={site:[0,30,700,0.62],trucks:[-62,2,118],recv:[-21,-13,100],pulp:[24,-15,100],pm:[22,9,130],wd:[-17,7,72],wh:[-37,24,105],shop:[57,-21,48]};
+  const JUMPS={site:[0,30,700,0.62],trucks:[-62,2,118],recv:[-21,-13,100],pulp:[24,-15,100],pm:[22,9,130],wd:[-17,7,72],wh:[-37,24,105],shop:[57,-21,48],mcc:[11,27,52]};   // (v6.10: mcc)
   // section labels: Auto fades them out after a few idle seconds, On keeps them, Off hides them
   let lblMode="auto";try{lblMode=localStorage.getItem("paper-mill-labels")||"auto";}catch(e){}
   G3.lastMove=performance.now();

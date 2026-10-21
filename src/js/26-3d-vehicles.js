@@ -85,6 +85,6 @@
   function driveTo(g,wp,speed,rdt){const dx=wp.x-g.position.x,dz=wp.z-g.position.z,d=Math.hypot(dx,dz);if(d<0.25)return true;
     const s=Math.min(d,speed*rdt);g.position.x+=dx/d*s;g.position.z+=dz/d*s;let h=Math.atan2(-dz,dx);if(wp.rev)h+=Math.PI;
     g.userData.heading=lerpAng(g.userData.heading,h,Math.min(1,rdt*(wp.rev?3:5)));g.rotation.y=g.userData.heading;g.userData.spin=(g.userData.spin||0)+(wp.rev?-1:1)*s/0.4;return false;}
-  const truckPool={in:[],out:[]},truckMap=new Map();
+  const truckPool={in:[],out:[]},truckMap=new Map();G3.truckMap=truckMap;
   // chemical tanker: every so often it backs onto a free receiving door, hooks up a hose, unloads and leaves (visual only)
   const CHEM={g:null,st:"away",t:25,d:-1,dz:0},_ha=new THREE.Vector3(),_hb=new THREE.Vector3(),_hup=new THREE.Vector3(0,1,0);
