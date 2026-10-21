@@ -86,7 +86,7 @@ function pfSVG(D,live){const vert=pfVert(),NU=104,NV=112,GAP=30,PAD=vert?24:10,n
   if(W.bale>0.05)wl(0,NU/2,["Bales lost",pfT(W.bale)]);
   wl(iM,NU-20,W.fine>0?["Effluent fiber",pfT(W.eff),"Permit fine "+money(W.fine)]:["Effluent fiber",pfT(W.eff)],W.fine>0?"bad":"");
   {const a=uOf(iM)+20,b=uOf(iP)+NU-16,vv=v1+26;o.push(`<polyline points="${poly([[a,v1],[a,vv],[b,vv],[b,v1+2]])}" class="pfbroke" marker-end="url(#pfArr)"/>`);
-    const uc=uOf(2)+NU/2,[x,y]=vert?[vv+6,uc+4]:[uc,vv+18];o.push(txt(x,y,"Broke "+pfT(W.broke)+" repulped","pfwv",vert?"start":"middle"));}
+    const uc=uOf(2)+NU/2,[x,y]=vert?[vv+6,uc+4]:[uc,vv+18];o.push(txt(x,y,"Broke "+pfT(W.broke)+(W.trim>0.05?" + trim "+pfT(W.trim):"")+" repulped","pfwv",vert?"start":"middle"));}
   o.push(`</g>`);
   // the areas (text in screen space, so it reads the same both ways)
   PF_AREAS.forEach(([a],i)=>{const u=uOf(i),[x,y]=X(u,v0),[w,h]=vert?[NV,NU]:[NU,NV],cx=x+w/2,cy=y+h/2,L=PF_LINES[a],lp=live?pfLamp(a):null,sel=PFUI.sel==="node:"+a;
@@ -113,7 +113,7 @@ function pfOutputs(D){const W=D.W,mx=Math.max(D.revenue,D.cost,1),pos=D.profit>=
       <div><span>Made</span><em>${pfT(D.made)}</em><em>worth ${money(W.val)}</em></div></button>
     <button type="button" class="pfbox${PFUI.sel==="out:waste"?" sel":""}" data-pf="out:waste"><b>Waste</b>
       <div><span>Rejects → landfill</span><em>${pfT(W.rej)}</em></div><div><span>Effluent fiber</span><em>${pfT(W.eff)}</em></div>
-      ${W.bale>0.05?`<div><span>Bales lost</span><em>${pfT(W.bale)}</em></div>`:""}${W.spill>0.05?`<div><span>Stock spilled</span><em>${pfT(W.spill)}</em></div>`:""}${W.scrap>0.05?`<div><span>Rolls scrapped</span><em>${pfT(W.scrap)}</em></div>`:""}<div><span>Broke (repulped)</span><em>${pfT(W.broke)}</em></div>
+      ${W.bale>0.05?`<div><span>Bales lost</span><em>${pfT(W.bale)}</em></div>`:""}${W.spill>0.05?`<div><span>Stock spilled</span><em>${pfT(W.spill)}</em></div>`:""}${W.scrap>0.05?`<div><span>Rolls scrapped</span><em>${pfT(W.scrap)}</em></div>`:""}<div><span>Broke (repulped)</span><em>${pfT(W.broke)}</em></div>${W.trim>0.05?`<div><span>Trim (DE pulper)</span><em>${pfT(W.trim)}</em></div>`:""}
       ${W.fine>0?`<div class="bad"><span>Permit fines</span><em>${money(W.fine)}</em></div>`:""}</button>
     <button type="button" class="pfbox pfprof${PFUI.sel==="out:profit"?" sel":""}" data-pf="out:profit"><b>${pos?"Profit":"Loss"}</b>
       <div class="pfbar"><span>Revenue</span><i style="width:${(D.revenue/mx*100).toFixed(1)}%" class="r"></i></div>
@@ -287,7 +287,7 @@ function pfBreak(D,live){const s=PFUI.sel;const [kind,a,b]=s.split(":"),t=D.made
     note="Revenue lands when a truck leaves, so it comes in lumps. \"Worth\" values the paper as it comes off the reel.";}
   else if(a==="waste"){title="Waste";const W=D.W;
     rows=[["Bales fed",pfT(W.feed)],["Rejects → landfill",pfT(W.rej)],["Share of bales",W.feed>0.5?Math.round(W.rej/W.feed*100)+" %":"–"],W.bale>0.05?["Bales lost (fire, rain, beavers)",pfT(W.bale)]:null,
-      ["Effluent fiber (white water)",pfT(W.eff)],["Broke, back to the pulper",pfT(W.broke)],W.spill>0.05?["Stock spilled (chest overflow, to the sewer)",pfT(W.spill),"bad"]:null,W.scrap>0.05?["Finished rolls scrapped (fire, wind)",pfT(W.scrap),"bad"]:null,W.fine>0?["Wastewater permit fines",money(W.fine)+(W.fines>1?" ("+W.fines+")":""),"bad"]:null];
+      ["Effluent fiber (white water)",pfT(W.eff)],["Broke, back to the pulper",pfT(W.broke)],W.trim>0.05?["Trim, back to the stock chest (DE pulper)",pfT(W.trim)]:null,W.spill>0.05?["Stock spilled (chest overflow, to the sewer)",pfT(W.spill),"bad"]:null,W.scrap>0.05?["Finished rolls scrapped (fire, wind)",pfT(W.scrap),"bad"]:null,W.fine>0?["Wastewater permit fines",money(W.fine)+(W.fines>1?" ("+W.fines+")":""),"bad"]:null];
     note="Waste is tons, shown for interest: landfill and effluent don't cost anything on their own. Broke isn't lost; it goes round again.";}
   else if(a==="profit"){title=D.profit>=0?"Profit":"Loss";rows=[["Revenue",money(D.revenue),"tot"]];
     PF_CATS.forEach(([c,name])=>rows.push([name,"−"+money(D.cat[c])]));

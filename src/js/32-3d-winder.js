@@ -35,15 +35,15 @@
   const webMk=n=>{const g=new THREE.BufferGeometry();g.setAttribute("position",new THREE.BufferAttribute(new Float32Array(n*2*3),3));const ix=[];for(let i=0;i<n-1;i++){const a=i*2;ix.push(a,a+1,a+2,a+1,a+3,a+2);}g.setIndex(ix);const o=new THREE.Mesh(g,paperDS);o.frustumCulled=false;wd.add(o);return o;};
   const wTan=(px,py,cx,cy,r,hiY)=>{const dx=px-cx,dy=py-cy,d=Math.hypot(dx,dy),b=Math.atan2(dy,dx),al=Math.acos(Math.min(1,r/d)),a1=b+al,a2=b-al;
     const p1=[cx+r*Math.cos(a1),cy+r*Math.sin(a1)],p2=[cx+r*Math.cos(a2),cy+r*Math.sin(a2)];return (hiY?p1[1]>=p2[1]:p1[0]>=p2[0])?p1:p2;};
-  const WEBA=webMk(6),WEBB=[webMk(14),webMk(14)],WK={ru:-1,rr:-1};
+  const WEBA=webMk(6),WEBB=[webMk(14),webMk(14)],WK={ru:-1,rr:-1,w:-1},IN=3.0/205;   // (v6.11: the 3 m web is 205" across: metres an inch)
   function wStrip(o,pts,z0,z1){const a=o.geometry.attributes.position.array;pts.forEach(([x,y],i)=>{a.set([x,y,z0,x,y,z1],i*6);});for(let i=pts.length;i<a.length/6;i++){const [x,y]=pts[pts.length-1];a.set([x,y,z0,x,y,z1],i*6);}
     o.geometry.attributes.position.needsUpdate=true;o.geometry.computeBoundingSphere();}
-  function webUpdate(ru,RR,yc){if(Math.abs(ru-WK.ru)>0.01){WK.ru=ru;const gt=[WD.GX,WD.GY+WD.GR],u=wTan(gt[0],gt[1],WD.UX,WD.UY,ru,true);
+  function webUpdate(ru,RR,yc,W){W=W||100;if(W!==WK.w){WK.w=W;WK.rr=-1;trimSet(W);}if(Math.abs(ru-WK.ru)>0.01){WK.ru=ru;const gt=[WD.GX,WD.GY+WD.GR],u=wTan(gt[0],gt[1],WD.UX,WD.UY,ru,true);
       wStrip(WEBA,[u,[WD.GX+0.06,WD.GY+WD.GR],gt,[WD.BX,WD.BY+WD.BR],[WD.SLX+0.2,WD.PASS],[WD.SLX,WD.PASS]],-1.5,1.5);}
     if(Math.abs(RR-WK.rr)>0.004){WK.rr=RR;const P=[[WD.SLX,WD.PASS]],L=(cx,cy,r,a0,a1,n)=>{for(let k=0;k<=n;k++){const a=a0+(a1-a0)*k/n;P.push([cx+r*Math.cos(a),cy+r*Math.sin(a)]);}};
       L(WD.LX,WD.LY,WD.LR,0.2,-2.6,3);   // down to the lead-in roll and under it
       const an=Math.atan2(yc-WD.DY,WD.SX-WD.RDX);L(WD.RDX,WD.DY,WD.DR,-0.75,an,8);   // up the rear drum's far side and over it into the nip
-      wStrip(WEBB[0],P,-1.45,-0.02);wStrip(WEBB[1],P,0.02,1.45);}}
+      const LW=W*IN;wStrip(WEBB[0],P,-LW-0.01,-0.01);wStrip(WEBB[1],P,0.01,LW+0.01);}}
   // upender: a hinged plate at the head of the roll conveyor that tips each roll from lying down to standing up
   const UPX=-22.9,UPZ=zc+0.7,UPY=0.5,UPC=1.32;
   const upender=new THREE.Group();upender.position.set(UPX,UPY,UPZ);scene.add(upender);
@@ -52,9 +52,22 @@
   // v6.5.7: transfer table beside the upender: the second roll of a set waits here, then slides across onto the plate
   box(1.5,0.48,1.5,M.steel,UPX,0.24,zc-1.45,scene);box(0.12,0.5,1.5,M.brand,UPX-0.8,0.25,zc-1.45,scene,false);
   const web={set visible(v){WEBA.visible=WEBB[0].visible=WEBB[1].visible=v;}};   // (34: shown while the winder cuts)
-  [[-1.5,-1.45],[1.45,1.5]].forEach(([z0,z1])=>wStrip(webMk(4),[[WD.SLX,WD.PASS],[WD.SLX-0.2,WD.PASS-0.12],[WD.SLX-0.38,WD.PASS-0.3],[WD.SLX-0.45,2.86]],z0,z1));   // the edge trims
-  G3.wdParts={setRolls,setCores,rider,rods,webUpdate,WD,WEBA,WEBB,unwind};
-  (G3.dynLater||(G3.dynLater=[])).push(rider,...rods,...setCores,...setRolls,WEBA,...WEBB);   // (they move or change shape: never batched)
+  // v6.11 the dry-end (DE) pulper on the drive side: the trim fan blows the trim into it and it pumps the slurry back to the
+  // stock chest (03g). A tub with its rim and agitator drive, the trim duct dropping in, and a name plate.
+  {const X=WD.SLX-0.45,Z=-5.3;cylZ(0.05,0.01,M.ink,X,0,Z,4,wd);
+   const tub=new THREE.Mesh(new CylG(1.15,1.05,1.3,18),M.steel);tub.position.set(X,0.65,Z);tub.castShadow=true;wd.add(tub);
+   const rim=new THREE.Mesh(new CylG(1.22,1.22,0.12,18),M.ink);rim.position.set(X,1.32,Z);wd.add(rim);
+   const pulp=new THREE.Mesh(new CircG(1.08,18),M.kraft);pulp.rotation.x=-Math.PI/2;pulp.position.set(X,1.36,Z);wd.add(pulp);
+   box(2.5,0.16,0.3,M.steel,X,1.5,Z,wd,false);box(0.55,0.5,0.55,M.stock,X,1.82,Z,wd,false);box(0.35,0.3,0.35,M.ink,X+0.45,1.75,Z,wd,false);
+   box(0.24,0.24,1.4,M.steel,X,1.6,Z+1.15,wd,false);box(0.24,1.2,0.24,M.steel,X,1.0,Z+1.75,wd,false);   // the trim duct from the fan, into the tub
+   cylZ(0.14,1.4,M.ww,X-1.0,0.35,Z+0.8,10,wd);box(0.5,0.4,0.4,M.brand,X-1.0,0.25,Z+1.6,wd,false);   // stock pump back to the chest
+   const c=document.createElement("canvas");c.width=256;c.height=48;const g=c.getContext("2d");g.fillStyle="#ffffff";g.fillRect(0,0,256,48);g.fillStyle="#1c2233";g.font="800 24px system-ui,sans-serif";g.textAlign="center";g.fillText("DE PULPER",128,33);
+   const t=new THREE.CanvasTexture(c);t.colorSpace=THREE.SRGBColorSpace;const pl=new THREE.Mesh(new THREE.PlaneGeometry(1.4,0.26),new THREE.MeshBasicMaterial({map:t}));pl.position.set(X,0.8,Z+1.13);wd.add(pl);}
+  // the edge trims: what's left of the web outside the twin rolls (v6.11: wider at narrow widths)
+  const TRIMS=[webMk(4),webMk(4)],TP=[[WD.SLX,WD.PASS],[WD.SLX-0.2,WD.PASS-0.12],[WD.SLX-0.38,WD.PASS-0.3],[WD.SLX-0.45,2.86]];
+  function trimSet(W){const L=W*IN+0.01;wStrip(TRIMS[0],TP,-1.5,-L);wStrip(TRIMS[1],TP,L,1.5);}trimSet(100);
+  G3.wdParts={setRolls,setCores,rider,rods,webUpdate,WD,WEBA,WEBB,unwind,IN};
+  (G3.dynLater||(G3.dynLater=[])).push(rider,...rods,...setCores,...setRolls,WEBA,...WEBB,...TRIMS);   // (they move or change shape: never batched)
   box(1.2,1.2,0.8,M.steel,0,0.6,4.3,wd);box(1.1,0.5,0.1,M.robot,0,1.25,3.95,wd,false);
   const SPR={x:-13.4,z:3.6};
   const rackSpools=[0,1,2].map(k=>{const m=spoolModel(scene);m.g.position.set(SPR.x-k*1.2,0.75,SPR.z+0.6);m.set(R0);return m;});

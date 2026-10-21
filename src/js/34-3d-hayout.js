@@ -199,10 +199,11 @@
        on top of the set, and at a set change (the set count drops) lifts clear for a moment and comes back down on the new cores */
     {const W=G3.wdParts,acc=S.winderAcc;if(W){if(W.lastAcc!=null&&acc<W.lastAcc-0.5)W.lift=1.4;W.lastAcc=acc;W.lift=Math.max(0,(W.lift||0)-rdt);
       const up=W.lift>0?0.6*Math.min(1,Math.min(W.lift,1.4-W.lift)*4):0;
-      W.setRolls.forEach((r,k)=>{r.scale.set(RR,RR,1);r.position.y=ycS;r.visible=wdOn;W.setCores[k].position.y=ycS;W.setCores[k].visible=wdOn;if(cutting)r.rotation.z-=rdt*10/Math.max(0.3,sr);});
+      const RW=S.wdW||100,LZ=RW*W.IN,sz=k=>(k?-1:1)*(LZ/2+0.01);   // (v6.11: the rolls are as long as their width)
+      W.setRolls.forEach((r,k)=>{r.scale.set(RR,RR,LZ/1.4);r.position.set(r.position.x,ycS,sz(k));r.visible=wdOn;W.setCores[k].scale.z=LZ/1.43;W.setCores[k].position.set(W.setCores[k].position.x,ycS,sz(k));W.setCores[k].visible=wdOn;if(cutting)r.rotation.z-=rdt*10/Math.max(0.3,sr);});
       const ry=(wdOn?ycS+RR:1.2)+W.WD.RIDR+up;W.rider.position.y=ry;if(cutting)W.rider.children[0].rotation.z+=rdt*10*0.62/W.WD.RIDR;
       W.rods.forEach(o=>{const y0=ry+0.47,y1=3.0,L=Math.max(0.05,y1-y0);o.scale.y=L;o.position.y=(y0+y1)/2;});
-      if(cutting)W.webUpdate(unwind.scale.x,RR,ycS);}}
+      if(cutting)W.webUpdate(unwind.scale.x,RR,ycS,RW);}}
     if(cutting){unwind.rotation.z+=rdt*6;drums.forEach(d=>d.rotation.z+=rdt*12);}
     web.visible=cutting&&unwind.visible;
     const inFlight=[CR.j,...CR.jobs].filter(Boolean),nPark=clamp(nP0-inFlight.filter(j=>j.kind==="park"&&!j.dropped).length+inFlight.filter(j=>j.fromPark&&!j.picked).length,0,parked.length);parked.forEach((g,k)=>g.children[2].visible=g.children[3].visible=k<nPark);G3.parkedN=nPark;

@@ -108,13 +108,19 @@ function step(dt){
   if(S.conv===undefined)S.conv=0;const convFull=S.conv>P.convCap-2+1e-6;S.wdBlocked=convFull;   // (v6.5.7: a set is two rolls, so the conveyor needs room for both)
   const cut=S.wd==="hayout"||M.winderDown||convFull?0:Math.min(S.winderBuf,C.wdr.v*dt/60); S.winderBuf-=cut;
   // v6.5.3: the winder splices the off-spec sections out of the set and winds them onto beater rolls of their own
-  {const T=[];lotTake(S.lots.buf,cut,T);let bt=0;for(const [k,q] of T){if(k==="beater")bt+=q;else lotPut(S.lots.acc,k,q);}S.winderAcc+=cut-bt;S.beatAcc=(S.beatAcc||0)+bt;S.beatEnd=cut>0&&bt<=1e-9;}
+  // v6.11: the trim (web - 2 x the roll width, 07j) is slit off and blown to the dry-end pulper, back to the stock chest
+  {const T=[];lotTake(S.lots.buf,cut,T);let bt=0,gd=0,tr=0;const f=cut>0?trimFrac(windW(T.length?T[0][0]==="beater"?C.grade:T[0][0]:C.grade)):0;
+    for(const [k,q] of T){const tq=q*f;tr+=tq;if(k==="beater")bt+=q-tq;else{lotPut(S.lots.acc,k,q-tq);gd+=q-tq;}}
+    S.winderAcc+=gd;S.beatAcc=(S.beatAcc||0)+bt;S.beatEnd=cut>0&&bt<=1e-9;trimTo(tr);S.trimNow=f;S.rates.trim=ease(S.rates.trim||0,tr*60/dt,dt,6);}
   if(cut>0&&L.hay<dt/720*0.75*P.hayBase*outRel("dry")*((C.hays?1:0)+(M.hayMul-1)))hayout(L.hayLen,L.hayLoss);
   let rollsMade=0;
   // (a roll takes the grade that makes up most of its paper: one roll at a grade change is part old, part new)
   // v6.5.7: the winder winds a set of two rolls side by side (the reel is slit in two); both come off together
-  while(S.winderAcc>=2*C.rollW.v-1e-9){for(let k=0;k<2;k++){const w=Math.min(S.winderAcc,C.rollW.v);S.winderAcc-=w;const T=[];lotTake(S.lots.acc,w,T);let g=C.grade,best=-1;for(const [k2,q] of T)if(q>best){best=q;g=k2;}
-    lotPut(S.lots.conv,g,1);S.conv+=1;rollsMade++;S.tot.rolls++;}}
+  // v6.11: twin rolls of the width the planner wants for that grade (07j): a W" roll is W/100 of a standard roll
+  for(;;){const g0=S.lots.acc.length?S.lots.acc[0][0]:C.grade,W=windW(g0),rt=rollT(W);if(S.winderAcc<2*rt-1e-9)break;let gs=g0;
+    for(let k=0;k<2;k++){const w=Math.min(S.winderAcc,rt);S.winderAcc-=w;const T=[];lotTake(S.lots.acc,w,T);let g=C.grade,best=-1;for(const [k2,q] of T)if(q>best){best=q;g=k2;}
+      lotPut(S.lots.conv,g,W/100,W);S.conv+=W/100;rollsMade++;S.tot.rolls++;gs=g;}
+    windCredit(gs,W,2*W/100);S.wdW=W;}
   // v6.5.3: a beater roll goes to the beater bay (27-3d draws it there from S.tot.beater) and round to the pulper
   // (full rolls while the off-spec section lasts; when good paper comes through again the rest goes on a short roll)
   // (v6.5.7: in sets of two, like the good rolls)

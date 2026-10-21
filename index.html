@@ -2264,7 +2264,7 @@ const MAINT=["birdline","steamjoint","fogfan","shaft","fabric","felt","winderdow
 const REPAIR_K=1.2;
 const UPS=[
  {id:"drive",g:"machine",name:"Drive & gearbox rebuild",lv:[115e3,105e3,90e3],desc:"+150 fpm max speed per level, if the dryers can keep up (heavy grades and a wet sheet reach their limit first)."},   // (v6.5 b5: 25% cheaper: the dryer limit can cap it)
- {id:"deckle",g:"machine",name:"Wider trim (deckle)",lv:[160e3,135e3],desc:"+6% tons at the same speed per level."},
+ {id:"deckle",g:"machine",name:"Wider trim (deckle)",lv:[160e3,135e3],desc:"+3\" of web per level (+1.5% tons at the same speed) and rolls up to 1.5\" wider, so wide rolls cost less trim."},
  {id:"shoe",g:"machine",name:"Shoe press",lv:[180e3],desc:"+100 fpm and 12% less energy per ton. A drier sheet into the dryers: about 16% more drying headroom."},
  {id:"winder",g:"machine",name:"Winder rebuild",lv:[285e3,520e3],desc:"+30 t/h winder speed and 40% fewer hayouts per level."},
  {id:"monitor",g:"machine",name:"Fabric & felt monitoring",lv:[220e3,150e3],desc:"Machine failures 40% rarer and fewer sheet breaks, per level."},
@@ -2294,7 +2294,7 @@ const UP=Object.fromEntries(UPS.map(u=>[u.id,u]));
 const LV=id=>(S&&S.up&&S.up[id])||0;
 function applyUpgrades(){
   applyGrade();
-  P.K=BASE.K*Math.pow(1.06,LV("deckle"))*(1+0.02*LV("apc"))*leadCap("pwet")*civSpeed();   // (v5.1: civics, Machinery)
+  P.K=BASE.K*(1+3/205*LV("deckle"))*   /* (v6.11: the deckle widens the web 3" a level, 07j; was +6%) */(1+0.02*LV("apc"))*leadCap("pwet")*civSpeed();   // (v5.1: civics, Machinery)
   P.spBonus=150*LV("drive")+100*LV("shoe");
   P.energyMul=(1-0.12*LV("shoe"))*(1-0.04*LV("apc"));P.refSave=10*LV("refiner");   /* (v6.5 balance: apc 8%, refiner $22: per-ton upgrades paid back 3-4x in a season) */
   P.yieldF=P.blendY+0.03*LV("clean"); P.tankCap=BASE.tankCap+150*LV("chest");
@@ -2719,6 +2719,39 @@ function manRep(){return manNow().short?MAN.SLOW:1;}
 // reseed). Ordinary shift changes and covers are on Report > Control room > Manning, not in the feed.
 function manTick(){const s=manIdx();if(s===MAN.seen)return;const prev=MAN.seen;MAN.seen=s;if(prev!==s-1||S.zen)return;
   const m=manNow();if(m.short)log(`Shift change: ${m.team} team on ${m.K==="D"?"days":"nights"}, one tech short (a vacation went unfilled). Maintenance repairs are slower until the next shift.`,"warn");}
+/* ---- v6.11 trim and rolls at width (plan: claude/trim-cd-plan.md) ----
+   The web at the reel is TRIM.web0 inches wide (+TRIM.perLv a level of the deckle upgrade). The winder slits it into a set
+   of two TWIN rolls of the same width W (customers order widths; every order is an even number of rolls), so the trim is
+   web - 2W, at least TRIM.minTrim (2.5" an edge). The widest roll is TRIM.maxW0 (+TRIM.maxPerLv a deckle level), so a
+   mill with the upgrade can run wider rolls. The trim (fiber and its water) is blown down the trim ducts to the dry-end
+   pulper under the winder and goes back to the stock chest, like the broke hole: paid for again in energy and winder time,
+   not lost, but never sold.
+   A roll has the same diameter whatever its width, so it weighs C.rollW.v x W/100. Lots, the warehouse, trucks and orders
+   count rolls in standard-roll units (a 100" roll is 1, a 90" roll 0.9), so every tons conversion stays units x C.rollW.v.
+   Width dice have their own stream ("wid"). Season, survival and free play; zen keeps 100" rolls and no trim. ---- */
+const TRIM={web0:205,perLv:3,maxW0:100,maxPerLv:1.5,minW:50,minTrim:5,bookTrim:0.07,
+  // customer widths and how often they're ordered (%): mostly wide, a few narrow ones that cost real trim
+  W:[[100,30],[98,22],[96,18],[93,12],[90,8],[86,5],[80,3],[72,1.5],[60,0.5]]};
+const trimOn=()=>!!(S&&!S.zen);
+const webW=()=>TRIM.web0+TRIM.perLv*LV("deckle");
+const maxRollW=()=>Math.min(TRIM.maxW0+TRIM.maxPerLv*LV("deckle"),(webW()-TRIM.minTrim)/2);
+const rollT=w=>C.rollW.v*(w||100)/100;                  // tons in one roll of width w
+const trimFrac=w=>trimOn()?Math.max(0,(webW()-2*(w||100))/webW()):0;
+const wFmt=w=>(Math.round((w||100)*10)/10)+'"';
+function wRand(){if(S.rng.wid==null)S.rng.wid=((S.seed||1)^0x2c1b3a5f)>>>0;const x=rand("wid")*100;let a=0;for(const [w,p] of TRIM.W){a+=p;if(x<a)return w;}return 100;}
+// a customer's width: with the deckle upgrade, half the full-width customers take the wider roll the mill can now make
+function orderWidth(){const m=maxRollW();let w=wRand();if(w>=100&&m>100&&rand("wid")<0.5)w=m;return Math.max(TRIM.minW,Math.min(w,m));}
+// rolls of grade g, width w still to wind: what open orders of that width have left to ship, less what is already wound
+// (in the warehouse, on the conveyor, on trucks at the doors). Orders of one width share their rolls, so it's by width.
+function windShort(g,w){const O=S.ord;if(!O)return 0;let n=0;for(const o of O.list)if(o.st==="open"&&o.g===g&&(o.w||100)===w)n+=o.r-o.sh;if(n<=1e-9)return 0;
+  n-=fgOf(g,w);for(const l of S.lots.conv)if(l[0]===g&&(l[2]||100)===w)n-=l[1];for(const tr of S.outDock)if(tr&&tr.g===g&&tr.w===w&&!tr.spot)n-=tr.load;return Math.max(0,n);}
+// the width the winder runs for grade g now: the earliest-due open order of g whose width is still short, else the widest (spot)
+function windW(g){if(!trimOn())return 100;const O=S.ord;if(O){let best=null;for(const o of O.list)if(o.st==="open"&&o.g===g&&o.w&&(!best||o.due<best.due)&&windShort(g,o.w)>1e-6)best=o;if(best)return best.w;}return maxRollW();}
+// a set of width w came off the winder: shown on the order (how much of it has been wound)
+function windCredit(g,w,u){const O=S.ord;if(!O||!trimOn())return;for(const o of O.list)if(o.st==="open"&&o.g===g&&o.w===w&&(o.wd||0)<o.r-1e-6){o.wd=(o.wd||0)+u;return;}}
+// the trim of this step's winding goes to the dry-end pulper and on into the stock chest (overflow waits in the beater bay)
+function trimTo(t){if(!(t>0))return;const room=Math.max(0,P.tankCap*0.98-S.tank),a=Math.min(t,room);S.tank+=a;if(t>a)S.q.bank+=t-a;
+  if(typeof WQ!=="undefined")WQ.rep+=t;S.tot.trim=(S.tot.trim||0)+t;pfW("trim",t);}
 const EVENTS=[
  {id:"refclash",g:"stock",name:"Refiner plates clash",head:"Refiner plates clashed! The refiners tripped: no stock is going forward to the machine chest.",dur:[180,300],mtbf:420,mods:{refOut:"refiner plates clashed"},fx:"refclash",
    // (v6.9.2: the refiners feed the machine chest; clashed, nothing goes forward, the machine runs the chest down and trips
@@ -3489,35 +3522,49 @@ function ordState(){if(!S.ord){S.ord={n:0,list:[],k:{ship:0,onT:0,lateT:0,late:0
 // called from seedRun: a fresh book for the run (the warehouse's opening stock already has buyers)
 function ordInit(){S.ord=null;S.rng.ord=(S.seed^0x51ed270b)>>>0;S.rng.bale=(S.seed^0x7a3c5e91)>>>0;S.bq=null;ordState();}
 function ordCarry(){const O=S.ord;let r=Math.floor(S.fg||0);while(r>=ORD.minR){const n=Math.min(r,P.truckRolls);r-=n;
-    O.list.push({id:++O.n,c:Math.floor(rand("ord")*CUST.length),g:C.grade,r:n,ld:0,sh:0,due:Math.round(S.t+(0.4+rand("ord")*0.8)*1440),t0:Math.round(S.t),st:"open"});}}
+    O.list.push({id:++O.n,c:Math.floor(rand("ord")*CUST.length),g:C.grade,r:n,w:100,wd:n,ld:0,sh:0,due:Math.round(S.t+(0.4+rand("ord")*0.8)*1440),t0:Math.round(S.t),st:"open"});}}
 // a production campaign of `tons` of grade g starting now: book its orders
 function ordCampaign(g,tons,t0){const O=S.ord;if(!O)return;const rw=C.rollW.v||12.5,G=GRADES[g],tph=Math.max(5,P.K*G.sp*G.bw)*ORD.eff;
-  let rolls=Math.floor(tons*ORD.cover/rw),made=0;
-  while(rolls>=ORD.minR){let n=Math.round(ORD.minR+rand("ord")*(ORD.maxR-ORD.minR));if(rolls-n<ORD.minR)n=rolls;rolls-=n;made+=n;
+  /* v6.11: each order is for rolls of one width, always an even number (the winder makes them in twin pairs); its size r
+     is in standard-roll units (a 90" roll is 0.9). The units booked allow for the trim the widths will cost. */
+  let units=tons*ORD.cover*(trimOn()?1-TRIM.bookTrim:1)/rw,made=0;
+  for(;;){const w=trimOn()?orderWidth():100,u1=w/100;if(units<ORD.minR*u1-1e-9)break;
+    let np=2*Math.round((ORD.minR+rand("ord")*(ORD.maxR-ORD.minR))/2);if(units-np*u1<ORD.minR*u1)np=2*Math.floor(units/u1/2);if(np<2)break;
+    const n=np*u1;units-=n;made+=n;
     const due=t0+made*rw/tph*60+(ORD.slack[0]+rand("ord")*(ORD.slack[1]-ORD.slack[0]))*1440;
-    O.list.push({id:++O.n,c:Math.floor(rand("ord")*CUST.length),g,r:n,ld:0,sh:0,due:Math.round(due),t0:Math.round(t0),st:"open"});}
+    O.list.push({id:++O.n,c:Math.floor(rand("ord")*CUST.length),g,r:n,w,np,wd:0,ld:0,sh:0,due:Math.round(due),t0:Math.round(t0),st:"open"});}
   ordPrune();}
 function ordPrune(){const L=S.ord.list;let closed=0;for(let i=L.length-1;i>=0;i--)if(L[i].st!=="open"&&++closed>ORD.keep)L.splice(i,1);}
 const ordGet=id=>S.ord&&S.ord.list.find(o=>o.id===id);
 const ordCust=o=>CUST[o.c]||"Customer";
 // rolls of grade g in the warehouse, and what isn't already promised to a truck at a door
-function fgOf(g){let s=0;for(const l of S.lots.fg)if(l[0]===g)s+=l[1];return s;}
-function ordFree(g){let r=fgOf(g);for(const tr of S.outDock)if(tr&&tr.g===g)r-=Math.max(0,tr.want-tr.load);return Math.max(0,r);}
-function ordNeed(g){let n=0;for(const o of S.ord.list)if(o.st==="open"&&o.g===g)n+=o.r-o.ld;return n;}
+// (v6.11: of width w too, when given: an order wants its own width)
+function fgOf(g,w){let s=0;for(const l of S.lots.fg)if(l[0]===g&&(!w||(l[2]||100)===w))s+=l[1];return s;}
+function ordFree(g,w){let r=fgOf(g,w);for(const tr of S.outDock)if(tr&&tr.g===g&&(!w||!tr.w||tr.w===w))r-=Math.max(0,tr.want-tr.load);return Math.max(0,r);}
+function ordNeed(g,w){let n=0;for(const o of S.ord.list)if(o.st==="open"&&o.g===g&&(!w||(o.w||100)===w))n+=o.r-o.ld;return n;}
+// the widths of grade g in the warehouse
+const fgWidths=g=>[...new Set(S.lots.fg.filter(l=>l[0]===g).map(l=>l[2]||100))];
 // take q rolls of grade g from lots L, oldest first
-function lotTakeG(L,g,q,out){let got=0;for(let i=0;i<L.length&&q>1e-9;){const h=L[i];if(h[0]!==g){i++;continue;}const k=Math.min(h[1],q);h[1]-=k;q-=k;got+=k;if(out)lotPut(out,g,k);if(h[1]<=1e-9)L.splice(i,1);else i++;}return got;}
+// (v6.11: and of width w, when given)
+function lotTakeG(L,g,q,out,w){let got=0;for(let i=0;i<L.length&&q>1e-9;){const h=L[i];if(h[0]!==g||(w&&(h[2]||100)!==w)){i++;continue;}const k=Math.min(h[1],q);h[1]-=k;q-=k;got+=k;if(out)lotPut(out,g,k,h[2]);if(h[1]<=1e-9)L.splice(i,1);else i++;}return got;}
 // give a truck at the door a job: an order, else a spot load; false if there's nothing to load
 function ordAssign(tr){const O=ordState();let best=null,bw=0;
-  for(const o of O.list){if(o.st!=="open")continue;const left=o.r-o.ld;if(left<=0)continue;const want=Math.min(P.truckRolls,left),free=Math.floor(ordFree(o.g)+1e-6);
-    // a full load, or a part load once that grade is off the machine (the next run of it may be days away)
-    const w=free>=want?want:(C.grade!==o.g&&free>=4)?free:0;if(!w)continue;if(!best||o.due<best.due){best=o;bw=w;}}
-  if(best){best.ld+=bw;Object.assign(tr,{oid:best.id,g:best.g,want:bw,spot:false,wait:0});return true;}
-  const sp=ordSpot();if(sp){Object.assign(tr,{oid:0,g:sp[0],want:sp[1],spot:true,wait:0});return true;}
+  for(const o of O.list){if(o.st!=="open")continue;const left=o.r-o.ld;if(left<=1e-6)continue;const ow=o.w||100,want=Math.min(P.truckRolls,left),free=ordFree(o.g,ow)+1e-6;
+    // a full load, or a part load once that width is wound (v6.11: rolls of the order's own width)
+    const w=free>=want?want:((C.grade!==o.g||windShort(o.g,ow)<=1e-6)&&free>=4*ow/100)?Math.min(free,want):0;if(!w)continue;if(!best||o.due<best.due){best=o;bw=w;}}
+  if(best){best.ld+=bw;Object.assign(tr,{oid:best.id,g:best.g,w:best.w||100,want:bw,spot:false,wait:0});return true;}
+  const sp=ordSpot();if(sp){Object.assign(tr,{oid:0,g:sp[0],w:sp[2],want:sp[1],spot:true,wait:0});return true;}
   return false;}
-function ordSpot(){let sg=null,sv=0;for(const g of GRADE_IDS){const s=Math.floor(ordFree(g)-ordNeed(g)+1e-6);if(s>sv){sv=s;sg=g;}}
-  if(sg&&(sv>=P.truckRolls||(S.fg>=P.fgCap*ORD.full&&sv>=4)))return [sg,Math.min(P.truckRolls,sv)];return null;}
+// (v6.11: surplus is counted width by width, so a spot truck never takes rolls an order of that width is waiting for; a
+// spot truck loads any surplus widths of its grade, so odd leftovers still go)
+const spotFree=(g,w)=>Math.max(0,ordFree(g,w)-ordNeed(g,w));
+// what a docked spot truck may still load of width w: the rolls no open order of that width needs, less what other trucks at the doors want
+function spotSur(g,w,self){let r=fgOf(g,w)-ordNeed(g,w);for(const tr of S.outDock)if(tr&&tr!==self&&tr.g===g&&(tr.w===w||(!tr.w&&tr.spot)))r-=Math.max(0,tr.want-tr.load);return Math.max(0,r);}
+const spotOf=g=>fgWidths(g).reduce((a,w)=>a+spotFree(g,w),0);
+function ordSpot(){let sg=null,sv=0;for(const g of GRADE_IDS){const s=spotOf(g);if(s>sv+1e-9){sv=s;sg=g;}}
+  if(sg&&(sv>=P.truckRolls||(S.fg>=P.fgCap*ORD.full&&sv>=4)))return [sg,Math.min(P.truckRolls,sv),null];return null;}
 // rolls that could leave now (what the auto truck rate calls trucks for)
-function ordReady(){let n=0;const full=S.fg>=P.fgCap*ORD.full;for(const g of GRADE_IDS){const f=ordFree(g),need=ordNeed(g),s=f-need;n+=Math.min(f,need);if(s>=P.truckRolls||(full&&s>=4))n+=s;}return n;}
+function ordReady(){let n=0;const full=S.fg>=P.fgCap*ORD.full;for(const g of GRADE_IDS){let s=0;for(const w of fgWidths(g)){const f=ordFree(g,w),need=ordNeed(g,w);n+=Math.min(f,need);s+=Math.max(0,f-need);}if(s>=P.truckRolls||(full&&s>=4))n+=s;}return n;}
 function ordAutoRate(){return clamp(ordReady()/P.truckRolls/3-S.outQ.length*0.15,0,10);}
 const ordLateD=o=>Math.max(0,(S.t-o.due-ORD.grace)/1440);
 // a loaded truck leaves: the invoice, the chargeback, the order's progress
@@ -3545,12 +3592,16 @@ function ordDocks(dt,lcap){let loaded=0;
   for(let d=0;d<P.shipDoors;d++)if(!S.outDock[d]&&S.outQ.length){const tr=S.outQ[0];if(!ordAssign(tr))break;S.outQ.shift();S.outDock[d]=tr;}
   let pool=S.bn==="ship"?P.shipDoors*P.doorRolls*dt/60:Infinity;
   for(let d=0;d<P.shipDoors;d++){const tr=S.outDock[d];if(!tr)continue;
-    const have=fgOf(tr.g),l=Math.max(0,Math.min(tr.want-tr.load,pool===Infinity?P.doorRolls*dt/60:pool,lcap,have));
-    if(l>0){pool-=l;lcap-=l;loaded+=l;tr.load+=l;S.fg-=lotTakeG(S.lots.fg,tr.g,l,tr.lots||(tr.lots=[]));tr.wait=0;}else tr.wait=(tr.wait||0)+dt;
+    const spotAny=tr.spot&&!tr.w,have=spotAny?fgWidths(tr.g).reduce((a,w)=>a+spotSur(tr.g,w,tr),0):fgOf(tr.g,tr.w),l=Math.max(0,Math.min(tr.want-tr.load,pool===Infinity?P.doorRolls*dt/60:pool,lcap,have));
+    if(l>0){pool-=l;lcap-=l;loaded+=l;tr.load+=l;
+      if(spotAny){let q=l;   // only surplus widths: what no open order of that width is waiting for
+        for(const w of fgWidths(tr.g)){if(q<=1e-9)break;const got=lotTakeG(S.lots.fg,tr.g,Math.min(q,spotSur(tr.g,w,tr)),tr.lots||(tr.lots=[]),w);S.fg-=got;q-=got;}
+        tr.load-=q;loaded-=q;}
+      else S.fg-=lotTakeG(S.lots.fg,tr.g,l,tr.lots||(tr.lots=[]),tr.w);tr.wait=0;}else tr.wait=(tr.wait||0)+dt;
     const done=tr.load>=tr.want-1e-6,stuck=tr.wait>90&&have<0.5;
     if(done||(stuck&&tr.load>0.5)){S.leaving.push({...tr,ty:outY(d),kind:"out"});if(S.leaving.length>24)S.leaving.shift();S.outDock[d]=null;
       S.tot.shipped+=tr.load;const tons=tr.load*C.rollW.v;S.shipT+=tons;spend(tons*frOutRate(),"frout");ordDepart(tr);}
-    else if(stuck){const o=!tr.spot&&ordGet(tr.oid);if(o)o.ld-=tr.want;S.outDock[d]=null;tr.oid=0;tr.g=null;tr.want=0;S.outQ.unshift(tr);}}   // nothing to load after all: back to the queue
+    else if(stuck){const o=!tr.spot&&ordGet(tr.oid);if(o)o.ld-=tr.want;S.outDock[d]=null;tr.oid=0;tr.g=null;tr.w=null;tr.want=0;S.outQ.unshift(tr);}}   // nothing to load after all: back to the queue
   return loaded;}
 
 // ---------- base load while the machine is stopped ----------
@@ -3710,9 +3761,11 @@ const HAYLINES=["HAYOUT! Paper is shooting to the roof!","Winder hayout! Every P
 // a hayout ruins the outer wraps of the set on the winder (about 3 t), not the whole 12.5 t roll
 // v2.9.5: reels at the winder (on the unwind + in storage); a reel turns up a fraction over 100 t, which used to make the
 // unwind reel count as "more than one" and block storage, so the machine stopped with storage empty
-function lotPut(L,g,q){if(!(q>0))return;const t=L[L.length-1];if(t&&t[0]===g)t[1]+=q;else L.push([g,q]);}
+// v6.11: a lot is [grade, quantity, roll width in inches] (100" when not given: the standard roll). Quantities of rolls are in
+// standard-roll units (C.rollW.v tons each), so a 90" roll is 0.9 of a unit and every tons conversion stays rolls x C.rollW.v
+function lotPut(L,g,q,w){if(!(q>0))return;w=w||100;const t=L[L.length-1];if(t&&t[0]===g&&(t[2]||100)===w)t[1]+=q;else L.push([g,q,w]);}
 // take q from the front of lots L (into lots `out` if given); returns what was taken
-function lotTake(L,q,out){let got=0;while(q>1e-9&&L.length){const h=L[0],k=Math.min(h[1],q);h[1]-=k;q-=k;got+=k;if(out)lotPut(out,h[0],k);if(h[1]<=1e-9)L.shift();}return got;}
+function lotTake(L,q,out){let got=0;while(q>1e-9&&L.length){const h=L[0],k=Math.min(h[1],q);h[1]-=k;q-=k;got+=k;if(out)lotPut(out,h[0],k,h[2]);if(h[1]<=1e-9)L.shift();}return got;}
 // the value of lots of rolls at today's price for each grade
 const lotValue=(L,tPerRoll,add=0)=>L.reduce((s,[g,q])=>s+q*tPerRoll*(priceOf(g)+add),0);
 function reelsAtWinder(){return Math.max(0,Math.ceil(S.winderBuf/P.jumbo-0.005));}
@@ -3916,13 +3969,19 @@ function step(dt){
   if(S.conv===undefined)S.conv=0;const convFull=S.conv>P.convCap-2+1e-6;S.wdBlocked=convFull;   // (v6.5.7: a set is two rolls, so the conveyor needs room for both)
   const cut=S.wd==="hayout"||M.winderDown||convFull?0:Math.min(S.winderBuf,C.wdr.v*dt/60); S.winderBuf-=cut;
   // v6.5.3: the winder splices the off-spec sections out of the set and winds them onto beater rolls of their own
-  {const T=[];lotTake(S.lots.buf,cut,T);let bt=0;for(const [k,q] of T){if(k==="beater")bt+=q;else lotPut(S.lots.acc,k,q);}S.winderAcc+=cut-bt;S.beatAcc=(S.beatAcc||0)+bt;S.beatEnd=cut>0&&bt<=1e-9;}
+  // v6.11: the trim (web - 2 x the roll width, 07j) is slit off and blown to the dry-end pulper, back to the stock chest
+  {const T=[];lotTake(S.lots.buf,cut,T);let bt=0,gd=0,tr=0;const f=cut>0?trimFrac(windW(T.length?T[0][0]==="beater"?C.grade:T[0][0]:C.grade)):0;
+    for(const [k,q] of T){const tq=q*f;tr+=tq;if(k==="beater")bt+=q-tq;else{lotPut(S.lots.acc,k,q-tq);gd+=q-tq;}}
+    S.winderAcc+=gd;S.beatAcc=(S.beatAcc||0)+bt;S.beatEnd=cut>0&&bt<=1e-9;trimTo(tr);S.trimNow=f;S.rates.trim=ease(S.rates.trim||0,tr*60/dt,dt,6);}
   if(cut>0&&L.hay<dt/720*0.75*P.hayBase*outRel("dry")*((C.hays?1:0)+(M.hayMul-1)))hayout(L.hayLen,L.hayLoss);
   let rollsMade=0;
   // (a roll takes the grade that makes up most of its paper: one roll at a grade change is part old, part new)
   // v6.5.7: the winder winds a set of two rolls side by side (the reel is slit in two); both come off together
-  while(S.winderAcc>=2*C.rollW.v-1e-9){for(let k=0;k<2;k++){const w=Math.min(S.winderAcc,C.rollW.v);S.winderAcc-=w;const T=[];lotTake(S.lots.acc,w,T);let g=C.grade,best=-1;for(const [k2,q] of T)if(q>best){best=q;g=k2;}
-    lotPut(S.lots.conv,g,1);S.conv+=1;rollsMade++;S.tot.rolls++;}}
+  // v6.11: twin rolls of the width the planner wants for that grade (07j): a W" roll is W/100 of a standard roll
+  for(;;){const g0=S.lots.acc.length?S.lots.acc[0][0]:C.grade,W=windW(g0),rt=rollT(W);if(S.winderAcc<2*rt-1e-9)break;let gs=g0;
+    for(let k=0;k<2;k++){const w=Math.min(S.winderAcc,rt);S.winderAcc-=w;const T=[];lotTake(S.lots.acc,w,T);let g=C.grade,best=-1;for(const [k2,q] of T)if(q>best){best=q;g=k2;}
+      lotPut(S.lots.conv,g,W/100,W);S.conv+=W/100;rollsMade++;S.tot.rolls++;gs=g;}
+    windCredit(gs,W,2*W/100);S.wdW=W;}
   // v6.5.3: a beater roll goes to the beater bay (27-3d draws it there from S.tot.beater) and round to the pulper
   // (full rolls while the off-spec section lasts; when good paper comes through again the rest goes on a short roll)
   // (v6.5.7: in sets of two, like the good rolls)
@@ -6227,10 +6286,10 @@ const PF_STEAMSH=0.6;   // steam's share of the energy bill (the same share the 
 const PF_RA={balefire:"yard",badocc:"yard",ragger:"pulper",rotortrip:"pulper",winderdown:"winder",tiedrolls:"winder",wrap:"winder",birdhay:"winder"};
 function pfRepArea(id){if(PF_RA[id])return PF_RA[id];const g=EV[id]&&EV[id].g;return g==="stock"?"stock":g==="machine"?"pm":g==="yard"?"ship":"site";}
 function pfNew(){return {d:Math.floor(S.t/1440),h:Math.floor(S.t/60),L0:Object.assign({},S.ledger),cash0:S.cash,ship0:S.shipT||0,prod0:S.tot.prodT,A:{},
-  W:{feed:0,rej:0,bale:0,eff:0,broke:0,val:0,fine:0,fines:0,spill:0,scrap:0,in:0,fw:0,pot:0,chg:0,spotd:0,idle:0}};}   // (v6.7: in, fw, pot, chg, spotd, idle)
+  W:{feed:0,rej:0,bale:0,eff:0,broke:0,val:0,fine:0,fines:0,spill:0,scrap:0,in:0,fw:0,pot:0,chg:0,spotd:0,idle:0,trim:0}};}   /* (v6.11: trim) */   // (v6.7: in, fw, pot, chg, spotd, idle)
 // (v6.5: every note goes to the day (S.pf) and to the hour (S.ph, 11c-hist.js) alike)
 function pfAdd(k,a,v){if(!v)return;for(const f of [S.pf,S.ph]){if(!f)continue;const o=f.A[k]||(f.A[k]={});o[a]=(o[a]||0)+v;}}
-function pfW(k,v){if(!v)return;if(S.pf)S.pf.W[k]+=v;if(S.ph)S.ph.W[k]+=v;}
+function pfW(k,v){if(!v)return;if(S.pf)S.pf.W[k]=(S.pf.W[k]||0)+v;if(S.ph)S.ph.W[k]=(S.ph.W[k]||0)+v;}
 // called at the top of step(): the first call starts the day; a new mill day keeps the finished one as prev
 function pfDay(){const d=Math.floor(S.t/1440);if(!S.pf){S.pf=pfNew();return;}if(d!==S.pf.d){const y=pfCalc(S.pf,true);S.pf=pfNew();S.pf.prev=y;}}
 // the chemicals and water part of the per-ton energy bill (the rest is energy); refiner savings come off chemicals
@@ -6342,7 +6401,7 @@ function histSum(rows,t0,t1){const s=k=>rows.reduce((a,r)=>a+(r[HCI[k]]||0),0);
   const sub={frin:{"Inbound haul":cat.frin},frout:{"Outbound freight":cat.frout},energy:{Steam:s("s.steam"),Power:s("s.power")},chem:{"Stock prep":s("s.chs"),"Wet end":s("s.chp")},labor:{"Forklift drivers":s("s.drv"),"Loaders and robots":s("s.ldr")},
     maint:{"Repair bills and outage budgets":s("s.rep"),"Maintenance techs":s("s.tech"),"Preventive maintenance program":s("s.pmp"),"Insurance premium":s("s.prem")},
     over:{"Site overhead":s("s.ovh"),"Civics":s("s.civ")},fiber:{"OCC bales":cat.fiber}};
-  const W={};["feed","rej","bale","eff","broke","val","fine","fines","spill","scrap","in","fw","pot","chg","spotd","idle"].forEach(k=>W[k]=s("w."+k));
+  const W={};["feed","rej","bale","eff","broke","val","fine","fines","spill","scrap","in","fw","pot","chg","spotd","idle","trim"].forEach(k=>W[k]=s("w."+k));
   const rep={};if(S.hist)for(const [t,id,v] of S.hist.ev)if(t>=t0&&t<t1)rep[id]=(rep[id]||0)+v;
   const cost=PF_CATS.reduce((a,[c])=>a+cat[c],0),rev=s("rev"),deals=s("deals"),revenue=rev+deals;
   return {h:rows.length,day:Math.floor(t1/1440),cat,sub,by,cost,rev,deals,revenue,profit:revenue-cost,shipT:s("ship"),made:s("made"),W,rep,cashChg:revenue-cost,upg:0,range:true};}
@@ -6424,6 +6483,7 @@ const TAGS=[
   ["dryl","Dryer load","DET","% of limit",()=>S.dry&&S.pm==="run"?S.dry.load*100:null,"a.dryl"],["moist","Reel moisture","DET","%",r=>r.run?r.moist:null,"a.moist"],
   ["bw","Basis weight","DET","lb/1000 ft²",r=>r.run?r.bw:null,"a.bw"],["tension","Draw tension","DET","kN/m",r=>r.run?r.tension:null,""],["draw","Open draw","DET","%",r=>r.draw,""],
   ["reel","Paper waiting at the winder","DET","t",()=>S.winderBuf+S.reel,"a.reel"],["cut","Winder","DET","t/h",()=>_R().cut,"a.cut"],["conv","Rolls on the conveyor","DET","rolls",()=>S.conv||0,""],
+  ["rollw","Roll width (twin set)","QCS","in",()=>S.zen?null:S.wdW||windW(C.grade),""],["trimp","Trim","QCS","%",()=>S.zen?null:(S.trimNow!=null?S.trimNow:trimFrac(windW(C.grade)))*100,""],["trimt","Trim to the DE pulper","QCS","t/h",()=>S.zen?null:_R().trim||0,""],   // (v6.11)
   // utilities
   ["boiler","Steam header","UTIL","% of full",r=>r.boiler*100,""],["vent","Steam vented","UTIL","t/h",()=>S.dry&&S.dry.vent>0.05?S.dry.vent:0,""],
   ["tss","Effluent TSS","UTIL","mg/L",()=>tssNow(),""],["energyt","Energy","UTIL","$/t",()=>Math.max(0,energyCost()-pfChemT()),"a.energyt"],
@@ -9774,15 +9834,15 @@ function no3D(){G3.ok=false;$("no3d").hidden=false;$("no3d-retry").onclick=()=>l
   const webMk=n=>{const g=new THREE.BufferGeometry();g.setAttribute("position",new THREE.BufferAttribute(new Float32Array(n*2*3),3));const ix=[];for(let i=0;i<n-1;i++){const a=i*2;ix.push(a,a+1,a+2,a+1,a+3,a+2);}g.setIndex(ix);const o=new THREE.Mesh(g,paperDS);o.frustumCulled=false;wd.add(o);return o;};
   const wTan=(px,py,cx,cy,r,hiY)=>{const dx=px-cx,dy=py-cy,d=Math.hypot(dx,dy),b=Math.atan2(dy,dx),al=Math.acos(Math.min(1,r/d)),a1=b+al,a2=b-al;
     const p1=[cx+r*Math.cos(a1),cy+r*Math.sin(a1)],p2=[cx+r*Math.cos(a2),cy+r*Math.sin(a2)];return (hiY?p1[1]>=p2[1]:p1[0]>=p2[0])?p1:p2;};
-  const WEBA=webMk(6),WEBB=[webMk(14),webMk(14)],WK={ru:-1,rr:-1};
+  const WEBA=webMk(6),WEBB=[webMk(14),webMk(14)],WK={ru:-1,rr:-1,w:-1},IN=3.0/205;   // (v6.11: the 3 m web is 205" across: metres an inch)
   function wStrip(o,pts,z0,z1){const a=o.geometry.attributes.position.array;pts.forEach(([x,y],i)=>{a.set([x,y,z0,x,y,z1],i*6);});for(let i=pts.length;i<a.length/6;i++){const [x,y]=pts[pts.length-1];a.set([x,y,z0,x,y,z1],i*6);}
     o.geometry.attributes.position.needsUpdate=true;o.geometry.computeBoundingSphere();}
-  function webUpdate(ru,RR,yc){if(Math.abs(ru-WK.ru)>0.01){WK.ru=ru;const gt=[WD.GX,WD.GY+WD.GR],u=wTan(gt[0],gt[1],WD.UX,WD.UY,ru,true);
+  function webUpdate(ru,RR,yc,W){W=W||100;if(W!==WK.w){WK.w=W;WK.rr=-1;trimSet(W);}if(Math.abs(ru-WK.ru)>0.01){WK.ru=ru;const gt=[WD.GX,WD.GY+WD.GR],u=wTan(gt[0],gt[1],WD.UX,WD.UY,ru,true);
       wStrip(WEBA,[u,[WD.GX+0.06,WD.GY+WD.GR],gt,[WD.BX,WD.BY+WD.BR],[WD.SLX+0.2,WD.PASS],[WD.SLX,WD.PASS]],-1.5,1.5);}
     if(Math.abs(RR-WK.rr)>0.004){WK.rr=RR;const P=[[WD.SLX,WD.PASS]],L=(cx,cy,r,a0,a1,n)=>{for(let k=0;k<=n;k++){const a=a0+(a1-a0)*k/n;P.push([cx+r*Math.cos(a),cy+r*Math.sin(a)]);}};
       L(WD.LX,WD.LY,WD.LR,0.2,-2.6,3);   // down to the lead-in roll and under it
       const an=Math.atan2(yc-WD.DY,WD.SX-WD.RDX);L(WD.RDX,WD.DY,WD.DR,-0.75,an,8);   // up the rear drum's far side and over it into the nip
-      wStrip(WEBB[0],P,-1.45,-0.02);wStrip(WEBB[1],P,0.02,1.45);}}
+      const LW=W*IN;wStrip(WEBB[0],P,-LW-0.01,-0.01);wStrip(WEBB[1],P,0.01,LW+0.01);}}
   // upender: a hinged plate at the head of the roll conveyor that tips each roll from lying down to standing up
   const UPX=-22.9,UPZ=zc+0.7,UPY=0.5,UPC=1.32;
   const upender=new THREE.Group();upender.position.set(UPX,UPY,UPZ);scene.add(upender);
@@ -9791,9 +9851,22 @@ function no3D(){G3.ok=false;$("no3d").hidden=false;$("no3d-retry").onclick=()=>l
   // v6.5.7: transfer table beside the upender: the second roll of a set waits here, then slides across onto the plate
   box(1.5,0.48,1.5,M.steel,UPX,0.24,zc-1.45,scene);box(0.12,0.5,1.5,M.brand,UPX-0.8,0.25,zc-1.45,scene,false);
   const web={set visible(v){WEBA.visible=WEBB[0].visible=WEBB[1].visible=v;}};   // (34: shown while the winder cuts)
-  [[-1.5,-1.45],[1.45,1.5]].forEach(([z0,z1])=>wStrip(webMk(4),[[WD.SLX,WD.PASS],[WD.SLX-0.2,WD.PASS-0.12],[WD.SLX-0.38,WD.PASS-0.3],[WD.SLX-0.45,2.86]],z0,z1));   // the edge trims
-  G3.wdParts={setRolls,setCores,rider,rods,webUpdate,WD,WEBA,WEBB,unwind};
-  (G3.dynLater||(G3.dynLater=[])).push(rider,...rods,...setCores,...setRolls,WEBA,...WEBB);   // (they move or change shape: never batched)
+  // v6.11 the dry-end (DE) pulper on the drive side: the trim fan blows the trim into it and it pumps the slurry back to the
+  // stock chest (03g). A tub with its rim and agitator drive, the trim duct dropping in, and a name plate.
+  {const X=WD.SLX-0.45,Z=-5.3;cylZ(0.05,0.01,M.ink,X,0,Z,4,wd);
+   const tub=new THREE.Mesh(new CylG(1.15,1.05,1.3,18),M.steel);tub.position.set(X,0.65,Z);tub.castShadow=true;wd.add(tub);
+   const rim=new THREE.Mesh(new CylG(1.22,1.22,0.12,18),M.ink);rim.position.set(X,1.32,Z);wd.add(rim);
+   const pulp=new THREE.Mesh(new CircG(1.08,18),M.kraft);pulp.rotation.x=-Math.PI/2;pulp.position.set(X,1.36,Z);wd.add(pulp);
+   box(2.5,0.16,0.3,M.steel,X,1.5,Z,wd,false);box(0.55,0.5,0.55,M.stock,X,1.82,Z,wd,false);box(0.35,0.3,0.35,M.ink,X+0.45,1.75,Z,wd,false);
+   box(0.24,0.24,1.4,M.steel,X,1.6,Z+1.15,wd,false);box(0.24,1.2,0.24,M.steel,X,1.0,Z+1.75,wd,false);   // the trim duct from the fan, into the tub
+   cylZ(0.14,1.4,M.ww,X-1.0,0.35,Z+0.8,10,wd);box(0.5,0.4,0.4,M.brand,X-1.0,0.25,Z+1.6,wd,false);   // stock pump back to the chest
+   const c=document.createElement("canvas");c.width=256;c.height=48;const g=c.getContext("2d");g.fillStyle="#ffffff";g.fillRect(0,0,256,48);g.fillStyle="#1c2233";g.font="800 24px system-ui,sans-serif";g.textAlign="center";g.fillText("DE PULPER",128,33);
+   const t=new THREE.CanvasTexture(c);t.colorSpace=THREE.SRGBColorSpace;const pl=new THREE.Mesh(new THREE.PlaneGeometry(1.4,0.26),new THREE.MeshBasicMaterial({map:t}));pl.position.set(X,0.8,Z+1.13);wd.add(pl);}
+  // the edge trims: what's left of the web outside the twin rolls (v6.11: wider at narrow widths)
+  const TRIMS=[webMk(4),webMk(4)],TP=[[WD.SLX,WD.PASS],[WD.SLX-0.2,WD.PASS-0.12],[WD.SLX-0.38,WD.PASS-0.3],[WD.SLX-0.45,2.86]];
+  function trimSet(W){const L=W*IN+0.01;wStrip(TRIMS[0],TP,-1.5,-L);wStrip(TRIMS[1],TP,L,1.5);}trimSet(100);
+  G3.wdParts={setRolls,setCores,rider,rods,webUpdate,WD,WEBA,WEBB,unwind,IN};
+  (G3.dynLater||(G3.dynLater=[])).push(rider,...rods,...setCores,...setRolls,WEBA,...WEBB,...TRIMS);   // (they move or change shape: never batched)
   box(1.2,1.2,0.8,M.steel,0,0.6,4.3,wd);box(1.1,0.5,0.1,M.robot,0,1.25,3.95,wd,false);
   const SPR={x:-13.4,z:3.6};
   const rackSpools=[0,1,2].map(k=>{const m=spoolModel(scene);m.g.position.set(SPR.x-k*1.2,0.75,SPR.z+0.6);m.set(R0);return m;});
@@ -10360,10 +10433,11 @@ function no3D(){G3.ok=false;$("no3d").hidden=false;$("no3d-retry").onclick=()=>l
        on top of the set, and at a set change (the set count drops) lifts clear for a moment and comes back down on the new cores */
     {const W=G3.wdParts,acc=S.winderAcc;if(W){if(W.lastAcc!=null&&acc<W.lastAcc-0.5)W.lift=1.4;W.lastAcc=acc;W.lift=Math.max(0,(W.lift||0)-rdt);
       const up=W.lift>0?0.6*Math.min(1,Math.min(W.lift,1.4-W.lift)*4):0;
-      W.setRolls.forEach((r,k)=>{r.scale.set(RR,RR,1);r.position.y=ycS;r.visible=wdOn;W.setCores[k].position.y=ycS;W.setCores[k].visible=wdOn;if(cutting)r.rotation.z-=rdt*10/Math.max(0.3,sr);});
+      const RW=S.wdW||100,LZ=RW*W.IN,sz=k=>(k?-1:1)*(LZ/2+0.01);   // (v6.11: the rolls are as long as their width)
+      W.setRolls.forEach((r,k)=>{r.scale.set(RR,RR,LZ/1.4);r.position.set(r.position.x,ycS,sz(k));r.visible=wdOn;W.setCores[k].scale.z=LZ/1.43;W.setCores[k].position.set(W.setCores[k].position.x,ycS,sz(k));W.setCores[k].visible=wdOn;if(cutting)r.rotation.z-=rdt*10/Math.max(0.3,sr);});
       const ry=(wdOn?ycS+RR:1.2)+W.WD.RIDR+up;W.rider.position.y=ry;if(cutting)W.rider.children[0].rotation.z+=rdt*10*0.62/W.WD.RIDR;
       W.rods.forEach(o=>{const y0=ry+0.47,y1=3.0,L=Math.max(0.05,y1-y0);o.scale.y=L;o.position.y=(y0+y1)/2;});
-      if(cutting)W.webUpdate(unwind.scale.x,RR,ycS);}}
+      if(cutting)W.webUpdate(unwind.scale.x,RR,ycS,RW);}}
     if(cutting){unwind.rotation.z+=rdt*6;drums.forEach(d=>d.rotation.z+=rdt*12);}
     web.visible=cutting&&unwind.visible;
     const inFlight=[CR.j,...CR.jobs].filter(Boolean),nPark=clamp(nP0-inFlight.filter(j=>j.kind==="park"&&!j.dropped).length+inFlight.filter(j=>j.fromPark&&!j.picked).length,0,parked.length);parked.forEach((g,k)=>g.children[2].visible=g.children[3].visible=k<nPark);G3.parkedN=nPark;
@@ -14547,7 +14621,7 @@ function pfSVG(D,live){const vert=pfVert(),NU=104,NV=112,GAP=30,PAD=vert?24:10,n
   if(W.bale>0.05)wl(0,NU/2,["Bales lost",pfT(W.bale)]);
   wl(iM,NU-20,W.fine>0?["Effluent fiber",pfT(W.eff),"Permit fine "+money(W.fine)]:["Effluent fiber",pfT(W.eff)],W.fine>0?"bad":"");
   {const a=uOf(iM)+20,b=uOf(iP)+NU-16,vv=v1+26;o.push(`<polyline points="${poly([[a,v1],[a,vv],[b,vv],[b,v1+2]])}" class="pfbroke" marker-end="url(#pfArr)"/>`);
-    const uc=uOf(2)+NU/2,[x,y]=vert?[vv+6,uc+4]:[uc,vv+18];o.push(txt(x,y,"Broke "+pfT(W.broke)+" repulped","pfwv",vert?"start":"middle"));}
+    const uc=uOf(2)+NU/2,[x,y]=vert?[vv+6,uc+4]:[uc,vv+18];o.push(txt(x,y,"Broke "+pfT(W.broke)+(W.trim>0.05?" + trim "+pfT(W.trim):"")+" repulped","pfwv",vert?"start":"middle"));}
   o.push(`</g>`);
   // the areas (text in screen space, so it reads the same both ways)
   PF_AREAS.forEach(([a],i)=>{const u=uOf(i),[x,y]=X(u,v0),[w,h]=vert?[NV,NU]:[NU,NV],cx=x+w/2,cy=y+h/2,L=PF_LINES[a],lp=live?pfLamp(a):null,sel=PFUI.sel==="node:"+a;
@@ -14574,7 +14648,7 @@ function pfOutputs(D){const W=D.W,mx=Math.max(D.revenue,D.cost,1),pos=D.profit>=
       <div><span>Made</span><em>${pfT(D.made)}</em><em>worth ${money(W.val)}</em></div></button>
     <button type="button" class="pfbox${PFUI.sel==="out:waste"?" sel":""}" data-pf="out:waste"><b>Waste</b>
       <div><span>Rejects → landfill</span><em>${pfT(W.rej)}</em></div><div><span>Effluent fiber</span><em>${pfT(W.eff)}</em></div>
-      ${W.bale>0.05?`<div><span>Bales lost</span><em>${pfT(W.bale)}</em></div>`:""}${W.spill>0.05?`<div><span>Stock spilled</span><em>${pfT(W.spill)}</em></div>`:""}${W.scrap>0.05?`<div><span>Rolls scrapped</span><em>${pfT(W.scrap)}</em></div>`:""}<div><span>Broke (repulped)</span><em>${pfT(W.broke)}</em></div>
+      ${W.bale>0.05?`<div><span>Bales lost</span><em>${pfT(W.bale)}</em></div>`:""}${W.spill>0.05?`<div><span>Stock spilled</span><em>${pfT(W.spill)}</em></div>`:""}${W.scrap>0.05?`<div><span>Rolls scrapped</span><em>${pfT(W.scrap)}</em></div>`:""}<div><span>Broke (repulped)</span><em>${pfT(W.broke)}</em></div>${W.trim>0.05?`<div><span>Trim (DE pulper)</span><em>${pfT(W.trim)}</em></div>`:""}
       ${W.fine>0?`<div class="bad"><span>Permit fines</span><em>${money(W.fine)}</em></div>`:""}</button>
     <button type="button" class="pfbox pfprof${PFUI.sel==="out:profit"?" sel":""}" data-pf="out:profit"><b>${pos?"Profit":"Loss"}</b>
       <div class="pfbar"><span>Revenue</span><i style="width:${(D.revenue/mx*100).toFixed(1)}%" class="r"></i></div>
@@ -14748,7 +14822,7 @@ function pfBreak(D,live){const s=PFUI.sel;const [kind,a,b]=s.split(":"),t=D.made
     note="Revenue lands when a truck leaves, so it comes in lumps. \"Worth\" values the paper as it comes off the reel.";}
   else if(a==="waste"){title="Waste";const W=D.W;
     rows=[["Bales fed",pfT(W.feed)],["Rejects → landfill",pfT(W.rej)],["Share of bales",W.feed>0.5?Math.round(W.rej/W.feed*100)+" %":"–"],W.bale>0.05?["Bales lost (fire, rain, beavers)",pfT(W.bale)]:null,
-      ["Effluent fiber (white water)",pfT(W.eff)],["Broke, back to the pulper",pfT(W.broke)],W.spill>0.05?["Stock spilled (chest overflow, to the sewer)",pfT(W.spill),"bad"]:null,W.scrap>0.05?["Finished rolls scrapped (fire, wind)",pfT(W.scrap),"bad"]:null,W.fine>0?["Wastewater permit fines",money(W.fine)+(W.fines>1?" ("+W.fines+")":""),"bad"]:null];
+      ["Effluent fiber (white water)",pfT(W.eff)],["Broke, back to the pulper",pfT(W.broke)],W.trim>0.05?["Trim, back to the stock chest (DE pulper)",pfT(W.trim)]:null,W.spill>0.05?["Stock spilled (chest overflow, to the sewer)",pfT(W.spill),"bad"]:null,W.scrap>0.05?["Finished rolls scrapped (fire, wind)",pfT(W.scrap),"bad"]:null,W.fine>0?["Wastewater permit fines",money(W.fine)+(W.fines>1?" ("+W.fines+")":""),"bad"]:null];
     note="Waste is tons, shown for interest: landfill and effluent don't cost anything on their own. Broke isn't lost; it goes round again.";}
   else if(a==="profit"){title=D.profit>=0?"Profit":"Loss";rows=[["Revenue",money(D.revenue),"tot"]];
     PF_CATS.forEach(([c,name])=>rows.push([name,"−"+money(D.cat[c])]));
@@ -15336,22 +15410,30 @@ function planRefresh(){const el=$("planBox");if(!el)return;const R=S.rates||{},p
   {const q=(pl.q||[]).map(x=>[x.g,x.t]);let i=pl.cur&&pl.cur.i!==undefined?pl.cur.i:pl.i;const nx=[];for(let k=0;k<4;k++){i=(i+1)%WHEEL.length;const g=WHEEL[i],c=GCOST[g];nx.push([g,(c.mix[0]+c.mix[1])/2]);}
     q.concat(nx).slice(0,4).forEach(([g,t])=>camp.push([g,t,false]));}
   let acc=0;const prodH=camp.map(([g,t,cur],k)=>{const h=t/tph;const st=acc;acc+=h;return `<tr${cur?' class="cur"':""}><td>${cur?"Now":k===1&&pl.q&&pl.q.length?"Next (rush)":"Then"}</td><td>${g}</td><td>${cur?Math.round(t).toLocaleString()+" t left":"~"+Math.round(t).toLocaleString()+" t"}</td><td>${cur?"~"+durTxt(h*60)+" more":"from ~"+durTxt(st*60)}</td></tr>`;}).join("");
-  const plan=`<p class="dcsfield">The market planner runs the grade wheel (${WHEEL.join(" → ")}) and books customer orders for each campaign. ${S.chg?`<b>Grade change to ${S.chg.to} in progress: ${S.chg.left.toFixed(1)} t of transition left.</b>`:""}</p>
+  // v6.11 the winder's pattern: twin rolls of the width the order book wants, and what that costs in trim (03g)
+  let pat="";if(trimOn()){const W=S.wdW||windW(C.grade),web=webW(),tr=web-2*W,ups=[];
+    if(O)O.list.filter(o=>o.st==="open"&&o.g===C.grade&&o.w&&windShort(o.g,o.w)>1e-6).sort((a,b)=>a.due-b.due).forEach(o=>{if(!ups.includes(o.w))ups.push(o.w);});
+    pat=`<div class="qcsv"><div><small>Winding now</small><b>2 × ${wFmt(W)}</b><small>twin rolls · ${(rollT(W)).toFixed(1)} t each</small></div>
+      <div><small>Trim</small><b class="${tr/web>0.1?"bad":""}">${wFmt(tr)} · ${(tr/web*100).toFixed(1)} %</b><small>of a ${wFmt(web)} web, to the DE pulper</small></div>
+      <div><small>Trim to the pulper</small><b>${(R.trim||0).toFixed(1)} t/h</b><small>${Math.round(S.tot.trim||0).toLocaleString()} t this run</small></div>
+      <div><small>Widths to come (${C.grade})</small><b>${ups.slice(0,4).map(wFmt).join(", ")||"spot: "+wFmt(maxRollW())}</b><small>by the orders' due dates</small></div></div>`;}
+  const plan=pat+`<p class="dcsfield">The market planner runs the grade wheel (${WHEEL.join(" → ")}) and books customer orders for each campaign. ${S.chg?`<b>Grade change to ${S.chg.to} in progress: ${S.chg.left.toFixed(1)} t of transition left.</b>`:""}</p>
     <table><thead><tr><th></th><th>Grade</th><th>Tons</th><th>Time at ${Math.round(tph)} t/h</th></tr></thead><tbody>${prodH}</tbody></table>`;
   // orders
   let ord="<p class=\"dcsfield\">Zen mode: no order book.</p>";
   if(O){const K=O.k,open=O.list.filter(o=>o.st==="open").sort((a,b)=>a.due-b.due),done=O.list.filter(o=>o.st!=="open").sort((a,b)=>b.done-a.done).slice(0,5),tons=K.onT+K.lateT;
-    const st=o=>{const left=o.r-Math.round(o.sh),late=S.t>o.due+ORD.grace;return late?["bad","late "+durTxt((S.t-o.due)).replace(" "," ")]:o.ld>o.sh+0.5?["ok","loading"]:Math.floor(ordFree(o.g))>=Math.min(left,P.truckRolls)?["ok","ready"]:C.grade===o.g?["","making"]:["","waiting for "+o.g];};
+    const st=o=>{const left=o.r-Math.round(o.sh),late=S.t>o.due+ORD.grace;return late?["bad","late "+durTxt((S.t-o.due)).replace(" "," ")]:o.ld>o.sh+0.5?["ok","loading"]:ordFree(o.g,o.w)>=Math.min(left,P.truckRolls)-1e-6?["ok","ready"]:C.grade===o.g?["","making"]:["","waiting for "+o.g];};
+    const pr=(o,q)=>Math.round(q*100/(o.w||100));   // (v6.11: rolls of the order's width, from standard-roll units)
     ord=`<div class="qcsv"><div><small>On-time delivery</small><b>${tons>0?Math.round(K.onT/tons*100)+" %":"–"}</b><small>${Math.round(tons).toLocaleString()} t on orders</small></div><div><small>Open orders</small><b>${open.length}</b><small>${open.filter(o=>S.t>o.due+ORD.grace).length} late · ${K.canc} canceled</small></div>
       <div><small>Spot market</small><b>${Math.round(K.spot)} t</b><small>−${money(K.spotV)} under list</small></div><div><small>Chargebacks</small><b>${money(K.chg)}</b><small>${K.dry} dry run${K.dry===1?"":"s"}</small></div></div>
-      <table><thead><tr><th>#</th><th>Customer</th><th>Grade</th><th>Rolls shipped</th><th>Due</th><th>Status</th></tr></thead><tbody>${open.map(o=>{const s=st(o);return `<tr class="${s[0]==="bad"?"late":""}"><td>${o.id}</td><td>${ordCust(o)}</td><td>${o.g}</td><td>${Math.round(o.sh)} / ${o.r}${o.ld>o.sh+0.5?` <small>(${Math.round(o.ld-o.sh)} loading)</small>`:""}</td><td>${dhm(o.due)}</td><td class="${s[0]}">${s[1]}</td></tr>`;}).join("")||`<tr><td colspan="6">No open orders.</td></tr>`}</tbody></table>
-      ${done.length?`<div class="dcssub">Recently closed</div><table><tbody>${done.map(o=>`<tr><td>${o.id}</td><td>${ordCust(o)}</td><td>${o.g}</td><td>${o.r} rolls</td><td>${o.st==="cancelled"?'<span class="bad">canceled</span>':o.done>o.due+ORD.grace?'<span class="bad">late</span>':'<span class="ok">on time</span>'}</td><td>${dhm(o.done)}</td></tr>`).join("")}</tbody></table>`:""}`;}
+      <table><thead><tr><th>#</th><th>Customer</th><th>Grade</th><th>Width</th><th>Rolls shipped</th><th>Due</th><th>Status</th></tr></thead><tbody>${open.map(o=>{const s=st(o);return `<tr class="${s[0]==="bad"?"late":""}"><td>${o.id}</td><td>${ordCust(o)}</td><td>${o.g}</td><td>${wFmt(o.w)}</td><td>${pr(o,o.sh)} / ${pr(o,o.r)}${o.ld>o.sh+0.5?` <small>(${pr(o,o.ld-o.sh)} loading)</small>`:""}</td><td>${dhm(o.due)}</td><td class="${s[0]}">${s[1]}</td></tr>`;}).join("")||`<tr><td colspan="7">No open orders.</td></tr>`}</tbody></table>
+      ${done.length?`<div class="dcssub">Recently closed</div><table><tbody>${done.map(o=>`<tr><td>${o.id}</td><td>${ordCust(o)}</td><td>${o.g}</td><td>${pr(o,o.r)} × ${wFmt(o.w)}</td><td>${o.st==="cancelled"?'<span class="bad">canceled</span>':o.done>o.due+ORD.grace?'<span class="bad">late</span>':'<span class="ok">on time</span>'}</td><td>${dhm(o.done)}</td></tr>`).join("")}</tbody></table>`:""}`;}
   // inventory
   const grades=Object.keys(GRADES),inv=grades.map(g=>{const have=fgOf(g),need=O?ordNeed(g):0,onT=S.outDock.filter(t=>t&&t.g===g).reduce((a,t)=>a+Math.max(0,t.want-t.load),0),free=have-onT,s=free-need;
-    return `<tr${g===C.grade?' class="cur"':""}><td>${g}</td><td>${Math.round(have)} rolls · ${Math.round(have*rw)} t</td><td>${O?Math.round(need):"–"}</td><td class="${O&&s<-0.5?"bad":O&&s>=P.truckRolls?"ok":""}">${O?(s>=0?"+":"")+Math.round(s):"–"}</td></tr>`;}).join("");
+    return `<tr${g===C.grade?' class="cur"':""}><td>${g}</td><td>${Math.round(have*rw)} t</td><td>${O?Math.round(need*rw)+" t":"–"}</td><td class="${O&&s<-0.5?"bad":O&&s>=P.truckRolls?"ok":""}">${O?(s>=0?"+":"")+Math.round(s*rw)+" t":"–"}</td></tr>`;}).join("");
   const yd=(R.feed||0)>0.5?S.yard/(R.feed*24):null,ch=(R.fiberUse||0)>0.5?S.tank/R.fiberUse:null;
   const invH=`<table><thead><tr><th>Warehouse</th><th>In stock</th><th>Open orders need</th><th>Surplus / short</th></tr></thead><tbody>${inv}</tbody></table>
-    <div class="qcsv"><div><small>Warehouse</small><b>${Math.round(S.fg/P.fgCap*100)} %</b><small>${Math.round(S.fg)} of ${Math.round(P.fgCap)} rolls</small></div>
+    <div class="qcsv"><div><small>Warehouse</small><b>${Math.round(S.fg/P.fgCap*100)} %</b><small>${Math.round(S.fg*rw).toLocaleString()} of ${Math.round(P.fgCap*rw).toLocaleString()} t</small></div>
       <div><small>Bale yard</small><b>${Math.round(S.yard).toLocaleString()} t</b><small>${yd!=null?yd.toFixed(1)+" days at today's feed":"pulper idle"}</small></div>
       ${Q?`<div><small>Bales</small><b>${(Q.m*100).toFixed(1)} %</b><small>moisture · ${bqBand(Q.k)} · stickies ${Math.round(Q.ck*100)} %</small></div>`:""}
       <div><small>Stock chest</small><b>${Math.round(S.tank)} t</b><small>${ch!=null?durTxt(ch*60)+" of stock":"machine idle"}</small></div>
@@ -15509,7 +15591,7 @@ function pfSVGt(D,live){const vert=pfVert(),NU=104,NV=112,GAP=30,PAD=vert?24:10,
    only: the sim and its dice are untouched, and the game keeps running at the player's speed while it is open.
    Keep RM_E in step with the sim when a relationship changes (tools/relmapcheck.py fails on a tag with no entry). ---- */
 const RM_DRV=[["x:weather","Weather",""],["x:bales","Bale grade mix",""],["x:pulpset","Pulper feed setpoint",""],["x:dilv","Pulper dilution valve","knob"],["x:slice","Headbox slice","knob"],["x:guide","Fabric guide roll","knob"],["x:zones","Headbox dilution zones","knob"],["x:spset","Machine speed setpoint",""],["x:grade","Grade on the machine",""],["x:dye","Dye system",""],["x:market","Market & leader effects",""],["x:power","Substation power",""],["x:incomer","MCC main incomer","knob"],["x:orders","Customer orders",""],["x:upsets","Upsets & DCS motors",""]];
-const RM_COL={"YARD":["inq","unload","yard","balem","stk","occp"],"SPOT":["feed","cp","nv101pv","nv101op","amps","pulpLvl","yield","fiber","rejt","hddp","lcdp","lwdp","fsld","fsdp","kwh","dil","chest","chestg","gap","refkw","csf","agit","refq","mcCons","mcLvl","lv104pv","lv104op","mcg","fan"],"WET":["wsp","jw","rd","vac","couchSol","pl","pressSol","gtrav","edge","osc","hbc","bwv","fv201pv","fv201op","bwsp","drain","seal","pressw","wwl","lv202pv","lv202op","wwg","wwov","hum"],"DET":["speed","prod","st1","st3","pv302pv","pv302op","pv303pv","pv303op","steam","dryl","moist","qc300pv","qc300op","bw","draw","tension"],"QCS":["off","rct","prem","cdsp","bank","reel","cut","conv"],"UTIL":["boiler","vent","energyt","shower","evap","wcl","wcg","makeup","fresh","wuse","wwover","outfall","tss"],"SHIP":["fg","load","outq","openo","lateo","price","profit"],"DRV":["mvkv","lv480","dc_SP","dc_PM","dc_WD","dl_pulp","dl_refA","dl_refB","dl_fan","dl_couch","dl_pr1","dl_pr2","dl_dry","dl_reel","dl_wind","mcckw"]};
+const RM_COL={"YARD":["inq","unload","yard","balem","stk","occp"],"SPOT":["feed","cp","nv101pv","nv101op","amps","pulpLvl","yield","fiber","rejt","hddp","lcdp","lwdp","fsld","fsdp","kwh","dil","chest","chestg","gap","refkw","csf","agit","refq","mcCons","mcLvl","lv104pv","lv104op","mcg","fan"],"WET":["wsp","jw","rd","vac","couchSol","pl","pressSol","gtrav","edge","osc","hbc","bwv","fv201pv","fv201op","bwsp","drain","seal","pressw","wwl","lv202pv","lv202op","wwg","wwov","hum"],"DET":["speed","prod","st1","st3","pv302pv","pv302op","pv303pv","pv303op","steam","dryl","moist","qc300pv","qc300op","bw","draw","tension"],"QCS":["off","rct","prem","cdsp","bank","reel","cut","rollw","trimp","trimt","conv"],"UTIL":["boiler","vent","energyt","shower","evap","wcl","wcg","makeup","fresh","wuse","wwover","outfall","tss"],"SHIP":["fg","load","outq","openo","lateo","price","profit"],"DRV":["mvkv","lv480","dc_SP","dc_PM","dc_WD","dl_pulp","dl_refA","dl_refB","dl_fan","dl_couch","dl_pr1","dl_pr2","dl_dry","dl_reel","dl_wind","mcckw"]};
 const RM_E=[
  ["x:weather","balem","p","Rain and snow soak the bales in the yard and on inbound loads"],
  ["x:weather","unload","n","Snow and fog slow inbound trucks"],
@@ -15537,6 +15619,12 @@ const RM_E=[
  ["fiber","chest","p","Fiber fills the stock chest"],
  ["prod","chest","n","The machine draws stock from the chest"],
  ["bank","chest","p","Beater rolls are repulped back into the chest"],
+ ["openo","rollw","p","The winder runs the width the earliest-due order still short of rolls wants (twin rolls)"],
+ ["rollw","trimp","n","Narrower twin rolls leave more of the web as trim"],
+ ["trimp","trimt","p","The trim share of what the winder cuts goes down the trim ducts"],
+ ["cut","trimt","p","The more the winder cuts, the more trim"],
+ ["trimt","chest","p","The dry-end pulper sends the trim back to the stock chest"],
+ ["trimp","profit","n","Trim is never sold: it is made, repulped and made again"],
  ["chest","chestg","s","Same chest, in gallons"],
  ["chest","stk","x","Chest residence time delays how fast stickies reach the machine"],
  ["stk","speed","n","Stickies raise the sheet-break rate"],

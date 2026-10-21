@@ -22,7 +22,7 @@ const MAINT=["birdline","steamjoint","fogfan","shaft","fabric","felt","winderdow
 const REPAIR_K=1.2;
 const UPS=[
  {id:"drive",g:"machine",name:"Drive & gearbox rebuild",lv:[115e3,105e3,90e3],desc:"+150 fpm max speed per level, if the dryers can keep up (heavy grades and a wet sheet reach their limit first)."},   // (v6.5 b5: 25% cheaper: the dryer limit can cap it)
- {id:"deckle",g:"machine",name:"Wider trim (deckle)",lv:[160e3,135e3],desc:"+6% tons at the same speed per level."},
+ {id:"deckle",g:"machine",name:"Wider trim (deckle)",lv:[160e3,135e3],desc:"+3\" of web per level (+1.5% tons at the same speed) and rolls up to 1.5\" wider, so wide rolls cost less trim."},
  {id:"shoe",g:"machine",name:"Shoe press",lv:[180e3],desc:"+100 fpm and 12% less energy per ton. A drier sheet into the dryers: about 16% more drying headroom."},
  {id:"winder",g:"machine",name:"Winder rebuild",lv:[285e3,520e3],desc:"+30 t/h winder speed and 40% fewer hayouts per level."},
  {id:"monitor",g:"machine",name:"Fabric & felt monitoring",lv:[220e3,150e3],desc:"Machine failures 40% rarer and fewer sheet breaks, per level."},
@@ -52,7 +52,7 @@ const UP=Object.fromEntries(UPS.map(u=>[u.id,u]));
 const LV=id=>(S&&S.up&&S.up[id])||0;
 function applyUpgrades(){
   applyGrade();
-  P.K=BASE.K*Math.pow(1.06,LV("deckle"))*(1+0.02*LV("apc"))*leadCap("pwet")*civSpeed();   // (v5.1: civics, Machinery)
+  P.K=BASE.K*(1+3/205*LV("deckle"))*   /* (v6.11: the deckle widens the web 3" a level, 07j; was +6%) */(1+0.02*LV("apc"))*leadCap("pwet")*civSpeed();   // (v5.1: civics, Machinery)
   P.spBonus=150*LV("drive")+100*LV("shoe");
   P.energyMul=(1-0.12*LV("shoe"))*(1-0.04*LV("apc"));P.refSave=10*LV("refiner");   /* (v6.5 balance: apc 8%, refiner $22: per-ton upgrades paid back 3-4x in a season) */
   P.yieldF=P.blendY+0.03*LV("clean"); P.tankCap=BASE.tankCap+150*LV("chest");

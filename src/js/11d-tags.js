@@ -43,6 +43,7 @@ const TAGS=[
   ["dryl","Dryer load","DET","% of limit",()=>S.dry&&S.pm==="run"?S.dry.load*100:null,"a.dryl"],["moist","Reel moisture","DET","%",r=>r.run?r.moist:null,"a.moist"],
   ["bw","Basis weight","DET","lb/1000 ft²",r=>r.run?r.bw:null,"a.bw"],["tension","Draw tension","DET","kN/m",r=>r.run?r.tension:null,""],["draw","Open draw","DET","%",r=>r.draw,""],
   ["reel","Paper waiting at the winder","DET","t",()=>S.winderBuf+S.reel,"a.reel"],["cut","Winder","DET","t/h",()=>_R().cut,"a.cut"],["conv","Rolls on the conveyor","DET","rolls",()=>S.conv||0,""],
+  ["rollw","Roll width (twin set)","QCS","in",()=>S.zen?null:S.wdW||windW(C.grade),""],["trimp","Trim","QCS","%",()=>S.zen?null:(S.trimNow!=null?S.trimNow:trimFrac(windW(C.grade)))*100,""],["trimt","Trim to the DE pulper","QCS","t/h",()=>S.zen?null:_R().trim||0,""],   // (v6.11)
   // utilities
   ["boiler","Steam header","UTIL","% of full",r=>r.boiler*100,""],["vent","Steam vented","UTIL","t/h",()=>S.dry&&S.dry.vent>0.05?S.dry.vent:0,""],
   ["tss","Effluent TSS","UTIL","mg/L",()=>tssNow(),""],["energyt","Energy","UTIL","$/t",()=>Math.max(0,energyCost()-pfChemT()),"a.energyt"],
