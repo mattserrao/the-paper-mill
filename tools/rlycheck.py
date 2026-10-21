@@ -141,7 +141,7 @@ with sync_playwright() as pw:
     answer()
 
     # AUTO-LW: more refining, the weight comes down; back to standard, it goes back up
-    r = J("""()=>{const P=__PM,S=P.S;S.inc.forEach(i=>i.left=0);P.CH.on=false;let w=0;while(S.chg&&w++<40000)P.step(P.SIM_STEP);const t0=S.t;P.knob.set('ref',85);while(S.t<t0+600)P.step(P.SIM_STEP);const chg=!!S.chg,lo=S.we.trim;P.knob.set('ref',60);while(S.t<t0+1300)P.step(P.SIM_STEP);return {lo,back:S.we.trim,chg}}""")
+    r = J("""()=>{const P=__PM,S=P.S;S.inc.forEach(i=>i.left=0);P.CH.on=false;const run=m=>{let n=0;while(n<m/P.SIM_STEP){P.step(P.SIM_STEP);if(!S.chg&&S.pm==='run')n++;}};P.knob.set('ref',85);run(600);const chg=!!S.chg,lo=S.we.trim;P.knob.set('ref',60);run(700);return {lo,back:S.we.trim,chg}}""")
     ok("AUTO-LW trims the weight down with ring crush to spare and back up without it", r["lo"] < -0.05 and r["back"] > -0.01 and r["back"] <= 0, json.dumps(r))
 
     # click for info
@@ -155,9 +155,11 @@ with sync_playwright() as pw:
     if shot: pg.screenshot(path=f"{shot}-info.png")
 
     # arc-flash PPE: the electrical tech walks in from outside and is suited inside the MCC
-    r = J("""()=>{const P=__PM,E=P.G3.ET;P.G3.elecSuit(false);E.w.position.set(2,0,20);let now=performance.now();for(let i=0;i<500;i++){now+=100;P.G3.navPump&&P.G3.navPump();P.G3.elecUpdate(0.1,now);}
-      return {in:E.w.position.x>4&&E.w.position.z>24,suit:!!E.suited}}""")
-    ok("arc-flash PPE goes on at the MCC door", r["in"] and r["suit"], json.dumps(r))
+    r = J("""()=>{const P=__PM,E=P.G3.ET;P.G3.elecSuit(false);E.w.position.set(2,0,20);let now=performance.now(),door=false;for(let i=0;i<500;i++){now+=100;P.G3.navPump&&P.G3.navPump();P.G3.elecUpdate(0.1,now);if(E.suited&&E.w.position.x>2&&E.w.position.x<5.6&&Math.abs(E.w.position.z-27.5)<0.6)door=true;}
+      const S=P.S,I=S.inc.length;P.rly.fail('pr1','drv');P.step(P.SIM_STEP);for(let i=0;i<300;i++){now+=100;P.G3.elecUpdate(0.1,now);}const job=!!E.suited;S.inc.forEach(i=>{if(i.id==='drivefail')i.left=0});S.inc=S.inc.filter(i=>i.id!=='drivefail');S.rel.q.length=0;S.rel.cur=null;S.cards.open=null;
+      for(let i=0;i<300;i++){now+=100;P.G3.elecUpdate(0.1,now);}
+      return {in:E.w.position.x>4&&E.w.position.z>24,door,job,desk:!E.suited}}""")
+    ok("arc-flash PPE: on at the MCC door, on for a drive job that starts while he's inside, off back at the desk", r["in"] and r["door"] and r["job"] and r["desk"], json.dumps(r))
 
     # zen: none of it
     r = J("()=>{const P=__PM;P.S.zen=true;const on=P.rly.on();P.S.zen=false;return on}")

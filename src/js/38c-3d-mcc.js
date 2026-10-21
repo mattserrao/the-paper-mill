@@ -111,6 +111,8 @@
     const line=(x,z)=>{const dx=x-q.x,dzz=z-q.z,d=Math.hypot(dx,dzz);if(d<0.06){q.x=x;q.z=z;return true;}const st=Math.min(d,sp*rdt);q.x+=dx/d*st;q.z+=dzz/d*st;w.rotation.y=Math.atan2(-dzz,dx);return false;};
     const onDoor=Math.abs(q.z-dz)<0.08&&q.x>MCC.x0-1.45&&q.x<MCC.x0+1.05;let scripted=true;
     const donning=()=>{if(!ET.donT)ET.donT=now;w.rotation.y=Math.PI;if(now-ET.donT<1800){pose(w,(((now-ET.donT)/450)|0)%2?"pull":"inspect",now);return true;}ET.donT=0;return false;};
+    // already inside when an MCC job comes in (paperwork at the desk): the suit goes on where he stands; back at the desk it comes off
+    if(ti&&ri){const mj=what==="cab"||what==="rect"||what==="main";if(mj!==!!ET.suited){if(!donning())elecSuit(mj);else{w.userData.wp=null;return elecLights(job,p,rdt);}}}
     if(ti&&!ri){if(onDoor&&!ET.suited&&Math.abs(q.x-dOut[0])<0.08){if(!donning())elecSuit(true);else{w.userData.wp=null;return elecLights(job,p,rdt);}}   // (at the door: the suit and hood go on)
       if(onDoor)line(dIn[0],dIn[1]);else if(nearW)line(dOut[0],dOut[1]);else scripted=false;}
     else if(!ti&&ri&&ET.suited&&onDoor&&Math.abs(q.x-dIn[0])<0.08){if(!donning())elecSuit(false);else return elecLights(job,p,rdt);}   // (and come off on the way out)

@@ -64,7 +64,7 @@ function rlyRefresh(){const tb=$("rlyTab");if(!tb)return;const R=rlyState(),D=R.
   {const e=$("rlyRd");if(e&&e._h!==rd){e._h=rd;e.innerHTML=rd;}}
   // the table
   const outg=!!(S.outg&&S.season&&S.season.on&&!S.free);
-  const rows=ASSETS.map(A=>{const a=R.a[A.id],L=Math.max(0,rlyLoad(A.id,r)),st=rlyDrvSt(A.id,L),c=R.chg[A.id]||{},cq=Object.keys(c).map(k=>RLY.plan[k].n).join(", ");
+  const rows=ASSETS.map(A=>{const a=R.a[A.id],L=Math.max(0,rlyLoad(A.id,r)),st=rlyDrvSt(A.id,L),c=R.chg[A.id]||{},bk=(S.outg&&S.outg.plan&&S.outg.plan.rly&&S.outg.plan.rly[A.id])||{},cq=[...Object.keys(bk).map(k=>RLY.plan[k].n+" ✓"),...Object.keys(c).map(k=>RLY.plan[k].n+(Object.keys(bk).length?" (after)":""))].join(", ");
     const dcls={fault:"bad",trip:"bad",nodc:"bad",run:L>100?"bad":L>95?"warn":"ok",idle:"",off:""}[st];
     return `<tr data-rsel="${A.id}" class="${RUI.sel===A.id?"cur":""}"><td><b>${A.n}</b><small>${LINEN[A.ln][2]}${a.pin?` · next ${a.pin==="vib"?"vibration":"ADX"} round`:""}</small></td><td>${rlyVibCell(a)}</td><td>${rlyAdxCell(a)}</td>
       <td>${rlyChip(st==="fault"?"Fault":st==="trip"?"Tripped":st==="nodc"?"No DC":st==="off"?"Off":Math.round(L)+" %",dcls,st==="run"?Math.round(rlyTemp(A.id,L))+" °C":st==="idle"?"idle":"")}</td>${outg?`<td>${cq?`<small class="rbk">${cq}</small>`:"<small>–</small>"}</td>`:""}</tr>`;}).join("");
@@ -77,7 +77,7 @@ function rlyRefresh(){const tb=$("rlyTab");if(!tb)return;const R=rlyState(),D=R.
   const c=R.chg[A.id]||{},booked=S.outg&&S.outg.plan&&S.outg.plan.rly&&S.outg.plan.rly[A.id];
   const chg=!outg?`<p class="dcsfield">Changeouts are booked for planned outages; ${S.free?"free play has none":"there are none in this mode"}.</p>`:
     `<div class="rchg">${["b","m","d"].map(k=>`<button type="button" data-rchg="${A.id}:${k}" aria-pressed="${!!c[k]}"><b>${RLY.plan[k].n}</b><small>${money(RLY.plan[k].cost)} · +${RLY.plan[k].min} min</small></button>`).join("")}</div>
-     <p class="dcsfield">${booked?`Booked for outage ${S.outg.k}: ${Object.keys(booked).map(k=>RLY.plan[k].n.toLowerCase()).join(", ")}. `:""}Ticked items go on the next outage plan (24 h before it) and are paid when you approve it. New parts come back at full health.</p>`;
+     <p class="dcsfield">${booked?`Booked for outage ${S.outg.k}: ${Object.keys(booked).map(k=>RLY.plan[k].n.toLowerCase()).join(", ")}. `:""}${booked?"That plan is approved; ticked items go on the plan for the outage after it.":"Ticked items go on the next outage plan (24 h before it) and are paid when you approve it."} New parts come back at full health.</p>`;
   const L=Math.max(0,rlyLoad(A.id,r)),st=rlyDrvSt(A.id,L);
   const det=`<div class="rdh"><b>${A.n}</b><small>${LINEN[A.ln][1]} (${LINEN[A.ln][2]}) · ${A.kw.toLocaleString()} kW VFD · if it fails: ${A.stop.toLowerCase().replace(/\.$/,"")}</small></div>
     <div class="rdg"><section class="plsec"><div class="dcssub">Vibration (maintenance)</div>${rlyVibCell(a)}<p class="dcsfield">${v&&vg.cls!=="unk"?VIBST[v.st][2]+".":"No recent reading: the last rounds didn't get to it, or were skipped."}</p>
@@ -90,7 +90,7 @@ function rlyRefresh(){const tb=$("rlyTab");if(!tb)return;const R=rlyState(),D=R.
       ${ximm?`<button type="button" class="rfix" data-rfix="${A.id}:adx"${busy?" disabled":""}>Plan repair · ${money(rlyFixCost(A.id,"adx"))}<small>swap in the spare motor now, no downtime</small></button>`:""}</div></section>
     <section class="plsec"><div class="dcssub">Drive</div>${rlyChip(st==="fault"?"Fault":st==="trip"?"Tripped":st==="nodc"?"No DC":st==="off"?"Off":Math.round(L)+" % load",{fault:"bad",trip:"bad",nodc:"bad",run:L>100?"bad":L>95?"warn":"ok"}[st]||"",st==="run"||st==="idle"?Math.round(rlyTemp(A.id,L))+" °C heat sink":"")}
       <p class="dcsfield">Drives fail without warning. Keep them under about 95% load; lightning and brownouts shorten their lives. <button type="button" class="linkb" data-trk="dl_${A.id}">Trend its load</button></p></section></div>
-    <div class="dcssub">Changeout at the next planned outage</div>${chg}`;
+    <div class="dcssub">${booked?"Changeout at the outage after":"Changeout at the next planned outage"}</div>${chg}`;
   const key=det;if(dt._h!==key){if(!dt.contains(document.activeElement)||RUI.key===""){dt._h=key;dt.innerHTML=det;}}RUI.key="x";}
 
 /* ---------- the outage plan: changeouts ---------- */
@@ -116,7 +116,7 @@ function drvSL(){const g=$("drvSL");if(!g)return;const mv=rlyMV(),lv=rlyLV(),blk
   h+=`<path d="M260 40 H300 M300 40 V125" stroke="${c(!blk)}" stroke-width="3"/>`+t(282,30,`${Math.round(lv)} V`,"","middle");
   LINEUPS.forEach(([ln,,tag],k)=>{const y=28+k*45,dc=rlyDC(ln),ok=dc>0;
     h+=`<path d="M300 ${y} H340" stroke="${c(!blk)}" stroke-width="2"/><rect x="340" y="${y-12}" width="42" height="24" rx="3" fill="#1c2b45" stroke="${c(ok)}" stroke-width="2"/>${t(361,y+4,"AC/DC","","middle")}
-      <path d="M382 ${y} H470" stroke="${c(ok)}" stroke-width="4"/>${t(426,y-6,`DC ${Math.round(dc)} V`,"","middle")}${t(476,y+4,tag+" · "+ASSETS.filter(A=>A.ln===ln).length+" drives","")}`;});
+      <path d="M382 ${y} H470" stroke="${c(ok)}" stroke-width="4"/>${t(426,y-6,`DC ${Math.round(dc)} V`,"","middle")}${t(476,y+4,(n=>tag+" · "+n+(n===1?" drive":" drives"))(ASSETS.filter(A=>A.ln===ln).length),"")}`;});
   if(g._h!==h){g._h=h;g.innerHTML=h;}}
 
 /* ---------- v6.10 the drive fault card: reset and go, or investigate (then run to the outage or replace) ---------- */
@@ -131,13 +131,14 @@ function rlyCardOpen(){const R=S.rel,q=R&&R.cur;if(!q)return;const inc=rlyDrvInc
       ["repl","Replace it now","Fit the spare drive from the MCC rack: 60–90 more minutes down, and the drive is new.",money(b)]];
   rlyCardEl.innerHTML=`<div class="modal deal civ" role="dialog" aria-modal="true" aria-labelledby="rly-h"><span class="dk">${q.step==="fault"?"Drive fault":"Drive fault · investigated"} · ${LINEN[A.ln][2]} · sim paused</span>
     <h2 id="rly-h">${A.n} drive${inc.rep&&q.step==="fault"?": faulted again":""}</h2>
-    <p>${q.step==="fault"?`The ${A.n.toLowerCase()} drive tripped and is showing a fault; ${stop}. Reset it and see, or find out why first?`:`Found: <b>${cz?cz[1]:"a worn drive"}</b>. ${cz?cz[2].charAt(0).toUpperCase()+cz[2].slice(1)+".":""}`}</p>
+    <p>${q.step==="fault"?`The ${A.n} drive tripped and is showing a fault; ${stop}. Reset it and see, or find out why first?`:`Found: <b>${cz?cz[1]:"a worn drive"}</b>. ${cz?cz[2].charAt(0).toUpperCase()+cz[2].slice(1)+".":""}`}</p>
     <p class="cvrly"><b>Reliability data</b> drive health ${Math.round(a.dh)}% · load ${Math.round(inc.load||0)}% when it tripped${a.patch?" · already patched once":""}</p>
     <div class="civch">${ch.map(([k,n,d,c],i)=>`<button type="button" class="civbtn" data-rc="${k}"><span class="cvl">${"AB"[i]}</span><span class="cvb"><b>${n}</b><span class="cvrow"><span class="cvcost${c==="free"?" free":""}">${c}</span></span><small>${d}</small></span></button>`).join("")}</div></div>`;
   rlyCardEl.querySelectorAll("[data-rc]").forEach(btn=>btn.addEventListener("click",()=>{const inc2=rlyDrvInc(q.a);rlyCardEl.hidden=true;R.cur=null;S.cards.open=null;if(inc2)rlyDecide(inc2,btn.dataset.rc,false);
     const menu=document.getElementById("v2menu");running=!(menu&&!menu.hidden);}));
   rlyCardEl.hidden=false;AUDIO.sfx("cash",150);const f=rlyCardEl.querySelector(".civbtn");if(f)f.focus({preventScroll:true});}
-UI_TICKS.push(()=>{const R=S&&S.rel;if(!R||!R.q)return;
+UI_TICKS.push(()=>{const R=S&&S.rel,done=!S||S.over||(S.season&&S.season.done);if(rlyCardEl&&!rlyCardEl.hidden&&(done||!R||!R.cur)){rlyCardEl.hidden=true;if(S&&S.cards&&S.cards.open&&S.cards.open.rly)S.cards.open=null;}   // (game over or a new game: no stale card)
+  if(!R||!R.q||done)return;
   if(R.cur&&!(S.cards&&S.cards.open)){rlyCardOpen();return;}   // (a reload: the card comes back)
   if(!R.cur&&R.q.length&&S.cards&&!S.cards.open&&!(S.civ&&(S.civ.cur||S.civ.pending))&&!S.over){R.cur=R.q.shift();rlyCardOpen();}
   if(rlyCardEl&&!rlyCardEl.hidden&&!R.cur){rlyCardEl.hidden=true;if(S.cards&&S.cards.open&&S.cards.open.rly)S.cards.open=null;}});

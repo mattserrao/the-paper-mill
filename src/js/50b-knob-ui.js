@@ -164,7 +164,7 @@ function kuiRefresh(){if(!KUI.panel&&!KUI.st)return;const r=knobRead();
   if(KUI.st){const o=$("dcsOv"),a=KUI.st,M2=MIMIC[a];$("dcsClock").textContent=`Day ${Math.floor(S.t/1440)+1} · ${clockOf(S.t)}`;
     if(M2){o.querySelectorAll("[data-tag]").forEach(t=>{const g=M2.tags.find(q=>q[2]===t.dataset.tag);if(g){const v=g[4](r);if(t.textContent!==v)t.textContent=v;}});
       o.querySelectorAll(".dcsctl .kctl").forEach(knobCtlSync);o.querySelectorAll("[data-rd]").forEach(d=>{const h=knobReadout(d.dataset.rd,r);if(d._h!==h){d._h=h;d.innerHTML=h;}});
-      const al=knobAlarms(a,r),ul=$("dcsAl"),h=al.length?al.map(([t,hi])=>`<li class="${hi?"hi":""}">${t}</li>`).join(""):'<li class="none">No alarms</li>';if(ul._h!==h){ul._h=h;ul.innerHTML=h;}
+      const al=knobAlarms(a,r),ul=$("dcsAl"),h=al.length?al.map(([t,hi])=>`<li class="${hi?"hi":""}">${t}</li>`).join(""):'<li class="none">No alarms</li>';if(ul&&ul._h!==h){ul._h=h;ul.innerHTML=h;}
       {const bt=$("dcsBeat");if(bt){const q=qualStatus(),on=r.run&&q.off>0.02,t=on?`⚠ MAKING BEATER · ${q.why.toUpperCase()} · ${q.off>=0.99?"the whole reel":Math.round(q.off*100)+"% of the reel"} to the beater`:"";if(bt.hidden===on)bt.hidden=!on;if(bt.textContent!==t)bt.textContent=t;}}
       o.querySelectorAll(".dcsrow canvas[data-cd]").forEach(c=>kuiCd(c,r));dcsSync();dcsPicSync(a);vlvDcsSync(o);if(a==="WATER")waterRefresh();}
     else if(a==="QCS"){const K=S.knob,F=(K&&K.F)||{},off=r.off,st=$("qcsSt");

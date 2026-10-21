@@ -4,6 +4,13 @@
 ## v6.10.0-t3 (2026-10-20): QA fixes and balance (test build)
 100 live QA runs (50 seasons, 50 survival) on t2, then matched balance runs against main.
 - **Fix:** a drive fault card nobody answers no longer holds the machine down. After an hour the default is taken (investigate, then replace) and the card closes.
+- **Fix (QA Agent A):** the electrical tech puts the arc-flash suit on for an MCC job that starts while he's already inside (paperwork at the desk), and takes it off back at the desk.
+- **Fix (QA Agent A):** changeouts already on an approved outage plan show in the Reliability table (✓) and detail; ticking more then says they go on the outage after.
+- **Fix (QA Agent A):** "MCC-3 · 1 drive"; the Control room help page lists the Reliability and Drives screens.
+- **Fix (QA Agent C):** a drive card can no longer open over the game-over screen or linger over the menu after a run ends.
+- **Fix (QA Agent C):** a faulted drive on a lineup whose DC bus is down shows as a fault, not just No DC.
+- **Fix (QA Agent C):** opening the second screen before picking a DCS screen no longer throws on every UI tick.
+- **Fix (QA Agent C):** the drive card names the machine as written ("The Refiner A drive", not "refiner a").
 - **Fix (QA Agent B):** an outage drive changeout clears the patch, so a replaced drive no longer faults 3× as often for the rest of the run.
 - **Fix (QA Agent B):** a repeat drive fault takes half as long again to deal with, as its card says (the longer time was worked out but never used).
 - **Fix (QA Agent B):** the process-flow labor line includes the electrical tech's wage ("Maintenance and electrical techs").

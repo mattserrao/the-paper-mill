@@ -80,7 +80,7 @@ function rlyLoad(id,r){if(!S||outOn()||rlyIncOf(id)||rlyRectDown(ASSETN[id].ln))
     case "wind":{const c=(S.rates&&S.rates.cut)||0;return M.winderDown||c<0.5?(S.wd==="run"?6:0):28+c/Math.max(1,P.winderMax)*62+w;}}
   return 0;}
 // drive status: run, idle (stopped by the process), trip (its motor or bearing failed), fault (the drive itself), off (outage)
-function rlyDrvSt(id,L){if(outOn())return "off";if(rlyRectDown(ASSETN[id].ln))return "nodc";const i=rlyIncOf(id);if(i)return i.kind==="drv"?"fault":"trip";return (L!=null?L:rlyLoad(id))>3?"run":"idle";}
+function rlyDrvSt(id,L){if(outOn())return "off";const i=rlyIncOf(id);if(i&&i.kind==="drv")return "fault";if(rlyRectDown(ASSETN[id].ln))return "nodc";if(i)return "trip";return (L!=null?L:rlyLoad(id))>3?"run":"idle";}
 const rlyTemp=(id,L)=>{const a=S.rel&&S.rel.a[id];return 27+(L||0)*0.38+(a?(100-a.dh)*0.12:0);};
 function rlyMccKw(r){r=r||knobRead();let k=0;for(const A of ASSETS)k+=Math.max(0,rlyLoad(A.id,r))/100*A.kw;return k;}
 function rlyStressV(id,r,L){let s=1;if(id==="pulp"&&r.amps>460)s+=(r.amps-460)/40;if((id==="refA"||id==="refB")&&r.kwh>80)s+=(r.kwh-80)/25;if((id==="pr1"||id==="pr2")&&r.pl>120)s+=(r.pl-120)/15;if(L>100)s+=(L-100)/20;return Math.min(4,s);}
