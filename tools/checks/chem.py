@@ -15,7 +15,7 @@ C = Checks(); ok, errs, log = C.ok, C.errs, C.log
 
 RUN = """(a)=>{const P=__PM,[name,set,mins,stop]=a;P.G3.save.restore(JSON.parse(window.__SNAP));P.setRunning(false);P.CH.on=false;P.C.breaks=false;P.C.hays=false;
  const S=P.S,t0=S.t,c0=S.cash,p0=S.tot.prodT,bt0=S.tot.beater||0,f0=S.feed.length,tph=S.rates.prod;let tss=0,n=0,fpr=0,trim=0,cs=0,m=0,inc=[];
- const has0=!!S.chem;for(const [id,v] of set){if(v==='auto')P.chem.mode(id,'auto');else if(v==='manual')P.chem.mode(id,'manual');else P.chem.flow(id,v*tph);}
+ const has0=!!S.chem;for(const [id,v] of set){if(v==='auto')P.chem.mode(id,'auto');else if(v==='manual')P.chem.mode(id,'manual');else if(typeof v==='string'&&v[0]==='r')P.chem.ratio(id,+v.slice(1));else P.chem.flow(id,v*tph);}
  if(stop){S.pm='break';S.breakLeft=1e9;}
  while(S.t-t0<mins){P.step(P.SIM_STEP);if(stop){S.pm='break';S.breakLeft=1e9;}for(const i of S.inc)if(!inc.includes(i.id))inc.push(i.id);
    if(S.pm==='run'){tss+=P.chem.tss();fpr+=P.chem.fpr();n++;if(S.t-t0>120&&S.t-t0<300){trim+=S.we.trim;cs+=(S.knob&&S.knob.x&&S.knob.x.cs)||19;m++;}}}
@@ -24,7 +24,7 @@ RUN = """(a)=>{const P=__PM,[name,set,mins,stop]=a;P.G3.save.restore(JSON.parse(
   trim:m?+(trim/m*100).toFixed(2):null,cs:m?+(cs/m).toFixed(2):null,inc,modes:S.chem?[S.chem.ds.m,S.chem.pol.m]:null,traced:logs.filter(t=>t.includes("traced")||t.includes("investigated"))};}"""
 # name, [(chemical, kg/t (x the paper rate as a fixed MANUAL pump) | 'auto' | 'manual')], minutes, the machine held stopped
 SC = [("control", [], 720, False), ("auto toggled", [("ds", "manual"), ("ds", "auto"), ("pol", "manual"), ("pol", "auto")], 720, False),
-      ("manual at standard", [("ds", 6), ("pol", 0.3)], 720, False), ("starch 8", [("ds", 8)], 720, False), ("starch 15", [("ds", 15)], 720, False),
+      ("manual at standard", [("ds", 6), ("pol", 0.3)], 720, False), ("starch 8", [("ds", 8)], 720, False), ("starch ratio 8 on AUTO", [("ds", "r8")], 720, False), ("polymer ratio 0.1 on AUTO", [("pol", "r0.1")], 720, False), ("starch 15", [("ds", 15)], 720, False),
       ("no starch", [("ds", 0)], 720, False), ("polymer 0.5", [("pol", 0.5)], 720, False), ("polymer 0.8", [("pol", 0.8)], 720, False),
       ("no polymer", [("pol", 0)], 720, False), ("stopped, auto", [], 240, True), ("stopped, manual pumps", [("ds", "manual"), ("pol", "manual")], 240, True)]
 
@@ -50,6 +50,10 @@ def scenarios(pw):
     ok("untouched: no chemical state", not c["has0"] and not c["has"])
     ok("AUTO is free: switching to MANUAL and back changes nothing", abs(R["auto toggled"]["cash"] - c["cash"]) <= 2 and R["auto toggled"]["prod"] == c["prod"], f"{R['auto toggled']['cash']} vs {c['cash']}")
     ok("MANUAL at the standard dose costs about the same", abs(R["manual at standard"]["cash"] - c["cash"]) < 200, f"{R['manual at standard']['cash']} vs {c['cash']}")
+    r8 = R["starch ratio 8 on AUTO"]
+    ok("AUTO ratio 8 kg/t: trims lighter and pays, still on AUTO", r8["trim"] < c["trim"] - 1 and r8["cash"] > c["cash"] and r8["modes"][0] == "auto", json.dumps([r8["trim"], r8["cash"], r8["modes"]]))
+    r01 = R["polymer ratio 0.1 on AUTO"]
+    ok("AUTO polymer ratio 0.1: permit breached, ratio traced back to the standard", "permit" in r01["inc"] and any("AUTO at 0.1" in t for t in r01["traced"]), json.dumps([r01["inc"], r01["traced"]])[:220])
     s8, s15 = R["starch 8"], R["starch 15"]
     ok("more starch: AUTO-LW trims lighter, a drier couch, and it pays", s8["trim"] < c["trim"] - 1 and s8["cs"] > c["cs"] + 0.1 and s8["cash"] > c["cash"], json.dumps([s8["trim"], s8["cs"], s8["cash"]]))
     ok("starch 15 trims lighter still", s15["trim"] < s8["trim"] - 1, json.dumps([s15["trim"], s8["trim"]]))
@@ -74,8 +78,11 @@ def ui(pw):
         ok(name, got == want, "" if got == want else f"got {got!r}, want {want!r}")
     pg.evaluate("()=>{const P=__PM;P.G3.save.restore(JSON.parse(window.__SNAP));P.setRunning(false);}")
     chk("WET DCS has both chemical rows on AUTO", "P.G3.knobTap({k:'station',a:'WET'});await wait(100);const r=['dsf','polf'].map(k=>{const e=document.querySelector(`#dcsOv [data-ds=${k}] [data-dsa]`);return e&&e.textContent});return r", ["AUTO", "AUTO"])
-    chk("dragging the polymer pump puts it on MANUAL", "const i=document.querySelector('#dcsOv [data-ds=polf] [data-dsv]');i.value=14;i.dispatchEvent(new Event('input'));await wait(100);return [P.S.chem.pol.m,P.S.chem.pol.f,document.querySelector('#dcsOv [data-ds=polf] [data-dsa]').textContent]", ["manual", 14, "MANUAL"])
-    chk("the button puts it back on AUTO", "document.querySelector('#dcsOv [data-ds=polf] [data-dsa]').click();await wait(100);const r=[P.S.chem.pol.m,document.querySelector('#dcsOv [data-ds=polf] [data-dsa]').textContent];document.getElementById('dcsClose').click();return r", ["auto", "AUTO"])
+    Q = "const row=document.querySelector('#dcsOv [data-ds=polf]'),i=row.querySelector('[data-dsv]'),btn=row.querySelector('[data-dsa]');"
+    chk("on AUTO the polymer slider sets its ratio (kg/t)", Q + "i.value=0.5;i.dispatchEvent(new Event('input'));await wait(100);return [P.S.chem.pol.m,P.S.chem.pol.sp,i.max,btn.textContent]", ["auto", 0.5, "0.8", "AUTO"])
+    chk("a ratio well under the standard warns of the permit", Q + "i.value=0.1;i.dispatchEvent(new Event('input'));await wait(100);return [P.chem.risk(),row.querySelector('.dcsn small').textContent.includes('PERMIT RISK')]", [True, True])
+    chk("the button puts it on MANUAL: the slider is the pump's kg/h", Q + "btn.click();await wait(100);i.value=14;i.dispatchEvent(new Event('input'));await wait(100);return [P.S.chem.pol.m,P.S.chem.pol.f,i.max,btn.textContent]", ["manual", 14, "32", "MANUAL"])
+    chk("the button puts it back on AUTO", Q + "btn.click();await wait(100);const r=[P.S.chem.pol.m,btn.textContent];document.getElementById('dcsClose').click();return r", ["auto", "AUTO"])
     chk("the chemical tags are trendable", "return ['dsdose','dsflow','poldose','polflow','fpr'].every(k=>P.G3.tags?P.G3.tags.some(t=>t[0]===k):true)", True)
     chk("zen: no chemicals", "P.S.zen=true;P.chem.flow('ds',300);const r=P.chem.on()===false&&P.chem.e('ds')===6;P.S.zen=false;return r", True)
     b.close()

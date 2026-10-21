@@ -1,8 +1,8 @@
 /* ---- v6.11.1 wet-end chemicals: dry strength (cationic starch) and the retention polymer, on the WET DCS ----
    Both come out of the chemicals and water budget (ECON.chem, $25/t): at their standard doses dry strength is 6 kg/t of
    starch at $0.55/kg ($3.30/t) and the polymer 0.3 kg/t at $3.50/kg ($1.05/t); the other $20.65/t is everything else.
-   AUTO is flow-paced: the pump follows production at the standard kg/t, so it stops on a break and costs exactly what
-   the budget already charges. MANUAL holds the pump at the operator's kg/h: as the tons move the dose moves with it,
+   AUTO is flow-paced: the pump follows production at a ratio (kg/t: the standard unless the player sets another), so it
+   stops on a break, and at the standard it costs exactly what the budget already charges (v6.11.1 QA: the ratio setpoint). MANUAL holds the pump at the operator's kg/h: as the tons move the dose moves with it,
    and on a break or a slow restart the chemical keeps going in (paid for, and an overdose as the sheet comes back).
    What reaches the sheet (e, kg/t) lags the dose: a quarter hour for the starch (through the machine chest), 3 minutes
    for the polymer (dosed at the fan pump). Against the standard dose:
@@ -18,22 +18,26 @@
    process engineer puts that chemical back on AUTO. Untouched (S.chem missing, or both on AUTO and settled) every
    factor here is exactly 1 and nothing is charged or drawn: seasons replay identically. Zen: no chemicals. */
 const CHM={
-  ds:{id:"ds",name:"Dry strength (starch)",short:"DRY STR",std:6,max:15,step:1,fmax:600,price:0.55,tau:15,where:"cationic starch to the machine chest"},
-  pol:{id:"pol",name:"Retention polymer",short:"POLYMER",std:0.3,max:0.8,step:0.1,fmax:32,price:3.5,tau:3,where:"retention aid at the fan pump"}};
+  ds:{id:"ds",name:"Dry strength (starch)",short:"DRY STR",std:6,max:15,step:1,rstep:0.5,fmax:600,price:0.55,tau:15,where:"cationic starch to the machine chest"},
+  pol:{id:"pol",name:"Retention polymer",short:"POLYMER",std:0.3,max:0.8,step:0.1,rstep:0.02,risk:0.2,fmax:32,price:3.5,tau:3,where:"retention aid at the fan pump"}};
 const CHEM_IDS=["ds","pol"];
 const CHEM_STD$=CHM.ds.std*CHM.ds.price+CHM.pol.std*CHM.pol.price;   // ($4.35/t of the $25/t)
 const chF=d=>0.15*(1-Math.exp(-d/6)),chG=p=>0.4+0.6*Math.exp(-p/0.2);
-function chemState(){if(!S.chem){S.chem={any:false,H:{}};for(const id of CHEM_IDS)S.chem[id]={m:"auto",f:0,e:CHM[id].std,d:CHM[id].std};}return S.chem;}
+function chemState(){if(!S.chem){S.chem={any:false,H:{}};for(const id of CHEM_IDS)S.chem[id]={m:"auto",f:0,sp:CHM[id].std,e:CHM[id].std,d:CHM[id].std};}return S.chem;}
 // anything off standard: a pump on MANUAL, or the sheet still carrying a dose that isn't the standard one
 function chemOn(){const X=S.chem;return !!(X&&X.any&&!S.zen);}
 function chemE(id){const X=S.chem;return X&&!S.zen?X[id].e:CHM[id].std;}
 function chemDose(id){const X=S.chem;return X&&!S.zen?X[id].d:CHM[id].std;}
 function chemMode(id){const X=S.chem;return X?X[id].m:"auto";}
+// AUTO's ratio setpoint (kg/t)
+function chemSp(id){const X=S.chem,v=X&&X[id].sp;return v!=null?v:CHM[id].std;}
 // the paper the machine is making (t/h), and the standard rate for the grade (a pump switched to MANUAL while it's down)
 function chemTph(){return S.pm==="run"?P.K*S.pmSpeed*(S.we&&S.we.bw||bwStd()):0;}
 function chemTstd(){const g=GRADES[C.grade]||GRADES["24"];return P.K*g.sp*g.bw;}
-// pump flow (kg/h): AUTO follows production at the standard dose
-function chemFlow(id){const X=S.chem;if(!X||X[id].m==="auto")return CHM[id].std*chemTph();return X[id].f;}
+// pump flow (kg/h): AUTO follows production at its ratio
+function chemFlow(id){const X=S.chem;if(!X||X[id].m==="auto")return chemSp(id)*chemTph();return X[id].f;}
+// the polymer low enough that the outfall is at risk of its permit (the DCS warns)
+function chemRisk(){return chemOn()&&(chemMode("pol")==="manual"?chemE("pol")<CHM.pol.risk||(chemDose("pol")!=null&&chemDose("pol")<CHM.pol.risk):chemSp("pol")<CHM.pol.risk);}
 // effects (exactly the identity untouched)
 function chemRct(){return chemOn()?chF(chemE("ds"))-chF(CHM.ds.std):0;}                 // ring crush: + share (07g rctNow)
 function chemDrain(){return chemOn()?1+0.8*(chF(chemE("ds"))-chF(CHM.ds.std)):1;}        // couch solids factor (07b dewater)
@@ -46,21 +50,25 @@ function chemMods(m){const x=chemDep();if(x>0)m.breakMul*=1+0.06*x;}
 function chemFreq(id){const x=chemDep();return id==="slime"&&x>0?1+0.25*x:1;}
 // the player on the DCS (zen: none). MANUAL starts where AUTO's pump is (bumpless); AUTO goes back to the ratio.
 function chemSetMode(id,m){if(S.zen||!CHM[id])return;const X=chemState(),c=X[id];if(m===c.m)return;
-  if(m==="manual"){const t=chemTph()||chemTstd();c.f=Math.round(CHM[id].std*t/CHM[id].step*10)*CHM[id].step/10;}
-  c.m=m;X.any=true;chemWake();log(`${CHM[id].name}: ${m==="auto"?"AUTO, flow-paced at "+CHM[id].std+" kg/t":"MANUAL, pump held at "+c.f.toFixed(1)+" kg/h"}`,"");}
+  if(m==="manual"){const t=chemTph()||chemTstd();c.f=Math.round(chemSp(id)*t/CHM[id].step*10)*CHM[id].step/10;}
+  c.m=m;X.any=true;chemWake();log(`${CHM[id].name}: ${m==="auto"?"AUTO, flow-paced at "+chemSp(id)+" kg/t":"MANUAL, pump held at "+c.f.toFixed(1)+" kg/h"}`,"");}
+// AUTO's ratio (kg/t): moving it puts a MANUAL pump back on AUTO
+function chemSetRatio(id,v){if(S.zen||!CHM[id])return;const X=chemState(),c=X[id],k=CHM[id];if(c.m!=="auto"){c.m="auto";log(`${k.name}: AUTO`,"");}
+  c.sp=Math.round(clamp(+v,0,k.max)/k.rstep)*k.rstep;c.sp=Math.round(c.sp*100)/100;X.any=true;chemWake();}
 function chemSetFlow(id,v){if(S.zen||!CHM[id])return;const X=chemState(),c=X[id];if(c.m!=="manual")chemSetMode(id,"manual");c.f=clamp(+v,0,CHM[id].fmax);X.any=true;chemWake();}
 // the wet end's dewatering chain lives in the knob model (07b): keep it running while a chemical is off standard
 function chemWake(){const K=knobState();if(!K.any){K.any=true;S.M=mods();}}
 // the crew puts a chemical back on AUTO
-function chemFix(id,head,who){const X=S.chem;if(!X||X[id].m==="auto")return;X[id].m="auto";log(`${head} ${who} traced it to the ${CHM[id].name.toLowerCase()} pump on MANUAL and put it back on AUTO (${CHM[id].std} kg/t).`,"ok");
+function chemFix(id,head,who){const X=S.chem;if(!X||(X[id].m==="auto"&&chemSp(id)===CHM[id].std))return;const was=X[id].m==="auto"?`AUTO at ${chemSp(id)} kg/t`:"MANUAL";X[id].m="auto";X[id].sp=CHM[id].std;
+  log(`${head} ${who} traced it to the ${CHM[id].name.toLowerCase()} (${was}) and set it back to AUTO at the standard ${CHM[id].std} kg/t.`,"ok");
   BANNERS.push({text:`Traced: ${CHM[id].name}`,t:null,kind:"good",tag:"FIXED"});while(BANNERS.length>3)BANNERS.splice(1,1);}
 // every step, after the machine made paper (07 step): what went in, its cost against the budget's share, the lags, the traces
 function chemTick(dt,prod){const X=S.chem;if(!X||S.zen)return;const h=dt/60,run=S.pm==="run"&&prod>0,tph=run?prod/h:0;
   let d$=0;
-  for(const id of CHEM_IDS){const c=X[id],k=CHM[id],kg=c.m==="auto"?k.std*prod:c.f*h;
+  for(const id of CHEM_IDS){const c=X[id],k=CHM[id],sp=c.sp!=null?c.sp:k.std,kg=c.m==="auto"?sp*prod:c.f*h;
     d$+=(kg-k.std*prod)*k.price;
-    if(run){c.d=kg/prod;c.e=kLag(c.e,c.d,k.tau,dt);}else c.d=c.m==="auto"?k.std:null;   /* (MANUAL on a stopped machine: chemical going in with no paper to put it in) */
-    if(c.m==="auto"&&Math.abs(c.e-k.std)<1e-3)c.e=k.std;}
+    if(run){c.d=kg/prod;c.e=kLag(c.e,c.d,k.tau,dt);}else c.d=c.m==="auto"?sp:null;   /* (MANUAL on a stopped machine: chemical going in with no paper to put it in) */
+    if(c.m==="auto"&&Math.abs(c.e-sp)<1e-3)c.e=sp;}
   if(d$&&!S.zen){const v=d$*(P.costMul||1);spend(v,"energy");pfAdd("chem","pm",v);}
   // ---- the crew's traces ----
   const H=X.H,tr=(k,bad,mins,id,head,who)=>{if(bad){H[k]=(H[k]||0)+dt;if(H[k]>=mins){H[k]=0;chemFix(id,head,who);}}else H[k]=Math.max(0,(H[k]||0)-dt*0.5);};
@@ -75,4 +83,4 @@ function chemTick(dt,prod){const X=S.chem;if(!X||S.zen)return;const h=dt/60,run=
   else if(!low)H.tss=Math.max(0,(H.tss||0)-dt/120);
   if(X.permit&&!S.inc.some(n=>n.real===X.permit)){X.permit=null;chemFix("pol","Permit breach investigated.","The environmental engineer");}
   // all back on AUTO and the sheet carrying the standard doses: stop running
-  if(X.any&&CHEM_IDS.every(id=>X[id].m==="auto"&&X[id].e===CHM[id].std)&&!X.permit){X.any=false;X.H={};}}
+  if(X.any&&CHEM_IDS.every(id=>X[id].m==="auto"&&chemSp(id)===CHM[id].std&&X[id].e===CHM[id].std)&&!X.permit){X.any=false;X.H={};}}

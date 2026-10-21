@@ -51,4 +51,4 @@ function endSurvival(){civDrop();const se=S.season,r=survResult(),w=r.wave;se.do
   $("so-stats").replaceChildren(...st.map(([k,v,c])=>{const d=document.createElement("div");if(c)d.className=c;const a=document.createElement("span");a.textContent=k;const b=document.createElement("b");b.textContent=v;d.append(a,b);return d;}));
   {const box=$("so-rc");if(box)box.hidden=true;}soMode(true);
   let nm="";try{nm=localStorage.getItem("paper-mill-player")||"";}catch(e){}$("so-name").value=nm;soCount();
-  $("so-submit").disabled=false;$("so-submit").textContent=lbOn()?"Submit score":"Save score";setMsg("");$("seasonOv").hidden=false;$("seasonOv").scrollTop=0;if(matchMedia("(hover:hover) and (pointer:fine)").matches)$("so-name").focus();else $("so-submit").focus({preventScroll:true});}
+  $("so-submit").disabled=false;$("so-submit").textContent=lbOn()?"Submit score":"Save score";setMsg("");outNoteHide();$("seasonOv").hidden=false;   /* (v6.11.1 QA) */$("seasonOv").scrollTop=0;if(matchMedia("(hover:hover) and (pointer:fine)").matches)$("so-name").focus();else $("so-submit").focus({preventScroll:true});}

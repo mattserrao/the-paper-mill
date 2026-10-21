@@ -1,5 +1,12 @@
 # Changelog
 
+## v6.11.1-t3 (2026-10-21): QA round (test build, test/v6.11.1-hood)
+50 season and 50 survival bot playthroughs (no page errors, every ledger reconciled) and same-seed balance runs against main and v6.10.2 (`claude/qa-v6111.md`).
+- **Economy: every upgrade 20% cheaper** (`UP_COSTK`, 03b `upCost`). Since v6.11.0 (the deckle at +1.5% tons a level, trim) smart buying added only ~$0.2M a season over rounds alone; at 80% it adds ~$0.95M again (rounds + shop +$2.39M → +$3.14M a season; hands-off and rounds unchanged; survival active 45.0 → 47.6 days).
+- **Chemical pumps: a ratio setpoint on AUTO.** On AUTO the WET DCS slider sets the kg/t the pump is flow-paced at (standard = no extra cost); the button switches to MANUAL (the slider is then the pump's kg/h). A crew trace sets the ratio back to the standard. (QA: a MANUAL pump set to 8 kg/t on day 1 had drifted to ~6 kg/t by day 30 as the tons rose.)
+- **Permit-risk warning:** the polymer row and a WET alarm warn when the dose is under 0.2 kg/t.
+- **Fixed:** an outage notice could sit over the season summary or the survival game-over screen.
+
 ## v6.11.1-t2 (2026-10-21): wet-end chemicals (test build, test/v6.11.1-hood)
 - **Dry strength (cationic starch)** and a **retention polymer** on the WET DCS (`07l-chem.js`), in every mode but zen. Both come out of the existing $25/t chemicals and water budget: starch 6 kg/t × $0.55 = $3.30/t and polymer 0.3 kg/t × $3.50 = $1.05/t at standard, so on AUTO nothing changes and nothing extra is charged.
 - **AUTO is flow-paced**: the pump follows the tons at the standard kg/t and stops on a break. **MANUAL** (drag the pump, or the AUTO button) holds a fixed kg/h, so the dose moves with the tons; on a break the chemical keeps going to the sewer, and the restart gets an overdose.

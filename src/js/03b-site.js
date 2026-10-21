@@ -87,7 +87,9 @@ function bnFor(seed){let h=(seed>>>0)^0x2545f491;h=Math.imul(h^(h>>>16),0x45d9f3
 const BNQ=()=>(S&&BN[S.bn])?S.bn:null;
 // what the machine needs at standard speed on 24 (t/h of paper), the yardstick for every capacity
 const NEEDREF=()=>BASE.K*GRADES["24"].sp*GRADES["24"].bw;
-function upCost(u,l){const c=u.lv[l];const b=BNQ();return b&&BN[b].ups.includes(u.id)?Math.round(c*(1-BN_DISC)/1000)*1000:c;}
+// v6.11.1 QA balance: every upgrade 20% cheaper than its list (smart buying back to v6.10.2's spread over rounds alone)
+const UP_COSTK=0.8;
+function upCost(u,l){const c=Math.round(u.lv[l]*UP_COSTK/1000)*1000;const b=BNQ();return b&&BN[b].ups.includes(u.id)?Math.round(c*(1-BN_DISC)/1000)*1000:c;}
 function upFix(u){const b=BNQ();return !!(b&&BN[b].ups.includes(u.id));}
 // capacities that a bottleneck can cut (called from applyUpgrades)
 function applySite(){const E=ENVX(),b=BNQ(),need=NEEDREF(),fiber=need/P.pmLoss,feed=fiber/OCCG.occ11.y;
