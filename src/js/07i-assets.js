@@ -35,6 +35,8 @@ const ASSETS=[
   {id:"reel",n:"Reel drum",ln:"PM",kw:400,ta:"dry",k:9,mods:{pmDown:"reel drive down"},stop:"The machine is down.",bb:35e3,mb:75e3},
   {id:"wind",n:"Winder drum",ln:"WD",kw:600,ta:"dry",k:10,mods:{winderDown:1},stop:"The winder is down; reels are stacking up.",bb:35e3,mb:80e3}];
 const ASSETN=Object.fromEntries(ASSETS.map(a=>[a.id,a]));
+// v6.10.1: an asset's rated kW now (the Refiner power upgrade fits bigger refiner motors and drives: +30%)
+const rlyKw=id=>{const A=ASSETN[id];return A.kw*((id==="refA"||id==="refB")&&LV("refiner")?1.3:1);};
 const VIBST={good:["Good","ok","Smooth: nothing in the spectrum"],imbal:["Imbalance","warn","1× running speed peak: imbalance; it loads the bearings"],misal:["Misalignment","warn","2× running speed and axial peaks: the coupling is out of line"],
   outer:["Outer race defect","warn","Bearing defect peaks (BPFO): a spall on the outer race; weeks to months left"],inner:["Inner race defect","bad","Inner race defect (BPFI) with sidebands: the bearing is wearing fast"],
   imm:["Imminent failure","bad","Broadband noise and harmonics everywhere: the bearing is failing; days left"]};
@@ -65,11 +67,14 @@ MAINT.push("bearingfail","motorfail","drivefail");FM_MAINT=null;FM_REL.add("bear
 const rlyOn=()=>!!(S&&!S.zen&&!S.over&&((S.season&&S.season.on)||S.free));
 function rlyState(){if(S.rel&&S.rel.v===1){if(!S.rel.rf)rlyState2(S.rel);return S.rel;}const sd=S.seed>>>0,R={v:1,a:{},pend:[],rd:{s:null,list:[]},hist:[],k:-1,caught:0,saved:0,fails:0,done:0,skip:0,chg:{},next:null};
   for(const A of ASSETS){const h=manH("rly",sd,A.id);R.a[A.id]={vib:55+h()*40,adx:60+h()*37,dh:75+h()*25,wv:1.0+h()*1.4,wm:0.4+h()*0.7,vm:h()<0.5?"imbal":"misal",am:["ins","bar","con"][Math.floor(h()*3)],lv:null,la:null,hv:[],ha:[],pin:""};}
+  {const h=manH("rlyold",sd),ids=ASSETS.map(A=>A.id).sort((a,b)=>manH("rlyold2",sd,a)()-manH("rlyold2",sd,b)());for(const id of ids.slice(0,3))R.a[id].dh=35+h()*25;}   // (v6.10.1: three drives start part-worn)
   if(S.rng&&S.rng.rel==null)S.rng.rel=(S.seed^0x2545f491)|0;rlyState2(R);
   return S.rel=R;}
 function rlyState2(R){const h=manH("rlyrf",S.seed>>>0);R.rf={};for(const [ln] of LINEUPS)R.rf[ln]=80+h()*20;R.rep=[];R.q=[];R.cur=null;}
 const rlyPend=(id,k)=>{const q=S.rel&&S.rel.pend;if(!q)return false;for(const p of q)if(p.a===id&&p.k===k)return true;return false;};
-const rlyF=h=>0.08+2.6*Math.pow(1-clamp(h,0,100)/100,2);   // fault odds against health: ~0.1 new, 1 at 40, 2.7 worn out
+const rlyF=h=>0.08+2.6*Math.pow(1-clamp(h,0,100)/100,2);
+// drive fault odds against drive health (v6.10.1: steeper when worn: 1 new, ~2 at 40, ~4 at 20, ~11 at 0)
+const rlyDrvF=h=>(1+(100-h)/60)*(h<30?1+(30-h)/10:1);   // fault odds against health: ~0.1 new, 1 at 40, 2.7 worn out
 const rlyIncOf=id=>{for(const i of S.inc)if(i.asset===id&&i.kind)return i;return null;};
 const rlyBill=(id,k)=>((k==="vib"?ASSETN[id].bb:k==="adx"?ASSETN[id].mb:RLY.drvBill)||0)*P.repairMul;
 
@@ -77,7 +82,7 @@ const rlyBill=(id,k)=>((k==="vib"?ASSETN[id].bb:k==="adx"?ASSETN[id].mb:RLY.drvB
 function rlyLoad(id,r){if(!S||outOn()||rlyIncOf(id)||rlyRectDown(ASSETN[id].ln))return 0;r=r||knobRead();const A=ASSETN[id],run=S.pm==="run",M=S.M||{},w=Math.sin(S.t*0.021+A.k)*0.7+Math.sin(S.t*0.057+A.k*2)*0.5;
   switch(id){
     case "pulp":return M.pulperDown?0:r.amps/500*100+w;
-    case "refA":case "refB":return r.refkw>0?r.refkw/2/A.kw*100*(id==="refB"?0.97:1.03)+w:0;
+    case "refA":case "refB":return r.refkw>0?r.refkw/2/rlyKw(id)*100*(id==="refB"?0.97:1.03)+w:0;
     case "fan":return run?48+30*S.pmSpeed/3000+w:M.pmDown?0:30+w;
     case "couch":return run?38+r.vac*1.05+w:M.pmDown?0:12;
     case "pr1":return run?42+r.pl*0.27+w:M.pmDown?0:12;
@@ -89,7 +94,7 @@ function rlyLoad(id,r){if(!S||outOn()||rlyIncOf(id)||rlyRectDown(ASSETN[id].ln))
 // drive status: run, idle (stopped by the process), trip (its motor or bearing failed), fault (the drive itself), off (outage)
 function rlyDrvSt(id,L){if(outOn())return "off";const i=rlyIncOf(id);if(i&&i.kind==="plan")return "lock";if(i&&i.kind==="drv")return "fault";if(rlyRectDown(ASSETN[id].ln))return "nodc";if(i)return "trip";return (L!=null?L:rlyLoad(id))>3?"run":"idle";}
 const rlyTemp=(id,L)=>{const a=S.rel&&S.rel.a[id];return 27+(L||0)*0.38+(a?(100-a.dh)*0.12:0);};
-function rlyMccKw(r){r=r||knobRead();let k=0;for(const A of ASSETS)k+=Math.max(0,rlyLoad(A.id,r))/100*A.kw;return k;}
+function rlyMccKw(r){r=r||knobRead();let k=0;for(const A of ASSETS)k+=Math.max(0,rlyLoad(A.id,r))/100*rlyKw(A.id);return k;}
 function rlyStressV(id,r,L){let s=1;if(id==="pulp"&&r.amps>460)s+=(r.amps-460)/40;if((id==="refA"||id==="refB")&&r.kwh>80)s+=(r.kwh-80)/25;if((id==="pr1"||id==="pr2")&&r.pl>120)s+=(r.pl-120)/15;if(L>100)s+=(L-100)/20;return Math.min(4,s);}
 const rlyStressM=L=>L>100?Math.min(4,1+(L-100)/15):1;
 
@@ -102,11 +107,11 @@ function rlyTick(dt){if(!rlyOn())return;const R=rlyState();rlyRounds(R);
   const r=knobRead(),out=outOn(),um=upsetMul(),live=CH.on&&um>0&&!out,h=RLY.tick/1440,u=um*2*CH.lvl;
   for(const A of ASSETS){const a=R.a[A.id],L=rlyLoad(A.id,r);
     const r1=rand("rel"),r2=rand("rel"),r3=rand("rel");   // (three draws an asset a tick, whatever happens)
-    if(!out&&L>5){a.vib=Math.max(0,a.vib-a.wv*h*rlyStressV(A.id,r,L));a.adx=Math.max(0,a.adx-a.wm*h*rlyStressM(L));a.dh=Math.max(0,a.dh-0.25*h*(L>100?1+(L-100)/10:1));}
+    if(!out&&L>5){a.vib=Math.max(0,a.vib-a.wv*h*rlyStressV(A.id,r,L));a.adx=Math.max(0,a.adx-a.wm*h*rlyStressM(L));a.dh=Math.max(0,a.dh-0.15*h*(L>100?1+(L-100)/10:1));}
     if(!live)continue;
     if(CH.en.bearingfail&&!rlyPend(A.id,"vib")&&!rlyIncOf(A.id)&&r1<RLY.baseB*h*rlyF(a.vib)*freqMul("bearingfail")*u)R.pend.push({a:A.id,k:"vib",due:S.t+RLY.leadB,born:S.t});
     if(CH.en.motorfail&&!rlyPend(A.id,"adx")&&!rlyIncOf(A.id)&&r2<RLY.baseM*h*rlyF(a.adx)*freqMul("motorfail")*u)R.pend.push({a:A.id,k:"adx",due:S.t+RLY.leadM,born:S.t});
-    if(CH.en.drivefail&&L>5&&!rlyIncOf(A.id)&&r3<RLY.baseD*h*(1+Math.max(0,L-95)/10)*(1+(100-a.dh)/50)*(a.patch?RLY.patch:1)*freqMul("drivefail")*u)rlyFail(A.id,"drv");}
+    if(CH.en.drivefail&&L>5&&!rlyIncOf(A.id)&&r3<RLY.baseD*h*(1+Math.max(0,L-95)/10)*rlyDrvF(a.dh)*(a.patch?RLY.patch:1)*freqMul("drivefail")*u)rlyFail(A.id,"drv");}
   // v6.10 the rectifiers (one per lineup): slow wear while their lineup runs, a fault takes the lineup's DC bus down
   for(const [ln] of LINEUPS){const x=rand("rel"),f=R.rf[ln];if(!out)R.rf[ln]=Math.max(0,f-0.15*h);
     if(live&&CH.en.rectfail&&!active("rectfail")&&x<RLY.rectBase*h*(1+(100-f)/40)*freqMul("rectfail")*u)rlyFail(null,"rect",{ln});}
@@ -231,7 +236,7 @@ function elecState(i){if(!ENEED(i.id))return "";if(i.stage==="wait")return "your
 // trigger() (04) calls this for every upset: the card's reliability line, and what a blackout does to the drives
 function rlyOnTrigger(inc){if(!S.rel||!rlyOn())return;const R=S.rel;
   if(RLY_LINK[inc.id])inc.cite=rlyCite(inc.id,inc);
-  const hit=inc.id==="lightning"||inc.id==="birdline"?[8,18]:inc.id==="brownout"?[3,6]:null;
+  const hit=inc.id==="lightning"||inc.id==="birdline"?[3,7]:inc.id==="brownout"?[1,3]:null;   // (v6.10.1: were 8-26 and 3-9: every drive was at 0% by the fifth week)
   if(hit)for(const A of ASSETS){const a=R.a[A.id];a.dh=Math.max(0,a.dh-hit[0]-rlyHash(A.id,Math.floor(S.t),inc.id)*hit[1]);}}
 // freqMul (03): the upsets tied to an asset get likelier as its bearings wear (about 0.6 new, 1 at 50, 2 worn out)
 function rlyLinkMul(id){const L=RLY_LINK[id];if(!L||!S||!S.rel||!rlyOn())return 1;let h=0;for(const a of L)h+=S.rel.a[a].vib;h/=L.length;return 0.55+1.6*Math.pow(1-h/100,1.6);}

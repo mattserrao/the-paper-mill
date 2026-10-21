@@ -184,7 +184,10 @@ with sync_playwright() as pw:
     # ---- 9 survival with Dot ----
     load("?env=desert")
     r = pick("v2surv", "dot")
-    pg.wait_for_function("__PM.S.season&&__PM.S.season.on", timeout=300000, polling=200); pg.wait_for_timeout(500); ev("()=>__PM.setRunning(false)")
+    pg.wait_for_function("__PM.S.season&&__PM.S.season.on", timeout=300000, polling=200); pg.wait_for_timeout(500)
+    try: pg.wait_for_function("()=>{const b=document.getElementById('civBar');return b&&!b.hidden}", timeout=20000, polling=200)   # (the bar draws on a UI tick: slow under load)
+    except Exception: pass
+    ev("()=>__PM.setRunning(false)")
     s = state()
     ok("9 survival with Dot: civics on, start = Dot (50/50/60/40), desert Machinery −6, no meter below 42", s["surv"] and s["lead"] == "dot" and {k: round(v) for k, v in s["civ"].items()} == {"E": 50, "L": 50, "M": 54, "C": 42} and s["bar"], s)
     ev("()=>{window.__BOT=null;}")

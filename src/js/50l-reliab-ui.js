@@ -17,12 +17,12 @@ function drvBuild(b){b.appendChild(kEl("div","dcsal",`<b>Alarms</b><ul id="dcsAl
 function drvRefresh(){const el=$("drvL");if(!el)return;const r=knobRead(),R=S.rel,pens=trPens();let kw=0,run=0,flt=0;const al=[];
   if(rlyArc())al.push(["ARC FLASH · MAIN INCOMER OPEN · NO 480 V",true]);
   if(rlyBlack())al.push(["LOSS OF SUPPLY · 13.8 kV FEEDER DEAD",true]);else if(active("brownout"))al.push([`BROWNOUT · FEEDER ${rlyMV().toFixed(1)} kV`,false]);
-  const rows=LINEUPS.map(([ln,name,tag])=>{const list=ASSETS.filter(A=>A.ln===ln).map(A=>{const L=Math.max(0,rlyLoad(A.id,r)),st=rlyDrvSt(A.id,L),T=rlyTemp(A.id,L);kw+=L/100*A.kw;if(st==="run")run++;if(st==="fault"||st==="trip"||st==="nodc")flt++;
+  const rows=LINEUPS.map(([ln,name,tag])=>{const list=ASSETS.filter(A=>A.ln===ln).map(A=>{const L=Math.max(0,rlyLoad(A.id,r)),st=rlyDrvSt(A.id,L),T=rlyTemp(A.id,L);kw+=L/100*rlyKw(A.id);if(st==="run")run++;if(st==="fault"||st==="trip"||st==="nodc")flt++;
       if(st==="nodc"){}else if(st==="fault")al.push([`DRIVE FAULT · ${A.n.toUpperCase()}`,true]);else if(st==="trip")al.push([`MOTOR TRIPPED · ${A.n.toUpperCase()}`,true]);
       else if(L>100)al.push([`DRIVE OVERLOAD · ${A.n.toUpperCase()} ${Math.round(L)}%`,L>110]);else if(L>95)al.push([`DRIVE LOAD HI · ${A.n.toUpperCase()}`,false]);
       if(T>72)al.push([`DRIVE TEMP HI · ${A.n.toUpperCase()} ${Math.round(T)} °C`,T>78]);
       const cls=L>100?"bad":L>95?"warn":"",stc={run:"ok",idle:"",off:"",lock:"warn",fault:"bad",trip:"bad",nodc:"bad"}[st],stn={run:"RUN",idle:"IDLE",off:"OFF · OUTAGE",lock:"LOCKED OUT · REPAIR",fault:"FAULT",trip:"TRIPPED",nodc:"NO DC"}[st];
-      return `<tr><td><b>${A.n}</b><small>${A.kw.toLocaleString()} kW VFD</small></td><td><span class="dst ${stc}">${stn}</span></td>
+      return `<tr><td><b>${A.n}</b><small>${rlyKw(A.id).toLocaleString()} kW VFD</small></td><td><span class="dst ${stc}">${stn}</span></td>
         <td><button type="button" class="dbar trk${pens.includes("dl_"+A.id)?" on":""}" data-trk="dl_${A.id}" aria-pressed="${pens.includes("dl_"+A.id)}" title="${pens.includes("dl_"+A.id)?"Trended: tap to stop":"Tap to trend"} ${A.n} drive load"><i style="width:${clamp(L,0,130)/1.3}%" class="${cls}"></i><em>${Math.round(L)} %</em></button></td><td class="${T>72?"bad":""}">${Math.round(T)} °C</td><td class="${R.a[A.id].dh<40?"bad":R.a[A.id].dh<60?"warn":""}">${Math.round(R.a[A.id].dh)}%${R.a[A.id].patch?" · patched":""}</td></tr>`;}).join("");
     if(rlyRectDown(ln)&&!rlyArc())al.push([`${tag} RECTIFIER FAULT · DC BUS DOWN`,true]);
     return `<section class="plsec"><div class="dcssub">${tag} · ${name} · DC bus ${Math.round(rlyDC(ln))} V · rectifier health ${Math.round(R.rf[ln])}%</div><table><thead><tr><th>Drive</th><th>Status</th><th>Load</th><th>Heat sink</th><th>Health</th></tr></thead><tbody>${list}</tbody></table></section>`;}).join("");
@@ -81,7 +81,7 @@ function rlyRefresh(){const tb=$("rlyTab");if(!tb)return;const R=rlyState(),D=R.
     `<div class="rchg">${["b","m","d"].map(k=>`<button type="button" data-rchg="${A.id}:${k}" aria-pressed="${!!c[k]}"><b>${RLY.plan[k].n}</b><small>${moneyX(RLY.plan[k].cost)} · +${RLY.plan[k].min} min</small></button>`).join("")}</div>
      <p class="dcsfield">${booked?`Booked for outage ${S.outg.k}: ${Object.keys(booked).map(k=>RLY.plan[k].n.toLowerCase()).join(", ")}. `:""}${booked?"That plan is approved; ticked items go on the plan for the outage after it.":"Ticked items go on the next outage plan (24 h before it) and are paid when you approve it."} New parts come back at full health.</p>`;
   const L=Math.max(0,rlyLoad(A.id,r)),st=rlyDrvSt(A.id,L);
-  const det=`<div class="rdh"><b>${A.n}</b><small>${LINEN[A.ln][1]} (${LINEN[A.ln][2]}) · ${A.kw.toLocaleString()} kW VFD · if it fails: ${A.stop.toLowerCase().replace(/\.$/,"")}</small></div>
+  const det=`<div class="rdh"><b>${A.n}</b><small>${LINEN[A.ln][1]} (${LINEN[A.ln][2]}) · ${rlyKw(A.id).toLocaleString()} kW VFD · if it fails: ${A.stop.toLowerCase().replace(/\.$/,"")}</small></div>
     <div class="rdg"><section class="plsec"><div class="dcssub">Vibration (maintenance)</div>${rlyVibCell(a)}<p class="dcsfield">${v&&vg.cls!=="unk"?VIBST[v.st][2]+".":"No recent reading: the last rounds didn't get to it, or were skipped."}</p>
       ${hist(a.hv,([t,mm,s])=>s==="fix"?`<div><span>${dhm(t)}</span><em class="ok">Repaired · new bearing</em></div>`:`<div><span>${dhm(t)}</span><em class="${VIBST[s][1]}">${mm} mm/s · ${VIBST[s][0]}</em></div>`)}
       <div class="ract"><button type="button" class="kstd" data-rpin="${A.id}:vib" aria-pressed="${a.pin==="vib"}"${on?"":" disabled"}>${a.pin==="vib"?"Pinned for the next round":"Pin to the next vibration round"}</button>
