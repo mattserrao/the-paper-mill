@@ -2,16 +2,17 @@
 exception in any step shows up here instead of in a player's session), then each site's first pieces and every upset
 piece play for real and the output level is read, so a silent piece is caught too.
 
-Level measurement (v6.10.2 tests): AUDIO.level() is the RMS of the analyser's last 2048 samples (~46 ms). The old
-musictest.py read it once at the end of the listen, so a sparse piece (Wet End Morning, Felt Moss, Neon Rain...) failed
-whenever that one read fell between notes (0.0003 on v6.10.1, while the same piece peaks at ~0.03). It is now polled
-every 100 ms through the whole listen and a piece passes on its loudest read; the share of loud reads is logged. The
-audio clock's progress against the wall clock is logged too: if a starved machine ever lets it fall behind (under 70%
-of the wall time), the piece fails with that reason instead of as "silent". The 3D view is not drawn (LITE, and
-G3.EXP.noRender) and the sim is paused while listening: the music depends on neither, and with another Chromium test on
-the 2 CPUs they starved the main thread, which also runs the music scheduler (a listen got 0 to 21 of its 80 polls while
-the audio clock kept pace): starved scheduler ticks drop notes, which is what read as near-silence. A listen with fewer
-than MIN_READS polls still fails, as "too few reads (main thread starved)", not as silent.
+Why v6.10.1's run read near-silent (level 0.0003 for 7 of 9 calm pieces): not a silence bug in 02-audio.js and not the
+audio clock (it kept pace with the wall clock throughout). The old test started listening at the first frame, while the
+shader prewarm (G3.prewarm, seconds of main-thread work under SwiftShader, longer with another Chromium on the 2 CPUs)
+was still running. The music scheduler is a 25 ms setInterval on that same main thread that schedules notes 0.3 s
+ahead, so a starved scheduler has nothing queued and the output really is quiet; the old test then read the level once,
+at the end, from a 46 ms analyser window. Upsets passed because they listened 1.5 s later. Fixes:
+  - listen only after G3.warm (+1 s), with the sim paused and the 3D frame not drawn (LITE + G3.EXP.noRender): the
+    music needs neither
+  - poll the level every 100 ms through the whole listen and pass on the peak (the loud share is logged)
+  - a listen with too few polls (main thread starved) or an audio clock under 70% of the wall time fails with that
+    reason, not as "silent"
 Replaces tools/musictest.py.
 Usage: python3 music.py [index.html] [--listen=8]   (seconds each piece plays for the level check)"""
 # tier: slow
@@ -34,10 +35,8 @@ READ = f"""()=>{{clearInterval(window.__LVt);const A=__PM.AUDIO,V=window.__LV,l=
 def boot(b, html, q):
     pg = open_game(b, html, q + "&" + LITE, viewport=(800, 450), errs=errs, wait=False)
     pg.wait_for_function("window.__PM&&__B.first!==null&&(!__PM.G3.prewarm||__PM.G3.warm)", timeout=240000, polling=300)
-    pg.wait_for_timeout(1000)   # (the warm-up after the first frame blocks the main thread for seconds: listen after it)
-    # the sim and the 3D frames share the main thread with the music scheduler (a 25 ms setInterval that schedules notes
-    # 0.3 s ahead): on a busy 2-CPU machine they starved it, notes were dropped and the piece really went quiet. The music
-    # needs neither, so the sim is paused and the frame not drawn while listening.
+    pg.wait_for_timeout(1000)   # (the shader prewarm after the first frame starves the music scheduler: listen after it)
+    # the sim and the 3D frames share the main thread with the music scheduler too; the music needs neither
     pg.evaluate("()=>{__PM.setRunning(false);const G=__PM.G3;if(G&&G.EXP)G.EXP.noRender=true;}")
     return pg
 
