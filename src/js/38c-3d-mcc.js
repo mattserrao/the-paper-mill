@@ -130,7 +130,7 @@
     elecLights(job,p,rdt);}
   // the cabinets: lights follow each drive and rectifier; the drive being replaced has its door open and the module coming out and going in
   function elecLights(job,p,rdt){
-    for(const [ln] of LINEUPS){const r=RECT3[ln];if(!r)continue;const m=outOn()?LEDM.off:rlyRectDown(ln)?LEDM.fault:rlyBlack()?LEDM.off:LEDM.run;if(r.led.material!==m)r.led.material=m;}
+    for(const [ln] of LINEUPS){const r=RECT3[ln];if(!r)continue;const m=outOn()?LEDM.off:rlyBlack()||rlyArc()?LEDM.off:rlyRectDown(ln)?LEDM.fault:LEDM.run;if(r.led.material!==m)r.led.material=m;}
     for(const A of ASSETS){const c=CAB[A.id];if(!c)continue;const st=S.rel?rlyDrvSt(A.id):"run",m=st==="run"?LEDM.run:st==="idle"?LEDM.idle:st==="off"||st==="lock"?LEDM.off:st==="nodc"?LEDM.off:LEDM.fault;if(c.led.material!==m)c.led.material=m;
       const busy=job&&job.id==="drivefail"&&job.asset===A.id&&job.eGo&&job.stage!=="reset",tgt=busy&&p>0.08&&p<0.92?1:0;c.open+=(tgt-c.open)*Math.min(1,rdt*3);c.hinge.rotation.y=-c.open*1.7;
       if(busy&&job.stage==="repl"&&p>0.2&&p<0.85){c.mod.visible=true;const k=p<0.5?(p-0.2)/0.3:1-(p-0.55)/0.3,kk=clamp(k,0,1);c.mod.material=p<0.5?modM.old:modM.new;c.mod.position.set(-0.55*kk,1.1-0.3*kk,0.02-1.0*kk);}

@@ -50,6 +50,8 @@ const RLY_ID={vib:"bearingfail",adx:"motorfail",drv:"drivefail",rect:"rectfail"}
 const RLY_PLAN={planbrg:{k:"vib",name:"Planned repair: bearings"},planmot:{k:"adx",name:"Planned repair: motor"}};
 // the three failures join EVENTS (never rolled by chaosTick: an endless MTBF on their own stream; knob:true keeps them out
 // of the Upsets panel's switches, the tornado and the machine crew's queue)
+// v6.10 t5: the arc flash at the MCC main incomer (a knob-caused breakdown, 07b knobArc; the electrical tech's job)
+{const e={id:"arcflash",g:"machine",knob:true,stream:"knob",name:"Arc flash at the MCC",head:"Arc flash at the MCC main incomer: every drive has lost its supply.",dur:[60,100],mtbf:1e12,mods:{pmDown:"MCC main incomer open",pulperDown:1,winderDown:1},fx:"arcflash"};EVENTS.push(e);EV.arcflash=e;CH.en.arcflash=true;REPAIR.arcflash=30e3;}
 for(const id in RLY_PLAN){const d=RLY_PLAN[id],e={id,g:"machine",knob:true,stream:"relx",name:d.name,dur:[30,30],mtbf:1e12,mods:{},rly:d.k,end:i=>rlyPlanDone(i)};
   Object.defineProperty(e,"head",{get:()=>{const i=S&&S.inc&&S.inc.find(x=>x.id===id),A=i&&ASSETN[i.asset];return A?`${A.n}: planned ${d.k==="vib"?"bearing change":"motor swap"}. ${A.stop}`:d.name;},enumerable:true});EVENTS.push(e);EV[id]=e;CH.en[id]=true;}
 for(const id in RLY_EV){const d=RLY_EV[id];const e={id,g:"machine",knob:true,stream:"relx",name:d.name,dur:[60,60],mtbf:1e12,mods:{},rly:d.k,end:i=>rlyFixed(i)};
@@ -57,7 +59,7 @@ for(const id in RLY_EV){const d=RLY_EV[id];const e={id,g:"machine",knob:true,str
 // bearings go to a maintenance pair; motors, drives and the blackouts to the electrical tech (v6.10: lightning and the
 // bird on the line were maintenance jobs)
 MSET.delete("lightning");MSET.delete("birdline");MSET.add("bearingfail");MSET.add("planbrg");
-const ESET=new Set(["motorfail","drivefail","rectfail","lightning","birdline","planmot"]),ENEED=id=>ESET.has(id),EMCC=new Set(["drivefail","rectfail","lightning","birdline"]);   // (EMCC: jobs in the MCC: arc-flash PPE at the door first)
+const ESET=new Set(["motorfail","drivefail","rectfail","lightning","birdline","planmot","arcflash"]),ENEED=id=>ESET.has(id),EMCC=new Set(["drivefail","rectfail","lightning","birdline","arcflash"]);   // (EMCC: jobs in the MCC: arc-flash PPE at the door first)
 MAINT.push("bearingfail","motorfail","drivefail");FM_MAINT=null;FM_REL.add("bearingfail");FM_REL.add("motorfail");   // (RCFA, PM and the Reliability program cut them too)
 
 const rlyOn=()=>!!(S&&!S.zen&&!S.over&&((S.season&&S.season.on)||S.free));
@@ -168,10 +170,10 @@ function rlyAdxSt(id){if(rlyPend(id,"adx"))return "imm";const h=S.rel.a[id].adx;
 function rlyRead(R,x){const who=x.who==="e"?"the electrical tech":"a maintenance tech";
   for(const id of x.a){const a=R.a[id],A=ASSETN[id];
     if(x.k==="vib"){const st=rlyVibSt(id),v=rlyVibV(st,a.vib,id);a.lv={t:S.t,st,v,by:x.who};a.hv.push([Math.round(S.t),v,st]);if(a.hv.length>8)a.hv.shift();
-      if(st==="imm"){BANNERS.push({text:`Vibration round: the ${A.n.toLowerCase()} bearing is failing. Plan the repair on the Reliability screen.`,t:null,tag:"RELIAB"});while(BANNERS.length>3)BANNERS.splice(1,1);log(`Vibration round (${who}): ${A.n} bearing failing (${v} mm/s). Plan the repair in Report → Control room → Reliability.`,"warn");}
+      if(st==="imm"){BANNERS.push({text:`Vibration round: the ${A.n} bearing is failing. Plan the repair on the Reliability screen.`,t:null,tag:"RELIAB"});while(BANNERS.length>3)BANNERS.splice(1,1);log(`Vibration round (${who}): ${A.n} bearing failing (${v} mm/s). Plan the repair in Report → Control room → Reliability.`,"warn");}
       else if(st==="inner")log(`Vibration round: ${A.n}, inner race defect (${v} mm/s).`,"warn");}
     else{const st=rlyAdxSt(id),hh=clamp(a.adx+(rlyHash(id,Math.floor(S.t),1)-0.5)*4,0,100);a.la={t:S.t,st,h:Math.round(hh),by:"e"};a.ha.push([Math.round(S.t),Math.round(hh),st]);if(a.ha.length>8)a.ha.shift();
-      if(st==="imm"){BANNERS.push({text:`ADX test: the ${A.n.toLowerCase()} motor is about to fail. Plan the repair on the Reliability screen.`,t:null,tag:"RELIAB"});while(BANNERS.length>3)BANNERS.splice(1,1);log(`ADX test: ${A.n} motor about to fail (${ADXMODE[a.am]}). Plan the repair in Report → Control room → Reliability.`,"warn");}
+      if(st==="imm"){BANNERS.push({text:`ADX test: the ${A.n} motor is about to fail. Plan the repair on the Reliability screen.`,t:null,tag:"RELIAB"});while(BANNERS.length>3)BANNERS.splice(1,1);log(`ADX test: ${A.n} motor about to fail (${ADXMODE[a.am]}). Plan the repair in Report → Control room → Reliability.`,"warn");}
       else if(st==="alarm")log(`ADX test: ${A.n} motor in alarm (${ADXMODE[a.am]}).`,"warn");}}}
 // the player's actions (the Reliability screen)
 function rlyPin(id,k){const R=rlyState(),a=R.a[id];if(!a)return;a.pin=a.pin===k?"":k;}
@@ -183,7 +185,7 @@ function rlyFix(id,k){if(!rlyOn())return false;const R=rlyState(),a=R.a[id],A=AS
   if(p>=0){R.pend.splice(p,1);R.caught++;R.saved+=bill-cost;if(civOn())civAdd(TELL.catchCiv,"Caught early");}
   const ck=k==="vib"?"b":"m",co=R.chg[id];if(co&&co[ck]){delete co[ck];if(!Object.keys(co).length)delete R.chg[id];}   // the part will be new: no outage changeout for it
   const pid=k==="vib"?"planbrg":"planmot",m=(RLY.fixMin[0]+rand("rel")*(RLY.fixMin[1]-RLY.fixMin[0]))*durMul(pid);
-  S.inc.push({id:pid,left:m,total:m,real:performance.now(),note:"planned",asset:id,kind:"plan",pk:k,mods:A.mods,planned:true});S.M=mods();
+  const pm=A.mods.pmDown?{pmDown:`${A.n.toLowerCase()}: planned ${k==="vib"?"bearing change":"motor swap"}`}:A.mods;S.inc.push({id:pid,left:m,total:m,real:performance.now(),note:"planned",asset:id,kind:"plan",pk:k,mods:pm,planned:true});S.M=mods();
   log(`Planned repair: ${A.n} ${k==="vib"?"bearing change":"motor swap"} for ${money(cost)}${p>=0?` (a ${money(bill)} failure avoided)`:""}. ${A.stop} About ${Math.round(m)} min.`,"warn");return true;}
 // the planned repair is done: the part is new
 function rlyPlanDone(i){const R=S.rel;if(!R)return;const a=R.a[i.asset];if(!a)return;
@@ -217,7 +219,7 @@ function rlyOutageEnd(o,pl){const R=S.rel;if(!R)return;const done=[];
 /* ---- the electrical tech: one job at a time, the blackouts first ---- */
 function rlyElecTick(dt){
   // a drive fault waits on the player's call (held, not counting down); an investigation that's done waits on the next one
-  for(const i of S.inc){if(i.kind!=="drv"||!i.stage)continue;if(i.stage==="wait"||i.stage==="found"){i.left=Math.max(i.left,30);
+  for(const i of S.inc){if(i.kind!=="drv"||!i.stage||i.clr)continue;if(i.stage==="wait"||i.stage==="found"){i.left=Math.max(i.left,30);
       // the card pauses the game; if the sim runs on without an answer for an hour (no screen to show it on), the crew decides: investigate, then replace
       i.waitT=(i.waitT||0)+dt;if(i.waitT>60){const st=i.stage;i.waitT=0;const R=S.rel;if(R){R.q=R.q.filter(q=>q.a!==i.asset);if(R.cur&&R.cur.a===i.asset){R.cur=null;if(S.cards&&S.cards.open&&S.cards.open.rly)S.cards.open=null;if(typeof document!=="undefined"){const o=document.getElementById("rlyOv");if(o)o.hidden=true;}}}rlyDecide(i,st==="wait"?"inv":"repl",true);continue;}}
     else if(i.stage==="inv"&&i.eGo&&i.left<=dt*3){i.stage="found";i.left=30;rlyAsk(i,"found");}
@@ -249,10 +251,11 @@ CIVU.drivefail={n:"Drive failure",a:"Machine",ch:[["New drive and a lineup cooli
    to 480 V) -> a rectifier per lineup -> a ~650 V DC common bus -> each drive's inverter -> its motor. The voltages follow
    the upsets (a blackout drops them all, a brownout sags them); a rectifier fault drops its lineup's DC bus. ---- */
 const PWR={util:115,mv:13.8,lv:480,dcK:1.35};
-const rlyRectDown=ln=>{if(!S||!S.inc)return false;for(const i of S.inc)if(i.id==="rectfail"&&i.line===ln)return true;return false;};
+const rlyRectDown=ln=>{if(!S||!S.inc)return false;if(active("arcflash"))return true;for(const i of S.inc)if(i.id==="rectfail"&&i.line===ln)return true;return false;};
 const rlyBlack=()=>!!(S&&(active("lightning")||active("birdline")));
 function rlyMV(){if(rlyBlack())return 0;return PWR.mv*(active("brownout")?0.92:1)*(1+Math.sin(S.t*0.013)*0.004);}
-function rlyLV(){return rlyMV()/PWR.mv*PWR.lv;}
+const rlyArc=()=>!!(S&&S.inc&&active("arcflash"));   // (t5: the main incomer open: no 480 V into the MCC)
+function rlyLV(){return rlyArc()?0:rlyMV()/PWR.mv*PWR.lv;}
 function rlyDC(ln){if(outOn()||rlyRectDown(ln))return 0;const v=rlyLV()*PWR.dcK;return v>0?v+Math.sin(S.t*0.05+ln.length)*2:0;}
 const RECT_MODS={SP:{pmDown:"MCC-1 DC bus down",pulperDown:1},PM:{pmDown:"MCC-2 DC bus down"},WD:{winderDown:1}};
 function rlyRectFail(ln){if(!ln||active("rectfail"))return false;const R=rlyState(),id="rectfail",d0=[120,240],dur=(d0[0]+rand("rel")*(d0[1]-d0[0]))*durMul(id);
@@ -263,6 +266,14 @@ function rlyRectFail(ln){if(!ln||active("rectfail"))return false;const R=rlyStat
   log(head+(inc.note?` (${inc.note})`:""),"bad");R.fails++;S.M=mods();leadAuto(inc);civOnUpset(inc);return true;}
 CIVU.rectfail={n:"Rectifier fault",a:"Machine",ch:[["New rectifier module and a thermal scan of the lineup",2,-1,{M:2}],["Swap the failed diode bridge",1,0,{}],["Bypass the snubber and restart",0,1,{M:-1,L:-1}]],t:"PQS"};
 delete CIVU.drivefail;   // (v6.10: a drive fault has its own card instead: reset or investigate, rlyAsk)
+// v6.10 t5: the new upsets in the Upsets tab (08): tab puts them in the list, trig sets one off by hand on a machine picked
+// at random (their own dice still decide when they come on their own; the random box switches that, as for every upset)
+{const pick=()=>ASSETS[Math.floor(Math.random()*ASSETS.length)].id;
+  EV.bearingfail.tab=true;EV.bearingfail.trig=()=>{if(rlyOn())rlyFail(pick(),"vib");};
+  EV.motorfail.tab=true;EV.motorfail.trig=()=>{if(rlyOn())rlyFail(pick(),"adx");};
+  EV.drivefail.tab=true;EV.drivefail.trig=()=>{if(rlyOn())rlyFail(pick(),"drv");};
+  EV.rectfail.tab=true;EV.rectfail.trig=()=>{if(rlyOn())rlyFail(null,"rect",{ln:LINEUPS[Math.floor(Math.random()*LINEUPS.length)][0]});};
+  EV.arcflash.tab=true;EV.arcflash.noRandom=true;EV.arcflash.trig=()=>{if(!S.zen)knobSet("incomer",0);};}
 
 /* ---- v6.10 drive faults: the player's call. Reset and go (back in ~5 min, but a weak drive may fault again within a day;
    the odds scale with the drive's health), or Investigate (45-90 min with the fault log and a meter: the cause, then Run

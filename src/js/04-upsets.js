@@ -134,7 +134,7 @@ function trigger(id,quiet){
   rlyOnTrigger(inc);   // v6.10: the card's reliability line; a blackout hits the drives (07i)
   civOnUpset(inc);   // v5.1 civics: the upset's choices (or a standing order)
 }
-function clearIncident(id){const i=S.inc.find(x=>x.id===id);if(i)i.left=0;}
+function clearIncident(id){const i=S.inc.find(x=>x.id===id);if(i){i.left=0;i.clr=true;}}   // (clr: a drive fault waiting on a call is held at 30 min, 07i: cleared by hand it goes)
 function chaosTick(dt){
   manTick();   // v6.9 manning: the shift change (03f)
   crewTick(dt);

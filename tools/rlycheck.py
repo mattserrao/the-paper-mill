@@ -173,6 +173,15 @@ with sync_playwright() as pw:
       return {in:E.w.position.x>4&&E.w.position.z>24,door,job,desk:!E.suited}}""")
     ok("arc-flash PPE: on at the MCC door, on for a drive job that starts while he's inside, off back at the desk", r["in"] and r["door"] and r["job"] and r["desk"], json.dumps(r))
 
+    # t5: the MCC main incomer (a fiddly knob): opened, an arc flash takes every drive's supply; the electrical tech resets it and the knob is closed again
+    r = J("""()=>{const P=__PM,S=P.S;S.inc.forEach(i=>{if(!i.kind)i.left=0;});P.step(P.SIM_STEP);let w=0;while(S.inc.length&&w++<6000)P.step(P.SIM_STEP);
+      P.knob.set('incomer',0);const on=S.inc.some(i=>i.id==='arcflash'),st=P.rly.ASSETS.map(A=>P.rly.drv(A.id)),pm=S.M.pmDown,ne=P.rly.ENEED('arcflash'),kw=P.rly.kw();
+      let n=0;while(S.inc.some(i=>i.id==='arcflash')&&n++<8000)P.step(P.SIM_STEP);for(let k=0;k<40;k++)P.step(P.SIM_STEP);
+      return {on,nodc:st.filter(x=>x==='nodc').length,pm:!!pm,ne,kw:Math.round(kw),cleared:!S.inc.some(i=>i.id==='arcflash'),closed:P.knob.read?__PM.S.knob.v.incomer:null,after:P.rly.ASSETS.map(A=>P.rly.drv(A.id)).filter(x=>x==='nodc').length}}""")
+    ok("t5: opening the MCC main incomer draws an arc flash: every drive loses DC, the machine stops, the electrical tech resets it and the incomer is closed again", r["on"] and r["nodc"] == 10 and r["pm"] and r["ne"] and r["kw"] == 0 and r["cleared"] and r["closed"] == 1 and r["after"] == 0, json.dumps(r))
+    r = J("()=>['bearingfail','motorfail','drivefail','rectfail','arcflash'].map(id=>!!document.getElementById('ev-'+id))")
+    ok("t5: the new upsets are in the Upsets tab", all(r), json.dumps(r))
+
     # zen: none of it
     r = J("()=>{const P=__PM;P.S.zen=true;const on=P.rly.on();P.S.zen=false;return on}")
     ok("zen has no reliability rounds", r is False)

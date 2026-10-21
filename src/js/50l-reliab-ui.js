@@ -15,6 +15,7 @@ function drvBuild(b){b.appendChild(kEl("div","dcsal",`<b>Alarms</b><ul id="dcsAl
   b.appendChild(kEl("div","drvw",`<div class="qcsv" id="drvTop"></div><div id="drvL"></div>`));
   b.appendChild(kEl("p","dcsfield","Load is the drive's output against its rated power. Tap a load to trend it (a marked bar is on the trend). Over about 95% a drive trips more often; over 100% it also wears its motor and bearings faster. A tripped drive reads zero until the electrical tech changes it."));}
 function drvRefresh(){const el=$("drvL");if(!el)return;const r=knobRead(),R=S.rel,pens=trPens();let kw=0,run=0,flt=0;const al=[];
+  if(rlyArc())al.push(["ARC FLASH · MAIN INCOMER OPEN · NO 480 V",true]);
   if(rlyBlack())al.push(["LOSS OF SUPPLY · 13.8 kV FEEDER DEAD",true]);else if(active("brownout"))al.push([`BROWNOUT · FEEDER ${rlyMV().toFixed(1)} kV`,false]);
   const rows=LINEUPS.map(([ln,name,tag])=>{const list=ASSETS.filter(A=>A.ln===ln).map(A=>{const L=Math.max(0,rlyLoad(A.id,r)),st=rlyDrvSt(A.id,L),T=rlyTemp(A.id,L);kw+=L/100*A.kw;if(st==="run")run++;if(st==="fault"||st==="trip"||st==="nodc")flt++;
       if(st==="nodc"){}else if(st==="fault")al.push([`DRIVE FAULT · ${A.n.toUpperCase()}`,true]);else if(st==="trip")al.push([`MOTOR TRIPPED · ${A.n.toUpperCase()}`,true]);
@@ -23,7 +24,7 @@ function drvRefresh(){const el=$("drvL");if(!el)return;const r=knobRead(),R=S.re
       const cls=L>100?"bad":L>95?"warn":"",stc={run:"ok",idle:"",off:"",lock:"warn",fault:"bad",trip:"bad",nodc:"bad"}[st],stn={run:"RUN",idle:"IDLE",off:"OFF · OUTAGE",lock:"LOCKED OUT · REPAIR",fault:"FAULT",trip:"TRIPPED",nodc:"NO DC"}[st];
       return `<tr><td><b>${A.n}</b><small>${A.kw.toLocaleString()} kW VFD</small></td><td><span class="dst ${stc}">${stn}</span></td>
         <td><button type="button" class="dbar trk${pens.includes("dl_"+A.id)?" on":""}" data-trk="dl_${A.id}" aria-pressed="${pens.includes("dl_"+A.id)}" title="${pens.includes("dl_"+A.id)?"Trended: tap to stop":"Tap to trend"} ${A.n} drive load"><i style="width:${clamp(L,0,130)/1.3}%" class="${cls}"></i><em>${Math.round(L)} %</em></button></td><td class="${T>72?"bad":""}">${Math.round(T)} °C</td><td class="${R.a[A.id].dh<40?"bad":R.a[A.id].dh<60?"warn":""}">${Math.round(R.a[A.id].dh)}%${R.a[A.id].patch?" · patched":""}</td></tr>`;}).join("");
-    if(rlyRectDown(ln))al.push([`${tag} RECTIFIER FAULT · DC BUS DOWN`,true]);
+    if(rlyRectDown(ln)&&!rlyArc())al.push([`${tag} RECTIFIER FAULT · DC BUS DOWN`,true]);
     return `<section class="plsec"><div class="dcssub">${tag} · ${name} · DC bus ${Math.round(rlyDC(ln))} V · rectifier health ${Math.round(R.rf[ln])}%</div><table><thead><tr><th>Drive</th><th>Status</th><th>Load</th><th>Heat sink</th><th>Health</th></tr></thead><tbody>${list}</tbody></table></section>`;}).join("");
   const h=`<section class="plsec drvsub"><div class="dcssub">Power</div><p class="dcsfield">${outOn()?"Planned outage: the lineups are locked out and tested dead.":rlyBlack()?"<span class=\"bad\">Blackout: no power from the substation.</span>":active("brownout")?"The utility has cut the mill back (brownout): the feeder sags 8%.":"115 kV from the utility, 13.8 kV across the site, 480 V into the rectifiers, about 650 V DC to the drives."}</p></section>`+rows;
   drvSL();
@@ -73,7 +74,7 @@ function rlyRefresh(){const tb=$("rlyTab");if(!tb)return;const R=rlyState(),D=R.
   if(tb._h!==h){tb._h=h;tb.innerHTML=h;}
   // the selected asset
   const A=ASSETN[RUI.sel],a=R.a[RUI.sel],dt=$("rlyDet");if(!A||!dt)return;
-  const v=a.lv,x=a.la,vg=rlyAge(v),xg=rlyAge(x),vimm=v&&v.st==="imm"&&vg.cls!=="unk"&&rlyPend(A.id,"vib"),ximm=x&&(x.st==="imm"&&rlyPend(A.id,"adx")||x.st==="alarm")&&xg.cls!=="unk",busy=!!rlyIncOf(A.id)||active(rlyFixEv.vib)||active(rlyFixEv.adx),fm=`machine down ${RLY.fixMin[0]}–${RLY.fixMin[1]} min`;
+  const v=a.lv,x=a.la,vg=rlyAge(v),xg=rlyAge(x),vimm=v&&v.st==="imm"&&vg.cls!=="unk"&&rlyPend(A.id,"vib"),ximm=x&&(x.st==="imm"&&rlyPend(A.id,"adx")||x.st==="alarm")&&xg.cls!=="unk",busy=!!rlyIncOf(A.id)||active(rlyFixEv.vib)||active(rlyFixEv.adx),fm=`${A.stop.replace(/\.$/,"").replace(/^The /,"the ").replace(/^One /,"one ").replace(/^No /,"no ")} for ${RLY.fixMin[0]}–${RLY.fixMin[1]} min`;
   const hist=(L,f)=>L.length?`<div class="rhist">${L.slice().reverse().map(f).join("")}</div>`:"";
   const c=R.chg[A.id]||{},booked=S.outg&&S.outg.plan&&S.outg.plan.rly&&S.outg.plan.rly[A.id];
   const chg=!outg?`<p class="dcsfield">Changeouts are booked for planned outages; ${S.free?"free play has none":"there are none in this mode"}.</p>`:

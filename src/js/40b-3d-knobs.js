@@ -25,6 +25,10 @@
     const gs=station(46.2,13.05,0);plate("GUIDE",0.7,46.2,2.0,13.21);KX.guide={at:gs.at};
     const cs=station(40.4,13.05,0);plate("COUCH PIT",0.8,40.4,2.0,13.21);KX.couch={at:cs.at};
     const os=station(35.0,13.15,0);plate("OSCILLATOR",0.8,35.0,2.0,13.31);KX.osc={at:os.at};
+    // v6.10 t5: the MCC main incomer's breaker handle, on the incoming 480 V section inside the MCC (38c)
+    {const x=CAB.main.stand[0],z=CABZ+0.36,g=new THREE.Group();g.position.set(x,0,z);scene.add(g);box(0.5,0.7,0.08,M.ink,0,1.35,0,g,false);
+      const h=box(0.12,0.42,0.12,M.bad,0.08,1.42,0.08,g);h.rotation.z=-0.35;box(0.2,0.12,0.14,M.bad,-0.12,1.12,0.07,g,false);
+      plate("MAIN INCOMER",0.8,x,2.0,z+0.06);KX.incomer={at:[x,1.6,z+0.3]};}
     // the couch pit agitator motor itself, low on the tending side
     {const m=new THREE.Mesh(new CylG(0.32,0.32,0.8,12),M.motor);m.rotation.z=Math.PI/2;m.position.set(41.2,0.45,12.75);scene.add(m);}
     // ---- the stock prep console (SPOT), like the machine floor's: desk, two screens, a stool; the screens face the operator ----
@@ -53,7 +57,7 @@
     const dotG=new THREE.SphereGeometry(0.55,16,10),ringG=new THREE.RingGeometry(0.85,1.15,28),stemG=new THREE.CylinderGeometry(0.06,0.06,1,6);
     const KVG=new THREE.Group();KVG.visible=false;scene.add(KVG);SM.dyn.add(KVG);const KVHITS=[],MARKS=[];
     // every knob in the view: the field knobs, the DCS-only knobs at their console, and the two knobs that were already there
-    const KVL=[["pulp"],["ref"],["agit"],["guide"],["couch"],["osc"],["zones","WET",[58,1.6,13.4]],["draw","DET",[-5,1.6,13.4]],["spider",null,[33,PH+1.2,-17.6]],["slice",null,[57.15,2.95,12.7]]];
+    const KVL=[["pulp"],["ref"],["agit"],["guide"],["couch"],["osc"],["incomer"],["zones","WET",[58,1.6,13.4]],["draw","DET",[-5,1.6,13.4]],["spider",null,[33,PH+1.2,-17.6]],["slice",null,[57.15,2.95,12.7]]];
     KVL.forEach(([id,st,pos])=>{const at=pos||KX[id].at,g=new THREE.Group();g.position.set(at[0],at[1]+2.2,at[2]);KVG.add(g);
       const d=new THREE.Mesh(dotG,mkM);d.renderOrder=9995;g.add(d);const r=new THREE.Mesh(ringG,ringM);r.renderOrder=9994;g.add(r);
       const s=new THREE.Mesh(stemG,mkM);s.scale.y=2.2;s.position.y=-1.1;s.renderOrder=9993;g.add(s);
@@ -119,5 +123,10 @@
     FXDEF.rotortrip=g=>spFx(g,16,-13.5,2.6,8);
     FXDEF.couchpit=g=>spFx(g,40.6,11.4,0.6,6);
     FXDEF.oscfail=g=>(now,rdt)=>{if(Math.random()<rdt*8)emit("steam",35.5+Math.random()*3.5,7.4,zc+R()*5,R()*0.4,0.8+Math.random(),R()*0.4,1.6,1.1,"#dfe7ee",0.5);};
+    // v6.10 t5: the arc flash at the main incomer: a white-blue flash and sparks out of the MCC, then smoke from the door
+    FXDEF.arcflash=g=>{return (now,rdt,inc)=>{if(rdt<=0)return;const x=CAB.main.stand[0],z=CABZ+0.6,f=inc&&inc.real?performance.now()-inc.real:9e9;
+      if(f<1500&&Math.random()<rdt*60)emit("spark",x+R()*0.8,1.4+Math.random()*0.8,z+Math.random()*0.6,R()*5,2+Math.random()*3,Math.random()*4,0.5,0.25,f<400?"#ffffff":"#7fd0ff",1);
+      if(Math.random()<rdt*3)emit("smoke",MCC.door[0]-0.6+R()*0.4,2.2,MCC.door[1]+R()*0.6,-0.4+R()*0.2,0.9,R()*0.2,3,1.4,"#5d636e",0.55);};};
+    PINS.arcflash=[11,7,27.5,"bolt"];
     PINS.rotortrip=[16,9,-13.5,"bolt"];PINS.couchpit=[40.6,7,12.2,"water"];PINS.oscfail=[37,11,zc,"!"];
   }

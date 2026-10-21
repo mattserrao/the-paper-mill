@@ -65,11 +65,11 @@ function simRate(){return S&&S.zen?1:G3.knobUI?(G3.vlvClk||1):outCapped()?OUT.si
 
 const cgrid=$("chaosgrid");
 GROUPS.forEach(([g,lab])=>{const d=document.createElement("div");d.className="grp";const h=document.createElement("h3");h.textContent=lab;d.appendChild(h);
-  EVENTS.filter(e=>e.g===g&&!e.knob&&(!e.env||e.env===SITE.env)).forEach(e=>{const r=document.createElement("div");r.className="ev";
-    r.innerHTML=`<button class="trig" id="ev-${e.id}" aria-pressed="false"><span>${e.name}${e.env?' <em class="envtag">'+ENVS[e.env].short+'</em>':""}</span><small></small></button><label><input type="checkbox" id="en-${e.id}" checked> random</label>`;
+  EVENTS.filter(e=>e.g===g&&(!e.knob||e.tab)&&(!e.env||e.env===SITE.env)).forEach(e=>{const r=document.createElement("div");r.className="ev";   // (v6.10 t5: tab: the reliability upsets and the arc flash, 07i)
+    r.innerHTML=`<button class="trig" id="ev-${e.id}" aria-pressed="false"><span>${e.name}${e.env?' <em class="envtag">'+ENVS[e.env].short+'</em>':""}</span><small></small></button>${e.noRandom?'<label class="knobonly">knob only</label>':`<label><input type="checkbox" id="en-${e.id}" checked> random</label>`}`;
     d.appendChild(r);
-    r.querySelector("button").addEventListener("click",()=>{if(S.season&&S.season.on)return;if(active(e.id))clearIncident(e.id);else{trigger(e.id);if(e.id==="birdline"&&typeof G3!=="undefined"&&G3.on&&$("v2close"))$("v2close").click();}updateChaos();});   // (t17: picking the bird closes the list so its cut-scene plays)
-    r.querySelector("input").addEventListener("change",ev=>{CH.en[e.id]=ev.target.checked;});});
+    r.querySelector("button").addEventListener("click",()=>{if(S.season&&S.season.on)return;if(active(e.id))clearIncident(e.id);else if(e.trig)e.trig();else{trigger(e.id);if(e.id==="birdline"&&typeof G3!=="undefined"&&G3.on&&$("v2close"))$("v2close").click();}updateChaos();});   // (t17: picking the bird closes the list so its cut-scene plays)
+    const cb=r.querySelector("input");if(cb)cb.addEventListener("change",ev=>{CH.en[e.id]=ev.target.checked;});});
   cgrid.appendChild(d);});
 $("chaosOn").addEventListener("change",e=>CH.on=e.target.checked);
 // collapsed by default: simple view first, "Show more" for fine control

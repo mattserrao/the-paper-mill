@@ -45,7 +45,10 @@ def make_route(html, netlog):
             except urllib.error.HTTPError as e: st, body, hd = e.code, e.read(), dict(e.headers)
             except Exception as e: st, body, hd = 599, json.dumps({"message": "net " + str(e)}).encode(), {}
             netlog.append({"m": r.request.method, "url": u.split("/rest/v1/")[-1][:160], "status": st, "body": body[:300].decode("utf8", "replace"), "ms": int((time.time() - t0) * 1000)})
-            return r.fulfill(status=st, body=body, headers={"Content-Type": hd.get("Content-Type", "application/json"), "Access-Control-Allow-Origin": "*"})
+            cr = next((v for k, v in hd.items() if k.lower() == "content-range"), None)   # (lbRank reads the count from Content-Range)
+            h = {"Content-Type": hd.get("Content-Type", "application/json"), "Access-Control-Allow-Origin": "*", "Access-Control-Expose-Headers": "Content-Range"}
+            if cr: h["Content-Range"] = cr
+            return r.fulfill(status=st, body=body, headers=h)
         return route_for(html)(r)
     return route
 

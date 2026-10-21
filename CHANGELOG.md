@@ -1,6 +1,14 @@
 # Changelog
 
 
+## v6.10.0-t5 (2026-10-20): main incomer and the Upsets tab (test build)
+- **New fiddly knob: the MCC main incomer.** A red breaker handle on the MCC's incoming 480 V section (tap it, or find it in the fiddly knobs view). Open it and it draws an **arc flash**: sparks and smoke at the MCC, no 480 V, every drive on all three lineups stops (the machine, the pulper and the winder), and a $30,000 bill. The electrical tech suits up, inspects, resets and closes it (about an hour), and the drives take a small knock in health. Drives shows "ARC FLASH · MAIN INCOMER OPEN".
+- **The new upsets are in the Upsets tab:** bearing failure, motor failure, drive failure and rectifier fault (set off by hand on a machine picked at random, and the random box switches their own dice) and the arc flash (knob only).
+- A drive fault waiting on your call can be cleared by hand from the Upsets tab.
+- QA Agent C (t4): round banners keep the machine's name as written ("the Refiner A bearing"); Plan repair says what actually stops (a refiner slows the machine, the winder stops only the winder); a planned repair's stop reason names the planned work, not "drive down".
+- Help: the main incomer and arc flash on the Reliability and Fiddly knobs pages; glossary entries Main incomer and Arc flash.
+- qa_v610: the harness forwards Content-Range, so the leaderboard can pin a run outside the top 100.
+
 ## v6.10.0-t4 (2026-10-20): QA review decisions (test build)
 Balance and polish the user picked from the t3 QA review (claude/qa-v610-t3.md).
 - **Balance:** each vibration round checks one machine (was two), so a full crew no longer sees everything every shift.

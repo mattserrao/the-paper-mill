@@ -4,7 +4,7 @@
    spider valve or slice panel, the game runs at 1 min/s (simRate, 08-ui-wiring.js) and is back at the player's speed on
    close. The screens only read the sim (knobRead / KHIST, 07b-knobs.js); the only writes are the player's knob moves. */
 const KUI={panel:null,st:null,tab:"dcs",built:{}};
-const AREA_N={SPOT:"Stock prep",WET:"Wet end",DET:"Dry end"};
+const AREA_N={SPOT:"Stock prep",WET:"Wet end",DET:"Dry end",DRV:"Drives"};
 // field knobs the DCS can also set remotely; the guide roll and the oscillator are set at the machine only
 const KREMOTE=new Set(["pulp","ref","agit","couch"]);
 function kuiSync(){const vc=G3.vlvUI&&!S.zen?G3.vlvUI():0;G3.vlvClk=vc;   // (v6.9: a valve faceplate runs the game on its tuning clock, 50k)
@@ -25,6 +25,8 @@ function knobCtl(id,where){const d=KNOBN[id],w=kEl("div","kctl"),key=where+"-"+i
     w.querySelector("[data-gt]").addEventListener("input",e=>{knobSet("guide",{gt:+e.target.value});kuiRefresh();});}
   else if(id==="couch"){w.innerHTML=`<div class="seg kseg" role="group" aria-label="Couch pit agitator"><button type="button" data-cv="1">RUN</button><button type="button" data-cv="0">STOP</button></div>`;
     w.querySelectorAll("[data-cv]").forEach(b=>b.addEventListener("click",()=>{knobSet("couch",+b.dataset.cv);kuiRefresh();}));}
+  else if(id==="incomer"){w.innerHTML=`<div class="seg kseg" role="group" aria-label="MCC main incomer"><button type="button" data-iv="1">CLOSED</button><button type="button" data-iv="0">OPEN</button></div>`;
+    w.querySelectorAll("[data-iv]").forEach(b=>b.addEventListener("click",()=>{knobSet("incomer",+b.dataset.iv);kuiRefresh();}));}
   else{w.innerHTML=`<label class="spis"><span>${d.min}</span><input type="range" min="${d.min}" max="${d.max}" step="${d.step}" data-kv aria-label="${d.name}"/><span>${d.max}</span></label>
       <div class="kval"><b data-kvv></b><small>standard ${KNOB_IDEAL[id].toFixed(d.dp||0)} ${d.unit}</small></div>`;
     w.querySelector("[data-kv]").addEventListener("input",e=>{knobSet(id,+e.target.value);kuiRefresh();});}
@@ -34,6 +36,7 @@ function knobCtlSync(w){const id=w.dataset.k,K=S.knob;
   else if(id==="guide"){const v=K?K.v:KNOB_IDEAL;w.querySelectorAll("[data-gm]").forEach(b=>b.setAttribute("aria-pressed",String(+b.dataset.gm===v.gm)));
     const r=w.querySelector("[data-gt]");if(actEl(r)!==r)r.value=v.gt;w.querySelector("[data-gtv]").textContent=(v.gt>0?"+":"")+v.gt+" mm";}
   else if(id==="couch"){const v=knobVal("couch");w.querySelectorAll("[data-cv]").forEach(b=>b.setAttribute("aria-pressed",String(+b.dataset.cv===v)));}
+  else if(id==="incomer"){const v=knobVal("incomer");w.querySelectorAll("[data-iv]").forEach(b=>b.setAttribute("aria-pressed",String(+b.dataset.iv===v)));}
   else{const d=KNOBN[id],v=knobVal(id),r=w.querySelector("[data-kv]");if(actEl(r)!==r)r.value=v;const b=w.querySelector("[data-kvv]");b.textContent=`${v.toFixed(d.dp||0)} ${d.unit}`;b.classList.toggle("moved",!knobAt(id));}}
 // a knob's own readings (process values an operator would see; no hints about what will go wrong)
 function knobReadout(id,r){const R=(k,v)=>`<div><small>${k}</small><b>${v}</b></div>`;
@@ -44,6 +47,7 @@ function knobReadout(id,r){const R=(k,v)=>`<div><small>${k}</small><b>${v}</b></
     case "vac":return R("Vacuum",kf(r.vac)+" kPa")+R("Couch solids",kf(r.couchSol)+" %");
     case "press":return R("Nip load",Math.round(r.pl)+" kN/m")+R("After the presses",kf(r.pressSol)+" % solids");
     case "guide":return R("Fabric edge",(r.edge>=0?"+":"")+Math.round(r.edge)+" mm")+R("Guide travel used",r.gm?Math.round(Math.min(1,r.gtrav)*100)+" %":"manual");
+    case "incomer":return R("Main breaker",knobVal("incomer")?"closed":"open")+R("480 V bus",Math.round(rlyLV())+" V")+R("Drive load",Math.round(rlyMccKw(r)).toLocaleString()+" kW");
     case "couch":return R("Agitator",r.couch?"running · 38 A":"stopped")+R("Pit level",Math.round(35+(S.pm==="run"?0:30)+r.cs*6)+" %");
     case "osc":return R("Shower stroke",Math.round(r.osc*0.14)+" /min")+R("Felt",r.stripes>0.15?"uneven":"clean");
     case "draw":return R("Open draw",kf(r.draw)+" %")+R("Sheet tension",r.run?kf(r.tension,2)+" kN/m":"–");

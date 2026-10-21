@@ -10,7 +10,7 @@
    Rules: S.knob does not exist until the player changes a knob, and knobTick() returns at once while every knob is at
    its ideal and the process has settled, so an untouched game draws no dice and changes nothing (same checksum).
    Incident durations use their own dice stream ("knob"); the shared upset streams are never touched. Zen: no knobs. */
-const KNOB_IDEAL={pulp:50,ref:60,agit:100,vac:30,press:100,osc:100,couch:1,draw:1.5,st1:70,gm:1,gt:0};
+const KNOB_IDEAL={pulp:50,ref:60,agit:100,vac:30,press:100,osc:100,couch:1,draw:1.5,st1:70,gm:1,gt:0,incomer:1};
 const KNOBS=[
   {id:"pulp",name:"Pulper dilution valve",area:"SPOT",where:"Pulper, stock prep",field:true,unit:"% open",min:0,max:100,step:1,
     tip:"Dilution water into the pulper tub: NV-101, which holds the consistency on AUTO. Moving it here puts NV-101 on MAN at that opening."},
@@ -30,6 +30,8 @@ const KNOBS=[
     tip:"Keeps the broke in the couch pit moving. Normally running."},
   {id:"osc",name:"Pick-up felt oscillator",area:"WET",where:"Pick-up felt showers, 1st press top felt",field:true,unit:"% stroke speed",min:0,max:100,step:5,
     tip:"Sweeps the felt-cleaning shower back and forth across the pick-up felt. Normally 100%."},
+  {id:"incomer",name:"MCC main incomer",area:"DRV",where:"MCC, the incoming 480 V section",field:true,
+    tip:"The main 480 V breaker that feeds all three drive lineups. It stays closed. Opening it under load draws an arc."},
   {id:"draw",name:"Press-to-dryer draw",area:"DET",where:"Dry end DCS",dcs:true,unit:"%",min:0,max:4,step:0.1,dp:1,
     tip:"Speed difference between the presses and the first dryers, which keeps the open draw taut. Standard is 1.5%. More draw stretches the sheet and lowers ring crush; less lets it flutter and break more often."},
   {id:"st1",name:"1st section steam",area:"DET",where:"Dry end DCS",dcs:true,unit:"kPa",min:0,max:250,step:5,
@@ -69,10 +71,12 @@ function knobSet(id,v){if(S.zen)return;const K=knobState();
   else if(id==="guide"){if(v.gm!=null&&v.gm!==K.v.gm){K.v.gm=v.gm;if(v.gm===0){K.gacc=0;K.gw0=knobWalk();}}if(v.gt!=null)K.v.gt=clamp(Math.round(v.gt),-40,40);}
   else if(id==="pulp"){vlvSetOP("NV-101",clamp(+v,0,100));}   // (v6.9: the field valve puts NV-101 on MAN)
   else{const d=KNOBN[id];K.v[id]=d&&d.min!=null?clamp(+v,d.min,d.max):+v;}
+  if(id==="incomer"&&!K.v.incomer)knobArc();   // (v6.10 t5: opened under load: an arc flash, at once)
   K.any=true;K.moved[id]=S.t;}
 function knobFmt(id){const K=S.knob,d=KNOBN[id];if(id==="slice"){const s=slcGet();return `B ${(12+3*s.v).toFixed(1)} mm · L ${s.h>=0?"+":""}${(4*s.h).toFixed(1)} mm`;}if(id==="zones"){const z=K?K.z:[];const n=z.filter(v=>v!==0).length;return n?`${n} zone${n>1?"s":""} trimmed`:"all zones 0%";}
   if(id==="guide"){const v=K?K.v:KNOB_IDEAL;return (v.gm?"AUTO":"MANUAL")+(v.gt?` · trim ${v.gt>0?"+":""}${v.gt} mm`:"");}
   if(id==="couch")return knobVal("couch")?"running":"stopped";
+  if(id==="incomer")return knobVal("incomer")?"closed":"open";
   const v=knobVal(id);return `${v.toFixed(d.dp||0)} ${d.unit}`;}
 function knobReset(id,quiet){const K=S.knob;if(!K)return;
   if(id==="slice"){K.v.sv=K.v.sh=0;if(G3.SLC){G3.SLC.v=G3.SLC.h=0;G3.SLC.dirty=true;}}
@@ -113,6 +117,11 @@ function knobBreak(type,why){if(S.pm!=="run")return false;S.pm="break";S.brkType
 // a break before the presses dumps the whole sheet into the couch pit: with the agitator off, settled fiber lets it overflow
 function knobCouch(){const K=S.knob;if(!K||S.zen||S.brkType!=="press"||K.cs<0.5||active("couchpit"))return;
   if(knobTrig("couchpit",["couch"],"Couch pit overflow! Broke from the sheet break is pouring over the pit edge onto the machine floor."))S.breakLeft+=60;}
+// v6.10 t5: the MCC main incomer opened under load: an arc flash, every drive loses its supply, the electrical tech
+// (suited) has to reset and close it. The knob is put back when the job is done, like every knob-caused breakdown.
+function knobArc(){if(S.zen||active("arcflash"))return;
+  if(knobTrig("arcflash",["incomer"],"Arc flash at the MCC! The main incomer was opened under load: all 480 V to the drive lineups is lost and every drive has stopped. The electrical tech is on the way to reset it.")&&S.rel){
+    for(const A of ASSETS){const a=S.rel.a[A.id];a.dh=Math.max(0,a.dh-4-rlyHash(A.id,Math.floor(S.t),"arc")*6);}}}
 // mods() calls this last (04-upsets.js): nothing changes while no knob has been touched
 function knobMods(m){const K=S.knob;if(!K||!K.any||S.zen)return;if(K.feed<1)m.feedMul*=K.feed;if(K.brk>1)m.breakMul*=K.brk;}
 // share of production going to the beater because of a knob (07-sim-step.js)
@@ -124,8 +133,8 @@ function knobTick(dt){const K=S.knob;if(!K||!K.any||S.zen)return;
   const v=K.v,x=K.x,L=(a,t,tau)=>kLag(a,t,tau,dt),H=K.H,run=S.pm==="run";
   // ---- knob incidents that cleared: the crew resets the cause ----
   for(let i=K.inc.length-1;i>=0;i--){const ki=K.inc[i];if(S.inc.some(n=>n.real===ki.real&&n.id===ki.id))continue;K.inc.splice(i,1);
-    const who={rotortrip:"Stock prep",overflow:"Stock prep",refclash:"Maintenance",boiler:"The engineers",fabric:"The wet-end crew",oscfail:"Maintenance",couchpit:"The wet-end crew"}[ki.id];
-    const head={rotortrip:"Pulper back on line.",overflow:"Pulper overflow cleaned up.",refclash:"Refiner re-plated.",boiler:"Steam is back.",fabric:"New forming fabric on.",oscfail:"Oscillator restarted: the felt will clean up over the next hour.",couchpit:"Couch pit cleaned out."}[ki.id];
+    const who={rotortrip:"Stock prep",overflow:"Stock prep",refclash:"Maintenance",boiler:"The engineers",fabric:"The wet-end crew",oscfail:"Maintenance",couchpit:"The wet-end crew",arcflash:"The electrical tech"}[ki.id];
+    const head={rotortrip:"Pulper back on line.",overflow:"Pulper overflow cleaned up.",refclash:"Refiner re-plated.",boiler:"Steam is back.",fabric:"New forming fabric on.",oscfail:"Oscillator restarted: the felt will clean up over the next hour.",couchpit:"Couch pit cleaned out.",arcflash:"Main incomer inspected, reset and closed: the drives are back."}[ki.id];
     if(ki.id==="couchpit")K.cs=0;
     knobFix(ki.cause,head,who);}
   // ---- stock prep ----

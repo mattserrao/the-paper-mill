@@ -9,12 +9,12 @@
   // who a figure is, from the manning model (03f): the person on shift in that seat (covering if someone's on vacation)
   function personRow(kind,k){const m=manNow();if(kind==="t")return m.techs[k];if(kind==="e")return m.elec;return m.ops[k];}
   function techDoing(T){if(T.inc){const i=S.inc.find(x=>x.id===T.inc);return T.state==="walk"?`working on: ${EV[T.inc].name.toLowerCase()}`:`on the way to: ${EV[T.inc].name.toLowerCase()}`+(i&&i.asset?` (${ASSETN[i.asset].n})`:"");}
-    if(T.rnd)return T.state==="walk"?`vibration round: measuring the ${ASSETN[T.rnd].n.toLowerCase()} bearings`:`vibration round: heading to the ${ASSETN[T.rnd].n.toLowerCase()}`;
+    if(T.rnd)return T.state==="walk"?`vibration round: measuring the ${ASSETN[T.rnd].n} bearings`:`vibration round: heading to the ${ASSETN[T.rnd].n}`;
     if(T.state==="home2"||T.state==="back"||T.state==="inside")return "heading back to the shop";if(T.state==="chase"||T.state==="cmount")return "chasing a runner out of the hall";return "in the shop: bench work";}
   function elecDoing(){const j=S.inc.find(i=>ENEED(i.id)&&i.eSlot===0);if(j){const w=j.eGo?"working on":"on the way to";
-      if(j.id==="drivefail")return `${j.eGo&&j.stage==="inv"?"reading the fault log on":w} the ${ASSETN[j.asset].n.toLowerCase()} drive`;if(j.id==="rectfail")return `${w} the ${LINEN[j.line][2]} rectifier`;
-      if(j.id==="motorfail")return `${w} the ${ASSETN[j.asset].n.toLowerCase()} motor`;return `${w}: ${EV[j.id].name.toLowerCase()} (resetting the main breaker)`;}
-    const R=S.rel,x=R&&R.rd.list.find(q=>q.who==="e"&&q.st==="go");if(x)return `ADX round: testing the ${x.a.map(a=>ASSETN[a].n.toLowerCase()).join(" and ")} motors`;
+      if(j.id==="drivefail")return `${j.eGo&&j.stage==="inv"?"reading the fault log on":w} the ${ASSETN[j.asset].n} drive`;if(j.id==="rectfail")return `${w} the ${LINEN[j.line][2]} rectifier`;
+      if(j.id==="motorfail")return `${w} the ${ASSETN[j.asset].n} motor`;return `${w}: ${EV[j.id].name.toLowerCase()} (resetting the main breaker)`;}
+    const R=S.rel,x=R&&R.rd.list.find(q=>q.who==="e"&&q.st==="go");if(x)return `ADX round: testing the ${x.a.map(a=>ASSETN[a].n).join(" and ")} motors`;
     return "in the MCC: paperwork and drive checks";}
   function opDoing(k){if(S.pm==="break"&&k<7)return working("brk")?"rethreading the sheet":"heading to the break";if(S.wd==="hayout"&&k<7)return "cleaning up the hayout";
     if(k>=7)return S.M&&S.M.pulperDown?"stock prep: waiting on the pulper":"stock prep: watching the pulper and screens";return S.pm==="run"?"machine floor: running the machine":"machine floor: the machine is down";}
