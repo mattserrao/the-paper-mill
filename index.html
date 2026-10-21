@@ -48,7 +48,6 @@ button.primary{background:var(--stock);border-color:var(--stock);color:var(--pan
 .kpi .k{font:600 12px var(--f-display);letter-spacing:.08em;text-transform:uppercase;color:var(--muted)}
 .kpi .v{font:500 20px var(--f-mono);font-variant-numeric:tabular-nums;white-space:nowrap}
 .kpi .s{font-size:12px;color:var(--muted);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-#plant{display:block;width:100%;min-width:760px;height:auto}
 .seg{display:inline-flex;border:1px solid var(--line);border-radius:6px;overflow:hidden}
 .seg button{border:0;border-radius:0;padding:6px 14px}
 .seg button[aria-pressed="true"]{background:var(--ink);color:var(--panel)}
@@ -64,34 +63,22 @@ button.primary{background:var(--stock);border-color:var(--stock);color:var(--pan
 #gl:active{cursor:grabbing}
 #labels3d{position:absolute;inset:0;pointer-events:none;overflow:hidden}
 #lbl2d{position:absolute;left:0;top:0;width:100%;height:100%;pointer-events:none}
-.view3d.compact .lbl{font-size:12px;padding:1px 5px}
-.view3d.compact .lbl b{font-size:12px}
-.view3d.compact .lbl span{display:none}
-.lbl{position:absolute;left:0;top:0;background:color-mix(in srgb,var(--panel) 90%,transparent);border:1px solid var(--line);border-radius:5px;padding:2px 7px;font:500 12px var(--f-mono);white-space:nowrap;font-variant-numeric:tabular-nums;color:var(--ink);line-height:1.3}
-.lbl b{display:block;font:700 12px var(--f-display);letter-spacing:.06em;text-transform:uppercase}
-.lbl.bad{border-color:var(--bad)} .lbl.bad b{color:var(--bad)}
 .banner3d{position:absolute;top:10px;left:50%;transform:translateX(-50%);display:flex;align-items:center;gap:10px;background:var(--panel);border:2px solid var(--bad);border-radius:6px;padding:4px 12px 4px 4px;width:max-content;max-width:calc(100% - 20px)}
 .banner3d span{background:var(--bad);color:var(--panel);font:700 13px var(--f-display);padding:3px 8px;border-radius:4px;letter-spacing:.08em;flex:none}
 .banner3d b{font:700 16px var(--f-display);color:var(--ink);min-width:0}
-.banner3d[hidden],.lbl[hidden]{display:none}
+.banner3d[hidden]{display:none}
 .banner3d.good{border-color:var(--ok)} .banner3d.good span{background:var(--ok)}
 .blackout3d{position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);pointer-events:none;z-index:4}
 .blackout3d div{background:rgba(255,255,255,.96);border:1px solid var(--line);border-left:4px solid var(--warn);border-radius:14px;padding:12px 16px;box-shadow:0 12px 32px rgba(0,0,0,.25);display:flex;flex-direction:column;gap:2px;min-width:240px}
 .blackout3d b{font:800 18px var(--f-body)}
 .blackout3d span{font:500 12.5px var(--f-body);color:var(--muted)}
 .flash3d{position:absolute;inset:0;background:#fff;opacity:0;pointer-events:none;z-index:3;transition:opacity .08s}
-.lbl.inc{border-color:color-mix(in srgb,var(--bad) 45%,white);box-shadow:0 6px 18px rgba(214,56,44,.18)}
-.lbl.inc b{color:var(--bad)}
 .blackout3d[hidden]{display:none}
 .chips3d{position:absolute;left:10px;bottom:10px;display:flex;flex-wrap:wrap;gap:4px;max-width:75%;pointer-events:none}
 .chips3d span,.chips3d button{background:var(--bad);color:var(--panel);font:700 12px var(--f-display);letter-spacing:.06em;text-transform:uppercase;padding:2px 8px;border-radius:999px;border:0}
 .chips3d button{pointer-events:auto;cursor:pointer}.chips3d button:hover,.chips3d button:focus-visible{filter:brightness(1.12);outline:2px solid var(--ink);outline-offset:1px}
-.banner3d.go{cursor:pointer}.lbl.inc{pointer-events:auto;cursor:pointer}
-.trendbox{border:1px solid var(--line);border-radius:8px;background:var(--panel);padding:10px 12px}
-.trendhead{display:flex;flex-wrap:wrap;gap:6px 16px;align-items:center;font-size:12px;color:var(--muted)}
-.trendhead b{font:600 12px var(--f-display);letter-spacing:.08em;text-transform:uppercase;color:var(--ink);margin-right:auto}
+.banner3d.go{cursor:pointer}
 .sw{display:inline-block;width:14px;height:3px;border-radius:2px;vertical-align:middle;margin-right:5px}
-#trend{display:block;width:100%;height:150px}
 .cards{display:grid;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));gap:12px}
 .card{background:var(--panel);border:1px solid var(--line);border-radius:8px;padding:12px 14px;display:flex;flex-direction:column;gap:10px;min-width:0}
 .card h2{margin:0;font:700 17px var(--f-display);letter-spacing:.03em;display:flex;align-items:center;gap:8px}
@@ -176,10 +163,10 @@ button.danger{background:var(--bad);border-color:var(--bad);color:var(--panel)}
 
 /* ---- clean product-style skin (light only) ---- */
 body{font-size:14px}
-.kpis,.card,.shop,.chaos,.trendbox,.view3d{border-color:var(--line);border-radius:16px;box-shadow:var(--shadow)}
+.kpis,.card,.shop,.chaos,.view3d{border-color:var(--line);border-radius:16px;box-shadow:var(--shadow)}
 .kpis{gap:0;background:var(--panel)}
 .kpi{padding:12px 14px;border-right:1px solid var(--line)}
-.kpi .k,.trendhead b,.ledger h3,.ugrp h3,.grp h3{font:600 12px var(--f-body);letter-spacing:.02em;text-transform:none;color:var(--muted)}
+.kpi .k,.ledger h3,.ugrp h3,.grp h3{font:600 12px var(--f-body);letter-spacing:.02em;text-transform:none;color:var(--muted)}
 .kpi .v{font:700 21px var(--f-body);letter-spacing:-.01em}
 .card h2{font:700 15.5px var(--f-body);letter-spacing:-.01em}
 .card h2 .n{font:600 12px var(--f-body);border-radius:6px;background:var(--chip);border:0;color:var(--muted);padding:2px 7px}
@@ -196,16 +183,8 @@ button:focus-visible,input:focus-visible,select:focus-visible{outline-color:var(
 .seg{border-radius:10px} .seg button[aria-pressed="true"]{background:var(--brand);color:#fff}
 .chaoshead h2{font:800 22px var(--f-body);letter-spacing:-.01em;text-transform:none}
 .sign{border:1px solid var(--line);border-radius:14px;font:600 12px var(--f-body);letter-spacing:.04em}
-.lbl{display:flex;align-items:center;gap:6px;background:rgba(255,255,255,.9);border:1px solid rgba(225,228,238,.9);border-radius:999px;padding:2px 9px 2px 7px;font:500 12px var(--f-body);box-shadow:0 2px 8px rgba(28,34,51,.08);transition:opacity .6s ease}
-.lbl b{display:inline;font:700 12px var(--f-body);letter-spacing:0;text-transform:none;color:var(--ink)}
-.lbl span{color:var(--muted)}
-.lbl.inc{background:rgba(255,255,255,.92);border-radius:12px;flex-direction:column;align-items:flex-start;gap:0;padding:4px 10px}
-#labels3d.lbl-idle .lbl.sec{opacity:0}
-#labels3d.lbl-off .lbl.sec,#labels3d.lbl-off .lbl.inc{display:none}
 .paperseg button{padding:4px 12px;font-size:12px}
 .lblseg span{font:600 12px var(--f-body);color:var(--muted);padding:0 8px;align-self:center}
-.lbl b::before{content:"";display:inline-block;width:6px;height:6px;border-radius:50%;background:var(--brand);margin-right:5px;vertical-align:1px}
-.lbl.bad b::before{background:var(--bad)}
 .banner3d{border-radius:12px;border-width:1px;box-shadow:0 8px 24px rgba(28,34,51,.14)}
 .banner3d span{font:700 12px var(--f-body);letter-spacing:.04em;border-radius:8px}
 .banner3d b{font:700 15px var(--f-body)}
@@ -230,7 +209,7 @@ button:focus-visible,input:focus-visible,select:focus-visible{outline-color:var(
   .chaoshead{gap:8px 10px}.chaoshead .check{flex:1 1 100%}
   #chaosRandom{flex:1}#chaosMore,#shopMore{margin-left:0}
   .shop .chaoshead .wallet{flex:1}
-  .trendhead .dm{display:inline}.trendhead .sw{width:10px;margin-right:3px}.trendhead{flex-wrap:nowrap;gap:9px;font-size:12px;white-space:nowrap;overflow:hidden}.trendhead b{margin-right:auto}}
+}
 @media (max-width:640px){
   header{display:block}
   .kpis{grid-template-columns:1fr 1fr;margin-top:12px}.kpi{padding:9px 12px}.kpi .v{font-size:18px}.kpi .k{font-size:12px}.kpi .s{font-size:12px}
@@ -416,7 +395,7 @@ body{margin:0}
 #dealOv.dealres .modal{pointer-events:auto;cursor:pointer;box-shadow:0 18px 50px rgba(28,34,51,.28)}
 #dealOv.dealres .dk{visibility:hidden}
 /* v3.1.3 season lock */
-body.season-lock #chaosgrid button.trig,body.season-lock #chaosRandom,body.season-lock #v2dis{opacity:.45;cursor:not-allowed}
+body.season-lock #chaosgrid button.trig,body.season-lock #chaosRandom{opacity:.45;cursor:not-allowed}
 body.season-lock label.check:has(#breaks),body.season-lock label.check:has(#hays){opacity:.6}
 /* v3.1.0 quick-start tutorial */
 #tut{position:fixed;left:0;right:0;bottom:0;z-index:160;display:flex;justify-content:center;padding:12px 12px calc(12px + env(safe-area-inset-bottom));pointer-events:none}
@@ -1146,7 +1125,7 @@ body.dark .kvchip{background:color-mix(in srgb,var(--panel) 96%,transparent)}
 .help .hfoot button{min-height:44px;padding:0 16px;border-radius:12px;font:700 14px var(--f-body)}
 .help .hfoot span{font:500 12.5px var(--f-body);color:var(--muted);flex:1;min-width:180px}
 .title .tleft{display:flex;gap:10px;pointer-events:auto}
-/* v5.7.3: six graphics choices (Auto, Bare, Low, Medium, High, Ultra) */
+/* the title screen's graphics choices (Auto, Low, Medium, High, Ultra) wrap in three columns */
 .title .tseg.tseg6{grid-template-columns:repeat(3,1fr)}
 #gfxSeg{flex-wrap:wrap}
 /* ---- v5.7.4 version notes (triple-tap the title screen's version number) ---- */
@@ -1178,8 +1157,6 @@ body.dark .kvchip{background:color-mix(in srgb,var(--panel) 96%,transparent)}
 .pfsvg .pfwl{fill:#8ea4c4;font:600 14px system-ui,sans-serif}.pfsvg .pfwv{fill:#dbe6f6;font:700 14.5px ui-monospace,SFMono-Regular,Menlo,monospace}.pfsvg .pfwv.bad{fill:#ff8b7f}
 .pfcap{margin:6px 4px 2px;color:#8ea4c4;font-size:11.5px;line-height:1.35}
 .pfwait{color:#8ea4c4;padding:30px;text-align:center;margin:0}
-.pfpop{position:absolute;right:10px;bottom:38px;width:min(330px,calc(100% - 20px));max-height:min(62%,460px);overflow:auto;background:#0f1b2d;border:1px solid #4fd18b;border-radius:10px;box-shadow:0 12px 32px rgba(0,0,0,.5);padding:8px 10px;z-index:2}
-.pfpop[hidden]{display:none}
 .pfph{display:flex;align-items:center;gap:8px;margin-bottom:4px}.pfph b{flex:1;color:#fff;font-size:14px}
 .pfpr div{display:flex;gap:8px;padding:3px 0;border-bottom:1px solid #1c2b45}.pfpr span{flex:1;color:#c3d3ea}.pfpr b{color:#fff;font-variant-numeric:tabular-nums;white-space:nowrap}
 .pfpr .hd{border:0;padding-top:8px}.pfpr .hd span{color:#8ea4c4;font-size:11px;letter-spacing:.08em;text-transform:uppercase;font-weight:700}
@@ -1291,12 +1268,6 @@ body.pmpop .popmain[data-v="dcs"] #dcsOv .dcs{max-width:1180px;margin:0 auto}
 /* v6.5.4: making-beater alert under the headbox dilution zones (WET DCS) */
 .dcsbeat{margin:-2px 0 4px;padding:8px 10px;border-radius:8px;background:#7a1f1a;color:#ffd0cb;font:800 12.5px var(--f-body);letter-spacing:.04em}.dcsbeat[hidden]{display:none}
 
-/* v6.6 orders & bales panel */
-.ordl{display:flex;flex-direction:column;gap:4px}
-.ordr{display:flex;align-items:center;justify-content:space-between;gap:8px;padding:6px 9px;border-radius:10px;background:var(--chip)}
-.ordr span{display:flex;flex-direction:column;min-width:0}.ordr b{font-size:13px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.ordr small{font-size:12px;color:var(--muted)}
-.ordr em{font-style:normal;font-size:12px;color:var(--muted);white-space:nowrap}.ordr em.ok{color:var(--ok)}.ordr em.bad{color:var(--bad)}
-.ordr.late{box-shadow:inset 3px 0 0 var(--bad)}.ordr.risk{box-shadow:inset 3px 0 0 var(--warn)}
 /* v6.7 control room: the DCS screens row, the trend pane beside the picture, the quality / planning / water screens */
 .dcsst{flex-wrap:wrap}
 .dcsmain{display:flex;flex-direction:column;gap:10px;min-width:0}
@@ -2725,8 +2696,6 @@ function manRoster(){const sd=(S&&S.seed)>>>0;if(MAN.ros&&MAN.seed===sd)return M
 const manCyc=(T,d)=>(((d+MAN.ANCH-MAN.OFF[T])%28)+28)%28;
 const manKind=s=>(((s%2)+2)%2)?"N":"D";
 function manTeam(s){const d=Math.floor(s/2),K=manKind(s);return MAN.TEAMS.find(T=>MAN.PAT[manCyc(T,d)]===K);}
-// a team's letter for a calendar day: "D", "N" or "O" (off)
-function manDay(T,d){return MAN.PAT[manCyc(T,d)];}
 // who works shift s: {team, techs:[{home, who, vac, cover}], ops:[...], short}. who is null for an unfilled gap;
 // cover is {type:"OT"|"swap", from:team}. Cached; the cache is dropped with the roster when the run is reseeded.
 function manShift(s){manRoster();const nt=Math.max(1,Math.min(MAN.NT,P.techs|0)),key=s*16+nt;let m=MAN.cache.get(key);if(m)return m;
@@ -2946,7 +2915,6 @@ const TELLTXT={balefire:"pallets stacked against a space heater at the bale yard
   boiler:"the boiler feed pump shaking and smoking",permit:"the wastewater outfall running discolored",icedintake:"ice building up on the river intake screen",brownout:"the substation panel flickering"};
 // v5.7: tells only in a running season, survival run or free play; never in zen, a lost run or the start menu
 const tellsOn=()=>!!(S&&!S.zen&&!S.over&&((S.season&&S.season.on)||S.free));
-const tellOk=id=>TELLABLE.has(id)&&tellsOn();
 function tellLead(){const w=survOn()?survWave():1;return Math.max(TELL.min,TELL.lead-(survOn()?TELL.step*(w-1):0))*1440;}
 function tellState(){if(!S.tell)S.tell={q:[],pre:false,day:-1,n:0,saved:0,savedMin:0,cn:{},prep:null};return S.tell;}
 const tellPending=id=>{const q=S.tell&&S.tell.q;if(!q)return false;for(let k=0;k<q.length;k++)if(q[k].id===id)return true;return false;};
@@ -2991,8 +2959,6 @@ function tellRoundEnd(a,caught){const T=tellState(),left=T.q.filter(p=>p.area===
 const tellRep=()=>LV("reliab")>=1||leadIs("dot");
 // per area: 0 steady, 1 climbing (something pending), 2 climbing fast (due within 24 h)
 function tellTrend(a){const q=(S.tell&&S.tell.q)||[];let v=0;for(const p of q)if(p.area===a)v=Math.max(v,p.due-S.t<1440?2:1);return Math.max(v,rlyTellTrend(a));}   // (v6.10: and what the shift rounds found, 07i)
-// in the visible list: only tells the dice actually rolled (the 3D shows them during a Round)
-const tellIn=a=>((S.tell&&S.tell.q)||[]).filter(p=>p.area===a);
 const tellSummary=()=>{const T=S&&S.tell;if(!T||!T.n)return "";return `Upsets caught early: ${T.n} — saved ${money(T.saved)} and ${tellHrs(T.savedMin)} of downtime.`;};
 // the end screens' line: "3 — saved $412k and 9.5 hours of downtime" (null when tells never ran this run)
 const tellEndStat=()=>{const T=S&&S.tell;if(!T||!T.pre)return null;return ["Upsets caught early",T.n?`${T.n} — saved ${money(T.saved)} and ${tellHrs(T.savedMin)} of downtime`:"none","wide"];};
@@ -3021,7 +2987,6 @@ function prepTally(pr){const it=pr&&pr.it||{};let n=0,m=0;
   if(it.draw){n++;m+=PREP.draw.min;}
   return {n,m};}
 const prepLine=(n,m)=>`Prep ${n}/4 — outage shortened ${m>=60?Math.floor(m/60)+" h"+(m%60?" "+m%60+" m":""):m+" min"}`;
-const prepTxt=pr=>{const t=prepTally(pr);return prepLine(t.n,t.m);};
 // the player's choices
 function prepDo(item,ch){const f=prepFor();if(!f)return false;const pr=prepState(f.k),it=pr.it,X=PREP.items.find(i=>i.k===item);if(!X||!prepUnlocked(X,f.left))return false;
   if(item==="parts"){const P2=PREP.parts;
@@ -3621,7 +3586,7 @@ function recTake(t,dt){if(!baleOn())return;const Q=bqState(),Y=recPiles(),sq=rec
 function recRate(){if(!baleOn())return Infinity;const sh=recShare(bqState().rec,"M");return P.pulperMax*(1-MW_RATE.k*Math.max(0,sh-MW_RATE.ref));}
 // an inbound load's grade and moisture (drawn when the truck arrives)
 // v6.8.3: the kind is the one furthest below its share of the recipe, counting the yard and the trucks already in
-function baleGrade(tr){const r=rand("bale"),a=rand("bale"),b=rand("bale");   // (three draws as before, so the bale stream is unchanged)
+function baleGrade(tr){rand("bale");const a=rand("bale");rand("bale");   // (three draws as before, so the bale stream is unchanged)
   let q="C";if(baleOn()){const Q=bqState(),Y=recPiles(),have={A:Y.A,C:Y.C,M:Y.M};for(const t of S.inQ.concat(S.inDock))if(t&&t.q&&have[t.q]!=null)have[t.q]+=t.load;
     const tot=have.A+have.C+have.M+tr.load;let bv=-1e9;for(const k of BTK){const v=recShare(Q.rec,k)*tot-have[k];if(v>bv){bv=v;q=k;}}}
   let m=BALE.m0+BALE.mSpread*a+(S.wx==="rain"?BALE.rain*(0.5+0.5*S.wet):S.wx==="snow"?BALE.snow:0)+(q==="A"?0:0.01);
@@ -3863,7 +3828,6 @@ function step(dt){
   dcsTick(dt);   // v6.5 b3 DCS motors and reject purges (07c; nothing until the DCS is used)
   dryTick(dt);   // v6.5 b5 the dryer limit: water, steam, moisture (07d)
   weTick(dt);   // v6.8 the basis weight loop, bale water in the pulper, screen pressure drop (07g)
-  const g=GRADES[C.grade];
   // 1 inbound arrivals
   // weather: changes every few hours; snow and fog slow the trucks, rain soaks bales
   if(S.wx===undefined){S.wx="clear";S.wxLeft=360;S.wet=0;}
@@ -4011,7 +3975,6 @@ function step(dt){
   if(S.trendAcc>=10){S.trendAcc-=10;S.trend.push([S.tank/P.tankCap,S.pmSpeed/3300,S.yard/P.yardCap,S.fg/P.fgCap]);if(S.trend.length>144)S.trend.shift();}
   vlvCapture();   // v6.9 the valves' boundary for the next 15 s, and their trend points (07h)
   histTick(dt);   // v6.5 history: the hour's readings and minutes (11c)
-  if(!S.zen)knobHist();   // v5.6: DCS / QCS trends (reads only)
   tagTick();   // v6.7 the control room's tag history (11d; reads only)
 }
 
@@ -4243,7 +4206,7 @@ function knobSteamCulprits(){const K=S.knob;if(!K)return [];const v=K.v,c=[];
 // readings for the DCS and QCS screens. With S.knob missing everything reads at its standard value.
 // Base values follow each grade's standard: reel speed, basis weight and 3rd section steam, and the stock prep level.
 function knobRead(){const K=S.knob,x=K?K.x:null,g=GRADES[C.grade]||GRADES["24"],bw=g.bw,run=S.pm==="run";
-  const z=x?x.z:new Array(KZONES).fill(0),sw=x?x.sw:0,t=S.t;
+  const z=x?x.z:new Array(KZONES).fill(0),t=S.t;
   const wob=(f,k)=>Math.sin(t*f+k)*0.6+Math.sin(t*f*2.7+k*2)*0.4;   // smooth stand-in for process noise (no dice)
   const Dr=S.dry,st3=Dr?Dr.st3:(DRY.base[C.grade]||DRY.base["24"]);   // (v6.5 b5: the dryer model, 07d)
   const m=Dr?Dr.m:DRY.m0;let cp=x?x.cp:5;
@@ -4256,13 +4219,6 @@ function knobRead(){const K=S.knob,x=K?K.x:null,g=GRADES[C.grade]||GRADES["24"],
     st1:knobVal("st1"),st3,steam:run?(Dr?Dr.steam:50.5*P.K*S.pmSpeed*bw/34.8):S.pm==="break"&&Dr?Dr.steam:0,boiler:Dr?Dr.hdr:1,moist:run?m+wob(0.13,4)*0.25:0,
     bw:run?qualMeasure().bw:0,hbc:S.we?S.we.hbc:WE.hbc,draw:knobVal("draw"),tension:run?1.0+(knobVal("draw")-1.5)*0.42:0,
     zones:z.map((v,i)=>m+v*0.35+Math.sin(i*1.7+t*0.01)*0.12),off:qualStatus().off,why:qualStatus().why,F:K&&K.F||{},speed:S.pmSpeed};}
-// DCS / QCS trend history: a reading every 2 sim minutes, 6 hours kept. Read-only on the sim (it never writes S), kept
-// outside S so saves don't grow; a new game or a loaded save starts it fresh.
-const KHIST={S:null,t:-1,a:[]};
-function knobHist(){if(KHIST.S!==S){KHIST.S=S;KHIST.a.length=0;KHIST.t=-1;}const k=Math.floor(S.t/2);if(k===KHIST.t)return;KHIST.t=k;
-  const r=knobRead(),u=v=>r.run?v:null,row=KHIST.a.length>=180?KHIST.a.shift():[];row.length=0;   // (readings that only exist with a sheet on are left blank while the machine is down)
-  row.push(S.t,r.cp,r.amps,r.gap,u(r.refkw),r.mcCons,r.vac,u(r.couchSol),r.pl,u(r.pressSol),r.edge,r.st1,u(r.st3),u(r.steam),r.boiler,u(r.moist),u(r.bw),u(r.tension),r.pulpLvl,r.stripes,r.off);KHIST.a.push(row);}   // (rows reused once 6 h are full)
-const KH_COL={cp:1,amps:2,gap:3,refkw:4,mcCons:5,vac:6,couchSol:7,pl:8,pressSol:9,edge:10,st1:11,st3:12,steam:13,boiler:14,moist:15,bw:16,tension:17,pulpLvl:18,stripes:19,off:20};
 /* ---- v6.5 b3 DCS motors and reject purges (the DCS expansion, claude/dcs-expansion-spec.md) ----
    Motors: On / Off / Auto from the DCS. On and Auto both run (On is the operator's hand, Auto the mill's logic); Off
    stops that step the way its upset does (a motor upset, m_*, with the same mods), and the operators start it again
@@ -4341,7 +4297,6 @@ function dryDemand0(tph){const g=C.grade,b=DRY.base[g]||DRY.base["24"];return b+
 // (20 points of moisture per unit of r, the v5.6 knob model). Before v6.5.2 the knobs added kPa to the demand and the
 // whole range up to the ceiling soaked them up, so on a mill with headroom the wet-end knobs did nothing but cost steam.
 function dryKnob(){const K=S.knob;if(!(K&&K.any))return {r:1,a:1};const r=(K.W||1)-(K.d1x||0);return {r,a:clamp(r,0.7,1.3)};}
-function dryDemand(tph){return dryDemand0(tph)*dryKnob().a;}
 // the paper rate the dryers can take before the sheet goes wet (for the bottleneck view)
 function dryCapTph(){const D=dryState(),g=C.grade,b=DRY.base[g]||DRY.base["24"],s=drySlope(g)/DRY.wpt0,k=s*dryWpt();
   return k>0?Math.max(0,(dryCeil(D)/dryKnob().a-b+s*dryRef(g)*DRY.wpt0)/k):1e9;}
@@ -4397,8 +4352,8 @@ const qBw=g=>{const s=(QSPEC[g]||QSPEC["24"]).bw,f=g===C.grade?bwSp()/bwStd():1;
 // the latest check (derived each step, not saved): measured values, what's out, the share of production going to the beater
 const QNOW={bw:0,m:8,shade:true,rct:60,out:[],why:"",off:0};
 // what the scanner reads now (no dice: the swings are smooth functions of time, like the DCS readings)
-function qualMeasure(){const g=C.grade,G=GRADES[g]||GRADES["24"],K=S.knob,t=S.t;
-  const wob=(f,k)=>Math.sin(t*f+k)*0.6+Math.sin(t*f*2.7+k*2)*0.4,sw=K&&K.any&&K.x?K.x.sw:0;
+function qualMeasure(){const t=S.t;
+  const wob=(f,k)=>Math.sin(t*f+k)*0.6+Math.sin(t*f*2.7+k*2)*0.4;
   const bw=bwMeas()+wob(0.11,5)*0.12;   // (v6.8: the BW loop's weight as the scanner saw it WE.dead minutes ago, 07g; thick stock and swings come through it)
   const m=S.dry?S.dry.m:DRY.m0;
   // shade: the dye system is in trouble (an upset, or the dye pump stopped from the DCS)
@@ -4772,7 +4727,7 @@ function vlvRun(n){const W=S.vlv;if(!W||!W.B)return;n=Math.min(VLV.sub,n);
 function vlvCatch(acc){const W=S.vlv;if(!W||!W.any||S.zen||!W.B)return;vlvRun(Math.floor(acc*60+1e-6));}
 // every step (07-sim-step.js), before the knobs and the machine: finish the window, hand the results to the game
 function vlvTick(dt){const W=S.vlv;if(!W||!W.any||S.zen)return;if(!W.B)vCap();vlvRun(VLV.sub);
-  const K=S.knob;if(W.lp["NV-101"]){const k=knobState();k.any=true;
+  if(W.lp["NV-101"]){const k=knobState();k.any=true;
     // pulper consistency swings reach the machine chest through the storage chest (an hour of stock)
     W.cpl=ease(W.cpl==null?5:W.cpl,W.lp["NV-101"].y,dt,VLV.cpTau);}
   else if(W.cpl!=null){W.cpl=ease(W.cpl,5,dt,VLV.cpTau);if(Math.abs(W.cpl-5)<0.005)W.cpl=null;}
@@ -5160,7 +5115,7 @@ function rlyPin(id,k){const R=rlyState(),a=R.a[id];if(!a)return;a.pin=a.pin===k?
 // a planned repair of a fault the rounds found (or a motor in ADX alarm): a share of the bill, and the machine down for
 // RLY.fixMin while the crew works (t4: it was instant)
 const rlyCanFix=(id,k)=>{const a=S.rel&&S.rel.a[id],v=a&&(k==="vib"?a.lv:a.la);return !!v&&(v.st==="imm"||(k==="adx"&&v.st==="alarm"));};
-function rlyFix(id,k){if(!rlyOn())return false;const R=rlyState(),a=R.a[id],A=ASSETN[id];if(!rlyCanFix(id,k)||rlyIncOf(id)||active(k==="vib"?"planbrg":"planmot"))return false;
+function rlyFix(id,k){if(!rlyOn())return false;const R=rlyState(),A=ASSETN[id];if(!rlyCanFix(id,k)||rlyIncOf(id)||active(k==="vib"?"planbrg":"planmot"))return false;
   const bill=rlyBill(id,k),cost=bill*RLY.fix,p=R.pend.findIndex(x=>x.a===id&&x.k===k);spend(cost,"repairs");pfRepair(RLY_ID[k],cost);
   if(p>=0){R.pend.splice(p,1);R.caught++;R.saved+=bill-cost;if(civOn())civAdd(TELL.catchCiv,"Caught early");}
   const ck=k==="vib"?"b":"m",co=R.chg[id];if(co&&co[ck]){delete co[ck];if(!Object.keys(co).length)delete R.chg[id];}   // the part will be new: no outage changeout for it
@@ -5440,7 +5395,7 @@ function seasonLocks(on){["chaosOn","chaosLvl","chaosClear"].forEach(id=>{const 
   document.querySelectorAll('#chaosgrid input[type=checkbox]').forEach(el=>el.disabled=on);
   // v3.1.3: in a season upsets can't be set off by hand, and sheet breaks / hayouts can't be switched off
   document.querySelectorAll('#chaosgrid button.trig').forEach(el=>{el.disabled=on;el.title=on?lockWhy():"";});
-  ["chaosRandom","v2dis"].forEach(id=>{const el=$(id);if(el){el.disabled=on;el.title=on?lockWhy():"";}});
+  {const el=$("chaosRandom");if(el){el.disabled=on;el.title=on?lockWhy():"";}}
   if(on){C.breaks=C.hays=true;}["breaks","hays"].forEach(id=>{const el=$(id);if(el){if(on)el.checked=true;el.disabled=on;}});
   // v4.2.1: in a season the area controls run on AUTO and are locked (paper colour is only a look, so it stays free)
   if(on)AUTOKEYS.forEach(k=>{if(C[k])C[k].auto=true;});
@@ -6255,7 +6210,6 @@ function updateText(){
 const col={};
 function readColors(){const cs=getComputedStyle(document.body||document.documentElement);   // (v5.4: body, where dark mode sets its colours)
   ["muted","line","stock","machine","kraft","ok"].forEach(k=>col[k]=cs.getPropertyValue("--"+k).trim());}
-const DPR=()=>Math.min(2,window.devicePixelRatio||1);
 // animation phases advanced by the 3D frame (conveyor belt, chest swirl, sheet, dryer cans, forklifts)
 const V={belt:0,swirl:0,sheet:0,cans:0,lifts:[],rollsAnim:0};
 document.addEventListener("pm-theme",()=>{readColors();});   // (v5.4: repaint in the new theme)
@@ -6433,8 +6387,6 @@ UI_TICKS.push(()=>{if(bfNeed())bfStart();});
    hourly history (S.hist) for tags that have a column there. Units: water and stock flows in US gallons a minute,
    volumes in gallons (v6.7: they were m³/h, L/s and m³). */
 const GPM=m3h=>m3h*4.40287,GAL=m3=>m3*264.172,LS_GPM=ls=>ls*15.8503;
-const WAT_GAL=()=>GAL(WAT.cap);                       // the white water chest, full
-const CHEST_GAL=()=>GAL(P.tankCap/(WAT.cs/100));      // the stock storage chest, full (its tons of fiber at storage consistency)
 const MCHEST_GAL=60000;                                // the machine chest
 const fmtGal=g=>{const a=Math.abs(g),s=g<0?"−":"";return s+(a>=1e6?(a/1e6).toFixed(2)+"M gal":a>=1e4?Math.round(a/1e3)+"k gal":Math.round(a).toLocaleString()+" gal");};
 const fmtGpm=g=>(g>=1e4?(g/1e3).toFixed(1)+"k":Math.round(g).toLocaleString())+" gpm";
@@ -6582,14 +6534,12 @@ function no3D(){G3.ok=false;$("no3d").hidden=false;$("no3d-retry").onclick=()=>l
      discrete GPU); the player can pin one in Controls. Pixel ratio, shadow refresh, shadow map size, weather particles and
      far-scenery shadows and the shadow softness change live; the lighting model and scenery density take effect on the next load. */
   // v15: px is each tier's budget of rendered pixels (drawing buffer); the pixel ratio is lowered to stay within it
-  // v5.7.3 bare: the bones only. Flat unlit colours (one matcap), plain boxes, no shadows, nothing outside the fence but the
-  // ground and roads, no sky, no ambient life, token upset effects, 30 FPS. Picked by the player only (Auto never), on reload.
   // (v6.1 t12: the iso build draws far less, so phones render at their screen's sharpness: low 1.5x, medium 2x within a
   // pixel budget; the low-FPS fallback still drops to 1x on a struggling device)
-  const GFX_TIERS={low:{pr:1.5,px:1.4e6,shadow:1024,soft:false,hz:10,scenery:0.5,wx:600,lambert:true,far:false},
-    medium:{pr:2,px:2.6e6,shadow:1024,soft:false,hz:15,scenery:0.85,wx:1000,lambert:true,far:false},
-    high:{pr:2,px:2.4e6,shadow:2048,soft:true,hz:24,scenery:1,wx:2000,lambert:true,far:false},
-    ultra:{pr:2,px:4.2e6,shadow:4096,soft:true,hz:60,scenery:1.4,wx:2600,lambert:true,far:true}};   // (v6.1 t2: Lambert on every tier: the paper look needs no PBR)
+  const GFX_TIERS={low:{pr:1.5,px:1.4e6,shadow:1024,soft:false,hz:10,scenery:0.5,wx:600,far:false},
+    medium:{pr:2,px:2.6e6,shadow:1024,soft:false,hz:15,scenery:0.85,wx:1000,far:false},
+    high:{pr:2,px:2.4e6,shadow:2048,soft:true,hz:24,scenery:1,wx:2000,far:false},
+    ultra:{pr:2,px:4.2e6,shadow:4096,soft:true,hz:60,scenery:1.4,wx:2600,far:true}};
   const gpuName=(()=>{try{const gl=renderer.getContext(),x=gl.getExtension("WEBGL_debug_renderer_info");return x?gl.getParameter(x.UNMASKED_RENDERER_WEBGL):gl.getParameter(gl.RENDERER);}catch(e){return "";}})();
   // (v15: Auto no longer picks Ultra; desktops get High, held to a smaller pixel budget and 1024 shadows unless the GPU is
   // a known discrete one; Ultra is the player's choice)
@@ -6597,9 +6547,9 @@ function no3D(){G3.ok=false;$("no3d").hidden=false;$("no3d-retry").onclick=()=>l
   const gfxAuto=mobile?((navigator.deviceMemory||4)<4?"low":"medium"):"high";
   let gfxPick="auto";try{gfxPick=localStorage.getItem("paper-mill-gfx")||"auto";}catch(e){}
   {const q=new URLSearchParams(location.search).get("gfx");if(q&&GFX_TIERS[q])gfxPick=q;}   // ?gfx=low|medium|high|ultra (tests)
-  if(!GFX_TIERS[gfxPick])gfxPick="auto";
+  if(!GFX_TIERS[gfxPick])gfxPick="auto";   // (an unknown saved pick, such as v5.7.3's "bare", loads as Auto)
   const GFX=G3.GFX={...GFX_TIERS[gfxPick==="auto"?gfxAuto:gfxPick],tier:gfxPick==="auto"?gfxAuto:gfxPick,pick:gfxPick,auto:gfxAuto,gpu:String(gpuName).slice(0,60)};
-  GFX.loaded=GFX.tier;const BARE=G3.bare=GFX.tier==="bare";if(gfxPick==="auto"&&!mobile&&!discrete){GFX.px=1.9e6;GFX.shadow=1024;}
+  GFX.loaded=GFX.tier;if(gfxPick==="auto"&&!mobile&&!discrete){GFX.px=1.9e6;GFX.shadow=1024;}
   // the pixel ratio for a canvas of w x h CSS px: the tier's ratio, the screen's, and the pixel budget, whichever is lowest
   G3.prFor=(w,h)=>G3.prFixed||Math.max(0.75,Math.min(GFX.pr,window.devicePixelRatio||1,Math.sqrt(GFX.px/Math.max(1,w*h))));
   {const gl=renderer.getContext();G3.multiDraw=!!gl.getExtension("WEBGL_multi_draw");
@@ -6609,7 +6559,7 @@ function no3D(){G3.ok=false;$("no3d").hidden=false;$("no3d-retry").onclick=()=>l
   // the shadow pass redraws every shadow-casting object, so refresh it a few times a second instead of every frame (v2.8.4: desktop too)
   renderer.shadowMap.autoUpdate=false;G3.shadowHz=GFX.hz;
   // v2.8.4: round shapes get only as many sides as their size needs at this zoom (unit shapes that get scaled up keep 24)
-  const segCap=(r,s)=>Math.max(3,Math.min(s,r===1?12:r<0.45?6:r<4?8:12));   // (v6.1 t7: 6-12 sides; tanks and rolls read as folded card)   // (v5.7.3: bare keeps round things to a few sides)
+  const segCap=(r,s)=>Math.max(3,Math.min(s,r===1?12:r<0.45?6:r<4?8:12));   // (v6.1 t7: 6-12 sides; tanks and rolls read as folded card)
   class CylG extends THREE.CylinderGeometry{constructor(rt=1,rb=1,h=1,rs=32,hs=1,oe=false,ts=0,tl=Math.PI*2){super(rt,rb,h,segCap(Math.max(rt,rb),rs),hs,oe,ts,tl);}}
   class SphG extends THREE.SphereGeometry{constructor(r=1,ws=32,hs=16,...a){super(r,Math.max(3,Math.min(ws,8)),Math.max(2,Math.min(hs,6)),...a);}}
   class RingG extends THREE.RingGeometry{constructor(a=0.5,b=1,ts=32,...x){super(a,b,Math.max(3,Math.min(ts,16)),...x);}}
@@ -6629,7 +6579,7 @@ function no3D(){G3.ok=false;$("no3d").hidden=false;$("no3d-retry").onclick=()=>l
   /* v6.2 test (zen free camera): zen mode gets a perspective camera that moves freely (the pre-iso zen shots: orbits,
      tilt-ups, low dollies, flyovers); the game itself keeps the fixed iso view. `camera` is whichever is live, swapped
      by placeCam (29). ?zeniso = zen stays isometric. */
-  const camPersp=new THREE.PerspectiveCamera(40,16/9,0.5,5000);camPersp.isoFit=()=>{};
+  const camPersp=new THREE.PerspectiveCamera(40,16/9,0.5,5000);
   let camera=camIso;G3.camIso=camIso;G3.camPersp=camPersp;
   G3.zenFree=!/[?&]zeniso/.test(location.search);
 
@@ -6652,16 +6602,8 @@ function no3D(){G3.ok=false;$("no3d").hidden=false;$("no3d-retry").onclick=()=>l
   G3.PAPER_PAL=PAPER_PAL;G3.palQ=PALQ;
   /* palette: every material is bound to a CSS token so theme switches recolor the scene */
   const MATS=[];
-  // v2.9.0: phones get the much cheaper Lambert lighting model instead of physically based shading (same colours, flatter sheen)
-  // v5.7.3 bare: every lit material becomes one unlit matcap material (a soft top-lit ball): flat colour with just enough
-  // shading to tell a box's top from its sides, and no lights, shadows or fog in the shader
-  let MCAP=null;
-  function bareMat(o){const r={};for(const k of ["color","map","alphaMap","transparent","opacity","side","vertexColors","depthWrite","depthTest","alphaTest","polygonOffset","polygonOffsetFactor","polygonOffsetUnits","visible"])if(o&&o[k]!==undefined)r[k]=o[k];
-    if(!MCAP){const c=document.createElement("canvas");c.width=c.height=64;const x=c.getContext("2d"),gr=x.createRadialGradient(26,20,4,32,32,34);gr.addColorStop(0,"#ffffff");gr.addColorStop(0.7,"#e6e6e6");gr.addColorStop(1,"#bdbdbd");x.fillStyle=gr;x.fillRect(0,0,64,64);
-      MCAP=new THREE.CanvasTexture(c);MCAP.colorSpace=THREE.SRGBColorSpace;}
-    r.matcap=MCAP;r.fog=false;return new THREE.MeshMatcapMaterial(r);}
-  G3.bareMat=bareMat;
-  function StdMat(o){if(BARE)return bareMat(o);if(!GFX.lambert)return new THREE.MeshStandardMaterial(o);const r=Object.assign({},o||{});delete r.roughness;delete r.metalness;delete r.flatShading;delete r.envMapIntensity;delete r.roughnessMap;delete r.metalnessMap;return new THREE.MeshLambertMaterial(r);}
+  // v6.1 t2: Lambert on every tier (the paper look needs no PBR): StdMat drops the physically based options
+  function StdMat(o){const r=Object.assign({},o||{});delete r.roughness;delete r.metalness;delete r.flatShading;delete r.envMapIntensity;delete r.roughnessMap;delete r.metalnessMap;return new THREE.MeshLambertMaterial(r);}
   function tok(name){return getComputedStyle(document.documentElement).getPropertyValue("--"+name).trim()||"#888";}
   function mat(token,opts={}){const m=new StdMat(Object.assign({roughness:0.72,metalness:0.04,flatShading:false},opts));m.userData.token=token;MATS.push(m);return m;}
   // v4.1 pass 3: an InstancedMesh gets its own copy of a shared material (palette token kept, so brand colours still reach it):
@@ -6704,7 +6646,7 @@ function no3D(){G3.ok=false;$("no3d").hidden=false;$("no3d-retry").onclick=()=>l
   const W=(x,y)=>[(x-600)/10,(y-330)/10];
   // v4.1 pass 3: a rounded box is 316 triangles at High/Ultra; phones get a coarser bevel (140 on Medium, 92 on Low), which
   // reads the same at phone size and takes a third off the static and moving batches
-  const RB={},RBQ=GFX.tier==="low"?[1,2]:GFX.lambert?[2,2]:[3,4];
+  const RB={},RBQ=GFX.tier==="low"?[1,2]:[2,2];
   function rboxGeo(w,h,d){const k=w+"|"+h+"|"+d;if(RB[k])return RB[k];const r=Math.min(0.16,Math.min(w,h,d)*0.2),s=new THREE.Shape(),ww=w-2*r,dd=d-2*r,c=Math.min(r*0.6,ww/2,dd/2);
     s.moveTo(-ww/2+c,-dd/2);s.lineTo(ww/2-c,-dd/2);s.quadraticCurveTo(ww/2,-dd/2,ww/2,-dd/2+c);s.lineTo(ww/2,dd/2-c);s.quadraticCurveTo(ww/2,dd/2,ww/2-c,dd/2);
     s.lineTo(-ww/2+c,dd/2);s.quadraticCurveTo(-ww/2,dd/2,-ww/2,dd/2-c);s.lineTo(-ww/2,-dd/2+c);s.quadraticCurveTo(-ww/2,-dd/2,-ww/2+c,-dd/2);
@@ -6717,7 +6659,7 @@ function no3D(){G3.ok=false;$("no3d").hidden=false;$("no3d-retry").onclick=()=>l
   const edgeSoft=new THREE.LineBasicMaterial({color:new THREE.Color("#3c4559").convertSRGBToLinear(),transparent:true,opacity:0.22});
   const edgeMat=new THREE.LineBasicMaterial({color:lin0("#3c4559"),transparent:true,opacity:0.42});
   function lin0(c){return new THREE.Color(c).convertSRGBToLinear();}
-  function edges(o,mt=edgeMat,ang=25){if(BARE)return new THREE.Group();   /* (v5.7.3 bare: no outlines) */const e=new THREE.LineSegments(new THREE.EdgesGeometry(o.geometry,ang),mt);o.add(e);return e;}
+  function edges(o,mt=edgeMat,ang=25){const e=new THREE.LineSegments(new THREE.EdgesGeometry(o.geometry,ang),mt);o.add(e);return e;}
   const aoC=document.createElement("canvas");aoC.width=4;aoC.height=64;{const x=aoC.getContext("2d"),g=x.createLinearGradient(0,0,0,64);g.addColorStop(0,"rgba(28,34,51,0.34)");g.addColorStop(0.35,"rgba(28,34,51,0.14)");g.addColorStop(1,"rgba(28,34,51,0)");x.fillStyle=g;x.fillRect(0,0,4,64);}
   const aoTex=new THREE.CanvasTexture(aoC);const aoMat=new THREE.MeshBasicMaterial({map:aoTex,transparent:true,depthWrite:false});
   const aoRC=document.createElement("canvas");aoRC.width=aoRC.height=128;{const x=aoRC.getContext("2d"),g=x.createRadialGradient(64,64,30,64,64,64);g.addColorStop(0,"rgba(28,34,51,0.38)");g.addColorStop(0.5,"rgba(28,34,51,0.16)");g.addColorStop(1,"rgba(28,34,51,0)");x.fillStyle=g;x.fillRect(0,0,128,128);}
@@ -7005,12 +6947,6 @@ function no3D(){G3.ok=false;$("no3d").hidden=false;$("no3d-retry").onclick=()=>l
     if(SITE.env==="urban"||SITE.env==="desert"){const [zc,hw]=riverAt(0);(SEA?[zc+hw+2.4]:[zc+hw+2.4,zc-hw-2.4]).forEach(z=>box(800,1.1,0.6,conc,0,0.55,z,scene,false));}   // the city: a sea wall
     ribbon(0,0.012,new StdMat({map:rt,roughness:0.15,metalness:0.1,polygonOffset:true,polygonOffsetFactor:-4,polygonOffsetUnits:-4}),(x,a,b)=>[(x+400)/8,0,(x+400)/8,(b-a)/8]);
     // (v6.2 z2: the water is pulled forward in depth: 6 mm over the bank sand z-fought into streaks under the zen perspective camera)
-    // v4.1 pass 3: a sparse sparkle layer drifting the other way over the water (High and Ultra tiers)
-    if(G3.GFX&&!G3.GFX.lambert){const sc2=document.createElement("canvas");sc2.width=sc2.height=128;const x=sc2.getContext("2d");x.clearRect(0,0,128,128);
-      for(let k=0;k<70;k++){const px=Math.random()*128,py=Math.random()*128,r=0.6+Math.random()*1.4,g=x.createRadialGradient(px,py,0,px,py,r*2.2);g.addColorStop(0,"rgba(255,255,255,0.9)");g.addColorStop(1,"rgba(255,255,255,0)");x.fillStyle=g;x.fillRect(px-3,py-3,6,6);}
-      const st2=new THREE.CanvasTexture(sc2);st2.colorSpace=THREE.SRGBColorSpace;st2.wrapS=st2.wrapT=THREE.RepeatWrapping;st2.repeat.set(60,1.2);ENV.sparkTex=st2;
-      const sp=ribbon(-0.5,0.03,new THREE.MeshBasicMaterial({map:st2,transparent:true,opacity:0.35,depthWrite:false,blending:THREE.AdditiveBlending,toneMapped:false}),(x,a,b)=>[(x+400)/800,0,(x+400)/800,(b-a)/11]);
-      sp.receiveShadow=false;sp.renderOrder=1;sp.userData.noNav=true;ENV.spark=sp;}
     box(4,3,4,conc,-30,1.5,-55.5);box(4.4,0.3,4.4,M.roofFlat,-30,3.1,-55.5);pipe([[-30,0.8,-57.5],[-30,0.8,-59],[-30,-0.5,-61]],0.35,M.metal);
     // fresh water from the river intake, up and over into the stock line that feeds the cleaners and screens on to stock storage
     {const fw=mat("water",{roughness:0.4});pipe([[-30,0.7,-53.5],[-30,0.7,-31.5],[-4,0.7,-31.5],[-4,0.7,-25.7],[4,0.7,-25.7],[4,6.0,-25.7],[11.2,6.0,-25.7],[11.2,6.0,-23.3]],0.32,fw);
@@ -10342,7 +10278,6 @@ function no3D(){G3.ok=false;$("no3d").hidden=false;$("no3d-retry").onclick=()=>l
     ENV.lampHead.color.copy(LAMP_OFF).lerp(LAMP_ON,night*bk);ENV.lampPool.opacity=0.32*night*bk;if(ENV.lampPoolMesh)ENV.lampPoolMesh.visible=night*bk>0.01;   // (v5.2: no invisible draws by day)
     ENV.pudM.opacity=0.55*(S.wet||0);if(ENV.pudMeshes){const v=(S.wet||0)>0.01;if(ENV.pudMeshes.v!==v){ENV.pudMeshes.v=v;ENV.pudMeshes.forEach(m=>m.visible=v);}}ENV.riverTex.offset.x=(ENV.riverTex.offset.x-rdt*0.02)%1;
     if(G3.YP&&G3.YP.flags&&rdt>0)G3.YP.flags.forEach((f,k)=>{f.rotation.y=0.55+0.28*Math.sin(now/900+k*2.1);});
-    if(ENV.spark){ENV.sparkTex.offset.x=(ENV.sparkTex.offset.x+rdt*0.013)%1;ENV.spark.material.opacity=0.35*day*(1-0.6*(fogK+wxK));}
     ENV.bridge.rotation.y-=rdt*0.12;
     // steam plume grows with production and dies when the boiler trips
     const boil=S.inc.some(i=>i.id==="boiler"),pr=clamp(Math.max((S.rates.prod||0)/35,(S.dry&&S.pm==="break"?S.dry.steam:0)/45),0,1.4);   // (v6.5.7: the boiler stays fired through a sheet break)
@@ -11125,8 +11060,7 @@ function no3D(){G3.ok=false;$("no3d").hidden=false;$("no3d-retry").onclick=()=>l
     [-1.2,1.2].forEach(dx=>{box(0.6,1.1,0.4,M.steel,X+dx,0.55,Z-1.45);box(0.5,0.25,0.05,M.ok,X+dx,0.95,Z-1.22,scene,false);
       const cb=new THREE.Mesh(new CylG(0.03,0.03,1.4,6),M.ink);cb.rotation.x=0.9;cb.position.set(X+dx+0.25,0.5,Z-0.8);scene.add(cb);});
     box(0.12,0.12,3.6,M.warn,X,0.06,Z-1.4,scene,false);
-    if(G3.GFX&&!G3.GFX.lambert){const c=document.createElement("canvas");c.width=256;c.height=64;const x=c.getContext("2d");x.fillStyle="#1c2233";x.fillRect(0,0,256,64);x.fillStyle="#f2c230";x.font="800 30px system-ui,sans-serif";x.textAlign="center";x.textBaseline="middle";x.fillText("CHARGING",128,33);
-    const t=new THREE.CanvasTexture(c);t.colorSpace=THREE.SRGBColorSpace;const sg=new THREE.Mesh(new THREE.PlaneGeometry(2.0,0.5),new THREE.MeshBasicMaterial({map:t}));sg.position.set(X,1.3,Z-1.6);scene.add(sg);}}
+}
   // flagpoles by the office door: the mill's flag and a safety flag
   {[[56.6,20.4,"brand"],[58.6,20.4,"ok"]].forEach(([x,z,tk],k)=>{const p=new THREE.Mesh(new CylG(0.05,0.07,9,8),M.steel);p.position.set(x,4.5,z);p.castShadow=true;scene.add(p);
       const ball=new THREE.Mesh(new SphG(0.12,8,6),M.brand);ball.position.set(x,9.05,z);scene.add(ball);
@@ -13882,7 +13816,8 @@ function setFS(on){document.body.classList.toggle("fs",on);
   else if(document.fullscreenElement)document.exitFullscreen().catch(()=>{});}
 document.addEventListener("fullscreenchange",()=>{if(!document.fullscreenElement&&document.body.classList.contains("fs")){if(ZEN)setZen(false);else setFS(false);}});
 document.addEventListener("keydown",e=>{if(e.key==="Escape"&&ZEN){setZen(false);return;}if(e.key==="Escape"&&document.body.classList.contains("fs"))setFS(false);});
-function openSlice(){$("spider").hidden=true;$("brian").hidden=true;$("slice").hidden=false;$("slcV").value=Math.round(G3.SLC.v*100);$("slcH").value=Math.round(G3.SLC.h*100);drawSlice();}
+// the spider valve and the slice are fiddly knobs too: their panels slow the game the same way and close the others (kuiSync, closeKnob and closeStation are in 50b)
+function openSlice(){closeKnob();closeStation(true);$("spider").hidden=true;$("brian").hidden=true;$("slice").hidden=false;$("slcV").value=Math.round(G3.SLC.v*100);$("slcH").value=Math.round(G3.SLC.h*100);drawSlice();kuiSync();}
 $("slcClose").addEventListener("click",()=>$("slice").hidden=true);
 ["slcV","slcH"].forEach(id=>$(id).addEventListener("input",e=>{if(G3.slcFix)return;slcSet(id==="slcV"?"v":"h",+e.target.value/100);   // (v6.5.5: into the sim's knob state, 07b)
   const g=G3.SLC.geo();if(g.lipX-g.wet>=6.8)slcBreak();drawSlice();}));
@@ -13908,7 +13843,7 @@ function openBrian(){$("spider").hidden=true;$("slice").hidden=true;$("brian").h
 $("briClose").addEventListener("click",()=>{$("brian").hidden=true;});
 $("briGo").addEventListener("click",()=>{G3.follow(!G3.following());briUpd();});
 G3.onFollowEnd=()=>{briUpd();};
-function openSpider(){$("brian").hidden=true;$("slice").hidden=true;$("spider").hidden=false;$("spiV").value=Math.round(G3.SPD.v*100);drawSpider();}
+function openSpider(){closeKnob();closeStation(true);$("brian").hidden=true;$("slice").hidden=true;$("spider").hidden=false;$("spiV").value=Math.round(G3.SPD.v*100);drawSpider();kuiSync();}
 $("spiClose").addEventListener("click",()=>$("spider").hidden=true);
 $("spiV").addEventListener("input",e=>{G3.SPD.v=+e.target.value/100;drawSpider();});
 function drawSpider(){const D=G3.SPD;if(!D||$("spider").hidden)return;
@@ -13946,7 +13881,7 @@ const TITLE_ART=[
    opened from the operator consoles (stock prep's, and the three on the machine floor). With any of these open, or the
    spider valve or slice panel, the game runs at 1 min/s (simRate, 08-ui-wiring.js) and is back at the player's speed on
    close. The screens only read the sim (knobRead / KHIST, 07b-knobs.js); the only writes are the player's knob moves. */
-const KUI={panel:null,st:null,tab:"dcs",built:{}};
+const KUI={panel:null,st:null,tab:"dcs"};
 const AREA_N={SPOT:"Stock prep",WET:"Wet end",DET:"Dry end",DRV:"Drives"};
 // field knobs the DCS can also set remotely; the guide roll and the oscillator are set at the machine only
 const KREMOTE=new Set(["pulp","ref","agit","couch"]);
@@ -14095,14 +14030,6 @@ function stationBuild(){const o=$("dcsOv");if(!o||!KUI.st)return;const a=KUI.st,
   else if(a==="PLAN")b.appendChild(kEl("div","plan","")).id="planBox";
   else if(a==="DRV")drvBuild(b);else if(a==="REL")rlyBuild(b);   // v6.10 (50l)
   trBuild();trLayout();kuiRefresh();}
-// the trend chart: up to four series on their own scales, newest at the right
-function drawTrend6(cv,series){if(!cv)return;const x=cv.getContext("2d"),W=cv.width,H=cv.height,a=KHIST.a,dk=document.body.classList.contains("dark");
-  x.fillStyle="#0f1b2d";x.fillRect(0,0,W,H);x.strokeStyle="rgba(140,170,210,.18)";x.lineWidth=1;for(let k=1;k<6;k++){x.beginPath();x.moveTo(W*k/6,0);x.lineTo(W*k/6,H);x.stroke();}for(let k=1;k<4;k++){x.beginPath();x.moveTo(0,H*k/4);x.lineTo(W,H*k/4);x.stroke();}
-  x.fillStyle="rgba(190,205,230,.7)";x.font="600 15px system-ui,sans-serif";x.fillText("−6 h",6,H-6);x.textAlign="right";x.fillText("now",W-6,H-6);x.textAlign="left";
-  if(a.length<2){x.fillStyle="rgba(190,205,230,.8)";x.font="600 18px system-ui,sans-serif";x.fillText("Collecting data…",W/2-70,H/2);return;}
-  const t1=a[a.length-1][0],t0=t1-360,X=t=>(t-t0)/360*W;
-  series.forEach(([k,,col,lo,hi])=>{const c=KH_COL[k];x.strokeStyle=col;x.lineWidth=2.5;x.beginPath();let st=false;
-    for(const r of a){if(r[0]<t0)continue;const v=r[c];if(v==null||v!==v){st=false;continue;}const y=H-8-clamp((v-lo)/(hi-lo),0,1)*(H-24);if(!st){x.moveTo(X(r[0]),y);st=true;}else x.lineTo(X(r[0]),y);}x.stroke();});}
 function kuiRefresh(){if(!KUI.panel&&!KUI.st)return;const r=knobRead();
   if(KUI.panel){const id=KUI.panel;document.querySelectorAll("#kpCtl .kctl").forEach(knobCtlSync);{const h=knobReadout(id,r),e=$("kpRead");if(e._h!==h){e._h=h;e.innerHTML=h;}}
     const n=$("kpNote"),moved=!knobAt(id),busy=S.knob&&S.knob.inc.some(i=>i.cause.includes(id));n.className="spin"+(moved?" bad":"");
@@ -14114,7 +14041,7 @@ function kuiRefresh(){if(!KUI.panel&&!KUI.st)return;const r=knobRead();
       const al=knobAlarms(a,r),ul=$("dcsAl"),h=al.length?al.map(([t,hi])=>`<li class="${hi?"hi":""}">${t}</li>`).join(""):'<li class="none">No alarms</li>';if(ul&&ul._h!==h){ul._h=h;ul.innerHTML=h;}
       {const bt=$("dcsBeat");if(bt){const q=qualStatus(),on=r.run&&q.off>0.02,t=on?`⚠ MAKING BEATER · ${q.why.toUpperCase()} · ${q.off>=0.99?"the whole reel":Math.round(q.off*100)+"% of the reel"} to the beater`:"";if(bt.hidden===on)bt.hidden=!on;if(bt.textContent!==t)bt.textContent=t;}}
       o.querySelectorAll(".dcsrow canvas[data-cd]").forEach(c=>kuiCd(c,r));dcsSync();dcsPicSync(a);vlvDcsSync(o);if(a==="WATER")waterRefresh();}
-    else if(a==="QCS"){const K=S.knob,F=(K&&K.F)||{},off=r.off,st=$("qcsSt");
+    else if(a==="QCS"){const K=S.knob,F=(K&&K.F)||{},st=$("qcsSt");
       // v6.5.3: the spec check (07e) names what's out; the grade change and the other knob defects after it
       const qs=qualStatus(),sh=!r.run?["MACHINE DOWN","down"]:QNOW.out.length?[`OFF SPEC · ${qs.why} · rolls to the beater`,"bad"]:S.chg?["GRADE CHANGE · weight in transition · rolls to the beater","warn"]:qs.off>0.02?[`REJECTING · ${qs.why} · ${Math.round(qs.off*100)}% to the beater`,"bad"]:["ON SPEC","ok"];
       if(st._h!==sh[0]){st._h=sh[0];st.textContent=sh[0];st.className="qcsst "+sh[1];}
@@ -14147,8 +14074,6 @@ G3.openKnob=openKnob;G3.openStation=openStation;G3.slcSet=slcSet;G3.hayout=()=>h
   G3.yieldUI=()=>{try{if(G3.VUI&&G3.VUI.id&&G3.vlvClose&&!POP.on)G3.vlvClose();if(!POP.on){closeKnob();closeStation();}else if(KUI.panel)closeKnob();}catch(_){}};   // (v6.9.2: cards, the outage plan and the pause menu draw under these)
   G3.closeKnobUI=()=>{closeKnob();closeStation();};
 ["spiClose","slcClose"].forEach(id=>$(id).addEventListener("click",()=>setTimeout(kuiSync,0)));
-// the spider valve and the slice are fiddly knobs too: their panels slow the game the same way (and close the others)
-{const o1=openSpider,o2=openSlice;openSpider=function(){closeKnob();closeStation(true);o1();kuiSync();};openSlice=function(){closeKnob();closeStation(true);o2();kuiSync();};}
 
 /* ---- the fiddly knobs view switch (Settings > View) and its chip ---- */
 {const row=$("v2viewrow"),lab=kEl("label","check",`<input id="knobView" type="checkbox"/> Fiddly knobs view`);row.appendChild(lab);
@@ -14298,7 +14223,6 @@ const pfHourLbl=h=>`${pfDayLbl(h)} · ${clockOf(((h%24)+24)%24*60)}`;
 const V_=k=>r=>r[HCI[k]];
 const HSUM=k=>k.reduce?(r=>k.reduce((a,x)=>a+(r[HCI[x]]||0),0)):V_(k);
 const C_={fi:"#e07b39",fo:"#9b7fd6",occ:"#c08a4a",en:"#ffb02e",ch:"#3fc6d6",lab:"#4fd18b",mt:"#ff7a8a",ov:"#a7b4cf",bl:"#7fb2ff",pu:"#c08bff",wh:"#dbe6f6"};
-const UPK={yard:"m.yard",pulper:"m.pulp",stock:"m.pulp",pm:"m.pmrun",winder:"m.wdrun",ship:"m.ship"};
 const PF_TR={
   yard:[{t:"Bale yard inventory",u:"t",k:"line",s:[["Yard",C_.occ,V_("a.yard")]]},{t:"Trucks in",u:"trucks",k:"bar",s:[["Trucks",C_.bl,V_("n.in")]]},
     {t:"OCC price",u:"$/t",k:"line",s:[["OCC",C_.occ,V_("a.occp")]],ev:1},{t:"Inbound haul",u:"$/t",k:"line",s:[["Haul",C_.fi,V_("a.haul")]]},{t:"Unloading",u:"t/h",k:"line",s:[["Unloaded",C_.bl,V_("a.unload")]]}],
@@ -14613,7 +14537,11 @@ function dcsAlarms(a,r,L){const al=(on,txt,hi)=>{if(on)L.push([txt,hi]);};vlvAla
     al(!!S.wdBlocked,"WINDER BLOCKED: CONVEYOR FULL",true);al(S.wd==="hayout","WINDER HAYOUT",true);
     const Dr=S.dry;if(Dr&&S.pm==="run"){al(dryLimited()&&Dr.m>DRY.m0+0.5,"DRYERS AT LIMIT · SHEET WET",true);al(!dryLimited()&&Dr.load>0.95,"DRYER LOAD HI",false);}
     al(!!(Dr&&Dr.trim>0.001),`SPEED TRIMMED ${Dr?Math.round(Dr.trim*100):0}% · DRYING THE SHEET`,!!(Dr&&Dr.wet));al(!!(Dr&&Dr.man!=null),"2ND / 3RD SECTION STEAM ON MANUAL",false);}
-  else if(a==="UTIL"){const Dr=S.dry;al(!!(Dr&&Dr.vent>1),"STEAM VENTING (SHEET BREAK)",false);al(tssNow()>45&&!dcsOn("permit"),"EFFLUENT TSS HI",false);al(!!(Dr&&Dr.steam>DRY.boiler*0.95),"BOILER STEAM HI",!!(Dr&&Dr.hdr<0.97));al(!!(Dr&&Dr.hdr<0.8),"STEAM HEADER LO",!!(Dr&&Dr.hdr<0.7));}}
+  else if(a==="UTIL"){const Dr=S.dry;al(!!(Dr&&Dr.vent>1),"STEAM VENTING (SHEET BREAK)",false);al(tssNow()>45&&!dcsOn("permit"),"EFFLUENT TSS HI",false);al(!!(Dr&&Dr.steam>DRY.boiler*0.95),"BOILER STEAM HI",!!(Dr&&Dr.hdr<0.97));al(!!(Dr&&Dr.hdr<0.8),"STEAM HEADER LO",!!(Dr&&Dr.hdr<0.7));}
+  else if(a==="WATER"){const W=S.wat;   // (v6.7 water screen, 50f: the river intake and the permit show here as well as on UTIL)
+    al(active("icedintake"),"RIVER INTAKE ICED · NO MAKEUP WATER",true);al(active("permit"),"WASTEWATER PERMIT EXCEEDED",true);
+    al(!!(W&&W.short>0),"WHITE WATER CHEST EMPTY · STOCK THICK",true);al(!!(W&&W.short<=0&&W.L<WAT.cap*0.25),"WHITE WATER CHEST LEVEL LO",false);
+    al(!!(W&&W.r.over>50),"WHITE WATER OVERFLOWING TO THE SEWER",false);al(tssNow()>45&&!active("permit"),"EFFLUENT TSS HI",false);}}
 
 /* ---- setpoint, motor and purge rows ---- */
 const DCARD=k=>{const cs=$("cards"),r=cs&&cs.querySelector(`.row[data-key="${k}"]`);return r?{inp:r.querySelector("input"),btn:r.querySelector(".auto")}:null;};
@@ -14646,7 +14574,7 @@ function dcsSetRows(a,cs){const defs=dcsSetDefs(a);
       row.querySelectorAll("[data-dye]").forEach(b=>b.addEventListener("click",()=>{const pc=document.querySelector(`#paperColor button[data-c="${b.dataset.dye}"]`);if(pc)pc.click();dcsSync();}));}
     else{row.innerHTML=`<div class="dcsn"><b>Grade</b><small>set by the market planner from customer orders</small></div><select disabled data-dgrade aria-label="Grade">${Object.keys(GRADES).map(g=>`<option value="${g}">${g} · ${GRADES[g].bw} lb</option>`).join("")}</select>`;}
     cs.appendChild(row);}
-  for(const d of defs){const [k,name,where,mn,mx,st,,,unit,card,field]=d,row=kEl("div","dcsrow dcsx");row.dataset.ds=k;
+  for(const d of defs){const [k,name,where,mn,mx,st,,,,card]=d,row=kEl("div","dcsrow dcsx");row.dataset.ds=k;
     row.innerHTML=`<div class="dcsn"><b>${name}</b><small>${where}</small></div><label class="spis"><input type="range" min="${mn}" max="${mx}" step="${st}" data-dsv aria-label="${name}"/></label><div class="kval"><b data-dsb></b></div>${card||d[11]?`<button type="button" class="reroll kstd" data-dsa>AUTO</button>`:""}`;
     row.querySelector("[data-dsv]").addEventListener("input",e=>{d[7](+e.target.value);dcsSync();});
     if(card)row.querySelector("[data-dsa]").addEventListener("click",()=>{dcsCardAuto(card);dcsSync();});
@@ -15067,7 +14995,7 @@ function recHtml(Q){const r=Q.rec,N=recN(r),Y=recPiles(),R=S.rates||{},sq=recSeq
       <td class="recst"><button type="button" data-rec="${q}-" aria-label="One fewer ${b.n}"${r[q]<=1?" disabled":""}>−</button><b>${r[q]}</b><button type="button" data-rec="${q}+" aria-label="One more ${b.n}"${r[q]>=RECMAX?" disabled":""}>+</button></td></tr>`;}).join("");
   const cost=BTK.reduce((a,q)=>a+r[q]*btPrice(q),0)/N,rj=1-recY(r),rate=recRate(),slow=rate<P.pulperMax-0.05;
   const chips=sq.map((q,i)=>`<i class="recb rec${q}${i===cur?" on":""}" title="${BT[q].n}">${BT[q].s}</i>`).join("");
-  const mw=Y.M<=0.5&&r.M>0,out=BTK.filter(q=>Y[q]<=0.5).map(q=>BT[q].n);
+  const out=BTK.filter(q=>Y[q]<=0.5).map(q=>BT[q].n);
   return `<p class="dcsfield">The pulper is fed in this order, bale by bale, and the trucks bring whichever kind is short. A bales cost more and pulp clean; Mixed Waste is cheap but a quarter of it goes to landfill.</p>
     <table class="rect"><thead><tr><th>Bale</th><th>Price</th><th>Rejects</th><th>Yard</th><th>Per cycle</th></tr></thead><tbody>${rows}</tbody></table>
     <div class="recseq" aria-label="Feed sequence">${chips}</div>
@@ -15096,11 +15024,6 @@ TAGMAP.evap2="evap";TAGMAP.twl=null;TAGMAP.ice=null;TAGMAP.perm=null;TAGMAP.wcf=
 PGX.WATER=[["intake",()=>stI("icedintake")],["tower",()=>active("icedintake")?"warn":"ok","tower"],["pumpBox",()=>"ok"],["headbox",()=>S.pm==="run"?"ok":"off"],["dryers",()=>S.pm==="run"?"ok":"off","d4"],
   ["pulper",()=>S.M&&S.M.pulperDown?"off":"ok","pulp"],["tank",()=>S.wat&&S.wat.short>0?"trip":S.wat&&S.wat.L<WAT.cap*0.25?"warn":"ok","wwc"],["clarifier",()=>or(stI("permit"),tssNow()>45?"warn":"ok")],
   ["landfill",()=>"ok"],["outfall",()=>"ok"]];
-// the water screen's alarms (the river intake and the permit show here as well as on UTIL)
-{const base=dcsAlarms;dcsAlarms=function(a,r,L){base(a,r,L);if(a!=="WATER")return;const al=(on,t,hi)=>{if(on)L.push([t,hi]);},W=S.wat;
-  al(active("icedintake"),"RIVER INTAKE ICED · NO MAKEUP WATER",true);al(active("permit"),"WASTEWATER PERMIT EXCEEDED",true);
-  al(!!(W&&W.short>0),"WHITE WATER CHEST EMPTY · STOCK THICK",true);al(!!(W&&W.short<=0&&W.L<WAT.cap*0.25),"WHITE WATER CHEST LEVEL LO",false);
-  al(!!(W&&W.r.over>50),"WHITE WATER OVERFLOWING TO THE SEWER",false);al(tssNow()>45&&!active("permit"),"EFFLUENT TSS HI",false);};}
 function waterRefresh(){const e=$("wBal");if(!e||!S.wat)return;const T=S.wat.tot,mg=v=>fmtGal(GAL(v||0)),paper=T.paper||0;
   const inn=[["Fresh water",T.fresh],["Water in the bales",T.bale],["Water in repulped beater",T.rep]],out=[["Up the dryer stack",T.evap],["In the paper",T.prod],["With the rejects",T.rej],["With the clarifier sludge",T.sludge],["Treated outfall",T.out]];
   const si=inn.reduce((a,x)=>a+(x[1]||0),0),so=out.reduce((a,x)=>a+(x[1]||0),0);
@@ -15766,7 +15689,7 @@ function vBumpRes(d){const box=$("vBr");if(!box)return;const W=S.vlv,r=W&&W.btRe
   $("vUse").addEventListener("click",()=>{vlvSetTune(d.id,{kc:t.kc,ti:t.ti,td:t.td});VUI.tab="tune";vlvBuild();});}
 
 /* -- Valve -- */
-function vpValve(p,d){const id=d.id,L=()=>S.vlv&&S.vlv.lp[id],vv=()=>(L()&&L().v)||d.valve,ed=!!S.free;
+function vpValve(p,d){const id=d.id,ed=!!S.free;
   const row=(k,lab,u,min,max,step,note)=>`<div class="vtn"><span class="vk">${lab} ${vgl(k)}</span>${ed?`<input type="range" min="${min}" max="${max}" step="${step}" data-vv="${k}" aria-label="${lab}"/>`:"<span></span>"}<span class="vnum1"><b data-vvv="${k}"></b><small>${u}</small></span></div><p class="vnote vsm">${note}</p>`;
   p.innerHTML=`<div class="vchar"><svg viewBox="0 0 220 150" id="vChr" role="img" aria-label="Valve characteristic"></svg><div><div class="vrow"><span class="vk">Trim ${vgl("cv")}</span>${ed?`<span class="seg" role="group" aria-label="Trim"><button type="button" data-ch="lin">Linear</button><button type="button" data-ch="eq">Equal-%</button></span>`:`<b id="vChN"></b>`}</div>
       <p class="vnote vsm">Medium: ${d.medium}. Action: ${d.act>0?"reverse":"direct"} ${vgl("act")} (${d.act>0?"the PV rises as it opens":"the PV falls as it opens"}).</p></div></div>
@@ -15828,7 +15751,7 @@ function vlvRefresh(force){const o=$("vlvOv");if(!o||o.hidden||!VUI.id)return;co
     const pv=$("vPV"),sp=$("vSP"),op=$("vOP");pv.textContent=vlvFmtPV(d,v.pv);
     if(actEl(sp)!==sp)sp.value=vfx(v.sp,d.pv.dp);sp.disabled=v.m==="CAS";$("vSPn").textContent=v.m==="CAS"?`from ${d.master} (CAS)`:d.id==="FV-201"?`grade ${C.grade} target ${bwStd().toFixed(2)} lb`:`${vF(d.spLim)[0]}–${vF(d.spLim)[1]} ${d.pv.u}`;
     if(actEl(op)!==op)op.value=vfx(v.op,1);op.readOnly=v.m!=="MAN";$("vOPn").textContent=d.ctl?`→ ${Math.round(v.op*d.out.k)} kPa 3rd section`:v.m==="MAN"?"you set this":"the controller sets this";
-    if(!d.ctl){const L=W&&W.lp[id],tg=L?L.tgt:v.pos;$("vBarC").style.left=clamp(v.op,0,100)+"%";$("vBarA").style.width=clamp(v.pos,0,100)+"%";
+    if(!d.ctl){$("vBarC").style.left=clamp(v.op,0,100)+"%";$("vBarA").style.width=clamp(v.pos,0,100)+"%";
       $("vPos").textContent=v.pos<0.5?"SHUT":v.pos>99.5?"WIDE OPEN":`${vfx(v.pos,1)}% open`;}
     const n=$("vNote"),ff=d.ff&&W&&W.B?W.B.ff:null;
     const nt=v.m==="IMAN"?"PV-302 and PV-303 aren't on CAS: this controller is tracking them (IMAN).":d.id==="FV-201"?`Speed feed-forward ${vgl("ff")}: ${v.t&&ff!=null?(ff>=0?"+":"")+ff.toFixed(1)+"%":"built in"}. The scanner reads ${WE.dead} min late.`:d.cas&&v.m!=="CAS"?`Off CAS: QC-300 can't hold the moisture until this is back on CAS.`:"";
@@ -16386,10 +16309,6 @@ UI_TICKS.push(()=>{const R=S&&S.rel,done=!S||S.over||(S.season&&S.season.done);i
         <div class="rcbar"><div class="rcbars">${bar}</div><div class="rprice" style="left:${(price/sc*100).toFixed(2)}%"><span>Price ${money(price)}</span></div></div>
         <div class="rmargin ${m>=0?"pos":"neg"}">Margin ${money(m)}/t · ${pc(price>0?m/price:0)}</div>
         <div class="rleg">${rows.map(r=>`<div><i style="background:${r[2]}"></i><span>${r[0]}</span><b class="mono">${money(r[1]/p.prod)}</b></div>`).join("")}</div>`;}
-    function upBlock(p){const top=p.dn.slice(0,3).map(([k,m])=>`${k} (${hrs(m)})`).join(" · ");
-      return `<div class="rhd"><h3>Uptime</h3><small>this period · outages left out</small></div><div class="rup">${RC_SEC.map(([k,n])=>{const v=p.rel[k]||0,w=v<0.9;
-        return `<span${w?' class="w"':""}>${n}</span><div><i style="width:${(v*100).toFixed(1)}%;background:${v<0.9?"var(--warn)":"var(--ok)"}"></i></div><b class="mono${w?" w":""}">${pc(v)}</b>`;}).join("")}</div>
-        <p class="rnote">${top?"Biggest losses: "+top+" · ":""}${p.breaks} sheet break${p.breaks===1?"":"s"} · ${p.hay} hayout${p.hay===1?"":"s"}</p>`;}
     function daysBlock(d){const D=(d.R.days||[]).filter(x=>x.d>3);if(!D.length)return "";
       const sv=!!S.season.surv,d0=sv?Math.max(0,D[D.length-1].d-30):0;   // v4.3 survival: the last 30 days, with a line at each outage
       const X=v=>22+(v-d0-1)*(326/29),Y=L=>20+(4-GP[L])*28,pts=D.map(x=>`${X(x.d).toFixed(1)},${Y(x.o)}`).join(" ");
@@ -16559,7 +16478,7 @@ function camPullOn(){try{return localStorage.getItem("paper-mill-campull")!=="of
     setTimeout(()=>{if(u===location.pathname+location.search+location.hash)location.reload();else location.href=u;},250);});
   // ---- settings ----
   const tog=(id,label,sub,on)=>`<label class="trow"><span><b>${label}</b>${sub?`<small>${sub}</small>`:""}</span><input type="checkbox" class="tsw" id="${id}"${on?" checked":""}/></label>`;
-  const gfxCap=g=>g[0].toUpperCase()+g.slice(1),GFX_TIP={auto:"Picked from your device",bare:"Bare bones: flat colors, no shadows, no scenery or ambient life, 30 FPS",low:"1024 shadows, 10 Hz, lighter scenery",medium:"1024 shadows, 15 Hz",high:"2048 softer shadows, 24 Hz, full scenery",ultra:"4096 softer shadows, every frame, dense scenery with far shadows"};
+  const gfxCap=g=>g[0].toUpperCase()+g.slice(1),GFX_TIP={auto:"Picked from your device",low:"1024 shadows, 10 Hz, lighter scenery",medium:"1024 shadows, 15 Hz",high:"2048 softer shadows, 24 Hz, full scenery",ultra:"4096 softer shadows, every frame, dense scenery with far shadows"};
   function paintSet(){let vol=70;try{vol=+(localStorage.getItem("paper-mill-vol")||70);}catch(e){}
     const tut=(()=>{try{return localStorage.getItem("paper-mill-tutorial")!=="off";}catch(e){return true;}})(),sh=$("viewShadows");
     $t("tSetBody").innerHTML=`<div class="tsub">Sound</div>${tog("tsSound","Sound","music and mill sounds",soundPref==="on")}
@@ -17019,8 +16938,8 @@ UI_TICKS.push(()=>{if(MANUI.open)manDraw();});
 // frame rate is a player choice (Controls): Battery saver = 30 fps, Smooth = 60 fps (v15 default: a 120 Hz screen no longer
 // draws twice as many frames), Max = the display's rate; remembered. (true/false still mean Max/saver for the test tools)
 const FPS_CAPS={saver:30,smooth:60,max:0};let FPS_MODE="smooth";try{const v=localStorage.getItem("paper-mill-fps");if(FPS_CAPS[v]!==undefined)FPS_MODE=v;}catch(e){}
-let FRAME_CAP=FPS_CAPS[FPS_MODE];if(G3.bare&&!(FRAME_CAP>0&&FRAME_CAP<=30))FRAME_CAP=30;G3.cap=FRAME_CAP;   // (v5.7.3: bare runs at 30 FPS at most)
-function setFpsMode(m){if(m===true)m="max";else if(m===false)m="saver";if(FPS_CAPS[m]===undefined)return;FPS_MODE=m;FRAME_CAP=FPS_CAPS[m];if(G3.bare&&!(FRAME_CAP>0&&FRAME_CAP<=30))FRAME_CAP=30;G3.cap=FRAME_CAP;try{localStorage.setItem("paper-mill-fps",m);}catch(e){}
+let FRAME_CAP=FPS_CAPS[FPS_MODE];G3.cap=FRAME_CAP;
+function setFpsMode(m){if(m===true)m="max";else if(m===false)m="saver";if(FPS_CAPS[m]===undefined)return;FPS_MODE=m;FRAME_CAP=FPS_CAPS[m];G3.cap=FRAME_CAP;try{localStorage.setItem("paper-mill-fps",m);}catch(e){}
   document.querySelectorAll("#fpsSeg button").forEach(b=>b.setAttribute("aria-pressed",String(b.dataset.fps===m)));}
 let last=performance.now(),uiAcc=0,uiN=0,lastPaint=0;
 const WACC={t:0,last:0};let STOPMO=false;try{STOPMO=localStorage.getItem("paper-mill-stopmo")==="on";}catch(e){}   // (v6.1 t4: off by default; it read as stutter)
@@ -17368,7 +17287,7 @@ requestAnimationFrame(frame);
     setField("Frame rate",seg);}
   {const w=document.createElement("div");w.innerHTML=themeSegHTML("seg");const seg=w.firstChild;seg.id="themeSeg";setField("Appearance",seg);}   // (v5.3 dark mode, 00b)
   if(G3.GFX){const seg=document.createElement("div");seg.className="seg";seg.id="gfxSeg";seg.setAttribute("role","group");seg.setAttribute("aria-label","Graphics");const cap=s=>s[0].toUpperCase()+s.slice(1);
-    seg.innerHTML=["auto","low","medium","high","ultra"].map(g=>`<button data-g="${g}" aria-pressed="${G3.GFX.pick===g}" title="${g==="auto"?"Picked from your device: "+cap(G3.GFX.auto):{bare:"Bare bones: flat colors, no shadows, no scenery or ambient life, 30 FPS (needs a reload)",low:"1024 shadows, 10 Hz, lighter scenery",medium:"1024 shadows, 15 Hz",high:"2048 softer shadows, 24 Hz, full scenery",ultra:"4096 softer shadows, every frame, dense scenery with far shadows"}[g]}">${g==="auto"?`Auto <small class="gtier">${cap(G3.GFX.auto)}</small>`:cap(g)}</button>`).join("");
+    seg.innerHTML=["auto","low","medium","high","ultra"].map(g=>`<button data-g="${g}" aria-pressed="${G3.GFX.pick===g}" title="${g==="auto"?"Picked from your device: "+cap(G3.GFX.auto):{low:"1024 shadows, 10 Hz, lighter scenery",medium:"1024 shadows, 15 Hz",high:"2048 softer shadows, 24 Hz, full scenery",ultra:"4096 softer shadows, every frame, dense scenery with far shadows"}[g]}">${g==="auto"?`Auto <small class="gtier">${cap(G3.GFX.auto)}</small>`:cap(g)}</button>`).join("");
     seg.querySelectorAll("button").forEach(x=>x.addEventListener("click",()=>G3.setGfx(x.dataset.g)));
     {const rb=document.createElement("button");rb.id="gfxReload";rb.hidden=true;rb.textContent="Reload to apply all";rb.title="Lighting model, round-shape detail and scenery density change on reload";rb.addEventListener("click",()=>location.reload());setField("Graphics",seg).appendChild(rb);}}
   {const l=document.createElement("label");l.className="check";l.title="While the view is still, the mill moves at 15 frames a second, like stop-motion; panning and zooming stay smooth";
