@@ -8262,7 +8262,7 @@ function no3D(){G3.ok=false;$("no3d").hidden=false;$("no3d-retry").onclick=()=>l
     glc.addEventListener("pointerup",e=>{if(!downAt)return;const m=Math.hypot(e.clientX-downAt[0],e.clientY-downAt[1]),t=performance.now()-downAt[2];downAt=null;if(m<6&&t<500){if(G3.tellTap&&G3.tellTap(e))return;   /* v5.7: a tell on a Round comes first */const li=G3.lblAt(e);if(li){if(G3.lblTap&&G3.lblTap(li))return;G3.flyTo(li);return;}const h=hit(e);if(h&&h.k)G3.knobTap(h);else if(h==="spider")openSpider();else if(h==="slice")openSlice();else if(h==="brian")openBrian();else if(G3.infoTap)G3.infoTap(e);}});   // (v6.10: click for info, 38d)
     glc.addEventListener("pointermove",e=>{const n=performance.now();if(n-hoverT<120||ptrs.size)return;hoverT=n;glc.style.cursor=G3.lblAt(e)||hit(e)?"pointer":"";});}
   let wAcc=0;glc.addEventListener("wheel",e=>{e.preventDefault();goal=null;if(e.shiftKey||Math.abs(e.deltaX)>Math.abs(e.deltaY)&&!e.ctrlKey)panBy(-e.deltaX||-e.deltaY,0);else if(FOL.on)FOL.r=clamp(FOL.r*Math.exp(e.deltaY*(e.ctrlKey?0.01:0.001)),10,120);else{wAcc+=e.deltaY*(e.ctrlKey?10:1);if(Math.abs(wAcc)>=60){cam.r=rNext(cam.r,wAcc>0?-1:1);wAcc=0;}}},{passive:false});   // (v6.1: one zoom step per wheel notch)
-  // keyboard: arrows/WASD move, Q/E rotate, +/- zoom
+  // keyboard: arrows/WASD move, +/- zoom
   glc.addEventListener("keydown",e=>{const k=e.key.toLowerCase(),st=24;let used=true;
     if(k==="arrowleft"||k==="a")panBy(st,0);else if(k==="arrowright"||k==="d")panBy(-st,0);else if(k==="arrowup"||k==="w")panBy(0,st);else if(k==="arrowdown"||k==="s")panBy(0,-st);
     else if(k==="+"||k==="=")cam.r=rNext(cam.r,1);else if(k==="-")cam.r=rNext(cam.r,-1);else used=false;   // (v6.1: no turning; zoom by whole steps)
