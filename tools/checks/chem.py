@@ -24,7 +24,7 @@ RUN = """(a)=>{const P=__PM,[name,set,mins,stop]=a;P.G3.save.restore(JSON.parse(
   trim:m?+(trim/m*100).toFixed(2):null,cs:m?+(cs/m).toFixed(2):null,inc,modes:S.chem?[S.chem.ds.m,S.chem.pol.m]:null,traced:logs.filter(t=>t.includes("traced")||t.includes("investigated"))};}"""
 # name, [(chemical, kg/t (x the paper rate as a fixed MANUAL pump) | 'auto' | 'manual')], minutes, the machine held stopped
 SC = [("control", [], 720, False), ("auto toggled", [("ds", "manual"), ("ds", "auto"), ("pol", "manual"), ("pol", "auto")], 720, False),
-      ("manual at standard", [("ds", 6), ("pol", 0.3)], 720, False), ("starch 8", [("ds", 8)], 720, False), ("starch ratio 8 on AUTO", [("ds", "r8")], 720, False), ("polymer ratio 0.1 on AUTO", [("pol", "r0.1")], 720, False), ("starch 15", [("ds", 15)], 720, False),
+      ("manual at standard", [("ds", 6), ("pol", 0.3)], 720, False), ("starch 8", [("ds", 8)], 720, False), ("starch ratio 8 on AUTO", [("ds", "r8")], 720, False), ("polymer ratio 0.04 on AUTO", [("pol", "r0.04")], 720, False), ("starch 15", [("ds", 15)], 720, False),
       ("no starch", [("ds", 0)], 720, False), ("polymer 0.5", [("pol", 0.5)], 720, False), ("polymer 0.8", [("pol", 0.8)], 720, False),
       ("no polymer", [("pol", 0)], 720, False), ("stopped, auto", [], 240, True), ("stopped, manual pumps", [("ds", "manual"), ("pol", "manual")], 240, True)]
 
@@ -48,12 +48,13 @@ def scenarios(pw):
         for t in r["traced"]: C.note("  ·", t[:140])
     c = R["control"]
     ok("untouched: no chemical state", not c["has0"] and not c["has"])
+    ok("a normal run is in permit (effluent TSS under 50 mg/L)", c["tss"] < 40, c["tss"])
     ok("AUTO is free: switching to MANUAL and back changes nothing", abs(R["auto toggled"]["cash"] - c["cash"]) <= 2 and R["auto toggled"]["prod"] == c["prod"], f"{R['auto toggled']['cash']} vs {c['cash']}")
     ok("MANUAL at the standard dose costs about the same", abs(R["manual at standard"]["cash"] - c["cash"]) < 200, f"{R['manual at standard']['cash']} vs {c['cash']}")
     r8 = R["starch ratio 8 on AUTO"]
     ok("AUTO ratio 8 kg/t: trims lighter and pays, still on AUTO", r8["trim"] < c["trim"] - 1 and r8["cash"] > c["cash"] and r8["modes"][0] == "auto", json.dumps([r8["trim"], r8["cash"], r8["modes"]]))
-    r01 = R["polymer ratio 0.1 on AUTO"]
-    ok("AUTO polymer ratio 0.1: permit breached, ratio traced back to the standard", "permit" in r01["inc"] and any("AUTO at 0.1" in t for t in r01["traced"]), json.dumps([r01["inc"], r01["traced"]])[:220])
+    r01 = R["polymer ratio 0.04 on AUTO"]
+    ok("AUTO polymer ratio 0.04: permit breached, ratio traced back to the standard", "permit" in r01["inc"] and any("AUTO at 0.04" in t for t in r01["traced"]), json.dumps([r01["inc"], r01["traced"]])[:220])
     s8, s15 = R["starch 8"], R["starch 15"]
     ok("more starch: AUTO-LW trims lighter, a drier couch, and it pays", s8["trim"] < c["trim"] - 1 and s8["cs"] > c["cs"] + 0.1 and s8["cash"] > c["cash"], json.dumps([s8["trim"], s8["cs"], s8["cash"]]))
     ok("starch 15 trims lighter still", s15["trim"] < s8["trim"] - 1, json.dumps([s15["trim"], s8["trim"]]))

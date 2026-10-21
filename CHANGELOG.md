@@ -1,5 +1,9 @@
 # Changelog
 
+## v6.11.1-t4 (2026-10-21): effluent in permit (test build, test/v6.11.1-hood)
+- **The clarifier catches 99.71% of the solids** (was 98.8%), so a normal run's effluent is about 25 mg/L TSS (p99 ~35) under the 50 mg/L permit; before, it sat around 120 and the TSS HI alarm stayed lit.
+- **The polymer's permit breach follows the reading:** TSS held over 50 mg/L for an hour while the polymer is under its standard (about a third of the standard dose or less) fines the mill; the permit-risk warning shows under 0.15 kg/t.
+
 ## v6.11.1-t3 (2026-10-21): QA round (test build, test/v6.11.1-hood)
 50 season and 50 survival bot playthroughs (no page errors, every ledger reconciled) and same-seed balance runs against main and v6.10.2 (`claude/qa-v6111.md`).
 - **Economy: every upgrade 20% cheaper** (`UP_COSTK`, 03b `upCost`). Since v6.11.0 (the deckle at +1.5% tons a level, trim) smart buying added only ~$0.2M a season over rounds alone; at 80% it adds ~$0.95M again (rounds + shop +$2.39M → +$3.14M a season; hands-off and rounds unchanged; survival active 45.0 → 47.6 days).

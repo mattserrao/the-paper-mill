@@ -11,15 +11,15 @@
      dewater), so less steam. Over 10 kg/t the spare starch feeds deposits: more breaks and slime.
    - Polymer: first pass retention (85% at standard; the fines and filler the wire loses go to the white water and on to
      the sewer): the machine's fiber loss scales with g(p) = 0.4 + 0.6 e^(-p/0.2), so cutting it loses fiber (fewer tons
-     a ton of fiber and a higher TSS; held under about half the standard dose for an hour, the outfall breaks the 50 mg/L
-     permit and the state fines the mill), and over 0.5 kg/t it over-flocculates: (dose - 0.5) of the reel goes to the
+     a ton of fiber and a higher TSS: a normal run is ~25 mg/L, and held over the 50 mg/L permit for an hour while the
+     polymer is cut, the state fines the mill), and over 0.5 kg/t it over-flocculates: (dose - 0.5) of the reel goes to the
      beater for poor formation (30% at 0.8 kg/t).
    The crew traces trouble back like a fiddly knob's: flocs or deposits for a few hours, or a permit breach, and the
    process engineer puts that chemical back on AUTO. Untouched (S.chem missing, or both on AUTO and settled) every
    factor here is exactly 1 and nothing is charged or drawn: seasons replay identically. Zen: no chemicals. */
 const CHM={
   ds:{id:"ds",name:"Dry strength (starch)",short:"DRY STR",std:6,max:15,step:1,rstep:0.5,fmax:600,price:0.55,tau:15,where:"cationic starch to the machine chest"},
-  pol:{id:"pol",name:"Retention polymer",short:"POLYMER",std:0.3,max:0.8,step:0.1,rstep:0.02,risk:0.2,fmax:32,price:3.5,tau:3,where:"retention aid at the fan pump"}};
+  pol:{id:"pol",name:"Retention polymer",short:"POLYMER",std:0.3,max:0.8,step:0.1,rstep:0.02,risk:0.15,fmax:32,price:3.5,tau:3,where:"retention aid at the fan pump"}};
 const CHEM_IDS=["ds","pol"];
 const CHEM_STD$=CHM.ds.std*CHM.ds.price+CHM.pol.std*CHM.pol.price;   // ($4.35/t of the $25/t)
 const chF=d=>0.15*(1-Math.exp(-d/6)),chG=p=>0.4+0.6*Math.exp(-p/0.2);
@@ -76,8 +76,9 @@ function chemTick(dt,prod){const X=S.chem;if(!X||S.zen)return;const h=dt/60,run=
   tr("dep",chemDep()>0,360,"ds","Deposits on the felts and dryer cans.","The process engineer");
   tr("weak",run&&chemE("ds")<CHM.ds.std-0.5&&QNOW.rct>0&&QNOW.rct<rctSpec(),60,"ds","QCS: ring crush under spec.","The process engineer");
   // ---- held over the permit by the fiber the wire is losing: the state fines the mill ----
-  // (the polymer under about half its standard: the wire's fiber loss up 35% or more; v6.11.1 the clarifier can't keep the outfall in permit)
-  const low=chemLoss()>=1.35;
+  // (v6.11.1 t4: the outfall's TSS over the 50 mg/L permit while the polymer is under its standard: a normal run sits at ~25
+  // mg/L, so it takes about a third of the standard dose or less, i.e. the wire losing 50% more fines, to hold it over)
+  const low=chemE("pol")<CHM.pol.std-1e-6&&tssWater()>50;
   if(low&&!active("permit")){H.tss=(H.tss||0)+dt/60;if(H.tss>=1){H.tss=0;
     if(knobTrig("permit",[],"Effluent over the permit! The wire is losing fines without the retention polymer and the clarifier can't keep up."))X.permit=S.inc[S.inc.length-1].real;}}
   else if(!low)H.tss=Math.max(0,(H.tss||0)-dt/120);
