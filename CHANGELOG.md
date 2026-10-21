@@ -1,5 +1,11 @@
 # Changelog
 
+## v6.11.0 (2026-10-21): The Winder, Trim and CD Update
+Release of v6.11.0-t1 and v6.11.0-t2 (below), merged from test/v6.11-blender.
+
+## v6.11.0-t2 (2026-10-21): economy rebalance (test build)
+- **Prices +2.5%** on every grade, to make up for the trim (v6.11.0-t1): 24 $642 → $658, 28 $662 → $679, 31 $680 → $697, 34Super $741 → $760 a ton.
+
 ## v6.11.0-t1 (2026-10-21): Blender redesign, the winder, trim and CD quality (test build, test/v6.11-blender)
 **Art (designed and reviewed in Blender, built in the game's own code; kits in `tools/blender/`):**
 - Headbox, press section framework and supports, a baked dryer hood cutaway, reel and winder stands, stock prep pipes coloured by what they carry, refiner details, folded-card building walls, the MCC interior, baked power house facades and roof plant, the clarifier and aeration basin, the water tower; workers (boots, gloves, belt, bigger hard hat), fork-trucks (LPG bottle, drive wheels, mast) and trucks (skirts, conspicuity tape, cab markers).
