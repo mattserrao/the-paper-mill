@@ -384,7 +384,7 @@ const PENDH={
  "intern":({w})=>{if(w){S.perk.sp["24"]=(S.perk.sp["24"]||0)+60;cardBanner("The intern's speed profile works: grade 24 runs 60 fpm faster.",true);}
       else{addFx({id:"intern",left:120,mods:{pmDown:"intern tripped the machine"}});cardBanner("The intern tripped the machine: 2 hours down.",false);}},
  "traps":({w})=>{if(w){S.perk.energy+=6;cardBanner("Steam trap survey paid off: energy $6/t cheaper.",true);}else cardBanner("Steam trap survey found nothing worth fixing.",false);},
- "wdrive":({w})=>{if(w){S.perk.winder=15;applyUpgrades();cardBanner("Used winder drive installed: +15 t/h winder capacity.",true);}
+ "wdrive":({w})=>{if(w){S.perk.winder=15;applyUpgrades();rlyRenew("wind","drv");   /* (v6.10 t4: the used drive replaces the winder's, at 85% health) */cardBanner("Used winder drive installed: +15 t/h winder capacity.",true);}
       else{addFx({id:"wdrive",left:180,mods:{winderDown:1}});cardBanner("The used winder drive was the wrong spec: winder down 3 hours.",false);}},
  "ot":()=>cardBanner("Weekend overtime is over: crews back to normal shifts.",true),
  "feltv":()=>{trigger("felt");cardBanner("The trial felt blew: crew pulling a new one.",false);},
@@ -406,7 +406,7 @@ const PENDH={
       else{trigger("balefire");cardBanner("Cleanup crew found a smoldering bale!",false);}},
  "film":({w})=>{if(w){S.perk.film=1;for(const g of Object.keys(ECON.price))S.perk.price[g]=(S.perk.price[g]||0)+5;cardBanner("New wrap film cut damage claims: +$5/t on every grade.",true);}
       else{addFx({id:"film",left:240,mods:{winderDown:1}});cardBanner("The new film jammed the wrapper: winder down 4 hours.",false);}},
- "rotor":({w})=>{addFx({id:"rotorok",left:14*1440,evf:{ragger:0.4,lcplug:0.4,hdblow:0.4}});cardBanner(w?"Pulper rotor rebuilt on time: plugs 60% rarer for 14 days.":"Pulper rebuild overran to 8 hours, but it's done: plugs 60% rarer for 14 days.",w);},
+ "rotor":({w})=>{addFx({id:"rotorok",left:14*1440,evf:{ragger:0.4,lcplug:0.4,hdblow:0.4}});rlyRenew("pulp","vib");   /* (v6.10 t4: a rebuilt rotor has new bearings) */cardBanner(w?"Pulper rotor rebuilt on time: plugs 60% rarer for 14 days.":"Pulper rebuild overran to 8 hours, but it's done: plugs 60% rarer for 14 days.",w);},
  "basket":()=>{trigger("fscreen");cardBanner("The trial basket cracked: fine screen down.",false);},
  "vip":({w})=>{if(w){S.perk.vip=1;S.perk.price["24"]=(S.perk.price["24"]||0)+10;cardBanner("The VIP tour went great: +$10/t on grade 24.",true);}
       else{addFx({id:"vipx",left:5*1440,price:{"24":-8}});cardBanner("The VIPs watched a sheet break: −⁠$8/t on grade 24 for 5 days.",false);}},

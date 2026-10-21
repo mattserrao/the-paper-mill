@@ -1483,7 +1483,7 @@ body.pmpop .popmain[data-v="dcs"] #dcsOv .dcs{max-width:1180px;margin:0 auto}
 .rhist{display:flex;flex-direction:column;gap:1px;font-size:11.5px;font-variant-numeric:tabular-nums}.rhist div{display:flex;justify-content:space-between;gap:8px}.rhist span{color:#8ea4c4}.rhist em{font-style:normal}
 .rhist em.ok{color:#9fe8bf}.rhist em.warn{color:#ffcf7a}.rhist em.bad{color:#ff8b7f}
 .ract{display:flex;flex-wrap:wrap;gap:6px}.dcs .kstd[aria-pressed="true"]{border-color:#4fd18b;color:#9fe8bf}
-.rfix{background:#ff6b5e;color:#0f1b2d;border:0;border-radius:8px;padding:6px 10px;font-weight:800;text-align:left;display:flex;flex-direction:column}.rfix small{font-weight:600;font-size:11px}.rfix:disabled{opacity:.5}
+.rfix{background:#ff6b5e;color:#0f1b2d;border:0;border-radius:8px;padding:6px 10px;font-weight:800;text-align:left;display:flex;flex-direction:column}.rfix small{font-weight:700;font-size:11.5px;color:#0f1b2d}.rfix:disabled{opacity:.5}
 .rchg{display:grid;grid-template-columns:repeat(3,1fr);gap:6px}.rchg button{background:#22324f;color:#dbe6f6;border:1px solid #33476a;border-radius:8px;padding:6px 8px;text-align:left}
 .rchg button small{display:block;color:#8ea4c4;font-size:11px}.rchg button[aria-pressed="true"]{border-color:#ffb02e;background:#3a2f17}.rchg button[aria-pressed="true"] b::before{content:"✓ "}
 .drvw{display:flex;flex-direction:column;gap:8px}.drvw table td small{display:block;color:#8ea4c4;font-size:11px}
@@ -1503,3 +1503,9 @@ body.pmpop .popmain[data-v="dcs"] #dcsOv .dcs{max-width:1180px;margin:0 auto}
 .infopop small{color:var(--muted);font-size:12px}.infopop p{margin:2px 0 0}.infopop .ipc{color:var(--warn);font-size:12px}
 .infopop .iprel{margin-top:4px;padding:8px;border-radius:8px;background:#16233a;display:flex;flex-wrap:wrap;gap:6px 10px;align-items:center}.infopop .iprel>b{width:100%;color:#dbe6f6;font-size:12px}
 .infopop .iprel .linkb{color:#7fb2ff;font-size:12px}
+
+/* v6.10 t4: trended drive loads are marked; outage changeouts are independent check toggles */
+.dbar.on{border-color:#4fd18b;box-shadow:0 0 0 1px #4fd18b inset}.dbar.on::after{content:"● trend";position:absolute;right:6px;top:3px;font:700 10px ui-monospace,Menlo,monospace;color:#4fd18b}
+.dst.warn{color:#ffcf7a}
+.rtog{display:flex;flex-wrap:wrap;gap:6px}.rtg{display:inline-flex;align-items:center;gap:6px;background:#22324f;color:#dbe6f6;border:1px solid #33476a;border-radius:6px;padding:5px 9px;font-size:12px}
+.rtg i{width:14px;height:14px;border:2px solid #8ea4c4;border-radius:3px;flex:none}.rtg[aria-pressed="true"]{border-color:#ffb02e;background:#3a2f17}.rtg[aria-pressed="true"] i{background:#ffb02e;border-color:#ffb02e;box-shadow:inset 0 0 0 2px #3a2f17}

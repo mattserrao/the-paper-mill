@@ -1,6 +1,20 @@
 # Changelog
 
 
+## v6.10.0-t4 (2026-10-20): QA review decisions (test build)
+Balance and polish the user picked from the t3 QA review (claude/qa-v610-t3.md).
+- **Balance:** each vibration round checks one machine (was two), so a full crew no longer sees everything every shift.
+- **Balance:** a planned repair takes the machine down 20–40 minutes while the crew works (new jobs: planned bearing change for maintenance, planned motor swap for the electrical tech). An outage changeout is now the no-downtime way. A motor in ADX alarm can be swapped early.
+- **Balance:** repeated drive resets get worse: each reset in the same day takes longer (5, 10, 15 min…), wears the drive more and is likelier to repeat; below 20% health a reset may not hold at all, and the card then offers only Investigate.
+- Rounds stopped by a planned outage aren't counted as skipped; repairs show as "Repaired" in the reading history.
+- Drive health (and patched/reset notes) on the Reliability detail and a Health column on Drives; rectifier health per lineup; brownout and loss-of-supply alarms on Drives.
+- A drive fault waiting on your call says "awaiting decision" instead of a frozen countdown; Investigate's cause follows the data (a hot or worn drive, a weak rectifier, a drive over its rating).
+- After an upgrade, a warning if the refiner drives now run near their rating; the relationship map's refiner-load note is corrected (energy × fiber rate).
+- Click for info: Refiner B and the 2nd press; the MCC can be tapped anywhere on its cabinets, wins over the electrician at a distance, and links to Drives; an MCC chip in Go to; emptied OCC trucks and customer truck grades read correctly; 3D labels stay on screen and clear of the Go to chips.
+- Drives load bars show which are trended; outage-plan changeouts are separate check toggles; exact prices on reliability buttons; DCS screens open at the top.
+- A tutorial card on rounds and the MCC; the daily card is the "Daily area round" with its "Area Trend Report" (not to be confused with shift vibration rounds); IGBT and Planned repair in the glossary; clearer drive card wording; US spelling throughout.
+- Outage complete says "breakdowns … the usual rate" instead of "±0%"; the outage start shows the exact end time; the pulper rotor rebuild deal renews its bearings and the used winder drive renews the winder drive; AUTO-LW starts over at a grade change; the leaderboard marks the run just submitted, not the best older one with the same name.
+
 ## v6.10.0-t3 (2026-10-20): QA fixes and balance (test build)
 100 live QA runs (50 seasons, 50 survival) on t2, then matched balance runs against main.
 - **Fix:** a drive fault card nobody answers no longer holds the machine down. After an hour the default is taken (investigate, then replace) and the card closes.

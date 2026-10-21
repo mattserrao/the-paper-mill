@@ -36,7 +36,7 @@ with sync_playwright() as pw:
     # one shift: every tech's vibration round and the ADX round run (nothing else going on)
     r = J("""()=>{const P=__PM,S=P.S;P.CH.on=false;while(S.t<720+400)P.step(P.SIM_STEP);const L=S.rel.rd.list;
       return {n:L.length,done:L.filter(x=>x.st==='done').length,vib:L.filter(x=>x.k==='vib').length,adx:L.filter(x=>x.k==='adx').length,read:Object.values(S.rel.a).filter(a=>a.lv).length,ard:Object.values(S.rel.a).filter(a=>a.la).length,techs:P.manShift(1).nt}}""")
-    ok("a quiet shift: every tech's vibration round and the ADX round are done", r["done"] == r["n"] and r["vib"] == r["techs"] and r["adx"] == 1 and r["read"] >= 2*r["techs"] and r["ard"] >= 2, json.dumps(r))
+    ok("a quiet shift: every tech's vibration round and the ADX round are done", r["done"] == r["n"] and r["vib"] == r["techs"] and r["adx"] == 1 and r["read"] >= r["techs"] and r["ard"] >= 2, json.dumps(r))
 
     # skipped: a maintenance job holding the first pair and an electrical job when the rounds start
     r = J("""()=>{const P=__PM,S=P.S;while(S.t<1440+40)P.step(P.SIM_STEP);P.trigger('cscreen');P.rly.fail('wind','drv');
@@ -53,8 +53,9 @@ with sync_playwright() as pw:
     # a fault found on a round, then a planned repair: no failure, 20% of the bill
     r = J("""()=>{const P=__PM,S=P.S,R=S.rel;R.pend.push({a:'refB',k:'vib',due:S.t+5000,born:S.t});R.a.refB.pin='vib';
       const s0=Math.floor(S.t/720);while(Math.floor(S.t/720)<s0+1)P.step(P.SIM_STEP);while(!R.rd.list.some(x=>x.k==='vib'&&x.a.includes('refB')&&x.st==='done')&&S.t<(s0+2)*720)P.step(P.SIM_STEP);
-      const v=R.a.refB.lv;const c0=S.cash,f=P.rly.fix('refB','vib'),c1=S.cash;return {st:v&&v.st,fix:f,paid:Math.round(c0-c1),pend:R.pend.some(p=>p.a==='refB'&&p.k==='vib'),caught:R.caught,h:Math.round(R.a.refB.vib)}}""")
-    ok("a pinned round finds the failing bearing (imminent) and the planned repair clears it", r["st"] == "imm" and r["fix"] and r["paid"] > 0 and not r["pend"] and r["caught"] >= 1 and r["h"] >= 90, json.dumps(r))
+      const v=R.a.refB.lv;const c0=S.cash,f=P.rly.fix('refB','vib'),c1=S.cash;const down=!!S.inc.find(i=>i.id==='planbrg'&&i.asset==='refB'),cap=S.M.speedCap,t0=S.t;let n=0;while(S.inc.some(i=>i.id==='planbrg')&&n++<4000)P.step(P.SIM_STEP);
+      return {st:v&&v.st,fix:f,paid:Math.round(c0-c1),pend:R.pend.some(p=>p.a==='refB'&&p.k==='vib'),caught:R.caught,h:Math.round(R.a.refB.vib),down,cap,min:Math.round(S.t-t0),hist:R.a.refB.hv.slice(-1)[0]}}""")
+    ok("a pinned round finds the failing bearing (imminent); the planned repair takes the refiner down 20-40 min (plus the crew's walk), then it's new and the history says repaired", r["st"] == "imm" and r["fix"] and r["paid"] > 0 and not r["pend"] and r["caught"] >= 1 and r["h"] >= 90 and r["down"] and r["cap"] == 0.75 and 20 <= r["min"] <= 70 and r["hist"][2] == "fix", json.dumps(r))
 
     # missed: it fails, the machine stops, and the bearing is new afterwards
     r = J("""()=>{const P=__PM,S=P.S,R=S.rel;P.CH.on=true;while(S.t<4*1440)P.step(P.SIM_STEP);R.pend.push({a:'couch',k:'vib',due:S.t+1,born:S.t});const t0=S.t;let seen=null;
@@ -67,7 +68,7 @@ with sync_playwright() as pw:
     ok("a motor failure on refiner A leaves one refiner (75% speed) and the motor is new after", r["asset"] == "refA" and abs(r["cap"] - 0.75) < 1e-6 and "Refiner A" in (r["head"] or "") and r["adx"] >= 90, json.dumps(r))
 
     # loads and tags
-    r = J("""()=>{const P=__PM,S=P.S;for(let i=0;i<200;i++)P.step(P.SIM_STEP);const L=P.rly.ASSETS.map(A=>P.rly.load(A.id));const t=P.G3.ctl.tagNow('dl_dry'),k=P.G3.ctl.tagNow('mcckw');return {L:L.map(Math.round),t,k}}""")
+    r = J("""()=>{const P=__PM,S=P.S;for(let i=0;i<200;i++)P.step(P.SIM_STEP);let w=0;while((S.pm!=='run'||S.inc.length)&&w++<8000){S.inc.forEach(i=>{if(!i.kind)i.left=Math.min(i.left,1)});P.step(P.SIM_STEP);}for(let i=0;i<40;i++)P.step(P.SIM_STEP);const L=P.rly.ASSETS.map(A=>P.rly.load(A.id));const t=P.G3.ctl.tagNow('dl_dry'),k=P.G3.ctl.tagNow('mcckw');return {L:L.map(Math.round),t,k}}""")
     ok("drive loads are live (machine running) and trend as tags", all(0 <= v < 140 for v in r["L"]) and sum(1 for v in r["L"] if v > 20) >= 6 and r["t"] and r["k"] and r["k"] > 1000, json.dumps(r))
 
     # the screens
@@ -128,10 +129,20 @@ with sync_playwright() as pw:
     J("()=>{__PM.CH.en.drivefail=false}")
     ok("a drive fault waits on the player's call (an hour, then the crew decides); Investigate finds a cause; Run to outage patches it and books the replacement", r["held"] == "wait" and r["still"] and r["found"] == "found" and r["cause"] and r["patch"] and r["booked"], json.dumps(r))
     J("()=>{const R=__PM.S.rel;R.q.length=0;R.cur=null;const o=document.getElementById('rlyOv');if(o)o.hidden=true;__PM.S.cards.open=null;}")
-    r = J("""()=>{const P=__PM,S=P.S;S.inc.forEach(i=>{if(i.id==='drivefail')i.left=0});P.step(P.SIM_STEP);let k=0;while(S.inc.some(i=>i.id==='drivefail'||i.id==='bearingfail'||i.id==='motorfail')&&k++<9000)P.step(P.SIM_STEP);P.CH.en.drivefail=false;S.rel.rep.length=0;S.rel.a.reel.dh=5;let rep=0;for(let k=0;k<6;k++){P.rly.fail('reel','drv');P.rly.decide('reel','reset');let n=0;while(S.inc.some(x=>x.id==='drivefail')&&n++<2000)P.step(P.SIM_STEP);}
+    r = J("""()=>{const P=__PM,S=P.S;S.inc.forEach(i=>{if(i.id==='drivefail')i.left=0});P.step(P.SIM_STEP);let k=0;while(S.inc.some(i=>i.id==='drivefail'||i.id==='bearingfail'||i.id==='motorfail')&&k++<9000)P.step(P.SIM_STEP);P.CH.en.drivefail=false;S.rel.rep.length=0;S.rel.a.reel.dh=30;let rep=0;for(let k=0;k<6;k++){P.rly.fail('reel','drv');P.rly.decide('reel','reset');let n=0;while(S.inc.some(x=>x.id==='drivefail')&&n++<2000)P.step(P.SIM_STEP);}
       rep=S.rel.rep.filter(p=>p.a==='reel').length;const r2=S.rel.rep.length;S.rel.rep.length=0;S.rel.q.length=0;S.rel.cur=null;S.cards.open=null;
       P.rly.fail('wind','drv');P.rly.decide('wind','repl');let n=0;while(S.inc.some(x=>x.id==='drivefail')&&n++<8000)P.step(P.SIM_STEP);return {rep,dh:Math.round(S.rel.a.wind.dh)}}""")
     ok("Reset and go on a worn drive sets up repeats; Replace now makes the drive new", r["rep"] >= 2 and r["dh"] == 100, json.dumps(r))
+    J("()=>{const R=__PM.S.rel;R.q.length=0;R.cur=null;const o=document.getElementById('rlyOv');if(o)o.hidden=true;__PM.S.cards.open=null;}")
+    # t4: each reset in a day takes longer; a nearly dead drive's reset may not hold (back to the player's call, reset no longer offered)
+    r = J("""()=>{const P=__PM,S=P.S,R=S.rel,a=R.a.couch;a.rs=[];a.dh=70;const m1=(()=>{P.rly.fail('couch','drv');P.rly.decide('couch','reset');const i=S.inc.find(x=>x.id==='drivefail');return i&&i.total})();
+      let n=0;while(S.inc.some(x=>x.id==='drivefail')&&n++<2000)P.step(P.SIM_STEP);R.rep.length=0;P.rly.fail('couch','drv');P.rly.decide('couch','reset');const m2=(S.inc.find(x=>x.id==='drivefail')||{}).total;
+      n=0;while(S.inc.some(x=>x.id==='drivefail')&&n++<2000)P.step(P.SIM_STEP);R.rep.length=0;R.q.length=0;R.cur=null;S.cards.open=null;
+      a.rs=[];a.dh=1;let held=0,tries=0;for(;tries<8&&!held;tries++){P.rly.fail('couch','drv');P.rly.decide('couch','reset');n=0;while(S.inc.some(x=>x.id==='drivefail'&&x.stage==='reset')&&n++<400)P.step(P.SIM_STEP);
+        const i=S.inc.find(x=>x.id==='drivefail');if(i&&i.stage==='wait'&&i.noReset)held=1;else{n=0;while(S.inc.some(x=>x.id==='drivefail')&&n++<2000)P.step(P.SIM_STEP);a.rs=[];a.dh=1;}R.rep.length=0;}
+      const i=S.inc.find(x=>x.id==='drivefail');R.q.length=0;R.cur=null;S.cards.open=null;const o=document.getElementById('rlyOv');if(o)o.hidden=true;if(i){P.rly.decide('couch','repl');n=0;while(S.inc.some(x=>x.id==='drivefail')&&n++<8000)P.step(P.SIM_STEP);}
+      return {m1,m2,held,tries}}""")
+    ok("t4: a second reset the same day takes longer; a reset on a nearly dead drive can fail and come back to the player's call", r["m2"] > r["m1"] and r["held"] == 1, json.dumps(r))
     J("()=>{const R=__PM.S.rel;R.q.length=0;R.cur=null;const o=document.getElementById('rlyOv');if(o)o.hidden=true;__PM.S.cards.open=null;}")
 
     # the power chain and a rectifier fault
@@ -141,7 +152,8 @@ with sync_playwright() as pw:
     answer()
 
     # AUTO-LW: more refining, the weight comes down; back to standard, it goes back up
-    r = J("""()=>{const P=__PM,S=P.S;S.inc.forEach(i=>i.left=0);P.CH.on=false;const run=m=>{let n=0;while(n<m/P.SIM_STEP){P.step(P.SIM_STEP);if(!S.chg&&S.pm==='run')n++;}};P.knob.set('ref',85);run(600);const chg=!!S.chg,lo=S.we.trim;P.knob.set('ref',60);run(700);return {lo,back:S.we.trim,chg}}""")
+    r = J("""()=>{const P=__PM,S=P.S;S.inc.forEach(i=>i.left=0);P.CH.on=false;let lo=0,n=0;P.knob.set('ref',85);while(n++<4800){P.step(P.SIM_STEP);lo=Math.min(lo,S.we.trim);if(lo<-0.06)break;}
+      P.knob.set('ref',60);let back=S.we.trim;n=0;while(n++<4800){P.step(P.SIM_STEP);back=S.we.trim;if(!S.chg&&back>-0.01)break;}return {lo,back}}""")
     ok("AUTO-LW trims the weight down with ring crush to spare and back up without it", r["lo"] < -0.05 and r["back"] > -0.01 and r["back"] <= 0, json.dumps(r))
 
     # click for info

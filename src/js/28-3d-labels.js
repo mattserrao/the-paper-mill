@@ -68,7 +68,9 @@
     lx.setTransform(1,0,0,1,0,0);lx.clearRect(0,0,lc.width,lc.height);let n=0;
     /* v6.1 t16: no label is drawn over another. Placed in order of importance (upsets, then red ones such as the
        bottleneck, then the area labels, then equipment), a label that would overlap one already placed is left out. */
-    const ord=LORD;ord.length=0;for(let i=0;i<LREC.length;i++){const R=LREC[i];R.cull=false;if(!R.on)continue;R.rx=R.x-R.W/2;R.ry=R.y-R.H;R.rk=R.inc?0:R.bad?1:R.area?2:3;ord.push(R);}
+    // v6.10 t4: kept on screen: not past the left or right edge, and not under the Go-to chips at the top (phones)
+    const vw=lc.width/d;let topIn=0,jl=0,jr=0;{const jb=document.getElementById("jumps");if(jb&&jb.offsetParent){const a=jb.getBoundingClientRect(),c=lc.getBoundingClientRect();if(a.bottom>c.top&&a.top<c.top+80){topIn=a.bottom-c.top+4;jl=a.left-c.left;jr=a.right-c.left;}}}
+    const ord=LORD;ord.length=0;for(let i=0;i<LREC.length;i++){const R=LREC[i];R.cull=false;if(!R.on)continue;R.rx=Math.max(4,Math.min(vw-R.W-4,R.x-R.W/2));R.ry=R.y-R.H;if(topIn&&R.ry<topIn&&R.rx<jr&&R.rx+R.W>jl)R.ry=topIn;R.rk=R.inc?0:R.bad?1:R.area?2:3;ord.push(R);}
     ord.sort((a,b)=>a.rk-b.rk);const PADL=3;
     for(let i=0;i<ord.length;i++){const R=ord[i];for(let j=0;j<i;j++){const Q=ord[j];if(Q.cull)continue;
         if(R.rx<Q.rx+Q.W+PADL&&R.rx+R.W+PADL>Q.rx&&R.ry<Q.ry+Q.H+PADL&&R.ry+R.H+PADL>Q.ry){R.cull=true;break;}}}
@@ -110,7 +112,7 @@
   LABELS.forEach(L=>{L.lb=lblNew(false);L.lb.area=!!L.area;L.v=new THREE.Vector3(...L.p);});
   const banner=$("banner3d"),chips=$("chips3d");
   // click a disaster (chip, breaking banner or its floating label) to fly the camera there
-  G3.spotOf=id=>{if(id==="bearingfail"||id==="motorfail"){const i=S.inc.find(x=>x.id===id),q=i&&G3.ASPOT&&G3.ASPOT[i.asset];if(q)return [q[2],q[3]];}return id==="hay"?[-17,7]:id==="brk"?[12,9]:PINS[id]?[PINS[id][0],PINS[id][2]]:null;};   // (v6.10: at the failed machine)
+  G3.spotOf=id=>{if(id==="bearingfail"||id==="motorfail"||id==="planbrg"||id==="planmot"){const i=S.inc.find(x=>x.id===id),q=i&&G3.ASPOT&&G3.ASPOT[i.asset];if(q)return [q[2],q[3]];}return id==="hay"?[-17,7]:id==="brk"?[12,9]:PINS[id]?[PINS[id][0],PINS[id][2]]:null;};   // (v6.10: at the failed machine)
   G3.flyTo=id=>{const sp=G3.spotOf(id);if(!sp)return;goal={t:new THREE.Vector3(sp[0],0,sp[1]),r:62,th:DEF.th,ph:0.88};};
   chips.addEventListener("click",e=>{const b=e.target.closest("button");if(b)G3.flyTo(b.dataset.id);});
   banner.addEventListener("click",()=>{const b=BANNERS[0];if(b&&b.id)G3.flyTo(b.id);});

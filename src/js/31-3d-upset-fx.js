@@ -289,7 +289,7 @@
   const _pq=new THREE.Quaternion();
   const PINS={icedintake:[-30,6,-55.5,"!"],duststorm:[-21,12,-13,"!"],flood:[-62,7,4,"water"],refclash:[60.6,8,-11,"!"],steamjoint:[11.2,9.5,4.6,"!"],fogfan:[49.5,22,-4.2,"!"],shaft:[12,10,15.6,"!"],dryerfire:[12,13,zc,"fire"],fabric:[48,9,zc,"!"],felt:[34.5,11,zc,"!"],slime:[4,11,zc,"!"],ragger:[16,9,-13.5,"!"],overflow:[-21,10,-13,"water"],chestover:[34.5,21,-15,"water"],lwplug:[11.2,9,ZL,"!"],cscreen:[15.2,8,ZL,"!"],fscreen:[19.2,9,ZL,"!"],lcplug:[26.6,8,ZL,"water"],hdblow:[25.8,13,-10.6,"water"],boiler:[76,14,-10,"!"],permit:[LAYOUT.wx(22),10,-40,"water"],thkblow:[34.5,22,-15,"water"],birdhay:[-18.7,9,zc,"!"],wrap:[12,12,zc,"!"],flares:[16,10,-13.5,"fire"],dye:[24,11,zc,"!"],winderdown:[-18.7,9,zc,"!"],tiedrolls:[-22.9,5,zc-0.7,"!"],
     badocc:[-17,10,-11,"!"],balefire:[-25,11,-12,"fire"],fleet:[-29,10,-16,"!"],calloff:[-36,10,23,"!"],fight:[-38,7,-21,"!"],roof:[-32,10,24,"water"],highway:[-72,7,4,"!"],
-    lightning:[34.5,16,-15,"bolt"],bearingfail:[40,8,0,"!"],motorfail:[40,8,0,"!"],drivefail:[11,9,27.5,"bolt"],tornado:[0,26,0,"!"],beaver:[-30,10,-16.5,"!"]};
+    lightning:[34.5,16,-15,"bolt"],bearingfail:[40,8,0,"!"],motorfail:[40,8,0,"!"],planbrg:[40,8,0,"!"],planmot:[40,8,0,"!"],drivefail:[11,9,27.5,"bolt"],tornado:[0,26,0,"!"],beaver:[-30,10,-16.5,"!"]};
   // a small lift truck (counterbalance forklift) for the yard upsets: body, overhead guard, mast and forks, nobody aboard
   function liftTruck(group,x,z,ry){const f=new THREE.Group();f.position.set(x,0,z);f.rotation.y=ry;group.add(f);box(1.8,0.9,1.1,M.warn,0,0.75,0,f);box(0.7,0.7,1.0,M.ink,-0.75,0.85,0,f);
     [[-0.3,0.5],[-0.3,-0.5],[0.6,0.5],[0.6,-0.5]].forEach(([a,b])=>box(0.06,1.3,0.06,M.ink,a,1.85,b,f,false));box(1.0,0.06,1.06,M.ink,0.15,2.5,0,f,false);
@@ -847,7 +847,7 @@
       {const zp=!G3.zen&&!G3.cineOn;f.pin.p.visible=f.pin.ring.visible=f.pin.stem.visible=zp;}   // v3.0.1: zen mode shows events without the red pins
       tmp.set(f.pin.x,f.pin.p.position.y+3.4,f.pin.z).project(camera);const vis=!G3.zen&&tmp.z<1&&Math.abs(tmp.x)<1.1&&Math.abs(tmp.y)<1.1;f.lb.vis=vis;
       if(vis){f.lb.x=Math.round((tmp.x+1)/2*w);f.lb.y=Math.round((1-tmp.y)/2*hh);
-        if(doTxt||f.lb.a==null){const st=incState(inc),b=`${st?st+" · ":""}${(inc.left/60).toFixed(1)} h left${inc.note?" · "+inc.note.split(" · ")[0]:""}`;lblSet(f.lb,EV[inc.id].name,b,true);}}});
+        if(doTxt||f.lb.a==null){const st=incState(inc),hold=inc.stage==="wait"||inc.stage==="found",b=`${st?st+" · ":""}${hold?"awaiting decision":(inc.left/60).toFixed(1)+" h left"}${inc.note?" · "+inc.note.split(" · ")[0]:""}`;lblSet(f.lb,EV[inc.id].name,b,true);}}});
     for(const id in FX){const f=FX[id];if(!f.on)f.lb.vis=false;}
     papTick();stepParts(rdt);fireLight.position.copy(fireLpos);fireFloorK=Math.max(0,fireFloorK-rdt*1.5);
     {const fl=0.9*Math.sin(performance.now()/60)+0.6*Math.sin(performance.now()/23),on=fireFloor.userData.on||0;fireLight.intensity=fireL>0?LEG*0.75*fireL*(3.4+fl+fireFloorK*3):0;

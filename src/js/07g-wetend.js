@@ -75,6 +75,7 @@ function weTick(dt){const W=weState(),run=S.pm==="run";
   // basis weight setpoint down to hold the QCS's ring crush at WE.lwM over the grade's minimum; when strength falls it brings
   // the weight back up, never over the grade's target. Slow (WE.lwTau minutes) to ride out the QCS dead time. Held during a
   // grade change and while the sheet is off. On unless the player takes the setpoint to MANUAL (lw:false).
+  if(S.chg&&W.lw!==false&&W.trim!==0)W.trim=0;   /* (t4: a grade change starts AUTO-LW over from the new grade's target) */
   if(run&&W.lw!==false&&!S.chg&&!S.zen&&QNOW.rct>0){const tg=rctSpec()*WE.lwM,e=(QNOW.rct-tg)/tg;W.trim=clamp(W.trim-dt/WE.lwTau*e,WE.trimMin,0);}
   // bale water in the pulper: a step in bale moisture thins the tub, and the dilution loop takes it back out
   if(baleOn()&&S.bq){const d=-WE.cpK*Math.max(0,S.bq.m-BALE.std)*100;W.cpd=d;W.cpc=ease(W.cpc||0,d,dt,WE.cpTau);}else{W.cpd=0;W.cpc=0;}

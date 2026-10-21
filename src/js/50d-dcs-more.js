@@ -121,7 +121,7 @@ function dcsSetRows(a,cs){const defs=dcsSetDefs(a);
   if(a==="UTIL")cs.appendChild(kEl("p","dcsfield","Monitoring only: water, effluent and rejects. The permit and the river intake show here when they act up. The full water balance is on WATER."));
   if(a==="WATER")cs.appendChild(kEl("p","dcsfield","Monitoring only: fresh water comes in for the showers and seal water and to top up the white water chest; the chest feeds stock prep's dilution; what's left goes through the clarifier to the outfall."));
   if(a==="SPOT"||a==="WET"){const row=kEl("div","dcsrow dcsx");
-    if(a==="SPOT"){row.innerHTML=`<div class="dcsn"><b>Dye: paper colour</b><small>dye pump on the machine chest</small></div><div class="seg kseg" role="group" aria-label="Paper colour"><button type="button" data-dye="brown">BROWN</button><button type="button" data-dye="white">WHITE</button></div>`;
+    if(a==="SPOT"){row.innerHTML=`<div class="dcsn"><b>Dye: paper color</b><small>dye pump on the machine chest</small></div><div class="seg kseg" role="group" aria-label="Paper color"><button type="button" data-dye="brown">BROWN</button><button type="button" data-dye="white">WHITE</button></div>`;
       row.querySelectorAll("[data-dye]").forEach(b=>b.addEventListener("click",()=>{const pc=document.querySelector(`#paperColor button[data-c="${b.dataset.dye}"]`);if(pc)pc.click();dcsSync();}));}
     else{row.innerHTML=`<div class="dcsn"><b>Grade</b><small>set by the market planner from customer orders</small></div><select disabled data-dgrade aria-label="Grade">${Object.keys(GRADES).map(g=>`<option value="${g}">${g} · ${GRADES[g].bw} lb</option>`).join("")}</select>`;}
     cs.appendChild(row);}

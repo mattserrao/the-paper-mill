@@ -16,7 +16,7 @@
     function data(){if(seasonOn()){const R=S.rc,live=S.season.done&&!S.season.surv&&R.cards.length>=3?R.cards[2]:rcMake(R.p,R.i),prev=R.i>0?R.cards[R.i-1]:null;return {R,live,prev,p:live.p,season:true};}
       return {p:rcSum(allAcc()),season:false};}
     function costRows(p){const sp=p.spent,cs=chemShare(),e=sp.Energy||0;
-      return [["Fiber (OCC)",sp.Fiber||0,"var(--kraft)"],["Energy & steam",e*(1-cs),"var(--stock)"],["Chemicals",e*cs,"var(--pulp)"],["Labour",sp.Labour||0,"var(--machine)"],["Overhead",sp.Overhead||0,"#9aa1b5"],
+      return [["Fiber (OCC)",sp.Fiber||0,"var(--kraft)"],["Energy & steam",e*(1-cs),"var(--stock)"],["Chemicals",e*cs,"var(--pulp)"],["Labor",sp.Labor||0,"var(--machine)"],["Overhead",sp.Overhead||0,"#9aa1b5"],
         ["Repairs",sp["Repairs & outages"]||0,"var(--bad)"],["Freight & insurance",(sp["Freight & insurance"]||0)+(sp["Premium freight"]||0),"var(--warn)"]].filter(r=>r[1]>0);}
     // (v4.3 survival: the tiles are waves, the last two and the one being played)
     function tiles(d){const R=d.R,out=[],sv=!!S.season.surv,i0=sv?Math.max(0,R.i-2):0;for(let i=i0;i<i0+3;i++){const c=R.cards[i],cur=i===R.i&&(sv||!S.season.done),lab=sv?`Wave ${i+1}`:`Days ${i*10+1}–${i*10+10}`;

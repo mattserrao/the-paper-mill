@@ -75,17 +75,17 @@ function beginOutage(){const o=S.outg,st=S.t;if(!o.plan)o.plan={stock:1,wet:1,dr
   if(typeof civOutageBegin==="function")civOutageBegin(o,st);   // v5.1 civics: Labor sets how long it runs
   prepBegin(o,st);   // v5.7 outage prep: completed checklist items take minutes off
   rlyOutageBegin(o);   // v6.10: booked changeouts add minutes (07i)
-  log(`Planned outage ${o.k} has begun: down until ${hourOf(o.end)}`,"warn");BANNERS.push({text:`Planned outage: the mill is down until ${hourOf(o.end)}.`,t:null,kind:"good",tag:"OUTAGE"});
+  log(`Planned outage ${o.k} has begun: down until ${clockOf(o.end)}`,"warn");BANNERS.push({text:`Planned outage: the mill is down until ${clockOf(o.end)}.`,t:null,kind:"good",tag:"OUTAGE"});
   const canWatch=C.simSpeed>OUT.simCap&&!TURBO_FAST(C.simSpeed);   // (at 5 min/s or slower there is nothing to slow down)
   outNote("Outage has begun",`The mill is down for planned maintenance: ${(OUT.jobs[outJob(o.k)-1]||"inspections").toLowerCase()} and new press felts. Started ${hourOf(st)}, ends ${outTime(o.end)}.${o.prep?`<br><b>${prepLine(o.prep.n,o.prep.m)}.</b>`:""}`,canWatch?7000:5000,canWatch?{label:"Watch the crews",on:outWatch}:null);}
 function endOutage(){const o=S.outg,pl=o.plan||{stock:1,wet:1,dry:1};o.on=false;o.watch=false;outNoteHide();   // v5.0.6: at the player's speed the outage can end before its 7 s notice does
   S.fx=S.fx.filter(f=>f.id!=="pout");S.M=mods();
   o.spd=null;   // (v5.0.1: nothing to restore: the outage only capped the running speed, see simRate)
   o.rel={stock:OUT.rel[pl.stock],wet:OUT.rel[pl.wet],dry:OUT.rel[pl.dry]};
-  const rp=v=>Math.round(Math.abs(1-OUT.rel[v])*100),txt=OUT.areas.map(([a,n])=>`${n} ${pl[a]===2?"+"+rp(2)+"%":pl[a]===0?"−"+rp(0)+"%":"±0%"}`).join(" · ");
-  BANNERS.push({text:`Outage ${o.k} complete. Reliability until the next outage: ${txt}`,t:null,kind:"good",tag:"OUTAGE"});while(BANNERS.length>3)BANNERS.splice(1,1);
-  log(`Outage ${o.k} complete. Reliability until the next outage: ${txt}`,"ok");
-  if(!survOn())outNote("Outage complete",`Restarting the mill. Reliability until the next outage: ${txt}.`,4000);   // (survival: the wave report card says it)
+  const rp=v=>Math.round(Math.abs(1-OUT.rel[v])*100),txt=OUT.areas.map(([a,n])=>`${n} ${pl[a]===2?rp(2)+"% fewer":pl[a]===0?rp(0)+"% more":"the usual rate (budget kept it even)"}`).join(" · ");   // (t4: plain words, not ±0%)
+  BANNERS.push({text:`Outage ${o.k} complete. Breakdowns until the next outage: ${txt}`,t:null,kind:"good",tag:"OUTAGE"});while(BANNERS.length>3)BANNERS.splice(1,1);
+  log(`Outage ${o.k} complete. Breakdowns until the next outage: ${txt}`,"ok");
+  if(!survOn())outNote("Outage complete",`Restarting the mill. Breakdowns until the next outage: ${txt}.`,4000);   // (survival: the wave report card says it)
   if(S.lead)leadOutageEnd(pl.lead);   // v4.4: the leader's pick for this outage is now part of the mill
   if(S.lead&&leadOverrun()>0){const m=leadOverrun();addFx({id:"felrun",left:m,mods:{pmDown:"project tie-ins"}});   // v4.4.0-t3: Felicity's projects make outages overrun
     log(`Project tie-ins: the machine stays down ${m>=60?(m/60).toFixed(m%60?1:0)+" h":m+" min"} longer.`,"warn");}

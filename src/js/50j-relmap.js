@@ -248,7 +248,7 @@ const RM_E=[
  ["x:power","mcckw","x","The substation feeds the MCC; lightning, a bird on the line or a brownout knock the drives' health down"],
  ["amps","dl_pulp","p","Rotor amps are the pulper drive's load (a thick tub works it harder)"],
  ["refkw","dl_refA","p","Refiner power, split across the two refiner drives"],["refkw","dl_refB","p","Refiner power, split across the two refiner drives"],
- ["kwh","dl_refA","p","More refining energy, more load: over about 85 kWh/t the refiner drives run past 100%"],["kwh","dl_refB","p","More refining energy, more load: over about 85 kWh/t the refiner drives run past 100%"],
+ ["kwh","dl_refA","p","More refining energy or more fiber through them, more load: refining energy × fiber rate; 85 kWh/t at 35 t/h, or about 75 kWh/t at 40 t/h, runs them at 100%"],["kwh","dl_refB","p","More refining energy or more fiber through them, more load: refining energy × fiber rate; 85 kWh/t at 35 t/h, or about 75 kWh/t at 40 t/h, runs them at 100%"],
  ["speed","dl_fan","p","Headbox flow follows speed: the fan pump works harder"],["vac","dl_couch","p","More forming vacuum, more drag on the couch roll"],
  ["pl","dl_pr1","p","Press load is torque on the press drives"],["pl","dl_pr2","p","Press load is torque on the press drives"],
  ["speed","dl_dry","p","The dryer section drive's load rises with speed"],["tension","dl_reel","p","Draw tension is torque on the reel drum"],["cut","dl_wind","p","Winding faster loads the winder drum"],

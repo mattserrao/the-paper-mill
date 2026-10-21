@@ -95,7 +95,7 @@
     if(j){const p=1-j.left/Math.max(1,j.total);
       if(j.id==="drivefail"&&CAB[j.asset]){const c=CAB[j.asset];return [c.stand[0],c.stand[1],c.home[0],c.home[1],!j.eGo?"run":j.stage==="inv"||j.stage==="wait"||j.stage==="found"?"type":"fix","cab",j,p];}
       if(j.id==="rectfail"&&RECT3[j.line]){const r=RECT3[j.line];return [r.stand[0],r.stand[1],r.home[0],r.home[1],j.eGo?"fix":"run","rect",j,p];}
-      if(j.id==="motorfail"&&ASPOT[j.asset]){const s=ASPOT[j.asset];return [s[0],s[1],s[2],s[3],j.eGo?"fix":"run","motor",j,p];}
+      if((j.id==="motorfail"||j.id==="planmot")&&ASPOT[j.asset]){const s=ASPOT[j.asset];return [s[0],s[1],s[2],s[3],j.eGo?"fix":"run","motor",j,p];}
       return [CAB.main.stand[0],CAB.main.stand[1],CAB.main.stand[0],CABZ,j.eGo?"fix":"run","main",j,p];}
     const x=rlyRnd("e");if(x&&x.a.length){const f=(S.t-x.t0)/Math.max(1,x.len),a=x.a[f<0.5?0:Math.min(x.a.length-1,1)],s=ASPOT[a];if(s)return [s[0]+0.8,s[1]+(s[1]>5?0:0.9),s[2],s[3],"type","adx",null,0];}
     return [MCC.desk[0],MCC.desk[1],MCC.desk[0],MCC.desk[1]-1,"type","home",null,0];}
@@ -131,7 +131,7 @@
   // the cabinets: lights follow each drive and rectifier; the drive being replaced has its door open and the module coming out and going in
   function elecLights(job,p,rdt){
     for(const [ln] of LINEUPS){const r=RECT3[ln];if(!r)continue;const m=outOn()?LEDM.off:rlyRectDown(ln)?LEDM.fault:rlyBlack()?LEDM.off:LEDM.run;if(r.led.material!==m)r.led.material=m;}
-    for(const A of ASSETS){const c=CAB[A.id];if(!c)continue;const st=S.rel?rlyDrvSt(A.id):"run",m=st==="run"?LEDM.run:st==="idle"?LEDM.idle:st==="off"?LEDM.off:st==="nodc"?LEDM.off:LEDM.fault;if(c.led.material!==m)c.led.material=m;
+    for(const A of ASSETS){const c=CAB[A.id];if(!c)continue;const st=S.rel?rlyDrvSt(A.id):"run",m=st==="run"?LEDM.run:st==="idle"?LEDM.idle:st==="off"||st==="lock"?LEDM.off:st==="nodc"?LEDM.off:LEDM.fault;if(c.led.material!==m)c.led.material=m;
       const busy=job&&job.id==="drivefail"&&job.asset===A.id&&job.eGo&&job.stage!=="reset",tgt=busy&&p>0.08&&p<0.92?1:0;c.open+=(tgt-c.open)*Math.min(1,rdt*3);c.hinge.rotation.y=-c.open*1.7;
       if(busy&&job.stage==="repl"&&p>0.2&&p<0.85){c.mod.visible=true;const k=p<0.5?(p-0.2)/0.3:1-(p-0.55)/0.3,kk=clamp(k,0,1);c.mod.material=p<0.5?modM.old:modM.new;c.mod.position.set(-0.55*kk,1.1-0.3*kk,0.02-1.0*kk);}
       else if(c.mod.visible)c.mod.visible=false;}}

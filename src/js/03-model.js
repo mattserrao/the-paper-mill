@@ -40,7 +40,7 @@ const UPS=[
  {id:"safety",g:"yard",name:"Safety & HR program",lv:[15e3],desc:"Dock fights and call-offs half as often."},
  {id:"maintcrew",g:"maint",name:"Maintenance techs",lv:[130e3,235e3,340e3],desc:"+2 techs on yellow scooters per level. Repairs finish 20% faster and repair bills are 10% lower per level (in-house work instead of contractors). Every tech also does a vibration round each shift when not called to an upset."},
  {id:"rcfa",g:"maint",name:"Root cause analysis (RCFA)",lv:[200e3,100e3],desc:"Every breakdown is investigated: repeat failures 25% rarer per level."},
- {id:"reliab",g:"maint",name:"Reliability program",lv:[255e3,160e3],desc:"Vibration and oil analysis: drive, felt and fabric failures 40% rarer and repair bills 15% lower per level. Level 1 adds the Vibration Report to your daily rounds. Covers the new bearing and motor failures too."},
+ {id:"reliab",g:"maint",name:"Reliability program",lv:[255e3,160e3],desc:"Vibration and oil analysis: drive, felt and fabric failures 40% rarer and repair bills 15% lower per level. Level 1 adds the Area Trend Report to your daily rounds. Covers the new bearing and motor failures too."},
  {id:"pmprog",g:"maint",name:"Preventive maintenance",lv:[115e3,235e3,365e3],desc:"Planned shutdown work: all breakdowns 20% rarer and fewer sheet breaks per level. Costs $150/h per level."},
  {id:"stores",g:"maint",name:"Spare parts storeroom",lv:[45e3],desc:"Parts on the shelf: repairs finish 25% faster."},
  {id:"apc",g:"mgmt",name:"Advanced process control",lv:[105e3,105e3],desc:"+2% tons and 4% less energy per level."},
@@ -119,6 +119,7 @@ function areaRel(a){const ids=OUT.ev[a]||[];if(!ids.length)return {tot:1,up:1,ou
 function durMul(id){let d=(id==="dryerfire"||id==="balefire")&&LV("fire")?0.5:1;if(MAINT.includes(id))d*=Math.pow(0.8,LV("maintcrew"))*(LV("stores")?0.75:1);return d;}
 function spend(v,k){if(S.free&&k==="upgrades")return;S.cash-=v;S.ledger[k]+=v;}
 function earn(v){S.cash+=v;S.ledger.rev+=v;}
+function moneyX(v){const a=Math.abs(v);return `${v<0?"−":""}$${Math.round(a).toLocaleString()}`;}   // (exact, for prices on buttons)
 function money(v){const a=Math.abs(v),sg=v<0?"−":"";return a>=1e6?`${sg}$${(a/1e6).toFixed(2)}M`:a>=1e4?`${sg}$${Math.round(a/1e3)}k`:`${sg}$${Math.round(a).toLocaleString()}`;}
 function inY(d){const n=P.doors;return n<=3?[130,185,240][d]:118+d*150/(n-1);}
 function outY(d){const n=P.shipDoors;return n<=3?[500,555,610][d]:495+d*120/(n-1);}

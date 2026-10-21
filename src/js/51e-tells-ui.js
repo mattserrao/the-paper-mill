@@ -1,5 +1,5 @@
 /* ---------- v5.7 Catching failures early: the UI (the model is 04b-tells.js, the 3D tells and the walk 33b-3d-tells.js) ----------
-   One Round button in the dock; its card is the Vibration Report (the areas with trend arrows when the report is
+   One Round button in the dock; its card is the Area Trend Report (the areas with trend arrows when the report is
    unlocked) and starting a Round is a tap on an area. While the walk runs, a slim strip counts down. The outage prep
    checklist opens from the outage countdown under the clock, and the same block sits in the 24-hour budget dialog. */
 {const TAB=document.querySelector(".v2tabs");let btn=null,ov=null,strip=null,cur=null;
@@ -10,10 +10,10 @@
   function shell(id){let el=document.getElementById(id);if(!el){el=document.createElement("div");el.className="overlay tellov";el.id=id;el.hidden=true;document.body.appendChild(el);
       el.addEventListener("click",e=>{if(e.target===el)el.hidden=true;});}return el;}
   const ARROW=["→","↗","⇈"],AWORD=["steady","climbing","climbing fast"];
-  // ---- the Round card (the Vibration Report) ----
+  // ---- the Round card (the Area Trend Report) ----
   function tellOpen(){if(!tellsOn())return;ov=shell("tellOv");const can=tellCan(),rep=tellRep();
-    ov.innerHTML=`<div class="modal deal tellcard" role="dialog" aria-modal="true" aria-labelledby="tell-h"><span class="dk">Daily round${rep?" · Vibration Report":""}</span>
-      <h2 id="tell-h">${can?"Where should the operator walk?":"Today's round is done"}</h2>
+    ov.innerHTML=`<div class="modal deal tellcard" role="dialog" aria-modal="true" aria-labelledby="tell-h"><span class="dk">Daily area round${rep?" · Area Trend Report":""}</span>
+      <h2 id="tell-h">${can?"Where should the operator walk?":"Today's area round is done"}</h2>
       <p>${can?"An operator walks one area for about 15 seconds. Tap any failing equipment you spot: a planned repair now costs far less than the breakdown.":"One round a day. The next one is available at 6 AM."}</p>
       ${rep?"":`<p class="tnorep">Get the Reliability program (Upgrades → Maintenance) to see vibration trends here.</p>`}
       <div class="tareas">${TAREAS.filter(a=>a.ids.some(id=>!EV[id].env||EV[id].env===SITE.env)).map(a=>{const v=rep?tellTrend(a.k):-1;
@@ -40,7 +40,7 @@
   function paintStrip(){if(!strip||!cur)return;const s=Math.ceil(G3.tellRoundLeft?G3.tellRoundLeft():0),t=`<b>Round · ${escHTML(TAREAK[cur.a].n)}</b><span>${s} s</span><small>${cur.n?`${cur.n} caught · `:""}tap anything failing</small>`;
     if(strip.innerHTML!==t)strip.innerHTML=t;}
   UI_TICKS.push(()=>{if(btn){const on=tellsOn(),can=on&&tellCan()&&!cur;if(btn.hidden===on){btn.hidden=!on;TAB.classList.toggle("r5",on);}
-      if(on){const dot=btn.querySelector(".rdot");if(dot.hidden===can)dot.hidden=!can;const tt=cur?"Round under way":can?"Daily round: walk an area":"Today's round is done. Next one at 6 AM";if(btn.title!==tt){btn.title=tt;btn.setAttribute("aria-label",tt);}btn.classList.toggle("used",!can&&!cur);}}
+      if(on){const dot=btn.querySelector(".rdot");if(dot.hidden===can)dot.hidden=!can;const tt=cur?"Round under way":can?"Daily area round: walk an area":"Today's area round is done. Next one at 6 AM";if(btn.title!==tt){btn.title=tt;btn.setAttribute("aria-label",tt);}btn.classList.toggle("used",!can&&!cur);}}
     if(cur){if(!tellsOn()||(G3.tellRoundOn&&!G3.tellRoundOn()&&!cur.no3d)){if(G3.tellRoundStop)G3.tellRoundStop();cur=null;if(strip)strip.hidden=true;}else paintStrip();}});
   // ---- the outage prep checklist ----
   const hm=m=>m>=60?Math.floor(m/60)+" h"+(m%60?" "+Math.round(m%60)+" m":""):Math.max(0,Math.round(m))+" min";

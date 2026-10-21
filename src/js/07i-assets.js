@@ -4,10 +4,10 @@
    runs, faster when it's pushed (refining energy, press load, a thick pulper, a drive over 100% load). Health raises the
    odds of a failure but never sets its time: the dice still decide.
    A bearing or motor fault, once rolled, develops for a lead time (RLY.leadB / leadM) before it fails. Only the shift
-   rounds see it: every maintenance tech does one vibration round a shift (two assets, most overdue first) and the
+   rounds see it: every maintenance tech does one vibration round a shift (one asset since t4, most overdue first) and the
    electrical tech one ADX motor-test round (two motors), unless they're called to an upset first; then the round is
    skipped and that data goes stale (Unknown after RLY.unknown). A round that finds a fault puts it on the Reliability
-   screen, where a planned repair costs RLY.fix of the bill with no downtime. Missed, it fails: bearingfail (maintenance
+   screen, where a planned repair costs RLY.fix of the bill and RLY.fixMin minutes down (t4). Missed, it fails: bearingfail (maintenance
    pair), motorfail (electrical tech). Drives fail with no warning (drivefail, electrical tech), likelier when loaded over
    ~95% or after lightning. Changeouts can be booked for a planned outage (cost and minutes; health back to new).
    The existing upsets tied to an asset (refiner clash, felt, fabric, driveshaft, wrap, winder) get likelier as its
@@ -17,9 +17,9 @@
    State: S.rel (saved with the run). ---- */
 const RLY={tick:15,leadB:36*60,leadM:72*60,baseB:0.016,baseM:0.009,baseD:1/300,   /* (v6.10 QA balance: were 0.03, 0.02, 1/150: 9 reliability failures a season cost ~$650k against v6.9.2) */
   stale:24*60,unknown:72*60,
-  vib:{at:60,len:120,n:2,stag:12},adx:{at:90,len:150,n:2},
+  vib:{at:60,len:120,n:1,stag:12},adx:{at:90,len:150,n:2},
   plan:{b:{cost:15e3,min:15,n:"Bearings"},m:{cost:60e3,min:30,n:"Motor"},d:{cost:25e3,min:10,n:"Drive"}},planCap:90,
-  fix:0.2,elecResp:10,ppe:3,rectBase:1/250,rectBill:40e3,drvCall:0.1,rep:[0.08,0.8],inv:[45,90],repl:[60,90],patch:3,dur:{vib:[150,270],adx:[240,420],drv:[60,120]},drvBill:35e3};
+  fix:0.2,fixMin:[20,40],rstWin:1440,rstFail:20,elecResp:10,ppe:3,rectBase:1/250,rectBill:40e3,drvCall:0.1,rep:[0.08,0.8],inv:[45,90],repl:[60,90],patch:3,dur:{vib:[150,270],adx:[240,420],drv:[60,120]},drvBill:35e3};
 const LINEUPS=[["SP","Stock prep lineup","MCC-1"],["PM","Machine sectional lineup","MCC-2"],["WD","Winder lineup","MCC-3"]];
 const LINEN=Object.fromEntries(LINEUPS.map(l=>[l[0],l]));
 // kw: rated power; stop: what the failure does, in words; ta: the Round area its tell shows in; k: a phase for the load wobble
@@ -45,14 +45,19 @@ const ADXMODE={ins:"insulation resistance to ground falling",bar:"a broken rotor
 const RLY_LINK={refclash:["refA","refB"],felt:["pr1","pr2"],fabric:["couch"],shaft:["dry"],wrap:["dry"],winderdown:["wind"],tiedrolls:["wind"]};
 const RLY_EV={bearingfail:{k:"vib",name:"Bearing failure"},motorfail:{k:"adx",name:"Motor failure"},drivefail:{k:"drv",name:"Drive failure"},rectfail:{k:"rect",name:"Rectifier fault"}};
 const RLY_ID={vib:"bearingfail",adx:"motorfail",drv:"drivefail",rect:"rectfail"};
+// v6.10 t4: a planned repair takes the machine down for RLY.fixMin (the crew's work, not a failure: no bill beyond the planned
+// share, no card, not counted as an upset); planbrg goes to a maintenance pair, planmot to the electrical tech
+const RLY_PLAN={planbrg:{k:"vib",name:"Planned repair: bearings"},planmot:{k:"adx",name:"Planned repair: motor"}};
 // the three failures join EVENTS (never rolled by chaosTick: an endless MTBF on their own stream; knob:true keeps them out
 // of the Upsets panel's switches, the tornado and the machine crew's queue)
+for(const id in RLY_PLAN){const d=RLY_PLAN[id],e={id,g:"machine",knob:true,stream:"relx",name:d.name,dur:[30,30],mtbf:1e12,mods:{},rly:d.k,end:i=>rlyPlanDone(i)};
+  Object.defineProperty(e,"head",{get:()=>{const i=S&&S.inc&&S.inc.find(x=>x.id===id),A=i&&ASSETN[i.asset];return A?`${A.n}: planned ${d.k==="vib"?"bearing change":"motor swap"}. ${A.stop}`:d.name;},enumerable:true});EVENTS.push(e);EV[id]=e;CH.en[id]=true;}
 for(const id in RLY_EV){const d=RLY_EV[id];const e={id,g:"machine",knob:true,stream:"relx",name:d.name,dur:[60,60],mtbf:1e12,mods:{},rly:d.k,end:i=>rlyFixed(i)};
   Object.defineProperty(e,"head",{get:()=>rlyHead(id),enumerable:true});EVENTS.push(e);EV[id]=e;CH.en[id]=true;}
 // bearings go to a maintenance pair; motors, drives and the blackouts to the electrical tech (v6.10: lightning and the
 // bird on the line were maintenance jobs)
-MSET.delete("lightning");MSET.delete("birdline");MSET.add("bearingfail");
-const ESET=new Set(["motorfail","drivefail","rectfail","lightning","birdline"]),ENEED=id=>ESET.has(id),EMCC=new Set(["drivefail","rectfail","lightning","birdline"]);   // (EMCC: jobs in the MCC: arc-flash PPE at the door first)
+MSET.delete("lightning");MSET.delete("birdline");MSET.add("bearingfail");MSET.add("planbrg");
+const ESET=new Set(["motorfail","drivefail","rectfail","lightning","birdline","planmot"]),ENEED=id=>ESET.has(id),EMCC=new Set(["drivefail","rectfail","lightning","birdline"]);   // (EMCC: jobs in the MCC: arc-flash PPE at the door first)
 MAINT.push("bearingfail","motorfail","drivefail");FM_MAINT=null;FM_REL.add("bearingfail");FM_REL.add("motorfail");   // (RCFA, PM and the Reliability program cut them too)
 
 const rlyOn=()=>!!(S&&!S.zen&&!S.over&&((S.season&&S.season.on)||S.free));
@@ -80,7 +85,7 @@ function rlyLoad(id,r){if(!S||outOn()||rlyIncOf(id)||rlyRectDown(ASSETN[id].ln))
     case "wind":{const c=(S.rates&&S.rates.cut)||0;return M.winderDown||c<0.5?(S.wd==="run"?6:0):28+c/Math.max(1,P.winderMax)*62+w;}}
   return 0;}
 // drive status: run, idle (stopped by the process), trip (its motor or bearing failed), fault (the drive itself), off (outage)
-function rlyDrvSt(id,L){if(outOn())return "off";const i=rlyIncOf(id);if(i&&i.kind==="drv")return "fault";if(rlyRectDown(ASSETN[id].ln))return "nodc";if(i)return "trip";return (L!=null?L:rlyLoad(id))>3?"run":"idle";}
+function rlyDrvSt(id,L){if(outOn())return "off";const i=rlyIncOf(id);if(i&&i.kind==="plan")return "lock";if(i&&i.kind==="drv")return "fault";if(rlyRectDown(ASSETN[id].ln))return "nodc";if(i)return "trip";return (L!=null?L:rlyLoad(id))>3?"run":"idle";}
 const rlyTemp=(id,L)=>{const a=S.rel&&S.rel.a[id];return 27+(L||0)*0.38+(a?(100-a.dh)*0.12:0);};
 function rlyMccKw(r){r=r||knobRead();let k=0;for(const A of ASSETS)k+=Math.max(0,rlyLoad(A.id,r))/100*A.kw;return k;}
 function rlyStressV(id,r,L){let s=1;if(id==="pulp"&&r.amps>460)s+=(r.amps-460)/40;if((id==="refA"||id==="refB")&&r.kwh>80)s+=(r.kwh-80)/25;if((id==="pr1"||id==="pr2")&&r.pl>120)s+=(r.pl-120)/15;if(L>100)s+=(L-100)/20;return Math.min(4,s);}
@@ -88,6 +93,8 @@ const rlyStressM=L=>L>100?Math.min(4,1+(L-100)/15):1;
 
 /* ---- every step (07): the rounds, then wear and the dice every RLY.tick minutes ---- */
 function rlyTick(dt){if(!rlyOn())return;const R=rlyState();rlyRounds(R);
+  if(R.upChk&&S.t>=R.upChk){R.upChk=0;const L=Math.max(rlyLoad("refA"),rlyLoad("refB"));   // (t4: after an upgrade, warn if it pushed the refiner drives near their rating)
+    if(L>=92){const t=`The refiner drives now run at ${Math.round(L)}% of their rating. Over about 95% they trip more often: ease the refining energy (kWh/t) on the stock prep DCS.`;BANNERS.push({text:t,t:null,tag:"DRV"});while(BANNERS.length>3)BANNERS.splice(1,1);log(t,"warn");}}
   const k=Math.floor(S.t/RLY.tick);if(k===R.k)return;const first=R.k<0;R.k=k;if(first)return;
   if(S.rng.rel==null)S.rng.rel=(S.seed^0x2545f491)|0;
   const r=knobRead(),out=outOn(),um=upsetMul(),live=CH.on&&um>0&&!out,h=RLY.tick/1440,u=um*2*CH.lvl;
@@ -124,7 +131,7 @@ function rlyHead(id,inc){inc=inc||(S&&S.inc?S.inc.find(x=>x.id===id):null);if(id
 function rlyFixed(i){const R=S.rel;if(!R||!i.asset)return;const a=R.a[i.asset];if(!a)return;
   if(i.kind==="vib"){a.vib=96;a.lv={t:S.t,st:"good",v:1.0,by:"new"};R.pend=R.pend.filter(p=>!(p.a===i.asset&&p.k==="vib"));}
   else if(i.kind==="adx"){a.adx=97;a.la={t:S.t,st:"good",h:97,by:"new"};R.pend=R.pend.filter(p=>!(p.a===i.asset&&p.k==="adx"));}
-  else if(i.kind==="drv"){if(i.stage==="repl"){a.dh=100;a.patch=false;}else if(i.stage==="patch"){a.patch=true;const c=S.rel.chg[i.asset]||(S.rel.chg[i.asset]={});c.d=1;}else if(i.stage==="reset")a.dh=Math.max(0,a.dh-4);}
+  else if(i.kind==="drv"){if(i.stage==="repl"){a.dh=100;a.patch=false;}else if(i.stage==="patch"){a.patch=true;const c=S.rel.chg[i.asset]||(S.rel.chg[i.asset]={});c.d=1;}else if(i.stage==="reset")a.dh=Math.max(0,a.dh-4*(1+(i.rstN||0)));}
   else if(i.kind==="rect"&&i.line)S.rel.rf[i.line]=100;}
 // the upset card's line: what the rounds last said about it
 function rlyCite(id,inc){const R=S.rel;if(!R)return "";const ago=t=>{const m=S.t-t;return m<90?Math.round(m)+" min ago":m<2880?(m/60).toFixed(m<600?1:0)+" h ago":(m/1440).toFixed(1)+" days ago";};
@@ -141,9 +148,9 @@ function rlyRounds(R){const s=manIdx(),st=s*720,D=R.rd;
     for(let k=0;k<m.nt;k++)D.list.push({who:"t"+k,k:"vib",t0:st+RLY.vib.at+k*RLY.vib.stag,len:RLY.vib.len,st:"plan",a:[],why:""});
     D.list.push({who:"e",k:"adx",t0:st+RLY.adx.at,len:RLY.adx.len,st:"plan",a:[],why:""});}
   for(const x of D.list){
-    if(x.st==="plan"&&S.t>=x.t0){const b=rlyBusy(x);if(b){x.st="skip";x.why=b;R.skip++;}else{x.st="go";x.a=rlyPick(R,x.k,RLY[x.k].n);x.t1=x.t0+x.len;if(!x.a.length){x.st="done";}}}
-    if(x.st==="go"){const b=rlyBusy(x);if(b){x.st="abandon";x.why=b;R.skip++;}else if(S.t>=x.t1){x.st="done";R.done++;rlyRead(R,x);}}}}
-function rlyShiftEnd(R){const D=R.rd,c=k=>D.list.filter(x=>x.k===k);
+    if(x.st==="plan"&&S.t>=x.t0){const b=rlyBusy(x);if(b){x.st=outOn()?"out":"skip";x.why=b;if(x.st==="skip")R.skip++;}else{x.st="go";x.a=rlyPick(R,x.k,RLY[x.k].n);x.t1=x.t0+x.len;if(!x.a.length){x.st="done";}}}
+    if(x.st==="go"){const b=rlyBusy(x);if(b){x.st=outOn()?"out":"abandon";x.why=b;if(x.st==="abandon")R.skip++;}else if(S.t>=x.t1){x.st="done";R.done++;rlyRead(R,x);}}}}
+function rlyShiftEnd(R){const D=R.rd,c=k=>D.list.filter(x=>x.k===k&&x.st!=="out");   // (t4: rounds the planned outage stopped don't count)
   R.hist.push({s:D.s,vd:c("vib").filter(x=>x.st==="done").length,vn:c("vib").length,ad:c("adx").filter(x=>x.st==="done").length,an:c("adx").length});while(R.hist.length>14)R.hist.shift();}
 // why a round can't happen (empty: it can)
 function rlyBusy(x){if(outOn())return "on the outage";
@@ -168,14 +175,26 @@ function rlyRead(R,x){const who=x.who==="e"?"the electrical tech":"a maintenance
       else if(st==="alarm")log(`ADX test: ${A.n} motor in alarm (${ADXMODE[a.am]}).`,"warn");}}}
 // the player's actions (the Reliability screen)
 function rlyPin(id,k){const R=rlyState(),a=R.a[id];if(!a)return;a.pin=a.pin===k?"":k;}
-// a planned repair of a fault the rounds found: a share of the bill, no downtime
-function rlyFix(id,k){if(!rlyOn())return false;const R=rlyState(),a=R.a[id],A=ASSETN[id],v=k==="vib"?a.lv:a.la;if(!v||v.st!=="imm"||rlyIncOf(id))return false;
+// a planned repair of a fault the rounds found (or a motor in ADX alarm): a share of the bill, and the machine down for
+// RLY.fixMin while the crew works (t4: it was instant)
+const rlyCanFix=(id,k)=>{const a=S.rel&&S.rel.a[id],v=a&&(k==="vib"?a.lv:a.la);return !!v&&(v.st==="imm"||(k==="adx"&&v.st==="alarm"));};
+function rlyFix(id,k){if(!rlyOn())return false;const R=rlyState(),a=R.a[id],A=ASSETN[id];if(!rlyCanFix(id,k)||rlyIncOf(id)||active(k==="vib"?"planbrg":"planmot"))return false;
   const bill=rlyBill(id,k),cost=bill*RLY.fix,p=R.pend.findIndex(x=>x.a===id&&x.k===k);spend(cost,"repairs");pfRepair(RLY_ID[k],cost);
   if(p>=0){R.pend.splice(p,1);R.caught++;R.saved+=bill-cost;if(civOn())civAdd(TELL.catchCiv,"Caught early");}
-  if(k==="vib"){a.vib=95;a.lv={t:S.t,st:"good",v:1.1,by:"fix"};}else{a.adx=96;a.la={t:S.t,st:"good",h:96,by:"fix"};}
-  const ck=k==="vib"?"b":"m",co=R.chg[id];if(co&&co[ck]){delete co[ck];if(!Object.keys(co).length)delete R.chg[id];}   // the part is new: no outage changeout for it
-  log(`Planned repair: ${A.n} ${k==="vib"?"bearings changed":"motor swapped for the spare"} for ${money(cost)}, no downtime (a ${money(bill)} failure avoided).`,"ok");return true;}
+  const ck=k==="vib"?"b":"m",co=R.chg[id];if(co&&co[ck]){delete co[ck];if(!Object.keys(co).length)delete R.chg[id];}   // the part will be new: no outage changeout for it
+  const pid=k==="vib"?"planbrg":"planmot",m=(RLY.fixMin[0]+rand("rel")*(RLY.fixMin[1]-RLY.fixMin[0]))*durMul(pid);
+  S.inc.push({id:pid,left:m,total:m,real:performance.now(),note:"planned",asset:id,kind:"plan",pk:k,mods:A.mods,planned:true});S.M=mods();
+  log(`Planned repair: ${A.n} ${k==="vib"?"bearing change":"motor swap"} for ${money(cost)}${p>=0?` (a ${money(bill)} failure avoided)`:""}. ${A.stop} About ${Math.round(m)} min.`,"warn");return true;}
+// the planned repair is done: the part is new
+function rlyPlanDone(i){const R=S.rel;if(!R)return;const a=R.a[i.asset];if(!a)return;
+  if(i.pk==="vib"){a.vib=95;a.lv={t:S.t,st:"good",v:1.1,by:"fix"};a.hv.push([Math.round(S.t),1.1,"fix"]);if(a.hv.length>8)a.hv.shift();R.pend=R.pend.filter(p=>!(p.a===i.asset&&p.k==="vib"));}
+  else{a.adx=96;a.la={t:S.t,st:"good",h:96,by:"fix"};a.ha.push([Math.round(S.t),96,"fix"]);if(a.ha.length>8)a.ha.shift();R.pend=R.pend.filter(p=>!(p.a===i.asset&&p.k==="adx"));}}
 const rlyFixCost=(id,k)=>rlyBill(id,k)*RLY.fix;
+const rlyFixEv={vib:"planbrg",adx:"planmot"};
+// a deal that renews a part (05 event cards): the rotor rebuild's bearings, the used winder drive
+function rlyRenew(id,k){if(!S||!S.rel||!rlyOn())return;const R=S.rel,a=R.a[id];if(!a)return;
+  if(k==="vib"){a.vib=100;a.lv={t:S.t,st:"good",v:0.9,by:"new"};a.hv.push([Math.round(S.t),0.9,"fix"]);if(a.hv.length>8)a.hv.shift();R.pend=R.pend.filter(p=>!(p.a===id&&p.k==="vib"));}
+  else if(k==="drv"){a.dh=85;a.patch=false;a.rs=[];}}
 
 /* ---- outage changeouts: booked on the outage plan (24 h before), done during the outage ---- */
 function rlyChg(id,k){const R=rlyState(),o=R.chg[id]||(R.chg[id]={});if(o[k])delete o[k];else o[k]=1;if(!Object.keys(o).length)delete R.chg[id];}
@@ -201,7 +220,8 @@ function rlyElecTick(dt){
   for(const i of S.inc){if(i.kind!=="drv"||!i.stage)continue;if(i.stage==="wait"||i.stage==="found"){i.left=Math.max(i.left,30);
       // the card pauses the game; if the sim runs on without an answer for an hour (no screen to show it on), the crew decides: investigate, then replace
       i.waitT=(i.waitT||0)+dt;if(i.waitT>60){const st=i.stage;i.waitT=0;const R=S.rel;if(R){R.q=R.q.filter(q=>q.a!==i.asset);if(R.cur&&R.cur.a===i.asset){R.cur=null;if(S.cards&&S.cards.open&&S.cards.open.rly)S.cards.open=null;if(typeof document!=="undefined"){const o=document.getElementById("rlyOv");if(o)o.hidden=true;}}}rlyDecide(i,st==="wait"?"inv":"repl",true);continue;}}
-    else if(i.stage==="inv"&&i.eGo&&i.left<=dt*3){i.stage="found";i.left=30;rlyAsk(i,"found");}}
+    else if(i.stage==="inv"&&i.eGo&&i.left<=dt*3){i.stage="found";i.left=30;rlyAsk(i,"found");}
+    else if(i.stage==="reset"&&i.rfail&&i.eGo&&i.left<=dt*3){i.rfail=false;i.noReset=true;i.stage="wait";i.left=30;i.waitT=0;log(`${ASSETN[i.asset].n} drive: the reset didn't hold. It has to be investigated or replaced.`,"bad");rlyAsk(i,"fault");}}
   let L=null;for(const i of S.inc)if(ENEED(i.id))(L||(L=[])).push(i);if(!L)return;
   const pri=id=>id==="lightning"||id==="birdline"?0:1;L.sort((a,b)=>pri(a.id)-pri(b.id));
   L.forEach((i,k)=>{i.eQ=k;if(k>0){if(i.eSlot===0){i.eSince=0;i.eGo=false;}i.eSlot=-1;return;}i.eSlot=0;if(!i.eSince){i.eSince=1;i.eResp=RLY.elecResp+(EMCC.has(i.id)?RLY.ppe:0);}if(i.eResp>0)i.eResp-=dt;if(i.eResp<=0)i.eGo=true;});}
@@ -213,7 +233,7 @@ function rlyOnTrigger(inc){if(!S.rel||!rlyOn())return;const R=S.rel;
   if(hit)for(const A of ASSETS){const a=R.a[A.id];a.dh=Math.max(0,a.dh-hit[0]-rlyHash(A.id,Math.floor(S.t),inc.id)*hit[1]);}}
 // freqMul (03): the upsets tied to an asset get likelier as its bearings wear (about 0.6 new, 1 at 50, 2 worn out)
 function rlyLinkMul(id){const L=RLY_LINK[id];if(!L||!S||!S.rel||!rlyOn())return 1;let h=0;for(const a of L)h+=S.rel.a[a].vib;h/=L.length;return 0.55+1.6*Math.pow(1-h/100,1.6);}
-// the Round card's Vibration Report arrows (04b tellTrend): a known fault in the area counts too
+// the Round card's Area Trend Report arrows (04b tellTrend): a known fault in the area counts too
 function rlyTellTrend(area){const R=S&&S.rel;if(!R)return 0;let v=0;for(const A of ASSETS){if(A.ta!==area)continue;const a=R.a[A.id],f=x=>x&&S.t-x.t<RLY.unknown?x.st:"";
   const s=f(a.lv),t=f(a.la);if(s==="imm"||t==="imm")v=2;else if(s==="inner"||s==="outer"||t==="alarm")v=Math.max(v,1);}return v;}
 // end screens: "Reliability rounds" line
@@ -247,17 +267,24 @@ delete CIVU.drivefail;   // (v6.10: a drive fault has its own card instead: rese
 /* ---- v6.10 drive faults: the player's call. Reset and go (back in ~5 min, but a weak drive may fault again within a day;
    the odds scale with the drive's health), or Investigate (45-90 min with the fault log and a meter: the cause, then Run
    to the outage (patched, likelier to fault, its replacement booked on the next outage plan) or Replace now). ---- */
-const DRVCAUSE=[["fan","a seized cooling fan","the heat sink ran hot until the drive tripped on overtemperature"],["cap","a failing DC bus capacitor","ripple on the DC bus is tripping it on overvoltage"],
+const DRVCAUSE=[["fan","a seized cooling fan","the fan stopped and the heat sink overheated within minutes, tripping it on overtemperature"],["cap","a failing DC bus capacitor","ripple on the DC bus is tripping it on overvoltage"],
   ["igbt","a failing IGBT module","one output phase is shorting to ground under load"],["con","a loose power connection","a hot spot on a motor lead lug is tripping it on phase loss"]];
-const rlyRepOdds=id=>{const a=S.rel.a[id];return clamp(RLY.rep[0]+RLY.rep[1]*(1-a.dh/100),RLY.rep[0],0.85);};
+// t4: resets in the last day (RLY.rstWin) make the next one worse: longer, more wear, likelier to come back
+const rlyRst=id=>{const a=S.rel.a[id];a.rs=(a.rs||[]).filter(t=>S.t-t<RLY.rstWin);return a.rs.length;};
+const rlyRepOdds=id=>{const a=S.rel.a[id];return clamp(RLY.rep[0]+RLY.rep[1]*(1-a.dh/100)+0.1*rlyRst(id),RLY.rep[0],0.95);};
+const rlyRstMin=id=>5*(1+rlyRst(id));
+const rlyRstFail=id=>{const h=S.rel.a[id].dh;return h<RLY.rstFail?(RLY.rstFail-h)/RLY.rstFail*0.9:0;};
 function rlyAsk(inc,step){const R=rlyState(),a=inc.asset;if(R.q.some(q=>q.a===a&&q.step===step)||(R.cur&&R.cur.a===a&&R.cur.step===step))return;
-  if(step==="found"&&!inc.cause){const k=Math.floor(rand("rel")*DRVCAUSE.length);inc.cause=DRVCAUSE[k][0];}
+  if(step==="found"&&!inc.cause){   // t4: the cause follows the data: a hot or worn drive, a weak rectifier, a drive run over its rating
+    const A=ASSETN[a],d=S.rel.a[a],L=inc.load||0,w={fan:1+(rlyTemp(a,L)>60?2:0),cap:1+(S.rel.rf[A.ln]<60?2:0),igbt:1+(L>95?2.5:0),con:1+(d.dh<50?1:0)};
+    let x=rand("rel")*(w.fan+w.cap+w.igbt+w.con);for(const c of DRVCAUSE){x-=w[c[0]];if(x<=0){inc.cause=c[0];break;}}if(!inc.cause)inc.cause="con";}
   if(typeof afkOn==="function"&&afkOn()){rlyDecide(inc,step==="fault"?"inv":"repl",true);return;}   // (free play's Let the mill run: the careful choice)
   R.q.push({a,step});}
 const rlyDrvInc=a=>S.inc.find(i=>i.id==="drivefail"&&i.asset===a);
 function rlyDecide(inc,ch,auto){const A=ASSETN[inc.asset],R=rlyState(),a=R.a[inc.asset];if(!A||!active("drivefail"))return;
   const go=(st,m)=>{if(inc.rep&&st!=="patch")m*=1.5;inc.stage=st;inc.left=inc.total=m;};/* a repeat fault: half as long again */let txt="";
-  if(ch==="reset"){go("reset",5);const p=rlyRepOdds(inc.asset);if(rand("rel")<p)R.rep.push({a:inc.asset,due:S.t+30+rand("rel")*1380});txt=`reset and run (repeat odds ${Math.round(p*100)}%)`;}
+  if(ch==="reset"){const n=rlyRst(inc.asset),p=rlyRepOdds(inc.asset),pf=rlyRstFail(inc.asset);go("reset",rlyRstMin(inc.asset));inc.rstN=n;a.rs.push(S.t);
+    if(rand("rel")<pf)inc.rfail=true;else if(rand("rel")<p)R.rep.push({a:inc.asset,due:S.t+30+rand("rel")*1380});txt=`reset and run (repeat odds ${Math.round(p*100)}%${n?`, reset ${n+1} today`:""})`;}
   else if(ch==="inv"){const d=RLY.inv;go("inv",d[0]+rand("rel")*(d[1]-d[0]));spend(2e3,"repairs");txt="investigate";}
   else if(ch==="patch"){go("patch",15);spend(4e3,"repairs");txt="patch it and run to the outage (replacement booked)";}
   else if(ch==="repl"){const d=RLY.repl;go("repl",d[0]+rand("rel")*(d[1]-d[0]));const b=RLY.drvBill*P.repairMul;spend(b,"repairs");pfRepair("drivefail",b);txt=`replace the drive now (${money(b)})`;}
