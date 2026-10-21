@@ -1,6 +1,9 @@
 # Changelog
 
 
+## v6.10.1 (2026-10-21): reliability polish
+Release of v6.10.1-t1 (below).
+
 ## v6.10.1-t1 (2026-10-21): polish (test build)
 Picked by the user from the post-release list.
 - **Drive wear:** drives wear slower (base wear 0.15 a day, was 0.25; lightning and the bird on the line knock 3–10% off each drive, was 8–26%; a brownout 1–4%, was 3–9%), so 0% means a drive near its end. Fault odds climb steeply when worn (about 2× at 40%, 4× at 20%, 11× at 0%). Three drives (picked by the run's seed) start part-worn at 35–60%.
