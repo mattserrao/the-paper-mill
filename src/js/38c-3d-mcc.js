@@ -31,7 +31,7 @@
       g.fillStyle="#ffffff";g.font="900 22px system-ui,sans-serif";g.textAlign="center";g.fillText("DANGER",64,23);g.fillStyle="#1c2233";g.font="800 15px system-ui,sans-serif";g.fillText("HIGH VOLTAGE",64,55);g.fillText("480 V",64,78);
       const t=new THREE.CanvasTexture(c);t.colorSpace=THREE.SRGBColorSpace;const p=new THREE.Mesh(new THREE.PlaneGeometry(0.8,0.6),new THREE.MeshBasicMaterial({map:t}));p.rotation.y=-Math.PI/2;p.position.set(MCC.x0-0.19,1.6,dz+1.6);scene.add(p);}
     blob(cx,cz,9);}
-  // ---- the lineups: a cabinet per drive along the back wall, facing the door; the incoming section at the east end ----
+  // ---- the lineups: a cabinet per drive along the back wall; the incoming section at the east end ----
   const LEDM={run:new THREE.MeshBasicMaterial({color:lin0("#3fe08a")}),idle:new THREE.MeshBasicMaterial({color:lin0("#e8b23a")}),fault:new THREE.MeshBasicMaterial({color:lin0("#ff3b2f")}),off:new THREE.MeshBasicMaterial({color:lin0("#4a5262")})};
   const cabM=mat("g-frame",{metalness:0.2,roughness:0.6}),modM={old:M.bad,new:M.ok};
   let RECT3={};const CAB={},CABZ=MCC.z0+0.55,dynMark=o=>{if(G3.SM&&G3.SM.dyn)G3.SM.dyn.add(o);else (G3.dynLater||(G3.dynLater=[])).push(o);return o;};
@@ -41,8 +41,6 @@
   // (AC to ~650 V DC, a grey cabinet with a heat-sink grille) and its drives (inverters) on a copper DC busbar along the top
   const rectM=mat("g-metal",{metalness:0.3,roughness:0.5}),cuM=new StdMat({color:lin0("#c47a3a"),roughness:0.35,metalness:0.6});RECT3={};
   {let x=MCC.x0+0.6;
-    [0,1].forEach(k=>{box(0.78,2.4,0.7,cabM,x+0.39+k*0.8,1.2,CABZ-0.05,scene);box(0.16,0.16,0.03,LEDM.run,x+0.6+k*0.8,1.95,CABZ+0.31,scene,false);});
-    mccPlate("MAIN 480 V",x+0.8,2.75,CABZ+0.3);CAB.main={stand:[x+0.8,CABZ+1.35]};x+=1.9;
     LINEUPS.forEach(([ln,,tag])=>{const list=ASSETS.filter(A=>A.ln===ln),x0=x;
       // the rectifier
       box(0.86,2.4,0.68,rectM,x+0.43,1.2,CABZ-0.02,scene);for(let k=0;k<6;k++)box(0.6,0.05,0.03,M.ink,x+0.43,0.5+k*0.12,CABZ+0.33,scene,false);
@@ -58,6 +56,10 @@
       // the DC bus: a copper bar over the rectifier and its drives
       box(x-x0-0.06,0.08,0.1,cuM,(x0+x-0.04)/2,2.5,CABZ+0.2,scene,false);
       mccPlate(tag+" · DC",(x0+x-0.04)/2,2.72,CABZ+0.32);x+=0.3;});
+    // the incoming 480 V section (from the transformer outside the east wall) at the east end, in clear view (t5: it was by the door)
+    [0,1].forEach(k=>{box(0.78,2.4,0.7,cabM,x+0.39+k*0.8,1.2,CABZ-0.05,scene);box(0.16,0.16,0.03,LEDM.run,x+0.6+k*0.8,1.95,CABZ+0.31,scene,false);});
+    mccPlate("MAIN 480 V",x+0.8,2.75,CABZ+0.3);CAB.main={stand:[x+0.8,CABZ+1.35]};
+
     // the desk with the tester's laptop, and the rack of spare drives
     box(1.6,0.08,0.8,M.kraft,MCC.desk[0],0.78,MCC.desk[1]-0.45,scene,false);[-0.7,0.7].forEach(s=>box(0.08,0.74,0.7,M.steel,MCC.desk[0]+s,0.37,MCC.desk[1]-0.45,scene,false));
     box(0.42,0.03,0.3,M.ink,MCC.desk[0],0.84,MCC.desk[1]-0.5,scene,false);

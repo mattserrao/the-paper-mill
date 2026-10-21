@@ -123,10 +123,49 @@
     FXDEF.rotortrip=g=>spFx(g,16,-13.5,2.6,8);
     FXDEF.couchpit=g=>spFx(g,40.6,11.4,0.6,6);
     FXDEF.oscfail=g=>(now,rdt)=>{if(Math.random()<rdt*8)emit("steam",35.5+Math.random()*3.5,7.4,zc+R()*5,R()*0.4,0.8+Math.random(),R()*0.4,1.6,1.1,"#dfe7ee",0.5);};
-    // v6.10 t5: the arc flash at the main incomer: a white-blue flash and sparks out of the MCC, then smoke from the door
-    FXDEF.arcflash=g=>{return (now,rdt,inc)=>{if(rdt<=0)return;const x=CAB.main.stand[0],z=CABZ+0.6,f=inc&&inc.real?performance.now()-inc.real:9e9;
-      if(f<1500&&Math.random()<rdt*60)emit("spark",x+R()*0.8,1.4+Math.random()*0.8,z+Math.random()*0.6,R()*5,2+Math.random()*3,Math.random()*4,0.5,0.25,f<400?"#ffffff":"#7fd0ff",1);
-      if(Math.random()<rdt*3)emit("smoke",MCC.door[0]-0.6+R()*0.4,2.2,MCC.door[1]+R()*0.6,-0.4+R()*0.2,0.9,R()*0.2,3,1.4,"#5d636e",0.55);};};
-    PINS.arcflash=[11,7,27.5,"bolt"];
+    // v6.10 t5: the arc flash at the main incomer. A blinding electric-blue fireball (a saturated blue halo and a white-hot
+    // core, flickering; normal blending, since additive light vanishes on the mill's pale ground), thick jagged arcs
+    // crawling over the switchgear and out to the walls, a shower of molten sparks, a blue flash over the whole screen while
+    // the MCC is in view, and a camera jolt; then re-strikes for a few seconds, and smoke pouring out of the door and roof.
+    {const halo=spriteTex((x,w)=>{const g=x.createRadialGradient(w/2,w/2,0,w/2,w/2,w/2);g.addColorStop(0,"rgba(255,255,255,1)");g.addColorStop(0.12,"rgba(225,245,255,1)");g.addColorStop(0.3,"rgba(80,170,255,0.9)");g.addColorStop(0.6,"rgba(30,90,255,0.45)");g.addColorStop(1,"rgba(20,40,200,0)");x.fillStyle=g;x.fillRect(0,0,w,w);},128);
+      const sm=()=>new THREE.SpriteMaterial({map:halo,transparent:true,depthWrite:false,depthTest:false,toneMapped:false});
+      const arcM=new THREE.MeshBasicMaterial({color:lin0("#e9f7ff"),transparent:true,depthWrite:false,depthTest:false,toneMapped:false});
+      const arcM2=new THREE.MeshBasicMaterial({color:lin0("#2f8cff"),transparent:true,depthWrite:false,depthTest:false,toneMapped:false});
+      const ringM=new THREE.MeshBasicMaterial({map:halo,transparent:true,depthWrite:false,toneMapped:false});
+      const NA=14,NP=12,SEG=NA*(NP-1),segG=new THREE.BoxGeometry(1,1,1),_m=new THREE.Matrix4(),_p=new THREE.Vector3(),_q=new THREE.Quaternion(),_s=new THREE.Vector3(),_u=new THREE.Vector3(0,1,0),_d=new THREE.Vector3();
+      let flashEl=null;const flash=o=>{if(!flashEl){flashEl=document.createElement("div");flashEl.className="arcflashfx";document.body.appendChild(flashEl);}const v=o.toFixed(2);if(flashEl.style.opacity!==v)flashEl.style.opacity=v;};
+      UI_TICKS.push(()=>{if(flashEl&&flashEl.style.opacity!=="0.00"&&!(S&&S.inc&&S.inc.some(i=>i.id==="arcflash")))flash(0);});   // (a fast clock can clear the flash before its last frame)
+      FXDEF.arcflash=g=>{const x=CAB.main.stand[0],z=CABZ+0.5,y=1.5;
+        const big=new THREE.Sprite(sm());big.position.set(x,y,z);big.renderOrder=9980;g.add(big);
+        const core=new THREE.Sprite(sm());core.position.set(x,y,z+0.1);core.renderOrder=9983;g.add(core);
+        const floor=new THREE.Mesh(new THREE.PlaneGeometry(1,1),ringM);floor.rotation.x=-Math.PI/2;floor.position.set(x,0.06,z+1.4);g.add(floor);
+        // the arcs: thick segments (WebGL lines are 1 px), white-hot ones and blue ones
+        const mkI=m=>{const im=new THREE.InstancedMesh(segG,m,SEG);im.renderOrder=9982;im.frustumCulled=false;im.count=0;g.add(im);return im;};const hot=mkI(arcM),blue=mkI(arcM2);
+        const pts=[];for(let i=0;i<NP;i++)pts.push(new THREE.Vector3());
+        const bolt=(tx,ty,tz)=>{for(let i=0;i<NP;i++){const f=i/(NP-1),j=Math.sin(f*Math.PI)*0.7,e=i&&i<NP-1;pts[i].set(x+(tx-x)*f+(e?R()*j:0),y+(ty-y)*f+(e?R()*j:0),z+(tz-z)*f+(e?R()*j*0.6:0));}};
+        const put=(im,w)=>{for(let i=0;i<NP-1;i++){const a=pts[i],b=pts[i+1];_d.subVectors(b,a);const L=_d.length();if(L<1e-4)continue;_p.addVectors(a,b).multiplyScalar(0.5);_q.setFromUnitVectors(_u,_d.normalize());_s.set(w,L,w);_m.compose(_p,_q,_s);im.setMatrixAt(im.count++,_m);}};
+        let lastB=0,shook=0;
+        return (now,rdt,inc)=>{const f=inc&&inc.real?performance.now()-inc.real:9e9;
+          const blast=f<3000?1-f/3000:0,re=f>=3000&&f<9000&&Math.sin(f/90)*Math.sin(f/37)>0.5?0.6:0,k=Math.max(blast,re),fl=k>0?0.7+Math.random()*0.3:0;
+          big.visible=core.visible=floor.visible=k>0;
+          if(k>0){const s=(8+blast*26)*fl;big.scale.set(s,s,1);big.material.opacity=Math.min(1,0.45+k*0.55)*fl;const c=(2+blast*6)*fl;core.scale.set(c,c,1);core.material.opacity=1;
+            const r=5+blast*12;floor.scale.set(r,r,1);ringM.opacity=0.8*k*fl;}
+          // the screen flash and a jolt, only when the MCC is on screen
+          {let on=0;if(blast>0){_p.set(x,y,z).project(camera);on=_p.z<1&&Math.abs(_p.x)<1.1&&Math.abs(_p.y)<1.1?1:0;}flash(on?Math.min(0.65,blast*blast*0.85*fl):0);
+            if(on&&!shook&&G3.camShake){shook=1;G3.camShake(0.9);}if(!inc||f>9e3)shook=0;}
+          const live=k>0;arcM.opacity=live?fl:0;arcM2.opacity=live?0.9*fl:0;
+          if(live&&now-lastB>40){lastB=now;hot.count=blue.count=0;const n=Math.round(4+k*(NA-4));
+            for(let i=0;i<n;i++){const a=Math.random()*Math.PI*2,d=1.4+Math.random()*(2+blast*7),up=i%4===0&&blast>0.3;bolt(up?x+R()*1.5:x+Math.cos(a)*d,up?MCC.h+2+Math.random()*4*blast:Math.max(0.05,y+R()*2+(i%3===0?1.8:0)),up?z+R()*1.5:z+Math.abs(Math.sin(a))*d*0.9);put(i%3?blue:hot,(i%3?0.16:0.11)*(0.6+0.6*k));
+              if(i%2===0){bolt(pts[NP-1].x+R()*1.8,Math.max(0.05,pts[NP-1].y+R()*1.4),pts[NP-1].z+R()*1.8);put(blue,0.08);}}   // (forks off the end)
+            hot.instanceMatrix.needsUpdate=blue.instanceMatrix.needsUpdate=true;}
+          else if(!live&&(hot.count||blue.count)){hot.count=blue.count=0;}
+          g.updateMatrixWorld(true);   // (the scene's automatic matrix update is off, 43-3d-frame.js)
+          if(rdt<=0)return;
+          if(blast>0&&Math.random()<rdt*160*blast)emitA("spark",x+R()*0.6,y+R()*0.5,z+Math.random()*0.4,R()*11,1+Math.random()*8,1+Math.random()*9,0.8+Math.random()*0.6,0.26+Math.random()*0.2,Math.random()<0.4?"#ffffff":Math.random()<0.6?"#4aa3ff":"#ffd27a",1);
+          if(re>0&&Math.random()<rdt*35)emitA("spark",x+R()*0.4,y+R()*0.4,z+0.2,R()*6,1+Math.random()*4,Math.random()*5,0.5,0.22,"#9fd2ff",1);
+          if(f<10000&&Math.random()<rdt*(f<3000?16:6))emitA("smoke",x+R()*1.4,y+1+Math.random(),z+0.6+R()*0.8,R()*0.7,1.3+Math.random(),R()*0.7,3.4,2+Math.random()*1.4,"#3f444d",0.65);
+          if(Math.random()<rdt*4)emitA("smoke",MCC.door[0]-0.7+R()*0.4,2.3,MCC.door[1]+R()*0.7,-0.8+R()*0.3,0.9+Math.random()*0.5,R()*0.3,3.4,1.6,"#5d636e",0.6);
+          if(Math.random()<rdt*3)emitA("smoke",x+R()*2,MCC.h+0.6,z+1.5+R()*1.5,R()*0.4,1.4,R()*0.4,4,2.4,"#5d636e",0.5);};};}
+    PINS.arcflash=[CAB.main.stand[0],7,CABZ+0.5,"bolt"];
     PINS.rotortrip=[16,9,-13.5,"bolt"];PINS.couchpit=[40.6,7,12.2,"water"];PINS.oscfail=[37,11,zc,"!"];
   }

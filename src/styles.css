@@ -1510,3 +1510,4 @@ body.pmpop .popmain[data-v="dcs"] #dcsOv .dcs{max-width:1180px;margin:0 auto}
 .rtog{display:flex;flex-wrap:wrap;gap:6px}.rtg{display:inline-flex;align-items:center;gap:6px;background:#22324f;color:#dbe6f6;border:1px solid #33476a;border-radius:6px;padding:5px 9px;font-size:12px}
 .rtg i{width:14px;height:14px;border:2px solid #8ea4c4;border-radius:3px;flex:none}.rtg[aria-pressed="true"]{border-color:#ffb02e;background:#3a2f17}.rtg[aria-pressed="true"] i{background:#ffb02e;border-color:#ffb02e;box-shadow:inset 0 0 0 2px #3a2f17}
 .ev .knobonly{font-size:11px;color:var(--muted,#7a8499);font-style:italic}
+.arcflashfx{position:fixed;inset:0;pointer-events:none;z-index:60;opacity:0;background:radial-gradient(circle at 50% 45%,rgba(235,248,255,.95),rgba(70,150,255,.75) 45%,rgba(30,70,220,.55));mix-blend-mode:screen}
