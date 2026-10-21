@@ -118,3 +118,4 @@ One line per version, oldest first. Add a line here with every release: build.py
 6.11.0-t2  Economy (Test): Paper Prices +2.5% on Every Grade to Make Up for Trim
 6.11.0     The Winder, Trim and CD Update: a Redesigned Mill (Designed in Blender), a Real Two-Drum Winder with a Rider Roll and Web Inspections, Twin Rolls at Order Widths with Trim to a DE Pulper, Quality per Roll across 12 CD Zones, a Spray Boom, a Steam Box Upgrade and Prices +2.5%
 6.11.1-t1  The Dryer Hood (Test): a Closed Dryer Hood with Six Lifting Doors that Rise on Breaks and Downtime, and a Hood Doors Fiddly Knob that Lifts the Front Away (4% More Steam While Running)
+6.11.1-t2  Wet-End Chemicals (Test): Dry Strength Starch and a Retention Polymer on the WET DCS, AUTO Flow-Paced at No Extra Cost with a MANUAL Pump Override

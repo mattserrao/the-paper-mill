@@ -36,6 +36,10 @@ const TAGS=[
   ["pl","Press load","WET","kN/m",r=>r.pl,""],["pressSol","Press solids","WET","%",r=>r.run?r.pressSol:null,""],["edge","Fabric edge","WET","mm",r=>r.edge,""],
   ["gtrav","Guide travel used","WET","%",r=>r.gm?Math.min(1,r.gtrav)*100:null,""],["osc","Felt shower oscillator","WET","%",r=>r.osc,""],
   ["wwl","White water silo level","WET","%",()=>S.we?S.we.L/WE.silo*100:null,"a.wwl"],["wwg","White water silo volume","WET","gal",()=>S.we?GAL(S.we.L):null,""],
+  // v6.11.1 wet-end chemicals (07l)
+  ["dsdose","Dry strength dose","WET","kg/t",()=>S.pm==="run"?chemE("ds"):null,""],["dsflow","Dry strength pump","WET","kg/h",()=>chemFlow("ds"),""],
+  ["poldose","Retention polymer dose","WET","kg/t",()=>S.pm==="run"?chemE("pol"):null,""],["polflow","Retention polymer pump","WET","kg/h",()=>chemFlow("pol"),""],
+  ["fpr","First pass retention","WET","%",()=>S.pm==="run"?fprNow():null,""],
   ["hum","Machine room humidity","WET","%",()=>clamp(62+(motStatus("fog")!=="run"||active("fogfan")?24:0)+wob2(0.01,8)*3,0,100),""],
   // dry end
   ["speed","Reel speed","DET","fpm",r=>r.speed,"a.speed"],["prod","Paper made","DET","t/h",()=>_R().prod,"a.prod"],["st1","1st section steam","DET","kPa",r=>r.st1,""],

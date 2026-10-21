@@ -87,6 +87,8 @@ function dcsAlarms(a,r,L){const al=(on,txt,hi)=>{if(on)L.push([txt,hi]);};vlvAla
     {const Wt=S.wat;al(!!(Wt&&Wt.L<WAT.cap*0.25),Wt&&Wt.short>0?"WHITE WATER CHEST EMPTY · STOCK THICK":"WHITE WATER CHEST LEVEL LO",!!(Wt&&Wt.short>0));}
     for(const k of ["hd","lc","lw"]){const dp=purgeDp(k);al(dp>PURGE.base[k]+(PURGE.trip[k]-PURGE.base[k])*0.6,{hd:"HD CLEANER ΔP HI",lc:"LC CLEANERS ΔP HI",lw:"LW CLEANERS ΔP HI"}[k],dp>PURGE.base[k]+(PURGE.trip[k]-PURGE.base[k])*0.85);}}
   else if(a==="WET"){al(motStatus("fog")!=="run","MACHINE ROOM HUMIDITY HI",false);
+    al(chemFloc()>0.02,"POLYMER HIGH · FLOCS IN THE SHEET",false);al(chemOn()&&fprNow()<82,"FIRST PASS RETENTION LO",fprNow()<78);al(chemDep()>0,"STARCH HIGH · DEPOSITS",false);
+    al(S.pm!=="run"&&CHEM_IDS.some(id=>chemMode(id)==="manual"&&chemFlow(id)>0),"CHEMICAL PUMP ON MANUAL · MACHINE DOWN",false);
     {const W=S.we;if(W&&S.pm==="run"){al(W.L<WE.silo*WE.makeL,W.cav>0?"WW SILO LOW · FAN PUMP CAVITATING":"WHITE WATER SILO LEVEL LO",W.cav>0);al(W.m==="manual","BASIS WEIGHT ON MANUAL",false);}}}
   else if(a==="DET"){al(S.pm==="break",`SHEET BREAK · ${({reel:"REEL",dryer:"DRYERS",press:"PRESSES"})[S.brkType]||"MACHINE"}`,true);al(S.pm==="spools","REEL STORE FULL: MACHINE HELD BACK",true);
     al(!!S.wdBlocked,"WINDER BLOCKED: CONVEYOR FULL",true);al(S.wd==="hayout","WINDER HAYOUT",true);
@@ -115,7 +117,11 @@ function dcsSetDefs(a){const D=()=>DCS_DRAW();
     ["slh","Slice lip position","remote from the DCS · L",-100,100,1,()=>G3.SLC?G3.SLC.h*100:0,v=>dcsSlice("h",v),"",null,1],
     // v6.8 the basis weight loop (07g): the setpoint (the grade's target, trimmed lighter if the strength will carry it) and the valve
     ["bws","Basis weight setpoint",(S.we&&S.we.lw===false)?`MANUAL · grade ${C.grade} target ${bwStd().toFixed(2)} lb · ring crush spec ${rctSpec()} lbf`:`AUTO-LW: holds ring crush ${Math.round((WE.lwM-1)*100)}% over spec (${(rctSpec()*WE.lwM).toFixed(1)} lbf) · grade target ${bwStd().toFixed(2)} lb`,+(bwStd()*(1+WE.trimMin)).toFixed(2),+(bwStd()*(1+WE.trimMax)).toFixed(2),0.05,()=>bwSp(),v=>bwSetTrim(v),"lb",null,0,
-      {on:()=>!(S.we&&S.we.lw===false),flip:()=>{if(S.zen)return;const W=weState();W.lw=W.lw===false?true:false;log(`Basis weight setpoint: ${W.lw?"AUTO-LW (the lightweight optimizer)":"MANUAL"}`,"");}}]];   // (v6.10 AUTO-LW, 07g)
+      {on:()=>!(S.we&&S.we.lw===false),flip:()=>{if(S.zen)return;const W=weState();W.lw=W.lw===false?true:false;log(`Basis weight setpoint: ${W.lw?"AUTO-LW (the lightweight optimizer)":"MANUAL"}`,"");}}],   // (v6.10 AUTO-LW, 07g)
+    // v6.11.1 the wet-end chemicals (07l): AUTO is flow-paced at the standard kg/t; dragging the pump puts it on MANUAL
+    ...CHEM_IDS.map((id,i)=>{const k=CHM[id],man=chemMode(id)==="manual",d=chemDose(id);
+      return [id+"f",k.name,man?`MANUAL · pump held · ${d==null?"machine down: going to the sewer":d.toFixed(id==="pol"?2:1)+" kg/t now"} · AUTO is ${k.std} kg/t`:`AUTO · flow-paced at ${k.std} kg/t · ${k.where}`,
+        0,k.fmax,k.step,()=>chemFlow(id),v=>chemSetFlow(id,v),"kg/h",null,0,{on:()=>chemMode(id)!=="manual",flip:()=>chemSetMode(id,chemMode(id)==="manual"?"auto":"manual")},i===0?"Wet-end chemicals":null];})];
   if(a==="DET")return [
     ["wsp","Machine speed (wire)","same setpoint as on WET",Math.round(1200/D()),Math.round((3300+P.spBonus)/D()),5,()=>C.pmSp.v/D(),v=>dcsCardSet("pmSp",Math.round(v*D()/10)*10),"fpm","pmSp"],
     ["wdr","Winder speed","",0,P.winderMax,1,()=>C.wdr.v,v=>dcsCardSet("wdr",v),"t/h","wdr"]];   // (v6.9: the 2nd / 3rd section steam is PV-302 / PV-303 under QC-300: tap them on the picture, 50k)
@@ -129,7 +135,7 @@ function dcsSetRows(a,cs){const defs=dcsSetDefs(a);
       row.querySelectorAll("[data-dye]").forEach(b=>b.addEventListener("click",()=>{const pc=document.querySelector(`#paperColor button[data-c="${b.dataset.dye}"]`);if(pc)pc.click();dcsSync();}));}
     else{row.innerHTML=`<div class="dcsn"><b>Grade</b><small>set by the market planner from customer orders</small></div><select disabled data-dgrade aria-label="Grade">${Object.keys(GRADES).map(g=>`<option value="${g}">${g} · ${GRADES[g].bw} lb</option>`).join("")}</select>`;}
     cs.appendChild(row);}
-  for(const d of defs){const [k,name,where,mn,mx,st,,,,card]=d,row=kEl("div","dcsrow dcsx");row.dataset.ds=k;
+  for(const d of defs){const [k,name,where,mn,mx,st,,,,card]=d,row=kEl("div","dcsrow dcsx");row.dataset.ds=k;if(d[12])cs.appendChild(kEl("div","dcssub",d[12]));
     row.innerHTML=`<div class="dcsn"><b>${name}</b><small>${where}</small></div><label class="spis"><input type="range" min="${mn}" max="${mx}" step="${st}" data-dsv aria-label="${name}"/></label><div class="kval"><b data-dsb></b></div>${card||d[11]?`<button type="button" class="reroll kstd" data-dsa>AUTO</button>`:""}`;
     row.querySelector("[data-dsv]").addEventListener("input",e=>{d[7](+e.target.value);dcsSync();});
     if(card)row.querySelector("[data-dsa]").addEventListener("click",()=>{dcsCardAuto(card);dcsSync();});

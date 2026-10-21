@@ -1,5 +1,12 @@
 # Changelog
 
+## v6.11.1-t2 (2026-10-21): wet-end chemicals (test build, test/v6.11.1-hood)
+- **Dry strength (cationic starch)** and a **retention polymer** on the WET DCS (`07l-chem.js`), in every mode but zen. Both come out of the existing $25/t chemicals and water budget: starch 6 kg/t × $0.55 = $3.30/t and polymer 0.3 kg/t × $3.50 = $1.05/t at standard, so on AUTO nothing changes and nothing extra is charged.
+- **AUTO is flow-paced**: the pump follows the tons at the standard kg/t and stops on a break. **MANUAL** (drag the pump, or the AUTO button) holds a fixed kg/h, so the dose moves with the tons; on a break the chemical keeps going to the sewer, and the restart gets an overdose.
+- **More starch:** more ring crush (+2.7% at 10 kg/t, +4.3% at 15), so AUTO-LW trims the weight lighter for the lightweight premium, and a drier couch (less steam). Over 10 kg/t: deposits (more breaks and slime). None: ring crush fails. **More polymer:** first pass retention up from 85% (fiber loss to the sewer down, more tons a ton of fiber, lower TSS). Over 0.5 kg/t: flocs, part of the reel to the beater. Under about half the standard for an hour: a permit breach.
+- The process engineer traces flocs, deposits and weak paper back and puts that pump on AUTO; the environmental engineer does after a permit breach.
+- Tags (dose, pump, first pass retention), WET alarms, relationship map links, help and glossary (dry strength, retention polymer, first pass retention, flow-paced control); new check `tools/checks/chem.py`.
+
 ## v6.11.1-t1 (2026-10-21): the dryer hood front (test build, test/v6.11.1-hood)
 - **A closed dryer hood** (designed in Blender, `tools/blender/hood_front_new.py`): the tending-side wall, the front half of the roof and the upper end walls now close the v6.11 cutaway, with **six lifting doors** on chains from a header along the top of their guides (two narrower ones each side of the crossover bridge, a fixed panel under it).
 - The doors **go up on their own** on a sheet break or whenever the machine is down (incl. outages) with steam rolling out from under them, and drop again once the sheet is back on.

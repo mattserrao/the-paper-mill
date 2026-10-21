@@ -107,6 +107,7 @@ function freqMul(id){let m=1;const MS=FM_MAINT||(FM_MAINT=new Set(MAINT));
   if(id==="fight"||id==="calloff")m*=LV("safety")?0.5:1;
   if(OUT.area[id])m*=outRel(OUT.area[id]);
   m*=siteFreq(id);
+  m*=chemFreq(id);   // v6.11.1 spare dry-strength starch feeds slime (07l)
   m*=civFreq(id);   // v5.1 civics: each choice's odds, and the meters
   m*=rlyLinkMul(id);   // v6.10: the upsets tied to an asset's bearings wear with them (07i)
   m*=leadFreq(id);   // v4.4 survival leaders: Chip's labour trouble, Felicity's projects, the upset Dot just fixed
