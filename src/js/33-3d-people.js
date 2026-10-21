@@ -1,20 +1,24 @@
   /* ---- people ---- */
-  const skin=M.skin;
+  const skin=M.skin,BOOT_M=new StdMat({color:lin0("#4a3524"),roughness:0.85}),GLOVE_M=new StdMat({color:lin0("#c9a46a"),roughness:0.8});
   // v4.1 pass 3: roles. vest: a hi-vis vest material over the torso (with a reflective band); radio: a handset on the belt
   function worker(suit,hatM,role){const p=new THREE.Group();const hip=new THREE.Group();hip.position.y=0.9;p.add(hip);
-    const legs=[-0.15,0.15].map(z=>{const l=new THREE.Group();l.position.z=z;const m=new THREE.Mesh(cubeG,M.ink);m.scale.set(0.22,0.9,0.22);m.position.y=-0.45;m.castShadow=true;l.add(m);hip.add(l);return l;});
+    // v6.11 Blender redesign (item 12): paper-doll proportions and colour blocks that read at cut-out size: work boots on the
+    // legs, leather gloves for hands, a belt, a bigger head and hard hat (x1.17). The parts the game poses are unchanged.
+    const legs=[-0.15,0.15].map(z=>{const l=new THREE.Group();l.position.z=z;const m=new THREE.Mesh(cubeG,M.ink);m.scale.set(0.22,0.9,0.22);m.position.y=-0.45;m.castShadow=true;l.add(m);
+      const bt=new THREE.Mesh(cubeG,BOOT_M);bt.scale.set(0.32,0.16,0.25);bt.position.set(0.05,-0.82,0);l.add(bt);hip.add(l);return l;});
     const torso=new THREE.Group();hip.add(torso);
     const body=new THREE.Mesh(cubeG,suit);body.scale.set(0.42,0.85,0.6);body.position.y=0.42;body.castShadow=true;torso.add(body);
-    const head=new THREE.Mesh(sphereG,skin);head.scale.setScalar(0.23);head.position.y=1.07;torso.add(head);
+    const head=new THREE.Mesh(sphereG,skin);head.scale.setScalar(0.27);head.position.y=1.1;torso.add(head);
+    {const b=new THREE.Mesh(cubeG,M.ink);b.scale.set(0.44,0.07,0.62);b.position.y=0.05;torso.add(b);}   // belt
     // v4.1 pass 5: a proper hard hat: a dome seated over the top of the head, a full brim all round with a longer peak at the
     // front (+x is the way a figure faces), and the moulded ridge front to back. Shared geometries, the hat's own material.
-    const hat=new THREE.Mesh(HAT_DOME,hatM);hat.scale.set(0.25,0.22,0.245);hat.position.set(0.01,1.12,0);torso.add(hat);
-    const brim=new THREE.Mesh(HAT_BRIM,hatM);brim.scale.set(0.315,0.022,0.29);brim.position.set(0.05,1.125,0);torso.add(brim);
-    const ridge=new THREE.Mesh(cubeG,hatM);ridge.scale.set(0.34,0.04,0.065);ridge.position.set(0.01,1.322,0);torso.add(ridge);
+    const hat=new THREE.Mesh(HAT_DOME,hatM);hat.scale.set(0.293,0.257,0.287);hat.position.set(0.01,1.155,0);torso.add(hat);
+    const brim=new THREE.Mesh(HAT_BRIM,hatM);brim.scale.set(0.369,0.026,0.339);brim.position.set(0.06,1.16,0);torso.add(brim);
+    const ridge=new THREE.Mesh(cubeG,hatM);ridge.scale.set(0.398,0.047,0.076);ridge.position.set(0.01,1.39,0);torso.add(ridge);
     if(role&&role.vest){const v=new THREE.Mesh(cubeG,role.vest);v.scale.set(0.47,0.42,0.65);v.position.y=0.63;torso.add(v);const bd=new THREE.Mesh(cubeG,HIVIS.band);bd.scale.set(0.48,0.06,0.66);bd.position.y=0.56;torso.add(bd);}
     if(role&&role.radio){const r=new THREE.Mesh(cubeG,M.ink);r.scale.set(0.08,0.16,0.1);r.position.set(0.12,0.06,0.33);torso.add(r);const an=new THREE.Mesh(cubeG,M.ink);an.scale.set(0.02,0.14,0.02);an.position.set(0.12,0.2,0.35);torso.add(an);}
     const armM=[],hands=[];const arms=[-0.39,0.39].map(z=>{const a=new THREE.Group();a.position.set(0,0.78,z);const m=new THREE.Mesh(cubeG,suit);m.scale.set(0.17,0.72,0.17);m.position.y=-0.36;a.add(m);armM.push(m);
-      const h=new THREE.Mesh(cubeG,skin);h.scale.set(0.13,0.13,0.13);h.position.y=-0.78;a.add(h);hands.push(h);torso.add(a);return a;});
+      const h=new THREE.Mesh(cubeG,GLOVE_M);h.scale.set(0.13,0.13,0.13);h.position.y=-0.78;a.add(h);hands.push(h);torso.add(a);return a;});
     const armful=new THREE.Mesh(cubeG,paperDS);armful.scale.set(0.7,0.45,0.75);armful.position.set(0.5,0.45,0);armful.visible=false;torso.add(armful);
     const noz=new THREE.Mesh(new CylG(0.07,0.11,0.75,10),M.ink);noz.rotation.z=-Math.PI/2;noz.position.set(0.72,0.62,0);noz.visible=false;torso.add(noz);
     const ext=new THREE.Mesh(new CylG(0.17,0.17,0.62,14),M.bad);ext.position.set(0.48,0.42,0.22);ext.visible=false;torso.add(ext);

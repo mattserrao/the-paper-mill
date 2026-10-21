@@ -88,8 +88,8 @@
     if(!u.suit0)u.suit0={body:u.body.material,arm:u.armM[0].material};
     u.body.material=on?arcM:u.suit0.body;u.armM.forEach(m=>m.material=on?arcM:u.suit0.arm);u.hood.visible=on;if(u.vestM)u.vestM.visible=!on;}
   function elecBuild(){if(ET.w)return;const w=worker(elecM,M.hatTeam.A,{vest:HIVIS.orange,radio:true});w.position.set(MCC.desk[0],0,MCC.desk[1]);ET.w=w;
-    {const u=w.userData,hood=new THREE.Group();const hb=new THREE.Mesh(new THREE.BoxGeometry(0.5,0.42,0.5),arcM);hb.position.set(0,1.1,0);hood.add(hb);
-      const sh=new THREE.Mesh(new THREE.BoxGeometry(0.06,0.24,0.38),shieldM);sh.position.set(0.25,1.1,0);hood.add(sh);hood.visible=false;u.torso.add(hood);u.hood=hood;
+    {const u=w.userData,hood=new THREE.Group();const hb=new THREE.Mesh(new THREE.BoxGeometry(0.6,0.5,0.6),arcM);hb.position.set(0,1.13,0);hood.add(hb);
+      const sh=new THREE.Mesh(new THREE.BoxGeometry(0.06,0.28,0.44),shieldM);sh.position.set(0.3,1.13,0);hood.add(sh);hood.visible=false;u.torso.add(hood);u.hood=hood;
       u.torso.children.forEach(c=>{if(c.isMesh&&c.material===HIVIS.orange)u.vestM=c;});}
     const c=new THREE.Group();box(0.8,0.7,0.5,M.ink,0,0.55,0,c);box(0.5,0.32,0.08,M.ok,0.05,1.06,-0.05,c,false);box(0.06,0.7,0.5,M.steel,-0.43,1.0,0,c,false);
     [[-0.3,-0.2],[-0.3,0.2],[0.3,-0.2],[0.3,0.2]].forEach(([a,b])=>cylZ(0.09,0.06,M.ink,a,0.09,b,8,c));c.userData.load=true;c.position.set(MCC.desk[0]-1.8,0,MCC.desk[1]+0.6);scene.add(c);dynMark(c);ET.cart=c;}
