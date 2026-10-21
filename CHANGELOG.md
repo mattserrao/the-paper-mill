@@ -1,5 +1,11 @@
 # Changelog
 
+## v6.11.1-t1 (2026-10-21): the dryer hood front (test build, test/v6.11.1-hood)
+- **A closed dryer hood** (designed in Blender, `tools/blender/hood_front_new.py`): the tending-side wall, the front half of the roof and the upper end walls now close the v6.11 cutaway, with **six lifting doors** on chains from a header along the top of their guides (two narrower ones each side of the crossover bridge, a fixed panel under it).
+- The doors **go up on their own** on a sheet break or whenever the machine is down (incl. outages) with steam rolling out from under them, and drop again once the sheet is back on.
+- **New fiddly knob, Dryer hood doors** (station under the tending-side catwalk; Season, Survival and Free Play): RAISED lifts the doors with a hiss, and 2 s after they are up the doors and the whole front section fly away like the roofs, leaving the cutaway view. CLOSED brings the front back, then drops the doors. While the machine runs with them up, the dryers use **4% more steam** (cost, the DCS steam reading and the boiler's load); the energy engineer can trace a high steam bill to it.
+- Knobs view, help, glossary ("Dryer hood") and the relationship map (hood doors → steam) updated.
+
 ## v6.11.0 (2026-10-21): The Winder, Trim and CD Update
 Release of v6.11.0-t1 and v6.11.0-t2 (below), merged from test/v6.11-blender.
 
