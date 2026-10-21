@@ -558,7 +558,7 @@
         x.lineJoin="round";x.lineCap="round";shape();x.fillStyle="#9aa3b1";x.fill();
         // the bands: alternating paper greys, each its own wobbly strip
         x.save();shape();x.clip();const cols=["#8a94a3","#b4bcc8","#7d8796","#a6afbc"];
-        for(let k=0;k<N-1;k++){const [y0,h0,o0]=bands[k],[y1,h1,o1]=bands[k+1];x.beginPath();x.moveTo(0,y0+(rnd()-0.5)*8);x.quadraticCurveTo(cx,y0+H*0.03*(rnd()-0.3),W,y0+(rnd()-0.5)*8);x.lineTo(W,y1);x.quadraticCurveTo(cx,y1+H*0.03*(rnd()-0.3),0,y1);x.closePath();x.fillStyle=cols[k%4];x.fill();}
+        for(let k=0;k<N-1;k++){const [y0]=bands[k],[y1]=bands[k+1];x.beginPath();x.moveTo(0,y0+(rnd()-0.5)*8);x.quadraticCurveTo(cx,y0+H*0.03*(rnd()-0.3),W,y0+(rnd()-0.5)*8);x.lineTo(W,y1);x.quadraticCurveTo(cx,y1+H*0.03*(rnd()-0.3),0,y1);x.closePath();x.fillStyle=cols[k%4];x.fill();}
         // white crayon scribbles round the funnel
         x.strokeStyle="rgba(255,255,255,0.85)";for(let k=0;k<9;k++){const t=0.1+rnd()*0.8,y=H*(0.06+t*0.84),hw=W*(0.44-0.36*Math.pow(t,0.8));x.lineWidth=2+rnd()*3;x.beginPath();
           x.moveTo(cx-hw*0.8,y);x.bezierCurveTo(cx-hw*0.3,y+H*0.02,cx+hw*0.3,y-H*0.02,cx+hw*0.85,y+H*0.01*(rnd()-0.5));x.stroke();}

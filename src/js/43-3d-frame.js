@@ -202,7 +202,7 @@
           const inBag=ok.filter(m=>(!m.rare&&Z.bag.includes(m.name))||(m.rare&&!H.includes(m.name)));
           if(inBag.length)ok=inBag;else{const fresh=ok.filter(m=>!H.includes(m.name));if(fresh.length)ok=fresh;else if(ok.length)ok=[ok.reduce((a,b)=>H.indexOf(a.name)<=H.indexOf(b.name)?a:b)];}
           if(ok.length){let tw=0;ok.forEach(m=>tw+=m.rare?2.5:1);let r=Math.random()*tw,m=ok[0];for(const c of ok){r-=c.rare?2.5:1;if(r<=0){m=c;break;}}
-            Z.mv={m,t:0,st:m.start?m.start():null};Z.who=null;Z.len=m.dur+1;H.push(m.name);if(Z.bag){const bi=Z.bag.indexOf(m.name);if(bi>=0)Z.bag.splice(bi,1);}Z.done&&Z.done.add(m.name);while(H.length>Math.min(8,MV.length-4))H.shift();G3.zenLast=m.name;
+            Z.mv={m,t:0,st:m.start?m.start():null};Z.who=null;Z.len=m.dur+1;H.push(m.name);if(Z.bag){const bi=Z.bag.indexOf(m.name);if(bi>=0)Z.bag.splice(bi,1);}Z.done&&Z.done.add(m.name);while(H.length>Math.min(8,MV.length-4))H.shift();
             // v3.2.0: each shot has its own paired looks
             const lk=m.look||["none"],cur2=document.body.dataset.zs,pl2=lk.length>1?lk.filter(l=>l!==cur2):lk;document.body.dataset.zs=pl2[Math.floor(Math.random()*pl2.length)];}}
         if(Z.mv){}

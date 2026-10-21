@@ -48,7 +48,7 @@ function no3D(){G3.ok=false;$("no3d").hidden=false;$("no3d-retry").onclick=()=>l
   const mobile=matchMedia("(pointer: coarse)").matches;
   /* v4.1 graphics tiers. Auto picks from the device (phones: Medium, or Low with little memory; desktops: High, or Ultra on a
      discrete GPU); the player can pin one in Controls. Pixel ratio, shadow refresh, shadow map size, weather particles and
-     far-scenery shadows and the shadow softness change live; the lighting model and scenery density take effect on the next load. */
+     far-scenery shadows and the shadow softness change live; round-shape detail and scenery density take effect on the next load. */
   // v15: px is each tier's budget of rendered pixels (drawing buffer); the pixel ratio is lowered to stay within it
   // (v6.1 t12: the iso build draws far less, so phones render at their screen's sharpness: low 1.5x, medium 2x within a
   // pixel budget; the low-FPS fallback still drops to 1x on a struggling device)

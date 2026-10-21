@@ -6532,7 +6532,7 @@ function no3D(){G3.ok=false;$("no3d").hidden=false;$("no3d-retry").onclick=()=>l
   const mobile=matchMedia("(pointer: coarse)").matches;
   /* v4.1 graphics tiers. Auto picks from the device (phones: Medium, or Low with little memory; desktops: High, or Ultra on a
      discrete GPU); the player can pin one in Controls. Pixel ratio, shadow refresh, shadow map size, weather particles and
-     far-scenery shadows and the shadow softness change live; the lighting model and scenery density take effect on the next load. */
+     far-scenery shadows and the shadow softness change live; round-shape detail and scenery density take effect on the next load. */
   // v15: px is each tier's budget of rendered pixels (drawing buffer); the pixel ratio is lowered to stay within it
   // (v6.1 t12: the iso build draws far less, so phones render at their screen's sharpness: low 1.5x, medium 2x within a
   // pixel budget; the low-FPS fallback still drops to 1x on a struggling device)
@@ -6888,7 +6888,7 @@ function no3D(){G3.ok=false;$("no3d").hidden=false;$("no3d-retry").onclick=()=>l
   /* ---- step 1: static plant ---- */
   // v4.1 the environment sets the ground, the river and its banks (ENVLOOK); the scenery itself is built in 42b-3d-scenery.js
   const ENVLOOK={rural:{ground:"#a3c487",bank:"#c9c1a8",water:"#4b7f99"},urban:{ground:"#a9bb8f",bank:"#b7b3a8",water:"#5f8aa6"},
-    desert:{ground:"#e0c697",bank:"#cfc9bb",water:"#2fb3c4"},swamp:{ground:"#8ea576",bank:"#6f6548",water:"#3f5f52"}}[SITE.env];G3.envLook=ENVLOOK;
+    desert:{ground:"#e0c697",bank:"#cfc9bb",water:"#2fb3c4"},swamp:{ground:"#8ea576",bank:"#6f6548",water:"#3f5f52"}}[SITE.env];
   // (v4.1 pass 3: the ground is the terrain mesh built in 42b-3d-scenery.js, flat under the mill, with the environment's texture)
   slab(-140,-95,-5.2,-2.4,M.asphalt);slab(-140,-95,11.2,13.8,M.asphalt);
   slab(-95,-34.4,-5.2,-2.4,M.asphalt);              // inbound road
@@ -7092,7 +7092,7 @@ function no3D(){G3.ok=false;$("no3d").hidden=false;$("no3d-retry").onclick=()=>l
   function floorDecal(x0,x1,z0,z1,ppm,paint){const W2=Math.round((x1-x0)*ppm),H2=Math.round((z1-z0)*ppm),c=document.createElement("canvas");c.width=W2;c.height=H2;
     const x=c.getContext("2d"),X=v=>(v-x0)*ppm,Z=v=>(v-z0)*ppm;paint(x,X,Z,ppm,W2,H2);
     const t=new THREE.CanvasTexture(c);t.colorSpace=THREE.SRGBColorSpace;t.anisotropy=4;
-    const m=(BARE?G3.bareMat:o=>new THREE.MeshLambertMaterial(o))({map:t,transparent:true,depthWrite:false,polygonOffset:true,polygonOffsetFactor:-2,polygonOffsetUnits:-2});
+    const m=new THREE.MeshLambertMaterial({map:t,transparent:true,depthWrite:false,polygonOffset:true,polygonOffsetFactor:-2,polygonOffsetUnits:-2});
     const o=new THREE.Mesh(new THREE.PlaneGeometry(x1-x0,z1-z0),m);o.rotation.x=-Math.PI/2;o.position.set((x0+x1)/2,0.055,(z0+z1)/2);o.receiveShadow=true;o.renderOrder=1;scene.add(o);return o;}
   let dSeed=7;const drnd=()=>{dSeed=(dSeed*16807)%2147483647;return dSeed/2147483647;};
   const dScuffs=(x,X,Z,ppm,pts,n)=>{for(let k=0;k<n;k++){const [cx,cz,sp]=pts[Math.floor(drnd()*pts.length)],px=X(cx+(drnd()-0.5)*sp),pz=Z(cz+(drnd()-0.5)*sp*0.6),r=(0.6+drnd()*1.6)*ppm,a0=drnd()*6.28;
@@ -7148,7 +7148,7 @@ function no3D(){G3.ok=false;$("no3d").hidden=false;$("no3d-retry").onclick=()=>l
     dHatch(x,X,Z,ppm,-24.6,-23.9,20.6,32.0,GRN,"rgba(255,255,255,0.45)");
     dScuffs(x,X,Z,ppm,[[-36,17,22],[-47.6,23,6],[-32,19.4,4],[-36,22,18],[-36,26,18]],120);});
   // props: pallet stacks, bins, chargers, bollards, extinguishers (instanced: a handful of draw calls in total)
-  {const LamB=o=>BARE?G3.bareMat(o):new THREE.MeshLambertMaterial(o);const pal=LamB({color:lin0("#b8894f")}),red=LamB({color:lin0("#d63a2f")}),yel=LamB({color:lin0("#f2b807")}),
+  {const LamB=o=>new THREE.MeshLambertMaterial(o);const pal=LamB({color:lin0("#b8894f")}),red=LamB({color:lin0("#d63a2f")}),yel=LamB({color:lin0("#f2b807")}),
       blu=LamB({color:lin0("#2f6fd1")}),gry=LamB({color:lin0("#596273")}),m4=new THREE.Matrix4();
     const dInst=(geo,m,list,rotY)=>{const im=new THREE.InstancedMesh(geo,instMat(m),list.length);list.forEach((p,i)=>{m4.makeRotationY(p[3]||rotY||0);m4.setPosition(p[0],p[1],p[2]);im.setMatrixAt(i,m4);});im.castShadow=true;im.receiveShadow=true;im.userData.bake=true;scene.add(im);return im;};
     const pallets=[];[[-33,-22.4],[-33,-21.2],[-11,-3.8],[-48,31.4],[-48,30.2],[-24.6,15.5]].forEach(([px,pz],j)=>{const h=2+((j*7)%4);for(let k=0;k<h;k++)pallets.push([px,0.08+k*0.15,pz,(k%2)*0.08]);});
@@ -8193,7 +8193,6 @@ function no3D(){G3.ok=false;$("no3d").hidden=false;$("no3d-retry").onclick=()=>l
   const ISO_TH=-Math.PI/4,ISO_PH=Math.acos(Math.sqrt(1/3)),R_MAX=760,R_K=[1,2,3,4,6,8,12],R_STEPS=R_K.map(k=>R_MAX/k);
   const rStep=r=>{let b=R_STEPS[0];for(const v of R_STEPS)if(Math.abs(Math.log(v/r))<Math.abs(Math.log(b/r)))b=v;return b;};
   const rNext=(r,dir)=>{const i=R_STEPS.indexOf(rStep(r));return R_STEPS[clamp(i+dir,0,R_STEPS.length-1)];};
-  G3.rSteps=R_STEPS;G3.rStep=rStep;
   const DEF={th:ISO_TH,ph:ISO_PH,r:R_MAX/3};const cam={...DEF};let rShown=DEF.r;
   const DEFT=target.clone();let goal=null;
   // v3.1.0 tutorial: glide the camera to a spot and mark it with a pulsing ring and a light beam
@@ -8225,7 +8224,7 @@ function no3D(){G3.ok=false;$("no3d").hidden=false;$("no3d-retry").onclick=()=>l
   // then place the orbit camera around its target (one function; v3 built this by wrapping it twice)
   // swap the live camera; leaving zen goes back to the iso view where the shot left off, on the nearest zoom step
   function camSwap(free){camera=free?camPersp:camIso;if(free){camPersp.aspect=(G3.vw||host.clientWidth)/Math.max(1,G3.vh||host.clientHeight);camPersp.updateProjectionMatrix();}
-    else{cam.r=rStep(clamp(cam.r,R_STEPS[R_STEPS.length-1],R_MAX));rShown=cam.r;}G3.camFree=free;G3.lastMove=performance.now();if(G3.onCamSwap)G3.onCamSwap(free);
+    else{cam.r=rStep(clamp(cam.r,R_STEPS[R_STEPS.length-1],R_MAX));rShown=cam.r;}G3.lastMove=performance.now();if(G3.onCamSwap)G3.onCamSwap(free);
     // (v6.2 z2: the river's ripple lines are packed for the iso view; seen in perspective they alias into streaks, so the free camera
     // gets wider ripples and anisotropic filtering)
     const RT=ENV.riverTex;if(RT){RT.repeat.x=free?6:40;RT.repeat.y=free?0.45:1.5;RT.anisotropy=free?8:1;RT.needsUpdate=true;}}
@@ -8244,11 +8243,10 @@ function no3D(){G3.ok=false;$("no3d").hidden=false;$("no3d-retry").onclick=()=>l
     const rr=rShown*((G3.vw||host.clientWidth)<600?1.35:1);G3.camR=rShown;G3.camDist=rr;
     camera.position.set(target.x+ISO_D*Math.sin(cam.ph)*Math.sin(cam.th),target.y+ISO_D*Math.cos(cam.ph),target.z+ISO_D*Math.sin(cam.ph)*Math.cos(cam.th));
     camera.lookAt(target);camera.isoFit(rr);}
-  const ptrs=new Map();let pinch0=0,r0=0,mid0=null,panBtn=false;
+  const ptrs=new Map();let pinch0=0,r0=0,mid0=null;
   const mid=()=>{const [a,b]=[...ptrs.values()];return {x:(a.x+b.x)/2,y:(a.y+b.y)/2,d:Math.hypot(a.x-b.x,a.y-b.y)};};
   glc.addEventListener("contextmenu",e=>e.preventDefault());
   glc.addEventListener("pointerdown",e=>{glc.setPointerCapture(e.pointerId);ptrs.set(e.pointerId,{x:e.clientX,y:e.clientY});goal=null;
-    panBtn=e.button===2||e.button===1||e.shiftKey;
     if(ptrs.size===2){const m=mid();pinch0=m.d;r0=FOL.on?FOL.r:cam.r;mid0=m;}});
   glc.addEventListener("pointermove",e=>{const p=ptrs.get(e.pointerId);if(!p)return;const dx=e.clientX-p.x,dy=e.clientY-p.y;
     if(ptrs.size===1)panBy(dx,dy);   // (v6.1 iso: the camera never turns, so any drag pans)
@@ -8914,7 +8912,7 @@ function no3D(){G3.ok=false;$("no3d").hidden=false;$("no3d-retry").onclick=()=>l
         x.lineJoin="round";x.lineCap="round";shape();x.fillStyle="#9aa3b1";x.fill();
         // the bands: alternating paper greys, each its own wobbly strip
         x.save();shape();x.clip();const cols=["#8a94a3","#b4bcc8","#7d8796","#a6afbc"];
-        for(let k=0;k<N-1;k++){const [y0,h0,o0]=bands[k],[y1,h1,o1]=bands[k+1];x.beginPath();x.moveTo(0,y0+(rnd()-0.5)*8);x.quadraticCurveTo(cx,y0+H*0.03*(rnd()-0.3),W,y0+(rnd()-0.5)*8);x.lineTo(W,y1);x.quadraticCurveTo(cx,y1+H*0.03*(rnd()-0.3),0,y1);x.closePath();x.fillStyle=cols[k%4];x.fill();}
+        for(let k=0;k<N-1;k++){const [y0]=bands[k],[y1]=bands[k+1];x.beginPath();x.moveTo(0,y0+(rnd()-0.5)*8);x.quadraticCurveTo(cx,y0+H*0.03*(rnd()-0.3),W,y0+(rnd()-0.5)*8);x.lineTo(W,y1);x.quadraticCurveTo(cx,y1+H*0.03*(rnd()-0.3),0,y1);x.closePath();x.fillStyle=cols[k%4];x.fill();}
         // white crayon scribbles round the funnel
         x.strokeStyle="rgba(255,255,255,0.85)";for(let k=0;k<9;k++){const t=0.1+rnd()*0.8,y=H*(0.06+t*0.84),hw=W*(0.44-0.36*Math.pow(t,0.8));x.lineWidth=2+rnd()*3;x.beginPath();
           x.moveTo(cx-hw*0.8,y);x.bezierCurveTo(cx-hw*0.3,y+H*0.02,cx+hw*0.3,y-H*0.02,cx+hw*0.85,y+H*0.01*(rnd()-0.5));x.stroke();}
@@ -9087,8 +9085,6 @@ function no3D(){G3.ok=false;$("no3d").hidden=false;$("no3d-retry").onclick=()=>l
   };
   const blackEl=$("blackout3d");let lastIncTxt=0;
   function makeFX(id){const def=FXDEF[id]||FXDEF[MOT_FXDEF[id]];const g=new THREE.Group();scene.add(g);const pp=PINS[id]||PINS[MOT_PIN[id]]||[0,10,0,"!"];/* (v6.5 b3: a stopped DCS motor uses its upset's spot, 07c) */const f=FX[id]={g,up:null,pin:pinAt(g,pp[0],pp[1],pp[2],pp[3]),lb:lblNew(true,id)};
-    // v5.7.3 bare: a token puff at the spot instead of the full effect (the red tag and label are as usual)
-    if(G3.bare){const x=pp[0],z=pp[2];f.up=(now,rdt)=>{if(rdt>0&&Math.random()<rdt*2.5)emit("smoke",x+R()*1.5,2,z+R()*1.5,R()*0.3,1.4,R()*0.3,2.4,1.6,"#6b707a",0.65);};return f;}
     f.up=def?def(g):()=>{};try{if(!/[?&]nofxinst/.test(location.search))f.inst=fxInst(g);}catch(e){console.error("effect instancing failed",id,e);}return f;}
   /* v6.1 t12: an effect's many look-alike parts (rain streaks, ripples, splash blobs, tornado puffs and debris) draw as one
      instanced mesh per shape and look instead of one draw each (the roof leak was ~100 draws, the tornado ~75). The effect
@@ -9331,7 +9327,7 @@ function no3D(){G3.ok=false;$("no3d").hidden=false;$("no3d-retry").onclick=()=>l
   const PART_IDS=Object.keys(BUILD).filter(k=>k!=="fx");
   // built a few scenes per frame during the start-up precompile (v5.2 review: all at once stalled the page for seconds on
   // slow devices, and the title music with it); civBuild() finishes whatever is left in one go
-  const toBuild=G3.bare?[]:[...PART_IDS];   // (v5.7.3 bare: no civics scenery in the world)
+  const toBuild=[...PART_IDS];
   function buildOne(id){try{const g=new THREE.Group();g.visible=false;scene.add(g);const P=CV.parts[id]=Object.assign({g,id},BUILD[id](g));
       P.tick(performance.now(),0,2,null,{});   // a first paint of its boards, so their textures upload before play
     }catch(e){diag(`civics scene "${id}" failed: ${String(e&&e.message||e).slice(0,100)}`);}}
@@ -9768,15 +9764,13 @@ function no3D(){G3.ok=false;$("no3d").hidden=false;$("no3d-retry").onclick=()=>l
       k.g.visible=false;RND.shown.delete(best);if(G3.onTellCaught)G3.onTellCaught(best);return true;};
     // the screen position of a shown tell (tests)
     G3.tellScreen=id=>{const k=KIT[id];if(!k||!k.g.visible)return null;const r=glc.getBoundingClientRect(),t=k.parts.top;_v.set(k.x,t[1]*SC*0.6,k.z).project(camera);return [r.left+(_v.x+1)/2*r.width,r.top+(1-_v.y)/2*r.height,_v.z];};
-    G3.tellSeek=f=>{if(RND.on)RND.t=f*RND.len;};G3.tellOp=()=>[op.position.x,op.position.z];
+    G3.tellSeek=f=>{if(RND.on)RND.t=f*RND.len;};
     G3.tellHold=ms=>{RND.touch=performance.now()+(ms||60000);};   // (tests: the camera stays where the tool put it)
     G3.tellShowAll=on=>{TG.visible=!!on;for(const id in KIT){const k=KIT[id],[x,z]=posOf(k);k.g.position.set(x,0,z);k.g.updateMatrixWorld(true);k.g.visible=!!on;}};   // (layout checks)
-    G3.tellKits=()=>Object.keys(KIT);
     G3.tellPos=id=>KIT[id]?posOf(KIT[id]):null;
     // for the prewarm's one render: everything shown, so nothing compiles mid-round
     G3.tellWarm=shown=>{if(!TG.visible){TG.visible=true;shown.push(TG);}for(const id in KIT)if(!KIT[id].g.visible){KIT[id].g.visible=true;shown.push(KIT[id].g);}if(!op.visible){op.visible=true;shown.push(op);}};
     // ---- every frame ----
-    let flick=0;
     G3.tellFrame=(rdt,now)=>{if(!RND.on)return;
       if(running&&!document.hidden)RND.t+=rdt;
       syncShown();
@@ -9806,14 +9800,14 @@ function no3D(){G3.ok=false;$("no3d").hidden=false;$("no3d-retry").onclick=()=>l
           case "outfall":if(Math.random()<rdt*14)emit("smoke",x+R()*4,0.4,z+R()*4,R()*0.3,0.5,R()*0.3,2.4,2.2,"#d9c79a",0.7);break;
           case "flicker":if(Math.random()<rdt*10)emit("spark",x+R(),ty,z+0.6,R()*3,2+Math.random()*3,2,0.5,0.22,"#bfe3ff",1);break;
           case "dye":if(Math.random()<rdt*14)emit("drop",x+R()*0.4,1.8,z+0.6,R()*1.5,1,1.5,0.8,0.22,["#d64fd6","#3fb6e0","#f2c230"][(Math.random()*3)|0],1);break;}
-        if(p.glow){flick+=rdt;const on=k.fx==="flicker"?Math.sin(now/45)+Math.sin(now/17)>0.2:Math.sin(now/180)>-0.3;if(p.glow.visible!==on)p.glow.visible=on;}}
+        if(p.glow){const on=k.fx==="flicker"?Math.sin(now/45)+Math.sin(now/17)>0.2:Math.sin(now/180)>-0.3;if(p.glow.visible!==on)p.glow.visible=on;}}
       if(RND.t>=RND.len){const d=RND.done;G3.tellRoundStop();if(d)d();}};
   }
   /* ---- hayout (v2.8.2, light): a short burst of 30 sheets (one instanced draw call) and a paper heap that shrinks as the crew cleans ---- */
   const HN=30,hayI=new THREE.InstancedMesh(new THREE.BoxGeometry(1.4,0.04,1),paperDS,HN);hayI.frustumCulled=false;hayI.visible=false;scene.add(hayI);
   const hayS=[],hM4=new THREE.Matrix4(),hQ=new THREE.Quaternion(),hE=new THREE.Euler(),hP=new THREE.Vector3(),hSc=new THREE.Vector3(1,1,1);
   for(let k=0;k<HN;k++)hayS.push({p:[0,0,0],v:[0,0,0],r:[0,0,0],sp:[0,0,0],k:0});
-  const heapG=new SphG(1,12,6,0,Math.PI*2,0,Math.PI/2),heap=new THREE.Mesh(heapG,paperDS);heap.position.set(-18.7,0,zc);heap.visible=false;scene.add(heap);G3.hayParts=[hayI,heap];
+  const heapG=new SphG(1,12,6,0,Math.PI*2,0,Math.PI/2),heap=new THREE.Mesh(heapG,paperDS);heap.position.set(-18.7,0,zc);heap.visible=false;scene.add(heap);
   let shake=0;
   function hayFx(rdt,now){const ep=EP.hay,on=!!(ep&&now<ep.until),age=on?(now-ep.t0)/1000:99,left=on?(ep.until-now)/1000:0;
     if(on&&!ep.burst){ep.burst=true;hayS.forEach(s=>{s.p=[-18.7+(Math.random()-0.5)*2,3.8,zc+(Math.random()-0.5)*3];s.v=[(Math.random()-0.5)*6,4+Math.random()*4,(Math.random()-0.5)*6];
@@ -10012,7 +10006,6 @@ function no3D(){G3.ok=false;$("no3d").hidden=false;$("no3d-retry").onclick=()=>l
   const nearest=(list,x)=>list.reduce((b,s)=>Math.abs(s[0]-x)<Math.abs(b[0]-x)?s:b,list[0]);
   // machine crew spots during a dryer fire: five on hoses at the front aisle, two with extinguishers at the back
   const FIRESPOT=[[24,14.4,"hose"],[18,14.4,"hose"],[12,14.4,"hose"],[6,14.4,"hose"],[0,14.4,"hose"],[20,4.0,"ext"],[8,4.0,"ext"]];
-  G3.crewSpots=()=>({HOME,HAY,RT,BRKSPOT,FIRESPOT,SITES});
   const crewHose=FIRESPOT.map(()=>hoseLine());
   // bale yard fire brigade: four firefighters with red helmets spray over the receiving wall
   const brigade=[0,1,2,3].map(k=>{const w=worker(M.warn,M.bad);w.visible=false;w.userData.home=[-4,-0.6];w.userData.spot=[-6.4,-6-k*4];w.userData.hose=hoseLine();w.position.set(-4,0,-0.6);return w;});
@@ -10033,7 +10026,7 @@ function no3D(){G3.ok=false;$("no3d").hidden=false;$("no3d-retry").onclick=()=>l
      G3.skyTick with the sky colour it already computes for the fog. Clouds and mist are camera-facing quads in one
      mesh each (one draw), their corners rewritten per frame; none on the Low tier. ---- */
   const SKY={n:0};G3.SKY=SKY;
-  if(!G3.bare&&(!camera.isIso||G3.zenFree)&&!new URLSearchParams(location.search).has("nosky")){   // (v6.2: zen's free camera sees the sky)   // (v6.1 iso: the view never reaches the sky)
+  if(G3.zenFree&&!new URLSearchParams(location.search).has("nosky")){   // (v6.2: zen's free camera sees the sky)   // (v6.1 iso: the view never reaches the sky)
   const uni={top:{value:new THREE.Color(0.5,0.6,0.8)},hor:{value:new THREE.Color(0.8,0.85,0.9)},sunDir:{value:sun.position.clone().normalize()},glow:{value:new THREE.Color(1,0.85,0.6)},gk:{value:0}};
     const skyMat=new THREE.ShaderMaterial({uniforms:uni,
       vertexShader:"varying vec3 vDir;void main(){vDir=normalize(position);vec4 p=projectionMatrix*modelViewMatrix*vec4(position,1.0);gl_Position=vec4(p.xy,p.w*0.99999,p.w);}",
@@ -10062,10 +10055,10 @@ function no3D(){G3.ok=false;$("no3d").hidden=false;$("no3d-retry").onclick=()=>l
           pos[b+9]=it.x-r.x*hw+u.x*hh;pos[b+10]=it.y-r.y*hw+u.y*hh;pos[b+11]=it.z-r.z*hw+u.z*hh;}
         g.setDrawRange(0,items.length*6);g.attributes.position.needsUpdate=true;g.computeBoundingSphere();}};}
     const _sr=new THREE.Vector3(),_su=new THREE.Vector3();
-    const tier=G3.GFX||{},nCloud=new URLSearchParams(location.search).has("noclouds")||tier.bare?0:tier.tier==="low"?0:tier.tier==="medium"?4:tier.tier==="ultra"?14:10;
+    const tier=G3.GFX||{},nCloud=new URLSearchParams(location.search).has("noclouds")?0:tier.tier==="low"?0:tier.tier==="medium"?4:tier.tier==="ultra"?14:10;
     const clouds=billboards(Math.max(1,nCloud),0xffffff,0.85),mist=billboards(8,0xf2f7ff,0.5);
     for(let i=0;i<nCloud;i++)clouds.items.push({x:-500+Math.random()*1000,y:150+Math.random()*90,z:-450+Math.random()*900,w:90+Math.random()*120,h:30+Math.random()*24,v:1.2+Math.random()*1.5});
-    SKY.clouds=clouds;SKY.mist=mist;SKY.mistOn=tier.tier!=="low"&&!tier.bare&&SITE.env==="rural";   // (v17: no mist on the bayou)
+    SKY.clouds=clouds;SKY.mist=mist;SKY.mistOn=tier.tier!=="low"&&SITE.env==="rural";   // (v17: no mist on the bayou)
     // mist banks: over the ponds in the bayou, along the river in the valley; placed on the first tick (the ponds come from the scenery)
     SKY.placeMist=()=>{if(SKY.mistSet)return;SKY.mistSet=true;const it=mist.items;
       // five overlapping banks along the river either side of the mill, then (bayou) the ponds nearest the mill
@@ -10136,7 +10129,7 @@ function no3D(){G3.ok=false;$("no3d").hidden=false;$("no3d-retry").onclick=()=>l
     u.legs.forEach(l=>{l.children[0].material=trouM;l.children[0].scale.set(0.2,0.9,0.2);const sh2=new THREE.Mesh(cubeG,shoeM);sh2.scale.set(0.32,0.1,0.18);sh2.position.set(0.06,-0.86,0);l.add(sh2);});
     u.armM.forEach(m=>m.scale.x=m.scale.z=0.15);}
   function free(w){w.visible=false;w.userData.busy=false;}
-  const AIS=16.5,parties=[];let ambT=G3.bare?{tour:1e12,mgr:1e12,office:1e12,birds:1e12,food:1e12}:{tour:25,mgr:45,office:8,birds:15,food:35};   // (v5.7.3 bare: no ambient life)
+  const AIS=16.5,parties=[];let ambT={tour:25,mgr:45,office:8,birds:15,food:35};
   // a party walks a path [x,z,stop seconds,act]; followers keep formation behind the leader and gather round at the stops
   function party(kind,members,path,walk){parties.push({kind,members,path,i:0,wait:0,walk});}
   G3.mgrLead=()=>{for(const P2 of parties)if(P2.kind==="mgr"&&!P2.home&&P2.members[0]&&P2.members[0].visible)return P2.members[0];return null;};
@@ -10187,10 +10180,10 @@ function no3D(){G3.ok=false;$("no3d").hidden=false;$("no3d-retry").onclick=()=>l
   const pigeon=BIRDS[5],PG={seen:null,t0:0};
   // weather particles around the camera target
   const WXP=(()=>{const n=2600,g=new THREE.BufferGeometry(),pos=new Float32Array(n*3);for(let i=0;i<n;i++){pos[i*3]=R()*80;pos[i*3+1]=Math.random()*40;pos[i*3+2]=R()*80;}
-    g.setAttribute("position",new THREE.BufferAttribute(pos,3));const m=new THREE.PointsMaterial({color:0xffffff,size:0.7,transparent:true,opacity:0.8,depthWrite:false});if(camera.isIso)m.sizeAttenuation=false;   // (v6.1 t13: in the iso view sizes are screen pixels)
+    g.setAttribute("position",new THREE.BufferAttribute(pos,3));const m=new THREE.PointsMaterial({color:0xffffff,size:0.7,transparent:true,opacity:0.8,depthWrite:false});m.sizeAttenuation=false;   // (v6.1 t13: in the iso view sizes are screen pixels)
     const p=new THREE.Points(g,m);p.frustumCulled=false;p.visible=false;scene.add(p);
     const rg=new THREE.BufferGeometry(),rp=new Float32Array(n*6);rg.setAttribute("position",new THREE.BufferAttribute(rp,3));
-    const rm=new THREE.LineBasicMaterial({color:lin0(camera.isIso?"#7f93ad":"#d6e2ee"),transparent:true,opacity:0.6,depthWrite:false});const rl=new THREE.LineSegments(rg,rm);rl.frustumCulled=false;rl.visible=false;scene.add(rl);
+    const rm=new THREE.LineBasicMaterial({color:lin0("#7f93ad"),transparent:true,opacity:0.6,depthWrite:false});const rl=new THREE.LineSegments(rg,rm);rl.frustumCulled=false;rl.visible=false;scene.add(rl);
     const wxN=Math.min(n,G3.GFX&&G3.GFX.wx!=null?G3.GFX.wx:1000);g.setDrawRange(0,wxN);rg.setDrawRange(0,wxN*2);G3.wxRange=k=>{const q=Math.min(n,k);g.setDrawRange(0,q);rg.setDrawRange(0,q*2);WXP.k=q;};return {p,g,pos,m,n,rg,rp,rm,rl,k:wxN};})();   // (v5.2: k = points drawn; only those are moved and uploaded)
   scene.fog=new THREE.Fog(0xb3bbcb,600,3000);
   const SKY_DAY=new THREE.Color(),SKY_NIGHT=lin0("#232b44"),SKY_RAIN=lin0("#8c94a2"),SKY_FOG=lin0("#c9ced6"),SKY_DUST=lin0("#c9a86b"),tmpC=new THREE.Color(),WIN_EM=lin0("#ffcf7a"),LAMP_OFF=lin0("#9aa3b2"),LAMP_ON=lin0("#fff2c4");let skyLast=null;   // (v5.2: parsed once, not every frame)
@@ -10274,7 +10267,7 @@ function no3D(){G3.ok=false;$("no3d").hidden=false;$("no3d-retry").onclick=()=>l
     if(G3.fogFan&&rdt>0){const F=G3.fogFan,down=S.inc.some(i=>i.id==="fogfan"),k=down?0:(S.pm==="run"?1:0.35);F.spin+=(k-F.spin)*Math.min(1,rdt*0.8);F.rot.rotation.y+=rdt*F.spin*14;
       // (v6.1 t12: the fog elimination fan's vapour is paper cut-out clouds too, smaller than the stack's; ?softplume = steam)
       if(/[?&]softplume/.test(location.search)){if(Math.random()<rdt*9*k)emitA("steam",F.top[0]+R()*0.5,F.top[1],F.top[2]+R()*0.5,R()*0.7+0.5,3.0+Math.random()*1.8,R()*0.7,3.4,2.0+Math.random()*1.6,"#f4f6f8",0.6);}
-      else if(Math.random()<rdt*1.5*k)emitA("paper",F.top[0]+R()*0.5,F.top[1]+1,F.top[2]+R()*0.5,R()*0.5+0.4,2.0+Math.random()*0.8,R()*0.5,4.2,3.0+Math.random()*1.4,"#ffffff",1);}G3.spiderFrame&&G3.spiderFrame(rdt);if(!G3.bare){M.wind.emissive=M.wind.emissive||new THREE.Color();M.wind.emissive.copy(WIN_EM).multiplyScalar(0.85*night*bk);if(G3.winMats)G3.winMats.forEach(m=>m.emissive.copy(M.wind.emissive).multiplyScalar(0.7));}   // (v5.7.3 bare: unlit glass has no glow to set)
+      else if(Math.random()<rdt*1.5*k)emitA("paper",F.top[0]+R()*0.5,F.top[1]+1,F.top[2]+R()*0.5,R()*0.5+0.4,2.0+Math.random()*0.8,R()*0.5,4.2,3.0+Math.random()*1.4,"#ffffff",1);}G3.spiderFrame&&G3.spiderFrame(rdt);M.wind.emissive=M.wind.emissive||new THREE.Color();M.wind.emissive.copy(WIN_EM).multiplyScalar(0.85*night*bk);if(G3.winMats)G3.winMats.forEach(m=>m.emissive.copy(M.wind.emissive).multiplyScalar(0.7));
     ENV.lampHead.color.copy(LAMP_OFF).lerp(LAMP_ON,night*bk);ENV.lampPool.opacity=0.32*night*bk;if(ENV.lampPoolMesh)ENV.lampPoolMesh.visible=night*bk>0.01;   // (v5.2: no invisible draws by day)
     ENV.pudM.opacity=0.55*(S.wet||0);if(ENV.pudMeshes){const v=(S.wet||0)>0.01;if(ENV.pudMeshes.v!==v){ENV.pudMeshes.v=v;ENV.pudMeshes.forEach(m=>m.visible=v);}}ENV.riverTex.offset.x=(ENV.riverTex.offset.x-rdt*0.02)%1;
     if(G3.YP&&G3.YP.flags&&rdt>0)G3.YP.flags.forEach((f,k)=>{f.rotation.y=0.55+0.28*Math.sin(now/900+k*2.1);});
@@ -10369,7 +10362,7 @@ function no3D(){G3.ok=false;$("no3d").hidden=false;$("no3d-retry").onclick=()=>l
          else _c.setHSL(0.07,0.14,Math.min(0.5,hsl.l*0.75+0.08));}   // bare branches
        a[j]=_c.r;a[j+1]=_c.g;a[j+2]=_c.b;}
      if(i1>=ca.count)ca.needsUpdate=true;return n;}   // (uploaded once, when its last chunk is done)
-   let shownPal=-1,chkT=0;   /* (t12: summer is a recolour too now, so nothing counts as shown until the first one) */G3.palShown=()=>PALS[shownPal];
+   let shownPal=-1,chkT=0;   /* (t12: summer is a recolour too now, so nothing counts as shown until the first one) */
    // v6.1 t3: one mesh per frame instead of all at once (no single long frame when a season starts)
    let palQ=[],palN=0;
    G3.setPal=p=>{p=((p%4)+4)%4;if(p===shownPal&&ORIG.size)return;shownPal=p;palN=0;
@@ -10432,7 +10425,7 @@ function no3D(){G3.ok=false;$("no3d").hidden=false;$("no3d-retry").onclick=()=>l
     wetI.renderOrder=2;wetI.userData.noNav=true;scene.add(wetI);const wet=[];let wk=0;for(let k=0;k<WT;k++){wet.push({x:0,z:0,t:99});}
     const wrot=new THREE.Quaternion().setFromAxisAngle(new THREE.Vector3(1,0,0),-Math.PI/2);
     let lastT=null,wetAcc=0,canAcc=0;
-    G3.janUpdate=(rdt,now)=>{if(!S||G3.bare)return;   // (v5.7.3 bare: no janitor, scrubbers or litter)
+    G3.janUpdate=(rdt,now)=>{if(!S)return;
       const hr=((S.t+360)/60)%24,night=NIGHT(hr);
       // litter builds during the working day
       if(lastT===null)lastT=S.t;const dh=Math.max(0,Math.min(60,(S.t-lastT)/60));lastT=S.t;
@@ -10611,7 +10604,7 @@ function no3D(){G3.ok=false;$("no3d").hidden=false;$("no3d-retry").onclick=()=>l
   G3.navPump=navPump;
   G3.navCheck=(pts,G=NAV)=>{if(!G.g)navBuild(G);let bad=0;for(let i=1;i<pts.length;i++){const a=pts[i-1],b=pts[i],d=Math.hypot(b[0]-a[0],b[1]-a[1]),n=Math.max(1,Math.ceil(d/0.25));
       for(let k=0;k<=n;k++){const c=navC(G,[a[0]+(b[0]-a[0])*k/n,a[1]+(b[1]-a[1])*k/n]);if(G.g[c[1]*G.nx+c[0]])bad++;}}return bad;};
-  G3.NAV=NAV;G3.NAVW=NAVW;G3.navRoute=(a,b)=>route(a,b);G3.navOld=(a,b)=>routeLanes(a,b);G3.navSpots=()=>({MAINT_SPOT,SLOTS});G3.navWalk=(a,b)=>navPath(NAVW,a,b,120000);
+  G3.NAV=NAV;G3.NAVW=NAVW;
   function route(from,to){let p=null;try{p=navPath(NAV,from,to);}catch(e){}return p||routeLanes(from,to);}
   function routeLanes(from,to){const pts=[],lf=lane(from),lt=lane(to);
     pts.push(lf==="F"?[from[0],17.6]:[Math.max(from[0],-5.5),-0.6]);
@@ -10671,7 +10664,7 @@ function no3D(){G3.ok=false;$("no3d").hidden=false;$("no3d-retry").onclick=()=>l
      incoming crew walks in from the parking lot, each to the person they relieve (a tech's bench in the shop; an
      operator wherever they are), stops for a word, and the outgoing person walks back out to the lot. In the mill the
      two simply trade places: the figure that stays takes the new hat and the walker leaves in the old one. A tech out
-     on a job is relieved when they get back to the shop. A load, a reseed, zen, the bare view, a jump of more than an
+     on a job is relieved when they get back to the shop. A load, a reseed, zen, a jump of more than an
      hour, or the next change arriving first all skip the walk and change the hats on the spot. Cosmetic only. ---- */
   const SHC={s:null,pool:{t:[],o:[],sp:[]},live:[],PARK:[63.6,34.4]};G3.SHC=SHC;   // (G3.SHC: tests)
   function setHat(w,m){const h=w.userData&&w.userData.hats;if(!h||!m||h[0].material===m)return;for(const x of h)x.material=m;}
@@ -10690,7 +10683,7 @@ function no3D(){G3.ok=false;$("no3d").hidden=false;$("no3d-retry").onclick=()=>l
   function shcFlush(){for(const L of SHC.live){setHat(L.f.w,L.newM);shcDone(L);}SHC.live.length=0;}
   G3.shiftUpdate=(rdt,now)=>{if(!S||!M.hatTeam)return;const s=manIdx(),m=manShift(s),figs=shcFigs();
     if(s!==SHC.s){const prev=SHC.s;SHC.s=s;shcFlush();
-      const walk=prev===s-1&&S.t-s*720<60&&!S.zen&&!G3.bare;
+      const walk=prev===s-1&&S.t-s*720<60&&!S.zen;
       figs.forEach((f,n)=>{const newM=shcWant(m,f);if(!newM)return;const oldM=f.w.userData.hats[0].material;
         if(!walk||!f.w.visible||oldM===newM){setHat(f.w,newM);return;}
         const c=shcWalker(f,newM);c.position.set(SHC.PARK[0]+(n%4)*0.7,0,SHC.PARK[1]+Math.floor(n/4)*0.7);
@@ -11059,8 +11052,7 @@ function no3D(){G3.ok=false;$("no3d").hidden=false;$("no3d-retry").onclick=()=>l
   {const X=-58.5,Z=-13;slab(X-2.2,X+2.2,Z-1.8,Z+1.8,M.slab,0.025);box(4.4,1.6,0.25,M.steel,X,0.8,Z-1.75);box(4.6,0.12,0.4,M.brand,X,1.66,Z-1.75,scene,false);
     [-1.2,1.2].forEach(dx=>{box(0.6,1.1,0.4,M.steel,X+dx,0.55,Z-1.45);box(0.5,0.25,0.05,M.ok,X+dx,0.95,Z-1.22,scene,false);
       const cb=new THREE.Mesh(new CylG(0.03,0.03,1.4,6),M.ink);cb.rotation.x=0.9;cb.position.set(X+dx+0.25,0.5,Z-0.8);scene.add(cb);});
-    box(0.12,0.12,3.6,M.warn,X,0.06,Z-1.4,scene,false);
-}
+    box(0.12,0.12,3.6,M.warn,X,0.06,Z-1.4,scene,false);}
   // flagpoles by the office door: the mill's flag and a safety flag
   {[[56.6,20.4,"brand"],[58.6,20.4,"ok"]].forEach(([x,z,tk],k)=>{const p=new THREE.Mesh(new CylG(0.05,0.07,9,8),M.steel);p.position.set(x,4.5,z);p.castShadow=true;scene.add(p);
       const ball=new THREE.Mesh(new SphG(0.12,8,6),M.brand);ball.position.set(x,9.05,z);scene.add(ball);
@@ -11179,12 +11171,12 @@ function no3D(){G3.ok=false;$("no3d").hidden=false;$("no3d-retry").onclick=()=>l
       else if(P&&t==="CircleGeometry"&&P.segments>seg)h=new THREE.CircleGeometry(P.radius,seg,P.thetaStart,P.thetaLength);
       if(h){// (the original may have been turned after it was made: find the turn that fits its bounds, else keep the original)
         g.computeBoundingBox();_bA.copy(g.boundingBox);let ok=null;
-        for(const [rx,ry,rz] of ROTS){const c=h.clone();if(rx)c.rotateX(rx);if(rz)c.rotateZ(rz);c.computeBoundingBox();_bB.copy(c.boundingBox);
+        for(const [rx,,rz] of ROTS){const c=h.clone();if(rx)c.rotateX(rx);if(rz)c.rotateZ(rz);c.computeBoundingBox();_bB.copy(c.boundingBox);
           const e=Math.max(_bA.min.distanceTo(_bB.min),_bA.max.distanceTo(_bB.max));if(e<0.02*Math.max(0.05,_bA.getSize(_smV).length())){ok=c;break;}c.dispose();}
         h.dispose();if(ok){ok.deleteAttribute("uv");v=ok;}}}catch(e){v=g;}SIMP.set(k,v);return v;}
   const VDIR=new THREE.Vector3(Math.sin(Math.acos(Math.sqrt(1/3)))*Math.sin(-Math.PI/4),Math.sqrt(1/3),Math.sin(Math.acos(Math.sqrt(1/3)))*Math.cos(-Math.PI/4));
   function bakeLevel(b,k){const R=LOD_R[k],SEG=LOD_SEG[k],L=[];for(const r of b.recs)if(r.v0!=null&&smRad(r)>=R)L.push([r,simpGeo(r.o.userData.fullGeo||r.o.geometry,SEG)]);
-    let nv=0,ni=0;for(const [r,g] of L){nv+=g.attributes.position.count;ni+=g.index?g.index.count:g.attributes.position.count;}
+    let nv=0,ni=0;for(const [,g] of L){nv+=g.attributes.position.count;ni+=g.index?g.index.count:g.attributes.position.count;}
     const pos=new Float32Array(nv*3),nor=new Float32Array(nv*3),col=new Float32Array(nv*3),idx=new Uint32Array(ni);let vo=0,io=0;
     for(const [r,g] of L){const o=r.o,P=g.attributes.position,N=g.attributes.normal,mw=r.mw||o.matrixWorld,flip=mw.determinant()<0,c=o.material.color;_smM3.getNormalMatrix(mw);
       for(let i=0;i<P.count;i++){_smV.set(P.getX(i),P.getY(i),P.getZ(i)).applyMatrix4(mw);const j=(vo+i)*3;pos[j]=_smV.x;pos[j+1]=_smV.y;pos[j+2]=_smV.z;
@@ -11198,7 +11190,7 @@ function no3D(){G3.ok=false;$("no3d").hidden=false;$("no3d-retry").onclick=()=>l
     geo.setIndex(new THREE.BufferAttribute(idx.slice(0,io),1));geo.computeBoundingSphere();
     const m=new THREE.Mesh(geo,b.mat);m.matrixAutoUpdate=false;m.userData.smBatch=true;m.name="flat batch (zoom step "+k+")";(b.parent||scene).add(m);
     for(const r of b.recs)if(r.lv&&r.lv[k]&&!L.some(x=>x[0]===r))r.lv[k]=null;return m;}
-  let lodK=-1;G3.lodLevel=()=>lodK;
+  let lodK=-1;
   function lodApply(b){if(!b.mesh)return;const k=G3.lodOff||BQ.has("nolod")?-1:lodK;
     if(k>=0&&!(b.lv&&b.lv[k])){try{(b.lv||(b.lv=[]))[k]=bakeLevel(b,k);}catch(e){smErr("zoom detail",e);b.lod=false;return;}}
     b.mesh.visible=k<0;if(b.lv)b.lv.forEach((m,i)=>{if(m)m.visible=i===k;});}
@@ -11580,7 +11572,7 @@ function no3D(){G3.ok=false;$("no3d").hidden=false;$("no3d-retry").onclick=()=>l
       [-0.6,0.6].forEach(dx=>{const ch=new THREE.Group();ch.position.set(35.5+dx,0,-1.85);scene.add(ch);box(0.55,0.08,0.55,M.ink,0,0.5,0,ch,false);box(0.55,0.6,0.08,M.ink,0,0.85,0.26,ch,false);box(0.08,0.5,0.08,M.steel,0,0.25,0,ch,false);});
       blob(35.5,-3.2,1.6);plate("SPOT · STOCK PREP DCS",1.6,35.5,0.62,-2.84);}
     // stations: where each DCS lives (the machine floor's three consoles, and stock prep's)
-    const ST=G3.KST=[{a:"SPOT",at:[35.5,1.6,-3.2]},{a:"WET",at:[58,1.6,13.4]},{a:"DET",at:[26,1.6,13.4]},{a:"DET",at:[-5,1.6,13.4]}];
+    const ST=[{a:"SPOT",at:[35.5,1.6,-3.2]},{a:"WET",at:[58,1.6,13.4]},{a:"DET",at:[26,1.6,13.4]},{a:"DET",at:[-5,1.6,13.4]}];
     // ---- tap targets: invisible spheres outside the scene (never drawn, never batched), with their matrices set once ----
     const HG=new THREE.SphereGeometry(1,8,6),HM=new THREE.MeshBasicMaterial(),HITS=[];
     const addHit=(at,r,tag)=>{const m=new THREE.Mesh(HG,HM);m.position.set(at[0],at[1],at[2]);m.scale.setScalar(r);m.updateMatrixWorld(true);m.userData.tag=tag;HITS.push(m);return m;};
@@ -11641,7 +11633,7 @@ function no3D(){G3.ok=false;$("no3d").hidden=false;$("no3d-retry").onclick=()=>l
     function paintStripes(k){const c=G3.pfCanvas;if(!c)return;const x=c.getContext("2d"),W=c.width,H=c.height;x.fillStyle="#fff";x.fillRect(0,0,W,H);x.fillStyle="#9a9a9a";x.fillRect(0,0,10,H);
       if(k>0.02){x.fillStyle=`rgba(92,64,30,${Math.min(0.95,0.35+k*0.7)})`;[0.12,0.29,0.47,0.66,0.83].forEach((v,i)=>x.fillRect(0,Math.round(v*H),W,Math.max(1,Math.round(H*(0.035+0.02*(i%2))))));}
       G3.pfTex.needsUpdate=true;}
-    let wire0=null,flut=false,lastSt=0;
+    let wire0=null,flut=false;
     G3.knobFrame=(rdt,now)=>{const K=S.knob,on=!!(K&&K.any)&&!S.zen;
       // stripes building up on the pick-up felt
       {const st=on?K.x.st:0,q=Math.round(st*20)/20;if(q!==pfLvl){pfLvl=q;paintStripes(q);}}
@@ -11793,7 +11785,7 @@ function no3D(){G3.ok=false;$("no3d").hidden=false;$("no3d-retry").onclick=()=>l
       for(let i=0;i<uv.count;i++){const u=uv.getX(i),v=uv.getY(i),py=fy?(1-v):v;uv.setXY(i,(r.x+u*r.w)/W,1-(r.y+py*r.h)/W);}
       o.geometry=g;o.material=mat;n++;}
     const tex=new THREE.CanvasTexture(cv);tex.colorSpace=THREE.SRGBColorSpace;tex.anisotropy=4;mat.map=tex;
-    G3.signAtlas={tex,seen};diag(`sign atlas: ${n} signs, ${seen.size} textures in one`);
+    diag(`sign atlas: ${n} signs, ${seen.size} textures in one`);
     UI_TICKS.push(k=>{if(k%2)return;let ch=false;for(const r of seen.values())if(r.t.version!==r.v){r.v=r.t.version;x.clearRect(r.x,r.y,r.w,r.h);x.drawImage(r.t.image,r.x,r.y);ch=true;}if(ch)tex.needsUpdate=true;});};
   /* v6.1 t7: faces the camera can never see. The view direction never changes, so on the first frame every static, opaque,
      single-sided mesh in the static merge keeps only its triangles that face the camera (the GPU threw the others away
@@ -12343,7 +12335,7 @@ function no3D(){G3.ok=false;$("no3d").hidden=false;$("no3d-retry").onclick=()=>l
     const T={box:tpl("box",()=>{const g=new THREE.BoxGeometry(1,1,1);g.translate(0,0.5,0);const ng=g.toNonIndexed(),a=ng.attributes.position.array,keep=[];
         for(let t=0;t<a.length;t+=9){const ys=[a[t+1],a[t+4],a[t+7]];if(ys.every(y=>y<1e-6))continue;for(let k=0;k<9;k++)keep.push(a[t+k]);}
         const out=new THREE.BufferGeometry();out.setAttribute("position",new THREE.Float32BufferAttribute(keep,3));return out;}),
-      ico:tpl("ico",()=>new THREE.IcosahedronGeometry(1,0)),oct:tpl("oct",()=>new THREE.OctahedronGeometry(1,0)),
+      ico:tpl("ico",()=>new THREE.IcosahedronGeometry(1,0)),
       cyl6:tpl("cyl6",()=>{const g=new THREE.CylinderGeometry(1,1,1,6,1,true);g.translate(0,0.5,0);return g;}),
       cyl10:tpl("cyl10",()=>{const g=new THREE.CylinderGeometry(1,1,1,10,1,false);g.translate(0,0.5,0);return g;}),
       tri3:tpl("tri3",()=>{const g=new THREE.CylinderGeometry(0.7,1,1,3,1,true);g.translate(0,0.5,0);return g;}),
@@ -12370,7 +12362,7 @@ function no3D(){G3.ok=false;$("no3d").hidden=false;$("no3d-retry").onclick=()=>l
     // where the utilities and features ended up (zen camera shots, the brownout's substation): name -> [x, z, height]
     const UTIL={};const note=(k,x,z,h)=>{UTIL[k]=[+x.toFixed(1),+z.toFixed(1),h];};
     // graphics tier: scenery density (Low 0.5 ... Ultra 1.4); the yard and the utilities are the same at every tier
-    const DEN=G3.GFX&&G3.GFX.scenery!=null?G3.GFX.scenery:1;   // (v5.7.3 bare: 0, and no environment kit at all)
+    const DEN=G3.GFX&&G3.GFX.scenery!=null?G3.GFX.scenery:1;
     /* ---------- noise for natural clustering ---------- */
     const NG=[];for(let k=0;k<40*32;k++)NG.push(RNG());
     function noise(x,z,s=60){const fx=(x+420)/s,fz=(z+320)/s,i=Math.floor(fx),j=Math.floor(fz),u=fx-i,v=fz-j,g=(a,b)=>NG[((b%32+32)%32)*40+((a%40+40)%40)];
@@ -12385,7 +12377,7 @@ function no3D(){G3.ok=false;$("no3d").hidden=false;$("no3d-retry").onclick=()=>l
     // the canal levee and the roads (causeways) stay at the pad's level
     const PLAT={x0:-172,x1:178,z0:-60,z1:100};
     function hBase(x,z){let h;
-      if(ENVK==="swamp"&&!G3.bare){const dx=Math.max(PLAT.x0-x,0,x-PLAT.x1),dz=Math.max(PLAT.z0-z,0,z-PLAT.z1);h=-1.4*sstep(2,14,Math.hypot(dx,dz));if(!h)return 0;}
+      if(ENVK==="swamp"){const dx=Math.max(PLAT.x0-x,0,x-PLAT.x1),dz=Math.max(PLAT.z0-z,0,z-PLAT.z1);h=-1.4*sstep(2,14,Math.hypot(dx,dz));if(!h)return 0;}
       else{if(!RELIEF)return 0;const f=sstep(100,230,dFence(x,z));if(f<=0)return 0;
         let n=ENVK==="desert"?noise(x*0.55,z*1.7,52)*1.1+noise(x,z,140)*0.6-0.55:noise(x,z,95)*1.35+noise(x,z,38)*0.45-0.62;
         n=Math.max(0,n);h=RELIEF*f*n*(ENVK==="desert"?1.15:1.0);}
@@ -12422,11 +12414,6 @@ function no3D(){G3.ok=false;$("no3d").hidden=false;$("no3d-retry").onclick=()=>l
     function conifer(x,z,s,tight){if(!place(x,z,(tight?0.55:1.3)*s))return false;const c=pick(["#3f6f4f","#4a7a55","#557f58","#3d6a52"]);trunk(x,z,0.4*s,1.6*s,pick(BARK));
       card(x,0,z,[[-1.7*s,1.1*s],[1.7*s,1.1*s],[0,4.5*s]],c,0.3,0.08);card(x,0,z,[[-1.25*s,3.2*s],[1.25*s,3.2*s],[0,6.1*s]],c,0.25,0.16);claim(x,z,(tight?0.6:1.5)*s,6.1*s,0.3*s);return true;}
     function bush(x,z,s,hex){if(!place(x,z,0.9*s))return false;const h=hex||pick(GREEN);card(x,0,z,[[-1.0*s,0],[1.0*s,0],[0.75*s,0.75*s],[0,1.05*s],[-0.75*s,0.75*s]],h,0.3);claim(x,z,0.9*s,1.1*s);return true;}
-    function broadleaf3D(x,z,s,far,tight){if(!place(x,z,(tight?0.7:1.6)*s))return false;const c=RNG()<0.06?pick(AUT):pick(GREEN);add(T.tri3,x,0,z,0.28*s,2.3*s,0.28*s,RNG()*6,pick(BARK),0.1);
-      add(far?T.oct:T.ico,x,3.4*s,z,1.9*s,(far?1.9:1.5)*s,1.9*s,RNG()*6,c,0.35);claim(x,z,(tight?0.75:1.7)*s,5.2*s,0.3*s);return true;}
-    function conifer3D(x,z,s,tight){if(!place(x,z,(tight?0.55:1.3)*s))return false;const c=pick(["#3f6f4f","#4a7a55","#557f58","#3d6a52"]);add(T.tri3,x,0,z,0.25*s,1.6*s,0.25*s,RNG()*6,pick(BARK),0.1);
-      add(T.cone6,x,1.1*s,z,1.7*s,3.4*s,1.7*s,RNG()*6,c,0.3);add(T.cone6,x,3.2*s,z,1.2*s,2.9*s,1.2*s,RNG()*6,c,0.25);claim(x,z,(tight?0.6:1.5)*s,6.1*s,0.3*s);return true;}
-    function bush3D(x,z,s,hex){if(!place(x,z,0.9*s))return false;add(T.oct,x,0.35*s,z,1.0*s,0.7*s,1.0*s,RNG()*6,hex||pick(GREEN),0.3);claim(x,z,0.9*s,1.1*s);return true;}
     function rock(x,z,s,hex){if(!place(x,z,1.1*s))return false;add(T.ico,x,0.2*s,z,1.2*s,0.75*s,1.0*s,RNG()*6,hex,0.25);claim(x,z,1.2*s,1*s);return true;}
     function house(x,z,ry,w,d,h,wall,roof){add(T.box,x,0,z,w,h,d,ry,wall,0.15);add(T.gable,x,h,z,w+0.4,h*0.55,d+0.5,ry,roof,0.05);}
     const NW=[];   // lit windows for the night (urban): [x,y,z,w,h,face] per window, merged into one mesh at the end
@@ -12607,7 +12594,7 @@ function no3D(){G3.ok=false;$("no3d").hidden=false;$("no3d-retry").onclick=()=>l
     // open ground: circles [x,z,r] and boxes [x0,x1,z0,z1] where the fill leaves no trees
     // (v14: ragged edges: each clearing's outline wanders with the noise, so no clearing is a clean circle or box)
     const OPEN=[],openAt=(x,z)=>{const e=(noise(x*2.3,z*2.3,26)-0.5);for(const o of OPEN){if(o.length===3?Math.hypot(x-o[0],z-o[1])<o[2]*(1+e*0.5):x>o[0]-e*14&&x<o[1]+e*14&&z>o[2]-e*14&&z<o[3]+e*14)return true;}return false;};
-    if(ENVK==="rural"&&!G3.bare){
+    if(ENVK==="rural"){
       // Forest valley: a wide river winding through wooded hills. South of the fence a concrete service court joins the
       // mill to two yards: the neighbouring Valley Timber Co. (log decks, chip pile, its own fence) and the mill's covered
       // cardboard (OCC) bale store with a truck unloading; the farm, fields and orchard beyond, the lake to the south-east,
@@ -12665,7 +12652,7 @@ function no3D(){G3.ok=false;$("no3d").hidden=false;$("no3d-retry").onclick=()=>l
       scatter(260,F.x0,F.x1,F.z0,F.z1,null,(x,z)=>broadleaf(x,z,rr(0.75,1.3),false));
       scatter(90,-410,410,-310,310,inMap,(x,z)=>bush(x,z,rr(0.8,1.4)));
       for(let k=0;k<7;k++){const a=rr(0,6.28),d=rr(360,420),x=Math.cos(a)*d,z=Math.sin(a)*d*0.8;if(!place(x,z,12))continue;add(T.mound,x,-3,z,rr(60,100),rr(9,18),rr(45,75),RNG()*6,pick(["#6f9a5c","#5f8a50","#7aa064"]),0.25);}}
-    if(ENVK==="urban"&&!G3.bare){
+    if(ENVK==="urban"){
       // City by the sea (v13 pass 2): the sea runs from the mill's back wall to the horizon. A seafront boulevard either side
       // of the mill; the beach with its boardwalk, pier and lifeguard towers to the west; the container port with gantry
       // cranes and a moored ship to the east, its breakwater and lighthouse out in the bay; ships at anchor offshore.
@@ -12786,7 +12773,7 @@ function no3D(){G3.ok=false;$("no3d").hidden=false;$("no3d-retry").onclick=()=>l
       scatter(40,F.x0,F.x1,F.z0,F.z1,null,(x,z)=>broadleaf(x,z,rr(0.6,1),false));
       scatter(160,-410,410,-310,310,inMap,(x,z)=>broadleaf(x,z,rr(0.6,0.95),true,true));
       {const z=60,x=HXr+10;if(place(x,z,4)){add(T.box,x,0,z,0.4,7,0.4,0,"#6b7079",0);add(T.box,x,7,z,0.4,3.2,8,0,"#f2c230",0.1);claim(x,z,4,11,0);}}}
-    if(ENVK==="desert"&&!G3.bare){
+    if(ENVK==="desert"){
       // Desert flats: a concrete canal past the mill; red mesas on every side, dry washes and dirt tracks across the
       // flats; the solar farm, water tanks and a reservoir east, a windpump and the substation west, an oasis, a ranch
       LM.solarFarm(206,86,10,7);LM.waterTanks(64,117);LM.reservoir(104,120,18,24);LM.reservoir(112,4,14,34);LM.windpump(-207,109);LM.stockPond(98,196);LM.mast(240,156,44);LM.ranch(232,-14);
@@ -13238,7 +13225,7 @@ function no3D(){G3.ok=false;$("no3d").hidden=false;$("no3d-retry").onclick=()=>l
      drift down, the singed bird flaps off trailing smoke, and the camera goes back where it was and the game carries on
      at the speed it had. Everything runs on its own real-time clock (the sim is paused); one bird and one set of
      effects, built once at start-up. Skipped in zen, the autotest and with ?nocine; Skip (or tapping the scene) ends it. */
-  {const Q=new URLSearchParams(location.search),NOCINE=Q.has("autotest")||Q.has("nocine")||!!G3.bare,IMP=10,END=13.4,EZ=k=>k<=0?0:k>=1?1:k*k*(3-2*k);
+  {const Q=new URLSearchParams(location.search),NOCINE=Q.has("autotest")||Q.has("nocine"),IMP=10,END=13.4,EZ=k=>k<=0?0:k>=1?1:k*k*(3-2*k);
     const mat=hex=>new StdMat({color:lin0(hex),roughness:0.75}),SPH=new THREE.SphereGeometry(1,14,10),BOX=new THREE.BoxGeometry(1,1,1);
     const part=(p,g,m,sx,sy,sz,x,y,z)=>{const o=new THREE.Mesh(g,m);o.scale.set(sx,sy,sz);o.position.set(x,y,z);o.castShadow=true;p.add(o);return o;};
     // the pigeon (local +x forward), 1.6x life size so it reads on a phone
@@ -13314,7 +13301,7 @@ function no3D(){G3.ok=false;$("no3d").hidden=false;$("no3d-retry").onclick=()=>l
         feathers.forEach(f=>{const u=f.userData.v,kk=k-0.05;f.visible=kk>0&&kk<3.2;if(!f.visible)return;f.position.set(c.I.x+u[0]*kk+Math.sin(kk*3+u[3])*0.4,Math.max(0.05,c.I.y+1+u[1]*kk-0.9*kk*kk*0.6),c.I.z+u[2]*kk);f.rotation.set(kk*3+u[3],kk*2,Math.sin(kk*4+u[3]));});
         if(t>=END)finish();}catch(e){console.error("bird cut-scene",e);finish();}};
     G3.cineSeek=t=>{if(C){C.t=t;C.chirp=C.chirp.filter(x=>x>t);if(t>=IMP&&!C.struck){C.struck=true;G3.cineHold=false;}}};   // (tests and stills)
-    G3.cineIMP=IMP;}
+}
   /* ---- v6.1 iso: 2D cut-outs for workers, fork-trucks and delivery trucks ----
      Only these three (userData.cut = "person", "lift" or "truck", set where they are built: 33 worker(), 27 forklift() and
      clamp3(), 26 makeTruck()). Everything else stays 3D.
@@ -13407,7 +13394,6 @@ function no3D(){G3.ok=false;$("no3d").hidden=false;$("no3d-retry").onclick=()=>l
    function heading(o){const e=o.matrixWorld.elements;return (((Math.round(Math.atan2(-e[2],e[0])/(Math.PI/4))%8)+8)%8);}
    // --- taking one picture ---
    const RTS=256,gl2=renderer.capabilities.isWebGL2!==false;
-   const hf=!!(renderer.extensions.has("EXT_color_buffer_half_float")||renderer.extensions.has("EXT_color_buffer_float"));
    const RT_A=new THREE.WebGLRenderTarget(RTS,RTS,{type:THREE.UnsignedByteType,   /* (v6.1 t4: 8-bit everywhere; a half-float MSAA target isn't renderable on every phone) */samples:gl2?4:0,generateMipmaps:false,minFilter:THREE.NearestFilter,magFilter:THREE.NearestFilter});
    RT_A.scissorTest=true;
    const finU={src:{value:RT_A.texture},uScale:{value:1},uPx:{value:64},uExp:{value:renderer.toneMappingExposure},uInk:{value:new THREE.Color(INK)},uPaper:{value:new THREE.Color(PAPERC)}};
@@ -13733,7 +13719,7 @@ function no3D(){G3.ok=false;$("no3d").hidden=false;$("no3d-retry").onclick=()=>l
           const inBag=ok.filter(m=>(!m.rare&&Z.bag.includes(m.name))||(m.rare&&!H.includes(m.name)));
           if(inBag.length)ok=inBag;else{const fresh=ok.filter(m=>!H.includes(m.name));if(fresh.length)ok=fresh;else if(ok.length)ok=[ok.reduce((a,b)=>H.indexOf(a.name)<=H.indexOf(b.name)?a:b)];}
           if(ok.length){let tw=0;ok.forEach(m=>tw+=m.rare?2.5:1);let r=Math.random()*tw,m=ok[0];for(const c of ok){r-=c.rare?2.5:1;if(r<=0){m=c;break;}}
-            Z.mv={m,t:0,st:m.start?m.start():null};Z.who=null;Z.len=m.dur+1;H.push(m.name);if(Z.bag){const bi=Z.bag.indexOf(m.name);if(bi>=0)Z.bag.splice(bi,1);}Z.done&&Z.done.add(m.name);while(H.length>Math.min(8,MV.length-4))H.shift();G3.zenLast=m.name;
+            Z.mv={m,t:0,st:m.start?m.start():null};Z.who=null;Z.len=m.dur+1;H.push(m.name);if(Z.bag){const bi=Z.bag.indexOf(m.name);if(bi>=0)Z.bag.splice(bi,1);}Z.done&&Z.done.add(m.name);while(H.length>Math.min(8,MV.length-4))H.shift();
             // v3.2.0: each shot has its own paired looks
             const lk=m.look||["none"],cur2=document.body.dataset.zs,pl2=lk.length>1?lk.filter(l=>l!==cur2):lk;document.body.dataset.zs=pl2[Math.floor(Math.random()*pl2.length)];}}
         if(Z.mv){}

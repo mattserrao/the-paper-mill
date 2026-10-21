@@ -99,12 +99,12 @@
       else if(P&&t==="CircleGeometry"&&P.segments>seg)h=new THREE.CircleGeometry(P.radius,seg,P.thetaStart,P.thetaLength);
       if(h){// (the original may have been turned after it was made: find the turn that fits its bounds, else keep the original)
         g.computeBoundingBox();_bA.copy(g.boundingBox);let ok=null;
-        for(const [rx,ry,rz] of ROTS){const c=h.clone();if(rx)c.rotateX(rx);if(rz)c.rotateZ(rz);c.computeBoundingBox();_bB.copy(c.boundingBox);
+        for(const [rx,,rz] of ROTS){const c=h.clone();if(rx)c.rotateX(rx);if(rz)c.rotateZ(rz);c.computeBoundingBox();_bB.copy(c.boundingBox);
           const e=Math.max(_bA.min.distanceTo(_bB.min),_bA.max.distanceTo(_bB.max));if(e<0.02*Math.max(0.05,_bA.getSize(_smV).length())){ok=c;break;}c.dispose();}
         h.dispose();if(ok){ok.deleteAttribute("uv");v=ok;}}}catch(e){v=g;}SIMP.set(k,v);return v;}
   const VDIR=new THREE.Vector3(Math.sin(Math.acos(Math.sqrt(1/3)))*Math.sin(-Math.PI/4),Math.sqrt(1/3),Math.sin(Math.acos(Math.sqrt(1/3)))*Math.cos(-Math.PI/4));
   function bakeLevel(b,k){const R=LOD_R[k],SEG=LOD_SEG[k],L=[];for(const r of b.recs)if(r.v0!=null&&smRad(r)>=R)L.push([r,simpGeo(r.o.userData.fullGeo||r.o.geometry,SEG)]);
-    let nv=0,ni=0;for(const [r,g] of L){nv+=g.attributes.position.count;ni+=g.index?g.index.count:g.attributes.position.count;}
+    let nv=0,ni=0;for(const [,g] of L){nv+=g.attributes.position.count;ni+=g.index?g.index.count:g.attributes.position.count;}
     const pos=new Float32Array(nv*3),nor=new Float32Array(nv*3),col=new Float32Array(nv*3),idx=new Uint32Array(ni);let vo=0,io=0;
     for(const [r,g] of L){const o=r.o,P=g.attributes.position,N=g.attributes.normal,mw=r.mw||o.matrixWorld,flip=mw.determinant()<0,c=o.material.color;_smM3.getNormalMatrix(mw);
       for(let i=0;i<P.count;i++){_smV.set(P.getX(i),P.getY(i),P.getZ(i)).applyMatrix4(mw);const j=(vo+i)*3;pos[j]=_smV.x;pos[j+1]=_smV.y;pos[j+2]=_smV.z;
@@ -118,7 +118,7 @@
     geo.setIndex(new THREE.BufferAttribute(idx.slice(0,io),1));geo.computeBoundingSphere();
     const m=new THREE.Mesh(geo,b.mat);m.matrixAutoUpdate=false;m.userData.smBatch=true;m.name="flat batch (zoom step "+k+")";(b.parent||scene).add(m);
     for(const r of b.recs)if(r.lv&&r.lv[k]&&!L.some(x=>x[0]===r))r.lv[k]=null;return m;}
-  let lodK=-1;G3.lodLevel=()=>lodK;
+  let lodK=-1;
   function lodApply(b){if(!b.mesh)return;const k=G3.lodOff||BQ.has("nolod")?-1:lodK;
     if(k>=0&&!(b.lv&&b.lv[k])){try{(b.lv||(b.lv=[]))[k]=bakeLevel(b,k);}catch(e){smErr("zoom detail",e);b.lod=false;return;}}
     b.mesh.visible=k<0;if(b.lv)b.lv.forEach((m,i)=>{if(m)m.visible=i===k;});}

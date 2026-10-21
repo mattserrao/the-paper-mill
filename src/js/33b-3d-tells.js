@@ -76,15 +76,13 @@
       k.g.visible=false;RND.shown.delete(best);if(G3.onTellCaught)G3.onTellCaught(best);return true;};
     // the screen position of a shown tell (tests)
     G3.tellScreen=id=>{const k=KIT[id];if(!k||!k.g.visible)return null;const r=glc.getBoundingClientRect(),t=k.parts.top;_v.set(k.x,t[1]*SC*0.6,k.z).project(camera);return [r.left+(_v.x+1)/2*r.width,r.top+(1-_v.y)/2*r.height,_v.z];};
-    G3.tellSeek=f=>{if(RND.on)RND.t=f*RND.len;};G3.tellOp=()=>[op.position.x,op.position.z];
+    G3.tellSeek=f=>{if(RND.on)RND.t=f*RND.len;};
     G3.tellHold=ms=>{RND.touch=performance.now()+(ms||60000);};   // (tests: the camera stays where the tool put it)
     G3.tellShowAll=on=>{TG.visible=!!on;for(const id in KIT){const k=KIT[id],[x,z]=posOf(k);k.g.position.set(x,0,z);k.g.updateMatrixWorld(true);k.g.visible=!!on;}};   // (layout checks)
-    G3.tellKits=()=>Object.keys(KIT);
     G3.tellPos=id=>KIT[id]?posOf(KIT[id]):null;
     // for the prewarm's one render: everything shown, so nothing compiles mid-round
     G3.tellWarm=shown=>{if(!TG.visible){TG.visible=true;shown.push(TG);}for(const id in KIT)if(!KIT[id].g.visible){KIT[id].g.visible=true;shown.push(KIT[id].g);}if(!op.visible){op.visible=true;shown.push(op);}};
     // ---- every frame ----
-    let flick=0;
     G3.tellFrame=(rdt,now)=>{if(!RND.on)return;
       if(running&&!document.hidden)RND.t+=rdt;
       syncShown();
@@ -114,6 +112,6 @@
           case "outfall":if(Math.random()<rdt*14)emit("smoke",x+R()*4,0.4,z+R()*4,R()*0.3,0.5,R()*0.3,2.4,2.2,"#d9c79a",0.7);break;
           case "flicker":if(Math.random()<rdt*10)emit("spark",x+R(),ty,z+0.6,R()*3,2+Math.random()*3,2,0.5,0.22,"#bfe3ff",1);break;
           case "dye":if(Math.random()<rdt*14)emit("drop",x+R()*0.4,1.8,z+0.6,R()*1.5,1,1.5,0.8,0.22,["#d64fd6","#3fb6e0","#f2c230"][(Math.random()*3)|0],1);break;}
-        if(p.glow){flick+=rdt;const on=k.fx==="flicker"?Math.sin(now/45)+Math.sin(now/17)>0.2:Math.sin(now/180)>-0.3;if(p.glow.visible!==on)p.glow.visible=on;}}
+        if(p.glow){const on=k.fx==="flicker"?Math.sin(now/45)+Math.sin(now/17)>0.2:Math.sin(now/180)>-0.3;if(p.glow.visible!==on)p.glow.visible=on;}}
       if(RND.t>=RND.len){const d=RND.done;G3.tellRoundStop();if(d)d();}};
   }

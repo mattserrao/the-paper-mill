@@ -1,7 +1,7 @@
   /* ---- step 1: static plant ---- */
   // v4.1 the environment sets the ground, the river and its banks (ENVLOOK); the scenery itself is built in 42b-3d-scenery.js
   const ENVLOOK={rural:{ground:"#a3c487",bank:"#c9c1a8",water:"#4b7f99"},urban:{ground:"#a9bb8f",bank:"#b7b3a8",water:"#5f8aa6"},
-    desert:{ground:"#e0c697",bank:"#cfc9bb",water:"#2fb3c4"},swamp:{ground:"#8ea576",bank:"#6f6548",water:"#3f5f52"}}[SITE.env];G3.envLook=ENVLOOK;
+    desert:{ground:"#e0c697",bank:"#cfc9bb",water:"#2fb3c4"},swamp:{ground:"#8ea576",bank:"#6f6548",water:"#3f5f52"}}[SITE.env];
   // (v4.1 pass 3: the ground is the terrain mesh built in 42b-3d-scenery.js, flat under the mill, with the environment's texture)
   slab(-140,-95,-5.2,-2.4,M.asphalt);slab(-140,-95,11.2,13.8,M.asphalt);
   slab(-95,-34.4,-5.2,-2.4,M.asphalt);              // inbound road

@@ -36,7 +36,7 @@
          else _c.setHSL(0.07,0.14,Math.min(0.5,hsl.l*0.75+0.08));}   // bare branches
        a[j]=_c.r;a[j+1]=_c.g;a[j+2]=_c.b;}
      if(i1>=ca.count)ca.needsUpdate=true;return n;}   // (uploaded once, when its last chunk is done)
-   let shownPal=-1,chkT=0;   /* (t12: summer is a recolour too now, so nothing counts as shown until the first one) */G3.palShown=()=>PALS[shownPal];
+   let shownPal=-1,chkT=0;   /* (t12: summer is a recolour too now, so nothing counts as shown until the first one) */
    // v6.1 t3: one mesh per frame instead of all at once (no single long frame when a season starts)
    let palQ=[],palN=0;
    G3.setPal=p=>{p=((p%4)+4)%4;if(p===shownPal&&ORIG.size)return;shownPal=p;palN=0;

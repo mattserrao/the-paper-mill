@@ -81,4 +81,4 @@
         feathers.forEach(f=>{const u=f.userData.v,kk=k-0.05;f.visible=kk>0&&kk<3.2;if(!f.visible)return;f.position.set(c.I.x+u[0]*kk+Math.sin(kk*3+u[3])*0.4,Math.max(0.05,c.I.y+1+u[1]*kk-0.9*kk*kk*0.6),c.I.z+u[2]*kk);f.rotation.set(kk*3+u[3],kk*2,Math.sin(kk*4+u[3]));});
         if(t>=END)finish();}catch(e){console.error("bird cut-scene",e);finish();}};
     G3.cineSeek=t=>{if(C){C.t=t;C.chirp=C.chirp.filter(x=>x>t);if(t>=IMP&&!C.struck){C.struck=true;G3.cineHold=false;}}};   // (tests and stills)
-    G3.cineIMP=IMP;}
+}

@@ -16,7 +16,6 @@
   const nearest=(list,x)=>list.reduce((b,s)=>Math.abs(s[0]-x)<Math.abs(b[0]-x)?s:b,list[0]);
   // machine crew spots during a dryer fire: five on hoses at the front aisle, two with extinguishers at the back
   const FIRESPOT=[[24,14.4,"hose"],[18,14.4,"hose"],[12,14.4,"hose"],[6,14.4,"hose"],[0,14.4,"hose"],[20,4.0,"ext"],[8,4.0,"ext"]];
-  G3.crewSpots=()=>({HOME,HAY,RT,BRKSPOT,FIRESPOT,SITES});
   const crewHose=FIRESPOT.map(()=>hoseLine());
   // bale yard fire brigade: four firefighters with red helmets spray over the receiving wall
   const brigade=[0,1,2,3].map(k=>{const w=worker(M.warn,M.bad);w.visible=false;w.userData.home=[-4,-0.6];w.userData.spot=[-6.4,-6-k*4];w.userData.hose=hoseLine();w.position.set(-4,0,-0.6);return w;});
