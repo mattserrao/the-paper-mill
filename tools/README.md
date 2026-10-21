@@ -56,8 +56,8 @@ don't add a new version-named check.
 - `perf/`: `quick.py` (quick phone performance test and sim checksum), `bench.py` (timing benchmark), `fpsbench.py` +
   `pmbench.py` (before/after frame cost), `latecompile.py` (shader programs compiled after start-up; should be 0),
   `drawcost.py` (what each draw costs), `allocprof.py` (what allocates).
-- `balance/`: `econ.py` (hands-off seasons), `survival.py` (survival runs to bankruptcy, by bot and leader),
-  `qa_balance.py` (scripted play styles over many seasons), `qa_v610.py` (full Season / Survival playthroughs through
+- `balance/`: `qa_balance.py` (scripted play styles over many seasons, or survival runs with `--mode=survival`; it
+  answers civics cards, deals and outage budgets through the real dialogs), `qa_v610.py` (full Season / Survival playthroughs through
   the real UI, optionally posting to the live boards).
 - `util/`: `titleart.py` (packs the title backgrounds into `src/js/50a-title-art.js`), `topview.py` / `gridview.py`
   (top-down layout renders), `clipcheck.py` (nothing stands inside scenery), `sightshots.py` (rare-sight stills),

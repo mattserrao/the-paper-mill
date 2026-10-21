@@ -4,7 +4,7 @@ pauses (and shows "Welcome back" on return), and a corrupt or old-version save i
 Replaces tools/savecheck.py (which only printed; tools/savecheck51.py was an outdated copy).
 Usage: python3 save.py [index.html]"""
 # tier: quick
-import sys, json, pathlib; sys.path.insert(0, str(pathlib.Path(__file__).resolve().parents[1]))
+import sys, pathlib; sys.path.insert(0, str(pathlib.Path(__file__).resolve().parents[1]))
 from lib import *
 C = Checks(); ok, errs, log = C.ok, C.errs, C.log
 

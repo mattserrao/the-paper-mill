@@ -1,5 +1,5 @@
 """Sampling allocation profile of steady play: which functions allocate the most JS memory."""
-import pathlib, sys, json, collections
+import pathlib, sys, collections
 from playwright.sync_api import sync_playwright
 import sys as _sys, pathlib as _pl; _sys.path.insert(0, str(_pl.Path(__file__).resolve().parents[1]))
 from lib import *   # route_for, INIT, HOOK, pick_leader, HERE (= tools/)
@@ -13,13 +13,14 @@ with sync_playwright() as pw:
     pg=ctx.new_page(); pg.route("**/*", route_for(html)); pg.add_init_script(INIT); pg.goto("http://bench.local/")
     pg.wait_for_function("window.__PM&&__B.first!==null&&(!__PM.G3.SM||__PM.G3.SM.done)",timeout=120000,polling=500)
     pg.evaluate("()=>{document.getElementById('v2go').click();__PM.setFps(true);__PM.C.simSpeed=30;}")
+    pick_leader(pg)   # (v6.10.2: since v5.1 Season opens the leader picker first; without this the tool measured the menu)
     pg.wait_for_timeout(70000)
     cdp=ctx.new_cdp_session(pg); cdp.send("HeapProfiler.enable"); cdp.send("HeapProfiler.startSampling",{"samplingInterval":4096,"includeObjectsCollectedByMajorGC":True,"includeObjectsCollectedByMinorGC":True})
     pg.wait_for_timeout(10000)
     prof=cdp.send("HeapProfiler.stopSampling")["profile"]; b.close()
 agg=collections.Counter(); 
 def walk(n):
-    cf=n["callFrame"]; self_=sum(s["size"] for s in prof["samples"] if s["nodeId"]==n["id"]) if False else n.get("selfSize",0)
+    cf=n["callFrame"]; self_=n.get("selfSize",0)
     agg[f'{cf["functionName"] or "(anon)"} [{cf["url"].split("/")[-1][:14]}:{cf["lineNumber"]+1}]']+=self_
     for c in n.get("children",[]): walk(c)
 walk(prof["head"]); tot=sum(agg.values())

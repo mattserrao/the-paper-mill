@@ -104,7 +104,7 @@ def survival_mode(pw):
     ok("wave 2: Chip's sales push is part of the mill (+$7/t)", s["lead"]["st"]["sales"] == 1 and s["lead"]["st"]["fibre"] == 0 and abs(s["lp"] - price1 - 7) < 1e-9, s)
     ok("wave 2: chip shows ×1.20 and ×1.10", s["svW"] == "Wave 2" and s["svU"] == "×1.20" and s["svC"] == "×1.10", s)
     ok("wave 2: upset rate is base 0.5 × 1.20 after the first week (wave 2 set)", abs(pg.evaluate("()=>{const S=__PM.S,t=S.t;S.t=8*1440;const v=__PM.upsetMul();S.t=t;return v;}") - 0.6) < 1e-9)
-    cash2 = s["cash"]; t2 = s["t"]
+    cash2 = s["cash"]
 
     # 4 save, reload, continue
     ok("save: written", pg.evaluate("()=>__PM.G3.save.save('test')"))

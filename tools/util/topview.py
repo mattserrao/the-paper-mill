@@ -21,6 +21,7 @@ with sync_playwright() as pw:
     pg.add_init_script(INIT); pg.goto("http://bench.local/" + q)
     pg.wait_for_function("window.__PM&&(!__PM.G3.SM||__PM.G3.SM.done)&&(!__PM.G3.prewarm||__PM.G3.warm)", timeout=240000, polling=500)
     pg.evaluate("()=>{document.getElementById('v2go').click();}"); pg.wait_for_timeout(4000)
+    pick_leader(pg)   # (v6.10.2: since v5.1 Season opens the leader picker first; without this the tool measured the menu)
     url = pg.evaluate("""([half,persp])=>{__PM.setRunning(false);const D=__PM.G3.diagScene(),T=__PM.THREE,R=D.renderer;const W=R.domElement.width,H=R.domElement.height,a=W/H;
       let cam;if(persp){cam=new T.PerspectiveCamera(30,a,1,3000);cam.position.set(-160,170,220);cam.lookAt(0,0,0);}
       else{cam=new T.OrthographicCamera(-half,half,half/a,-half/a,1,2000);cam.position.set(0,600,0);cam.up.set(0,0,-1);cam.lookAt(0,0,0);}

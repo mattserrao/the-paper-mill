@@ -20,6 +20,7 @@ Numbers are only comparable to other runs of this same harness.
 import json, statistics, sys, time, pathlib
 import sys as _sys, pathlib as _pl; _sys.path.insert(0, str(_pl.Path(__file__).resolve().parents[1]))
 from lib import *   # route_for, INIT, HOOK, pick_leader, HERE (= tools/)
+VW, VH = 800, 450
 
 def stats(xs):
     xs = sorted(xs)
@@ -44,6 +45,7 @@ def one_run(pw, html):
     pg.evaluate("""()=>{const R=__PM.G3.renderer,r=R.render.bind(R);R.render=(a,b)=>{const t=performance.now();r(a,b);__B.cur+=performance.now()-t;};
         document.getElementById('v2go').click();__PM.setFps(true);
         __PM.C.simSpeed=30;const el=document.getElementById('simspeed');if(el){el.value=30;el.dispatchEvent(new Event('input'));}}""")
+    pick_leader(pg)   # (v6.10.2: since v5.1 Season opens the leader picker first; without this the tool measured the menu)
     out = {"startup": startup}
     def scenario(name, setup):
         pg.evaluate(setup)

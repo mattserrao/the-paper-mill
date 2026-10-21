@@ -8,12 +8,11 @@ frame and draw counters), HOOK (window.__PM test hook for older builds), pick_le
 for sim-only checks, and Checks (one pass/fail log, the RESULT line and the exit code every check ends with).
 Replaces the old pattern of exec()-ing a slice of bench.py's source.
 """
-import json, statistics, sys, time, pathlib, os
-from playwright.sync_api import sync_playwright
+import functools, json, statistics, sys, time, pathlib, os   # (json, statistics, time: re-exported for the tools)
+from playwright.sync_api import sync_playwright              # (re-exported: every check uses it)
 
 
 HERE = pathlib.Path(__file__).resolve().parent          # tools/ (node_modules and t186 live here)
-VW, VH = 800, 450
 _R128 = HERE / "node_modules/three/build/three.min.js"          # r128 (v3.3.4 and early v4)
 T186 = HERE / "t186/node_modules/three/build"                                    # r186 (v4 after the upgrade)
 
@@ -60,12 +59,11 @@ def pick_leader(pg, who="hank", timeout=90000):
     return True
 
 
+@functools.lru_cache(None)
 def r128():
     """three.js r128 for old builds (v3.3.4 to early v4). Read only when a page asks for it, so it isn't required for
     current builds (which load r186 from t186/)."""
-    global _R128_TXT
-    try: return _R128_TXT
-    except NameError: _R128_TXT = _R128.read_text(); return _R128_TXT
+    return _R128.read_text()
 
 GPU_ARGS = ["--use-gl=angle", "--use-angle=swiftshader", "--enable-unsafe-swiftshader", "--ignore-gpu-blocklist"]
 LITE = "gfx=low&nosm"   # sim-only checks: low tier, no static batching (boots ~2 s instead of ~9 s; the sim is unchanged)

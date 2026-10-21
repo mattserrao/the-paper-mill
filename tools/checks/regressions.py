@@ -22,7 +22,7 @@ page-error check. econfix 3 printed a revenue of $14 on v6.10.1 and asserted not
 an order (05b), so its hand-docked empty truck never loaded; it now books a 34Super order and checks that truck's invoice.
 Usage: python3 regressions.py [index.html]"""
 # tier: default
-import sys, os, re, json, pathlib; sys.path.insert(0, str(pathlib.Path(__file__).resolve().parents[1]))
+import sys, os, re, pathlib; sys.path.insert(0, str(pathlib.Path(__file__).resolve().parents[1]))
 from lib import *
 C = Checks(); ok, errs, log = C.ok, C.errs, C.log
 

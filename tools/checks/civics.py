@@ -145,7 +145,7 @@ def civics(pw):
 
     # ---- 6 outage dialog with levers and the leader's pick, in a season ----
     ev("()=>{const S=__PM.S;S.cards.open=null;S.civ.cur=null;S.civ.q=[];}")
-    o1 = bot("S.outg.noticed||S.outg.k>1", 60000, "noout")
+    bot("S.outg.noticed||S.outg.k>1", 60000, "noout")
     od = ev("""()=>{const v=id=>{const e=document.getElementById(id);return !!e&&!e.hidden};return {open:v('outOv'),lead:!!document.querySelector('#outOv #out-lpick'),civ:document.querySelectorAll('#outOv .civplan .seg').length,
       dk:(document.querySelector('#outOv .dk')||{}).textContent};}""")
     ok("6 season outage dialog: Chip's pick and three civics levers", od["open"] and od["lead"] and od["civ"] == 3 and "of 4" in (od["dk"] or ""), od)

@@ -9,7 +9,7 @@ Usage: python3 run_checks.py [index.html] [--tier=quick|default|full] [-j 2] [--
 Each check is its own process (one Chromium each), so -j sets how many run at once. On a 2-CPU machine keep -j 2:
 more slows every check and pushes the real-time waits past their limits. Logs go to tools/check-logs/<check>.log.
 Exit code 0 only if every check passed. A check passes when it exits 0 and prints "RESULT: PASS" (lib.Checks.done)."""
-import concurrent.futures as cf, pathlib, re, subprocess, sys, time
+import argparse, concurrent.futures as cf, pathlib, re, subprocess, sys, time
 
 HERE = pathlib.Path(__file__).resolve().parent
 CHECKS, LOGS = HERE / "checks", HERE / "check-logs"
@@ -20,20 +20,23 @@ def tier_of(p):
     return m.group(1) if m else "default"
 
 def main():
-    args = sys.argv[1:]
-    opt = {a.split("=")[0]: (a.split("=", 1)[1] if "=" in a else True) for a in args if a.startswith("--")}
-    pos = [a for a in args if not a.startswith("-")]
-    jobs = 2
-    if "-j" in args: jobs = int(args[args.index("-j") + 1]); pos = [a for a in pos if a != str(jobs)]
-    html = pathlib.Path(pos[0]).resolve() if pos else HERE.parent / "index.html"
-    if opt.get("--build"):
+    ap = argparse.ArgumentParser(description="Run the regression checks in tools/checks/.")
+    ap.add_argument("html", nargs="?", default=str(HERE.parent / "index.html"), help="the built game (default ../index.html)")
+    ap.add_argument("--tier", choices=("quick", "default", "full"), default="default")
+    ap.add_argument("-j", type=int, default=2, help="checks at once (keep 2 on a 2-CPU machine)")
+    ap.add_argument("--only", help="comma-separated check names (any tier)")
+    ap.add_argument("--build", action="store_true", help="run build.py first")
+    a = ap.parse_args()
+    html, jobs = pathlib.Path(a.html).resolve(), a.j
+    if a.build:
         r = subprocess.run([sys.executable, str(HERE.parent / "build.py")], capture_output=True, text=True)
         print(r.stdout.strip().splitlines()[-1] if r.stdout.strip() else r.stderr)
         if r.returncode: sys.exit("build failed")
-    tier = opt.get("--tier", "default"); cap = {"quick": 0, "default": 1, "full": 2}[tier]
-    only = set(opt["--only"].split(",")) if "--only" in opt else None
+    tier, cap = a.tier, {"quick": 0, "default": 1, "full": 2}[a.tier]
+    only = set(a.only.split(",")) if a.only else None
     todo = sorted((p for p in CHECKS.glob("*.py") if not p.name.startswith("_")),
                   key=lambda p: (-len(p.read_text()), p.name))   # longest first: better packing across workers
+    if only and only - {p.stem for p in todo}: sys.exit("no such check: " + ", ".join(sorted(only - {p.stem for p in todo})))
     todo = [p for p in todo if (p.stem in only if only else ORDER.get(tier_of(p), 1) <= cap)]
     if not todo: sys.exit("no checks matched")
     LOGS.mkdir(exist_ok=True)

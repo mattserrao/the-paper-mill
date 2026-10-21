@@ -1,5 +1,5 @@
 """Which shader programs get compiled after the start-up precompile? Plays 60 s normally, then triggers every upset."""
-import pathlib,sys,json,collections
+import pathlib,sys
 from playwright.sync_api import sync_playwright
 import sys as _sys, pathlib as _pl; _sys.path.insert(0, str(_pl.Path(__file__).resolve().parents[1]))
 from lib import *   # route_for, INIT, HOOK, pick_leader, HERE (= tools/)
@@ -15,6 +15,7 @@ with sync_playwright() as pw:
       const orr=R.render.bind(R);R.render=(a,c)=>{orr(a,c);for(const p of R.info.programs){if(seen.has(p.id))continue;seen.add(p.id);
         __late.push({t:Math.round(performance.now()/1000),name:p.name,key:p.cacheKey.split(',').filter(x=>x&&x!=='false'&&x!=='0').slice(0,40).join(',')});}};}""")
     pg.evaluate("()=>{document.getElementById('v2go').click();__PM.setFps(true);__PM.C.simSpeed=30;}")
+    pick_leader(pg)   # (v6.10.2: since v5.1 Season opens the leader picker first; without this the tool measured the menu)
     pg.wait_for_timeout(60000)
     pg.evaluate("()=>{__PM.CH.on=true;__PM.EVENTS.forEach(e=>{try{__PM.trigger(e.id,true)}catch(_){}})}")
     pg.wait_for_timeout(20000)

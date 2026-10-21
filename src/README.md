@@ -53,7 +53,7 @@ then `tail.html`. All game code runs inside **one shared closure** (opened in `0
 - **Environment gameplay** goes through `applySite()` (called from `applyUpgrades`): `P.siteOcc`, `sitePrice`, `siteEnergy`,
   `siteWage`, `siteOver`, `siteIn` (inbound trucks), `siteWx` (weather thresholds; still one `rand("wx")` draw) and
   `siteFreq(id)` (upset frequency, inside `freqMul`, shown as "site" under Reliability). Keep each environment's
-  hands-off season near break-even: `econ.py index.html 15 --env=X`.
+  hands-off season near break-even: `tools/balance/qa_balance.py index.html handsoff 15 --env=X`.
 - **`LAYOUT`** (`layoutFor(seed)`): where the auxiliary plant sits. Only the wastewater plant moves (two slots, either way
   round); code that places or points at it uses `LAYOUT.wx(x)` on its v4.0 coordinates (21 plant, 31 permit effect and pin,
   42 zen shot). The power house stays: the steam rack ties it to the dryers.
@@ -157,11 +157,11 @@ then `tail.html`. All game code runs inside **one shared closure** (opened in `0
   Picks go through the outage dialog: `leadPlanNew()` / `leadPlanMount()` (09c) write `o.plan.lead={to, pick}`;
   `beginOutage()` applies a change of leader (`leadChange`), `endOutage()` adds the pick to the stacks (`leadOutageEnd`).
   Stacks belong to the mill, not the leader. A new leader needs: an entry in `LEADERS`, `LEAD_IMG` and `LEAD_FACE` (`09c-leader-art.js`), `LEAD_IDS` and
-  `LEAD_PICKS`, its effects in the helpers, and a policy in `tools/balance/survival.py`. (The leader is not on the leaderboard.)
+  `LEAD_PICKS`, its effects in the helpers, and a policy in `tools/balance/qa_balance.py` (`--lead=`). (The leader is not on the leaderboard.)
   Portraits are embedded WebP images at 408 x 460 (`09c-leader-art.js`), shown as CSS backgrounds by `leadArt(id)`; `LEAD_FACE` is the
   square that frames each face (the chip avatar and the outage dialog).
-- **Retuning**: change `SURV.up` / `SURV.cost`, then `tools/balance/survival.py index.html 10 --bot=handsoff` (and `buyer`, `saver`), with `--leader=chip|dot|fel|hank` for each leader.
-  A run has to end: every bot should be bankrupt well before `--maxdays`.
+- **Retuning**: change `SURV.up` / `SURV.cost`, then `tools/balance/qa_balance.py index.html handsoff,active,buyer 10 --mode=survival`, with `--lead=chip|dot|fel|hank` for each leader.
+  A run has to end: every style should be bankrupt well before `--maxdays`.
 
 ## Device autotest (`?autotest`)
 

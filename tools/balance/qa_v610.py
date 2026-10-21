@@ -147,7 +147,7 @@ def run(pw, k):
         name = f"QA Test {k + (100 if SURV else 0)}"; rec["name"] = name
         pg.evaluate("n=>{const i=document.getElementById('so-name');i.value=n;i.dispatchEvent(new Event('input'))}", name)
         msg = ""
-        for attempt in range(4):
+        for _ in range(4):
             if not NOPOST: gate()
             try: pg.click("#so-submit", timeout=60000)
             except Exception:

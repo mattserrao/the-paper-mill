@@ -1,4 +1,4 @@
-"""Quick performance test (~2 min). Usage: python3 quick.py <index.html> [label] [--desktop] [--expect=96960821] [--env=rural] [--mill=1]
+"""Quick performance test (~2 min). Usage: python3 quick.py <index.html> [label] [--desktop] [--expect=<sim checksum>] [--env=rural] [--mill=1]
 
 One phone-emulated load (390x844 @1x, touch: the game's phone path keys on touch, and 1x keeps the software GPU fast enough; --desktop for 800x450), seeded, low-FPS fallback off, at 30 sim-min/s:
   normal  : 10 s settle, 10 s measured
@@ -18,7 +18,7 @@ Per phase it reports counts that don't depend on machine speed (compare them acr
 and timing (this machine; only for same-session comparison): cpu_ms (frame callback, median), style_layout_ms_f
 (browser style + layout per frame), browser_ms_f (style, layout, paint, layerize, commit per frame), over50 (frames over 50 ms of CPU).
 Writes quick-<label>.json next to this script and prints one JSON object."""
-import json, pathlib, sys, statistics as st, re
+import json, pathlib, sys
 from playwright.sync_api import sync_playwright
 import sys as _sys, pathlib as _pl; _sys.path.insert(0, str(_pl.Path(__file__).resolve().parents[1]))
 from lib import *   # route_for, INIT, HOOK, pick_leader, HERE (= tools/)
@@ -26,7 +26,7 @@ from lib import *   # route_for, INIT, HOOK, pick_leader, HERE (= tools/)
 args = [a for a in sys.argv[1:] if not a.startswith("--")]
 flags = {a.split("=")[0]: (a.split("=", 1)[1] if "=" in a else True) for a in sys.argv[1:] if a.startswith("--")}
 path = args[0]; label = args[1] if len(args) > 1 else pathlib.Path(path).parent.name or "build"
-expect = flags.get("--expect", "96960821"); desktop = "--desktop" in flags
+expect = flags.get("--expect", ""); desktop = "--desktop" in flags   # (no default checksum: it changes whenever the sim does)
 site = "".join(f"&{k}={flags.get('--'+k)}" for k in ("env", "mill") if "--" + k in flags)   # v4.1: ?env=&mill= (default: rural with its fixed layout, mill #21, as players see it)
 html = pathlib.Path(path).read_text()
 if "window.__PM=" not in html:
@@ -113,7 +113,7 @@ with sync_playwright() as pw:
     pg.on("pageerror", lambda e: errs.append(str(e)[:200]))
     base = route_for(html)
     pg.route("**/*", lambda r: r.fulfill(body=html, content_type="text/html") if r.request.url.startswith("http://bench.local/") else base(r))
-    pg.goto(f"http://bench.local/?autotest&scale=0.05&gpu=0&expect={expect}{site}")
+    pg.goto(f"http://bench.local/?autotest&scale=0.05&gpu=0{'&expect=' + expect if expect else ''}{site}")
     pg.wait_for_function("window.__AUTOTEST", timeout=300000, polling=1000)
     c = pg.evaluate("()=>window.__AUTOTEST.check||{}")
     out["checksum"] = c.get("hash"); out["checksum_pass"] = c.get("pass")

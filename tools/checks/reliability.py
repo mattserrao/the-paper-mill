@@ -21,7 +21,7 @@ def reliability(pw):
     pg.evaluate("()=>{const t=document.getElementById('tut');if(t)t.hidden=true;__PM.setRunning(false);__PM.S.cards.next=1e12;}")
     def J(s):
         try: return pg.evaluate(s)
-        except Exception as e:
+        except Exception:
             C.note("STEP FAILED:", s[:120]); raise
     def answer():   # answer any civics cards waiting (the camera pull can hold one back a few seconds)
         for _ in range(12):

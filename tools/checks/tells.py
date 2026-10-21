@@ -86,8 +86,7 @@ def season(pw):
     pg.evaluate(CLR)
     before = pg.evaluate("()=>{const S=__PM.S;return {cash:S.cash,M:S.civ.m.M,L:S.civ.m.L,n:S.tell.n,rep:S.ledger.repairs}}")
     catch_round(pg, "wet", ["felt"], "click")
-    after = pg.evaluate("()=>{const S=__PM.S;return {cash:S.cash,M:S.civ.m.M,L:S.civ.m.L,n:S.tell.n,rep:S.ledger.repairs,q:S.tell.q.map(p=>p.id),saved:S.tell.saved,mins:S.tell.savedMin,bill:45e3*__PM.S.tell&&0}}")
-    bill = pg.evaluate("()=>{return 45e3*(function(){return 1})()}")
+    after = pg.evaluate("()=>{const S=__PM.S;return {cash:S.cash,M:S.civ.m.M,L:S.civ.m.L,n:S.tell.n,rep:S.ledger.repairs,q:S.tell.q.map(p=>p.id),saved:S.tell.saved,mins:S.tell.savedMin}}")
     rep_cut = after["rep"] - before["rep"]
     ok("catch (click): caught and out of the queue", after["n"] == before["n"] + 1 and "felt" not in after["q"], after)
     ok(f"catch: planned repair is {T_CUT:.0%} of the bill", abs(rep_cut / (rep_cut + after["saved"]) - T_CUT) < 0.01 if rep_cut > 0 else False, f"paid {rep_cut:.0f}, saved {after['saved']:.0f}")

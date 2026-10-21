@@ -23,6 +23,7 @@ with sync_playwright() as pw:
     pg.add_init_script(INIT); pg.goto(f"http://bench.local/?env={env}&mill={mill}")
     pg.wait_for_function("window.__PM&&__B.first!==null&&(!__PM.G3.prewarm||__PM.G3.warm)", timeout=240000, polling=500)
     pg.evaluate("()=>{document.getElementById('v2go').click();__PM.setFps(true);__PM.C.simSpeed=30;}")
+    pick_leader(pg)   # (v6.10.2: since v5.1 Season opens the leader picker first; without this the tool measured the menu)
     for k in range(secs // 2):
         if k == secs // 6: pg.evaluate("()=>{__PM.CH.on=true;__PM.EVENTS.forEach(e=>{try{__PM.trigger(e.id,true)}catch(_){}})}")
         if k == secs // 3:   # zen mode for the last two thirds: scripted camera shots
