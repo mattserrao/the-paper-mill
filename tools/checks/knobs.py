@@ -138,10 +138,11 @@ def ui(pw):
     pg.evaluate("()=>document.getElementById('kpClose').click()")
     # v6.11.1 the dryer hood doors: the knob raises them, the front flies away 2 s after they're up, and comes back on close;
     # with the knob closed the doors go up on their own on a break and drop once the machine runs
-    W = "const W=async(f,ms)=>{const t=performance.now();while(!f()&&performance.now()-t<ms)await wait(50);return f();},H=P.G3.HOOD;"
-    chk("hood knob: doors up, front flies away 2 s later", W + "P.C.simSpeed=1;P.setRunning(true);P.knob.set('hood',1);const up=await W(()=>H.u>=1,8000),early=H.f<0.05;const gone=await W(()=>H.f>0.98,9000);return [up,early,gone,P.S.knob.v.hood]", [True, True, True, 1])
-    chk("hood knob closed: front back, then the doors drop", W + "P.knob.set('hood',0);const back=await W(()=>H.f<0.01,9000),stillUp=H.u>0.5;P.S.pm='run';const down=await W(()=>H.u<=0,8000);return [back,stillUp,down]", [True, True, True])
-    chk("hood doors go up on their own on a break (no fly-away)", W + "P.S.pm='break';P.S.breakLeft=999;const up=await W(()=>H.u>=1,8000);await wait(2600);const f=H.f;P.S.pm='run';P.S.breakLeft=0;const down=await W(()=>H.u<=0,8000);P.setRunning(false);return [up,f<0.01,down,!P.S.knob||!P.S.knob.v.hood]", [True, True, True, True])
+    # (the sim paused and the hood stepped by hand at 0.1 s a tick, so slow headless frames don't matter)
+    W = "P.setRunning(false);const H=P.G3.HOOD,T=(f,s)=>{for(let i=0;i<s*10&&!f();i++)P.G3.hoodTick(0.1);return f();};"
+    chk("hood knob: doors up, front flies away 2 s later", W + "P.S.pm='run';P.knob.set('hood',1);const up=T(()=>H.u>=1,4),early=H.f<0.05;T(()=>false,1.5);const notYet=H.f<0.05;const gone=T(()=>H.f>0.98,3);return [up,early,notYet,gone,P.S.knob.v.hood]", [True, True, True, True, 1])
+    chk("hood knob closed: front back, then the doors drop", W + "P.knob.set('hood',0);const back=T(()=>H.f<0.01,3),stillUp=H.u>0.5;const down=T(()=>H.u<=0,4);return [back,stillUp,down]", [True, True, True])
+    chk("hood doors go up on their own on a break (no fly-away)", W + "P.S.pm='break';const up=T(()=>H.u>=1,4);T(()=>false,3);const f=H.f;P.S.pm='run';const down=T(()=>H.u<=0,4);return [up,f<0.01,down,!P.S.knob||!P.S.knob.v.hood]", [True, True, True, True])
     chk("a moved knob survives save and continue", "P.knob.set('vac',22);P.step(0.25);const d={v:1,S:JSON.parse(JSON.stringify(P.S)),C:P.C,CH:{on:P.CH.on,lvl:P.CH.lvl,en:P.CH.en},MILL:null,day:2,cash:P.S.cash};P.G3.save.restore(JSON.parse(JSON.stringify(d)));return [P.S.knob.v.vac,P.knob.off()]", [22, ["vac"]])
     b.close()
 
@@ -160,6 +161,12 @@ def shaders(pw):
     pg.evaluate("()=>{__PM.knob.open('WET','dcs')}"); pg.wait_for_timeout(1000)
     n1 = pg.evaluate("()=>__PM.G3.diagScene().renderer.info.programs.length")
     ok("no late shader compiles: the knob view, a knob panel and the DCS add no programs", n1 <= n0, f"programs after start-up {n0}, after {n1}")
+    # v6.11.1: the dryer hood's front flying away (and back) draws it faded: those shaders come from the prewarm too
+    pg.evaluate("()=>{__PM.knob.close&&__PM.knob.close();__PM.G3.camSet([12,9,40,-0.2,0.9,0]);__PM.knob.set('hood',1);const H=__PM.G3.HOOD;for(let i=0;i<40;i++)__PM.G3.hoodTick(0.1);for(let i=0;i<4;i++)__PM.G3.hoodTick(0.1)}")
+    pg.wait_for_timeout(1500)
+    pg.evaluate("()=>{for(let i=0;i<40;i++)__PM.G3.hoodTick(0.1);__PM.knob.set('hood',0);for(let i=0;i<4;i++)__PM.G3.hoodTick(0.1)}"); pg.wait_for_timeout(1500)
+    n2 = pg.evaluate("()=>__PM.G3.diagScene().renderer.info.programs.length")
+    ok("no late shader compiles: the dryer hood front flying away and back adds no programs", n2 <= n1, f"programs before {n1}, after {n2}")
     b.close()
 
 with sync_playwright() as pw:
