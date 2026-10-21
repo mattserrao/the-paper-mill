@@ -33,7 +33,8 @@ READ = f"""()=>{{clearInterval(window.__LVt);const A=__PM.AUDIO,V=window.__LV,l=
 
 def boot(b, html, q):
     pg = open_game(b, html, q + "&" + LITE, viewport=(800, 450), errs=errs, wait=False)
-    pg.wait_for_function("window.__PM&&__B.first!==null", timeout=120000, polling=300)
+    pg.wait_for_function("window.__PM&&__B.first!==null&&(!__PM.G3.prewarm||__PM.G3.warm)", timeout=240000, polling=300)
+    pg.wait_for_timeout(1000)   # (the warm-up after the first frame blocks the main thread for seconds: listen after it)
     # the sim and the 3D frames share the main thread with the music scheduler (a 25 ms setInterval that schedules notes
     # 0.3 s ahead): on a busy 2-CPU machine they starved it, notes were dropped and the piece really went quiet. The music
     # needs neither, so the sim is paused and the frame not drawn while listening.

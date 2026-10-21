@@ -42,10 +42,12 @@ shot = sys.argv[2] if len(sys.argv) > 2 else None
 SNAP = """()=>{const P=__PM;P.setRunning(false);P.CH.on=false;const S=P.S;while(S.t<1440)P.step(P.SIM_STEP);%s
   window.__SNAP=JSON.stringify({v:1,S,C:P.C,CH:{on:false,lvl:P.CH.lvl,en:P.CH.en},MILL:null,day:2,cash:S.cash});}"""
 
-# (the season's bottleneck is drawn with Math.random at season start (09 startSeason), and the low graphics tier uses up a
-#  different number of cosmetic randoms while booting, so under LITE the same seed got "screens" (28 t/h) instead of the
-#  full tier's "winder" (34.8 t/h). Pinned to the mill the old full-tier checks ran.)
-PIN_BN = "()=>__PM.setBn('winder')"
+# (the season's bottleneck is rolled with Math.random at season start (09 startSeason, "cosmetic"), and how many randoms
+#  the page has used by then depends on boot timing and the graphics tier, so it changed from one load to the next: the
+#  same snapshot runs gave 32 / 2 beater rolls (agitator off / press loading low) with "recv" and 8 / 0 with "winder",
+#  where the winder backlog holds the off-spec reels unwound past the 12 h window. Pinned to "recv", the mill the old
+#  full-tier checks happened to get in the recorded v6.10.1 run.)
+PIN_BN = "()=>__PM.setBn('recv')"
 
 def boot_season(pw, query, viewport=(900, 600), html=None, leader="hank", console=False):
     b = launch(pw); pg = open_game(b, html or html_arg(), query, viewport=viewport, errs=errs, wait=False)
@@ -97,10 +99,7 @@ QRUN = """(a)=>{const P=__PM,[setup,mins]=a,G=P.G3;G.save.restore(JSON.parse(win
 
 def qual(pw):
     C.sec("qual")
-    # (full graphics tier, not LITE: with LITE the same runs cut far fewer beater rolls (agitator off 8 vs 34, press
-    #  loading low 0 vs 2 with the same 43 min out of spec), so "wound into beater rolls" failed; the old full-tier
-    #  numbers come back without it)
-    b, pg = boot_season(pw, "notitle&nosave&nobf")
+    b, pg = boot_season(pw, "notitle&nosave&nobf&" + LITE)
     pg.evaluate(SNAP % "")
     # ---- the spec sheet ----
     spec = pg.evaluate("()=>{const out={};for(const g of ['24','28','31','34Super']){__PM.C.grade=g;const q=__PM.G3.qual();out[g]=q.spec;}return out}")
