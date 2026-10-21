@@ -1,6 +1,15 @@
 # Changelog
 
 
+## v6.10.0 (2026-10-20): The Reliability and Electrical Update
+Release of test builds t1–t5 (below). Plan: claude/reliability-v610-plan.md; QA: claude/qa-v610-t3.md.
+- Ten critical VFD motors with bearing, motor and drive health, fed from three drive lineups in a new MCC building (115 kV → 13.8 kV → 480 V → ~650 V DC).
+- An electrical tech on every shift; each maintenance tech does a vibration round a shift and the electrical tech an ADX round, skipped when they're called to upsets.
+- Reliability and Drives screens in the control room; drive loads trendable; relationship map, help and glossary updated.
+- New upsets: bearing, motor and drive failures, rectifier faults, and the arc flash at the MCC main incomer (a new fiddly knob); all in the Upsets tab.
+- Drive fault decisions (reset and go, or investigate then run to the outage or replace), planned repairs with downtime, outage changeouts, arc-flash PPE, AUTO-LW basis weight, click for info, and the water tower in the north-east corner.
+- Balanced against v6.9.2 over 100 live QA runs and matched balance runs: doing the rounds is the biggest boost, hands-off play is punished harder, most seasons still profit.
+
 ## v6.10.0-t5 (2026-10-20): main incomer and the Upsets tab (test build)
 - **New fiddly knob: the MCC main incomer.** A red breaker handle on the MCC's incoming 480 V section (tap it, or find it in the fiddly knobs view). Open it and it draws an **arc flash**: sparks and smoke at the MCC, no 480 V, every drive on all three lineups stops (the machine, the pulper and the winder), and a $30,000 bill. The electrical tech suits up, inspects, resets and closes it (about an hour), and the drives take a small knock in health. Drives shows "ARC FLASH · MAIN INCOMER OPEN".
 - **The incomer moved to the east end of the MCC** (beside the transformer it's fed from), so the doorway no longer hides it.
