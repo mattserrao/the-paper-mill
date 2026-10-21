@@ -1,3 +1,17 @@
+  /* ---- v6.11 the winder operator's web inspection (called from the crew loop below) ---- */
+  const WINSP={every:120,lane:-18.7+1.9};
+  function winderInspect(w,u,rdt,now){const cut=S.rates.cut>0.5&&S.wd!=="hayout";
+    if(!u.insp){if(!cut)return false;if(u.inspT==null)u.inspT=S.t+30+Math.random()*60;if(S.t<u.inspT)return false;
+      const X=WINSP.lane;u.insp={k:0,t:0,pts:[[X,14.2,"walk"],[X,13.1,"duck"],[X,zc+1.6,"look",6],[X,zc+0.2,"duck"],[X,zc+0.2,"look",3],[X,zc+1.6,"duck"],[X,zc+1.6,"look",3],[X,13.1,"duck"],[X,14.2,"walk"],[HOME[6][0],HOME[6][1],"walk"]]};}
+    u.inspSeen=now;const I=u.insp,[tx,tz,act,hold]=I.pts[I.k];
+    if(!cut&&I.k<I.pts.length-2)I.k=I.pts.length-2;   // (the winder stopped: straight back out)
+    if(u.torch)u.torch.visible=true;
+    if(I.k===0||I.k===I.pts.length-1){if(!moveP(w,tx,tz,3.2,rdt)){pose(w,"walk",now);return true;}if(++I.k>=I.pts.length){u.insp=null;u.inspT=S.t+WINSP.every*(0.85+Math.random()*0.3);u.wt=0;}return true;}   // (to the winder and back home: the walkers' path-finding)
+    const dx=tx-w.position.x,dz=tz-w.position.z,d=Math.hypot(dx,dz),sp=act==="duck"?1.2:2.2;
+    if(d>0.06){const st=Math.min(d,sp*rdt);w.position.x+=dx/d*st;w.position.z+=dz/d*st;w.rotation.y=lerpAng(w.rotation.y,Math.atan2(-dz,dx),Math.min(1,rdt*10));pose(w,act==="duck"?"inspect":"walk",now);if(u.torch)u.torch.visible=true;return true;}
+    if(hold){I.t+=rdt;face(w,w.position.x-1,w.position.z,rdt);pose(w,"look",now);if(I.t<hold)return true;I.t=0;}
+    if(++I.k>=I.pts.length){u.insp=null;u.inspT=S.t+WINSP.every*(0.85+Math.random()*0.3);if(u.torch)u.torch.visible=false;u.wt=0;}
+    return true;}
   /* ---- hayout (v2.8.2, light): a short burst of 30 sheets (one instanced draw call) and a paper heap that shrinks as the crew cleans ---- */
   const HN=30,hayI=new THREE.InstancedMesh(new THREE.BoxGeometry(1.4,0.04,1),paperDS,HN);hayI.frustumCulled=false;hayI.visible=false;scene.add(hayI);
   const hayS=[],hM4=new THREE.Matrix4(),hQ=new THREE.Quaternion(),hE=new THREE.Euler(),hP=new THREE.Vector3(),hSc=new THREE.Vector3(1,1,1);
@@ -45,7 +59,7 @@
     G3.prevPm=S.pm;G3.prevWrap=S.inc.some(x=>x.id==="wrap");
     ropes.forEach(m=>m.visible=false);spears.forEach(m=>m.visible=false);
     const tvOn=CONSOLES.map(()=>false);
-    crew.forEach((w,i)=>{let tx,tz,act,fx=null;
+    crew.forEach((w,i)=>{let tx,tz,act,fx=null;if(i===6){const u6=w.userData;if(u6.insp&&now-(u6.inspSeen||0)>1500){u6.insp=null;u6.inspT=S.t+60;}if(u6.torch)u6.torch.visible=!!u6.insp;}   // (called away mid-inspection: it starts over later)
       if(dryOn){fireCrew(w,i,rdt,now);if(Math.hypot(w.position.x-FIRESPOT[i][0],w.position.z-FIRESPOT[i][1])<0.4)here=true;return;}
       if(hayOn){if(!EP.hay)EP.hay={t0:now-2000,until:now+900,burst:true};const age=now-EP.hay.t0,shuttle=i%2===1,ph=((age/1800)+i*0.37)%2,s=HAY[i];
         if(age<1100){tx=w.position.x;tz=w.position.z;act="look";fx=[-18.7,zc];}
@@ -103,6 +117,10 @@
       if(RUN.on){if(!u.chase&&Math.abs(RUN.x-w.position.x)<11)u.chase=true;
         if(u.chase){const back=2.4+(i%3)*1.3;moveP(w,RUN.x-RUN.dir*back,RUN.z+(i%2?0.9:-0.9),8.4,rdt);pose(w,"run",now);return;}}
       else u.chase=false;
+      // v6.11 winder update: every 2 hours of mill time, while the winder is cutting, the winder operator walks in under the
+      // running web between the unwind and the slitters with a flashlight, looks the sheet over at the tending-side edge (where
+      // the camera sees him), ducks in under the middle, and walks back out (visual only: nothing in the game depends on it; it comes before the vending machine, lunch and breaks)
+      if(i===6&&winderInspect(w,u,rdt,now))return;
       // idle: drift around their own patch of the aisle, stop to watch the machine or point something out
       if(!u.lunch&&!u.vend&&VEND.user<0&&Math.random()<rdt*0.006){u.vend=true;u.vt=0;VEND.user=i;}
       if(u.vend){const a=moveP(w,VEND.x+0.1,VEND.z-1.0,4.2,rdt);if(a){face(w,VEND.x,VEND.z+1,rdt);u.vt+=rdt;pose(w,u.vt<2.2?"type":"idle",now);if(u.vt>4){u.vend=false;VEND.user=-1;u.wt=0;}}else pose(w,"walk",now);return;}
@@ -176,7 +194,15 @@
     const cutting=S.rates.cut>0.5&&S.wd!=="hayout"&&!CR.hideUnwind;
     const nP0=craneUpdate(rdt);
     const ur=0.35+1.65*Math.sqrt(Math.min(S.winderBuf,P.jumbo)/P.jumbo);unwind.scale.set(ur,ur,1);unwind.visible=S.winderBuf>0.2&&!CR.hideUnwind;
-    const sr=0.25+0.75*Math.min(1,S.winderAcc/(2*C.rollW.v)),RR=0.62*sr;/* (v6.5.7: a set of two) */setRolls.forEach(r=>{r.scale.set(RR,RR,1);r.position.y=0.75+Math.sqrt(Math.max(0.01,(0.5+RR)*(0.5+RR)-0.3025));r.visible=S.wd!=="hayout";if(cutting)r.rotation.z-=rdt*10/Math.max(0.3,sr);});
+    const sr=0.25+0.75*Math.min(1,S.winderAcc/(2*C.rollW.v)),RR=0.62*sr,ycS=0.75+Math.sqrt(Math.max(0.01,(0.5+RR)*(0.5+RR)-0.3025)),wdOn=S.wd!=="hayout";
+    /* (v6.5.7: a set of two) v6.11 winder update: the cores stay core-sized as the rolls build round them; the rider roll rides
+       on top of the set, and at a set change (the set count drops) lifts clear for a moment and comes back down on the new cores */
+    {const W=G3.wdParts,acc=S.winderAcc;if(W){if(W.lastAcc!=null&&acc<W.lastAcc-0.5)W.lift=1.4;W.lastAcc=acc;W.lift=Math.max(0,(W.lift||0)-rdt);
+      const up=W.lift>0?0.6*Math.min(1,Math.min(W.lift,1.4-W.lift)*4):0;
+      W.setRolls.forEach((r,k)=>{r.scale.set(RR,RR,1);r.position.y=ycS;r.visible=wdOn;W.setCores[k].position.y=ycS;W.setCores[k].visible=wdOn;if(cutting)r.rotation.z-=rdt*10/Math.max(0.3,sr);});
+      const ry=(wdOn?ycS+RR:1.2)+W.WD.RIDR+up;W.rider.position.y=ry;if(cutting)W.rider.children[0].rotation.z+=rdt*10*0.62/W.WD.RIDR;
+      W.rods.forEach(o=>{const y0=ry+0.47,y1=3.0,L=Math.max(0.05,y1-y0);o.scale.y=L;o.position.y=(y0+y1)/2;});
+      if(cutting)W.webUpdate(unwind.scale.x,RR,ycS);}}
     if(cutting){unwind.rotation.z+=rdt*6;drums.forEach(d=>d.rotation.z+=rdt*12);}
     web.visible=cutting&&unwind.visible;
     const inFlight=[CR.j,...CR.jobs].filter(Boolean),nPark=clamp(nP0-inFlight.filter(j=>j.kind==="park"&&!j.dropped).length+inFlight.filter(j=>j.fromPark&&!j.picked).length,0,parked.length);parked.forEach((g,k)=>g.children[2].visible=g.children[3].visible=k<nPark);G3.parkedN=nPark;

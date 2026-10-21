@@ -156,7 +156,9 @@
     x.beginPath();x.moveTo(100,98);x.lineTo(118,134);x.lineTo(138,98);x.closePath();x.fill();x.stroke();x.fillStyle="#ffffff";x.fillRect(102,92,34,10);
     x.font="900 44px system-ui,sans-serif";x.textAlign="center";x.textBaseline="middle";const sy="#$%@&!!";[...sy].forEach((ch,k)=>{x.fillStyle=k%2?"#c8281e":"#1c2233";x.fillText(ch,38+k*30,56+(k%2?-5:4));});
     const t=new THREE.CanvasTexture(c);t.colorSpace=THREE.SRGBColorSpace;const sp=new THREE.Sprite(new THREE.SpriteMaterial({map:t,transparent:true,depthTest:false,toneMapped:false}));sp.scale.set(1.9,1.04,1);sp.renderOrder=9;sp.visible=false;scene.add(sp);return sp;})();
-  const crew=HOME.map(([x,z])=>{const w=worker(M.stock,M.warn,{radio:true});w.position.set(x,0,z);return w;});G3.followable=()=>crew.concat(spOps||[]);
+  const crew=HOME.map(([x,z])=>{const w=worker(M.stock,M.warn,{radio:true});w.position.set(x,0,z);return w;});
+  // v6.11: the winder operator's flashlight for the web inspection (34), in the right hand, lit lens forward; hidden until he goes in
+  {const u=crew[6].userData,tg=new THREE.Group();tg.position.set(0.1,-0.8,0);u.arms[0].add(tg);box(0.28,0.09,0.09,M.warn,0.1,0,0,tg,false);box(0.04,0.12,0.12,new THREE.MeshBasicMaterial({color:lin0("#fff3b0")}),0.25,0,0,tg,false);tg.visible=false;u.torch=tg;}G3.followable=()=>crew.concat(spOps||[]);
   const BRK={walk:false,smoke:new Set(),pic:new Set()};
   // follow a 3D route [x,y,z,pauseSeconds,pose]; height is interpolated along each leg, so stairs read as climbing
   function walkRoute(w,R2,st,rdt,now){const u=w.userData;if(!R2||!R2.length)return true;const p=R2[st.ri];if(!p)return true;

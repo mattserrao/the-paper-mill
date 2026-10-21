@@ -6,7 +6,7 @@ Loads the game headless with ?nosm (no static batching, originals stay in the sc
 visible mesh whose world bounding box centre is inside the box: world-space triangles, material colour, the source
 geometry type, plus the iso camera (world matrix, ortho frustum) so Blender can match the game's view.
 """
-import json, sys, pathlib
+import json, sys, pathlib, os
 from playwright.sync_api import sync_playwright
 HERE = pathlib.Path(__file__).parent
 import sys as _s; _s.path.insert(0, str(HERE))
@@ -33,8 +33,10 @@ with sync_playwright() as pw:
     pg.wait_for_function("window.__PM&&__PM.G3&&__PM.G3.scene&&!!__PM.G3.camSet", timeout=300000, polling=500)
     pg.evaluate("()=>document.getElementById('v2go').click()"); pick_leader(pg)
     pg.wait_for_timeout(4000)
+    if __import__("os").environ.get("PRE"): pg.evaluate(__import__("os").environ["PRE"])   # optional JS to run first (e.g. set up a scene)
     W = int(__import__("os").environ.get("WAIT", "0"))   # optional: run the sim at speed first (trucks arrive), seconds
     if W: pg.evaluate("()=>{__PM.setRunning(true);__PM.C.simSpeed=30;}"); pg.wait_for_timeout(W * 1000)
+    if os.environ.get("PRINT"): print(pg.evaluate(os.environ["PRINT"]))
     d = pg.evaluate(DUMP, box)
     pathlib.Path(out).write_text(json.dumps(d))
     print(len(d["objs"]), "meshes", sum(len(o["F"]) // 3 for o in d["objs"]), "tris")

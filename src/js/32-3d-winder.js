@@ -2,41 +2,48 @@
   const paperDS=basic("paperc",{side:THREE.DoubleSide});
   slab(-29,-6,-2.5,3,M.slab,0.03);
   const wd=new THREE.Group();wd.position.set(-18.7,0,zc);scene.add(wd);
-  // v6.11 Blender redesign (tools/blender/reelwind_new.py): drum side frames and bearings, an A-frame unwind stand with its brake,
-  // the slitter section (top knives on a beam, anvil under the web) and drive-side motors, the same look as the reel
-  {box(3,1.45,0.3,M.steel,-1.85,0.72,-2.75,wd,false);
-   box(0.55,0.55,0.4,M.ink,-1.3,0.75,-2.75,wd,false);
-   box(0.55,0.55,0.4,M.ink,-2.4,0.75,-2.75,wd,false);
-   box(2.2,0.12,0.9,M.ink,2.6,0.06,-2.75,wd,false);
-   {const o=box(0.3,2.3,0.45,M.steel,1.95,1.15,-2.75,wd,false);o.rotation.set(0,0,-0.208);};
-   {const o=box(0.3,2.3,0.45,M.steel,3.25,1.15,-2.75,wd,false);o.rotation.set(0,0,0.208);};
-   box(0.7,0.7,0.55,M.ink,2.6,2.4,-2.75,wd,false);
-   box(0.3,2.9,0.35,M.steel,-0.15,1.45,-2.75,wd,false);
-   box(0.3,2.9,0.35,M.steel,1.35,1.45,-2.75,wd,false);
-   box(1.8,0.3,0.4,M.steel,0.6,3,-2.75,wd,false);
-   box(3,1.45,0.3,M.steel,-1.85,0.72,2.75,wd,false);
-   box(0.55,0.55,0.4,M.ink,-1.3,0.75,2.75,wd,false);
-   box(0.55,0.55,0.4,M.ink,-2.4,0.75,2.75,wd,false);
-   box(2.2,0.12,0.9,M.ink,2.6,0.06,2.75,wd,false);
-   {const o=box(0.3,2.3,0.45,M.steel,1.95,1.15,2.75,wd,false);o.rotation.set(0,0,-0.208);};
-   {const o=box(0.3,2.3,0.45,M.steel,3.25,1.15,2.75,wd,false);o.rotation.set(0,0,0.208);};
-   box(0.7,0.7,0.55,M.ink,2.6,2.4,2.75,wd,false);
-   box(0.3,2.9,0.35,M.steel,-0.15,1.45,2.75,wd,false);
-   box(0.3,2.9,0.35,M.steel,1.35,1.45,2.75,wd,false);
-   box(1.8,0.3,0.4,M.steel,0.6,3,2.75,wd,false);
-   box(0.4,0.3,5.9,M.metal,0.6,2.75,0,wd,false);
-   box(0.16,0.4,0.22,M.ink,0.6,2.45,-1.45,wd,false);
-   box(0.16,0.4,0.22,M.ink,0.6,2.45,0,wd,false);
-   box(0.16,0.4,0.22,M.ink,0.6,2.45,1.45,wd,false);
-   box(0.4,0.22,5.9,M.metal,0.6,1.95,0,wd,false);
-   cylZ(0.72,0.12,M.ink,2.6,2.4,-3.1,16);
-   box(0.5,0.9,0.3,M.steel,2.6,1.95,-3.25,wd,false);
-   cylZ(0.42,0.9,M.stock,-1.85,0.75,-3.5,14);
-   box(0.9,0.75,0.9,M.steel,-1.85,0.37,-3.5,wd,false);}
-  const unwind=cylZ(1,4.8,M.paper,2.6,2.4,0,22,wd);cylZ(0.22,5.8,M.steel,2.6,2.4,0,8,wd);
-  const drums=[cylZ(0.5,5,M.metal,-1.3,0.75,0,12,wd),cylZ(0.5,5,M.metal,-2.4,0.75,0,12,wd)];
+  /* v6.11 winder update (tools/blender/winder_new.py): a two-drum winder that reads as one. The web runs from the unwind
+     stand (its brake holds the tension) over a guide roll on load cells and a bowed spreader roll, through the slitter
+     section (top knives over the bottom band knife: two edge trims, blown down the trim ducts, and one centre slit for the
+     sim's set of 2), down under a lead-in roll and up round the rear drum into the nip. The set builds on the rear and front
+     drums under the rider roll, which rides up its guide columns as the rolls grow. The unwind sits 2 m further out and the
+     pass line is 3.3 m up, so the winder operator can walk in under the running web to inspect the sheet (34-3d-hayout.js). */
+  const WD={UX:4.6,UY:2.4,GX:2.3,GY:3.35,GR:0.16,BX:1.5,BY:3.3,BR:0.12,SLX:0.6,PASS:3.3,RDX:-1.3,FDX:-2.4,DY:0.75,DR:0.5,SX:-1.85,RIDR:0.26,LX:-0.35,LY:0.45,LR:0.12};G3.WD=WD;
+  box(2.2,0.12,0.9,M.ink,4.6,0.06,-2.75,wd,false);{const o=box(0.3,2.3,0.45,M.steel,3.95,1.15,-2.75,wd,false);o.rotation.set(0,0,-0.208);};{const o=box(0.3,2.3,0.45,M.steel,5.25,1.15,-2.75,wd,false);o.rotation.set(0,0,0.208);};box(0.7,0.7,0.55,M.ink,4.6,2.4,-2.75,wd,false);box(0.22,3.25,0.3,M.steel,2.3,1.625,-2,wd,false);box(0.36,0.2,0.36,M.ok,2.3,3.13,-2,wd,false);box(0.3,0.26,0.3,M.ink,2.3,3.35,-2,wd,false);box(0.22,3.2,0.3,M.steel,1.5,1.6,-2,wd,false);box(0.28,0.24,0.28,M.ink,1.5,3.3,-2,wd,false);box(0.3,4.05,0.35,M.steel,-0.15,2.02,-2.75,wd,false);box(0.3,4.05,0.35,M.steel,1.2,2.02,-2.75,wd,false);box(1.75,0.3,0.4,M.steel,0.52,4.05,-2.75,wd,false);box(3,1.45,0.3,M.steel,-1.85,0.72,-2.75,wd,false);box(0.55,0.55,0.4,M.ink,-1.3,0.75,-2.75,wd,false);box(0.55,0.55,0.4,M.ink,-2.4,0.75,-2.75,wd,false);box(0.25,3.8,0.35,M.steel,-2.4,1.9,-2.75,wd,false);box(0.25,3.8,0.35,M.steel,-1.3,1.9,-2.75,wd,false);box(1.5,0.35,0.45,M.steel,-1.85,3.95,-2.75,wd,false);{const g=new CylG(0.13,0.13,1,10);const o=new THREE.Mesh(g,M.steel);o.position.set(-1.85,3.5,-2.75);o.castShadow=true;wd.add(o);}box(2.2,0.12,0.9,M.ink,4.6,0.06,2.75,wd,false);{const o=box(0.3,2.3,0.45,M.steel,3.95,1.15,2.75,wd,false);o.rotation.set(0,0,-0.208);};{const o=box(0.3,2.3,0.45,M.steel,5.25,1.15,2.75,wd,false);o.rotation.set(0,0,0.208);};box(0.7,0.7,0.55,M.ink,4.6,2.4,2.75,wd,false);box(0.22,3.25,0.3,M.steel,2.3,1.625,2,wd,false);box(0.36,0.2,0.36,M.ok,2.3,3.13,2,wd,false);box(0.3,0.26,0.3,M.ink,2.3,3.35,2,wd,false);box(0.22,3.2,0.3,M.steel,1.5,1.6,2,wd,false);box(0.28,0.24,0.28,M.ink,1.5,3.3,2,wd,false);box(0.3,4.05,0.35,M.steel,-0.15,2.02,2.75,wd,false);box(0.3,4.05,0.35,M.steel,1.2,2.02,2.75,wd,false);box(1.75,0.3,0.4,M.steel,0.52,4.05,2.75,wd,false);box(3,1.45,0.3,M.steel,-1.85,0.72,2.75,wd,false);box(0.55,0.55,0.4,M.ink,-1.3,0.75,2.75,wd,false);box(0.55,0.55,0.4,M.ink,-2.4,0.75,2.75,wd,false);box(0.25,3.8,0.35,M.steel,-2.4,1.9,2.75,wd,false);box(0.25,3.8,0.35,M.steel,-1.3,1.9,2.75,wd,false);box(1.5,0.35,0.45,M.steel,-1.85,3.95,2.75,wd,false);{const g=new CylG(0.13,0.13,1,10);const o=new THREE.Mesh(g,M.steel);o.position.set(-1.85,3.5,2.75);o.castShadow=true;wd.add(o);}cylZ(0.72,0.12,M.ink,4.6,2.4,-3.1,16,wd);box(0.5,0.9,0.3,M.steel,4.6,1.95,-3.25,wd,false);box(0.4,0.3,5.9,M.metal,0.6,3.78,0,wd,false);box(0.16,0.4,0.22,M.ink,0.6,3.48,-1.45,wd,false);cylZ(0.14,0.03,M.metal,0.6,3.38,-1.45,12,wd);box(0.16,0.4,0.22,M.ink,0.6,3.48,0,wd,false);cylZ(0.14,0.03,M.metal,0.6,3.38,0,12,wd);box(0.16,0.4,0.22,M.ink,0.6,3.48,1.45,wd,false);cylZ(0.14,0.03,M.metal,0.6,3.38,1.45,12,wd);cylZ(0.17,5.4,M.metal,0.6,3.13,0,12,wd);box(0.4,0.22,5.9,M.metal,0.6,2.75,0,wd,false);box(0.3,0.3,0.3,M.steel,0.15,2.7,-1.62,wd,false);{const g=new CylG(0.12,0.12,2.5,8);const o=new THREE.Mesh(g,M.steel);o.position.set(0.15,1.3,-1.62);o.castShadow=true;wd.add(o);}box(0.3,0.3,0.3,M.steel,0.15,2.7,1.62,wd,false);{const g=new CylG(0.12,0.12,2.5,8);const o=new THREE.Mesh(g,M.steel);o.position.set(0.15,1.3,1.62);o.castShadow=true;wd.add(o);}box(0.24,0.24,1.6,M.steel,0.15,0.12,-2.42,wd,false);box(0.24,0.24,3.24,M.steel,0.15,0.12,0,wd,false);box(1,1,0.9,M.steel,0.15,0.5,-3.6,wd,false);cylZ(0.38,0.12,M.ink,0.15,0.6,-4.1,12,wd);cylZ(0.42,0.9,M.stock,-1.85,0.75,-3.5,14,wd);box(0.9,0.75,0.9,M.steel,-1.85,0.37,-3.5,wd,false);box(0.12,0.12,5,M.warn,-3.15,1.15,0,wd,false);box(0.2,0.5,0.2,M.ink,-3.15,0.75,-2.45,wd,false);box(0.2,0.5,0.2,M.ink,-3.15,0.75,2.45,wd,false);box(0.35,0.5,0.2,M.warn,-0.6,1.4,3.3,wd,false);box(0.04,1.4,0.04,M.ink,-0.6,2.4,3.3,wd,false);cylZ(0.42,0.9,M.stock,5.5,1.2,-3.4,14,wd);
+  // wound paper on the roll ends: growth rings round the core, a slightly darker outer wrap
+  const endT=texC(128,128,(x,W)=>{const c=W/2;x.fillStyle="#c79b6c";x.fillRect(0,0,W,W);let sd=5;const rn=()=>{sd=(sd*16807)%2147483647;return sd/2147483647;};
+      for(let r=10;r<c;r+=2.2+rn()*1.6){x.strokeStyle=`rgba(90,58,30,${0.08+rn()*0.12})`;x.lineWidth=0.8+rn();x.beginPath();x.arc(c,c,r,0,7);x.stroke();}
+      x.strokeStyle="rgba(70,45,22,0.55)";x.lineWidth=4;x.beginPath();x.arc(c,c,c-2,0,7);x.stroke();},false);
+  const endM=new StdMat({map:endT,roughness:0.9});
+  // (one material per mesh: the end faces are their own thin discs, so the batcher never has to split a moving roll)
+  const rollG=(L,seg)=>{const g=new CylG(1,1,L,seg);g.rotateX(Math.PI/2);return g;},capG=new CircG(1,24);
+  const roll=(L,seg,x,y,z)=>{const r=new THREE.Mesh(rollG(L,seg),M.paper);r.position.set(x,y,z);r.castShadow=true;[1,-1].forEach(s=>{const c=new THREE.Mesh(capG,endM);c.position.z=s*(L/2+0.004);if(s<0)c.rotation.y=Math.PI;r.add(c);});wd.add(r);return r;};
+  const unwind=roll(4.8,24,WD.UX,WD.UY,0);cylZ(0.22,5.8,M.steel,WD.UX,WD.UY,0,8,wd);
+  const drums=[cylZ(WD.DR,5,M.metal,WD.RDX,WD.DY,0,16,wd),cylZ(WD.DR,5,M.metal,WD.FDX,WD.DY,0,16,wd)];
+  // guide, spreader and lead-in rolls
+  [[WD.GX,WD.GY,WD.GR,3.4],[WD.BX,WD.BY,WD.BR,3.4],[WD.LX,WD.LY,WD.LR,3.3]].forEach(([x,y,r,L])=>cylZ(r,L,M.metal,x,y,0,12,wd));
+  [-1.7,1.7].forEach(z=>box(0.2,0.45,0.25,M.ink,WD.LX,0.22,z,wd,false));
   // v6.5.7: the winder builds a SET of two rolls side by side on the drums (the sim's set), each the size of a roll on the conveyor
-  const setRolls=[0.725,-0.725].map(z=>cylZ(1,1.4,M.paper,-1.85,1.75,z,24,wd));
+  const setRolls=[0.725,-0.725].map(z=>roll(1.4,24,WD.SX,1.75,z));
+  const setCores=[0.725,-0.725].map(z=>cylZ(0.12,1.43,M.ink,WD.SX,1.75,z,10,wd));
+  // the rider roll on its carriage, the carriage rods up into the cylinders on the crossheads
+  const rider=new THREE.Group();rider.position.set(WD.SX,2.4,0);wd.add(rider);cylZ(WD.RIDR,3.1,M.steel,0,0,0,14,rider);box(0.5,0.3,5.9,M.warn,0,0.32,0,rider,false);
+  [-2.75,2.75].forEach(z=>box(0.3,0.4,0.4,M.ink,0,0.32,z,rider,false));
+  const rods=[-2.75,2.75].map(z=>{const o=new THREE.Mesh(new CylG(0.06,0.06,1,6),M.metal);o.position.set(WD.SX,3,z);wd.add(o);return o;});
+  // the edge trims curl off at the knives and down into their nozzles
+  // the web: one sheet up to the knives, two after them; strips along a path that follows the unwind and the set as they change
+  const webMk=n=>{const g=new THREE.BufferGeometry();g.setAttribute("position",new THREE.BufferAttribute(new Float32Array(n*2*3),3));const ix=[];for(let i=0;i<n-1;i++){const a=i*2;ix.push(a,a+1,a+2,a+1,a+3,a+2);}g.setIndex(ix);const o=new THREE.Mesh(g,paperDS);o.frustumCulled=false;wd.add(o);return o;};
+  const wTan=(px,py,cx,cy,r,hiY)=>{const dx=px-cx,dy=py-cy,d=Math.hypot(dx,dy),b=Math.atan2(dy,dx),al=Math.acos(Math.min(1,r/d)),a1=b+al,a2=b-al;
+    const p1=[cx+r*Math.cos(a1),cy+r*Math.sin(a1)],p2=[cx+r*Math.cos(a2),cy+r*Math.sin(a2)];return (hiY?p1[1]>=p2[1]:p1[0]>=p2[0])?p1:p2;};
+  const WEBA=webMk(6),WEBB=[webMk(14),webMk(14)],WK={ru:-1,rr:-1};
+  function wStrip(o,pts,z0,z1){const a=o.geometry.attributes.position.array;pts.forEach(([x,y],i)=>{a.set([x,y,z0,x,y,z1],i*6);});for(let i=pts.length;i<a.length/6;i++){const [x,y]=pts[pts.length-1];a.set([x,y,z0,x,y,z1],i*6);}
+    o.geometry.attributes.position.needsUpdate=true;o.geometry.computeBoundingSphere();}
+  function webUpdate(ru,RR,yc){if(Math.abs(ru-WK.ru)>0.01){WK.ru=ru;const gt=[WD.GX,WD.GY+WD.GR],u=wTan(gt[0],gt[1],WD.UX,WD.UY,ru,true);
+      wStrip(WEBA,[u,[WD.GX+0.06,WD.GY+WD.GR],gt,[WD.BX,WD.BY+WD.BR],[WD.SLX+0.2,WD.PASS],[WD.SLX,WD.PASS]],-1.5,1.5);}
+    if(Math.abs(RR-WK.rr)>0.004){WK.rr=RR;const P=[[WD.SLX,WD.PASS]],L=(cx,cy,r,a0,a1,n)=>{for(let k=0;k<=n;k++){const a=a0+(a1-a0)*k/n;P.push([cx+r*Math.cos(a),cy+r*Math.sin(a)]);}};
+      L(WD.LX,WD.LY,WD.LR,0.2,-2.6,3);   // down to the lead-in roll and under it
+      const an=Math.atan2(yc-WD.DY,WD.SX-WD.RDX);L(WD.RDX,WD.DY,WD.DR,-0.75,an,8);   // up the rear drum's far side and over it into the nip
+      wStrip(WEBB[0],P,-1.45,-0.02);wStrip(WEBB[1],P,0.02,1.45);}}
   // upender: a hinged plate at the head of the roll conveyor that tips each roll from lying down to standing up
   const UPX=-22.9,UPZ=zc+0.7,UPY=0.5,UPC=1.32;
   const upender=new THREE.Group();upender.position.set(UPX,UPY,UPZ);scene.add(upender);
@@ -44,7 +51,10 @@
   box(0.25,0.5,0.25,M.ink,-0.9,-0.25,0,scene,false);
   // v6.5.7: transfer table beside the upender: the second roll of a set waits here, then slides across onto the plate
   box(1.5,0.48,1.5,M.steel,UPX,0.24,zc-1.45,scene);box(0.12,0.5,1.5,M.brand,UPX-0.8,0.25,zc-1.45,scene,false);
-  const web=new THREE.Mesh(new THREE.PlaneGeometry(4.6,4.6),paperDS);web.rotation.x=-Math.PI/2;web.position.set(0.4,2.2,0);wd.add(web);
+  const web={set visible(v){WEBA.visible=WEBB[0].visible=WEBB[1].visible=v;}};   // (34: shown while the winder cuts)
+  [[-1.5,-1.45],[1.45,1.5]].forEach(([z0,z1])=>wStrip(webMk(4),[[WD.SLX,WD.PASS],[WD.SLX-0.2,WD.PASS-0.12],[WD.SLX-0.38,WD.PASS-0.3],[WD.SLX-0.45,2.86]],z0,z1));   // the edge trims
+  G3.wdParts={setRolls,setCores,rider,rods,webUpdate,WD,WEBA,WEBB,unwind};
+  (G3.dynLater||(G3.dynLater=[])).push(rider,...rods,...setCores,...setRolls,WEBA,...WEBB);   // (they move or change shape: never batched)
   box(1.2,1.2,0.8,M.steel,0,0.6,4.3,wd);box(1.1,0.5,0.1,M.robot,0,1.25,3.95,wd,false);
   const SPR={x:-13.4,z:3.6};
   const rackSpools=[0,1,2].map(k=>{const m=spoolModel(scene);m.g.position.set(SPR.x-k*1.2,0.75,SPR.z+0.6);m.set(R0);return m;});
@@ -66,7 +76,7 @@
    box(0.45,0.07,2*ZH+0.4,M.warn,0,-0.75,0,crHook,false);box(0.45,0.07,2*ZH+0.4,M.warn,0,-1.1,0,crHook,false);box(0.09,0.32,2*ZH+0.4,M.warn,0,-0.92,0,crHook,false);
    [-ZH,ZH].forEach(z=>{box(0.32,SB-1.1,0.2,M.warn,0,-(1.1+SB)/2,z,crHook,false);box(0.85,0.16,0.28,M.ink,0.05,-SB-0.32,z,crHook,false);box(0.14,0.5,0.28,M.ink,0.42,-SB-0.1,z,crHook,false);});}
   const carried=spoolModel(crHook);carried.g.position.y=-SB;carried.g.visible=false;
-  const UNW=[-16.1,2.4,zc],REELP=[KX,DY,zc],parkP=k=>[-11.8-k*4.1,2.15,-0.2],SPOOLP=()=>[SPR.x-Math.max(0,rackSpools.filter(m=>m.g.visible).length-1)*1.2,0.75,SPR.z+0.6],ARMP=()=>[DX+Math.cos(105*Math.PI/180)*(DR+R0+0.35),DY+Math.sin(105*Math.PI/180)*(DR+R0+0.35),zc];
+  const UNW=[-18.7+WD.UX,WD.UY,zc],REELP=[KX,DY,zc],parkP=k=>[-11.8-k*4.1,2.15,-0.2],SPOOLP=()=>[SPR.x-Math.max(0,rackSpools.filter(m=>m.g.visible).length-1)*1.2,0.75,SPR.z+0.6],ARMP=()=>[DX+Math.cos(105*Math.PI/180)*(DR+R0+0.35),DY+Math.sin(105*Math.PI/180)*(DR+R0+0.35),zc];
   function craneUpdate(rdt){const nPark=Math.max(0,reelsAtWinder()-1);
     if(CR.lastTurn<0){CR.lastTurn=S.tot.turnups;CR.lastPark=nPark;}
     // v2.9.5: a turn-up and a stored reel going to the unwind can land in the same frame (fast game speeds): handle both,
