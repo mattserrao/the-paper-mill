@@ -33,6 +33,8 @@ with sync_playwright() as pw:
     pg.wait_for_function("window.__PM&&__PM.G3&&__PM.G3.scene&&!!__PM.G3.camSet", timeout=300000, polling=500)
     pg.evaluate("()=>document.getElementById('v2go').click()"); pick_leader(pg)
     pg.wait_for_timeout(4000)
+    W = int(__import__("os").environ.get("WAIT", "0"))   # optional: run the sim at speed first (trucks arrive), seconds
+    if W: pg.evaluate("()=>{__PM.setRunning(true);__PM.C.simSpeed=30;}"); pg.wait_for_timeout(W * 1000)
     d = pg.evaluate(DUMP, box)
     pathlib.Path(out).write_text(json.dumps(d))
     print(len(d["objs"]), "meshes", sum(len(o["F"]) // 3 for o in d["objs"]), "tris")
