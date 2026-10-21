@@ -3,8 +3,8 @@ Usage: python3 gridview.py index.html out.png x0 x1 z0 z1 [step]"""
 import pathlib, sys, base64, io
 from playwright.sync_api import sync_playwright
 from PIL import Image, ImageDraw
-src = open(pathlib.Path(__file__).parent / "bench.py").read()
-exec(src.split("def stats")[0].split("from playwright.sync_api import sync_playwright")[1])
+import sys as _sys, pathlib as _pl; _sys.path.insert(0, str(_pl.Path(__file__).resolve().parents[1]))
+from lib import *   # route_for, INIT, HOOK, pick_leader, HERE (= tools/)
 path, out = sys.argv[1], sys.argv[2]; x0, x1, z0, z1 = map(float, sys.argv[3:7]); step = float(sys.argv[7]) if len(sys.argv) > 7 else 5
 html = pathlib.Path(path).read_text()
 W = 1400; H = int(W * (z1 - z0) / (x1 - x0))

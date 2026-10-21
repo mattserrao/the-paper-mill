@@ -19,9 +19,8 @@ Usage: python3 qa_balance.py <index.html> <styles> <seeds> [--seed0=1000] [--env
 Prints one JSON line per season and a summary per style (mean / median / SD of profit, ledger means)."""
 import json, pathlib, sys, statistics as st, time
 from playwright.sync_api import sync_playwright
-HERE = pathlib.Path(__file__).parent
-src = (HERE / "bench.py").read_text()
-exec(src.split("def stats")[0].split("from playwright.sync_api import sync_playwright")[1])
+import sys as _sys, pathlib as _pl; _sys.path.insert(0, str(_pl.Path(__file__).resolve().parents[1]))
+from lib import *   # route_for, INIT, HOOK, pick_leader, HERE (= tools/)
 args = [a for a in sys.argv[1:] if not a.startswith("--")]
 fl = {a.split("=")[0]: a.split("=", 1)[1] for a in sys.argv[1:] if a.startswith("--") and "=" in a}
 path, styles, N = args[0], args[1].split(","), int(args[2])

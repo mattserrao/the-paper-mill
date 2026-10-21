@@ -33,7 +33,7 @@ Writes bench-<label>.json (chromium) or bench-<label>-webkit.json next to this s
 import json, pathlib, sys, statistics as st, time
 from playwright.sync_api import sync_playwright
 import pmbench as PB
-HERE = pathlib.Path(__file__).parent
+HERE = pathlib.Path(__file__).resolve().parents[1]   # tools/
 
 args = [a for a in sys.argv[1:] if not a.startswith("--")]
 flags = {a.split("=")[0]: (a.split("=", 1)[1] if "=" in a else True) for a in sys.argv[1:] if a.startswith("--")}

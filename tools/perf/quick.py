@@ -20,9 +20,8 @@ and timing (this machine; only for same-session comparison): cpu_ms (frame callb
 Writes quick-<label>.json next to this script and prints one JSON object."""
 import json, pathlib, sys, statistics as st, re
 from playwright.sync_api import sync_playwright
-HERE = pathlib.Path(__file__).parent
-src = (HERE / "bench.py").read_text()
-exec(src.split("def stats")[0].split("from playwright.sync_api import sync_playwright")[1])   # route_for, INIT, HOOK
+import sys as _sys, pathlib as _pl; _sys.path.insert(0, str(_pl.Path(__file__).resolve().parents[1]))
+from lib import *   # route_for, INIT, HOOK, pick_leader, HERE (= tools/)
 
 args = [a for a in sys.argv[1:] if not a.startswith("--")]
 flags = {a.split("=")[0]: (a.split("=", 1)[1] if "=" in a else True) for a in sys.argv[1:] if a.startswith("--")}

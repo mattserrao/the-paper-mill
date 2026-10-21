@@ -4,8 +4,8 @@ below scenery during zen mode.
 Usage: python3 clipcheck.py index.html [env] [mill seed] [seconds]"""
 import json, pathlib, sys
 from playwright.sync_api import sync_playwright
-src = open(pathlib.Path(__file__).parent / "bench.py").read()
-exec(src.split("def stats")[0].split("from playwright.sync_api import sync_playwright")[1])
+import sys as _sys, pathlib as _pl; _sys.path.insert(0, str(_pl.Path(__file__).resolve().parents[1]))
+from lib import *   # route_for, INIT, HOOK, pick_leader, HERE (= tools/)
 html = pathlib.Path(sys.argv[1]).read_text(); env = sys.argv[2] if len(sys.argv) > 2 else "rural"
 mill = sys.argv[3] if len(sys.argv) > 3 else "1"; secs = int(sys.argv[4]) if len(sys.argv) > 4 else 60
 if "window.__PM=" not in html:

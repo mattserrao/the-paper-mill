@@ -1,8 +1,8 @@
 """Which shader programs get compiled after the start-up precompile? Plays 60 s normally, then triggers every upset."""
 import pathlib,sys,json,collections
 from playwright.sync_api import sync_playwright
-src=open('bench.py').read()
-exec(src.split('def stats')[0].split('from playwright.sync_api import sync_playwright')[1])
+import sys as _sys, pathlib as _pl; _sys.path.insert(0, str(_pl.Path(__file__).resolve().parents[1]))
+from lib import *   # route_for, INIT, HOOK, pick_leader, HERE (= tools/)
 html=pathlib.Path(sys.argv[1]).read_text();phone="phone" in sys.argv
 with sync_playwright() as pw:
     b=pw.chromium.launch(args=["--use-gl=angle","--use-angle=swiftshader","--enable-unsafe-swiftshader"])

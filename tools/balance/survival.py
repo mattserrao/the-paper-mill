@@ -27,9 +27,8 @@ books, what the leader built) and the mean / min / max. A run still alive after 
 survival run has to end, so treat that as a balance failure."""
 import json, pathlib, sys, statistics as st
 from playwright.sync_api import sync_playwright
-HERE = pathlib.Path(__file__).parent
-src = (HERE / "bench.py").read_text()
-exec(src.split("def stats")[0].split("from playwright.sync_api import sync_playwright")[1])
+import sys as _sys, pathlib as _pl; _sys.path.insert(0, str(_pl.Path(__file__).resolve().parents[1]))
+from lib import *   # route_for, INIT, HOOK, pick_leader, HERE (= tools/)
 
 args = [a for a in sys.argv[1:] if not a.startswith("--")]
 fl = {a.split("=")[0]: a.split("=", 1)[1] for a in sys.argv[1:] if a.startswith("--") and "=" in a}

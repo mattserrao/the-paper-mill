@@ -12,9 +12,8 @@ condition is tested on the same seasons. Prints per-run results and the mean / S
 (cash at season end; the season starts with ECON.start = $2M) and of profit (finish - start)."""
 import json, pathlib, sys, statistics as st
 from playwright.sync_api import sync_playwright
-HERE = pathlib.Path(__file__).parent
-src = (HERE / "bench.py").read_text()
-exec(src.split("def stats")[0].split("from playwright.sync_api import sync_playwright")[1])
+import sys as _sys, pathlib as _pl; _sys.path.insert(0, str(_pl.Path(__file__).resolve().parents[1]))
+from lib import *   # route_for, INIT, HOOK, pick_leader, HERE (= tools/)
 
 args = [a for a in sys.argv[1:] if not a.startswith("--")]
 fl = {a.split("=")[0]: a.split("=", 1)[1] for a in sys.argv[1:] if a.startswith("--") and "=" in a}
@@ -54,6 +53,7 @@ with sync_playwright() as pw:
     pg.route("**/*", route_for(html)); pg.add_init_script(INIT); pg.goto("http://bench.local/" + (f"?env={env}" if env else ""))
     pg.wait_for_function("window.__PM&&window.__B&&__B.first!==null", timeout=120000)
     pg.evaluate("()=>document.getElementById('v2go').click()")
+    pick_leader(pg)   # (v6.10.2: since v5.1 a season starts through the leader picker; econ.py had stalled here)
     pg.wait_for_function("__PM.S.season&&__PM.S.season.on", timeout=120000, polling=200); pg.wait_for_timeout(300)
     pg.evaluate("()=>{const G=__PM.G3;if(G&&G.EXP)G.EXP.noRender=true;}")   # sim only
     res = [pg.evaluate(RUN, [k, seed0, price, outage, bn]) for k in range(N)]

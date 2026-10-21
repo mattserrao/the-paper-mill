@@ -2,8 +2,8 @@
 Usage: python3 tellprobe.py <index.html> <mode season|surv|free> <js file>"""
 import pathlib, sys, json
 from playwright.sync_api import sync_playwright
-src = open(pathlib.Path(__file__).parent / "bench.py").read()
-exec(src.split("def stats")[0].split("from playwright.sync_api import sync_playwright")[1])
+import sys as _sys, pathlib as _pl; _sys.path.insert(0, str(_pl.Path(__file__).resolve().parents[1]))
+from lib import *   # route_for, INIT, HOOK, pick_leader, HERE (= tools/)
 html = pathlib.Path(sys.argv[1]).read_text(); mode = sys.argv[2]; js = pathlib.Path(sys.argv[3]).read_text(); extra = sys.argv[4] if len(sys.argv) > 4 else ""
 with sync_playwright() as pw:
     b = pw.chromium.launch(args=["--use-gl=angle", "--use-angle=swiftshader", "--enable-unsafe-swiftshader"])

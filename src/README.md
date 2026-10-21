@@ -115,7 +115,7 @@ then `tail.html`. All game code runs inside **one shared closure** (opened in `0
   arrays too, palette token kept).
 - **Per-frame allocation**: the paper sheet (25) is one geometry updated in place; particle batches (31) keep their
   lists, a count and one update-range object per attribute; `SLC.geo()` returns one reused object; the static-merge watch
-  compacts its list in place. `tools/allocprof.py` shows what allocates; `quick.py`'s `alloc_MB_s` must stay ≤ 2.
+  compacts its list in place. `tools/perf/allocprof.py` shows what allocates; `quick.py`'s `alloc_MB_s` must stay ≤ 2.
 - Debug flags: `?nosky` (no dome, clouds or mist), `?noclouds`, `?noterr` (no ground mesh), `?gfx=low|medium|high|ultra`.
 
 ### Music (v4.1 pass 4, `02-audio.js`)
@@ -129,8 +129,8 @@ then `tail.html`. All game code runs inside **one shared closure** (opened in `0
   pieces, with its tape echo `echoIn`); `intG` has its own echo `echoInt`. `mkOut(bus, hallSend, echoSend)` makes an
   instrument output. Nothing here allocates per frame in the 3D sense; the scheduler builds nodes 0.3–0.5 s ahead.
 - `Math.random` is allowed in this file (music); the sim never reads it. `?song=` and `?upset=` are listening aids.
-- Checks: `tools/musictest.py` (schedules every step of every piece in the page, then plays each site's first pieces and
-  the upset pieces for a few seconds and reads the output level) and `tools/musicrec.py` (records a piece to MP3).
+- Checks: `tools/checks/music.py` (schedules every step of every piece in the page, then plays each site's first pieces and
+  the upset pieces for a few seconds and reads the output level) and `tools/util/musicrec.py` (records a piece to MP3).
 
 ## Survival mode (v4.3)
 
@@ -157,10 +157,10 @@ then `tail.html`. All game code runs inside **one shared closure** (opened in `0
   Picks go through the outage dialog: `leadPlanNew()` / `leadPlanMount()` (09c) write `o.plan.lead={to, pick}`;
   `beginOutage()` applies a change of leader (`leadChange`), `endOutage()` adds the pick to the stacks (`leadOutageEnd`).
   Stacks belong to the mill, not the leader. A new leader needs: an entry in `LEADERS`, `LEAD_IMG` and `LEAD_FACE` (`09c-leader-art.js`), `LEAD_IDS` and
-  `LEAD_PICKS`, its effects in the helpers, and a policy in `tools/survival.py`. (The leader is not on the leaderboard.)
+  `LEAD_PICKS`, its effects in the helpers, and a policy in `tools/balance/survival.py`. (The leader is not on the leaderboard.)
   Portraits are embedded WebP images at 408 x 460 (`09c-leader-art.js`), shown as CSS backgrounds by `leadArt(id)`; `LEAD_FACE` is the
   square that frames each face (the chip avatar and the outage dialog).
-- **Retuning**: change `SURV.up` / `SURV.cost`, then `tools/survival.py index.html 10 --bot=handsoff` (and `buyer`, `saver`), with `--leader=chip|dot|fel|hank` for each leader.
+- **Retuning**: change `SURV.up` / `SURV.cost`, then `tools/balance/survival.py index.html 10 --bot=handsoff` (and `buyer`, `saver`), with `--leader=chip|dot|fel|hank` for each leader.
   A run has to end: every bot should be bankrupt well before `--maxdays`.
 
 ## Device autotest (`?autotest`)
@@ -179,7 +179,7 @@ turns the low-FPS fallback off so builds compare at the same settings, then meas
 
 The results page has a **Copy results** button (the full JSON, including every frame time for normal play and
 upsets). Options: `scale=0.5` shortens every phase, `speed=` sim minutes per second (default 10, the game's
-default), `seed=`, `fallback` keeps the low-FPS fallback on. `tools/autotest.py index.html` runs it headless.
+default), `seed=`, `fallback` keeps the low-FPS fallback on. `tools/checks/autotest.py index.html` runs it headless.
 
 ## three.js (r186) notes
 
@@ -190,29 +190,10 @@ default), `seed=`, `fallback` keeps the low-FPS fallback on. `tools/autotest.py 
 
 ## Tools (`tools/`)
 
-Music: `musictest.py` and `musicrec.py` (see above). Needs Python 3 with Playwright (Chromium), and Node with `eslint@8`, `three@0.128.0` (for older builds) and `three@0.186.1` (in `t186/`) installed next to the scripts. The scripts serve three.js locally, so tests run offline.
-
-- `suite.py index.html <label>`: the performance scorecard (~10 min). It runs `calib.py`, `audit.py` (desktop and phone), `hitches.py`, `phone.py` and `steady_high.py`. Add the result as a column in the project doc `paper-mill-benchmarks.md`.
-- `latecompile.py index.html phone`: shader programs compiled after the start-up precompile (should be 0).
-- `audiotap.py index.html`: audio contexts created on the first tap (Chromium can't reproduce iOS interruptions).
-- `diagread.py index.html`: prints the top of the Diagnostics panel after 20 s of play.
-- `phone.py a.html b.html … --shadows`: phone CPU and draws per frame, with shadows forced on so builds compare on equal graphics.
-- `experiments.py index.html`: applies one change at a time (no blur, no labels, single-pass transparency, actors hidden, outlines hidden, shadows on), measures, then reverts.
-- `allocprof.py index.html phone`: which functions allocate the most JS memory during play.
-- `autotest.py index.html [scale] [--desktop] [--expect=hash]`: runs the in-page `?autotest` headless (phone emulation) and checks the results page, the Copy button and that nothing was saved.
-- `quick.py index.html <label> [--env=urban] [--mill=7]`: the quick performance test (counts and timings, phone emulation, checksum).
-- `clipcheck.py index.html [env] [mill] [seconds]`: runs a site with every upset and zen mode and fails if any person, vehicle,
-  car or train stands inside scenery, or the camera dips into it.
-- `topview.py index.html out.png "?env=desert&mill=7" [--half=330] [--persp]`: a top-down (or overview) render of a site.
-- `econ.py index.html 15 [--env=swamp] [--bn=winder]`: hands-off seasons for a site, optionally with a forced bottleneck.
-- `bench.py index.html <label> 3`: the older timing benchmark (also provides the shared test hook and local three.js routing the other scripts use).
-- `smoke.py index.html`: drives every menu and panel plus a full 30-day season; fails on any page error.
-- `survcheck.py index.html [shots_dir]`: drives a survival run from the menu to the leaderboard (waves, multipliers, save and continue, the fifth outage in 3D, bankruptcy, score, both boards); fails on any page error.
-- `survival.py index.html 5 [--bot=handsoff|buyer|saver] [--up=0.2] [--cost=0.1] [--compound=1]`: survival runs to bankruptcy, with days survived and per-wave profit, incidents and downtime.
-- `determinism.py index.html`: two loads of the same season week must play out identically.
-- `balance.py index.html 40`: average outcomes over 40 seasons, to confirm balance after sim changes.
-- `idcheck.py index.html`: every element ID the code looks up exists.
-- `nothree.py index.html`: with three.js unreachable, the page shows the no-3D screen without errors.
+See `tools/README.md`. In short: `python3 tools/run_checks.py --build` rebuilds `index.html` and runs every regression
+check in `tools/checks/` (`--tier=quick` for the four fast ones, `--tier=full` before a release); performance tools are in
+`tools/perf/`, balance runs in `tools/balance/`, layout and art helpers in `tools/util/`. When a change touches a
+feature, add assertions to that feature's check rather than a new version-named script.
 
 ## Fiddly knobs (v5.6)
 
@@ -228,6 +209,6 @@ Music: `musictest.py` and `musicrec.py` (see above). Needs Python 3 with Playwri
   DCS trends, kept outside `S`) at the end of `step()`.
 - **Speed:** with a knob panel, a DCS / QCS screen, the spider valve or the slice open, `simRate()` returns 1 (`G3.knobUI`);
   the player's own speed is never touched.
-- **Tests:** `tools/knobcheck.py <index.html>`: every knob on its own and the interacting pairs (consequence happens,
+- **Tests:** `tools/checks/knobs.py <index.html>`: every knob on its own and the interacting pairs (consequence happens,
   later rather than at once, costs money, gets traced and reset), an untouched run, and the screens (speed, view, taps
   in 3D, save and continue).

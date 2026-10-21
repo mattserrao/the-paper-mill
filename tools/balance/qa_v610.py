@@ -7,8 +7,8 @@ Usage: python3 qa_v610.py <season|surv> <index.html> <first_k> <last_k> <out.jso
 Styles cycle handsoff / buyer / gambler / random / active; sites rural / urban / desert / swamp; leaders chip / dot / fel / hank."""
 import json, os, pathlib, ssl, sys, time, fcntl, urllib.request, urllib.error, urllib.parse
 from playwright.sync_api import sync_playwright
-HERE = pathlib.Path(__file__).parent
-exec((HERE / "bench.py").read_text().split("def stats")[0].split("from playwright.sync_api import sync_playwright")[1])
+import sys as _sys, pathlib as _pl; _sys.path.insert(0, str(_pl.Path(__file__).resolve().parents[1]))
+from lib import *   # route_for, INIT, HOOK, pick_leader, HERE (= tools/)
 
 args = [a for a in sys.argv[1:] if not a.startswith("--")]
 mode, path, k0, k1, out = args[0], args[1], int(args[2]), int(args[3]), args[4]

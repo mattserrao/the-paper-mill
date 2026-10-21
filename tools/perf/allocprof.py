@@ -1,8 +1,8 @@
 """Sampling allocation profile of steady play: which functions allocate the most JS memory."""
 import pathlib, sys, json, collections
 from playwright.sync_api import sync_playwright
-src = open(pathlib.Path(__file__).parent / "bench.py").read()
-exec(src.split("def stats")[0].split("from playwright.sync_api import sync_playwright")[1])
+import sys as _sys, pathlib as _pl; _sys.path.insert(0, str(_pl.Path(__file__).resolve().parents[1]))
+from lib import *   # route_for, INIT, HOOK, pick_leader, HERE (= tools/)
 path=sys.argv[1]; phone=len(sys.argv)>2 and sys.argv[2]=="phone"
 html=pathlib.Path(path).read_text()
 if "window.__PM=" not in html:

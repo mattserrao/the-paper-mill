@@ -10,7 +10,7 @@ import base64, io, pathlib, sys
 from PIL import Image
 
 src = pathlib.Path(sys.argv[1])
-out = pathlib.Path(__file__).resolve().parent.parent / "src" / "js" / "50a-title-art.js"
+out = pathlib.Path(__file__).resolve().parents[2] / "src" / "js" / "50a-title-art.js"
 names = sorted({p.name.rsplit("-", 1)[0] for p in src.glob("*-desktop.png")})
 def pack(p, size, q=58):
     im = Image.open(p).convert("RGB").resize(size, Image.LANCZOS)

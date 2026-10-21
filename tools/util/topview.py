@@ -3,8 +3,8 @@ Usage: python3 topview.py index.html out.png [query] [--half=W] [--persp]
 query is appended to the page URL (e.g. "?env=desert&layout=1234"). --half sets the half-width in metres (default 230)."""
 import pathlib, sys, base64
 from playwright.sync_api import sync_playwright
-src = open(pathlib.Path(__file__).parent / "bench.py").read()
-exec(src.split("def stats")[0].split("from playwright.sync_api import sync_playwright")[1])
+import sys as _sys, pathlib as _pl; _sys.path.insert(0, str(_pl.Path(__file__).resolve().parents[1]))
+from lib import *   # route_for, INIT, HOOK, pick_leader, HERE (= tools/)
 args = [a for a in sys.argv[1:] if not a.startswith("--")]
 fl = {a.split("=")[0]: (a.split("=", 1)[1] if "=" in a else True) for a in sys.argv[1:] if a.startswith("--")}
 path, out = args[0], args[1]; q = args[2] if len(args) > 2 else ""

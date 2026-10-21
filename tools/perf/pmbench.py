@@ -1,9 +1,8 @@
 """Shared pieces for the v5.5 benchmark tools (fpsbench.py, gpuexp.py): page routing, the v5 start sequence
 (leader pick), and the per-frame sampler that times CPU submission and GPU completion of every render."""
 import pathlib, time
-HERE = pathlib.Path(__file__).parent
-_src = (HERE / "bench.py").read_text()
-exec(_src.split("def stats")[0].split("from playwright.sync_api import sync_playwright")[1])   # route_for, INIT, HOOK
+import sys as _sys, pathlib as _pl; _sys.path.insert(0, str(_pl.Path(__file__).resolve().parents[1]))
+from lib import *   # route_for, INIT, HOOK, pick_leader, HERE (= tools/)
 
 def load_html(path):
     html = pathlib.Path(path).read_text()

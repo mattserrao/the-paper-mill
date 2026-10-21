@@ -6,8 +6,8 @@ Tears in the Mist; desert Dry Wash / High Noon Haze / Mesa Wind; swamp Cypress R
 upsets strings / pulse / gallop / stomp / drive."""
 import pathlib, sys, subprocess, struct, shutil
 from playwright.sync_api import sync_playwright
-src = open(pathlib.Path(__file__).parent / "bench.py").read()
-exec(src.split("def stats")[0].split("from playwright.sync_api import sync_playwright")[1])
+import sys as _sys, pathlib as _pl; _sys.path.insert(0, str(_pl.Path(__file__).resolve().parents[1]))
+from lib import *   # route_for, INIT, HOOK, pick_leader, HERE (= tools/)
 args = [a for a in sys.argv[1:] if not a.startswith("--")]; flags = {a.split("=")[0]: a.split("=", 1)[1] if "=" in a else True for a in sys.argv[1:] if a.startswith("--")}
 html = pathlib.Path(args[0]).read_text(); out = pathlib.Path(args[1]); out.mkdir(parents=True, exist_ok=True)
 secs = float(flags.get("--secs", 40)); only = [x.strip().lower() for x in flags.get("--only", "").split(",") if x.strip()]

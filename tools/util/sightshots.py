@@ -2,8 +2,8 @@
 Usage: python3 sightshots.py <index.html> <outdir> <env> "t:x,z,r,th,ph,y;t:..." """
 import pathlib,sys
 from playwright.sync_api import sync_playwright
-src=open(pathlib.Path(__file__).parent/'bench.py').read()
-exec(src.split('def stats')[0].split('from playwright.sync_api import sync_playwright')[1])
+import sys as _sys, pathlib as _pl; _sys.path.insert(0, str(_pl.Path(__file__).resolve().parents[1]))
+from lib import *   # route_for, INIT, HOOK, pick_leader, HERE (= tools/)
 html=pathlib.Path(sys.argv[1]).read_text();out=sys.argv[2];env=sys.argv[3]
 shots=[(float(a.split(':')[0]),None if a.split(':')[1]=='f' else [float(v) for v in a.split(':')[1].split(',')]) for a in sys.argv[4].split(';')]   # 't:f' = the scene's own focus
 with sync_playwright() as pw:
