@@ -6807,14 +6807,23 @@ function no3D(){G3.ok=false;$("no3d").hidden=false;$("no3d-retry").onclick=()=>l
     x.fillStyle="#bdbdbd";x.fillRect(0,0,W,4);x.fillRect(0,H-4,W,4);x.fillStyle="#f4f1e6";x.fillRect(52,22,26,18);x.strokeStyle="#6a6a6a";x.lineWidth=1;x.strokeRect(52.5,22.5,25,17);
     x.fillStyle="#7a7a7a";for(let k=0;k<4;k++)x.fillRect(55,26+k*3.4,k%2?14:19,1.2);},false);
   M.motor=mat("stock",{map:motorTex,roughness:0.5});
-  // ribbed cladding for building walls
-  const ribC=document.createElement("canvas");ribC.width=32;ribC.height=4;{const x=ribC.getContext("2d");x.fillStyle="#ffffff";x.fillRect(0,0,32,4);x.fillStyle="#e3e6ee";x.fillRect(0,0,4,4);x.fillStyle="#f1f3f8";x.fillRect(4,0,3,4);x.fillStyle="#d7dbe6";x.fillRect(28,0,4,4);}
-  const ribTex=new THREE.CanvasTexture(ribC);ribTex.wrapS=ribTex.wrapT=THREE.RepeatWrapping;ribTex.colorSpace=THREE.SRGBColorSpace;
-  // v4.1 pass 3: one shared material; the rib pitch comes from each wall's own uvs (per face, along its length) instead of a
-  // texture clone with its own repeat, so the 22 walls batch into one draw instead of 22
-  const ribM=mat("g-wall",{map:ribTex,roughness:0.8});
+  M.rawStock=mat("pulp");M.ww=mat("g-wire");M.arrow=mat("g-wall",{roughness:0.9});   // v6.11 pipe colours (24-3d-stockprep-steam.js)
+  // v6.11 (item 9): folded-card building walls. Each wall reads as a sheet of card folded every 3 m: warm card stock with a faint
+  // grain, a light-brown fold line with a soft fold shade beside it, and the dark-brown ink edge baked along the top and the
+  // bottom (the paper style guide: bold dark-brown outlines, lighter fold lines). One shared texture and material, so the
+  // walls still batch into one draw. (Was a 0.55 m ribbed-cladding stripe.)
+  const ribC=document.createElement("canvas");ribC.width=256;ribC.height=128;{const x=ribC.getContext("2d"),W2=256,H2=128;
+    x.fillStyle="#fbf7ee";x.fillRect(0,0,W2,H2);
+    let sd=7;const rnd=()=>{sd=(sd*16807)%2147483647;return sd/2147483647;};
+    for(let k=0;k<900;k++){x.fillStyle=rnd()<0.5?"rgba(120,96,64,0.05)":"rgba(255,255,255,0.35)";x.fillRect(rnd()*W2,rnd()*H2,1+rnd()*2,1);}   // card grain
+    const sh=x.createLinearGradient(0,0,18,0);sh.addColorStop(0,"rgba(90,70,50,0.13)");sh.addColorStop(1,"rgba(90,70,50,0)");x.fillStyle=sh;x.fillRect(0,0,18,H2);   // fold shade
+    x.strokeStyle="rgba(138,111,85,0.75)";x.lineWidth=2;x.beginPath();for(let y=0;y<=H2;y+=8){const w=Math.sin(y*0.21)*0.8;y?x.lineTo(1+w,y):x.moveTo(1+w,y);}x.stroke();   // fold line
+    x.strokeStyle="#3b2a1e";x.lineWidth=3;[2,H2-2].forEach(y0=>{x.beginPath();for(let xx=0;xx<=W2;xx+=8){const w=Math.sin(xx/W2*Math.PI*6)*0.9;xx?x.lineTo(xx,y0+w):x.moveTo(xx,y0+w);}x.stroke();});}   // ink edges
+  const ribTex=new THREE.CanvasTexture(ribC);ribTex.wrapS=ribTex.wrapT=THREE.RepeatWrapping;ribTex.colorSpace=THREE.SRGBColorSpace;ribTex.anisotropy=4;
+  // one shared material; the fold pitch comes from each wall's own uvs (per face, along its length)
+  const ribM=mat("g-wall",{map:ribTex,roughness:0.9});
   function ribWall(w,hh,d,x,y,z,parent=scene){const g=new THREE.BoxGeometry(w,hh,d),uv=g.attributes.uv;
-    for(let i=0;i<uv.count;i++)uv.setX(i,uv.getX(i)*((i<8?d:w)/0.55));   // faces 0-1 run along z, the rest along x
+    for(let i=0;i<uv.count;i++)uv.setX(i,uv.getX(i)*((i<8?d:w)/3.0));   // faces 0-1 run along z, the rest along x (a fold every 3 m)
     const o=new THREE.Mesh(g,ribM);o.position.set(x,y,z);o.castShadow=true;o.receiveShadow=true;parent.add(o);edges(o);
     const trim=new THREE.Mesh(new THREE.BoxGeometry(w+0.06,0.32,d+0.06),M.brand);trim.position.set(x,y+hh/2-0.13,z);/* cap sits 3 cm proud of the wall so their tops never share a plane */parent.add(trim);edges(trim);return o;}
   // strapped OCC bales and paper roll end-caps
@@ -6974,6 +6983,14 @@ function no3D(){G3.ok=false;$("no3d").hidden=false;$("no3d-retry").onclick=()=>l
     if(G3.papWater){const pt=G3.paperWater(false);pt.repeat.set((px1-px0)/10,(pz1-pz0)/10);ENV.wwM.map=pt;ENV.wwM.needsUpdate=true;}   // (t13: paper water)
     const pond=new THREE.Mesh(new THREE.PlaneGeometry(px1-px0-0.4,pz1-pz0-0.4),ENV.wwM);pond.rotation.x=-Math.PI/2;pond.position.set((px0+px1)/2,1.0,(pz0+pz1)/2);scene.add(pond);
     ENV.aer=[[WX(27),-42],[WX(37),-42],[WX(27),-38],[WX(37),-38]];ENV.aer.forEach(([x,z])=>{const a=new THREE.Mesh(new CylG(0.7,0.7,0.4,12),M.warn);a.position.set(x,1.15,z);scene.add(a);});
+    // v6.11 Blender redesign (item 11, tools/blender/phww_new.py): the clarifier's effluent launder, centre drive platform with its
+    // rail, the effluent box and the access stair; the aeration basin's aerators on pontoons over churned water, the catwalk along
+    // the camera-side wall, the motor control kiosk and the return-sludge pump. Built round each tank's centre (mirrored layouts).
+    {const g=new THREE.Group();g.position.set(cx,0,cz);scene.add(g);{const o=box(1.494,0.3,0.45,M.steel,6.409,1.95,0.722,g,false);o.rotation.set(0,-1.683,0);};{const o=box(1.494,0.3,0.45,M.steel,6.088,1.95,2.13,g,false);o.rotation.set(0,-1.907,0);};{const o=box(1.494,0.3,0.45,M.steel,5.461,1.95,3.432,g,false);o.rotation.set(0,-2.132,0);};{const o=box(1.494,0.3,0.45,M.steel,4.561,1.95,4.561,g,false);o.rotation.set(0,-2.356,0);};{const o=box(1.494,0.3,0.45,M.steel,3.432,1.95,5.461,g,false);o.rotation.set(0,-2.581,0);};{const o=box(1.494,0.3,0.45,M.steel,2.13,1.95,6.088,g,false);o.rotation.set(0,-2.805,0);};{const o=box(1.494,0.3,0.45,M.steel,0.722,1.95,6.409,g,false);o.rotation.set(0,-3.029,0);};{const o=box(1.494,0.3,0.45,M.steel,-0.722,1.95,6.409,g,false);o.rotation.set(0,-3.254,0);};{const o=box(1.494,0.3,0.45,M.steel,-2.13,1.95,6.088,g,false);o.rotation.set(0,-3.478,0);};{const o=box(1.494,0.3,0.45,M.steel,-3.432,1.95,5.461,g,false);o.rotation.set(0,-3.703,0);};{const o=box(1.494,0.3,0.45,M.steel,-4.561,1.95,4.561,g,false);o.rotation.set(0,-3.927,0);};{const o=box(1.494,0.3,0.45,M.steel,-5.461,1.95,3.432,g,false);o.rotation.set(0,-4.151,0);};{const o=box(1.494,0.3,0.45,M.steel,-6.088,1.95,2.13,g,false);o.rotation.set(0,-4.376,0);};{const o=box(1.494,0.3,0.45,M.steel,-6.409,1.95,0.722,g,false);o.rotation.set(0,-4.6,0);};{const o=box(1.494,0.3,0.45,M.steel,-6.409,1.95,-0.722,g,false);o.rotation.set(0,-4.825,0);};{const o=box(1.494,0.3,0.45,M.steel,-6.088,1.95,-2.13,g,false);o.rotation.set(0,-5.049,0);};{const o=box(1.494,0.3,0.45,M.steel,-5.461,1.95,-3.432,g,false);o.rotation.set(0,-5.273,0);};{const o=box(1.494,0.3,0.45,M.steel,-4.561,1.95,-4.561,g,false);o.rotation.set(0,-5.498,0);};{const o=box(1.494,0.3,0.45,M.steel,-3.432,1.95,-5.461,g,false);o.rotation.set(0,-5.722,0);};{const o=box(1.494,0.3,0.45,M.steel,-2.13,1.95,-6.088,g,false);o.rotation.set(0,-5.947,0);};{const o=box(1.494,0.3,0.45,M.steel,-0.722,1.95,-6.409,g,false);o.rotation.set(0,-6.171,0);};{const o=box(1.494,0.3,0.45,M.steel,0.722,1.95,-6.409,g,false);o.rotation.set(0,-6.395,0);};{const o=box(1.494,0.3,0.45,M.steel,2.13,1.95,-6.088,g,false);o.rotation.set(0,-6.62,0);};{const o=box(1.494,0.3,0.45,M.steel,3.432,1.95,-5.461,g,false);o.rotation.set(0,-6.844,0);};{const o=box(1.494,0.3,0.45,M.steel,4.561,1.95,-4.561,g,false);o.rotation.set(0,-7.069,0);};{const o=box(1.494,0.3,0.45,M.steel,5.461,1.95,-3.432,g,false);o.rotation.set(0,-7.293,0);};{const o=box(1.494,0.3,0.45,M.steel,6.088,1.95,-2.13,g,false);o.rotation.set(0,-7.517,0);};{const o=box(1.494,0.3,0.45,M.steel,6.409,1.95,-0.722,g,false);o.rotation.set(0,-7.742,0);};box(2.4,0.3,2.4,M.steel,0,2.65,0,g,false);box(0.9,0.7,0.9,M.stock,0,3.15,0,g,false);box(0.5,0.4,0.5,M.ink,0,3.7,0,g,false);box(0.05,0.9,0.05,M.warn,-1.15,3.2,-1.15,g,false);box(0.05,0.9,0.05,M.warn,-1.15,3.2,1.15,g,false);box(0.05,0.9,0.05,M.warn,1.15,3.2,-1.15,g,false);box(0.05,0.9,0.05,M.warn,1.15,3.2,1.15,g,false);box(2.35,0.05,0.05,M.warn,0,3.6,-1.15,g,false);box(0.05,0.05,2.35,M.warn,-1.15,3.6,0,g,false);box(2.35,0.05,0.05,M.warn,0,3.6,1.15,g,false);box(0.05,0.05,2.35,M.warn,1.15,3.6,0,g,false);box(1.2,1.6,1,M.metal,0,0.8,-7.5,g,false);box(0.9,0.08,0.32,M.warn,7.6,0.37,1.4,g,false);box(0.9,0.08,0.32,M.warn,7.6,0.74,1.08,g,false);box(0.9,0.08,0.32,M.warn,7.6,1.11,0.76,g,false);box(0.9,0.08,0.32,M.warn,7.6,1.48,0.44,g,false);box(0.9,0.08,0.32,M.warn,7.6,1.85,0.12,g,false);box(0.9,0.08,0.32,M.warn,7.6,2.22,-0.2,g,false);box(0.06,1,2.2,M.warn,8.05,1.7,0.8,g,false);}
+    {const g=new THREE.Group();g.position.set((px0+px1)/2,0,(pz0+pz1)/2);scene.add(g);{const cg=new CylG(1.5,1.5,0.04,16);const o=new THREE.Mesh(cg,conc);o.position.set(-5,1.03,-2);o.castShadow=true;g.add(o);}{const cg=new CylG(0.18,0.18,1.3,8);cg.rotateZ(-Math.PI/2);const o=new THREE.Mesh(cg,M.warn);o.position.set(-4.122,1.1,-1.521);o.castShadow=true;g.add(o);}{const cg=new CylG(0.18,0.18,1.3,8);cg.rotateZ(-Math.PI/2);const o=new THREE.Mesh(cg,M.warn);o.position.set(-5.854,1.1,-1.48);o.castShadow=true;g.add(o);}{const cg=new CylG(0.18,0.18,1.3,8);cg.rotateZ(-Math.PI/2);const o=new THREE.Mesh(cg,M.warn);o.position.set(-5.024,1.1,-3);o.castShadow=true;g.add(o);}{const cg=new CylG(0.35,0.35,0.6,10);const o=new THREE.Mesh(cg,M.stock);o.position.set(-5,1.65,-2);o.castShadow=true;g.add(o);}{const cg=new CylG(0.2,0.2,0.1,8);const o=new THREE.Mesh(cg,M.ink);o.position.set(-5,2,-2);o.castShadow=true;g.add(o);}{const cg=new CylG(1.5,1.5,0.04,16);const o=new THREE.Mesh(cg,conc);o.position.set(5,1.03,-2);o.castShadow=true;g.add(o);}{const cg=new CylG(0.18,0.18,1.3,8);cg.rotateZ(-Math.PI/2);const o=new THREE.Mesh(cg,M.warn);o.position.set(5.878,1.1,-1.521);o.castShadow=true;g.add(o);}{const cg=new CylG(0.18,0.18,1.3,8);cg.rotateZ(-Math.PI/2);const o=new THREE.Mesh(cg,M.warn);o.position.set(4.146,1.1,-1.48);o.castShadow=true;g.add(o);}{const cg=new CylG(0.18,0.18,1.3,8);cg.rotateZ(-Math.PI/2);const o=new THREE.Mesh(cg,M.warn);o.position.set(4.976,1.1,-3);o.castShadow=true;g.add(o);}{const cg=new CylG(0.35,0.35,0.6,10);const o=new THREE.Mesh(cg,M.stock);o.position.set(5,1.65,-2);o.castShadow=true;g.add(o);}{const cg=new CylG(0.2,0.2,0.1,8);const o=new THREE.Mesh(cg,M.ink);o.position.set(5,2,-2);o.castShadow=true;g.add(o);}{const cg=new CylG(1.5,1.5,0.04,16);const o=new THREE.Mesh(cg,conc);o.position.set(-5,1.03,2);o.castShadow=true;g.add(o);}{const cg=new CylG(0.18,0.18,1.3,8);cg.rotateZ(-Math.PI/2);const o=new THREE.Mesh(cg,M.warn);o.position.set(-4.122,1.1,2.479);o.castShadow=true;g.add(o);}{const cg=new CylG(0.18,0.18,1.3,8);cg.rotateZ(-Math.PI/2);const o=new THREE.Mesh(cg,M.warn);o.position.set(-5.854,1.1,2.52);o.castShadow=true;g.add(o);}{const cg=new CylG(0.18,0.18,1.3,8);cg.rotateZ(-Math.PI/2);const o=new THREE.Mesh(cg,M.warn);o.position.set(-5.024,1.1,1);o.castShadow=true;g.add(o);}{const cg=new CylG(0.35,0.35,0.6,10);const o=new THREE.Mesh(cg,M.stock);o.position.set(-5,1.65,2);o.castShadow=true;g.add(o);}{const cg=new CylG(0.2,0.2,0.1,8);const o=new THREE.Mesh(cg,M.ink);o.position.set(-5,2,2);o.castShadow=true;g.add(o);}{const cg=new CylG(1.5,1.5,0.04,16);const o=new THREE.Mesh(cg,conc);o.position.set(5,1.03,2);o.castShadow=true;g.add(o);}{const cg=new CylG(0.18,0.18,1.3,8);cg.rotateZ(-Math.PI/2);const o=new THREE.Mesh(cg,M.warn);o.position.set(5.878,1.1,2.479);o.castShadow=true;g.add(o);}{const cg=new CylG(0.18,0.18,1.3,8);cg.rotateZ(-Math.PI/2);const o=new THREE.Mesh(cg,M.warn);o.position.set(4.146,1.1,2.52);o.castShadow=true;g.add(o);}{const cg=new CylG(0.18,0.18,1.3,8);cg.rotateZ(-Math.PI/2);const o=new THREE.Mesh(cg,M.warn);o.position.set(4.976,1.1,1);o.castShadow=true;g.add(o);}{const cg=new CylG(0.35,0.35,0.6,10);const o=new THREE.Mesh(cg,M.stock);o.position.set(5,1.65,2);o.castShadow=true;g.add(o);}{const cg=new CylG(0.2,0.2,0.1,8);const o=new THREE.Mesh(cg,M.ink);o.position.set(5,2,2);o.castShadow=true;g.add(o);}box(20,0.06,1,M.metal,0,1.33,6.25,g,false);box(0.05,1,0.05,M.warn,-9.8,1.85,6.72,g,false);box(0.05,1,0.05,M.warn,-7.3,1.85,6.72,g,false);box(0.05,1,0.05,M.warn,-4.8,1.85,6.72,g,false);box(0.05,1,0.05,M.warn,-2.3,1.85,6.72,g,false);box(0.05,1,0.05,M.warn,0.2,1.85,6.72,g,false);box(0.05,1,0.05,M.warn,2.7,1.85,6.72,g,false);box(0.05,1,0.05,M.warn,5.2,1.85,6.72,g,false);box(0.05,1,0.05,M.warn,7.7,1.85,6.72,g,false);box(20,0.05,0.05,M.warn,0,2.35,6.72,g,false);box(20,0.05,0.05,M.warn,0,1.85,6.72,g,false);box(2.2,0.15,1.6,M.slab,8.5,0.08,8.3,g,false);box(1.8,1.9,0.9,M.steel,8.5,1.05,8.3,g,false);box(1.9,0.08,1.1,M.ink,8.5,2.04,8.3,g,false);{const o=box(0.04,1.5,0.75,M.ink,8.5,1,8.76,g,false);o.rotation.set(0,1.571,0);};box(0.9,0.5,0.6,M.brand,6,0.4,8.2,g,false);box(0.55,0.45,0.45,M.ink,6.7,0.4,8.2,g,false);}
+    // the turning bridge gets its walkway rails, the skimmer arm and the drive carriage at the wall
+    [-0.42,0.42].forEach(s=>{box(r,0.05,0.05,M.warn,r/2,0.95,s,ENV.bridge,false);for(let k=0;k<=6;k++)box(0.05,0.8,0.05,M.warn,0.6+k*(r-1)/6,0.58,s,ENV.bridge,false);});
+    box(r-1.2,0.12,0.25,M.ink,r/2,-0.5,0.65,ENV.bridge,false);box(0.8,0.7,1.2,M.ink,r-0.25,0.05,0,ENV.bridge,false);
     // effluent transfer tank and pump between stock prep and the clarifier (visual only)
     {const T=[10,-28.6],R=1.45,H=3.4;const tk=new THREE.Mesh(new CylG(R,R,H,24),M.tank);tk.position.set(T[0],H/2,T[1]);tk.castShadow=true;tk.receiveShadow=true;scene.add(tk);
       const lid=new THREE.Mesh(new CylG(R+0.06,R+0.06,0.14,24),M.steel);lid.position.set(T[0],H+0.07,T[1]);scene.add(lid);
@@ -6982,14 +6999,36 @@ function no3D(){G3.ok=false;$("no3d").hidden=false;$("no3d-retry").onclick=()=>l
       [-0.3,0.3].forEach(dz=>box(0.06,H+0.9,0.06,M.warn,T[0]+R+0.15,(H+0.9)/2,T[1]+dz,scene,false));for(let y=0.4;y<H+0.6;y+=0.4)box(0.06,0.06,0.6,M.warn,T[0]+R+0.15,y,T[1],scene,false);
       const c=document.createElement("canvas");c.width=256;c.height=48;const x=c.getContext("2d");x.fillStyle="#ffffff";x.fillRect(0,0,256,48);x.fillStyle="#1c2233";x.font="800 24px system-ui,sans-serif";x.textAlign="center";x.fillText("EFFLUENT TRANSFER",128,33);
       const t=new THREE.CanvasTexture(c);t.colorSpace=THREE.SRGBColorSpace;const pl=new THREE.Mesh(new THREE.PlaneGeometry(2.0,0.38),new THREE.MeshBasicMaterial({map:t}));pl.position.set(T[0],2.75,T[1]+R+0.02);scene.add(pl);
-      pipe([[10,0.8,-25.2],[10,0.8,-27.2]],0.3,M.stock);
+      pipe([[10,0.8,-25.2],[10,0.8,-27.2]],0.3,M.ww);
       box(1.1,0.6,0.9,M.brand,11.9,0.45,-30.6,scene);box(0.7,0.55,0.6,M.ink,12.85,0.45,-30.6,scene,false);    // transfer pump and motor
-      pipe([[10,0.6,-30.0],[10,0.6,-30.6],[11.4,0.6,-30.6]],0.22,M.stock);pipe([[11.9,0.9,-30.6],[11.9,0.9,-31.4],[10,0.9,-31.4],[10,2.4,-31.4],...(cx!==10?[[cx,2.4,-31.4]]:[]),[cx,2.4,-33]],0.26,M.stock);
+      pipe([[10,0.6,-30.0],[10,0.6,-30.6],[11.4,0.6,-30.6]],0.22,M.ww);pipe([[11.9,0.9,-30.6],[11.9,0.9,-31.4],[10,0.9,-31.4],[10,2.4,-31.4],...(cx!==10?[[cx,2.4,-31.4]]:[]),[cx,2.4,-33]],0.26,M.ww);
       /* pipe supports on the long run to a moved clarifier */for(let x=16;x<cx-3;x+=8)box(0.22,2.2,0.22,M.steel,x,1.1,-31.4,scene,false);}pipe([[WX(17.1),1.4,-40],[WX(22),1.4,-40]],0.3,M.metal);ENV.ww=[cx,cz];}
   // power house and boiler stack, steam header into the machine hall
   {const x0=70,x1=82,z0=-16,z1=-4,h=9;const b=box(x1-x0,h,z1-z0,conc,(x0+x1)/2,h/2,(z0+z1)/2);edges(b);box(x1-x0+0.4,0.4,z1-z0+0.4,M.roofFlat,(x0+x1)/2,h+0.2,(z0+z1)/2);
-    [z0-0.03,z1+0.03].forEach(z=>box(x1-x0-2,1.2,0.1,M.wind,(x0+x1)/2,5.6,z,scene,false));box(0.1,1.2,z1-z0-2,M.wind,x0-0.03,5.6,(z0+z1)/2,scene,false);
-    box(0.12,3,2.2,M.ink,x0-0.05,1.5,-10,scene,false);
+    // v6.11 Blender redesign (item 11, tools/blender/phww_new.py): the two walls the fixed camera sees are each one baked
+    // facade (concrete card with fold joints every 3 m, a band of tall boiler-house windows, louvres, the roller door on the
+    // west wall, the personnel door and the sign on the south wall, ink edges); round it the roof parapet, safety-valve vents,
+    // roof fans, a caged ladder, the stack collar and emissions-test platform, and the forced-draft fan. (Was trim bands + a door box.)
+    {const fac=(W,H,door,sign)=>texC(512,Math.round(512*H/W),(x,Wp,Hp)=>{const p=Wp/W,Y=v=>Hp-v*p;
+        x.fillStyle="#ebe6da";x.fillRect(0,0,Wp,Hp);let sd=11;const rn=()=>{sd=(sd*16807)%2147483647;return sd/2147483647;};
+        for(let k=0;k<1400;k++){x.fillStyle=rn()<0.5?"rgba(120,96,64,0.06)":"rgba(255,255,255,0.4)";x.fillRect(rn()*Wp,rn()*Hp,1+rn()*2,1);}
+        x.strokeStyle="rgba(138,111,85,0.6)";x.lineWidth=2;for(let u=3;u<W;u+=3){x.beginPath();x.moveTo(u*p,0);x.lineTo(u*p+1,Hp);x.stroke();}
+        x.beginPath();x.moveTo(0,Y(4.5));x.lineTo(Wp,Y(4.5));x.stroke();
+        for(let u=1.2;u<W-0.8;u+=2.4){if(door&&Math.abs(u+0.6-door[0])<2.6)continue;   // tall windows, upper band
+          x.fillStyle="#3a4660";x.fillRect(u*p,Y(8.0),1.2*p,2.8*p);x.fillStyle="rgba(190,215,235,0.35)";x.beginPath();x.moveTo(u*p,Y(6.4));x.lineTo(u*p+1.2*p,Y(7.6));x.lineTo(u*p+1.2*p,Y(8.0));x.lineTo(u*p+0.8*p,Y(8.0));x.lineTo(u*p,Y(7.2));x.fill();
+          x.strokeStyle="#f4f1e8";x.lineWidth=2;x.strokeRect(u*p,Y(8.0),1.2*p,2.8*p);x.beginPath();x.moveTo(u*p,Y(6.6));x.lineTo(u*p+1.2*p,Y(6.6));x.moveTo(u*p+0.6*p,Y(8));x.lineTo(u*p+0.6*p,Y(5.2));x.stroke();
+          x.fillStyle="#9a958a";x.fillRect(u*p-3,Y(5.2),1.2*p+6,4);}
+        for(let u=0.8;u<W-1;u+=4.0){if(door&&Math.abs(u+0.6-door[0])<2.4)continue;   // louvres, lower band
+          x.fillStyle="#8d97a8";x.fillRect(u*p,Y(2.6),1.4*p,1.2*p);x.fillStyle="#4a5262";for(let k=0;k<6;k++)x.fillRect(u*p+3,Y(2.6)+4+k*(1.2*p-6)/6,1.4*p-6,2.5);}
+        if(door){const [u,w,h,kind]=door;x.fillStyle=kind==="roll"?"#7d8796":"#2e3a50";x.fillRect((u-w/2)*p,Y(h),w*p,h*p);
+          if(kind==="roll"){x.fillStyle="rgba(40,44,56,0.35)";for(let y=0.15;y<h;y+=0.25)x.fillRect((u-w/2)*p,Y(y),w*p,2);x.fillStyle="#f2b51d";x.fillRect((u-w/2)*p-6,Y(h)-6,6,h*p+6);x.fillRect((u+w/2)*p,Y(h)-6,6,h*p+6);}
+          x.strokeStyle="#3b2a1e";x.lineWidth=3;x.strokeRect((u-w/2)*p,Y(h),w*p,h*p);}
+        if(sign){x.fillStyle="#1c2233";x.fillRect(sign[0]*p,Y(9.0)+8,sign[1]*p,0.9*p);x.fillStyle="#ffffff";x.font=`800 ${Math.round(0.55*p)}px system-ui,sans-serif`;x.textAlign="center";x.fillText(sign[2],(sign[0]+sign[1]/2)*p,Y(9.0)+8+0.68*p);}
+        x.strokeStyle="#3b2a1e";x.lineWidth=5;x.strokeRect(2.5,2.5,Wp-5,Hp-5);},false);
+      const fM=t=>mat("g-wall",{map:t,roughness:0.9});
+      const fw=new THREE.Mesh(new THREE.PlaneGeometry(z1-z0,h),fM(fac(z1-z0,h,[6,3.4,3.8,"roll"],null)));fw.rotation.y=-Math.PI/2;fw.position.set(x0-0.04,h/2,(z0+z1)/2);scene.add(fw);
+      const fs=new THREE.Mesh(new THREE.PlaneGeometry(x1-x0,h),fM(fac(x1-x0,h,[3.2,1.1,2.3,"door"],[5.2,6.2,"POWER HOUSE"])));fs.position.set((x0+x1)/2,h/2,z1+0.04);scene.add(fs);
+      box(12.5,0.5,0.25,M.ink,76,9.45,-3.9,scene,false);box(0.25,0.5,12.5,M.ink,69.9,9.45,-10,scene,false);{const g=new CylG(0.12,0.12,4,8);const o=new THREE.Mesh(g,M.steel);o.position.set(72.5,11.6,-11.2);o.castShadow=true;scene.add(o);}{const g=new CylG(0.2,0.2,0.4,8);const o=new THREE.Mesh(g,M.steel);o.position.set(72.5,13.5,-11.2);o.castShadow=true;scene.add(o);}{const g=new CylG(0.12,0.12,4,8);const o=new THREE.Mesh(g,M.steel);o.position.set(75.5,11.6,-11.2);o.castShadow=true;scene.add(o);}{const g=new CylG(0.2,0.2,0.4,8);const o=new THREE.Mesh(g,M.steel);o.position.set(75.5,13.5,-11.2);o.castShadow=true;scene.add(o);}{const g=new CylG(0.7,0.7,0.55,12);const o=new THREE.Mesh(g,M.metal);o.position.set(72,9.6,-6);o.castShadow=true;scene.add(o);}{const g=new CylG(0.8,0.8,0.08,12);const o=new THREE.Mesh(g,M.ink);o.position.set(72,9.92,-6);o.castShadow=true;scene.add(o);}{const g=new CylG(0.7,0.7,0.55,12);const o=new THREE.Mesh(g,M.metal);o.position.set(76,9.6,-6);o.castShadow=true;scene.add(o);}{const g=new CylG(0.8,0.8,0.08,12);const o=new THREE.Mesh(g,M.ink);o.position.set(76,9.92,-6);o.castShadow=true;scene.add(o);}box(1.2,0.3,1.2,M.steel,80.5,9.55,-14.5,scene,false);box(0.06,10.1,0.06,M.warn,70.95,5.05,-3.65,scene,false);box(0.06,10.1,0.06,M.warn,71.45,5.05,-3.65,scene,false);box(0.5,0.05,0.05,M.warn,71.2,0.4,-3.65,scene,false);box(0.5,0.05,0.05,M.warn,71.2,0.8,-3.65,scene,false);box(0.5,0.05,0.05,M.warn,71.2,1.2,-3.65,scene,false);box(0.5,0.05,0.05,M.warn,71.2,1.6,-3.65,scene,false);box(0.5,0.05,0.05,M.warn,71.2,2,-3.65,scene,false);box(0.5,0.05,0.05,M.warn,71.2,2.4,-3.65,scene,false);box(0.5,0.05,0.05,M.warn,71.2,2.8,-3.65,scene,false);box(0.5,0.05,0.05,M.warn,71.2,3.2,-3.65,scene,false);box(0.5,0.05,0.05,M.warn,71.2,3.6,-3.65,scene,false);box(0.5,0.05,0.05,M.warn,71.2,4,-3.65,scene,false);box(0.5,0.05,0.05,M.warn,71.2,4.4,-3.65,scene,false);box(0.5,0.05,0.05,M.warn,71.2,4.8,-3.65,scene,false);box(0.5,0.05,0.05,M.warn,71.2,5.2,-3.65,scene,false);box(0.5,0.05,0.05,M.warn,71.2,5.6,-3.65,scene,false);box(0.5,0.05,0.05,M.warn,71.2,6,-3.65,scene,false);box(0.5,0.05,0.05,M.warn,71.2,6.4,-3.65,scene,false);box(0.5,0.05,0.05,M.warn,71.2,6.8,-3.65,scene,false);box(0.5,0.05,0.05,M.warn,71.2,7.2,-3.65,scene,false);box(0.5,0.05,0.05,M.warn,71.2,7.6,-3.65,scene,false);box(0.5,0.05,0.05,M.warn,71.2,8,-3.65,scene,false);box(0.5,0.05,0.05,M.warn,71.2,8.4,-3.65,scene,false);box(0.5,0.05,0.05,M.warn,71.2,8.8,-3.65,scene,false);box(0.5,0.05,0.05,M.warn,71.2,9.2,-3.65,scene,false);box(0.5,0.05,0.05,M.warn,71.2,9.6,-3.65,scene,false);box(0.75,0.06,0.06,M.warn,71.2,3,-3.25,scene,false);box(0.75,0.06,0.06,M.warn,71.2,5,-3.25,scene,false);box(0.75,0.06,0.06,M.warn,71.2,7,-3.25,scene,false);box(0.75,0.06,0.06,M.warn,71.2,9,-3.25,scene,false);box(0.05,6.6,0.05,M.warn,70.83,5.7,-3.4,scene,false);box(0.05,6.6,0.05,M.warn,71.57,5.7,-3.4,scene,false);{const g=new CylG(1.85,1.85,0.6,16);const o=new THREE.Mesh(g,M.steel);o.position.set(79,9.5,-6.5);o.castShadow=true;scene.add(o);}{const g=new CylG(2.5,2.5,0.12,16);const o=new THREE.Mesh(g,M.steel);o.position.set(79,24,-6.5);o.castShadow=true;scene.add(o);}box(0.06,1,0.06,M.warn,81.4,24.5,-6.5,scene,false);{const o=box(1.55,0.06,0.06,M.warn,81.244,25,-5.771,scene,false);o.rotation.set(0,-1.885,0);};box(0.06,1,0.06,M.warn,80.942,24.5,-5.089,scene,false);{const o=box(1.55,0.06,0.06,M.warn,80.387,25,-4.591,scene,false);o.rotation.set(0,-2.513,0);};box(0.06,1,0.06,M.warn,79.742,24.5,-4.217,scene,false);{const o=box(1.55,0.06,0.06,M.warn,79,25,-4.14,scene,false);o.rotation.set(0,-3.142,0);};box(0.06,1,0.06,M.warn,78.258,24.5,-4.217,scene,false);{const o=box(1.55,0.06,0.06,M.warn,77.613,25,-4.591,scene,false);o.rotation.set(0,-3.77,0);};box(0.06,1,0.06,M.warn,77.058,24.5,-5.089,scene,false);{const o=box(1.55,0.06,0.06,M.warn,76.756,25,-5.771,scene,false);o.rotation.set(0,-4.398,0);};box(0.06,1,0.06,M.warn,76.6,24.5,-6.5,scene,false);{const o=box(1.55,0.06,0.06,M.warn,76.756,25,-7.229,scene,false);o.rotation.set(0,-5.027,0);};box(0.06,1,0.06,M.warn,77.058,24.5,-7.911,scene,false);{const o=box(1.55,0.06,0.06,M.warn,77.613,25,-8.409,scene,false);o.rotation.set(0,-5.655,0);};box(0.06,1,0.06,M.warn,78.258,24.5,-8.783,scene,false);{const o=box(1.55,0.06,0.06,M.warn,79,25,-8.86,scene,false);o.rotation.set(0,-6.283,0);};box(0.06,1,0.06,M.warn,79.742,24.5,-8.783,scene,false);{const o=box(1.55,0.06,0.06,M.warn,80.387,25,-8.409,scene,false);o.rotation.set(0,-6.912,0);};box(0.06,1,0.06,M.warn,80.942,24.5,-7.911,scene,false);{const o=box(1.55,0.06,0.06,M.warn,81.244,25,-7.229,scene,false);o.rotation.set(0,-7.54,0);};box(0.5,0.4,0.5,M.ok,77.8,24.4,-4.9,scene,false);box(0.06,0.06,0.6,M.warn,77.38,12,-6.5,scene,false);box(0.06,0.06,0.6,M.warn,77.38,15,-6.5,scene,false);box(0.06,0.06,0.6,M.warn,77.38,18,-6.5,scene,false);box(0.06,0.06,0.6,M.warn,77.38,21,-6.5,scene,false);box(0.06,15,0.06,M.warn,77.38,16.5,-6.75,scene,false);box(0.06,15,0.06,M.warn,77.38,16.5,-6.25,scene,false);box(3.2,0.2,2,M.slab,79,0.1,-2.6,scene,false);box(1.2,1.6,1.2,M.metal,78,1,-2.6,scene,false);box(1,0.9,0.08,M.ink,78,1.1,-1.96,scene,false);cylZ(0.9,0.7,M.steel,79.6,1.1,-2.6,14);box(0.8,0.6,0.6,M.stock,80.5,0.6,-2.6,scene,false);box(0.5,1.2,0.5,M.steel,79.6,2.4,-3.4,scene,false);}
     const stT=texC(128,512,(x,W,H)=>{x.fillStyle="#f3f2ef";x.fillRect(0,0,W,H);for(let k=0;k<900;k++){const v=Math.random()<0.5?190:255;x.fillStyle=`rgba(${v},${v},${v-6},0.25)`;x.fillRect(Math.random()*W,Math.random()*H,1.5,1.5);}
       for(let k=1;k<23;k++){const y=H-k*H/22.7;x.fillStyle="rgba(95,92,86,0.38)";x.fillRect(0,y,W,1.6);x.fillStyle="rgba(255,255,255,0.6)";x.fillRect(0,y+1.6,W,1);
         x.fillStyle="rgba(110,106,98,0.35)";for(let d=0;d<8;d++)x.fillRect(d*16+5+(k%2)*8,y+H/45,1.6,1.6);}
@@ -7391,7 +7430,13 @@ function no3D(){G3.ok=false;$("no3d").hidden=false;$("no3d-retry").onclick=()=>l
   const _fl=new THREE.Vector3(),_fu=new THREE.Vector3(0,1,0);
   function flange(p,q,r,m){_fl.set(q[0]-p[0],q[1]-p[1],q[2]-p[2]).normalize();const f=new THREE.Mesh(new CylG(r*1.55,r*1.55,0.14,16),m);
     f.position.set(p[0]+_fl.x*0.07,p[1]+_fl.y*0.07,p[2]+_fl.z*0.07);f.quaternion.setFromUnitVectors(_fu,_fl);scene.add(f);}
-  function spool(pts,r,m){pipe(pts,r,m);flange(pts[0],pts[1],r,M.steel);const n=pts.length;flange(pts[n-1],pts[n-2],r,M.steel);}
+  // v6.11 (item 7, pipe read): every line is coloured by what it carries (raw pulper stock brown, clean stock blue, white water and
+  // filtrate teal, fresh water pale blue, steam insulated silver) and long runs carry a white flow arrow pointing downstream
+  M.rawStock=M.rawStock||mat("pulp");M.ww=M.ww||mat("g-wire");M.arrow=M.arrow||mat("g-wall",{roughness:0.9});
+  const _fa=new THREE.Vector3();
+  function flowArrows(pts,r){for(let i=1;i<pts.length;i++){const a=pts[i-1],b=pts[i];_fa.set(b[0]-a[0],b[1]-a[1],b[2]-a[2]);const L=_fa.length();if(L<4)continue;_fa.normalize();
+    const o=new THREE.Mesh(new CylG(0,r*1.45,r*2.4,8),M.arrow);o.position.set((a[0]+b[0])/2,(a[1]+b[1])/2,(a[2]+b[2])/2);o.quaternion.setFromUnitVectors(_fu,_fa);scene.add(o);}}
+  function spool(pts,r,m){pipe(pts,r,m);flange(pts[0],pts[1],r,M.steel);const n=pts.length;flange(pts[n-1],pts[n-2],r,M.steel);if(m!==M.steel&&m!==M.metal)flowArrows(pts,r);}
   // ---- steam: elevated pipe rack from the power house to a header along the drive side of the dryers ----
   {const ins=new StdMat({color:lin0("#cfd4dc"),metalness:0.55,roughness:0.35}),Y=10.6,ZH=4.9,ZC=4.25;
     const S1=[[70,8,-7],[68.6,8,-7],[68.6,Y,-7],[68.6,Y,-0.35],[46,Y,-0.35],[46,Y+2.6,-0.35],[42,Y+2.6,-0.35],[42,Y,-0.35],[27.3,Y,-0.35],[27.3,Y,ZH],[-4.5,Y,ZH]];
@@ -7491,10 +7536,10 @@ function no3D(){G3.ok=false;$("no3d").hidden=false;$("no3d-retry").onclick=()=>l
     const cap=new THREE.Mesh(new CylG(0.5,0.78,0.3,20),M.metal);cap.position.y=6.45;hc.add(cap);
     box(0.45,0.45,0.45,M.warn,0,1.65,0,hc,false);const jp=new THREE.Mesh(new CylG(0.13,0.13,0.9,10),M.metal);jp.position.y=1.0;hc.add(jp);box(0.45,0.45,0.45,M.warn,0,0.75,0,hc,false);
     box(1.3,0.6,1.0,M.ink,0,0.3,1.0,hc);[[-0.8,-0.8],[0.8,-0.8],[-0.8,0.8],[0.8,0.8]].forEach(([a,b])=>box(0.14,4.9,0.14,M.steel,a,2.45,b,hc,false));box(1.9,0.12,1.9,M.steel,0,4.9,0,hc,false);}
-  spool([[20.2,1,-11.5],[25.0,1,-11.5],[25.0,5.9,-11.5],[25.4,5.9,-11.5]],0.26,M.stock);
+  spool([[20.2,1,-11.5],[25.0,1,-11.5],[25.0,5.9,-11.5],[25.4,5.9,-11.5]],0.26,M.rawStock);
   fieldPump(22.2,1,-11.5,-Math.PI/2);
   // HD accepts: up onto a pipe rack, south past the pulper, west along the rack and down into the lightweight cleaners
-  spool([[25.8,6.6,-10.6],[25.8,7.6,-10.6],[25.8,7.6,-19.9],[11.2,7.6,-19.9],[11.2,7.6,ZL],[11.2,4.1,ZL]],0.24,M.stock);
+  spool([[25.8,6.6,-10.6],[25.8,7.6,-10.6],[25.8,7.6,-19.9],[11.2,7.6,-19.9],[11.2,7.6,ZL],[11.2,4.1,ZL]],0.24,M.rawStock);
   [[25.8,-15.4],[25.8,-19.9],[20,-19.9],[14.4,-19.9]].forEach(([x,z])=>post(x,z,7.35));
   // pressure screen: housing, basket band, motor on top, inlet stub on the west side, accepts stub on the east
   function screen(x,z,h,band){const g=new THREE.Group();g.position.set(x,0,z);scene.add(g);blob(x,z,1.4);
@@ -7515,8 +7560,8 @@ function no3D(){G3.ok=false;$("no3d").hidden=false;$("no3d-retry").onclick=()=>l
   screen(19.2,ZL-1.0,2.6,M.ok);screen(19.2,ZL+1.0,2.6,M.ok);           // fine screens (slotted baskets)
   box(1.2,0.8,1.0,M.bad,15.2,0.4,ZL-1.9);box(1.0,0.7,0.9,M.bad,19.2,0.35,ZL-2.5);
   // grade-level connections on one elevation, west inlet / east outlet
-  spool([[12.4,1.2,ZL],[14.45,1.2,ZL]],0.22,M.stock);
-  spool([[15.95,1.2,ZL],[17.6,1.2,ZL],[17.6,1.2,ZL-1.0],[18.45,1.2,ZL-1.0]],0.2,M.stock);spool([[17.6,1.2,ZL],[17.6,1.2,ZL+1.0],[18.45,1.2,ZL+1.0]],0.2,M.stock);
+  spool([[12.4,1.2,ZL],[14.45,1.2,ZL]],0.22,M.rawStock);
+  spool([[15.95,1.2,ZL],[17.6,1.2,ZL],[17.6,1.2,ZL-1.0],[18.45,1.2,ZL-1.0]],0.2,M.rawStock);spool([[17.6,1.2,ZL],[17.6,1.2,ZL+1.0],[18.45,1.2,ZL+1.0]],0.2,M.rawStock);
   spool([[19.95,1.2,ZL-1.0],[20.8,1.2,ZL-1.0],[20.8,1.2,ZL+1.0],[19.95,1.2,ZL+1.0]],0.2,M.stock);
   spool([[20.8,1.2,ZL],[22.4,1.2,ZL]],0.22,M.stock);fieldPump(21.7,1.2,ZL,0);
   // LC cleaner bank: rack, inlet / accepts / reject headers, two rows of inverted cones (second row comes with the Screens & cleaners upgrade)
@@ -7640,8 +7685,8 @@ function no3D(){G3.ok=false;$("no3d").hidden=false;$("no3d-retry").onclick=()=>l
       const sp=sealSpill[i],k=SPD.spill[i];sp.visible=k>0.02;sp.scale.set(0.8+2.6*k,0.8+2.2*k,1);sp.material.color.copy(w.material.color);
       if(l>=1&&rdt>0&&Math.random()<rdt*12){const a=Math.random()*6.28;emit("drop",26.4+Math.cos(a)*1.5,2.8,(i?-13.9:-17.6)+Math.sin(a)*1.5,Math.cos(a)*1.2,0.5,Math.sin(a)*1.2,0.7,0.26,"#"+w.material.color.clone().convertLinearToSRGB().getHexString(),0.9);}});
     if(G3.spiderWheel)G3.spiderWheel.rotation.x=SPD.v*12;};
-  spool([[31.0,PH+2.35,-15.3],[26.4,PH+2.35,-15.3],[26.4,PH+2.35,-17.6],[26.4,3.0,-17.6]],0.16,M.metal);
-  spool([[31.0,PH+2.85,-14.7],[26.4,PH+2.85,-14.7],[26.4,PH+2.85,-13.9],[26.4,3.0,-13.9]],0.16,M.steel);
+  spool([[31.0,PH+2.35,-15.3],[26.4,PH+2.35,-15.3],[26.4,PH+2.35,-17.6],[26.4,3.0,-17.6]],0.16,M.ww);
+  spool([[31.0,PH+2.85,-14.7],[26.4,PH+2.85,-14.7],[26.4,PH+2.85,-13.9],[26.4,3.0,-13.9]],0.16,M.ww);
   // thickened stock drops straight from the repulper hopper into the chest below
   spool([[38.4,PH-0.6,-11.45],[38.4,PH-1.3,-11.45],[36.2,PH-1.3,-13.2],[36.2,10.4,-13.2]],0.28,M.stock);
   fieldPump(45,1,-11,-Math.PI/2);
@@ -7673,7 +7718,7 @@ function no3D(){G3.ok=false;$("no3d").hidden=false;$("no3d-retry").onclick=()=>l
      const t=new THREE.CanvasTexture(c);t.colorSpace=THREE.SRGBColorSpace;const pl=new THREE.Mesh(new THREE.PlaneGeometry(1.8,0.34),new THREE.MeshBasicMaterial({map:t}));pl.position.set(50.4,0.6,-8.08);scene.add(pl);}
     // machine chest outlet to the fan pump suction; base ply white water from the silo joins it
     spool([[46.6,0.8,-13.0],[46.6,2.35,-13.0],[46.6,2.35,-9.3],[46.6,1.65,-9.3],[47.0,1.65,-9.3]],0.32,M.stock);   // runs above head height so the yard stays open
-    spool([[46.0,0.15,3.0],[46.0,5.6,3.0],[46.0,5.6,-8.4],[46.0,1.65,-8.4],[46.0,1.65,-9.3],[46.4,1.65,-9.3]],0.28,M.stock);
+    spool([[46.0,0.15,3.0],[46.0,5.6,3.0],[46.0,5.6,-8.4],[46.0,1.65,-8.4],[46.0,1.65,-9.3],[46.4,1.65,-9.3]],0.28,M.ww);
     // fan pump discharge: up, over the hall's back wall and into the headbox
     spool([[47.6,3.2,-9.3],[47.6,7.6,-9.3],[47.6,7.6,3.6],[60.75,7.6,3.6],[60.75,7.6,5.85],[60.75,1.9,5.85]],0.34,M.stock);}   // into the top of the tapered header, drive-side end
 
@@ -7684,29 +7729,101 @@ function no3D(){G3.ok=false;$("no3d").hidden=false;$("no3d-retry").onclick=()=>l
   // a row of slice actuators on the nozzle, stiffener ribs, side plates, and the L/B gauge on the tending side
   const HB=G3.HB={lipX:55.0,lipY:3.1};
   {const hbM=mat(M.steel.userData.token,{roughness:0.42,metalness:0.3,flatShading:true}),hbD=mat(M.ink.userData.token,{roughness:0.5,metalness:0.25,flatShading:true}),hbS=mat(M.metal.userData.token,{roughness:0.38,metalness:0.4,flatShading:true});
-    const prof=[[60.0,0.6],[60.0,3.3],[59.55,3.78],[57.3,3.78],[55.45,3.24],[55.12,3.14],[55.12,2.99],[55.35,2.97],[56.15,2.55],[56.6,1.5],[56.6,0.6]];
     const mk=(pts,depth,m,z0)=>{const sh=new THREE.Shape();pts.forEach(([x,y],i)=>i?sh.lineTo(x,y):sh.moveTo(x,y));const g=new THREE.ExtrudeGeometry(sh,{depth,bevelEnabled:false});
       const o=new THREE.Mesh(g,m);o.position.z=z0;o.castShadow=o.receiveShadow=true;scene.add(o);return o;};
-    const body=mk(prof,CD,hbM,zc-CD/2);edges(body,undefined,20);
-    // side plates, proud of the body, dark
-    [zc-CD/2-0.09,zc+CD/2].forEach(z=>{const sp=mk(prof.map(([x,y])=>[x+(x>58?0.05:x<55.5?0.04:0),y+(y>3.5?0.05:0)]),0.09,hbS,z);edges(sp,undefined,20);});
-    // stiffener ribs down the back wall and across the top deck
-    for(let k=0;k<7;k++){const z=zc-CD/2+0.45+k*(CD-0.9)/6;box(0.14,2.7,0.12,hbD,60.07,1.95,z,scene,false);box(2.1,0.12,0.12,hbD,58.4,3.84,z,scene,false);}
-    // brand stripe on the top edge, walkway grating and handrail on the deck
-    box(0.16,0.1,CD+0.2,M.brand,59.62,3.76,zc,scene,false);box(0.16,0.1,CD+0.2,M.brand,57.3,3.8,zc,scene,false);
-    [zc-CD/2-0.05,zc+CD/2+0.05].forEach(z=>{[57.6,58.6,59.5].forEach(x=>box(0.06,0.9,0.06,M.warn,x,4.27,z,scene,false));box(2.0,0.06,0.06,M.warn,58.55,4.7,z,scene,false);});
-    // tapered manifold header behind the headbox (inlet on the drive side), with its recirculation outlet on the tending side
-    {const tg=new CylG(0.36,0.68,CD+0.6,18);tg.rotateX(Math.PI/2);const t=new THREE.Mesh(tg,hbM);t.position.set(60.75,1.35,zc);t.castShadow=true;scene.add(t);edges(t,undefined,30);
-     cylZ(0.5,0.25,hbD,60.75,1.35,zc-CD/2-0.42,18);cylZ(0.28,0.6,hbD,60.75,1.35,zc+CD/2+0.55,14);for(let k=0;k<5;k++)box(0.5,0.12,0.12,hbD,60.3,1.35,zc-CD/2+0.7+k*(CD-1.4)/4,scene,false);}
-    // slice actuators: a row of small boxes with motors along the nozzle just behind the lip
-    const ang=Math.atan2(3.78-3.24,57.3-55.45);
-    for(let k=0;k<12;k++){const z=zc-CD/2+0.35+k*(CD-0.7)/11,a=box(0.28,0.3,0.3,hbD,56.05,3.58,z,scene,false);a.rotation.z=ang;const m2=new THREE.Mesh(new CylG(0.09,0.09,0.28,8),M.metal);m2.position.set(56.15,3.85,z);scene.add(m2);}
-    box(0.08,0.08,CD,M.metal,56.05,3.78,zc,scene,false);
-    // the slice lip itself: a bright steel bar that moves with the vertical and horizontal slice settings
-    HB.lip=box(0.42,0.1,CD+0.04,M.metal,55.33,3.13,zc,scene,false);
+    // v6.11 Blender redesign (tools/blender/hb_new.py): a stand with jacking pads, a tapered inlet header (drive-side inlet,
+    // tending-side recirculation), the tube bank, bolted side plates, slice beam and actuators, the apron, a deck with a ladder
+    // and a ladder. Same footprint; HB.lip is still the moving slice lip.
+    const ZD=zc-CD/2,ZT=zc+CD/2;
+    box(4,0.12,0.7,hbD,58,0.06,5.55,scene,false);
+    box(0.45,0.85,0.45,hbM,56.5,0.55,5.55,scene,false);
+    box(0.45,0.85,0.45,hbM,59.5,0.55,5.55,scene,false);
+    box(3.9,0.3,0.55,hbM,58,1.05,5.55,scene,false);
+    box(0.6,0.12,0.6,hbS,56.5,1.26,5.55,scene,false);
+    box(0.6,0.12,0.6,hbS,59.5,1.26,5.55,scene,false);
+    box(4,0.12,0.7,hbD,58,0.06,12.65,scene,false);
+    box(0.45,0.85,0.45,hbM,56.5,0.55,12.65,scene,false);
+    box(0.45,0.85,0.45,hbM,59.5,0.55,12.65,scene,false);
+    box(3.9,0.3,0.55,hbM,58,1.05,12.65,scene,false);
+    box(0.6,0.12,0.6,hbS,56.5,1.26,12.65,scene,false);
+    box(0.6,0.12,0.6,hbS,59.5,1.26,12.65,scene,false);
+    box(0.5,0.35,7.6,hbM,56.5,1.05,9.1,scene,false);
+    box(0.5,0.35,7.6,hbM,59.5,1.05,9.1,scene,false);
+    {const o=mk([[59.6, 1.2], [59.6, 3.35], [59.25, 3.7], [57.5, 3.7], [55.55, 3.22], [55.15, 3.12], [55.15, 2.98], [55.45, 2.95], [56.35, 2.45], [56.75, 1.2]],6.4,hbM,5.9);edges(o,undefined,20);}
+    {const o=mk([[59.660000000000004, 1.15], [59.660000000000004, 3.35], [59.31, 3.7600000000000002], [57.5, 3.7600000000000002], [55.529999999999994, 3.22], [55.129999999999995, 3.12], [55.129999999999995, 2.98], [55.43, 2.95], [56.35, 2.45], [56.75, 1.15]],0.14,hbD,5.76);edges(o,undefined,20);}
+    {const o=mk([[59.660000000000004, 1.15], [59.660000000000004, 3.35], [59.31, 3.7600000000000002], [57.5, 3.7600000000000002], [55.529999999999994, 3.22], [55.129999999999995, 3.12], [55.129999999999995, 2.98], [55.43, 2.95], [56.35, 2.45], [56.75, 1.15]],0.14,hbD,12.3);edges(o,undefined,20);}
+    cylZ(0.05,0.04,hbS,59.2,3.44,12.46,6);
+    cylZ(0.05,0.04,hbS,58.633,3.37,12.46,6);
+    cylZ(0.05,0.04,hbS,58.067,3.3,12.46,6);
+    cylZ(0.05,0.04,hbS,57.5,3.23,12.46,6);
+    cylZ(0.05,0.04,hbS,56.933,3.16,12.46,6);
+    cylZ(0.05,0.04,hbS,56.367,3.09,12.46,6);
+    cylZ(0.05,0.04,hbS,55.8,3.02,12.46,6);
+    box(0.5,2.1,6.2,hbS,59.85,2.25,9.1,scene,false);
+    box(0.58,0.1,6.3,hbD,59.85,1.35,9.1,scene,false);
+    box(0.58,0.1,6.3,hbD,59.85,2.25,9.1,scene,false);
+    box(0.58,0.1,6.3,hbD,59.85,3.15,9.1,scene,false);
+    {const g=new CylG(0.38,0.75,6.8,14);g.rotateX(Math.PI/2);const o=new THREE.Mesh(g,hbM);o.position.set(60.75,1.75,9.1);o.castShadow=true;scene.add(o);edges(o,undefined,30);}
+    cylZ(0.95,0.18,hbD,60.75,1.75,5.58,14);
+    cylZ(0.48,0.14,hbD,60.75,1.75,12.78,12);
+    spool([[60.75,1.75,12.8],[60.75,1.75,13.4],[60.75,0.4,13.4]],0.26,M.stock);
+    {const g=new CylG(0.28,0.28,0.06,10);g.rotateZ(-Math.PI/2);const o=new THREE.Mesh(g,M.warn);o.position.set(61.05,1.75,13.4);o.castShadow=true;scene.add(o);}
+    box(0.7,0.55,0.3,hbM,60.6,0.95,6.5,scene,false);
+    box(0.7,0.55,0.3,hbM,60.6,0.95,9.1,scene,false);
+    box(0.7,0.55,0.3,hbM,60.6,0.95,11.7,scene,false);
+    {const o=box(2,0.28,6.5,hbS,56.55,3.6,9.1,scene,false);o.rotation.set(0,0,0.241);};
+    {const o=box(0.34,0.5,0.34,hbD,56.25,3.95,6.35,scene,false);o.rotation.set(0,0,0.241);};
+    {const g=new CylG(0.12,0.12,0.35,8);const o=new THREE.Mesh(g,hbS);o.position.set(56.3,4.35,6.35);o.castShadow=true;scene.add(o);}
+    {const o=box(0.34,0.5,0.34,hbD,56.25,3.95,6.961,scene,false);o.rotation.set(0,0,0.241);};
+    {const g=new CylG(0.12,0.12,0.35,8);const o=new THREE.Mesh(g,hbS);o.position.set(56.3,4.35,6.961);o.castShadow=true;scene.add(o);}
+    {const o=box(0.34,0.5,0.34,hbD,56.25,3.95,7.572,scene,false);o.rotation.set(0,0,0.241);};
+    {const g=new CylG(0.12,0.12,0.35,8);const o=new THREE.Mesh(g,hbS);o.position.set(56.3,4.35,7.572);o.castShadow=true;scene.add(o);}
+    {const o=box(0.34,0.5,0.34,hbD,56.25,3.95,8.183,scene,false);o.rotation.set(0,0,0.241);};
+    {const g=new CylG(0.12,0.12,0.35,8);const o=new THREE.Mesh(g,hbS);o.position.set(56.3,4.35,8.183);o.castShadow=true;scene.add(o);}
+    {const o=box(0.34,0.5,0.34,hbD,56.25,3.95,8.794,scene,false);o.rotation.set(0,0,0.241);};
+    {const g=new CylG(0.12,0.12,0.35,8);const o=new THREE.Mesh(g,hbS);o.position.set(56.3,4.35,8.794);o.castShadow=true;scene.add(o);}
+    {const o=box(0.34,0.5,0.34,hbD,56.25,3.95,9.406,scene,false);o.rotation.set(0,0,0.241);};
+    {const g=new CylG(0.12,0.12,0.35,8);const o=new THREE.Mesh(g,hbS);o.position.set(56.3,4.35,9.406);o.castShadow=true;scene.add(o);}
+    {const o=box(0.34,0.5,0.34,hbD,56.25,3.95,10.017,scene,false);o.rotation.set(0,0,0.241);};
+    {const g=new CylG(0.12,0.12,0.35,8);const o=new THREE.Mesh(g,hbS);o.position.set(56.3,4.35,10.017);o.castShadow=true;scene.add(o);}
+    {const o=box(0.34,0.5,0.34,hbD,56.25,3.95,10.628,scene,false);o.rotation.set(0,0,0.241);};
+    {const g=new CylG(0.12,0.12,0.35,8);const o=new THREE.Mesh(g,hbS);o.position.set(56.3,4.35,10.628);o.castShadow=true;scene.add(o);}
+    {const o=box(0.34,0.5,0.34,hbD,56.25,3.95,11.239,scene,false);o.rotation.set(0,0,0.241);};
+    {const g=new CylG(0.12,0.12,0.35,8);const o=new THREE.Mesh(g,hbS);o.position.set(56.3,4.35,11.239);o.castShadow=true;scene.add(o);}
+    {const o=box(0.34,0.5,0.34,hbD,56.25,3.95,11.85,scene,false);o.rotation.set(0,0,0.241);};
+    {const g=new CylG(0.12,0.12,0.35,8);const o=new THREE.Mesh(g,hbS);o.position.set(56.3,4.35,11.85);o.castShadow=true;scene.add(o);}
+    box(0.08,0.08,6.4,M.warn,56.25,4.22,9.1,scene,false);
+    HB.lip=box(0.42,0.1,6.44,hbS,55.33,3.13,9.1,scene,false);
+    box(0.55,0.06,6.4,hbS,55.22,2.93,9.1,scene,false);
+    box(1.75,0.06,6.9,hbS,58.4,3.76,9.1,scene,false);
+    box(0.06,1,0.06,M.warn,57.6,4.29,5.7,scene,false);
+    box(0.06,1,0.06,M.warn,58.45,4.29,5.7,scene,false);
+    box(0.06,1,0.06,M.warn,59.3,4.29,5.7,scene,false);
+    box(1.8,0.06,0.06,M.warn,58.45,4.79,5.7,scene,false);
+    box(1.8,0.06,0.06,M.warn,58.45,4.29,5.7,scene,false);
+    box(1.8,0.14,0.04,M.warn,58.45,3.86,5.7,scene,false);
+    box(0.06,1,0.06,M.warn,57.6,4.29,12.5,scene,false);
+    box(0.06,1,0.06,M.warn,58.45,4.29,12.5,scene,false);
+    box(0.06,1,0.06,M.warn,59.3,4.29,12.5,scene,false);
+    box(1.8,0.06,0.06,M.warn,58.45,4.79,12.5,scene,false);
+    box(1.8,0.06,0.06,M.warn,58.45,4.29,12.5,scene,false);
+    box(1.8,0.14,0.04,M.warn,58.45,3.86,12.5,scene,false);
+    box(0.06,3.9,0.06,M.warn,59.55,1.95,13.05,scene,false);
+    box(0.06,3.9,0.06,M.warn,60.05,1.95,13.05,scene,false);
+    box(0.5,0.04,0.05,M.warn,59.8,0.4,13.05,scene,false);
+    box(0.5,0.04,0.05,M.warn,59.8,0.82,13.05,scene,false);
+    box(0.5,0.04,0.05,M.warn,59.8,1.24,13.05,scene,false);
+    box(0.5,0.04,0.05,M.warn,59.8,1.66,13.05,scene,false);
+    box(0.5,0.04,0.05,M.warn,59.8,2.08,13.05,scene,false);
+    box(0.5,0.04,0.05,M.warn,59.8,2.5,13.05,scene,false);
+    box(0.5,0.04,0.05,M.warn,59.8,2.92,13.05,scene,false);
+    box(0.5,0.04,0.05,M.warn,59.8,3.34,13.05,scene,false);
+    box(0.5,0.04,0.05,M.warn,59.8,3.76,13.05,scene,false);
+    box(0.16,0.1,6.6,M.brand,59.45,3.66,9.1,scene,false);
+    box(0.7,0.5,0.04,hbD,58.75,2.3,12.46,scene,false);
     // L/B gauge on the tending side: chart paper behind a red pointer, in a dark frame
     const gc=document.createElement("canvas");gc.width=256;gc.height=192;HB.gc=gc;const gt=new THREE.CanvasTexture(gc);gt.colorSpace=THREE.SRGBColorSpace;HB.gt=gt;
-    const GZ=zc+CD/2+0.09;const fr=box(1.1,0.84,0.08,hbD,57.15,2.95,GZ+0.04,scene,false);
+    const GZ=zc+CD/2+0.14;const fr=box(1.1,0.84,0.08,hbD,57.15,2.95,GZ+0.04,scene,false);
     const pl=new THREE.Mesh(new THREE.PlaneGeometry(1.0,0.75),new THREE.MeshBasicMaterial({map:gt,toneMapped:false}));pl.position.set(57.15,2.95,GZ+0.085);scene.add(pl);
     G3.sliceHit=[pl,fr];}
   box(14,0.25,CD,M.steel,47.8,2.4,zc);                                     // forming table
@@ -7740,7 +7857,111 @@ function no3D(){G3.ok=false;$("no3d").hidden=false;$("no3d-retry").onclick=()=>l
   // tandem bottom felt: picks the sheet up off the wire and carries it through both nips
   feltMeshes.push(feltLoop([[41.2,2.95],[38,3.32],[30.6,3.32],[29.6,2.4],[29.6,0.55],[40.6,0.55],[41.6,1.7]]));[[29.6,2.4],[29.6,0.55],[40.6,0.55],[41.6,1.7]].forEach(p=>guide(...p));
   // press frames make the section stand out
-  [zc-CD/2-0.55,zc+CD/2+0.55].forEach(z=>{box(1.1,6.2,0.5,M.steel,37,3.1,z);box(1.3,6.6,0.5,M.steel,32,3.3,z);box(6.5,0.5,0.5,M.steel,34.5,7.9,z);});
+  // v6.11 Blender redesign (tools/blender/press_new.py): press stands with bearing housings and top-loading cylinders, a felt-run
+  // girder each side carrying the upper guide-roll bearings, pedestals under the lower guide rolls, sole plates, Uhle boxes,
+  // felt showers and a hydraulic power unit
+  {box(13.6,0.16,0.9,M.ink,35,0.08,5.35,scene,false);
+   box(0.34,8.35,0.42,M.steel,35.7,4.175,5.35,scene,false);
+   box(0.34,8.35,0.42,M.steel,38.3,4.175,5.35,scene,false);
+   box(3.05,0.45,0.55,M.steel,37,1.25,5.35,scene,false);
+   box(0.78,0.78,0.55,M.ink,37,2.35,5.35,scene,false);
+   box(0.78,0.78,0.55,M.ink,37,4.45,5.35,scene,false);
+   {const g=new CylG(0.22,0.22,3.15,10);const o=new THREE.Mesh(g,M.metal);o.position.set(37,6.675,5.35);o.castShadow=true;scene.add(o);}
+   {const g=new CylG(0.09,0.09,0.45,8);const o=new THREE.Mesh(g,M.warn);o.position.set(37,5.15,5.35);o.castShadow=true;scene.add(o);}
+   box(0.7,0.18,0.7,M.steel,37,8.1,5.35,scene,false);
+   cylZ(0.32,0.08,M.metal,37,2.35,5,12);
+   cylZ(0.32,0.08,M.metal,37,4.45,5,12);
+   box(0.34,8.35,0.42,M.steel,30.55,4.175,5.35,scene,false);
+   box(0.34,8.35,0.42,M.steel,33.45,4.175,5.35,scene,false);
+   box(3.35,0.45,0.55,M.steel,32,0.95,5.35,scene,false);
+   box(0.78,0.78,0.55,M.ink,32,2.2,5.35,scene,false);
+   box(0.78,0.78,0.55,M.ink,32,4.6,5.35,scene,false);
+   {const g=new CylG(0.22,0.22,3,10);const o=new THREE.Mesh(g,M.metal);o.position.set(32,6.75,5.35);o.castShadow=true;scene.add(o);}
+   {const g=new CylG(0.09,0.09,0.45,8);const o=new THREE.Mesh(g,M.warn);o.position.set(32,5.3,5.35);o.castShadow=true;scene.add(o);}
+   box(0.7,0.18,0.7,M.steel,32,8.1,5.35,scene,false);
+   cylZ(0.32,0.08,M.metal,32,2.2,5,12);
+   cylZ(0.32,0.08,M.metal,32,4.6,5,12);
+   box(12.6,0.4,0.42,M.steel,34.9,8.35,5.35,scene,false);
+   box(0.36,0.5,0.36,M.steel,30,7.83,5.35,scene,false);
+   box(0.36,0.5,0.36,M.steel,35,7.83,5.35,scene,false);
+   box(0.36,0.5,0.36,M.steel,39.8,7.83,5.35,scene,false);
+   box(0.5,0.5,0.4,M.ink,39.4,5.6,5.35,scene,false);
+   box(0.18,2.5,0.18,M.metal,39.4,6.975,5.35,scene,false);
+   box(0.5,0.5,0.4,M.ink,39.2,7.1,5.35,scene,false);
+   box(0.18,1,0.18,M.metal,39.2,7.725,5.35,scene,false);
+   box(0.5,0.5,0.4,M.ink,35.2,7.1,5.35,scene,false);
+   box(0.18,1,0.18,M.metal,35.2,7.725,5.35,scene,false);
+   box(0.5,0.5,0.4,M.ink,34.9,5.6,5.35,scene,false);
+   box(0.18,2.5,0.18,M.metal,34.9,6.975,5.35,scene,false);
+   box(0.5,0.5,0.4,M.ink,34.2,6.1,5.35,scene,false);
+   box(0.18,2,0.18,M.metal,34.2,7.225,5.35,scene,false);
+   box(0.5,0.5,0.4,M.ink,33.8,7.6,5.35,scene,false);
+   box(0.18,0.5,0.18,M.metal,33.8,7.975,5.35,scene,false);
+   box(0.5,0.5,0.4,M.ink,30.3,7.6,5.35,scene,false);
+   box(0.18,0.5,0.18,M.metal,30.3,7.975,5.35,scene,false);
+   box(0.5,0.5,0.4,M.ink,29.8,6.1,5.35,scene,false);
+   box(0.18,2,0.18,M.metal,29.8,7.225,5.35,scene,false);
+   box(0.5,0.5,0.4,M.ink,29.6,2.4,5.35,scene,false);
+   box(0.4,2.2,0.4,M.steel,29.6,1.1,5.35,scene,false);
+   box(0.5,0.5,0.4,M.ink,29.6,0.55,5.35,scene,false);
+   box(0.5,0.5,0.4,M.ink,40.6,0.55,5.35,scene,false);
+   box(0.5,0.5,0.4,M.ink,41.6,1.7,5.35,scene,false);
+   box(0.4,1.5,0.4,M.steel,41.6,0.75,5.35,scene,false);
+   box(13.6,0.16,0.9,M.ink,35,0.08,12.85,scene,false);
+   box(0.34,8.35,0.42,M.steel,35.7,4.175,12.85,scene,false);
+   box(0.34,8.35,0.42,M.steel,38.3,4.175,12.85,scene,false);
+   box(3.05,0.45,0.55,M.steel,37,1.25,12.85,scene,false);
+   box(0.78,0.78,0.55,M.ink,37,2.35,12.85,scene,false);
+   box(0.78,0.78,0.55,M.ink,37,4.45,12.85,scene,false);
+   {const g=new CylG(0.22,0.22,3.15,10);const o=new THREE.Mesh(g,M.metal);o.position.set(37,6.675,12.85);o.castShadow=true;scene.add(o);}
+   {const g=new CylG(0.09,0.09,0.45,8);const o=new THREE.Mesh(g,M.warn);o.position.set(37,5.15,12.85);o.castShadow=true;scene.add(o);}
+   box(0.7,0.18,0.7,M.steel,37,8.1,12.85,scene,false);
+   cylZ(0.32,0.08,M.metal,37,2.35,13.2,12);
+   cylZ(0.32,0.08,M.metal,37,4.45,13.2,12);
+   box(0.34,8.35,0.42,M.steel,30.55,4.175,12.85,scene,false);
+   box(0.34,8.35,0.42,M.steel,33.45,4.175,12.85,scene,false);
+   box(3.35,0.45,0.55,M.steel,32,0.95,12.85,scene,false);
+   box(0.78,0.78,0.55,M.ink,32,2.2,12.85,scene,false);
+   box(0.78,0.78,0.55,M.ink,32,4.6,12.85,scene,false);
+   {const g=new CylG(0.22,0.22,3,10);const o=new THREE.Mesh(g,M.metal);o.position.set(32,6.75,12.85);o.castShadow=true;scene.add(o);}
+   {const g=new CylG(0.09,0.09,0.45,8);const o=new THREE.Mesh(g,M.warn);o.position.set(32,5.3,12.85);o.castShadow=true;scene.add(o);}
+   box(0.7,0.18,0.7,M.steel,32,8.1,12.85,scene,false);
+   cylZ(0.32,0.08,M.metal,32,2.2,13.2,12);
+   cylZ(0.32,0.08,M.metal,32,4.6,13.2,12);
+   box(12.6,0.4,0.42,M.steel,34.9,8.35,12.85,scene,false);
+   box(0.36,0.5,0.36,M.steel,30,7.83,12.85,scene,false);
+   box(0.36,0.5,0.36,M.steel,35,7.83,12.85,scene,false);
+   box(0.36,0.5,0.36,M.steel,39.8,7.83,12.85,scene,false);
+   box(0.5,0.5,0.4,M.ink,39.4,5.6,12.85,scene,false);
+   box(0.18,2.5,0.18,M.metal,39.4,6.975,12.85,scene,false);
+   box(0.5,0.5,0.4,M.ink,39.2,7.1,12.85,scene,false);
+   box(0.18,1,0.18,M.metal,39.2,7.725,12.85,scene,false);
+   box(0.5,0.5,0.4,M.ink,35.2,7.1,12.85,scene,false);
+   box(0.18,1,0.18,M.metal,35.2,7.725,12.85,scene,false);
+   box(0.5,0.5,0.4,M.ink,34.9,5.6,12.85,scene,false);
+   box(0.18,2.5,0.18,M.metal,34.9,6.975,12.85,scene,false);
+   box(0.5,0.5,0.4,M.ink,34.2,6.1,12.85,scene,false);
+   box(0.18,2,0.18,M.metal,34.2,7.225,12.85,scene,false);
+   box(0.5,0.5,0.4,M.ink,33.8,7.6,12.85,scene,false);
+   box(0.18,0.5,0.18,M.metal,33.8,7.975,12.85,scene,false);
+   box(0.5,0.5,0.4,M.ink,30.3,7.6,12.85,scene,false);
+   box(0.18,0.5,0.18,M.metal,30.3,7.975,12.85,scene,false);
+   box(0.5,0.5,0.4,M.ink,29.8,6.1,12.85,scene,false);
+   box(0.18,2,0.18,M.metal,29.8,7.225,12.85,scene,false);
+   box(0.5,0.5,0.4,M.ink,29.6,2.4,12.85,scene,false);
+   box(0.4,2.2,0.4,M.steel,29.6,1.1,12.85,scene,false);
+   box(0.5,0.5,0.4,M.ink,29.6,0.55,12.85,scene,false);
+   box(0.5,0.5,0.4,M.ink,40.6,0.55,12.85,scene,false);
+   box(0.5,0.5,0.4,M.ink,41.6,1.7,12.85,scene,false);
+   box(0.4,1.5,0.4,M.steel,41.6,0.75,12.85,scene,false);
+   box(0.5,0.35,6.4,M.metal,37.2,6.82,9.1,scene,false);
+   box(0.5,0.35,6.4,M.metal,32,7.32,9.1,scene,false);
+   box(0.5,0.35,6.4,M.metal,35,0.3,9.1,scene,false);
+   cylZ(0.07,6.6,M.stock,38.6,7.5,9.1,8);
+   cylZ(0.07,6.6,M.stock,31.2,8,9.1,8);
+   cylZ(0.07,6.6,M.stock,34,0.95,9.1,8);
+   box(1.6,1,0.9,M.stock,34.5,0.5,4.05,scene,false);
+   box(1.4,0.06,0.7,M.ink,34.5,1.03,4.05,scene,false);}
   const shoeMat=M.stock;
   const cansTop=[],cansBot=[];
   // can ends sample one flat spot of the brushed texture (no streaks across the heads)
@@ -7757,10 +7978,93 @@ function no3D(){G3.ok=false;$("no3d").hidden=false;$("no3d-retry").onclick=()=>l
     return ()=>{if(!spin&&once)return;once=true;for(let i=0;i<all.length;i++){const o=all[i];o.updateMatrix();im.setMatrixAt(i,o.matrix);}im.instanceMatrix.needsUpdate=true;};})();
   // machine frame rails + dryer hood frame
   [zc-CD/2-0.6,zc+CD/2+0.6].forEach(z=>{box(74,0.5,0.4,M.steel,26,0.25,z);for(let x=-6;x<=30;x+=6)box(0.35,7.4,0.35,M.steel,x,3.7,z);box(37,0.35,0.35,M.steel,12,7.4,z);});
+  // v6.11 Blender redesign (tools/blender/hood_new.py): the dryer hood as a baked cutaway: full drive-side wall, the back part of
+  // the roof, stepped end walls and a low tending-side skirt with inked cut edges, so the cans stay in view; exhaust stacks and
+  // a supply-air duct on the roof (under the crossover bridge)
+  {box(34,8,0.14,M.metal,12,4,5.05,scene,false);
+   box(0.07,7.7,0.03,M.steel,-3,4,5.135,scene,false);
+   box(0.07,7.7,0.03,M.steel,-1,4,5.135,scene,false);
+   box(0.07,7.7,0.03,M.steel,1,4,5.135,scene,false);
+   box(0.07,7.7,0.03,M.steel,3,4,5.135,scene,false);
+   box(0.07,7.7,0.03,M.steel,5,4,5.135,scene,false);
+   box(0.07,7.7,0.03,M.steel,7,4,5.135,scene,false);
+   box(0.07,7.7,0.03,M.steel,9,4,5.135,scene,false);
+   box(0.07,7.7,0.03,M.steel,11,4,5.135,scene,false);
+   box(0.07,7.7,0.03,M.steel,13,4,5.135,scene,false);
+   box(0.07,7.7,0.03,M.steel,15,4,5.135,scene,false);
+   box(0.07,7.7,0.03,M.steel,17,4,5.135,scene,false);
+   box(0.07,7.7,0.03,M.steel,19,4,5.135,scene,false);
+   box(0.07,7.7,0.03,M.steel,21,4,5.135,scene,false);
+   box(0.07,7.7,0.03,M.steel,23,4,5.135,scene,false);
+   box(0.07,7.7,0.03,M.steel,25,4,5.135,scene,false);
+   box(0.07,7.7,0.03,M.steel,27,4,5.135,scene,false);
+   box(34,0.35,0.2,M.steel,12,0.175,5.05,scene,false);
+   box(34.2,0.18,3.69,M.metal,12,8.09,6.825,scene,false);
+   box(0.07,0.03,3.55,M.steel,-3,8.195,6.825,scene,false);
+   box(0.07,0.03,3.55,M.steel,-1,8.195,6.825,scene,false);
+   box(0.07,0.03,3.55,M.steel,1,8.195,6.825,scene,false);
+   box(0.07,0.03,3.55,M.steel,3,8.195,6.825,scene,false);
+   box(0.07,0.03,3.55,M.steel,5,8.195,6.825,scene,false);
+   box(0.07,0.03,3.55,M.steel,7,8.195,6.825,scene,false);
+   box(0.07,0.03,3.55,M.steel,9,8.195,6.825,scene,false);
+   box(0.07,0.03,3.55,M.steel,11,8.195,6.825,scene,false);
+   box(0.07,0.03,3.55,M.steel,13,8.195,6.825,scene,false);
+   box(0.07,0.03,3.55,M.steel,15,8.195,6.825,scene,false);
+   box(0.07,0.03,3.55,M.steel,17,8.195,6.825,scene,false);
+   box(0.07,0.03,3.55,M.steel,19,8.195,6.825,scene,false);
+   box(0.07,0.03,3.55,M.steel,21,8.195,6.825,scene,false);
+   box(0.07,0.03,3.55,M.steel,23,8.195,6.825,scene,false);
+   box(0.07,0.03,3.55,M.steel,25,8.195,6.825,scene,false);
+   box(0.07,0.03,3.55,M.steel,27,8.195,6.825,scene,false);
+   box(34.2,0.22,0.1,M.ink,12,8.09,8.62,scene,false);
+   box(0.14,8,3.55,M.metal,-5,4,6.825,scene,false);
+   box(0.14,3.6,3.95,M.metal,-5,1.8,10.575,scene,false);
+   box(0.18,0.1,3.95,M.ink,-5,3.6,10.575,scene,false);
+   box(0.18,4.4,0.1,M.ink,-5,5.8,8.6,scene,false);
+   box(0.14,8,3.55,M.metal,29,4,6.825,scene,false);
+   box(0.14,3.6,3.95,M.metal,29,1.8,10.575,scene,false);
+   box(0.18,0.1,3.95,M.ink,29,3.6,10.575,scene,false);
+   box(0.18,4.4,0.1,M.ink,29,5.8,8.6,scene,false);
+   box(0.16,0.5,6.6,M.ink,29.01,3.9,9.1,scene,false);
+   box(0.16,2.2,1.2,M.steel,-5.01,1.1,6.825,scene,false);
+   box(34,1.2,0.14,M.metal,12,0.6,12.55,scene,false);
+   box(34,0.1,0.18,M.ink,12,1.2,12.55,scene,false);
+   box(1.4,0.06,0.04,M.steel,1,1,12.64,scene,false);
+   box(1.4,0.06,0.04,M.steel,13,1,12.64,scene,false);
+   box(1.4,0.06,0.04,M.steel,25,1,12.64,scene,false);
+   {const g=new CylG(0.6,0.6,0.9,12);const o=new THREE.Mesh(g,M.metal);o.position.set(4,8.63,6.6);o.castShadow=true;scene.add(o);}
+   {const g=new CylG(0.7,0.7,0.12,12);const o=new THREE.Mesh(g,M.ink);o.position.set(4,9.1,6.6);o.castShadow=true;scene.add(o);}
+   {const g=new CylG(0.6,0.6,0.9,12);const o=new THREE.Mesh(g,M.metal);o.position.set(20,8.63,6.6);o.castShadow=true;scene.add(o);}
+   {const g=new CylG(0.7,0.7,0.12,12);const o=new THREE.Mesh(g,M.ink);o.position.set(20,9.1,6.6);o.castShadow=true;scene.add(o);}
+   box(10,0.42,0.8,M.steel,12,8.39,6,scene,false);
+   box(0.5,0.4,0.2,M.ok,10,5.6,5.22,scene,false);}
   // reel + stand, winder, roll conveyor
   const popeDrum=cylZ(DR,CD,M.metal,DX,DY,zc,32);for(let k=0;k<8;k++){const a=k/8*Math.PI*2;box(0.06,0.06,CD,M.steel,Math.cos(a)*DR,Math.sin(a)*DR,0,popeDrum,false);}
-  cylZ(0.2,CD+1.8,M.ink,DX,DY,zc,10);[zc-ZJ,zc+ZJ].forEach(z=>{box(0.7,DY+0.4,0.6,M.steel,DX,(DY+0.4)/2,z);
+  cylZ(0.2,CD+1.8,M.ink,DX,DY,zc,10);[zc-ZJ,zc+ZJ].forEach(z=>{
     box(DX-(KX-1.4),0.35,0.5,M.steel,(DX+KX-1.4)/2-0.3,DY-0.42,z);for(let x=DX-0.6;x>=KX-1;x-=3)box(0.4,DY-0.6,0.4,M.steel,x,(DY-0.6)/2,z);box(0.5,0.9,0.6,M.bad,KX-RM*0+(-0.95),DY+0.1,z);});
+  // v6.11 Blender redesign (tools/blender/reelwind_new.py): reel drum stands with base plates and bearings, capped rails, the
+  // drive-side drum motor and gearbox
+  {box(1.9,0.12,0.8,M.ink,-5.6,0.06,5.45,scene,false);
+   box(0.32,3.9,0.5,M.steel,-6.15,1.95,5.45,scene,false);
+   box(0.32,3.9,0.5,M.steel,-5.05,1.95,5.45,scene,false);
+   box(1.45,0.3,0.55,M.steel,-5.6,3.75,5.45,scene,false);
+   box(0.8,0.8,0.62,M.ink,-5.6,4.2,5.45,scene,false);
+   box(7.1,0.08,0.32,M.metal,-9.45,4,5.45,scene,false);
+   box(0.7,0.1,0.7,M.ink,-6.2,0.05,5.45,scene,false);
+   box(0.7,0.1,0.7,M.ink,-9.2,0.05,5.45,scene,false);
+   box(0.7,0.1,0.7,M.ink,-12.2,0.05,5.45,scene,false);
+   box(1.9,0.12,0.8,M.ink,-5.6,0.06,12.75,scene,false);
+   box(0.32,3.9,0.5,M.steel,-6.15,1.95,12.75,scene,false);
+   box(0.32,3.9,0.5,M.steel,-5.05,1.95,12.75,scene,false);
+   box(1.45,0.3,0.55,M.steel,-5.6,3.75,12.75,scene,false);
+   box(0.8,0.8,0.62,M.ink,-5.6,4.2,12.75,scene,false);
+   box(7.1,0.08,0.32,M.metal,-9.45,4,12.75,scene,false);
+   box(0.7,0.1,0.7,M.ink,-6.2,0.05,12.75,scene,false);
+   box(0.7,0.1,0.7,M.ink,-9.2,0.05,12.75,scene,false);
+   box(0.7,0.1,0.7,M.ink,-12.2,0.05,12.75,scene,false);
+   cylZ(0.48,1.1,M.stock,-5.6,4.2,4.5,14);
+   box(0.7,0.7,0.6,M.steel,-5.6,4.2,5.3,scene,false);
+   box(1,3.85,0.9,M.steel,-5.6,1.925,4.5,scene,false);}
   // one reel spool model: steel shell + long journals, paper scaled on as it builds
   function spoolModel(parent){const g=new THREE.Group();parent.add(g);const spin=new THREE.Group();g.add(spin);cylZ(R0,CD+0.4,M.steel,0,0,0,20,spin);cylZ(0.22,CD+2.2,M.ink,0,0,0,10,spin);
     const pg=new CylG(1,1,CD,40);pg.rotateX(Math.PI/2);const paper=new THREE.Mesh(pg,ROLLM);paper.castShadow=paper.receiveShadow=true;spin.add(paper);
@@ -7905,6 +8209,9 @@ function no3D(){G3.ok=false;$("no3d").hidden=false;$("no3d-retry").onclick=()=>l
     box(0.12,0.12,1.8,M.ink,-3.0,0.6,0,g,false);                                   // ICC bumper
     [-0.75,0.75].forEach(z=>{box(0.08,0.55,0.08,M.ink,0.2,0.48,z,g,false);box(0.25,0.06,0.25,M.ink,0.2,0.2,z,g,false);}); // landing gear
     [-2.95,-2.95].forEach((x,k)=>box(0.04,0.5,0.4,M.ink,-2.2,0.45,k?0.9:-0.9,g,false));   // mud flaps
+    // v6.11 Blender redesign (item 13, tools/blender/vehicles_new.py): trailer side skirts, red/white conspicuity tape, cab roof
+    // marker lights and a sun visor
+    box(1.8,0.42,0.04,M.steel,-0.95,0.56,-0.902,g,false);box(0.2,0.05,0.02,tailM,-2.85,0.98,-0.941,g,false);box(0.2,0.05,0.02,M.wall,-2.45,0.98,-0.941,g,false);box(0.2,0.05,0.02,tailM,-2.05,0.98,-0.941,g,false);box(0.2,0.05,0.02,M.wall,-1.65,0.98,-0.941,g,false);box(0.2,0.05,0.02,tailM,-1.25,0.98,-0.941,g,false);box(0.2,0.05,0.02,M.wall,-0.85,0.98,-0.941,g,false);box(0.2,0.05,0.02,tailM,-0.45,0.98,-0.941,g,false);box(0.2,0.05,0.02,M.wall,-0.05,0.98,-0.941,g,false);box(0.2,0.05,0.02,tailM,0.35,0.98,-0.941,g,false);box(0.2,0.05,0.02,M.wall,0.75,0.98,-0.941,g,false);box(1.8,0.42,0.04,M.steel,-0.95,0.56,0.902,g,false);box(0.2,0.05,0.02,tailM,-2.85,0.98,0.941,g,false);box(0.2,0.05,0.02,M.wall,-2.45,0.98,0.941,g,false);box(0.2,0.05,0.02,tailM,-2.05,0.98,0.941,g,false);box(0.2,0.05,0.02,M.wall,-1.65,0.98,0.941,g,false);box(0.2,0.05,0.02,tailM,-1.25,0.98,0.941,g,false);box(0.2,0.05,0.02,M.wall,-0.85,0.98,0.941,g,false);box(0.2,0.05,0.02,tailM,-0.45,0.98,0.941,g,false);box(0.2,0.05,0.02,M.wall,-0.05,0.98,0.941,g,false);box(0.2,0.05,0.02,tailM,0.35,0.98,0.941,g,false);box(0.2,0.05,0.02,M.wall,0.75,0.98,0.941,g,false);box(0.08,0.06,0.1,M.lane,2.82,2.36,-0.5,g,false);box(0.08,0.06,0.1,M.lane,2.82,2.36,0,g,false);box(0.08,0.06,0.1,M.lane,2.82,2.36,0.5,g,false);box(0.22,0.05,1.7,M.ink,2.92,2.26,0,g,false);
     }
     // wheels: steer, tandem drive, tandem trailer
     [2.35,1.25,0.6,-2.0,-2.75].forEach(x=>[-0.82,0.82].forEach(z=>{const w=new THREE.Mesh(wheelG,M.ink);w.position.set(x,0.4,z);g.add(w);
@@ -8054,7 +8361,10 @@ function no3D(){G3.ok=false;$("no3d").hidden=false;$("no3d-retry").onclick=()=>l
     // v4.1 pass 3: a driver (seat, hi-vis vest, head, hard hat) instead of a black block
     box(0.34,0.3,0.36,M.ink,-0.2,0.98,0,g,false);box(0.3,0.36,0.3,HIVIS.orange,-0.12,1.3,0,g,false).receiveShadow=false;   // (same flags as a walker's vest: one batch)
     const hd=new THREE.Mesh(DRV_HEAD,M.skin);hd.scale.setScalar(0.17);hd.position.set(-0.1,1.62,0);g.add(hd);const ht=new THREE.Mesh(DRV_HAT,M.warn);ht.scale.set(0.21,0.17,0.21);ht.position.set(-0.1,1.66,0);g.add(ht);
-    const bc=new THREE.Mesh(DRV_HEAD,M.beacon);bc.scale.setScalar(0.07);bc.position.set(-0.07,1.98,0.3);g.add(bc);[[-0.35,-0.42],[-0.35,0.42],[0.35,-0.42],[0.35,0.42]].forEach(([x,z])=>cylZ(0.2,0.16,M.ink,x,0.2,z,12,g));}
+    const bc=new THREE.Mesh(DRV_HEAD,M.beacon);bc.scale.setScalar(0.07);bc.position.set(-0.07,1.98,0.3);g.add(bc);[[-0.35,-0.42],[-0.35,0.42]].forEach(([x,z])=>cylZ(0.2,0.16,M.ink,x,0.2,z,12,g));
+    // v6.11 Blender redesign (item 13, tools/blender/vehicles_new.py): a rounded counterweight with the LPG bottle across it,
+    // bigger front drive wheels, mast cross-heads and the lift cylinder, steps, the front guard screen
+    cylZ(0.3,0.86,M.ink,-0.62,0.62,0,14,g);cylZ(0.17,0.62,M.wall,-0.74,1.1,0,12,g);{const cg=new CylG(0.05,0.05,0.12,6);const o=new THREE.Mesh(cg,M.ink);o.position.set(-0.74,1.3,0.2);o.castShadow=true;g.add(o);}box(0.36,0.05,0.06,M.steel,-0.74,0.95,-0.25,g,false);box(0.36,0.05,0.06,M.steel,-0.74,0.95,0.25,g,false);cylZ(0.28,0.2,M.ink,0.35,0.28,-0.45,14,g);cylZ(0.13,0.22,M.steel,0.35,0.28,-0.464,8,g);cylZ(0.28,0.2,M.ink,0.35,0.28,0.45,14,g);cylZ(0.13,0.22,M.steel,0.35,0.28,0.464,8,g);box(0.08,0.08,0.64,M.ink,0.66,0.55,0,g,false);box(0.08,0.08,0.64,M.ink,0.66,1.35,0,g,false);box(0.08,0.08,0.64,M.ink,0.66,1.85,0,g,false);box(0.1,1.2,0.1,M.steel,0.6,0.95,0,g,false);box(0.3,0.05,0.14,M.steel,-0.05,0.34,-0.46,g,false);box(0.3,0.05,0.14,M.steel,-0.05,0.34,0.46,g,false);box(0.04,0.5,0.5,M.wind,0.29,1.62,0,g,false);}
   function forklift(m){const g=new THREE.Group();box(1.15,0.62,0.85,M.fork,0,0.55,0,g);box(0.3,0.55,0.82,M.ink,-0.62,0.62,0,g);cage(g);
     box(0.08,1.8,0.08,M.ink,0.66,1.0,-0.28,g,false);box(0.08,1.8,0.08,M.ink,0.66,1.0,0.28,g,false);box(0.75,0.06,0.12,M.ink,1.02,0.22,-0.2,g,false);box(0.75,0.06,0.12,M.ink,1.02,0.22,0.2,g,false);
     const load=box(0.72,0.62,0.72,M.bale,1.02,0.58,0,g);g.userData.load=load;scene.add(g);return cutMark(g,"lift");}
@@ -9241,7 +9551,7 @@ function no3D(){G3.ok=false;$("no3d").hidden=false;$("no3d-retry").onclick=()=>l
       x.font=`800 ${fs}px "Plus Jakarta Sans",system-ui,sans-serif`;x.fillStyle=fg;x.textAlign="center";x.textBaseline="middle";lines.forEach((l,i)=>x.fillText(l,W/2,H/2+(i-(lines.length-1)/2)*fs*1.05));t.needsUpdate=true;};
     return mesh;}
   // a townsperson: a worker figure without the hard hat (the dome is kept as hair)
-  function townie(i){const p=worker(cvM(TOWN[i%TOWN.length]),cvM(HAIR[i%HAIR.length]));const t=p.userData.torso;t.children.forEach(o=>{if(o.isMesh&&o.material===cvM(HAIR[i%HAIR.length])&&o.scale.y<0.1)o.visible=false;});return p;}
+  function townie(i){const p=worker(cvM(TOWN[i%TOWN.length]),cvM(HAIR[i%HAIR.length]));const t=p.userData.torso;t.children.forEach(o=>{if(o.isMesh&&o.material===cvM(HAIR[i%HAIR.length])&&o.scale.y<0.1)o.visible=false;});p.userData.hands.forEach(h=>h.material=M.skin);return p;}
   // a sign on a stick, held above the head
   // (v5.2 review: signs with the same slogan and colour share one painted material and geometry, so they batch together)
   const SIGNM={},SIGNG=new THREE.PlaneGeometry(1.9,1.15);
@@ -9431,7 +9741,37 @@ function no3D(){G3.ok=false;$("no3d").hidden=false;$("no3d-retry").onclick=()=>l
   const paperDS=basic("paperc",{side:THREE.DoubleSide});
   slab(-29,-6,-2.5,3,M.slab,0.03);
   const wd=new THREE.Group();wd.position.set(-18.7,0,zc);scene.add(wd);
-  [-2.7,2.7].forEach(z=>{box(0.5,3.8,0.5,M.steel,-2.6,1.9,z,wd);box(0.5,3.8,0.5,M.steel,3.4,1.9,z,wd);box(6.5,0.4,0.5,M.steel,0.4,3.9,z,wd);});
+  // v6.11 Blender redesign (tools/blender/reelwind_new.py): drum side frames and bearings, an A-frame unwind stand with its brake,
+  // the slitter section (top knives on a beam, anvil under the web) and drive-side motors, the same look as the reel
+  {box(3,1.45,0.3,M.steel,-1.85,0.72,-2.75,wd,false);
+   box(0.55,0.55,0.4,M.ink,-1.3,0.75,-2.75,wd,false);
+   box(0.55,0.55,0.4,M.ink,-2.4,0.75,-2.75,wd,false);
+   box(2.2,0.12,0.9,M.ink,2.6,0.06,-2.75,wd,false);
+   {const o=box(0.3,2.3,0.45,M.steel,1.95,1.15,-2.75,wd,false);o.rotation.set(0,0,-0.208);};
+   {const o=box(0.3,2.3,0.45,M.steel,3.25,1.15,-2.75,wd,false);o.rotation.set(0,0,0.208);};
+   box(0.7,0.7,0.55,M.ink,2.6,2.4,-2.75,wd,false);
+   box(0.3,2.9,0.35,M.steel,-0.15,1.45,-2.75,wd,false);
+   box(0.3,2.9,0.35,M.steel,1.35,1.45,-2.75,wd,false);
+   box(1.8,0.3,0.4,M.steel,0.6,3,-2.75,wd,false);
+   box(3,1.45,0.3,M.steel,-1.85,0.72,2.75,wd,false);
+   box(0.55,0.55,0.4,M.ink,-1.3,0.75,2.75,wd,false);
+   box(0.55,0.55,0.4,M.ink,-2.4,0.75,2.75,wd,false);
+   box(2.2,0.12,0.9,M.ink,2.6,0.06,2.75,wd,false);
+   {const o=box(0.3,2.3,0.45,M.steel,1.95,1.15,2.75,wd,false);o.rotation.set(0,0,-0.208);};
+   {const o=box(0.3,2.3,0.45,M.steel,3.25,1.15,2.75,wd,false);o.rotation.set(0,0,0.208);};
+   box(0.7,0.7,0.55,M.ink,2.6,2.4,2.75,wd,false);
+   box(0.3,2.9,0.35,M.steel,-0.15,1.45,2.75,wd,false);
+   box(0.3,2.9,0.35,M.steel,1.35,1.45,2.75,wd,false);
+   box(1.8,0.3,0.4,M.steel,0.6,3,2.75,wd,false);
+   box(0.4,0.3,5.9,M.metal,0.6,2.75,0,wd,false);
+   box(0.16,0.4,0.22,M.ink,0.6,2.45,-1.45,wd,false);
+   box(0.16,0.4,0.22,M.ink,0.6,2.45,0,wd,false);
+   box(0.16,0.4,0.22,M.ink,0.6,2.45,1.45,wd,false);
+   box(0.4,0.22,5.9,M.metal,0.6,1.95,0,wd,false);
+   cylZ(0.72,0.12,M.ink,2.6,2.4,-3.1,16);
+   box(0.5,0.9,0.3,M.steel,2.6,1.95,-3.25,wd,false);
+   cylZ(0.42,0.9,M.stock,-1.85,0.75,-3.5,14);
+   box(0.9,0.75,0.9,M.steel,-1.85,0.37,-3.5,wd,false);}
   const unwind=cylZ(1,4.8,M.paper,2.6,2.4,0,22,wd);cylZ(0.22,5.8,M.steel,2.6,2.4,0,8,wd);
   const drums=[cylZ(0.5,5,M.metal,-1.3,0.75,0,12,wd),cylZ(0.5,5,M.metal,-2.4,0.75,0,12,wd)];
   // v6.5.7: the winder builds a SET of two rolls side by side on the drums (the sim's set), each the size of a roll on the conveyor
@@ -9514,22 +9854,26 @@ function no3D(){G3.ok=false;$("no3d").hidden=false;$("no3d-retry").onclick=()=>l
     box(W,0.06,0.06,ylw,HX,0.55,HZ-W/2,scene,false);box(0.06,0.06,W,ylw,HX-W/2,0.55,HZ,scene,false);box(0.06,0.06,W,ylw,HX+W/2,0.55,HZ,scene,false);}
 
   /* ---- people ---- */
-  const skin=M.skin;
+  const skin=M.skin,BOOT_M=new StdMat({color:lin0("#4a3524"),roughness:0.85}),GLOVE_M=new StdMat({color:lin0("#c9a46a"),roughness:0.8});
   // v4.1 pass 3: roles. vest: a hi-vis vest material over the torso (with a reflective band); radio: a handset on the belt
   function worker(suit,hatM,role){const p=new THREE.Group();const hip=new THREE.Group();hip.position.y=0.9;p.add(hip);
-    const legs=[-0.15,0.15].map(z=>{const l=new THREE.Group();l.position.z=z;const m=new THREE.Mesh(cubeG,M.ink);m.scale.set(0.22,0.9,0.22);m.position.y=-0.45;m.castShadow=true;l.add(m);hip.add(l);return l;});
+    // v6.11 Blender redesign (item 12): paper-doll proportions and colour blocks that read at cut-out size: work boots on the
+    // legs, leather gloves for hands, a belt, a bigger head and hard hat (x1.17). The parts the game poses are unchanged.
+    const legs=[-0.15,0.15].map(z=>{const l=new THREE.Group();l.position.z=z;const m=new THREE.Mesh(cubeG,M.ink);m.scale.set(0.22,0.9,0.22);m.position.y=-0.45;m.castShadow=true;l.add(m);
+      const bt=new THREE.Mesh(cubeG,BOOT_M);bt.scale.set(0.32,0.16,0.25);bt.position.set(0.05,-0.82,0);l.add(bt);hip.add(l);return l;});
     const torso=new THREE.Group();hip.add(torso);
     const body=new THREE.Mesh(cubeG,suit);body.scale.set(0.42,0.85,0.6);body.position.y=0.42;body.castShadow=true;torso.add(body);
-    const head=new THREE.Mesh(sphereG,skin);head.scale.setScalar(0.23);head.position.y=1.07;torso.add(head);
+    const head=new THREE.Mesh(sphereG,skin);head.scale.setScalar(0.27);head.position.y=1.1;torso.add(head);
+    {const b=new THREE.Mesh(cubeG,M.ink);b.scale.set(0.44,0.07,0.62);b.position.y=0.05;torso.add(b);}   // belt
     // v4.1 pass 5: a proper hard hat: a dome seated over the top of the head, a full brim all round with a longer peak at the
     // front (+x is the way a figure faces), and the moulded ridge front to back. Shared geometries, the hat's own material.
-    const hat=new THREE.Mesh(HAT_DOME,hatM);hat.scale.set(0.25,0.22,0.245);hat.position.set(0.01,1.12,0);torso.add(hat);
-    const brim=new THREE.Mesh(HAT_BRIM,hatM);brim.scale.set(0.315,0.022,0.29);brim.position.set(0.05,1.125,0);torso.add(brim);
-    const ridge=new THREE.Mesh(cubeG,hatM);ridge.scale.set(0.34,0.04,0.065);ridge.position.set(0.01,1.322,0);torso.add(ridge);
+    const hat=new THREE.Mesh(HAT_DOME,hatM);hat.scale.set(0.293,0.257,0.287);hat.position.set(0.01,1.155,0);torso.add(hat);
+    const brim=new THREE.Mesh(HAT_BRIM,hatM);brim.scale.set(0.369,0.026,0.339);brim.position.set(0.06,1.16,0);torso.add(brim);
+    const ridge=new THREE.Mesh(cubeG,hatM);ridge.scale.set(0.398,0.047,0.076);ridge.position.set(0.01,1.39,0);torso.add(ridge);
     if(role&&role.vest){const v=new THREE.Mesh(cubeG,role.vest);v.scale.set(0.47,0.42,0.65);v.position.y=0.63;torso.add(v);const bd=new THREE.Mesh(cubeG,HIVIS.band);bd.scale.set(0.48,0.06,0.66);bd.position.y=0.56;torso.add(bd);}
     if(role&&role.radio){const r=new THREE.Mesh(cubeG,M.ink);r.scale.set(0.08,0.16,0.1);r.position.set(0.12,0.06,0.33);torso.add(r);const an=new THREE.Mesh(cubeG,M.ink);an.scale.set(0.02,0.14,0.02);an.position.set(0.12,0.2,0.35);torso.add(an);}
     const armM=[],hands=[];const arms=[-0.39,0.39].map(z=>{const a=new THREE.Group();a.position.set(0,0.78,z);const m=new THREE.Mesh(cubeG,suit);m.scale.set(0.17,0.72,0.17);m.position.y=-0.36;a.add(m);armM.push(m);
-      const h=new THREE.Mesh(cubeG,skin);h.scale.set(0.13,0.13,0.13);h.position.y=-0.78;a.add(h);hands.push(h);torso.add(a);return a;});
+      const h=new THREE.Mesh(cubeG,GLOVE_M);h.scale.set(0.13,0.13,0.13);h.position.y=-0.78;a.add(h);hands.push(h);torso.add(a);return a;});
     const armful=new THREE.Mesh(cubeG,paperDS);armful.scale.set(0.7,0.45,0.75);armful.position.set(0.5,0.45,0);armful.visible=false;torso.add(armful);
     const noz=new THREE.Mesh(new CylG(0.07,0.11,0.75,10),M.ink);noz.rotation.z=-Math.PI/2;noz.position.set(0.72,0.62,0);noz.visible=false;torso.add(noz);
     const ext=new THREE.Mesh(new CylG(0.17,0.17,0.62,14),M.bad);ext.position.set(0.48,0.42,0.22);ext.visible=false;torso.add(ext);
@@ -10126,6 +10470,7 @@ function no3D(){G3.ok=false;$("no3d").hidden=false;$("no3d-retry").onclick=()=>l
     const tie=new THREE.Mesh(cubeG,tieM);tie.scale.set(0.025,0.4,0.075);tie.position.set(0.2,0.6,0);T.add(tie);
     [-1,1].forEach(sd=>{const l=new THREE.Mesh(cubeG,SUIT);l.scale.set(0.02,0.32,0.06);l.position.set(0.19,0.7,sd*0.105);l.rotation.x=sd*0.35;T.add(l);});
     const col=new THREE.Mesh(cubeG,shirtM);col.scale.set(0.3,0.06,0.34);col.position.set(0.02,0.85,0);T.add(col);
+    u.hands.forEach(h=>h.material=M.skin);u.legs.forEach(l=>{if(l.children[1])l.children[1].visible=false;});   // (v6.11: no work boots or gloves in a suit)
     u.legs.forEach(l=>{l.children[0].material=trouM;l.children[0].scale.set(0.2,0.9,0.2);const sh2=new THREE.Mesh(cubeG,shoeM);sh2.scale.set(0.32,0.1,0.18);sh2.position.set(0.06,-0.86,0);l.add(sh2);});
     u.armM.forEach(m=>m.scale.x=m.scale.z=0.15);}
   function free(w){w.visible=false;w.userData.busy=false;}
@@ -10766,7 +11111,11 @@ function no3D(){G3.ok=false;$("no3d").hidden=false;$("no3d-retry").onclick=()=>l
     // the desk with the tester's laptop, and the rack of spare drives
     box(1.6,0.08,0.8,M.kraft,MCC.desk[0],0.78,MCC.desk[1]-0.45,scene,false);[-0.7,0.7].forEach(s=>box(0.08,0.74,0.7,M.steel,MCC.desk[0]+s,0.37,MCC.desk[1]-0.45,scene,false));
     box(0.42,0.03,0.3,M.ink,MCC.desk[0],0.84,MCC.desk[1]-0.5,scene,false);
-    box(0.5,2.0,1.8,M.steel,MCC.x1-0.6,1.0,MCC.z1-3.3,scene);for(let k=0;k<3;k++)box(0.42,0.36,0.5,M.ok,MCC.x1-0.85,0.5+k*0.62,MCC.z1-3.7+(k%2)*0.6,scene,false);}
+    // v6.11 Blender redesign (item 10, tools/blender/mcc_new.py): plinths and door louvres on the cabinets, a cable tray on wall
+    // brackets with a drop into every cabinet, the incoming conduit, the arc-flash rubber mat and yellow approach boundary on the
+    // floor, a steel shelf rack for the spare drives (was a solid block), the desk monitor, a CO2 extinguisher and the PPE locker
+    {const pW=mat("panel");box(0.88,0.1,0.66,M.ink,5.03,0.05,24.53,scene,false);box(0.7,0.1,0.66,M.ink,5.86,0.05,24.53,scene,false);box(0.44,0.03,0.02,M.ink,5.86,2.18,24.865,scene,false);box(0.44,0.03,0.02,M.ink,5.86,2.23,24.865,scene,false);box(0.44,0.03,0.02,M.ink,5.86,2.28,24.865,scene,false);box(0.7,0.1,0.66,M.ink,6.58,0.05,24.53,scene,false);box(0.44,0.03,0.02,M.ink,6.58,2.18,24.865,scene,false);box(0.44,0.03,0.02,M.ink,6.58,2.23,24.865,scene,false);box(0.44,0.03,0.02,M.ink,6.58,2.28,24.865,scene,false);box(0.7,0.1,0.66,M.ink,7.3,0.05,24.53,scene,false);box(0.44,0.03,0.02,M.ink,7.3,2.18,24.865,scene,false);box(0.44,0.03,0.02,M.ink,7.3,2.23,24.865,scene,false);box(0.44,0.03,0.02,M.ink,7.3,2.28,24.865,scene,false);box(0.7,0.1,0.66,M.ink,8.02,0.05,24.53,scene,false);box(0.44,0.03,0.02,M.ink,8.02,2.18,24.865,scene,false);box(0.44,0.03,0.02,M.ink,8.02,2.23,24.865,scene,false);box(0.44,0.03,0.02,M.ink,8.02,2.28,24.865,scene,false);box(0.88,0.1,0.66,M.ink,9.13,0.05,24.53,scene,false);box(0.7,0.1,0.66,M.ink,9.96,0.05,24.53,scene,false);box(0.44,0.03,0.02,M.ink,9.96,2.18,24.865,scene,false);box(0.44,0.03,0.02,M.ink,9.96,2.23,24.865,scene,false);box(0.44,0.03,0.02,M.ink,9.96,2.28,24.865,scene,false);box(0.7,0.1,0.66,M.ink,10.68,0.05,24.53,scene,false);box(0.44,0.03,0.02,M.ink,10.68,2.18,24.865,scene,false);box(0.44,0.03,0.02,M.ink,10.68,2.23,24.865,scene,false);box(0.44,0.03,0.02,M.ink,10.68,2.28,24.865,scene,false);box(0.7,0.1,0.66,M.ink,11.4,0.05,24.53,scene,false);box(0.44,0.03,0.02,M.ink,11.4,2.18,24.865,scene,false);box(0.44,0.03,0.02,M.ink,11.4,2.23,24.865,scene,false);box(0.44,0.03,0.02,M.ink,11.4,2.28,24.865,scene,false);box(0.7,0.1,0.66,M.ink,12.12,0.05,24.53,scene,false);box(0.44,0.03,0.02,M.ink,12.12,2.18,24.865,scene,false);box(0.44,0.03,0.02,M.ink,12.12,2.23,24.865,scene,false);box(0.44,0.03,0.02,M.ink,12.12,2.28,24.865,scene,false);box(0.7,0.1,0.66,M.ink,12.84,0.05,24.53,scene,false);box(0.44,0.03,0.02,M.ink,12.84,2.18,24.865,scene,false);box(0.44,0.03,0.02,M.ink,12.84,2.23,24.865,scene,false);box(0.44,0.03,0.02,M.ink,12.84,2.28,24.865,scene,false);box(0.88,0.1,0.66,M.ink,13.95,0.05,24.53,scene,false);box(0.7,0.1,0.66,M.ink,14.78,0.05,24.53,scene,false);box(0.44,0.03,0.02,M.ink,14.78,2.18,24.865,scene,false);box(0.44,0.03,0.02,M.ink,14.78,2.23,24.865,scene,false);box(0.44,0.03,0.02,M.ink,14.78,2.28,24.865,scene,false);box(0.8,0.1,0.66,M.ink,15.85,0.05,24.53,scene,false);box(0.8,0.1,0.66,M.ink,16.65,0.05,24.53,scene,false);box(12.66,0.06,0.42,M.steel,10.73,3.45,24.38,scene,false);box(12.66,0.14,0.03,M.steel,10.73,3.52,24.59,scene,false);box(0.06,0.32,0.4,cabM,4.7,3.3,24.36,scene,false);box(0.06,0.32,0.4,cabM,6.3,3.3,24.36,scene,false);box(0.06,0.32,0.4,cabM,7.9,3.3,24.36,scene,false);box(0.06,0.32,0.4,cabM,9.5,3.3,24.36,scene,false);box(0.06,0.32,0.4,cabM,11.1,3.3,24.36,scene,false);box(0.06,0.32,0.4,cabM,12.7,3.3,24.36,scene,false);box(0.06,0.32,0.4,cabM,14.3,3.3,24.36,scene,false);box(0.06,0.32,0.4,cabM,15.9,3.3,24.36,scene,false);box(0.14,0.9,0.12,M.ink,5.03,2.96,24.43,scene,false);box(0.14,0.9,0.12,M.ink,5.86,2.96,24.43,scene,false);box(0.14,0.9,0.12,M.ink,6.58,2.96,24.43,scene,false);box(0.14,0.9,0.12,M.ink,7.3,2.96,24.43,scene,false);box(0.14,0.9,0.12,M.ink,8.02,2.96,24.43,scene,false);box(0.14,0.9,0.12,M.ink,9.13,2.96,24.43,scene,false);box(0.14,0.9,0.12,M.ink,9.96,2.96,24.43,scene,false);box(0.14,0.9,0.12,M.ink,10.68,2.96,24.43,scene,false);box(0.14,0.9,0.12,M.ink,11.4,2.96,24.43,scene,false);box(0.14,0.9,0.12,M.ink,12.12,2.96,24.43,scene,false);box(0.14,0.9,0.12,M.ink,12.84,2.96,24.43,scene,false);box(0.14,0.9,0.12,M.ink,13.95,2.96,24.43,scene,false);box(0.14,0.9,0.12,M.ink,14.78,2.96,24.43,scene,false);box(0.14,0.9,0.12,M.ink,15.85,2.96,24.43,scene,false);box(0.14,0.9,0.12,M.ink,16.65,2.96,24.43,scene,false);box(1.14,0.22,0.22,M.ink,17.53,3.1,25.6,scene,false);box(0.22,0.7,0.22,M.ink,16.96,2.75,25.6,scene,false);box(12.26,0.02,0.9,M.ink,10.83,0.06,25.36,scene,false);box(12.46,0.012,0.09,M.lane,10.83,0.055,26.21,scene,false);box(0.09,0.012,1.35,M.lane,4.55,0.055,25.53,scene,false);box(0.09,0.012,1.35,M.lane,17.01,0.055,25.53,scene,false);box(0.06,2.1,0.06,cabM,17.15,1.05,26.8,scene,false);box(0.06,2.1,0.06,cabM,17.65,1.05,26.8,scene,false);box(0.06,2.1,0.06,cabM,17.15,1.05,27.7,scene,false);box(0.06,2.1,0.06,cabM,17.65,1.05,27.7,scene,false);box(0.06,2.1,0.06,cabM,17.15,1.05,28.6,scene,false);box(0.06,2.1,0.06,cabM,17.65,1.05,28.6,scene,false);box(0.56,0.04,1.86,M.steel,17.4,0.3,27.7,scene,false);box(0.56,0.04,1.86,M.steel,17.4,0.92,27.7,scene,false);box(0.56,0.04,1.86,M.steel,17.4,1.54,27.7,scene,false);box(0.56,0.04,1.86,M.steel,17.4,2.08,27.7,scene,false);box(0.5,0.3,0.06,pW,17.12,1.85,26.75,scene,false);box(0.5,0.32,0.04,M.ink,15.7,1.05,28.95,scene,false);box(0.06,0.2,0.06,M.ink,15.7,0.9,28.95,scene,false);{const g=new CylG(0.13,0.13,0.7,10);const o=new THREE.Mesh(g,M.bad);o.position.set(4.45,0.45,30.5);o.castShadow=true;scene.add(o);}box(0.12,0.08,0.12,M.ink,4.45,0.84,30.5,scene,false);box(0.45,1.9,0.7,M.stock,4.5,0.95,29.6,scene,false);box(0.02,0.4,0.5,pW,4.74,1.5,29.6,scene,false);}
+    for(let k=0;k<3;k++)box(0.42,0.36,0.5,M.ok,MCC.x1-0.85,0.5+k*0.62,MCC.z1-3.7+(k%2)*0.6,scene,false);}
   // ---- the transformer on its pad, and the duct bank to the riser pole at the fence ----
   {const [tx,tz]=MCC.tx;slab(tx-1.6,tx+1.6,tz-1.8,tz+1.8,M.slab,0.05);box(2.2,2.2,2.6,M.steel,tx,1.1,tz);for(let k=0;k<6;k++)box(0.3,1.6,0.06,M.metal,tx+1.24,1.0,tz-1+k*0.4,scene,false);
     [-0.6,0,0.6].forEach(o=>{const b=new THREE.Mesh(new CylG(0.09,0.12,0.6,8),M.wind);b.position.set(tx,2.5,tz+o);scene.add(b);});
@@ -10787,8 +11136,8 @@ function no3D(){G3.ok=false;$("no3d").hidden=false;$("no3d-retry").onclick=()=>l
     if(!u.suit0)u.suit0={body:u.body.material,arm:u.armM[0].material};
     u.body.material=on?arcM:u.suit0.body;u.armM.forEach(m=>m.material=on?arcM:u.suit0.arm);u.hood.visible=on;if(u.vestM)u.vestM.visible=!on;}
   function elecBuild(){if(ET.w)return;const w=worker(elecM,M.hatTeam.A,{vest:HIVIS.orange,radio:true});w.position.set(MCC.desk[0],0,MCC.desk[1]);ET.w=w;
-    {const u=w.userData,hood=new THREE.Group();const hb=new THREE.Mesh(new THREE.BoxGeometry(0.5,0.42,0.5),arcM);hb.position.set(0,1.1,0);hood.add(hb);
-      const sh=new THREE.Mesh(new THREE.BoxGeometry(0.06,0.24,0.38),shieldM);sh.position.set(0.25,1.1,0);hood.add(sh);hood.visible=false;u.torso.add(hood);u.hood=hood;
+    {const u=w.userData,hood=new THREE.Group();const hb=new THREE.Mesh(new THREE.BoxGeometry(0.6,0.5,0.6),arcM);hb.position.set(0,1.13,0);hood.add(hb);
+      const sh=new THREE.Mesh(new THREE.BoxGeometry(0.06,0.28,0.44),shieldM);sh.position.set(0.3,1.13,0);hood.add(sh);hood.visible=false;u.torso.add(hood);u.hood=hood;
       u.torso.children.forEach(c=>{if(c.isMesh&&c.material===HIVIS.orange)u.vestM=c;});}
     const c=new THREE.Group();box(0.8,0.7,0.5,M.ink,0,0.55,0,c);box(0.5,0.32,0.08,M.ok,0.05,1.06,-0.05,c,false);box(0.06,0.7,0.5,M.steel,-0.43,1.0,0,c,false);
     [[-0.3,-0.2],[-0.3,0.2],[0.3,-0.2],[0.3,0.2]].forEach(([a,b])=>cylZ(0.09,0.06,M.ink,a,0.09,b,8,c));c.userData.load=true;c.position.set(MCC.desk[0]-1.8,0,MCC.desk[1]+0.6);scene.add(c);dynMark(c);ET.cart=c;}
@@ -10960,7 +11309,15 @@ function no3D(){G3.ok=false;$("no3d").hidden=false;$("no3d-retry").onclick=()=>l
       const cg=new CylG(0.45,0.45,0.35,16);cg.rotateZ(Math.PI/2);const cp=new THREE.Mesh(cg,M.warn);cp.position.set(X+2.2,2.0,z);g.add(cp);
       const mg=new CylG(1.0,1.0,2.8,24);mg.rotateZ(Math.PI/2);const mo=new THREE.Mesh(mg,M.motor);mo.position.set(X+3.8,1.6,z);mo.castShadow=true;g.add(mo);REF_MOTORS.push(mo);   // motor
       for(let k=0;k<8;k++){const a=k/8*Math.PI*2;box(2.6,0.08,0.08,M.ink,X+3.8,1.6+Math.cos(a)*1.02,z+Math.sin(a)*1.02,g,false);}   // cooling fins
-      box(0.7,0.6,0.7,M.ink,X+3.8,2.85,z,g,false);blob(X+1.5,z,3.6);});
+      box(0.7,0.6,0.7,M.ink,X+3.8,2.85,z,g,false);blob(X+1.5,z,3.6);
+      // v6.11 (item 8): a coupling guard over the shaft, anchor bolts on the skid, the plate-gap actuator with its position scale,
+      // and a name plate on a post at the door end so the two refiners read at a glance (players click them for their health)
+      box(1.0,1.05,1.05,M.lane,X+2.2,2.0,z,g,false);
+      [[-3.3,-1.5],[-3.3,1.5],[3.3,-1.5],[3.3,1.5]].forEach(([dx,dz])=>box(0.22,0.12,0.22,M.ink,X+1.6+dx,0.5,z+dz,g,false));
+      box(0.5,0.5,0.5,M.ink,X-0.7,3.25,z,g,false);box(0.08,0.5,0.6,M.ok,X-0.97,3.25,z,g,false);
+      {const c=document.createElement("canvas");c.width=256;c.height=48;const x=c.getContext("2d");x.fillStyle="#ffffff";x.fillRect(0,0,256,48);x.fillStyle="#1c2233";x.font="800 24px system-ui,sans-serif";x.textAlign="center";x.fillText(z<-11?"REFINER A":"REFINER B",128,33);
+       const t=new THREE.CanvasTexture(c);t.colorSpace=THREE.SRGBColorSpace;const pl=new THREE.Mesh(new THREE.PlaneGeometry(1.6,0.3),new THREE.MeshBasicMaterial({map:t}));pl.rotation.y=-Math.PI/2;pl.position.set(X-2.05,1.15,z);g.add(pl);
+       box(0.1,1.0,0.1,M.steel,X-1.98,0.5,z,g,false);box(0.06,0.36,1.7,M.ink,X-1.99,1.15,z,g,false);}});
     const P=0.24;   // inlet header from the stock line, over and down into each housing; outlets back to the line
     spool([[57,4.8,-11],[57.9,4.8,-11],[57.9,4.6,-11]],P,M.stock);spool([[57.9,4.6,-14],[57.9,4.6,-8]],P,M.stock);
     ZS.forEach(z=>{spool([[57.9,4.6,z],[X,4.6,z],[X,3.55,z]],P,M.stock);spool([[X,0.7,z+(z<-11?1.55:-1.55)],[X,0.7,-11],[56.2,0.7,-11]],0.2,M.stock);});
@@ -11003,12 +11360,10 @@ function no3D(){G3.ok=false;$("no3d").hidden=false;$("no3d-retry").onclick=()=>l
   {const rb0=G3.rebrand;G3.rebrand=()=>{rb0&&rb0();drawSigns();};}
   // the water tower: four legs, a riser, a tank with the mill name round it, a conical roof, a catwalk and a beacon
   {const TX=84,TZ=-24,H=21,R=4.3;YP.tower=[TX,TZ,H+9.5];
-    const legM=M.steel;[[-1,-1],[1,-1],[-1,1],[1,1]].forEach(([a,b])=>{box(0.42,H,0.42,legM,TX+a*3.1,H/2,TZ+b*3.1);
-      box(0.9,0.12,0.9,M.ink,TX+a*3.1,0.06,TZ+b*3.1,scene,false);});
-    [6,12.5,19].forEach((y,i)=>{box(6.6,0.18,0.18,legM,TX,y,TZ-3.1,scene,false);box(6.6,0.18,0.18,legM,TX,y,TZ+3.1,scene,false);box(0.18,0.18,6.6,legM,TX-3.1,y,TZ,scene,false);box(0.18,0.18,6.6,legM,TX+3.1,y,TZ,scene,false);
-      // x bracing on each face between rings
-      [[0,-3.1,0],[0,3.1,0],[-3.1,0,1],[3.1,0,1]].forEach(([dx,dz,ax])=>{for(const s of [1,-1]){const br=box(0.1,7.4,0.1,legM,TX+dx,y-3.2,TZ+dz,scene,false);if(ax)br.rotation.x=s*0.72;else br.rotation.z=s*0.72;}});});
-    const riser=new THREE.Mesh(new CylG(0.38,0.38,H+0.5,12),M.steel);riser.position.set(TX,(H+0.5)/2,TZ);riser.castShadow=true;scene.add(riser);
+    // v6.11 Blender redesign (item 15, tools/blender/tower_new.py): battered legs on concrete piers, strut rings with tension-rod
+    // X bracing, a wider riser with a frost box at its foot, the overflow pipe, a caged ladder up the camera-side leg, and the
+    // roof's finial, vent, hatch and ladder. (Was four straight legs, a thin riser and a ladder on the far leg.)
+    {const o=box(0.5,21.2,0.5,M.steel,80.65,10.5,-27.35,scene,false);o.rotation.set(0.033,0,-0.033);};box(1.3,0.7,1.3,M.slab,80.3,0.35,-27.7,scene,false);box(0.8,0.12,0.8,M.ink,80.3,0.76,-27.7,scene,false);{const o=box(0.5,21.2,0.5,M.steel,87.35,10.5,-27.35,scene,false);o.rotation.set(0.033,0,0.033);};box(1.3,0.7,1.3,M.slab,87.7,0.35,-27.7,scene,false);box(0.8,0.12,0.8,M.ink,87.7,0.76,-27.7,scene,false);{const o=box(0.5,21.2,0.5,M.steel,80.65,10.5,-20.65,scene,false);o.rotation.set(-0.033,0,-0.033);};box(1.3,0.7,1.3,M.slab,80.3,0.35,-20.3,scene,false);box(0.8,0.12,0.8,M.ink,80.3,0.76,-20.3,scene,false);{const o=box(0.5,21.2,0.5,M.steel,87.35,10.5,-20.65,scene,false);o.rotation.set(-0.033,0,0.033);};box(1.3,0.7,1.3,M.slab,87.7,0.35,-20.3,scene,false);box(0.8,0.12,0.8,M.ink,87.7,0.76,-20.3,scene,false);box(6.933,0.2,0.2,M.steel,84,7,-27.467,scene,false);box(0.2,0.2,6.933,M.steel,80.533,7,-24,scene,false);box(6.933,0.2,0.2,M.steel,84,7,-20.533,scene,false);box(0.2,0.2,6.933,M.steel,87.467,7,-24,scene,false);box(6.467,0.2,0.2,M.steel,84,14,-27.233,scene,false);box(0.2,0.2,6.467,M.steel,80.767,14,-24,scene,false);box(6.467,0.2,0.2,M.steel,84,14,-20.767,scene,false);box(0.2,0.2,6.467,M.steel,87.233,14,-24,scene,false);box(6.027,0.2,0.2,M.steel,84,20.6,-27.013,scene,false);box(0.2,0.2,6.027,M.steel,80.987,20.6,-24,scene,false);box(6.027,0.2,0.2,M.steel,84,20.6,-20.987,scene,false);box(0.2,0.2,6.027,M.steel,87.013,20.6,-24,scene,false);{const o=box(9.456,0.07,0.07,M.ink,84,3.9,-27.57,scene,false);o.rotation.set(0,0,-0.715);};{const o=box(0.07,0.07,9.456,M.ink,80.43,3.9,-24,scene,false);o.rotation.set(0.715,0,0);};{const o=box(9.456,0.07,0.07,M.ink,84,3.9,-27.57,scene,false);o.rotation.set(0,0,0.715);};{const o=box(0.07,0.07,9.456,M.ink,80.43,3.9,-24,scene,false);o.rotation.set(-0.715,0,0);};{const o=box(9.456,0.07,0.07,M.ink,84,3.9,-20.43,scene,false);o.rotation.set(0,0,-0.715);};{const o=box(0.07,0.07,9.456,M.ink,87.57,3.9,-24,scene,false);o.rotation.set(0.715,0,0);};{const o=box(9.456,0.07,0.07,M.ink,84,3.9,-20.43,scene,false);o.rotation.set(0,0,0.715);};{const o=box(0.07,0.07,9.456,M.ink,87.57,3.9,-24,scene,false);o.rotation.set(-0.715,0,0);};{const o=box(9.69,0.07,0.07,M.ink,84,10.5,-27.35,scene,false);o.rotation.set(0,0,-0.807);};{const o=box(0.07,0.07,9.69,M.ink,80.65,10.5,-24,scene,false);o.rotation.set(0.807,0,0);};{const o=box(9.69,0.07,0.07,M.ink,84,10.5,-27.35,scene,false);o.rotation.set(0,0,0.807);};{const o=box(0.07,0.07,9.69,M.ink,80.65,10.5,-24,scene,false);o.rotation.set(-0.807,0,0);};{const o=box(9.69,0.07,0.07,M.ink,84,10.5,-20.65,scene,false);o.rotation.set(0,0,-0.807);};{const o=box(0.07,0.07,9.69,M.ink,87.35,10.5,-24,scene,false);o.rotation.set(0.807,0,0);};{const o=box(9.69,0.07,0.07,M.ink,84,10.5,-20.65,scene,false);o.rotation.set(0,0,0.807);};{const o=box(0.07,0.07,9.69,M.ink,87.35,10.5,-24,scene,false);o.rotation.set(-0.807,0,0);};{const o=box(9.087,0.07,0.07,M.ink,84,17.3,-27.123,scene,false);o.rotation.set(0,0,-0.813);};{const o=box(0.07,0.07,9.087,M.ink,80.877,17.3,-24,scene,false);o.rotation.set(0.813,0,0);};{const o=box(9.087,0.07,0.07,M.ink,84,17.3,-27.123,scene,false);o.rotation.set(0,0,0.813);};{const o=box(0.07,0.07,9.087,M.ink,80.877,17.3,-24,scene,false);o.rotation.set(-0.813,0,0);};{const o=box(9.087,0.07,0.07,M.ink,84,17.3,-20.877,scene,false);o.rotation.set(0,0,-0.813);};{const o=box(0.07,0.07,9.087,M.ink,87.123,17.3,-24,scene,false);o.rotation.set(0.813,0,0);};{const o=box(9.087,0.07,0.07,M.ink,84,17.3,-20.877,scene,false);o.rotation.set(0,0,0.813);};{const o=box(0.07,0.07,9.087,M.ink,87.123,17.3,-24,scene,false);o.rotation.set(-0.813,0,0);};{const g=new CylG(0.75,0.75,20.2,14);const o=new THREE.Mesh(g,M.steel);o.position.set(84,11.1,-24);o.castShadow=true;scene.add(o);}{const g=new CylG(0.82,0.82,0.18,14);const o=new THREE.Mesh(g,M.steel);o.position.set(84,5,-24);o.castShadow=true;scene.add(o);}{const g=new CylG(0.82,0.82,0.18,14);const o=new THREE.Mesh(g,M.steel);o.position.set(84,11,-24);o.castShadow=true;scene.add(o);}{const g=new CylG(0.82,0.82,0.18,14);const o=new THREE.Mesh(g,M.steel);o.position.set(84,17,-24);o.castShadow=true;scene.add(o);}box(2.6,2.6,2.6,panelM,84,1.3,-24,scene,false);box(2.9,0.25,2.9,M.brand,84,2.72,-24,scene,false);box(0.9,1.9,0.05,M.steel,83.4,0.95,-22.69,scene,false);{const g=new CylG(0.16,0.16,19.8,8);const o=new THREE.Mesh(g,M.steel);o.position.set(86.8,10.4,-26.6);o.castShadow=true;scene.add(o);}box(1.2,0.1,1.2,M.slab,86.8,0.05,-26.6,scene,false);box(0.05,20.6,0.05,M.warn,80.475,10.3,-20.825,scene,false);box(0.05,20.6,0.05,M.warn,80.825,10.3,-20.475,scene,false);{const o=box(0.5,0.05,0.05,M.warn,80.65,0.6,-20.65,scene,false);o.rotation.set(0,0.785,0);};{const o=box(0.5,0.05,0.05,M.warn,80.65,1.2,-20.65,scene,false);o.rotation.set(0,0.785,0);};{const o=box(0.5,0.05,0.05,M.warn,80.65,1.8,-20.65,scene,false);o.rotation.set(0,0.785,0);};{const o=box(0.5,0.05,0.05,M.warn,80.65,2.4,-20.65,scene,false);o.rotation.set(0,0.785,0);};{const o=box(0.5,0.05,0.05,M.warn,80.65,3,-20.65,scene,false);o.rotation.set(0,0.785,0);};{const o=box(0.5,0.05,0.05,M.warn,80.65,3.6,-20.65,scene,false);o.rotation.set(0,0.785,0);};{const o=box(0.5,0.05,0.05,M.warn,80.65,4.2,-20.65,scene,false);o.rotation.set(0,0.785,0);};{const o=box(0.5,0.05,0.05,M.warn,80.65,4.8,-20.65,scene,false);o.rotation.set(0,0.785,0);};{const o=box(0.5,0.05,0.05,M.warn,80.65,5.4,-20.65,scene,false);o.rotation.set(0,0.785,0);};{const o=box(0.5,0.05,0.05,M.warn,80.65,6,-20.65,scene,false);o.rotation.set(0,0.785,0);};{const o=box(0.5,0.05,0.05,M.warn,80.65,6.6,-20.65,scene,false);o.rotation.set(0,0.785,0);};{const o=box(0.5,0.05,0.05,M.warn,80.65,7.2,-20.65,scene,false);o.rotation.set(0,0.785,0);};{const o=box(0.5,0.05,0.05,M.warn,80.65,7.8,-20.65,scene,false);o.rotation.set(0,0.785,0);};{const o=box(0.5,0.05,0.05,M.warn,80.65,8.4,-20.65,scene,false);o.rotation.set(0,0.785,0);};{const o=box(0.5,0.05,0.05,M.warn,80.65,9,-20.65,scene,false);o.rotation.set(0,0.785,0);};{const o=box(0.5,0.05,0.05,M.warn,80.65,9.6,-20.65,scene,false);o.rotation.set(0,0.785,0);};{const o=box(0.5,0.05,0.05,M.warn,80.65,10.2,-20.65,scene,false);o.rotation.set(0,0.785,0);};{const o=box(0.5,0.05,0.05,M.warn,80.65,10.8,-20.65,scene,false);o.rotation.set(0,0.785,0);};{const o=box(0.5,0.05,0.05,M.warn,80.65,11.4,-20.65,scene,false);o.rotation.set(0,0.785,0);};{const o=box(0.5,0.05,0.05,M.warn,80.65,12,-20.65,scene,false);o.rotation.set(0,0.785,0);};{const o=box(0.5,0.05,0.05,M.warn,80.65,12.6,-20.65,scene,false);o.rotation.set(0,0.785,0);};{const o=box(0.5,0.05,0.05,M.warn,80.65,13.2,-20.65,scene,false);o.rotation.set(0,0.785,0);};{const o=box(0.5,0.05,0.05,M.warn,80.65,13.8,-20.65,scene,false);o.rotation.set(0,0.785,0);};{const o=box(0.5,0.05,0.05,M.warn,80.65,14.4,-20.65,scene,false);o.rotation.set(0,0.785,0);};{const o=box(0.5,0.05,0.05,M.warn,80.65,15,-20.65,scene,false);o.rotation.set(0,0.785,0);};{const o=box(0.5,0.05,0.05,M.warn,80.65,15.6,-20.65,scene,false);o.rotation.set(0,0.785,0);};{const o=box(0.5,0.05,0.05,M.warn,80.65,16.2,-20.65,scene,false);o.rotation.set(0,0.785,0);};{const o=box(0.5,0.05,0.05,M.warn,80.65,16.8,-20.65,scene,false);o.rotation.set(0,0.785,0);};{const o=box(0.5,0.05,0.05,M.warn,80.65,17.4,-20.65,scene,false);o.rotation.set(0,0.785,0);};{const o=box(0.5,0.05,0.05,M.warn,80.65,18,-20.65,scene,false);o.rotation.set(0,0.785,0);};{const o=box(0.5,0.05,0.05,M.warn,80.65,18.6,-20.65,scene,false);o.rotation.set(0,0.785,0);};{const o=box(0.5,0.05,0.05,M.warn,80.65,19.2,-20.65,scene,false);o.rotation.set(0,0.785,0);};{const o=box(0.5,0.05,0.05,M.warn,80.65,19.8,-20.65,scene,false);o.rotation.set(0,0.785,0);};{const o=box(0.5,0.05,0.05,M.warn,80.65,20.4,-20.65,scene,false);o.rotation.set(0,0.785,0);};{const o=box(0.05,0.05,0.8,M.warn,80.07,4,-20.67,scene,false);o.rotation.set(0,0.785,0);};{const o=box(0.05,0.05,0.8,M.warn,80.67,4,-20.07,scene,false);o.rotation.set(0,0.785,0);};{const o=box(0.9,0.05,0.05,M.warn,80.1,4,-20.1,scene,false);o.rotation.set(0,0.785,0);};{const o=box(0.05,0.05,0.8,M.warn,80.07,6,-20.67,scene,false);o.rotation.set(0,0.785,0);};{const o=box(0.05,0.05,0.8,M.warn,80.67,6,-20.07,scene,false);o.rotation.set(0,0.785,0);};{const o=box(0.9,0.05,0.05,M.warn,80.1,6,-20.1,scene,false);o.rotation.set(0,0.785,0);};{const o=box(0.05,0.05,0.8,M.warn,80.07,8,-20.67,scene,false);o.rotation.set(0,0.785,0);};{const o=box(0.05,0.05,0.8,M.warn,80.67,8,-20.07,scene,false);o.rotation.set(0,0.785,0);};{const o=box(0.9,0.05,0.05,M.warn,80.1,8,-20.1,scene,false);o.rotation.set(0,0.785,0);};{const o=box(0.05,0.05,0.8,M.warn,80.07,10,-20.67,scene,false);o.rotation.set(0,0.785,0);};{const o=box(0.05,0.05,0.8,M.warn,80.67,10,-20.07,scene,false);o.rotation.set(0,0.785,0);};{const o=box(0.9,0.05,0.05,M.warn,80.1,10,-20.1,scene,false);o.rotation.set(0,0.785,0);};{const o=box(0.05,0.05,0.8,M.warn,80.07,12,-20.67,scene,false);o.rotation.set(0,0.785,0);};{const o=box(0.05,0.05,0.8,M.warn,80.67,12,-20.07,scene,false);o.rotation.set(0,0.785,0);};{const o=box(0.9,0.05,0.05,M.warn,80.1,12,-20.1,scene,false);o.rotation.set(0,0.785,0);};{const o=box(0.05,0.05,0.8,M.warn,80.07,14,-20.67,scene,false);o.rotation.set(0,0.785,0);};{const o=box(0.05,0.05,0.8,M.warn,80.67,14,-20.07,scene,false);o.rotation.set(0,0.785,0);};{const o=box(0.9,0.05,0.05,M.warn,80.1,14,-20.1,scene,false);o.rotation.set(0,0.785,0);};{const o=box(0.05,0.05,0.8,M.warn,80.07,16,-20.67,scene,false);o.rotation.set(0,0.785,0);};{const o=box(0.05,0.05,0.8,M.warn,80.67,16,-20.07,scene,false);o.rotation.set(0,0.785,0);};{const o=box(0.9,0.05,0.05,M.warn,80.1,16,-20.1,scene,false);o.rotation.set(0,0.785,0);};{const o=box(0.05,0.05,0.8,M.warn,80.07,18,-20.67,scene,false);o.rotation.set(0,0.785,0);};{const o=box(0.05,0.05,0.8,M.warn,80.67,18,-20.07,scene,false);o.rotation.set(0,0.785,0);};{const o=box(0.9,0.05,0.05,M.warn,80.1,18,-20.1,scene,false);o.rotation.set(0,0.785,0);};{const o=box(0.05,0.05,0.8,M.warn,80.07,20,-20.67,scene,false);o.rotation.set(0,0.785,0);};{const o=box(0.05,0.05,0.8,M.warn,80.67,20,-20.07,scene,false);o.rotation.set(0,0.785,0);};{const o=box(0.9,0.05,0.05,M.warn,80.1,20,-20.1,scene,false);o.rotation.set(0,0.785,0);};{const g=new CylG(0.35,0.35,0.5,10);const o=new THREE.Mesh(g,M.steel);o.position.set(84,29.95,-24);o.castShadow=true;scene.add(o);}{const g=new CylG(0.18,0.18,0.5,8);const o=new THREE.Mesh(g,M.bad);o.position.set(84,30.45,-24);o.castShadow=true;scene.add(o);}{const g=new CylG(0.35,0.35,0.6,8);const o=new THREE.Mesh(g,M.steel);o.position.set(85.3,28.4,-23);o.castShadow=true;scene.add(o);}{const g=new CylG(0.5,0.5,0.12,8);const o=new THREE.Mesh(g,M.ink);o.position.set(85.3,28.75,-23);o.castShadow=true;scene.add(o);}{const o=box(0.9,0.12,0.9,M.steel,82.7,28.45,-22.7,scene,false);o.rotation.set(-0.55,0,0);};{const o=box(0.5,0.05,0.05,M.ink,80.889,21.6,-20.889,scene,false);o.rotation.set(0,0.785,0);};{const o=box(0.5,0.05,0.05,M.ink,80.889,22.1,-20.889,scene,false);o.rotation.set(0,0.785,0);};{const o=box(0.5,0.05,0.05,M.ink,80.889,22.6,-20.889,scene,false);o.rotation.set(0,0.785,0);};{const o=box(0.5,0.05,0.05,M.ink,80.889,23.1,-20.889,scene,false);o.rotation.set(0,0.785,0);};{const o=box(0.5,0.05,0.05,M.ink,80.889,23.6,-20.889,scene,false);o.rotation.set(0,0.785,0);};{const o=box(0.5,0.05,0.05,M.ink,80.889,24.1,-20.889,scene,false);o.rotation.set(0,0.785,0);};{const o=box(0.5,0.05,0.05,M.ink,80.889,24.6,-20.889,scene,false);o.rotation.set(0,0.785,0);};{const o=box(0.5,0.05,0.05,M.ink,80.889,25.1,-20.889,scene,false);o.rotation.set(0,0.785,0);};{const o=box(0.5,0.05,0.05,M.ink,80.889,25.6,-20.889,scene,false);o.rotation.set(0,0.785,0);};{const o=box(0.5,0.05,0.05,M.ink,80.889,26.1,-20.889,scene,false);o.rotation.set(0,0.785,0);};{const o=box(0.5,0.05,0.05,M.ink,80.889,26.6,-20.889,scene,false);o.rotation.set(0,0.785,0);};{const o=box(0.5,0.05,0.05,M.ink,80.889,27.1,-20.889,scene,false);o.rotation.set(0,0.785,0);};box(0.05,6.4,0.05,M.ink,80.709,24.4,-21.069,scene,false);box(0.05,6.4,0.05,M.ink,81.069,24.4,-20.709,scene,false);
     signDraws.push(x=>{const b=tok("brand");x.fillStyle="#f4f4f1";x.fillRect(0,0,1024,128);
       x.fillStyle="rgba(0,0,0,0.06)";for(let y=0;y<128;y+=32)x.fillRect(0,y,1024,1);x.fillStyle=b;x.fillRect(0,11,1024,11);x.fillRect(0,106,1024,11);
       x.textAlign="center";x.textBaseline="middle";let n=MILL.name.toUpperCase(),fs=76;
@@ -11023,9 +11378,7 @@ function no3D(){G3.ok=false;$("no3d").hidden=false;$("no3d-retry").onclick=()=>l
     const walk=new THREE.Mesh(new THREE.TorusGeometry(R+0.55,0.14,5,28),M.steel);walk.rotation.x=Math.PI/2;walk.position.set(TX,H+0.15,TZ);scene.add(walk);
     const rail=new THREE.Mesh(new THREE.TorusGeometry(R+0.75,0.05,4,28),M.ink);rail.rotation.x=Math.PI/2;rail.position.set(TX,H+1.2,TZ);scene.add(rail);
     for(let k=0;k<12;k++){const a=k/12*6.283;box(0.06,1.1,0.06,M.ink,TX+Math.cos(a)*(R+0.75),H+0.7,TZ+Math.sin(a)*(R+0.75),scene,false);}
-    // ladder up one leg, lamp on top
-    for(let y=1;y<H;y+=0.7)box(0.5,0.05,0.05,M.ink,TX-3.1,y,TZ-3.55,scene,false);[-0.25,0.25].forEach(dx=>box(0.05,H,0.05,M.ink,TX-3.1+dx,H/2,TZ-3.55,scene,false));
-    box(0.1,1.2,0.1,M.ink,TX,H+6.4+2.4,TZ,scene,false);G3.extraBeacons=(G3.extraBeacons||[]).concat([[TX,H+6.4+3.1,TZ]]);
+    G3.extraBeacons=(G3.extraBeacons||[]).concat([[TX,H+6.4+3.4,TZ]]);
     blob(TX,TZ,7);}
   // bale stacks between the receiving shed and the rail spur (where the train drops them): plain boxes, one shared
   // geometry (a rounded box here would be 29 x 316 triangles for the same look from any distance a player sees them)
@@ -16767,6 +17120,7 @@ function camPullOn(){try{return localStorage.getItem("paper-mill-campull")!=="of
     ["Basis weight setpoint","The weight the machine aims for, set on the WET DCS from 10% under to 5% over the grade's target. The weight spec is ±3% around it."],
     ["Lightweight premium","On-spec paper made under the grade's target weight earns half the trim as extra price, up to 5%. A lighter sheet needs more refining to pass ring crush."],
     ["Headbox consistency (HBC)","Fiber in the headbox jet: about 0.8%. The fan pump thins the machine chest's stock (about 3.2%) down to it with white water."],
+    ["Pipe colours","Pipes are coloured by what they carry: brown is raw stock from the pulper, blue is cleaned stock, teal is white water and filtrate, pale blue is fresh water and silver is insulated steam. White arrows point the way it flows."],
     ["Fan pump","Pumps the stock to the headbox, mixing in white water from the silo. If the silo runs under 15% it cavitates and the weight swings."],
     ["White water","The water that drains through the forming fabric, still carrying fine fiber. The mill uses it again to dilute stock."],
     ["White water silo","The tank under the wire (60,000 gallons) that catches the table's drainage and feeds the fan pump. It normally overflows to the white water chest; LV-202 tops it up under 25%, and held under 8% the sheet breaks."],
