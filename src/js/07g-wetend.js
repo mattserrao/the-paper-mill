@@ -98,7 +98,7 @@ function rctNow(bw){const ri=1+WE.rctK*(kwhNow()-WE.kwh0)-WE.rctStk*Math.max(0,(
 const premShare=()=>S.we?Math.min(WE.premMax,WE.prem*Math.max(0,-S.we.trim)):0;
 // the paper machine's water this step (07f waterTick, before its own sums): returns the change in the silo's water (t)
 function weFlow(dt,u){const W=weState(),h=dt/60,F=W.f,run=S.pm==="run"&&u>0;
-  const K=S.knob,x=K&&K.any&&K.x?K.x:null,cs=x&&x.cs!=null?x.cs:19,ps=x&&x.ps!=null?x.ps:44+4*LV("shoe"),vac=x?x.vac:30;
+  const K=S.knob,x=K&&K.any&&K.x?K.x:null,cs=x&&x.cs!=null?x.cs:csStd(),ps=x&&x.ps!=null?x.ps:psStd(),vac=x?x.vac:30;
   const L0=W.L;let make=0,over=0,hb=0,dil=0,drain=0,seal=0,press=0,hbc=WE.hbc;
   if(run){const U=u/h,sp=Math.max(S.pmSpeed,1),mc=mcCons(),Qd=weU0(sp)*100/WE.hbc,Ft=U*100/mc,Dd=Math.max(0,Qd-Ft);
     const s=clamp(WE.seal0+WE.sealK*(vac-30),0.08,0.4),siloIn=Q=>Math.max(0,Q-U*100/cs)*(1-s);

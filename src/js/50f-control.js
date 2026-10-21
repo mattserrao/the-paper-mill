@@ -135,11 +135,46 @@ function trDrawRel(){const el=trQ("#trRel");if(!el)return;const p=trPens(),T=TRU
 function qcsBuild(b){
   b.appendChild(kEl("div","qcshead",`<div class="qcsst" id="qcsSt"></div><div class="qcsv" id="qcsV"></div>`));
   b.appendChild(kEl("div","dcsctl",`<div class="dcssub">Beater &amp; on spec</div><div class="qcsv" id="qcsBk"></div>`));
-  b.appendChild(kEl("div","dcstr",`<div class="dcssub">CD moisture profile · 12 zones (spec ±1.5 %)</div><canvas width="640" height="170" id="qcsCd"></canvas>`));
+  // v6.11: the CD profile with the twin rolls and the trim over it, and the three CD actuators (07k)
+  b.appendChild(kEl("div","dcstr",`<div class="dcssub">CD profile · 12 zones · drive side on the left</div><div class="cdroll" id="qcsRolls"></div><canvas width="640" height="230" id="qcsCd"></canvas><div class="cdact" id="qcsAct"></div>`));
+  const A=$("qcsAct");if(A&&!A._w){A._w=1;
+    A.addEventListener("click",e=>{const t=e.target.closest("[data-cdman]");if(!t)return;const row=t.dataset.cdman;cdSetMan(row,!cdState().man[row]);cdActSync(true);});
+    A.addEventListener("input",e=>{const t=e.target.closest("[data-cdz]");if(!t)return;const [row,z]=t.dataset.cdz.split(":");cdSetZone(row,+z,+t.value);cdActSync();});}
   b.appendChild(kEl("div","qcsdef",`<div class="dcssub">Web inspection</div><div class="qcsgrid" id="qcsDef"></div>`));
   b.appendChild(kEl("div","dcsctl",`<div class="dcssub">Spec sheet</div><div class="qtab" id="qcsSpec"></div>`));
   b.appendChild(kEl("div","dcsctl",`<div class="dcssub">Off-spec log · newest first</div><div class="qtab" id="qcsLog"></div>`));
   b.appendChild(kEl("div","dcsctl",`<div class="dcssub">Grade changes</div><div class="qtab" id="qcsGc"></div>`));}
+// v6.11 the CD actuator rows: AUTO / MAN and a zone slider each (built once per layout, values synced)
+const CDROWS=[["dil","Headbox dilution","weight streaks",-100,100],["sb","Steam box","wet streaks, wet edges",0,100],["sp","Spray boom","dry streaks",0,100]];
+function cdActSync(force){const A=$("qcsAct");if(!A||!cdOn())return;const C2=cdState(),key=CDROWS.map(r=>r[0]+(C2.man[r[0]]?1:0)).join("")+(sbHave()?"s":"");
+  if(force||A._k!==key){A._k=key;A.innerHTML=CDROWS.map(([id,n,what,lo,hi])=>{const na=id==="sb"&&!sbHave(),man=C2.man[id];
+    return `<div class="cdrow${na?" na":""}"><div class="cdlab"><b>${n}</b><small>${na?"not fitted · Upgrades: Steam box":what}</small>${na?"":`<button type="button" class="cdmode${man?" man":""}" data-cdman="${id}">${man?"MAN":"AUTO"}</button>`}</div>
+      <div class="cdz">${Array.from({length:12},(_,z)=>`<label><input type="range" min="${lo}" max="${hi}" step="5" data-cdz="${id}:${z}"${na||!man?" disabled":""}><span></span></label>`).join("")}</div></div>`;}).join("");}
+  A.querySelectorAll("[data-cdz]").forEach(i=>{const [id,z]=i.dataset.cdz.split(":"),C3=S.cd,v=C3.man[id]?C3.ms[id][z]:Math.round((id==="sp"?C3.sp[z]:id==="sb"?C3.sb[z]:C3.dil[z]/1.5)*100);
+    if(document.activeElement!==i&&+i.value!==v)i.value=v;const s=i.nextElementSibling,t=String(v);if(s.textContent!==t)s.textContent=t;});}
+// the profile: the web with its trim and twin rolls on top, zone moisture against the spec, zone weight against its tolerance
+function cdDraw(cv,r){if(!cv)return;const x=cv.getContext("2d"),W=cv.width,H=cv.height;x.fillStyle="#0f1b2d";x.fillRect(0,0,W,H);
+  if(!r.run||!cdOn()){x.fillStyle="rgba(190,205,230,.8)";x.font="600 18px system-ui,sans-serif";x.textAlign="center";x.fillText(!r.run?"Scanner parked: no sheet":"Zen: no CD profile",W/2,H/2);x.textAlign="left";return;}
+  const C2=cdState(),web=webW(),Wd=S.wdW||windW(C.grade),tr=(web-2*Wd)/2,X=v=>v/web*W,o=C2.off||[[],[]];
+  // the web: trim (hatched), the DS and TS rolls (red when going to the beater)
+  x.fillStyle="#3a4660";x.fillRect(0,4,W,22);
+  [[tr,tr+Wd,0],[tr+Wd,tr+2*Wd,1]].forEach(([a,b,s])=>{x.fillStyle=o[s].length?"#b9473f":"#3e6f5a";x.fillRect(X(a)+1,4,X(b)-X(a)-2,22);x.fillStyle="#fff";x.font="700 12px system-ui,sans-serif";x.textAlign="center";
+    x.fillText(`${CDSIDE[s]} roll ${wFmt(Wd)}${o[s].length?" · beater":""}`,(X(a)+X(b))/2,19);});
+  x.strokeStyle="rgba(255,255,255,.25)";for(let k=0;k<W;k+=6){x.beginPath();x.moveTo(k,26);x.lineTo(k+4,4);x.stroke();}x.fillStyle="#3e6f5a";
+  [[tr,tr+Wd,0],[tr+Wd,tr+2*Wd,1]].forEach(([a,b,s])=>{x.fillStyle=o[s].length?"#b9473f":"#3e6f5a";x.fillRect(X(a)+1,4,X(b)-X(a)-2,22);x.fillStyle="#fff";x.fillText(`${CDSIDE[s]} roll ${wFmt(Wd)}${o[s].length?" · beater":""}`,(X(a)+X(b))/2,19);});
+  // moisture
+  const sp=QSPEC[C.grade]||QSPEC["24"],lo=3,hi=13,top=34,mh=120,Y=v=>top+mh-clamp((v-lo)/(hi-lo),0,1)*mh,zw=W/12;
+  x.fillStyle="rgba(79,209,139,.14)";x.fillRect(0,Y(sp.m[1]),W,Y(sp.m[0])-Y(sp.m[1]));
+  for(let z=0;z<12;z++){const m=QNOW.m+C2.dv[z],bad=m<sp.m[0]||m>sp.m[1];x.fillStyle=bad?"#ff6b5e":"#5f8fd8";const y=Y(m);x.fillRect(z*zw+5,y,zw-10,top+mh-y);}
+  x.fillStyle="rgba(190,205,230,.8)";x.font="600 11px system-ui,sans-serif";x.textAlign="left";x.fillText(`moisture % · spec ${sp.m[0]}–${sp.m[1]}`,6,top+11);
+  // edge wet bands
+  for(let s=0;s<2;s++)if(C2.edge[s]>0.05){x.fillStyle=C2.edge[s]>tr?"#ff6b5e":"#8fb3c9";const w=Math.max(2,X(C2.edge[s]));x.fillRect(s?W-w:0,top,w,mh);}
+  // basis weight streaks
+  const bt=top+mh+12,bh=56,tol=CD.bwTol*bwSp(),YB=v=>bt+bh/2-clamp(v/(tol*2.2),-1,1)*bh/2;
+  x.fillStyle="rgba(79,209,139,.14)";x.fillRect(0,YB(tol),W,YB(-tol)-YB(tol));x.strokeStyle="rgba(190,205,230,.35)";x.beginPath();x.moveTo(0,bt+bh/2);x.lineTo(W,bt+bh/2);x.stroke();
+  for(let z=0;z<12;z++){const v=C2.bw[z],bad=Math.abs(v)>tol;x.fillStyle=bad?"#ff6b5e":"#c4b08c";const y=YB(v),y0=bt+bh/2;x.fillRect(z*zw+5,Math.min(y,y0),zw-10,Math.max(1,Math.abs(y-y0)));
+    x.fillStyle="rgba(190,205,230,.75)";x.font="600 12px system-ui,sans-serif";x.textAlign="center";x.fillText(String(z+1),z*zw+zw/2,H-3);}
+  x.textAlign="left";x.fillStyle="rgba(190,205,230,.8)";x.font="600 11px system-ui,sans-serif";x.fillText(`weight streak · ±${tol.toFixed(2)} lb`,6,bt+10);}
 const dhm=t=>`D${Math.floor(t/1440)+1} ${clockOf(t)}`;
 const durTxt=m=>m>=90?(m/60).toFixed(1)+" h":Math.max(1,Math.round(m))+" min";
 function qcsRefresh(){const Q=S.q||{},put=(id,h)=>{const e=$(id);if(e&&e._h!==h){e._h=h;e.innerHTML=h;}};

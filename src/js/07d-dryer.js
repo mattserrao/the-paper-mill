@@ -15,7 +15,7 @@ const DRY={hold:0.3,m0:8,ceil:180,ceilFloor:0.7,perKpa:0.15,spec:10,back:9,slope
   base:{"24":120,"28":127,"31":136,"34Super":133}};   // (3rd-section kPa by grade at its standard rate; v6.7.1 grade set)
 DRY.wpt0=(1-DRY.m0/100)/0.44-1;   // water evaporated per ton of paper at standard press solids
 function dryState(){if(!S.dry)S.dry={m:DRY.m0,st3:DRY.base[C.grade]||DRY.base["24"],dem:DRY.base["24"],trim:0,steam:0,hdr:1,load:0.7,maxDem:0,wet:false};return S.dry;}
-const dryWpt=()=>(1-DRY.m0/100)/(0.44+0.04*LV("shoe"))-1;   // (v6.5.6: on the 8% setpoint; it assumed 7%)   // water per ton of paper into the dryers
+const dryWpt=()=>(1-DRY.m0/100)/(psStd()/100)-1;   // (v6.5.6: on the 8% setpoint; it assumed 7%)   // water per ton of paper into the dryers
 const drySlope=g=>DRY.slopeRef*(GRADES[g].bw/GRADES["24"].bw);
 const dryRef=g=>BASE.K*GRADES[g].sp*GRADES[g].bw;   // the grade's standard t/h (what the base pressure was measured at)
 // the ceiling, less what a sagging boiler header takes off it

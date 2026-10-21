@@ -449,6 +449,11 @@
   // the sheet runs over the top cans and under the bottom cans (serpentine), with true tangent lines between them
   const sheetPre=[[55.1,3.07],[54.0,2.95],[41,3.0],[37,3.4],[32,3.4],[29,3.6]],CANR=1.34;
   const canCirc=[];for(let i=0;i<10;i++){canCirc.push({x:(872-i*32-600)/10,y:5.4,d:1});canCirc.push({x:(856-i*32-600)/10,y:2.4,d:-1});}
+  // v6.11 the remoisturizing spray boom (standard, 07k): a beam across the sheet between the last dryer and the reel, 12 nozzle
+  // zones on its underside, a water header from the drive side
+  {const X=-3.3,Y=5.3,Z0=zc-CD/2-0.25,Z1=zc+CD/2+0.25,L=Z1-Z0;box(0.42,0.36,L,M.steel,X,Y,zc,scene,false);box(0.46,0.06,L+0.1,M.ink,X,Y-0.21,zc,scene,false);
+    for(let k=0;k<12;k++){const z=Z0+0.15+(k+0.5)*(L-0.3)/12;box(0.12,0.14,0.12,M.stock,X,Y-0.3,z,scene,false);}
+    [Z0-0.05,Z1+0.05].forEach(z=>box(0.16,Y,0.16,M.steel,X,Y/2,z,scene,false));pipe([[X,Y+0.25,Z0],[X,Y+0.25,Z0-1.2],[X,0.6,Z0-1.2]],0.1,M.ww);}
   // Pope reel: the sheet wraps the reel drum and goes into the nip with the building reel (or the new spool right after turn-up)
   canCirc.push({x:DX,y:DY,d:1,r:DR});
   // tangent point on circle c for a straight run between the circle and point q; "out" = leaving the circle toward q

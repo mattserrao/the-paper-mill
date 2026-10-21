@@ -19,6 +19,7 @@ function step(dt){
   knobTick(dt);   // v5.6 fiddly knobs (returns at once unless a knob was moved)
   dcsTick(dt);   // v6.5 b3 DCS motors and reject purges (07c; nothing until the DCS is used)
   dryTick(dt);   // v6.5 b5 the dryer limit: water, steam, moisture (07d)
+  cdTick(dt);   // v6.11 the CD profile and its actuators (07k)
   weTick(dt);   // v6.8 the basis weight loop, bale water in the pulper, screen pressure drop (07g)
   // 1 inbound arrivals
   // weather: changes every few hours; snow and fog slow the trucks, rain soaks bales
@@ -93,6 +94,7 @@ function step(dt){
     // transition tons; then the other knob defects' share
     let off=0;if(qualTick().off)off=prod;
     else if(S.chg){off=Math.min(prod,S.chg.left);S.chg.left-=off;if(S.chg.left<=1e-6){log(`Grade change to ${S.chg.to} complete: back on spec`,"ok");S.chg=null;}}
+    else{const cf=cdOff();if(cf>0)off=prod*cf;}   // v6.11: a streak or a wet edge beaters only the roll under it (07k)
     {const kf=knobOff();if(kf>0)off=Math.min(prod,off+(prod-off)*kf);}   // v5.6: a moved knob sending part of the reel to the beater (defects other than weight and moisture)
     // (v6.5.3: off-spec paper stays on the reel as beater and is wound into beater rolls; before, it vanished here)
     if(off>0){pfW("broke",off);S.tot.broke+=off;S.q.off+=off;prod-=off;beat=off;}
