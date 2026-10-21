@@ -135,7 +135,7 @@ function vlvRun(n){const W=S.vlv;if(!W||!W.B)return;n=Math.min(VLV.sub,n);
 function vlvCatch(acc){const W=S.vlv;if(!W||!W.any||S.zen||!W.B)return;vlvRun(Math.floor(acc*60+1e-6));}
 // every step (07-sim-step.js), before the knobs and the machine: finish the window, hand the results to the game
 function vlvTick(dt){const W=S.vlv;if(!W||!W.any||S.zen)return;if(!W.B)vCap();vlvRun(VLV.sub);
-  const K=S.knob;if(W.lp["NV-101"]){const k=knobState();k.any=true;
+  if(W.lp["NV-101"]){const k=knobState();k.any=true;
     // pulper consistency swings reach the machine chest through the storage chest (an hour of stock)
     W.cpl=ease(W.cpl==null?5:W.cpl,W.lp["NV-101"].y,dt,VLV.cpTau);}
   else if(W.cpl!=null){W.cpl=ease(W.cpl,5,dt,VLV.cpTau);if(Math.abs(W.cpl-5)<0.005)W.cpl=null;}

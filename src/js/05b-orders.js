@@ -150,7 +150,7 @@ function recTake(t,dt){if(!baleOn())return;const Q=bqState(),Y=recPiles(),sq=rec
 function recRate(){if(!baleOn())return Infinity;const sh=recShare(bqState().rec,"M");return P.pulperMax*(1-MW_RATE.k*Math.max(0,sh-MW_RATE.ref));}
 // an inbound load's grade and moisture (drawn when the truck arrives)
 // v6.8.3: the kind is the one furthest below its share of the recipe, counting the yard and the trucks already in
-function baleGrade(tr){const r=rand("bale"),a=rand("bale"),b=rand("bale");   // (three draws as before, so the bale stream is unchanged)
+function baleGrade(tr){rand("bale");const a=rand("bale");rand("bale");   // (three draws as before, so the bale stream is unchanged)
   let q="C";if(baleOn()){const Q=bqState(),Y=recPiles(),have={A:Y.A,C:Y.C,M:Y.M};for(const t of S.inQ.concat(S.inDock))if(t&&t.q&&have[t.q]!=null)have[t.q]+=t.load;
     const tot=have.A+have.C+have.M+tr.load;let bv=-1e9;for(const k of BTK){const v=recShare(Q.rec,k)*tot-have[k];if(v>bv){bv=v;q=k;}}}
   let m=BALE.m0+BALE.mSpread*a+(S.wx==="rain"?BALE.rain*(0.5+0.5*S.wet):S.wx==="snow"?BALE.snow:0)+(q==="A"?0:0.01);

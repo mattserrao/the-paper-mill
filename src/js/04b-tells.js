@@ -33,7 +33,6 @@ const TELLTXT={balefire:"pallets stacked against a space heater at the bale yard
   boiler:"the boiler feed pump shaking and smoking",permit:"the wastewater outfall running discolored",icedintake:"ice building up on the river intake screen",brownout:"the substation panel flickering"};
 // v5.7: tells only in a running season, survival run or free play; never in zen, a lost run or the start menu
 const tellsOn=()=>!!(S&&!S.zen&&!S.over&&((S.season&&S.season.on)||S.free));
-const tellOk=id=>TELLABLE.has(id)&&tellsOn();
 function tellLead(){const w=survOn()?survWave():1;return Math.max(TELL.min,TELL.lead-(survOn()?TELL.step*(w-1):0))*1440;}
 function tellState(){if(!S.tell)S.tell={q:[],pre:false,day:-1,n:0,saved:0,savedMin:0,cn:{},prep:null};return S.tell;}
 const tellPending=id=>{const q=S.tell&&S.tell.q;if(!q)return false;for(let k=0;k<q.length;k++)if(q[k].id===id)return true;return false;};
@@ -78,8 +77,6 @@ function tellRoundEnd(a,caught){const T=tellState(),left=T.q.filter(p=>p.area===
 const tellRep=()=>LV("reliab")>=1||leadIs("dot");
 // per area: 0 steady, 1 climbing (something pending), 2 climbing fast (due within 24 h)
 function tellTrend(a){const q=(S.tell&&S.tell.q)||[];let v=0;for(const p of q)if(p.area===a)v=Math.max(v,p.due-S.t<1440?2:1);return Math.max(v,rlyTellTrend(a));}   // (v6.10: and what the shift rounds found, 07i)
-// in the visible list: only tells the dice actually rolled (the 3D shows them during a Round)
-const tellIn=a=>((S.tell&&S.tell.q)||[]).filter(p=>p.area===a);
 const tellSummary=()=>{const T=S&&S.tell;if(!T||!T.n)return "";return `Upsets caught early: ${T.n} — saved ${money(T.saved)} and ${tellHrs(T.savedMin)} of downtime.`;};
 // the end screens' line: "3 — saved $412k and 9.5 hours of downtime" (null when tells never ran this run)
 const tellEndStat=()=>{const T=S&&S.tell;if(!T||!T.pre)return null;return ["Upsets caught early",T.n?`${T.n} — saved ${money(T.saved)} and ${tellHrs(T.savedMin)} of downtime`:"none","wide"];};
@@ -108,7 +105,6 @@ function prepTally(pr){const it=pr&&pr.it||{};let n=0,m=0;
   if(it.draw){n++;m+=PREP.draw.min;}
   return {n,m};}
 const prepLine=(n,m)=>`Prep ${n}/4 — outage shortened ${m>=60?Math.floor(m/60)+" h"+(m%60?" "+m%60+" m":""):m+" min"}`;
-const prepTxt=pr=>{const t=prepTally(pr);return prepLine(t.n,t.m);};
 // the player's choices
 function prepDo(item,ch){const f=prepFor();if(!f)return false;const pr=prepState(f.k),it=pr.it,X=PREP.items.find(i=>i.k===item);if(!X||!prepUnlocked(X,f.left))return false;
   if(item==="parts"){const P2=PREP.parts;

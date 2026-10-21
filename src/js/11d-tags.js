@@ -6,8 +6,6 @@
    hourly history (S.hist) for tags that have a column there. Units: water and stock flows in US gallons a minute,
    volumes in gallons (v6.7: they were m³/h, L/s and m³). */
 const GPM=m3h=>m3h*4.40287,GAL=m3=>m3*264.172,LS_GPM=ls=>ls*15.8503;
-const WAT_GAL=()=>GAL(WAT.cap);                       // the white water chest, full
-const CHEST_GAL=()=>GAL(P.tankCap/(WAT.cs/100));      // the stock storage chest, full (its tons of fiber at storage consistency)
 const MCHEST_GAL=60000;                                // the machine chest
 const fmtGal=g=>{const a=Math.abs(g),s=g<0?"−":"";return s+(a>=1e6?(a/1e6).toFixed(2)+"M gal":a>=1e4?Math.round(a/1e3)+"k gal":Math.round(a).toLocaleString()+" gal");};
 const fmtGpm=g=>(g>=1e4?(g/1e3).toFixed(1)+"k":Math.round(g).toLocaleString())+" gpm";
