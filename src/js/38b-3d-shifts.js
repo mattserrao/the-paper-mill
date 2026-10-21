@@ -3,7 +3,7 @@
      incoming crew walks in from the parking lot, each to the person they relieve (a tech's bench in the shop; an
      operator wherever they are), stops for a word, and the outgoing person walks back out to the lot. In the mill the
      two simply trade places: the figure that stays takes the new hat and the walker leaves in the old one. A tech out
-     on a job is relieved when they get back to the shop. A load, a reseed, zen, the bare view, a jump of more than an
+     on a job is relieved when they get back to the shop. A load, a reseed, zen, a jump of more than an
      hour, or the next change arriving first all skip the walk and change the hats on the spot. Cosmetic only. ---- */
   const SHC={s:null,pool:{t:[],o:[],sp:[]},live:[],PARK:[63.6,34.4]};G3.SHC=SHC;   // (G3.SHC: tests)
   function setHat(w,m){const h=w.userData&&w.userData.hats;if(!h||!m||h[0].material===m)return;for(const x of h)x.material=m;}
@@ -22,7 +22,7 @@
   function shcFlush(){for(const L of SHC.live){setHat(L.f.w,L.newM);shcDone(L);}SHC.live.length=0;}
   G3.shiftUpdate=(rdt,now)=>{if(!S||!M.hatTeam)return;const s=manIdx(),m=manShift(s),figs=shcFigs();
     if(s!==SHC.s){const prev=SHC.s;SHC.s=s;shcFlush();
-      const walk=prev===s-1&&S.t-s*720<60&&!S.zen&&!G3.bare;
+      const walk=prev===s-1&&S.t-s*720<60&&!S.zen;
       figs.forEach((f,n)=>{const newM=shcWant(m,f);if(!newM)return;const oldM=f.w.userData.hats[0].material;
         if(!walk||!f.w.visible||oldM===newM){setHat(f.w,newM);return;}
         const c=shcWalker(f,newM);c.position.set(SHC.PARK[0]+(n%4)*0.7,0,SHC.PARK[1]+Math.floor(n/4)*0.7);

@@ -3,7 +3,7 @@
      G3.skyTick with the sky colour it already computes for the fog. Clouds and mist are camera-facing quads in one
      mesh each (one draw), their corners rewritten per frame; none on the Low tier. ---- */
   const SKY={n:0};G3.SKY=SKY;
-  if(!G3.bare&&(!camera.isIso||G3.zenFree)&&!new URLSearchParams(location.search).has("nosky")){   // (v6.2: zen's free camera sees the sky)   // (v6.1 iso: the view never reaches the sky)
+  if(G3.zenFree&&!new URLSearchParams(location.search).has("nosky")){   // (v6.2: zen's free camera sees the sky)   // (v6.1 iso: the view never reaches the sky)
   const uni={top:{value:new THREE.Color(0.5,0.6,0.8)},hor:{value:new THREE.Color(0.8,0.85,0.9)},sunDir:{value:sun.position.clone().normalize()},glow:{value:new THREE.Color(1,0.85,0.6)},gk:{value:0}};
     const skyMat=new THREE.ShaderMaterial({uniforms:uni,
       vertexShader:"varying vec3 vDir;void main(){vDir=normalize(position);vec4 p=projectionMatrix*modelViewMatrix*vec4(position,1.0);gl_Position=vec4(p.xy,p.w*0.99999,p.w);}",
@@ -32,10 +32,10 @@
           pos[b+9]=it.x-r.x*hw+u.x*hh;pos[b+10]=it.y-r.y*hw+u.y*hh;pos[b+11]=it.z-r.z*hw+u.z*hh;}
         g.setDrawRange(0,items.length*6);g.attributes.position.needsUpdate=true;g.computeBoundingSphere();}};}
     const _sr=new THREE.Vector3(),_su=new THREE.Vector3();
-    const tier=G3.GFX||{},nCloud=new URLSearchParams(location.search).has("noclouds")||tier.bare?0:tier.tier==="low"?0:tier.tier==="medium"?4:tier.tier==="ultra"?14:10;
+    const tier=G3.GFX||{},nCloud=new URLSearchParams(location.search).has("noclouds")?0:tier.tier==="low"?0:tier.tier==="medium"?4:tier.tier==="ultra"?14:10;
     const clouds=billboards(Math.max(1,nCloud),0xffffff,0.85),mist=billboards(8,0xf2f7ff,0.5);
     for(let i=0;i<nCloud;i++)clouds.items.push({x:-500+Math.random()*1000,y:150+Math.random()*90,z:-450+Math.random()*900,w:90+Math.random()*120,h:30+Math.random()*24,v:1.2+Math.random()*1.5});
-    SKY.clouds=clouds;SKY.mist=mist;SKY.mistOn=tier.tier!=="low"&&!tier.bare&&SITE.env==="rural";   // (v17: no mist on the bayou)
+    SKY.clouds=clouds;SKY.mist=mist;SKY.mistOn=tier.tier!=="low"&&SITE.env==="rural";   // (v17: no mist on the bayou)
     // mist banks: over the ponds in the bayou, along the river in the valley; placed on the first tick (the ponds come from the scenery)
     SKY.placeMist=()=>{if(SKY.mistSet)return;SKY.mistSet=true;const it=mist.items;
       // five overlapping banks along the river either side of the mill, then (bayou) the ponds nearest the mill

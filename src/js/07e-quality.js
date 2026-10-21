@@ -18,8 +18,8 @@ const qBw=g=>{const s=(QSPEC[g]||QSPEC["24"]).bw,f=g===C.grade?bwSp()/bwStd():1;
 // the latest check (derived each step, not saved): measured values, what's out, the share of production going to the beater
 const QNOW={bw:0,m:8,shade:true,rct:60,out:[],why:"",off:0};
 // what the scanner reads now (no dice: the swings are smooth functions of time, like the DCS readings)
-function qualMeasure(){const g=C.grade,G=GRADES[g]||GRADES["24"],K=S.knob,t=S.t;
-  const wob=(f,k)=>Math.sin(t*f+k)*0.6+Math.sin(t*f*2.7+k*2)*0.4,sw=K&&K.any&&K.x?K.x.sw:0;
+function qualMeasure(){const t=S.t;
+  const wob=(f,k)=>Math.sin(t*f+k)*0.6+Math.sin(t*f*2.7+k*2)*0.4;
   const bw=bwMeas()+wob(0.11,5)*0.12;   // (v6.8: the BW loop's weight as the scanner saw it WE.dead minutes ago, 07g; thick stock and swings come through it)
   const m=S.dry?S.dry.m:DRY.m0;
   // shade: the dye system is in trouble (an upset, or the dye pump stopped from the DCS)

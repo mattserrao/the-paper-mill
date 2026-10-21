@@ -48,7 +48,6 @@ button.primary{background:var(--stock);border-color:var(--stock);color:var(--pan
 .kpi .k{font:600 12px var(--f-display);letter-spacing:.08em;text-transform:uppercase;color:var(--muted)}
 .kpi .v{font:500 20px var(--f-mono);font-variant-numeric:tabular-nums;white-space:nowrap}
 .kpi .s{font-size:12px;color:var(--muted);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-#plant{display:block;width:100%;min-width:760px;height:auto}
 .seg{display:inline-flex;border:1px solid var(--line);border-radius:6px;overflow:hidden}
 .seg button{border:0;border-radius:0;padding:6px 14px}
 .seg button[aria-pressed="true"]{background:var(--ink);color:var(--panel)}
@@ -64,34 +63,22 @@ button.primary{background:var(--stock);border-color:var(--stock);color:var(--pan
 #gl:active{cursor:grabbing}
 #labels3d{position:absolute;inset:0;pointer-events:none;overflow:hidden}
 #lbl2d{position:absolute;left:0;top:0;width:100%;height:100%;pointer-events:none}
-.view3d.compact .lbl{font-size:12px;padding:1px 5px}
-.view3d.compact .lbl b{font-size:12px}
-.view3d.compact .lbl span{display:none}
-.lbl{position:absolute;left:0;top:0;background:color-mix(in srgb,var(--panel) 90%,transparent);border:1px solid var(--line);border-radius:5px;padding:2px 7px;font:500 12px var(--f-mono);white-space:nowrap;font-variant-numeric:tabular-nums;color:var(--ink);line-height:1.3}
-.lbl b{display:block;font:700 12px var(--f-display);letter-spacing:.06em;text-transform:uppercase}
-.lbl.bad{border-color:var(--bad)} .lbl.bad b{color:var(--bad)}
 .banner3d{position:absolute;top:10px;left:50%;transform:translateX(-50%);display:flex;align-items:center;gap:10px;background:var(--panel);border:2px solid var(--bad);border-radius:6px;padding:4px 12px 4px 4px;width:max-content;max-width:calc(100% - 20px)}
 .banner3d span{background:var(--bad);color:var(--panel);font:700 13px var(--f-display);padding:3px 8px;border-radius:4px;letter-spacing:.08em;flex:none}
 .banner3d b{font:700 16px var(--f-display);color:var(--ink);min-width:0}
-.banner3d[hidden],.lbl[hidden]{display:none}
+.banner3d[hidden]{display:none}
 .banner3d.good{border-color:var(--ok)} .banner3d.good span{background:var(--ok)}
 .blackout3d{position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);pointer-events:none;z-index:4}
 .blackout3d div{background:rgba(255,255,255,.96);border:1px solid var(--line);border-left:4px solid var(--warn);border-radius:14px;padding:12px 16px;box-shadow:0 12px 32px rgba(0,0,0,.25);display:flex;flex-direction:column;gap:2px;min-width:240px}
 .blackout3d b{font:800 18px var(--f-body)}
 .blackout3d span{font:500 12.5px var(--f-body);color:var(--muted)}
 .flash3d{position:absolute;inset:0;background:#fff;opacity:0;pointer-events:none;z-index:3;transition:opacity .08s}
-.lbl.inc{border-color:color-mix(in srgb,var(--bad) 45%,white);box-shadow:0 6px 18px rgba(214,56,44,.18)}
-.lbl.inc b{color:var(--bad)}
 .blackout3d[hidden]{display:none}
 .chips3d{position:absolute;left:10px;bottom:10px;display:flex;flex-wrap:wrap;gap:4px;max-width:75%;pointer-events:none}
 .chips3d span,.chips3d button{background:var(--bad);color:var(--panel);font:700 12px var(--f-display);letter-spacing:.06em;text-transform:uppercase;padding:2px 8px;border-radius:999px;border:0}
 .chips3d button{pointer-events:auto;cursor:pointer}.chips3d button:hover,.chips3d button:focus-visible{filter:brightness(1.12);outline:2px solid var(--ink);outline-offset:1px}
-.banner3d.go{cursor:pointer}.lbl.inc{pointer-events:auto;cursor:pointer}
-.trendbox{border:1px solid var(--line);border-radius:8px;background:var(--panel);padding:10px 12px}
-.trendhead{display:flex;flex-wrap:wrap;gap:6px 16px;align-items:center;font-size:12px;color:var(--muted)}
-.trendhead b{font:600 12px var(--f-display);letter-spacing:.08em;text-transform:uppercase;color:var(--ink);margin-right:auto}
+.banner3d.go{cursor:pointer}
 .sw{display:inline-block;width:14px;height:3px;border-radius:2px;vertical-align:middle;margin-right:5px}
-#trend{display:block;width:100%;height:150px}
 .cards{display:grid;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));gap:12px}
 .card{background:var(--panel);border:1px solid var(--line);border-radius:8px;padding:12px 14px;display:flex;flex-direction:column;gap:10px;min-width:0}
 .card h2{margin:0;font:700 17px var(--f-display);letter-spacing:.03em;display:flex;align-items:center;gap:8px}
@@ -176,10 +163,10 @@ button.danger{background:var(--bad);border-color:var(--bad);color:var(--panel)}
 
 /* ---- clean product-style skin (light only) ---- */
 body{font-size:14px}
-.kpis,.card,.shop,.chaos,.trendbox,.view3d{border-color:var(--line);border-radius:16px;box-shadow:var(--shadow)}
+.kpis,.card,.shop,.chaos,.view3d{border-color:var(--line);border-radius:16px;box-shadow:var(--shadow)}
 .kpis{gap:0;background:var(--panel)}
 .kpi{padding:12px 14px;border-right:1px solid var(--line)}
-.kpi .k,.trendhead b,.ledger h3,.ugrp h3,.grp h3{font:600 12px var(--f-body);letter-spacing:.02em;text-transform:none;color:var(--muted)}
+.kpi .k,.ledger h3,.ugrp h3,.grp h3{font:600 12px var(--f-body);letter-spacing:.02em;text-transform:none;color:var(--muted)}
 .kpi .v{font:700 21px var(--f-body);letter-spacing:-.01em}
 .card h2{font:700 15.5px var(--f-body);letter-spacing:-.01em}
 .card h2 .n{font:600 12px var(--f-body);border-radius:6px;background:var(--chip);border:0;color:var(--muted);padding:2px 7px}
@@ -196,16 +183,8 @@ button:focus-visible,input:focus-visible,select:focus-visible{outline-color:var(
 .seg{border-radius:10px} .seg button[aria-pressed="true"]{background:var(--brand);color:#fff}
 .chaoshead h2{font:800 22px var(--f-body);letter-spacing:-.01em;text-transform:none}
 .sign{border:1px solid var(--line);border-radius:14px;font:600 12px var(--f-body);letter-spacing:.04em}
-.lbl{display:flex;align-items:center;gap:6px;background:rgba(255,255,255,.9);border:1px solid rgba(225,228,238,.9);border-radius:999px;padding:2px 9px 2px 7px;font:500 12px var(--f-body);box-shadow:0 2px 8px rgba(28,34,51,.08);transition:opacity .6s ease}
-.lbl b{display:inline;font:700 12px var(--f-body);letter-spacing:0;text-transform:none;color:var(--ink)}
-.lbl span{color:var(--muted)}
-.lbl.inc{background:rgba(255,255,255,.92);border-radius:12px;flex-direction:column;align-items:flex-start;gap:0;padding:4px 10px}
-#labels3d.lbl-idle .lbl.sec{opacity:0}
-#labels3d.lbl-off .lbl.sec,#labels3d.lbl-off .lbl.inc{display:none}
 .paperseg button{padding:4px 12px;font-size:12px}
 .lblseg span{font:600 12px var(--f-body);color:var(--muted);padding:0 8px;align-self:center}
-.lbl b::before{content:"";display:inline-block;width:6px;height:6px;border-radius:50%;background:var(--brand);margin-right:5px;vertical-align:1px}
-.lbl.bad b::before{background:var(--bad)}
 .banner3d{border-radius:12px;border-width:1px;box-shadow:0 8px 24px rgba(28,34,51,.14)}
 .banner3d span{font:700 12px var(--f-body);letter-spacing:.04em;border-radius:8px}
 .banner3d b{font:700 15px var(--f-body)}
@@ -230,7 +209,7 @@ button:focus-visible,input:focus-visible,select:focus-visible{outline-color:var(
   .chaoshead{gap:8px 10px}.chaoshead .check{flex:1 1 100%}
   #chaosRandom{flex:1}#chaosMore,#shopMore{margin-left:0}
   .shop .chaoshead .wallet{flex:1}
-  .trendhead .dm{display:inline}.trendhead .sw{width:10px;margin-right:3px}.trendhead{flex-wrap:nowrap;gap:9px;font-size:12px;white-space:nowrap;overflow:hidden}.trendhead b{margin-right:auto}}
+}
 @media (max-width:640px){
   header{display:block}
   .kpis{grid-template-columns:1fr 1fr;margin-top:12px}.kpi{padding:9px 12px}.kpi .v{font-size:18px}.kpi .k{font-size:12px}.kpi .s{font-size:12px}
@@ -416,7 +395,7 @@ body{margin:0}
 #dealOv.dealres .modal{pointer-events:auto;cursor:pointer;box-shadow:0 18px 50px rgba(28,34,51,.28)}
 #dealOv.dealres .dk{visibility:hidden}
 /* v3.1.3 season lock */
-body.season-lock #chaosgrid button.trig,body.season-lock #chaosRandom,body.season-lock #v2dis{opacity:.45;cursor:not-allowed}
+body.season-lock #chaosgrid button.trig,body.season-lock #chaosRandom{opacity:.45;cursor:not-allowed}
 body.season-lock label.check:has(#breaks),body.season-lock label.check:has(#hays){opacity:.6}
 /* v3.1.0 quick-start tutorial */
 #tut{position:fixed;left:0;right:0;bottom:0;z-index:160;display:flex;justify-content:center;padding:12px 12px calc(12px + env(safe-area-inset-bottom));pointer-events:none}
@@ -1146,7 +1125,7 @@ body.dark .kvchip{background:color-mix(in srgb,var(--panel) 96%,transparent)}
 .help .hfoot button{min-height:44px;padding:0 16px;border-radius:12px;font:700 14px var(--f-body)}
 .help .hfoot span{font:500 12.5px var(--f-body);color:var(--muted);flex:1;min-width:180px}
 .title .tleft{display:flex;gap:10px;pointer-events:auto}
-/* v5.7.3: six graphics choices (Auto, Bare, Low, Medium, High, Ultra) */
+/* the title screen's graphics choices (Auto, Low, Medium, High, Ultra) wrap in three columns */
 .title .tseg.tseg6{grid-template-columns:repeat(3,1fr)}
 #gfxSeg{flex-wrap:wrap}
 /* ---- v5.7.4 version notes (triple-tap the title screen's version number) ---- */
@@ -1178,8 +1157,6 @@ body.dark .kvchip{background:color-mix(in srgb,var(--panel) 96%,transparent)}
 .pfsvg .pfwl{fill:#8ea4c4;font:600 14px system-ui,sans-serif}.pfsvg .pfwv{fill:#dbe6f6;font:700 14.5px ui-monospace,SFMono-Regular,Menlo,monospace}.pfsvg .pfwv.bad{fill:#ff8b7f}
 .pfcap{margin:6px 4px 2px;color:#8ea4c4;font-size:11.5px;line-height:1.35}
 .pfwait{color:#8ea4c4;padding:30px;text-align:center;margin:0}
-.pfpop{position:absolute;right:10px;bottom:38px;width:min(330px,calc(100% - 20px));max-height:min(62%,460px);overflow:auto;background:#0f1b2d;border:1px solid #4fd18b;border-radius:10px;box-shadow:0 12px 32px rgba(0,0,0,.5);padding:8px 10px;z-index:2}
-.pfpop[hidden]{display:none}
 .pfph{display:flex;align-items:center;gap:8px;margin-bottom:4px}.pfph b{flex:1;color:#fff;font-size:14px}
 .pfpr div{display:flex;gap:8px;padding:3px 0;border-bottom:1px solid #1c2b45}.pfpr span{flex:1;color:#c3d3ea}.pfpr b{color:#fff;font-variant-numeric:tabular-nums;white-space:nowrap}
 .pfpr .hd{border:0;padding-top:8px}.pfpr .hd span{color:#8ea4c4;font-size:11px;letter-spacing:.08em;text-transform:uppercase;font-weight:700}
@@ -1291,12 +1268,6 @@ body.pmpop .popmain[data-v="dcs"] #dcsOv .dcs{max-width:1180px;margin:0 auto}
 /* v6.5.4: making-beater alert under the headbox dilution zones (WET DCS) */
 .dcsbeat{margin:-2px 0 4px;padding:8px 10px;border-radius:8px;background:#7a1f1a;color:#ffd0cb;font:800 12.5px var(--f-body);letter-spacing:.04em}.dcsbeat[hidden]{display:none}
 
-/* v6.6 orders & bales panel */
-.ordl{display:flex;flex-direction:column;gap:4px}
-.ordr{display:flex;align-items:center;justify-content:space-between;gap:8px;padding:6px 9px;border-radius:10px;background:var(--chip)}
-.ordr span{display:flex;flex-direction:column;min-width:0}.ordr b{font-size:13px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.ordr small{font-size:12px;color:var(--muted)}
-.ordr em{font-style:normal;font-size:12px;color:var(--muted);white-space:nowrap}.ordr em.ok{color:var(--ok)}.ordr em.bad{color:var(--bad)}
-.ordr.late{box-shadow:inset 3px 0 0 var(--bad)}.ordr.risk{box-shadow:inset 3px 0 0 var(--warn)}
 /* v6.7 control room: the DCS screens row, the trend pane beside the picture, the quality / planning / water screens */
 .dcsst{flex-wrap:wrap}
 .dcsmain{display:flex;flex-direction:column;gap:10px;min-width:0}
@@ -1704,7 +1675,7 @@ body.pmpop .popmain[data-v="dcs"] #dcsOv .dcs{max-width:1180px;margin:0 auto}
 <div class="btns"><button class="primary" id="no3d-retry">Try again</button></div></div></div>
 
 <script type="module">
-const APP_VER="v6.10.1";   // shown in the menu and sent with leaderboard scores (max 12 characters)
+const APP_VER="v6.10.2";   // shown in the menu and sent with leaderboard scores (max 12 characters)
 // TEST BUILDS ONLY (off in releases): turbo speeds 240/480/960 sim min/s for fast playtests. Above 120, crews and maintenance start jobs
 // without waiting for the 3D walk (as with the 3D view off) and outages keep the speed. Set false for a release.
 const TURBO=false,TURBO_FAST=s=>TURBO&&s>120;
@@ -2725,8 +2696,6 @@ function manRoster(){const sd=(S&&S.seed)>>>0;if(MAN.ros&&MAN.seed===sd)return M
 const manCyc=(T,d)=>(((d+MAN.ANCH-MAN.OFF[T])%28)+28)%28;
 const manKind=s=>(((s%2)+2)%2)?"N":"D";
 function manTeam(s){const d=Math.floor(s/2),K=manKind(s);return MAN.TEAMS.find(T=>MAN.PAT[manCyc(T,d)]===K);}
-// a team's letter for a calendar day: "D", "N" or "O" (off)
-function manDay(T,d){return MAN.PAT[manCyc(T,d)];}
 // who works shift s: {team, techs:[{home, who, vac, cover}], ops:[...], short}. who is null for an unfilled gap;
 // cover is {type:"OT"|"swap", from:team}. Cached; the cache is dropped with the roster when the run is reseeded.
 function manShift(s){manRoster();const nt=Math.max(1,Math.min(MAN.NT,P.techs|0)),key=s*16+nt;let m=MAN.cache.get(key);if(m)return m;
@@ -2946,7 +2915,6 @@ const TELLTXT={balefire:"pallets stacked against a space heater at the bale yard
   boiler:"the boiler feed pump shaking and smoking",permit:"the wastewater outfall running discolored",icedintake:"ice building up on the river intake screen",brownout:"the substation panel flickering"};
 // v5.7: tells only in a running season, survival run or free play; never in zen, a lost run or the start menu
 const tellsOn=()=>!!(S&&!S.zen&&!S.over&&((S.season&&S.season.on)||S.free));
-const tellOk=id=>TELLABLE.has(id)&&tellsOn();
 function tellLead(){const w=survOn()?survWave():1;return Math.max(TELL.min,TELL.lead-(survOn()?TELL.step*(w-1):0))*1440;}
 function tellState(){if(!S.tell)S.tell={q:[],pre:false,day:-1,n:0,saved:0,savedMin:0,cn:{},prep:null};return S.tell;}
 const tellPending=id=>{const q=S.tell&&S.tell.q;if(!q)return false;for(let k=0;k<q.length;k++)if(q[k].id===id)return true;return false;};
@@ -2991,8 +2959,6 @@ function tellRoundEnd(a,caught){const T=tellState(),left=T.q.filter(p=>p.area===
 const tellRep=()=>LV("reliab")>=1||leadIs("dot");
 // per area: 0 steady, 1 climbing (something pending), 2 climbing fast (due within 24 h)
 function tellTrend(a){const q=(S.tell&&S.tell.q)||[];let v=0;for(const p of q)if(p.area===a)v=Math.max(v,p.due-S.t<1440?2:1);return Math.max(v,rlyTellTrend(a));}   // (v6.10: and what the shift rounds found, 07i)
-// in the visible list: only tells the dice actually rolled (the 3D shows them during a Round)
-const tellIn=a=>((S.tell&&S.tell.q)||[]).filter(p=>p.area===a);
 const tellSummary=()=>{const T=S&&S.tell;if(!T||!T.n)return "";return `Upsets caught early: ${T.n} — saved ${money(T.saved)} and ${tellHrs(T.savedMin)} of downtime.`;};
 // the end screens' line: "3 — saved $412k and 9.5 hours of downtime" (null when tells never ran this run)
 const tellEndStat=()=>{const T=S&&S.tell;if(!T||!T.pre)return null;return ["Upsets caught early",T.n?`${T.n} — saved ${money(T.saved)} and ${tellHrs(T.savedMin)} of downtime`:"none","wide"];};
@@ -3021,7 +2987,6 @@ function prepTally(pr){const it=pr&&pr.it||{};let n=0,m=0;
   if(it.draw){n++;m+=PREP.draw.min;}
   return {n,m};}
 const prepLine=(n,m)=>`Prep ${n}/4 — outage shortened ${m>=60?Math.floor(m/60)+" h"+(m%60?" "+m%60+" m":""):m+" min"}`;
-const prepTxt=pr=>{const t=prepTally(pr);return prepLine(t.n,t.m);};
 // the player's choices
 function prepDo(item,ch){const f=prepFor();if(!f)return false;const pr=prepState(f.k),it=pr.it,X=PREP.items.find(i=>i.k===item);if(!X||!prepUnlocked(X,f.left))return false;
   if(item==="parts"){const P2=PREP.parts;
@@ -3621,7 +3586,7 @@ function recTake(t,dt){if(!baleOn())return;const Q=bqState(),Y=recPiles(),sq=rec
 function recRate(){if(!baleOn())return Infinity;const sh=recShare(bqState().rec,"M");return P.pulperMax*(1-MW_RATE.k*Math.max(0,sh-MW_RATE.ref));}
 // an inbound load's grade and moisture (drawn when the truck arrives)
 // v6.8.3: the kind is the one furthest below its share of the recipe, counting the yard and the trucks already in
-function baleGrade(tr){const r=rand("bale"),a=rand("bale"),b=rand("bale");   // (three draws as before, so the bale stream is unchanged)
+function baleGrade(tr){rand("bale");const a=rand("bale");rand("bale");   // (three draws as before, so the bale stream is unchanged)
   let q="C";if(baleOn()){const Q=bqState(),Y=recPiles(),have={A:Y.A,C:Y.C,M:Y.M};for(const t of S.inQ.concat(S.inDock))if(t&&t.q&&have[t.q]!=null)have[t.q]+=t.load;
     const tot=have.A+have.C+have.M+tr.load;let bv=-1e9;for(const k of BTK){const v=recShare(Q.rec,k)*tot-have[k];if(v>bv){bv=v;q=k;}}}
   let m=BALE.m0+BALE.mSpread*a+(S.wx==="rain"?BALE.rain*(0.5+0.5*S.wet):S.wx==="snow"?BALE.snow:0)+(q==="A"?0:0.01);
@@ -3863,7 +3828,6 @@ function step(dt){
   dcsTick(dt);   // v6.5 b3 DCS motors and reject purges (07c; nothing until the DCS is used)
   dryTick(dt);   // v6.5 b5 the dryer limit: water, steam, moisture (07d)
   weTick(dt);   // v6.8 the basis weight loop, bale water in the pulper, screen pressure drop (07g)
-  const g=GRADES[C.grade];
   // 1 inbound arrivals
   // weather: changes every few hours; snow and fog slow the trucks, rain soaks bales
   if(S.wx===undefined){S.wx="clear";S.wxLeft=360;S.wet=0;}
@@ -4011,7 +3975,6 @@ function step(dt){
   if(S.trendAcc>=10){S.trendAcc-=10;S.trend.push([S.tank/P.tankCap,S.pmSpeed/3300,S.yard/P.yardCap,S.fg/P.fgCap]);if(S.trend.length>144)S.trend.shift();}
   vlvCapture();   // v6.9 the valves' boundary for the next 15 s, and their trend points (07h)
   histTick(dt);   // v6.5 history: the hour's readings and minutes (11c)
-  if(!S.zen)knobHist();   // v5.6: DCS / QCS trends (reads only)
   tagTick();   // v6.7 the control room's tag history (11d; reads only)
 }
 
@@ -4243,7 +4206,7 @@ function knobSteamCulprits(){const K=S.knob;if(!K)return [];const v=K.v,c=[];
 // readings for the DCS and QCS screens. With S.knob missing everything reads at its standard value.
 // Base values follow each grade's standard: reel speed, basis weight and 3rd section steam, and the stock prep level.
 function knobRead(){const K=S.knob,x=K?K.x:null,g=GRADES[C.grade]||GRADES["24"],bw=g.bw,run=S.pm==="run";
-  const z=x?x.z:new Array(KZONES).fill(0),sw=x?x.sw:0,t=S.t;
+  const z=x?x.z:new Array(KZONES).fill(0),t=S.t;
   const wob=(f,k)=>Math.sin(t*f+k)*0.6+Math.sin(t*f*2.7+k*2)*0.4;   // smooth stand-in for process noise (no dice)
   const Dr=S.dry,st3=Dr?Dr.st3:(DRY.base[C.grade]||DRY.base["24"]);   // (v6.5 b5: the dryer model, 07d)
   const m=Dr?Dr.m:DRY.m0;let cp=x?x.cp:5;
@@ -4256,13 +4219,6 @@ function knobRead(){const K=S.knob,x=K?K.x:null,g=GRADES[C.grade]||GRADES["24"],
     st1:knobVal("st1"),st3,steam:run?(Dr?Dr.steam:50.5*P.K*S.pmSpeed*bw/34.8):S.pm==="break"&&Dr?Dr.steam:0,boiler:Dr?Dr.hdr:1,moist:run?m+wob(0.13,4)*0.25:0,
     bw:run?qualMeasure().bw:0,hbc:S.we?S.we.hbc:WE.hbc,draw:knobVal("draw"),tension:run?1.0+(knobVal("draw")-1.5)*0.42:0,
     zones:z.map((v,i)=>m+v*0.35+Math.sin(i*1.7+t*0.01)*0.12),off:qualStatus().off,why:qualStatus().why,F:K&&K.F||{},speed:S.pmSpeed};}
-// DCS / QCS trend history: a reading every 2 sim minutes, 6 hours kept. Read-only on the sim (it never writes S), kept
-// outside S so saves don't grow; a new game or a loaded save starts it fresh.
-const KHIST={S:null,t:-1,a:[]};
-function knobHist(){if(KHIST.S!==S){KHIST.S=S;KHIST.a.length=0;KHIST.t=-1;}const k=Math.floor(S.t/2);if(k===KHIST.t)return;KHIST.t=k;
-  const r=knobRead(),u=v=>r.run?v:null,row=KHIST.a.length>=180?KHIST.a.shift():[];row.length=0;   // (readings that only exist with a sheet on are left blank while the machine is down)
-  row.push(S.t,r.cp,r.amps,r.gap,u(r.refkw),r.mcCons,r.vac,u(r.couchSol),r.pl,u(r.pressSol),r.edge,r.st1,u(r.st3),u(r.steam),r.boiler,u(r.moist),u(r.bw),u(r.tension),r.pulpLvl,r.stripes,r.off);KHIST.a.push(row);}   // (rows reused once 6 h are full)
-const KH_COL={cp:1,amps:2,gap:3,refkw:4,mcCons:5,vac:6,couchSol:7,pl:8,pressSol:9,edge:10,st1:11,st3:12,steam:13,boiler:14,moist:15,bw:16,tension:17,pulpLvl:18,stripes:19,off:20};
 /* ---- v6.5 b3 DCS motors and reject purges (the DCS expansion, claude/dcs-expansion-spec.md) ----
    Motors: On / Off / Auto from the DCS. On and Auto both run (On is the operator's hand, Auto the mill's logic); Off
    stops that step the way its upset does (a motor upset, m_*, with the same mods), and the operators start it again
@@ -4341,7 +4297,6 @@ function dryDemand0(tph){const g=C.grade,b=DRY.base[g]||DRY.base["24"];return b+
 // (20 points of moisture per unit of r, the v5.6 knob model). Before v6.5.2 the knobs added kPa to the demand and the
 // whole range up to the ceiling soaked them up, so on a mill with headroom the wet-end knobs did nothing but cost steam.
 function dryKnob(){const K=S.knob;if(!(K&&K.any))return {r:1,a:1};const r=(K.W||1)-(K.d1x||0);return {r,a:clamp(r,0.7,1.3)};}
-function dryDemand(tph){return dryDemand0(tph)*dryKnob().a;}
 // the paper rate the dryers can take before the sheet goes wet (for the bottleneck view)
 function dryCapTph(){const D=dryState(),g=C.grade,b=DRY.base[g]||DRY.base["24"],s=drySlope(g)/DRY.wpt0,k=s*dryWpt();
   return k>0?Math.max(0,(dryCeil(D)/dryKnob().a-b+s*dryRef(g)*DRY.wpt0)/k):1e9;}
@@ -4397,8 +4352,8 @@ const qBw=g=>{const s=(QSPEC[g]||QSPEC["24"]).bw,f=g===C.grade?bwSp()/bwStd():1;
 // the latest check (derived each step, not saved): measured values, what's out, the share of production going to the beater
 const QNOW={bw:0,m:8,shade:true,rct:60,out:[],why:"",off:0};
 // what the scanner reads now (no dice: the swings are smooth functions of time, like the DCS readings)
-function qualMeasure(){const g=C.grade,G=GRADES[g]||GRADES["24"],K=S.knob,t=S.t;
-  const wob=(f,k)=>Math.sin(t*f+k)*0.6+Math.sin(t*f*2.7+k*2)*0.4,sw=K&&K.any&&K.x?K.x.sw:0;
+function qualMeasure(){const t=S.t;
+  const wob=(f,k)=>Math.sin(t*f+k)*0.6+Math.sin(t*f*2.7+k*2)*0.4;
   const bw=bwMeas()+wob(0.11,5)*0.12;   // (v6.8: the BW loop's weight as the scanner saw it WE.dead minutes ago, 07g; thick stock and swings come through it)
   const m=S.dry?S.dry.m:DRY.m0;
   // shade: the dye system is in trouble (an upset, or the dye pump stopped from the DCS)
@@ -4772,7 +4727,7 @@ function vlvRun(n){const W=S.vlv;if(!W||!W.B)return;n=Math.min(VLV.sub,n);
 function vlvCatch(acc){const W=S.vlv;if(!W||!W.any||S.zen||!W.B)return;vlvRun(Math.floor(acc*60+1e-6));}
 // every step (07-sim-step.js), before the knobs and the machine: finish the window, hand the results to the game
 function vlvTick(dt){const W=S.vlv;if(!W||!W.any||S.zen)return;if(!W.B)vCap();vlvRun(VLV.sub);
-  const K=S.knob;if(W.lp["NV-101"]){const k=knobState();k.any=true;
+  if(W.lp["NV-101"]){const k=knobState();k.any=true;
     // pulper consistency swings reach the machine chest through the storage chest (an hour of stock)
     W.cpl=ease(W.cpl==null?5:W.cpl,W.lp["NV-101"].y,dt,VLV.cpTau);}
   else if(W.cpl!=null){W.cpl=ease(W.cpl,5,dt,VLV.cpTau);if(Math.abs(W.cpl-5)<0.005)W.cpl=null;}
@@ -5160,7 +5115,7 @@ function rlyPin(id,k){const R=rlyState(),a=R.a[id];if(!a)return;a.pin=a.pin===k?
 // a planned repair of a fault the rounds found (or a motor in ADX alarm): a share of the bill, and the machine down for
 // RLY.fixMin while the crew works (t4: it was instant)
 const rlyCanFix=(id,k)=>{const a=S.rel&&S.rel.a[id],v=a&&(k==="vib"?a.lv:a.la);return !!v&&(v.st==="imm"||(k==="adx"&&v.st==="alarm"));};
-function rlyFix(id,k){if(!rlyOn())return false;const R=rlyState(),a=R.a[id],A=ASSETN[id];if(!rlyCanFix(id,k)||rlyIncOf(id)||active(k==="vib"?"planbrg":"planmot"))return false;
+function rlyFix(id,k){if(!rlyOn())return false;const R=rlyState(),A=ASSETN[id];if(!rlyCanFix(id,k)||rlyIncOf(id)||active(k==="vib"?"planbrg":"planmot"))return false;
   const bill=rlyBill(id,k),cost=bill*RLY.fix,p=R.pend.findIndex(x=>x.a===id&&x.k===k);spend(cost,"repairs");pfRepair(RLY_ID[k],cost);
   if(p>=0){R.pend.splice(p,1);R.caught++;R.saved+=bill-cost;if(civOn())civAdd(TELL.catchCiv,"Caught early");}
   const ck=k==="vib"?"b":"m",co=R.chg[id];if(co&&co[ck]){delete co[ck];if(!Object.keys(co).length)delete R.chg[id];}   // the part will be new: no outage changeout for it
@@ -5440,7 +5395,7 @@ function seasonLocks(on){["chaosOn","chaosLvl","chaosClear"].forEach(id=>{const 
   document.querySelectorAll('#chaosgrid input[type=checkbox]').forEach(el=>el.disabled=on);
   // v3.1.3: in a season upsets can't be set off by hand, and sheet breaks / hayouts can't be switched off
   document.querySelectorAll('#chaosgrid button.trig').forEach(el=>{el.disabled=on;el.title=on?lockWhy():"";});
-  ["chaosRandom","v2dis"].forEach(id=>{const el=$(id);if(el){el.disabled=on;el.title=on?lockWhy():"";}});
+  {const el=$("chaosRandom");if(el){el.disabled=on;el.title=on?lockWhy():"";}}
   if(on){C.breaks=C.hays=true;}["breaks","hays"].forEach(id=>{const el=$(id);if(el){if(on)el.checked=true;el.disabled=on;}});
   // v4.2.1: in a season the area controls run on AUTO and are locked (paper colour is only a look, so it stays free)
   if(on)AUTOKEYS.forEach(k=>{if(C[k])C[k].auto=true;});
@@ -6255,7 +6210,6 @@ function updateText(){
 const col={};
 function readColors(){const cs=getComputedStyle(document.body||document.documentElement);   // (v5.4: body, where dark mode sets its colours)
   ["muted","line","stock","machine","kraft","ok"].forEach(k=>col[k]=cs.getPropertyValue("--"+k).trim());}
-const DPR=()=>Math.min(2,window.devicePixelRatio||1);
 // animation phases advanced by the 3D frame (conveyor belt, chest swirl, sheet, dryer cans, forklifts)
 const V={belt:0,swirl:0,sheet:0,cans:0,lifts:[],rollsAnim:0};
 document.addEventListener("pm-theme",()=>{readColors();});   // (v5.4: repaint in the new theme)
@@ -6433,8 +6387,6 @@ UI_TICKS.push(()=>{if(bfNeed())bfStart();});
    hourly history (S.hist) for tags that have a column there. Units: water and stock flows in US gallons a minute,
    volumes in gallons (v6.7: they were m³/h, L/s and m³). */
 const GPM=m3h=>m3h*4.40287,GAL=m3=>m3*264.172,LS_GPM=ls=>ls*15.8503;
-const WAT_GAL=()=>GAL(WAT.cap);                       // the white water chest, full
-const CHEST_GAL=()=>GAL(P.tankCap/(WAT.cs/100));      // the stock storage chest, full (its tons of fiber at storage consistency)
 const MCHEST_GAL=60000;                                // the machine chest
 const fmtGal=g=>{const a=Math.abs(g),s=g<0?"−":"";return s+(a>=1e6?(a/1e6).toFixed(2)+"M gal":a>=1e4?Math.round(a/1e3)+"k gal":Math.round(a).toLocaleString()+" gal");};
 const fmtGpm=g=>(g>=1e4?(g/1e3).toFixed(1)+"k":Math.round(g).toLocaleString())+" gpm";
@@ -6580,16 +6532,14 @@ function no3D(){G3.ok=false;$("no3d").hidden=false;$("no3d-retry").onclick=()=>l
   const mobile=matchMedia("(pointer: coarse)").matches;
   /* v4.1 graphics tiers. Auto picks from the device (phones: Medium, or Low with little memory; desktops: High, or Ultra on a
      discrete GPU); the player can pin one in Controls. Pixel ratio, shadow refresh, shadow map size, weather particles and
-     far-scenery shadows and the shadow softness change live; the lighting model and scenery density take effect on the next load. */
+     far-scenery shadows and the shadow softness change live; round-shape detail and scenery density take effect on the next load. */
   // v15: px is each tier's budget of rendered pixels (drawing buffer); the pixel ratio is lowered to stay within it
-  // v5.7.3 bare: the bones only. Flat unlit colours (one matcap), plain boxes, no shadows, nothing outside the fence but the
-  // ground and roads, no sky, no ambient life, token upset effects, 30 FPS. Picked by the player only (Auto never), on reload.
   // (v6.1 t12: the iso build draws far less, so phones render at their screen's sharpness: low 1.5x, medium 2x within a
   // pixel budget; the low-FPS fallback still drops to 1x on a struggling device)
-  const GFX_TIERS={low:{pr:1.5,px:1.4e6,shadow:1024,soft:false,hz:10,scenery:0.5,wx:600,lambert:true,far:false},
-    medium:{pr:2,px:2.6e6,shadow:1024,soft:false,hz:15,scenery:0.85,wx:1000,lambert:true,far:false},
-    high:{pr:2,px:2.4e6,shadow:2048,soft:true,hz:24,scenery:1,wx:2000,lambert:true,far:false},
-    ultra:{pr:2,px:4.2e6,shadow:4096,soft:true,hz:60,scenery:1.4,wx:2600,lambert:true,far:true}};   // (v6.1 t2: Lambert on every tier: the paper look needs no PBR)
+  const GFX_TIERS={low:{pr:1.5,px:1.4e6,shadow:1024,soft:false,hz:10,scenery:0.5,wx:600,far:false},
+    medium:{pr:2,px:2.6e6,shadow:1024,soft:false,hz:15,scenery:0.85,wx:1000,far:false},
+    high:{pr:2,px:2.4e6,shadow:2048,soft:true,hz:24,scenery:1,wx:2000,far:false},
+    ultra:{pr:2,px:4.2e6,shadow:4096,soft:true,hz:60,scenery:1.4,wx:2600,far:true}};
   const gpuName=(()=>{try{const gl=renderer.getContext(),x=gl.getExtension("WEBGL_debug_renderer_info");return x?gl.getParameter(x.UNMASKED_RENDERER_WEBGL):gl.getParameter(gl.RENDERER);}catch(e){return "";}})();
   // (v15: Auto no longer picks Ultra; desktops get High, held to a smaller pixel budget and 1024 shadows unless the GPU is
   // a known discrete one; Ultra is the player's choice)
@@ -6597,9 +6547,9 @@ function no3D(){G3.ok=false;$("no3d").hidden=false;$("no3d-retry").onclick=()=>l
   const gfxAuto=mobile?((navigator.deviceMemory||4)<4?"low":"medium"):"high";
   let gfxPick="auto";try{gfxPick=localStorage.getItem("paper-mill-gfx")||"auto";}catch(e){}
   {const q=new URLSearchParams(location.search).get("gfx");if(q&&GFX_TIERS[q])gfxPick=q;}   // ?gfx=low|medium|high|ultra (tests)
-  if(!GFX_TIERS[gfxPick])gfxPick="auto";
+  if(!GFX_TIERS[gfxPick])gfxPick="auto";   // (an unknown saved pick, such as v5.7.3's "bare", loads as Auto)
   const GFX=G3.GFX={...GFX_TIERS[gfxPick==="auto"?gfxAuto:gfxPick],tier:gfxPick==="auto"?gfxAuto:gfxPick,pick:gfxPick,auto:gfxAuto,gpu:String(gpuName).slice(0,60)};
-  GFX.loaded=GFX.tier;const BARE=G3.bare=GFX.tier==="bare";if(gfxPick==="auto"&&!mobile&&!discrete){GFX.px=1.9e6;GFX.shadow=1024;}
+  GFX.loaded=GFX.tier;if(gfxPick==="auto"&&!mobile&&!discrete){GFX.px=1.9e6;GFX.shadow=1024;}
   // the pixel ratio for a canvas of w x h CSS px: the tier's ratio, the screen's, and the pixel budget, whichever is lowest
   G3.prFor=(w,h)=>G3.prFixed||Math.max(0.75,Math.min(GFX.pr,window.devicePixelRatio||1,Math.sqrt(GFX.px/Math.max(1,w*h))));
   {const gl=renderer.getContext();G3.multiDraw=!!gl.getExtension("WEBGL_multi_draw");
@@ -6609,7 +6559,7 @@ function no3D(){G3.ok=false;$("no3d").hidden=false;$("no3d-retry").onclick=()=>l
   // the shadow pass redraws every shadow-casting object, so refresh it a few times a second instead of every frame (v2.8.4: desktop too)
   renderer.shadowMap.autoUpdate=false;G3.shadowHz=GFX.hz;
   // v2.8.4: round shapes get only as many sides as their size needs at this zoom (unit shapes that get scaled up keep 24)
-  const segCap=(r,s)=>Math.max(3,Math.min(s,r===1?12:r<0.45?6:r<4?8:12));   // (v6.1 t7: 6-12 sides; tanks and rolls read as folded card)   // (v5.7.3: bare keeps round things to a few sides)
+  const segCap=(r,s)=>Math.max(3,Math.min(s,r===1?12:r<0.45?6:r<4?8:12));   // (v6.1 t7: 6-12 sides; tanks and rolls read as folded card)
   class CylG extends THREE.CylinderGeometry{constructor(rt=1,rb=1,h=1,rs=32,hs=1,oe=false,ts=0,tl=Math.PI*2){super(rt,rb,h,segCap(Math.max(rt,rb),rs),hs,oe,ts,tl);}}
   class SphG extends THREE.SphereGeometry{constructor(r=1,ws=32,hs=16,...a){super(r,Math.max(3,Math.min(ws,8)),Math.max(2,Math.min(hs,6)),...a);}}
   class RingG extends THREE.RingGeometry{constructor(a=0.5,b=1,ts=32,...x){super(a,b,Math.max(3,Math.min(ts,16)),...x);}}
@@ -6629,7 +6579,7 @@ function no3D(){G3.ok=false;$("no3d").hidden=false;$("no3d-retry").onclick=()=>l
   /* v6.2 test (zen free camera): zen mode gets a perspective camera that moves freely (the pre-iso zen shots: orbits,
      tilt-ups, low dollies, flyovers); the game itself keeps the fixed iso view. `camera` is whichever is live, swapped
      by placeCam (29). ?zeniso = zen stays isometric. */
-  const camPersp=new THREE.PerspectiveCamera(40,16/9,0.5,5000);camPersp.isoFit=()=>{};
+  const camPersp=new THREE.PerspectiveCamera(40,16/9,0.5,5000);
   let camera=camIso;G3.camIso=camIso;G3.camPersp=camPersp;
   G3.zenFree=!/[?&]zeniso/.test(location.search);
 
@@ -6652,16 +6602,8 @@ function no3D(){G3.ok=false;$("no3d").hidden=false;$("no3d-retry").onclick=()=>l
   G3.PAPER_PAL=PAPER_PAL;G3.palQ=PALQ;
   /* palette: every material is bound to a CSS token so theme switches recolor the scene */
   const MATS=[];
-  // v2.9.0: phones get the much cheaper Lambert lighting model instead of physically based shading (same colours, flatter sheen)
-  // v5.7.3 bare: every lit material becomes one unlit matcap material (a soft top-lit ball): flat colour with just enough
-  // shading to tell a box's top from its sides, and no lights, shadows or fog in the shader
-  let MCAP=null;
-  function bareMat(o){const r={};for(const k of ["color","map","alphaMap","transparent","opacity","side","vertexColors","depthWrite","depthTest","alphaTest","polygonOffset","polygonOffsetFactor","polygonOffsetUnits","visible"])if(o&&o[k]!==undefined)r[k]=o[k];
-    if(!MCAP){const c=document.createElement("canvas");c.width=c.height=64;const x=c.getContext("2d"),gr=x.createRadialGradient(26,20,4,32,32,34);gr.addColorStop(0,"#ffffff");gr.addColorStop(0.7,"#e6e6e6");gr.addColorStop(1,"#bdbdbd");x.fillStyle=gr;x.fillRect(0,0,64,64);
-      MCAP=new THREE.CanvasTexture(c);MCAP.colorSpace=THREE.SRGBColorSpace;}
-    r.matcap=MCAP;r.fog=false;return new THREE.MeshMatcapMaterial(r);}
-  G3.bareMat=bareMat;
-  function StdMat(o){if(BARE)return bareMat(o);if(!GFX.lambert)return new THREE.MeshStandardMaterial(o);const r=Object.assign({},o||{});delete r.roughness;delete r.metalness;delete r.flatShading;delete r.envMapIntensity;delete r.roughnessMap;delete r.metalnessMap;return new THREE.MeshLambertMaterial(r);}
+  // v6.1 t2: Lambert on every tier (the paper look needs no PBR): StdMat drops the physically based options
+  function StdMat(o){const r=Object.assign({},o||{});delete r.roughness;delete r.metalness;delete r.flatShading;delete r.envMapIntensity;delete r.roughnessMap;delete r.metalnessMap;return new THREE.MeshLambertMaterial(r);}
   function tok(name){return getComputedStyle(document.documentElement).getPropertyValue("--"+name).trim()||"#888";}
   function mat(token,opts={}){const m=new StdMat(Object.assign({roughness:0.72,metalness:0.04,flatShading:false},opts));m.userData.token=token;MATS.push(m);return m;}
   // v4.1 pass 3: an InstancedMesh gets its own copy of a shared material (palette token kept, so brand colours still reach it):
@@ -6704,7 +6646,7 @@ function no3D(){G3.ok=false;$("no3d").hidden=false;$("no3d-retry").onclick=()=>l
   const W=(x,y)=>[(x-600)/10,(y-330)/10];
   // v4.1 pass 3: a rounded box is 316 triangles at High/Ultra; phones get a coarser bevel (140 on Medium, 92 on Low), which
   // reads the same at phone size and takes a third off the static and moving batches
-  const RB={},RBQ=GFX.tier==="low"?[1,2]:GFX.lambert?[2,2]:[3,4];
+  const RB={},RBQ=GFX.tier==="low"?[1,2]:[2,2];
   function rboxGeo(w,h,d){const k=w+"|"+h+"|"+d;if(RB[k])return RB[k];const r=Math.min(0.16,Math.min(w,h,d)*0.2),s=new THREE.Shape(),ww=w-2*r,dd=d-2*r,c=Math.min(r*0.6,ww/2,dd/2);
     s.moveTo(-ww/2+c,-dd/2);s.lineTo(ww/2-c,-dd/2);s.quadraticCurveTo(ww/2,-dd/2,ww/2,-dd/2+c);s.lineTo(ww/2,dd/2-c);s.quadraticCurveTo(ww/2,dd/2,ww/2-c,dd/2);
     s.lineTo(-ww/2+c,dd/2);s.quadraticCurveTo(-ww/2,dd/2,-ww/2,dd/2-c);s.lineTo(-ww/2,-dd/2+c);s.quadraticCurveTo(-ww/2,-dd/2,-ww/2+c,-dd/2);
@@ -6717,7 +6659,7 @@ function no3D(){G3.ok=false;$("no3d").hidden=false;$("no3d-retry").onclick=()=>l
   const edgeSoft=new THREE.LineBasicMaterial({color:new THREE.Color("#3c4559").convertSRGBToLinear(),transparent:true,opacity:0.22});
   const edgeMat=new THREE.LineBasicMaterial({color:lin0("#3c4559"),transparent:true,opacity:0.42});
   function lin0(c){return new THREE.Color(c).convertSRGBToLinear();}
-  function edges(o,mt=edgeMat,ang=25){if(BARE)return new THREE.Group();   /* (v5.7.3 bare: no outlines) */const e=new THREE.LineSegments(new THREE.EdgesGeometry(o.geometry,ang),mt);o.add(e);return e;}
+  function edges(o,mt=edgeMat,ang=25){const e=new THREE.LineSegments(new THREE.EdgesGeometry(o.geometry,ang),mt);o.add(e);return e;}
   const aoC=document.createElement("canvas");aoC.width=4;aoC.height=64;{const x=aoC.getContext("2d"),g=x.createLinearGradient(0,0,0,64);g.addColorStop(0,"rgba(28,34,51,0.34)");g.addColorStop(0.35,"rgba(28,34,51,0.14)");g.addColorStop(1,"rgba(28,34,51,0)");x.fillStyle=g;x.fillRect(0,0,4,64);}
   const aoTex=new THREE.CanvasTexture(aoC);const aoMat=new THREE.MeshBasicMaterial({map:aoTex,transparent:true,depthWrite:false});
   const aoRC=document.createElement("canvas");aoRC.width=aoRC.height=128;{const x=aoRC.getContext("2d"),g=x.createRadialGradient(64,64,30,64,64,64);g.addColorStop(0,"rgba(28,34,51,0.38)");g.addColorStop(0.5,"rgba(28,34,51,0.16)");g.addColorStop(1,"rgba(28,34,51,0)");x.fillStyle=g;x.fillRect(0,0,128,128);}
@@ -6946,7 +6888,7 @@ function no3D(){G3.ok=false;$("no3d").hidden=false;$("no3d-retry").onclick=()=>l
   /* ---- step 1: static plant ---- */
   // v4.1 the environment sets the ground, the river and its banks (ENVLOOK); the scenery itself is built in 42b-3d-scenery.js
   const ENVLOOK={rural:{ground:"#a3c487",bank:"#c9c1a8",water:"#4b7f99"},urban:{ground:"#a9bb8f",bank:"#b7b3a8",water:"#5f8aa6"},
-    desert:{ground:"#e0c697",bank:"#cfc9bb",water:"#2fb3c4"},swamp:{ground:"#8ea576",bank:"#6f6548",water:"#3f5f52"}}[SITE.env];G3.envLook=ENVLOOK;
+    desert:{ground:"#e0c697",bank:"#cfc9bb",water:"#2fb3c4"},swamp:{ground:"#8ea576",bank:"#6f6548",water:"#3f5f52"}}[SITE.env];
   // (v4.1 pass 3: the ground is the terrain mesh built in 42b-3d-scenery.js, flat under the mill, with the environment's texture)
   slab(-140,-95,-5.2,-2.4,M.asphalt);slab(-140,-95,11.2,13.8,M.asphalt);
   slab(-95,-34.4,-5.2,-2.4,M.asphalt);              // inbound road
@@ -7005,12 +6947,6 @@ function no3D(){G3.ok=false;$("no3d").hidden=false;$("no3d-retry").onclick=()=>l
     if(SITE.env==="urban"||SITE.env==="desert"){const [zc,hw]=riverAt(0);(SEA?[zc+hw+2.4]:[zc+hw+2.4,zc-hw-2.4]).forEach(z=>box(800,1.1,0.6,conc,0,0.55,z,scene,false));}   // the city: a sea wall
     ribbon(0,0.012,new StdMat({map:rt,roughness:0.15,metalness:0.1,polygonOffset:true,polygonOffsetFactor:-4,polygonOffsetUnits:-4}),(x,a,b)=>[(x+400)/8,0,(x+400)/8,(b-a)/8]);
     // (v6.2 z2: the water is pulled forward in depth: 6 mm over the bank sand z-fought into streaks under the zen perspective camera)
-    // v4.1 pass 3: a sparse sparkle layer drifting the other way over the water (High and Ultra tiers)
-    if(G3.GFX&&!G3.GFX.lambert){const sc2=document.createElement("canvas");sc2.width=sc2.height=128;const x=sc2.getContext("2d");x.clearRect(0,0,128,128);
-      for(let k=0;k<70;k++){const px=Math.random()*128,py=Math.random()*128,r=0.6+Math.random()*1.4,g=x.createRadialGradient(px,py,0,px,py,r*2.2);g.addColorStop(0,"rgba(255,255,255,0.9)");g.addColorStop(1,"rgba(255,255,255,0)");x.fillStyle=g;x.fillRect(px-3,py-3,6,6);}
-      const st2=new THREE.CanvasTexture(sc2);st2.colorSpace=THREE.SRGBColorSpace;st2.wrapS=st2.wrapT=THREE.RepeatWrapping;st2.repeat.set(60,1.2);ENV.sparkTex=st2;
-      const sp=ribbon(-0.5,0.03,new THREE.MeshBasicMaterial({map:st2,transparent:true,opacity:0.35,depthWrite:false,blending:THREE.AdditiveBlending,toneMapped:false}),(x,a,b)=>[(x+400)/800,0,(x+400)/800,(b-a)/11]);
-      sp.receiveShadow=false;sp.renderOrder=1;sp.userData.noNav=true;ENV.spark=sp;}
     box(4,3,4,conc,-30,1.5,-55.5);box(4.4,0.3,4.4,M.roofFlat,-30,3.1,-55.5);pipe([[-30,0.8,-57.5],[-30,0.8,-59],[-30,-0.5,-61]],0.35,M.metal);
     // fresh water from the river intake, up and over into the stock line that feeds the cleaners and screens on to stock storage
     {const fw=mat("water",{roughness:0.4});pipe([[-30,0.7,-53.5],[-30,0.7,-31.5],[-4,0.7,-31.5],[-4,0.7,-25.7],[4,0.7,-25.7],[4,6.0,-25.7],[11.2,6.0,-25.7],[11.2,6.0,-23.3]],0.32,fw);
@@ -7156,7 +7092,7 @@ function no3D(){G3.ok=false;$("no3d").hidden=false;$("no3d-retry").onclick=()=>l
   function floorDecal(x0,x1,z0,z1,ppm,paint){const W2=Math.round((x1-x0)*ppm),H2=Math.round((z1-z0)*ppm),c=document.createElement("canvas");c.width=W2;c.height=H2;
     const x=c.getContext("2d"),X=v=>(v-x0)*ppm,Z=v=>(v-z0)*ppm;paint(x,X,Z,ppm,W2,H2);
     const t=new THREE.CanvasTexture(c);t.colorSpace=THREE.SRGBColorSpace;t.anisotropy=4;
-    const m=(BARE?G3.bareMat:o=>new THREE.MeshLambertMaterial(o))({map:t,transparent:true,depthWrite:false,polygonOffset:true,polygonOffsetFactor:-2,polygonOffsetUnits:-2});
+    const m=new THREE.MeshLambertMaterial({map:t,transparent:true,depthWrite:false,polygonOffset:true,polygonOffsetFactor:-2,polygonOffsetUnits:-2});
     const o=new THREE.Mesh(new THREE.PlaneGeometry(x1-x0,z1-z0),m);o.rotation.x=-Math.PI/2;o.position.set((x0+x1)/2,0.055,(z0+z1)/2);o.receiveShadow=true;o.renderOrder=1;scene.add(o);return o;}
   let dSeed=7;const drnd=()=>{dSeed=(dSeed*16807)%2147483647;return dSeed/2147483647;};
   const dScuffs=(x,X,Z,ppm,pts,n)=>{for(let k=0;k<n;k++){const [cx,cz,sp]=pts[Math.floor(drnd()*pts.length)],px=X(cx+(drnd()-0.5)*sp),pz=Z(cz+(drnd()-0.5)*sp*0.6),r=(0.6+drnd()*1.6)*ppm,a0=drnd()*6.28;
@@ -7212,7 +7148,7 @@ function no3D(){G3.ok=false;$("no3d").hidden=false;$("no3d-retry").onclick=()=>l
     dHatch(x,X,Z,ppm,-24.6,-23.9,20.6,32.0,GRN,"rgba(255,255,255,0.45)");
     dScuffs(x,X,Z,ppm,[[-36,17,22],[-47.6,23,6],[-32,19.4,4],[-36,22,18],[-36,26,18]],120);});
   // props: pallet stacks, bins, chargers, bollards, extinguishers (instanced: a handful of draw calls in total)
-  {const LamB=o=>BARE?G3.bareMat(o):new THREE.MeshLambertMaterial(o);const pal=LamB({color:lin0("#b8894f")}),red=LamB({color:lin0("#d63a2f")}),yel=LamB({color:lin0("#f2b807")}),
+  {const LamB=o=>new THREE.MeshLambertMaterial(o);const pal=LamB({color:lin0("#b8894f")}),red=LamB({color:lin0("#d63a2f")}),yel=LamB({color:lin0("#f2b807")}),
       blu=LamB({color:lin0("#2f6fd1")}),gry=LamB({color:lin0("#596273")}),m4=new THREE.Matrix4();
     const dInst=(geo,m,list,rotY)=>{const im=new THREE.InstancedMesh(geo,instMat(m),list.length);list.forEach((p,i)=>{m4.makeRotationY(p[3]||rotY||0);m4.setPosition(p[0],p[1],p[2]);im.setMatrixAt(i,m4);});im.castShadow=true;im.receiveShadow=true;im.userData.bake=true;scene.add(im);return im;};
     const pallets=[];[[-33,-22.4],[-33,-21.2],[-11,-3.8],[-48,31.4],[-48,30.2],[-24.6,15.5]].forEach(([px,pz],j)=>{const h=2+((j*7)%4);for(let k=0;k<h;k++)pallets.push([px,0.08+k*0.15,pz,(k%2)*0.08]);});
@@ -8257,7 +8193,6 @@ function no3D(){G3.ok=false;$("no3d").hidden=false;$("no3d-retry").onclick=()=>l
   const ISO_TH=-Math.PI/4,ISO_PH=Math.acos(Math.sqrt(1/3)),R_MAX=760,R_K=[1,2,3,4,6,8,12],R_STEPS=R_K.map(k=>R_MAX/k);
   const rStep=r=>{let b=R_STEPS[0];for(const v of R_STEPS)if(Math.abs(Math.log(v/r))<Math.abs(Math.log(b/r)))b=v;return b;};
   const rNext=(r,dir)=>{const i=R_STEPS.indexOf(rStep(r));return R_STEPS[clamp(i+dir,0,R_STEPS.length-1)];};
-  G3.rSteps=R_STEPS;G3.rStep=rStep;
   const DEF={th:ISO_TH,ph:ISO_PH,r:R_MAX/3};const cam={...DEF};let rShown=DEF.r;
   const DEFT=target.clone();let goal=null;
   // v3.1.0 tutorial: glide the camera to a spot and mark it with a pulsing ring and a light beam
@@ -8289,7 +8224,7 @@ function no3D(){G3.ok=false;$("no3d").hidden=false;$("no3d-retry").onclick=()=>l
   // then place the orbit camera around its target (one function; v3 built this by wrapping it twice)
   // swap the live camera; leaving zen goes back to the iso view where the shot left off, on the nearest zoom step
   function camSwap(free){camera=free?camPersp:camIso;if(free){camPersp.aspect=(G3.vw||host.clientWidth)/Math.max(1,G3.vh||host.clientHeight);camPersp.updateProjectionMatrix();}
-    else{cam.r=rStep(clamp(cam.r,R_STEPS[R_STEPS.length-1],R_MAX));rShown=cam.r;}G3.camFree=free;G3.lastMove=performance.now();if(G3.onCamSwap)G3.onCamSwap(free);
+    else{cam.r=rStep(clamp(cam.r,R_STEPS[R_STEPS.length-1],R_MAX));rShown=cam.r;}G3.lastMove=performance.now();if(G3.onCamSwap)G3.onCamSwap(free);
     // (v6.2 z2: the river's ripple lines are packed for the iso view; seen in perspective they alias into streaks, so the free camera
     // gets wider ripples and anisotropic filtering)
     const RT=ENV.riverTex;if(RT){RT.repeat.x=free?6:40;RT.repeat.y=free?0.45:1.5;RT.anisotropy=free?8:1;RT.needsUpdate=true;}}
@@ -8308,11 +8243,10 @@ function no3D(){G3.ok=false;$("no3d").hidden=false;$("no3d-retry").onclick=()=>l
     const rr=rShown*((G3.vw||host.clientWidth)<600?1.35:1);G3.camR=rShown;G3.camDist=rr;
     camera.position.set(target.x+ISO_D*Math.sin(cam.ph)*Math.sin(cam.th),target.y+ISO_D*Math.cos(cam.ph),target.z+ISO_D*Math.sin(cam.ph)*Math.cos(cam.th));
     camera.lookAt(target);camera.isoFit(rr);}
-  const ptrs=new Map();let pinch0=0,r0=0,mid0=null,panBtn=false;
+  const ptrs=new Map();let pinch0=0,r0=0,mid0=null;
   const mid=()=>{const [a,b]=[...ptrs.values()];return {x:(a.x+b.x)/2,y:(a.y+b.y)/2,d:Math.hypot(a.x-b.x,a.y-b.y)};};
   glc.addEventListener("contextmenu",e=>e.preventDefault());
   glc.addEventListener("pointerdown",e=>{glc.setPointerCapture(e.pointerId);ptrs.set(e.pointerId,{x:e.clientX,y:e.clientY});goal=null;
-    panBtn=e.button===2||e.button===1||e.shiftKey;
     if(ptrs.size===2){const m=mid();pinch0=m.d;r0=FOL.on?FOL.r:cam.r;mid0=m;}});
   glc.addEventListener("pointermove",e=>{const p=ptrs.get(e.pointerId);if(!p)return;const dx=e.clientX-p.x,dy=e.clientY-p.y;
     if(ptrs.size===1)panBy(dx,dy);   // (v6.1 iso: the camera never turns, so any drag pans)
@@ -8328,7 +8262,7 @@ function no3D(){G3.ok=false;$("no3d").hidden=false;$("no3d-retry").onclick=()=>l
     glc.addEventListener("pointerup",e=>{if(!downAt)return;const m=Math.hypot(e.clientX-downAt[0],e.clientY-downAt[1]),t=performance.now()-downAt[2];downAt=null;if(m<6&&t<500){if(G3.tellTap&&G3.tellTap(e))return;   /* v5.7: a tell on a Round comes first */const li=G3.lblAt(e);if(li){if(G3.lblTap&&G3.lblTap(li))return;G3.flyTo(li);return;}const h=hit(e);if(h&&h.k)G3.knobTap(h);else if(h==="spider")openSpider();else if(h==="slice")openSlice();else if(h==="brian")openBrian();else if(G3.infoTap)G3.infoTap(e);}});   // (v6.10: click for info, 38d)
     glc.addEventListener("pointermove",e=>{const n=performance.now();if(n-hoverT<120||ptrs.size)return;hoverT=n;glc.style.cursor=G3.lblAt(e)||hit(e)?"pointer":"";});}
   let wAcc=0;glc.addEventListener("wheel",e=>{e.preventDefault();goal=null;if(e.shiftKey||Math.abs(e.deltaX)>Math.abs(e.deltaY)&&!e.ctrlKey)panBy(-e.deltaX||-e.deltaY,0);else if(FOL.on)FOL.r=clamp(FOL.r*Math.exp(e.deltaY*(e.ctrlKey?0.01:0.001)),10,120);else{wAcc+=e.deltaY*(e.ctrlKey?10:1);if(Math.abs(wAcc)>=60){cam.r=rNext(cam.r,wAcc>0?-1:1);wAcc=0;}}},{passive:false});   // (v6.1: one zoom step per wheel notch)
-  // keyboard: arrows/WASD move, Q/E rotate, +/- zoom
+  // keyboard: arrows/WASD move, +/- zoom
   glc.addEventListener("keydown",e=>{const k=e.key.toLowerCase(),st=24;let used=true;
     if(k==="arrowleft"||k==="a")panBy(st,0);else if(k==="arrowright"||k==="d")panBy(-st,0);else if(k==="arrowup"||k==="w")panBy(0,st);else if(k==="arrowdown"||k==="s")panBy(0,-st);
     else if(k==="+"||k==="=")cam.r=rNext(cam.r,1);else if(k==="-")cam.r=rNext(cam.r,-1);else used=false;   // (v6.1: no turning; zoom by whole steps)
@@ -8978,7 +8912,7 @@ function no3D(){G3.ok=false;$("no3d").hidden=false;$("no3d-retry").onclick=()=>l
         x.lineJoin="round";x.lineCap="round";shape();x.fillStyle="#9aa3b1";x.fill();
         // the bands: alternating paper greys, each its own wobbly strip
         x.save();shape();x.clip();const cols=["#8a94a3","#b4bcc8","#7d8796","#a6afbc"];
-        for(let k=0;k<N-1;k++){const [y0,h0,o0]=bands[k],[y1,h1,o1]=bands[k+1];x.beginPath();x.moveTo(0,y0+(rnd()-0.5)*8);x.quadraticCurveTo(cx,y0+H*0.03*(rnd()-0.3),W,y0+(rnd()-0.5)*8);x.lineTo(W,y1);x.quadraticCurveTo(cx,y1+H*0.03*(rnd()-0.3),0,y1);x.closePath();x.fillStyle=cols[k%4];x.fill();}
+        for(let k=0;k<N-1;k++){const [y0]=bands[k],[y1]=bands[k+1];x.beginPath();x.moveTo(0,y0+(rnd()-0.5)*8);x.quadraticCurveTo(cx,y0+H*0.03*(rnd()-0.3),W,y0+(rnd()-0.5)*8);x.lineTo(W,y1);x.quadraticCurveTo(cx,y1+H*0.03*(rnd()-0.3),0,y1);x.closePath();x.fillStyle=cols[k%4];x.fill();}
         // white crayon scribbles round the funnel
         x.strokeStyle="rgba(255,255,255,0.85)";for(let k=0;k<9;k++){const t=0.1+rnd()*0.8,y=H*(0.06+t*0.84),hw=W*(0.44-0.36*Math.pow(t,0.8));x.lineWidth=2+rnd()*3;x.beginPath();
           x.moveTo(cx-hw*0.8,y);x.bezierCurveTo(cx-hw*0.3,y+H*0.02,cx+hw*0.3,y-H*0.02,cx+hw*0.85,y+H*0.01*(rnd()-0.5));x.stroke();}
@@ -9151,8 +9085,6 @@ function no3D(){G3.ok=false;$("no3d").hidden=false;$("no3d-retry").onclick=()=>l
   };
   const blackEl=$("blackout3d");let lastIncTxt=0;
   function makeFX(id){const def=FXDEF[id]||FXDEF[MOT_FXDEF[id]];const g=new THREE.Group();scene.add(g);const pp=PINS[id]||PINS[MOT_PIN[id]]||[0,10,0,"!"];/* (v6.5 b3: a stopped DCS motor uses its upset's spot, 07c) */const f=FX[id]={g,up:null,pin:pinAt(g,pp[0],pp[1],pp[2],pp[3]),lb:lblNew(true,id)};
-    // v5.7.3 bare: a token puff at the spot instead of the full effect (the red tag and label are as usual)
-    if(G3.bare){const x=pp[0],z=pp[2];f.up=(now,rdt)=>{if(rdt>0&&Math.random()<rdt*2.5)emit("smoke",x+R()*1.5,2,z+R()*1.5,R()*0.3,1.4,R()*0.3,2.4,1.6,"#6b707a",0.65);};return f;}
     f.up=def?def(g):()=>{};try{if(!/[?&]nofxinst/.test(location.search))f.inst=fxInst(g);}catch(e){console.error("effect instancing failed",id,e);}return f;}
   /* v6.1 t12: an effect's many look-alike parts (rain streaks, ripples, splash blobs, tornado puffs and debris) draw as one
      instanced mesh per shape and look instead of one draw each (the roof leak was ~100 draws, the tornado ~75). The effect
@@ -9395,7 +9327,7 @@ function no3D(){G3.ok=false;$("no3d").hidden=false;$("no3d-retry").onclick=()=>l
   const PART_IDS=Object.keys(BUILD).filter(k=>k!=="fx");
   // built a few scenes per frame during the start-up precompile (v5.2 review: all at once stalled the page for seconds on
   // slow devices, and the title music with it); civBuild() finishes whatever is left in one go
-  const toBuild=G3.bare?[]:[...PART_IDS];   // (v5.7.3 bare: no civics scenery in the world)
+  const toBuild=[...PART_IDS];
   function buildOne(id){try{const g=new THREE.Group();g.visible=false;scene.add(g);const P=CV.parts[id]=Object.assign({g,id},BUILD[id](g));
       P.tick(performance.now(),0,2,null,{});   // a first paint of its boards, so their textures upload before play
     }catch(e){diag(`civics scene "${id}" failed: ${String(e&&e.message||e).slice(0,100)}`);}}
@@ -9832,15 +9764,13 @@ function no3D(){G3.ok=false;$("no3d").hidden=false;$("no3d-retry").onclick=()=>l
       k.g.visible=false;RND.shown.delete(best);if(G3.onTellCaught)G3.onTellCaught(best);return true;};
     // the screen position of a shown tell (tests)
     G3.tellScreen=id=>{const k=KIT[id];if(!k||!k.g.visible)return null;const r=glc.getBoundingClientRect(),t=k.parts.top;_v.set(k.x,t[1]*SC*0.6,k.z).project(camera);return [r.left+(_v.x+1)/2*r.width,r.top+(1-_v.y)/2*r.height,_v.z];};
-    G3.tellSeek=f=>{if(RND.on)RND.t=f*RND.len;};G3.tellOp=()=>[op.position.x,op.position.z];
+    G3.tellSeek=f=>{if(RND.on)RND.t=f*RND.len;};
     G3.tellHold=ms=>{RND.touch=performance.now()+(ms||60000);};   // (tests: the camera stays where the tool put it)
     G3.tellShowAll=on=>{TG.visible=!!on;for(const id in KIT){const k=KIT[id],[x,z]=posOf(k);k.g.position.set(x,0,z);k.g.updateMatrixWorld(true);k.g.visible=!!on;}};   // (layout checks)
-    G3.tellKits=()=>Object.keys(KIT);
     G3.tellPos=id=>KIT[id]?posOf(KIT[id]):null;
     // for the prewarm's one render: everything shown, so nothing compiles mid-round
     G3.tellWarm=shown=>{if(!TG.visible){TG.visible=true;shown.push(TG);}for(const id in KIT)if(!KIT[id].g.visible){KIT[id].g.visible=true;shown.push(KIT[id].g);}if(!op.visible){op.visible=true;shown.push(op);}};
     // ---- every frame ----
-    let flick=0;
     G3.tellFrame=(rdt,now)=>{if(!RND.on)return;
       if(running&&!document.hidden)RND.t+=rdt;
       syncShown();
@@ -9870,14 +9800,14 @@ function no3D(){G3.ok=false;$("no3d").hidden=false;$("no3d-retry").onclick=()=>l
           case "outfall":if(Math.random()<rdt*14)emit("smoke",x+R()*4,0.4,z+R()*4,R()*0.3,0.5,R()*0.3,2.4,2.2,"#d9c79a",0.7);break;
           case "flicker":if(Math.random()<rdt*10)emit("spark",x+R(),ty,z+0.6,R()*3,2+Math.random()*3,2,0.5,0.22,"#bfe3ff",1);break;
           case "dye":if(Math.random()<rdt*14)emit("drop",x+R()*0.4,1.8,z+0.6,R()*1.5,1,1.5,0.8,0.22,["#d64fd6","#3fb6e0","#f2c230"][(Math.random()*3)|0],1);break;}
-        if(p.glow){flick+=rdt;const on=k.fx==="flicker"?Math.sin(now/45)+Math.sin(now/17)>0.2:Math.sin(now/180)>-0.3;if(p.glow.visible!==on)p.glow.visible=on;}}
+        if(p.glow){const on=k.fx==="flicker"?Math.sin(now/45)+Math.sin(now/17)>0.2:Math.sin(now/180)>-0.3;if(p.glow.visible!==on)p.glow.visible=on;}}
       if(RND.t>=RND.len){const d=RND.done;G3.tellRoundStop();if(d)d();}};
   }
   /* ---- hayout (v2.8.2, light): a short burst of 30 sheets (one instanced draw call) and a paper heap that shrinks as the crew cleans ---- */
   const HN=30,hayI=new THREE.InstancedMesh(new THREE.BoxGeometry(1.4,0.04,1),paperDS,HN);hayI.frustumCulled=false;hayI.visible=false;scene.add(hayI);
   const hayS=[],hM4=new THREE.Matrix4(),hQ=new THREE.Quaternion(),hE=new THREE.Euler(),hP=new THREE.Vector3(),hSc=new THREE.Vector3(1,1,1);
   for(let k=0;k<HN;k++)hayS.push({p:[0,0,0],v:[0,0,0],r:[0,0,0],sp:[0,0,0],k:0});
-  const heapG=new SphG(1,12,6,0,Math.PI*2,0,Math.PI/2),heap=new THREE.Mesh(heapG,paperDS);heap.position.set(-18.7,0,zc);heap.visible=false;scene.add(heap);G3.hayParts=[hayI,heap];
+  const heapG=new SphG(1,12,6,0,Math.PI*2,0,Math.PI/2),heap=new THREE.Mesh(heapG,paperDS);heap.position.set(-18.7,0,zc);heap.visible=false;scene.add(heap);
   let shake=0;
   function hayFx(rdt,now){const ep=EP.hay,on=!!(ep&&now<ep.until),age=on?(now-ep.t0)/1000:99,left=on?(ep.until-now)/1000:0;
     if(on&&!ep.burst){ep.burst=true;hayS.forEach(s=>{s.p=[-18.7+(Math.random()-0.5)*2,3.8,zc+(Math.random()-0.5)*3];s.v=[(Math.random()-0.5)*6,4+Math.random()*4,(Math.random()-0.5)*6];
@@ -10076,7 +10006,6 @@ function no3D(){G3.ok=false;$("no3d").hidden=false;$("no3d-retry").onclick=()=>l
   const nearest=(list,x)=>list.reduce((b,s)=>Math.abs(s[0]-x)<Math.abs(b[0]-x)?s:b,list[0]);
   // machine crew spots during a dryer fire: five on hoses at the front aisle, two with extinguishers at the back
   const FIRESPOT=[[24,14.4,"hose"],[18,14.4,"hose"],[12,14.4,"hose"],[6,14.4,"hose"],[0,14.4,"hose"],[20,4.0,"ext"],[8,4.0,"ext"]];
-  G3.crewSpots=()=>({HOME,HAY,RT,BRKSPOT,FIRESPOT,SITES});
   const crewHose=FIRESPOT.map(()=>hoseLine());
   // bale yard fire brigade: four firefighters with red helmets spray over the receiving wall
   const brigade=[0,1,2,3].map(k=>{const w=worker(M.warn,M.bad);w.visible=false;w.userData.home=[-4,-0.6];w.userData.spot=[-6.4,-6-k*4];w.userData.hose=hoseLine();w.position.set(-4,0,-0.6);return w;});
@@ -10097,7 +10026,7 @@ function no3D(){G3.ok=false;$("no3d").hidden=false;$("no3d-retry").onclick=()=>l
      G3.skyTick with the sky colour it already computes for the fog. Clouds and mist are camera-facing quads in one
      mesh each (one draw), their corners rewritten per frame; none on the Low tier. ---- */
   const SKY={n:0};G3.SKY=SKY;
-  if(!G3.bare&&(!camera.isIso||G3.zenFree)&&!new URLSearchParams(location.search).has("nosky")){   // (v6.2: zen's free camera sees the sky)   // (v6.1 iso: the view never reaches the sky)
+  if(G3.zenFree&&!new URLSearchParams(location.search).has("nosky")){   // (v6.2: zen's free camera sees the sky)   // (v6.1 iso: the view never reaches the sky)
   const uni={top:{value:new THREE.Color(0.5,0.6,0.8)},hor:{value:new THREE.Color(0.8,0.85,0.9)},sunDir:{value:sun.position.clone().normalize()},glow:{value:new THREE.Color(1,0.85,0.6)},gk:{value:0}};
     const skyMat=new THREE.ShaderMaterial({uniforms:uni,
       vertexShader:"varying vec3 vDir;void main(){vDir=normalize(position);vec4 p=projectionMatrix*modelViewMatrix*vec4(position,1.0);gl_Position=vec4(p.xy,p.w*0.99999,p.w);}",
@@ -10126,10 +10055,10 @@ function no3D(){G3.ok=false;$("no3d").hidden=false;$("no3d-retry").onclick=()=>l
           pos[b+9]=it.x-r.x*hw+u.x*hh;pos[b+10]=it.y-r.y*hw+u.y*hh;pos[b+11]=it.z-r.z*hw+u.z*hh;}
         g.setDrawRange(0,items.length*6);g.attributes.position.needsUpdate=true;g.computeBoundingSphere();}};}
     const _sr=new THREE.Vector3(),_su=new THREE.Vector3();
-    const tier=G3.GFX||{},nCloud=new URLSearchParams(location.search).has("noclouds")||tier.bare?0:tier.tier==="low"?0:tier.tier==="medium"?4:tier.tier==="ultra"?14:10;
+    const tier=G3.GFX||{},nCloud=new URLSearchParams(location.search).has("noclouds")?0:tier.tier==="low"?0:tier.tier==="medium"?4:tier.tier==="ultra"?14:10;
     const clouds=billboards(Math.max(1,nCloud),0xffffff,0.85),mist=billboards(8,0xf2f7ff,0.5);
     for(let i=0;i<nCloud;i++)clouds.items.push({x:-500+Math.random()*1000,y:150+Math.random()*90,z:-450+Math.random()*900,w:90+Math.random()*120,h:30+Math.random()*24,v:1.2+Math.random()*1.5});
-    SKY.clouds=clouds;SKY.mist=mist;SKY.mistOn=tier.tier!=="low"&&!tier.bare&&SITE.env==="rural";   // (v17: no mist on the bayou)
+    SKY.clouds=clouds;SKY.mist=mist;SKY.mistOn=tier.tier!=="low"&&SITE.env==="rural";   // (v17: no mist on the bayou)
     // mist banks: over the ponds in the bayou, along the river in the valley; placed on the first tick (the ponds come from the scenery)
     SKY.placeMist=()=>{if(SKY.mistSet)return;SKY.mistSet=true;const it=mist.items;
       // five overlapping banks along the river either side of the mill, then (bayou) the ponds nearest the mill
@@ -10200,7 +10129,7 @@ function no3D(){G3.ok=false;$("no3d").hidden=false;$("no3d-retry").onclick=()=>l
     u.legs.forEach(l=>{l.children[0].material=trouM;l.children[0].scale.set(0.2,0.9,0.2);const sh2=new THREE.Mesh(cubeG,shoeM);sh2.scale.set(0.32,0.1,0.18);sh2.position.set(0.06,-0.86,0);l.add(sh2);});
     u.armM.forEach(m=>m.scale.x=m.scale.z=0.15);}
   function free(w){w.visible=false;w.userData.busy=false;}
-  const AIS=16.5,parties=[];let ambT=G3.bare?{tour:1e12,mgr:1e12,office:1e12,birds:1e12,food:1e12}:{tour:25,mgr:45,office:8,birds:15,food:35};   // (v5.7.3 bare: no ambient life)
+  const AIS=16.5,parties=[];let ambT={tour:25,mgr:45,office:8,birds:15,food:35};
   // a party walks a path [x,z,stop seconds,act]; followers keep formation behind the leader and gather round at the stops
   function party(kind,members,path,walk){parties.push({kind,members,path,i:0,wait:0,walk});}
   G3.mgrLead=()=>{for(const P2 of parties)if(P2.kind==="mgr"&&!P2.home&&P2.members[0]&&P2.members[0].visible)return P2.members[0];return null;};
@@ -10251,10 +10180,10 @@ function no3D(){G3.ok=false;$("no3d").hidden=false;$("no3d-retry").onclick=()=>l
   const pigeon=BIRDS[5],PG={seen:null,t0:0};
   // weather particles around the camera target
   const WXP=(()=>{const n=2600,g=new THREE.BufferGeometry(),pos=new Float32Array(n*3);for(let i=0;i<n;i++){pos[i*3]=R()*80;pos[i*3+1]=Math.random()*40;pos[i*3+2]=R()*80;}
-    g.setAttribute("position",new THREE.BufferAttribute(pos,3));const m=new THREE.PointsMaterial({color:0xffffff,size:0.7,transparent:true,opacity:0.8,depthWrite:false});if(camera.isIso)m.sizeAttenuation=false;   // (v6.1 t13: in the iso view sizes are screen pixels)
+    g.setAttribute("position",new THREE.BufferAttribute(pos,3));const m=new THREE.PointsMaterial({color:0xffffff,size:0.7,transparent:true,opacity:0.8,depthWrite:false});m.sizeAttenuation=false;   // (v6.1 t13: in the iso view sizes are screen pixels)
     const p=new THREE.Points(g,m);p.frustumCulled=false;p.visible=false;scene.add(p);
     const rg=new THREE.BufferGeometry(),rp=new Float32Array(n*6);rg.setAttribute("position",new THREE.BufferAttribute(rp,3));
-    const rm=new THREE.LineBasicMaterial({color:lin0(camera.isIso?"#7f93ad":"#d6e2ee"),transparent:true,opacity:0.6,depthWrite:false});const rl=new THREE.LineSegments(rg,rm);rl.frustumCulled=false;rl.visible=false;scene.add(rl);
+    const rm=new THREE.LineBasicMaterial({color:lin0("#7f93ad"),transparent:true,opacity:0.6,depthWrite:false});const rl=new THREE.LineSegments(rg,rm);rl.frustumCulled=false;rl.visible=false;scene.add(rl);
     const wxN=Math.min(n,G3.GFX&&G3.GFX.wx!=null?G3.GFX.wx:1000);g.setDrawRange(0,wxN);rg.setDrawRange(0,wxN*2);G3.wxRange=k=>{const q=Math.min(n,k);g.setDrawRange(0,q);rg.setDrawRange(0,q*2);WXP.k=q;};return {p,g,pos,m,n,rg,rp,rm,rl,k:wxN};})();   // (v5.2: k = points drawn; only those are moved and uploaded)
   scene.fog=new THREE.Fog(0xb3bbcb,600,3000);
   const SKY_DAY=new THREE.Color(),SKY_NIGHT=lin0("#232b44"),SKY_RAIN=lin0("#8c94a2"),SKY_FOG=lin0("#c9ced6"),SKY_DUST=lin0("#c9a86b"),tmpC=new THREE.Color(),WIN_EM=lin0("#ffcf7a"),LAMP_OFF=lin0("#9aa3b2"),LAMP_ON=lin0("#fff2c4");let skyLast=null;   // (v5.2: parsed once, not every frame)
@@ -10338,11 +10267,10 @@ function no3D(){G3.ok=false;$("no3d").hidden=false;$("no3d-retry").onclick=()=>l
     if(G3.fogFan&&rdt>0){const F=G3.fogFan,down=S.inc.some(i=>i.id==="fogfan"),k=down?0:(S.pm==="run"?1:0.35);F.spin+=(k-F.spin)*Math.min(1,rdt*0.8);F.rot.rotation.y+=rdt*F.spin*14;
       // (v6.1 t12: the fog elimination fan's vapour is paper cut-out clouds too, smaller than the stack's; ?softplume = steam)
       if(/[?&]softplume/.test(location.search)){if(Math.random()<rdt*9*k)emitA("steam",F.top[0]+R()*0.5,F.top[1],F.top[2]+R()*0.5,R()*0.7+0.5,3.0+Math.random()*1.8,R()*0.7,3.4,2.0+Math.random()*1.6,"#f4f6f8",0.6);}
-      else if(Math.random()<rdt*1.5*k)emitA("paper",F.top[0]+R()*0.5,F.top[1]+1,F.top[2]+R()*0.5,R()*0.5+0.4,2.0+Math.random()*0.8,R()*0.5,4.2,3.0+Math.random()*1.4,"#ffffff",1);}G3.spiderFrame&&G3.spiderFrame(rdt);if(!G3.bare){M.wind.emissive=M.wind.emissive||new THREE.Color();M.wind.emissive.copy(WIN_EM).multiplyScalar(0.85*night*bk);if(G3.winMats)G3.winMats.forEach(m=>m.emissive.copy(M.wind.emissive).multiplyScalar(0.7));}   // (v5.7.3 bare: unlit glass has no glow to set)
+      else if(Math.random()<rdt*1.5*k)emitA("paper",F.top[0]+R()*0.5,F.top[1]+1,F.top[2]+R()*0.5,R()*0.5+0.4,2.0+Math.random()*0.8,R()*0.5,4.2,3.0+Math.random()*1.4,"#ffffff",1);}G3.spiderFrame&&G3.spiderFrame(rdt);M.wind.emissive=M.wind.emissive||new THREE.Color();M.wind.emissive.copy(WIN_EM).multiplyScalar(0.85*night*bk);if(G3.winMats)G3.winMats.forEach(m=>m.emissive.copy(M.wind.emissive).multiplyScalar(0.7));
     ENV.lampHead.color.copy(LAMP_OFF).lerp(LAMP_ON,night*bk);ENV.lampPool.opacity=0.32*night*bk;if(ENV.lampPoolMesh)ENV.lampPoolMesh.visible=night*bk>0.01;   // (v5.2: no invisible draws by day)
     ENV.pudM.opacity=0.55*(S.wet||0);if(ENV.pudMeshes){const v=(S.wet||0)>0.01;if(ENV.pudMeshes.v!==v){ENV.pudMeshes.v=v;ENV.pudMeshes.forEach(m=>m.visible=v);}}ENV.riverTex.offset.x=(ENV.riverTex.offset.x-rdt*0.02)%1;
     if(G3.YP&&G3.YP.flags&&rdt>0)G3.YP.flags.forEach((f,k)=>{f.rotation.y=0.55+0.28*Math.sin(now/900+k*2.1);});
-    if(ENV.spark){ENV.sparkTex.offset.x=(ENV.sparkTex.offset.x+rdt*0.013)%1;ENV.spark.material.opacity=0.35*day*(1-0.6*(fogK+wxK));}
     ENV.bridge.rotation.y-=rdt*0.12;
     // steam plume grows with production and dies when the boiler trips
     const boil=S.inc.some(i=>i.id==="boiler"),pr=clamp(Math.max((S.rates.prod||0)/35,(S.dry&&S.pm==="break"?S.dry.steam:0)/45),0,1.4);   // (v6.5.7: the boiler stays fired through a sheet break)
@@ -10434,7 +10362,7 @@ function no3D(){G3.ok=false;$("no3d").hidden=false;$("no3d-retry").onclick=()=>l
          else _c.setHSL(0.07,0.14,Math.min(0.5,hsl.l*0.75+0.08));}   // bare branches
        a[j]=_c.r;a[j+1]=_c.g;a[j+2]=_c.b;}
      if(i1>=ca.count)ca.needsUpdate=true;return n;}   // (uploaded once, when its last chunk is done)
-   let shownPal=-1,chkT=0;   /* (t12: summer is a recolour too now, so nothing counts as shown until the first one) */G3.palShown=()=>PALS[shownPal];
+   let shownPal=-1,chkT=0;   /* (t12: summer is a recolour too now, so nothing counts as shown until the first one) */
    // v6.1 t3: one mesh per frame instead of all at once (no single long frame when a season starts)
    let palQ=[],palN=0;
    G3.setPal=p=>{p=((p%4)+4)%4;if(p===shownPal&&ORIG.size)return;shownPal=p;palN=0;
@@ -10497,7 +10425,7 @@ function no3D(){G3.ok=false;$("no3d").hidden=false;$("no3d-retry").onclick=()=>l
     wetI.renderOrder=2;wetI.userData.noNav=true;scene.add(wetI);const wet=[];let wk=0;for(let k=0;k<WT;k++){wet.push({x:0,z:0,t:99});}
     const wrot=new THREE.Quaternion().setFromAxisAngle(new THREE.Vector3(1,0,0),-Math.PI/2);
     let lastT=null,wetAcc=0,canAcc=0;
-    G3.janUpdate=(rdt,now)=>{if(!S||G3.bare)return;   // (v5.7.3 bare: no janitor, scrubbers or litter)
+    G3.janUpdate=(rdt,now)=>{if(!S)return;
       const hr=((S.t+360)/60)%24,night=NIGHT(hr);
       // litter builds during the working day
       if(lastT===null)lastT=S.t;const dh=Math.max(0,Math.min(60,(S.t-lastT)/60));lastT=S.t;
@@ -10676,7 +10604,7 @@ function no3D(){G3.ok=false;$("no3d").hidden=false;$("no3d-retry").onclick=()=>l
   G3.navPump=navPump;
   G3.navCheck=(pts,G=NAV)=>{if(!G.g)navBuild(G);let bad=0;for(let i=1;i<pts.length;i++){const a=pts[i-1],b=pts[i],d=Math.hypot(b[0]-a[0],b[1]-a[1]),n=Math.max(1,Math.ceil(d/0.25));
       for(let k=0;k<=n;k++){const c=navC(G,[a[0]+(b[0]-a[0])*k/n,a[1]+(b[1]-a[1])*k/n]);if(G.g[c[1]*G.nx+c[0]])bad++;}}return bad;};
-  G3.NAV=NAV;G3.NAVW=NAVW;G3.navRoute=(a,b)=>route(a,b);G3.navOld=(a,b)=>routeLanes(a,b);G3.navSpots=()=>({MAINT_SPOT,SLOTS});G3.navWalk=(a,b)=>navPath(NAVW,a,b,120000);
+  G3.NAV=NAV;G3.NAVW=NAVW;
   function route(from,to){let p=null;try{p=navPath(NAV,from,to);}catch(e){}return p||routeLanes(from,to);}
   function routeLanes(from,to){const pts=[],lf=lane(from),lt=lane(to);
     pts.push(lf==="F"?[from[0],17.6]:[Math.max(from[0],-5.5),-0.6]);
@@ -10736,7 +10664,7 @@ function no3D(){G3.ok=false;$("no3d").hidden=false;$("no3d-retry").onclick=()=>l
      incoming crew walks in from the parking lot, each to the person they relieve (a tech's bench in the shop; an
      operator wherever they are), stops for a word, and the outgoing person walks back out to the lot. In the mill the
      two simply trade places: the figure that stays takes the new hat and the walker leaves in the old one. A tech out
-     on a job is relieved when they get back to the shop. A load, a reseed, zen, the bare view, a jump of more than an
+     on a job is relieved when they get back to the shop. A load, a reseed, zen, a jump of more than an
      hour, or the next change arriving first all skip the walk and change the hats on the spot. Cosmetic only. ---- */
   const SHC={s:null,pool:{t:[],o:[],sp:[]},live:[],PARK:[63.6,34.4]};G3.SHC=SHC;   // (G3.SHC: tests)
   function setHat(w,m){const h=w.userData&&w.userData.hats;if(!h||!m||h[0].material===m)return;for(const x of h)x.material=m;}
@@ -10755,7 +10683,7 @@ function no3D(){G3.ok=false;$("no3d").hidden=false;$("no3d-retry").onclick=()=>l
   function shcFlush(){for(const L of SHC.live){setHat(L.f.w,L.newM);shcDone(L);}SHC.live.length=0;}
   G3.shiftUpdate=(rdt,now)=>{if(!S||!M.hatTeam)return;const s=manIdx(),m=manShift(s),figs=shcFigs();
     if(s!==SHC.s){const prev=SHC.s;SHC.s=s;shcFlush();
-      const walk=prev===s-1&&S.t-s*720<60&&!S.zen&&!G3.bare;
+      const walk=prev===s-1&&S.t-s*720<60&&!S.zen;
       figs.forEach((f,n)=>{const newM=shcWant(m,f);if(!newM)return;const oldM=f.w.userData.hats[0].material;
         if(!walk||!f.w.visible||oldM===newM){setHat(f.w,newM);return;}
         const c=shcWalker(f,newM);c.position.set(SHC.PARK[0]+(n%4)*0.7,0,SHC.PARK[1]+Math.floor(n/4)*0.7);
@@ -11124,9 +11052,7 @@ function no3D(){G3.ok=false;$("no3d").hidden=false;$("no3d-retry").onclick=()=>l
   {const X=-58.5,Z=-13;slab(X-2.2,X+2.2,Z-1.8,Z+1.8,M.slab,0.025);box(4.4,1.6,0.25,M.steel,X,0.8,Z-1.75);box(4.6,0.12,0.4,M.brand,X,1.66,Z-1.75,scene,false);
     [-1.2,1.2].forEach(dx=>{box(0.6,1.1,0.4,M.steel,X+dx,0.55,Z-1.45);box(0.5,0.25,0.05,M.ok,X+dx,0.95,Z-1.22,scene,false);
       const cb=new THREE.Mesh(new CylG(0.03,0.03,1.4,6),M.ink);cb.rotation.x=0.9;cb.position.set(X+dx+0.25,0.5,Z-0.8);scene.add(cb);});
-    box(0.12,0.12,3.6,M.warn,X,0.06,Z-1.4,scene,false);
-    if(G3.GFX&&!G3.GFX.lambert){const c=document.createElement("canvas");c.width=256;c.height=64;const x=c.getContext("2d");x.fillStyle="#1c2233";x.fillRect(0,0,256,64);x.fillStyle="#f2c230";x.font="800 30px system-ui,sans-serif";x.textAlign="center";x.textBaseline="middle";x.fillText("CHARGING",128,33);
-    const t=new THREE.CanvasTexture(c);t.colorSpace=THREE.SRGBColorSpace;const sg=new THREE.Mesh(new THREE.PlaneGeometry(2.0,0.5),new THREE.MeshBasicMaterial({map:t}));sg.position.set(X,1.3,Z-1.6);scene.add(sg);}}
+    box(0.12,0.12,3.6,M.warn,X,0.06,Z-1.4,scene,false);}
   // flagpoles by the office door: the mill's flag and a safety flag
   {[[56.6,20.4,"brand"],[58.6,20.4,"ok"]].forEach(([x,z,tk],k)=>{const p=new THREE.Mesh(new CylG(0.05,0.07,9,8),M.steel);p.position.set(x,4.5,z);p.castShadow=true;scene.add(p);
       const ball=new THREE.Mesh(new SphG(0.12,8,6),M.brand);ball.position.set(x,9.05,z);scene.add(ball);
@@ -11245,12 +11171,12 @@ function no3D(){G3.ok=false;$("no3d").hidden=false;$("no3d-retry").onclick=()=>l
       else if(P&&t==="CircleGeometry"&&P.segments>seg)h=new THREE.CircleGeometry(P.radius,seg,P.thetaStart,P.thetaLength);
       if(h){// (the original may have been turned after it was made: find the turn that fits its bounds, else keep the original)
         g.computeBoundingBox();_bA.copy(g.boundingBox);let ok=null;
-        for(const [rx,ry,rz] of ROTS){const c=h.clone();if(rx)c.rotateX(rx);if(rz)c.rotateZ(rz);c.computeBoundingBox();_bB.copy(c.boundingBox);
+        for(const [rx,,rz] of ROTS){const c=h.clone();if(rx)c.rotateX(rx);if(rz)c.rotateZ(rz);c.computeBoundingBox();_bB.copy(c.boundingBox);
           const e=Math.max(_bA.min.distanceTo(_bB.min),_bA.max.distanceTo(_bB.max));if(e<0.02*Math.max(0.05,_bA.getSize(_smV).length())){ok=c;break;}c.dispose();}
         h.dispose();if(ok){ok.deleteAttribute("uv");v=ok;}}}catch(e){v=g;}SIMP.set(k,v);return v;}
   const VDIR=new THREE.Vector3(Math.sin(Math.acos(Math.sqrt(1/3)))*Math.sin(-Math.PI/4),Math.sqrt(1/3),Math.sin(Math.acos(Math.sqrt(1/3)))*Math.cos(-Math.PI/4));
   function bakeLevel(b,k){const R=LOD_R[k],SEG=LOD_SEG[k],L=[];for(const r of b.recs)if(r.v0!=null&&smRad(r)>=R)L.push([r,simpGeo(r.o.userData.fullGeo||r.o.geometry,SEG)]);
-    let nv=0,ni=0;for(const [r,g] of L){nv+=g.attributes.position.count;ni+=g.index?g.index.count:g.attributes.position.count;}
+    let nv=0,ni=0;for(const [,g] of L){nv+=g.attributes.position.count;ni+=g.index?g.index.count:g.attributes.position.count;}
     const pos=new Float32Array(nv*3),nor=new Float32Array(nv*3),col=new Float32Array(nv*3),idx=new Uint32Array(ni);let vo=0,io=0;
     for(const [r,g] of L){const o=r.o,P=g.attributes.position,N=g.attributes.normal,mw=r.mw||o.matrixWorld,flip=mw.determinant()<0,c=o.material.color;_smM3.getNormalMatrix(mw);
       for(let i=0;i<P.count;i++){_smV.set(P.getX(i),P.getY(i),P.getZ(i)).applyMatrix4(mw);const j=(vo+i)*3;pos[j]=_smV.x;pos[j+1]=_smV.y;pos[j+2]=_smV.z;
@@ -11264,7 +11190,7 @@ function no3D(){G3.ok=false;$("no3d").hidden=false;$("no3d-retry").onclick=()=>l
     geo.setIndex(new THREE.BufferAttribute(idx.slice(0,io),1));geo.computeBoundingSphere();
     const m=new THREE.Mesh(geo,b.mat);m.matrixAutoUpdate=false;m.userData.smBatch=true;m.name="flat batch (zoom step "+k+")";(b.parent||scene).add(m);
     for(const r of b.recs)if(r.lv&&r.lv[k]&&!L.some(x=>x[0]===r))r.lv[k]=null;return m;}
-  let lodK=-1;G3.lodLevel=()=>lodK;
+  let lodK=-1;
   function lodApply(b){if(!b.mesh)return;const k=G3.lodOff||BQ.has("nolod")?-1:lodK;
     if(k>=0&&!(b.lv&&b.lv[k])){try{(b.lv||(b.lv=[]))[k]=bakeLevel(b,k);}catch(e){smErr("zoom detail",e);b.lod=false;return;}}
     b.mesh.visible=k<0;if(b.lv)b.lv.forEach((m,i)=>{if(m)m.visible=i===k;});}
@@ -11646,7 +11572,7 @@ function no3D(){G3.ok=false;$("no3d").hidden=false;$("no3d-retry").onclick=()=>l
       [-0.6,0.6].forEach(dx=>{const ch=new THREE.Group();ch.position.set(35.5+dx,0,-1.85);scene.add(ch);box(0.55,0.08,0.55,M.ink,0,0.5,0,ch,false);box(0.55,0.6,0.08,M.ink,0,0.85,0.26,ch,false);box(0.08,0.5,0.08,M.steel,0,0.25,0,ch,false);});
       blob(35.5,-3.2,1.6);plate("SPOT · STOCK PREP DCS",1.6,35.5,0.62,-2.84);}
     // stations: where each DCS lives (the machine floor's three consoles, and stock prep's)
-    const ST=G3.KST=[{a:"SPOT",at:[35.5,1.6,-3.2]},{a:"WET",at:[58,1.6,13.4]},{a:"DET",at:[26,1.6,13.4]},{a:"DET",at:[-5,1.6,13.4]}];
+    const ST=[{a:"SPOT",at:[35.5,1.6,-3.2]},{a:"WET",at:[58,1.6,13.4]},{a:"DET",at:[26,1.6,13.4]},{a:"DET",at:[-5,1.6,13.4]}];
     // ---- tap targets: invisible spheres outside the scene (never drawn, never batched), with their matrices set once ----
     const HG=new THREE.SphereGeometry(1,8,6),HM=new THREE.MeshBasicMaterial(),HITS=[];
     const addHit=(at,r,tag)=>{const m=new THREE.Mesh(HG,HM);m.position.set(at[0],at[1],at[2]);m.scale.setScalar(r);m.updateMatrixWorld(true);m.userData.tag=tag;HITS.push(m);return m;};
@@ -11707,7 +11633,7 @@ function no3D(){G3.ok=false;$("no3d").hidden=false;$("no3d-retry").onclick=()=>l
     function paintStripes(k){const c=G3.pfCanvas;if(!c)return;const x=c.getContext("2d"),W=c.width,H=c.height;x.fillStyle="#fff";x.fillRect(0,0,W,H);x.fillStyle="#9a9a9a";x.fillRect(0,0,10,H);
       if(k>0.02){x.fillStyle=`rgba(92,64,30,${Math.min(0.95,0.35+k*0.7)})`;[0.12,0.29,0.47,0.66,0.83].forEach((v,i)=>x.fillRect(0,Math.round(v*H),W,Math.max(1,Math.round(H*(0.035+0.02*(i%2))))));}
       G3.pfTex.needsUpdate=true;}
-    let wire0=null,flut=false,lastSt=0;
+    let wire0=null,flut=false;
     G3.knobFrame=(rdt,now)=>{const K=S.knob,on=!!(K&&K.any)&&!S.zen;
       // stripes building up on the pick-up felt
       {const st=on?K.x.st:0,q=Math.round(st*20)/20;if(q!==pfLvl){pfLvl=q;paintStripes(q);}}
@@ -11859,7 +11785,7 @@ function no3D(){G3.ok=false;$("no3d").hidden=false;$("no3d-retry").onclick=()=>l
       for(let i=0;i<uv.count;i++){const u=uv.getX(i),v=uv.getY(i),py=fy?(1-v):v;uv.setXY(i,(r.x+u*r.w)/W,1-(r.y+py*r.h)/W);}
       o.geometry=g;o.material=mat;n++;}
     const tex=new THREE.CanvasTexture(cv);tex.colorSpace=THREE.SRGBColorSpace;tex.anisotropy=4;mat.map=tex;
-    G3.signAtlas={tex,seen};diag(`sign atlas: ${n} signs, ${seen.size} textures in one`);
+    diag(`sign atlas: ${n} signs, ${seen.size} textures in one`);
     UI_TICKS.push(k=>{if(k%2)return;let ch=false;for(const r of seen.values())if(r.t.version!==r.v){r.v=r.t.version;x.clearRect(r.x,r.y,r.w,r.h);x.drawImage(r.t.image,r.x,r.y);ch=true;}if(ch)tex.needsUpdate=true;});};
   /* v6.1 t7: faces the camera can never see. The view direction never changes, so on the first frame every static, opaque,
      single-sided mesh in the static merge keeps only its triangles that face the camera (the GPU threw the others away
@@ -12409,7 +12335,7 @@ function no3D(){G3.ok=false;$("no3d").hidden=false;$("no3d-retry").onclick=()=>l
     const T={box:tpl("box",()=>{const g=new THREE.BoxGeometry(1,1,1);g.translate(0,0.5,0);const ng=g.toNonIndexed(),a=ng.attributes.position.array,keep=[];
         for(let t=0;t<a.length;t+=9){const ys=[a[t+1],a[t+4],a[t+7]];if(ys.every(y=>y<1e-6))continue;for(let k=0;k<9;k++)keep.push(a[t+k]);}
         const out=new THREE.BufferGeometry();out.setAttribute("position",new THREE.Float32BufferAttribute(keep,3));return out;}),
-      ico:tpl("ico",()=>new THREE.IcosahedronGeometry(1,0)),oct:tpl("oct",()=>new THREE.OctahedronGeometry(1,0)),
+      ico:tpl("ico",()=>new THREE.IcosahedronGeometry(1,0)),
       cyl6:tpl("cyl6",()=>{const g=new THREE.CylinderGeometry(1,1,1,6,1,true);g.translate(0,0.5,0);return g;}),
       cyl10:tpl("cyl10",()=>{const g=new THREE.CylinderGeometry(1,1,1,10,1,false);g.translate(0,0.5,0);return g;}),
       tri3:tpl("tri3",()=>{const g=new THREE.CylinderGeometry(0.7,1,1,3,1,true);g.translate(0,0.5,0);return g;}),
@@ -12436,7 +12362,7 @@ function no3D(){G3.ok=false;$("no3d").hidden=false;$("no3d-retry").onclick=()=>l
     // where the utilities and features ended up (zen camera shots, the brownout's substation): name -> [x, z, height]
     const UTIL={};const note=(k,x,z,h)=>{UTIL[k]=[+x.toFixed(1),+z.toFixed(1),h];};
     // graphics tier: scenery density (Low 0.5 ... Ultra 1.4); the yard and the utilities are the same at every tier
-    const DEN=G3.GFX&&G3.GFX.scenery!=null?G3.GFX.scenery:1;   // (v5.7.3 bare: 0, and no environment kit at all)
+    const DEN=G3.GFX&&G3.GFX.scenery!=null?G3.GFX.scenery:1;
     /* ---------- noise for natural clustering ---------- */
     const NG=[];for(let k=0;k<40*32;k++)NG.push(RNG());
     function noise(x,z,s=60){const fx=(x+420)/s,fz=(z+320)/s,i=Math.floor(fx),j=Math.floor(fz),u=fx-i,v=fz-j,g=(a,b)=>NG[((b%32+32)%32)*40+((a%40+40)%40)];
@@ -12451,7 +12377,7 @@ function no3D(){G3.ok=false;$("no3d").hidden=false;$("no3d-retry").onclick=()=>l
     // the canal levee and the roads (causeways) stay at the pad's level
     const PLAT={x0:-172,x1:178,z0:-60,z1:100};
     function hBase(x,z){let h;
-      if(ENVK==="swamp"&&!G3.bare){const dx=Math.max(PLAT.x0-x,0,x-PLAT.x1),dz=Math.max(PLAT.z0-z,0,z-PLAT.z1);h=-1.4*sstep(2,14,Math.hypot(dx,dz));if(!h)return 0;}
+      if(ENVK==="swamp"){const dx=Math.max(PLAT.x0-x,0,x-PLAT.x1),dz=Math.max(PLAT.z0-z,0,z-PLAT.z1);h=-1.4*sstep(2,14,Math.hypot(dx,dz));if(!h)return 0;}
       else{if(!RELIEF)return 0;const f=sstep(100,230,dFence(x,z));if(f<=0)return 0;
         let n=ENVK==="desert"?noise(x*0.55,z*1.7,52)*1.1+noise(x,z,140)*0.6-0.55:noise(x,z,95)*1.35+noise(x,z,38)*0.45-0.62;
         n=Math.max(0,n);h=RELIEF*f*n*(ENVK==="desert"?1.15:1.0);}
@@ -12488,11 +12414,6 @@ function no3D(){G3.ok=false;$("no3d").hidden=false;$("no3d-retry").onclick=()=>l
     function conifer(x,z,s,tight){if(!place(x,z,(tight?0.55:1.3)*s))return false;const c=pick(["#3f6f4f","#4a7a55","#557f58","#3d6a52"]);trunk(x,z,0.4*s,1.6*s,pick(BARK));
       card(x,0,z,[[-1.7*s,1.1*s],[1.7*s,1.1*s],[0,4.5*s]],c,0.3,0.08);card(x,0,z,[[-1.25*s,3.2*s],[1.25*s,3.2*s],[0,6.1*s]],c,0.25,0.16);claim(x,z,(tight?0.6:1.5)*s,6.1*s,0.3*s);return true;}
     function bush(x,z,s,hex){if(!place(x,z,0.9*s))return false;const h=hex||pick(GREEN);card(x,0,z,[[-1.0*s,0],[1.0*s,0],[0.75*s,0.75*s],[0,1.05*s],[-0.75*s,0.75*s]],h,0.3);claim(x,z,0.9*s,1.1*s);return true;}
-    function broadleaf3D(x,z,s,far,tight){if(!place(x,z,(tight?0.7:1.6)*s))return false;const c=RNG()<0.06?pick(AUT):pick(GREEN);add(T.tri3,x,0,z,0.28*s,2.3*s,0.28*s,RNG()*6,pick(BARK),0.1);
-      add(far?T.oct:T.ico,x,3.4*s,z,1.9*s,(far?1.9:1.5)*s,1.9*s,RNG()*6,c,0.35);claim(x,z,(tight?0.75:1.7)*s,5.2*s,0.3*s);return true;}
-    function conifer3D(x,z,s,tight){if(!place(x,z,(tight?0.55:1.3)*s))return false;const c=pick(["#3f6f4f","#4a7a55","#557f58","#3d6a52"]);add(T.tri3,x,0,z,0.25*s,1.6*s,0.25*s,RNG()*6,pick(BARK),0.1);
-      add(T.cone6,x,1.1*s,z,1.7*s,3.4*s,1.7*s,RNG()*6,c,0.3);add(T.cone6,x,3.2*s,z,1.2*s,2.9*s,1.2*s,RNG()*6,c,0.25);claim(x,z,(tight?0.6:1.5)*s,6.1*s,0.3*s);return true;}
-    function bush3D(x,z,s,hex){if(!place(x,z,0.9*s))return false;add(T.oct,x,0.35*s,z,1.0*s,0.7*s,1.0*s,RNG()*6,hex||pick(GREEN),0.3);claim(x,z,0.9*s,1.1*s);return true;}
     function rock(x,z,s,hex){if(!place(x,z,1.1*s))return false;add(T.ico,x,0.2*s,z,1.2*s,0.75*s,1.0*s,RNG()*6,hex,0.25);claim(x,z,1.2*s,1*s);return true;}
     function house(x,z,ry,w,d,h,wall,roof){add(T.box,x,0,z,w,h,d,ry,wall,0.15);add(T.gable,x,h,z,w+0.4,h*0.55,d+0.5,ry,roof,0.05);}
     const NW=[];   // lit windows for the night (urban): [x,y,z,w,h,face] per window, merged into one mesh at the end
@@ -12673,7 +12594,7 @@ function no3D(){G3.ok=false;$("no3d").hidden=false;$("no3d-retry").onclick=()=>l
     // open ground: circles [x,z,r] and boxes [x0,x1,z0,z1] where the fill leaves no trees
     // (v14: ragged edges: each clearing's outline wanders with the noise, so no clearing is a clean circle or box)
     const OPEN=[],openAt=(x,z)=>{const e=(noise(x*2.3,z*2.3,26)-0.5);for(const o of OPEN){if(o.length===3?Math.hypot(x-o[0],z-o[1])<o[2]*(1+e*0.5):x>o[0]-e*14&&x<o[1]+e*14&&z>o[2]-e*14&&z<o[3]+e*14)return true;}return false;};
-    if(ENVK==="rural"&&!G3.bare){
+    if(ENVK==="rural"){
       // Forest valley: a wide river winding through wooded hills. South of the fence a concrete service court joins the
       // mill to two yards: the neighbouring Valley Timber Co. (log decks, chip pile, its own fence) and the mill's covered
       // cardboard (OCC) bale store with a truck unloading; the farm, fields and orchard beyond, the lake to the south-east,
@@ -12731,7 +12652,7 @@ function no3D(){G3.ok=false;$("no3d").hidden=false;$("no3d-retry").onclick=()=>l
       scatter(260,F.x0,F.x1,F.z0,F.z1,null,(x,z)=>broadleaf(x,z,rr(0.75,1.3),false));
       scatter(90,-410,410,-310,310,inMap,(x,z)=>bush(x,z,rr(0.8,1.4)));
       for(let k=0;k<7;k++){const a=rr(0,6.28),d=rr(360,420),x=Math.cos(a)*d,z=Math.sin(a)*d*0.8;if(!place(x,z,12))continue;add(T.mound,x,-3,z,rr(60,100),rr(9,18),rr(45,75),RNG()*6,pick(["#6f9a5c","#5f8a50","#7aa064"]),0.25);}}
-    if(ENVK==="urban"&&!G3.bare){
+    if(ENVK==="urban"){
       // City by the sea (v13 pass 2): the sea runs from the mill's back wall to the horizon. A seafront boulevard either side
       // of the mill; the beach with its boardwalk, pier and lifeguard towers to the west; the container port with gantry
       // cranes and a moored ship to the east, its breakwater and lighthouse out in the bay; ships at anchor offshore.
@@ -12852,7 +12773,7 @@ function no3D(){G3.ok=false;$("no3d").hidden=false;$("no3d-retry").onclick=()=>l
       scatter(40,F.x0,F.x1,F.z0,F.z1,null,(x,z)=>broadleaf(x,z,rr(0.6,1),false));
       scatter(160,-410,410,-310,310,inMap,(x,z)=>broadleaf(x,z,rr(0.6,0.95),true,true));
       {const z=60,x=HXr+10;if(place(x,z,4)){add(T.box,x,0,z,0.4,7,0.4,0,"#6b7079",0);add(T.box,x,7,z,0.4,3.2,8,0,"#f2c230",0.1);claim(x,z,4,11,0);}}}
-    if(ENVK==="desert"&&!G3.bare){
+    if(ENVK==="desert"){
       // Desert flats: a concrete canal past the mill; red mesas on every side, dry washes and dirt tracks across the
       // flats; the solar farm, water tanks and a reservoir east, a windpump and the substation west, an oasis, a ranch
       LM.solarFarm(206,86,10,7);LM.waterTanks(64,117);LM.reservoir(104,120,18,24);LM.reservoir(112,4,14,34);LM.windpump(-207,109);LM.stockPond(98,196);LM.mast(240,156,44);LM.ranch(232,-14);
@@ -13304,7 +13225,7 @@ function no3D(){G3.ok=false;$("no3d").hidden=false;$("no3d-retry").onclick=()=>l
      drift down, the singed bird flaps off trailing smoke, and the camera goes back where it was and the game carries on
      at the speed it had. Everything runs on its own real-time clock (the sim is paused); one bird and one set of
      effects, built once at start-up. Skipped in zen, the autotest and with ?nocine; Skip (or tapping the scene) ends it. */
-  {const Q=new URLSearchParams(location.search),NOCINE=Q.has("autotest")||Q.has("nocine")||!!G3.bare,IMP=10,END=13.4,EZ=k=>k<=0?0:k>=1?1:k*k*(3-2*k);
+  {const Q=new URLSearchParams(location.search),NOCINE=Q.has("autotest")||Q.has("nocine"),IMP=10,END=13.4,EZ=k=>k<=0?0:k>=1?1:k*k*(3-2*k);
     const mat=hex=>new StdMat({color:lin0(hex),roughness:0.75}),SPH=new THREE.SphereGeometry(1,14,10),BOX=new THREE.BoxGeometry(1,1,1);
     const part=(p,g,m,sx,sy,sz,x,y,z)=>{const o=new THREE.Mesh(g,m);o.scale.set(sx,sy,sz);o.position.set(x,y,z);o.castShadow=true;p.add(o);return o;};
     // the pigeon (local +x forward), 1.6x life size so it reads on a phone
@@ -13380,7 +13301,7 @@ function no3D(){G3.ok=false;$("no3d").hidden=false;$("no3d-retry").onclick=()=>l
         feathers.forEach(f=>{const u=f.userData.v,kk=k-0.05;f.visible=kk>0&&kk<3.2;if(!f.visible)return;f.position.set(c.I.x+u[0]*kk+Math.sin(kk*3+u[3])*0.4,Math.max(0.05,c.I.y+1+u[1]*kk-0.9*kk*kk*0.6),c.I.z+u[2]*kk);f.rotation.set(kk*3+u[3],kk*2,Math.sin(kk*4+u[3]));});
         if(t>=END)finish();}catch(e){console.error("bird cut-scene",e);finish();}};
     G3.cineSeek=t=>{if(C){C.t=t;C.chirp=C.chirp.filter(x=>x>t);if(t>=IMP&&!C.struck){C.struck=true;G3.cineHold=false;}}};   // (tests and stills)
-    G3.cineIMP=IMP;}
+}
   /* ---- v6.1 iso: 2D cut-outs for workers, fork-trucks and delivery trucks ----
      Only these three (userData.cut = "person", "lift" or "truck", set where they are built: 33 worker(), 27 forklift() and
      clamp3(), 26 makeTruck()). Everything else stays 3D.
@@ -13473,7 +13394,6 @@ function no3D(){G3.ok=false;$("no3d").hidden=false;$("no3d-retry").onclick=()=>l
    function heading(o){const e=o.matrixWorld.elements;return (((Math.round(Math.atan2(-e[2],e[0])/(Math.PI/4))%8)+8)%8);}
    // --- taking one picture ---
    const RTS=256,gl2=renderer.capabilities.isWebGL2!==false;
-   const hf=!!(renderer.extensions.has("EXT_color_buffer_half_float")||renderer.extensions.has("EXT_color_buffer_float"));
    const RT_A=new THREE.WebGLRenderTarget(RTS,RTS,{type:THREE.UnsignedByteType,   /* (v6.1 t4: 8-bit everywhere; a half-float MSAA target isn't renderable on every phone) */samples:gl2?4:0,generateMipmaps:false,minFilter:THREE.NearestFilter,magFilter:THREE.NearestFilter});
    RT_A.scissorTest=true;
    const finU={src:{value:RT_A.texture},uScale:{value:1},uPx:{value:64},uExp:{value:renderer.toneMappingExposure},uInk:{value:new THREE.Color(INK)},uPaper:{value:new THREE.Color(PAPERC)}};
@@ -13799,7 +13719,7 @@ function no3D(){G3.ok=false;$("no3d").hidden=false;$("no3d-retry").onclick=()=>l
           const inBag=ok.filter(m=>(!m.rare&&Z.bag.includes(m.name))||(m.rare&&!H.includes(m.name)));
           if(inBag.length)ok=inBag;else{const fresh=ok.filter(m=>!H.includes(m.name));if(fresh.length)ok=fresh;else if(ok.length)ok=[ok.reduce((a,b)=>H.indexOf(a.name)<=H.indexOf(b.name)?a:b)];}
           if(ok.length){let tw=0;ok.forEach(m=>tw+=m.rare?2.5:1);let r=Math.random()*tw,m=ok[0];for(const c of ok){r-=c.rare?2.5:1;if(r<=0){m=c;break;}}
-            Z.mv={m,t:0,st:m.start?m.start():null};Z.who=null;Z.len=m.dur+1;H.push(m.name);if(Z.bag){const bi=Z.bag.indexOf(m.name);if(bi>=0)Z.bag.splice(bi,1);}Z.done&&Z.done.add(m.name);while(H.length>Math.min(8,MV.length-4))H.shift();G3.zenLast=m.name;
+            Z.mv={m,t:0,st:m.start?m.start():null};Z.who=null;Z.len=m.dur+1;H.push(m.name);if(Z.bag){const bi=Z.bag.indexOf(m.name);if(bi>=0)Z.bag.splice(bi,1);}Z.done&&Z.done.add(m.name);while(H.length>Math.min(8,MV.length-4))H.shift();
             // v3.2.0: each shot has its own paired looks
             const lk=m.look||["none"],cur2=document.body.dataset.zs,pl2=lk.length>1?lk.filter(l=>l!==cur2):lk;document.body.dataset.zs=pl2[Math.floor(Math.random()*pl2.length)];}}
         if(Z.mv){}
@@ -13882,7 +13802,8 @@ function setFS(on){document.body.classList.toggle("fs",on);
   else if(document.fullscreenElement)document.exitFullscreen().catch(()=>{});}
 document.addEventListener("fullscreenchange",()=>{if(!document.fullscreenElement&&document.body.classList.contains("fs")){if(ZEN)setZen(false);else setFS(false);}});
 document.addEventListener("keydown",e=>{if(e.key==="Escape"&&ZEN){setZen(false);return;}if(e.key==="Escape"&&document.body.classList.contains("fs"))setFS(false);});
-function openSlice(){$("spider").hidden=true;$("brian").hidden=true;$("slice").hidden=false;$("slcV").value=Math.round(G3.SLC.v*100);$("slcH").value=Math.round(G3.SLC.h*100);drawSlice();}
+// the spider valve and the slice are fiddly knobs too: their panels slow the game the same way and close the others (kuiSync, closeKnob and closeStation are in 50b)
+function openSlice(){closeKnob();closeStation(true);$("spider").hidden=true;$("brian").hidden=true;$("slice").hidden=false;$("slcV").value=Math.round(G3.SLC.v*100);$("slcH").value=Math.round(G3.SLC.h*100);drawSlice();kuiSync();}
 $("slcClose").addEventListener("click",()=>$("slice").hidden=true);
 ["slcV","slcH"].forEach(id=>$(id).addEventListener("input",e=>{if(G3.slcFix)return;slcSet(id==="slcV"?"v":"h",+e.target.value/100);   // (v6.5.5: into the sim's knob state, 07b)
   const g=G3.SLC.geo();if(g.lipX-g.wet>=6.8)slcBreak();drawSlice();}));
@@ -13908,7 +13829,7 @@ function openBrian(){$("spider").hidden=true;$("slice").hidden=true;$("brian").h
 $("briClose").addEventListener("click",()=>{$("brian").hidden=true;});
 $("briGo").addEventListener("click",()=>{G3.follow(!G3.following());briUpd();});
 G3.onFollowEnd=()=>{briUpd();};
-function openSpider(){$("brian").hidden=true;$("slice").hidden=true;$("spider").hidden=false;$("spiV").value=Math.round(G3.SPD.v*100);drawSpider();}
+function openSpider(){closeKnob();closeStation(true);$("brian").hidden=true;$("slice").hidden=true;$("spider").hidden=false;$("spiV").value=Math.round(G3.SPD.v*100);drawSpider();kuiSync();}
 $("spiClose").addEventListener("click",()=>$("spider").hidden=true);
 $("spiV").addEventListener("input",e=>{G3.SPD.v=+e.target.value/100;drawSpider();});
 function drawSpider(){const D=G3.SPD;if(!D||$("spider").hidden)return;
@@ -13946,7 +13867,7 @@ const TITLE_ART=[
    opened from the operator consoles (stock prep's, and the three on the machine floor). With any of these open, or the
    spider valve or slice panel, the game runs at 1 min/s (simRate, 08-ui-wiring.js) and is back at the player's speed on
    close. The screens only read the sim (knobRead / KHIST, 07b-knobs.js); the only writes are the player's knob moves. */
-const KUI={panel:null,st:null,tab:"dcs",built:{}};
+const KUI={panel:null,st:null,tab:"dcs"};
 const AREA_N={SPOT:"Stock prep",WET:"Wet end",DET:"Dry end",DRV:"Drives"};
 // field knobs the DCS can also set remotely; the guide roll and the oscillator are set at the machine only
 const KREMOTE=new Set(["pulp","ref","agit","couch"]);
@@ -14095,14 +14016,6 @@ function stationBuild(){const o=$("dcsOv");if(!o||!KUI.st)return;const a=KUI.st,
   else if(a==="PLAN")b.appendChild(kEl("div","plan","")).id="planBox";
   else if(a==="DRV")drvBuild(b);else if(a==="REL")rlyBuild(b);   // v6.10 (50l)
   trBuild();trLayout();kuiRefresh();}
-// the trend chart: up to four series on their own scales, newest at the right
-function drawTrend6(cv,series){if(!cv)return;const x=cv.getContext("2d"),W=cv.width,H=cv.height,a=KHIST.a,dk=document.body.classList.contains("dark");
-  x.fillStyle="#0f1b2d";x.fillRect(0,0,W,H);x.strokeStyle="rgba(140,170,210,.18)";x.lineWidth=1;for(let k=1;k<6;k++){x.beginPath();x.moveTo(W*k/6,0);x.lineTo(W*k/6,H);x.stroke();}for(let k=1;k<4;k++){x.beginPath();x.moveTo(0,H*k/4);x.lineTo(W,H*k/4);x.stroke();}
-  x.fillStyle="rgba(190,205,230,.7)";x.font="600 15px system-ui,sans-serif";x.fillText("−6 h",6,H-6);x.textAlign="right";x.fillText("now",W-6,H-6);x.textAlign="left";
-  if(a.length<2){x.fillStyle="rgba(190,205,230,.8)";x.font="600 18px system-ui,sans-serif";x.fillText("Collecting data…",W/2-70,H/2);return;}
-  const t1=a[a.length-1][0],t0=t1-360,X=t=>(t-t0)/360*W;
-  series.forEach(([k,,col,lo,hi])=>{const c=KH_COL[k];x.strokeStyle=col;x.lineWidth=2.5;x.beginPath();let st=false;
-    for(const r of a){if(r[0]<t0)continue;const v=r[c];if(v==null||v!==v){st=false;continue;}const y=H-8-clamp((v-lo)/(hi-lo),0,1)*(H-24);if(!st){x.moveTo(X(r[0]),y);st=true;}else x.lineTo(X(r[0]),y);}x.stroke();});}
 function kuiRefresh(){if(!KUI.panel&&!KUI.st)return;const r=knobRead();
   if(KUI.panel){const id=KUI.panel;document.querySelectorAll("#kpCtl .kctl").forEach(knobCtlSync);{const h=knobReadout(id,r),e=$("kpRead");if(e._h!==h){e._h=h;e.innerHTML=h;}}
     const n=$("kpNote"),moved=!knobAt(id),busy=S.knob&&S.knob.inc.some(i=>i.cause.includes(id));n.className="spin"+(moved?" bad":"");
@@ -14114,7 +14027,7 @@ function kuiRefresh(){if(!KUI.panel&&!KUI.st)return;const r=knobRead();
       const al=knobAlarms(a,r),ul=$("dcsAl"),h=al.length?al.map(([t,hi])=>`<li class="${hi?"hi":""}">${t}</li>`).join(""):'<li class="none">No alarms</li>';if(ul&&ul._h!==h){ul._h=h;ul.innerHTML=h;}
       {const bt=$("dcsBeat");if(bt){const q=qualStatus(),on=r.run&&q.off>0.02,t=on?`⚠ MAKING BEATER · ${q.why.toUpperCase()} · ${q.off>=0.99?"the whole reel":Math.round(q.off*100)+"% of the reel"} to the beater`:"";if(bt.hidden===on)bt.hidden=!on;if(bt.textContent!==t)bt.textContent=t;}}
       o.querySelectorAll(".dcsrow canvas[data-cd]").forEach(c=>kuiCd(c,r));dcsSync();dcsPicSync(a);vlvDcsSync(o);if(a==="WATER")waterRefresh();}
-    else if(a==="QCS"){const K=S.knob,F=(K&&K.F)||{},off=r.off,st=$("qcsSt");
+    else if(a==="QCS"){const K=S.knob,F=(K&&K.F)||{},st=$("qcsSt");
       // v6.5.3: the spec check (07e) names what's out; the grade change and the other knob defects after it
       const qs=qualStatus(),sh=!r.run?["MACHINE DOWN","down"]:QNOW.out.length?[`OFF SPEC · ${qs.why} · rolls to the beater`,"bad"]:S.chg?["GRADE CHANGE · weight in transition · rolls to the beater","warn"]:qs.off>0.02?[`REJECTING · ${qs.why} · ${Math.round(qs.off*100)}% to the beater`,"bad"]:["ON SPEC","ok"];
       if(st._h!==sh[0]){st._h=sh[0];st.textContent=sh[0];st.className="qcsst "+sh[1];}
@@ -14147,8 +14060,6 @@ G3.openKnob=openKnob;G3.openStation=openStation;G3.slcSet=slcSet;G3.hayout=()=>h
   G3.yieldUI=()=>{try{if(G3.VUI&&G3.VUI.id&&G3.vlvClose&&!POP.on)G3.vlvClose();if(!POP.on){closeKnob();closeStation();}else if(KUI.panel)closeKnob();}catch(_){}};   // (v6.9.2: cards, the outage plan and the pause menu draw under these)
   G3.closeKnobUI=()=>{closeKnob();closeStation();};
 ["spiClose","slcClose"].forEach(id=>$(id).addEventListener("click",()=>setTimeout(kuiSync,0)));
-// the spider valve and the slice are fiddly knobs too: their panels slow the game the same way (and close the others)
-{const o1=openSpider,o2=openSlice;openSpider=function(){closeKnob();closeStation(true);o1();kuiSync();};openSlice=function(){closeKnob();closeStation(true);o2();kuiSync();};}
 
 /* ---- the fiddly knobs view switch (Settings > View) and its chip ---- */
 {const row=$("v2viewrow"),lab=kEl("label","check",`<input id="knobView" type="checkbox"/> Fiddly knobs view`);row.appendChild(lab);
@@ -14298,7 +14209,6 @@ const pfHourLbl=h=>`${pfDayLbl(h)} · ${clockOf(((h%24)+24)%24*60)}`;
 const V_=k=>r=>r[HCI[k]];
 const HSUM=k=>k.reduce?(r=>k.reduce((a,x)=>a+(r[HCI[x]]||0),0)):V_(k);
 const C_={fi:"#e07b39",fo:"#9b7fd6",occ:"#c08a4a",en:"#ffb02e",ch:"#3fc6d6",lab:"#4fd18b",mt:"#ff7a8a",ov:"#a7b4cf",bl:"#7fb2ff",pu:"#c08bff",wh:"#dbe6f6"};
-const UPK={yard:"m.yard",pulper:"m.pulp",stock:"m.pulp",pm:"m.pmrun",winder:"m.wdrun",ship:"m.ship"};
 const PF_TR={
   yard:[{t:"Bale yard inventory",u:"t",k:"line",s:[["Yard",C_.occ,V_("a.yard")]]},{t:"Trucks in",u:"trucks",k:"bar",s:[["Trucks",C_.bl,V_("n.in")]]},
     {t:"OCC price",u:"$/t",k:"line",s:[["OCC",C_.occ,V_("a.occp")]],ev:1},{t:"Inbound haul",u:"$/t",k:"line",s:[["Haul",C_.fi,V_("a.haul")]]},{t:"Unloading",u:"t/h",k:"line",s:[["Unloaded",C_.bl,V_("a.unload")]]}],
@@ -14613,7 +14523,11 @@ function dcsAlarms(a,r,L){const al=(on,txt,hi)=>{if(on)L.push([txt,hi]);};vlvAla
     al(!!S.wdBlocked,"WINDER BLOCKED: CONVEYOR FULL",true);al(S.wd==="hayout","WINDER HAYOUT",true);
     const Dr=S.dry;if(Dr&&S.pm==="run"){al(dryLimited()&&Dr.m>DRY.m0+0.5,"DRYERS AT LIMIT · SHEET WET",true);al(!dryLimited()&&Dr.load>0.95,"DRYER LOAD HI",false);}
     al(!!(Dr&&Dr.trim>0.001),`SPEED TRIMMED ${Dr?Math.round(Dr.trim*100):0}% · DRYING THE SHEET`,!!(Dr&&Dr.wet));al(!!(Dr&&Dr.man!=null),"2ND / 3RD SECTION STEAM ON MANUAL",false);}
-  else if(a==="UTIL"){const Dr=S.dry;al(!!(Dr&&Dr.vent>1),"STEAM VENTING (SHEET BREAK)",false);al(tssNow()>45&&!dcsOn("permit"),"EFFLUENT TSS HI",false);al(!!(Dr&&Dr.steam>DRY.boiler*0.95),"BOILER STEAM HI",!!(Dr&&Dr.hdr<0.97));al(!!(Dr&&Dr.hdr<0.8),"STEAM HEADER LO",!!(Dr&&Dr.hdr<0.7));}}
+  else if(a==="UTIL"){const Dr=S.dry;al(!!(Dr&&Dr.vent>1),"STEAM VENTING (SHEET BREAK)",false);al(tssNow()>45&&!dcsOn("permit"),"EFFLUENT TSS HI",false);al(!!(Dr&&Dr.steam>DRY.boiler*0.95),"BOILER STEAM HI",!!(Dr&&Dr.hdr<0.97));al(!!(Dr&&Dr.hdr<0.8),"STEAM HEADER LO",!!(Dr&&Dr.hdr<0.7));}
+  else if(a==="WATER"){const W=S.wat;   // (v6.7 water screen, 50f: the river intake and the permit show here as well as on UTIL)
+    al(active("icedintake"),"RIVER INTAKE ICED · NO MAKEUP WATER",true);al(active("permit"),"WASTEWATER PERMIT EXCEEDED",true);
+    al(!!(W&&W.short>0),"WHITE WATER CHEST EMPTY · STOCK THICK",true);al(!!(W&&W.short<=0&&W.L<WAT.cap*0.25),"WHITE WATER CHEST LEVEL LO",false);
+    al(!!(W&&W.r.over>50),"WHITE WATER OVERFLOWING TO THE SEWER",false);al(tssNow()>45&&!active("permit"),"EFFLUENT TSS HI",false);}}
 
 /* ---- setpoint, motor and purge rows ---- */
 const DCARD=k=>{const cs=$("cards"),r=cs&&cs.querySelector(`.row[data-key="${k}"]`);return r?{inp:r.querySelector("input"),btn:r.querySelector(".auto")}:null;};
@@ -14646,7 +14560,7 @@ function dcsSetRows(a,cs){const defs=dcsSetDefs(a);
       row.querySelectorAll("[data-dye]").forEach(b=>b.addEventListener("click",()=>{const pc=document.querySelector(`#paperColor button[data-c="${b.dataset.dye}"]`);if(pc)pc.click();dcsSync();}));}
     else{row.innerHTML=`<div class="dcsn"><b>Grade</b><small>set by the market planner from customer orders</small></div><select disabled data-dgrade aria-label="Grade">${Object.keys(GRADES).map(g=>`<option value="${g}">${g} · ${GRADES[g].bw} lb</option>`).join("")}</select>`;}
     cs.appendChild(row);}
-  for(const d of defs){const [k,name,where,mn,mx,st,,,unit,card,field]=d,row=kEl("div","dcsrow dcsx");row.dataset.ds=k;
+  for(const d of defs){const [k,name,where,mn,mx,st,,,,card]=d,row=kEl("div","dcsrow dcsx");row.dataset.ds=k;
     row.innerHTML=`<div class="dcsn"><b>${name}</b><small>${where}</small></div><label class="spis"><input type="range" min="${mn}" max="${mx}" step="${st}" data-dsv aria-label="${name}"/></label><div class="kval"><b data-dsb></b></div>${card||d[11]?`<button type="button" class="reroll kstd" data-dsa>AUTO</button>`:""}`;
     row.querySelector("[data-dsv]").addEventListener("input",e=>{d[7](+e.target.value);dcsSync();});
     if(card)row.querySelector("[data-dsa]").addEventListener("click",()=>{dcsCardAuto(card);dcsSync();});
@@ -15067,7 +14981,7 @@ function recHtml(Q){const r=Q.rec,N=recN(r),Y=recPiles(),R=S.rates||{},sq=recSeq
       <td class="recst"><button type="button" data-rec="${q}-" aria-label="One fewer ${b.n}"${r[q]<=1?" disabled":""}>−</button><b>${r[q]}</b><button type="button" data-rec="${q}+" aria-label="One more ${b.n}"${r[q]>=RECMAX?" disabled":""}>+</button></td></tr>`;}).join("");
   const cost=BTK.reduce((a,q)=>a+r[q]*btPrice(q),0)/N,rj=1-recY(r),rate=recRate(),slow=rate<P.pulperMax-0.05;
   const chips=sq.map((q,i)=>`<i class="recb rec${q}${i===cur?" on":""}" title="${BT[q].n}">${BT[q].s}</i>`).join("");
-  const mw=Y.M<=0.5&&r.M>0,out=BTK.filter(q=>Y[q]<=0.5).map(q=>BT[q].n);
+  const out=BTK.filter(q=>Y[q]<=0.5).map(q=>BT[q].n);
   return `<p class="dcsfield">The pulper is fed in this order, bale by bale, and the trucks bring whichever kind is short. A bales cost more and pulp clean; Mixed Waste is cheap but a quarter of it goes to landfill.</p>
     <table class="rect"><thead><tr><th>Bale</th><th>Price</th><th>Rejects</th><th>Yard</th><th>Per cycle</th></tr></thead><tbody>${rows}</tbody></table>
     <div class="recseq" aria-label="Feed sequence">${chips}</div>
@@ -15096,11 +15010,6 @@ TAGMAP.evap2="evap";TAGMAP.twl=null;TAGMAP.ice=null;TAGMAP.perm=null;TAGMAP.wcf=
 PGX.WATER=[["intake",()=>stI("icedintake")],["tower",()=>active("icedintake")?"warn":"ok","tower"],["pumpBox",()=>"ok"],["headbox",()=>S.pm==="run"?"ok":"off"],["dryers",()=>S.pm==="run"?"ok":"off","d4"],
   ["pulper",()=>S.M&&S.M.pulperDown?"off":"ok","pulp"],["tank",()=>S.wat&&S.wat.short>0?"trip":S.wat&&S.wat.L<WAT.cap*0.25?"warn":"ok","wwc"],["clarifier",()=>or(stI("permit"),tssNow()>45?"warn":"ok")],
   ["landfill",()=>"ok"],["outfall",()=>"ok"]];
-// the water screen's alarms (the river intake and the permit show here as well as on UTIL)
-{const base=dcsAlarms;dcsAlarms=function(a,r,L){base(a,r,L);if(a!=="WATER")return;const al=(on,t,hi)=>{if(on)L.push([t,hi]);},W=S.wat;
-  al(active("icedintake"),"RIVER INTAKE ICED · NO MAKEUP WATER",true);al(active("permit"),"WASTEWATER PERMIT EXCEEDED",true);
-  al(!!(W&&W.short>0),"WHITE WATER CHEST EMPTY · STOCK THICK",true);al(!!(W&&W.short<=0&&W.L<WAT.cap*0.25),"WHITE WATER CHEST LEVEL LO",false);
-  al(!!(W&&W.r.over>50),"WHITE WATER OVERFLOWING TO THE SEWER",false);al(tssNow()>45&&!active("permit"),"EFFLUENT TSS HI",false);};}
 function waterRefresh(){const e=$("wBal");if(!e||!S.wat)return;const T=S.wat.tot,mg=v=>fmtGal(GAL(v||0)),paper=T.paper||0;
   const inn=[["Fresh water",T.fresh],["Water in the bales",T.bale],["Water in repulped beater",T.rep]],out=[["Up the dryer stack",T.evap],["In the paper",T.prod],["With the rejects",T.rej],["With the clarifier sludge",T.sludge],["Treated outfall",T.out]];
   const si=inn.reduce((a,x)=>a+(x[1]||0),0),so=out.reduce((a,x)=>a+(x[1]||0),0);
@@ -15766,7 +15675,7 @@ function vBumpRes(d){const box=$("vBr");if(!box)return;const W=S.vlv,r=W&&W.btRe
   $("vUse").addEventListener("click",()=>{vlvSetTune(d.id,{kc:t.kc,ti:t.ti,td:t.td});VUI.tab="tune";vlvBuild();});}
 
 /* -- Valve -- */
-function vpValve(p,d){const id=d.id,L=()=>S.vlv&&S.vlv.lp[id],vv=()=>(L()&&L().v)||d.valve,ed=!!S.free;
+function vpValve(p,d){const id=d.id,ed=!!S.free;
   const row=(k,lab,u,min,max,step,note)=>`<div class="vtn"><span class="vk">${lab} ${vgl(k)}</span>${ed?`<input type="range" min="${min}" max="${max}" step="${step}" data-vv="${k}" aria-label="${lab}"/>`:"<span></span>"}<span class="vnum1"><b data-vvv="${k}"></b><small>${u}</small></span></div><p class="vnote vsm">${note}</p>`;
   p.innerHTML=`<div class="vchar"><svg viewBox="0 0 220 150" id="vChr" role="img" aria-label="Valve characteristic"></svg><div><div class="vrow"><span class="vk">Trim ${vgl("cv")}</span>${ed?`<span class="seg" role="group" aria-label="Trim"><button type="button" data-ch="lin">Linear</button><button type="button" data-ch="eq">Equal-%</button></span>`:`<b id="vChN"></b>`}</div>
       <p class="vnote vsm">Medium: ${d.medium}. Action: ${d.act>0?"reverse":"direct"} ${vgl("act")} (${d.act>0?"the PV rises as it opens":"the PV falls as it opens"}).</p></div></div>
@@ -15828,7 +15737,7 @@ function vlvRefresh(force){const o=$("vlvOv");if(!o||o.hidden||!VUI.id)return;co
     const pv=$("vPV"),sp=$("vSP"),op=$("vOP");pv.textContent=vlvFmtPV(d,v.pv);
     if(actEl(sp)!==sp)sp.value=vfx(v.sp,d.pv.dp);sp.disabled=v.m==="CAS";$("vSPn").textContent=v.m==="CAS"?`from ${d.master} (CAS)`:d.id==="FV-201"?`grade ${C.grade} target ${bwStd().toFixed(2)} lb`:`${vF(d.spLim)[0]}–${vF(d.spLim)[1]} ${d.pv.u}`;
     if(actEl(op)!==op)op.value=vfx(v.op,1);op.readOnly=v.m!=="MAN";$("vOPn").textContent=d.ctl?`→ ${Math.round(v.op*d.out.k)} kPa 3rd section`:v.m==="MAN"?"you set this":"the controller sets this";
-    if(!d.ctl){const L=W&&W.lp[id],tg=L?L.tgt:v.pos;$("vBarC").style.left=clamp(v.op,0,100)+"%";$("vBarA").style.width=clamp(v.pos,0,100)+"%";
+    if(!d.ctl){$("vBarC").style.left=clamp(v.op,0,100)+"%";$("vBarA").style.width=clamp(v.pos,0,100)+"%";
       $("vPos").textContent=v.pos<0.5?"SHUT":v.pos>99.5?"WIDE OPEN":`${vfx(v.pos,1)}% open`;}
     const n=$("vNote"),ff=d.ff&&W&&W.B?W.B.ff:null;
     const nt=v.m==="IMAN"?"PV-302 and PV-303 aren't on CAS: this controller is tracking them (IMAN).":d.id==="FV-201"?`Speed feed-forward ${vgl("ff")}: ${v.t&&ff!=null?(ff>=0?"+":"")+ff.toFixed(1)+"%":"built in"}. The scanner reads ${WE.dead} min late.`:d.cas&&v.m!=="CAS"?`Off CAS: QC-300 can't hold the moisture until this is back on CAS.`:"";
@@ -16386,10 +16295,6 @@ UI_TICKS.push(()=>{const R=S&&S.rel,done=!S||S.over||(S.season&&S.season.done);i
         <div class="rcbar"><div class="rcbars">${bar}</div><div class="rprice" style="left:${(price/sc*100).toFixed(2)}%"><span>Price ${money(price)}</span></div></div>
         <div class="rmargin ${m>=0?"pos":"neg"}">Margin ${money(m)}/t · ${pc(price>0?m/price:0)}</div>
         <div class="rleg">${rows.map(r=>`<div><i style="background:${r[2]}"></i><span>${r[0]}</span><b class="mono">${money(r[1]/p.prod)}</b></div>`).join("")}</div>`;}
-    function upBlock(p){const top=p.dn.slice(0,3).map(([k,m])=>`${k} (${hrs(m)})`).join(" · ");
-      return `<div class="rhd"><h3>Uptime</h3><small>this period · outages left out</small></div><div class="rup">${RC_SEC.map(([k,n])=>{const v=p.rel[k]||0,w=v<0.9;
-        return `<span${w?' class="w"':""}>${n}</span><div><i style="width:${(v*100).toFixed(1)}%;background:${v<0.9?"var(--warn)":"var(--ok)"}"></i></div><b class="mono${w?" w":""}">${pc(v)}</b>`;}).join("")}</div>
-        <p class="rnote">${top?"Biggest losses: "+top+" · ":""}${p.breaks} sheet break${p.breaks===1?"":"s"} · ${p.hay} hayout${p.hay===1?"":"s"}</p>`;}
     function daysBlock(d){const D=(d.R.days||[]).filter(x=>x.d>3);if(!D.length)return "";
       const sv=!!S.season.surv,d0=sv?Math.max(0,D[D.length-1].d-30):0;   // v4.3 survival: the last 30 days, with a line at each outage
       const X=v=>22+(v-d0-1)*(326/29),Y=L=>20+(4-GP[L])*28,pts=D.map(x=>`${X(x.d).toFixed(1)},${Y(x.o)}`).join(" ");
@@ -16559,7 +16464,7 @@ function camPullOn(){try{return localStorage.getItem("paper-mill-campull")!=="of
     setTimeout(()=>{if(u===location.pathname+location.search+location.hash)location.reload();else location.href=u;},250);});
   // ---- settings ----
   const tog=(id,label,sub,on)=>`<label class="trow"><span><b>${label}</b>${sub?`<small>${sub}</small>`:""}</span><input type="checkbox" class="tsw" id="${id}"${on?" checked":""}/></label>`;
-  const gfxCap=g=>g[0].toUpperCase()+g.slice(1),GFX_TIP={auto:"Picked from your device",bare:"Bare bones: flat colors, no shadows, no scenery or ambient life, 30 FPS",low:"1024 shadows, 10 Hz, lighter scenery",medium:"1024 shadows, 15 Hz",high:"2048 softer shadows, 24 Hz, full scenery",ultra:"4096 softer shadows, every frame, dense scenery with far shadows"};
+  const gfxCap=g=>g[0].toUpperCase()+g.slice(1),GFX_TIP={auto:"Picked from your device",low:"1024 shadows, 10 Hz, lighter scenery",medium:"1024 shadows, 15 Hz",high:"2048 softer shadows, 24 Hz, full scenery",ultra:"4096 softer shadows, every frame, dense scenery with far shadows"};
   function paintSet(){let vol=70;try{vol=+(localStorage.getItem("paper-mill-vol")||70);}catch(e){}
     const tut=(()=>{try{return localStorage.getItem("paper-mill-tutorial")!=="off";}catch(e){return true;}})(),sh=$("viewShadows");
     $t("tSetBody").innerHTML=`<div class="tsub">Sound</div>${tog("tsSound","Sound","music and mill sounds",soundPref==="on")}
@@ -16945,7 +16850,7 @@ function camPullOn(){try{return localStorage.getItem("paper-mill-campull")!=="of
    (within 700 ms per tap) and a list of every version's one-line note pops up, newest first. The list comes from
    VERSION-NOTES.txt at the repo root: build.py swaps it in for the placeholder below, so adding a line there with each
    release keeps the pop-up current (build.py warns when APP_VER has no line). ---------- */
-{const VNOTES=[["4.0.0", "Graphics Overhaul: 60 FPS on iPhone, ~80% Fewer Draw Calls"], ["4.0.1", "Performance Follow-Up, Show FPS Option and Device Autotest"], ["4.0.2", "Economy Rebalance and Smoother Upset Labels"], ["4.1.0", "Four Environments, Seeded Mills, Bottlenecks, Graphics Tiers and Site Music"], ["4.2.0", "New Site Maps, Rare Sights, Zen Map Rotation and Economics Fixes"], ["4.2.0-s", "Save and Continue Season (Test)"], ["4.2.1", "Save/Continue, Settings Panel and Outage Speed Fix"], ["4.2.2-t", "Bayou Gator Sight Reworked (Test)"], ["4.2.2-t2", "Gator Bass Riff (Test)"], ["4.2.2-t3", "Gator Riff Removed, Wide Camera Framing (Test)"], ["4.2.2-t4", "Gator Scene Shortened and Widened (Test)"], ["4.2.2-t5", "One Rare Sight per Map in Zen (Test)"], ["4.2.2", "Rare Sights Reworked, Bird Strike Upset, Mill Report Tab"], ["4.2.3-t", "Cowboys, Bigfoot and Tugboat Sights Reworked (Test)"], ["4.2.3", "Laptop Battery Saving (Default GPU)"], ["4.2.4", "$25M Goal Removed and Quick Fixes"], ["4.2.5", "Random Bottleneck per Season and Accessibility Improvements"], ["4.3.0-t1", "Survival Mode (Test)"], ["4.4.0-t1", "Mill Leaders in Survival (Test)"], ["4.4.0-t2", "Painted Leader Portraits (Test)"], ["4.4.0-t3", "Leader Redesign, 4-Day Waves and Fixes (Test)"], ["5.0.0", "Survival Mode Release with Mill Leaders"], ["5.0.1", "Results Dialog and Game Speed Fixes"], ["5.0.2", "Report Card Label Fixes"], ["5.0.3", "Survival Playtest Fixes (Test)"], ["5.0.4", "Playtest Review: Dot Auto-Fix and Shipping Fix (Test)"], ["5.0.5", "Polish Rounds from Survival Playtests"], ["5.0.6", "Survival QA Fixes, Opt-In Outage Watch, Leaderboard Filters"], ["5.1.0", "Civics Meters and Leaders in Seasons (Test)"], ["5.4.0", "Title Screen, Civics in the World and Dark Mode"], ["5.4.1", "Loading Splash, No Old-Menu Flash"], ["5.4.2", "Graphics Quality on the Title Screen"], ["5.5.0", "Performance Improvements"], ["5.6.0", "Fiddly Knobs, DCS/QCS Screens and Knobs View"], ["5.7.0", "Catching Failures Early: Tells, Daily Rounds, Vibration Report, Outage Prep"], ["5.7.1", "Bottom Menu Reorder, Settings Back on the Right"], ["5.7.2", "Help Page with Game Guide and Glossary"], ["5.7.3", "Bare Graphics Mode for Weak Phones"], ["5.7.4", "Version Notes Pop-Up (Triple-Tap the Version Number)"], ["6.1.0-t1", "Isometric Paper View: Fixed Camera, Cut-Outs, Drop Shadows, Cutaways, Season Palettes (Test)"], ["6.1.0-t2", "Iso Round 2: Cut-Outs Always Paper, GPU Pictures, Stop-Motion World, Fewer Draws (Test)"], ["6.1.0-t3", "Iso Round 3: iPhone Batching, Instanced Cans, Sign Atlas, Lighter Frames (Test)"], ["6.1.0-t4", "Iso Fixes: Operators and Fork-Trucks Back, Less Stutter (Test)"], ["6.1.0-t5", "Cut-Out Edge Artifact Fixed (Test)"], ["6.1.0-t6", "Iso Optimization: Hidden Objects Cost Nothing, Lighter Moving Batches (Test)"], ["6.1.0-t7", "Iso Triangle Cut: Paper-Card Trees, Flat Ground, Hidden Faces Gone, Plain Boxes (Test)"], ["6.1.0-t8", "Paper Palette: 40 Colours, Flat Surfaces, Paper Grain, Fewer Draws (Test)"], ["6.1.0-t9", "Reel Fix: Growing Reel Draws Again (Test)"], ["6.1.0-t10", "Draw Cut 2: Colour in the Matrix, Merged Roofs, Uploads on Change, Culling Fix, Parked Groups (Test)"], ["6.1.0-t11", "QA Fixes: Cut-Outs Never Drawn as Loose 3D Parts, Fallback Shows 3D, Roofs On or Off per Zoom Step (Test)"], ["6.1.0-t12", "Paper Smoke, Blinking Lights, Stronger Seasons, Sharper Phones, Instanced Upsets, Pictures at Start (Test)"], ["6.1.0-t13", "Paper Effects: Flames, Child-Made Tornado, Lamp Cones, Flags, Paper Water, Visible Weather (Test)"], ["6.1.0-t14", "Paper Upsets: Cut-Out Props, Paper Pigeon, Paper Sparks, Steam, Fireworks, Ice and Flood (Test)"], ["6.1.0-t15", "Beaver Reworked as One Smaller Cut-Out (Test)"], ["6.1.0-t16", "Paper Props Dim at Night, Labels Never Overlap, Fewer Cut-Out Pictures (Test)"], ["6.1.0-t17", "Bird on the Power Lines Cut-Scene Plays When Set Off From the Upsets List (Test)"], ["6.1.0-t18", "Zen Close-Ups Fixed, Rare Sights as Paper Cut-Outs, Tilt-Shift Diorama Look (Test)"], ["6.1.0-t19", "Narrower Tilt-Shift Band, Winder Trash Can Out of the Broke Hole (Test)"], ["6.1.0-t20", "Balance: Rounds Pay More, Capacity and Maintenance Upgrades Re-Priced"], ["6.1.0", "Paper Diorama: Isometric Paper Art Style, Cut-Out People and Upsets, Tilt-Shift, Rounds Pay More, Upgrades Re-Priced"], ["6.1.1", "Phone Fixes: Gentler Tilt-Shift on Tall Screens, Cut-Out People No Longer Blank on iPhone"], ["6.1.2", "iPhone: Cut-Out Self-Test Retries, People Keep Their Colours in the 3D Fallback"], ["6.1.3", "Broke Hole by the Winder Looks Like a Floor Opening (Was a Black Square)"], ["6.1.4", "Tilt-Shift Removed"], ["6.2.0", "Zen Free Camera: Perspective Zen Shots, 3D People in Zen, Cleaner River Water"], ["6.3.0-f1", "Process Flow Overview (Test): Inputs, Mill Areas and Outputs for the Mill Day, in Settings"], ["6.3.0-f2", "Process Flow: the Game Keeps Running While It's Open (Test)"], ["6.3.0", "Process Flow Overview: Inputs, Mill Areas and Outputs for the Mill Day (Settings > View)"], ["6.4.0", "Zen Shots Review: Shuffle-Bag Shot Order, Landscape Shots Rebuilt, Close Rare Sights"], ["6.5.0-a1", "Digital Twin A (Test): Hourly History, 14 Prior Days, 7 d / Run Ranges, Area Trends and Uptime"], ["6.5.0-b1", "Digital Twin B (Test): Real Freight Costs with a Diesel Index, Area Controls Moved into Process Flow"], ["6.5.0-b2", "Market Pricing (Test): 2026 OCC and Energy Costs, Diesel in $/gal, Desert Long Haul, Real Steam Rates"], ["6.5.0-b3", "DCS Expansion (Test): Full SPOT, WET and DET Pictures, a UTIL Screen, Motors and Reject Purges"], ["6.5.0-b4", "DCS Pictograms (Test): Equipment Drawn as Classic DCS Symbols, Colour Only When Something's Wrong"], ["6.5.0-b5", "The Dryer Limit (Test): Speed and Grade Load the Dryers, a Wet Sheet Fails Spec and Slows the Machine"], ["6.5.0", "Digital Twin: Process Flow Trends and Controls, Real Freight and Market Costs, Full DCS, Dryer Limit, Rebalance"], ["6.5.1", "Second Screen: Pop the DCS and Process Flow Out to Their Own Window for a Second Monitor (Desktop)"], ["6.5.2", "Knob Fixes: Wet-End and Steam Knobs Bite Again Under the Dryer Limit, DCS Uses the Machine's Name"], ["6.5.3", "Quality Specs: Weight, Moisture and Color Specs per Grade, Off-Spec Paper Wound into Beater Rolls and Repulped"], ["6.5.4", "DCS Fixes: Making-Beater Alerts, SPOT in Process Order, Boiler and Power on Utilities, 2nd/3rd Section Steam Control"], ["6.5.5-t1", "Dewatering Chain (Test): Jet and Vacuum Optimums, Couch to Press Solids, Press Solids Set the Dryer Steam Both Ways"], ["6.5.5", "The Dewatering Chain: Jet and Vacuum Optimums, Couch to Press Solids, Press Solids Set the Dryer Steam Both Ways"], ["6.5.6-t1", "Mass Balance (Test): A Real Water Balance and White Water Chest, Hayout Broke Repulped, Every Fiber Loss Booked"], ["6.5.6", "Mass Balance: A Real Water Balance and White Water Chest, Hayout Broke Repulped, Every Fiber Loss Booked"], ["6.5.7-t1", "Winder Pass (Test): Four Reel Storage Stands, Two-Roll Sets, Rolls Tied Together, Steam Vented on a Sheet Break"], ["6.5.7", "Winder Pass: Four Reel Storage Stands, Two-Roll Sets, Rolls Tied Together, Steam Vented on a Sheet Break"], ["6.6.0-t1", "Orders and Bales (Test): Customer Order Book and Spot Market, Idle Energy While Stopped, Bale Grading at the Gate"], ["6.6.0", "Orders and Bales: Customer Order Book and Spot Market, Idle Energy While Stopped, Bale Grading at the Gate"], ["6.7.0-t1", "Control Room (Test): Planning, Water and Quality Screens, Split-Screen Trends of Anything, What Moves With What, Process Flow Views"], ["6.7.0", "Control Room: Planning, Water and Quality Screens, Split-Screen Trends of Anything, What Moves With What, Process Flow Views"], ["6.7.1-t1", "New Grade Set (Test): Grades 24, 28, 31 and 34Super, Same Tons per Hour"], ["6.7.1", "New Grade Set: Grades 24, 28, 31 and 34Super, Same Tons per Hour"], ["6.8.0-t1", "Process Relationships (Test): Refining Energy and Ring Crush, Basis Weight Loop, Headbox at 0.8%, White Water Silo, Bale Water and Screen Pressure Drop"], ["6.8.0-t2", "Relationship Map in the Control Room (Test): What Drives Each Reading and What It Moves, Live"], ["6.8.0", "Process Relationships: Refining Energy and Ring Crush, Basis Weight Loop, Headbox at 0.8%, White Water Silo, Bale Water, Screen Pressure Drop and the Relationship Map"], ["6.8.1", "Report Tab Tidy: Live Mill First, Last-24-Hours Chart, Quality & Fiber and Orders & Bales Removed"], ["6.8.2", "Manning: DuPont 12 Shifts for Techs and Operators, Team Hard Hats, Shift Change Walk-In, Vacations Covered Across Teams"], ["6.8.3", "OCC Recipe (A Bales, C Bales, Mixed Waste), Relationship Map Zoom and 3D Light Cones at Night"], ["6.9.0-t1", "The Valves Update (Test): Six Control Loops on the DCS with Real Valves, Faceplates, PID Tuning, Bump Tests, a Tuning Clock and Tuning Challenges"], ["6.9.0", "The Valves Update: Six Control Loops on the DCS with Real Valves, Faceplates, PID Tuning, Bump Tests, a Tuning Clock, Tuning Challenges and Their Links on the Relationship Map"], ["6.9.1", "Wet End Controls: Rush / Drag in fpm on the WET DCS"], ["6.9.2", "Release Review: Help and Glossary Brought Up to Date, Nine Bug Fixes, Refiners Feed the Machine Chest (a Clash Trips the Machine on Low Level) and an Economy Rebalance Where the Daily Round Is the Biggest Boost"], ["6.10.0-t1", "The Reliability and Electrical Update (Test): Ten VFD Motors with Health, an MCC Building with Three Drive Lineups Fed from the Substation, an Electrical Tech on Every Shift, Shift Vibration and ADX Rounds That Get Skipped When Techs Are Busy, Reliability and Drives Screens, Bearing, Motor and Drive Failures, Outage Changeouts and the Water Tower Moved to the North-East Corner"], ["6.10.0-t2", "The Reliability and Electrical Update (Test 2): the 115 kV to 650 V DC Power Chain with Rectifier Faults, Reset-or-Investigate Drive Fault Decisions, Arc-Flash PPE at the MCC, AUTO-LW Basis Weight, Click for Info and Lamps Under the Roofs"], ["6.10.0-t3", "The Reliability and Electrical Update (Test 3): QA Fixes and Balance: Unanswered Drive Faults Auto-Decide After an Hour, Drive Cards Show Load at the Trip, Reliability Failures About Half as Often, Lower Motor and Rectifier Bills"], ["6.10.0-t4", "The Reliability and Electrical Update (Test 4): One Machine per Vibration Round, Planned Repairs Take the Machine Down 20-40 Minutes, Repeated Drive Resets Get Worse and Can Fail, a Tutorial Card for Rounds and the MCC, Drive and Rectifier Health on Screen, Clearer Click for Info and 26 Polish Fixes"], ["6.10.0-t5", "The Reliability and Electrical Update (Test 5): the MCC Main Incomer Fiddly Knob (Opening It Causes an Arc Flash), the New Upsets in the Upsets Tab"], ["6.10.0", "The Reliability and Electrical Update: Ten Critical VFD Motors on Three MCC Drive Lineups, an Electrical Tech on Every Shift, Shift Vibration and ADX Rounds, Reliability and Drives Screens, Bearing, Motor, Drive and Rectifier Failures, Drive Fault Decisions, Outage Changeouts, the MCC Main Incomer and Its Arc Flash, AUTO-LW and Click for Info"], ["6.10.1-t1", "Polish (Test): Drives Wear Slower but Fail More When Worn, Three Drives Start Part-Worn, the Refiner Upgrade Brings Bigger Drives, the Main Incomer on the Relationship Map, a Message for a Blank Mill Name"], ["6.10.1", "Reliability Polish: Drives Wear Slower but Fail More When Worn, Three Drives Start Part-Worn, Bigger Refiner Drives with the Refiner Upgrade, the Main Incomer on the Relationship Map, a Message for a Blank Mill Name"]];
+{const VNOTES=[["4.0.0", "Graphics Overhaul: 60 FPS on iPhone, ~80% Fewer Draw Calls"], ["4.0.1", "Performance Follow-Up, Show FPS Option and Device Autotest"], ["4.0.2", "Economy Rebalance and Smoother Upset Labels"], ["4.1.0", "Four Environments, Seeded Mills, Bottlenecks, Graphics Tiers and Site Music"], ["4.2.0", "New Site Maps, Rare Sights, Zen Map Rotation and Economics Fixes"], ["4.2.0-s", "Save and Continue Season (Test)"], ["4.2.1", "Save/Continue, Settings Panel and Outage Speed Fix"], ["4.2.2-t", "Bayou Gator Sight Reworked (Test)"], ["4.2.2-t2", "Gator Bass Riff (Test)"], ["4.2.2-t3", "Gator Riff Removed, Wide Camera Framing (Test)"], ["4.2.2-t4", "Gator Scene Shortened and Widened (Test)"], ["4.2.2-t5", "One Rare Sight per Map in Zen (Test)"], ["4.2.2", "Rare Sights Reworked, Bird Strike Upset, Mill Report Tab"], ["4.2.3-t", "Cowboys, Bigfoot and Tugboat Sights Reworked (Test)"], ["4.2.3", "Laptop Battery Saving (Default GPU)"], ["4.2.4", "$25M Goal Removed and Quick Fixes"], ["4.2.5", "Random Bottleneck per Season and Accessibility Improvements"], ["4.3.0-t1", "Survival Mode (Test)"], ["4.4.0-t1", "Mill Leaders in Survival (Test)"], ["4.4.0-t2", "Painted Leader Portraits (Test)"], ["4.4.0-t3", "Leader Redesign, 4-Day Waves and Fixes (Test)"], ["5.0.0", "Survival Mode Release with Mill Leaders"], ["5.0.1", "Results Dialog and Game Speed Fixes"], ["5.0.2", "Report Card Label Fixes"], ["5.0.3", "Survival Playtest Fixes (Test)"], ["5.0.4", "Playtest Review: Dot Auto-Fix and Shipping Fix (Test)"], ["5.0.5", "Polish Rounds from Survival Playtests"], ["5.0.6", "Survival QA Fixes, Opt-In Outage Watch, Leaderboard Filters"], ["5.1.0", "Civics Meters and Leaders in Seasons (Test)"], ["5.4.0", "Title Screen, Civics in the World and Dark Mode"], ["5.4.1", "Loading Splash, No Old-Menu Flash"], ["5.4.2", "Graphics Quality on the Title Screen"], ["5.5.0", "Performance Improvements"], ["5.6.0", "Fiddly Knobs, DCS/QCS Screens and Knobs View"], ["5.7.0", "Catching Failures Early: Tells, Daily Rounds, Vibration Report, Outage Prep"], ["5.7.1", "Bottom Menu Reorder, Settings Back on the Right"], ["5.7.2", "Help Page with Game Guide and Glossary"], ["5.7.3", "Bare Graphics Mode for Weak Phones"], ["5.7.4", "Version Notes Pop-Up (Triple-Tap the Version Number)"], ["6.1.0-t1", "Isometric Paper View: Fixed Camera, Cut-Outs, Drop Shadows, Cutaways, Season Palettes (Test)"], ["6.1.0-t2", "Iso Round 2: Cut-Outs Always Paper, GPU Pictures, Stop-Motion World, Fewer Draws (Test)"], ["6.1.0-t3", "Iso Round 3: iPhone Batching, Instanced Cans, Sign Atlas, Lighter Frames (Test)"], ["6.1.0-t4", "Iso Fixes: Operators and Fork-Trucks Back, Less Stutter (Test)"], ["6.1.0-t5", "Cut-Out Edge Artifact Fixed (Test)"], ["6.1.0-t6", "Iso Optimization: Hidden Objects Cost Nothing, Lighter Moving Batches (Test)"], ["6.1.0-t7", "Iso Triangle Cut: Paper-Card Trees, Flat Ground, Hidden Faces Gone, Plain Boxes (Test)"], ["6.1.0-t8", "Paper Palette: 40 Colours, Flat Surfaces, Paper Grain, Fewer Draws (Test)"], ["6.1.0-t9", "Reel Fix: Growing Reel Draws Again (Test)"], ["6.1.0-t10", "Draw Cut 2: Colour in the Matrix, Merged Roofs, Uploads on Change, Culling Fix, Parked Groups (Test)"], ["6.1.0-t11", "QA Fixes: Cut-Outs Never Drawn as Loose 3D Parts, Fallback Shows 3D, Roofs On or Off per Zoom Step (Test)"], ["6.1.0-t12", "Paper Smoke, Blinking Lights, Stronger Seasons, Sharper Phones, Instanced Upsets, Pictures at Start (Test)"], ["6.1.0-t13", "Paper Effects: Flames, Child-Made Tornado, Lamp Cones, Flags, Paper Water, Visible Weather (Test)"], ["6.1.0-t14", "Paper Upsets: Cut-Out Props, Paper Pigeon, Paper Sparks, Steam, Fireworks, Ice and Flood (Test)"], ["6.1.0-t15", "Beaver Reworked as One Smaller Cut-Out (Test)"], ["6.1.0-t16", "Paper Props Dim at Night, Labels Never Overlap, Fewer Cut-Out Pictures (Test)"], ["6.1.0-t17", "Bird on the Power Lines Cut-Scene Plays When Set Off From the Upsets List (Test)"], ["6.1.0-t18", "Zen Close-Ups Fixed, Rare Sights as Paper Cut-Outs, Tilt-Shift Diorama Look (Test)"], ["6.1.0-t19", "Narrower Tilt-Shift Band, Winder Trash Can Out of the Broke Hole (Test)"], ["6.1.0-t20", "Balance: Rounds Pay More, Capacity and Maintenance Upgrades Re-Priced"], ["6.1.0", "Paper Diorama: Isometric Paper Art Style, Cut-Out People and Upsets, Tilt-Shift, Rounds Pay More, Upgrades Re-Priced"], ["6.1.1", "Phone Fixes: Gentler Tilt-Shift on Tall Screens, Cut-Out People No Longer Blank on iPhone"], ["6.1.2", "iPhone: Cut-Out Self-Test Retries, People Keep Their Colours in the 3D Fallback"], ["6.1.3", "Broke Hole by the Winder Looks Like a Floor Opening (Was a Black Square)"], ["6.1.4", "Tilt-Shift Removed"], ["6.2.0", "Zen Free Camera: Perspective Zen Shots, 3D People in Zen, Cleaner River Water"], ["6.3.0-f1", "Process Flow Overview (Test): Inputs, Mill Areas and Outputs for the Mill Day, in Settings"], ["6.3.0-f2", "Process Flow: the Game Keeps Running While It's Open (Test)"], ["6.3.0", "Process Flow Overview: Inputs, Mill Areas and Outputs for the Mill Day (Settings > View)"], ["6.4.0", "Zen Shots Review: Shuffle-Bag Shot Order, Landscape Shots Rebuilt, Close Rare Sights"], ["6.5.0-a1", "Digital Twin A (Test): Hourly History, 14 Prior Days, 7 d / Run Ranges, Area Trends and Uptime"], ["6.5.0-b1", "Digital Twin B (Test): Real Freight Costs with a Diesel Index, Area Controls Moved into Process Flow"], ["6.5.0-b2", "Market Pricing (Test): 2026 OCC and Energy Costs, Diesel in $/gal, Desert Long Haul, Real Steam Rates"], ["6.5.0-b3", "DCS Expansion (Test): Full SPOT, WET and DET Pictures, a UTIL Screen, Motors and Reject Purges"], ["6.5.0-b4", "DCS Pictograms (Test): Equipment Drawn as Classic DCS Symbols, Colour Only When Something's Wrong"], ["6.5.0-b5", "The Dryer Limit (Test): Speed and Grade Load the Dryers, a Wet Sheet Fails Spec and Slows the Machine"], ["6.5.0", "Digital Twin: Process Flow Trends and Controls, Real Freight and Market Costs, Full DCS, Dryer Limit, Rebalance"], ["6.5.1", "Second Screen: Pop the DCS and Process Flow Out to Their Own Window for a Second Monitor (Desktop)"], ["6.5.2", "Knob Fixes: Wet-End and Steam Knobs Bite Again Under the Dryer Limit, DCS Uses the Machine's Name"], ["6.5.3", "Quality Specs: Weight, Moisture and Color Specs per Grade, Off-Spec Paper Wound into Beater Rolls and Repulped"], ["6.5.4", "DCS Fixes: Making-Beater Alerts, SPOT in Process Order, Boiler and Power on Utilities, 2nd/3rd Section Steam Control"], ["6.5.5-t1", "Dewatering Chain (Test): Jet and Vacuum Optimums, Couch to Press Solids, Press Solids Set the Dryer Steam Both Ways"], ["6.5.5", "The Dewatering Chain: Jet and Vacuum Optimums, Couch to Press Solids, Press Solids Set the Dryer Steam Both Ways"], ["6.5.6-t1", "Mass Balance (Test): A Real Water Balance and White Water Chest, Hayout Broke Repulped, Every Fiber Loss Booked"], ["6.5.6", "Mass Balance: A Real Water Balance and White Water Chest, Hayout Broke Repulped, Every Fiber Loss Booked"], ["6.5.7-t1", "Winder Pass (Test): Four Reel Storage Stands, Two-Roll Sets, Rolls Tied Together, Steam Vented on a Sheet Break"], ["6.5.7", "Winder Pass: Four Reel Storage Stands, Two-Roll Sets, Rolls Tied Together, Steam Vented on a Sheet Break"], ["6.6.0-t1", "Orders and Bales (Test): Customer Order Book and Spot Market, Idle Energy While Stopped, Bale Grading at the Gate"], ["6.6.0", "Orders and Bales: Customer Order Book and Spot Market, Idle Energy While Stopped, Bale Grading at the Gate"], ["6.7.0-t1", "Control Room (Test): Planning, Water and Quality Screens, Split-Screen Trends of Anything, What Moves With What, Process Flow Views"], ["6.7.0", "Control Room: Planning, Water and Quality Screens, Split-Screen Trends of Anything, What Moves With What, Process Flow Views"], ["6.7.1-t1", "New Grade Set (Test): Grades 24, 28, 31 and 34Super, Same Tons per Hour"], ["6.7.1", "New Grade Set: Grades 24, 28, 31 and 34Super, Same Tons per Hour"], ["6.8.0-t1", "Process Relationships (Test): Refining Energy and Ring Crush, Basis Weight Loop, Headbox at 0.8%, White Water Silo, Bale Water and Screen Pressure Drop"], ["6.8.0-t2", "Relationship Map in the Control Room (Test): What Drives Each Reading and What It Moves, Live"], ["6.8.0", "Process Relationships: Refining Energy and Ring Crush, Basis Weight Loop, Headbox at 0.8%, White Water Silo, Bale Water, Screen Pressure Drop and the Relationship Map"], ["6.8.1", "Report Tab Tidy: Live Mill First, Last-24-Hours Chart, Quality & Fiber and Orders & Bales Removed"], ["6.8.2", "Manning: DuPont 12 Shifts for Techs and Operators, Team Hard Hats, Shift Change Walk-In, Vacations Covered Across Teams"], ["6.8.3", "OCC Recipe (A Bales, C Bales, Mixed Waste), Relationship Map Zoom and 3D Light Cones at Night"], ["6.9.0-t1", "The Valves Update (Test): Six Control Loops on the DCS with Real Valves, Faceplates, PID Tuning, Bump Tests, a Tuning Clock and Tuning Challenges"], ["6.9.0", "The Valves Update: Six Control Loops on the DCS with Real Valves, Faceplates, PID Tuning, Bump Tests, a Tuning Clock, Tuning Challenges and Their Links on the Relationship Map"], ["6.9.1", "Wet End Controls: Rush / Drag in fpm on the WET DCS"], ["6.9.2", "Release Review: Help and Glossary Brought Up to Date, Nine Bug Fixes, Refiners Feed the Machine Chest (a Clash Trips the Machine on Low Level) and an Economy Rebalance Where the Daily Round Is the Biggest Boost"], ["6.10.0-t1", "The Reliability and Electrical Update (Test): Ten VFD Motors with Health, an MCC Building with Three Drive Lineups Fed from the Substation, an Electrical Tech on Every Shift, Shift Vibration and ADX Rounds That Get Skipped When Techs Are Busy, Reliability and Drives Screens, Bearing, Motor and Drive Failures, Outage Changeouts and the Water Tower Moved to the North-East Corner"], ["6.10.0-t2", "The Reliability and Electrical Update (Test 2): the 115 kV to 650 V DC Power Chain with Rectifier Faults, Reset-or-Investigate Drive Fault Decisions, Arc-Flash PPE at the MCC, AUTO-LW Basis Weight, Click for Info and Lamps Under the Roofs"], ["6.10.0-t3", "The Reliability and Electrical Update (Test 3): QA Fixes and Balance: Unanswered Drive Faults Auto-Decide After an Hour, Drive Cards Show Load at the Trip, Reliability Failures About Half as Often, Lower Motor and Rectifier Bills"], ["6.10.0-t4", "The Reliability and Electrical Update (Test 4): One Machine per Vibration Round, Planned Repairs Take the Machine Down 20-40 Minutes, Repeated Drive Resets Get Worse and Can Fail, a Tutorial Card for Rounds and the MCC, Drive and Rectifier Health on Screen, Clearer Click for Info and 26 Polish Fixes"], ["6.10.0-t5", "The Reliability and Electrical Update (Test 5): the MCC Main Incomer Fiddly Knob (Opening It Causes an Arc Flash), the New Upsets in the Upsets Tab"], ["6.10.0", "The Reliability and Electrical Update: Ten Critical VFD Motors on Three MCC Drive Lineups, an Electrical Tech on Every Shift, Shift Vibration and ADX Rounds, Reliability and Drives Screens, Bearing, Motor, Drive and Rectifier Failures, Drive Fault Decisions, Outage Changeouts, the MCC Main Incomer and Its Arc Flash, AUTO-LW and Click for Info"], ["6.10.1-t1", "Polish (Test): Drives Wear Slower but Fail More When Worn, Three Drives Start Part-Worn, the Refiner Upgrade Brings Bigger Drives, the Main Incomer on the Relationship Map, a Message for a Blank Mill Name"], ["6.10.1", "Reliability Polish: Drives Wear Slower but Fail More When Worn, Three Drives Start Part-Worn, Bigger Refiner Drives with the Refiner Upgrade, the Main Incomer on the Relationship Map, a Message for a Blank Mill Name"], ["6.10.2", "Tests and Tidy: One Test Runner with 21 Merged Checks, Dead Code Removed (Bare Graphics Leftovers, Unused Code and Styles), Lint Clean"]];
   let ov=null,held=false;
   function render(){
     const cur=APP_VER.replace(/^v/i,""),rows=VNOTES.slice().reverse().map(([v,n])=>
@@ -17019,8 +16924,8 @@ UI_TICKS.push(()=>{if(MANUI.open)manDraw();});
 // frame rate is a player choice (Controls): Battery saver = 30 fps, Smooth = 60 fps (v15 default: a 120 Hz screen no longer
 // draws twice as many frames), Max = the display's rate; remembered. (true/false still mean Max/saver for the test tools)
 const FPS_CAPS={saver:30,smooth:60,max:0};let FPS_MODE="smooth";try{const v=localStorage.getItem("paper-mill-fps");if(FPS_CAPS[v]!==undefined)FPS_MODE=v;}catch(e){}
-let FRAME_CAP=FPS_CAPS[FPS_MODE];if(G3.bare&&!(FRAME_CAP>0&&FRAME_CAP<=30))FRAME_CAP=30;G3.cap=FRAME_CAP;   // (v5.7.3: bare runs at 30 FPS at most)
-function setFpsMode(m){if(m===true)m="max";else if(m===false)m="saver";if(FPS_CAPS[m]===undefined)return;FPS_MODE=m;FRAME_CAP=FPS_CAPS[m];if(G3.bare&&!(FRAME_CAP>0&&FRAME_CAP<=30))FRAME_CAP=30;G3.cap=FRAME_CAP;try{localStorage.setItem("paper-mill-fps",m);}catch(e){}
+let FRAME_CAP=FPS_CAPS[FPS_MODE];G3.cap=FRAME_CAP;
+function setFpsMode(m){if(m===true)m="max";else if(m===false)m="saver";if(FPS_CAPS[m]===undefined)return;FPS_MODE=m;FRAME_CAP=FPS_CAPS[m];G3.cap=FRAME_CAP;try{localStorage.setItem("paper-mill-fps",m);}catch(e){}
   document.querySelectorAll("#fpsSeg button").forEach(b=>b.setAttribute("aria-pressed",String(b.dataset.fps===m)));}
 let last=performance.now(),uiAcc=0,uiN=0,lastPaint=0;
 const WACC={t:0,last:0};let STOPMO=false;try{STOPMO=localStorage.getItem("paper-mill-stopmo")==="on";}catch(e){}   // (v6.1 t4: off by default; it read as stutter)
@@ -17368,7 +17273,7 @@ requestAnimationFrame(frame);
     setField("Frame rate",seg);}
   {const w=document.createElement("div");w.innerHTML=themeSegHTML("seg");const seg=w.firstChild;seg.id="themeSeg";setField("Appearance",seg);}   // (v5.3 dark mode, 00b)
   if(G3.GFX){const seg=document.createElement("div");seg.className="seg";seg.id="gfxSeg";seg.setAttribute("role","group");seg.setAttribute("aria-label","Graphics");const cap=s=>s[0].toUpperCase()+s.slice(1);
-    seg.innerHTML=["auto","low","medium","high","ultra"].map(g=>`<button data-g="${g}" aria-pressed="${G3.GFX.pick===g}" title="${g==="auto"?"Picked from your device: "+cap(G3.GFX.auto):{bare:"Bare bones: flat colors, no shadows, no scenery or ambient life, 30 FPS (needs a reload)",low:"1024 shadows, 10 Hz, lighter scenery",medium:"1024 shadows, 15 Hz",high:"2048 softer shadows, 24 Hz, full scenery",ultra:"4096 softer shadows, every frame, dense scenery with far shadows"}[g]}">${g==="auto"?`Auto <small class="gtier">${cap(G3.GFX.auto)}</small>`:cap(g)}</button>`).join("");
+    seg.innerHTML=["auto","low","medium","high","ultra"].map(g=>`<button data-g="${g}" aria-pressed="${G3.GFX.pick===g}" title="${g==="auto"?"Picked from your device: "+cap(G3.GFX.auto):{low:"1024 shadows, 10 Hz, lighter scenery",medium:"1024 shadows, 15 Hz",high:"2048 softer shadows, 24 Hz, full scenery",ultra:"4096 softer shadows, every frame, dense scenery with far shadows"}[g]}">${g==="auto"?`Auto <small class="gtier">${cap(G3.GFX.auto)}</small>`:cap(g)}</button>`).join("");
     seg.querySelectorAll("button").forEach(x=>x.addEventListener("click",()=>G3.setGfx(x.dataset.g)));
     {const rb=document.createElement("button");rb.id="gfxReload";rb.hidden=true;rb.textContent="Reload to apply all";rb.title="Lighting model, round-shape detail and scenery density change on reload";rb.addEventListener("click",()=>location.reload());setField("Graphics",seg).appendChild(rb);}}
   {const l=document.createElement("label");l.className="check";l.title="While the view is still, the mill moves at 15 frames a second, like stop-motion; panning and zooming stay smooth";

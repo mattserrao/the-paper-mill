@@ -5,7 +5,8 @@ function setFS(on){document.body.classList.toggle("fs",on);
   else if(document.fullscreenElement)document.exitFullscreen().catch(()=>{});}
 document.addEventListener("fullscreenchange",()=>{if(!document.fullscreenElement&&document.body.classList.contains("fs")){if(ZEN)setZen(false);else setFS(false);}});
 document.addEventListener("keydown",e=>{if(e.key==="Escape"&&ZEN){setZen(false);return;}if(e.key==="Escape"&&document.body.classList.contains("fs"))setFS(false);});
-function openSlice(){$("spider").hidden=true;$("brian").hidden=true;$("slice").hidden=false;$("slcV").value=Math.round(G3.SLC.v*100);$("slcH").value=Math.round(G3.SLC.h*100);drawSlice();}
+// the spider valve and the slice are fiddly knobs too: their panels slow the game the same way and close the others (kuiSync, closeKnob and closeStation are in 50b)
+function openSlice(){closeKnob();closeStation(true);$("spider").hidden=true;$("brian").hidden=true;$("slice").hidden=false;$("slcV").value=Math.round(G3.SLC.v*100);$("slcH").value=Math.round(G3.SLC.h*100);drawSlice();kuiSync();}
 $("slcClose").addEventListener("click",()=>$("slice").hidden=true);
 ["slcV","slcH"].forEach(id=>$(id).addEventListener("input",e=>{if(G3.slcFix)return;slcSet(id==="slcV"?"v":"h",+e.target.value/100);   // (v6.5.5: into the sim's knob state, 07b)
   const g=G3.SLC.geo();if(g.lipX-g.wet>=6.8)slcBreak();drawSlice();}));
@@ -31,7 +32,7 @@ function openBrian(){$("spider").hidden=true;$("slice").hidden=true;$("brian").h
 $("briClose").addEventListener("click",()=>{$("brian").hidden=true;});
 $("briGo").addEventListener("click",()=>{G3.follow(!G3.following());briUpd();});
 G3.onFollowEnd=()=>{briUpd();};
-function openSpider(){$("brian").hidden=true;$("slice").hidden=true;$("spider").hidden=false;$("spiV").value=Math.round(G3.SPD.v*100);drawSpider();}
+function openSpider(){closeKnob();closeStation(true);$("brian").hidden=true;$("slice").hidden=true;$("spider").hidden=false;$("spiV").value=Math.round(G3.SPD.v*100);drawSpider();kuiSync();}
 $("spiClose").addEventListener("click",()=>$("spider").hidden=true);
 $("spiV").addEventListener("input",e=>{G3.SPD.v=+e.target.value/100;drawSpider();});
 function drawSpider(){const D=G3.SPD;if(!D||$("spider").hidden)return;

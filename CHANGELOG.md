@@ -1,6 +1,11 @@
 # Changelog
 
 
+## v6.10.2 (2026-10-21): tests and tidy
+No gameplay changes intended.
+- **Tests:** one runner, `tools/run_checks.py` (`--tier=quick|default|full`, `--build`), over 21 checks in `tools/checks/` that replace 39 scripts; one shared harness, `tools/lib.py`, instead of exec()-ing bench.py. Tools sorted into `perf/`, `balance/` and `util/`; 95 dead or duplicate scripts removed, plus the pre-civics `econ.py` and `survival.py` (their bots never reached an outage). Stale expectations fixed (AUTO-LW weight and refining, the NV-101 trip window, music listening before the prewarm finished); sim checks pin the bottleneck. See `tools/README.md`.
+- **Dead code:** the Bare graphics tier's leftovers removed (a saved "bare" pick now loads as Auto), plus unused variables, functions, styles and markup; the built game lints clean (was 42 warnings).
+
 ## v6.10.1 (2026-10-21): reliability polish
 Release of v6.10.1-t1 (below).
 

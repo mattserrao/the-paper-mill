@@ -226,7 +226,7 @@ function knobSteamCulprits(){const K=S.knob;if(!K)return [];const v=K.v,c=[];
 // readings for the DCS and QCS screens. With S.knob missing everything reads at its standard value.
 // Base values follow each grade's standard: reel speed, basis weight and 3rd section steam, and the stock prep level.
 function knobRead(){const K=S.knob,x=K?K.x:null,g=GRADES[C.grade]||GRADES["24"],bw=g.bw,run=S.pm==="run";
-  const z=x?x.z:new Array(KZONES).fill(0),sw=x?x.sw:0,t=S.t;
+  const z=x?x.z:new Array(KZONES).fill(0),t=S.t;
   const wob=(f,k)=>Math.sin(t*f+k)*0.6+Math.sin(t*f*2.7+k*2)*0.4;   // smooth stand-in for process noise (no dice)
   const Dr=S.dry,st3=Dr?Dr.st3:(DRY.base[C.grade]||DRY.base["24"]);   // (v6.5 b5: the dryer model, 07d)
   const m=Dr?Dr.m:DRY.m0;let cp=x?x.cp:5;
@@ -239,10 +239,3 @@ function knobRead(){const K=S.knob,x=K?K.x:null,g=GRADES[C.grade]||GRADES["24"],
     st1:knobVal("st1"),st3,steam:run?(Dr?Dr.steam:50.5*P.K*S.pmSpeed*bw/34.8):S.pm==="break"&&Dr?Dr.steam:0,boiler:Dr?Dr.hdr:1,moist:run?m+wob(0.13,4)*0.25:0,
     bw:run?qualMeasure().bw:0,hbc:S.we?S.we.hbc:WE.hbc,draw:knobVal("draw"),tension:run?1.0+(knobVal("draw")-1.5)*0.42:0,
     zones:z.map((v,i)=>m+v*0.35+Math.sin(i*1.7+t*0.01)*0.12),off:qualStatus().off,why:qualStatus().why,F:K&&K.F||{},speed:S.pmSpeed};}
-// DCS / QCS trend history: a reading every 2 sim minutes, 6 hours kept. Read-only on the sim (it never writes S), kept
-// outside S so saves don't grow; a new game or a loaded save starts it fresh.
-const KHIST={S:null,t:-1,a:[]};
-function knobHist(){if(KHIST.S!==S){KHIST.S=S;KHIST.a.length=0;KHIST.t=-1;}const k=Math.floor(S.t/2);if(k===KHIST.t)return;KHIST.t=k;
-  const r=knobRead(),u=v=>r.run?v:null,row=KHIST.a.length>=180?KHIST.a.shift():[];row.length=0;   // (readings that only exist with a sheet on are left blank while the machine is down)
-  row.push(S.t,r.cp,r.amps,r.gap,u(r.refkw),r.mcCons,r.vac,u(r.couchSol),r.pl,u(r.pressSol),r.edge,r.st1,u(r.st3),u(r.steam),r.boiler,u(r.moist),u(r.bw),u(r.tension),r.pulpLvl,r.stripes,r.off);KHIST.a.push(row);}   // (rows reused once 6 h are full)
-const KH_COL={cp:1,amps:2,gap:3,refkw:4,mcCons:5,vac:6,couchSol:7,pl:8,pressSol:9,edge:10,st1:11,st3:12,steam:13,boiler:14,moist:15,bw:16,tension:17,pulpLvl:18,stripes:19,off:20};

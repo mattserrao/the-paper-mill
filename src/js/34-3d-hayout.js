@@ -2,7 +2,7 @@
   const HN=30,hayI=new THREE.InstancedMesh(new THREE.BoxGeometry(1.4,0.04,1),paperDS,HN);hayI.frustumCulled=false;hayI.visible=false;scene.add(hayI);
   const hayS=[],hM4=new THREE.Matrix4(),hQ=new THREE.Quaternion(),hE=new THREE.Euler(),hP=new THREE.Vector3(),hSc=new THREE.Vector3(1,1,1);
   for(let k=0;k<HN;k++)hayS.push({p:[0,0,0],v:[0,0,0],r:[0,0,0],sp:[0,0,0],k:0});
-  const heapG=new SphG(1,12,6,0,Math.PI*2,0,Math.PI/2),heap=new THREE.Mesh(heapG,paperDS);heap.position.set(-18.7,0,zc);heap.visible=false;scene.add(heap);G3.hayParts=[hayI,heap];
+  const heapG=new SphG(1,12,6,0,Math.PI*2,0,Math.PI/2),heap=new THREE.Mesh(heapG,paperDS);heap.position.set(-18.7,0,zc);heap.visible=false;scene.add(heap);
   let shake=0;
   function hayFx(rdt,now){const ep=EP.hay,on=!!(ep&&now<ep.until),age=on?(now-ep.t0)/1000:99,left=on?(ep.until-now)/1000:0;
     if(on&&!ep.burst){ep.burst=true;hayS.forEach(s=>{s.p=[-18.7+(Math.random()-0.5)*2,3.8,zc+(Math.random()-0.5)*3];s.v=[(Math.random()-0.5)*6,4+Math.random()*4,(Math.random()-0.5)*6];

@@ -27,7 +27,6 @@ function dryDemand0(tph){const g=C.grade,b=DRY.base[g]||DRY.base["24"];return b+
 // (20 points of moisture per unit of r, the v5.6 knob model). Before v6.5.2 the knobs added kPa to the demand and the
 // whole range up to the ceiling soaked them up, so on a mill with headroom the wet-end knobs did nothing but cost steam.
 function dryKnob(){const K=S.knob;if(!(K&&K.any))return {r:1,a:1};const r=(K.W||1)-(K.d1x||0);return {r,a:clamp(r,0.7,1.3)};}
-function dryDemand(tph){return dryDemand0(tph)*dryKnob().a;}
 // the paper rate the dryers can take before the sheet goes wet (for the bottleneck view)
 function dryCapTph(){const D=dryState(),g=C.grade,b=DRY.base[g]||DRY.base["24"],s=drySlope(g)/DRY.wpt0,k=s*dryWpt();
   return k>0?Math.max(0,(dryCeil(D)/dryKnob().a-b+s*dryRef(g)*DRY.wpt0)/k):1e9;}

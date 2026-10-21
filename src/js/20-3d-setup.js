@@ -48,16 +48,14 @@ function no3D(){G3.ok=false;$("no3d").hidden=false;$("no3d-retry").onclick=()=>l
   const mobile=matchMedia("(pointer: coarse)").matches;
   /* v4.1 graphics tiers. Auto picks from the device (phones: Medium, or Low with little memory; desktops: High, or Ultra on a
      discrete GPU); the player can pin one in Controls. Pixel ratio, shadow refresh, shadow map size, weather particles and
-     far-scenery shadows and the shadow softness change live; the lighting model and scenery density take effect on the next load. */
+     far-scenery shadows and the shadow softness change live; round-shape detail and scenery density take effect on the next load. */
   // v15: px is each tier's budget of rendered pixels (drawing buffer); the pixel ratio is lowered to stay within it
-  // v5.7.3 bare: the bones only. Flat unlit colours (one matcap), plain boxes, no shadows, nothing outside the fence but the
-  // ground and roads, no sky, no ambient life, token upset effects, 30 FPS. Picked by the player only (Auto never), on reload.
   // (v6.1 t12: the iso build draws far less, so phones render at their screen's sharpness: low 1.5x, medium 2x within a
   // pixel budget; the low-FPS fallback still drops to 1x on a struggling device)
-  const GFX_TIERS={low:{pr:1.5,px:1.4e6,shadow:1024,soft:false,hz:10,scenery:0.5,wx:600,lambert:true,far:false},
-    medium:{pr:2,px:2.6e6,shadow:1024,soft:false,hz:15,scenery:0.85,wx:1000,lambert:true,far:false},
-    high:{pr:2,px:2.4e6,shadow:2048,soft:true,hz:24,scenery:1,wx:2000,lambert:true,far:false},
-    ultra:{pr:2,px:4.2e6,shadow:4096,soft:true,hz:60,scenery:1.4,wx:2600,lambert:true,far:true}};   // (v6.1 t2: Lambert on every tier: the paper look needs no PBR)
+  const GFX_TIERS={low:{pr:1.5,px:1.4e6,shadow:1024,soft:false,hz:10,scenery:0.5,wx:600,far:false},
+    medium:{pr:2,px:2.6e6,shadow:1024,soft:false,hz:15,scenery:0.85,wx:1000,far:false},
+    high:{pr:2,px:2.4e6,shadow:2048,soft:true,hz:24,scenery:1,wx:2000,far:false},
+    ultra:{pr:2,px:4.2e6,shadow:4096,soft:true,hz:60,scenery:1.4,wx:2600,far:true}};
   const gpuName=(()=>{try{const gl=renderer.getContext(),x=gl.getExtension("WEBGL_debug_renderer_info");return x?gl.getParameter(x.UNMASKED_RENDERER_WEBGL):gl.getParameter(gl.RENDERER);}catch(e){return "";}})();
   // (v15: Auto no longer picks Ultra; desktops get High, held to a smaller pixel budget and 1024 shadows unless the GPU is
   // a known discrete one; Ultra is the player's choice)
@@ -65,9 +63,9 @@ function no3D(){G3.ok=false;$("no3d").hidden=false;$("no3d-retry").onclick=()=>l
   const gfxAuto=mobile?((navigator.deviceMemory||4)<4?"low":"medium"):"high";
   let gfxPick="auto";try{gfxPick=localStorage.getItem("paper-mill-gfx")||"auto";}catch(e){}
   {const q=new URLSearchParams(location.search).get("gfx");if(q&&GFX_TIERS[q])gfxPick=q;}   // ?gfx=low|medium|high|ultra (tests)
-  if(!GFX_TIERS[gfxPick])gfxPick="auto";
+  if(!GFX_TIERS[gfxPick])gfxPick="auto";   // (an unknown saved pick, such as v5.7.3's "bare", loads as Auto)
   const GFX=G3.GFX={...GFX_TIERS[gfxPick==="auto"?gfxAuto:gfxPick],tier:gfxPick==="auto"?gfxAuto:gfxPick,pick:gfxPick,auto:gfxAuto,gpu:String(gpuName).slice(0,60)};
-  GFX.loaded=GFX.tier;const BARE=G3.bare=GFX.tier==="bare";if(gfxPick==="auto"&&!mobile&&!discrete){GFX.px=1.9e6;GFX.shadow=1024;}
+  GFX.loaded=GFX.tier;if(gfxPick==="auto"&&!mobile&&!discrete){GFX.px=1.9e6;GFX.shadow=1024;}
   // the pixel ratio for a canvas of w x h CSS px: the tier's ratio, the screen's, and the pixel budget, whichever is lowest
   G3.prFor=(w,h)=>G3.prFixed||Math.max(0.75,Math.min(GFX.pr,window.devicePixelRatio||1,Math.sqrt(GFX.px/Math.max(1,w*h))));
   {const gl=renderer.getContext();G3.multiDraw=!!gl.getExtension("WEBGL_multi_draw");
@@ -77,7 +75,7 @@ function no3D(){G3.ok=false;$("no3d").hidden=false;$("no3d-retry").onclick=()=>l
   // the shadow pass redraws every shadow-casting object, so refresh it a few times a second instead of every frame (v2.8.4: desktop too)
   renderer.shadowMap.autoUpdate=false;G3.shadowHz=GFX.hz;
   // v2.8.4: round shapes get only as many sides as their size needs at this zoom (unit shapes that get scaled up keep 24)
-  const segCap=(r,s)=>Math.max(3,Math.min(s,r===1?12:r<0.45?6:r<4?8:12));   // (v6.1 t7: 6-12 sides; tanks and rolls read as folded card)   // (v5.7.3: bare keeps round things to a few sides)
+  const segCap=(r,s)=>Math.max(3,Math.min(s,r===1?12:r<0.45?6:r<4?8:12));   // (v6.1 t7: 6-12 sides; tanks and rolls read as folded card)
   class CylG extends THREE.CylinderGeometry{constructor(rt=1,rb=1,h=1,rs=32,hs=1,oe=false,ts=0,tl=Math.PI*2){super(rt,rb,h,segCap(Math.max(rt,rb),rs),hs,oe,ts,tl);}}
   class SphG extends THREE.SphereGeometry{constructor(r=1,ws=32,hs=16,...a){super(r,Math.max(3,Math.min(ws,8)),Math.max(2,Math.min(hs,6)),...a);}}
   class RingG extends THREE.RingGeometry{constructor(a=0.5,b=1,ts=32,...x){super(a,b,Math.max(3,Math.min(ts,16)),...x);}}
@@ -97,7 +95,7 @@ function no3D(){G3.ok=false;$("no3d").hidden=false;$("no3d-retry").onclick=()=>l
   /* v6.2 test (zen free camera): zen mode gets a perspective camera that moves freely (the pre-iso zen shots: orbits,
      tilt-ups, low dollies, flyovers); the game itself keeps the fixed iso view. `camera` is whichever is live, swapped
      by placeCam (29). ?zeniso = zen stays isometric. */
-  const camPersp=new THREE.PerspectiveCamera(40,16/9,0.5,5000);camPersp.isoFit=()=>{};
+  const camPersp=new THREE.PerspectiveCamera(40,16/9,0.5,5000);
   let camera=camIso;G3.camIso=camIso;G3.camPersp=camPersp;
   G3.zenFree=!/[?&]zeniso/.test(location.search);
 
@@ -120,16 +118,8 @@ function no3D(){G3.ok=false;$("no3d").hidden=false;$("no3d-retry").onclick=()=>l
   G3.PAPER_PAL=PAPER_PAL;G3.palQ=PALQ;
   /* palette: every material is bound to a CSS token so theme switches recolor the scene */
   const MATS=[];
-  // v2.9.0: phones get the much cheaper Lambert lighting model instead of physically based shading (same colours, flatter sheen)
-  // v5.7.3 bare: every lit material becomes one unlit matcap material (a soft top-lit ball): flat colour with just enough
-  // shading to tell a box's top from its sides, and no lights, shadows or fog in the shader
-  let MCAP=null;
-  function bareMat(o){const r={};for(const k of ["color","map","alphaMap","transparent","opacity","side","vertexColors","depthWrite","depthTest","alphaTest","polygonOffset","polygonOffsetFactor","polygonOffsetUnits","visible"])if(o&&o[k]!==undefined)r[k]=o[k];
-    if(!MCAP){const c=document.createElement("canvas");c.width=c.height=64;const x=c.getContext("2d"),gr=x.createRadialGradient(26,20,4,32,32,34);gr.addColorStop(0,"#ffffff");gr.addColorStop(0.7,"#e6e6e6");gr.addColorStop(1,"#bdbdbd");x.fillStyle=gr;x.fillRect(0,0,64,64);
-      MCAP=new THREE.CanvasTexture(c);MCAP.colorSpace=THREE.SRGBColorSpace;}
-    r.matcap=MCAP;r.fog=false;return new THREE.MeshMatcapMaterial(r);}
-  G3.bareMat=bareMat;
-  function StdMat(o){if(BARE)return bareMat(o);if(!GFX.lambert)return new THREE.MeshStandardMaterial(o);const r=Object.assign({},o||{});delete r.roughness;delete r.metalness;delete r.flatShading;delete r.envMapIntensity;delete r.roughnessMap;delete r.metalnessMap;return new THREE.MeshLambertMaterial(r);}
+  // v6.1 t2: Lambert on every tier (the paper look needs no PBR): StdMat drops the physically based options
+  function StdMat(o){const r=Object.assign({},o||{});delete r.roughness;delete r.metalness;delete r.flatShading;delete r.envMapIntensity;delete r.roughnessMap;delete r.metalnessMap;return new THREE.MeshLambertMaterial(r);}
   function tok(name){return getComputedStyle(document.documentElement).getPropertyValue("--"+name).trim()||"#888";}
   function mat(token,opts={}){const m=new StdMat(Object.assign({roughness:0.72,metalness:0.04,flatShading:false},opts));m.userData.token=token;MATS.push(m);return m;}
   // v4.1 pass 3: an InstancedMesh gets its own copy of a shared material (palette token kept, so brand colours still reach it):
@@ -172,7 +162,7 @@ function no3D(){G3.ok=false;$("no3d").hidden=false;$("no3d-retry").onclick=()=>l
   const W=(x,y)=>[(x-600)/10,(y-330)/10];
   // v4.1 pass 3: a rounded box is 316 triangles at High/Ultra; phones get a coarser bevel (140 on Medium, 92 on Low), which
   // reads the same at phone size and takes a third off the static and moving batches
-  const RB={},RBQ=GFX.tier==="low"?[1,2]:GFX.lambert?[2,2]:[3,4];
+  const RB={},RBQ=GFX.tier==="low"?[1,2]:[2,2];
   function rboxGeo(w,h,d){const k=w+"|"+h+"|"+d;if(RB[k])return RB[k];const r=Math.min(0.16,Math.min(w,h,d)*0.2),s=new THREE.Shape(),ww=w-2*r,dd=d-2*r,c=Math.min(r*0.6,ww/2,dd/2);
     s.moveTo(-ww/2+c,-dd/2);s.lineTo(ww/2-c,-dd/2);s.quadraticCurveTo(ww/2,-dd/2,ww/2,-dd/2+c);s.lineTo(ww/2,dd/2-c);s.quadraticCurveTo(ww/2,dd/2,ww/2-c,dd/2);
     s.lineTo(-ww/2+c,dd/2);s.quadraticCurveTo(-ww/2,dd/2,-ww/2,dd/2-c);s.lineTo(-ww/2,-dd/2+c);s.quadraticCurveTo(-ww/2,-dd/2,-ww/2+c,-dd/2);
@@ -185,7 +175,7 @@ function no3D(){G3.ok=false;$("no3d").hidden=false;$("no3d-retry").onclick=()=>l
   const edgeSoft=new THREE.LineBasicMaterial({color:new THREE.Color("#3c4559").convertSRGBToLinear(),transparent:true,opacity:0.22});
   const edgeMat=new THREE.LineBasicMaterial({color:lin0("#3c4559"),transparent:true,opacity:0.42});
   function lin0(c){return new THREE.Color(c).convertSRGBToLinear();}
-  function edges(o,mt=edgeMat,ang=25){if(BARE)return new THREE.Group();   /* (v5.7.3 bare: no outlines) */const e=new THREE.LineSegments(new THREE.EdgesGeometry(o.geometry,ang),mt);o.add(e);return e;}
+  function edges(o,mt=edgeMat,ang=25){const e=new THREE.LineSegments(new THREE.EdgesGeometry(o.geometry,ang),mt);o.add(e);return e;}
   const aoC=document.createElement("canvas");aoC.width=4;aoC.height=64;{const x=aoC.getContext("2d"),g=x.createLinearGradient(0,0,0,64);g.addColorStop(0,"rgba(28,34,51,0.34)");g.addColorStop(0.35,"rgba(28,34,51,0.14)");g.addColorStop(1,"rgba(28,34,51,0)");x.fillStyle=g;x.fillRect(0,0,4,64);}
   const aoTex=new THREE.CanvasTexture(aoC);const aoMat=new THREE.MeshBasicMaterial({map:aoTex,transparent:true,depthWrite:false});
   const aoRC=document.createElement("canvas");aoRC.width=aoRC.height=128;{const x=aoRC.getContext("2d"),g=x.createRadialGradient(64,64,30,64,64,64);g.addColorStop(0,"rgba(28,34,51,0.38)");g.addColorStop(0.5,"rgba(28,34,51,0.16)");g.addColorStop(1,"rgba(28,34,51,0)");x.fillStyle=g;x.fillRect(0,0,128,128);}

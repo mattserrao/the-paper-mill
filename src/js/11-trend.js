@@ -3,7 +3,6 @@
 const col={};
 function readColors(){const cs=getComputedStyle(document.body||document.documentElement);   // (v5.4: body, where dark mode sets its colours)
   ["muted","line","stock","machine","kraft","ok"].forEach(k=>col[k]=cs.getPropertyValue("--"+k).trim());}
-const DPR=()=>Math.min(2,window.devicePixelRatio||1);
 // animation phases advanced by the 3D frame (conveyor belt, chest swirl, sheet, dryer cans, forklifts)
 const V={belt:0,swirl:0,sheet:0,cans:0,lifts:[],rollsAnim:0};
 document.addEventListener("pm-theme",()=>{readColors();});   // (v5.4: repaint in the new theme)

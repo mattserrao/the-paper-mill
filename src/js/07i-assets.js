@@ -185,7 +185,7 @@ function rlyPin(id,k){const R=rlyState(),a=R.a[id];if(!a)return;a.pin=a.pin===k?
 // a planned repair of a fault the rounds found (or a motor in ADX alarm): a share of the bill, and the machine down for
 // RLY.fixMin while the crew works (t4: it was instant)
 const rlyCanFix=(id,k)=>{const a=S.rel&&S.rel.a[id],v=a&&(k==="vib"?a.lv:a.la);return !!v&&(v.st==="imm"||(k==="adx"&&v.st==="alarm"));};
-function rlyFix(id,k){if(!rlyOn())return false;const R=rlyState(),a=R.a[id],A=ASSETN[id];if(!rlyCanFix(id,k)||rlyIncOf(id)||active(k==="vib"?"planbrg":"planmot"))return false;
+function rlyFix(id,k){if(!rlyOn())return false;const R=rlyState(),A=ASSETN[id];if(!rlyCanFix(id,k)||rlyIncOf(id)||active(k==="vib"?"planbrg":"planmot"))return false;
   const bill=rlyBill(id,k),cost=bill*RLY.fix,p=R.pend.findIndex(x=>x.a===id&&x.k===k);spend(cost,"repairs");pfRepair(RLY_ID[k],cost);
   if(p>=0){R.pend.splice(p,1);R.caught++;R.saved+=bill-cost;if(civOn())civAdd(TELL.catchCiv,"Caught early");}
   const ck=k==="vib"?"b":"m",co=R.chg[id];if(co&&co[ck]){delete co[ck];if(!Object.keys(co).length)delete R.chg[id];}   // the part will be new: no outage changeout for it

@@ -82,7 +82,7 @@
       for(let i=0;i<uv.count;i++){const u=uv.getX(i),v=uv.getY(i),py=fy?(1-v):v;uv.setXY(i,(r.x+u*r.w)/W,1-(r.y+py*r.h)/W);}
       o.geometry=g;o.material=mat;n++;}
     const tex=new THREE.CanvasTexture(cv);tex.colorSpace=THREE.SRGBColorSpace;tex.anisotropy=4;mat.map=tex;
-    G3.signAtlas={tex,seen};diag(`sign atlas: ${n} signs, ${seen.size} textures in one`);
+    diag(`sign atlas: ${n} signs, ${seen.size} textures in one`);
     UI_TICKS.push(k=>{if(k%2)return;let ch=false;for(const r of seen.values())if(r.t.version!==r.v){r.v=r.t.version;x.clearRect(r.x,r.y,r.w,r.h);x.drawImage(r.t.image,r.x,r.y);ch=true;}if(ch)tex.needsUpdate=true;});};
   /* v6.1 t7: faces the camera can never see. The view direction never changes, so on the first frame every static, opaque,
      single-sided mesh in the static merge keeps only its triangles that face the camera (the GPU threw the others away

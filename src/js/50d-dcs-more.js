@@ -92,7 +92,11 @@ function dcsAlarms(a,r,L){const al=(on,txt,hi)=>{if(on)L.push([txt,hi]);};vlvAla
     al(!!S.wdBlocked,"WINDER BLOCKED: CONVEYOR FULL",true);al(S.wd==="hayout","WINDER HAYOUT",true);
     const Dr=S.dry;if(Dr&&S.pm==="run"){al(dryLimited()&&Dr.m>DRY.m0+0.5,"DRYERS AT LIMIT · SHEET WET",true);al(!dryLimited()&&Dr.load>0.95,"DRYER LOAD HI",false);}
     al(!!(Dr&&Dr.trim>0.001),`SPEED TRIMMED ${Dr?Math.round(Dr.trim*100):0}% · DRYING THE SHEET`,!!(Dr&&Dr.wet));al(!!(Dr&&Dr.man!=null),"2ND / 3RD SECTION STEAM ON MANUAL",false);}
-  else if(a==="UTIL"){const Dr=S.dry;al(!!(Dr&&Dr.vent>1),"STEAM VENTING (SHEET BREAK)",false);al(tssNow()>45&&!dcsOn("permit"),"EFFLUENT TSS HI",false);al(!!(Dr&&Dr.steam>DRY.boiler*0.95),"BOILER STEAM HI",!!(Dr&&Dr.hdr<0.97));al(!!(Dr&&Dr.hdr<0.8),"STEAM HEADER LO",!!(Dr&&Dr.hdr<0.7));}}
+  else if(a==="UTIL"){const Dr=S.dry;al(!!(Dr&&Dr.vent>1),"STEAM VENTING (SHEET BREAK)",false);al(tssNow()>45&&!dcsOn("permit"),"EFFLUENT TSS HI",false);al(!!(Dr&&Dr.steam>DRY.boiler*0.95),"BOILER STEAM HI",!!(Dr&&Dr.hdr<0.97));al(!!(Dr&&Dr.hdr<0.8),"STEAM HEADER LO",!!(Dr&&Dr.hdr<0.7));}
+  else if(a==="WATER"){const W=S.wat;   // (v6.7 water screen, 50f: the river intake and the permit show here as well as on UTIL)
+    al(active("icedintake"),"RIVER INTAKE ICED · NO MAKEUP WATER",true);al(active("permit"),"WASTEWATER PERMIT EXCEEDED",true);
+    al(!!(W&&W.short>0),"WHITE WATER CHEST EMPTY · STOCK THICK",true);al(!!(W&&W.short<=0&&W.L<WAT.cap*0.25),"WHITE WATER CHEST LEVEL LO",false);
+    al(!!(W&&W.r.over>50),"WHITE WATER OVERFLOWING TO THE SEWER",false);al(tssNow()>45&&!active("permit"),"EFFLUENT TSS HI",false);}}
 
 /* ---- setpoint, motor and purge rows ---- */
 const DCARD=k=>{const cs=$("cards"),r=cs&&cs.querySelector(`.row[data-key="${k}"]`);return r?{inp:r.querySelector("input"),btn:r.querySelector(".auto")}:null;};
@@ -125,7 +129,7 @@ function dcsSetRows(a,cs){const defs=dcsSetDefs(a);
       row.querySelectorAll("[data-dye]").forEach(b=>b.addEventListener("click",()=>{const pc=document.querySelector(`#paperColor button[data-c="${b.dataset.dye}"]`);if(pc)pc.click();dcsSync();}));}
     else{row.innerHTML=`<div class="dcsn"><b>Grade</b><small>set by the market planner from customer orders</small></div><select disabled data-dgrade aria-label="Grade">${Object.keys(GRADES).map(g=>`<option value="${g}">${g} · ${GRADES[g].bw} lb</option>`).join("")}</select>`;}
     cs.appendChild(row);}
-  for(const d of defs){const [k,name,where,mn,mx,st,,,unit,card,field]=d,row=kEl("div","dcsrow dcsx");row.dataset.ds=k;
+  for(const d of defs){const [k,name,where,mn,mx,st,,,,card]=d,row=kEl("div","dcsrow dcsx");row.dataset.ds=k;
     row.innerHTML=`<div class="dcsn"><b>${name}</b><small>${where}</small></div><label class="spis"><input type="range" min="${mn}" max="${mx}" step="${st}" data-dsv aria-label="${name}"/></label><div class="kval"><b data-dsb></b></div>${card||d[11]?`<button type="button" class="reroll kstd" data-dsa>AUTO</button>`:""}`;
     row.querySelector("[data-dsv]").addEventListener("input",e=>{d[7](+e.target.value);dcsSync();});
     if(card)row.querySelector("[data-dsa]").addEventListener("click",()=>{dcsCardAuto(card);dcsSync();});

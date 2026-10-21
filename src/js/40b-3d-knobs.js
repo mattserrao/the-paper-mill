@@ -40,7 +40,7 @@
       [-0.6,0.6].forEach(dx=>{const ch=new THREE.Group();ch.position.set(35.5+dx,0,-1.85);scene.add(ch);box(0.55,0.08,0.55,M.ink,0,0.5,0,ch,false);box(0.55,0.6,0.08,M.ink,0,0.85,0.26,ch,false);box(0.08,0.5,0.08,M.steel,0,0.25,0,ch,false);});
       blob(35.5,-3.2,1.6);plate("SPOT · STOCK PREP DCS",1.6,35.5,0.62,-2.84);}
     // stations: where each DCS lives (the machine floor's three consoles, and stock prep's)
-    const ST=G3.KST=[{a:"SPOT",at:[35.5,1.6,-3.2]},{a:"WET",at:[58,1.6,13.4]},{a:"DET",at:[26,1.6,13.4]},{a:"DET",at:[-5,1.6,13.4]}];
+    const ST=[{a:"SPOT",at:[35.5,1.6,-3.2]},{a:"WET",at:[58,1.6,13.4]},{a:"DET",at:[26,1.6,13.4]},{a:"DET",at:[-5,1.6,13.4]}];
     // ---- tap targets: invisible spheres outside the scene (never drawn, never batched), with their matrices set once ----
     const HG=new THREE.SphereGeometry(1,8,6),HM=new THREE.MeshBasicMaterial(),HITS=[];
     const addHit=(at,r,tag)=>{const m=new THREE.Mesh(HG,HM);m.position.set(at[0],at[1],at[2]);m.scale.setScalar(r);m.updateMatrixWorld(true);m.userData.tag=tag;HITS.push(m);return m;};
@@ -101,7 +101,7 @@
     function paintStripes(k){const c=G3.pfCanvas;if(!c)return;const x=c.getContext("2d"),W=c.width,H=c.height;x.fillStyle="#fff";x.fillRect(0,0,W,H);x.fillStyle="#9a9a9a";x.fillRect(0,0,10,H);
       if(k>0.02){x.fillStyle=`rgba(92,64,30,${Math.min(0.95,0.35+k*0.7)})`;[0.12,0.29,0.47,0.66,0.83].forEach((v,i)=>x.fillRect(0,Math.round(v*H),W,Math.max(1,Math.round(H*(0.035+0.02*(i%2))))));}
       G3.pfTex.needsUpdate=true;}
-    let wire0=null,flut=false,lastSt=0;
+    let wire0=null,flut=false;
     G3.knobFrame=(rdt,now)=>{const K=S.knob,on=!!(K&&K.any)&&!S.zen;
       // stripes building up on the pick-up felt
       {const st=on?K.x.st:0,q=Math.round(st*20)/20;if(q!==pfLvl){pfLvl=q;paintStripes(q);}}

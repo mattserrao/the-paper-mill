@@ -20,7 +20,6 @@ function step(dt){
   dcsTick(dt);   // v6.5 b3 DCS motors and reject purges (07c; nothing until the DCS is used)
   dryTick(dt);   // v6.5 b5 the dryer limit: water, steam, moisture (07d)
   weTick(dt);   // v6.8 the basis weight loop, bale water in the pulper, screen pressure drop (07g)
-  const g=GRADES[C.grade];
   // 1 inbound arrivals
   // weather: changes every few hours; snow and fog slow the trucks, rain soaks bales
   if(S.wx===undefined){S.wx="clear";S.wxLeft=360;S.wet=0;}
@@ -168,7 +167,6 @@ function step(dt){
   if(S.trendAcc>=10){S.trendAcc-=10;S.trend.push([S.tank/P.tankCap,S.pmSpeed/3300,S.yard/P.yardCap,S.fg/P.fgCap]);if(S.trend.length>144)S.trend.shift();}
   vlvCapture();   // v6.9 the valves' boundary for the next 15 s, and their trend points (07h)
   histTick(dt);   // v6.5 history: the hour's readings and minutes (11c)
-  if(!S.zen)knobHist();   // v5.6: DCS / QCS trends (reads only)
   tagTick();   // v6.7 the control room's tag history (11d; reads only)
 }
 

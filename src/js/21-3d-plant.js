@@ -1,7 +1,7 @@
   /* ---- step 1: static plant ---- */
   // v4.1 the environment sets the ground, the river and its banks (ENVLOOK); the scenery itself is built in 42b-3d-scenery.js
   const ENVLOOK={rural:{ground:"#a3c487",bank:"#c9c1a8",water:"#4b7f99"},urban:{ground:"#a9bb8f",bank:"#b7b3a8",water:"#5f8aa6"},
-    desert:{ground:"#e0c697",bank:"#cfc9bb",water:"#2fb3c4"},swamp:{ground:"#8ea576",bank:"#6f6548",water:"#3f5f52"}}[SITE.env];G3.envLook=ENVLOOK;
+    desert:{ground:"#e0c697",bank:"#cfc9bb",water:"#2fb3c4"},swamp:{ground:"#8ea576",bank:"#6f6548",water:"#3f5f52"}}[SITE.env];
   // (v4.1 pass 3: the ground is the terrain mesh built in 42b-3d-scenery.js, flat under the mill, with the environment's texture)
   slab(-140,-95,-5.2,-2.4,M.asphalt);slab(-140,-95,11.2,13.8,M.asphalt);
   slab(-95,-34.4,-5.2,-2.4,M.asphalt);              // inbound road
@@ -60,12 +60,6 @@
     if(SITE.env==="urban"||SITE.env==="desert"){const [zc,hw]=riverAt(0);(SEA?[zc+hw+2.4]:[zc+hw+2.4,zc-hw-2.4]).forEach(z=>box(800,1.1,0.6,conc,0,0.55,z,scene,false));}   // the city: a sea wall
     ribbon(0,0.012,new StdMat({map:rt,roughness:0.15,metalness:0.1,polygonOffset:true,polygonOffsetFactor:-4,polygonOffsetUnits:-4}),(x,a,b)=>[(x+400)/8,0,(x+400)/8,(b-a)/8]);
     // (v6.2 z2: the water is pulled forward in depth: 6 mm over the bank sand z-fought into streaks under the zen perspective camera)
-    // v4.1 pass 3: a sparse sparkle layer drifting the other way over the water (High and Ultra tiers)
-    if(G3.GFX&&!G3.GFX.lambert){const sc2=document.createElement("canvas");sc2.width=sc2.height=128;const x=sc2.getContext("2d");x.clearRect(0,0,128,128);
-      for(let k=0;k<70;k++){const px=Math.random()*128,py=Math.random()*128,r=0.6+Math.random()*1.4,g=x.createRadialGradient(px,py,0,px,py,r*2.2);g.addColorStop(0,"rgba(255,255,255,0.9)");g.addColorStop(1,"rgba(255,255,255,0)");x.fillStyle=g;x.fillRect(px-3,py-3,6,6);}
-      const st2=new THREE.CanvasTexture(sc2);st2.colorSpace=THREE.SRGBColorSpace;st2.wrapS=st2.wrapT=THREE.RepeatWrapping;st2.repeat.set(60,1.2);ENV.sparkTex=st2;
-      const sp=ribbon(-0.5,0.03,new THREE.MeshBasicMaterial({map:st2,transparent:true,opacity:0.35,depthWrite:false,blending:THREE.AdditiveBlending,toneMapped:false}),(x,a,b)=>[(x+400)/800,0,(x+400)/800,(b-a)/11]);
-      sp.receiveShadow=false;sp.renderOrder=1;sp.userData.noNav=true;ENV.spark=sp;}
     box(4,3,4,conc,-30,1.5,-55.5);box(4.4,0.3,4.4,M.roofFlat,-30,3.1,-55.5);pipe([[-30,0.8,-57.5],[-30,0.8,-59],[-30,-0.5,-61]],0.35,M.metal);
     // fresh water from the river intake, up and over into the stock line that feeds the cleaners and screens on to stock storage
     {const fw=mat("water",{roughness:0.4});pipe([[-30,0.7,-53.5],[-30,0.7,-31.5],[-4,0.7,-31.5],[-4,0.7,-25.7],[4,0.7,-25.7],[4,6.0,-25.7],[11.2,6.0,-25.7],[11.2,6.0,-23.3]],0.32,fw);

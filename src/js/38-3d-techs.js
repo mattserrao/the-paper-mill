@@ -104,7 +104,7 @@
   G3.navPump=navPump;
   G3.navCheck=(pts,G=NAV)=>{if(!G.g)navBuild(G);let bad=0;for(let i=1;i<pts.length;i++){const a=pts[i-1],b=pts[i],d=Math.hypot(b[0]-a[0],b[1]-a[1]),n=Math.max(1,Math.ceil(d/0.25));
       for(let k=0;k<=n;k++){const c=navC(G,[a[0]+(b[0]-a[0])*k/n,a[1]+(b[1]-a[1])*k/n]);if(G.g[c[1]*G.nx+c[0]])bad++;}}return bad;};
-  G3.NAV=NAV;G3.NAVW=NAVW;G3.navRoute=(a,b)=>route(a,b);G3.navOld=(a,b)=>routeLanes(a,b);G3.navSpots=()=>({MAINT_SPOT,SLOTS});G3.navWalk=(a,b)=>navPath(NAVW,a,b,120000);
+  G3.NAV=NAV;G3.NAVW=NAVW;
   function route(from,to){let p=null;try{p=navPath(NAV,from,to);}catch(e){}return p||routeLanes(from,to);}
   function routeLanes(from,to){const pts=[],lf=lane(from),lt=lane(to);
     pts.push(lf==="F"?[from[0],17.6]:[Math.max(from[0],-5.5),-0.6]);

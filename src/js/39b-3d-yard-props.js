@@ -60,9 +60,7 @@
   {const X=-58.5,Z=-13;slab(X-2.2,X+2.2,Z-1.8,Z+1.8,M.slab,0.025);box(4.4,1.6,0.25,M.steel,X,0.8,Z-1.75);box(4.6,0.12,0.4,M.brand,X,1.66,Z-1.75,scene,false);
     [-1.2,1.2].forEach(dx=>{box(0.6,1.1,0.4,M.steel,X+dx,0.55,Z-1.45);box(0.5,0.25,0.05,M.ok,X+dx,0.95,Z-1.22,scene,false);
       const cb=new THREE.Mesh(new CylG(0.03,0.03,1.4,6),M.ink);cb.rotation.x=0.9;cb.position.set(X+dx+0.25,0.5,Z-0.8);scene.add(cb);});
-    box(0.12,0.12,3.6,M.warn,X,0.06,Z-1.4,scene,false);
-    if(G3.GFX&&!G3.GFX.lambert){const c=document.createElement("canvas");c.width=256;c.height=64;const x=c.getContext("2d");x.fillStyle="#1c2233";x.fillRect(0,0,256,64);x.fillStyle="#f2c230";x.font="800 30px system-ui,sans-serif";x.textAlign="center";x.textBaseline="middle";x.fillText("CHARGING",128,33);
-    const t=new THREE.CanvasTexture(c);t.colorSpace=THREE.SRGBColorSpace;const sg=new THREE.Mesh(new THREE.PlaneGeometry(2.0,0.5),new THREE.MeshBasicMaterial({map:t}));sg.position.set(X,1.3,Z-1.6);scene.add(sg);}}
+    box(0.12,0.12,3.6,M.warn,X,0.06,Z-1.4,scene,false);}
   // flagpoles by the office door: the mill's flag and a safety flag
   {[[56.6,20.4,"brand"],[58.6,20.4,"ok"]].forEach(([x,z,tk],k)=>{const p=new THREE.Mesh(new CylG(0.05,0.07,9,8),M.steel);p.position.set(x,4.5,z);p.castShadow=true;scene.add(p);
       const ball=new THREE.Mesh(new SphG(0.12,8,6),M.brand);ball.position.set(x,9.05,z);scene.add(ball);

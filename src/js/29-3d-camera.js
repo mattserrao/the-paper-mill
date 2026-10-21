@@ -7,7 +7,6 @@
   const ISO_TH=-Math.PI/4,ISO_PH=Math.acos(Math.sqrt(1/3)),R_MAX=760,R_K=[1,2,3,4,6,8,12],R_STEPS=R_K.map(k=>R_MAX/k);
   const rStep=r=>{let b=R_STEPS[0];for(const v of R_STEPS)if(Math.abs(Math.log(v/r))<Math.abs(Math.log(b/r)))b=v;return b;};
   const rNext=(r,dir)=>{const i=R_STEPS.indexOf(rStep(r));return R_STEPS[clamp(i+dir,0,R_STEPS.length-1)];};
-  G3.rSteps=R_STEPS;G3.rStep=rStep;
   const DEF={th:ISO_TH,ph:ISO_PH,r:R_MAX/3};const cam={...DEF};let rShown=DEF.r;
   const DEFT=target.clone();let goal=null;
   // v3.1.0 tutorial: glide the camera to a spot and mark it with a pulsing ring and a light beam
@@ -39,7 +38,7 @@
   // then place the orbit camera around its target (one function; v3 built this by wrapping it twice)
   // swap the live camera; leaving zen goes back to the iso view where the shot left off, on the nearest zoom step
   function camSwap(free){camera=free?camPersp:camIso;if(free){camPersp.aspect=(G3.vw||host.clientWidth)/Math.max(1,G3.vh||host.clientHeight);camPersp.updateProjectionMatrix();}
-    else{cam.r=rStep(clamp(cam.r,R_STEPS[R_STEPS.length-1],R_MAX));rShown=cam.r;}G3.camFree=free;G3.lastMove=performance.now();if(G3.onCamSwap)G3.onCamSwap(free);
+    else{cam.r=rStep(clamp(cam.r,R_STEPS[R_STEPS.length-1],R_MAX));rShown=cam.r;}G3.lastMove=performance.now();if(G3.onCamSwap)G3.onCamSwap(free);
     // (v6.2 z2: the river's ripple lines are packed for the iso view; seen in perspective they alias into streaks, so the free camera
     // gets wider ripples and anisotropic filtering)
     const RT=ENV.riverTex;if(RT){RT.repeat.x=free?6:40;RT.repeat.y=free?0.45:1.5;RT.anisotropy=free?8:1;RT.needsUpdate=true;}}
@@ -58,11 +57,10 @@
     const rr=rShown*((G3.vw||host.clientWidth)<600?1.35:1);G3.camR=rShown;G3.camDist=rr;
     camera.position.set(target.x+ISO_D*Math.sin(cam.ph)*Math.sin(cam.th),target.y+ISO_D*Math.cos(cam.ph),target.z+ISO_D*Math.sin(cam.ph)*Math.cos(cam.th));
     camera.lookAt(target);camera.isoFit(rr);}
-  const ptrs=new Map();let pinch0=0,r0=0,mid0=null,panBtn=false;
+  const ptrs=new Map();let pinch0=0,r0=0,mid0=null;
   const mid=()=>{const [a,b]=[...ptrs.values()];return {x:(a.x+b.x)/2,y:(a.y+b.y)/2,d:Math.hypot(a.x-b.x,a.y-b.y)};};
   glc.addEventListener("contextmenu",e=>e.preventDefault());
   glc.addEventListener("pointerdown",e=>{glc.setPointerCapture(e.pointerId);ptrs.set(e.pointerId,{x:e.clientX,y:e.clientY});goal=null;
-    panBtn=e.button===2||e.button===1||e.shiftKey;
     if(ptrs.size===2){const m=mid();pinch0=m.d;r0=FOL.on?FOL.r:cam.r;mid0=m;}});
   glc.addEventListener("pointermove",e=>{const p=ptrs.get(e.pointerId);if(!p)return;const dx=e.clientX-p.x,dy=e.clientY-p.y;
     if(ptrs.size===1)panBy(dx,dy);   // (v6.1 iso: the camera never turns, so any drag pans)
@@ -78,7 +76,7 @@
     glc.addEventListener("pointerup",e=>{if(!downAt)return;const m=Math.hypot(e.clientX-downAt[0],e.clientY-downAt[1]),t=performance.now()-downAt[2];downAt=null;if(m<6&&t<500){if(G3.tellTap&&G3.tellTap(e))return;   /* v5.7: a tell on a Round comes first */const li=G3.lblAt(e);if(li){if(G3.lblTap&&G3.lblTap(li))return;G3.flyTo(li);return;}const h=hit(e);if(h&&h.k)G3.knobTap(h);else if(h==="spider")openSpider();else if(h==="slice")openSlice();else if(h==="brian")openBrian();else if(G3.infoTap)G3.infoTap(e);}});   // (v6.10: click for info, 38d)
     glc.addEventListener("pointermove",e=>{const n=performance.now();if(n-hoverT<120||ptrs.size)return;hoverT=n;glc.style.cursor=G3.lblAt(e)||hit(e)?"pointer":"";});}
   let wAcc=0;glc.addEventListener("wheel",e=>{e.preventDefault();goal=null;if(e.shiftKey||Math.abs(e.deltaX)>Math.abs(e.deltaY)&&!e.ctrlKey)panBy(-e.deltaX||-e.deltaY,0);else if(FOL.on)FOL.r=clamp(FOL.r*Math.exp(e.deltaY*(e.ctrlKey?0.01:0.001)),10,120);else{wAcc+=e.deltaY*(e.ctrlKey?10:1);if(Math.abs(wAcc)>=60){cam.r=rNext(cam.r,wAcc>0?-1:1);wAcc=0;}}},{passive:false});   // (v6.1: one zoom step per wheel notch)
-  // keyboard: arrows/WASD move, Q/E rotate, +/- zoom
+  // keyboard: arrows/WASD move, +/- zoom
   glc.addEventListener("keydown",e=>{const k=e.key.toLowerCase(),st=24;let used=true;
     if(k==="arrowleft"||k==="a")panBy(st,0);else if(k==="arrowright"||k==="d")panBy(-st,0);else if(k==="arrowup"||k==="w")panBy(0,st);else if(k==="arrowdown"||k==="s")panBy(0,-st);
     else if(k==="+"||k==="=")cam.r=rNext(cam.r,1);else if(k==="-")cam.r=rNext(cam.r,-1);else used=false;   // (v6.1: no turning; zoom by whole steps)

@@ -139,7 +139,6 @@ const pfHourLbl=h=>`${pfDayLbl(h)} · ${clockOf(((h%24)+24)%24*60)}`;
 const V_=k=>r=>r[HCI[k]];
 const HSUM=k=>k.reduce?(r=>k.reduce((a,x)=>a+(r[HCI[x]]||0),0)):V_(k);
 const C_={fi:"#e07b39",fo:"#9b7fd6",occ:"#c08a4a",en:"#ffb02e",ch:"#3fc6d6",lab:"#4fd18b",mt:"#ff7a8a",ov:"#a7b4cf",bl:"#7fb2ff",pu:"#c08bff",wh:"#dbe6f6"};
-const UPK={yard:"m.yard",pulper:"m.pulp",stock:"m.pulp",pm:"m.pmrun",winder:"m.wdrun",ship:"m.ship"};
 const PF_TR={
   yard:[{t:"Bale yard inventory",u:"t",k:"line",s:[["Yard",C_.occ,V_("a.yard")]]},{t:"Trucks in",u:"trucks",k:"bar",s:[["Trucks",C_.bl,V_("n.in")]]},
     {t:"OCC price",u:"$/t",k:"line",s:[["OCC",C_.occ,V_("a.occp")]],ev:1},{t:"Inbound haul",u:"$/t",k:"line",s:[["Haul",C_.fi,V_("a.haul")]]},{t:"Unloading",u:"t/h",k:"line",s:[["Unloaded",C_.bl,V_("a.unload")]]}],

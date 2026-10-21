@@ -28,8 +28,6 @@ function manRoster(){const sd=(S&&S.seed)>>>0;if(MAN.ros&&MAN.seed===sd)return M
 const manCyc=(T,d)=>(((d+MAN.ANCH-MAN.OFF[T])%28)+28)%28;
 const manKind=s=>(((s%2)+2)%2)?"N":"D";
 function manTeam(s){const d=Math.floor(s/2),K=manKind(s);return MAN.TEAMS.find(T=>MAN.PAT[manCyc(T,d)]===K);}
-// a team's letter for a calendar day: "D", "N" or "O" (off)
-function manDay(T,d){return MAN.PAT[manCyc(T,d)];}
 // who works shift s: {team, techs:[{home, who, vac, cover}], ops:[...], short}. who is null for an unfilled gap;
 // cover is {type:"OT"|"swap", from:team}. Cached; the cache is dropped with the roster when the run is reseeded.
 function manShift(s){manRoster();const nt=Math.max(1,Math.min(MAN.NT,P.techs|0)),key=s*16+nt;let m=MAN.cache.get(key);if(m)return m;

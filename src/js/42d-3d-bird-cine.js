@@ -5,7 +5,7 @@
      drift down, the singed bird flaps off trailing smoke, and the camera goes back where it was and the game carries on
      at the speed it had. Everything runs on its own real-time clock (the sim is paused); one bird and one set of
      effects, built once at start-up. Skipped in zen, the autotest and with ?nocine; Skip (or tapping the scene) ends it. */
-  {const Q=new URLSearchParams(location.search),NOCINE=Q.has("autotest")||Q.has("nocine")||!!G3.bare,IMP=10,END=13.4,EZ=k=>k<=0?0:k>=1?1:k*k*(3-2*k);
+  {const Q=new URLSearchParams(location.search),NOCINE=Q.has("autotest")||Q.has("nocine"),IMP=10,END=13.4,EZ=k=>k<=0?0:k>=1?1:k*k*(3-2*k);
     const mat=hex=>new StdMat({color:lin0(hex),roughness:0.75}),SPH=new THREE.SphereGeometry(1,14,10),BOX=new THREE.BoxGeometry(1,1,1);
     const part=(p,g,m,sx,sy,sz,x,y,z)=>{const o=new THREE.Mesh(g,m);o.scale.set(sx,sy,sz);o.position.set(x,y,z);o.castShadow=true;p.add(o);return o;};
     // the pigeon (local +x forward), 1.6x life size so it reads on a phone
@@ -81,4 +81,4 @@
         feathers.forEach(f=>{const u=f.userData.v,kk=k-0.05;f.visible=kk>0&&kk<3.2;if(!f.visible)return;f.position.set(c.I.x+u[0]*kk+Math.sin(kk*3+u[3])*0.4,Math.max(0.05,c.I.y+1+u[1]*kk-0.9*kk*kk*0.6),c.I.z+u[2]*kk);f.rotation.set(kk*3+u[3],kk*2,Math.sin(kk*4+u[3]));});
         if(t>=END)finish();}catch(e){console.error("bird cut-scene",e);finish();}};
     G3.cineSeek=t=>{if(C){C.t=t;C.chirp=C.chirp.filter(x=>x>t);if(t>=IMP&&!C.struck){C.struck=true;G3.cineHold=false;}}};   // (tests and stills)
-    G3.cineIMP=IMP;}
+}
