@@ -30,7 +30,7 @@
       x.font=`800 ${fs}px "Plus Jakarta Sans",system-ui,sans-serif`;x.fillStyle=fg;x.textAlign="center";x.textBaseline="middle";lines.forEach((l,i)=>x.fillText(l,W/2,H/2+(i-(lines.length-1)/2)*fs*1.05));t.needsUpdate=true;};
     return mesh;}
   // a townsperson: a worker figure without the hard hat (the dome is kept as hair)
-  function townie(i){const p=worker(cvM(TOWN[i%TOWN.length]),cvM(HAIR[i%HAIR.length]));const t=p.userData.torso;t.children.forEach(o=>{if(o.isMesh&&o.material===cvM(HAIR[i%HAIR.length])&&o.scale.y<0.1)o.visible=false;});return p;}
+  function townie(i){const p=worker(cvM(TOWN[i%TOWN.length]),cvM(HAIR[i%HAIR.length]));const t=p.userData.torso;t.children.forEach(o=>{if(o.isMesh&&o.material===cvM(HAIR[i%HAIR.length])&&o.scale.y<0.1)o.visible=false;});p.userData.hands.forEach(h=>h.material=M.skin);return p;}
   // a sign on a stick, held above the head
   // (v5.2 review: signs with the same slogan and colour share one painted material and geometry, so they batch together)
   const SIGNM={},SIGNG=new THREE.PlaneGeometry(1.9,1.15);

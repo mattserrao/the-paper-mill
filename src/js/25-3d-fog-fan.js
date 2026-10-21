@@ -41,8 +41,8 @@
       const sp=sealSpill[i],k=SPD.spill[i];sp.visible=k>0.02;sp.scale.set(0.8+2.6*k,0.8+2.2*k,1);sp.material.color.copy(w.material.color);
       if(l>=1&&rdt>0&&Math.random()<rdt*12){const a=Math.random()*6.28;emit("drop",26.4+Math.cos(a)*1.5,2.8,(i?-13.9:-17.6)+Math.sin(a)*1.5,Math.cos(a)*1.2,0.5,Math.sin(a)*1.2,0.7,0.26,"#"+w.material.color.clone().convertLinearToSRGB().getHexString(),0.9);}});
     if(G3.spiderWheel)G3.spiderWheel.rotation.x=SPD.v*12;};
-  spool([[31.0,PH+2.35,-15.3],[26.4,PH+2.35,-15.3],[26.4,PH+2.35,-17.6],[26.4,3.0,-17.6]],0.16,M.metal);
-  spool([[31.0,PH+2.85,-14.7],[26.4,PH+2.85,-14.7],[26.4,PH+2.85,-13.9],[26.4,3.0,-13.9]],0.16,M.steel);
+  spool([[31.0,PH+2.35,-15.3],[26.4,PH+2.35,-15.3],[26.4,PH+2.35,-17.6],[26.4,3.0,-17.6]],0.16,M.ww);
+  spool([[31.0,PH+2.85,-14.7],[26.4,PH+2.85,-14.7],[26.4,PH+2.85,-13.9],[26.4,3.0,-13.9]],0.16,M.ww);
   // thickened stock drops straight from the repulper hopper into the chest below
   spool([[38.4,PH-0.6,-11.45],[38.4,PH-1.3,-11.45],[36.2,PH-1.3,-13.2],[36.2,10.4,-13.2]],0.28,M.stock);
   fieldPump(45,1,-11,-Math.PI/2);
@@ -74,7 +74,7 @@
      const t=new THREE.CanvasTexture(c);t.colorSpace=THREE.SRGBColorSpace;const pl=new THREE.Mesh(new THREE.PlaneGeometry(1.8,0.34),new THREE.MeshBasicMaterial({map:t}));pl.position.set(50.4,0.6,-8.08);scene.add(pl);}
     // machine chest outlet to the fan pump suction; base ply white water from the silo joins it
     spool([[46.6,0.8,-13.0],[46.6,2.35,-13.0],[46.6,2.35,-9.3],[46.6,1.65,-9.3],[47.0,1.65,-9.3]],0.32,M.stock);   // runs above head height so the yard stays open
-    spool([[46.0,0.15,3.0],[46.0,5.6,3.0],[46.0,5.6,-8.4],[46.0,1.65,-8.4],[46.0,1.65,-9.3],[46.4,1.65,-9.3]],0.28,M.stock);
+    spool([[46.0,0.15,3.0],[46.0,5.6,3.0],[46.0,5.6,-8.4],[46.0,1.65,-8.4],[46.0,1.65,-9.3],[46.4,1.65,-9.3]],0.28,M.ww);
     // fan pump discharge: up, over the hall's back wall and into the headbox
     spool([[47.6,3.2,-9.3],[47.6,7.6,-9.3],[47.6,7.6,3.6],[60.75,7.6,3.6],[60.75,7.6,5.85],[60.75,1.9,5.85]],0.34,M.stock);}   // into the top of the tapered header, drive-side end
 
@@ -85,29 +85,101 @@
   // a row of slice actuators on the nozzle, stiffener ribs, side plates, and the L/B gauge on the tending side
   const HB=G3.HB={lipX:55.0,lipY:3.1};
   {const hbM=mat(M.steel.userData.token,{roughness:0.42,metalness:0.3,flatShading:true}),hbD=mat(M.ink.userData.token,{roughness:0.5,metalness:0.25,flatShading:true}),hbS=mat(M.metal.userData.token,{roughness:0.38,metalness:0.4,flatShading:true});
-    const prof=[[60.0,0.6],[60.0,3.3],[59.55,3.78],[57.3,3.78],[55.45,3.24],[55.12,3.14],[55.12,2.99],[55.35,2.97],[56.15,2.55],[56.6,1.5],[56.6,0.6]];
     const mk=(pts,depth,m,z0)=>{const sh=new THREE.Shape();pts.forEach(([x,y],i)=>i?sh.lineTo(x,y):sh.moveTo(x,y));const g=new THREE.ExtrudeGeometry(sh,{depth,bevelEnabled:false});
       const o=new THREE.Mesh(g,m);o.position.z=z0;o.castShadow=o.receiveShadow=true;scene.add(o);return o;};
-    const body=mk(prof,CD,hbM,zc-CD/2);edges(body,undefined,20);
-    // side plates, proud of the body, dark
-    [zc-CD/2-0.09,zc+CD/2].forEach(z=>{const sp=mk(prof.map(([x,y])=>[x+(x>58?0.05:x<55.5?0.04:0),y+(y>3.5?0.05:0)]),0.09,hbS,z);edges(sp,undefined,20);});
-    // stiffener ribs down the back wall and across the top deck
-    for(let k=0;k<7;k++){const z=zc-CD/2+0.45+k*(CD-0.9)/6;box(0.14,2.7,0.12,hbD,60.07,1.95,z,scene,false);box(2.1,0.12,0.12,hbD,58.4,3.84,z,scene,false);}
-    // brand stripe on the top edge, walkway grating and handrail on the deck
-    box(0.16,0.1,CD+0.2,M.brand,59.62,3.76,zc,scene,false);box(0.16,0.1,CD+0.2,M.brand,57.3,3.8,zc,scene,false);
-    [zc-CD/2-0.05,zc+CD/2+0.05].forEach(z=>{[57.6,58.6,59.5].forEach(x=>box(0.06,0.9,0.06,M.warn,x,4.27,z,scene,false));box(2.0,0.06,0.06,M.warn,58.55,4.7,z,scene,false);});
-    // tapered manifold header behind the headbox (inlet on the drive side), with its recirculation outlet on the tending side
-    {const tg=new CylG(0.36,0.68,CD+0.6,18);tg.rotateX(Math.PI/2);const t=new THREE.Mesh(tg,hbM);t.position.set(60.75,1.35,zc);t.castShadow=true;scene.add(t);edges(t,undefined,30);
-     cylZ(0.5,0.25,hbD,60.75,1.35,zc-CD/2-0.42,18);cylZ(0.28,0.6,hbD,60.75,1.35,zc+CD/2+0.55,14);for(let k=0;k<5;k++)box(0.5,0.12,0.12,hbD,60.3,1.35,zc-CD/2+0.7+k*(CD-1.4)/4,scene,false);}
-    // slice actuators: a row of small boxes with motors along the nozzle just behind the lip
-    const ang=Math.atan2(3.78-3.24,57.3-55.45);
-    for(let k=0;k<12;k++){const z=zc-CD/2+0.35+k*(CD-0.7)/11,a=box(0.28,0.3,0.3,hbD,56.05,3.58,z,scene,false);a.rotation.z=ang;const m2=new THREE.Mesh(new CylG(0.09,0.09,0.28,8),M.metal);m2.position.set(56.15,3.85,z);scene.add(m2);}
-    box(0.08,0.08,CD,M.metal,56.05,3.78,zc,scene,false);
-    // the slice lip itself: a bright steel bar that moves with the vertical and horizontal slice settings
-    HB.lip=box(0.42,0.1,CD+0.04,M.metal,55.33,3.13,zc,scene,false);
+    // v6.11 Blender redesign (tools/blender/hb_new.py): a stand with jacking pads, a tapered inlet header (drive-side inlet,
+    // tending-side recirculation), the tube bank, bolted side plates, slice beam and actuators, the apron, a deck with a ladder
+    // and a ladder. Same footprint; HB.lip is still the moving slice lip.
+    const ZD=zc-CD/2,ZT=zc+CD/2;
+    box(4,0.12,0.7,hbD,58,0.06,5.55,scene,false);
+    box(0.45,0.85,0.45,hbM,56.5,0.55,5.55,scene,false);
+    box(0.45,0.85,0.45,hbM,59.5,0.55,5.55,scene,false);
+    box(3.9,0.3,0.55,hbM,58,1.05,5.55,scene,false);
+    box(0.6,0.12,0.6,hbS,56.5,1.26,5.55,scene,false);
+    box(0.6,0.12,0.6,hbS,59.5,1.26,5.55,scene,false);
+    box(4,0.12,0.7,hbD,58,0.06,12.65,scene,false);
+    box(0.45,0.85,0.45,hbM,56.5,0.55,12.65,scene,false);
+    box(0.45,0.85,0.45,hbM,59.5,0.55,12.65,scene,false);
+    box(3.9,0.3,0.55,hbM,58,1.05,12.65,scene,false);
+    box(0.6,0.12,0.6,hbS,56.5,1.26,12.65,scene,false);
+    box(0.6,0.12,0.6,hbS,59.5,1.26,12.65,scene,false);
+    box(0.5,0.35,7.6,hbM,56.5,1.05,9.1,scene,false);
+    box(0.5,0.35,7.6,hbM,59.5,1.05,9.1,scene,false);
+    {const o=mk([[59.6, 1.2], [59.6, 3.35], [59.25, 3.7], [57.5, 3.7], [55.55, 3.22], [55.15, 3.12], [55.15, 2.98], [55.45, 2.95], [56.35, 2.45], [56.75, 1.2]],6.4,hbM,5.9);edges(o,undefined,20);}
+    {const o=mk([[59.660000000000004, 1.15], [59.660000000000004, 3.35], [59.31, 3.7600000000000002], [57.5, 3.7600000000000002], [55.529999999999994, 3.22], [55.129999999999995, 3.12], [55.129999999999995, 2.98], [55.43, 2.95], [56.35, 2.45], [56.75, 1.15]],0.14,hbD,5.76);edges(o,undefined,20);}
+    {const o=mk([[59.660000000000004, 1.15], [59.660000000000004, 3.35], [59.31, 3.7600000000000002], [57.5, 3.7600000000000002], [55.529999999999994, 3.22], [55.129999999999995, 3.12], [55.129999999999995, 2.98], [55.43, 2.95], [56.35, 2.45], [56.75, 1.15]],0.14,hbD,12.3);edges(o,undefined,20);}
+    cylZ(0.05,0.04,hbS,59.2,3.44,12.46,6);
+    cylZ(0.05,0.04,hbS,58.633,3.37,12.46,6);
+    cylZ(0.05,0.04,hbS,58.067,3.3,12.46,6);
+    cylZ(0.05,0.04,hbS,57.5,3.23,12.46,6);
+    cylZ(0.05,0.04,hbS,56.933,3.16,12.46,6);
+    cylZ(0.05,0.04,hbS,56.367,3.09,12.46,6);
+    cylZ(0.05,0.04,hbS,55.8,3.02,12.46,6);
+    box(0.5,2.1,6.2,hbS,59.85,2.25,9.1,scene,false);
+    box(0.58,0.1,6.3,hbD,59.85,1.35,9.1,scene,false);
+    box(0.58,0.1,6.3,hbD,59.85,2.25,9.1,scene,false);
+    box(0.58,0.1,6.3,hbD,59.85,3.15,9.1,scene,false);
+    {const g=new CylG(0.38,0.75,6.8,14);g.rotateX(Math.PI/2);const o=new THREE.Mesh(g,hbM);o.position.set(60.75,1.75,9.1);o.castShadow=true;scene.add(o);edges(o,undefined,30);}
+    cylZ(0.95,0.18,hbD,60.75,1.75,5.58,14);
+    cylZ(0.48,0.14,hbD,60.75,1.75,12.78,12);
+    spool([[60.75,1.75,12.8],[60.75,1.75,13.4],[60.75,0.4,13.4]],0.26,M.stock);
+    {const g=new CylG(0.28,0.28,0.06,10);g.rotateZ(-Math.PI/2);const o=new THREE.Mesh(g,M.warn);o.position.set(61.05,1.75,13.4);o.castShadow=true;scene.add(o);}
+    box(0.7,0.55,0.3,hbM,60.6,0.95,6.5,scene,false);
+    box(0.7,0.55,0.3,hbM,60.6,0.95,9.1,scene,false);
+    box(0.7,0.55,0.3,hbM,60.6,0.95,11.7,scene,false);
+    {const o=box(2,0.28,6.5,hbS,56.55,3.6,9.1,scene,false);o.rotation.set(0,0,0.241);};
+    {const o=box(0.34,0.5,0.34,hbD,56.25,3.95,6.35,scene,false);o.rotation.set(0,0,0.241);};
+    {const g=new CylG(0.12,0.12,0.35,8);const o=new THREE.Mesh(g,hbS);o.position.set(56.3,4.35,6.35);o.castShadow=true;scene.add(o);}
+    {const o=box(0.34,0.5,0.34,hbD,56.25,3.95,6.961,scene,false);o.rotation.set(0,0,0.241);};
+    {const g=new CylG(0.12,0.12,0.35,8);const o=new THREE.Mesh(g,hbS);o.position.set(56.3,4.35,6.961);o.castShadow=true;scene.add(o);}
+    {const o=box(0.34,0.5,0.34,hbD,56.25,3.95,7.572,scene,false);o.rotation.set(0,0,0.241);};
+    {const g=new CylG(0.12,0.12,0.35,8);const o=new THREE.Mesh(g,hbS);o.position.set(56.3,4.35,7.572);o.castShadow=true;scene.add(o);}
+    {const o=box(0.34,0.5,0.34,hbD,56.25,3.95,8.183,scene,false);o.rotation.set(0,0,0.241);};
+    {const g=new CylG(0.12,0.12,0.35,8);const o=new THREE.Mesh(g,hbS);o.position.set(56.3,4.35,8.183);o.castShadow=true;scene.add(o);}
+    {const o=box(0.34,0.5,0.34,hbD,56.25,3.95,8.794,scene,false);o.rotation.set(0,0,0.241);};
+    {const g=new CylG(0.12,0.12,0.35,8);const o=new THREE.Mesh(g,hbS);o.position.set(56.3,4.35,8.794);o.castShadow=true;scene.add(o);}
+    {const o=box(0.34,0.5,0.34,hbD,56.25,3.95,9.406,scene,false);o.rotation.set(0,0,0.241);};
+    {const g=new CylG(0.12,0.12,0.35,8);const o=new THREE.Mesh(g,hbS);o.position.set(56.3,4.35,9.406);o.castShadow=true;scene.add(o);}
+    {const o=box(0.34,0.5,0.34,hbD,56.25,3.95,10.017,scene,false);o.rotation.set(0,0,0.241);};
+    {const g=new CylG(0.12,0.12,0.35,8);const o=new THREE.Mesh(g,hbS);o.position.set(56.3,4.35,10.017);o.castShadow=true;scene.add(o);}
+    {const o=box(0.34,0.5,0.34,hbD,56.25,3.95,10.628,scene,false);o.rotation.set(0,0,0.241);};
+    {const g=new CylG(0.12,0.12,0.35,8);const o=new THREE.Mesh(g,hbS);o.position.set(56.3,4.35,10.628);o.castShadow=true;scene.add(o);}
+    {const o=box(0.34,0.5,0.34,hbD,56.25,3.95,11.239,scene,false);o.rotation.set(0,0,0.241);};
+    {const g=new CylG(0.12,0.12,0.35,8);const o=new THREE.Mesh(g,hbS);o.position.set(56.3,4.35,11.239);o.castShadow=true;scene.add(o);}
+    {const o=box(0.34,0.5,0.34,hbD,56.25,3.95,11.85,scene,false);o.rotation.set(0,0,0.241);};
+    {const g=new CylG(0.12,0.12,0.35,8);const o=new THREE.Mesh(g,hbS);o.position.set(56.3,4.35,11.85);o.castShadow=true;scene.add(o);}
+    box(0.08,0.08,6.4,M.warn,56.25,4.22,9.1,scene,false);
+    HB.lip=box(0.42,0.1,6.44,hbS,55.33,3.13,9.1,scene,false);
+    box(0.55,0.06,6.4,hbS,55.22,2.93,9.1,scene,false);
+    box(1.75,0.06,6.9,hbS,58.4,3.76,9.1,scene,false);
+    box(0.06,1,0.06,M.warn,57.6,4.29,5.7,scene,false);
+    box(0.06,1,0.06,M.warn,58.45,4.29,5.7,scene,false);
+    box(0.06,1,0.06,M.warn,59.3,4.29,5.7,scene,false);
+    box(1.8,0.06,0.06,M.warn,58.45,4.79,5.7,scene,false);
+    box(1.8,0.06,0.06,M.warn,58.45,4.29,5.7,scene,false);
+    box(1.8,0.14,0.04,M.warn,58.45,3.86,5.7,scene,false);
+    box(0.06,1,0.06,M.warn,57.6,4.29,12.5,scene,false);
+    box(0.06,1,0.06,M.warn,58.45,4.29,12.5,scene,false);
+    box(0.06,1,0.06,M.warn,59.3,4.29,12.5,scene,false);
+    box(1.8,0.06,0.06,M.warn,58.45,4.79,12.5,scene,false);
+    box(1.8,0.06,0.06,M.warn,58.45,4.29,12.5,scene,false);
+    box(1.8,0.14,0.04,M.warn,58.45,3.86,12.5,scene,false);
+    box(0.06,3.9,0.06,M.warn,59.55,1.95,13.05,scene,false);
+    box(0.06,3.9,0.06,M.warn,60.05,1.95,13.05,scene,false);
+    box(0.5,0.04,0.05,M.warn,59.8,0.4,13.05,scene,false);
+    box(0.5,0.04,0.05,M.warn,59.8,0.82,13.05,scene,false);
+    box(0.5,0.04,0.05,M.warn,59.8,1.24,13.05,scene,false);
+    box(0.5,0.04,0.05,M.warn,59.8,1.66,13.05,scene,false);
+    box(0.5,0.04,0.05,M.warn,59.8,2.08,13.05,scene,false);
+    box(0.5,0.04,0.05,M.warn,59.8,2.5,13.05,scene,false);
+    box(0.5,0.04,0.05,M.warn,59.8,2.92,13.05,scene,false);
+    box(0.5,0.04,0.05,M.warn,59.8,3.34,13.05,scene,false);
+    box(0.5,0.04,0.05,M.warn,59.8,3.76,13.05,scene,false);
+    box(0.16,0.1,6.6,M.brand,59.45,3.66,9.1,scene,false);
+    box(0.7,0.5,0.04,hbD,58.75,2.3,12.46,scene,false);
     // L/B gauge on the tending side: chart paper behind a red pointer, in a dark frame
     const gc=document.createElement("canvas");gc.width=256;gc.height=192;HB.gc=gc;const gt=new THREE.CanvasTexture(gc);gt.colorSpace=THREE.SRGBColorSpace;HB.gt=gt;
-    const GZ=zc+CD/2+0.09;const fr=box(1.1,0.84,0.08,hbD,57.15,2.95,GZ+0.04,scene,false);
+    const GZ=zc+CD/2+0.14;const fr=box(1.1,0.84,0.08,hbD,57.15,2.95,GZ+0.04,scene,false);
     const pl=new THREE.Mesh(new THREE.PlaneGeometry(1.0,0.75),new THREE.MeshBasicMaterial({map:gt,toneMapped:false}));pl.position.set(57.15,2.95,GZ+0.085);scene.add(pl);
     G3.sliceHit=[pl,fr];}
   box(14,0.25,CD,M.steel,47.8,2.4,zc);                                     // forming table
@@ -141,7 +213,111 @@
   // tandem bottom felt: picks the sheet up off the wire and carries it through both nips
   feltMeshes.push(feltLoop([[41.2,2.95],[38,3.32],[30.6,3.32],[29.6,2.4],[29.6,0.55],[40.6,0.55],[41.6,1.7]]));[[29.6,2.4],[29.6,0.55],[40.6,0.55],[41.6,1.7]].forEach(p=>guide(...p));
   // press frames make the section stand out
-  [zc-CD/2-0.55,zc+CD/2+0.55].forEach(z=>{box(1.1,6.2,0.5,M.steel,37,3.1,z);box(1.3,6.6,0.5,M.steel,32,3.3,z);box(6.5,0.5,0.5,M.steel,34.5,7.9,z);});
+  // v6.11 Blender redesign (tools/blender/press_new.py): press stands with bearing housings and top-loading cylinders, a felt-run
+  // girder each side carrying the upper guide-roll bearings, pedestals under the lower guide rolls, sole plates, Uhle boxes,
+  // felt showers and a hydraulic power unit
+  {box(13.6,0.16,0.9,M.ink,35,0.08,5.35,scene,false);
+   box(0.34,8.35,0.42,M.steel,35.7,4.175,5.35,scene,false);
+   box(0.34,8.35,0.42,M.steel,38.3,4.175,5.35,scene,false);
+   box(3.05,0.45,0.55,M.steel,37,1.25,5.35,scene,false);
+   box(0.78,0.78,0.55,M.ink,37,2.35,5.35,scene,false);
+   box(0.78,0.78,0.55,M.ink,37,4.45,5.35,scene,false);
+   {const g=new CylG(0.22,0.22,3.15,10);const o=new THREE.Mesh(g,M.metal);o.position.set(37,6.675,5.35);o.castShadow=true;scene.add(o);}
+   {const g=new CylG(0.09,0.09,0.45,8);const o=new THREE.Mesh(g,M.warn);o.position.set(37,5.15,5.35);o.castShadow=true;scene.add(o);}
+   box(0.7,0.18,0.7,M.steel,37,8.1,5.35,scene,false);
+   cylZ(0.32,0.08,M.metal,37,2.35,5,12);
+   cylZ(0.32,0.08,M.metal,37,4.45,5,12);
+   box(0.34,8.35,0.42,M.steel,30.55,4.175,5.35,scene,false);
+   box(0.34,8.35,0.42,M.steel,33.45,4.175,5.35,scene,false);
+   box(3.35,0.45,0.55,M.steel,32,0.95,5.35,scene,false);
+   box(0.78,0.78,0.55,M.ink,32,2.2,5.35,scene,false);
+   box(0.78,0.78,0.55,M.ink,32,4.6,5.35,scene,false);
+   {const g=new CylG(0.22,0.22,3,10);const o=new THREE.Mesh(g,M.metal);o.position.set(32,6.75,5.35);o.castShadow=true;scene.add(o);}
+   {const g=new CylG(0.09,0.09,0.45,8);const o=new THREE.Mesh(g,M.warn);o.position.set(32,5.3,5.35);o.castShadow=true;scene.add(o);}
+   box(0.7,0.18,0.7,M.steel,32,8.1,5.35,scene,false);
+   cylZ(0.32,0.08,M.metal,32,2.2,5,12);
+   cylZ(0.32,0.08,M.metal,32,4.6,5,12);
+   box(12.6,0.4,0.42,M.steel,34.9,8.35,5.35,scene,false);
+   box(0.36,0.5,0.36,M.steel,30,7.83,5.35,scene,false);
+   box(0.36,0.5,0.36,M.steel,35,7.83,5.35,scene,false);
+   box(0.36,0.5,0.36,M.steel,39.8,7.83,5.35,scene,false);
+   box(0.5,0.5,0.4,M.ink,39.4,5.6,5.35,scene,false);
+   box(0.18,2.5,0.18,M.metal,39.4,6.975,5.35,scene,false);
+   box(0.5,0.5,0.4,M.ink,39.2,7.1,5.35,scene,false);
+   box(0.18,1,0.18,M.metal,39.2,7.725,5.35,scene,false);
+   box(0.5,0.5,0.4,M.ink,35.2,7.1,5.35,scene,false);
+   box(0.18,1,0.18,M.metal,35.2,7.725,5.35,scene,false);
+   box(0.5,0.5,0.4,M.ink,34.9,5.6,5.35,scene,false);
+   box(0.18,2.5,0.18,M.metal,34.9,6.975,5.35,scene,false);
+   box(0.5,0.5,0.4,M.ink,34.2,6.1,5.35,scene,false);
+   box(0.18,2,0.18,M.metal,34.2,7.225,5.35,scene,false);
+   box(0.5,0.5,0.4,M.ink,33.8,7.6,5.35,scene,false);
+   box(0.18,0.5,0.18,M.metal,33.8,7.975,5.35,scene,false);
+   box(0.5,0.5,0.4,M.ink,30.3,7.6,5.35,scene,false);
+   box(0.18,0.5,0.18,M.metal,30.3,7.975,5.35,scene,false);
+   box(0.5,0.5,0.4,M.ink,29.8,6.1,5.35,scene,false);
+   box(0.18,2,0.18,M.metal,29.8,7.225,5.35,scene,false);
+   box(0.5,0.5,0.4,M.ink,29.6,2.4,5.35,scene,false);
+   box(0.4,2.2,0.4,M.steel,29.6,1.1,5.35,scene,false);
+   box(0.5,0.5,0.4,M.ink,29.6,0.55,5.35,scene,false);
+   box(0.5,0.5,0.4,M.ink,40.6,0.55,5.35,scene,false);
+   box(0.5,0.5,0.4,M.ink,41.6,1.7,5.35,scene,false);
+   box(0.4,1.5,0.4,M.steel,41.6,0.75,5.35,scene,false);
+   box(13.6,0.16,0.9,M.ink,35,0.08,12.85,scene,false);
+   box(0.34,8.35,0.42,M.steel,35.7,4.175,12.85,scene,false);
+   box(0.34,8.35,0.42,M.steel,38.3,4.175,12.85,scene,false);
+   box(3.05,0.45,0.55,M.steel,37,1.25,12.85,scene,false);
+   box(0.78,0.78,0.55,M.ink,37,2.35,12.85,scene,false);
+   box(0.78,0.78,0.55,M.ink,37,4.45,12.85,scene,false);
+   {const g=new CylG(0.22,0.22,3.15,10);const o=new THREE.Mesh(g,M.metal);o.position.set(37,6.675,12.85);o.castShadow=true;scene.add(o);}
+   {const g=new CylG(0.09,0.09,0.45,8);const o=new THREE.Mesh(g,M.warn);o.position.set(37,5.15,12.85);o.castShadow=true;scene.add(o);}
+   box(0.7,0.18,0.7,M.steel,37,8.1,12.85,scene,false);
+   cylZ(0.32,0.08,M.metal,37,2.35,13.2,12);
+   cylZ(0.32,0.08,M.metal,37,4.45,13.2,12);
+   box(0.34,8.35,0.42,M.steel,30.55,4.175,12.85,scene,false);
+   box(0.34,8.35,0.42,M.steel,33.45,4.175,12.85,scene,false);
+   box(3.35,0.45,0.55,M.steel,32,0.95,12.85,scene,false);
+   box(0.78,0.78,0.55,M.ink,32,2.2,12.85,scene,false);
+   box(0.78,0.78,0.55,M.ink,32,4.6,12.85,scene,false);
+   {const g=new CylG(0.22,0.22,3,10);const o=new THREE.Mesh(g,M.metal);o.position.set(32,6.75,12.85);o.castShadow=true;scene.add(o);}
+   {const g=new CylG(0.09,0.09,0.45,8);const o=new THREE.Mesh(g,M.warn);o.position.set(32,5.3,12.85);o.castShadow=true;scene.add(o);}
+   box(0.7,0.18,0.7,M.steel,32,8.1,12.85,scene,false);
+   cylZ(0.32,0.08,M.metal,32,2.2,13.2,12);
+   cylZ(0.32,0.08,M.metal,32,4.6,13.2,12);
+   box(12.6,0.4,0.42,M.steel,34.9,8.35,12.85,scene,false);
+   box(0.36,0.5,0.36,M.steel,30,7.83,12.85,scene,false);
+   box(0.36,0.5,0.36,M.steel,35,7.83,12.85,scene,false);
+   box(0.36,0.5,0.36,M.steel,39.8,7.83,12.85,scene,false);
+   box(0.5,0.5,0.4,M.ink,39.4,5.6,12.85,scene,false);
+   box(0.18,2.5,0.18,M.metal,39.4,6.975,12.85,scene,false);
+   box(0.5,0.5,0.4,M.ink,39.2,7.1,12.85,scene,false);
+   box(0.18,1,0.18,M.metal,39.2,7.725,12.85,scene,false);
+   box(0.5,0.5,0.4,M.ink,35.2,7.1,12.85,scene,false);
+   box(0.18,1,0.18,M.metal,35.2,7.725,12.85,scene,false);
+   box(0.5,0.5,0.4,M.ink,34.9,5.6,12.85,scene,false);
+   box(0.18,2.5,0.18,M.metal,34.9,6.975,12.85,scene,false);
+   box(0.5,0.5,0.4,M.ink,34.2,6.1,12.85,scene,false);
+   box(0.18,2,0.18,M.metal,34.2,7.225,12.85,scene,false);
+   box(0.5,0.5,0.4,M.ink,33.8,7.6,12.85,scene,false);
+   box(0.18,0.5,0.18,M.metal,33.8,7.975,12.85,scene,false);
+   box(0.5,0.5,0.4,M.ink,30.3,7.6,12.85,scene,false);
+   box(0.18,0.5,0.18,M.metal,30.3,7.975,12.85,scene,false);
+   box(0.5,0.5,0.4,M.ink,29.8,6.1,12.85,scene,false);
+   box(0.18,2,0.18,M.metal,29.8,7.225,12.85,scene,false);
+   box(0.5,0.5,0.4,M.ink,29.6,2.4,12.85,scene,false);
+   box(0.4,2.2,0.4,M.steel,29.6,1.1,12.85,scene,false);
+   box(0.5,0.5,0.4,M.ink,29.6,0.55,12.85,scene,false);
+   box(0.5,0.5,0.4,M.ink,40.6,0.55,12.85,scene,false);
+   box(0.5,0.5,0.4,M.ink,41.6,1.7,12.85,scene,false);
+   box(0.4,1.5,0.4,M.steel,41.6,0.75,12.85,scene,false);
+   box(0.5,0.35,6.4,M.metal,37.2,6.82,9.1,scene,false);
+   box(0.5,0.35,6.4,M.metal,32,7.32,9.1,scene,false);
+   box(0.5,0.35,6.4,M.metal,35,0.3,9.1,scene,false);
+   cylZ(0.07,6.6,M.stock,38.6,7.5,9.1,8);
+   cylZ(0.07,6.6,M.stock,31.2,8,9.1,8);
+   cylZ(0.07,6.6,M.stock,34,0.95,9.1,8);
+   box(1.6,1,0.9,M.stock,34.5,0.5,4.05,scene,false);
+   box(1.4,0.06,0.7,M.ink,34.5,1.03,4.05,scene,false);}
   const shoeMat=M.stock;
   const cansTop=[],cansBot=[];
   // can ends sample one flat spot of the brushed texture (no streaks across the heads)
@@ -158,10 +334,93 @@
     return ()=>{if(!spin&&once)return;once=true;for(let i=0;i<all.length;i++){const o=all[i];o.updateMatrix();im.setMatrixAt(i,o.matrix);}im.instanceMatrix.needsUpdate=true;};})();
   // machine frame rails + dryer hood frame
   [zc-CD/2-0.6,zc+CD/2+0.6].forEach(z=>{box(74,0.5,0.4,M.steel,26,0.25,z);for(let x=-6;x<=30;x+=6)box(0.35,7.4,0.35,M.steel,x,3.7,z);box(37,0.35,0.35,M.steel,12,7.4,z);});
+  // v6.11 Blender redesign (tools/blender/hood_new.py): the dryer hood as a baked cutaway: full drive-side wall, the back part of
+  // the roof, stepped end walls and a low tending-side skirt with inked cut edges, so the cans stay in view; exhaust stacks and
+  // a supply-air duct on the roof (under the crossover bridge)
+  {box(34,8,0.14,M.metal,12,4,5.05,scene,false);
+   box(0.07,7.7,0.03,M.steel,-3,4,5.135,scene,false);
+   box(0.07,7.7,0.03,M.steel,-1,4,5.135,scene,false);
+   box(0.07,7.7,0.03,M.steel,1,4,5.135,scene,false);
+   box(0.07,7.7,0.03,M.steel,3,4,5.135,scene,false);
+   box(0.07,7.7,0.03,M.steel,5,4,5.135,scene,false);
+   box(0.07,7.7,0.03,M.steel,7,4,5.135,scene,false);
+   box(0.07,7.7,0.03,M.steel,9,4,5.135,scene,false);
+   box(0.07,7.7,0.03,M.steel,11,4,5.135,scene,false);
+   box(0.07,7.7,0.03,M.steel,13,4,5.135,scene,false);
+   box(0.07,7.7,0.03,M.steel,15,4,5.135,scene,false);
+   box(0.07,7.7,0.03,M.steel,17,4,5.135,scene,false);
+   box(0.07,7.7,0.03,M.steel,19,4,5.135,scene,false);
+   box(0.07,7.7,0.03,M.steel,21,4,5.135,scene,false);
+   box(0.07,7.7,0.03,M.steel,23,4,5.135,scene,false);
+   box(0.07,7.7,0.03,M.steel,25,4,5.135,scene,false);
+   box(0.07,7.7,0.03,M.steel,27,4,5.135,scene,false);
+   box(34,0.35,0.2,M.steel,12,0.175,5.05,scene,false);
+   box(34.2,0.18,3.69,M.metal,12,8.09,6.825,scene,false);
+   box(0.07,0.03,3.55,M.steel,-3,8.195,6.825,scene,false);
+   box(0.07,0.03,3.55,M.steel,-1,8.195,6.825,scene,false);
+   box(0.07,0.03,3.55,M.steel,1,8.195,6.825,scene,false);
+   box(0.07,0.03,3.55,M.steel,3,8.195,6.825,scene,false);
+   box(0.07,0.03,3.55,M.steel,5,8.195,6.825,scene,false);
+   box(0.07,0.03,3.55,M.steel,7,8.195,6.825,scene,false);
+   box(0.07,0.03,3.55,M.steel,9,8.195,6.825,scene,false);
+   box(0.07,0.03,3.55,M.steel,11,8.195,6.825,scene,false);
+   box(0.07,0.03,3.55,M.steel,13,8.195,6.825,scene,false);
+   box(0.07,0.03,3.55,M.steel,15,8.195,6.825,scene,false);
+   box(0.07,0.03,3.55,M.steel,17,8.195,6.825,scene,false);
+   box(0.07,0.03,3.55,M.steel,19,8.195,6.825,scene,false);
+   box(0.07,0.03,3.55,M.steel,21,8.195,6.825,scene,false);
+   box(0.07,0.03,3.55,M.steel,23,8.195,6.825,scene,false);
+   box(0.07,0.03,3.55,M.steel,25,8.195,6.825,scene,false);
+   box(0.07,0.03,3.55,M.steel,27,8.195,6.825,scene,false);
+   box(34.2,0.22,0.1,M.ink,12,8.09,8.62,scene,false);
+   box(0.14,8,3.55,M.metal,-5,4,6.825,scene,false);
+   box(0.14,3.6,3.95,M.metal,-5,1.8,10.575,scene,false);
+   box(0.18,0.1,3.95,M.ink,-5,3.6,10.575,scene,false);
+   box(0.18,4.4,0.1,M.ink,-5,5.8,8.6,scene,false);
+   box(0.14,8,3.55,M.metal,29,4,6.825,scene,false);
+   box(0.14,3.6,3.95,M.metal,29,1.8,10.575,scene,false);
+   box(0.18,0.1,3.95,M.ink,29,3.6,10.575,scene,false);
+   box(0.18,4.4,0.1,M.ink,29,5.8,8.6,scene,false);
+   box(0.16,0.5,6.6,M.ink,29.01,3.9,9.1,scene,false);
+   box(0.16,2.2,1.2,M.steel,-5.01,1.1,6.825,scene,false);
+   box(34,1.2,0.14,M.metal,12,0.6,12.55,scene,false);
+   box(34,0.1,0.18,M.ink,12,1.2,12.55,scene,false);
+   box(1.4,0.06,0.04,M.steel,1,1,12.64,scene,false);
+   box(1.4,0.06,0.04,M.steel,13,1,12.64,scene,false);
+   box(1.4,0.06,0.04,M.steel,25,1,12.64,scene,false);
+   {const g=new CylG(0.6,0.6,0.9,12);const o=new THREE.Mesh(g,M.metal);o.position.set(4,8.63,6.6);o.castShadow=true;scene.add(o);}
+   {const g=new CylG(0.7,0.7,0.12,12);const o=new THREE.Mesh(g,M.ink);o.position.set(4,9.1,6.6);o.castShadow=true;scene.add(o);}
+   {const g=new CylG(0.6,0.6,0.9,12);const o=new THREE.Mesh(g,M.metal);o.position.set(20,8.63,6.6);o.castShadow=true;scene.add(o);}
+   {const g=new CylG(0.7,0.7,0.12,12);const o=new THREE.Mesh(g,M.ink);o.position.set(20,9.1,6.6);o.castShadow=true;scene.add(o);}
+   box(10,0.42,0.8,M.steel,12,8.39,6,scene,false);
+   box(0.5,0.4,0.2,M.ok,10,5.6,5.22,scene,false);}
   // reel + stand, winder, roll conveyor
   const popeDrum=cylZ(DR,CD,M.metal,DX,DY,zc,32);for(let k=0;k<8;k++){const a=k/8*Math.PI*2;box(0.06,0.06,CD,M.steel,Math.cos(a)*DR,Math.sin(a)*DR,0,popeDrum,false);}
-  cylZ(0.2,CD+1.8,M.ink,DX,DY,zc,10);[zc-ZJ,zc+ZJ].forEach(z=>{box(0.7,DY+0.4,0.6,M.steel,DX,(DY+0.4)/2,z);
+  cylZ(0.2,CD+1.8,M.ink,DX,DY,zc,10);[zc-ZJ,zc+ZJ].forEach(z=>{
     box(DX-(KX-1.4),0.35,0.5,M.steel,(DX+KX-1.4)/2-0.3,DY-0.42,z);for(let x=DX-0.6;x>=KX-1;x-=3)box(0.4,DY-0.6,0.4,M.steel,x,(DY-0.6)/2,z);box(0.5,0.9,0.6,M.bad,KX-RM*0+(-0.95),DY+0.1,z);});
+  // v6.11 Blender redesign (tools/blender/reelwind_new.py): reel drum stands with base plates and bearings, capped rails, the
+  // drive-side drum motor and gearbox
+  {box(1.9,0.12,0.8,M.ink,-5.6,0.06,5.45,scene,false);
+   box(0.32,3.9,0.5,M.steel,-6.15,1.95,5.45,scene,false);
+   box(0.32,3.9,0.5,M.steel,-5.05,1.95,5.45,scene,false);
+   box(1.45,0.3,0.55,M.steel,-5.6,3.75,5.45,scene,false);
+   box(0.8,0.8,0.62,M.ink,-5.6,4.2,5.45,scene,false);
+   box(7.1,0.08,0.32,M.metal,-9.45,4,5.45,scene,false);
+   box(0.7,0.1,0.7,M.ink,-6.2,0.05,5.45,scene,false);
+   box(0.7,0.1,0.7,M.ink,-9.2,0.05,5.45,scene,false);
+   box(0.7,0.1,0.7,M.ink,-12.2,0.05,5.45,scene,false);
+   box(1.9,0.12,0.8,M.ink,-5.6,0.06,12.75,scene,false);
+   box(0.32,3.9,0.5,M.steel,-6.15,1.95,12.75,scene,false);
+   box(0.32,3.9,0.5,M.steel,-5.05,1.95,12.75,scene,false);
+   box(1.45,0.3,0.55,M.steel,-5.6,3.75,12.75,scene,false);
+   box(0.8,0.8,0.62,M.ink,-5.6,4.2,12.75,scene,false);
+   box(7.1,0.08,0.32,M.metal,-9.45,4,12.75,scene,false);
+   box(0.7,0.1,0.7,M.ink,-6.2,0.05,12.75,scene,false);
+   box(0.7,0.1,0.7,M.ink,-9.2,0.05,12.75,scene,false);
+   box(0.7,0.1,0.7,M.ink,-12.2,0.05,12.75,scene,false);
+   cylZ(0.48,1.1,M.stock,-5.6,4.2,4.5,14);
+   box(0.7,0.7,0.6,M.steel,-5.6,4.2,5.3,scene,false);
+   box(1,3.85,0.9,M.steel,-5.6,1.925,4.5,scene,false);}
   // one reel spool model: steel shell + long journals, paper scaled on as it builds
   function spoolModel(parent){const g=new THREE.Group();parent.add(g);const spin=new THREE.Group();g.add(spin);cylZ(R0,CD+0.4,M.steel,0,0,0,20,spin);cylZ(0.22,CD+2.2,M.ink,0,0,0,10,spin);
     const pg=new CylG(1,1,CD,40);pg.rotateX(Math.PI/2);const paper=new THREE.Mesh(pg,ROLLM);paper.castShadow=paper.receiveShadow=true;spin.add(paper);
@@ -190,6 +449,11 @@
   // the sheet runs over the top cans and under the bottom cans (serpentine), with true tangent lines between them
   const sheetPre=[[55.1,3.07],[54.0,2.95],[41,3.0],[37,3.4],[32,3.4],[29,3.6]],CANR=1.34;
   const canCirc=[];for(let i=0;i<10;i++){canCirc.push({x:(872-i*32-600)/10,y:5.4,d:1});canCirc.push({x:(856-i*32-600)/10,y:2.4,d:-1});}
+  // v6.11 the remoisturizing spray boom (standard, 07k): a beam across the sheet between the last dryer and the reel, 12 nozzle
+  // zones on its underside, a water header from the drive side
+  {const X=-3.3,Y=5.3,Z0=zc-CD/2-0.25,Z1=zc+CD/2+0.25,L=Z1-Z0;box(0.42,0.36,L,M.steel,X,Y,zc,scene,false);box(0.46,0.06,L+0.1,M.ink,X,Y-0.21,zc,scene,false);
+    for(let k=0;k<12;k++){const z=Z0+0.15+(k+0.5)*(L-0.3)/12;box(0.12,0.14,0.12,M.stock,X,Y-0.3,z,scene,false);}
+    [Z0-0.05,Z1+0.05].forEach(z=>box(0.16,Y,0.16,M.steel,X,Y/2,z,scene,false));pipe([[X,Y+0.25,Z0],[X,Y+0.25,Z0-1.2],[X,0.6,Z0-1.2]],0.1,M.ww);}
   // Pope reel: the sheet wraps the reel drum and goes into the nip with the building reel (or the new spool right after turn-up)
   canCirc.push({x:DX,y:DY,d:1,r:DR});
   // tangent point on circle c for a straight run between the circle and point q; "out" = leaving the circle toward q

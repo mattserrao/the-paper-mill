@@ -323,14 +323,23 @@ function no3D(){G3.ok=false;$("no3d").hidden=false;$("no3d-retry").onclick=()=>l
     x.fillStyle="#bdbdbd";x.fillRect(0,0,W,4);x.fillRect(0,H-4,W,4);x.fillStyle="#f4f1e6";x.fillRect(52,22,26,18);x.strokeStyle="#6a6a6a";x.lineWidth=1;x.strokeRect(52.5,22.5,25,17);
     x.fillStyle="#7a7a7a";for(let k=0;k<4;k++)x.fillRect(55,26+k*3.4,k%2?14:19,1.2);},false);
   M.motor=mat("stock",{map:motorTex,roughness:0.5});
-  // ribbed cladding for building walls
-  const ribC=document.createElement("canvas");ribC.width=32;ribC.height=4;{const x=ribC.getContext("2d");x.fillStyle="#ffffff";x.fillRect(0,0,32,4);x.fillStyle="#e3e6ee";x.fillRect(0,0,4,4);x.fillStyle="#f1f3f8";x.fillRect(4,0,3,4);x.fillStyle="#d7dbe6";x.fillRect(28,0,4,4);}
-  const ribTex=new THREE.CanvasTexture(ribC);ribTex.wrapS=ribTex.wrapT=THREE.RepeatWrapping;ribTex.colorSpace=THREE.SRGBColorSpace;
-  // v4.1 pass 3: one shared material; the rib pitch comes from each wall's own uvs (per face, along its length) instead of a
-  // texture clone with its own repeat, so the 22 walls batch into one draw instead of 22
-  const ribM=mat("g-wall",{map:ribTex,roughness:0.8});
+  M.rawStock=mat("pulp");M.ww=mat("g-wire");M.arrow=mat("g-wall",{roughness:0.9});   // v6.11 pipe colours (24-3d-stockprep-steam.js)
+  // v6.11 (item 9): folded-card building walls. Each wall reads as a sheet of card folded every 3 m: warm card stock with a faint
+  // grain, a light-brown fold line with a soft fold shade beside it, and the dark-brown ink edge baked along the top and the
+  // bottom (the paper style guide: bold dark-brown outlines, lighter fold lines). One shared texture and material, so the
+  // walls still batch into one draw. (Was a 0.55 m ribbed-cladding stripe.)
+  const ribC=document.createElement("canvas");ribC.width=256;ribC.height=128;{const x=ribC.getContext("2d"),W2=256,H2=128;
+    x.fillStyle="#fbf7ee";x.fillRect(0,0,W2,H2);
+    let sd=7;const rnd=()=>{sd=(sd*16807)%2147483647;return sd/2147483647;};
+    for(let k=0;k<900;k++){x.fillStyle=rnd()<0.5?"rgba(120,96,64,0.05)":"rgba(255,255,255,0.35)";x.fillRect(rnd()*W2,rnd()*H2,1+rnd()*2,1);}   // card grain
+    const sh=x.createLinearGradient(0,0,18,0);sh.addColorStop(0,"rgba(90,70,50,0.13)");sh.addColorStop(1,"rgba(90,70,50,0)");x.fillStyle=sh;x.fillRect(0,0,18,H2);   // fold shade
+    x.strokeStyle="rgba(138,111,85,0.75)";x.lineWidth=2;x.beginPath();for(let y=0;y<=H2;y+=8){const w=Math.sin(y*0.21)*0.8;y?x.lineTo(1+w,y):x.moveTo(1+w,y);}x.stroke();   // fold line
+    x.strokeStyle="#3b2a1e";x.lineWidth=3;[2,H2-2].forEach(y0=>{x.beginPath();for(let xx=0;xx<=W2;xx+=8){const w=Math.sin(xx/W2*Math.PI*6)*0.9;xx?x.lineTo(xx,y0+w):x.moveTo(xx,y0+w);}x.stroke();});}   // ink edges
+  const ribTex=new THREE.CanvasTexture(ribC);ribTex.wrapS=ribTex.wrapT=THREE.RepeatWrapping;ribTex.colorSpace=THREE.SRGBColorSpace;ribTex.anisotropy=4;
+  // one shared material; the fold pitch comes from each wall's own uvs (per face, along its length)
+  const ribM=mat("g-wall",{map:ribTex,roughness:0.9});
   function ribWall(w,hh,d,x,y,z,parent=scene){const g=new THREE.BoxGeometry(w,hh,d),uv=g.attributes.uv;
-    for(let i=0;i<uv.count;i++)uv.setX(i,uv.getX(i)*((i<8?d:w)/0.55));   // faces 0-1 run along z, the rest along x
+    for(let i=0;i<uv.count;i++)uv.setX(i,uv.getX(i)*((i<8?d:w)/3.0));   // faces 0-1 run along z, the rest along x (a fold every 3 m)
     const o=new THREE.Mesh(g,ribM);o.position.set(x,y,z);o.castShadow=true;o.receiveShadow=true;parent.add(o);edges(o);
     const trim=new THREE.Mesh(new THREE.BoxGeometry(w+0.06,0.32,d+0.06),M.brand);trim.position.set(x,y+hh/2-0.13,z);/* cap sits 3 cm proud of the wall so their tops never share a plane */parent.add(trim);edges(trim);return o;}
   // strapped OCC bales and paper roll end-caps

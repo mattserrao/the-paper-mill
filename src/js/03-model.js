@@ -10,7 +10,7 @@ const AUTOKEYS=["inRate","drivers","pulper","pmSp","wdr","loaders","outRate"];
 
 let C,S;
 const BASE={...P};
-const ECON={price:{"24":642,"28":662,"31":680,"34Super":741},   /* (v6.5 balance: -$15/t, inactive play is punished most) */   // (v6.5: +$30/t: outbound freight is its own cost now, FR; b2: less what the cheaper OCC and energy save per ton, ~$82-84, and $4 for paper made but not yet sold; measured on 12 hands-off seasons)
+const ECON={price:{"24":658,"28":679,"31":697,"34Super":760},   /* (v6.11.0-t2 balance: +2.5% on every grade, for the trim) */   /* (v6.5 balance: -$15/t, inactive play is punished most) */   // (v6.5: +$30/t: outbound freight is its own cost now, FR; b2: less what the cheaper OCC and energy save per ton, ~$82-84, and $4 for paper made but not yet sold; measured on 12 hands-off seasons)
   energy:68,   // (b2: was 95; a recycled mill buying its power, 2026 prices)
   chem:25,wage:45,robot:15,overhead:2400,start:2e6,bankrupt:-1.5e6};
 const REPAIR={rotortrip:20e3,oscfail:12e3,couchpit:25e3,birdline:200e3,refclash:140e3,steamjoint:90e3,fogfan:35e3,shaft:250e3,dryerfire:400e3,fabric:90e3,felt:45e3,slime:30e3,ragger:15e3,overflow:120e3,chestover:60e3,lwplug:25e3,cscreen:45e3,fscreen:60e3,lcplug:30e3,hdblow:55e3,boiler:60e3,permit:120e3,thkblow:70e3,birdhay:0,wrap:15e3,dye:20e3,flares:0,winderdown:40e3,runner:0,badocc:0,balefire:150e3,fleet:40e3,calloff:10e3,fight:5e3,roof:80e3,highway:0,lightning:200e3,tornado:500e3,beaver:25e3,icedintake:20e3,brownout:10e3,duststorm:25e3,flood:60e3};
@@ -22,7 +22,8 @@ const MAINT=["birdline","steamjoint","fogfan","shaft","fabric","felt","winderdow
 const REPAIR_K=1.2;
 const UPS=[
  {id:"drive",g:"machine",name:"Drive & gearbox rebuild",lv:[115e3,105e3,90e3],desc:"+150 fpm max speed per level, if the dryers can keep up (heavy grades and a wet sheet reach their limit first)."},   // (v6.5 b5: 25% cheaper: the dryer limit can cap it)
- {id:"deckle",g:"machine",name:"Wider trim (deckle)",lv:[160e3,135e3],desc:"+6% tons at the same speed per level."},
+ {id:"deckle",g:"machine",name:"Wider trim (deckle)",lv:[160e3,135e3],desc:"+3\" of web per level (+1.5% tons at the same speed) and rolls up to 1.5\" wider, so wide rolls cost less trim."},
+ {id:"steambox",g:"machine",name:"Steam box",lv:[165e3],desc:"A 12-zone steam box at the end of the forming table: +1.5 points couch solids and +40 fpm, and the CD loop can dry out wet streaks and wet edges (costs some steam)."},
  {id:"shoe",g:"machine",name:"Shoe press",lv:[180e3],desc:"+100 fpm and 12% less energy per ton. A drier sheet into the dryers: about 16% more drying headroom."},
  {id:"winder",g:"machine",name:"Winder rebuild",lv:[285e3,520e3],desc:"+30 t/h winder speed and 40% fewer hayouts per level."},
  {id:"monitor",g:"machine",name:"Fabric & felt monitoring",lv:[220e3,150e3],desc:"Machine failures 40% rarer and fewer sheet breaks, per level."},
@@ -52,8 +53,8 @@ const UP=Object.fromEntries(UPS.map(u=>[u.id,u]));
 const LV=id=>(S&&S.up&&S.up[id])||0;
 function applyUpgrades(){
   applyGrade();
-  P.K=BASE.K*Math.pow(1.06,LV("deckle"))*(1+0.02*LV("apc"))*leadCap("pwet")*civSpeed();   // (v5.1: civics, Machinery)
-  P.spBonus=150*LV("drive")+100*LV("shoe");
+  P.K=BASE.K*(1+3/205*LV("deckle"))*   /* (v6.11: the deckle widens the web 3" a level, 07j; was +6%) */(1+0.02*LV("apc"))*leadCap("pwet")*civSpeed();   // (v5.1: civics, Machinery)
+  P.spBonus=150*LV("drive")+100*LV("shoe")+40*LV("steambox");   /* (v6.11: steam box) */
   P.energyMul=(1-0.12*LV("shoe"))*(1-0.04*LV("apc"));P.refSave=10*LV("refiner");   /* (v6.5 balance: apc 8%, refiner $22: per-ton upgrades paid back 3-4x in a season) */
   P.yieldF=P.blendY+0.03*LV("clean"); P.tankCap=BASE.tankCap+150*LV("chest");
   P.driverRate=BASE.driverRate*(1+0.25*LV("forklift")); P.doors=3+LV("docks"); P.shipDoors=3+LV("docks");

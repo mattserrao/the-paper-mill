@@ -23,7 +23,7 @@ function watState(){if(!S.wat)S.wat={L:WAT.cap*0.55,short:0,shortK:0,r:{fresh:0,
 // stock that leaves the storage chest any other way (a spill to the floor drains) goes to the sewer with its water
 function wSpill(t){if(t>0)WQ.spill+=t;}
 function waterTick(dt){const W=watState(),h=dt/60,T=W.tot,q=WQ;
-  const K=S.knob,ps=K&&K.any&&K.x&&K.x.ps!=null?K.x.ps:44+4*LV("shoe"),dry=1-DRY.m0/100,m=(S.dry?S.dry.m:DRY.m0)/100;
+  const K=S.knob,ps=K&&K.any&&K.x&&K.x.ps!=null?K.x.ps:psStd(),dry=1-DRY.m0/100,m=(S.dry?S.dry.m:DRY.m0)/100;
   const wIn=q.p*dry*(100/ps-1),prodW=Math.min(wIn,q.p*m),evap=wIn-prodW;   // the sheet's water into the dryers: most of it goes up the stack
   const rejW=q.rej*(1-WAT.rejS)/WAT.rejS,baleW=q.f*WAT.baleW+q.bw,repW=q.rep*DRY.m0/100,shw=q.p*WAT.shower,base=WAT.base*h;
   // the white water chest: the machine's return, less stock prep's draw (net per ton of fiber to and from storage)

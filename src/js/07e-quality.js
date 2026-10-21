@@ -47,6 +47,7 @@ function qualStatus(){const K=S.knob,ko=K&&K.any?K.off:0;
   if(QNOW.out.length)return {off:1,why:QNOW.why};
   if(S.chg)return {off:1,why:QWHY.chg};
   if(ko>0.005)return {off:ko,why:KOFFN[K.offWhy]||"off spec"};
+  {const w=cdOn()&&S.pm==="run"?cdWhy():"";if(w)return {off:w.includes(" · ")?1:0.5,why:w};}   // v6.11: a roll of the set (07k)
   return {off:0,why:""};}
 // ---- the beater process: beater rolls wait in the warehouse bay (S.q.bank, tons) and are repulped into the stock chest ----
 // The broke pulper takes about two rolls an hour while the chest has room; the fiber goes straight to stock (no rejects:

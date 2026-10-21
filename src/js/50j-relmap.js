@@ -4,7 +4,7 @@
    only: the sim and its dice are untouched, and the game keeps running at the player's speed while it is open.
    Keep RM_E in step with the sim when a relationship changes (tools/relmapcheck.py fails on a tag with no entry). ---- */
 const RM_DRV=[["x:weather","Weather",""],["x:bales","Bale grade mix",""],["x:pulpset","Pulper feed setpoint",""],["x:dilv","Pulper dilution valve","knob"],["x:slice","Headbox slice","knob"],["x:guide","Fabric guide roll","knob"],["x:zones","Headbox dilution zones","knob"],["x:spset","Machine speed setpoint",""],["x:grade","Grade on the machine",""],["x:dye","Dye system",""],["x:market","Market & leader effects",""],["x:power","Substation power",""],["x:incomer","MCC main incomer","knob"],["x:orders","Customer orders",""],["x:upsets","Upsets & DCS motors",""]];
-const RM_COL={"YARD":["inq","unload","yard","balem","stk","occp"],"SPOT":["feed","cp","nv101pv","nv101op","amps","pulpLvl","yield","fiber","rejt","hddp","lcdp","lwdp","fsld","fsdp","kwh","dil","chest","chestg","gap","refkw","csf","agit","refq","mcCons","mcLvl","lv104pv","lv104op","mcg","fan"],"WET":["wsp","jw","rd","vac","couchSol","pl","pressSol","gtrav","edge","osc","hbc","bwv","fv201pv","fv201op","bwsp","drain","seal","pressw","wwl","lv202pv","lv202op","wwg","wwov","hum"],"DET":["speed","prod","st1","st3","pv302pv","pv302op","pv303pv","pv303op","steam","dryl","moist","qc300pv","qc300op","bw","draw","tension"],"QCS":["off","rct","prem","cdsp","bank","reel","cut","conv"],"UTIL":["boiler","vent","energyt","shower","evap","wcl","wcg","makeup","fresh","wuse","wwover","outfall","tss"],"SHIP":["fg","load","outq","openo","lateo","price","profit"],"DRV":["mvkv","lv480","dc_SP","dc_PM","dc_WD","dl_pulp","dl_refA","dl_refB","dl_fan","dl_couch","dl_pr1","dl_pr2","dl_dry","dl_reel","dl_wind","mcckw"]};
+const RM_COL={"YARD":["inq","unload","yard","balem","stk","occp"],"SPOT":["feed","cp","nv101pv","nv101op","amps","pulpLvl","yield","fiber","rejt","hddp","lcdp","lwdp","fsld","fsdp","kwh","dil","chest","chestg","gap","refkw","csf","agit","refq","mcCons","mcLvl","lv104pv","lv104op","mcg","fan"],"WET":["wsp","jw","rd","vac","couchSol","pl","pressSol","gtrav","edge","osc","hbc","bwv","fv201pv","fv201op","bwsp","drain","seal","pressw","wwl","lv202pv","lv202op","wwg","wwov","hum"],"DET":["speed","prod","st1","st3","pv302pv","pv302op","pv303pv","pv303op","steam","dryl","moist","qc300pv","qc300op","bw","draw","tension"],"QCS":["off","rct","prem","cdsp","bank","reel","cut","rollw","trimp","trimt","cdspan","sbout","spout","conv"],"UTIL":["boiler","vent","energyt","shower","evap","wcl","wcg","makeup","fresh","wuse","wwover","outfall","tss"],"SHIP":["fg","load","outq","openo","lateo","price","profit"],"DRV":["mvkv","lv480","dc_SP","dc_PM","dc_WD","dl_pulp","dl_refA","dl_refB","dl_fan","dl_couch","dl_pr1","dl_pr2","dl_dry","dl_reel","dl_wind","mcckw"]};
 const RM_E=[
  ["x:weather","balem","p","Rain and snow soak the bales in the yard and on inbound loads"],
  ["x:weather","unload","n","Snow and fog slow inbound trucks"],
@@ -32,6 +32,18 @@ const RM_E=[
  ["fiber","chest","p","Fiber fills the stock chest"],
  ["prod","chest","n","The machine draws stock from the chest"],
  ["bank","chest","p","Beater rolls are repulped back into the chest"],
+ ["openo","rollw","p","The winder runs the width the earliest-due order still short of rolls wants (twin rolls)"],
+ ["rollw","trimp","n","Narrower twin rolls leave more of the web as trim"],
+ ["trimp","trimt","p","The trim share of what the winder cuts goes down the trim ducts"],
+ ["cut","trimt","p","The more the winder cuts, the more trim"],
+ ["trimt","chest","p","The dry-end pulper sends the trim back to the stock chest"],
+ ["trimp","profit","n","Trim is never sold: it is made, repulped and made again"],
+ ["x:zones","cdspan","p","Dilution zones moved off zero put weight streaks in the CD profile"],
+ ["sbout","cdspan","n","The steam box dries out wet zones and wet edges"],
+ ["spout","cdspan","n","The spray boom brings dry zones back up"],
+ ["cdspan","off","p","A zone out of spec sends the roll under it to the beater (its twin ships)"],
+ ["sbout","couchSol","p","The steam box heats the sheet so it drains better"],
+ ["sbout","steam","p","The steam box uses steam"],
  ["chest","chestg","s","Same chest, in gallons"],
  ["chest","stk","x","Chest residence time delays how fast stickies reach the machine"],
  ["stk","speed","n","Stickies raise the sheet-break rate"],

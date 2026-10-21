@@ -29,19 +29,34 @@
       const cg=new CylG(0.45,0.45,0.35,16);cg.rotateZ(Math.PI/2);const cp=new THREE.Mesh(cg,M.warn);cp.position.set(X+2.2,2.0,z);g.add(cp);
       const mg=new CylG(1.0,1.0,2.8,24);mg.rotateZ(Math.PI/2);const mo=new THREE.Mesh(mg,M.motor);mo.position.set(X+3.8,1.6,z);mo.castShadow=true;g.add(mo);REF_MOTORS.push(mo);   // motor
       for(let k=0;k<8;k++){const a=k/8*Math.PI*2;box(2.6,0.08,0.08,M.ink,X+3.8,1.6+Math.cos(a)*1.02,z+Math.sin(a)*1.02,g,false);}   // cooling fins
-      box(0.7,0.6,0.7,M.ink,X+3.8,2.85,z,g,false);blob(X+1.5,z,3.6);});
+      box(0.7,0.6,0.7,M.ink,X+3.8,2.85,z,g,false);blob(X+1.5,z,3.6);
+      // v6.11 (item 8): a coupling guard over the shaft, anchor bolts on the skid, the plate-gap actuator with its position scale,
+      // and a name plate on a post at the door end so the two refiners read at a glance (players click them for their health)
+      box(1.0,1.05,1.05,M.lane,X+2.2,2.0,z,g,false);
+      [[-3.3,-1.5],[-3.3,1.5],[3.3,-1.5],[3.3,1.5]].forEach(([dx,dz])=>box(0.22,0.12,0.22,M.ink,X+1.6+dx,0.5,z+dz,g,false));
+      box(0.5,0.5,0.5,M.ink,X-0.7,3.25,z,g,false);box(0.08,0.5,0.6,M.ok,X-0.97,3.25,z,g,false);
+      {const c=document.createElement("canvas");c.width=256;c.height=48;const x=c.getContext("2d");x.fillStyle="#ffffff";x.fillRect(0,0,256,48);x.fillStyle="#1c2233";x.font="800 24px system-ui,sans-serif";x.textAlign="center";x.fillText(z<-11?"REFINER A":"REFINER B",128,33);
+       const t=new THREE.CanvasTexture(c);t.colorSpace=THREE.SRGBColorSpace;const pl=new THREE.Mesh(new THREE.PlaneGeometry(1.6,0.3),new THREE.MeshBasicMaterial({map:t}));pl.rotation.y=-Math.PI/2;pl.position.set(X-2.05,1.15,z);g.add(pl);
+       box(0.1,1.0,0.1,M.steel,X-1.98,0.5,z,g,false);box(0.06,0.36,1.7,M.ink,X-1.99,1.15,z,g,false);}});
     const P=0.24;   // inlet header from the stock line, over and down into each housing; outlets back to the line
     spool([[57,4.8,-11],[57.9,4.8,-11],[57.9,4.6,-11]],P,M.stock);spool([[57.9,4.6,-14],[57.9,4.6,-8]],P,M.stock);
     ZS.forEach(z=>{spool([[57.9,4.6,z],[X,4.6,z],[X,3.55,z]],P,M.stock);spool([[X,0.7,z+(z<-11?1.55:-1.55)],[X,0.7,-11],[56.2,0.7,-11]],0.2,M.stock);});
     // v3.3: refined stock rises from the outlet header and drops into the top of the machine chest
     spool([[56.2,0.7,-11],[56.2,0.7,-10.2],[56.2,10.8,-10.2],[49.2,10.8,-10.2],[49.2,10.8,-13.6],[49.2,9.6,-13.6]],0.32,M.stock);
     });
+  // v6.11 the steam box (an upgrade, 07k): a hood across the forming table just before the couch, with its 12 zone valves
+  // on a manifold and the steam line in from the drive side
+  const stbox=upg("steambox",g=>{const X=42.6,Y=3.25,Z0=zc-CD/2-0.3,Z1=zc+CD/2+0.3,L=Z1-Z0;
+    box(1.5,0.55,L,M.steel,X,Y+0.28,zc,g);box(1.6,0.08,L+0.1,M.ink,X,Y+0.02,zc,g,false);box(1.2,0.22,L-0.4,M.metal,X,Y+0.66,zc,g,false);
+    for(let k=0;k<12;k++){const z=Z0+0.2+(k+0.5)*(L-0.4)/12;box(0.18,0.22,0.18,M.bad,X+0.55,Y+0.88,z,g,false);box(0.06,0.3,0.06,M.ink,X+0.55,Y+0.62,z,g,false);}
+    box(0.24,0.24,L-0.2,M.steel,X+0.55,Y+1.05,zc,g,false);pipe([[X+0.55,Y+1.05,Z0-0.1],[X+0.55,Y+1.05,Z0-1.4],[X+0.55,8.2,Z0-1.4]],0.14,M.steel,g);
+    [Z0-0.05,Z1+0.05].forEach(z=>box(0.2,Y,0.2,M.steel,X,Y/2,z,g,false));});
   const ctrl=upg("apc",g=>{box(6,3.2,4,M.wall,46,1.6,-6,g);box(5.4,1.1,0.1,M.robot,46,2.2,-3.95,g,false);box(6.4,0.3,4.4,M.steel,46,3.35,-6,g);});
   function upUpdate(now){
     motors.visible=LV("drive")>0;motors.children.forEach((m,k)=>m.visible=k<LV("drive"));
     beacons.visible=LV("monitor")>0;beacons.children.forEach((b,k)=>{b.visible=k<3*LV("monitor");{const m=b.userData.bm||(b.userData.bm=b.material=M.robot.clone());m.color.copy((((now/500+k)|0)%3===0?M.ok:M.robot).color);}});   // (v5.2: blink by colour on the light's own material: swapping materials pulled it out of its batch)
     sprink.visible=LV("fire")>0;cleaners.visible=LV("clean")>0;cleaners.children.forEach((c,k)=>c.visible=k<14*LV("clean"));
-    detrash.visible=LV("detrash")>0;refiner.visible=true;{const k=LV("refiner")>0?1.3:1;REF_MOTORS.forEach(m=>m.scale.set(k>1?1.1:1,k,k));}walk.visible=LV("safety")>0;ctrl.visible=LV("apc")>0;
+    detrash.visible=LV("detrash")>0;stbox.visible=LV("steambox")>0;refiner.visible=true;{const k=LV("refiner")>0?1.3:1;REF_MOTORS.forEach(m=>m.scale.set(k>1?1.1:1,k,k));}walk.visible=LV("safety")>0;ctrl.visible=LV("apc")>0;
     annexes.forEach((a,k)=>{a.visible=LV("wh")>k;});
     // rolls fill main bay first, then annexes
     const total=Math.ceil(S.fg/(P.fgCap/(84+36*LV("wh"))));rolls.count=Math.min(84,total);   // (v5.2: the matrices never change, only the count: no re-upload)

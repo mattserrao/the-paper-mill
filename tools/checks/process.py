@@ -200,7 +200,8 @@ def water(pw):
     ok("dryer evaporation about 1.1 m3 a ton", 0.95 < per("evap") < 1.25, f'{per("evap"):.2f} m3/t')
     # ---- steady running: chest overflows a little to the sewer, no makeup ----
     s = R("", 240)
-    ok("steady: the white water chest sits at its overflow, no fresh makeup", s["r"]["make"] < 1 and s["r"]["over"] > 5 and abs(s["L"] / 2000 - 0.7) < 0.02, json.dumps({k: round(v) for k, v in s["r"].items()}))
+    # (v6.11: the DE pulper repulps the trim with white water, so the chest runs at or just under its overflow, not over it)
+    ok("steady: the white water chest sits at its overflow, no fresh makeup", s["r"]["make"] < 1 and abs(s["L"] / 2000 - 0.7) < 0.08, json.dumps({**{k: round(v) for k, v in s["r"].items()}, "L": round(s["L"])}))
     # ---- a machine stop: stock prep keeps pulping, the chest draws down, fresh water makes up ----
     d = R("S.tank=60;P.trigger('shaft');", 120)   # (a low storage chest, so stock prep keeps pulping)
     ok("machine down: fresh makeup flows (intake doesn't drop to zero)", d["maxFresh"] > 200 and d["r"]["fresh"] > 60, f'max fresh {d["maxFresh"]:.0f} m3/h, chest low {d["minL"]:.0f} m3')

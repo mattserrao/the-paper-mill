@@ -19,6 +19,7 @@ function step(dt){
   knobTick(dt);   // v5.6 fiddly knobs (returns at once unless a knob was moved)
   dcsTick(dt);   // v6.5 b3 DCS motors and reject purges (07c; nothing until the DCS is used)
   dryTick(dt);   // v6.5 b5 the dryer limit: water, steam, moisture (07d)
+  cdTick(dt);   // v6.11 the CD profile and its actuators (07k)
   weTick(dt);   // v6.8 the basis weight loop, bale water in the pulper, screen pressure drop (07g)
   // 1 inbound arrivals
   // weather: changes every few hours; snow and fog slow the trucks, rain soaks bales
@@ -93,6 +94,7 @@ function step(dt){
     // transition tons; then the other knob defects' share
     let off=0;if(qualTick().off)off=prod;
     else if(S.chg){off=Math.min(prod,S.chg.left);S.chg.left-=off;if(S.chg.left<=1e-6){log(`Grade change to ${S.chg.to} complete: back on spec`,"ok");S.chg=null;}}
+    else{const cf=cdOff();if(cf>0)off=prod*cf;}   // v6.11: a streak or a wet edge beaters only the roll under it (07k)
     {const kf=knobOff();if(kf>0)off=Math.min(prod,off+(prod-off)*kf);}   // v5.6: a moved knob sending part of the reel to the beater (defects other than weight and moisture)
     // (v6.5.3: off-spec paper stays on the reel as beater and is wound into beater rolls; before, it vanished here)
     if(off>0){pfW("broke",off);S.tot.broke+=off;S.q.off+=off;prod-=off;beat=off;}
@@ -108,13 +110,19 @@ function step(dt){
   if(S.conv===undefined)S.conv=0;const convFull=S.conv>P.convCap-2+1e-6;S.wdBlocked=convFull;   // (v6.5.7: a set is two rolls, so the conveyor needs room for both)
   const cut=S.wd==="hayout"||M.winderDown||convFull?0:Math.min(S.winderBuf,C.wdr.v*dt/60); S.winderBuf-=cut;
   // v6.5.3: the winder splices the off-spec sections out of the set and winds them onto beater rolls of their own
-  {const T=[];lotTake(S.lots.buf,cut,T);let bt=0;for(const [k,q] of T){if(k==="beater")bt+=q;else lotPut(S.lots.acc,k,q);}S.winderAcc+=cut-bt;S.beatAcc=(S.beatAcc||0)+bt;S.beatEnd=cut>0&&bt<=1e-9;}
+  // v6.11: the trim (web - 2 x the roll width, 07j) is slit off and blown to the dry-end pulper, back to the stock chest
+  {const T=[];lotTake(S.lots.buf,cut,T);let bt=0,gd=0,tr=0;const f=cut>0?trimFrac(windW(T.length?T[0][0]==="beater"?C.grade:T[0][0]:C.grade)):0;
+    for(const [k,q] of T){const tq=q*f;tr+=tq;if(k==="beater")bt+=q-tq;else{lotPut(S.lots.acc,k,q-tq);gd+=q-tq;}}
+    S.winderAcc+=gd;S.beatAcc=(S.beatAcc||0)+bt;S.beatEnd=cut>0&&bt<=1e-9;trimTo(tr);S.trimNow=f;S.rates.trim=ease(S.rates.trim||0,tr*60/dt,dt,6);}
   if(cut>0&&L.hay<dt/720*0.75*P.hayBase*outRel("dry")*((C.hays?1:0)+(M.hayMul-1)))hayout(L.hayLen,L.hayLoss);
   let rollsMade=0;
   // (a roll takes the grade that makes up most of its paper: one roll at a grade change is part old, part new)
   // v6.5.7: the winder winds a set of two rolls side by side (the reel is slit in two); both come off together
-  while(S.winderAcc>=2*C.rollW.v-1e-9){for(let k=0;k<2;k++){const w=Math.min(S.winderAcc,C.rollW.v);S.winderAcc-=w;const T=[];lotTake(S.lots.acc,w,T);let g=C.grade,best=-1;for(const [k2,q] of T)if(q>best){best=q;g=k2;}
-    lotPut(S.lots.conv,g,1);S.conv+=1;rollsMade++;S.tot.rolls++;}}
+  // v6.11: twin rolls of the width the planner wants for that grade (07j): a W" roll is W/100 of a standard roll
+  for(;;){const g0=S.lots.acc.length?S.lots.acc[0][0]:C.grade,W=windW(g0),rt=rollT(W);if(S.winderAcc<2*rt-1e-9)break;let gs=g0;
+    for(let k=0;k<2;k++){const w=Math.min(S.winderAcc,rt);S.winderAcc-=w;const T=[];lotTake(S.lots.acc,w,T);let g=C.grade,best=-1;for(const [k2,q] of T)if(q>best){best=q;g=k2;}
+      lotPut(S.lots.conv,g,W/100,W);S.conv+=W/100;rollsMade++;S.tot.rolls++;gs=g;}
+    windCredit(gs,W,2*W/100);S.wdW=W;}
   // v6.5.3: a beater roll goes to the beater bay (27-3d draws it there from S.tot.beater) and round to the pulper
   // (full rolls while the off-spec section lasts; when good paper comes through again the rest goes on a short roll)
   // (v6.5.7: in sets of two, like the good rolls)

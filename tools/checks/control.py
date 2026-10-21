@@ -106,7 +106,8 @@ def control(pw):
     pg.evaluate("()=>document.querySelector('#dcsTrp [data-trm=rel]').click()"); pg.wait_for_timeout(200)
     pg.evaluate("()=>{const s=document.getElementById('trRelT');s.value='prod';s.dispatchEvent(new Event('change',{bubbles:true}));}"); pg.wait_for_timeout(800)
     r = pg.evaluate("()=>[...document.querySelectorAll('#trRel .trrr b')].map(b=>b.textContent)")
-    ok("'Moves with' ranks what moves with paper made", len(r) >= 3 and ("Reel speed" in r or "Dryer steam flow" in r), r)
+    # (v6.11: a roll to the beater for a CD streak dips good tons at the same speed, so the machine's flows can outrank the speed)
+    ok("'Moves with' ranks what moves with paper made", len(r) >= 3 and any(k in r for k in ("Reel speed", "Dryer steam flow", "Fan pump flow (headbox)", "Refined stock flow", "Dryer evaporation")), r)
     if shot: pg.screenshot(path=f"{shot}-rel.png")
     pg.evaluate("()=>{const b=document.querySelector('#trRel [data-tradd]');b&&b.click();}"); pg.wait_for_timeout(200)
     ok("'+ trend' puts it on the trend", pg.evaluate("()=>__PM.CX.TRUI.mode") == "tr")
@@ -124,7 +125,7 @@ def control(pw):
 
     # --- planning and water
     pg.evaluate("()=>document.querySelector('#dcsOv [data-a=PLAN]').click()"); pg.wait_for_timeout(600)
-    r = pg.evaluate("()=>{const S=__PM.S,open=S.ord.list.filter(o=>o.st==='open').length,secs=[...document.querySelectorAll('#planBox .plsec .dcssub')].map(e=>e.textContent);const ob=[...document.querySelectorAll('#planBox .plsec')].find(x=>/Order book/.test((x.querySelector('.dcssub')||{}).textContent||'')),tb=ob&&ob.querySelector('table tbody');return {open,rows:tb?[...tb.rows].filter(r=>r.cells.length===6).length:0,secs}}")
+    r = pg.evaluate("()=>{const S=__PM.S,open=S.ord.list.filter(o=>o.st==='open').length,secs=[...document.querySelectorAll('#planBox .plsec .dcssub')].map(e=>e.textContent);const ob=[...document.querySelectorAll('#planBox .plsec')].find(x=>/Order book/.test((x.querySelector('.dcssub')||{}).textContent||'')),tb=ob&&ob.querySelector('table tbody');return {open,rows:tb?[...tb.rows].filter(r=>r.cells.length===7).length:0,secs}}")
     ok("planning has its four sections", all(s in " ".join(r["secs"]) for s in ["Production plan", "Order book", "Inventory", "Trucks"]), r["secs"])
     ok("every open order is listed", r["rows"] == r["open"], r)
     pg.evaluate("()=>document.querySelector('#dcsOv [data-a=WATER]').click()"); pg.wait_for_timeout(600)

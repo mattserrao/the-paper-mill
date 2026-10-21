@@ -54,7 +54,7 @@ function slcSet(k,val){if(S.zen)return;const K=knobState();K.v[k==="v"?"sv":"sh"
    steam; wetter, more, both ways (before v6.5.5 no knob ever saved steam). Untouched, every factor is exactly 1. */
 function dewater(fr,vac,pl,jv,jh){
   const eJet=1-0.25*jv*jv-0.15*jh*jh,dv=(vac-30)/30,eVac=1-(dv<0?0.58:0.15)*dv*dv,eRef=eDrain(csfOf(fr));   // (v6.8: drainage follows freeness, 07g)
-  const cs=clamp(19*eJet*eVac*eRef,8,26),pb=44+4*LV("shoe");
+  const cs=clamp(19*eJet*eVac*eRef+CD.sbCouch*LV("steambox"),8,27.5),   /* (v6.11: the steam box, 07k) */pb=44+4*LV("shoe");
   const lt=pl<100?0.2*(pl-100):pl<=130?0.08*(pl-100):2.4-0.3*(pl-130);
   const ps=clamp(pb+(cs-19)+lt,30,56),wpt=p=>(1-DRY.m0/100)/(p/100)-1;
   return {cs,ps,W:wpt(ps)/wpt(pb),eJet,eVac,eRef};}
@@ -175,7 +175,7 @@ function knobTick(dt){const K=S.knob;if(!K||!K.any||S.zen)return;
   const F={wet:x.m>10?(x.m-10)/4:0,dry:x.m<6?(6-x.m)/2:0,cd:nz/3,bw:x.sw>0.3?(x.sw-0.3)/0.6:0,crush:x.cr>0.05?(x.cr-0.05)/0.6:0,stripes:x.st>0.4?(x.st-0.4)/0.4:0,wrinkles:x.dl>0.15?(x.dl-0.15)/0.6:0};
   // (v6.5.3: weight and moisture are judged against the grade's spec by the QCS check, 07e; F.wet, dry and bw stay for
   // the screens and the crew's tracing, and only the other defects send a share of the reel to the beater from here)
-  let keep=1,top="",tv=0;for(const k in F){const f=clamp(F[k],0,1);F[k]=f;if(k==="wet"||k==="dry"||k==="bw")continue;keep*=1-f;if(f>tv){tv=f;top=k;}}
+  let keep=1,top="",tv=0;for(const k in F){const f=clamp(F[k],0,1);F[k]=f;if(k==="wet"||k==="dry"||k==="bw")continue;if((k==="cd"||k==="stripes")&&cdOn())continue;   /* (v6.11: they beater the roll under them, 07k) */keep*=1-f;if(f>tv){tv=f;top=k;}}
   const off=1-keep;
   if(off>0.02&&K.off<=0.02&&run)qualAlert(KOFFN[top]);   // (v6.5.4: banner too, 07e)
   if(off<=0.02&&K.off>0.02)log("QCS: the reel is back on spec.","ok");
@@ -234,8 +234,8 @@ function knobRead(){const K=S.knob,x=K?K.x:null,g=GRADES[C.grade]||GRADES["24"],
   return {run,cp,amps:410*(0.55+cp/5*0.45)*(S.M.pulperDown?0:1),pulpLvl:clamp(62+(5-cp)*9+wob(0.05,1)*1.5,0,110),
     gap:x?x.fr:gapOf(knobVal("ref")),refkw:run&&!(S.M&&S.M.refOut)?kwhNow()*Math.max(0,S.rates.fiberUse||0):0,kwh:kwhNow(),csf:csfOf(x?x.fr:gapOf(knobVal("ref"))),   // (v6.8: refiner power = specific energy x fiber)
     mcLvl:vlvT("LV-104")?S.vlv.lp["LV-104"].pvm:S.mcl!=null?S.mcl:69+wob(0.02,2)*3,refq:!run&&S.refq==null?0:S.refq==null?100*Math.max(0,S.rates.fiberUse||0)/Math.max(1e-6,weUstd()):S.refq*100,mcCons:mcCons(),agit:knobVal("agit"),
-    vac:x?x.vac:30,couchSol:x&&x.cs!=null?x.cs:19,pl:x?x.pl:100,pressSol:x&&x.ps!=null?x.ps:44+4*LV("shoe"),
+    vac:x?x.vac:30,couchSol:x&&x.cs!=null?x.cs:csStd(),pl:x?x.pl:100,pressSol:x&&x.ps!=null?x.ps:psStd(),
     edge:K?K.edge:0,gtrav:K?K.gtrav:0,gm:knobVal("gm"),stripes:x?x.st:0,cs:K?K.cs:0,couch:knobVal("couch"),osc:knobVal("osc"),wear:K?K.wear:0,
     st1:knobVal("st1"),st3,steam:run?(Dr?Dr.steam:50.5*P.K*S.pmSpeed*bw/34.8):S.pm==="break"&&Dr?Dr.steam:0,boiler:Dr?Dr.hdr:1,moist:run?m+wob(0.13,4)*0.25:0,
     bw:run?qualMeasure().bw:0,hbc:S.we?S.we.hbc:WE.hbc,draw:knobVal("draw"),tension:run?1.0+(knobVal("draw")-1.5)*0.42:0,
-    zones:z.map((v,i)=>m+v*0.35+Math.sin(i*1.7+t*0.01)*0.12),off:qualStatus().off,why:qualStatus().why,F:K&&K.F||{},speed:S.pmSpeed};}
+    zones:cdOn()&&S.cd?S.cd.dv.map(d=>m+d):z.map((v,i)=>m+v*0.35+Math.sin(i*1.7+t*0.01)*0.12),   /* (v6.11: the CD profile, 07k) */off:qualStatus().off,why:qualStatus().why,F:K&&K.F||{},speed:S.pmSpeed};}

@@ -97,9 +97,11 @@ const HAYLINES=["HAYOUT! Paper is shooting to the roof!","Winder hayout! Every P
 // a hayout ruins the outer wraps of the set on the winder (about 3 t), not the whole 12.5 t roll
 // v2.9.5: reels at the winder (on the unwind + in storage); a reel turns up a fraction over 100 t, which used to make the
 // unwind reel count as "more than one" and block storage, so the machine stopped with storage empty
-function lotPut(L,g,q){if(!(q>0))return;const t=L[L.length-1];if(t&&t[0]===g)t[1]+=q;else L.push([g,q]);}
+// v6.11: a lot is [grade, quantity, roll width in inches] (100" when not given: the standard roll). Quantities of rolls are in
+// standard-roll units (C.rollW.v tons each), so a 90" roll is 0.9 of a unit and every tons conversion stays rolls x C.rollW.v
+function lotPut(L,g,q,w){if(!(q>0))return;w=w||100;const t=L[L.length-1];if(t&&t[0]===g&&(t[2]||100)===w)t[1]+=q;else L.push([g,q,w]);}
 // take q from the front of lots L (into lots `out` if given); returns what was taken
-function lotTake(L,q,out){let got=0;while(q>1e-9&&L.length){const h=L[0],k=Math.min(h[1],q);h[1]-=k;q-=k;got+=k;if(out)lotPut(out,h[0],k);if(h[1]<=1e-9)L.shift();}return got;}
+function lotTake(L,q,out){let got=0;while(q>1e-9&&L.length){const h=L[0],k=Math.min(h[1],q);h[1]-=k;q-=k;got+=k;if(out)lotPut(out,h[0],k,h[2]);if(h[1]<=1e-9)L.shift();}return got;}
 // the value of lots of rolls at today's price for each grade
 const lotValue=(L,tPerRoll,add=0)=>L.reduce((s,[g,q])=>s+q*tPerRoll*(priceOf(g)+add),0);
 function reelsAtWinder(){return Math.max(0,Math.ceil(S.winderBuf/P.jumbo-0.005));}

@@ -43,6 +43,7 @@
     const tie=new THREE.Mesh(cubeG,tieM);tie.scale.set(0.025,0.4,0.075);tie.position.set(0.2,0.6,0);T.add(tie);
     [-1,1].forEach(sd=>{const l=new THREE.Mesh(cubeG,SUIT);l.scale.set(0.02,0.32,0.06);l.position.set(0.19,0.7,sd*0.105);l.rotation.x=sd*0.35;T.add(l);});
     const col=new THREE.Mesh(cubeG,shirtM);col.scale.set(0.3,0.06,0.34);col.position.set(0.02,0.85,0);T.add(col);
+    u.hands.forEach(h=>h.material=M.skin);u.legs.forEach(l=>{if(l.children[1])l.children[1].visible=false;});   // (v6.11: no work boots or gloves in a suit)
     u.legs.forEach(l=>{l.children[0].material=trouM;l.children[0].scale.set(0.2,0.9,0.2);const sh2=new THREE.Mesh(cubeG,shoeM);sh2.scale.set(0.32,0.1,0.18);sh2.position.set(0.06,-0.86,0);l.add(sh2);});
     u.armM.forEach(m=>m.scale.x=m.scale.z=0.15);}
   function free(w){w.visible=false;w.userData.busy=false;}

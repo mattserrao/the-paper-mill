@@ -53,35 +53,49 @@ function ordState(){if(!S.ord){S.ord={n:0,list:[],k:{ship:0,onT:0,lateT:0,late:0
 // called from seedRun: a fresh book for the run (the warehouse's opening stock already has buyers)
 function ordInit(){S.ord=null;S.rng.ord=(S.seed^0x51ed270b)>>>0;S.rng.bale=(S.seed^0x7a3c5e91)>>>0;S.bq=null;ordState();}
 function ordCarry(){const O=S.ord;let r=Math.floor(S.fg||0);while(r>=ORD.minR){const n=Math.min(r,P.truckRolls);r-=n;
-    O.list.push({id:++O.n,c:Math.floor(rand("ord")*CUST.length),g:C.grade,r:n,ld:0,sh:0,due:Math.round(S.t+(0.4+rand("ord")*0.8)*1440),t0:Math.round(S.t),st:"open"});}}
+    O.list.push({id:++O.n,c:Math.floor(rand("ord")*CUST.length),g:C.grade,r:n,w:100,wd:n,ld:0,sh:0,due:Math.round(S.t+(0.4+rand("ord")*0.8)*1440),t0:Math.round(S.t),st:"open"});}}
 // a production campaign of `tons` of grade g starting now: book its orders
 function ordCampaign(g,tons,t0){const O=S.ord;if(!O)return;const rw=C.rollW.v||12.5,G=GRADES[g],tph=Math.max(5,P.K*G.sp*G.bw)*ORD.eff;
-  let rolls=Math.floor(tons*ORD.cover/rw),made=0;
-  while(rolls>=ORD.minR){let n=Math.round(ORD.minR+rand("ord")*(ORD.maxR-ORD.minR));if(rolls-n<ORD.minR)n=rolls;rolls-=n;made+=n;
+  /* v6.11: each order is for rolls of one width, always an even number (the winder makes them in twin pairs); its size r
+     is in standard-roll units (a 90" roll is 0.9). The units booked allow for the trim the widths will cost. */
+  let units=tons*ORD.cover*(trimOn()?1-TRIM.bookTrim:1)/rw,made=0;
+  for(;;){const w=trimOn()?orderWidth():100,u1=w/100;if(units<ORD.minR*u1-1e-9)break;
+    let np=2*Math.round((ORD.minR+rand("ord")*(ORD.maxR-ORD.minR))/2);if(units-np*u1<ORD.minR*u1)np=2*Math.floor(units/u1/2);if(np<2)break;
+    const n=np*u1;units-=n;made+=n;
     const due=t0+made*rw/tph*60+(ORD.slack[0]+rand("ord")*(ORD.slack[1]-ORD.slack[0]))*1440;
-    O.list.push({id:++O.n,c:Math.floor(rand("ord")*CUST.length),g,r:n,ld:0,sh:0,due:Math.round(due),t0:Math.round(t0),st:"open"});}
+    O.list.push({id:++O.n,c:Math.floor(rand("ord")*CUST.length),g,r:n,w,np,wd:0,ld:0,sh:0,due:Math.round(due),t0:Math.round(t0),st:"open"});}
   ordPrune();}
 function ordPrune(){const L=S.ord.list;let closed=0;for(let i=L.length-1;i>=0;i--)if(L[i].st!=="open"&&++closed>ORD.keep)L.splice(i,1);}
 const ordGet=id=>S.ord&&S.ord.list.find(o=>o.id===id);
 const ordCust=o=>CUST[o.c]||"Customer";
 // rolls of grade g in the warehouse, and what isn't already promised to a truck at a door
-function fgOf(g){let s=0;for(const l of S.lots.fg)if(l[0]===g)s+=l[1];return s;}
-function ordFree(g){let r=fgOf(g);for(const tr of S.outDock)if(tr&&tr.g===g)r-=Math.max(0,tr.want-tr.load);return Math.max(0,r);}
-function ordNeed(g){let n=0;for(const o of S.ord.list)if(o.st==="open"&&o.g===g)n+=o.r-o.ld;return n;}
+// (v6.11: of width w too, when given: an order wants its own width)
+function fgOf(g,w){let s=0;for(const l of S.lots.fg)if(l[0]===g&&(!w||(l[2]||100)===w))s+=l[1];return s;}
+function ordFree(g,w){let r=fgOf(g,w);for(const tr of S.outDock)if(tr&&tr.g===g&&(!w||!tr.w||tr.w===w))r-=Math.max(0,tr.want-tr.load);return Math.max(0,r);}
+function ordNeed(g,w){let n=0;for(const o of S.ord.list)if(o.st==="open"&&o.g===g&&(!w||(o.w||100)===w))n+=o.r-o.ld;return n;}
+// the widths of grade g in the warehouse
+const fgWidths=g=>[...new Set(S.lots.fg.filter(l=>l[0]===g).map(l=>l[2]||100))];
 // take q rolls of grade g from lots L, oldest first
-function lotTakeG(L,g,q,out){let got=0;for(let i=0;i<L.length&&q>1e-9;){const h=L[i];if(h[0]!==g){i++;continue;}const k=Math.min(h[1],q);h[1]-=k;q-=k;got+=k;if(out)lotPut(out,g,k);if(h[1]<=1e-9)L.splice(i,1);else i++;}return got;}
+// (v6.11: and of width w, when given)
+function lotTakeG(L,g,q,out,w){let got=0;for(let i=0;i<L.length&&q>1e-9;){const h=L[i];if(h[0]!==g||(w&&(h[2]||100)!==w)){i++;continue;}const k=Math.min(h[1],q);h[1]-=k;q-=k;got+=k;if(out)lotPut(out,g,k,h[2]);if(h[1]<=1e-9)L.splice(i,1);else i++;}return got;}
 // give a truck at the door a job: an order, else a spot load; false if there's nothing to load
 function ordAssign(tr){const O=ordState();let best=null,bw=0;
-  for(const o of O.list){if(o.st!=="open")continue;const left=o.r-o.ld;if(left<=0)continue;const want=Math.min(P.truckRolls,left),free=Math.floor(ordFree(o.g)+1e-6);
-    // a full load, or a part load once that grade is off the machine (the next run of it may be days away)
-    const w=free>=want?want:(C.grade!==o.g&&free>=4)?free:0;if(!w)continue;if(!best||o.due<best.due){best=o;bw=w;}}
-  if(best){best.ld+=bw;Object.assign(tr,{oid:best.id,g:best.g,want:bw,spot:false,wait:0});return true;}
-  const sp=ordSpot();if(sp){Object.assign(tr,{oid:0,g:sp[0],want:sp[1],spot:true,wait:0});return true;}
+  for(const o of O.list){if(o.st!=="open")continue;const left=o.r-o.ld;if(left<=1e-6)continue;const ow=o.w||100,want=Math.min(P.truckRolls,left),free=ordFree(o.g,ow)+1e-6;
+    // a full load, or a part load once that width is wound (v6.11: rolls of the order's own width)
+    const w=free>=want?want:((C.grade!==o.g||windShort(o.g,ow)<=1e-6)&&free>=4*ow/100)?Math.min(free,want):0;if(!w)continue;if(!best||o.due<best.due){best=o;bw=w;}}
+  if(best){best.ld+=bw;Object.assign(tr,{oid:best.id,g:best.g,w:best.w||100,want:bw,spot:false,wait:0});return true;}
+  const sp=ordSpot();if(sp){Object.assign(tr,{oid:0,g:sp[0],w:sp[2],want:sp[1],spot:true,wait:0});return true;}
   return false;}
-function ordSpot(){let sg=null,sv=0;for(const g of GRADE_IDS){const s=Math.floor(ordFree(g)-ordNeed(g)+1e-6);if(s>sv){sv=s;sg=g;}}
-  if(sg&&(sv>=P.truckRolls||(S.fg>=P.fgCap*ORD.full&&sv>=4)))return [sg,Math.min(P.truckRolls,sv)];return null;}
+// (v6.11: surplus is counted width by width, so a spot truck never takes rolls an order of that width is waiting for; a
+// spot truck loads any surplus widths of its grade, so odd leftovers still go)
+const spotFree=(g,w)=>Math.max(0,ordFree(g,w)-ordNeed(g,w));
+// what a docked spot truck may still load of width w: the rolls no open order of that width needs, less what other trucks at the doors want
+function spotSur(g,w,self){let r=fgOf(g,w)-ordNeed(g,w);for(const tr of S.outDock)if(tr&&tr!==self&&tr.g===g&&(tr.w===w||(!tr.w&&tr.spot)))r-=Math.max(0,tr.want-tr.load);return Math.max(0,r);}
+const spotOf=g=>fgWidths(g).reduce((a,w)=>a+spotFree(g,w),0);
+function ordSpot(){let sg=null,sv=0;for(const g of GRADE_IDS){const s=spotOf(g);if(s>sv+1e-9){sv=s;sg=g;}}
+  if(sg&&(sv>=P.truckRolls||(S.fg>=P.fgCap*ORD.full&&sv>=4)))return [sg,Math.min(P.truckRolls,sv),null];return null;}
 // rolls that could leave now (what the auto truck rate calls trucks for)
-function ordReady(){let n=0;const full=S.fg>=P.fgCap*ORD.full;for(const g of GRADE_IDS){const f=ordFree(g),need=ordNeed(g),s=f-need;n+=Math.min(f,need);if(s>=P.truckRolls||(full&&s>=4))n+=s;}return n;}
+function ordReady(){let n=0;const full=S.fg>=P.fgCap*ORD.full;for(const g of GRADE_IDS){let s=0;for(const w of fgWidths(g)){const f=ordFree(g,w),need=ordNeed(g,w);n+=Math.min(f,need);s+=Math.max(0,f-need);}if(s>=P.truckRolls||(full&&s>=4))n+=s;}return n;}
 function ordAutoRate(){return clamp(ordReady()/P.truckRolls/3-S.outQ.length*0.15,0,10);}
 const ordLateD=o=>Math.max(0,(S.t-o.due-ORD.grace)/1440);
 // a loaded truck leaves: the invoice, the chargeback, the order's progress
@@ -109,12 +123,16 @@ function ordDocks(dt,lcap){let loaded=0;
   for(let d=0;d<P.shipDoors;d++)if(!S.outDock[d]&&S.outQ.length){const tr=S.outQ[0];if(!ordAssign(tr))break;S.outQ.shift();S.outDock[d]=tr;}
   let pool=S.bn==="ship"?P.shipDoors*P.doorRolls*dt/60:Infinity;
   for(let d=0;d<P.shipDoors;d++){const tr=S.outDock[d];if(!tr)continue;
-    const have=fgOf(tr.g),l=Math.max(0,Math.min(tr.want-tr.load,pool===Infinity?P.doorRolls*dt/60:pool,lcap,have));
-    if(l>0){pool-=l;lcap-=l;loaded+=l;tr.load+=l;S.fg-=lotTakeG(S.lots.fg,tr.g,l,tr.lots||(tr.lots=[]));tr.wait=0;}else tr.wait=(tr.wait||0)+dt;
+    const spotAny=tr.spot&&!tr.w,have=spotAny?fgWidths(tr.g).reduce((a,w)=>a+spotSur(tr.g,w,tr),0):fgOf(tr.g,tr.w),l=Math.max(0,Math.min(tr.want-tr.load,pool===Infinity?P.doorRolls*dt/60:pool,lcap,have));
+    if(l>0){pool-=l;lcap-=l;loaded+=l;tr.load+=l;
+      if(spotAny){let q=l;   // only surplus widths: what no open order of that width is waiting for
+        for(const w of fgWidths(tr.g)){if(q<=1e-9)break;const got=lotTakeG(S.lots.fg,tr.g,Math.min(q,spotSur(tr.g,w,tr)),tr.lots||(tr.lots=[]),w);S.fg-=got;q-=got;}
+        tr.load-=q;loaded-=q;}
+      else S.fg-=lotTakeG(S.lots.fg,tr.g,l,tr.lots||(tr.lots=[]),tr.w);tr.wait=0;}else tr.wait=(tr.wait||0)+dt;
     const done=tr.load>=tr.want-1e-6,stuck=tr.wait>90&&have<0.5;
     if(done||(stuck&&tr.load>0.5)){S.leaving.push({...tr,ty:outY(d),kind:"out"});if(S.leaving.length>24)S.leaving.shift();S.outDock[d]=null;
       S.tot.shipped+=tr.load;const tons=tr.load*C.rollW.v;S.shipT+=tons;spend(tons*frOutRate(),"frout");ordDepart(tr);}
-    else if(stuck){const o=!tr.spot&&ordGet(tr.oid);if(o)o.ld-=tr.want;S.outDock[d]=null;tr.oid=0;tr.g=null;tr.want=0;S.outQ.unshift(tr);}}   // nothing to load after all: back to the queue
+    else if(stuck){const o=!tr.spot&&ordGet(tr.oid);if(o)o.ld-=tr.want;S.outDock[d]=null;tr.oid=0;tr.g=null;tr.w=null;tr.want=0;S.outQ.unshift(tr);}}   // nothing to load after all: back to the queue
   return loaded;}
 
 // ---------- base load while the machine is stopped ----------

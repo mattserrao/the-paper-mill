@@ -3,7 +3,13 @@
   const _fl=new THREE.Vector3(),_fu=new THREE.Vector3(0,1,0);
   function flange(p,q,r,m){_fl.set(q[0]-p[0],q[1]-p[1],q[2]-p[2]).normalize();const f=new THREE.Mesh(new CylG(r*1.55,r*1.55,0.14,16),m);
     f.position.set(p[0]+_fl.x*0.07,p[1]+_fl.y*0.07,p[2]+_fl.z*0.07);f.quaternion.setFromUnitVectors(_fu,_fl);scene.add(f);}
-  function spool(pts,r,m){pipe(pts,r,m);flange(pts[0],pts[1],r,M.steel);const n=pts.length;flange(pts[n-1],pts[n-2],r,M.steel);}
+  // v6.11 (item 7, pipe read): every line is coloured by what it carries (raw pulper stock brown, clean stock blue, white water and
+  // filtrate teal, fresh water pale blue, steam insulated silver) and long runs carry a white flow arrow pointing downstream
+  M.rawStock=M.rawStock||mat("pulp");M.ww=M.ww||mat("g-wire");M.arrow=M.arrow||mat("g-wall",{roughness:0.9});
+  const _fa=new THREE.Vector3();
+  function flowArrows(pts,r){for(let i=1;i<pts.length;i++){const a=pts[i-1],b=pts[i];_fa.set(b[0]-a[0],b[1]-a[1],b[2]-a[2]);const L=_fa.length();if(L<4)continue;_fa.normalize();
+    const o=new THREE.Mesh(new CylG(0,r*1.45,r*2.4,8),M.arrow);o.position.set((a[0]+b[0])/2,(a[1]+b[1])/2,(a[2]+b[2])/2);o.quaternion.setFromUnitVectors(_fu,_fa);scene.add(o);}}
+  function spool(pts,r,m){pipe(pts,r,m);flange(pts[0],pts[1],r,M.steel);const n=pts.length;flange(pts[n-1],pts[n-2],r,M.steel);if(m!==M.steel&&m!==M.metal)flowArrows(pts,r);}
   // ---- steam: elevated pipe rack from the power house to a header along the drive side of the dryers ----
   {const ins=new StdMat({color:lin0("#cfd4dc"),metalness:0.55,roughness:0.35}),Y=10.6,ZH=4.9,ZC=4.25;
     const S1=[[70,8,-7],[68.6,8,-7],[68.6,Y,-7],[68.6,Y,-0.35],[46,Y,-0.35],[46,Y+2.6,-0.35],[42,Y+2.6,-0.35],[42,Y,-0.35],[27.3,Y,-0.35],[27.3,Y,ZH],[-4.5,Y,ZH]];
@@ -103,10 +109,10 @@
     const cap=new THREE.Mesh(new CylG(0.5,0.78,0.3,20),M.metal);cap.position.y=6.45;hc.add(cap);
     box(0.45,0.45,0.45,M.warn,0,1.65,0,hc,false);const jp=new THREE.Mesh(new CylG(0.13,0.13,0.9,10),M.metal);jp.position.y=1.0;hc.add(jp);box(0.45,0.45,0.45,M.warn,0,0.75,0,hc,false);
     box(1.3,0.6,1.0,M.ink,0,0.3,1.0,hc);[[-0.8,-0.8],[0.8,-0.8],[-0.8,0.8],[0.8,0.8]].forEach(([a,b])=>box(0.14,4.9,0.14,M.steel,a,2.45,b,hc,false));box(1.9,0.12,1.9,M.steel,0,4.9,0,hc,false);}
-  spool([[20.2,1,-11.5],[25.0,1,-11.5],[25.0,5.9,-11.5],[25.4,5.9,-11.5]],0.26,M.stock);
+  spool([[20.2,1,-11.5],[25.0,1,-11.5],[25.0,5.9,-11.5],[25.4,5.9,-11.5]],0.26,M.rawStock);
   fieldPump(22.2,1,-11.5,-Math.PI/2);
   // HD accepts: up onto a pipe rack, south past the pulper, west along the rack and down into the lightweight cleaners
-  spool([[25.8,6.6,-10.6],[25.8,7.6,-10.6],[25.8,7.6,-19.9],[11.2,7.6,-19.9],[11.2,7.6,ZL],[11.2,4.1,ZL]],0.24,M.stock);
+  spool([[25.8,6.6,-10.6],[25.8,7.6,-10.6],[25.8,7.6,-19.9],[11.2,7.6,-19.9],[11.2,7.6,ZL],[11.2,4.1,ZL]],0.24,M.rawStock);
   [[25.8,-15.4],[25.8,-19.9],[20,-19.9],[14.4,-19.9]].forEach(([x,z])=>post(x,z,7.35));
   // pressure screen: housing, basket band, motor on top, inlet stub on the west side, accepts stub on the east
   function screen(x,z,h,band){const g=new THREE.Group();g.position.set(x,0,z);scene.add(g);blob(x,z,1.4);
@@ -127,8 +133,8 @@
   screen(19.2,ZL-1.0,2.6,M.ok);screen(19.2,ZL+1.0,2.6,M.ok);           // fine screens (slotted baskets)
   box(1.2,0.8,1.0,M.bad,15.2,0.4,ZL-1.9);box(1.0,0.7,0.9,M.bad,19.2,0.35,ZL-2.5);
   // grade-level connections on one elevation, west inlet / east outlet
-  spool([[12.4,1.2,ZL],[14.45,1.2,ZL]],0.22,M.stock);
-  spool([[15.95,1.2,ZL],[17.6,1.2,ZL],[17.6,1.2,ZL-1.0],[18.45,1.2,ZL-1.0]],0.2,M.stock);spool([[17.6,1.2,ZL],[17.6,1.2,ZL+1.0],[18.45,1.2,ZL+1.0]],0.2,M.stock);
+  spool([[12.4,1.2,ZL],[14.45,1.2,ZL]],0.22,M.rawStock);
+  spool([[15.95,1.2,ZL],[17.6,1.2,ZL],[17.6,1.2,ZL-1.0],[18.45,1.2,ZL-1.0]],0.2,M.rawStock);spool([[17.6,1.2,ZL],[17.6,1.2,ZL+1.0],[18.45,1.2,ZL+1.0]],0.2,M.rawStock);
   spool([[19.95,1.2,ZL-1.0],[20.8,1.2,ZL-1.0],[20.8,1.2,ZL+1.0],[19.95,1.2,ZL+1.0]],0.2,M.stock);
   spool([[20.8,1.2,ZL],[22.4,1.2,ZL]],0.22,M.stock);fieldPump(21.7,1.2,ZL,0);
   // LC cleaner bank: rack, inlet / accepts / reject headers, two rows of inverted cones (second row comes with the Screens & cleaners upgrade)

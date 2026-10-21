@@ -1,5 +1,29 @@
 # Changelog
 
+## v6.11.0 (2026-10-21): The Winder, Trim and CD Update
+Release of v6.11.0-t1 and v6.11.0-t2 (below), merged from test/v6.11-blender.
+
+## v6.11.0-t2 (2026-10-21): economy rebalance (test build)
+- **Prices +2.5%** on every grade, to make up for the trim (v6.11.0-t1): 24 $642 → $658, 28 $662 → $679, 31 $680 → $697, 34Super $741 → $760 a ton.
+
+## v6.11.0-t1 (2026-10-21): Blender redesign, the winder, trim and CD quality (test build, test/v6.11-blender)
+**Art (designed and reviewed in Blender, built in the game's own code; kits in `tools/blender/`):**
+- Headbox, press section framework and supports, a baked dryer hood cutaway, reel and winder stands, stock prep pipes coloured by what they carry, refiner details, folded-card building walls, the MCC interior, baked power house facades and roof plant, the clarifier and aeration basin, the water tower; workers (boots, gloves, belt, bigger hard hat), fork-trucks (LPG bottle, drive wheels, mast) and trucks (skirts, conspicuity tape, cab markers).
+- **The winder:** unwind stand moved 2 m out, guide roll on load cells, bowed spreader roll, slitters (two edge trims and a centre slit) over a 3.3 m pass line, the web down under a lead-in roll and round the rear drum into the nip; twin rolls with wound ends and cores build under a rider roll that rides up its guide columns and lifts at each set change. The winder operator walks in under the running web about every 2 game hours with a flashlight (visual only).
+- Fixed on the way: a moving multi-material mesh is split by the batcher; the winder rolls use one material and separate end caps (multi-material rolls washed out the whole mill's colours 30 s in).
+
+**Trim and rolls at width (03g):**
+- The web is 205" (+3" a level of the deckle upgrade, which was +6% tons; now +1.5% tons and rolls up to 1.5" wider). Sets are twin rolls of one width, 50"–100"; trim = web − 2 × width, at least 5". Trim goes to a new DE pulper and back to the stock chest; never sold.
+- Orders carry a customer width (mostly wide) and an even number of rolls; a roll weighs 12.5 t × width/100. Lots, the warehouse, trucks and orders count standard-roll units, so tons conversions are unchanged. Order trucks load their order's width; spot trucks load surplus widths of a grade. The winder runs the width of the earliest-due order still short of rolls (by width, since orders of one width share their rolls), else the widest roll for spot.
+- PLAN: the pattern now (2 × width, trim inches and %, trim t/h) and the widths to come; order rows show width and rolls of that width; inventory in tons. Process flow: a trim stream. Tags: roll width, trim %, trim t/h (relationship map entries).
+
+**Quality per roll across the CD (07k):**
+- 12 CD zones (drive side first). Zone moisture: dry edges, a slow wave, an occasional wandering wet streak, wet bands under a filled-in pick-up felt. Zone weight: a small natural streak plus the dilution zones knob.
+- A zone out of spec beaters only the roll under it; a wet edge narrower than the edge trim is slit off with it. Whole-sheet problems (average weight, ring crush, color, grade change) still beater the set. CD streaks and felt stripes no longer take a share of the whole reel (outside zen).
+- **Spray boom** (standard, after the dryers) brings dry zones up; **steam box** (new upgrade, $165k) dries wet zones and wet edges, +1.5 points couch solids, +40 fpm, uses some steam. Headbox dilution auto-trims weight streaks. Each AUTO by default, MAN per zone on the QCS CD section.
+- Sim check over 6 days: about 2.2% of production to the beater from CD problems without the steam box, near 0 with it.
+
+**Checks:** control (order rows have a Width column), process (the DE pulper repulps the trim with white water: the chest runs at or just under its overflow).
 
 ## v6.10.2 (2026-10-21): tests and tidy
 No gameplay changes intended.
