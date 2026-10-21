@@ -204,7 +204,7 @@ function vBumpRes(d){const box=$("vBr");if(!box)return;const W=S.vlv,r=W&&W.btRe
   $("vUse").addEventListener("click",()=>{vlvSetTune(d.id,{kc:t.kc,ti:t.ti,td:t.td});VUI.tab="tune";vlvBuild();});}
 
 /* -- Valve -- */
-function vpValve(p,d){const id=d.id,L=()=>S.vlv&&S.vlv.lp[id],vv=()=>(L()&&L().v)||d.valve,ed=!!S.free;
+function vpValve(p,d){const id=d.id,ed=!!S.free;
   const row=(k,lab,u,min,max,step,note)=>`<div class="vtn"><span class="vk">${lab} ${vgl(k)}</span>${ed?`<input type="range" min="${min}" max="${max}" step="${step}" data-vv="${k}" aria-label="${lab}"/>`:"<span></span>"}<span class="vnum1"><b data-vvv="${k}"></b><small>${u}</small></span></div><p class="vnote vsm">${note}</p>`;
   p.innerHTML=`<div class="vchar"><svg viewBox="0 0 220 150" id="vChr" role="img" aria-label="Valve characteristic"></svg><div><div class="vrow"><span class="vk">Trim ${vgl("cv")}</span>${ed?`<span class="seg" role="group" aria-label="Trim"><button type="button" data-ch="lin">Linear</button><button type="button" data-ch="eq">Equal-%</button></span>`:`<b id="vChN"></b>`}</div>
       <p class="vnote vsm">Medium: ${d.medium}. Action: ${d.act>0?"reverse":"direct"} ${vgl("act")} (${d.act>0?"the PV rises as it opens":"the PV falls as it opens"}).</p></div></div>
@@ -266,7 +266,7 @@ function vlvRefresh(force){const o=$("vlvOv");if(!o||o.hidden||!VUI.id)return;co
     const pv=$("vPV"),sp=$("vSP"),op=$("vOP");pv.textContent=vlvFmtPV(d,v.pv);
     if(actEl(sp)!==sp)sp.value=vfx(v.sp,d.pv.dp);sp.disabled=v.m==="CAS";$("vSPn").textContent=v.m==="CAS"?`from ${d.master} (CAS)`:d.id==="FV-201"?`grade ${C.grade} target ${bwStd().toFixed(2)} lb`:`${vF(d.spLim)[0]}–${vF(d.spLim)[1]} ${d.pv.u}`;
     if(actEl(op)!==op)op.value=vfx(v.op,1);op.readOnly=v.m!=="MAN";$("vOPn").textContent=d.ctl?`→ ${Math.round(v.op*d.out.k)} kPa 3rd section`:v.m==="MAN"?"you set this":"the controller sets this";
-    if(!d.ctl){const L=W&&W.lp[id],tg=L?L.tgt:v.pos;$("vBarC").style.left=clamp(v.op,0,100)+"%";$("vBarA").style.width=clamp(v.pos,0,100)+"%";
+    if(!d.ctl){$("vBarC").style.left=clamp(v.op,0,100)+"%";$("vBarA").style.width=clamp(v.pos,0,100)+"%";
       $("vPos").textContent=v.pos<0.5?"SHUT":v.pos>99.5?"WIDE OPEN":`${vfx(v.pos,1)}% open`;}
     const n=$("vNote"),ff=d.ff&&W&&W.B?W.B.ff:null;
     const nt=v.m==="IMAN"?"PV-302 and PV-303 aren't on CAS: this controller is tracking them (IMAN).":d.id==="FV-201"?`Speed feed-forward ${vgl("ff")}: ${v.t&&ff!=null?(ff>=0?"+":"")+ff.toFixed(1)+"%":"built in"}. The scanner reads ${WE.dead} min late.`:d.cas&&v.m!=="CAS"?`Off CAS: QC-300 can't hold the moisture until this is back on CAS.`:"";

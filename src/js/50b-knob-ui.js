@@ -3,7 +3,7 @@
    opened from the operator consoles (stock prep's, and the three on the machine floor). With any of these open, or the
    spider valve or slice panel, the game runs at 1 min/s (simRate, 08-ui-wiring.js) and is back at the player's speed on
    close. The screens only read the sim (knobRead / KHIST, 07b-knobs.js); the only writes are the player's knob moves. */
-const KUI={panel:null,st:null,tab:"dcs",built:{}};
+const KUI={panel:null,st:null,tab:"dcs"};
 const AREA_N={SPOT:"Stock prep",WET:"Wet end",DET:"Dry end",DRV:"Drives"};
 // field knobs the DCS can also set remotely; the guide roll and the oscillator are set at the machine only
 const KREMOTE=new Set(["pulp","ref","agit","couch"]);
@@ -152,14 +152,6 @@ function stationBuild(){const o=$("dcsOv");if(!o||!KUI.st)return;const a=KUI.st,
   else if(a==="PLAN")b.appendChild(kEl("div","plan","")).id="planBox";
   else if(a==="DRV")drvBuild(b);else if(a==="REL")rlyBuild(b);   // v6.10 (50l)
   trBuild();trLayout();kuiRefresh();}
-// the trend chart: up to four series on their own scales, newest at the right
-function drawTrend6(cv,series){if(!cv)return;const x=cv.getContext("2d"),W=cv.width,H=cv.height,a=KHIST.a,dk=document.body.classList.contains("dark");
-  x.fillStyle="#0f1b2d";x.fillRect(0,0,W,H);x.strokeStyle="rgba(140,170,210,.18)";x.lineWidth=1;for(let k=1;k<6;k++){x.beginPath();x.moveTo(W*k/6,0);x.lineTo(W*k/6,H);x.stroke();}for(let k=1;k<4;k++){x.beginPath();x.moveTo(0,H*k/4);x.lineTo(W,H*k/4);x.stroke();}
-  x.fillStyle="rgba(190,205,230,.7)";x.font="600 15px system-ui,sans-serif";x.fillText("−6 h",6,H-6);x.textAlign="right";x.fillText("now",W-6,H-6);x.textAlign="left";
-  if(a.length<2){x.fillStyle="rgba(190,205,230,.8)";x.font="600 18px system-ui,sans-serif";x.fillText("Collecting data…",W/2-70,H/2);return;}
-  const t1=a[a.length-1][0],t0=t1-360,X=t=>(t-t0)/360*W;
-  series.forEach(([k,,col,lo,hi])=>{const c=KH_COL[k];x.strokeStyle=col;x.lineWidth=2.5;x.beginPath();let st=false;
-    for(const r of a){if(r[0]<t0)continue;const v=r[c];if(v==null||v!==v){st=false;continue;}const y=H-8-clamp((v-lo)/(hi-lo),0,1)*(H-24);if(!st){x.moveTo(X(r[0]),y);st=true;}else x.lineTo(X(r[0]),y);}x.stroke();});}
 function kuiRefresh(){if(!KUI.panel&&!KUI.st)return;const r=knobRead();
   if(KUI.panel){const id=KUI.panel;document.querySelectorAll("#kpCtl .kctl").forEach(knobCtlSync);{const h=knobReadout(id,r),e=$("kpRead");if(e._h!==h){e._h=h;e.innerHTML=h;}}
     const n=$("kpNote"),moved=!knobAt(id),busy=S.knob&&S.knob.inc.some(i=>i.cause.includes(id));n.className="spin"+(moved?" bad":"");
@@ -171,7 +163,7 @@ function kuiRefresh(){if(!KUI.panel&&!KUI.st)return;const r=knobRead();
       const al=knobAlarms(a,r),ul=$("dcsAl"),h=al.length?al.map(([t,hi])=>`<li class="${hi?"hi":""}">${t}</li>`).join(""):'<li class="none">No alarms</li>';if(ul&&ul._h!==h){ul._h=h;ul.innerHTML=h;}
       {const bt=$("dcsBeat");if(bt){const q=qualStatus(),on=r.run&&q.off>0.02,t=on?`⚠ MAKING BEATER · ${q.why.toUpperCase()} · ${q.off>=0.99?"the whole reel":Math.round(q.off*100)+"% of the reel"} to the beater`:"";if(bt.hidden===on)bt.hidden=!on;if(bt.textContent!==t)bt.textContent=t;}}
       o.querySelectorAll(".dcsrow canvas[data-cd]").forEach(c=>kuiCd(c,r));dcsSync();dcsPicSync(a);vlvDcsSync(o);if(a==="WATER")waterRefresh();}
-    else if(a==="QCS"){const K=S.knob,F=(K&&K.F)||{},off=r.off,st=$("qcsSt");
+    else if(a==="QCS"){const K=S.knob,F=(K&&K.F)||{},st=$("qcsSt");
       // v6.5.3: the spec check (07e) names what's out; the grade change and the other knob defects after it
       const qs=qualStatus(),sh=!r.run?["MACHINE DOWN","down"]:QNOW.out.length?[`OFF SPEC · ${qs.why} · rolls to the beater`,"bad"]:S.chg?["GRADE CHANGE · weight in transition · rolls to the beater","warn"]:qs.off>0.02?[`REJECTING · ${qs.why} · ${Math.round(qs.off*100)}% to the beater`,"bad"]:["ON SPEC","ok"];
       if(st._h!==sh[0]){st._h=sh[0];st.textContent=sh[0];st.className="qcsst "+sh[1];}
@@ -204,8 +196,6 @@ G3.openKnob=openKnob;G3.openStation=openStation;G3.slcSet=slcSet;G3.hayout=()=>h
   G3.yieldUI=()=>{try{if(G3.VUI&&G3.VUI.id&&G3.vlvClose&&!POP.on)G3.vlvClose();if(!POP.on){closeKnob();closeStation();}else if(KUI.panel)closeKnob();}catch(_){}};   // (v6.9.2: cards, the outage plan and the pause menu draw under these)
   G3.closeKnobUI=()=>{closeKnob();closeStation();};
 ["spiClose","slcClose"].forEach(id=>$(id).addEventListener("click",()=>setTimeout(kuiSync,0)));
-// the spider valve and the slice are fiddly knobs too: their panels slow the game the same way (and close the others)
-{const o1=openSpider,o2=openSlice;openSpider=function(){closeKnob();closeStation(true);o1();kuiSync();};openSlice=function(){closeKnob();closeStation(true);o2();kuiSync();};}
 
 /* ---- the fiddly knobs view switch (Settings > View) and its chip ---- */
 {const row=$("v2viewrow"),lab=kEl("label","check",`<input id="knobView" type="checkbox"/> Fiddly knobs view`);row.appendChild(lab);

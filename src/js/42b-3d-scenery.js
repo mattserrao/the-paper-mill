@@ -90,7 +90,7 @@
     // where the utilities and features ended up (zen camera shots, the brownout's substation): name -> [x, z, height]
     const UTIL={};const note=(k,x,z,h)=>{UTIL[k]=[+x.toFixed(1),+z.toFixed(1),h];};
     // graphics tier: scenery density (Low 0.5 ... Ultra 1.4); the yard and the utilities are the same at every tier
-    const DEN=G3.GFX&&G3.GFX.scenery!=null?G3.GFX.scenery:1;   // (v5.7.3 bare: 0, and no environment kit at all)
+    const DEN=G3.GFX&&G3.GFX.scenery!=null?G3.GFX.scenery:1;
     /* ---------- noise for natural clustering ---------- */
     const NG=[];for(let k=0;k<40*32;k++)NG.push(RNG());
     function noise(x,z,s=60){const fx=(x+420)/s,fz=(z+320)/s,i=Math.floor(fx),j=Math.floor(fz),u=fx-i,v=fz-j,g=(a,b)=>NG[((b%32+32)%32)*40+((a%40+40)%40)];
@@ -105,7 +105,7 @@
     // the canal levee and the roads (causeways) stay at the pad's level
     const PLAT={x0:-172,x1:178,z0:-60,z1:100};
     function hBase(x,z){let h;
-      if(ENVK==="swamp"&&!G3.bare){const dx=Math.max(PLAT.x0-x,0,x-PLAT.x1),dz=Math.max(PLAT.z0-z,0,z-PLAT.z1);h=-1.4*sstep(2,14,Math.hypot(dx,dz));if(!h)return 0;}
+      if(ENVK==="swamp"){const dx=Math.max(PLAT.x0-x,0,x-PLAT.x1),dz=Math.max(PLAT.z0-z,0,z-PLAT.z1);h=-1.4*sstep(2,14,Math.hypot(dx,dz));if(!h)return 0;}
       else{if(!RELIEF)return 0;const f=sstep(100,230,dFence(x,z));if(f<=0)return 0;
         let n=ENVK==="desert"?noise(x*0.55,z*1.7,52)*1.1+noise(x,z,140)*0.6-0.55:noise(x,z,95)*1.35+noise(x,z,38)*0.45-0.62;
         n=Math.max(0,n);h=RELIEF*f*n*(ENVK==="desert"?1.15:1.0);}
@@ -327,7 +327,7 @@
     // open ground: circles [x,z,r] and boxes [x0,x1,z0,z1] where the fill leaves no trees
     // (v14: ragged edges: each clearing's outline wanders with the noise, so no clearing is a clean circle or box)
     const OPEN=[],openAt=(x,z)=>{const e=(noise(x*2.3,z*2.3,26)-0.5);for(const o of OPEN){if(o.length===3?Math.hypot(x-o[0],z-o[1])<o[2]*(1+e*0.5):x>o[0]-e*14&&x<o[1]+e*14&&z>o[2]-e*14&&z<o[3]+e*14)return true;}return false;};
-    if(ENVK==="rural"&&!G3.bare){
+    if(ENVK==="rural"){
       // Forest valley: a wide river winding through wooded hills. South of the fence a concrete service court joins the
       // mill to two yards: the neighbouring Valley Timber Co. (log decks, chip pile, its own fence) and the mill's covered
       // cardboard (OCC) bale store with a truck unloading; the farm, fields and orchard beyond, the lake to the south-east,
@@ -385,7 +385,7 @@
       scatter(260,F.x0,F.x1,F.z0,F.z1,null,(x,z)=>broadleaf(x,z,rr(0.75,1.3),false));
       scatter(90,-410,410,-310,310,inMap,(x,z)=>bush(x,z,rr(0.8,1.4)));
       for(let k=0;k<7;k++){const a=rr(0,6.28),d=rr(360,420),x=Math.cos(a)*d,z=Math.sin(a)*d*0.8;if(!place(x,z,12))continue;add(T.mound,x,-3,z,rr(60,100),rr(9,18),rr(45,75),RNG()*6,pick(["#6f9a5c","#5f8a50","#7aa064"]),0.25);}}
-    if(ENVK==="urban"&&!G3.bare){
+    if(ENVK==="urban"){
       // City by the sea (v13 pass 2): the sea runs from the mill's back wall to the horizon. A seafront boulevard either side
       // of the mill; the beach with its boardwalk, pier and lifeguard towers to the west; the container port with gantry
       // cranes and a moored ship to the east, its breakwater and lighthouse out in the bay; ships at anchor offshore.
@@ -506,7 +506,7 @@
       scatter(40,F.x0,F.x1,F.z0,F.z1,null,(x,z)=>broadleaf(x,z,rr(0.6,1),false));
       scatter(160,-410,410,-310,310,inMap,(x,z)=>broadleaf(x,z,rr(0.6,0.95),true,true));
       {const z=60,x=HXr+10;if(place(x,z,4)){add(T.box,x,0,z,0.4,7,0.4,0,"#6b7079",0);add(T.box,x,7,z,0.4,3.2,8,0,"#f2c230",0.1);claim(x,z,4,11,0);}}}
-    if(ENVK==="desert"&&!G3.bare){
+    if(ENVK==="desert"){
       // Desert flats: a concrete canal past the mill; red mesas on every side, dry washes and dirt tracks across the
       // flats; the solar farm, water tanks and a reservoir east, a windpump and the substation west, an oasis, a ranch
       LM.solarFarm(206,86,10,7);LM.waterTanks(64,117);LM.reservoir(104,120,18,24);LM.reservoir(112,4,14,34);LM.windpump(-207,109);LM.stockPond(98,196);LM.mast(240,156,44);LM.ranch(232,-14);

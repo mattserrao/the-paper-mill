@@ -197,7 +197,7 @@ function recHtml(Q){const r=Q.rec,N=recN(r),Y=recPiles(),R=S.rates||{},sq=recSeq
       <td class="recst"><button type="button" data-rec="${q}-" aria-label="One fewer ${b.n}"${r[q]<=1?" disabled":""}>−</button><b>${r[q]}</b><button type="button" data-rec="${q}+" aria-label="One more ${b.n}"${r[q]>=RECMAX?" disabled":""}>+</button></td></tr>`;}).join("");
   const cost=BTK.reduce((a,q)=>a+r[q]*btPrice(q),0)/N,rj=1-recY(r),rate=recRate(),slow=rate<P.pulperMax-0.05;
   const chips=sq.map((q,i)=>`<i class="recb rec${q}${i===cur?" on":""}" title="${BT[q].n}">${BT[q].s}</i>`).join("");
-  const mw=Y.M<=0.5&&r.M>0,out=BTK.filter(q=>Y[q]<=0.5).map(q=>BT[q].n);
+  const out=BTK.filter(q=>Y[q]<=0.5).map(q=>BT[q].n);
   return `<p class="dcsfield">The pulper is fed in this order, bale by bale, and the trucks bring whichever kind is short. A bales cost more and pulp clean; Mixed Waste is cheap but a quarter of it goes to landfill.</p>
     <table class="rect"><thead><tr><th>Bale</th><th>Price</th><th>Rejects</th><th>Yard</th><th>Per cycle</th></tr></thead><tbody>${rows}</tbody></table>
     <div class="recseq" aria-label="Feed sequence">${chips}</div>
@@ -226,11 +226,6 @@ TAGMAP.evap2="evap";TAGMAP.twl=null;TAGMAP.ice=null;TAGMAP.perm=null;TAGMAP.wcf=
 PGX.WATER=[["intake",()=>stI("icedintake")],["tower",()=>active("icedintake")?"warn":"ok","tower"],["pumpBox",()=>"ok"],["headbox",()=>S.pm==="run"?"ok":"off"],["dryers",()=>S.pm==="run"?"ok":"off","d4"],
   ["pulper",()=>S.M&&S.M.pulperDown?"off":"ok","pulp"],["tank",()=>S.wat&&S.wat.short>0?"trip":S.wat&&S.wat.L<WAT.cap*0.25?"warn":"ok","wwc"],["clarifier",()=>or(stI("permit"),tssNow()>45?"warn":"ok")],
   ["landfill",()=>"ok"],["outfall",()=>"ok"]];
-// the water screen's alarms (the river intake and the permit show here as well as on UTIL)
-{const base=dcsAlarms;dcsAlarms=function(a,r,L){base(a,r,L);if(a!=="WATER")return;const al=(on,t,hi)=>{if(on)L.push([t,hi]);},W=S.wat;
-  al(active("icedintake"),"RIVER INTAKE ICED · NO MAKEUP WATER",true);al(active("permit"),"WASTEWATER PERMIT EXCEEDED",true);
-  al(!!(W&&W.short>0),"WHITE WATER CHEST EMPTY · STOCK THICK",true);al(!!(W&&W.short<=0&&W.L<WAT.cap*0.25),"WHITE WATER CHEST LEVEL LO",false);
-  al(!!(W&&W.r.over>50),"WHITE WATER OVERFLOWING TO THE SEWER",false);al(tssNow()>45&&!active("permit"),"EFFLUENT TSS HI",false);};}
 function waterRefresh(){const e=$("wBal");if(!e||!S.wat)return;const T=S.wat.tot,mg=v=>fmtGal(GAL(v||0)),paper=T.paper||0;
   const inn=[["Fresh water",T.fresh],["Water in the bales",T.bale],["Water in repulped beater",T.rep]],out=[["Up the dryer stack",T.evap],["In the paper",T.prod],["With the rejects",T.rej],["With the clarifier sludge",T.sludge],["Treated outfall",T.out]];
   const si=inn.reduce((a,x)=>a+(x[1]||0),0),so=out.reduce((a,x)=>a+(x[1]||0),0);

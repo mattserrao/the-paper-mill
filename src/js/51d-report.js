@@ -35,10 +35,6 @@
         <div class="rcbar"><div class="rcbars">${bar}</div><div class="rprice" style="left:${(price/sc*100).toFixed(2)}%"><span>Price ${money(price)}</span></div></div>
         <div class="rmargin ${m>=0?"pos":"neg"}">Margin ${money(m)}/t · ${pc(price>0?m/price:0)}</div>
         <div class="rleg">${rows.map(r=>`<div><i style="background:${r[2]}"></i><span>${r[0]}</span><b class="mono">${money(r[1]/p.prod)}</b></div>`).join("")}</div>`;}
-    function upBlock(p){const top=p.dn.slice(0,3).map(([k,m])=>`${k} (${hrs(m)})`).join(" · ");
-      return `<div class="rhd"><h3>Uptime</h3><small>this period · outages left out</small></div><div class="rup">${RC_SEC.map(([k,n])=>{const v=p.rel[k]||0,w=v<0.9;
-        return `<span${w?' class="w"':""}>${n}</span><div><i style="width:${(v*100).toFixed(1)}%;background:${v<0.9?"var(--warn)":"var(--ok)"}"></i></div><b class="mono${w?" w":""}">${pc(v)}</b>`;}).join("")}</div>
-        <p class="rnote">${top?"Biggest losses: "+top+" · ":""}${p.breaks} sheet break${p.breaks===1?"":"s"} · ${p.hay} hayout${p.hay===1?"":"s"}</p>`;}
     function daysBlock(d){const D=(d.R.days||[]).filter(x=>x.d>3);if(!D.length)return "";
       const sv=!!S.season.surv,d0=sv?Math.max(0,D[D.length-1].d-30):0;   // v4.3 survival: the last 30 days, with a line at each outage
       const X=v=>22+(v-d0-1)*(326/29),Y=L=>20+(4-GP[L])*28,pts=D.map(x=>`${X(x.d).toFixed(1)},${Y(x.o)}`).join(" ");

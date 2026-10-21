@@ -43,7 +43,7 @@
     wetI.renderOrder=2;wetI.userData.noNav=true;scene.add(wetI);const wet=[];let wk=0;for(let k=0;k<WT;k++){wet.push({x:0,z:0,t:99});}
     const wrot=new THREE.Quaternion().setFromAxisAngle(new THREE.Vector3(1,0,0),-Math.PI/2);
     let lastT=null,wetAcc=0,canAcc=0;
-    G3.janUpdate=(rdt,now)=>{if(!S||G3.bare)return;   // (v5.7.3 bare: no janitor, scrubbers or litter)
+    G3.janUpdate=(rdt,now)=>{if(!S)return;
       const hr=((S.t+360)/60)%24,night=NIGHT(hr);
       // litter builds during the working day
       if(lastT===null)lastT=S.t;const dh=Math.max(0,Math.min(60,(S.t-lastT)/60));lastT=S.t;

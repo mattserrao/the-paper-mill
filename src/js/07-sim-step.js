@@ -167,7 +167,6 @@ function step(dt){
   if(S.trendAcc>=10){S.trendAcc-=10;S.trend.push([S.tank/P.tankCap,S.pmSpeed/3300,S.yard/P.yardCap,S.fg/P.fgCap]);if(S.trend.length>144)S.trend.shift();}
   vlvCapture();   // v6.9 the valves' boundary for the next 15 s, and their trend points (07h)
   histTick(dt);   // v6.5 history: the hour's readings and minutes (11c)
-  if(!S.zen)knobHist();   // v5.6: DCS / QCS trends (reads only)
   tagTick();   // v6.7 the control room's tag history (11d; reads only)
 }
 

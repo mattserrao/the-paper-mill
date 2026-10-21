@@ -46,7 +46,7 @@
     u.legs.forEach(l=>{l.children[0].material=trouM;l.children[0].scale.set(0.2,0.9,0.2);const sh2=new THREE.Mesh(cubeG,shoeM);sh2.scale.set(0.32,0.1,0.18);sh2.position.set(0.06,-0.86,0);l.add(sh2);});
     u.armM.forEach(m=>m.scale.x=m.scale.z=0.15);}
   function free(w){w.visible=false;w.userData.busy=false;}
-  const AIS=16.5,parties=[];let ambT=G3.bare?{tour:1e12,mgr:1e12,office:1e12,birds:1e12,food:1e12}:{tour:25,mgr:45,office:8,birds:15,food:35};   // (v5.7.3 bare: no ambient life)
+  const AIS=16.5,parties=[];let ambT={tour:25,mgr:45,office:8,birds:15,food:35};
   // a party walks a path [x,z,stop seconds,act]; followers keep formation behind the leader and gather round at the stops
   function party(kind,members,path,walk){parties.push({kind,members,path,i:0,wait:0,walk});}
   G3.mgrLead=()=>{for(const P2 of parties)if(P2.kind==="mgr"&&!P2.home&&P2.members[0]&&P2.members[0].visible)return P2.members[0];return null;};
@@ -184,11 +184,10 @@
     if(G3.fogFan&&rdt>0){const F=G3.fogFan,down=S.inc.some(i=>i.id==="fogfan"),k=down?0:(S.pm==="run"?1:0.35);F.spin+=(k-F.spin)*Math.min(1,rdt*0.8);F.rot.rotation.y+=rdt*F.spin*14;
       // (v6.1 t12: the fog elimination fan's vapour is paper cut-out clouds too, smaller than the stack's; ?softplume = steam)
       if(/[?&]softplume/.test(location.search)){if(Math.random()<rdt*9*k)emitA("steam",F.top[0]+R()*0.5,F.top[1],F.top[2]+R()*0.5,R()*0.7+0.5,3.0+Math.random()*1.8,R()*0.7,3.4,2.0+Math.random()*1.6,"#f4f6f8",0.6);}
-      else if(Math.random()<rdt*1.5*k)emitA("paper",F.top[0]+R()*0.5,F.top[1]+1,F.top[2]+R()*0.5,R()*0.5+0.4,2.0+Math.random()*0.8,R()*0.5,4.2,3.0+Math.random()*1.4,"#ffffff",1);}G3.spiderFrame&&G3.spiderFrame(rdt);if(!G3.bare){M.wind.emissive=M.wind.emissive||new THREE.Color();M.wind.emissive.copy(WIN_EM).multiplyScalar(0.85*night*bk);if(G3.winMats)G3.winMats.forEach(m=>m.emissive.copy(M.wind.emissive).multiplyScalar(0.7));}   // (v5.7.3 bare: unlit glass has no glow to set)
+      else if(Math.random()<rdt*1.5*k)emitA("paper",F.top[0]+R()*0.5,F.top[1]+1,F.top[2]+R()*0.5,R()*0.5+0.4,2.0+Math.random()*0.8,R()*0.5,4.2,3.0+Math.random()*1.4,"#ffffff",1);}G3.spiderFrame&&G3.spiderFrame(rdt);M.wind.emissive=M.wind.emissive||new THREE.Color();M.wind.emissive.copy(WIN_EM).multiplyScalar(0.85*night*bk);if(G3.winMats)G3.winMats.forEach(m=>m.emissive.copy(M.wind.emissive).multiplyScalar(0.7));
     ENV.lampHead.color.copy(LAMP_OFF).lerp(LAMP_ON,night*bk);ENV.lampPool.opacity=0.32*night*bk;if(ENV.lampPoolMesh)ENV.lampPoolMesh.visible=night*bk>0.01;   // (v5.2: no invisible draws by day)
     ENV.pudM.opacity=0.55*(S.wet||0);if(ENV.pudMeshes){const v=(S.wet||0)>0.01;if(ENV.pudMeshes.v!==v){ENV.pudMeshes.v=v;ENV.pudMeshes.forEach(m=>m.visible=v);}}ENV.riverTex.offset.x=(ENV.riverTex.offset.x-rdt*0.02)%1;
     if(G3.YP&&G3.YP.flags&&rdt>0)G3.YP.flags.forEach((f,k)=>{f.rotation.y=0.55+0.28*Math.sin(now/900+k*2.1);});
-    if(ENV.spark){ENV.sparkTex.offset.x=(ENV.sparkTex.offset.x+rdt*0.013)%1;ENV.spark.material.opacity=0.35*day*(1-0.6*(fogK+wxK));}
     ENV.bridge.rotation.y-=rdt*0.12;
     // steam plume grows with production and dies when the boiler trips
     const boil=S.inc.some(i=>i.id==="boiler"),pr=clamp(Math.max((S.rates.prod||0)/35,(S.dry&&S.pm==="break"?S.dry.steam:0)/45),0,1.4);   // (v6.5.7: the boiler stays fired through a sheet break)

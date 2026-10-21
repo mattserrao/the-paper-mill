@@ -8,7 +8,7 @@ function seasonLocks(on){["chaosOn","chaosLvl","chaosClear"].forEach(id=>{const 
   document.querySelectorAll('#chaosgrid input[type=checkbox]').forEach(el=>el.disabled=on);
   // v3.1.3: in a season upsets can't be set off by hand, and sheet breaks / hayouts can't be switched off
   document.querySelectorAll('#chaosgrid button.trig').forEach(el=>{el.disabled=on;el.title=on?lockWhy():"";});
-  ["chaosRandom","v2dis"].forEach(id=>{const el=$(id);if(el){el.disabled=on;el.title=on?lockWhy():"";}});
+  {const el=$("chaosRandom");if(el){el.disabled=on;el.title=on?lockWhy():"";}}
   if(on){C.breaks=C.hays=true;}["breaks","hays"].forEach(id=>{const el=$(id);if(el){if(on)el.checked=true;el.disabled=on;}});
   // v4.2.1: in a season the area controls run on AUTO and are locked (paper colour is only a look, so it stays free)
   if(on)AUTOKEYS.forEach(k=>{if(C[k])C[k].auto=true;});
