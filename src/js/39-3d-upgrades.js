@@ -29,7 +29,15 @@
       const cg=new CylG(0.45,0.45,0.35,16);cg.rotateZ(Math.PI/2);const cp=new THREE.Mesh(cg,M.warn);cp.position.set(X+2.2,2.0,z);g.add(cp);
       const mg=new CylG(1.0,1.0,2.8,24);mg.rotateZ(Math.PI/2);const mo=new THREE.Mesh(mg,M.motor);mo.position.set(X+3.8,1.6,z);mo.castShadow=true;g.add(mo);REF_MOTORS.push(mo);   // motor
       for(let k=0;k<8;k++){const a=k/8*Math.PI*2;box(2.6,0.08,0.08,M.ink,X+3.8,1.6+Math.cos(a)*1.02,z+Math.sin(a)*1.02,g,false);}   // cooling fins
-      box(0.7,0.6,0.7,M.ink,X+3.8,2.85,z,g,false);blob(X+1.5,z,3.6);});
+      box(0.7,0.6,0.7,M.ink,X+3.8,2.85,z,g,false);blob(X+1.5,z,3.6);
+      // v6.11 (item 8): a coupling guard over the shaft, anchor bolts on the skid, the plate-gap actuator with its position scale,
+      // and a name plate on a post at the door end so the two refiners read at a glance (players click them for their health)
+      box(1.0,1.05,1.05,M.lane,X+2.2,2.0,z,g,false);
+      [[-3.3,-1.5],[-3.3,1.5],[3.3,-1.5],[3.3,1.5]].forEach(([dx,dz])=>box(0.22,0.12,0.22,M.ink,X+1.6+dx,0.5,z+dz,g,false));
+      box(0.5,0.5,0.5,M.ink,X-0.7,3.25,z,g,false);box(0.08,0.5,0.6,M.ok,X-0.97,3.25,z,g,false);
+      {const c=document.createElement("canvas");c.width=256;c.height=48;const x=c.getContext("2d");x.fillStyle="#ffffff";x.fillRect(0,0,256,48);x.fillStyle="#1c2233";x.font="800 24px system-ui,sans-serif";x.textAlign="center";x.fillText(z<-11?"REFINER A":"REFINER B",128,33);
+       const t=new THREE.CanvasTexture(c);t.colorSpace=THREE.SRGBColorSpace;const pl=new THREE.Mesh(new THREE.PlaneGeometry(1.6,0.3),new THREE.MeshBasicMaterial({map:t}));pl.rotation.y=-Math.PI/2;pl.position.set(X-2.05,1.15,z);g.add(pl);
+       box(0.1,1.0,0.1,M.steel,X-1.98,0.5,z,g,false);box(0.06,0.36,1.7,M.ink,X-1.99,1.15,z,g,false);}});
     const P=0.24;   // inlet header from the stock line, over and down into each housing; outlets back to the line
     spool([[57,4.8,-11],[57.9,4.8,-11],[57.9,4.6,-11]],P,M.stock);spool([[57.9,4.6,-14],[57.9,4.6,-8]],P,M.stock);
     ZS.forEach(z=>{spool([[57.9,4.6,z],[X,4.6,z],[X,3.55,z]],P,M.stock);spool([[X,0.7,z+(z<-11?1.55:-1.55)],[X,0.7,-11],[56.2,0.7,-11]],0.2,M.stock);});

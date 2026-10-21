@@ -2,7 +2,37 @@
   const paperDS=basic("paperc",{side:THREE.DoubleSide});
   slab(-29,-6,-2.5,3,M.slab,0.03);
   const wd=new THREE.Group();wd.position.set(-18.7,0,zc);scene.add(wd);
-  [-2.7,2.7].forEach(z=>{box(0.5,3.8,0.5,M.steel,-2.6,1.9,z,wd);box(0.5,3.8,0.5,M.steel,3.4,1.9,z,wd);box(6.5,0.4,0.5,M.steel,0.4,3.9,z,wd);});
+  // v6.11 Blender redesign (tools/blender/reelwind_new.py): drum side frames and bearings, an A-frame unwind stand with its brake,
+  // the slitter section (top knives on a beam, anvil under the web) and drive-side motors, the same look as the reel
+  {box(3,1.45,0.3,M.steel,-1.85,0.72,-2.75,wd,false);
+   box(0.55,0.55,0.4,M.ink,-1.3,0.75,-2.75,wd,false);
+   box(0.55,0.55,0.4,M.ink,-2.4,0.75,-2.75,wd,false);
+   box(2.2,0.12,0.9,M.ink,2.6,0.06,-2.75,wd,false);
+   {const o=box(0.3,2.3,0.45,M.steel,1.95,1.15,-2.75,wd,false);o.rotation.set(0,0,-0.208);};
+   {const o=box(0.3,2.3,0.45,M.steel,3.25,1.15,-2.75,wd,false);o.rotation.set(0,0,0.208);};
+   box(0.7,0.7,0.55,M.ink,2.6,2.4,-2.75,wd,false);
+   box(0.3,2.9,0.35,M.steel,-0.15,1.45,-2.75,wd,false);
+   box(0.3,2.9,0.35,M.steel,1.35,1.45,-2.75,wd,false);
+   box(1.8,0.3,0.4,M.steel,0.6,3,-2.75,wd,false);
+   box(3,1.45,0.3,M.steel,-1.85,0.72,2.75,wd,false);
+   box(0.55,0.55,0.4,M.ink,-1.3,0.75,2.75,wd,false);
+   box(0.55,0.55,0.4,M.ink,-2.4,0.75,2.75,wd,false);
+   box(2.2,0.12,0.9,M.ink,2.6,0.06,2.75,wd,false);
+   {const o=box(0.3,2.3,0.45,M.steel,1.95,1.15,2.75,wd,false);o.rotation.set(0,0,-0.208);};
+   {const o=box(0.3,2.3,0.45,M.steel,3.25,1.15,2.75,wd,false);o.rotation.set(0,0,0.208);};
+   box(0.7,0.7,0.55,M.ink,2.6,2.4,2.75,wd,false);
+   box(0.3,2.9,0.35,M.steel,-0.15,1.45,2.75,wd,false);
+   box(0.3,2.9,0.35,M.steel,1.35,1.45,2.75,wd,false);
+   box(1.8,0.3,0.4,M.steel,0.6,3,2.75,wd,false);
+   box(0.4,0.3,5.9,M.metal,0.6,2.75,0,wd,false);
+   box(0.16,0.4,0.22,M.ink,0.6,2.45,-1.45,wd,false);
+   box(0.16,0.4,0.22,M.ink,0.6,2.45,0,wd,false);
+   box(0.16,0.4,0.22,M.ink,0.6,2.45,1.45,wd,false);
+   box(0.4,0.22,5.9,M.metal,0.6,1.95,0,wd,false);
+   cylZ(0.72,0.12,M.ink,2.6,2.4,-3.1,16);
+   box(0.5,0.9,0.3,M.steel,2.6,1.95,-3.25,wd,false);
+   cylZ(0.42,0.9,M.stock,-1.85,0.75,-3.5,14);
+   box(0.9,0.75,0.9,M.steel,-1.85,0.37,-3.5,wd,false);}
   const unwind=cylZ(1,4.8,M.paper,2.6,2.4,0,22,wd);cylZ(0.22,5.8,M.steel,2.6,2.4,0,8,wd);
   const drums=[cylZ(0.5,5,M.metal,-1.3,0.75,0,12,wd),cylZ(0.5,5,M.metal,-2.4,0.75,0,12,wd)];
   // v6.5.7: the winder builds a SET of two rolls side by side on the drums (the sim's set), each the size of a roll on the conveyor

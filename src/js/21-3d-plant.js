@@ -95,9 +95,9 @@
       [-0.3,0.3].forEach(dz=>box(0.06,H+0.9,0.06,M.warn,T[0]+R+0.15,(H+0.9)/2,T[1]+dz,scene,false));for(let y=0.4;y<H+0.6;y+=0.4)box(0.06,0.06,0.6,M.warn,T[0]+R+0.15,y,T[1],scene,false);
       const c=document.createElement("canvas");c.width=256;c.height=48;const x=c.getContext("2d");x.fillStyle="#ffffff";x.fillRect(0,0,256,48);x.fillStyle="#1c2233";x.font="800 24px system-ui,sans-serif";x.textAlign="center";x.fillText("EFFLUENT TRANSFER",128,33);
       const t=new THREE.CanvasTexture(c);t.colorSpace=THREE.SRGBColorSpace;const pl=new THREE.Mesh(new THREE.PlaneGeometry(2.0,0.38),new THREE.MeshBasicMaterial({map:t}));pl.position.set(T[0],2.75,T[1]+R+0.02);scene.add(pl);
-      pipe([[10,0.8,-25.2],[10,0.8,-27.2]],0.3,M.stock);
+      pipe([[10,0.8,-25.2],[10,0.8,-27.2]],0.3,M.ww);
       box(1.1,0.6,0.9,M.brand,11.9,0.45,-30.6,scene);box(0.7,0.55,0.6,M.ink,12.85,0.45,-30.6,scene,false);    // transfer pump and motor
-      pipe([[10,0.6,-30.0],[10,0.6,-30.6],[11.4,0.6,-30.6]],0.22,M.stock);pipe([[11.9,0.9,-30.6],[11.9,0.9,-31.4],[10,0.9,-31.4],[10,2.4,-31.4],...(cx!==10?[[cx,2.4,-31.4]]:[]),[cx,2.4,-33]],0.26,M.stock);
+      pipe([[10,0.6,-30.0],[10,0.6,-30.6],[11.4,0.6,-30.6]],0.22,M.ww);pipe([[11.9,0.9,-30.6],[11.9,0.9,-31.4],[10,0.9,-31.4],[10,2.4,-31.4],...(cx!==10?[[cx,2.4,-31.4]]:[]),[cx,2.4,-33]],0.26,M.ww);
       /* pipe supports on the long run to a moved clarifier */for(let x=16;x<cx-3;x+=8)box(0.22,2.2,0.22,M.steel,x,1.1,-31.4,scene,false);}pipe([[WX(17.1),1.4,-40],[WX(22),1.4,-40]],0.3,M.metal);ENV.ww=[cx,cz];}
   // power house and boiler stack, steam header into the machine hall
   {const x0=70,x1=82,z0=-16,z1=-4,h=9;const b=box(x1-x0,h,z1-z0,conc,(x0+x1)/2,h/2,(z0+z1)/2);edges(b);box(x1-x0+0.4,0.4,z1-z0+0.4,M.roofFlat,(x0+x1)/2,h+0.2,(z0+z1)/2);

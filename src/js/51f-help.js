@@ -185,6 +185,7 @@
     ["Basis weight setpoint","The weight the machine aims for, set on the WET DCS from 10% under to 5% over the grade's target. The weight spec is ±3% around it."],
     ["Lightweight premium","On-spec paper made under the grade's target weight earns half the trim as extra price, up to 5%. A lighter sheet needs more refining to pass ring crush."],
     ["Headbox consistency (HBC)","Fiber in the headbox jet: about 0.8%. The fan pump thins the machine chest's stock (about 3.2%) down to it with white water."],
+    ["Pipe colours","Pipes are coloured by what they carry: brown is raw stock from the pulper, blue is cleaned stock, teal is white water and filtrate, pale blue is fresh water and silver is insulated steam. White arrows point the way it flows."],
     ["Fan pump","Pumps the stock to the headbox, mixing in white water from the silo. If the silo runs under 15% it cavitates and the weight swings."],
     ["White water","The water that drains through the forming fabric, still carrying fine fiber. The mill uses it again to dilute stock."],
     ["White water silo","The tank under the wire (60,000 gallons) that catches the table's drainage and feeds the fan pump. It normally overflows to the white water chest; LV-202 tops it up under 25%, and held under 8% the sheet breaks."],
