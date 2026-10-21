@@ -27,6 +27,9 @@ def catch_round(pg, area, ids, how):
         pg.wait_for_function("id=>!!__PM.G3.tellScreen(id)", arg=id, timeout=30000)
         pg.evaluate("id=>{const G=__PM.G3,p=G.tellPos(id),c=G.camGet();G.tellHold();G.camSet([p[0],p[1],58,c[3],0.62]);}", id)   # (as a player would pan to it; the camera holds still)
         pg.wait_for_timeout(1500)
+        # (tellScreen projects with the camera as the last frame left it: on a loaded machine 1.5 s can pass without a
+        # frame, and the tap then lands off screen. Wait for a few real frames as well)
+        pg.evaluate("()=>new Promise(r=>{let n=0;const f=()=>{if(++n>=4)r();else requestAnimationFrame(f);};requestAnimationFrame(f);})")
         xy = pg.evaluate("id=>__PM.G3.tellScreen(id)", id)
         C.note("tap", id, [round(v) for v in xy[:2]], pg.evaluate("([x,y])=>{const e=document.elementFromPoint(x,y);return e&&(e.id||e.className||e.tagName)}", xy[:2]), pg.evaluate("()=>({run:__PM.running,on:__PM.G3.tellRoundOn()})"))
         if how == "tap": pg.touchscreen.tap(xy[0], xy[1])

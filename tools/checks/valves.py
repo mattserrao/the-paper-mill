@@ -27,6 +27,9 @@ def valves(pw):
     b = launch(pw); pg = open_game(b, html, "notitle&nosave&nobf&" + LITE, viewport=(900, 600), errs=errs, wait=False)
     pg.wait_for_function("window.__PM&&window.__B&&__B.first!==null&&(!__PM.G3.prewarm||__PM.G3.warm)", timeout=240000, polling=500)
     pg.evaluate("()=>document.getElementById('v2go').click()"); pick_leader(pg)
+    # (the season's bottleneck comes from Math.random at season start and the low tier boots on a different count of
+    #  cosmetic randoms: pinned to the full tier's "winder", the mill the old check ran)
+    pg.evaluate("()=>__PM.setBn('winder')")
     pg.evaluate("""()=>{const P=__PM;P.setRunning(false);P.CH.on=false;const S=P.S;while(S.t<1440)P.step(P.SIM_STEP);
       S.bq.k=0.1;S.bq.ck=0.1;S.bq.m=0.10;window.__SNAP=JSON.stringify({v:1,S,C:P.C,CH:{on:false,lvl:P.CH.lvl,en:P.CH.en},MILL:null,day:2,cash:S.cash});window.__Q0=P.QNOW.rct;}""")
     R = lambda setup="", mins=60, probe="return null;", each=None: pg.evaluate(RUN, [setup, mins, probe, each])

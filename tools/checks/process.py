@@ -42,11 +42,16 @@ shot = sys.argv[2] if len(sys.argv) > 2 else None
 SNAP = """()=>{const P=__PM;P.setRunning(false);P.CH.on=false;const S=P.S;while(S.t<1440)P.step(P.SIM_STEP);%s
   window.__SNAP=JSON.stringify({v:1,S,C:P.C,CH:{on:false,lvl:P.CH.lvl,en:P.CH.en},MILL:null,day:2,cash:S.cash});}"""
 
+# (the season's bottleneck is drawn with Math.random at season start (09 startSeason), and the low graphics tier uses up a
+#  different number of cosmetic randoms while booting, so under LITE the same seed got "screens" (28 t/h) instead of the
+#  full tier's "winder" (34.8 t/h). Pinned to the mill the old full-tier checks ran.)
+PIN_BN = "()=>__PM.setBn('winder')"
+
 def boot_season(pw, query, viewport=(900, 600), html=None, leader="hank", console=False):
     b = launch(pw); pg = open_game(b, html or html_arg(), query, viewport=viewport, errs=errs, wait=False)
     if console: pg.on("console", lambda m: m.type == "error" and "Failed to load resource" not in m.text and errs.append("CONSOLE " + m.text[:300]))
     pg.wait_for_function("window.__PM&&window.__B&&__B.first!==null&&(!__PM.G3.prewarm||__PM.G3.warm)", timeout=240000, polling=500)
-    pg.evaluate("()=>document.getElementById('v2go').click()"); pick_leader(pg, leader)
+    pg.evaluate("()=>document.getElementById('v2go').click()"); pick_leader(pg, leader); pg.evaluate(PIN_BN)
     return b, pg
 
 
@@ -92,7 +97,10 @@ QRUN = """(a)=>{const P=__PM,[setup,mins]=a,G=P.G3;G.save.restore(JSON.parse(win
 
 def qual(pw):
     C.sec("qual")
-    b, pg = boot_season(pw, "notitle&nosave&nobf&" + LITE)
+    # (full graphics tier, not LITE: with LITE the same runs cut far fewer beater rolls (agitator off 8 vs 34, press
+    #  loading low 0 vs 2 with the same 43 min out of spec), so "wound into beater rolls" failed; the old full-tier
+    #  numbers come back without it)
+    b, pg = boot_season(pw, "notitle&nosave&nobf")
     pg.evaluate(SNAP % "")
     # ---- the spec sheet ----
     spec = pg.evaluate("()=>{const out={};for(const g of ['24','28','31','34Super']){__PM.C.grade=g;const q=__PM.G3.qual();out[g]=q.spec;}return out}")
@@ -313,7 +321,7 @@ def order(pw):
     pg.on("console", lambda m: m.type == "error" and "Failed to load resource" not in m.text and errs.append("CONSOLE " + m.text[:300]))
     pg.wait_for_function("window.__PM&&window.__B&&__B.first!==null", timeout=300000, polling=500)
     pg.evaluate("()=>document.getElementById('v2go').click()"); pick_leader(pg)
-    pg.wait_for_function("__PM.S.season&&__PM.S.season.on", timeout=120000, polling=100)
+    pg.wait_for_function("__PM.S.season&&__PM.S.season.on", timeout=120000, polling=100); pg.evaluate(PIN_BN)
     pg.evaluate("""()=>{const P=__PM;P.setRunning(false);if(P.G3)P.G3.on=false;
       window.__run=(m,f)=>{const S=P.S,h=P.SIM_STEP||0.25,t1=S.t+m;while(S.t<t1-1e-9){P.step(h);if(f)f();const o=S.cards&&S.cards.open;
         if(o){if(o.outage){const b=document.getElementById('out-ok');if(b)b.click();}S.cards.open=null;['dealOv','outOv','seasonOv','civOv','rcOv'].forEach(id=>{const e=document.getElementById(id);if(e)e.hidden=true;});}
@@ -486,7 +494,7 @@ def ref(pw):
     b = launch(pw); pg = open_game(b, html, "env=rural&nobf&" + LITE, viewport=(1000, 700), errs=errs, wait=False)
     pg.wait_for_function("window.__PM&&__B.first!==null", timeout=300000)
     pg.evaluate("()=>document.getElementById('v2go').click()"); pick_leader(pg, "chip")
-    pg.wait_for_function("__PM.S.season&&__PM.S.season.on", timeout=300000)
+    pg.wait_for_function("__PM.S.season&&__PM.S.season.on", timeout=300000); pg.evaluate(PIN_BN)
     ev = pg.evaluate
     ev("()=>{__PM.setRunning(false);const t=document.getElementById('tut');if(t)t.hidden=true;const G=__PM.G3;if(G&&G.EXP)G.EXP.noRender=true;}")
     RUN = """(mins)=>{const P=__PM,S=P.S,o=[];S.cards.next=1e12;for(let i=0;i<mins*4;i++){P.step(0.25);if(S.civ&&S.civ.cur){S.civ.cur=null;S.cards.open=null;}if(S.cards.open&&!S.cards.open.civ)S.cards.open=null;
