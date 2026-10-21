@@ -9,8 +9,8 @@ geometry type, plus the iso camera (world matrix, ortho frustum) so Blender can 
 import json, sys, pathlib
 from playwright.sync_api import sync_playwright
 HERE = pathlib.Path(__file__).parent
-src = (HERE / "bench.py").read_text()
-exec(src.split("def stats")[0].split("from playwright.sync_api import sync_playwright")[1])
+import sys as _s; _s.path.insert(0, str(HERE))
+from lib import route_for, INIT, HOOK, pick_leader   # v6.10.2: the shared harness (tools/lib.py)
 html = pathlib.Path(sys.argv[1]).read_text()
 out = sys.argv[2]; box = [float(v) for v in sys.argv[3:9]]; shot = sys.argv[9] if len(sys.argv) > 9 else None
 if "window.__PM=" not in html:
