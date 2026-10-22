@@ -1,5 +1,8 @@
 # Changelog
 
+## v6.11.1 (2026-10-21): The Dryer Hood and Wet-End Chemicals
+Release of v6.11.1-t1 to t4 (below), merged from test/v6.11.1-hood.
+
 ## v6.11.1-t4 (2026-10-21): effluent in permit (test build, test/v6.11.1-hood)
 - **The clarifier catches 99.71% of the solids** (was 98.8%), so a normal run's effluent is about 25 mg/L TSS (p99 ~35) under the 50 mg/L permit; before, it sat around 120 and the TSS HI alarm stayed lit.
 - **The polymer's permit breach follows the reading:** TSS held over 50 mg/L for an hour while the polymer is under its standard (about a third of the standard dose or less) fines the mill; the permit-risk warning shows under 0.15 kg/t.
