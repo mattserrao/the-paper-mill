@@ -247,8 +247,12 @@ def winder(pw):
     ok("machine stops on spools only with storage full", all(s["stored"] >= 4 for s in seen if s["pm"] == "spools"))
     # (the crane animates in real frame time: under load it can still be carrying the last reel, so let it finish first;
     #  v6.11.2: up to 2 min, as two checks side by side can slow the frames past 30 s)
-    try: pg.wait_for_function("()=>{const C=__PM.G3.CR;return !C.j&&!C.jobs.length}", timeout=120000, polling=250)
-    except Exception: C.note("crane:", pg.evaluate("()=>{const C=__PM.G3.CR;const f=j=>j&&({kind:j.kind,fromPark:!!j.fromPark,fromReel:!!j.fromReel,picked:!!j.picked,dropped:!!j.dropped,delay:j.delay,b:j.b});return {j:f(C.j),jobs:C.jobs.map(f),t:C.t,hidePark:C.hidePark}}"))
+    #  v6.11.2 t6: the crane only moves while the game runs, and a civics card or a deal that pops up meanwhile pauses it, so
+    #  under load the crane could freeze mid-move with the last reel and the stands read one short. Slow the sim right down
+    #  (the machine is stopped on spools, nothing else changes) and keep answering cards and resuming while it finishes.
+    pg.evaluate("()=>{__PM.C.simSpeed=1;}")
+    try: pg.wait_for_function("()=>{__civ();__deal();if(!__PM.running&&document.getElementById('v2menu').hidden)__PM.setRunning(true);const C=__PM.G3.CR;return !C.j&&!C.jobs.length}", timeout=120000, polling=250)
+    except Exception: C.note("crane:", pg.evaluate("()=>{const C=__PM.G3.CR;const f=j=>j&&({kind:j.kind,fromPark:!!j.fromPark,fromReel:!!j.fromReel,picked:!!j.picked,dropped:!!j.dropped,delay:j.delay,b:j.b});return {j:f(C.j),jobs:C.jobs.map(f),t:C.t,hidePark:C.hidePark,running:__PM.running,cards:__PM.S.cards&&__PM.S.cards.open?Object.keys(__PM.S.cards.open).join():null,ovs:[...document.querySelectorAll('.overlay')].filter(e=>!e.hidden).map(e=>e.id),menu:!document.getElementById('v2menu').hidden,day:(__PM.S.t/1440).toFixed(2)}}"))
     rest = pg.evaluate("()=>({stored:Math.max(0,Math.ceil(__PM.S.winderBuf/100-0.005)-1),vis:(__PM.G3.parkedN??-1),pm:__PM.S.pm})")
     ok("stands match the sim at rest", rest["vis"] == rest["stored"], rest)
     pg.wait_for_timeout(5000)
