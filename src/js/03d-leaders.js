@@ -28,7 +28,8 @@ const LEAD={
   clean:0.15,            //   ...and sheet breaks and hayouts -15% per pick
   steamFull:4,           // v5.0.5: Hank's first 4 dryer tunings give the full cut, later ones half (8 picks used to cut steam to 0.64x)
   steam:0.055,           // Hank, dial in the dryers: steam (the energy part of energyCost, not chemicals) -5.5% per pick (stays with the mill)
-  heavy:0.02};           // Hank, runs the sheet heavy (basis-weight giveaway): fiber +2% while he is in charge
+  thread:0.25,           // v6.11.2 t6 QA: Hank, an old hand at threading: break and hayout time runs down 25% faster while he is in charge (seasons had him ~13% behind)
+  heavy:0.01};           // Hank, runs the sheet heavy (basis-weight giveaway): fiber +1% while he is in charge (t6: was 2%)
 const LEAD_IDS=["chip","dot","fel","hank"];
 // v5.1: the picker words the leaders for the mode being started (before the run exists survRun() is false)
 let leadMode=null;const leadSv=()=>leadMode?leadMode==="surv":survRun();
@@ -52,7 +53,7 @@ const leadLock=()=>survRun()&&S&&S.lead&&S.lead.lockW&&S.lead.lockW===survWave()
 const leadFibre=()=>S&&S.lead?leadLock()*(leadIs("hank")?1+LEAD.heavy:1):1;
 const leadPrice=()=>LEAD.sales*leadN("sales");
 const leadClean=()=>Math.pow(1-LEAD.clean,leadN("rethread"));              // sheet breaks and hayouts (Hank's runnability)
-const leadRethread=()=>1/Math.pow(1-LEAD.rethread,leadN("rethread"));      // how fast break and hayout time runs down (Hank)
+const leadRethread=()=>1/Math.pow(1-LEAD.rethread,leadN("rethread"))/(leadIs("hank")?1-LEAD.thread:1);      // how fast break and hayout time runs down (Hank)
 const leadEnergy=()=>{const n=leadN("clean");return Math.pow(1-LEAD.steam,Math.min(n,LEAD.steamFull))*Math.pow(1-LEAD.steam/2,Math.max(0,n-LEAD.steamFull));};   // v5.0.5: picks after the 4th give half               // Hank's dryer tuning (key "clean" kept for saves)
 const leadBill=()=>leadIs("dot")?LEAD.bills:1;
 const leadRep=()=>leadIs("dot")?1/(1-LEAD.rep):1;                           // repair speed (Dot)
