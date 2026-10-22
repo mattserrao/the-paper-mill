@@ -1,5 +1,17 @@
 # Changelog
 
+## v6.11.2-t5 (2026-10-22): vehicles and polish (test build, test/v6.11.2)
+- **New vehicle models** (designed in Blender, rebuilt in code from its profiles; parts merged per material): a step-van **food truck** (raked nose, serving hatch, counter, awning, roof vent); a GP-style **locomotive** (chamfered long hood, taller cab with wrap glazing, raked short hood, fuel tank, brake blister, pilots, handrails) and boxcars with end ladders and a roof walk; **staff cars** as sedans and SUVs with wheels and bumpers; and a Broderson-style **carry-deck crane** for the pulper job (low chassis, cab beside the boom, slewing turret with counterweight, three-section tapered telescopic boom). Meshes: truck 12→6, crane 46→28, train 137→70, cars 72→72 with paint materials 24→10; about +3,600 triangles in all, mostly car wheels.
+- **Warehouse annexes** are roofed walls: the props south of the warehouse move out ahead of each annex, the wall between opens, and the robot or clamp forks store rolls in the annex bays.
+- **Warehouse door:** a personnel door at the north end of the east wall, with an exit sign.
+- **Shift change walkers** no longer cut through walls: path searches finish before they move, the shop has a real doorway, and their targets hold still.
+- **Uncle Brian** stays with his scrubber and can be tapped for a ride-along again.
+- **MCC room light:** a wall pack on the north-east wall lights the floor.
+- **Beater bay** can be tapped for the tons of beater waiting to be repulped and the rolls in the bay. With robot forks the rolls still go to receiving (robots cover the clamp jobs), and the outbound lamp goes dark once outbound is robotic.
+- **Known defects view** (Rounds card): greys the plant and drops labelled bullseye pins on tells spotted on rounds and on vibration (mechanical, orange) and ADX (electrical, blue) findings.
+- **DE pulper on the DET DCS:** level, consistency and the broke going in (trim plus dryer-section breaks); no operator control.
+- Checks: dcs (DE pulper readings).
+
 ## v6.11.2-t4 (2026-10-22): small improvements (test build, test/v6.11.2)
 - **Drives re-rated** for a ~35 t/h recycled linerboard machine: refiners 2,000 kW each (2,600 with the upgrade), dryer section 1,500, couch 400, presses 450, reel 200, winder 750; pulper (1,100) and fan pump (900) unchanged.
 - **Electricity is metered** (07i `pwrTick`): the ten drives at their load plus the balance of plant (vacuum, pumps, agitators, fans, air, lighting; 6.4 MW running, 75% on a break, 35% stopped, 15% in an outage) at $0.07/kWh, about 12.5 MW and 390 kWh/t on a normal run. The per-ton bill is now steam and chemicals only. Calibrated to the old flat bill: a calm run $90.4/t vs $90.7; a chaotic week $121.9 vs $123.9 (stops now draw what a stopped mill draws). The separate refining kWh charge is gone (the refiner drives are metered); APC's 4% and survival's cost multiplier apply to power; the shoe press and the leader's dryer tuning stay steam savings. Glossary: Electricity.

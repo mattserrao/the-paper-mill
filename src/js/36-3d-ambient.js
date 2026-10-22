@@ -86,14 +86,19 @@
   function startBirds(){const n=3+Math.floor(Math.random()*4),dir=Math.random()<0.5?-1:1;flock={x:dir<0?72:-26,dir,z:4+Math.random()*10,n,offs:BIRDS.map(()=>[Math.random()*3,Math.random()*2.5-1.2,Math.random()*1.5])};}
   // food truck parks out front; operators drift over for food
   const FOOD=G3.FOOD={open:false,id:0,x:33,z:32.5,state:"off",t:0,spot(i){return [this.x-2.2+(i%4)*1.5,35.2+(i>=4?1.0:0)];}};
-  const truck=new THREE.Group();scene.add(truck);truck.visible=false;
+  const truck=new THREE.Group();truck.name="foodTruck";scene.add(truck);truck.visible=false;
   {const cols=["#f2b51d","#e4572e","#2ec4b6","#e84393"],bc=cloth(cols[Math.floor(Math.random()*cols.length)]);
-    box(5.6,2.6,2.4,bc,0.4,1.75,0,truck);box(1.9,1.9,2.3,bc,-3.1,1.4,0,truck);box(0.1,0.9,2.0,M.wind,-4.06,1.8,0,truck,false);
-    box(3.0,1.1,0.1,M.ink,0.6,2.05,1.22,truck,false);const aw=box(3.6,0.08,1.3,M.bad,0.6,2.85,1.75,truck,false);aw.rotation.x=0.35;box(3.0,0.1,0.5,M.steel,0.6,1.45,1.45,truck,false);
-    [[-3,1],[-3,-1],[2.2,1],[2.2,-1]].forEach(([x,z])=>cylZ(0.42,0.3,M.ink,x,0.42,z*1.1,16,truck));
+    /* v6.11.2 t5: a step van from a Blender side profile (raked nose, radiused roof) with a serving hatch, counter, awning,
+       roof vent and skirt; parts merged per material, so it is fewer draws than the old boxes */
+    const K=KIT();K.prof(bc,[[3.2,0.62],[3.2,3.2],[3.05,3.32],[-2.1,3.32],[-2.55,3.1],[-3.25,1.95],[-3.95,1.75],[-4.05,0.62]],2.4)
+      .prof(M.vglass,[[-2.5,3.02],[-3.15,1.98],[-3.22,2.0],[-2.58,3.06]],2.2).box(M.vglass,0.9,0.7,2.44,-2.75,2.4,0)
+      .box(M.ink,3.0,1.15,0.06,0.6,2.15,1.22).box(M.ink,7.1,0.25,2.3,-0.4,0.6,0).box(M.ink,3.1,0.85,0.08,0.6,3.85,0.06)
+      .box(M.steel,3.1,0.08,0.45,0.6,1.55,1.42).box(M.steel,0.25,0.3,2.4,-4.1,0.78,0).box(M.steel,0.8,0.25,0.8,1.6,3.45,-0.4)
+      .box(M.bad,3.5,0.07,1.3,0.6,2.98,1.8,0.35);
+    [[-2.9,1],[-2.9,-1],[2.2,1],[2.2,-1]].forEach(([x,z])=>K.cylZ(M.ink,0.45,0.3,x,0.45,z*1.05,12));K.build(truck);
     const c=document.createElement("canvas");c.width=256;c.height=64;const x=c.getContext("2d");x.fillStyle="#fff";x.fillRect(0,0,256,64);x.fillStyle="#1c2233";x.font='800 38px "Plus Jakarta Sans",system-ui,sans-serif';x.textAlign="center";x.textBaseline="middle";
     x.fillText(["TACOS","BBQ","PIEROGI","BURGERS","PHO"][Math.floor(Math.random()*5)],128,34);const t=new THREE.CanvasTexture(c);t.colorSpace=THREE.SRGBColorSpace;
-    const sg=new THREE.Mesh(new THREE.PlaneGeometry(3,0.75),new THREE.MeshBasicMaterial({map:t}));sg.position.set(0.6,3.45,0.2);truck.add(sg);box(3.1,0.85,0.08,M.ink,0.6,3.45,0.13,truck,false);}
+    const sg=new THREE.Mesh(new THREE.PlaneGeometry(3,0.75),new THREE.MeshBasicMaterial({map:t}));sg.position.set(0.6,3.85,0.11);truck.add(sg);}
   const FL={seen:null,until:0};
   const pigeon=BIRDS[5],PG={seen:null,t0:0};
   // weather particles around the camera target
