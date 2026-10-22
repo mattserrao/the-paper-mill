@@ -20,9 +20,9 @@ CTX = ssl.create_default_context(cafile=os.environ.get("SSL_CERT_FILE") or "/roo
 ENVS = ["rural", "urban", "desert", "swamp"]; STYLES = os.environ.get("QA_STYLES","handsoff,buyer,gambler,random,active").split(","); LEADERS = ["chip", "dot", "fel", "hank"]
 
 base = pathlib.Path(path).read_text()
-base = base.replace("window.__PM={", "window.__PM={get ECON(){return ECON},get UPS(){return UPS},get BN(){return BN},buy:id=>buy(id),lineCaps:()=>lineCaps(),leadFix:id=>leadFix(id),leadFixable:id=>leadFixable(id),leadFixReady:()=>leadFixReady(),get SURV(){return SURV},survUp:w=>survUp(w),survCost:w=>survCost(w),upCost:(u,l)=>upCost(u,l),upLocked:()=>upLocked(),premShare:()=>premShare(),",1)
+base = base.replace("window.__PM={", "window.__PM={get ECON(){return ECON},get UPS(){return UPS},get BN(){return BN},buy:id=>buy(id),lineCaps:()=>lineCaps(),leadFix:id=>leadFix(id),leadFixable:id=>leadFixable(id),leadFixReady:()=>leadFixReady(),get SURV(){return SURV},survUp:w=>survUp(w),survCost:w=>survCost(w),upCost:(u,l)=>upCost(u,l),upLocked:()=>upLocked(),",1)
 base = base.replace("seedRun(Math.floor(Date.now()/6048e5)", "seedRun(Math.floor((Date.now()+(window.__WK||0)*6048e5)/6048e5)", 1)
-assert "window.__WK" in base and "premShare:()" in base
+assert "window.__WK" in base
 
 def gate():
     GATE.touch(exist_ok=True)
@@ -98,7 +98,7 @@ PLAY = r"""async ([style,seed,swap,surv])=>{const P=__PM,S=P.S,h=P.SIM_STEP||0.2
     if(surv&&S.outg.k!==wk){P.setRunning(false);await new Promise(r=>setTimeout(r,0));const Ld=S.ledger,dl=k=>Math.round(((Ld[k]||0)-(L0[k]||0))/1e3);
       log.waves.push({w:wk,net_k:Math.round((S.cash-c0)/1e3),inc:S.tot.incidents-i0,rev_k:dl('rev'),occ_k:dl('occ'),energy_k:dl('energy'),labor_k:dl('labor'),repairs_k:dl('repairs'),upMul:+P.survUp(S.outg.k).toFixed(3),costMul:+P.survCost(S.outg.k).toFixed(3)});
       wk=S.outg.k;c0=S.cash;i0=S.tot.incidents;L0=JSON.parse(JSON.stringify(Ld));}
-    const d=Math.floor(S.t/1440);if(d!==lastDay){lastDay=d;if(S.we){log.trims.push(+S.we.trim.toFixed(4));log.prem.push(+P.premShare().toFixed(4));}if(style!=='handsoff'&&style!=='rounds')shop();if(style==='active'||style==='rounds')activeDay();chemDay();}
+    const d=Math.floor(S.t/1440);if(d!==lastDay){lastDay=d;if(S.we){log.trims.push(+S.we.trim.toFixed(4));}if(style!=='handsoff'&&style!=='rounds')shop();if(style==='active'||style==='rounds')activeDay();chemDay();}
     P.setRunning(false);if(n%4000===0)await new Promise(r=>setTimeout(r,0));}
   log.steps=n;log.simSec=+((performance.now()-t0)/1000).toFixed(1);log.day=+(S.t/1440).toFixed(2);log.done=!!(S.season&&S.season.done);log.result=S.season&&S.season.result;
   log.cash=Math.round(S.cash);log.start=P.ECON.start;log.bn=S.bn;log.leaderEnd=S.lead&&S.lead.id;
