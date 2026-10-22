@@ -264,7 +264,7 @@ def winder(pw):
     drained = []
     for k in range(200):
         ff(12)
-        r = pg.evaluate("()=>{const S=__PM.S,G=__PM.G3;return {stored:Math.max(0,Math.ceil(S.winderBuf/100-0.005)-1),vis:(G.parkedN??-1),pm:S.pm,rolls:S.tot.rolls,wd:S.wd,conv:S.conv,convCap:__PM.P.convCap,inc:S.inc.map(i=>i.id).join(),run:__PM.running,card:S.cards&&S.cards.open?Object.keys(S.cards.open).join():null,day:+(S.t/1440).toFixed(2)}}")
+        r = pg.evaluate("()=>{const S=__PM.S,G=__PM.G3;return {stored:Math.max(0,Math.ceil(S.winderBuf/100-0.005)-1),vis:(G.parkedN??-1),pm:S.pm,rolls:S.tot.rolls,wd:S.wd,conv:S.conv,inc:S.inc.map(i=>i.id).join(),run:__PM.running,card:S.cards&&S.cards.open?Object.keys(S.cards.open).join():null,day:+(S.t/1440).toFixed(2)}}")
         drained.append(r)
         if r["stored"] <= 1 and k > 4: break
     C.note("drain:", json.dumps(drained[-1]))
