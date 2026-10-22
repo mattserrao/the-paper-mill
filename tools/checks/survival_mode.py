@@ -212,9 +212,10 @@ def survival_mode(pw):
     r = pick("so-new", "fel"); pg.evaluate("()=>__PM.setRunning(false)"); pg.wait_for_timeout(600); s = state()
     ok("new run: the picker offers the last leader started with", r["sel"] == "chip" and not r["dis"], r)
     ok("new survival run: clean start with Felicity (wave 1, ×1, $2.0M, nothing built)", s["surv"] and s["on"] and s["k"] == 1 and s["costMul"] == 1 and abs(s["cash"] - 2000000) < 5000 and s["t"] < 60 and abs(s["occ"] - occ1) < 1e-9
-       and s["lead"]["id"] == "fel" and not s["lead"]["changed"] and not any(s["lead"]["st"].values()) and abs(s["lp"] - price1) < 1e-9 and abs(s["rep"] / 1.2 - pg.evaluate("()=>__PM.civBill()")) < 0.005, s)   # (repairs: the civics meters only, which drift a little: a leader nudges them at the start)
+       and s["lead"]["id"] == "fel" and not s["lead"]["changed"] and not any(s["lead"]["st"].values()) and abs(s["lp"] - price1) < 1e-9 and abs(s["rep"] / 1.05 - pg.evaluate("()=>__PM.civBill()")) < 0.005, s)   # (repairs: the civics meters only, which drift a little: a leader nudges them at the start)
+    enW1 = s["energy"]   # (v6.11.2: the steam bill follows the grade (t4), and a new run can start on another grade: wave 4 against this run's wave 1)
     pg.evaluate("()=>{__PM.S.outg.k=4;__PM.setBn(__PM.S.bn);}"); s = state()
-    ok("costs follow the wave (wave 4 = ×1.331 on fibre and energy)", abs(s["costMul"] - 1.331) < 1e-9 and abs(s["occ"] / occ1 - 1.331) < 1e-9 and abs(s["energy"] / en1 - 1.331) < 1e-9, s)
+    ok("costs follow the wave (wave 4 = ×1.331 on fibre and energy)", abs(s["costMul"] - 1.331) < 1e-9 and abs(s["occ"] / occ1 - 1.331) < 1e-9 and abs(s["energy"] / enW1 - 1.331) < 1e-9, s)
     pg.evaluate("()=>{document.getElementById('v2pause').click();document.getElementById('v2free').click();__PM.setRunning(false);}"); pg.wait_for_timeout(600); s = state()
     ok("free play abandons the run: no wave costs, no leader, no chip, no locks", not s["surv"] and s["costMul"] == 1 and s["lead"] is None and not s["chip"] and not s["lock"], s)
     # (v5.1: seasons have leaders too, picked the same way)
@@ -228,7 +229,7 @@ def survival_mode(pw):
     ok("New survival, then Back: the season goes on", s["on"] and not s["surv"] and pg.evaluate("()=>document.getElementById('leadOv').hidden"), s)
     pick("v2survNew", "hank"); pg.evaluate("()=>__PM.setRunning(false)"); pg.wait_for_timeout(500); s = state()
     ok("New survival from the pause menu starts a run with Hank (runs heavy from day one: fibre +1% since t6, energy unchanged)", s["surv"] and s["on"] and s["k"] == 1 and s["chip"] and s["lead"]["id"] == "hank"
-       and abs(s["occ"] / occ1 - 1.01) < 1e-9 and abs(s["energy"] - en1) < 1e-9, s)
+       and abs(s["occ"] / occ1 - 1.01) < 1e-9 and abs(s["energy"] - pg.evaluate("()=>{const P=__PM,S=P.S,L=S.lead;S.lead=null;P.setBn(S.bn);const e=P.energyCost();S.lead=L;P.setBn(S.bn);return e}")) < 1e-9, s)   # (energy: the same run without a leader)
     r = pg.evaluate("()=>{const P=__PM,S=P.S;S.cash=-1.6e6;P.G3.on=false;P.step(0.25);P.G3.on=true;document.getElementById('so-more').click();return {ov:document.getElementById('seasonOv').hidden,menu:!document.getElementById('v2menu').hidden,run:P.running,season:!!P.S.season,cash:P.S.cash};}")
     ok("game over: Menu goes back to the menu on a fresh mill", r["ov"] and r["menu"] and not r["run"] and not r["season"] and r["cash"] == 2000000, r)
     b.close()

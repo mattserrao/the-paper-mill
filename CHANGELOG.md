@@ -1,5 +1,14 @@
 # Changelog
 
+## v6.11.2-t6 (2026-10-22): QA round (test build, test/v6.11.2)
+QA: 50 seasons and 50 survival runs by the bots (5 styles, 4 maps, 4 leaders, not posted): 0 page errors, stuck cards, NaN or ledger mismatches. Same-seed balance against main and per leader. Report: project doc `claude/qa-v6112.md`.
+- **Season grade counts the money:** half operations (the report cards), half a profit band (A ≥ +$2M, B ≥ +$1M, C ≥ $0, D ≥ −$1M, F below), rounded toward the worse; the summary shows both parts. QA had an A ("Bonus secured") on a $859k loss and a B on a $2.2M loss.
+- **Known defects view:** early-warning findings (imbalance, misalignment, outer race, ADX Watch) get a small faded pin with no pulse, labelled once zoomed in; serious ones (inner race, imminent, ADX Alarm) and tells spotted on rounds keep the full bullseye. The chip and the Rounds button count serious and early apart.
+- **DE pulper:** sized to the sheet (25 min of the sheet at threading speed, the outlet pump moves 80% of it; trim goes straight through), so a break fills it at the same pace on any grade. At 85% a high-level alarm (feed line, the DET level reading turns amber, red at 97%); at 97% it overflows to the floor drains: a $12k cleanup and the fiber to the sewer and clarifier. QA: 4–7 alarms and about one overflow a season.
+- **Repair bills 12.5% lower** (`REPAIR_K` 1.2 → 1.05).
+- **Hank:** while he's in charge, sheet breaks and hayouts are 30% rarer and clear 25% faster; runs heavy now costs fiber +1% (was 2%). Seasons (rounds, same seeds): Hank $2.27M → $2.35M (Dot $2.61M); survival unchanged at ~35 days (Chip 35.6, Dot 37.3, Fel 35.0).
+- Checks: dcs (DE pulper alarm, overflow and alarm colour), survival_mode (REPAIR_K, Hank's +1%, the steam bill follows the grade). Harness: `tools/balance/qa_v6112.py`.
+
 ## v6.11.2-t5 (2026-10-22): vehicles and polish (test build, test/v6.11.2)
 - **New vehicle models** (designed in Blender, rebuilt in code from its profiles; parts merged per material): a step-van **food truck** (raked nose, serving hatch, counter, awning, roof vent); a GP-style **locomotive** (chamfered long hood, taller cab with wrap glazing, raked short hood, fuel tank, brake blister, pilots, handrails) and boxcars with end ladders and a roof walk; **staff cars** as sedans and SUVs with wheels and bumpers; and a Broderson-style **carry-deck crane** for the pulper job (low chassis, cab beside the boom, slewing turret with counterweight, three-section tapered telescopic boom). Meshes: truck 12→6, crane 46→28, train 137→70, cars 72→72 with paint materials 24→10; about +3,600 triangles in all, mostly car wheels.
 - **Warehouse annexes** are roofed walls: the props south of the warehouse move out ahead of each annex, the wall between opens, and the robot or clamp forks store rolls in the annex bays.
