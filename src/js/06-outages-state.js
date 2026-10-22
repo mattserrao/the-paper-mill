@@ -99,11 +99,15 @@ const HAYLINES=["HAYOUT! Paper is shooting to the roof!","Winder hayout! Every P
 // unwind reel count as "more than one" and block storage, so the machine stopped with storage empty
 // v6.11: a lot is [grade, quantity, roll width in inches] (100" when not given: the standard roll). Quantities of rolls are in
 // standard-roll units (C.rollW.v tons each), so a 90" roll is 0.9 of a unit and every tons conversion stays rolls x C.rollW.v
-function lotPut(L,g,q,w){if(!(q>0))return;w=w||100;const t=L[L.length-1];if(t&&t[0]===g&&(t[2]||100)===w)t[1]+=q;else L.push([g,q,w]);}
+// v6.11.2: a lot is [grade, quantity, width, area ratio]: the ratio is the grade's target weight over the weight it was made at
+// (1.05 = 5% more ft² a ton than standard), blended by quantity when lots merge. Paper is sold by area (07g areaF).
+function lotPut(L,g,q,w,a){if(!(q>0))return;w=w||100;a=a||1;const t=L[L.length-1];if(t&&t[0]===g&&(t[2]||100)===w){const r=t[3]||1;if(a!==r)t[3]=(r*t[1]+a*q)/(t[1]+q);t[1]+=q;}else L.push([g,q,w,a]);}
 // take q from the front of lots L (into lots `out` if given); returns what was taken
-function lotTake(L,q,out){let got=0;while(q>1e-9&&L.length){const h=L[0],k=Math.min(h[1],q);h[1]-=k;q-=k;got+=k;if(out)lotPut(out,h[0],k,h[2]);if(h[1]<=1e-9)L.shift();}return got;}
+function lotTake(L,q,out){let got=0;while(q>1e-9&&L.length){const h=L[0],k=Math.min(h[1],q);h[1]-=k;q-=k;got+=k;if(out)lotPut(out,h[0],k,h[2],h[3]);if(h[1]<=1e-9)L.shift();}return got;}
+// the quantity-weighted area ratio of lots L (1 when empty)
+function lotA(L){let q=0,a=0;for(const l of L||[]){q+=l[1];a+=l[1]*(l[3]||1);}return q>1e-9?a/q:1;}
 // the value of lots of rolls at today's price for each grade
-const lotValue=(L,tPerRoll,add=0)=>L.reduce((s,[g,q])=>s+q*tPerRoll*(priceOf(g)+add),0);
+const lotValue=(L,tPerRoll,add=0)=>L.reduce((s,[g,q,,a])=>s+q*tPerRoll*(priceOf(g)*(a||1)+add),0);   // (v6.11.2: sold by area)
 function reelsAtWinder(){return Math.max(0,Math.ceil(S.winderBuf/P.jumbo-0.005));}
 function hayout(a=rand("upx"),b=rand("upx")){AUDIO.sfx("hayout",600);S.wd="hayout";S.hayLeft=40+a*40;S.hayTotal=S.hayLeft;enqueue("hay");
   const extra=Math.min(S.winderBuf,2+b*4),wraps=Math.min(S.winderAcc,P.jumbo/32),loss=extra+wraps;S.winderBuf-=extra;S.winderAcc-=wraps;lotTake(S.lots.buf,extra);lotTake(S.lots.acc,wraps);S.tot.broke+=loss;S.tot.hayouts++;S.q.bank+=loss;pfW("broke",loss);   // (v6.5.6: hayout broke goes to the beater bay and is repulped; it used to vanish)

@@ -100,10 +100,10 @@ function step(dt){
     // (v6.5.3: off-spec paper stays on the reel as beater and is wound into beater rolls; before, it vanished here)
     if(off>0){pfW("broke",off);S.tot.broke+=off;S.q.off+=off;prod-=off;beat=off;}
     if(S.plan.hot&&C.grade==="34Super")S.plan.hot.made+=prod;
-    {const ps=premShare();if(ps>0&&prod>0&&!S.zen){const v=prod*priceOf(C.grade)*ps;earn(v);S.tot.prem=(S.tot.prem||0)+v;}}   // v6.8 the lightweight premium, paid as the on-spec paper is made
-    if(S.pf&&prod>0)pfW("val",prod*priceOf(C.grade)*(1+premShare()));}
+    // (v6.11.2: the v6.8 lightweight premium is gone: paper is sold by area, so a light ton earns more when it ships, 07g areaF)
+    if(S.pf&&prod>0)pfW("val",prod*priceOf(C.grade)*areaNow());}
   qLog(dt,beat);   // v6.7 the off-spec log (07e)
-  S.reel+=prod+beat;lotPut(S.lots.reel,C.grade,prod);lotPut(S.lots.reel,"beater",beat); S.tot.prodT+=prod; {const pt=P.K*C.pmSp.v*bwSp()*dt/60;S.tot.pot+=pt;pfW("pot",pt);}   // (v6.7: potential tons at the setpoint speed, by the hour, for the process flow)
+  S.reel+=prod+beat;lotPut(S.lots.reel,C.grade,prod,100,areaNow());lotPut(S.lots.reel,"beater",beat); S.tot.prodT+=prod; {const pt=P.K*C.pmSp.v*bwSp()*dt/60;S.tot.pot+=pt;pfW("pot",pt);}   // (v6.7: potential tons at the setpoint speed, by the hour, for the process flow)
   planTick(dt,prod);
   if(S.reel>=P.jumbo&&reelsAtWinder()<=P.storeReels){S.winderBuf+=S.reel;lotTake(S.lots.reel,S.reel,S.lots.buf);S.reel=0;S.lots.reel.length=0;S.tot.turnups++;}
   // 6 winder
@@ -113,7 +113,7 @@ function step(dt){
   // v6.5.3: the winder splices the off-spec sections out of the set and winds them onto beater rolls of their own
   // v6.11: the trim (web - 2 x the roll width, 07j) is slit off and blown to the dry-end pulper, back to the stock chest
   {const T=[];lotTake(S.lots.buf,cut,T);let bt=0,gd=0,tr=0;const f=cut>0?trimFrac(windW(T.length?T[0][0]==="beater"?C.grade:T[0][0]:C.grade)):0;
-    for(const [k,q] of T){const tq=q*f;tr+=tq;if(k==="beater")bt+=q-tq;else{lotPut(S.lots.acc,k,q-tq);gd+=q-tq;}}
+    for(const [k,q,,a] of T){const tq=q*f;tr+=tq;if(k==="beater")bt+=q-tq;else{lotPut(S.lots.acc,k,q-tq,100,a);gd+=q-tq;}}
     S.winderAcc+=gd;S.beatAcc=(S.beatAcc||0)+bt;S.beatEnd=cut>0&&bt<=1e-9;trimTo(tr);S.trimNow=f;S.rates.trim=ease(S.rates.trim||0,tr*60/dt,dt,6);}
   if(cut>0&&L.hay<dt/720*0.75*P.hayBase*outRel("dry")*((C.hays?1:0)+(M.hayMul-1)))hayout(L.hayLen,L.hayLoss);
   let rollsMade=0;
@@ -122,7 +122,7 @@ function step(dt){
   // v6.11: twin rolls of the width the planner wants for that grade (07j): a W" roll is W/100 of a standard roll
   for(;;){const g0=S.lots.acc.length?S.lots.acc[0][0]:C.grade,W=windW(g0),rt=rollT(W);if(S.winderAcc<2*rt-1e-9)break;let gs=g0;
     for(let k=0;k<2;k++){const w=Math.min(S.winderAcc,rt);S.winderAcc-=w;const T=[];lotTake(S.lots.acc,w,T);let g=C.grade,best=-1;for(const [k2,q] of T)if(q>best){best=q;g=k2;}
-      lotPut(S.lots.conv,g,W/100,W);S.conv+=W/100;rollsMade++;S.tot.rolls++;gs=g;}
+      lotPut(S.lots.conv,g,W/100,W,lotA(T));S.conv+=W/100;rollsMade++;S.tot.rolls++;gs=g;}
     windCredit(gs,W,2*W/100);S.wdW=W;}
   // v6.5.3: a beater roll goes to the beater bay (27-3d draws it there from S.tot.beater) and round to the pulper
   // (full rolls while the off-spec section lasts; when good paper comes through again the rest goes on a short roll)

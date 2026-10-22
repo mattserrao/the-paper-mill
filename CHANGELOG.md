@@ -1,5 +1,13 @@
 # Changelog
 
+## v6.11.2-t1 (2026-10-22): sold by area (test build, test/v6.11.2)
+- **Paper is sold by area (MSF, thousand ft²)**, as box plants buy it. List price ($/t) is for a ton at the grade's target basis weight; a ton made lighter covers more ft² and sells for list × target weight ÷ actual weight, a heavier one for less (full 1:1, no extra heavy penalty). 5% light ≈ +5.3% a ton; 3% heavy ≈ −2.9%.
+- Everything the player sees stays in tons. Each lot carries an area ratio stamped at the reel from the true basis weight (`areaNow`, 07g), blended by quantity through reel → winder → conveyor → warehouse → truck (06 `lotPut`/`lotTake`/`lotA`); the invoice applies it when a truck leaves (05b `ordDepart`, the zen truck path and the spot-sale card via `lotValue`). Chargebacks and the spot discount stay per ton. Old saves' lots sell at list.
+- **The v6.8 lightweight premium is retired** (half the trim, max 5%, paid as paper was made), so a light ton isn't paid twice. The trim range is unchanged (−10% to +5%).
+- **Weight credit** shown on the WET DCS basis weight line, the QCS panel and the `prem` QCS tag (now "Weight credit (sold by area)", can go negative); the KPI strip and process flow show the effective $/t (list kept alongside in the process flow).
+- **Planning screen:** "Area a roll" (MSF in the roll being wound, weight credit, effective $/t) and "Shipped by area" (MSF shipped, MSF/t and the average weight credit).
+- Relationship map (basis weight → weight credit → profit), help and glossary (MSF, Weight credit; the lightweight premium entries replaced) updated. Economy not yet rebalanced.
+
 ## v6.11.1 (2026-10-21): The Dryer Hood and Wet-End Chemicals
 Release of v6.11.1-t1 to t4 (below), merged from test/v6.11.1-hood.
 

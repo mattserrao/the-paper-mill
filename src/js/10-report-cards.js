@@ -243,7 +243,7 @@ function updateText(){
     txt("k-cash",money(S.cash));$("k-cash-box").classList.toggle("neg",S.cash<0);
     txt("k-cash-s",S.cash<0?`bankrupt at ${money(ECON.bankrupt)}`:(d=>d>=0?`${money(d)} made so far`:`${money(-d)} down so far`)(S.cash-ECON.start));
     {const t=S.t>=1440?money(S.profitRate)+"/day":"after day 1";txt("k-profit",t);$("k-profit").style.color=/^[−-]/.test(t)?"var(--bad)":"var(--ink)";}
-    txt("k-profit-s",`operating, last 12 h · ${money(priceOf(C.grade))}/t`);
+    txt("k-profit-s",`operating, last 12 h · ${money(S.zen?priceOf(C.grade):priceEff())}/t`);   // (v6.11.2: what a ton of the paper being made sells for, by area)
   }
   txt("k-tank",f0(level)+" %");
   const net=R.fiberIn-R.fiberUse;

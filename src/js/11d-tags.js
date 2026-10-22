@@ -59,7 +59,7 @@ const TAGS=[
   ["wcl","White water chest level","WATER","%",()=>S.wat?S.wat.L/WAT.cap*100:null,""],["wcg","White water chest volume","WATER","gal",()=>S.wat?GAL(S.wat.L):null,""],
   ["wuse","Fresh water per ton","WATER","gal/ton",()=>{const W=wr();return W&&W.p>1?GAL(W.fresh/W.p):null;},""],
   // quality
-  ["off","Reel to the beater","QCS","%",r=>r.run?r.off*100:null,""],["rct","Ring crush","QCS","lbf/6 in",()=>S.pm==="run"?QNOW.rct:null,"a.rct"],["prem","Lightweight premium","QCS","%",()=>premShare()*100,""],["cdsp","CD moisture spread","QCS","%",r=>r.run?Math.max(...r.zones)-Math.min(...r.zones):null,""],
+  ["off","Reel to the beater","QCS","%",r=>r.run?r.off*100:null,""],["rct","Ring crush","QCS","lbf/6 in",()=>S.pm==="run"?QNOW.rct:null,"a.rct"],["prem","Weight credit (sold by area)","QCS","%",()=>S.zen?null:(areaQcs()-1)*100,""],["cdsp","CD moisture spread","QCS","%",r=>r.run?Math.max(...r.zones)-Math.min(...r.zones):null,""],
   ["bank","Beater bay waiting","QCS","t",()=>S.q?S.q.bank||0:0,""],
   // planning and the yard
   ["yard","Bale yard","PLAN","t",()=>S.yard,"a.yard"],["unload","Unloading","PLAN","t/h",()=>_R().unload,"a.unload"],["occp","OCC price","PLAN","$/t",()=>P.occPrice,"a.occp"],
