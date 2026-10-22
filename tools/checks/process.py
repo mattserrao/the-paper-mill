@@ -24,7 +24,7 @@ dewatercheck.py, watercheck.py, windercheck.py, ordercheck.py, relcheck.py and r
   through the sim (no 3D), each mechanic against the books, then zen (unchanged behaviour).
 - rel (v6.8, 07g): headbox at 0.8% and the fan pump dilution, the basis weight loop and its dead time, the white water
   silo (overflow, draw-down, cavitation break), refining energy -> freeness, couch solids and ring crush, a lighter
-  setpoint with the lightweight premium, bale water in the pulper, and pressure drop -> rejects. Since v6.10 AUTO-LW
+  setpoint sold by area (v6.11.2; the v6.8 lightweight premium before), bale water in the pulper, and pressure drop -> rejects. Since v6.10 AUTO-LW
   (07g weTick) trims the basis weight setpoint down while ring crush is over 1.03 x spec, so the untouched weight sits a
   little under the grade's target and extra refining shows up mostly as a lighter sheet rather than more ring crush.
 - ref (v6.9.2): a refiner plate clash stops forward flow, the machine runs the machine chest down and trips on low level,
@@ -206,7 +206,9 @@ def water(pw):
     d = R("S.tank=60;P.trigger('shaft');", 120)   # (a low storage chest, so stock prep keeps pulping)
     ok("machine down: fresh makeup flows (intake doesn't drop to zero)", d["maxFresh"] > 200 and d["r"]["fresh"] > 60, f'max fresh {d["maxFresh"]:.0f} m3/h, chest low {d["minL"]:.0f} m3')
     # ---- iced intake and a machine stop: no makeup, the chest runs dry, stock thick, weight out of spec ----
-    e = R("S.tank=60;P.trigger('shaft');P.trigger('icedintake');", 420)
+    # (v6.11.2: a short stop: the driveshaft's 4-8 h repair plus the rethread could outlast the window, so the restart was never
+    #  seen. 60 min of repair still drains the chest dry (~105 min) before the machine is back)
+    e = R("S.tank=60;P.trigger('shaft');S.inc.find(i=>i.id==='shaft').left=60;P.trigger('icedintake');", 420)
     ok("iced intake + machine down: the white water chest runs dry", e["minL"] < 1 and e["maxShort"] > 0.5, f'low {e["minL"]:.0f} m3, shortK {e["maxShort"]:.2f}')
     ok("...and the thick stock puts the weight out of spec when it restarts", e["bwOut"] > 5, f'{e["bwOut"]:.0f} min out on weight')
     # ---- fiber accounting fixes ----
@@ -243,9 +245,14 @@ def winder(pw):
     mx = max(s["stored"] for s in seen)
     ok("four reels stored before the machine backs up", mx >= 4, mx)
     ok("machine stops on spools only with storage full", all(s["stored"] >= 4 for s in seen if s["pm"] == "spools"))
-    # (the crane animates in real frame time: under load it can still be carrying the last reel, so let it finish first)
-    try: pg.wait_for_function("()=>{const C=__PM.G3.CR;return !C.j&&!C.jobs.length}", timeout=30000, polling=250)
-    except Exception: C.note("crane:", pg.evaluate("()=>{const C=__PM.G3.CR;const f=j=>j&&({kind:j.kind,fromPark:!!j.fromPark,fromReel:!!j.fromReel,picked:!!j.picked,dropped:!!j.dropped,delay:j.delay,b:j.b});return {j:f(C.j),jobs:C.jobs.map(f),t:C.t,hidePark:C.hidePark}}"))
+    # (the crane animates in real frame time: under load it can still be carrying the last reel, so let it finish first;
+    #  v6.11.2: up to 2 min, as two checks side by side can slow the frames past 30 s)
+    #  v6.11.2 t6: the crane only moves while the game runs, and a civics card or a deal that pops up meanwhile pauses it, so
+    #  under load the crane could freeze mid-move with the last reel and the stands read one short. Slow the sim right down
+    #  (the machine is stopped on spools, nothing else changes) and keep answering cards and resuming while it finishes.
+    pg.evaluate("()=>{__PM.C.simSpeed=1;}")
+    try: pg.wait_for_function("()=>{__civ();__deal();if(!__PM.running&&document.getElementById('v2menu').hidden)__PM.setRunning(true);const C=__PM.G3.CR;return !C.j&&!C.jobs.length}", timeout=120000, polling=250)
+    except Exception: C.note("crane:", pg.evaluate("()=>{const C=__PM.G3.CR;const f=j=>j&&({kind:j.kind,fromPark:!!j.fromPark,fromReel:!!j.fromReel,picked:!!j.picked,dropped:!!j.dropped,delay:j.delay,b:j.b});return {j:f(C.j),jobs:C.jobs.map(f),t:C.t,hidePark:C.hidePark,running:__PM.running,cards:__PM.S.cards&&__PM.S.cards.open?Object.keys(__PM.S.cards.open).join():null,ovs:[...document.querySelectorAll('.overlay')].filter(e=>!e.hidden).map(e=>e.id),menu:!document.getElementById('v2menu').hidden,day:(__PM.S.t/1440).toFixed(2)}}"))
     rest = pg.evaluate("()=>({stored:Math.max(0,Math.ceil(__PM.S.winderBuf/100-0.005)-1),vis:(__PM.G3.parkedN??-1),pm:__PM.S.pm})")
     ok("stands match the sim at rest", rest["vis"] == rest["stored"], rest)
     pg.wait_for_timeout(5000)
@@ -253,13 +260,17 @@ def winder(pw):
     ok("stands match the sim after the crane settles", r["vis"] == r["stored"], r)
     if shot: pg.evaluate("()=>{__PM.C.simSpeed=1}"); pg.wait_for_timeout(800); pg.screenshot(path=f"{shot}-storage-full.png")
     # --- 2. winder back: storage drains reel by reel onto the unwind
-    pg.evaluate("()=>{__PM.S.inc.find(x=>x.id==='winderdown').left=0;__PM.C.simSpeed=60;}")
+    # (v6.11.2 t6: on maps and grades where the winder is the bottleneck (~28 t/h against a 35 t/h machine) storage only drains
+    #  when a break happens to stop the machine, so the step passed or failed by luck. Slow the machine to 60% while the
+    #  winder catches up, so it always can)
+    pg.evaluate("()=>{__PM.S.inc.find(x=>x.id==='winderdown').left=0;window.__sp0={v:__PM.C.pmSp.v,a:__PM.C.pmSp.auto};__PM.C.pmSp.auto=false;__PM.C.pmSp.v=Math.round(__PM.C.pmSp.v*0.6);__PM.C.simSpeed=60;}")
     drained = []
     for k in range(200):
         ff(12)
-        r = pg.evaluate("()=>{const S=__PM.S,G=__PM.G3;return {stored:Math.max(0,Math.ceil(S.winderBuf/100-0.005)-1),vis:(G.parkedN??-1),pm:S.pm,rolls:S.tot.rolls}}")
+        r = pg.evaluate("()=>{const S=__PM.S,G=__PM.G3;return {stored:Math.max(0,Math.ceil(S.winderBuf/100-0.005)-1),vis:(G.parkedN??-1),pm:S.pm,rolls:S.tot.rolls,wd:S.wd,conv:S.conv,inc:S.inc.map(i=>i.id).join(),run:__PM.running,card:S.cards&&S.cards.open?Object.keys(S.cards.open).join():null,day:+(S.t/1440).toFixed(2)}}")
         drained.append(r)
         if r["stored"] <= 1 and k > 4: break
+    pg.evaluate("()=>{__PM.C.pmSp.v=__sp0.v;__PM.C.pmSp.auto=__sp0.a;}")   # (the machine back to its own speed for the rest)
     C.note("drain:", json.dumps(drained[-1]))
     ok("storage drains after the winder is fixed", min(d["stored"] for d in drained) < mx, [d["stored"] for d in drained][-12:])   # (it refills while the machine runs, so the low point, not the last reading)
     if shot:
@@ -316,7 +327,7 @@ def winder(pw):
 def order(pw):
     C.sec("order")
     # test copy only: reach the v6.6 functions and constants
-    html = html_arg().replace("window.__PM={", "window.__PM={get OX(){return {ORD,BALE,BASEL,ordState,ordAssign,ordDepart,ordFree,ordNeed,fgOf,baleGrade,baleGate,baleUnload,baleFeed,bqState,baseLoadTick,priceOf,energyCost,pfChemT,outOn,ordOn,GRADES,P,C}},", 1)
+    html = html_arg().replace("window.__PM={", "window.__PM={get OX(){return {ORD,BALE,BASEL,ordState,ordAssign,ordDepart,ordFree,ordNeed,fgOf,baleGrade,baleGate,baleUnload,baleFeed,bqState,baseLoadTick,priceOf,energyCost,pfChemT,outOn,ordOn,GRADES,P,C,lotPut,lotTake,lotA,lotValue,msfPerT,pwrTick}},", 1)
     b = launch(pw); pg = open_game(b, html, "notitle&" + LITE, viewport=(900, 640), errs=errs, wait=False)
     pg.on("console", lambda m: m.type == "error" and "Failed to load resource" not in m.text and errs.append("CONSOLE " + m.text[:300]))
     pg.wait_for_function("window.__PM&&window.__B&&__B.first!==null", timeout=300000, polling=500)
@@ -350,6 +361,19 @@ def order(pw):
     ok("late order invoiced at list less the chargeback (3 days: $45/t)", abs(r["late"] - r["exp_late"]) < 1, json.dumps(r))
     ok("spot load invoiced at list less the spot discount", abs(r["spot"] - r["exp_spot"]) < 1)
     ok("on-time order at list, and marked delivered", abs(r["ont"] - r["exp_ont"]) < 1 and r["st2"] == "done")
+    # --- 3b. v6.11.2 sold by area: lots carry the area ratio, a truck earns list x its ratio, MSF is counted
+    r = pg.evaluate("""()=>{const P=__PM,S=P.S,X=P.OX,rw=X.C.rollW.v,g=X.C.grade,pr=X.priceOf(g),O=X.ordState(),bw=X.GRADES[g].bw;
+      const L=[];X.lotPut(L,g,1,100,1.05);X.lotPut(L,g,3,100,1);const blend={n:L.length,a:L[0][3]};
+      const T=[];X.lotTake(L,2,T);const carried=T[0][3];
+      const inv=(lots,spot)=>{const o={id:++O.n,c:0,g,r:10,ld:10,sh:0,due:S.t+1440,t0:S.t,st:'open'};O.list.push(o);const r0=S.ledger.rev,m0=O.k.msf;
+        X.ordDepart({oid:spot?0:o.id,g,want:10,load:10,spot,lots});return [S.ledger.rev-r0,O.k.msf-m0];};
+      const [light,lm]=inv([[g,10,100,1.05]],false),[heavy]=inv([[g,10,100,0.97]],false),[old]=inv([[g,10]],false),[spot]=inv([[g,10,100,1.05]],true);
+      return {blend,carried,light,heavy,old,spot,lm,exp_light:10*rw*pr*1.05,exp_heavy:10*rw*pr*0.97,exp_old:10*rw*pr,exp_spot:10*rw*(pr*1.05-X.ORD.spot),exp_lm:10*rw*2000*1.05/bw,
+        val:X.lotValue([[g,2,100,1.04]],rw),exp_val:2*rw*pr*1.04}}""")
+    ok("lots merge with a quantity-weighted area ratio, and lotTake carries it", r["blend"]["n"] == 1 and abs(r["blend"]["a"] - 1.0125) < 1e-9 and abs(r["carried"] - 1.0125) < 1e-9, json.dumps(r["blend"]))
+    ok("a light truck (+5% area) earns list x 1.05, a heavy one (-3%) list x 0.97", abs(r["light"] - r["exp_light"]) < 1 and abs(r["heavy"] - r["exp_heavy"]) < 1, json.dumps(r))
+    ok("lots from an old save (no ratio) sell at list; spot is list x area less the per-ton discount", abs(r["old"] - r["exp_old"]) < 1 and abs(r["spot"] - r["exp_spot"]) < 1)
+    ok("MSF shipped counted from tons, grade weight and area ratio; lot value by area", abs(r["lm"] - r["exp_lm"]) < 0.01 and abs(r["val"] - r["exp_val"]) < 1, f'msf {r["lm"]:.1f} vs {r["exp_lm"]:.1f}')
     # --- 4. cancellation: an order 4+ days late is cancelled
     r = pg.evaluate("""()=>{const P=__PM,S=P.S,X=P.OX,O=X.ordState();const o={id:++O.n,c:2,g:'28',r:20,ld:0,sh:0,due:S.t-4.2*1440,t0:S.t-6*1440,st:'open'};O.list.push(o);
       const c0=O.k.canc;__run(5);return {st:o.st,canc:O.k.canc-c0}}""")
@@ -365,13 +389,16 @@ def order(pw):
       const res={dry:O.k.dry-d0,fee:S.ledger.frout-fr0,q:S.outQ.length,made:Math.round(made)};S.lots.fg=keep;S.fg=fg;P.C.outRate.auto=true;return res}""")
     ok("an empty-handed truck leaves after the wait with a dry-run fee", r["dry"] == 1 and r["fee"] >= 299 and r["q"] == 0, json.dumps(r))
     # --- 6. base load: charged while stopped, not while running
+    # (v6.11.2: baseLoadTick is the stopped mill's steam only; electricity is metered every step by pwrTick from the drives and
+    #  the balance of plant: a break still draws most of it, a stop about a third, running the most)
     r = pg.evaluate("""()=>{const P=__PM,S=P.S,X=P.OX;const pm=S.pm;
       const e=()=>S.ledger.energy;S.pm='run';let a=e();X.baseLoadTick(60);const run=e()-a;
-      S.pm='break';a=e();X.baseLoadTick(60);const brk=e()-a;S.pm='down';a=e();X.baseLoadTick(60);const stop=e()-a;S.pm=pm;
-      const g=X.GRADES[X.C.grade],tph=X.P.K*g.sp*g.bw,en=Math.max(0,X.energyCost()-X.pfChemT());return {run,brk,stop,full:en*tph}}""")
-    ok("no base load while running", r["run"] == 0, json.dumps(r))
-    ok("a sheet break draws power (machine turning) but not idle steam", 0.3 < r["brk"] / r["full"] * 2.5 < 1.0, json.dumps(r))
-    ok("a stop draws power and banked-boiler steam, less than running", 0 < r["stop"] < 0.5 * r["full"], json.dumps(r))
+      S.pm='break';a=e();X.baseLoadTick(60);const brk=e()-a;S.pm='down';a=e();X.baseLoadTick(60);const stop=e()-a;
+      S.pm='run';a=e();X.pwrTick(60);const pRun=e()-a;S.pm='break';a=e();X.pwrTick(60);const pBrk=e()-a;S.pm='down';a=e();X.pwrTick(60);const pStop=e()-a;S.pm=pm;
+      return {run,brk,stop,pRun,pBrk,pStop}}""")
+    ok("no base load while running; a break has no idle steam, a stop does", r["run"] == 0 and r["brk"] == 0 and r["stop"] > 0, json.dumps(r))
+    ok("metered power: running > a break > a stop > 0 (v6.11.2)", r["pRun"] > r["pBrk"] > r["pStop"] > 0, json.dumps(r))
+    ok("a stop draws power and banked-boiler steam, less than running", 0 < r["stop"] + r["pStop"] < 0.5 * r["pRun"] / 0.4, json.dumps(r))   # (v6.11.2: pRun is the power share, 40%, of a running hour)
     r = pg.evaluate("()=>{const S=__PM.S;return {idle:S.tot.idleE||0,pf:S.pf&&S.pf.A&&S.pf.A.power?Object.keys(S.pf.A.power):[]}}")
     ok("idle energy has built up over the season and is placed by area", r["idle"] > 1000, json.dumps(r))
     # --- 7. bale grading
@@ -404,6 +431,7 @@ def order(pw):
     h = pg.evaluate("()=>{const b=document.getElementById('planBox');return b?b.innerText:''}")
     pg.evaluate("()=>{const x=document.getElementById('dcsClose');if(x)x.click();}")
     ok("Planning screen shows the order book and the bale yard", "on-time delivery" in h.lower() and "bale yard" in h.lower(), h[:120])
+    ok("Planning screen shows area: MSF a roll and MSF shipped (v6.11.2)", "area a roll" in h.lower() and "shipped by area" in h.lower() and "msf/t" in h.lower(), h[:120])
     # --- 9. zen: no orders, no idle energy, no bale effects
     r = pg.evaluate("""()=>{const P=__PM,S=P.S,X=P.OX;S.zen=true;const e0=S.ledger.energy,pm=S.pm;S.pm='down';X.baseLoadTick(60);const idle=S.ledger.energy-e0;S.pm=pm;
       const f=X.baleFeed();const on=X.ordOn();S.zen=false;return {idle,sf:f.sf,yk:f.yk,on}}""")
@@ -419,7 +447,7 @@ RRUN = """(a)=>{const P=__PM,[setup,mins,probe]=a,G=P.G3;G.save.restore(JSON.par
   return {bw:+w.bw.toFixed(3),meas:+W.bwMeas().toFixed(3),sp:+W.bwSp().toFixed(3),hbc:+w.hbc.toFixed(3),L:+(w.L/(60000/264.172)*100).toFixed(1),cav:+w.cav.toFixed(2),
     hb:Math.round(w.f.hb||0),dil:Math.round(w.f.dil||0),drain:Math.round(w.f.drain||0),seal:Math.round(w.f.seal||0),press:Math.round(w.f.press||0),over:Math.round(w.f.over||0),
     cs:+r.couchSol.toFixed(2),csf:Math.round(r.csf),kwh:Math.round(r.kwh),refkw:Math.round(r.refkw),cp:+r.cp.toFixed(2),rct:+q.rct?.toFixed?.(1)||0,rctq:+(G.we.rct()).toFixed(1),spec:G.we.rctSpec(),
-    out:q.out,prem:+(W.premShare()*100).toFixed(2),premT:Math.round(S.tot.prem||0),yield:+W.dpYield().toFixed(4),prod:+S.rates.prod.toFixed(2),breaks:S.tot.breaks-brk0,pm:S.pm,
+    out:q.out,prem:+((W.areaQcs()-1)*100).toFixed(2),ra:+W.areaNow().toFixed(4),yield:+W.dpYield().toFixed(4),prod:+S.rates.prod.toFixed(2),breaks:S.tot.breaks-brk0,pm:S.pm,
     speed:Math.round(S.pmSpeed),valve:+w.v.toFixed(1),mode:w.m,energy:Math.round(S.ledger.energy),trim:+w.trim.toFixed(4),tr};}"""
 
 def rel(pw):
@@ -452,11 +480,13 @@ def rel(pw):
     r30 = R("P.knob.set('ref',30);", 180)
     ok("less refining: freer stock drains faster but the sheet is weaker", r30["cs"] > base["cs"] and r30["rctq"] < base["rctq"], f'couch {r30["cs"]}, rct {r30["rctq"]}')
 
-    # ---- a lighter setpoint: fails ring crush at standard refining, passes with more, and earns the premium ----
+    # ---- a lighter setpoint: fails ring crush at standard refining, passes with more, and sells more area a ton ----
     lt = R("G.we.setTrim(G.we.bwSp()*0.95);", 60)
     ok("5% lighter at standard refining: weight on spec, ring crush out, to the beater", "rct" in lt["out"] and "bw" not in lt["out"] and abs(lt["meas"] - lt["sp"]) < 0.05, f'out {lt["out"]} rct {lt["rctq"]} spec {lt["spec"]} bw {lt["meas"]}')
     lr = R("G.we.setTrim(G.we.bwSp()*0.95);P.knob.set('ref',75);", 240)
-    ok("5% lighter with 75 kWh/t: on spec, lightweight premium paid", not lr["out"] and lr["prem"] > 2 and lr["premT"] > 0, f'out {lr["out"]} rct {lr["rctq"]} prem {lr["prem"]}% paid {lr["premT"]}')
+    ok("5% lighter with 75 kWh/t: on spec, weight credit ~+5%, paper stamped light as it's made", not lr["out"] and lr["prem"] > 4.5 and lr["ra"] > 1.045, f'out {lr["out"]} rct {lr["rctq"]} credit {lr["prem"]}% area ratio {lr["ra"]}')
+    hv = R("G.we.setTrim(G.we.bwSp()*1.03);", 120)
+    ok("3% heavier: on spec, weight credit ~-3% (sells less a ton), paper stamped heavy", not hv["out"] and -3.3 < hv["prem"] < -2.4 and hv["ra"] < 0.98, f'out {hv["out"]} credit {hv["prem"]}% area ratio {hv["ra"]}')
 
     # ---- the BW loop: thick stock, dead time, correction; manual doesn't correct ----
     PROBE = "return [+G.we.state().bw.toFixed(3),+G.we.bwMeas().toFixed(3)];"
@@ -530,6 +560,7 @@ def ref(pw):
     need = [("chest", "refq"), ("refq", "mcLvl"), ("gap", "refq"), ("x:upsets", "refq"), ("kwh", "couchSol"), ("kwh", "rct"), ("lv104op", "refq")]
     ok("relationship map: refiners fed from the stock chest, feeding the machine chest, the clash, and refining vs drainage", all(k in keys for k in need), [k for k in need if k not in keys])
     ok("relationship map: refq is a tag in the SPOT column", "refq" in rm["tags"] and "refq" in rm["col"]["SPOT"])
+    ok("relationship map: weight -> weight credit -> profit (sold by area, v6.11.2)", ("bw", "prem") in keys and ("prem", "profit") in keys and ("bwsp", "prem") not in keys)
     b.close()
 
 

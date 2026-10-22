@@ -1,5 +1,60 @@
 # Changelog
 
+## v6.11.2 (2026-10-22): Sold by Area and Metered Power
+Release of v6.11.2-t1 to t6 (below), merged from test/v6.11.2. Full regression suite: 22/22 checks (833 assertions).
+
+## v6.11.2-t6 (2026-10-22): QA round (test build, test/v6.11.2)
+QA: 50 seasons and 50 survival runs by the bots (5 styles, 4 maps, 4 leaders, not posted): 0 page errors, stuck cards, NaN or ledger mismatches. Same-seed balance against main and per leader. Report: project doc `claude/qa-v6112.md`.
+- **Season grade counts the money:** half operations (the report cards), half a profit band (A ≥ +$2M, B ≥ +$1M, C ≥ $0, D ≥ −$1M, F below), rounded toward the worse; the summary shows both parts. QA had an A ("Bonus secured") on a $859k loss and a B on a $2.2M loss.
+- **Known defects view:** early-warning findings (imbalance, misalignment, outer race, ADX Watch) get a small faded pin with no pulse, labelled once zoomed in; serious ones (inner race, imminent, ADX Alarm) and tells spotted on rounds keep the full bullseye. The chip and the Rounds button count serious and early apart.
+- **DE pulper:** sized to the sheet (25 min of the sheet at threading speed, the outlet pump moves 80% of it; trim goes straight through), so a break fills it at the same pace on any grade. At 85% a high-level alarm (feed line, the DET level reading turns amber, red at 97%); at 97% it overflows to the floor drains: a $12k cleanup and the fiber to the sewer and clarifier. QA: 4–7 alarms and about one overflow a season.
+- **Repair bills 12.5% lower** (`REPAIR_K` 1.2 → 1.05).
+- **Hank:** while he's in charge, sheet breaks and hayouts are 30% rarer and clear 25% faster; runs heavy now costs fiber +1% (was 2%). Seasons (rounds, same seeds): Hank $2.27M → $2.35M (Dot $2.61M); survival unchanged at ~35 days (Chip 35.6, Dot 37.3, Fel 35.0).
+- Checks: dcs (DE pulper alarm, overflow and alarm colour), survival_mode (REPAIR_K, Hank's +1%, the steam bill follows the grade). Harness: `tools/balance/qa_v6112.py`.
+
+## v6.11.2-t5 (2026-10-22): vehicles and polish (test build, test/v6.11.2)
+- **New vehicle models** (designed in Blender, rebuilt in code from its profiles; parts merged per material): a step-van **food truck** (raked nose, serving hatch, counter, awning, roof vent); a GP-style **locomotive** (chamfered long hood, taller cab with wrap glazing, raked short hood, fuel tank, brake blister, pilots, handrails) and boxcars with end ladders and a roof walk; **staff cars** as sedans and SUVs with wheels and bumpers; and a Broderson-style **carry-deck crane** for the pulper job (low chassis, cab beside the boom, slewing turret with counterweight, three-section tapered telescopic boom). Meshes: truck 12→6, crane 46→28, train 137→70, cars 72→72 with paint materials 24→10; about +3,600 triangles in all, mostly car wheels.
+- **Warehouse annexes** are roofed walls: the props south of the warehouse move out ahead of each annex, the wall between opens, and the robot or clamp forks store rolls in the annex bays.
+- **Warehouse door:** a personnel door at the north end of the east wall, with an exit sign.
+- **Shift change walkers** no longer cut through walls: path searches finish before they move, the shop has a real doorway, and their targets hold still.
+- **Uncle Brian** stays with his scrubber and can be tapped for a ride-along again.
+- **MCC room light:** a wall pack on the north-east wall lights the floor.
+- **Beater bay** can be tapped for the tons of beater waiting to be repulped and the rolls in the bay. With robot forks the rolls still go to receiving (robots cover the clamp jobs), and the outbound lamp goes dark once outbound is robotic.
+- **Known defects view** (Rounds card): greys the plant and drops labelled bullseye pins on tells spotted on rounds and on vibration (mechanical, orange) and ADX (electrical, blue) findings.
+- **DE pulper on the DET DCS:** level, consistency and the broke going in (trim plus dryer-section breaks); no operator control.
+- Checks: dcs (DE pulper readings; DET still has 6 page boxes, the pulper is plain equipment; its test waits for the machine to be back at speed).
+
+## v6.11.2-t4 (2026-10-22): small improvements (test build, test/v6.11.2)
+- **Drives re-rated** for a ~35 t/h recycled linerboard machine: refiners 2,000 kW each (2,600 with the upgrade), dryer section 1,500, couch 400, presses 450, reel 200, winder 750; pulper (1,100) and fan pump (900) unchanged.
+- **Electricity is metered** (07i `pwrTick`): the ten drives at their load plus the balance of plant (vacuum, pumps, agitators, fans, air, lighting; 6.4 MW running, 75% on a break, 35% stopped, 15% in an outage) at $0.07/kWh, about 12.5 MW and 390 kWh/t on a normal run. The per-ton bill is now steam and chemicals only. Calibrated to the old flat bill: a calm run $90.4/t vs $90.7; a chaotic week $121.9 vs $123.9 (stops now draw what a stopped mill draws). The separate refining kWh charge is gone (the refiner drives are metered); APC's 4% and survival's cost multiplier apply to power; the shoe press and the leader's dryer tuning stay steam savings. Glossary: Electricity.
+- **Dry strength starch removed** (DCS row, tags, ring crush and couch links, deposits, traces, relationship map, help and glossary). The chemicals and water budget stays $25/t; the starch's $3.30/t is part of the base. At its standard dose it changed nothing, so the balance doesn't move.
+- **Spare spool stand:** three spools on two rails at their journals, west of the winder on the crane's line, so the crane fetches one by travelling east–west only. The old floor rack reached into the unwind stand and the parked reels.
+- **Roll warehouse:** the south wall's top half lifts and fades with the roof in the cutaway, leaving a half wall so the floor and rolls show.
+- **Removed** the OCC compactor, its dumpster and the recycling cage west of the office (the production record board stays).
+- **Fixed:** the night lamp pools were built before their planes had a position, so all ten were drawn as one upright 16 m warm glow at the world origin (the drive side behind the reel) from dusk to dawn; and a scenery activity vehicle sat at the origin until its first wait ended.
+- Checks: chem (polymer only), dcs (WET order), reliability (new ratings), process (metered power by state; the crane gets 2 min to settle).
+
+## v6.11.2-t3 (2026-10-22): test suite green (test build, test/v6.11.2)
+- **Fixed: reel storage could read full with only 3 of 4 reels stored.** A turn-up moved the whole reel, including the step's few hundred kilos past 100 t, to the winder, and the reel count (tons ÷ 100, rounded up) then counted a reel too many, so the machine went onto spools a reel early. A turn-up now takes exactly one jumbo; the overshoot starts the next reel.
+- **Tornado damage is sudden by design:** its two random upsets still fire at once with no tell, even tellable ones; they are now marked (`by:"tornado"`) so the tells check can tell them apart.
+- Checks: tells looks at every new incident (not only the last) and skips tornado damage; the water check uses a 60-minute machine stop so the restart lands in its window; the control check forces one sheet break so speed and tons have something to correlate; the knobs check's 3D taps wait for the camera to settle.
+
+## v6.11.2-t2 (2026-10-22): minor updates (test build, test/v6.11.2)
+- **DET DCS: 2nd and 3rd section steam** are on the setpoint list (PV-302 / PV-303). On CAS the reel moisture loop (QC-300) sets them; dragging one takes it off CAS onto AUTO at that pressure, and the CAS button hands it back.
+- **Setpoints in process order**, under headings. WET: thick stock to the headbox (grade, dry strength, basis weight, retention polymer), headbox (dilution zones, slice opening, slice lip), forming table (machine speed, vacuum, couch pit agitator), press section (press loading). DET: press to dryers (draw), dryer steam (1st, 2nd, 3rd section), reel and winder.
+- **Yard and warehouse crews no longer leave their trucks for a sheet break or a hayout**: receiving and truck loading carry on (before, both stopped while the crew rethreaded).
+- **The MCC desk computer** is a tap target that opens the Drives page.
+- **The SPOT console** moved from under the wet-end pipe racks to the north-west corner of the stock prep pad, by the effluent transfer tank, where the camera can see it.
+- **Cloudy and clear seal chest labels** turned 90° onto the west face; on the south face each chest hid the other's label.
+
+## v6.11.2-t1 (2026-10-22): sold by area (test build, test/v6.11.2)
+- **Paper is sold by area (MSF, thousand ft²)**, as box plants buy it. List price ($/t) is for a ton at the grade's target basis weight; a ton made lighter covers more ft² and sells for list × target weight ÷ actual weight, a heavier one for less (full 1:1, no extra heavy penalty). 5% light ≈ +5.3% a ton; 3% heavy ≈ −2.9%.
+- Everything the player sees stays in tons. Each lot carries an area ratio stamped at the reel from the true basis weight (`areaNow`, 07g), blended by quantity through reel → winder → conveyor → warehouse → truck (06 `lotPut`/`lotTake`/`lotA`); the invoice applies it when a truck leaves (05b `ordDepart`, the zen truck path and the spot-sale card via `lotValue`). Chargebacks and the spot discount stay per ton. Old saves' lots sell at list.
+- **The v6.8 lightweight premium is retired** (half the trim, max 5%, paid as paper was made), so a light ton isn't paid twice. The trim range is unchanged (−10% to +5%).
+- **Weight credit** shown on the WET DCS basis weight line, the QCS panel and the `prem` QCS tag (now "Weight credit (sold by area)", can go negative); the KPI strip and process flow show the effective $/t (list kept alongside in the process flow).
+- **Planning screen:** "Area a roll" (MSF in the roll being wound, weight credit, effective $/t) and "Shipped by area" (MSF shipped, MSF/t and the average weight credit).
+- Relationship map (basis weight → weight credit → profit), help and glossary (MSF, Weight credit; the lightweight premium entries replaced) updated. Economy not yet rebalanced.
+
 ## v6.11.1 (2026-10-21): The Dryer Hood and Wet-End Chemicals
 Release of v6.11.1-t1 to t4 (below), merged from test/v6.11.1-hood.
 

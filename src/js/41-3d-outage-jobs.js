@@ -52,33 +52,42 @@
     hcHook.position.set(x,hy,z);hcBeam.rotation.y=yaw;hcBeam.visible=beam;const top=11.68,L=Math.max(0.05,top-hy-0.27);hcCable.position.set(x,hy+0.27+L/2,z);hcCable.scale.set(1,L,1);}
   hcSet(62,9.6,8.6,0,false);
   /* -- mobile crane (comes in for the pulper job) -- */
-  const MCm=new THREE.Group();MCm.visible=false;scene.add(MCm);
+  const MCm=new THREE.Group();MCm.name="mobileCrane";MCm.visible=false;scene.add(MCm);
   const mcTurret=new THREE.Group(),mcBoom=new THREE.Group(),mcOut=[];
-  {box(9,0.9,2.5,M.fork,0,1.15,0,MCm);box(2.2,1.7,2.5,M.fork,3.7,2.3,0,MCm);box(0.08,0.75,2.2,M.wind,4.82,2.6,0,MCm,false);
-   [-3.1,-1.7,2.0,3.4].forEach(x=>[-1.2,1.2].forEach(z=>cylZ(0.55,0.42,M.ink,x,0.55,z,14,MCm)));
-   [[-3.6,1],[-3.6,-1],[2.6,1],[2.6,-1]].forEach(([x,s])=>{const g=new THREE.Group();g.position.set(x,0.95,s*1.0);MCm.add(g);box(0.35,0.3,1.6,M.warn,0,0,s*0.8,g,false);box(0.16,0.85,0.16,M.ink,0,-0.45,s*1.5,g,false);box(0.7,0.08,0.7,M.ink,0,-0.88,s*1.5,g,false);g.userData.s=s;mcOut.push(g);});
-   mcTurret.position.set(-1.4,1.6,0);MCm.add(mcTurret);box(2.8,0.9,2.3,M.fork,0,0.45,0,mcTurret);box(1.0,1.2,0.9,M.wind,0.4,1.4,-0.75,mcTurret,false);box(1.2,0.7,2.0,M.ink,-1.5,0.85,0,mcTurret,false);
-   mcBoom.position.set(0.9,1.1,0.25);mcTurret.add(mcBoom);{const g=new THREE.BoxGeometry(1,0.55,0.55);g.translate(0.5,0,0);const b=new THREE.Mesh(g,M.fork);b.castShadow=true;mcBoom.add(b);mcBoom.userData.b=b;
-     const g2=new THREE.BoxGeometry(1,0.4,0.4);g2.translate(0.5,0,0);const b2=new THREE.Mesh(g2,M.warn);mcBoom.add(b2);mcBoom.userData.fly=b2;}}
-  // v4.1 pass 3: the crane gets its detail back: cab glazing with frames, mirrors, a beacon and exhaust, hazard stripes on the
-  // bumpers and counterweight, a boom hoist ram, a sheave head on the boom base, and striped outrigger pads
+  /* v6.11.2 t5: a Broderson-style carry-deck crane, drawn in Blender: a low chassis with raked ends on four big tyres, the
+     operator's cab fixed at the front left beside the boom, a slewing turret with its counterweight, and a three-section
+     tapered telescopic boom that rests over the nose. Each part group is merged per material (a few draws, as before) */
   {const stripeM=new StdMat({map:texC(64,8,(x)=>{for(let i=0;i<4;i++){x.fillStyle=i%2?"#ffffff":"#e0343c";x.fillRect(i*16,0,16,8);}},true),roughness:0.6});
-    box(0.06,0.95,0.08,M.ink,4.85,2.6,-1.08,MCm,false);box(0.06,0.95,0.08,M.ink,4.85,2.6,1.08,MCm,false);box(0.06,0.08,2.24,M.ink,4.85,3.08,0,MCm,false);box(0.06,0.08,2.24,M.ink,4.85,2.14,0,MCm,false);   // window frames
-    [-1.0,1.0].forEach(z=>box(0.08,0.32,0.26,M.ink,4.3,2.95,z*1.38,MCm,false));                                                                     // mirrors
-    [[2.6,0.6],[-3.2,0.6],[2.6,-0.6],[-3.2,-0.6]].forEach(([x,z])=>box(0.4,0.14,0.1,stripeM,x,0.72,z*2.1,MCm,false));                                  // bumper stripes
-    const bcn=new THREE.Mesh(DRV_HEAD,M.beacon);bcn.scale.setScalar(0.14);bcn.position.set(3.7,3.3,0.8);MCm.add(bcn);         // beacon
-    const ex=new THREE.Mesh(new CylG(0.08,0.08,1.4,8),M.ink);ex.position.set(2.9,3.4,-0.95);MCm.add(ex);                                                 // exhaust stack
-    box(0.3,0.5,2.0,stripeM,-2.1,0.85,0,mcTurret,false);box(1.1,0.08,0.08,M.warn,-0.9,1.3,1.0,mcTurret,false);box(1.1,0.08,0.08,M.warn,-0.9,1.3,-1.0,mcTurret,false);   // counterweight stripe, handrails
-    const sheave=new THREE.Mesh(new CylG(0.3,0.3,0.7,12),M.ink);sheave.rotation.x=Math.PI/2;sheave.position.set(0.2,0.2,0);mcBoom.add(sheave);           // sheave head at the boom foot
-    const ram=box(2.3,0.2,0.2,M.metal,1.6,-0.5,0,mcBoom,false);ram.rotation.z=0.32;const ramB=box(1.2,0.3,0.3,M.ink,0.9,-0.32,0,mcBoom,false);ramB.rotation.z=0.32;   // hoist ram
-    mcOut.forEach(g=>{const pd=g.children[2];if(pd)pd.material=stripeM;});}
+   const C=KIT();C.prof(M.fork,[[-4.3,0.75],[4.3,0.75],[4.6,1.1],[4.45,1.45],[-4.3,1.45],[-4.6,1.1]],2.5)
+     .box(M.ink,8.4,0.3,2.1,0,0.55,0).box(stripeM,0.12,0.3,2.3,4.58,1.1,0).box(stripeM,0.12,0.3,2.3,-4.58,1.1,0)
+     .prof(M.fork,[[2.5,1.45],[4.3,1.45],[4.3,2.2],[2.5,2.2]],1.05,0,0,-0.65)                                   // cab lower body
+     .prof(M.vglass,[[4.3,2.2],[4.05,3.25],[2.5,3.3],[2.5,2.2]],1.0,0,0,-0.65)                                    // cab glazing
+     .prof(M.ink,[[4.15,3.25],[2.4,3.32],[2.4,3.45],[4.2,3.38]],1.15,0,0,-0.65)                                  // cab roof (ROPS)
+     .box(M.ink,0.08,1.25,0.08,4.3,2.8,-0.13).box(M.ink,0.08,1.25,0.08,4.3,2.8,-1.17).box(M.ink,0.08,1.3,0.08,2.5,2.8,-0.13).box(M.ink,0.08,1.3,0.08,2.5,2.8,-1.17)
+     .box(M.ink,0.08,0.32,0.26,4.4,2.9,-1.35).cylY(M.ink,0.08,0.08,1.2,-3.4,2.05,-0.95,8)                        // mirror, exhaust
+     .box(M.ink,1.6,0.06,1.0,-3.0,1.5,0.55);                                                                     // carry-deck tread plate
+   [[-2.7,1],[-2.7,-1],[2.7,1],[2.7,-1]].forEach(([x,z])=>C.cylZ(M.ink,0.62,0.5,x,0.62,z*1.15,14));C.build(MCm);
+   const bcn=new THREE.Mesh(DRV_HEAD,M.beacon);bcn.scale.setScalar(0.14);bcn.position.set(3.4,3.55,-0.65);MCm.add(bcn);
+   [[-3.95,1],[-3.95,-1],[3.95,1],[3.95,-1]].forEach(([x,s])=>{const g=new THREE.Group();g.position.set(x,0.95,s*1.0);MCm.add(g);box(0.35,0.3,1.6,M.warn,0,0,s*0.8,g,false);box(0.16,0.85,0.16,M.ink,0,-0.45,s*1.5,g,false);box(0.7,0.08,0.7,stripeM,0,-0.88,s*1.5,g,false);g.userData.s=s;mcOut.push(g);});
+   mcTurret.position.set(-1.4,1.45,0);MCm.add(mcTurret);
+   KIT().prof(M.fork,[[-1.6,0],[1.4,0],[1.4,0.75],[-0.4,1.0],[-1.6,1.0]],1.6,0,0,0.35).box(M.ink,1.0,1.1,1.9,-2.2,0.55,0.2).box(stripeM,0.06,0.4,1.9,-2.72,0.55,0.2)
+     .box(M.warn,1.1,0.08,0.08,-0.9,1.25,1.1).build(mcTurret);
+   mcBoom.position.set(0.9,1.2,0.38);mcTurret.add(mcBoom);
+   // unit-length tapered sections (pivot at x=0), stretched along x by mcLen
+   const sec=(h,m)=>{const g=profGeo([[0,-h/2],[1,-h*0.42],[1,h*0.42],[0,h/2]],h*0.9);const o=new THREE.Mesh(g,m);o.castShadow=true;mcBoom.add(o);return o;};
+   mcBoom.userData.b=sec(0.7,M.fork);mcBoom.userData.mid=sec(0.55,M.fork);mcBoom.userData.fly=sec(0.42,M.warn);
+   const tip=new THREE.Group();mcBoom.add(tip);mcBoom.userData.tip=tip;KIT().cylZ(M.ink,0.26,0.36,0.1,-0.05,0,12).box(M.ink,0.5,0.5,0.4,-0.1,0,0).build(tip,false);
+   KIT().cylZ(M.ink,0.32,0.75,0.15,0.0,0,12).build(mcBoom,false);                                               // foot pin
+   const ram=box(2.3,0.2,0.2,M.metal,1.6,-0.5,0,mcBoom,false);ram.rotation.z=0.32;const ramB=box(1.2,0.3,0.3,M.ink,0.9,-0.32,0,mcBoom,false);ramB.rotation.z=0.32;}
+  // boom section lengths: base b, tip at L; the middle section splits the difference
+  function mcLen(b,L){const u=mcBoom.userData;u.b.scale.x=b;u.fly.scale.x=L;u.mid.scale.x=Math.max(b,(b+L)/2+0.4);u.tip.position.x=L;}
   const mcCable=new THREE.Mesh(new CylG(0.04,0.04,1,6),M.ink);mcCable.visible=false;scene.add(mcCable);
   const mcHook=new THREE.Group();mcHook.visible=false;scene.add(mcHook);box(0.5,0.5,0.4,M.warn,0,0,0,mcHook,false);box(0.52,0.18,0.42,M.ink,0,-0.2,0,mcHook,false);
   const _mp=new THREE.Vector3();
   // aim the boom so the hook hangs at (hx,hy,hz); the hook block is 0.9 above the load point
   function mcAim(hx,hy,hz,ext){const yaw0=MCm.rotation.y;mcTurret.getWorldPosition(_mp);const yaw=Math.atan2(-(hz-_mp.z),hx-_mp.x);mcTurret.rotation.y=yaw-yaw0;
     const px=_mp.x+Math.cos(yaw)*0.9,pz=_mp.z-Math.sin(yaw)*0.9,py=_mp.y+1.1,r=Math.max(2,Math.hypot(hx-px,hz-pz)),th=Math.max(hy+4.2,7.5),a=Math.atan2(th-py,r),L=Math.hypot(r,th-py);
-    mcBoom.rotation.z=a;mcBoom.userData.b.scale.x=L*0.55*ext+0.01;mcBoom.userData.fly.scale.x=L;const hk=hy+0.9;mcHook.position.set(hx,hk,hz);
+    mcBoom.rotation.z=a;mcLen(L*0.55*ext+0.01,L);const hk=hy+0.9;mcHook.position.set(hx,hk,hz);
     const cl=Math.max(0.05,th-hk-0.25);mcCable.position.set(hx,hk+0.25+cl/2,hz);mcCable.scale.set(1,cl,1);}
   /* -- staged / carried parts -- */
   const shinyM=new StdMat({color:lin0("#dfe5ec"),metalness:0.85,roughness:0.22}),wornM=new StdMat({color:lin0("#6b5a4c"),metalness:0.3,roughness:0.85}),woodM=new StdMat({color:lin0("#a9814f"),roughness:0.85});
@@ -164,7 +173,7 @@
     if(f<0.62){const a=tech(4,"hall"),b=tech(5,"hall"),pick=hook&&hook.z>13;const bx=pick?hook.x:46.5;
       go(a,bx-3.9,16.25,pick?"fix":"look",hook?hook.x:37,hook?hook.z:zc,rdt,now);go(b,bx+3.9,16.25,pick?"fix":"point",hook?hook.x:37,hook?hook.z:zc,rdt,now);}}
   // parked: beside the pulper, boom stowed, outriggers in
-  function mcPark(){MCm.visible=true;MCm.position.set(MCP[0],0,MCP[1]);MCm.rotation.y=0;mcTurret.rotation.y=0;mcBoom.rotation.z=0.04;mcBoom.userData.b.scale.x=4.6;mcBoom.userData.fly.scale.x=6.8;
+  function mcPark(){MCm.visible=true;MCm.position.set(MCP[0],0,MCP[1]);MCm.rotation.y=0;mcTurret.rotation.y=0;mcBoom.rotation.z=0.04;mcLen(4.6,6.8);
     mcOut.forEach(g=>{g.position.z=g.userData.s*1.0;const lg=g.children[1],pd=g.children[2];lg.scale.y=0.3;lg.position.y=-0.425*0.3;pd.position.y=-0.85*0.3-0.03;});}
   function job3(f,rdt,now){// pulper rotor change with a mobile crane
     MCm.visible=true;
@@ -185,7 +194,7 @@
       else{let y=lrp(0.18,5.0,q[1]),x=lrp(PAL[0],PCX,q[2]),z=lrp(PAL[1],PCZ,q[2]);if(u>=0.75)y=lrp(5.0,0.22,q[3]);ROT.neu.position.set(x,y,z);H=[x,y+1.1,z];}}
     else{ROT.old.position.set(OLDR[0],0.02,OLDR[1]);ROT.neu.position.set(...IN);const u=sst(seg(f,0.64,0.72));H=[lrp(PCX,REST[0],u),lrp(1.3,REST[1],u),lrp(PCZ,REST[2],u)];}
     MCm.updateMatrixWorld(true);const rig=f>=0.11&&f<0.86;mcHook.visible=mcCable.visible=rig;
-    if(rig)mcAim(H[0],H[1],H[2],1);else{mcTurret.rotation.y=0;mcBoom.rotation.z=0.04;mcBoom.userData.b.scale.x=4.6;mcBoom.userData.fly.scale.x=6.8;}
+    if(rig)mcAim(H[0],H[1],H[2],1);else{mcTurret.rotation.y=0;mcBoom.rotation.z=0.04;mcLen(4.6,6.8);}
     if(f<0.88){const a=tech(4,"shop"),b=tech(5,"shop");const wk=f>=0.38&&f<0.5?[PAL[0]+2.0,PAL[1]+0.2,PAL[0],PAL[1]]:[PCX+3.4,PCZ+4.3,PCX,PCZ];
       go(a,wk[0],wk[1],f<0.16?"look":"point",wk[2],wk[3],rdt,now);go(b,12.2,-10.6,f<0.16||f>0.64?"look":"fix",PCX,PCZ,rdt,now);}}
   // walk round an open refiner door rather than through it (door lines at z -12.3 and -9.7, open toward -x up to x 56.2)

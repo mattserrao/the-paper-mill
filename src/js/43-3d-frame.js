@@ -167,7 +167,13 @@
       g.children[0].material=M.fork;if(G3.yardFrozen){g.userData.load.visible=false;continue;}
       if(S.M.clampMul!==0)clampJob(g,i,rdt);}
     ensure(robots,P.robots,robot);
-    robots.forEach((g,r)=>{if(r>=P.robots)return;const ph=S.M.clampMul===0?0.3:(V.rollsAnim*0.45+r*0.29)%2,t=ph<1?ph:2-ph,[x,z]=W(130+t*200,outY(r%P.shipDoors)+(r%2?6:-6));
+    // v6.11.2: the warehouse's two special jobs (clamp 0: the roll conveyor into the stacks and beater rolls into the bay; clamp 1:
+    // the beater truck and the docks) fall to the robots when there are not enough clamp trucks working, so beater rolls still
+    // reach the bay and go round to receiving to be repulped with an all-robot outbound
+    const hum=Math.min(nLo,Math.floor(S.effHum+1e-9)),rJob=[];for(let s2=hum,r=0;s2<2&&r<P.robots;s2++,r++)rJob[r]=s2;
+    robots.forEach((g,r)=>{if(r<P.robots&&rJob[r]!=null&&!G3.yardFrozen){g.userData.rj=1;if(S.M.clampMul!==0)clampJob(g,rJob[r],rdt);return;}
+      if(g.userData.rj){g.userData.rj=0;g.userData.cj=null;g.userData.load.visible=false;}});
+    robots.forEach((g,r)=>{if(r>=P.robots||g.userData.rj)return;const ph=S.M.clampMul===0?0.3:(V.rollsAnim*0.45+r*0.29)%2,t=ph<1?ph:2-ph,[x,z]=W(130+t*200,outY(r%P.shipDoors)+(r%2?6:-6));
       g.position.set(x,0,z);{const l=g.userData.light,m=l.userData.bm||(l.userData.bm=l.material=M.stock.clone());m.color.copy((((now/400+r)|0)%2?M.ok:M.stock).color);}});   // (v5.2: blink by colour, see 39)
     pm("forklifts, clamp trucks, robots");
     // blackout dims the plant
@@ -262,7 +268,7 @@
     // v14: zoomed out, only the area labels and the landmark names show; closer in, the equipment labels and no landmarks
     const wide=camera.isIso?(G3.camR||999)>=300:(G3.camDist||camera.position.distanceTo(target))>400;   // (t16: in the iso view the whole-site step (380) counts as zoomed out: area labels only)
     // (v5.2: no projecting or text building while the section labels can't show: zen, hidden view, labels off)
-    if(G3.kvOn)LABELS.forEach(L=>{L.lb.vis=false;});   // v5.6: the fiddly knobs view shows only the knobs' labels (and upsets')
+    if(G3.kvOn||G3.dvOn)LABELS.forEach(L=>{L.lb.vis=false;});   // v5.6: the fiddly knobs view shows only the knobs' labels (and upsets')
     else if(!(G3.zen||LB.hid||labelHost.classList.contains("lbl-off")))LABELS.forEach(L=>{const R=L.lb;if(L.land?!wide:(!L.area&&wide)){R.vis=false;return;}tmp.copy(L.v).project(camera);const vis=tmp.z<1&&Math.abs(tmp.x)<1.05&&Math.abs(tmp.y)<1.05;R.vis=vis;
       if(!vis)return;R.x=Math.round((tmp.x+1)/2*w);R.y=Math.round((1-tmp.y)/2*hh);
       if(doText||R.a==null){const [a,b]=L.t();lblSet(R,a,b,!!(L.cls&&L.cls()));}});

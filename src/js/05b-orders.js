@@ -45,7 +45,7 @@ const ordOn=()=>!!(S&&!S.zen);
 const baleOn=ordOn;
 
 // ---------- the order book ----------
-function ordState(){if(!S.ord){S.ord={n:0,list:[],k:{ship:0,onT:0,lateT:0,late:0,chg:0,spot:0,spotV:0,canc:0,dry:0,done:0,doneOn:0}};
+function ordState(){if(!S.ord){S.ord={n:0,list:[],k:{ship:0,onT:0,lateT:0,late:0,chg:0,spot:0,spotV:0,canc:0,dry:0,done:0,doneOn:0,msf:0,aT:0,mT:0}};
     if(S.rng&&S.rng.ord==null)S.rng.ord=((S.seed||1)^0x51ed270b)>>>0;   // (a save from before v6.6)
     for(const tr of (S.outDock||[]))if(tr&&tr.want==null){const g=(tr.lots&&tr.lots.length&&tr.lots[0][0])||C.grade;Object.assign(tr,{g,want:Math.max(tr.load||0,P.truckRolls),spot:true,oid:0,wait:0});}   // (v6.9.2: a docked truck from a pre-v6.6 save)
     if(S.plan)ordCampaign(C.grade,Math.max(0,S.plan.left||0),S.t);ordCarry();}
@@ -77,7 +77,7 @@ function ordNeed(g,w){let n=0;for(const o of S.ord.list)if(o.st==="open"&&o.g===
 const fgWidths=g=>[...new Set(S.lots.fg.filter(l=>l[0]===g).map(l=>l[2]||100))];
 // take q rolls of grade g from lots L, oldest first
 // (v6.11: and of width w, when given)
-function lotTakeG(L,g,q,out,w){let got=0;for(let i=0;i<L.length&&q>1e-9;){const h=L[i];if(h[0]!==g||(w&&(h[2]||100)!==w)){i++;continue;}const k=Math.min(h[1],q);h[1]-=k;q-=k;got+=k;if(out)lotPut(out,g,k,h[2]);if(h[1]<=1e-9)L.splice(i,1);else i++;}return got;}
+function lotTakeG(L,g,q,out,w){let got=0;for(let i=0;i<L.length&&q>1e-9;){const h=L[i];if(h[0]!==g||(w&&(h[2]||100)!==w)){i++;continue;}const k=Math.min(h[1],q);h[1]-=k;q-=k;got+=k;if(out)lotPut(out,g,k,h[2],h[3]);if(h[1]<=1e-9)L.splice(i,1);else i++;}return got;}
 // give a truck at the door a job: an order, else a spot load; false if there's nothing to load
 function ordAssign(tr){const O=ordState();let best=null,bw=0;
   for(const o of O.list){if(o.st!=="open")continue;const left=o.r-o.ld;if(left<=1e-6)continue;const ow=o.w||100,want=Math.min(P.truckRolls,left),free=ordFree(o.g,ow)+1e-6;
@@ -99,8 +99,11 @@ function ordReady(){let n=0;const full=S.fg>=P.fgCap*ORD.full;for(const g of GRA
 function ordAutoRate(){return clamp(ordReady()/P.truckRolls/3-S.outQ.length*0.15,0,10);}
 const ordLateD=o=>Math.max(0,(S.t-o.due-ORD.grace)/1440);
 // a loaded truck leaves: the invoice, the chargeback, the order's progress
-function ordDepart(tr){const O=ordState(),K=O.k,rw=C.rollW.v,tons=tr.load*rw,pr=priceOf(tr.g);let v;
+// (v6.11.2: paper is sold by area: list $/t is for the grade's target weight, so the truck's tons earn list × its area ratio;
+// chargebacks and the spot discount stay per ton. K.msf counts the thousand square feet shipped, K.aT the area-weighted tons of K.mT)
+function ordDepart(tr){const O=ordState(),K=O.k,rw=C.rollW.v,tons=tr.load*rw,a=lotA(tr.lots),pr=priceOf(tr.g)*a;let v;
   if(tr.load<=1e-9||!(pr===pr))return;
+  K.msf=(K.msf||0)+tons*msfPerT(tr.g,a);K.aT=(K.aT||0)+tons*a;K.mT=(K.mT||0)+tons;
   if(tr.spot){v=tons*(pr-ORD.spot);K.spot+=tons;K.spotV+=tons*ORD.spot;pfW("spotd",tons*ORD.spot);}
   else{const o=ordGet(tr.oid),ld=o?ordLateD(o):0,chg=ld>0?Math.min(ORD.lateCap,ORD.late*Math.ceil(ld)):0;v=tons*(pr-chg);K.chg+=tons*chg;if(chg)pfW("chg",tons*chg);
     if(ld>0)K.lateT+=tons;else K.onT+=tons;
@@ -136,9 +139,11 @@ function ordDocks(dt,lcap){let loaded=0;
   return loaded;}
 
 // ---------- base load while the machine is stopped ----------
-function baseLoadTick(dt){if(S.zen||S.pm==="run")return;const g=GRADES[C.grade],tph=P.K*g.sp*g.bw,en=Math.max(0,energyCost()-pfChemT());if(!(en>0&&tph>0))return;
-  const B=outOn()?BASEL.out:S.pm==="break"?BASEL.brk:BASEL.stop,h=dt/60,pw=en*(1-PF_STEAMSH)*tph*h,st=en*PF_STEAMSH*tph*h*B.steam;let v=st;
-  for(const a in PF_POWER){const x=pw*PF_POWER[a]*B[a];v+=x;pfAdd("power",a,x);}if(st>0)pfAdd("steam","pm",st);
+// (v6.11.2: the steam only: a stopped mill's electricity is metered by pwrTick (07i), the drives at idle and the balance of plant
+//  at its stopped share)
+function baseLoadTick(dt){if(S.zen||S.pm==="run")return;const g=GRADES[C.grade],tph=P.K*g.sp*g.bw,en=Math.max(0,energyCostT()-pfChemT());if(!(en>0&&tph>0))return;
+  const B=outOn()?BASEL.out:S.pm==="break"?BASEL.brk:BASEL.stop,h=dt/60,st=en*tph*h*B.steam;let v=st;
+  if(st>0)pfAdd("steam","pm",st);
   if(v>0){spend(v,"energy");S.tot.idleE=(S.tot.idleE||0)+v;pfW("idle",v);}}
 
 // ---------- bale grading ----------

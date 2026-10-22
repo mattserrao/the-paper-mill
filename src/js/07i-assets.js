@@ -22,18 +22,19 @@ const RLY={tick:15,leadB:36*60,leadM:72*60,baseB:0.016,baseM:0.009,baseD:1/300, 
   fix:0.2,fixMin:[20,40],rstWin:1440,rstFail:20,elecResp:10,ppe:3,rectBase:1/250,rectBill:40e3,drvCall:0.1,rep:[0.08,0.8],inv:[45,90],repl:[60,90],patch:3,dur:{vib:[150,270],adx:[240,420],drv:[60,120]},drvBill:35e3};
 const LINEUPS=[["SP","Stock prep lineup","MCC-1"],["PM","Machine sectional lineup","MCC-2"],["WD","Winder lineup","MCC-3"]];
 const LINEN=Object.fromEntries(LINEUPS.map(l=>[l[0],l]));
-// kw: rated power; stop: what the failure does, in words; ta: the Round area its tell shows in; k: a phase for the load wobble
+// kw: rated power (v6.11.2: re-rated for a ~35 t/h recycled linerboard machine: refiners 2,000 kW, dryer groups 1,500, couch 400,
+//   presses 450, reel 200, winder 750; pulper and fan pump unchanged); stop: what the failure does, in words; ta: the Round area its tell shows in; k: a phase for the load wobble
 const ASSETS=[
   {id:"pulp",n:"Pulper rotor",ln:"SP",kw:1100,ta:"pulp",k:1,mods:{pulperDown:1},stop:"The pulper is stopped; the stock chest is draining.",bb:45e3,mb:120e3},
-  {id:"refA",n:"Refiner A",ln:"SP",kw:1500,ta:"scr",k:2,mods:{speedCap:0.75},stop:"One refiner left: the machine slows to 75%.",bb:40e3,mb:135e3},
-  {id:"refB",n:"Refiner B",ln:"SP",kw:1500,ta:"scr",k:3,mods:{speedCap:0.75},stop:"One refiner left: the machine slows to 75%.",bb:40e3,mb:135e3},
+  {id:"refA",n:"Refiner A",ln:"SP",kw:2000,ta:"scr",k:2,mods:{speedCap:0.75},stop:"One refiner left: the machine slows to 75%.",bb:40e3,mb:135e3},
+  {id:"refB",n:"Refiner B",ln:"SP",kw:2000,ta:"scr",k:3,mods:{speedCap:0.75},stop:"One refiner left: the machine slows to 75%.",bb:40e3,mb:135e3},
   {id:"fan",n:"Fan pump",ln:"SP",kw:900,ta:"scr",k:4,mods:{pmDown:"fan pump down"},stop:"No stock to the headbox: the machine is down.",bb:35e3,mb:105e3},
-  {id:"couch",n:"Couch roll",ln:"PM",kw:600,ta:"wet",k:5,mods:{pmDown:"couch drive down"},stop:"The machine is down.",bb:50e3,mb:90e3},
-  {id:"pr1",n:"1st press",ln:"PM",kw:700,ta:"wet",k:6,mods:{pmDown:"1st press drive down"},stop:"The machine is down.",bb:50e3,mb:100e3},
-  {id:"pr2",n:"2nd press",ln:"PM",kw:700,ta:"wet",k:7,mods:{pmDown:"2nd press drive down"},stop:"The machine is down.",bb:50e3,mb:100e3},
-  {id:"dry",n:"Dryer section",ln:"PM",kw:800,ta:"dry",k:8,mods:{pmDown:"dryer drive down"},stop:"The machine is down.",bb:55e3,mb:110e3},
-  {id:"reel",n:"Reel drum",ln:"PM",kw:400,ta:"dry",k:9,mods:{pmDown:"reel drive down"},stop:"The machine is down.",bb:35e3,mb:75e3},
-  {id:"wind",n:"Winder drum",ln:"WD",kw:600,ta:"dry",k:10,mods:{winderDown:1},stop:"The winder is down; reels are stacking up.",bb:35e3,mb:80e3}];
+  {id:"couch",n:"Couch roll",ln:"PM",kw:400,ta:"wet",k:5,mods:{pmDown:"couch drive down"},stop:"The machine is down.",bb:50e3,mb:90e3},
+  {id:"pr1",n:"1st press",ln:"PM",kw:450,ta:"wet",k:6,mods:{pmDown:"1st press drive down"},stop:"The machine is down.",bb:50e3,mb:100e3},
+  {id:"pr2",n:"2nd press",ln:"PM",kw:450,ta:"wet",k:7,mods:{pmDown:"2nd press drive down"},stop:"The machine is down.",bb:50e3,mb:100e3},
+  {id:"dry",n:"Dryer section",ln:"PM",kw:1500,ta:"dry",k:8,mods:{pmDown:"dryer drive down"},stop:"The machine is down.",bb:55e3,mb:110e3},
+  {id:"reel",n:"Reel drum",ln:"PM",kw:200,ta:"dry",k:9,mods:{pmDown:"reel drive down"},stop:"The machine is down.",bb:35e3,mb:75e3},
+  {id:"wind",n:"Winder drum",ln:"WD",kw:750,ta:"dry",k:10,mods:{winderDown:1},stop:"The winder is down; reels are stacking up.",bb:35e3,mb:80e3}];
 const ASSETN=Object.fromEntries(ASSETS.map(a=>[a.id,a]));
 // v6.10.1: an asset's rated kW now (the Refiner power upgrade fits bigger refiner motors and drives: +30%)
 const rlyKw=id=>{const A=ASSETN[id];return A.kw*((id==="refA"||id==="refB")&&LV("refiner")?1.3:1);};
@@ -95,6 +96,23 @@ function rlyLoad(id,r){if(!S||outOn()||rlyIncOf(id)||rlyRectDown(ASSETN[id].ln))
 function rlyDrvSt(id,L){if(outOn())return "off";const i=rlyIncOf(id);if(i&&i.kind==="plan")return "lock";if(i&&i.kind==="drv")return "fault";if(rlyRectDown(ASSETN[id].ln))return "nodc";if(i)return "trip";return (L!=null?L:rlyLoad(id))>3?"run":"idle";}
 const rlyTemp=(id,L)=>{const a=S.rel&&S.rel.a[id];return 27+(L||0)*0.38+(a?(100-a.dh)*0.12:0);};
 function rlyMccKw(r){r=r||knobRead();let k=0;for(const A of ASSETS)k+=Math.max(0,rlyLoad(A.id,r))/100*rlyKw(A.id);return k;}
+/* ---- v6.11.2 metered electricity ----
+   The electricity bill is the drives at their load (the ten on the Drives page, rated kW x load) plus the balance of plant
+   (vacuum pumps, stock and water pumps, agitators, fans, compressed air, lighting, effluent): ELEC.bop kW running, a share of
+   it on a break, stopped or in an outage. At $ELEC.price/kWh. Calibrated so a standard grade 24 run costs what the flat bill
+   did (ECON.energy's power share, 40% of $68/t: about 12.5 MW and 390 kWh/t at 32 t/h), so a slow machine, a stop or heavy
+   refining now show in the bill as they would. The APC upgrade (-4%) and survival's cost multiplier apply; the shoe press
+   and the leader's dryer tuning are steam savings (03 energyCostT). Booked to the process flow's power by area. */
+const ELEC={price:0.07,bop:6400,k:{brk:0.75,stop:0.35,out:0.15},area:{pulp:"pulper",refA:"stock",refB:"stock",fan:"stock"}};
+const pwrBop=()=>ELEC.bop*(outOn()?ELEC.k.out:S.pm==="run"?1:S.pm==="break"?ELEC.k.brk:ELEC.k.stop);
+const pwrMul=()=>(1-0.04*LV("apc"))*(P.costMul||1);
+function pwrKw(r){return rlyMccKw(r)+pwrBop();}
+// $/t of electricity at this moment (for the screens): today's draw over the tons an hour (the grade's standard when stopped)
+function pwrT(){if(!S)return 0;const g=GRADES[C.grade]||GRADES["24"],tph=S.pm==="run"&&S.rates&&S.rates.prod>1?S.rates.prod:P.K*g.sp*g.bw;return tph>0?pwrKw()*ELEC.price*pwrMul()/tph:0;}
+function pwrTick(dt){const r=knobRead(),h=dt/60,m=ELEC.price*pwrMul()*h;let v=0;
+  for(const A of ASSETS){const x=Math.max(0,rlyLoad(A.id,r))/100*rlyKw(A.id)*m;if(x>0){v+=x;pfAdd("power",ELEC.area[A.id]||"pm",x);}}
+  const b=pwrBop()*m;for(const a in PF_POWER)pfAdd("power",a,b*PF_POWER[a]);v+=b;
+  if(v>0){spend(v,"energy");if(S.pm!=="run"){S.tot.idleE=(S.tot.idleE||0)+v;pfW("idle",v);}}}
 function rlyStressV(id,r,L){let s=1;if(id==="pulp"&&r.amps>460)s+=(r.amps-460)/40;if((id==="refA"||id==="refB")&&r.kwh>80)s+=(r.kwh-80)/25;if((id==="pr1"||id==="pr2")&&r.pl>120)s+=(r.pl-120)/15;if(L>100)s+=(L-100)/20;return Math.min(4,s);}
 const rlyStressM=L=>L>100?Math.min(4,1+(L-100)/15):1;
 

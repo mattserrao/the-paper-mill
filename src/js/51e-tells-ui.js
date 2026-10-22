@@ -19,11 +19,23 @@
       <div class="tareas">${TAREAS.filter(a=>a.ids.some(id=>!EV[id].env||EV[id].env===SITE.env)).map(a=>{const v=rep?tellTrend(a.k):-1;
         return `<button type="button" class="tarea" data-a="${a.k}"${can?"":" disabled"}><span><b>${escHTML(a.n)}</b><small>${escHTML(a.ids.filter(id=>!EV[id].env||EV[id].env===SITE.env).map(id=>EV[id].name.replace(/^(\w)(\w*)/,(m,a,b)=>b&&b===b.toUpperCase()?m:a.toLowerCase()+b)).slice(0,3).join(", "))}…</small></span>${v>=0?`<em class="tv tv${v}" title="${AWORD[v]}">${ARROW[v]}<small>${AWORD[v]}</small></em>`:""}</button>`;}).join("")}</div>
       ${(()=>{const f=prepFor();if(!f)return "";const pr=prepState(f.k),tl=prepTally(pr);return `<button type="button" class="tprep" id="tell-prep"><span><b>Outage ${f.k} prep checklist</b><br><small>${prepLine(tl.n,tl.m)}</small></span><span aria-hidden="true">›</span></button>`;})()}
+      ${(()=>{const L=knownDefects(),n=L.length,e=L.filter(d=>d.early).length;return `<button type="button" class="tprep" id="tell-def"><span><b>Known defects view</b><br><small>${n?`${n-e} serious · ${e} early · <span class="dvk m">mechanical</span> <span class="dvk e">electrical</span>`:"nothing known right now: walk a round, or test with the Reliability program"}</small></span><span aria-hidden="true">›</span></button>`;})()}
       <div class="btns"><button type="button" id="tell-x" style="flex:1">Close</button></div></div>`;
     {const pb=ov.querySelector("#tell-prep");if(pb)pb.addEventListener("click",()=>{ov.hidden=true;prepOpen();});}
+    {const db=ov.querySelector("#tell-def");if(db)db.addEventListener("click",()=>{ov.hidden=true;dvSet(true);});}   // v6.11.2
     ov.querySelectorAll(".tarea").forEach(b=>b.addEventListener("click",()=>{ov.hidden=true;roundGo(b.dataset.a);}));
     ov.querySelector("#tell-x").addEventListener("click",()=>{ov.hidden=true;});ov.hidden=false;const f=ov.querySelector(".tarea:not([disabled])")||ov.querySelector("#tell-x");if(f)f.focus({preventScroll:true});}
   G3.tellOpen=tellOpen;
+  // ---- v6.11.2 the known defects view: like the fiddly knobs view (Settings), a chip at the top to leave it ----
+  let dvChip=null;
+  function dvSet(on){on=!!on&&!S.zen;if(on&&G3.kvOn&&G3.setKnobView)G3.setKnobView(false);const n=G3.defectView?G3.defectView(on):0;
+    if(!dvChip){dvChip=document.createElement("div");dvChip.className="kvchip dvchip";dvChip.id="dvChip";dvChip.hidden=true;dvChip.innerHTML=`<b>Known defects</b><span id="dvN"></span><button type="button" id="dvExit">Exit</button>`;
+      const host=document.getElementById("view3d")||document.body;host.appendChild(dvChip);dvChip.querySelector("#dvExit").addEventListener("click",()=>dvSet(false));}
+    dvChip.hidden=!on;document.body.classList.toggle("kview",on||!!G3.kvOn);if(on){const L=knownDefects(),e=L.filter(d=>d.early).length,k=L.length-e;   // (t6: serious and early-warning counted apart)
+      dvChip.querySelector("#dvN").innerHTML=L.length?`${k} serious · ${e} early · <span class="dvk m">mechanical</span> <span class="dvk e">electrical</span>`:"none known";}
+    return n;}
+  G3.setDefectView=dvSet;
+  UI_TICKS.push(()=>{if(G3.dvOn&&(S.zen||(dvChip&&dvChip.hidden)))dvSet(false);});
   // ---- a Round ----
   function roundGo(a){if(!tellRoundStart(a))return;cur={a,n:0};
     if(!strip){strip=document.createElement("div");strip.id="tellStrip";strip.className="tellstrip";strip.setAttribute("role","status");document.body.appendChild(strip);}

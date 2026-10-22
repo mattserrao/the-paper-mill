@@ -42,7 +42,7 @@
     if(EP.hay&&S.wd==="hayout")EP.hay.until=Math.max(EP.hay.until,now+900);
     // the crew works the oldest machine/winder job first
     const head=S.crewQ&&S.crewQ[0],hk=head?head.k:null;let here=false;
-    const hayOn=hk==="hay",brkOn=hk==="brk",yardBrk=brkOn&&S.brkType!=="reel"&&head.go;
+    const hayOn=hk==="hay",brkOn=hk==="brk",yardBrk=false;   // (v6.11.2: the yard and warehouse crews stay on their trucks at a sheet break)
     if(yardBrk&&!EP.brk)EP.brk={launched:false};
     {const ri=S.inc.find(x=>x.id==="runner");if(ri&&ri.real!==RUN.seen){RUN.seen=ri.real;RUN.t0=now;RUN.until=now+2*(RX0-RX1)/RSP*1000;crew.forEach(w=>w.userData.chase=false);}
       RUN.on=now<RUN.until;runnerW.visible=RUN.on;
@@ -176,7 +176,7 @@
       if(k===1&&!(inc&&inc.id==="ragger")&&(u.rk==="ragpre"||u.rk==="ragback")){if(goRoute(w,"ragback",[[RAG.foot[0]-0.6,-7.4],[RAG.foot[0]-0.6,-19.6],[22,-19.6]],5,rdt))u.rk=null;else{pose(w,"walk",now);return;}}
       if(inc){u.ry=0;u.sr=null;const sp=SPJOB[inc.id],a=moveP(w,sp[0]+k*1.4,sp[1]+1.2,6,rdt);if(a)face(w,sp[0],sp[1]-2,rdt);pose(w,a?(k?"look":"clean"):"run",now);return;}
       if(!u.sr)u.sr={ri:0,pt:0,which:k};const R2=k===0?G3.thkRoute:SPGROUND;if(walkRoute(w,R2,u.sr,rdt,now))u.sr=null;});
-    // yard crews jump off their trucks and run to the machine on a sheet break
+    // (before v6.11.2 the yard crews jumped off their trucks and ran to the machine on a sheet break; yardBrk is now always false)
     if(head&&here)head.here=true;
     if(yardBrk&&EP.brk&&!EP.brk.launched){EP.brk.launched=true;let k=0;
       const spots=[];lifts.forEach((g,i)=>{if(g.visible&&i<Math.floor(S.effDrv+1e-9))spots.push([g.position.x,g.position.z]);});

@@ -122,3 +122,10 @@ One line per version, oldest first. Add a line here with every release: build.py
 6.11.1-t3  QA Round (Test): Upgrades 20% Cheaper, a Ratio Setpoint for the Chemical Pumps on AUTO, a Permit-Risk Warning for Low Polymer, No Outage Notice over the Season Summary
 6.11.1-t4  Effluent in Permit (Test): the Clarifier Catches More, so a Normal Run Is ~25 mg/L TSS under the 50 mg/L Permit, and Cutting the Polymer Breaks It
 6.11.1     The Dryer Hood and Wet-End Chemicals: a Closed Dryer Hood with Lifting Doors and a Hood Doors Fiddly Knob, Dry Strength and Retention Polymer on the WET DCS, Upgrades 20% Cheaper, Effluent in Permit
+6.11.2-t1  Sold by Area (Test): Paper Is Sold by the Square Foot, so a Lighter Sheet Earns More a Ton and a Heavier One Less; the Mill Still Counts in Tons; MSF on the Planning Screen
+6.11.2-t2  Control Room Tidy-Up (Test): 2nd and 3rd Section Steam on the DET DCS, WET Setpoints in Process Order, Yard Crews Stay Put on Breaks, MCC Computer Opens Drives, SPOT Console Moved, Seal Chest Labels Turned
+6.11.2-t3  Test Suite Green (Test): Reel Storage Counts Right (a Turn-Up Takes Exactly One Reel), Tornado Damage Marked as Sudden, Steadier Checks
+6.11.2-t4  Metered Power (Test): Drives Re-Rated and Electricity Billed from Their Load, Starch Removed, a Spare Spool Stand on the Crane Line, a Half Wall on the Roll Warehouse, Two Stray Objects at the Origin Fixed
+6.11.2-t5  Vehicles and Polish (Test): New Food Truck, Train, Staff Cars and Carry-Deck Crane, Warehouse Annexes Roofed and Used for Storage, a Door on the Warehouse, Shift Walkers Use Doorways, Uncle Brian Rides Again, MCC Light, Beater Bay Info, Known Defects View, DE Pulper on the DCS
+6.11.2-t6  QA Round (Test): Season Grade Counts the Money, Early Defect Pins Dimmed, DE Pulper High-Level Alarm and Overflow, Repair Bills 12.5% Lower, Hank Gets a Feel for the Sheet
+6.11.2     Sold by Area and Metered Power: Rolls Sold by the Square Foot, Drives Re-Rated with Electricity Billed from Their Load, Starch Removed, New Vehicles, Warehouse Annexes Roofed and Used, Known Defects View, DE Pulper on the DCS, Season Grade Counts the Money, Repairs 12.5% Lower, Hank Buffed

@@ -81,7 +81,11 @@
       const glass=new THREE.Mesh(new THREE.PlaneGeometry(z1-z0-0.2,1.3),gl);glass.rotation.y=Math.PI/2;glass.position.set(x0+(i+1)*tw+0.07,y+0.87,(z0+z1)/2);g.add(glass);}
     g.userData.mats=[m,gl,em];scene.add(g);roofs.push(g);return g;}
   box2(-34.4,-8,-23.5,-3);box2(-49,-23.8,14.8,32.2);skirt(-2,1.2,64,1.2,2.4);skirt(65.2,2.4,65.2,16.2,2.4);
-  sawRoof(-34.6,-7.85,-23.65,-2.85,WH);sawRoof(-49.15,-23.65,14.65,32.35,WH);
+  sawRoof(-34.6,-7.85,-23.65,-2.85,WH);
+  // v6.11.2: the roll warehouse's south wall (the one facing the camera) is a half wall in the cutaway: its top half belongs to the
+  // roof group, so it lifts and fades with the roof (with its own copies of the materials, so no other wall fades with it)
+  {const whR=sawRoof(-49.15,-23.65,14.65,32.35,WH),n0=whR.children.length;ribWall(25.2,WH/2,0.3,-36.4,WH*3/4,32.2,whR);G3.whSouthHi=whR.children.slice(n0);G3.sawRoof=sawRoof;
+   const cl=new Map();whR.children.slice(n0).forEach(o=>o.traverse(c=>{if(!c.material)return;let m=cl.get(c.material);if(!m){m=c.material.clone();cl.set(c.material,m);whR.userData.mats.push(m);}c.material=m;}));}
   // paper machine hall: full building seen from the air (walls, window bands, sawtooth roof), gone as soon as you zoom in
   // v3.2.1: the tending side is widened from z 16.75 out to HALL.zf (20), east of the first bay; the west bay stays where it was
   // so it doesn't run into the warehouse. Doors: a big roll-up door to the food truck lawn and two personnel doors.
@@ -135,7 +139,7 @@
     if(Math.hypot(c[0]-x,c[1]-z)<R+c[2]*0.8)g.userData.gust=now+2200;});};
   let rfT=0;
   G3.roofFade=r=>{if(cutMode==="on")r=0;else if(cutMode==="off")r=1e9;const now=performance.now(),ek=rfT?1-Math.exp(-Math.min(0.25,(now-rfT)/1000)*11):1;rfT=now;
-    roofs.forEach(g=>{const f=g.userData.fade||[170,70],aT=(g.userData.gust&&now<g.userData.gust)?0:r>=f[0]+f[1]/2?1:0;   /* (t13: a passing tornado blows it off for a moment) */   /* (t11 QA: on or off per zoom step, the ramp's midpoint as the switch: at step 190 the ramp left every roof stuck at 29%, lifted 4.6 m) */
+    roofs.forEach(g=>{if(g.userData.off){if(g.visible)g.visible=false;return;}   /* (v6.11.2: a warehouse annex's roof before it is built) */const f=g.userData.fade||[170,70],aT=(g.userData.gust&&now<g.userData.gust)?0:r>=f[0]+f[1]/2?1:0;   /* (t13: a passing tornado blows it off for a moment) */   /* (t11 QA: on or off per zoom step, the ramp's midpoint as the switch: at step 190 the ramp left every roof stuck at 29%, lifted 4.6 m) */
     let a=g.userData.aa;a=a===undefined?aT:Math.abs(aT-a)<0.004?aT:a+(aT-a)*ek;g.userData.aa=a;const solid=a>0.995;g.visible=a>0.02;
     {const y=(1-a)*(1-a)*LIFT;if(g.position.y!==y)g.position.y=y;}
     if(g.userData.a!==undefined&&Math.abs(g.userData.a-a)<0.002)return;g.userData.a=a;

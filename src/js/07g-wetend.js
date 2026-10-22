@@ -23,15 +23,15 @@
 
    Refining. The refiners' knob is specific energy (kWh/t, standard 60); the plate gap follows. More energy: lower
    freeness, slower drainage (lower couch solids, 07b dewater), and more ring crush. Ring crush scales with basis weight,
-   so more refining lets the BW setpoint come down and still pass the strength spec; on-spec paper under the grade's
-   weight earns the lightweight premium. Refining power is billed as energy (more or less than standard).
+   so more refining lets the BW setpoint come down and still pass the strength spec; paper is sold by area (v6.11.2), so
+   a lighter sheet sells more ft² a ton (and a heavier one fewer). Refining power is billed as energy (more or less than standard).
 
    Bale water: wet bales thin the pulper; the dilution loop takes the water back out over WE.cpTau minutes.
    Cleaners and screens: pressure drop builds with dirty bales (and a fine screen with its load); past a clean level
    the rejects carry good fiber with them, so the yield falls. */
 const WE={lwM:1.03,lwTau:45,hbc:0.8,mc0:3.2,dead:3,tauI:8,trimMin:-0.10,trimMax:0.05,valveMax:100,
   silo:60000/264.172,over:0.85,makeL:0.25,make:120,cav:0.15,trip:0.08,tripMin:30,refill:0.6,seal0:0.18,sealK:0.006,
-  kwh0:60,kwhMin:20,kwhMax:130,rctK:0.0045,rctStk:0.05,rctDraw:0.04,rctSpec:0.97,prem:0.5,premMax:0.05,kwhCost:0.07,
+  kwh0:60,kwhMin:20,kwhMax:130,rctK:0.0045,rctStk:0.05,rctDraw:0.04,rctSpec:0.97,kwhCost:0.07,
   cpK:0.12,cpTau:20,dirt:0.8,dirtRef:0.1,rejOn:1.1,rejW:{hd:0.03,lc:0.04,lw:0.03,fs:0.05},fs0:30};
 // ring crush (lbf/6 in) of each grade at its target weight and standard refining; the spec is 97 % of it
 const RCT0={"24":60,"28":67,"31":75,"34Super":84};
@@ -92,10 +92,17 @@ function dpYield(){if(S.zen)return 1;let x=0;for(const k of ["hd","lc","lw"])x+=
 // strength: ring crush from refining, the measured weight and stickies; the spec is the grade's
 const rctSpec=()=>Math.round((RCT0[C.grade]||60)*WE.rctSpec*10)/10;
 // (v6.8.3: open draw: each % of draw over the 1.5 % standard stretches the sheet and takes 4 % off ring crush; less draw adds it)
-function rctNow(bw){const ri=1+WE.rctK*(kwhNow()-WE.kwh0)-WE.rctStk*Math.max(0,((S.bq&&!S.zen)?S.bq.ck:0.1)-0.1)-WE.rctDraw*((S.zen?KNOB_IDEAL.draw:knobVal("draw"))-KNOB_IDEAL.draw)+chemRct();   // (v6.11.1: dry strength, 07l)
+function rctNow(bw){const ri=1+WE.rctK*(kwhNow()-WE.kwh0)-WE.rctStk*Math.max(0,((S.bq&&!S.zen)?S.bq.ck:0.1)-0.1)-WE.rctDraw*((S.zen?KNOB_IDEAL.draw:knobVal("draw"))-KNOB_IDEAL.draw);   // (v6.11.2: dry strength starch removed; v6.11.1 added its ring crush here)
   return (RCT0[C.grade]||60)*(bw/bwStd())*ri;}
-// the lightweight premium share of the price for on-spec paper under the grade's weight
-const premShare=()=>S.we?Math.min(WE.premMax,WE.prem*Math.max(0,-S.we.trim)):0;
+// v6.11.2 paper is sold by area (MSF, thousand ft²), the way box plants buy it. The list price ($/t) is for a ton at the
+// grade's target weight; a ton made lighter covers more ft² and sells for list × bwStd/bw, a heavier one for less. The player
+// still sees tons: the ratio rides on every lot from the reel to the truck (06 lotPut) and is paid when the truck leaves.
+const areaF=bw=>S.zen||!(bw>0)?1:bwStd()/bw;
+const areaNow=()=>S.pm==="run"&&S.we&&S.we.bw>0?areaF(S.we.bw):1;            // the paper being made now (true weight)
+const areaQcs=()=>areaF(S.pm==="run"&&S.we?bwMeas():bwSp());                   // what the QCS shows (or the setpoint when down)
+const msfPerT=(g,a)=>2*(a||1)/((GRADES[g]||GRADES["24"]).bw/1000);            // MSF in a short ton: 2000 lb / (lb per 1000 ft²)
+const priceEff=()=>priceOf(C.grade)*areaQcs();
+const wcFmt=a=>{const p=(a-1)*100;return Math.abs(p)<0.05?"sells at list (by area)":`${p>0?"+":"−"}${Math.abs(p).toFixed(1)}% ${p>0?"light":"heavy"}, by area`;};                                     // $/t for the paper on the machine now
 // the paper machine's water this step (07f waterTick, before its own sums): returns the change in the silo's water (t)
 function weFlow(dt,u){const W=weState(),h=dt/60,F=W.f,run=S.pm==="run"&&u>0;
   const K=S.knob,x=K&&K.any&&K.x?K.x:null,cs=x&&x.cs!=null?x.cs:csStd(),ps=x&&x.ps!=null?x.ps:psStd(),vac=x?x.vac:30;

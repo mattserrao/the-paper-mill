@@ -10,8 +10,15 @@
   // every figure that works the rotation: techs[k] are MAN techs k; crew (machine floor, 7) and spOps (stock prep, 2) are ops 0-8
   let shcF=null,shcN=-1;
   function shcFigs(){if(shcF&&shcN===techs.length)return shcF;shcN=techs.length;const out=shcF=[];techs.forEach((T,k)=>out.push({w:T.w,kind:"t",i:k,T,to:()=>T.bench.p,ok:()=>T.state==="home"}));
-    crew.forEach((w,k)=>out.push({w,kind:"o",i:k,to:()=>[w.position.x+0.9,w.position.z+0.6],ok:()=>true}));
-    spOps.forEach((w,k)=>out.push({w,kind:"sp",i:7+k,to:()=>[w.position.x+0.9,w.position.z+0.6],ok:()=>true}));return out;}
+    crew.forEach((w,k)=>out.push({w,kind:"o",i:k,to:()=>shcBeside(w),ok:()=>true}));
+    spOps.forEach((w,k)=>out.push({w,kind:"sp",i:7+k,to:()=>shcBeside(w),ok:()=>true}));return out;}
+  // v6.11.2: where the relief stands: beside the operator on open floor (the walking grid, 38). It used to be a fixed 0.9 m
+  // right and 0.6 m south, which for an operator by the hall's tending-side wall was inside the wall, so the walker's last
+  // straight steps took them through it
+  const SHB=[[0.9,0.6],[0.9,-0.6],[-0.9,0.6],[-0.9,-0.6],[0,0.9],[0,-0.9],[1.2,0],[-1.2,0]];
+  function shcBeside(w){const x=w.position.x,z=w.position.z;if(!NAVW.g)navBuild(NAVW);
+    for(const [dx,dz] of SHB){const c=navC(NAVW,[x+dx,z+dz]);if(navFree(NAVW,c[0],c[1]))return [x+dx,z+dz];}
+    const n=navNearest(NAVW,navC(NAVW,[x,z]));return n?[NAVW.x0+(n[0]+0.5)*NAVW.cs,NAVW.z0+(n[1]+0.5)*NAVW.cs]:[x,z];}
   function shcWant(m,f){const row=f.kind==="t"?m.techs[f.i]:m.ops[f.i];if(!row)return null;const p=row.who||row.home;return M.hatTeam[p.team];}
   // a walker that looks like the person it relieves (same suit and vest), from a small pool kept for reuse
   function shcWalker(f,hatM){const P0=SHC.pool[f.kind];let c=P0.pop();
@@ -32,7 +39,10 @@
     if(!SHC.live.length)return;
     const sp=2.2*clamp(simRate()/20,1,4);
     for(let k=SHC.live.length-1;k>=0;k--){const L=SHC.live[k],c=L.c;
-      if(L.st==="in"){if(L.wait>0){L.wait-=rdt;pose(c,"idle",now);continue;}const [tx,tz]=L.f.to();
+      if(L.st==="in"){if(L.wait>0){L.wait-=rdt;pose(c,"idle",now);continue;}
+        // (v6.11.2: the target is held while the person stays put: it used to follow them every frame, so a walker's route search
+        //  (38 walkPlan) restarted every frame, never finished, and the walker steered straight at them through the walls)
+        const w=L.f.w;if(!L.tgt||Math.hypot(w.position.x-L.ax,w.position.z-L.az)>3){L.tgt=L.f.to();L.ax=w.position.x;L.az=w.position.z;}const [tx,tz]=L.tgt;
         if(moveP(c,tx,tz,sp,rdt)){L.st="wait";}else pose(c,"walk",now);}
       else if(L.st==="wait"){face(c,L.f.w.position.x,L.f.w.position.z,rdt);pose(c,"idle",now);L.give+=rdt;
         // the person being relieved has to be free (a tech back in the shop); after 40 s the change happens anyway

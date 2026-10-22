@@ -1,13 +1,16 @@
   /* ---- maintenance techs: break room, yellow three-wheel scooters, repairs ---- */
   const SHOP={x0:50.5,x1:63,z0:-25,z1:-19.2,door:[56,-18.4]};
   slab(49,65,-27,-14.5,M.slab,0.03);box2(SHOP.x0,SHOP.x1,SHOP.z0,SHOP.z1,1.4);
-  ribWall(SHOP.x1-SHOP.x0,3.3,0.3,(SHOP.x0+SHOP.x1)/2,1.65,SHOP.z1);ribWall(SHOP.x1-SHOP.x0,3.3,0.3,(SHOP.x0+SHOP.x1)/2,1.65,SHOP.z0);
+  // (v6.11.2: the front wall has a real doorway at the door (it was solid, with the door drawn on it, so the techs walked through
+  //  the wall to their benches): two wall runs and a header over a 1.6 m opening)
+  {const dx0=SHOP.door[0]-0.85,dx1=SHOP.door[0]+0.85;ribWall(dx0-SHOP.x0,3.3,0.3,(SHOP.x0+dx0)/2,1.65,SHOP.z1);ribWall(SHOP.x1-dx1,3.3,0.3,(dx1+SHOP.x1)/2,1.65,SHOP.z1);ribWall(dx1-dx0,1.0,0.3,SHOP.door[0],2.8,SHOP.z1);}
+  ribWall(SHOP.x1-SHOP.x0,3.3,0.3,(SHOP.x0+SHOP.x1)/2,1.65,SHOP.z0);
   ribWall(0.3,3.3,SHOP.z1-SHOP.z0,SHOP.x0,1.65,(SHOP.z0+SHOP.z1)/2);ribWall(0.3,3.3,SHOP.z1-SHOP.z0,SHOP.x1,1.65,(SHOP.z0+SHOP.z1)/2);
   {const rm=mat("brand",{transparent:true,roughness:0.55}),rg=new THREE.Group();scene.add(rg);
    const roof=new THREE.Mesh(new THREE.BoxGeometry(SHOP.x1-SHOP.x0+0.6,0.35,SHOP.z1-SHOP.z0+0.6),rm);roof.position.set((SHOP.x0+SHOP.x1)/2,3.45,(SHOP.z0+SHOP.z1)/2);roof.castShadow=true;rg.add(roof);
    rg.userData.mats=[rm];roofs.push(rg);
-   box(1.6,2.3,0.14,M.ink,SHOP.door[0],1.15,SHOP.z1+0.12,scene,false);{const W=SHOP.x1-SHOP.x0,H=2.95,wx=[51.6,53.4,58.4,60.1,61.8].map(v=>[v-SHOP.x0,1.05,1.3,0.95]);
-     const fs=facade(W,H,wx,[SHOP.door[0]-SHOP.x0,2.22,4.6,0.62,"MAINTENANCE"],SHOP.door[0]-SHOP.x0);fs.position.set((SHOP.x0+SHOP.x1)/2,H/2,SHOP.z1+0.17);scene.add(fs);}}
+   {const d=box(0.12,2.3,1.0,M.ink,SHOP.door[0]-0.82,1.15,SHOP.z1-0.55,scene,false);d.userData.noNav=true;}   /* (v6.11.2: the door stands open against the inside wall) */{const W=SHOP.x1-SHOP.x0,H=2.95,wx=[51.6,53.4,58.4,60.1,61.8].map(v=>[v-SHOP.x0,1.05,1.3,0.95]);
+     const fs=facade(W,H,wx,[SHOP.door[0]-SHOP.x0,2.22,4.6,0.62,"MAINTENANCE"],SHOP.door[0]-SHOP.x0);fs.position.set((SHOP.x0+SHOP.x1)/2,H/2,SHOP.z1+0.17);fs.userData.noNav=true;scene.add(fs);}}
   const SLOTS=[51.5,52.9,54.3,55.7,58.5,59.9,61.3,62.7].map(x=>[x,-16.6]);
   // shop floor: workbenches with pumps on them along the back wall, rebuild stands, parts racks, a break table
   const BENCH=[];
@@ -37,7 +40,7 @@
   const NAV={x0:-62,z0:-52,cs:0.5,nx:300,nz:210,g:null,inf:0.35},NAVW={x0:-62,z0:-52,cs:0.5,nx:300,nz:210,g:null,inf:0.22};
   function navBuild(G){const g=new Uint8Array(G.nx*G.nz),bb=new THREE.Box3(),INF=G.inf;scene.updateMatrixWorld(true);
     const navCb=o=>{if(!o.isMesh||o.isInstancedMesh||o.userData.smBatch||!o.geometry)return;
-      for(let x=o;x&&x!==scene;x=x.parent){const u=x.userData||{};if(!x.visible&&x!==o)return;if(u.legs||u.wheels||u.load||u.cj||u.trike||u.stack||u.noNav||u.mats)return;}
+      for(let x=o;x&&x!==scene;x=x.parent){const u=x.userData||{};if(!x.visible&&x!==o)return;if(u.legs||u.wheels||u.load||u.cj||u.trike||u.stack||u.noNav)return;}   // (v6.11.2: no longer skips a roof group (u.mats): the machine hall's shell walls live in one, so walkers at a shift change cut through them; the roofs themselves are over 1.9 m and skipped below)
       if(!o.visible&&o.layers.mask===1)return;
       const gb=o.geometry.boundingBox||(o.geometry.computeBoundingBox(),o.geometry.boundingBox);bb.copy(gb).applyMatrix4(o.matrixWorld);
       if(bb.min.y>1.9||bb.max.y<0.25)return;if((bb.max.x-bb.min.x)*(bb.max.z-bb.min.z)>900)return;
@@ -87,21 +90,21 @@
       done=true;return {path:finish()};}};}
   function navPath(G,from,to,maxIt=250000){return navSearch(G,from,to,maxIt).step(Infinity).path;}
   // people: plan a walk only when the straight line is blocked; re-plan when the destination changes
-  function walkPlan(p,tx,tz){const u=p.userData,key=(Math.round(tx*4)+2048)*4096+(Math.round(tz*4)+2048);   /* (v5.2: a number, no string per walker per frame) */if(u.wpKey===key)return u.wp;u.wpKey=key;u.wp=null;
+  function walkPlan(p,tx,tz){const u=p.userData,key=(Math.round(tx*4)+2048)*4096+(Math.round(tz*4)+2048);   /* (v5.2: a number, no string per walker per frame) */if(u.wpKey===key)return u.wp;u.wpKey=key;u.wp=null;u.wpPend=false;
     if(!NAVW.g)navBuild(NAVW);const a=[p.position.x,p.position.z],b=[tx,tz],d=Math.hypot(tx-a[0],tz-a[1]);if(d<1.2)return null;
     {const ca=navC(NAVW,a),cb=navC(NAVW,b);const sA=navNearest(NAVW,ca),sB=navNearest(NAVW,cb);if(!sA||!sB)return null;
       const pa=[NAVW.x0+(sA[0]+0.5)*NAVW.cs,NAVW.z0+(sA[1]+0.5)*NAVW.cs],pb=[NAVW.x0+(sB[0]+0.5)*NAVW.cs,NAVW.z0+(sB[1]+0.5)*NAVW.cs];if(navLOS(NAVW,pa,pb))return null;}
     // v4.0.4: queued; navPump() searches ~2 ms per frame and fills u.wp when done (until then the walker steers locally)
     const Q=NAVW.jobs||(NAVW.jobs=[]);for(let k=Q.length-1;k>=0;k--)if(Q[k].p===p&&k>0)Q.splice(k,1);
-    Q.push({p,key,a,b,d});return null;}
-  function navPump(){const Q=NAVW.jobs;if(!Q||!Q.length)return;const end=performance.now()+2;
+    Q.push({p,key,a,b,d});u.wpPend=true;return null;}   // (v6.11.2: wpPend: the walker waits for its route instead of steering through the walls, 33 moveP)
+  function navPump(){const Q=NAVW.jobs;if(!Q||!Q.length)return;const end=performance.now()+3;
     while(Q.length&&performance.now()<end){const j=Q[0];
       if(j.p.userData.wpKey!==j.key){Q.shift();continue;}   // the walker has a new destination: drop this search
-      if(!j.s)try{j.s=navSearch(NAVW,j.a,j.b,120000,"scw");}catch(e){Q.shift();continue;}
+      if(!j.s)try{j.s=navSearch(NAVW,j.a,j.b,120000,"scw");}catch(e){Q.shift();j.p.userData.wpPend=false;continue;}
       let r;try{r=j.s.step(end);}catch(e){r={path:null};}if(!r)return;Q.shift();
       let path=r.path;if(path){let L=0;for(let i=1;i<path.length;i++)L+=Math.hypot(path[i][0]-path[i-1][0],path[i][1]-path[i-1][1]);if(L>j.d*3+25)path=null;}
-      if(j.p.userData.wpKey===j.key)j.p.userData.wp=path?path.slice(1,-1):null;}}
-  G3.navPump=navPump;
+      if(j.p.userData.wpKey===j.key){j.p.userData.wp=path?path.slice(1,-1):null;j.p.userData.wpPend=false;}}}
+  G3.navPump=navPump;G3.navDbg={NAVW,NAV,navPath,navBuild,navC,navFree};   // (v6.11.2: tests)
   G3.navCheck=(pts,G=NAV)=>{if(!G.g)navBuild(G);let bad=0;for(let i=1;i<pts.length;i++){const a=pts[i-1],b=pts[i],d=Math.hypot(b[0]-a[0],b[1]-a[1]),n=Math.max(1,Math.ceil(d/0.25));
       for(let k=0;k<=n;k++){const c=navC(G,[a[0]+(b[0]-a[0])*k/n,a[1]+(b[1]-a[1])*k/n]);if(G.g[c[1]*G.nx+c[0]])bad++;}}return bad;};
   G3.NAV=NAV;G3.NAVW=NAVW;

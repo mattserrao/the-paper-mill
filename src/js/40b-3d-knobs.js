@@ -34,20 +34,25 @@
     // the couch pit agitator motor itself, low on the tending side
     {const m=new THREE.Mesh(new CylG(0.32,0.32,0.8,12),M.motor);m.rotation.z=Math.PI/2;m.position.set(41.2,0.45,12.75);scene.add(m);}
     // ---- the stock prep console (SPOT), like the machine floor's: desk, two screens, a stool; the screens face the operator ----
-    {const g=new THREE.Group();g.position.set(35.5,0,-3.2);scene.add(g);box(2.0,1.0,0.7,M.steel,0,0.5,0,g);const top=box(2.0,0.12,0.75,M.ink,0,1.05,0.05,g,false);top.rotation.x=0.35;
+    // (v6.11.2: moved from under the wet-end pipe racks to the stock prep pad's north-west corner, by the effluent transfer tank,
+    //  where the iso camera can see it; the screens and stools face the camera's side)
+    const SPC=[6.4,-22.9];
+    {const g=new THREE.Group();g.position.set(SPC[0],0,SPC[1]);scene.add(g);box(2.0,1.0,0.7,M.steel,0,0.5,0,g);const top=box(2.0,0.12,0.75,M.ink,0,1.05,0.05,g,false);top.rotation.x=0.35;
       const c=document.createElement("canvas");c.width=128;c.height=80;const x=c.getContext("2d");x.fillStyle="#13233a";x.fillRect(0,0,128,80);x.strokeStyle="#4fd18b";x.lineWidth=2;x.strokeRect(10,14,34,30);x.strokeRect(54,24,26,22);x.strokeRect(90,14,28,34);
       x.beginPath();x.moveTo(44,30);x.lineTo(54,34);x.moveTo(80,34);x.lineTo(90,30);x.stroke();x.fillStyle="#ffb02e";x.fillRect(8,58,50,7);x.fillStyle="#9ab3d6";x.fillRect(66,58,52,7);
       const t=new THREE.CanvasTexture(c);t.colorSpace=THREE.SRGBColorSpace;const sm=new THREE.MeshBasicMaterial({map:t,toneMapped:false});
       [-0.5,0.5].forEach(dx=>{box(0.08,0.5,0.08,M.ink,dx,1.35,-0.25,g,false);box(0.85,0.55,0.08,M.ink,dx,1.75,-0.25,g,false);const sc=new THREE.Mesh(new THREE.PlaneGeometry(0.76,0.47),sm);sc.position.set(dx,1.75,-0.205);g.add(sc);});
-      [-0.6,0.6].forEach(dx=>{const ch=new THREE.Group();ch.position.set(35.5+dx,0,-1.85);scene.add(ch);box(0.55,0.08,0.55,M.ink,0,0.5,0,ch,false);box(0.55,0.6,0.08,M.ink,0,0.85,0.26,ch,false);box(0.08,0.5,0.08,M.steel,0,0.25,0,ch,false);});
-      blob(35.5,-3.2,1.6);plate("SPOT · STOCK PREP DCS",1.6,35.5,0.62,-2.84);}
+      [-0.6,0.6].forEach(dx=>{const ch=new THREE.Group();ch.position.set(SPC[0]+dx,0,SPC[1]+1.35);scene.add(ch);box(0.55,0.08,0.55,M.ink,0,0.5,0,ch,false);box(0.55,0.6,0.08,M.ink,0,0.85,0.26,ch,false);box(0.08,0.5,0.08,M.steel,0,0.25,0,ch,false);});
+      blob(SPC[0],SPC[1],1.6);plate("SPOT · STOCK PREP DCS",1.6,SPC[0],0.62,SPC[1]+0.36);}
     // stations: where each DCS lives (the machine floor's three consoles, and stock prep's)
-    const ST=[{a:"SPOT",at:[35.5,1.6,-3.2]},{a:"WET",at:[58,1.6,13.4]},{a:"DET",at:[26,1.6,13.4]},{a:"DET",at:[-5,1.6,13.4]}];
+    const ST=[{a:"SPOT",at:[SPC[0],1.6,SPC[1]]},{a:"WET",at:[58,1.6,13.4]},{a:"DET",at:[26,1.6,13.4]},{a:"DET",at:[-5,1.6,13.4]}];
+    // v6.11.2: the computer on the MCC desk (38c) opens the Drives page
+    {const MC=G3.MCC;if(MC)ST.push({a:"DRV",at:[MC.desk[0],1.0,MC.desk[1]-0.45],r:1.1});}
     // ---- tap targets: invisible spheres outside the scene (never drawn, never batched), with their matrices set once ----
     const HG=new THREE.SphereGeometry(1,8,6),HM=new THREE.MeshBasicMaterial(),HITS=[];
     const addHit=(at,r,tag)=>{const m=new THREE.Mesh(HG,HM);m.position.set(at[0],at[1],at[2]);m.scale.setScalar(r);m.updateMatrixWorld(true);m.userData.tag=tag;HITS.push(m);return m;};
     for(const id in KX)addHit(KX[id].at,1.3,{k:"knob",id});
-    ST.forEach(s=>addHit(s.at,1.6,{k:"station",a:s.a}));
+    ST.forEach(s=>addHit(s.at,s.r||1.6,{k:"station",a:s.a}));
     // in the knob view the markers are the targets, bigger and wherever they float
     G3.knobFly=id=>{const k=KX[id];if(k&&G3.camTo)G3.camTo(k.at[0],k.at[2],46);};
     G3.knobHit=rc=>{if(G3.zen||S.zen)return null;const h=rc.intersectObjects(G3.kvOn?KVHITS:HITS,false);return h.length?h[0].object.userData.tag:null;};
@@ -80,6 +85,30 @@
       if(t.startsWith("station:"))G3.knobTap({k:"station",a:t.slice(8)});else if(t==="spider"||t==="slice")G3.knobTap({k:t});else G3.knobTap({k:"knob",id:t});return true;};
     const _q=new THREE.Vector3(),_d=new THREE.Vector3();
     G3.kvVeil=veil;
+    // ---- v6.11.2 the known defects view (Rounds screen): the mill greyed out, a labelled bullseye on each known defect,
+    // orange for mechanical, blue for electrical ----
+    const DVG=new THREE.Group();DVG.visible=false;scene.add(DVG);SM.dyn.add(DVG);const DV={on:false,pins:new Map(),t:0};
+    const dvM={m:new THREE.MeshBasicMaterial({color:lin0("#e8590c"),depthTest:false,depthWrite:false,transparent:true,toneMapped:false}),e:new THREE.MeshBasicMaterial({color:lin0("#1c7ed6"),depthTest:false,depthWrite:false,transparent:true,toneMapped:false}),w:new THREE.MeshBasicMaterial({color:0xffffff,depthTest:false,depthWrite:false,transparent:true,toneMapped:false})};
+    const ring1=new THREE.RingGeometry(0.95,1.3,32),ring2=new THREE.RingGeometry(0.45,0.7,28),dot=new THREE.CircleGeometry(0.25,20),disc=new THREE.CircleGeometry(1.32,32);
+    // (t6: early-warning findings get a small faded pin with no pulse; serious ones and spotted tells keep the full bullseye)
+    const dvF={};for(const k in dvM){dvF[k]=dvM[k].clone();dvF[k].opacity=0.5;}
+    function dvPin(d){const g=new THREE.Group(),b=new THREE.Group();g.add(b);const MM=d.early?dvF:dvM,M2=MM[d.k];
+      [[disc,MM.w,9991],[ring1,M2,9992],[ring2,M2,9992],[dot,M2,9993]].forEach(([geo,m,o])=>{const x=new THREE.Mesh(geo,m);x.renderOrder=o;b.add(x);});
+      const s=new THREE.Mesh(stemG,M2);s.scale.y=d.early?1.4:2.2;s.position.y=d.early?-0.7:-1.1;s.renderOrder=9990;g.add(s);
+      const y=d.early?2.6:3.4;g.position.set(d.at[0],y,d.at[1]);DVG.add(g);return {g,b,lb:lblNew(true,"defect:"+d.id),v:new THREE.Vector3(d.at[0],y+(d.early?1.0:1.5),d.at[1]),d,early:!!d.early};}
+    function dvSync(){const L=knownDefects(),keep=new Set();for(const d of L){keep.add(d.id);let p=DV.pins.get(d.id);if(p&&p.early!==!!d.early){DVG.remove(p.g);p.lb.vis=false;p=null;}if(!p){p=dvPin(d);DV.pins.set(d.id,p);}p.d=d;}
+      for(const [id,p] of DV.pins)if(!keep.has(id)){DVG.remove(p.g);p.lb.vis=false;DV.pins.delete(id);}return L.length;}
+    G3.defectView=on=>{on=!!on&&!S.zen;if(on===DV.on)return DV.pins.size;DV.on=on;G3.dvOn=on;DVG.visible=on;veil.visible=on||!!G3.kvOn;LB.force=true;
+      if(on){if(labelHost.classList.contains("lbl-off")){DV.lblOff=true;labelHost.classList.remove("lbl-off");}return dvSync();}
+      for(const p of DV.pins.values())p.lb.vis=false;if(DV.lblOff){DV.lblOff=false;labelHost.classList.add("lbl-off");}return 0;};
+    G3.defectCount=()=>knownDefects().length;
+    function dvFrame(now){if(!DV.on)return;if(now-DV.t>1000){DV.t=now;dvSync();}
+      {const d=camera.near*1.2,h=(camera.isIso?camera.top-camera.bottom:2*d*Math.tan(camera.fov*Math.PI/360))*1.15;camera.getWorldDirection(_d);veil.position.copy(camera.position).addScaledVector(_d,d);veil.quaternion.copy(camera.quaternion);veil.scale.set(h*camera.aspect,h,1);veil.updateMatrixWorld();}
+      const w=G3.vw||host.clientWidth,hh=G3.vh||host.clientHeight,pulse=0.5+0.5*Math.sin(now/300);
+      for(const p of DV.pins.values()){p.b.lookAt(camera.position);const s=p.early?0.6:1+0.15*pulse;p.b.scale.set(s,s,s);p.g.updateMatrixWorld(true);_q.copy(p.v).project(camera);
+        const vis=_q.z<1&&Math.abs(_q.x)<1.05&&Math.abs(_q.y)<1.05;p.lb.vis=vis;if(!vis)continue;p.lb.x=Math.round((_q.x+1)/2*w);p.lb.y=Math.round((1-_q.y)/2*hh);
+        const cd=G3.camDist||camera.position.distanceTo(p.v);if(p.early&&cd>110){p.lb.vis=false;continue;}   // (early pins are labelled once zoomed in)
+        lblSet(p.lb,p.d.a,cd>170?"":p.d.b,p.d.k==="m");}}
     function kvFrame(now){if(!G3.kvOn)return;
       if(labelHost.classList.contains("lbl-off")){kvLblOff=true;labelHost.classList.remove("lbl-off");}   // (the labels intro may switch them off meanwhile)
       // (the scene's automatic matrix update is off while moving batches draw, 43-3d-frame.js: update these by hand)
@@ -120,7 +149,7 @@
         if(K.x.bs>0.2&&Math.random()<rdt*6*K.x.bs)emit("steam",76+R(),15,-10+R(),R()*0.5,3+Math.random()*2,R()*0.5,3,2.4,"#eef1f5",0.6);}
       // a thick pulper: the handwheel turned shut; a thin one, wide open (just the wheel's angle)
       if(K){const turn=(w,a)=>{if(Math.abs(w.rotation.y-a)>1e-4){w.rotation.y=a;w.updateMatrixWorld(true);}};turn(KX.pulp.w,(K.v.pulp-50)/50*Math.PI);turn(KX.ref.w,(gapOf(K.v.ref)-0.5)*Math.PI*3);}
-      kvFrame(now);};
+      kvFrame(now);dvFrame(now);};
     // ---- breakdowns only a knob causes: their effects and pins (31-3d-upset-fx.js builds and precompiles them) ----
     FXDEF.rotortrip=g=>spFx(g,16,-13.5,2.6,8);
     FXDEF.couchpit=g=>spFx(g,40.6,11.4,0.6,6);

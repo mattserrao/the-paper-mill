@@ -172,6 +172,22 @@ function no3D(){G3.ok=false;$("no3d").hidden=false;$("no3d-retry").onclick=()=>l
   const BXG={};const boxGeo=(w,h,d)=>{const k=w+"|"+h+"|"+d;let g=BXG[k];if(!g){g=new THREE.BoxGeometry(w,h,d);g.userData.shared=true;BXG[k]=g;}return g;};
   function box(w,h,d,m,x,y,z,parent=scene,shadow=true){const o=new THREE.Mesh(boxGeo(w,h,d),m);o.position.set(x,y,z);o.castShadow=shadow;o.receiveShadow=true;parent.add(o);return o;}
   function cylZ(r,len,m,x,y,z,seg=24,parent=scene){const g=new CylG(r,r,len,seg);g.rotateX(Math.PI/2);const o=new THREE.Mesh(g,m);o.position.set(x,y,z);o.castShadow=true;o.receiveShadow=true;parent.add(o);return o;}
+  /* v6.11.2 t5: kit-bashed vehicles (Blender-designed profiles). Parts are collected per material and merged into one mesh
+     per material, so a detailed model costs a handful of draws: KIT().box/prof/cyl(...).build(parent) */
+  function profGeo(pts,depth,alongX){const s=new THREE.Shape();pts.forEach(([u,v],i)=>i?s.lineTo(u,v):s.moveTo(u,v));const g=new THREE.ExtrudeGeometry(s,{depth,bevelEnabled:false,curveSegments:1});
+    g.translate(0,0,-depth/2);if(alongX)g.rotateY(Math.PI/2);return g;}
+  function mergeGeo(list){let n=0;const parts=list.map(g=>{const q=g.index?g.toNonIndexed():g;n+=q.attributes.position.count;return q;});
+    const P=new Float32Array(n*3),N=new Float32Array(n*3),U=new Float32Array(n*2);let o=0;
+    parts.forEach(q=>{const c=q.attributes.position.count;P.set(q.attributes.position.array,o*3);if(!q.attributes.normal)q.computeVertexNormals();N.set(q.attributes.normal.array,o*3);if(q.attributes.uv)U.set(q.attributes.uv.array,o*2);o+=c;});
+    const g=new THREE.BufferGeometry();g.setAttribute("position",new THREE.BufferAttribute(P,3));g.setAttribute("normal",new THREE.BufferAttribute(N,3));g.setAttribute("uv",new THREE.BufferAttribute(U,2));g.computeBoundingSphere();return g;}
+  function KIT(){const by=new Map(),put=(m,g)=>{if(!by.has(m))by.set(m,[]);by.get(m).push(g);return K;},
+    xf=(g,x,y,z,rx,ry,rz)=>{if(rx)g.rotateX(rx);if(ry)g.rotateY(ry);if(rz)g.rotateZ(rz);g.translate(x,y,z);return g;},
+    K={box(m,w,h,d,x,y,z,rx,ry,rz){return put(m,xf(new THREE.BoxGeometry(w,h,d),x,y,z,rx,ry,rz));},
+      prof(m,pts,depth,x=0,y=0,z=0,alongX=false,ry=0){return put(m,xf(profGeo(pts,depth,alongX),x,y,z,0,ry,0));},
+      cylZ(m,r,len,x,y,z,seg=12){const g=new CylG(r,r,len,seg);g.rotateX(Math.PI/2);return put(m,xf(g,x,y,z));},
+      cylY(m,r0,r1,h,x,y,z,seg=10){return put(m,xf(new CylG(r0,r1,h,seg),x,y,z));},
+      geos(){const out=new Map();by.forEach((l,m)=>out.set(m,mergeGeo(l)));return out;},
+      build(parent,shadow=true){const ms=[];K.geos().forEach((g,m)=>{const o=new THREE.Mesh(g,m);o.castShadow=shadow;o.receiveShadow=true;parent.add(o);ms.push(o);});return ms;}};return K;}
   const edgeSoft=new THREE.LineBasicMaterial({color:new THREE.Color("#3c4559").convertSRGBToLinear(),transparent:true,opacity:0.22});
   const edgeMat=new THREE.LineBasicMaterial({color:lin0("#3c4559"),transparent:true,opacity:0.42});
   function lin0(c){return new THREE.Color(c).convertSRGBToLinear();}
@@ -208,7 +224,7 @@ function no3D(){G3.ok=false;$("no3d").hidden=false;$("no3d-retry").onclick=()=>l
     kraft:mat("kraft"),stock:mat("stock"),paper:mat("paperc",{roughness:0.95}),ink:mat("ink"),warn:mat("warn"),ok:mat("ok"),bad:mat("bad"),
     lane:mat("g-lane"),glass:mat("g-wall",{transparent:true,opacity:0.3,depthWrite:false,side:THREE.DoubleSide,roughness:0.2}),robot:mat("stock",{roughness:0.4}),off:mat("smoke")};
   M.liquid=mat("pulp",{roughness:0.75});M.pulp=mat("pulp",{roughness:0.3});M.efork=mat("stock");
-  M.steel=mat("g-frame",{metalness:0.25,roughness:0.55});M.brand=mat("brand",{roughness:0.55});M.fork=mat("g-fork",{roughness:0.5});M.wind=mat("g-glass",{roughness:0.2,metalness:0.3});
+  M.steel=mat("g-frame",{metalness:0.25,roughness:0.55});M.brand=mat("brand",{roughness:0.55});M.fork=mat("g-fork",{roughness:0.5});M.wind=mat("g-glass",{roughness:0.2,metalness:0.3});M.vglass=new StdMat({color:lin0("#2c3b4d"),roughness:0.25,metalness:0.2});/* (t5: vehicle glazing) */
   M.robot=mat("brand",{roughness:0.4});
   // v4.1 pass 3: people. Skin, role hats (yellow operators, blue maintenance, white managers, green visitors) and hi-vis vests
   M.skin=mat("g-skin");M.hatBlue=M.stock;M.hatGreen=M.ok;   // (shared materials: no new batch looks)

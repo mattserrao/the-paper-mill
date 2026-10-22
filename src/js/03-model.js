@@ -19,7 +19,7 @@ const MAINT=["birdline","steamjoint","fogfan","shaft","fabric","felt","winderdow
 // v4.1 v19: prices reset after the payback review (most upgrades now pay back within days, not months)
 // t20 balance: the capacity and maintenance upgrades re-priced (40-60% cheaper) so they can pay back inside a season
 // v6.9.2 balance: every upgrade 30% dearer (rounded to $5k) so the daily Round is the biggest boost; missed failures 20% dearer (REPAIR_K); overhead $2,400/h (was $3,400) so most mills still profit
-const REPAIR_K=1.2;
+const REPAIR_K=1.05;   // (v6.11.2 t6 QA: was 1.2; repair bills 12.5% lower, hands-off paid ~$3.4M a season)
 const UPS=[
  {id:"drive",g:"machine",name:"Drive & gearbox rebuild",lv:[115e3,105e3,90e3],desc:"+150 fpm max speed per level, if the dryers can keep up (heavy grades and a wet sheet reach their limit first)."},   // (v6.5 b5: 25% cheaper: the dryer limit can cap it)
  {id:"deckle",g:"machine",name:"Wider trim (deckle)",lv:[160e3,135e3],desc:"+3\" of web per level (+1.5% tons at the same speed) and rolls up to 1.5\" wider, so wide rolls cost less trim."},
@@ -74,7 +74,11 @@ function applyUpgrades(){
 function applyGrade(){const g=(typeof C!=="undefined"&&C&&C.grade)||"24",c=GCOST[g],d=c.dlk;
   P.blendP=OCCG.occ11.p*(1-d)+OCCG.dlk.p*d;P.blendY=OCCG.occ11.y*(1-d)+OCCG.dlk.y*d;
   P.steamMul=c.steam;P.chemAdd=c.chem-((S&&S.perk)?S.perk.chem:0);P.gradeBrk=c.brk;}
-function energyCost(){return Math.max(0,ECON.energy*P.steamMul*P.energyMul*leadEnergy()+ECON.chem+P.chemAdd+(P.siteEnergy||0)-(P.refSave||0)-((S&&S.perk&&S.perk.energy)||0)+civEnergy())*(P.costMul||1);}
+// v6.11.2: the bill per ton is now steam and chemicals (plus the site's and civics' adjustments): ECON.energy's steam share
+// (PF_STEAMSH). Electricity is metered from the drives and the balance of plant every step (07i pwrTick), so energyCost()
+// (what a ton costs now, for the screens) adds the metered $/t at today's rate.
+function energyCostT(){return Math.max(0,ECON.energy*PF_STEAMSH*P.steamMul*P.energyMul*leadEnergy()+ECON.chem+P.chemAdd+(P.siteEnergy||0)-(P.refSave||0)-((S&&S.perk&&S.perk.energy)||0)+civEnergy())*(P.costMul||1);}
+function energyCost(){return energyCostT()+pwrT();}
 /* ---- v6.5 freight: inbound haul per ton of bales unloaded, outbound freight per ton shipped. Each = (base + site) x the
    diesel share of a truck rate (26%; diesel a weekly seeded walk, $2.40-6.80/gal, b2) x weather (normalised so the site's average weather is 1) x detours (flood,
    dust storm), plus card and civics effects (fx.fr, $/t on outbound). Survival's cost multiplier and the leader's fiber factor

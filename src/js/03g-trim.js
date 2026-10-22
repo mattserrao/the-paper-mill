@@ -31,3 +31,32 @@ function windCredit(g,w,u){const O=S.ord;if(!O||!trimOn())return;for(const o of 
 // the trim of this step's winding goes to the dry-end pulper and on into the stock chest (overflow waits in the beater bay)
 function trimTo(t){if(!(t>0))return;const room=Math.max(0,P.tankCap*0.98-S.tank),a=Math.min(t,room);S.tank+=a;if(t>a)S.q.bank+=t-a;
   if(typeof WQ!=="undefined")WQ.rep+=t;S.tot.trim=(S.tot.trim||0)+t;pfW("trim",t);}
+
+/* ---- v6.11.2 the dry-end pulper (read only on the DET DCS) ----
+   A tub under the winder and the dry end: the edge trim is blown into it all the time, and on a dryer or reel break the sheet
+   goes down the hole into it too (a press break goes to the couch pit). White water dilutes what comes in to about 4%, up to
+   the dilution header's limit; a pump sends it back to the stock chest at a rate set by the tub level. On a break more comes
+   in than the pump can take, so the level climbs (t6: an overflow sends fiber to the sewer).
+   The tons it handles are already counted (trim and broke go back to the stock chest), so apart from an overflow it doesn't
+   change the mass balance. S.dep = {m: slurry in the tub (t), f: fiber in it (t), fin: fiber coming in (t/h)}. Not in zen. */
+/* t6: sized to the sheet: the tub holds 25 minutes of the sheet at threading speed (as slurry at 4%) and its outlet pump
+   moves 80% of it, so whatever the grade a break fills it at the same pace: about 20 min in the high-level alarm goes (85%),
+   at about 40 min it overflows (97%) to the floor drains: a cleanup, and the fiber to the sewer and the clarifier.
+   Dilution follows the broke (consistency control), up to its valve. */
+const DEP={hold:0.42,pumpK:0.8,c0:4.0,dil:900,lo:0.35,span:0.5,hi:0.85,ovf:0.97,clean:12000};
+const depSheet=()=>P.K*P.minSpeed*0.5*bwSp();   // (t/h of fiber: the sheet going into the pulper during a break)
+function depSize(){const sl=Math.max(20,depSheet()/(DEP.c0/100));return {cap:sl*DEP.hold,pump:sl*DEP.pumpK};}
+function depState(){if(!S.dep){const z=depSize();S.dep={m:z.cap*0.42,f:z.cap*0.42*DEP.c0/100,fin:0,cap:z.cap};}return S.dep;}
+function depTick(dt,trimT){if(S.zen)return;const D=depState(),h=dt/60;if(!(h>0))return;
+  const z=depSize();if(!D.cap)D.cap=z.cap;if(Math.abs(z.cap/D.cap-1)>0.01){const k=z.cap/D.cap;D.m*=k;D.f*=k;D.cap=z.cap;}   // (a new grade: same level, new tub)
+  const tr=(trimT||0)/h;let fin=tr;if(S.pm==="break"&&S.brkType!=="press")fin+=depSheet();
+  // (the trim, however fast the winder runs, goes straight through: the pump's level-controlled share is what's left for a break)
+  const cap=D.cap,L=D.m/cap,win=Math.min(DEP.dil,fin*(100/DEP.c0-1)),q=tr*100/DEP.c0+z.pump*clamp((L-DEP.lo)/DEP.span,0,1),c=D.m>1e-6?D.f/D.m:0;
+  let m=D.m+(fin+win-q)*h,f=D.f+(fin-q*c)*h;const top=cap*DEP.ovf;
+  if(m>top){const x=m-top,cx=m>0?f/m:0;wSpill(x*cx);f-=x*cx;m=top;D.ovT=(D.ovT||0)+x*cx;
+    if(!D.ov){D.ov=true;spend(DEP.clean,"repairs");log(`The dry-end pulper overflowed: broke is over the top and down the floor drains to the clarifier. Cleanup ${money(DEP.clean)}. Get the sheet back on.`,"bad");}}
+  else if(m<top*0.9)D.ov=false;
+  const L2=m/cap;if(L2>=DEP.hi&&!D.al){D.al=true;if(!D.ov)log(`Dry-end pulper high level (${Math.round(L2*100)}%): the broke from the break is coming in faster than it's pumped away.`,"warn");}else if(L2<0.75)D.al=false;
+  D.m=clamp(m,0.01,cap);D.f=clamp(f,0,D.m);D.fin=fin;D.q=q;}
+const depLvl=()=>S.dep&&S.dep.cap?S.dep.m/S.dep.cap*100:42;
+const depCons=()=>S.dep&&S.dep.m>0?S.dep.f/S.dep.m*100:DEP.c0;

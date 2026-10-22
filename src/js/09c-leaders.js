@@ -11,7 +11,7 @@ const LEADERS={
     plus:()=>`Each outage, one debottlenecking project that stays: +${pct1(LEAD.cap)}% capacity for the fiber line, the paper machine or finishing.`,
     minus:()=>`Project tie-ins: every outage overruns ${LEAD.overrun} minutes for each project done so far.`},
   hank:{name:"Hank Headbox",title:"The machine tender",role:"Operator",say:"She'll tell you what she wants.",
-    plus:()=>`Each outage, one gain that stays: runnability (sheet breaks and hayouts −${pct1(LEAD.clean)}%, and back up ${pct1(LEAD.rethread)}% faster) or dial in the dryers (steam −${pct1(LEAD.steam)}%).`,
+    plus:()=>`While he's in charge, sheet breaks and hayouts are ${pct1(LEAD.feel)}% rarer and clear ${pct1(LEAD.thread)}% faster. Each outage, one gain that stays: runnability (sheet breaks and hayouts −${pct1(LEAD.clean)}%, and back up ${pct1(LEAD.rethread)}% faster) or dial in the dryers (steam −${pct1(LEAD.steam)}%).`,
     minus:()=>`Runs the sheet heavy: fiber +${pct1(LEAD.heavy)}% while he's in charge (basis-weight giveaway).`}};
 function leadStart(id){if(!LEADERS[id])return;S.lead={id,st:{fibre:0,sales:0,rethread:0,clean:0,pstock:0,pwet:0,pdry:0},changed:false,was:null,fixW:0,fixed:[],lockW:0};applyUpgrades();
   if(S.civ&&S.t<1&&typeof civSetStart==="function")civSetStart();   // v5.1 civics: the leader's starting meters

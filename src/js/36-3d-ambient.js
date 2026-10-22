@@ -86,14 +86,19 @@
   function startBirds(){const n=3+Math.floor(Math.random()*4),dir=Math.random()<0.5?-1:1;flock={x:dir<0?72:-26,dir,z:4+Math.random()*10,n,offs:BIRDS.map(()=>[Math.random()*3,Math.random()*2.5-1.2,Math.random()*1.5])};}
   // food truck parks out front; operators drift over for food
   const FOOD=G3.FOOD={open:false,id:0,x:33,z:32.5,state:"off",t:0,spot(i){return [this.x-2.2+(i%4)*1.5,35.2+(i>=4?1.0:0)];}};
-  const truck=new THREE.Group();scene.add(truck);truck.visible=false;
+  const truck=new THREE.Group();truck.name="foodTruck";scene.add(truck);truck.visible=false;
   {const cols=["#f2b51d","#e4572e","#2ec4b6","#e84393"],bc=cloth(cols[Math.floor(Math.random()*cols.length)]);
-    box(5.6,2.6,2.4,bc,0.4,1.75,0,truck);box(1.9,1.9,2.3,bc,-3.1,1.4,0,truck);box(0.1,0.9,2.0,M.wind,-4.06,1.8,0,truck,false);
-    box(3.0,1.1,0.1,M.ink,0.6,2.05,1.22,truck,false);const aw=box(3.6,0.08,1.3,M.bad,0.6,2.85,1.75,truck,false);aw.rotation.x=0.35;box(3.0,0.1,0.5,M.steel,0.6,1.45,1.45,truck,false);
-    [[-3,1],[-3,-1],[2.2,1],[2.2,-1]].forEach(([x,z])=>cylZ(0.42,0.3,M.ink,x,0.42,z*1.1,16,truck));
+    /* v6.11.2 t5: a step van from a Blender side profile (raked nose, radiused roof) with a serving hatch, counter, awning,
+       roof vent and skirt; parts merged per material, so it is fewer draws than the old boxes */
+    const K=KIT();K.prof(bc,[[3.2,0.62],[3.2,3.2],[3.05,3.32],[-2.1,3.32],[-2.55,3.1],[-3.25,1.95],[-3.95,1.75],[-4.05,0.62]],2.4)
+      .prof(M.vglass,[[-2.5,3.02],[-3.15,1.98],[-3.22,2.0],[-2.58,3.06]],2.2).box(M.vglass,0.9,0.7,2.44,-2.75,2.4,0)
+      .box(M.ink,3.0,1.15,0.06,0.6,2.15,1.22).box(M.ink,7.1,0.25,2.3,-0.4,0.6,0).box(M.ink,3.1,0.85,0.08,0.6,3.85,0.06)
+      .box(M.steel,3.1,0.08,0.45,0.6,1.55,1.42).box(M.steel,0.25,0.3,2.4,-4.1,0.78,0).box(M.steel,0.8,0.25,0.8,1.6,3.45,-0.4)
+      .box(M.bad,3.5,0.07,1.3,0.6,2.98,1.8,0.35);
+    [[-2.9,1],[-2.9,-1],[2.2,1],[2.2,-1]].forEach(([x,z])=>K.cylZ(M.ink,0.45,0.3,x,0.45,z*1.05,12));K.build(truck);
     const c=document.createElement("canvas");c.width=256;c.height=64;const x=c.getContext("2d");x.fillStyle="#fff";x.fillRect(0,0,256,64);x.fillStyle="#1c2233";x.font='800 38px "Plus Jakarta Sans",system-ui,sans-serif';x.textAlign="center";x.textBaseline="middle";
     x.fillText(["TACOS","BBQ","PIEROGI","BURGERS","PHO"][Math.floor(Math.random()*5)],128,34);const t=new THREE.CanvasTexture(c);t.colorSpace=THREE.SRGBColorSpace;
-    const sg=new THREE.Mesh(new THREE.PlaneGeometry(3,0.75),new THREE.MeshBasicMaterial({map:t}));sg.position.set(0.6,3.45,0.2);truck.add(sg);box(3.1,0.85,0.08,M.ink,0.6,3.45,0.13,truck,false);}
+    const sg=new THREE.Mesh(new THREE.PlaneGeometry(3,0.75),new THREE.MeshBasicMaterial({map:t}));sg.position.set(0.6,3.85,0.11);truck.add(sg);}
   const FL={seen:null,until:0};
   const pigeon=BIRDS[5],PG={seen:null,t0:0};
   // weather particles around the camera target
@@ -123,7 +128,8 @@
     // in fog, snow or a dust storm it now starts in front of the nearest building and thickens across the map)
     if(camera.isIso){const f=Math.min(1,fogK/0.45),dd=Math.max(f,dustK);if(dd>0.01){const D=Math.max(d,120);scene.fog.near=Math.min(scene.fog.near,d0-D*0.4*dd);scene.fog.far=Math.min(scene.fog.far,d0+D*(3.2+3*(1-dd)));}}   // (v6.1 iso: fog measured as if the camera stood at its zoom distance)
     if(G3.zen&&document.body.dataset.zs!=="none"){scene.fog.near=d0+(scene.fog.near-d0)*0.45;scene.fog.far=d0+(scene.fog.far-d0)*0.55;}}   // (t18: zen's thicker fog counts from the zoom distance, not the iso camera's 1.2 km stand-off, which fogged out every close shot)
-    const night=1-day;if(!G3.nightL){
+    const night=1-day,LAMP_WH=8;   // (the roll warehouse's lamp in G3.nightL)
+    if(!G3.nightL){
       // v2.8.4: no point lights (every pixel paid for all 10 of them, day and night); each fixture throws a soft additive pool of light on the floor instead
       /* v6.1 t13: lamp light as cut paper: a crisp pale-yellow ellipse on the floor with a slightly deeper rim, laid over the
          scene (not added as glow), and a see-through paper cone from each lamp down to it. ?softnight = the old glows */
@@ -145,6 +151,7 @@
         const f=new THREE.Mesh(new CylG(0.5,0.7,0.3,12),new THREE.MeshBasicMaterial({color:0xfff1cf}));f.position.set(x,y+0.2,z);f.visible=false;scene.add(f);return {p,f,k:deck?0.55:i<4?0.22:0.35,x,y,z,fy,D:D*0.8};});
       if(CONEN){const parts=[],m4=new THREE.Matrix4();
         G3.nightL.forEach(l=>{const h=l.y-(l.fy+0.05),g=new CylG(0.45,l.D*0.42,h,28,1,true);g.applyMatrix4(m4.makeTranslation(l.x,l.fy+0.05+h/2,l.z));parts.push(g.index?g.toNonIndexed():g);});
+        {let o=0;G3.coneR=parts.map(g=>{const r=[o,g.attributes.position.count];o+=r[1];return r;});}   // (v6.11.2: each lamp's vertices, so one can be switched off)
         const cg=new THREE.BufferGeometry();["position","normal","uv"].forEach(a=>{const n=parts[0].attributes[a].itemSize,arr=[];parts.forEach(g=>arr.push(...g.attributes[a].array));cg.setAttribute(a,new THREE.Float32BufferAttribute(arr,n));});cg.computeBoundingSphere();
         // alpha: strongest along the line of sight through the cone's middle, gone at its silhouette; bright at the lamp, faint at the floor
         const cm=new THREE.ShaderMaterial({uniforms:{op:{value:0},col:{value:lin0("#ffe2a0")}},transparent:true,depthWrite:false,side:THREE.DoubleSide,blending:THREE.AdditiveBlending,toneMapped:false,fog:false,
@@ -161,13 +168,21 @@
         const cm=new THREE.MeshBasicMaterial({map:ct,transparent:true,depthWrite:false,toneMapped:false,side:THREE.DoubleSide,opacity:0});
         const cones=new THREE.Mesh(cg,cm);cones.renderOrder=3;cones.visible=false;cones.userData.smBatch=true;cones.name="lamp cones";scene.add(cones);G3.nightCones=cones;}}
     /* v6.1 t8: the ten pools of lamp light are one additive mesh (their strengths in the vertex colours), not ten draws */
+    /* (v6.11.2: each plane's matrix is built here from its position and rotation: the static merge can freeze a never-drawn
+       plane (matrixAutoUpdate off) before its matrix was ever computed, and updateMatrixWorld then kept the identity, so all
+       ten pools were stacked as one upright 16 m plane at the world origin: a warm glow on the drive side behind the reel) */
     if(!G3.nightPool){const pos=[],col=[],uv=[],c=new THREE.Color(0xffd9a0),v=new THREE.Vector3();
-      G3.nightL.forEach(l=>{l.p.updateMatrixWorld(true);const g=l.p.geometry,P=g.attributes.position,U=g.attributes.uv,I=g.index;
+      G3.nightL.forEach(l=>{l.p.updateMatrix();l.p.matrixWorld.copy(l.p.matrix);const g=l.p.geometry,P=g.attributes.position,U=g.attributes.uv,I=g.index;
         for(let j=0;j<I.count;j++){const i=I.getX(j);v.fromBufferAttribute(P,i).applyMatrix4(l.p.matrixWorld);pos.push(v.x,v.y,v.z);uv.push(U.getX(i),U.getY(i));col.push(c.r*l.k,c.g*l.k,c.b*l.k);}});
       const pg=new THREE.BufferGeometry();pg.setAttribute("position",new THREE.Float32BufferAttribute(pos,3));pg.setAttribute("uv",new THREE.Float32BufferAttribute(uv,2));pg.setAttribute("color",new THREE.Float32BufferAttribute(col,3));pg.computeBoundingSphere();
       if(G3.papNight)for(let q=0;q<col.length;q++)col[q]=[c.r,c.g,c.b][q%3];
       const pm=G3.nightL[0].p.material.clone();pm.color.set(0xffffff);pm.vertexColors=true;const mesh=new THREE.Mesh(pg,pm);mesh.renderOrder=2;mesh.visible=false;mesh.userData.smBatch=true;scene.add(mesh);G3.nightPool=mesh;}
-    G3.nightPool.material.opacity=night*bk*(G3.papNight?0.85:1);G3.nightPool.visible=night>0.05;if(G3.nightCones){const o=night*bk*(G3.coneNight?1:0.8);if(G3.coneNight)G3.nightCones.material.uniforms.op.value=o;else G3.nightCones.material.opacity=o;G3.nightCones.visible=night>0.05;}G3.nightL.forEach(l=>{l.p.visible=false;l.f.visible=night>0.2;});G3.nightK=night;
+    // v6.11.2: with the robots running outbound the roll warehouse is lights-out: its lamp (pool, cone and fixture) is off
+    {const off=P.robots>0;if(G3.whLampOff!==off){G3.whLampOff=off;const pc=G3.nightPool.geometry.attributes.color,o0=LAMP_WH*6;
+       if(!G3.whPoolC)G3.whPoolC=Array.from(pc.array.slice(o0*3,(o0+6)*3));for(let q=0;q<18;q++)pc.array[o0*3+q]=off?0:G3.whPoolC[q];pc.needsUpdate=true;
+       const C3=G3.nightCones,R=G3.coneR&&G3.coneR[LAMP_WH];if(C3&&R){const pa=C3.geometry.attributes.position;if(!G3.whConeP)G3.whConeP=Array.from(pa.array.slice(R[0]*3,(R[0]+R[1])*3));
+         const L=G3.nightL[LAMP_WH];for(let v=0;v<R[1];v++){const j=(R[0]+v)*3;if(off){pa.array[j]=L.x;pa.array[j+1]=L.y;pa.array[j+2]=L.z;}else{pa.array[j]=G3.whConeP[v*3];pa.array[j+1]=G3.whConeP[v*3+1];pa.array[j+2]=G3.whConeP[v*3+2];}}pa.needsUpdate=true;}}}
+    G3.nightPool.material.opacity=night*bk*(G3.papNight?0.85:1);G3.nightPool.visible=night>0.05;if(G3.nightCones){const o=night*bk*(G3.coneNight?1:0.8);if(G3.coneNight)G3.nightCones.material.uniforms.op.value=o;else G3.nightCones.material.opacity=o;G3.nightCones.visible=night>0.05;}G3.nightL.forEach((l,i)=>{l.p.visible=false;l.f.visible=night>0.2&&!(i===LAMP_WH&&P.robots>0);});G3.nightK=night;
     // v3.2.0: red aviation beacons on top of the boiler stack and the fog fan stack; small lamps on the disk thickener
     if(!G3.beacons){const gl=G3.papNight?spriteTex((x,w)=>{x.clearRect(0,0,w,w);x.fillStyle="#ffffff";x.beginPath();x.arc(w/2,w/2,w*0.34,0,7);x.fill();x.strokeStyle="#2b1d12";x.lineWidth=w*0.07;x.beginPath();x.arc(w/2,w/2,w*0.36,0,7);x.stroke();
         x.fillStyle="rgba(255,255,255,0.75)";x.beginPath();x.arc(w*0.42,w*0.42,w*0.09,0,7);x.fill();},64):spriteTex((x,w)=>{const g=x.createRadialGradient(w/2,w/2,0,w/2,w/2,w/2);g.addColorStop(0,"rgba(255,255,255,1)");g.addColorStop(0.3,"rgba(255,255,255,0.5)");g.addColorStop(1,"rgba(255,255,255,0)");x.fillStyle=g;x.fillRect(0,0,w,w);},64);

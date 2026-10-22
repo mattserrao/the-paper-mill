@@ -23,6 +23,15 @@
     // rooftop: the drive room's cooling units (the drives make heat)
     const ac=mat("g-metal",{transparent:true,metalness:0.35,roughness:0.5});[7,15].forEach(x=>{const u=new THREE.Mesh(new THREE.BoxGeometry(1.8,0.9,1.4),ac);u.position.set(x,H+0.8,cz+1.2);u.castShadow=true;rg.add(u);});
     rg.userData.mats=[rm,wm,gl,ac];roofs.push(rg);
+    // v6.11.2: a wall pack on the north wall at the east end, lighting the lineups and the desk: a fixture with a lit lens, a
+    // soft pool of light on the floor and a wash up the wall above it (day and night: it's an indoor room)
+    {const LX=MCC.x1-2.2,LZ=MCC.z0+0.18,LY=3.55;box(1.0,0.28,0.32,M.ink,LX,LY,LZ+0.12,scene,false);box(1.06,0.06,0.36,M.steel,LX,LY+0.17,LZ+0.12,scene,false);
+     const lens=new THREE.Mesh(new THREE.BoxGeometry(0.86,0.05,0.24),new THREE.MeshBasicMaterial({color:lin0("#fff6dc"),toneMapped:false}));lens.position.set(LX,LY-0.15,LZ+0.14);scene.add(lens);
+     const gT=spriteTex((x,w)=>{const g=x.createRadialGradient(w/2,w/2,0,w/2,w/2,w/2);g.addColorStop(0,"rgba(255,248,226,0.55)");g.addColorStop(0.5,"rgba(255,244,214,0.22)");g.addColorStop(1,"rgba(255,244,214,0)");x.fillStyle=g;x.fillRect(0,0,w,w);},128);
+     const pm=new THREE.MeshBasicMaterial({map:gT,transparent:true,depthWrite:false,toneMapped:false,polygonOffset:true,polygonOffsetFactor:-4,polygonOffsetUnits:-4});
+     const pool=new THREE.Mesh(new THREE.PlaneGeometry(8,6),pm);pool.rotation.x=-Math.PI/2;pool.position.set(LX-1.2,0.07,LZ+2.6);pool.renderOrder=2;scene.add(pool);
+     const wash=new THREE.Mesh(new THREE.PlaneGeometry(4.4,2.6),pm);wash.position.set(LX,LY+0.5,LZ+0.02);wash.renderOrder=2;scene.add(wash);
+     [lens,pool,wash].forEach(o=>o.updateMatrixWorld(true));}
     // toward the hall: windows and the sign; the west end: the door, its canopy and the danger sign
     const fw=[2.0,4.6,9.4,12.0].map(v=>[v,1.4,1.4,1.0]);const fs=facade(W,H-0.1,fw.map(([c,...r])=>[W-c,...r]),[W-7.0,3.05,4.6,0.7,"MCC · ELECTRICAL"]);fs.rotation.y=Math.PI;fs.position.set(cx,(H-0.1)/2,MCC.z0-0.17);scene.add(fs);
     const fe=facade(D,H-0.1,[[1.4,1.4,1.2,1.0],[5.7,1.4,1.0,1.0]],null,dz-MCC.z0);fe.rotation.y=-Math.PI/2;fe.position.set(MCC.x0-0.17,(H-0.1)/2,cz);scene.add(fe);

@@ -53,7 +53,7 @@ const EVENTS=[
  {id:"birdline",g:"god",name:"Bird on the power lines",head:"A bird flew into the substation! Flash, bang: mill-wide blackout.",dur:[60,180],mtbf:900,stream:"bird",mods:{pmDown:"power outage",pulperDown:1,recvMul:0,clampMul:0},fx:"birdline",
    start:i=>{if(typeof G3!=="undefined"&&G3.birdCine)G3.birdCine(i);}},
  {id:"tornado",g:"god",name:"Tornado",head:"Tornado touches down on the mill site!",dur:[60,120],mtbf:600,fx:"tornado",
-   start:i=>{const pool=EVENTS.filter(e=>e.g!=="god"&&!e.knob&&!active(e.id));for(let k=0;k<2&&pool.length;k++){const e=pool.splice(Math.floor(rand("upx")*pool.length),1)[0];trigger(e.id,true);}
+   start:i=>{const pool=EVENTS.filter(e=>e.g!=="god"&&!e.knob&&!active(e.id));for(let k=0;k<2&&pool.length;k++){const e=pool.splice(Math.floor(rand("upx")*pool.length),1)[0];trigger(e.id,true);const d=S.inc.find(x=>x.id===e.id);if(d)d.by="tornado";}   /* (v6.11.2: tornado damage is sudden: it fires at once with no tell, even for a tellable upset; marked for the tells check) */
      const l=Math.round(S.fg*0.05);S.fg-=l;pfW("scrap",l*C.rollW.v);lotTake(S.lots.fg,l);i.note=`${l} rolls blown away`;}},
  {id:"beaver",g:"god",name:"Giant beaver",head:"A giant beaver crawls out of the river and starts eating the bale yard!",dur:[120,240],mtbf:700,mods:{yardEat:120,recvMul:0.3},fx:"beaver"},
  // v4.1 environment-specific upsets (env: only on that site; the dice are still drawn everywhere so the streams stay in step)
@@ -109,7 +109,8 @@ function mods(){const m=baseMods();
     if(i.drvCap!==undefined)m.drvCap=Math.min(m.drvCap,i.drvCap); if(i.ldrCap!==undefined)m.ldrCap=Math.min(m.ldrCap,i.ldrCap);}
   for(const f of (S.fx||[])){const e=f.mods||{};if(e.pmDown)m.pmDown=e.pmDown;if(e.speedCap)m.speedCap=Math.min(m.speedCap,e.speedCap);if(e.breakMul)m.breakMul*=e.breakMul;if(e.winderDown)m.winderDown=true;if(e.recvMul!==undefined)m.recvMul*=e.recvMul;if(e.pulperDown)m.pulperDown=true;if(e.docksClosed)m.docksClosed=true;if(e.noOut)m.noOut=true;if(e.noIn)m.noIn=true;if(e.yieldMul)m.yieldMul*=e.yieldMul;if(e.feedMul)m.feedMul*=e.feedMul;if(e.clampMul!==undefined)m.clampMul*=e.clampMul;if(e.offSpec)m.offSpec=true;if(e.hayMul)m.hayMul*=e.hayMul;}   // (v5.1: civics fx use these too)
   if(S.wx==="rain"&&!baleOn())m.yieldMul*=0.97;   // (v6.6: outside zen the yard's moisture does this, 05b)
-  if(S.pm==="break"&&S.brkType!=="reel"&&working("brk")){m.recvMul=0;m.clampMul=0;m.crewAtPM=true;}
+  // (v6.11.2: the warehouse and yard crews no longer leave their trucks to help rethread a sheet break; receiving and
+  //  shipping carry on through breaks and hayouts. crewAtPM stays in the mods, always false, for older saves and the pills)
   knobMods(m);vlvMods(m);chemMods(m);   // v5.6 / v6.9 fiddly knobs (nothing unless a knob was moved)
   bqMods(m);   // v6.6 stickies from contaminated bales (05b)
   dryMods(m);   // v6.5 b5 the dryer limit: the crew's speed trim for a wet sheet (07d)

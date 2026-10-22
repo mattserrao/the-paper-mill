@@ -22,7 +22,7 @@ function pfDay(){const d=Math.floor(S.t/1440);if(!S.pf){S.pf=pfNew();return;}if(
 // (stronger bonding, less starch)
 function pfChemT(){return Math.max(0,ECON.chem+P.chemAdd+(P.siteChem||0)-(P.refSave||0))*(P.costMul||1);}
 function pfEnergy(prod,ec){if(!(ec>0))return;const ch=Math.min(ec,prod*pfChemT()),en=ec-ch;
-  pfAdd("chem","stock",ch*0.5);pfAdd("chem","pm",ch*0.5);pfAdd("steam","pm",en*PF_STEAMSH);for(const a in PF_POWER)pfAdd("power",a,en*(1-PF_STEAMSH)*PF_POWER[a]);}
+  pfAdd("chem","stock",ch*0.5);pfAdd("chem","pm",ch*0.5);pfAdd("steam","pm",en);}   // (v6.11.2: power is metered and booked by pwrTick, 07i)
 function pfLabor(dt){const w=(ECON.wage+(P.siteWage||0))*(P.costMul||1)*leadWage()*civWage(),m=dt/60;
   pfAdd("labor","yard",C.drivers.v*w*m);pfAdd("labor","ship",(C.loaders.v*w+P.robots*ECON.robot)*m);pfAdd("mlab","techs",(P.techs+(P.elec||0))*w*m);if(P.pmCost)pfAdd("mlab","pmprog",P.pmCost*m);}
 function pfRepair(id,bill){if(!bill)return;pfAdd("rep",pfRepArea(id),bill);pfAdd("repid",id,bill);if(id==="permit"){pfW("fine",bill);pfW("fines",1);}histEv(id,bill);}

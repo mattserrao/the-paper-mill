@@ -71,7 +71,8 @@
     let best=null,bd=1e9;for(const cx of [fb[0]-1.1,fb[1]+1.1])for(const cz of [fb[2]-1.1,fb[3]+1.1]){if(Math.hypot(cx-px,cz-pz)<0.3||segBox(px,pz,cx,cz,b))continue;const d=Math.hypot(cx-px,cz-pz)+Math.hypot(tx-cx,tz-cz)+(segBox(cx,cz,tx,tz,b)?20:0);if(d<bd){bd=d;best=[cx,cz];}}
     if(!best){const cx=Math.abs(px-fb[0])<Math.abs(px-fb[1])?fb[0]-1.1:fb[1]+1.1;best=[cx,pz];}return best;}
   function moveP(p,tx,tz,speed,rdt){
-    if(p.userData&&p.userData.legs&&rdt>0){const wp=walkPlan(p,tx,tz);if(wp&&wp.length){const q=wp[0],dx=q[0]-p.position.x,dz=q[1]-p.position.z,d=Math.hypot(dx,dz);
+    if(p.userData&&p.userData.legs&&rdt>0){const wp=walkPlan(p,tx,tz);if(p.userData.wpPend&&!(wp&&wp.length))return false;   // (v6.11.2: its route is still being worked out: wait, don't walk through the wall)
+      if(wp&&wp.length){const q=wp[0],dx=q[0]-p.position.x,dz=q[1]-p.position.z,d=Math.hypot(dx,dz);
         if(d<0.3){wp.shift();}else{const st=Math.min(d,speed*rdt);p.position.x+=dx/d*st;p.position.z+=dz/d*st;p.rotation.y=lerpAng(p.rotation.y,Math.atan2(-dz,dx),Math.min(1,rdt*12));}return false;}}
     const av=avoid(p.position.x,p.position.z,tx,tz);if(av){tx=av[0];tz=av[1];const dx=tx-p.position.x,dz=tz-p.position.z,d=Math.hypot(dx,dz)||1,st=Math.min(d,speed*rdt);
       p.position.x+=dx/d*st;p.position.z+=dz/d*st;p.rotation.y=lerpAng(p.rotation.y,Math.atan2(-dz,dx),Math.min(1,rdt*12));return false;}

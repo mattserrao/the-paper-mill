@@ -41,7 +41,10 @@ def control(pw):
     pg.wait_for_function("()=>__PM.S.hist&&__PM.S.hist.bf", timeout=300000, polling=500)
     pg.evaluate("()=>{__PM.setRunning(false);const t=document.getElementById('tut');if(t)t.hidden=true;}")
     run = lambda m: pg.evaluate(RUN, m)
-    run(26 * 60)
+    # (v6.11.2: a hands-off day can pass with no sheet break, and a flat speed correlates with nothing: force one break mid-run)
+    run(20 * 60)
+    pg.evaluate("()=>{const S=__PM.S;S.pm='break';S.brkType='press';S.breakLeft=60;S.breakTotal=60;S.crewQ=[{k:'brk',resp:0,since:0,here:true,go:true}];}")
+    run(6 * 60)
 
     # --- tags and their history
     r = pg.evaluate("""()=>{const X=__PM.CX;const bad=[];const r0=__PM.S;for(const t of X.TAGS){let v;try{v=t[4](X.knobRead());}catch(e){bad.push(t[0]);}}
@@ -98,7 +101,7 @@ def control(pw):
     # --- relationships
     pg.evaluate("()=>document.querySelector('#dcsTrp [data-trr=\"48h\"]').click()"); pg.wait_for_timeout(200)   # (6 h of steady running has nothing to correlate)
     r = pg.evaluate("()=>{const X=__PM.CX,D=X.relData(),o=X.bestLag(D.col.speed,D.col.prod,30);return {n:D.n,r:o.r0.r,lag:o.best.lag}}")
-    ok("speed and paper made move together (r > 0.8)", r["r"] > 0.8, r)
+    ok("speed and paper made move together (r > 0.75)", r["r"] > 0.75, r)   # (v6.11.2 t6: Hank, this check's leader, now has 30% fewer breaks, so fewer big swings to correlate: 0.80 -> 0.75)
     pg.evaluate("()=>document.querySelector('#dcsTrp [data-trm=xy]').click()"); pg.wait_for_timeout(300)
     pg.evaluate("()=>{const x=document.getElementById('trX'),y=document.getElementById('trY');x.value='speed';x.dispatchEvent(new Event('change',{bubbles:true}));y.value='steam';y.dispatchEvent(new Event('change',{bubbles:true}));}"); pg.wait_for_timeout(400)
     t = pg.evaluate("()=>document.getElementById('trXYs').textContent")

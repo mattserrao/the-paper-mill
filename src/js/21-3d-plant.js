@@ -145,33 +145,43 @@
   // rail spur along the back of receiving, with a train that drops off boxcars
   {const tie=new THREE.InstancedMesh(new THREE.BoxGeometry(0.35,0.14,2.6),wood,170),m4=new THREE.Matrix4();let n=0;for(let x=-139;x<-9&&n<170;x+=0.8){m4.makeTranslation(x,0.07,-29);tie.setMatrixAt(n++,m4);}tie.count=n;tie.userData.bake=true;scene.add(tie);
     [-29.7,-28.3].forEach(z=>box(131,0.16,0.12,M.metal,-74.5,0.2,z,scene,false));box(0.6,1.1,2.6,M.bad,-9,0.55,-29,scene,false);
-    const T=new THREE.Group();scene.add(T);const TW=[];
+    const T=new THREE.Group();T.name="train";scene.add(T);const TW=[];
     const wG=new CylG(0.42,0.42,0.16,14);wG.rotateX(Math.PI/2);
     function bogie(parent,x){const b=new THREE.Group();b.position.x=x;parent.add(b);box(2.4,0.35,2.2,M.ink,0,0.62,0,b,false);
       [-0.7,0.7].forEach(ax=>[-0.7,0.7].forEach(z=>{const w=new THREE.Mesh(wG,M.metal);w.position.set(ax,0.42,z);b.add(w);TW.push(w);}));}
     function coupler(parent,x){box(0.8,0.22,0.3,M.ink,x,0.95,0,parent,false);}
-    // GP-style road switcher: long hood, cab, short hood, walkways with handrails, headlights, horn, exhaust stack
-    const loco=new THREE.Group();T.add(loco);box(13,0.35,3.0,M.ink,0,1.05,0,loco);
-    box(8.0,2.4,2.2,M.brand,-1.6,2.4,0,loco);box(2.4,3.0,2.9,M.brand,3.6,2.75,0,loco);box(2.2,1.6,2.0,M.brand,5.9,2.0,0,loco);
-    box(0.06,0.85,2.4,M.wind,4.82,3.55,0,loco,false);[-1.47,1.47].forEach(z=>box(1.6,0.8,0.05,M.wind,3.6,3.55,z,loco,false));
-    box(2.6,0.12,3.0,M.ink,3.6,4.3,0,loco,false);box(8.2,0.08,0.06,M.warn,-1.5,1.9,1.45,loco,false);box(8.2,0.08,0.06,M.warn,-1.5,1.9,-1.45,loco,false);
-    for(let x=-5.4;x<=2.2;x+=1.9)[-1.45,1.45].forEach(z=>box(0.06,0.85,0.06,M.warn,x,1.5,z,loco,false));
-    [-3.4,-1.2].forEach(x=>{const f=new THREE.Mesh(new CylG(0.55,0.55,0.12,16),M.ink);f.position.set(x,3.62,0);loco.add(f);});
-    const ls=new THREE.Mesh(new CylG(0.16,0.2,0.5,10),M.ink);ls.position.set(1.2,3.8,0);loco.add(ls);
-    [6.95,-5.6].forEach(x=>{const hl=new THREE.Mesh(new THREE.BoxGeometry(0.06,0.18,0.5),new THREE.MeshBasicMaterial({color:0xfff6d6}));hl.position.set(x,2.55,0);loco.add(hl);});
-    box(0.4,0.4,2.8,M.warn,6.6,0.95,0,loco,false);bogie(loco,-4.2);bogie(loco,3.9);coupler(loco,6.8);coupler(loco,-6.8);
+    /* v6.11.2 t5: GP-style road switcher redrawn in Blender: a long hood with chamfered top edges, a taller cab with a rolled
+       roof and wrap glazing, a raked short hood, fuel tank, dynamic-brake blister, radiator fans, pilots and handrails.
+       The parts are merged per material (one mesh each for paint, dark, glass, safety yellow, lamps) */
+    const loco=new THREE.Group();T.add(loco);
+    {const K=KIT(),LMP=new THREE.MeshBasicMaterial({color:0xfff6d6});
+      K.box(M.ink,13.6,0.32,3.0,0,1.05,0)
+       .prof(M.brand,[[-1.1,1.2],[1.1,1.2],[1.1,3.25],[0.85,3.6],[-0.85,3.6],[-1.1,3.25]],8.0,-1.6,0,0,true)
+       .prof(M.brand,[[-1.45,1.2],[1.45,1.2],[1.45,3.95],[1.1,4.25],[-1.1,4.25],[-1.45,3.95]],2.4,3.6,0,0,true)
+       .prof(M.brand,[[4.8,1.2],[7.0,1.2],[7.0,2.45],[6.8,2.75],[4.8,2.85]],2.0)
+       .prof(M.vglass,[[-1.47,3.2],[1.47,3.2],[1.47,3.85],[-1.47,3.85]],2.0,3.6,0,0,true).box(M.vglass,0.06,0.65,2.5,4.81,3.5,0)
+       .box(M.brand,2.0,0.3,1.4,-0.3,3.72,0).box(M.ink,0.35,0.5,0.35,1.6,3.8,0)
+       .prof(M.ink,[[-1.0,0.95],[1.0,0.95],[1.15,0.65],[0.9,0.35],[-0.9,0.35],[-1.15,0.65]],4.2,-0.4,0,0,true);
+      [-3.4,-4.6].forEach(x=>K.cylY(M.ink,0.55,0.55,0.12,x,3.62,0,14));
+      K.box(M.warn,0.4,0.5,3.0,7.0,0.95,0).box(M.warn,0.4,0.5,3.0,-6.6,0.95,0)
+       .box(M.warn,11.8,0.06,0.06,0.6,1.95,1.45).box(M.warn,11.8,0.06,0.06,0.6,1.95,-1.45);
+      for(let x=-5.4;x<=6.6;x+=2.0)[-1.45,1.45].forEach(z=>K.box(M.warn,0.06,0.75,0.06,x,1.55,z));
+      [7.03,-5.63].forEach(x=>K.box(LMP,0.06,0.18,0.5,x,2.55,0));K.box(LMP,0.06,0.14,0.36,4.83,4.0,0);
+      K.build(loco);}
+    bogie(loco,-4.2);bogie(loco,3.9);coupler(loco,6.8);coupler(loco,-6.8);
     // consist: two boxcars of finished rolls (doors open while spotted) and a bulkhead flat of OCC bales
     const cars=[];
     [["#9b3d2a","box"],["#3d5f8c","box"],["#5b6270","flat"]].forEach(([hex,kind],k)=>{const c=new THREE.Group();c.position.x=-14-k*13;T.add(c);cars.push(c);const cm=cloth0b(hex);
       box(12.2,0.3,2.9,M.ink,0,1.0,0,c);bogie(c,-4.4);bogie(c,4.4);coupler(c,6.3);coupler(c,-6.3);
-      if(kind==="box"){box(12,3.3,2.8,cm,0,2.8,0,c);for(let x=-5.5;x<=5.5;x+=1.1)[-1.42,1.42].forEach(z=>box(0.06,3.2,0.04,cm,x,2.8,z,c,false));
-        box(12,0.1,0.6,M.ink,0,4.48,0,c,false);[-5.8,5.8].forEach(x=>box(0.08,2.6,0.4,M.ink,x,2.6,1.45,c,false));
+      if(kind==="box"){const K=KIT();K.box(cm,12,3.3,2.8,0,2.8,0).prof(cm,[[-6,4.45],[6,4.45],[6,4.6],[-6,4.6]],2.6);for(let x=-5.5;x<=5.5;x+=1.1)[-1.42,1.42].forEach(z=>K.box(cm,0.08,3.2,0.05,x,2.8,z));
+        K.box(M.ink,12,0.1,0.6,0,4.66,0);[-5.8,5.8].forEach(x=>{K.box(M.ink,0.08,2.6,0.4,x,2.6,1.45);for(let y=1.6;y<=4.2;y+=0.45)K.box(M.warn,0.45,0.05,0.05,x+(x<0?0.3:-0.3),y,1.5);});
+        K.build(c);
         const dr=box(2.6,2.7,0.08,cloth0b("#5a2318"),0,2.6,1.47,c);c.userData.door=dr;
         const sg=new THREE.Mesh(new THREE.PlaneGeometry(4,0.5),new THREE.MeshBasicMaterial({map:(()=>{const cc=document.createElement("canvas");cc.width=256;cc.height=32;const x=cc.getContext("2d");x.fillStyle="#ffffff";x.font='800 22px "IBM Plex Mono",monospace';x.fillText(k?"PMRX 220418":"PMRX 104772",8,24);const t=new THREE.CanvasTexture(cc);t.colorSpace=THREE.SRGBColorSpace;return t;})(),transparent:true}));sg.position.set(-3.4,3.9,1.43);c.add(sg);}
       else{box(12,0.4,2.8,cm,0,1.35,0,c);[-5.8,5.8].forEach(x=>box(0.3,2.8,2.8,cm,x,2.9,0,c));
         const b2=new THREE.InstancedMesh(new THREE.BoxGeometry(1.3,0.95,1.3),instMat(M.bale),24),m4b=new THREE.Matrix4();let n2=0;
         for(let i=0;i<8;i++)for(let l=0;l<3;l++){m4b.makeTranslation(-4.9+i*1.4,2.05+l*0.97,(l%2?0.35:-0.35));b2.setMatrixAt(n2++,m4b);}b2.castShadow=true;c.add(b2);}});
-    cars.forEach(c=>c.userData.train=true);loco.userData.train=true;ENV.trainWheels=TW;ENV.trainCars=cars;ENV.locoStack=[1.2,4.1];
+    cars.forEach(c=>c.userData.train=true);loco.userData.train=true;ENV.trainWheels=TW;ENV.trainCars=cars;ENV.locoStack=[1.6,4.2];
     T.position.set(-180,0,-29);ENV.train={g:T,state:"away",t:60};}
   // day-staff cars drive in through the east gate in the morning and leave in the evening, one at a time so they queue nicely
   const CARQ={inQ:[],outQ:[],t:0,init:false};
@@ -190,8 +200,16 @@
   {slab(66,88,38,56,M.asphalt,0.02);for(let r=0;r<3;r++)for(let k=0;k<=8;k++)box(0.12,0.02,4.4,M.panelW0||(M.panelW0=mat("panel")),67+k*2.6,0.05,40.6+r*6.2,scene,false);
     slab(60.5,66,31.5,33.4,M.slab,0.025);
     const cols=["#c0392b","#2c3e50","#ecf0f1","#7f8c8d","#2980b9","#16a085","#f1c40f","#34495e","#d35400","#bdc3c7"];ENV.cars=[];
-    for(let r=0;r<3;r++)for(let k=0;k<8;k++){const g=new THREE.Group();g.position.set(68.3+k*2.6,0,40.6+r*6.2);g.rotation.y=Math.PI/2;scene.add(g);const cm=cloth0b(cols[(k*7+r*3)%cols.length]);
-      box(4.2,0.9,1.8,cm,0,0.7,0,g);box(2.3,0.75,1.66,cm,-0.2,1.45,0,g);box(2.2,0.6,1.7,M.wind,-0.2,1.45,0,g,false);
+    /* v6.11.2 t5: sedans and SUVs from Blender-drawn side profiles (front = +x): a painted body, glass, and one dark mesh for
+       wheels, bumpers and lamps, so a car is still three draws; the shapes are shared and the paint is one material per colour */
+    const CARV=[["sedan",[[-2.2,0.32],[2.2,0.32],[2.22,0.62],[2.12,0.82],[1.0,0.95],[-1.6,0.98],[-2.18,0.9]],[[0.95,0.95],[0.25,1.42],[-1.05,1.44],[-1.62,0.98]],[[0.88,0.97],[0.22,1.38],[-1.02,1.4],[-1.52,1.0]],1.76,1.6,1.35,0.34],
+      ["suv",[[-2.25,0.36],[2.25,0.36],[2.28,0.72],[2.15,0.98],[1.2,1.08],[-2.25,1.1]],[[1.2,1.08],[0.55,1.72],[-2.2,1.76],[-2.25,1.1]],[[1.12,1.1],[0.52,1.66],[-1.9,1.7],[-1.96,1.12]],1.82,1.7,1.4,0.38]]
+      .map(([nm,bp,cp,gp,w,cw,wx,wr])=>{const P=KIT(),G=KIT(),D=KIT();P.prof(0,bp,w).prof(0,cp,cw);G.prof(0,gp,cw+0.05);
+        [[wx,1],[wx,-1],[-wx,1],[-wx,-1]].forEach(([x,s])=>D.cylZ(0,wr,0.24,x,wr,s*(w/2-0.08),10));D.box(0,0.14,0.22,w-0.04,2.2,0.42,0).box(0,0.14,0.22,w-0.04,-2.2,0.42,0);
+        return [P.geos().get(0),G.geos().get(0),D.geos().get(0)];});
+    const CPAINT={};
+    for(let r=0;r<3;r++)for(let k=0;k<8;k++){const g=new THREE.Group();g.position.set(68.3+k*2.6,0,40.6+r*6.2);g.rotation.y=Math.PI/2;scene.add(g);const hx=cols[(k*7+r*3)%cols.length],cm=CPAINT[hx]||(CPAINT[hx]=cloth0b(hx));
+      const V=CARV[(k*5+r*2)%3===0?1:0];[[V[0],cm,true],[V[1],M.vglass,false],[V[2],M.ink,true]].forEach(([geo,m,sh])=>{const o=new THREE.Mesh(geo,m);o.castShadow=sh;o.receiveShadow=true;g.add(o);});
       g.userData.car=true;ENV.cars.push({g,ord:Math.random(),sx:68.3+k*2.6,sz:40.6+r*6.2,aisle:r===2?49.9:43.7,st:"parked"});}
     ENV.cars.sort((a,b)=>a.ord-b.ord);
     // the first third belong to the shift crews (always here); the rest are day staff who arrive around 6 a.m. and leave around 6 p.m.
@@ -228,5 +246,10 @@
   const WH=4.6;ribWall(26.4,WH,0.3,-21.2,WH/2,-23.5);ribWall(26.4,WH,0.3,-21.2,WH/2,-3);ribWall(0.3,WH,10.8,-8,WH/2,-18.1);ribWall(0.3,WH,7.3,-8,WH/2,-6.65);ribWall(0.3,WH-2.3,2.4,-8,2.3+(WH-2.3)/2,-11.5);
   // warehouse: floor + walls
   slab(-49,-23.8,14.8,32.2,M.slab,0.04);
-  ribWall(25.2,WH,0.3,-36.4,WH/2,14.8);ribWall(25.2,WH,0.3,-36.4,WH/2,32.2);ribWall(0.3,WH,3.3,-23.8,WH/2,16.45);ribWall(0.3,WH,11.5,-23.8,WH/2,26.45);ribWall(0.3,WH-2.5,2.6,-23.8,2.5+(WH-2.5)/2,19.4);
+  ribWall(25.2,WH,0.3,-36.4,WH/2,14.8);{const g=new THREE.Group();scene.add(g);(G3.dynLater||(G3.dynLater=[])).push(g);G3.whSouthLo=g;ribWall(25.2,WH/2,0.3,-36.4,WH/4,32.2,g);}/* (v6.11.2: the south wall's lower half, in its own group so a warehouse annex can open it; its top half rides with the roof, 22) */
+  // v6.11.2: a walk-through door for the operators at the north end of the east wall (into the winder end of the hall)
+  {const D0=15.6,D1=16.6;ribWall(0.3,WH,D0-14.8,-23.8,WH/2,(14.8+D0)/2);ribWall(0.3,WH,18.1-D1,-23.8,WH/2,(D1+18.1)/2);ribWall(0.3,WH-2.2,D1-D0,-23.8,2.2+(WH-2.2)/2,(D0+D1)/2);
+   [D0,D1].forEach(z=>box(0.36,2.2,0.08,M.brand,-23.8,1.1,z,scene,false));const leaf=box(0.9,2.05,0.06,M.brand,-24.3,1.05,D0+0.07,scene,false);leaf.userData.noNav=true;
+   box(0.5,0.12,0.04,M.ok,-23.62,2.38,(D0+D1)/2,scene,false);}   // (frame, the door standing open into the warehouse, an exit sign)
+  ribWall(0.3,WH,11.5,-23.8,WH/2,26.45);ribWall(0.3,WH-2.5,2.6,-23.8,2.5+(WH-2.5)/2,19.4);
 

@@ -37,21 +37,16 @@
   {const bg=baleBox;
     for(let st=0;st<5;st++)for(let r=0;r<2;r++)for(let l=0;l<3;l++){if(st===3&&l===2)continue;const b=new THREE.Mesh(bg,M.baleG[1]);b.position.set(-30+st*4+(r?0.15:0),0.48+l*0.96,-25.4-r*1.4);b.rotation.y=(st*7+l*3)%2?0.04:-0.03;b.castShadow=true;b.receiveShadow=true;scene.add(b);}}
   // south of the warehouse: pallet stacks, a dumpster, a stack of empty roll cores
-  {const kraft=M.kraft;[[-44,36],[-41.5,36],[-39,36.4]].forEach(([x,z],k)=>{for(let l=0;l<7+(k%2)*3;l++){box(1.2,0.1,1.0,kraft,x,0.07+l*0.16,z,scene,false);[-0.45,0,0.45].forEach(dx=>box(0.1,0.08,1.0,M.ink,x+dx,0.11+l*0.16+0.02,z,scene,false));}});
-    for(let r=0;r<3;r++)for(let c=0;c<4-r;c++){const core=cylZ(0.17,2.4,M.kraft,-34+c*0.36+r*0.18,0.17+r*0.3,36.2,10);core.rotation.y=0;}
+  // (v6.11.2: in a group that moves south past a warehouse annex when one is built, 39 upUpdate)
+  {const kraft=M.kraft,WP=new THREE.Group();scene.add(WP);(G3.dynLater||(G3.dynLater=[])).push(WP);G3.whProps=WP;
+    [[-44,36],[-41.5,36],[-39,36.4]].forEach(([x,z],k)=>{for(let l=0;l<7+(k%2)*3;l++){box(1.2,0.1,1.0,kraft,x,0.07+l*0.16,z,WP,false);[-0.45,0,0.45].forEach(dx=>box(0.1,0.08,1.0,M.ink,x+dx,0.11+l*0.16+0.02,z,WP,false));}});
+    for(let r=0;r<3;r++)for(let c=0;c<4-r;c++){const core=cylZ(0.17,2.4,M.kraft,-34+c*0.36+r*0.18,0.17+r*0.3,36.2,10,WP);core.rotation.y=0;}
     YP.dumpster=(x,z,ry=0)=>{const g=new THREE.Group();g.position.set(x,0,z);g.rotation.y=ry;scene.add(g);const dm=M.ok;
       const body=new THREE.Mesh(new THREE.BoxGeometry(2.4,1.3,1.4),dm);body.position.y=0.75;body.castShadow=true;body.receiveShadow=true;g.add(body);box(1.15,0.1,1.42,dm,-0.6,1.42,0,g,false);   // (a plain box: the one green rounded box would be a batch of its own)
   const lid=box(1.15,0.1,1.42,dm,0.6,1.5,0,g,false);lid.rotation.z=-0.35;lid.position.y=1.6;
       [[-0.9,-0.55],[0.9,-0.55],[-0.9,0.55],[0.9,0.55]].forEach(([a,b])=>cylZ(0.09,0.08,M.ink,a,0.09,b,8,g));box(0.08,0.9,1.2,M.ink,-1.22,0.75,0,g,false);return g;};
-    YP.dumpster(-27.5,36.5,0.1);}
-  // by the office: an OCC compactor and its dumpster, a vending-machine-sized recycling cage
-  {const g=new THREE.Group();g.position.set(45.8,0,29);scene.add(g);const steel=M.steel,blue=M.brand;
-    box(3.0,2.0,2.0,blue,0,1.0,0,g);box(2.2,1.0,2.1,steel,0.2,2.5,0,g);box(1.6,0.08,1.6,M.ink,-0.4,3.0,0,g,false);                         // body, hopper, lid
-    const ram=new THREE.Mesh(new CylG(0.18,0.18,1.6,10),M.metal);ram.rotation.z=Math.PI/2;ram.position.set(-2.1,1.2,0);g.add(ram);box(0.9,0.8,0.8,M.ink,-2.6,1.0,0,g);   // ram cylinder + power pack
-    box(0.5,0.6,0.08,panelM,1.3,1.4,1.05,g,false);box(0.12,0.12,0.12,M.bad,1.45,1.55,1.1,g,false);box(0.12,0.12,0.12,M.ok,1.2,1.55,1.1,g,false);    // control panel
-    YP.dumpster(45.8,32.6,0);
-    const cage=new THREE.Group();cage.position.set(43,0,29.5);scene.add(cage);[[-0.7,-0.5],[0.7,-0.5],[-0.7,0.5],[0.7,0.5]].forEach(([a,b])=>box(0.06,1.6,0.06,M.metal,a,0.8,b,cage,false));
-    box(1.5,0.06,1.1,M.metal,0,1.62,0,cage,false);const cb=new THREE.Mesh(baleBox,M.baleG[1]);cb.scale.set(1.05,0.9,0.75);cb.position.y=0.45;cb.castShadow=true;cb.receiveShadow=true;cage.add(cb);}   // (same look as the bale stacks)
+    WP.add(YP.dumpster(-27.5,36.5,0.1));}
+  // (v6.11.2: the OCC compactor, its dumpster and the recycling cage that stood west of the office are gone; the production record board stays)
   // forklift charging bay off the receiving apron
   {const X=-58.5,Z=-13;slab(X-2.2,X+2.2,Z-1.8,Z+1.8,M.slab,0.025);box(4.4,1.6,0.25,M.steel,X,0.8,Z-1.75);box(4.6,0.12,0.4,M.brand,X,1.66,Z-1.75,scene,false);
     [-1.2,1.2].forEach(dx=>{box(0.6,1.1,0.4,M.steel,X+dx,0.55,Z-1.45);box(0.5,0.25,0.05,M.ok,X+dx,0.95,Z-1.22,scene,false);

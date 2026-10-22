@@ -69,7 +69,12 @@ def qa1_cards(pw):
     t = ev("""()=>{const S=__PM.S;S.civ.orders={Machine:'Q'};__PM.trigger('felt');const pend=!!S.civ.pending,card=!(document.getElementById('civOv')||{hidden:true}).hidden;
       return new Promise(r=>setTimeout(()=>{r({pend,card,still:!!S.civ.pending})},6000));}""")
     ok("standing order waits on sim time (still pending after 6 s paused)", t["pend"] and not t["card"] and t["still"], t)
-    m = ev("()=>{document.getElementById('v2pause').click();return new Promise(r=>requestAnimationFrame(()=>requestAnimationFrame(()=>setTimeout(()=>r({menu:!document.getElementById('v2menu').hidden,toast:!document.getElementById('civToast').hidden}),1500))));}")
+    # (v6.11.2: the toast follows the menu on the UI tick, every 0.4 s of frame time; frame time is capped at 0.1 s a frame, so
+    #  under load a tick can take well over 1.5 s: wait up to 8 s for it)
+    ev("()=>document.getElementById('v2pause').click()")
+    try: pg.wait_for_function("()=>!document.getElementById('v2menu').hidden&&document.getElementById('civToast').hidden", timeout=8000, polling=200)
+    except Exception: pass
+    m = ev("()=>({menu:!document.getElementById('v2menu').hidden,toast:!document.getElementById('civToast').hidden})")
     ok("toast hidden while the pause menu is up", m["menu"] and not m["toast"], m)
     ev("()=>document.getElementById('v2go').click()"); pg.wait_for_timeout(500); ev("()=>__PM.setRunning(false)")
     w = ev("()=>{const S=__PM.S;S.cards.next=S.t;__PM.step(0.25);return {deal:!!(S.cards.open&&S.cards.open.c),pend:!!S.civ.pending};}")

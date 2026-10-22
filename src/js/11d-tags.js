@@ -37,7 +37,7 @@ const TAGS=[
   ["gtrav","Guide travel used","WET","%",r=>r.gm?Math.min(1,r.gtrav)*100:null,""],["osc","Felt shower oscillator","WET","%",r=>r.osc,""],
   ["wwl","White water silo level","WET","%",()=>S.we?S.we.L/WE.silo*100:null,"a.wwl"],["wwg","White water silo volume","WET","gal",()=>S.we?GAL(S.we.L):null,""],
   // v6.11.1 wet-end chemicals (07l)
-  ["dsdose","Dry strength dose","WET","kg/t",()=>S.pm==="run"?chemE("ds"):null,""],["dsflow","Dry strength pump","WET","kg/h",()=>chemFlow("ds"),""],
+  
   ["poldose","Retention polymer dose","WET","kg/t",()=>S.pm==="run"?chemE("pol"):null,""],["polflow","Retention polymer pump","WET","kg/h",()=>chemFlow("pol"),""],
   ["fpr","First pass retention","WET","%",()=>S.pm==="run"?fprNow():null,""],
   ["hum","Machine room humidity","WET","%",()=>clamp(62+(motStatus("fog")!=="run"||active("fogfan")?24:0)+wob2(0.01,8)*3,0,100),""],
@@ -47,6 +47,7 @@ const TAGS=[
   ["dryl","Dryer load","DET","% of limit",()=>S.dry&&S.pm==="run"?S.dry.load*100:null,"a.dryl"],["moist","Reel moisture","DET","%",r=>r.run?r.moist:null,"a.moist"],
   ["bw","Basis weight","DET","lb/1000 ft²",r=>r.run?r.bw:null,"a.bw"],["tension","Draw tension","DET","kN/m",r=>r.run?r.tension:null,""],["draw","Open draw","DET","%",r=>r.draw,""],
   ["reel","Paper waiting at the winder","DET","t",()=>S.winderBuf+S.reel,"a.reel"],["cut","Winder","DET","t/h",()=>_R().cut,"a.cut"],["conv","Rolls on the conveyor","DET","rolls",()=>S.conv||0,""],
+  ["delvl","DE pulper level","DET","%",()=>S.zen?null:depLvl(),""],["decons","DE pulper consistency","DET","%",()=>S.zen?null:depCons(),""],["defin","DE pulper fiber in","DET","t/h",()=>S.zen||!S.dep?null:S.dep.fin,""],
   ["rollw","Roll width (twin set)","QCS","in",()=>S.zen?null:S.wdW||windW(C.grade),""],["trimp","Trim","QCS","%",()=>S.zen?null:(S.trimNow!=null?S.trimNow:trimFrac(windW(C.grade)))*100,""],["trimt","Trim to the DE pulper","QCS","t/h",()=>S.zen?null:_R().trim||0,""],
   ["cdspan","CD moisture spread (worst zone)","QCS","%",()=>S.zen||!S.cd||S.pm!=="run"?null:Math.max(...S.cd.dv.map(Math.abs)),""],["sbout","Steam box output","QCS","%",()=>S.zen||!S.cd||!sbHave()?null:S.cd.sb.reduce((a,v)=>a+v,0)/12*100,""],["spout","Spray boom output","QCS","%",()=>S.zen||!S.cd?null:S.cd.sp.reduce((a,v)=>a+v,0)/12*100,""],   // (v6.11)
   // utilities
@@ -59,7 +60,7 @@ const TAGS=[
   ["wcl","White water chest level","WATER","%",()=>S.wat?S.wat.L/WAT.cap*100:null,""],["wcg","White water chest volume","WATER","gal",()=>S.wat?GAL(S.wat.L):null,""],
   ["wuse","Fresh water per ton","WATER","gal/ton",()=>{const W=wr();return W&&W.p>1?GAL(W.fresh/W.p):null;},""],
   // quality
-  ["off","Reel to the beater","QCS","%",r=>r.run?r.off*100:null,""],["rct","Ring crush","QCS","lbf/6 in",()=>S.pm==="run"?QNOW.rct:null,"a.rct"],["prem","Lightweight premium","QCS","%",()=>premShare()*100,""],["cdsp","CD moisture spread","QCS","%",r=>r.run?Math.max(...r.zones)-Math.min(...r.zones):null,""],
+  ["off","Reel to the beater","QCS","%",r=>r.run?r.off*100:null,""],["rct","Ring crush","QCS","lbf/6 in",()=>S.pm==="run"?QNOW.rct:null,"a.rct"],["prem","Weight credit (sold by area)","QCS","%",()=>S.zen?null:(areaQcs()-1)*100,""],["cdsp","CD moisture spread","QCS","%",r=>r.run?Math.max(...r.zones)-Math.min(...r.zones):null,""],
   ["bank","Beater bay waiting","QCS","t",()=>S.q?S.q.bank||0:0,""],
   // planning and the yard
   ["yard","Bale yard","PLAN","t",()=>S.yard,"a.yard"],["unload","Unloading","PLAN","t/h",()=>_R().unload,"a.unload"],["occp","OCC price","PLAN","$/t",()=>P.occPrice,"a.occp"],

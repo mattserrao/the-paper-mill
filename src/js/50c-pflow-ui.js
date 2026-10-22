@@ -283,7 +283,7 @@ function pfBreak(D,live){const s=PFUI.sel;const [kind,a,b]=s.split(":"),t=D.made
   else if(a==="paper"){title="Paper";
     rows=[["Shipped",pfT(D.shipT)],["Sales",money(D.rev)],D.deals?["Deals and trials",money(D.deals)]:null,["Revenue",money(D.revenue),"tot"],
       ["Made (good paper)",pfT(D.made)],["Worth at the prices of the day",money(D.W.val)],["Broke to the beater",pfT(D.W.broke)]];
-    if(live)rows.push(["Now","","hd"],["Grade on the machine",C.grade],["Price",money(priceOf(C.grade))+"/t"]);
+    if(live)rows.push(["Now","","hd"],["Grade on the machine",C.grade],["Price",money(priceOf(C.grade))+"/t list"],...(S.zen?[]:[["Selling at (by area)",money(priceEff())+"/t · "+wcFmt(areaQcs())]]));
     note="Revenue lands when a truck leaves, so it comes in lumps. \"Worth\" values the paper as it comes off the reel.";}
   else if(a==="waste"){title="Waste";const W=D.W;
     rows=[["Bales fed",pfT(W.feed)],["Rejects → landfill",pfT(W.rej)],["Share of bales",W.feed>0.5?Math.round(W.rej/W.feed*100)+" %":"–"],W.bale>0.05?["Bales lost (fire, rain, beavers)",pfT(W.bale)]:null,

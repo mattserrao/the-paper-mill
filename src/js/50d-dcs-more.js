@@ -61,13 +61,14 @@ MIMIC.WET={title:"WET END",h:282,trends:MIMIC_KNOB.WET.trends,
     MT(340,172,"couchSol","SOL",r=>kf(r.couchSol)+"%"),MT(340,194,"cs","PIT",r=>r.couch?"RUN":"STOP"),MT(440,172,"osc","OSC",r=>Math.round(r.osc)+"%"),
     MT(567,172,"pl","LOAD",r=>Math.round(r.pl)+" kN/m"),MT(567,194,"pressSol","SOL",r=>kf(r.pressSol)+"%"),MT(567,66,"psp","SPD",DV.psp),MT(260,232,"wwl","LEVEL",DV.wwl),MT(260,246,"wwg","VOL",DV.wwg),MT(370,232,"drain","DRAIN",DV.drn),MT(560,232,"pressw","PRESS",DV.pw),
     MT(60,216,"hbc","HBC",DV.hbc),MT(572,54,"hum","RH",DV.hum)]};   // (v6.9: the basis weight valve is FV-201, drawn by 50k)
-MIMIC.DET={title:"DRY END",h:280,trends:MIMIC_KNOB.DET.trends,
-  eq:[[14,96,80,50,"OPEN DRAW"],[112,80,130,80,"1ST SECTION"],[260,80,170,80,"2ND / 3RD SECTION"],[448,90,74,60,"REEL"],[546,90,84,60,"WINDER"],[546,214,84,30,"ROLL CONV","s"]],
-  ln:[["M94 121 H112"],["M242 120 H260"],["M430 120 H448"],["M522 120 H546"],["M630 120 H636 V229 H630"],["M640 66 H177 V80 M345 66 V80",1]],   // (v6.5.4: the steam header comes in from the boiler house, UTIL)
+MIMIC.DET={title:"DRY END",h:320,trends:MIMIC_KNOB.DET.trends,
+  eq:[[14,96,80,50,"OPEN DRAW"],[112,80,130,80,"1ST SECTION"],[260,80,170,80,"2ND / 3RD SECTION"],[448,90,74,60,"REEL"],[546,90,84,60,"WINDER"],[546,214,84,30,"ROLL CONV","s"],[546,280,84,30,"DE PULPER","s"]],   // (v6.11.2: the dry-end pulper, read only)
+  ln:[["M94 121 H112"],["M242 120 H260"],["M430 120 H448"],["M522 120 H546"],["M630 120 H636 V229 H630"],["M630 135 H639 V295 H630"],["M640 66 H177 V80 M345 66 V80",1]],   // (v6.5.4: the steam header comes in from the boiler house, UTIL)
   tags:[MT(54,172,"draw","DRAW",r=>kf(r.draw)+"%"),MT(54,194,"tension","TENS",r=>r.run?kf(r.tension,2):"–"),MT(177,176,"st1","STEAM",r=>Math.round(r.st1)+" kPa"),MT(177,192,"dr1","DRV",DV.dr1),MT(177,208,"dsp","SPD",DV.dsp),
     MT(345,176,"st3","STEAM",r=>Math.round(r.st3)+" kPa "+(S.dry&&S.dry.man!=null?"MAN":"AUTO")),MT(345,192,"steam","FLOW",r=>r.steam>0.5?kf(r.steam)+" t/h":"–"),MT(345,208,"dr2","DRV",DV.dr2),MT(345,224,"dryl","LOAD",DV.dryl),MT(560,58,"hdr","STEAM HDR",r=>Math.round(r.boiler*100)+"%"),
     MT(485,166,"moist","MOIST",r=>r.run?kf(r.moist)+"%":"–"),MT(485,180,"bw","BW",r=>r.run?kf(r.bw,2):"–"),MT(485,194,"spool","SPOOL",DV.spool),MT(485,208,"store","STORE",DV.store),MT(485,222,"tu","TURN-UPS",DV.tu),MT(485,84,"speed","SPEED",r=>Math.round(r.speed)+" fpm"),
-    MT(588,166,"wdr","SP",DV.wdr),MT(588,180,"wdt","CUT",DV.wdt),MT(588,194,"hay","HAYOUTS",DV.hay),MT(588,262,"rolls","ROLLS",DV.rolls)]};
+    MT(588,166,"wdr","SP",DV.wdr),MT(588,180,"wdt","CUT",DV.wdt),MT(588,194,"hay","HAYOUTS",DV.hay),MT(588,262,"rolls","ROLLS",DV.rolls),
+    [472,284,"delvl","LEVEL",()=>S.zen?"–":Math.round(depLvl())+"%",()=>depLvl()>=DEP.ovf*100?"bad":depLvl()>=DEP.hi*100?"warn":""],MT(472,298,"decons","CONS",()=>S.zen?"–":kf(depCons())+"%"),MT(472,312,"defin","IN",()=>S.zen||!S.dep?"–":kf(S.dep.fin)+" t/h"+(S.pm==="break"&&S.brkType!=="press"?" BRK":""))]};
 MIMIC.UTIL={title:"UTILITIES",h:270,trends:[["steam","Steam flow t/h","#7fb2ff",0,70],["boiler","Steam header (1 = full)","#ffb02e",0.5,1.05]],
   // (v6.5.4: the boiler and the power supply live here; they were on DET)
   eq:[[14,60,96,50,"RIVER INTAKE"],[134,60,96,50,"WATER TOWER"],[254,60,110,50,"MILL"],[388,60,110,50,"WASTEWATER"],[522,60,100,50,"OUTFALL"],[254,196,110,36,"LANDFILL","s"],
@@ -87,7 +88,7 @@ function dcsAlarms(a,r,L){const al=(on,txt,hi)=>{if(on)L.push([txt,hi]);};vlvAla
     {const Wt=S.wat;al(!!(Wt&&Wt.L<WAT.cap*0.25),Wt&&Wt.short>0?"WHITE WATER CHEST EMPTY · STOCK THICK":"WHITE WATER CHEST LEVEL LO",!!(Wt&&Wt.short>0));}
     for(const k of ["hd","lc","lw"]){const dp=purgeDp(k);al(dp>PURGE.base[k]+(PURGE.trip[k]-PURGE.base[k])*0.6,{hd:"HD CLEANER ΔP HI",lc:"LC CLEANERS ΔP HI",lw:"LW CLEANERS ΔP HI"}[k],dp>PURGE.base[k]+(PURGE.trip[k]-PURGE.base[k])*0.85);}}
   else if(a==="WET"){al(motStatus("fog")!=="run","MACHINE ROOM HUMIDITY HI",false);
-    al(chemFloc()>0.02,"POLYMER HIGH · FLOCS IN THE SHEET",false);al(chemOn()&&fprNow()<82,"FIRST PASS RETENTION LO",fprNow()<78);al(chemRisk(),"POLYMER LOW · EFFLUENT PERMIT RISK",true);al(chemDep()>0,"STARCH HIGH · DEPOSITS",false);
+    al(chemFloc()>0.02,"POLYMER HIGH · FLOCS IN THE SHEET",false);al(chemOn()&&fprNow()<82,"FIRST PASS RETENTION LO",fprNow()<78);al(chemRisk(),"POLYMER LOW · EFFLUENT PERMIT RISK",true);
     al(S.pm!=="run"&&CHEM_IDS.some(id=>chemMode(id)==="manual"&&chemFlow(id)>0),"CHEMICAL PUMP ON MANUAL · MACHINE DOWN",false);
     {const W=S.we;if(W&&S.pm==="run"){al(W.L<WE.silo*WE.makeL,W.cav>0?"WW SILO LOW · FAN PUMP CAVITATING":"WHITE WATER SILO LEVEL LO",W.cav>0);al(W.m==="manual","BASIS WEIGHT ON MANUAL",false);}}}
   else if(a==="DET"){al(S.pm==="break",`SHEET BREAK · ${({reel:"REEL",dryer:"DRYERS",press:"PRESSES"})[S.brkType]||"MACHINE"}`,true);al(S.pm==="spools","REEL STORE FULL: MACHINE HELD BACK",true);
@@ -116,7 +117,7 @@ function dcsSetDefs(a){const D=()=>DCS_DRAW();
     ["slv","Slice opening","remote from the DCS · B",-100,100,1,()=>G3.SLC?G3.SLC.v*100:0,v=>dcsSlice("v",v),"",null,1],
     ["slh","Slice lip position","remote from the DCS · L",-100,100,1,()=>G3.SLC?G3.SLC.h*100:0,v=>dcsSlice("h",v),"",null,1],
     // v6.8 the basis weight loop (07g): the setpoint (the grade's target, trimmed lighter if the strength will carry it) and the valve
-    ["bws","Basis weight setpoint",(S.we&&S.we.lw===false)?`MANUAL · grade ${C.grade} target ${bwStd().toFixed(2)} lb · ring crush spec ${rctSpec()} lbf`:`AUTO-LW: holds ring crush ${Math.round((WE.lwM-1)*100)}% over spec (${(rctSpec()*WE.lwM).toFixed(1)} lbf) · grade target ${bwStd().toFixed(2)} lb`,+(bwStd()*(1+WE.trimMin)).toFixed(2),+(bwStd()*(1+WE.trimMax)).toFixed(2),0.05,()=>bwSp(),v=>bwSetTrim(v),"lb",null,0,
+    ["bws","Basis weight setpoint",(S.we&&S.we.lw===false)?`MANUAL · grade ${C.grade} target ${bwStd().toFixed(2)} lb · ring crush spec ${rctSpec()} lbf`+(S.zen?"":` · ${wcFmt(areaQcs())}`):`AUTO-LW: holds ring crush ${Math.round((WE.lwM-1)*100)}% over spec (${(rctSpec()*WE.lwM).toFixed(1)} lbf) · grade target ${bwStd().toFixed(2)} lb`+(S.zen?"":` · ${wcFmt(areaQcs())}`),+(bwStd()*(1+WE.trimMin)).toFixed(2),+(bwStd()*(1+WE.trimMax)).toFixed(2),0.05,()=>bwSp(),v=>bwSetTrim(v),"lb",null,0,
       {on:()=>!(S.we&&S.we.lw===false),flip:()=>{if(S.zen)return;const W=weState();W.lw=W.lw===false?true:false;log(`Basis weight setpoint: ${W.lw?"AUTO-LW (the lightweight optimizer)":"MANUAL"}`,"");}}],   // (v6.10 AUTO-LW, 07g)
     // v6.11.1 the wet-end chemicals (07l): AUTO is flow-paced at the standard kg/t; dragging the pump puts it on MANUAL
     // (v6.11.1 QA: on AUTO the slider is the ratio in kg/t; on MANUAL the pump's kg/h; the polymer row warns of the permit)
@@ -127,8 +128,22 @@ function dcsSetDefs(a){const D=()=>DCS_DRAW();
         0,k.max,k.rstep,()=>chemSp(id),v=>chemSetRatio(id,v),"kg/t",null,0,{on:()=>true,flip:()=>chemSetMode(id,"manual")},i===0?"Wet-end chemicals":null];})];
   if(a==="DET")return [
     ["wsp","Machine speed (wire)","same setpoint as on WET",Math.round(1200/D()),Math.round((3300+P.spBonus)/D()),5,()=>C.pmSp.v/D(),v=>dcsCardSet("pmSp",Math.round(v*D()/10)*10),"fpm","pmSp"],
-    ["wdr","Winder speed","",0,P.winderMax,1,()=>C.wdr.v,v=>dcsCardSet("wdr",v),"t/h","wdr"]];   // (v6.9: the 2nd / 3rd section steam is PV-302 / PV-303 under QC-300: tap them on the picture, 50k)
+    ["wdr","Winder speed","",0,P.winderMax,1,()=>C.wdr.v,v=>dcsCardSet("wdr",v),"t/h","wdr"],
+    // v6.11.2 the 2nd and 3rd section steam on the setpoint list: PV-302 / PV-303 (07h). On CAS the moisture controller QC-300
+    // sets them; dragging one takes it off CAS onto AUTO at that pressure, and the button puts it back on CAS.
+    ...[["PV-302","st2","2nd section steam"],["PV-303","st3","3rd section steam"]].map(([id,k,n])=>{const v=vlvView(id),cas=v.m==="CAS",pv=Math.round(v.pv);
+      return [k+"sp",n,cas?`CAS · set by QC-300 (reel moisture ${DRY.m0}%) · ${pv} kPa`:`${v.m==="MAN"?"MANUAL · valve held at "+Math.round(v.op)+"%":"AUTO · held at the setpoint"} · ${pv} kPa · CAS hands it back to the moisture loop`,
+        0,250,5,()=>vlvView(id).sp,x=>{if(vlvView(id).m!=="AUTO")vlvSetMode(id,"AUTO");vlvSetSP(id,x);},"kPa",null,0,
+        {on:()=>vlvView(id).m==="CAS",flip:()=>vlvSetMode(id,vlvView(id).m==="CAS"?"AUTO":"CAS"),lab:["CAS","AUTO"]}];})];
   return [];}
+// v6.11.2: the setpoint rows in the order the stock meets them, under a heading for each part of the machine
+const DCS_ORDER={
+  WET:[["Thick stock to the headbox","grade","bws","polf"],["Headbox","zones","beat","slv","slh"],["Forming table","wsp","vac","couch"],["Press section","press"]],
+  DET:[["Press to dryers","draw"],["Dryer steam","st1","st2sp","st3sp"],["Reel and winder","wsp","wdr"]]};
+function dcsOrder(a,cs){const O=DCS_ORDER[a];if(!O)return;const kids=[...cs.children],by={};kids.forEach(e=>{if(e.dataset.ord)by[e.dataset.ord]=e;});
+  const used=new Set();cs.replaceChildren();
+  for(const [h,...ks] of O){const els=ks.map(k=>by[k]).filter(Boolean);if(!els.length)continue;cs.appendChild(kEl("div","dcssub",h));els.forEach(e=>{cs.appendChild(e);used.add(e);});}
+  kids.forEach(e=>{if(!used.has(e)&&e.dataset.ord)cs.appendChild(e);});}   // (anything not listed keeps its place at the end; the old headings go)
 function dcsSlice(k,v){const D=G3.SLC;if(!D||G3.slcFix||S.zen)return;slcSet(k,v/100);const g=D.geo();if(g.lipX-g.wet>=6.8&&typeof slcBreak==="function")slcBreak();}
 function dcsSetRows(a,cs){const defs=dcsSetDefs(a);
   if(a==="UTIL")cs.appendChild(kEl("p","dcsfield","Monitoring only: water, effluent and rejects. The permit and the river intake show here when they act up. The full water balance is on WATER."));
@@ -136,9 +151,9 @@ function dcsSetRows(a,cs){const defs=dcsSetDefs(a);
   if(a==="SPOT"||a==="WET"){const row=kEl("div","dcsrow dcsx");
     if(a==="SPOT"){row.innerHTML=`<div class="dcsn"><b>Dye: paper color</b><small>dye pump on the machine chest</small></div><div class="seg kseg" role="group" aria-label="Paper color"><button type="button" data-dye="brown">BROWN</button><button type="button" data-dye="white">WHITE</button></div>`;
       row.querySelectorAll("[data-dye]").forEach(b=>b.addEventListener("click",()=>{const pc=document.querySelector(`#paperColor button[data-c="${b.dataset.dye}"]`);if(pc)pc.click();dcsSync();}));}
-    else{row.innerHTML=`<div class="dcsn"><b>Grade</b><small>set by the market planner from customer orders</small></div><select disabled data-dgrade aria-label="Grade">${Object.keys(GRADES).map(g=>`<option value="${g}">${g} · ${GRADES[g].bw} lb</option>`).join("")}</select>`;}
+    else{row.dataset.ord="grade";row.innerHTML=`<div class="dcsn"><b>Grade</b><small>set by the market planner from customer orders</small></div><select disabled data-dgrade aria-label="Grade">${Object.keys(GRADES).map(g=>`<option value="${g}">${g} · ${GRADES[g].bw} lb</option>`).join("")}</select>`;}
     cs.appendChild(row);}
-  for(const d of defs){const [k,name,where,mn,mx,st,,,,card]=d,row=kEl("div","dcsrow dcsx");row.dataset.ds=k;if(d[12])cs.appendChild(kEl("div","dcssub",d[12]));
+  for(const d of defs){const [k,name,where,mn,mx,st,,,,card]=d,row=kEl("div","dcsrow dcsx");row.dataset.ds=k;row.dataset.ord=k;if(d[12])cs.appendChild(kEl("div","dcssub",d[12]));
     row.innerHTML=`<div class="dcsn"><b>${name}</b><small>${where}</small></div><label class="spis"><input type="range" min="${mn}" max="${mx}" step="${st}" data-dsv aria-label="${name}"/></label><div class="kval"><b data-dsb></b></div>${card||d[11]?`<button type="button" class="reroll kstd" data-dsa>AUTO</button>`:""}`;
     const cur=()=>dcsSetDefs(a).find(x=>x[0]===k)||d;   // (v6.11.1: a row can change what it sets, e.g. a chemical pump's ratio on AUTO, kg/h on MANUAL)
     row.querySelector("[data-dsv]").addEventListener("input",e=>{cur()[7](+e.target.value);dcsSync();});
@@ -160,7 +175,7 @@ function dcsSync(){const o=$("dcsOv");if(!o||o.hidden||!KUI.st)return;const a=KU
   o.querySelectorAll("[data-ds]").forEach(row=>{const d=defs.find(x=>x[0]===row.dataset.ds);if(!d)return;const inp=row.querySelector("[data-dsv]"),c=d[9]?DCARD(d[9]):null,lock=!!(c&&c.inp.disabled)||!!S.zen;
     if(inp.max!==String(d[4]))inp.max=d[4];if(inp.min!==String(d[3]))inp.min=d[3];if(inp.step!==String(d[5]))inp.step=d[5];if(actEl(inp)!==inp)inp.value=d[6]();inp.disabled=lock||(d[10]&&!G3[d[0]==="spi"?"SPD":"SLC"]);
     const bv=row.querySelector("[data-dsb]"),t=`${(+d[6]()).toFixed(d[5]<0.1?2:d[5]<1?1:0)} ${d[8]}`;if(bv.textContent!==t)bv.textContent=t;
-    if(d[11]){const ab=row.querySelector("[data-dsa]"),au=d[11].on();ab.textContent=au?"AUTO":"MANUAL";ab.setAttribute("aria-pressed",String(au));ab.disabled=S.zen;
+    if(d[11]){const ab=row.querySelector("[data-dsa]"),au=d[11].on();ab.textContent=(d[11].lab||["AUTO","MANUAL"])[au?0:1];ab.setAttribute("aria-pressed",String(au));ab.disabled=S.zen;
       const sm=row.querySelector(".dcsn small");if(sm&&sm.textContent!==d[2])sm.textContent=d[2];}
     const ab=row.querySelector("[data-dsa]");if(ab&&c){const au=C[d[9]].auto,txt=c.btn?(au?"AUTO":"MANUAL"):"";ab.hidden=!c.btn;ab.textContent=txt;ab.setAttribute("aria-pressed",String(!!au));ab.disabled=lock;}
     row.classList.toggle("locked",lock);});
@@ -173,7 +188,7 @@ function dcsSync(){const o=$("dcsOv");if(!o||o.hidden||!KUI.st)return;const a=KU
     row.querySelector("[data-pp]").disabled=m!=="manual"||S.zen;const t=`ΔP ${Math.round(dp)} kPa · plugs at ${PURGE.trip[k]}`+(m==="manual"?" · purge before it plugs":""),s=row.querySelector("[data-dps]");if(s.textContent!==t)s.textContent=t;
     row.classList.toggle("bad",dp>PURGE.base[k]+(PURGE.trip[k]-PURGE.base[k])*0.6);});}
 G3.dcs={motSet,purgeSet,purgeNow,motStatus,dcsArea};
-G3.we={state:weState,bwTrue,bwMeas,bwSp,setMode:bwSetMode,setValve:bwSetValve,setTrim:bwSetTrim,rct:()=>rctNow(bwMeas()),rctSpec,dpYield,kwhNow,cpBale,premShare,gapOf,csfOf};   // (v6.8 tests: tools/relcheck.py)   // (tests: tools/dcscheck.py)
+G3.we={state:weState,bwTrue,bwMeas,bwSp,setMode:bwSetMode,setValve:bwSetValve,setTrim:bwSetTrim,rct:()=>rctNow(bwMeas()),rctSpec,dpYield,kwhNow,cpBale,areaQcs,areaNow,msfPerT,priceEff,gapOf,csfOf};   // (v6.8 tests: tools/relcheck.py)   // (tests: tools/dcscheck.py)
 
 /* ---- v6.5 b4 pictograms: each box is drawn as its equipment, in the classic coloured DCS style (steel vessels, blue
    water, brown stock, cream paper). Grey outline when normal; colour only when it isn't: amber = warning, red = tripped
