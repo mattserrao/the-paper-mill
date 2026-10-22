@@ -18,6 +18,10 @@ parts.append((S / "tail.html").read_text())
 # notes pop-up (51g-version-notes.js). Add a line there with every release.
 import json, re
 notes = [list(m.groups()) for m in (re.match(r"^(\d+\.\d+\.\d+\S*)\s+(.+?)\s*$", l) for l in (ROOT / "VERSION-NOTES.txt").read_text().splitlines()) if m]
+# v6.11.3: a test build's line (6.11.2-t5 ...) stays in the file as the record, but once its release line (6.11.2 ...) exists
+# the pop-up shows only the release; a test build still in progress (no release line yet) is shown.
+_released = {n[0] for n in notes if re.fullmatch(r"\d+\.\d+\.\d+", n[0])}
+notes = [n for n in notes if not ((m := re.match(r"(\d+\.\d+\.\d+)-[ts]", n[0])) and m.group(1) in _released)]
 parts = [p.replace("/*@VERSION_NOTES@*/[]", json.dumps(notes, ensure_ascii=False)) for p in parts]
 ver = re.search(r'APP_VER="v?([^"]+)"', (S / "js" / "00-diagnostics-log.js").read_text())
 if ver and not any(n[0] == ver.group(1) for n in notes):

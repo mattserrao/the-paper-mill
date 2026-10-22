@@ -3,7 +3,7 @@
 Usage: python3 bench.py <index.html> <label> [runs]
 
 Loads the game in headless Chromium (SwiftShader WebGL, 800x450, DPR 1),
-with a seeded Math.random, no network (three.js r128 served locally), and
+with a seeded Math.random, no network (three.js served locally by lib.py), and
 measures:
   startup   - time to first game frame and until static-mesh merging ends
   normal    - 15 s of a running season at 30 sim-min/s, frame cap off

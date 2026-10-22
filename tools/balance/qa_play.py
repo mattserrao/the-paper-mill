@@ -1,9 +1,12 @@
-"""QA v6.11.2 (copy of qa_v6111 for t5: starch gone, so the chemical play is the polymer ratio; the known defects view, beater bay info and DE pulper are read; metered power is logged) QA v6.11.1 (copy of qa_v610 with the wet-end chemicals and the dryer hood knob in play): QA v6.10: full SEASON or SURVIVAL playthroughs through the real menu, leader picker and summary screen, each
-submitted to the LIVE leaderboard (QA Test N). Based on the v5.0.2 qa_survival.py / qa_seasons.py, updated for v6.10:
-leaders in seasons, civics cards, the drive fault card (reset / investigate / run to outage / replace), and an
-"active" style that walks the daily Round (catching every tell in the busiest area) and plans the repairs the shift
-rounds find (the active play the economy is meant to reward).
-Usage: python3 qa_v610.py <season|surv> <index.html> <first_k> <last_k> <out.jsonl> [--stride=N] [--nopost]
+"""QA playthrough bot: full SEASON or SURVIVAL playthroughs through the real menu, leader picker and summary screen, each
+submitted to the LIVE leaderboard (QA Test N). Based on the v5.0.2 qa_survival.py / qa_seasons.py, updated for v6.10
+(leaders in seasons, civics cards, the drive fault card: reset / investigate / run to outage / replace, and an "active"
+style that walks the daily Round (catching every tell in the busiest area) and plans the repairs the shift rounds find,
+the active play the economy is meant to reward), v6.11.1 (the wet-end chemicals and the dryer hood knob in play) and
+v6.11.2 (starch gone, so the chemical play is the polymer ratio; the known defects view, beater bay info and DE pulper
+are read; metered power is logged). One file, edited in place for each QA round (v6.11.3: was qa_v610 / qa_v6111 / qa_v6112,
+three drifting copies).
+Usage: python3 qa_play.py <season|surv> <index.html> <first_k> <last_k> <out.jsonl> [--stride=N] [--nopost]
 Styles cycle handsoff / buyer / gambler / random / active; sites rural / urban / desert / swamp; leaders chip / dot / fel / hank."""
 import json, os, pathlib, ssl, sys, time, fcntl, urllib.request, urllib.error, urllib.parse
 from playwright.sync_api import sync_playwright

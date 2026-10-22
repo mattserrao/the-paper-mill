@@ -4,7 +4,7 @@ Everything here runs the built game (`index.html`) in headless Chromium, offline
 locally and answers the leaderboard with an empty list.
 
 **Setup (once):** Python 3 with Playwright (Chromium), then in `tools/`:
-`npm i three@0.128.0` (old builds only) and `mkdir t186 && cd t186 && npm i three@0.186.1` (current builds).
+`mkdir t186 && cd t186 && npm i three@0.186.1` (the three.js every build since v4 loads; served locally by `lib.py`).
 Lint (release review): `npx -y eslint@8 --no-eslintrc -c eslintrc.json <game.js>`.
 
 ## Regression checks: `run_checks.py` and `checks/`
@@ -57,8 +57,8 @@ don't add a new version-named check.
   `pmbench.py` (before/after frame cost), `latecompile.py` (shader programs compiled after start-up; should be 0),
   `drawcost.py` (what each draw costs), `allocprof.py` (what allocates).
 - `balance/`: `qa_balance.py` (scripted play styles over many seasons, or survival runs with `--mode=survival`; it
-  answers civics cards, deals and outage budgets through the real dialogs), `qa_v610.py` (full Season / Survival playthroughs through
-  the real UI, optionally posting to the live boards).
+  answers civics cards, deals and outage budgets through the real dialogs), `qa_play.py` (full Season / Survival playthroughs through
+  the real UI, optionally posting to the live boards; one file, edited in place for each QA round).
 - `util/`: `titleart.py` (packs the title backgrounds into `src/js/50a-title-art.js`), `topview.py` / `gridview.py`
   (top-down layout renders), `clipcheck.py` (nothing stands inside scenery), `sightshots.py` (rare-sight stills),
   `musicrec.py` (records the music), `tellprobe.py` (run a JS snippet against a started game).

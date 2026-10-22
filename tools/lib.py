@@ -8,13 +8,13 @@ frame and draw counters), HOOK (window.__PM test hook for older builds), pick_le
 for sim-only checks, and Checks (one pass/fail log, the RESULT line and the exit code every check ends with).
 Replaces the old pattern of exec()-ing a slice of bench.py's source.
 """
-import functools, json, statistics, sys, time, pathlib, os   # (json, statistics, time: re-exported for the tools)
+import json, statistics, sys, time, pathlib, os   # (json, statistics, time: re-exported for the tools)
 from playwright.sync_api import sync_playwright              # (re-exported: every check uses it)
 
 
-HERE = pathlib.Path(__file__).resolve().parent          # tools/ (node_modules and t186 live here)
-_R128 = HERE / "node_modules/three/build/three.min.js"          # r128 (v3.3.4 and early v4)
-T186 = HERE / "t186/node_modules/three/build"                                    # r186 (v4 after the upgrade)
+HERE = pathlib.Path(__file__).resolve().parent          # tools/ (t186 lives here)
+T186 = HERE / "t186/node_modules/three/build"            # three.js r186 (every build since v4; the r128 route for the
+                                                         # v3/early-v4 builds went with test/v5.0.4 in v6.11.3)
 
 def route_for(html):
     """Serve the page and its three.js locally; answer the leaderboard with an empty list; block everything else."""
@@ -24,7 +24,6 @@ def route_for(html):
         if "three@0.186" in u:
             f = "three.core.js" if u.endswith("three.core.js") else "three.module.js"
             return r.fulfill(body=(T186 / f).read_text(), content_type="application/javascript", headers={"Access-Control-Allow-Origin": "*"})
-        if "three" in u and u.endswith(".js"): return r.fulfill(body=r128(), content_type="application/javascript")
         if "supabase" in u: return r.fulfill(body="[]", content_type="application/json")
         return r.abort()
     return route
@@ -58,12 +57,6 @@ def pick_leader(pg, who="hank", timeout=90000):
     pg.wait_for_function("__PM.S.season&&__PM.S.season.on", timeout=60000, polling=50)
     return True
 
-
-@functools.lru_cache(None)
-def r128():
-    """three.js r128 for old builds (v3.3.4 to early v4). Read only when a page asks for it, so it isn't required for
-    current builds (which load r186 from t186/)."""
-    return _R128.read_text()
 
 GPU_ARGS = ["--use-gl=angle", "--use-angle=swiftshader", "--enable-unsafe-swiftshader", "--ignore-gpu-blocklist"]
 LITE = "gfx=low&nosm"   # sim-only checks: low tier, no static batching (boots ~2 s instead of ~9 s; the sim is unchanged)
