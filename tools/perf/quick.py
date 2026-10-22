@@ -103,6 +103,8 @@ with sync_playwright() as pw:
     pg.wait_for_function("window.__PM&&__B.first!==null&&(!__PM.G3.prewarm||__PM.G3.warm)", timeout=240000, polling=500)
     cdp = ctx.new_cdp_session(pg); cdp.send("Performance.enable")
     pg.evaluate("()=>{const G=__PM.G3,R=G.renderer,r=R.render.bind(R);R.render=(a,b)=>{const t=performance.now();r(a,b);__B.cur+=performance.now()-t;};document.getElementById('v2go').click();__PM.setFps(true);__PM.C.simSpeed=30;G.noFallback=true;}")
+    pick_leader(pg)   # (v6.12: since v5.1 Season opens the leader picker first; without this the "normal" phase measured the picker, paused)
+    pg.evaluate("()=>{__PM.C.simSpeed=30;}")
     pg.evaluate(SAMPLER)
     out["normal"] = phase(pg, cdp, 8000, 12000)
     pg.evaluate("()=>{__PM.CH.on=true;__PM.EVENTS.forEach(e=>{try{__PM.trigger(e.id,true)}catch(_){}})}")

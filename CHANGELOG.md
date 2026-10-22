@@ -1,5 +1,11 @@
 # Changelog
 
+## v6.12.0-t1 (2026-10-22): performance baseline (test build, test/v6.12-perf)
+No game changes: main v6.11.2 under a test version number, so a phone's `?autotest` results name the build. The device
+numbers it gathers are the baseline for the v6.12 performance work (`claude/perf-review-v6113.md` in the Project).
+- `tools/perf/quick.py`: picks a leader after clicking Season (since v5.1 the picker comes first), so its "normal" phase
+  measures a running mill instead of the paused picker (`bench`, `latecompile` and `allocprof` had this fix in v6.10.2).
+
 ## v6.11.2 (2026-10-22): Sold by Area and Metered Power
 Release of v6.11.2-t1 to t6 (below), merged from test/v6.11.2. Full regression suite: 22/22 checks (833 assertions).
 
