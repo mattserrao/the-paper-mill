@@ -10,7 +10,7 @@
 - **Beater bay** can be tapped for the tons of beater waiting to be repulped and the rolls in the bay. With robot forks the rolls still go to receiving (robots cover the clamp jobs), and the outbound lamp goes dark once outbound is robotic.
 - **Known defects view** (Rounds card): greys the plant and drops labelled bullseye pins on tells spotted on rounds and on vibration (mechanical, orange) and ADX (electrical, blue) findings.
 - **DE pulper on the DET DCS:** level, consistency and the broke going in (trim plus dryer-section breaks); no operator control.
-- Checks: dcs (DE pulper readings).
+- Checks: dcs (DE pulper readings; DET still has 6 page boxes, the pulper is plain equipment; its test waits for the machine to be back at speed).
 
 ## v6.11.2-t4 (2026-10-22): small improvements (test build, test/v6.11.2)
 - **Drives re-rated** for a ~35 t/h recycled linerboard machine: refiners 2,000 kW each (2,600 with the upgrade), dryer section 1,500, couch 400, presses 450, reel 200, winder 750; pulper (1,100) and fan pump (900) unchanged.
