@@ -260,13 +260,17 @@ def winder(pw):
     ok("stands match the sim after the crane settles", r["vis"] == r["stored"], r)
     if shot: pg.evaluate("()=>{__PM.C.simSpeed=1}"); pg.wait_for_timeout(800); pg.screenshot(path=f"{shot}-storage-full.png")
     # --- 2. winder back: storage drains reel by reel onto the unwind
-    pg.evaluate("()=>{__PM.S.inc.find(x=>x.id==='winderdown').left=0;__PM.C.simSpeed=60;}")
+    # (v6.11.2 t6: on maps and grades where the winder is the bottleneck (~28 t/h against a 35 t/h machine) storage only drains
+    #  when a break happens to stop the machine, so the step passed or failed by luck. Slow the machine to 60% while the
+    #  winder catches up, so it always can)
+    pg.evaluate("()=>{__PM.S.inc.find(x=>x.id==='winderdown').left=0;window.__sp0={v:__PM.C.pmSp.v,a:__PM.C.pmSp.auto};__PM.C.pmSp.auto=false;__PM.C.pmSp.v=Math.round(__PM.C.pmSp.v*0.6);__PM.C.simSpeed=60;}")
     drained = []
     for k in range(200):
         ff(12)
         r = pg.evaluate("()=>{const S=__PM.S,G=__PM.G3;return {stored:Math.max(0,Math.ceil(S.winderBuf/100-0.005)-1),vis:(G.parkedN??-1),pm:S.pm,rolls:S.tot.rolls,wd:S.wd,conv:S.conv,inc:S.inc.map(i=>i.id).join(),run:__PM.running,card:S.cards&&S.cards.open?Object.keys(S.cards.open).join():null,day:+(S.t/1440).toFixed(2)}}")
         drained.append(r)
         if r["stored"] <= 1 and k > 4: break
+    pg.evaluate("()=>{__PM.C.pmSp.v=__sp0.v;__PM.C.pmSp.auto=__sp0.a;}")   # (the machine back to its own speed for the rest)
     C.note("drain:", json.dumps(drained[-1]))
     ok("storage drains after the winder is fixed", min(d["stored"] for d in drained) < mx, [d["stored"] for d in drained][-12:])   # (it refills while the machine runs, so the low point, not the last reading)
     if shot:
