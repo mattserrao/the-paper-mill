@@ -1,5 +1,10 @@
 # Changelog
 
+## v6.11.2-t3 (2026-10-22): test suite green (test build, test/v6.11.2)
+- **Fixed: reel storage could read full with only 3 of 4 reels stored.** A turn-up moved the whole reel, including the step's few hundred kilos past 100 t, to the winder, and the reel count (tons ÷ 100, rounded up) then counted a reel too many, so the machine went onto spools a reel early. A turn-up now takes exactly one jumbo; the overshoot starts the next reel.
+- **Tornado damage is sudden by design:** its two random upsets still fire at once with no tell, even tellable ones; they are now marked (`by:"tornado"`) so the tells check can tell them apart.
+- Checks: tells looks at every new incident (not only the last) and skips tornado damage; the water check uses a 60-minute machine stop so the restart lands in its window; the control check forces one sheet break so speed and tons have something to correlate; the knobs check's 3D taps wait for the camera to settle.
+
 ## v6.11.2-t2 (2026-10-22): minor updates (test build, test/v6.11.2)
 - **DET DCS: 2nd and 3rd section steam** are on the setpoint list (PV-302 / PV-303). On CAS the reel moisture loop (QC-300) sets them; dragging one takes it off CAS onto AUTO at that pressure, and the CAS button hands it back.
 - **Setpoints in process order**, under headings. WET: thick stock to the headbox (grade, dry strength, basis weight, retention polymer), headbox (dilution zones, slice opening, slice lip), forming table (machine speed, vacuum, couch pit agitator), press section (press loading). DET: press to dryers (draw), dryer steam (1st, 2nd, 3rd section), reel and winder.

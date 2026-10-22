@@ -105,7 +105,8 @@ function step(dt){
   qLog(dt,beat);   // v6.7 the off-spec log (07e)
   S.reel+=prod+beat;lotPut(S.lots.reel,C.grade,prod,100,areaNow());lotPut(S.lots.reel,"beater",beat); S.tot.prodT+=prod; {const pt=P.K*C.pmSp.v*bwSp()*dt/60;S.tot.pot+=pt;pfW("pot",pt);}   // (v6.7: potential tons at the setpoint speed, by the hour, for the process flow)
   planTick(dt,prod);
-  if(S.reel>=P.jumbo&&reelsAtWinder()<=P.storeReels){S.winderBuf+=S.reel;lotTake(S.lots.reel,S.reel,S.lots.buf);S.reel=0;S.lots.reel.length=0;S.tot.turnups++;}
+  if(S.reel>=P.jumbo&&reelsAtWinder()<=P.storeReels){const q=P.jumbo;S.winderBuf+=q;lotTake(S.lots.reel,q,S.lots.buf);S.reel=Math.max(0,S.reel-q);if(S.reel<1e-9){S.reel=0;S.lots.reel.length=0;}S.tot.turnups++;}   // (v6.11.2: a turn-up takes exactly one jumbo; the step's overshoot starts the next reel. Before, the overshoot went
+   //  to the winder too, and reelsAtWinder (tons / 100, rounded up) counted one reel too many: storage read full at 3 of 4)
   // 6 winder
   if(S.wd==="hayout"){if(working("hay"))S.hayLeft-=dt*leadRethread();S.tot.hayMin+=dt;if(S.hayLeft<=0){S.wd="run";log("Winder cleaned up and running again","ok");}}
   if(S.conv===undefined)S.conv=0;const convFull=S.conv>P.convCap-2+1e-6;S.wdBlocked=convFull;   // (v6.5.7: a set is two rolls, so the conveyor needs room for both)

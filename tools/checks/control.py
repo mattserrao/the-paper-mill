@@ -41,7 +41,10 @@ def control(pw):
     pg.wait_for_function("()=>__PM.S.hist&&__PM.S.hist.bf", timeout=300000, polling=500)
     pg.evaluate("()=>{__PM.setRunning(false);const t=document.getElementById('tut');if(t)t.hidden=true;}")
     run = lambda m: pg.evaluate(RUN, m)
-    run(26 * 60)
+    # (v6.11.2: a hands-off day can pass with no sheet break, and a flat speed correlates with nothing: force one break mid-run)
+    run(20 * 60)
+    pg.evaluate("()=>{const S=__PM.S;S.pm='break';S.brkType='press';S.breakLeft=60;S.breakTotal=60;S.crewQ=[{k:'brk',resp:0,since:0,here:true,go:true}];}")
+    run(6 * 60)
 
     # --- tags and their history
     r = pg.evaluate("""()=>{const X=__PM.CX;const bad=[];const r0=__PM.S;for(const t of X.TAGS){let v;try{v=t[4](X.knobRead());}catch(e){bad.push(t[0]);}}

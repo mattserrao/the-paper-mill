@@ -206,7 +206,9 @@ def water(pw):
     d = R("S.tank=60;P.trigger('shaft');", 120)   # (a low storage chest, so stock prep keeps pulping)
     ok("machine down: fresh makeup flows (intake doesn't drop to zero)", d["maxFresh"] > 200 and d["r"]["fresh"] > 60, f'max fresh {d["maxFresh"]:.0f} m3/h, chest low {d["minL"]:.0f} m3')
     # ---- iced intake and a machine stop: no makeup, the chest runs dry, stock thick, weight out of spec ----
-    e = R("S.tank=60;P.trigger('shaft');P.trigger('icedintake');", 420)
+    # (v6.11.2: a short stop: the driveshaft's 4-8 h repair plus the rethread could outlast the window, so the restart was never
+    #  seen. 60 min of repair still drains the chest dry (~105 min) before the machine is back)
+    e = R("S.tank=60;P.trigger('shaft');S.inc.find(i=>i.id==='shaft').left=60;P.trigger('icedintake');", 420)
     ok("iced intake + machine down: the white water chest runs dry", e["minL"] < 1 and e["maxShort"] > 0.5, f'low {e["minL"]:.0f} m3, shortK {e["maxShort"]:.2f}')
     ok("...and the thick stock puts the weight out of spec when it restarts", e["bwOut"] > 5, f'{e["bwOut"]:.0f} min out on weight')
     # ---- fiber accounting fixes ----

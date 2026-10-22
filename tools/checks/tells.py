@@ -55,8 +55,9 @@ def season(pw):
     r = pg.evaluate("""()=>{const P=__PM,S=P.S,TL=new Set(P.tell.areas.flatMap(a=>a.ids));const seenQ={},fired=[],bad=[];let k0=S.tot.incidents;
       while(S.t<14*1440){P.step(P.SIM_STEP);if(S.cards.open){if(S.cards.open.outage)document.getElementById('out-ok').click();else S.cards.open=null;}if(S.civ&&(S.civ.cur||S.civ.pending)){S.civ.cur=null;S.civ.pending=null;S.civ.q=[];}
         for(const p of S.tell.q){const k=p.id+"@"+p.born;if(!seenQ[k])seenQ[k]={id:p.id,due:p.due,born:p.born};}
-        if(S.tot.incidents>k0){k0=S.tot.incidents;const i=S.inc[S.inc.length-1];if(!i)continue;const tl=TL.has(i.id)&&!P.EVENTS.find(e=>e.id===i.id).env||TL.has(i.id)&&P.EVENTS.find(e=>e.id===i.id).env===P.SITE.env;
-          if(tl){const q=Object.values(seenQ).filter(x=>x.id===i.id&&!x.used&&x.due<=S.t+0.01);q.sort((a,b)=>a.due-b.due);const m=q[0];if(!m)bad.push(i.id+"@"+Math.round(S.t));else{m.used=1;fired.push([i.id,Math.round(m.born),Math.round(m.due),Math.round(S.t)]);}}}}
+        if(S.tot.incidents>k0){const nNew=S.tot.incidents-k0;k0=S.tot.incidents;for(const i of S.inc.slice(-nNew)){if(!i||i.by==="tornado")continue;   // (v6.11.2: every new incident, not just the last; a tornado's damage is instant by design)
+          const tl=TL.has(i.id)&&!P.EVENTS.find(e=>e.id===i.id).env||TL.has(i.id)&&P.EVENTS.find(e=>e.id===i.id).env===P.SITE.env;
+          if(tl){const q=Object.values(seenQ).filter(x=>x.id===i.id&&!x.used&&x.due<=S.t+0.01);q.sort((a,b)=>a.due-b.due);const m=q[0];if(!m)bad.push(i.id+"@"+Math.round(S.t));else{m.used=1;fired.push([i.id,Math.round(m.born),Math.round(m.due),Math.round(S.t)]);}}}}}
       return {fired,bad,queued:Object.keys(seenQ).length,left:S.tell.q.length};}""")
     ok("pre-roll: tellable upsets were queued", r["queued"] > 0, f"{r['queued']} queued")
     ok("pre-roll: every tellable upset fired came from the queue", not r["bad"] and len(r["fired"]) > 0, f"fired {len(r['fired'])}, unqueued {r['bad']}")
