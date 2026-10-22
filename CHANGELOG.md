@@ -1,5 +1,13 @@
 # Changelog
 
+## v6.11.2-t2 (2026-10-22): minor updates (test build, test/v6.11.2)
+- **DET DCS: 2nd and 3rd section steam** are on the setpoint list (PV-302 / PV-303). On CAS the reel moisture loop (QC-300) sets them; dragging one takes it off CAS onto AUTO at that pressure, and the CAS button hands it back.
+- **Setpoints in process order**, under headings. WET: thick stock to the headbox (grade, dry strength, basis weight, retention polymer), headbox (dilution zones, slice opening, slice lip), forming table (machine speed, vacuum, couch pit agitator), press section (press loading). DET: press to dryers (draw), dryer steam (1st, 2nd, 3rd section), reel and winder.
+- **Yard and warehouse crews no longer leave their trucks for a sheet break or a hayout**: receiving and truck loading carry on (before, both stopped while the crew rethreaded).
+- **The MCC desk computer** is a tap target that opens the Drives page.
+- **The SPOT console** moved from under the wet-end pipe racks to the north-west corner of the stock prep pad, by the effluent transfer tank, where the camera can see it.
+- **Cloudy and clear seal chest labels** turned 90° onto the west face; on the south face each chest hid the other's label.
+
 ## v6.11.2-t1 (2026-10-22): sold by area (test build, test/v6.11.2)
 - **Paper is sold by area (MSF, thousand ft²)**, as box plants buy it. List price ($/t) is for a ton at the grade's target basis weight; a ton made lighter covers more ft² and sells for list × target weight ÷ actual weight, a heavier one for less (full 1:1, no extra heavy penalty). 5% light ≈ +5.3% a ton; 3% heavy ≈ −2.9%.
 - Everything the player sees stays in tons. Each lot carries an area ratio stamped at the reel from the true basis weight (`areaNow`, 07g), blended by quantity through reel → winder → conveyor → warehouse → truck (06 `lotPut`/`lotTake`/`lotA`); the invoice applies it when a truck leaves (05b `ordDepart`, the zen truck path and the spot-sale card via `lotValue`). Chargebacks and the spot discount stay per ton. Old saves' lots sell at list.

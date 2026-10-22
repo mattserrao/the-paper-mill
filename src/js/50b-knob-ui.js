@@ -146,9 +146,10 @@ function stationBuild(){const o=$("dcsOv");if(!o||!KUI.st)return;const a=KUI.st,
     if(a==="WATER")b.appendChild(kEl("div","dcsctl",`<div class="dcssub">Water balance · the run so far</div><div class="wbal" id="wBal"></div>`));
     const ids=KNOBS.filter(k=>k.area===a&&(k.dcs||KREMOTE.has(k.id))&&k.id!=="pulp").map(k=>k.id),fld=KNOBS.filter(k=>k.area===a&&k.field&&!KREMOTE.has(k.id));   // (v6.9: the pulper dilution valve is NV-101, on the picture)
     const cs=kEl("div","dcsctl");cs.appendChild(kEl("div","dcssub","Setpoints"));dcsSetRows(a,cs);
-    ids.forEach(id=>{const row=kEl("div","dcsrow"+(id==="zones"?" wide":""));row.appendChild(kEl("div","dcsn",`<b>${KNOBN[id].name}</b><small>${KNOBN[id].field?"remote from the DCS":"DCS"}</small>`));row.appendChild(knobCtl(id,"d"));
+    ids.forEach(id=>{const row=kEl("div","dcsrow"+(id==="zones"?" wide":""));row.dataset.ord=id;row.appendChild(kEl("div","dcsn",`<b>${KNOBN[id].name}</b><small>${KNOBN[id].field?"remote from the DCS":"DCS"}</small>`));row.appendChild(knobCtl(id,"d"));
       const rd=kEl("div","spir krd");rd.dataset.rd=id;row.appendChild(rd);row.appendChild(kEl("button","reroll kstd","Standard")).addEventListener("click",()=>{knobReset(id);kuiRefresh();});cs.appendChild(row);
-      if(id==="zones"){const bt=kEl("div","dcsbeat","");bt.id="dcsBeat";bt.hidden=true;bt.setAttribute("role","status");cs.appendChild(bt);}});   // v6.5.4: making-beater alert under the dilution zones
+      if(id==="zones"){const bt=kEl("div","dcsbeat","");bt.id="dcsBeat";bt.dataset.ord="beat";bt.hidden=true;bt.setAttribute("role","status");cs.appendChild(bt);}});   // v6.5.4: making-beater alert under the dilution zones
+    dcsOrder(a,cs);   // (v6.11.2: rows in the order the stock meets them, under section headings, 50d)
     if(fld.length)cs.appendChild(kEl("p","dcsfield",`Set at the machine, not from here: ${fld.map(k=>`<button type="button" class="linkb" data-fk="${k.id}">${k.name.toLowerCase()}</button>`).join(", ")}. Look for the red knobs on the floor.`));
     cs.querySelectorAll("[data-fk]").forEach(x=>x.addEventListener("click",()=>{const id=x.dataset.fk;closeStation();if(G3.knobFly)G3.knobFly(id);openKnob(id);}));
     b.appendChild(cs);dcsMotRows(a,b);}

@@ -127,8 +127,22 @@ function dcsSetDefs(a){const D=()=>DCS_DRAW();
         0,k.max,k.rstep,()=>chemSp(id),v=>chemSetRatio(id,v),"kg/t",null,0,{on:()=>true,flip:()=>chemSetMode(id,"manual")},i===0?"Wet-end chemicals":null];})];
   if(a==="DET")return [
     ["wsp","Machine speed (wire)","same setpoint as on WET",Math.round(1200/D()),Math.round((3300+P.spBonus)/D()),5,()=>C.pmSp.v/D(),v=>dcsCardSet("pmSp",Math.round(v*D()/10)*10),"fpm","pmSp"],
-    ["wdr","Winder speed","",0,P.winderMax,1,()=>C.wdr.v,v=>dcsCardSet("wdr",v),"t/h","wdr"]];   // (v6.9: the 2nd / 3rd section steam is PV-302 / PV-303 under QC-300: tap them on the picture, 50k)
+    ["wdr","Winder speed","",0,P.winderMax,1,()=>C.wdr.v,v=>dcsCardSet("wdr",v),"t/h","wdr"],
+    // v6.11.2 the 2nd and 3rd section steam on the setpoint list: PV-302 / PV-303 (07h). On CAS the moisture controller QC-300
+    // sets them; dragging one takes it off CAS onto AUTO at that pressure, and the button puts it back on CAS.
+    ...[["PV-302","st2","2nd section steam"],["PV-303","st3","3rd section steam"]].map(([id,k,n])=>{const v=vlvView(id),cas=v.m==="CAS",pv=Math.round(v.pv);
+      return [k+"sp",n,cas?`CAS · set by QC-300 (reel moisture ${DRY.m0}%) · ${pv} kPa`:`${v.m==="MAN"?"MANUAL · valve held at "+Math.round(v.op)+"%":"AUTO · held at the setpoint"} · ${pv} kPa · CAS hands it back to the moisture loop`,
+        0,250,5,()=>vlvView(id).sp,x=>{if(vlvView(id).m!=="AUTO")vlvSetMode(id,"AUTO");vlvSetSP(id,x);},"kPa",null,0,
+        {on:()=>vlvView(id).m==="CAS",flip:()=>vlvSetMode(id,vlvView(id).m==="CAS"?"AUTO":"CAS"),lab:["CAS","AUTO"]}];})];
   return [];}
+// v6.11.2: the setpoint rows in the order the stock meets them, under a heading for each part of the machine
+const DCS_ORDER={
+  WET:[["Thick stock to the headbox","grade","dsf","bws","polf"],["Headbox","zones","beat","slv","slh"],["Forming table","wsp","vac","couch"],["Press section","press"]],
+  DET:[["Press to dryers","draw"],["Dryer steam","st1","st2sp","st3sp"],["Reel and winder","wsp","wdr"]]};
+function dcsOrder(a,cs){const O=DCS_ORDER[a];if(!O)return;const kids=[...cs.children],by={};kids.forEach(e=>{if(e.dataset.ord)by[e.dataset.ord]=e;});
+  const used=new Set();cs.replaceChildren();
+  for(const [h,...ks] of O){const els=ks.map(k=>by[k]).filter(Boolean);if(!els.length)continue;cs.appendChild(kEl("div","dcssub",h));els.forEach(e=>{cs.appendChild(e);used.add(e);});}
+  kids.forEach(e=>{if(!used.has(e)&&e.dataset.ord)cs.appendChild(e);});}   // (anything not listed keeps its place at the end; the old headings go)
 function dcsSlice(k,v){const D=G3.SLC;if(!D||G3.slcFix||S.zen)return;slcSet(k,v/100);const g=D.geo();if(g.lipX-g.wet>=6.8&&typeof slcBreak==="function")slcBreak();}
 function dcsSetRows(a,cs){const defs=dcsSetDefs(a);
   if(a==="UTIL")cs.appendChild(kEl("p","dcsfield","Monitoring only: water, effluent and rejects. The permit and the river intake show here when they act up. The full water balance is on WATER."));
@@ -136,9 +150,9 @@ function dcsSetRows(a,cs){const defs=dcsSetDefs(a);
   if(a==="SPOT"||a==="WET"){const row=kEl("div","dcsrow dcsx");
     if(a==="SPOT"){row.innerHTML=`<div class="dcsn"><b>Dye: paper color</b><small>dye pump on the machine chest</small></div><div class="seg kseg" role="group" aria-label="Paper color"><button type="button" data-dye="brown">BROWN</button><button type="button" data-dye="white">WHITE</button></div>`;
       row.querySelectorAll("[data-dye]").forEach(b=>b.addEventListener("click",()=>{const pc=document.querySelector(`#paperColor button[data-c="${b.dataset.dye}"]`);if(pc)pc.click();dcsSync();}));}
-    else{row.innerHTML=`<div class="dcsn"><b>Grade</b><small>set by the market planner from customer orders</small></div><select disabled data-dgrade aria-label="Grade">${Object.keys(GRADES).map(g=>`<option value="${g}">${g} · ${GRADES[g].bw} lb</option>`).join("")}</select>`;}
+    else{row.dataset.ord="grade";row.innerHTML=`<div class="dcsn"><b>Grade</b><small>set by the market planner from customer orders</small></div><select disabled data-dgrade aria-label="Grade">${Object.keys(GRADES).map(g=>`<option value="${g}">${g} · ${GRADES[g].bw} lb</option>`).join("")}</select>`;}
     cs.appendChild(row);}
-  for(const d of defs){const [k,name,where,mn,mx,st,,,,card]=d,row=kEl("div","dcsrow dcsx");row.dataset.ds=k;if(d[12])cs.appendChild(kEl("div","dcssub",d[12]));
+  for(const d of defs){const [k,name,where,mn,mx,st,,,,card]=d,row=kEl("div","dcsrow dcsx");row.dataset.ds=k;row.dataset.ord=k;if(d[12])cs.appendChild(kEl("div","dcssub",d[12]));
     row.innerHTML=`<div class="dcsn"><b>${name}</b><small>${where}</small></div><label class="spis"><input type="range" min="${mn}" max="${mx}" step="${st}" data-dsv aria-label="${name}"/></label><div class="kval"><b data-dsb></b></div>${card||d[11]?`<button type="button" class="reroll kstd" data-dsa>AUTO</button>`:""}`;
     const cur=()=>dcsSetDefs(a).find(x=>x[0]===k)||d;   // (v6.11.1: a row can change what it sets, e.g. a chemical pump's ratio on AUTO, kg/h on MANUAL)
     row.querySelector("[data-dsv]").addEventListener("input",e=>{cur()[7](+e.target.value);dcsSync();});
@@ -160,7 +174,7 @@ function dcsSync(){const o=$("dcsOv");if(!o||o.hidden||!KUI.st)return;const a=KU
   o.querySelectorAll("[data-ds]").forEach(row=>{const d=defs.find(x=>x[0]===row.dataset.ds);if(!d)return;const inp=row.querySelector("[data-dsv]"),c=d[9]?DCARD(d[9]):null,lock=!!(c&&c.inp.disabled)||!!S.zen;
     if(inp.max!==String(d[4]))inp.max=d[4];if(inp.min!==String(d[3]))inp.min=d[3];if(inp.step!==String(d[5]))inp.step=d[5];if(actEl(inp)!==inp)inp.value=d[6]();inp.disabled=lock||(d[10]&&!G3[d[0]==="spi"?"SPD":"SLC"]);
     const bv=row.querySelector("[data-dsb]"),t=`${(+d[6]()).toFixed(d[5]<0.1?2:d[5]<1?1:0)} ${d[8]}`;if(bv.textContent!==t)bv.textContent=t;
-    if(d[11]){const ab=row.querySelector("[data-dsa]"),au=d[11].on();ab.textContent=au?"AUTO":"MANUAL";ab.setAttribute("aria-pressed",String(au));ab.disabled=S.zen;
+    if(d[11]){const ab=row.querySelector("[data-dsa]"),au=d[11].on();ab.textContent=(d[11].lab||["AUTO","MANUAL"])[au?0:1];ab.setAttribute("aria-pressed",String(au));ab.disabled=S.zen;
       const sm=row.querySelector(".dcsn small");if(sm&&sm.textContent!==d[2])sm.textContent=d[2];}
     const ab=row.querySelector("[data-dsa]");if(ab&&c){const au=C[d[9]].auto,txt=c.btn?(au?"AUTO":"MANUAL"):"";ab.hidden=!c.btn;ab.textContent=txt;ab.setAttribute("aria-pressed",String(!!au));ab.disabled=lock;}
     row.classList.toggle("locked",lock);});

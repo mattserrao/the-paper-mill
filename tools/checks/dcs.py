@@ -151,8 +151,34 @@ def layout(pw):
     if shot: pg.screenshot(path=f"{shot}-wet.png")
     b.close()
 
+def rows(pw):
+    # v6.11.2: the setpoint rows follow the stock through the machine; the 2nd and 3rd section steam on DET; the yard and
+    # warehouse crews keep working through a sheet break
+    C.sec("rows")
+    b = launch(pw); pg = page(b, html_arg(), "nobf&" + LITE, (1280, 900)); pg.wait_for_timeout(800)
+    pg.evaluate("()=>document.getElementById('v2go').click()"); pick_leader(pg); pg.wait_for_timeout(500)
+    pg.evaluate("()=>{__PM.setRunning(false);for(let i=0;i<4*60;i++){if(__PM.S.cards)__PM.S.cards.open=null;__PM.step(0.25)}}")
+    order = lambda a: pg.evaluate("a=>{__PM.G3.openStation(a,'dcs');const c=[...document.querySelectorAll('#dcsOv .dcsctl')].find(e=>e.querySelector('[data-ord]'));return [...c.children].map(e=>e.classList.contains('dcssub')?'#'+e.textContent:e.dataset.ord||'').filter(Boolean)}", a)
+    w = order("WET")
+    want = ["#Thick stock to the headbox", "grade", "dsf", "bws", "polf", "#Headbox", "zones", "beat", "slv", "slh", "#Forming table", "wsp", "vac", "couch", "#Press section", "press"]
+    ok("WET rows in process order: thick stock, headbox, forming table, press", w == want, w)
+    d = order("DET")
+    ok("DET rows: draw, 1st / 2nd / 3rd section steam, reel and winder", d == ["#Press to dryers", "draw", "#Dryer steam", "st1", "st2sp", "st3sp", "#Reel and winder", "wsp", "wdr"], d)
+    r = pg.evaluate("""()=>{const q=s=>document.querySelector(s),V=()=>({m3:q('[data-ds="st3sp"] [data-dsa]').textContent,m2:q('[data-ds="st2sp"] [data-dsa]').textContent});
+      const a=V();const inp=q('[data-ds="st3sp"] [data-dsv]');inp.value=150;inp.dispatchEvent(new Event('input',{bubbles:true}));
+      for(let i=0;i<4*3;i++)__PM.step(0.25);const v3=__PM.S.vlv.lp['PV-303'];const b={...V(),sp:v3.sp,m:v3.m,pv:Math.round(v3.pvm)};
+      q('[data-ds="st3sp"] [data-dsa]').click();const c={...V(),m:__PM.S.vlv.lp['PV-303'].m};return {a,b,c}}""")
+    ok("2nd and 3rd section steam start on CAS (the moisture loop)", r["a"] == {"m3": "CAS", "m2": "CAS"}, r["a"])
+    ok("dragging 3rd section steam takes PV-303 off CAS onto AUTO at that pressure", r["b"]["m"] == "AUTO" and r["b"]["sp"] == 150 and r["b"]["m3"] == "AUTO" and r["b"]["pv"] > 130, r["b"])
+    ok("the CAS button hands it back to the moisture loop", r["c"]["m"] == "CAS" and r["c"]["m3"] == "CAS", r["c"])
+    r = pg.evaluate("""()=>{const P=__PM,S=P.S;__PM.G3.closeStation&&__PM.G3.closeStation();S.pm='break';S.brkType='press';S.breakLeft=60;S.breakTotal=60;S.crewQ=[{k:'brk',resp:0,since:0,here:true,go:true}];let rec=[],clamp=[],at=0;
+      for(let i=0;i<4*30;i++){if(S.cards)S.cards.open=null;P.step(0.25);if(S.pm==='break'){rec.push(S.M.recvMul);clamp.push(S.M.clampMul);if(S.M.crewAtPM)at++;}}
+      return {n:rec.length,rec:Math.min(...rec),clamp:Math.min(...clamp),at}}""")
+    ok("sheet break: the yard keeps receiving and the warehouse keeps loading (no crew to the PM)", r["n"] > 0 and r["rec"] > 0 and r["clamp"] > 0 and r["at"] == 0, r)
+    b.close()
+
 with sync_playwright() as pw:
-    for f in (screens, layout):
+    for f in (screens, layout, rows):
         try: f(pw)
         except Exception as e: ok(f"{f.__name__}: ran to the end", False, repr(e)[:300])
 C.done()

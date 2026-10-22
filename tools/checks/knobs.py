@@ -130,12 +130,27 @@ def ui(pw):
     # a real tap on the red hardware in 3D: aim the camera at it and click where it lands on screen
     pg.evaluate("()=>{__PM.setRunning(false);document.querySelectorAll('.overlay').forEach(o=>o.hidden=true);if(__PM.S.cards)__PM.S.cards.open=null;const k=__PM.G3.KX.osc.at;__PM.G3.camSet([k[0],k[2],40,-0.2,0.9,0]);}")
     pg.wait_for_timeout(1200)
+    # (v6.11.2: under load the zoom can still be easing onto its step: tap once the iso camera has settled)
+    pg.wait_for_function("()=>{const g=__PM.G3.camGet(),c=g.join(),w=window;const s=w.__camLast===c;w.__camLast=c;return s&&Math.abs(g[3]+Math.PI/4)<0.01&&g[2]!==40}", timeout=20000, polling=300)
     xy = pg.evaluate("()=>{const G=__PM.G3,c=G.diagScene().camera,k=G.KX.osc.at,v=new __PM.THREE.Vector3(k[0],k[1]-0.3,k[2]).project(c),r=document.getElementById('gl').getBoundingClientRect();return [r.left+(v.x+1)/2*r.width,r.top+(1-v.y)/2*r.height]}")
     C.note("tap at", [round(v) for v in xy], pg.evaluate("xy=>{const e=document.elementFromPoint(xy[0],xy[1]);return e&&(e.id||e.className||e.tagName)}", xy))
     pg.mouse.click(xy[0], xy[1]); pg.wait_for_timeout(300)
     t = pg.evaluate("()=>!document.getElementById('knobP').hidden&&document.getElementById('kp-h').textContent")
     ok("tap on the 3D knob opens it", t == "Pick-up felt oscillator", repr(t))
     pg.evaluate("()=>document.getElementById('kpClose').click()")
+    # v6.11.2: a real tap on the SPOT console (moved to stock prep's north-west corner) and on the MCC desk computer (Drives page)
+    def tap_station(at, want, label):
+        pg.evaluate("at=>{document.querySelectorAll('.overlay').forEach(o=>o.hidden=true);__PM.G3.camSet([at[0],at[2],40,-0.2,0.9,0]);}", at); pg.wait_for_timeout(1200)
+        # (the zoom eases onto its step over a few frames: tap once the camera has stopped, or the point moves under the click)
+        pg.wait_for_function("()=>{const g=__PM.G3.camGet(),c=g.join(),w=window;const s=w.__camLast===c;w.__camLast=c;return s&&Math.abs(g[3]+Math.PI/4)<0.01&&g[2]!==40}", timeout=20000, polling=300)
+        xy = pg.evaluate("at=>{const c=__PM.G3.diagScene().camera,v=new __PM.THREE.Vector3(at[0],at[1],at[2]).project(c),r=document.getElementById('gl').getBoundingClientRect();return [r.left+(v.x+1)/2*r.width,r.top+(1-v.y)/2*r.height]}", at)
+        info = pg.evaluate("xy=>{const e=document.elementFromPoint(xy[0],xy[1]);return [e&&(e.id||e.className||e.tagName),__PM.G3.camGet().map(v=>+v.toFixed(2))]}", xy)
+        pg.mouse.click(xy[0], xy[1]); pg.wait_for_timeout(400)
+        st = pg.evaluate("()=>{const o=document.getElementById('dcsOv');return o&&!o.hidden?o._st:null}")
+        ok(label, st == want, repr([st, xy, info]))
+        pg.evaluate("()=>{const x=document.getElementById('dcsClose');if(x)x.click();}"); pg.wait_for_timeout(200)
+    tap_station([6.4, 1.2, -22.9], "SPOT", "tap on the SPOT console (stock prep, north-west corner) opens SPOT")
+    tap_station(pg.evaluate("()=>{const M=__PM.G3.MCC;return [M.desk[0],0.95,M.desk[1]-0.45]}"), "DRV", "tap on the MCC desk computer opens the Drives page")
     # v6.11.1 the dryer hood doors: the knob raises them, the front flies away 2 s after they're up, and comes back on close;
     # with the knob closed the doors go up on their own on a break and drop once the machine runs
     # (the sim paused and the hood stepped by hand at 0.1 s a tick, so slow headless frames don't matter)

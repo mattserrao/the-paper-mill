@@ -213,5 +213,5 @@
     [0.9,1.9].forEach(y=>{const b=new THREE.Mesh(new CylG(R2+0.02,R2+0.02,0.1,28,1,true),M.steel);b.position.set(x,y,z);scene.add(b);});
     const w=new THREE.Mesh(new CircG(R2-0.05,28),new StdMat({color:lin0(col),roughness:0.15,metalness:0.1}));w.rotation.x=-Math.PI/2;w.position.set(x,H2-0.3,z);scene.add(w);
     const sc=document.createElement("canvas");sc.width=128;sc.height=40;const c=sc.getContext("2d");c.fillStyle="#ffffff";c.fillRect(0,0,128,40);c.fillStyle=col;c.fillRect(0,0,12,40);c.fillStyle="#1c2233";c.font="800 24px system-ui,sans-serif";c.textAlign="center";c.fillText(txt,70,29);
-    const st=new THREE.CanvasTexture(sc);st.colorSpace=THREE.SRGBColorSpace;const sg=new THREE.Mesh(new THREE.PlaneGeometry(2.4,0.75),new THREE.MeshBasicMaterial({map:st,toneMapped:false}));sg.position.set(x,1.4,z+R2+0.06);scene.add(sg);
+    const st=new THREE.CanvasTexture(sc);st.colorSpace=THREE.SRGBColorSpace;const sg=new THREE.Mesh(new THREE.PlaneGeometry(2.4,0.75),new THREE.MeshBasicMaterial({map:st,toneMapped:false}));sg.position.set(x-R2-0.06,1.4,z);sg.rotation.y=-Math.PI/2;scene.add(sg);   // (v6.11.2: turned 90° onto the west face: on the south face each chest hid the other's label from the camera)
     return w;};

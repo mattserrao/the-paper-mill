@@ -34,20 +34,25 @@
     // the couch pit agitator motor itself, low on the tending side
     {const m=new THREE.Mesh(new CylG(0.32,0.32,0.8,12),M.motor);m.rotation.z=Math.PI/2;m.position.set(41.2,0.45,12.75);scene.add(m);}
     // ---- the stock prep console (SPOT), like the machine floor's: desk, two screens, a stool; the screens face the operator ----
-    {const g=new THREE.Group();g.position.set(35.5,0,-3.2);scene.add(g);box(2.0,1.0,0.7,M.steel,0,0.5,0,g);const top=box(2.0,0.12,0.75,M.ink,0,1.05,0.05,g,false);top.rotation.x=0.35;
+    // (v6.11.2: moved from under the wet-end pipe racks to the stock prep pad's north-west corner, by the effluent transfer tank,
+    //  where the iso camera can see it; the screens and stools face the camera's side)
+    const SPC=[6.4,-22.9];
+    {const g=new THREE.Group();g.position.set(SPC[0],0,SPC[1]);scene.add(g);box(2.0,1.0,0.7,M.steel,0,0.5,0,g);const top=box(2.0,0.12,0.75,M.ink,0,1.05,0.05,g,false);top.rotation.x=0.35;
       const c=document.createElement("canvas");c.width=128;c.height=80;const x=c.getContext("2d");x.fillStyle="#13233a";x.fillRect(0,0,128,80);x.strokeStyle="#4fd18b";x.lineWidth=2;x.strokeRect(10,14,34,30);x.strokeRect(54,24,26,22);x.strokeRect(90,14,28,34);
       x.beginPath();x.moveTo(44,30);x.lineTo(54,34);x.moveTo(80,34);x.lineTo(90,30);x.stroke();x.fillStyle="#ffb02e";x.fillRect(8,58,50,7);x.fillStyle="#9ab3d6";x.fillRect(66,58,52,7);
       const t=new THREE.CanvasTexture(c);t.colorSpace=THREE.SRGBColorSpace;const sm=new THREE.MeshBasicMaterial({map:t,toneMapped:false});
       [-0.5,0.5].forEach(dx=>{box(0.08,0.5,0.08,M.ink,dx,1.35,-0.25,g,false);box(0.85,0.55,0.08,M.ink,dx,1.75,-0.25,g,false);const sc=new THREE.Mesh(new THREE.PlaneGeometry(0.76,0.47),sm);sc.position.set(dx,1.75,-0.205);g.add(sc);});
-      [-0.6,0.6].forEach(dx=>{const ch=new THREE.Group();ch.position.set(35.5+dx,0,-1.85);scene.add(ch);box(0.55,0.08,0.55,M.ink,0,0.5,0,ch,false);box(0.55,0.6,0.08,M.ink,0,0.85,0.26,ch,false);box(0.08,0.5,0.08,M.steel,0,0.25,0,ch,false);});
-      blob(35.5,-3.2,1.6);plate("SPOT · STOCK PREP DCS",1.6,35.5,0.62,-2.84);}
+      [-0.6,0.6].forEach(dx=>{const ch=new THREE.Group();ch.position.set(SPC[0]+dx,0,SPC[1]+1.35);scene.add(ch);box(0.55,0.08,0.55,M.ink,0,0.5,0,ch,false);box(0.55,0.6,0.08,M.ink,0,0.85,0.26,ch,false);box(0.08,0.5,0.08,M.steel,0,0.25,0,ch,false);});
+      blob(SPC[0],SPC[1],1.6);plate("SPOT · STOCK PREP DCS",1.6,SPC[0],0.62,SPC[1]+0.36);}
     // stations: where each DCS lives (the machine floor's three consoles, and stock prep's)
-    const ST=[{a:"SPOT",at:[35.5,1.6,-3.2]},{a:"WET",at:[58,1.6,13.4]},{a:"DET",at:[26,1.6,13.4]},{a:"DET",at:[-5,1.6,13.4]}];
+    const ST=[{a:"SPOT",at:[SPC[0],1.6,SPC[1]]},{a:"WET",at:[58,1.6,13.4]},{a:"DET",at:[26,1.6,13.4]},{a:"DET",at:[-5,1.6,13.4]}];
+    // v6.11.2: the computer on the MCC desk (38c) opens the Drives page
+    {const MC=G3.MCC;if(MC)ST.push({a:"DRV",at:[MC.desk[0],1.0,MC.desk[1]-0.45],r:1.1});}
     // ---- tap targets: invisible spheres outside the scene (never drawn, never batched), with their matrices set once ----
     const HG=new THREE.SphereGeometry(1,8,6),HM=new THREE.MeshBasicMaterial(),HITS=[];
     const addHit=(at,r,tag)=>{const m=new THREE.Mesh(HG,HM);m.position.set(at[0],at[1],at[2]);m.scale.setScalar(r);m.updateMatrixWorld(true);m.userData.tag=tag;HITS.push(m);return m;};
     for(const id in KX)addHit(KX[id].at,1.3,{k:"knob",id});
-    ST.forEach(s=>addHit(s.at,1.6,{k:"station",a:s.a}));
+    ST.forEach(s=>addHit(s.at,s.r||1.6,{k:"station",a:s.a}));
     // in the knob view the markers are the targets, bigger and wherever they float
     G3.knobFly=id=>{const k=KX[id];if(k&&G3.camTo)G3.camTo(k.at[0],k.at[2],46);};
     G3.knobHit=rc=>{if(G3.zen||S.zen)return null;const h=rc.intersectObjects(G3.kvOn?KVHITS:HITS,false);return h.length?h[0].object.userData.tag:null;};
