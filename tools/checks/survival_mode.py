@@ -143,7 +143,7 @@ def survival_mode(pw):
             s = state()
             ok("wave 4: Dot runs the mill; Chip's push and pay settlements stay, his lock was for wave 3 only, his call-offs leave with him", s["lead"]["id"] == "dot" and s["lead"]["changed"] and s["lead"]["was"] == "chip" and s["lead"]["st"]["fibre"] == 1 and s["lead"]["st"]["sales"] == 1
                and abs(s["lp"] - price1 - 7) < 1e-9 and abs(s["costMul"] - 1.331) < 1e-9 and abs(s["occ"] / (s["occBase"] * s["costMul"]) - 1) < 1e-9 and abs(pg.evaluate("()=>__PM.wage()") - 1.1 ** 2) < 1e-9 and abs(pg.evaluate("()=>__PM.freq('calloff')") - pg.evaluate("()=>__PM.freq('highway')")) < 1e-9, s)
-            ok("wave 4: Dot's repair bills cost 5% more", abs(s["rep"] / 1.2 - 1.05) < 1e-9, s["rep"])   # (v6.9.2: every bill carries REPAIR_K 1.2)
+            ok("wave 4: Dot's repair bills cost 5% more", abs(s["rep"] / 1.05 - 1.05) < 1e-9, s["rep"])   # (v6.9.2: every bill carries REPAIR_K; v6.11.2 t6: 1.05)
             # v5.0.4 Dot's fix is automatic: a driveshaft snaps and (odds forced to 100% here) she fixes it on the spot; once per cycle
             f0 = pg.evaluate("()=>__PM.freq('shaft')"); cashF = pg.evaluate("()=>__PM.S.cash")
             f = pg.evaluate("""()=>{const L=__PM.LEAD,a=L.autoFix;L.autoFix=1;__PM.trigger('shaft');const S=__PM.S,cashA=S.cash,inc=S.inc.find(i=>i.id==='shaft')||{left:-1,bill:0};

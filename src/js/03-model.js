@@ -19,7 +19,7 @@ const MAINT=["birdline","steamjoint","fogfan","shaft","fabric","felt","winderdow
 // v4.1 v19: prices reset after the payback review (most upgrades now pay back within days, not months)
 // t20 balance: the capacity and maintenance upgrades re-priced (40-60% cheaper) so they can pay back inside a season
 // v6.9.2 balance: every upgrade 30% dearer (rounded to $5k) so the daily Round is the biggest boost; missed failures 20% dearer (REPAIR_K); overhead $2,400/h (was $3,400) so most mills still profit
-const REPAIR_K=1.2;
+const REPAIR_K=1.05;   // (v6.11.2 t6 QA: was 1.2; repair bills 12.5% lower, hands-off paid ~$3.4M a season)
 const UPS=[
  {id:"drive",g:"machine",name:"Drive & gearbox rebuild",lv:[115e3,105e3,90e3],desc:"+150 fpm max speed per level, if the dryers can keep up (heavy grades and a wet sheet reach their limit first)."},   // (v6.5 b5: 25% cheaper: the dryer limit can cap it)
  {id:"deckle",g:"machine",name:"Wider trim (deckle)",lv:[160e3,135e3],desc:"+3\" of web per level (+1.5% tons at the same speed) and rolls up to 1.5\" wider, so wide rolls cost less trim."},

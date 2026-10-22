@@ -90,11 +90,13 @@
     const DVG=new THREE.Group();DVG.visible=false;scene.add(DVG);SM.dyn.add(DVG);const DV={on:false,pins:new Map(),t:0};
     const dvM={m:new THREE.MeshBasicMaterial({color:lin0("#e8590c"),depthTest:false,depthWrite:false,transparent:true,toneMapped:false}),e:new THREE.MeshBasicMaterial({color:lin0("#1c7ed6"),depthTest:false,depthWrite:false,transparent:true,toneMapped:false}),w:new THREE.MeshBasicMaterial({color:0xffffff,depthTest:false,depthWrite:false,transparent:true,toneMapped:false})};
     const ring1=new THREE.RingGeometry(0.95,1.3,32),ring2=new THREE.RingGeometry(0.45,0.7,28),dot=new THREE.CircleGeometry(0.25,20),disc=new THREE.CircleGeometry(1.32,32);
-    function dvPin(d){const g=new THREE.Group(),b=new THREE.Group();g.add(b);const M2=dvM[d.k];
-      [[disc,dvM.w,9991],[ring1,M2,9992],[ring2,M2,9992],[dot,M2,9993]].forEach(([geo,m,o])=>{const x=new THREE.Mesh(geo,m);x.renderOrder=o;b.add(x);});
-      const s=new THREE.Mesh(stemG,M2);s.scale.y=2.2;s.position.y=-1.1;s.renderOrder=9990;g.add(s);
-      g.position.set(d.at[0],3.4,d.at[1]);DVG.add(g);return {g,b,lb:lblNew(true,"defect:"+d.id),v:new THREE.Vector3(d.at[0],4.9,d.at[1]),d};}
-    function dvSync(){const L=knownDefects(),keep=new Set();for(const d of L){keep.add(d.id);let p=DV.pins.get(d.id);if(!p){p=dvPin(d);DV.pins.set(d.id,p);}p.d=d;}
+    // (t6: early-warning findings get a small faded pin with no pulse; serious ones and spotted tells keep the full bullseye)
+    const dvF={};for(const k in dvM){dvF[k]=dvM[k].clone();dvF[k].opacity=0.5;}
+    function dvPin(d){const g=new THREE.Group(),b=new THREE.Group();g.add(b);const MM=d.early?dvF:dvM,M2=MM[d.k];
+      [[disc,MM.w,9991],[ring1,M2,9992],[ring2,M2,9992],[dot,M2,9993]].forEach(([geo,m,o])=>{const x=new THREE.Mesh(geo,m);x.renderOrder=o;b.add(x);});
+      const s=new THREE.Mesh(stemG,M2);s.scale.y=d.early?1.4:2.2;s.position.y=d.early?-0.7:-1.1;s.renderOrder=9990;g.add(s);
+      const y=d.early?2.6:3.4;g.position.set(d.at[0],y,d.at[1]);DVG.add(g);return {g,b,lb:lblNew(true,"defect:"+d.id),v:new THREE.Vector3(d.at[0],y+(d.early?1.0:1.5),d.at[1]),d,early:!!d.early};}
+    function dvSync(){const L=knownDefects(),keep=new Set();for(const d of L){keep.add(d.id);let p=DV.pins.get(d.id);if(p&&p.early!==!!d.early){DVG.remove(p.g);p.lb.vis=false;p=null;}if(!p){p=dvPin(d);DV.pins.set(d.id,p);}p.d=d;}
       for(const [id,p] of DV.pins)if(!keep.has(id)){DVG.remove(p.g);p.lb.vis=false;DV.pins.delete(id);}return L.length;}
     G3.defectView=on=>{on=!!on&&!S.zen;if(on===DV.on)return DV.pins.size;DV.on=on;G3.dvOn=on;DVG.visible=on;veil.visible=on||!!G3.kvOn;LB.force=true;
       if(on){if(labelHost.classList.contains("lbl-off")){DV.lblOff=true;labelHost.classList.remove("lbl-off");}return dvSync();}
@@ -103,9 +105,10 @@
     function dvFrame(now){if(!DV.on)return;if(now-DV.t>1000){DV.t=now;dvSync();}
       {const d=camera.near*1.2,h=(camera.isIso?camera.top-camera.bottom:2*d*Math.tan(camera.fov*Math.PI/360))*1.15;camera.getWorldDirection(_d);veil.position.copy(camera.position).addScaledVector(_d,d);veil.quaternion.copy(camera.quaternion);veil.scale.set(h*camera.aspect,h,1);veil.updateMatrixWorld();}
       const w=G3.vw||host.clientWidth,hh=G3.vh||host.clientHeight,pulse=0.5+0.5*Math.sin(now/300);
-      for(const p of DV.pins.values()){p.b.lookAt(camera.position);const s=1+0.15*pulse;p.b.scale.set(s,s,s);p.g.updateMatrixWorld(true);_q.copy(p.v).project(camera);
+      for(const p of DV.pins.values()){p.b.lookAt(camera.position);const s=p.early?0.6:1+0.15*pulse;p.b.scale.set(s,s,s);p.g.updateMatrixWorld(true);_q.copy(p.v).project(camera);
         const vis=_q.z<1&&Math.abs(_q.x)<1.05&&Math.abs(_q.y)<1.05;p.lb.vis=vis;if(!vis)continue;p.lb.x=Math.round((_q.x+1)/2*w);p.lb.y=Math.round((1-_q.y)/2*hh);
-        lblSet(p.lb,p.d.a,(G3.camDist||camera.position.distanceTo(p.v))>170?"":p.d.b,p.d.k==="m");}}
+        const cd=G3.camDist||camera.position.distanceTo(p.v);if(p.early&&cd>110){p.lb.vis=false;continue;}   // (early pins are labelled once zoomed in)
+        lblSet(p.lb,p.d.a,cd>170?"":p.d.b,p.d.k==="m");}}
     function kvFrame(now){if(!G3.kvOn)return;
       if(labelHost.classList.contains("lbl-off")){kvLblOff=true;labelHost.classList.remove("lbl-off");}   // (the labels intro may switch them off meanwhile)
       // (the scene's automatic matrix update is off while moving batches draw, 43-3d-frame.js: update these by hand)

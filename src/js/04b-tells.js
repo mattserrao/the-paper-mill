@@ -138,9 +138,10 @@ function prepEnd(o,budget){const p=o.prep;if(!p||!p.n||!(budget>0))return;const 
    (mechanical) and ADX (electrical) readings of each critical machine that came back worse than Good. Each: {k:"m"|"e", at:[x,z],
    a: what, b: the finding}. Electrical tells: the ones on electrical gear. */
 const DEF_ELEC=new Set(["brownout","boiler"]);
+/* (t6: early = an early-warning finding (imbalance, misalignment, outer race, ADX Watch): a small faded pin) */
 function knownDefects(){const out=[];if(!S||S.zen)return out;
-  for(const p of (S.tell&&S.tell.q)||[])if(p.seen){const at=G3.tellPos?G3.tellPos(p.id):null;if(at)out.push({k:DEF_ELEC.has(p.id)?"e":"m",at,a:EV[p.id].name,b:"spotted on a round: "+(TELLTXT[p.id]||"failing"),id:"t:"+p.id});}
+  for(const p of (S.tell&&S.tell.q)||[])if(p.seen){const at=G3.tellPos?G3.tellPos(p.id):null;if(at)out.push({k:DEF_ELEC.has(p.id)?"e":"m",at,a:EV[p.id].name,b:"spotted on a round: "+(TELLTXT[p.id]||"failing"),id:"t:"+p.id,early:false});}
   if(S.rel&&typeof ASSETS!=="undefined")for(const A of ASSETS){const a=S.rel.a[A.id],sp=G3.ASPOT&&G3.ASPOT[A.id];if(!a||!sp)continue;
-    if(a.lv&&a.lv.st&&a.lv.st!=="good")out.push({k:"m",at:[sp[0],sp[1]],a:A.n,b:VIBST[a.lv.st][0]+" (vibration)",id:"v:"+A.id});
-    if(a.la&&a.la.st&&a.la.st!=="good")out.push({k:"e",at:[sp[0]+1.2,sp[1]+0.8],a:A.n,b:ADXST[a.la.st][0]+" (ADX)",id:"a:"+A.id});}
+    if(a.lv&&a.lv.st&&a.lv.st!=="good")out.push({k:"m",at:[sp[0],sp[1]],a:A.n,b:VIBST[a.lv.st][0]+" (vibration)",id:"v:"+A.id,early:VIBST[a.lv.st][1]!=="bad"});
+    if(a.la&&a.la.st&&a.la.st!=="good")out.push({k:"e",at:[sp[0]+1.2,sp[1]+0.8],a:A.n,b:ADXST[a.la.st][0]+" (ADX)",id:"a:"+A.id,early:ADXST[a.la.st][1]!=="bad"});}
   return out;}

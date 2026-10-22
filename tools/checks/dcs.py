@@ -177,12 +177,19 @@ def rows(pw):
     ok("sheet break: the yard keeps receiving and the warehouse keeps loading (no crew to the PM)", r["n"] > 0 and r["rec"] > 0 and r["clamp"] > 0 and r["at"] == 0, r)
     # v6.11.2 the dry-end pulper on DET: trim keeps it ticking over; a dryer break fills it and thickens it
     r = pg.evaluate("""()=>{const P=__PM,S=P.S;let ok=0;for(let i=0;i<4*60*12&&ok<4*45;i++){if(S.cards)S.cards.open=null;P.step(0.25);ok=(S.pm==='run'&&S.dep&&S.dep.fin>0.5)?ok+1:0;}   // (back up to speed after the earlier break, then 45 min of trim)
-      const D=S.dep,a={L:D.m/300*100,c:D.f/D.m*100,fin:D.fin};
+      const D=S.dep,a={L:D.m/D.cap*100,c:D.f/D.m*100,fin:D.fin};
       S.pm='break';S.brkType='dryer';S.breakLeft=60;S.breakTotal=60;S.crewQ=[{k:'brk',resp:0,since:0,here:true,go:true}];for(let i=0;i<4*30;i++){if(S.cards)S.cards.open=null;P.step(0.25);}
-      const b={L:D.m/300*100,c:D.f/D.m*100,fin:D.fin};__PM.G3.openStation('DET','dcs');const t=[...document.querySelectorAll('#dcsOv [data-tag=delvl],#dcsOv [data-tag=decons],#dcsOv [data-tag=defin]')].map(e=>e.textContent);return {a,b,t}}""")
-    ok("DE pulper: trim alone keeps it near 40% at ~4% consistency", 30 < r["a"]["L"] < 55 and 3.5 < r["a"]["c"] < 4.5 and r["a"]["fin"] > 0.5, r["a"])
+      const b={L:D.m/D.cap*100,c:D.f/D.m*100,fin:D.fin};__PM.G3.openStation('DET','dcs');const t=[...document.querySelectorAll('#dcsOv [data-tag=delvl],#dcsOv [data-tag=decons],#dcsOv [data-tag=defin]')].map(e=>e.textContent);return {a,b,t}}""")
+    ok("DE pulper: trim alone keeps it low (30–55%) at ~4% consistency", 30 < r["a"]["L"] < 55 and 3.5 < r["a"]["c"] < 4.5 and r["a"]["fin"] > 0.5, r["a"])
     ok("DE pulper: a dryer break sends the sheet in: level climbs", r["b"]["L"] > r["a"]["L"] + 10 and r["b"]["fin"] > 5 * max(1, r["a"]["fin"]), r["b"])
     ok("DE pulper readings on the DET screen", len(r["t"]) == 3 and all(x not in ("–", "") for x in r["t"]), r["t"])
+    # t6: a long break at full speed: the high-level alarm, then the overflow (cleanup booked, fiber to the sewer), level tag in alarm colour
+    r = pg.evaluate("""()=>{const P=__PM,S=P.S;S.pm='break';S.brkType='dryer';S.breakLeft=120;S.breakTotal=120;const r0=S.ledger.repairs;let al=0,ov=0;
+      for(let i=0;i<4*100;i++){if(S.cards)S.cards.open=null;if(S.pm!=='break'){S.pm='break';S.brkType='dryer';S.breakLeft=60;}P.step(0.25);if(S.dep.al&&!al)al=i/4;if(S.dep.ov&&!ov)ov=i/4;}
+      const f=S.feed.slice(0,40).map(x=>x.text);__PM.G3.openStation('DET','dcs');const tg=document.querySelector('#dcsOv [data-tag=delvl]');
+      return {al,ov,cost:S.ledger.repairs-r0,L:S.dep.m/400*100,alLine:f.some(t=>/pulper high level/.test(t)),ovLine:f.some(t=>/pulper overflowed/.test(t)),tagCls:tg?tg.getAttribute('class'):null}}""")
+    ok("DE pulper: a long break sets off the high-level alarm, then overflows with a cleanup", r["al"] > 0 and r["ov"] > r["al"] and r["cost"] >= 12000 and r["alLine"] and r["ovLine"], r)
+    ok("DE pulper: the level reading is in alarm colour when it's that high", r["tagCls"] and "tal" in r["tagCls"], r["tagCls"])
     b.close()
 
 with sync_playwright() as pw:

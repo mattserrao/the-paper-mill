@@ -102,8 +102,10 @@ function endSeason(bust){const se=S.season;civDrop();se.done=true;se.on=false;ru
   const r=seasonResult();se.result=r;AUDIO.sfx(r.score>0?"win":"lose",100);
   soMode(false);$("so-h").textContent=bust?"Season over: bankrupt":"Season complete";
   $("so-p").textContent=bust?`${MILL.name} ran out of money before day ${SEASON_DAYS}.`:`${SEASON_DAYS} days at ${MILL.name}${/[.!?]$/.test(MILL.name)?"":"."}`;   // (v4.2.5: no "Co.." when the name ends in a full stop)
-  const eff=S.tot.pot>0?S.tot.prodT/S.tot.pot:1,sg=S.rc&&S.rc.s?rcMake(S.rc.s,S.rc.i).overall:null,g=sg?RATINGS.find(x=>x[1]===sg):RATINGS.find(x=>eff>=x[0]);
-  const st=[["Net profit",money(r.score),"big"],["Tons shipped",f0(r.tons)+" t"],["Upsets survived",String(r.incidents)],["Rolls made",String(S.tot.rolls)],["Season grade",g[1]+" · "+g[2]],["Output",Math.round(eff*100)+"% of max-speed tons"]];
+  const eff=S.tot.pot>0?S.tot.prodT/S.tot.pot:1,sg=S.rc&&S.rc.s?rcMake(S.rc.s,S.rc.i).overall:null,g0=sg?RATINGS.find(x=>x[1]===sg):RATINGS.find(x=>eff>=x[0]),
+    // v6.11.2 t6: the season grade blends operations (the report cards) with money: half each, rounded toward the worse grade
+    oi=RATINGS.indexOf(g0),pi=r.score>=2e6?0:r.score>=1e6?1:r.score>=0?2:r.score>=-1e6?3:4,g=RATINGS[Math.min(4,Math.ceil((oi+pi)/2))];
+  const st=[["Net profit",money(r.score),"big"],["Tons shipped",f0(r.tons)+" t"],["Upsets survived",String(r.incidents)],["Rolls made",String(S.tot.rolls)],["Season grade",g[1]+" · "+g[2]+` (operations ${g0[1]}, profit ${RATINGS[pi][1]})`,"wide"],["Output",Math.round(eff*100)+"% of max-speed tons"]];
   if(S.civ&&S.civ.m&&!S.free&&civSummary(S.civ.m))st.push(["Civics",civSummary(S.civ.m),"wide"]);   // v5.1 QA2
   if(S.lead)st.push(["Mill leader",LEADERS[S.lead.id].name+(S.lead.was?" (after "+LEADERS[S.lead.was].name+")":""),"wide"]);   // v5.1: seasons have leaders too
   {const ts=tellEndStat();if(ts)st.push(ts);}{const rs=rlyEndStat();if(rs)st.push(rs);}   // v5.7 catching failures early

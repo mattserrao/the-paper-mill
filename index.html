@@ -1512,6 +1512,9 @@ body.pmpop .popmain[data-v="dcs"] #dcsOv .dcs{max-width:1180px;margin:0 auto}
 
 /* v6.11.2 known defects view */
 .dvchip{border-color:#e8590c}.dvchip b{color:#e8590c}.kvchip .dvk,.dvk{display:inline-block;padding:0 6px;border-radius:999px;color:#fff;font-size:11px;font-weight:700}.kvchip .dvk{color:#fff}.dvk.m{background:#e8590c}.dvk.e{background:#1c7ed6}
+
+/* v6.11.2 t6: alarm colours on mimic readings (DE pulper level) */
+.mtg tspan.twn{fill:#ffb84d}.mtg tspan.tal{fill:#ff6b5e}
 </style>
 </head>
 <body class="app">
@@ -2274,7 +2277,7 @@ const MAINT=["birdline","steamjoint","fogfan","shaft","fabric","felt","winderdow
 // v4.1 v19: prices reset after the payback review (most upgrades now pay back within days, not months)
 // t20 balance: the capacity and maintenance upgrades re-priced (40-60% cheaper) so they can pay back inside a season
 // v6.9.2 balance: every upgrade 30% dearer (rounded to $5k) so the daily Round is the biggest boost; missed failures 20% dearer (REPAIR_K); overhead $2,400/h (was $3,400) so most mills still profit
-const REPAIR_K=1.2;
+const REPAIR_K=1.05;   // (v6.11.2 t6 QA: was 1.2; repair bills 12.5% lower, hands-off paid ~$3.4M a season)
 const UPS=[
  {id:"drive",g:"machine",name:"Drive & gearbox rebuild",lv:[115e3,105e3,90e3],desc:"+150 fpm max speed per level, if the dryers can keep up (heavy grades and a wet sheet reach their limit first)."},   // (v6.5 b5: 25% cheaper: the dryer limit can cap it)
  {id:"deckle",g:"machine",name:"Wider trim (deckle)",lv:[160e3,135e3],desc:"+3\" of web per level (+1.5% tons at the same speed) and rolls up to 1.5\" wider, so wide rolls cost less trim."},
@@ -2778,16 +2781,29 @@ function trimTo(t){if(!(t>0))return;const room=Math.max(0,P.tankCap*0.98-S.tank)
    A tub under the winder and the dry end: the edge trim is blown into it all the time, and on a dryer or reel break the sheet
    goes down the hole into it too (a press break goes to the couch pit). White water dilutes what comes in to about 4%, up to
    the dilution header's limit; a pump sends it back to the stock chest at a rate set by the tub level. On a break more comes
-   in than the pump can take, so the level climbs; near the top the dilution is cut back, so the consistency climbs as well.
-   Display only: the tons it handles are already counted (trim and broke go back to the stock chest), so nothing here changes
-   the mass balance. S.dep = {m: slurry in the tub (t), f: fiber in it (t), fin: fiber coming in (t/h)}. Not in zen. */
-const DEP={cap:300,c0:4.0,dil:900,pump:600,lo:0.35,span:0.5};
-function depState(){if(!S.dep)S.dep={m:DEP.cap*0.42,f:DEP.cap*0.42*DEP.c0/100,fin:0};return S.dep;}
+   in than the pump can take, so the level climbs (t6: an overflow sends fiber to the sewer).
+   The tons it handles are already counted (trim and broke go back to the stock chest), so apart from an overflow it doesn't
+   change the mass balance. S.dep = {m: slurry in the tub (t), f: fiber in it (t), fin: fiber coming in (t/h)}. Not in zen. */
+/* t6: sized to the sheet: the tub holds 25 minutes of the sheet at threading speed (as slurry at 4%) and its outlet pump
+   moves 80% of it, so whatever the grade a break fills it at the same pace: about 20 min in the high-level alarm goes (85%),
+   at about 40 min it overflows (97%) to the floor drains: a cleanup, and the fiber to the sewer and the clarifier.
+   Dilution follows the broke (consistency control), up to its valve. */
+const DEP={hold:0.42,pumpK:0.8,c0:4.0,dil:900,lo:0.35,span:0.5,hi:0.85,ovf:0.97,clean:12000};
+const depSheet=()=>P.K*P.minSpeed*0.5*bwSp();   // (t/h of fiber: the sheet going into the pulper during a break)
+function depSize(){const sl=Math.max(20,depSheet()/(DEP.c0/100));return {cap:sl*DEP.hold,pump:sl*DEP.pumpK};}
+function depState(){if(!S.dep){const z=depSize();S.dep={m:z.cap*0.42,f:z.cap*0.42*DEP.c0/100,fin:0,cap:z.cap};}return S.dep;}
 function depTick(dt,trimT){if(S.zen)return;const D=depState(),h=dt/60;if(!(h>0))return;
-  let fin=(trimT||0)/h;if(S.pm==="break"&&S.brkType!=="press")fin+=P.K*Math.max(S.pmSpeed,P.minSpeed*0.5)*bwSp();
-  const L=D.m/DEP.cap,win=Math.min(DEP.dil,fin*(100/DEP.c0-1))*clamp((0.97-L)/0.07,0,1),q=DEP.pump*clamp((L-DEP.lo)/DEP.span,0,1),c=D.m>1e-6?D.f/D.m:0;
-  D.m=clamp(D.m+(fin+win-q)*h,0.5,DEP.cap);D.f=clamp(D.f+(fin-q*c)*h,0,D.m);D.fin=fin;D.q=q;}
-const depLvl=()=>S.dep?S.dep.m/DEP.cap*100:42;
+  const z=depSize();if(!D.cap)D.cap=z.cap;if(Math.abs(z.cap/D.cap-1)>0.01){const k=z.cap/D.cap;D.m*=k;D.f*=k;D.cap=z.cap;}   // (a new grade: same level, new tub)
+  const tr=(trimT||0)/h;let fin=tr;if(S.pm==="break"&&S.brkType!=="press")fin+=depSheet();
+  // (the trim, however fast the winder runs, goes straight through: the pump's level-controlled share is what's left for a break)
+  const cap=D.cap,L=D.m/cap,win=Math.min(DEP.dil,fin*(100/DEP.c0-1)),q=tr*100/DEP.c0+z.pump*clamp((L-DEP.lo)/DEP.span,0,1),c=D.m>1e-6?D.f/D.m:0;
+  let m=D.m+(fin+win-q)*h,f=D.f+(fin-q*c)*h;const top=cap*DEP.ovf;
+  if(m>top){const x=m-top,cx=m>0?f/m:0;wSpill(x*cx);f-=x*cx;m=top;D.ovT=(D.ovT||0)+x*cx;
+    if(!D.ov){D.ov=true;spend(DEP.clean,"repairs");log(`The dry-end pulper overflowed: broke is over the top and down the floor drains to the clarifier. Cleanup ${money(DEP.clean)}. Get the sheet back on.`,"bad");}}
+  else if(m<top*0.9)D.ov=false;
+  const L2=m/cap;if(L2>=DEP.hi&&!D.al){D.al=true;if(!D.ov)log(`Dry-end pulper high level (${Math.round(L2*100)}%): the broke from the break is coming in faster than it's pumped away.`,"warn");}else if(L2<0.75)D.al=false;
+  D.m=clamp(m,0.01,cap);D.f=clamp(f,0,D.m);D.fin=fin;D.q=q;}
+const depLvl=()=>S.dep&&S.dep.cap?S.dep.m/S.dep.cap*100:42;
 const depCons=()=>S.dep&&S.dep.m>0?S.dep.f/S.dep.m*100:DEP.c0;
 const EVENTS=[
  {id:"refclash",g:"stock",name:"Refiner plates clash",head:"Refiner plates clashed! The refiners tripped: no stock is going forward to the machine chest.",dur:[180,300],mtbf:420,mods:{refOut:"refiner plates clashed"},fx:"refclash",
@@ -3091,11 +3107,12 @@ function prepEnd(o,budget){const p=o.prep;if(!p||!p.n||!(budget>0))return;const 
    (mechanical) and ADX (electrical) readings of each critical machine that came back worse than Good. Each: {k:"m"|"e", at:[x,z],
    a: what, b: the finding}. Electrical tells: the ones on electrical gear. */
 const DEF_ELEC=new Set(["brownout","boiler"]);
+/* (t6: early = an early-warning finding (imbalance, misalignment, outer race, ADX Watch): a small faded pin) */
 function knownDefects(){const out=[];if(!S||S.zen)return out;
-  for(const p of (S.tell&&S.tell.q)||[])if(p.seen){const at=G3.tellPos?G3.tellPos(p.id):null;if(at)out.push({k:DEF_ELEC.has(p.id)?"e":"m",at,a:EV[p.id].name,b:"spotted on a round: "+(TELLTXT[p.id]||"failing"),id:"t:"+p.id});}
+  for(const p of (S.tell&&S.tell.q)||[])if(p.seen){const at=G3.tellPos?G3.tellPos(p.id):null;if(at)out.push({k:DEF_ELEC.has(p.id)?"e":"m",at,a:EV[p.id].name,b:"spotted on a round: "+(TELLTXT[p.id]||"failing"),id:"t:"+p.id,early:false});}
   if(S.rel&&typeof ASSETS!=="undefined")for(const A of ASSETS){const a=S.rel.a[A.id],sp=G3.ASPOT&&G3.ASPOT[A.id];if(!a||!sp)continue;
-    if(a.lv&&a.lv.st&&a.lv.st!=="good")out.push({k:"m",at:[sp[0],sp[1]],a:A.n,b:VIBST[a.lv.st][0]+" (vibration)",id:"v:"+A.id});
-    if(a.la&&a.la.st&&a.la.st!=="good")out.push({k:"e",at:[sp[0]+1.2,sp[1]+0.8],a:A.n,b:ADXST[a.la.st][0]+" (ADX)",id:"a:"+A.id});}
+    if(a.lv&&a.lv.st&&a.lv.st!=="good")out.push({k:"m",at:[sp[0],sp[1]],a:A.n,b:VIBST[a.lv.st][0]+" (vibration)",id:"v:"+A.id,early:VIBST[a.lv.st][1]!=="bad"});
+    if(a.la&&a.la.st&&a.la.st!=="good")out.push({k:"e",at:[sp[0]+1.2,sp[1]+0.8],a:A.n,b:ADXST[a.la.st][0]+" (ADX)",id:"a:"+A.id,early:ADXST[a.la.st][1]!=="bad"});}
   return out;}
 /* ---------- event cards: offers the player can accept or decline (v2.2.0) ---------- */
 // one card about every 1.5 game days, never two at once; the sim pauses while a card is open.
@@ -6325,8 +6342,10 @@ function endSeason(bust){const se=S.season;civDrop();se.done=true;se.on=false;ru
   const r=seasonResult();se.result=r;AUDIO.sfx(r.score>0?"win":"lose",100);
   soMode(false);$("so-h").textContent=bust?"Season over: bankrupt":"Season complete";
   $("so-p").textContent=bust?`${MILL.name} ran out of money before day ${SEASON_DAYS}.`:`${SEASON_DAYS} days at ${MILL.name}${/[.!?]$/.test(MILL.name)?"":"."}`;   // (v4.2.5: no "Co.." when the name ends in a full stop)
-  const eff=S.tot.pot>0?S.tot.prodT/S.tot.pot:1,sg=S.rc&&S.rc.s?rcMake(S.rc.s,S.rc.i).overall:null,g=sg?RATINGS.find(x=>x[1]===sg):RATINGS.find(x=>eff>=x[0]);
-  const st=[["Net profit",money(r.score),"big"],["Tons shipped",f0(r.tons)+" t"],["Upsets survived",String(r.incidents)],["Rolls made",String(S.tot.rolls)],["Season grade",g[1]+" · "+g[2]],["Output",Math.round(eff*100)+"% of max-speed tons"]];
+  const eff=S.tot.pot>0?S.tot.prodT/S.tot.pot:1,sg=S.rc&&S.rc.s?rcMake(S.rc.s,S.rc.i).overall:null,g0=sg?RATINGS.find(x=>x[1]===sg):RATINGS.find(x=>eff>=x[0]),
+    // v6.11.2 t6: the season grade blends operations (the report cards) with money: half each, rounded toward the worse grade
+    oi=RATINGS.indexOf(g0),pi=r.score>=2e6?0:r.score>=1e6?1:r.score>=0?2:r.score>=-1e6?3:4,g=RATINGS[Math.min(4,Math.ceil((oi+pi)/2))];
+  const st=[["Net profit",money(r.score),"big"],["Tons shipped",f0(r.tons)+" t"],["Upsets survived",String(r.incidents)],["Rolls made",String(S.tot.rolls)],["Season grade",g[1]+" · "+g[2]+` (operations ${g0[1]}, profit ${RATINGS[pi][1]})`,"wide"],["Output",Math.round(eff*100)+"% of max-speed tons"]];
   if(S.civ&&S.civ.m&&!S.free&&civSummary(S.civ.m))st.push(["Civics",civSummary(S.civ.m),"wide"]);   // v5.1 QA2
   if(S.lead)st.push(["Mill leader",LEADERS[S.lead.id].name+(S.lead.was?" (after "+LEADERS[S.lead.was].name+")":""),"wide"]);   // v5.1: seasons have leaders too
   {const ts=tellEndStat();if(ts)st.push(ts);}{const rs=rlyEndStat();if(rs)st.push(rs);}   // v5.7 catching failures early
@@ -12496,11 +12515,13 @@ function no3D(){G3.ok=false;$("no3d").hidden=false;$("no3d-retry").onclick=()=>l
     const DVG=new THREE.Group();DVG.visible=false;scene.add(DVG);SM.dyn.add(DVG);const DV={on:false,pins:new Map(),t:0};
     const dvM={m:new THREE.MeshBasicMaterial({color:lin0("#e8590c"),depthTest:false,depthWrite:false,transparent:true,toneMapped:false}),e:new THREE.MeshBasicMaterial({color:lin0("#1c7ed6"),depthTest:false,depthWrite:false,transparent:true,toneMapped:false}),w:new THREE.MeshBasicMaterial({color:0xffffff,depthTest:false,depthWrite:false,transparent:true,toneMapped:false})};
     const ring1=new THREE.RingGeometry(0.95,1.3,32),ring2=new THREE.RingGeometry(0.45,0.7,28),dot=new THREE.CircleGeometry(0.25,20),disc=new THREE.CircleGeometry(1.32,32);
-    function dvPin(d){const g=new THREE.Group(),b=new THREE.Group();g.add(b);const M2=dvM[d.k];
-      [[disc,dvM.w,9991],[ring1,M2,9992],[ring2,M2,9992],[dot,M2,9993]].forEach(([geo,m,o])=>{const x=new THREE.Mesh(geo,m);x.renderOrder=o;b.add(x);});
-      const s=new THREE.Mesh(stemG,M2);s.scale.y=2.2;s.position.y=-1.1;s.renderOrder=9990;g.add(s);
-      g.position.set(d.at[0],3.4,d.at[1]);DVG.add(g);return {g,b,lb:lblNew(true,"defect:"+d.id),v:new THREE.Vector3(d.at[0],4.9,d.at[1]),d};}
-    function dvSync(){const L=knownDefects(),keep=new Set();for(const d of L){keep.add(d.id);let p=DV.pins.get(d.id);if(!p){p=dvPin(d);DV.pins.set(d.id,p);}p.d=d;}
+    // (t6: early-warning findings get a small faded pin with no pulse; serious ones and spotted tells keep the full bullseye)
+    const dvF={};for(const k in dvM){dvF[k]=dvM[k].clone();dvF[k].opacity=0.5;}
+    function dvPin(d){const g=new THREE.Group(),b=new THREE.Group();g.add(b);const MM=d.early?dvF:dvM,M2=MM[d.k];
+      [[disc,MM.w,9991],[ring1,M2,9992],[ring2,M2,9992],[dot,M2,9993]].forEach(([geo,m,o])=>{const x=new THREE.Mesh(geo,m);x.renderOrder=o;b.add(x);});
+      const s=new THREE.Mesh(stemG,M2);s.scale.y=d.early?1.4:2.2;s.position.y=d.early?-0.7:-1.1;s.renderOrder=9990;g.add(s);
+      const y=d.early?2.6:3.4;g.position.set(d.at[0],y,d.at[1]);DVG.add(g);return {g,b,lb:lblNew(true,"defect:"+d.id),v:new THREE.Vector3(d.at[0],y+(d.early?1.0:1.5),d.at[1]),d,early:!!d.early};}
+    function dvSync(){const L=knownDefects(),keep=new Set();for(const d of L){keep.add(d.id);let p=DV.pins.get(d.id);if(p&&p.early!==!!d.early){DVG.remove(p.g);p.lb.vis=false;p=null;}if(!p){p=dvPin(d);DV.pins.set(d.id,p);}p.d=d;}
       for(const [id,p] of DV.pins)if(!keep.has(id)){DVG.remove(p.g);p.lb.vis=false;DV.pins.delete(id);}return L.length;}
     G3.defectView=on=>{on=!!on&&!S.zen;if(on===DV.on)return DV.pins.size;DV.on=on;G3.dvOn=on;DVG.visible=on;veil.visible=on||!!G3.kvOn;LB.force=true;
       if(on){if(labelHost.classList.contains("lbl-off")){DV.lblOff=true;labelHost.classList.remove("lbl-off");}return dvSync();}
@@ -12509,9 +12530,10 @@ function no3D(){G3.ok=false;$("no3d").hidden=false;$("no3d-retry").onclick=()=>l
     function dvFrame(now){if(!DV.on)return;if(now-DV.t>1000){DV.t=now;dvSync();}
       {const d=camera.near*1.2,h=(camera.isIso?camera.top-camera.bottom:2*d*Math.tan(camera.fov*Math.PI/360))*1.15;camera.getWorldDirection(_d);veil.position.copy(camera.position).addScaledVector(_d,d);veil.quaternion.copy(camera.quaternion);veil.scale.set(h*camera.aspect,h,1);veil.updateMatrixWorld();}
       const w=G3.vw||host.clientWidth,hh=G3.vh||host.clientHeight,pulse=0.5+0.5*Math.sin(now/300);
-      for(const p of DV.pins.values()){p.b.lookAt(camera.position);const s=1+0.15*pulse;p.b.scale.set(s,s,s);p.g.updateMatrixWorld(true);_q.copy(p.v).project(camera);
+      for(const p of DV.pins.values()){p.b.lookAt(camera.position);const s=p.early?0.6:1+0.15*pulse;p.b.scale.set(s,s,s);p.g.updateMatrixWorld(true);_q.copy(p.v).project(camera);
         const vis=_q.z<1&&Math.abs(_q.x)<1.05&&Math.abs(_q.y)<1.05;p.lb.vis=vis;if(!vis)continue;p.lb.x=Math.round((_q.x+1)/2*w);p.lb.y=Math.round((1-_q.y)/2*hh);
-        lblSet(p.lb,p.d.a,(G3.camDist||camera.position.distanceTo(p.v))>170?"":p.d.b,p.d.k==="m");}}
+        const cd=G3.camDist||camera.position.distanceTo(p.v);if(p.early&&cd>110){p.lb.vis=false;continue;}   // (early pins are labelled once zoomed in)
+        lblSet(p.lb,p.d.a,cd>170?"":p.d.b,p.d.k==="m");}}
     function kvFrame(now){if(!G3.kvOn)return;
       if(labelHost.classList.contains("lbl-off")){kvLblOff=true;labelHost.classList.remove("lbl-off");}   // (the labels intro may switch them off meanwhile)
       // (the scene's automatic matrix update is off while moving batches draw, 43-3d-frame.js: update these by hand)
@@ -14946,7 +14968,7 @@ function kuiRefresh(){if(!KUI.panel&&!KUI.st)return;const r=knobRead();
     n.textContent=busy?"A crew is working on trouble out here.":moved?`Moved off standard (${knobFmt(id)}). Things may take a while to show up, and not always here.`:"At standard.";
     $("kpReset").disabled=!moved;if(id==="zones")kuiCd(document.querySelector('#kpCtl canvas[data-cd]'),r);}
   if(KUI.st){const o=$("dcsOv"),a=KUI.st,M2=MIMIC[a];$("dcsClock").textContent=`Day ${Math.floor(S.t/1440)+1} · ${clockOf(S.t)}`;
-    if(M2){o.querySelectorAll("[data-tag]").forEach(t=>{const g=M2.tags.find(q=>q[2]===t.dataset.tag);if(g){const v=g[4](r);if(t.textContent!==v)t.textContent=v;}});
+    if(M2){o.querySelectorAll("[data-tag]").forEach(t=>{const g=M2.tags.find(q=>q[2]===t.dataset.tag);if(g){const v=g[4](r);if(t.textContent!==v)t.textContent=v;if(g[5]){const c=g[5]();t.classList.toggle("tal",c==="bad");t.classList.toggle("twn",c==="warn");}}});
       o.querySelectorAll(".dcsctl .kctl").forEach(knobCtlSync);o.querySelectorAll("[data-rd]").forEach(d=>{const h=knobReadout(d.dataset.rd,r);if(d._h!==h){d._h=h;d.innerHTML=h;}});
       const al=knobAlarms(a,r),ul=$("dcsAl"),h=al.length?al.map(([t,hi])=>`<li class="${hi?"hi":""}">${t}</li>`).join(""):'<li class="none">No alarms</li>';if(ul&&ul._h!==h){ul._h=h;ul.innerHTML=h;}
       {const bt=$("dcsBeat");if(bt){const q=qualStatus(),on=r.run&&q.off>0.02,t=on?`⚠ MAKING BEATER · ${q.why.toUpperCase()} · ${q.off>=0.99?"the whole reel":Math.round(q.off*100)+"% of the reel"} to the beater`:"";if(bt.hidden===on)bt.hidden=!on;if(bt.textContent!==t)bt.textContent=t;}}
@@ -15423,7 +15445,7 @@ MIMIC.DET={title:"DRY END",h:320,trends:MIMIC_KNOB.DET.trends,
     MT(345,176,"st3","STEAM",r=>Math.round(r.st3)+" kPa "+(S.dry&&S.dry.man!=null?"MAN":"AUTO")),MT(345,192,"steam","FLOW",r=>r.steam>0.5?kf(r.steam)+" t/h":"–"),MT(345,208,"dr2","DRV",DV.dr2),MT(345,224,"dryl","LOAD",DV.dryl),MT(560,58,"hdr","STEAM HDR",r=>Math.round(r.boiler*100)+"%"),
     MT(485,166,"moist","MOIST",r=>r.run?kf(r.moist)+"%":"–"),MT(485,180,"bw","BW",r=>r.run?kf(r.bw,2):"–"),MT(485,194,"spool","SPOOL",DV.spool),MT(485,208,"store","STORE",DV.store),MT(485,222,"tu","TURN-UPS",DV.tu),MT(485,84,"speed","SPEED",r=>Math.round(r.speed)+" fpm"),
     MT(588,166,"wdr","SP",DV.wdr),MT(588,180,"wdt","CUT",DV.wdt),MT(588,194,"hay","HAYOUTS",DV.hay),MT(588,262,"rolls","ROLLS",DV.rolls),
-    MT(472,284,"delvl","LEVEL",()=>S.zen?"–":Math.round(depLvl())+"%"),MT(472,298,"decons","CONS",()=>S.zen?"–":kf(depCons())+"%"),MT(472,312,"defin","IN",()=>S.zen||!S.dep?"–":kf(S.dep.fin)+" t/h"+(S.pm==="break"&&S.brkType!=="press"?" BRK":""))]};
+    [472,284,"delvl","LEVEL",()=>S.zen?"–":Math.round(depLvl())+"%",()=>depLvl()>=DEP.ovf*100?"bad":depLvl()>=DEP.hi*100?"warn":""],MT(472,298,"decons","CONS",()=>S.zen?"–":kf(depCons())+"%"),MT(472,312,"defin","IN",()=>S.zen||!S.dep?"–":kf(S.dep.fin)+" t/h"+(S.pm==="break"&&S.brkType!=="press"?" BRK":""))]};
 MIMIC.UTIL={title:"UTILITIES",h:270,trends:[["steam","Steam flow t/h","#7fb2ff",0,70],["boiler","Steam header (1 = full)","#ffb02e",0.5,1.05]],
   // (v6.5.4: the boiler and the power supply live here; they were on DET)
   eq:[[14,60,96,50,"RIVER INTAKE"],[134,60,96,50,"WATER TOWER"],[254,60,110,50,"MILL"],[388,60,110,50,"WASTEWATER"],[522,60,100,50,"OUTFALL"],[254,196,110,36,"LANDFILL","s"],
@@ -17549,7 +17571,7 @@ function camPullOn(){try{return localStorage.getItem("paper-mill-campull")!=="of
       <div class="tareas">${TAREAS.filter(a=>a.ids.some(id=>!EV[id].env||EV[id].env===SITE.env)).map(a=>{const v=rep?tellTrend(a.k):-1;
         return `<button type="button" class="tarea" data-a="${a.k}"${can?"":" disabled"}><span><b>${escHTML(a.n)}</b><small>${escHTML(a.ids.filter(id=>!EV[id].env||EV[id].env===SITE.env).map(id=>EV[id].name.replace(/^(\w)(\w*)/,(m,a,b)=>b&&b===b.toUpperCase()?m:a.toLowerCase()+b)).slice(0,3).join(", "))}…</small></span>${v>=0?`<em class="tv tv${v}" title="${AWORD[v]}">${ARROW[v]}<small>${AWORD[v]}</small></em>`:""}</button>`;}).join("")}</div>
       ${(()=>{const f=prepFor();if(!f)return "";const pr=prepState(f.k),tl=prepTally(pr);return `<button type="button" class="tprep" id="tell-prep"><span><b>Outage ${f.k} prep checklist</b><br><small>${prepLine(tl.n,tl.m)}</small></span><span aria-hidden="true">›</span></button>`;})()}
-      ${(()=>{const n=G3.defectCount?G3.defectCount():0;return `<button type="button" class="tprep" id="tell-def"><span><b>Known defects view</b><br><small>${n?`${n} known · <span class="dvk m">mechanical</span> <span class="dvk e">electrical</span>`:"nothing known right now: walk a round, or test with the Reliability program"}</small></span><span aria-hidden="true">›</span></button>`;})()}
+      ${(()=>{const L=knownDefects(),n=L.length,e=L.filter(d=>d.early).length;return `<button type="button" class="tprep" id="tell-def"><span><b>Known defects view</b><br><small>${n?`${n-e} serious · ${e} early · <span class="dvk m">mechanical</span> <span class="dvk e">electrical</span>`:"nothing known right now: walk a round, or test with the Reliability program"}</small></span><span aria-hidden="true">›</span></button>`;})()}
       <div class="btns"><button type="button" id="tell-x" style="flex:1">Close</button></div></div>`;
     {const pb=ov.querySelector("#tell-prep");if(pb)pb.addEventListener("click",()=>{ov.hidden=true;prepOpen();});}
     {const db=ov.querySelector("#tell-def");if(db)db.addEventListener("click",()=>{ov.hidden=true;dvSet(true);});}   // v6.11.2
@@ -17561,7 +17583,9 @@ function camPullOn(){try{return localStorage.getItem("paper-mill-campull")!=="of
   function dvSet(on){on=!!on&&!S.zen;if(on&&G3.kvOn&&G3.setKnobView)G3.setKnobView(false);const n=G3.defectView?G3.defectView(on):0;
     if(!dvChip){dvChip=document.createElement("div");dvChip.className="kvchip dvchip";dvChip.id="dvChip";dvChip.hidden=true;dvChip.innerHTML=`<b>Known defects</b><span id="dvN"></span><button type="button" id="dvExit">Exit</button>`;
       const host=document.getElementById("view3d")||document.body;host.appendChild(dvChip);dvChip.querySelector("#dvExit").addEventListener("click",()=>dvSet(false));}
-    dvChip.hidden=!on;document.body.classList.toggle("kview",on||!!G3.kvOn);if(on)dvChip.querySelector("#dvN").innerHTML=n?`${n} known · <span class="dvk m">mechanical</span> <span class="dvk e">electrical</span>`:"none known";}
+    dvChip.hidden=!on;document.body.classList.toggle("kview",on||!!G3.kvOn);if(on){const L=knownDefects(),e=L.filter(d=>d.early).length,k=L.length-e;   // (t6: serious and early-warning counted apart)
+      dvChip.querySelector("#dvN").innerHTML=L.length?`${k} serious · ${e} early · <span class="dvk m">mechanical</span> <span class="dvk e">electrical</span>`:"none known";}
+    return n;}
   G3.setDefectView=dvSet;
   UI_TICKS.push(()=>{if(G3.dvOn&&(S.zen||(dvChip&&dvChip.hidden)))dvSet(false);});
   // ---- a Round ----

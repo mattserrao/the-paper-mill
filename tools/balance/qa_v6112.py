@@ -76,7 +76,7 @@ PLAY = r"""async ([style,seed,swap,surv])=>{const P=__PM,S=P.S,h=P.SIM_STEP||0.2
     if(style==='random'){const r=rnd();if(r<0.15){C.flow('pol',rnd()*0.8*Math.max(10,S.rates.prod||30));log.chem.push('pol?');}else if(r<0.3){C.mode('pol','auto');log.chem.push('auto');}
       if(rnd()<0.2){P.knob.set('hood',S.knob&&S.knob.v.hood?0:1);log.hood++;}
       if(rnd()<0.3&&P.G3.setDefectView){try{const nn=P.G3.setDefectView(true);log.dv=(log.dv||0)+1;log.dvPins=Math.max(log.dvPins||0,nn||0);P.G3.setDefectView(false);}catch(e){log.errs.push('dv '+e.message);}}}
-    if(S.dep){log.depMax=Math.max(log.depMax||0,S.dep.m/3);log.depMin=Math.min(log.depMin??999,S.dep.m/3);if(!isFinite(S.dep.m)||!isFinite(S.dep.f))log.nan=true;}
+    if(S.dep){log.depMax=Math.max(log.depMax||0,S.dep.m/S.dep.cap*100);log.depMin=Math.min(log.depMin??999,S.dep.m/S.dep.cap*100);if(!isFinite(S.dep.m)||!isFinite(S.dep.f))log.nan=true;}
     if(S.q&&S.q.bank>(log.bankMax||0))log.bankMax=Math.round(S.q.bank);};
   const chemMode0=id=>S.chem?S.chem[id].m:'auto';
   const drvCall=q=>{const a=S.rel.a[q.a],ch=q.step==='fault'?(style==='gambler'?'reset':style==='random'?(rnd()<.5?'reset':'inv'):style==='handsoff'?null:(a.dh<60?'inv':'reset')):(style==='random'?(rnd()<.5?'patch':'repl'):style==='gambler'?'patch':'repl');

@@ -1493,3 +1493,6 @@ body.pmpop .popmain[data-v="dcs"] #dcsOv .dcs{max-width:1180px;margin:0 auto}
 
 /* v6.11.2 known defects view */
 .dvchip{border-color:#e8590c}.dvchip b{color:#e8590c}.kvchip .dvk,.dvk{display:inline-block;padding:0 6px;border-radius:999px;color:#fff;font-size:11px;font-weight:700}.kvchip .dvk{color:#fff}.dvk.m{background:#e8590c}.dvk.e{background:#1c7ed6}
+
+/* v6.11.2 t6: alarm colours on mimic readings (DE pulper level) */
+.mtg tspan.twn{fill:#ffb84d}.mtg tspan.tal{fill:#ff6b5e}

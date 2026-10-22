@@ -68,7 +68,7 @@ MIMIC.DET={title:"DRY END",h:320,trends:MIMIC_KNOB.DET.trends,
     MT(345,176,"st3","STEAM",r=>Math.round(r.st3)+" kPa "+(S.dry&&S.dry.man!=null?"MAN":"AUTO")),MT(345,192,"steam","FLOW",r=>r.steam>0.5?kf(r.steam)+" t/h":"–"),MT(345,208,"dr2","DRV",DV.dr2),MT(345,224,"dryl","LOAD",DV.dryl),MT(560,58,"hdr","STEAM HDR",r=>Math.round(r.boiler*100)+"%"),
     MT(485,166,"moist","MOIST",r=>r.run?kf(r.moist)+"%":"–"),MT(485,180,"bw","BW",r=>r.run?kf(r.bw,2):"–"),MT(485,194,"spool","SPOOL",DV.spool),MT(485,208,"store","STORE",DV.store),MT(485,222,"tu","TURN-UPS",DV.tu),MT(485,84,"speed","SPEED",r=>Math.round(r.speed)+" fpm"),
     MT(588,166,"wdr","SP",DV.wdr),MT(588,180,"wdt","CUT",DV.wdt),MT(588,194,"hay","HAYOUTS",DV.hay),MT(588,262,"rolls","ROLLS",DV.rolls),
-    MT(472,284,"delvl","LEVEL",()=>S.zen?"–":Math.round(depLvl())+"%"),MT(472,298,"decons","CONS",()=>S.zen?"–":kf(depCons())+"%"),MT(472,312,"defin","IN",()=>S.zen||!S.dep?"–":kf(S.dep.fin)+" t/h"+(S.pm==="break"&&S.brkType!=="press"?" BRK":""))]};
+    [472,284,"delvl","LEVEL",()=>S.zen?"–":Math.round(depLvl())+"%",()=>depLvl()>=DEP.ovf*100?"bad":depLvl()>=DEP.hi*100?"warn":""],MT(472,298,"decons","CONS",()=>S.zen?"–":kf(depCons())+"%"),MT(472,312,"defin","IN",()=>S.zen||!S.dep?"–":kf(S.dep.fin)+" t/h"+(S.pm==="break"&&S.brkType!=="press"?" BRK":""))]};
 MIMIC.UTIL={title:"UTILITIES",h:270,trends:[["steam","Steam flow t/h","#7fb2ff",0,70],["boiler","Steam header (1 = full)","#ffb02e",0.5,1.05]],
   // (v6.5.4: the boiler and the power supply live here; they were on DET)
   eq:[[14,60,96,50,"RIVER INTAKE"],[134,60,96,50,"WATER TOWER"],[254,60,110,50,"MILL"],[388,60,110,50,"WASTEWATER"],[522,60,100,50,"OUTFALL"],[254,196,110,36,"LANDFILL","s"],
