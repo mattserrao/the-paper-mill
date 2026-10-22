@@ -111,7 +111,7 @@ function endSeason(bust){const se=S.season;civDrop();se.done=true;se.on=false;ru
   {const c=bust?null:rcFinal(),box=$("so-rc");if(box){if(c){box.hidden=false;box.innerHTML=`<div class="rcmini"><div class="rcg g${c.overall}">${c.overall}</div><div><b><span class="nw">Days ${c.from}–${c.to}</span> report card</b><small>${Object.entries(c.g).map(([k,v])=>k+" "+v).join(" · ")}</small><p>${c.tip}</p></div></div><button id="so-rcbtn" class="ghost">Open the full report card</button>`;
       $("so-rcbtn").addEventListener("click",()=>rcOpen(c,true));}else box.hidden=true;}}
   let nm="";try{nm=localStorage.getItem("paper-mill-player")||"";}catch(e){}$("so-name").value=nm;soCount();
-  $("so-submit").disabled=false;$("so-submit").textContent=lbOn()?"Submit score":"Save score";setMsg("");$("seasonOv").hidden=false;$("seasonOv").scrollTop=0;if(matchMedia("(hover:hover) and (pointer:fine)").matches)$("so-name").focus();else $("so-submit").focus({preventScroll:true});}
+  $("so-submit").disabled=false;$("so-submit").textContent=lbOn()?"Submit score":"Save score";setMsg("");outNoteHide();$("seasonOv").hidden=false;   /* (v6.11.1 QA: an outage notice never sits over the summary) */$("seasonOv").scrollTop=0;if(matchMedia("(hover:hover) and (pointer:fine)").matches)$("so-name").focus();else $("so-submit").focus({preventScroll:true});}
 // v5.0.4: the name box shows how many of its 16 characters are used
 function soCount(){const i=$("so-name"),c=$("so-count");if(!i||!c)return;const n=i.value.length;c.textContent=n+"/16";c.classList.toggle("full",n>=16);}
 {const i=document.getElementById("so-name");if(i)i.addEventListener("input",soCount);}

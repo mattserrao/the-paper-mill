@@ -87,6 +87,8 @@ function dcsAlarms(a,r,L){const al=(on,txt,hi)=>{if(on)L.push([txt,hi]);};vlvAla
     {const Wt=S.wat;al(!!(Wt&&Wt.L<WAT.cap*0.25),Wt&&Wt.short>0?"WHITE WATER CHEST EMPTY · STOCK THICK":"WHITE WATER CHEST LEVEL LO",!!(Wt&&Wt.short>0));}
     for(const k of ["hd","lc","lw"]){const dp=purgeDp(k);al(dp>PURGE.base[k]+(PURGE.trip[k]-PURGE.base[k])*0.6,{hd:"HD CLEANER ΔP HI",lc:"LC CLEANERS ΔP HI",lw:"LW CLEANERS ΔP HI"}[k],dp>PURGE.base[k]+(PURGE.trip[k]-PURGE.base[k])*0.85);}}
   else if(a==="WET"){al(motStatus("fog")!=="run","MACHINE ROOM HUMIDITY HI",false);
+    al(chemFloc()>0.02,"POLYMER HIGH · FLOCS IN THE SHEET",false);al(chemOn()&&fprNow()<82,"FIRST PASS RETENTION LO",fprNow()<78);al(chemRisk(),"POLYMER LOW · EFFLUENT PERMIT RISK",true);al(chemDep()>0,"STARCH HIGH · DEPOSITS",false);
+    al(S.pm!=="run"&&CHEM_IDS.some(id=>chemMode(id)==="manual"&&chemFlow(id)>0),"CHEMICAL PUMP ON MANUAL · MACHINE DOWN",false);
     {const W=S.we;if(W&&S.pm==="run"){al(W.L<WE.silo*WE.makeL,W.cav>0?"WW SILO LOW · FAN PUMP CAVITATING":"WHITE WATER SILO LEVEL LO",W.cav>0);al(W.m==="manual","BASIS WEIGHT ON MANUAL",false);}}}
   else if(a==="DET"){al(S.pm==="break",`SHEET BREAK · ${({reel:"REEL",dryer:"DRYERS",press:"PRESSES"})[S.brkType]||"MACHINE"}`,true);al(S.pm==="spools","REEL STORE FULL: MACHINE HELD BACK",true);
     al(!!S.wdBlocked,"WINDER BLOCKED: CONVEYOR FULL",true);al(S.wd==="hayout","WINDER HAYOUT",true);
@@ -115,7 +117,14 @@ function dcsSetDefs(a){const D=()=>DCS_DRAW();
     ["slh","Slice lip position","remote from the DCS · L",-100,100,1,()=>G3.SLC?G3.SLC.h*100:0,v=>dcsSlice("h",v),"",null,1],
     // v6.8 the basis weight loop (07g): the setpoint (the grade's target, trimmed lighter if the strength will carry it) and the valve
     ["bws","Basis weight setpoint",(S.we&&S.we.lw===false)?`MANUAL · grade ${C.grade} target ${bwStd().toFixed(2)} lb · ring crush spec ${rctSpec()} lbf`:`AUTO-LW: holds ring crush ${Math.round((WE.lwM-1)*100)}% over spec (${(rctSpec()*WE.lwM).toFixed(1)} lbf) · grade target ${bwStd().toFixed(2)} lb`,+(bwStd()*(1+WE.trimMin)).toFixed(2),+(bwStd()*(1+WE.trimMax)).toFixed(2),0.05,()=>bwSp(),v=>bwSetTrim(v),"lb",null,0,
-      {on:()=>!(S.we&&S.we.lw===false),flip:()=>{if(S.zen)return;const W=weState();W.lw=W.lw===false?true:false;log(`Basis weight setpoint: ${W.lw?"AUTO-LW (the lightweight optimizer)":"MANUAL"}`,"");}}]];   // (v6.10 AUTO-LW, 07g)
+      {on:()=>!(S.we&&S.we.lw===false),flip:()=>{if(S.zen)return;const W=weState();W.lw=W.lw===false?true:false;log(`Basis weight setpoint: ${W.lw?"AUTO-LW (the lightweight optimizer)":"MANUAL"}`,"");}}],   // (v6.10 AUTO-LW, 07g)
+    // v6.11.1 the wet-end chemicals (07l): AUTO is flow-paced at the standard kg/t; dragging the pump puts it on MANUAL
+    // (v6.11.1 QA: on AUTO the slider is the ratio in kg/t; on MANUAL the pump's kg/h; the polymer row warns of the permit)
+    ...CHEM_IDS.map((id,i)=>{const k=CHM[id],man=chemMode(id)==="manual",d=chemDose(id),sp=chemSp(id),dp=id==="pol"?2:1,risk=id==="pol"&&chemRisk()?" · PERMIT RISK: the wire is losing fines":"";
+      return man?[id+"f",k.name,`MANUAL · pump held at ${chemFlow(id).toFixed(1)} kg/h · ${d==null?"machine down: going to the sewer":d.toFixed(dp)+" kg/t now"}${risk}`,
+        0,k.fmax,k.step,()=>chemFlow(id),v=>chemSetFlow(id,v),"kg/h",null,0,{on:()=>false,flip:()=>chemSetMode(id,"auto")},i===0?"Wet-end chemicals":null]
+       :[id+"f",k.name,`AUTO · flow-paced at the ratio (standard ${k.std} kg/t) · ${Math.round(chemFlow(id))} kg/h · ${k.where}${risk}`,
+        0,k.max,k.rstep,()=>chemSp(id),v=>chemSetRatio(id,v),"kg/t",null,0,{on:()=>true,flip:()=>chemSetMode(id,"manual")},i===0?"Wet-end chemicals":null];})];
   if(a==="DET")return [
     ["wsp","Machine speed (wire)","same setpoint as on WET",Math.round(1200/D()),Math.round((3300+P.spBonus)/D()),5,()=>C.pmSp.v/D(),v=>dcsCardSet("pmSp",Math.round(v*D()/10)*10),"fpm","pmSp"],
     ["wdr","Winder speed","",0,P.winderMax,1,()=>C.wdr.v,v=>dcsCardSet("wdr",v),"t/h","wdr"]];   // (v6.9: the 2nd / 3rd section steam is PV-302 / PV-303 under QC-300: tap them on the picture, 50k)
@@ -129,11 +138,12 @@ function dcsSetRows(a,cs){const defs=dcsSetDefs(a);
       row.querySelectorAll("[data-dye]").forEach(b=>b.addEventListener("click",()=>{const pc=document.querySelector(`#paperColor button[data-c="${b.dataset.dye}"]`);if(pc)pc.click();dcsSync();}));}
     else{row.innerHTML=`<div class="dcsn"><b>Grade</b><small>set by the market planner from customer orders</small></div><select disabled data-dgrade aria-label="Grade">${Object.keys(GRADES).map(g=>`<option value="${g}">${g} · ${GRADES[g].bw} lb</option>`).join("")}</select>`;}
     cs.appendChild(row);}
-  for(const d of defs){const [k,name,where,mn,mx,st,,,,card]=d,row=kEl("div","dcsrow dcsx");row.dataset.ds=k;
+  for(const d of defs){const [k,name,where,mn,mx,st,,,,card]=d,row=kEl("div","dcsrow dcsx");row.dataset.ds=k;if(d[12])cs.appendChild(kEl("div","dcssub",d[12]));
     row.innerHTML=`<div class="dcsn"><b>${name}</b><small>${where}</small></div><label class="spis"><input type="range" min="${mn}" max="${mx}" step="${st}" data-dsv aria-label="${name}"/></label><div class="kval"><b data-dsb></b></div>${card||d[11]?`<button type="button" class="reroll kstd" data-dsa>AUTO</button>`:""}`;
-    row.querySelector("[data-dsv]").addEventListener("input",e=>{d[7](+e.target.value);dcsSync();});
+    const cur=()=>dcsSetDefs(a).find(x=>x[0]===k)||d;   // (v6.11.1: a row can change what it sets, e.g. a chemical pump's ratio on AUTO, kg/h on MANUAL)
+    row.querySelector("[data-dsv]").addEventListener("input",e=>{cur()[7](+e.target.value);dcsSync();});
     if(card)row.querySelector("[data-dsa]").addEventListener("click",()=>{dcsCardAuto(card);dcsSync();});
-    else if(d[11])row.querySelector("[data-dsa]").addEventListener("click",()=>{d[11].flip();dcsSync();});
+    else if(d[11])row.querySelector("[data-dsa]").addEventListener("click",()=>{cur()[11].flip();dcsSync();});
     cs.appendChild(row);}}
 function dcsMotRows(a,b){const ms=MOTORS.filter(m=>m.a===a),pg=a==="SPOT"?["hd","lc","lw"]:[];if(!ms.length&&!pg.length)return;
   const box=kEl("div","dcsctl");box.appendChild(kEl("div","dcssub","Motors"+(pg.length?" and reject purges":"")));
@@ -148,7 +158,7 @@ function dcsMotRows(a,b){const ms=MOTORS.filter(m=>m.a===a),pg=a==="SPOT"?["hd",
 // keep every row on this screen in step with the sim and the Process flow controls
 function dcsSync(){const o=$("dcsOv");if(!o||o.hidden||!KUI.st)return;const a=KUI.st,defs=dcsSetDefs(a);
   o.querySelectorAll("[data-ds]").forEach(row=>{const d=defs.find(x=>x[0]===row.dataset.ds);if(!d)return;const inp=row.querySelector("[data-dsv]"),c=d[9]?DCARD(d[9]):null,lock=!!(c&&c.inp.disabled)||!!S.zen;
-    if(inp.max!==String(d[4]))inp.max=d[4];if(inp.min!==String(d[3]))inp.min=d[3];if(actEl(inp)!==inp)inp.value=d[6]();inp.disabled=lock||(d[10]&&!G3[d[0]==="spi"?"SPD":"SLC"]);
+    if(inp.max!==String(d[4]))inp.max=d[4];if(inp.min!==String(d[3]))inp.min=d[3];if(inp.step!==String(d[5]))inp.step=d[5];if(actEl(inp)!==inp)inp.value=d[6]();inp.disabled=lock||(d[10]&&!G3[d[0]==="spi"?"SPD":"SLC"]);
     const bv=row.querySelector("[data-dsb]"),t=`${(+d[6]()).toFixed(d[5]<0.1?2:d[5]<1?1:0)} ${d[8]}`;if(bv.textContent!==t)bv.textContent=t;
     if(d[11]){const ab=row.querySelector("[data-dsa]"),au=d[11].on();ab.textContent=au?"AUTO":"MANUAL";ab.setAttribute("aria-pressed",String(au));ab.disabled=S.zen;
       const sm=row.querySelector(".dcsn small");if(sm&&sm.textContent!==d[2])sm.textContent=d[2];}

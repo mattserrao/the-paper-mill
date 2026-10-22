@@ -35,7 +35,7 @@ function dryTick(dt){const D=dryState(),g=C.grade,b=DRY.base[g]||DRY.base["24"],
   const A=dryKnob(),dem0=run?dryDemand0(tph):b*0.5,dem=run?dem0*A.a:b*0.5;D.dem=ease(D.dem,dem,dt,3);D.dem0=ease(D.dem0==null?dem0:D.dem0,dem0,dt,3);if(run&&!S.zen&&D.dem>D.maxDem)D.maxDem=D.dem;
   D.km=ease(D.km||0,run?20*(A.r-A.a):0,dt,10);   // (v6.5.2: moisture the knobs put past the auto loop's reach)
   // steam and the boiler (a boiler trip still stops the machine on its own; 04-upsets)
-  const water=tph*dryWpt()*((S.knob&&S.knob.any&&S.knob.W)||1);
+  const water=tph*dryWpt()*((S.knob&&S.knob.any&&S.knob.W)||1)*(hoodUp()?1+HOOD_STEAM:1);   // (v6.11.1: hood doors raised on the knob)
   // v6.5.7: on a sheet break the boiler isn't backed down: steam keeps flowing at the running rate, the cans condense a share
   // to stay hot (DRY.hold) and the rest is vented to atmosphere through the header vent on the roof (24-3d), and paid for
   const brk=S.pm==="break";if(run)D.runSt=D.steam;

@@ -68,7 +68,7 @@ function step(dt){
   if(S.pm==="run"){
     let tgt=C.pmSp.v*M.speedCap;
     if(level<low){const f=clamp((level-5)/(low-5),0,1);
-      const supply=(S.rates.fiberIn*P.pmLoss)/(P.K*bwSp());
+      const supply=(S.rates.fiberIn*pmRet())/(P.K*bwSp());
       tgt=Math.min(C.pmSp.v,Math.max(supply,C.pmSp.v*f));}
     tgt=Math.max(Math.min(tgt,C.pmSp.v*M.speedCap),P.minSpeed);
     const r=P.ramp*dt; S.pmSpeed+=clamp(tgt-S.pmSpeed,-r*2,r);
@@ -79,12 +79,13 @@ function step(dt){
       log(`Sheet break ${S.brkType==="reel"?"at the reel (short)":S.brkType==="dryer"?"before the dryers":"before the presses (long)"}`,"warn");brkNote();}
     if(S.pm==="run"){
       prod=P.K*S.pmSpeed*S.we.bw*dt/60;   // (v6.8: the weight the BW loop is making, 07g)
-      const use=prod/P.pmLoss;
-      if(!fromMc&&use>S.tank){prod=S.tank*P.pmLoss;}
-      if(!fromMc)S.tank-=prod/P.pmLoss;pfW("eff",prod/P.pmLoss-prod);WQ.u+=prod/P.pmLoss;WQ.p+=prod;
+      const ret=pmRet(),use=prod/ret;   // (v6.11.1: the retention polymer moves the machine's fiber loss, 07l; untouched it is P.pmLoss)
+      if(!fromMc&&use>S.tank){prod=S.tank*ret;}
+      if(!fromMc)S.tank-=prod/ret;pfW("eff",prod/ret-prod);WQ.u+=prod/ret;WQ.p+=prod;
     }
   }
   if(S.pm!=="run") S.pmSpeed=ease(S.pmSpeed,0,dt,3);
+  chemTick(dt,prod);   // v6.11.1 wet-end chemicals (07l)
   baseLoadTick(dt);   // v6.6: a stopped machine still draws power and keeps the boiler banked
   let beat=0;
   if(prod>0){{const ec=prod*energyCost();spend(ec,"energy");pfEnergy(prod,ec);}knobSteamCost(prod);

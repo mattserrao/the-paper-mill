@@ -394,6 +394,64 @@
    {const g=new CylG(0.7,0.7,0.12,12);const o=new THREE.Mesh(g,M.ink);o.position.set(20,9.1,6.6);o.castShadow=true;scene.add(o);}
    box(10,0.42,0.8,M.steel,12,8.39,6,scene,false);
    box(0.5,0.4,0.2,M.ok,10,5.6,5.22,scene,false);}
+  /* v6.11.1 the dryer hood's front (tools/blender/hood_front_new.py): the tending-side wall, the front of the roof and the upper end
+     walls close the cutaway over the cans, with six lifting doors on chains from a header along the top of their guides. The
+     doors go up on their own on a sheet break or whenever the machine is down, and drop again once it runs. The fiddly knob
+     (07b "hood") raises them while it runs; 2 s after they are up, the doors and the whole front section fly away like the
+     roofs (lift and fade), leaving the v6.11 cutaway, and come back the other way when the knob is closed. Two groups of a
+     few merged meshes with their own materials (so they can fade), kept out of the static and moving batches. */
+  {const HX0=-5,HX1=29,ZF=12.55,ZD0=12.62,ZD1=12.70,DY0=1.25,DY1=6.15,LIFTD=4.6,HDR=10.95,
+     SEAMS=[-5,1.2,7.4,13.5,14.5,19.3,24.1,29],DOORS=[[-4.92,1.12],[1.28,7.32],[7.48,13.42],[14.58,19.22],[19.38,24.02],[24.18,28.92]];
+   const HMt={metal:instMat(M.metal),steel:instMat(M.steel),ink:instMat(M.ink),warn:instMat(M.warn)},HMl=Object.values(HMt);
+   // boxes by material, merged into one mesh each: [x0,x1,y0,y1,z0,z1]
+   const mk=()=>({metal:[],steel:[],ink:[],warn:[]});
+   function merged(L,m,parent){const P=[],N=[],U=[],I=[];for(const [x0,x1,y0,y1,z0,z1] of L){const g=new THREE.BoxGeometry(x1-x0,y1-y0,z1-z0);g.translate((x0+x1)/2,(y0+y1)/2,(z0+z1)/2);
+       const b=P.length/3;P.push(...g.attributes.position.array);N.push(...g.attributes.normal.array);U.push(...g.attributes.uv.array);for(const i of g.index.array)I.push(i+b);g.dispose();}
+     const g=new THREE.BufferGeometry();g.setAttribute("position",new THREE.Float32BufferAttribute(P,3));g.setAttribute("normal",new THREE.Float32BufferAttribute(N,3));g.setAttribute("uv",new THREE.Float32BufferAttribute(U,2));g.setIndex(I);
+     const o=new THREE.Mesh(g,m);o.castShadow=true;o.receiveShadow=true;o.userData.smBatch=true;parent.add(o);return o;}
+   const FG=new THREE.Group(),DG=new THREE.Group();FG.name="dryer hood front";DG.name="dryer hood doors";scene.add(FG);FG.add(DG);(G3.dynLater||(G3.dynLater=[])).push(FG);
+   // ---- the fixed front: fascia over the doors, the panel under the crossover bridge, the front of the roof, the upper end walls, guides and header ----
+   {const B=mk();
+    B.metal.push([HX0,HX1,DY1+0.05,8.0,ZF-0.07,ZD0],[13.5,14.5,1.2,DY1+0.05,ZF-0.07,ZD0],[HX0-0.1,HX1+0.1,8.0,8.18,8.6,ZD0+0.02]);
+    B.ink.push([HX0,HX1,DY1,DY1+0.1,ZF-0.07,ZD0+0.02],[HX0-0.1,HX1+0.1,7.95,8.2,ZD0-0.04,ZD0+0.06]);
+    for(let x=HX0+2;x<HX1-0.5;x+=2)B.steel.push([x-0.035,x+0.035,8.18,8.21,8.6,ZF]);
+    for(const xe of [HX0,HX1]){B.metal.push([xe-0.07,xe+0.07,3.6,8.0,8.6,ZF]);B.ink.push([xe-0.09,xe+0.09,0,8.0,ZF-0.05,ZF+0.05]);}
+    // door guides at every seam (the two beside the crossover bridge stop under its deck), the header with its drive shaft and gear motor
+    for(const x of SEAMS){const top=x>13&&x<15?8.6:HDR;B.steel.push([x-0.08,x+0.08,1.2,top,ZD0,ZD1+0.05]);B.ink.push([x-0.1,x+0.1,top-0.06,top,ZD0,ZD1+0.07]);}
+    B.steel.push([HX0-0.15,HX1+0.15,HDR,HDR+0.22,ZD0-0.02,ZD1+0.12]);B.ink.push([HX0-0.15,HX1+0.15,HDR+0.2,HDR+0.26,ZD0-0.02,ZD1+0.12]);
+    B.warn.push([27.6,28.6,HDR+0.26,HDR+0.86,ZD0,ZD1+0.2]);B.ink.push([26.9,27.6,HDR+0.36,HDR+0.76,ZD0+0.05,ZD1+0.15]);
+    for(const k in B)if(B[k].length)merged(B[k],HMt[k],FG);}
+   // the chains from the header to each door's lifting lugs (one mesh hung from the header: shortened as the doors rise)
+   const CH=(()=>{const L=[];DOORS.forEach(([a,b])=>[a+0.45,b-0.45].forEach(x=>L.push([x-0.025,x+0.025,-1,0,ZD0+0.02,ZD0+0.06])));const o=merged(L,HMt.ink,FG);o.position.y=HDR;o.castShadow=false;return o;})();
+   // ---- the six doors: panel, inked top and bottom edges, two stiffeners, a sight glass, the handle, a tag and the lugs ----
+   {const B=mk();
+    DOORS.forEach(([a,b])=>{const c=(a+b)/2;
+      B.metal.push([a,b,DY0,DY1,ZD0,ZD1]);B.ink.push([a,b,DY1-0.1,DY1,ZD0-0.01,ZD1+0.02],[a,b,DY0,DY0+0.1,ZD0-0.01,ZD1+0.02]);
+      for(const y of [2.85,4.45])B.steel.push([a+0.15,b-0.15,y-0.05,y+0.05,ZD1,ZD1+0.05]);
+      B.steel.push([c-0.56,c+0.56,3.24,4.01,ZD1,ZD1+0.03]);B.ink.push([c-0.48,c+0.48,3.32,3.93,ZD1,ZD1+0.045]);
+      B.warn.push([c-0.7,c+0.7,1.6,1.7,ZD1,ZD1+0.06],[a+0.25,a+0.75,5.4,5.75,ZD1,ZD1+0.03]);
+      for(const x of [a+0.45,b-0.45])B.ink.push([x-0.09,x+0.09,DY1,DY1+0.16,ZD0+0.01,ZD1-0.01]);});
+    for(const k in B)merged(B[k],HMt[k],DG);}
+   // ---- the animation (43 calls this every frame): u = doors up (0..1), f = front section flown away (0..1) ----
+   const HOOD={u:0,f:0,a:1,want:false,upT:0,knob:false,last:false};G3.HOOD=HOOD;
+   const ss=t=>t*t*(3-2*t);let shownA=-1;
+   function hoodShow(a){if(a===shownA)return;shownA=a;const solid=a>0.995;FG.visible=a>0.02;FG.position.y=(1-a)*(1-a)*9;
+     for(const m of HMl){if(m.transparent!==!solid){m.transparent=!solid;m.needsUpdate=true;}m.depthWrite=solid;m.opacity=a;}
+     const sh=a>0.6;FG.traverse(o=>{if(o.isMesh&&o!==CH)o.castShadow=sh;});}
+   // (the prewarm draws it half faded, so the transparent shaders are compiled at start-up, 31)
+   G3.hoodWarm=on=>hoodShow(on?0.5:HOOD.a);
+   G3.hoodTick=rdt=>{if(!(rdt>0))return;const knob=!S.zen&&knobVal("hood")===1,auto=S.pm!=="run"||outOn();
+     if(knob&&!HOOD.knob&&HOOD.u<0.5)try{AUDIO.sfx("hiss",400);}catch(_){}   // (the hood's air cylinders letting go)
+     if(!knob&&HOOD.knob&&HOOD.u>0.5&&!auto)try{AUDIO.sfx("clunk",400);}catch(_){}
+     HOOD.knob=knob;HOOD.want=knob||auto||HOOD.f>0.002;
+     const u0=HOOD.u;HOOD.u=clamp(HOOD.u+(HOOD.want?1:-1)*rdt/2.2,0,1);
+     if(HOOD.u>=1&&u0<1)HOOD.upT=0;if(HOOD.u>=1)HOOD.upT+=rdt;
+     // steam rolling out from under the doors as they open on a hot hood
+     if(HOOD.want&&HOOD.u>0.05&&HOOD.u<0.9&&HOOD.f<0.5&&Math.random()<rdt*14)emitA("steam",HX0+Math.random()*(HX1-HX0),DY0+0.5+Math.random()*1.5,ZD1+0.3,(Math.random()-0.5)*0.4,0.5+Math.random()*0.4,0.35,3,2.4+Math.random()*2,"#eef1f4",0.45);
+     const ft=knob&&HOOD.u>=1&&HOOD.upT>=2?1:0;HOOD.f=Math.abs(ft-HOOD.f)<0.004?ft:HOOD.f+(ft-HOOD.f)*(1-Math.exp(-Math.min(0.25,rdt)*11));
+     HOOD.a=1-HOOD.f;hoodShow(HOOD.a);
+     const lift=ss(HOOD.u)*LIFTD;if(DG.position.y!==lift){DG.position.y=lift;CH.scale.y=Math.max(0.01,HDR-(DY1+0.16+lift));}};
+   CH.scale.y=HDR-(DY1+0.16);}
   // reel + stand, winder, roll conveyor
   const popeDrum=cylZ(DR,CD,M.metal,DX,DY,zc,32);for(let k=0;k<8;k++){const a=k/8*Math.PI*2;box(0.06,0.06,CD,M.steel,Math.cos(a)*DR,Math.sin(a)*DR,0,popeDrum,false);}
   cylZ(0.2,CD+1.8,M.ink,DX,DY,zc,10);[zc-ZJ,zc+ZJ].forEach(z=>{

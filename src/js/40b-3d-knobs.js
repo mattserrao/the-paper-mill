@@ -25,6 +25,8 @@
     const gs=station(46.2,13.05,0);plate("GUIDE",0.7,46.2,2.0,13.21);KX.guide={at:gs.at};
     const cs=station(40.4,13.05,0);plate("COUCH PIT",0.8,40.4,2.0,13.21);KX.couch={at:cs.at};
     const os=station(35.0,13.15,0);plate("OSCILLATOR",0.8,35.0,2.0,13.31);KX.osc={at:os.at};
+    // v6.11.1: the dryer hood doors' raise / lower station, on a post under the tending-side catwalk
+    const hs=station(3.0,13.15,0);plate("HOOD DOORS",0.8,3.0,2.0,13.31);KX.hood={at:hs.at};
     // v6.10 t5: the MCC main incomer's breaker handle, on the incoming 480 V section inside the MCC (38c)
     {const x=CAB.main.stand[0],z=CABZ+0.36,g=new THREE.Group();g.position.set(x,0,z);scene.add(g);box(0.5,0.7,0.08,M.ink,0,1.35,0,g,false);
       const h=box(0.12,0.42,0.12,M.bad,0.08,1.42,0.08,g);h.rotation.z=-0.35;box(0.2,0.12,0.14,M.bad,-0.12,1.12,0.07,g,false);
@@ -57,7 +59,7 @@
     const dotG=new THREE.SphereGeometry(0.55,16,10),ringG=new THREE.RingGeometry(0.85,1.15,28),stemG=new THREE.CylinderGeometry(0.06,0.06,1,6);
     const KVG=new THREE.Group();KVG.visible=false;scene.add(KVG);SM.dyn.add(KVG);const KVHITS=[],MARKS=[];
     // every knob in the view: the field knobs, the DCS-only knobs at their console, and the two knobs that were already there
-    const KVL=[["pulp"],["ref"],["agit"],["guide"],["couch"],["osc"],["incomer"],["zones","WET",[58,1.6,13.4]],["draw","DET",[-5,1.6,13.4]],["spider",null,[33,PH+1.2,-17.6]],["slice",null,[57.15,2.95,12.7]]];
+    const KVL=[["pulp"],["ref"],["agit"],["guide"],["couch"],["osc"],["incomer"],["hood"],["zones","WET",[58,1.6,13.4]],["draw","DET",[-5,1.6,13.4]],["spider",null,[33,PH+1.2,-17.6]],["slice",null,[57.15,2.95,12.7]]];
     KVL.forEach(([id,st,pos])=>{const at=pos||KX[id].at,g=new THREE.Group();g.position.set(at[0],at[1]+2.2,at[2]);KVG.add(g);
       const d=new THREE.Mesh(dotG,mkM);d.renderOrder=9995;g.add(d);const r=new THREE.Mesh(ringG,ringM);r.renderOrder=9994;g.add(r);
       const s=new THREE.Mesh(stemG,mkM);s.scale.y=2.2;s.position.y=-1.1;s.renderOrder=9993;g.add(s);

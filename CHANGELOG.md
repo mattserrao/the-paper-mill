@@ -1,5 +1,32 @@
 # Changelog
 
+## v6.11.1 (2026-10-21): The Dryer Hood and Wet-End Chemicals
+Release of v6.11.1-t1 to t4 (below), merged from test/v6.11.1-hood.
+
+## v6.11.1-t4 (2026-10-21): effluent in permit (test build, test/v6.11.1-hood)
+- **The clarifier catches 99.71% of the solids** (was 98.8%), so a normal run's effluent is about 25 mg/L TSS (p99 ~35) under the 50 mg/L permit; before, it sat around 120 and the TSS HI alarm stayed lit.
+- **The polymer's permit breach follows the reading:** TSS held over 50 mg/L for an hour while the polymer is under its standard (about a third of the standard dose or less) fines the mill; the permit-risk warning shows under 0.15 kg/t.
+
+## v6.11.1-t3 (2026-10-21): QA round (test build, test/v6.11.1-hood)
+50 season and 50 survival bot playthroughs (no page errors, every ledger reconciled) and same-seed balance runs against main and v6.10.2 (`claude/qa-v6111.md`).
+- **Economy: every upgrade 20% cheaper** (`UP_COSTK`, 03b `upCost`). Since v6.11.0 (the deckle at +1.5% tons a level, trim) smart buying added only ~$0.2M a season over rounds alone; at 80% it adds ~$0.95M again (rounds + shop +$2.39M → +$3.14M a season; hands-off and rounds unchanged; survival active 45.0 → 47.6 days).
+- **Chemical pumps: a ratio setpoint on AUTO.** On AUTO the WET DCS slider sets the kg/t the pump is flow-paced at (standard = no extra cost); the button switches to MANUAL (the slider is then the pump's kg/h). A crew trace sets the ratio back to the standard. (QA: a MANUAL pump set to 8 kg/t on day 1 had drifted to ~6 kg/t by day 30 as the tons rose.)
+- **Permit-risk warning:** the polymer row and a WET alarm warn when the dose is under 0.2 kg/t.
+- **Fixed:** an outage notice could sit over the season summary or the survival game-over screen.
+
+## v6.11.1-t2 (2026-10-21): wet-end chemicals (test build, test/v6.11.1-hood)
+- **Dry strength (cationic starch)** and a **retention polymer** on the WET DCS (`07l-chem.js`), in every mode but zen. Both come out of the existing $25/t chemicals and water budget: starch 6 kg/t × $0.55 = $3.30/t and polymer 0.3 kg/t × $3.50 = $1.05/t at standard, so on AUTO nothing changes and nothing extra is charged.
+- **AUTO is flow-paced**: the pump follows the tons at the standard kg/t and stops on a break. **MANUAL** (drag the pump, or the AUTO button) holds a fixed kg/h, so the dose moves with the tons; on a break the chemical keeps going to the sewer, and the restart gets an overdose.
+- **More starch:** more ring crush (+2.7% at 10 kg/t, +4.3% at 15), so AUTO-LW trims the weight lighter for the lightweight premium, and a drier couch (less steam). Over 10 kg/t: deposits (more breaks and slime). None: ring crush fails. **More polymer:** first pass retention up from 85% (fiber loss to the sewer down, more tons a ton of fiber, lower TSS). Over 0.5 kg/t: flocs, part of the reel to the beater. Under about half the standard for an hour: a permit breach.
+- The process engineer traces flocs, deposits and weak paper back and puts that pump on AUTO; the environmental engineer does after a permit breach.
+- Tags (dose, pump, first pass retention), WET alarms, relationship map links, help and glossary (dry strength, retention polymer, first pass retention, flow-paced control); new check `tools/checks/chem.py`.
+
+## v6.11.1-t1 (2026-10-21): the dryer hood front (test build, test/v6.11.1-hood)
+- **A closed dryer hood** (designed in Blender, `tools/blender/hood_front_new.py`): the tending-side wall, the front half of the roof and the upper end walls now close the v6.11 cutaway, with **six lifting doors** on chains from a header along the top of their guides (two narrower ones each side of the crossover bridge, a fixed panel under it).
+- The doors **go up on their own** on a sheet break or whenever the machine is down (incl. outages) with steam rolling out from under them, and drop again once the sheet is back on.
+- **New fiddly knob, Dryer hood doors** (station under the tending-side catwalk; Season, Survival and Free Play): RAISED lifts the doors with a hiss, and 2 s after they are up the doors and the whole front section fly away like the roofs, leaving the cutaway view. CLOSED brings the front back, then drops the doors. While the machine runs with them up, the dryers use **4% more steam** (cost, the DCS steam reading and the boiler's load); the energy engineer can trace a high steam bill to it.
+- Knobs view, help, glossary ("Dryer hood") and the relationship map (hood doors → steam) updated.
+
 ## v6.11.0 (2026-10-21): The Winder, Trim and CD Update
 Release of v6.11.0-t1 and v6.11.0-t2 (below), merged from test/v6.11-blender.
 

@@ -824,8 +824,8 @@
         // colour space, and every material drawn there compiled a second program that play never uses (about 30 of them)
         if(G3.dbTick)G3.dbTick();
         // v5.2: the roofs drawn half-faded too, so the transparent roof shaders the first zoom-in needs are compiled now, not mid-play
-        const rf=G3.roofFade&&G3.camGet?G3.camGet()[2]:null;if(rf!=null)G3.roofFade(120);
-        renderer.shadowMap.needsUpdate=true;renderer.setScissorTest(true);renderer.setScissor(0,0,1,1);renderer.render(scene,camera);if(rf!=null)G3.roofFade(rf);
+        const rf=G3.roofFade&&G3.camGet?G3.camGet()[2]:null;if(rf!=null)G3.roofFade(120);if(G3.hoodWarm)G3.hoodWarm(true);   /* (v6.11.1: the dryer hood front half faded too, 25) */
+        renderer.shadowMap.needsUpdate=true;renderer.setScissorTest(true);renderer.setScissor(0,0,1,1);renderer.render(scene,camera);if(rf!=null)G3.roofFade(rf);if(G3.hoodWarm)G3.hoodWarm(false);
         renderer.setScissorTest(false);shown.forEach(g=>g.visible=false);wld.forEach((o,i)=>o.visible=wv[i]);renderer.shadowMap.needsUpdate=true;
         // v4.0.1: the stand-ins' materials are kept, not disposed: three.js deletes a shader program once no material uses it,
         // which threw away every shader compiled only for a stand-in

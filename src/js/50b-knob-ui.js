@@ -27,6 +27,8 @@ function knobCtl(id,where){const d=KNOBN[id],w=kEl("div","kctl"),key=where+"-"+i
     w.querySelectorAll("[data-cv]").forEach(b=>b.addEventListener("click",()=>{knobSet("couch",+b.dataset.cv);kuiRefresh();}));}
   else if(id==="incomer"){w.innerHTML=`<div class="seg kseg" role="group" aria-label="MCC main incomer"><button type="button" data-iv="1">CLOSED</button><button type="button" data-iv="0">OPEN</button></div>`;
     w.querySelectorAll("[data-iv]").forEach(b=>b.addEventListener("click",()=>{knobSet("incomer",+b.dataset.iv);kuiRefresh();}));}
+  else if(id==="hood"){w.innerHTML=`<div class="seg kseg" role="group" aria-label="Dryer hood doors"><button type="button" data-hv="0">CLOSED</button><button type="button" data-hv="1">RAISED</button></div>`;
+    w.querySelectorAll("[data-hv]").forEach(b=>b.addEventListener("click",()=>{knobSet("hood",+b.dataset.hv);kuiRefresh();}));}
   else{w.innerHTML=`<label class="spis"><span>${d.min}</span><input type="range" min="${d.min}" max="${d.max}" step="${d.step}" data-kv aria-label="${d.name}"/><span>${d.max}</span></label>
       <div class="kval"><b data-kvv></b><small>standard ${KNOB_IDEAL[id].toFixed(d.dp||0)} ${d.unit}</small></div>`;
     w.querySelector("[data-kv]").addEventListener("input",e=>{knobSet(id,+e.target.value);kuiRefresh();});}
@@ -37,6 +39,7 @@ function knobCtlSync(w){const id=w.dataset.k,K=S.knob;
     const r=w.querySelector("[data-gt]");if(actEl(r)!==r)r.value=v.gt;w.querySelector("[data-gtv]").textContent=(v.gt>0?"+":"")+v.gt+" mm";}
   else if(id==="couch"){const v=knobVal("couch");w.querySelectorAll("[data-cv]").forEach(b=>b.setAttribute("aria-pressed",String(+b.dataset.cv===v)));}
   else if(id==="incomer"){const v=knobVal("incomer");w.querySelectorAll("[data-iv]").forEach(b=>b.setAttribute("aria-pressed",String(+b.dataset.iv===v)));}
+  else if(id==="hood"){const v=knobVal("hood");w.querySelectorAll("[data-hv]").forEach(b=>b.setAttribute("aria-pressed",String(+b.dataset.hv===v)));}
   else{const d=KNOBN[id],v=knobVal(id),r=w.querySelector("[data-kv]");if(actEl(r)!==r)r.value=v;const b=w.querySelector("[data-kvv]");b.textContent=`${v.toFixed(d.dp||0)} ${d.unit}`;b.classList.toggle("moved",!knobAt(id));}}
 // a knob's own readings (process values an operator would see; no hints about what will go wrong)
 function knobReadout(id,r){const R=(k,v)=>`<div><small>${k}</small><b>${v}</b></div>`;
@@ -48,6 +51,7 @@ function knobReadout(id,r){const R=(k,v)=>`<div><small>${k}</small><b>${v}</b></
     case "press":return R("Nip load",Math.round(r.pl)+" kN/m")+R("After the presses",kf(r.pressSol)+" % solids");
     case "guide":return R("Fabric edge",(r.edge>=0?"+":"")+Math.round(r.edge)+" mm")+R("Guide travel used",r.gm?Math.round(Math.min(1,r.gtrav)*100)+" %":"manual");
     case "incomer":return R("Main breaker",knobVal("incomer")?"closed":"open")+R("480 V bus",Math.round(rlyLV())+" V")+R("Drive load",Math.round(rlyMccKw(r)).toLocaleString()+" kW");
+    case "hood":{const h=G3.HOOD||{u:0,f:0};return R("Doors",h.u>0.98?"up":h.u>0.02?(h.want?"lifting…":"lowering…"):"closed")+R("Front section",h.f>0.98?"lifted off":h.f>0.02?"moving":"in place")+R("Dryer steam",r.steam>0?kf(r.steam)+" t/h":"–");}
     case "couch":return R("Agitator",r.couch?"running · 38 A":"stopped")+R("Pit level",Math.round(35+(S.pm==="run"?0:30)+r.cs*6)+" %");
     case "osc":return R("Shower stroke",Math.round(r.osc*0.14)+" /min")+R("Felt",r.stripes>0.15?"uneven":"clean");
     case "draw":return R("Open draw",kf(r.draw)+" %")+R("Sheet tension",r.run?kf(r.tension,2)+" kN/m":"–");

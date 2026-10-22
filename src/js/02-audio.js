@@ -393,6 +393,8 @@ const AUDIO=(()=>{
     water:t=>{nz(t,0.9,sfxBus,0.35,"bandpass",1100,0.7,0.02);for(let k=0;k<10;k++){const s=t+0.1+Math.random()*0.8,f=300+Math.random()*500;tone(s,sfxBus,"sine",f,0.08,0.06,0.003,f*1.8);}},
     steam:t=>{nz(t,0.25,sfxBus,0.4,"highpass",1200);const a=nz(t+0.05,4.2,sfxBus,0.55,"bandpass",2600,0.45,0.08);a.fl.frequency.setValueAtTime(2600,t+2.5);a.fl.frequency.exponentialRampToValueAtTime(1300,t+4.2);
       nz(t+0.05,4.0,sfxBus,0.3,"lowpass",500,0.6,0.1);tone(t,sfxBus,"sine",70,0.6,0.4,0.004,40);},
+    hiss:t=>{nz(t,0.06,sfxBus,0.3,"highpass",4000);const a=nz(t+0.03,1.5,sfxBus,0.42,"highpass",3200,0.7,0.35);a.fl.frequency.setValueAtTime(3200,t+0.6);a.fl.frequency.exponentialRampToValueAtTime(1800,t+1.5);
+      nz(t+0.05,1.2,sfxBus,0.12,"bandpass",900,0.8,0.3);},   // (v6.11.1: the dryer hood doors' air cylinders letting go as they lift)
     siren:t=>{const o=ctx.createOscillator(),g=ctx.createGain();o.type="sine";for(let k=0;k<4;k++){o.frequency.setValueAtTime(650,t+k*0.6);o.frequency.linearRampToValueAtTime(1250,t+k*0.6+0.3);o.frequency.linearRampToValueAtTime(650,t+k*0.6+0.6);}
       g.gain.setValueAtTime(0.0001,t);g.gain.exponentialRampToValueAtTime(0.09,t+0.05);g.gain.setValueAtTime(0.09,t+2.2);g.gain.exponentialRampToValueAtTime(0.0001,t+2.5);o.connect(g);g.connect(sfxBus);o.start(t);o.stop(t+2.6);},
     thunder:t=>{nz(t,0.12,sfxBus,0.7,"highpass",1500);const r=nz(t+0.05,3.2,sfxBus,0.8,"lowpass",900,0.5,0.03);r.fl.frequency.exponentialRampToValueAtTime(80,t+3.2);tone(t+0.05,sfxBus,"sine",55,2.0,0.5,0.01,30);},

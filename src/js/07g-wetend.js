@@ -92,7 +92,7 @@ function dpYield(){if(S.zen)return 1;let x=0;for(const k of ["hd","lc","lw"])x+=
 // strength: ring crush from refining, the measured weight and stickies; the spec is the grade's
 const rctSpec=()=>Math.round((RCT0[C.grade]||60)*WE.rctSpec*10)/10;
 // (v6.8.3: open draw: each % of draw over the 1.5 % standard stretches the sheet and takes 4 % off ring crush; less draw adds it)
-function rctNow(bw){const ri=1+WE.rctK*(kwhNow()-WE.kwh0)-WE.rctStk*Math.max(0,((S.bq&&!S.zen)?S.bq.ck:0.1)-0.1)-WE.rctDraw*((S.zen?KNOB_IDEAL.draw:knobVal("draw"))-KNOB_IDEAL.draw);
+function rctNow(bw){const ri=1+WE.rctK*(kwhNow()-WE.kwh0)-WE.rctStk*Math.max(0,((S.bq&&!S.zen)?S.bq.ck:0.1)-0.1)-WE.rctDraw*((S.zen?KNOB_IDEAL.draw:knobVal("draw"))-KNOB_IDEAL.draw)+chemRct();   // (v6.11.1: dry strength, 07l)
   return (RCT0[C.grade]||60)*(bw/bwStd())*ri;}
 // the lightweight premium share of the price for on-spec paper under the grade's weight
 const premShare=()=>S.we?Math.min(WE.premMax,WE.prem*Math.max(0,-S.we.trim)):0;

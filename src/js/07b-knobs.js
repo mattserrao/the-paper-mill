@@ -10,7 +10,7 @@
    Rules: S.knob does not exist until the player changes a knob, and knobTick() returns at once while every knob is at
    its ideal and the process has settled, so an untouched game draws no dice and changes nothing (same checksum).
    Incident durations use their own dice stream ("knob"); the shared upset streams are never touched. Zen: no knobs. */
-const KNOB_IDEAL={pulp:50,ref:60,agit:100,vac:30,press:100,osc:100,couch:1,draw:1.5,st1:70,gm:1,gt:0,incomer:1};
+const KNOB_IDEAL={pulp:50,ref:60,agit:100,vac:30,press:100,osc:100,couch:1,draw:1.5,st1:70,gm:1,gt:0,incomer:1,hood:0};
 const KNOBS=[
   {id:"pulp",name:"Pulper dilution valve",area:"SPOT",where:"Pulper, stock prep",field:true,unit:"% open",min:0,max:100,step:1,
     tip:"Dilution water into the pulper tub: NV-101, which holds the consistency on AUTO. Moving it here puts NV-101 on MAN at that opening."},
@@ -36,7 +36,13 @@ const KNOBS=[
     tip:"Speed difference between the presses and the first dryers, which keeps the open draw taut. Standard is 1.5%. More draw stretches the sheet and lowers ring crush; less lets it flutter and break more often."},
   {id:"st1",name:"1st section steam",area:"DET",where:"Dry end DCS",dcs:true,unit:"kPa",min:0,max:250,step:5,
     tip:"Steam pressure in the first dryer section. The 3rd section is on automatic moisture control. Standard is 70 kPa."},
+  {id:"hood",name:"Dryer hood doors",area:"DET",where:"Dryer hood, tending side",field:true,
+    tip:"The lifting doors on the front of the dryer hood. They go up on their own on a sheet break or whenever the machine is down, and drop again once the sheet is back on. Raised here, they stay up while the machine runs: you can see the cans, but the hood leaks heat and the dryers burn more steam."},
 ];
+// v6.11.1: the dryer hood doors raised on the knob while the machine runs (the 3D front section lifts off 2 s later, 25-3d):
+// the hood leaks its hot air, so the dryers use 4% more steam per ton (cost, the DCS steam reading and the boiler's load)
+const HOOD_STEAM=0.04;
+const hoodUp=()=>{const K=S.knob;return !!(K&&K.any&&!S.zen&&K.v.hood);};
 const KNOBN=Object.fromEntries(KNOBS.map(k=>[k.id,k]));
 // v6.5.5: the headbox slice (opening B and lip position L, -1..1, kept in the knob state as sv / sh so it's saved and
 // replayed) is a knob for the crew's tracing too; its own panel and the WET DCS set it (50-view-spider.js, 50d)
@@ -54,7 +60,7 @@ function slcSet(k,val){if(S.zen)return;const K=knobState();K.v[k==="v"?"sv":"sh"
    steam; wetter, more, both ways (before v6.5.5 no knob ever saved steam). Untouched, every factor is exactly 1. */
 function dewater(fr,vac,pl,jv,jh){
   const eJet=1-0.25*jv*jv-0.15*jh*jh,dv=(vac-30)/30,eVac=1-(dv<0?0.58:0.15)*dv*dv,eRef=eDrain(csfOf(fr));   // (v6.8: drainage follows freeness, 07g)
-  const cs=clamp(19*eJet*eVac*eRef+CD.sbCouch*LV("steambox"),8,27.5),   /* (v6.11: the steam box, 07k) */pb=44+4*LV("shoe");
+  const cs=clamp(19*eJet*eVac*eRef*chemDrain()+CD.sbCouch*LV("steambox"),8,27.5),   /* (v6.11: the steam box, 07k) */pb=44+4*LV("shoe");
   const lt=pl<100?0.2*(pl-100):pl<=130?0.08*(pl-100):2.4-0.3*(pl-130);
   const ps=clamp(pb+(cs-19)+lt,30,56),wpt=p=>(1-DRY.m0/100)/(p/100)-1;
   return {cs,ps,W:wpt(ps)/wpt(pb),eJet,eVac,eRef};}
@@ -77,6 +83,7 @@ function knobFmt(id){const K=S.knob,d=KNOBN[id];if(id==="slice"){const s=slcGet(
   if(id==="guide"){const v=K?K.v:KNOB_IDEAL;return (v.gm?"AUTO":"MANUAL")+(v.gt?` · trim ${v.gt>0?"+":""}${v.gt} mm`:"");}
   if(id==="couch")return knobVal("couch")?"running":"stopped";
   if(id==="incomer")return knobVal("incomer")?"closed":"open";
+  if(id==="hood")return knobVal("hood")?"raised":"closed";
   const v=knobVal(id);return `${v.toFixed(d.dp||0)} ${d.unit}`;}
 function knobReset(id,quiet){const K=S.knob;if(!K)return;
   if(id==="slice"){K.v.sv=K.v.sh=0;if(G3.SLC){G3.SLC.v=G3.SLC.h=0;G3.SLC.dirty=true;}}
@@ -163,7 +170,7 @@ function knobTick(dt){const K=S.knob;if(!K||!K.any||S.zen)return;
   // v6.5 b5: moisture, the 3rd section and the boiler header come from the dryer model (07d), which now also sees speed
   const a0=clamp(W-x.d1,0.7,1.3),Dr=dryState();K.W=W;K.d1x=x.d1;K.a=Dr.st3/(DRY.base[C.grade]||DRY.base["24"]);
   x.m=Dr.m;                                                             // reel moisture (%)
-  K.sf=a0+Math.max(0,x.d1);                                             // steam load per ton (1 = normal): the cost side (v6.5.5: a drier sheet saves steam)
+  K.sf=a0+Math.max(0,x.d1)+(v.hood&&run?HOOD_STEAM:0);                 // steam load per ton (1 = normal): the cost side (v6.5.5: a drier sheet saves steam; v6.11.1: hood doors up)
   // boiler header sagging under the load: the boiler's own limit (07d), or (v6.5.2) the knobs holding the dryers' total
   // steam per ton (the 3rd section's share plus the 1st's, a0 + d1) at its 30% top for a while. With the 1st section
   // turned down the 3rd takes its share over, which isn't more steam, so that alone doesn't trip it.
@@ -172,7 +179,7 @@ function knobTick(dt){const K=S.knob;if(!K||!K.any||S.zen)return;
   x.cr1=L(x.cr1||0,Math.max(0,x.pl-115)/30,10);x.cr=L(x.cr||0,x.cr1,10);x.dt=L(x.dt,Math.max(0,v.draw-2.4),10);
   // ---- consequences: off-spec ----
   const nz=x.z.filter(z=>Math.abs(z)>4).length;
-  const F={wet:x.m>10?(x.m-10)/4:0,dry:x.m<6?(6-x.m)/2:0,cd:nz/3,bw:x.sw>0.3?(x.sw-0.3)/0.6:0,crush:x.cr>0.05?(x.cr-0.05)/0.6:0,stripes:x.st>0.4?(x.st-0.4)/0.4:0,wrinkles:x.dl>0.15?(x.dl-0.15)/0.6:0};
+  const F={wet:x.m>10?(x.m-10)/4:0,dry:x.m<6?(6-x.m)/2:0,cd:nz/3,bw:x.sw>0.3?(x.sw-0.3)/0.6:0,crush:x.cr>0.05?(x.cr-0.05)/0.6:0,stripes:x.st>0.4?(x.st-0.4)/0.4:0,wrinkles:x.dl>0.15?(x.dl-0.15)/0.6:0,floc:chemFloc()};   // (v6.11.1 floc: a polymer overdose, 07l)
   // (v6.5.3: weight and moisture are judged against the grade's spec by the QCS check, 07e; F.wet, dry and bw stay for
   // the screens and the crew's tracing, and only the other defects send a share of the reel to the beater from here)
   let keep=1,top="",tv=0;for(const k in F){const f=clamp(F[k],0,1);F[k]=f;if(k==="wet"||k==="dry"||k==="bw")continue;if((k==="cd"||k==="stripes")&&cdOn())continue;   /* (v6.11: they beater the roll under them, 07k) */keep*=1-f;if(f>tv){tv=f;top=k;}}
@@ -212,16 +219,16 @@ function knobTick(dt){const K=S.knob;if(!K||!K.any||S.zen)return;
   tr("feed",K.feed<0.95,480,()=>["pulp"],"Stock prep can't keep the chest up: the pulper is running thin.","Stock prep");
   tr("moist",F.wet>0||F.dry>0||(K.harm.moist&&K.harm.moist.n>0),180,()=>F.wet>0?knobSteamCulprits():["st1","ref"].filter(i=>!knobAt(i)),F.wet>0?"QCS: the sheet is coming off the reel wet.":"QCS: the sheet is coming off the reel over-dried.","The process engineer");
   // ---- all back at ideal and settled: stop running ----
-  if(!knobsOff().length&&!K.inc.length&&K.cs<0.01&&K.wear<0.001&&Math.abs(x.cp-5)<0.02&&Math.abs(x.fr-0.5)<0.002&&x.ch<0.01&&x.sw<0.005&&Math.abs(x.vac-30)<0.05&&Math.abs(x.pl-100)<0.05&&knobAt("slice")&&Math.abs(x.jv||0)<0.005&&Math.abs(x.jh||0)<0.005&&x.st<0.005&&Math.abs(x.d1)<0.001&&Math.abs(x.m-DRY.m0)<0.02&&x.bs<0.01&&x.dl<0.002&&(x.dl1||0)<0.002&&(x.cr||0)<0.002&&(x.cr1||0)<0.002&&x.dt<0.002&&x.z.every(z=>Math.abs(z)<0.02)&&K.off===0){
+  if(!knobsOff().length&&!chemOn()&&!K.inc.length&&K.cs<0.01&&K.wear<0.001&&Math.abs(x.cp-5)<0.02&&Math.abs(x.fr-0.5)<0.002&&x.ch<0.01&&x.sw<0.005&&Math.abs(x.vac-30)<0.05&&Math.abs(x.pl-100)<0.05&&knobAt("slice")&&Math.abs(x.jv||0)<0.005&&Math.abs(x.jh||0)<0.005&&x.st<0.005&&Math.abs(x.d1)<0.001&&Math.abs(x.m-DRY.m0)<0.02&&x.bs<0.01&&x.dl<0.002&&(x.dl1||0)<0.002&&(x.cr||0)<0.002&&(x.cr1||0)<0.002&&x.dt<0.002&&x.z.every(z=>Math.abs(z)<0.02)&&K.off===0){
     K.any=false;K.off=0;K.sf=1;K.feed=1;K.brk=1;K.edge=0;K.gtrav=0;K.H={};K.harm={};S.M=mods();}
 }
-const KOFFN={wet:"sheet too wet",dry:"sheet over-dried",cd:"CD moisture streaks",bw:"basis weight swings",crush:"crush marks",stripes:"stripes from the pick-up felt",wrinkles:"wrinkles in the reel"};
+const KOFFN={wet:"sheet too wet",dry:"sheet over-dried",cd:"CD moisture streaks",bw:"basis weight swings",crush:"crush marks",stripes:"stripes from the pick-up felt",wrinkles:"wrinkles in the reel",floc:"flocs in the sheet (poor formation)"};
 // what is putting the extra water into the dryers (or the extra steam on): the knobs the engineers will trace
 function knobSteamCulprits(){const K=S.knob;if(!K)return [];const v=K.v,c=[];
   // (v6.5.5: each knob's share of the extra water, from the dewatering chain with that knob put back to standard)
   const sl=slcGet(),W0=dewater(gapOf(v.ref),v.vac,v.press,sl.v,sl.h).W,dW=(o)=>W0-dewater(o.fr??gapOf(v.ref),o.vac??v.vac,o.pl??v.press,o.jv??sl.v,o.jh??sl.h).W;
   if(!knobAt("ref"))c.push(["ref",dW({fr:0.5})]);if(!knobAt("vac"))c.push(["vac",dW({vac:30})]);if(!knobAt("press"))c.push(["press",dW({pl:100})]);if(!knobAt("slice"))c.push(["slice",dW({jv:0,jh:0})]);
-  if(v.st1!==70)c.push(["st1",Math.abs(v.st1-70)/130*0.35]);
+  if(v.st1!==70)c.push(["st1",Math.abs(v.st1-70)/130*0.35]);if(v.hood)c.push(["hood",HOOD_STEAM]);
   c.sort((a,b)=>b[1]-a[1]);return c.filter(r=>r[1]>0.02).map(r=>r[0]);}
 // readings for the DCS and QCS screens. With S.knob missing everything reads at its standard value.
 // Base values follow each grade's standard: reel speed, basis weight and 3rd section steam, and the stock prep level.
