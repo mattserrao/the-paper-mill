@@ -43,6 +43,7 @@
       [[12,5,9.1],"Dryers","Dry end",()=>`Steam ${r.steam>0.5?f1(r.steam)+" t/h":"–"} · 3rd section ${Math.round(r.st3)} kPa · reel moisture ${r.run?f1(r.moist)+" %":"–"}`,"dry"],
       [[-4,4,9.1],"Reel","Dry end",()=>`${Math.round(S.pmSpeed)} fpm · ${f1(S.reel)} of 100 t on the reel`,"reel"],
       [[-18.7,4,9.1],"Winder","Dry end",()=>S.wd==="hayout"?"Hayout: crew cleaning up":`${f1(R.cut||0)} t/h · ${Math.max(0,reelsAtWinder()-1)}/${P.storeReels} reels stored`,"wind"],
+      [[[-31.4,1.2,15.75],[-35,1.2,15.75],[-27.8,1.2,15.75]],"Beater bay","Shipping",()=>{const t=(S.q&&S.q.bank)||0,n=G3.BEAT?G3.BEAT.bay.length:0;return `${Math.round(t).toLocaleString()} t of beater to repulp · ${n} roll${n===1?"":"s"} in the bay${G3.BT&&G3.BT.st!=="away"?" · truck taking them to receiving":""}`;}],   // v6.11.2
       [[-36.4,3,23],"Roll warehouse","Shipping",()=>`${Math.round(S.fg)} of ${Math.round(P.fgCap)} rolls · ${S.outQ.length} trucks waiting`],
       [[-21,3,-13],"Receiving and bale yard","Yard",()=>`${Math.round(S.yard).toLocaleString()} t of bales · unloading ${f1(R.unload||0)} t/h · ${S.inQ.length} trucks waiting`],
       [[76,8,-10],"Boiler house","Utilities",()=>`Steam header ${Math.round(r.boiler*100)} % · ${r.steam>0.5?f1(r.steam):"0"} t/h`],

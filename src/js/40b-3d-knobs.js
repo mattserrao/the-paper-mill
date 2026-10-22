@@ -85,6 +85,27 @@
       if(t.startsWith("station:"))G3.knobTap({k:"station",a:t.slice(8)});else if(t==="spider"||t==="slice")G3.knobTap({k:t});else G3.knobTap({k:"knob",id:t});return true;};
     const _q=new THREE.Vector3(),_d=new THREE.Vector3();
     G3.kvVeil=veil;
+    // ---- v6.11.2 the known defects view (Rounds screen): the mill greyed out, a labelled bullseye on each known defect,
+    // orange for mechanical, blue for electrical ----
+    const DVG=new THREE.Group();DVG.visible=false;scene.add(DVG);SM.dyn.add(DVG);const DV={on:false,pins:new Map(),t:0};
+    const dvM={m:new THREE.MeshBasicMaterial({color:lin0("#e8590c"),depthTest:false,depthWrite:false,transparent:true,toneMapped:false}),e:new THREE.MeshBasicMaterial({color:lin0("#1c7ed6"),depthTest:false,depthWrite:false,transparent:true,toneMapped:false}),w:new THREE.MeshBasicMaterial({color:0xffffff,depthTest:false,depthWrite:false,transparent:true,toneMapped:false})};
+    const ring1=new THREE.RingGeometry(0.95,1.3,32),ring2=new THREE.RingGeometry(0.45,0.7,28),dot=new THREE.CircleGeometry(0.25,20),disc=new THREE.CircleGeometry(1.32,32);
+    function dvPin(d){const g=new THREE.Group(),b=new THREE.Group();g.add(b);const M2=dvM[d.k];
+      [[disc,dvM.w,9991],[ring1,M2,9992],[ring2,M2,9992],[dot,M2,9993]].forEach(([geo,m,o])=>{const x=new THREE.Mesh(geo,m);x.renderOrder=o;b.add(x);});
+      const s=new THREE.Mesh(stemG,M2);s.scale.y=2.2;s.position.y=-1.1;s.renderOrder=9990;g.add(s);
+      g.position.set(d.at[0],3.4,d.at[1]);DVG.add(g);return {g,b,lb:lblNew(true,"defect:"+d.id),v:new THREE.Vector3(d.at[0],4.9,d.at[1]),d};}
+    function dvSync(){const L=knownDefects(),keep=new Set();for(const d of L){keep.add(d.id);let p=DV.pins.get(d.id);if(!p){p=dvPin(d);DV.pins.set(d.id,p);}p.d=d;}
+      for(const [id,p] of DV.pins)if(!keep.has(id)){DVG.remove(p.g);p.lb.vis=false;DV.pins.delete(id);}return L.length;}
+    G3.defectView=on=>{on=!!on&&!S.zen;if(on===DV.on)return DV.pins.size;DV.on=on;G3.dvOn=on;DVG.visible=on;veil.visible=on||!!G3.kvOn;LB.force=true;
+      if(on){if(labelHost.classList.contains("lbl-off")){DV.lblOff=true;labelHost.classList.remove("lbl-off");}return dvSync();}
+      for(const p of DV.pins.values())p.lb.vis=false;if(DV.lblOff){DV.lblOff=false;labelHost.classList.add("lbl-off");}return 0;};
+    G3.defectCount=()=>knownDefects().length;
+    function dvFrame(now){if(!DV.on)return;if(now-DV.t>1000){DV.t=now;dvSync();}
+      {const d=camera.near*1.2,h=(camera.isIso?camera.top-camera.bottom:2*d*Math.tan(camera.fov*Math.PI/360))*1.15;camera.getWorldDirection(_d);veil.position.copy(camera.position).addScaledVector(_d,d);veil.quaternion.copy(camera.quaternion);veil.scale.set(h*camera.aspect,h,1);veil.updateMatrixWorld();}
+      const w=G3.vw||host.clientWidth,hh=G3.vh||host.clientHeight,pulse=0.5+0.5*Math.sin(now/300);
+      for(const p of DV.pins.values()){p.b.lookAt(camera.position);const s=1+0.15*pulse;p.b.scale.set(s,s,s);p.g.updateMatrixWorld(true);_q.copy(p.v).project(camera);
+        const vis=_q.z<1&&Math.abs(_q.x)<1.05&&Math.abs(_q.y)<1.05;p.lb.vis=vis;if(!vis)continue;p.lb.x=Math.round((_q.x+1)/2*w);p.lb.y=Math.round((1-_q.y)/2*hh);
+        lblSet(p.lb,p.d.a,(G3.camDist||camera.position.distanceTo(p.v))>170?"":p.d.b,p.d.k==="m");}}
     function kvFrame(now){if(!G3.kvOn)return;
       if(labelHost.classList.contains("lbl-off")){kvLblOff=true;labelHost.classList.remove("lbl-off");}   // (the labels intro may switch them off meanwhile)
       // (the scene's automatic matrix update is off while moving batches draw, 43-3d-frame.js: update these by hand)
@@ -125,7 +146,7 @@
         if(K.x.bs>0.2&&Math.random()<rdt*6*K.x.bs)emit("steam",76+R(),15,-10+R(),R()*0.5,3+Math.random()*2,R()*0.5,3,2.4,"#eef1f5",0.6);}
       // a thick pulper: the handwheel turned shut; a thin one, wide open (just the wheel's angle)
       if(K){const turn=(w,a)=>{if(Math.abs(w.rotation.y-a)>1e-4){w.rotation.y=a;w.updateMatrixWorld(true);}};turn(KX.pulp.w,(K.v.pulp-50)/50*Math.PI);turn(KX.ref.w,(gapOf(K.v.ref)-0.5)*Math.PI*3);}
-      kvFrame(now);};
+      kvFrame(now);dvFrame(now);};
     // ---- breakdowns only a knob causes: their effects and pins (31-3d-upset-fx.js builds and precompiles them) ----
     FXDEF.rotortrip=g=>spFx(g,16,-13.5,2.6,8);
     FXDEF.couchpit=g=>spFx(g,40.6,11.4,0.6,6);

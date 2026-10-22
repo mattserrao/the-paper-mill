@@ -33,7 +33,7 @@ def screens(pw):
     pg.evaluate("()=>document.getElementById('v2go').click()"); pick_leader(pg); pg.wait_for_timeout(500)
     pg.evaluate("()=>{__PM.setRunning(false);if(__PM.S.cards)__PM.S.cards.open=null;for(let i=0;i<4*120;i++)__PM.step(0.25)}")
     steps = lambda m: pg.evaluate("m=>{for(let i=0;i<m*4;i++){if(__PM.S.cards)__PM.S.cards.open=null;__PM.step(0.25)}}", m)
-    want = {"SPOT": 16, "WET": 7, "DET": 6, "UTIL": 8}   # (v6.5.4: boiler and power moved from DET to UTIL; v6.5.6: the white water chest on SPOT)
+    want = {"SPOT": 16, "WET": 7, "DET": 7, "UTIL": 8}   # (v6.11.2: the DE pulper on DET) (v6.5.4: boiler and power moved from DET to UTIL; v6.5.6: the white water chest on SPOT)
     for a, n in want.items():
         pg.evaluate(f"()=>__PM.G3.openStation('{a}','dcs')"); pg.wait_for_timeout(400)
         st = pg.evaluate("()=>{const o=document.getElementById('dcsOv');const tags=[...o.querySelectorAll('[data-tag]')].map(t=>t.textContent);return {eq:o.querySelectorAll('.mimic .pg-bg').length,tags:tags.length,bad:tags.filter(t=>/undefined|NaN|^–?$/.test(t)&&t!=='–')}}")
@@ -175,6 +175,13 @@ def rows(pw):
       for(let i=0;i<4*30;i++){if(S.cards)S.cards.open=null;P.step(0.25);if(S.pm==='break'){rec.push(S.M.recvMul);clamp.push(S.M.clampMul);if(S.M.crewAtPM)at++;}}
       return {n:rec.length,rec:Math.min(...rec),clamp:Math.min(...clamp),at}}""")
     ok("sheet break: the yard keeps receiving and the warehouse keeps loading (no crew to the PM)", r["n"] > 0 and r["rec"] > 0 and r["clamp"] > 0 and r["at"] == 0, r)
+    # v6.11.2 the dry-end pulper on DET: trim keeps it ticking over; a dryer break fills it and thickens it
+    r = pg.evaluate("""()=>{const P=__PM,S=P.S;S.pm='run';for(let i=0;i<4*60;i++){if(S.cards)S.cards.open=null;P.step(0.25);}const D=S.dep,a={L:D.m/300*100,c:D.f/D.m*100,fin:D.fin};
+      S.pm='break';S.brkType='dryer';S.breakLeft=60;S.breakTotal=60;S.crewQ=[{k:'brk',resp:0,since:0,here:true,go:true}];for(let i=0;i<4*30;i++){if(S.cards)S.cards.open=null;P.step(0.25);}
+      const b={L:D.m/300*100,c:D.f/D.m*100,fin:D.fin};__PM.G3.openStation('DET','dcs');const t=[...document.querySelectorAll('#dcsOv [data-tag=delvl],#dcsOv [data-tag=decons],#dcsOv [data-tag=defin]')].map(e=>e.textContent);return {a,b,t}}""")
+    ok("DE pulper: trim alone keeps it near 40% at ~4% consistency", 30 < r["a"]["L"] < 55 and 3.5 < r["a"]["c"] < 4.5 and r["a"]["fin"] > 0.5, r["a"])
+    ok("DE pulper: a dryer break sends the sheet in: level climbs", r["b"]["L"] > r["a"]["L"] + 15 and r["b"]["fin"] > 15, r["b"])
+    ok("DE pulper readings on the DET screen", len(r["t"]) == 3 and all(x not in ("–", "") for x in r["t"]), r["t"])
     b.close()
 
 with sync_playwright() as pw:

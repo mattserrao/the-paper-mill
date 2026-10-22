@@ -58,14 +58,17 @@
     bayDraw();}
   // warehouse clamp trucks. Lanes: aisle along the south wall (z 17) and a lane inside the shipping doors (x -47.5).
   // Truck 0 tends the roll conveyor (rolls into the stacks, beater rolls into the bay); the rest load trucks at the doors.
-  const AIS2=17.0,LANEX=-47.6,slot=k=>{k=Math.max(0,Math.min(83,k));return [-45+(k%12)*1.75,31.2-Math.floor(k/12)*1.7];};
-  const via=(from,to)=>{const P2=[[from[0],AIS2]];if(Math.abs(to[0]-from[0])>0.3)P2.push([to[0],AIS2]);P2.push(to);return P2;};
+  const AIS2=17.0,LANEX=-47.6,slot=k=>{k=Math.max(0,Math.min((G3.whSlots||84)-1,k));if(k<84)return [-45+(k%12)*1.75,31.2-Math.floor(k/12)*1.7];
+    const a=k-84,n=Math.floor(a/36),j=a%36;return [-45+(j%12)*1.75,32.2+n*8+1.5+Math.floor(j/12)*2.2];};   // (v6.11.2: past the 84 main bays, the annexes' rows)
+  const via=(from,to)=>{const P2=[[from[0],AIS2]];
+    if(to[1]>32.2||from[1]>32.2){P2.push([LANEX,AIS2]);P2.push([LANEX,Math.max(to[1],AIS2)]);if(Math.abs(to[0]-LANEX)>0.3)P2.push([to[0],Math.max(to[1],AIS2)]);if(from[1]>32.2)P2.splice(0,1,[LANEX,from[1]]);P2.push(to);return P2;}   // (v6.11.2: to and from an annex down the west lane, not through the stacks)
+    if(Math.abs(to[0]-from[0])>0.3)P2.push([to[0],AIS2]);P2.push(to);return P2;};
   function clampJob(g,i,rdt){const J=g.userData.cj||(g.userData.cj={path:[],carry:null,after:null,wait:0}),sp=3.2*TSC();
     if(!g.userData.load.material.isMaterial&&!g.userData.lm){g.userData.lm=[new StdMat({roughness:0.8}),M.rollCap,M.rollCap];g.userData.load.material=g.userData.lm;}
     g.userData.load.visible=!!J.carry;if(J.carry)g.userData.lm[0].color.set(J.carry.col||"#ffffff");
     if(J.path.length){const p=J.path[0];if(moveVeh(g,p[0],p[1],sp,rdt)){J.path.shift();if(!J.path.length&&J.after){const f=J.after;J.after=null;f();}}return;}
     if(J.wait>0){J.wait-=rdt;return;}
-    const n=rolls.count,here=[g.position.x,g.position.z];
+    const n=G3.whTotal!=null?G3.whTotal:rolls.count,here=[g.position.x,g.position.z];   // (v6.11.2: annexes included)
     if(i===0){const RV=G3.rollVis,f=RV&&RV.list[0];
       if(f&&RV.CL&&f.d>=RV.CL-0.05){J.path=via(here,[-31.9,19.4]);J.after=()=>{const r=RV.list[0];if(!r||r.d<RV.CL-0.3){J.wait=0.5;return;}RV.list.shift();J.carry={col:r.col};
           const to=r.col?[bayPos(BEAT.bay.length)[0],16.9]:(()=>{const s2=slot(n);return [s2[0],s2[1]-1.45];})();BEAT.carry+=r.col?1:0;
@@ -109,7 +112,9 @@
   function clamp3(m){const g=new THREE.Group();box(1.15,0.62,0.85,M.fork,0,0.55,0,g);box(0.3,0.55,0.82,M.ink,-0.62,0.62,0,g);cage(g);
     box(0.08,1.9,0.08,M.ink,0.66,1.05,-0.3,g,false);box(0.08,1.9,0.08,M.ink,0.66,1.05,0.3,g,false);box(0.5,0.62,0.08,M.brand,0.98,0.95,-0.48,g,false);box(0.5,0.62,0.08,M.brand,0.98,0.95,0.48,g,false);
     const r=new THREE.Mesh(new CylG(0.4,0.4,0.9,18),ROLLM);r.position.set(0.95,0.95,0);g.add(r);g.userData.load=r;scene.add(g);return cutMark(g,"lift");}
-  function robot(){const g=new THREE.Group();box(1.1,0.35,1.1,M.robot,0,0.3,0,g);const l=box(0.3,0.08,0.3,M.ok,0,0.52,0,g,false);g.userData.light=l;scene.add(g);return g;}
+  function robot(){const g=new THREE.Group();box(1.1,0.35,1.1,M.robot,0,0.3,0,g);const l=box(0.3,0.08,0.3,M.ok,0,0.52,0,g,false);g.userData.light=l;
+    const r=new THREE.Mesh(new CylG(0.4,0.4,0.9,18),ROLLM);r.position.set(0,1.0,0);r.visible=false;g.add(r);g.userData.load=r;   // (v6.11.2: a roll it can carry when it covers a clamp truck's job)
+    scene.add(g);return g;}
   const lifts=[],loaders=[],robots=[];
   function ensure(arr,n,make){while(arr.length<n)arr.push(make());arr.forEach((o,i)=>o.visible=i<n);}
 

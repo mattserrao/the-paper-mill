@@ -228,5 +228,10 @@
   const WH=4.6;ribWall(26.4,WH,0.3,-21.2,WH/2,-23.5);ribWall(26.4,WH,0.3,-21.2,WH/2,-3);ribWall(0.3,WH,10.8,-8,WH/2,-18.1);ribWall(0.3,WH,7.3,-8,WH/2,-6.65);ribWall(0.3,WH-2.3,2.4,-8,2.3+(WH-2.3)/2,-11.5);
   // warehouse: floor + walls
   slab(-49,-23.8,14.8,32.2,M.slab,0.04);
-  ribWall(25.2,WH,0.3,-36.4,WH/2,14.8);ribWall(25.2,WH/2,0.3,-36.4,WH/4,32.2);/* (v6.11.2: the south wall's lower half; its top half rides with the roof, 22) */ribWall(0.3,WH,3.3,-23.8,WH/2,16.45);ribWall(0.3,WH,11.5,-23.8,WH/2,26.45);ribWall(0.3,WH-2.5,2.6,-23.8,2.5+(WH-2.5)/2,19.4);
+  ribWall(25.2,WH,0.3,-36.4,WH/2,14.8);{const g=new THREE.Group();scene.add(g);(G3.dynLater||(G3.dynLater=[])).push(g);G3.whSouthLo=g;ribWall(25.2,WH/2,0.3,-36.4,WH/4,32.2,g);}/* (v6.11.2: the south wall's lower half, in its own group so a warehouse annex can open it; its top half rides with the roof, 22) */
+  // v6.11.2: a walk-through door for the operators at the north end of the east wall (into the winder end of the hall)
+  {const D0=15.6,D1=16.6;ribWall(0.3,WH,D0-14.8,-23.8,WH/2,(14.8+D0)/2);ribWall(0.3,WH,18.1-D1,-23.8,WH/2,(D1+18.1)/2);ribWall(0.3,WH-2.2,D1-D0,-23.8,2.2+(WH-2.2)/2,(D0+D1)/2);
+   [D0,D1].forEach(z=>box(0.36,2.2,0.08,M.brand,-23.8,1.1,z,scene,false));const leaf=box(0.9,2.05,0.06,M.brand,-24.3,1.05,D0+0.07,scene,false);leaf.userData.noNav=true;
+   box(0.5,0.12,0.04,M.ok,-23.62,2.38,(D0+D1)/2,scene,false);}   // (frame, the door standing open into the warehouse, an exit sign)
+  ribWall(0.3,WH,11.5,-23.8,WH/2,26.45);ribWall(0.3,WH-2.5,2.6,-23.8,2.5+(WH-2.5)/2,19.4);
 

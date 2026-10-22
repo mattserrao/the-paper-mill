@@ -1509,6 +1509,9 @@ body.pmpop .popmain[data-v="dcs"] #dcsOv .dcs{max-width:1180px;margin:0 auto}
 .cdz{display:grid;grid-template-columns:repeat(12,1fr);gap:2px}.cdz label{display:flex;flex-direction:column;align-items:center;font-size:10px;color:#b8c9e4}
 .cdz input{writing-mode:vertical-lr;direction:rtl;width:18px;height:64px;margin:0;accent-color:#5f8fd8}.cdz input:disabled{opacity:.6}
 @media (max-width:600px){.cdrow{grid-template-columns:1fr}.cdz input{height:48px;width:14px}}
+
+/* v6.11.2 known defects view */
+.dvchip{border-color:#e8590c}.dvchip b{color:#e8590c}.kvchip .dvk,.dvk{display:inline-block;padding:0 6px;border-radius:999px;color:#fff;font-size:11px;font-weight:700}.kvchip .dvk{color:#fff}.dvk.m{background:#e8590c}.dvk.e{background:#1c7ed6}
 </style>
 </head>
 <body class="app">
@@ -2770,6 +2773,22 @@ function windCredit(g,w,u){const O=S.ord;if(!O||!trimOn())return;for(const o of 
 // the trim of this step's winding goes to the dry-end pulper and on into the stock chest (overflow waits in the beater bay)
 function trimTo(t){if(!(t>0))return;const room=Math.max(0,P.tankCap*0.98-S.tank),a=Math.min(t,room);S.tank+=a;if(t>a)S.q.bank+=t-a;
   if(typeof WQ!=="undefined")WQ.rep+=t;S.tot.trim=(S.tot.trim||0)+t;pfW("trim",t);}
+
+/* ---- v6.11.2 the dry-end pulper (read only on the DET DCS) ----
+   A tub under the winder and the dry end: the edge trim is blown into it all the time, and on a dryer or reel break the sheet
+   goes down the hole into it too (a press break goes to the couch pit). White water dilutes what comes in to about 4%, up to
+   the dilution header's limit; a pump sends it back to the stock chest at a rate set by the tub level. On a break more comes
+   in than the pump can take, so the level climbs; near the top the dilution is cut back, so the consistency climbs as well.
+   Display only: the tons it handles are already counted (trim and broke go back to the stock chest), so nothing here changes
+   the mass balance. S.dep = {m: slurry in the tub (t), f: fiber in it (t), fin: fiber coming in (t/h)}. Not in zen. */
+const DEP={cap:300,c0:4.0,dil:900,pump:600,lo:0.35,span:0.5};
+function depState(){if(!S.dep)S.dep={m:DEP.cap*0.42,f:DEP.cap*0.42*DEP.c0/100,fin:0};return S.dep;}
+function depTick(dt,trimT){if(S.zen)return;const D=depState(),h=dt/60;if(!(h>0))return;
+  let fin=(trimT||0)/h;if(S.pm==="break"&&S.brkType!=="press")fin+=P.K*Math.max(S.pmSpeed,P.minSpeed*0.5)*bwSp();
+  const L=D.m/DEP.cap,win=Math.min(DEP.dil,fin*(100/DEP.c0-1))*clamp((0.97-L)/0.07,0,1),q=DEP.pump*clamp((L-DEP.lo)/DEP.span,0,1),c=D.m>1e-6?D.f/D.m:0;
+  D.m=clamp(D.m+(fin+win-q)*h,0.5,DEP.cap);D.f=clamp(D.f+(fin-q*c)*h,0,D.m);D.fin=fin;D.q=q;}
+const depLvl=()=>S.dep?S.dep.m/DEP.cap*100:42;
+const depCons=()=>S.dep&&S.dep.m>0?S.dep.f/S.dep.m*100:DEP.c0;
 const EVENTS=[
  {id:"refclash",g:"stock",name:"Refiner plates clash",head:"Refiner plates clashed! The refiners tripped: no stock is going forward to the machine chest.",dur:[180,300],mtbf:420,mods:{refOut:"refiner plates clashed"},fx:"refclash",
    // (v6.9.2: the refiners feed the machine chest; clashed, nothing goes forward, the machine runs the chest down and trips
@@ -3066,6 +3085,18 @@ function prepBegin(o,st){const pr=S.tell&&S.tell.prep;S.fx=S.fx.filter(f=>f.id!=
   o.prep={n:t.n,m:cut};if(cut>0)log(`Outage prep ${t.n}/4: the outage is ${cut} min shorter.`,"ok");S.M=mods();}
 // the outage ends: refund on the approved budget
 function prepEnd(o,budget){const p=o.prep;if(!p||!p.n||!(budget>0))return;const r=budget*PREP.refund*p.n;S.cash+=r;S.ledger.repairs-=r;log(`Outage prep ${p.n}/4: ${money(r)} of the outage budget came back.`,"ok");}
+
+/* ---- v6.11.2 known defects: what the mill knows is going wrong, for the Rounds screen's known defects view ----
+   Tells an operator walked past on a Round (shown, not tapped: still there until caught or failed), and the last vibration
+   (mechanical) and ADX (electrical) readings of each critical machine that came back worse than Good. Each: {k:"m"|"e", at:[x,z],
+   a: what, b: the finding}. Electrical tells: the ones on electrical gear. */
+const DEF_ELEC=new Set(["brownout","boiler"]);
+function knownDefects(){const out=[];if(!S||S.zen)return out;
+  for(const p of (S.tell&&S.tell.q)||[])if(p.seen){const at=G3.tellPos?G3.tellPos(p.id):null;if(at)out.push({k:DEF_ELEC.has(p.id)?"e":"m",at,a:EV[p.id].name,b:"spotted on a round: "+(TELLTXT[p.id]||"failing"),id:"t:"+p.id});}
+  if(S.rel&&typeof ASSETS!=="undefined")for(const A of ASSETS){const a=S.rel.a[A.id],sp=G3.ASPOT&&G3.ASPOT[A.id];if(!a||!sp)continue;
+    if(a.lv&&a.lv.st&&a.lv.st!=="good")out.push({k:"m",at:[sp[0],sp[1]],a:A.n,b:VIBST[a.lv.st][0]+" (vibration)",id:"v:"+A.id});
+    if(a.la&&a.la.st&&a.la.st!=="good")out.push({k:"e",at:[sp[0]+1.2,sp[1]+0.8],a:A.n,b:ADXST[a.la.st][0]+" (ADX)",id:"a:"+A.id});}
+  return out;}
 /* ---------- event cards: offers the player can accept or decline (v2.2.0) ---------- */
 // one card about every 1.5 game days, never two at once; the sim pauses while a card is open.
 // odds are shown honestly and shift with upgrades and how the mill is running. Seeded per season week.
@@ -4005,7 +4036,7 @@ function step(dt){
   // v6.11: the trim (web - 2 x the roll width, 07j) is slit off and blown to the dry-end pulper, back to the stock chest
   {const T=[];lotTake(S.lots.buf,cut,T);let bt=0,gd=0,tr=0;const f=cut>0?trimFrac(windW(T.length?T[0][0]==="beater"?C.grade:T[0][0]:C.grade)):0;
     for(const [k,q,,a] of T){const tq=q*f;tr+=tq;if(k==="beater")bt+=q-tq;else{lotPut(S.lots.acc,k,q-tq,100,a);gd+=q-tq;}}
-    S.winderAcc+=gd;S.beatAcc=(S.beatAcc||0)+bt;S.beatEnd=cut>0&&bt<=1e-9;trimTo(tr);S.trimNow=f;S.rates.trim=ease(S.rates.trim||0,tr*60/dt,dt,6);}
+    S.winderAcc+=gd;S.beatAcc=(S.beatAcc||0)+bt;S.beatEnd=cut>0&&bt<=1e-9;trimTo(tr);depTick(dt,tr);S.trimNow=f;S.rates.trim=ease(S.rates.trim||0,tr*60/dt,dt,6);}
   if(cut>0&&L.hay<dt/720*0.75*P.hayBase*outRel("dry")*((C.hays?1:0)+(M.hayMul-1)))hayout(L.hayLen,L.hayLoss);
   let rollsMade=0;
   // (a roll takes the grade that makes up most of its paper: one roll at a grade change is part old, part new)
@@ -6692,6 +6723,7 @@ const TAGS=[
   ["dryl","Dryer load","DET","% of limit",()=>S.dry&&S.pm==="run"?S.dry.load*100:null,"a.dryl"],["moist","Reel moisture","DET","%",r=>r.run?r.moist:null,"a.moist"],
   ["bw","Basis weight","DET","lb/1000 ft²",r=>r.run?r.bw:null,"a.bw"],["tension","Draw tension","DET","kN/m",r=>r.run?r.tension:null,""],["draw","Open draw","DET","%",r=>r.draw,""],
   ["reel","Paper waiting at the winder","DET","t",()=>S.winderBuf+S.reel,"a.reel"],["cut","Winder","DET","t/h",()=>_R().cut,"a.cut"],["conv","Rolls on the conveyor","DET","rolls",()=>S.conv||0,""],
+  ["delvl","DE pulper level","DET","%",()=>S.zen?null:depLvl(),""],["decons","DE pulper consistency","DET","%",()=>S.zen?null:depCons(),""],["defin","DE pulper fiber in","DET","t/h",()=>S.zen||!S.dep?null:S.dep.fin,""],
   ["rollw","Roll width (twin set)","QCS","in",()=>S.zen?null:S.wdW||windW(C.grade),""],["trimp","Trim","QCS","%",()=>S.zen?null:(S.trimNow!=null?S.trimNow:trimFrac(windW(C.grade)))*100,""],["trimt","Trim to the DE pulper","QCS","t/h",()=>S.zen?null:_R().trim||0,""],
   ["cdspan","CD moisture spread (worst zone)","QCS","%",()=>S.zen||!S.cd||S.pm!=="run"?null:Math.max(...S.cd.dv.map(Math.abs)),""],["sbout","Steam box output","QCS","%",()=>S.zen||!S.cd||!sbHave()?null:S.cd.sb.reduce((a,v)=>a+v,0)/12*100,""],["spout","Spray boom output","QCS","%",()=>S.zen||!S.cd?null:S.cd.sp.reduce((a,v)=>a+v,0)/12*100,""],   // (v6.11)
   // utilities
@@ -7394,7 +7426,12 @@ function no3D(){G3.ok=false;$("no3d").hidden=false;$("no3d-retry").onclick=()=>l
   const WH=4.6;ribWall(26.4,WH,0.3,-21.2,WH/2,-23.5);ribWall(26.4,WH,0.3,-21.2,WH/2,-3);ribWall(0.3,WH,10.8,-8,WH/2,-18.1);ribWall(0.3,WH,7.3,-8,WH/2,-6.65);ribWall(0.3,WH-2.3,2.4,-8,2.3+(WH-2.3)/2,-11.5);
   // warehouse: floor + walls
   slab(-49,-23.8,14.8,32.2,M.slab,0.04);
-  ribWall(25.2,WH,0.3,-36.4,WH/2,14.8);ribWall(25.2,WH/2,0.3,-36.4,WH/4,32.2);/* (v6.11.2: the south wall's lower half; its top half rides with the roof, 22) */ribWall(0.3,WH,3.3,-23.8,WH/2,16.45);ribWall(0.3,WH,11.5,-23.8,WH/2,26.45);ribWall(0.3,WH-2.5,2.6,-23.8,2.5+(WH-2.5)/2,19.4);
+  ribWall(25.2,WH,0.3,-36.4,WH/2,14.8);{const g=new THREE.Group();scene.add(g);(G3.dynLater||(G3.dynLater=[])).push(g);G3.whSouthLo=g;ribWall(25.2,WH/2,0.3,-36.4,WH/4,32.2,g);}/* (v6.11.2: the south wall's lower half, in its own group so a warehouse annex can open it; its top half rides with the roof, 22) */
+  // v6.11.2: a walk-through door for the operators at the north end of the east wall (into the winder end of the hall)
+  {const D0=15.6,D1=16.6;ribWall(0.3,WH,D0-14.8,-23.8,WH/2,(14.8+D0)/2);ribWall(0.3,WH,18.1-D1,-23.8,WH/2,(D1+18.1)/2);ribWall(0.3,WH-2.2,D1-D0,-23.8,2.2+(WH-2.2)/2,(D0+D1)/2);
+   [D0,D1].forEach(z=>box(0.36,2.2,0.08,M.brand,-23.8,1.1,z,scene,false));const leaf=box(0.9,2.05,0.06,M.brand,-24.3,1.05,D0+0.07,scene,false);leaf.userData.noNav=true;
+   box(0.5,0.12,0.04,M.ok,-23.62,2.38,(D0+D1)/2,scene,false);}   // (frame, the door standing open into the warehouse, an exit sign)
+  ribWall(0.3,WH,11.5,-23.8,WH/2,26.45);ribWall(0.3,WH-2.5,2.6,-23.8,2.5+(WH-2.5)/2,19.4);
 
   // ---- v2.9.14 lived-in floors: one painted canvas decal per building (bays, aisles, walkways, parking, scuffs, stains,
   // joints) = one draw call each, plus a few instanced props (pallets, bollards, bins, chargers, extinguishers) ----
@@ -7482,7 +7519,7 @@ function no3D(){G3.ok=false;$("no3d").hidden=false;$("no3d-retry").onclick=()=>l
   sawRoof(-34.6,-7.85,-23.65,-2.85,WH);
   // v6.11.2: the roll warehouse's south wall (the one facing the camera) is a half wall in the cutaway: its top half belongs to the
   // roof group, so it lifts and fades with the roof (with its own copies of the materials, so no other wall fades with it)
-  {const whR=sawRoof(-49.15,-23.65,14.65,32.35,WH),n0=whR.children.length;ribWall(25.2,WH/2,0.3,-36.4,WH*3/4,32.2,whR);
+  {const whR=sawRoof(-49.15,-23.65,14.65,32.35,WH),n0=whR.children.length;ribWall(25.2,WH/2,0.3,-36.4,WH*3/4,32.2,whR);G3.whSouthHi=whR.children.slice(n0);G3.sawRoof=sawRoof;
    const cl=new Map();whR.children.slice(n0).forEach(o=>o.traverse(c=>{if(!c.material)return;let m=cl.get(c.material);if(!m){m=c.material.clone();cl.set(c.material,m);whR.userData.mats.push(m);}c.material=m;}));}
   // paper machine hall: full building seen from the air (walls, window bands, sawtooth roof), gone as soon as you zoom in
   // v3.2.1: the tending side is widened from z 16.75 out to HALL.zf (20), east of the first bay; the west bay stays where it was
@@ -7537,7 +7574,7 @@ function no3D(){G3.ok=false;$("no3d").hidden=false;$("no3d-retry").onclick=()=>l
     if(Math.hypot(c[0]-x,c[1]-z)<R+c[2]*0.8)g.userData.gust=now+2200;});};
   let rfT=0;
   G3.roofFade=r=>{if(cutMode==="on")r=0;else if(cutMode==="off")r=1e9;const now=performance.now(),ek=rfT?1-Math.exp(-Math.min(0.25,(now-rfT)/1000)*11):1;rfT=now;
-    roofs.forEach(g=>{const f=g.userData.fade||[170,70],aT=(g.userData.gust&&now<g.userData.gust)?0:r>=f[0]+f[1]/2?1:0;   /* (t13: a passing tornado blows it off for a moment) */   /* (t11 QA: on or off per zoom step, the ramp's midpoint as the switch: at step 190 the ramp left every roof stuck at 29%, lifted 4.6 m) */
+    roofs.forEach(g=>{if(g.userData.off){if(g.visible)g.visible=false;return;}   /* (v6.11.2: a warehouse annex's roof before it is built) */const f=g.userData.fade||[170,70],aT=(g.userData.gust&&now<g.userData.gust)?0:r>=f[0]+f[1]/2?1:0;   /* (t13: a passing tornado blows it off for a moment) */   /* (t11 QA: on or off per zoom step, the ramp's midpoint as the switch: at step 190 the ramp left every roof stuck at 29%, lifted 4.6 m) */
     let a=g.userData.aa;a=a===undefined?aT:Math.abs(aT-a)<0.004?aT:a+(aT-a)*ek;g.userData.aa=a;const solid=a>0.995;g.visible=a>0.02;
     {const y=(1-a)*(1-a)*LIFT;if(g.position.y!==y)g.position.y=y;}
     if(g.userData.a!==undefined&&Math.abs(g.userData.a-a)<0.002)return;g.userData.a=a;
@@ -8657,14 +8694,17 @@ function no3D(){G3.ok=false;$("no3d").hidden=false;$("no3d-retry").onclick=()=>l
     bayDraw();}
   // warehouse clamp trucks. Lanes: aisle along the south wall (z 17) and a lane inside the shipping doors (x -47.5).
   // Truck 0 tends the roll conveyor (rolls into the stacks, beater rolls into the bay); the rest load trucks at the doors.
-  const AIS2=17.0,LANEX=-47.6,slot=k=>{k=Math.max(0,Math.min(83,k));return [-45+(k%12)*1.75,31.2-Math.floor(k/12)*1.7];};
-  const via=(from,to)=>{const P2=[[from[0],AIS2]];if(Math.abs(to[0]-from[0])>0.3)P2.push([to[0],AIS2]);P2.push(to);return P2;};
+  const AIS2=17.0,LANEX=-47.6,slot=k=>{k=Math.max(0,Math.min((G3.whSlots||84)-1,k));if(k<84)return [-45+(k%12)*1.75,31.2-Math.floor(k/12)*1.7];
+    const a=k-84,n=Math.floor(a/36),j=a%36;return [-45+(j%12)*1.75,32.2+n*8+1.5+Math.floor(j/12)*2.2];};   // (v6.11.2: past the 84 main bays, the annexes' rows)
+  const via=(from,to)=>{const P2=[[from[0],AIS2]];
+    if(to[1]>32.2||from[1]>32.2){P2.push([LANEX,AIS2]);P2.push([LANEX,Math.max(to[1],AIS2)]);if(Math.abs(to[0]-LANEX)>0.3)P2.push([to[0],Math.max(to[1],AIS2)]);if(from[1]>32.2)P2.splice(0,1,[LANEX,from[1]]);P2.push(to);return P2;}   // (v6.11.2: to and from an annex down the west lane, not through the stacks)
+    if(Math.abs(to[0]-from[0])>0.3)P2.push([to[0],AIS2]);P2.push(to);return P2;};
   function clampJob(g,i,rdt){const J=g.userData.cj||(g.userData.cj={path:[],carry:null,after:null,wait:0}),sp=3.2*TSC();
     if(!g.userData.load.material.isMaterial&&!g.userData.lm){g.userData.lm=[new StdMat({roughness:0.8}),M.rollCap,M.rollCap];g.userData.load.material=g.userData.lm;}
     g.userData.load.visible=!!J.carry;if(J.carry)g.userData.lm[0].color.set(J.carry.col||"#ffffff");
     if(J.path.length){const p=J.path[0];if(moveVeh(g,p[0],p[1],sp,rdt)){J.path.shift();if(!J.path.length&&J.after){const f=J.after;J.after=null;f();}}return;}
     if(J.wait>0){J.wait-=rdt;return;}
-    const n=rolls.count,here=[g.position.x,g.position.z];
+    const n=G3.whTotal!=null?G3.whTotal:rolls.count,here=[g.position.x,g.position.z];   // (v6.11.2: annexes included)
     if(i===0){const RV=G3.rollVis,f=RV&&RV.list[0];
       if(f&&RV.CL&&f.d>=RV.CL-0.05){J.path=via(here,[-31.9,19.4]);J.after=()=>{const r=RV.list[0];if(!r||r.d<RV.CL-0.3){J.wait=0.5;return;}RV.list.shift();J.carry={col:r.col};
           const to=r.col?[bayPos(BEAT.bay.length)[0],16.9]:(()=>{const s2=slot(n);return [s2[0],s2[1]-1.45];})();BEAT.carry+=r.col?1:0;
@@ -8708,7 +8748,9 @@ function no3D(){G3.ok=false;$("no3d").hidden=false;$("no3d-retry").onclick=()=>l
   function clamp3(m){const g=new THREE.Group();box(1.15,0.62,0.85,M.fork,0,0.55,0,g);box(0.3,0.55,0.82,M.ink,-0.62,0.62,0,g);cage(g);
     box(0.08,1.9,0.08,M.ink,0.66,1.05,-0.3,g,false);box(0.08,1.9,0.08,M.ink,0.66,1.05,0.3,g,false);box(0.5,0.62,0.08,M.brand,0.98,0.95,-0.48,g,false);box(0.5,0.62,0.08,M.brand,0.98,0.95,0.48,g,false);
     const r=new THREE.Mesh(new CylG(0.4,0.4,0.9,18),ROLLM);r.position.set(0.95,0.95,0);g.add(r);g.userData.load=r;scene.add(g);return cutMark(g,"lift");}
-  function robot(){const g=new THREE.Group();box(1.1,0.35,1.1,M.robot,0,0.3,0,g);const l=box(0.3,0.08,0.3,M.ok,0,0.52,0,g,false);g.userData.light=l;scene.add(g);return g;}
+  function robot(){const g=new THREE.Group();box(1.1,0.35,1.1,M.robot,0,0.3,0,g);const l=box(0.3,0.08,0.3,M.ok,0,0.52,0,g,false);g.userData.light=l;
+    const r=new THREE.Mesh(new CylG(0.4,0.4,0.9,18),ROLLM);r.position.set(0,1.0,0);r.visible=false;g.add(r);g.userData.load=r;   // (v6.11.2: a roll it can carry when it covers a clamp truck's job)
+    scene.add(g);return g;}
   const lifts=[],loaders=[],robots=[];
   function ensure(arr,n,make){while(arr.length<n)arr.push(make());arr.forEach((o,i)=>o.visible=i<n);}
 
@@ -8904,7 +8946,7 @@ function no3D(){G3.ok=false;$("no3d").hidden=false;$("no3d-retry").onclick=()=>l
   {const rc=new THREE.Raycaster(),nd=new THREE.Vector2();if(rc.layers)rc.layers.enableAll();let downAt=null,hoverT=0;
     const hit=e=>{const r=glc.getBoundingClientRect();nd.set((e.clientX-r.left)/r.width*2-1,-(e.clientY-r.top)/r.height*2+1);rc.setFromCamera(nd,camera);
       if(G3.knobHit){const k=G3.knobHit(rc);if(k)return k;}   // v5.6 fiddly knobs and the DCS consoles (40b)
-      if(G3.spiderHit&&rc.intersectObjects(G3.spiderHit,false).length)return "spider";if(G3.sliceHit&&rc.intersectObjects(G3.sliceHit,false).length)return "slice";if(G3.scrubbers&&rc.intersectObject(G3.scrubbers[0].hit,false).length)return "brian";return false;};
+      if(G3.spiderHit&&rc.intersectObjects(G3.spiderHit,false).length)return "spider";if(G3.sliceHit&&rc.intersectObjects(G3.sliceHit,false).length)return "slice";if(G3.scrubbers){const H=G3.scrubbers[0].hit;H.updateWorldMatrix(true,false);if(rc.intersectObject(H,false).length)return "brian";}   /* (v6.11.2: the tap box is invisible, and invisible objects skip the matrix update (20), so it stayed where he parked: refresh it first) */return false;};
     glc.addEventListener("pointerdown",e=>{downAt=[e.clientX,e.clientY,performance.now()];});
     glc.addEventListener("pointerup",e=>{if(!downAt)return;const m=Math.hypot(e.clientX-downAt[0],e.clientY-downAt[1]),t=performance.now()-downAt[2];downAt=null;if(m<6&&t<500){if(G3.tellTap&&G3.tellTap(e))return;   /* v5.7: a tell on a Round comes first */const li=G3.lblAt(e);if(li){if(G3.lblTap&&G3.lblTap(li))return;G3.flyTo(li);return;}const h=hit(e);if(h&&h.k)G3.knobTap(h);else if(h==="spider")openSpider();else if(h==="slice")openSlice();else if(h==="brian")openBrian();else if(G3.infoTap)G3.infoTap(e);}});   // (v6.10: click for info, 38d)
     glc.addEventListener("pointermove",e=>{const n=performance.now();if(n-hoverT<120||ptrs.size)return;hoverT=n;glc.style.cursor=G3.lblAt(e)||hit(e)?"pointer":"";});}
@@ -10293,7 +10335,8 @@ function no3D(){G3.ok=false;$("no3d").hidden=false;$("no3d-retry").onclick=()=>l
     let best=null,bd=1e9;for(const cx of [fb[0]-1.1,fb[1]+1.1])for(const cz of [fb[2]-1.1,fb[3]+1.1]){if(Math.hypot(cx-px,cz-pz)<0.3||segBox(px,pz,cx,cz,b))continue;const d=Math.hypot(cx-px,cz-pz)+Math.hypot(tx-cx,tz-cz)+(segBox(cx,cz,tx,tz,b)?20:0);if(d<bd){bd=d;best=[cx,cz];}}
     if(!best){const cx=Math.abs(px-fb[0])<Math.abs(px-fb[1])?fb[0]-1.1:fb[1]+1.1;best=[cx,pz];}return best;}
   function moveP(p,tx,tz,speed,rdt){
-    if(p.userData&&p.userData.legs&&rdt>0){const wp=walkPlan(p,tx,tz);if(wp&&wp.length){const q=wp[0],dx=q[0]-p.position.x,dz=q[1]-p.position.z,d=Math.hypot(dx,dz);
+    if(p.userData&&p.userData.legs&&rdt>0){const wp=walkPlan(p,tx,tz);if(p.userData.wpPend&&!(wp&&wp.length))return false;   // (v6.11.2: its route is still being worked out: wait, don't walk through the wall)
+      if(wp&&wp.length){const q=wp[0],dx=q[0]-p.position.x,dz=q[1]-p.position.z,d=Math.hypot(dx,dz);
         if(d<0.3){wp.shift();}else{const st=Math.min(d,speed*rdt);p.position.x+=dx/d*st;p.position.z+=dz/d*st;p.rotation.y=lerpAng(p.rotation.y,Math.atan2(-dz,dx),Math.min(1,rdt*12));}return false;}}
     const av=avoid(p.position.x,p.position.z,tx,tz);if(av){tx=av[0];tz=av[1];const dx=tx-p.position.x,dz=tz-p.position.z,d=Math.hypot(dx,dz)||1,st=Math.min(d,speed*rdt);
       p.position.x+=dx/d*st;p.position.z+=dz/d*st;p.rotation.y=lerpAng(p.rotation.y,Math.atan2(-dz,dx),Math.min(1,rdt*12));return false;}
@@ -10463,7 +10506,7 @@ function no3D(){G3.ok=false;$("no3d").hidden=false;$("no3d-retry").onclick=()=>l
     G3.tellRoundStop=()=>{if(!RND.on)return;RND.on=false;G3.rounding=false;TG.visible=false;op.visible=false;for(const id in KIT)KIT[id].g.visible=false;RND.shown.clear();};
     G3.tellRoundLeft=()=>RND.on?Math.max(0,RND.len-RND.t):0;
     // which tells show: the ones queued in this area (an upset that fires mid-walk disappears; a caught one vanishes)
-    function syncShown(){const q=(S.tell&&S.tell.q)||[],want=new Set();for(const p of q)if(p.area===RND.a&&KIT[p.id]&&!RND.hits.has(p.id))want.add(p.id);
+    function syncShown(){const q=(S.tell&&S.tell.q)||[],want=new Set();for(const p of q)if(p.area===RND.a&&KIT[p.id]&&!RND.hits.has(p.id)){want.add(p.id);p.seen=1;}   // (v6.11.2: shown on a Round: a known defect until it is caught or fails)
       for(const id in KIT){const k=KIT[id],on=want.has(id);if(k.g.visible!==on){if(on){const [x,z]=posOf(k);k.g.position.set(x,0,z);k.g.updateMatrixWorld(true);}k.g.visible=on;}}
       RND.shown=want;}
     // a tap: the nearest shown tell within reach on screen
@@ -10946,7 +10989,8 @@ function no3D(){G3.ok=false;$("no3d").hidden=false;$("no3d-retry").onclick=()=>l
     // in fog, snow or a dust storm it now starts in front of the nearest building and thickens across the map)
     if(camera.isIso){const f=Math.min(1,fogK/0.45),dd=Math.max(f,dustK);if(dd>0.01){const D=Math.max(d,120);scene.fog.near=Math.min(scene.fog.near,d0-D*0.4*dd);scene.fog.far=Math.min(scene.fog.far,d0+D*(3.2+3*(1-dd)));}}   // (v6.1 iso: fog measured as if the camera stood at its zoom distance)
     if(G3.zen&&document.body.dataset.zs!=="none"){scene.fog.near=d0+(scene.fog.near-d0)*0.45;scene.fog.far=d0+(scene.fog.far-d0)*0.55;}}   // (t18: zen's thicker fog counts from the zoom distance, not the iso camera's 1.2 km stand-off, which fogged out every close shot)
-    const night=1-day;if(!G3.nightL){
+    const night=1-day,LAMP_WH=8;   // (the roll warehouse's lamp in G3.nightL)
+    if(!G3.nightL){
       // v2.8.4: no point lights (every pixel paid for all 10 of them, day and night); each fixture throws a soft additive pool of light on the floor instead
       /* v6.1 t13: lamp light as cut paper: a crisp pale-yellow ellipse on the floor with a slightly deeper rim, laid over the
          scene (not added as glow), and a see-through paper cone from each lamp down to it. ?softnight = the old glows */
@@ -10968,6 +11012,7 @@ function no3D(){G3.ok=false;$("no3d").hidden=false;$("no3d-retry").onclick=()=>l
         const f=new THREE.Mesh(new CylG(0.5,0.7,0.3,12),new THREE.MeshBasicMaterial({color:0xfff1cf}));f.position.set(x,y+0.2,z);f.visible=false;scene.add(f);return {p,f,k:deck?0.55:i<4?0.22:0.35,x,y,z,fy,D:D*0.8};});
       if(CONEN){const parts=[],m4=new THREE.Matrix4();
         G3.nightL.forEach(l=>{const h=l.y-(l.fy+0.05),g=new CylG(0.45,l.D*0.42,h,28,1,true);g.applyMatrix4(m4.makeTranslation(l.x,l.fy+0.05+h/2,l.z));parts.push(g.index?g.toNonIndexed():g);});
+        {let o=0;G3.coneR=parts.map(g=>{const r=[o,g.attributes.position.count];o+=r[1];return r;});}   // (v6.11.2: each lamp's vertices, so one can be switched off)
         const cg=new THREE.BufferGeometry();["position","normal","uv"].forEach(a=>{const n=parts[0].attributes[a].itemSize,arr=[];parts.forEach(g=>arr.push(...g.attributes[a].array));cg.setAttribute(a,new THREE.Float32BufferAttribute(arr,n));});cg.computeBoundingSphere();
         // alpha: strongest along the line of sight through the cone's middle, gone at its silhouette; bright at the lamp, faint at the floor
         const cm=new THREE.ShaderMaterial({uniforms:{op:{value:0},col:{value:lin0("#ffe2a0")}},transparent:true,depthWrite:false,side:THREE.DoubleSide,blending:THREE.AdditiveBlending,toneMapped:false,fog:false,
@@ -10993,7 +11038,12 @@ function no3D(){G3.ok=false;$("no3d").hidden=false;$("no3d-retry").onclick=()=>l
       const pg=new THREE.BufferGeometry();pg.setAttribute("position",new THREE.Float32BufferAttribute(pos,3));pg.setAttribute("uv",new THREE.Float32BufferAttribute(uv,2));pg.setAttribute("color",new THREE.Float32BufferAttribute(col,3));pg.computeBoundingSphere();
       if(G3.papNight)for(let q=0;q<col.length;q++)col[q]=[c.r,c.g,c.b][q%3];
       const pm=G3.nightL[0].p.material.clone();pm.color.set(0xffffff);pm.vertexColors=true;const mesh=new THREE.Mesh(pg,pm);mesh.renderOrder=2;mesh.visible=false;mesh.userData.smBatch=true;scene.add(mesh);G3.nightPool=mesh;}
-    G3.nightPool.material.opacity=night*bk*(G3.papNight?0.85:1);G3.nightPool.visible=night>0.05;if(G3.nightCones){const o=night*bk*(G3.coneNight?1:0.8);if(G3.coneNight)G3.nightCones.material.uniforms.op.value=o;else G3.nightCones.material.opacity=o;G3.nightCones.visible=night>0.05;}G3.nightL.forEach(l=>{l.p.visible=false;l.f.visible=night>0.2;});G3.nightK=night;
+    // v6.11.2: with the robots running outbound the roll warehouse is lights-out: its lamp (pool, cone and fixture) is off
+    {const off=P.robots>0;if(G3.whLampOff!==off){G3.whLampOff=off;const pc=G3.nightPool.geometry.attributes.color,o0=LAMP_WH*6;
+       if(!G3.whPoolC)G3.whPoolC=Array.from(pc.array.slice(o0*3,(o0+6)*3));for(let q=0;q<18;q++)pc.array[o0*3+q]=off?0:G3.whPoolC[q];pc.needsUpdate=true;
+       const C3=G3.nightCones,R=G3.coneR&&G3.coneR[LAMP_WH];if(C3&&R){const pa=C3.geometry.attributes.position;if(!G3.whConeP)G3.whConeP=Array.from(pa.array.slice(R[0]*3,(R[0]+R[1])*3));
+         const L=G3.nightL[LAMP_WH];for(let v=0;v<R[1];v++){const j=(R[0]+v)*3;if(off){pa.array[j]=L.x;pa.array[j+1]=L.y;pa.array[j+2]=L.z;}else{pa.array[j]=G3.whConeP[v*3];pa.array[j+1]=G3.whConeP[v*3+1];pa.array[j+2]=G3.whConeP[v*3+2];}}pa.needsUpdate=true;}}}
+    G3.nightPool.material.opacity=night*bk*(G3.papNight?0.85:1);G3.nightPool.visible=night>0.05;if(G3.nightCones){const o=night*bk*(G3.coneNight?1:0.8);if(G3.coneNight)G3.nightCones.material.uniforms.op.value=o;else G3.nightCones.material.opacity=o;G3.nightCones.visible=night>0.05;}G3.nightL.forEach((l,i)=>{l.p.visible=false;l.f.visible=night>0.2&&!(i===LAMP_WH&&P.robots>0);});G3.nightK=night;
     // v3.2.0: red aviation beacons on top of the boiler stack and the fog fan stack; small lamps on the disk thickener
     if(!G3.beacons){const gl=G3.papNight?spriteTex((x,w)=>{x.clearRect(0,0,w,w);x.fillStyle="#ffffff";x.beginPath();x.arc(w/2,w/2,w*0.34,0,7);x.fill();x.strokeStyle="#2b1d12";x.lineWidth=w*0.07;x.beginPath();x.arc(w/2,w/2,w*0.36,0,7);x.stroke();
         x.fillStyle="rgba(255,255,255,0.75)";x.beginPath();x.arc(w*0.42,w*0.42,w*0.09,0,7);x.fill();},64):spriteTex((x,w)=>{const g=x.createRadialGradient(w/2,w/2,0,w/2,w/2,w/2);g.addColorStop(0,"rgba(255,255,255,1)");g.addColorStop(0.3,"rgba(255,255,255,0.5)");g.addColorStop(1,"rgba(255,255,255,0)");x.fillStyle=g;x.fillRect(0,0,w,w);},64);
@@ -11155,7 +11205,7 @@ function no3D(){G3.ok=false;$("no3d").hidden=false;$("no3d-retry").onclick=()=>l
     const MOP=[[58,15.3],[26,15.3],[-5,15.3]],HOMEJ=[OFF.door[0],OFF.door[1]];
     const J={st:"off",q:[],t:0,tgt:null};G3.janitor={jan,J,cans:CANS};
     // ride-on floor scrubbers: one for the machine hall aisle, one for the warehouse lanes
-    function scrubber(park,loop){const g=new THREE.Group();g.position.set(park[0],0,park[1]);scene.add(g);g.userData.noNav=true;
+    function scrubber(park,loop){const g=new THREE.Group();g.position.set(park[0],0,park[1]);scene.add(g);g.userData.noNav=true;(G3.dynLater||(G3.dynLater=[])).push(g);   /* (v6.11.2: they drive: never frozen into the static merge, or the body and its tap target stayed parked while Uncle Brian's cut-out drove off without it) */
       box(1.5,0.55,0.95,M.warn,0,0.5,0,g);box(0.6,0.5,0.85,M.warn,-0.35,0.95,0,g,false);box(0.35,0.12,0.5,M.ink,0.05,0.82,0,g,false);box(0.08,0.4,0.4,M.ink,-0.1,1.0,0,g,false);
       box(0.5,0.18,1.05,M.ink,0.72,0.15,0,g,false);box(0.12,0.1,1.15,M.ink,-0.8,0.1,0,g,false);
       const bl=new THREE.Mesh(new SphG(0.09,8,6),new THREE.MeshBasicMaterial({color:0xffa31a,toneMapped:false}));bl.position.set(-0.45,1.32,0);g.add(bl);
@@ -11245,13 +11295,16 @@ function no3D(){G3.ok=false;$("no3d").hidden=false;$("no3d-retry").onclick=()=>l
   /* ---- maintenance techs: break room, yellow three-wheel scooters, repairs ---- */
   const SHOP={x0:50.5,x1:63,z0:-25,z1:-19.2,door:[56,-18.4]};
   slab(49,65,-27,-14.5,M.slab,0.03);box2(SHOP.x0,SHOP.x1,SHOP.z0,SHOP.z1,1.4);
-  ribWall(SHOP.x1-SHOP.x0,3.3,0.3,(SHOP.x0+SHOP.x1)/2,1.65,SHOP.z1);ribWall(SHOP.x1-SHOP.x0,3.3,0.3,(SHOP.x0+SHOP.x1)/2,1.65,SHOP.z0);
+  // (v6.11.2: the front wall has a real doorway at the door (it was solid, with the door drawn on it, so the techs walked through
+  //  the wall to their benches): two wall runs and a header over a 1.6 m opening)
+  {const dx0=SHOP.door[0]-0.85,dx1=SHOP.door[0]+0.85;ribWall(dx0-SHOP.x0,3.3,0.3,(SHOP.x0+dx0)/2,1.65,SHOP.z1);ribWall(SHOP.x1-dx1,3.3,0.3,(dx1+SHOP.x1)/2,1.65,SHOP.z1);ribWall(dx1-dx0,1.0,0.3,SHOP.door[0],2.8,SHOP.z1);}
+  ribWall(SHOP.x1-SHOP.x0,3.3,0.3,(SHOP.x0+SHOP.x1)/2,1.65,SHOP.z0);
   ribWall(0.3,3.3,SHOP.z1-SHOP.z0,SHOP.x0,1.65,(SHOP.z0+SHOP.z1)/2);ribWall(0.3,3.3,SHOP.z1-SHOP.z0,SHOP.x1,1.65,(SHOP.z0+SHOP.z1)/2);
   {const rm=mat("brand",{transparent:true,roughness:0.55}),rg=new THREE.Group();scene.add(rg);
    const roof=new THREE.Mesh(new THREE.BoxGeometry(SHOP.x1-SHOP.x0+0.6,0.35,SHOP.z1-SHOP.z0+0.6),rm);roof.position.set((SHOP.x0+SHOP.x1)/2,3.45,(SHOP.z0+SHOP.z1)/2);roof.castShadow=true;rg.add(roof);
    rg.userData.mats=[rm];roofs.push(rg);
-   box(1.6,2.3,0.14,M.ink,SHOP.door[0],1.15,SHOP.z1+0.12,scene,false);{const W=SHOP.x1-SHOP.x0,H=2.95,wx=[51.6,53.4,58.4,60.1,61.8].map(v=>[v-SHOP.x0,1.05,1.3,0.95]);
-     const fs=facade(W,H,wx,[SHOP.door[0]-SHOP.x0,2.22,4.6,0.62,"MAINTENANCE"],SHOP.door[0]-SHOP.x0);fs.position.set((SHOP.x0+SHOP.x1)/2,H/2,SHOP.z1+0.17);scene.add(fs);}}
+   {const d=box(0.12,2.3,1.0,M.ink,SHOP.door[0]-0.82,1.15,SHOP.z1-0.55,scene,false);d.userData.noNav=true;}   /* (v6.11.2: the door stands open against the inside wall) */{const W=SHOP.x1-SHOP.x0,H=2.95,wx=[51.6,53.4,58.4,60.1,61.8].map(v=>[v-SHOP.x0,1.05,1.3,0.95]);
+     const fs=facade(W,H,wx,[SHOP.door[0]-SHOP.x0,2.22,4.6,0.62,"MAINTENANCE"],SHOP.door[0]-SHOP.x0);fs.position.set((SHOP.x0+SHOP.x1)/2,H/2,SHOP.z1+0.17);fs.userData.noNav=true;scene.add(fs);}}
   const SLOTS=[51.5,52.9,54.3,55.7,58.5,59.9,61.3,62.7].map(x=>[x,-16.6]);
   // shop floor: workbenches with pumps on them along the back wall, rebuild stands, parts racks, a break table
   const BENCH=[];
@@ -11281,7 +11334,7 @@ function no3D(){G3.ok=false;$("no3d").hidden=false;$("no3d-retry").onclick=()=>l
   const NAV={x0:-62,z0:-52,cs:0.5,nx:300,nz:210,g:null,inf:0.35},NAVW={x0:-62,z0:-52,cs:0.5,nx:300,nz:210,g:null,inf:0.22};
   function navBuild(G){const g=new Uint8Array(G.nx*G.nz),bb=new THREE.Box3(),INF=G.inf;scene.updateMatrixWorld(true);
     const navCb=o=>{if(!o.isMesh||o.isInstancedMesh||o.userData.smBatch||!o.geometry)return;
-      for(let x=o;x&&x!==scene;x=x.parent){const u=x.userData||{};if(!x.visible&&x!==o)return;if(u.legs||u.wheels||u.load||u.cj||u.trike||u.stack||u.noNav||u.mats)return;}
+      for(let x=o;x&&x!==scene;x=x.parent){const u=x.userData||{};if(!x.visible&&x!==o)return;if(u.legs||u.wheels||u.load||u.cj||u.trike||u.stack||u.noNav)return;}   // (v6.11.2: no longer skips a roof group (u.mats): the machine hall's shell walls live in one, so walkers at a shift change cut through them; the roofs themselves are over 1.9 m and skipped below)
       if(!o.visible&&o.layers.mask===1)return;
       const gb=o.geometry.boundingBox||(o.geometry.computeBoundingBox(),o.geometry.boundingBox);bb.copy(gb).applyMatrix4(o.matrixWorld);
       if(bb.min.y>1.9||bb.max.y<0.25)return;if((bb.max.x-bb.min.x)*(bb.max.z-bb.min.z)>900)return;
@@ -11331,21 +11384,21 @@ function no3D(){G3.ok=false;$("no3d").hidden=false;$("no3d-retry").onclick=()=>l
       done=true;return {path:finish()};}};}
   function navPath(G,from,to,maxIt=250000){return navSearch(G,from,to,maxIt).step(Infinity).path;}
   // people: plan a walk only when the straight line is blocked; re-plan when the destination changes
-  function walkPlan(p,tx,tz){const u=p.userData,key=(Math.round(tx*4)+2048)*4096+(Math.round(tz*4)+2048);   /* (v5.2: a number, no string per walker per frame) */if(u.wpKey===key)return u.wp;u.wpKey=key;u.wp=null;
+  function walkPlan(p,tx,tz){const u=p.userData,key=(Math.round(tx*4)+2048)*4096+(Math.round(tz*4)+2048);   /* (v5.2: a number, no string per walker per frame) */if(u.wpKey===key)return u.wp;u.wpKey=key;u.wp=null;u.wpPend=false;
     if(!NAVW.g)navBuild(NAVW);const a=[p.position.x,p.position.z],b=[tx,tz],d=Math.hypot(tx-a[0],tz-a[1]);if(d<1.2)return null;
     {const ca=navC(NAVW,a),cb=navC(NAVW,b);const sA=navNearest(NAVW,ca),sB=navNearest(NAVW,cb);if(!sA||!sB)return null;
       const pa=[NAVW.x0+(sA[0]+0.5)*NAVW.cs,NAVW.z0+(sA[1]+0.5)*NAVW.cs],pb=[NAVW.x0+(sB[0]+0.5)*NAVW.cs,NAVW.z0+(sB[1]+0.5)*NAVW.cs];if(navLOS(NAVW,pa,pb))return null;}
     // v4.0.4: queued; navPump() searches ~2 ms per frame and fills u.wp when done (until then the walker steers locally)
     const Q=NAVW.jobs||(NAVW.jobs=[]);for(let k=Q.length-1;k>=0;k--)if(Q[k].p===p&&k>0)Q.splice(k,1);
-    Q.push({p,key,a,b,d});return null;}
-  function navPump(){const Q=NAVW.jobs;if(!Q||!Q.length)return;const end=performance.now()+2;
+    Q.push({p,key,a,b,d});u.wpPend=true;return null;}   // (v6.11.2: wpPend: the walker waits for its route instead of steering through the walls, 33 moveP)
+  function navPump(){const Q=NAVW.jobs;if(!Q||!Q.length)return;const end=performance.now()+3;
     while(Q.length&&performance.now()<end){const j=Q[0];
       if(j.p.userData.wpKey!==j.key){Q.shift();continue;}   // the walker has a new destination: drop this search
-      if(!j.s)try{j.s=navSearch(NAVW,j.a,j.b,120000,"scw");}catch(e){Q.shift();continue;}
+      if(!j.s)try{j.s=navSearch(NAVW,j.a,j.b,120000,"scw");}catch(e){Q.shift();j.p.userData.wpPend=false;continue;}
       let r;try{r=j.s.step(end);}catch(e){r={path:null};}if(!r)return;Q.shift();
       let path=r.path;if(path){let L=0;for(let i=1;i<path.length;i++)L+=Math.hypot(path[i][0]-path[i-1][0],path[i][1]-path[i-1][1]);if(L>j.d*3+25)path=null;}
-      if(j.p.userData.wpKey===j.key)j.p.userData.wp=path?path.slice(1,-1):null;}}
-  G3.navPump=navPump;
+      if(j.p.userData.wpKey===j.key){j.p.userData.wp=path?path.slice(1,-1):null;j.p.userData.wpPend=false;}}}
+  G3.navPump=navPump;G3.navDbg={NAVW,NAV,navPath,navBuild,navC,navFree};   // (v6.11.2: tests)
   G3.navCheck=(pts,G=NAV)=>{if(!G.g)navBuild(G);let bad=0;for(let i=1;i<pts.length;i++){const a=pts[i-1],b=pts[i],d=Math.hypot(b[0]-a[0],b[1]-a[1]),n=Math.max(1,Math.ceil(d/0.25));
       for(let k=0;k<=n;k++){const c=navC(G,[a[0]+(b[0]-a[0])*k/n,a[1]+(b[1]-a[1])*k/n]);if(G.g[c[1]*G.nx+c[0]])bad++;}}return bad;};
   G3.NAV=NAV;G3.NAVW=NAVW;
@@ -11415,8 +11468,15 @@ function no3D(){G3.ok=false;$("no3d").hidden=false;$("no3d-retry").onclick=()=>l
   // every figure that works the rotation: techs[k] are MAN techs k; crew (machine floor, 7) and spOps (stock prep, 2) are ops 0-8
   let shcF=null,shcN=-1;
   function shcFigs(){if(shcF&&shcN===techs.length)return shcF;shcN=techs.length;const out=shcF=[];techs.forEach((T,k)=>out.push({w:T.w,kind:"t",i:k,T,to:()=>T.bench.p,ok:()=>T.state==="home"}));
-    crew.forEach((w,k)=>out.push({w,kind:"o",i:k,to:()=>[w.position.x+0.9,w.position.z+0.6],ok:()=>true}));
-    spOps.forEach((w,k)=>out.push({w,kind:"sp",i:7+k,to:()=>[w.position.x+0.9,w.position.z+0.6],ok:()=>true}));return out;}
+    crew.forEach((w,k)=>out.push({w,kind:"o",i:k,to:()=>shcBeside(w),ok:()=>true}));
+    spOps.forEach((w,k)=>out.push({w,kind:"sp",i:7+k,to:()=>shcBeside(w),ok:()=>true}));return out;}
+  // v6.11.2: where the relief stands: beside the operator on open floor (the walking grid, 38). It used to be a fixed 0.9 m
+  // right and 0.6 m south, which for an operator by the hall's tending-side wall was inside the wall, so the walker's last
+  // straight steps took them through it
+  const SHB=[[0.9,0.6],[0.9,-0.6],[-0.9,0.6],[-0.9,-0.6],[0,0.9],[0,-0.9],[1.2,0],[-1.2,0]];
+  function shcBeside(w){const x=w.position.x,z=w.position.z;if(!NAVW.g)navBuild(NAVW);
+    for(const [dx,dz] of SHB){const c=navC(NAVW,[x+dx,z+dz]);if(navFree(NAVW,c[0],c[1]))return [x+dx,z+dz];}
+    const n=navNearest(NAVW,navC(NAVW,[x,z]));return n?[NAVW.x0+(n[0]+0.5)*NAVW.cs,NAVW.z0+(n[1]+0.5)*NAVW.cs]:[x,z];}
   function shcWant(m,f){const row=f.kind==="t"?m.techs[f.i]:m.ops[f.i];if(!row)return null;const p=row.who||row.home;return M.hatTeam[p.team];}
   // a walker that looks like the person it relieves (same suit and vest), from a small pool kept for reuse
   function shcWalker(f,hatM){const P0=SHC.pool[f.kind];let c=P0.pop();
@@ -11437,7 +11497,10 @@ function no3D(){G3.ok=false;$("no3d").hidden=false;$("no3d-retry").onclick=()=>l
     if(!SHC.live.length)return;
     const sp=2.2*clamp(simRate()/20,1,4);
     for(let k=SHC.live.length-1;k>=0;k--){const L=SHC.live[k],c=L.c;
-      if(L.st==="in"){if(L.wait>0){L.wait-=rdt;pose(c,"idle",now);continue;}const [tx,tz]=L.f.to();
+      if(L.st==="in"){if(L.wait>0){L.wait-=rdt;pose(c,"idle",now);continue;}
+        // (v6.11.2: the target is held while the person stays put: it used to follow them every frame, so a walker's route search
+        //  (38 walkPlan) restarted every frame, never finished, and the walker steered straight at them through the walls)
+        const w=L.f.w;if(!L.tgt||Math.hypot(w.position.x-L.ax,w.position.z-L.az)>3){L.tgt=L.f.to();L.ax=w.position.x;L.az=w.position.z;}const [tx,tz]=L.tgt;
         if(moveP(c,tx,tz,sp,rdt)){L.st="wait";}else pose(c,"walk",now);}
       else if(L.st==="wait"){face(c,L.f.w.position.x,L.f.w.position.z,rdt);pose(c,"idle",now);L.give+=rdt;
         // the person being relieved has to be free (a tech back in the shop); after 40 s the change happens anyway
@@ -11470,6 +11533,15 @@ function no3D(){G3.ok=false;$("no3d").hidden=false;$("no3d-retry").onclick=()=>l
     // rooftop: the drive room's cooling units (the drives make heat)
     const ac=mat("g-metal",{transparent:true,metalness:0.35,roughness:0.5});[7,15].forEach(x=>{const u=new THREE.Mesh(new THREE.BoxGeometry(1.8,0.9,1.4),ac);u.position.set(x,H+0.8,cz+1.2);u.castShadow=true;rg.add(u);});
     rg.userData.mats=[rm,wm,gl,ac];roofs.push(rg);
+    // v6.11.2: a wall pack on the north wall at the east end, lighting the lineups and the desk: a fixture with a lit lens, a
+    // soft pool of light on the floor and a wash up the wall above it (day and night: it's an indoor room)
+    {const LX=MCC.x1-2.2,LZ=MCC.z0+0.18,LY=3.55;box(1.0,0.28,0.32,M.ink,LX,LY,LZ+0.12,scene,false);box(1.06,0.06,0.36,M.steel,LX,LY+0.17,LZ+0.12,scene,false);
+     const lens=new THREE.Mesh(new THREE.BoxGeometry(0.86,0.05,0.24),new THREE.MeshBasicMaterial({color:lin0("#fff6dc"),toneMapped:false}));lens.position.set(LX,LY-0.15,LZ+0.14);scene.add(lens);
+     const gT=spriteTex((x,w)=>{const g=x.createRadialGradient(w/2,w/2,0,w/2,w/2,w/2);g.addColorStop(0,"rgba(255,248,226,0.55)");g.addColorStop(0.5,"rgba(255,244,214,0.22)");g.addColorStop(1,"rgba(255,244,214,0)");x.fillStyle=g;x.fillRect(0,0,w,w);},128);
+     const pm=new THREE.MeshBasicMaterial({map:gT,transparent:true,depthWrite:false,toneMapped:false,polygonOffset:true,polygonOffsetFactor:-4,polygonOffsetUnits:-4});
+     const pool=new THREE.Mesh(new THREE.PlaneGeometry(8,6),pm);pool.rotation.x=-Math.PI/2;pool.position.set(LX-1.2,0.07,LZ+2.6);pool.renderOrder=2;scene.add(pool);
+     const wash=new THREE.Mesh(new THREE.PlaneGeometry(4.4,2.6),pm);wash.position.set(LX,LY+0.5,LZ+0.02);wash.renderOrder=2;scene.add(wash);
+     [lens,pool,wash].forEach(o=>o.updateMatrixWorld(true));}
     // toward the hall: windows and the sign; the west end: the door, its canopy and the danger sign
     const fw=[2.0,4.6,9.4,12.0].map(v=>[v,1.4,1.4,1.0]);const fs=facade(W,H-0.1,fw.map(([c,...r])=>[W-c,...r]),[W-7.0,3.05,4.6,0.7,"MCC · ELECTRICAL"]);fs.rotation.y=Math.PI;fs.position.set(cx,(H-0.1)/2,MCC.z0-0.17);scene.add(fs);
     const fe=facade(D,H-0.1,[[1.4,1.4,1.2,1.0],[5.7,1.4,1.0,1.0]],null,dz-MCC.z0);fe.rotation.y=-Math.PI/2;fe.position.set(MCC.x0-0.17,(H-0.1)/2,cz);scene.add(fe);
@@ -11634,6 +11706,7 @@ function no3D(){G3.ok=false;$("no3d").hidden=false;$("no3d-retry").onclick=()=>l
       [[12,5,9.1],"Dryers","Dry end",()=>`Steam ${r.steam>0.5?f1(r.steam)+" t/h":"–"} · 3rd section ${Math.round(r.st3)} kPa · reel moisture ${r.run?f1(r.moist)+" %":"–"}`,"dry"],
       [[-4,4,9.1],"Reel","Dry end",()=>`${Math.round(S.pmSpeed)} fpm · ${f1(S.reel)} of 100 t on the reel`,"reel"],
       [[-18.7,4,9.1],"Winder","Dry end",()=>S.wd==="hayout"?"Hayout: crew cleaning up":`${f1(R.cut||0)} t/h · ${Math.max(0,reelsAtWinder()-1)}/${P.storeReels} reels stored`,"wind"],
+      [[[-31.4,1.2,15.75],[-35,1.2,15.75],[-27.8,1.2,15.75]],"Beater bay","Shipping",()=>{const t=(S.q&&S.q.bank)||0,n=G3.BEAT?G3.BEAT.bay.length:0;return `${Math.round(t).toLocaleString()} t of beater to repulp · ${n} roll${n===1?"":"s"} in the bay${G3.BT&&G3.BT.st!=="away"?" · truck taking them to receiving":""}`;}],   // v6.11.2
       [[-36.4,3,23],"Roll warehouse","Shipping",()=>`${Math.round(S.fg)} of ${Math.round(P.fgCap)} rolls · ${S.outQ.length} trucks waiting`],
       [[-21,3,-13],"Receiving and bale yard","Yard",()=>`${Math.round(S.yard).toLocaleString()} t of bales · unloading ${f1(R.unload||0)} t/h · ${S.inQ.length} trucks waiting`],
       [[76,8,-10],"Boiler house","Utilities",()=>`Steam header ${Math.round(r.boiler*100)} % · ${r.steam>0.5?f1(r.steam):"0"} t/h`],
@@ -11687,7 +11760,13 @@ function no3D(){G3.ok=false;$("no3d").hidden=false;$("no3d-retry").onclick=()=>l
   const detrash=upg("detrash",g=>{box(3,2.6,2.4,M.stock,22.5,1.3,-19.5,g);cylZ(0.4,2.8,M.metal,22.5,2.9,-19.5,8,g);});
   const annexes=[1,2].map(n=>upg("wh"+n,g=>{const z0=32.2+(n-1)*8,z1=z0+8;
     const f=new THREE.Mesh(new THREE.PlaneGeometry(25.2,8),M.slab);f.rotation.x=-Math.PI/2;f.position.set(-36.4,0.045,(z0+z1)/2);f.receiveShadow=true;g.add(f);
-    ribWall(0.3,4.6,8,-49,2.3,(z0+z1)/2,g);ribWall(0.3,4.6,8,-23.8,2.3,(z0+z1)/2,g);ribWall(25.2,4.6,0.3,-36.4,2.3,z1,g);
+    ribWall(0.3,4.6,8,-49,2.3,(z0+z1)/2,g);ribWall(0.3,4.6,8,-23.8,2.3,(z0+z1)/2,g);
+    // v6.11.2: a sawtooth roof like the warehouse's (lifts in the cutaway), and the south wall a half wall in the cutaway: its
+    // lower half here, its top half on the roof. The wall it stands against is opened when it is built (upUpdate)
+    {const k0=g.children.length;ribWall(25.2,2.3,0.3,-36.4,1.15,z1,g);g.userData.southLo=g.children.slice(k0);
+     const R=G3.sawRoof(-49.15,-23.65,z0,z1+0.15,4.6),n0=R.children.length;ribWall(25.2,2.3,0.3,-36.4,3.45,z1,R);R.userData.off=true;
+     const hi=R.children.slice(n0),cl=new Map();hi.forEach(o=>o.traverse(c=>{if(!c.material)return;let m=cl.get(c.material);if(!m){m=c.material.clone();cl.set(c.material,m);R.userData.mats.push(m);}c.material=m;}));
+     g.userData.roof=R;g.userData.southHi=hi;}
     const im=new THREE.InstancedMesh(rollGeo,instMat(ROLLM),36),m=new THREE.Matrix4();for(let k=0;k<36;k++){m.makeTranslation(-45+(k%12)*1.75,0.74,z0+1.5+Math.floor(k/12)*2.2);im.setMatrixAt(k,m);}im.castShadow=true;g.add(im);g.userData.rolls=im;}));
   const walk=upg("safety",g=>{    [[-21.2,-2.6,26.4,0.5],[-36.4,14.4,25.2,0.5],[23,3.4,68,0.5],[23,15.6,68,0.5]].forEach(([x,z,w,d])=>box(w,0.03,d,M.warn,x,0.07,z,g,false));});
   // refiner upgrade: two large double-disc refiners in parallel off the chest-to-headbox stock line, each with its own motor
@@ -11736,9 +11815,11 @@ function no3D(){G3.ok=false;$("no3d").hidden=false;$("no3d-retry").onclick=()=>l
     beacons.visible=LV("monitor")>0;beacons.children.forEach((b,k)=>{b.visible=k<3*LV("monitor");{const m=b.userData.bm||(b.userData.bm=b.material=M.robot.clone());m.color.copy((((now/500+k)|0)%3===0?M.ok:M.robot).color);}});   // (v5.2: blink by colour on the light's own material: swapping materials pulled it out of its batch)
     sprink.visible=LV("fire")>0;cleaners.visible=LV("clean")>0;cleaners.children.forEach((c,k)=>c.visible=k<14*LV("clean"));
     detrash.visible=LV("detrash")>0;stbox.visible=LV("steambox")>0;refiner.visible=true;{const k=LV("refiner")>0?1.3:1;REF_MOTORS.forEach(m=>m.scale.set(k>1?1.1:1,k,k));}walk.visible=LV("safety")>0;ctrl.visible=LV("apc")>0;
-    annexes.forEach((a,k)=>{a.visible=LV("wh")>k;});
+    annexes.forEach((a,k)=>{a.visible=LV("wh")>k;a.userData.roof.userData.off=!(LV("wh")>k);
+      const open=LV("wh")>k+1;a.userData.southLo.forEach(o=>o.visible=!open);a.userData.southHi.forEach(o=>o.visible=!open);});   // (v6.11.2: the next annex opens this one's south wall)
+    {const open=LV("wh")>0;if(G3.whSouthLo)G3.whSouthLo.visible=!open;(G3.whSouthHi||[]).forEach(o=>o.visible=!open);if(G3.whProps)G3.whProps.position.z=8.6*LV("wh");}   // (the main south wall opens into the first annex; the yard props move south past them)
     // rolls fill main bay first, then annexes
-    const total=Math.ceil(S.fg/(P.fgCap/(84+36*LV("wh"))));rolls.count=Math.min(84,total);   // (v5.2: the matrices never change, only the count: no re-upload)
+    const total=Math.ceil(S.fg/(P.fgCap/(84+36*LV("wh"))));rolls.count=Math.min(84,total);G3.whTotal=total;G3.whSlots=84+36*LV("wh");   // (v5.2: the matrices never change, only the count: no re-upload)
     annexes.forEach((a,k)=>{const n=clamp(total-84-36*k,0,36);a.userData.rolls.count=n;});
     const ps=1+0.15*LV("pulper");pulper.scale.set(ps,1,ps);
     belt.material=P.autoFeed?M.robot:M.steel;
@@ -11792,13 +11873,15 @@ function no3D(){G3.ok=false;$("no3d").hidden=false;$("no3d-retry").onclick=()=>l
   {const bg=baleBox;
     for(let st=0;st<5;st++)for(let r=0;r<2;r++)for(let l=0;l<3;l++){if(st===3&&l===2)continue;const b=new THREE.Mesh(bg,M.baleG[1]);b.position.set(-30+st*4+(r?0.15:0),0.48+l*0.96,-25.4-r*1.4);b.rotation.y=(st*7+l*3)%2?0.04:-0.03;b.castShadow=true;b.receiveShadow=true;scene.add(b);}}
   // south of the warehouse: pallet stacks, a dumpster, a stack of empty roll cores
-  {const kraft=M.kraft;[[-44,36],[-41.5,36],[-39,36.4]].forEach(([x,z],k)=>{for(let l=0;l<7+(k%2)*3;l++){box(1.2,0.1,1.0,kraft,x,0.07+l*0.16,z,scene,false);[-0.45,0,0.45].forEach(dx=>box(0.1,0.08,1.0,M.ink,x+dx,0.11+l*0.16+0.02,z,scene,false));}});
-    for(let r=0;r<3;r++)for(let c=0;c<4-r;c++){const core=cylZ(0.17,2.4,M.kraft,-34+c*0.36+r*0.18,0.17+r*0.3,36.2,10);core.rotation.y=0;}
+  // (v6.11.2: in a group that moves south past a warehouse annex when one is built, 39 upUpdate)
+  {const kraft=M.kraft,WP=new THREE.Group();scene.add(WP);(G3.dynLater||(G3.dynLater=[])).push(WP);G3.whProps=WP;
+    [[-44,36],[-41.5,36],[-39,36.4]].forEach(([x,z],k)=>{for(let l=0;l<7+(k%2)*3;l++){box(1.2,0.1,1.0,kraft,x,0.07+l*0.16,z,WP,false);[-0.45,0,0.45].forEach(dx=>box(0.1,0.08,1.0,M.ink,x+dx,0.11+l*0.16+0.02,z,WP,false));}});
+    for(let r=0;r<3;r++)for(let c=0;c<4-r;c++){const core=cylZ(0.17,2.4,M.kraft,-34+c*0.36+r*0.18,0.17+r*0.3,36.2,10,WP);core.rotation.y=0;}
     YP.dumpster=(x,z,ry=0)=>{const g=new THREE.Group();g.position.set(x,0,z);g.rotation.y=ry;scene.add(g);const dm=M.ok;
       const body=new THREE.Mesh(new THREE.BoxGeometry(2.4,1.3,1.4),dm);body.position.y=0.75;body.castShadow=true;body.receiveShadow=true;g.add(body);box(1.15,0.1,1.42,dm,-0.6,1.42,0,g,false);   // (a plain box: the one green rounded box would be a batch of its own)
   const lid=box(1.15,0.1,1.42,dm,0.6,1.5,0,g,false);lid.rotation.z=-0.35;lid.position.y=1.6;
       [[-0.9,-0.55],[0.9,-0.55],[-0.9,0.55],[0.9,0.55]].forEach(([a,b])=>cylZ(0.09,0.08,M.ink,a,0.09,b,8,g));box(0.08,0.9,1.2,M.ink,-1.22,0.75,0,g,false);return g;};
-    YP.dumpster(-27.5,36.5,0.1);}
+    WP.add(YP.dumpster(-27.5,36.5,0.1));}
   // (v6.11.2: the OCC compactor, its dumpster and the recycling cage that stood west of the office are gone; the production record board stays)
   // forklift charging bay off the receiving apron
   {const X=-58.5,Z=-13;slab(X-2.2,X+2.2,Z-1.8,Z+1.8,M.slab,0.025);box(4.4,1.6,0.25,M.steel,X,0.8,Z-1.75);box(4.6,0.12,0.4,M.brand,X,1.66,Z-1.75,scene,false);
@@ -12369,6 +12452,27 @@ function no3D(){G3.ok=false;$("no3d").hidden=false;$("no3d-retry").onclick=()=>l
       if(t.startsWith("station:"))G3.knobTap({k:"station",a:t.slice(8)});else if(t==="spider"||t==="slice")G3.knobTap({k:t});else G3.knobTap({k:"knob",id:t});return true;};
     const _q=new THREE.Vector3(),_d=new THREE.Vector3();
     G3.kvVeil=veil;
+    // ---- v6.11.2 the known defects view (Rounds screen): the mill greyed out, a labelled bullseye on each known defect,
+    // orange for mechanical, blue for electrical ----
+    const DVG=new THREE.Group();DVG.visible=false;scene.add(DVG);SM.dyn.add(DVG);const DV={on:false,pins:new Map(),t:0};
+    const dvM={m:new THREE.MeshBasicMaterial({color:lin0("#e8590c"),depthTest:false,depthWrite:false,transparent:true,toneMapped:false}),e:new THREE.MeshBasicMaterial({color:lin0("#1c7ed6"),depthTest:false,depthWrite:false,transparent:true,toneMapped:false}),w:new THREE.MeshBasicMaterial({color:0xffffff,depthTest:false,depthWrite:false,transparent:true,toneMapped:false})};
+    const ring1=new THREE.RingGeometry(0.95,1.3,32),ring2=new THREE.RingGeometry(0.45,0.7,28),dot=new THREE.CircleGeometry(0.25,20),disc=new THREE.CircleGeometry(1.32,32);
+    function dvPin(d){const g=new THREE.Group(),b=new THREE.Group();g.add(b);const M2=dvM[d.k];
+      [[disc,dvM.w,9991],[ring1,M2,9992],[ring2,M2,9992],[dot,M2,9993]].forEach(([geo,m,o])=>{const x=new THREE.Mesh(geo,m);x.renderOrder=o;b.add(x);});
+      const s=new THREE.Mesh(stemG,M2);s.scale.y=2.2;s.position.y=-1.1;s.renderOrder=9990;g.add(s);
+      g.position.set(d.at[0],3.4,d.at[1]);DVG.add(g);return {g,b,lb:lblNew(true,"defect:"+d.id),v:new THREE.Vector3(d.at[0],4.9,d.at[1]),d};}
+    function dvSync(){const L=knownDefects(),keep=new Set();for(const d of L){keep.add(d.id);let p=DV.pins.get(d.id);if(!p){p=dvPin(d);DV.pins.set(d.id,p);}p.d=d;}
+      for(const [id,p] of DV.pins)if(!keep.has(id)){DVG.remove(p.g);p.lb.vis=false;DV.pins.delete(id);}return L.length;}
+    G3.defectView=on=>{on=!!on&&!S.zen;if(on===DV.on)return DV.pins.size;DV.on=on;G3.dvOn=on;DVG.visible=on;veil.visible=on||!!G3.kvOn;LB.force=true;
+      if(on){if(labelHost.classList.contains("lbl-off")){DV.lblOff=true;labelHost.classList.remove("lbl-off");}return dvSync();}
+      for(const p of DV.pins.values())p.lb.vis=false;if(DV.lblOff){DV.lblOff=false;labelHost.classList.add("lbl-off");}return 0;};
+    G3.defectCount=()=>knownDefects().length;
+    function dvFrame(now){if(!DV.on)return;if(now-DV.t>1000){DV.t=now;dvSync();}
+      {const d=camera.near*1.2,h=(camera.isIso?camera.top-camera.bottom:2*d*Math.tan(camera.fov*Math.PI/360))*1.15;camera.getWorldDirection(_d);veil.position.copy(camera.position).addScaledVector(_d,d);veil.quaternion.copy(camera.quaternion);veil.scale.set(h*camera.aspect,h,1);veil.updateMatrixWorld();}
+      const w=G3.vw||host.clientWidth,hh=G3.vh||host.clientHeight,pulse=0.5+0.5*Math.sin(now/300);
+      for(const p of DV.pins.values()){p.b.lookAt(camera.position);const s=1+0.15*pulse;p.b.scale.set(s,s,s);p.g.updateMatrixWorld(true);_q.copy(p.v).project(camera);
+        const vis=_q.z<1&&Math.abs(_q.x)<1.05&&Math.abs(_q.y)<1.05;p.lb.vis=vis;if(!vis)continue;p.lb.x=Math.round((_q.x+1)/2*w);p.lb.y=Math.round((1-_q.y)/2*hh);
+        lblSet(p.lb,p.d.a,(G3.camDist||camera.position.distanceTo(p.v))>170?"":p.d.b,p.d.k==="m");}}
     function kvFrame(now){if(!G3.kvOn)return;
       if(labelHost.classList.contains("lbl-off")){kvLblOff=true;labelHost.classList.remove("lbl-off");}   // (the labels intro may switch them off meanwhile)
       // (the scene's automatic matrix update is off while moving batches draw, 43-3d-frame.js: update these by hand)
@@ -12409,7 +12513,7 @@ function no3D(){G3.ok=false;$("no3d").hidden=false;$("no3d-retry").onclick=()=>l
         if(K.x.bs>0.2&&Math.random()<rdt*6*K.x.bs)emit("steam",76+R(),15,-10+R(),R()*0.5,3+Math.random()*2,R()*0.5,3,2.4,"#eef1f5",0.6);}
       // a thick pulper: the handwheel turned shut; a thin one, wide open (just the wheel's angle)
       if(K){const turn=(w,a)=>{if(Math.abs(w.rotation.y-a)>1e-4){w.rotation.y=a;w.updateMatrixWorld(true);}};turn(KX.pulp.w,(K.v.pulp-50)/50*Math.PI);turn(KX.ref.w,(gapOf(K.v.ref)-0.5)*Math.PI*3);}
-      kvFrame(now);};
+      kvFrame(now);dvFrame(now);};
     // ---- breakdowns only a knob causes: their effects and pins (31-3d-upset-fx.js builds and precompiles them) ----
     FXDEF.rotortrip=g=>spFx(g,16,-13.5,2.6,8);
     FXDEF.couchpit=g=>spFx(g,40.6,11.4,0.6,6);
@@ -14445,7 +14549,13 @@ function no3D(){G3.ok=false;$("no3d").hidden=false;$("no3d-retry").onclick=()=>l
       g.children[0].material=M.fork;if(G3.yardFrozen){g.userData.load.visible=false;continue;}
       if(S.M.clampMul!==0)clampJob(g,i,rdt);}
     ensure(robots,P.robots,robot);
-    robots.forEach((g,r)=>{if(r>=P.robots)return;const ph=S.M.clampMul===0?0.3:(V.rollsAnim*0.45+r*0.29)%2,t=ph<1?ph:2-ph,[x,z]=W(130+t*200,outY(r%P.shipDoors)+(r%2?6:-6));
+    // v6.11.2: the warehouse's two special jobs (clamp 0: the roll conveyor into the stacks and beater rolls into the bay; clamp 1:
+    // the beater truck and the docks) fall to the robots when there are not enough clamp trucks working, so beater rolls still
+    // reach the bay and go round to receiving to be repulped with an all-robot outbound
+    const hum=Math.min(nLo,Math.floor(S.effHum+1e-9)),rJob=[];for(let s2=hum,r=0;s2<2&&r<P.robots;s2++,r++)rJob[r]=s2;
+    robots.forEach((g,r)=>{if(r<P.robots&&rJob[r]!=null&&!G3.yardFrozen){g.userData.rj=1;if(S.M.clampMul!==0)clampJob(g,rJob[r],rdt);return;}
+      if(g.userData.rj){g.userData.rj=0;g.userData.cj=null;g.userData.load.visible=false;}});
+    robots.forEach((g,r)=>{if(r>=P.robots||g.userData.rj)return;const ph=S.M.clampMul===0?0.3:(V.rollsAnim*0.45+r*0.29)%2,t=ph<1?ph:2-ph,[x,z]=W(130+t*200,outY(r%P.shipDoors)+(r%2?6:-6));
       g.position.set(x,0,z);{const l=g.userData.light,m=l.userData.bm||(l.userData.bm=l.material=M.stock.clone());m.color.copy((((now/400+r)|0)%2?M.ok:M.stock).color);}});   // (v5.2: blink by colour, see 39)
     pm("forklifts, clamp trucks, robots");
     // blackout dims the plant
@@ -14540,7 +14650,7 @@ function no3D(){G3.ok=false;$("no3d").hidden=false;$("no3d-retry").onclick=()=>l
     // v14: zoomed out, only the area labels and the landmark names show; closer in, the equipment labels and no landmarks
     const wide=camera.isIso?(G3.camR||999)>=300:(G3.camDist||camera.position.distanceTo(target))>400;   // (t16: in the iso view the whole-site step (380) counts as zoomed out: area labels only)
     // (v5.2: no projecting or text building while the section labels can't show: zen, hidden view, labels off)
-    if(G3.kvOn)LABELS.forEach(L=>{L.lb.vis=false;});   // v5.6: the fiddly knobs view shows only the knobs' labels (and upsets')
+    if(G3.kvOn||G3.dvOn)LABELS.forEach(L=>{L.lb.vis=false;});   // v5.6: the fiddly knobs view shows only the knobs' labels (and upsets')
     else if(!(G3.zen||LB.hid||labelHost.classList.contains("lbl-off")))LABELS.forEach(L=>{const R=L.lb;if(L.land?!wide:(!L.area&&wide)){R.vis=false;return;}tmp.copy(L.v).project(camera);const vis=tmp.z<1&&Math.abs(tmp.x)<1.05&&Math.abs(tmp.y)<1.05;R.vis=vis;
       if(!vis)return;R.x=Math.round((tmp.x+1)/2*w);R.y=Math.round((1-tmp.y)/2*hh);
       if(doText||R.a==null){const [a,b]=L.t();lblSet(R,a,b,!!(L.cls&&L.cls()));}});
@@ -15258,13 +15368,14 @@ MIMIC.WET={title:"WET END",h:282,trends:MIMIC_KNOB.WET.trends,
     MT(340,172,"couchSol","SOL",r=>kf(r.couchSol)+"%"),MT(340,194,"cs","PIT",r=>r.couch?"RUN":"STOP"),MT(440,172,"osc","OSC",r=>Math.round(r.osc)+"%"),
     MT(567,172,"pl","LOAD",r=>Math.round(r.pl)+" kN/m"),MT(567,194,"pressSol","SOL",r=>kf(r.pressSol)+"%"),MT(567,66,"psp","SPD",DV.psp),MT(260,232,"wwl","LEVEL",DV.wwl),MT(260,246,"wwg","VOL",DV.wwg),MT(370,232,"drain","DRAIN",DV.drn),MT(560,232,"pressw","PRESS",DV.pw),
     MT(60,216,"hbc","HBC",DV.hbc),MT(572,54,"hum","RH",DV.hum)]};   // (v6.9: the basis weight valve is FV-201, drawn by 50k)
-MIMIC.DET={title:"DRY END",h:280,trends:MIMIC_KNOB.DET.trends,
-  eq:[[14,96,80,50,"OPEN DRAW"],[112,80,130,80,"1ST SECTION"],[260,80,170,80,"2ND / 3RD SECTION"],[448,90,74,60,"REEL"],[546,90,84,60,"WINDER"],[546,214,84,30,"ROLL CONV","s"]],
-  ln:[["M94 121 H112"],["M242 120 H260"],["M430 120 H448"],["M522 120 H546"],["M630 120 H636 V229 H630"],["M640 66 H177 V80 M345 66 V80",1]],   // (v6.5.4: the steam header comes in from the boiler house, UTIL)
+MIMIC.DET={title:"DRY END",h:320,trends:MIMIC_KNOB.DET.trends,
+  eq:[[14,96,80,50,"OPEN DRAW"],[112,80,130,80,"1ST SECTION"],[260,80,170,80,"2ND / 3RD SECTION"],[448,90,74,60,"REEL"],[546,90,84,60,"WINDER"],[546,214,84,30,"ROLL CONV","s"],[546,280,84,30,"DE PULPER","s"]],   // (v6.11.2: the dry-end pulper, read only)
+  ln:[["M94 121 H112"],["M242 120 H260"],["M430 120 H448"],["M522 120 H546"],["M630 120 H636 V229 H630"],["M630 135 H639 V295 H630"],["M640 66 H177 V80 M345 66 V80",1]],   // (v6.5.4: the steam header comes in from the boiler house, UTIL)
   tags:[MT(54,172,"draw","DRAW",r=>kf(r.draw)+"%"),MT(54,194,"tension","TENS",r=>r.run?kf(r.tension,2):"–"),MT(177,176,"st1","STEAM",r=>Math.round(r.st1)+" kPa"),MT(177,192,"dr1","DRV",DV.dr1),MT(177,208,"dsp","SPD",DV.dsp),
     MT(345,176,"st3","STEAM",r=>Math.round(r.st3)+" kPa "+(S.dry&&S.dry.man!=null?"MAN":"AUTO")),MT(345,192,"steam","FLOW",r=>r.steam>0.5?kf(r.steam)+" t/h":"–"),MT(345,208,"dr2","DRV",DV.dr2),MT(345,224,"dryl","LOAD",DV.dryl),MT(560,58,"hdr","STEAM HDR",r=>Math.round(r.boiler*100)+"%"),
     MT(485,166,"moist","MOIST",r=>r.run?kf(r.moist)+"%":"–"),MT(485,180,"bw","BW",r=>r.run?kf(r.bw,2):"–"),MT(485,194,"spool","SPOOL",DV.spool),MT(485,208,"store","STORE",DV.store),MT(485,222,"tu","TURN-UPS",DV.tu),MT(485,84,"speed","SPEED",r=>Math.round(r.speed)+" fpm"),
-    MT(588,166,"wdr","SP",DV.wdr),MT(588,180,"wdt","CUT",DV.wdt),MT(588,194,"hay","HAYOUTS",DV.hay),MT(588,262,"rolls","ROLLS",DV.rolls)]};
+    MT(588,166,"wdr","SP",DV.wdr),MT(588,180,"wdt","CUT",DV.wdt),MT(588,194,"hay","HAYOUTS",DV.hay),MT(588,262,"rolls","ROLLS",DV.rolls),
+    MT(472,284,"delvl","LEVEL",()=>S.zen?"–":Math.round(depLvl())+"%"),MT(472,298,"decons","CONS",()=>S.zen?"–":kf(depCons())+"%"),MT(472,312,"defin","IN",()=>S.zen||!S.dep?"–":kf(S.dep.fin)+" t/h"+(S.pm==="break"&&S.brkType!=="press"?" BRK":""))]};
 MIMIC.UTIL={title:"UTILITIES",h:270,trends:[["steam","Steam flow t/h","#7fb2ff",0,70],["boiler","Steam header (1 = full)","#ffb02e",0.5,1.05]],
   // (v6.5.4: the boiler and the power supply live here; they were on DET)
   eq:[[14,60,96,50,"RIVER INTAKE"],[134,60,96,50,"WATER TOWER"],[254,60,110,50,"MILL"],[388,60,110,50,"WASTEWATER"],[522,60,100,50,"OUTFALL"],[254,196,110,36,"LANDFILL","s"],
@@ -15953,7 +16064,7 @@ function pfSVGt(D,live){const vert=pfVert(),NU=104,NV=112,GAP=30,PAD=vert?24:10,
    only: the sim and its dice are untouched, and the game keeps running at the player's speed while it is open.
    Keep RM_E in step with the sim when a relationship changes (tools/relmapcheck.py fails on a tag with no entry). ---- */
 const RM_DRV=[["x:weather","Weather",""],["x:bales","Bale grade mix",""],["x:pulpset","Pulper feed setpoint",""],["x:dilv","Pulper dilution valve","knob"],["x:slice","Headbox slice","knob"],["x:guide","Fabric guide roll","knob"],["x:zones","Headbox dilution zones","knob"],["x:spset","Machine speed setpoint",""],["x:grade","Grade on the machine",""],["x:dye","Dye system",""],["x:market","Market & leader effects",""],["x:power","Substation power",""],["x:incomer","MCC main incomer","knob"],["x:hood","Dryer hood doors","knob"],["x:orders","Customer orders",""],["x:upsets","Upsets & DCS motors",""]];
-const RM_COL={"YARD":["inq","unload","yard","balem","stk","occp"],"SPOT":["feed","cp","nv101pv","nv101op","amps","pulpLvl","yield","fiber","rejt","hddp","lcdp","lwdp","fsld","fsdp","kwh","dil","chest","chestg","gap","refkw","csf","agit","refq","mcCons","mcLvl","lv104pv","lv104op","mcg","fan"],"WET":["wsp","jw","rd","vac","couchSol","pl","pressSol","gtrav","edge","osc","hbc","bwv","fv201pv","fv201op","bwsp","drain","seal","pressw","wwl","lv202pv","lv202op","wwg","wwov","hum","polflow","poldose","fpr"],"DET":["speed","prod","st1","st3","pv302pv","pv302op","pv303pv","pv303op","steam","dryl","moist","qc300pv","qc300op","bw","draw","tension"],"QCS":["off","rct","prem","cdsp","bank","reel","cut","rollw","trimp","trimt","cdspan","sbout","spout","conv"],"UTIL":["boiler","vent","energyt","shower","evap","wcl","wcg","makeup","fresh","wuse","wwover","outfall","tss"],"SHIP":["fg","load","outq","openo","lateo","price","profit"],"DRV":["mvkv","lv480","dc_SP","dc_PM","dc_WD","dl_pulp","dl_refA","dl_refB","dl_fan","dl_couch","dl_pr1","dl_pr2","dl_dry","dl_reel","dl_wind","mcckw"]};
+const RM_COL={"YARD":["inq","unload","yard","balem","stk","occp"],"SPOT":["feed","cp","nv101pv","nv101op","amps","pulpLvl","yield","fiber","rejt","hddp","lcdp","lwdp","fsld","fsdp","kwh","dil","chest","chestg","gap","refkw","csf","agit","refq","mcCons","mcLvl","lv104pv","lv104op","mcg","fan"],"WET":["wsp","jw","rd","vac","couchSol","pl","pressSol","gtrav","edge","osc","hbc","bwv","fv201pv","fv201op","bwsp","drain","seal","pressw","wwl","lv202pv","lv202op","wwg","wwov","hum","polflow","poldose","fpr"],"DET":["speed","prod","st1","st3","pv302pv","pv302op","pv303pv","pv303op","steam","dryl","moist","qc300pv","qc300op","bw","draw","tension","defin","delvl","decons"],"QCS":["off","rct","prem","cdsp","bank","reel","cut","rollw","trimp","trimt","cdspan","sbout","spout","conv"],"UTIL":["boiler","vent","energyt","shower","evap","wcl","wcg","makeup","fresh","wuse","wwover","outfall","tss"],"SHIP":["fg","load","outq","openo","lateo","price","profit"],"DRV":["mvkv","lv480","dc_SP","dc_PM","dc_WD","dl_pulp","dl_refA","dl_refB","dl_fan","dl_couch","dl_pr1","dl_pr2","dl_dry","dl_reel","dl_wind","mcckw"]};
 const RM_E=[
  ["x:weather","balem","p","Rain and snow soak the bales in the yard and on inbound loads"],
  ["x:weather","unload","n","Snow and fog slow inbound trucks"],
@@ -16159,6 +16270,9 @@ const RM_E=[
  ["x:grade","off","p","Grade-change transition tons"],
  ["x:zones","cdsp","x","Trimmed zones put streaks in the CD profile"],
  ["moist","cdsp","p","Zone readings ride on reel moisture"],
+ ["trimt","defin","p","The edge trim is blown into the dry-end pulper (and the whole sheet on a dryer or reel break)"],
+ ["defin","delvl","p","More in than the pump sends back to the stock chest: the tub fills"],
+ ["delvl","decons","p","Near the top the dilution is cut back, so the stock thickens"],
  ["cdsp","off","p","More than 3 zones out sends part of the reel to the beater"],
  ["draw","tension","p","Tension follows draw"],
  ["draw","off","x","Under 1% the reel wrinkles"],
@@ -17387,11 +17501,21 @@ function camPullOn(){try{return localStorage.getItem("paper-mill-campull")!=="of
       <div class="tareas">${TAREAS.filter(a=>a.ids.some(id=>!EV[id].env||EV[id].env===SITE.env)).map(a=>{const v=rep?tellTrend(a.k):-1;
         return `<button type="button" class="tarea" data-a="${a.k}"${can?"":" disabled"}><span><b>${escHTML(a.n)}</b><small>${escHTML(a.ids.filter(id=>!EV[id].env||EV[id].env===SITE.env).map(id=>EV[id].name.replace(/^(\w)(\w*)/,(m,a,b)=>b&&b===b.toUpperCase()?m:a.toLowerCase()+b)).slice(0,3).join(", "))}…</small></span>${v>=0?`<em class="tv tv${v}" title="${AWORD[v]}">${ARROW[v]}<small>${AWORD[v]}</small></em>`:""}</button>`;}).join("")}</div>
       ${(()=>{const f=prepFor();if(!f)return "";const pr=prepState(f.k),tl=prepTally(pr);return `<button type="button" class="tprep" id="tell-prep"><span><b>Outage ${f.k} prep checklist</b><br><small>${prepLine(tl.n,tl.m)}</small></span><span aria-hidden="true">›</span></button>`;})()}
+      ${(()=>{const n=G3.defectCount?G3.defectCount():0;return `<button type="button" class="tprep" id="tell-def"><span><b>Known defects view</b><br><small>${n?`${n} known · <span class="dvk m">mechanical</span> <span class="dvk e">electrical</span>`:"nothing known right now: walk a round, or test with the Reliability program"}</small></span><span aria-hidden="true">›</span></button>`;})()}
       <div class="btns"><button type="button" id="tell-x" style="flex:1">Close</button></div></div>`;
     {const pb=ov.querySelector("#tell-prep");if(pb)pb.addEventListener("click",()=>{ov.hidden=true;prepOpen();});}
+    {const db=ov.querySelector("#tell-def");if(db)db.addEventListener("click",()=>{ov.hidden=true;dvSet(true);});}   // v6.11.2
     ov.querySelectorAll(".tarea").forEach(b=>b.addEventListener("click",()=>{ov.hidden=true;roundGo(b.dataset.a);}));
     ov.querySelector("#tell-x").addEventListener("click",()=>{ov.hidden=true;});ov.hidden=false;const f=ov.querySelector(".tarea:not([disabled])")||ov.querySelector("#tell-x");if(f)f.focus({preventScroll:true});}
   G3.tellOpen=tellOpen;
+  // ---- v6.11.2 the known defects view: like the fiddly knobs view (Settings), a chip at the top to leave it ----
+  let dvChip=null;
+  function dvSet(on){on=!!on&&!S.zen;if(on&&G3.kvOn&&G3.setKnobView)G3.setKnobView(false);const n=G3.defectView?G3.defectView(on):0;
+    if(!dvChip){dvChip=document.createElement("div");dvChip.className="kvchip dvchip";dvChip.id="dvChip";dvChip.hidden=true;dvChip.innerHTML=`<b>Known defects</b><span id="dvN"></span><button type="button" id="dvExit">Exit</button>`;
+      const host=document.getElementById("view3d")||document.body;host.appendChild(dvChip);dvChip.querySelector("#dvExit").addEventListener("click",()=>dvSet(false));}
+    dvChip.hidden=!on;document.body.classList.toggle("kview",on||!!G3.kvOn);if(on)dvChip.querySelector("#dvN").innerHTML=n?`${n} known · <span class="dvk m">mechanical</span> <span class="dvk e">electrical</span>`:"none known";}
+  G3.setDefectView=dvSet;
+  UI_TICKS.push(()=>{if(G3.dvOn&&(S.zen||(dvChip&&dvChip.hidden)))dvSet(false);});
   // ---- a Round ----
   function roundGo(a){if(!tellRoundStart(a))return;cur={a,n:0};
     if(!strip){strip=document.createElement("div");strip.id="tellStrip";strip.className="tellstrip";strip.setAttribute("role","status");document.body.appendChild(strip);}
@@ -17632,7 +17756,7 @@ function camPullOn(){try{return localStorage.getItem("paper-mill-campull")!=="of
     ["Headbox consistency (HBC)","Fiber in the headbox jet: about 0.8%. The fan pump thins the machine chest's stock (about 3.2%) down to it with white water."],
     ["Trim","The web is 205\" wide at the reel (3\" more a level of the deckle upgrade). The winder slits it into two twin rolls of the same width; what's left at the edges is trim, at least 5\". Trim is blown down to the DE pulper and back to the stock chest: made, repulped and made again, never sold. Narrow orders cost more trim."],
     ["Twin rolls","Every set off the winder is two rolls of the same width, because customers order widths in pairs (for example 96\"/96\"). A roll weighs 12.5 t at 100\" and less when it's narrower. The planner runs the width of the earliest-due order that still needs rolls, and the widest roll it can make for the spot market."],
-    ["DE pulper","The dry-end pulper beside the winder. The trim fan blows the edge trim into it, and it pumps the slurry back to the stock chest, like the broke hole."],
+    ["DE pulper","The dry-end pulper beside the winder. The trim fan blows the edge trim into it, and on a dryer or reel break the whole sheet goes in too; white water thins it to about 4% and a pump sends it back to the stock chest. Its level, consistency and what is coming in show on the DET DCS (read only): on a break the level climbs."],
     ["CD profile","Cross direction: across the machine. The QCS reads 12 zones from the drive side (DS) to the tending side (TS). A streak in one zone, or a wet edge wider than the trim, sends only the roll under it to the beater; its twin still ships."],
     ["Steam box","An upgrade: a 12-zone steam box at the end of the forming table. It adds 1.5 points of couch solids and 40 fpm, and on AUTO it dries out wet streaks and wet edges. It uses some steam."],
     ["Spray boom","Standard: a remoisturizing spray boom between the last dryer and the reel. On AUTO its 12 zones add water where the sheet runs dry, so dry streaks and dry edges stay in spec."],

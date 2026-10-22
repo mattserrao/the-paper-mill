@@ -29,7 +29,7 @@
     const MOP=[[58,15.3],[26,15.3],[-5,15.3]],HOMEJ=[OFF.door[0],OFF.door[1]];
     const J={st:"off",q:[],t:0,tgt:null};G3.janitor={jan,J,cans:CANS};
     // ride-on floor scrubbers: one for the machine hall aisle, one for the warehouse lanes
-    function scrubber(park,loop){const g=new THREE.Group();g.position.set(park[0],0,park[1]);scene.add(g);g.userData.noNav=true;
+    function scrubber(park,loop){const g=new THREE.Group();g.position.set(park[0],0,park[1]);scene.add(g);g.userData.noNav=true;(G3.dynLater||(G3.dynLater=[])).push(g);   /* (v6.11.2: they drive: never frozen into the static merge, or the body and its tap target stayed parked while Uncle Brian's cut-out drove off without it) */
       box(1.5,0.55,0.95,M.warn,0,0.5,0,g);box(0.6,0.5,0.85,M.warn,-0.35,0.95,0,g,false);box(0.35,0.12,0.5,M.ink,0.05,0.82,0,g,false);box(0.08,0.4,0.4,M.ink,-0.1,1.0,0,g,false);
       box(0.5,0.18,1.05,M.ink,0.72,0.15,0,g,false);box(0.12,0.1,1.15,M.ink,-0.8,0.1,0,g,false);
       const bl=new THREE.Mesh(new SphG(0.09,8,6),new THREE.MeshBasicMaterial({color:0xffa31a,toneMapped:false}));bl.position.set(-0.45,1.32,0);g.add(bl);

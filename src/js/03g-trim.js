@@ -31,3 +31,19 @@ function windCredit(g,w,u){const O=S.ord;if(!O||!trimOn())return;for(const o of 
 // the trim of this step's winding goes to the dry-end pulper and on into the stock chest (overflow waits in the beater bay)
 function trimTo(t){if(!(t>0))return;const room=Math.max(0,P.tankCap*0.98-S.tank),a=Math.min(t,room);S.tank+=a;if(t>a)S.q.bank+=t-a;
   if(typeof WQ!=="undefined")WQ.rep+=t;S.tot.trim=(S.tot.trim||0)+t;pfW("trim",t);}
+
+/* ---- v6.11.2 the dry-end pulper (read only on the DET DCS) ----
+   A tub under the winder and the dry end: the edge trim is blown into it all the time, and on a dryer or reel break the sheet
+   goes down the hole into it too (a press break goes to the couch pit). White water dilutes what comes in to about 4%, up to
+   the dilution header's limit; a pump sends it back to the stock chest at a rate set by the tub level. On a break more comes
+   in than the pump can take, so the level climbs; near the top the dilution is cut back, so the consistency climbs as well.
+   Display only: the tons it handles are already counted (trim and broke go back to the stock chest), so nothing here changes
+   the mass balance. S.dep = {m: slurry in the tub (t), f: fiber in it (t), fin: fiber coming in (t/h)}. Not in zen. */
+const DEP={cap:300,c0:4.0,dil:900,pump:600,lo:0.35,span:0.5};
+function depState(){if(!S.dep)S.dep={m:DEP.cap*0.42,f:DEP.cap*0.42*DEP.c0/100,fin:0};return S.dep;}
+function depTick(dt,trimT){if(S.zen)return;const D=depState(),h=dt/60;if(!(h>0))return;
+  let fin=(trimT||0)/h;if(S.pm==="break"&&S.brkType!=="press")fin+=P.K*Math.max(S.pmSpeed,P.minSpeed*0.5)*bwSp();
+  const L=D.m/DEP.cap,win=Math.min(DEP.dil,fin*(100/DEP.c0-1))*clamp((0.97-L)/0.07,0,1),q=DEP.pump*clamp((L-DEP.lo)/DEP.span,0,1),c=D.m>1e-6?D.f/D.m:0;
+  D.m=clamp(D.m+(fin+win-q)*h,0.5,DEP.cap);D.f=clamp(D.f+(fin-q*c)*h,0,D.m);D.fin=fin;D.q=q;}
+const depLvl=()=>S.dep?S.dep.m/DEP.cap*100:42;
+const depCons=()=>S.dep&&S.dep.m>0?S.dep.f/S.dep.m*100:DEP.c0;

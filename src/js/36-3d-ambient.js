@@ -123,7 +123,8 @@
     // in fog, snow or a dust storm it now starts in front of the nearest building and thickens across the map)
     if(camera.isIso){const f=Math.min(1,fogK/0.45),dd=Math.max(f,dustK);if(dd>0.01){const D=Math.max(d,120);scene.fog.near=Math.min(scene.fog.near,d0-D*0.4*dd);scene.fog.far=Math.min(scene.fog.far,d0+D*(3.2+3*(1-dd)));}}   // (v6.1 iso: fog measured as if the camera stood at its zoom distance)
     if(G3.zen&&document.body.dataset.zs!=="none"){scene.fog.near=d0+(scene.fog.near-d0)*0.45;scene.fog.far=d0+(scene.fog.far-d0)*0.55;}}   // (t18: zen's thicker fog counts from the zoom distance, not the iso camera's 1.2 km stand-off, which fogged out every close shot)
-    const night=1-day;if(!G3.nightL){
+    const night=1-day,LAMP_WH=8;   // (the roll warehouse's lamp in G3.nightL)
+    if(!G3.nightL){
       // v2.8.4: no point lights (every pixel paid for all 10 of them, day and night); each fixture throws a soft additive pool of light on the floor instead
       /* v6.1 t13: lamp light as cut paper: a crisp pale-yellow ellipse on the floor with a slightly deeper rim, laid over the
          scene (not added as glow), and a see-through paper cone from each lamp down to it. ?softnight = the old glows */
@@ -145,6 +146,7 @@
         const f=new THREE.Mesh(new CylG(0.5,0.7,0.3,12),new THREE.MeshBasicMaterial({color:0xfff1cf}));f.position.set(x,y+0.2,z);f.visible=false;scene.add(f);return {p,f,k:deck?0.55:i<4?0.22:0.35,x,y,z,fy,D:D*0.8};});
       if(CONEN){const parts=[],m4=new THREE.Matrix4();
         G3.nightL.forEach(l=>{const h=l.y-(l.fy+0.05),g=new CylG(0.45,l.D*0.42,h,28,1,true);g.applyMatrix4(m4.makeTranslation(l.x,l.fy+0.05+h/2,l.z));parts.push(g.index?g.toNonIndexed():g);});
+        {let o=0;G3.coneR=parts.map(g=>{const r=[o,g.attributes.position.count];o+=r[1];return r;});}   // (v6.11.2: each lamp's vertices, so one can be switched off)
         const cg=new THREE.BufferGeometry();["position","normal","uv"].forEach(a=>{const n=parts[0].attributes[a].itemSize,arr=[];parts.forEach(g=>arr.push(...g.attributes[a].array));cg.setAttribute(a,new THREE.Float32BufferAttribute(arr,n));});cg.computeBoundingSphere();
         // alpha: strongest along the line of sight through the cone's middle, gone at its silhouette; bright at the lamp, faint at the floor
         const cm=new THREE.ShaderMaterial({uniforms:{op:{value:0},col:{value:lin0("#ffe2a0")}},transparent:true,depthWrite:false,side:THREE.DoubleSide,blending:THREE.AdditiveBlending,toneMapped:false,fog:false,
@@ -170,7 +172,12 @@
       const pg=new THREE.BufferGeometry();pg.setAttribute("position",new THREE.Float32BufferAttribute(pos,3));pg.setAttribute("uv",new THREE.Float32BufferAttribute(uv,2));pg.setAttribute("color",new THREE.Float32BufferAttribute(col,3));pg.computeBoundingSphere();
       if(G3.papNight)for(let q=0;q<col.length;q++)col[q]=[c.r,c.g,c.b][q%3];
       const pm=G3.nightL[0].p.material.clone();pm.color.set(0xffffff);pm.vertexColors=true;const mesh=new THREE.Mesh(pg,pm);mesh.renderOrder=2;mesh.visible=false;mesh.userData.smBatch=true;scene.add(mesh);G3.nightPool=mesh;}
-    G3.nightPool.material.opacity=night*bk*(G3.papNight?0.85:1);G3.nightPool.visible=night>0.05;if(G3.nightCones){const o=night*bk*(G3.coneNight?1:0.8);if(G3.coneNight)G3.nightCones.material.uniforms.op.value=o;else G3.nightCones.material.opacity=o;G3.nightCones.visible=night>0.05;}G3.nightL.forEach(l=>{l.p.visible=false;l.f.visible=night>0.2;});G3.nightK=night;
+    // v6.11.2: with the robots running outbound the roll warehouse is lights-out: its lamp (pool, cone and fixture) is off
+    {const off=P.robots>0;if(G3.whLampOff!==off){G3.whLampOff=off;const pc=G3.nightPool.geometry.attributes.color,o0=LAMP_WH*6;
+       if(!G3.whPoolC)G3.whPoolC=Array.from(pc.array.slice(o0*3,(o0+6)*3));for(let q=0;q<18;q++)pc.array[o0*3+q]=off?0:G3.whPoolC[q];pc.needsUpdate=true;
+       const C3=G3.nightCones,R=G3.coneR&&G3.coneR[LAMP_WH];if(C3&&R){const pa=C3.geometry.attributes.position;if(!G3.whConeP)G3.whConeP=Array.from(pa.array.slice(R[0]*3,(R[0]+R[1])*3));
+         const L=G3.nightL[LAMP_WH];for(let v=0;v<R[1];v++){const j=(R[0]+v)*3;if(off){pa.array[j]=L.x;pa.array[j+1]=L.y;pa.array[j+2]=L.z;}else{pa.array[j]=G3.whConeP[v*3];pa.array[j+1]=G3.whConeP[v*3+1];pa.array[j+2]=G3.whConeP[v*3+2];}}pa.needsUpdate=true;}}}
+    G3.nightPool.material.opacity=night*bk*(G3.papNight?0.85:1);G3.nightPool.visible=night>0.05;if(G3.nightCones){const o=night*bk*(G3.coneNight?1:0.8);if(G3.coneNight)G3.nightCones.material.uniforms.op.value=o;else G3.nightCones.material.opacity=o;G3.nightCones.visible=night>0.05;}G3.nightL.forEach((l,i)=>{l.p.visible=false;l.f.visible=night>0.2&&!(i===LAMP_WH&&P.robots>0);});G3.nightK=night;
     // v3.2.0: red aviation beacons on top of the boiler stack and the fog fan stack; small lamps on the disk thickener
     if(!G3.beacons){const gl=G3.papNight?spriteTex((x,w)=>{x.clearRect(0,0,w,w);x.fillStyle="#ffffff";x.beginPath();x.arc(w/2,w/2,w*0.34,0,7);x.fill();x.strokeStyle="#2b1d12";x.lineWidth=w*0.07;x.beginPath();x.arc(w/2,w/2,w*0.36,0,7);x.stroke();
         x.fillStyle="rgba(255,255,255,0.75)";x.beginPath();x.arc(w*0.42,w*0.42,w*0.09,0,7);x.fill();},64):spriteTex((x,w)=>{const g=x.createRadialGradient(w/2,w/2,0,w/2,w/2,w/2);g.addColorStop(0,"rgba(255,255,255,1)");g.addColorStop(0.3,"rgba(255,255,255,0.5)");g.addColorStop(1,"rgba(255,255,255,0)");x.fillStyle=g;x.fillRect(0,0,w,w);},64);

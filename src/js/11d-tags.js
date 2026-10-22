@@ -47,6 +47,7 @@ const TAGS=[
   ["dryl","Dryer load","DET","% of limit",()=>S.dry&&S.pm==="run"?S.dry.load*100:null,"a.dryl"],["moist","Reel moisture","DET","%",r=>r.run?r.moist:null,"a.moist"],
   ["bw","Basis weight","DET","lb/1000 ft²",r=>r.run?r.bw:null,"a.bw"],["tension","Draw tension","DET","kN/m",r=>r.run?r.tension:null,""],["draw","Open draw","DET","%",r=>r.draw,""],
   ["reel","Paper waiting at the winder","DET","t",()=>S.winderBuf+S.reel,"a.reel"],["cut","Winder","DET","t/h",()=>_R().cut,"a.cut"],["conv","Rolls on the conveyor","DET","rolls",()=>S.conv||0,""],
+  ["delvl","DE pulper level","DET","%",()=>S.zen?null:depLvl(),""],["decons","DE pulper consistency","DET","%",()=>S.zen?null:depCons(),""],["defin","DE pulper fiber in","DET","t/h",()=>S.zen||!S.dep?null:S.dep.fin,""],
   ["rollw","Roll width (twin set)","QCS","in",()=>S.zen?null:S.wdW||windW(C.grade),""],["trimp","Trim","QCS","%",()=>S.zen?null:(S.trimNow!=null?S.trimNow:trimFrac(windW(C.grade)))*100,""],["trimt","Trim to the DE pulper","QCS","t/h",()=>S.zen?null:_R().trim||0,""],
   ["cdspan","CD moisture spread (worst zone)","QCS","%",()=>S.zen||!S.cd||S.pm!=="run"?null:Math.max(...S.cd.dv.map(Math.abs)),""],["sbout","Steam box output","QCS","%",()=>S.zen||!S.cd||!sbHave()?null:S.cd.sb.reduce((a,v)=>a+v,0)/12*100,""],["spout","Spray boom output","QCS","%",()=>S.zen||!S.cd?null:S.cd.sp.reduce((a,v)=>a+v,0)/12*100,""],   // (v6.11)
   // utilities

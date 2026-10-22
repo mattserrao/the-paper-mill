@@ -8,7 +8,13 @@
   const detrash=upg("detrash",g=>{box(3,2.6,2.4,M.stock,22.5,1.3,-19.5,g);cylZ(0.4,2.8,M.metal,22.5,2.9,-19.5,8,g);});
   const annexes=[1,2].map(n=>upg("wh"+n,g=>{const z0=32.2+(n-1)*8,z1=z0+8;
     const f=new THREE.Mesh(new THREE.PlaneGeometry(25.2,8),M.slab);f.rotation.x=-Math.PI/2;f.position.set(-36.4,0.045,(z0+z1)/2);f.receiveShadow=true;g.add(f);
-    ribWall(0.3,4.6,8,-49,2.3,(z0+z1)/2,g);ribWall(0.3,4.6,8,-23.8,2.3,(z0+z1)/2,g);ribWall(25.2,4.6,0.3,-36.4,2.3,z1,g);
+    ribWall(0.3,4.6,8,-49,2.3,(z0+z1)/2,g);ribWall(0.3,4.6,8,-23.8,2.3,(z0+z1)/2,g);
+    // v6.11.2: a sawtooth roof like the warehouse's (lifts in the cutaway), and the south wall a half wall in the cutaway: its
+    // lower half here, its top half on the roof. The wall it stands against is opened when it is built (upUpdate)
+    {const k0=g.children.length;ribWall(25.2,2.3,0.3,-36.4,1.15,z1,g);g.userData.southLo=g.children.slice(k0);
+     const R=G3.sawRoof(-49.15,-23.65,z0,z1+0.15,4.6),n0=R.children.length;ribWall(25.2,2.3,0.3,-36.4,3.45,z1,R);R.userData.off=true;
+     const hi=R.children.slice(n0),cl=new Map();hi.forEach(o=>o.traverse(c=>{if(!c.material)return;let m=cl.get(c.material);if(!m){m=c.material.clone();cl.set(c.material,m);R.userData.mats.push(m);}c.material=m;}));
+     g.userData.roof=R;g.userData.southHi=hi;}
     const im=new THREE.InstancedMesh(rollGeo,instMat(ROLLM),36),m=new THREE.Matrix4();for(let k=0;k<36;k++){m.makeTranslation(-45+(k%12)*1.75,0.74,z0+1.5+Math.floor(k/12)*2.2);im.setMatrixAt(k,m);}im.castShadow=true;g.add(im);g.userData.rolls=im;}));
   const walk=upg("safety",g=>{    [[-21.2,-2.6,26.4,0.5],[-36.4,14.4,25.2,0.5],[23,3.4,68,0.5],[23,15.6,68,0.5]].forEach(([x,z,w,d])=>box(w,0.03,d,M.warn,x,0.07,z,g,false));});
   // refiner upgrade: two large double-disc refiners in parallel off the chest-to-headbox stock line, each with its own motor
@@ -57,9 +63,11 @@
     beacons.visible=LV("monitor")>0;beacons.children.forEach((b,k)=>{b.visible=k<3*LV("monitor");{const m=b.userData.bm||(b.userData.bm=b.material=M.robot.clone());m.color.copy((((now/500+k)|0)%3===0?M.ok:M.robot).color);}});   // (v5.2: blink by colour on the light's own material: swapping materials pulled it out of its batch)
     sprink.visible=LV("fire")>0;cleaners.visible=LV("clean")>0;cleaners.children.forEach((c,k)=>c.visible=k<14*LV("clean"));
     detrash.visible=LV("detrash")>0;stbox.visible=LV("steambox")>0;refiner.visible=true;{const k=LV("refiner")>0?1.3:1;REF_MOTORS.forEach(m=>m.scale.set(k>1?1.1:1,k,k));}walk.visible=LV("safety")>0;ctrl.visible=LV("apc")>0;
-    annexes.forEach((a,k)=>{a.visible=LV("wh")>k;});
+    annexes.forEach((a,k)=>{a.visible=LV("wh")>k;a.userData.roof.userData.off=!(LV("wh")>k);
+      const open=LV("wh")>k+1;a.userData.southLo.forEach(o=>o.visible=!open);a.userData.southHi.forEach(o=>o.visible=!open);});   // (v6.11.2: the next annex opens this one's south wall)
+    {const open=LV("wh")>0;if(G3.whSouthLo)G3.whSouthLo.visible=!open;(G3.whSouthHi||[]).forEach(o=>o.visible=!open);if(G3.whProps)G3.whProps.position.z=8.6*LV("wh");}   // (the main south wall opens into the first annex; the yard props move south past them)
     // rolls fill main bay first, then annexes
-    const total=Math.ceil(S.fg/(P.fgCap/(84+36*LV("wh"))));rolls.count=Math.min(84,total);   // (v5.2: the matrices never change, only the count: no re-upload)
+    const total=Math.ceil(S.fg/(P.fgCap/(84+36*LV("wh"))));rolls.count=Math.min(84,total);G3.whTotal=total;G3.whSlots=84+36*LV("wh");   // (v5.2: the matrices never change, only the count: no re-upload)
     annexes.forEach((a,k)=>{const n=clamp(total-84-36*k,0,36);a.userData.rolls.count=n;});
     const ps=1+0.15*LV("pulper");pulper.scale.set(ps,1,ps);
     belt.material=P.autoFeed?M.robot:M.steel;

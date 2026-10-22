@@ -62,7 +62,7 @@
     G3.tellRoundStop=()=>{if(!RND.on)return;RND.on=false;G3.rounding=false;TG.visible=false;op.visible=false;for(const id in KIT)KIT[id].g.visible=false;RND.shown.clear();};
     G3.tellRoundLeft=()=>RND.on?Math.max(0,RND.len-RND.t):0;
     // which tells show: the ones queued in this area (an upset that fires mid-walk disappears; a caught one vanishes)
-    function syncShown(){const q=(S.tell&&S.tell.q)||[],want=new Set();for(const p of q)if(p.area===RND.a&&KIT[p.id]&&!RND.hits.has(p.id))want.add(p.id);
+    function syncShown(){const q=(S.tell&&S.tell.q)||[],want=new Set();for(const p of q)if(p.area===RND.a&&KIT[p.id]&&!RND.hits.has(p.id)){want.add(p.id);p.seen=1;}   // (v6.11.2: shown on a Round: a known defect until it is caught or fails)
       for(const id in KIT){const k=KIT[id],on=want.has(id);if(k.g.visible!==on){if(on){const [x,z]=posOf(k);k.g.position.set(x,0,z);k.g.updateMatrixWorld(true);}k.g.visible=on;}}
       RND.shown=want;}
     // a tap: the nearest shown tell within reach on screen
