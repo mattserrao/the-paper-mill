@@ -227,8 +227,8 @@ def survival_mode(pw):
     pg.evaluate("()=>document.getElementById('ld-no').click()"); s = state()
     ok("New survival, then Back: the season goes on", s["on"] and not s["surv"] and pg.evaluate("()=>document.getElementById('leadOv').hidden"), s)
     pick("v2survNew", "hank"); pg.evaluate("()=>__PM.setRunning(false)"); pg.wait_for_timeout(500); s = state()
-    ok("New survival from the pause menu starts a run with Hank (runs heavy from day one: fibre +2%, energy unchanged)", s["surv"] and s["on"] and s["k"] == 1 and s["chip"] and s["lead"]["id"] == "hank"
-       and abs(s["occ"] / occ1 - 1.02) < 1e-9 and abs(s["energy"] - en1) < 1e-9, s)
+    ok("New survival from the pause menu starts a run with Hank (runs heavy from day one: fibre +1% since t6, energy unchanged)", s["surv"] and s["on"] and s["k"] == 1 and s["chip"] and s["lead"]["id"] == "hank"
+       and abs(s["occ"] / occ1 - 1.01) < 1e-9 and abs(s["energy"] - en1) < 1e-9, s)
     r = pg.evaluate("()=>{const P=__PM,S=P.S;S.cash=-1.6e6;P.G3.on=false;P.step(0.25);P.G3.on=true;document.getElementById('so-more').click();return {ov:document.getElementById('seasonOv').hidden,menu:!document.getElementById('v2menu').hidden,run:P.running,season:!!P.S.season,cash:P.S.cash};}")
     ok("game over: Menu goes back to the menu on a fresh mill", r["ov"] and r["menu"] and not r["run"] and not r["season"] and r["cash"] == 2000000, r)
     b.close()
