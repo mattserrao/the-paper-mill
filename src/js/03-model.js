@@ -74,7 +74,11 @@ function applyUpgrades(){
 function applyGrade(){const g=(typeof C!=="undefined"&&C&&C.grade)||"24",c=GCOST[g],d=c.dlk;
   P.blendP=OCCG.occ11.p*(1-d)+OCCG.dlk.p*d;P.blendY=OCCG.occ11.y*(1-d)+OCCG.dlk.y*d;
   P.steamMul=c.steam;P.chemAdd=c.chem-((S&&S.perk)?S.perk.chem:0);P.gradeBrk=c.brk;}
-function energyCost(){return Math.max(0,ECON.energy*P.steamMul*P.energyMul*leadEnergy()+ECON.chem+P.chemAdd+(P.siteEnergy||0)-(P.refSave||0)-((S&&S.perk&&S.perk.energy)||0)+civEnergy())*(P.costMul||1);}
+// v6.11.2: the bill per ton is now steam and chemicals (plus the site's and civics' adjustments): ECON.energy's steam share
+// (PF_STEAMSH). Electricity is metered from the drives and the balance of plant every step (07i pwrTick), so energyCost()
+// (what a ton costs now, for the screens) adds the metered $/t at today's rate.
+function energyCostT(){return Math.max(0,ECON.energy*PF_STEAMSH*P.steamMul*P.energyMul*leadEnergy()+ECON.chem+P.chemAdd+(P.siteEnergy||0)-(P.refSave||0)-((S&&S.perk&&S.perk.energy)||0)+civEnergy())*(P.costMul||1);}
+function energyCost(){return energyCostT()+pwrT();}
 /* ---- v6.5 freight: inbound haul per ton of bales unloaded, outbound freight per ton shipped. Each = (base + site) x the
    diesel share of a truck rate (26%; diesel a weekly seeded walk, $2.40-6.80/gal, b2) x weather (normalised so the site's average weather is 1) x detours (flood,
    dust storm), plus card and civics effects (fx.fr, $/t on outbound). Survival's cost multiplier and the leader's fiber factor

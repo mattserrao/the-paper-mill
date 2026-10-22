@@ -69,9 +69,16 @@
   G3.wdParts={setRolls,setCores,rider,rods,webUpdate,WD,WEBA,WEBB,unwind,IN};
   (G3.dynLater||(G3.dynLater=[])).push(rider,...rods,...setCores,...setRolls,WEBA,...WEBB,...TRIMS);   // (they move or change shape: never batched)
   box(1.2,1.2,0.8,M.steel,0,0.6,4.3,wd);box(1.1,0.5,0.1,M.robot,0,1.25,3.95,wd,false);
-  const SPR={x:-13.4,z:3.6};
-  const rackSpools=[0,1,2].map(k=>{const m=spoolModel(scene);m.g.position.set(SPR.x-k*1.2,0.75,SPR.z+0.6);m.set(R0);return m;});
-  [SPR.x-1.2].forEach(x=>{box(3.4,0.3,0.4,M.steel,x,0.35,SPR.z+0.6-ZJ,scene);box(3.4,0.3,0.4,M.steel,x,0.35,SPR.z+0.6+ZJ,scene);});
+  // v6.11.2: the spare spool stand, west of the winder on the crane's line (z = zc): two rails at the journals carry the empty
+  // spools side by side, so the crane only travels east-west to take one to the primary arms (it left the line before only
+  // to reach the old floor rack, which reached into the unwind stand and the parked reels)
+  const SPR={x:-24.5,dx:-1.0,y:1.22,z:zc,ry:0.98};
+  const rackSpools=[0,1,2].map(k=>{const m=spoolModel(scene);m.g.position.set(SPR.x+k*SPR.dx,SPR.y,SPR.z);m.set(R0);return m;});
+  {const x0=SPR.x+0.6,x1=SPR.x+2*SPR.dx-0.6,xm=(x0+x1)/2,L=x0-x1;
+   [-ZJ,ZJ].forEach(dz=>{const z=SPR.z+dz;box(L,0.12,0.3,M.steel,xm,SPR.ry-0.06,z,scene);box(L,0.05,0.3,M.warn,xm,SPR.ry+0.005,z,scene,false);   // rail with a painted top
+     [x0-0.12,x1+0.12].forEach(x=>{box(0.18,SPR.ry-0.12,0.18,M.steel,x,(SPR.ry-0.12)/2,z,scene);box(0.08,0.32,0.3,M.warn,x,SPR.ry+0.16,z,scene,false);});   // legs and end stops
+     box(0.12,0.08,0.12,M.ink,xm,SPR.ry-0.2,z,scene,false);});
+   box(L,0.08,0.12,M.steel,xm,0.25,SPR.z-ZJ+0.1,scene,false);box(L,0.08,0.12,M.steel,xm,0.25,SPR.z+ZJ-0.1,scene,false);}
   const parked=[0,1,2,3].map(k=>{const g=new THREE.Group();g.position.set(-11.8-k*4.1,0,-0.2);scene.add(g);
     box(0.35,1.1,4.6,M.steel,-1.3,0.55,0,g);box(0.35,1.1,4.6,M.steel,1.3,0.55,0,g);cylZ(2,5.2,M.paper,0,2.15,0,22,g);cylZ(0.22,6.2,M.steel,0,2.15,0,8,g);return g;});
   // overhead crane: carries full reels from the reel to storage and from storage to the winder unwind
@@ -89,7 +96,7 @@
    box(0.45,0.07,2*ZH+0.4,M.warn,0,-0.75,0,crHook,false);box(0.45,0.07,2*ZH+0.4,M.warn,0,-1.1,0,crHook,false);box(0.09,0.32,2*ZH+0.4,M.warn,0,-0.92,0,crHook,false);
    [-ZH,ZH].forEach(z=>{box(0.32,SB-1.1,0.2,M.warn,0,-(1.1+SB)/2,z,crHook,false);box(0.85,0.16,0.28,M.ink,0.05,-SB-0.32,z,crHook,false);box(0.14,0.5,0.28,M.ink,0.42,-SB-0.1,z,crHook,false);});}
   const carried=spoolModel(crHook);carried.g.position.y=-SB;carried.g.visible=false;
-  const UNW=[-18.7+WD.UX,WD.UY,zc],REELP=[KX,DY,zc],parkP=k=>[-11.8-k*4.1,2.15,-0.2],SPOOLP=()=>[SPR.x-Math.max(0,rackSpools.filter(m=>m.g.visible).length-1)*1.2,0.75,SPR.z+0.6],ARMP=()=>[DX+Math.cos(105*Math.PI/180)*(DR+R0+0.35),DY+Math.sin(105*Math.PI/180)*(DR+R0+0.35),zc];
+  const UNW=[-18.7+WD.UX,WD.UY,zc],REELP=[KX,DY,zc],parkP=k=>[-11.8-k*4.1,2.15,-0.2],SPOOLP=()=>[SPR.x+Math.max(0,rackSpools.filter(m=>m.g.visible).length-1)*SPR.dx,SPR.y,SPR.z],ARMP=()=>[DX+Math.cos(105*Math.PI/180)*(DR+R0+0.35),DY+Math.sin(105*Math.PI/180)*(DR+R0+0.35),zc];
   function craneUpdate(rdt){const nPark=Math.max(0,reelsAtWinder()-1);
     if(CR.lastTurn<0){CR.lastTurn=S.tot.turnups;CR.lastPark=nPark;}
     // v2.9.5: a turn-up and a stored reel going to the unwind can land in the same frame (fast game speeds): handle both,

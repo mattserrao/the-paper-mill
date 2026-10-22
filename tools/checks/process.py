@@ -245,8 +245,9 @@ def winder(pw):
     mx = max(s["stored"] for s in seen)
     ok("four reels stored before the machine backs up", mx >= 4, mx)
     ok("machine stops on spools only with storage full", all(s["stored"] >= 4 for s in seen if s["pm"] == "spools"))
-    # (the crane animates in real frame time: under load it can still be carrying the last reel, so let it finish first)
-    try: pg.wait_for_function("()=>{const C=__PM.G3.CR;return !C.j&&!C.jobs.length}", timeout=30000, polling=250)
+    # (the crane animates in real frame time: under load it can still be carrying the last reel, so let it finish first;
+    #  v6.11.2: up to 2 min, as two checks side by side can slow the frames past 30 s)
+    try: pg.wait_for_function("()=>{const C=__PM.G3.CR;return !C.j&&!C.jobs.length}", timeout=120000, polling=250)
     except Exception: C.note("crane:", pg.evaluate("()=>{const C=__PM.G3.CR;const f=j=>j&&({kind:j.kind,fromPark:!!j.fromPark,fromReel:!!j.fromReel,picked:!!j.picked,dropped:!!j.dropped,delay:j.delay,b:j.b});return {j:f(C.j),jobs:C.jobs.map(f),t:C.t,hidePark:C.hidePark}}"))
     rest = pg.evaluate("()=>({stored:Math.max(0,Math.ceil(__PM.S.winderBuf/100-0.005)-1),vis:(__PM.G3.parkedN??-1),pm:__PM.S.pm})")
     ok("stands match the sim at rest", rest["vis"] == rest["stored"], rest)
@@ -318,7 +319,7 @@ def winder(pw):
 def order(pw):
     C.sec("order")
     # test copy only: reach the v6.6 functions and constants
-    html = html_arg().replace("window.__PM={", "window.__PM={get OX(){return {ORD,BALE,BASEL,ordState,ordAssign,ordDepart,ordFree,ordNeed,fgOf,baleGrade,baleGate,baleUnload,baleFeed,bqState,baseLoadTick,priceOf,energyCost,pfChemT,outOn,ordOn,GRADES,P,C,lotPut,lotTake,lotA,lotValue,msfPerT}},", 1)
+    html = html_arg().replace("window.__PM={", "window.__PM={get OX(){return {ORD,BALE,BASEL,ordState,ordAssign,ordDepart,ordFree,ordNeed,fgOf,baleGrade,baleGate,baleUnload,baleFeed,bqState,baseLoadTick,priceOf,energyCost,pfChemT,outOn,ordOn,GRADES,P,C,lotPut,lotTake,lotA,lotValue,msfPerT,pwrTick}},", 1)
     b = launch(pw); pg = open_game(b, html, "notitle&" + LITE, viewport=(900, 640), errs=errs, wait=False)
     pg.on("console", lambda m: m.type == "error" and "Failed to load resource" not in m.text and errs.append("CONSOLE " + m.text[:300]))
     pg.wait_for_function("window.__PM&&window.__B&&__B.first!==null", timeout=300000, polling=500)
@@ -380,13 +381,16 @@ def order(pw):
       const res={dry:O.k.dry-d0,fee:S.ledger.frout-fr0,q:S.outQ.length,made:Math.round(made)};S.lots.fg=keep;S.fg=fg;P.C.outRate.auto=true;return res}""")
     ok("an empty-handed truck leaves after the wait with a dry-run fee", r["dry"] == 1 and r["fee"] >= 299 and r["q"] == 0, json.dumps(r))
     # --- 6. base load: charged while stopped, not while running
+    # (v6.11.2: baseLoadTick is the stopped mill's steam only; electricity is metered every step by pwrTick from the drives and
+    #  the balance of plant: a break still draws most of it, a stop about a third, running the most)
     r = pg.evaluate("""()=>{const P=__PM,S=P.S,X=P.OX;const pm=S.pm;
       const e=()=>S.ledger.energy;S.pm='run';let a=e();X.baseLoadTick(60);const run=e()-a;
-      S.pm='break';a=e();X.baseLoadTick(60);const brk=e()-a;S.pm='down';a=e();X.baseLoadTick(60);const stop=e()-a;S.pm=pm;
-      const g=X.GRADES[X.C.grade],tph=X.P.K*g.sp*g.bw,en=Math.max(0,X.energyCost()-X.pfChemT());return {run,brk,stop,full:en*tph}}""")
-    ok("no base load while running", r["run"] == 0, json.dumps(r))
-    ok("a sheet break draws power (machine turning) but not idle steam", 0.3 < r["brk"] / r["full"] * 2.5 < 1.0, json.dumps(r))
-    ok("a stop draws power and banked-boiler steam, less than running", 0 < r["stop"] < 0.5 * r["full"], json.dumps(r))
+      S.pm='break';a=e();X.baseLoadTick(60);const brk=e()-a;S.pm='down';a=e();X.baseLoadTick(60);const stop=e()-a;
+      S.pm='run';a=e();X.pwrTick(60);const pRun=e()-a;S.pm='break';a=e();X.pwrTick(60);const pBrk=e()-a;S.pm='down';a=e();X.pwrTick(60);const pStop=e()-a;S.pm=pm;
+      return {run,brk,stop,pRun,pBrk,pStop}}""")
+    ok("no base load while running; a break has no idle steam, a stop does", r["run"] == 0 and r["brk"] == 0 and r["stop"] > 0, json.dumps(r))
+    ok("metered power: running > a break > a stop > 0 (v6.11.2)", r["pRun"] > r["pBrk"] > r["pStop"] > 0, json.dumps(r))
+    ok("a stop draws power and banked-boiler steam, less than running", 0 < r["stop"] + r["pStop"] < 0.5 * r["pRun"] / 0.4, json.dumps(r))   # (v6.11.2: pRun is the power share, 40%, of a running hour)
     r = pg.evaluate("()=>{const S=__PM.S;return {idle:S.tot.idleE||0,pf:S.pf&&S.pf.A&&S.pf.A.power?Object.keys(S.pf.A.power):[]}}")
     ok("idle energy has built up over the season and is placed by area", r["idle"] > 1000, json.dumps(r))
     # --- 7. bale grading

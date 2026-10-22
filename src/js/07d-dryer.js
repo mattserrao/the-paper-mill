@@ -40,7 +40,7 @@ function dryTick(dt){const D=dryState(),g=C.grade,b=DRY.base[g]||DRY.base["24"],
   // to stay hot (DRY.hold) and the rest is vented to atmosphere through the header vent on the roof (24-3d), and paid for
   const brk=S.pm==="break";if(run)D.runSt=D.steam;
   D.steam=ease(D.steam,run?water*DRY.stPerW:brk?(D.runSt||0):0,dt,4);D.vent=ease(D.vent||0,brk?D.steam*(1-DRY.hold):0,dt,0.5);
-  if(brk&&!S.zen&&D.steam>0.5){const en=Math.max(0,energyCost()-pfChemT()),wpt=dryWpt()*DRY.stPerW,v=wpt>0?D.steam*dt/60*en*PF_STEAMSH/wpt:0;
+  if(brk&&!S.zen&&D.steam>0.5){const en=Math.max(0,energyCostT()-pfChemT()),wpt=dryWpt()*DRY.stPerW,v=wpt>0?D.steam*dt/60*en/wpt:0;   /* (v6.11.2: the per-ton bill is steam now) */
     if(v>0){spend(v,"energy");pfAdd("steam","pm",v);D.ventT=(D.ventT||0)+D.vent*dt/60;D.ventC=(D.ventC||0)+v*(1-DRY.hold);}}
   D.hdr=ease(D.hdr,D.steam>DRY.boiler?Math.max(0.6,1-(D.steam-DRY.boiler)/DRY.boiler*1.5):1,dt,20);
   // the floor is speed's (a slow machine over-dries); a knob that takes load off can take the 3rd section under it

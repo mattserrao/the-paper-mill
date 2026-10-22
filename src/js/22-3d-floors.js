@@ -81,7 +81,11 @@
       const glass=new THREE.Mesh(new THREE.PlaneGeometry(z1-z0-0.2,1.3),gl);glass.rotation.y=Math.PI/2;glass.position.set(x0+(i+1)*tw+0.07,y+0.87,(z0+z1)/2);g.add(glass);}
     g.userData.mats=[m,gl,em];scene.add(g);roofs.push(g);return g;}
   box2(-34.4,-8,-23.5,-3);box2(-49,-23.8,14.8,32.2);skirt(-2,1.2,64,1.2,2.4);skirt(65.2,2.4,65.2,16.2,2.4);
-  sawRoof(-34.6,-7.85,-23.65,-2.85,WH);sawRoof(-49.15,-23.65,14.65,32.35,WH);
+  sawRoof(-34.6,-7.85,-23.65,-2.85,WH);
+  // v6.11.2: the roll warehouse's south wall (the one facing the camera) is a half wall in the cutaway: its top half belongs to the
+  // roof group, so it lifts and fades with the roof (with its own copies of the materials, so no other wall fades with it)
+  {const whR=sawRoof(-49.15,-23.65,14.65,32.35,WH),n0=whR.children.length;ribWall(25.2,WH/2,0.3,-36.4,WH*3/4,32.2,whR);
+   const cl=new Map();whR.children.slice(n0).forEach(o=>o.traverse(c=>{if(!c.material)return;let m=cl.get(c.material);if(!m){m=c.material.clone();cl.set(c.material,m);whR.userData.mats.push(m);}c.material=m;}));}
   // paper machine hall: full building seen from the air (walls, window bands, sawtooth roof), gone as soon as you zoom in
   // v3.2.1: the tending side is widened from z 16.75 out to HALL.zf (20), east of the first bay; the west bay stays where it was
   // so it doesn't run into the warehouse. Doors: a big roll-up door to the food truck lawn and two personnel doors.

@@ -1683,7 +1683,7 @@ body.pmpop .popmain[data-v="dcs"] #dcsOv .dcs{max-width:1180px;margin:0 auto}
 <div class="btns"><button class="primary" id="no3d-retry">Try again</button></div></div></div>
 
 <script type="module">
-const APP_VER="v6.11.2-t3";   // shown in the menu and sent with leaderboard scores (max 12 characters)
+const APP_VER="v6.11.2-t4";   // shown in the menu and sent with leaderboard scores (max 12 characters)
 // TEST BUILDS ONLY (off in releases): turbo speeds 240/480/960 sim min/s for fast playtests. Above 120, crews and maintenance start jobs
 // without waiting for the 3D walk (as with the 3D view off) and outages keep the speed. Set false for a release.
 const TURBO=false,TURBO_FAST=s=>TURBO&&s>120;
@@ -2326,7 +2326,11 @@ function applyUpgrades(){
 function applyGrade(){const g=(typeof C!=="undefined"&&C&&C.grade)||"24",c=GCOST[g],d=c.dlk;
   P.blendP=OCCG.occ11.p*(1-d)+OCCG.dlk.p*d;P.blendY=OCCG.occ11.y*(1-d)+OCCG.dlk.y*d;
   P.steamMul=c.steam;P.chemAdd=c.chem-((S&&S.perk)?S.perk.chem:0);P.gradeBrk=c.brk;}
-function energyCost(){return Math.max(0,ECON.energy*P.steamMul*P.energyMul*leadEnergy()+ECON.chem+P.chemAdd+(P.siteEnergy||0)-(P.refSave||0)-((S&&S.perk&&S.perk.energy)||0)+civEnergy())*(P.costMul||1);}
+// v6.11.2: the bill per ton is now steam and chemicals (plus the site's and civics' adjustments): ECON.energy's steam share
+// (PF_STEAMSH). Electricity is metered from the drives and the balance of plant every step (07i pwrTick), so energyCost()
+// (what a ton costs now, for the screens) adds the metered $/t at today's rate.
+function energyCostT(){return Math.max(0,ECON.energy*PF_STEAMSH*P.steamMul*P.energyMul*leadEnergy()+ECON.chem+P.chemAdd+(P.siteEnergy||0)-(P.refSave||0)-((S&&S.perk&&S.perk.energy)||0)+civEnergy())*(P.costMul||1);}
+function energyCost(){return energyCostT()+pwrT();}
 /* ---- v6.5 freight: inbound haul per ton of bales unloaded, outbound freight per ton shipped. Each = (base + site) x the
    diesel share of a truck rate (26%; diesel a weekly seeded walk, $2.40-6.80/gal, b2) x weather (normalised so the site's average weather is 1) x detours (flood,
    dust storm), plus card and civics effects (fx.fr, $/t on outbound). Survival's cost multiplier and the leader's fiber factor
@@ -3623,9 +3627,11 @@ function ordDocks(dt,lcap){let loaded=0;
   return loaded;}
 
 // ---------- base load while the machine is stopped ----------
-function baseLoadTick(dt){if(S.zen||S.pm==="run")return;const g=GRADES[C.grade],tph=P.K*g.sp*g.bw,en=Math.max(0,energyCost()-pfChemT());if(!(en>0&&tph>0))return;
-  const B=outOn()?BASEL.out:S.pm==="break"?BASEL.brk:BASEL.stop,h=dt/60,pw=en*(1-PF_STEAMSH)*tph*h,st=en*PF_STEAMSH*tph*h*B.steam;let v=st;
-  for(const a in PF_POWER){const x=pw*PF_POWER[a]*B[a];v+=x;pfAdd("power",a,x);}if(st>0)pfAdd("steam","pm",st);
+// (v6.11.2: the steam only: a stopped mill's electricity is metered by pwrTick (07i), the drives at idle and the balance of plant
+//  at its stopped share)
+function baseLoadTick(dt){if(S.zen||S.pm==="run")return;const g=GRADES[C.grade],tph=P.K*g.sp*g.bw,en=Math.max(0,energyCostT()-pfChemT());if(!(en>0&&tph>0))return;
+  const B=outOn()?BASEL.out:S.pm==="break"?BASEL.brk:BASEL.stop,h=dt/60,st=en*tph*h*B.steam;let v=st;
+  if(st>0)pfAdd("steam","pm",st);
   if(v>0){spend(v,"energy");S.tot.idleE=(S.tot.idleE||0)+v;pfW("idle",v);}}
 
 // ---------- bale grading ----------
@@ -3970,9 +3976,10 @@ function step(dt){
   if(S.pm!=="run") S.pmSpeed=ease(S.pmSpeed,0,dt,3);
   chemTick(dt,prod);   // v6.11.1 wet-end chemicals (07l)
   baseLoadTick(dt);   // v6.6: a stopped machine still draws power and keeps the boiler banked
+  pwrTick(dt);   // v6.11.2: metered electricity: the drives at their load and the balance of plant (07i)
   let beat=0;
-  if(prod>0){{const ec=prod*energyCost();spend(ec,"energy");pfEnergy(prod,ec);}knobSteamCost(prod);
-    {const de=kwhNow()-WE.kwh0;if(de&&!S.zen){const v=de*prod/P.pmLoss*WE.kwhCost*P.energyMul*(P.costMul||1);spend(v,"energy");pfAdd("power","stock",v);}}   // v6.8 refining power above (or below) standard
+  if(prod>0){{const ec=prod*energyCostT();spend(ec,"energy");pfEnergy(prod,ec);}knobSteamCost(prod);
+    // (v6.11.2: refining power above or below standard is metered with the refiner drives now, 07i pwrTick)
   S.q.made+=prod;
     // v6.5.3: the spec check (07e): weight, moisture or color out and the whole reel is beater; then a grade change's
     // transition tons; then the other knob defects' share
@@ -4125,7 +4132,7 @@ function slcSet(k,val){if(S.zen)return;const K=knobState();K.v[k==="v"?"sv":"sh"
    steam; wetter, more, both ways (before v6.5.5 no knob ever saved steam). Untouched, every factor is exactly 1. */
 function dewater(fr,vac,pl,jv,jh){
   const eJet=1-0.25*jv*jv-0.15*jh*jh,dv=(vac-30)/30,eVac=1-(dv<0?0.58:0.15)*dv*dv,eRef=eDrain(csfOf(fr));   // (v6.8: drainage follows freeness, 07g)
-  const cs=clamp(19*eJet*eVac*eRef*chemDrain()+CD.sbCouch*LV("steambox"),8,27.5),   /* (v6.11: the steam box, 07k) */pb=44+4*LV("shoe");
+  const cs=clamp(19*eJet*eVac*eRef+CD.sbCouch*LV("steambox"),8,27.5),   /* (v6.11: the steam box, 07k) */pb=44+4*LV("shoe");
   const lt=pl<100?0.2*(pl-100):pl<=130?0.08*(pl-100):2.4-0.3*(pl-130);
   const ps=clamp(pb+(cs-19)+lt,30,56),wpt=p=>(1-DRY.m0/100)/(p/100)-1;
   return {cs,ps,W:wpt(ps)/wpt(pb),eJet,eVac,eRef};}
@@ -4402,7 +4409,7 @@ function dryTick(dt){const D=dryState(),g=C.grade,b=DRY.base[g]||DRY.base["24"],
   // to stay hot (DRY.hold) and the rest is vented to atmosphere through the header vent on the roof (24-3d), and paid for
   const brk=S.pm==="break";if(run)D.runSt=D.steam;
   D.steam=ease(D.steam,run?water*DRY.stPerW:brk?(D.runSt||0):0,dt,4);D.vent=ease(D.vent||0,brk?D.steam*(1-DRY.hold):0,dt,0.5);
-  if(brk&&!S.zen&&D.steam>0.5){const en=Math.max(0,energyCost()-pfChemT()),wpt=dryWpt()*DRY.stPerW,v=wpt>0?D.steam*dt/60*en*PF_STEAMSH/wpt:0;
+  if(brk&&!S.zen&&D.steam>0.5){const en=Math.max(0,energyCostT()-pfChemT()),wpt=dryWpt()*DRY.stPerW,v=wpt>0?D.steam*dt/60*en/wpt:0;   /* (v6.11.2: the per-ton bill is steam now) */
     if(v>0){spend(v,"energy");pfAdd("steam","pm",v);D.ventT=(D.ventT||0)+D.vent*dt/60;D.ventC=(D.ventC||0)+v*(1-DRY.hold);}}
   D.hdr=ease(D.hdr,D.steam>DRY.boiler?Math.max(0.6,1-(D.steam-DRY.boiler)/DRY.boiler*1.5):1,dt,20);
   // the floor is speed's (a slow machine over-dries); a knob that takes load off can take the 3rd section under it
@@ -4626,7 +4633,7 @@ function dpYield(){if(S.zen)return 1;let x=0;for(const k of ["hd","lc","lw"])x+=
 // strength: ring crush from refining, the measured weight and stickies; the spec is the grade's
 const rctSpec=()=>Math.round((RCT0[C.grade]||60)*WE.rctSpec*10)/10;
 // (v6.8.3: open draw: each % of draw over the 1.5 % standard stretches the sheet and takes 4 % off ring crush; less draw adds it)
-function rctNow(bw){const ri=1+WE.rctK*(kwhNow()-WE.kwh0)-WE.rctStk*Math.max(0,((S.bq&&!S.zen)?S.bq.ck:0.1)-0.1)-WE.rctDraw*((S.zen?KNOB_IDEAL.draw:knobVal("draw"))-KNOB_IDEAL.draw)+chemRct();   // (v6.11.1: dry strength, 07l)
+function rctNow(bw){const ri=1+WE.rctK*(kwhNow()-WE.kwh0)-WE.rctStk*Math.max(0,((S.bq&&!S.zen)?S.bq.ck:0.1)-0.1)-WE.rctDraw*((S.zen?KNOB_IDEAL.draw:knobVal("draw"))-KNOB_IDEAL.draw);   // (v6.11.2: dry strength starch removed; v6.11.1 added its ring crush here)
   return (RCT0[C.grade]||60)*(bw/bwStd())*ri;}
 // v6.11.2 paper is sold by area (MSF, thousand ft²), the way box plants buy it. The list price ($/t) is for a ton at the
 // grade's target weight; a ton made lighter covers more ft² and sells for list × bwStd/bw, a heavier one for less. The player
@@ -5052,18 +5059,19 @@ const RLY={tick:15,leadB:36*60,leadM:72*60,baseB:0.016,baseM:0.009,baseD:1/300, 
   fix:0.2,fixMin:[20,40],rstWin:1440,rstFail:20,elecResp:10,ppe:3,rectBase:1/250,rectBill:40e3,drvCall:0.1,rep:[0.08,0.8],inv:[45,90],repl:[60,90],patch:3,dur:{vib:[150,270],adx:[240,420],drv:[60,120]},drvBill:35e3};
 const LINEUPS=[["SP","Stock prep lineup","MCC-1"],["PM","Machine sectional lineup","MCC-2"],["WD","Winder lineup","MCC-3"]];
 const LINEN=Object.fromEntries(LINEUPS.map(l=>[l[0],l]));
-// kw: rated power; stop: what the failure does, in words; ta: the Round area its tell shows in; k: a phase for the load wobble
+// kw: rated power (v6.11.2: re-rated for a ~35 t/h recycled linerboard machine: refiners 2,000 kW, dryer groups 1,500, couch 400,
+//   presses 450, reel 200, winder 750; pulper and fan pump unchanged); stop: what the failure does, in words; ta: the Round area its tell shows in; k: a phase for the load wobble
 const ASSETS=[
   {id:"pulp",n:"Pulper rotor",ln:"SP",kw:1100,ta:"pulp",k:1,mods:{pulperDown:1},stop:"The pulper is stopped; the stock chest is draining.",bb:45e3,mb:120e3},
-  {id:"refA",n:"Refiner A",ln:"SP",kw:1500,ta:"scr",k:2,mods:{speedCap:0.75},stop:"One refiner left: the machine slows to 75%.",bb:40e3,mb:135e3},
-  {id:"refB",n:"Refiner B",ln:"SP",kw:1500,ta:"scr",k:3,mods:{speedCap:0.75},stop:"One refiner left: the machine slows to 75%.",bb:40e3,mb:135e3},
+  {id:"refA",n:"Refiner A",ln:"SP",kw:2000,ta:"scr",k:2,mods:{speedCap:0.75},stop:"One refiner left: the machine slows to 75%.",bb:40e3,mb:135e3},
+  {id:"refB",n:"Refiner B",ln:"SP",kw:2000,ta:"scr",k:3,mods:{speedCap:0.75},stop:"One refiner left: the machine slows to 75%.",bb:40e3,mb:135e3},
   {id:"fan",n:"Fan pump",ln:"SP",kw:900,ta:"scr",k:4,mods:{pmDown:"fan pump down"},stop:"No stock to the headbox: the machine is down.",bb:35e3,mb:105e3},
-  {id:"couch",n:"Couch roll",ln:"PM",kw:600,ta:"wet",k:5,mods:{pmDown:"couch drive down"},stop:"The machine is down.",bb:50e3,mb:90e3},
-  {id:"pr1",n:"1st press",ln:"PM",kw:700,ta:"wet",k:6,mods:{pmDown:"1st press drive down"},stop:"The machine is down.",bb:50e3,mb:100e3},
-  {id:"pr2",n:"2nd press",ln:"PM",kw:700,ta:"wet",k:7,mods:{pmDown:"2nd press drive down"},stop:"The machine is down.",bb:50e3,mb:100e3},
-  {id:"dry",n:"Dryer section",ln:"PM",kw:800,ta:"dry",k:8,mods:{pmDown:"dryer drive down"},stop:"The machine is down.",bb:55e3,mb:110e3},
-  {id:"reel",n:"Reel drum",ln:"PM",kw:400,ta:"dry",k:9,mods:{pmDown:"reel drive down"},stop:"The machine is down.",bb:35e3,mb:75e3},
-  {id:"wind",n:"Winder drum",ln:"WD",kw:600,ta:"dry",k:10,mods:{winderDown:1},stop:"The winder is down; reels are stacking up.",bb:35e3,mb:80e3}];
+  {id:"couch",n:"Couch roll",ln:"PM",kw:400,ta:"wet",k:5,mods:{pmDown:"couch drive down"},stop:"The machine is down.",bb:50e3,mb:90e3},
+  {id:"pr1",n:"1st press",ln:"PM",kw:450,ta:"wet",k:6,mods:{pmDown:"1st press drive down"},stop:"The machine is down.",bb:50e3,mb:100e3},
+  {id:"pr2",n:"2nd press",ln:"PM",kw:450,ta:"wet",k:7,mods:{pmDown:"2nd press drive down"},stop:"The machine is down.",bb:50e3,mb:100e3},
+  {id:"dry",n:"Dryer section",ln:"PM",kw:1500,ta:"dry",k:8,mods:{pmDown:"dryer drive down"},stop:"The machine is down.",bb:55e3,mb:110e3},
+  {id:"reel",n:"Reel drum",ln:"PM",kw:200,ta:"dry",k:9,mods:{pmDown:"reel drive down"},stop:"The machine is down.",bb:35e3,mb:75e3},
+  {id:"wind",n:"Winder drum",ln:"WD",kw:750,ta:"dry",k:10,mods:{winderDown:1},stop:"The winder is down; reels are stacking up.",bb:35e3,mb:80e3}];
 const ASSETN=Object.fromEntries(ASSETS.map(a=>[a.id,a]));
 // v6.10.1: an asset's rated kW now (the Refiner power upgrade fits bigger refiner motors and drives: +30%)
 const rlyKw=id=>{const A=ASSETN[id];return A.kw*((id==="refA"||id==="refB")&&LV("refiner")?1.3:1);};
@@ -5125,6 +5133,23 @@ function rlyLoad(id,r){if(!S||outOn()||rlyIncOf(id)||rlyRectDown(ASSETN[id].ln))
 function rlyDrvSt(id,L){if(outOn())return "off";const i=rlyIncOf(id);if(i&&i.kind==="plan")return "lock";if(i&&i.kind==="drv")return "fault";if(rlyRectDown(ASSETN[id].ln))return "nodc";if(i)return "trip";return (L!=null?L:rlyLoad(id))>3?"run":"idle";}
 const rlyTemp=(id,L)=>{const a=S.rel&&S.rel.a[id];return 27+(L||0)*0.38+(a?(100-a.dh)*0.12:0);};
 function rlyMccKw(r){r=r||knobRead();let k=0;for(const A of ASSETS)k+=Math.max(0,rlyLoad(A.id,r))/100*rlyKw(A.id);return k;}
+/* ---- v6.11.2 metered electricity ----
+   The electricity bill is the drives at their load (the ten on the Drives page, rated kW x load) plus the balance of plant
+   (vacuum pumps, stock and water pumps, agitators, fans, compressed air, lighting, effluent): ELEC.bop kW running, a share of
+   it on a break, stopped or in an outage. At $ELEC.price/kWh. Calibrated so a standard grade 24 run costs what the flat bill
+   did (ECON.energy's power share, 40% of $68/t: about 12.5 MW and 390 kWh/t at 32 t/h), so a slow machine, a stop or heavy
+   refining now show in the bill as they would. The APC upgrade (-4%) and survival's cost multiplier apply; the shoe press
+   and the leader's dryer tuning are steam savings (03 energyCostT). Booked to the process flow's power by area. */
+const ELEC={price:0.07,bop:6400,k:{brk:0.75,stop:0.35,out:0.15},area:{pulp:"pulper",refA:"stock",refB:"stock",fan:"stock"}};
+const pwrBop=()=>ELEC.bop*(outOn()?ELEC.k.out:S.pm==="run"?1:S.pm==="break"?ELEC.k.brk:ELEC.k.stop);
+const pwrMul=()=>(1-0.04*LV("apc"))*(P.costMul||1);
+function pwrKw(r){return rlyMccKw(r)+pwrBop();}
+// $/t of electricity at this moment (for the screens): today's draw over the tons an hour (the grade's standard when stopped)
+function pwrT(){if(!S)return 0;const g=GRADES[C.grade]||GRADES["24"],tph=S.pm==="run"&&S.rates&&S.rates.prod>1?S.rates.prod:P.K*g.sp*g.bw;return tph>0?pwrKw()*ELEC.price*pwrMul()/tph:0;}
+function pwrTick(dt){const r=knobRead(),h=dt/60,m=ELEC.price*pwrMul()*h;let v=0;
+  for(const A of ASSETS){const x=Math.max(0,rlyLoad(A.id,r))/100*rlyKw(A.id)*m;if(x>0){v+=x;pfAdd("power",ELEC.area[A.id]||"pm",x);}}
+  const b=pwrBop()*m;for(const a in PF_POWER)pfAdd("power",a,b*PF_POWER[a]);v+=b;
+  if(v>0){spend(v,"energy");if(S.pm!=="run"){S.tot.idleE=(S.tot.idleE||0)+v;pfW("idle",v);}}}
 function rlyStressV(id,r,L){let s=1;if(id==="pulp"&&r.amps>460)s+=(r.amps-460)/40;if((id==="refA"||id==="refB")&&r.kwh>80)s+=(r.kwh-80)/25;if((id==="pr1"||id==="pr2")&&r.pl>120)s+=(r.pl-120)/15;if(L>100)s+=(L-100)/20;return Math.min(4,s);}
 const rlyStressM=L=>L>100?Math.min(4,1+(L-100)/15):1;
 
@@ -5379,7 +5404,7 @@ function cdTick(dt){if(!cdOn())return;const C2=cdState(),t=S.t,K=S.knob,x=K&&K.a
     C2.bw[z]=bd+C2.dil[z]+(x&&x.z?x.z[z]*0.35:0);}
   for(let s=0;s<2;s++)C2.edge[s]=Math.max(0,eRaw[s]-(sbHave()?3.5*C2.sb[s?11:0]:0));
   // the steam box's steam (a share of the dryers' own bill: CD.sbSteam a ton for each zone at full output)
-  if(sbHave()&&S.pm==="run"&&(S.rates.prod||0)>0){const u=C2.sb.reduce((a,v)=>a+v,0)/12,v=u*CD.sbSteam*S.rates.prod*dt/60*energyCost();if(v>0){spend(v,"energy");pfAdd("steam","pm",v);}}}
+  if(sbHave()&&S.pm==="run"&&(S.rates.prod||0)>0){const u=C2.sb.reduce((a,v)=>a+v,0)/12,v=u*CD.sbSteam*S.rates.prod*dt/60*Math.max(0,energyCostT()-pfChemT());   /* (v6.11.2: steam's rate) */if(v>0){spend(v,"energy");pfAdd("steam","pm",v);}}}
 // what each roll of the set has wrong: [[DS roll reasons],[TS roll reasons]] (empty = on spec)
 function cdRolls(){const C2=cdState(),W=S.wdW||windW(C.grade),web=webW(),tr=(web-2*W)/2,zw=web/12,mA=QNOW.m,sp=QSPEC[C.grade]||QSPEC["24"],bwT=CD.bwTol*bwSp();
   const R=[[tr,tr+W],[tr+W,tr+2*W]],off=[[],[]];
@@ -5397,31 +5422,26 @@ function cdWhy(){const C2=S.cd;if(!C2)return "";return [0,1].filter(s=>C2.off[s]
 // the player's moves on the QCS CD tab
 function cdSetMan(row,on){const C2=cdState();if(row==="sb"&&!sbHave())return;C2.man[row]=!!on;if(on){const src=row==="sp"?C2.sp:row==="sb"?C2.sb:C2.dil;C2.ms[row]=src.map(v=>Math.round(clamp(v*(row==="dil"?100/1.5:100),-100,100)));}}
 function cdSetZone(row,z,v){const C2=cdState();if(row==="sb"&&!sbHave())return;C2.man[row]=true;C2.ms[row][z]=Math.round(clamp(v,row==="dil"?-100:0,100));}
-/* ---- v6.11.1 wet-end chemicals: dry strength (cationic starch) and the retention polymer, on the WET DCS ----
-   Both come out of the chemicals and water budget (ECON.chem, $25/t): at their standard doses dry strength is 6 kg/t of
-   starch at $0.55/kg ($3.30/t) and the polymer 0.3 kg/t at $3.50/kg ($1.05/t); the other $20.65/t is everything else.
+/* ---- v6.11.1 wet-end chemicals: the retention polymer on the WET DCS (v6.11.2: dry strength starch removed) ----
+   The polymer comes out of the chemicals and water budget (ECON.chem, $25/t, unchanged): 0.3 kg/t at $3.50/kg ($1.05/t) at
+   standard; the other $23.95/t is everything else (v6.11.2: the starch's $3.30/t folded into it, so the budget is the same).
    AUTO is flow-paced: the pump follows production at a ratio (kg/t: the standard unless the player sets another), so it
    stops on a break, and at the standard it costs exactly what the budget already charges (v6.11.1 QA: the ratio setpoint). MANUAL holds the pump at the operator's kg/h: as the tons move the dose moves with it,
    and on a break or a slow restart the chemical keeps going in (paid for, and an overdose as the sheet comes back).
-   What reaches the sheet (e, kg/t) lags the dose: a quarter hour for the starch (through the machine chest), 3 minutes
-   for the polymer (dosed at the fan pump). Against the standard dose:
-   - Dry strength: more ring crush (saturating: f(d) = 0.15 (1 - e^(-d/6)); +2.7% at 10 kg/t, +4.3% at 15, -9.5% at
-     none), so AUTO-LW can trim the basis weight lighter (07g), and better drainage (couch solids x 1 + 0.8 dF, 07b
-     dewater), so less steam. Over 10 kg/t the spare starch feeds deposits: more breaks and slime.
+   What reaches the sheet (e, kg/t) lags the dose by 3 minutes (dosed at the fan pump). Against the standard dose:
    - Polymer: first pass retention (85% at standard; the fines and filler the wire loses go to the white water and on to
      the sewer): the machine's fiber loss scales with g(p) = 0.4 + 0.6 e^(-p/0.2), so cutting it loses fiber (fewer tons
      a ton of fiber and a higher TSS: a normal run is ~25 mg/L, and held over the 50 mg/L permit for an hour while the
      polymer is cut, the state fines the mill), and over 0.5 kg/t it over-flocculates: (dose - 0.5) of the reel goes to the
      beater for poor formation (30% at 0.8 kg/t).
-   The crew traces trouble back like a fiddly knob's: flocs or deposits for a few hours, or a permit breach, and the
-   process engineer puts that chemical back on AUTO. Untouched (S.chem missing, or both on AUTO and settled) every
-   factor here is exactly 1 and nothing is charged or drawn: seasons replay identically. Zen: no chemicals. */
+   The crew traces trouble back like a fiddly knob's: flocs for a few hours, or a permit breach, and the process engineer
+   puts the polymer back on AUTO. Untouched (S.chem missing, or on AUTO and settled) every factor here is exactly 1 and
+   nothing is charged or drawn: seasons replay identically. Zen: no chemicals. Older saves may still hold S.chem.ds: unused. */
 const CHM={
-  ds:{id:"ds",name:"Dry strength (starch)",short:"DRY STR",std:6,max:15,step:1,rstep:0.5,fmax:600,price:0.55,tau:15,where:"cationic starch to the machine chest"},
   pol:{id:"pol",name:"Retention polymer",short:"POLYMER",std:0.3,max:0.8,step:0.1,rstep:0.02,risk:0.15,fmax:32,price:3.5,tau:3,where:"retention aid at the fan pump"}};
-const CHEM_IDS=["ds","pol"];
-const CHEM_STD$=CHM.ds.std*CHM.ds.price+CHM.pol.std*CHM.pol.price;   // ($4.35/t of the $25/t)
-const chF=d=>0.15*(1-Math.exp(-d/6)),chG=p=>0.4+0.6*Math.exp(-p/0.2);
+const CHEM_IDS=["pol"];   // (v6.11.2: "ds", dry strength starch, removed)
+const CHEM_STD$=CHM.pol.std*CHM.pol.price;   // ($1.05/t of the $25/t)
+const chG=p=>0.4+0.6*Math.exp(-p/0.2);
 function chemState(){if(!S.chem){S.chem={any:false,H:{}};for(const id of CHEM_IDS)S.chem[id]={m:"auto",f:0,sp:CHM[id].std,e:CHM[id].std,d:CHM[id].std};}return S.chem;}
 // anything off standard: a pump on MANUAL, or the sheet still carrying a dose that isn't the standard one
 function chemOn(){const X=S.chem;return !!(X&&X.any&&!S.zen);}
@@ -5438,15 +5458,12 @@ function chemFlow(id){const X=S.chem;if(!X||X[id].m==="auto")return chemSp(id)*c
 // the polymer low enough that the outfall is at risk of its permit (the DCS warns)
 function chemRisk(){return chemOn()&&(chemMode("pol")==="manual"?chemE("pol")<CHM.pol.risk||(chemDose("pol")!=null&&chemDose("pol")<CHM.pol.risk):chemSp("pol")<CHM.pol.risk);}
 // effects (exactly the identity untouched)
-function chemRct(){return chemOn()?chF(chemE("ds"))-chF(CHM.ds.std):0;}                 // ring crush: + share (07g rctNow)
-function chemDrain(){return chemOn()?1+0.8*(chF(chemE("ds"))-chF(CHM.ds.std)):1;}        // couch solids factor (07b dewater)
 function chemLoss(){return chemOn()?chG(chemE("pol"))/chG(CHM.pol.std):1;}              // the machine's fiber loss factor
 function pmRet(){return chemOn()?1-(1-P.pmLoss)*chemLoss():P.pmLoss;}                    // fiber into paper (07 step)
 function fprNow(){return 100-15*chemLoss();}                                             // first pass retention (%)
 function chemFloc(){return chemOn()?clamp((chemE("pol")-0.5)/1.0,0,1):0;}                // share of the reel lost to flocs (07b F.floc)
-function chemDep(){return chemOn()?Math.max(0,chemE("ds")-10):0;}                         // kg/t of spare starch over 10
-function chemMods(m){const x=chemDep();if(x>0)m.breakMul*=1+0.06*x;}
-function chemFreq(id){const x=chemDep();return id==="slime"&&x>0?1+0.25*x:1;}
+function chemMods(m){}   // (v6.11.2: nothing since the starch went: it was the deposits' extra breaks)
+function chemFreq(id){return 1;}   // (and their slime)
 // the player on the DCS (zen: none). MANUAL starts where AUTO's pump is (bumpless); AUTO goes back to the ratio.
 function chemSetMode(id,m){if(S.zen||!CHM[id])return;const X=chemState(),c=X[id];if(m===c.m)return;
   if(m==="manual"){const t=chemTph()||chemTstd();c.f=Math.round(chemSp(id)*t/CHM[id].step*10)*CHM[id].step/10;}
@@ -5472,8 +5489,6 @@ function chemTick(dt,prod){const X=S.chem;if(!X||S.zen)return;const h=dt/60,run=
   // ---- the crew's traces ----
   const H=X.H,tr=(k,bad,mins,id,head,who)=>{if(bad){H[k]=(H[k]||0)+dt;if(H[k]>=mins){H[k]=0;chemFix(id,head,who);}}else H[k]=Math.max(0,(H[k]||0)-dt*0.5);};
   tr("floc",run&&chemFloc()>0.02,180,"pol","QCS: flocs and poor formation in the sheet.","The process engineer");
-  tr("dep",chemDep()>0,360,"ds","Deposits on the felts and dryer cans.","The process engineer");
-  tr("weak",run&&chemE("ds")<CHM.ds.std-0.5&&QNOW.rct>0&&QNOW.rct<rctSpec(),60,"ds","QCS: ring crush under spec.","The process engineer");
   // ---- held over the permit by the fiber the wire is losing: the state fines the mill ----
   // (v6.11.1 t4: the outfall's TSS over the 50 mg/L permit while the polymer is under its standard: a normal run sits at ~25
   // mg/L, so it takes about a third of the standard dose or less, i.e. the wire losing 50% more fines, to hold it over)
@@ -6486,7 +6501,7 @@ function pfDay(){const d=Math.floor(S.t/1440);if(!S.pf){S.pf=pfNew();return;}if(
 // (stronger bonding, less starch)
 function pfChemT(){return Math.max(0,ECON.chem+P.chemAdd+(P.siteChem||0)-(P.refSave||0))*(P.costMul||1);}
 function pfEnergy(prod,ec){if(!(ec>0))return;const ch=Math.min(ec,prod*pfChemT()),en=ec-ch;
-  pfAdd("chem","stock",ch*0.5);pfAdd("chem","pm",ch*0.5);pfAdd("steam","pm",en*PF_STEAMSH);for(const a in PF_POWER)pfAdd("power",a,en*(1-PF_STEAMSH)*PF_POWER[a]);}
+  pfAdd("chem","stock",ch*0.5);pfAdd("chem","pm",ch*0.5);pfAdd("steam","pm",en);}   // (v6.11.2: power is metered and booked by pwrTick, 07i)
 function pfLabor(dt){const w=(ECON.wage+(P.siteWage||0))*(P.costMul||1)*leadWage()*civWage(),m=dt/60;
   pfAdd("labor","yard",C.drivers.v*w*m);pfAdd("labor","ship",(C.loaders.v*w+P.robots*ECON.robot)*m);pfAdd("mlab","techs",(P.techs+(P.elec||0))*w*m);if(P.pmCost)pfAdd("mlab","pmprog",P.pmCost*m);}
 function pfRepair(id,bill){if(!bill)return;pfAdd("rep",pfRepArea(id),bill);pfAdd("repid",id,bill);if(id==="permit"){pfW("fine",bill);pfW("fines",1);}histEv(id,bill);}
@@ -6667,7 +6682,7 @@ const TAGS=[
   ["gtrav","Guide travel used","WET","%",r=>r.gm?Math.min(1,r.gtrav)*100:null,""],["osc","Felt shower oscillator","WET","%",r=>r.osc,""],
   ["wwl","White water silo level","WET","%",()=>S.we?S.we.L/WE.silo*100:null,"a.wwl"],["wwg","White water silo volume","WET","gal",()=>S.we?GAL(S.we.L):null,""],
   // v6.11.1 wet-end chemicals (07l)
-  ["dsdose","Dry strength dose","WET","kg/t",()=>S.pm==="run"?chemE("ds"):null,""],["dsflow","Dry strength pump","WET","kg/h",()=>chemFlow("ds"),""],
+  
   ["poldose","Retention polymer dose","WET","kg/t",()=>S.pm==="run"?chemE("pol"):null,""],["polflow","Retention polymer pump","WET","kg/h",()=>chemFlow("pol"),""],
   ["fpr","First pass retention","WET","%",()=>S.pm==="run"?fprNow():null,""],
   ["hum","Machine room humidity","WET","%",()=>clamp(62+(motStatus("fog")!=="run"||active("fogfan")?24:0)+wob2(0.01,8)*3,0,100),""],
@@ -7379,7 +7394,7 @@ function no3D(){G3.ok=false;$("no3d").hidden=false;$("no3d-retry").onclick=()=>l
   const WH=4.6;ribWall(26.4,WH,0.3,-21.2,WH/2,-23.5);ribWall(26.4,WH,0.3,-21.2,WH/2,-3);ribWall(0.3,WH,10.8,-8,WH/2,-18.1);ribWall(0.3,WH,7.3,-8,WH/2,-6.65);ribWall(0.3,WH-2.3,2.4,-8,2.3+(WH-2.3)/2,-11.5);
   // warehouse: floor + walls
   slab(-49,-23.8,14.8,32.2,M.slab,0.04);
-  ribWall(25.2,WH,0.3,-36.4,WH/2,14.8);ribWall(25.2,WH,0.3,-36.4,WH/2,32.2);ribWall(0.3,WH,3.3,-23.8,WH/2,16.45);ribWall(0.3,WH,11.5,-23.8,WH/2,26.45);ribWall(0.3,WH-2.5,2.6,-23.8,2.5+(WH-2.5)/2,19.4);
+  ribWall(25.2,WH,0.3,-36.4,WH/2,14.8);ribWall(25.2,WH/2,0.3,-36.4,WH/4,32.2);/* (v6.11.2: the south wall's lower half; its top half rides with the roof, 22) */ribWall(0.3,WH,3.3,-23.8,WH/2,16.45);ribWall(0.3,WH,11.5,-23.8,WH/2,26.45);ribWall(0.3,WH-2.5,2.6,-23.8,2.5+(WH-2.5)/2,19.4);
 
   // ---- v2.9.14 lived-in floors: one painted canvas decal per building (bays, aisles, walkways, parking, scuffs, stains,
   // joints) = one draw call each, plus a few instanced props (pallets, bollards, bins, chargers, extinguishers) ----
@@ -7464,7 +7479,11 @@ function no3D(){G3.ok=false;$("no3d").hidden=false;$("no3d-retry").onclick=()=>l
       const glass=new THREE.Mesh(new THREE.PlaneGeometry(z1-z0-0.2,1.3),gl);glass.rotation.y=Math.PI/2;glass.position.set(x0+(i+1)*tw+0.07,y+0.87,(z0+z1)/2);g.add(glass);}
     g.userData.mats=[m,gl,em];scene.add(g);roofs.push(g);return g;}
   box2(-34.4,-8,-23.5,-3);box2(-49,-23.8,14.8,32.2);skirt(-2,1.2,64,1.2,2.4);skirt(65.2,2.4,65.2,16.2,2.4);
-  sawRoof(-34.6,-7.85,-23.65,-2.85,WH);sawRoof(-49.15,-23.65,14.65,32.35,WH);
+  sawRoof(-34.6,-7.85,-23.65,-2.85,WH);
+  // v6.11.2: the roll warehouse's south wall (the one facing the camera) is a half wall in the cutaway: its top half belongs to the
+  // roof group, so it lifts and fades with the roof (with its own copies of the materials, so no other wall fades with it)
+  {const whR=sawRoof(-49.15,-23.65,14.65,32.35,WH),n0=whR.children.length;ribWall(25.2,WH/2,0.3,-36.4,WH*3/4,32.2,whR);
+   const cl=new Map();whR.children.slice(n0).forEach(o=>o.traverse(c=>{if(!c.material)return;let m=cl.get(c.material);if(!m){m=c.material.clone();cl.set(c.material,m);whR.userData.mats.push(m);}c.material=m;}));}
   // paper machine hall: full building seen from the air (walls, window bands, sawtooth roof), gone as soon as you zoom in
   // v3.2.1: the tending side is widened from z 16.75 out to HALL.zf (20), east of the first bay; the west bay stays where it was
   // so it doesn't run into the warehouse. Doors: a big roll-up door to the food truck lawn and two personnel doors.
@@ -10126,9 +10145,16 @@ function no3D(){G3.ok=false;$("no3d").hidden=false;$("no3d-retry").onclick=()=>l
   G3.wdParts={setRolls,setCores,rider,rods,webUpdate,WD,WEBA,WEBB,unwind,IN};
   (G3.dynLater||(G3.dynLater=[])).push(rider,...rods,...setCores,...setRolls,WEBA,...WEBB,...TRIMS);   // (they move or change shape: never batched)
   box(1.2,1.2,0.8,M.steel,0,0.6,4.3,wd);box(1.1,0.5,0.1,M.robot,0,1.25,3.95,wd,false);
-  const SPR={x:-13.4,z:3.6};
-  const rackSpools=[0,1,2].map(k=>{const m=spoolModel(scene);m.g.position.set(SPR.x-k*1.2,0.75,SPR.z+0.6);m.set(R0);return m;});
-  [SPR.x-1.2].forEach(x=>{box(3.4,0.3,0.4,M.steel,x,0.35,SPR.z+0.6-ZJ,scene);box(3.4,0.3,0.4,M.steel,x,0.35,SPR.z+0.6+ZJ,scene);});
+  // v6.11.2: the spare spool stand, west of the winder on the crane's line (z = zc): two rails at the journals carry the empty
+  // spools side by side, so the crane only travels east-west to take one to the primary arms (it left the line before only
+  // to reach the old floor rack, which reached into the unwind stand and the parked reels)
+  const SPR={x:-24.5,dx:-1.0,y:1.22,z:zc,ry:0.98};
+  const rackSpools=[0,1,2].map(k=>{const m=spoolModel(scene);m.g.position.set(SPR.x+k*SPR.dx,SPR.y,SPR.z);m.set(R0);return m;});
+  {const x0=SPR.x+0.6,x1=SPR.x+2*SPR.dx-0.6,xm=(x0+x1)/2,L=x0-x1;
+   [-ZJ,ZJ].forEach(dz=>{const z=SPR.z+dz;box(L,0.12,0.3,M.steel,xm,SPR.ry-0.06,z,scene);box(L,0.05,0.3,M.warn,xm,SPR.ry+0.005,z,scene,false);   // rail with a painted top
+     [x0-0.12,x1+0.12].forEach(x=>{box(0.18,SPR.ry-0.12,0.18,M.steel,x,(SPR.ry-0.12)/2,z,scene);box(0.08,0.32,0.3,M.warn,x,SPR.ry+0.16,z,scene,false);});   // legs and end stops
+     box(0.12,0.08,0.12,M.ink,xm,SPR.ry-0.2,z,scene,false);});
+   box(L,0.08,0.12,M.steel,xm,0.25,SPR.z-ZJ+0.1,scene,false);box(L,0.08,0.12,M.steel,xm,0.25,SPR.z+ZJ-0.1,scene,false);}
   const parked=[0,1,2,3].map(k=>{const g=new THREE.Group();g.position.set(-11.8-k*4.1,0,-0.2);scene.add(g);
     box(0.35,1.1,4.6,M.steel,-1.3,0.55,0,g);box(0.35,1.1,4.6,M.steel,1.3,0.55,0,g);cylZ(2,5.2,M.paper,0,2.15,0,22,g);cylZ(0.22,6.2,M.steel,0,2.15,0,8,g);return g;});
   // overhead crane: carries full reels from the reel to storage and from storage to the winder unwind
@@ -10146,7 +10172,7 @@ function no3D(){G3.ok=false;$("no3d").hidden=false;$("no3d-retry").onclick=()=>l
    box(0.45,0.07,2*ZH+0.4,M.warn,0,-0.75,0,crHook,false);box(0.45,0.07,2*ZH+0.4,M.warn,0,-1.1,0,crHook,false);box(0.09,0.32,2*ZH+0.4,M.warn,0,-0.92,0,crHook,false);
    [-ZH,ZH].forEach(z=>{box(0.32,SB-1.1,0.2,M.warn,0,-(1.1+SB)/2,z,crHook,false);box(0.85,0.16,0.28,M.ink,0.05,-SB-0.32,z,crHook,false);box(0.14,0.5,0.28,M.ink,0.42,-SB-0.1,z,crHook,false);});}
   const carried=spoolModel(crHook);carried.g.position.y=-SB;carried.g.visible=false;
-  const UNW=[-18.7+WD.UX,WD.UY,zc],REELP=[KX,DY,zc],parkP=k=>[-11.8-k*4.1,2.15,-0.2],SPOOLP=()=>[SPR.x-Math.max(0,rackSpools.filter(m=>m.g.visible).length-1)*1.2,0.75,SPR.z+0.6],ARMP=()=>[DX+Math.cos(105*Math.PI/180)*(DR+R0+0.35),DY+Math.sin(105*Math.PI/180)*(DR+R0+0.35),zc];
+  const UNW=[-18.7+WD.UX,WD.UY,zc],REELP=[KX,DY,zc],parkP=k=>[-11.8-k*4.1,2.15,-0.2],SPOOLP=()=>[SPR.x+Math.max(0,rackSpools.filter(m=>m.g.visible).length-1)*SPR.dx,SPR.y,SPR.z],ARMP=()=>[DX+Math.cos(105*Math.PI/180)*(DR+R0+0.35),DY+Math.sin(105*Math.PI/180)*(DR+R0+0.35),zc];
   function craneUpdate(rdt){const nPark=Math.max(0,reelsAtWinder()-1);
     if(CR.lastTurn<0){CR.lastTurn=S.tot.turnups;CR.lastPark=nPark;}
     // v2.9.5: a turn-up and a stored reel going to the unwind can land in the same frame (fast game speeds): handle both,
@@ -10958,8 +10984,11 @@ function no3D(){G3.ok=false;$("no3d").hidden=false;$("no3d-retry").onclick=()=>l
         const cm=new THREE.MeshBasicMaterial({map:ct,transparent:true,depthWrite:false,toneMapped:false,side:THREE.DoubleSide,opacity:0});
         const cones=new THREE.Mesh(cg,cm);cones.renderOrder=3;cones.visible=false;cones.userData.smBatch=true;cones.name="lamp cones";scene.add(cones);G3.nightCones=cones;}}
     /* v6.1 t8: the ten pools of lamp light are one additive mesh (their strengths in the vertex colours), not ten draws */
+    /* (v6.11.2: each plane's matrix is built here from its position and rotation: the static merge can freeze a never-drawn
+       plane (matrixAutoUpdate off) before its matrix was ever computed, and updateMatrixWorld then kept the identity, so all
+       ten pools were stacked as one upright 16 m plane at the world origin: a warm glow on the drive side behind the reel) */
     if(!G3.nightPool){const pos=[],col=[],uv=[],c=new THREE.Color(0xffd9a0),v=new THREE.Vector3();
-      G3.nightL.forEach(l=>{l.p.updateMatrixWorld(true);const g=l.p.geometry,P=g.attributes.position,U=g.attributes.uv,I=g.index;
+      G3.nightL.forEach(l=>{l.p.updateMatrix();l.p.matrixWorld.copy(l.p.matrix);const g=l.p.geometry,P=g.attributes.position,U=g.attributes.uv,I=g.index;
         for(let j=0;j<I.count;j++){const i=I.getX(j);v.fromBufferAttribute(P,i).applyMatrix4(l.p.matrixWorld);pos.push(v.x,v.y,v.z);uv.push(U.getX(i),U.getY(i));col.push(c.r*l.k,c.g*l.k,c.b*l.k);}});
       const pg=new THREE.BufferGeometry();pg.setAttribute("position",new THREE.Float32BufferAttribute(pos,3));pg.setAttribute("uv",new THREE.Float32BufferAttribute(uv,2));pg.setAttribute("color",new THREE.Float32BufferAttribute(col,3));pg.computeBoundingSphere();
       if(G3.papNight)for(let q=0;q<col.length;q++)col[q]=[c.r,c.g,c.b][q%3];
@@ -11770,14 +11799,7 @@ function no3D(){G3.ok=false;$("no3d").hidden=false;$("no3d-retry").onclick=()=>l
   const lid=box(1.15,0.1,1.42,dm,0.6,1.5,0,g,false);lid.rotation.z=-0.35;lid.position.y=1.6;
       [[-0.9,-0.55],[0.9,-0.55],[-0.9,0.55],[0.9,0.55]].forEach(([a,b])=>cylZ(0.09,0.08,M.ink,a,0.09,b,8,g));box(0.08,0.9,1.2,M.ink,-1.22,0.75,0,g,false);return g;};
     YP.dumpster(-27.5,36.5,0.1);}
-  // by the office: an OCC compactor and its dumpster, a vending-machine-sized recycling cage
-  {const g=new THREE.Group();g.position.set(45.8,0,29);scene.add(g);const steel=M.steel,blue=M.brand;
-    box(3.0,2.0,2.0,blue,0,1.0,0,g);box(2.2,1.0,2.1,steel,0.2,2.5,0,g);box(1.6,0.08,1.6,M.ink,-0.4,3.0,0,g,false);                         // body, hopper, lid
-    const ram=new THREE.Mesh(new CylG(0.18,0.18,1.6,10),M.metal);ram.rotation.z=Math.PI/2;ram.position.set(-2.1,1.2,0);g.add(ram);box(0.9,0.8,0.8,M.ink,-2.6,1.0,0,g);   // ram cylinder + power pack
-    box(0.5,0.6,0.08,panelM,1.3,1.4,1.05,g,false);box(0.12,0.12,0.12,M.bad,1.45,1.55,1.1,g,false);box(0.12,0.12,0.12,M.ok,1.2,1.55,1.1,g,false);    // control panel
-    YP.dumpster(45.8,32.6,0);
-    const cage=new THREE.Group();cage.position.set(43,0,29.5);scene.add(cage);[[-0.7,-0.5],[0.7,-0.5],[-0.7,0.5],[0.7,0.5]].forEach(([a,b])=>box(0.06,1.6,0.06,M.metal,a,0.8,b,cage,false));
-    box(1.5,0.06,1.1,M.metal,0,1.62,0,cage,false);const cb=new THREE.Mesh(baleBox,M.baleG[1]);cb.scale.set(1.05,0.9,0.75);cb.position.y=0.45;cb.castShadow=true;cb.receiveShadow=true;cage.add(cb);}   // (same look as the bale stacks)
+  // (v6.11.2: the OCC compactor, its dumpster and the recycling cage that stood west of the office are gone; the production record board stays)
   // forklift charging bay off the receiving apron
   {const X=-58.5,Z=-13;slab(X-2.2,X+2.2,Z-1.8,Z+1.8,M.slab,0.025);box(4.4,1.6,0.25,M.steel,X,0.8,Z-1.75);box(4.6,0.12,0.4,M.brand,X,1.66,Z-1.75,scene,false);
     [-1.2,1.2].forEach(dx=>{box(0.6,1.1,0.4,M.steel,X+dx,0.55,Z-1.45);box(0.5,0.25,0.05,M.ok,X+dx,0.95,Z-1.22,scene,false);
@@ -13687,9 +13709,11 @@ function no3D(){G3.ok=false;$("no3d").hidden=false;$("no3d-retry").onclick=()=>l
     const H=(x,z)=>G3.terrainH?G3.terrainH(x,z):0;
     // follow a polyline back and forth at v m/s, waiting `wait` s at each end; fn(state) shows or hides loads
     function shuttle(g,pts,v,wait,fn){const L=[0];for(let i=1;i<pts.length;i++)L.push(L[i-1]+Math.hypot(pts[i][0]-pts[i-1][0],pts[i][1]-pts[i-1][1]));const tot=L[L.length-1];
-      const st={s:0,dir:1,w:wait*0.5};ACT.push(rdt=>{if(st.w>0){st.w-=rdt;return;}st.s+=st.dir*v*rdt;if(st.s>=tot||st.s<=0){st.s=Math.max(0,Math.min(tot,st.s));st.dir=-st.dir;st.w=wait;if(fn)fn(st);}
-        let i=1;while(i<L.length-1&&L[i]<st.s)i++;const f=(st.s-L[i-1])/Math.max(1e-6,L[i]-L[i-1]),x=pts[i-1][0]+(pts[i][0]-pts[i-1][0])*f,z=pts[i-1][1]+(pts[i][1]-pts[i-1][1])*f;
-        g.position.set(x,H(x,z),z);g.rotation.y=Math.atan2(-(pts[i][1]-pts[i-1][1]),pts[i][0]-pts[i-1][0])+(st.dir<0?Math.PI:0);});if(fn)fn(st);return st;}
+      const st={s:0,dir:1,w:wait*0.5};
+      // (v6.11.2: placed on its route at once: before, it sat at the world origin (the drive side by the reel) until its first wait ran out)
+      const place=()=>{let i=1;while(i<L.length-1&&L[i]<st.s)i++;const f=(st.s-L[i-1])/Math.max(1e-6,L[i]-L[i-1]),x=pts[i-1][0]+(pts[i][0]-pts[i-1][0])*f,z=pts[i-1][1]+(pts[i][1]-pts[i-1][1])*f;
+        g.position.set(x,H(x,z),z);g.rotation.y=Math.atan2(-(pts[i][1]-pts[i-1][1]),pts[i][0]-pts[i-1][0])+(st.dir<0?Math.PI:0);};
+      ACT.push(rdt=>{if(st.w>0){st.w-=rdt;return;}st.s+=st.dir*v*rdt;if(st.s>=tot||st.s<=0){st.s=Math.max(0,Math.min(tot,st.s));st.dir=-st.dir;st.w=wait;if(fn)fn(st);}place();});place();if(fn)fn(st);return st;}
     const grp=()=>{const g=new THREE.Group();g.userData.act=true;scene.add(g);return g;};
     if(SITE.env==="rural"){
       // the loader: body, cab, engine, a boom with a grapple carrying three logs east, back empty
@@ -15260,7 +15284,7 @@ function dcsAlarms(a,r,L){const al=(on,txt,hi)=>{if(on)L.push([txt,hi]);};vlvAla
     {const Wt=S.wat;al(!!(Wt&&Wt.L<WAT.cap*0.25),Wt&&Wt.short>0?"WHITE WATER CHEST EMPTY · STOCK THICK":"WHITE WATER CHEST LEVEL LO",!!(Wt&&Wt.short>0));}
     for(const k of ["hd","lc","lw"]){const dp=purgeDp(k);al(dp>PURGE.base[k]+(PURGE.trip[k]-PURGE.base[k])*0.6,{hd:"HD CLEANER ΔP HI",lc:"LC CLEANERS ΔP HI",lw:"LW CLEANERS ΔP HI"}[k],dp>PURGE.base[k]+(PURGE.trip[k]-PURGE.base[k])*0.85);}}
   else if(a==="WET"){al(motStatus("fog")!=="run","MACHINE ROOM HUMIDITY HI",false);
-    al(chemFloc()>0.02,"POLYMER HIGH · FLOCS IN THE SHEET",false);al(chemOn()&&fprNow()<82,"FIRST PASS RETENTION LO",fprNow()<78);al(chemRisk(),"POLYMER LOW · EFFLUENT PERMIT RISK",true);al(chemDep()>0,"STARCH HIGH · DEPOSITS",false);
+    al(chemFloc()>0.02,"POLYMER HIGH · FLOCS IN THE SHEET",false);al(chemOn()&&fprNow()<82,"FIRST PASS RETENTION LO",fprNow()<78);al(chemRisk(),"POLYMER LOW · EFFLUENT PERMIT RISK",true);
     al(S.pm!=="run"&&CHEM_IDS.some(id=>chemMode(id)==="manual"&&chemFlow(id)>0),"CHEMICAL PUMP ON MANUAL · MACHINE DOWN",false);
     {const W=S.we;if(W&&S.pm==="run"){al(W.L<WE.silo*WE.makeL,W.cav>0?"WW SILO LOW · FAN PUMP CAVITATING":"WHITE WATER SILO LEVEL LO",W.cav>0);al(W.m==="manual","BASIS WEIGHT ON MANUAL",false);}}}
   else if(a==="DET"){al(S.pm==="break",`SHEET BREAK · ${({reel:"REEL",dryer:"DRYERS",press:"PRESSES"})[S.brkType]||"MACHINE"}`,true);al(S.pm==="spools","REEL STORE FULL: MACHINE HELD BACK",true);
@@ -15310,7 +15334,7 @@ function dcsSetDefs(a){const D=()=>DCS_DRAW();
   return [];}
 // v6.11.2: the setpoint rows in the order the stock meets them, under a heading for each part of the machine
 const DCS_ORDER={
-  WET:[["Thick stock to the headbox","grade","dsf","bws","polf"],["Headbox","zones","beat","slv","slh"],["Forming table","wsp","vac","couch"],["Press section","press"]],
+  WET:[["Thick stock to the headbox","grade","bws","polf"],["Headbox","zones","beat","slv","slh"],["Forming table","wsp","vac","couch"],["Press section","press"]],
   DET:[["Press to dryers","draw"],["Dryer steam","st1","st2sp","st3sp"],["Reel and winder","wsp","wdr"]]};
 function dcsOrder(a,cs){const O=DCS_ORDER[a];if(!O)return;const kids=[...cs.children],by={};kids.forEach(e=>{if(e.dataset.ord)by[e.dataset.ord]=e;});
   const used=new Set();cs.replaceChildren();
@@ -15929,7 +15953,7 @@ function pfSVGt(D,live){const vert=pfVert(),NU=104,NV=112,GAP=30,PAD=vert?24:10,
    only: the sim and its dice are untouched, and the game keeps running at the player's speed while it is open.
    Keep RM_E in step with the sim when a relationship changes (tools/relmapcheck.py fails on a tag with no entry). ---- */
 const RM_DRV=[["x:weather","Weather",""],["x:bales","Bale grade mix",""],["x:pulpset","Pulper feed setpoint",""],["x:dilv","Pulper dilution valve","knob"],["x:slice","Headbox slice","knob"],["x:guide","Fabric guide roll","knob"],["x:zones","Headbox dilution zones","knob"],["x:spset","Machine speed setpoint",""],["x:grade","Grade on the machine",""],["x:dye","Dye system",""],["x:market","Market & leader effects",""],["x:power","Substation power",""],["x:incomer","MCC main incomer","knob"],["x:hood","Dryer hood doors","knob"],["x:orders","Customer orders",""],["x:upsets","Upsets & DCS motors",""]];
-const RM_COL={"YARD":["inq","unload","yard","balem","stk","occp"],"SPOT":["feed","cp","nv101pv","nv101op","amps","pulpLvl","yield","fiber","rejt","hddp","lcdp","lwdp","fsld","fsdp","kwh","dil","chest","chestg","gap","refkw","csf","agit","refq","mcCons","mcLvl","lv104pv","lv104op","mcg","fan"],"WET":["wsp","jw","rd","vac","couchSol","pl","pressSol","gtrav","edge","osc","hbc","bwv","fv201pv","fv201op","bwsp","drain","seal","pressw","wwl","lv202pv","lv202op","wwg","wwov","hum","dsflow","dsdose","polflow","poldose","fpr"],"DET":["speed","prod","st1","st3","pv302pv","pv302op","pv303pv","pv303op","steam","dryl","moist","qc300pv","qc300op","bw","draw","tension"],"QCS":["off","rct","prem","cdsp","bank","reel","cut","rollw","trimp","trimt","cdspan","sbout","spout","conv"],"UTIL":["boiler","vent","energyt","shower","evap","wcl","wcg","makeup","fresh","wuse","wwover","outfall","tss"],"SHIP":["fg","load","outq","openo","lateo","price","profit"],"DRV":["mvkv","lv480","dc_SP","dc_PM","dc_WD","dl_pulp","dl_refA","dl_refB","dl_fan","dl_couch","dl_pr1","dl_pr2","dl_dry","dl_reel","dl_wind","mcckw"]};
+const RM_COL={"YARD":["inq","unload","yard","balem","stk","occp"],"SPOT":["feed","cp","nv101pv","nv101op","amps","pulpLvl","yield","fiber","rejt","hddp","lcdp","lwdp","fsld","fsdp","kwh","dil","chest","chestg","gap","refkw","csf","agit","refq","mcCons","mcLvl","lv104pv","lv104op","mcg","fan"],"WET":["wsp","jw","rd","vac","couchSol","pl","pressSol","gtrav","edge","osc","hbc","bwv","fv201pv","fv201op","bwsp","drain","seal","pressw","wwl","lv202pv","lv202op","wwg","wwov","hum","polflow","poldose","fpr"],"DET":["speed","prod","st1","st3","pv302pv","pv302op","pv303pv","pv303op","steam","dryl","moist","qc300pv","qc300op","bw","draw","tension"],"QCS":["off","rct","prem","cdsp","bank","reel","cut","rollw","trimp","trimt","cdspan","sbout","spout","conv"],"UTIL":["boiler","vent","energyt","shower","evap","wcl","wcg","makeup","fresh","wuse","wwover","outfall","tss"],"SHIP":["fg","load","outq","openo","lateo","price","profit"],"DRV":["mvkv","lv480","dc_SP","dc_PM","dc_WD","dl_pulp","dl_refA","dl_refB","dl_fan","dl_couch","dl_pr1","dl_pr2","dl_dry","dl_reel","dl_wind","mcckw"]};
 const RM_E=[
  ["x:weather","balem","p","Rain and snow soak the bales in the yard and on inbound loads"],
  ["x:weather","unload","n","Snow and fog slow inbound trucks"],
@@ -16108,14 +16132,8 @@ const RM_E=[
  ["speed","steam","p","More tons, more water to evaporate"],
  ["pressSol","steam","n","Drier off the presses, less steam (and more when wetter)"],
  ["st1","steam","p","1st section above 70 kPa adds steam cost"],
- ["prod","dsflow","p","AUTO: the starch pump is flow-paced to the tons being made"],
  ["prod","polflow","p","AUTO: the polymer pump is flow-paced to the tons being made"],
- ["dsflow","dsdose","p","More starch a ton (in MANUAL a fixed pump doses more as the tons fall)"],
  ["polflow","poldose","p","More polymer a ton (in MANUAL a fixed pump doses more as the tons fall)"],
- ["dsdose","rct","p","Dry strength bonds the fibers: more ring crush, so AUTO-LW can run lighter"],
- ["dsdose","couchSol","p","Cationic starch drains the sheet faster: drier off the couch"],
- ["dsdose","speed","n","Over 10 kg/t the spare starch builds deposits: more breaks and slime"],
- ["dsdose","profit","n","Starch above the 6 kg/t standard costs $0.55 a kg"],
  ["poldose","fpr","p","The retention polymer flocs the fines onto the fibers: higher first pass retention"],
  ["poldose","off","p","Over 0.5 kg/t it over-flocculates: poor formation sends rolls to the beater"],
  ["poldose","profit","n","Polymer above the 0.3 kg/t standard costs $3.50 a kg"],
@@ -17489,8 +17507,8 @@ function camPullOn(){try{return localStorage.getItem("paper-mill-campull")!=="of
     <li><b>Forming and couch:</b> the forming vacuum (30 kPa standard) pulls water out; the sheet leaves the couch at about 19% solids.</li>
     <li><b>Presses:</b> about 44% solids leaving (48% with the shoe press). More press loading squeezes more out, but crush marks start from 115 kN/m.</li>
     <li><b>Dryers:</b> the moisture controller QC-300 sets the 2nd and 3rd section steam to hold the reel at 8%. Past the 3rd section's limit the sheet comes off wet; watch LOAD on DET.</li>
-    <li><b>Wet-end chemicals</b> (WET DCS, every mode but zen): <b>dry strength</b> starch (standard 6 kg/t) and the <b>retention polymer</b> (0.3 kg/t). Both are part of the $25/t chemicals and water budget, so on AUTO they cost nothing extra. AUTO is flow-paced: the pump follows the tons at a ratio in kg/t and stops on a break. On AUTO the slider sets that ratio (the standard costs nothing extra; more costs the chemical's price for every extra kg). The button switches the pump to MANUAL, which holds a fixed kg/h: the dose then moves with the tons, and on a break the chemical keeps going to the sewer. Run the polymer much under its standard and the DCS warns of the effluent permit.</li>
-    <li>More starch: more ring crush (AUTO-LW then runs the sheet lighter, and lighter paper sells more area a ton) and a drier sheet off the couch; past 10 kg/t it builds deposits (more breaks and slime). More polymer: higher first pass retention, more paper from the same fiber and a cleaner effluent; past 0.5 kg/t it flocs the sheet and rolls go to the beater. Cut the polymer and the fines go to the sewer: held over the 50 mg/L permit for an hour, the mill is fined. The process engineer puts a pump back on AUTO when it causes trouble.</li></ul>`],
+    <li><b>Wet-end chemicals</b> (WET DCS, every mode but zen): the <b>retention polymer</b> (0.3 kg/t). It is part of the $25/t chemicals and water budget, so on AUTO it costs nothing extra. AUTO is flow-paced: the pump follows the tons at a ratio in kg/t and stops on a break. On AUTO the slider sets that ratio (the standard costs nothing extra; more costs the chemical's price for every extra kg). The button switches the pump to MANUAL, which holds a fixed kg/h: the dose then moves with the tons, and on a break the chemical keeps going to the sewer. Run the polymer much under its standard and the DCS warns of the effluent permit.</li>
+    <li>More polymer: higher first pass retention, more paper from the same fiber and a cleaner effluent; past 0.5 kg/t it flocs the sheet and rolls go to the beater. Cut the polymer and the fines go to the sewer: held over the 50 mg/L permit for an hour, the mill is fined. The process engineer puts a pump back on AUTO when it causes trouble.</li></ul>`],
   ["Water","water",`<p><b>Report → Control room → Water</b> (and UTIL) follow every gallon. Flows are in gallons a minute (gpm), chests and tanks in gallons.</p>
     <ul><li>Fresh water comes from the river for the showers, seal water and top-up. Water also comes in with the bales and the repulped beater.</li>
     <li>The machine's white water drains into the silo under the wire (60,000 gallons) and the white water chest in stock prep, which supplies stock prep's dilution. Run it dry and the stock goes thick.</li>
@@ -17524,7 +17542,6 @@ function camPullOn(){try{return localStorage.getItem("paper-mill-campull")!=="of
     ["DLK","Double-lined kraft: strong, dearer fiber blended into the heavier grades (a tenth of 28, a quarter of 31, over half of 34Super), so they cost more fiber a ton. It isn't a bale kind in the OCC recipe."],
     ["Draw","The small speed difference between sections that keeps the sheet tight; the press-to-dryer (open) draw's standard is 1.5%. More draw stretches the sheet and lowers ring crush (about 4% for each % over), and past 2.4% it snaps. Less draw lets the sheet flutter: breaks come more often below 1.5%, and under 1% the reel wrinkles."],
     ["Dryer cans","Steam-heated cylinders that dry the sheet."],
-    ["Dry strength","A chemical (here cationic starch, 6 kg/t standard) added to the stock to bond the fibers: a stronger sheet (ring crush) at the same weight, so it can run lighter, and it drains a little faster. Too much builds deposits."],
     ["Retention polymer","A retention aid (0.3 kg/t standard) dosed at the fan pump that flocs fines and filler onto the fibers so the wire keeps them. Too little and they go to the white water and the sewer; too much and the sheet forms in clumps."],
     ["First pass retention","The share of the solids in the headbox that stays in the sheet on one pass over the wire (about 85% here). The rest goes round with the white water, and some of it on to the sewer."],
     ["Flow-paced (ratio) control","A chemical pump on AUTO that follows production: it doses a set kg per ton, so the flow rises and falls with the tons and stops on a break. On MANUAL the pump holds a fixed flow whatever the machine does."],
@@ -17562,6 +17579,7 @@ function camPullOn(){try{return localStorage.getItem("paper-mill-campull")!=="of
     ["VFD (drive)","Variable-frequency drive: runs a motor at the speed the process wants. Load is its output against its rated power; over about 95% it trips more often, and over 100% it wears its motor faster."],
     ["Drive lineup","A row of drive cabinets in the MCC, one per motor, with a status light each: green running, amber idle, red faulted."],
     ["Electrical tech","One per shift, working from the MCC: drive changeouts, motor failures, resetting the mill after a blackout, and the ADX motor tests. Busy on a job, the ADX round is skipped."],
+    ["Electricity","Metered, not a flat rate: the ten big drives on the Drives page at their load, plus the rest of the mill (vacuum pumps, stock and water pumps, agitators, fans, compressed air, lighting) at 7¢ a kWh. About 12.5 MW and 390 kWh a ton on a normal run. A slow machine, a stop or heavy refining shows up in the bill; a stopped mill still draws about a third. Steam and chemicals stay a per-ton bill."],
     ["Vibration round","Each maintenance tech's once-a-shift walk with a vibration analyzer, one machine, most overdue first. Skipped when the tech is called to an upset."],
     ["Vibration states","What the spectrum says about a bearing: good; imbalance or misalignment (1× or 2× running speed: they load the bearing); outer race defect (weeks left); inner race defect (wearing fast); imminent failure (days)."],
     ["Bearing failure","A motor bearing that failed in service: the machine stops until maintenance changes it. A vibration round finds it about a day and a half ahead."],
@@ -17702,7 +17720,7 @@ function camPullOn(){try{return localStorage.getItem("paper-mill-campull")!=="of
    (within 700 ms per tap) and a list of every version's one-line note pops up, newest first. The list comes from
    VERSION-NOTES.txt at the repo root: build.py swaps it in for the placeholder below, so adding a line there with each
    release keeps the pop-up current (build.py warns when APP_VER has no line). ---------- */
-{const VNOTES=[["4.0.0", "Graphics Overhaul: 60 FPS on iPhone, ~80% Fewer Draw Calls"], ["4.0.1", "Performance Follow-Up, Show FPS Option and Device Autotest"], ["4.0.2", "Economy Rebalance and Smoother Upset Labels"], ["4.1.0", "Four Environments, Seeded Mills, Bottlenecks, Graphics Tiers and Site Music"], ["4.2.0", "New Site Maps, Rare Sights, Zen Map Rotation and Economics Fixes"], ["4.2.0-s", "Save and Continue Season (Test)"], ["4.2.1", "Save/Continue, Settings Panel and Outage Speed Fix"], ["4.2.2-t", "Bayou Gator Sight Reworked (Test)"], ["4.2.2-t2", "Gator Bass Riff (Test)"], ["4.2.2-t3", "Gator Riff Removed, Wide Camera Framing (Test)"], ["4.2.2-t4", "Gator Scene Shortened and Widened (Test)"], ["4.2.2-t5", "One Rare Sight per Map in Zen (Test)"], ["4.2.2", "Rare Sights Reworked, Bird Strike Upset, Mill Report Tab"], ["4.2.3-t", "Cowboys, Bigfoot and Tugboat Sights Reworked (Test)"], ["4.2.3", "Laptop Battery Saving (Default GPU)"], ["4.2.4", "$25M Goal Removed and Quick Fixes"], ["4.2.5", "Random Bottleneck per Season and Accessibility Improvements"], ["4.3.0-t1", "Survival Mode (Test)"], ["4.4.0-t1", "Mill Leaders in Survival (Test)"], ["4.4.0-t2", "Painted Leader Portraits (Test)"], ["4.4.0-t3", "Leader Redesign, 4-Day Waves and Fixes (Test)"], ["5.0.0", "Survival Mode Release with Mill Leaders"], ["5.0.1", "Results Dialog and Game Speed Fixes"], ["5.0.2", "Report Card Label Fixes"], ["5.0.3", "Survival Playtest Fixes (Test)"], ["5.0.4", "Playtest Review: Dot Auto-Fix and Shipping Fix (Test)"], ["5.0.5", "Polish Rounds from Survival Playtests"], ["5.0.6", "Survival QA Fixes, Opt-In Outage Watch, Leaderboard Filters"], ["5.1.0", "Civics Meters and Leaders in Seasons (Test)"], ["5.4.0", "Title Screen, Civics in the World and Dark Mode"], ["5.4.1", "Loading Splash, No Old-Menu Flash"], ["5.4.2", "Graphics Quality on the Title Screen"], ["5.5.0", "Performance Improvements"], ["5.6.0", "Fiddly Knobs, DCS/QCS Screens and Knobs View"], ["5.7.0", "Catching Failures Early: Tells, Daily Rounds, Vibration Report, Outage Prep"], ["5.7.1", "Bottom Menu Reorder, Settings Back on the Right"], ["5.7.2", "Help Page with Game Guide and Glossary"], ["5.7.3", "Bare Graphics Mode for Weak Phones"], ["5.7.4", "Version Notes Pop-Up (Triple-Tap the Version Number)"], ["6.1.0-t1", "Isometric Paper View: Fixed Camera, Cut-Outs, Drop Shadows, Cutaways, Season Palettes (Test)"], ["6.1.0-t2", "Iso Round 2: Cut-Outs Always Paper, GPU Pictures, Stop-Motion World, Fewer Draws (Test)"], ["6.1.0-t3", "Iso Round 3: iPhone Batching, Instanced Cans, Sign Atlas, Lighter Frames (Test)"], ["6.1.0-t4", "Iso Fixes: Operators and Fork-Trucks Back, Less Stutter (Test)"], ["6.1.0-t5", "Cut-Out Edge Artifact Fixed (Test)"], ["6.1.0-t6", "Iso Optimization: Hidden Objects Cost Nothing, Lighter Moving Batches (Test)"], ["6.1.0-t7", "Iso Triangle Cut: Paper-Card Trees, Flat Ground, Hidden Faces Gone, Plain Boxes (Test)"], ["6.1.0-t8", "Paper Palette: 40 Colours, Flat Surfaces, Paper Grain, Fewer Draws (Test)"], ["6.1.0-t9", "Reel Fix: Growing Reel Draws Again (Test)"], ["6.1.0-t10", "Draw Cut 2: Colour in the Matrix, Merged Roofs, Uploads on Change, Culling Fix, Parked Groups (Test)"], ["6.1.0-t11", "QA Fixes: Cut-Outs Never Drawn as Loose 3D Parts, Fallback Shows 3D, Roofs On or Off per Zoom Step (Test)"], ["6.1.0-t12", "Paper Smoke, Blinking Lights, Stronger Seasons, Sharper Phones, Instanced Upsets, Pictures at Start (Test)"], ["6.1.0-t13", "Paper Effects: Flames, Child-Made Tornado, Lamp Cones, Flags, Paper Water, Visible Weather (Test)"], ["6.1.0-t14", "Paper Upsets: Cut-Out Props, Paper Pigeon, Paper Sparks, Steam, Fireworks, Ice and Flood (Test)"], ["6.1.0-t15", "Beaver Reworked as One Smaller Cut-Out (Test)"], ["6.1.0-t16", "Paper Props Dim at Night, Labels Never Overlap, Fewer Cut-Out Pictures (Test)"], ["6.1.0-t17", "Bird on the Power Lines Cut-Scene Plays When Set Off From the Upsets List (Test)"], ["6.1.0-t18", "Zen Close-Ups Fixed, Rare Sights as Paper Cut-Outs, Tilt-Shift Diorama Look (Test)"], ["6.1.0-t19", "Narrower Tilt-Shift Band, Winder Trash Can Out of the Broke Hole (Test)"], ["6.1.0-t20", "Balance: Rounds Pay More, Capacity and Maintenance Upgrades Re-Priced"], ["6.1.0", "Paper Diorama: Isometric Paper Art Style, Cut-Out People and Upsets, Tilt-Shift, Rounds Pay More, Upgrades Re-Priced"], ["6.1.1", "Phone Fixes: Gentler Tilt-Shift on Tall Screens, Cut-Out People No Longer Blank on iPhone"], ["6.1.2", "iPhone: Cut-Out Self-Test Retries, People Keep Their Colours in the 3D Fallback"], ["6.1.3", "Broke Hole by the Winder Looks Like a Floor Opening (Was a Black Square)"], ["6.1.4", "Tilt-Shift Removed"], ["6.2.0", "Zen Free Camera: Perspective Zen Shots, 3D People in Zen, Cleaner River Water"], ["6.3.0-f1", "Process Flow Overview (Test): Inputs, Mill Areas and Outputs for the Mill Day, in Settings"], ["6.3.0-f2", "Process Flow: the Game Keeps Running While It's Open (Test)"], ["6.3.0", "Process Flow Overview: Inputs, Mill Areas and Outputs for the Mill Day (Settings > View)"], ["6.4.0", "Zen Shots Review: Shuffle-Bag Shot Order, Landscape Shots Rebuilt, Close Rare Sights"], ["6.5.0-a1", "Digital Twin A (Test): Hourly History, 14 Prior Days, 7 d / Run Ranges, Area Trends and Uptime"], ["6.5.0-b1", "Digital Twin B (Test): Real Freight Costs with a Diesel Index, Area Controls Moved into Process Flow"], ["6.5.0-b2", "Market Pricing (Test): 2026 OCC and Energy Costs, Diesel in $/gal, Desert Long Haul, Real Steam Rates"], ["6.5.0-b3", "DCS Expansion (Test): Full SPOT, WET and DET Pictures, a UTIL Screen, Motors and Reject Purges"], ["6.5.0-b4", "DCS Pictograms (Test): Equipment Drawn as Classic DCS Symbols, Colour Only When Something's Wrong"], ["6.5.0-b5", "The Dryer Limit (Test): Speed and Grade Load the Dryers, a Wet Sheet Fails Spec and Slows the Machine"], ["6.5.0", "Digital Twin: Process Flow Trends and Controls, Real Freight and Market Costs, Full DCS, Dryer Limit, Rebalance"], ["6.5.1", "Second Screen: Pop the DCS and Process Flow Out to Their Own Window for a Second Monitor (Desktop)"], ["6.5.2", "Knob Fixes: Wet-End and Steam Knobs Bite Again Under the Dryer Limit, DCS Uses the Machine's Name"], ["6.5.3", "Quality Specs: Weight, Moisture and Color Specs per Grade, Off-Spec Paper Wound into Beater Rolls and Repulped"], ["6.5.4", "DCS Fixes: Making-Beater Alerts, SPOT in Process Order, Boiler and Power on Utilities, 2nd/3rd Section Steam Control"], ["6.5.5-t1", "Dewatering Chain (Test): Jet and Vacuum Optimums, Couch to Press Solids, Press Solids Set the Dryer Steam Both Ways"], ["6.5.5", "The Dewatering Chain: Jet and Vacuum Optimums, Couch to Press Solids, Press Solids Set the Dryer Steam Both Ways"], ["6.5.6-t1", "Mass Balance (Test): A Real Water Balance and White Water Chest, Hayout Broke Repulped, Every Fiber Loss Booked"], ["6.5.6", "Mass Balance: A Real Water Balance and White Water Chest, Hayout Broke Repulped, Every Fiber Loss Booked"], ["6.5.7-t1", "Winder Pass (Test): Four Reel Storage Stands, Two-Roll Sets, Rolls Tied Together, Steam Vented on a Sheet Break"], ["6.5.7", "Winder Pass: Four Reel Storage Stands, Two-Roll Sets, Rolls Tied Together, Steam Vented on a Sheet Break"], ["6.6.0-t1", "Orders and Bales (Test): Customer Order Book and Spot Market, Idle Energy While Stopped, Bale Grading at the Gate"], ["6.6.0", "Orders and Bales: Customer Order Book and Spot Market, Idle Energy While Stopped, Bale Grading at the Gate"], ["6.7.0-t1", "Control Room (Test): Planning, Water and Quality Screens, Split-Screen Trends of Anything, What Moves With What, Process Flow Views"], ["6.7.0", "Control Room: Planning, Water and Quality Screens, Split-Screen Trends of Anything, What Moves With What, Process Flow Views"], ["6.7.1-t1", "New Grade Set (Test): Grades 24, 28, 31 and 34Super, Same Tons per Hour"], ["6.7.1", "New Grade Set: Grades 24, 28, 31 and 34Super, Same Tons per Hour"], ["6.8.0-t1", "Process Relationships (Test): Refining Energy and Ring Crush, Basis Weight Loop, Headbox at 0.8%, White Water Silo, Bale Water and Screen Pressure Drop"], ["6.8.0-t2", "Relationship Map in the Control Room (Test): What Drives Each Reading and What It Moves, Live"], ["6.8.0", "Process Relationships: Refining Energy and Ring Crush, Basis Weight Loop, Headbox at 0.8%, White Water Silo, Bale Water, Screen Pressure Drop and the Relationship Map"], ["6.8.1", "Report Tab Tidy: Live Mill First, Last-24-Hours Chart, Quality & Fiber and Orders & Bales Removed"], ["6.8.2", "Manning: DuPont 12 Shifts for Techs and Operators, Team Hard Hats, Shift Change Walk-In, Vacations Covered Across Teams"], ["6.8.3", "OCC Recipe (A Bales, C Bales, Mixed Waste), Relationship Map Zoom and 3D Light Cones at Night"], ["6.9.0-t1", "The Valves Update (Test): Six Control Loops on the DCS with Real Valves, Faceplates, PID Tuning, Bump Tests, a Tuning Clock and Tuning Challenges"], ["6.9.0", "The Valves Update: Six Control Loops on the DCS with Real Valves, Faceplates, PID Tuning, Bump Tests, a Tuning Clock, Tuning Challenges and Their Links on the Relationship Map"], ["6.9.1", "Wet End Controls: Rush / Drag in fpm on the WET DCS"], ["6.9.2", "Release Review: Help and Glossary Brought Up to Date, Nine Bug Fixes, Refiners Feed the Machine Chest (a Clash Trips the Machine on Low Level) and an Economy Rebalance Where the Daily Round Is the Biggest Boost"], ["6.10.0-t1", "The Reliability and Electrical Update (Test): Ten VFD Motors with Health, an MCC Building with Three Drive Lineups Fed from the Substation, an Electrical Tech on Every Shift, Shift Vibration and ADX Rounds That Get Skipped When Techs Are Busy, Reliability and Drives Screens, Bearing, Motor and Drive Failures, Outage Changeouts and the Water Tower Moved to the North-East Corner"], ["6.10.0-t2", "The Reliability and Electrical Update (Test 2): the 115 kV to 650 V DC Power Chain with Rectifier Faults, Reset-or-Investigate Drive Fault Decisions, Arc-Flash PPE at the MCC, AUTO-LW Basis Weight, Click for Info and Lamps Under the Roofs"], ["6.10.0-t3", "The Reliability and Electrical Update (Test 3): QA Fixes and Balance: Unanswered Drive Faults Auto-Decide After an Hour, Drive Cards Show Load at the Trip, Reliability Failures About Half as Often, Lower Motor and Rectifier Bills"], ["6.10.0-t4", "The Reliability and Electrical Update (Test 4): One Machine per Vibration Round, Planned Repairs Take the Machine Down 20-40 Minutes, Repeated Drive Resets Get Worse and Can Fail, a Tutorial Card for Rounds and the MCC, Drive and Rectifier Health on Screen, Clearer Click for Info and 26 Polish Fixes"], ["6.10.0-t5", "The Reliability and Electrical Update (Test 5): the MCC Main Incomer Fiddly Knob (Opening It Causes an Arc Flash), the New Upsets in the Upsets Tab"], ["6.10.0", "The Reliability and Electrical Update: Ten Critical VFD Motors on Three MCC Drive Lineups, an Electrical Tech on Every Shift, Shift Vibration and ADX Rounds, Reliability and Drives Screens, Bearing, Motor, Drive and Rectifier Failures, Drive Fault Decisions, Outage Changeouts, the MCC Main Incomer and Its Arc Flash, AUTO-LW and Click for Info"], ["6.10.1-t1", "Polish (Test): Drives Wear Slower but Fail More When Worn, Three Drives Start Part-Worn, the Refiner Upgrade Brings Bigger Drives, the Main Incomer on the Relationship Map, a Message for a Blank Mill Name"], ["6.10.1", "Reliability Polish: Drives Wear Slower but Fail More When Worn, Three Drives Start Part-Worn, Bigger Refiner Drives with the Refiner Upgrade, the Main Incomer on the Relationship Map, a Message for a Blank Mill Name"], ["6.10.2", "Tests and Tidy: One Test Runner with 21 Merged Checks, Dead Code Removed (Bare Graphics Leftovers, Unused Code and Styles), Lint Clean"], ["6.11.0-t1", "Blender Redesign, the Winder and Trim (Test): Redesigned Machine, Buildings, MCC, Power House, Wastewater, Water Tower, Workers and Vehicles; a Real Two-Drum Winder with a Rider Roll and Web Inspections; Twin Rolls at Order Widths with Trim to a DE Pulper; Quality per Roll across 12 CD Zones; a Spray Boom and a Steam Box Upgrade"], ["6.11.0-t2", "Economy (Test): Paper Prices +2.5% on Every Grade to Make Up for Trim"], ["6.11.0", "The Winder, Trim and CD Update: a Redesigned Mill (Designed in Blender), a Real Two-Drum Winder with a Rider Roll and Web Inspections, Twin Rolls at Order Widths with Trim to a DE Pulper, Quality per Roll across 12 CD Zones, a Spray Boom, a Steam Box Upgrade and Prices +2.5%"], ["6.11.1-t1", "The Dryer Hood (Test): a Closed Dryer Hood with Six Lifting Doors that Rise on Breaks and Downtime, and a Hood Doors Fiddly Knob that Lifts the Front Away (4% More Steam While Running)"], ["6.11.1-t2", "Wet-End Chemicals (Test): Dry Strength Starch and a Retention Polymer on the WET DCS, AUTO Flow-Paced at No Extra Cost with a MANUAL Pump Override"], ["6.11.1-t3", "QA Round (Test): Upgrades 20% Cheaper, a Ratio Setpoint for the Chemical Pumps on AUTO, a Permit-Risk Warning for Low Polymer, No Outage Notice over the Season Summary"], ["6.11.1-t4", "Effluent in Permit (Test): the Clarifier Catches More, so a Normal Run Is ~25 mg/L TSS under the 50 mg/L Permit, and Cutting the Polymer Breaks It"], ["6.11.1", "The Dryer Hood and Wet-End Chemicals: a Closed Dryer Hood with Lifting Doors and a Hood Doors Fiddly Knob, Dry Strength and Retention Polymer on the WET DCS, Upgrades 20% Cheaper, Effluent in Permit"], ["6.11.2-t1", "Sold by Area (Test): Paper Is Sold by the Square Foot, so a Lighter Sheet Earns More a Ton and a Heavier One Less; the Mill Still Counts in Tons; MSF on the Planning Screen"], ["6.11.2-t2", "Control Room Tidy-Up (Test): 2nd and 3rd Section Steam on the DET DCS, WET Setpoints in Process Order, Yard Crews Stay Put on Breaks, MCC Computer Opens Drives, SPOT Console Moved, Seal Chest Labels Turned"], ["6.11.2-t3", "Test Suite Green (Test): Reel Storage Counts Right (a Turn-Up Takes Exactly One Reel), Tornado Damage Marked as Sudden, Steadier Checks"]];
+{const VNOTES=[["4.0.0", "Graphics Overhaul: 60 FPS on iPhone, ~80% Fewer Draw Calls"], ["4.0.1", "Performance Follow-Up, Show FPS Option and Device Autotest"], ["4.0.2", "Economy Rebalance and Smoother Upset Labels"], ["4.1.0", "Four Environments, Seeded Mills, Bottlenecks, Graphics Tiers and Site Music"], ["4.2.0", "New Site Maps, Rare Sights, Zen Map Rotation and Economics Fixes"], ["4.2.0-s", "Save and Continue Season (Test)"], ["4.2.1", "Save/Continue, Settings Panel and Outage Speed Fix"], ["4.2.2-t", "Bayou Gator Sight Reworked (Test)"], ["4.2.2-t2", "Gator Bass Riff (Test)"], ["4.2.2-t3", "Gator Riff Removed, Wide Camera Framing (Test)"], ["4.2.2-t4", "Gator Scene Shortened and Widened (Test)"], ["4.2.2-t5", "One Rare Sight per Map in Zen (Test)"], ["4.2.2", "Rare Sights Reworked, Bird Strike Upset, Mill Report Tab"], ["4.2.3-t", "Cowboys, Bigfoot and Tugboat Sights Reworked (Test)"], ["4.2.3", "Laptop Battery Saving (Default GPU)"], ["4.2.4", "$25M Goal Removed and Quick Fixes"], ["4.2.5", "Random Bottleneck per Season and Accessibility Improvements"], ["4.3.0-t1", "Survival Mode (Test)"], ["4.4.0-t1", "Mill Leaders in Survival (Test)"], ["4.4.0-t2", "Painted Leader Portraits (Test)"], ["4.4.0-t3", "Leader Redesign, 4-Day Waves and Fixes (Test)"], ["5.0.0", "Survival Mode Release with Mill Leaders"], ["5.0.1", "Results Dialog and Game Speed Fixes"], ["5.0.2", "Report Card Label Fixes"], ["5.0.3", "Survival Playtest Fixes (Test)"], ["5.0.4", "Playtest Review: Dot Auto-Fix and Shipping Fix (Test)"], ["5.0.5", "Polish Rounds from Survival Playtests"], ["5.0.6", "Survival QA Fixes, Opt-In Outage Watch, Leaderboard Filters"], ["5.1.0", "Civics Meters and Leaders in Seasons (Test)"], ["5.4.0", "Title Screen, Civics in the World and Dark Mode"], ["5.4.1", "Loading Splash, No Old-Menu Flash"], ["5.4.2", "Graphics Quality on the Title Screen"], ["5.5.0", "Performance Improvements"], ["5.6.0", "Fiddly Knobs, DCS/QCS Screens and Knobs View"], ["5.7.0", "Catching Failures Early: Tells, Daily Rounds, Vibration Report, Outage Prep"], ["5.7.1", "Bottom Menu Reorder, Settings Back on the Right"], ["5.7.2", "Help Page with Game Guide and Glossary"], ["5.7.3", "Bare Graphics Mode for Weak Phones"], ["5.7.4", "Version Notes Pop-Up (Triple-Tap the Version Number)"], ["6.1.0-t1", "Isometric Paper View: Fixed Camera, Cut-Outs, Drop Shadows, Cutaways, Season Palettes (Test)"], ["6.1.0-t2", "Iso Round 2: Cut-Outs Always Paper, GPU Pictures, Stop-Motion World, Fewer Draws (Test)"], ["6.1.0-t3", "Iso Round 3: iPhone Batching, Instanced Cans, Sign Atlas, Lighter Frames (Test)"], ["6.1.0-t4", "Iso Fixes: Operators and Fork-Trucks Back, Less Stutter (Test)"], ["6.1.0-t5", "Cut-Out Edge Artifact Fixed (Test)"], ["6.1.0-t6", "Iso Optimization: Hidden Objects Cost Nothing, Lighter Moving Batches (Test)"], ["6.1.0-t7", "Iso Triangle Cut: Paper-Card Trees, Flat Ground, Hidden Faces Gone, Plain Boxes (Test)"], ["6.1.0-t8", "Paper Palette: 40 Colours, Flat Surfaces, Paper Grain, Fewer Draws (Test)"], ["6.1.0-t9", "Reel Fix: Growing Reel Draws Again (Test)"], ["6.1.0-t10", "Draw Cut 2: Colour in the Matrix, Merged Roofs, Uploads on Change, Culling Fix, Parked Groups (Test)"], ["6.1.0-t11", "QA Fixes: Cut-Outs Never Drawn as Loose 3D Parts, Fallback Shows 3D, Roofs On or Off per Zoom Step (Test)"], ["6.1.0-t12", "Paper Smoke, Blinking Lights, Stronger Seasons, Sharper Phones, Instanced Upsets, Pictures at Start (Test)"], ["6.1.0-t13", "Paper Effects: Flames, Child-Made Tornado, Lamp Cones, Flags, Paper Water, Visible Weather (Test)"], ["6.1.0-t14", "Paper Upsets: Cut-Out Props, Paper Pigeon, Paper Sparks, Steam, Fireworks, Ice and Flood (Test)"], ["6.1.0-t15", "Beaver Reworked as One Smaller Cut-Out (Test)"], ["6.1.0-t16", "Paper Props Dim at Night, Labels Never Overlap, Fewer Cut-Out Pictures (Test)"], ["6.1.0-t17", "Bird on the Power Lines Cut-Scene Plays When Set Off From the Upsets List (Test)"], ["6.1.0-t18", "Zen Close-Ups Fixed, Rare Sights as Paper Cut-Outs, Tilt-Shift Diorama Look (Test)"], ["6.1.0-t19", "Narrower Tilt-Shift Band, Winder Trash Can Out of the Broke Hole (Test)"], ["6.1.0-t20", "Balance: Rounds Pay More, Capacity and Maintenance Upgrades Re-Priced"], ["6.1.0", "Paper Diorama: Isometric Paper Art Style, Cut-Out People and Upsets, Tilt-Shift, Rounds Pay More, Upgrades Re-Priced"], ["6.1.1", "Phone Fixes: Gentler Tilt-Shift on Tall Screens, Cut-Out People No Longer Blank on iPhone"], ["6.1.2", "iPhone: Cut-Out Self-Test Retries, People Keep Their Colours in the 3D Fallback"], ["6.1.3", "Broke Hole by the Winder Looks Like a Floor Opening (Was a Black Square)"], ["6.1.4", "Tilt-Shift Removed"], ["6.2.0", "Zen Free Camera: Perspective Zen Shots, 3D People in Zen, Cleaner River Water"], ["6.3.0-f1", "Process Flow Overview (Test): Inputs, Mill Areas and Outputs for the Mill Day, in Settings"], ["6.3.0-f2", "Process Flow: the Game Keeps Running While It's Open (Test)"], ["6.3.0", "Process Flow Overview: Inputs, Mill Areas and Outputs for the Mill Day (Settings > View)"], ["6.4.0", "Zen Shots Review: Shuffle-Bag Shot Order, Landscape Shots Rebuilt, Close Rare Sights"], ["6.5.0-a1", "Digital Twin A (Test): Hourly History, 14 Prior Days, 7 d / Run Ranges, Area Trends and Uptime"], ["6.5.0-b1", "Digital Twin B (Test): Real Freight Costs with a Diesel Index, Area Controls Moved into Process Flow"], ["6.5.0-b2", "Market Pricing (Test): 2026 OCC and Energy Costs, Diesel in $/gal, Desert Long Haul, Real Steam Rates"], ["6.5.0-b3", "DCS Expansion (Test): Full SPOT, WET and DET Pictures, a UTIL Screen, Motors and Reject Purges"], ["6.5.0-b4", "DCS Pictograms (Test): Equipment Drawn as Classic DCS Symbols, Colour Only When Something's Wrong"], ["6.5.0-b5", "The Dryer Limit (Test): Speed and Grade Load the Dryers, a Wet Sheet Fails Spec and Slows the Machine"], ["6.5.0", "Digital Twin: Process Flow Trends and Controls, Real Freight and Market Costs, Full DCS, Dryer Limit, Rebalance"], ["6.5.1", "Second Screen: Pop the DCS and Process Flow Out to Their Own Window for a Second Monitor (Desktop)"], ["6.5.2", "Knob Fixes: Wet-End and Steam Knobs Bite Again Under the Dryer Limit, DCS Uses the Machine's Name"], ["6.5.3", "Quality Specs: Weight, Moisture and Color Specs per Grade, Off-Spec Paper Wound into Beater Rolls and Repulped"], ["6.5.4", "DCS Fixes: Making-Beater Alerts, SPOT in Process Order, Boiler and Power on Utilities, 2nd/3rd Section Steam Control"], ["6.5.5-t1", "Dewatering Chain (Test): Jet and Vacuum Optimums, Couch to Press Solids, Press Solids Set the Dryer Steam Both Ways"], ["6.5.5", "The Dewatering Chain: Jet and Vacuum Optimums, Couch to Press Solids, Press Solids Set the Dryer Steam Both Ways"], ["6.5.6-t1", "Mass Balance (Test): A Real Water Balance and White Water Chest, Hayout Broke Repulped, Every Fiber Loss Booked"], ["6.5.6", "Mass Balance: A Real Water Balance and White Water Chest, Hayout Broke Repulped, Every Fiber Loss Booked"], ["6.5.7-t1", "Winder Pass (Test): Four Reel Storage Stands, Two-Roll Sets, Rolls Tied Together, Steam Vented on a Sheet Break"], ["6.5.7", "Winder Pass: Four Reel Storage Stands, Two-Roll Sets, Rolls Tied Together, Steam Vented on a Sheet Break"], ["6.6.0-t1", "Orders and Bales (Test): Customer Order Book and Spot Market, Idle Energy While Stopped, Bale Grading at the Gate"], ["6.6.0", "Orders and Bales: Customer Order Book and Spot Market, Idle Energy While Stopped, Bale Grading at the Gate"], ["6.7.0-t1", "Control Room (Test): Planning, Water and Quality Screens, Split-Screen Trends of Anything, What Moves With What, Process Flow Views"], ["6.7.0", "Control Room: Planning, Water and Quality Screens, Split-Screen Trends of Anything, What Moves With What, Process Flow Views"], ["6.7.1-t1", "New Grade Set (Test): Grades 24, 28, 31 and 34Super, Same Tons per Hour"], ["6.7.1", "New Grade Set: Grades 24, 28, 31 and 34Super, Same Tons per Hour"], ["6.8.0-t1", "Process Relationships (Test): Refining Energy and Ring Crush, Basis Weight Loop, Headbox at 0.8%, White Water Silo, Bale Water and Screen Pressure Drop"], ["6.8.0-t2", "Relationship Map in the Control Room (Test): What Drives Each Reading and What It Moves, Live"], ["6.8.0", "Process Relationships: Refining Energy and Ring Crush, Basis Weight Loop, Headbox at 0.8%, White Water Silo, Bale Water, Screen Pressure Drop and the Relationship Map"], ["6.8.1", "Report Tab Tidy: Live Mill First, Last-24-Hours Chart, Quality & Fiber and Orders & Bales Removed"], ["6.8.2", "Manning: DuPont 12 Shifts for Techs and Operators, Team Hard Hats, Shift Change Walk-In, Vacations Covered Across Teams"], ["6.8.3", "OCC Recipe (A Bales, C Bales, Mixed Waste), Relationship Map Zoom and 3D Light Cones at Night"], ["6.9.0-t1", "The Valves Update (Test): Six Control Loops on the DCS with Real Valves, Faceplates, PID Tuning, Bump Tests, a Tuning Clock and Tuning Challenges"], ["6.9.0", "The Valves Update: Six Control Loops on the DCS with Real Valves, Faceplates, PID Tuning, Bump Tests, a Tuning Clock, Tuning Challenges and Their Links on the Relationship Map"], ["6.9.1", "Wet End Controls: Rush / Drag in fpm on the WET DCS"], ["6.9.2", "Release Review: Help and Glossary Brought Up to Date, Nine Bug Fixes, Refiners Feed the Machine Chest (a Clash Trips the Machine on Low Level) and an Economy Rebalance Where the Daily Round Is the Biggest Boost"], ["6.10.0-t1", "The Reliability and Electrical Update (Test): Ten VFD Motors with Health, an MCC Building with Three Drive Lineups Fed from the Substation, an Electrical Tech on Every Shift, Shift Vibration and ADX Rounds That Get Skipped When Techs Are Busy, Reliability and Drives Screens, Bearing, Motor and Drive Failures, Outage Changeouts and the Water Tower Moved to the North-East Corner"], ["6.10.0-t2", "The Reliability and Electrical Update (Test 2): the 115 kV to 650 V DC Power Chain with Rectifier Faults, Reset-or-Investigate Drive Fault Decisions, Arc-Flash PPE at the MCC, AUTO-LW Basis Weight, Click for Info and Lamps Under the Roofs"], ["6.10.0-t3", "The Reliability and Electrical Update (Test 3): QA Fixes and Balance: Unanswered Drive Faults Auto-Decide After an Hour, Drive Cards Show Load at the Trip, Reliability Failures About Half as Often, Lower Motor and Rectifier Bills"], ["6.10.0-t4", "The Reliability and Electrical Update (Test 4): One Machine per Vibration Round, Planned Repairs Take the Machine Down 20-40 Minutes, Repeated Drive Resets Get Worse and Can Fail, a Tutorial Card for Rounds and the MCC, Drive and Rectifier Health on Screen, Clearer Click for Info and 26 Polish Fixes"], ["6.10.0-t5", "The Reliability and Electrical Update (Test 5): the MCC Main Incomer Fiddly Knob (Opening It Causes an Arc Flash), the New Upsets in the Upsets Tab"], ["6.10.0", "The Reliability and Electrical Update: Ten Critical VFD Motors on Three MCC Drive Lineups, an Electrical Tech on Every Shift, Shift Vibration and ADX Rounds, Reliability and Drives Screens, Bearing, Motor, Drive and Rectifier Failures, Drive Fault Decisions, Outage Changeouts, the MCC Main Incomer and Its Arc Flash, AUTO-LW and Click for Info"], ["6.10.1-t1", "Polish (Test): Drives Wear Slower but Fail More When Worn, Three Drives Start Part-Worn, the Refiner Upgrade Brings Bigger Drives, the Main Incomer on the Relationship Map, a Message for a Blank Mill Name"], ["6.10.1", "Reliability Polish: Drives Wear Slower but Fail More When Worn, Three Drives Start Part-Worn, Bigger Refiner Drives with the Refiner Upgrade, the Main Incomer on the Relationship Map, a Message for a Blank Mill Name"], ["6.10.2", "Tests and Tidy: One Test Runner with 21 Merged Checks, Dead Code Removed (Bare Graphics Leftovers, Unused Code and Styles), Lint Clean"], ["6.11.0-t1", "Blender Redesign, the Winder and Trim (Test): Redesigned Machine, Buildings, MCC, Power House, Wastewater, Water Tower, Workers and Vehicles; a Real Two-Drum Winder with a Rider Roll and Web Inspections; Twin Rolls at Order Widths with Trim to a DE Pulper; Quality per Roll across 12 CD Zones; a Spray Boom and a Steam Box Upgrade"], ["6.11.0-t2", "Economy (Test): Paper Prices +2.5% on Every Grade to Make Up for Trim"], ["6.11.0", "The Winder, Trim and CD Update: a Redesigned Mill (Designed in Blender), a Real Two-Drum Winder with a Rider Roll and Web Inspections, Twin Rolls at Order Widths with Trim to a DE Pulper, Quality per Roll across 12 CD Zones, a Spray Boom, a Steam Box Upgrade and Prices +2.5%"], ["6.11.1-t1", "The Dryer Hood (Test): a Closed Dryer Hood with Six Lifting Doors that Rise on Breaks and Downtime, and a Hood Doors Fiddly Knob that Lifts the Front Away (4% More Steam While Running)"], ["6.11.1-t2", "Wet-End Chemicals (Test): Dry Strength Starch and a Retention Polymer on the WET DCS, AUTO Flow-Paced at No Extra Cost with a MANUAL Pump Override"], ["6.11.1-t3", "QA Round (Test): Upgrades 20% Cheaper, a Ratio Setpoint for the Chemical Pumps on AUTO, a Permit-Risk Warning for Low Polymer, No Outage Notice over the Season Summary"], ["6.11.1-t4", "Effluent in Permit (Test): the Clarifier Catches More, so a Normal Run Is ~25 mg/L TSS under the 50 mg/L Permit, and Cutting the Polymer Breaks It"], ["6.11.1", "The Dryer Hood and Wet-End Chemicals: a Closed Dryer Hood with Lifting Doors and a Hood Doors Fiddly Knob, Dry Strength and Retention Polymer on the WET DCS, Upgrades 20% Cheaper, Effluent in Permit"], ["6.11.2-t1", "Sold by Area (Test): Paper Is Sold by the Square Foot, so a Lighter Sheet Earns More a Ton and a Heavier One Less; the Mill Still Counts in Tons; MSF on the Planning Screen"], ["6.11.2-t2", "Control Room Tidy-Up (Test): 2nd and 3rd Section Steam on the DET DCS, WET Setpoints in Process Order, Yard Crews Stay Put on Breaks, MCC Computer Opens Drives, SPOT Console Moved, Seal Chest Labels Turned"], ["6.11.2-t3", "Test Suite Green (Test): Reel Storage Counts Right (a Turn-Up Takes Exactly One Reel), Tornado Damage Marked as Sudden, Steadier Checks"], ["6.11.2-t4", "Metered Power (Test): Drives Re-Rated and Electricity Billed from Their Load, Starch Removed, a Spare Spool Stand on the Crane Line, a Half Wall on the Roll Warehouse, Two Stray Objects at the Origin Fixed"]];
   let ov=null,held=false;
   function render(){
     const cur=APP_VER.replace(/^v/i,""),rows=VNOTES.slice().reverse().map(([v,n])=>

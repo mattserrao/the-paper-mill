@@ -161,8 +161,11 @@
         const cm=new THREE.MeshBasicMaterial({map:ct,transparent:true,depthWrite:false,toneMapped:false,side:THREE.DoubleSide,opacity:0});
         const cones=new THREE.Mesh(cg,cm);cones.renderOrder=3;cones.visible=false;cones.userData.smBatch=true;cones.name="lamp cones";scene.add(cones);G3.nightCones=cones;}}
     /* v6.1 t8: the ten pools of lamp light are one additive mesh (their strengths in the vertex colours), not ten draws */
+    /* (v6.11.2: each plane's matrix is built here from its position and rotation: the static merge can freeze a never-drawn
+       plane (matrixAutoUpdate off) before its matrix was ever computed, and updateMatrixWorld then kept the identity, so all
+       ten pools were stacked as one upright 16 m plane at the world origin: a warm glow on the drive side behind the reel) */
     if(!G3.nightPool){const pos=[],col=[],uv=[],c=new THREE.Color(0xffd9a0),v=new THREE.Vector3();
-      G3.nightL.forEach(l=>{l.p.updateMatrixWorld(true);const g=l.p.geometry,P=g.attributes.position,U=g.attributes.uv,I=g.index;
+      G3.nightL.forEach(l=>{l.p.updateMatrix();l.p.matrixWorld.copy(l.p.matrix);const g=l.p.geometry,P=g.attributes.position,U=g.attributes.uv,I=g.index;
         for(let j=0;j<I.count;j++){const i=I.getX(j);v.fromBufferAttribute(P,i).applyMatrix4(l.p.matrixWorld);pos.push(v.x,v.y,v.z);uv.push(U.getX(i),U.getY(i));col.push(c.r*l.k,c.g*l.k,c.b*l.k);}});
       const pg=new THREE.BufferGeometry();pg.setAttribute("position",new THREE.Float32BufferAttribute(pos,3));pg.setAttribute("uv",new THREE.Float32BufferAttribute(uv,2));pg.setAttribute("color",new THREE.Float32BufferAttribute(col,3));pg.computeBoundingSphere();
       if(G3.papNight)for(let q=0;q<col.length;q++)col[q]=[c.r,c.g,c.b][q%3];

@@ -87,9 +87,10 @@ function step(dt){
   if(S.pm!=="run") S.pmSpeed=ease(S.pmSpeed,0,dt,3);
   chemTick(dt,prod);   // v6.11.1 wet-end chemicals (07l)
   baseLoadTick(dt);   // v6.6: a stopped machine still draws power and keeps the boiler banked
+  pwrTick(dt);   // v6.11.2: metered electricity: the drives at their load and the balance of plant (07i)
   let beat=0;
-  if(prod>0){{const ec=prod*energyCost();spend(ec,"energy");pfEnergy(prod,ec);}knobSteamCost(prod);
-    {const de=kwhNow()-WE.kwh0;if(de&&!S.zen){const v=de*prod/P.pmLoss*WE.kwhCost*P.energyMul*(P.costMul||1);spend(v,"energy");pfAdd("power","stock",v);}}   // v6.8 refining power above (or below) standard
+  if(prod>0){{const ec=prod*energyCostT();spend(ec,"energy");pfEnergy(prod,ec);}knobSteamCost(prod);
+    // (v6.11.2: refining power above or below standard is metered with the refiner drives now, 07i pwrTick)
   S.q.made+=prod;
     // v6.5.3: the spec check (07e): weight, moisture or color out and the whole reel is beater; then a grade change's
     // transition tons; then the other knob defects' share

@@ -1,5 +1,15 @@
 # Changelog
 
+## v6.11.2-t4 (2026-10-22): small improvements (test build, test/v6.11.2)
+- **Drives re-rated** for a ~35 t/h recycled linerboard machine: refiners 2,000 kW each (2,600 with the upgrade), dryer section 1,500, couch 400, presses 450, reel 200, winder 750; pulper (1,100) and fan pump (900) unchanged.
+- **Electricity is metered** (07i `pwrTick`): the ten drives at their load plus the balance of plant (vacuum, pumps, agitators, fans, air, lighting; 6.4 MW running, 75% on a break, 35% stopped, 15% in an outage) at $0.07/kWh, about 12.5 MW and 390 kWh/t on a normal run. The per-ton bill is now steam and chemicals only. Calibrated to the old flat bill: a calm run $90.4/t vs $90.7; a chaotic week $121.9 vs $123.9 (stops now draw what a stopped mill draws). The separate refining kWh charge is gone (the refiner drives are metered); APC's 4% and survival's cost multiplier apply to power; the shoe press and the leader's dryer tuning stay steam savings. Glossary: Electricity.
+- **Dry strength starch removed** (DCS row, tags, ring crush and couch links, deposits, traces, relationship map, help and glossary). The chemicals and water budget stays $25/t; the starch's $3.30/t is part of the base. At its standard dose it changed nothing, so the balance doesn't move.
+- **Spare spool stand:** three spools on two rails at their journals, west of the winder on the crane's line, so the crane fetches one by travelling east–west only. The old floor rack reached into the unwind stand and the parked reels.
+- **Roll warehouse:** the south wall's top half lifts and fades with the roof in the cutaway, leaving a half wall so the floor and rolls show.
+- **Removed** the OCC compactor, its dumpster and the recycling cage west of the office (the production record board stays).
+- **Fixed:** the night lamp pools were built before their planes had a position, so all ten were drawn as one upright 16 m warm glow at the world origin (the drive side behind the reel) from dusk to dawn; and a scenery activity vehicle sat at the origin until its first wait ended.
+- Checks: chem (polymer only), dcs (WET order), reliability (new ratings), process (metered power by state; the crane gets 2 min to settle).
+
 ## v6.11.2-t3 (2026-10-22): test suite green (test build, test/v6.11.2)
 - **Fixed: reel storage could read full with only 3 of 4 reels stored.** A turn-up moved the whole reel, including the step's few hundred kilos past 100 t, to the winder, and the reel count (tons ÷ 100, rounded up) then counted a reel too many, so the machine went onto spools a reel early. A turn-up now takes exactly one jumbo; the overshoot starts the next reel.
 - **Tornado damage is sudden by design:** its two random upsets still fire at once with no tell, even tellable ones; they are now marked (`by:"tornado"`) so the tells check can tell them apart.

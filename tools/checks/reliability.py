@@ -183,9 +183,9 @@ def reliability(pw):
     r = J("()=>['bearingfail','motorfail','drivefail','rectfail','arcflash'].map(id=>!!document.getElementById('ev-'+id))")
     ok("t5: the new upsets are in the Upsets tab", all(r), json.dumps(r))
 
-    # v6.10.1: the refiner upgrade raises the refiner drives' rating; three drives start part-worn
+    # v6.10.1: the refiner upgrade raises the refiner drives' rating; three drives start part-worn (v6.11.2: refiners re-rated 2,000 kW)
     r = J("""()=>{const P=__PM,S=P.S,k0=P.rly.kwOf('refA');S.up.refiner=1;const k1=P.rly.kwOf('refA');S.up.refiner=0;return {k0,k1,pulp:P.rly.kwOf('pulp')}}""")
-    ok("v6.10.1: the refiner upgrade fits refiner drives 30% bigger (other drives unchanged)", r["k0"] == 1500 and r["k1"] == 1950 and r["pulp"] == 1100, json.dumps(r))
+    ok("v6.10.1: the refiner upgrade fits refiner drives 30% bigger (other drives unchanged)", r["k0"] == 2000 and r["k1"] == 2600 and r["pulp"] == 1100, json.dumps(r))
 
     # zen: none of it
     r = J("()=>{const P=__PM;P.S.zen=true;const on=P.rly.on();P.S.zen=false;return on}")

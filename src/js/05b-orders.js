@@ -139,9 +139,11 @@ function ordDocks(dt,lcap){let loaded=0;
   return loaded;}
 
 // ---------- base load while the machine is stopped ----------
-function baseLoadTick(dt){if(S.zen||S.pm==="run")return;const g=GRADES[C.grade],tph=P.K*g.sp*g.bw,en=Math.max(0,energyCost()-pfChemT());if(!(en>0&&tph>0))return;
-  const B=outOn()?BASEL.out:S.pm==="break"?BASEL.brk:BASEL.stop,h=dt/60,pw=en*(1-PF_STEAMSH)*tph*h,st=en*PF_STEAMSH*tph*h*B.steam;let v=st;
-  for(const a in PF_POWER){const x=pw*PF_POWER[a]*B[a];v+=x;pfAdd("power",a,x);}if(st>0)pfAdd("steam","pm",st);
+// (v6.11.2: the steam only: a stopped mill's electricity is metered by pwrTick (07i), the drives at idle and the balance of plant
+//  at its stopped share)
+function baseLoadTick(dt){if(S.zen||S.pm==="run")return;const g=GRADES[C.grade],tph=P.K*g.sp*g.bw,en=Math.max(0,energyCostT()-pfChemT());if(!(en>0&&tph>0))return;
+  const B=outOn()?BASEL.out:S.pm==="break"?BASEL.brk:BASEL.stop,h=dt/60,st=en*tph*h*B.steam;let v=st;
+  if(st>0)pfAdd("steam","pm",st);
   if(v>0){spend(v,"energy");S.tot.idleE=(S.tot.idleE||0)+v;pfW("idle",v);}}
 
 // ---------- bale grading ----------
