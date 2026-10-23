@@ -16,7 +16,8 @@
    const KIND={person:{R:1.3,cy:1.0,ppm:36,at:0},lift:{R:2.0,cy:1.1,ppm:34,at:1},truck:{R:4.2,cy:1.4,ppm:30,at:1}};
    const CUT=G3.CUT={actors:[],cells:new Map(),byKD:new Map(),byK:new Map(),queue:[],qset:new Set(),caps:0,full:0,resets:0,errs:0,t:0,ok:true,burst:0};
    // --- atlases: a shelf packer over a 2048 square each ---
-   function atlas(H=AH){const rt=new THREE.WebGLRenderTarget(AW,H,{depthBuffer:false,generateMipmaps:true,minFilter:THREE.LinearMipmapLinearFilter,magFilter:THREE.LinearFilter});
+   const NOMIPS=/[?&]nomips/.test(location.search);   // (v6.12 t3: A/B on the phone: no atlas mipmaps, so a picture never rebuilds a 2048-square mip chain)
+   function atlas(H=AH){const rt=new THREE.WebGLRenderTarget(AW,H,{depthBuffer:false,generateMipmaps:!NOMIPS,minFilter:NOMIPS?THREE.LinearFilter:THREE.LinearMipmapLinearFilter,magFilter:THREE.LinearFilter});
      rt.texture.anisotropy=4;rt.scissorTest=true;return {rt,tex:rt.texture,rows:[],nextY:0,full:false,h:H};}
    function alloc(A,s){for(const r of A.rows)if(r.h===s&&r.x+s<=AW){const x=r.x;r.x+=s+PAD;return [x,r.y];}
      if(A.nextY+s>A.h){A.full=true;return evict(A,s);}const r={y:A.nextY,h:s,x:s+PAD};A.nextY+=s+PAD;A.rows.push(r);return [0,r.y];}
@@ -118,7 +119,7 @@
        renderer.autoClear=false;
        RT_A.viewport.set(0,0,px,px);RT_A.scissor.set(0,0,Math.min(RTS,px+8),Math.min(RTS,px+8));   /* (t5: cleared a little past the picture too) */renderer.setRenderTarget(RT_A);renderer.setClearColor(0x000000,0);renderer.clear(true,true,false);renderer.render(cs,cc);
        finU.uScale.value=px/RTS;finU.uPx.value=px;finU.uExp.value=renderer.toneMappingExposure;
-       A.tex.generateMipmaps=mips!==false;   // (mipmaps once per frame, on its last picture: a 2048 x 1024 rebuild each time was a hitch)
+       A.tex.generateMipmaps=mips!==false&&!NOMIPS;   // (mipmaps once per frame, on its last picture: a 2048 x 1024 rebuild each time was a hitch)
        A.rt.viewport.set(at[0],at[1],px,px);A.rt.scissor.set(at[0],at[1],px,px);renderer.setRenderTarget(A.rt);renderer.render(finS,finC);
      }finally{   // put it back exactly as it was, and the renderer too
        renderer.setRenderTarget(rt0);renderer.setClearColor(cl,ca);renderer.autoClear=ac;
