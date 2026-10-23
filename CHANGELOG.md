@@ -1,11 +1,12 @@
 # Changelog
 
-## v6.12.0-t3 (2026-10-22): performance baseline (test build, test/v6.12-perf)
+## v6.12.0-t4 (2026-10-22): performance baseline (test build, test/v6.12-perf)
 No game changes: main v6.11.2 under a test version number, so a phone's `?autotest` results name the build. The device
 numbers it gathers are the baseline for the v6.12 performance work (`claude/perf-review-v6113.md` in the Project).
 - `?autotest` runs with "Let the mill run" on (event, drive and civics cards answer themselves, as a standing order would) and
   gives the mill a $50M cushion before the all-upsets phase: 55 repair bills at once bankrupted the season and the "Season
   over" dialog stopped the test on a phone (t2).
+- `?autotest&quick` (t4) adds seven 5 s bisection phases after normal play (sim paused, UI tick off, movers hidden, moving batches frozen, paper sheet frozen, labels canvas off, drop shadows off) and every slow frame carries a 4-frame ledger (matrix uploads, label repaints, pictures, sheet rebuilds, draws, backfill, sim time). The iPhone showed a ~70 ms hitch about once a second in normal play, in 3D-actor and no-mipmap builds alike, and never with every upset on.
 - `?nomips` (t3): the cut-out atlases without mipmaps, an A/B switch for the ~70 ms hitch the iPhone shows once a second in normal play (`?cutfail` is the other: 3D actors, no pictures at all).
 - `tools/perf/quick.py`: picks a leader after clicking Season (since v5.1 the picker comes first), so its "normal" phase
   measures a running mill instead of the paused picker (`bench`, `latecompile` and `allocprof` had this fix in v6.10.2).

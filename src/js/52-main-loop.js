@@ -40,7 +40,7 @@ function frame(now){
   const rdt=Math.max(0,Math.min(0.1,(now-last)/1000));last=now;
   // schedule the next frame first: a bug in one frame must never stop the game loop (v2.8.5: the sim step too)
   requestAnimationFrame(frame);
-  if(running&&!BF.busy){try{simAcc=Math.min(simAcc+rdt*simRate(),60);while(simAcc>=SIM_STEP&&running){step(SIM_STEP);simAcc-=SIM_STEP;}if(G3.vlvClk)vlvCatch(simAcc);}catch(e){if(!frame.serr)frame.serr=0;if(frame.serr++<5)console.error("sim error",e);}}
+  if(running&&!BF.busy&&!(G3.EXP&&G3.EXP.noSim)){try{simAcc=Math.min(simAcc+rdt*simRate(),60);while(simAcc>=SIM_STEP&&running){step(SIM_STEP);simAcc-=SIM_STEP;}if(G3.vlvClk)vlvCatch(simAcc);}catch(e){if(!frame.serr)frame.serr=0;if(frame.serr++<5)console.error("sim error",e);}}
   if(PFo&&PFo.on)PFo.acc["SIM (game logic step)"]=(PFo.acc["SIM (game logic step)"]||0)+(performance.now()-fT0);
   if(G3.cineTick)G3.cineTick(now);   // (v4.2.4: the bird cut-scene runs on real time while the game is paused)
   // v5.2: nothing is drawn behind the opaque title screen once the start-up precompile is done (it needs its frames until then)
@@ -52,9 +52,9 @@ function frame(now){
       if(G3.on&&G3.frame){WACC.t=Math.min(0.25,WACC.t+(running?rdt:0));
         if(!STOPMO||(G3.camBusy&&G3.camBusy())||now-WACC.last>=1000/15-4){WACC.last=now;const d=Math.min(0.1,WACC.t);WACC.t=0;G3.frame(d);}}}
     uiAcc+=rdt;if(uiAcc>(document.body.classList.contains("sheet-open")?0.2:0.4)){   // (v6.1 t3: 2.5 a second with no panel open)
-      uiAcc=0;uiN++;try{AUDIO.update(running&&!S.zen&&(S.inc.length>0||S.wd==="hayout"));}catch(_){}
-      const uT=performance.now();if(paneShown($("cards")))syncControls();updateText();UI_TICKS.forEach(f=>{try{f(uiN);}catch(e){console.error("ui tick",e);}});
-      if(paneShown($("chaosSec")))updateChaos();if(!$("brian").hidden)briUpd();if(paneShown($("shopSec")))updateShop();if(paneShown($("relnow"))&&$("repLive").open)updateRel();   /* (v5.2: no offsetParent layout read) */
+      uiAcc=0;uiN++;if(!(G3.EXP&&G3.EXP.noUI))try{AUDIO.update(running&&!S.zen&&(S.inc.length>0||S.wd==="hayout"));}catch(_){}
+      const uT=performance.now();if(!(G3.EXP&&G3.EXP.noUI)){if(paneShown($("cards")))syncControls();updateText();UI_TICKS.forEach(f=>{try{f(uiN);}catch(e){console.error("ui tick",e);}});
+      if(paneShown($("chaosSec")))updateChaos();if(!$("brian").hidden)briUpd();if(paneShown($("shopSec")))updateShop();if(paneShown($("relnow"))&&$("repLive").open)updateRel();}   /* (v5.2: no offsetParent layout read) */
       if(PFo&&PFo.on)PFo.acc["UI panels (5x/s)"]=(PFo.acc["UI panels (5x/s)"]||0)+(performance.now()-uT);}}
   catch(e){if(!frame.errs)frame.errs=0;if(frame.errs++<5)console.error("frame error",e);}
   if(PFo&&PFo.on){const d=performance.now()-fT0;PFo.js.push(d);}

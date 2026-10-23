@@ -42,13 +42,17 @@
     const end=performance.now()+sec(measureS);
     // v4.0.2: what each slow frame (over 25 ms) was spent on: code sections, GPU uploads and shader compiles that frame
     {const t0=performance.now(),I=D().renderer.info;let last=0,prev={},pg=programs(),geo=I.memory.geometries,tex=I.memory.textures,nJs=0;
+      // v6.12 t4: a ledger of what each frame did (deltas), kept for the last 4 frames so a slow frame shows what led up to it
+      const led=()=>({mup:(G3.DB&&G3.DB.mup)||0,lbl:G3.LB?G3.LB.nd:0,cut:G3.CUT?G3.CUT.caps:0,sheet:G3.sheetBuilds||0,draws:I.render.calls,bf:BF.busy?1:0,run:running?1:0,t:+(S.t).toFixed(1)});
+      const ring=[];let lastLed=led();
       const tick=now=>{if(!PF.on||now>end)return;requestAnimationFrame(tick);const gap=last?now-last:0;last=now;
+        {const L=led(),dl={};for(const k in L)dl[k]=k==="t"||k==="draws"||k==="bf"||k==="run"?L[k]:L[k]-lastLed[k];lastLed=L;dl.gap=Math.round(gap);ring.push(dl);if(ring.length>4)ring.shift();}
         const acc=PF.acc,d={};for(const k in acc){const v=acc[k]-(prev[k]||0);if(v>=0.5)d[k]=+v.toFixed(1);}prev={...acc};
         const pN=programs(),gN=I.memory.geometries,xN=I.memory.textures,js=PF.js.length>nJs?PF.js[PF.js.length-1]:0;nJs=PF.js.length;
         if(gap>25){const SF=R.slow_frames||(R.slow_frames=[]),mine=SF.filter(f=>f.phase===name),low=mine.length<6?null:mine.reduce((a,b)=>a.gap_ms<=b.gap_ms?a:b);
           if(low&&low.gap_ms>=gap){}else{if(low)SF.splice(SF.indexOf(low),1);SF.push({phase:name,t_s:+((now-t0)/1000).toFixed(2),gap_ms:Math.round(gap),js_ms:+js.toFixed(1),
           sections:Object.fromEntries(Object.entries(d).sort((a,b)=>b[1]-a[1]).slice(0,4)),new_programs:pN-pg,new_geometries:gN-geo,new_textures:xN-tex,
-          sim_min:Math.round(S.t),upsets:S.inc.length,moving_batches:G3.DB?G3.DB.bms.length:null,pending_batches:G3.DB?(G3.DB.pending||0)+(G3.DB.q?G3.DB.q.size:0):null});}}
+          sim_min:Math.round(S.t),upsets:S.inc.length,moving_batches:G3.DB?G3.DB.bms.length:null,pending_batches:G3.DB?(G3.DB.pending||0)+(G3.DB.q?G3.DB.q.size:0):null,ledger:ring.slice()});}}
         pg=pN;geo=gN;tex=xN;};requestAnimationFrame(tick);}
     while(performance.now()<end){if(!running){R.pauses++;running=true;}say(`${name} · ${Math.max(1,Math.ceil((end-performance.now())/1000))} s`);await wait(250);}
     PF.on=false;const gaps=PF.gaps.slice(1),g=gaps.slice().sort((a,b)=>a-b),n=g.length,sum=g.reduce((a,b)=>a+b,0),js=PF.js.slice().sort((a,b)=>a-b);
@@ -129,7 +133,16 @@
     // a season on a fixed seed, at the display's frame rate, with no tutorial, event cards or leaderboard; nothing saved
     FRAME_CAP=0;G3.cap=0;G3.noFallback=!Q.has("fallback");setSimSpeed(SPEED);
     G3.autotest=true;startSeason();seedRun(SEED);S.cards.next=1e12;S.afk=true;G3.play();   // (v6.12: "Let the mill run" on: event, drive and civics cards answer themselves; on a phone they stopped the test)
-    if(QUICK){await phase("normal","Normal play",4,8,null,null,true);R.display_hz_est=null;}
+    if(QUICK){await phase("normal","Normal play",4,8,null,null,true);R.display_hz_est=null;
+      // v6.12 t4: bisection phases, 5 s each, for a hitch that shows in normal play: which switch makes it stop?
+      const B=[["no_sim","Sim paused (render on)",()=>{G3.EXP.noSim=true;},()=>{G3.EXP.noSim=false;}],
+        ["no_ui","UI tick off",()=>{G3.EXP.noUI=true;},()=>{G3.EXP.noUI=false;}],
+        ["no_movers","People + vehicles hidden",()=>{G3.EXP.noMovers=true;},()=>{G3.EXP.noMovers=false;}],
+        ["no_db","Moving batches frozen",()=>{G3.EXP.noDb=true;},()=>{G3.EXP.noDb=false;}],
+        ["no_sheet","Paper sheet frozen",()=>{G3.EXP.noSheet=true;},()=>{G3.EXP.noSheet=false;}],
+        ["no_labels","Labels canvas off",()=>{if(G3.LB){G3.LB.hid=true;G3.LB.force=true;}},()=>{if(G3.LB){G3.LB.hid=false;G3.LB.force=true;}}],
+        ["no_drop","Drop shadows off",()=>{if(G3.dropMesh)G3.dropMesh.visible=false;},()=>{if(G3.dropMesh)G3.dropMesh.visible=true;}]];
+      for(const [k,nm,on,off] of B){const o=await phase(k,nm,1.5,5,on,off,true);o.over50_per_s=r1(o.over50/5);}}
     else{await phase("normal","Normal play",8,20,null,null,true);
     await phase("shadows_off","Shadows off",2.5,5,()=>setShadows(false),()=>setShadows(true));
     let pr=1;await phase("half_res","Half resolution",2,5,()=>{const d=D();pr=d.renderer.getPixelRatio();d.renderer.setPixelRatio(pr*0.5);d.resize();},()=>{const d=D();d.renderer.setPixelRatio(pr);d.resize();});

@@ -107,7 +107,7 @@
       const dyeOn=S.M.offSpec;if(dyeOn){const k=Math.floor(now/1400)%DYE.length;if(k!==dyeK){dyeK=k;dyeSheet.color.copy(lin0(DYE[k]));dyeReel.color.copy(lin0(DYE[(k+2)%DYE.length]));}}
       sheetMesh.material=dyeOn?dyeSheet:sheetMat;{/* v6.1 t9: the reel's paper was split by material on the first frame (40c), so it takes one material, not the array */
         const one=!reel.geometry.groups.length,rm=dyeOn?dyeReel:(one?ROLLM[0]:ROLLM);if(reel.material!==rm){reel.material=rm;if(one)for(const c of reel.children)if(c.isMesh)c.material=dyeOn?dyeReel:ROLLM[1];}}
-      sheetMesh.visible=show;sheetMesh.geometry.setDrawRange(0,(sheetKey[Math.min(segs,sheetKey.length-1)]||0)*6);G3.sliceFrame(now,show&&segs>=2);}sheetTex.offset.x=-V.sheet/24*1.0;
+      sheetMesh.visible=show;sheetMesh.geometry.setDrawRange(0,(sheetKey[Math.min(segs,sheetKey.length-1)]||0)*6);if(!G3.EXP.noSheet)G3.sliceFrame(now,show&&segs>=2);}sheetTex.offset.x=-V.sheet/24*1.0;
     pm("paper machine, reel, crane, winder");
     // roll conveyor
     // each finished roll is kicked off the winder, rolls down the ramp, is upended and rides the conveyor to the warehouse;
@@ -244,7 +244,7 @@
     if(EXP.noMovers){if(!moversCache)moversCache=scene.children.filter(o=>o.userData&&(o.userData.legs||o.userData.wheels||o.userData.load||o.userData.cj));hidM=moversCache.filter(o=>o.visible);hidM.forEach(o=>o.visible=false);}
     try{if(G3.knobFrame)G3.knobFrame(rdt,now);}catch(e){G3.fErr=(G3.fErr||0)+1;if(G3.fErr<6)console.error("knobs",e);}   // v5.6 fiddly knobs (40b)
     try{if(G3.tellFrame)G3.tellFrame(rdt,now);}catch(e){G3.fErr=(G3.fErr||0)+1;if(G3.fErr<6)console.error("tells",e);}   // v5.7 the daily round (33b)
-    if(G3.dbTick)G3.dbTick();
+    if(G3.dbTick&&!EXP.noDb)G3.dbTick();
     if(G3.fxSync)G3.fxSync();   // v6.1 t12: upset effect parts drawn instanced (31)
     if(G3.smColTick)G3.smColTick();   // v6.1 t12: blinking lights in the merged scenery, every frame (40)
     if(G3.cutTick)G3.cutTick(now);
