@@ -193,7 +193,7 @@
   const PCOL=new Map(),pcol=c=>{let v=PCOL.get(c);if(!v){v=lin(c);PCOL.set(c,v);}return v;};
   // background ambience (plume, aerators, outfall) is capped so it can never crowd out fires, sparks and disaster effects
   function emitA(type,x,y,z,vx,vy,vz,life,size,color,op){if(liveN<600)emit(type,x,y,z,vx,vy,vz,life,size,color,op);}   // (named arguments: a rest array per call was a steady allocation)
-  function emit(type,x,y,z,vx,vy,vz,life,size,color,op=1){let p=pFree.pop();
+  function emit(type,x,y,z,vx,vy,vz,life,size,color,op=1){if(ZON){const k=zoneOf(x,z);if(zoneMir(k))vx=-vx;x=siteX(k,x);}let p=pFree.pop();   // (v7.0: effects are aimed in logical coordinates, drawn in the site)
     if(!p){if(parts.length>=PCAP)return;p={v:[0,0,0]};parts.push(p);}
     const c=pcol(color);p.type=type;p.t=PT[type];p.alive=true;p.x=x;p.y=y;p.z=z;p.v[0]=vx;p.v[1]=vy;p.v[2]=vz;p.life=p.max=life;p.size=size;p.op=op;
     p.r=c.r;p.g=c.g;p.b=c.b;p.rot=Math.random()*6.28;p.spin=(Math.random()-0.5)*2;p.ph=Math.random()*6.28;p.fl=1;p.tile=p.t.tiles?(Math.random()*4)|0:-1;if(p.t.flat){p.rot=(Math.random()-0.5)*0.5;p.fl=Math.random()<0.5?-1:1;}if(type==="paper"){p.rot=(Math.random()-0.5)*0.5;p.r0=p.rot;p.fl=Math.random()<0.5?-1:1;}if(type==="fire"&&p.t.sheet){p.rot=(Math.random()-0.5)*0.3;p.spin=(Math.random()-0.5)*0.25;p.fl=Math.random()<0.5?-1:1;}liveN++;}
@@ -277,7 +277,7 @@
   function pinAt(g,x,y,z,kind){const p=new THREE.Group();let head=null,flag=null,fm=null;
     if(PAPF){fm=papReg(new THREE.MeshBasicMaterial({map:flagTex(kind,0),transparent:true,alphaTest:0.5,depthTest:false,toneMapped:false,side:THREE.DoubleSide}),0.45);
       const fg=new THREE.PlaneGeometry(3.2,2);fg.translate(1.6,-1,0);flag=new THREE.Mesh(fg,fm);flag.renderOrder=10;flag.position.set(0,1.0,0);p.add(flag);
-      flag.onBeforeRender=()=>{flag.quaternion.copy(camera.quaternion);if(p.parent)flag.quaternion.premultiply(_pq.copy(p.quaternion).invert());flag.updateMatrixWorld();};}
+      flag.onBeforeRender=()=>{const mir=!!(p.parent&&p.parent.matrixWorld.determinant()<0);flag.quaternion.copy(camera.quaternion);if(mir){flag.quaternion.y=-flag.quaternion.y;flag.quaternion.z=-flag.quaternion.z;}if(p.parent)flag.quaternion.premultiply(_pq.copy(p.quaternion).invert());flag.scale.x=mir?-1:1;flag.updateMatrixWorld();};   /* (v7.0: in the mirrored hall block the flag is turned and flipped back, so it faces the camera and reads) */}
     else{head=new THREE.Mesh(pinGeo,pinMat);head.castShadow=true;p.add(head);
     const ic=new THREE.Sprite(new THREE.SpriteMaterial({map:iconTex(kind),depthTest:false,transparent:true,toneMapped:false}));ic.renderOrder=10;ic.position.set(0,2.15,0);ic.scale.setScalar(1.3);p.add(ic);}
     p.position.set(x,y,z);g.add(p);
@@ -730,7 +730,7 @@
             if(!q||z>front||inHole(x,z))continue;const mv=Math.hypot(x-q[0],z-q[1]);if(mv>0.004&&Math.random()<rdt*24)emitA("drop",x+R()*1.2,0.35,z+R()*1.2,R()*2,1.2+Math.random()*1.4,R()*2,0.55,0.3,"#dfe9e6",0.85);}}};},
   };
   const blackEl=$("blackout3d");let lastIncTxt=0;
-  function makeFX(id){const def=FXDEF[id]||FXDEF[MOT_FXDEF[id]];const g=new THREE.Group();scene.add(g);const pp=PINS[id]||PINS[MOT_PIN[id]]||[0,10,0,"!"];/* (v6.5 b3: a stopped DCS motor uses its upset's spot, 07c) */const f=FX[id]={g,up:null,pin:pinAt(g,pp[0],pp[1],pp[2],pp[3]),lb:lblNew(true,id)};
+  function makeFX(id){const def=FXDEF[id]||FXDEF[MOT_FXDEF[id]];const g=new THREE.Group();scene.add(g);const pp=PINS[id]||PINS[MOT_PIN[id]]||[0,10,0,"!"];/* (v6.5 b3: a stopped DCS motor uses its upset's spot, 07c) */if(G3.zSetAt)G3.zSetAt(g,pp[0],pp[2]);   /* (v7.0: the effect is drawn in its upset's zone) */const f=FX[id]={g,up:null,pin:pinAt(g,pp[0],pp[1],pp[2],pp[3]),lb:lblNew(true,id)};
     f.up=def?def(g):()=>{};try{if(!/[?&]nofxinst/.test(location.search))f.inst=fxInst(g);}catch(e){console.error("effect instancing failed",id,e);}return f;}
   /* v6.1 t12: an effect's many look-alike parts (rain streaks, ripples, splash blobs, tornado puffs and debris) draw as one
      instanced mesh per shape and look instead of one draw each (the roof leak was ~100 draws, the tornado ~75). The effect
@@ -753,7 +753,7 @@
     const out=[];
     for(const L of groups.values()){if(L.length<4)continue;const o0=L[0],sprite=!!o0.isSprite,geo=sprite?SPRG:o0.geometry;
       const im=new THREE.InstancedMesh(geo,fxMat(o0.material,sprite),L.length);const al=new THREE.InstancedBufferAttribute(new Float32Array(L.length).fill(1),1);al.setUsage(THREE.DynamicDrawUsage);
-      im.geometry=geo.clone();im.geometry.setAttribute("iAlpha",al);im.instanceMatrix.setUsage(THREE.DynamicDrawUsage);im.setColorAt(0,_fc.set(1,1,1));im.frustumCulled=false;im.renderOrder=o0.renderOrder;im.name="effect parts";im.userData.smBatch=true;
+      im.geometry=geo.clone();im.geometry.setAttribute("iAlpha",al);im.instanceMatrix.setUsage(THREE.DynamicDrawUsage);im.setColorAt(0,_fc.set(1,1,1));im.frustumCulled=false;im.renderOrder=o0.renderOrder;im.name="effect parts";im.userData.smBatch=true;im.matrixAutoUpdate=false;im.matrixWorldAutoUpdate=false;im.matrixWorld.identity();   /* (v7.0: its instances are world matrices already, so it must not take the effect group's zone on top) */
       g.add(im);L.forEach(o=>o.layers.set(FXI_LAYER));out.push({im,L,al,sprite});}
     return out.length?out:null;}
   // each frame, for a showing effect: the instanced copies follow their originals

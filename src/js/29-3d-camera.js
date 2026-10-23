@@ -1,5 +1,5 @@
   /* ---- camera controls: drag to orbit, wheel/pinch to zoom ---- */
-  const target=new THREE.Vector3(-14,0,5);
+  const target=LAYOUT6?new THREE.Vector3(-14,0,5):new THREE.Vector3(4,0,6);   // (v7.0: the middle of the v7 site, in site coordinates; the camera lives in site coordinates)
   /* v6.1 iso: the camera never turns or tilts. ISO_TH looks across the mill from the south-west corner (45 degrees),
      ISO_PH is the true isometric elevation (35.26 degrees above the ground). Everything that used to set th/ph still may:
      placeCam pins them. Zoom rests on whole-number steps of the widest view (1x, 2x, 3x ... 12x), so pixels per metre are
@@ -18,8 +18,8 @@
   const DEFT=target.clone();let goal=null;
   // v3.1.0 tutorial: glide the camera to a spot and mark it with a pulsing ring and a light beam
   // on phones the tutorial card covers the lower half: aim past the spot so it sits in the upper half of the screen
-  G3.camTo=(x,z,r,th,ph)=>{th=th??(G3.freeCam?cam.th:DEF.th);ph=ph??(G3.freeCam?cam.ph:0.9);const k=host.clientWidth<600?r*0.13:0;goal={t:new THREE.Vector3(x+Math.sin(th)*k,0,z+Math.cos(th)*k),r,th,ph:ph??0.9};};
-  G3.camGlide=c=>{goal={t:new THREE.Vector3(c[0],c[5]||0,c[1]),r:c[2],th:c[3],ph:c[4]};};   // v5.2: glide to an exact view (the camera pull, 31b)
+  G3.camTo=(x,z,r,th,ph)=>{[x,z]=G3.sitePt(x,z);th=th??(G3.freeCam?cam.th:DEF.th);ph=ph??(G3.freeCam?cam.ph:0.9);const k=host.clientWidth<600?r*0.13:0;goal={t:new THREE.Vector3(x+Math.sin(th)*k,0,z+Math.cos(th)*k),r,th,ph:ph??0.9};};
+  G3.camGlide=c=>{if(c.logical){const q=G3.sitePt(c[0],c[1]);c=[q[0],q[1],c[2],c[3],c[4],c[5]];}goal={t:new THREE.Vector3(c[0],c[5]||0,c[1]),r:c[2],th:c[3],ph:c[4]};};   // v5.2: glide to an exact view (the camera pull, 31b)
   G3.camHome=()=>{goal={t:DEFT.clone(),r:DEF.r,th:DEF.th,ph:DEF.ph};};
   G3.camSet=c=>{goal=null;target.set(c[0],c[5]||0,c[1]);cam.r=c[2];cam.th=c[3];cam.ph=c[4];};   // tests and screenshots
   G3.camGet=()=>[target.x,target.z,cam.r,cam.th,cam.ph,target.y];   // (v4.2.4: the bird cut-scene puts the camera back)
@@ -28,20 +28,20 @@
    const bm=new THREE.MeshBasicMaterial({color:lin0("#ffd27a"),transparent:true,opacity:0.18,depthWrite:false,side:THREE.DoubleSide,toneMapped:false});
    const beam=new THREE.Mesh(new CylG(1,1,1,32,1,true),bm);beam.renderOrder=19;beam.visible=false;scene.add(beam);
    const HI={on:false,x:0,z:0,r:6};
-   G3.tutHi=(x,z,r)=>{if(x==null){HI.on=false;ring.visible=beam.visible=false;return;}Object.assign(HI,{on:true,x,z,r});};
+   G3.tutHi=(x,z,r)=>{if(x==null){HI.on=false;ring.visible=beam.visible=false;return;}[x,z]=G3.sitePt(x,z);Object.assign(HI,{on:true,x,z,r});};
    G3.tutTick=now=>{if(!HI.on)return;ring.visible=beam.visible=true;const ph=(now/1400)%1;ring.position.set(HI.x,0.15,HI.z);ring.scale.setScalar(HI.r*(0.92+0.16*ph));hm.opacity=0.9-0.45*ph;
      beam.position.set(HI.x,9,HI.z);beam.scale.set(HI.r*0.9,18,HI.r*0.9);bm.opacity=0.10+0.06*Math.sin(now/300);};}
   // move the look-at point across the ground, in screen directions
   function panBy(dx,dy){goal=null;folEnd();const rr=rShown*(host.clientWidth<600?1.35:1),wpp=2*rr*Math.tan(9*Math.PI/180)/Math.max(1,host.clientHeight),s=wpp;   // (v6.12: the iso field (18 degrees) in both modes: the free camera frames the same)
     const ph=G3.freeCam?clamp(cam.ph,0.05,1.36):ISO_PH,rx=Math.cos(cam.th),rz=-Math.sin(cam.th),fx=-Math.sin(cam.th)/Math.cos(ph),fz=-Math.cos(cam.th)/Math.cos(ph);   // (v6.1: screen up runs along the ground, foreshortened by the view angle)
     // (v14: zoomed out the pan reaches the whole site, so the outer scenery can be looked over)
-    const wk=clamp((cam.r-300)/300,0,1);target.x=clamp(target.x-(rx*dx-fx*dy)*s,-85-260*wk,70+260*wk);target.z=clamp(target.z-(rz*dx-fz*dy)*s,-40-200*wk,48+200*wk);}
+    const wk=clamp((cam.r-300)/300,0,1);target.x=clamp(target.x-(rx*dx-fx*dy)*s,FENCE7.x0+15-260*wk,FENCE7.x1-22+260*wk);target.z=clamp(target.z-(rz*dx-fz*dy)*s,-40-200*wk,48+200*wk);}
   // v6.12 free camera: turn and tilt about the target
   function orbitBy(dx,dy){goal=null;folEnd();cam.th-=dx*0.0065;cam.ph=clamp(cam.ph-dy*0.0055,PH_MIN,PH_MAX);G3.lastMove=performance.now();}
   G3.orbitBy=orbitBy;
-  G3.panBox=()=>{const wk=clamp((cam.r-300)/300,0,1);return [-85-260*wk,70+260*wk,-40-200*wk,48+200*wk];};   // (v6.12: where panBy lets the target go at this zoom, for the whole-site picture, 40d)
+  G3.panBox=()=>{const wk=clamp((cam.r-300)/300,0,1);return [FENCE7.x0+15-260*wk,FENCE7.x1-22+260*wk,-40-200*wk,48+200*wk];};   // (v6.12: where panBy lets the target go at this zoom, for the whole-site picture, 40d)
   // v3.3.4: follow Uncle Brian on the hall scrubber; drag still orbits, wheel/pinch zoom in close, any pan or camera jump ends it
-  const FOL={on:false,r:30,n:0};
+  const FOL={on:false,r:30,n:0},_folV=new THREE.Vector3();
   const folEnd=()=>{if(!FOL.on)return;FOL.on=false;G3.onFollowEnd&&G3.onFollowEnd();};
   G3.follow=on=>{if(on){goal=null;FOL.on=true;FOL.r=30;FOL.n=0;}else folEnd();};
   G3.following=()=>FOL.on;
@@ -54,7 +54,7 @@
     // gets wider ripples and anisotropic filtering)
     const RT=ENV.riverTex;if(RT){RT.repeat.x=free?6:40;RT.repeat.y=free?0.45:1.5;RT.anisotropy=free?8:1;RT.needsUpdate=true;}}
   function placeCam(){if(FOL.on){const R=G3.scrubbers&&G3.scrubbers[0];if(goal||(S&&S.zen)||!R)folEnd();
-      else{const g=R.g.position;target.x+=(g.x-target.x)*0.1;target.z+=(g.z-target.z)*0.1;cam.r+=(FOL.r-cam.r)*0.08;if(FOL.n++<90)cam.ph+=(0.62-cam.ph)*0.06;G3.lastMove=performance.now();}}
+      else{const g=G3.siteV(R.g.position,_folV);target.x+=(g.x-target.x)*0.1;target.z+=(g.z-target.z)*0.1;cam.r+=(FOL.r-cam.r)*0.08;if(FOL.n++<90)cam.ph+=(0.62-cam.ph)*0.06;G3.lastMove=performance.now();}}
     if(goal){G3.lastMove=performance.now();target.lerp(goal.t,0.12);cam.r+=(goal.r-cam.r)*0.12;cam.th=lerpAng(cam.th,goal.th,0.12);cam.ph+=(goal.ph-cam.ph)*0.12;
       goal.n=(goal.n||0)+1;if(goal.n>150||target.distanceTo(goal.t)<0.2&&Math.abs(goal.r-cam.r)<0.5){goal=null;if(!freeOn())cam.r=rStep(cam.r);}}
     // v6.2 test: zen with the free camera: the shot's angles and distance as they are, through the perspective camera

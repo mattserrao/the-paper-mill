@@ -75,7 +75,7 @@
       for(let i=0;i<26;i++)emit("spark",k.x+R()*1.2,1.4,k.z+R()*1.2,R()*5,4+Math.random()*4,R()*5,0.7,0.3,"#5ee08a",1);
       k.g.visible=false;RND.shown.delete(best);if(G3.onTellCaught)G3.onTellCaught(best);return true;};
     // the screen position of a shown tell (tests)
-    G3.tellScreen=id=>{const k=KIT[id];if(!k||!k.g.visible)return null;const r=glc.getBoundingClientRect(),t=k.parts.top;_v.set(k.x,t[1]*SC*0.6,k.z).project(camera);return [r.left+(_v.x+1)/2*r.width,r.top+(1-_v.y)/2*r.height,_v.z];};
+    G3.tellScreen=id=>{const k=KIT[id];if(!k||!k.g.visible)return null;const r=glc.getBoundingClientRect(),t=k.parts.top;G3.siteV(_v.set(k.x,t[1]*SC*0.6,k.z)).project(camera);return [r.left+(_v.x+1)/2*r.width,r.top+(1-_v.y)/2*r.height,_v.z];};
     G3.tellSeek=f=>{if(RND.on)RND.t=f*RND.len;};
     G3.tellHold=ms=>{RND.touch=performance.now()+(ms||60000);};   // (tests: the camera stays where the tool put it)
     G3.tellShowAll=on=>{TG.visible=!!on;for(const id in KIT){const k=KIT[id],[x,z]=posOf(k);k.g.position.set(x,0,z);k.g.updateMatrixWorld(true);k.g.visible=!!on;}};   // (layout checks)

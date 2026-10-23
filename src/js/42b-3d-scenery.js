@@ -1,3 +1,4 @@
+  if(G3.zonePass)G3.zonePass();   // (v7.0: every block in its v7 place before the scenery keeps clear of it)
   /* ---- v4.1 scenery: the world around the core mill, from the environment (SITE.env) and the mill seed (SITE.seed) ----
      Built once, after every other static object exists, so it can keep clear of all of them:
      1. A keep-out grid (2 m cells) is filled from the bounding boxes of every visible mesh and every instance of every

@@ -46,6 +46,23 @@ function layoutFor(seed){const r=siteRng(seed);const L=LAYOUTS[Math.floor(r()*LA
   // wx/wz map a v4.0 wastewater-plant coordinate to this layout (flip mirrors the plant inside its 1..46 slot)
   const dx=L.ww==="east"?45:0,wx=x=>dx+(L.flip?47-x:x),wz=z=>z;return {...L,dx,wx,wz,i:LAYOUTS.indexOf(L)};}
 const LAYOUT=layoutFor(SITE.seed);
+// v7.0 the site laid out the way the process runs: bales in on the west (screen left), rolls out on the east (screen
+// right). The mill is still built in its v6 coordinates, now its "logical" coordinates, and ZONES places each block in
+// the v7 site with one rigid transform, picked by where a thing stands in logical coordinates (zoneOf):
+//   W  west block: receiving, bale yard, rail, stock prep with its approach flow (refiners, fan pump), the shop,
+//      wastewater, river intake: moved 52 m west
+//   H  hall block: machine hall, winder, warehouse, shipping, MCC, parking, the outbound road: mirrored about x = 32
+//      (x -> 64 - x), so the machine runs west to east and its tending side still faces the camera
+//   E  power house block (power house, boiler, water tower): moved 30 m west, so it stands behind the dryers
+// The sim never sees any of this: it is where things are drawn (20b-3d-zones.js). ?layout6 shows the v6 layout.
+const LAYOUT6=new URLSearchParams(location.search).has("layout6");
+const ZONES=LAYOUT6?{W:{dx:0},H:{dx:0},E:{dx:0}}:{W:{dx:-52},H:{mir:64},E:{dx:-30}};
+function zoneOf(x,z){if(x>46&&x<54&&z>-7&&z<=-3.3)return "H";   // the fog fan, on the hall's back wall
+  if(z>-3.3)return "H";if(x>66&&z>-30)return "E";return "W";}
+function siteX(k,x){const Z=ZONES[k];return Z.mir!=null?Z.mir-x:x+Z.dx;}
+function sitePt(x,z){return [siteX(zoneOf(x,z),x),z];}   // a logical point -> where it stands in the v7 site
+const zoneMir=k=>ZONES[k].mir!=null;
+const FENCE7=LAYOUT6?{x0:-100,x1:92,z0:-52,z1:64}:{x0:-152,x1:164,z0:-52,z1:64};   // the v7 fence, in site coordinates
 siteBrand(SITE.env);
 // v4.1 v13: each site's water, after the v13 site maps: a centre line z(x) through control points and a half-width.
 // The mill's intake (x -30) and outfall (x ±32) always sit on the near bank at z -60, so the river touches the mill there.

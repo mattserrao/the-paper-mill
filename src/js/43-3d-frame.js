@@ -270,7 +270,7 @@
     const wide=camera.isIso||(G3.freeCam&&!(S&&S.zen))?(G3.camR||999)>=300:(G3.camDist||camera.position.distanceTo(target))>400;   // (v6.12: the free camera's zoom keeps the iso meaning)   // (t16: in the iso view the whole-site step (380) counts as zoomed out: area labels only)
     // (v5.2: no projecting or text building while the section labels can't show: zen, hidden view, labels off)
     if(G3.kvOn||G3.dvOn)LABELS.forEach(L=>{L.lb.vis=false;});   // v5.6: the fiddly knobs view shows only the knobs' labels (and upsets')
-    else if(!(G3.zen||LB.hid||labelHost.classList.contains("lbl-off")))LABELS.forEach(L=>{const R=L.lb;if(L.land?!wide:(!L.area&&wide)){R.vis=false;return;}tmp.copy(L.v).project(camera);const vis=tmp.z<1&&Math.abs(tmp.x)<1.05&&Math.abs(tmp.y)<1.05;R.vis=vis;
+    else if(!(G3.zen||LB.hid||labelHost.classList.contains("lbl-off")))LABELS.forEach(L=>{const R=L.lb;if(L.land?!wide:(!L.area&&wide)){R.vis=false;return;}G3.siteV(L.v,tmp).project(camera);const vis=tmp.z<1&&Math.abs(tmp.x)<1.05&&Math.abs(tmp.y)<1.05;R.vis=vis;
       if(!vis)return;R.x=Math.round((tmp.x+1)/2*w);R.y=Math.round((1-tmp.y)/2*hh);
       if(doText||R.a==null){const [a,b]=L.t();lblSet(R,a,b,!!(L.cls&&L.cls()));}});
     lblPaint(now);
@@ -284,4 +284,5 @@
   // the diagnostics needs a few internals for its scene census and switches
   G3.diagScene=()=>({scene,renderer,parts,MATS,resize,camera});
   applyPalette();rebuildDoors();
+  if(G3.zonePass){G3.zonePass();G3.zonesOn=true;}   // (v7.0: whatever was built after the scenery; from here on new things go by where they stand)
 })();

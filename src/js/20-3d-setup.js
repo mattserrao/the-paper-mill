@@ -219,7 +219,27 @@ function no3D(){G3.ok=false;$("no3d").hidden=false;$("no3d-retry").onclick=()=>l
     const fg=new CylG(0.38,0.38,0.18,18);fg.rotateZ(Math.PI/2);const fan=new THREE.Mesh(fg,M.ink);fan.position.set(1.58,0.75,0);g.add(fan);
     box(0.3,0.25,0.3,M.ink,1.0,1.25,0,g,false);return g;}
   function fieldPump(x,y,z,rot){const g=pumpModel();g.rotation.y=rot;g.position.set(x+0.7*Math.cos(rot),y-0.75,z-0.7*Math.sin(rot));blob(x+0.4*Math.sin(-rot),z,1.6);return g;}
-  function pipe(pts,r,m,parent=scene){const up=new THREE.Vector3(0,1,0);
+  // v7.0: a pipe whose points lie in more than one zone (03b ZONES) is re-routed in site coordinates: each zone's run of
+  // points goes where its zone is drawn, and consecutive runs are joined, at their two nearest points, by an overhead
+  // L-shaped run. The pieces are marked as already in site coordinates (userData.zd) so the zone pass leaves them alone.
+  const ZONP=!LAYOUT6;
+  function zdSince(n0){for(let i=n0;i<scene.children.length;i++)scene.children[i].userData.zd=true;}   // (v7.0: these were built in site coordinates)
+  function zRoute(pts){const runs=[];for(const p of pts){const k=zoneOf(p[0],p[2]),q=[siteX(k,p[0]),p[1],p[2]];
+      const r=runs[runs.length-1];if(r&&r.k===k)r.p.push(q);else runs.push({k,p:[q]});}
+    let path=runs[0].p;
+    for(let i=1;i<runs.length;i++){const R=runs[i].p;let bj=0,bk=0,bd=Infinity;
+      for(let j=0;j<path.length;j++)for(let k=0;k<R.length;k++){const d=Math.abs(path[j][0]-R[k][0])+Math.abs(path[j][2]-R[k][2]);if(d<bd){bd=d;bj=j;bk=k;}}
+      const A=path[bj],B=R[bk],Y=Math.max(A[1],B[1],4.5);
+      path=path.slice(0,bj+1).concat([[A[0],Y,A[2]],[A[0],Y,B[2]],[B[0],Y,B[2]]],R.slice(bk));}
+    const out=[];for(const p of path){const l=out[out.length-1];if(!l||Math.hypot(p[0]-l[0],p[1]-l[1],p[2]-l[2])>0.05)out.push(p);}
+    // drop points in the middle of a straight run (keeps the elbows clean)
+    return out.filter((p,i)=>{if(i===0||i===out.length-1)return true;const a=out[i-1],c=out[i+1];const u=[p[0]-a[0],p[1]-a[1],p[2]-a[2]],v=[c[0]-p[0],c[1]-p[1],c[2]-p[2]];
+      const cx=u[1]*v[2]-u[2]*v[1],cy=u[2]*v[0]-u[0]*v[2],cz=u[0]*v[1]-u[1]*v[0];return Math.hypot(cx,cy,cz)>1e-6||(u[0]*v[0]+u[1]*v[1]+u[2]*v[2])<0;});}
+  const zCross=pts=>{if(!ZONP||pts.length<2)return false;const k=zoneOf(pts[0][0],pts[0][2]);return pts.some(p=>zoneOf(p[0],p[2])!==k);};
+  function pipe(pts,r,m,parent=scene){
+    if(parent===scene&&zCross(pts)){const n0=scene.children.length;pipe0(zRoute(pts),r,m,parent);for(let i=n0;i<scene.children.length;i++)scene.children[i].userData.zd=true;return;}
+    pipe0(pts,r,m,parent);}
+  function pipe0(pts,r,m,parent=scene){const up=new THREE.Vector3(0,1,0);
     for(let i=0;i<pts.length-1;i++){const a=new THREE.Vector3(...pts[i]),b=new THREE.Vector3(...pts[i+1]),d=b.clone().sub(a),L=d.length();
       const tex=m===M.stock&&M.pipeStock,cg=new CylG(r,r,L,10);if(tex){const uv=cg.attributes.uv;for(let k=0;k<uv.count;k++)uv.setY(k,uv.getY(k)*L/3);}
       const o=new THREE.Mesh(cg,tex?M.pipeStock:m);o.position.copy(a).add(b).multiplyScalar(0.5);o.quaternion.setFromUnitVectors(up,d.normalize());o.castShadow=true;parent.add(o);}

@@ -9,9 +9,11 @@
   const _fa=new THREE.Vector3();
   function flowArrows(pts,r){for(let i=1;i<pts.length;i++){const a=pts[i-1],b=pts[i];_fa.set(b[0]-a[0],b[1]-a[1],b[2]-a[2]);const L=_fa.length();if(L<4)continue;_fa.normalize();
     const o=new THREE.Mesh(new CylG(0,r*1.45,r*2.4,8),M.arrow);o.position.set((a[0]+b[0])/2,(a[1]+b[1])/2,(a[2]+b[2])/2);o.quaternion.setFromUnitVectors(_fu,_fa);scene.add(o);}}
-  function spool(pts,r,m){pipe(pts,r,m);flange(pts[0],pts[1],r,M.steel);const n=pts.length;flange(pts[n-1],pts[n-2],r,M.steel);if(m!==M.steel&&m!==M.metal)flowArrows(pts,r);}
+  function spool(pts,r,m){if(zCross(pts)){pipe(pts,r,m);return;}   // (v7.0: re-routed between zones: no end flanges or flow arrows on the old path)
+    pipe(pts,r,m);flange(pts[0],pts[1],r,M.steel);const n=pts.length;flange(pts[n-1],pts[n-2],r,M.steel);if(m!==M.steel&&m!==M.metal)flowArrows(pts,r);}
   // ---- steam: elevated pipe rack from the power house to a header along the drive side of the dryers ----
   {const ins=new StdMat({color:lin0("#cfd4dc"),metalness:0.55,roughness:0.35}),Y=10.6,ZH=4.9,ZC=4.25;
+    if(LAYOUT6){
     const S1=[[70,8,-7],[68.6,8,-7],[68.6,Y,-7],[68.6,Y,-0.35],[46,Y,-0.35],[46,Y+2.6,-0.35],[42,Y+2.6,-0.35],[42,Y,-0.35],[27.3,Y,-0.35],[27.3,Y,ZH],[-4.5,Y,ZH]];
     pipe(S1,0.32,ins);for(let i=1;i<S1.length-1;i++){const p=S1[i];const b=new THREE.Mesh(new SphG(0.34,12,8),ins);b.position.set(p[0],p[1],p[2]);scene.add(b);}   // insulated elbows
     flange(S1[0],S1[1],0.32,M.steel);
@@ -21,6 +23,18 @@
     [66,59,52,38,31].forEach(x=>{box(0.3,Y-0.35,0.3,M.steel,x,(Y-0.35)/2,0,scene);box(0.26,0.26,2.0,M.steel,x,Y-0.45,0,scene,false);});
     box(0.3,Y-0.35,0.3,M.steel,69,(Y-0.35)/2,-3.5,scene);box(1.8,0.26,0.26,M.steel,69,Y-0.45,-3.5,scene,false);
     box(0.3,Y+2.25,0.3,M.steel,44,(Y+2.25)/2,0,scene);box(0.26,0.26,2.0,M.steel,44,Y+2.15,0,scene,false);box(0.26,0.26,2.0,M.steel,44,Y-0.45,0,scene,false);
+    }else{
+    // v7.0: the power house stands right behind the dryers, so the steam drops straight out of its south wall, across the
+    // hall's back wall and into the drive-side header (built here in site coordinates: power house wall at x 40..52, z -4;
+    // the header runs the length of the dryers, site x 36.7..68.5). The header and condensate runs stay in the hall's frame.
+    const n0=scene.children.length,PX=siteX("E",74);   // (the header spans site x 36.7..68.5, so the drop lands on it)
+    const S1=[[PX,8,-4.4],[PX,Y,-4.4],[PX,Y,ZH]];
+    pipe0(S1,0.32,ins);for(let i=1;i<S1.length-1;i++){const p=S1[i];const b=new THREE.Mesh(new SphG(0.34,12,8),ins);b.position.set(p[0],p[1],p[2]);scene.add(b);}
+    flange(S1[0],S1[1],0.32,M.steel);
+    pipe0([[PX+1.2,6.5,-4.4],[PX+1.2,Y,-4.4],[PX+1.2,Y,ZC]],0.14,M.steel);   // condensate return alongside
+    box(0.3,Y-0.35,0.3,M.steel,PX+0.6,(Y-0.35)/2,-3.6,scene);box(2.2,0.26,0.26,M.steel,PX+0.6,Y-0.45,-3.6,scene,false);   // a rack bent outside the back wall
+    zdSince(n0);
+    pipe([[27.3,Y,ZH],[-4.5,Y,ZH]],0.32,ins);pipe([[27.95,Y,ZC],[-4.5,Y,ZC]],0.14,M.steel);}   // the header and condensate run, in the hall
     for(let x=22;x>=-4;x-=6.5){box(0.06,13.4-Y,0.06,M.ink,x,(13.4+Y)/2,ZH,scene,false);box(0.06,13.4-Y,0.06,M.ink,x,(13.4+Y)/2,ZC,scene,false);box(0.12,0.12,1.0,M.ink,x,Y-0.38,(ZH+ZC)/2,scene,false);}
     // a drop and rotary joint to the drive-side journal of every dryer can
     for(let i=0;i<10;i++)[[(872-i*32-600)/10,5.4],[(856-i*32-600)/10,2.4]].forEach(([x,y])=>{pipe([[x,Y,ZH],[x,y,ZH],[x,y,5.62]],0.07,ins);

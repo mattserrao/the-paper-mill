@@ -24,19 +24,23 @@
     function run(ax,az,bx,bz){const L=Math.hypot(bx-ax,bz-az);if(L<0.5)return;const t=fm.clone();t.map=ft.clone();t.map.needsUpdate=true;t.map.repeat.set(L/1.2,H2/1.2);
       const pl=new THREE.Mesh(new THREE.PlaneGeometry(L,H2),t);pl.position.set((ax+bx)/2,H2/2,(az+bz)/2);pl.rotation.y=-Math.atan2(bz-az,bx-ax);scene.add(pl);
       pipe([[ax,H2,az],[bx,H2,bz]],0.05,M.metal);for(let k=0;k<=Math.ceil(L/4);k++){const f=k/Math.ceil(L/4);posts.push([ax+(bx-ax)*f,az+(bz-az)*f]);}}
-    const W0=FENCE.x0,W1=FENCE.x1,Z0=FENCE.z0,Z1=FENCE.z1;
+    const zn0=scene.children.length;   // (v7.0: the fence is built in site coordinates (FENCE7), round the v7 site)
+    const W0=FENCE7.x0,W1=FENCE7.x1,Z0=FENCE7.z0,Z1=FENCE7.z1;
     run(W0,Z0,W1,Z0);run(W0,Z1,W1,Z1);
-    [[Z0,-37.4],[-33.6,-31],[-27,-6],[-1.6,10.4],[14.6,Z1]].forEach(([a,b])=>run(W0,a,W0,b));
-    [[Z0,30.5],[34.5,Z1]].forEach(([a,b])=>run(W1,a,W1,b));
+    if(LAYOUT6){[[Z0,-37.4],[-33.6,-31],[-27,-6],[-1.6,10.4],[14.6,Z1]].forEach(([a,b])=>run(W0,a,W0,b));[[Z0,30.5],[34.5,Z1]].forEach(([a,b])=>run(W1,a,W1,b));}
+    else{[[Z0,-37.4],[-33.6,-31],[-27,-6],[-1.6,30.5],[34.5,Z1]].forEach(([a,b])=>run(W0,a,W0,b));   // west: rejects road, rail, inbound road, staff road
+      [[Z0,10.4],[14.6,Z1]].forEach(([a,b])=>run(W1,a,W1,b));}   // east: the outbound road
     const pg=new CylG(0.08,0.08,2.6,6),pm=new THREE.InstancedMesh(pg,instMat(M.metal),posts.length),m4=new THREE.Matrix4();
-    posts.forEach((p,k)=>{m4.makeTranslation(p[0],1.3,p[1]);pm.setMatrixAt(k,m4);});pm.userData.bake=true;scene.add(pm);}
+    posts.forEach((p,k)=>{m4.makeTranslation(p[0],1.3,p[1]);pm.setMatrixAt(k,m4);});pm.userData.bake=true;scene.add(pm);for(let i=zn0;i<scene.children.length;i++)scene.children[i].userData.zd=true;}
   // guard gate between the two roads, with boom barriers
-  {const gx=FENCE.x0-1.5,gz=4.4;box(3,2.6,3,conc,gx,1.3,gz);box(3.4,0.25,3.4,M.roofFlat,gx,2.75,gz);box(3.02,0.8,2.2,M.wind,gx,1.75,gz,scene,false);
+  {const zn0=scene.children.length;   // (v7.0: in site coordinates: the inbound gate on the west fence, the outbound gate on the east; a gatehouse at each)
+   const GH=LAYOUT6?[[FENCE.x0-1.5,4.4]]:[[FENCE7.x0-1.5,-9.4],[FENCE7.x1+1.5,8.2]];
+   GH.forEach(([gx,gz])=>{box(3,2.6,3,conc,gx,1.3,gz);box(3.4,0.25,3.4,M.roofFlat,gx,2.75,gz);box(3.02,0.8,2.2,M.wind,gx,1.75,gz,scene,false);});
     const sc=document.createElement("canvas");sc.width=128;sc.height=8;const x=sc.getContext("2d");for(let i=0;i<8;i++){x.fillStyle=i%2?"#ffffff":"#e0343c";x.fillRect(i*16,0,16,8);}
     const st=new THREE.CanvasTexture(sc);st.colorSpace=THREE.SRGBColorSpace;const bm=new StdMat({map:st,roughness:0.6});
-    [[-1.6,1],[14.6,-1]].forEach(([z,dir])=>{box(0.5,1.1,0.5,M.ink,FENCE.x0,0.55,z,scene,false);const arm=new THREE.Group();arm.position.set(FENCE.x0,1.05,z);scene.add(arm);
+    (LAYOUT6?[[-1.6,1,FENCE.x0],[14.6,-1,FENCE.x0]]:[[-1.6,1,FENCE7.x0],[14.6,-1,FENCE7.x1]]).forEach(([z,dir,gx])=>{box(0.5,1.1,0.5,M.ink,gx,0.55,z,scene,false);const arm=new THREE.Group();arm.position.set(gx,1.05,z);scene.add(arm);
       const a=new THREE.Mesh(new THREE.BoxGeometry(0.16,0.16,4.2),bm);a.position.z=-dir*2.1;arm.add(a);arm.rotation.x=dir*1.15;});
-}
+   for(let i=zn0;i<scene.children.length;i++)scene.children[i].userData.zd=true;}
   // truck scale where the inbound queue stops, with a scale house and a weight display
   {box(8,0.14,3.0,M.steel,-40.7,0.07,-3.8,scene,false);[-4,4].forEach(dx=>box(0.12,0.16,3.0,M.lane,-40.7+dx,0.09,-3.8,scene,false));
     box(3.2,2.6,2.4,conc,-41,1.3,-0.4);box(3.5,0.22,2.7,M.roofFlat,-41,2.7,-0.4);box(2.2,0.8,0.08,M.wind,-41,1.7,-1.62,scene,false);

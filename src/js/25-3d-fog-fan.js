@@ -328,7 +328,7 @@
      layer, out of the static merge; canInst copies their matrices into the instanced mesh each drawn frame. */
   const canInst=(()=>{const all=cansTop.concat(cansBot);all.forEach(o=>{o.layers.set(27);(G3.dynLater||(G3.dynLater=[])).push(o);});
     const im=new THREE.InstancedMesh(all[0].geometry,instMat(M.can),all.length);all.forEach((o,i)=>{o.updateMatrix();im.setMatrixAt(i,o.matrix);});
-    im.computeBoundingSphere();im.userData.smBatch=true;im.name="dryer cans";scene.add(im);
+    im.computeBoundingSphere();im.userData.smBatch=true;im.userData.zLogical=true;im.name="dryer cans";scene.add(im);   // (v7.0 zLogical: its instances are the cans' own (logical) matrices, so it is zoned like them)
     // (v6.1 t10: flat-coloured cylinders turning on their own axis look the same at every angle: no per-frame upload; ?canspin brings it back)
     const spin=/[?&]canspin/.test(location.search);let once=false;
     return ()=>{if(!spin&&once)return;once=true;for(let i=0;i<all.length;i++){const o=all[i];o.updateMatrix();im.setMatrixAt(i,o.matrix);}im.instanceMatrix.needsUpdate=true;};})();
