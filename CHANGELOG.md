@@ -1,5 +1,10 @@
 # Changelog
 
+## v6.12.0 (2026-10-23): Cool, Fast and Free
+Release of v6.12.0-t1 to t7 (below) and the v6.11.3 repo cleanup, merged from test/v6.12-perf. iPhone autotest: 60 FPS and
+0 frames over 33 ms in every phase at the default zoom, the whole-site zoom and the free camera. Regression suite: the
+default tier 20/20 checks (786 assertions); the two slow checks (autotest, music) last passed on t6.
+
 ## v6.12.0-t7 (2026-10-23): the whole-site picture is off by default (test build, test/v6.12-perf)
 - iPhone results at the whole-site zoom: with the picture 4 frames over 33 ms (worst 38 ms) and 10.7 ms of GPU a frame;
   without it 0 frames over 33 ms (worst 31 ms) and 9.6 ms. The picture cut triangles (83k to 27k) but not GPU time, and

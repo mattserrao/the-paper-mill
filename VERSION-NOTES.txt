@@ -132,3 +132,4 @@ One line per version, oldest first. Add a line here with every release: build.py
 6.12.0-t5  Smooth on the Phone (Test): the Sign Boards No Longer Re-Upload the Whole Atlas Every 0.8 s
 6.12.0-t6  Cool, Fast and Free (Test): the World Draws at 30 While the View Is Still, the Whole Site as One Picture, a Free 3D Camera in Settings
 6.12.0-t7  Whole-Site Picture Off by Default (Test): Opt-In with ?imp
+6.12.0     Cool, Fast and Free: Smooth on the Phone (Sign Boards No Longer Re-Upload Every 0.8 s), the World Draws at 30 While the View Is Still, a Free 3D Camera in Settings, Record Board Updates Once a Day
