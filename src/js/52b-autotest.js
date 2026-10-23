@@ -39,7 +39,7 @@
   // one measured phase: switch something on, settle, record every frame through the existing profiler (G3.PF), switch it off
   async function phase(key,name,settleS,measureS,on,off,keepGaps){const PF=G3.PF;if(on)on();say(name+" (settling)");await wait(sec(settleS));noteLate(name+" (settling)");
     const p0=programs();PF.acc={};PF.frames=0;PF.calls=0;PF.tris=0;PF.gaps=[];PF.js=[];PF.lastNow=0;PF.on=true;
-    const end=performance.now()+sec(measureS);
+    const end=performance.now()+sec(measureS),wd0=G3.wdraws||0,t00=performance.now();
     // v4.0.2: what each slow frame (over 25 ms) was spent on: code sections, GPU uploads and shader compiles that frame
     {const t0=performance.now(),I=D().renderer.info;let last=0,prev={},pg=programs(),geo=I.memory.geometries,tex=I.memory.textures,nJs=0;
       // v6.12 t4: a ledger of what each frame did (deltas), kept for the last 4 frames so a slow frame shows what led up to it
@@ -64,6 +64,7 @@
       canvas:[gl.drawingBufferWidth,gl.drawingBufferHeight],pixel_ratio:d.renderer.getPixelRatio(),
       shadows:d.renderer.shadowMap.enabled?(G3.shadowHz||"every frame"):"off",programs:[p0,programs()],
       heap_mb:performance.memory?Math.round(performance.memory.usedJSHeapSize/1e6):null,
+      world_fps:r1(((G3.wdraws||0)-wd0)/Math.max(0.001,(performance.now()-t00)/1000)),imp:G3.impStats?G3.impStats():null,cam:G3.freeCam?"free":"iso",
       sections:Object.fromEntries(Object.entries(PF.acc).sort((a,b)=>b[1]-a[1]).map(([k,v])=>[k,+(v/Math.max(1,PF.frames)).toFixed(2)]))};
     if(keepGaps)o.gaps=gaps.map(r1);
     noteLate(name);if(off)off();R.phases[key]=o;return o;}
@@ -132,7 +133,8 @@
     let wl=null;try{if(navigator.wakeLock)wl=await navigator.wakeLock.request("screen");}catch(e){}
     // a season on a fixed seed, at the display's frame rate, with no tutorial, event cards or leaderboard; nothing saved
     FRAME_CAP=0;G3.cap=0;G3.noFallback=!Q.has("fallback");setSimSpeed(SPEED);
-    G3.autotest=true;startSeason();seedRun(SEED);S.cards.next=1e12;S.afk=true;G3.play();   // (v6.12: "Let the mill run" on: event, drive and civics cards answer themselves; on a phone they stopped the test)
+    G3.autotest=true;startSeason();seedRun(SEED);S.cards.next=1e12;S.afk=true;G3.play();
+    if(Q.get("view")==="site"&&G3.jump)G3.jump("site");   // (v6.12: &view=site measures the whole-site zoom, where the whole-site picture works)   // (v6.12: "Let the mill run" on: event, drive and civics cards answer themselves; on a phone they stopped the test)
     if(QUICK){await phase("normal","Normal play",4,8,null,null,true);R.display_hz_est=null;
       // v6.12 t4: bisection phases, 5 s each, for a hitch that shows in normal play: which switch makes it stop?
       const B=[["no_sim","Sim paused (render on)",()=>{G3.EXP.noSim=true;},()=>{G3.EXP.noSim=false;}],

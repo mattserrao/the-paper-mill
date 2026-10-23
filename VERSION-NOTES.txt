@@ -130,3 +130,4 @@ One line per version, oldest first. Add a line here with every release: build.py
 6.11.2-t6  QA Round (Test): Season Grade Counts the Money, Early Defect Pins Dimmed, DE Pulper High-Level Alarm and Overflow, Repair Bills 12.5% Lower, Hank Gets a Feel for the Sheet
 6.11.2     Sold by Area and Metered Power: Rolls Sold by the Square Foot, Drives Re-Rated with Electricity Billed from Their Load, Starch Removed, New Vehicles, Warehouse Annexes Roofed and Used, Known Defects View, DE Pulper on the DCS, Season Grade Counts the Money, Repairs 12.5% Lower, Hank Buffed
 6.12.0-t5  Smooth on the Phone (Test): the Sign Boards No Longer Re-Upload the Whole Atlas Every 0.8 s
+6.12.0-t6  Cool, Fast and Free (Test): the World Draws at 30 While the View Is Still, the Whole Site as One Picture, a Free 3D Camera in Settings

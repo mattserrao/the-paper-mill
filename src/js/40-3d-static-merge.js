@@ -112,7 +112,7 @@
       const I=g.index,n=I?I.count:P.count;
       for(let q=0;q<n;q+=3){let a=vo+(I?I.getX(q):q),bb=vo+(I?I.getX(q+1):q+1),cc=vo+(I?I.getX(q+2):q+2);if(flip){const t=bb;bb=cc;cc=t;}
         const ux=pos[bb*3]-pos[a*3],uy=pos[bb*3+1]-pos[a*3+1],uz=pos[bb*3+2]-pos[a*3+2],wx=pos[cc*3]-pos[a*3],wy=pos[cc*3+1]-pos[a*3+1],wz=pos[cc*3+2]-pos[a*3+2];
-        if(b.mat.side===THREE.FrontSide&&(uy*wz-uz*wy)*VDIR.x+(uz*wx-ux*wz)*VDIR.y+(ux*wy-uy*wx)*VDIR.z<=1e-7)continue;idx[io++]=a;idx[io++]=bb;idx[io++]=cc;}
+        if(b.mat.side===THREE.FrontSide&&!G3.freeCam&&(uy*wz-uz*wy)*VDIR.x+(uz*wx-ux*wz)*VDIR.y+(ux*wy-uy*wx)*VDIR.z<=1e-7)continue;idx[io++]=a;idx[io++]=bb;idx[io++]=cc;}
       (r.lv||(r.lv=[]))[k]=[vo,P.count];vo+=P.count;}
     const geo=new THREE.BufferGeometry();geo.setAttribute("position",new THREE.BufferAttribute(pos,3));geo.setAttribute("normal",new THREE.BufferAttribute(nor,3));geo.setAttribute("color",new THREE.BufferAttribute(col,3));
     geo.setIndex(new THREE.BufferAttribute(idx.slice(0,io),1));geo.computeBoundingSphere();
@@ -304,7 +304,7 @@
   // v4.2.5: batching failures go to Diagnostics (the first 5, then a count), not only the console or nowhere
   const smErr=(what,e)=>{SM.errs=(SM.errs||0)+1;if(SM.errs<=5)diag(`batching: ${what} failed: ${String(e&&e.message||e).slice(0,120)}`);else if(SM.errs===6)diag("batching: more failures, not logged");};
   function smTick(now){if(SM.off)return;
-    if(!SM.t0){SM.t0=now;try{scene.updateMatrixWorld(true);try{if(G3.paperize)G3.paperize();}catch(e){console.error("paperize failed",e);}try{if(G3.atlasSigns)G3.atlasSigns();}catch(e){console.error("sign atlas failed",e);}try{if(G3.splitMulti)G3.splitMulti();scene.updateMatrixWorld(true);}catch(e){console.error("split failed",e);}try{if(G3.dropBuild)G3.dropBuild();}catch(e){console.error("drop shadows failed",e);}smSnapshot();try{if(G3.stripBack&&!BQ.has("nostrip"))G3.stripBack(SM.list);}catch(e){console.error("strip failed",e);}smMerge();}
+    if(!SM.t0){SM.t0=now;try{scene.updateMatrixWorld(true);try{if(G3.paperize)G3.paperize();}catch(e){console.error("paperize failed",e);}try{if(G3.atlasSigns)G3.atlasSigns();}catch(e){console.error("sign atlas failed",e);}try{if(G3.splitMulti)G3.splitMulti();scene.updateMatrixWorld(true);}catch(e){console.error("split failed",e);}try{if(G3.dropBuild)G3.dropBuild();}catch(e){console.error("drop shadows failed",e);}smSnapshot();try{if(G3.stripBack&&!BQ.has("nostrip")&&!G3.freeCam)G3.stripBack(SM.list);}catch(e){console.error("strip failed",e);}smMerge();}
       catch(e){console.error("scenery batching failed",e);smErr("scenery batching (batching off)",e);SM.off=true;SM.done=true;SM.list.forEach(r=>{r.o.layers.set(0);if(r.bm)r.bm.visible=false;});}return;}
     if(SM.queue&&SM.queue.length){try{smStep();}catch(e){console.error("scenery baking failed",e);smErr("scenery baking",e);SM.queue=[];SM.done=true;}return;}
     if(now>SM.checkT){SM.checkT=now+(now-SM.t0<10000?0:500);try{smWatch();}catch(e){smErr("watch for moved objects",e);}}}

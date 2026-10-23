@@ -160,8 +160,10 @@
         const cones=new THREE.Mesh(cg,cm);cones.renderOrder=3;cones.visible=false;cones.userData.smBatch=true;cones.userData.noNav=true;cones.name="lamp cones";scene.add(cones);G3.nightCones=cones;}
       // the cones: one camera-facing paper trapezoid per lamp (the camera never turns), all in one mesh
       else if(PAPN){camera.updateMatrixWorld();const e=camera.matrixWorld.elements,rx=e[0],rz=e[2],pos=[],uv=[];
-        G3.nightL.forEach(l=>{const tw=0.5,bw=l.D*0.42,y0=l.y,y1=l.fy+0.05;const P=[[l.x-rx*tw,y0,l.z-rz*tw],[l.x+rx*tw,y0,l.z+rz*tw],[l.x+rx*bw,y1,l.z+rz*bw],[l.x-rx*bw,y1,l.z-rz*bw]];
-          [0,1,2,0,2,3].forEach(i=>{pos.push(...P[i]);uv.push([0,1,1,0][i],[1,1,0,0][i]);});});
+        G3.nightL.forEach(l=>{const tw=0.5,bw=l.D*0.42,y0=l.y,y1=l.fy+0.05;
+          for(const [ax,az] of (G3.freeCam?[[Math.SQRT1_2,Math.SQRT1_2],[Math.SQRT1_2,-Math.SQRT1_2]]:[[rx,rz]])){   // (v6.12 free camera: two crossed cones)
+            const P=[[l.x-ax*tw,y0,l.z-az*tw],[l.x+ax*tw,y0,l.z+az*tw],[l.x+ax*bw,y1,l.z+az*bw],[l.x-ax*bw,y1,l.z-az*bw]];
+            [0,1,2,0,2,3].forEach(i=>{pos.push(...P[i]);uv.push([0,1,1,0][i],[1,1,0,0][i]);});}});
         const cg=new THREE.BufferGeometry();cg.setAttribute("position",new THREE.Float32BufferAttribute(pos,3));cg.setAttribute("uv",new THREE.Float32BufferAttribute(uv,2));cg.computeBoundingSphere();
         const ct=spriteTex((x,w,h)=>{x.clearRect(0,0,w,h);x.fillStyle="rgba(255,214,110,0.6)";x.fillRect(0,0,w,h);x.fillStyle="rgba(255,236,170,0.4)";x.fillRect(w*0.3,0,w*0.4,h);
           x.fillStyle="rgba(214,170,80,0.7)";x.fillRect(0,0,w*0.04,h);x.fillRect(w*0.96,0,w*0.04,h);},64,64);

@@ -1,5 +1,33 @@
 # Changelog
 
+## v6.12.0-t6 (2026-10-22): idle rendering, the whole-site picture and the free camera (test build, test/v6.12-perf)
+The three items of `claude/v612-plan.md`, built together.
+- **The world draws at 30 while the view is still (Smooth):** a pan, zoom, glide, drag, tap or key draws every frame, and
+  for 300 ms after; with the camera still the 3D world is updated and drawn every other frame. The cut-outs already step at
+  12-15 a second, so it looks the same and the GPU does about half the work: the cooler-phone fix. Behind an open overlay
+  (a DCS screen, the process flow, a card) it draws at 15; paused and idle it already drew once a second. The sim, the panels
+  and the FPS readout keep the display's rate (the readout shows the display rate). Battery saver and Max are as before.
+  The Stop-motion option is gone (this replaces it). `?adapt=0` turns it off; the autotest reports `world_fps` per phase.
+- **The whole-site picture (40d):** at the widest zoom step of the fixed view the static world (scenery and baked batches,
+  scenery sectors, terrain) is drawn once into 1024-pixel tiles (the screen's own colours plus depth) and the screen gets the
+  tiles as flat quads that write their depth; everything live (people, trucks, cards, bales, effects, the sheet, the drop
+  shadows, the signs, night lights, the time-of-day grade) draws over them as before and hides behind baked buildings. The
+  whole pannable world is kept as tiles: the ones on screen at once, the rest one a frame once the picture is steady (phones
+  keep the nearest 8, ~64 MB). The camera is put on whole pixels of the tile grid so tiles land pixel for pixel. A new
+  picture when anything static changes (lights, rounded so dawn and dusk step about once a second even at speed 120; a
+  season or brand colour; a part handed back; a roof; the view size); more than 3 in a second (lightning, a fire's flicker)
+  draws as before for 3 s. Blinking lights stay live: a light that changed colour in the last 3 s is drawn on its own over
+  the picture. Off away from 1x, in the free camera and in zen; `?noimp` turns it off. Diagnostics: `G3.impStats()`;
+  the autotest's `&view=site` measures the whole-site zoom and reports `imp` per phase.
+- **Free camera (Settings > Graphics > Camera: Fixed (iso) / Free 3D, reload to switch, phones too):** one finger or the left
+  button turns and tilts, two fingers or the right button (or shift) move, pinch or the wheel zoom smoothly, Q/E turn and
+  R/F tilt; jumps keep the angle; the view reset and every new load start at the iso angle. Zoom keeps its iso meaning (the
+  perspective camera stands where it frames the same), so labels, detail steps and truck specks switch as before. Built for
+  it at load: shapes keep their back faces (no back-face strip in the merge, the zoom-detail twins or the scenery), card trees
+  and lamp cones are two crossed cards with both faces, and the paper cut-outs are billboards: pictures are always taken
+  from the iso angle with the model turned by the camera's own turn, so cached pictures stay right from any side (zen's
+  free camera gets this too). Phones draw at pixel ratio 1.5 at most in this mode. `?freecam` / `?freecam=0` override it.
+
 ## v6.12.0-t5 (2026-10-22): the iPhone hitch (test build, test/v6.12-perf)
 main v6.11.2 plus the fix below: main v6.11.2 under a test version number, so a phone's `?autotest` results name the build. The device
 numbers it gathers are the baseline for the v6.12 performance work (`claude/perf-review-v6113.md` in the Project).

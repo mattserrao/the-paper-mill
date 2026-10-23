@@ -1689,7 +1689,7 @@ body.pmpop .popmain[data-v="dcs"] #dcsOv .dcs{max-width:1180px;margin:0 auto}
 <div class="btns"><button class="primary" id="no3d-retry">Try again</button></div></div></div>
 
 <script type="module">
-const APP_VER="v6.12.0-t5";   // shown in the menu and sent with leaderboard scores (max 12 characters)
+const APP_VER="v6.12.0-t6";   // shown in the menu and sent with leaderboard scores (max 12 characters)
 // TEST BUILDS ONLY (off in releases): turbo speeds 240/480/960 sim min/s for fast playtests. Above 120, crews and maintenance start jobs
 // without waiting for the 3D walk (as with the 3D view off) and outages keep the speed. Set false for a release.
 const TURBO=false,TURBO_FAST=s=>TURBO&&s>120;
@@ -6876,7 +6876,12 @@ function no3D(){G3.ok=false;$("no3d").hidden=false;$("no3d-retry").onclick=()=>l
   const GFX=G3.GFX={...GFX_TIERS[gfxPick==="auto"?gfxAuto:gfxPick],tier:gfxPick==="auto"?gfxAuto:gfxPick,pick:gfxPick,auto:gfxAuto,gpu:String(gpuName).slice(0,60)};
   GFX.loaded=GFX.tier;if(gfxPick==="auto"&&!mobile&&!discrete){GFX.px=1.9e6;GFX.shadow=1024;}
   // the pixel ratio for a canvas of w x h CSS px: the tier's ratio, the screen's, and the pixel budget, whichever is lowest
-  G3.prFor=(w,h)=>G3.prFixed||Math.max(0.75,Math.min(GFX.pr,window.devicePixelRatio||1,Math.sqrt(GFX.px/Math.max(1,w*h))));
+  /* v6.12 free camera: Settings > Graphics > Camera (Fixed iso / Free 3D), remembered, read here before anything is built:
+     with it the static shapes keep their back faces, card trees are crossed, lamp cones too, and the cut-outs face the
+     camera from any side (36, 40, 40c, 42b, 42f); the whole-site picture (40d) is off. ?freecam / ?freecam=0 override it. */
+  G3.freeCam=(()=>{const m=/[?&]freecam(=([01]))?(&|$)/.exec(location.search);if(m)return m[2]!=="0";try{return localStorage.getItem("paper-mill-freecam")==="on";}catch(e){return false;}})();
+  G3.setFreeCam=on=>{try{localStorage.setItem("paper-mill-freecam",on?"on":"off");}catch(e){}};
+  G3.prFor=(w,h)=>G3.prFixed||Math.max(0.75,Math.min(GFX.pr,G3.freeCam&&mobile?1.5:9,window.devicePixelRatio||1,Math.sqrt(GFX.px/Math.max(1,w*h))));   // (v6.12: phones in the free camera at 1.5 at most: it draws about twice the shapes)
   {const gl=renderer.getContext();G3.multiDraw=!!gl.getExtension("WEBGL_multi_draw");
     diag(`multi-draw: ${G3.multiDraw?"yes (a batch is one draw)":"NO (three.js draws each batched object separately)"} · antialias ${gl.getContextAttributes().antialias?"on":"off"} · GPU preference ${G3.gpuPref}`);}
   diag(`graphics: ${GFX.tier}${gfxPick==="auto"?" (auto)":""} on ${GFX.gpu||"unknown GPU"}`);
@@ -8940,10 +8945,17 @@ function no3D(){G3.ok=false;$("no3d").hidden=false;$("no3d-retry").onclick=()=>l
   const rStep=r=>{let b=R_STEPS[0];for(const v of R_STEPS)if(Math.abs(Math.log(v/r))<Math.abs(Math.log(b/r)))b=v;return b;};
   const rNext=(r,dir)=>{const i=R_STEPS.indexOf(rStep(r));return R_STEPS[clamp(i+dir,0,R_STEPS.length-1)];};
   const DEF={th:ISO_TH,ph:ISO_PH,r:R_MAX/3};const cam={...DEF};let rShown=DEF.r;
+  /* v6.12 free camera (Settings > Graphics > Camera: Free 3D, G3.freeCam, read at load in 20): the perspective camera turns
+     and tilts anywhere. cam.r keeps its meaning ("how far out"): the perspective camera stands FREE_K x cam.r from the target,
+     which frames the same as the iso view at that zoom (18 degree iso field, 40 degree perspective field). It always starts at
+     the iso angle; the view reset goes back to it. Zen keeps its own free camera (G3.zenFree), measured in plain metres. */
+  const FREE_K=Math.tan(9*Math.PI/180)/Math.tan(20*Math.PI/180),FREE_RMIN=14,PH_MIN=0.22,PH_MAX=1.38;
+  const zenFreeOn=()=>!!(G3.zenFree&&S&&S.zen),freeOn=()=>!!G3.freeCam||zenFreeOn();
+  const rWant=()=>goal||freeOn()?cam.r:rStep(cam.r);
   const DEFT=target.clone();let goal=null;
   // v3.1.0 tutorial: glide the camera to a spot and mark it with a pulsing ring and a light beam
   // on phones the tutorial card covers the lower half: aim past the spot so it sits in the upper half of the screen
-  G3.camTo=(x,z,r,th,ph)=>{th=th??DEF.th;const k=host.clientWidth<600?r*0.13:0;goal={t:new THREE.Vector3(x+Math.sin(th)*k,0,z+Math.cos(th)*k),r,th,ph:ph??0.9};};
+  G3.camTo=(x,z,r,th,ph)=>{th=th??(G3.freeCam?cam.th:DEF.th);ph=ph??(G3.freeCam?cam.ph:0.9);const k=host.clientWidth<600?r*0.13:0;goal={t:new THREE.Vector3(x+Math.sin(th)*k,0,z+Math.cos(th)*k),r,th,ph:ph??0.9};};
   G3.camGlide=c=>{goal={t:new THREE.Vector3(c[0],c[5]||0,c[1]),r:c[2],th:c[3],ph:c[4]};};   // v5.2: glide to an exact view (the camera pull, 31b)
   G3.camHome=()=>{goal={t:DEFT.clone(),r:DEF.r,th:DEF.th,ph:DEF.ph};};
   G3.camSet=c=>{goal=null;target.set(c[0],c[5]||0,c[1]);cam.r=c[2];cam.th=c[3];cam.ph=c[4];};   // tests and screenshots
@@ -8957,10 +8969,14 @@ function no3D(){G3.ok=false;$("no3d").hidden=false;$("no3d-retry").onclick=()=>l
    G3.tutTick=now=>{if(!HI.on)return;ring.visible=beam.visible=true;const ph=(now/1400)%1;ring.position.set(HI.x,0.15,HI.z);ring.scale.setScalar(HI.r*(0.92+0.16*ph));hm.opacity=0.9-0.45*ph;
      beam.position.set(HI.x,9,HI.z);beam.scale.set(HI.r*0.9,18,HI.r*0.9);bm.opacity=0.10+0.06*Math.sin(now/300);};}
   // move the look-at point across the ground, in screen directions
-  function panBy(dx,dy){goal=null;folEnd();const rr=rShown*(host.clientWidth<600?1.35:1),wpp=2*rr*Math.tan(camera.fov*Math.PI/360)/Math.max(1,host.clientHeight),s=wpp;
-    const rx=Math.cos(cam.th),rz=-Math.sin(cam.th),fx=-Math.sin(cam.th)/Math.cos(ISO_PH),fz=-Math.cos(cam.th)/Math.cos(ISO_PH);   // (v6.1: screen up runs along the ground, foreshortened by the view angle)
+  function panBy(dx,dy){goal=null;folEnd();const rr=rShown*(host.clientWidth<600?1.35:1),wpp=2*rr*Math.tan(9*Math.PI/180)/Math.max(1,host.clientHeight),s=wpp;   // (v6.12: the iso field (18 degrees) in both modes: the free camera frames the same)
+    const ph=G3.freeCam?clamp(cam.ph,0.05,1.36):ISO_PH,rx=Math.cos(cam.th),rz=-Math.sin(cam.th),fx=-Math.sin(cam.th)/Math.cos(ph),fz=-Math.cos(cam.th)/Math.cos(ph);   // (v6.1: screen up runs along the ground, foreshortened by the view angle)
     // (v14: zoomed out the pan reaches the whole site, so the outer scenery can be looked over)
     const wk=clamp((cam.r-300)/300,0,1);target.x=clamp(target.x-(rx*dx-fx*dy)*s,-85-260*wk,70+260*wk);target.z=clamp(target.z-(rz*dx-fz*dy)*s,-40-200*wk,48+200*wk);}
+  // v6.12 free camera: turn and tilt about the target
+  function orbitBy(dx,dy){goal=null;folEnd();cam.th-=dx*0.0065;cam.ph=clamp(cam.ph-dy*0.0055,PH_MIN,PH_MAX);G3.lastMove=performance.now();}
+  G3.orbitBy=orbitBy;
+  G3.panBox=()=>{const wk=clamp((cam.r-300)/300,0,1);return [-85-260*wk,70+260*wk,-40-200*wk,48+200*wk];};   // (v6.12: where panBy lets the target go at this zoom, for the whole-site picture, 40d)
   // v3.3.4: follow Uncle Brian on the hall scrubber; drag still orbits, wheel/pinch zoom in close, any pan or camera jump ends it
   const FOL={on:false,r:30,n:0};
   const folEnd=()=>{if(!FOL.on)return;FOL.on=false;G3.onFollowEnd&&G3.onFollowEnd();};
@@ -8977,11 +8993,16 @@ function no3D(){G3.ok=false;$("no3d").hidden=false;$("no3d-retry").onclick=()=>l
   function placeCam(){if(FOL.on){const R=G3.scrubbers&&G3.scrubbers[0];if(goal||(S&&S.zen)||!R)folEnd();
       else{const g=R.g.position;target.x+=(g.x-target.x)*0.1;target.z+=(g.z-target.z)*0.1;cam.r+=(FOL.r-cam.r)*0.08;if(FOL.n++<90)cam.ph+=(0.62-cam.ph)*0.06;G3.lastMove=performance.now();}}
     if(goal){G3.lastMove=performance.now();target.lerp(goal.t,0.12);cam.r+=(goal.r-cam.r)*0.12;cam.th=lerpAng(cam.th,goal.th,0.12);cam.ph+=(goal.ph-cam.ph)*0.12;
-      goal.n=(goal.n||0)+1;if(goal.n>150||target.distanceTo(goal.t)<0.2&&Math.abs(goal.r-cam.r)<0.5){goal=null;if(!(G3.zenFree&&S&&S.zen))cam.r=rStep(cam.r);}}
+      goal.n=(goal.n||0)+1;if(goal.n>150||target.distanceTo(goal.t)<0.2&&Math.abs(goal.r-cam.r)<0.5){goal=null;if(!freeOn())cam.r=rStep(cam.r);}}
     // v6.2 test: zen with the free camera: the shot's angles and distance as they are, through the perspective camera
-    const free=!!(G3.zenFree&&S&&S.zen);if(free!==(camera===camPersp))camSwap(free);
-    if(free){cam.r=clamp(cam.r,4,900);rShown=cam.r;G3.camR=cam.r;G3.camDist=cam.r;const sp=Math.sin(cam.ph);
-      camPersp.position.set(target.x+cam.r*sp*Math.sin(cam.th),target.y+cam.r*Math.cos(cam.ph),target.z+cam.r*sp*Math.cos(cam.th));
+    const zf=zenFreeOn(),free=zf||!!G3.freeCam;if(free!==(camera===camPersp))camSwap(free);
+    if(free){let dist;
+      if(zf){cam.r=clamp(cam.r,4,900);rShown=cam.r;G3.camR=cam.r;dist=cam.r;}
+      else{cam.r=clamp(cam.r,FREE_RMIN,R_MAX);if(!goal)cam.ph=clamp(cam.ph,PH_MIN,PH_MAX);   // (v6.12 free camera: zoom eases like the iso view's, without the whole-number steps)
+        {const k=Math.abs(Math.log(cam.r/rShown));rShown=k<0.004?cam.r:Math.exp(Math.log(rShown)+(Math.log(cam.r)-Math.log(rShown))*0.35);}
+        G3.camR=rShown;dist=rShown*FREE_K*((G3.vw||host.clientWidth)<600?1.35:1);}
+      G3.camDist=dist;const sp=Math.sin(cam.ph);
+      camPersp.position.set(target.x+dist*sp*Math.sin(cam.th),target.y+dist*Math.cos(cam.ph),target.z+dist*sp*Math.cos(cam.th));
       if(camPersp.position.y<0.4)camPersp.position.y=0.4;camPersp.lookAt(target);return;}
     // v6.1 iso: angles pinned; the shown zoom eases to the nearest whole-number step of whatever cam.r asks for
     cam.th=ISO_TH;cam.ph=ISO_PH;cam.r=clamp(cam.r,R_STEPS[R_STEPS.length-1]*0.8,R_MAX);
@@ -8992,12 +9013,12 @@ function no3D(){G3.ok=false;$("no3d").hidden=false;$("no3d-retry").onclick=()=>l
   const ptrs=new Map();let pinch0=0,r0=0,mid0=null;
   const mid=()=>{const [a,b]=[...ptrs.values()];return {x:(a.x+b.x)/2,y:(a.y+b.y)/2,d:Math.hypot(a.x-b.x,a.y-b.y)};};
   glc.addEventListener("contextmenu",e=>e.preventDefault());
-  glc.addEventListener("pointerdown",e=>{glc.setPointerCapture(e.pointerId);ptrs.set(e.pointerId,{x:e.clientX,y:e.clientY});goal=null;
+  glc.addEventListener("pointerdown",e=>{glc.setPointerCapture(e.pointerId);ptrs.set(e.pointerId,{x:e.clientX,y:e.clientY,b:e.button});goal=null;
     if(ptrs.size===2){const m=mid();pinch0=m.d;r0=FOL.on?FOL.r:cam.r;mid0=m;}});
   glc.addEventListener("pointermove",e=>{const p=ptrs.get(e.pointerId);if(!p)return;const dx=e.clientX-p.x,dy=e.clientY-p.y;
-    if(ptrs.size===1)panBy(dx,dy);   // (v6.1 iso: the camera never turns, so any drag pans)
+    if(ptrs.size===1){if(G3.freeCam&&!(p.b===1||p.b===2||e.shiftKey))orbitBy(dx,dy);else panBy(dx,dy);}   // (v6.1 iso: the camera never turns, so any drag pans; v6.12 free camera: one finger or the left button turns, right/middle button or shift moves)
     p.x=e.clientX;p.y=e.clientY;
-    if(ptrs.size===2){const m=mid();if(pinch0>0){if(FOL.on)FOL.r=clamp(r0*pinch0/m.d,10,120);else cam.r=rStep(clamp(r0*pinch0/m.d,50,760));}if(mid0&&!FOL.on)panBy(m.x-mid0.x,m.y-mid0.y);mid0=m;}});
+    if(ptrs.size===2){const m=mid();if(pinch0>0){if(FOL.on)FOL.r=clamp(r0*pinch0/m.d,10,120);else cam.r=G3.freeCam?clamp(r0*pinch0/m.d,FREE_RMIN,R_MAX):rStep(clamp(r0*pinch0/m.d,50,760));}if(mid0&&!FOL.on)panBy(m.x-mid0.x,m.y-mid0.y);mid0=m;}});
   const up=e=>{ptrs.delete(e.pointerId);pinch0=0;mid0=null;};glc.addEventListener("pointerup",up);glc.addEventListener("pointercancel",up);
   // easter egg: click the spider valve on the disk thickener
   {const rc=new THREE.Raycaster(),nd=new THREE.Vector2();if(rc.layers)rc.layers.enableAll();let downAt=null,hoverT=0;
@@ -9007,11 +9028,12 @@ function no3D(){G3.ok=false;$("no3d").hidden=false;$("no3d-retry").onclick=()=>l
     glc.addEventListener("pointerdown",e=>{downAt=[e.clientX,e.clientY,performance.now()];});
     glc.addEventListener("pointerup",e=>{if(!downAt)return;const m=Math.hypot(e.clientX-downAt[0],e.clientY-downAt[1]),t=performance.now()-downAt[2];downAt=null;if(m<6&&t<500){if(G3.tellTap&&G3.tellTap(e))return;   /* v5.7: a tell on a Round comes first */const li=G3.lblAt(e);if(li){if(G3.lblTap&&G3.lblTap(li))return;G3.flyTo(li);return;}const h=hit(e);if(h&&h.k)G3.knobTap(h);else if(h==="spider")openSpider();else if(h==="slice")openSlice();else if(h==="brian")openBrian();else if(G3.infoTap)G3.infoTap(e);}});   // (v6.10: click for info, 38d)
     glc.addEventListener("pointermove",e=>{const n=performance.now();if(n-hoverT<120||ptrs.size)return;hoverT=n;glc.style.cursor=G3.lblAt(e)||hit(e)?"pointer":"";});}
-  let wAcc=0;glc.addEventListener("wheel",e=>{e.preventDefault();goal=null;if(e.shiftKey||Math.abs(e.deltaX)>Math.abs(e.deltaY)&&!e.ctrlKey)panBy(-e.deltaX||-e.deltaY,0);else if(FOL.on)FOL.r=clamp(FOL.r*Math.exp(e.deltaY*(e.ctrlKey?0.01:0.001)),10,120);else{wAcc+=e.deltaY*(e.ctrlKey?10:1);if(Math.abs(wAcc)>=60){cam.r=rNext(cam.r,wAcc>0?-1:1);wAcc=0;}}},{passive:false});   // (v6.1: one zoom step per wheel notch)
+  let wAcc=0;glc.addEventListener("wheel",e=>{e.preventDefault();goal=null;if(e.shiftKey||Math.abs(e.deltaX)>Math.abs(e.deltaY)&&!e.ctrlKey)panBy(-e.deltaX||-e.deltaY,0);else if(FOL.on)FOL.r=clamp(FOL.r*Math.exp(e.deltaY*(e.ctrlKey?0.01:0.001)),10,120);else if(G3.freeCam)cam.r=clamp(cam.r*Math.exp(e.deltaY*(e.ctrlKey?0.01:0.0012)),FREE_RMIN,R_MAX);else{wAcc+=e.deltaY*(e.ctrlKey?10:1);if(Math.abs(wAcc)>=60){cam.r=rNext(cam.r,wAcc>0?-1:1);wAcc=0;}}},{passive:false});   // (v6.1: one zoom step per wheel notch)
   // keyboard: arrows/WASD move, +/- zoom
   glc.addEventListener("keydown",e=>{const k=e.key.toLowerCase(),st=24;let used=true;
     if(k==="arrowleft"||k==="a")panBy(st,0);else if(k==="arrowright"||k==="d")panBy(-st,0);else if(k==="arrowup"||k==="w")panBy(0,st);else if(k==="arrowdown"||k==="s")panBy(0,-st);
-    else if(k==="+"||k==="=")cam.r=rNext(cam.r,1);else if(k==="-")cam.r=rNext(cam.r,-1);else used=false;   // (v6.1: no turning; zoom by whole steps)
+    else if(k==="+"||k==="=")cam.r=G3.freeCam?clamp(cam.r/1.25,FREE_RMIN,R_MAX):rNext(cam.r,1);else if(k==="-")cam.r=G3.freeCam?clamp(cam.r*1.25,FREE_RMIN,R_MAX):rNext(cam.r,-1);
+    else if(G3.freeCam&&(k==="q"||k==="e"))orbitBy(k==="q"?-40:40,0);else if(G3.freeCam&&(k==="r"||k==="f"))orbitBy(0,k==="r"?-30:30);else used=false;   // (v6.1: no turning; zoom by whole steps)
     if(used){e.preventDefault();goal=null;}});
   // on-screen pad: press and hold to move
   let padDir=null;
@@ -9019,7 +9041,7 @@ function no3D(){G3.ok=false;$("no3d").hidden=false;$("no3d-retry").onclick=()=>l
     b.addEventListener("pointerdown",e=>{e.preventDefault();b.setPointerCapture(e.pointerId);padDir=[px,py];});
     ["pointerup","pointercancel","pointerleave"].forEach(t=>b.addEventListener(t,()=>padDir=null));});
   // v6.1 t2: is the camera moving (or about to)? The stop-motion world (52) draws every frame only then
-  G3.camBusy=()=>!!goal||FOL.on||ptrs.size>0||!!padDir||Math.abs(rShown-(goal?cam.r:rStep(cam.r)))>0.01||performance.now()-(G3.lastMove||0)<300||!!G3.cineHold;   // (v6.1 t3: zen is stop-motion too)
+  G3.camBusy=()=>!!goal||FOL.on||ptrs.size>0||!!padDir||Math.abs(rShown-rWant())>0.01||performance.now()-(G3.lastMove||0)<300||!!G3.cineHold;   // (v6.1 t3: zen is stop-motion too)
   G3.padTick=rdt=>{if(padDir)panBy(-padDir[0]*500*rdt,-padDir[1]*500*rdt);};
   const JUMPS={site:[0,30,700,0.62],trucks:[-62,2,118],recv:[-21,-13,100],pulp:[24,-15,100],pm:[22,9,130],wd:[-17,7,72],wh:[-37,24,105],shop:[57,-21,48],mcc:[11,27,52]};   // (v6.10: mcc)
   // section labels: Auto fades them out after a few idle seconds, On keeps them, Off hides them
@@ -9035,7 +9057,7 @@ function no3D(){G3.ok=false;$("no3d").hidden=false;$("no3d-retry").onclick=()=>l
   $("pad").addEventListener("pointerdown",poke);
   G3.labelIdle=now=>{if(!G3.lblStarted){G3.lblStarted=1;G3.lastMove=now+2500;}labelHost.classList.toggle("lbl-idle",lblMode==="auto"&&now-G3.lastMove>3500);};
   setLbl(lblMode);
-  G3.jump=(j,zoom=1)=>{const v=JUMPS[j];if(!v)return;const [x,z,r,ph]=v;folEnd();goal={t:new THREE.Vector3(x,0,z),r:r*zoom,th:DEF.th,ph:ph||0.88};};   // (v5.0.6: also the outage notice's Watch the crews)
+  G3.jump=(j,zoom=1)=>{const v=JUMPS[j];if(!v)return;const [x,z,r,ph]=v;folEnd();goal={t:new THREE.Vector3(x,0,z),r:r*zoom,th:G3.freeCam?cam.th:DEF.th,ph:G3.freeCam?cam.ph:(ph||0.88)};};   // (v5.0.6: also the outage notice's Watch the crews)
   document.querySelectorAll("#jumps button").forEach(b=>b.addEventListener("click",()=>G3.jump(b.dataset.j)));
   $("viewReset").addEventListener("click",()=>{goal={t:DEFT.clone(),r:DEF.r,th:DEF.th,ph:DEF.ph};});
   // v4.2.4: the Shadows switch fades the sun's shadow to nothing and stops refreshing the shadow map. It never turns the
@@ -11083,8 +11105,10 @@ function no3D(){G3.ok=false;$("no3d").hidden=false;$("no3d-retry").onclick=()=>l
         const cones=new THREE.Mesh(cg,cm);cones.renderOrder=3;cones.visible=false;cones.userData.smBatch=true;cones.userData.noNav=true;cones.name="lamp cones";scene.add(cones);G3.nightCones=cones;}
       // the cones: one camera-facing paper trapezoid per lamp (the camera never turns), all in one mesh
       else if(PAPN){camera.updateMatrixWorld();const e=camera.matrixWorld.elements,rx=e[0],rz=e[2],pos=[],uv=[];
-        G3.nightL.forEach(l=>{const tw=0.5,bw=l.D*0.42,y0=l.y,y1=l.fy+0.05;const P=[[l.x-rx*tw,y0,l.z-rz*tw],[l.x+rx*tw,y0,l.z+rz*tw],[l.x+rx*bw,y1,l.z+rz*bw],[l.x-rx*bw,y1,l.z-rz*bw]];
-          [0,1,2,0,2,3].forEach(i=>{pos.push(...P[i]);uv.push([0,1,1,0][i],[1,1,0,0][i]);});});
+        G3.nightL.forEach(l=>{const tw=0.5,bw=l.D*0.42,y0=l.y,y1=l.fy+0.05;
+          for(const [ax,az] of (G3.freeCam?[[Math.SQRT1_2,Math.SQRT1_2],[Math.SQRT1_2,-Math.SQRT1_2]]:[[rx,rz]])){   // (v6.12 free camera: two crossed cones)
+            const P=[[l.x-ax*tw,y0,l.z-az*tw],[l.x+ax*tw,y0,l.z+az*tw],[l.x+ax*bw,y1,l.z+az*bw],[l.x-ax*bw,y1,l.z-az*bw]];
+            [0,1,2,0,2,3].forEach(i=>{pos.push(...P[i]);uv.push([0,1,1,0][i],[1,1,0,0][i]);});}});
         const cg=new THREE.BufferGeometry();cg.setAttribute("position",new THREE.Float32BufferAttribute(pos,3));cg.setAttribute("uv",new THREE.Float32BufferAttribute(uv,2));cg.computeBoundingSphere();
         const ct=spriteTex((x,w,h)=>{x.clearRect(0,0,w,h);x.fillStyle="rgba(255,214,110,0.6)";x.fillRect(0,0,w,h);x.fillStyle="rgba(255,236,170,0.4)";x.fillRect(w*0.3,0,w*0.4,h);
           x.fillStyle="rgba(214,170,80,0.7)";x.fillRect(0,0,w*0.04,h);x.fillRect(w*0.96,0,w*0.04,h);},64,64);
@@ -12084,7 +12108,7 @@ function no3D(){G3.ok=false;$("no3d").hidden=false;$("no3d-retry").onclick=()=>l
       const I=g.index,n=I?I.count:P.count;
       for(let q=0;q<n;q+=3){let a=vo+(I?I.getX(q):q),bb=vo+(I?I.getX(q+1):q+1),cc=vo+(I?I.getX(q+2):q+2);if(flip){const t=bb;bb=cc;cc=t;}
         const ux=pos[bb*3]-pos[a*3],uy=pos[bb*3+1]-pos[a*3+1],uz=pos[bb*3+2]-pos[a*3+2],wx=pos[cc*3]-pos[a*3],wy=pos[cc*3+1]-pos[a*3+1],wz=pos[cc*3+2]-pos[a*3+2];
-        if(b.mat.side===THREE.FrontSide&&(uy*wz-uz*wy)*VDIR.x+(uz*wx-ux*wz)*VDIR.y+(ux*wy-uy*wx)*VDIR.z<=1e-7)continue;idx[io++]=a;idx[io++]=bb;idx[io++]=cc;}
+        if(b.mat.side===THREE.FrontSide&&!G3.freeCam&&(uy*wz-uz*wy)*VDIR.x+(uz*wx-ux*wz)*VDIR.y+(ux*wy-uy*wx)*VDIR.z<=1e-7)continue;idx[io++]=a;idx[io++]=bb;idx[io++]=cc;}
       (r.lv||(r.lv=[]))[k]=[vo,P.count];vo+=P.count;}
     const geo=new THREE.BufferGeometry();geo.setAttribute("position",new THREE.BufferAttribute(pos,3));geo.setAttribute("normal",new THREE.BufferAttribute(nor,3));geo.setAttribute("color",new THREE.BufferAttribute(col,3));
     geo.setIndex(new THREE.BufferAttribute(idx.slice(0,io),1));geo.computeBoundingSphere();
@@ -12276,7 +12300,7 @@ function no3D(){G3.ok=false;$("no3d").hidden=false;$("no3d-retry").onclick=()=>l
   // v4.2.5: batching failures go to Diagnostics (the first 5, then a count), not only the console or nowhere
   const smErr=(what,e)=>{SM.errs=(SM.errs||0)+1;if(SM.errs<=5)diag(`batching: ${what} failed: ${String(e&&e.message||e).slice(0,120)}`);else if(SM.errs===6)diag("batching: more failures, not logged");};
   function smTick(now){if(SM.off)return;
-    if(!SM.t0){SM.t0=now;try{scene.updateMatrixWorld(true);try{if(G3.paperize)G3.paperize();}catch(e){console.error("paperize failed",e);}try{if(G3.atlasSigns)G3.atlasSigns();}catch(e){console.error("sign atlas failed",e);}try{if(G3.splitMulti)G3.splitMulti();scene.updateMatrixWorld(true);}catch(e){console.error("split failed",e);}try{if(G3.dropBuild)G3.dropBuild();}catch(e){console.error("drop shadows failed",e);}smSnapshot();try{if(G3.stripBack&&!BQ.has("nostrip"))G3.stripBack(SM.list);}catch(e){console.error("strip failed",e);}smMerge();}
+    if(!SM.t0){SM.t0=now;try{scene.updateMatrixWorld(true);try{if(G3.paperize)G3.paperize();}catch(e){console.error("paperize failed",e);}try{if(G3.atlasSigns)G3.atlasSigns();}catch(e){console.error("sign atlas failed",e);}try{if(G3.splitMulti)G3.splitMulti();scene.updateMatrixWorld(true);}catch(e){console.error("split failed",e);}try{if(G3.dropBuild)G3.dropBuild();}catch(e){console.error("drop shadows failed",e);}smSnapshot();try{if(G3.stripBack&&!BQ.has("nostrip")&&!G3.freeCam)G3.stripBack(SM.list);}catch(e){console.error("strip failed",e);}smMerge();}
       catch(e){console.error("scenery batching failed",e);smErr("scenery batching (batching off)",e);SM.off=true;SM.done=true;SM.list.forEach(r=>{r.o.layers.set(0);if(r.bm)r.bm.visible=false;});}return;}
     if(SM.queue&&SM.queue.length){try{smStep();}catch(e){console.error("scenery baking failed",e);smErr("scenery baking",e);SM.queue=[];SM.done=true;}return;}
     if(now>SM.checkT){SM.checkT=now+(now-SM.t0<10000?0:500);try{smWatch();}catch(e){smErr("watch for moved objects",e);}}}
@@ -12782,6 +12806,140 @@ function no3D(){G3.ok=false;$("no3d").hidden=false;$("no3d-retry").onclick=()=>l
      diag(`paper palette: ${nm} materials flattened and snapped, ${nd} shading decals removed, ${nb} instanced sets baked, ${(performance.now()-t0).toFixed(0)} ms`);};
    // theme or brand changes reset the token colours: snap them again
    const rb=G3.rebrand;if(rb)G3.rebrand=()=>{rb();MATS.forEach(snap);};}
+  /* ---- v6.12 the whole-site picture ----
+     At the widest zoom step (1x) of the fixed iso view the static world (the scenery batches and baked batches, the scenery
+     sectors and the terrain: ~45 draws, ~55k triangles) does not change from one frame to the next, and the camera never
+     turns. So it is drawn once into pictures (tiles of 1024 x 1024: colour as the screen would show it, and depth) and each
+     frame the screen gets the tiles it needs as flat quads that also write their depth, with every live thing (people and
+     trucks, cards, bales, rolls, effects, the sheet, the drop shadows, the signs, the night lights, the time-of-day grade)
+     drawn over them as usual and hidden behind baked buildings by the baked depth.
+     - Tiles are kept as the player pans (the whole pannable world, filled in as it is seen and in the background once the
+       picture is steady; phones keep the nearest 8, about 64 MB). The camera is put on whole pixels of the picture's grid, so
+       the tiles land pixel for pixel (a shift of under half a pixel).
+     - A new picture (every tile again) when anything static changes: the lights (time of day, weather, a fire), a colour
+       (season palette, brand), a part handed back from its batch, a roof, the size of the view. Small light changes are
+       rounded first, so dawn and dusk take a step every second or so even at speed 120. More than 3 new pictures in a second
+       (lightning, a fire's flicker) switches it off for 3 s.
+     - Blinking lights stay live: a light whose colour changed in the last 3 s is drawn on its own over the picture.
+     - Off: away from 1x, the free camera, zen, ?noimp, or anything failing (falls back to drawing as before). */
+  {const BL=24,TS=1024,CAP=mobile?8:16,ON=!/[?&]noimp/.test(location.search);
+   const IMP=G3.IMP={active:false,gen:0,gens:0,bakes:0,tiles:new Map(),susp:0,hist:[],sig:"",prox:new Map(),objs:new Set(),fills:0,err:null};
+   const bakeCam=new THREE.OrthographicCamera(-1,1,1,-1,1,ISO_D*2.6);bakeCam.layers.set(BL);
+   const _r=new THREE.Vector3(),_u=new THREE.Vector3(),_f=new THREE.Vector3(),_b=new THREE.Vector3(),_d=new THREE.Vector3(),_sz=new THREE.Vector2();
+   // the picture's fixed origin: where the iso camera stands for a target at (0,0,0)
+   {const th=-Math.PI/4,ph=Math.acos(Math.sqrt(1/3));_b.set(ISO_D*Math.sin(ph)*Math.sin(th),ISO_D*Math.cos(ph),ISO_D*Math.sin(ph)*Math.cos(th));}
+   // --- the tile quads: drawn first, writing colour and the picture's depth (moved to this camera) ---
+   const QG=new THREE.BufferGeometry();QG.setAttribute("position",new THREE.Float32BufferAttribute([0,0,0,1,0,0,1,1,0,0,1,0],3));QG.setIndex([0,1,2,0,2,3]);
+   const VS="uniform vec4 uRect;uniform vec2 uScr;void main(){vec2 p=(uRect.xy+position.xy*uRect.zw)/uScr*2.0-1.0;gl_Position=vec4(p,0.0,1.0);}";
+   const FS="uniform sampler2D uCol;uniform sampler2D uDep;uniform vec2 uOrg;uniform float uDOff;void main(){ivec2 tc=clamp(ivec2(floor(gl_FragCoord.xy-uOrg)),ivec2(0),ivec2("+(TS-1)+"));"+
+     "float d=texelFetch(uDep,tc,0).r;gl_FragColor=texelFetch(uCol,tc,0);gl_FragDepth=d>=1.0?1.0:clamp(d+uDOff,0.0,1.0);}";
+   const grp=new THREE.Group();grp.name="whole-site picture";grp.userData.noNav=true;scene.add(grp);if(G3.SM&&G3.SM.dyn)G3.SM.dyn.add(grp);
+   const quads=[];
+   function quad(i){while(quads.length<=i){const m=new THREE.ShaderMaterial({vertexShader:VS,fragmentShader:FS,
+       uniforms:{uRect:{value:new THREE.Vector4()},uScr:{value:new THREE.Vector2(1,1)},uCol:{value:null},uDep:{value:null},uOrg:{value:new THREE.Vector2()},uDOff:{value:0}},
+       depthFunc:THREE.AlwaysDepth,depthWrite:true,depthTest:true,toneMapped:false,fog:false});
+     const q=new THREE.Mesh(QG,m);q.frustumCulled=false;q.renderOrder=-1e6;q.visible=false;q.userData.noNav=true;q.userData.smBatch=true;grp.add(q);quads.push(q);}return quads[i];}
+   // --- tiles: an 8-bit colour target holding the screen's own colours (tone-mapped, sRGB: rendered the way the screen is, see
+   //     below) plus a 24-bit depth texture ---
+   function newRT(){const dt=new THREE.DepthTexture(TS,TS);dt.type=THREE.UnsignedIntType;dt.minFilter=dt.magFilter=THREE.NearestFilter;
+     const aa=renderer.getContext().getContextAttributes().antialias;   // (the screen's own antialiasing, so baked edges match live ones)
+     const rt=new THREE.WebGLRenderTarget(TS,TS,{depthBuffer:true,depthTexture:dt,minFilter:THREE.NearestFilter,magFilter:THREE.NearestFilter,generateMipmaps:false,type:THREE.UnsignedByteType,samples:aa?4:0});
+     /* (three.js tone-maps and sRGB-encodes only for the screen, or for a target flagged as an XR one, which then encodes into
+        its texture's colour space. The target is made as plain RGBA8 first, then flagged: the shaders write exactly the
+        screen's bytes, with the same shader programs (nothing new to compile), and the bytes are stored as they are.) */
+     renderer.initRenderTarget(rt);rt.texture.colorSpace=THREE.SRGBColorSpace;rt.isXRRenderTarget=true;return rt;}
+   function dropTile(k){const t=IMP.tiles.get(k);if(!t)return;t.rt.depthTexture.dispose();t.rt.dispose();IMP.tiles.delete(k);}
+   function dropAll(){for(const k of [...IMP.tiles.keys()])dropTile(k);}
+   // --- what goes into the picture: static, opaque, untextured, on the plain layer ---
+   const okMat=m=>m&&!Array.isArray(m)&&!m.transparent&&!m.map&&m.opacity>=0.999&&m.visible!==false&&!m.isShaderMaterial;
+   const shownUp=o=>{for(let x=o;x;x=x.parent){if(!x.visible)return false;if(x===scene)return true;}return false;};
+   function staticList(){const L=[],SM=G3.SM;if(!SM||!SM.done||SM.off)return L;
+     const add=o=>{if(o&&(o.isMesh||o.isLine||o.isLineSegments||o.isBatchedMesh)&&(o.layers.mask===1||o.layers.mask===1<<BL)&&okMat(o.material)&&shownUp(o))L.push(o);};
+     for(const b of SM.bms){if(!b.userData.impW){const f=b.setVisibleAt;b.setVisibleAt=function(i,v){if(this.getVisibleAt(i)!==v)this.userData.impV=(this.userData.impV||0)+1;return f.call(this,i,v);};b.userData.impW=1;}add(b);}
+     for(const b of SM.batches.values()){add(b.mesh);if(b.lv)b.lv.forEach(add);}
+     if(G3.scenery&&G3.scenery.parts)G3.scenery.parts.forEach(add);add(G3.terrain);return L;}
+   // --- the signature: everything the picture depends on, rounded so that changes under what the screen can show don't count ---
+   const q3=v=>Math.round(v*400),qi=v=>Math.round(Math.log(Math.max(1e-4,v))/0.006),lights=[];let lightsN=-1,H1=0,H2=0;
+   const hv=v=>{v=v|0;H1=Math.imul(H1^v,0x9e3779b1)+0x7f4a7c15|0;H2=Math.imul(H2+v,0x85ebca6b)^(H2>>>13);};   // (two running hashes: no strings per frame)
+   const hc=c=>{hv(q3(c.r));hv(q3(c.g));hv(q3(c.b));};
+   function sigOf(L,W,H,ppu){H1=17;H2=31;hv(W);hv(H);hv(Math.round(camera.top*1e3));hv(Math.round(camera.right*1e3));hv(Math.round(ppu*1e4));hv(G3.impBrand||0);
+     const e=camera.quaternion;hv(Math.round(e.x*1e5));hv(Math.round(e.y*1e5));hv(Math.round(e.z*1e5));
+     if(lightsN!==scene.children.length){lightsN=scene.children.length;lights.length=0;scene.traverse(o=>{if(o.isLight){lights.push(o);o.layers.enable(BL);}});}
+     for(const l of lights){hv(l.visible&&l.intensity>1e-3?qi(l.intensity):-1);hc(l.color);if(l.groundColor)hc(l.groundColor);}
+     if(scene.fog){hc(scene.fog.color);hv(scene.fog.near|0);hv(scene.fog.far|0);hv(Math.round((scene.fog.density||0)*1e5));}
+     if(scene.background&&scene.background.isColor)hc(scene.background);
+     for(const o of L){const m=o.material,g=o.geometry,w=o.matrixWorld.elements;hv(o.id);if(m.color)hc(m.color);
+       if(m.emissive){hv(q3(m.emissive.r*m.emissiveIntensity));hv(q3(m.emissive.g*m.emissiveIntensity));hv(q3(m.emissive.b*m.emissiveIntensity));}
+       hv(Math.round(w[12]*100));hv(Math.round(w[13]*100));hv(Math.round(w[14]*100));
+       if(o.isBatchedMesh){hv(o.userData.impV||0);hv(o.instanceCount);}
+       else if(g){hv(g.id);hv(g.attributes.position?g.attributes.position.version:0);hv(g.index?g.index.version:0);hv(g.drawRange.count);
+         if(o.userData.scenery||o===G3.terrain)hv(g.attributes.color?g.attributes.color.version:0);}}   // (scenery and ground: the season's colours; a batch's own colour changes are blinking lights, drawn live)
+     return H1+":"+H2;}
+   // --- live lights: an object whose colour changed in the last 3 s is drawn on its own over the picture ---
+   function proxies(now,live){const SM=G3.SM,seen=new Set();let ended=false;
+     if(live&&SM&&SM.anim)for(const r of SM.anim){if(r.out||!r.o||!r.o.material||!r.o.material.color)continue;const h=r.o.material.color.getHex();
+       if(r._ih===undefined){r._ih=h;r._it=0;}if(h!==r._ih){r._ih=h;r._it=now;}if(now-r._it>3000)continue;
+       const inPic=r.bm?(()=>{try{return r.bm.getVisibleAt(r.iid);}catch(e){return false;}})():!!(r.lv&&r.lv[0]);if(!inPic)continue;
+       seen.add(r);let p=IMP.prox.get(r);
+       if(!p){const g=r.o.userData.fullGeo||r.o.geometry,m=r.o.material.clone();m.polygonOffset=true;m.polygonOffsetFactor=-1;m.polygonOffsetUnits=-4;
+         p=new THREE.Mesh(g,m);p.matrixAutoUpdate=false;p.matrixWorldAutoUpdate=false;p.frustumCulled=false;p.userData.noNav=true;p.userData.smBatch=true;p.matrixWorld.copy(r.mw||r.o.matrixWorld);grp.add(p);IMP.prox.set(r,p);}
+       p.material.color.copy(r.o.material.color);if(p.material.emissive&&r.o.material.emissive){p.material.emissive.copy(r.o.material.emissive);p.material.emissiveIntensity=r.o.material.emissiveIntensity;}p.visible=true;}
+     for(const [r,p] of IMP.prox)if(!seen.has(r)){grp.remove(p);p.material.dispose();IMP.prox.delete(r);if(live)ended=true;}
+     return ended;}   // (a light that settled on a new colour: the next picture takes it in)
+   // --- switching the static set between the screen and the picture ---
+   function setLayers(L){const now=new Set(L);
+     for(const o of IMP.objs)if(!now.has(o)){o.layers.mask=o.userData.impMask||1;delete o.userData.impMask;}
+     for(const o of now)if(o.layers.mask!==1<<BL){o.userData.impMask=o.layers.mask;o.layers.set(BL);}
+     IMP.objs=now;}
+   function off(){if(IMP.active){setLayers([]);quads.forEach(q=>q.visible=false);proxies(0,false);IMP.active=false;G3.cullCam=null;
+       if(G3.SM&&G3.SM.bms)G3.SM.bms.forEach(b=>{b.perObjectFrustumCulled=true;});}}   // (their last cull was for a tile: cull for the screen this frame too)   // (cullCam: the static batches cull again for the screen)
+   G3.impOff=()=>{off();IMP.err=IMP.err||"error";};
+   G3.impStats=()=>({on:ON&&!IMP.err,active:IMP.active,tiles:IMP.tiles.size,gens:IMP.gens,bakes:IMP.bakes,fills:IMP.fills,suspended:performance.now()<IMP.susp,proxies:IMP.prox.size,static:IMP.objs.size,err:IMP.err});
+   // a brand or theme change recolours everything: one new picture (36c rebrand hook)
+   {const rb=G3.rebrand;if(rb)G3.rebrand=(...a)=>{const r=rb(...a);G3.impBrand=(G3.impBrand||0)+1;return r;};}
+   // --- one tile: the static set alone, through an orthographic camera covering just that tile of the picture's grid ---
+   function bake(i,j,ppu,gen){const k=i+","+j;let t=IMP.tiles.get(k);
+     if(!t){if(IMP.tiles.size>=CAP){let lo=null;for(const [kk,tt] of IMP.tiles)if(!lo||tt.u<lo[1].u)lo=[kk,tt];if(lo)dropTile(lo[0]);}t={rt:newRT(),gen:-1,u:0};IMP.tiles.set(k,t);}
+     bakeCam.position.copy(_b);bakeCam.quaternion.copy(camera.quaternion);bakeCam.left=i*TS/ppu;bakeCam.right=(i+1)*TS/ppu;bakeCam.bottom=j*TS/ppu;bakeCam.top=(j+1)*TS/ppu;
+     bakeCam.near=camera.near;bakeCam.far=camera.far;bakeCam.updateProjectionMatrix();bakeCam.updateMatrixWorld();
+     const rt0=renderer.getRenderTarget(),ac=renderer.autoClear,cull=G3.SM.bms.map(b=>b.perObjectFrustumCulled);
+     G3.SM.bms.forEach(b=>{b.perObjectFrustumCulled=true;});   // (each batch culls to this tile; the screen culls again afterwards: cullCam)
+     const mwa=scene.matrixWorldAutoUpdate;scene.matrixWorldAutoUpdate=false;   // (static: no matrix pass per tile)
+     try{renderer.autoClear=true;renderer.setRenderTarget(t.rt);renderer.render(scene,bakeCam);}
+     finally{renderer.setRenderTarget(rt0);renderer.autoClear=ac;scene.matrixWorldAutoUpdate=mwa;G3.SM.bms.forEach((b,n)=>{b.perObjectFrustumCulled=cull[n];});G3.cullCam=null;}
+     t.gen=gen;IMP.bakes++;return t;}
+   // --- every frame, just before the screen render (43) ---
+   let still0=0,lastGenT=0;
+   G3.impFrame=()=>{const now=performance.now();
+     const want=ON&&!IMP.err&&!G3.impDisable&&!G3.freeCam&&camera===G3.camIso&&!(S&&S.zen)&&!G3.zen&&Math.abs((G3.camR||0)-R_MAX)<0.01&&!goal&&now>=IMP.susp&&G3.SM&&G3.SM.done&&!G3.SM.off;
+     if(!want){off();return;}
+     renderer.getDrawingBufferSize(_sz);const W=_sz.x,H=_sz.y;if(W<16||H<16){off();return;}
+     const L=staticList();if(L.length<3){off();return;}
+     setLayers(L);IMP.active=true;
+     // the picture's grid: pixels per metre on the screen; the camera onto whole pixels of the grid
+     camera.updateMatrixWorld();const e=camera.matrixWorld.elements;_r.set(e[0],e[1],e[2]).normalize();_u.set(e[4],e[5],e[6]).normalize();_f.set(-e[8],-e[9],-e[10]).normalize();
+     const ppu=H/(camera.top-camera.bottom);_d.subVectors(camera.position,_b);
+     const X0=(_d.dot(_r)+camera.left)*ppu,Y0=(_d.dot(_u)+camera.bottom)*ppu,fx=X0-Math.round(X0),fy=Y0-Math.round(Y0);
+     camera.position.addScaledVector(_r,-fx/ppu).addScaledVector(_u,-fy/ppu);camera.updateMatrixWorld();IMP.snap=[-fx/ppu,-fy/ppu];
+     const x0=Math.round(X0),y0=Math.round(Y0),dOff=_d.subVectors(_b,camera.position).dot(_f)/(camera.far-camera.near);
+     // a new picture when anything it depends on changed
+     const sig=sigOf(L,W,H,ppu);
+     if(sig!==IMP.sig){IMP.sig=sig;IMP.gen++;IMP.gens++;lastGenT=now;IMP.hist=IMP.hist.filter(t=>now-t<1000);IMP.hist.push(now);
+       if(IMP.hist.length>3){IMP.susp=now+3000;IMP.hist=[];IMP.sig="";off();return;}}   // (lightning, a fire's flicker: draw as before for a while)
+     if(proxies(now,true)){IMP.sig="";}   // (a light settled: take it into the next picture)
+     // the tiles on screen: made now if missing or old
+     const i0=Math.floor(x0/TS),i1=Math.floor((x0+W-1)/TS),j0=Math.floor(y0/TS),j1=Math.floor((y0+H-1)/TS);let n=0;
+     for(let i=i0;i<=i1;i++)for(let j=j0;j<=j1;j++){let t=IMP.tiles.get(i+","+j);if(!t||t.gen!==IMP.gen)t=bake(i,j,ppu,IMP.gen);t.u=now;
+       const q=quad(n++),U=q.material.uniforms,ox=i*TS-x0,oy=j*TS-y0;U.uRect.value.set(ox,oy,TS,TS);U.uScr.value.set(W,H);U.uOrg.value.set(ox,oy);U.uCol.value=t.rt.texture;U.uDep.value=t.rt.depthTexture;U.uDOff.value=dOff;q.visible=true;}
+     for(let k=n;k<quads.length;k++)quads[k].visible=false;
+     // the rest of the pannable world, one tile a frame, once the picture has been steady for 2 s and the camera is still
+     if(G3.camBusy&&G3.camBusy())still0=now;
+     if(now-lastGenT>2000&&now-still0>500&&IMP.tiles.size<CAP){const B=G3.panBox&&G3.panBox();let PR=null;
+       if(B){PR=[1e9,-1e9,1e9,-1e9];for(const x of [B[0],B[1]])for(const z of [B[2],B[3]]){const a=x*_r.x+z*_r.z,c=x*_u.x+z*_u.z;PR[0]=Math.min(PR[0],a);PR[1]=Math.max(PR[1],a);PR[2]=Math.min(PR[2],c);PR[3]=Math.max(PR[3],c);}}
+       if(PR){let best=null,bd=1e18;const ci=(i0+i1)/2,cj=(j0+j1)/2;
+         for(let i=Math.floor((PR[0]+camera.left)*ppu/TS)-0;i<=Math.floor((PR[1]+camera.right)*ppu/TS);i++)for(let j=Math.floor((PR[2]+camera.bottom)*ppu/TS);j<=Math.floor((PR[3]+camera.top)*ppu/TS);j++){
+           const t=IMP.tiles.get(i+","+j);if(t&&t.gen===IMP.gen)continue;const dd=(i-ci)*(i-ci)+(j-cj)*(j-cj);if(dd<bd){bd=dd;best=[i,j];}}
+         if(best){bake(best[0],best[1],ppu,IMP.gen).u=now-1;IMP.fills++;}}}};}
   /* ---- v3.0.0: planned outage jobs ----
      Every outage: maintenance technicians change the press felts (the felt-change animation, driven by the outage clock).
      Outage 1: 1st press roll change with a wet-end overhead crane (new rolls staged on cradles the day before).
@@ -13348,13 +13506,14 @@ function no3D(){G3.ok=false;$("no3d").hidden=false;$("no3d-retry").onclick=()=>l
     /* v6.1 t7: paper-card trees. The camera never turns, so a tree is a flat standee facing it: a crown polygon and a trunk
        strip, a few triangles in the same vertex-coloured scenery mesh (lighter at the top, darker at the base), instead of a
        3D crown and trunk. CR/CU are the camera's right and the card's up (world up); cards wind toward the camera. */
-    const CR=[Math.SQRT1_2,0,Math.SQRT1_2],_cc=new THREE.Color(),_cc2=new THREE.Color();
+    const CR=[Math.SQRT1_2,0,Math.SQRT1_2],CRF=[CR,[Math.SQRT1_2,0,-Math.SQRT1_2]],_cc=new THREE.Color(),_cc2=new THREE.Color();
     function card(x,y0,z,pts,hex,shade=0.3,fwd=0,hexLo){const S2=SEC[secOf(x,z)];const yb=y0+hAt(x,z);x-=Math.SQRT1_2*fwd;z+=Math.SQRT1_2*fwd;   /* (fwd: a crown sits a hair in front of its trunk) */_cc.set(G3.palQ(hex)).convertSRGBToLinear();_cc2.set(G3.palQ(hexLo||hex)).convertSRGBToLinear();
       let lo=1e9,hi=-1e9;for(const p of pts){lo=Math.min(lo,p[1]);hi=Math.max(hi,p[1]);}const span=Math.max(1e-6,hi-lo);
-      const P=(u,v)=>[x+CR[0]*u,yb+v,z+CR[2]*u];
-      for(let i=1;i<pts.length-1;i++)for(const p of [pts[0],pts[i],pts[i+1]]){const w=P(p[0],p[1]);S2.p.push(w[0],w[1],w[2]);const t=(p[1]-lo)/span,k=1-shade*(1-t);
-        S2.c.push((_cc2.r+(_cc.r-_cc2.r)*t)*k,(_cc2.g+(_cc.g-_cc2.g)*t)*k,(_cc2.b+(_cc.b-_cc2.b)*t)*k);}
-      S2.n+=pts.length-2;}
+      // (v6.12 free camera: two crossed cards, each with both faces, so a tree reads as a tree from any side)
+      for(const B of (G3.freeCam?CRF:[CR]))for(const back of (G3.freeCam?[false,true]:[false])){const P=(u,v)=>[x+B[0]*u,yb+v,z+B[2]*u];
+        for(let i=1;i<pts.length-1;i++)for(const p of (back?[pts[0],pts[i+1],pts[i]]:[pts[0],pts[i],pts[i+1]])){const w=P(p[0],p[1]);S2.p.push(w[0],w[1],w[2]);const t=(p[1]-lo)/span,k=1-shade*(1-t);
+          S2.c.push((_cc2.r+(_cc.r-_cc2.r)*t)*k,(_cc2.g+(_cc.g-_cc2.g)*t)*k,(_cc2.b+(_cc.b-_cc2.b)*t)*k);}
+        S2.n+=pts.length-2;}}
     const ring=(cx,cy,rx,ry,n,j)=>{const o=[];for(let i=0;i<n;i++){const a=Math.PI/2-i/n*Math.PI*2,k=1+(j?(RNG()-0.5)*j:0);o.push([cx+Math.cos(a)*rx*k,cy+Math.sin(a)*ry*k]);}return o.reverse();};
     function trunk(x,z,w,h,hex){card(x,0,z,[[-w/2,0],[w/2,0],[w/2,h],[-w/2,h]],hex,0.15);}
     function broadleaf(x,z,s,far,tight){if(!place(x,z,(tight?0.7:1.6)*s))return false;const c=RNG()<0.06?pick(AUT):pick(GREEN);
@@ -13864,7 +14023,7 @@ function no3D(){G3.ok=false;$("no3d").hidden=false;$("no3d-retry").onclick=()=>l
     let tris=0;const parts=[];
     // v6.1 t7: the fixed camera never sees a triangle facing away from it (the material is single-sided, so they were only
     // ever transformed and thrown away): keep the ones facing the camera
-    {const th=-Math.PI/4,ph=Math.acos(Math.sqrt(1/3)),vx=Math.sin(ph)*Math.sin(th),vy=Math.cos(ph),vz=Math.sin(ph)*Math.cos(th);let before=0,after=0;
+    if(!G3.freeCam){const th=-Math.PI/4,ph=Math.acos(Math.sqrt(1/3)),vx=Math.sin(ph)*Math.sin(th),vy=Math.cos(ph),vz=Math.sin(ph)*Math.cos(th);let before=0,after=0;   // (v6.12: not with the free camera)
      for(const k in SEC){const S2=SEC[k];if(!S2.n)continue;const P=S2.p,C=S2.c,np=[],nc=[];
        for(let t=0;t<P.length;t+=9){const ux=P[t+3]-P[t],uy=P[t+4]-P[t+1],uz=P[t+5]-P[t+2],wx=P[t+6]-P[t],wy=P[t+7]-P[t+1],wz=P[t+8]-P[t+2];
          if((uy*wz-uz*wy)*vx+(uz*wx-ux*wz)*vy+(ux*wy-uy*wx)*vz<=1e-7)continue;for(let q=0;q<9;q++){np.push(P[t+q]);nc.push(C[t+q]);}}
@@ -14308,7 +14467,14 @@ function no3D(){G3.ok=false;$("no3d").hidden=false;$("no3d-retry").onclick=()=>l
    const cc=new THREE.OrthographicCamera(-1,1,1,-1,1,400);cc.layers.set(0);cc.layers.enable(CUT_LAYER);cc.layers.enable(30);
    // view direction (unit, from the target toward the camera) and screen right/up, from the fixed main camera
    const toCam=new THREE.Vector3(),cRight=new THREE.Vector3(),cUp=new THREE.Vector3();
-   function basis(){camera.updateMatrixWorld();const e=camera.matrixWorld.elements;cRight.set(e[0],e[1],e[2]).normalize();cUp.set(e[4],e[5],e[6]).normalize();toCam.set(e[8],e[9],e[10]).normalize();}
+   /* v6.12: a picture is always taken from the iso angle, with the model turned by the camera's own turn away from it (yawD),
+      so the cached pictures (look + one of 8 headings) stay right for a camera on any side (the free camera, zen). The card
+      itself faces the live camera. In the fixed iso view yawD is 0 and nothing changes. */
+   const isoTo=new THREE.Vector3(Math.sin(Math.acos(Math.sqrt(1/3)))*Math.sin(-Math.PI/4),Math.sqrt(1/3),Math.sin(Math.acos(Math.sqrt(1/3)))*Math.cos(-Math.PI/4)),isoQ=new THREE.Quaternion();
+   {const c=new THREE.OrthographicCamera();c.position.copy(isoTo);c.lookAt(0,0,0);c.updateMatrixWorld();isoQ.copy(c.quaternion);}
+   let yawD=0;
+   function basis(){camera.updateMatrixWorld();const e=camera.matrixWorld.elements;cRight.set(e[0],e[1],e[2]).normalize();cUp.set(e[4],e[5],e[6]).normalize();toCam.set(e[8],e[9],e[10]).normalize();
+     yawD=Math.hypot(toCam.x,toCam.z)>0.05?Math.atan2(toCam.x,toCam.z)-Math.atan2(isoTo.x,isoTo.z):0;}
    // --- finding them: anything built with userData.cut, rescanned every 2 s (pools grow during play) ---
    /* v6.1 t18: live cut-outs. A rare sight's figure (42c: userData.live = {R, cy}) never repeats a pose, so instead of a
       picture per look it is pictured again 8 times a second, as it stands and facing the way it faces, into two slots of
@@ -14342,7 +14508,7 @@ function no3D(){G3.ok=false;$("no3d").hidden=false;$("no3d-retry").onclick=()=>l
      else if(a.kind==="truck")k+="|"+(u.doorL?q(u.doorL.rotation.y,0.6)+","+q(u.doorR.rotation.y,0.6):"");
      return k;}
    const _m=new THREE.Matrix4(),_p=new THREE.Vector3();
-   function heading(o){const e=o.matrixWorld.elements;return (((Math.round(Math.atan2(-e[2],e[0])/(Math.PI/4))%8)+8)%8);}
+   function heading(o){const e=o.matrixWorld.elements;return (((Math.round((Math.atan2(-e[2],e[0])-yawD)/(Math.PI/4))%8)+8)%8);}
    // --- taking one picture ---
    const RTS=256,gl2=renderer.capabilities.isWebGL2!==false;
    const RT_A=new THREE.WebGLRenderTarget(RTS,RTS,{type:THREE.UnsignedByteType,   /* (v6.1 t4: 8-bit everywhere; a half-float MSAA target isn't renderable on every phone) */samples:gl2?4:0,generateMipmaps:false,minFilter:THREE.NearestFilter,magFilter:THREE.NearestFilter});
@@ -14369,7 +14535,7 @@ function no3D(){G3.ok=false;$("no3d").hidden=false;$("no3d-retry").onclick=()=>l
      try{cs.add(o);o.position.set(0,0,0);if(dir!=null)o.rotation.y=dir*Math.PI/4;o.visible=true;o.updateMatrixWorld(true);
        cs.fog=scene.fog;   // (the same fog object: fog is part of the shader, and the picture is far nearer than it starts)
        ch.color.copy(hemi.color);ch.groundColor.copy(hemi.groundColor);cd.color.copy(sun.color);cd.position.copy(sun.position).sub(sun.target.position);cd.target.position.set(0,0,0);cd.updateMatrixWorld();cd.target.updateMatrixWorld();
-       cc.left=-K.R;cc.right=K.R;cc.top=K.R;cc.bottom=-K.R;cc.updateProjectionMatrix();cc.position.set(0,K.cy,0).addScaledVector(toCam,150);cc.quaternion.copy(camera.quaternion);cc.updateMatrixWorld();
+       cc.left=-K.R;cc.right=K.R;cc.top=K.R;cc.bottom=-K.R;cc.updateProjectionMatrix();const fixed=dir!=null;cc.position.set(0,K.cy,0).addScaledVector(fixed?isoTo:toCam,150);cc.quaternion.copy(fixed?isoQ:camera.quaternion);   /* (v6.12: cached pictures from the iso angle; live ones as the camera sees them) */cc.updateMatrixWorld();
        renderer.autoClear=false;
        RT_A.viewport.set(0,0,px,px);RT_A.scissor.set(0,0,Math.min(RTS,px+8),Math.min(RTS,px+8));   /* (t5: cleared a little past the picture too) */renderer.setRenderTarget(RT_A);renderer.setClearColor(0x000000,0);renderer.clear(true,true,false);renderer.render(cs,cc);
        finU.uScale.value=px/RTS;finU.uPx.value=px;finU.uExp.value=renderer.toneMappingExposure;
@@ -14424,7 +14590,7 @@ function no3D(){G3.ok=false;$("no3d").hidden=false;$("no3d-retry").onclick=()=>l
    const freeMode=on=>{if(!CUT.ok||CUT.free===on)return;CUT.free=on;const all=CUT.actors.concat(LIVE);
      for(const a of all){a.o.children.forEach(c=>{c.matrixWorldAutoUpdate=on;});hide(a,!on);a.cell=null;a.hid=!on;}
      sets.forEach(S2=>{S2.card.count=S2.shad.count=0;});};
-   let farT=0;G3.onCamSwap=on=>{if(!on)for(const a of CUT.actors.concat(LIVE))a.zfar=false;freeMode(on);};
+   let farT=0;G3.onCamSwap=on=>{if(!on)for(const a of CUT.actors.concat(LIVE))a.zfar=false;freeMode(on&&!G3.freeCam);};   // (v6.12: the free camera setting keeps the paper cut-outs, as billboards; zen's own free camera still shows the 3D models)
    G3.cutTick=now=>{if(!CUT.ok)return;if(CUT.free){if(now>scanT){scanT=now+2000;try{rescan();for(const a of CUT.actors.concat(LIVE))if(a.hid){a.o.children.forEach(c=>{c.matrixWorldAutoUpdate=true;});hide(a,false);a.hid=false;a.zfar=false;}}catch(e){}}
      /* v6.4: in zen's free camera every person and vehicle part is its own draw (~300 draws in a whole-site shot); the
         ones over 130 m from the camera are a few pixels, so they are left out (and their matrices not updated) */
@@ -14724,6 +14890,7 @@ function no3D(){G3.ok=false;$("no3d").hidden=false;$("no3d-retry").onclick=()=>l
     if(G3.SM&&G3.SM.bms&&G3.SM.bms.length&&!G3.SM.off){const C=G3.cullCam||(G3.cullCam=new Float64Array(23).fill(NaN)),p=camera.position,q=camera.quaternion,pm=camera.projectionMatrix.elements;
       let moved=false;const v=[p.x,p.y,p.z,q.x,q.y,q.z,q.w];for(let i=0;i<7;i++)if(C[i]!==v[i]){moved=true;C[i]=v[i];}for(let i=0;i<16;i++)if(C[7+i]!==pm[i]){moved=true;C[7+i]=pm[i];}
       const on=!G3.cullOff&&(moved||(renderer.shadowMap.enabled&&renderer.shadowMap.needsUpdate)||!!G3.cullAlways);   /* (t10: needsUpdate stays set with shadow maps off: every batch was re-culled every frame) */if(on)G3.cullN=(G3.cullN||0)+1;for(const b of G3.SM.bms)b.perObjectFrustumCulled=on||(!G3.cullOff&&b._visibilityChanged);}   // (t10: a batch whose visibility changed rebuilds its list: culled, not everything)   // (G3.cullOff / cullAlways: A/B switches for the tools)
+    if(G3.impFrame&&!EXP.noRender){try{G3.impFrame();}catch(e){G3.impErr=(G3.impErr||0)+1;if(G3.impErr<6)console.error("whole-site picture",e);if(G3.impOff)G3.impOff();}}   // v6.12 the whole-site picture (40d)
     if(!EXP.noRender){scene.matrixWorldAutoUpdate=!G3.DB||!G3.DB.n;renderer.render(scene,camera);scene.matrixWorldAutoUpdate=true;}
     if(hidM)hidM.forEach(o=>o.visible=true);
     // (v15: no counting when the render was skipped: renderer.info still holds the last real frame's numbers; and the moving
@@ -14734,7 +14901,7 @@ function no3D(){G3.ok=false;$("no3d").hidden=false;$("no3d-retry").onclick=()=>l
     // labels follow the 3D anchors
     const w=G3.vw||host.clientWidth,hh=G3.vh||host.clientHeight,doText=now-lastLabel>200;if(doText)lastLabel=now;
     // v14: zoomed out, only the area labels and the landmark names show; closer in, the equipment labels and no landmarks
-    const wide=camera.isIso?(G3.camR||999)>=300:(G3.camDist||camera.position.distanceTo(target))>400;   // (t16: in the iso view the whole-site step (380) counts as zoomed out: area labels only)
+    const wide=camera.isIso||(G3.freeCam&&!(S&&S.zen))?(G3.camR||999)>=300:(G3.camDist||camera.position.distanceTo(target))>400;   // (v6.12: the free camera's zoom keeps the iso meaning)   // (t16: in the iso view the whole-site step (380) counts as zoomed out: area labels only)
     // (v5.2: no projecting or text building while the section labels can't show: zen, hidden view, labels off)
     if(G3.kvOn||G3.dvOn)LABELS.forEach(L=>{L.lb.vis=false;});   // v5.6: the fiddly knobs view shows only the knobs' labels (and upsets')
     else if(!(G3.zen||LB.hid||labelHost.classList.contains("lbl-off")))LABELS.forEach(L=>{const R=L.lb;if(L.land?!wide:(!L.area&&wide)){R.vis=false;return;}tmp.copy(L.v).project(camera);const vis=tmp.z<1&&Math.abs(tmp.x)<1.05&&Math.abs(tmp.y)<1.05;R.vis=vis;
@@ -17932,7 +18099,7 @@ function camPullOn(){try{return localStorage.getItem("paper-mill-campull")!=="of
    (within 700 ms per tap) and a list of every version's one-line note pops up, newest first. The list comes from
    VERSION-NOTES.txt at the repo root: build.py swaps it in for the placeholder below, so adding a line there with each
    release keeps the pop-up current (build.py warns when APP_VER has no line). ---------- */
-{const VNOTES=[["4.0.0", "Graphics Overhaul: 60 FPS on iPhone, ~80% Fewer Draw Calls"], ["4.0.1", "Performance Follow-Up, Show FPS Option and Device Autotest"], ["4.0.2", "Economy Rebalance and Smoother Upset Labels"], ["4.1.0", "Four Environments, Seeded Mills, Bottlenecks, Graphics Tiers and Site Music"], ["4.2.0", "New Site Maps, Rare Sights, Zen Map Rotation and Economics Fixes"], ["4.2.0-s", "Save and Continue Season (Test)"], ["4.2.1", "Save/Continue, Settings Panel and Outage Speed Fix"], ["4.2.2-t", "Bayou Gator Sight Reworked (Test)"], ["4.2.2-t2", "Gator Bass Riff (Test)"], ["4.2.2-t3", "Gator Riff Removed, Wide Camera Framing (Test)"], ["4.2.2-t4", "Gator Scene Shortened and Widened (Test)"], ["4.2.2-t5", "One Rare Sight per Map in Zen (Test)"], ["4.2.2", "Rare Sights Reworked, Bird Strike Upset, Mill Report Tab"], ["4.2.3-t", "Cowboys, Bigfoot and Tugboat Sights Reworked (Test)"], ["4.2.3", "Laptop Battery Saving (Default GPU)"], ["4.2.4", "$25M Goal Removed and Quick Fixes"], ["4.2.5", "Random Bottleneck per Season and Accessibility Improvements"], ["4.3.0-t1", "Survival Mode (Test)"], ["4.4.0-t1", "Mill Leaders in Survival (Test)"], ["4.4.0-t2", "Painted Leader Portraits (Test)"], ["4.4.0-t3", "Leader Redesign, 4-Day Waves and Fixes (Test)"], ["5.0.0", "Survival Mode Release with Mill Leaders"], ["5.0.1", "Results Dialog and Game Speed Fixes"], ["5.0.2", "Report Card Label Fixes"], ["5.0.3", "Survival Playtest Fixes (Test)"], ["5.0.4", "Playtest Review: Dot Auto-Fix and Shipping Fix (Test)"], ["5.0.5", "Polish Rounds from Survival Playtests"], ["5.0.6", "Survival QA Fixes, Opt-In Outage Watch, Leaderboard Filters"], ["5.1.0", "Civics Meters and Leaders in Seasons (Test)"], ["5.4.0", "Title Screen, Civics in the World and Dark Mode"], ["5.4.1", "Loading Splash, No Old-Menu Flash"], ["5.4.2", "Graphics Quality on the Title Screen"], ["5.5.0", "Performance Improvements"], ["5.6.0", "Fiddly Knobs, DCS/QCS Screens and Knobs View"], ["5.7.0", "Catching Failures Early: Tells, Daily Rounds, Vibration Report, Outage Prep"], ["5.7.1", "Bottom Menu Reorder, Settings Back on the Right"], ["5.7.2", "Help Page with Game Guide and Glossary"], ["5.7.3", "Bare Graphics Mode for Weak Phones"], ["5.7.4", "Version Notes Pop-Up (Triple-Tap the Version Number)"], ["6.1.0-t1", "Isometric Paper View: Fixed Camera, Cut-Outs, Drop Shadows, Cutaways, Season Palettes (Test)"], ["6.1.0-t2", "Iso Round 2: Cut-Outs Always Paper, GPU Pictures, Stop-Motion World, Fewer Draws (Test)"], ["6.1.0-t3", "Iso Round 3: iPhone Batching, Instanced Cans, Sign Atlas, Lighter Frames (Test)"], ["6.1.0-t4", "Iso Fixes: Operators and Fork-Trucks Back, Less Stutter (Test)"], ["6.1.0-t5", "Cut-Out Edge Artifact Fixed (Test)"], ["6.1.0-t6", "Iso Optimization: Hidden Objects Cost Nothing, Lighter Moving Batches (Test)"], ["6.1.0-t7", "Iso Triangle Cut: Paper-Card Trees, Flat Ground, Hidden Faces Gone, Plain Boxes (Test)"], ["6.1.0-t8", "Paper Palette: 40 Colours, Flat Surfaces, Paper Grain, Fewer Draws (Test)"], ["6.1.0-t9", "Reel Fix: Growing Reel Draws Again (Test)"], ["6.1.0-t10", "Draw Cut 2: Colour in the Matrix, Merged Roofs, Uploads on Change, Culling Fix, Parked Groups (Test)"], ["6.1.0-t11", "QA Fixes: Cut-Outs Never Drawn as Loose 3D Parts, Fallback Shows 3D, Roofs On or Off per Zoom Step (Test)"], ["6.1.0-t12", "Paper Smoke, Blinking Lights, Stronger Seasons, Sharper Phones, Instanced Upsets, Pictures at Start (Test)"], ["6.1.0-t13", "Paper Effects: Flames, Child-Made Tornado, Lamp Cones, Flags, Paper Water, Visible Weather (Test)"], ["6.1.0-t14", "Paper Upsets: Cut-Out Props, Paper Pigeon, Paper Sparks, Steam, Fireworks, Ice and Flood (Test)"], ["6.1.0-t15", "Beaver Reworked as One Smaller Cut-Out (Test)"], ["6.1.0-t16", "Paper Props Dim at Night, Labels Never Overlap, Fewer Cut-Out Pictures (Test)"], ["6.1.0-t17", "Bird on the Power Lines Cut-Scene Plays When Set Off From the Upsets List (Test)"], ["6.1.0-t18", "Zen Close-Ups Fixed, Rare Sights as Paper Cut-Outs, Tilt-Shift Diorama Look (Test)"], ["6.1.0-t19", "Narrower Tilt-Shift Band, Winder Trash Can Out of the Broke Hole (Test)"], ["6.1.0-t20", "Balance: Rounds Pay More, Capacity and Maintenance Upgrades Re-Priced"], ["6.1.0", "Paper Diorama: Isometric Paper Art Style, Cut-Out People and Upsets, Tilt-Shift, Rounds Pay More, Upgrades Re-Priced"], ["6.1.1", "Phone Fixes: Gentler Tilt-Shift on Tall Screens, Cut-Out People No Longer Blank on iPhone"], ["6.1.2", "iPhone: Cut-Out Self-Test Retries, People Keep Their Colours in the 3D Fallback"], ["6.1.3", "Broke Hole by the Winder Looks Like a Floor Opening (Was a Black Square)"], ["6.1.4", "Tilt-Shift Removed"], ["6.2.0", "Zen Free Camera: Perspective Zen Shots, 3D People in Zen, Cleaner River Water"], ["6.3.0-f1", "Process Flow Overview (Test): Inputs, Mill Areas and Outputs for the Mill Day, in Settings"], ["6.3.0-f2", "Process Flow: the Game Keeps Running While It's Open (Test)"], ["6.3.0", "Process Flow Overview: Inputs, Mill Areas and Outputs for the Mill Day (Settings > View)"], ["6.4.0", "Zen Shots Review: Shuffle-Bag Shot Order, Landscape Shots Rebuilt, Close Rare Sights"], ["6.5.0-a1", "Digital Twin A (Test): Hourly History, 14 Prior Days, 7 d / Run Ranges, Area Trends and Uptime"], ["6.5.0-b1", "Digital Twin B (Test): Real Freight Costs with a Diesel Index, Area Controls Moved into Process Flow"], ["6.5.0-b2", "Market Pricing (Test): 2026 OCC and Energy Costs, Diesel in $/gal, Desert Long Haul, Real Steam Rates"], ["6.5.0-b3", "DCS Expansion (Test): Full SPOT, WET and DET Pictures, a UTIL Screen, Motors and Reject Purges"], ["6.5.0-b4", "DCS Pictograms (Test): Equipment Drawn as Classic DCS Symbols, Colour Only When Something's Wrong"], ["6.5.0-b5", "The Dryer Limit (Test): Speed and Grade Load the Dryers, a Wet Sheet Fails Spec and Slows the Machine"], ["6.5.0", "Digital Twin: Process Flow Trends and Controls, Real Freight and Market Costs, Full DCS, Dryer Limit, Rebalance"], ["6.5.1", "Second Screen: Pop the DCS and Process Flow Out to Their Own Window for a Second Monitor (Desktop)"], ["6.5.2", "Knob Fixes: Wet-End and Steam Knobs Bite Again Under the Dryer Limit, DCS Uses the Machine's Name"], ["6.5.3", "Quality Specs: Weight, Moisture and Color Specs per Grade, Off-Spec Paper Wound into Beater Rolls and Repulped"], ["6.5.4", "DCS Fixes: Making-Beater Alerts, SPOT in Process Order, Boiler and Power on Utilities, 2nd/3rd Section Steam Control"], ["6.5.5-t1", "Dewatering Chain (Test): Jet and Vacuum Optimums, Couch to Press Solids, Press Solids Set the Dryer Steam Both Ways"], ["6.5.5", "The Dewatering Chain: Jet and Vacuum Optimums, Couch to Press Solids, Press Solids Set the Dryer Steam Both Ways"], ["6.5.6-t1", "Mass Balance (Test): A Real Water Balance and White Water Chest, Hayout Broke Repulped, Every Fiber Loss Booked"], ["6.5.6", "Mass Balance: A Real Water Balance and White Water Chest, Hayout Broke Repulped, Every Fiber Loss Booked"], ["6.5.7-t1", "Winder Pass (Test): Four Reel Storage Stands, Two-Roll Sets, Rolls Tied Together, Steam Vented on a Sheet Break"], ["6.5.7", "Winder Pass: Four Reel Storage Stands, Two-Roll Sets, Rolls Tied Together, Steam Vented on a Sheet Break"], ["6.6.0-t1", "Orders and Bales (Test): Customer Order Book and Spot Market, Idle Energy While Stopped, Bale Grading at the Gate"], ["6.6.0", "Orders and Bales: Customer Order Book and Spot Market, Idle Energy While Stopped, Bale Grading at the Gate"], ["6.7.0-t1", "Control Room (Test): Planning, Water and Quality Screens, Split-Screen Trends of Anything, What Moves With What, Process Flow Views"], ["6.7.0", "Control Room: Planning, Water and Quality Screens, Split-Screen Trends of Anything, What Moves With What, Process Flow Views"], ["6.7.1-t1", "New Grade Set (Test): Grades 24, 28, 31 and 34Super, Same Tons per Hour"], ["6.7.1", "New Grade Set: Grades 24, 28, 31 and 34Super, Same Tons per Hour"], ["6.8.0-t1", "Process Relationships (Test): Refining Energy and Ring Crush, Basis Weight Loop, Headbox at 0.8%, White Water Silo, Bale Water and Screen Pressure Drop"], ["6.8.0-t2", "Relationship Map in the Control Room (Test): What Drives Each Reading and What It Moves, Live"], ["6.8.0", "Process Relationships: Refining Energy and Ring Crush, Basis Weight Loop, Headbox at 0.8%, White Water Silo, Bale Water, Screen Pressure Drop and the Relationship Map"], ["6.8.1", "Report Tab Tidy: Live Mill First, Last-24-Hours Chart, Quality & Fiber and Orders & Bales Removed"], ["6.8.2", "Manning: DuPont 12 Shifts for Techs and Operators, Team Hard Hats, Shift Change Walk-In, Vacations Covered Across Teams"], ["6.8.3", "OCC Recipe (A Bales, C Bales, Mixed Waste), Relationship Map Zoom and 3D Light Cones at Night"], ["6.9.0-t1", "The Valves Update (Test): Six Control Loops on the DCS with Real Valves, Faceplates, PID Tuning, Bump Tests, a Tuning Clock and Tuning Challenges"], ["6.9.0", "The Valves Update: Six Control Loops on the DCS with Real Valves, Faceplates, PID Tuning, Bump Tests, a Tuning Clock, Tuning Challenges and Their Links on the Relationship Map"], ["6.9.1", "Wet End Controls: Rush / Drag in fpm on the WET DCS"], ["6.9.2", "Release Review: Help and Glossary Brought Up to Date, Nine Bug Fixes, Refiners Feed the Machine Chest (a Clash Trips the Machine on Low Level) and an Economy Rebalance Where the Daily Round Is the Biggest Boost"], ["6.10.0-t1", "The Reliability and Electrical Update (Test): Ten VFD Motors with Health, an MCC Building with Three Drive Lineups Fed from the Substation, an Electrical Tech on Every Shift, Shift Vibration and ADX Rounds That Get Skipped When Techs Are Busy, Reliability and Drives Screens, Bearing, Motor and Drive Failures, Outage Changeouts and the Water Tower Moved to the North-East Corner"], ["6.10.0-t2", "The Reliability and Electrical Update (Test 2): the 115 kV to 650 V DC Power Chain with Rectifier Faults, Reset-or-Investigate Drive Fault Decisions, Arc-Flash PPE at the MCC, AUTO-LW Basis Weight, Click for Info and Lamps Under the Roofs"], ["6.10.0-t3", "The Reliability and Electrical Update (Test 3): QA Fixes and Balance: Unanswered Drive Faults Auto-Decide After an Hour, Drive Cards Show Load at the Trip, Reliability Failures About Half as Often, Lower Motor and Rectifier Bills"], ["6.10.0-t4", "The Reliability and Electrical Update (Test 4): One Machine per Vibration Round, Planned Repairs Take the Machine Down 20-40 Minutes, Repeated Drive Resets Get Worse and Can Fail, a Tutorial Card for Rounds and the MCC, Drive and Rectifier Health on Screen, Clearer Click for Info and 26 Polish Fixes"], ["6.10.0-t5", "The Reliability and Electrical Update (Test 5): the MCC Main Incomer Fiddly Knob (Opening It Causes an Arc Flash), the New Upsets in the Upsets Tab"], ["6.10.0", "The Reliability and Electrical Update: Ten Critical VFD Motors on Three MCC Drive Lineups, an Electrical Tech on Every Shift, Shift Vibration and ADX Rounds, Reliability and Drives Screens, Bearing, Motor, Drive and Rectifier Failures, Drive Fault Decisions, Outage Changeouts, the MCC Main Incomer and Its Arc Flash, AUTO-LW and Click for Info"], ["6.10.1-t1", "Polish (Test): Drives Wear Slower but Fail More When Worn, Three Drives Start Part-Worn, the Refiner Upgrade Brings Bigger Drives, the Main Incomer on the Relationship Map, a Message for a Blank Mill Name"], ["6.10.1", "Reliability Polish: Drives Wear Slower but Fail More When Worn, Three Drives Start Part-Worn, Bigger Refiner Drives with the Refiner Upgrade, the Main Incomer on the Relationship Map, a Message for a Blank Mill Name"], ["6.10.2", "Tests and Tidy: One Test Runner with 21 Merged Checks, Dead Code Removed (Bare Graphics Leftovers, Unused Code and Styles), Lint Clean"], ["6.11.0-t1", "Blender Redesign, the Winder and Trim (Test): Redesigned Machine, Buildings, MCC, Power House, Wastewater, Water Tower, Workers and Vehicles; a Real Two-Drum Winder with a Rider Roll and Web Inspections; Twin Rolls at Order Widths with Trim to a DE Pulper; Quality per Roll across 12 CD Zones; a Spray Boom and a Steam Box Upgrade"], ["6.11.0-t2", "Economy (Test): Paper Prices +2.5% on Every Grade to Make Up for Trim"], ["6.11.0", "The Winder, Trim and CD Update: a Redesigned Mill (Designed in Blender), a Real Two-Drum Winder with a Rider Roll and Web Inspections, Twin Rolls at Order Widths with Trim to a DE Pulper, Quality per Roll across 12 CD Zones, a Spray Boom, a Steam Box Upgrade and Prices +2.5%"], ["6.11.1-t1", "The Dryer Hood (Test): a Closed Dryer Hood with Six Lifting Doors that Rise on Breaks and Downtime, and a Hood Doors Fiddly Knob that Lifts the Front Away (4% More Steam While Running)"], ["6.11.1-t2", "Wet-End Chemicals (Test): Dry Strength Starch and a Retention Polymer on the WET DCS, AUTO Flow-Paced at No Extra Cost with a MANUAL Pump Override"], ["6.11.1-t3", "QA Round (Test): Upgrades 20% Cheaper, a Ratio Setpoint for the Chemical Pumps on AUTO, a Permit-Risk Warning for Low Polymer, No Outage Notice over the Season Summary"], ["6.11.1-t4", "Effluent in Permit (Test): the Clarifier Catches More, so a Normal Run Is ~25 mg/L TSS under the 50 mg/L Permit, and Cutting the Polymer Breaks It"], ["6.11.1", "The Dryer Hood and Wet-End Chemicals: a Closed Dryer Hood with Lifting Doors and a Hood Doors Fiddly Knob, Dry Strength and Retention Polymer on the WET DCS, Upgrades 20% Cheaper, Effluent in Permit"], ["6.11.2-t1", "Sold by Area (Test): Paper Is Sold by the Square Foot, so a Lighter Sheet Earns More a Ton and a Heavier One Less; the Mill Still Counts in Tons; MSF on the Planning Screen"], ["6.11.2-t2", "Control Room Tidy-Up (Test): 2nd and 3rd Section Steam on the DET DCS, WET Setpoints in Process Order, Yard Crews Stay Put on Breaks, MCC Computer Opens Drives, SPOT Console Moved, Seal Chest Labels Turned"], ["6.11.2-t3", "Test Suite Green (Test): Reel Storage Counts Right (a Turn-Up Takes Exactly One Reel), Tornado Damage Marked as Sudden, Steadier Checks"], ["6.11.2-t4", "Metered Power (Test): Drives Re-Rated and Electricity Billed from Their Load, Starch Removed, a Spare Spool Stand on the Crane Line, a Half Wall on the Roll Warehouse, Two Stray Objects at the Origin Fixed"], ["6.11.2-t5", "Vehicles and Polish (Test): New Food Truck, Train, Staff Cars and Carry-Deck Crane, Warehouse Annexes Roofed and Used for Storage, a Door on the Warehouse, Shift Walkers Use Doorways, Uncle Brian Rides Again, MCC Light, Beater Bay Info, Known Defects View, DE Pulper on the DCS"], ["6.11.2-t6", "QA Round (Test): Season Grade Counts the Money, Early Defect Pins Dimmed, DE Pulper High-Level Alarm and Overflow, Repair Bills 12.5% Lower, Hank Gets a Feel for the Sheet"], ["6.11.2", "Sold by Area and Metered Power: Rolls Sold by the Square Foot, Drives Re-Rated with Electricity Billed from Their Load, Starch Removed, New Vehicles, Warehouse Annexes Roofed and Used, Known Defects View, DE Pulper on the DCS, Season Grade Counts the Money, Repairs 12.5% Lower, Hank Buffed"], ["6.12.0-t5", "Smooth on the Phone (Test): the Sign Boards No Longer Re-Upload the Whole Atlas Every 0.8 s"]];
+{const VNOTES=[["4.0.0", "Graphics Overhaul: 60 FPS on iPhone, ~80% Fewer Draw Calls"], ["4.0.1", "Performance Follow-Up, Show FPS Option and Device Autotest"], ["4.0.2", "Economy Rebalance and Smoother Upset Labels"], ["4.1.0", "Four Environments, Seeded Mills, Bottlenecks, Graphics Tiers and Site Music"], ["4.2.0", "New Site Maps, Rare Sights, Zen Map Rotation and Economics Fixes"], ["4.2.0-s", "Save and Continue Season (Test)"], ["4.2.1", "Save/Continue, Settings Panel and Outage Speed Fix"], ["4.2.2-t", "Bayou Gator Sight Reworked (Test)"], ["4.2.2-t2", "Gator Bass Riff (Test)"], ["4.2.2-t3", "Gator Riff Removed, Wide Camera Framing (Test)"], ["4.2.2-t4", "Gator Scene Shortened and Widened (Test)"], ["4.2.2-t5", "One Rare Sight per Map in Zen (Test)"], ["4.2.2", "Rare Sights Reworked, Bird Strike Upset, Mill Report Tab"], ["4.2.3-t", "Cowboys, Bigfoot and Tugboat Sights Reworked (Test)"], ["4.2.3", "Laptop Battery Saving (Default GPU)"], ["4.2.4", "$25M Goal Removed and Quick Fixes"], ["4.2.5", "Random Bottleneck per Season and Accessibility Improvements"], ["4.3.0-t1", "Survival Mode (Test)"], ["4.4.0-t1", "Mill Leaders in Survival (Test)"], ["4.4.0-t2", "Painted Leader Portraits (Test)"], ["4.4.0-t3", "Leader Redesign, 4-Day Waves and Fixes (Test)"], ["5.0.0", "Survival Mode Release with Mill Leaders"], ["5.0.1", "Results Dialog and Game Speed Fixes"], ["5.0.2", "Report Card Label Fixes"], ["5.0.3", "Survival Playtest Fixes (Test)"], ["5.0.4", "Playtest Review: Dot Auto-Fix and Shipping Fix (Test)"], ["5.0.5", "Polish Rounds from Survival Playtests"], ["5.0.6", "Survival QA Fixes, Opt-In Outage Watch, Leaderboard Filters"], ["5.1.0", "Civics Meters and Leaders in Seasons (Test)"], ["5.4.0", "Title Screen, Civics in the World and Dark Mode"], ["5.4.1", "Loading Splash, No Old-Menu Flash"], ["5.4.2", "Graphics Quality on the Title Screen"], ["5.5.0", "Performance Improvements"], ["5.6.0", "Fiddly Knobs, DCS/QCS Screens and Knobs View"], ["5.7.0", "Catching Failures Early: Tells, Daily Rounds, Vibration Report, Outage Prep"], ["5.7.1", "Bottom Menu Reorder, Settings Back on the Right"], ["5.7.2", "Help Page with Game Guide and Glossary"], ["5.7.3", "Bare Graphics Mode for Weak Phones"], ["5.7.4", "Version Notes Pop-Up (Triple-Tap the Version Number)"], ["6.1.0-t1", "Isometric Paper View: Fixed Camera, Cut-Outs, Drop Shadows, Cutaways, Season Palettes (Test)"], ["6.1.0-t2", "Iso Round 2: Cut-Outs Always Paper, GPU Pictures, Stop-Motion World, Fewer Draws (Test)"], ["6.1.0-t3", "Iso Round 3: iPhone Batching, Instanced Cans, Sign Atlas, Lighter Frames (Test)"], ["6.1.0-t4", "Iso Fixes: Operators and Fork-Trucks Back, Less Stutter (Test)"], ["6.1.0-t5", "Cut-Out Edge Artifact Fixed (Test)"], ["6.1.0-t6", "Iso Optimization: Hidden Objects Cost Nothing, Lighter Moving Batches (Test)"], ["6.1.0-t7", "Iso Triangle Cut: Paper-Card Trees, Flat Ground, Hidden Faces Gone, Plain Boxes (Test)"], ["6.1.0-t8", "Paper Palette: 40 Colours, Flat Surfaces, Paper Grain, Fewer Draws (Test)"], ["6.1.0-t9", "Reel Fix: Growing Reel Draws Again (Test)"], ["6.1.0-t10", "Draw Cut 2: Colour in the Matrix, Merged Roofs, Uploads on Change, Culling Fix, Parked Groups (Test)"], ["6.1.0-t11", "QA Fixes: Cut-Outs Never Drawn as Loose 3D Parts, Fallback Shows 3D, Roofs On or Off per Zoom Step (Test)"], ["6.1.0-t12", "Paper Smoke, Blinking Lights, Stronger Seasons, Sharper Phones, Instanced Upsets, Pictures at Start (Test)"], ["6.1.0-t13", "Paper Effects: Flames, Child-Made Tornado, Lamp Cones, Flags, Paper Water, Visible Weather (Test)"], ["6.1.0-t14", "Paper Upsets: Cut-Out Props, Paper Pigeon, Paper Sparks, Steam, Fireworks, Ice and Flood (Test)"], ["6.1.0-t15", "Beaver Reworked as One Smaller Cut-Out (Test)"], ["6.1.0-t16", "Paper Props Dim at Night, Labels Never Overlap, Fewer Cut-Out Pictures (Test)"], ["6.1.0-t17", "Bird on the Power Lines Cut-Scene Plays When Set Off From the Upsets List (Test)"], ["6.1.0-t18", "Zen Close-Ups Fixed, Rare Sights as Paper Cut-Outs, Tilt-Shift Diorama Look (Test)"], ["6.1.0-t19", "Narrower Tilt-Shift Band, Winder Trash Can Out of the Broke Hole (Test)"], ["6.1.0-t20", "Balance: Rounds Pay More, Capacity and Maintenance Upgrades Re-Priced"], ["6.1.0", "Paper Diorama: Isometric Paper Art Style, Cut-Out People and Upsets, Tilt-Shift, Rounds Pay More, Upgrades Re-Priced"], ["6.1.1", "Phone Fixes: Gentler Tilt-Shift on Tall Screens, Cut-Out People No Longer Blank on iPhone"], ["6.1.2", "iPhone: Cut-Out Self-Test Retries, People Keep Their Colours in the 3D Fallback"], ["6.1.3", "Broke Hole by the Winder Looks Like a Floor Opening (Was a Black Square)"], ["6.1.4", "Tilt-Shift Removed"], ["6.2.0", "Zen Free Camera: Perspective Zen Shots, 3D People in Zen, Cleaner River Water"], ["6.3.0-f1", "Process Flow Overview (Test): Inputs, Mill Areas and Outputs for the Mill Day, in Settings"], ["6.3.0-f2", "Process Flow: the Game Keeps Running While It's Open (Test)"], ["6.3.0", "Process Flow Overview: Inputs, Mill Areas and Outputs for the Mill Day (Settings > View)"], ["6.4.0", "Zen Shots Review: Shuffle-Bag Shot Order, Landscape Shots Rebuilt, Close Rare Sights"], ["6.5.0-a1", "Digital Twin A (Test): Hourly History, 14 Prior Days, 7 d / Run Ranges, Area Trends and Uptime"], ["6.5.0-b1", "Digital Twin B (Test): Real Freight Costs with a Diesel Index, Area Controls Moved into Process Flow"], ["6.5.0-b2", "Market Pricing (Test): 2026 OCC and Energy Costs, Diesel in $/gal, Desert Long Haul, Real Steam Rates"], ["6.5.0-b3", "DCS Expansion (Test): Full SPOT, WET and DET Pictures, a UTIL Screen, Motors and Reject Purges"], ["6.5.0-b4", "DCS Pictograms (Test): Equipment Drawn as Classic DCS Symbols, Colour Only When Something's Wrong"], ["6.5.0-b5", "The Dryer Limit (Test): Speed and Grade Load the Dryers, a Wet Sheet Fails Spec and Slows the Machine"], ["6.5.0", "Digital Twin: Process Flow Trends and Controls, Real Freight and Market Costs, Full DCS, Dryer Limit, Rebalance"], ["6.5.1", "Second Screen: Pop the DCS and Process Flow Out to Their Own Window for a Second Monitor (Desktop)"], ["6.5.2", "Knob Fixes: Wet-End and Steam Knobs Bite Again Under the Dryer Limit, DCS Uses the Machine's Name"], ["6.5.3", "Quality Specs: Weight, Moisture and Color Specs per Grade, Off-Spec Paper Wound into Beater Rolls and Repulped"], ["6.5.4", "DCS Fixes: Making-Beater Alerts, SPOT in Process Order, Boiler and Power on Utilities, 2nd/3rd Section Steam Control"], ["6.5.5-t1", "Dewatering Chain (Test): Jet and Vacuum Optimums, Couch to Press Solids, Press Solids Set the Dryer Steam Both Ways"], ["6.5.5", "The Dewatering Chain: Jet and Vacuum Optimums, Couch to Press Solids, Press Solids Set the Dryer Steam Both Ways"], ["6.5.6-t1", "Mass Balance (Test): A Real Water Balance and White Water Chest, Hayout Broke Repulped, Every Fiber Loss Booked"], ["6.5.6", "Mass Balance: A Real Water Balance and White Water Chest, Hayout Broke Repulped, Every Fiber Loss Booked"], ["6.5.7-t1", "Winder Pass (Test): Four Reel Storage Stands, Two-Roll Sets, Rolls Tied Together, Steam Vented on a Sheet Break"], ["6.5.7", "Winder Pass: Four Reel Storage Stands, Two-Roll Sets, Rolls Tied Together, Steam Vented on a Sheet Break"], ["6.6.0-t1", "Orders and Bales (Test): Customer Order Book and Spot Market, Idle Energy While Stopped, Bale Grading at the Gate"], ["6.6.0", "Orders and Bales: Customer Order Book and Spot Market, Idle Energy While Stopped, Bale Grading at the Gate"], ["6.7.0-t1", "Control Room (Test): Planning, Water and Quality Screens, Split-Screen Trends of Anything, What Moves With What, Process Flow Views"], ["6.7.0", "Control Room: Planning, Water and Quality Screens, Split-Screen Trends of Anything, What Moves With What, Process Flow Views"], ["6.7.1-t1", "New Grade Set (Test): Grades 24, 28, 31 and 34Super, Same Tons per Hour"], ["6.7.1", "New Grade Set: Grades 24, 28, 31 and 34Super, Same Tons per Hour"], ["6.8.0-t1", "Process Relationships (Test): Refining Energy and Ring Crush, Basis Weight Loop, Headbox at 0.8%, White Water Silo, Bale Water and Screen Pressure Drop"], ["6.8.0-t2", "Relationship Map in the Control Room (Test): What Drives Each Reading and What It Moves, Live"], ["6.8.0", "Process Relationships: Refining Energy and Ring Crush, Basis Weight Loop, Headbox at 0.8%, White Water Silo, Bale Water, Screen Pressure Drop and the Relationship Map"], ["6.8.1", "Report Tab Tidy: Live Mill First, Last-24-Hours Chart, Quality & Fiber and Orders & Bales Removed"], ["6.8.2", "Manning: DuPont 12 Shifts for Techs and Operators, Team Hard Hats, Shift Change Walk-In, Vacations Covered Across Teams"], ["6.8.3", "OCC Recipe (A Bales, C Bales, Mixed Waste), Relationship Map Zoom and 3D Light Cones at Night"], ["6.9.0-t1", "The Valves Update (Test): Six Control Loops on the DCS with Real Valves, Faceplates, PID Tuning, Bump Tests, a Tuning Clock and Tuning Challenges"], ["6.9.0", "The Valves Update: Six Control Loops on the DCS with Real Valves, Faceplates, PID Tuning, Bump Tests, a Tuning Clock, Tuning Challenges and Their Links on the Relationship Map"], ["6.9.1", "Wet End Controls: Rush / Drag in fpm on the WET DCS"], ["6.9.2", "Release Review: Help and Glossary Brought Up to Date, Nine Bug Fixes, Refiners Feed the Machine Chest (a Clash Trips the Machine on Low Level) and an Economy Rebalance Where the Daily Round Is the Biggest Boost"], ["6.10.0-t1", "The Reliability and Electrical Update (Test): Ten VFD Motors with Health, an MCC Building with Three Drive Lineups Fed from the Substation, an Electrical Tech on Every Shift, Shift Vibration and ADX Rounds That Get Skipped When Techs Are Busy, Reliability and Drives Screens, Bearing, Motor and Drive Failures, Outage Changeouts and the Water Tower Moved to the North-East Corner"], ["6.10.0-t2", "The Reliability and Electrical Update (Test 2): the 115 kV to 650 V DC Power Chain with Rectifier Faults, Reset-or-Investigate Drive Fault Decisions, Arc-Flash PPE at the MCC, AUTO-LW Basis Weight, Click for Info and Lamps Under the Roofs"], ["6.10.0-t3", "The Reliability and Electrical Update (Test 3): QA Fixes and Balance: Unanswered Drive Faults Auto-Decide After an Hour, Drive Cards Show Load at the Trip, Reliability Failures About Half as Often, Lower Motor and Rectifier Bills"], ["6.10.0-t4", "The Reliability and Electrical Update (Test 4): One Machine per Vibration Round, Planned Repairs Take the Machine Down 20-40 Minutes, Repeated Drive Resets Get Worse and Can Fail, a Tutorial Card for Rounds and the MCC, Drive and Rectifier Health on Screen, Clearer Click for Info and 26 Polish Fixes"], ["6.10.0-t5", "The Reliability and Electrical Update (Test 5): the MCC Main Incomer Fiddly Knob (Opening It Causes an Arc Flash), the New Upsets in the Upsets Tab"], ["6.10.0", "The Reliability and Electrical Update: Ten Critical VFD Motors on Three MCC Drive Lineups, an Electrical Tech on Every Shift, Shift Vibration and ADX Rounds, Reliability and Drives Screens, Bearing, Motor, Drive and Rectifier Failures, Drive Fault Decisions, Outage Changeouts, the MCC Main Incomer and Its Arc Flash, AUTO-LW and Click for Info"], ["6.10.1-t1", "Polish (Test): Drives Wear Slower but Fail More When Worn, Three Drives Start Part-Worn, the Refiner Upgrade Brings Bigger Drives, the Main Incomer on the Relationship Map, a Message for a Blank Mill Name"], ["6.10.1", "Reliability Polish: Drives Wear Slower but Fail More When Worn, Three Drives Start Part-Worn, Bigger Refiner Drives with the Refiner Upgrade, the Main Incomer on the Relationship Map, a Message for a Blank Mill Name"], ["6.10.2", "Tests and Tidy: One Test Runner with 21 Merged Checks, Dead Code Removed (Bare Graphics Leftovers, Unused Code and Styles), Lint Clean"], ["6.11.0-t1", "Blender Redesign, the Winder and Trim (Test): Redesigned Machine, Buildings, MCC, Power House, Wastewater, Water Tower, Workers and Vehicles; a Real Two-Drum Winder with a Rider Roll and Web Inspections; Twin Rolls at Order Widths with Trim to a DE Pulper; Quality per Roll across 12 CD Zones; a Spray Boom and a Steam Box Upgrade"], ["6.11.0-t2", "Economy (Test): Paper Prices +2.5% on Every Grade to Make Up for Trim"], ["6.11.0", "The Winder, Trim and CD Update: a Redesigned Mill (Designed in Blender), a Real Two-Drum Winder with a Rider Roll and Web Inspections, Twin Rolls at Order Widths with Trim to a DE Pulper, Quality per Roll across 12 CD Zones, a Spray Boom, a Steam Box Upgrade and Prices +2.5%"], ["6.11.1-t1", "The Dryer Hood (Test): a Closed Dryer Hood with Six Lifting Doors that Rise on Breaks and Downtime, and a Hood Doors Fiddly Knob that Lifts the Front Away (4% More Steam While Running)"], ["6.11.1-t2", "Wet-End Chemicals (Test): Dry Strength Starch and a Retention Polymer on the WET DCS, AUTO Flow-Paced at No Extra Cost with a MANUAL Pump Override"], ["6.11.1-t3", "QA Round (Test): Upgrades 20% Cheaper, a Ratio Setpoint for the Chemical Pumps on AUTO, a Permit-Risk Warning for Low Polymer, No Outage Notice over the Season Summary"], ["6.11.1-t4", "Effluent in Permit (Test): the Clarifier Catches More, so a Normal Run Is ~25 mg/L TSS under the 50 mg/L Permit, and Cutting the Polymer Breaks It"], ["6.11.1", "The Dryer Hood and Wet-End Chemicals: a Closed Dryer Hood with Lifting Doors and a Hood Doors Fiddly Knob, Dry Strength and Retention Polymer on the WET DCS, Upgrades 20% Cheaper, Effluent in Permit"], ["6.11.2-t1", "Sold by Area (Test): Paper Is Sold by the Square Foot, so a Lighter Sheet Earns More a Ton and a Heavier One Less; the Mill Still Counts in Tons; MSF on the Planning Screen"], ["6.11.2-t2", "Control Room Tidy-Up (Test): 2nd and 3rd Section Steam on the DET DCS, WET Setpoints in Process Order, Yard Crews Stay Put on Breaks, MCC Computer Opens Drives, SPOT Console Moved, Seal Chest Labels Turned"], ["6.11.2-t3", "Test Suite Green (Test): Reel Storage Counts Right (a Turn-Up Takes Exactly One Reel), Tornado Damage Marked as Sudden, Steadier Checks"], ["6.11.2-t4", "Metered Power (Test): Drives Re-Rated and Electricity Billed from Their Load, Starch Removed, a Spare Spool Stand on the Crane Line, a Half Wall on the Roll Warehouse, Two Stray Objects at the Origin Fixed"], ["6.11.2-t5", "Vehicles and Polish (Test): New Food Truck, Train, Staff Cars and Carry-Deck Crane, Warehouse Annexes Roofed and Used for Storage, a Door on the Warehouse, Shift Walkers Use Doorways, Uncle Brian Rides Again, MCC Light, Beater Bay Info, Known Defects View, DE Pulper on the DCS"], ["6.11.2-t6", "QA Round (Test): Season Grade Counts the Money, Early Defect Pins Dimmed, DE Pulper High-Level Alarm and Overflow, Repair Bills 12.5% Lower, Hank Gets a Feel for the Sheet"], ["6.11.2", "Sold by Area and Metered Power: Rolls Sold by the Square Foot, Drives Re-Rated with Electricity Billed from Their Load, Starch Removed, New Vehicles, Warehouse Annexes Roofed and Used, Known Defects View, DE Pulper on the DCS, Season Grade Counts the Money, Repairs 12.5% Lower, Hank Buffed"], ["6.12.0-t5", "Smooth on the Phone (Test): the Sign Boards No Longer Re-Upload the Whole Atlas Every 0.8 s"], ["6.12.0-t6", "Cool, Fast and Free (Test): the World Draws at 30 While the View Is Still, the Whole Site as One Picture, a Free 3D Camera in Settings"]];
   let ov=null,held=false;
   function render(){
     const cur=APP_VER.replace(/^v/i,""),rows=VNOTES.slice().reverse().map(([v,n])=>
@@ -18010,8 +18177,13 @@ let FRAME_CAP=FPS_CAPS[FPS_MODE];G3.cap=FRAME_CAP;
 function setFpsMode(m){if(m===true)m="max";else if(m===false)m="saver";if(FPS_CAPS[m]===undefined)return;FPS_MODE=m;FRAME_CAP=FPS_CAPS[m];G3.cap=FRAME_CAP;try{localStorage.setItem("paper-mill-fps",m);}catch(e){}
   document.querySelectorAll("#fpsSeg button").forEach(b=>b.setAttribute("aria-pressed",String(b.dataset.fps===m)));}
 let last=performance.now(),uiAcc=0,uiN=0,lastPaint=0;
-const WACC={t:0,last:0};let STOPMO=false;try{STOPMO=localStorage.getItem("paper-mill-stopmo")==="on";}catch(e){}   // (v6.1 t4: off by default; it read as stutter)
-function setStopMo(on){STOPMO=!!on;try{localStorage.setItem("paper-mill-stopmo",on?"on":"off");}catch(e){}const c=document.getElementById("stopMo");if(c)c.checked=STOPMO;}
+/* v6.12 adaptive world rate (replaces v6.1's stop-motion option). On Smooth, the 3D world is updated and drawn every frame
+   while the camera moves (pan, zoom, glide, drag, any tap or key: G3.camBusy, 29) and at 30 a second while it is still; the
+   cut-outs already step at 12-15, so nothing reads differently, and the GPU does half the work in the common case. Behind an
+   open overlay (DCS, process flow, cards: G3.veiled, set on the UI tick) the world draws at 15. Paused and idle it already
+   drew once a second (live, below). The sim, the UI and the FPS readout keep the loop's rate (the readout shows the display
+   rate). Battery saver (30) and Max are unchanged. ?adapt=0 turns it off (A/B). */
+const WACC={t:0,last:0},ADAPT=!/[?&]adapt=0/.test(location.search);G3.wdraws=0;
 /* v4.0.1: optional FPS readout (Controls > Show FPS), bottom-right; counts drawn loop frames, text written twice a second */
 const FPSM={on:false,el:null,n:0,t0:0,txt:""};
 function setShowFps(on){FPSM.on=!!on;try{localStorage.setItem("paper-mill-showfps",on?"1":"0");}catch(e){}
@@ -18055,9 +18227,11 @@ function frame(now){
          cut-outs already step at that rate); a pan, zoom or glide draws every frame. Skipped frames draw nothing, so the
          last picture stays on screen. Settings > Performance > Stop-motion (on by default). */
       if(G3.on&&G3.frame){WACC.t=Math.min(0.25,WACC.t+(running?rdt:0));
-        if(!STOPMO||(G3.camBusy&&G3.camBusy())||now-WACC.last>=1000/15-4){WACC.last=now;const d=Math.min(0.1,WACC.t);WACC.t=0;G3.frame(d);}}}
+        const busy=!G3.camBusy||G3.camBusy(),rate=!ADAPT||G3.adaptOff||FPS_MODE!=="smooth"||busy?0:G3.veiled?15:30;
+        if(!rate||now-WACC.last>=1000/rate-4){WACC.last=now;const d=Math.min(0.1,WACC.t);WACC.t=0;G3.frame(d);G3.wdraws++;}}}
     uiAcc+=rdt;if(uiAcc>(document.body.classList.contains("sheet-open")?0.2:0.4)){   // (v6.1 t3: 2.5 a second with no panel open)
-      uiAcc=0;uiN++;if(!(G3.EXP&&G3.EXP.noUI))try{AUDIO.update(running&&!S.zen&&(S.inc.length>0||S.wd==="hayout"));}catch(_){}
+      uiAcc=0;uiN++;{let v=false;for(const o of document.querySelectorAll(".overlay:not([hidden])"))if(o.getClientRects().length){v=true;break;}G3.veiled=v;}
+      if(!(G3.EXP&&G3.EXP.noUI))try{AUDIO.update(running&&!S.zen&&(S.inc.length>0||S.wd==="hayout"));}catch(_){}
       const uT=performance.now();if(!(G3.EXP&&G3.EXP.noUI)){if(paneShown($("cards")))syncControls();updateText();UI_TICKS.forEach(f=>{try{f(uiN);}catch(e){console.error("ui tick",e);}});
       if(paneShown($("chaosSec")))updateChaos();if(!$("brian").hidden)briUpd();if(paneShown($("shopSec")))updateShop();if(paneShown($("relnow"))&&$("repLive").open)updateRel();}   /* (v5.2: no offsetParent layout read) */
       if(PFo&&PFo.on)PFo.acc["UI panels (5x/s)"]=(PFo.acc["UI panels (5x/s)"]||0)+(performance.now()-uT);}}
@@ -18107,7 +18281,7 @@ requestAnimationFrame(frame);
   // one measured phase: switch something on, settle, record every frame through the existing profiler (G3.PF), switch it off
   async function phase(key,name,settleS,measureS,on,off,keepGaps){const PF=G3.PF;if(on)on();say(name+" (settling)");await wait(sec(settleS));noteLate(name+" (settling)");
     const p0=programs();PF.acc={};PF.frames=0;PF.calls=0;PF.tris=0;PF.gaps=[];PF.js=[];PF.lastNow=0;PF.on=true;
-    const end=performance.now()+sec(measureS);
+    const end=performance.now()+sec(measureS),wd0=G3.wdraws||0,t00=performance.now();
     // v4.0.2: what each slow frame (over 25 ms) was spent on: code sections, GPU uploads and shader compiles that frame
     {const t0=performance.now(),I=D().renderer.info;let last=0,prev={},pg=programs(),geo=I.memory.geometries,tex=I.memory.textures,nJs=0;
       // v6.12 t4: a ledger of what each frame did (deltas), kept for the last 4 frames so a slow frame shows what led up to it
@@ -18132,6 +18306,7 @@ requestAnimationFrame(frame);
       canvas:[gl.drawingBufferWidth,gl.drawingBufferHeight],pixel_ratio:d.renderer.getPixelRatio(),
       shadows:d.renderer.shadowMap.enabled?(G3.shadowHz||"every frame"):"off",programs:[p0,programs()],
       heap_mb:performance.memory?Math.round(performance.memory.usedJSHeapSize/1e6):null,
+      world_fps:r1(((G3.wdraws||0)-wd0)/Math.max(0.001,(performance.now()-t00)/1000)),imp:G3.impStats?G3.impStats():null,cam:G3.freeCam?"free":"iso",
       sections:Object.fromEntries(Object.entries(PF.acc).sort((a,b)=>b[1]-a[1]).map(([k,v])=>[k,+(v/Math.max(1,PF.frames)).toFixed(2)]))};
     if(keepGaps)o.gaps=gaps.map(r1);
     noteLate(name);if(off)off();R.phases[key]=o;return o;}
@@ -18200,7 +18375,8 @@ requestAnimationFrame(frame);
     let wl=null;try{if(navigator.wakeLock)wl=await navigator.wakeLock.request("screen");}catch(e){}
     // a season on a fixed seed, at the display's frame rate, with no tutorial, event cards or leaderboard; nothing saved
     FRAME_CAP=0;G3.cap=0;G3.noFallback=!Q.has("fallback");setSimSpeed(SPEED);
-    G3.autotest=true;startSeason();seedRun(SEED);S.cards.next=1e12;S.afk=true;G3.play();   // (v6.12: "Let the mill run" on: event, drive and civics cards answer themselves; on a phone they stopped the test)
+    G3.autotest=true;startSeason();seedRun(SEED);S.cards.next=1e12;S.afk=true;G3.play();
+    if(Q.get("view")==="site"&&G3.jump)G3.jump("site");   // (v6.12: &view=site measures the whole-site zoom, where the whole-site picture works)   // (v6.12: "Let the mill run" on: event, drive and civics cards answer themselves; on a phone they stopped the test)
     if(QUICK){await phase("normal","Normal play",4,8,null,null,true);R.display_hz_est=null;
       // v6.12 t4: bisection phases, 5 s each, for a hitch that shows in normal play: which switch makes it stop?
       const B=[["no_sim","Sim paused (render on)",()=>{G3.EXP.noSim=true;},()=>{G3.EXP.noSim=false;}],
@@ -18371,9 +18547,13 @@ requestAnimationFrame(frame);
     seg.innerHTML=["auto","low","medium","high","ultra"].map(g=>`<button data-g="${g}" aria-pressed="${G3.GFX.pick===g}" title="${g==="auto"?"Picked from your device: "+cap(G3.GFX.auto):{low:"1024 shadows, 10 Hz, lighter scenery",medium:"1024 shadows, 15 Hz",high:"2048 softer shadows, 24 Hz, full scenery",ultra:"4096 softer shadows, every frame, dense scenery with far shadows"}[g]}">${g==="auto"?`Auto <small class="gtier">${cap(G3.GFX.auto)}</small>`:cap(g)}</button>`).join("");
     seg.querySelectorAll("button").forEach(x=>x.addEventListener("click",()=>G3.setGfx(x.dataset.g)));
     {const rb=document.createElement("button");rb.id="gfxReload";rb.hidden=true;rb.textContent="Reload to apply all";rb.title="Lighting model, round-shape detail and scenery density change on reload";rb.addEventListener("click",()=>location.reload());setField("Graphics",seg).appendChild(rb);}}
-  {const l=document.createElement("label");l.className="check";l.title="While the view is still, the mill moves at 15 frames a second, like stop-motion; panning and zooming stay smooth";
-    l.innerHTML='<input id="stopMo" type="checkbox"/> Stop-motion (saves power)';const p=document.getElementById("v2perfrow")||document.getElementById("v2ctlrow");if(p)p.appendChild(l);
-    const c=l.querySelector("input");c.checked=STOPMO;c.addEventListener("change",e=>setStopMo(e.target.checked));}
+  // v6.12 the free camera: chosen here, applied on reload (the shapes are built for one camera or the other)
+  {const seg=document.createElement("div");seg.className="seg";seg.id="camSeg";seg.setAttribute("role","group");seg.setAttribute("aria-label","Camera");
+    const cur=!!G3.freeCam;let pick=cur;
+    seg.innerHTML=[[false,"Fixed (iso)","The tabletop view the mill was drawn for"],[true,"Free 3D","Turn and tilt anywhere: drag to turn, two fingers (or right-drag) to move, pinch or wheel to zoom. Draws more; the mill was drawn to be seen from the south-west, so some backs are plain"]].map(([k,t,ti])=>`<button data-free="${k}" aria-pressed="${cur===k}" title="${ti}">${t}</button>`).join("");
+    const rb=document.createElement("button");rb.id="camReload";rb.hidden=true;rb.textContent="Reload to switch";rb.addEventListener("click",()=>location.reload());
+    seg.querySelectorAll("button").forEach(x=>x.addEventListener("click",()=>{pick=x.dataset.free==="true";G3.setFreeCam(pick);seg.querySelectorAll("button").forEach(y=>y.setAttribute("aria-pressed",String(y.dataset.free===String(pick))));rb.hidden=pick===cur;}));
+    setField("Camera",seg).appendChild(rb);}
   {const l=document.createElement("label");l.className="check";l.innerHTML='<input id="showFps" type="checkbox"/> Show FPS';
     const row0=document.getElementById("v2viewrow")||document.getElementById("v2ctlrow");if(row0)row0.appendChild(l);
     l.querySelector("input").addEventListener("change",e=>setShowFps(e.target.checked));

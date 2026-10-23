@@ -54,7 +54,14 @@
    const cc=new THREE.OrthographicCamera(-1,1,1,-1,1,400);cc.layers.set(0);cc.layers.enable(CUT_LAYER);cc.layers.enable(30);
    // view direction (unit, from the target toward the camera) and screen right/up, from the fixed main camera
    const toCam=new THREE.Vector3(),cRight=new THREE.Vector3(),cUp=new THREE.Vector3();
-   function basis(){camera.updateMatrixWorld();const e=camera.matrixWorld.elements;cRight.set(e[0],e[1],e[2]).normalize();cUp.set(e[4],e[5],e[6]).normalize();toCam.set(e[8],e[9],e[10]).normalize();}
+   /* v6.12: a picture is always taken from the iso angle, with the model turned by the camera's own turn away from it (yawD),
+      so the cached pictures (look + one of 8 headings) stay right for a camera on any side (the free camera, zen). The card
+      itself faces the live camera. In the fixed iso view yawD is 0 and nothing changes. */
+   const isoTo=new THREE.Vector3(Math.sin(Math.acos(Math.sqrt(1/3)))*Math.sin(-Math.PI/4),Math.sqrt(1/3),Math.sin(Math.acos(Math.sqrt(1/3)))*Math.cos(-Math.PI/4)),isoQ=new THREE.Quaternion();
+   {const c=new THREE.OrthographicCamera();c.position.copy(isoTo);c.lookAt(0,0,0);c.updateMatrixWorld();isoQ.copy(c.quaternion);}
+   let yawD=0;
+   function basis(){camera.updateMatrixWorld();const e=camera.matrixWorld.elements;cRight.set(e[0],e[1],e[2]).normalize();cUp.set(e[4],e[5],e[6]).normalize();toCam.set(e[8],e[9],e[10]).normalize();
+     yawD=Math.hypot(toCam.x,toCam.z)>0.05?Math.atan2(toCam.x,toCam.z)-Math.atan2(isoTo.x,isoTo.z):0;}
    // --- finding them: anything built with userData.cut, rescanned every 2 s (pools grow during play) ---
    /* v6.1 t18: live cut-outs. A rare sight's figure (42c: userData.live = {R, cy}) never repeats a pose, so instead of a
       picture per look it is pictured again 8 times a second, as it stands and facing the way it faces, into two slots of
@@ -88,7 +95,7 @@
      else if(a.kind==="truck")k+="|"+(u.doorL?q(u.doorL.rotation.y,0.6)+","+q(u.doorR.rotation.y,0.6):"");
      return k;}
    const _m=new THREE.Matrix4(),_p=new THREE.Vector3();
-   function heading(o){const e=o.matrixWorld.elements;return (((Math.round(Math.atan2(-e[2],e[0])/(Math.PI/4))%8)+8)%8);}
+   function heading(o){const e=o.matrixWorld.elements;return (((Math.round((Math.atan2(-e[2],e[0])-yawD)/(Math.PI/4))%8)+8)%8);}
    // --- taking one picture ---
    const RTS=256,gl2=renderer.capabilities.isWebGL2!==false;
    const RT_A=new THREE.WebGLRenderTarget(RTS,RTS,{type:THREE.UnsignedByteType,   /* (v6.1 t4: 8-bit everywhere; a half-float MSAA target isn't renderable on every phone) */samples:gl2?4:0,generateMipmaps:false,minFilter:THREE.NearestFilter,magFilter:THREE.NearestFilter});
@@ -115,7 +122,7 @@
      try{cs.add(o);o.position.set(0,0,0);if(dir!=null)o.rotation.y=dir*Math.PI/4;o.visible=true;o.updateMatrixWorld(true);
        cs.fog=scene.fog;   // (the same fog object: fog is part of the shader, and the picture is far nearer than it starts)
        ch.color.copy(hemi.color);ch.groundColor.copy(hemi.groundColor);cd.color.copy(sun.color);cd.position.copy(sun.position).sub(sun.target.position);cd.target.position.set(0,0,0);cd.updateMatrixWorld();cd.target.updateMatrixWorld();
-       cc.left=-K.R;cc.right=K.R;cc.top=K.R;cc.bottom=-K.R;cc.updateProjectionMatrix();cc.position.set(0,K.cy,0).addScaledVector(toCam,150);cc.quaternion.copy(camera.quaternion);cc.updateMatrixWorld();
+       cc.left=-K.R;cc.right=K.R;cc.top=K.R;cc.bottom=-K.R;cc.updateProjectionMatrix();const fixed=dir!=null;cc.position.set(0,K.cy,0).addScaledVector(fixed?isoTo:toCam,150);cc.quaternion.copy(fixed?isoQ:camera.quaternion);   /* (v6.12: cached pictures from the iso angle; live ones as the camera sees them) */cc.updateMatrixWorld();
        renderer.autoClear=false;
        RT_A.viewport.set(0,0,px,px);RT_A.scissor.set(0,0,Math.min(RTS,px+8),Math.min(RTS,px+8));   /* (t5: cleared a little past the picture too) */renderer.setRenderTarget(RT_A);renderer.setClearColor(0x000000,0);renderer.clear(true,true,false);renderer.render(cs,cc);
        finU.uScale.value=px/RTS;finU.uPx.value=px;finU.uExp.value=renderer.toneMappingExposure;
@@ -170,7 +177,7 @@
    const freeMode=on=>{if(!CUT.ok||CUT.free===on)return;CUT.free=on;const all=CUT.actors.concat(LIVE);
      for(const a of all){a.o.children.forEach(c=>{c.matrixWorldAutoUpdate=on;});hide(a,!on);a.cell=null;a.hid=!on;}
      sets.forEach(S2=>{S2.card.count=S2.shad.count=0;});};
-   let farT=0;G3.onCamSwap=on=>{if(!on)for(const a of CUT.actors.concat(LIVE))a.zfar=false;freeMode(on);};
+   let farT=0;G3.onCamSwap=on=>{if(!on)for(const a of CUT.actors.concat(LIVE))a.zfar=false;freeMode(on&&!G3.freeCam);};   // (v6.12: the free camera setting keeps the paper cut-outs, as billboards; zen's own free camera still shows the 3D models)
    G3.cutTick=now=>{if(!CUT.ok)return;if(CUT.free){if(now>scanT){scanT=now+2000;try{rescan();for(const a of CUT.actors.concat(LIVE))if(a.hid){a.o.children.forEach(c=>{c.matrixWorldAutoUpdate=true;});hide(a,false);a.hid=false;a.zfar=false;}}catch(e){}}
      /* v6.4: in zen's free camera every person and vehicle part is its own draw (~300 draws in a whole-site shot); the
         ones over 130 m from the camera are a few pixels, so they are left out (and their matrices not updated) */

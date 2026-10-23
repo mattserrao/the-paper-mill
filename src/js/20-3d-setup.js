@@ -67,7 +67,12 @@ function no3D(){G3.ok=false;$("no3d").hidden=false;$("no3d-retry").onclick=()=>l
   const GFX=G3.GFX={...GFX_TIERS[gfxPick==="auto"?gfxAuto:gfxPick],tier:gfxPick==="auto"?gfxAuto:gfxPick,pick:gfxPick,auto:gfxAuto,gpu:String(gpuName).slice(0,60)};
   GFX.loaded=GFX.tier;if(gfxPick==="auto"&&!mobile&&!discrete){GFX.px=1.9e6;GFX.shadow=1024;}
   // the pixel ratio for a canvas of w x h CSS px: the tier's ratio, the screen's, and the pixel budget, whichever is lowest
-  G3.prFor=(w,h)=>G3.prFixed||Math.max(0.75,Math.min(GFX.pr,window.devicePixelRatio||1,Math.sqrt(GFX.px/Math.max(1,w*h))));
+  /* v6.12 free camera: Settings > Graphics > Camera (Fixed iso / Free 3D), remembered, read here before anything is built:
+     with it the static shapes keep their back faces, card trees are crossed, lamp cones too, and the cut-outs face the
+     camera from any side (36, 40, 40c, 42b, 42f); the whole-site picture (40d) is off. ?freecam / ?freecam=0 override it. */
+  G3.freeCam=(()=>{const m=/[?&]freecam(=([01]))?(&|$)/.exec(location.search);if(m)return m[2]!=="0";try{return localStorage.getItem("paper-mill-freecam")==="on";}catch(e){return false;}})();
+  G3.setFreeCam=on=>{try{localStorage.setItem("paper-mill-freecam",on?"on":"off");}catch(e){}};
+  G3.prFor=(w,h)=>G3.prFixed||Math.max(0.75,Math.min(GFX.pr,G3.freeCam&&mobile?1.5:9,window.devicePixelRatio||1,Math.sqrt(GFX.px/Math.max(1,w*h))));   // (v6.12: phones in the free camera at 1.5 at most: it draws about twice the shapes)
   {const gl=renderer.getContext();G3.multiDraw=!!gl.getExtension("WEBGL_multi_draw");
     diag(`multi-draw: ${G3.multiDraw?"yes (a batch is one draw)":"NO (three.js draws each batched object separately)"} · antialias ${gl.getContextAttributes().antialias?"on":"off"} · GPU preference ${G3.gpuPref}`);}
   diag(`graphics: ${GFX.tier}${gfxPick==="auto"?" (auto)":""} on ${GFX.gpu||"unknown GPU"}`);
