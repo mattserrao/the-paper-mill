@@ -39,16 +39,20 @@
   // one measured phase: switch something on, settle, record every frame through the existing profiler (G3.PF), switch it off
   async function phase(key,name,settleS,measureS,on,off,keepGaps){const PF=G3.PF;if(on)on();say(name+" (settling)");await wait(sec(settleS));noteLate(name+" (settling)");
     const p0=programs();PF.acc={};PF.frames=0;PF.calls=0;PF.tris=0;PF.gaps=[];PF.js=[];PF.lastNow=0;PF.on=true;
-    const end=performance.now()+sec(measureS);
+    const end=performance.now()+sec(measureS),wd0=G3.wdraws||0,t00=performance.now();
     // v4.0.2: what each slow frame (over 25 ms) was spent on: code sections, GPU uploads and shader compiles that frame
     {const t0=performance.now(),I=D().renderer.info;let last=0,prev={},pg=programs(),geo=I.memory.geometries,tex=I.memory.textures,nJs=0;
+      // v6.12 t4: a ledger of what each frame did (deltas), kept for the last 4 frames so a slow frame shows what led up to it
+      const led=()=>({mup:(G3.DB&&G3.DB.mup)||0,lbl:G3.LB?G3.LB.nd:0,cut:G3.CUT?G3.CUT.caps:0,sheet:G3.sheetBuilds||0,draws:I.render.calls,bf:BF.busy?1:0,run:running?1:0,t:+(S.t).toFixed(1)});
+      const ring=[];let lastLed=led();
       const tick=now=>{if(!PF.on||now>end)return;requestAnimationFrame(tick);const gap=last?now-last:0;last=now;
+        {const L=led(),dl={};for(const k in L)dl[k]=k==="t"||k==="draws"||k==="bf"||k==="run"?L[k]:L[k]-lastLed[k];lastLed=L;dl.gap=Math.round(gap);ring.push(dl);if(ring.length>4)ring.shift();}
         const acc=PF.acc,d={};for(const k in acc){const v=acc[k]-(prev[k]||0);if(v>=0.5)d[k]=+v.toFixed(1);}prev={...acc};
         const pN=programs(),gN=I.memory.geometries,xN=I.memory.textures,js=PF.js.length>nJs?PF.js[PF.js.length-1]:0;nJs=PF.js.length;
         if(gap>25){const SF=R.slow_frames||(R.slow_frames=[]),mine=SF.filter(f=>f.phase===name),low=mine.length<6?null:mine.reduce((a,b)=>a.gap_ms<=b.gap_ms?a:b);
           if(low&&low.gap_ms>=gap){}else{if(low)SF.splice(SF.indexOf(low),1);SF.push({phase:name,t_s:+((now-t0)/1000).toFixed(2),gap_ms:Math.round(gap),js_ms:+js.toFixed(1),
           sections:Object.fromEntries(Object.entries(d).sort((a,b)=>b[1]-a[1]).slice(0,4)),new_programs:pN-pg,new_geometries:gN-geo,new_textures:xN-tex,
-          sim_min:Math.round(S.t),upsets:S.inc.length,moving_batches:G3.DB?G3.DB.bms.length:null,pending_batches:G3.DB?(G3.DB.pending||0)+(G3.DB.q?G3.DB.q.size:0):null});}}
+          sim_min:Math.round(S.t),upsets:S.inc.length,moving_batches:G3.DB?G3.DB.bms.length:null,pending_batches:G3.DB?(G3.DB.pending||0)+(G3.DB.q?G3.DB.q.size:0):null,ledger:ring.slice()});}}
         pg=pN;geo=gN;tex=xN;};requestAnimationFrame(tick);}
     while(performance.now()<end){if(!running){R.pauses++;running=true;}say(`${name} · ${Math.max(1,Math.ceil((end-performance.now())/1000))} s`);await wait(250);}
     PF.on=false;const gaps=PF.gaps.slice(1),g=gaps.slice().sort((a,b)=>a-b),n=g.length,sum=g.reduce((a,b)=>a+b,0),js=PF.js.slice().sort((a,b)=>a-b);
@@ -60,6 +64,7 @@
       canvas:[gl.drawingBufferWidth,gl.drawingBufferHeight],pixel_ratio:d.renderer.getPixelRatio(),
       shadows:d.renderer.shadowMap.enabled?(G3.shadowHz||"every frame"):"off",programs:[p0,programs()],
       heap_mb:performance.memory?Math.round(performance.memory.usedJSHeapSize/1e6):null,
+      world_fps:r1(((G3.wdraws||0)-wd0)/Math.max(0.001,(performance.now()-t00)/1000)),imp:G3.impStats?G3.impStats():null,cam:G3.freeCam?"free":"iso",
       sections:Object.fromEntries(Object.entries(PF.acc).sort((a,b)=>b[1]-a[1]).map(([k,v])=>[k,+(v/Math.max(1,PF.frames)).toFixed(2)]))};
     if(keepGaps)o.gaps=gaps.map(r1);
     noteLate(name);if(off)off();R.phases[key]=o;return o;}
@@ -128,15 +133,25 @@
     let wl=null;try{if(navigator.wakeLock)wl=await navigator.wakeLock.request("screen");}catch(e){}
     // a season on a fixed seed, at the display's frame rate, with no tutorial, event cards or leaderboard; nothing saved
     FRAME_CAP=0;G3.cap=0;G3.noFallback=!Q.has("fallback");setSimSpeed(SPEED);
-    startSeason();seedRun(SEED);S.cards.next=1e12;G3.play();
-    if(QUICK){await phase("normal","Normal play",4,8,null,null,true);R.display_hz_est=null;}
+    G3.autotest=true;startSeason();seedRun(SEED);S.cards.next=1e12;S.afk=true;G3.play();
+    if(Q.get("view")==="site"&&G3.jump)G3.jump("site");   // (v6.12: &view=site measures the whole-site zoom, where the whole-site picture works)   // (v6.12: "Let the mill run" on: event, drive and civics cards answer themselves; on a phone they stopped the test)
+    if(QUICK){await phase("normal","Normal play",4,8,null,null,true);R.display_hz_est=null;
+      // v6.12 t4: bisection phases, 5 s each, for a hitch that shows in normal play: which switch makes it stop?
+      const B=[["no_sim","Sim paused (render on)",()=>{G3.EXP.noSim=true;},()=>{G3.EXP.noSim=false;}],
+        ["no_ui","UI tick off",()=>{G3.EXP.noUI=true;},()=>{G3.EXP.noUI=false;}],
+        ["no_movers","People + vehicles hidden",()=>{G3.EXP.noMovers=true;},()=>{G3.EXP.noMovers=false;}],
+        ["no_db","Moving batches frozen",()=>{G3.EXP.noDb=true;},()=>{G3.EXP.noDb=false;}],
+        ["no_sheet","Paper sheet frozen",()=>{G3.EXP.noSheet=true;},()=>{G3.EXP.noSheet=false;}],
+        ["no_labels","Labels canvas off",()=>{if(G3.LB){G3.LB.hid=true;G3.LB.force=true;}},()=>{if(G3.LB){G3.LB.hid=false;G3.LB.force=true;}}],
+        ["no_drop","Drop shadows off",()=>{if(G3.dropMesh)G3.dropMesh.visible=false;},()=>{if(G3.dropMesh)G3.dropMesh.visible=true;}]];
+      for(const [k,nm,on,off] of B){const o=await phase(k,nm,1.5,5,on,off,true);o.over50_per_s=r1(o.over50/5);}}
     else{await phase("normal","Normal play",8,20,null,null,true);
     await phase("shadows_off","Shadows off",2.5,5,()=>setShadows(false),()=>setShadows(true));
     let pr=1;await phase("half_res","Half resolution",2,5,()=>{const d=D();pr=d.renderer.getPixelRatio();d.renderer.setPixelRatio(pr*0.5);d.resize();},()=>{const d=D();d.renderer.setPixelRatio(pr);d.resize();});
     await phase("no_render","3D render skipped",1.5,5,()=>{G3.EXP.noRender=true;},()=>{G3.EXP.noRender=false;});
     // the display's refresh rate: with nothing to draw, frames arrive at it (60, 90, 120 Hz)
     {const f=R.phases.no_render.p50;R.display_hz_est=f?[30,60,90,120,144].reduce((b,hz)=>Math.abs(1000/f-hz)<Math.abs(1000/f-b)?hz:b,60):null;}}
-    await phase("stress","All upsets at once",QUICK?2:3,QUICK?10:15,()=>{CH.on=true;EVENTS.forEach(e=>{try{trigger(e.id,true);}catch(_){}});},null,true);
+    await phase("stress","All upsets at once",QUICK?2:3,QUICK?10:15,()=>{S.cash=Math.max(S.cash,50e6);CH.on=true;EVENTS.forEach(e=>{try{trigger(e.id,true);}catch(_){}});},null,true);   // (v6.12: a cash cushion first; 55 repair bills at once bankrupted the season and the "Season over" dialog stopped the test)
     // the browser's own per-frame work (style, layout, compositing of the HTML overlays) is in neither the JS nor the
     // GPU numbers: the same all-upsets scene with the labels, chips and banner hidden shows its share
     {let st=null;await phase("stress_no_html","All upsets, HTML labels hidden",QUICK?1:1.5,QUICK?4:6,()=>{st=document.createElement("style");st.textContent="#labels3d,#chips3d,.banner3d{display:none!important}";document.head.appendChild(st);},()=>{if(st)st.remove();});}

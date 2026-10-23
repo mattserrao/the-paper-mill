@@ -1,5 +1,63 @@
 # Changelog
 
+## v6.12.0 (2026-10-23): Cool, Fast and Free
+Release of v6.12.0-t1 to t7 (below) and the v6.11.3 repo cleanup, merged from test/v6.12-perf. iPhone autotest: 60 FPS and
+0 frames over 33 ms in every phase at the default zoom, the whole-site zoom and the free camera. Regression suite: the
+default tier 20/20 checks (786 assertions); the two slow checks (autotest, music) last passed on t6.
+
+## v6.12.0-t7 (2026-10-23): the whole-site picture is off by default (test build, test/v6.12-perf)
+- iPhone results at the whole-site zoom: with the picture 4 frames over 33 ms (worst 38 ms) and 10.7 ms of GPU a frame;
+  without it 0 frames over 33 ms (worst 31 ms) and 9.6 ms. The picture cut triangles (83k to 27k) but not GPU time, and
+  its rebuilds (47 in 94 s) caused the slow frames. It is now opt-in with `?imp` (`?noimp` is no longer needed).
+  Idle rendering and the free camera are unchanged (0 frames over 33 ms on the iPhone in every phase).
+
+## v6.12.0-t6 (2026-10-22): idle rendering, the whole-site picture and the free camera (test build, test/v6.12-perf)
+The three items of `claude/v612-plan.md`, built together.
+- **The world draws at 30 while the view is still (Smooth):** a pan, zoom, glide, drag, tap or key draws every frame, and
+  for 300 ms after; with the camera still the 3D world is updated and drawn every other frame. The cut-outs already step at
+  12-15 a second, so it looks the same and the GPU does about half the work: the cooler-phone fix. Behind an open overlay
+  (a DCS screen, the process flow, a card) it draws at 15; paused and idle it already drew once a second. The sim, the panels
+  and the FPS readout keep the display's rate (the readout shows the display rate). Battery saver and Max are as before.
+  The Stop-motion option is gone (this replaces it). `?adapt=0` turns it off; the autotest reports `world_fps` per phase.
+- **The whole-site picture (40d):** at the widest zoom step of the fixed view the static world (scenery and baked batches,
+  scenery sectors, terrain) is drawn once into 1024-pixel tiles (the screen's own colours plus depth) and the screen gets the
+  tiles as flat quads that write their depth; everything live (people, trucks, cards, bales, effects, the sheet, the drop
+  shadows, the signs, night lights, the time-of-day grade) draws over them as before and hides behind baked buildings. The
+  whole pannable world is kept as tiles: the ones on screen at once, the rest one a frame once the picture is steady (phones
+  keep the nearest 8, ~64 MB). The camera is put on whole pixels of the tile grid so tiles land pixel for pixel. A new
+  picture when anything static changes (lights, rounded so dawn and dusk step about once a second even at speed 120; a
+  season or brand colour; a part handed back; a roof; the view size); more than 3 in a second (lightning, a fire's flicker)
+  draws as before for 3 s. Blinking lights stay live: a light that changed colour in the last 3 s is drawn on its own over
+  the picture. Off away from 1x, in the free camera and in zen; `?noimp` turns it off. Diagnostics: `G3.impStats()`;
+  the autotest's `&view=site` measures the whole-site zoom and reports `imp` per phase.
+- **Free camera (Settings > Graphics > Camera: Fixed (iso) / Free 3D, reload to switch, phones too):** one finger or the left
+  button turns and tilts, two fingers or the right button (or shift) move, pinch or the wheel zoom smoothly, Q/E turn and
+  R/F tilt; jumps keep the angle; the view reset and every new load start at the iso angle. Zoom keeps its iso meaning (the
+  perspective camera stands where it frames the same), so labels, detail steps and truck specks switch as before. Built for
+  it at load: shapes keep their back faces (no back-face strip in the merge, the zoom-detail twins or the scenery), card trees
+  and lamp cones are two crossed cards with both faces, and the paper cut-outs are billboards: pictures are always taken
+  from the iso angle with the model turned by the camera's own turn, so cached pictures stay right from any side (zen's
+  free camera gets this too). Phones draw at pixel ratio 1.5 at most in this mode. `?freecam` / `?freecam=0` override it.
+
+## v6.12.0-t5 (2026-10-22): the iPhone hitch (test build, test/v6.12-perf)
+main v6.11.2 plus the fix below: main v6.11.2 under a test version number, so a phone's `?autotest` results name the build. The device
+numbers it gathers are the baseline for the v6.12 performance work (`claude/perf-review-v6113.md` in the Project).
+- `?autotest` runs with "Let the mill run" on (event, drive and civics cards answer themselves, as a standing order would) and
+  gives the mill a $50M cushion before the all-upsets phase: 55 repair bills at once bankrupted the season and the "Season
+  over" dialog stopped the test on a phone (t2).
+- **The sign atlas re-upload (t5):** the iPhone showed a 55-72 ms stall every 0.83 s in normal play (three dropped frames, then
+  catch-up), with 2-3 ms of JS in the frame. The t4 bisection pinned it to the UI tick, and only while the sim runs: every other
+  tick, any sign whose canvas changed (the tons and clock boards change with sim time) was copied into the 2048-square sign
+  atlas canvas and the **whole 16 MB atlas re-uploaded** to the GPU (`tex.needsUpdate`), mip chain and all. With the machine
+  down (the all-upsets phase) the boards don't change, which is why that phase ran clean. Now only the changed sign is
+  uploaded (`copyTextureToTexture`: `texSubImage2D` of its own small canvas, then the mips), checked pixel-identical to the
+  full upload headless. `?signfull` keeps the old path for an A/B; `G3.signAtlas` exposes the atlas to the tests.
+- **Production record board:** shows the record of a completed day (set at the day roll) and flips to "NEW PRODUCTION RECORD" once today passes it: two redraws a day at most, where it redrew on every ton of today's running count (the live total was in its redraw key). Shows a dash until the first day is done.
+- `?autotest&quick` (t4) adds seven 5 s bisection phases after normal play (sim paused, UI tick off, movers hidden, moving batches frozen, paper sheet frozen, labels canvas off, drop shadows off) and every slow frame carries a 4-frame ledger (matrix uploads, label repaints, pictures, sheet rebuilds, draws, backfill, sim time). The iPhone showed a ~70 ms hitch about once a second in normal play, in 3D-actor and no-mipmap builds alike, and never with every upset on.
+- `?nomips` (t3): the cut-out atlases without mipmaps, an A/B switch for the ~70 ms hitch the iPhone shows once a second in normal play (`?cutfail` is the other: 3D actors, no pictures at all).
+- `tools/perf/quick.py`: picks a leader after clicking Season (since v5.1 the picker comes first), so its "normal" phase
+  measures a running mill instead of the paused picker (`bench`, `latecompile` and `allocprof` had this fix in v6.10.2).
+
 ## v6.11.2 (2026-10-22): Sold by Area and Metered Power
 Release of v6.11.2-t1 to t6 (below), merged from test/v6.11.2. Full regression suite: 22/22 checks (833 assertions).
 

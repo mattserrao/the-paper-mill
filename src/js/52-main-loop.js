@@ -5,8 +5,13 @@ let FRAME_CAP=FPS_CAPS[FPS_MODE];G3.cap=FRAME_CAP;
 function setFpsMode(m){if(m===true)m="max";else if(m===false)m="saver";if(FPS_CAPS[m]===undefined)return;FPS_MODE=m;FRAME_CAP=FPS_CAPS[m];G3.cap=FRAME_CAP;try{localStorage.setItem("paper-mill-fps",m);}catch(e){}
   document.querySelectorAll("#fpsSeg button").forEach(b=>b.setAttribute("aria-pressed",String(b.dataset.fps===m)));}
 let last=performance.now(),uiAcc=0,uiN=0,lastPaint=0;
-const WACC={t:0,last:0};let STOPMO=false;try{STOPMO=localStorage.getItem("paper-mill-stopmo")==="on";}catch(e){}   // (v6.1 t4: off by default; it read as stutter)
-function setStopMo(on){STOPMO=!!on;try{localStorage.setItem("paper-mill-stopmo",on?"on":"off");}catch(e){}const c=document.getElementById("stopMo");if(c)c.checked=STOPMO;}
+/* v6.12 adaptive world rate (replaces v6.1's stop-motion option). On Smooth, the 3D world is updated and drawn every frame
+   while the camera moves (pan, zoom, glide, drag, any tap or key: G3.camBusy, 29) and at 30 a second while it is still; the
+   cut-outs already step at 12-15, so nothing reads differently, and the GPU does half the work in the common case. Behind an
+   open overlay (DCS, process flow, cards: G3.veiled, set on the UI tick) the world draws at 15. Paused and idle it already
+   drew once a second (live, below). The sim, the UI and the FPS readout keep the loop's rate (the readout shows the display
+   rate). Battery saver (30) and Max are unchanged. ?adapt=0 turns it off (A/B). */
+const WACC={t:0,last:0},ADAPT=!/[?&]adapt=0/.test(location.search);G3.wdraws=0;
 /* v4.0.1: optional FPS readout (Controls > Show FPS), bottom-right; counts drawn loop frames, text written twice a second */
 const FPSM={on:false,el:null,n:0,t0:0,txt:""};
 function setShowFps(on){FPSM.on=!!on;try{localStorage.setItem("paper-mill-showfps",on?"1":"0");}catch(e){}
@@ -40,7 +45,7 @@ function frame(now){
   const rdt=Math.max(0,Math.min(0.1,(now-last)/1000));last=now;
   // schedule the next frame first: a bug in one frame must never stop the game loop (v2.8.5: the sim step too)
   requestAnimationFrame(frame);
-  if(running&&!BF.busy){try{simAcc=Math.min(simAcc+rdt*simRate(),60);while(simAcc>=SIM_STEP&&running){step(SIM_STEP);simAcc-=SIM_STEP;}if(G3.vlvClk)vlvCatch(simAcc);}catch(e){if(!frame.serr)frame.serr=0;if(frame.serr++<5)console.error("sim error",e);}}
+  if(running&&!BF.busy&&!(G3.EXP&&G3.EXP.noSim)){try{simAcc=Math.min(simAcc+rdt*simRate(),60);while(simAcc>=SIM_STEP&&running){step(SIM_STEP);simAcc-=SIM_STEP;}if(G3.vlvClk)vlvCatch(simAcc);}catch(e){if(!frame.serr)frame.serr=0;if(frame.serr++<5)console.error("sim error",e);}}
   if(PFo&&PFo.on)PFo.acc["SIM (game logic step)"]=(PFo.acc["SIM (game logic step)"]||0)+(performance.now()-fT0);
   if(G3.cineTick)G3.cineTick(now);   // (v4.2.4: the bird cut-scene runs on real time while the game is paused)
   // v5.2: nothing is drawn behind the opaque title screen once the start-up precompile is done (it needs its frames until then)
@@ -50,11 +55,13 @@ function frame(now){
          cut-outs already step at that rate); a pan, zoom or glide draws every frame. Skipped frames draw nothing, so the
          last picture stays on screen. Settings > Performance > Stop-motion (on by default). */
       if(G3.on&&G3.frame){WACC.t=Math.min(0.25,WACC.t+(running?rdt:0));
-        if(!STOPMO||(G3.camBusy&&G3.camBusy())||now-WACC.last>=1000/15-4){WACC.last=now;const d=Math.min(0.1,WACC.t);WACC.t=0;G3.frame(d);}}}
+        const busy=!G3.camBusy||G3.camBusy(),rate=!ADAPT||G3.adaptOff||FPS_MODE!=="smooth"||busy?0:G3.veiled?15:30;
+        if(!rate||now-WACC.last>=1000/rate-4){WACC.last=now;const d=Math.min(0.1,WACC.t);WACC.t=0;G3.frame(d);G3.wdraws++;}}}
     uiAcc+=rdt;if(uiAcc>(document.body.classList.contains("sheet-open")?0.2:0.4)){   // (v6.1 t3: 2.5 a second with no panel open)
-      uiAcc=0;uiN++;try{AUDIO.update(running&&!S.zen&&(S.inc.length>0||S.wd==="hayout"));}catch(_){}
-      const uT=performance.now();if(paneShown($("cards")))syncControls();updateText();UI_TICKS.forEach(f=>{try{f(uiN);}catch(e){console.error("ui tick",e);}});
-      if(paneShown($("chaosSec")))updateChaos();if(!$("brian").hidden)briUpd();if(paneShown($("shopSec")))updateShop();if(paneShown($("relnow"))&&$("repLive").open)updateRel();   /* (v5.2: no offsetParent layout read) */
+      uiAcc=0;uiN++;{let v=false;for(const o of document.querySelectorAll(".overlay:not([hidden])"))if(o.getClientRects().length){v=true;break;}G3.veiled=v;}
+      if(!(G3.EXP&&G3.EXP.noUI))try{AUDIO.update(running&&!S.zen&&(S.inc.length>0||S.wd==="hayout"));}catch(_){}
+      const uT=performance.now();if(!(G3.EXP&&G3.EXP.noUI)){if(paneShown($("cards")))syncControls();updateText();UI_TICKS.forEach(f=>{try{f(uiN);}catch(e){console.error("ui tick",e);}});
+      if(paneShown($("chaosSec")))updateChaos();if(!$("brian").hidden)briUpd();if(paneShown($("shopSec")))updateShop();if(paneShown($("relnow"))&&$("repLive").open)updateRel();}   /* (v5.2: no offsetParent layout read) */
       if(PFo&&PFo.on)PFo.acc["UI panels (5x/s)"]=(PFo.acc["UI panels (5x/s)"]||0)+(performance.now()-uT);}}
   catch(e){if(!frame.errs)frame.errs=0;if(frame.errs++<5)console.error("frame error",e);}
   if(PFo&&PFo.on){const d=performance.now()-fT0;PFo.js.push(d);}

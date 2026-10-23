@@ -88,9 +88,13 @@
     seg.innerHTML=["auto","low","medium","high","ultra"].map(g=>`<button data-g="${g}" aria-pressed="${G3.GFX.pick===g}" title="${g==="auto"?"Picked from your device: "+cap(G3.GFX.auto):{low:"1024 shadows, 10 Hz, lighter scenery",medium:"1024 shadows, 15 Hz",high:"2048 softer shadows, 24 Hz, full scenery",ultra:"4096 softer shadows, every frame, dense scenery with far shadows"}[g]}">${g==="auto"?`Auto <small class="gtier">${cap(G3.GFX.auto)}</small>`:cap(g)}</button>`).join("");
     seg.querySelectorAll("button").forEach(x=>x.addEventListener("click",()=>G3.setGfx(x.dataset.g)));
     {const rb=document.createElement("button");rb.id="gfxReload";rb.hidden=true;rb.textContent="Reload to apply all";rb.title="Lighting model, round-shape detail and scenery density change on reload";rb.addEventListener("click",()=>location.reload());setField("Graphics",seg).appendChild(rb);}}
-  {const l=document.createElement("label");l.className="check";l.title="While the view is still, the mill moves at 15 frames a second, like stop-motion; panning and zooming stay smooth";
-    l.innerHTML='<input id="stopMo" type="checkbox"/> Stop-motion (saves power)';const p=document.getElementById("v2perfrow")||document.getElementById("v2ctlrow");if(p)p.appendChild(l);
-    const c=l.querySelector("input");c.checked=STOPMO;c.addEventListener("change",e=>setStopMo(e.target.checked));}
+  // v6.12 the free camera: chosen here, applied on reload (the shapes are built for one camera or the other)
+  {const seg=document.createElement("div");seg.className="seg";seg.id="camSeg";seg.setAttribute("role","group");seg.setAttribute("aria-label","Camera");
+    const cur=!!G3.freeCam;let pick=cur;
+    seg.innerHTML=[[false,"Fixed (iso)","The tabletop view the mill was drawn for"],[true,"Free 3D","Turn and tilt anywhere: drag to turn, two fingers (or right-drag) to move, pinch or wheel to zoom. Draws more; the mill was drawn to be seen from the south-west, so some backs are plain"]].map(([k,t,ti])=>`<button data-free="${k}" aria-pressed="${cur===k}" title="${ti}">${t}</button>`).join("");
+    const rb=document.createElement("button");rb.id="camReload";rb.hidden=true;rb.textContent="Reload to switch";rb.addEventListener("click",()=>location.reload());
+    seg.querySelectorAll("button").forEach(x=>x.addEventListener("click",()=>{pick=x.dataset.free==="true";G3.setFreeCam(pick);seg.querySelectorAll("button").forEach(y=>y.setAttribute("aria-pressed",String(y.dataset.free===String(pick))));rb.hidden=pick===cur;}));
+    setField("Camera",seg).appendChild(rb);}
   {const l=document.createElement("label");l.className="check";l.innerHTML='<input id="showFps" type="checkbox"/> Show FPS';
     const row0=document.getElementById("v2viewrow")||document.getElementById("v2ctlrow");if(row0)row0.appendChild(l);
     l.querySelector("input").addEventListener("change",e=>setShowFps(e.target.checked));

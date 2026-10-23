@@ -528,7 +528,7 @@
   const sheetG=new THREE.BufferGeometry(),sheetPos=new Float32Array(SHEET_CAP*6),sheetUV=new Float32Array(SHEET_CAP*4),sheetIdx=new Uint16Array((SHEET_CAP-1)*6);
   sheetG.setAttribute("position",new THREE.BufferAttribute(sheetPos,3));sheetG.setAttribute("uv",new THREE.BufferAttribute(sheetUV,2));sheetG.setAttribute("normal",new THREE.BufferAttribute(new Float32Array(SHEET_CAP*6),3));sheetG.setIndex(new THREE.BufferAttribute(sheetIdx,1));
   const sheetMesh=new THREE.Mesh(sheetG,sheetMat);sheetMesh.receiveShadow=true;sheetMesh.frustumCulled=false;scene.add(sheetMesh);
-  function buildSheet(reelR){const sp=sheetPath(reelR),pts=sp.pts,n=Math.min(pts.length,SHEET_CAP);sheetKey=sp.key;let acc=0;
+  function buildSheet(reelR){G3.sheetBuilds=(G3.sheetBuilds||0)+1;const sp=sheetPath(reelR),pts=sp.pts,n=Math.min(pts.length,SHEET_CAP);sheetKey=sp.key;let acc=0;
     for(let i=0;i<n;i++){const p=pts[i];if(i)acc+=Math.hypot(p[0]-pts[i-1][0],p[1]-pts[i-1][1]);const v=i*6,u=i*4;
       sheetPos[v]=p[0];sheetPos[v+1]=p[1];sheetPos[v+2]=zc-CD/2+0.2;sheetPos[v+3]=p[0];sheetPos[v+4]=p[1];sheetPos[v+5]=zc+CD/2-0.2;sheetUV[u]=acc/3;sheetUV[u+1]=0;sheetUV[u+2]=acc/3;sheetUV[u+3]=1;
       if(i){const b=(i-1)*2,q=(i-1)*6;sheetIdx[q]=b;sheetIdx[q+1]=b+1;sheetIdx[q+2]=b+2;sheetIdx[q+3]=b+1;sheetIdx[q+4]=b+3;sheetIdx[q+5]=b+2;}}
