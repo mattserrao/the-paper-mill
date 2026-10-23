@@ -13,8 +13,9 @@
        rounded first, so dawn and dusk take a step every second or so even at speed 120. More than 3 new pictures in a second
        (lightning, a fire's flicker) switches it off for 3 s.
      - Blinking lights stay live: a light whose colour changed in the last 3 s is drawn on its own over the picture.
-     - Off: away from 1x, the free camera, zen, ?noimp, or anything failing (falls back to drawing as before). */
-  {const BL=24,TS=1024,CAP=mobile?8:16,ON=!/[?&]noimp/.test(location.search);
+     - Opt-in since t7 (?imp): on the iPhone it saved no GPU time and its rebuilds caused the only frames over 33 ms.
+     - Off: without ?imp, away from 1x, the free camera, zen, or anything failing (falls back to drawing as before). */
+  {const BL=24,TS=1024,CAP=mobile?8:16,ON=/[?&]imp(?:=1)?(?:&|$)/.test(location.search);
    const IMP=G3.IMP={active:false,gen:0,gens:0,bakes:0,tiles:new Map(),susp:0,hist:[],sig:"",prox:new Map(),objs:new Set(),fills:0,err:null};
    const bakeCam=new THREE.OrthographicCamera(-1,1,1,-1,1,ISO_D*2.6);bakeCam.layers.set(BL);
    const _r=new THREE.Vector3(),_u=new THREE.Vector3(),_f=new THREE.Vector3(),_b=new THREE.Vector3(),_d=new THREE.Vector3(),_sz=new THREE.Vector2();

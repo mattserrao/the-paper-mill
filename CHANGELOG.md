@@ -1,5 +1,11 @@
 # Changelog
 
+## v6.12.0-t7 (2026-10-23): the whole-site picture is off by default (test build, test/v6.12-perf)
+- iPhone results at the whole-site zoom: with the picture 4 frames over 33 ms (worst 38 ms) and 10.7 ms of GPU a frame;
+  without it 0 frames over 33 ms (worst 31 ms) and 9.6 ms. The picture cut triangles (83k to 27k) but not GPU time, and
+  its rebuilds (47 in 94 s) caused the slow frames. It is now opt-in with `?imp` (`?noimp` is no longer needed).
+  Idle rendering and the free camera are unchanged (0 frames over 33 ms on the iPhone in every phase).
+
 ## v6.12.0-t6 (2026-10-22): idle rendering, the whole-site picture and the free camera (test build, test/v6.12-perf)
 The three items of `claude/v612-plan.md`, built together.
 - **The world draws at 30 while the view is still (Smooth):** a pan, zoom, glide, drag, tap or key draws every frame, and
