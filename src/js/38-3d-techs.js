@@ -42,16 +42,25 @@
     const navCb=o=>{if(!o.isMesh||o.isInstancedMesh||o.userData.smBatch||!o.geometry)return;
       for(let x=o;x&&x!==scene;x=x.parent){const u=x.userData||{};if(!x.visible&&x!==o)return;if(u.legs||u.wheels||u.load||u.cj||u.trike||u.stack||u.noNav)return;}   // (v6.11.2: no longer skips a roof group (u.mats): the machine hall's shell walls live in one, so walkers at a shift change cut through them; the roofs themselves are over 1.9 m and skipped below)
       if(!o.visible&&o.layers.mask===1)return;
-      const gb=o.geometry.boundingBox||(o.geometry.computeBoundingBox(),o.geometry.boundingBox);bb.copy(gb).applyMatrix4(o.matrixWorld);
+      const gb=o.geometry.boundingBox||(o.geometry.computeBoundingBox(),o.geometry.boundingBox);const lm=G3.zLogMat?G3.zLogMat(o,_navM):o.matrixWorld;if(!lm)return;bb.copy(gb).applyMatrix4(lm);   // (v7.0: in logical coordinates, where the walkers walk)
       if(bb.min.y>1.9||bb.max.y<0.25)return;if((bb.max.x-bb.min.x)*(bb.max.z-bb.min.z)>900)return;
       const i0=Math.max(0,Math.floor((bb.min.x-INF-G.x0)/G.cs)),i1=Math.min(G.nx-1,Math.floor((bb.max.x+INF-G.x0)/G.cs)),
         j0=Math.max(0,Math.floor((bb.min.z-INF-G.z0)/G.cs)),j1=Math.min(G.nz-1,Math.floor((bb.max.z+INF-G.z0)/G.cs));
       for(let j=j0;j<=j1;j++)for(let i=i0;i<=i1;i++)g[j*G.nx+i]=1;};
     scene.traverse(navCb);if(G3.SM&&G3.SM.holder)G3.SM.holder.traverse(navCb);   // (static things parked out of the scene graph (40) still block the way)
     // v4.1: scenery trunks and posts inside the yard (merged into one mesh, so not seen above)
-    (G3.navBoxes||[]).forEach(([x0,x1,z0,z1])=>{const i0=Math.max(0,Math.floor((x0-INF-G.x0)/G.cs)),i1=Math.min(G.nx-1,Math.floor((x1+INF-G.x0)/G.cs)),
+    (G3.navBoxes||[]).forEach(([x0,x1,z0,z1])=>{if(G3.siteToLogical&&!LAYOUT6){const q=G3.siteToLogical((x0+x1)/2,(z0+z1)/2);if(!q)return;const dx=q[0]-(x0+x1)/2;x0+=dx;x1+=dx;}   // (v7.0: scenery stands in the site: back to logical)
+      const i0=Math.max(0,Math.floor((x0-INF-G.x0)/G.cs)),i1=Math.min(G.nx-1,Math.floor((x1+INF-G.x0)/G.cs)),
       j0=Math.max(0,Math.floor((z0-INF-G.z0)/G.cs)),j1=Math.min(G.nz-1,Math.floor((z1+INF-G.z0)/G.cs));for(let j=j0;j<=j1;j++)for(let i=i0;i<=i1;i++)g[j*G.nx+i]=1;});
+    // v7.0: the zones are drawn apart (03b ZONES), so a walker crossing between the west block and the hall block would jump
+    // on screen. At logical x 58 the two land on the same site x (58 - 52 = 64 - 58), so the boundary is walled off in the
+    // grid except for a gap round there: people and trikes go between stock prep and the hall through it, without a jump.
+    if(!LAYOUT6){const j0=Math.floor((-3.75-G.z0)/G.cs),j1=Math.floor((-2.95-G.z0)/G.cs);
+      for(let i=0;i<G.nx;i++){const x=G.x0+(i+0.5)*G.cs;if(x>55.5&&x<60.5)continue;for(let j=j0;j<=j1;j++)if(j>=0&&j<G.nz)g[j*G.nx+i]=1;}
+      // and the fog fan's patch (part of the hall block, standing in the west block's ground) is kept out of
+      for(let j=Math.floor((-7.5-G.z0)/G.cs);j<=Math.floor((-3.0-G.z0)/G.cs);j++)for(let i=Math.floor((45.5-G.x0)/G.cs);i<=Math.floor((54.5-G.x0)/G.cs);i++)if(i>=0&&j>=0&&i<G.nx&&j<G.nz)g[j*G.nx+i]=1;}
     G.g=g;}
+  const _navM=new THREE.Matrix4();
   const navC=(G,p)=>[clamp(Math.floor((p[0]-G.x0)/G.cs),0,G.nx-1),clamp(Math.floor((p[1]-G.z0)/G.cs),0,G.nz-1)];
   const navFree=(G,i,j)=>i>=0&&j>=0&&i<G.nx&&j<G.nz&&!G.g[j*G.nx+i];
   function navNearest(G,c){if(navFree(G,c[0],c[1]))return c;for(let r=1;r<16;r++)for(let dj=-r;dj<=r;dj++)for(let di=-r;di<=r;di++){if(Math.max(Math.abs(di),Math.abs(dj))!==r)continue;if(navFree(G,c[0]+di,c[1]+dj))return [c[0]+di,c[1]+dj];}return null;}

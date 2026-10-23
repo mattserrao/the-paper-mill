@@ -177,7 +177,7 @@
   const pullBlocked=()=>!camPullOn()||G3.rounding||S.zen||G3.zen||G3.cineOn||(G3.tut&&G3.tut.on)||(G3.following&&G3.following())||(S.outg&&S.outg.watch);
   function pullTo(id,card){const now=performance.now();if(pullBlocked()||!G3.on)return false;
     if(now-PULL.touch<5000||now-PULL.last<12000||PULL.on)return false;const sp=G3.spotOf(id)||civSpot(id);if(!sp)return false;
-    const c=G3.camGet(),to=[sp[0],sp[1],Math.min(90,Math.max(55,c[2]*0.4)),c[3],0.9];
+    const c=G3.camGet(),to=[sp[0],sp[1],Math.min(90,Math.max(55,c[2]*0.4)),c[3],0.9];to.logical=true;   // (v7.0: camGlide maps it to the site)
     PULL.last=now;PULL.on={id,back:c,to,t:now,phase:"go",card:card||null};G3.camGlide(to);diag("camera: fly to "+id+(card?" (then its card)":""));return true;}
   // v5.4: a major upset's choice card pauses the game at once; the camera flies there first and the card opens on arrival
   G3.civPullCard=(id,show)=>{if(!MAJOR.has(id)||!CV.built)return false;if(S&&S.inc)for(const inc of S.inc)if(inc.id===id)PULL.incSeen.add(inc);return pullTo(id,show);};

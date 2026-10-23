@@ -19,7 +19,7 @@
    for(const k of Object.keys(ZONES)){ZZ[k]=mk(k,false);ZZ[k+"c"]=mk(k,true);}}
   const zFor=(x,z,conj)=>{const k=zoneOf(x,z);return conj?ZZ[k+"c"]:ZZ[k];};
   const zTop=p=>p===scene||p===null||(G3.SM&&p===G3.SM.holder)||!!(p&&p.__zcont);   // (a container group: its children are zoned one by one)
-  function zApply(o){if(!zTop(o.parent))return;const z=o.__zdyn?zFor(o.position.x,o.position.z,true):o.__zz;if(!z)return;
+  function zApply(o){if(!zTop(o.parent))return;if(o.__zsc){o.matrixWorld.elements[12]+=scX(o.position.x)-o.position.x;return;}const z=o.__zdyn?zFor(o.position.x,o.position.z,true):o.__zz;if(!z)return;
     o.matrixWorld.premultiply(z.pre);if(z.post)o.matrixWorld.multiply(z.post);}
   // the two three.js (r186) world-matrix updates, as they are, plus zApply
   function zUMW(force){if(this.matrixAutoUpdate)this.updateMatrix();
@@ -73,6 +73,7 @@
     scene.updateMatrixWorld(true);}
   function zOne(o,parts,depth){const bb=new THREE.Box3(),v=new THREE.Vector3();{if(o.__zz!==undefined)return;o.__zz=null;
       if(o.isLight||o.isCamera||o.userData.zd||(o.userData.smBatch&&!o.userData.zLogical)||o.userData.terrain||parts.has(o)){ZS.native++;return;}   // (smBatch: the engine's own batches and pictures hold site-space matrices already)
+      if(o.userData.zsc){o.__zsc=true;zSet(o,null,false);ZS.sc=(ZS.sc||0)+1;return;}   // (the activity scenes and rare sights: drawn warped like the scenery round them)
       if(o.isInstancedMesh){zInst(o);ZS.inst++;return;}
       if(isMover(o)){zSet(o,null,true);ZS.dyn++;return;}
       bb.makeEmpty();try{bb.setFromObject(o);}catch(e){}
@@ -95,3 +96,15 @@
   G3.sitePt=(x,z)=>ZON?sitePt(x,z):[x,z];
   G3.siteV=(v,out=v)=>{if(!ZON)return out.copy(v);const k=zoneOf(v.x,v.z);return out.set(siteX(k,v.x),v.y,v.z);};
   G3.zoneMirAt=(x,z)=>ZON&&zoneMir(zoneOf(x,z));
+  // a thing's world matrix in logical coordinates (the walkers' path-finding grid is logical, 38): the zone taken back off
+  // at the ancestor that carries it. Null for things built in site coordinates (userData.zd).
+  const _zl1=new THREE.Matrix4(),_zl2=new THREE.Matrix4();
+  G3.zLogMat=(o,out)=>{if(!ZON)return out.copy(o.matrixWorld);let t=null;
+    for(let x=o;x;x=x.parent){if(x.userData&&x.userData.zd)return null;if((x.__zz||x.__zdyn)&&zTop(x.parent)){t=x;break;}}
+    if(!t)return out.copy(o.matrixWorld);
+    const pm=t.parent&&t.parent!==scene&&!(G3.SM&&t.parent===G3.SM.holder)?t.parent.matrixWorld:null;
+    _zl1.copy(t.matrixWorld).invert().multiply(o.matrixWorld);   // o relative to t (no zone in it)
+    out.multiplyMatrices(t.matrix,_zl1);if(pm)out.premultiply(pm);return out;};
+  // a site point back to logical coordinates (the zone whose image it falls in)
+  G3.siteToLogical=(x,z)=>{if(!ZON)return [x,z];for(const k of Object.keys(ZONES)){const Z=ZONES[k],lx=Z.mir!=null?Z.mir-x:x-Z.dx;if(zoneOf(lx,z)===k)return [lx,z];}return null;};
+

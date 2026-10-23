@@ -5,10 +5,11 @@
      along a siding in the rail yard, and a straddle carrier running containers between the quay and the stacks.
      Desert: the solar crew's pickup on its maintenance track, a dust trail behind it. Bayou: a forklift taking bales from
      the barge dock round the fence to receiving. ---- */
+  const ZSC0=scene.children.length;   // (v7.0: everything built here stands in the scenery and is drawn warped like it, 20b)
   {const CYLG=new THREE.CylinderGeometry(1,1,1,12),ACT=[],AS=G3.actSpots||{},AM={},am=(k,hex)=>AM[k]||(AM[k]=new StdMat({color:lin0(hex),roughness:0.7}));
     const part=(g,w,h,d,x,y,z,k,hex)=>{const m=new THREE.Mesh(cubeG,am(k,hex));m.scale.set(w,h,d);m.position.set(x,y+h/2,z);m.castShadow=true;g.add(m);return m;};
     const wheel=(g,x,z,r,w)=>{const m=new THREE.Mesh(CYLG,am("tyre","#2f3a49"));m.scale.set(r,w,r);m.rotation.x=Math.PI/2;m.position.set(x,r,z);g.add(m);return m;};
-    const H=(x,z)=>G3.terrainH?G3.terrainH(x,z):0;
+    const H=(x,z)=>G3.terrainHs?G3.terrainHs(x,z):G3.terrainH?G3.terrainH(x,z):0;   // (v7.0: these scenes are laid out in the scenery's own layout)
     // follow a polyline back and forth at v m/s, waiting `wait` s at each end; fn(state) shows or hides loads
     function shuttle(g,pts,v,wait,fn){const L=[0];for(let i=1;i<pts.length;i++)L.push(L[i-1]+Math.hypot(pts[i][0]-pts[i-1][0],pts[i][1]-pts[i-1][1]));const tot=L[L.length-1];
       const st={s:0,dir:1,w:wait*0.5};
@@ -281,3 +282,5 @@
       G3.sightFocus=()=>sight&&sight.focus?sight.focus():null;}
     G3.actTick=rdt=>{if(!(rdt>0))return;rdt=Math.min(rdt,0.1);for(let k=0;k<ACT.length;k++)ACT[k](rdt);};
     G3.act=ACT.length;}
+  for(let i=ZSC0;i<scene.children.length;i++)scene.children[i].userData.zsc=true;
+  {const f0=G3.sightFocus;if(f0&&!LAYOUT6)G3.sightFocus=()=>{const f=f0();if(!f)return f;const o=f.slice();o[0]=scX(o[0]);if(o.length>6)o[6]=scX(o[6]);return o;};}

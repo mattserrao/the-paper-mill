@@ -120,7 +120,7 @@
   $("pad").addEventListener("pointerdown",poke);
   G3.labelIdle=now=>{if(!G3.lblStarted){G3.lblStarted=1;G3.lastMove=now+2500;}labelHost.classList.toggle("lbl-idle",lblMode==="auto"&&now-G3.lastMove>3500);};
   setLbl(lblMode);
-  G3.jump=(j,zoom=1)=>{const v=JUMPS[j];if(!v)return;const [x,z,r,ph]=v;folEnd();goal={t:new THREE.Vector3(x,0,z),r:r*zoom,th:G3.freeCam?cam.th:DEF.th,ph:G3.freeCam?cam.ph:(ph||0.88)};};   // (v5.0.6: also the outage notice's Watch the crews)
+  G3.jump=(j,zoom=1)=>{const v=JUMPS[j];if(!v)return;let [x,z,r,ph]=v;if(j==="site"){if(!LAYOUT6)x=6;}else [x,z]=G3.sitePt(x,z);folEnd();   /* (v7.0: logical spots; the whole-site view is centred on the v7 site) */goal={t:new THREE.Vector3(x,0,z),r:r*zoom,th:G3.freeCam?cam.th:DEF.th,ph:G3.freeCam?cam.ph:(ph||0.88)};};   // (v5.0.6: also the outage notice's Watch the crews)
   document.querySelectorAll("#jumps button").forEach(b=>b.addEventListener("click",()=>G3.jump(b.dataset.j)));
   $("viewReset").addEventListener("click",()=>{goal={t:DEFT.clone(),r:DEF.r,th:DEF.th,ph:DEF.ph};});
   // v4.2.4: the Shadows switch fades the sun's shadow to nothing and stops refreshing the shadow map. It never turns the

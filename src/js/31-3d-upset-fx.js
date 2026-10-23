@@ -670,14 +670,17 @@
     // sets in, sandbag walls go up at the doors, bales, pallets, drums and a tyre float and drift, forklifts and clamp
     // trucks throw spray, a gator cruises through the yard once, and at the end the water drains back to the canal
     // and leaves dark wet ground that dries out. The pulper overflow (same effect) keeps the plain version.
-    flood:g=>{const sh=new THREE.Shape(),Z0=-52,Z1=66,X0=-150,X1=96;sh.moveTo(X0,Z0);sh.lineTo(X1,Z0);sh.lineTo(X1,Z1);sh.lineTo(X0,Z1);sh.closePath();
+    flood:g=>{const sh=new THREE.Shape(),Z0=-52,Z1=66,X0=LAYOUT6?-150:FENCE7.x0-2,X1=LAYOUT6?96:FENCE7.x1+4;sh.moveTo(X0,Z0);sh.lineTo(X1,Z0);sh.lineTo(X1,Z1);sh.lineTo(X0,Z1);sh.closePath();
       const HOLES=[[-27.2,64,-2.9,19.85],[-34.4,-8,-23.5,-3],[-49,-23.8,14.8,32.2],[4,47,-25,-2],[49,65,-27,-14.5],[70,82,-16,-4],[49,61,24,30]];
-      HOLES.forEach(([x0,x1,z0,z1])=>{const h=new THREE.Path();h.moveTo(x0,z0);h.lineTo(x1,z0);h.lineTo(x1,z1);h.lineTo(x0,z1);h.closePath();sh.holes.push(h);});
+      // (v7.0: the sheet is drawn in site coordinates, round the whole v7 site, with each building's hole where it now stands)
+      const SH=LAYOUT6?HOLES:HOLES.map(([x0,x1,z0,z1])=>{const k=zoneOf((x0+x1)/2,(z0+z1)/2),a=siteX(k,x0),b=siteX(k,x1);return [Math.min(a,b),Math.max(a,b),z0,z1];});
+      SH.forEach(([x0,x1,z0,z1])=>{const h=new THREE.Path();h.moveTo(x0,z0);h.lineTo(x1,z0);h.lineTo(x1,z1);h.lineTo(x0,z1);h.closePath();sh.holes.push(h);});
       const inHole=(x,z)=>HOLES.some(([x0,x1,z0,z1])=>x>x0-0.8&&x<x1+0.8&&z>z0-0.8&&z<z1+0.8);
       const geo=new THREE.ShapeGeometry(sh);geo.rotateX(Math.PI/2);geo.translate(0,0,-Z0);   // (north edge at z 0, so the sheet spreads south by scaling z)
       const wm=new StdMat({color:lin0("#7b6a47"),transparent:true,opacity:0,roughness:0.04,metalness:0.3,depthWrite:false,side:THREE.DoubleSide});
       if(G3.papWater){const t=G3.paperWater(false);t.repeat.set(1/12,1/12);wm.map=t;wm.color.copy(lin0("#9a8a62"));wm.roughness=0.9;wm.metalness=0;}   // (t14: paper water, cut strips, nearly opaque)
       const w=new THREE.Mesh(geo,wm);w.position.set(0,0.09,Z0);w.renderOrder=1;g.add(w);
+      if(!LAYOUT6){w.frustumCulled=false;w.matrixWorldAutoUpdate=false;w.onBeforeRender=()=>{w.updateMatrix();w.matrixWorld.copy(w.matrix);};}   // (v7.0: not moved with the effect's zone)
       const wetM=new THREE.MeshBasicMaterial({color:lin0("#3e3a2c"),transparent:true,opacity:0,depthWrite:false,side:THREE.DoubleSide});
       const wet=new THREE.Mesh(geo,wetM);wet.position.set(0,0.06,Z0);wet.renderOrder=1;g.add(wet);
       // the foam line at the front, and the swollen canal

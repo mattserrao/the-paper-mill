@@ -5,6 +5,7 @@
      drift down, the singed bird flaps off trailing smoke, and the camera goes back where it was and the game carries on
      at the speed it had. Everything runs on its own real-time clock (the sim is paused); one bird and one set of
      effects, built once at start-up. Skipped in zen, the autotest and with ?nocine; Skip (or tapping the scene) ends it. */
+  const ZD0=scene.children.length;   // (v7.0: the cut-scene is laid out in site coordinates (the substation, the middle of the site))
   {const Q=new URLSearchParams(location.search),NOCINE=Q.has("autotest")||Q.has("nocine"),IMP=10,END=13.4,EZ=k=>k<=0?0:k>=1?1:k*k*(3-2*k);
     const mat=hex=>new StdMat({color:lin0(hex),roughness:0.75}),SPH=new THREE.SphereGeometry(1,14,10),BOX=new THREE.BoxGeometry(1,1,1);
     const part=(p,g,m,sx,sy,sz,x,y,z)=>{const o=new THREE.Mesh(g,m);o.scale.set(sx,sy,sz);o.position.set(x,y,z);o.castShadow=true;p.add(o);return o;};
@@ -30,8 +31,8 @@
     const ov=document.createElement("div");ov.className="cine3d";ov.hidden=true;ov.innerHTML='<i class="lb t"></i><i class="lb b"></i><i class="fl"></i><button type="button" class="skip">Skip</button>';
     ($("view3d")||document.body).appendChild(ov);const fl=ov.querySelector(".fl"),bars=ov.querySelectorAll(".lb");
     let C=null;
-    const sub=()=>{const u=G3.scenery&&G3.scenery.util&&G3.scenery.util.substation;return u?[u[0],u[1],3.4]:[74,-10,9.5];};
-    function start(){const [sx,sz,sy]=sub(),I=new THREE.Vector3(sx,sy+2.6,sz),cx=-14,cz=5,R=38,away=Math.atan2(cz-sz,cx-sx),a0=away-5.5*0.3;
+    const sub=()=>{const u=G3.scenery&&G3.scenery.util&&G3.scenery.util.substation;return u?[u[0],u[1],3.4]:LAYOUT6?[74,-10,9.5]:[siteX("E",74),-10,9.5];};
+    function start(){const [sx,sz,sy]=sub(),I=new THREE.Vector3(sx,sy+2.6,sz),cx=LAYOUT6?-14:8,cz=LAYOUT6?5:6,R=38,away=Math.atan2(cz-sz,cx-sx),a0=away-5.5*0.3;
       // circle high over the mill; at 5.5 s dive from the far side; from 8.5 s a flat run-in over the last 25 m to the lines
       const P5=new THREE.Vector3(cx+Math.cos(away)*R,70,cz+Math.sin(away)*R),d=new THREE.Vector3(I.x-P5.x,0,I.z-P5.z).normalize();
       const A=new THREE.Vector3(I.x-d.x*25,I.y+3,I.z-d.z*25),Pc=new THREE.Vector3(A.x-d.x*12,A.y+6,A.z-d.z*12),wideTh=Math.atan2(-d.z,d.x);
@@ -82,3 +83,4 @@
         if(t>=END)finish();}catch(e){console.error("bird cut-scene",e);finish();}};
     G3.cineSeek=t=>{if(C){C.t=t;C.chirp=C.chirp.filter(x=>x>t);if(t>=IMP&&!C.struck){C.struck=true;G3.cineHold=false;}}};   // (tests and stills)
 }
+  for(let i=ZD0;i<scene.children.length;i++)scene.children[i].userData.zd=true;

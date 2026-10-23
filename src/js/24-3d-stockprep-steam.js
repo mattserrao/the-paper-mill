@@ -27,11 +27,11 @@
     // v7.0: the power house stands right behind the dryers, so the steam drops straight out of its south wall, across the
     // hall's back wall and into the drive-side header (built here in site coordinates: power house wall at x 40..52, z -4;
     // the header runs the length of the dryers, site x 36.7..68.5). The header and condensate runs stay in the hall's frame.
-    const n0=scene.children.length,PX=siteX("E",74);   // (the header spans site x 36.7..68.5, so the drop lands on it)
-    const S1=[[PX,8,-4.4],[PX,Y,-4.4],[PX,Y,ZH]];
+    const n0=scene.children.length,PX=siteX("E",74),HX=Math.max(PX,siteX("H",27.3)+0.4);   // (the header starts at site x 36.7: the run turns along the back of the hall to reach it)
+    const S1=PX>=HX?[[PX,8,-4.4],[PX,Y,-4.4],[PX,Y,ZH]]:[[PX,8,-4.4],[PX,Y,-4.4],[PX,Y,-1.2],[HX,Y,-1.2],[HX,Y,ZH]];
     pipe0(S1,0.32,ins);for(let i=1;i<S1.length-1;i++){const p=S1[i];const b=new THREE.Mesh(new SphG(0.34,12,8),ins);b.position.set(p[0],p[1],p[2]);scene.add(b);}
     flange(S1[0],S1[1],0.32,M.steel);
-    pipe0([[PX+1.2,6.5,-4.4],[PX+1.2,Y,-4.4],[PX+1.2,Y,ZC]],0.14,M.steel);   // condensate return alongside
+    pipe0(PX>=HX?[[PX+1.2,6.5,-4.4],[PX+1.2,Y,-4.4],[PX+1.2,Y,ZC]]:[[PX+1.2,6.5,-4.4],[PX+1.2,Y,-4.4],[PX+1.2,Y,-0.4],[HX+0.8,Y,-0.4],[HX+0.8,Y,ZC]],0.14,M.steel);   // condensate return alongside
     box(0.3,Y-0.35,0.3,M.steel,PX+0.6,(Y-0.35)/2,-3.6,scene);box(2.2,0.26,0.26,M.steel,PX+0.6,Y-0.45,-3.6,scene,false);   // a rack bent outside the back wall
     zdSince(n0);
     pipe([[27.3,Y,ZH],[-4.5,Y,ZH]],0.32,ins);pipe([[27.95,Y,ZC],[-4.5,Y,ZC]],0.14,M.steel);}   // the header and condensate run, in the hall

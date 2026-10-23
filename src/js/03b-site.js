@@ -53,16 +53,22 @@ const LAYOUT=layoutFor(SITE.seed);
 //      wastewater, river intake: moved 52 m west
 //   H  hall block: machine hall, winder, warehouse, shipping, MCC, parking, the outbound road: mirrored about x = 32
 //      (x -> 64 - x), so the machine runs west to east and its tending side still faces the camera
-//   E  power house block (power house, boiler, water tower): moved 30 m west, so it stands behind the dryers
+//   E  power house block (power house, boiler, water tower): moved 52 m west like the west block (so walking between
+//      them never jumps), which puts it behind the presses and the first dryers
 // The sim never sees any of this: it is where things are drawn (20b-3d-zones.js). ?layout6 shows the v6 layout.
 const LAYOUT6=new URLSearchParams(location.search).has("layout6");
-const ZONES=LAYOUT6?{W:{dx:0},H:{dx:0},E:{dx:0}}:{W:{dx:-52},H:{mir:64},E:{dx:-30}};
+const ZONES=LAYOUT6?{W:{dx:0},H:{dx:0},E:{dx:0}}:{W:{dx:-52},H:{mir:64},E:{dx:-52}};
 function zoneOf(x,z){if(x>46&&x<54&&z>-7&&z<=-3.3)return "H";   // the fog fan, on the hall's back wall
   if(z>-3.3)return "H";if(x>66&&z>-30)return "E";return "W";}
 function siteX(k,x){const Z=ZONES[k];return Z.mir!=null?Z.mir-x:x+Z.dx;}
 function sitePt(x,z){return [siteX(zoneOf(x,z),x),z];}   // a logical point -> where it stands in the v7 site
 const zoneMir=k=>ZONES[k].mir!=null;
 const FENCE7=LAYOUT6?{x0:-100,x1:92,z0:-52,z1:64}:{x0:-152,x1:164,z0:-52,z1:64};   // the v7 fence, in site coordinates
+// the scenery (42b) is still laid out round the v6 fence (x -100..92) and drawn round the v7 one: x is shifted west of
+// the old fence with the west gate (-52 m), east of it with the east gate (+72 m), and stretched in between (scX)
+const SCN6={a:-100,b:92};
+function scX(s){if(LAYOUT6)return s;const A=FENCE7.x0,B=FENCE7.x1;return s<=SCN6.a?s+(A-SCN6.a):s>=SCN6.b?s+(B-SCN6.b):A+(s-SCN6.a)*(B-A)/(SCN6.b-SCN6.a);}
+function scXi(x){if(LAYOUT6)return x;const A=FENCE7.x0,B=FENCE7.x1;return x<=A?x-(A-SCN6.a):x>=B?x-(B-SCN6.b):SCN6.a+(x-A)*(SCN6.b-SCN6.a)/(B-A);}
 siteBrand(SITE.env);
 // v4.1 v13: each site's water, after the v13 site maps: a centre line z(x) through control points and a half-width.
 // The mill's intake (x -30) and outfall (x ±32) always sit on the near bank at z -60, so the river touches the mill there.
@@ -70,8 +76,11 @@ siteBrand(SITE.env);
 // canal; swamp: a straight bayou canal. riverAt(x) -> [centre z, half-width] (used by the plant, the scenery, the zen camera,
 // the dawn mist and the site picker's plan).
 const RIVERS={
-  rural:{kind:"river",pts:[[-440,-214],[-350,-200],[-270,-166],[-200,-146],[-130,-118],[-75,-84],[-35,-73],[35,-73],[80,-90],[140,-118],[220,-120],[300,-100],[370,-104],[440,-128]],
-    hw:[[-440,22],[-150,18],[-80,13.5],[75,13.5],[140,17],[440,21]],water:"#4b7f99",bank:"#c9c1a8"},
+  rural:LAYOUT6?{kind:"river",pts:[[-440,-214],[-350,-200],[-270,-166],[-200,-146],[-130,-118],[-75,-84],[-35,-73],[35,-73],[80,-90],[140,-118],[220,-120],[300,-100],[370,-104],[440,-128]],
+    hw:[[-440,22],[-150,18],[-80,13.5],[75,13.5],[140,17],[440,21]],water:"#4b7f99",bank:"#c9c1a8"}:
+    // (v7.0: the straight reach along the mill runs from the moved intake (x -82) past the outfalls (x -20 / 25))
+    {kind:"river",pts:[[-440,-214],[-370,-200],[-300,-166],[-235,-146],[-175,-118],[-127,-84],[-95,-73],[40,-73],[85,-90],[145,-118],[225,-120],[305,-100],[375,-104],[440,-128]],
+    hw:[[-440,22],[-200,18],[-120,13.5],[80,13.5],[145,17],[440,21]],water:"#4b7f99",bank:"#c9c1a8"},
   urban:{kind:"sea",pts:[[-440,-780],[440,-780]],hw:[[-440,720],[440,720]],water:"#4a7f9e",bank:"#b7b3a8"},   // v13 pass 2: the open sea north of the mill (near shore z -60)
   desert:{kind:"canal",pts:[[-440,-66],[440,-66]],hw:[[-440,6],[440,6]],water:"#2fb3c4",bank:"#cfc9bb"},
   swamp:{kind:"canal",pts:[[-440,-67],[440,-67]],hw:[[-440,10],[440,10]],water:"#3f5f52",bank:"#6f6548"}};

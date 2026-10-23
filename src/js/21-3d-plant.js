@@ -32,6 +32,8 @@
       [[Z0,10.4],[14.6,Z1]].forEach(([a,b])=>run(W1,a,W1,b));}   // east: the outbound road
     const pg=new CylG(0.08,0.08,2.6,6),pm=new THREE.InstancedMesh(pg,instMat(M.metal),posts.length),m4=new THREE.Matrix4();
     posts.forEach((p,k)=>{m4.makeTranslation(p[0],1.3,p[1]);pm.setMatrixAt(k,m4);});pm.userData.bake=true;scene.add(pm);for(let i=zn0;i<scene.children.length;i++)scene.children[i].userData.zd=true;}
+  // v7.0: the staff road comes in at the west gate now (the car park moved to the west end with the hall block)
+  if(!LAYOUT6){const n0=scene.children.length;slab(FENCE7.x0-2,-27,31.4,33.6,M.asphalt,0.025);for(let x=FENCE7.x0+2;x<-30;x+=4)box(2,0.02,0.16,M.lane,x,0.05,32.5,scene,false);zdSince(n0);}
   // guard gate between the two roads, with boom barriers
   {const zn0=scene.children.length;   // (v7.0: in site coordinates: the inbound gate on the west fence, the outbound gate on the east; a gatehouse at each)
    const GH=LAYOUT6?[[FENCE.x0-1.5,4.4]]:[[FENCE7.x0-1.5,-9.4],[FENCE7.x1+1.5,8.2]];

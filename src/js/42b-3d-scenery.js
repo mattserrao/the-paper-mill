@@ -27,17 +27,18 @@
       scene.traverse(o=>{if(!o.isMesh||!o.geometry)return;for(let x=o;x&&x!==scene;x=x.parent){if(!x.visible)return;const u=x.userData||{};if(u.legs||u.wheels||u.load||u.trike)return;}
         if(o.layers.mask!==1&&!o.isInstancedMesh)return;
         const g=o.geometry;if(!g.boundingBox)g.computeBoundingBox();gb.copy(g.boundingBox);
-        const one=b=>{if(b.max.x-b.min.x>300||b.max.z-b.min.z>300)return;const m=b.max.y<0.3?0.8:1.6;kMark(b.min.x-m,b.max.x+m,b.min.z-m,b.max.z+m);};
+        const one=b=>{if(b.max.x-b.min.x>300||b.max.z-b.min.z>300)return;const m=b.max.y<0.3?0.8:1.6;kMark(scXi(b.min.x)-m,scXi(b.max.x)+m,b.min.z-m,b.max.z+m);};   // (v7.0: the mill stands in the site; the grid is in the scenery's own (v6) layout)
         if(o.isInstancedMesh){for(let k=0;k<o.count;k++){o.getMatrixAt(k,m4);m4.premultiply(o.matrixWorld);bb.copy(gb).applyMatrix4(m4);one(bb);}}
         else{bb.copy(gb).applyMatrix4(o.matrixWorld);one(bb);}});}
     // the river and its banks (water plants allowed); v13: along the site's river line
-    for(let x=-420;x<420;x+=2){const [zc,hw]=riverAt(x+1);kMark(x,x+2,zc-hw-3,zc+hw+3,2);}
+    for(let x=-420;x<420;x+=2){const [zc,hw]=riverAt(scX(x+1));kMark(x,x+2,zc-hw-3,zc+hw+3,2);}
     // the river line sampled every metre for the terrain (the levelling asks for it at every vertex)
-    const RZT=new Float32Array(882*2);for(let i=0;i<882;i++){const r=riverAt(i-441);RZT[i*2]=r[0];RZT[i*2+1]=r[1];}
+    const RZT=new Float32Array(882*2);for(let i=0;i<882;i++){const r=riverAt(scX(i-441));RZT[i*2]=r[0];RZT[i*2+1]=r[1];}
     const rDist=(x,z)=>{const i=Math.max(0,Math.min(881,Math.round(x)+441));return Math.abs(z-RZT[i*2])-RZT[i*2+1];};
     kMark(-420,-139,-33,-25,1);                                        // the rail line out to the horizon
-    if(FD)kMark(FD.x-6,FD.x+6,FD.z-3,FD.z+6,1);                        // food-truck pitch (the truck is hidden until lunch)
+    if(FD){const fx=scXi(G3.sitePt(FD.x,FD.z)[0]);kMark(fx-6,fx+6,FD.z-3,FD.z+6,1);}                        // food-truck pitch (the truck is hidden until lunch)
     kMark(-150,-95,-8,17,1);                                           // truck roads up to the gate and the turning space
+    if(!LAYOUT6)kMark(92,140,8,17,1);                                  // (v7.0: the outbound road leaves by the east gate)
     const inside=(x,z,m=0)=>x>F.x0+m&&x<F.x1-m&&z>F.z0+m&&z<F.z1-m;
     /* ---------- geometry merger: vertex colours, flat normals, one mesh per sector ---------- */
     // sectors: the land round the fence ("near", shadowed) and the rest, in one mesh on phones and five on desktops
@@ -54,7 +55,11 @@
         if(nx*cx+ny*(cy-fix)+nz*cz<0)for(let k=0;k<3;k++){const s=a[t+3+k];a[t+3+k]=a[t+6+k];a[t+6+k]=s;}}
       return TPL[k]=a;}
     // add a template with a transform and colour; shade darkens toward the base for a little ambient occlusion
-    function add(arr,x,y,z,sx,sy,sz,ry,hex,shade=0.18,sec,rx=0,rz=0){const S2=SEC[sec==="near"?"near":secOf(x,z)];_col.set(G3.palQ?G3.palQ(hex):hex).convertSRGBToLinear();y+=hAt(x,z);
+    // (v7.0: everything is laid out in the scenery's v6 layout and drawn warped to the v7 site (03b scX): a long ground piece
+    // is stretched with it, anything else just moved. WOFF: the caller has already warped (roads))
+    let WOFF=false;
+    function add(arr,x,y,z,sx,sy,sz,ry,hex,shade=0.18,sec,rx=0,rz=0){const xs=WOFF?scXi(x):x;if(!WOFF){if(!ry&&!rx&&!rz&&sx>12){const a=scX(x-sx/2),b=scX(x+sx/2);x=(a+b)/2;sx=b-a;}else x=scX(x);}
+      const S2=SEC[sec==="near"?"near":secOf(xs,z)];_col.set(G3.palQ?G3.palQ(hex):hex).convertSRGBToLinear();y+=hAt(xs,z);
       _e.set(rx,ry,rz);_q.setFromEuler(_e);_m.compose(_v.set(x,y,z),_q,_s.set(sx,sy,sz));const e=_m.elements;
       let lo=1e9,hi=-1e9;for(let i=1;i<arr.length;i+=3){lo=Math.min(lo,arr[i]);hi=Math.max(hi,arr[i]);}const span=Math.max(1e-6,hi-lo);
       for(let i=0;i<arr.length;i+=3){const ax=arr[i],ay=arr[i+1],az=arr[i+2];
@@ -78,18 +83,18 @@
       mound:tpl("mound",()=>{const g=new THREE.SphereGeometry(1,7,3,0,Math.PI*2,0,Math.PI/2);return g;})};
     // flat polygon on the ground (water patches, fields): a fan of triangles, pre-transformed
     function poly(pts,y,hex,sec){const S2=SEC[sec==="near"?"near":secOf(pts[0][0],pts[0][1])];_col.set(hex).convertSRGBToLinear();let cx=0,cz=0;pts.forEach(p=>{cx+=p[0];cz+=p[1];});cx/=pts.length;cz/=pts.length;y+=hAt(cx,cz);
-      for(let i=0;i<pts.length;i++){const a=pts[i],b=pts[(i+1)%pts.length];S2.p.push(cx,y,cz,b[0],y,b[1],a[0],y,a[1]);for(let k=0;k<3;k++)S2.c.push(_col.r,_col.g,_col.b);S2.n++;}}
+      for(let i=0;i<pts.length;i++){const a=pts[i],b=pts[(i+1)%pts.length];S2.p.push(scX(cx),y,cz,scX(b[0]),y,b[1],scX(a[0]),y,a[1]);for(let k=0;k<3;k++)S2.c.push(_col.r,_col.g,_col.b);S2.n++;}}
     // camera height floor and walker obstacles
     const HC=8,HNX=106,HNZ=80,HX0=-424,HZ0=-320,HM=new Float32Array(HNX*HNZ);
-    function hMark(x,z,r,h){const i0=Math.max(0,Math.floor((x-r-HX0)/HC)),i1=Math.min(HNX-1,Math.floor((x+r-HX0)/HC)),j0=Math.max(0,Math.floor((z-r-HZ0)/HC)),j1=Math.min(HNZ-1,Math.floor((z+r-HZ0)/HC));
+    function hMark(x,z,r,h){x=scX(x);const i0=Math.max(0,Math.floor((x-r-HX0)/HC)),i1=Math.min(HNX-1,Math.floor((x+r-HX0)/HC)),j0=Math.max(0,Math.floor((z-r-HZ0)/HC)),j1=Math.min(HNZ-1,Math.floor((z+r-HZ0)/HC));
       for(let j=j0;j<=j1;j++)for(let i=i0;i<=i1;i++)HM[j*HNX+i]=Math.max(HM[j*HNX+i],h);}
     G3.sceneryH=(x,z)=>{const i=Math.floor((x-HX0)/HC),j=Math.floor((z-HZ0)/HC);return (i<0||j<0||i>=HNX||j>=HNZ?0:HM[j*HNX+i])+(G3.terrainH?G3.terrainH(x,z):0);};
     const NB=G3.navBoxes=[];
     // claim a footprint: keep-out, camera floor, and (inside the yard) a walker obstacle at the trunk
-    function claim(x,z,r,h,trunk){kMark(x-r,x+r,z-r,z+r,3);hMark(x,z,r,h);if(trunk&&x>-62&&x<88&&z>-52&&z<53)NB.push([x-trunk,x+trunk,z-trunk,z+trunk]);}
+    function claim(x,z,r,h,trunk){kMark(x-r,x+r,z-r,z+r,3);hMark(x,z,r,h);if(trunk&&x>-62&&x<88&&z>-52&&z<53){const xw=scX(x);NB.push([xw-trunk,xw+trunk,z-trunk,z+trunk]);}}
     const place=(x,z,r,water)=>kFree(x,z,r,water);
     // where the utilities and features ended up (zen camera shots, the brownout's substation): name -> [x, z, height]
-    const UTIL={};const note=(k,x,z,h)=>{UTIL[k]=[+x.toFixed(1),+z.toFixed(1),h];};
+    const UTIL={};const note=(k,x,z,h)=>{UTIL[k]=[+scX(x).toFixed(1),+z.toFixed(1),h];};   // (in site coordinates)
     // graphics tier: scenery density (Low 0.5 ... Ultra 1.4); the yard and the utilities are the same at every tier
     const DEN=G3.GFX&&G3.GFX.scenery!=null?G3.GFX.scenery:1;
     /* ---------- noise for natural clustering ---------- */
@@ -123,14 +128,14 @@
       if(h){const d=rDist(x,z);if(d<22)h*=sstep(12,22,d);}
       // (v13: and the roads stay level through a pad's blend too)
       if(h)for(let k=0;k<CORR.length;k++){const c=CORR[k];for(let i=1;i<c.length;i++){const d=dSeg(x,z,c[i-1],c[i]);if(d<44){h*=sstep(14,44,d);if(h===0)return 0;}}}if(h&&x<-124&&z>-46&&z<-12)h*=sstep(0,6,Math.max(-40-z,z+18));return h;}
-    G3.terrainH=hAt;
+    G3.terrainH=(x,z)=>hAt(scXi(x),z);G3.terrainHs=hAt;   // (v7.0: callers outside the scenery ask in site coordinates)
     /* ---------- assets ---------- */
     const GREEN=["#6fa76b","#5f9a63","#7cb072","#8ab879","#5b8f5c","#4f8257","#94bf6e","#6a9a4f","#7aa88a"],AUT=["#c9a24a","#d08a3c","#b9673a"],BARK=["#7a5a3c","#6b4f36","#8a6a4a"];
     /* v6.1 t7: paper-card trees. The camera never turns, so a tree is a flat standee facing it: a crown polygon and a trunk
        strip, a few triangles in the same vertex-coloured scenery mesh (lighter at the top, darker at the base), instead of a
        3D crown and trunk. CR/CU are the camera's right and the card's up (world up); cards wind toward the camera. */
     const CR=[Math.SQRT1_2,0,Math.SQRT1_2],CRF=[CR,[Math.SQRT1_2,0,-Math.SQRT1_2]],_cc=new THREE.Color(),_cc2=new THREE.Color();
-    function card(x,y0,z,pts,hex,shade=0.3,fwd=0,hexLo){const S2=SEC[secOf(x,z)];const yb=y0+hAt(x,z);x-=Math.SQRT1_2*fwd;z+=Math.SQRT1_2*fwd;   /* (fwd: a crown sits a hair in front of its trunk) */_cc.set(G3.palQ(hex)).convertSRGBToLinear();_cc2.set(G3.palQ(hexLo||hex)).convertSRGBToLinear();
+    function card(x,y0,z,pts,hex,shade=0.3,fwd=0,hexLo){const S2=SEC[secOf(x,z)];const yb=y0+hAt(x,z);x=scX(x);x-=Math.SQRT1_2*fwd;z+=Math.SQRT1_2*fwd;   /* (fwd: a crown sits a hair in front of its trunk) */_cc.set(G3.palQ(hex)).convertSRGBToLinear();_cc2.set(G3.palQ(hexLo||hex)).convertSRGBToLinear();
       let lo=1e9,hi=-1e9;for(const p of pts){lo=Math.min(lo,p[1]);hi=Math.max(hi,p[1]);}const span=Math.max(1e-6,hi-lo);
       // (v6.12 free camera: two crossed cards, each with both faces, so a tree reads as a tree from any side)
       for(const B of (G3.freeCam?CRF:[CR]))for(const back of (G3.freeCam?[false,true]:[false])){const P=(u,v)=>[x+B[0]*u,yb+v,z+B[2]*u];
@@ -152,20 +157,20 @@
       // window bands: thin darker slabs every 3.5 m on taller buildings; rooftop units and a water tank on some
       if(h>9){const glass=pick(["#3c4a5c","#46576d","#2f3a49"]),st=Math.max(3.5,(h-4)/4);for(let y=2.6;y<h-1.5;y+=st){add(T.box,x,y,z,w+0.08,1.2,d+0.08,ry,glass,0);
           if(DEN>=0.85)for(const f of [0,1,2,3]){const len=f%2?d:w,n=Math.max(1,Math.floor(len/3.6));for(let k=0;k<n;k++){if(RNG()>0.42)continue;const t=(k+0.5)/n-0.5;
-            const wx=f===0?x+w/2+0.05:f===2?x-w/2-0.05:x+t*len,wz=f===1?z+d/2+0.05:f===3?z-d/2-0.05:z+t*len;NW.push([wx,y0+y+0.6,wz,1.3,1.0,f]);}}}
+            const wx=f===0?x+w/2+0.05:f===2?x-w/2-0.05:x+t*len,wz=f===1?z+d/2+0.05:f===3?z-d/2-0.05:z+t*len;NW.push([scX(wx),y0+y+0.6,wz,1.3,1.0,f]);}}}
         // rooftop plant and the odd water tank (phones: one unit, no tank; sub-pixel at that range anyway)
         for(let k=0,n=DEN<1?1:2+Math.floor(RNG()*3);k<n;k++)add(T.box,x+rr(-w/3,w/3),h+0.6,z+rr(-d/3,d/3),rr(1.2,2.4),rr(0.8,1.6),rr(1.2,2.4),0,"#9aa0a8",0.15);
         if(DEN>=1&&RNG()<0.35){add(T.cyl10,x+rr(-w/4,w/4),h+0.6,z+rr(-d/4,d/4),1.3,2.6,1.3,0,"#7a5a3c",0.15);}}
       else if(DEN>=0.85){for(const f of [0,1,2,3]){const len=f%2?d:w,n=Math.max(1,Math.floor(len/4));for(let k=0;k<n;k++){if(RNG()>0.3)continue;const t=(k+0.5)/n-0.5;
-          const wx=f===0?x+w/2+0.05:f===2?x-w/2-0.05:x+t*len,wz=f===1?z+d/2+0.05:f===3?z-d/2-0.05:z+t*len;NW.push([wx,y0+h*0.55,wz,1.6,1.1,f]);}}}}
+          const wx=f===0?x+w/2+0.05:f===2?x-w/2-0.05:x+t*len,wz=f===1?z+d/2+0.05:f===3?z-d/2-0.05:z+t*len;NW.push([scX(wx),y0+h*0.55,wz,1.6,1.1,f]);}}}}
     function silo(x,z,r,h,hex){add(T.cyl10,x,0,z,r,h,r,0,hex,0.15);add(T.dome,x,h,z,r,r*0.7,r,0,"#9aa0a8",0.05);}
     /* ---------- 2. roads, rail and bridges (v13: laid out after the v13 site maps) ---------- */
     const ROADC=ENVK==="desert"?"#6f6a62":"#5a5f69",LANE=ENVK==="urban"?"#f2f2f2":"#f2c230",SHOULD=ENVK==="desert"?"#c9b791":ENVK==="swamp"?"#7d7457":"#b9b29c";
     const TRACK={rural:"#b8a57f",urban:"#a9a59a",desert:"#ead9b4",swamp:"#a99b74"}[ENVK];
-    function road(pts,w,dash,sec){CORR.push(pts);for(let i=1;i<pts.length;i++){const a=pts[i-1],b=pts[i],dx=b[0]-a[0],dz=b[1]-a[1],L=Math.hypot(dx,dz),ry=Math.atan2(-dz,dx),mx=(a[0]+b[0])/2,mz=(a[1]+b[1])/2;
+    function road(pts,w,dash,sec){CORR.push(pts);WOFF=true;for(let i=1;i<pts.length;i++){const a=pts[i-1],b=pts[i],ax=scX(a[0]),bx=scX(b[0]),dx=bx-ax,dz=b[1]-a[1],L=Math.hypot(dx,dz),ry=Math.atan2(-dz,dx),mx=(ax+bx)/2,mz=(a[1]+b[1])/2;
         add(T.quad,mx,0.024,mz,L+w*0.6,1,w+1.6,ry,SHOULD,0,sec);add(T.quad,mx,0.03,mz,L+w*0.5,1,w,ry,ROADC,0,sec);
-        if(dash)for(let d=2;d<L-2;d+=7){const f=d/L;add(T.quad,a[0]+dx*f,0.036,a[1]+dz*f,3,1,0.22,ry,LANE,0,sec);}
-        const n=Math.ceil(L/2);for(let k=0;k<=n;k++){const x=a[0]+dx*k/n,z=a[1]+dz*k/n;kMark(x-w/2-1.5,x+w/2+1.5,z-w/2-1.5,z+w/2+1.5,1);}}}
+        if(dash)for(let d=2;d<L-2;d+=7){const f=d/L;add(T.quad,ax+dx*f,0.036,a[1]+dz*f,3,1,0.22,ry,LANE,0,sec);}
+        const sdx=b[0]-a[0],n=Math.ceil(Math.hypot(sdx,dz)/2);for(let k=0;k<=n;k++){const x=a[0]+sdx*k/n,z=a[1]+dz*k/n;kMark(x-w/2-1.5,x+w/2+1.5,z-w/2-1.5,z+w/2+1.5,1);}}WOFF=false;}
     // smooth a polyline (Catmull-Rom, a point every ~step m)
     function smooth(pts,step=6){const out=[];for(let i=0;i<pts.length-1;i++){const p0=pts[Math.max(0,i-1)],p1=pts[i],p2=pts[i+1],p3=pts[Math.min(pts.length-1,i+2)],n=Math.max(1,Math.ceil(Math.hypot(p2[0]-p1[0],p2[1]-p1[1])/step));
         for(let k=0;k<n;k++){const t=k/n,t2=t*t,t3=t2*t,f=(a,b,c,d)=>0.5*(2*b+(-a+c)*t+(2*a-5*b+4*c-d)*t2+(-a+3*b-3*c+d)*t3);out.push([f(p0[0],p1[0],p2[0],p3[0]),f(p0[1],p1[1],p2[1],p3[1])]);}}
@@ -175,18 +180,18 @@
     function strip(pts,w,y,hex,ko,wob=0,sec){const P=smooth(pts),S2=SEC[sec==="near"?"near":secOf(P[0][0],P[0][1])];_col.set(hex).convertSRGBToLinear();const L=[],R=[];
       for(let i=0;i<P.length;i++){const a=P[Math.max(0,i-1)],b=P[Math.min(P.length-1,i+1)];let dx=b[0]-a[0],dz=b[1]-a[1];const l=Math.hypot(dx,dz)||1;dx/=l;dz/=l;
         const hw=(typeof w==="function"?w(i/Math.max(1,P.length-1)):w)/2*(1+wob*(noise(P[i][0]*3,P[i][1]*3,40)-0.5)*2);L.push([P[i][0]-dz*hw,P[i][1]+dx*hw]);R.push([P[i][0]+dz*hw,P[i][1]-dx*hw]);if(ko)kMark(P[i][0]-hw-1,P[i][0]+hw+1,P[i][1]-hw-1,P[i][1]+hw+1,ko);}
-      const v=p=>{S2.p.push(p[0],y+hAt(p[0],p[1]),p[1]);S2.c.push(_col.r,_col.g,_col.b);};
+      const v=p=>{S2.p.push(scX(p[0]),y+hAt(p[0],p[1]),p[1]);S2.c.push(_col.r,_col.g,_col.b);};
       for(let i=1;i<P.length;i++){v(L[i-1]);v(L[i]);v(R[i-1]);v(R[i-1]);v(L[i]);v(R[i]);S2.n+=2;}return P;}
     const track=(pts,w=3.4,hex=TRACK)=>strip(pts,w,0.05,hex,1,0.15);
     // v14: name boards (two posts in the merged mesh, the board itself a small textured plane made at the end)
     const SIGNS=[];function sign(x,z,ry,text,bg,fg){const c=Math.cos(ry),s2=Math.sin(ry);[-1,1].forEach(k=>add(T.box,x+k*3.4*c,0,z-k*3.4*s2,0.22,3.6,0.22,0,"#6b7079",0));SIGNS.push([x,z,ry,text,bg,fg]);}
     const channel=(pts,w,hex)=>{const wf=typeof w==="function"?w:()=>w;const P=strip(pts,t=>wf(t)+4,0.03,ENVK==="swamp"?"#6f6548":"#c9c1a8",2,0.6);strip(pts,wf,0.045,hex,2,0.6);return P;};
     // the highway (west of the gate) and the east road, straight as on the maps; the swamp's highway bends west up north
-    const HXr=-158,EX={rural:160,urban:112,desert:144,swamp:160}[ENVK],RZ=x=>riverAt(Math.max(-440,Math.min(440,x)));
+    const HXr=-158,EX={rural:160,urban:112,desert:144,swamp:160}[ENVK],RZ=x=>riverAt(Math.max(-440,Math.min(440,scX(x))));
     const north=ENVK==="swamp"?[[HXr-22,-320],[HXr-20,-250],[HXr-4,-195]]:[[HXr,-320]],[hz,hw0]=RZ(HXr),[ez,ew0]=RZ(EX);
     const SEA=(RIVERS[ENVK]||{}).kind==="sea";   // the city by the sea: no far bank, so no bridges and no roads beyond
-    if(!SEA)road([...north,[HXr,hz-hw0-9]],9,true);road([[HXr,hz+hw0+9],[HXr,-3.8],[HXr,12.5],[HXr,80],[HXr,320]],9,true);road([[-140,-3.8],[HXr,-3.8]],5.6,false,"near");road([[-140,12.5],[HXr,12.5]],5.6,false,"near");
-    road([[100,32.5],[EX,32.5]],6,false,"e");if(!SEA)road([[EX,-320],[EX,ez-ew0-9]],7,true);road([[EX,ez+ew0+9],[EX,32.5],[EX,110],[EX,320]],7,true);
+    if(!SEA)road([...north,[HXr,hz-hw0-9]],9,true);road([[HXr,hz+hw0+9],[HXr,-3.8],[HXr,12.5],[HXr,80],[HXr,320]],9,true);road([[-140,-3.8],[HXr,-3.8]],5.6,false,"near");if(LAYOUT6)road([[-140,12.5],[HXr,12.5]],5.6,false,"near");else if(EX>136)road([[132,12.5],[EX,12.5]],5.6,false,"near");   // (v7.0: rolls leave by the east gate)
+    if(LAYOUT6)road([[100,32.5],[EX,32.5]],6,false,"e");else road([[-100,32.5],[HXr,32.5]],6,false,"near");   /* (v7.0: the staff car park is now at the west end) */if(!SEA)road([[EX,-320],[EX,ez-ew0-9]],7,true);road([[EX,ez+ew0+9],[EX,32.5],[EX,110],[EX,320]],7,true);
     // bridges: deck, parapets and piers across the water and its banks
     function bridge(x,w){const [zc,hw]=RZ(x),L=2*hw+20;add(T.box,x,1.2,zc,w+2,0.5,L,0,"#9a9ea6",0.1);[-1,1].forEach(s2=>add(T.box,x+s2*(w/2+0.5),1.7,zc,0.4,0.9,L,0,"#c8ccd2",0.1));
       for(let z=zc-hw-6;z<=zc+hw+6.1;z+=Math.max(8,(2*hw+12)/Math.ceil((2*hw+12)/16)))add(T.box,x,0,z,w,1.2,1.2,0,"#8a8e96",0.2);add(T.quad,x,1.46,zc,w,1,L,0,ROADC,0);
@@ -208,7 +213,7 @@
         [[-9,-7],[9,-7],[-9,7],[9,7]].forEach(([a,b])=>add(T.box,x+a,0,z+b,0.3,6,0.3,0,"#8d939c",0.1));add(T.box,x,5.8,z-7,18,0.3,0.3,0,"#8d939c",0);add(T.box,x,5.8,z+7,18,0.3,0.3,0,"#8d939c",0);
         [[0,-9,22,0.1],[0,9,22,0.1],[-11,0,0.1,18],[11,0,0.1,18]].forEach(([a,b,w,d])=>add(T.box,x+a,0,z+b,w,2.2,d,0,"#a8b0b8",0.3));claim(x,z,12,7,0);note("substation",x,z,7);return [x,z];},
       // v6.10: the mill's own feeder, wood poles with three wires from the substation to the riser pole at the fence (38c MCC.riser)
-      feeder(sub){const M2=G3.MCC;if(!M2||!sub)return;const [rx,rz]=M2.riser,zo=F.z1+8,pts=[[sub[0]+(sub[0]<rx?11:-11),sub[1]]];
+      feeder(sub){const M2=G3.MCC;if(!M2||!sub)return;const rz=M2.riser[1],rx=scXi(G3.sitePt(M2.riser[0],rz)[0]),zo=F.z1+8,pts=[[sub[0]+(sub[0]<rx?11:-11),sub[1]]];
         if(Math.abs(sub[1]-zo)>12)pts.push([sub[0]+(sub[0]<rx?11:-11),zo]);pts.push([rx,zo],[rx,rz]);
         const P2=[];for(let i=0;i<pts.length-1;i++){const a=pts[i],b=pts[i+1],L=Math.hypot(b[0]-a[0],b[1]-a[1]),n=Math.max(1,Math.round(L/34));for(let k=i?1:0;k<=n;k++)P2.push([a[0]+(b[0]-a[0])*k/n,a[1]+(b[1]-a[1])*k/n]);}
         const H=9.4;P2.forEach(([x,z],k)=>{if(k===P2.length-1)return;if(onRiver(x,z,1)||inside(x,z,2))return;add(T.cyl6,x,0,z,0.2,H+0.4,0.2,0,"#7b5d42",0.12);
@@ -606,8 +611,8 @@
       const base=new THREE.Color(ENVLOOK.ground).convertSRGBToLinear(),tint=new THREE.Color(),mixc=new THREE.Color();
       const PATCH={rural:[["#c9c46c",55,0.6,0.5,500,0],["#b59a6b",40,0.72,0.55,0,500]],urban:[["#9fb585",60,0.6,0.45,500,0],["#b3bd9a",45,0.7,0.35,0,500]],
         desert:[["#ead9b0",52,0.5,0.5,0,0],["#c7b08a",45,0.68,0.5,300,0],["#d9c190",80,0.62,0.35,0,300]],swamp:[["#6f6a4a",45,0.6,0.5,0,0],["#7f9a63",60,0.6,0.5,300,0]]}[ENVK];
-      const SEAF=(RIVERS[ENVK]||{}).kind==="sea";for(let i=0;i<pa.count;i++){const x=pa.getX(i),z=pa.getZ(i);pa.setY(i,hAt(x,z)-(SEAF&&rDist(x,z)<-6?2.5:0));   // (the sea bed sits well under the water: no flicker far out)
-        const df=dFence(x,z),near=sstep(16,60,df);tint.copy(base);
+      const SEAF=(RIVERS[ENVK]||{}).kind==="sea";for(let i=0;i<pa.count;i++){const x=pa.getX(i),z=pa.getZ(i),xs=scXi(x);pa.setY(i,hAt(xs,z)-(SEAF&&rDist(xs,z)<-6?2.5:0));   // (the sea bed sits well under the water: no flicker far out)
+        const df=dFence(xs,z),near=sstep(16,60,df);tint.copy(base);
         if(near>0){for(const [hex,sc,th,k,ox,oz] of PATCH){const n=noise(x+ox,z+oz,sc);if(n>th)tint.lerp(mixc.set(hex).convertSRGBToLinear(),k*near*Math.min(1,(n-th)/0.12));}
           tint.multiplyScalar(1+(noise(x,z,70)-0.5)*0.16*near);}
         if(G3.palQ){tint.convertLinearToSRGB();tint.set(G3.palQ("#"+tint.getHexString())).convertSRGBToLinear();}   // (v6.1 t8: palette patches, no gradients)
@@ -640,7 +645,7 @@
     SIGNS.forEach(([x,z,ry,text,bg,fg])=>{const c=document.createElement("canvas");c.width=512;c.height=96;const X=c.getContext("2d");X.fillStyle=bg;X.fillRect(0,0,512,96);X.strokeStyle=fg;X.lineWidth=5;X.strokeRect(8,8,496,80);
       X.fillStyle=fg;X.textAlign="center";X.textBaseline="middle";let fs=46;do{X.font=`800 ${fs}px system-ui,sans-serif`;fs-=2;}while(X.measureText(text).width>470&&fs>18);X.fillText(text,256,50);
       const t=new THREE.CanvasTexture(c);t.colorSpace=THREE.SRGBColorSpace;const m=new THREE.Mesh(new THREE.PlaneGeometry(7.4,1.4),new THREE.MeshBasicMaterial({map:t,side:THREE.DoubleSide}));
-      m.position.set(x,hAt(x,z)+2.8,z);m.rotation.y=ry;m.userData.noNav=true;scene.add(m);});
+      m.position.set(scX(x),hAt(x,z)+2.8,z);m.rotation.y=ry;m.userData.noNav=true;scene.add(m);});
     /* ---------- build the merged meshes ---------- */
     const smat=new StdMat({vertexColors:true,roughness:0.9,flatShading:true});smat.color.set(0xffffff);
     let tris=0;const parts=[];
@@ -662,8 +667,8 @@
         railyard:"Rail yard",waterTower:"Water tower",recycler:"Recycling yard",pier:"Pier",port:"Container port",lighthouse:"Lighthouse",townWater:"Town water",beach:"Beach",
         solarFarm:"Solar farm",waterTanks:"Water tanks",windpump:"Windpump",stockPond:"Stock pond",ranch:"Ranch",bargeDock:"Barge dock",barge:"Barge",shack:"Fishing shack",boardwalk:"Boardwalk lookout",dockLane:"Bale route to receiving"};
       if(ENVK==="urban")UTIL.beach=[-300,-80,4];
-      if(typeof LABELS!=="undefined")for(const k in UTIL){if(!NM[k])continue;const [x,z,h]=UTIL[k],y=hAt(x,z)+Math.min(30,h)+4;LABELS.push({land:1,p:[x,y,z],t:()=>[NM[k],""],lb:lblNew(false),v:new THREE.Vector3(x,y,z)});}}
+      if(typeof LABELS!=="undefined")for(const k in UTIL){if(!NM[k])continue;const [x,z,h]=UTIL[k],y=hAt(scXi(x),z)+Math.min(30,h)+4;LABELS.push({land:1,p:[x,y,z],t:()=>[NM[k],""],lb:lblNew(false),v:new THREE.Vector3(x,y,z)});}}
     // for the clipping check (tools/clipcheck.py): is (x,z) inside a scenery footprint?
-    G3.sceneryAt=(x,z)=>{const i=kIdx(x,z);return i>=0&&KO[i]===3;};
+    G3.sceneryAt=(x,z)=>{const i=kIdx(scXi(x),z);return i>=0&&KO[i]===3;};
     G3.scenery={env:ENVK,seed:SITE.seed,layout:LAYOUT.i,parts,tris,util:UTIL,sectors:Object.fromEntries(Object.entries(SEC).map(([k,v])=>[k,v.n])),navBoxes:NB.length};
     diag(`scenery: ${ENVK} mill #${SITE.seed} (layout ${LAYOUT.i}): ${tris} triangles in ${parts.length} meshes`);}
