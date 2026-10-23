@@ -250,10 +250,13 @@
     envAcc+=rdt;if(envAcc>1){envAcc=0;
       const q=S.inQ&&S.inQ[0],txt=q?(14.6+(q.load||0)).toFixed(1)+" t":"-- . - t";const sc=ENV.scale;if(txt!==sc.last){sc.last=txt;const x=sc.ctx;x.fillStyle="#101418";x.fillRect(0,0,256,80);x.fillStyle="#ff5a3c";x.font='700 46px "IBM Plex Mono",monospace';x.textAlign="center";x.textBaseline="middle";x.fillText(txt,128,42);sc.tex.needsUpdate=true;}
       // v2.9.13: the yard board shows the daily production record (best 6am-6am day) and today's tons so far
-      const pd=S.pd||{start:0,rec:0},today=Math.max(0,S.tot.prodT-pd.start),best=Math.max(pd.rec,today),isNew=pd.rec>0&&today>pd.rec,
-        fmt=v=>Math.round(v).toLocaleString("en-US"),bt=fmt(best)+"|"+fmt(today)+"|"+isNew;const bd=ENV.board;
+      // v6.12: the board shows the record of a completed day (set at the 6am roll) and flips to "NEW PRODUCTION RECORD" once
+      // today passes it: two redraws a day at most. (It redrew on every ton of today's running count before: the redraw key
+      // carried the live total, so the sign's canvas was recopied into the atlas every 0.8 s.)
+      const pd=S.pd||{start:0,rec:0},today=Math.max(0,S.tot.prodT-pd.start),best=pd.rec,isNew=pd.rec>0&&today>pd.rec,
+        fmt=v=>Math.round(v).toLocaleString("en-US"),bt=fmt(best)+"|"+isNew;const bd=ENV.board;
       if(bt!==bd.last){bd.last=bt;const x=bd.ctx;x.fillStyle="#ffffff";x.fillRect(0,0,512,256);x.fillStyle=isNew?"#c77d00":"#1f8a4c";x.fillRect(0,0,512,64);
         x.fillStyle="#fff";x.font='800 36px "Plus Jakarta Sans",system-ui,sans-serif';x.textAlign="center";x.textBaseline="middle";x.fillText(isNew?"NEW PRODUCTION RECORD":"PRODUCTION RECORD",256,34);
-        x.fillStyle="#1c2233";x.font='800 96px "Plus Jakarta Sans",system-ui,sans-serif';x.fillText(fmt(best)+" t",256,160);
+        x.fillStyle="#1c2233";x.font='800 96px "Plus Jakarta Sans",system-ui,sans-serif';x.fillText(best>0?fmt(best)+" t":"— t",256,160);   // (no completed day yet: a dash, not 0)
         bd.tex.needsUpdate=true;}}}
 

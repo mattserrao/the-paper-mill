@@ -13,6 +13,7 @@ numbers it gathers are the baseline for the v6.12 performance work (`claude/perf
   down (the all-upsets phase) the boards don't change, which is why that phase ran clean. Now only the changed sign is
   uploaded (`copyTextureToTexture`: `texSubImage2D` of its own small canvas, then the mips), checked pixel-identical to the
   full upload headless. `?signfull` keeps the old path for an A/B; `G3.signAtlas` exposes the atlas to the tests.
+- **Production record board:** shows the record of a completed day (set at the day roll) and flips to "NEW PRODUCTION RECORD" once today passes it: two redraws a day at most, where it redrew on every ton of today's running count (the live total was in its redraw key). Shows a dash until the first day is done.
 - `?autotest&quick` (t4) adds seven 5 s bisection phases after normal play (sim paused, UI tick off, movers hidden, moving batches frozen, paper sheet frozen, labels canvas off, drop shadows off) and every slow frame carries a 4-frame ledger (matrix uploads, label repaints, pictures, sheet rebuilds, draws, backfill, sim time). The iPhone showed a ~70 ms hitch about once a second in normal play, in 3D-actor and no-mipmap builds alike, and never with every upset on.
 - `?nomips` (t3): the cut-out atlases without mipmaps, an A/B switch for the ~70 ms hitch the iPhone shows once a second in normal play (`?cutfail` is the other: 3D actors, no pictures at all).
 - `tools/perf/quick.py`: picks a leader after clicking Season (since v5.1 the picker comes first), so its "normal" phase
