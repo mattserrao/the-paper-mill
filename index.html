@@ -13069,7 +13069,7 @@ function no3D(){G3.ok=false;$("no3d").hidden=false;$("no3d-retry").onclick=()=>l
   // 8 directions, a ray from the subject out to the camera spot, the first clear one (from a random start), else the longest
   const _zrc=new THREE.Raycaster(),_zo=new THREE.Vector3(),_zd=new THREE.Vector3();if(_zrc.layers)_zrc.layers.enableAll();
   function clearSide(x,y,z,r,ph){const a0=Math.random()*6.28;let best=a0,bd=-1;_zo.set(x,y+0.3,z);
-    for(let i=0;i<8;i++){const a=a0+i*Math.PI/4;_zd.set(Math.sin(ph)*Math.sin(a),Math.cos(ph),Math.sin(ph)*Math.cos(a)).normalize();_zrc.set(_zo,_zd);_zrc.far=r;
+    for(let i=0;i<8;i++){const a=a0+i*Math.PI/4;_zd.set(Math.sin(ph)*Math.sin(a),Math.cos(ph),Math.sin(ph)*Math.cos(a)).normalize();_zrc.set(_zo,_zd);_zrc.far=r;_zrc.camera=camera;   // (v6.12 t5: a sprite on the ray logged a console error without a camera set; the smoke check flaked on it)
       let h=null;try{h=_zrc.intersectObjects(scene.children,true).find(q=>q.object.visible&&!q.object.isSprite&&!(q.object.material&&q.object.material.transparent));}catch(e){}
       const dd=h?h.distance:r;if(dd>=r)return a;if(dd>bd){bd=dd;best=a;}}return best;}
   G3.zenMoves=()=>zenMoves();   // (tests: run every shot)
