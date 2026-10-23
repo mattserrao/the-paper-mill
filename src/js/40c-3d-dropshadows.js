@@ -83,7 +83,15 @@
       o.geometry=g;o.material=mat;n++;}
     const tex=new THREE.CanvasTexture(cv);tex.colorSpace=THREE.SRGBColorSpace;tex.anisotropy=4;mat.map=tex;
     diag(`sign atlas: ${n} signs, ${seen.size} textures in one`);
-    UI_TICKS.push(k=>{if(k%2)return;let ch=false;for(const r of seen.values())if(r.t.version!==r.v){r.v=r.t.version;x.clearRect(r.x,r.y,r.w,r.h);x.drawImage(r.t.image,r.x,r.y);ch=true;}if(ch)tex.needsUpdate=true;});};
+    /* v6.12 t5: a sign that changed is copied into the atlas's GPU texture on its own (texSubImage2D of its small canvas,
+       then the mip chain), not by re-uploading the whole 2048 canvas: on the iPhone that upload was a ~70 ms stall every
+       0.8 s while the mill ran (the tons / clock signs change every tick). ?signfull keeps the old full upload (A/B). */
+    const FULL=/[?&]signfull/.test(location.search),dp=new THREE.Vector2();G3.signAtlas={tex,seen,cv,W,subs:0,fulls:0};
+    const sync=()=>{let ch=false;for(const r of seen.values())if(r.t.version!==r.v){r.v=r.t.version;x.clearRect(r.x,r.y,r.w,r.h);x.drawImage(r.t.image,r.x,r.y);
+      if(!FULL&&tex.version>0&&!G3.signAtlas.err){try{dp.set(r.x,W-r.y-r.h);renderer.copyTextureToTexture(r.t,tex,null,dp);G3.signAtlas.subs++;continue;}catch(e){G3.signAtlas.err=String(e);}}
+      ch=true;}
+      if(ch){tex.needsUpdate=true;G3.signAtlas.fulls++;}};
+    G3.signAtlas.sync=sync;UI_TICKS.push(k=>{if(k%2)return;sync();});};
   /* v6.1 t7: faces the camera can never see. The view direction never changes, so on the first frame every static, opaque,
      single-sided mesh in the static merge keeps only its triangles that face the camera (the GPU threw the others away
      anyway, after transforming them). One stripped copy per shape and orientation is shared. An object that later moves or

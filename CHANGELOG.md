@@ -1,11 +1,18 @@
 # Changelog
 
-## v6.12.0-t4 (2026-10-22): performance baseline (test build, test/v6.12-perf)
-No game changes: main v6.11.2 under a test version number, so a phone's `?autotest` results name the build. The device
+## v6.12.0-t5 (2026-10-22): the iPhone hitch (test build, test/v6.12-perf)
+main v6.11.2 plus the fix below: main v6.11.2 under a test version number, so a phone's `?autotest` results name the build. The device
 numbers it gathers are the baseline for the v6.12 performance work (`claude/perf-review-v6113.md` in the Project).
 - `?autotest` runs with "Let the mill run" on (event, drive and civics cards answer themselves, as a standing order would) and
   gives the mill a $50M cushion before the all-upsets phase: 55 repair bills at once bankrupted the season and the "Season
   over" dialog stopped the test on a phone (t2).
+- **The sign atlas re-upload (t5):** the iPhone showed a 55-72 ms stall every 0.83 s in normal play (three dropped frames, then
+  catch-up), with 2-3 ms of JS in the frame. The t4 bisection pinned it to the UI tick, and only while the sim runs: every other
+  tick, any sign whose canvas changed (the tons and clock boards change with sim time) was copied into the 2048-square sign
+  atlas canvas and the **whole 16 MB atlas re-uploaded** to the GPU (`tex.needsUpdate`), mip chain and all. With the machine
+  down (the all-upsets phase) the boards don't change, which is why that phase ran clean. Now only the changed sign is
+  uploaded (`copyTextureToTexture`: `texSubImage2D` of its own small canvas, then the mips), checked pixel-identical to the
+  full upload headless. `?signfull` keeps the old path for an A/B; `G3.signAtlas` exposes the atlas to the tests.
 - `?autotest&quick` (t4) adds seven 5 s bisection phases after normal play (sim paused, UI tick off, movers hidden, moving batches frozen, paper sheet frozen, labels canvas off, drop shadows off) and every slow frame carries a 4-frame ledger (matrix uploads, label repaints, pictures, sheet rebuilds, draws, backfill, sim time). The iPhone showed a ~70 ms hitch about once a second in normal play, in 3D-actor and no-mipmap builds alike, and never with every upset on.
 - `?nomips` (t3): the cut-out atlases without mipmaps, an A/B switch for the ~70 ms hitch the iPhone shows once a second in normal play (`?cutfail` is the other: 3D actors, no pictures at all).
 - `tools/perf/quick.py`: picks a leader after clicking Season (since v5.1 the picker comes first), so its "normal" phase
