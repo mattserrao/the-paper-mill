@@ -25,7 +25,7 @@ def catch_round(pg, area, ids, how):
     got = []
     for id in ids:
         pg.wait_for_function("id=>!!__PM.G3.tellScreen(id)", arg=id, timeout=30000)
-        pg.evaluate("id=>{const G=__PM.G3,p=G.tellPos(id),c=G.camGet();G.tellHold();G.camSet([p[0],p[1],58,c[3],0.62]);}", id)   # (as a player would pan to it; the camera holds still)
+        pg.evaluate("id=>{const G=__PM.G3,p=G.tellPos(id),q=G.sitePt?G.sitePt(p[0],p[1]):p,c=G.camGet();G.tellHold();G.camSet([q[0],q[1],58,c[3],0.62]);}", id)   # (v7.0: tellPos is logical, the camera is in site coordinates)   # (as a player would pan to it; the camera holds still)
         pg.wait_for_timeout(1500)
         # (tellScreen projects with the camera as the last frame left it: on a loaded machine 1.5 s can pass without a
         # frame, and the tap then lands off screen. Wait for a few real frames as well)

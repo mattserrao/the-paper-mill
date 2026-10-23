@@ -66,7 +66,7 @@
     truckMap.forEach((g,id)=>{if(g.visible)out.push(["v","k"+id,P3(g,2),g,40]);});
     EQ().forEach((q,k)=>{if(Array.isArray(q[0][0]))q[0].forEach(pt=>out.push(["q","q"+k,pt,null,34]));else out.push(["q","q"+k,q[0],null,46]);});return out;}
   function pick(e){const r=renderer.domElement.getBoundingClientRect(),mx=e.clientX-r.left,my=e.clientY-r.top;let best=null,bd=1e9;
-    for(const c of cands()){_iv.set(c[2][0],c[2][1],c[2][2]).project(camera);if(_iv.z>1||_iv.z<-1)continue;const sx=(_iv.x+1)/2*r.width,sy=(1-_iv.y)/2*r.height,d=Math.hypot(sx-mx,sy-my);
+    for(const c of cands()){G3.siteV(_iv.set(c[2][0],c[2][1],c[2][2])).project(camera);if(_iv.z>1||_iv.z<-1)continue;const sx=(_iv.x+1)/2*r.width,sy=(1-_iv.y)/2*r.height,d=Math.hypot(sx-mx,sy-my);
       if(d>c[4])continue;const score=d+(c[0]==="q"?30:0)+_iv.z*4;if(score<bd){bd=score;best=c;}}
     return best;}
   function infoHTML(c){if(!c)return null;const k=c[1];

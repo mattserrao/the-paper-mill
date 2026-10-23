@@ -58,7 +58,7 @@ const LAYOUT=layoutFor(SITE.seed);
 // The sim never sees any of this: it is where things are drawn (20b-3d-zones.js). ?layout6 shows the v6 layout.
 const LAYOUT6=new URLSearchParams(location.search).has("layout6");
 const ZONES=LAYOUT6?{W:{dx:0},H:{dx:0},E:{dx:0}}:{W:{dx:-52},H:{mir:64},E:{dx:-52}};
-function zoneOf(x,z){if(x>46&&x<54&&z>-7&&z<=-3.3)return "H";   // the fog fan, on the hall's back wall
+function zoneOf(x,z){if(x>47&&x<53.5&&z>-6.2&&z<=-3.3)return "H";   // the fog fan, on the hall's back wall
   if(z>-3.3)return "H";if(x>66&&z>-30)return "E";return "W";}
 function siteX(k,x){const Z=ZONES[k];return Z.mir!=null?Z.mir-x:x+Z.dx;}
 function sitePt(x,z){return [siteX(zoneOf(x,z),x),z];}   // a logical point -> where it stands in the v7 site

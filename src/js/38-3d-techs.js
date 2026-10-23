@@ -58,7 +58,7 @@
     if(!LAYOUT6){const j0=Math.floor((-3.75-G.z0)/G.cs),j1=Math.floor((-2.95-G.z0)/G.cs);
       for(let i=0;i<G.nx;i++){const x=G.x0+(i+0.5)*G.cs;if(x>55.5&&x<60.5)continue;for(let j=j0;j<=j1;j++)if(j>=0&&j<G.nz)g[j*G.nx+i]=1;}
       // and the fog fan's patch (part of the hall block, standing in the west block's ground) is kept out of
-      for(let j=Math.floor((-7.5-G.z0)/G.cs);j<=Math.floor((-3.0-G.z0)/G.cs);j++)for(let i=Math.floor((45.5-G.x0)/G.cs);i<=Math.floor((54.5-G.x0)/G.cs);i++)if(i>=0&&j>=0&&i<G.nx&&j<G.nz)g[j*G.nx+i]=1;}
+      for(let j=Math.floor((-5.9-G.z0)/G.cs);j<=Math.floor((-3.0-G.z0)/G.cs);j++)for(let i=Math.floor((46.8-G.x0)/G.cs);i<=Math.floor((53.6-G.x0)/G.cs);i++)if(i>=0&&j>=0&&i<G.nx&&j<G.nz)g[j*G.nx+i]=1;}
     G.g=g;}
   const _navM=new THREE.Matrix4();
   const navC=(G,p)=>[clamp(Math.floor((p[0]-G.x0)/G.cs),0,G.nx-1),clamp(Math.floor((p[1]-G.z0)/G.cs),0,G.nz-1)];

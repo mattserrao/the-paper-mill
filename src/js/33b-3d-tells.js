@@ -68,7 +68,7 @@
     // a tap: the nearest shown tell within reach on screen
     const _v=new THREE.Vector3(),_e=new THREE.Vector3();
     G3.tellTap=e=>{if(!RND.on||!RND.shown.size)return false;const r=glc.getBoundingClientRect(),px=e.clientX-r.left,py=e.clientY-r.top;let best=null,bd=1e9;
-      for(const id of RND.shown){const k=KIT[id],t=k.parts.top;_v.set(k.x,t[1]*SC*0.6,k.z);_e.copy(_v).add(_e.set(0,2.5,0));
+      for(const id of RND.shown){const k=KIT[id],t=k.parts.top;G3.siteV(_v.set(k.x,t[1]*SC*0.6,k.z));_e.set(0,2.5,0).add(_v);   // (v7.0: the tell is drawn at its site point)
         _v.project(camera);_e.project(camera);if(_v.z>1)continue;const sx=(_v.x+1)/2*r.width,sy=(1-_v.y)/2*r.height,ex=(_e.x+1)/2*r.width,ey=(1-_e.y)/2*r.height;
         const reach=Math.max(TAP_PX,Math.hypot(ex-sx,ey-sy)),d=Math.hypot(px-sx,py-sy);if(d<=reach&&d<bd){bd=d;best=id;}}
       if(!best)return false;RND.hits.add(best);const k=KIT[best];
