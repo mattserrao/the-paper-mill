@@ -128,7 +128,7 @@
     let wl=null;try{if(navigator.wakeLock)wl=await navigator.wakeLock.request("screen");}catch(e){}
     // a season on a fixed seed, at the display's frame rate, with no tutorial, event cards or leaderboard; nothing saved
     FRAME_CAP=0;G3.cap=0;G3.noFallback=!Q.has("fallback");setSimSpeed(SPEED);
-    startSeason();seedRun(SEED);S.cards.next=1e12;G3.play();
+    G3.autotest=true;startSeason();seedRun(SEED);S.cards.next=1e12;S.afk=true;G3.play();   // (v6.12: "Let the mill run" on: event, drive and civics cards answer themselves; on a phone they stopped the test)
     if(QUICK){await phase("normal","Normal play",4,8,null,null,true);R.display_hz_est=null;}
     else{await phase("normal","Normal play",8,20,null,null,true);
     await phase("shadows_off","Shadows off",2.5,5,()=>setShadows(false),()=>setShadows(true));
@@ -136,7 +136,7 @@
     await phase("no_render","3D render skipped",1.5,5,()=>{G3.EXP.noRender=true;},()=>{G3.EXP.noRender=false;});
     // the display's refresh rate: with nothing to draw, frames arrive at it (60, 90, 120 Hz)
     {const f=R.phases.no_render.p50;R.display_hz_est=f?[30,60,90,120,144].reduce((b,hz)=>Math.abs(1000/f-hz)<Math.abs(1000/f-b)?hz:b,60):null;}}
-    await phase("stress","All upsets at once",QUICK?2:3,QUICK?10:15,()=>{CH.on=true;EVENTS.forEach(e=>{try{trigger(e.id,true);}catch(_){}});},null,true);
+    await phase("stress","All upsets at once",QUICK?2:3,QUICK?10:15,()=>{S.cash=Math.max(S.cash,50e6);CH.on=true;EVENTS.forEach(e=>{try{trigger(e.id,true);}catch(_){}});},null,true);   // (v6.12: a cash cushion first; 55 repair bills at once bankrupted the season and the "Season over" dialog stopped the test)
     // the browser's own per-frame work (style, layout, compositing of the HTML overlays) is in neither the JS nor the
     // GPU numbers: the same all-upsets scene with the labels, chips and banner hidden shows its share
     {let st=null;await phase("stress_no_html","All upsets, HTML labels hidden",QUICK?1:1.5,QUICK?4:6,()=>{st=document.createElement("style");st.textContent="#labels3d,#chips3d,.banner3d{display:none!important}";document.head.appendChild(st);},()=>{if(st)st.remove();});}

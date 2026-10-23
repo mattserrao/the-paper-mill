@@ -333,7 +333,7 @@ function cardHave(c){const ids=[...new Set([...String(c.odds).matchAll(/LV\("(\w
   return !no.length?"You have both.":!has.length?"You have neither yet.":`You have ${nm(has[0])}, not ${nm(no[0])}.`;}
 let cardEl=null;
 // v6.8.3 free play "Let the mill run" (Settings): the card is declined on the spot and the sim doesn't pause
-const afkOn=()=>!!(S&&S.free&&S.afk);
+const afkOn=()=>!!(S&&S.afk&&(S.free||G3.autotest));   // (v6.12: the ?autotest season runs with it on too, so no card stops the clock)
 function openCard(c){if(afkOn()){log(`Declined for you: ${c.title}`,"");if(typeof civCardDecline==="function")civCardDecline(c);return;}if(G3.yieldUI)G3.yieldUI();   // (v6.9.2: a card draws under the DCS and faceplate; close them so it isn't hidden)
   const o=c.odds();S.cards.open={c,o};running=false;
   if(!cardEl){cardEl=document.createElement("div");cardEl.className="overlay";cardEl.id="dealOv";cardEl.hidden=true;document.body.appendChild(cardEl);
