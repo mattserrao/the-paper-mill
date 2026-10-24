@@ -32,7 +32,7 @@
       this.matrixWorldNeedsUpdate=false;force=true;}
     if(down===true){const c=this.children;for(let i=0,l=c.length;i<l;i++)c[i].updateWorldMatrix(false,true,force);}}
   function zSet(o,z,dyn){o.__zz=z;o.__zdyn=!!dyn;o.updateMatrixWorld=zUMW;o.updateWorldMatrix=zUWM;o.matrixWorldNeedsUpdate=true;}
-  const ZMOVER=["legs","wheels","trike","car","load","act","cj","cut","truck","lift"];
+  const ZMOVER=["legs","wheels","trike","car","load","act","cj","cut","truck","lift","zMove"];   // (zMove: anything else built round its origin and moved about later)
   const isMover=o=>{const u=o.userData||{};for(const k of ZMOVER)if(u[k])return true;return false;};
   const SYM=new Set(["BoxGeometry","CylinderGeometry","PlaneGeometry","SphereGeometry","CircleGeometry","TorusGeometry","ConeGeometry","RingGeometry","CapsuleGeometry","IcosahedronGeometry","OctahedronGeometry"]);
   function zConj(o){if(!o.isMesh||o.children.length)return false;const g=o.geometry;if(!g)return false;
@@ -43,7 +43,15 @@
   const _zm=new THREE.Matrix4(),_zp=new THREE.Vector3();
   // (all its instances in one zone: the whole mesh is zoned instead, because some are re-posed every frame (the dryer
   // cans turn, rolls roll) and a per-instance change would be overwritten; truly mirrored in H)
-  function zInst(o){if(o.userData.zd)return;o.updateMatrixWorld(true);const n=o.count,ks=new Set();
+  // an instanced mesh with nothing in it yet (stock that fills in later: the bale yard, the beater bay, the bale line): it
+  // can't be placed by its instances, and its origin is not where it stands. Held back and zoned whole, by where most of
+  // its instances stand, on the first frame it has any (G3.zPend, 43)
+  const ZPEND=new Set();
+  const zUnset=o=>{const e=o.instanceMatrix.array;for(let i=0;i<o.count;i++){const j=i*16;if(e[j+12]*e[j+12]+e[j+14]*e[j+14]>1e-6)return false;}return true;};   // (no instance placed yet: all at the origin)
+  G3.zPend=()=>{if(!ZPEND.size)return;for(const o of ZPEND){if(!o.parent){ZPEND.delete(o);continue;}if(o.isMesh&&!o.isInstancedMesh){if(o.visible){ZPEND.delete(o);zOne(o,new Set(),0);o.updateMatrixWorld(true);}continue;}if(!o.isInstancedMesh){if(o.children.length){ZPEND.delete(o);zOne(o,new Set(),0);o.updateMatrixWorld(true);}continue;}if(!(o.count>0)||zUnset(o))continue;ZPEND.delete(o);
+    o.updateMatrixWorld(true);const c={};for(let i=0;i<o.count;i++){o.getMatrixAt(i,_zm);_zm.premultiply(o.matrixWorld);_zp.setFromMatrixPosition(_zm);const k=zoneOf(_zp.x,_zp.z);c[k]=(c[k]||0)+1;}
+    const k=Object.keys(c).sort((a,b)=>c[b]-c[a])[0];o.__zz=null;zSet(o,ZZ[k],false);if(zoneMir(k))zFlip(o);o.updateMatrixWorld(true);ZS.pend=(ZS.pend||0)+1;}};
+  function zInst(o){if(o.userData.zd)return;if(!(o.count>0)||zUnset(o)){o.__zz=null;ZPEND.add(o);return;}o.updateMatrixWorld(true);const n=o.count,ks=new Set();
     for(let i=0;i<n;i++){o.getMatrixAt(i,_zm);_zm.premultiply(o.matrixWorld);_zp.setFromMatrixPosition(_zm);ks.add(zoneOf(_zp.x,_zp.z));}
     if(ks.size<=1){const k=ks.size?[...ks][0]:(()=>{const b=new THREE.Box3().setFromObject(o),c=b.getCenter(new THREE.Vector3());return b.isEmpty()?"H":zoneOf(c.x,c.z);})();
       o.__zz=null;zSet(o,ZZ[k],false);if(zoneMir(k))zFlip(o);return;}
@@ -76,8 +84,10 @@
       if(o.userData.zsc){o.__zsc=true;zSet(o,null,false);ZS.sc=(ZS.sc||0)+1;return;}   // (the activity scenes and rare sights: drawn warped like the scenery round them)
       if(o.isInstancedMesh){zInst(o);ZS.inst++;return;}
       if(isMover(o)){zSet(o,null,true);ZS.dyn++;return;}
+      if(o.isMesh&&!o.visible&&!o.children.length&&o.position.lengthSq()<1e-6){o.__zz=undefined;ZPEND.add(o);ZS.pendM=(ZS.pendM||0)+1;return;}   // (a hidden part parked at the origin until it is used, like the trash on the pulper: by where it stands once shown)
       bb.makeEmpty();try{bb.setFromObject(o);}catch(e){}
-      if(bb.isEmpty()){zSet(o,null,true);ZS.dyn++;return;}   // nothing to measure yet (an empty holder): goes by where it stands
+      if(bb.isEmpty()){if(o.isGroup&&o.position.lengthSq()<1e-6&&!o.children.length){o.__zz=undefined;ZPEND.add(o);ZS.pendG=(ZS.pendG||0)+1;return;}   // (an empty holder at the origin whose parts are added later, placed where they stand: zoned once it has some)
+        zSet(o,null,true);ZS.dyn++;return;}   // nothing to measure yet (an empty holder): goes by where it stands
       if(bb.max.x-bb.min.x>230||bb.max.z-bb.min.z>230){ZS.native++;return;}   // world-sized (the river, the ground): already in site coordinates
       if(depth<3&&zIsCont(o,bb)){o.__zcont=true;ZS.cont=(ZS.cont||0)+1;for(const c of o.children.slice())zOne(c,parts,depth+1);return;}
       bb.getCenter(v);const k=zoneOf(v.x,v.z),conj=zoneMir(k)&&zConj(o);zSet(o,ZZ[conj?k+"c":k],false);if(zoneMir(k)&&!conj)zFlip(o);ZS.n++;ZS.by[k]=(ZS.by[k]||0)+1;
@@ -85,12 +95,16 @@
       if(k0!==k||k1!==k||k2!==k||k3!==k)ZS.span.push([o.name||o.type,k,+bb.min.x.toFixed(1),+bb.max.x.toFixed(1),+bb.min.z.toFixed(1),+bb.max.z.toFixed(1)]);}}
   G3.zonePass=zonePass;
   // place a thing by a logical point (an effect by its upset's spot): mirrored in H
+  // a mesh made from another after the pass (40c bakes instanced meshes into one plain mesh standing at the origin): it
+  // takes the original's zone, or stays in site coordinates when the original's instances were already placed there (split
+  // across zones, or built in site coordinates). Without this it is zoned by its origin (the hall) and moved twice.
+  G3.zCopy=(from,to)=>{if(!ZON||from.__zz===undefined)return;if(from.__zz)zSet(to,from.__zz,false);else{to.__zz=null;to.userData.zd=true;}};
   G3.zSetAt=(o,x,z)=>{if(!ZON)return;o.__zz=null;const k=zoneOf(x,z);zSet(o,ZZ[k],false);if(zoneMir(k))zFlip(o);};
   // things added to the scene after the pass (pins, spawned props and vehicles) go by where they stand each frame. Looked at
   // once the adding code has finished (a microtask later), so the engine's own batches (userData.smBatch, set right after
   // they are added) are left in site coordinates
   if(ZON){const add0=scene.add.bind(scene);
-    const late=o=>{if(o.parent!==scene||o.__zz!==undefined||o.isLight||o.isCamera||o.isBatchedMesh||o.userData.zd||o.userData.smBatch)return;o.__zz=null;ZS.late=(ZS.late||0)+1;if(o.isInstancedMesh){zInst(o);return;}zSet(o,null,true);};   // (an instanced copy made later, like the dryer cans: by where its instances stand)
+    const late=o=>{if(o.parent!==scene||o.__zz!==undefined||o.isLight||o.isCamera||o.isBatchedMesh||o.userData.zd||o.userData.smBatch)return;o.__zz=null;ZS.late=(ZS.late||0)+1;if(o.isInstancedMesh){zInst(o);return;}if(o.isGroup&&o.position.lengthSq()<1e-6&&!o.children.length){o.__zz=undefined;ZPEND.add(o);return;}zSet(o,null,true);};   // (an instanced copy made later, like the dryer cans: by where its instances stand)
     scene.add=function(...a){add0(...a);if(G3.zonesOn)for(const o of a)if(o&&o.__zz===undefined)queueMicrotask(()=>late(o));return this;};}
   // a logical point -> site point (people, effects, pins and the camera use these)
   G3.sitePt=(x,z)=>ZON?sitePt(x,z):[x,z];

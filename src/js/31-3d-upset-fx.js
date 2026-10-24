@@ -846,7 +846,7 @@
       if(G3.EXP&&G3.EXP.hideFX===inc.id){f.g.visible=false;return;}   // autotest GPU probe: this effect off (no drawing, no new particles)
       f.g.visible=true;f.on=true;f.up(now,rdt,inc);if(inc.asset&&inc.kind!=="drv"&&G3.ASPOT&&G3.ASPOT[inc.asset]){const q=G3.ASPOT[inc.asset];f.pinPos=[q[2],q[3]];}   /* (v6.10: the failed machine, 07i) */if(f.pinPos)f.pin.move(f.pinPos[0],f.pinPos[1]);f.pin.update(now);
       {const zp=!G3.zen&&!G3.cineOn;f.pin.p.visible=f.pin.ring.visible=f.pin.stem.visible=zp;}   // v3.0.1: zen mode shows events without the red pins
-      tmp.set(f.pin.x,f.pin.p.position.y+3.4,f.pin.z).project(camera);const vis=!G3.zen&&tmp.z<1&&Math.abs(tmp.x)<1.1&&Math.abs(tmp.y)<1.1;f.lb.vis=vis;
+      G3.siteV(tmp.set(f.pin.x,f.pin.p.position.y+3.4,f.pin.z)).project(camera);const vis=!G3.zen&&tmp.z<1&&Math.abs(tmp.x)<1.1&&Math.abs(tmp.y)<1.1;f.lb.vis=vis;
       if(vis){f.lb.x=Math.round((tmp.x+1)/2*w);f.lb.y=Math.round((1-tmp.y)/2*hh);
         if(doTxt||f.lb.a==null){const st=incState(inc),hold=inc.stage==="wait"||inc.stage==="found",b=`${st?st+" · ":""}${hold?"awaiting decision":(inc.left/60).toFixed(1)+" h left"}${inc.note?" · "+inc.note.split(" · ")[0]:""}`;lblSet(f.lb,EV[inc.id].name,b,true);}}});
     for(const id in FX){const f=FX[id];if(!f.on)f.lb.vis=false;}

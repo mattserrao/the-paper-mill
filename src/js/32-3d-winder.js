@@ -90,7 +90,7 @@
   const crCable=new THREE.Mesh(new CylG(0.04,0.04,1,6),M.ink);scene.add(crCable);
   // reel strongback: rigid lifting beam longer than the spool, fixed legs ending in J-hooks that cradle the journals
   const ZH=CD/2+0.9,SB=0.8+RM+0.6;
-  const crHook=new THREE.Group();scene.add(crHook);
+  const crHook=new THREE.Group();crHook.userData.zMove=true;scene.add(crHook);   // (v7.0: zoned whole, by where it hangs, not split into its parts at the start)
   {box(0.7,0.6,0.55,M.warn,0,0.25,0,crHook,false);cylZ(0.24,0.6,M.ink,0,0.3,0,12,crHook);
    [-1.2,1.2].forEach(z=>{const a=new THREE.Vector3(0,-0.2,0),b=new THREE.Vector3(0,-0.7,z),d=b.clone().sub(a);const r=new THREE.Mesh(new CylG(0.035,0.035,d.length(),6),M.ink);r.position.copy(a).add(b).multiplyScalar(0.5);r.quaternion.setFromUnitVectors(new THREE.Vector3(0,1,0),d.normalize());crHook.add(r);});
    box(0.45,0.07,2*ZH+0.4,M.warn,0,-0.75,0,crHook,false);box(0.45,0.07,2*ZH+0.4,M.warn,0,-1.1,0,crHook,false);box(0.09,0.32,2*ZH+0.4,M.warn,0,-0.92,0,crHook,false);

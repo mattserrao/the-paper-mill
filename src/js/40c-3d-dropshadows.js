@@ -137,7 +137,7 @@
        for(let j=0;j<ni;j++)idx[k*ni+j]=k*nv+(I?I.getX(j):j);}
      const bg=new THREE.BufferGeometry();bg.setAttribute("position",new THREE.BufferAttribute(pos,3));if(nor)bg.setAttribute("normal",new THREE.BufferAttribute(nor,3));if(uv)bg.setAttribute("uv",new THREE.BufferAttribute(uv,2));
      bg.setIndex(new THREE.BufferAttribute(idx,1));bg.computeBoundingSphere();bg.computeBoundingBox();
-     const mesh=new THREE.Mesh(bg,o.material);mesh.castShadow=o.castShadow;mesh.receiveShadow=o.receiveShadow;mesh.visible=o.visible;const par=o.parent||scene;par.remove(o);par.add(mesh);return mesh;}
+     const mesh=new THREE.Mesh(bg,o.material);mesh.castShadow=o.castShadow;mesh.receiveShadow=o.receiveShadow;mesh.visible=o.visible;if(G3.zCopy)G3.zCopy(o,mesh);const par=o.parent||scene;par.remove(o);par.add(mesh);return mesh;}
    G3.paperize=()=>{const t0=performance.now();let nm=0,nd=0,nb=0;
      {const L=[];scene.traverse(o=>{if(o.isInstancedMesh&&o.userData.bake&&o.count>0)L.push(o);});L.forEach(o=>{try{bakeInst(o);nb++;}catch(e){}});}
      scene.traverse(o=>{if(o.userData&&o.userData.aoDecal){o.visible=false;nd++;return;}if(!o.material)return;

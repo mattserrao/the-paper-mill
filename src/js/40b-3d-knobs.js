@@ -50,7 +50,7 @@
     {const MC=G3.MCC;if(MC)ST.push({a:"DRV",at:[MC.desk[0],1.0,MC.desk[1]-0.45],r:1.1});}
     // ---- tap targets: invisible spheres outside the scene (never drawn, never batched), with their matrices set once ----
     const HG=new THREE.SphereGeometry(1,8,6),HM=new THREE.MeshBasicMaterial(),HITS=[];
-    const addHit=(at,r,tag)=>{const m=new THREE.Mesh(HG,HM);m.position.set(at[0],at[1],at[2]);m.scale.setScalar(r);m.updateMatrixWorld(true);m.userData.tag=tag;HITS.push(m);return m;};
+    const addHit=(at,r,tag)=>{const m=new THREE.Mesh(HG,HM);G3.siteV(m.position.set(at[0],at[1],at[2]));   /* (v7.0: the targets are outside the scene, so never zoned: placed at the site point) */m.scale.setScalar(r);m.updateMatrixWorld(true);m.userData.tag=tag;HITS.push(m);return m;};
     for(const id in KX)addHit(KX[id].at,1.3,{k:"knob",id});
     ST.forEach(s=>addHit(s.at,s.r||1.6,{k:"station",a:s.a}));
     // in the knob view the markers are the targets, bigger and wherever they float
@@ -68,9 +68,9 @@
     KVL.forEach(([id,st,pos])=>{const at=pos||KX[id].at,g=new THREE.Group();g.position.set(at[0],at[1]+2.2,at[2]);KVG.add(g);
       const d=new THREE.Mesh(dotG,mkM);d.renderOrder=9995;g.add(d);const r=new THREE.Mesh(ringG,ringM);r.renderOrder=9994;g.add(r);
       const s=new THREE.Mesh(stemG,mkM);s.scale.y=2.2;s.position.y=-1.1;s.renderOrder=9993;g.add(s);
-      const lb=lblNew(true,"knob:"+(st?"station:"+st:id));MARKS.push({id,st,g,r,lb,v:new THREE.Vector3(at[0],at[1]+3.6,at[2])});
+      const lb=lblNew(true,"knob:"+(st?"station:"+st:id));MARKS.push({id,st,g,r,lb,v:G3.siteV(new THREE.Vector3(at[0],at[1]+3.6,at[2]))});
       const tag=id==="spider"?{k:"spider"}:id==="slice"?{k:"slice"}:st?{k:"station",a:st}:{k:"knob",id};
-      const hm=new THREE.Mesh(HG,HM);hm.position.set(at[0],at[1]+2.2,at[2]);hm.scale.setScalar(2.2);hm.updateMatrixWorld(true);hm.userData.tag=tag;KVHITS.push(hm);});
+      const hm=new THREE.Mesh(HG,HM);G3.siteV(hm.position.set(at[0],at[1]+2.2,at[2]));hm.scale.setScalar(2.2);hm.updateMatrixWorld(true);hm.userData.tag=tag;KVHITS.push(hm);});
     // (the section labels' Off setting would hide the knobs' labels too: lifted while the view is up, put back after)
     let kvLblOff=false;
     // shown for the prewarm's one render, so the view's shaders are compiled at start-up, not when it is first turned on
@@ -87,7 +87,7 @@
     G3.kvVeil=veil;
     // ---- v6.11.2 the known defects view (Rounds screen): the mill greyed out, a labelled bullseye on each known defect,
     // orange for mechanical, blue for electrical ----
-    const DVG=new THREE.Group();DVG.visible=false;scene.add(DVG);SM.dyn.add(DVG);const DV={on:false,pins:new Map(),t:0};
+    const DVG=new THREE.Group();DVG.userData.zd=true;DVG.visible=false;   /* (v7.0: its pins are placed at their site points) */scene.add(DVG);SM.dyn.add(DVG);const DV={on:false,pins:new Map(),t:0};
     const dvM={m:new THREE.MeshBasicMaterial({color:lin0("#e8590c"),depthTest:false,depthWrite:false,transparent:true,toneMapped:false}),e:new THREE.MeshBasicMaterial({color:lin0("#1c7ed6"),depthTest:false,depthWrite:false,transparent:true,toneMapped:false}),w:new THREE.MeshBasicMaterial({color:0xffffff,depthTest:false,depthWrite:false,transparent:true,toneMapped:false})};
     const ring1=new THREE.RingGeometry(0.95,1.3,32),ring2=new THREE.RingGeometry(0.45,0.7,28),dot=new THREE.CircleGeometry(0.25,20),disc=new THREE.CircleGeometry(1.32,32);
     // (t6: early-warning findings get a small faded pin with no pulse; serious ones and spotted tells keep the full bullseye)
@@ -95,7 +95,7 @@
     function dvPin(d){const g=new THREE.Group(),b=new THREE.Group();g.add(b);const MM=d.early?dvF:dvM,M2=MM[d.k];
       [[disc,MM.w,9991],[ring1,M2,9992],[ring2,M2,9992],[dot,M2,9993]].forEach(([geo,m,o])=>{const x=new THREE.Mesh(geo,m);x.renderOrder=o;b.add(x);});
       const s=new THREE.Mesh(stemG,M2);s.scale.y=d.early?1.4:2.2;s.position.y=d.early?-0.7:-1.1;s.renderOrder=9990;g.add(s);
-      const y=d.early?2.6:3.4;g.position.set(d.at[0],y,d.at[1]);DVG.add(g);return {g,b,lb:lblNew(true,"defect:"+d.id),v:new THREE.Vector3(d.at[0],y+(d.early?1.0:1.5),d.at[1]),d,early:!!d.early};}
+      const y=d.early?2.6:3.4;G3.siteV(g.position.set(d.at[0],y,d.at[1]));DVG.add(g);return {g,b,lb:lblNew(true,"defect:"+d.id),v:G3.siteV(new THREE.Vector3(d.at[0],y+(d.early?1.0:1.5),d.at[1])),d,early:!!d.early};}
     function dvSync(){const L=knownDefects(),keep=new Set();for(const d of L){keep.add(d.id);let p=DV.pins.get(d.id);if(p&&p.early!==!!d.early){DVG.remove(p.g);p.lb.vis=false;p=null;}if(!p){p=dvPin(d);DV.pins.set(d.id,p);}p.d=d;}
       for(const [id,p] of DV.pins)if(!keep.has(id)){DVG.remove(p.g);p.lb.vis=false;DV.pins.delete(id);}return L.length;}
     G3.defectView=on=>{on=!!on&&!S.zen;if(on===DV.on)return DV.pins.size;DV.on=on;G3.dvOn=on;DVG.visible=on;veil.visible=on||!!G3.kvOn;LB.force=true;
@@ -182,7 +182,7 @@
           if(k>0){const s=(8+blast*26)*fl;big.scale.set(s,s,1);big.material.opacity=Math.min(1,0.45+k*0.55)*fl;const c=(2+blast*6)*fl;core.scale.set(c,c,1);core.material.opacity=1;
             const r=5+blast*12;floor.scale.set(r,r,1);ringM.opacity=0.8*k*fl;}
           // the screen flash and a jolt, only when the MCC is on screen
-          {let on=0;if(blast>0){_p.set(x,y,z).project(camera);on=_p.z<1&&Math.abs(_p.x)<1.1&&Math.abs(_p.y)<1.1?1:0;}flash(on?Math.min(0.65,blast*blast*0.85*fl):0);
+          {let on=0;if(blast>0){G3.siteV(_p.set(x,y,z)).project(camera);on=_p.z<1&&Math.abs(_p.x)<1.1&&Math.abs(_p.y)<1.1?1:0;}flash(on?Math.min(0.65,blast*blast*0.85*fl):0);
             if(on&&!shook&&G3.camShake){shook=1;G3.camShake(0.9);}if(!inc||f>9e3)shook=0;}
           const live=k>0;arcM.opacity=live?fl:0;arcM2.opacity=live?0.9*fl:0;
           if(live&&now-lastB>40){lastB=now;hot.count=blue.count=0;const n=Math.round(4+k*(NA-4));
