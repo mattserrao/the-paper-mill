@@ -14,7 +14,7 @@
   function outCloth(id){const f=outPhase();if(f<0)return null;if(id==="fabric"&&outJob(S.outg.k)!==2)return null;const X=CL_X[id];if(f<X[0]||f>X[4]+0.015)return null;return pwl(f,X,CL_Y);}
   G3.outCloth=outCloth;
   const ocM=()=>M.panelWhite||(M.panelWhite=mat("panel"));
-  const ENTRY={hall:[65.6,15.4],shop:[56,-18.2]};
+  const ENTRY={hall:[65.6,15.4],shop:[-12.5,30.8]};   // (v6.12.1: the shop is on the lawn south of the hall, west of the MCC)
   function tech(i,from){let w=OV.crew[i];if(!w){w=worker(techM,ocM());w.visible=false;OV.crew[i]=w;}
     if(!w.visible){const e=ENTRY[from]||ENTRY.hall;w.position.set(e[0],0,e[1]);w.userData.from=from;w.visible=true;}w.userData.used=true;return w;}
   // walk to a spot, then face and act; returns true once there

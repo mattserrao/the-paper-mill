@@ -1,6 +1,10 @@
   /* ---- maintenance techs: break room, yellow three-wheel scooters, repairs ---- */
-  const SHOP={x0:50.5,x1:63,z0:-25,z1:-19.2,door:[56,-18.4]};
-  slab(49,65,-27,-14.5,M.slab,0.03);box2(SHOP.x0,SHOP.x1,SHOP.z0,SHOP.z1,1.4);
+  // v6.12.1: the shop moved from behind stock prep (x 50.5..63, z -25..-19.2) to the lawn south of the machine hall, west of
+  // the MCC (38c): the same building, benches and trike slots slid by (-68.5, +49), so the door and the MAINTENANCE sign still
+  // face +z (the camera), with the trike apron in front and a 9.5 m yard to the MCC's door. Shop + MCC make one maintenance
+  // and electrical block; the shift relief walks in along the front of the hall from the parking lot (38b).
+  const SHOP={x0:-18,x1:-5.5,z0:24,z1:29.8,door:[-12.5,30.6]};
+  slab(-19.5,-3.5,23,34.5,M.slab,0.03);box2(SHOP.x0,SHOP.x1,SHOP.z0,SHOP.z1,1.4);
   // (v6.11.2: the front wall has a real doorway at the door (it was solid, with the door drawn on it, so the techs walked through
   //  the wall to their benches): two wall runs and a header over a 1.6 m opening)
   {const dx0=SHOP.door[0]-0.85,dx1=SHOP.door[0]+0.85;ribWall(dx0-SHOP.x0,3.3,0.3,(SHOP.x0+dx0)/2,1.65,SHOP.z1);ribWall(SHOP.x1-dx1,3.3,0.3,(dx1+SHOP.x1)/2,1.65,SHOP.z1);ribWall(dx1-dx0,1.0,0.3,SHOP.door[0],2.8,SHOP.z1);}
@@ -9,19 +13,19 @@
   {const rm=mat("brand",{transparent:true,roughness:0.55}),rg=new THREE.Group();scene.add(rg);
    const roof=new THREE.Mesh(new THREE.BoxGeometry(SHOP.x1-SHOP.x0+0.6,0.35,SHOP.z1-SHOP.z0+0.6),rm);roof.position.set((SHOP.x0+SHOP.x1)/2,3.45,(SHOP.z0+SHOP.z1)/2);roof.castShadow=true;rg.add(roof);
    rg.userData.mats=[rm];roofs.push(rg);
-   {const d=box(0.12,2.3,1.0,M.ink,SHOP.door[0]-0.82,1.15,SHOP.z1-0.55,scene,false);d.userData.noNav=true;}   /* (v6.11.2: the door stands open against the inside wall) */{const W=SHOP.x1-SHOP.x0,H=2.95,wx=[51.6,53.4,58.4,60.1,61.8].map(v=>[v-SHOP.x0,1.05,1.3,0.95]);
+   {const d=box(0.12,2.3,1.0,M.ink,SHOP.door[0]-0.82,1.15,SHOP.z1-0.55,scene,false);d.userData.noNav=true;}   /* (v6.11.2: the door stands open against the inside wall) */{const W=SHOP.x1-SHOP.x0,H=2.95,wx=[1.1,2.9,7.9,9.6,11.3].map(v=>[v,1.05,1.3,0.95]);   /* (window centres from the west wall) */
      const fs=facade(W,H,wx,[SHOP.door[0]-SHOP.x0,2.22,4.6,0.62,"MAINTENANCE"],SHOP.door[0]-SHOP.x0);fs.position.set((SHOP.x0+SHOP.x1)/2,H/2,SHOP.z1+0.17);fs.userData.noNav=true;scene.add(fs);}}
-  const SLOTS=[51.5,52.9,54.3,55.7,58.5,59.9,61.3,62.7].map(x=>[x,-16.6]);
-  // shop floor: workbenches with pumps on them along the back wall, rebuild stands, parts racks, a break table
+  const SLOTS=[-17,-15.6,-14.2,-12.8,-10,-8.6,-7.2,-5.8].map(x=>[x,32.4]);   // (the trike apron in front of the door)
+  // shop floor: workbenches with pumps on them along the back wall (z0, the north wall), rebuild stands, parts racks, a break table
   const BENCH=[];
-  {const wood=M.kraft;[52.1,54.9,57.7,60.5].forEach(x=>{box(2.3,0.12,1.0,wood,x,0.95,-24.2,scene,false);[-1,1].forEach(sx=>box(0.1,0.9,0.9,M.steel,x+sx*1.05,0.45,-24.2,scene,false));
-      box(2.2,1.3,0.06,M.steel,x,2.0,-24.8,scene,false);for(let k=0;k<5;k++)box(0.07,0.32,0.05,k%2?M.bad:M.ink,x-0.8+k*0.4,2.0,-24.74,scene,false);
-      const pm=pumpModel();pm.scale.setScalar(0.42);pm.position.set(x,1.01,-24.15);pm.rotation.y=0.3;BENCH.push({p:[x,-23.25],l:[x,-24.4]});});
-    [[52.3,-20.6],[61.3,-20.6]].forEach(([x,z],k)=>{box(1.4,0.5,0.9,M.steel,x,0.25,z,scene);const pm=pumpModel();pm.scale.setScalar(0.5);pm.position.set(x,0.5,z);pm.rotation.y=k?Math.PI:0;
+  {const wood=M.kraft;[-16.4,-13.6,-10.8,-8].forEach(x=>{box(2.3,0.12,1.0,wood,x,0.95,24.8,scene,false);[-1,1].forEach(sx=>box(0.1,0.9,0.9,M.steel,x+sx*1.05,0.45,24.8,scene,false));
+      box(2.2,1.3,0.06,M.steel,x,2.0,24.2,scene,false);for(let k=0;k<5;k++)box(0.07,0.32,0.05,k%2?M.bad:M.ink,x-0.8+k*0.4,2.0,24.26,scene,false);
+      const pm=pumpModel();pm.scale.setScalar(0.42);pm.position.set(x,1.01,24.85);pm.rotation.y=0.3;BENCH.push({p:[x,25.75],l:[x,24.6]});});
+    [[-16.2,28.4],[-7.2,28.4]].forEach(([x,z],k)=>{box(1.4,0.5,0.9,M.steel,x,0.25,z,scene);const pm=pumpModel();pm.scale.setScalar(0.5);pm.position.set(x,0.5,z);pm.rotation.y=k?Math.PI:0;
       BENCH.push({p:[x+(k?-1.25:1.25),z],l:[x,z]});BENCH.push({p:[x,z+0.95],l:[x,z]});});
-    box(0.5,2.4,4.6,M.steel,50.95,1.2,-22.1,scene);for(let k=0;k<4;k++)box(0.48,0.06,4.5,M.ink,50.95,0.4+k*0.6,-22.1,scene,false);
-    for(let k=0;k<6;k++)box(0.3,0.3,0.4,k%2?M.stock:M.warn,50.95,0.6+(k%3)*0.6,-23.8+k*0.7,scene,false);
-    box(1.0,0.08,0.8,M.panel,58.4,0.78,-20.7,scene,false);box(0.12,0.74,0.12,M.steel,58.4,0.37,-20.7,scene,false);}
+    box(0.5,2.4,4.6,M.steel,-17.55,1.2,26.9,scene);for(let k=0;k<4;k++)box(0.48,0.06,4.5,M.ink,-17.55,0.4+k*0.6,26.9,scene,false);
+    for(let k=0;k<6;k++)box(0.3,0.3,0.4,k%2?M.stock:M.warn,-17.55,0.6+(k%3)*0.6,25.2+k*0.7,scene,false);
+    box(1.0,0.08,0.8,M.panel,-10.1,0.78,28.3,scene,false);box(0.12,0.74,0.12,M.steel,-10.1,0.37,28.3,scene,false);}
   const techM=mat("g-tech");
   function trike(){const g=new THREE.Group();
     box(1.3,0.42,0.7,M.fork,0,0.55,0,g);box(0.5,0.5,0.62,M.fork,-0.62,0.86,0,g);box(0.42,0.12,0.5,M.ink,-0.15,0.85,0,g,false);
@@ -109,11 +113,15 @@
       for(let k=0;k<=n;k++){const c=navC(G,[a[0]+(b[0]-a[0])*k/n,a[1]+(b[1]-a[1])*k/n]);if(G.g[c[1]*G.nx+c[0]])bad++;}}return bad;};
   G3.NAV=NAV;G3.NAVW=NAVW;
   function route(from,to){let p=null;try{p=navPath(NAV,from,to);}catch(e){}return p||routeLanes(from,to);}
+  // v6.12.1: a point on the lawn south of the hall (the shop's apron) joins the front lane through the roll-up door at x 33
+  const DOORX=33,south=p=>p[1]>20.5;
   function routeLanes(from,to){const pts=[],lf=lane(from),lt=lane(to);
-    pts.push(lf==="F"?[from[0],17.6]:[Math.max(from[0],-5.5),-0.6]);
+    if(south(from))pts.push([DOORX,23.5]);
+    pts.push(lf==="F"?[south(from)?DOORX:from[0],17.6]:[Math.max(from[0],-5.5),-0.6]);
     if(lf!==lt)pts.push(...(lf==="C"?[[67,-0.6],[67,17.6]]:[[67,17.6],[67,-0.6]]));
-    pts.push(lt==="F"?[to[0],17.6]:[Math.max(to[0],-5.5),-0.6]);pts.push(to);return pts;}
-  const techs=[];
+    pts.push(lt==="F"?[south(to)?DOORX:to[0],17.6]:[Math.max(to[0],-5.5),-0.6]);
+    if(south(to))pts.push([DOORX,23.5]);pts.push(to);return pts;}
+  const techs=[];G3.shopDbg={SHOP,SLOTS,BENCH,MAINT_SPOT,get techs(){return techs;}};   // (v6.12.1: tests)
   function ensureTechs(){while(techs.length<Math.min(8,P.techs)){const k=techs.length,s=SLOTS[k],w=worker(techM,M.hatBlue,{vest:HIVIS.yellow,radio:true}),t=trike();
       t.position.set(s[0],0,s[1]);t.rotation.y=Math.PI/2;const b=BENCH[k];w.position.set(b.p[0],0,b.p[1]);techs.push({w,t,k,slot:s,bench:b,state:"home",path:null,inc:null,onSite:0,walk:null});}}
   function walkTo(T,pts,speed,rdt,now){while(T.walk&&T.walk.length){if(moveP(T.w,T.walk[0][0],T.walk[0][1],speed,rdt))T.walk.shift();else{pose(T.w,"run",now);return false;}}return true;}
@@ -129,9 +137,9 @@
     techs.forEach((T,k)=>{const want=k<P.techs&&MI[Math.floor(k/2)]?MI[Math.floor(k/2)]:null,rnd=!want&&k<P.techs?rndAt(k):null,active=T.inc?S.inc.some(i=>i.id===T.inc):!!(T.rnd&&rnd&&rnd.a===T.rnd);
       switch(T.state){
         case "home":{T.w.visible=k<P.techs;const b=T.bench;
-          if(want){T.inc=want.id;T.rnd=null;T.spot=mSpot(want);T.state="exit";T.next="mount";T.walk=[[SHOP.door[0],-20.1],[SHOP.door[0],-18.1]];break;}
-          if(rnd){T.inc=null;T.rnd=rnd.a;T.spot=ASPOT[rnd.a];T.state="exit";T.next="mount";T.walk=[[SHOP.door[0],-20.1],[SHOP.door[0],-18.1]];break;}   // v6.10 a vibration round
-          if(RUN.on&&k<2&&k<P.techs&&T.ran!==RUN.t0){T.ran=RUN.t0;T.state="exit";T.next="cmount";T.walk=[[SHOP.door[0],-20.1],[SHOP.door[0],-18.1]];break;}
+          if(want){T.inc=want.id;T.rnd=null;T.spot=mSpot(want);T.state="exit";T.next="mount";T.walk=[[SHOP.door[0],SHOP.z1-0.9],[SHOP.door[0],SHOP.z1+1.1]];break;}
+          if(rnd){T.inc=null;T.rnd=rnd.a;T.spot=ASPOT[rnd.a];T.state="exit";T.next="mount";T.walk=[[SHOP.door[0],SHOP.z1-0.9],[SHOP.door[0],SHOP.z1+1.1]];break;}   // v6.10 a vibration round
+          if(RUN.on&&k<2&&k<P.techs&&T.ran!==RUN.t0){T.ran=RUN.t0;T.state="exit";T.next="cmount";T.walk=[[SHOP.door[0],SHOP.z1-0.9],[SHOP.door[0],SHOP.z1+1.1]];break;}
           if(moveP(T.w,b.p[0],b.p[1],3,rdt)){face(T.w,b.l[0],b.l[1],rdt);pose(T.w,"fix",now);T.w.userData.armful.visible=false;
             if(Math.random()<rdt*1.2){const [nx,,nz]=nozzlePos(T.w);for(let j=0;j<2;j++)emit("spark",nx,1.1,nz,R()*2,1.5+Math.random()*2,R()*2,0.3,0.18,"#ff8a1f",1);}}
           else pose(T.w,"walk",now);break;}
@@ -158,7 +166,7 @@
             if(nx){T.inc=nx.i?nx.i.id:null;T.rnd=nx.r||null;T.spot=nx.s;T.state="out";const from=[T.t.position.x,T.t.position.z];T.path=route(from,T.rnd?[nx.s[0]-1.4,nx.s[1]]:[nx.s[0]+((k%3)-1)*1.6,nx.s[1]+(k>2?1.4:0)]);break;}
             T.state="home2";T.rnd=null;T.path=route([T.t.position.x,T.t.position.z],T.slot);}else pose(T.w,"run",now);break;}
         case "home2":pose(T.w,"ride",now);T.w.position.y=0.12;if(drive(T,rdt)){T.t.rotation.y=Math.PI/2;T.state="inside";}break;
-        case "inside":if(!T.walk)T.walk=[[SHOP.door[0],-18.1],[SHOP.door[0],-20.1],T.bench.p];if(walkTo(T,null,5,rdt,now)){T.walk=null;T.state="home";T.inc=null;T.rnd=null;}break;
+        case "inside":if(!T.walk)T.walk=[[SHOP.door[0],SHOP.z1+1.1],[SHOP.door[0],SHOP.z1-0.9],T.bench.p];if(walkTo(T,null,5,rdt,now)){T.walk=null;T.state="home";T.inc=null;T.rnd=null;}break;
       }
       T.t.visible=k<P.techs;});}
 

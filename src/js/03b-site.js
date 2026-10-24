@@ -38,7 +38,8 @@ const SITE=(()=>{const q=new URLSearchParams(location.search);let s=null;const t
 // a small seeded generator for anything built from the mill seed (layout, scenery): independent of the sim's streams
 function siteRng(seed){let s=(seed>>>0)^0x5bd1e995;return ()=>{s=(s+0x6D2B79F5)|0;let t=Math.imul(s^(s>>>15),s|1);t^=t+Math.imul(t^(t>>>7),t|61);return ((t^(t>>>14))>>>0)/4294967296;};}
 // auxiliary layout from the mill seed: the wastewater plant sits behind stock prep (slot "back", x 1..46, z -49..-31,
-// its v4.0 spot) or behind the maintenance shop (slot "east", x 46..91), clarifier and aeration pond either way round.
+// its v4.0 spot) or further east, between stock prep and the power house (slot "east", x 46..91; the maintenance shop stood
+// in front of it until v6.12.1 moved it south of the hall), clarifier and aeration pond either way round.
 // The power house stays put: the steam rack ties it to the dryers. Utilities that follow the environment (water tower,
 // substation, solar farm, barge dock...) take seeded slots around the fence (42b-3d-scenery.js).
 const LAYOUTS=[{ww:"back",flip:false},{ww:"east",flip:false},{ww:"back",flip:true},{ww:"east",flip:true}];

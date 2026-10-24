@@ -1,5 +1,14 @@
 # Changelog
 
+## v6.12.1-t1 (2026-10-24): the shop moves south (test build, test/v6.12.1)
+- The maintenance shop (the shift techs' shop: benches, rebuild stands, parts rack, trike apron) moved from behind stock prep
+  (x 50.5..63, z -25..-19) to the lawn south of the machine hall, west of the MCC: x -18..-5.5, z 24..29.8, door and sign
+  still facing the camera, the eight trike slots in front at z 32.4 and a 9.5 m yard to the MCC's door. Shop and MCC now make
+  one maintenance-and-electrical block, and the shift relief walks in along the front of the hall from the parking lot.
+- Follows the move: the outage crews' shop entry (41), the Shop camera jump (29), the civics notice easel by the hall (now
+  between the shop and the MCC, 31b), and the trikes' lane fallback (a start on the lawn goes in by the roll-up door, 38).
+- The old pad behind stock prep is lawn again (the scenery seeds it like any other open ground).
+
 ## v6.12.0 (2026-10-23): Cool, Fast and Free
 Release of v6.12.0-t1 to t7 (below), merged from test/v6.12-perf. iPhone autotest: 60 FPS and
 0 frames over 33 ms in every phase at the default zoom, the whole-site zoom and the free camera. Regression suite: the

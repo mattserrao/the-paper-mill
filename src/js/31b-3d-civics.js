@@ -110,7 +110,7 @@
     queue(g){const T=[["#1d4f91",0],["#d6382c",1],["#1f8a4c",2],["#f2b51d",3]].map(([c,i])=>simpleTruck(g,c,GATE[0]-12-i*10.5,12.6,0));return {spot:[GATE[0]-20,12],tick(now,rdt,k){T.forEach((t,i)=>t.visible=i<(k>1?4:3));}};},
     signWh(g){const s=easel(g,-60,36,0);return {spot:[-60,30],tick(now,rdt,k,txt){s.userData.set(txt||"QUALITY HOLD","#ffe066","#1c2233","#1c2233");}};},
     signGate(g){const s=easel(g,FENCE.x0+7,-9.5,0,3,1.6);return {spot:[FENCE.x0+7,-9.5],tick(now,rdt,k,txt){s.userData.set(txt||"NOTICE","#f4efe2","#1c2233","#1c2233");}};},
-    signHall(g){const s=easel(g,-12,24.5,0,3.4,1.7);return {spot:[-12,22],tick(now,rdt,k,txt,o){const c=(o&&o.col)||"cream",C={cream:["#f4efe2","#1c2233"],red:["#d6382c","#ffffff"],green:["#1f8a4c","#ffffff"]}[c];s.userData.set(txt||"NOTICE",C[0],C[1],C[1]);}};},
+    signHall(g){const s=easel(g,-1.5,24.5,0,3.4,1.7);return {spot:[-1.5,22],   /* (v6.12.1: between the shop and the MCC) */tick(now,rdt,k,txt,o){const c=(o&&o.col)||"cream",C={cream:["#f4efe2","#1c2233"],red:["#d6382c","#ffffff"],green:["#1f8a4c","#ffffff"]}[c];s.userData.set(txt||"NOTICE",C[0],C[1],C[1]);}};},
     // particle-only scenes (no meshes; the group is empty)
     fx(g){return {spot:[0,0],tick(){}};}};
   const PART_IDS=Object.keys(BUILD).filter(k=>k!=="fx");
