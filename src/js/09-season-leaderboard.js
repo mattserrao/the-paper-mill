@@ -20,7 +20,10 @@ function startSeason(surv){newGame();S.season=surv?{on:true,surv:true,end:1e12,d
   // v4.2.5: the bottleneck is rolled fresh for every season (it used to come from the week's seed, so the whole week shared
   // one and the first buy was always the same). Picked before the season starts, like the "any" site, so it draws no
   // stream: the week's dice are unchanged. It is saved with the season (S.bn).
-  S.bn=BN_IDS[Math.floor(Math.random()*BN_IDS.length)];applyUpgrades();
+  S.bn=BN_IDS[Math.floor(Math.random()*BN_IDS.length)];
+  // v6.12.1: how short the bottleneck runs varies by season too (BNSEV: severe, typical, mild), so the luck of the draw
+  // matters more (it moved median profit only ~$0.4M across areas)
+  S.bnSev=Math.floor(Math.random()*BNSEV.length);applyUpgrades();
   S.pal=Math.floor(Math.random()*4);   // v6.1 iso: the season's palette (spring, summer, autumn, winter; 36c), cosmetic like the bottleneck
   if(typeof civStart==="function")civStart();   // v5.1 civics: the four meters start (the leader, picked next, sets their values)
   C.breaks=true;

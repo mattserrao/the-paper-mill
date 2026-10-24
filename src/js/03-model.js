@@ -21,11 +21,11 @@ const MAINT=["birdline","steamjoint","fogfan","shaft","fabric","felt","winderdow
 // v6.9.2 balance: every upgrade 30% dearer (rounded to $5k) so the daily Round is the biggest boost; missed failures 20% dearer (REPAIR_K); overhead $2,400/h (was $3,400) so most mills still profit
 const REPAIR_K=1.05;   // (v6.11.2 t6 QA: was 1.2; repair bills 12.5% lower, hands-off paid ~$3.4M a season)
 const UPS=[
- {id:"drive",g:"machine",name:"Drive & gearbox rebuild",lv:[115e3,105e3,90e3],desc:"+150 fpm max speed per level, if the dryers can keep up (heavy grades and a wet sheet reach their limit first)."},   // (v6.5 b5: 25% cheaper: the dryer limit can cap it)
- {id:"deckle",g:"machine",name:"Wider trim (deckle)",lv:[160e3,135e3],desc:"+3\" of web per level (+1.5% tons at the same speed) and rolls up to 1.5\" wider, so wide rolls cost less trim."},
- {id:"steambox",g:"machine",name:"Steam box",lv:[165e3],desc:"A 12-zone steam box at the end of the forming table: +1.5 points couch solids and +40 fpm, and the CD loop can dry out wet streaks and wet edges (costs some steam)."},
- {id:"shoe",g:"machine",name:"Shoe press",lv:[180e3],desc:"+100 fpm and 12% less energy per ton. A drier sheet into the dryers: about 16% more drying headroom."},
- {id:"winder",g:"machine",name:"Winder rebuild",lv:[285e3,520e3],desc:"+30 t/h winder speed and 40% fewer hayouts per level."},
+ {id:"drive",ck:0.75,g:"machine",name:"Drive & gearbox rebuild",lv:[115e3,105e3,90e3],desc:"+150 fpm max speed per level, if the dryers can keep up (heavy grades and a wet sheet reach their limit first)."},   // (v6.5 b5: 25% cheaper: the dryer limit can cap it)
+ {id:"deckle",ck:0.75,g:"machine",name:"Wider trim (deckle)",lv:[160e3,135e3],desc:"+3\" of web per level (+1.5% tons at the same speed) and rolls up to 1.5\" wider, so wide rolls cost less trim."},
+ {id:"steambox",ck:0.75,g:"machine",name:"Steam box",lv:[165e3],desc:"A 12-zone steam box at the end of the forming table: +1.5 points couch solids and +40 fpm, and the CD loop can dry out wet streaks and wet edges (costs some steam)."},
+ {id:"shoe",ck:0.75,g:"machine",name:"Shoe press",lv:[180e3],desc:"+100 fpm and 12% less energy per ton. A drier sheet into the dryers: about 16% more drying headroom."},
+ {id:"winder",ck:0.75,g:"machine",name:"Winder rebuild",lv:[285e3,520e3],desc:"+30 t/h winder speed and 40% fewer hayouts per level."},
  {id:"monitor",g:"machine",name:"Fabric & felt monitoring",lv:[220e3,150e3],desc:"Machine failures 40% rarer and fewer sheet breaks, per level."},
  {id:"refiner",g:"machine",name:"Refiner power upgrade",lv:[145e3],desc:"Bigger motors and drives (+30% rating) and new plates on the twin refiners between the machine chest and the fan pump. Stronger bonding: $10/t less energy and chemicals."},
  {id:"fire",g:"machine",name:"Fire suppression",lv:[115e3],desc:"Dryer and bale yard fires 60% rarer and half as long."},
@@ -44,7 +44,7 @@ const UPS=[
  {id:"reliab",g:"maint",name:"Reliability program",lv:[255e3,160e3],desc:"Vibration and oil analysis: drive, felt and fabric failures 40% rarer and repair bills 15% lower per level. Level 1 adds the Area Trend Report to your daily rounds. Covers the new bearing and motor failures too."},
  {id:"pmprog",g:"maint",name:"Preventive maintenance",lv:[115e3,235e3,365e3],desc:"Planned shutdown work: all breakdowns 20% rarer and fewer sheet breaks per level. Costs $150/h per level."},
  {id:"stores",g:"maint",name:"Spare parts storeroom",lv:[45e3],desc:"Parts on the shelf: repairs finish 25% faster."},
- {id:"apc",g:"mgmt",name:"Advanced process control",lv:[105e3,105e3],desc:"+2% tons and 4% less energy per level."},
+ {id:"apc",ck:0.75,g:"mgmt",name:"Advanced process control",lv:[105e3,105e3],desc:"+2% tons and 4% less energy per level."},
  {id:"contract",g:"mgmt",name:"Long-term OCC contract",lv:[155e3,155e3],desc:"OCC costs $10/t less per level."},
  {id:"sales",g:"mgmt",name:"Sales team",lv:[155e3,155e3],desc:"Paper sells for $12/t more per level."},
  {id:"insure",g:"mgmt",name:"Insurance policy",lv:[195e3],desc:"Repair bills cut 60%. Premium $900/h."},

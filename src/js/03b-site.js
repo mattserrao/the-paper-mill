@@ -69,7 +69,7 @@ function siteSave(env){try{localStorage.setItem("paper-mill-site",JSON.stringify
 const ENVX=()=>ENVS[SITE.env]||ENVS.rural;
 // ---- bottleneck: one area starts well short of the paper machine's rate. Its capacity is BNK[area] of what the machine
 // needs on 24 at standard speed (set per area so a hands-off season loses about the same with each); the upgrades for
-// that area are 25% off and fix it (BN[].ups)
+// that area are 25% off and fix it (BN[].ups). v6.12.1: BNSEV scales both by the season's severity
 const BNK={recv:0.70,pulper:0.82,screens:0.81,winder:0.80,ship:0.80},BN_DISC=0.25;
 const BN={
   recv:{name:"Receiving docks",what:"unloading",ups:["docks","forklift"],g:"yard",sec:"recv",
@@ -86,26 +86,31 @@ const BN_IDS=["recv","pulper","screens","winder","ship"];
 // the run's bottleneck follows from its seed (a hash, so no sim stream is drawn)
 function bnFor(seed){let h=(seed>>>0)^0x2545f491;h=Math.imul(h^(h>>>16),0x45d9f3b);h=Math.imul(h^(h>>>16),0x45d9f3b);h^=h>>>16;return BN_IDS[(h>>>0)%BN_IDS.length];}
 const BNQ=()=>(S&&BN[S.bn])?S.bn:null;
+// v6.12.1: the season's bottleneck severity scales its capacity (BNK) and the discount on the upgrades that fix it
+const BNSEV=[{n:"severe",k:0.84,disc:0.35},{n:"typical",k:1,disc:0.25},{n:"mild",k:1.14,disc:0.15}];
+const bnSev=()=>BNSEV[(S&&S.bnSev!=null)?S.bnSev:1]||BNSEV[1];
 // what the machine needs at standard speed on 24 (t/h of paper), the yardstick for every capacity
 const NEEDREF=()=>BASE.K*GRADES["24"].sp*GRADES["24"].bw;
 // v6.11.1 QA balance: every upgrade 20% cheaper than its list (smart buying back to v6.10.2's spread over rounds alone)
 const UP_COSTK=0.8;
-function upCost(u,l){const c=Math.round(u.lv[l]*UP_COSTK/1000)*1000;const b=BNQ();return b&&BN[b].ups.includes(u.id)?Math.round(c*(1-BN_DISC)/1000)*1000:c;}
+// v6.12.1 QA: the speed and throughput upgrades a further 25% off (u.ck), so they pay back inside a season once the
+// bottleneck is fixed (measured paired 30-day returns at the old price: shoe 2.9x, steam box 2.0x, drive 1.6x, APC 0.87x)
+function upCost(u,l){const c=Math.round(u.lv[l]*UP_COSTK*(u.ck||1)/1000)*1000;const b=BNQ();return b&&BN[b].ups.includes(u.id)?Math.round(c*(1-bnSev().disc)/1000)*1000:c;}
 function upFix(u){const b=BNQ();return !!(b&&BN[b].ups.includes(u.id));}
 // capacities that a bottleneck can cut (called from applyUpgrades)
 function applySite(){const E=ENVX(),b=BNQ(),need=NEEDREF(),fiber=need/P.pmLoss,feed=fiber/OCCG.occ11.y;
   P.siteOcc=0;P.sitePrice=0;P.siteHaul=E.occ;P.siteFreight=-E.price;   // v6.5: the site's OCC and price adders are now its freight (haul in, freight out)
   P.siteEnergy=E.energy+E.chem;P.siteChem=E.chem;P.siteWage=E.wage;P.siteOver=E.over;P.siteWx=E.wx;P.siteIn=E.inMul;
   // receiving: unloading per door (t/h); normal docks never limit
-  P.doorRate=b==="recv"?BNK.recv*feed/3*(1+0.25*LV("forklift")):BASE.doorRate;
+  P.doorRate=b==="recv"?BNK.recv*bnSev().k*feed/3*(1+0.25*LV("forklift")):BASE.doorRate;
   // pulper feed (t/h of bales)
-  P.pulperMax=b==="pulper"?BNK.pulper*feed+30*LV("pulper"):70+25*LV("pulper");
+  P.pulperMax=b==="pulper"?BNK.pulper*bnSev().k*feed+30*LV("pulper"):70+25*LV("pulper");
   // screens: accepted fiber (t/h); normal is far above anything the pulper can feed
-  P.screenMax=b==="screens"?BNK.screens*fiber+18*LV("clean"):80+15*LV("clean");
+  P.screenMax=b==="screens"?BNK.screens*bnSev().k*fiber+18*LV("clean"):80+15*LV("clean");
   // winder (t/h)
-  P.winderMax=(b==="winder"?BNK.winder*need:45)+30*LV("winder")+((S&&S.perk&&S.perk.winder)||0);
+  P.winderMax=(b==="winder"?BNK.winder*bnSev().k*need:45)+30*LV("winder")+((S&&S.perk&&S.perk.winder)||0);
   // shipping: rolls loaded per door per hour
-  P.doorRolls=b==="ship"?BNK.ship*need/(P.jumbo/P.rollsPerReel)/3*(1+0.35*LV("agv")):BASE.doorRolls;}
+  P.doorRolls=b==="ship"?BNK.ship*bnSev().k*need/(P.jumbo/P.rollsPerReel)/3*(1+0.35*LV("agv")):BASE.doorRolls;}
 // rated capacity of each area right now, in t/h of paper (for the Line capacity view and the bottleneck banner)
 function lineCaps(){const g=GRADES[C.grade],pm=P.K*(g.sp+P.spBonus)*g.bw,y=P.yieldF,k=P.pmLoss,roll=P.jumbo/P.rollsPerReel;
   return [["recv","Receiving",P.doors*P.doorRate*y*k],["pulper","Pulper",P.pulperMax*y*k],["screens","Screens & cleaners",P.screenMax*k],
@@ -130,7 +135,7 @@ function lineCapView(host){const h=document.createElement("h3");h.textContent="L
   host.appendChild(p);}
 // at the start of a run: say which area is the bottleneck and what it costs (banner + log)
 function bnNotice(){if(!S||!S.bn)return;const b=BN[S.bn],c=lineCaps(),me=c.find(x=>x[0]===S.bn),pm=c.find(x=>x[0]==="pm");
-  const t=`Bottleneck: ${b.name}. ${b.what[0].toUpperCase()+b.what.slice(1)} tops out near ${Math.round(me[2])} t/h; the machine can make ${Math.round(pm[2])} t/h. See Upgrades.`;
+  const sv=bnSev(),t=`Bottleneck (${sv.n}): ${b.name}. ${b.what[0].toUpperCase()+b.what.slice(1)} tops out near ${Math.round(me[2])} t/h; the machine can make ${Math.round(pm[2])} t/h. See Upgrades.`;
   for(let k=BANNERS.length-1;k>=0;k--)if(BANNERS[k].id==="bn")BANNERS.splice(k,1);
   BANNERS.push({text:t,t:null,id:"bn",tag:"BOTTLENECK"});while(BANNERS.length>3)BANNERS.splice(1,1);log(t,"warn");}
 // is the run's bottleneck still short of the machine? (labels, 5 times a second)
@@ -138,6 +143,6 @@ function bnShort(){const b=BNQ();if(!b)return false;const c=lineCaps();return c.
 // the bottleneck card at the top of Upgrades (shown on phones too, where the ledger is folded away)
 function bnCard(){const el=$("bnCard");if(!el)return;const b=BNQ(),short=bnShort();el.hidden=!b;if(!b)return;
   const c=lineCaps(),me=c.find(x=>x[0]===b),pm=c.find(x=>x[0]==="pm"),fix=BN[b].ups.map(id=>UP[id].name).join(" or ");
-  const html=short?`<b>Bottleneck: ${BN[b].name}</b><span>${Math.round(me[2])} t/h against the machine's ${Math.round(pm[2])} t/h. ${fix} fixes it, 25% off.</span>`
+  const html=short?`<b>Bottleneck (${bnSev().n}): ${BN[b].name}</b><span>${Math.round(me[2])} t/h against the machine's ${Math.round(pm[2])} t/h. ${fix} fixes it, ${Math.round(bnSev().disc*100)}% off.</span>`
     :`<b>${BN[b].name}: fixed</b><span>It now keeps up with the machine (${Math.round(me[2])} t/h against ${Math.round(pm[2])} t/h).</span>`;
   if(el.dataset.h!==html){el.dataset.h=html;el.innerHTML=html;}el.classList.toggle("ok",!short);}

@@ -108,15 +108,18 @@ function ordDepart(tr){const O=ordState(),K=O.k,rw=C.rollW.v,tons=tr.load*rw,a=l
   else{const o=ordGet(tr.oid),ld=o?ordLateD(o):0,chg=ld>0?Math.min(ORD.lateCap,ORD.late*Math.ceil(ld)):0;v=tons*(pr-chg);K.chg+=tons*chg;if(chg)pfW("chg",tons*chg);
     if(ld>0)K.lateT+=tons;else K.onT+=tons;
     if(o){o.sh+=tr.load;o.ld-=Math.max(0,tr.want-tr.load);if(o.st==="open"&&o.sh>=o.r-1e-6){o.st="done";o.done=Math.round(S.t);K.done++;if(!(ld>0))K.doneOn++;
-        log(`Order #${o.id} for ${ordCust(o)} delivered: ${o.r} rolls of ${o.g}${ld>0?`, ${Math.ceil(ld)} day${Math.ceil(ld)===1?"":"s"} late (−$${chg}/t)`:" on time"}`,ld>0?"warn":"ok");}}}
+        log(`Order #${o.id} for ${ordCust(o)} delivered: ${ordRolls(o,o.np||ordPcs(o,o.r))}${ld>0?`, ${Math.ceil(ld)} day${Math.ceil(ld)===1?"":"s"} late (−$${chg}/t)`:" on time"}`,ld>0?"warn":"ok");}}}
   K.ship+=tons;earn(v);}
+// v6.12.1: the feed counts rolls (pieces), not standard-roll units (o.r, o.sh: a 90" roll is 0.9), with the width when
+// it isn't the standard 100" ("12 rolls of 24 (90")"); it used to print the units ("26.040000000000003 rolls")
+const ordPcs=(o,u)=>Math.round(u/((o.w||100)/100)),ordRolls=(o,n)=>`${n} roll${n===1?"":"s"} of ${o.g}${(o.w||100)!==100?` (${o.w}")`:""}`;
 // every step: late orders, cancellations, dry runs (cheap: the book is a few dozen orders)
 function ordTick(dt){if(!ordOn())return;const O=ordState(),K=O.k;
   for(const o of O.list){if(o.st!=="open")continue;
-    if(!o.lw&&S.t>o.due+ORD.grace){o.lw=true;K.late++;log(`Order #${o.id} for ${ordCust(o)} is late: ${Math.round(o.sh)} of ${o.r} rolls of ${o.g} shipped`,"warn");}
+    if(!o.lw&&S.t>o.due+ORD.grace){o.lw=true;K.late++;log(`Order #${o.id} for ${ordCust(o)} is late: ${ordPcs(o,o.sh)} of ${ordRolls(o,o.np||ordPcs(o,o.r))} shipped`,"warn");}
     if(S.t>o.due+ORD.cancel*1440){o.st="cancelled";o.done=Math.round(S.t);K.canc++;
       for(const tr of S.outDock)if(tr&&tr.oid===o.id)tr.spot=true;   // a truck already loading it takes it to the spot market
-      log(`Order #${o.id} canceled by ${ordCust(o)}: ${o.r-Math.round(o.sh)} rolls of ${o.g} never shipped. They go to the spot market.`,"bad");
+      log(`Order #${o.id} canceled by ${ordCust(o)}: ${ordRolls(o,Math.max(1,(o.np||ordPcs(o,o.r))-ordPcs(o,o.sh)))} never shipped. They go to the spot market.`,"bad");
       BANNERS.push({text:`Order canceled: ${ordCust(o)} gave up waiting for ${o.g}`,t:null,tag:"ORDER"});while(BANNERS.length>3)BANNERS.splice(1,1);}}
   for(let i=S.outQ.length-1;i>=0;i--){const tr=S.outQ[i];if(tr.tq==null)tr.tq=S.t;if(S.t-tr.tq>ORD.dryWait){S.outQ.splice(i,1);spend(ORD.dryRun,"frout");K.dry++;
       S.leaving.push({...tr,ty:outY(0),kind:"out"});if(S.leaving.length>24)S.leaving.shift();

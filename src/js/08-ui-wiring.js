@@ -115,7 +115,7 @@ function updateShop(){const short=bnShort();   // (v5.2: once per tick, not once
     const fix=short&&us.some(upFix);const el=$("usum-"+g),h=`${fix?'<em class="fixg">fix</em> ':""}${own}/${tot} bought${can?` · <b>${can} affordable</b>`:""}`;if(el&&el.innerHTML!==h)el.innerHTML=h;});
   UPS.forEach(u=>{const l=LV(u.id),el=$("up-"+u.id),b=$("buy-"+u.id),max=l>=u.lv.length;
     el.classList.toggle("max",max);if(el.dataset.lv!==String(l)){el.dataset.lv=l;el.querySelectorAll(".pips i").forEach((p,k)=>p.classList.toggle("on",k<l));}
-    {const fx=upFix(u),ft=el.querySelector(".fixtag");el.classList.toggle("fix",fx);if(ft){ft.hidden=!fx;if(fx){const t=short?"Fixes the bottleneck · 25% off. "+(BN_UPTXT[S.bn+"/"+u.id]||""):"Bottleneck fixed · still 25% off";   /* v5.1 QA2: no "fixes" once it is fixed */if(ft.textContent!==t)ft.textContent=t;}}}
+    {const fx=upFix(u),ft=el.querySelector(".fixtag");el.classList.toggle("fix",fx);if(ft){ft.hidden=!fx;if(fx){const t=short?"Fixes the bottleneck · "+Math.round(bnSev().disc*100)+"% off. "+(BN_UPTXT[S.bn+"/"+u.id]||""):"Bottleneck fixed · still 25% off";   /* v5.1 QA2: no "fixes" once it is fixed */if(ft.textContent!==t)ft.textContent=t;}}}
     let bt,bd;if(max){bd=true;bt="Maxed";}
     else{const c=upCost(u,l),lk=upLocked();bd=lk||(!S.free&&S.cash<c);bt=S.free?"Add (free play)":lk?`${money(c)} · ${upNext()}`:S.cash<c?`Need ${money(c)}`:`Buy ${money(c)}`;}
     if(b.disabled!==bd)b.disabled=bd;if(b.textContent!==bt)b.textContent=bt;});

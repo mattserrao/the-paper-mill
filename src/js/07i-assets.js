@@ -66,7 +66,7 @@ const ESET=new Set(["motorfail","drivefail","rectfail","lightning","birdline","p
 MAINT.push("bearingfail","motorfail","drivefail");FM_MAINT=null;FM_REL.add("bearingfail");FM_REL.add("motorfail");   // (RCFA, PM and the Reliability program cut them too)
 
 const rlyOn=()=>!!(S&&!S.zen&&!S.over&&((S.season&&S.season.on)||S.free));
-function rlyState(){if(S.rel&&S.rel.v===1){if(!S.rel.rf)rlyState2(S.rel);return S.rel;}const sd=S.seed>>>0,R={v:1,a:{},pend:[],rd:{s:null,list:[]},hist:[],k:-1,caught:0,saved:0,fails:0,done:0,skip:0,chg:{},next:null};
+function rlyState(){if(S.rel&&S.rel.v===1){if(!S.rel.rf)rlyState2(S.rel);return S.rel;}const sd=S.seed>>>0,R={v:1,a:{},pend:[],rd:{s:null,list:[]},hist:[],k:-1,caught:0,found:0,saved:0,fails:0,done:0,skip:0,chg:{},next:null};
   for(const A of ASSETS){const h=manH("rly",sd,A.id);R.a[A.id]={vib:55+h()*40,adx:60+h()*37,dh:75+h()*25,wv:1.0+h()*1.4,wm:0.4+h()*0.7,vm:h()<0.5?"imbal":"misal",am:["ins","bar","con"][Math.floor(h()*3)],lv:null,la:null,hv:[],ha:[],pin:""};}
   {const h=manH("rlyold",sd),ids=ASSETS.map(A=>A.id).sort((a,b)=>manH("rlyold2",sd,a)()-manH("rlyold2",sd,b)());for(const id of ids.slice(0,3))R.a[id].dh=35+h()*25;}   // (v6.10.1: three drives start part-worn)
   if(S.rng&&S.rng.rel==null)S.rng.rel=(S.seed^0x2545f491)|0;rlyState2(R);
@@ -190,13 +190,15 @@ const rlyHash=(...x)=>manH("rlyv",(S.seed>>>0),...x)();
 function rlyVibSt(id){const a=S.rel.a[id];if(rlyPend(id,"vib"))return "imm";const h=a.vib;return h>=75?"good":h>=60?a.vm:h>=40?"outer":"inner";}
 function rlyVibV(st,h,id){const b={good:1.0+(100-h)*0.06,imbal:3+(75-h)*0.1,misal:3.2+(75-h)*0.1,outer:4.6+(60-h)*0.12,inner:6.8+(40-h)*0.06,imm:9.5}[st]||1;return Math.round((b+rlyHash(id,Math.floor(S.t))*0.6)*10)/10;}
 function rlyAdxSt(id){if(rlyPend(id,"adx"))return "imm";const h=S.rel.a[id].adx;return h>=75?"good":h>=55?"watch":"alarm";}
+// v6.12.1: faults found on a round (imminent, counted once per pending failure) for the end screen's found / acted-on line
+function rlyFound(R,id,k){for(const p of R.pend)if(p.a===id&&p.k===k&&!p.fnd){p.fnd=1;R.found=(R.found||0)+1;}}
 function rlyRead(R,x){const who=x.who==="e"?"the electrical tech":"a maintenance tech";
   for(const id of x.a){const a=R.a[id],A=ASSETN[id];
     if(x.k==="vib"){const st=rlyVibSt(id),v=rlyVibV(st,a.vib,id);a.lv={t:S.t,st,v,by:x.who};a.hv.push([Math.round(S.t),v,st]);if(a.hv.length>8)a.hv.shift();
-      if(st==="imm"){BANNERS.push({text:`Vibration round: the ${A.n} bearing is failing. Plan the repair on the Reliability screen.`,t:null,tag:"RELIAB"});while(BANNERS.length>3)BANNERS.splice(1,1);log(`Vibration round (${who}): ${A.n} bearing failing (${v} mm/s). Plan the repair in Report → Control room → Reliability.`,"warn");}
+      if(st==="imm"){rlyFound(R,id,"vib");BANNERS.push({text:`Vibration round: the ${A.n} bearing is failing. Plan the repair on the Reliability screen.`,t:null,tag:"RELIAB"});while(BANNERS.length>3)BANNERS.splice(1,1);log(`Vibration round (${who}): ${A.n} bearing failing (${v} mm/s). Plan the repair in Report → Control room → Reliability.`,"warn");}
       else if(st==="inner")log(`Vibration round: ${A.n}, inner race defect (${v} mm/s).`,"warn");}
     else{const st=rlyAdxSt(id),hh=clamp(a.adx+(rlyHash(id,Math.floor(S.t),1)-0.5)*4,0,100);a.la={t:S.t,st,h:Math.round(hh),by:"e"};a.ha.push([Math.round(S.t),Math.round(hh),st]);if(a.ha.length>8)a.ha.shift();
-      if(st==="imm"){BANNERS.push({text:`ADX test: the ${A.n} motor is about to fail. Plan the repair on the Reliability screen.`,t:null,tag:"RELIAB"});while(BANNERS.length>3)BANNERS.splice(1,1);log(`ADX test: ${A.n} motor about to fail (${ADXMODE[a.am]}). Plan the repair in Report → Control room → Reliability.`,"warn");}
+      if(st==="imm"){rlyFound(R,id,"adx");BANNERS.push({text:`ADX test: the ${A.n} motor is about to fail. Plan the repair on the Reliability screen.`,t:null,tag:"RELIAB"});while(BANNERS.length>3)BANNERS.splice(1,1);log(`ADX test: ${A.n} motor about to fail (${ADXMODE[a.am]}). Plan the repair in Report → Control room → Reliability.`,"warn");}
       else if(st==="alarm")log(`ADX test: ${A.n} motor in alarm (${ADXMODE[a.am]}).`,"warn");}}}
 // the player's actions (the Reliability screen)
 function rlyPin(id,k){const R=rlyState(),a=R.a[id];if(!a)return;a.pin=a.pin===k?"":k;}
@@ -262,7 +264,8 @@ function rlyLinkMul(id){const L=RLY_LINK[id];if(!L||!S||!S.rel||!rlyOn())return 
 function rlyTellTrend(area){const R=S&&S.rel;if(!R)return 0;let v=0;for(const A of ASSETS){if(A.ta!==area)continue;const a=R.a[A.id],f=x=>x&&S.t-x.t<RLY.unknown?x.st:"";
   const s=f(a.lv),t=f(a.la);if(s==="imm"||t==="imm")v=2;else if(s==="inner"||s==="outer"||t==="alarm")v=Math.max(v,1);}return v;}
 // end screens: "Reliability rounds" line
-const rlyEndStat=()=>{const R=S&&S.rel;if(!R||!(R.done+R.skip))return null;return ["Reliability rounds",`${R.done} done, ${R.skip} skipped · ${R.caught} fault${R.caught===1?"":"s"} caught, ${R.fails} failure${R.fails===1?"":"s"}`,"wide"];};
+const rlyEndStat=()=>{const R=S&&S.rel;if(!R||!(R.done+R.skip))return null;const f=Math.max(R.found||0,R.caught);   // (v6.12.1: found vs acted on; it said "0 faults caught" in nearly every season)
+  return ["Reliability rounds",`${R.done} done, ${R.skip} skipped · ${f} fault${f===1?"":"s"} found, ${R.caught} acted on · ${R.fails} failure${R.fails===1?"":"s"}`,"wide"];};
 // how old a reading is, and whether it still counts
 function rlyAge(x){if(!x)return {cls:"unk",txt:"never"};const m=S.t-x.t,txt=m<90?Math.max(0,Math.round(m))+" min":m<2880?(m/60).toFixed(m<600?1:0)+" h":(m/1440).toFixed(1)+" d";return {cls:m>RLY.unknown?"unk":m>RLY.stale?"stale":"",txt};}
 // the civics choices for the three failures (03e's format: [label, cost tier, odds step, civics, note]; tags P proper, Q cheap, S shortcut)

@@ -1,5 +1,21 @@
 # Changelog
 
+## v6.12.1-t4 (2026-10-24): season QA fixes (test build, test/v6.12.1)
+From the 50-season QA (`claude/qa-v6121-seasons.md`) and the decisions on it.
+- Upgrades: the speed and throughput upgrades (drive, deckle, steam box, shoe press, winder, APC) are a further 25% off
+  (`ck` on the upgrade, `upCost`). Measured paired 30-day returns at the old prices, with the bottleneck fixed: shoe 2.9x,
+  steam box 2.0x, drive 1.6x, APC 0.87x; capacity upgrades earn nothing unless their area limits the line (then 10x+).
+- Season grade: operations weighs twice what profit does, rounded to the nearer grade (was half each, rounded worse).
+- Bottleneck severity: each season's bottleneck is mild, typical or severe (capacity x1.14 / 1 / 0.84; the fixing
+  upgrades 15 / 25 / 35% off), shown on the bottleneck card, the upgrade tag, the start notice and in the help.
+- Order feed: delivered, late and cancelled lines count whole rolls, with the width when it isn't 100" ("12 rolls of 31
+  (98")"); they printed standard-roll units ("26.040000000000003 rolls").
+- Season summary: "Reliability rounds 351 done · 2 faults found, 1 acted on · 1 failure" (was "0 faults caught" in
+  nearly every season).
+- OCC price lock outcome reworded ("Locked in, and then the market fell.").
+- QA rerun, 50 seasons: a smart buyer (fix the bottleneck, buy what pays, walk the Round) +$2.20M median, 12/12 in profit,
+  10 A grades; hands-off +$0.31M; buy-everything still loses. Bottleneck spread ~$2.3M (was ~$0.4M).
+
 ## v6.12.1-t3 (2026-10-24): approach bay QA (test build, test/v6.12.1)
 - Played the refiner plate change (outage 4) through in a season, live: the headbox's footprint runs to x 62.25, so t2's
   service aisle was only ~2.5 m and an open refiner door nearly closed it; walkers squeezed through the headbox corner.

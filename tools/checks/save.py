@@ -29,9 +29,10 @@ def save(pw):
     st = pg.evaluate("()=>[__PM.S.cards.pend.map(p=>p.h),__PM.S.fx.map(f=>f.id),Math.round(__PM.S.t)]")
     C.note("before save: pending", st)
     ok("pending card outcomes exist before the save (so the save carries them)", len(st[0]) > 0, st[0])
-    ms = pg.evaluate("()=>{const ok=__PM.G3.save.save('test');window.__sv=localStorage.getItem('paper-mill-save');return [ok,__PM.G3.saveMs,window.__sv.length]}")
+    # save and play on in one evaluate: a live frame between the two (autosave or UI tick) could shift the run under load
+    ms = pg.evaluate("(n)=>{const ok=__PM.G3.save.save('test');window.__sv=localStorage.getItem('paper-mill-save');const ms=__PM.G3.saveMs;return [ok,ms,window.__sv.length,(" + STEP + ")(n)]}", 2 * 1440 * 4)
     ok("save succeeds", ms[0] is True and ms[2] > 1000, f"ok={ms[0]} {ms[1]:.1f} ms {ms[2]} bytes")
-    a = pg.evaluate(STEP, 2 * 1440 * 4); C.note("uninterrupted day 5:", a)
+    a = ms[3]; C.note("uninterrupted day 5:", a)
     pg.evaluate("()=>{__PM.G3.saveOff=true;localStorage.setItem('paper-mill-save',window.__sv);}")   # (the autosave has moved on since: put the test save back)
     pg.close()
 
@@ -39,19 +40,18 @@ def save(pw):
     has = pg.evaluate("()=>!!document.getElementById('v2cont')&&document.getElementById('v2cont').textContent")
     ok("menu shows a Continue button", bool(has) and "Continue" in has, has)
     # click and pause in one go: waiting for running===true first let a frame or two of sim slip in (a flaky DIFFER)
-    r = pg.evaluate("()=>{document.getElementById('v2cont').click();const was=__PM.running;__PM.setRunning(false);return was}")
-    ok("Continue starts the game", r is True)
-    bb = pg.evaluate(STEP, 2 * 1440 * 4); C.note("restored day 5:", bb)
+    r = pg.evaluate("(n)=>{document.getElementById('v2cont').click();const was=__PM.running;__PM.setRunning(false);return [was,(" + STEP + ")(n)]}", 2 * 1440 * 4)
+    ok("Continue starts the game", r[0] is True)
+    bb = r[1]; C.note("restored day 5:", bb)
     ok("restored run continues exactly like the uninterrupted one", a == bb, f"{a} vs {bb}")
 
     # hidden page: save + pause + welcome back
-    pg.evaluate("()=>__PM.setRunning(true)")
-    pg.evaluate("()=>{Object.defineProperty(document,'hidden',{configurable:true,get:()=>true});document.dispatchEvent(new Event('visibilitychange'));}")
+    # run + hide in one evaluate: a live frame in between could open a card and pause, so the hide would not count as a pause
+    pg.evaluate("()=>{__PM.S.cards.next=1e12;__PM.S.cards.open=null;__PM.setRunning(true);Object.defineProperty(document,'hidden',{configurable:true,get:()=>true});document.dispatchEvent(new Event('visibilitychange'));}")
     h = pg.evaluate("()=>[__PM.running,JSON.parse(localStorage.getItem('paper-mill-save')).why]")
     ok("hidden page pauses", h[0] is False)
     ok("hidden page saves (why=hidden)", h[1] == "hidden", h[1])
-    pg.evaluate("()=>{Object.defineProperty(document,'hidden',{configurable:true,get:()=>false});document.dispatchEvent(new Event('visibilitychange'));}")
-    w = pg.evaluate("()=>[!document.getElementById('v2menu').hidden,document.getElementById('v2state').textContent]")
+    w = pg.evaluate("()=>{Object.defineProperty(document,'hidden',{configurable:true,get:()=>false});document.dispatchEvent(new Event('visibilitychange'));return [!document.getElementById('v2menu').hidden,document.getElementById('v2state').textContent]}")
     ok("back on the page: menu shown with Welcome back", w[0] and "Welcome back" in w[1], w)
     pg.close()
 
