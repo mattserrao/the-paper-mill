@@ -1689,7 +1689,7 @@ body.pmpop .popmain[data-v="dcs"] #dcsOv .dcs{max-width:1180px;margin:0 auto}
 <div class="btns"><button class="primary" id="no3d-retry">Try again</button></div></div></div>
 
 <script type="module">
-const APP_VER="v7.0.0-t4";   // shown in the menu and sent with leaderboard scores (max 12 characters)
+const APP_VER="v7.0.0-t5";   // shown in the menu and sent with leaderboard scores (max 12 characters)
 // TEST BUILDS ONLY (off in releases): turbo speeds 240/480/960 sim min/s for fast playtests. Above 120, crews and maintenance start jobs
 // without waiting for the 3D walk (as with the 3D view off) and outages keep the speed. Set false for a release.
 const TURBO=false,TURBO_FAST=s=>TURBO&&s>120;
@@ -2442,21 +2442,37 @@ const LAYOUT=layoutFor(SITE.seed);
 // v7.0 the site laid out the way the process runs: bales in on the west (screen left), rolls out on the east (screen
 // right). The mill is still built in its v6 coordinates, now its "logical" coordinates, and ZONES places each block in
 // the v7 site with one rigid transform, picked by where a thing stands in logical coordinates (zoneOf):
-//   W  west block: receiving, bale yard, rail, stock prep with its approach flow (refiners, fan pump), the shop,
-//      wastewater, river intake: moved 52 m west
-//   H  hall block: machine hall, winder, warehouse, shipping, MCC, parking, the outbound road: mirrored about x = 32
-//      (x -> 64 - x), so the machine runs west to east and its tending side still faces the camera
-//   E  power house block (power house, boiler, water tower): moved 52 m west like the west block (so walking between
-//      them never jumps), which puts it behind the presses and the first dryers
+//   W  west block: receiving, bale yard, rail, stock prep with its approach flow (refiners, fan pump), the shop: moved
+//      52 m west and (t5) WZ south, so stock prep stands on the machine's line, in front of the wet end
+//   U  the river side (t5): wastewater and the river intake, kept by the river: moved west with the west block only
+//   S  a strip between the two (logical z -33.5..-32): drawn stretched from the river side's place to the west block's,
+//      so whatever crosses it (walkers, the pipes) joins them up
+//   H  hall block: machine hall, winder, warehouse, shipping, MCC, parking, the outbound road: mirrored about x = 39
+//      (x -> 78 - x), so the machine runs west to east and its tending side still faces the camera
+//   A  (t5) the walkway along the south of stock prep: an empty corner of the old site (logical x 0..47, z 52..61), drawn
+//      on the lawn south of the west block, so walkers can go round stock prep on that side (it holds nothing)
+//   E  power house block (power house, boiler, water tower): moved with the hall (t5: 38 m west), behind the presses
+//      and the first dryers
 // The sim never sees any of this: it is where things are drawn (20b-3d-zones.js). ?layout6 shows the v6 layout.
 const LAYOUT6=new URLSearchParams(location.search).has("layout6");
-const ZONES=LAYOUT6?{W:{dx:0},H:{dx:0},E:{dx:0}}:{W:{dx:-52},H:{mir:64},E:{dx:-52}};
+const WZ=LAYOUT6?0:20,SBAND=[-33.5,-32];   // (the west block's step south; the stretched strip, in logical z)
+const AZ=17.2-52;   // (the walkway block: logical z 52 is drawn just south of the west block's south edge, site z 16.7)
+const ZONES=LAYOUT6?{W:{dx:0},U:{dx:0},S:{dx:0},H:{dx:0},E:{dx:0},A:{dx:0}}:{W:{dx:-52,dz:WZ},U:{dx:-52},S:{dx:-52,band:true},H:{mir:78},E:{dx:-38},A:{dx:-52,dz:AZ}};
 function zoneOf(x,z){if(x>47&&x<53.5&&z>-6.2&&z<=-3.3)return "H";   // the fog fan, on the hall's back wall
-  if(z>-3.3)return "H";if(x>66&&z>-30)return "E";return "W";}
+  if(!LAYOUT6&&x>=0&&x<=47&&z>=52&&z<=61)return "A";   // (t5: an empty corner of the old site, drawn as the walkway along the south of stock prep)
+  if(z>-3.3&&!(x<-36.5&&z<8))return "H";if(x>66&&z>-30)return "E";if(z<-50)return "U";   // (t5: receiving's side of the inbound road, with its scale house, stays with the west block)
+  if(x>-22){if(x>66||z<SBAND[0])return "U";if(z<SBAND[1])return "S";}return "W";}
 function siteX(k,x){const Z=ZONES[k];return Z.mir!=null?Z.mir-x:x+Z.dx;}
-function sitePt(x,z){return [siteX(zoneOf(x,z),x),z];}   // a logical point -> where it stands in the v7 site
+// (the strip: its far edge stays with the river side, its near edge meets the west block)
+const sBand=z=>Math.min(1,Math.max(0,(z-SBAND[0])/(SBAND[1]-SBAND[0])))*WZ;
+function siteZ(k,z){const Z=ZONES[k];return Z.band?z+sBand(z):z+(Z.dz||0);}
+function sitePt(x,z){const k=zoneOf(x,z);return [siteX(k,x),siteZ(k,z)];}   // a logical point -> where it stands in the v7 site
+// a site point -> the logical point that zone k draws there (null if zone k draws nothing there)
+function siteInv(k,x,z){const Z=ZONES[k],lx=Z.mir!=null?Z.mir-x:x-Z.dx;let lz;
+  if(Z.band){const a=SBAND[0],w=SBAND[1]-SBAND[0];if(z<a||z>a+w+WZ)return null;lz=a+(z-a)*w/(w+WZ);}else lz=z-(Z.dz||0);
+  return zoneOf(lx,lz)===k?[lx,lz]:null;}
 const zoneMir=k=>ZONES[k].mir!=null;
-const FENCE7=LAYOUT6?{x0:-100,x1:92,z0:-52,z1:64}:{x0:-152,x1:164,z0:-52,z1:64};   // the v7 fence, in site coordinates
+const FENCE7=LAYOUT6?{x0:-100,x1:92,z0:-52,z1:64}:{x0:-152,x1:178,z0:-52,z1:64};   // (t5: 14 m wider at the east, where the hall block moved)   // the v7 fence, in site coordinates
 // the scenery (42b) is still laid out round the v6 fence (x -100..92) and drawn round the v7 one: x is shifted west of
 // the old fence with the west gate (-52 m), east of it with the east gate (+72 m), and stretched in between (scX)
 const SCN6={a:-100,b:92};
@@ -7059,7 +7075,7 @@ function no3D(){G3.ok=false;$("no3d").hidden=false;$("no3d-retry").onclick=()=>l
   // L-shaped run. The pieces are marked as already in site coordinates (userData.zd) so the zone pass leaves them alone.
   const ZONP=!LAYOUT6;
   function zdSince(n0){for(let i=n0;i<scene.children.length;i++)scene.children[i].userData.zd=true;}   // (v7.0: these were built in site coordinates)
-  function zRoute(pts){const runs=[];for(const p of pts){const k=zoneOf(p[0],p[2]),q=[siteX(k,p[0]),p[1],p[2]];
+  function zRoute(pts){const runs=[];for(const p of pts){const k=zoneOf(p[0],p[2]),q=[siteX(k,p[0]),p[1],siteZ(k,p[2])];
       const r=runs[runs.length-1];if(r&&r.k===k)r.p.push(q);else runs.push({k,p:[q]});}
     let path=runs[0].p;
     for(let i=1;i<runs.length;i++){const R=runs[i].p;let bj=0,bk=0,bd=Infinity;
@@ -7302,10 +7318,14 @@ function no3D(){G3.ok=false;$("no3d").hidden=false;$("no3d-retry").onclick=()=>l
   const ZON=!LAYOUT6;
   const ZZ={};
   {const mk=(k,conj)=>{const Z=ZONES[k],pre=new THREE.Matrix4();
-      if(Z.mir!=null)pre.set(-1,0,0,Z.mir, 0,1,0,0, 0,0,1,0, 0,0,0,1);else pre.makeTranslation(Z.dx,0,0);
+      if(Z.mir!=null)pre.set(-1,0,0,Z.mir, 0,1,0,0, 0,0,1,0, 0,0,0,1);else pre.makeTranslation(Z.dx,0,Z.dz||0);
       return {k,pre,post:conj&&Z.mir!=null?new THREE.Matrix4().makeScale(-1,1,1):null};};
    for(const k of Object.keys(ZONES)){ZZ[k]=mk(k,false);ZZ[k+"c"]=mk(k,true);}}
-  const zFor=(x,z,conj)=>{const k=zoneOf(x,z);return conj?ZZ[k+"c"]:ZZ[k];};
+  // the stretched strip (03b S) has no one transform: a thing in it is moved by the strip's offset where it stands (keep:
+  // a transform of its own, for a thing placed once; otherwise a shared one, for a mover re-placed every frame)
+  const _zS={k:"S",pre:new THREE.Matrix4(),post:null};
+  const zAt=(k,z,conj,keep)=>{const Z=ZONES[k];if(!Z.band)return conj?ZZ[k+"c"]:ZZ[k];const o=keep?{k,pre:new THREE.Matrix4(),post:null}:_zS;o.pre.makeTranslation(Z.dx,0,sBand(z));return o;};
+  const zFor=(x,z,conj,keep)=>zAt(zoneOf(x,z),z,conj,keep);
   const zTop=p=>p===scene||p===null||(G3.SM&&p===G3.SM.holder)||!!(p&&p.__zcont);   // (a container group: its children are zoned one by one)
   function zApply(o){if(!zTop(o.parent))return;if(o.__zsc){o.matrixWorld.elements[12]+=scX(o.position.x)-o.position.x;return;}const z=o.__zdyn?zFor(o.position.x,o.position.z,true):o.__zz;if(!z)return;
     o.matrixWorld.premultiply(z.pre);if(z.post)o.matrixWorld.multiply(z.post);}
@@ -7338,11 +7358,11 @@ function no3D(){G3.ok=false;$("no3d").hidden=false;$("no3d-retry").onclick=()=>l
   const zUnset=o=>{const e=o.instanceMatrix.array;for(let i=0;i<o.count;i++){const j=i*16;if(e[j+12]*e[j+12]+e[j+14]*e[j+14]>1e-6)return false;}return true;};   // (no instance placed yet: all at the origin)
   G3.zPend=()=>{if(!ZPEND.size)return;for(const o of ZPEND){if(!o.parent){ZPEND.delete(o);continue;}if(o.isMesh&&!o.isInstancedMesh){if(o.visible){ZPEND.delete(o);zOne(o,new Set(),0);o.updateMatrixWorld(true);}continue;}if(!o.isInstancedMesh){if(o.children.length){ZPEND.delete(o);zOne(o,new Set(),0);o.updateMatrixWorld(true);}continue;}if(!(o.count>0)||zUnset(o))continue;ZPEND.delete(o);
     o.updateMatrixWorld(true);const c={};for(let i=0;i<o.count;i++){o.getMatrixAt(i,_zm);_zm.premultiply(o.matrixWorld);_zp.setFromMatrixPosition(_zm);const k=zoneOf(_zp.x,_zp.z);c[k]=(c[k]||0)+1;}
-    const k=Object.keys(c).sort((a,b)=>c[b]-c[a])[0];o.__zz=null;zSet(o,ZZ[k],false);if(zoneMir(k))zFlip(o);o.updateMatrixWorld(true);ZS.pend=(ZS.pend||0)+1;}};
+    const k=Object.keys(c).sort((a,b)=>c[b]-c[a])[0];o.__zz=null;zSet(o,zAt(k,_zp.z,false,true),false);if(zoneMir(k))zFlip(o);o.updateMatrixWorld(true);ZS.pend=(ZS.pend||0)+1;}};
   function zInst(o){if(o.userData.zd)return;if(!(o.count>0)||zUnset(o)){o.__zz=null;ZPEND.add(o);return;}o.updateMatrixWorld(true);const n=o.count,ks=new Set();
     for(let i=0;i<n;i++){o.getMatrixAt(i,_zm);_zm.premultiply(o.matrixWorld);_zp.setFromMatrixPosition(_zm);ks.add(zoneOf(_zp.x,_zp.z));}
     if(ks.size<=1){const k=ks.size?[...ks][0]:(()=>{const b=new THREE.Box3().setFromObject(o),c=b.getCenter(new THREE.Vector3());return b.isEmpty()?"H":zoneOf(c.x,c.z);})();
-      o.__zz=null;zSet(o,ZZ[k],false);if(zoneMir(k))zFlip(o);return;}
+      o.__zz=null;{const b=new THREE.Box3().setFromObject(o);zSet(o,zAt(k,b.isEmpty()?0:(b.min.z+b.max.z)/2,false,true),false);}if(zoneMir(k))zFlip(o);return;}
     ZS.instSplit=(ZS.instSplit||0)+1;
     for(let i=0;i<n;i++){o.getMatrixAt(i,_zm);_zm.premultiply(o.matrixWorld);_zp.setFromMatrixPosition(_zm);const z=zFor(_zp.x,_zp.z,true);
       _zm.premultiply(z.pre);if(z.post)_zm.multiply(z.post);_zm.premultiply(_zinv.copy(o.matrixWorld).invert());o.setMatrixAt(i,_zm);}
@@ -7378,7 +7398,7 @@ function no3D(){G3.ok=false;$("no3d").hidden=false;$("no3d-retry").onclick=()=>l
         zSet(o,null,true);ZS.dyn++;return;}   // nothing to measure yet (an empty holder): goes by where it stands
       if(bb.max.x-bb.min.x>230||bb.max.z-bb.min.z>230){ZS.native++;return;}   // world-sized (the river, the ground): already in site coordinates
       if(depth<3&&zIsCont(o,bb)){o.__zcont=true;ZS.cont=(ZS.cont||0)+1;for(const c of o.children.slice())zOne(c,parts,depth+1);return;}
-      bb.getCenter(v);const k=zoneOf(v.x,v.z),conj=zoneMir(k)&&zConj(o);zSet(o,ZZ[conj?k+"c":k],false);if(zoneMir(k)&&!conj)zFlip(o);ZS.n++;ZS.by[k]=(ZS.by[k]||0)+1;
+      bb.getCenter(v);const k=zoneOf(v.x,v.z),conj=zoneMir(k)&&zConj(o);zSet(o,zAt(k,v.z,conj,true),false);if(zoneMir(k)&&!conj)zFlip(o);ZS.n++;ZS.by[k]=(ZS.by[k]||0)+1;
       const k0=zoneOf(bb.min.x,bb.min.z),k1=zoneOf(bb.max.x,bb.max.z),k2=zoneOf(bb.min.x,bb.max.z),k3=zoneOf(bb.max.x,bb.min.z);
       if(k0!==k||k1!==k||k2!==k||k3!==k)ZS.span.push([o.name||o.type,k,+bb.min.x.toFixed(1),+bb.max.x.toFixed(1),+bb.min.z.toFixed(1),+bb.max.z.toFixed(1)]);}}
   G3.zonePass=zonePass;
@@ -7387,7 +7407,7 @@ function no3D(){G3.ok=false;$("no3d").hidden=false;$("no3d-retry").onclick=()=>l
   // takes the original's zone, or stays in site coordinates when the original's instances were already placed there (split
   // across zones, or built in site coordinates). Without this it is zoned by its origin (the hall) and moved twice.
   G3.zCopy=(from,to)=>{if(!ZON||from.__zz===undefined)return;if(from.__zz)zSet(to,from.__zz,false);else{to.__zz=null;to.userData.zd=true;}};
-  G3.zSetAt=(o,x,z)=>{if(!ZON)return;o.__zz=null;const k=zoneOf(x,z);zSet(o,ZZ[k],false);if(zoneMir(k))zFlip(o);};
+  G3.zSetAt=(o,x,z)=>{if(!ZON)return;o.__zz=null;const k=zoneOf(x,z);zSet(o,zAt(k,z,false,true),false);if(zoneMir(k))zFlip(o);};
   // things added to the scene after the pass (pins, spawned props and vehicles) go by where they stand each frame. Looked at
   // once the adding code has finished (a microtask later), so the engine's own batches (userData.smBatch, set right after
   // they are added) are left in site coordinates
@@ -7396,8 +7416,9 @@ function no3D(){G3.ok=false;$("no3d").hidden=false;$("no3d-retry").onclick=()=>l
     scene.add=function(...a){add0(...a);if(G3.zonesOn)for(const o of a)if(o&&o.__zz===undefined)queueMicrotask(()=>late(o));return this;};}
   // a logical point -> site point (people, effects, pins and the camera use these)
   G3.sitePt=(x,z)=>ZON?sitePt(x,z):[x,z];
-  G3.siteV=(v,out=v)=>{if(!ZON)return out.copy(v);const k=zoneOf(v.x,v.z);return out.set(siteX(k,v.x),v.y,v.z);};
+  G3.siteV=(v,out=v)=>{if(!ZON)return out.copy(v);const k=zoneOf(v.x,v.z);return out.set(siteX(k,v.x),v.y,siteZ(k,v.z));};
   G3.zoneMirAt=(x,z)=>ZON&&zoneMir(zoneOf(x,z));
+  G3.zoneAt=(x,z)=>ZON?zoneOf(x,z):"W";   // (tests)
   // a thing's world matrix in logical coordinates (the walkers' path-finding grid is logical, 38): the zone taken back off
   // at the ancestor that carries it. Null for things built in site coordinates (userData.zd).
   const _zl1=new THREE.Matrix4(),_zl2=new THREE.Matrix4();
@@ -7408,7 +7429,8 @@ function no3D(){G3.ok=false;$("no3d").hidden=false;$("no3d-retry").onclick=()=>l
     _zl1.copy(t.matrixWorld).invert().multiply(o.matrixWorld);   // o relative to t (no zone in it)
     out.multiplyMatrices(t.matrix,_zl1);if(pm)out.premultiply(pm);return out;};
   // a site point back to logical coordinates (the zone whose image it falls in)
-  G3.siteToLogical=(x,z)=>{if(!ZON)return [x,z];for(const k of Object.keys(ZONES)){const Z=ZONES[k],lx=Z.mir!=null?Z.mir-x:x-Z.dx;if(zoneOf(lx,z)===k)return [lx,z];}return null;};
+  G3.siteToLogical=(x,z)=>{if(!ZON)return [x,z];for(const k of Object.keys(ZONES)){const q=siteInv(k,x,z);if(q)return q;}return null;};
+  G3.siteInv=(k,x,z)=>ZON?siteInv(k,x,z):[x,z];   // (the logical point zone k draws at a site point, or null)
 
   /* ---- step 1: static plant ---- */
   // v4.1 the environment sets the ground, the river and its banks (ENVLOOK); the scenery itself is built in 42b-3d-scenery.js
@@ -7440,19 +7462,19 @@ function no3D(){G3.ok=false;$("no3d").hidden=false;$("no3d-retry").onclick=()=>l
     const W0=FENCE7.x0,W1=FENCE7.x1,Z0=FENCE7.z0,Z1=FENCE7.z1;
     run(W0,Z0,W1,Z0);run(W0,Z1,W1,Z1);
     if(LAYOUT6){[[Z0,-37.4],[-33.6,-31],[-27,-6],[-1.6,10.4],[14.6,Z1]].forEach(([a,b])=>run(W0,a,W0,b));[[Z0,30.5],[34.5,Z1]].forEach(([a,b])=>run(W1,a,W1,b));}
-    else{[[Z0,-37.4],[-33.6,-31],[-27,-6],[-1.6,30.5],[34.5,Z1]].forEach(([a,b])=>run(W0,a,W0,b));   // west: rejects road, rail, inbound road, staff road
+    else{[[Z0,-37.4+WZ],[-33.6+WZ,-31+WZ],[-27+WZ,-6+WZ],[-1.6+WZ,30.5],[34.5,Z1]].forEach(([a,b])=>run(W0,a,W0,b));   // west: rejects road, rail, inbound road (t5: with the west block, WZ south), staff road
       [[Z0,10.4],[14.6,Z1]].forEach(([a,b])=>run(W1,a,W1,b));}   // east: the outbound road
     const pg=new CylG(0.08,0.08,2.6,6),pm=new THREE.InstancedMesh(pg,instMat(M.metal),posts.length),m4=new THREE.Matrix4();
     posts.forEach((p,k)=>{m4.makeTranslation(p[0],1.3,p[1]);pm.setMatrixAt(k,m4);});pm.userData.bake=true;scene.add(pm);for(let i=zn0;i<scene.children.length;i++)scene.children[i].userData.zd=true;}
   // v7.0: the staff road comes in at the west gate now (the car park moved to the west end with the hall block)
-  if(!LAYOUT6){const n0=scene.children.length;slab(FENCE7.x0-2,-27,31.4,33.6,M.asphalt,0.025);for(let x=FENCE7.x0+2;x<-30;x+=4)box(2,0.02,0.16,M.lane,x,0.05,32.5,scene,false);zdSince(n0);}
+  if(!LAYOUT6){const n0=scene.children.length;slab(FENCE7.x0-2,-13,31.4,33.6,M.asphalt,0.025);for(let x=FENCE7.x0+2;x<-16;x+=4)box(2,0.02,0.16,M.lane,x,0.05,32.5,scene,false);zdSince(n0);}
   // guard gate between the two roads, with boom barriers
   {const zn0=scene.children.length;   // (v7.0: in site coordinates: the inbound gate on the west fence, the outbound gate on the east; a gatehouse at each)
-   const GH=LAYOUT6?[[FENCE.x0-1.5,4.4]]:[[FENCE7.x0-1.5,-9.4],[FENCE7.x1+1.5,8.2]];
+   const GH=LAYOUT6?[[FENCE.x0-1.5,4.4]]:[[FENCE7.x0-1.5,-9.4+WZ],[FENCE7.x1+1.5,8.2]];
    GH.forEach(([gx,gz])=>{box(3,2.6,3,conc,gx,1.3,gz);box(3.4,0.25,3.4,M.roofFlat,gx,2.75,gz);box(3.02,0.8,2.2,M.wind,gx,1.75,gz,scene,false);});
     const sc=document.createElement("canvas");sc.width=128;sc.height=8;const x=sc.getContext("2d");for(let i=0;i<8;i++){x.fillStyle=i%2?"#ffffff":"#e0343c";x.fillRect(i*16,0,16,8);}
     const st=new THREE.CanvasTexture(sc);st.colorSpace=THREE.SRGBColorSpace;const bm=new StdMat({map:st,roughness:0.6});
-    (LAYOUT6?[[-1.6,1,FENCE.x0],[14.6,-1,FENCE.x0]]:[[-1.6,1,FENCE7.x0],[14.6,-1,FENCE7.x1]]).forEach(([z,dir,gx])=>{box(0.5,1.1,0.5,M.ink,gx,0.55,z,scene,false);const arm=new THREE.Group();arm.position.set(gx,1.05,z);scene.add(arm);
+    (LAYOUT6?[[-1.6,1,FENCE.x0],[14.6,-1,FENCE.x0]]:[[-1.6+WZ,1,FENCE7.x0],[14.6,-1,FENCE7.x1]]).forEach(([z,dir,gx])=>{box(0.5,1.1,0.5,M.ink,gx,0.55,z,scene,false);const arm=new THREE.Group();arm.position.set(gx,1.05,z);scene.add(arm);
       const a=new THREE.Mesh(new THREE.BoxGeometry(0.16,0.16,4.2),bm);a.position.z=-dir*2.1;arm.add(a);arm.rotation.x=dir*1.15;});
    for(let i=zn0;i<scene.children.length;i++)scene.children[i].userData.zd=true;}
   // truck scale where the inbound queue stops, with a scale house and a weight display
@@ -9126,7 +9148,7 @@ function no3D(){G3.ok=false;$("no3d").hidden=false;$("no3d-retry").onclick=()=>l
   banner.addEventListener("click",()=>{const b=BANNERS[0];if(b&&b.id)G3.flyTo(b.id);});
 
   /* ---- camera controls: drag to orbit, wheel/pinch to zoom ---- */
-  const target=LAYOUT6?new THREE.Vector3(-14,0,5):new THREE.Vector3(4,0,6);   // (v7.0: the middle of the v7 site, in site coordinates; the camera lives in site coordinates)
+  const target=LAYOUT6?new THREE.Vector3(-14,0,5):new THREE.Vector3(13,0,8);   // (v7.0: the middle of the v7 site, in site coordinates; the camera lives in site coordinates)
   /* v6.1 iso: the camera never turns or tilts. ISO_TH looks across the mill from the south-west corner (45 degrees),
      ISO_PH is the true isometric elevation (35.26 degrees above the ground). Everything that used to set th/ph still may:
      placeCam pins them. Zoom rests on whole-number steps of the widest view (1x, 2x, 3x ... 12x), so pixels per metre are
@@ -9247,7 +9269,7 @@ function no3D(){G3.ok=false;$("no3d").hidden=false;$("no3d-retry").onclick=()=>l
   $("pad").addEventListener("pointerdown",poke);
   G3.labelIdle=now=>{if(!G3.lblStarted){G3.lblStarted=1;G3.lastMove=now+2500;}labelHost.classList.toggle("lbl-idle",lblMode==="auto"&&now-G3.lastMove>3500);};
   setLbl(lblMode);
-  G3.jump=(j,zoom=1)=>{const v=JUMPS[j];if(!v)return;let [x,z,r,ph]=v;if(j==="site"){if(!LAYOUT6)x=6;}else [x,z]=G3.sitePt(x,z);folEnd();   /* (v7.0: logical spots; the whole-site view is centred on the v7 site) */goal={t:new THREE.Vector3(x,0,z),r:r*zoom,th:G3.freeCam?cam.th:DEF.th,ph:G3.freeCam?cam.ph:(ph||0.88)};};   // (v5.0.6: also the outage notice's Watch the crews)
+  G3.jump=(j,zoom=1)=>{const v=JUMPS[j];if(!v)return;let [x,z,r,ph]=v;if(j==="site"){if(!LAYOUT6){x=13;z=8;}}else [x,z]=G3.sitePt(x,z);folEnd();   /* (v7.0: logical spots; the whole-site view is centred on the v7 site) */goal={t:new THREE.Vector3(x,0,z),r:r*zoom,th:G3.freeCam?cam.th:DEF.th,ph:G3.freeCam?cam.ph:(ph||0.88)};};   // (v5.0.6: also the outage notice's Watch the crews)
   document.querySelectorAll("#jumps button").forEach(b=>b.addEventListener("click",()=>G3.jump(b.dataset.j)));
   $("viewReset").addEventListener("click",()=>{goal={t:DEFT.clone(),r:DEF.r,th:DEF.th,ph:DEF.ph};});
   // v4.2.4: the Shadows switch fades the sun's shadow to nothing and stops refreshing the shadow map. It never turns the
@@ -9505,7 +9527,7 @@ function no3D(){G3.ok=false;$("no3d").hidden=false;$("no3d-retry").onclick=()=>l
   const PCOL=new Map(),pcol=c=>{let v=PCOL.get(c);if(!v){v=lin(c);PCOL.set(c,v);}return v;};
   // background ambience (plume, aerators, outfall) is capped so it can never crowd out fires, sparks and disaster effects
   function emitA(type,x,y,z,vx,vy,vz,life,size,color,op){if(liveN<600)emit(type,x,y,z,vx,vy,vz,life,size,color,op);}   // (named arguments: a rest array per call was a steady allocation)
-  function emit(type,x,y,z,vx,vy,vz,life,size,color,op=1){if(ZON){const k=zoneOf(x,z);if(zoneMir(k))vx=-vx;x=siteX(k,x);}let p=pFree.pop();   // (v7.0: effects are aimed in logical coordinates, drawn in the site)
+  function emit(type,x,y,z,vx,vy,vz,life,size,color,op=1){if(ZON){const k=zoneOf(x,z);if(zoneMir(k))vx=-vx;x=siteX(k,x);z=siteZ(k,z);}let p=pFree.pop();   // (v7.0: effects are aimed in logical coordinates, drawn in the site)
     if(!p){if(parts.length>=PCAP)return;p={v:[0,0,0]};parts.push(p);}
     const c=pcol(color);p.type=type;p.t=PT[type];p.alive=true;p.x=x;p.y=y;p.z=z;p.v[0]=vx;p.v[1]=vy;p.v[2]=vz;p.life=p.max=life;p.size=size;p.op=op;
     p.r=c.r;p.g=c.g;p.b=c.b;p.rot=Math.random()*6.28;p.spin=(Math.random()-0.5)*2;p.ph=Math.random()*6.28;p.fl=1;p.tile=p.t.tiles?(Math.random()*4)|0:-1;if(p.t.flat){p.rot=(Math.random()-0.5)*0.5;p.fl=Math.random()<0.5?-1:1;}if(type==="paper"){p.rot=(Math.random()-0.5)*0.5;p.r0=p.rot;p.fl=Math.random()<0.5?-1:1;}if(type==="fire"&&p.t.sheet){p.rot=(Math.random()-0.5)*0.3;p.spin=(Math.random()-0.5)*0.25;p.fl=Math.random()<0.5?-1:1;}liveN++;}
@@ -9985,7 +10007,7 @@ function no3D(){G3.ok=false;$("no3d").hidden=false;$("no3d-retry").onclick=()=>l
     flood:g=>{const sh=new THREE.Shape(),Z0=-52,Z1=66,X0=LAYOUT6?-150:FENCE7.x0-2,X1=LAYOUT6?96:FENCE7.x1+4;sh.moveTo(X0,Z0);sh.lineTo(X1,Z0);sh.lineTo(X1,Z1);sh.lineTo(X0,Z1);sh.closePath();
       const HOLES=[[-27.2,64,-2.9,19.85],[-34.4,-8,-23.5,-3],[-49,-23.8,14.8,32.2],[4,47,-25,-2],[49,65,-27,-14.5],[70,82,-16,-4],[49,61,24,30]];
       // (v7.0: the sheet is drawn in site coordinates, round the whole v7 site, with each building's hole where it now stands)
-      const SH=LAYOUT6?HOLES:HOLES.map(([x0,x1,z0,z1])=>{const k=zoneOf((x0+x1)/2,(z0+z1)/2),a=siteX(k,x0),b=siteX(k,x1);return [Math.min(a,b),Math.max(a,b),z0,z1];});
+      const SH=LAYOUT6?HOLES:HOLES.map(([x0,x1,z0,z1])=>{const k=zoneOf((x0+x1)/2,(z0+z1)/2),a=siteX(k,x0),b=siteX(k,x1);return [Math.min(a,b),Math.max(a,b),siteZ(k,z0),siteZ(k,z1)];});
       SH.forEach(([x0,x1,z0,z1])=>{const h=new THREE.Path();h.moveTo(x0,z0);h.lineTo(x1,z0);h.lineTo(x1,z1);h.lineTo(x0,z1);h.closePath();sh.holes.push(h);});
       const inHole=(x,z)=>HOLES.some(([x0,x1,z0,z1])=>x>x0-0.8&&x<x1+0.8&&z>z0-0.8&&z<z1+0.8);
       const geo=new THREE.ShapeGeometry(sh);geo.rotateX(Math.PI/2);geo.translate(0,0,-Z0);   // (north edge at z 0, so the sheet spreads south by scaling z)
@@ -10086,7 +10108,7 @@ function no3D(){G3.ok=false;$("no3d").hidden=false;$("no3d-retry").onclick=()=>l
      one-effect-at-a-time warm-up during play cost a whole-scene pass every 1.5-4 s.) */
   let warm=null;
   G3.prewarm=()=>warm||(warm=new Promise(res=>{const ids=EVENTS.map(e=>e.id).filter(k=>!FX[k]);
-    const done=()=>{G3.warm=true;diag("shaders precompiled: "+renderer.info.programs.length+" programs");res();};
+    const done=()=>{G3.warm=true;diag("shaders precompiled: "+renderer.info.programs.length+" programs");if(G3.navWarm)try{G3.navWarm();}catch(e){}res();};   // (v7.0 t5: the walkers' grids too, while the menu is up: a v7 grid takes ~0.1 s, 38)
     const stepW=()=>{if(!SM.done){requestAnimationFrame(stepW);return;}const t=performance.now();
       while(ids.length&&performance.now()-t<8){const id=ids.shift();try{makeFX(id).g.visible=false;}catch(e){diag(`prewarm: upset effect "${id}" failed: ${String(e&&e.message||e).slice(0,100)}`);}}
       if(ids.length){requestAnimationFrame(stepW);return;}
@@ -10606,14 +10628,20 @@ function no3D(){G3.ok=false;$("no3d").hidden=false;$("no3d-retry").onclick=()=>l
     if(px>b[0]&&px<b[1]&&pz>b[2]&&pz<b[3])return null;if(!segBox(px,pz,tx,tz,b))return null;
     let best=null,bd=1e9;for(const cx of [fb[0]-1.1,fb[1]+1.1])for(const cz of [fb[2]-1.1,fb[3]+1.1]){if(Math.hypot(cx-px,cz-pz)<0.3||segBox(px,pz,cx,cz,b))continue;const d=Math.hypot(cx-px,cz-pz)+Math.hypot(tx-cx,tz-cz)+(segBox(cx,cz,tx,tz,b)?20:0);if(d<bd){bd=d;best=[cx,cz];}}
     if(!best){const cx=Math.abs(px-fb[0])<Math.abs(px-fb[1])?fb[0]-1.1:fb[1]+1.1;best=[cx,pz];}return best;}
+  // v7.0 t5: in the stretched strip between the west block and the river side (03b S) a logical metre north-south is drawn
+  // several metres long: walkers slow down there by as much, so they keep their pace on screen
+  const BK=LAYOUT6?1:1+WZ/(SBAND[1]-SBAND[0]);
+  const bandK=(x,z,ux,uz)=>BK===1||zoneOf(x,z)!=="S"?1:Math.hypot(ux,uz*BK);
+  G3.bandK=bandK;
   function moveP(p,tx,tz,speed,rdt){
     if(p.userData&&p.userData.legs&&rdt>0){const wp=walkPlan(p,tx,tz);if(p.userData.wpPend&&!(wp&&wp.length))return false;   // (v6.11.2: its route is still being worked out: wait, don't walk through the wall)
-      if(wp&&wp.length){const q=wp[0],dx=q[0]-p.position.x,dz=q[1]-p.position.z,d=Math.hypot(dx,dz);
-        if(d<0.3){wp.shift();}else{const st=Math.min(d,speed*rdt);p.position.x+=dx/d*st;p.position.z+=dz/d*st;p.rotation.y=lerpAng(p.rotation.y,Math.atan2(-dz,dx),Math.min(1,rdt*12));}return false;}}
+      if(wp&&wp.length){const q=wp[0];if(q[2]){p.position.x=q[0];p.position.z=q[1];wp.shift();return false;}   // (v7.0 t5: a portal between two blocks: across in one step, the same spot on screen)
+        const dx=q[0]-p.position.x,dz=q[1]-p.position.z,d=Math.hypot(dx,dz);
+        if(d<0.3){wp.shift();}else{const st=Math.min(d,speed*rdt/bandK(p.position.x,p.position.z,dx/d,dz/d));p.position.x+=dx/d*st;p.position.z+=dz/d*st;p.rotation.y=lerpAng(p.rotation.y,Math.atan2(-dz,dx),Math.min(1,rdt*12));}return false;}}
     const av=avoid(p.position.x,p.position.z,tx,tz);if(av){tx=av[0];tz=av[1];const dx=tx-p.position.x,dz=tz-p.position.z,d=Math.hypot(dx,dz)||1,st=Math.min(d,speed*rdt);
       p.position.x+=dx/d*st;p.position.z+=dz/d*st;p.rotation.y=lerpAng(p.rotation.y,Math.atan2(-dz,dx),Math.min(1,rdt*12));return false;}
     const dx=tx-p.position.x,dz=tz-p.position.z,d=Math.hypot(dx,dz);
-    if(d<0.15)return true;const s=Math.min(d,speed*rdt);p.position.x+=dx/d*s;p.position.z+=dz/d*s;p.rotation.y=lerpAng(p.rotation.y,Math.atan2(-dz,dx),Math.min(1,rdt*12));return false;}
+    if(d<0.15)return true;const s=Math.min(d,speed*rdt/bandK(p.position.x,p.position.z,dx/d,dz/d));p.position.x+=dx/d*s;p.position.z+=dz/d*s;p.rotation.y=lerpAng(p.rotation.y,Math.atan2(-dz,dx),Math.min(1,rdt*12));return false;}
   function face(p,x,z,rdt){p.rotation.y=lerpAng(p.rotation.y,Math.atan2(-(z-p.position.z),x-p.position.x),Math.min(1,rdt*8));}
   // operator consoles on the tending-side aisle: wet end, press/dryer, dry end. Each operator's home is a console spot
   const CONSOLES=[58,26,-5];
@@ -11605,7 +11633,7 @@ function no3D(){G3.ok=false;$("no3d").hidden=false;$("no3d-retry").onclick=()=>l
     cylZ(0.3,0.16,M.ink,0.78,0.3,0,16,g);cylZ(0.3,0.16,M.ink,-0.55,0.3,-0.45,16,g);cylZ(0.3,0.16,M.ink,-0.55,0.3,0.45,16,g);
     box(0.04,1.4,0.04,M.ink,-0.82,1.5,0.25,g,false);const flag=new THREE.Mesh(new THREE.PlaneGeometry(0.42,0.26),new THREE.MeshBasicMaterial({color:lin(tok("fire")),side:THREE.DoubleSide}));flag.position.set(-0.6,2.08,0.25);g.add(flag);
     g.userData.trike=true;scene.add(g);return g;}
-  const MAINT_SPOT={birdline:[40,-8],refclash:[58.2,-11],steamjoint:[11.2,3.4],fogfan:[47.2,-5.4],shaft:[12,16.4],fabric:[53.5,14.6],felt:[40.5,14.6],overflow:[-5,-10.5],chestover:[29.5,-9.6],hdblow:[24.2,-9.4],boiler:[68.6,-10],thkblow:[41.6,-10.4],lwplug:[11.2,-20.3],cscreen:[15.2,-20.6],fscreen:[19.2,-20.4],lcplug:[26.6,-20.7],winderdown:[-14.6,14.6],fleet:[-6.3,-14],roof:[-21.6,24],lightning:[40,-8],icedintake:[-30,-50]};
+  const MAINT_SPOT={birdline:[40,-8],refclash:[58.2,-11],steamjoint:[11.2,3.4],fogfan:[50.2,-2.6],shaft:[12,16.4],fabric:[53.5,14.6],felt:[40.5,14.6],overflow:[-5,-10.5],chestover:[29.5,-9.6],hdblow:[24.2,-9.4],boiler:[68.6,-10],thkblow:[41.6,-10.4],lwplug:[11.2,-20.3],cscreen:[15.2,-20.6],fscreen:[19.2,-20.4],lcplug:[26.6,-20.7],winderdown:[-14.6,14.6],fleet:[-6.3,-14],roof:[-21.6,24],lightning:[40,-8],icedintake:[-30,-50]};
   function lane(p){return p[1]>2.4?"F":"C";}
   // v2.9.19: maintenance trikes path-find around buildings and equipment. A 0.5 m ground grid is built once from every
   // static mesh that reaches into the 0.25-1.9 m band (walls, tanks, skids, pumps, trees, posts), grown by 0.75 m for the
@@ -11613,7 +11641,7 @@ function no3D(){G3.ok=false;$("no3d").hidden=false;$("no3d-retry").onclick=()=>l
   // v2.9.19/20: path-finding on 0.5 m ground grids built once from every static mesh that reaches into the 0.25-1.9 m band
   // (walls, tanks, skids, pumps, stairs, trees, posts). Trikes use a grid grown by 0.35 m, people one grown by 0.22 m.
   // A* + line-of-sight smoothing; anything that can't be routed falls back to the old behaviour.
-  const NAV={x0:-62,z0:-52,cs:0.5,nx:300,nz:210,g:null,inf:0.35},NAVW={x0:-62,z0:-52,cs:0.5,nx:300,nz:210,g:null,inf:0.22};
+  const NAV={x0:-62,z0:-52,cs:0.5,nx:300,nz:228,g:null,inf:0.35},NAVW={x0:-62,z0:-52,cs:0.5,nx:300,nz:228,g:null,inf:0.22};   // (t5: 9 m further south, for the walkway block, 03b A)
   function navBuild(G){const g=new Uint8Array(G.nx*G.nz),bb=new THREE.Box3(),INF=G.inf;scene.updateMatrixWorld(true);
     const navCb=o=>{if(!o.isMesh||o.isInstancedMesh||o.userData.smBatch||!o.geometry)return;
       for(let x=o;x&&x!==scene;x=x.parent){const u=x.userData||{};if(!x.visible&&x!==o)return;if(u.legs||u.wheels||u.load||u.cj||u.trike||u.stack||u.noNav)return;}   // (v6.11.2: no longer skips a roof group (u.mats): the machine hall's shell walls live in one, so walkers at a shift change cut through them; the roofs themselves are over 1.9 m and skipped below)
@@ -11625,21 +11653,59 @@ function no3D(){G3.ok=false;$("no3d").hidden=false;$("no3d-retry").onclick=()=>l
       for(let j=j0;j<=j1;j++)for(let i=i0;i<=i1;i++)g[j*G.nx+i]=1;};
     scene.traverse(navCb);if(G3.SM&&G3.SM.holder)G3.SM.holder.traverse(navCb);   // (static things parked out of the scene graph (40) still block the way)
     // v4.1: scenery trunks and posts inside the yard (merged into one mesh, so not seen above)
-    (G3.navBoxes||[]).forEach(([x0,x1,z0,z1])=>{if(G3.siteToLogical&&!LAYOUT6){const q=G3.siteToLogical((x0+x1)/2,(z0+z1)/2);if(!q)return;const dx=q[0]-(x0+x1)/2;x0+=dx;x1+=dx;}   // (v7.0: scenery stands in the site: back to logical)
+    (G3.navBoxes||[]).forEach(([x0,x1,z0,z1])=>{if(G3.siteToLogical&&!LAYOUT6){const q=G3.siteToLogical((x0+x1)/2,(z0+z1)/2);if(!q)return;const dx=q[0]-(x0+x1)/2,dz=q[1]-(z0+z1)/2;x0+=dx;x1+=dx;
+      if(zoneOf(q[0],q[1])==="S"){const f=(SBAND[1]-SBAND[0])/(SBAND[1]-SBAND[0]+WZ),h=(z1-z0)/2*f;z0=q[1]-h;z1=q[1]+h;}else{z0+=dz;z1+=dz;}}   // (t5: a trunk in the stretched strip is squeezed with it)   // (v7.0: scenery stands in the site: back to logical)
       const i0=Math.max(0,Math.floor((x0-INF-G.x0)/G.cs)),i1=Math.min(G.nx-1,Math.floor((x1+INF-G.x0)/G.cs)),
       j0=Math.max(0,Math.floor((z0-INF-G.z0)/G.cs)),j1=Math.min(G.nz-1,Math.floor((z1+INF-G.z0)/G.cs));for(let j=j0;j<=j1;j++)for(let i=i0;i<=i1;i++)g[j*G.nx+i]=1;});
-    // v7.0: the zones are drawn apart (03b ZONES), so a walker crossing between the west block and the hall block would jump
-    // on screen. At logical x 58 the two land on the same site x (58 - 52 = 64 - 58), so the boundary is walled off in the
-    // grid except for a gap round there: people and trikes go between stock prep and the hall through it, without a jump.
-    if(!LAYOUT6){const j0=Math.floor((-3.75-G.z0)/G.cs),j1=Math.floor((-2.95-G.z0)/G.cs);
-      for(let i=0;i<G.nx;i++){const x=G.x0+(i+0.5)*G.cs;if(x>55.5&&x<60.5)continue;for(let j=j0;j<=j1;j++)if(j>=0&&j<G.nz)g[j*G.nx+i]=1;}
-      // and the fog fan's patch (part of the hall block, standing in the west block's ground) is kept out of
-      for(let j=Math.floor((-5.9-G.z0)/G.cs);j<=Math.floor((-3.0-G.z0)/G.cs);j++)for(let i=Math.floor((46.8-G.x0)/G.cs);i<=Math.floor((53.6-G.x0)/G.cs);i++)if(i>=0&&j>=0&&i<G.nx&&j<G.nz)g[j*G.nx+i]=1;}
+    // v7.0 t5: the blocks are drawn apart (03b ZONES), so a walker who stepped from one block's ground into the next in
+    // logical coordinates would jump on screen. Where two neighbouring cells belong to blocks that don't meet in the site,
+    // both are walled. The walkers cross between blocks instead where the site joins them: a portal links two free cells
+    // of different blocks that are drawn on the same spot (navPortals), and the walker steps from one to the other.
+    // And a cell is blocked when anything drawn in the site stands on its site spot, whichever block it belongs to (a
+    // block drawn over another block's open ground: the walkers of one don't walk through the other's equipment).
+    if(!LAYOUT6){const N=G.nx*G.nz,K=new Uint8Array(N),SX=new Float32Array(N),SZ=new Float32Array(N),KI={W:0,U:1,S:2,H:3,E:4,A:5},KS=["W","U","S","H","E","A"];
+      for(let j=0;j<G.nz;j++)for(let i=0;i<G.nx;i++){const x=G.x0+(i+0.5)*G.cs,z=G.z0+(j+0.5)*G.cs,k=zoneOf(x,z),c=j*G.nx+i;K[c]=KI[k];SX[c]=siteX(k,x);SZ[c]=siteZ(k,z);}
+      const joined=(a,b)=>a===b||(a===2&&(b===0||b===1))||(b===2&&(a===0||a===1));   // (blocks that can meet edge to edge: W, the strip and U)
+      // two neighbouring cells join if they are drawn side by side: the same block, or W / the strip / U where the strip
+      // meets them (across the strip a step north-south is drawn several metres long)
+      const SSTEP=G.cs*(1+WZ/(SBAND[1]-SBAND[0]))*1.05,meet=(c,d,vert)=>K[c]===K[d]||(joined(K[c],K[d])&&Math.hypot(SX[c]-SX[d],SZ[c]-SZ[d])<=(vert?SSTEP:G.cs*1.6));
+      const wall=new Uint8Array(N);
+      for(let j=0;j<G.nz;j++)for(let i=0;i<G.nx;i++){const c=j*G.nx+i;if(i+1<G.nx&&!meet(c,c+1,false)){wall[c]=1;wall[c+1]=1;}if(j+1<G.nz&&!meet(c,c+G.nx,true)){wall[c]=1;wall[c+G.nx]=1;}}
+      for(let c=0;c<N;c++)if(wall[c])g[c]=1;
+      // the fog fan's patch (part of the hall block, standing in the west block's ground) is kept out of
+      for(let j=Math.floor((-5.9-G.z0)/G.cs);j<=Math.floor((-3.0-G.z0)/G.cs);j++)for(let i=Math.floor((46.8-G.x0)/G.cs);i<=Math.floor((53.6-G.x0)/G.cs);i++)if(i>=0&&j>=0&&i<G.nx&&j<G.nz)g[j*G.nx+i]=1;
+      // what's drawn, in site coordinates: a second grid over the whole site
+      const SG={x0:FENCE7.x0-10,z0:FENCE7.z0-10,cs:G.cs},sb=new THREE.Box3();SG.nx=Math.ceil((FENCE7.x1+10-SG.x0)/SG.cs);SG.nz=Math.ceil((FENCE7.z1+10-SG.z0)/SG.cs);const sg=new Uint8Array(SG.nx*SG.nz);
+      const siteCb=o=>{if(!o.isMesh||o.isInstancedMesh||o.userData.smBatch||!o.geometry)return;
+        for(let x=o;x&&x!==scene;x=x.parent){const u=x.userData||{};if(!x.visible&&x!==o)return;if(u.legs||u.wheels||u.load||u.cj||u.trike||u.stack||u.noNav||u.zMove)return;}
+        if(!o.visible&&o.layers.mask===1)return;const gb=o.geometry.boundingBox||(o.geometry.computeBoundingBox(),o.geometry.boundingBox);sb.copy(gb).applyMatrix4(o.matrixWorld);
+        if(sb.min.y>1.9||sb.max.y<0.25)return;if((sb.max.x-sb.min.x)*(sb.max.z-sb.min.z)>900)return;
+        const i0=Math.max(0,Math.floor((sb.min.x-INF-SG.x0)/SG.cs)),i1=Math.min(SG.nx-1,Math.floor((sb.max.x+INF-SG.x0)/SG.cs)),j0=Math.max(0,Math.floor((sb.min.z-INF-SG.z0)/SG.cs)),j1=Math.min(SG.nz-1,Math.floor((sb.max.z+INF-SG.z0)/SG.cs));
+        for(let j=j0;j<=j1;j++)for(let i=i0;i<=i1;i++)sg[j*SG.nx+i]=1;};
+      scene.traverse(siteCb);if(G3.SM&&G3.SM.holder)G3.SM.holder.traverse(siteCb);
+      const sCell=(x,z)=>{const i=Math.floor((x-SG.x0)/SG.cs),j=Math.floor((z-SG.z0)/SG.cs);return i>=0&&j>=0&&i<SG.nx&&j<SG.nz?j*SG.nx+i:-1;};
+      for(let c=0;c<N;c++)if(!g[c]){const q=sCell(SX[c],SZ[c]);if(q>=0&&sg[q])g[c]=1;}
+      // portals: a free cell, and a free cell of another block (one that doesn't join it) drawn on the same site spot
+      const POFF=[[0,0],[0,1],[0,-1],[1,0],[-1,0],[0,1.5],[0,-1.5],[1.5,0],[-1.5,0],[0,2],[0,-2],[2,0],[-2,0]];
+      const L=new Map();let nP=0;const link=(a,b)=>{let l=L.get(a);if(!l)L.set(a,l=[]);if(!l.includes(b)){l.push(b);nP++;}};
+      // (cells near a seam try the small steps across it; elsewhere only the same spot, where two blocks are drawn over each other)
+      const nearW=new Uint8Array(N);for(let j=0;j<G.nz;j++)for(let i=0;i<G.nx;i++){if(!wall[j*G.nx+i])continue;for(let dj=-6;dj<=6;dj++)for(let di=-6;di<=6;di++){const a=i+di,b=j+dj;if(a>=0&&b>=0&&a<G.nx&&b<G.nz)nearW[b*G.nx+a]=1;}}
+      const P0=[[0,0]],BX=KS.map(()=>[1e9,-1e9,1e9,-1e9]);for(let c=0;c<N;c++){const b=BX[K[c]];if(SX[c]<b[0])b[0]=SX[c];if(SX[c]>b[1])b[1]=SX[c];if(SZ[c]<b[2])b[2]=SZ[c];if(SZ[c]>b[3])b[3]=SZ[c];}   // (each block's footprint in the site)
+      for(let c=0;c<N;c++){if(g[c])continue;const k=K[c],OFF=nearW[c]?POFF:P0;
+        for(let k2=0;k2<6;k2++){if(joined(k,k2))continue;const bx=BX[k2];if(SX[c]<bx[0]-2.5||SX[c]>bx[1]+2.5||SZ[c]<bx[2]-2.5||SZ[c]>bx[3]+2.5)continue;
+          for(const [ox,oz] of OFF){const q=siteInv(KS[k2],SX[c]+ox,SZ[c]+oz);if(!q)continue;   // (on the same spot, or across the walled seam where two blocks only touch)
+            const i=Math.floor((q[0]-G.x0)/G.cs),j=Math.floor((q[1]-G.z0)/G.cs);if(i<0||j<0||i>=G.nx||j>=G.nz)continue;const c2=j*G.nx+i;if(g[c2]||K[c2]!==k2)continue;
+            if(Math.hypot(SX[c2]-SX[c],SZ[c2]-SZ[c])>2.3)continue;link(c,c2);link(c2,c);break;}}}
+      G.L=L;G.SX=SX;G.SZ=SZ;G.nP=nP;}
     G.g=g;}
   const _navM=new THREE.Matrix4();
   const navC=(G,p)=>[clamp(Math.floor((p[0]-G.x0)/G.cs),0,G.nx-1),clamp(Math.floor((p[1]-G.z0)/G.cs),0,G.nz-1)];
   const navFree=(G,i,j)=>i>=0&&j>=0&&i<G.nx&&j<G.nz&&!G.g[j*G.nx+i];
-  function navNearest(G,c){if(navFree(G,c[0],c[1]))return c;for(let r=1;r<16;r++)for(let dj=-r;dj<=r;dj++)for(let di=-r;di<=r;di++){if(Math.max(Math.abs(di),Math.abs(dj))!==r)continue;if(navFree(G,c[0]+di,c[1]+dj))return [c[0]+di,c[1]+dj];}return null;}
+  // (v7.0 t5: the nearest free cell of the same block as the spot asked for, where there is one: a cell across a seam is
+  //  drawn somewhere else, and the last step from it to the spot would jump)
+  function navNearest(G,c){if(navFree(G,c[0],c[1]))return c;const K=G.SX&&!LAYOUT6?zoneOf(G.x0+(c[0]+0.5)*G.cs,G.z0+(c[1]+0.5)*G.cs):null;let any=null;
+    for(let r=1;r<16;r++)for(let dj=-r;dj<=r;dj++)for(let di=-r;di<=r;di++){if(Math.max(Math.abs(di),Math.abs(dj))!==r)continue;if(!navFree(G,c[0]+di,c[1]+dj))continue;
+      if(!K||zoneOf(G.x0+(c[0]+di+0.5)*G.cs,G.z0+(c[1]+dj+0.5)*G.cs)===K)return [c[0]+di,c[1]+dj];if(!any)any=[c[0]+di,c[1]+dj];}return any;}
   // v4.0.3: same samples and arithmetic as navC/navFree, without two array allocations per sample (route smoothing
   // calls this hundreds of times per route)
   function navLOS(G,a,b){const ax=a[0],az=a[1],bx=b[0],bz=b[1],d=Math.hypot(bx-ax,bz-az),n=Math.ceil(d/(G.cs*0.5)),nx=G.nx,nz=G.nz,g=G.g;
@@ -11661,17 +11727,23 @@ function no3D(){G3.ok=false;$("no3d").hidden=false;$("no3d-retry").onclick=()=>l
       let k=hn++;hf[k]=f;hi[k]=i;while(k>0){const p2=(k-1)>>1;if(hf[p2]<=hf[k])break;const a=hf[p2],b=hi[p2];hf[p2]=hf[k];hi[p2]=hi[k];hf[k]=a;hi[k]=b;k=p2;}};
     const pop=()=>{const top=hi[0];hn--;if(hn>0){hf[0]=hf[hn];hi[0]=hi[hn];let k=0;for(;;){const l=2*k+1,r=l+1;let m=k;if(l<hn&&hf[l]<hf[m])m=l;if(r<hn&&hf[r]<hf[m])m=r;if(m===k)break;
         const a=hf[m],b=hi[m];hf[m]=hf[k];hi[m]=hi[k];hf[k]=a;hi[k]=b;k=m;}}return top;};
-    const h=i=>{const x=i%G.nx,z=(i/G.nx)|0,dx=Math.abs(x-t[0]),dz=Math.abs(z-t[1]);return Math.max(dx,dz)+0.414*Math.min(dx,dz);};
+    const SX=G.SX,SZ=G.SZ,LK=G.L,ics=1/G.cs;   // (v7.0 t5: costs and the estimate measured where the cells are drawn, so routes are the short ones on screen)
+    const h=SX?i=>Math.hypot(SX[i]-SX[ti],SZ[i]-SZ[ti])*ics:i=>{const x=i%G.nx,z=(i/G.nx)|0,dx=Math.abs(x-t[0]),dz=Math.abs(z-t[1]);return Math.max(dx,dz)+0.414*Math.min(dx,dz);};
     touch(si);touch(ti);gs[si]=0;push(h(si),si);let it=0,done=false;
     const finish=()=>{if(came[ti]<0&&si!==ti)return null;
-      const cells=[];for(let i=ti;i>=0;i=came[i]){cells.push([G.x0+((i%G.nx)+0.5)*G.cs,G.z0+(((i/G.nx)|0)+0.5)*G.cs]);if(i===si)break;}cells.reverse();
-      const out=[cells[0]];let k=0;while(k<cells.length-1){let j=cells.length-1;while(j>k+1&&!navLOS(G,cells[k],cells[j]))j--;out.push(cells[j]);k=j;}
+      const cells=[];for(let i=ti;i>=0;i=came[i]){const c=[G.x0+((i%G.nx)+0.5)*G.cs,G.z0+(((i/G.nx)|0)+0.5)*G.cs],p=came[i];
+        if(p>=0&&i!==si&&(Math.abs((p%G.nx)-(i%G.nx))>1||Math.abs(((p/G.nx)|0)-((i/G.nx)|0))>1))c[2]=1;   // (reached through a portal: the walker steps across to it)
+        cells.push(c);if(i===si)break;}cells.reverse();
+      const out=[cells[0]];let k=0;while(k<cells.length-1){let j=cells.length-1;
+        {for(let m=k+1;m<=j;m++)if(cells[m][2]){j=m===k+1?m:m-1;break;}}   // (never smoothed past a portal: up to the cell before it, then the step across)
+        while(j>k+1&&!navLOS(G,cells[k],cells[j]))j--;out.push(cells[j]);k=j;}
       out.push(to);return out;};
     return {step(deadline){if(done)return {path:null};
       while(hn&&it++<maxIt){if((it&255)===0&&performance.now()>deadline){it--;return undefined;}
         const i=pop();if(i===ti)break;if(closed[i])continue;closed[i]=1;const x=i%G.nx,z=(i/G.nx)|0;
         for(let dz=-1;dz<=1;dz++)for(let dx=-1;dx<=1;dx++){if(!dx&&!dz)continue;const nx=x+dx,nz=z+dz;if(!navFree(G,nx,nz))continue;if(dx&&dz&&(!navFree(G,x+dx,z)||!navFree(G,x,z+dz)))continue;
-          const ni=nz*G.nx+nx;touch(ni);const ng=gs[i]+(dx&&dz?1.414:1);if(ng<gs[ni]){gs[ni]=ng;came[ni]=i;push(ng+h(ni),ni);}}}
+          const ni=nz*G.nx+nx;touch(ni);const ng=gs[i]+(SX?Math.max(0.5,Math.hypot(SX[ni]-SX[i],SZ[ni]-SZ[i])*ics):(dx&&dz?1.414:1));if(ng<gs[ni]){gs[ni]=ng;came[ni]=i;push(ng+h(ni),ni);}}
+        const lk=LK&&LK.get(i);if(lk)for(const ni of lk){if(G.g[ni])continue;touch(ni);const ng=gs[i]+0.5+Math.hypot(SX[ni]-SX[i],SZ[ni]-SZ[i])*ics;if(ng<gs[ni]){gs[ni]=ng;came[ni]=i;push(ng+h(ni),ni);}}}
       done=true;return {path:finish()};}};}
   function navPath(G,from,to,maxIt=250000){return navSearch(G,from,to,maxIt).step(Infinity).path;}
   // people: plan a walk only when the straight line is blocked; re-plan when the destination changes
@@ -11687,13 +11759,16 @@ function no3D(){G3.ok=false;$("no3d").hidden=false;$("no3d-retry").onclick=()=>l
       if(j.p.userData.wpKey!==j.key){Q.shift();continue;}   // the walker has a new destination: drop this search
       if(!j.s)try{j.s=navSearch(NAVW,j.a,j.b,120000,"scw");}catch(e){Q.shift();j.p.userData.wpPend=false;continue;}
       let r;try{r=j.s.step(end);}catch(e){r={path:null};}if(!r)return;Q.shift();
-      let path=r.path;if(path){let L=0;for(let i=1;i<path.length;i++)L+=Math.hypot(path[i][0]-path[i-1][0],path[i][1]-path[i-1][1]);if(L>j.d*3+25)path=null;}
+      let path=r.path;if(path){let L=0;for(let i=1;i<path.length;i++)if(!path[i][2])L+=Math.hypot(path[i][0]-path[i-1][0],path[i][1]-path[i-1][1]);if(L>j.d*3+25)path=null;}
       if(j.p.userData.wpKey===j.key){j.p.userData.wp=path?path.slice(1,-1):null;j.p.userData.wpPend=false;}}}
+  G3.navWarm=()=>{if(!NAVW.g)navBuild(NAVW);if(!NAV.g)navBuild(NAV);};
   G3.navPump=navPump;G3.navDbg={NAVW,NAV,navPath,navBuild,navC,navFree};   // (v6.11.2: tests)
   G3.navCheck=(pts,G=NAV)=>{if(!G.g)navBuild(G);let bad=0;for(let i=1;i<pts.length;i++){const a=pts[i-1],b=pts[i],d=Math.hypot(b[0]-a[0],b[1]-a[1]),n=Math.max(1,Math.ceil(d/0.25));
       for(let k=0;k<=n;k++){const c=navC(G,[a[0]+(b[0]-a[0])*k/n,a[1]+(b[1]-a[1])*k/n]);if(G.g[c[1]*G.nx+c[0]])bad++;}}return bad;};
   G3.NAV=NAV;G3.NAVW=NAVW;
-  function route(from,to){let p=null;try{p=navPath(NAV,from,to);}catch(e){}return p||routeLanes(from,to);}
+  function route(from,to){let p=null;try{p=navPath(NAV,from,to);}catch(e){}if(!p&&!LAYOUT6)try{p=navPath(NAVW,from,to);}catch(e){}   // (v7.0 t5: the people's finer grid next: the lanes don't know the blocks are drawn apart)
+    if(!p&&!LAYOUT6){const F=G3.routeFails||(G3.routeFails=[]);if(F.length<40)F.push([from.map(v=>+v.toFixed(1)),to.map(v=>+v.toFixed(1))]);}   // (diagnostics: a route the grids couldn't find)
+    return p||routeLanes(from,to);}
   function routeLanes(from,to){const pts=[],lf=lane(from),lt=lane(to);
     pts.push(lf==="F"?[from[0],17.6]:[Math.max(from[0],-5.5),-0.6]);
     if(lf!==lt)pts.push(...(lf==="C"?[[67,-0.6],[67,17.6]]:[[67,17.6],[67,-0.6]]));
@@ -11702,7 +11777,8 @@ function no3D(){G3.ok=false;$("no3d").hidden=false;$("no3d-retry").onclick=()=>l
   function ensureTechs(){while(techs.length<Math.min(8,P.techs)){const k=techs.length,s=SLOTS[k],w=worker(techM,M.hatBlue,{vest:HIVIS.yellow,radio:true}),t=trike();
       t.position.set(s[0],0,s[1]);t.rotation.y=Math.PI/2;const b=BENCH[k];w.position.set(b.p[0],0,b.p[1]);techs.push({w,t,k,slot:s,bench:b,state:"home",path:null,inc:null,onSite:0,walk:null});}}
   function walkTo(T,pts,speed,rdt,now){while(T.walk&&T.walk.length){if(moveP(T.w,T.walk[0][0],T.walk[0][1],speed,rdt))T.walk.shift();else{pose(T.w,"run",now);return false;}}return true;}
-  function drive(T,rdt){const p=T.path[0],dx=p[0]-T.t.position.x,dz=p[1]-T.t.position.z,d=Math.hypot(dx,dz),s=Math.min(d,22*rdt);
+  function drive(T,rdt){if(T.path[0]&&T.path[0][2]){const q=T.path.shift();T.t.position.x=q[0];T.t.position.z=q[1];if(!T.path.length)return true;}   // (v7.0 t5: a portal: across in one step)
+    const p=T.path[0],dx=p[0]-T.t.position.x,dz=p[1]-T.t.position.z,d=Math.hypot(dx,dz),s=Math.min(d,22*rdt/(d>0.05&&G3.bandK?G3.bandK(T.t.position.x,T.t.position.z,dx/d,dz/d):1));
     if(d>0.05){T.t.position.x+=dx/d*s;T.t.position.z+=dz/d*s;T.t.rotation.y=lerpAng(T.t.rotation.y,Math.atan2(-dz,dx),Math.min(1,rdt*10));}
     if(d<0.25)T.path.shift();
     const a=T.t.rotation.y;T.w.position.set(T.t.position.x-Math.cos(a)*0.15,0,T.t.position.z+Math.sin(a)*0.15);T.w.rotation.y=a;return T.path.length===0;}
@@ -11809,7 +11885,7 @@ function no3D(){G3.ok=false;$("no3d").hidden=false;$("no3d-retry").onclick=()=>l
      breaker resets after a blackout. The model decides everything; this only shows it. ---- */
   const MCC={x0:4,x1:18,z0:24,z1:31,h:4.4,door:[4,27.5],desk:[15.4,29.7],riser:[20,62],tx:[20.2,27]};G3.MCC=MCC;
   // where the rounds and the repairs happen at each critical machine (walkable spots, checked against the nav grid), and what to face
-  const ASPOT={pulp:[14,-8,16,-14],refA:[56.5,-12.2,60,-14],refB:[57.2,-8.8,60,-8.5],fan:[52,-6.5,51,-9.3],couch:[50,15.2,50,9],pr1:[39,15.2,39,9],pr2:[34.5,15.2,34.5,9],
+  const ASPOT={pulp:[14,-8,16,-14],refA:[56.5,-12.2,60,-14],refB:[57.2,-8.8,60,-8.5],fan:[52,-7.1,51,-9.3],couch:[50,15.2,50,9],pr1:[39,15.2,39,9],pr2:[34.5,15.2,34.5,9],
     dry:[14,16.4,14,9],reel:[-3,16.4,-4,9],wind:[-14.6,14.6,-16,9]};G3.ASPOT=ASPOT;
   // ---- the building: the lineups stand along the north wall facing the camera; the door is in the west wall; the south
   // wall above knee height lifts off with the roof (like the machine hall's shell), so the room shows in a close cutaway ----
@@ -13396,7 +13472,7 @@ function no3D(){G3.ok=false;$("no3d").hidden=false;$("no3d-retry").onclick=()=>l
   const ease=u=>u<0?0:u>1?1:u*u*(3-2*u),mix=(a,b,u)=>a+(b-a)*u,_zv=new THREE.Vector3();
   let zenMovesCache=null;
   // v17 helpers for the landscape-and-mill shots: U(k) is a place from the scenery's list ([x, z, height]) or null
-  const U=k=>(G3.scenery&&G3.scenery.util&&G3.scenery.util[k])||null,MILLC=LAYOUT6?[14,2,5]:[8,2,6];   // (v7.0: the middle of the v7 site)
+  const U=k=>(G3.scenery&&G3.scenery.util&&G3.scenery.util[k])||null,MILLC=LAYOUT6?[14,2,5]:[15,2,8];   // (v7.0: the middle of the v7 site)
   // v6.4: from a place, with the place in the foreground and the mill beyond: the camera starts low behind the place
   // (on the far side from the mill), looks past it toward the mill and creeps in. (Was: 120 m+ out and high, so the place
   // itself was rarely in frame and every "from X" shot looked alike.)
@@ -13581,7 +13657,7 @@ function no3D(){G3.ok=false;$("no3d").hidden=false;$("no3d-retry").onclick=()=>l
     // v7.0: the mill's own shots are written in logical coordinates: each frame's target goes to its place in the v7 site,
     // and inside the mirrored hall block the camera's orbit angle is mirrored too (the shot sees the same side of things)
     if(!LAYOUT6){const LAND=["over the forest","over the rooftops","across the flats","over the bayou","approach"],i0=zenMovesCache.findIndex(m=>LAND.includes(m.name));
-      zenMovesCache.slice(0,i0<0?zenMovesCache.length:i0).forEach(m=>{const at0=m.at;m.at=(t,mv,rdt)=>{const r=at0(t,mv,rdt);if(!r)return r;const k=zoneOf(r[0],r[2]),o=r.slice();o[0]=siteX(k,r[0]);if(zoneMir(k))o[4]=-o[4];return o;};});}
+      zenMovesCache.slice(0,i0<0?zenMovesCache.length:i0).forEach(m=>{const at0=m.at;m.at=(t,mv,rdt)=>{const r=at0(t,mv,rdt);if(!r)return r;const k=zoneOf(r[0],r[2]),o=r.slice();o[0]=siteX(k,r[0]);o[2]=siteZ(k,r[2]);if(zoneMir(k))o[4]=-o[4];return o;};});}
     return zenMovesCache;}
   if(G3.zonePass)G3.zonePass();   // (v7.0: every block in its v7 place before the scenery keeps clear of it)
   /* ---- v4.1 scenery: the world around the core mill, from the environment (SITE.env) and the mill seed (SITE.seed) ----
@@ -13620,7 +13696,8 @@ function no3D(){G3.ok=false;$("no3d").hidden=false;$("no3d-retry").onclick=()=>l
     // the river line sampled every metre for the terrain (the levelling asks for it at every vertex)
     const RZT=new Float32Array(882*2);for(let i=0;i<882;i++){const r=riverAt(scX(i-441));RZT[i*2]=r[0];RZT[i*2+1]=r[1];}
     const rDist=(x,z)=>{const i=Math.max(0,Math.min(881,Math.round(x)+441));return Math.abs(z-RZT[i*2])-RZT[i*2+1];};
-    kMark(-420,-139,-33,-25,1);                                        // the rail line out to the horizon
+    kMark(-420,-139,-33+WZ,-25+WZ,1);
+    if(!LAYOUT6)kMark(scXi(siteX("S",-22)),scXi(siteX("S",66)),SBAND[0],SBAND[1]+WZ,1);   // (t5: the lawn the stretched strip is drawn on, between the rail and the river side, kept clear: walkers cross it)                                        // the rail line out to the horizon
     if(FD){const fx=scXi(G3.sitePt(FD.x,FD.z)[0]);kMark(fx-6,fx+6,FD.z-3,FD.z+6,1);}                        // food-truck pitch (the truck is hidden until lunch)
     kMark(-150,-95,-8,17,1);                                           // truck roads up to the gate and the turning space
     if(!LAYOUT6)kMark(92,140,8,17,1);                                  // (v7.0: the outbound road leaves by the east gate)
@@ -13703,7 +13780,7 @@ function no3D(){G3.ok=false;$("no3d").hidden=false;$("no3d-retry").onclick=()=>l
       // the river and its banks stay level, rising over 10 m from 12 m beyond the water; the rail line out west likewise
       // (v13: measured from the site's river line)
       {const d=rDist(x,z);if(d<22)h*=sstep(12,22,d);}
-      if(x<-124&&z>-46&&z<-12)h*=sstep(0,6,Math.max(-40-z,z+18));
+      if(x<-124&&z>-46+WZ&&z<-12+WZ)h*=sstep(0,6,Math.max(-40+WZ-z,z+18-WZ));   // (t5: the rail comes in WZ further south, with the west block)
       for(let k=0;k<CORR.length;k++){const c=CORR[k];for(let i=1;i<c.length;i++){const d=dSeg(x,z,c[i-1],c[i]);if(d<44){h*=sstep(14,44,d);if(h===0)return 0;}}}
       return h;}
     // a pad: flat ground of radius r at (x,z), blended into the slope over the next 18 m (features, lakes, big utilities)
@@ -13775,7 +13852,7 @@ function no3D(){G3.ok=false;$("no3d").hidden=false;$("no3d-retry").onclick=()=>l
     const HXr=-158,EX={rural:160,urban:112,desert:144,swamp:160}[ENVK],RZ=x=>riverAt(Math.max(-440,Math.min(440,scX(x))));
     const north=ENVK==="swamp"?[[HXr-22,-320],[HXr-20,-250],[HXr-4,-195]]:[[HXr,-320]],[hz,hw0]=RZ(HXr),[ez,ew0]=RZ(EX);
     const SEA=(RIVERS[ENVK]||{}).kind==="sea";   // the city by the sea: no far bank, so no bridges and no roads beyond
-    if(!SEA)road([...north,[HXr,hz-hw0-9]],9,true);road([[HXr,hz+hw0+9],[HXr,-3.8],[HXr,12.5],[HXr,80],[HXr,320]],9,true);road([[-140,-3.8],[HXr,-3.8]],5.6,false,"near");if(LAYOUT6)road([[-140,12.5],[HXr,12.5]],5.6,false,"near");else if(EX>136)road([[132,12.5],[EX,12.5]],5.6,false,"near");   // (v7.0: rolls leave by the east gate)
+    if(!SEA)road([...north,[HXr,hz-hw0-9]],9,true);road([[HXr,hz+hw0+9],[HXr,-3.8+WZ],[HXr,32.5],[HXr,80],[HXr,320]],9,true);road([[-140,-3.8+WZ],[HXr,-3.8+WZ]],5.6,false,"near");if(LAYOUT6)road([[-140,12.5],[HXr,12.5]],5.6,false,"near");else if(EX>136)road([[132,12.5],[EX,12.5]],5.6,false,"near");   // (v7.0: rolls leave by the east gate)
     if(LAYOUT6)road([[100,32.5],[EX,32.5]],6,false,"e");else road([[-100,32.5],[HXr,32.5]],6,false,"near");   /* (v7.0: the staff car park is now at the west end) */if(!SEA)road([[EX,-320],[EX,ez-ew0-9]],7,true);road([[EX,ez+ew0+9],[EX,32.5],[EX,110],[EX,320]],7,true);
     // bridges: deck, parapets and piers across the water and its banks
     function bridge(x,w){const [zc,hw]=RZ(x),L=2*hw+20;add(T.box,x,1.2,zc,w+2,0.5,L,0,"#9a9ea6",0.1);[-1,1].forEach(s2=>add(T.box,x+s2*(w/2+0.5),1.7,zc,0.4,0.9,L,0,"#c8ccd2",0.1));
@@ -13783,9 +13860,9 @@ function no3D(){G3.ok=false;$("no3d").hidden=false;$("no3d-retry").onclick=()=>l
       if(L>40)for(let d=-L/2+3;d<L/2-3;d+=7)add(T.quad,x,1.48,zc+d,0.22,1,3,0,LANE,0);kMark(x-w/2-3,x+w/2+3,zc-L/2,zc+L/2,1);hMark(x,zc,Math.max(8,L/2),3);}
     if(!SEA){bridge(HXr,9);bridge(EX,7);}
     // rail line from the spur out to the horizon (the train arrives from the west), level crossing at the highway
-    {const n=Math.floor((-139+420)/0.8);for(let k=0;k<n;k+=2){const x=-139.4-k*0.8;add(T.box,x,0,-29,0.35,0.14,2.6,0,"#7b5d42",0,x>-110?"near":"w");}
-      [-29.7,-28.3].forEach(z=>{for(let x=-139;x>-420;x-=40)add(T.box,x-20,0.14,z,40,0.16,0.12,0,"#8d939c",0,x>-110?"near":"w");});
-      add(T.quad,HXr,0.04,-29,10,1,4,0,"#6d6a63",0);[-1,1].forEach(s2=>{add(T.box,HXr+s2*6,0,-29+s2*3,0.25,3.2,0.25,0,"#f2f2f2",0.1);add(T.box,HXr+s2*6,2.6,-29+s2*3,0.9,0.5,0.15,0,"#d6382c",0);});}
+    {const n=Math.floor((-139+420)/0.8);for(let k=0;k<n;k+=2){const x=-139.4-k*0.8;add(T.box,x,0,-29+WZ,0.35,0.14,2.6,0,"#7b5d42",0,x>-110?"near":"w");}
+      [-29.7+WZ,-28.3+WZ].forEach(z=>{for(let x=-139;x>-420;x-=40)add(T.box,x-20,0.14,z,40,0.16,0.12,0,"#8d939c",0,x>-110?"near":"w");});
+      add(T.quad,HXr,0.04,-29+WZ,10,1,4,0,"#6d6a63",0);[-1,1].forEach(s2=>{add(T.box,HXr+s2*6,0,-29+WZ+s2*3,0.25,3.2,0.25,0,"#f2f2f2",0.1);add(T.box,HXr+s2*6,2.6,-29+WZ+s2*3,0.9,0.5,0.15,0,"#d6382c",0);});}
     const onRiver=(x,z,m=4)=>{const [zc,hw]=RZ(x);return Math.abs(z-zc)<hw+m;};
     /* ---------- 3. landmarks: fixed spots from the v13 site maps (the seed only varies the details and the fill) ---------- */
     const LM={
@@ -13842,17 +13919,17 @@ function no3D(){G3.ok=false;$("no3d").hidden=false;$("no3d-retry").onclick=()=>l
       // rail yard: sidings either side of the main line, strings of boxcars and tank cars
       // rail yard: sidings either side of the main line, fanned off it by a ladder track with turnouts at the east end
       // (v14), buffer stops at the west end, strings of boxcars and tank cars; siding -18.5 is kept clear for the shunter
-      railyard(x0,x1){const cx=(x0+x1)/2;pad(cx,-28,(x1-x0)/2);add(T.quad,cx,0.02,-28,x1-x0,1,34,0,"#a59d8c",0,"w");
+      railyard(x0,x1){const cx=(x0+x1)/2,oz=WZ;pad(cx,-28+oz,(x1-x0)/2);add(T.quad,cx,0.02,-28+oz,x1-x0,1,34,0,"#a59d8c",0,"w");   // (t5: oz, with the rail line)
         const rail=(ax,az,bx,bz)=>{const L=Math.hypot(bx-ax,bz-az),ry=Math.atan2(-(bz-az),bx-ax),nx=Math.sin(ry),nz=Math.cos(ry);
           [-0.7,0.7].forEach(o=>add(T.box,(ax+bx)/2+nx*o,0.14,(az+bz)/2+nz*o,L,0.16,0.12,ry,"#8d939c",0,"w"));for(let d=1;d<L;d+=1.6){const f=d/L;add(T.box,ax+(bx-ax)*f,0.02,az+(bz-az)*f,0.35,0.12,2.6,ry,"#7b5d42",0,"w");}};
         const LX=x1-6,SL=3;   // ladders leave the main line at LX, 1 m across for every 3 m along
-        [[-34,-39,-44],[-23.5,-18.5,-13.5]].forEach(side=>{const far=side[2];rail(LX,-29,LX-SL*Math.abs(far+29),far);
-          side.forEach(zz=>{const xk=LX-SL*Math.abs(zz+29);rail(x0+2,zz,xk,zz);add(T.box,x0+1.5,0,zz,0.8,1.2,3,0,"#d6382c",0.1,"w");
-            for(let x=x0+10;x<xk-12;x+=15){if(RNG()<0.3||(zz===-18.5&&x>x0+40))continue;const tank=Math.abs(zz)===34||Math.abs(zz)===18.5?RNG()<0.6:false;
+        [[-34,-39,-44],[-23.5,-18.5,-13.5]].forEach(side0=>{const side=side0.map(z=>z+oz),far=side[2];rail(LX,-29+oz,LX-SL*Math.abs(far-oz+29),far);
+          side.forEach(zz=>{const xk=LX-SL*Math.abs(zz-oz+29),z0=zz-oz;rail(x0+2,zz,xk,zz);add(T.box,x0+1.5,0,zz,0.8,1.2,3,0,"#d6382c",0.1,"w");
+            for(let x=x0+10;x<xk-12;x+=15){if(RNG()<0.3||(z0===-18.5&&x>x0+40))continue;const tank=Math.abs(z0)===34||Math.abs(z0)===18.5?RNG()<0.6:false;
               if(tank)add(T.cyl10,x+6,1.0,zz,1.4,12,1.4,0,pick(["#2f3a49","#e9ecef","#5b6270"]),0.15,"w",0,Math.PI/2);
               else add(T.box,x,0.9,zz,13,3.3,2.8,0,pick(["#9b3d2a","#3d5f8c","#5b6270","#7a4a3a","#2f7d4f","#c9a24a"]),0.2,"w");}});});
-        G3.actSpots=G3.actSpots||{};G3.actSpots.shunter={z:-18.5,xa:x0+50,xb:LX-SL*10.5-16};
-        add(T.box,x1-20,0,-6,16,6,8,0,"#a5543f",0.2);add(T.gable,x1-20,6,-6,16.4,2,8.6,0,"#5b6270",0);kMark(x0,x1,-48,-8,3);hMark(cx,-28,(x1-x0)/2,5);note("railyard",cx,-28,5);},
+        G3.actSpots=G3.actSpots||{};G3.actSpots.shunter={z:-18.5+oz,xa:x0+50,xb:LX-SL*10.5-16};
+        add(T.box,x1-20,0,-6+oz,16,6,8,0,"#a5543f",0.2);add(T.gable,x1-20,6,-6+oz,16.4,2,8.6,0,"#5b6270",0);kMark(x0,x1,-48+oz,-8+oz,3);hMark(cx,-28+oz,(x1-x0)/2,5);note("railyard",cx,-28+oz,5);},
       solarFarm(x,z,rows,cols){pad(x,z,Math.max(rows*5.6,cols*12)/2+6);add(T.quad,x,0.022,z,cols*12+8,1,rows*5.6+8,0,"#d8c79d",0);
         for(let r=0;r<rows;r++)for(let c=0;c<cols;c++){const px=x-cols*6+6+c*12,pz=z-rows*2.8+2.8+r*5.6;add(T.box,px,1.0,pz,11,0.12,2.8,0,"#2c3e63",0,undefined,-0.45);add(T.box,px,0,pz+0.6,0.2,1.2,0.2,0,"#8d939c",0);}
         // v14: a maintenance track round the field, an inverter skid in every other aisle, the transformer pad where the line leaves
@@ -13981,7 +14058,7 @@ function no3D(){G3.ok=false;$("no3d").hidden=false;$("no3d-retry").onclick=()=>l
       const GP=45,xs=[];for(let x=HXr-GP*6;x<=430;x+=GP)xs.push(x);
       const [rzc,rhw]=RZ(0),shore=rzc+rhw,sBank=shore+2.4,BLV=-51.5;   // the sea wall at -57.6, the boulevard just inland
       const zsS=[-8,37,82];while(zsS[zsS.length-1]+GP<330)zsS.push(zsS[zsS.length-1]+GP);
-      const MILLX=[HXr,EX],RAILZ=[-50,-8];
+      const MILLX=[HXr,EX],RAILZ=[-50+WZ,-8+WZ];
       const streetRaw=(cx,cz,len,along,w=6)=>{add(T.quad,cx,0.025,cz,along?len:w,1,along?w:len,0,ROADC,0);
         [-1,1].forEach(s2=>add(T.quad,cx+(along?0:s2*(w/2+0.9)),0.028,cz+(along?s2*(w/2+0.9):0),along?len:1.8,1,along?1.8:len,0,"#c8c6bf",0));
         if(DEN>=1||Math.hypot(cx,cz)<200)for(let d=-len/2+3;d<len/2-3;d+=7)add(T.quad,cx+(along?d:0),0.03,cz+(along?0:d),along?3:0.2,1,along?0.2:3,0,"#f2f2f2",0);
@@ -14577,7 +14654,7 @@ function no3D(){G3.ok=false;$("no3d").hidden=false;$("no3d-retry").onclick=()=>l
     ($("view3d")||document.body).appendChild(ov);const fl=ov.querySelector(".fl"),bars=ov.querySelectorAll(".lb");
     let C=null;
     const sub=()=>{const u=G3.scenery&&G3.scenery.util&&G3.scenery.util.substation;return u?[u[0],u[1],3.4]:LAYOUT6?[74,-10,9.5]:[siteX("E",74),-10,9.5];};
-    function start(){const [sx,sz,sy]=sub(),I=new THREE.Vector3(sx,sy+2.6,sz),cx=LAYOUT6?-14:8,cz=LAYOUT6?5:6,R=38,away=Math.atan2(cz-sz,cx-sx),a0=away-5.5*0.3;
+    function start(){const [sx,sz,sy]=sub(),I=new THREE.Vector3(sx,sy+2.6,sz),cx=LAYOUT6?-14:15,cz=LAYOUT6?5:8,R=38,away=Math.atan2(cz-sz,cx-sx),a0=away-5.5*0.3;
       // circle high over the mill; at 5.5 s dive from the far side; from 8.5 s a flat run-in over the last 25 m to the lines
       const P5=new THREE.Vector3(cx+Math.cos(away)*R,70,cz+Math.sin(away)*R),d=new THREE.Vector3(I.x-P5.x,0,I.z-P5.z).normalize();
       const A=new THREE.Vector3(I.x-d.x*25,I.y+3,I.z-d.z*25),Pc=new THREE.Vector3(A.x-d.x*12,A.y+6,A.z-d.z*12),wideTh=Math.atan2(-d.z,d.x);
@@ -18319,7 +18396,7 @@ function camPullOn(){try{return localStorage.getItem("paper-mill-campull")!=="of
    (within 700 ms per tap) and a list of every version's one-line note pops up, newest first. The list comes from
    VERSION-NOTES.txt at the repo root: build.py swaps it in for the placeholder below, so adding a line there with each
    release keeps the pop-up current (build.py warns when APP_VER has no line). ---------- */
-{const VNOTES=[["4.0.0", "Graphics Overhaul: 60 FPS on iPhone, ~80% Fewer Draw Calls"], ["4.0.1", "Performance Follow-Up, Show FPS Option and Device Autotest"], ["4.0.2", "Economy Rebalance and Smoother Upset Labels"], ["4.1.0", "Four Environments, Seeded Mills, Bottlenecks, Graphics Tiers and Site Music"], ["4.2.0", "New Site Maps, Rare Sights, Zen Map Rotation and Economics Fixes"], ["4.2.0-s", "Save and Continue Season (Test)"], ["4.2.1", "Save/Continue, Settings Panel and Outage Speed Fix"], ["4.2.2-t", "Bayou Gator Sight Reworked (Test)"], ["4.2.2-t2", "Gator Bass Riff (Test)"], ["4.2.2-t3", "Gator Riff Removed, Wide Camera Framing (Test)"], ["4.2.2-t4", "Gator Scene Shortened and Widened (Test)"], ["4.2.2-t5", "One Rare Sight per Map in Zen (Test)"], ["4.2.2", "Rare Sights Reworked, Bird Strike Upset, Mill Report Tab"], ["4.2.3-t", "Cowboys, Bigfoot and Tugboat Sights Reworked (Test)"], ["4.2.3", "Laptop Battery Saving (Default GPU)"], ["4.2.4", "$25M Goal Removed and Quick Fixes"], ["4.2.5", "Random Bottleneck per Season and Accessibility Improvements"], ["4.3.0-t1", "Survival Mode (Test)"], ["4.4.0-t1", "Mill Leaders in Survival (Test)"], ["4.4.0-t2", "Painted Leader Portraits (Test)"], ["4.4.0-t3", "Leader Redesign, 4-Day Waves and Fixes (Test)"], ["5.0.0", "Survival Mode Release with Mill Leaders"], ["5.0.1", "Results Dialog and Game Speed Fixes"], ["5.0.2", "Report Card Label Fixes"], ["5.0.3", "Survival Playtest Fixes (Test)"], ["5.0.4", "Playtest Review: Dot Auto-Fix and Shipping Fix (Test)"], ["5.0.5", "Polish Rounds from Survival Playtests"], ["5.0.6", "Survival QA Fixes, Opt-In Outage Watch, Leaderboard Filters"], ["5.1.0", "Civics Meters and Leaders in Seasons (Test)"], ["5.4.0", "Title Screen, Civics in the World and Dark Mode"], ["5.4.1", "Loading Splash, No Old-Menu Flash"], ["5.4.2", "Graphics Quality on the Title Screen"], ["5.5.0", "Performance Improvements"], ["5.6.0", "Fiddly Knobs, DCS/QCS Screens and Knobs View"], ["5.7.0", "Catching Failures Early: Tells, Daily Rounds, Vibration Report, Outage Prep"], ["5.7.1", "Bottom Menu Reorder, Settings Back on the Right"], ["5.7.2", "Help Page with Game Guide and Glossary"], ["5.7.3", "Bare Graphics Mode for Weak Phones"], ["5.7.4", "Version Notes Pop-Up (Triple-Tap the Version Number)"], ["6.1.0-t1", "Isometric Paper View: Fixed Camera, Cut-Outs, Drop Shadows, Cutaways, Season Palettes (Test)"], ["6.1.0-t2", "Iso Round 2: Cut-Outs Always Paper, GPU Pictures, Stop-Motion World, Fewer Draws (Test)"], ["6.1.0-t3", "Iso Round 3: iPhone Batching, Instanced Cans, Sign Atlas, Lighter Frames (Test)"], ["6.1.0-t4", "Iso Fixes: Operators and Fork-Trucks Back, Less Stutter (Test)"], ["6.1.0-t5", "Cut-Out Edge Artifact Fixed (Test)"], ["6.1.0-t6", "Iso Optimization: Hidden Objects Cost Nothing, Lighter Moving Batches (Test)"], ["6.1.0-t7", "Iso Triangle Cut: Paper-Card Trees, Flat Ground, Hidden Faces Gone, Plain Boxes (Test)"], ["6.1.0-t8", "Paper Palette: 40 Colours, Flat Surfaces, Paper Grain, Fewer Draws (Test)"], ["6.1.0-t9", "Reel Fix: Growing Reel Draws Again (Test)"], ["6.1.0-t10", "Draw Cut 2: Colour in the Matrix, Merged Roofs, Uploads on Change, Culling Fix, Parked Groups (Test)"], ["6.1.0-t11", "QA Fixes: Cut-Outs Never Drawn as Loose 3D Parts, Fallback Shows 3D, Roofs On or Off per Zoom Step (Test)"], ["6.1.0-t12", "Paper Smoke, Blinking Lights, Stronger Seasons, Sharper Phones, Instanced Upsets, Pictures at Start (Test)"], ["6.1.0-t13", "Paper Effects: Flames, Child-Made Tornado, Lamp Cones, Flags, Paper Water, Visible Weather (Test)"], ["6.1.0-t14", "Paper Upsets: Cut-Out Props, Paper Pigeon, Paper Sparks, Steam, Fireworks, Ice and Flood (Test)"], ["6.1.0-t15", "Beaver Reworked as One Smaller Cut-Out (Test)"], ["6.1.0-t16", "Paper Props Dim at Night, Labels Never Overlap, Fewer Cut-Out Pictures (Test)"], ["6.1.0-t17", "Bird on the Power Lines Cut-Scene Plays When Set Off From the Upsets List (Test)"], ["6.1.0-t18", "Zen Close-Ups Fixed, Rare Sights as Paper Cut-Outs, Tilt-Shift Diorama Look (Test)"], ["6.1.0-t19", "Narrower Tilt-Shift Band, Winder Trash Can Out of the Broke Hole (Test)"], ["6.1.0-t20", "Balance: Rounds Pay More, Capacity and Maintenance Upgrades Re-Priced"], ["6.1.0", "Paper Diorama: Isometric Paper Art Style, Cut-Out People and Upsets, Tilt-Shift, Rounds Pay More, Upgrades Re-Priced"], ["6.1.1", "Phone Fixes: Gentler Tilt-Shift on Tall Screens, Cut-Out People No Longer Blank on iPhone"], ["6.1.2", "iPhone: Cut-Out Self-Test Retries, People Keep Their Colours in the 3D Fallback"], ["6.1.3", "Broke Hole by the Winder Looks Like a Floor Opening (Was a Black Square)"], ["6.1.4", "Tilt-Shift Removed"], ["6.2.0", "Zen Free Camera: Perspective Zen Shots, 3D People in Zen, Cleaner River Water"], ["6.3.0-f1", "Process Flow Overview (Test): Inputs, Mill Areas and Outputs for the Mill Day, in Settings"], ["6.3.0-f2", "Process Flow: the Game Keeps Running While It's Open (Test)"], ["6.3.0", "Process Flow Overview: Inputs, Mill Areas and Outputs for the Mill Day (Settings > View)"], ["6.4.0", "Zen Shots Review: Shuffle-Bag Shot Order, Landscape Shots Rebuilt, Close Rare Sights"], ["6.5.0-a1", "Digital Twin A (Test): Hourly History, 14 Prior Days, 7 d / Run Ranges, Area Trends and Uptime"], ["6.5.0-b1", "Digital Twin B (Test): Real Freight Costs with a Diesel Index, Area Controls Moved into Process Flow"], ["6.5.0-b2", "Market Pricing (Test): 2026 OCC and Energy Costs, Diesel in $/gal, Desert Long Haul, Real Steam Rates"], ["6.5.0-b3", "DCS Expansion (Test): Full SPOT, WET and DET Pictures, a UTIL Screen, Motors and Reject Purges"], ["6.5.0-b4", "DCS Pictograms (Test): Equipment Drawn as Classic DCS Symbols, Colour Only When Something's Wrong"], ["6.5.0-b5", "The Dryer Limit (Test): Speed and Grade Load the Dryers, a Wet Sheet Fails Spec and Slows the Machine"], ["6.5.0", "Digital Twin: Process Flow Trends and Controls, Real Freight and Market Costs, Full DCS, Dryer Limit, Rebalance"], ["6.5.1", "Second Screen: Pop the DCS and Process Flow Out to Their Own Window for a Second Monitor (Desktop)"], ["6.5.2", "Knob Fixes: Wet-End and Steam Knobs Bite Again Under the Dryer Limit, DCS Uses the Machine's Name"], ["6.5.3", "Quality Specs: Weight, Moisture and Color Specs per Grade, Off-Spec Paper Wound into Beater Rolls and Repulped"], ["6.5.4", "DCS Fixes: Making-Beater Alerts, SPOT in Process Order, Boiler and Power on Utilities, 2nd/3rd Section Steam Control"], ["6.5.5-t1", "Dewatering Chain (Test): Jet and Vacuum Optimums, Couch to Press Solids, Press Solids Set the Dryer Steam Both Ways"], ["6.5.5", "The Dewatering Chain: Jet and Vacuum Optimums, Couch to Press Solids, Press Solids Set the Dryer Steam Both Ways"], ["6.5.6-t1", "Mass Balance (Test): A Real Water Balance and White Water Chest, Hayout Broke Repulped, Every Fiber Loss Booked"], ["6.5.6", "Mass Balance: A Real Water Balance and White Water Chest, Hayout Broke Repulped, Every Fiber Loss Booked"], ["6.5.7-t1", "Winder Pass (Test): Four Reel Storage Stands, Two-Roll Sets, Rolls Tied Together, Steam Vented on a Sheet Break"], ["6.5.7", "Winder Pass: Four Reel Storage Stands, Two-Roll Sets, Rolls Tied Together, Steam Vented on a Sheet Break"], ["6.6.0-t1", "Orders and Bales (Test): Customer Order Book and Spot Market, Idle Energy While Stopped, Bale Grading at the Gate"], ["6.6.0", "Orders and Bales: Customer Order Book and Spot Market, Idle Energy While Stopped, Bale Grading at the Gate"], ["6.7.0-t1", "Control Room (Test): Planning, Water and Quality Screens, Split-Screen Trends of Anything, What Moves With What, Process Flow Views"], ["6.7.0", "Control Room: Planning, Water and Quality Screens, Split-Screen Trends of Anything, What Moves With What, Process Flow Views"], ["6.7.1-t1", "New Grade Set (Test): Grades 24, 28, 31 and 34Super, Same Tons per Hour"], ["6.7.1", "New Grade Set: Grades 24, 28, 31 and 34Super, Same Tons per Hour"], ["6.8.0-t1", "Process Relationships (Test): Refining Energy and Ring Crush, Basis Weight Loop, Headbox at 0.8%, White Water Silo, Bale Water and Screen Pressure Drop"], ["6.8.0-t2", "Relationship Map in the Control Room (Test): What Drives Each Reading and What It Moves, Live"], ["6.8.0", "Process Relationships: Refining Energy and Ring Crush, Basis Weight Loop, Headbox at 0.8%, White Water Silo, Bale Water, Screen Pressure Drop and the Relationship Map"], ["6.8.1", "Report Tab Tidy: Live Mill First, Last-24-Hours Chart, Quality & Fiber and Orders & Bales Removed"], ["6.8.2", "Manning: DuPont 12 Shifts for Techs and Operators, Team Hard Hats, Shift Change Walk-In, Vacations Covered Across Teams"], ["6.8.3", "OCC Recipe (A Bales, C Bales, Mixed Waste), Relationship Map Zoom and 3D Light Cones at Night"], ["6.9.0-t1", "The Valves Update (Test): Six Control Loops on the DCS with Real Valves, Faceplates, PID Tuning, Bump Tests, a Tuning Clock and Tuning Challenges"], ["6.9.0", "The Valves Update: Six Control Loops on the DCS with Real Valves, Faceplates, PID Tuning, Bump Tests, a Tuning Clock, Tuning Challenges and Their Links on the Relationship Map"], ["6.9.1", "Wet End Controls: Rush / Drag in fpm on the WET DCS"], ["6.9.2", "Release Review: Help and Glossary Brought Up to Date, Nine Bug Fixes, Refiners Feed the Machine Chest (a Clash Trips the Machine on Low Level) and an Economy Rebalance Where the Daily Round Is the Biggest Boost"], ["6.10.0-t1", "The Reliability and Electrical Update (Test): Ten VFD Motors with Health, an MCC Building with Three Drive Lineups Fed from the Substation, an Electrical Tech on Every Shift, Shift Vibration and ADX Rounds That Get Skipped When Techs Are Busy, Reliability and Drives Screens, Bearing, Motor and Drive Failures, Outage Changeouts and the Water Tower Moved to the North-East Corner"], ["6.10.0-t2", "The Reliability and Electrical Update (Test 2): the 115 kV to 650 V DC Power Chain with Rectifier Faults, Reset-or-Investigate Drive Fault Decisions, Arc-Flash PPE at the MCC, AUTO-LW Basis Weight, Click for Info and Lamps Under the Roofs"], ["6.10.0-t3", "The Reliability and Electrical Update (Test 3): QA Fixes and Balance: Unanswered Drive Faults Auto-Decide After an Hour, Drive Cards Show Load at the Trip, Reliability Failures About Half as Often, Lower Motor and Rectifier Bills"], ["6.10.0-t4", "The Reliability and Electrical Update (Test 4): One Machine per Vibration Round, Planned Repairs Take the Machine Down 20-40 Minutes, Repeated Drive Resets Get Worse and Can Fail, a Tutorial Card for Rounds and the MCC, Drive and Rectifier Health on Screen, Clearer Click for Info and 26 Polish Fixes"], ["6.10.0-t5", "The Reliability and Electrical Update (Test 5): the MCC Main Incomer Fiddly Knob (Opening It Causes an Arc Flash), the New Upsets in the Upsets Tab"], ["6.10.0", "The Reliability and Electrical Update: Ten Critical VFD Motors on Three MCC Drive Lineups, an Electrical Tech on Every Shift, Shift Vibration and ADX Rounds, Reliability and Drives Screens, Bearing, Motor, Drive and Rectifier Failures, Drive Fault Decisions, Outage Changeouts, the MCC Main Incomer and Its Arc Flash, AUTO-LW and Click for Info"], ["6.10.1-t1", "Polish (Test): Drives Wear Slower but Fail More When Worn, Three Drives Start Part-Worn, the Refiner Upgrade Brings Bigger Drives, the Main Incomer on the Relationship Map, a Message for a Blank Mill Name"], ["6.10.1", "Reliability Polish: Drives Wear Slower but Fail More When Worn, Three Drives Start Part-Worn, Bigger Refiner Drives with the Refiner Upgrade, the Main Incomer on the Relationship Map, a Message for a Blank Mill Name"], ["6.10.2", "Tests and Tidy: One Test Runner with 21 Merged Checks, Dead Code Removed (Bare Graphics Leftovers, Unused Code and Styles), Lint Clean"], ["6.11.0-t1", "Blender Redesign, the Winder and Trim (Test): Redesigned Machine, Buildings, MCC, Power House, Wastewater, Water Tower, Workers and Vehicles; a Real Two-Drum Winder with a Rider Roll and Web Inspections; Twin Rolls at Order Widths with Trim to a DE Pulper; Quality per Roll across 12 CD Zones; a Spray Boom and a Steam Box Upgrade"], ["6.11.0-t2", "Economy (Test): Paper Prices +2.5% on Every Grade to Make Up for Trim"], ["6.11.0", "The Winder, Trim and CD Update: a Redesigned Mill (Designed in Blender), a Real Two-Drum Winder with a Rider Roll and Web Inspections, Twin Rolls at Order Widths with Trim to a DE Pulper, Quality per Roll across 12 CD Zones, a Spray Boom, a Steam Box Upgrade and Prices +2.5%"], ["6.11.1-t1", "The Dryer Hood (Test): a Closed Dryer Hood with Six Lifting Doors that Rise on Breaks and Downtime, and a Hood Doors Fiddly Knob that Lifts the Front Away (4% More Steam While Running)"], ["6.11.1-t2", "Wet-End Chemicals (Test): Dry Strength Starch and a Retention Polymer on the WET DCS, AUTO Flow-Paced at No Extra Cost with a MANUAL Pump Override"], ["6.11.1-t3", "QA Round (Test): Upgrades 20% Cheaper, a Ratio Setpoint for the Chemical Pumps on AUTO, a Permit-Risk Warning for Low Polymer, No Outage Notice over the Season Summary"], ["6.11.1-t4", "Effluent in Permit (Test): the Clarifier Catches More, so a Normal Run Is ~25 mg/L TSS under the 50 mg/L Permit, and Cutting the Polymer Breaks It"], ["6.11.1", "The Dryer Hood and Wet-End Chemicals: a Closed Dryer Hood with Lifting Doors and a Hood Doors Fiddly Knob, Dry Strength and Retention Polymer on the WET DCS, Upgrades 20% Cheaper, Effluent in Permit"], ["6.11.2-t1", "Sold by Area (Test): Paper Is Sold by the Square Foot, so a Lighter Sheet Earns More a Ton and a Heavier One Less; the Mill Still Counts in Tons; MSF on the Planning Screen"], ["6.11.2-t2", "Control Room Tidy-Up (Test): 2nd and 3rd Section Steam on the DET DCS, WET Setpoints in Process Order, Yard Crews Stay Put on Breaks, MCC Computer Opens Drives, SPOT Console Moved, Seal Chest Labels Turned"], ["6.11.2-t3", "Test Suite Green (Test): Reel Storage Counts Right (a Turn-Up Takes Exactly One Reel), Tornado Damage Marked as Sudden, Steadier Checks"], ["6.11.2-t4", "Metered Power (Test): Drives Re-Rated and Electricity Billed from Their Load, Starch Removed, a Spare Spool Stand on the Crane Line, a Half Wall on the Roll Warehouse, Two Stray Objects at the Origin Fixed"], ["6.11.2-t5", "Vehicles and Polish (Test): New Food Truck, Train, Staff Cars and Carry-Deck Crane, Warehouse Annexes Roofed and Used for Storage, a Door on the Warehouse, Shift Walkers Use Doorways, Uncle Brian Rides Again, MCC Light, Beater Bay Info, Known Defects View, DE Pulper on the DCS"], ["6.11.2-t6", "QA Round (Test): Season Grade Counts the Money, Early Defect Pins Dimmed, DE Pulper High-Level Alarm and Overflow, Repair Bills 12.5% Lower, Hank Gets a Feel for the Sheet"], ["6.11.2", "Sold by Area and Metered Power: Rolls Sold by the Square Foot, Drives Re-Rated with Electricity Billed from Their Load, Starch Removed, New Vehicles, Warehouse Annexes Roofed and Used, Known Defects View, DE Pulper on the DCS, Season Grade Counts the Money, Repairs 12.5% Lower, Hank Buffed"], ["6.12.0-t5", "Smooth on the Phone (Test): the Sign Boards No Longer Re-Upload the Whole Atlas Every 0.8 s"], ["6.12.0-t6", "Cool, Fast and Free (Test): the World Draws at 30 While the View Is Still, the Whole Site as One Picture, a Free 3D Camera in Settings"], ["6.12.0-t7", "Whole-Site Picture Off by Default (Test): Opt-In with ?imp"], ["6.12.0", "Cool, Fast and Free: Smooth on the Phone (Sign Boards No Longer Re-Upload Every 0.8 s), the World Draws at 30 While the View Is Still, a Free 3D Camera in Settings, Record Board Updates Once a Day"], ["7.0.0-t1", "The Site Laid Out Left to Right (Test 1): Bales In on the West, Rolls Out on the East; the Machine Hall Mirrored so the Machine Runs Left to Right; Stock Prep, Wastewater and the Receiving Line Moved West; the Power House Behind the Dryers; a Gate at Each End"], ["7.0.0-t2", "The Site Laid Out Left to Right (Test 2): Walkers Cross Between Stock Prep and the Hall Without a Jump, the Power House Moves With the West Block, the Scenery and Its Roads Laid Round the Wider Site (Staff Road From the West, Rolls Out East), the Rural River Bend Follows the Intake, Zen Shots, Camera Jumps and the Bird Cut-Scene in the New Site, the Flood Sheet Fits the New Buildings"], ["7.0.0-t3", "The Site Laid Out Left to Right (Test 3): Tapping a Tell on a Round and Click for Info Hit the Right Spot in the New Site, the Fan Pump Round Spot Walkable Again"], ["7.0.0-t4", "The Site Laid Out Left to Right (Test 4): Every Fiddly Knob, DCS Console and the Spider Valve Answer a Tap Where They Are Drawn, the Rail Spur Stops at the Bale Yard, Bales, Stock Bins, the Crane Hook, Fence Posts and Yard Lamps in Their Own Block, Effect and Defect Labels on Their Pins"]];
+{const VNOTES=[["4.0.0", "Graphics Overhaul: 60 FPS on iPhone, ~80% Fewer Draw Calls"], ["4.0.1", "Performance Follow-Up, Show FPS Option and Device Autotest"], ["4.0.2", "Economy Rebalance and Smoother Upset Labels"], ["4.1.0", "Four Environments, Seeded Mills, Bottlenecks, Graphics Tiers and Site Music"], ["4.2.0", "New Site Maps, Rare Sights, Zen Map Rotation and Economics Fixes"], ["4.2.0-s", "Save and Continue Season (Test)"], ["4.2.1", "Save/Continue, Settings Panel and Outage Speed Fix"], ["4.2.2-t", "Bayou Gator Sight Reworked (Test)"], ["4.2.2-t2", "Gator Bass Riff (Test)"], ["4.2.2-t3", "Gator Riff Removed, Wide Camera Framing (Test)"], ["4.2.2-t4", "Gator Scene Shortened and Widened (Test)"], ["4.2.2-t5", "One Rare Sight per Map in Zen (Test)"], ["4.2.2", "Rare Sights Reworked, Bird Strike Upset, Mill Report Tab"], ["4.2.3-t", "Cowboys, Bigfoot and Tugboat Sights Reworked (Test)"], ["4.2.3", "Laptop Battery Saving (Default GPU)"], ["4.2.4", "$25M Goal Removed and Quick Fixes"], ["4.2.5", "Random Bottleneck per Season and Accessibility Improvements"], ["4.3.0-t1", "Survival Mode (Test)"], ["4.4.0-t1", "Mill Leaders in Survival (Test)"], ["4.4.0-t2", "Painted Leader Portraits (Test)"], ["4.4.0-t3", "Leader Redesign, 4-Day Waves and Fixes (Test)"], ["5.0.0", "Survival Mode Release with Mill Leaders"], ["5.0.1", "Results Dialog and Game Speed Fixes"], ["5.0.2", "Report Card Label Fixes"], ["5.0.3", "Survival Playtest Fixes (Test)"], ["5.0.4", "Playtest Review: Dot Auto-Fix and Shipping Fix (Test)"], ["5.0.5", "Polish Rounds from Survival Playtests"], ["5.0.6", "Survival QA Fixes, Opt-In Outage Watch, Leaderboard Filters"], ["5.1.0", "Civics Meters and Leaders in Seasons (Test)"], ["5.4.0", "Title Screen, Civics in the World and Dark Mode"], ["5.4.1", "Loading Splash, No Old-Menu Flash"], ["5.4.2", "Graphics Quality on the Title Screen"], ["5.5.0", "Performance Improvements"], ["5.6.0", "Fiddly Knobs, DCS/QCS Screens and Knobs View"], ["5.7.0", "Catching Failures Early: Tells, Daily Rounds, Vibration Report, Outage Prep"], ["5.7.1", "Bottom Menu Reorder, Settings Back on the Right"], ["5.7.2", "Help Page with Game Guide and Glossary"], ["5.7.3", "Bare Graphics Mode for Weak Phones"], ["5.7.4", "Version Notes Pop-Up (Triple-Tap the Version Number)"], ["6.1.0-t1", "Isometric Paper View: Fixed Camera, Cut-Outs, Drop Shadows, Cutaways, Season Palettes (Test)"], ["6.1.0-t2", "Iso Round 2: Cut-Outs Always Paper, GPU Pictures, Stop-Motion World, Fewer Draws (Test)"], ["6.1.0-t3", "Iso Round 3: iPhone Batching, Instanced Cans, Sign Atlas, Lighter Frames (Test)"], ["6.1.0-t4", "Iso Fixes: Operators and Fork-Trucks Back, Less Stutter (Test)"], ["6.1.0-t5", "Cut-Out Edge Artifact Fixed (Test)"], ["6.1.0-t6", "Iso Optimization: Hidden Objects Cost Nothing, Lighter Moving Batches (Test)"], ["6.1.0-t7", "Iso Triangle Cut: Paper-Card Trees, Flat Ground, Hidden Faces Gone, Plain Boxes (Test)"], ["6.1.0-t8", "Paper Palette: 40 Colours, Flat Surfaces, Paper Grain, Fewer Draws (Test)"], ["6.1.0-t9", "Reel Fix: Growing Reel Draws Again (Test)"], ["6.1.0-t10", "Draw Cut 2: Colour in the Matrix, Merged Roofs, Uploads on Change, Culling Fix, Parked Groups (Test)"], ["6.1.0-t11", "QA Fixes: Cut-Outs Never Drawn as Loose 3D Parts, Fallback Shows 3D, Roofs On or Off per Zoom Step (Test)"], ["6.1.0-t12", "Paper Smoke, Blinking Lights, Stronger Seasons, Sharper Phones, Instanced Upsets, Pictures at Start (Test)"], ["6.1.0-t13", "Paper Effects: Flames, Child-Made Tornado, Lamp Cones, Flags, Paper Water, Visible Weather (Test)"], ["6.1.0-t14", "Paper Upsets: Cut-Out Props, Paper Pigeon, Paper Sparks, Steam, Fireworks, Ice and Flood (Test)"], ["6.1.0-t15", "Beaver Reworked as One Smaller Cut-Out (Test)"], ["6.1.0-t16", "Paper Props Dim at Night, Labels Never Overlap, Fewer Cut-Out Pictures (Test)"], ["6.1.0-t17", "Bird on the Power Lines Cut-Scene Plays When Set Off From the Upsets List (Test)"], ["6.1.0-t18", "Zen Close-Ups Fixed, Rare Sights as Paper Cut-Outs, Tilt-Shift Diorama Look (Test)"], ["6.1.0-t19", "Narrower Tilt-Shift Band, Winder Trash Can Out of the Broke Hole (Test)"], ["6.1.0-t20", "Balance: Rounds Pay More, Capacity and Maintenance Upgrades Re-Priced"], ["6.1.0", "Paper Diorama: Isometric Paper Art Style, Cut-Out People and Upsets, Tilt-Shift, Rounds Pay More, Upgrades Re-Priced"], ["6.1.1", "Phone Fixes: Gentler Tilt-Shift on Tall Screens, Cut-Out People No Longer Blank on iPhone"], ["6.1.2", "iPhone: Cut-Out Self-Test Retries, People Keep Their Colours in the 3D Fallback"], ["6.1.3", "Broke Hole by the Winder Looks Like a Floor Opening (Was a Black Square)"], ["6.1.4", "Tilt-Shift Removed"], ["6.2.0", "Zen Free Camera: Perspective Zen Shots, 3D People in Zen, Cleaner River Water"], ["6.3.0-f1", "Process Flow Overview (Test): Inputs, Mill Areas and Outputs for the Mill Day, in Settings"], ["6.3.0-f2", "Process Flow: the Game Keeps Running While It's Open (Test)"], ["6.3.0", "Process Flow Overview: Inputs, Mill Areas and Outputs for the Mill Day (Settings > View)"], ["6.4.0", "Zen Shots Review: Shuffle-Bag Shot Order, Landscape Shots Rebuilt, Close Rare Sights"], ["6.5.0-a1", "Digital Twin A (Test): Hourly History, 14 Prior Days, 7 d / Run Ranges, Area Trends and Uptime"], ["6.5.0-b1", "Digital Twin B (Test): Real Freight Costs with a Diesel Index, Area Controls Moved into Process Flow"], ["6.5.0-b2", "Market Pricing (Test): 2026 OCC and Energy Costs, Diesel in $/gal, Desert Long Haul, Real Steam Rates"], ["6.5.0-b3", "DCS Expansion (Test): Full SPOT, WET and DET Pictures, a UTIL Screen, Motors and Reject Purges"], ["6.5.0-b4", "DCS Pictograms (Test): Equipment Drawn as Classic DCS Symbols, Colour Only When Something's Wrong"], ["6.5.0-b5", "The Dryer Limit (Test): Speed and Grade Load the Dryers, a Wet Sheet Fails Spec and Slows the Machine"], ["6.5.0", "Digital Twin: Process Flow Trends and Controls, Real Freight and Market Costs, Full DCS, Dryer Limit, Rebalance"], ["6.5.1", "Second Screen: Pop the DCS and Process Flow Out to Their Own Window for a Second Monitor (Desktop)"], ["6.5.2", "Knob Fixes: Wet-End and Steam Knobs Bite Again Under the Dryer Limit, DCS Uses the Machine's Name"], ["6.5.3", "Quality Specs: Weight, Moisture and Color Specs per Grade, Off-Spec Paper Wound into Beater Rolls and Repulped"], ["6.5.4", "DCS Fixes: Making-Beater Alerts, SPOT in Process Order, Boiler and Power on Utilities, 2nd/3rd Section Steam Control"], ["6.5.5-t1", "Dewatering Chain (Test): Jet and Vacuum Optimums, Couch to Press Solids, Press Solids Set the Dryer Steam Both Ways"], ["6.5.5", "The Dewatering Chain: Jet and Vacuum Optimums, Couch to Press Solids, Press Solids Set the Dryer Steam Both Ways"], ["6.5.6-t1", "Mass Balance (Test): A Real Water Balance and White Water Chest, Hayout Broke Repulped, Every Fiber Loss Booked"], ["6.5.6", "Mass Balance: A Real Water Balance and White Water Chest, Hayout Broke Repulped, Every Fiber Loss Booked"], ["6.5.7-t1", "Winder Pass (Test): Four Reel Storage Stands, Two-Roll Sets, Rolls Tied Together, Steam Vented on a Sheet Break"], ["6.5.7", "Winder Pass: Four Reel Storage Stands, Two-Roll Sets, Rolls Tied Together, Steam Vented on a Sheet Break"], ["6.6.0-t1", "Orders and Bales (Test): Customer Order Book and Spot Market, Idle Energy While Stopped, Bale Grading at the Gate"], ["6.6.0", "Orders and Bales: Customer Order Book and Spot Market, Idle Energy While Stopped, Bale Grading at the Gate"], ["6.7.0-t1", "Control Room (Test): Planning, Water and Quality Screens, Split-Screen Trends of Anything, What Moves With What, Process Flow Views"], ["6.7.0", "Control Room: Planning, Water and Quality Screens, Split-Screen Trends of Anything, What Moves With What, Process Flow Views"], ["6.7.1-t1", "New Grade Set (Test): Grades 24, 28, 31 and 34Super, Same Tons per Hour"], ["6.7.1", "New Grade Set: Grades 24, 28, 31 and 34Super, Same Tons per Hour"], ["6.8.0-t1", "Process Relationships (Test): Refining Energy and Ring Crush, Basis Weight Loop, Headbox at 0.8%, White Water Silo, Bale Water and Screen Pressure Drop"], ["6.8.0-t2", "Relationship Map in the Control Room (Test): What Drives Each Reading and What It Moves, Live"], ["6.8.0", "Process Relationships: Refining Energy and Ring Crush, Basis Weight Loop, Headbox at 0.8%, White Water Silo, Bale Water, Screen Pressure Drop and the Relationship Map"], ["6.8.1", "Report Tab Tidy: Live Mill First, Last-24-Hours Chart, Quality & Fiber and Orders & Bales Removed"], ["6.8.2", "Manning: DuPont 12 Shifts for Techs and Operators, Team Hard Hats, Shift Change Walk-In, Vacations Covered Across Teams"], ["6.8.3", "OCC Recipe (A Bales, C Bales, Mixed Waste), Relationship Map Zoom and 3D Light Cones at Night"], ["6.9.0-t1", "The Valves Update (Test): Six Control Loops on the DCS with Real Valves, Faceplates, PID Tuning, Bump Tests, a Tuning Clock and Tuning Challenges"], ["6.9.0", "The Valves Update: Six Control Loops on the DCS with Real Valves, Faceplates, PID Tuning, Bump Tests, a Tuning Clock, Tuning Challenges and Their Links on the Relationship Map"], ["6.9.1", "Wet End Controls: Rush / Drag in fpm on the WET DCS"], ["6.9.2", "Release Review: Help and Glossary Brought Up to Date, Nine Bug Fixes, Refiners Feed the Machine Chest (a Clash Trips the Machine on Low Level) and an Economy Rebalance Where the Daily Round Is the Biggest Boost"], ["6.10.0-t1", "The Reliability and Electrical Update (Test): Ten VFD Motors with Health, an MCC Building with Three Drive Lineups Fed from the Substation, an Electrical Tech on Every Shift, Shift Vibration and ADX Rounds That Get Skipped When Techs Are Busy, Reliability and Drives Screens, Bearing, Motor and Drive Failures, Outage Changeouts and the Water Tower Moved to the North-East Corner"], ["6.10.0-t2", "The Reliability and Electrical Update (Test 2): the 115 kV to 650 V DC Power Chain with Rectifier Faults, Reset-or-Investigate Drive Fault Decisions, Arc-Flash PPE at the MCC, AUTO-LW Basis Weight, Click for Info and Lamps Under the Roofs"], ["6.10.0-t3", "The Reliability and Electrical Update (Test 3): QA Fixes and Balance: Unanswered Drive Faults Auto-Decide After an Hour, Drive Cards Show Load at the Trip, Reliability Failures About Half as Often, Lower Motor and Rectifier Bills"], ["6.10.0-t4", "The Reliability and Electrical Update (Test 4): One Machine per Vibration Round, Planned Repairs Take the Machine Down 20-40 Minutes, Repeated Drive Resets Get Worse and Can Fail, a Tutorial Card for Rounds and the MCC, Drive and Rectifier Health on Screen, Clearer Click for Info and 26 Polish Fixes"], ["6.10.0-t5", "The Reliability and Electrical Update (Test 5): the MCC Main Incomer Fiddly Knob (Opening It Causes an Arc Flash), the New Upsets in the Upsets Tab"], ["6.10.0", "The Reliability and Electrical Update: Ten Critical VFD Motors on Three MCC Drive Lineups, an Electrical Tech on Every Shift, Shift Vibration and ADX Rounds, Reliability and Drives Screens, Bearing, Motor, Drive and Rectifier Failures, Drive Fault Decisions, Outage Changeouts, the MCC Main Incomer and Its Arc Flash, AUTO-LW and Click for Info"], ["6.10.1-t1", "Polish (Test): Drives Wear Slower but Fail More When Worn, Three Drives Start Part-Worn, the Refiner Upgrade Brings Bigger Drives, the Main Incomer on the Relationship Map, a Message for a Blank Mill Name"], ["6.10.1", "Reliability Polish: Drives Wear Slower but Fail More When Worn, Three Drives Start Part-Worn, Bigger Refiner Drives with the Refiner Upgrade, the Main Incomer on the Relationship Map, a Message for a Blank Mill Name"], ["6.10.2", "Tests and Tidy: One Test Runner with 21 Merged Checks, Dead Code Removed (Bare Graphics Leftovers, Unused Code and Styles), Lint Clean"], ["6.11.0-t1", "Blender Redesign, the Winder and Trim (Test): Redesigned Machine, Buildings, MCC, Power House, Wastewater, Water Tower, Workers and Vehicles; a Real Two-Drum Winder with a Rider Roll and Web Inspections; Twin Rolls at Order Widths with Trim to a DE Pulper; Quality per Roll across 12 CD Zones; a Spray Boom and a Steam Box Upgrade"], ["6.11.0-t2", "Economy (Test): Paper Prices +2.5% on Every Grade to Make Up for Trim"], ["6.11.0", "The Winder, Trim and CD Update: a Redesigned Mill (Designed in Blender), a Real Two-Drum Winder with a Rider Roll and Web Inspections, Twin Rolls at Order Widths with Trim to a DE Pulper, Quality per Roll across 12 CD Zones, a Spray Boom, a Steam Box Upgrade and Prices +2.5%"], ["6.11.1-t1", "The Dryer Hood (Test): a Closed Dryer Hood with Six Lifting Doors that Rise on Breaks and Downtime, and a Hood Doors Fiddly Knob that Lifts the Front Away (4% More Steam While Running)"], ["6.11.1-t2", "Wet-End Chemicals (Test): Dry Strength Starch and a Retention Polymer on the WET DCS, AUTO Flow-Paced at No Extra Cost with a MANUAL Pump Override"], ["6.11.1-t3", "QA Round (Test): Upgrades 20% Cheaper, a Ratio Setpoint for the Chemical Pumps on AUTO, a Permit-Risk Warning for Low Polymer, No Outage Notice over the Season Summary"], ["6.11.1-t4", "Effluent in Permit (Test): the Clarifier Catches More, so a Normal Run Is ~25 mg/L TSS under the 50 mg/L Permit, and Cutting the Polymer Breaks It"], ["6.11.1", "The Dryer Hood and Wet-End Chemicals: a Closed Dryer Hood with Lifting Doors and a Hood Doors Fiddly Knob, Dry Strength and Retention Polymer on the WET DCS, Upgrades 20% Cheaper, Effluent in Permit"], ["6.11.2-t1", "Sold by Area (Test): Paper Is Sold by the Square Foot, so a Lighter Sheet Earns More a Ton and a Heavier One Less; the Mill Still Counts in Tons; MSF on the Planning Screen"], ["6.11.2-t2", "Control Room Tidy-Up (Test): 2nd and 3rd Section Steam on the DET DCS, WET Setpoints in Process Order, Yard Crews Stay Put on Breaks, MCC Computer Opens Drives, SPOT Console Moved, Seal Chest Labels Turned"], ["6.11.2-t3", "Test Suite Green (Test): Reel Storage Counts Right (a Turn-Up Takes Exactly One Reel), Tornado Damage Marked as Sudden, Steadier Checks"], ["6.11.2-t4", "Metered Power (Test): Drives Re-Rated and Electricity Billed from Their Load, Starch Removed, a Spare Spool Stand on the Crane Line, a Half Wall on the Roll Warehouse, Two Stray Objects at the Origin Fixed"], ["6.11.2-t5", "Vehicles and Polish (Test): New Food Truck, Train, Staff Cars and Carry-Deck Crane, Warehouse Annexes Roofed and Used for Storage, a Door on the Warehouse, Shift Walkers Use Doorways, Uncle Brian Rides Again, MCC Light, Beater Bay Info, Known Defects View, DE Pulper on the DCS"], ["6.11.2-t6", "QA Round (Test): Season Grade Counts the Money, Early Defect Pins Dimmed, DE Pulper High-Level Alarm and Overflow, Repair Bills 12.5% Lower, Hank Gets a Feel for the Sheet"], ["6.11.2", "Sold by Area and Metered Power: Rolls Sold by the Square Foot, Drives Re-Rated with Electricity Billed from Their Load, Starch Removed, New Vehicles, Warehouse Annexes Roofed and Used, Known Defects View, DE Pulper on the DCS, Season Grade Counts the Money, Repairs 12.5% Lower, Hank Buffed"], ["6.12.0-t5", "Smooth on the Phone (Test): the Sign Boards No Longer Re-Upload the Whole Atlas Every 0.8 s"], ["6.12.0-t6", "Cool, Fast and Free (Test): the World Draws at 30 While the View Is Still, the Whole Site as One Picture, a Free 3D Camera in Settings"], ["6.12.0-t7", "Whole-Site Picture Off by Default (Test): Opt-In with ?imp"], ["6.12.0", "Cool, Fast and Free: Smooth on the Phone (Sign Boards No Longer Re-Upload Every 0.8 s), the World Draws at 30 While the View Is Still, a Free 3D Camera in Settings, Record Board Updates Once a Day"], ["7.0.0-t1", "The Site Laid Out Left to Right (Test 1): Bales In on the West, Rolls Out on the East; the Machine Hall Mirrored so the Machine Runs Left to Right; Stock Prep, Wastewater and the Receiving Line Moved West; the Power House Behind the Dryers; a Gate at Each End"], ["7.0.0-t2", "The Site Laid Out Left to Right (Test 2): Walkers Cross Between Stock Prep and the Hall Without a Jump, the Power House Moves With the West Block, the Scenery and Its Roads Laid Round the Wider Site (Staff Road From the West, Rolls Out East), the Rural River Bend Follows the Intake, Zen Shots, Camera Jumps and the Bird Cut-Scene in the New Site, the Flood Sheet Fits the New Buildings"], ["7.0.0-t3", "The Site Laid Out Left to Right (Test 3): Tapping a Tell on a Round and Click for Info Hit the Right Spot in the New Site, the Fan Pump Round Spot Walkable Again"], ["7.0.0-t4", "The Site Laid Out Left to Right (Test 4): Every Fiddly Knob, DCS Console and the Spider Valve Answer a Tap Where They Are Drawn, the Rail Spur Stops at the Bale Yard, Bales, Stock Bins, the Crane Hook, Fence Posts and Yard Lamps in Their Own Block, Effect and Defect Labels on Their Pins"], ["7.0.0-t5", "The Site Laid Out Left to Right (Test 5): One Line From Bales to Rolls (Receiving and Stock Prep Step Down onto the Machine's Line), Wastewater and the River Intake Stay by the River, the Power House Behind the Presses, Walkers Cross Between the Blocks Without a Jump, a Walkway South of Stock Prep"]];
   let ov=null,held=false;
   function render(){
     const cur=APP_VER.replace(/^v/i,""),rows=VNOTES.slice().reverse().map(([v,n])=>

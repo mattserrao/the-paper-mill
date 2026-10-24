@@ -14,10 +14,14 @@
   const ZON=!LAYOUT6;
   const ZZ={};
   {const mk=(k,conj)=>{const Z=ZONES[k],pre=new THREE.Matrix4();
-      if(Z.mir!=null)pre.set(-1,0,0,Z.mir, 0,1,0,0, 0,0,1,0, 0,0,0,1);else pre.makeTranslation(Z.dx,0,0);
+      if(Z.mir!=null)pre.set(-1,0,0,Z.mir, 0,1,0,0, 0,0,1,0, 0,0,0,1);else pre.makeTranslation(Z.dx,0,Z.dz||0);
       return {k,pre,post:conj&&Z.mir!=null?new THREE.Matrix4().makeScale(-1,1,1):null};};
    for(const k of Object.keys(ZONES)){ZZ[k]=mk(k,false);ZZ[k+"c"]=mk(k,true);}}
-  const zFor=(x,z,conj)=>{const k=zoneOf(x,z);return conj?ZZ[k+"c"]:ZZ[k];};
+  // the stretched strip (03b S) has no one transform: a thing in it is moved by the strip's offset where it stands (keep:
+  // a transform of its own, for a thing placed once; otherwise a shared one, for a mover re-placed every frame)
+  const _zS={k:"S",pre:new THREE.Matrix4(),post:null};
+  const zAt=(k,z,conj,keep)=>{const Z=ZONES[k];if(!Z.band)return conj?ZZ[k+"c"]:ZZ[k];const o=keep?{k,pre:new THREE.Matrix4(),post:null}:_zS;o.pre.makeTranslation(Z.dx,0,sBand(z));return o;};
+  const zFor=(x,z,conj,keep)=>zAt(zoneOf(x,z),z,conj,keep);
   const zTop=p=>p===scene||p===null||(G3.SM&&p===G3.SM.holder)||!!(p&&p.__zcont);   // (a container group: its children are zoned one by one)
   function zApply(o){if(!zTop(o.parent))return;if(o.__zsc){o.matrixWorld.elements[12]+=scX(o.position.x)-o.position.x;return;}const z=o.__zdyn?zFor(o.position.x,o.position.z,true):o.__zz;if(!z)return;
     o.matrixWorld.premultiply(z.pre);if(z.post)o.matrixWorld.multiply(z.post);}
@@ -50,11 +54,11 @@
   const zUnset=o=>{const e=o.instanceMatrix.array;for(let i=0;i<o.count;i++){const j=i*16;if(e[j+12]*e[j+12]+e[j+14]*e[j+14]>1e-6)return false;}return true;};   // (no instance placed yet: all at the origin)
   G3.zPend=()=>{if(!ZPEND.size)return;for(const o of ZPEND){if(!o.parent){ZPEND.delete(o);continue;}if(o.isMesh&&!o.isInstancedMesh){if(o.visible){ZPEND.delete(o);zOne(o,new Set(),0);o.updateMatrixWorld(true);}continue;}if(!o.isInstancedMesh){if(o.children.length){ZPEND.delete(o);zOne(o,new Set(),0);o.updateMatrixWorld(true);}continue;}if(!(o.count>0)||zUnset(o))continue;ZPEND.delete(o);
     o.updateMatrixWorld(true);const c={};for(let i=0;i<o.count;i++){o.getMatrixAt(i,_zm);_zm.premultiply(o.matrixWorld);_zp.setFromMatrixPosition(_zm);const k=zoneOf(_zp.x,_zp.z);c[k]=(c[k]||0)+1;}
-    const k=Object.keys(c).sort((a,b)=>c[b]-c[a])[0];o.__zz=null;zSet(o,ZZ[k],false);if(zoneMir(k))zFlip(o);o.updateMatrixWorld(true);ZS.pend=(ZS.pend||0)+1;}};
+    const k=Object.keys(c).sort((a,b)=>c[b]-c[a])[0];o.__zz=null;zSet(o,zAt(k,_zp.z,false,true),false);if(zoneMir(k))zFlip(o);o.updateMatrixWorld(true);ZS.pend=(ZS.pend||0)+1;}};
   function zInst(o){if(o.userData.zd)return;if(!(o.count>0)||zUnset(o)){o.__zz=null;ZPEND.add(o);return;}o.updateMatrixWorld(true);const n=o.count,ks=new Set();
     for(let i=0;i<n;i++){o.getMatrixAt(i,_zm);_zm.premultiply(o.matrixWorld);_zp.setFromMatrixPosition(_zm);ks.add(zoneOf(_zp.x,_zp.z));}
     if(ks.size<=1){const k=ks.size?[...ks][0]:(()=>{const b=new THREE.Box3().setFromObject(o),c=b.getCenter(new THREE.Vector3());return b.isEmpty()?"H":zoneOf(c.x,c.z);})();
-      o.__zz=null;zSet(o,ZZ[k],false);if(zoneMir(k))zFlip(o);return;}
+      o.__zz=null;{const b=new THREE.Box3().setFromObject(o);zSet(o,zAt(k,b.isEmpty()?0:(b.min.z+b.max.z)/2,false,true),false);}if(zoneMir(k))zFlip(o);return;}
     ZS.instSplit=(ZS.instSplit||0)+1;
     for(let i=0;i<n;i++){o.getMatrixAt(i,_zm);_zm.premultiply(o.matrixWorld);_zp.setFromMatrixPosition(_zm);const z=zFor(_zp.x,_zp.z,true);
       _zm.premultiply(z.pre);if(z.post)_zm.multiply(z.post);_zm.premultiply(_zinv.copy(o.matrixWorld).invert());o.setMatrixAt(i,_zm);}
@@ -90,7 +94,7 @@
         zSet(o,null,true);ZS.dyn++;return;}   // nothing to measure yet (an empty holder): goes by where it stands
       if(bb.max.x-bb.min.x>230||bb.max.z-bb.min.z>230){ZS.native++;return;}   // world-sized (the river, the ground): already in site coordinates
       if(depth<3&&zIsCont(o,bb)){o.__zcont=true;ZS.cont=(ZS.cont||0)+1;for(const c of o.children.slice())zOne(c,parts,depth+1);return;}
-      bb.getCenter(v);const k=zoneOf(v.x,v.z),conj=zoneMir(k)&&zConj(o);zSet(o,ZZ[conj?k+"c":k],false);if(zoneMir(k)&&!conj)zFlip(o);ZS.n++;ZS.by[k]=(ZS.by[k]||0)+1;
+      bb.getCenter(v);const k=zoneOf(v.x,v.z),conj=zoneMir(k)&&zConj(o);zSet(o,zAt(k,v.z,conj,true),false);if(zoneMir(k)&&!conj)zFlip(o);ZS.n++;ZS.by[k]=(ZS.by[k]||0)+1;
       const k0=zoneOf(bb.min.x,bb.min.z),k1=zoneOf(bb.max.x,bb.max.z),k2=zoneOf(bb.min.x,bb.max.z),k3=zoneOf(bb.max.x,bb.min.z);
       if(k0!==k||k1!==k||k2!==k||k3!==k)ZS.span.push([o.name||o.type,k,+bb.min.x.toFixed(1),+bb.max.x.toFixed(1),+bb.min.z.toFixed(1),+bb.max.z.toFixed(1)]);}}
   G3.zonePass=zonePass;
@@ -99,7 +103,7 @@
   // takes the original's zone, or stays in site coordinates when the original's instances were already placed there (split
   // across zones, or built in site coordinates). Without this it is zoned by its origin (the hall) and moved twice.
   G3.zCopy=(from,to)=>{if(!ZON||from.__zz===undefined)return;if(from.__zz)zSet(to,from.__zz,false);else{to.__zz=null;to.userData.zd=true;}};
-  G3.zSetAt=(o,x,z)=>{if(!ZON)return;o.__zz=null;const k=zoneOf(x,z);zSet(o,ZZ[k],false);if(zoneMir(k))zFlip(o);};
+  G3.zSetAt=(o,x,z)=>{if(!ZON)return;o.__zz=null;const k=zoneOf(x,z);zSet(o,zAt(k,z,false,true),false);if(zoneMir(k))zFlip(o);};
   // things added to the scene after the pass (pins, spawned props and vehicles) go by where they stand each frame. Looked at
   // once the adding code has finished (a microtask later), so the engine's own batches (userData.smBatch, set right after
   // they are added) are left in site coordinates
@@ -108,8 +112,9 @@
     scene.add=function(...a){add0(...a);if(G3.zonesOn)for(const o of a)if(o&&o.__zz===undefined)queueMicrotask(()=>late(o));return this;};}
   // a logical point -> site point (people, effects, pins and the camera use these)
   G3.sitePt=(x,z)=>ZON?sitePt(x,z):[x,z];
-  G3.siteV=(v,out=v)=>{if(!ZON)return out.copy(v);const k=zoneOf(v.x,v.z);return out.set(siteX(k,v.x),v.y,v.z);};
+  G3.siteV=(v,out=v)=>{if(!ZON)return out.copy(v);const k=zoneOf(v.x,v.z);return out.set(siteX(k,v.x),v.y,siteZ(k,v.z));};
   G3.zoneMirAt=(x,z)=>ZON&&zoneMir(zoneOf(x,z));
+  G3.zoneAt=(x,z)=>ZON?zoneOf(x,z):"W";   // (tests)
   // a thing's world matrix in logical coordinates (the walkers' path-finding grid is logical, 38): the zone taken back off
   // at the ancestor that carries it. Null for things built in site coordinates (userData.zd).
   const _zl1=new THREE.Matrix4(),_zl2=new THREE.Matrix4();
@@ -120,5 +125,6 @@
     _zl1.copy(t.matrixWorld).invert().multiply(o.matrixWorld);   // o relative to t (no zone in it)
     out.multiplyMatrices(t.matrix,_zl1);if(pm)out.premultiply(pm);return out;};
   // a site point back to logical coordinates (the zone whose image it falls in)
-  G3.siteToLogical=(x,z)=>{if(!ZON)return [x,z];for(const k of Object.keys(ZONES)){const Z=ZONES[k],lx=Z.mir!=null?Z.mir-x:x-Z.dx;if(zoneOf(lx,z)===k)return [lx,z];}return null;};
+  G3.siteToLogical=(x,z)=>{if(!ZON)return [x,z];for(const k of Object.keys(ZONES)){const q=siteInv(k,x,z);if(q)return q;}return null;};
+  G3.siteInv=(k,x,z)=>ZON?siteInv(k,x,z):[x,z];   // (the logical point zone k draws at a site point, or null)
 

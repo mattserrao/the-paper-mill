@@ -1,5 +1,5 @@
   /* ---- camera controls: drag to orbit, wheel/pinch to zoom ---- */
-  const target=LAYOUT6?new THREE.Vector3(-14,0,5):new THREE.Vector3(4,0,6);   // (v7.0: the middle of the v7 site, in site coordinates; the camera lives in site coordinates)
+  const target=LAYOUT6?new THREE.Vector3(-14,0,5):new THREE.Vector3(13,0,8);   // (v7.0: the middle of the v7 site, in site coordinates; the camera lives in site coordinates)
   /* v6.1 iso: the camera never turns or tilts. ISO_TH looks across the mill from the south-west corner (45 degrees),
      ISO_PH is the true isometric elevation (35.26 degrees above the ground). Everything that used to set th/ph still may:
      placeCam pins them. Zoom rests on whole-number steps of the widest view (1x, 2x, 3x ... 12x), so pixels per metre are
@@ -120,7 +120,7 @@
   $("pad").addEventListener("pointerdown",poke);
   G3.labelIdle=now=>{if(!G3.lblStarted){G3.lblStarted=1;G3.lastMove=now+2500;}labelHost.classList.toggle("lbl-idle",lblMode==="auto"&&now-G3.lastMove>3500);};
   setLbl(lblMode);
-  G3.jump=(j,zoom=1)=>{const v=JUMPS[j];if(!v)return;let [x,z,r,ph]=v;if(j==="site"){if(!LAYOUT6)x=6;}else [x,z]=G3.sitePt(x,z);folEnd();   /* (v7.0: logical spots; the whole-site view is centred on the v7 site) */goal={t:new THREE.Vector3(x,0,z),r:r*zoom,th:G3.freeCam?cam.th:DEF.th,ph:G3.freeCam?cam.ph:(ph||0.88)};};   // (v5.0.6: also the outage notice's Watch the crews)
+  G3.jump=(j,zoom=1)=>{const v=JUMPS[j];if(!v)return;let [x,z,r,ph]=v;if(j==="site"){if(!LAYOUT6){x=13;z=8;}}else [x,z]=G3.sitePt(x,z);folEnd();   /* (v7.0: logical spots; the whole-site view is centred on the v7 site) */goal={t:new THREE.Vector3(x,0,z),r:r*zoom,th:G3.freeCam?cam.th:DEF.th,ph:G3.freeCam?cam.ph:(ph||0.88)};};   // (v5.0.6: also the outage notice's Watch the crews)
   document.querySelectorAll("#jumps button").forEach(b=>b.addEventListener("click",()=>G3.jump(b.dataset.j)));
   $("viewReset").addEventListener("click",()=>{goal={t:DEFT.clone(),r:DEF.r,th:DEF.th,ph:DEF.ph};});
   // v4.2.4: the Shadows switch fades the sun's shadow to nothing and stops refreshing the shadow map. It never turns the

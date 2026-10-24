@@ -28,19 +28,19 @@
     const W0=FENCE7.x0,W1=FENCE7.x1,Z0=FENCE7.z0,Z1=FENCE7.z1;
     run(W0,Z0,W1,Z0);run(W0,Z1,W1,Z1);
     if(LAYOUT6){[[Z0,-37.4],[-33.6,-31],[-27,-6],[-1.6,10.4],[14.6,Z1]].forEach(([a,b])=>run(W0,a,W0,b));[[Z0,30.5],[34.5,Z1]].forEach(([a,b])=>run(W1,a,W1,b));}
-    else{[[Z0,-37.4],[-33.6,-31],[-27,-6],[-1.6,30.5],[34.5,Z1]].forEach(([a,b])=>run(W0,a,W0,b));   // west: rejects road, rail, inbound road, staff road
+    else{[[Z0,-37.4+WZ],[-33.6+WZ,-31+WZ],[-27+WZ,-6+WZ],[-1.6+WZ,30.5],[34.5,Z1]].forEach(([a,b])=>run(W0,a,W0,b));   // west: rejects road, rail, inbound road (t5: with the west block, WZ south), staff road
       [[Z0,10.4],[14.6,Z1]].forEach(([a,b])=>run(W1,a,W1,b));}   // east: the outbound road
     const pg=new CylG(0.08,0.08,2.6,6),pm=new THREE.InstancedMesh(pg,instMat(M.metal),posts.length),m4=new THREE.Matrix4();
     posts.forEach((p,k)=>{m4.makeTranslation(p[0],1.3,p[1]);pm.setMatrixAt(k,m4);});pm.userData.bake=true;scene.add(pm);for(let i=zn0;i<scene.children.length;i++)scene.children[i].userData.zd=true;}
   // v7.0: the staff road comes in at the west gate now (the car park moved to the west end with the hall block)
-  if(!LAYOUT6){const n0=scene.children.length;slab(FENCE7.x0-2,-27,31.4,33.6,M.asphalt,0.025);for(let x=FENCE7.x0+2;x<-30;x+=4)box(2,0.02,0.16,M.lane,x,0.05,32.5,scene,false);zdSince(n0);}
+  if(!LAYOUT6){const n0=scene.children.length;slab(FENCE7.x0-2,-13,31.4,33.6,M.asphalt,0.025);for(let x=FENCE7.x0+2;x<-16;x+=4)box(2,0.02,0.16,M.lane,x,0.05,32.5,scene,false);zdSince(n0);}
   // guard gate between the two roads, with boom barriers
   {const zn0=scene.children.length;   // (v7.0: in site coordinates: the inbound gate on the west fence, the outbound gate on the east; a gatehouse at each)
-   const GH=LAYOUT6?[[FENCE.x0-1.5,4.4]]:[[FENCE7.x0-1.5,-9.4],[FENCE7.x1+1.5,8.2]];
+   const GH=LAYOUT6?[[FENCE.x0-1.5,4.4]]:[[FENCE7.x0-1.5,-9.4+WZ],[FENCE7.x1+1.5,8.2]];
    GH.forEach(([gx,gz])=>{box(3,2.6,3,conc,gx,1.3,gz);box(3.4,0.25,3.4,M.roofFlat,gx,2.75,gz);box(3.02,0.8,2.2,M.wind,gx,1.75,gz,scene,false);});
     const sc=document.createElement("canvas");sc.width=128;sc.height=8;const x=sc.getContext("2d");for(let i=0;i<8;i++){x.fillStyle=i%2?"#ffffff":"#e0343c";x.fillRect(i*16,0,16,8);}
     const st=new THREE.CanvasTexture(sc);st.colorSpace=THREE.SRGBColorSpace;const bm=new StdMat({map:st,roughness:0.6});
-    (LAYOUT6?[[-1.6,1,FENCE.x0],[14.6,-1,FENCE.x0]]:[[-1.6,1,FENCE7.x0],[14.6,-1,FENCE7.x1]]).forEach(([z,dir,gx])=>{box(0.5,1.1,0.5,M.ink,gx,0.55,z,scene,false);const arm=new THREE.Group();arm.position.set(gx,1.05,z);scene.add(arm);
+    (LAYOUT6?[[-1.6,1,FENCE.x0],[14.6,-1,FENCE.x0]]:[[-1.6+WZ,1,FENCE7.x0],[14.6,-1,FENCE7.x1]]).forEach(([z,dir,gx])=>{box(0.5,1.1,0.5,M.ink,gx,0.55,z,scene,false);const arm=new THREE.Group();arm.position.set(gx,1.05,z);scene.add(arm);
       const a=new THREE.Mesh(new THREE.BoxGeometry(0.16,0.16,4.2),bm);a.position.z=-dir*2.1;arm.add(a);arm.rotation.x=dir*1.15;});
    for(let i=zn0;i<scene.children.length;i++)scene.children[i].userData.zd=true;}
   // truck scale where the inbound queue stops, with a scale house and a weight display

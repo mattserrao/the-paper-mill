@@ -193,7 +193,7 @@
   const PCOL=new Map(),pcol=c=>{let v=PCOL.get(c);if(!v){v=lin(c);PCOL.set(c,v);}return v;};
   // background ambience (plume, aerators, outfall) is capped so it can never crowd out fires, sparks and disaster effects
   function emitA(type,x,y,z,vx,vy,vz,life,size,color,op){if(liveN<600)emit(type,x,y,z,vx,vy,vz,life,size,color,op);}   // (named arguments: a rest array per call was a steady allocation)
-  function emit(type,x,y,z,vx,vy,vz,life,size,color,op=1){if(ZON){const k=zoneOf(x,z);if(zoneMir(k))vx=-vx;x=siteX(k,x);}let p=pFree.pop();   // (v7.0: effects are aimed in logical coordinates, drawn in the site)
+  function emit(type,x,y,z,vx,vy,vz,life,size,color,op=1){if(ZON){const k=zoneOf(x,z);if(zoneMir(k))vx=-vx;x=siteX(k,x);z=siteZ(k,z);}let p=pFree.pop();   // (v7.0: effects are aimed in logical coordinates, drawn in the site)
     if(!p){if(parts.length>=PCAP)return;p={v:[0,0,0]};parts.push(p);}
     const c=pcol(color);p.type=type;p.t=PT[type];p.alive=true;p.x=x;p.y=y;p.z=z;p.v[0]=vx;p.v[1]=vy;p.v[2]=vz;p.life=p.max=life;p.size=size;p.op=op;
     p.r=c.r;p.g=c.g;p.b=c.b;p.rot=Math.random()*6.28;p.spin=(Math.random()-0.5)*2;p.ph=Math.random()*6.28;p.fl=1;p.tile=p.t.tiles?(Math.random()*4)|0:-1;if(p.t.flat){p.rot=(Math.random()-0.5)*0.5;p.fl=Math.random()<0.5?-1:1;}if(type==="paper"){p.rot=(Math.random()-0.5)*0.5;p.r0=p.rot;p.fl=Math.random()<0.5?-1:1;}if(type==="fire"&&p.t.sheet){p.rot=(Math.random()-0.5)*0.3;p.spin=(Math.random()-0.5)*0.25;p.fl=Math.random()<0.5?-1:1;}liveN++;}
@@ -673,7 +673,7 @@
     flood:g=>{const sh=new THREE.Shape(),Z0=-52,Z1=66,X0=LAYOUT6?-150:FENCE7.x0-2,X1=LAYOUT6?96:FENCE7.x1+4;sh.moveTo(X0,Z0);sh.lineTo(X1,Z0);sh.lineTo(X1,Z1);sh.lineTo(X0,Z1);sh.closePath();
       const HOLES=[[-27.2,64,-2.9,19.85],[-34.4,-8,-23.5,-3],[-49,-23.8,14.8,32.2],[4,47,-25,-2],[49,65,-27,-14.5],[70,82,-16,-4],[49,61,24,30]];
       // (v7.0: the sheet is drawn in site coordinates, round the whole v7 site, with each building's hole where it now stands)
-      const SH=LAYOUT6?HOLES:HOLES.map(([x0,x1,z0,z1])=>{const k=zoneOf((x0+x1)/2,(z0+z1)/2),a=siteX(k,x0),b=siteX(k,x1);return [Math.min(a,b),Math.max(a,b),z0,z1];});
+      const SH=LAYOUT6?HOLES:HOLES.map(([x0,x1,z0,z1])=>{const k=zoneOf((x0+x1)/2,(z0+z1)/2),a=siteX(k,x0),b=siteX(k,x1);return [Math.min(a,b),Math.max(a,b),siteZ(k,z0),siteZ(k,z1)];});
       SH.forEach(([x0,x1,z0,z1])=>{const h=new THREE.Path();h.moveTo(x0,z0);h.lineTo(x1,z0);h.lineTo(x1,z1);h.lineTo(x0,z1);h.closePath();sh.holes.push(h);});
       const inHole=(x,z)=>HOLES.some(([x0,x1,z0,z1])=>x>x0-0.8&&x<x1+0.8&&z>z0-0.8&&z<z1+0.8);
       const geo=new THREE.ShapeGeometry(sh);geo.rotateX(Math.PI/2);geo.translate(0,0,-Z0);   // (north edge at z 0, so the sheet spreads south by scaling z)
@@ -774,7 +774,7 @@
      one-effect-at-a-time warm-up during play cost a whole-scene pass every 1.5-4 s.) */
   let warm=null;
   G3.prewarm=()=>warm||(warm=new Promise(res=>{const ids=EVENTS.map(e=>e.id).filter(k=>!FX[k]);
-    const done=()=>{G3.warm=true;diag("shaders precompiled: "+renderer.info.programs.length+" programs");res();};
+    const done=()=>{G3.warm=true;diag("shaders precompiled: "+renderer.info.programs.length+" programs");if(G3.navWarm)try{G3.navWarm();}catch(e){}res();};   // (v7.0 t5: the walkers' grids too, while the menu is up: a v7 grid takes ~0.1 s, 38)
     const stepW=()=>{if(!SM.done){requestAnimationFrame(stepW);return;}const t=performance.now();
       while(ids.length&&performance.now()-t<8){const id=ids.shift();try{makeFX(id).g.visible=false;}catch(e){diag(`prewarm: upset effect "${id}" failed: ${String(e&&e.message||e).slice(0,100)}`);}}
       if(ids.length){requestAnimationFrame(stepW);return;}

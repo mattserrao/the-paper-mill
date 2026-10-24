@@ -35,7 +35,8 @@
     // the river line sampled every metre for the terrain (the levelling asks for it at every vertex)
     const RZT=new Float32Array(882*2);for(let i=0;i<882;i++){const r=riverAt(scX(i-441));RZT[i*2]=r[0];RZT[i*2+1]=r[1];}
     const rDist=(x,z)=>{const i=Math.max(0,Math.min(881,Math.round(x)+441));return Math.abs(z-RZT[i*2])-RZT[i*2+1];};
-    kMark(-420,-139,-33,-25,1);                                        // the rail line out to the horizon
+    kMark(-420,-139,-33+WZ,-25+WZ,1);
+    if(!LAYOUT6)kMark(scXi(siteX("S",-22)),scXi(siteX("S",66)),SBAND[0],SBAND[1]+WZ,1);   // (t5: the lawn the stretched strip is drawn on, between the rail and the river side, kept clear: walkers cross it)                                        // the rail line out to the horizon
     if(FD){const fx=scXi(G3.sitePt(FD.x,FD.z)[0]);kMark(fx-6,fx+6,FD.z-3,FD.z+6,1);}                        // food-truck pitch (the truck is hidden until lunch)
     kMark(-150,-95,-8,17,1);                                           // truck roads up to the gate and the turning space
     if(!LAYOUT6)kMark(92,140,8,17,1);                                  // (v7.0: the outbound road leaves by the east gate)
@@ -118,7 +119,7 @@
       // the river and its banks stay level, rising over 10 m from 12 m beyond the water; the rail line out west likewise
       // (v13: measured from the site's river line)
       {const d=rDist(x,z);if(d<22)h*=sstep(12,22,d);}
-      if(x<-124&&z>-46&&z<-12)h*=sstep(0,6,Math.max(-40-z,z+18));
+      if(x<-124&&z>-46+WZ&&z<-12+WZ)h*=sstep(0,6,Math.max(-40+WZ-z,z+18-WZ));   // (t5: the rail comes in WZ further south, with the west block)
       for(let k=0;k<CORR.length;k++){const c=CORR[k];for(let i=1;i<c.length;i++){const d=dSeg(x,z,c[i-1],c[i]);if(d<44){h*=sstep(14,44,d);if(h===0)return 0;}}}
       return h;}
     // a pad: flat ground of radius r at (x,z), blended into the slope over the next 18 m (features, lakes, big utilities)
@@ -190,7 +191,7 @@
     const HXr=-158,EX={rural:160,urban:112,desert:144,swamp:160}[ENVK],RZ=x=>riverAt(Math.max(-440,Math.min(440,scX(x))));
     const north=ENVK==="swamp"?[[HXr-22,-320],[HXr-20,-250],[HXr-4,-195]]:[[HXr,-320]],[hz,hw0]=RZ(HXr),[ez,ew0]=RZ(EX);
     const SEA=(RIVERS[ENVK]||{}).kind==="sea";   // the city by the sea: no far bank, so no bridges and no roads beyond
-    if(!SEA)road([...north,[HXr,hz-hw0-9]],9,true);road([[HXr,hz+hw0+9],[HXr,-3.8],[HXr,12.5],[HXr,80],[HXr,320]],9,true);road([[-140,-3.8],[HXr,-3.8]],5.6,false,"near");if(LAYOUT6)road([[-140,12.5],[HXr,12.5]],5.6,false,"near");else if(EX>136)road([[132,12.5],[EX,12.5]],5.6,false,"near");   // (v7.0: rolls leave by the east gate)
+    if(!SEA)road([...north,[HXr,hz-hw0-9]],9,true);road([[HXr,hz+hw0+9],[HXr,-3.8+WZ],[HXr,32.5],[HXr,80],[HXr,320]],9,true);road([[-140,-3.8+WZ],[HXr,-3.8+WZ]],5.6,false,"near");if(LAYOUT6)road([[-140,12.5],[HXr,12.5]],5.6,false,"near");else if(EX>136)road([[132,12.5],[EX,12.5]],5.6,false,"near");   // (v7.0: rolls leave by the east gate)
     if(LAYOUT6)road([[100,32.5],[EX,32.5]],6,false,"e");else road([[-100,32.5],[HXr,32.5]],6,false,"near");   /* (v7.0: the staff car park is now at the west end) */if(!SEA)road([[EX,-320],[EX,ez-ew0-9]],7,true);road([[EX,ez+ew0+9],[EX,32.5],[EX,110],[EX,320]],7,true);
     // bridges: deck, parapets and piers across the water and its banks
     function bridge(x,w){const [zc,hw]=RZ(x),L=2*hw+20;add(T.box,x,1.2,zc,w+2,0.5,L,0,"#9a9ea6",0.1);[-1,1].forEach(s2=>add(T.box,x+s2*(w/2+0.5),1.7,zc,0.4,0.9,L,0,"#c8ccd2",0.1));
@@ -198,9 +199,9 @@
       if(L>40)for(let d=-L/2+3;d<L/2-3;d+=7)add(T.quad,x,1.48,zc+d,0.22,1,3,0,LANE,0);kMark(x-w/2-3,x+w/2+3,zc-L/2,zc+L/2,1);hMark(x,zc,Math.max(8,L/2),3);}
     if(!SEA){bridge(HXr,9);bridge(EX,7);}
     // rail line from the spur out to the horizon (the train arrives from the west), level crossing at the highway
-    {const n=Math.floor((-139+420)/0.8);for(let k=0;k<n;k+=2){const x=-139.4-k*0.8;add(T.box,x,0,-29,0.35,0.14,2.6,0,"#7b5d42",0,x>-110?"near":"w");}
-      [-29.7,-28.3].forEach(z=>{for(let x=-139;x>-420;x-=40)add(T.box,x-20,0.14,z,40,0.16,0.12,0,"#8d939c",0,x>-110?"near":"w");});
-      add(T.quad,HXr,0.04,-29,10,1,4,0,"#6d6a63",0);[-1,1].forEach(s2=>{add(T.box,HXr+s2*6,0,-29+s2*3,0.25,3.2,0.25,0,"#f2f2f2",0.1);add(T.box,HXr+s2*6,2.6,-29+s2*3,0.9,0.5,0.15,0,"#d6382c",0);});}
+    {const n=Math.floor((-139+420)/0.8);for(let k=0;k<n;k+=2){const x=-139.4-k*0.8;add(T.box,x,0,-29+WZ,0.35,0.14,2.6,0,"#7b5d42",0,x>-110?"near":"w");}
+      [-29.7+WZ,-28.3+WZ].forEach(z=>{for(let x=-139;x>-420;x-=40)add(T.box,x-20,0.14,z,40,0.16,0.12,0,"#8d939c",0,x>-110?"near":"w");});
+      add(T.quad,HXr,0.04,-29+WZ,10,1,4,0,"#6d6a63",0);[-1,1].forEach(s2=>{add(T.box,HXr+s2*6,0,-29+WZ+s2*3,0.25,3.2,0.25,0,"#f2f2f2",0.1);add(T.box,HXr+s2*6,2.6,-29+WZ+s2*3,0.9,0.5,0.15,0,"#d6382c",0);});}
     const onRiver=(x,z,m=4)=>{const [zc,hw]=RZ(x);return Math.abs(z-zc)<hw+m;};
     /* ---------- 3. landmarks: fixed spots from the v13 site maps (the seed only varies the details and the fill) ---------- */
     const LM={
@@ -257,17 +258,17 @@
       // rail yard: sidings either side of the main line, strings of boxcars and tank cars
       // rail yard: sidings either side of the main line, fanned off it by a ladder track with turnouts at the east end
       // (v14), buffer stops at the west end, strings of boxcars and tank cars; siding -18.5 is kept clear for the shunter
-      railyard(x0,x1){const cx=(x0+x1)/2;pad(cx,-28,(x1-x0)/2);add(T.quad,cx,0.02,-28,x1-x0,1,34,0,"#a59d8c",0,"w");
+      railyard(x0,x1){const cx=(x0+x1)/2,oz=WZ;pad(cx,-28+oz,(x1-x0)/2);add(T.quad,cx,0.02,-28+oz,x1-x0,1,34,0,"#a59d8c",0,"w");   // (t5: oz, with the rail line)
         const rail=(ax,az,bx,bz)=>{const L=Math.hypot(bx-ax,bz-az),ry=Math.atan2(-(bz-az),bx-ax),nx=Math.sin(ry),nz=Math.cos(ry);
           [-0.7,0.7].forEach(o=>add(T.box,(ax+bx)/2+nx*o,0.14,(az+bz)/2+nz*o,L,0.16,0.12,ry,"#8d939c",0,"w"));for(let d=1;d<L;d+=1.6){const f=d/L;add(T.box,ax+(bx-ax)*f,0.02,az+(bz-az)*f,0.35,0.12,2.6,ry,"#7b5d42",0,"w");}};
         const LX=x1-6,SL=3;   // ladders leave the main line at LX, 1 m across for every 3 m along
-        [[-34,-39,-44],[-23.5,-18.5,-13.5]].forEach(side=>{const far=side[2];rail(LX,-29,LX-SL*Math.abs(far+29),far);
-          side.forEach(zz=>{const xk=LX-SL*Math.abs(zz+29);rail(x0+2,zz,xk,zz);add(T.box,x0+1.5,0,zz,0.8,1.2,3,0,"#d6382c",0.1,"w");
-            for(let x=x0+10;x<xk-12;x+=15){if(RNG()<0.3||(zz===-18.5&&x>x0+40))continue;const tank=Math.abs(zz)===34||Math.abs(zz)===18.5?RNG()<0.6:false;
+        [[-34,-39,-44],[-23.5,-18.5,-13.5]].forEach(side0=>{const side=side0.map(z=>z+oz),far=side[2];rail(LX,-29+oz,LX-SL*Math.abs(far-oz+29),far);
+          side.forEach(zz=>{const xk=LX-SL*Math.abs(zz-oz+29),z0=zz-oz;rail(x0+2,zz,xk,zz);add(T.box,x0+1.5,0,zz,0.8,1.2,3,0,"#d6382c",0.1,"w");
+            for(let x=x0+10;x<xk-12;x+=15){if(RNG()<0.3||(z0===-18.5&&x>x0+40))continue;const tank=Math.abs(z0)===34||Math.abs(z0)===18.5?RNG()<0.6:false;
               if(tank)add(T.cyl10,x+6,1.0,zz,1.4,12,1.4,0,pick(["#2f3a49","#e9ecef","#5b6270"]),0.15,"w",0,Math.PI/2);
               else add(T.box,x,0.9,zz,13,3.3,2.8,0,pick(["#9b3d2a","#3d5f8c","#5b6270","#7a4a3a","#2f7d4f","#c9a24a"]),0.2,"w");}});});
-        G3.actSpots=G3.actSpots||{};G3.actSpots.shunter={z:-18.5,xa:x0+50,xb:LX-SL*10.5-16};
-        add(T.box,x1-20,0,-6,16,6,8,0,"#a5543f",0.2);add(T.gable,x1-20,6,-6,16.4,2,8.6,0,"#5b6270",0);kMark(x0,x1,-48,-8,3);hMark(cx,-28,(x1-x0)/2,5);note("railyard",cx,-28,5);},
+        G3.actSpots=G3.actSpots||{};G3.actSpots.shunter={z:-18.5+oz,xa:x0+50,xb:LX-SL*10.5-16};
+        add(T.box,x1-20,0,-6+oz,16,6,8,0,"#a5543f",0.2);add(T.gable,x1-20,6,-6+oz,16.4,2,8.6,0,"#5b6270",0);kMark(x0,x1,-48+oz,-8+oz,3);hMark(cx,-28+oz,(x1-x0)/2,5);note("railyard",cx,-28+oz,5);},
       solarFarm(x,z,rows,cols){pad(x,z,Math.max(rows*5.6,cols*12)/2+6);add(T.quad,x,0.022,z,cols*12+8,1,rows*5.6+8,0,"#d8c79d",0);
         for(let r=0;r<rows;r++)for(let c=0;c<cols;c++){const px=x-cols*6+6+c*12,pz=z-rows*2.8+2.8+r*5.6;add(T.box,px,1.0,pz,11,0.12,2.8,0,"#2c3e63",0,undefined,-0.45);add(T.box,px,0,pz+0.6,0.2,1.2,0.2,0,"#8d939c",0);}
         // v14: a maintenance track round the field, an inverter skid in every other aisle, the transformer pad where the line leaves
@@ -396,7 +397,7 @@
       const GP=45,xs=[];for(let x=HXr-GP*6;x<=430;x+=GP)xs.push(x);
       const [rzc,rhw]=RZ(0),shore=rzc+rhw,sBank=shore+2.4,BLV=-51.5;   // the sea wall at -57.6, the boulevard just inland
       const zsS=[-8,37,82];while(zsS[zsS.length-1]+GP<330)zsS.push(zsS[zsS.length-1]+GP);
-      const MILLX=[HXr,EX],RAILZ=[-50,-8];
+      const MILLX=[HXr,EX],RAILZ=[-50+WZ,-8+WZ];
       const streetRaw=(cx,cz,len,along,w=6)=>{add(T.quad,cx,0.025,cz,along?len:w,1,along?w:len,0,ROADC,0);
         [-1,1].forEach(s2=>add(T.quad,cx+(along?0:s2*(w/2+0.9)),0.028,cz+(along?s2*(w/2+0.9):0),along?len:1.8,1,along?1.8:len,0,"#c8c6bf",0));
         if(DEN>=1||Math.hypot(cx,cz)<200)for(let d=-len/2+3;d<len/2-3;d+=7)add(T.quad,cx+(along?d:0),0.03,cz+(along?0:d),along?3:0.2,1,along?0.2:3,0,"#f2f2f2",0);

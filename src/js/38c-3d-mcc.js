@@ -8,7 +8,7 @@
      breaker resets after a blackout. The model decides everything; this only shows it. ---- */
   const MCC={x0:4,x1:18,z0:24,z1:31,h:4.4,door:[4,27.5],desk:[15.4,29.7],riser:[20,62],tx:[20.2,27]};G3.MCC=MCC;
   // where the rounds and the repairs happen at each critical machine (walkable spots, checked against the nav grid), and what to face
-  const ASPOT={pulp:[14,-8,16,-14],refA:[56.5,-12.2,60,-14],refB:[57.2,-8.8,60,-8.5],fan:[52,-6.5,51,-9.3],couch:[50,15.2,50,9],pr1:[39,15.2,39,9],pr2:[34.5,15.2,34.5,9],
+  const ASPOT={pulp:[14,-8,16,-14],refA:[56.5,-12.2,60,-14],refB:[57.2,-8.8,60,-8.5],fan:[52,-7.1,51,-9.3],couch:[50,15.2,50,9],pr1:[39,15.2,39,9],pr2:[34.5,15.2,34.5,9],
     dry:[14,16.4,14,9],reel:[-3,16.4,-4,9],wind:[-14.6,14.6,-16,9]};G3.ASPOT=ASPOT;
   // ---- the building: the lineups stand along the north wall facing the camera; the door is in the west wall; the south
   // wall above knee height lifts off with the roof (like the machine hall's shell), so the room shows in a close cutaway ----

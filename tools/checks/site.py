@@ -24,10 +24,11 @@ TAP = """([it,kv])=>{const G=__PM.G3,T=__PM.THREE,cam=G.camIso;const v=it.c?new 
 PLACES = """()=>{const T=__PM.THREE,G=__PM.G3,s=G.scene;s.updateMatrixWorld(true);const out={},lm=new T.Matrix4(),im=new T.Matrix4(),a=new T.Matrix4(),b=new T.Matrix4(),c0=new T.Vector3(),p=new T.Vector3(),lp=new T.Vector3();let tot=0;
  const vis=o=>{for(let x=o;x;x=x.parent)if(!x.visible)return false;return true;};
  const topOf=o=>{let t=o;while(t.parent&&t.parent!==s&&!t.parent.__zcont&&!(G.SM&&t.parent===G.SM.holder))t=t.parent;return t;};
+ const FAM=new Set(['W','S','U']);
  const skip=t=>{const u=t.userData||{};return u.cut||u.load||u.cj||t.name==='mobileCrane';};   // (forklifts draw as cut-outs; the crane works beside the pulper with its boom over the line)
  // a part's own centre (its geometry's middle), in logical coordinates and where it is drawn
  const chk=(o,t,mw,lw,kind)=>{p.copy(c0).applyMatrix4(mw);lp.copy(c0).applyMatrix4(lw);const q=G.sitePt(lp.x,lp.z);tot++;
-   if(Math.hypot(p.x-q[0],p.z-q[1])>1.5){const k=kind+' '+(t.name||t.type)+' zone '+(t.__zz?t.__zz.k:t.__zdyn?'moving':'-');const r=out[k]=out[k]||{n:0,ex:null};r.n++;
+   if(Math.hypot(p.x-q[0],p.z-q[1])>1.5&&!(FAM.has(G.zoneAt(lp.x,lp.z))&&t.__zz&&FAM.has(t.__zz.k))){   // (W, the strip and U are one family: a part of a group in one of them may reach into the next)const k=kind+' '+(t.name||t.type)+' zone '+(t.__zz?t.__zz.k:t.__zdyn?'moving':'-');const r=out[k]=out[k]||{n:0,ex:null};r.n++;
     if(!r.ex)r.ex='logical '+lp.x.toFixed(1)+','+lp.z.toFixed(1)+' drawn '+p.x.toFixed(1)+' want '+q[0].toFixed(1);}};
  const one=o=>{if(!o.isMesh||o.isBatchedMesh||o.userData.smBatch||!o.geometry||!o.geometry.attributes.position)return;const t=topOf(o);if(skip(t)||t.__zz===null&&!t.__zdyn)return;if(!G.zLogMat(o,lm))return;
   if(!o.geometry.boundingBox)o.geometry.computeBoundingBox();o.geometry.boundingBox.getCenter(c0);
@@ -63,10 +64,11 @@ def site(pw):
     pg.wait_for_function("()=>!__PM.G3.SM||__PM.G3.SM.done", timeout=120000)
     r = pg.evaluate(PLACES)
     ok("every drawn part stands at the site point of its logical spot", not r["bad"], f"{r['tot']} parts; " + " | ".join(r["bad"][:8]))
-    rail = pg.evaluate("""()=>{const T=__PM.THREE,G=__PM.G3,s=G.scene;s.updateMatrixWorld(true);let mx=-1e9;const b=new T.Box3();const L=[];s.traverse(o=>L.push(o));if(G.SM)G.SM.list.forEach(r=>L.push(r.o));
+    rail = pg.evaluate("""()=>{const T=__PM.THREE,G=__PM.G3,s=G.scene;s.updateMatrixWorld(true);let mx=-1e9;const b=new T.Box3(),RZ=G.sitePt(-75,-29)[1];const L=[];   // (the spur's line, where the west block draws it)
+      s.traverse(o=>L.push(o));if(G.SM)G.SM.list.forEach(r=>L.push(r.o));
       L.forEach(o=>{if(!o.isMesh||o.isBatchedMesh||!o.geometry||!o.geometry.attributes.position)return;const n=o.isInstancedMesh?o.count*o.geometry.attributes.position.count:o.geometry.attributes.position.count;if(n<2000)return;
         if(o.isInstancedMesh){o.computeBoundingBox();b.copy(o.boundingBox).applyMatrix4(o.matrixWorld);}else{if(!o.geometry.boundingBox)o.geometry.computeBoundingBox();b.copy(o.geometry.boundingBox).applyMatrix4(o.matrixWorld);}
-        if(b.min.z>-31&&b.max.z<-27&&b.max.y<0.5&&b.max.x-b.min.x>60)mx=Math.max(mx,b.max.x);});return mx;}""")
+        if(b.min.z>RZ-2&&b.max.z<RZ+2&&b.max.y<0.5&&b.max.x-b.min.x>60)mx=Math.max(mx,b.max.x);});return mx;}""")
     log.append(f"     rail spur ends at site x {rail:.1f}")
     ok("the rail spur stops at the bale yard, west of stock prep", -1e8 < rail < -50, f"ends at x {rail:.1f}")
     b.close()

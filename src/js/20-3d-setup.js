@@ -224,7 +224,7 @@ function no3D(){G3.ok=false;$("no3d").hidden=false;$("no3d-retry").onclick=()=>l
   // L-shaped run. The pieces are marked as already in site coordinates (userData.zd) so the zone pass leaves them alone.
   const ZONP=!LAYOUT6;
   function zdSince(n0){for(let i=n0;i<scene.children.length;i++)scene.children[i].userData.zd=true;}   // (v7.0: these were built in site coordinates)
-  function zRoute(pts){const runs=[];for(const p of pts){const k=zoneOf(p[0],p[2]),q=[siteX(k,p[0]),p[1],p[2]];
+  function zRoute(pts){const runs=[];for(const p of pts){const k=zoneOf(p[0],p[2]),q=[siteX(k,p[0]),p[1],siteZ(k,p[2])];
       const r=runs[runs.length-1];if(r&&r.k===k)r.p.push(q);else runs.push({k,p:[q]});}
     let path=runs[0].p;
     for(let i=1;i<runs.length;i++){const R=runs[i].p;let bj=0,bk=0,bd=Infinity;

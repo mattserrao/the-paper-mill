@@ -3,7 +3,7 @@
   const ease=u=>u<0?0:u>1?1:u*u*(3-2*u),mix=(a,b,u)=>a+(b-a)*u,_zv=new THREE.Vector3();
   let zenMovesCache=null;
   // v17 helpers for the landscape-and-mill shots: U(k) is a place from the scenery's list ([x, z, height]) or null
-  const U=k=>(G3.scenery&&G3.scenery.util&&G3.scenery.util[k])||null,MILLC=LAYOUT6?[14,2,5]:[8,2,6];   // (v7.0: the middle of the v7 site)
+  const U=k=>(G3.scenery&&G3.scenery.util&&G3.scenery.util[k])||null,MILLC=LAYOUT6?[14,2,5]:[15,2,8];   // (v7.0: the middle of the v7 site)
   // v6.4: from a place, with the place in the foreground and the mill beyond: the camera starts low behind the place
   // (on the far side from the mill), looks past it toward the mill and creeps in. (Was: 120 m+ out and high, so the place
   // itself was rarely in frame and every "from X" shot looked alike.)
@@ -188,5 +188,5 @@
     // v7.0: the mill's own shots are written in logical coordinates: each frame's target goes to its place in the v7 site,
     // and inside the mirrored hall block the camera's orbit angle is mirrored too (the shot sees the same side of things)
     if(!LAYOUT6){const LAND=["over the forest","over the rooftops","across the flats","over the bayou","approach"],i0=zenMovesCache.findIndex(m=>LAND.includes(m.name));
-      zenMovesCache.slice(0,i0<0?zenMovesCache.length:i0).forEach(m=>{const at0=m.at;m.at=(t,mv,rdt)=>{const r=at0(t,mv,rdt);if(!r)return r;const k=zoneOf(r[0],r[2]),o=r.slice();o[0]=siteX(k,r[0]);if(zoneMir(k))o[4]=-o[4];return o;};});}
+      zenMovesCache.slice(0,i0<0?zenMovesCache.length:i0).forEach(m=>{const at0=m.at;m.at=(t,mv,rdt)=>{const r=at0(t,mv,rdt);if(!r)return r;const k=zoneOf(r[0],r[2]),o=r.slice();o[0]=siteX(k,r[0]);o[2]=siteZ(k,r[2]);if(zoneMir(k))o[4]=-o[4];return o;};});}
     return zenMovesCache;}

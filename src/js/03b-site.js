@@ -49,21 +49,37 @@ const LAYOUT=layoutFor(SITE.seed);
 // v7.0 the site laid out the way the process runs: bales in on the west (screen left), rolls out on the east (screen
 // right). The mill is still built in its v6 coordinates, now its "logical" coordinates, and ZONES places each block in
 // the v7 site with one rigid transform, picked by where a thing stands in logical coordinates (zoneOf):
-//   W  west block: receiving, bale yard, rail, stock prep with its approach flow (refiners, fan pump), the shop,
-//      wastewater, river intake: moved 52 m west
-//   H  hall block: machine hall, winder, warehouse, shipping, MCC, parking, the outbound road: mirrored about x = 32
-//      (x -> 64 - x), so the machine runs west to east and its tending side still faces the camera
-//   E  power house block (power house, boiler, water tower): moved 52 m west like the west block (so walking between
-//      them never jumps), which puts it behind the presses and the first dryers
+//   W  west block: receiving, bale yard, rail, stock prep with its approach flow (refiners, fan pump), the shop: moved
+//      52 m west and (t5) WZ south, so stock prep stands on the machine's line, in front of the wet end
+//   U  the river side (t5): wastewater and the river intake, kept by the river: moved west with the west block only
+//   S  a strip between the two (logical z -33.5..-32): drawn stretched from the river side's place to the west block's,
+//      so whatever crosses it (walkers, the pipes) joins them up
+//   H  hall block: machine hall, winder, warehouse, shipping, MCC, parking, the outbound road: mirrored about x = 39
+//      (x -> 78 - x), so the machine runs west to east and its tending side still faces the camera
+//   A  (t5) the walkway along the south of stock prep: an empty corner of the old site (logical x 0..47, z 52..61), drawn
+//      on the lawn south of the west block, so walkers can go round stock prep on that side (it holds nothing)
+//   E  power house block (power house, boiler, water tower): moved with the hall (t5: 38 m west), behind the presses
+//      and the first dryers
 // The sim never sees any of this: it is where things are drawn (20b-3d-zones.js). ?layout6 shows the v6 layout.
 const LAYOUT6=new URLSearchParams(location.search).has("layout6");
-const ZONES=LAYOUT6?{W:{dx:0},H:{dx:0},E:{dx:0}}:{W:{dx:-52},H:{mir:64},E:{dx:-52}};
+const WZ=LAYOUT6?0:20,SBAND=[-33.5,-32];   // (the west block's step south; the stretched strip, in logical z)
+const AZ=17.2-52;   // (the walkway block: logical z 52 is drawn just south of the west block's south edge, site z 16.7)
+const ZONES=LAYOUT6?{W:{dx:0},U:{dx:0},S:{dx:0},H:{dx:0},E:{dx:0},A:{dx:0}}:{W:{dx:-52,dz:WZ},U:{dx:-52},S:{dx:-52,band:true},H:{mir:78},E:{dx:-38},A:{dx:-52,dz:AZ}};
 function zoneOf(x,z){if(x>47&&x<53.5&&z>-6.2&&z<=-3.3)return "H";   // the fog fan, on the hall's back wall
-  if(z>-3.3)return "H";if(x>66&&z>-30)return "E";return "W";}
+  if(!LAYOUT6&&x>=0&&x<=47&&z>=52&&z<=61)return "A";   // (t5: an empty corner of the old site, drawn as the walkway along the south of stock prep)
+  if(z>-3.3&&!(x<-36.5&&z<8))return "H";if(x>66&&z>-30)return "E";if(z<-50)return "U";   // (t5: receiving's side of the inbound road, with its scale house, stays with the west block)
+  if(x>-22){if(x>66||z<SBAND[0])return "U";if(z<SBAND[1])return "S";}return "W";}
 function siteX(k,x){const Z=ZONES[k];return Z.mir!=null?Z.mir-x:x+Z.dx;}
-function sitePt(x,z){return [siteX(zoneOf(x,z),x),z];}   // a logical point -> where it stands in the v7 site
+// (the strip: its far edge stays with the river side, its near edge meets the west block)
+const sBand=z=>Math.min(1,Math.max(0,(z-SBAND[0])/(SBAND[1]-SBAND[0])))*WZ;
+function siteZ(k,z){const Z=ZONES[k];return Z.band?z+sBand(z):z+(Z.dz||0);}
+function sitePt(x,z){const k=zoneOf(x,z);return [siteX(k,x),siteZ(k,z)];}   // a logical point -> where it stands in the v7 site
+// a site point -> the logical point that zone k draws there (null if zone k draws nothing there)
+function siteInv(k,x,z){const Z=ZONES[k],lx=Z.mir!=null?Z.mir-x:x-Z.dx;let lz;
+  if(Z.band){const a=SBAND[0],w=SBAND[1]-SBAND[0];if(z<a||z>a+w+WZ)return null;lz=a+(z-a)*w/(w+WZ);}else lz=z-(Z.dz||0);
+  return zoneOf(lx,lz)===k?[lx,lz]:null;}
 const zoneMir=k=>ZONES[k].mir!=null;
-const FENCE7=LAYOUT6?{x0:-100,x1:92,z0:-52,z1:64}:{x0:-152,x1:164,z0:-52,z1:64};   // the v7 fence, in site coordinates
+const FENCE7=LAYOUT6?{x0:-100,x1:92,z0:-52,z1:64}:{x0:-152,x1:178,z0:-52,z1:64};   // (t5: 14 m wider at the east, where the hall block moved)   // the v7 fence, in site coordinates
 // the scenery (42b) is still laid out round the v6 fence (x -100..92) and drawn round the v7 one: x is shifted west of
 // the old fence with the west gate (-52 m), east of it with the east gate (+72 m), and stretched in between (scX)
 const SCN6={a:-100,b:92};
