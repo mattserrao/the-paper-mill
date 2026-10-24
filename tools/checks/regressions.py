@@ -35,6 +35,12 @@ APP_VER = built_ver()   # read from the built page, not hard-coded
 FX1 = "window.__PM={civQueue:(i,k)=>civQueue(i,k),civNext:()=>civNext(),civCommit:()=>civCommit(),openCard:id=>openCard(CARDS.find(c=>c.id===id)),get CIV(){return CIV},maintState:i=>maintState(i),"
 QF = "env=rural&nobf&" + LITE
 
+# v6.12.1: answering a choice card resumes the game live (09d: running = no menu up), so between steps the real-time loop
+# could deal an event card or queue another civics card, and the next trigger's card then waited behind it: a test that
+# passed or failed on frame timing. QUIET pauses and clears every card before a step that triggers one.
+QUIET = """()=>{__PM.setRunning(false);const S=__PM.S;S.cards.next=1e12;S.cards.open=null;if(S.civ){S.civ.q=[];S.civ.cur=null;S.civ.pending=null;}
+  ['dealOv','civOv'].forEach(i=>{const o=document.getElementById(i);if(o)o.hidden=true;});}"""
+
 def qa1_civics(pw):
     C.sec("qa1_civics")
     html = html_arg().replace("window.__PM={", FX1, 1)
@@ -47,11 +53,13 @@ def qa1_civics(pw):
     ev("()=>{document.querySelector('#leadOv .ldcard[data-l=chip]').click();document.getElementById('ld-go').click();}")
     pg.wait_for_function("__PM.S.season&&__PM.S.season.on", timeout=300000); pg.wait_for_timeout(500)
     ev("()=>{__PM.setRunning(false);__PM.S.t=2*1440;const t=document.getElementById('tut');if(t)t.hidden=true;}")
+    ev(QUIET)
     # bug 5: chips in points
     c = ev("()=>{const S=__PM.S;__PM.trigger('felt');const chips=[...document.querySelectorAll('#civOv .cvc')].map(e=>e.textContent),bill=(document.querySelector('#civOv .cvbill')||{}).textContent,ord=document.querySelector('#civOv .civord').textContent;const m0=S.civ.m.M;document.querySelectorAll('#civOv .civbtn')[0].click();return {chips,bill,ord,dM:S.civ.m.M-m0};}")
     ok("chips show meter points (Machinery +3) and the bar moves the same", "Machinery +3" in c["chips"] and abs(c["dM"] - 3) < 0.01, c)
     ok("repair bill line on the card", bool(c["bill"]) and "already paid" in c["bill"], c)
     # bug 1: free play with a card open
+    ev(QUIET)
     fr = ev("()=>{const S=__PM.S;S.cards.next=1e12;S.inc=[];__PM.trigger('shaft');const open=!!(S.cards.open&&S.cards.open.civ);   /* (v6.9.2: the card itself shows after the camera pull) */document.getElementById('v2free').click();return new Promise(r=>setTimeout(()=>{const t0=S.t;setTimeout(()=>r({open,running:__PM.running,card:!(document.getElementById('civOv')||{hidden:true}).hidden,moved:S.t>t0,menu:!document.getElementById('v2menu').hidden}),4000)},300));}")
     ok("free play with a choice card open: card gone, game runs on", fr["open"] and not fr["card"] and fr["moved"], fr)
     b.close()
@@ -86,10 +94,12 @@ def qa1_cards(pw):
       document.querySelectorAll('#civOv .civbtn')[0].click();return {deal,civ,civ2,run,box,lab,order:S.civ.orders.Machine};}""")
     ok("Change over an event card: card waits, then opens; box unticked; order kept", ch["deal"] and not ch["civ"] and ch["civ2"] and not ch["run"] and not ch["box"] and ch["order"] == "Q", ch)
     # bug 11: Tab stays in the card
+    ev(QUIET)
     tb = ev("""()=>{const S=__PM.S;S.inc=[];__PM.trigger('fabric');const ids=[];for(let i=0;i<7;i++){document.dispatchEvent(new KeyboardEvent('keydown',{key:'Tab',bubbles:true}));const a=document.activeElement;ids.push(!!a.closest('#civOv'));}
       const z=getComputedStyle(document.getElementById('civOv')).zIndex;document.querySelectorAll('#civOv .civbtn')[2].click();return {ids,z};}""")
     ok("Tab stays inside the choice card; card draws under the pause menu", all(tb["ids"]) and int(tb["z"]) < 120, tb)
     # bug 4 + levers in points
+    ev(QUIET)
     ev("()=>{const S=__PM.S;S.civ.orders={};S.inc=[];S.fx=S.fx.filter(f=>!f.civ);S.outg.noticed=false;S.t=__PM.outStart?__PM.outStart(1)-1430:5*1440+600;}")
     pg.wait_for_timeout(200)
     ev("()=>{const S=__PM.S;for(let i=0;i<40&&!S.outg.noticed;i++){__PM.step(0.25);const o=S.cards.open;if(o&&o.c)document.getElementById('deal-no').click();if(S.civ.cur)document.querySelectorAll('#civOv .civbtn')[0].click();__PM.setRunning(false);}}")
@@ -97,6 +107,7 @@ def qa1_cards(pw):
     ok("outage levers: exactly one button pressed in each; text in points", lv["open"] and lv["segs"] == [1, 1, 1] and "Labor +6" in lv["txt"], lv)
     if lv["open"]: ev("()=>document.getElementById('out-ok').click()")
     # bug 6: walkout raise
+    ev(QUIET)
     wr = ev("()=>{const S=__PM.S;S.cards.open=null;__PM.civQueue('c_walkout','meter');__PM.civNext();document.querySelectorAll('#civOv .civbtn')[0].click();return S.civ.wage;}")
     ok("walkout settlement raises wages 3% for good", abs(wr - 1.03) < 1e-9, wr)
     # bug 7: customer walks broker = one grade, -5
