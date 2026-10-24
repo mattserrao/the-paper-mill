@@ -1,5 +1,30 @@
 # Changelog
 
+## v7.0.0-t5 (2026-10-24): one line from bales to rolls (test build, test/v7.0-layout)
+- The west block (receiving, rail, stock prep, approach flow, shop) steps 20 m south onto the machine's line; the hall and
+  power house blocks move 14 m east to leave room for the approach flow. Shipping stays in front of the winder.
+- Wastewater and the river intake are a block of their own and stay by the river; a stretched strip joins them to the
+  west block across the lawn, and a walkway block (an empty corner of the old site) runs along the south of stock prep.
+- The west fence gaps, west gate, staff road, highway connector, rail line and rail yard follow the west block.
+- Walkers' grids: walls where blocks don't meet on screen, a site-space obstacle check, portals between blocks drawn on
+  the same spot, A* by on-screen distance, walkers keep their pace in the strip, trikes try the people's grid before the
+  old lane routes; built during the start-up warm-up. 0 walker or vehicle jumps in ~45 game hours.
+
+## v7.0.0-t4 (2026-10-23): knobs, the rail spur and stray parts in the v7 site (test build, test/v7.0-layout)
+- Every fiddly knob, DCS console, the MCC desk, the spider valve and the slice answer a tap where they are drawn, in the
+  normal view and the fiddly knobs view (their tap targets were still at the v6 spots).
+- The rail spur stops at the bale yard: meshes baked from instanced meshes after the zone pass (rail ties, fence posts,
+  yard lamps) keep their zone instead of being zoned by their origin.
+- Bale stacks, beater-bay rolls, bale wires, receiving and shipping holders, the pulper's floating trash and the crane
+  hook are drawn in their own block; effect labels, defect pins and the arc flash use site points.
+- New `tools/checks/site.py` (taps, placement of every part, the rail spur).
+
+## v7.0.0-t1 to t3 (2026-10-23): the site laid out left to right (test builds, test/v7.0-layout)
+Plan: `claude/v7-layout-plan.md`. Zone frames over the v6 (logical) layout: the west block moved west, the hall block
+mirrored so the machine runs west to east with its tending side to the camera, the power house behind the dryers, a gate at
+each end. Walkers, scenery and roads, cameras, zen shots, the bird cut-scene and effects follow (t2); tell taps and click
+for info hit the right spot (t3). The sim is unchanged.
+
 ## v6.12.0 (2026-10-23): Cool, Fast and Free
 Release of v6.12.0-t1 to t7 (below), merged from test/v6.12-perf. iPhone autotest: 60 FPS and
 0 frames over 33 ms in every phase at the default zoom, the whole-site zoom and the free camera. Regression suite: the

@@ -4,6 +4,9 @@
   places   every drawn mesh, and every instance of an instanced mesh, stands at the site point of its logical spot
            (catches parts zoned by their origin: meshes baked after the pass, stock that fills in later, empty holders)
   rail     the rail spur stops at the bale yard (baked after the pass, it once ran on past stock prep)
+  pins     every upset fired at once: each effect's pin is drawn within 5 m of its upset's spot
+  routes   (t5) people can walk between the consoles, the round spots and the maintenance spots of every block without a
+           jump on screen, and no trike route falls back to the old lane routes in a run
 Usage: python3 site.py [index.html]"""
 # tier: default
 import sys, json, pathlib; sys.path.insert(0, str(pathlib.Path(__file__).resolve().parents[1]))
@@ -73,6 +76,45 @@ def site(pw):
     ok("the rail spur stops at the bale yard, west of stock prep", -1e8 < rail < -50, f"ends at x {rail:.1f}")
     b.close()
 
+SPOTS = {"spot":[7.5,-21],"wet":[58,13.4],"det":[-5,13.4],"mcc":[10,23],"shop":[56,-22],"receiving":[-40,-15],"clarifier":[10,-36],
+         "aeration":[30,-37],"boiler":[68.6,-10],"powerhouse":[73,-18],"winder":[-18,10],"felt":[40.5,14.6],"chest":[29.5,-9.6],"fogfan":[50.2,-2.6]}
+ROUTES = """(P)=>{const G=__PM.G3,D=G.navDbg,N=D.NAVW;G.navWarm&&G.navWarm();for(const [k,s] of Object.entries(G.ASPOT||{}))P['round '+k]=[s[0],s[1]];
+ const bad=[],K=Object.keys(P),from=P.wet;
+ for(const k of K){if(k==='wet')continue;const p=D.navPath(N,from,P[k]);if(!p){bad.push(k+': no route');continue;}
+  let big=0;for(let i=1;i<p.length;i++){if(p[i][2])continue;const n=Math.ceil(Math.hypot(p[i][0]-p[i-1][0],p[i][1]-p[i-1][1])/0.25);let q0=G.sitePt(p[i-1][0],p[i-1][1]);
+   for(let m=1;m<=n;m++){const x=p[i-1][0]+(p[i][0]-p[i-1][0])*m/n,z=p[i-1][1]+(p[i][1]-p[i-1][1])*m/n,q=G.sitePt(x,z),st=Math.hypot(q[0]-q0[0],q[1]-q0[1]);if(G.zoneAt(x,z)!=='S')big=Math.max(big,st);q0=q;}}
+  if(big>2)bad.push(k+': a '+big.toFixed(1)+' m step on screen');}
+ return {n:K.length,bad};}"""
+PINS = """()=>{const G=__PM.G3,T=__PM.THREE,v=new T.Vector3(),bad=[];let n=0;
+ for(const [id,f] of Object.entries(G.FX)){if(!f.on||!f.pin||!f.pin.p.visible)continue;n++;f.pin.p.updateWorldMatrix(true,false);f.pin.p.getWorldPosition(v);const q=G.sitePt(f.pin.x,f.pin.z),d=Math.hypot(v.x-q[0],v.z-q[1]);
+  if(d>5)bad.push(id+' '+d.toFixed(0)+' m off');}
+ return {n,bad};}"""
+
+def more(pw):
+    C.sec("site")
+    html = html_arg()
+    b = launch(pw)
+    pg = open_game(b, html, viewport=(1280, 800), errs=errs)
+    pg.wait_for_timeout(1500)
+    pg.evaluate("()=>document.getElementById('v2free').click()"); pg.wait_for_timeout(4000)
+    r = pg.evaluate(ROUTES, SPOTS)
+    ok("people walk between the consoles, round spots and maintenance spots of every block without a jump", not r["bad"], f"{r['n']} spots; " + "; ".join(r["bad"][:8]))
+    # every upset at once, then the pins
+    pg.evaluate("()=>{__PM.CH.on=true;__PM.EVENTS.forEach(e=>{try{__PM.trigger(e.id,true)}catch(_){}})}")
+    pg.wait_for_timeout(3000)
+    r = pg.evaluate(PINS)
+    ok("every upset's pin is drawn at its spot", r["n"] > 20 and not r["bad"], f"{r['n']} pins; " + "; ".join(r["bad"][:8]))
+    # a run of the mill at speed: the trikes' routes
+    pg.evaluate("()=>{__PM.CH.on=false;__PM.S.inc.forEach(i=>i.left=0);document.querySelectorAll('.overlay').forEach(o=>{if(o.id!=='v2menu')o.hidden=true});if(__PM.S.cards)__PM.S.cards.open=null;__PM.setRunning(true)}")
+    for _ in range(3): pg.evaluate("()=>document.getElementById('v2fast').click()")
+    for _ in range(6):
+        pg.wait_for_timeout(8000)
+        pg.evaluate("()=>{document.querySelectorAll('.overlay').forEach(o=>{if(o.id!=='v2menu'&&!o.hidden)o.hidden=true});if(__PM.S.cards)__PM.S.cards.open=null;__PM.setRunning(true)}")
+    r = pg.evaluate("()=>({fails:(__PM.G3.routeFails||[]).slice(0,6),t:Math.round(__PM.S.t)})")
+    ok("no trike route falls back to the lane routes", not r["fails"], f"{r['t']} sim minutes; {r['fails']}")
+    b.close()
+
 with sync_playwright() as pw:
     site(pw)
+    more(pw)
 C.done()
