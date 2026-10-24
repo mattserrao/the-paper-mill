@@ -1,5 +1,15 @@
 # Changelog
 
+## v6.12.1-t3 (2026-10-24): approach bay QA (test build, test/v6.12.1)
+- Played the refiner plate change (outage 4) through in a season, live: the headbox's footprint runs to x 62.25, so t2's
+  service aisle was only ~2.5 m and an open refiner door nearly closed it; walkers squeezed through the headbox corner.
+  The bay is 1.5 m longer (hall to x 74.6) and the refiners sit at X 68.7: a 4 m aisle with 2 m past an open door, the
+  same clearances the old yard layout had. Plate stacks at x 63.4 in the middle of the aisle, the door work spot clear of
+  the gap adjuster, the east entry in the middle of the aisle opening (76.2, 17.8), the corridor round the bay at x 77.5.
+- Full regression suite run (all 22 checks incl. the in-game autotest and music); the reliability check's info tap moved
+  to the refiners' new spot (it was tapping the old one, now the fan pump).
+- G3.outDbg: a read-only test export of the outage visuals (41).
+
 ## v6.12.1-t2 (2026-10-24): a true approach system (test build, test/v6.12.1)
 - The machine hall grows one approach bay east (x 64.3 to 73.1) with a personnel door on the tending side. The twin
   refiners move into it from the yard behind the hall: X 67.2, z 6.5 / 12.5, straddling the machine centreline beside the

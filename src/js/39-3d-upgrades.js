@@ -20,9 +20,9 @@
   // refiner upgrade: two large double-disc refiners in parallel off the chest-to-headbox stock line, each with its own motor
   const REF_MOTORS=[],REF_DOORS=[];   // v2.9.18: the twin refiners are standard equipment; the upgrade fits bigger motors
   // v6.12.1 approach system: the refiners moved from the yard behind the hall (X 60.6, z -14/-8) into the approach bay at the
-  // east end of the hall (22: HALL.x1 73.1), beside the headbox, straddling the machine centreline; doors open west into the
+  // east end of the hall (22: HALL.x1 74.6), beside the headbox, straddling the machine centreline; doors open west into the
   // service aisle by the headbox header. They now take thick stock from the machine chest pump and feed the fan pump (25).
-  const refiner=upg("refiner",g=>{const X=67.2,ZS=[6.5,12.5],ZM=9.5;
+  const refiner=upg("refiner",g=>{const X=68.7,ZS=[6.5,12.5],ZM=9.5;
     ZS.forEach(z=>{box(7.2,0.45,3.4,M.steel,X+1.6,0.22,z,g);                                                              // skid
       const hg=new CylG(1.55,1.55,1.7,28);hg.rotateZ(Math.PI/2);const h=new THREE.Mesh(hg,M.brand);h.position.set(X,2.0,z);h.castShadow=true;g.add(h);   // disc housing
       {const fg=new CylG(1.7,1.7,0.18,28);fg.rotateZ(Math.PI/2);const f=new THREE.Mesh(fg,M.steel);f.position.set(X+0.95,2.0,z);g.add(f);}
@@ -50,7 +50,7 @@
     const P=0.24;   // inlet header from the stock line, over and down into each housing; outlets back to the line
     // v6.12.1: thick stock from the machine chest pump (25) comes over the back wall at x 64.5 and down to an inlet header
     // in the service aisle; each refiner discharges into an outlet header between the two housings, which rises and runs
-    // back over the wall at x 67.2 to the fan pump suction on the old refiner pad (25)
+    // back over the wall at x 68.7 to the fan pump suction on the old refiner pad (25)
     const HX=X-2.7;spool([[HX,7.6,4.0],[HX,7.6,ZS[0]],[HX,4.6,ZS[0]]],P,M.stock);spool([[HX,4.6,ZS[0]],[HX,4.6,ZS[1]]],P,M.stock);
     ZS.forEach(z=>{spool([[HX,4.6,z],[X,4.6,z],[X,3.55,z]],P,M.stock);spool([[X,0.7,z+(z<ZM?1.55:-1.55)],[X,0.7,ZM]],0.2,M.stock);});
     spool([[X,0.7,ZM],[X,8.6,ZM],[X,8.6,4.0]],0.32,M.stock);

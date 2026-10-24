@@ -113,7 +113,7 @@
       if(u.side==="back"){if(goSide(w,AROUND,14.8,9,rdt))u.side=null;else{pose(w,"run",now);return;}}
       if(u.side==="stock"&&(u.ry||0)>0.02){if(!moveP(w,RAG.top[0],RAG.top[1],3,rdt)&&Math.hypot(w.position.x-RAG.top[0],w.position.z-RAG.top[1])>0.2&&!u.ragDown){pose(w,"walk",now);return;}u.ragDown=true;
         if(!ragClimb(w,false,rdt)){pose(w,"walk",now);return;}u.ragDown=false;u.ry=0;}
-      if(u.side==="stock"){if(goRoute(w,"ragback",[[RAG.foot[0],-1.5],[76,-1.2],[76,17.4],[HOME[i][0],15.2]],8,rdt)){u.side=null;u.rk=null;}else{pose(w,"run",now);return;}}
+      if(u.side==="stock"){if(goRoute(w,"ragback",[[RAG.foot[0],-1.5],[77.5,-1.2],[77.5,17.4],[HOME[i][0],15.2]],8,rdt)){u.side=null;u.rk=null;}else{pose(w,"run",now);return;}}
       if(RUN.on){if(!u.chase&&Math.abs(RUN.x-w.position.x)<11)u.chase=true;
         if(u.chase){const back=2.4+(i%3)*1.3;moveP(w,RUN.x-RUN.dir*back,RUN.z+(i%2?0.9:-0.9),8.4,rdt);pose(w,"run",now);return;}}
       else u.chase=false;

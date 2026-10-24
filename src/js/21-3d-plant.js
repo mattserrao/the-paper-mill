@@ -8,7 +8,7 @@
   slab(-53,-34.4,-24.5,-2.4,M.asphalt,0.03);        // receiving apron
   slab(-95,-49,11.2,13.8,M.asphalt);                // outbound road
   slab(-67,-49,11.2,33,M.asphalt,0.03);             // shipping apron
-  slab(-27.2,73.1,3,14.8,M.slab,0.03);slab(-23.8,73.1,14.8,19.85,M.slab,0.03);slab(-27.2,-2.9,-2.9,3,M.slab,0.031); // machine hall floor + reel bay along the back
+  slab(-27.2,74.6,3,14.8,M.slab,0.03);slab(-23.8,74.6,14.8,19.85,M.slab,0.03);slab(-27.2,-2.9,-2.9,3,M.slab,0.031); // machine hall floor + reel bay along the back
   slab(4,47,-25,-2,M.slab,0.03);                    // stock prep pad
   for(let x=-92;x<-36;x+=4)box(2,0.02,0.16,M.lane,x,0.05,-3.8,scene,false);
   for(let x=-92;x<-50;x+=4)box(2,0.02,0.16,M.lane,x,0.05,12.5,scene,false);
@@ -226,7 +226,7 @@
     [-1.6,1.6].forEach(dx=>box(0.14,1.2,0.14,M.ink,44+dx,0.6,22.8,scene,false));ENV.board={ctx:sc.getContext("2d"),tex:st,last:""};}
   // v4.1: trees and the rest of the world outside the buildings are built from the environment and mill seed (42b-3d-scenery.js)
   // street lamps along the roads, the front of the hall and the parking lot
-  {const L=[];for(let x=-130;x<-68;x+=16){L.push([x,-6.2]);L.push([x,15]);}for(let x=-20;x<=60;x+=16)L.push([x===44?38.5:x,22.6]);for(let x=68;x<=88;x+=10)L.push([x,57.4]);L.push([60,36]);L.push([46,30]);L.push([76,22.6]);
+  {const L=[];for(let x=-130;x<-68;x+=16){L.push([x,-6.2]);L.push([x,15]);}for(let x=-20;x<=60;x+=16)L.push([x===44?38.5:x,22.6]);for(let x=68;x<=88;x+=10)L.push([x,57.4]);L.push([60,36]);L.push([46,30]);L.push([77.5,22.6]);
     const pole=new THREE.InstancedMesh(new CylG(0.08,0.1,6,6),instMat(M.metal),L.length),head=new THREE.InstancedMesh(new THREE.BoxGeometry(0.9,0.2,0.4),new THREE.MeshBasicMaterial({color:0xffffff}),L.length);
     const poolT=spriteTex((x,w)=>{const g=x.createRadialGradient(w/2,w/2,0,w/2,w/2,w/2);g.addColorStop(0,"rgba(255,255,255,1)");g.addColorStop(0.45,"rgba(255,255,255,0.6)");g.addColorStop(1,"rgba(255,255,255,0)");x.fillStyle=g;x.fillRect(0,0,w,w);});
     const poolM=new THREE.MeshBasicMaterial({map:poolT,color:lin0("#ffd98a"),transparent:true,opacity:0,depthWrite:false,polygonOffset:true,polygonOffsetFactor:-4,polygonOffsetUnits:-4,}),pools=new THREE.InstancedMesh(new THREE.PlaneGeometry(9,9),poolM,L.length);pools.renderOrder=3;
@@ -238,7 +238,7 @@
     [[-70,-3.8,3,1],[-55,-3.4,2,0.8],[-40,-12,2.6,1.4],[-55,22,3,1.6],[-80,12.6,2.4,0.8],[72,46,3,1.6],[80,52,2,1],[30,32.6,2.4,1],[-30,-30,2,1]].forEach(([x,z,a,b])=>{const p=new THREE.Mesh(new CircG(1,20),ENV.pudM);(ENV.pudMeshes||(ENV.pudMeshes=[])).push(p);p.rotation.x=-Math.PI/2;p.scale.set(a,b,1);p.position.set(x,0.045,z);scene.add(p);});}
   function cloth0b(h){return new StdMat({color:lin0(h),roughness:0.6});}
   // painted walkway and zone lines
-  [[-25,73,2.9],[-25,73,16.4]].forEach(([a,b,z])=>{for(let x=a;x<b;x+=2.4)box(1.3,0.02,0.14,M.lane,x,0.06,z,scene,false);});
+  [[-25,74.5,2.9],[-25,74.5,16.4]].forEach(([a,b,z])=>{for(let x=a;x<b;x+=2.4)box(1.3,0.02,0.14,M.lane,x,0.06,z,scene,false);});
   [[4,44,-24.6],[4,44,-2.3]].forEach(([a,b,z])=>box(b-a,0.02,0.14,M.lane,(a+b)/2,0.06,z,scene,false));
 
   // receiving shed: floor, three walls, door wall rebuilt when docks change

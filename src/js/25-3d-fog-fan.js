@@ -70,22 +70,22 @@
     // name plate
     {const c=document.createElement("canvas");c.width=256;c.height=48;const x=c.getContext("2d");x.fillStyle="#ffffff";x.fillRect(0,0,256,48);x.fillStyle="#1c2233";x.font="800 26px system-ui,sans-serif";x.textAlign="center";x.fillText("MACHINE CHEST",128,33);
      const t=new THREE.CanvasTexture(c);t.colorSpace=THREE.SRGBColorSpace;const pl=new THREE.Mesh(new THREE.PlaneGeometry(2.4,0.45),new THREE.MeshBasicMaterial({map:t}));pl.position.set(MX,4.4,MZ+MR+0.03);scene.add(pl);}
-    // machine chest pump (v6.12.1): draws the machine chest and pushes thick stock up and east, over the back wall at x 64.5
+    // machine chest pump (v6.12.1): draws the machine chest and pushes thick stock up and east, over the back wall at x 66
     // and down to the refiners' inlet header in the approach bay (39). Pump nozzles (20 pumpModel, scale k at origin X):
     // suction face at X-0.95k, height 0.75k; discharge on top at X-0.7k, 1.6k
     {const g=pumpModel();g.scale.setScalar(1.2);g.position.set(48.8,0.25,-10.4);blob(49.2,-10.4,1.8);
      {const c=document.createElement("canvas");c.width=256;c.height=48;const x=c.getContext("2d");x.fillStyle="#ffffff";x.fillRect(0,0,256,48);x.fillStyle="#1c2233";x.font="800 20px system-ui,sans-serif";x.textAlign="center";x.fillText("MACHINE CHEST PUMP",128,33);
      const t=new THREE.CanvasTexture(c);t.colorSpace=THREE.SRGBColorSpace;const pl=new THREE.Mesh(new THREE.PlaneGeometry(1.6,0.3),new THREE.MeshBasicMaterial({map:t}));pl.position.set(49.2,0.55,-9.75);scene.add(pl);}
      spool([[46.6,0.8,-13.0],[46.6,1.15,-13.0],[46.6,1.15,-10.4],[47.66,1.15,-10.4]],0.26,M.stock);
-     spool([[47.96,2.17,-10.4],[47.96,7.6,-10.4],[64.5,7.6,-10.4],[64.5,7.6,4.0]],0.32,M.stock);}
+     spool([[47.96,2.17,-10.4],[47.96,7.6,-10.4],[66.0,7.6,-10.4],[66.0,7.6,4.0]],0.32,M.stock);}
     // fan pump (v6.12.1: on the old refiner pad, the "basement" pump right behind the headbox's drive-side inlet): a big
     // end-suction pump, twice the size of the others, on its own plinth. Its suction tee takes refined thick stock back over
-    // the wall from the refiners (x 67.2) and base ply white water from the silo (x 46, along z -9)
+    // the wall from the refiners (x 68.7) and base ply white water from the silo (x 46, along z -9)
     slab(57.4,67.4,-14.2,-3.0,M.slab,0.032);
     {const g=pumpModel();g.scale.setScalar(2);g.position.set(62.6,0.25,-11);box(5.6,0.25,2.4,M.steel,63.5,0.125,-11,scene);blob(63.4,-11,3.2);
      {const c=document.createElement("canvas");c.width=256;c.height=48;const x=c.getContext("2d");x.fillStyle="#ffffff";x.fillRect(0,0,256,48);x.fillStyle="#1c2233";x.font="800 26px system-ui,sans-serif";x.textAlign="center";x.fillText("FAN PUMP",128,33);
      const t=new THREE.CanvasTexture(c);t.colorSpace=THREE.SRGBColorSpace;const pl=new THREE.Mesh(new THREE.PlaneGeometry(1.8,0.34),new THREE.MeshBasicMaterial({map:t}));pl.position.set(64.0,0.6,-9.78);scene.add(pl);}
-     spool([[67.2,8.6,4.0],[67.2,8.6,-12.4],[58.6,8.6,-12.4],[58.6,1.75,-12.4],[58.6,1.75,-11]],0.32,M.stock);
+     spool([[68.7,8.6,4.0],[68.7,8.6,-12.4],[58.6,8.6,-12.4],[58.6,1.75,-12.4],[58.6,1.75,-11]],0.32,M.stock);
      spool([[46.0,0.15,3.0],[46.0,5.6,3.0],[46.0,5.6,-9.0],[58.6,5.6,-9.0],[58.6,1.75,-9.0],[58.6,1.75,-11]],0.28,M.ww);
      spool([[58.6,1.75,-11],[60.7,1.75,-11]],0.34,M.stock);
      // machine screen (visual, v6.12.1): a vertical pressure screen between the fan pump and the hall; thin stock in on the

@@ -135,3 +135,4 @@ One line per version, oldest first. Add a line here with every release: build.py
 6.12.0     Cool, Fast and Free: Smooth on the Phone (Sign Boards No Longer Re-Upload Every 0.8 s), the World Draws at 30 While the View Is Still, a Free 3D Camera in Settings, Record Board Updates Once a Day
 6.12.1-t1  The Shop Moves South (Test): the Maintenance Shop Now Stands West of the MCC on the Lawn in Front of the Hall
 6.12.1-t2  A True Approach System (Test): the Refiners Stand Beside the Headbox in a New Bay, the Fan Pump Behind It, Refiners After the Machine Chest
+6.12.1-t3  Approach Bay QA (Test): a 4 m Service Aisle by the Headbox, the Refiner Plate Change Played Through Clean

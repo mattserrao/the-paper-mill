@@ -104,7 +104,7 @@
           const u=ease(t/20);return [DX-2.2,DY-0.6,zc,mix(40,32,u),mix(-0.55,-0.35,u),mix(1.18,1.25,u)];}},
       // low sideways track past the twin refiners in the approach bay, doors in the foreground (v6.12.1)
       {name:"refiner yard pass",look:["hc","none"],dur:13,ok:()=>true,
-        at:(t)=>{if(t>13)return null;const u=ease(t/13);return [67.6,2.2,mix(4.5,13.5,u),40,mix(0.2,0.45,u),0.98];}},
+        at:(t)=>{if(t>13)return null;const u=ease(t/13);return [69.1,2.2,mix(4.5,13.5,u),40,mix(0.2,0.45,u),0.98];}},
       // follow a loaded truck from the dock out past the gate
       {name:"truck departure",look:["dusk","none"],rare:1,dur:18,
         ok:()=>cam.r<TRUCK_FAR*2&&truckPool.out.some(g=>g.visible&&g.userData.busy&&(g.userData.phase==="leave"||(g.userData.phase==="dock"&&(g.userData.frac||0)>0.85))),

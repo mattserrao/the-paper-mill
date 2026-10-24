@@ -28,9 +28,9 @@
     dHatch(x,X,Z,ppm,-9.3,-8.1,-23.4,-3.1,GRN,"rgba(255,255,255,0.45)");dTxt(x,X,Z,ppm,"WALKWAY",-8.7,-19,0.45,"#fff",Math.PI/2);
     for(let i=0;i<4;i++)dBox(x,X,Z,-14.2-i*2.6-1.1,-14.2-i*2.6+1.1,-22.9,-20.5,YEL,0.1*ppm);dTxt(x,X,Z,ppm,"FORKLIFT PARKING",-18.1,-20.0,0.5,"rgba(242,184,7,0.95)");
     dScuffs(x,X,Z,ppm,[[-32.3,-12,3],[-20,-7.3,10],[-20,-11.5,10],[-20,-15.7,10],[-31,-9,3],[-31,-14.5,3],[-31,-20,3],[-20.3,-11.5,3]],140);});
-  // v6.12.1: the hall ends at x1 73.1 (was 64.3): one approach bay east of the headbox for the refiners, with a personnel door
-const HALL={zf:20,xw:-23.15,x1:73.1,doors:[{x:-22.05,w:2.2,h:3.2,open:true},{x:33,w:6,h:5,big:true},{x:53,w:1.8,h:2.4},{x:62.4,w:1.6,h:2.4},{x:70.4,w:1.6,h:2.4}]};G3.HALL=HALL;
-  // v3.2.1 machine hall  x -23.15..64.3 (v6.12.1: ..73.1), z 2.5..19.85: walkway lines, door crossings, keep-clear at the big door, crane load zones
+  // v6.12.1: the hall ends at x1 74.6 (was 64.3): one approach bay east of the headbox for the refiners, with a personnel door
+const HALL={zf:20,xw:-23.15,x1:74.6,doors:[{x:-22.05,w:2.2,h:3.2,open:true},{x:33,w:6,h:5,big:true},{x:53,w:1.8,h:2.4},{x:62.4,w:1.6,h:2.4},{x:71.6,w:1.6,h:2.4}]};G3.HALL=HALL;
+  // v3.2.1 machine hall  x -23.15..64.3 (v6.12.1: ..74.6), z 2.5..19.85: walkway lines, door crossings, keep-clear at the big door, crane load zones
   floorDecal(-23.15,HALL.x1,2.5,19.85,mobile?14:24,(x,X,Z,ppm,W2,H2)=>{
     x.strokeStyle=YEL;x.lineWidth=0.12*ppm;[15.3,17.3].forEach(z=>{x.beginPath();x.moveTo(X(-19.5),Z(z));x.lineTo(X(HALL.x1-0.8),Z(z));x.stroke();});
     for(let wx=-14;wx<HALL.x1-2;wx+=12){dTxt(x,X,Z,ppm,"WALKWAY",wx,16.85,0.42,"rgba(242,184,7,0.9)");
