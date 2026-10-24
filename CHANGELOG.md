@@ -1,5 +1,23 @@
 # Changelog
 
+## v6.12.1-t2 (2026-10-24): a true approach system (test build, test/v6.12.1)
+- The machine hall grows one approach bay east (x 64.3 to 73.1) with a personnel door on the tending side. The twin
+  refiners move into it from the yard behind the hall: X 67.2, z 6.5 / 12.5, straddling the machine centreline beside the
+  headbox, doors opening into a service aisle by the headbox header, motors to the new east wall.
+- The fan pump moves to the old refiner pad, right behind the headbox's drive-side inlet, on a new slab. New visual-only
+  equipment: a machine chest pump at the machine chest and a machine screen between the fan pump and the headbox.
+- Pipes follow the real approach flow, every run coloured and arrowed: stock chest pump (LV-104) into the top of the machine
+  chest; machine chest pump over the back wall to the refiners' inlet header; the refiners' outlet header back over the
+  wall to the fan pump suction, where silo white water joins; fan pump through the machine screen into the headbox.
+- Sim order changed to match: stock chest -> machine chest -> refiners -> fan pump -> headbox. A refiner plate clash now
+  starves the fan pump: the sheet breaks after 2 minutes and the machine stays down until the refiners are back (it used to
+  run the machine chest down and trip on low level). The machine chest keeps its level through a clash.
+- Followed the move: tech round/repair spots, the clash spot, pin, sparks zone and tell, info pop-ups, the zen refiner
+  pass, the fan pump label; the outage plate change and its staging now come in by the bay's east door (no carry from the
+  shop); the east entry, the hayout route and the trikes' lane connector moved round the bay (x 76); the flood holes; the
+  stock prep DCS pictures (refiners after the machine chest); relationship map, help guide and glossary (new: Approach flow,
+  Machine screen); the process and dcs checks updated to the new order.
+
 ## v6.12.1-t1 (2026-10-24): the shop moves south (test build, test/v6.12.1)
 - The maintenance shop (the shift techs' shop: benches, rebuild stands, parts rack, trike apron) moved from behind stock prep
   (x 50.5..63, z -25..-19) to the lawn south of the machine hall, west of the MCC: x -18..-5.5, z 24..29.8, door and sign

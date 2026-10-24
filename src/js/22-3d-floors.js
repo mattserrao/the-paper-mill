@@ -28,11 +28,12 @@
     dHatch(x,X,Z,ppm,-9.3,-8.1,-23.4,-3.1,GRN,"rgba(255,255,255,0.45)");dTxt(x,X,Z,ppm,"WALKWAY",-8.7,-19,0.45,"#fff",Math.PI/2);
     for(let i=0;i<4;i++)dBox(x,X,Z,-14.2-i*2.6-1.1,-14.2-i*2.6+1.1,-22.9,-20.5,YEL,0.1*ppm);dTxt(x,X,Z,ppm,"FORKLIFT PARKING",-18.1,-20.0,0.5,"rgba(242,184,7,0.95)");
     dScuffs(x,X,Z,ppm,[[-32.3,-12,3],[-20,-7.3,10],[-20,-11.5,10],[-20,-15.7,10],[-31,-9,3],[-31,-14.5,3],[-31,-20,3],[-20.3,-11.5,3]],140);});
-  const HALL={zf:20,xw:-23.15,doors:[{x:-22.05,w:2.2,h:3.2,open:true},{x:33,w:6,h:5,big:true},{x:53,w:1.8,h:2.4},{x:62.4,w:1.6,h:2.4}]};G3.HALL=HALL;
-  // v3.2.1 machine hall  x -23.15..64.3, z 2.5..19.85: walkway lines, door crossings, keep-clear at the big door, crane load zones
-  floorDecal(-23.15,64.3,2.5,19.85,mobile?14:24,(x,X,Z,ppm,W2,H2)=>{
-    x.strokeStyle=YEL;x.lineWidth=0.12*ppm;[15.3,17.3].forEach(z=>{x.beginPath();x.moveTo(X(-19.5),Z(z));x.lineTo(X(63.5),Z(z));x.stroke();});
-    for(let wx=-14;wx<62;wx+=12){dTxt(x,X,Z,ppm,"WALKWAY",wx,16.85,0.42,"rgba(242,184,7,0.9)");
+  // v6.12.1: the hall ends at x1 73.1 (was 64.3): one approach bay east of the headbox for the refiners, with a personnel door
+const HALL={zf:20,xw:-23.15,x1:73.1,doors:[{x:-22.05,w:2.2,h:3.2,open:true},{x:33,w:6,h:5,big:true},{x:53,w:1.8,h:2.4},{x:62.4,w:1.6,h:2.4},{x:70.4,w:1.6,h:2.4}]};G3.HALL=HALL;
+  // v3.2.1 machine hall  x -23.15..64.3 (v6.12.1: ..73.1), z 2.5..19.85: walkway lines, door crossings, keep-clear at the big door, crane load zones
+  floorDecal(-23.15,HALL.x1,2.5,19.85,mobile?14:24,(x,X,Z,ppm,W2,H2)=>{
+    x.strokeStyle=YEL;x.lineWidth=0.12*ppm;[15.3,17.3].forEach(z=>{x.beginPath();x.moveTo(X(-19.5),Z(z));x.lineTo(X(HALL.x1-0.8),Z(z));x.stroke();});
+    for(let wx=-14;wx<HALL.x1-2;wx+=12){dTxt(x,X,Z,ppm,"WALKWAY",wx,16.85,0.42,"rgba(242,184,7,0.9)");
       x.save();x.translate(X(wx+2.2),Z(16.3));x.fillStyle="rgba(242,184,7,0.9)";const s2=0.18*ppm;x.beginPath();x.arc(0,-s2*1.6,s2*0.55,0,7);x.fill();x.fillRect(-s2*0.35,-s2,s2*0.7,s2*1.3);x.fillRect(-s2*0.6,s2*0.3,s2*0.35,s2*1.1);x.fillRect(s2*0.25,s2*0.3,s2*0.35,s2*1.1);x.restore();}
     G3.HALL.doors.forEach(d=>{if(d.big){dHatch(x,X,Z,ppm,d.x-d.w/2,d.x+d.w/2,17.4,19.5,"rgba(242,184,7,0.35)","rgba(30,30,30,0.4)");dTxt(x,X,Z,ppm,"KEEP CLEAR",d.x,18.45,0.5,"#ffffff");}
       else if(!d.open){x.fillStyle="rgba(255,255,255,0.8)";for(let zz=17.45;zz<19.4;zz+=0.45)x.fillRect(X(d.x-d.w/2),Z(zz),X(d.x+d.w/2)-X(d.x-d.w/2),0.22*ppm);}});
@@ -70,7 +71,7 @@
     dInst(new CylG(0.1,0.1,0.45,8),red,[[-8.3,1.2,-6.0],[-8.3,1.2,-20.0],[-34.1,1.2,-11.7],[-23.95,1.2,24.0],[-48.75,1.2,22.0],[-36,1.2,31.95]]);   // fire extinguishers on the walls
   }
   // machine hall: a cutaway shell, back and end walls only, so the machine stays in view
-  ribWall(66,5.2,0.3,31,2.6,2.4);ribWall(0.3,5.2,13.8,64,2.6,9.3);
+  ribWall(HALL.x1+2,5.2,0.3,(HALL.x1-2)/2,2.6,2.4);ribWall(0.3,5.2,13.8,HALL.x1,2.6,9.3);
   {const s=new THREE.Mesh(new THREE.PlaneGeometry(26,3.25),signMat);s.position.set(51,3.1,2.57);scene.add(s);
    const s2=new THREE.Mesh(new THREE.PlaneGeometry(13,1.62),signMat);s2.position.set(-21.2,2.55,-2.83);scene.add(s2);}
   // sawtooth roofs in galvanised sheet with wear (v20; they were the brand colour); they fade away as you zoom in
@@ -80,7 +81,7 @@
       const geo=new THREE.ExtrudeGeometry(s,{depth:z1-z0,bevelEnabled:false});const o=new THREE.Mesh(geo,m);o.position.set(x0+i*tw,y+0.07,z0);o.castShadow=true;g.add(o);edges(o,em,20);
       const glass=new THREE.Mesh(new THREE.PlaneGeometry(z1-z0-0.2,1.3),gl);glass.rotation.y=Math.PI/2;glass.position.set(x0+(i+1)*tw+0.07,y+0.87,(z0+z1)/2);g.add(glass);}
     g.userData.mats=[m,gl,em];scene.add(g);roofs.push(g);return g;}
-  box2(-34.4,-8,-23.5,-3);box2(-49,-23.8,14.8,32.2);skirt(-2,1.2,64,1.2,2.4);skirt(65.2,2.4,65.2,16.2,2.4);
+  box2(-34.4,-8,-23.5,-3);box2(-49,-23.8,14.8,32.2);skirt(-2,1.2,HALL.x1,1.2,2.4);skirt(HALL.x1+1.2,2.4,HALL.x1+1.2,16.2,2.4);
   sawRoof(-34.6,-7.85,-23.65,-2.85,WH);
   // v6.11.2: the roll warehouse's south wall (the one facing the camera) is a half wall in the cutaway: its top half belongs to the
   // roof group, so it lifts and fades with the roof (with its own copies of the materials, so no other wall fades with it)
@@ -89,7 +90,7 @@
   // paper machine hall: full building seen from the air (walls, window bands, sawtooth roof), gone as soon as you zoom in
   // v3.2.1: the tending side is widened from z 16.75 out to HALL.zf (20), east of the first bay; the west bay stays where it was
   // so it doesn't run into the warehouse. Doors: a big roll-up door to the food truck lawn and two personnel doors.
-  {const g=new THREE.Group(),HH=13.4,X0=-27.2,X1=64.3,Z0=2.25,Z1=16.75,ZA=-2.85,XA=-2.9,ZF=HALL.zf,XW=HALL.xw;
+  {const g=new THREE.Group(),HH=13.4,X0=-27.2,X1=HALL.x1,Z0=2.25,Z1=16.75,ZA=-2.85,XA=-2.9,ZF=HALL.zf,XW=HALL.xw;
     const wm=mat("g-wall",{transparent:true,roughness:0.7}),gl=mat("g-glass",{transparent:true,roughness:0.12,metalness:0.45}),em=new THREE.LineBasicMaterial({color:lin0("#1c2233"),transparent:true,opacity:0.35}),bm=mat("brand",{transparent:true,roughness:0.55,side:THREE.DoubleSide});
     const add=(o,e)=>{o.castShadow=true;o.receiveShadow=true;g.add(o);if(e)edges(o,em,20);return o;};
     const wall=(w,h,d,x,y,z)=>{const o=new THREE.Mesh(new THREE.BoxGeometry(w,h,d),wm);o.position.set(x,y,z);return add(o,true);};
@@ -118,7 +119,7 @@
 
     g.userData.mats=[wm,gl,em,bm,rm,g.userData.dk];g.userData.fade=[255,40];scene.add(g);roofs.push(g);}
   // close-up: a low ribbed base wall along the new tending-side line (so people use the doors), hatched thresholds and bollards at the doors
-  {const ZF=HALL.zf;let xa=HALL.xw;HALL.doors.forEach(d=>{const a=d.x-d.w/2;if(a-xa>0.05)ribWall(a-xa,1.1,0.3,(xa+a)/2,0.55,ZF);xa=d.x+d.w/2;});ribWall(64.3-xa,1.1,0.3,(xa+64.3)/2,0.55,ZF);
+  {const ZF=HALL.zf;let xa=HALL.xw;HALL.doors.forEach(d=>{const a=d.x-d.w/2;if(a-xa>0.05)ribWall(a-xa,1.1,0.3,(xa+a)/2,0.55,ZF);xa=d.x+d.w/2;});ribWall(HALL.x1-xa,1.1,0.3,(xa+HALL.x1)/2,0.55,ZF);
    const hc=document.createElement("canvas");hc.width=128;hc.height=16;{const x=hc.getContext("2d");x.fillStyle="#f2b807";x.fillRect(0,0,128,16);x.fillStyle="#1c2233";for(let k=-2;k<18;k++){x.beginPath();x.moveTo(k*8,16);x.lineTo(k*8+4,16);x.lineTo(k*8+12,0);x.lineTo(k*8+8,0);x.fill();}}
    const ht=new THREE.CanvasTexture(hc);ht.colorSpace=THREE.SRGBColorSpace;ht.wrapS=THREE.RepeatWrapping;
    HALL.doors.forEach(d=>{const t=ht.clone();t.needsUpdate=true;t.repeat.set(d.w/1.2,1);const th=new THREE.Mesh(new THREE.PlaneGeometry(d.w,0.45),new THREE.MeshBasicMaterial({map:t}));th.rotation.x=-Math.PI/2;th.position.set(d.x,0.055,ZF);scene.add(th);

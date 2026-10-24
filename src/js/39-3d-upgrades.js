@@ -19,12 +19,15 @@
   const walk=upg("safety",g=>{    [[-21.2,-2.6,26.4,0.5],[-36.4,14.4,25.2,0.5],[23,3.4,68,0.5],[23,15.6,68,0.5]].forEach(([x,z,w,d])=>box(w,0.03,d,M.warn,x,0.07,z,g,false));});
   // refiner upgrade: two large double-disc refiners in parallel off the chest-to-headbox stock line, each with its own motor
   const REF_MOTORS=[],REF_DOORS=[];   // v2.9.18: the twin refiners are standard equipment; the upgrade fits bigger motors
-  const refiner=upg("refiner",g=>{const X=60.6,ZS=[-14,-8];
+  // v6.12.1 approach system: the refiners moved from the yard behind the hall (X 60.6, z -14/-8) into the approach bay at the
+  // east end of the hall (22: HALL.x1 73.1), beside the headbox, straddling the machine centreline; doors open west into the
+  // service aisle by the headbox header. They now take thick stock from the machine chest pump and feed the fan pump (25).
+  const refiner=upg("refiner",g=>{const X=67.2,ZS=[6.5,12.5],ZM=9.5;
     ZS.forEach(z=>{box(7.2,0.45,3.4,M.steel,X+1.6,0.22,z,g);                                                              // skid
       const hg=new CylG(1.55,1.55,1.7,28);hg.rotateZ(Math.PI/2);const h=new THREE.Mesh(hg,M.brand);h.position.set(X,2.0,z);h.castShadow=true;g.add(h);   // disc housing
       {const fg=new CylG(1.7,1.7,0.18,28);fg.rotateZ(Math.PI/2);const f=new THREE.Mesh(fg,M.steel);f.position.set(X+0.95,2.0,z);g.add(f);}
       // v3.0.0: the door side (flange + gap adjuster) swings open on a hinge at its inner edge for plate changes
-      {const s=z<-11?1:-1,door=new THREE.Group();door.position.set(X-0.95,0,z+s*1.7);g.add(door);
+      {const s=z<ZM?1:-1,door=new THREE.Group();door.position.set(X-0.95,0,z+s*1.7);g.add(door);
        const fg=new CylG(1.7,1.7,0.18,28);fg.rotateZ(Math.PI/2);const f=new THREE.Mesh(fg,M.steel);f.position.set(0,2.0,-s*1.7);f.castShadow=true;door.add(f);
        box(1.4,1.0,1.6,M.steel,-0.65,1.5,-s*1.7,door);const ad=new THREE.Mesh(new CylG(0.28,0.28,1.0,12),M.ink);ad.position.set(-0.65,2.4,-s*1.7);door.add(ad);
        const face=new THREE.Mesh(new CylG(1.3,1.3,0.04,28).rotateZ(Math.PI/2),M.steel);face.position.set(X-0.87,2.0,z);face.visible=false;g.add(face);
@@ -41,14 +44,16 @@
       box(1.0,1.05,1.05,M.lane,X+2.2,2.0,z,g,false);
       [[-3.3,-1.5],[-3.3,1.5],[3.3,-1.5],[3.3,1.5]].forEach(([dx,dz])=>box(0.22,0.12,0.22,M.ink,X+1.6+dx,0.5,z+dz,g,false));
       box(0.5,0.5,0.5,M.ink,X-0.7,3.25,z,g,false);box(0.08,0.5,0.6,M.ok,X-0.97,3.25,z,g,false);
-      {const c=document.createElement("canvas");c.width=256;c.height=48;const x=c.getContext("2d");x.fillStyle="#ffffff";x.fillRect(0,0,256,48);x.fillStyle="#1c2233";x.font="800 24px system-ui,sans-serif";x.textAlign="center";x.fillText(z<-11?"REFINER A":"REFINER B",128,33);
+      {const c=document.createElement("canvas");c.width=256;c.height=48;const x=c.getContext("2d");x.fillStyle="#ffffff";x.fillRect(0,0,256,48);x.fillStyle="#1c2233";x.font="800 24px system-ui,sans-serif";x.textAlign="center";x.fillText(z<ZM?"REFINER A":"REFINER B",128,33);
        const t=new THREE.CanvasTexture(c);t.colorSpace=THREE.SRGBColorSpace;const pl=new THREE.Mesh(new THREE.PlaneGeometry(1.6,0.3),new THREE.MeshBasicMaterial({map:t}));pl.rotation.y=-Math.PI/2;pl.position.set(X-2.05,1.15,z);g.add(pl);
        box(0.1,1.0,0.1,M.steel,X-1.98,0.5,z,g,false);box(0.06,0.36,1.7,M.ink,X-1.99,1.15,z,g,false);}});
     const P=0.24;   // inlet header from the stock line, over and down into each housing; outlets back to the line
-    spool([[57,4.8,-11],[57.9,4.8,-11],[57.9,4.6,-11]],P,M.stock);spool([[57.9,4.6,-14],[57.9,4.6,-8]],P,M.stock);
-    ZS.forEach(z=>{spool([[57.9,4.6,z],[X,4.6,z],[X,3.55,z]],P,M.stock);spool([[X,0.7,z+(z<-11?1.55:-1.55)],[X,0.7,-11],[56.2,0.7,-11]],0.2,M.stock);});
-    // v3.3: refined stock rises from the outlet header and drops into the top of the machine chest
-    spool([[56.2,0.7,-11],[56.2,0.7,-10.2],[56.2,10.8,-10.2],[49.2,10.8,-10.2],[49.2,10.8,-13.6],[49.2,9.6,-13.6]],0.32,M.stock);
+    // v6.12.1: thick stock from the machine chest pump (25) comes over the back wall at x 64.5 and down to an inlet header
+    // in the service aisle; each refiner discharges into an outlet header between the two housings, which rises and runs
+    // back over the wall at x 67.2 to the fan pump suction on the old refiner pad (25)
+    const HX=X-2.7;spool([[HX,7.6,4.0],[HX,7.6,ZS[0]],[HX,4.6,ZS[0]]],P,M.stock);spool([[HX,4.6,ZS[0]],[HX,4.6,ZS[1]]],P,M.stock);
+    ZS.forEach(z=>{spool([[HX,4.6,z],[X,4.6,z],[X,3.55,z]],P,M.stock);spool([[X,0.7,z+(z<ZM?1.55:-1.55)],[X,0.7,ZM]],0.2,M.stock);});
+    spool([[X,0.7,ZM],[X,8.6,ZM],[X,8.6,4.0]],0.32,M.stock);
     });
   // v6.11 the steam box (an upgrade, 07k): a hood across the forming table just before the couch, with its 12 zone valves
   // on a manifold and the steam line in from the drive side

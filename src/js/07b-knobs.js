@@ -111,7 +111,7 @@ function knobSettle(id){const K=S.knob,x=K.x;x.bs=0;x.bk=0;K.H={};
 function knobTrig(id,cause,why){if(active(id))return false;const K=S.knob,e=EV[id];if(S.rng.knob==null)S.rng.knob=(S.seed^0x6b9f3c21)|0;
   const dur=(e.dur[0]+rand("knob")*(e.dur[1]-e.dur[0]))*durMul(id);
   const inc={id,left:dur,total:dur,real:performance.now(),note:"",knob:cause};
-  if(id==="refclash"){inc.billMul=0.5;inc.note="refiners down: the machine chest is running down";}   // (v6.9.2: no forward flow, 07g mcTick)
+  if(id==="refclash"){inc.billMul=0.5;inc.note="refiners down: the fan pump is starved of thick stock";}   // (v6.12.1: no thick stock to the fan pump, 07g mcTick)
   S.inc.push(inc);(S.evc||(S.evc={}))[id]=(S.evc[id]||0)+1;if(QINC(id))enqueue(id);S.lastInc=S.t;S.tot.incidents++;try{AUDIO.event(id);}catch(_){}
   BANNERS.push({text:why||e.head,t:null,id});while(BANNERS.length>3)BANNERS.splice(1,1);
   if(e.start&&id!=="refclash")e.start(inc);

@@ -27,7 +27,7 @@ const UPS=[
  {id:"shoe",g:"machine",name:"Shoe press",lv:[180e3],desc:"+100 fpm and 12% less energy per ton. A drier sheet into the dryers: about 16% more drying headroom."},
  {id:"winder",g:"machine",name:"Winder rebuild",lv:[285e3,520e3],desc:"+30 t/h winder speed and 40% fewer hayouts per level."},
  {id:"monitor",g:"machine",name:"Fabric & felt monitoring",lv:[220e3,150e3],desc:"Machine failures 40% rarer and fewer sheet breaks, per level."},
- {id:"refiner",g:"machine",name:"Refiner power upgrade",lv:[145e3],desc:"Bigger motors and drives (+30% rating) and new plates on the twin refiners between the chest and the headbox. Stronger bonding: $10/t less energy and chemicals."},
+ {id:"refiner",g:"machine",name:"Refiner power upgrade",lv:[145e3],desc:"Bigger motors and drives (+30% rating) and new plates on the twin refiners between the machine chest and the fan pump. Stronger bonding: $10/t less energy and chemicals."},
  {id:"fire",g:"machine",name:"Fire suppression",lv:[115e3],desc:"Dryer and bale yard fires 60% rarer and half as long."},
  {id:"pulper",g:"stock",name:"Pulper rotor upgrade",lv:[325e3,585e3],desc:"+25 t/h pulper capacity per level."},
  {id:"clean",g:"stock",name:"Screens & cleaners",lv:[80e3,80e3],desc:"+3 points of pulper yield and 40% fewer screen and cleaner breakdowns per level. Adds a second row of LC cleaners."},

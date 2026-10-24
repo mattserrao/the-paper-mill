@@ -32,7 +32,7 @@
     const DEF={
       balefire:[-14,-8.3,pallets,"heat",0],fleet:[-14,-15.2,forklift,"oil",Math.PI],roof:[-36,23.5,bucket,"roof",0],
       ragger:[10.5,-9.5,motor,"smoke",0],overflow:[22,-8,flange,"wet",0],hdblow:[27.5,-7.5,flange,"spray",0],lwplug:[9,-18.5,flange,"spray",0],lcplug:[26.6,-27,flange,"sand",0],
-      cscreen:[14.5,-27.5,pump,"shake",0],fscreen:[20,-27.5,pump,"rattle",0],refclash:[60.6,-6.6,pump,"shake",Math.PI/2],thkblow:[35,-9,flange,"spray",0],dye:[30.5,-6,glass,"dye",0],
+      cscreen:[14.5,-27.5,pump,"shake",0],fscreen:[20,-27.5,pump,"rattle",0],refclash:[67.2,14.9,pump,"shake",Math.PI/2],thkblow:[35,-9,flange,"spray",0],dye:[30.5,-6,glass,"dye",0],
       fabric:[48,15.6,hot,"hot",0],felt:[35,15.6,hot,"hot",0],slime:[42,15.6,streak,"slime",0],fogfan:[52,-4.5,motor,"smoke",0],
       shaft:[12,15.6,drive,"shake",0],dryerfire:[4,3.4,lint,"lint",0],wrap:[24,15.6,blade,"chatter",0],steamjoint:[14,3.4,flange,"steam",0],winderdown:[-22,16.5,motor,"hot",0],tiedrolls:[-17.6,16.4,blade,"chatter",0],
       boiler:[74,-7,pump,"smoke",0],permit:[null,-42,lint,"outfall",0],icedintake:[-30,-52.5,ice,"",0],brownout:[null,null,panel,"flicker",0]};

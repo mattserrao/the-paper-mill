@@ -57,7 +57,7 @@ function step(dt){
   {const t1=S.tank+fiberIn,cl=Math.max(0,t1-P.tankCap);S.tank=t1-cl;if(cl>0){pfW("spill",cl);WQ.clip+=cl;}WQ.fi+=fiberIn-cl;}
   // 5 paper machine
   const level=S.tank/P.tankCap*100, low=C.lowLevel.v;
-  const pmDn=mcTick(dt,M)?"machine chest low level, refiners down":M.pmDown,fromMc=!!M.refOut&&!vlvT("LV-104");   // v6.9.2: refiners down, the machine runs on what's in the machine chest (07g)
+  const pmDn=mcTick(dt,M)?"refiners down: no thick stock to the fan pump":M.pmDown,fromMc=false;   // v6.12.1: the refiners are after the machine chest now (07g); a clash starves the fan pump
   if(pmDn){ if(S.pm!=="incident"){ S.pm="incident"; S.lastDown=pmDn; } }
   else if(S.pm==="incident"){ if(level>8)rethread("after the shutdown"+(S.lastDown?" ("+S.lastDown+")":"")); else S.pm="down"; S.pmSpeed=Math.min(S.pmSpeed,P.minSpeed); }
   if(S.pm==="break"){if(working("brk"))S.breakLeft-=dt*leadRethread();S.tot.breakMin+=dt;if(S.breakLeft<=0&&level>8){S.pm="run";S.pmSpeed=Math.min(C.pmSp.v,P.minSpeed+300);}}

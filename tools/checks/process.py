@@ -27,9 +27,9 @@ dewatercheck.py, watercheck.py, windercheck.py, ordercheck.py, relcheck.py and r
   setpoint sold by area (v6.11.2; the v6.8 lightweight premium before), bale water in the pulper, and pressure drop -> rejects. Since v6.10 AUTO-LW
   (07g weTick) trims the basis weight setpoint down while ring crush is over 1.03 x spec, so the untouched weight sits a
   little under the grade's target and extra refining shows up mostly as a lighter sheet rather than more ring crush.
-- ref (v6.9.2): a refiner plate clash stops forward flow, the machine runs the machine chest down and trips on low level,
-  the stock chest isn't drawn while it does, and once the refiners are back the chest refills and the machine comes
-  back; "run on one refiner" ends the trip with the machine held at 75%; the relationship map has the new links.
+- ref (v6.9.2; v6.12.1 approach system): a refiner plate clash starves the fan pump: the machine runs on for a couple of
+  minutes, then the sheet breaks and it stays down until the refiners are back; the machine chest (upstream now) keeps
+  its level; "run on one refiner" ends the trip with the machine held at 75%; the relationship map has the new links.
 
 Usage: python3 process.py [index.html] [shot_prefix]"""
 # tier: default
@@ -533,21 +533,19 @@ def ref(pw):
     ev(f"({RUN})(60)")   # settle
     ev("()=>{__PM.S.feed.length=0}")
     r = ev("()=>{const S=__PM.S;S.cards.next=1e12;__PM.trigger('refclash');const i=S.inc.find(x=>x.id==='refclash');if(i){i.left=i.total=90;}return {inc:!!i,pm:S.pm,lvl:__PM.mcLvl()}}")
-    ok("a clash starts with the machine still running on the machine chest", r["inc"] and r["pm"] == "run", json.dumps(r))
+    ok("a clash starts with the machine still running (thick stock still in the lines)", r["inc"] and r["pm"] == "run", json.dumps(r))
     tr = ev(f"({RUN})(150)")
     lv = [x[1] for x in tr]
     first_down = next((i for i, x in enumerate(tr) if x[2] != "run" and x[4]), None)
-    ok("the machine chest runs down while the refiners are out", min(lv) <= 10.5, lv[:20])
-    ok("the machine trips on low level a few minutes after the clash (not at once)", first_down is not None and 2 <= first_down <= 15, json.dumps([first_down, tr[:16]])[:400])
-    dr = [x for x in tr if x[4] and x[2] == "run"]
-    ok("the stock chest isn't drawn while the machine runs on the machine chest", len(dr) < 2 or dr[-1][3] >= dr[0][3] - 0.01, dr[:6])
+    ok("the machine chest keeps its level (it's upstream of the refiners)", min(lv) >= 60, lv[:20])
+    ok("the sheet breaks a couple of minutes after the clash (not at once)", first_down is not None and 2 <= first_down <= 6, json.dumps([first_down, tr[:16]])[:400])
     back = next((i for i, x in enumerate(tr) if not x[4]), None)
     ok("the refiners come back after the repair", back is not None, tr[-3:])
     after = tr[back:] if back is not None else []
-    ok("the chest refills and the machine comes back (rethread)", any(x[1] >= 35 for x in after) and any(x[2] in ("run", "break") for x in after[5:]), json.dumps(after[:30])[:400])
+    ok("the machine comes back once the refiners are (rethread)", any(x[2] in ("run", "break") for x in after[5:]), json.dumps(after[:30])[:400])
     ok("the machine stays down while the refiners are out", all(x[2] != "run" for x in tr[first_down + 1:back]) if first_down is not None and back else False, tr[first_down:back][:10] if first_down else None)
     lg = ev("()=>__PM.S.feed.map(l=>l.text).join(' | ')")
-    ok("the trip and the restart are logged", "Machine chest low level" in json.dumps(lg) and "coming back up" in json.dumps(lg), str(lg)[-600:])
+    ok("the trip and the restart are logged", "Refiners down" in json.dumps(lg) and "coming back up" in json.dumps(lg), str(lg)[-600:])
     # the shortcut: run on one refiner until the outage
     ev(f"({RUN})(120)")
     r = ev("""()=>{const P=__PM,S=P.S;P.trigger('refclash');const i=S.inc.find(x=>x.id==='refclash');P.civApply({id:'refclash',kind:'up'},2);P.step(0.25);return {inc:S.inc.some(x=>x.id==='refclash'),fx:(S.fx||[]).map(f=>f.id)}}""")
@@ -557,8 +555,8 @@ def ref(pw):
     # the relationship map
     rm = ev("()=>__PM.RMX")
     keys = {(a, b2) for a, b2, *_ in rm["e"]}
-    need = [("chest", "refq"), ("refq", "mcLvl"), ("gap", "refq"), ("x:upsets", "refq"), ("kwh", "couchSol"), ("kwh", "rct"), ("lv104op", "refq")]
-    ok("relationship map: refiners fed from the stock chest, feeding the machine chest, the clash, and refining vs drainage", all(k in keys for k in need), [k for k in need if k not in keys])
+    need = [("chest", "mcLvl"), ("mcLvl", "refq"), ("refq", "hbc"), ("gap", "refq"), ("x:upsets", "refq"), ("kwh", "couchSol"), ("kwh", "rct"), ("lv104op", "mcLvl")]
+    ok("relationship map: stock chest -> machine chest -> refiners -> fan pump (v6.12.1), the clash, and refining vs drainage", all(k in keys for k in need), [k for k in need if k not in keys])
     ok("relationship map: refq is a tag in the SPOT column", "refq" in rm["tags"] and "refq" in rm["col"]["SPOT"])
     ok("relationship map: weight -> weight credit -> profit (sold by area, v6.11.2)", ("bw", "prem") in keys and ("prem", "profit") in keys and ("bwsp", "prem") not in keys)
     b.close()
