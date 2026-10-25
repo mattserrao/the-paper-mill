@@ -1000,6 +1000,7 @@ html.pm-boot #pmBoot{display:grid;place-content:center;justify-items:center;gap:
 .kzones{display:grid;grid-template-columns:repeat(12,1fr);gap:2px}.kz{display:flex;flex-direction:column;align-items:center;gap:1px}
 .kz button{padding:2px 0;width:100%;min-height:26px;font-size:11px;line-height:1}.kz b{font-size:12px;font-variant-numeric:tabular-nums}.kz small{color:var(--muted);font-size:10px}
 .kzcv canvas{width:100%;height:auto;border-radius:6px;display:block}
+.kcbox{width:100%;height:auto;border-radius:6px;display:block;margin:2px 0 8px}
 .dcsov{place-items:center;padding:10px;background:rgba(12,18,30,.55)}
 .dcs{background:#16233a;color:#dbe6f6;border:1px solid #2c3e5c;border-radius:12px;width:min(780px,100%);max-height:calc(100dvh - 20px);display:flex;flex-direction:column;overflow:hidden;box-shadow:0 18px 48px rgba(0,0,0,.4);font-size:13px}
 .dcsh{display:flex;align-items:center;gap:8px;padding:8px 10px;background:#0f1b2d;border-bottom:1px solid #2c3e5c;flex-wrap:wrap}

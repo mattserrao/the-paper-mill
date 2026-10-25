@@ -94,6 +94,7 @@
     ["Cleaners (HD, LC, lightweight)","Cone-shaped separators that spin out heavy dirt (high-density), sand (low-consistency) and light plastic and wax (lightweight)."],
     ["Consistency","How much fiber is in the water, as a percentage. Pulp is mostly water."],
     ["Couch pit","The pit under the end of the forming section that catches trimmed and broken sheet."],
+    ["Couch suction box","The vacuum box inside the suction couch roll, at the end of the forming section. One of the fiddly knobs: its angle (standard −6°) sets where the suction zone sits under the wire. Off its best position it seals worse, the couch vacuum falls and the sheet leaves the couch wetter, so the dryers burn more steam."],
     ["DCS","Distributed control system: the operator screens (SPOT, WET, DET, UTIL and WATER, plus QCS, PLAN and TREND in the same row) with live readings, alarms and trends."],
     ["Control loop (PV, SP, OP)","A controller that measures a process value (PV), compares it with its setpoint (SP) and moves a valve (its output, OP) to close the gap. MAN: the operator sets the output; AUTO: the controller does; CAS: another controller sets its setpoint."],
     ["PID tuning (Kc, Ti, Td)","How a controller reacts: Kc is its gain, Ti (minutes) how quickly the integral removes an offset, Td (minutes) how much it reacts to the rate of change. Too much gain rings; too little is lazy."],

@@ -1,5 +1,24 @@
 # Changelog
 
+## v6.12.1-t6 (2026-10-24): couch suction box, approach piping, felts, dryer catwalk (test build, test/v6.12.1)
+- New fiddly knob, the couch suction box (WET, a red station by the couch roll's tending side): the angle of the vacuum box
+  inside the suction couch roll, -15 to +15 degrees, standard and best -6. Off best the box seals worse: the couch vacuum
+  falls from 60 kPa with the square of the angle (35 kPa at +15) and couch solids with it (19 to 16.5 %), which carries on
+  to press solids, the water into the dryers and steam (49 to 55 t/h at +15). The box turns over about 8 minutes. Its
+  panel draws the roll from the tending side with the box where it is now (and a ghost where it's being turned to), a
+  degree scale and a vacuum gauge; readouts for couch vacuum, box position and couch solids. The steam culprit tracing
+  and the crew's knob tracing know it; old saves read it as standard.
+- Approach piping, three clear legs: the stock chest pump is a real pump at the stock chest's east outlet (an orphan pump
+  that sat off the line is gone), and its line goes straight up, east along z -10.2 and over the hall's back wall to the
+  refiners; the refiners' outlet comes back over the wall into the top of the machine chest; the machine chest pump feeds
+  the fan pump.
+- The machine screen (the domed vessel beside the fan pump) has a label.
+- Felts: each felt has its own texture with one seam line that comes round once per turn of the loop (was a band every
+  2.5 m); the pick-up felt and the 2nd press top felt now run the right way (their lower runs go with the sheet), and
+  their guide rolls turn with them.
+- The tending-side catwalk along the dryers and its stair are gone, so the dryers read from the camera; the crossover
+  bridge keeps a ladder up from the floor, and the operators' round walks the tending-side floor.
+
 ## v6.12.1-t5 (2026-10-24): rail bay, stock flow order, tail threading (test build, test/v6.12.1)
 - Receiving: the shed runs north to the rail spur (z -26.7, was -23.5) with an open rail bay in the north wall: a raised
   dock at car-floor height with bumpers, a dock plate and a ramp, a RAIL DOCK landing with the unloaded bales staged on

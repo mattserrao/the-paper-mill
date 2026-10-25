@@ -97,6 +97,7 @@
     {p:[58,5.6,zc],t:()=>{const D=G3.SLC;if(!D)return ["Headbox",""];const g=D.geo();return ["Headbox",G3.slcFix?"resetting the slice":"slice "+(12+3*D.v).toFixed(1)+" mm · wet line "+(g.lipX-g.wet).toFixed(1)+" m"];},cls:()=>!!G3.slcFix},
     {p:[47.6,12.4,-15.0],t:()=>["Machine chest",f0(mcLvlNow())+" %"]},
     {p:[63.5,3.6,-11],t:()=>["Fan pump",S.pm==="run"?"to the headbox":"idling"]},
+    {p:[61.2,5.2,-5.6],t:()=>["Machine screen",S.pm==="run"?"last check before the headbox":"idling"]},
     {p:[44,0.6,12.9],t:()=>["Base ply silo","white water under the wire"]},
     {p:[34.5,9.6,zc-1.5],t:()=>["Twin press",LV("shoe")?"shoe in 2nd press":"tandem bottom felt"]},
     {area:1,p:[10,8.4,zc],t:()=>[NAME+(S.pm==="run"?"":" · "+({break:"sheet break "+({reel:"at the reel",dryer:"before the dryers",press:"before the presses"}[S.brkType]||"")+(working("brk")?": rethreading":": crew on the way"),down:"no stock",full:"warehouse full",spools:"winder backed up",incident:S.M.pmDown||"down"}[S.pm]||"")),f0(S.pmSpeed)+" fpm · "+f1(S.rates.prod)+" t/h"],cls:()=>S.pm==="run"?"":"bad"},

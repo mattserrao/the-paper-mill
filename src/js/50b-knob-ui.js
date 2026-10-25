@@ -23,6 +23,10 @@ function knobCtl(id,where){const d=KNOBN[id],w=kEl("div","kctl"),key=where+"-"+i
       <label class="spis"><span>Trim</span><input type="range" min="-40" max="40" step="1" data-gt aria-label="Guide trim"/><b data-gtv>0 mm</b></label>`;
     w.querySelectorAll("[data-gm]").forEach(b=>b.addEventListener("click",()=>{knobSet("guide",{gm:+b.dataset.gm});kuiRefresh();}));
     w.querySelector("[data-gt]").addEventListener("input",e=>{knobSet("guide",{gt:+e.target.value});kuiRefresh();});}
+  else if(id==="cbox"){const d=KNOBN.cbox;w.innerHTML=`<canvas class="kcbox" width="340" height="215" data-cbcv aria-label="Couch roll cross-section: the suction box's position and the couch vacuum"></canvas>
+      <label class="spis"><span>${d.min}°</span><input type="range" min="${d.min}" max="${d.max}" step="${d.step}" data-kv aria-label="${d.name} angle"/><span>+${d.max}°</span></label>
+      <div class="kval"><b data-kvv></b><small>standard ${KNOB_IDEAL.cbox}°</small></div>`;
+    w.querySelector("[data-kv]").addEventListener("input",e=>{knobSet("cbox",+e.target.value);kuiRefresh();});}
   else if(id==="couch"){w.innerHTML=`<div class="seg kseg" role="group" aria-label="Couch pit agitator"><button type="button" data-cv="1">RUN</button><button type="button" data-cv="0">STOP</button></div>`;
     w.querySelectorAll("[data-cv]").forEach(b=>b.addEventListener("click",()=>{knobSet("couch",+b.dataset.cv);kuiRefresh();}));}
   else if(id==="incomer"){w.innerHTML=`<div class="seg kseg" role="group" aria-label="MCC main incomer"><button type="button" data-iv="1">CLOSED</button><button type="button" data-iv="0">OPEN</button></div>`;
@@ -37,6 +41,8 @@ function knobCtlSync(w){const id=w.dataset.k,K=S.knob;
   if(id==="zones"){const z=K?K.z:[];w.querySelectorAll("[data-zv]").forEach(b=>{const v=z[+b.dataset.zv]||0;b.textContent=(v>0?"+":"")+v;b.classList.toggle("moved",v!==0);});}
   else if(id==="guide"){const v=K?K.v:KNOB_IDEAL;w.querySelectorAll("[data-gm]").forEach(b=>b.setAttribute("aria-pressed",String(+b.dataset.gm===v.gm)));
     const r=w.querySelector("[data-gt]");if(actEl(r)!==r)r.value=v.gt;w.querySelector("[data-gtv]").textContent=(v.gt>0?"+":"")+v.gt+" mm";}
+  else if(id==="cbox"){const v=knobVal("cbox"),r=w.querySelector("[data-kv]");if(actEl(r)!==r)r.value=v;const b=w.querySelector("[data-kvv]");b.textContent=`${v>0?"+":v<0?"−":""}${Math.abs(v)}°`;b.classList.toggle("moved",!knobAt("cbox"));
+    cboxDraw(w.querySelector("[data-cbcv]"),v);}
   else if(id==="couch"){const v=knobVal("couch");w.querySelectorAll("[data-cv]").forEach(b=>b.setAttribute("aria-pressed",String(+b.dataset.cv===v)));}
   else if(id==="incomer"){const v=knobVal("incomer");w.querySelectorAll("[data-iv]").forEach(b=>b.setAttribute("aria-pressed",String(+b.dataset.iv===v)));}
   else if(id==="hood"){const v=knobVal("hood");w.querySelectorAll("[data-hv]").forEach(b=>b.setAttribute("aria-pressed",String(+b.dataset.hv===v)));}
@@ -48,6 +54,7 @@ function knobReadout(id,r){const R=(k,v)=>`<div><small>${k}</small><b>${v}</b></
     case "ref":return R("Energy",Math.round(r.kwh)+" kWh/t")+R("Plate gap",kf(r.gap,2)+" mm")+R("Refiner load",Math.round(r.refkw)+" kW")+R("Freeness",Math.round(r.csf)+" mL CSF");
     case "agit":return R("Agitator",r.agit+" %")+R("Machine chest",Math.round(r.mcLvl)+" %")+R("Chest consistency",kf(r.mcCons,2)+" %");
     case "vac":return R("Vacuum",kf(r.vac)+" kPa")+R("Couch solids",kf(r.couchSol)+" %");
+    case "cbox":return R("Couch vacuum",kf(r.cvac)+" kPa")+R("Box position",(r.cbox>0.05?"+":r.cbox<-0.05?"−":"")+kf(Math.abs(r.cbox))+"°")+R("Couch solids",kf(r.couchSol)+" %");
     case "press":return R("Nip load",Math.round(r.pl)+" kN/m")+R("After the presses",kf(r.pressSol)+" % solids");
     case "guide":return R("Fabric edge",(r.edge>=0?"+":"")+Math.round(r.edge)+" mm")+R("Guide travel used",r.gm?Math.round(Math.min(1,r.gtrav)*100)+" %":"manual");
     case "incomer":return R("Main breaker",knobVal("incomer")?"closed":"open")+R("480 V bus",Math.round(rlyLV())+" V")+R("Drive load",Math.round(rlyMccKw(r)).toLocaleString()+" kW");
@@ -58,6 +65,41 @@ function knobReadout(id,r){const R=(k,v)=>`<div><small>${k}</small><b>${v}</b></
     case "st1":return R("1st section",Math.round(r.st1)+" kPa")+R("3rd section (auto)",Math.round(r.st3)+" kPa")+R("Reel moisture",r.run?kf(r.moist)+" %":"–");
     case "zones":return R("Reel moisture",r.run?kf(r.moist)+" %":"–")+R("Zones trimmed",(S.knob?S.knob.z.filter(v=>v).length:0)+" of 12");}
   return "";}
+
+/* v6.12.1-t6 the couch suction box picture: the couch roll seen from the tending side, the fabric and sheet wrapping its
+   top (coming in from the forming table on the right, leaving for the pick-up on the left), the suction box inside the
+   shell drawn where it is now (the sim's lagged position; a ghost outline shows where it is being turned to), a degree
+   scale round the roll, and the couch vacuum on a gauge beside it */
+function cboxDraw(cv,set){if(!cv)return;const x=cv.getContext("2d"),W=cv.width,H=cv.height,K=S.knob,act=K&&K.x&&K.x.cb!=null?K.x.cb:CBOX.best,vac=cboxVac(act);
+  const cx=128,cy=122,R=58,D=Math.PI/180,ang=a=>-Math.PI/2-(26+a)*D;   // (screen angle of a box centre a degrees from standard-ish: 26 deg past top dead centre, toward the pick-up)
+  x.clearRect(0,0,W,H);x.fillStyle="#0f1b2d";x.fillRect(0,0,W,H);
+  // degree scale outside the roll: -15 .. +15
+  x.strokeStyle="#5d7392";x.fillStyle="#9ab3d6";x.font="600 10px system-ui,sans-serif";x.textAlign="center";x.lineWidth=1.5;
+  for(let a=-15;a<=15;a+=5){const t=ang(a),r0=R+10,r1=R+(a%15?15:19);x.beginPath();x.moveTo(cx+Math.cos(t)*r0,cy+Math.sin(t)*r0);x.lineTo(cx+Math.cos(t)*r1,cy+Math.sin(t)*r1);x.stroke();
+    if(a%15===0||a===0){const r2=R+29;x.fillText((a>0?"+":a<0?"−":"")+Math.abs(a)+"°",cx+Math.cos(t)*r2,cy+Math.sin(t)*r2+4);}}
+  // the roll: drilled shell
+  x.fillStyle="#2a3a52";x.beginPath();x.arc(cx,cy,R,0,7);x.fill();x.strokeStyle="#8d99ab";x.lineWidth=5;x.beginPath();x.arc(cx,cy,R-2,0,7);x.stroke();
+  x.fillStyle="#0f1b2d";for(let k=0;k<36;k++){const t=k/36*6.283;x.beginPath();x.arc(cx+Math.cos(t)*(R-2),cy+Math.sin(t)*(R-2),1.1,0,7);x.fill();}
+  // the suction box: a wedge inside the shell, with its seal strips
+  const box=(a,fill,stroke)=>{const t0=ang(a)-20*D,t1=ang(a)+20*D;x.beginPath();x.moveTo(cx+Math.cos(t0)*14,cy+Math.sin(t0)*14);x.arc(cx,cy,R-6,t0,t1);x.lineTo(cx+Math.cos(t1)*14,cy+Math.sin(t1)*14);x.closePath();
+    if(fill){x.fillStyle=fill;x.fill();}if(stroke){x.strokeStyle=stroke;x.lineWidth=1.5;x.setLineDash([4,3]);x.stroke();x.setLineDash([]);}
+    if(fill){x.strokeStyle="#ffb02e";x.lineWidth=4;[t0,t1].forEach(t=>{x.beginPath();x.moveTo(cx+Math.cos(t)*(R-14),cy+Math.sin(t)*(R-14));x.lineTo(cx+Math.cos(t)*(R-5),cy+Math.sin(t)*(R-5));x.stroke();});}};
+  if(Math.abs(set-act)>0.3)box(set,null,"#9ab3d6");
+  const k=clamp((vac-30)/32,0,1);box(act,`rgba(${Math.round(80+40*(1-k))},${Math.round(150+60*k)},${Math.round(220)},0.85)`);
+  // pointer on the scale at the box's centre
+  {const t=ang(act);x.fillStyle="#ffb02e";x.beginPath();x.moveTo(cx+Math.cos(t)*(R+9),cy+Math.sin(t)*(R+9));x.lineTo(cx+Math.cos(t+0.06)*(R+1),cy+Math.sin(t+0.06)*(R+1));x.lineTo(cx+Math.cos(t-0.06)*(R+1),cy+Math.sin(t-0.06)*(R+1));x.fill();}
+  // the fabric over the top: in from the table on the right, round the couch; the sheet leaves it
+  // past the suction zone for the pick-up felt (drawn going away down-left, clear of the scale)
+  {const tw=Math.PI/2+70*D;x.strokeStyle="#c9d4e2";x.lineWidth=3;x.beginPath();x.moveTo(W-112,cy-R-3);x.lineTo(cx,cy-R-3);x.arc(cx,cy,R+3,-Math.PI/2,-tw,true);x.stroke();
+   const sw=Math.PI/2+58*D,px=cx+Math.cos(-sw)*(R+6),py=cy+Math.sin(-sw)*(R+6);x.strokeStyle="#f3efe2";x.lineWidth=2;x.beginPath();x.moveTo(px,py);x.lineTo(px-30,py+42);x.stroke();
+   x.fillStyle="#9ab3d6";x.textAlign="left";x.fillText("from the table",W-170,cy-R-10);x.fillText("sheet to the pick-up",4,Math.min(H-6,py+56));}
+  // rotation arrow
+  x.strokeStyle="#5d7392";x.lineWidth=1.5;x.beginPath();x.arc(cx,cy,22,-0.6,-2.5,true);x.stroke();
+  // the vacuum gauge
+  const gx=W-58,gy=34,gh=150,vmax=70,lev=clamp(vac/vmax,0,1);x.fillStyle="#1b2a40";x.fillRect(gx,gy,22,gh);
+  x.fillStyle=vac>55?"#4fd18b":vac>45?"#ffb02e":"#ff7a8a";x.fillRect(gx,gy+gh*(1-lev),22,gh*lev);x.strokeStyle="#5d7392";x.strokeRect(gx,gy,22,gh);
+  x.fillStyle="#9ab3d6";x.textAlign="right";for(let v=0;v<=70;v+=10){const y=gy+gh*(1-v/vmax);x.fillRect(gx-4,y,4,1);if(v%20===0)x.fillText(String(v),gx-6,y+3);}
+  x.textAlign="center";x.fillStyle="#e8eef7";x.font="700 12px system-ui,sans-serif";x.fillText(kf(vac)+" kPa",gx+11,gy+gh+16);x.font="600 10px system-ui,sans-serif";x.fillStyle="#9ab3d6";x.fillText("VACUUM",gx+11,gy-8);}
 
 /* ---- the field knob panel (a small floating card, like the spider valve's) ---- */
 function knobPanel(){let p=$("knobP");if(p)return p;

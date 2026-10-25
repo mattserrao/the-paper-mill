@@ -45,12 +45,18 @@
   spool([[31.0,PH+2.85,-14.7],[26.4,PH+2.85,-14.7],[26.4,PH+2.85,-13.9],[26.4,3.0,-13.9]],0.16,M.ww);
   // thickened stock drops straight from the repulper hopper into the chest below
   spool([[38.4,PH-0.6,-11.45],[38.4,PH-1.3,-11.45],[36.2,PH-1.3,-13.2],[36.2,10.4,-13.2]],0.28,M.stock);
-  fieldPump(45,1,-11,-Math.PI/2);
   // v2.9.19: the stock line runs overhead (it used to lie on the ground and wall off the stock-prep yard)
-  // v6.12.1-t5: stock chest > stock chest pump (LV-104) > refiners (in the hall's approach bay, 39) > machine chest >
-  // machine chest pump > fan pump (behind the headbox) > machine screen > headbox. The stock line climbs to 7.6 m and runs
-  // east along z -9.8, then north over the back wall at x 66 to the refiners' inlet header
-  spool([[37.7,1,-12.1],[38.6,1,-11],[40,1,-11],[40,4.8,-11],[43.4,4.8,-11],[43.4,7.6,-11],[43.4,7.6,-9.8],[66.0,7.6,-9.8],[66.0,7.6,4.0]],0.32,M.stock);
+  // v6.12.1-t5/t6: stock chest > stock chest pump (LV-104) > refiners (in the hall's approach bay, 39) > machine chest >
+  // machine chest pump > fan pump (behind the headbox) > machine screen > headbox. Three legs, each on its own path:
+  // 1 the stock chest pump stands at the chest's east outlet (clear of the thickener platform's corner column) and sends
+  //   the stock straight up to 7.6 m, east along z -10.2 and north over the hall's back wall at x 66 to the refiners'
+  //   inlet header (39); 2 the refiners' outlet comes back over the wall at x 68.7 (8.6 m), out to z -13, up to 11.2 m and
+  //   west over the machine chest into its open top; 3 the machine chest pump to the fan pump suction (below)
+  {const X=41.2,Z=-10.2,k=1.2,g=pumpModel();g.scale.setScalar(k);g.position.set(X,0.25,Z);blob(X+0.4,Z,1.8);
+   {const c=document.createElement("canvas");c.width=256;c.height=48;const x=c.getContext("2d");x.fillStyle="#ffffff";x.fillRect(0,0,256,48);x.fillStyle="#1c2233";x.font="800 20px system-ui,sans-serif";x.textAlign="center";x.fillText("STOCK CHEST PUMP",128,33);
+    const t=new THREE.CanvasTexture(c);t.colorSpace=THREE.SRGBColorSpace;const pl=new THREE.Mesh(new THREE.PlaneGeometry(1.6,0.3),new THREE.MeshBasicMaterial({map:t}));pl.position.set(X+0.4,0.55,Z+0.65);scene.add(pl);}
+   spool([[38.2,1.15,-13.2],[38.2,1.15,Z],[X-0.95*k,1.15,Z]],0.26,M.stock);
+   spool([[X-0.7*k,2.17,Z],[X-0.7*k,7.6,Z],[66.0,7.6,Z],[66.0,7.6,4.0]],0.32,M.stock);}
   slab(44.2,52.8,-18.4,-7.6,M.slab,0.032);
   // machine chest (v6.12.1-t5): the same tiled, open-top concrete chest as the stock chest, at half its volume (the same
   // 10 m height, radius 4.2/sqrt 2), with a bridge agitator and a level gauge facing the camera. The level is the sim's
@@ -222,8 +228,13 @@
   const fc=document.createElement("canvas");fc.width=64;fc.height=4;const fx2=fc.getContext("2d");fx2.fillStyle="#fff";fx2.fillRect(0,0,64,4);fx2.fillStyle="#9a9a9a";fx2.fillRect(0,0,10,4);
   const feltTex=new THREE.CanvasTexture(fc);feltTex.wrapS=THREE.RepeatWrapping;feltTex.colorSpace=THREE.SRGBColorSpace;
   const feltMat=mat("g-felt",{map:feltTex,side:THREE.DoubleSide,flatShading:false,roughness:1});
-  function feltLoop(pts,lm=feltMat){const P2=[...pts,pts[0]],pos=[],uv=[],idx=[];let acc=0;
-    P2.forEach((p,i)=>{if(i)acc+=Math.hypot(p[0]-P2[i-1][0],p[1]-P2[i-1][1]);pos.push(p[0],p[1],-(CD-0.2),p[0],p[1],0);uv.push(acc/2.5,0,acc/2.5,1);if(i){const b=(i-1)*2;idx.push(b,b+1,b+2,b+1,b+3,b+2);}});
+  // v6.12.1-t6: each felt has its own texture, a plain felt with one seam line that comes round once per turn of the loop
+  // (u runs 0..1 round the loop: once=true); the forming fabric keeps the old pattern every 2.5 m. 43 moves each felt's
+  // texture by its own loop length, in its own direction (userData.dir: the press felts' lower runs go with the sheet)
+  function seamTex(h=4){const c=document.createElement("canvas");c.width=256;c.height=h;const x=c.getContext("2d");x.fillStyle="#fff";x.fillRect(0,0,256,h);x.fillStyle="#8a8a8a";x.fillRect(0,0,4,h);
+    const t=new THREE.CanvasTexture(c);t.wrapS=THREE.RepeatWrapping;t.colorSpace=THREE.SRGBColorSpace;t.userData.c=c;return t;}
+  function feltLoop(pts,lm=feltMat,once=false){const P2=[...pts,pts[0]],pos=[],uv=[],idx=[];let acc=0,L0=0;for(let i=1;i<P2.length;i++)L0+=Math.hypot(P2[i][0]-P2[i-1][0],P2[i][1]-P2[i-1][1]);const uk=once?1/L0:1/2.5;
+    P2.forEach((p,i)=>{if(i)acc+=Math.hypot(p[0]-P2[i-1][0],p[1]-P2[i-1][1]);pos.push(p[0],p[1],-(CD-0.2),p[0],p[1],0);uv.push(acc*uk,0,acc*uk,1);if(i){const b=(i-1)*2;idx.push(b,b+1,b+2,b+1,b+3,b+2);}});
     const g=new THREE.BufferGeometry();g.setAttribute("position",new THREE.Float32BufferAttribute(pos,3));g.setAttribute("uv",new THREE.Float32BufferAttribute(uv,2));g.setIndex(idx);g.computeVertexNormals();
     const m=new THREE.Mesh(g,lm);m.position.z=zc+CD/2-0.1;m.castShadow=true;m.receiveShadow=true;scene.add(m);
     {const acc2=[0];for(let i=1;i<P2.length;i++)acc2.push(acc2[i-1]+Math.hypot(P2[i][0]-P2[i-1][0],P2[i][1]-P2[i-1][1]));m.userData.path={pts:P2,acc:acc2,L:acc2[acc2.length-1],segs:P2.length-1};}
@@ -237,13 +248,12 @@
   // 1st press top felt
   // (v5.6: the pick-up felt is the 1st press top felt; it has its own felt texture so the knobs can paint oscillator
   // stripes into it, 40b-3d-knobs.js)
-  {const c=document.createElement("canvas");c.width=64;c.height=32;const x=c.getContext("2d");x.fillStyle="#fff";x.fillRect(0,0,64,32);x.fillStyle="#9a9a9a";x.fillRect(0,0,10,32);
-    const t=new THREE.CanvasTexture(c);t.wrapS=THREE.RepeatWrapping;t.colorSpace=THREE.SRGBColorSpace;G3.pfCanvas=c;G3.pfTex=t;
-    feltMeshes.push(feltLoop([[35.6,3.47],[38.4,3.47],[39.4,5.6],[39.2,7.1],[35.2,7.1],[34.9,5.6]],mat("g-felt",{map:t,side:THREE.DoubleSide,flatShading:false,roughness:1})));}[[39.4,5.6],[39.2,7.1],[35.2,7.1],[34.9,5.6]].forEach(p=>guide(...p));
+  {const t=seamTex(32);G3.pfCanvas=t.userData.c;G3.pfTex=t;
+    const m=feltLoop([[35.6,3.47],[38.4,3.47],[39.4,5.6],[39.2,7.1],[35.2,7.1],[34.9,5.6]],mat("g-felt",{map:t,side:THREE.DoubleSide,flatShading:false,roughness:1}),true);m.userData.dir=1;feltMeshes.push(m);}[[39.4,5.6],[39.2,7.1],[35.2,7.1],[34.9,5.6]].forEach(p=>{guide(...p);feltGuides[feltGuides.length-1].userData.s=-1;});
   // 2nd press top felt
-  feltMeshes.push(feltLoop([[30.5,3.47],[33.5,3.47],[34.2,6.1],[33.8,7.6],[30.3,7.6],[29.8,6.1]]));[[34.2,6.1],[33.8,7.6],[30.3,7.6],[29.8,6.1]].forEach(p=>guide(...p));
+  {const m=feltLoop([[30.5,3.47],[33.5,3.47],[34.2,6.1],[33.8,7.6],[30.3,7.6],[29.8,6.1]],mat("g-felt",{map:seamTex(),side:THREE.DoubleSide,flatShading:false,roughness:1}),true);m.userData.dir=1;feltMeshes.push(m);}[[34.2,6.1],[33.8,7.6],[30.3,7.6],[29.8,6.1]].forEach(p=>{guide(...p);feltGuides[feltGuides.length-1].userData.s=-1;});
   // tandem bottom felt: picks the sheet up off the wire and carries it through both nips
-  feltMeshes.push(feltLoop([[41.2,2.95],[38,3.32],[30.6,3.32],[29.6,2.4],[29.6,0.55],[40.6,0.55],[41.6,1.7]]));[[29.6,2.4],[29.6,0.55],[40.6,0.55],[41.6,1.7]].forEach(p=>guide(...p));
+  {const m=feltLoop([[41.2,2.95],[38,3.32],[30.6,3.32],[29.6,2.4],[29.6,0.55],[40.6,0.55],[41.6,1.7]],mat("g-felt",{map:seamTex(),side:THREE.DoubleSide,flatShading:false,roughness:1}),true);m.userData.dir=-1;feltMeshes.push(m);}[[29.6,2.4],[29.6,0.55],[40.6,0.55],[41.6,1.7]].forEach(p=>guide(...p));
   // press frames make the section stand out
   // v6.11 Blender redesign (tools/blender/press_new.py): press stands with bearing housings and top-loading cylinders, a felt-run
   // girder each side carrying the upper guide-roll bearings, pedestals under the lower guide rolls, sole plates, Uhle boxes,

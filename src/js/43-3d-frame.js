@@ -92,7 +92,7 @@
     // machine
     const pmRun=S.pm==="run";
     for(let i=0;i<cansTop.length;i++)cansTop[i].rotation.z=V.cans;for(let i=0;i<cansBot.length;i++)cansBot[i].rotation.z=-V.cans;canInst();if(G3.hoodTick)G3.hoodTick(rdt);
-    press[0].rotation.z=-V.cans*1.3;press[1].rotation.z=V.cans*1.3;press[2].rotation.z=-V.cans*1.15;press[3].rotation.z=V.cans*1.15;feltTex.offset.x=-(V.cans*0.35)%1;wireTex.offset.x=(V.cans*0.35)%1;feltGuides.forEach(g=>g.rotation.z=-V.cans*4);wireRolls.forEach(w=>w.rotation.z=V.cans*2.5);
+    press[0].rotation.z=-V.cans*1.3;press[1].rotation.z=V.cans*1.3;press[2].rotation.z=-V.cans*1.15;press[3].rotation.z=V.cans*1.15;feltTex.offset.x=-(V.cans*0.35)%1;for(let i=0;i<feltMeshes.length;i++){const f=feltMeshes[i],t=f.material.map;if(t&&f.userData.dir)t.offset.x=(f.userData.dir*V.cans*0.875/f.userData.path.L)%1;}   /* (v6.12.1-t6: per felt, one seam per turn, 25) */wireTex.offset.x=(V.cans*0.35)%1;feltGuides.forEach(g=>g.rotation.z=-V.cans*4*(g.userData.s||1));wireRolls.forEach(w=>w.rotation.z=V.cans*2.5);
     press.forEach((p,i)=>{p.material=LV("shoe")&&i===3?shoeMat:M.metal;});
     const rr=R0+(RM-R0)*Math.sqrt(clamp(S.reel/P.jumbo,0,1));reelUpdate(rdt,rr);
     if(Math.abs(nipPhi-sheetR)>0.02){sheetR=nipPhi;buildSheet(rr);}
