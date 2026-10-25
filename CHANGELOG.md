@@ -1,5 +1,25 @@
 # Changelog
 
+## v6.13.0-t3 (2026-10-25): QA fixes (test build, test/v6.13-steam-sheet)
+QA round: claude/qa-v613-t2.md (50 seasons + 50 survival against main). Decisions 2026-10-25.
+- **Broken syphon runs to the outage:** after the crew finds it (2 h of flooding) they valve the can off: it runs cold
+  (no steam, no drying, no condensate drag) and the other cans pick up its share until the next outage changes the
+  syphon. A second broken syphon with a can already out stops the machine to change both (the old behaviour). The IR
+  survey shows the valved-off can cold; "Broken syphon: cleared" is no longer logged for a can that's still out.
+- **Broke chest 150 t (was 60):** several hours of breaks. With the machine down and the chest nearly full, the trickle
+  back into the machine chest now stops once the furnish is 30% broke (B1: a long stop took it to 88-91%).
+- **Every break in the break log (B3):** knob breaks (draw, couch, vacuum, crush, too wet, too dry), the machine chest
+  running empty, the silo's fan pump cavitating and the spider are now logged with their cause, so the BRK screen covers
+  all of them (2 runs in the QA had up to 39% missing).
+- **Where breaks happen:** the base split is now press 35% / dryers 40% / reel 25% (was 20 / 35 / 45): most breaks on a
+  linerboard machine are at the press and in the open draws.
+- **Hood humidity ceiling (B2):** 450 g/kg (a dew point near 80 °C); a starved exhaust had run it to 631 g/kg and 2.7x
+  the steam. The drips carry the rest of the penalty.
+- **A faster sim:** the steam model now steps once a sim minute (its time constants are minutes), and the break risk is
+  worked out once a step for the sim, the tags and the screens. Sim cost over main: about +5% (t2: about +20%).
+- Checks: steamsheet (the syphon is valved off; a second one stops the machine), process (the steady white water chest
+  may still be filling back to its overflow from the snapshot). QA harness `tools/balance/qa_v613.py`.
+
 ## v6.13.0-t2 (2026-10-25): Steam and Sheet (test build, test/v6.13-steam-sheet)
 Plan: claude/v613-steam-sheet-plan.md. Season, survival and free play; zen keeps its simple model.
 - **Dryer cans and the steam and condensate cascade (07m):** the 20 cans (1st section 1-6, 2nd 7-12, 3rd 13-20) each

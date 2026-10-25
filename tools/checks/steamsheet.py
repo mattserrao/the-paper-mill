@@ -43,11 +43,13 @@ def sim(pw):
     ok("PDC-304 fixed high: steam blows through to the condenser, condensate return falls, it costs", hi["mx"]["waste"] > 0.3 and hi["mn"]["ret"] < 0.845 and hi["energy"] / 120 > base["energy"] / 180, json.dumps({"waste": hi["mx"]["waste"], "ret": hi["mn"]["ret"], "e/min": [hi["energy"] / 120, base["energy"] / 180]}))
     lo = R("P.G3.vlv.setSP('PDC-304',12);", 120, "{fl:G.steam.flooded()}")
     ok("PDC-304 fixed under what the speed needs: cans flood", lo["mx"]["fl"] > 1, lo["mx"]["fl"])
-    sy = R("P.trigger('syphon');", 150, "{inc:S.inc.map(i=>i.id),pmd:S.M.pmDown,ir:(G.steam.ir(),S.stm.ir.c.slice())}")
+    sy = R("P.trigger('syphon');", 150, "{inc:S.inc.map(i=>i.id),pmd:S.M.pmDown,pm:S.pm,cold:S.stm.cold,ir:(G.steam.ir(),S.stm.ir.c.slice())}")
+    sy2 = R("S.stm.cold=3;P.trigger('syphon');", 150, "{pmd:S.M.pmDown,inc:S.inc.map(i=>i.id)}")
     sy60 = R("P.trigger('syphon');", 60, "{can:S.inc.find(i=>i.id==='syphon').can,ir:(G.steam.ir(),S.stm.ir.c.slice()),fl:S.stm.fl.slice()}")
     cold = sy60["ir"][sy60["can"]]; others = [v for j, v in enumerate(sy60["ir"]) if j != sy60["can"] and abs(j - sy60["can"]) > 0 and (j < 12) == (sy60["can"] < 12)]
     ok("broken syphon: its can floods and the IR survey shows it cold", sy60["fl"][sy60["can"]] > 0.9 and cold < min(others) - 20, json.dumps({"can": sy60["can"], "cold": cold, "others": min(others) if others else None}))
-    ok("broken syphon: after about 2 h the crew stops the machine to change it", sy["pmd"] == "syphon change" or any("syphon" in f.lower() for f in sy["feed"]), json.dumps({"pmd": sy["pmd"], "inc": sy["inc"]}))
+    ok("broken syphon: after about 2 h the crew valves the can off and runs on to the outage", sy["pmd"] != "syphon change" and sy["cold"] >= 0 and sy["ir"][sy["cold"]] < min(sy["ir"]) + 1 and any("valved off" in f for f in sy["feed"]) and not any("Broken syphon: cleared" in f for f in sy["feed"]), json.dumps({"pmd": sy["pmd"], "cold": sy["cold"], "inc": sy["inc"], "feed": [f for f in sy["feed"] if "yphon" in f or "valved" in f][:3]}))
+    ok("a second broken syphon with a can already valved off stops the machine to change both", sy2["pmd"] == "syphon change", json.dumps(sy2))
     # ---- the hood and the machine room ----
     ex = R("P.G3.steam.setFan('exh',40);", 180, "{}")
     ok("too little hood exhaust: humid hood, condensate drips, beater spots, more break risk", ex["mx"]["H"] > 200 and ex["mx"]["drip"] > 0.3 and ex["off"] > 0.5 and ex["mx"]["R"] > 1.2, json.dumps({"H": ex["mx"]["H"], "drip": ex["mx"]["drip"], "off": ex["off"], "R": ex["mx"]["R"]}))

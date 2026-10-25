@@ -30,7 +30,7 @@ const EVENTS=[
    start:i=>{const W=2*C.rollW.v,a=Math.min(S.winderAcc,W),b=Math.min(S.winderBuf,W-a),q=a+b;S.winderAcc-=a;S.winderBuf-=b;lotTake(S.lots.acc,a);lotTake(S.lots.buf,b);
      i.q=q;i.note=`${q.toFixed(1)} t of rolls to the beater`;},
    end:i=>{if(!(i.q>0))return;S.tot.beater=(S.tot.beater||0)+2*C.rollW.v;S.tot.beatRolls=(S.tot.beatRolls||0)+2;S.q.bank+=i.q;S.tot.broke+=i.q;pfW("broke",i.q);S.tot.tied=(S.tot.tied||0)+1;i.q=0;}},
- {id:"syphon",g:"machine",stream:"syph",name:"Broken syphon",head:"A dryer can's syphon broke: the can is filling with condensate and running cold. The sheet comes off wetter and the dryer drive is working harder.",dur:[210,270],mtbf:260,mods:{},fx:"syphon",start:i=>stmSyphonStart(i),end:()=>stmSyphonEnd()},   // v6.13 (07m): floods while running for STM.syFind min, then the crew finds it and stops for the change
+ {id:"syphon",g:"machine",stream:"syph",name:"Broken syphon",head:"A dryer can's syphon broke: the can is filling with condensate and running cold. The sheet comes off wetter and the dryer drive is working harder.",dur:[210,270],mtbf:260,mods:{},fx:"syphon",start:i=>stmSyphonStart(i),end:i=>stmSyphonEnd(i)},   // v6.13 (07m): floods while running for STM.syFind min, then the crew valves the can off until the outage (a second one with a can already out: stop and change both)
  {id:"steamjoint",g:"machine",name:"Steam joint leak",head:"A dryer steam joint blew out on the drive side! Sheet off back to the wet end until maintenance repacks it.",dur:[150,270],mtbf:320,mods:{pmDown:"steam joint leak"},fx:"steamjoint"},
  {id:"boiler",g:"machine",name:"Boiler trip",head:"The boiler tripped! No steam for the dryers. Machine down.",dur:[90,180],mtbf:260,mods:{pmDown:"no steam"},fx:"boiler"},
  {id:"permit",g:"stock",name:"Wastewater permit exceeded",head:"Effluent over the permit limit! The state fines the mill and stock prep throttles back.",dur:[180,300],mtbf:380,mods:{feedMul:0.7},fx:"permit"},
@@ -148,7 +148,7 @@ function chaosTick(dt){
   rlyElecTick(dt);   // v6.10: the electrical tech's job (07i)
   for(const i of S.inc){if(QINC(i.id)&&!working(i.id))continue;if(MNEED(i.id)&&!i.mGo)continue;if(ENEED(i.id)&&!i.eGo)continue;const w=QINC(i.id)||MNEED(i.id)||ENEED(i.id);if(w)i.go=true;i.left-=dt*(w?repRate()*leadRep()*civRepair()*(MNEED(i.id)?manRep():1):1);}
   for(const i of S.inc)if(i.left<=0){if(EV[i.id].end)EV[i.id].end(i);shOnEnd(i.id);}   // (v6.13: new clothing starts clean of stickies, 07n)
-  for(const i of S.inc)if(i.left<=0)log(`${EV[i.id].name}: cleared, back to normal`,"ok");
+  for(const i of S.inc)if(i.left<=0&&!i.noClr)log(`${EV[i.id].name}: cleared, back to normal`,"ok");
   // (v4.1 pass 7: compacted in place and counted with a loop: this runs every sim step, and the two filters made new arrays each time)
   {let w=0;for(let k=0;k<S.inc.length;k++){const i=S.inc[k];if(i.left>0)S.inc[w++]=i;}S.inc.length=w;}
   // v3.3.3: two upsets already running make a third 75% less likely; back to normal once they clear

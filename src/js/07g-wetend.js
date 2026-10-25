@@ -140,7 +140,7 @@ function weFlow(dt,u){const W=weState(),h=dt/60,F=W.f,run=S.pm==="run"&&u>0;
   return W.L-L0+(vlvT("LV-202")?S.vlv.acc.dL||0:0);}
 // a sheet break from the fan pump cavitating (no dice: a fixed rethread at the wet end)
 function weBreak(){if(S.pm!=="run")return;S.pm="break";S.brkType="press";S.breakLeft=2*36;S.breakTotal=S.breakLeft;S.tot.breaks++;enqueue("brk");AUDIO.sfx("snap",2500);
-  log("Sheet break at the wet end: the white water silo ran low and the fan pump cavitated.","warn");brkNote();}
+  log("Sheet break at the wet end: the white water silo ran low and the fan pump cavitated.","warn");brkNote();brLog1("press","stock");}
 // the BW loop from the DCS (50d)
 function bwSetMode(m){if(S.zen)return;const W=weState();if(m===W.m)return;
   if(m==="auto"){const sp=Math.max(S.pmSpeed,P.minSpeed*0.5),c0=W.c;W.c=1;const base=weValveAuto(sp);W.c=clamp(base>0?W.v/base:c0,0.5,1.6);}   // (bumpless: the trim takes over where the valve is)

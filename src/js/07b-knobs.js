@@ -155,10 +155,11 @@ function knobTrig(id,cause,why){if(active(id))return false;const K=S.knob,e=EV[i
   if(e.start&&id!=="refclash")e.start(inc);
   const bill=(REPAIR[id]||0)*P.repairMul*(inc.billMul||1);if(bill>0){spend(bill,"repairs");inc.bill=bill;inc.note=(inc.note?inc.note+" · ":"")+`repair bill ${money(bill)}`;}
   log((why||e.head)+(inc.note?` (${inc.note})`:""),"bad");K.inc.push({id,real:inc.real,cause});S.M=mods();return true;}
+const KBC={draw:"draw",agit:"stock",vac:"cloth",crush:"cloth",wet:"dry",dry:"dry"};   // (v6.13 t3: each knob break's cause in the break log, 07n BRKN)
 // a knob-caused sheet break (no dice from the break stream: those keep their place for the random breaks)
-function knobBreak(type,why){if(S.pm!=="run")return false;S.pm="break";S.brkType=type;const r=rand("knob");
+function knobBreak(type,why,ck){if(S.pm!=="run")return false;S.pm="break";S.brkType=type;const r=rand("knob");
   S.breakLeft=2*(type==="reel"?4+r*6:type==="dryer"?12+r*14:26+r*20);S.breakTotal=S.breakLeft;S.tot.breaks++;enqueue("brk");AUDIO.sfx("snap",2500);
-  log(why,"warn");brkNote();return true;}
+  log(why,"warn");brkNote();brLog1(type,ck||"stock");return true;}
 // a break before the presses dumps the whole sheet into the couch pit: with the agitator off, settled fiber lets it overflow
 function knobCouch(){const K=S.knob;if(!K||S.zen||S.brkType!=="press"||K.cs<0.5||active("couchpit"))return;
   if(knobTrig("couchpit",["couch"],"Couch pit overflow! Broke from the sheet break is pouring over the pit edge onto the machine floor."))S.breakLeft+=60;}
@@ -229,7 +230,7 @@ function knobTick(dt){const K=S.knob;if(!K||!K.any||S.zen)return;
   K.feed=x.cp<4?clamp(x.cp/4,0.5,1):1;
     K.brk=1+Math.max(0,x.fr-0.6)*4;   // (v6.12.1-t7: the slack-draw breaks are in mods(), 04: drawBrk(), against the draw the speed needs)
   // ---- consequences: breaks (deterministic: a hazard builds and the sheet goes when it is full) ----
-  const haz=(k,rate,type,why,hk)=>{if(rate<=0){H[k]=Math.max(0,(H[k]||0)-dt/120);return;}H[k]=(H[k]||0)+dt/60*rate;if(H[k]>=1&&run){H[k]=0;knobBreak(type,why);const h=hk||k;(K.harm[h]||(K.harm[h]={t:0,n:0})).n++;}};
+  const haz=(k,rate,type,why,hk)=>{if(rate<=0){H[k]=Math.max(0,(H[k]||0)-dt/120);return;}H[k]=(H[k]||0)+dt/60*rate;if(H[k]>=1&&run){H[k]=0;knobBreak(type,why,KBC[k]);const h=hk||k;(K.harm[h]||(K.harm[h]={t:0,n:0})).n++;}};
   haz("draw",x.dt*3,"dryer","Sheet break in the open draw: the sheet snapped going into the dryers.");
   haz("agit",x.sw>0.7?(x.sw-0.7)*4:0,"press","Sheet break at the wet end: a heavy spot in the sheet tore at the couch.");
   haz("vac",x.vac<15?(15-x.vac)/10*1.5:0,"press","Sheet break at the wet end: the sheet left the couch too wet to hold together.");

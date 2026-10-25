@@ -29,12 +29,12 @@
    Seasons, survival and free play; zen keeps the plain dryer model. No dice except the upset's own stream. ---- */
 const STM={cans:20,sec:[[0,6],[6,12],[12,20]],share:[0.25,0.30,0.45],need0:[5,14,23],needK:4,spRef:2632,margin:12,dpMax:80,
   flSpan:15,flUp:10,flDn:5,drvK:1.5,bt0:0.03,btK:0.004,btWaste:0.15,tcK:60,
-  H:160,Hhi:200,Hdrip:215,Hlo:120,exhAuto:75,supK:0.95,air:0.12,hrK:0.55,ret:0.85,fuelK:0.25,hum0:55,humWet:7,fogUp:15,
+  H:160,Hhi:200,Hmax:450,tick:1,Hdrip:215,Hlo:120,exhAuto:75,supK:0.95,air:0.12,hrK:0.55,ret:0.85,fuelK:0.25,hum0:55,humWet:7,fogUp:15,
   irStale:24*60,irUnknown:72*60};
 const stmOn=()=>!!(S&&!S.zen);
 const STMN=["1st","2nd","3rd"];
 function stmState(){if(!S.stm)S.stm={dp:[15,25,35],fl:new Array(STM.cans).fill(0),bt:[0,0,0],waste:0,H:STM.H,exh:STM.exhAuto,sup:STM.exhAuto*STM.supK,exhM:"auto",supM:"auto",
-    exhSp:STM.exhAuto,supSp:STM.exhAuto*STM.supK,hum:62,ret:STM.ret,mk:0,air:0,drip:0,roof:0,ir:null,syph:-1,sp4:null,kpi:{st:0,kwh:0,usd:0}};return S.stm;}
+    exhSp:STM.exhAuto,supSp:STM.exhAuto*STM.supK,hum:62,ret:STM.ret,mk:0,air:0,drip:0,roof:0,ir:null,syph:-1,cold:-1,sp4:null,kpi:{st:0,kwh:0,usd:0}};return S.stm;}
 // the ΔP each section needs at this speed, and what AUTO schedules (need + margin)
 const stmNeed=(i,sp)=>Math.max(3,STM.need0[i]+STM.needK*((sp??(S.pm==="run"?S.pmSpeed:C.pmSp.v))-STM.spRef)/300);
 const stmAuto=(i,sp)=>stmNeed(i,sp)+STM.margin;
@@ -43,7 +43,7 @@ const stmSp=()=>{const T=S.stm;return T&&T.sp4!=null?T.sp4:stmAuto(2);};
 // the thermocompressor's reach: the motive hand valve (the knob) caps the 3rd section's ΔP
 const stmTcMax=()=>STM.tcK*Math.pow(knobVal("tcv")/100,1.5);
 // what flooded cans take off the drying (0 = none) and the demand factor that follows; the hood's slow drying on top
-function stmLost(){const T=S.stm;if(!T||!stmOn())return 0;let l=0;for(let s=0;s<3;s++){const [a,b]=STM.sec[s],w=STM.share[s]/(b-a);for(let j=a;j<b;j++)l+=w*T.fl[j];}return Math.min(0.6,l);}
+function stmLost(){const T=S.stm;if(!T||!stmOn())return 0;let l=0;for(let s=0;s<3;s++){const [a,b]=STM.sec[s],w=STM.share[s]/(b-a);for(let j=a;j<b;j++)l+=w*(j===T.cold?1:T.fl[j]);}return Math.min(0.6,l);}
 function stmDemF(){if(!stmOn()||!S.stm)return 1;const H=S.stm.H,h=H>STM.Hhi?1+0.004*(H-STM.Hhi):1;return h/(1-stmLost());}
 // flooded can count (a can over half full counts), for the screens
 const stmFlooded=()=>S.stm?S.stm.fl.filter(f=>f>0.5).length:0;
@@ -54,11 +54,13 @@ const stmDrvAdd=()=>stmOn()?STM.drvK*stmFloodSum():0;
 const stmPrice=()=>{const wpt=dryWpt()*DRY.stPerW;return wpt>0?Math.max(0,energyCostT()-pfChemT())/wpt:0;};
 // the shell temperature of can j (°C): its section's steam saturation, less what a flooded can loses
 function stmShell(j){const T=S.stm,s=j<6?0:j<12?1:2,D=S.dry,run=S.pm==="run",p=s===0?knobVal("st1"):s===1?(D?D.st3*0.8:96):(D?D.st3:120);
-  const sat=100+0.27*Math.max(0,p)-0.00035*p*p,f=T?T.fl[j]:0;return run||S.pm==="break"?sat-55*f:45;}
+  const sat=100+0.27*Math.max(0,p)-0.00035*p*p,f=T?(j===T.cold?1:T.fl[j]):0;return run||S.pm==="break"?sat-55*f:45;}
 
 // a can's shell temperature with nothing wrong (its section's steam), for the survey's "cold can" call
 function stmShellStd(j){const T=S.stm,f=T?T.fl[j]:0;return stmShell(j)+55*f;}
-function stmTick(dt){if(!stmOn())return;const T=stmState(),run=S.pm==="run",D=S.dry||dryState(),h=dt/60;
+function stmTick(dt0){if(!stmOn())return;const T=stmState();
+  // (v6.13 t3: once a sim minute with the minute's dt: the steam side's time constants are minutes, and every step cost 15% of the sim)
+  T.acc=(T.acc||0)+dt0;if(T.acc<STM.tick-1e-9)return;const dt=T.acc;T.acc=0;const run=S.pm==="run",D=S.dry||dryState(),h=dt/60;
   // ---- ΔP per section: AUTO's schedule; PDC-304 (the valve model, 07h) once touched; the hand valve's cap ----
   const cap=stmTcMax();
   for(let s=0;s<3;s++){let tgt=s===2?Math.min(stmSp(),cap):stmAuto(s);
@@ -80,7 +82,7 @@ function stmTick(dt){if(!stmOn())return;const T=stmState(),run=S.pm==="run",D=S.
   if(T.exhM==="auto"){const need=evap>0?evap*1000/(STM.H-Hin)/A0*100:STM.exhAuto*0.4;T.exhSp=clamp(need*(fog?1+STM.fogUp/100:1),20,100);}
   if(T.supM==="auto")T.supSp=T.exhSp*STM.supK;
   T.exh=ease(T.exh,T.exhSp,dt,2);T.sup=ease(T.sup,T.supSp,dt,2);
-  const A=Math.max(1e-6,A0*T.exh/100);T.H=evap>0?Hin+evap*1000/A:Hin+8;
+  const A=Math.max(1e-6,A0*T.exh/100);T.H=Math.min(STM.Hmax,evap>0?Hin+evap*1000/A:Hin+8);   /* (v6.13 t3: near saturation at hood temperature; the drips carry the rest) */
   T.drip=run?clamp((T.H-STM.Hdrip)/40,0,1):0;
   // machine room humidity: the hood's spill (supply over exhaust), the wet end's vapour, the fog fan (exhaust raised for it on AUTO)
   const spill=Math.max(0,(T.sup-T.exh)/Math.max(1,T.exh)),hum=STM.hum0+(run?STM.humWet:STM.humWet*0.4)+spill*120+(fog?24-(T.exhM==="auto"?10:0):0);
@@ -102,7 +104,7 @@ function stmTick(dt){if(!stmOn())return;const T=stmState(),run=S.pm==="run",D=S.
 // the dew point (°C) of air at H g water / kg dry air (Magnus, at 1 atm)
 function stmDew(H){const x=Math.max(0.001,H/1000),pw=1013.25*x/(0.622+x),l=Math.log(pw/6.112);return 243.04*l/(17.625-l);}
 // the supply air's own humidity (g/kg): outdoor air by site
-const stmHin=()=>({swamp:14,desert:4,urban:8,rural:7})[SITE.env]||8;
+const STMHIN={swamp:14,desert:4,urban:8,rural:7},stmHin=()=>STMHIN[SITE.env]||8;
 const stmHin0=()=>8;
 // the mill's electric load now (kW): the drives at their load and the balance of plant (07i pwrTick, without billing)
 function stmKw(){const r=knobRead();let v=0;for(const A of ASSETS)v+=Math.max(0,rlyLoad(A.id,r))/100*rlyKw(A.id);return v+pwrBop();}
@@ -117,7 +119,15 @@ const stmIrAge=()=>S.stm&&S.stm.ir?S.t-S.stm.ir.t:Infinity;
 // the broken syphon upset: which can (the upset's own dice), and what it does when it runs (EV.syphon, 04)
 function stmSyphonStart(i){const T=stmState();if(S.rng.syph==null)S.rng.syph=(S.seed^0x1b873593)|0;i.can=6+Math.floor(rand("syph")*14);T.syph=i.can;
   i.note=`can ${i.can+1} (${STMN[i.can<12?1:2]} section) flooding`;}
-function stmSyphonEnd(){const T=S.stm;if(T)T.syph=-1;}
-// the upset's phases: the can floods while the machine runs; after STM.syFind minutes the crew finds it and stops for the change
+// the upset's phases: the can floods until the crew finds it (STM.syFind min). The first broken syphon is valved off: the can
+// runs cold (no steam, no drying, no condensate) until the next outage changes it. A second one with a can already out is too
+// much drying lost: the machine stops and both syphons are changed. (v6.13 t3: was always a stop)
 STM.syFind=120;
-function stmSyphonMods(i){const run=i.total-i.left;return run>=STM.syFind?{pmDown:"syphon change"}:{};}
+function stmSyphonEnd(i){const T=S.stm;if(!T)return;const c=T.syph;T.syph=-1;if(!i||!i.found)return;
+  if(i.both){T.cold=-1;return;}
+  if(!((T.cold??-1)>=0)&&c>=0){T.cold=c;i.noClr=true;log(`Can ${c+1} valved off: the crew shut its steam and condensate. It runs cold until the outage changes the syphon; the other cans pick up its drying.`,"warn");}}
+function stmSyphonMods(i){const T=S.stm,run=i.total-i.left;if(run<STM.syFind)return {};
+  if(!i.found){i.found=true;i.both=!!(T&&T.cold>=0);if(!i.both)i.left=Math.min(i.left,1);}
+  return i.both?{pmDown:"syphon change"}:{};}
+// the outage changes the valved-off can's syphon
+function stmOutage(){const T=S.stm;if(T&&T.cold>=0){log(`Outage: the syphon in can ${T.cold+1} was changed; the can is back on steam.`,"ok");T.cold=-1;}}

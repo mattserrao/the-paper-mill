@@ -24,7 +24,7 @@
    and hood). The dice still say when; R (times RCAL, so a hands-off mill breaks as often as v6.12 on average) says how
    likely, and the contributors say where. Seasons, survival and free play; zen keeps the plain model. ---- */
 const HB={jw0:0.985,jwMin:0.965,jwMax:1.005,b0:12,bK:3};
-const SH={stfiSpec:0.95,tsr0:1.6,tsrD:400,tsrR:300,dep0:40,depG:6,depC:0.15,bkCap:60,bkHi:0.7,bkLim:0.20,turnP:0.012,nip0:2,hard0:60,hardK:12,
+const SH={stfiSpec:0.95,tsr0:1.6,tsrD:400,tsrR:300,dep0:40,depG:6,depC:0.15,bkCap:150,bkTrk:0.30,bkHi:0.7,bkLim:0.20,turnP:0.012,nip0:2,hard0:60,hardK:12,
   rcal:1};
 const STFI0={"24":2.6,"28":2.9,"31":3.25,"34Super":3.6};   // kN/m at the grade's target weight and standard refining
 const shOn=()=>!!(S&&!S.zen);
@@ -87,7 +87,7 @@ function bkTick(dt){const B=bkState(),h=dt/60,run=S.pm==="run";
   B.r=B.m==="auto"?bkRatioAuto():B.sp;
   // back into the stock chest as a share of the machine's furnish; with the machine down and the broke chest nearly full, a
   // steady trickle so it doesn't overflow
-  {const room=Math.max(0,P.tankCap*0.98-S.tank),use=run?(S.rates.fiberUse||0)*h:0,q=Math.min(B.f,room,run?B.r*use:(bkLvl()>0.9?10*h:0));if(q>0){B.f-=q;S.tank+=q;bkMix(q);}}
+  {const room=Math.max(0,P.tankCap*0.98-S.tank),use=run?(S.rates.fiberUse||0)*h:0,q=Math.min(B.f,room,run?B.r*use:(bkLvl()>0.9&&(S.tbf||0)<SH.bkTrk?10*h:0));if(q>0){B.f-=q;S.tank+=q;bkMix(q);}}
   if(B.f<SH.bkCap*0.95)B.ov=false;B.inR=ease(B.inR||0,B.in/h,dt,6);B.in=0;}
 function bkSet(m,v){if(S.zen)return;const B=bkState();if(m==="auto"){B.m="auto";return;}B.m="manual";if(v!=null)B.sp=clamp(+v,0,0.3);}
 // ---- the reel ----
@@ -112,7 +112,10 @@ function turnupRoll(){if(!shOn()||S.pm!=="run")return;if(S.rng.turnup==null)S.rn
 let BRR={R:1,parts:[],ev:0};   // (the last risk the break check worked out; the screens work out their own)
 const BRKN={draw:"Open draw tension vs wet strength",stk:"Stickies and holes",cd:"Wet streaks and edges",broke:"Broke in the furnish",stock:"Stock swings",cloth:"Fabric and felt",dry:"Dryers and hood",turnup:"Turn-up failed"};
 const BRKM={draw:"Method",stk:"Material",cd:"Measurement",broke:"Material",stock:"Machine",cloth:"Machine",dry:"Environment",ev:"Crew & events",turnup:"Machine"};
-function brkRisk(){if(!shOn())return {R:1,parts:[],ev:Math.max(0,(S.M&&S.M.breakMul||1)-1)};
+// (v6.13 t3: worked out once a step: the sim checks it, the tags and screens read the same one)
+const BRKC={S:null,t:-1,v:null};
+function brkRisk(){const tm=S.t;if(BRKC.S===S&&BRKC.t===tm)return BRKC.v;BRKC.S=S;BRKC.t=tm;return BRKC.v=brkRisk0();}
+function brkRisk0(){if(!shOn())return {R:1,parts:[],ev:Math.max(0,(S.M&&S.M.breakMul||1)-1)};
   const K=S.knob,x=K&&K.any&&K.x?K.x:null,ps=x&&x.ps!=null?x.ps:psStd()+shPsAdd()+shCsAdd(),run=S.pm==="run";
   // (tension: the DCS's reading; slack under what the speed needs is drawBrk's. Wet strength against a plain twin press's 44%:
   //  the shoe press and the steam box send a stronger sheet into the open draw, a wet one out of the presses a weaker one)
@@ -129,12 +132,13 @@ function brkRisk(){if(!shOn())return {R:1,parts:[],ev:Math.max(0,(S.M&&S.M.break
   {const T2=S.stm,D=S.dry,wet=D&&!(K&&K.any)&&D.m>13?(D.m-13)*0.8:0;parts.push(["dry",BRKN.dry,1+(T2?0.03*stmFloodSum()+1.5*T2.drip+T2.roof:0)+wet,"dryer"]);}
   let R=1;for(const p of parts)R*=p[2];return {R,parts,ev:Math.max(0,(S.M&&S.M.breakMul||1)-1)};}
 // where a break goes: the old split for the base and the events, each contributor's excess at its own place
-function brkWhere(B,r){const w={reel:0.45,dryer:0.35,press:0.2},tot={reel:w.reel,dryer:w.dryer,press:w.press};
+function brkWhere(B,r){const w={reel:0.25,dryer:0.40,press:0.35},tot={reel:w.reel,dryer:w.dryer,press:w.press};
   for(const p of B.parts)if(p[2]>1)tot[p[3]]+=Math.log(p[2]);
   const s=tot.reel+tot.dryer+tot.press;let u=r*s;for(const k of ["reel","dryer","press"]){u-=tot[k];if(u<0)return k;}return "press";}
 // the break log (last 40): where, the top three causes with their shares, R at the time
 function brLog(loc,top,B){if(S.zen)return;const L=S.brl||(S.brl=[]);
   L.push({t:Math.round(S.t),loc,R:Math.round((B?B.R:1)*100)/100,top,c:B?Object.fromEntries(B.parts.map(p=>[p[0],Math.round(p[2]*1000)/1000])):{},ev:B?Math.round(B.ev*100)/100:0});while(L.length>40)L.shift();}
+function brLog1(loc,k,lab){brLog(loc,[[k,lab||BRKN[k]||k,1]],brkRisk());}   // (v6.13 t3: knob, valve, silo and spider breaks)
 // the top causes of a break from the risk now: each contributor's log-share of everything that made it likelier
 function brTop(B){const xs=B.parts.filter(p=>p[2]>1.005).map(p=>[p[0],p[1],Math.log(p[2])]);if(B.ev>0.005)xs.push(["ev","Upsets and events",Math.log(1+B.ev)]);
   const s=xs.reduce((a,p)=>a+p[2],0);if(s<=0)return [["base","Normal running",1]];return xs.sort((a,b)=>b[2]-a[2]).slice(0,3).map(p=>[p[0],p[1],Math.round(p[2]/s*100)/100]);}
@@ -143,7 +147,7 @@ function brTop(B){const xs=B.parts.filter(p=>p[2]>1.005).map(p=>[p[0],p[1],Math.
 function shTick(dt){if(!shOn())return;if(!S.hb)S.hb={jw:HB.jw0};   // (a run from v6.13 always has it: an older save without it gets its slice migrated, 07g)
   stkTick(dt);bkTick(dt);
   // a planned outage just ended: the wash-up cleaned the clothing and the first cans
-  const on=!!(S.outg&&S.outg.on);if(S.shOut&&!on)stkClean("all","Outage wash-up: the forming fabric, the felts and the first dryer cans are clean of stickies.");S.shOut=on;
+  const on=!!(S.outg&&S.outg.on);if(S.shOut&&!on){stkClean("all","Outage wash-up: the forming fabric, the felts and the first dryer cans are clean of stickies.");stmOutage();}S.shOut=on;
   if(shOff()){const K=knobState();K.any=true;}}
 // new clothing starts clean (04 upsets' end)
 function shOnEnd(id){if(!shOn())return;if(id==="fabric")stkClean("fab");if(id==="felt")stkClean("felt");}

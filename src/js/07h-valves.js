@@ -162,7 +162,7 @@ function vConseq(dt){const W=S.vlv,L=W.lp["LV-104"];
     if(W.acc.mco>0){const t=Math.min(S.tank,W.acc.mco*weUstd()/60/VLV.mcK);if(t>0){S.tank-=t;wSpill(t);W.mcOver=(W.mcOver||0)+t;}
       if(!W.lg.mco){W.lg.mco=1;log("The machine chest is overflowing: refined stock is going to the sewer.","bad");}W.acc.mco=0;}else if(y<95)W.lg.mco=0;}
   else W.mcLow=0;}
-function vBreak(why){if(S.pm!=="run")return;S.pm="break";S.brkType="press";S.breakLeft=2*36;S.breakTotal=S.breakLeft;S.tot.breaks++;enqueue("brk");AUDIO.sfx("snap",2500);log(why,"warn");brkNote();}
+function vBreak(why){if(S.pm!=="run")return;S.pm="break";S.brkType="press";S.breakLeft=2*36;S.breakTotal=S.breakLeft;S.tot.breaks++;enqueue("brk");AUDIO.sfx("snap",2500);log(why,"warn");brkNote();brLog1("press","stock");}
 function vlvMods(m){const W=S.vlv;if(!W||!W.any||S.zen)return;if(W.mcLow>0)m.speedCap=Math.min(m.speedCap,1-0.5*W.mcLow);}
 // a loop that keeps hurting the mill: the crew finds it and puts it back on standard tuning (seasons and survival, not free play)
 function vCrew(dt){const W=S.vlv;if(S.free)return;

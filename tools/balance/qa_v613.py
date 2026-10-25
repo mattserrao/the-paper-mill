@@ -94,6 +94,13 @@ PLAY = r"""async ([style,seed,swap,surv])=>{const P=__PM,S=P.S,h=P.SIM_STEP||0.2
       if(rnd()<0.1&&P.G3.ride){try{P.G3.ride();if(P.G3.rideHud)P.G3.rideHud(rnd());if(P.G3.rideAt)P.G3.rideAt(rnd());P.G3.rideEnd();log.rides++;}catch(e){log.errs.push('ride '+e.message);}}}
     if(style==='active'){const st=S.stk;if(st&&Math.max(st.fab,st.felt,st.can)>70&&S.pm!=='run'){SH.stkClean('all');L('clean');}}}catch(e){log.errs.push('lev '+e.message);}};
   const SH0=()=>P.G3&&P.G3.sheet;
+  const wetWatch=()=>{if(S.pm==='run'&&S.dry){log.mN=(log.mN||0)+1;log.mS=(log.mS||0)+S.dry.m;}
+    for(const f of (S.feed||[]).slice(0,6)){if(f._qw)continue;f._qw=1;if(/wet streak|wet edge|moisture out of spec/.test(f.text)){const T=S.stm;const e={fl:T?T.fl.filter(v=>v>0.2).length:-1,H:T?Math.round(T.H):-1,sy:(S.inc||[]).some(i=>i.id==='syphon'),m:S.dry?+S.dry.m.toFixed(2):null,since:S.t-(log._runT||0)};(log.wet||(log.wet=[])).push(e);}}
+    if(S.pm!=='run')log._runT=S.t;};
+  const offWatch=()=>{const b=S.tot.broke||0,d=b-(log._b0||0);log._b0=b;if(d<=1e-9)return;let c;
+    if(S.tot.hayouts!==log._hy){log._hy=S.tot.hayouts;c='hayout';}else if((S.tot.tied||0)!==log._ti){log._ti=S.tot.tied||0;c='tied';}else if(S.chg)c='gradechg';
+    else{const f=(S.feed||[]).find(f=>/^QCS: /.test(f.text)&&!/back (in|on) spec/.test(f.text));c=f?f.text.replace(/QCS: /,'').replace(/\(zone \d+\)/,'').replace(/ on \d+.*|[.:].*/,'').trim().slice(0,40):'?';if(S.knob&&S.knob.v)c=c;}
+    (log.offBy||(log.offBy={}))[c]=((log.offBy||{})[c]||0)+d;};
   const sheetWatch=()=>{const T=S.stm;if(T){const f=T.fl.filter(v=>v>0.5).length;if(f>log.flMax)log.flMax=f;if(f>0)log.flMin+=h*40;if(S.pm==='run'){if(T.H>200)log.Hhi=(log.Hhi||0)+h*40;if(T.H>215)log.Hdrip=(log.Hdrip||0)+h*40;log.runMin=(log.runMin||0)+h*40;}if(T.H>log.Hmax)log.Hmax=+T.H.toFixed(1);if(T.hum>log.humMax)log.humMax=+T.hum.toFixed(1);if(T.roof>log.roofMax)log.roofMax=+(+T.roof).toFixed(2);for(const v of [T.H,T.hum,T.waste,...T.dp,...T.fl])if(!isFinite(v))log.nan=true;}
     if((S.tbf||0)>0.5&&!log.tbfWhy)log.tbfWhy={day:+(S.t/1440).toFixed(2),pm:S.pm,brk:S.brkType,tank:Math.round(S.tank),bkf:S.bk&&Math.round(S.bk.f),out:Object.keys(S.outg||{}).filter(k=>S.outg[k]===true),pulp:S.pulper||null,inc:(S.inc||[]).map(i=>i.id)};if((S.tbf||0)>0.2)log.tbfHi=(log.tbfHi||0)+h*40;if(SH0()&&SH0().bkLvl()>0.98)log.bkFull=(log.bkFull||0)+h*40;if((S.tbf||0)>log.tbfMax)log.tbfMax=+S.tbf.toFixed(3);{const SH=P.G3.sheet;if(SH){const b=SH.bkLvl();if(b<log.bkMin)log.bkMin=+b.toFixed(3);if(b>log.bkMax)log.bkMax=+b.toFixed(3);
       if(S.pm==='run'){const v=SH.stfi();if(v!=null&&isFinite(v)){log.stfiN++;if(v<SH.stfiSpec())log.stfiLow++;}}}}
@@ -106,7 +113,7 @@ PLAY = r"""async ([style,seed,swap,surv])=>{const P=__PM,S=P.S,h=P.SIM_STEP||0.2
   while(S.season&&S.season.on&&n<(surv?400:40)*1440/h){P.step(h);n++;if(!(S.season&&S.season.on))break;if(!isFinite(S.cash)||!isFinite(S.t))log.nan=true;{const tr=!!S.mcTrip;if(tr&&!log._tr)log.refTrips++;log._tr=tr;if(tr)log.refDownMin+=h;if(S.M&&S.M.refOut&&!log._ro)log.refClashes++;log._ro=!!(S.M&&S.M.refOut);const ml=P.knob&&P.knob.read?P.knob.read().mcLvl:null;if(ml!=null&&n%40===0&&ml<log.mcMin)log.mcMin=Math.round(ml);}if(S.cash<log.minCash)log.minCash=S.cash;
     // the drive fault card (it only opens on a UI tick, which doesn't run while the bot steps: answer from the queue the way the card would)
     if(S.rel&&S.rel.q&&S.rel.q.length){const q=S.rel.q[0];if(drvCall(q))S.rel.q.shift();}
-    if(n%8===0)grab();if(n%40===0)sheetWatch();const o=S.cards&&S.cards.open;if(o)grab();
+    if(n%8===0)grab();if(n%40===0)sheetWatch();if(n%4===0)wetWatch();offWatch();const o=S.cards&&S.cards.open;if(o)grab();
     if(o){if(o.c){log.cards++;const acc=style==='gambler'||((style==='buyer'||style==='active'||style==='smart')&&rnd()<.5)||(style==='random'&&rnd()<.5);if(acc){log.acc++;if(!click('deal-yes'))log.ovs.noYes=(log.ovs.noYes||0)+1;}else if(!click('deal-no'))log.ovs.noNo=(log.ovs.noNo||0)+1;
         const d=document.getElementById('dealOv');if(d){clearTimeout(d._t);d.hidden=true;d.classList.remove('dealres');}}
       else if(o.civ){log.civ++;const bs=[...document.querySelectorAll('#civOv .civbtn')];const b=style==='handsoff'?bs[bs.length-1]:style==='random'?bs[Math.floor(rnd()*bs.length)]:style==='gambler'?bs[bs.length-1]:bs[0];if(b)b.click();else log.ovs.noCiv=(log.ovs.noCiv||0)+1;}
