@@ -1,5 +1,77 @@
 # Changelog
 
+## v6.13.0-t2 (2026-10-25): Steam and Sheet (test build, test/v6.13-steam-sheet)
+Plan: claude/v613-steam-sheet-plan.md. Season, survival and free play; zen keeps its simple model.
+- **Dryer cans and the steam and condensate cascade (07m):** the 20 cans (1st section 1-6, 2nd 7-12, 3rd 13-20) each
+  dry their share. A syphon needs a differential pressure to lift the condensate, more the faster the machine runs
+  (+4 kPa a 300 fpm over 2,632); short of it the cans flood from the back of the section forward: the rest of the cans
+  take their share (the 3rd section's demand rises by 1 / (1 - lost)), the moisture loop asks for more steam and the dryer
+  drive works harder (+1.5% a flooded can). Over it, blow-through past 15% of a section's steam goes to the condenser.
+  AUTO schedules every section's ΔP with speed (what it needs + 12 kPa), so an untouched machine never floods or wastes.
+- **PDC-304, the 7th control loop (07h):** the 3rd section's syphon ΔP through the thermocompressor's motive steam
+  (faceplate, tuning, bump test, loop health, crew trace). SCHEDULE / FIXED setpoint on the new STEAM screen. A sixth
+  tuning challenge, "Hold the syphons" (reference 8.97).
+- **New fiddly knob, the thermocompressor's motive hand valve** (dryer basement, tending side, x 14): pinched, PDC-304
+  can't reach its setpoint (reach 60 kPa x opening^1.5); the dry-end operator traces it after 2 h of flooding.
+- **Broken syphon (new tellable upset, its own dice):** one can floods whatever the ΔP; after 2 h of wet running the
+  crew stops to change it. Its tell is a cold can on the dry end round's IR gun. Every dry end round now takes an IR
+  survey of all 20 cans (Reliability screen: shell temperatures, stale after a day, unknown after three).
+- **The hood and the machine room:** hood humidity from the evaporation and the exhaust air (AUTO holds 160 g/kg; the
+  exhaust and supply fans on the STEAM screen, AUTO or MANUAL). Over 200 g/kg the pockets dry slower; past the dew point
+  the hood drips (beater spots, breaks). Supply over exhaust spills into the machine room. The machine room's humidity is
+  modelled (hood spill, wet end vapour, the fog fan); with the fog fan down AUTO raises the exhaust and over ~75% RH the
+  roof drips. The fog fan upset now matters.
+- **Energy:** condensate return (85% standard) falls with blow-through to the condenser, steam joint leaks and venting
+  on a break; the boiler makeup is fresh water in the water balance (T.boil out again) and costs fuel to heat. Supply
+  air coil steam follows the supply air. New upgrade **Hood heat recovery** ($30k list): the coils use 55% less steam.
+  Steam per ton, kWh per ton and $ per ton on the new ENERGY screen and as tags.
+- **The headbox (07n):** the fan pump holds a **J/W setpoint** (WET DCS, 0.965-1.005, 0.985 standard); the slice opening
+  now sets the jet's thickness, so at a held J/W a wider slice runs the headbox thinner (more water, a little less couch
+  solids) and a narrower one thicker (worse formation). Older saves keep their J/W (the slice migrates). Headbox
+  pressure, jet speed and formation index readings.
+- **Fiber orientation and STFI CD:** the MD/CD ratio climbs away from a square jet (faster with drag); **STFI CD** is a
+  new spec (95% of the grade's standard; 24: 2.47 kN/m) from weight, refining, press density, orientation, formation and
+  broke. Under it the reel goes to the beater. AUTO-LW trims to the tighter of ring crush and STFI. The process engineer
+  traces a hard rush or drag back to the headbox.
+- **Stickies deposits** on the forming fabric, the pick-up felt and the first dryer cans: build with the stickies and the
+  recipe (A bales 0.6, C 1, Mixed waste 1.8), cleaned by the showers to 40 on standard bales. Over it: holes (breaks),
+  pick-outs (beater from 50), a filled felt (press solids from 55). New clothing starts clean; a planned outage's
+  wash-up cleans them all.
+- **The broke chest:** the trim, the sheet during a break (the wet end keeps forming at threading speed while the stock
+  chest has stock) and the repulped beater go to the broke chest; its pump meters it back as a share of the furnish
+  (SPOT DCS: AUTO by level 2-15%, or MANUAL 0-30%). Over 20% broke the stock drains slower, the sheet is weaker and
+  breaks more. Full, it overflows to the sewer. Off-spec rolls still take the warehouse beater route.
+- **The reel:** a turn-up onto a new spool fails about 1 in 80 (more when faster than the grade's standard or wet):
+  a short break at the reel. The reel drum nip (DET DCS, 2.0 kN/m) sets the reel's hardness: soft (<55) raises the
+  tied-rolls odds, hard (>70) the winder's hayouts.
+- **Physics-based breaks:** the odds are today's base x R, a product of named contributors: the open draw's tension
+  against the sheet's wet strength (at its press solids against a plain twin press's 44%: the shoe press and the steam
+  box send a stronger sheet across), stickies and holes, wet streaks and edges, broke, stock swings, fabric and felt,
+  the dryers and hood. Upsets, cards and civics still add on top. Where a sheet breaks now follows its cause. Hands-off
+  calibration (24 seasons against v6.12.1): 22 breaks a season in both (2 of the new ones failed turn-ups). The break
+  log (last 40) keeps each break's causes.
+- **Screens:** STEAM (DCS: the cascade, TC-304, condenser, receivers, hood fans and the fog fan, with alarms); PROFILE
+  (consistency and solids, headbox to reel on a log scale, the grade's standard as a ghost, water out per stage);
+  BREAKS (the tightrope gauge, a waterfall of what makes a break likelier, the break log and each break's fishbone);
+  ENERGY (KPIs and where the steam goes); SPC on QCS (individuals and moving range for weight, moisture, ring crush and
+  STFI, control limits, Cpk, Western Electric rules 1-4); a side elevation across the top of WET and DET with the break
+  risk; STFI, formation and reel hardness on QCS; new tags, history columns and relationship map links (a Steam & air
+  column).
+- **Ride the sheet:** a button on WET, DET and PROFILE: a 30 s camera ride with the web from the slice to the reel
+  (the hood front lifts away for it), with a HUD (section, consistency or solids, speed, draw, sheet temperature); tap
+  to leave. Every device, no setting needed.
+- Determinism: AUTO-LW and the CD rolls read the QCS fresh instead of the last step's reading. New dice streams only
+  (syph, turnup), drawn only when their event happens.
+- Tests: new check steamsheet (the cascade, the hood, energy, the headbox and STFI, broke, the reel, breaks, save, the
+  screens); process (water balance with the boiler makeup and the broke chest, J/W and slice semantics), dcs (row
+  order), control (relationship map), speed (the below-zero banner counted in the log) updated.
+
+## v6.13.0-t1 (2026-10-25): save and continue exact (test build, test/v6.13-steam-sheet)
+- A reloaded run continued $1 off the run it was saved from on some seeds: the last QCS reading (which AUTO-LW reads)
+  and the hourly-refreshed P (civics-dependent price, break and repair factors) were rebuilt on load instead of restored.
+  Both are saved now. The save check's hidden-page test reads the save in the same evaluate (an autosave could land
+  between).
+
 ## v6.12.1 (2026-10-25): The Approach System
 Release of v6.12.1-t1 to t8 (below), merged from test/v6.12.1. Regression suite: all 22 checks pass on t7 (the full tier,
 with knobs, dcs and help rerun on their own after test updates); t8 passed process, knobs, dcs, save and smoke. The

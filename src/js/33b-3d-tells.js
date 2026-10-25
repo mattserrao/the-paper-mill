@@ -26,6 +26,7 @@
     function lint(g){for(let k=0;k<8;k++){const b=new THREE.Mesh(sphereG,M.paper);b.scale.set(0.5+(k%3)*0.2,0.22+(k%2)*0.12,0.45);b.position.set(-1.2+k*0.34,0.15,((k*3)%3-1)*0.35);g.add(b);}return {top:[0,0.5,0]};}
     function drive(g){box(1.4,1.2,1.2,M.steel,-1.0,0.6,0,g);const w=new THREE.Group();w.position.set(0.4,0.75,0);g.add(w);cyl(0.32,0.5,M.warn,0,0,0,w,Math.PI/2);cyl(0.14,1.6,M.metal,0.9,0,0,w,Math.PI/2);return {w,top:[0,1.4,0]};}
     function blade(g){box(2.4,0.12,0.3,M.metal,0,1.1,0,g,false);const w=new THREE.Group();w.position.set(0,1.1,0.2);g.add(w);box(2.3,0.04,0.25,M.steel,0,0,0,w,false);cyl(0.05,1.1,M.steel,-1.1,0.55,0,g);cyl(0.05,1.1,M.steel,1.1,0.55,0,g);return {w,top:[0,1.3,0]};}
+    function coldcan(g){const c=cyl(0.55,1.6,FM.water,0,1.1,0,g,0,Math.PI/2);box(0.3,0.5,0.2,M.ink,1.1,0.9,0.45,g,false);const s=new THREE.Mesh(cubeG,M.beacon);s.scale.set(0.16,0.12,0.04);s.position.set(1.1,1.08,0.56);g.add(s);return {glow:s,top:[0,1.9,0]};}   // (v6.13: a can shell cold blue in the IR gun's view)
     function glass(g){box(0.8,1.2,0.6,M.steel,0,0.6,0,g,false);const s=new THREE.Mesh(cubeG,M.bad);s.scale.set(0.3,0.36,0.05);s.position.set(0,0.95,0.31);g.add(s);cyl(0.1,1.6,M.metal,0,0.95,-0.6,g,0,Math.PI/2);return {glow:s,top:[0,1.3,0]};}
     // ---- where each tell sits: [x, z, prop, effect, rotation, extra] (ground level; checked against the area screenshots) ----
     const SC=1.8;   // tells are drawn larger than life: exaggerated, so they read from the round's camera
@@ -34,7 +35,7 @@
       ragger:[10.5,-9.5,motor,"smoke",0],overflow:[22,-8,flange,"wet",0],hdblow:[27.5,-7.5,flange,"spray",0],lwplug:[9,-18.5,flange,"spray",0],lcplug:[26.6,-27,flange,"sand",0],
       cscreen:[14.5,-27.5,pump,"shake",0],fscreen:[20,-27.5,pump,"rattle",0],refclash:[68.7,14.9,pump,"shake",Math.PI/2],thkblow:[35,-9,flange,"spray",0],dye:[30.5,-6,glass,"dye",0],
       fabric:[48,15.6,hot,"hot",0],felt:[35,15.6,hot,"hot",0],slime:[42,15.6,streak,"slime",0],fogfan:[52,-4.5,motor,"smoke",0],
-      shaft:[12,15.6,drive,"shake",0],dryerfire:[4,3.4,lint,"lint",0],wrap:[24,15.6,blade,"chatter",0],steamjoint:[14,3.4,flange,"steam",0],winderdown:[-22,16.5,motor,"hot",0],tiedrolls:[-17.6,16.4,blade,"chatter",0],
+      shaft:[12,15.6,drive,"shake",0],dryerfire:[4,3.4,lint,"lint",0],wrap:[24,15.6,blade,"chatter",0],steamjoint:[14,3.4,flange,"steam",0],syphon:[18,15.6,coldcan,"",0],winderdown:[-22,16.5,motor,"hot",0],tiedrolls:[-17.6,16.4,blade,"chatter",0],
       boiler:[74,-7,pump,"smoke",0],permit:[null,-42,lint,"outfall",0],icedintake:[-30,-52.5,ice,"",0],brownout:[null,null,panel,"flicker",0]};
     const R=()=>Math.random()-0.5;
     for(const id in DEF){const [x,z,make,fx,ry]=DEF[id],g=new THREE.Group();g.rotation.y=ry||0;g.scale.setScalar(SC);TG.add(g);g.visible=false;

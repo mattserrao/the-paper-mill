@@ -13,7 +13,7 @@ const BASE={...P};
 const ECON={price:{"24":658,"28":679,"31":697,"34Super":760},   /* (v6.11.0-t2 balance: +2.5% on every grade, for the trim) */   /* (v6.5 balance: -$15/t, inactive play is punished most) */   // (v6.5: +$30/t: outbound freight is its own cost now, FR; b2: less what the cheaper OCC and energy save per ton, ~$82-84, and $4 for paper made but not yet sold; measured on 12 hands-off seasons)
   energy:68,   // (b2: was 95; a recycled mill buying its power, 2026 prices)
   chem:25,wage:45,robot:15,overhead:2400,start:2e6,bankrupt:-1.5e6};
-const REPAIR={rotortrip:20e3,oscfail:12e3,couchpit:25e3,birdline:200e3,refclash:140e3,steamjoint:90e3,fogfan:35e3,shaft:250e3,dryerfire:400e3,fabric:90e3,felt:45e3,slime:30e3,ragger:15e3,overflow:120e3,chestover:60e3,lwplug:25e3,cscreen:45e3,fscreen:60e3,lcplug:30e3,hdblow:55e3,boiler:60e3,permit:120e3,thkblow:70e3,birdhay:0,wrap:15e3,dye:20e3,flares:0,winderdown:40e3,runner:0,badocc:0,balefire:150e3,fleet:40e3,calloff:10e3,fight:5e3,roof:80e3,highway:0,lightning:200e3,tornado:500e3,beaver:25e3,icedintake:20e3,brownout:10e3,duststorm:25e3,flood:60e3};
+const REPAIR={syphon:30e3,rotortrip:20e3,oscfail:12e3,couchpit:25e3,birdline:200e3,refclash:140e3,steamjoint:90e3,fogfan:35e3,shaft:250e3,dryerfire:400e3,fabric:90e3,felt:45e3,slime:30e3,ragger:15e3,overflow:120e3,chestover:60e3,lwplug:25e3,cscreen:45e3,fscreen:60e3,lcplug:30e3,hdblow:55e3,boiler:60e3,permit:120e3,thkblow:70e3,birdhay:0,wrap:15e3,dye:20e3,flares:0,winderdown:40e3,runner:0,badocc:0,balefire:150e3,fleet:40e3,calloff:10e3,fight:5e3,roof:80e3,highway:0,lightning:200e3,tornado:500e3,beaver:25e3,icedintake:20e3,brownout:10e3,duststorm:25e3,flood:60e3};
 const UGROUPS=[["machine","Paper machine"],["stock","Stock prep"],["yard","Warehouse & logistics"],["maint","Maintenance"],["mgmt","Management"]];
 const MAINT=["birdline","steamjoint","fogfan","shaft","fabric","felt","winderdown","hdblow","lwplug","cscreen","fscreen","lcplug","boiler","thkblow","ragger","overflow","fleet","roof","lightning","icedintake"];
 // v4.1 v19: prices reset after the payback review (most upgrades now pay back within days, not months)
@@ -28,6 +28,7 @@ const UPS=[
  {id:"winder",ck:0.75,g:"machine",name:"Winder rebuild",lv:[285e3,520e3],desc:"+30 t/h winder speed and 40% fewer hayouts per level."},
  {id:"monitor",g:"machine",name:"Fabric & felt monitoring",lv:[220e3,150e3],desc:"Machine failures 40% rarer and fewer sheet breaks, per level."},
  {id:"refiner",g:"machine",name:"Refiner power upgrade",lv:[145e3],desc:"Bigger motors and drives (+30% rating) and new plates on the twin refiners between the stock chest and the machine chest. Stronger bonding: $10/t less energy and chemicals."},
+ {id:"heatrec",g:"machine",name:"Hood heat recovery",lv:[30e3],desc:"An air-to-air exchanger on the dryer hood's exhaust preheats the supply air: the supply air coils use 55% less steam, about 6.6% off the dryers' steam bill."},   // (v6.13, 07m: priced to pay back in about a third of a season)
  {id:"fire",g:"machine",name:"Fire suppression",lv:[115e3],desc:"Dryer and bale yard fires 60% rarer and half as long."},
  {id:"pulper",g:"stock",name:"Pulper rotor upgrade",lv:[325e3,585e3],desc:"+25 t/h pulper capacity per level."},
  {id:"clean",g:"stock",name:"Screens & cleaners",lv:[80e3,80e3],desc:"+3 points of pulper yield and 40% fewer screen and cleaner breakdowns per level. Adds a second row of LC cleaners."},
@@ -112,6 +113,7 @@ function freqMul(id){let m=1;const MS=FM_MAINT||(FM_MAINT=new Set(MAINT));
   if(OUT.area[id])m*=outRel(OUT.area[id]);
   m*=siteFreq(id);
   m*=chemFreq(id);   // v6.11.1 spare dry-strength starch feeds slime (07l)
+  m*=shFreq(id);   // v6.13 soft reels tie together at the winder; a flooded can wraps (07n)
   m*=civFreq(id);   // v5.1 civics: each choice's odds, and the meters
   m*=rlyLinkMul(id);   // v6.10: the upsets tied to an asset's bearings wear with them (07i)
   m*=leadFreq(id);   // v4.4 survival leaders: Chip's labour trouble, Felicity's projects, the upset Dot just fixed

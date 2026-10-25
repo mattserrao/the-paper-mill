@@ -53,7 +53,12 @@
     // (v6.2 z2: the river's ripple lines are packed for the iso view; seen in perspective they alias into streaks, so the free camera
     // gets wider ripples and anisotropic filtering)
     const RT=ENV.riverTex;if(RT){RT.repeat.x=free?6:40;RT.repeat.y=free?0.45:1.5;RT.anisotropy=free?8:1;RT.needsUpdate=true;}}
-  function placeCam(){if(FOL.on){const R=G3.scrubbers&&G3.scrubbers[0];if(goal||(S&&S.zen)||!R)folEnd();
+  function placeCam(){
+    // v6.13 "Ride the sheet" (50m): the perspective camera travels with the web, close in from the iso view's own direction
+    // (south-west and above), so it sees what the iso view's cutaways are built to show and none of the faces it never sees
+    {const R=G3.sheetRide;if(R&&R.on){const u=(performance.now()-R.t0)/R.len;if(u>=1)G3.rideEnd();
+      else{if(camera!==camPersp)camSwap(true);const [px,py]=G3.rideAt(u),zc=9.1;camPersp.position.set(px-11,py+10.5,zc+12.5);camPersp.lookAt(px+0.5,py,zc);G3.camDist=10;G3.camR=60;G3.rideHud(u);G3.lastMove=performance.now();return;}}}
+    if(FOL.on){const R=G3.scrubbers&&G3.scrubbers[0];if(goal||(S&&S.zen)||!R)folEnd();
       else{const g=R.g.position;target.x+=(g.x-target.x)*0.1;target.z+=(g.z-target.z)*0.1;cam.r+=(FOL.r-cam.r)*0.08;if(FOL.n++<90)cam.ph+=(0.62-cam.ph)*0.06;G3.lastMove=performance.now();}}
     if(goal){G3.lastMove=performance.now();target.lerp(goal.t,0.12);cam.r+=(goal.r-cam.r)*0.12;cam.th=lerpAng(cam.th,goal.th,0.12);cam.ph+=(goal.ph-cam.ph)*0.12;
       goal.n=(goal.n||0)+1;if(goal.n>150||target.distanceTo(goal.t)<0.2&&Math.abs(goal.r-cam.r)<0.5){goal=null;if(!freeOn())cam.r=rStep(cam.r);}}

@@ -142,3 +142,5 @@ One line per version, oldest first. Add a line here with every release: build.py
 6.12.1-t7  Forming Table Vacuum Zones and Pump, Refiners Run Out of Power at High Tonnage, Draw Rises with Speed (Test)
 6.12.1-t8  Speed Upgrades Raise the Open Draw with Them (Test)
 6.12.1     The Approach System: Refiners Beside the Headbox, a Rail Bay at Receiving, Forming Table Vacuum Zones, Couch Suction Box, Tail Threading, Draw That Follows Speed, Refiners That Run Out of Power, Upgrades That Pay Back
+6.13.0-t1  Save and Continue Picks Up Exactly Where It Left Off (Test)
+6.13.0-t2  Steam and Sheet (Test): Dryer Cans, Syphons and PDC-304, Hood Air, Energy per Ton, J/W and STFI CD, Stickies, the Broke Chest, Turn-ups, Physics-Based Breaks, the Machine Profile, SPC and Ride the Sheet

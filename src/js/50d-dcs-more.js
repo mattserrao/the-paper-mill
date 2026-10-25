@@ -7,7 +7,7 @@ const DCS_DRAW=()=>1.015*(1+knobVal("draw")/100)*1.01;   // wire -> presses, pre
 const wob2=(f,k)=>Math.sin(S.t*f+k)*0.6+Math.sin(S.t*f*2.7+k*2)*0.4;
 const dcsOn=id=>active(id);
 // jet-to-wire ratio from the slice opening (the saved slice, so it reads the same with or without the 3D view)
-const dcsJw=()=>0.985+0.02*slcGet().v;
+const dcsJw=()=>hbJw();   // (v6.13: the fan pump holds the J/W setpoint; the slice opening sets the headbox consistency, 07n)
 const dcsRD=()=>(dcsJw()-1)*S.pmSpeed/DCS_DRAW();
 const DV={
   rgt:()=>motStatus("ragger")!=="run"?"0 kN":(14+wob2(0.05,13)*1.5+(S.rates.feed||0)/10).toFixed(1)+" kN",jdc:()=>String(Math.floor(((S.pf&&S.pf.W.feed)||0)/40)),
@@ -70,7 +70,7 @@ MIMIC.DET={title:"DRY END",h:320,trends:MIMIC_KNOB.DET.trends,
     MT(345,176,"st3","STEAM",r=>Math.round(r.st3)+" kPa "+(S.dry&&S.dry.man!=null?"MAN":"AUTO")),MT(345,192,"steam","FLOW",r=>r.steam>0.5?kf(r.steam)+" t/h":"–"),MT(345,208,"dr2","DRV",DV.dr2),MT(345,224,"dryl","LOAD",DV.dryl),MT(560,58,"hdr","STEAM HDR",r=>Math.round(r.boiler*100)+"%"),
     MT(485,166,"moist","MOIST",r=>r.run?kf(r.moist)+"%":"–"),MT(485,180,"bw","BW",r=>r.run?kf(r.bw,2):"–"),MT(485,194,"spool","SPOOL",DV.spool),MT(485,208,"store","STORE",DV.store),MT(485,222,"tu","TURN-UPS",DV.tu),MT(485,84,"speed","SPEED",r=>Math.round(r.speed)+" fpm"),
     MT(588,166,"wdr","SP",DV.wdr),MT(588,180,"wdt","CUT",DV.wdt),MT(588,194,"hay","HAYOUTS",DV.hay),MT(588,262,"rolls","ROLLS",DV.rolls),
-    [472,284,"delvl","LEVEL",()=>S.zen?"–":Math.round(depLvl())+"%",()=>depLvl()>=DEP.ovf*100?"bad":depLvl()>=DEP.hi*100?"warn":""],MT(472,298,"decons","CONS",()=>S.zen?"–":kf(depCons())+"%"),MT(472,312,"defin","IN",()=>S.zen||!S.dep?"–":kf(S.dep.fin)+" t/h"+(S.pm==="break"&&S.brkType!=="press"?" BRK":""))]};
+    [472,284,"delvl","LEVEL",()=>S.zen?"–":Math.round(depLvl())+"%",()=>depLvl()>=DEP.ovf*100-0.01?"bad":depLvl()>=DEP.hi*100?"warn":""],MT(472,298,"decons","CONS",()=>S.zen?"–":kf(depCons())+"%"),MT(472,312,"defin","IN",()=>S.zen||!S.dep?"–":kf(S.dep.fin)+" t/h"+(S.pm==="break"&&S.brkType!=="press"?" BRK":""))]};
 MIMIC.UTIL={title:"UTILITIES",h:270,trends:[["steam","Steam flow t/h","#7fb2ff",0,70],["boiler","Steam header (1 = full)","#ffb02e",0.5,1.05]],
   // (v6.5.4: the boiler and the power supply live here; they were on DET)
   eq:[[14,60,96,50,"RIVER INTAKE"],[134,60,96,50,"WATER TOWER"],[254,60,110,50,"MILL"],[388,60,110,50,"WASTEWATER"],[522,60,100,50,"OUTFALL"],[254,196,110,36,"LANDFILL","s"],
@@ -97,6 +97,7 @@ function dcsAlarms(a,r,L){const al=(on,txt,hi)=>{if(on)L.push([txt,hi]);};vlvAla
     al(!!S.wdBlocked,"WINDER BLOCKED: CONVEYOR FULL",true);al(S.wd==="hayout","WINDER HAYOUT",true);
     const Dr=S.dry;if(Dr&&S.pm==="run"){al(dryLimited()&&Dr.m>DRY.m0+0.5,"DRYERS AT LIMIT · SHEET WET",true);al(!dryLimited()&&Dr.load>0.95,"DRYER LOAD HI",false);}
     al(!!(Dr&&Dr.trim>0.001),`SPEED TRIMMED ${Dr?Math.round(Dr.trim*100):0}% · DRYING THE SHEET`,!!(Dr&&Dr.wet));al(!!(Dr&&Dr.man!=null),"2ND / 3RD SECTION STEAM ON MANUAL",false);}
+  else if(a==="STM")stmAlarms(L);   // v6.13 (50m)
   else if(a==="UTIL"){const Dr=S.dry;al(!!(Dr&&Dr.vent>1),"STEAM VENTING (SHEET BREAK)",false);al(tssNow()>45&&!dcsOn("permit"),"EFFLUENT TSS HI",false);al(!!(Dr&&Dr.steam>DRY.boiler*0.95),"BOILER STEAM HI",!!(Dr&&Dr.hdr<0.97));al(!!(Dr&&Dr.hdr<0.8),"STEAM HEADER LO",!!(Dr&&Dr.hdr<0.7));}
   else if(a==="WATER"){const W=S.wat;   // (v6.7 water screen, 50f: the river intake and the permit show here as well as on UTIL)
     al(active("icedintake"),"RIVER INTAKE ICED · NO MAKEUP WATER",true);al(active("permit"),"WASTEWATER PERMIT EXCEEDED",true);
@@ -113,10 +114,15 @@ function dcsSetDefs(a){const D=()=>DCS_DRAW();
     ["cvsp","Bale conveyor speed","drives the pulper feed",0,100,1,()=>C.pulper.v/Math.max(1,P.pulperMax)*100,v=>dcsCardSet("pulper",v/100*P.pulperMax),"%","pulper"],
     ["lvt","Stock chest level target","the auto pulper aims here",20,95,1,()=>C.lvlTarget.v,v=>dcsCardSet("lvlTarget",v),"%","lvlTarget"],
     ["lvl","PM slows below","stock chest level",10,60,1,()=>C.lowLevel.v,v=>dcsCardSet("lowLevel",v),"%","lowLevel"],
-    ["spi","Disk thickener spider valve","remote from the DCS · % to the clear side",0,100,1,()=>G3.SPD?G3.SPD.v*100:50,v=>{if(G3.SPD){G3.SPD.v=v/100;}},"%",null,1]];
+    ["spi","Disk thickener spider valve","remote from the DCS · % to the clear side",0,100,1,()=>G3.SPD?G3.SPD.v*100:50,v=>{if(G3.SPD){G3.SPD.v=v/100;}},"%",null,1],
+    // v6.13 the broke chest (07n): its pump meters broke back into the stock chest as a share of the furnish
+    ...(S.zen?[]:[["bkr","Broke ratio",`${bkState().m==="auto"?"AUTO · by the broke chest's level, 2 to 15%":"MANUAL · held at the ratio"} · broke chest ${Math.round(bkLvl()*100)}% · ${Math.round((S.tbf||0)*100)}% broke in the stock now${(S.tbf||0)>SH.bkLim?" · OVER 20%: slower drainage, weaker sheet":""}`,
+      0,30,1,()=>(S.bk?S.bk.r:0.1)*100,v=>bkSet("manual",v/100),"%",null,0,{on:()=>bkState().m==="auto",flip:()=>{const B=bkState();bkSet(B.m==="auto"?"manual":"auto",B.r);}},"Broke"]])];
   if(a==="WET")return [
     ["wsp","Machine speed (wire)","sets the reel by the section draws",Math.round(1200/D()),Math.round((3300+P.spBonus)/D()),5,()=>C.pmSp.v/D(),v=>dcsCardSet("pmSp",Math.round(v*D()/10)*10),"fpm","pmSp"],
-    ["slv","Slice opening","remote from the DCS · B",-100,100,1,()=>G3.SLC?G3.SLC.v*100:0,v=>dcsSlice("v",v),"",null,1],
+    // v6.13: the fan pump holds the jet's speed (J/W, 07n); the slice opening B sets the headbox consistency at that J/W
+    ...(S.zen?[]:[["jwsp","J/W ratio (fan pump)",`the fan pump holds the jet at ${Math.round(hbJet())} fpm · headbox ${hbPsi().toFixed(1)} psi · MD/CD ${tsrNow().toFixed(2)} · standard ${HB.jw0}`,HB.jwMin,HB.jwMax,0.001,()=>hbJw(),v=>hbSetJw(v),"",null,0,{on:()=>Math.abs(hbJw()-HB.jw0)<1e-9,flip:()=>hbSetJw(HB.jw0),lab:["STANDARD","SET"]}]]),
+    ["slv","Slice opening",S.zen?"remote from the DCS · B":`remote from the DCS · B ${slcB().toFixed(1)} mm: wider runs the headbox thinner (${hbcSet().toFixed(2)}%)`,-100,100,1,()=>G3.SLC?G3.SLC.v*100:0,v=>dcsSlice("v",v),"",null,1],
     ["slh","Slice lip position","remote from the DCS · L",-100,100,1,()=>G3.SLC?G3.SLC.h*100:0,v=>dcsSlice("h",v),"",null,1],
     // v6.8 the basis weight loop (07g): the setpoint (the grade's target, trimmed lighter if the strength will carry it) and the valve
     ["bws","Basis weight setpoint",(S.we&&S.we.lw===false)?`MANUAL · grade ${C.grade} target ${bwStd().toFixed(2)} lb · ring crush spec ${rctSpec()} lbf`+(S.zen?"":` · ${wcFmt(areaQcs())}`):`AUTO-LW: holds ring crush ${Math.round((WE.lwM-1)*100)}% over spec (${(rctSpec()*WE.lwM).toFixed(1)} lbf) · grade target ${bwStd().toFixed(2)} lb`+(S.zen?"":` · ${wcFmt(areaQcs())}`),+(bwStd()*(1+WE.trimMin)).toFixed(2),+(bwStd()*(1+WE.trimMax)).toFixed(2),0.05,()=>bwSp(),v=>bwSetTrim(v),"lb",null,0,
@@ -131,17 +137,25 @@ function dcsSetDefs(a){const D=()=>DCS_DRAW();
   if(a==="DET")return [
     ["wsp","Machine speed (wire)","same setpoint as on WET",Math.round(1200/D()),Math.round((3300+P.spBonus)/D()),5,()=>C.pmSp.v/D(),v=>dcsCardSet("pmSp",Math.round(v*D()/10)*10),"fpm","pmSp"],
     ["wdr","Winder speed","",0,P.winderMax,1,()=>C.wdr.v,v=>dcsCardSet("wdr",v),"t/h","wdr"],
+    ...(S.zen?[]:[["nip","Reel drum nip",`reel hardness ${Math.round(reelHard())} (standard ${SH.hard0}) · soft under 55: rolls telescope and tie at the winder · hard over 70: they crack and break there`,0.5,5,0.1,()=>reelNip(),v=>reelSetNip(v),"kN/m",null,0,{on:()=>Math.abs(reelNip()-SH.nip0)<1e-9,flip:()=>reelSetNip(SH.nip0),lab:["STANDARD","SET"]}]]),
     // v6.11.2 the 2nd and 3rd section steam on the setpoint list: PV-302 / PV-303 (07h). On CAS the moisture controller QC-300
     // sets them; dragging one takes it off CAS onto AUTO at that pressure, and the button puts it back on CAS.
     ...[["PV-302","st2","2nd section steam"],["PV-303","st3","3rd section steam"]].map(([id,k,n])=>{const v=vlvView(id),cas=v.m==="CAS",pv=Math.round(v.pv);
       return [k+"sp",n,cas?`CAS · set by QC-300 (reel moisture ${DRY.m0}%) · ${pv} kPa`:`${v.m==="MAN"?"MANUAL · valve held at "+Math.round(v.op)+"%":"AUTO · held at the setpoint"} · ${pv} kPa · CAS hands it back to the moisture loop`,
         0,250,5,()=>vlvView(id).sp,x=>{if(vlvView(id).m!=="AUTO")vlvSetMode(id,"AUTO");vlvSetSP(id,x);},"kPa",null,0,
         {on:()=>vlvView(id).m==="CAS",flip:()=>vlvSetMode(id,vlvView(id).m==="CAS"?"AUTO":"CAS"),lab:["CAS","AUTO"]}];})];
+  if(a==="STM"&&!S.zen){const T=stmState(),need=stmNeed(2),pv=vlvView("PDC-304").pv,sch=T.sp4==null;
+    return [["pdcsp","3rd section syphon ΔP · PDC-304",sch?`AUTO schedule: what this speed needs (${need.toFixed(1)} kPa) + ${STM.margin} · PV ${pv.toFixed(1)} kPa`:`FIXED at the setpoint · this speed needs ${need.toFixed(1)} kPa · PV ${pv.toFixed(1)} kPa${pv<need?" · CANS FLOODING":""}`,
+        5,70,0.5,()=>stmSp(),v=>vlvSetSP("PDC-304",v),"kPa",null,0,{on:()=>stmState().sp4==null,flip:()=>{const T2=stmState();if(T2.sp4==null)vlvSetSP("PDC-304",stmSp());else{stmSetSp(null);if(vlvT("PDC-304"))S.vlv.lp["PDC-304"].sp=stmSp();}},lab:["SCHEDULE","FIXED"]}],
+      ...[["exh","Hood exhaust fan"],["sup","Hood supply fan"]].map(([k,n])=>{const au=T[k+"M"]==="auto";
+        return [k,n,k==="exh"?`${au?"AUTO · holds "+STM.H+" g/kg":"MANUAL"} · hood ${Math.round(T.H)} g/kg · dew point ${Math.round(stmDew(T.H))} °C${T.drip>0?" · DRIPPING":""}`:`${au?"AUTO · 95% of the exhaust":"MANUAL"}${T.sup>T.exh?" · OVER THE EXHAUST: the hood is spilling into the machine room":""} · machine room ${Math.round(T.hum)}% RH`,
+          10,100,1,()=>T[k+"Sp"],v=>stmSetFan(k,v),"%",null,0,{on:()=>stmState()[k+"M"]==="auto",flip:()=>{const T2=stmState();stmSetFan(k,T2[k+"M"]==="auto"?T2[k+"Sp"]:"auto");}}];})];}
   return [];}
 // v6.11.2: the setpoint rows in the order the stock meets them, under a heading for each part of the machine
 const DCS_ORDER={
-  WET:[["Thick stock to the headbox","grade","bws","polf"],["Headbox","zones","beat","slv","slh"],["Forming table","wsp","gbox","lvac","vac","couch"],["Press section","press"]],
-  DET:[["Press to dryers","draw"],["Dryer steam","st1","st2sp","st3sp"],["Reel and winder","wsp","wdr"]]};
+  WET:[["Thick stock to the headbox","grade","bws","polf"],["Headbox","jwsp","zones","beat","slv","slh"],["Forming table","wsp","gbox","lvac","vac","couch"],["Press section","press"]],
+  DET:[["Press to dryers","draw"],["Dryer steam","st1","st2sp","st3sp"],["Reel and winder","wsp","nip","wdr"]],
+  STM:[["Syphons and condensate","pdcsp"],["Hood air","exh","sup"]]};
 function dcsOrder(a,cs){const O=DCS_ORDER[a];if(!O)return;const kids=[...cs.children],by={};kids.forEach(e=>{if(e.dataset.ord)by[e.dataset.ord]=e;});
   const used=new Set();cs.replaceChildren();
   for(const [h,...ks] of O){const els=ks.map(k=>by[k]).filter(Boolean);if(!els.length)continue;cs.appendChild(kEl("div","dcssub",h));els.forEach(e=>{cs.appendChild(e);used.add(e);});}
@@ -176,7 +190,7 @@ function dcsMotRows(a,b){const ms=MOTORS.filter(m=>m.a===a),pg=a==="SPOT"?["hd",
 function dcsSync(){const o=$("dcsOv");if(!o||o.hidden||!KUI.st)return;const a=KUI.st,defs=dcsSetDefs(a);
   o.querySelectorAll("[data-ds]").forEach(row=>{const d=defs.find(x=>x[0]===row.dataset.ds);if(!d)return;const inp=row.querySelector("[data-dsv]"),c=d[9]?DCARD(d[9]):null,lock=!!(c&&c.inp.disabled)||!!S.zen;
     if(inp.max!==String(d[4]))inp.max=d[4];if(inp.min!==String(d[3]))inp.min=d[3];if(inp.step!==String(d[5]))inp.step=d[5];if(actEl(inp)!==inp)inp.value=d[6]();inp.disabled=lock||(d[10]&&!G3[d[0]==="spi"?"SPD":"SLC"]);
-    const bv=row.querySelector("[data-dsb]"),t=`${(+d[6]()).toFixed(d[5]<0.1?2:d[5]<1?1:0)} ${d[8]}`;if(bv.textContent!==t)bv.textContent=t;
+    const bv=row.querySelector("[data-dsb]"),t=`${(+d[6]()).toFixed(d[5]<0.01?3:d[5]<0.1?2:d[5]<1?1:0)} ${d[8]}`;if(bv.textContent!==t)bv.textContent=t;
     if(d[11]){const ab=row.querySelector("[data-dsa]"),au=d[11].on();ab.textContent=(d[11].lab||["AUTO","MANUAL"])[au?0:1];ab.setAttribute("aria-pressed",String(au));ab.disabled=S.zen;
       const sm=row.querySelector(".dcsn small");if(sm&&sm.textContent!==d[2])sm.textContent=d[2];}
     const ab=row.querySelector("[data-dsa]");if(ab&&c){const au=C[d[9]].auto,txt=c.btn?(au?"AUTO":"MANUAL"):"";ab.hidden=!c.btn;ab.textContent=txt;ab.setAttribute("aria-pressed",String(!!au));ab.disabled=lock;}

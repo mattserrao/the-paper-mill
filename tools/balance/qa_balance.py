@@ -77,7 +77,7 @@ PLAY = r"""async ([style,seed,maxdays])=>{const P=__PM,S=P.S,h=P.SIM_STEP||0.25,
     const d=Math.floor(S.t/1440);if(d!==lastDay){lastDay=d;if(style!=='handsoff'&&style!=='rounds')shop();}
     P.setRunning(false);if(n%6000===0)await new Promise(r=>setTimeout(r,0));}
   const LG=S.ledger||{};const res=S.season&&S.season.result||{};
-  return Object.assign(L,{surv:!!(S.season&&S.season.surv),alive:!!(S.season&&S.season.on),wave:S.outg&&S.outg.k,day:+(S.t/1440).toFixed(2),score:res.score,cash:Math.round(S.cash),bn:S.bn,lead:S.lead&&S.lead.id,tons:res.tons,incidents:res.incidents,
+  return Object.assign(L,{surv:!!(S.season&&S.season.surv),alive:!!(S.season&&S.season.on),wave:S.outg&&S.outg.k,day:+(S.t/1440).toFixed(2),score:res.score,cash:Math.round(S.cash),bn:S.bn,lead:S.lead&&S.lead.id,tons:res.tons,incidents:res.incidents,breaks:S.tot.breaks,breakMin:Math.round(S.tot.breakMin||0),tuFail:S.tot.tuFail||0,prodT:Math.round(S.tot.prodT),
     tells:T.T?{n:T.T.n,saved:Math.round(T.T.saved||0)}:null,meters:S.civ?Object.fromEntries(Object.entries(S.civ.m).map(([k,v])=>[k,Math.round(v)])):null,
     ledger:Object.fromEntries(Object.entries(LG).map(([k,v])=>[k,Math.round(v)]))});}"""
 

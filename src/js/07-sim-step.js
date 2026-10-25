@@ -19,6 +19,7 @@ function step(dt){
   knobTick(dt);   // v5.6 fiddly knobs (returns at once unless a knob was moved)
   dcsTick(dt);   // v6.5 b3 DCS motors and reject purges (07c; nothing until the DCS is used)
   dryTick(dt);   // v6.5 b5 the dryer limit: water, steam, moisture (07d)
+  stmTick(dt);   // v6.13 the cans, the steam and condensate cascade, the hood and the energy KPIs (07m)
   cdTick(dt);   // v6.11 the CD profile and its actuators (07k)
   weTick(dt);   // v6.8 the basis weight loop, bale water in the pulper, screen pressure drop (07g)
   // 1 inbound arrivals
@@ -54,7 +55,7 @@ function step(dt){
   if(baleOn()&&rejT>0){const lf=rejT*LANDFILL*(P.costMul||1);spend(lf,"occ");bqState().lf+=lf;}   // v6.8.3: rejects hauled to landfill   // v6.6: water over 10% isn't fiber; contamination is rejects
   baleTick(dt,fiberIn);
   // (v6.5.6: stock the chest has no room for goes over the top to the sewer, and is booked as spilled; it used to vanish)
-  {const t1=S.tank+fiberIn,cl=Math.max(0,t1-P.tankCap);S.tank=t1-cl;if(cl>0){pfW("spill",cl);WQ.clip+=cl;}WQ.fi+=fiberIn-cl;}
+  {const t1=S.tank+fiberIn,cl=Math.max(0,t1-P.tankCap);S.tank=t1-cl;if(cl>0){pfW("spill",cl);WQ.clip+=cl;}WQ.fi+=fiberIn-cl;if(shOn())bkFresh(fiberIn-cl);}   // (v6.13: fresh fiber dilutes the chest's broke share, 07n)
   // 5 paper machine
   const level=S.tank/P.tankCap*100, low=C.lowLevel.v;
   const pmDn=mcTick(dt,M)?"machine chest low level, refiners down":M.pmDown,fromMc=!!M.refOut&&!vlvT("LV-104");   // v6.9.2: refiners down, the machine runs on what's in the machine chest (07g)
@@ -74,7 +75,11 @@ function step(dt){
     const r=P.ramp*dt; S.pmSpeed+=clamp(tgt-S.pmSpeed,-r*2,r);
     if(level<5){S.pm="down";}
     else if(S.reel>=P.jumbo&&reelsAtWinder()>P.storeReels){S.pm="spools";}
-    else if(L.brk<dt/390*0.25*P.breakBase*(outRel("wet")+outRel("dry"))/2*((C.breaks?P.gradeBrk:0)+(M.breakMul-1))){S.pm="break";const r=L.brkType;S.brkType=r<0.45?"reel":r<0.8?"dryer":"press";
+    // v6.13: the break odds come from the process (07n brkRisk: R, the product of the named contributors, x SH.rcal so a
+    // hands-off mill breaks as often as before on average); the events' multipliers (upsets, cards, civics) still add on
+    // top. With random breaks off (C.breaks) only what the process adds over normal running is left. The contributors also
+    // say where the sheet goes. Zen: as before.
+    else if((BRR=brkRisk(),L.brk<dt/390*0.25*P.breakBase*(outRel("wet")+outRel("dry"))/2*(P.gradeBrk*(S.zen?1:SH.rcal)*(C.breaks?BRR.R:Math.max(0,BRR.R-1))+(M.breakMul-1)))){S.pm="break";const r=L.brkType;S.brkType=S.zen?(r<0.45?"reel":r<0.8?"dryer":"press"):brkWhere(BRR,r);brLog(S.brkType,brTop(BRR),BRR);
       S.breakLeft=2*(S.brkType==="reel"?4+L.brkLen*6:S.brkType==="dryer"?12+L.brkLen*14:26+L.brkLen*20);S.breakTotal=S.breakLeft;S.tot.breaks++;enqueue("brk");AUDIO.sfx("snap",2500);
       log(`Sheet break ${S.brkType==="reel"?"at the reel (short)":S.brkType==="dryer"?"before the dryers":"before the presses (long)"}`,"warn");brkNote();}
     if(S.pm==="run"){
@@ -97,7 +102,8 @@ function step(dt){
     let off=0;if(qualTick().off)off=prod;
     else if(S.chg){off=Math.min(prod,S.chg.left);S.chg.left-=off;if(S.chg.left<=1e-6){log(`Grade change to ${S.chg.to} complete: back on spec`,"ok");S.chg=null;}}
     else{const cf=cdOff();if(cf>0)off=prod*cf;}   // v6.11: a streak or a wet edge beaters only the roll under it (07k)
-    {const kf=knobOff();if(kf>0)off=Math.min(prod,off+(prod-off)*kf);}   // v5.6: a moved knob sending part of the reel to the beater (defects other than weight and moisture)
+    {const kf=knobOff();if(kf>0)off=Math.min(prod,off+(prod-off)*kf);}
+    {const sf=stmOff()+stkOff();if(sf>0)off=Math.min(prod,off+(prod-off)*sf);}   // v6.13: hood and roof drips, pick-outs on the first cans (07m, 07n)   // v5.6: a moved knob sending part of the reel to the beater (defects other than weight and moisture)
     // (v6.5.3: off-spec paper stays on the reel as beater and is wound into beater rolls; before, it vanished here)
     if(off>0){pfW("broke",off);S.tot.broke+=off;S.q.off+=off;prod-=off;beat=off;}
     if(S.plan.hot&&C.grade==="34Super")S.plan.hot.made+=prod;
@@ -106,7 +112,8 @@ function step(dt){
   qLog(dt,beat);   // v6.7 the off-spec log (07e)
   S.reel+=prod+beat;lotPut(S.lots.reel,C.grade,prod,100,areaNow());lotPut(S.lots.reel,"beater",beat); S.tot.prodT+=prod; {const pt=P.K*C.pmSp.v*bwSp()*dt/60;S.tot.pot+=pt;pfW("pot",pt);}   // (v6.7: potential tons at the setpoint speed, by the hour, for the process flow)
   planTick(dt,prod);
-  if(S.reel>=P.jumbo&&reelsAtWinder()<=P.storeReels){const q=P.jumbo;S.winderBuf+=q;lotTake(S.lots.reel,q,S.lots.buf);S.reel=Math.max(0,S.reel-q);if(S.reel<1e-9){S.reel=0;S.lots.reel.length=0;}S.tot.turnups++;}   // (v6.11.2: a turn-up takes exactly one jumbo; the step's overshoot starts the next reel. Before, the overshoot went
+  shTick(dt);   // v6.13 stickies deposits, the broke chest (the sheet goes to broke on a break), the outage wash-up (07n)
+  if(S.reel>=P.jumbo&&reelsAtWinder()<=P.storeReels){const q=P.jumbo;S.winderBuf+=q;lotTake(S.lots.reel,q,S.lots.buf);S.reel=Math.max(0,S.reel-q);if(S.reel<1e-9){S.reel=0;S.lots.reel.length=0;}S.tot.turnups++;turnupRoll();}   // (v6.13: a turn-up can fail, 07n)   // (v6.11.2: a turn-up takes exactly one jumbo; the step's overshoot starts the next reel. Before, the overshoot went
    //  to the winder too, and reelsAtWinder (tons / 100, rounded up) counted one reel too many: storage read full at 3 of 4)
   // 6 winder
   if(S.wd==="hayout"){if(working("hay"))S.hayLeft-=dt*leadRethread();S.tot.hayMin+=dt;if(S.hayLeft<=0){S.wd="run";log("Winder cleaned up and running again","ok");}}

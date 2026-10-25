@@ -26,7 +26,7 @@ function dryDemand0(tph){const g=C.grade,b=DRY.base[g]||DRY.base["24"];return b+
 // share, 1 = normal). The 3rd section's auto loop takes up to ±30% of it (a); past that the knobs move the moisture
 // (20 points of moisture per unit of r, the v5.6 knob model). Before v6.5.2 the knobs added kPa to the demand and the
 // whole range up to the ceiling soaked them up, so on a mill with headroom the wet-end knobs did nothing but cost steam.
-function dryKnob(){const K=S.knob;if(!(K&&K.any))return {r:1,a:1};const r=(K.W||1)-(K.d1x||0);return {r,a:clamp(r,0.7,1.3)};}
+function dryKnob(){const K=S.knob,f=stmDemF();if(!(K&&K.any))return {r:f,a:f};const r=(K.W||1)-(K.d1x||0);return {r:r*f,a:clamp(r,0.7,1.3)*f};}   // (v6.13: flooded cans and a humid hood, 07m: the rest of the cans have to do their share; past the auto loop's ±30% only the knobs' part moves the moisture)
 // the paper rate the dryers can take before the sheet goes wet (for the bottleneck view)
 function dryCapTph(){const D=dryState(),g=C.grade,b=DRY.base[g]||DRY.base["24"],s=drySlope(g)/DRY.wpt0,k=s*dryWpt();
   return k>0?Math.max(0,(dryCeil(D)/dryKnob().a-b+s*dryRef(g)*DRY.wpt0)/k):1e9;}
@@ -58,7 +58,6 @@ function dryTick(dt){const D=dryState(),g=C.grade,b=DRY.base[g]||DRY.base["24"],
   if(D.wet)D.trim=Math.min(0.4,D.trim+0.01*dt);else if(D.trim>0&&D.dem<ceil-4)D.trim=Math.max(0,D.trim-0.005*dt);
   if(!D.wet&&wasWet)log("QCS: moisture back in spec. The machine is coming back up to speed.","ok");}
 // mods (04-upsets mods()): the crew's speed trim, and wet-sheet breaks in the dryers when the knob model isn't running
-function dryMods(m){const D=S.dry;if(!D||S.zen)return;if(D.trim>0)m.speedCap=Math.min(m.speedCap,1-D.trim);
-  const K=S.knob;if(!(K&&K.any)&&D.m>13)m.breakMul*=1+(D.m-13)*0.8;}
+function dryMods(m){const D=S.dry;if(!D||S.zen)return;if(D.trim>0)m.speedCap=Math.min(m.speedCap,1-D.trim);}   // (v6.13: a wet sheet's breaks are in the break risk, 07n)
 // (v6.5.3: whether the reel is in spec on moisture is the QCS spec check's call now, 07e-quality.js)
 const dryLimited=()=>!!(S.dry&&S.pm==="run"&&S.dry.dem>=dryCeil(S.dry)-0.5);

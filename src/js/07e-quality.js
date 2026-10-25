@@ -11,12 +11,12 @@ const QSPEC={   // basis weight lb/1000 ft² (target ±3%), reel moisture % (8 �
   "28": {bw:[27.19,28.87],m:[6.0,10.0],shade:"mill shade"},
   "31": {bw:[30.17,32.03],m:[6.0,10.0],shade:"mill shade"},
   "34Super":{bw:[32.99,35.03],m:[6.0,10.0],shade:"mill shade"}};
-const QWHY={bw:"weight",m:"moisture",shade:"color",chg:"weight (grade change)",rct:"ring crush"};
+const QWHY={bw:"weight",m:"moisture",shade:"color",chg:"weight (grade change)",rct:"ring crush",stfi:"STFI CD"};
 // v6.8: the weight spec is ±3% around the basis weight setpoint (the grade's target unless trimmed on the WET DCS), and
 // every grade has a ring crush minimum (07g RCT0, 97% of it). More refining raises ring crush, so a lighter setpoint can pass.
 const qBw=g=>{const s=(QSPEC[g]||QSPEC["24"]).bw,f=g===C.grade?bwSp()/bwStd():1;return [s[0]*f,s[1]*f];};
 // the latest check (derived each step, not saved): measured values, what's out, the share of production going to the beater
-const QNOW={bw:0,m:8,shade:true,rct:60,out:[],why:"",off:0};
+const QNOW={bw:0,m:8,shade:true,rct:60,stfi:2.6,out:[],why:"",off:0};
 // what the scanner reads now (no dice: the swings are smooth functions of time, like the DCS readings)
 function qualMeasure(){const t=S.t;
   const wob=(f,k)=>Math.sin(t*f+k)*0.6+Math.sin(t*f*2.7+k*2)*0.4;
@@ -24,11 +24,11 @@ function qualMeasure(){const t=S.t;
   const m=S.dry?S.dry.m:DRY.m0;
   // shade: the dye system is in trouble (an upset, or the dye pump stopped from the DCS)
   const shade=!(active("dye")||active("m_dye")||motState("dye")==="off");
-  return {bw,m,shade,rct:rctNow(bw)};}
+  return {bw,m,shade,rct:rctNow(bw),stfi:stfiNow(bw)};}   // (v6.13: STFI CD, 07n)
 function qualTick(){const Q=QNOW,sp=QSPEC[C.grade]||QSPEC["24"];if(Q.S!==S){Q.S=S;Q.out=[];Q.why="";Q.logT=Q.endT=null;}
-  const r=qualMeasure();Q.bw=r.bw;Q.m=r.m;Q.shade=r.shade;Q.rct=r.rct;
+  const r=qualMeasure();Q.bw=r.bw;Q.m=r.m;Q.shade=r.shade;Q.rct=r.rct;Q.stfi=r.stfi;
   if(S.pm!=="run"||S.zen){Q.off=0;return Q;}   // (no sheet, nothing to judge: the last verdict stands until it runs again)
-  const out=[],bb=qBw(C.grade);if(r.bw<bb[0]||r.bw>bb[1])out.push("bw");if(r.rct<rctSpec())out.push("rct");
+  const out=[],bb=qBw(C.grade);if(r.bw<bb[0]||r.bw>bb[1])out.push("bw");if(r.rct<rctSpec())out.push("rct");if(r.stfi<stfiSpec())out.push("stfi");
   // (any other off-spec spell, like civics' "moisture drifting", is a moisture violation whatever the dryers say)
   if(r.m<sp.m[0]||r.m>sp.m[1]||(S.M&&S.M.offSpec&&r.shade))out.push("m");
   if(!r.shade)out.push("shade");
@@ -53,8 +53,8 @@ function qualStatus(){const K=S.knob,ko=K&&K.any?K.off:0;
 // The broke pulper takes about two rolls an hour while the chest has room; the fiber goes straight to stock (no rejects:
 // it's clean paper). A broker can buy what's waiting in the bay instead (05-event-cards.js "seconds").
 const QBEAT={rate:25};   // t/h repulped
-function beaterTick(dt){const b=S.q.bank||0;if(b<=1e-6)return;const room=P.tankCap*0.98-S.tank;if(room<=0)return;
-  const t=Math.min(b,QBEAT.rate*dt/60,room);S.q.bank=b-t;S.tank+=t;WQ.rep+=t;S.tot.repulped=(S.tot.repulped||0)+t;}
+function beaterTick(dt){const b=S.q.bank||0;if(b<=1e-6)return;const room=shOn()?SH.bkCap*0.95-bkState().f:P.tankCap*0.98-S.tank;if(room<=0)return;   // (v6.13: into the broke chest, metered back from there, 07n)
+  const t=Math.min(b,QBEAT.rate*dt/60,room);S.q.bank=b-t;if(shOn())bkIn(t,"beater");else S.tank+=t;WQ.rep+=t;S.tot.repulped=(S.tot.repulped||0)+t;}
 // ---- v6.7 the off-spec log (the quality screen): a spell starts with the first beater ton and ends after 10 quiet minutes ----
 function qLog(dt,beat){const Q=S.q;if(!Q)return;
   if(beat>0){if(!Q.cur){const q=qualStatus();Q.cur={t0:Math.round(S.t),t1:Math.round(S.t),why:q.why||"off spec",g:C.grade,tons:0,quiet:0};}Q.cur.tons+=beat;Q.cur.t1=Math.round(S.t);Q.cur.quiet=0;}

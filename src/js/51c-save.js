@@ -15,7 +15,7 @@
         // the open card or dialog is kept by name (the card object holds functions); 3D-only fields are left out
         const op=S.cards&&S.cards.open;S2.cards=Object.assign({},S.cards,{open:op&&op.c?{cid:op.c.id}:op&&op.outage?{outage:true}:null});
         const data={v:VER,app:APP_VER,env:SITE.env,mill:SITE.seed,at:Date.now(),why,S:S2,C,CH:{on:CH.on,lvl:CH.lvl,en:CH.en},
-          PS:Object.fromEntries(Object.entries(P).filter(e=>typeof e[1]==="number"||typeof e[1]==="boolean")),QN:{bw:QNOW.bw,m:QNOW.m,shade:QNOW.shade,rct:QNOW.rct,out:QNOW.out,why:QNOW.why,off:QNOW.off,logT:QNOW.logT,endT:QNOW.endT},MILL:{name:MILL.name,brand:MILL.brand},day:Math.floor(S.t/1440)+1,cash:S.cash};
+          PS:Object.fromEntries(Object.entries(P).filter(e=>typeof e[1]==="number"||typeof e[1]==="boolean")),QN:{bw:QNOW.bw,m:QNOW.m,shade:QNOW.shade,rct:QNOW.rct,stfi:QNOW.stfi,out:QNOW.out,why:QNOW.why,off:QNOW.off,logT:QNOW.logT,endT:QNOW.endT},MILL:{name:MILL.name,brand:MILL.brand},day:Math.floor(S.t/1440)+1,cash:S.cash};
         localStorage.setItem(KEY,JSON.stringify(data));lastSave=performance.now();G3.saveMs=lastSave-t0;return true;}
       catch(e){diag("save failed: "+String(e&&e.message||e).slice(0,80));return false;}}
     // v6.7.1: saves from before the grade set changed carry the old grade ids; they're mapped to the new ones on load

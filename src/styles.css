@@ -1497,3 +1497,13 @@ body.pmpop .popmain[data-v="dcs"] #dcsOv .dcs{max-width:1180px;margin:0 auto}
 
 /* v6.11.2 t6: alarm colours on mimic readings (DE pulper level) */
 .mtg tspan.twn{fill:#ffb84d}.mtg tspan.tal{fill:#ff6b5e}
+/* v6.13 Steam and Sheet (50m): the side elevation strip on WET/DET, the profile and breaks screens, the sheet camera's HUD */
+.shstrip{display:flex;gap:6px;align-items:stretch;margin:0 0 6px}.shstrip canvas{flex:1;min-width:0;display:block;border-radius:8px}
+.shstrip [data-shride]{font-size:11px;padding:3px 8px;writing-mode:vertical-rl;transform:rotate(180deg)}
+.prbtn{display:flex;align-items:center;gap:10px;margin-top:6px}.prbtn small{color:#8ea4c4;font-size:12px}
+.dcsctl canvas#brFish{width:100%;display:block;border-radius:8px;margin-top:6px}
+.qtab tr[data-bri]{cursor:pointer}.qtab tr.sel td{background:#1d3550}
+#spcSel{margin:4px 0}
+.ridehud{position:fixed;left:50%;top:92px;transform:translateX(-50%);z-index:900;display:flex;gap:12px;align-items:baseline;flex-wrap:wrap;justify-content:center;
+  background:rgba(12,22,38,.86);color:#e8f0ff;border:1px solid #2c3e5c;border-radius:12px;padding:8px 14px;font:600 13px system-ui,sans-serif;font-variant-numeric:tabular-nums;max-width:92vw;cursor:pointer}
+.ridehud b{font-size:15px;color:#ffd27a}.ridehud small{color:#8ea4c4;font-size:11px}
