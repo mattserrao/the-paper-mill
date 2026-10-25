@@ -1,5 +1,11 @@
 # Changelog
 
+## v6.12.1-t8 (2026-10-25): speed upgrades raise the draw (test build, test/v6.12.1)
+- Buying a speed upgrade (drive, shoe press, steam box) raises the open draw to what the faster machine needs (0.1% per
+  100 fpm: drive +0.15%, shoe +0.10%, steam box +0.04%), with a log line, and that becomes the draw's standard (reset,
+  "moved" and the ring crush reference follow it, S.drawUp), so an upgrade alone never costs extra breaks. The required
+  draw is now measured from the grade's own standard speed (1.5% there); the draw knob steps in 0.05%.
+
 ## v6.12.1-t7 (2026-10-24): forming vacuum zones, refining power cap, draw vs speed (test build, test/v6.12.1)
 - Forming table in zones, headbox to couch: the forming board (blades, no vacuum), three gravity boxes, three low vacuum
   boxes and four high vacuum flatboxes, drawn as boxes down the table with their ends in zone colours and a name plate per

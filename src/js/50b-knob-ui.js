@@ -35,7 +35,7 @@ function knobCtl(id,where){const d=KNOBN[id],w=kEl("div","kctl"),key=where+"-"+i
     w.querySelectorAll("[data-hv]").forEach(b=>b.addEventListener("click",()=>{knobSet("hood",+b.dataset.hv);if(where==="p")closeKnob();else kuiRefresh();}));}
   else{const k=d.dk||1,dp=d.dp||0,st=d.dk?Math.pow(10,-dp):d.step,mn=+(d.min*k).toFixed(dp),mx=+(d.max*k).toFixed(dp);   // (v6.12.1-t7: dk shows a knob in other units, the high vacuum's kPa as inHg)
     w.innerHTML=`<label class="spis"><span>${mn}</span><input type="range" min="${mn}" max="${mx}" step="${st}" data-kv aria-label="${d.name}"/><span>${mx}</span></label>
-      <div class="kval"><b data-kvv></b><small data-kvs>standard ${(KNOB_IDEAL[id]*k).toFixed(dp)} ${d.unit}</small></div>`;
+      <div class="kval"><b data-kvv></b><small data-kvs>standard ${((id==="draw"?drawStd():KNOB_IDEAL[id])*k).toFixed(dp)} ${d.unit}</small></div>`;
     w.querySelector("[data-kv]").addEventListener("input",e=>{knobSet(id,+e.target.value/k);kuiRefresh();});}
   return w;}
 function knobCtlSync(w){const id=w.dataset.k,K=S.knob;

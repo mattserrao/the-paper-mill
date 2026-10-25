@@ -100,7 +100,7 @@ function dpYield(){if(S.zen)return 1;let x=0;for(const k of ["hd","lc","lw"])x+=
 // strength: ring crush from refining, the measured weight and stickies; the spec is the grade's
 const rctSpec=()=>Math.round((RCT0[C.grade]||60)*WE.rctSpec*10)/10;
 // (v6.8.3: open draw: each % of draw over the 1.5 % standard stretches the sheet and takes 4 % off ring crush; less draw adds it)
-function rctNow(bw){const ri=1+WE.rctK*(kwhNow()-WE.kwh0)-WE.rctStk*Math.max(0,((S.bq&&!S.zen)?S.bq.ck:0.1)-0.1)-WE.rctDraw*((S.zen?KNOB_IDEAL.draw:knobVal("draw"))-KNOB_IDEAL.draw);   // (v6.11.2: dry strength starch removed; v6.11.1 added its ring crush here)
+function rctNow(bw){const ri=1+WE.rctK*(kwhNow()-WE.kwh0)-WE.rctStk*Math.max(0,((S.bq&&!S.zen)?S.bq.ck:0.1)-0.1)-WE.rctDraw*((S.zen?drawStd():knobVal("draw"))-drawStd());   // (v6.11.2: dry strength starch removed; v6.11.1 added its ring crush here)
   return (RCT0[C.grade]||60)*(bw/bwStd())*ri;}
 // v6.11.2 paper is sold by area (MSF, thousand ft²), the way box plants buy it. The list price ($/t) is for a ton at the
 // grade's target weight; a ton made lighter covers more ft² and sells for list × bwStd/bw, a heavier one for less. The player

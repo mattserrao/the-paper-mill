@@ -98,7 +98,7 @@ const upDay=()=>Math.floor(S.t/1440),upLocked=()=>!S.free&&S.upDay===upDay();
 const UP_NARROW=matchMedia("(max-width:420px)");
 const upNext=()=>((S.t+360)/60)%24>=6?"tomorrow 6\u00a0AM":"at 6\u00a0AM";   // v5.0.6: "6 AM" never splits across lines
 function buy(id){const u=UP[id],l=LV(id);if(l>=u.lv.length)return;const cost=upCost(u,l);if(!S.free&&S.cash<cost)return;if(upLocked())return;
-  S.upDay=upDay();spend(cost,"upgrades");AUDIO.sfx("cash",150);S.up[id]=l+1;applyUpgrades();if(S.rel)S.rel.upChk=S.t+20;   // (v6.10 t4: check the refiner drives' load once the mill has settled, 07i)
+  S.upDay=upDay();spend(cost,"upgrades");AUDIO.sfx("cash",150);const sb0=P.spBonus;S.up[id]=l+1;applyUpgrades();drawUpg(P.spBonus-sb0);   /* (v6.12.1-t8: a faster machine gets the draw it needs) */if(S.rel)S.rel.upChk=S.t+20;   // (v6.10 t4: check the refiner drives' load once the mill has settled, 07i)
   if(id==="reliab"&&l===0&&civOn())civAdd(TELL.relCiv,"Reliability program");   // v5.7: monitoring raises Machinery (and unlocks the Area Trend Report)
   BANNERS.push({text:`${u.name}${u.lv.length>1?" level "+(l+1):""} is online.`,t:null,kind:"good"});while(BANNERS.length>3)BANNERS.splice(1,1);
   log(`Installed ${u.name}${u.lv.length>1?" level "+(l+1):""} (${money(cost)})`,"ok");updateShop();}

@@ -41,7 +41,7 @@ const KNOBS=[
     tip:"Sweeps the felt-cleaning shower back and forth across the pick-up felt. Normally 100%."},
   {id:"incomer",name:"MCC main incomer",area:"DRV",where:"MCC, the incoming 480 V section",field:true,
     tip:"The main 480 V breaker that feeds all three drive lineups. It stays closed. Opening it under load draws an arc."},
-  {id:"draw",name:"Press-to-dryer draw",area:"DET",where:"Dry end DCS",dcs:true,unit:"%",min:0,max:4,step:0.1,dp:1,
+  {id:"draw",name:"Press-to-dryer draw",area:"DET",where:"Dry end DCS",dcs:true,unit:"%",min:0,max:4,step:0.05,dp:2,
     tip:"Speed difference between the presses and the first dryers, which keeps the open draw taut. Standard is 1.5%. More draw stretches the sheet and lowers ring crush; less lets it flutter and break more often."},
   {id:"st1",name:"1st section steam",area:"DET",where:"Dry end DCS",dcs:true,unit:"kPa",min:0,max:250,step:5,
     tip:"Steam pressure in the first dryer section. The 3rd section is on automatic moisture control. Standard is 70 kPa."},
@@ -51,10 +51,17 @@ const KNOBS=[
 // v6.11.1: the dryer hood doors raised on the knob while the machine runs (the 3D front section lifts off 2 s later, 25-3d):
 // the hood leaks its hot air, so the dryers use 4% more steam per ton (cost, the DCS steam reading and the boiler's load)
 const HOOD_STEAM=0.04;
-// v6.12.1-t7 the open draw has to rise with speed: 1.5 % at the standard 2,632 fpm and 0.1 % more for every 100 fpm faster
-// (less when slower). drawBrk: the break multiplier under what the speed needs (mods, 04), as v6.8.3 had it under 1.5 %
-const DRAWV={sp0:2632,d0:1.5,k:0.1};
-const drawReq=sp=>Math.max(0.5,DRAWV.d0+DRAWV.k*((sp??(S.pm==="run"?S.pmSpeed:C.pmSp.v))-DRAWV.sp0)/100);
+// v6.12.1-t7 the open draw has to rise with speed: 1.5 % at the grade's standard speed (2,632 fpm on 24 lb) and 0.1 % more
+// for every 100 fpm faster (less when slower). drawBrk: the break multiplier under what the speed needs (mods, 04), as
+// v6.8.3 had it under 1.5 %. t8: a speed upgrade raises the draw with it (buy, 08: drawUpg), so its standard, drawStd(), is
+// 1.5 % plus what the upgrades' speed needs (S.drawUp); the knob, its reset and the ring crush reference all use that
+const DRAWV={d0:1.5,k:0.1};
+const drawStd=()=>DRAWV.d0+(S&&S.drawUp||0);
+const drawReq=sp=>Math.max(0.5,DRAWV.d0+DRAWV.k*((sp??(S.pm==="run"?S.pmSpeed:C.pmSp.v))-(GRADES[C.grade]||GRADES["24"]).sp)/100);
+// a purchase that made the machine faster (P.spBonus up by db fpm): the draw goes up to match, and the log says so
+function drawUpg(db){if(!(db>0)||S.zen)return;const d=Math.round(DRAWV.k*db/100*100)/100;S.drawUp=(S.drawUp||0)+d;
+  const K=S.knob;if(K&&K.v.draw!=null)K.v.draw=Math.round((K.v.draw+d)*100)/100;
+  log(`Open draw raised to ${knobVal("draw").toFixed(2)}% for the faster machine (+${Math.round(db)} fpm needs +${d.toFixed(2)}%).`,"ok");}
 const drawBrk=()=>S.pm==="run"?1+1.2*Math.pow(Math.max(0,drawReq()-knobVal("draw")),1.3):1;
 const hoodUp=()=>{const K=S.knob;return !!(K&&K.any&&!S.zen&&K.v.hood);};
 const KNOBN=Object.fromEntries(KNOBS.map(k=>[k.id,k]));
@@ -91,12 +98,12 @@ function dewater(fr,vac,pl,jv,jh,cb,gb,lv){
   const ps=clamp(pb+(cs-19)+lt,30,56),wpt=p=>(1-DRY.m0/100)/(p/100)-1;
   return {cs,ps,W:wpt(ps)/wpt(pb),eJet,eVac,eRef,eBox,eZ};}
 const KZONES=12;
-function knobState(){if(!S.knob){S.knob={v:Object.assign({},KNOB_IDEAL),z:new Array(KZONES).fill(0),
+function knobState(){if(!S.knob){S.knob={v:Object.assign({},KNOB_IDEAL,{draw:drawStd()}),z:new Array(KZONES).fill(0),
     x:{cp:5,fr:0.5,ch:0,sw:0,vac:30,pl:100,st:0,d1:0,m:8,dl:0,dt:0,bs:0,z:new Array(KZONES).fill(0)},
     any:false,cs:0,wear:0,gacc:0,gm0:0,H:{},harm:{},off:0,offWhy:"",sf:1,a:1,W:1,feed:1,brk:1,edge:0,gtrav:0,inc:[],warned:{},moved:{}};}
   if(S.knob.pmPrev==null)S.knob.pmPrev=S.pm;if(S.rng&&S.rng.knob==null)S.rng.knob=(S.seed^0x6b9f3c21)|0;return S.knob;}
-function knobVal(id){if(id==="pulp"){const o=vlvPulpOP();if(o!=null)return o;}const K=S.knob;return K?(K.v[id]??KNOB_IDEAL[id]):KNOB_IDEAL[id];}   // (v6.9: the pulper dilution valve is NV-101's)
-function knobAt(id){const K=S.knob;if(!K)return true;if(id==="pulp"&&vlvT("NV-101"))return false;if(id==="slice")return !K.v.sv&&!K.v.sh;if(id==="zones")return K.z.every(v=>v===0);if(id==="guide")return K.v.gm===1&&K.v.gt===0;return (K.v[id]??KNOB_IDEAL[id])===KNOB_IDEAL[id];}
+function knobVal(id){if(id==="pulp"){const o=vlvPulpOP();if(o!=null)return o;}const K=S.knob,d=id==="draw"?drawStd():KNOB_IDEAL[id];return K?(K.v[id]??d):d;}   // (v6.9: the pulper dilution valve is NV-101's)
+function knobAt(id){const K=S.knob;if(!K)return true;if(id==="pulp"&&vlvT("NV-101"))return false;if(id==="slice")return !K.v.sv&&!K.v.sh;if(id==="zones")return K.z.every(v=>v===0);if(id==="guide")return K.v.gm===1&&K.v.gt===0;if(id==="draw")return Math.abs((K.v.draw??drawStd())-drawStd())<0.001;return (K.v[id]??KNOB_IDEAL[id])===KNOB_IDEAL[id];}
 // the player moves a knob (UI): v is the new value (zones: [i,v]; guide: {gm,gt})
 function knobSet(id,v){if(S.zen)return;const K=knobState();
   if(id==="zones"){const [i,z]=v;K.z[i]=clamp(Math.round(z),-10,10);}
@@ -113,7 +120,7 @@ function knobFmt(id){const K=S.knob,d=KNOBN[id];if(id==="slice"){const s=slcGet(
   const v=knobVal(id)*(d.dk||1);return `${v.toFixed(d.dp||0)} ${d.unit}`;}
 function knobReset(id,quiet){const K=S.knob;if(!K)return;
   if(id==="slice"){K.v.sv=K.v.sh=0;if(G3.SLC){G3.SLC.v=G3.SLC.h=0;G3.SLC.dirty=true;}}
-  else if(id==="zones")K.z.fill(0);else if(id==="guide"){K.v.gm=1;K.v.gt=0;K.gacc=0;}else K.v[id]=KNOB_IDEAL[id];
+  else if(id==="zones")K.z.fill(0);else if(id==="guide"){K.v.gm=1;K.v.gt=0;K.gacc=0;}else K.v[id]=id==="draw"?drawStd():KNOB_IDEAL[id];
   if(id==="pulp")vlvRevert("NV-101",quiet);   // (v6.9)
   if(!quiet)K.any=true;}
 // which knobs are off their ideal right now (for the knob view, the DCS and the crew's trace)
@@ -203,7 +210,7 @@ function knobTick(dt){const K=S.knob;if(!K||!K.any||S.zen)return;
   // turned down the 3rd takes its share over, which isn't more steam, so that alone doesn't trip it.
   x.bk=L(x.bk||0,a0+x.d1>=1.29?1:0,40);x.bs=Math.max(clamp((1-Dr.hdr)/0.45,0,1),x.bk);
   x.dl1=L(x.dl1||0,Math.max(0,1.0-v.draw),10);x.dl=L(x.dl,x.dl1,10);   // (two stages: the reel has to build a few wraps before the wrinkles show)
-  x.cr1=L(x.cr1||0,Math.max(0,x.pl-115)/30,10);x.cr=L(x.cr||0,x.cr1,10);x.dt=L(x.dt,Math.max(0,v.draw-2.4),10);
+  x.cr1=L(x.cr1||0,Math.max(0,x.pl-115)/30,10);x.cr=L(x.cr||0,x.cr1,10);x.dt=L(x.dt,Math.max(0,v.draw-(drawStd()+0.9)),10);
   // ---- consequences: off-spec ----
   const nz=x.z.filter(z=>Math.abs(z)>4).length;
   const F={wet:x.m>10?(x.m-10)/4:0,dry:x.m<6?(6-x.m)/2:0,cd:nz/3,bw:x.sw>0.3?(x.sw-0.3)/0.6:0,crush:x.cr>0.05?(x.cr-0.05)/0.6:0,stripes:x.st>0.4?(x.st-0.4)/0.4:0,wrinkles:x.dl>0.15?(x.dl-0.15)/0.6:0,floc:chemFloc()};   // (v6.11.1 floc: a polymer overdose, 07l)
@@ -270,5 +277,5 @@ function knobRead(){const K=S.knob,x=K?K.x:null,g=GRADES[C.grade]||GRADES["24"],
     vac:x?x.vac:30,vacIn:(x?x.vac:30)/FZ.in,gbox:x&&x.gb!=null?x.gb:FZ.gb,lvac:x&&x.lv!=null?x.lv:FZ.lv,...(()=>{const p=FZ.pv(x&&x.gb!=null?x.gb:FZ.gb,x&&x.lv!=null?x.lv:FZ.lv,x?x.vac:30);return {vpkw:run?p.kw+wob(0.09,7)*3:0,gbv:p.gv,lvv:p.lv,hvv:p.hv};})(),cbox:x&&x.cb!=null?x.cb:CBOX.best,cvac:cboxVac(x?x.cb:CBOX.best)+(run?wob(0.07,5)*0.4:0),cvacIn:(cboxVac(x?x.cb:CBOX.best)+(run?wob(0.07,5)*0.4:0))/FZ.in,couchSol:x&&x.cs!=null?x.cs:csStd(),pl:x?x.pl:100,pressSol:x&&x.ps!=null?x.ps:psStd(),
     edge:K?K.edge:0,gtrav:K?K.gtrav:0,gm:knobVal("gm"),stripes:x?x.st:0,cs:K?K.cs:0,couch:knobVal("couch"),osc:knobVal("osc"),wear:K?K.wear:0,
     st1:knobVal("st1"),st3,steam:run?(Dr?Dr.steam:50.5*P.K*S.pmSpeed*bw/34.8):S.pm==="break"&&Dr?Dr.steam:0,boiler:Dr?Dr.hdr:1,moist:run?m+wob(0.13,4)*0.25:0,
-    bw:run?qualMeasure().bw:0,hbc:S.we?S.we.hbc:WE.hbc,draw:knobVal("draw"),tension:run?1.0+(knobVal("draw")-1.5)*0.42:0,
+    bw:run?qualMeasure().bw:0,hbc:S.we?S.we.hbc:WE.hbc,draw:knobVal("draw"),tension:run?1.0+(knobVal("draw")-drawStd())*0.42:0,
     zones:cdOn()&&S.cd?S.cd.dv.map(d=>m+d):z.map((v,i)=>m+v*0.35+Math.sin(i*1.7+t*0.01)*0.12),   /* (v6.11: the CD profile, 07k) */off:qualStatus().off,why:qualStatus().why,F:K&&K.F||{},speed:S.pmSpeed};}
