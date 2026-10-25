@@ -160,7 +160,7 @@ def rows(pw):
     pg.evaluate("()=>{__PM.setRunning(false);for(let i=0;i<4*60;i++){if(__PM.S.cards)__PM.S.cards.open=null;__PM.step(0.25)}}")
     order = lambda a: pg.evaluate("a=>{__PM.G3.openStation(a,'dcs');const c=[...document.querySelectorAll('#dcsOv .dcsctl')].find(e=>e.querySelector('[data-ord]'));return [...c.children].map(e=>e.classList.contains('dcssub')?'#'+e.textContent:e.dataset.ord||'').filter(Boolean)}", a)
     w = order("WET")
-    want = ["#Thick stock to the headbox", "grade", "bws", "polf", "#Headbox", "zones", "beat", "slv", "slh", "#Forming table", "wsp", "vac", "couch", "#Press section", "press"]
+    want = ["#Thick stock to the headbox", "grade", "bws", "polf", "#Headbox", "zones", "beat", "slv", "slh", "#Forming table", "wsp", "gbox", "lvac", "vac", "couch", "#Press section", "press"]
     ok("WET rows in process order: thick stock, headbox, forming table, press", w == want, w)
     d = order("DET")
     ok("DET rows: draw, 1st / 2nd / 3rd section steam, reel and winder", d == ["#Press to dryers", "draw", "#Dryer steam", "st1", "st2sp", "st3sp", "#Reel and winder", "wsp", "wdr"], d)

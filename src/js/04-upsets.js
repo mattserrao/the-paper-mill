@@ -1,7 +1,8 @@
 const EVENTS=[
  {id:"refclash",g:"stock",name:"Refiner plates clash",head:"Refiner plates clashed! The refiners tripped: no stock is going forward to the machine chest.",dur:[180,300],mtbf:420,mods:{refOut:"refiner plates clashed"},fx:"refclash",
-   // (v6.9.2: the refiners feed the machine chest; clashed, nothing goes forward, the machine runs the chest down and trips
-   // on its low level (07g mcTick), and comes back once maintenance has re-plated them and the chest has refilled)
+   // (v6.9.2, again from v6.12.1-t5: the refiners, in the hall's approach bay, feed the machine chest; clashed, nothing goes
+   // forward, the machine runs the chest down and trips on its low level (07g mcTick), and comes back once maintenance has
+   // re-plated them and the chest has refilled)
    start:inc=>{rand("upx");inc.note="refiners down: the machine chest is running down";}},
  {id:"shaft",g:"machine",name:"Driveshaft snaps",head:"Dryer driveshaft snaps. Millwrights called in.",dur:[240,480],mtbf:160,mods:{pmDown:"driveshaft"},fx:"shaft"},
  {id:"dryerfire",g:"machine",name:"Fire in the dryers",head:"Fire in the dryer hood! Deluge on, sheet off.",dur:[180,360],mtbf:260,mods:{pmDown:"dryer fire"},fx:"dryerfire"},
@@ -111,6 +112,9 @@ function mods(){const m=baseMods();
   if(S.wx==="rain"&&!baleOn())m.yieldMul*=0.97;   // (v6.6: outside zen the yard's moisture does this, 05b)
   // (v6.11.2: the warehouse and yard crews no longer leave their trucks to help rethread a sheet break; receiving and
   //  shipping carry on through breaks and hayouts. crewAtPM stays in the mods, always false, for older saves and the pills)
+  // v6.12.1-t7: the open draw has to rise with speed (DRAWV, 07b): under what this speed needs the sheet flutters into the
+  // dryers and breaks come more often, the further under the more (whether or not the knob was ever touched)
+  if(!S.zen){const k=drawBrk();if(k>1)m.breakMul*=k;}
   knobMods(m);vlvMods(m);chemMods(m);   // v5.6 / v6.9 fiddly knobs (nothing unless a knob was moved)
   bqMods(m);   // v6.6 stickies from contaminated bales (05b)
   dryMods(m);   // v6.5 b5 the dryer limit: the crew's speed trim for a wet sheet (07d)

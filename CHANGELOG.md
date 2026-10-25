@@ -1,5 +1,130 @@
 # Changelog
 
+## v6.12.1 (2026-10-25): The Approach System
+Release of v6.12.1-t1 to t8 (below), merged from test/v6.12.1. Regression suite: all 22 checks pass on t7 (the full tier,
+with knobs, dcs and help rerun on their own after test updates); t8 passed process, knobs, dcs, save and smoke. The
+in-game autotest ran in the test browser; it has not been run on an iPhone for this release.
+
+## v6.12.1-t8 (2026-10-25): speed upgrades raise the draw (test build, test/v6.12.1)
+- Buying a speed upgrade (drive, shoe press, steam box) raises the open draw to what the faster machine needs (0.1% per
+  100 fpm: drive +0.15%, shoe +0.10%, steam box +0.04%), with a log line, and that becomes the draw's standard (reset,
+  "moved" and the ring crush reference follow it, S.drawUp), so an upgrade alone never costs extra breaks. The required
+  draw is now measured from the grade's own standard speed (1.5% there); the draw knob steps in 0.05%.
+
+## v6.12.1-t7 (2026-10-24): forming vacuum zones, refining power cap, draw vs speed (test build, test/v6.12.1)
+- Forming table in zones, headbox to couch: the forming board (blades, no vacuum), three gravity boxes, three low vacuum
+  boxes and four high vacuum flatboxes, drawn as boxes down the table with their ends in zone colours and a name plate per
+  group; on the drive side a leg from each vacuum box to a header and a liquid ring vacuum pump with its separator and vent.
+- Two new WET DCS knobs: gravity box vacuum (0-5 inHg, standard 1.0, PV-311) and low vacuum boxes (2-10 inHg, standard
+  5.0, PV-312); the old forming vacuum knob is now the high vacuum flatboxes (PV-313), unchanged inside (kPa), shown as
+  inHg (standard 8.9). Each zone off its standard loses up to about a point of couch solids (more steam); over its limit
+  (gravity 3, low 8, flatboxes 13 inHg) it wears the forming fabric toward a failure, and every zone adds to the couch
+  drive's load. The WET picture shows each zone's vacuum, its valve opening and the pump's kW (120 kW + the vacuum asked
+  for), with alarms for low vacuum and fabric wear; trends and tags in inHg; the couch box reads inHg too.
+- Refining power cap (HPDT): the refiners can put 2,400 kW into the stock (3,120 with the refiner upgrade), so the kWh/t
+  they deliver is the setpoint or that power over the tonnage, whichever is less: 60 kWh/t holds to 40 t/h (52 upgraded),
+  then falls (48 kWh/t, 2.7 HPDT at 50 t/h), and strength (ring crush) and freeness follow. Readouts in kWh/t and HPDT, and
+  refiner load against its maximum.
+- Open draw vs speed: the draw has to rise 0.1% for every 100 fpm over 2,632 fpm (1.5% there). Under what the speed
+  needs, breaks going into the dryers come more often, whether or not the knob was touched (about +25% at +300 fpm left at
+  1.5%). The DRY END DCS shows the draw against what's needed, with an alarm when it's short.
+- The dryer hood doors' and the MCC main incomer's field panels close when you throw the switch.
+
+## v6.12.1-t6 (2026-10-24): couch suction box, approach piping, felts, dryer catwalk (test build, test/v6.12.1)
+- New fiddly knob, the couch suction box (WET, a red station by the couch roll's tending side, at x 40.4; the couch pit
+  agitator's station moved east to x 43.4, swapping places): the angle of the vacuum box
+  inside the suction couch roll, -15 to +15 degrees, standard and best -6. Off best the box seals worse: the couch vacuum
+  falls from 60 kPa with the square of the angle (35 kPa at +15) and couch solids with it (19 to 16.5 %), which carries on
+  to press solids, the water into the dryers and steam (49 to 55 t/h at +15). The box turns over about 8 minutes. Its
+  panel draws the roll from the tending side with the box where it is now (and a ghost where it's being turned to), a
+  degree scale and a vacuum gauge; readouts for couch vacuum, box position and couch solids. The steam culprit tracing
+  and the crew's knob tracing know it; old saves read it as standard.
+- Approach piping, three clear legs: the stock chest pump is a real pump at the stock chest's east outlet (an orphan pump
+  that sat off the line is gone), and its line goes straight up, east along z -10.2 and over the hall's back wall to the
+  refiners; the refiners' outlet comes back over the wall into the top of the machine chest; the machine chest pump feeds
+  the fan pump.
+- The machine screen (the domed vessel beside the fan pump) has a label.
+- Felts: each felt has its own texture with one seam line that comes round once per turn of the loop (was a band every
+  2.5 m); the pick-up felt and the 2nd press top felt now run the right way (their lower runs go with the sheet), and
+  their guide rolls turn with them.
+- The tending-side catwalk along the dryers and its stair are gone, so the dryers read from the camera; the crossover
+  bridge keeps a ladder up from the floor, and the operators' round walks the tending-side floor.
+
+## v6.12.1-t5 (2026-10-24): rail bay, stock flow order, tail threading (test build, test/v6.12.1)
+- Receiving: the shed runs north to the rail spur (z -26.7, was -23.5) with an open rail bay in the north wall: a raised
+  dock at car-floor height with bumpers, a dock plate and a ramp, a RAIL DOCK landing with the unloaded bales staged on
+  it (they stood outside, between the shed and the track). The train now brings a boxcar of OCC right behind the loco;
+  it stops with its door at the bay (track 7.8 m longer, stop x -9.5), opens the door on arrival (bales in the doorway)
+  and closes it before it leaves. The two roll boxcars keep their doors shut.
+- Stock flow: stock chest > stock chest pump (LV-104) > refiners (still in the approach bay) > machine chest > machine
+  chest pump > fan pump > machine screen > headbox. New pipe runs: the stock line over the back wall at x 66 to the
+  refiners' inlet header; refined stock back out over the wall at x 68.7 and down into the machine chest's open top; the
+  machine chest pump to the fan pump suction. DCS stock prep pictures, the relations map, LV-104's text and the help
+  follow the order (back to the pre-t2 pictures, which already had it).
+- Refiner clash: no stock goes forward, the machine draws the machine chest down to its 10% low limit and shuts down on
+  low level; once the refiners are re-plated the chest refills and the machine rethreads over 35% (07g mcTick, the
+  v6.9.2 model again).
+- Machine chest: half the stock chest's volume (radius 4.2/sqrt 2, the same 10 m height), and built like it: tiled,
+  open-top, a bridge agitator, a level gauge with its setpoint and trip marks, the level showing the sim's machine chest
+  level (red near the trip). The label shows the level. It fits where it was, so it stays put.
+- Tail threading (visual only, same rethread time): after a break each section (presses, first and second dryer
+  section, reel) is threaded with a narrow tail on the tending side first, then widened out to the full sheet, before the
+  next section starts. Same for rethreading after a dryer wrap. (25 THR, a second sheet mesh sharing the sheet's buffers.)
+- Zen "fan pump to headbox" shot follows the fan pump's real route (it still started at the pre-t2 fan pump).
+
+## v6.12.1-t4 (2026-10-24): season QA fixes (test build, test/v6.12.1)
+From the 50-season QA (`claude/qa-v6121-seasons.md`) and the decisions on it.
+- Upgrades: the speed and throughput upgrades (drive, deckle, steam box, shoe press, winder, APC) are a further 25% off
+  (`ck` on the upgrade, `upCost`). Measured paired 30-day returns at the old prices, with the bottleneck fixed: shoe 2.9x,
+  steam box 2.0x, drive 1.6x, APC 0.87x; capacity upgrades earn nothing unless their area limits the line (then 10x+).
+- Season grade: operations weighs twice what profit does, rounded to the nearer grade (was half each, rounded worse).
+- Bottleneck severity: each season's bottleneck is mild, typical or severe (capacity x1.14 / 1 / 0.84; the fixing
+  upgrades 15 / 25 / 35% off), shown on the bottleneck card, the upgrade tag, the start notice and in the help.
+- Order feed: delivered, late and cancelled lines count whole rolls, with the width when it isn't 100" ("12 rolls of 31
+  (98")"); they printed standard-roll units ("26.040000000000003 rolls").
+- Season summary: "Reliability rounds 351 done · 2 faults found, 1 acted on · 1 failure" (was "0 faults caught" in
+  nearly every season).
+- OCC price lock outcome reworded ("Locked in, and then the market fell.").
+- QA rerun, 50 seasons: a smart buyer (fix the bottleneck, buy what pays, walk the Round) +$2.20M median, 12/12 in profit,
+  10 A grades; hands-off +$0.31M; buy-everything still loses. Bottleneck spread ~$2.3M (was ~$0.4M).
+
+## v6.12.1-t3 (2026-10-24): approach bay QA (test build, test/v6.12.1)
+- Played the refiner plate change (outage 4) through in a season, live: the headbox's footprint runs to x 62.25, so t2's
+  service aisle was only ~2.5 m and an open refiner door nearly closed it; walkers squeezed through the headbox corner.
+  The bay is 1.5 m longer (hall to x 74.6) and the refiners sit at X 68.7: a 4 m aisle with 2 m past an open door, the
+  same clearances the old yard layout had. Plate stacks at x 63.4 in the middle of the aisle, the door work spot clear of
+  the gap adjuster, the east entry in the middle of the aisle opening (76.2, 17.8), the corridor round the bay at x 77.5.
+- Full regression suite run (all 22 checks incl. the in-game autotest and music); the reliability check's info tap moved
+  to the refiners' new spot (it was tapping the old one, now the fan pump).
+- G3.outDbg: a read-only test export of the outage visuals (41).
+
+## v6.12.1-t2 (2026-10-24): a true approach system (test build, test/v6.12.1)
+- The machine hall grows one approach bay east (x 64.3 to 73.1) with a personnel door on the tending side. The twin
+  refiners move into it from the yard behind the hall: X 67.2, z 6.5 / 12.5, straddling the machine centreline beside the
+  headbox, doors opening into a service aisle by the headbox header, motors to the new east wall.
+- The fan pump moves to the old refiner pad, right behind the headbox's drive-side inlet, on a new slab. New visual-only
+  equipment: a machine chest pump at the machine chest and a machine screen between the fan pump and the headbox.
+- Pipes follow the real approach flow, every run coloured and arrowed: stock chest pump (LV-104) into the top of the machine
+  chest; machine chest pump over the back wall to the refiners' inlet header; the refiners' outlet header back over the
+  wall to the fan pump suction, where silo white water joins; fan pump through the machine screen into the headbox.
+- Sim order changed to match: stock chest -> machine chest -> refiners -> fan pump -> headbox. A refiner plate clash now
+  starves the fan pump: the sheet breaks after 2 minutes and the machine stays down until the refiners are back (it used to
+  run the machine chest down and trip on low level). The machine chest keeps its level through a clash.
+- Followed the move: tech round/repair spots, the clash spot, pin, sparks zone and tell, info pop-ups, the zen refiner
+  pass, the fan pump label; the outage plate change and its staging now come in by the bay's east door (no carry from the
+  shop); the east entry, the hayout route and the trikes' lane connector moved round the bay (x 76); the flood holes; the
+  stock prep DCS pictures (refiners after the machine chest); relationship map, help guide and glossary (new: Approach flow,
+  Machine screen); the process and dcs checks updated to the new order.
+
+## v6.12.1-t1 (2026-10-24): the shop moves south (test build, test/v6.12.1)
+- The maintenance shop (the shift techs' shop: benches, rebuild stands, parts rack, trike apron) moved from behind stock prep
+  (x 50.5..63, z -25..-19) to the lawn south of the machine hall, west of the MCC: x -18..-5.5, z 24..29.8, door and sign
+  still facing the camera, the eight trike slots in front at z 32.4 and a 9.5 m yard to the MCC's door. Shop and MCC now make
+  one maintenance-and-electrical block, and the shift relief walks in along the front of the hall from the parking lot.
+- Follows the move: the outage crews' shop entry (41), the Shop camera jump (29), the civics notice easel by the hall (now
+  between the shop and the MCC, 31b), and the trikes' lane fallback (a start on the lawn goes in by the roll-up door, 38).
+- The old pad behind stock prep is lawn again (the scenery seeds it like any other open ground).
+
 ## v6.12.0 (2026-10-23): Cool, Fast and Free
 Release of v6.12.0-t1 to t7 (below), merged from test/v6.12-perf. iPhone autotest: 60 FPS and
 0 frames over 33 ms in every phase at the default zoom, the whole-site zoom and the free camera. Regression suite: the

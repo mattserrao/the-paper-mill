@@ -287,7 +287,7 @@
     const o={p,ring,stem,x,y,z,move(nx,nz){this.x=nx;this.z=nz;},update(now){const b=PAPF?0:Math.sin(now/320)*0.35;p.position.set(this.x,this.y+b,this.z);if(!PAPF)p.rotation.y=now/1500;else{const v=((now/260)|0)%2;fm.map=flagTex(kind,v);}
       const ph=(now/1600)%1;ring.position.set(this.x,0.13,this.z);ring.scale.setScalar(1+ph*5);rm.opacity=0.85*(1-ph);stem.position.set(this.x,(this.y+b+(PAPF?1:0))/2,this.z);stem.scale.y=this.y+b+(PAPF?1:0);}};return o;}
   const _pq=new THREE.Quaternion();
-  const PINS={icedintake:[-30,6,-55.5,"!"],duststorm:[-21,12,-13,"!"],flood:[-62,7,4,"water"],refclash:[60.6,8,-11,"!"],steamjoint:[11.2,9.5,4.6,"!"],fogfan:[49.5,22,-4.2,"!"],shaft:[12,10,15.6,"!"],dryerfire:[12,13,zc,"fire"],fabric:[48,9,zc,"!"],felt:[34.5,11,zc,"!"],slime:[4,11,zc,"!"],ragger:[16,9,-13.5,"!"],overflow:[-21,10,-13,"water"],chestover:[34.5,21,-15,"water"],lwplug:[11.2,9,ZL,"!"],cscreen:[15.2,8,ZL,"!"],fscreen:[19.2,9,ZL,"!"],lcplug:[26.6,8,ZL,"water"],hdblow:[25.8,13,-10.6,"water"],boiler:[76,14,-10,"!"],permit:[LAYOUT.wx(22),10,-40,"water"],thkblow:[34.5,22,-15,"water"],birdhay:[-18.7,9,zc,"!"],wrap:[12,12,zc,"!"],flares:[16,10,-13.5,"fire"],dye:[24,11,zc,"!"],winderdown:[-18.7,9,zc,"!"],tiedrolls:[-22.9,5,zc-0.7,"!"],
+  const PINS={icedintake:[-30,6,-55.5,"!"],duststorm:[-21,12,-13,"!"],flood:[-62,7,4,"water"],refclash:[68.7,8,9.5,"!"],steamjoint:[11.2,9.5,4.6,"!"],fogfan:[49.5,22,-4.2,"!"],shaft:[12,10,15.6,"!"],dryerfire:[12,13,zc,"fire"],fabric:[48,9,zc,"!"],felt:[34.5,11,zc,"!"],slime:[4,11,zc,"!"],ragger:[16,9,-13.5,"!"],overflow:[-21,10,-13,"water"],chestover:[34.5,21,-15,"water"],lwplug:[11.2,9,ZL,"!"],cscreen:[15.2,8,ZL,"!"],fscreen:[19.2,9,ZL,"!"],lcplug:[26.6,8,ZL,"water"],hdblow:[25.8,13,-10.6,"water"],boiler:[76,14,-10,"!"],permit:[LAYOUT.wx(22),10,-40,"water"],thkblow:[34.5,22,-15,"water"],birdhay:[-18.7,9,zc,"!"],wrap:[12,12,zc,"!"],flares:[16,10,-13.5,"fire"],dye:[24,11,zc,"!"],winderdown:[-18.7,9,zc,"!"],tiedrolls:[-22.9,5,zc-0.7,"!"],
     badocc:[-17,10,-11,"!"],balefire:[-25,11,-12,"fire"],fleet:[-29,10,-16,"!"],calloff:[-36,10,23,"!"],fight:[-38,7,-21,"!"],roof:[-32,10,24,"water"],highway:[-72,7,4,"!"],
     lightning:[34.5,16,-15,"bolt"],bearingfail:[40,8,0,"!"],motorfail:[40,8,0,"!"],planbrg:[40,8,0,"!"],planmot:[40,8,0,"!"],drivefail:[11,9,27.5,"bolt"],tornado:[0,26,0,"!"],beaver:[-30,10,-16.5,"!"]};
   // a small lift truck (counterbalance forklift) for the yard upsets: body, overhead guard, mast and forks, nobody aboard
@@ -368,9 +368,9 @@
     motorfail:g=>(now,rdt,inc)=>{const s=inc&&G3.ASPOT&&G3.ASPOT[inc.asset];if(!s||rdt<=0)return;const x=s[2],z=s[3];
       if(Math.random()<rdt*5)emit("smoke",x+R(),1.6,z+R(),R()*0.6,1.6,R()*0.6,3.0,1.8,"#3e4148",0.7);if(Math.random()<rdt*1.5)emit("spark",x,1.3,z,R()*3,2,R()*3,0.3,0.2,"#7fd0ff",1);},
     drivefail:g=>(now,rdt,inc)=>{const M2=G3.MCC;if(!M2||rdt<=0)return;if(Math.random()<rdt*2)emit("smoke",(M2.x0+M2.x1)/2+R()*3,M2.h+0.6,(M2.z0+M2.z1)/2+R()*2,R()*0.4,1.2,R()*0.4,2.2,1.4,"#6b707a",0.45);},
-    refclash:g=>{const z=zone(g,56,66,-16.4,-5.6);
-      return (now,rdt,inc)=>{z(now);const zs=inc&&inc.both?[-14,-8]:[-14];zs.forEach(zz=>{if(Math.random()<rdt*10)emit("spark",60.6+0.95,2.0,zz+R()*1.2,R()*5+2,3+Math.random()*4,R()*5,0.5+Math.random()*0.3,0.3,"#ffb23e",1);
-        if(Math.random()<rdt*4)emit("smoke",60.6,3.4,zz,R()*0.6,1.6,R()*0.6,2.6,1.6,"#7e848e",0.5);});};},
+    refclash:g=>{const z=zone(g,63.5,74.3,4,15);   // (v6.12.1: the refiners are in the approach bay, 39)
+      return (now,rdt,inc)=>{z(now);const zs=inc&&inc.both?[6.5,12.5]:[6.5];zs.forEach(zz=>{if(Math.random()<rdt*10)emit("spark",68.7+0.95,2.0,zz+R()*1.2,R()*5+2,3+Math.random()*4,R()*5,0.5+Math.random()*0.3,0.3,"#ffb23e",1);
+        if(Math.random()<rdt*4)emit("smoke",68.7,3.4,zz,R()*0.6,1.6,R()*0.6,2.6,1.6,"#7e848e",0.5);});};},
     shaft:g=>{const z=zone(g,4,20,12.9,16.6);const motor=box(2.2,1.8,1.8,M.steel,12,0.9,14.8,g);
       // (t14: the two broken halves are cut-out cards, and the sparks paper stars)
       let s1,s2;if(shaftTex){s1=cardSprite(shaftTex,3.8,0.95);s2=cardSprite(mirrorTex(shaftTex),3.8,0.95);s1.position.set(9.6,1.2,14.0);s2.position.set(14.4,0.9,14.6);g.add(s1,s2);}
@@ -534,7 +534,7 @@
       else{const a=pts[0],b=pts[pts.length-1];bolt=new THREE.Mesh(new THREE.PlaneGeometry(13,a.distanceTo(b)*1.08),new THREE.MeshBasicMaterial({map:TX.bolt,transparent:true,alphaTest:0.5,toneMapped:false,side:THREE.DoubleSide}));
         bolt.position.copy(a).add(b).multiplyScalar(0.5);bolt.renderOrder=6;g.add(bolt);bolt.onBeforeRender=()=>{bolt.quaternion.copy(camera.quaternion);bolt.updateMatrixWorld();};}
       const glows=pts.map(p=>{const s=new THREE.Sprite(new THREE.SpriteMaterial({map:TX.dot,color:lin("#9fc3ff"),transparent:true,depthWrite:false,toneMapped:false}));s.position.copy(p);s.scale.setScalar(7);g.add(s);return s;});
-      const beacons=[[-34.4,4.9,-23.5],[-8,4.9,-3],[-49,4.9,14.8],[-23.8,4.9,32.2],[64,5.4,2.4],[-2,5.4,2.4]].map(p=>{const s=new THREE.Sprite(new THREE.SpriteMaterial({map:(/[?&]softfx/.test(location.search)?TX.dot:TX.disc),color:lin("#ff3b30"),transparent:true,depthWrite:false,toneMapped:false}));s.position.set(...p);g.add(s);return s;});
+      const beacons=[[-34.4,4.9,-26.7],[-8,4.9,-3],[-49,4.9,14.8],[-23.8,4.9,32.2],[74.6,5.4,2.4],[-2,5.4,2.4]].map(p=>{const s=new THREE.Sprite(new THREE.SpriteMaterial({map:(/[?&]softfx/.test(location.search)?TX.dot:TX.disc),color:lin("#ff3b30"),transparent:true,depthWrite:false,toneMapped:false}));s.position.set(...p);g.add(s);return s;});
       const flash=$("flash3d");
       return (now,rdt,inc)=>{const age=(now-inc.real)/1000,on=age<1.4?((now/80)|0)%2===0:(now%2600)<110;bolt.visible=on;glows.forEach(s=>s.visible=on&&softB);
         flash.style.opacity=age<0.12?0.9:age<0.3?0.0:age<0.42?0.6:on&&age>1.4?0.35:0;beacons.forEach((s,k)=>s.scale.setScalar(1.2+2.2*Math.max(0,Math.sin(now/180+k))));
@@ -671,7 +671,7 @@
     // trucks throw spray, a gator cruises through the yard once, and at the end the water drains back to the canal
     // and leaves dark wet ground that dries out. The pulper overflow (same effect) keeps the plain version.
     flood:g=>{const sh=new THREE.Shape(),Z0=-52,Z1=66,X0=-150,X1=96;sh.moveTo(X0,Z0);sh.lineTo(X1,Z0);sh.lineTo(X1,Z1);sh.lineTo(X0,Z1);sh.closePath();
-      const HOLES=[[-27.2,64,-2.9,19.85],[-34.4,-8,-23.5,-3],[-49,-23.8,14.8,32.2],[4,47,-25,-2],[49,65,-27,-14.5],[70,82,-16,-4],[49,61,24,30]];
+      const HOLES=[[-27.2,74.6,-2.9,19.85],[-34.4,-8,-26.7,-3],[-49,-23.8,14.8,32.2],[4,47,-25,-2],[-19.5,-3.5,23,34.5],[70,82,-16,-4],[49,61,24,30]];
       HOLES.forEach(([x0,x1,z0,z1])=>{const h=new THREE.Path();h.moveTo(x0,z0);h.lineTo(x1,z0);h.lineTo(x1,z1);h.lineTo(x0,z1);h.closePath();sh.holes.push(h);});
       const inHole=(x,z)=>HOLES.some(([x0,x1,z0,z1])=>x>x0-0.8&&x<x1+0.8&&z>z0-0.8&&z<z1+0.8);
       const geo=new THREE.ShapeGeometry(sh);geo.rotateX(Math.PI/2);geo.translate(0,0,-Z0);   // (north edge at z 0, so the sheet spreads south by scaling z)

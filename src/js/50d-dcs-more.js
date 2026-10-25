@@ -54,10 +54,12 @@ MIMIC.SPOT={title:"STOCK PREP",h:312,trends:MIMIC_KNOB.SPOT.trends,
     MT(150,272,"mcCons","CONS",r=>kf(r.mcCons,2)+"%"),MT(150,286,"agit","AGIT",r=>r.agit+"%"),MT(212,176,"dyef","DYE",DV.dyef),MT(504,50,"wcl","LVL",DV.wcl),MT(56,262,"flow","FLOW",()=>fmtGpm(GPM(S.we?S.we.f.hb||0:0))),MT(56,276,"dil","DIL",DV.dil),MT(255,290,"kwh","ENERGY",r=>Math.round(r.kwh)+" kWh/t"),
     MT(360,300,"chv","VOL",DV.chv),MT(150,300,"mcv","VOL",DV.mcv),MT(504,62,"wcv","VOL",DV.wcv)]};   // (v6.7: chest volumes in gallons)
 MIMIC.WET={title:"WET END",h:282,trends:MIMIC_KNOB.WET.trends,
-  eq:[[520,8,104,30,"FOG FAN"],[14,80,74,70,"HEADBOX"],[104,105,190,25,"FORMING TABLE"],[110,214,100,26,"WW SILO","s"],[308,90,64,50,"COUCH"],[388,90,104,50,"PICK-UP FELT"],[508,80,118,70,()=>LV("shoe")?"SHOE PRESS":"TWIN PRESS"]],
-  ln:[["M88 115 H104"],["M294 117 H308"],["M372 115 H388"],["M492 115 H508"],["M160 130 V214",1]],
+  eq:[[520,8,104,30,"FOG FAN"],[14,80,74,70,"HEADBOX"],[104,105,190,25,"FORMING TABLE"],[110,214,100,26,"WW SILO","s"],[308,90,64,50,"COUCH"],[388,90,104,50,"PICK-UP FELT"],[508,80,118,70,()=>LV("shoe")?"SHOE PRESS":"TWIN PRESS"],
+    [216,8,92,26,"VACUUM PUMP","s"]],   // (v6.12.1-t7: one pump for the gravity, low and high vacuum boxes, a control valve each)
+  ln:[["M88 115 H104"],["M294 117 H308"],["M372 115 H388"],["M492 115 H508"],["M112 130 V214",1],["M262 34 V48 H150 V105 M206 48 V105 M262 48 V105",1]],
   tags:[MT(51,172,"zones","ZONES",()=>(S.knob?S.knob.z.filter(v=>v).length:0)+"/12"),MT(51,194,"slc","SLICE",DV.slc),MT(51,70,"jw","J/W",DV.jw),MT(140,72,"wsp","WIRE",DV.wsp),MT(126,88,"rd","R/D",DV.rd),
-    MT(240,172,"vac","VAC",r=>kf(r.vac)+" kPa"),MT(240,88,"edge","EDGE",r=>(r.edge>=0?"+":"")+Math.round(r.edge)+" mm"),MT(240,194,"gtrav","GUIDE",r=>r.gm?"AUTO "+Math.round(Math.min(1,r.gtrav)*100)+"%":"MAN"),
+    MT(160,142,"gbox","GRAV",r=>kf(r.gbox)+" inHg"),MT(160,155,"lvac","LOW",r=>kf(r.lvac)+" inHg"),MT(160,168,"vac","HIGH",r=>kf(r.vacIn)+" inHg"),
+    MT(262,142,"gbv","PV-311",r=>Math.round(r.gbv)+"%"),MT(262,155,"lvv","PV-312",r=>Math.round(r.lvv)+"%"),MT(262,168,"hvv","PV-313",r=>Math.round(r.hvv)+"%"),MT(345,22,"vpkw","PUMP",r=>r.run?Math.round(r.vpkw)+" kW":"–"),MT(240,88,"edge","EDGE",r=>(r.edge>=0?"+":"")+Math.round(r.edge)+" mm"),MT(240,194,"gtrav","GUIDE",r=>r.gm?"AUTO "+Math.round(Math.min(1,r.gtrav)*100)+"%":"MAN"),
     MT(340,172,"couchSol","SOL",r=>kf(r.couchSol)+"%"),MT(340,194,"cs","PIT",r=>r.couch?"RUN":"STOP"),MT(440,172,"osc","OSC",r=>Math.round(r.osc)+"%"),
     MT(567,172,"pl","LOAD",r=>Math.round(r.pl)+" kN/m"),MT(567,194,"pressSol","SOL",r=>kf(r.pressSol)+"%"),MT(567,66,"psp","SPD",DV.psp),MT(260,232,"wwl","LEVEL",DV.wwl),MT(260,246,"wwg","VOL",DV.wwg),MT(370,232,"drain","DRAIN",DV.drn),MT(560,232,"pressw","PRESS",DV.pw),
     MT(60,216,"hbc","HBC",DV.hbc),MT(572,54,"hum","RH",DV.hum)]};   // (v6.9: the basis weight valve is FV-201, drawn by 50k)
@@ -138,7 +140,7 @@ function dcsSetDefs(a){const D=()=>DCS_DRAW();
   return [];}
 // v6.11.2: the setpoint rows in the order the stock meets them, under a heading for each part of the machine
 const DCS_ORDER={
-  WET:[["Thick stock to the headbox","grade","bws","polf"],["Headbox","zones","beat","slv","slh"],["Forming table","wsp","vac","couch"],["Press section","press"]],
+  WET:[["Thick stock to the headbox","grade","bws","polf"],["Headbox","zones","beat","slv","slh"],["Forming table","wsp","gbox","lvac","vac","couch"],["Press section","press"]],
   DET:[["Press to dryers","draw"],["Dryer steam","st1","st2sp","st3sp"],["Reel and winder","wsp","wdr"]]};
 function dcsOrder(a,cs){const O=DCS_ORDER[a];if(!O)return;const kids=[...cs.children],by={};kids.forEach(e=>{if(e.dataset.ord)by[e.dataset.ord]=e;});
   const used=new Set();cs.replaceChildren();

@@ -179,7 +179,7 @@ def control(pw):
     pg.evaluate("()=>document.querySelector('#dcsOv [data-trv=pic]').click()")
 
     # --- zen: the DCS buttons are off
-    pg.evaluate("()=>{__PM.CX.closeStation();__PM.S.zen=true;}"); pg.wait_for_function("()=>document.querySelector('#ctlRoom [data-cr=dcs]').disabled", timeout=8000)
+    pg.evaluate("()=>{__PM.CX.closeStation();__PM.S.zen=true;}"); pg.wait_for_function("()=>document.querySelector('#ctlRoom [data-cr=dcs]').disabled", timeout=30000, polling=100)   # (a UI tick applies it: give a loaded box room)
     ok("zen: control room keeps the process flow only", pg.evaluate("()=>document.querySelector('#ctlRoom [data-cr=dcs]').disabled&&!document.querySelector('#ctlRoom [data-cr=pf]').disabled"))
     pg.evaluate("()=>{__PM.S.zen=false;}")
     b.close()

@@ -14,7 +14,7 @@
   function outCloth(id){const f=outPhase();if(f<0)return null;if(id==="fabric"&&outJob(S.outg.k)!==2)return null;const X=CL_X[id];if(f<X[0]||f>X[4]+0.015)return null;return pwl(f,X,CL_Y);}
   G3.outCloth=outCloth;
   const ocM=()=>M.panelWhite||(M.panelWhite=mat("panel"));
-  const ENTRY={hall:[65.6,15.4],shop:[56,-18.2]};
+  const ENTRY={hall:[76.2,17.8],shop:[-12.5,30.8]};   // (v6.12.1: the shop is on the lawn south of the hall, west of the MCC)
   function tech(i,from){let w=OV.crew[i];if(!w){w=worker(techM,ocM());w.visible=false;OV.crew[i]=w;}
     if(!w.visible){const e=ENTRY[from]||ENTRY.hall;w.position.set(e[0],0,e[1]);w.userData.from=from;w.visible=true;}w.userData.used=true;return w;}
   // walk to a spot, then face and act; returns true once there
@@ -108,7 +108,7 @@
   const plateG=new CylG(0.75,0.75,0.05,22);
   function stack(x,z,m,n){const g=new THREE.Group();g.position.set(x,0,z);g.visible=false;scene.add(g);box(1.7,0.15,1.7,woodM,0,0.075,0,g);
     const ps=[];for(let k=0;k<n;k++){const p=new THREE.Mesh(plateG,m);p.position.y=0.18+k*0.06;p.rotation.y=k*0.7;g.add(p);ps.push(p);}g.userData.ps=ps;return g;}
-  const STK={neu:stack(55.0,-13.6,shinyM,4),used:stack(55.0,-8.8,wornM,4)};
+  const STK={neu:stack(63.4,6.9,shinyM,4),used:stack(63.4,11.7,wornM,4)};   // (v6.12.1: in the approach bay's service aisle, 39)
   const carryP=[0,1].map(()=>{const m=new THREE.Mesh(plateG,shinyM);m.visible=false;scene.add(m);return m;});
   function holdPlate(m,w,mat){m.material=mat;m.visible=true;const a=w.rotation.y;m.position.set(w.position.x+Math.cos(a)*0.55,1.15,w.position.z-Math.sin(a)*0.55);m.rotation.set(0,a,Math.PI/2);}
   [hcBridge,hcHook,hcCable,MCm,mcCable,mcHook,ROT.old,ROT.neu,ROT.pallet,STK.neu,STK.used,...Object.values(R1),...cradT,...cradD,pulpStock,rotor,press[0],press[1],...REF_DOORS.map(d=>d.door),...REF_DOORS.map(d=>d.face)].forEach(o=>SM.dyn.add(o));
@@ -123,7 +123,7 @@
     if(!OV.stg||OV.stg.k!==k)OV.stg={k,t0:now,done:false};const st=OV.stg,age=(now-st.t0)/1000;
     if(k===2){return false;}
     if(st.gone){return false;}
-    const a=tech(4,k===1?"hall":"shop"),b=tech(5,k===1?"hall":"shop");
+    const a=tech(4,k===1||k===4?"hall":"shop"),b=tech(5,k===1||k===4?"hall":"shop");   // (v6.12.1: the plates come in by the bay's east door)
     if(k===1){// the hall crane lowers each new roll onto its cradle while two techs guide it
       cradT.forEach(c=>c.visible=true);const per=7;
       [[R1.newT,T1,0],[R1.newB,T2,1]].forEach(([r,T,i])=>{const u=clamp((age-1-i*per)/per,0,1);if(u<=0){r.visible=false;return;}r.visible=true;
@@ -135,11 +135,11 @@
       const arr=go(a,PAL[0]-1.6,PAL[1]+1.4,"fix",PAL[0],PAL[1],rdt,now)&go(b,PAL[0]+1.6,PAL[1]+1.4,"fix",PAL[0],PAL[1],rdt,now);
       if(arr&&!st.t1)st.t1=now;const u=st.t1?clamp((now-st.t1)/3500,0,1):0;ROT.pallet.visible=ROT.neu.visible=u>0;
       ROT.pallet.position.set(PAL[0],0.09,PAL[1]);ROT.neu.position.set(PAL[0],0.18,PAL[1]);ROT.neu.scale.setScalar(0.4+0.6*sst(u));if(u>=1&&now-st.t1>5000)st.done=true;}
-    if(k===4){// two techs carry the new plates out of the shop one by one and stack them by the refiners
+    if(k===4){// two techs carry the new plates in by the approach bay's east door one by one and stack them by the refiners
       STK.neu.visible=true;const ps=STK.neu.userData.ps;if(st.n==null){st.n=0;st.trip=[0,0];}
-      [a,b].forEach((w,i)=>{if(st.n>=4){go(w,ENTRY.shop[0],ENTRY.shop[1],"idle",null,null,rdt,now,5,"walk");carryP[i].visible=false;return;}
-        const out=st.trip[i]%2===0;if(out){carryP[i].visible=false;if(go(w,ENTRY.shop[0]+i*0.8,ENTRY.shop[1]+0.4,"idle",null,null,rdt,now,5,"walk"))st.trip[i]++;}
-        else{holdPlate(carryP[i],w,shinyM);if(moveP(w,55.0+(i?0.95:-0.95),-13.6+0.6,4,rdt)){face(w,55,-13.6,rdt);pose(w,"clean",now);st.n++;st.trip[i]++;carryP[i].visible=false;}else pose(w,"haul",now);}});
+      [a,b].forEach((w,i)=>{if(st.n>=4){go(w,ENTRY.hall[0],ENTRY.hall[1],"idle",null,null,rdt,now,5,"walk");carryP[i].visible=false;return;}
+        const out=st.trip[i]%2===0;if(out){carryP[i].visible=false;if(go(w,ENTRY.hall[0]+i*0.8,ENTRY.hall[1]+0.4,"idle",null,null,rdt,now,5,"walk"))st.trip[i]++;}
+        else{holdPlate(carryP[i],w,shinyM);if(moveP(w,63.4+(i?0.95:-0.95),6.9+0.6,4,rdt)){face(w,63.4,6.9,rdt);pose(w,"clean",now);st.n++;st.trip[i]++;carryP[i].visible=false;}else pose(w,"haul",now);}});
       ps.forEach((p,j)=>p.visible=j<st.n);if(st.n>=4&&!st.t2)st.t2=now;if(st.t2&&now-st.t2>3000)st.done=true;}
     if(st.done){// walk back and go inside
       let n=0;[a,b].forEach(w=>{const e=ENTRY[w.userData.from]||ENTRY.hall;if(moveP(w,e[0],e[1],5,rdt)){w.visible=false;n++;}else pose(w,"walk",now);w.userData.used=true;});if(n===2)st.gone=true;}
@@ -197,9 +197,9 @@
     if(rig)mcAim(H[0],H[1],H[2],1);else{mcTurret.rotation.y=0;mcBoom.rotation.z=0.04;mcLen(4.6,6.8);}
     if(f<0.88){const a=tech(4,"shop"),b=tech(5,"shop");const wk=f>=0.38&&f<0.5?[PAL[0]+2.0,PAL[1]+0.2,PAL[0],PAL[1]]:[PCX+3.4,PCZ+4.3,PCX,PCZ];
       go(a,wk[0],wk[1],f<0.16?"look":"point",wk[2],wk[3],rdt,now);go(b,12.2,-10.6,f<0.16||f>0.64?"look":"fix",PCX,PCZ,rdt,now);}}
-  // walk round an open refiner door rather than through it (door lines at z -12.3 and -9.7, open toward -x up to x 56.2)
+  // walk round an open refiner door rather than through it (door lines at z 8.2 and 10.8, open toward -x up to x 64.3)
   function goR(w,x,z,act,lx,lz,rdt,now,sp,mv){for(const d of REF_DOORS){if(d.door.rotation.y===0)continue;const zl=d.z+d.s*1.7;
-      if(Math.sign(w.position.z-zl)!==Math.sign(z-zl)&&w.position.x>55.6){return go(w,55.25,zl+(w.position.z<zl?-0.55:0.55),act,lx,lz,rdt,now,sp,mv)&&false;}}
+      if(Math.sign(w.position.z-zl)!==Math.sign(z-zl)&&w.position.x>63.7){return go(w,63.35,zl+(w.position.z<zl?-0.55:0.55),act,lx,lz,rdt,now,sp,mv)&&false;}}
     return go(w,x,z,act,lx,lz,rdt,now,sp,mv);}
   function job4(f,rdt,now){// refiner plates: open the door, unbolt, carry the old plates out and the new ones in, bolt up, close; refiner A then B
     STK.neu.visible=true;const nps=STK.neu.userData.ps,ups=STK.used.userData.ps;let nNew=4,nUsed=0,busy=null;
@@ -211,22 +211,22 @@
       if(u>0&&u<1)busy={d,u,trip};});
     nps.forEach((p,j)=>p.visible=j<nNew);ups.forEach((p,j)=>p.visible=j<nUsed);STK.used.visible=nUsed>0;
     if(f>=0.92)return;
-    const a=tech(4,"shop"),b=tech(5,"shop");
-    if(!busy){goR(a,56.6,-12.9,"look",58,-14,rdt,now,6,"walk");goR(b,56.6,-9.1,"look",58,-8,rdt,now,6,"walk");return;}
-    const {d,u,trip}=busy,fx=d.x-2.05,fz=d.z,aside=d.z-d.s*2.3;
-    if(u<0.16||u>0.86){goR(a,57.1,aside,"point",d.x-1,fz,rdt,now,6);goR(b,55.9,aside+d.s*0.7,"look",d.x-1,fz,rdt,now,6);return;}
+    const a=tech(4,"hall"),b=tech(5,"hall");
+    if(!busy){goR(a,64.7,7.6,"look",66.1,6.5,rdt,now,6,"walk");goR(b,64.7,11.4,"look",66.1,12.5,rdt,now,6,"walk");return;}
+    const {d,u,trip}=busy,fx=d.x-2.8,fz=d.z,aside=d.z-d.s*2.3;
+    if(u<0.16||u>0.86){goR(a,65.2,aside,"point",d.x-1,fz,rdt,now,6);goR(b,64.0,aside+d.s*0.7,"look",d.x-1,fz,rdt,now,6);return;}
     if(u<0.30||u>=0.80){goR(a,fx,fz-0.55,"fix",d.x,fz,rdt,now,6);goR(b,fx,fz+0.55,"fix",d.x,fz,rdt,now,6);return;}
     const t=trip(u<0.55?0:1);
     // tech a takes an old plate to the used stack; tech b fetches a new one from the new stack and fits it
-    if(t<0.45){holdPlate(carryP[0],a,wornM);goR(a,55.9,-9.7,"clean",55,-8.8,rdt,now,5,"haul");if(carryP[0].visible)holdPlate(carryP[0],a,wornM);}
+    if(t<0.45){holdPlate(carryP[0],a,wornM);goR(a,64.3,10.8,"clean",63.4,11.7,rdt,now,5,"haul");if(carryP[0].visible)holdPlate(carryP[0],a,wornM);}
     else goR(a,fx,fz-0.55,"fix",d.x,fz,rdt,now,6);
-    if(t<0.5)goR(b,55.9,-12.8,"clean",55,-13.6,rdt,now,6);
+    if(t<0.5)goR(b,64.3,7.7,"clean",63.4,6.9,rdt,now,6);
     else if(t<0.95){goR(b,fx,fz+0.55,"fix",d.x,fz,rdt,now,5,"haul");holdPlate(carryP[1],b,shinyM);}
     else goR(b,fx,fz+0.55,"fix",d.x,fz,rdt,now,6);}
   function outageReset(){press[0].visible=press[1].visible=true;Object.values(R1).forEach(r=>r.visible=false);cradT.forEach(c=>c.visible=false);cradD.forEach(c=>c.visible=false);
     hcSet(62,9.6,8.6,0,false);mcHook.visible=mcCable.visible=false;mcPark();ROT.old.visible=ROT.neu.visible=ROT.pallet.visible=false;pulpStock.position.y=2.9;rotor.visible=true;
     STK.neu.visible=STK.used.visible=false;carryP.forEach(m=>m.visible=false);REF_DOORS.forEach(d=>{d.door.rotation.y=0;d.face.visible=false;});}
-  let ovActive=false;
+  let ovActive=false;G3.outDbg={get stg(){return OV.stg;},get crew(){return OV.crew;},STK,REF_DOORS,phase:()=>outPhase()};   // (v6.12.1: tests)
   function outageVis(rdt,now){const f=outPhase(),o=S.outg;OV.crew.forEach(w=>{if(w)w.userData.used=false;});OV.ropes.forEach(m=>m.visible=false);
     if(f<0){if(ovActive){ovActive=false;outageReset();}
       const sg=stageTick(rdt,now);

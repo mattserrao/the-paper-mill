@@ -36,15 +36,15 @@ SC = [
  ("guide trimmed on auto", {"guide": {"gm": 1, "gt": 28}}, 1600, {"inc": "fabric", "after": 60, "fixed": ["guide"]}),
  ("couch agitator off + break", {"couch": 0, "_break": 90}, 400, {"inc": "couchpit", "after": 60, "fixed": ["couch"]}),
  ("steam1 high + refiner open (dry)", {"st1": 250, "ref": 20}, 600, {"off": 0.2, "dry": True, "after": 5, "fixed": ["st1"]}),
- ("steam1 low + refiner tight (wet)", {"st1": 0, "ref": 111}, 600, {"off": 0.05, "wet": True, "after": 10}),
+ ("steam1 low + refiner tight (wet)", {"_up": "refiner", "st1": 0, "ref": 111}, 600, {"off": 0.05, "wet": True, "after": 10}),   # (v6.12.1-t7: 111 kWh/t needs the refiner upgrade's power, 07g refEff)
  ("steam1 high alone (no off-spec)", {"st1": 200}, 400, {"maxoff": 0.0, "steam": 1.05}),
- ("refiner tight alone (steam only)", {"ref": 94}, 400, {"maxoff": 0.0, "steam": 1.1}),
+ ("refiner tight alone (steam only)", {"_up": "refiner", "ref": 94}, 400, {"maxoff": 0.0, "steam": 1.1}),   # (v6.12.1-t7: with the upgrade's power)
  ("hood doors raised (4% steam only)", {"hood": 1}, 400, {"maxoff": 0.0, "steam": 1.035}),   # (v6.11.1: no trace on its own, the player's view)
 ]
 RUN = """(a)=>{const P=__PM,[name,set,mins]=a,G=P.G3;G.save.restore(JSON.parse(window.__SNAP));P.setRunning(false);P.CH.on=false;P.C.breaks=false;P.C.hays=false;
   const S=P.S,t0=S.t,cash0=S.cash,inc0=S.tot.incidents,brk0=S.tot.breaks,beat0=S.tot.beater||0,feed0=S.feed.length;
   const seen=[],brks=[];let maxOff=0,maxSf=1,minM=99,maxM=0,first=null,bk=S.tot.breaks;
-  for(const k in set){if(k==="_break")continue;if(k==="zones"){set[k].forEach(z=>P.knob.set("zones",z));}else P.knob.set(k,set[k]);}
+  for(const k in set){if(k==="_break")continue;if(k==="_up"){S.up[set[k]]=1;continue;}if(k==="zones"){set[k].forEach(z=>P.knob.set("zones",z));}else P.knob.set(k,set[k]);}
   const hasKnob=!!S.knob;let forced=false;
   while(S.t-t0<mins){P.step(P.SIM_STEP);const dt=S.t-t0;
     if(set._break&&!forced&&dt>=set._break&&S.pm==="run"){forced=true;S.pm="break";S.brkType="press";S.breakLeft=60;S.breakTotal=60;S.tot.breaks++;}

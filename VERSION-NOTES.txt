@@ -133,3 +133,12 @@ One line per version, oldest first. Add a line here with every release: build.py
 6.12.0-t6  Cool, Fast and Free (Test): the World Draws at 30 While the View Is Still, the Whole Site as One Picture, a Free 3D Camera in Settings
 6.12.0-t7  Whole-Site Picture Off by Default (Test): Opt-In with ?imp
 6.12.0     Cool, Fast and Free: Smooth on the Phone (Sign Boards No Longer Re-Upload Every 0.8 s), the World Draws at 30 While the View Is Still, a Free 3D Camera in Settings, Record Board Updates Once a Day
+6.12.1-t1  The Shop Moves South (Test): the Maintenance Shop Now Stands West of the MCC on the Lawn in Front of the Hall
+6.12.1-t2  A True Approach System (Test): the Refiners Stand Beside the Headbox in a New Bay, the Fan Pump Behind It, Refiners After the Machine Chest
+6.12.1-t3  Approach Bay QA (Test): a 4 m Service Aisle by the Headbox, the Refiner Plate Change Played Through Clean
+6.12.1-t4  Season QA Fixes (Test): Upgrades That Pay Back, a Fairer Grade, Bottlenecks Mild to Severe, Whole Rolls in the Order Feed
+6.12.1-t5  Rail Bay at Receiving, Refiners Ahead of the Machine Chest, Tail Threading (Test)
+6.12.1-t6  Couch Suction Box Knob, Cleaner Approach Piping, Felts Run True, No Tending-Side Dryer Catwalk (Test)
+6.12.1-t7  Forming Table Vacuum Zones and Pump, Refiners Run Out of Power at High Tonnage, Draw Rises with Speed (Test)
+6.12.1-t8  Speed Upgrades Raise the Open Draw with Them (Test)
+6.12.1     The Approach System: Refiners Beside the Headbox, a Rail Bay at Receiving, Forming Table Vacuum Zones, Couch Suction Box, Tail Threading, Draw That Follows Speed, Refiners That Run Out of Power, Upgrades That Pay Back

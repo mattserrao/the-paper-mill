@@ -23,7 +23,9 @@
     const rv=wheelValve(58.9,1.5,-11.0,Math.PI/2);plate("PLATE GAP",1.0,58.55,2.75,-11.0,-Math.PI/2);KX.ref={at:rv.at,w:rv.w};
     const as=station(51.4,-11.4,-Math.PI/4);plate("AGITATOR",0.8,51.4,2.0,-11.25,-Math.PI/4);KX.agit={at:as.at};
     const gs=station(46.2,13.05,0);plate("GUIDE",0.7,46.2,2.0,13.21);KX.guide={at:gs.at};
-    const cs=station(40.4,13.05,0);plate("COUCH PIT",0.8,40.4,2.0,13.21);KX.couch={at:cs.at};
+    const cs=station(43.4,13.05,0);plate("COUCH PIT",0.8,43.4,2.0,13.21);KX.couch={at:cs.at};   // (v6.12.1-t6: swapped with the couch box)
+    // v6.12.1-t6: the couch suction box's position control, on a post by the couch roll (the couch pit agitator's station moved east to make room)
+    const cbs=station(40.4,13.05,0);plate("COUCH BOX",0.8,40.4,2.0,13.21);KX.cbox={at:cbs.at};
     const os=station(35.0,13.15,0);plate("OSCILLATOR",0.8,35.0,2.0,13.31);KX.osc={at:os.at};
     // v6.11.1: the dryer hood doors' raise / lower station, on a post under the tending-side catwalk
     const hs=station(3.0,13.15,0);plate("HOOD DOORS",0.8,3.0,2.0,13.31);KX.hood={at:hs.at};
@@ -129,14 +131,13 @@
     // ---- what a moved knob looks like ----
     // the pick-up felt (1st press top felt) gets its own felt texture so stripes can be painted into it (same shader as the other felts)
     let pfLvl=-1;
-    function paintStripes(k){const c=G3.pfCanvas;if(!c)return;const x=c.getContext("2d"),W=c.width,H=c.height;x.fillStyle="#fff";x.fillRect(0,0,W,H);x.fillStyle="#9a9a9a";x.fillRect(0,0,10,H);
+    function paintStripes(k){const c=G3.pfCanvas;if(!c)return;const x=c.getContext("2d"),W=c.width,H=c.height;x.fillStyle="#fff";x.fillRect(0,0,W,H);x.fillStyle="#8a8a8a";x.fillRect(0,0,4,H);   /* (v6.12.1-t6: the seam, once per turn) */
       if(k>0.02){x.fillStyle=`rgba(92,64,30,${Math.min(0.95,0.35+k*0.7)})`;[0.12,0.29,0.47,0.66,0.83].forEach((v,i)=>x.fillRect(0,Math.round(v*H),W,Math.max(1,Math.round(H*(0.035+0.02*(i%2))))));}
       G3.pfTex.needsUpdate=true;}
     let wire0=null,flut=false;
     G3.knobFrame=(rdt,now)=>{const K=S.knob,on=!!(K&&K.any)&&!S.zen;
       // stripes building up on the pick-up felt
       {const st=on?K.x.st:0,q=Math.round(st*20)/20;if(q!==pfLvl){pfLvl=q;paintStripes(q);}}
-      if(G3.pfTex)G3.pfTex.offset.x=feltTex.offset.x;
       // the forming fabric walking toward the tending side (the guide roll out of travel, or on manual)
       if(wire0===null)wire0=wireLoop.position.z;{const e=on?clamp(K.edge,-60,60):0,z=wire0+e*0.012;if(Math.abs(wireLoop.position.z-z)>1e-4){wireLoop.position.z=z;wireLoop.updateMatrixWorld();}}
       // a slack open draw flutters going into the dryers

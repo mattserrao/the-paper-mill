@@ -163,7 +163,7 @@ def reliability(pw):
     pg.wait_for_timeout(1500)
     r = J("""()=>{const D=__PM.G3.diagScene(),T=__PM.THREE,rc=D.renderer.domElement.getBoundingClientRect(),sc=(x,y,z)=>{const v=new T.Vector3(x,y,z).project(D.camera);return {clientX:rc.left+(v.x+1)/2*rc.width,clientY:rc.top+(1-v.y)/2*rc.height};};
       const f=__PM.G3.followable()[0];__PM.G3.infoTap(sc(f.position.x,1.1,f.position.z));const a=document.getElementById('infoPop').textContent;
-      __PM.G3.infoTap(sc(60.6,3,-11));const b=document.getElementById('infoPop').textContent;return {a:a.slice(0,90),b:b.slice(0,120)}}""")
+      __PM.G3.infoTap(sc(68.7,3,9.5));   /*(v6.12.1: the refiners are in the approach bay)*/const b=document.getElementById('infoPop').textContent;return {a:a.slice(0,90),b:b.slice(0,120)}}""")
     ok("click for info: an operator (name, team) and the refiners (readings and reliability)", "operator" in r["a"] and "team" in r["a"] and "Refiner" in r["b"] and "kWh/t" in r["b"], json.dumps(r))
     if shot: pg.screenshot(path=f"{shot}-info.png")
 

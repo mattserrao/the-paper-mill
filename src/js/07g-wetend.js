@@ -47,7 +47,15 @@ function weMigrate(){const K=S&&S.knob;if(K&&K.v&&K.v.ref!=null&&K.v.ref<=1.5)K.
 const bwStd=()=>(GRADES[C.grade]||GRADES["24"]).bw;
 const bwSp=()=>bwStd()*(1+(S.we?S.we.trim:0));
 // refining energy the stock on the machine has had (lagged through the chest by the knob model)
-const kwhNow=()=>{const K=S.knob;return K&&K.any&&K.x?eOfGap(K.x.fr):(K?knobVal("ref"):WE.kwh0);};
+/* v6.12.1-t7 the refiners' power cap: they can put REFCAP.kw into the stock between them (x1.3 with the refiner upgrade), so the
+   specific energy they deliver (kWh/t; 1 HPDT = 17.9 kWh/t) is the setpoint or what that power spreads over the tonnage,
+   whichever is less. At 60 kWh/t that holds to 40 t/h (52 with the upgrade); past it the refining, and its strength,
+   falls away. gapOf/eOfGap: the plate gap for an energy and back */
+const REFCAP={kw:2400,up:1.3},HPDT=17.9;
+const refCap=()=>REFCAP.kw*(LV("refiner")?REFCAP.up:1);
+const refTph=()=>S.pm==="run"?Math.max(0,S.rates.fiberUse||0):0;
+const refEff=set=>{const t=refTph();return t>0?Math.min(set,refCap()/t):set;};
+const kwhNow=()=>{const K=S.knob;return K&&K.any&&K.x?eOfGap(K.x.fr):refEff(K?knobVal("ref"):WE.kwh0);};
 // machine chest consistency (07b knobRead shows it): the agitator's swings, thick stock from an empty water chest
 function mcCons(){const K=S.knob,sw=K&&K.any&&!S.zen&&K.x?K.x.sw:0,t=S.t;return WE.mc0+sw*0.9*(Math.sin(t*0.21+3)*0.6+Math.sin(t*0.21*2.7+6)*0.4)+(S.wat?S.wat.shortK*0.6:0)+vlvMc();}   // (v6.9: + pulper consistency swings, NV-101, 07h)
 // fiber t/h the design headbox flow is sized for (the setpoint at this speed)
@@ -92,7 +100,7 @@ function dpYield(){if(S.zen)return 1;let x=0;for(const k of ["hd","lc","lw"])x+=
 // strength: ring crush from refining, the measured weight and stickies; the spec is the grade's
 const rctSpec=()=>Math.round((RCT0[C.grade]||60)*WE.rctSpec*10)/10;
 // (v6.8.3: open draw: each % of draw over the 1.5 % standard stretches the sheet and takes 4 % off ring crush; less draw adds it)
-function rctNow(bw){const ri=1+WE.rctK*(kwhNow()-WE.kwh0)-WE.rctStk*Math.max(0,((S.bq&&!S.zen)?S.bq.ck:0.1)-0.1)-WE.rctDraw*((S.zen?KNOB_IDEAL.draw:knobVal("draw"))-KNOB_IDEAL.draw);   // (v6.11.2: dry strength starch removed; v6.11.1 added its ring crush here)
+function rctNow(bw){const ri=1+WE.rctK*(kwhNow()-WE.kwh0)-WE.rctStk*Math.max(0,((S.bq&&!S.zen)?S.bq.ck:0.1)-0.1)-WE.rctDraw*((S.zen?drawStd():knobVal("draw"))-drawStd());   // (v6.11.2: dry strength starch removed; v6.11.1 added its ring crush here)
   return (RCT0[C.grade]||60)*(bw/bwStd())*ri;}
 // v6.11.2 paper is sold by area (MSF, thousand ft²), the way box plants buy it. The list price ($/t) is for a ton at the
 // grade's target weight; a ton made lighter covers more ft² and sells for list × bwStd/bw, a heavier one for less. The player
@@ -136,7 +144,8 @@ function bwSetMode(m){if(S.zen)return;const W=weState();if(m===W.m)return;
 function bwSetValve(v){if(S.zen)return;const W=weState();W.m="manual";W.v=clamp(+v,0,WE.valveMax);}
 function bwSetTrim(lb){if(S.zen)return;const W=weState();W.lw=false;W.trim=clamp(+lb/bwStd()-1,WE.trimMin,WE.trimMax);}
 
-/* ---------- v6.9.2 the refiners and the machine chest: the refiners take stock from the stock (storage) chest and feed the
+/* ---------- v6.9.2 the refiners and the machine chest (v6.12.1-t5: back to this order, with the refiners in the hall's
+   approach bay: stock chest > refiners > machine chest > machine chest pump > fan pump): the refiners take stock from the stock (storage) chest and feed the
    machine chest; the machine draws the machine chest. With the refiner plates clashed (an upset's refOut) nothing goes
    forward: the machine runs the chest down at its draw (the LV-104 model's 13.75 %/min at standard) and trips on low
    level; back on line the refiners refill it at twice the standard flow, out of the stock chest, and the machine rethreads

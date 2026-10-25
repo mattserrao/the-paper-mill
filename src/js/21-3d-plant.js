@@ -8,7 +8,7 @@
   slab(-53,-34.4,-24.5,-2.4,M.asphalt,0.03);        // receiving apron
   slab(-95,-49,11.2,13.8,M.asphalt);                // outbound road
   slab(-67,-49,11.2,33,M.asphalt,0.03);             // shipping apron
-  slab(-27.2,64,3,14.8,M.slab,0.03);slab(-23.8,64,14.8,19.85,M.slab,0.03);slab(-27.2,-2.9,-2.9,3,M.slab,0.031); // machine hall floor + reel bay along the back
+  slab(-27.2,74.6,3,14.8,M.slab,0.03);slab(-23.8,74.6,14.8,19.85,M.slab,0.03);slab(-27.2,-2.9,-2.9,3,M.slab,0.031); // machine hall floor + reel bay along the back
   slab(4,47,-25,-2,M.slab,0.03);                    // stock prep pad
   for(let x=-92;x<-36;x+=4)box(2,0.02,0.16,M.lane,x,0.05,-3.8,scene,false);
   for(let x=-92;x<-50;x+=4)box(2,0.02,0.16,M.lane,x,0.05,12.5,scene,false);
@@ -142,9 +142,9 @@
     [30.5,32.5].forEach(y=>{const bd=new THREE.Mesh(new CylG(1.24,1.24,1,20),M.bad);bd.position.set(79,y,-6.5);scene.add(bd);});
     const drum=cylZ(1.1,5,M.steel,74,10.2,-10,16);drum.rotation.y=Math.PI/2;
     ENV.stack=[79,34.2,-6.5];}
-  // rail spur along the back of receiving, with a train that drops off boxcars
-  {const tie=new THREE.InstancedMesh(new THREE.BoxGeometry(0.35,0.14,2.6),wood,170),m4=new THREE.Matrix4();let n=0;for(let x=-139;x<-9&&n<170;x+=0.8){m4.makeTranslation(x,0.07,-29);tie.setMatrixAt(n++,m4);}tie.count=n;tie.userData.bake=true;scene.add(tie);
-    [-29.7,-28.3].forEach(z=>box(131,0.16,0.12,M.metal,-74.5,0.2,z,scene,false));box(0.6,1.1,2.6,M.bad,-9,0.55,-29,scene,false);
+  // rail spur along the back of receiving, with a train that spots a boxcar of OCC at the receiving rail bay
+  {const tie=new THREE.InstancedMesh(new THREE.BoxGeometry(0.35,0.14,2.6),wood,180),m4=new THREE.Matrix4();let n=0;for(let x=-139;x<-1.6&&n<180;x+=0.8){m4.makeTranslation(x,0.07,-29);tie.setMatrixAt(n++,m4);}tie.count=n;tie.userData.bake=true;scene.add(tie);
+    [-29.7,-28.3].forEach(z=>box(138.8,0.16,0.12,M.metal,-70.6,0.2,z,scene,false));box(0.6,1.1,2.6,M.bad,-1.2,0.55,-29,scene,false);   // (v6.12.1-t5: 7.8 m longer)
     const T=new THREE.Group();T.name="train";scene.add(T);const TW=[];
     const wG=new CylG(0.42,0.42,0.16,14);wG.rotateX(Math.PI/2);
     function bogie(parent,x){const b=new THREE.Group();b.position.x=x;parent.add(b);box(2.4,0.35,2.2,M.ink,0,0.62,0,b,false);
@@ -169,20 +169,24 @@
       [7.03,-5.63].forEach(x=>K.box(LMP,0.06,0.18,0.5,x,2.55,0));K.box(LMP,0.06,0.14,0.36,4.83,4.0,0);
       K.build(loco);}
     bogie(loco,-4.2);bogie(loco,3.9);coupler(loco,6.8);coupler(loco,-6.8);
-    // consist: two boxcars of finished rolls (doors open while spotted) and a bulkhead flat of OCC bales
+    // consist (v6.12.1-t5): a boxcar of OCC bales right behind the loco, spotted at the receiving rail bay (its door opens
+    // while it stands there), then two boxcars of finished rolls, doors shut
     const cars=[];
-    [["#9b3d2a","box"],["#3d5f8c","box"],["#5b6270","flat"]].forEach(([hex,kind],k)=>{const c=new THREE.Group();c.position.x=-14-k*13;T.add(c);cars.push(c);const cm=cloth0b(hex);
+    [["#7a4a3a","occ"],["#9b3d2a","box"],["#3d5f8c","box"]].forEach(([hex,kind],k)=>{const c=new THREE.Group();c.position.x=-14-k*13;T.add(c);cars.push(c);const cm=cloth0b(hex);
       box(12.2,0.3,2.9,M.ink,0,1.0,0,c);bogie(c,-4.4);bogie(c,4.4);coupler(c,6.3);coupler(c,-6.3);
-      if(kind==="box"){const K=KIT();K.box(cm,12,3.3,2.8,0,2.8,0).prof(cm,[[-6,4.45],[6,4.45],[6,4.6],[-6,4.6]],2.6);for(let x=-5.5;x<=5.5;x+=1.1)[-1.42,1.42].forEach(z=>K.box(cm,0.08,3.2,0.05,x,2.8,z));
+      if(kind!=="flat"){const K=KIT();K.box(cm,12,3.3,2.8,0,2.8,0).prof(cm,[[-6,4.45],[6,4.45],[6,4.6],[-6,4.6]],2.6);for(let x=-5.5;x<=5.5;x+=1.1)[-1.42,1.42].forEach(z=>K.box(cm,0.08,3.2,0.05,x,2.8,z));
         K.box(M.ink,12,0.1,0.6,0,4.66,0);[-5.8,5.8].forEach(x=>{K.box(M.ink,0.08,2.6,0.4,x,2.6,1.45);for(let y=1.6;y<=4.2;y+=0.45)K.box(M.warn,0.45,0.05,0.05,x+(x<0?0.3:-0.3),y,1.5);});
         K.build(c);
-        const dr=box(2.6,2.7,0.08,cloth0b("#5a2318"),0,2.6,1.47,c);c.userData.door=dr;
-        const sg=new THREE.Mesh(new THREE.PlaneGeometry(4,0.5),new THREE.MeshBasicMaterial({map:(()=>{const cc=document.createElement("canvas");cc.width=256;cc.height=32;const x=cc.getContext("2d");x.fillStyle="#ffffff";x.font='800 22px "IBM Plex Mono",monospace';x.fillText(k?"PMRX 220418":"PMRX 104772",8,24);const t=new THREE.CanvasTexture(cc);t.colorSpace=THREE.SRGBColorSpace;return t;})(),transparent:true}));sg.position.set(-3.4,3.9,1.43);c.add(sg);}
+        const dr=box(2.6,2.7,0.08,cloth0b(kind==="occ"?"#4a2c22":"#5a2318"),0,2.6,1.47,c);
+        if(kind==="occ"){c.userData.door=dr;box(2.6,2.7,0.04,M.ink,0,2.6,1.415,c,false);   // the doorway, and the bales stacked in it
+          const bl=new THREE.InstancedMesh(new THREE.BoxGeometry(1.2,0.85,0.2),instMat(M.bale),6),mb=new THREE.Matrix4();let nb=0;
+          for(let i=0;i<2;i++)for(let l=0;l<3;l++){mb.makeTranslation(-0.62+i*1.24,1.68+l*0.87,1.39);bl.setMatrixAt(nb++,mb);}c.add(bl);}
+        const sg=new THREE.Mesh(new THREE.PlaneGeometry(4,0.5),new THREE.MeshBasicMaterial({map:(()=>{const cc=document.createElement("canvas");cc.width=256;cc.height=32;const x=cc.getContext("2d");x.fillStyle="#ffffff";x.font='800 22px "IBM Plex Mono",monospace';x.fillText(kind==="occ"?"OCC · RBOX 51207":k===1?"PMRX 104772":"PMRX 220418",8,24);const t=new THREE.CanvasTexture(cc);t.colorSpace=THREE.SRGBColorSpace;return t;})(),transparent:true}));sg.position.set(-3.4,3.9,1.43);c.add(sg);}
       else{box(12,0.4,2.8,cm,0,1.35,0,c);[-5.8,5.8].forEach(x=>box(0.3,2.8,2.8,cm,x,2.9,0,c));
         const b2=new THREE.InstancedMesh(new THREE.BoxGeometry(1.3,0.95,1.3),instMat(M.bale),24),m4b=new THREE.Matrix4();let n2=0;
         for(let i=0;i<8;i++)for(let l=0;l<3;l++){m4b.makeTranslation(-4.9+i*1.4,2.05+l*0.97,(l%2?0.35:-0.35));b2.setMatrixAt(n2++,m4b);}b2.castShadow=true;c.add(b2);}});
     cars.forEach(c=>c.userData.train=true);loco.userData.train=true;ENV.trainWheels=TW;ENV.trainCars=cars;ENV.locoStack=[1.6,4.2];
-    T.position.set(-180,0,-29);ENV.train={g:T,state:"away",t:60};}
+    T.position.set(-180,0,-29);ENV.train={g:T,state:"away",t:60};G3.trainDbg=ENV.train;}
   // day-staff cars drive in through the east gate in the morning and leave in the evening, one at a time so they queue nicely
   const CARQ={inQ:[],outQ:[],t:0,init:false};
   function carPath(c,arrive){const G=[[100,32.5],[89.5,32.5],[89.5,c.aisle],[c.sx,c.aisle]],P=arrive?[...G,[c.sx,c.sz]]:[[c.sx,c.sz],...G.slice().reverse()];
@@ -226,7 +230,7 @@
     [-1.6,1.6].forEach(dx=>box(0.14,1.2,0.14,M.ink,44+dx,0.6,22.8,scene,false));ENV.board={ctx:sc.getContext("2d"),tex:st,last:""};}
   // v4.1: trees and the rest of the world outside the buildings are built from the environment and mill seed (42b-3d-scenery.js)
   // street lamps along the roads, the front of the hall and the parking lot
-  {const L=[];for(let x=-130;x<-68;x+=16){L.push([x,-6.2]);L.push([x,15]);}for(let x=-20;x<=60;x+=16)L.push([x===44?38.5:x,22.6]);for(let x=68;x<=88;x+=10)L.push([x,57.4]);L.push([60,36]);L.push([46,30]);
+  {const L=[];for(let x=-130;x<-68;x+=16){L.push([x,-6.2]);L.push([x,15]);}for(let x=-20;x<=60;x+=16)L.push([x===44?38.5:x,22.6]);for(let x=68;x<=88;x+=10)L.push([x,57.4]);L.push([60,36]);L.push([46,30]);L.push([77.5,22.6]);
     const pole=new THREE.InstancedMesh(new CylG(0.08,0.1,6,6),instMat(M.metal),L.length),head=new THREE.InstancedMesh(new THREE.BoxGeometry(0.9,0.2,0.4),new THREE.MeshBasicMaterial({color:0xffffff}),L.length);
     const poolT=spriteTex((x,w)=>{const g=x.createRadialGradient(w/2,w/2,0,w/2,w/2,w/2);g.addColorStop(0,"rgba(255,255,255,1)");g.addColorStop(0.45,"rgba(255,255,255,0.6)");g.addColorStop(1,"rgba(255,255,255,0)");x.fillStyle=g;x.fillRect(0,0,w,w);});
     const poolM=new THREE.MeshBasicMaterial({map:poolT,color:lin0("#ffd98a"),transparent:true,opacity:0,depthWrite:false,polygonOffset:true,polygonOffsetFactor:-4,polygonOffsetUnits:-4,}),pools=new THREE.InstancedMesh(new THREE.PlaneGeometry(9,9),poolM,L.length);pools.renderOrder=3;
@@ -238,12 +242,23 @@
     [[-70,-3.8,3,1],[-55,-3.4,2,0.8],[-40,-12,2.6,1.4],[-55,22,3,1.6],[-80,12.6,2.4,0.8],[72,46,3,1.6],[80,52,2,1],[30,32.6,2.4,1],[-30,-30,2,1]].forEach(([x,z,a,b])=>{const p=new THREE.Mesh(new CircG(1,20),ENV.pudM);(ENV.pudMeshes||(ENV.pudMeshes=[])).push(p);p.rotation.x=-Math.PI/2;p.scale.set(a,b,1);p.position.set(x,0.045,z);scene.add(p);});}
   function cloth0b(h){return new StdMat({color:lin0(h),roughness:0.6});}
   // painted walkway and zone lines
-  [[-25,64,2.9],[-25,64,16.4]].forEach(([a,b,z])=>{for(let x=a;x<b;x+=2.4)box(1.3,0.02,0.14,M.lane,x,0.06,z,scene,false);});
+  [[-25,74.5,2.9],[-25,74.5,16.4]].forEach(([a,b,z])=>{for(let x=a;x<b;x+=2.4)box(1.3,0.02,0.14,M.lane,x,0.06,z,scene,false);});
   [[4,44,-24.6],[4,44,-2.3]].forEach(([a,b,z])=>box(b-a,0.02,0.14,M.lane,(a+b)/2,0.06,z,scene,false));
 
-  // receiving shed: floor, three walls, door wall rebuilt when docks change
-  slab(-34.4,-8,-23.5,-3,M.slab,0.04);
-  const WH=4.6;ribWall(26.4,WH,0.3,-21.2,WH/2,-23.5);ribWall(26.4,WH,0.3,-21.2,WH/2,-3);ribWall(0.3,WH,10.8,-8,WH/2,-18.1);ribWall(0.3,WH,7.3,-8,WH/2,-6.65);ribWall(0.3,WH-2.3,2.4,-8,2.3+(WH-2.3)/2,-11.5);
+  // receiving shed: floor, three walls, door wall rebuilt when docks change. v6.12.1-t5: the shed runs north to the rail spur
+  // (z -26.7, was -23.5), with an open rail bay in the north wall (RBAY) where the OCC boxcar is spotted and unloaded: a raised
+  // dock at car-floor height across the bay, with bumpers, a dock plate and a ramp down to the floor at its east end
+  const RBAY={z:-26.7,x0:-28,x1:-19,h:4.1};G3.RBAY=RBAY;
+  slab(-34.4,-8,RBAY.z,-3,M.slab,0.04);
+  const WH=4.6;ribWall(RBAY.x0+34.4,WH,0.3,(-34.4+RBAY.x0)/2,WH/2,RBAY.z);ribWall(-8-RBAY.x1,WH,0.3,(RBAY.x1-8)/2,WH/2,RBAY.z);
+  ribWall(RBAY.x1-RBAY.x0,WH-RBAY.h,0.3,(RBAY.x0+RBAY.x1)/2,RBAY.h+(WH-RBAY.h)/2,RBAY.z);
+  {const DY=1.1,DZ0=RBAY.z+0.15,DZ1=RBAY.z+1.9,W=RBAY.x1-RBAY.x0-1.2,cx=(RBAY.x0+RBAY.x1)/2-0.6;
+   box(W,DY,DZ1-DZ0,M.slab,cx,DY/2,(DZ0+DZ1)/2,scene);box(W,0.06,0.18,M.warn,cx,DY+0.03,DZ1-0.09,scene,false);   // the dock and its yellow edge
+   [RBAY.x0+0.9,cx,RBAY.x1-2.1].forEach(x=>box(0.5,0.45,0.22,M.ink,x,DY-0.35,RBAY.z-0.05,scene,false));            // rubber bumpers on the track side
+   box(2.2,0.08,1.1,M.steel,cx-1.2,DY+0.02,RBAY.z-0.35,scene,false);                                                 // dock plate over the gap to the car
+   {const L=4.2,a=Math.atan2(DY,L),r=box(Math.hypot(L,DY),0.18,DZ1-DZ0,M.slab,cx+W/2+L/2,DY/2,(DZ0+DZ1)/2,scene);r.rotation.z=-a;}   // ramp down to the floor
+   box(0.12,1.05,DZ1-DZ0,M.warn,cx-W/2+0.06,DY+0.52,(DZ0+DZ1)/2,scene,false);}
+  ribWall(26.4,WH,0.3,-21.2,WH/2,-3);ribWall(0.3,WH,14,-8,WH/2,-19.7);ribWall(0.3,WH,7.3,-8,WH/2,-6.65);ribWall(0.3,WH-2.3,2.4,-8,2.3+(WH-2.3)/2,-11.5);
   // warehouse: floor + walls
   slab(-49,-23.8,14.8,32.2,M.slab,0.04);
   ribWall(25.2,WH,0.3,-36.4,WH/2,14.8);{const g=new THREE.Group();scene.add(g);(G3.dynLater||(G3.dynLater=[])).push(g);G3.whSouthLo=g;ribWall(25.2,WH/2,0.3,-36.4,WH/4,32.2,g);}/* (v6.11.2: the south wall's lower half, in its own group so a warehouse annex can open it; its top half rides with the roof, 22) */

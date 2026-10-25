@@ -220,7 +220,7 @@ const CARDS=[
   odds:()=>60,why:"Fiber markets are a coin toss with a small edge.",
   ok:()=>!S.plan.disc,
   accept(c){const w=rand("card")*100<c.o;S.plan.disc={t:2000,v:w?15:-10};
-    return w?"Locked: the next 2,000 t of OCC come in $15/t cheaper.":"Locked in... and then the market fell. The next 2,000 t cost $10/t over market.";}},
+    return w?"Locked: the next 2,000 t of OCC come in $15/t cheaper.":"Locked in, and then the market fell. The next 2,000 t cost $10/t over market.";}},
  {id:"film",area:"Outbound",title:"New roll wrap film",
   story:()=>"A packaging vendor has a tougher stretch film. Fewer damage claims could lift what customers pay. Changeover costs $25k.",
   win:()=>"+$5/t on every grade, permanently",lose:()=>"The film jams the wrapper: winder down 4 hours",

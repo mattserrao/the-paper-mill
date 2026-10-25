@@ -4,7 +4,7 @@
    only: the sim and its dice are untouched, and the game keeps running at the player's speed while it is open.
    Keep RM_E in step with the sim when a relationship changes (tools/relmapcheck.py fails on a tag with no entry). ---- */
 const RM_DRV=[["x:weather","Weather",""],["x:bales","Bale grade mix",""],["x:pulpset","Pulper feed setpoint",""],["x:dilv","Pulper dilution valve","knob"],["x:slice","Headbox slice","knob"],["x:guide","Fabric guide roll","knob"],["x:zones","Headbox dilution zones","knob"],["x:spset","Machine speed setpoint",""],["x:grade","Grade on the machine",""],["x:dye","Dye system",""],["x:market","Market & leader effects",""],["x:power","Substation power",""],["x:incomer","MCC main incomer","knob"],["x:hood","Dryer hood doors","knob"],["x:orders","Customer orders",""],["x:upsets","Upsets & DCS motors",""]];
-const RM_COL={"YARD":["inq","unload","yard","balem","stk","occp"],"SPOT":["feed","cp","nv101pv","nv101op","amps","pulpLvl","yield","fiber","rejt","hddp","lcdp","lwdp","fsld","fsdp","kwh","dil","chest","chestg","gap","refkw","csf","agit","refq","mcCons","mcLvl","lv104pv","lv104op","mcg","fan"],"WET":["wsp","jw","rd","vac","couchSol","pl","pressSol","gtrav","edge","osc","hbc","bwv","fv201pv","fv201op","bwsp","drain","seal","pressw","wwl","lv202pv","lv202op","wwg","wwov","hum","polflow","poldose","fpr"],"DET":["speed","prod","st1","st3","pv302pv","pv302op","pv303pv","pv303op","steam","dryl","moist","qc300pv","qc300op","bw","draw","tension","defin","delvl","decons"],"QCS":["off","rct","prem","cdsp","bank","reel","cut","rollw","trimp","trimt","cdspan","sbout","spout","conv"],"UTIL":["boiler","vent","energyt","shower","evap","wcl","wcg","makeup","fresh","wuse","wwover","outfall","tss"],"SHIP":["fg","load","outq","openo","lateo","price","profit"],"DRV":["mvkv","lv480","dc_SP","dc_PM","dc_WD","dl_pulp","dl_refA","dl_refB","dl_fan","dl_couch","dl_pr1","dl_pr2","dl_dry","dl_reel","dl_wind","mcckw"]};
+const RM_COL={"YARD":["inq","unload","yard","balem","stk","occp"],"SPOT":["feed","cp","nv101pv","nv101op","amps","pulpLvl","yield","fiber","rejt","hddp","lcdp","lwdp","fsld","fsdp","kwh","dil","chest","chestg","gap","refkw","csf","agit","refq","mcCons","mcLvl","lv104pv","lv104op","mcg","fan"],"WET":["wsp","jw","rd","gbox","lvac","vac","vpkw","couchSol","pl","pressSol","gtrav","edge","osc","hbc","bwv","fv201pv","fv201op","bwsp","drain","seal","pressw","wwl","lv202pv","lv202op","wwg","wwov","hum","polflow","poldose","fpr"],"DET":["speed","prod","st1","st3","pv302pv","pv302op","pv303pv","pv303op","steam","dryl","moist","qc300pv","qc300op","bw","draw","tension","defin","delvl","decons"],"QCS":["off","rct","prem","cdsp","bank","reel","cut","rollw","trimp","trimt","cdspan","sbout","spout","conv"],"UTIL":["boiler","vent","energyt","shower","evap","wcl","wcg","makeup","fresh","wuse","wwover","outfall","tss"],"SHIP":["fg","load","outq","openo","lateo","price","profit"],"DRV":["mvkv","lv480","dc_SP","dc_PM","dc_WD","dl_pulp","dl_refA","dl_refB","dl_fan","dl_couch","dl_pr1","dl_pr2","dl_dry","dl_reel","dl_wind","mcckw"]};
 const RM_E=[
  ["x:weather","balem","p","Rain and snow soak the bales in the yard and on inbound loads"],
  ["x:weather","unload","n","Snow and fog slow inbound trucks"],
@@ -159,13 +159,17 @@ const RM_E=[
  ["x:slice","jw","x","Slice opening sets the jet speed: J/W 0.965 to 1.005, 0.985 standard"],
  ["jw","rd","p","Rush / drag = (J/W − 1) × wire speed"],
  ["wsp","rd","x","Same J/W, bigger rush or drag in fpm at a faster wire"],
- ["vac","couchSol","x","Best at 30 kPa; losses either side, worse below"],
+ ["vac","couchSol","x","Flatboxes best at 8.9 inHg; losses either side, worse below"],
+ ["gbox","couchSol","x","Gravity boxes best at 1.0 inHg: under it the early drainage is lost, over it the sheet seals"],
+ ["lvac","couchSol","x","Low vacuum boxes best at 5.0 inHg: losses either side"],
+ ["gbox","vpkw","p","More vacuum asked of the pump, more power"],["lvac","vpkw","p","More vacuum asked of the pump, more power"],["vac","vpkw","p","More vacuum asked of the pump, more power"],
+ ["gbox","speed","n","Over 3 inHg the gravity boxes drag on the fabric and wear it toward a failure"],["lvac","speed","n","Over 8 inHg the low vacuum boxes drag on the fabric and wear it toward a failure"],
  ["x:slice","couchSol","x","Jet off its best angle or ratio loses couch solids"],
  ["couchSol","pressSol","p","Press solids start from couch solids, point for point"],
  ["pl","pressSol","x","Rises with load to 130 kN/m, then the nip crushes"],
  ["pl","off","p","Crush marks above 115 kN/m"],
  ["pl","speed","n","Nip crush breaks above 130 kN/m"],
- ["vac","speed","n","Under 15 kPa the sheet leaves the couch too wet (breaks); over 45 kPa wears the fabric out"],
+ ["vac","speed","n","Under 4.4 inHg the sheet leaves the couch too wet (breaks); over 13 inHg wears the fabric out"],
  ["x:guide","gtrav","x","AUTO trim and the fabric's slow walk use up guide travel"],
  ["x:guide","edge","x","MANUAL holds still while the fabric drifts"],
  ["gtrav","edge","p","Past full travel the fabric walks off center"],
@@ -274,7 +278,7 @@ const RM_E=[
  ["amps","dl_pulp","p","Rotor amps are the pulper drive's load (a thick tub works it harder)"],
  ["refkw","dl_refA","p","Refiner power, split across the two refiner drives"],["refkw","dl_refB","p","Refiner power, split across the two refiner drives"],
  ["kwh","dl_refA","p","More refining energy or more fiber through them, more load: refining energy × fiber rate; 85 kWh/t at 35 t/h, or about 75 kWh/t at 40 t/h, runs them at 100%"],["kwh","dl_refB","p","More refining energy or more fiber through them, more load: refining energy × fiber rate; 85 kWh/t at 35 t/h, or about 75 kWh/t at 40 t/h, runs them at 100%"],
- ["speed","dl_fan","p","Headbox flow follows speed: the fan pump works harder"],["vac","dl_couch","p","More forming vacuum, more drag on the couch roll"],
+ ["speed","dl_fan","p","Headbox flow follows speed: the fan pump works harder"],["vac","dl_couch","p","More forming vacuum, more drag on the couch roll"],["gbox","dl_couch","p","Gravity box vacuum drags on the fabric the couch drives"],["lvac","dl_couch","p","Low vacuum drags on the fabric the couch drives"],
  ["pl","dl_pr1","p","Press load is torque on the press drives"],["pl","dl_pr2","p","Press load is torque on the press drives"],
  ["speed","dl_dry","p","The dryer section drive's load rises with speed"],["tension","dl_reel","p","Draw tension is torque on the reel drum"],["cut","dl_wind","p","Winding faster loads the winder drum"],
  ["x:upsets","dl_pulp","x","A failed bearing, motor or drive (or the pulper down) reads zero"],["x:upsets","dl_dry","x","A failed bearing, motor or drive, or the machine down, reads zero"],

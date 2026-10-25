@@ -102,9 +102,9 @@
         start:()=>({n:S.tot.turnups,at:-1}),
         at:(t,mv)=>{const st=mv.st;if(st.at<0&&S.tot.turnups>st.n)st.at=t;if((st.at>=0&&t-st.at>7)||t>26||(st.at<0&&S.pm!=="run"))return null;
           const u=ease(t/20);return [DX-2.2,DY-0.6,zc,mix(40,32,u),mix(-0.55,-0.35,u),mix(1.18,1.25,u)];}},
-      // low sideways track past the twin refiners, doors in the foreground
+      // low sideways track past the twin refiners in the approach bay, doors in the foreground (v6.12.1)
       {name:"refiner yard pass",look:["hc","none"],dur:13,ok:()=>true,
-        at:(t)=>{if(t>13)return null;const u=ease(t/13);return [61,2.2,mix(-16,-7,u),40,mix(0.2,0.45,u),0.98];}},
+        at:(t)=>{if(t>13)return null;const u=ease(t/13);return [69.1,2.2,mix(4.5,13.5,u),40,mix(0.2,0.45,u),0.98];}},
       // follow a loaded truck from the dock out past the gate
       {name:"truck departure",look:["dusk","none"],rare:1,dur:18,
         ok:()=>cam.r<TRUCK_FAR*2&&truckPool.out.some(g=>g.visible&&g.userData.busy&&(g.userData.phase==="leave"||(g.userData.phase==="dock"&&(g.userData.frac||0)>0.85))),
@@ -143,9 +143,9 @@
       // lunch at the food truck and the picnic tables
       {name:"lunch rush",look:["gold","airy"],rare:1,dur:8,ok:()=>!!(G3.FOOD&&G3.FOOD.open&&G3.followable&&G3.followable().some(w=>w.userData.lunch)),
         at:(t)=>{if(t>8)return null;const u=ease(t/8);return [33,0.8,mix(34.2,35.4,u),mix(24,18,u),mix(0.35,0.75,u),mix(1.12,1.2,u)];}},
-      // follow the feed: fan pump, up, over the hall wall and down into the headbox header
+      // follow the feed: fan pump, through the machine screen, over the hall wall and down into the headbox header (v6.12.1-t5)
       {name:"fan pump to headbox",look:["none","airy"],dur:8,ok:()=>true,
-        at:(t)=>{if(t>8)return null;const P=[[47.6,1.5,-9.3],[47.6,7.6,-9.3],[47.6,7.6,3.6],[60.75,7.6,3.6],[60.75,2.2,5.85]],L=[0];for(let i=1;i<P.length;i++)L.push(L[i-1]+Math.hypot(P[i][0]-P[i-1][0],P[i][1]-P[i-1][1],P[i][2]-P[i-1][2]));
+        at:(t)=>{if(t>8)return null;const P=[[62.6,1.5,-11],[61.2,4.2,-11],[61.2,4.2,-8.0],[61.2,7.6,-3.6],[61.2,7.6,3.6],[60.75,7.6,5.85],[60.75,2.2,5.85]],L=[0];for(let i=1;i<P.length;i++)L.push(L[i-1]+Math.hypot(P[i][0]-P[i-1][0],P[i][1]-P[i-1][1],P[i][2]-P[i-1][2]));
           const d=ease(t/8)*L[L.length-1];let i=1;while(i<L.length-1&&L[i]<d)i++;const k=(d-L[i-1])/(L[i]-L[i-1]),a=P[i-1],b=P[i];
           return [mix(a[0],b[0],k),mix(a[1],b[1],k),mix(a[2],b[2],k),17,mix(-0.95,-0.5,t/8),1.0];}},
       // the L/B gauge, then out to the jet and the wavy wet line on the wire

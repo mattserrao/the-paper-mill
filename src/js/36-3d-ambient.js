@@ -225,7 +225,7 @@
     carsUpdate(rdt,hr);
     // the train: arrives, sits while the cars are unloaded, then leaves
     // the train eases in, spots its cars at the mill, opens the boxcar doors, then pulls back out
-    const tr=ENV.train;if(rdt>0){tr.t-=rdt;tr.v=tr.v||0;const STOP=-17,AW=-200;
+    const tr=ENV.train;if(rdt>0){tr.t-=rdt;tr.v=tr.v||0;const STOP=-9.5,AW=-200;   // (v6.12.1-t5: the OCC boxcar's door lines up with the receiving rail bay, 21 RBAY)
       if(tr.state==="away"&&tr.t<=0){tr.state="in";tr.g.position.x=AW;tr.v=8;}
       else if(tr.state==="in"){const d=STOP-tr.g.position.x;tr.v=Math.min(8,Math.sqrt(Math.max(0,2*1.1*d))+0.15);tr.g.position.x=Math.min(STOP,tr.g.position.x+tr.v*rdt);if(d<0.02){tr.state="wait";tr.t=35;tr.v=0;}}
       else if(tr.state==="wait"&&tr.t<=0)tr.state="outb";

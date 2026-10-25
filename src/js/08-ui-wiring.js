@@ -98,7 +98,7 @@ const upDay=()=>Math.floor(S.t/1440),upLocked=()=>!S.free&&S.upDay===upDay();
 const UP_NARROW=matchMedia("(max-width:420px)");
 const upNext=()=>((S.t+360)/60)%24>=6?"tomorrow 6\u00a0AM":"at 6\u00a0AM";   // v5.0.6: "6 AM" never splits across lines
 function buy(id){const u=UP[id],l=LV(id);if(l>=u.lv.length)return;const cost=upCost(u,l);if(!S.free&&S.cash<cost)return;if(upLocked())return;
-  S.upDay=upDay();spend(cost,"upgrades");AUDIO.sfx("cash",150);S.up[id]=l+1;applyUpgrades();if(S.rel)S.rel.upChk=S.t+20;   // (v6.10 t4: check the refiner drives' load once the mill has settled, 07i)
+  S.upDay=upDay();spend(cost,"upgrades");AUDIO.sfx("cash",150);const sb0=P.spBonus;S.up[id]=l+1;applyUpgrades();drawUpg(P.spBonus-sb0);   /* (v6.12.1-t8: a faster machine gets the draw it needs) */if(S.rel)S.rel.upChk=S.t+20;   // (v6.10 t4: check the refiner drives' load once the mill has settled, 07i)
   if(id==="reliab"&&l===0&&civOn())civAdd(TELL.relCiv,"Reliability program");   // v5.7: monitoring raises Machinery (and unlocks the Area Trend Report)
   BANNERS.push({text:`${u.name}${u.lv.length>1?" level "+(l+1):""} is online.`,t:null,kind:"good"});while(BANNERS.length>3)BANNERS.splice(1,1);
   log(`Installed ${u.name}${u.lv.length>1?" level "+(l+1):""} (${money(cost)})`,"ok");updateShop();}
@@ -115,7 +115,7 @@ function updateShop(){const short=bnShort();   // (v5.2: once per tick, not once
     const fix=short&&us.some(upFix);const el=$("usum-"+g),h=`${fix?'<em class="fixg">fix</em> ':""}${own}/${tot} bought${can?` · <b>${can} affordable</b>`:""}`;if(el&&el.innerHTML!==h)el.innerHTML=h;});
   UPS.forEach(u=>{const l=LV(u.id),el=$("up-"+u.id),b=$("buy-"+u.id),max=l>=u.lv.length;
     el.classList.toggle("max",max);if(el.dataset.lv!==String(l)){el.dataset.lv=l;el.querySelectorAll(".pips i").forEach((p,k)=>p.classList.toggle("on",k<l));}
-    {const fx=upFix(u),ft=el.querySelector(".fixtag");el.classList.toggle("fix",fx);if(ft){ft.hidden=!fx;if(fx){const t=short?"Fixes the bottleneck · 25% off. "+(BN_UPTXT[S.bn+"/"+u.id]||""):"Bottleneck fixed · still 25% off";   /* v5.1 QA2: no "fixes" once it is fixed */if(ft.textContent!==t)ft.textContent=t;}}}
+    {const fx=upFix(u),ft=el.querySelector(".fixtag");el.classList.toggle("fix",fx);if(ft){ft.hidden=!fx;if(fx){const t=short?"Fixes the bottleneck · "+Math.round(bnSev().disc*100)+"% off. "+(BN_UPTXT[S.bn+"/"+u.id]||""):"Bottleneck fixed · still 25% off";   /* v5.1 QA2: no "fixes" once it is fixed */if(ft.textContent!==t)ft.textContent=t;}}}
     let bt,bd;if(max){bd=true;bt="Maxed";}
     else{const c=upCost(u,l),lk=upLocked();bd=lk||(!S.free&&S.cash<c);bt=S.free?"Add (free play)":lk?`${money(c)} · ${upNext()}`:S.cash<c?`Need ${money(c)}`:`Buy ${money(c)}`;}
     if(b.disabled!==bd)b.disabled=bd;if(b.textContent!==bt)b.textContent=bt;});

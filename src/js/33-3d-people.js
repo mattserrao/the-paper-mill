@@ -102,12 +102,14 @@
   // [station spot, zone x0, zone x1]; the winder operator stays clear of the roll conveyor
   const OPS=[[[57.4,14.3],46,62],[[58.6,14.3],40,56],[[26.6,14.3],29,41],[[25.4,14.3],12,28],[[-4.4,14.3],-1,14],[[-5.6,14.3],-9,3],[[-15.6,14.0],-17.1,-13.2]];
   const HOME=OPS.map(o=>o[0]);
-  // paper machine catwalks: tending-side walkway along the dryers with a stair, a crossover bridge, and a headbox platform on the back side
-  {const CY=4.2,CZ=13.3;walkway(-3,CZ,28.5,CZ,CY,1.1,[1,1],true);flight([33.6,0,CZ],[28.5,CY,CZ],1.1);
+  // paper machine catwalks: a crossover bridge over the dryers (with a ladder up from the tending-side floor) and a headbox
+  // platform on the back side. (v6.12.1-t6: the tending-side catwalk along the dryers and its stair are gone, so the dryer
+  // section reads from the camera; the operators' round walks the floor along the tending side instead)
+  {const CZ=13.3,RZ=14.2;
     walkway(14,4.0,14,CZ-0.55,8.8,1.0,[1,1],false);[[13.5,4.0],[14.5,4.0],[13.5,12.8],[14.5,12.8]].forEach(([x,z])=>box(0.16,8.6,0.16,M.steel,x,4.3,z,scene,false));
-    [-0.25,0.25].forEach(dx=>box(0.07,4.7,0.07,M.warn,14+dx,CY+2.35,CZ-0.3,scene,false));for(let y=CY+0.3;y<8.8;y+=0.45)box(0.56,0.05,0.06,M.warn,14,y,CZ-0.3,scene,false);
+    [-0.25,0.25].forEach(dx=>box(0.07,9.0,0.07,M.warn,14+dx,4.5,CZ-0.3,scene,false));for(let y=0.3;y<8.8;y+=0.45)box(0.56,0.05,0.06,M.warn,14,y,CZ-0.3,scene,false);
     walkway(53.8,4.9,60.8,4.9,2.4,1.2,[1,0],true);flight([62.6,0,4.9],[60.8,2.4,4.9],1.0);
-    G3.pmRoute=[[34.2,0,14.2],[33.6,0,CZ],[28.5,CY,CZ],[20,CY,CZ,3,"inspect"],[8,CY,CZ,3,"inspect"],[-1.5,CY,CZ,2,"look"],[28.5,CY,CZ],[33.6,0,CZ],[34.2,0,14.4]];}
+    G3.pmRoute=[[34.2,0,14.4],[28.5,0,RZ],[20,0,RZ,3,"inspect"],[8,0,RZ,3,"inspect"],[-1.5,0,RZ,2,"look"],[28.5,0,RZ],[34.2,0,14.4]];}
   // chairs at each console; operators kick back when the mill is running sweet
   CONSOLES.forEach(cx=>[-0.6,0.6].forEach(dx=>{const g=new THREE.Group();g.position.set(cx+dx,0,14.75);scene.add(g);box(0.55,0.08,0.55,M.ink,0,0.5,0,g,false);box(0.55,0.6,0.08,M.ink,0,0.85,0.26,g,false);box(0.08,0.5,0.08,M.steel,0,0.25,0,g,false);}));
   // lead ropes for pulling a new forming fabric on from the drive side

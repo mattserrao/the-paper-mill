@@ -31,11 +31,12 @@
     for(let k=0;k<12;k++){const a=k/12*6.283;box(0.06,1.1,0.06,M.ink,TX+Math.cos(a)*(R+0.75),H+0.7,TZ+Math.sin(a)*(R+0.75),scene,false);}
     G3.extraBeacons=(G3.extraBeacons||[]).concat([[TX,H+6.4+3.4,TZ]]);
     blob(TX,TZ,7);}
-  // bale stacks between the receiving shed and the rail spur (where the train drops them): plain boxes, one shared
+  // bale stacks unloaded from the OCC boxcar, staged on the rail dock floor east of the dock ramp (v6.12.1-t5: they stood
+  // outside between the shed and the rail spur, which is now inside the shed's north extension): plain boxes, one shared
   // geometry (a rounded box here would be 29 x 316 triangles for the same look from any distance a player sees them)
   const baleBox=new THREE.BoxGeometry(1.3,0.95,1.3);baleBox.userData.shared=true;
   {const bg=baleBox;
-    for(let st=0;st<5;st++)for(let r=0;r<2;r++)for(let l=0;l<3;l++){if(st===3&&l===2)continue;const b=new THREE.Mesh(bg,M.baleG[1]);b.position.set(-30+st*4+(r?0.15:0),0.48+l*0.96,-25.4-r*1.4);b.rotation.y=(st*7+l*3)%2?0.04:-0.03;b.castShadow=true;b.receiveShadow=true;scene.add(b);}}
+    for(let st=0;st<4;st++)for(let l=0;l<3;l++){if(st===2&&l===2)continue;const b=new THREE.Mesh(bg,M.baleG[1]);b.position.set(-14.6+st*1.55,0.48+l*0.96,-25.65);b.rotation.y=(st*7+l*3)%2?0.04:-0.03;b.castShadow=true;b.receiveShadow=true;scene.add(b);}}
   // south of the warehouse: pallet stacks, a dumpster, a stack of empty roll cores
   // (v6.11.2: in a group that moves south past a warehouse annex when one is built, 39 upUpdate)
   {const kraft=M.kraft,WP=new THREE.Group();scene.add(WP);(G3.dynLater||(G3.dynLater=[])).push(WP);G3.whProps=WP;

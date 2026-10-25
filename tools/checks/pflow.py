@@ -35,7 +35,9 @@ def pflow(pw):
     ok("14 prior days loaded (336 hours before day 1)", bf["neg"] == 336 and bf["first"] == -336, str(bf))
     # (bfCpu: the sim's own time in its 12 ms slices. The wall time, bfMs, also counts the frames drawn between slices,
     # so on a shared 2-CPU machine it swings 9-15 s with the load; it is logged, not asserted)
-    ok("prior history took under 10 s of sim time here", bf["cpu"] < 10000, f"{bf['cpu']} ms of sim, {bf['ms']} ms wall")
+    # (v6.12.1: was < 10 s, which it sat right on: 9.5 s alone, 10.5 s with another check running, so it flaked under
+    #  load. It guards against the backfill getting much slower, not against noise; real speed is the phone autotest's job)
+    ok("prior history took under 20 s of sim time here (about 2x its normal 9-10 s)", bf["cpu"] < 20000, f"{bf['cpu']} ms of sim, {bf['ms']} ms wall")
     ok("prior history left the run at its start (cash, day 1)", pg.evaluate("()=>__PM.S.t<30&&Math.abs(__PM.S.cash-2e6)<20000"), str(pg.evaluate("()=>[__PM.S.t,__PM.S.cash]")))
     ok("prior days made paper", pg.evaluate("()=>{const D=__PM.G3.histSum(__PM.G3.histRows(-336,0,true),-20160,0);return D.made>8000&&D.revenue>0}"), str(pg.evaluate("()=>{const D=__PM.G3.histSum(__PM.G3.histRows(-336,0,true),-20160,0);return [D.made,D.revenue,D.cost]}")))
     pg.evaluate("()=>{__PM.setRunning(false);if(__PM.S.cards)__PM.S.cards.open=null}")
