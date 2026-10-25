@@ -30,12 +30,13 @@ function knobCtl(id,where){const d=KNOBN[id],w=kEl("div","kctl"),key=where+"-"+i
   else if(id==="couch"){w.innerHTML=`<div class="seg kseg" role="group" aria-label="Couch pit agitator"><button type="button" data-cv="1">RUN</button><button type="button" data-cv="0">STOP</button></div>`;
     w.querySelectorAll("[data-cv]").forEach(b=>b.addEventListener("click",()=>{knobSet("couch",+b.dataset.cv);kuiRefresh();}));}
   else if(id==="incomer"){w.innerHTML=`<div class="seg kseg" role="group" aria-label="MCC main incomer"><button type="button" data-iv="1">CLOSED</button><button type="button" data-iv="0">OPEN</button></div>`;
-    w.querySelectorAll("[data-iv]").forEach(b=>b.addEventListener("click",()=>{knobSet("incomer",+b.dataset.iv);kuiRefresh();}));}
+    w.querySelectorAll("[data-iv]").forEach(b=>b.addEventListener("click",()=>{knobSet("incomer",+b.dataset.iv);if(where==="p")closeKnob();else kuiRefresh();}));   /* (v6.12.1-t7: the field panel closes on the switch) */}
   else if(id==="hood"){w.innerHTML=`<div class="seg kseg" role="group" aria-label="Dryer hood doors"><button type="button" data-hv="0">CLOSED</button><button type="button" data-hv="1">RAISED</button></div>`;
-    w.querySelectorAll("[data-hv]").forEach(b=>b.addEventListener("click",()=>{knobSet("hood",+b.dataset.hv);kuiRefresh();}));}
-  else{w.innerHTML=`<label class="spis"><span>${d.min}</span><input type="range" min="${d.min}" max="${d.max}" step="${d.step}" data-kv aria-label="${d.name}"/><span>${d.max}</span></label>
-      <div class="kval"><b data-kvv></b><small>standard ${KNOB_IDEAL[id].toFixed(d.dp||0)} ${d.unit}</small></div>`;
-    w.querySelector("[data-kv]").addEventListener("input",e=>{knobSet(id,+e.target.value);kuiRefresh();});}
+    w.querySelectorAll("[data-hv]").forEach(b=>b.addEventListener("click",()=>{knobSet("hood",+b.dataset.hv);if(where==="p")closeKnob();else kuiRefresh();}));}
+  else{const k=d.dk||1,dp=d.dp||0,st=d.dk?Math.pow(10,-dp):d.step,mn=+(d.min*k).toFixed(dp),mx=+(d.max*k).toFixed(dp);   // (v6.12.1-t7: dk shows a knob in other units, the high vacuum's kPa as inHg)
+    w.innerHTML=`<label class="spis"><span>${mn}</span><input type="range" min="${mn}" max="${mx}" step="${st}" data-kv aria-label="${d.name}"/><span>${mx}</span></label>
+      <div class="kval"><b data-kvv></b><small data-kvs>standard ${(KNOB_IDEAL[id]*k).toFixed(dp)} ${d.unit}</small></div>`;
+    w.querySelector("[data-kv]").addEventListener("input",e=>{knobSet(id,+e.target.value/k);kuiRefresh();});}
   return w;}
 function knobCtlSync(w){const id=w.dataset.k,K=S.knob;
   if(id==="zones"){const z=K?K.z:[];w.querySelectorAll("[data-zv]").forEach(b=>{const v=z[+b.dataset.zv]||0;b.textContent=(v>0?"+":"")+v;b.classList.toggle("moved",v!==0);});}
@@ -46,22 +47,25 @@ function knobCtlSync(w){const id=w.dataset.k,K=S.knob;
   else if(id==="couch"){const v=knobVal("couch");w.querySelectorAll("[data-cv]").forEach(b=>b.setAttribute("aria-pressed",String(+b.dataset.cv===v)));}
   else if(id==="incomer"){const v=knobVal("incomer");w.querySelectorAll("[data-iv]").forEach(b=>b.setAttribute("aria-pressed",String(+b.dataset.iv===v)));}
   else if(id==="hood"){const v=knobVal("hood");w.querySelectorAll("[data-hv]").forEach(b=>b.setAttribute("aria-pressed",String(+b.dataset.hv===v)));}
-  else{const d=KNOBN[id],v=knobVal(id),r=w.querySelector("[data-kv]");if(actEl(r)!==r)r.value=v;const b=w.querySelector("[data-kvv]");b.textContent=`${v.toFixed(d.dp||0)} ${d.unit}`;b.classList.toggle("moved",!knobAt(id));}}
+  else{const d=KNOBN[id],k=d.dk||1,v=knobVal(id)*k,r=w.querySelector("[data-kv]");if(actEl(r)!==r)r.value=v;const b=w.querySelector("[data-kvv]");b.textContent=`${v.toFixed(d.dp||0)} ${d.unit}`;b.classList.toggle("moved",!knobAt(id));
+    if(id==="draw"){const q=drawReq(),sm=w.querySelector("[data-kvs]");if(sm)sm.textContent=`needs ${q.toFixed(1)} % at ${Math.round(S.pm==="run"?S.pmSpeed:C.pmSp.v).toLocaleString()} fpm`;b.classList.toggle("moved",knobVal("draw")<q-0.05);}}}
 // a knob's own readings (process values an operator would see; no hints about what will go wrong)
 function knobReadout(id,r){const R=(k,v)=>`<div><small>${k}</small><b>${v}</b></div>`;
   switch(id){
     case "pulp":return R("Pulper consistency",kf(r.cp)+" %")+R("Rotor",Math.round(r.amps)+" A")+R("Tub level",Math.round(r.pulpLvl)+" %");
-    case "ref":return R("Energy",Math.round(r.kwh)+" kWh/t")+R("Plate gap",kf(r.gap,2)+" mm")+R("Refiner load",Math.round(r.refkw)+" kW")+R("Freeness",Math.round(r.csf)+" mL CSF");
+    case "ref":return R("Energy",Math.round(r.kwh)+" kWh/t · "+kf(r.hpdt,2)+" HPDT")+R("Plate gap",kf(r.gap,2)+" mm")+R("Refiner load",Math.round(r.refkw).toLocaleString()+" / "+Math.round(r.refcap).toLocaleString()+" kW"+(r.kwh<r.refset-0.5?" · at max":""))+R("Freeness",Math.round(r.csf)+" mL CSF");
     case "agit":return R("Agitator",r.agit+" %")+R("Machine chest",Math.round(r.mcLvl)+" %")+R("Chest consistency",kf(r.mcCons,2)+" %");
-    case "vac":return R("Vacuum",kf(r.vac)+" kPa")+R("Couch solids",kf(r.couchSol)+" %");
-    case "cbox":return R("Couch vacuum",kf(r.cvac)+" kPa")+R("Box position",(r.cbox>0.05?"+":r.cbox<-0.05?"−":"")+kf(Math.abs(r.cbox))+"°")+R("Couch solids",kf(r.couchSol)+" %");
+    case "vac":return R("Flatboxes",kf(r.vacIn)+" inHg · PV-313 "+Math.round(r.hvv)+"%")+R("Vacuum pump",Math.round(r.vpkw)+" kW")+R("Couch solids",kf(r.couchSol)+" %");
+    case "gbox":return R("Gravity boxes",kf(r.gbox)+" inHg · PV-311 "+Math.round(r.gbv)+"%")+R("Vacuum pump",Math.round(r.vpkw)+" kW")+R("Couch solids",kf(r.couchSol)+" %");
+    case "lvac":return R("Low vacuum",kf(r.lvac)+" inHg · PV-312 "+Math.round(r.lvv)+"%")+R("Vacuum pump",Math.round(r.vpkw)+" kW")+R("Couch solids",kf(r.couchSol)+" %");
+    case "cbox":return R("Couch vacuum",kf(r.cvacIn)+" inHg")+R("Box position",(r.cbox>0.05?"+":r.cbox<-0.05?"−":"")+kf(Math.abs(r.cbox))+"°")+R("Couch solids",kf(r.couchSol)+" %");
     case "press":return R("Nip load",Math.round(r.pl)+" kN/m")+R("After the presses",kf(r.pressSol)+" % solids");
     case "guide":return R("Fabric edge",(r.edge>=0?"+":"")+Math.round(r.edge)+" mm")+R("Guide travel used",r.gm?Math.round(Math.min(1,r.gtrav)*100)+" %":"manual");
     case "incomer":return R("Main breaker",knobVal("incomer")?"closed":"open")+R("480 V bus",Math.round(rlyLV())+" V")+R("Drive load",Math.round(rlyMccKw(r)).toLocaleString()+" kW");
     case "hood":{const h=G3.HOOD||{u:0,f:0};return R("Doors",h.u>0.98?"up":h.u>0.02?(h.want?"lifting…":"lowering…"):"closed")+R("Front section",h.f>0.98?"lifted off":h.f>0.02?"moving":"in place")+R("Dryer steam",r.steam>0?kf(r.steam)+" t/h":"–");}
     case "couch":return R("Agitator",r.couch?"running · 38 A":"stopped")+R("Pit level",Math.round(35+(S.pm==="run"?0:30)+r.cs*6)+" %");
     case "osc":return R("Shower stroke",Math.round(r.osc*0.14)+" /min")+R("Felt",r.stripes>0.15?"uneven":"clean");
-    case "draw":return R("Open draw",kf(r.draw)+" %")+R("Sheet tension",r.run?kf(r.tension,2)+" kN/m":"–");
+    case "draw":return R("Open draw",kf(r.draw)+" % · needs "+kf(drawReq())+" %")+R("Sheet tension",r.run?kf(r.tension,2)+" kN/m":"–");
     case "st1":return R("1st section",Math.round(r.st1)+" kPa")+R("3rd section (auto)",Math.round(r.st3)+" kPa")+R("Reel moisture",r.run?kf(r.moist)+" %":"–");
     case "zones":return R("Reel moisture",r.run?kf(r.moist)+" %":"–")+R("Zones trimmed",(S.knob?S.knob.z.filter(v=>v).length:0)+" of 12");}
   return "";}
@@ -148,21 +152,21 @@ const MIMIC={
       [369,172,"gap","GAP",r=>kf(r.gap,2)+" mm"],[369,194,"refkw","LOAD",r=>Math.round(r.refkw)+" kW"],[369,80,"csf","CSF",r=>Math.round(r.csf)+" mL"],[476,172,"mcCons","CONS",r=>kf(r.mcCons,2)+"%"],[476,194,"agit","AGIT",r=>r.agit+"%"],[586,150,"flow","FLOW",()=>S.pm==="run"?Math.round(S.pmSpeed*1.9)+" L/s":"0 L/s"]],
     trends:[["cp","Pulper consistency %","#ffb02e",0,10],["amps","Rotor A","#4fd18b",0,700],["mcCons","Machine chest cons %","#7fb2ff",2.4,4.0],["refkw","Refiner kW","#ff7a8a",0,4000]]},
   WET:{title:"WET END",eq:[[14,80,74,70,"HEADBOX"],[104,105,190,25,"FORMING TABLE"],[308,90,64,50,"COUCH"],[388,90,104,50,"PICK-UP FELT"],[508,80,118,70,"TWIN PRESS"]],
-    tags:[[51,172,"zones","ZONES",r=>(S.knob?S.knob.z.filter(v=>v).length:0)+"/12"],[199,172,"vac","VAC",r=>kf(r.vac)+" kPa"],[199,88,"edge","EDGE",r=>(r.edge>=0?"+":"")+Math.round(r.edge)+" mm"],[199,194,"gtrav","GUIDE",r=>r.gm?"AUTO "+Math.round(Math.min(1,r.gtrav)*100)+"%":"MAN"],
+    tags:[[51,172,"zones","ZONES",r=>(S.knob?S.knob.z.filter(v=>v).length:0)+"/12"],[150,150,"gbox","GRAV",r=>kf(r.gbox)+" inHg"],[205,150,"lvac","LOW",r=>kf(r.lvac)+" inHg"],[260,150,"vac","HIGH",r=>kf(r.vacIn)+" inHg"],[199,88,"edge","EDGE",r=>(r.edge>=0?"+":"")+Math.round(r.edge)+" mm"],[199,194,"gtrav","GUIDE",r=>r.gm?"AUTO "+Math.round(Math.min(1,r.gtrav)*100)+"%":"MAN"],
       [340,172,"couchSol","SOL",r=>kf(r.couchSol)+"%"],[340,194,"cs","PIT",r=>r.couch?"RUN":"STOP"],[440,172,"osc","OSC",r=>Math.round(r.osc)+"%"],[567,172,"pl","LOAD",r=>Math.round(r.pl)+" kN/m"],[567,194,"pressSol","SOL",r=>kf(r.pressSol)+"%"]],
-    trends:[["vac","Vacuum kPa","#7fb2ff",0,60],["couchSol","Couch solids %","#4fd18b",12,24],["pl","Press load kN/m","#ffb02e",40,160],["pressSol","Press solids %","#ff7a8a",38,50]]},
+    trends:[["vacIn","Flatbox vacuum inHg","#7fb2ff",0,18],["couchSol","Couch solids %","#4fd18b",12,24],["pl","Press load kN/m","#ffb02e",40,160],["pressSol","Press solids %","#ff7a8a",38,50]]},
   DET:{title:"DRY END",eq:[[14,90,80,50,"OPEN DRAW"],[112,75,130,80,"1ST SECTION"],[260,75,170,80,"2ND / 3RD SECTION"],[448,85,74,60,"REEL"],[546,20,80,40,"BOILER"]],
-    tags:[[54,172,"draw","DRAW",r=>kf(r.draw)+"%"],[54,194,"tension","TENS",r=>r.run?kf(r.tension,2):"–"],[177,172,"st1","STEAM",r=>Math.round(r.st1)+" kPa"],[345,172,"st3","AUTO",r=>Math.round(r.st3)+" kPa"],[345,194,"steam","FLOW",r=>r.steam>0.5?kf(r.steam)+" t/h":"–"],
+    tags:[[54,172,"draw","DRAW",r=>kf(r.draw)+"% / "+kf(drawReq())],[54,194,"tension","TENS",r=>r.run?kf(r.tension,2):"–"],[177,172,"st1","STEAM",r=>Math.round(r.st1)+" kPa"],[345,172,"st3","AUTO",r=>Math.round(r.st3)+" kPa"],[345,194,"steam","FLOW",r=>r.steam>0.5?kf(r.steam)+" t/h":"–"],
       [485,172,"moist","MOIST",r=>r.run?kf(r.moist)+"%":"–"],[485,194,"bw","BW",r=>r.run?kf(r.bw,2):"–"],[586,78,"boiler","HEADER",r=>Math.round(r.boiler*100)+"%"],[485,72,"speed","SPEED",r=>Math.round(r.speed)+" fpm"]],
     trends:[["st3","3rd section steam kPa","#ffb02e",40,200],["steam","Steam flow t/h","#7fb2ff",0,70],["moist","Reel moisture %","#4fd18b",0,14],["tension","Draw tension kN/m","#ff7a8a",0,2.5]]}};
 // alarms from the current readings: what a DCS would flash. They point at symptoms, not at the knob behind them.
 function knobAlarms(a,r){const L=[],al=(on,txt,hi)=>{if(on)L.push([txt,hi]);};const K=S.knob;
   if(a==="SPOT"){al(r.cp>6.5,"PULPER CONS HI",r.cp>7.2);al(r.cp<3.5,"PULPER CONS LO",r.cp<2.6);al(r.pulpLvl>92,"PULPER LEVEL HI",r.pulpLvl>100);al(r.amps>520,"ROTOR AMPS HI",r.amps>560);
     al(r.gap<0.25,"REFINER GAP LO",r.gap<0.18);al(Math.abs(r.mcCons-3.2)>0.35,"MACHINE CHEST CONS DEV",Math.abs(r.mcCons-3.2)>0.6);}
-  else if(a==="WET"){al(r.vac<18,"FORMER VACUUM LO",r.vac<12);al(Math.abs(r.edge)>12,"FABRIC EDGE DEV",Math.abs(r.edge)>35);al(r.gm&&r.gtrav>0.85,"GUIDE AT END OF TRAVEL",r.gtrav>=1);
+  else if(a==="WET"){al(r.vac<18,"FLATBOX VACUUM LO",r.vac<12);al(r.gbox<0.4,"GRAVITY BOX VACUUM LO",false);al(r.lvac<3,"LOW VACUUM LO",false);al((K&&K.wear||0)>0.4,"FORMING FABRIC WEAR HI",(K&&K.wear||0)>0.75);al(Math.abs(r.edge)>12,"FABRIC EDGE DEV",Math.abs(r.edge)>35);al(r.gm&&r.gtrav>0.85,"GUIDE AT END OF TRAVEL",r.gtrav>=1);
     al(r.cs>0.6&&S.pm!=="run","COUCH PIT LEVEL HI",r.cs>1.2);al(r.pl>125,"PRESS LOAD HI",r.pl>135);al(r.couchSol<16,"COUCH SOLIDS LO",r.couchSol<14);al(K&&K.F&&K.F.cd>0,"CD PROFILE OUT",true);}
   else if(a==="DET"&&r.run){al(S.dry&&r.st3>=dryCeil(S.dry)-1,"3RD SECTION STEAM AT MAX",true);al(r.boiler<0.8,"STEAM HEADER LO",r.boiler<0.7);al(r.run&&r.moist>9.5,"REEL MOISTURE HI",r.moist>11);al(r.run&&r.moist<6.5,"REEL MOISTURE LO",r.moist<6);
-    al(r.run&&r.tension>1.3,"DRAW TENSION HI",r.tension>1.5);al(r.run&&r.tension<0.85,"DRAW TENSION LO",r.tension<0.7);
+    al(r.run&&r.draw<drawReq()-0.05,"OPEN DRAW LOW FOR SPEED · NEEDS "+kf(drawReq())+" %",r.draw<drawReq()-0.3);al(r.run&&r.tension>1.3,"DRAW TENSION HI",r.tension>1.5);al(r.run&&r.tension<0.85,"DRAW TENSION LO",r.tension<0.7);
     al(QNOW.out.includes("bw"),"BASIS WEIGHT OFF SPEC",true);al(QNOW.out.includes("m"),"MOISTURE OFF SPEC",true);al(QNOW.out.includes("shade"),"COLOR OFF SPEC",true);}   // (v6.5.3: the QCS spec check)
   else if(a==="DET")al(r.boiler<0.8,"STEAM HEADER LO",r.boiler<0.7);
   {const q=qualStatus();if(r.run&&q.off>0.02)L.unshift([`MAKING BEATER · ${q.why.toUpperCase()}`,true]);}   // (v6.5.4: on every screen, first)

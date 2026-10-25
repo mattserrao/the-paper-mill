@@ -466,7 +466,12 @@ def rel(pw):
     ok("untouched: ring crush on spec, no rejects from pressure drop, standard refining", base["rctq"] >= base["spec"] and base["yield"] == 1 and base["kwh"] == 60 and not base["out"], f'rct {base["rctq"]} spec {base["spec"]} out {base["out"]}')
 
     # ---- refining ----
-    r90 = R("P.knob.set('ref',90);", 180)
+    # (v6.12.1-t7: the refiners' power cap, 07g refEff: 2,400 kW, so 90 kWh/t at ~35 t/h (3,150 kW) can't be delivered; with
+    #  the refiner upgrade (+30%, 3,120 kW) nearly all of it is. The upgrade is set for the "more refining" runs; the cap
+    #  itself is checked without it)
+    rcap = R("P.knob.set('ref',90);", 180)
+    ok("refining power cap: 90 kWh/t at this tonnage runs the refiners at their 2,400 kW and delivers less (lower HPDT)", 2300 <= rcap["refkw"] <= 2420 and 60 < rcap["kwh"] < 75, f'kW {rcap["refkw"]}, delivered {rcap["kwh"]} kWh/t')
+    r90 = R("S.up.refiner=1;P.knob.set('ref',90);", 180)
     ok("more refining: lower freeness, lower couch solids, more refiner power", r90["csf"] < base["csf"] - 40 and r90["cs"] < base["cs"] - 0.5 and r90["refkw"] > base["refkw"] * 1.3, f'csf {r90["csf"]} vs {base["csf"]}, couch {r90["cs"]} vs {base["cs"]}, kW {r90["refkw"]} vs {base["refkw"]}')
     # (design, 07g rctNow: ring crush = RCT0 x (weight / grade weight) x (1 + 0.0045 per kWh/t over 60 ...), so 90 kWh/t is
     #  +13.5% strength at the same weight. Since v6.10 AUTO-LW spends that as a lighter sheet: it trims the weight until ring

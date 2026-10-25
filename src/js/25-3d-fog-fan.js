@@ -222,6 +222,29 @@
     G3.sliceHit=[pl,fr];}
   box(14,0.25,CD,M.steel,47.8,2.4,zc);                                     // forming table
   const wireRolls=[cylZ(0.5,CD+0.4,M.metal,41,2.4,zc),cylZ(0.5,CD+0.4,M.metal,54.5,2.4,zc)];
+  /* v6.12.1-t7 the forming table's zones, headbox to couch, as boxes across the table under the fabric (their ends stand out
+     past it on both sides, coloured by zone): the forming board, three gravity boxes, three low vacuum boxes and four high
+     vacuum flatboxes, with a name plate under each group on the tending side. On the drive side a short leg from each
+     vacuum box drops to a header at 2.15 m (head height, clear of anyone walking under it), which runs to the liquid ring
+     vacuum pump on the floor by the back wall, with its separator and a vent up through the roof */
+  {const ZS=[{n:"FORMING BOARD",c:"#8d96a3",x:[53.7],w:0.6,vac:false},{n:"GRAVITY BOXES",c:"#9fc6e8",x:[52.5,51.65,50.8],w:0.6,vac:true},
+      {n:"LOW VACUUM",c:"#4f8fd1",x:[49.6,48.75,47.9],w:0.6,vac:true},{n:"HIGH VACUUM",c:"#24508f",x:[46.6,45.7,44.8,43.9],w:0.7,vac:true}];
+    const Y=2.71,H=0.32,ZL=CD+0.9,ZD=zc-CD/2-0.45,HY=2.15,legs=[];
+    ZS.forEach(zz=>{const m=new StdMat({color:lin0(zz.c),roughness:0.6,metalness:0.2});
+      zz.x.forEach(x=>{box(zz.w,H,ZL,m,x,Y,zc,scene);box(zz.w+0.06,0.05,ZL+0.04,M.ink,x,Y+H/2,zc,scene,false);if(zz.vac)legs.push(x);});
+      const cx=(zz.x[0]+zz.x[zz.x.length-1])/2,c=document.createElement("canvas");c.width=256;c.height=40;const g=c.getContext("2d");g.fillStyle=zz.c;g.fillRect(0,0,256,40);g.fillStyle="#ffffff";g.fillRect(4,4,248,32);
+      g.fillStyle="#1c2233";g.font="800 20px system-ui,sans-serif";g.textAlign="center";g.fillText(zz.n,128,28);const t=new THREE.CanvasTexture(c);t.colorSpace=THREE.SRGBColorSpace;
+      const pl=new THREE.Mesh(new THREE.PlaneGeometry(1.7,0.27),new THREE.MeshBasicMaterial({map:t}));pl.position.set(cx,2.05,zc+CD/2+0.48);scene.add(pl);box(1.76,0.33,0.04,M.ink,cx,2.05,zc+CD/2+0.45,scene,false);});
+    legs.forEach(x=>pipe([[x,Y-0.1,ZD],[x,HY,ZD]],0.07,M.steel));
+    const PX=50.2,PZ=3.55;pipe([[legs[legs.length-1],HY,ZD],[legs[0],HY,ZD]],0.16,M.steel);spool([[PX,HY,ZD],[PX,HY,PZ+0.3],[PX,1.4,PZ+0.3]],0.16,M.steel);
+    // the liquid ring pump: casing, coupling guard and motor on a base plate; the separator beside it and its vent
+    box(3.6,0.2,1.3,M.steel,PX+0.7,0.1,PZ,scene);
+    {const k=cylZ(0.55,1.0,M.motor,PX,0.78,PZ,20);k.rotation.y=Math.PI/2;const e=cylZ(0.6,0.08,M.steel,PX-0.5,0.78,PZ,20);e.rotation.y=Math.PI/2;
+     box(0.5,0.5,0.55,M.warn,PX+0.75,0.75,PZ,scene,false);const mo=cylZ(0.45,1.3,M.motor,PX+1.65,0.7,PZ,16);mo.rotation.y=Math.PI/2;box(0.4,0.3,0.4,M.ink,PX+1.65,1.25,PZ,scene,false);}
+    {const sp=new THREE.Mesh(new CylG(0.4,0.4,1.6,16),M.tank);sp.position.set(PX-1.4,1.0,PZ);sp.castShadow=true;scene.add(sp);pipe([[PX-0.6,0.78,PZ],[PX-1.0,0.78,PZ]],0.12,M.steel);pipe([[PX-1.4,1.8,PZ],[PX-1.4,9.5,PZ]],0.1,M.steel);}
+    {const c=document.createElement("canvas");c.width=256;c.height=48;const g=c.getContext("2d");g.fillStyle="#ffffff";g.fillRect(0,0,256,48);g.fillStyle="#1c2233";g.font="800 24px system-ui,sans-serif";g.textAlign="center";g.fillText("VACUUM PUMP",128,33);
+     const t=new THREE.CanvasTexture(c);t.colorSpace=THREE.SRGBColorSpace;const pl=new THREE.Mesh(new THREE.PlaneGeometry(1.5,0.28),new THREE.MeshBasicMaterial({map:t}));pl.position.set(PX+0.7,0.45,PZ+0.67);scene.add(pl);}
+    G3.FZ3={pump:[PX,PZ]};}
   // twin press: 1st press nip at x 37, 2nd press nip at x 32, each with its own top felt and one tandem bottom felt
   const press=[cylZ(1.05,CD+0.4,M.metal,37,4.45,zc,18),cylZ(1.05,CD+0.4,M.metal,37,2.35,zc,18),cylZ(1.2,CD+0.4,M.metal,32,4.6,zc,18),cylZ(1.2,CD+0.4,M.metal,32,2.2,zc,18)];
   M.felt=mat("g-felt",{roughness:1});

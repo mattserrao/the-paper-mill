@@ -1,7 +1,27 @@
 # Changelog
 
+## v6.12.1-t7 (2026-10-24): forming vacuum zones, refining power cap, draw vs speed (test build, test/v6.12.1)
+- Forming table in zones, headbox to couch: the forming board (blades, no vacuum), three gravity boxes, three low vacuum
+  boxes and four high vacuum flatboxes, drawn as boxes down the table with their ends in zone colours and a name plate per
+  group; on the drive side a leg from each vacuum box to a header and a liquid ring vacuum pump with its separator and vent.
+- Two new WET DCS knobs: gravity box vacuum (0-5 inHg, standard 1.0, PV-311) and low vacuum boxes (2-10 inHg, standard
+  5.0, PV-312); the old forming vacuum knob is now the high vacuum flatboxes (PV-313), unchanged inside (kPa), shown as
+  inHg (standard 8.9). Each zone off its standard loses up to about a point of couch solids (more steam); over its limit
+  (gravity 3, low 8, flatboxes 13 inHg) it wears the forming fabric toward a failure, and every zone adds to the couch
+  drive's load. The WET picture shows each zone's vacuum, its valve opening and the pump's kW (120 kW + the vacuum asked
+  for), with alarms for low vacuum and fabric wear; trends and tags in inHg; the couch box reads inHg too.
+- Refining power cap (HPDT): the refiners can put 2,400 kW into the stock (3,120 with the refiner upgrade), so the kWh/t
+  they deliver is the setpoint or that power over the tonnage, whichever is less: 60 kWh/t holds to 40 t/h (52 upgraded),
+  then falls (48 kWh/t, 2.7 HPDT at 50 t/h), and strength (ring crush) and freeness follow. Readouts in kWh/t and HPDT, and
+  refiner load against its maximum.
+- Open draw vs speed: the draw has to rise 0.1% for every 100 fpm over 2,632 fpm (1.5% there). Under what the speed
+  needs, breaks going into the dryers come more often, whether or not the knob was touched (about +25% at +300 fpm left at
+  1.5%). The DRY END DCS shows the draw against what's needed, with an alarm when it's short.
+- The dryer hood doors' and the MCC main incomer's field panels close when you throw the switch.
+
 ## v6.12.1-t6 (2026-10-24): couch suction box, approach piping, felts, dryer catwalk (test build, test/v6.12.1)
-- New fiddly knob, the couch suction box (WET, a red station by the couch roll's tending side): the angle of the vacuum box
+- New fiddly knob, the couch suction box (WET, a red station by the couch roll's tending side, at x 40.4; the couch pit
+  agitator's station moved east to x 43.4, swapping places): the angle of the vacuum box
   inside the suction couch roll, -15 to +15 degrees, standard and best -6. Off best the box seals worse: the couch vacuum
   falls from 60 kPa with the square of the angle (35 kPa at +15) and couch solids with it (19 to 16.5 %), which carries on
   to press solids, the water into the dryers and steam (49 to 55 t/h at +15). The box turns over about 8 minutes. Its

@@ -85,7 +85,7 @@ function rlyLoad(id,r){if(!S||outOn()||rlyIncOf(id)||rlyRectDown(ASSETN[id].ln))
     case "pulp":return M.pulperDown?0:r.amps/500*100+w;
     case "refA":case "refB":return r.refkw>0?r.refkw/2/rlyKw(id)*100*(id==="refB"?0.97:1.03)+w:0;
     case "fan":return run?48+30*S.pmSpeed/3000+w:M.pmDown?0:30+w;
-    case "couch":return run?38+r.vac*1.05+w:M.pmDown?0:12;
+    case "couch":return run?38+r.vac*1.05+(r.gbox-1)*2.4+(r.lvac-5)*1.6+w:M.pmDown?0:12;   // (v6.12.1-t7: every vacuum zone drags on the fabric, and the couch drives it)
     case "pr1":return run?42+r.pl*0.27+w:M.pmDown?0:12;
     case "pr2":return run?38+r.pl*0.24+w:M.pmDown?0:12;
     case "dry":return run?46+S.pmSpeed/3000*26+w:M.pmDown?0:14;

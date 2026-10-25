@@ -23,9 +23,9 @@
     const rv=wheelValve(58.9,1.5,-11.0,Math.PI/2);plate("PLATE GAP",1.0,58.55,2.75,-11.0,-Math.PI/2);KX.ref={at:rv.at,w:rv.w};
     const as=station(51.4,-11.4,-Math.PI/4);plate("AGITATOR",0.8,51.4,2.0,-11.25,-Math.PI/4);KX.agit={at:as.at};
     const gs=station(46.2,13.05,0);plate("GUIDE",0.7,46.2,2.0,13.21);KX.guide={at:gs.at};
-    const cs=station(40.4,13.05,0);plate("COUCH PIT",0.8,40.4,2.0,13.21);KX.couch={at:cs.at};
-    // v6.12.1-t6: the couch suction box's position control, on a post by the couch roll's tending-side bearing
-    const cbs=station(43.4,13.05,0);plate("COUCH BOX",0.8,43.4,2.0,13.21);KX.cbox={at:cbs.at};
+    const cs=station(43.4,13.05,0);plate("COUCH PIT",0.8,43.4,2.0,13.21);KX.couch={at:cs.at};   // (v6.12.1-t6: swapped with the couch box)
+    // v6.12.1-t6: the couch suction box's position control, on a post by the couch roll (the couch pit agitator's station moved east to make room)
+    const cbs=station(40.4,13.05,0);plate("COUCH BOX",0.8,40.4,2.0,13.21);KX.cbox={at:cbs.at};
     const os=station(35.0,13.15,0);plate("OSCILLATOR",0.8,35.0,2.0,13.31);KX.osc={at:os.at};
     // v6.11.1: the dryer hood doors' raise / lower station, on a post under the tending-side catwalk
     const hs=station(3.0,13.15,0);plate("HOOD DOORS",0.8,3.0,2.0,13.31);KX.hood={at:hs.at};

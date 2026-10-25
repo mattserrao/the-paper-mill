@@ -112,6 +112,9 @@ function mods(){const m=baseMods();
   if(S.wx==="rain"&&!baleOn())m.yieldMul*=0.97;   // (v6.6: outside zen the yard's moisture does this, 05b)
   // (v6.11.2: the warehouse and yard crews no longer leave their trucks to help rethread a sheet break; receiving and
   //  shipping carry on through breaks and hayouts. crewAtPM stays in the mods, always false, for older saves and the pills)
+  // v6.12.1-t7: the open draw has to rise with speed (DRAWV, 07b): under what this speed needs the sheet flutters into the
+  // dryers and breaks come more often, the further under the more (whether or not the knob was ever touched)
+  if(!S.zen){const k=drawBrk();if(k>1)m.breakMul*=k;}
   knobMods(m);vlvMods(m);chemMods(m);   // v5.6 / v6.9 fiddly knobs (nothing unless a knob was moved)
   bqMods(m);   // v6.6 stickies from contaminated bales (05b)
   dryMods(m);   // v6.5 b5 the dryer limit: the crew's speed trim for a wet sheet (07d)

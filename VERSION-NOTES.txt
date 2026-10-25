@@ -139,3 +139,4 @@ One line per version, oldest first. Add a line here with every release: build.py
 6.12.1-t4  Season QA Fixes (Test): Upgrades That Pay Back, a Fairer Grade, Bottlenecks Mild to Severe, Whole Rolls in the Order Feed
 6.12.1-t5  Rail Bay at Receiving, Refiners Ahead of the Machine Chest, Tail Threading (Test)
 6.12.1-t6  Couch Suction Box Knob, Cleaner Approach Piping, Felts Run True, No Tending-Side Dryer Catwalk (Test)
+6.12.1-t7  Forming Table Vacuum Zones and Pump, Refiners Run Out of Power at High Tonnage, Draw Rises with Speed (Test)

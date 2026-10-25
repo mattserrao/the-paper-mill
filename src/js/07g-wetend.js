@@ -47,7 +47,15 @@ function weMigrate(){const K=S&&S.knob;if(K&&K.v&&K.v.ref!=null&&K.v.ref<=1.5)K.
 const bwStd=()=>(GRADES[C.grade]||GRADES["24"]).bw;
 const bwSp=()=>bwStd()*(1+(S.we?S.we.trim:0));
 // refining energy the stock on the machine has had (lagged through the chest by the knob model)
-const kwhNow=()=>{const K=S.knob;return K&&K.any&&K.x?eOfGap(K.x.fr):(K?knobVal("ref"):WE.kwh0);};
+/* v6.12.1-t7 the refiners' power cap: they can put REFCAP.kw into the stock between them (x1.3 with the refiner upgrade), so the
+   specific energy they deliver (kWh/t; 1 HPDT = 17.9 kWh/t) is the setpoint or what that power spreads over the tonnage,
+   whichever is less. At 60 kWh/t that holds to 40 t/h (52 with the upgrade); past it the refining, and its strength,
+   falls away. gapOf/eOfGap: the plate gap for an energy and back */
+const REFCAP={kw:2400,up:1.3},HPDT=17.9;
+const refCap=()=>REFCAP.kw*(LV("refiner")?REFCAP.up:1);
+const refTph=()=>S.pm==="run"?Math.max(0,S.rates.fiberUse||0):0;
+const refEff=set=>{const t=refTph();return t>0?Math.min(set,refCap()/t):set;};
+const kwhNow=()=>{const K=S.knob;return K&&K.any&&K.x?eOfGap(K.x.fr):refEff(K?knobVal("ref"):WE.kwh0);};
 // machine chest consistency (07b knobRead shows it): the agitator's swings, thick stock from an empty water chest
 function mcCons(){const K=S.knob,sw=K&&K.any&&!S.zen&&K.x?K.x.sw:0,t=S.t;return WE.mc0+sw*0.9*(Math.sin(t*0.21+3)*0.6+Math.sin(t*0.21*2.7+6)*0.4)+(S.wat?S.wat.shortK*0.6:0)+vlvMc();}   // (v6.9: + pulper consistency swings, NV-101, 07h)
 // fiber t/h the design headbox flow is sized for (the setpoint at this speed)

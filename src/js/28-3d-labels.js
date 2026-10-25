@@ -97,6 +97,8 @@
     {p:[58,5.6,zc],t:()=>{const D=G3.SLC;if(!D)return ["Headbox",""];const g=D.geo();return ["Headbox",G3.slcFix?"resetting the slice":"slice "+(12+3*D.v).toFixed(1)+" mm · wet line "+(g.lipX-g.wet).toFixed(1)+" m"];},cls:()=>!!G3.slcFix},
     {p:[47.6,12.4,-15.0],t:()=>["Machine chest",f0(mcLvlNow())+" %"]},
     {p:[63.5,3.6,-11],t:()=>["Fan pump",S.pm==="run"?"to the headbox":"idling"]},
+    {p:[48.8,3.9,zc],t:()=>{const f=fzNow();return ["Forming table",`vacuum ${f.gb.toFixed(1)} · ${f.lv.toFixed(1)} · ${f.hi.toFixed(1)} inHg`];}},
+    {p:[50.6,2.1,3.55],t:()=>["Vacuum pump",S.pm==="run"?Math.round(fzNow().kw)+" kW":"idling"]},
     {p:[61.2,5.2,-5.6],t:()=>["Machine screen",S.pm==="run"?"last check before the headbox":"idling"]},
     {p:[44,0.6,12.9],t:()=>["Base ply silo","white water under the wire"]},
     {p:[34.5,9.6,zc-1.5],t:()=>["Twin press",LV("shoe")?"shoe in 2nd press":"tandem bottom felt"]},
