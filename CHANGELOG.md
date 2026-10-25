@@ -1,5 +1,10 @@
 # Changelog
 
+## v6.12.1 (2026-10-25): The Approach System
+Release of v6.12.1-t1 to t8 (below), merged from test/v6.12.1. Regression suite: all 22 checks pass on t7 (the full tier,
+with knobs, dcs and help rerun on their own after test updates); t8 passed process, knobs, dcs, save and smoke. The
+in-game autotest ran in the test browser; it has not been run on an iPhone for this release.
+
 ## v6.12.1-t8 (2026-10-25): speed upgrades raise the draw (test build, test/v6.12.1)
 - Buying a speed upgrade (drive, shoe press, steam box) raises the open draw to what the faster machine needs (0.1% per
   100 fpm: drive +0.15%, shoe +0.10%, steam box +0.04%), with a log line, and that becomes the draw's standard (reset,
