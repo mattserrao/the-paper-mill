@@ -53,7 +53,7 @@ function qualStatus(){const K=S.knob,ko=K&&K.any?K.off:0;
 // The broke pulper takes about two rolls an hour while the chest has room; the fiber goes straight to stock (no rejects:
 // it's clean paper). A broker can buy what's waiting in the bay instead (05-event-cards.js "seconds").
 const QBEAT={rate:25};   // t/h repulped
-function beaterTick(dt){const b=S.q.bank||0;if(b<=1e-6)return;const room=shOn()?SH.bkCap*0.95-bkState().f:P.tankCap*0.98-S.tank;if(room<=0)return;   // (v6.13: into the broke chest, metered back from there, 07n)
+function beaterTick(dt){const b=S.q.bank||0;if(b<=1e-6)return;const room=shOn()?SH.bkCap*SH.bkHi-bkState().f:P.tankCap*0.98-S.tank;if(room<=0)return;   // (v6.13: into the broke chest, metered back from there, 07n; t3: only to 75%, the rest kept for a break's broke)
   const t=Math.min(b,QBEAT.rate*dt/60,room);S.q.bank=b-t;if(shOn())bkIn(t,"beater");else S.tank+=t;WQ.rep+=t;S.tot.repulped=(S.tot.repulped||0)+t;}
 // ---- v6.7 the off-spec log (the quality screen): a spell starts with the first beater ton and ends after 10 quiet minutes ----
 function qLog(dt,beat){const Q=S.q;if(!Q)return;

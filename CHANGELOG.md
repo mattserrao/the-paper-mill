@@ -8,6 +8,8 @@ QA round: claude/qa-v613-t2.md (50 seasons + 50 survival against main). Decision
   survey shows the valved-off can cold; "Broken syphon: cleared" is no longer logged for a can that's still out.
 - **Broke chest 150 t (was 60):** several hours of breaks. With the machine down and the chest nearly full, the trickle
   back into the machine chest now stops once the furnish is 30% broke (B1: a long stop took it to 88-91%).
+  The beater repulps into it only to 75% full, so the last quarter is kept for a break's broke (with it filling to
+  95% from the beater, the QA saw it overflow in nearly every season even at 150 t).
 - **Every break in the break log (B3):** knob breaks (draw, couch, vacuum, crush, too wet, too dry), the machine chest
   running empty, the silo's fan pump cavitating and the spider are now logged with their cause, so the BRK screen covers
   all of them (2 runs in the QA had up to 39% missing).

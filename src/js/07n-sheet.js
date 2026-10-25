@@ -24,7 +24,7 @@
    and hood). The dice still say when; R (times RCAL, so a hands-off mill breaks as often as v6.12 on average) says how
    likely, and the contributors say where. Seasons, survival and free play; zen keeps the plain model. ---- */
 const HB={jw0:0.985,jwMin:0.965,jwMax:1.005,b0:12,bK:3};
-const SH={stfiSpec:0.95,tsr0:1.6,tsrD:400,tsrR:300,dep0:40,depG:6,depC:0.15,bkCap:150,bkTrk:0.30,bkHi:0.7,bkLim:0.20,turnP:0.012,nip0:2,hard0:60,hardK:12,
+const SH={stfiSpec:0.95,tsr0:1.6,tsrD:400,tsrR:300,dep0:40,depG:6,depC:0.15,bkCap:150,bkTrk:0.30,bkHi:0.75,bkLim:0.20,turnP:0.012,nip0:2,hard0:60,hardK:12,
   rcal:1};
 const STFI0={"24":2.6,"28":2.9,"31":3.25,"34Super":3.6};   // kN/m at the grade's target weight and standard refining
 const shOn=()=>!!(S&&!S.zen);
