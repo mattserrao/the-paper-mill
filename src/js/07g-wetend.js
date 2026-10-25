@@ -136,19 +136,24 @@ function bwSetMode(m){if(S.zen)return;const W=weState();if(m===W.m)return;
 function bwSetValve(v){if(S.zen)return;const W=weState();W.m="manual";W.v=clamp(+v,0,WE.valveMax);}
 function bwSetTrim(lb){if(S.zen)return;const W=weState();W.lw=false;W.trim=clamp(+lb/bwStd()-1,WE.trimMin,WE.trimMax);}
 
-/* ---------- v6.9.2 the refiners and the machine chest. v6.12.1 approach system: the stock chest pump (LV-104) feeds the
-   machine chest; the machine chest pump sends thick stock through the refiners (in the hall's approach bay) to the fan
-   pump. With the refiner plates clashed (an upset's refOut) no thick stock reaches the fan pump: the headbox thins out and
-   after MCH.starve minutes the sheet breaks and the machine is down until the refiners are back, then it rethreads. The
-   machine chest is upstream now, so a clash doesn't touch its level (S.mcl stays null: LV-104's steady 69 %, or the valve
-   model's own level when LV-104 is on it). (Before v6.12.1 the refiners fed the machine chest, which ran down and tripped.)
-   ---------- */
-const MCH={sp:69,trip:10,restart:35,k:13.75,fill:2,starve:2};
+/* ---------- v6.9.2 the refiners and the machine chest (v6.12.1-t5: back to this order, with the refiners in the hall's
+   approach bay: stock chest > refiners > machine chest > machine chest pump > fan pump): the refiners take stock from the stock (storage) chest and feed the
+   machine chest; the machine draws the machine chest. With the refiner plates clashed (an upset's refOut) nothing goes
+   forward: the machine runs the chest down at its draw (the LV-104 model's 13.75 %/min at standard) and trips on low
+   level; back on line the refiners refill it at twice the standard flow, out of the stock chest, and the machine rethreads
+   once it's back over the restart level. Untouched and undisturbed the level is LV-104's steady 69 % (S.mcl null). With
+   LV-104 on the valve model (07h) the valve model owns the level and its inflow stops instead. ---------- */
+const MCH={sp:69,trip:10,restart:35,k:13.75,fill:2};
 const mcLvlNow=()=>vlvT("LV-104")?S.vlv.lp["LV-104"].y:(S.mcl==null?MCH.sp:S.mcl);
-function mcTick(dt,M){S.mcl=null;if(S.zen){S.mcTrip=false;S.refq=null;S.refStv=0;return false;}
-  const out=!!M.refOut;
+function mcTick(dt,M){if(S.zen){S.mcl=null;S.mcTrip=false;S.refq=null;return false;}
+  const out=!!M.refOut,own=vlvT("LV-104"),ustd=Math.max(1e-6,weUstd()),q=S.pm==="run"?(S.rates.fiberUse||0)/ustd:0;
   S.refq=out?0:null;   // (null: the refiners pass what the machine draws; the reading works it out)
-  if(out){if(S.pm==="run")S.refStv=(S.refStv||0)+dt;}else S.refStv=0;
-  if(!S.mcTrip&&out&&(S.refStv||0)>=MCH.starve){S.mcTrip=true;log("Refiners down: no thick stock is reaching the fan pump. The headbox thinned out and the sheet broke; the paper machine is down until the refiners are back.","bad");}
-  else if(S.mcTrip&&!out){S.mcTrip=false;S.refStv=0;log("The refiners are back on line and thick stock is reaching the fan pump: the machine is coming back up.","ok");}
+  if(!own){let y=S.mcl==null?MCH.sp:S.mcl;
+    if(out)y=Math.max(0,y-MCH.k*q*dt);
+    else if(y<MCH.sp){const dy=Math.min(MCH.sp-y,MCH.k*Math.max(0,MCH.fill-q)*dt),tk=dy*ustd/60/MCH.k,got=Math.min(S.tank,tk);
+      S.tank-=got;y+=tk>0?dy*got/tk:0;S.refq=MCH.fill;}
+    S.mcl=(!out&&y>=MCH.sp-1e-6)?null:y;}
+  const y=mcLvlNow();
+  if(!S.mcTrip&&out&&y<=MCH.trip){S.mcTrip=true;log("Machine chest low level: with the refiners down nothing is coming forward. The paper machine is shut down.","bad");}
+  else if(S.mcTrip&&!out&&y>=MCH.restart){S.mcTrip=false;log("The refiners are back and the machine chest is filling: the machine is coming back up.","ok");}
   return !!S.mcTrip;}

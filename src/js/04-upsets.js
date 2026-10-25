@@ -1,8 +1,9 @@
 const EVENTS=[
- {id:"refclash",g:"stock",name:"Refiner plates clash",head:"Refiner plates clashed! The refiners tripped: no thick stock is going forward to the fan pump.",dur:[180,300],mtbf:420,mods:{refOut:"refiner plates clashed"},fx:"refclash",
-   // (v6.12.1 approach system: the refiners sit between the machine chest and the fan pump; clashed, the headbox starves and
-   // the sheet breaks after a couple of minutes (07g mcTick); the machine comes back once maintenance has re-plated them)
-   start:inc=>{rand("upx");inc.note="refiners down: the fan pump is starved of thick stock";}},
+ {id:"refclash",g:"stock",name:"Refiner plates clash",head:"Refiner plates clashed! The refiners tripped: no stock is going forward to the machine chest.",dur:[180,300],mtbf:420,mods:{refOut:"refiner plates clashed"},fx:"refclash",
+   // (v6.9.2, again from v6.12.1-t5: the refiners, in the hall's approach bay, feed the machine chest; clashed, nothing goes
+   // forward, the machine runs the chest down and trips on its low level (07g mcTick), and comes back once maintenance has
+   // re-plated them and the chest has refilled)
+   start:inc=>{rand("upx");inc.note="refiners down: the machine chest is running down";}},
  {id:"shaft",g:"machine",name:"Driveshaft snaps",head:"Dryer driveshaft snaps. Millwrights called in.",dur:[240,480],mtbf:160,mods:{pmDown:"driveshaft"},fx:"shaft"},
  {id:"dryerfire",g:"machine",name:"Fire in the dryers",head:"Fire in the dryer hood! Deluge on, sheet off.",dur:[180,360],mtbf:260,mods:{pmDown:"dryer fire"},fx:"dryerfire"},
  {id:"fabric",g:"machine",name:"Fabric runs off",head:"Forming fabric tracked off the rolls and folded up.",dur:[150,300],mtbf:180,mods:{pmDown:"fabric change"},fx:"fabric"},

@@ -62,7 +62,7 @@
       // painted truck bay in front of the door
       const bx=x+bayDir*3.3;[[0,-1.25],[0,1.25]].forEach(([_,dz])=>box(5.6,0.02,0.12,M.lane,bx,0.06,z+dz,group,false));box(0.12,0.02,2.6,M.lane,x+bayDir*6.1,0.06,z,group,false);});}
   function rebuildDoors(){const k=P.doors+"|"+P.shipDoors;if(k===doorKey)return;doorKey=k;
-    buildDoorWall(doorWalls.in,-34.4,-23.5,-3,Array.from({length:P.doors},(_,d)=>W(0,inY(d))[1]),WH,-1);
+    buildDoorWall(doorWalls.in,-34.4,-26.7,-3,Array.from({length:P.doors},(_,d)=>W(0,inY(d))[1]),WH,-1);
     buildDoorWall(doorWalls.out,-49,14.8,32.2,Array.from({length:P.shipDoors},(_,d)=>W(0,outY(d))[1]),WH,-1);}
 
   // conveyor to pulper

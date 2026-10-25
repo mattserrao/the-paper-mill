@@ -95,7 +95,7 @@
     {p:[26.6,3.9,ZL],t:()=>["LC cleaners",S.inc.some(i=>i.id==="lcplug")?"plugged":"sand & grit out"]},
     {area:1,p:[41.2,9.4,-15],t:()=>["Stock chest",f0(S.tank/P.tankCap*100)+" %"]},
     {p:[58,5.6,zc],t:()=>{const D=G3.SLC;if(!D)return ["Headbox",""];const g=D.geo();return ["Headbox",G3.slcFix?"resetting the slice":"slice "+(12+3*D.v).toFixed(1)+" mm · wet line "+(g.lipX-g.wet).toFixed(1)+" m"];},cls:()=>!!G3.slcFix},
-    {p:[47.6,11.6,-15.0],t:()=>["Machine chest","refined stock"]},
+    {p:[47.6,12.4,-15.0],t:()=>["Machine chest",f0(mcLvlNow())+" %"]},
     {p:[63.5,3.6,-11],t:()=>["Fan pump",S.pm==="run"?"to the headbox":"idling"]},
     {p:[44,0.6,12.9],t:()=>["Base ply silo","white water under the wire"]},
     {p:[34.5,9.6,zc-1.5],t:()=>["Twin press",LV("shoe")?"shoe in 2nd press":"tandem bottom felt"]},

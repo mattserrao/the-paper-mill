@@ -41,19 +41,18 @@ const MIMIC_KNOB={SPOT:MIMIC.SPOT,WET:MIMIC.WET,DET:MIMIC.DET};
 const MT=(x,y,k,t,f)=>[x,y,k,t,f];
 MIMIC.SPOT={title:"STOCK PREP",h:312,trends:MIMIC_KNOB.SPOT.trends,
   // (v6.5.4: in process order. Top row left to right: conveyor, pulper, HD cleaner, coarse screens, LC cleaners, fine
-  // screens. Down, then right to left: LW cleaners, thickener, stock storage chest, machine chest, refiners, fan pump: v6.12.1
-  // approach system, the refiners after the machine chest; the entries keep their order so PGX stays index for index)
+  // screens. Down, then right to left: LW cleaners, thickener, stock storage chest, refiners, machine chest, fan pump)
   eq:[[8,66,76,40,"CONVEYOR"],[100,56,110,60,"PULPER"],[100,8,52,26,"RAGGER","s"],[158,8,52,26,"JUNK","s"],[228,66,78,40,"HD CLEANER"],[324,66,78,40,"COARSE SCR"],[420,66,88,40,"LC CLEANERS"],
-    [524,66,86,40,"FINE SCR"],[525,206,86,40,"LW CLEANERS"],[420,206,88,40,"THICKENER"],[316,196,88,60,"STOCK CHEST"],[108,206,86,40,"REFINERS"],[204,196,92,60,"MACHINE CHEST"],[214,160,70,24,"DYE","s"],[8,206,80,40,"FAN PUMP"],[452,8,104,28,"WATER CHEST","s"]],
-  ln:[["M84 86 H100"],["M210 86 H228"],["M306 86 H324"],["M402 86 H420"],["M508 86 H524"],["M610 86 H622 V226 H611"],["M525 226 H508"],["M420 226 H404"],["M316 226 H296"],["M204 226 H194"],["M108 226 H88"],["M8 226 H0"],
-    ["M126 34 V56",1],["M184 34 V56",1],["M249 184 V196",1],["M452 22 H330 V66",1]],
+    [524,66,86,40,"FINE SCR"],[525,206,86,40,"LW CLEANERS"],[420,206,88,40,"THICKENER"],[316,196,88,60,"STOCK CHEST"],[212,206,86,40,"REFINERS"],[104,196,92,60,"MACHINE CHEST"],[114,160,70,24,"DYE","s"],[8,206,80,40,"FAN PUMP"],[452,8,104,28,"WATER CHEST","s"]],
+  ln:[["M84 86 H100"],["M210 86 H228"],["M306 86 H324"],["M402 86 H420"],["M508 86 H524"],["M610 86 H622 V226 H611"],["M525 226 H508"],["M420 226 H404"],["M316 226 H298"],["M212 226 H196"],["M104 226 H88"],["M8 226 H0"],
+    ["M126 34 V56",1],["M184 34 V56",1],["M149 184 V196",1],["M452 22 H330 V66",1]],
   tags:[MT(48,22,"rgt","TENS",DV.rgt),MT(244,22,"jdc","DUMPS",DV.jdc),MT(46,124,"cvsp","SPD",DV.cvsp),MT(46,138,"cvst","",DV.cvst),MT(155,124,"cp","CONS",r=>kf(r.cp)+"%"),MT(155,138,"amps","ROTOR",r=>Math.round(r.amps)+" A"),MT(155,152,"pulpLvl","LEVEL",r=>Math.round(r.pulpLvl)+"%"),
     MT(267,124,"hddp","ΔP",DV.hddp),MT(363,124,"csdp","ΔP",DV.csdp),MT(363,138,"csrj","REJ",DV.csrj),MT(464,124,"lcdp","ΔP",DV.lcdp),MT(464,138,"lcrow","ROWS",DV.lcrow),MT(567,124,"fsdp","ΔP",DV.fsdp),MT(567,138,"fsld","LOAD",DV.fsld),
     MT(568,262,"lwdp","ΔP",DV.lwdp),MT(464,262,"thf","FILT",DV.thf),MT(464,276,"thv","SPIDER",DV.thv),MT(464,290,"thl","VAT",DV.thl),
     MT(360,186,"stc","CONS",DV.stc),MT(360,272,"lvl","LEVEL",()=>Math.round(S.tank/P.tankCap*100)+"%"),MT(360,286,"lvsp","SP",DV.lvsp),
-    MT(155,196,"csf","CSF",r=>Math.round(r.csf)+" mL"),MT(155,262,"gap","GAP",r=>kf(r.gap,2)+" mm"),MT(155,276,"refkw","LOAD",r=>Math.round(r.refkw)+" kW"),
-    MT(252,272,"mcCons","CONS",r=>kf(r.mcCons,2)+"%"),MT(252,286,"agit","AGIT",r=>r.agit+"%"),MT(249,148,"dyef","DYE",DV.dyef),MT(504,50,"wcl","LVL",DV.wcl),MT(54,262,"flow","FLOW",()=>fmtGpm(GPM(S.we?S.we.f.hb||0:0))),MT(54,276,"dil","DIL",DV.dil),MT(155,290,"kwh","ENERGY",r=>Math.round(r.kwh)+" kWh/t"),
-    MT(360,300,"chv","VOL",DV.chv),MT(252,300,"mcv","VOL",DV.mcv),MT(504,62,"wcv","VOL",DV.wcv)]};   // (v6.7: chest volumes in gallons)
+    MT(255,196,"csf","CSF",r=>Math.round(r.csf)+" mL"),MT(255,262,"gap","GAP",r=>kf(r.gap,2)+" mm"),MT(255,276,"refkw","LOAD",r=>Math.round(r.refkw)+" kW"),
+    MT(150,272,"mcCons","CONS",r=>kf(r.mcCons,2)+"%"),MT(150,286,"agit","AGIT",r=>r.agit+"%"),MT(212,176,"dyef","DYE",DV.dyef),MT(504,50,"wcl","LVL",DV.wcl),MT(56,262,"flow","FLOW",()=>fmtGpm(GPM(S.we?S.we.f.hb||0:0))),MT(56,276,"dil","DIL",DV.dil),MT(255,290,"kwh","ENERGY",r=>Math.round(r.kwh)+" kWh/t"),
+    MT(360,300,"chv","VOL",DV.chv),MT(150,300,"mcv","VOL",DV.mcv),MT(504,62,"wcv","VOL",DV.wcv)]};   // (v6.7: chest volumes in gallons)
 MIMIC.WET={title:"WET END",h:282,trends:MIMIC_KNOB.WET.trends,
   eq:[[520,8,104,30,"FOG FAN"],[14,80,74,70,"HEADBOX"],[104,105,190,25,"FORMING TABLE"],[110,214,100,26,"WW SILO","s"],[308,90,64,50,"COUCH"],[388,90,104,50,"PICK-UP FELT"],[508,80,118,70,()=>LV("shoe")?"SHOE PRESS":"TWIN PRESS"]],
   ln:[["M88 115 H104"],["M294 117 H308"],["M372 115 H388"],["M492 115 H508"],["M160 130 V214",1]],

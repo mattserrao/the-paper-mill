@@ -143,9 +143,9 @@
       // lunch at the food truck and the picnic tables
       {name:"lunch rush",look:["gold","airy"],rare:1,dur:8,ok:()=>!!(G3.FOOD&&G3.FOOD.open&&G3.followable&&G3.followable().some(w=>w.userData.lunch)),
         at:(t)=>{if(t>8)return null;const u=ease(t/8);return [33,0.8,mix(34.2,35.4,u),mix(24,18,u),mix(0.35,0.75,u),mix(1.12,1.2,u)];}},
-      // follow the feed: fan pump, up, over the hall wall and down into the headbox header
+      // follow the feed: fan pump, through the machine screen, over the hall wall and down into the headbox header (v6.12.1-t5)
       {name:"fan pump to headbox",look:["none","airy"],dur:8,ok:()=>true,
-        at:(t)=>{if(t>8)return null;const P=[[47.6,1.5,-9.3],[47.6,7.6,-9.3],[47.6,7.6,3.6],[60.75,7.6,3.6],[60.75,2.2,5.85]],L=[0];for(let i=1;i<P.length;i++)L.push(L[i-1]+Math.hypot(P[i][0]-P[i-1][0],P[i][1]-P[i-1][1],P[i][2]-P[i-1][2]));
+        at:(t)=>{if(t>8)return null;const P=[[62.6,1.5,-11],[61.2,4.2,-11],[61.2,4.2,-8.0],[61.2,7.6,-3.6],[61.2,7.6,3.6],[60.75,7.6,5.85],[60.75,2.2,5.85]],L=[0];for(let i=1;i<P.length;i++)L.push(L[i-1]+Math.hypot(P[i][0]-P[i-1][0],P[i][1]-P[i-1][1],P[i][2]-P[i-1][2]));
           const d=ease(t/8)*L[L.length-1];let i=1;while(i<L.length-1&&L[i]<d)i++;const k=(d-L[i-1])/(L[i]-L[i-1]),a=P[i-1],b=P[i];
           return [mix(a[0],b[0],k),mix(a[1],b[1],k),mix(a[2],b[2],k),17,mix(-0.95,-0.5,t/8),1.0];}},
       // the L/B gauge, then out to the jet and the wavy wet line on the wire

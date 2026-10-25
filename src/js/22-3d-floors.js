@@ -20,13 +20,14 @@
   const dTxt=(x,X,Z,ppm,s2,cx,cz,size,col,rot=0)=>{x.save();x.translate(X(cx),Z(cz));x.rotate(rot);x.fillStyle=col;x.font=`800 ${size*ppm}px "Plus Jakarta Sans",system-ui,sans-serif`;x.textAlign="center";x.textBaseline="middle";x.fillText(s2,0,0);x.restore();};
   const YEL="rgba(242,184,7,0.85)",WHT="rgba(255,255,255,0.75)",GRN="rgba(46,160,90,0.55)";
   const PPM=mobile?20:32;
-  // receiving shed  x -34.4..-8, z -23.5..-3
-  floorDecal(-34.4,-8,-23.5,-3,PPM,(x,X,Z,ppm,W2,H2)=>{dJoints(x,W2,H2,ppm);dStains(x,X,Z,ppm,-34,-9,-23,-3.5,26);
+  // receiving shed  x -34.4..-8, z -26.7..-3 (v6.12.1-t5: north to the rail spur, with the rail dock along the north wall)
+  floorDecal(-34.4,-8,-26.7,-3,PPM,(x,X,Z,ppm,W2,H2)=>{dJoints(x,W2,H2,ppm);dStains(x,X,Z,ppm,-34,-9,-23,-3.5,26);
     [-5.6,-9.0,-14.0,-17.4].forEach((r,i)=>{dBox(x,X,Z,-30.8,-10.4,r-0.75,r+0.75,YEL,0.1*ppm);dTxt(x,X,Z,ppm,"R"+(i+1),-31.6,r,0.7,"rgba(242,184,7,0.9)");});
     [-7.3,-11.5,-15.7].forEach(z=>dDashH(x,X,Z,ppm,-32,-9.5,z,WHT));dDashV(x,X,Z,ppm,-32.3,-21.5,-4.6,WHT);
-    dHatch(x,X,Z,ppm,-34.3,-33.5,-23.4,-3.1,"rgba(242,184,7,0.35)","rgba(30,30,30,0.35)");          // keep the dock wall clear
+    dHatch(x,X,Z,ppm,-34.3,-33.5,-26.6,-3.1,"rgba(242,184,7,0.35)","rgba(30,30,30,0.35)");          // keep the dock wall clear
     dHatch(x,X,Z,ppm,-9.3,-8.1,-23.4,-3.1,GRN,"rgba(255,255,255,0.45)");dTxt(x,X,Z,ppm,"WALKWAY",-8.7,-19,0.45,"#fff",Math.PI/2);
     for(let i=0;i<4;i++)dBox(x,X,Z,-14.2-i*2.6-1.1,-14.2-i*2.6+1.1,-22.9,-20.5,YEL,0.1*ppm);dTxt(x,X,Z,ppm,"FORKLIFT PARKING",-18.1,-20.0,0.5,"rgba(242,184,7,0.95)");
+    dHatch(x,X,Z,ppm,-15.8,-8.2,-26.6,-24.8,"rgba(242,184,7,0.3)","rgba(30,30,30,0.3)");dTxt(x,X,Z,ppm,"RAIL DOCK",-12,-25.7,0.6,"#ffffff");dDashH(x,X,Z,ppm,-32,-9.5,-24.2,WHT);
     dScuffs(x,X,Z,ppm,[[-32.3,-12,3],[-20,-7.3,10],[-20,-11.5,10],[-20,-15.7,10],[-31,-9,3],[-31,-14.5,3],[-31,-20,3],[-20.3,-11.5,3]],140);});
   // v6.12.1: the hall ends at x1 74.6 (was 64.3): one approach bay east of the headbox for the refiners, with a personnel door
 const HALL={zf:20,xw:-23.15,x1:74.6,doors:[{x:-22.05,w:2.2,h:3.2,open:true},{x:33,w:6,h:5,big:true},{x:53,w:1.8,h:2.4},{x:62.4,w:1.6,h:2.4},{x:71.6,w:1.6,h:2.4}]};G3.HALL=HALL;
@@ -81,8 +82,8 @@ const HALL={zf:20,xw:-23.15,x1:74.6,doors:[{x:-22.05,w:2.2,h:3.2,open:true},{x:3
       const geo=new THREE.ExtrudeGeometry(s,{depth:z1-z0,bevelEnabled:false});const o=new THREE.Mesh(geo,m);o.position.set(x0+i*tw,y+0.07,z0);o.castShadow=true;g.add(o);edges(o,em,20);
       const glass=new THREE.Mesh(new THREE.PlaneGeometry(z1-z0-0.2,1.3),gl);glass.rotation.y=Math.PI/2;glass.position.set(x0+(i+1)*tw+0.07,y+0.87,(z0+z1)/2);g.add(glass);}
     g.userData.mats=[m,gl,em];scene.add(g);roofs.push(g);return g;}
-  box2(-34.4,-8,-23.5,-3);box2(-49,-23.8,14.8,32.2);skirt(-2,1.2,HALL.x1,1.2,2.4);skirt(HALL.x1+1.2,2.4,HALL.x1+1.2,16.2,2.4);
-  sawRoof(-34.6,-7.85,-23.65,-2.85,WH);
+  box2(-34.4,-8,-26.7,-3);box2(-49,-23.8,14.8,32.2);skirt(-2,1.2,HALL.x1,1.2,2.4);skirt(HALL.x1+1.2,2.4,HALL.x1+1.2,16.2,2.4);
+  sawRoof(-34.6,-7.85,-26.85,-2.85,WH);
   // v6.11.2: the roll warehouse's south wall (the one facing the camera) is a half wall in the cutaway: its top half belongs to the
   // roof group, so it lifts and fades with the roof (with its own copies of the materials, so no other wall fades with it)
   {const whR=sawRoof(-49.15,-23.65,14.65,32.35,WH),n0=whR.children.length;ribWall(25.2,WH/2,0.3,-36.4,WH*3/4,32.2,whR);G3.whSouthHi=whR.children.slice(n0);G3.sawRoof=sawRoof;

@@ -47,45 +47,55 @@
   spool([[38.4,PH-0.6,-11.45],[38.4,PH-1.3,-11.45],[36.2,PH-1.3,-13.2],[36.2,10.4,-13.2]],0.28,M.stock);
   fieldPump(45,1,-11,-Math.PI/2);
   // v2.9.19: the stock line runs overhead (it used to lie on the ground and wall off the stock-prep yard)
-  // v6.12.1 approach system: the stock chest pump (LV-104) now feeds the top of the machine chest directly
-  spool([[37.7,1,-12.1],[38.6,1,-11],[40,1,-11],[40,4.8,-11],[43.4,4.8,-11],[43.4,10.8,-11],[46.4,10.8,-11],[46.4,10.8,-13.6],[46.4,9.6,-13.6]],0.32,M.stock);
-  // v3.3: machine chest. v6.12.1 approach system: stock chest > machine chest > machine chest pump > refiners (in the hall's
-  // approach bay, 39) > fan pump (on the old refiner pad behind the headbox) > machine screen > headbox, with base ply white
-  // water from the silo under the wire joining the thick stock at the fan pump suction
+  // v6.12.1-t5: stock chest > stock chest pump (LV-104) > refiners (in the hall's approach bay, 39) > machine chest >
+  // machine chest pump > fan pump (behind the headbox) > machine screen > headbox. The stock line climbs to 7.6 m and runs
+  // east along z -9.8, then north over the back wall at x 66 to the refiners' inlet header
+  spool([[37.7,1,-12.1],[38.6,1,-11],[40,1,-11],[40,4.8,-11],[43.4,4.8,-11],[43.4,7.6,-11],[43.4,7.6,-9.8],[66.0,7.6,-9.8],[66.0,7.6,4.0]],0.32,M.stock);
   slab(44.2,52.8,-18.4,-7.6,M.slab,0.032);
-  {const MX=47.6,MZ=-15.0,MR=2.75,MH=10;blob(MX,MZ,4.2);
-    const sh=new THREE.Mesh(new CylG(MR,MR,MH,32,1,true),M.tank);sh.position.set(MX,MH/2,MZ);sh.castShadow=true;sh.receiveShadow=true;scene.add(sh);
-    const lid=new THREE.Mesh(new CylG(MR+0.06,MR+0.06,0.22,32),M.steel);lid.position.set(MX,MH+0.11,MZ);lid.castShadow=true;scene.add(lid);
-    box(1.0,0.35,1.0,M.ink,MX-0.9,MH+0.38,MZ+0.6,scene,false);
-    const base=new THREE.Mesh(new CylG(MR+0.08,MR+0.12,0.45,32),M.steel);base.position.set(MX,0.22,MZ);scene.add(base);
-    [3.2,6.6].forEach(y=>{const b=new THREE.Mesh(new CylG(MR+0.03,MR+0.03,0.14,32,1,true),M.steel);b.position.set(MX,y,MZ);scene.add(b);});
-    // side-entry agitator low on the west side
-    // (on the south-east side: the west side is tight against the thickener stair tower, the east side against the trike parking)
-    {const ga=new THREE.Group();ga.position.set(MX,0,MZ);ga.rotation.y=-Math.PI/4;scene.add(ga);
-     const ag=new CylG(0.55,0.55,1.6,16);ag.rotateZ(Math.PI/2);const m=new THREE.Mesh(ag,M.motor);m.position.set(MR+1.1,1.1,0);m.castShadow=true;ga.add(m);
-     box(0.6,0.7,0.8,M.steel,MR+0.2,1.0,0,ga,false);box(2.4,0.18,1.0,M.steel,MR+0.9,0.45,0,ga,false);}
-    // caged ladder up the north side to the roof
-    {const LZ=MZ-MR-0.25;[-0.3,0.3].forEach(dx=>box(0.07,MH+1.0,0.07,M.warn,MX+dx,(MH+1.0)/2,LZ,scene,false));for(let y=0.4;y<MH+0.6;y+=0.45)box(0.62,0.06,0.06,M.warn,MX,y,LZ,scene,false);
-     [2.5,5,7.5,10].forEach(y=>{const c=new THREE.Mesh(new THREE.TorusGeometry(0.45,0.035,4,12,Math.PI),M.warn);c.rotation.set(0,0,0);c.position.set(MX,y,LZ-0.05);c.rotation.x=Math.PI/2;c.rotation.z=Math.PI;scene.add(c);});}
-    // name plate
+  // machine chest (v6.12.1-t5): the same tiled, open-top concrete chest as the stock chest, at half its volume (the same
+  // 10 m height, radius 4.2/sqrt 2), with a bridge agitator and a level gauge facing the camera. The level is the sim's
+  // machine chest level (07g mcLvlNow): it runs down when the refiners clash and the machine trips at 10 % (43)
+  {const MX=47.6,MZ=-15.0,MR=4.2/Math.SQRT2,MH=10;blob(MX,MZ,MR+1.4);
+    const tO=tileOut.clone(),tI=tileIn.clone();tO.needsUpdate=tI.needsUpdate=true;tO.repeat.set(10,5);tI.repeat.set(10,5);
+    const cO=mat("g-tile",{map:tO,roughness:0.6}),cI=mat("g-tile",{map:tI,roughness:0.5,side:THREE.BackSide});
+    const mc=new THREE.Group();mc.position.set(MX,0,MZ);scene.add(mc);
+    const sh=new THREE.Mesh(new CylG(MR,MR,MH,36,1,true),cO);sh.position.y=MH/2;sh.castShadow=true;sh.receiveShadow=true;mc.add(sh);
+    const si=new THREE.Mesh(new CylG(MR-0.06,MR-0.06,MH-0.1,36,1,true),cI);si.position.y=MH/2;mc.add(si);
+    const rim=new THREE.Mesh(new RingG(MR-0.06,MR+0.02,40),M.steel);rim.rotation.x=-Math.PI/2;rim.position.y=MH+0.01;mc.add(rim);
+    const br=new THREE.Mesh(new CylG(MR+0.04,MR+0.04,0.4,36),M.steel);br.position.y=0.2;mc.add(br);
+    [2.5,5,7.5].forEach(y=>{const b=new THREE.Mesh(new CylG(MR+0.012,MR+0.012,0.12,36,1,true),M.steel);b.position.y=y;mc.add(b);});
+    const liq=new THREE.Mesh(new CircG(MR-0.06,36),surfMat);liq.rotation.x=-Math.PI/2;liq.position.y=MH*0.69;mc.add(liq);
+    // agitator bridge across the top (east-west, clear of the inlet that drops in on the north side)
+    box(MR*2+0.6,0.45,0.9,M.steel,0,MH+0.25,0,mc);box(1.3,1.1,1.3,M.brand,0,MH+1.0,0,mc);{const s=new THREE.Mesh(new CylG(0.12,0.12,8,8),M.metal);s.position.y=6.4;mc.add(s);}
+    // level gauge: scale plate, sight glass, fill, the setpoint (green) and trip (red) marks
+    const gg=new THREE.Group();gg.position.set(-MR*0.38,0,MR*0.93);gg.rotation.y=-0.39;mc.add(gg);
+    {const pl=new THREE.Mesh(new THREE.BoxGeometry(1.2,10.2,0.12),[M.steel,M.steel,M.steel,M.steel,new StdMat({map:gsTex,roughness:0.7}),M.steel]);pl.position.set(0,5.1,0);gg.add(pl);
+     const tb=new THREE.Mesh(new CylG(0.2,0.2,9.8,16,1,true),M.glass);tb.position.set(0.25,5.1,0.22);gg.add(tb);
+     [0.15,10.05].forEach(y=>{const c=new THREE.Mesh(new THREE.BoxGeometry(0.5,0.3,0.5),M.steel);c.position.set(0.25,y,0.18);gg.add(c);});}
+    const gf=new THREE.Mesh(new CylG(0.15,0.15,1,12),M.liquid);gf.position.set(0.25,0,0.22);gg.add(gf);
+    const tT=new THREE.Mesh(new THREE.BoxGeometry(0.9,0.12,0.14),M.ok),tL=new THREE.Mesh(new THREE.BoxGeometry(0.9,0.12,0.14),M.bad);tT.position.set(0.1,0.2+0.69*9.8,0.14);tL.position.set(0.1,0.2+0.10*9.8,0.14);gg.add(tT,tL);
+    G3.MC3={liq,gf};
+    // name plate, on the side away from the gauge
     {const c=document.createElement("canvas");c.width=256;c.height=48;const x=c.getContext("2d");x.fillStyle="#ffffff";x.fillRect(0,0,256,48);x.fillStyle="#1c2233";x.font="800 26px system-ui,sans-serif";x.textAlign="center";x.fillText("MACHINE CHEST",128,33);
-     const t=new THREE.CanvasTexture(c);t.colorSpace=THREE.SRGBColorSpace;const pl=new THREE.Mesh(new THREE.PlaneGeometry(2.4,0.45),new THREE.MeshBasicMaterial({map:t}));pl.position.set(MX,4.4,MZ+MR+0.03);scene.add(pl);}
-    // machine chest pump (v6.12.1): draws the machine chest and pushes thick stock up and east, over the back wall at x 66
-    // and down to the refiners' inlet header in the approach bay (39). Pump nozzles (20 pumpModel, scale k at origin X):
-    // suction face at X-0.95k, height 0.75k; discharge on top at X-0.7k, 1.6k
+     const t=new THREE.CanvasTexture(c);t.colorSpace=THREE.SRGBColorSpace;const pl=new THREE.Mesh(new THREE.PlaneGeometry(2.4,0.45),new THREE.MeshBasicMaterial({map:t}));pl.position.set(MX+MR*0.55,4.4,MZ+MR*0.84+0.03);pl.rotation.y=0.58;scene.add(pl);}
+    // refined stock back from the refiners (39: up from the outlet header and out over the back wall at x 68.7): south at
+    // 8.6 m to z -13, up over the chest at 11.2 m, west, and down into its open top on the north-east side
+    spool([[68.7,8.6,4.0],[68.7,8.6,-13.0],[68.7,11.2,-13.0],[49.0,11.2,-13.0],[49.0,11.2,-13.8],[49.0,9.6,-13.8]],0.32,M.stock);
+    // machine chest pump: draws the bottom of the chest on its north-east side and sends the stock to the fan pump suction:
+    // up to 4.2 m, east along z -10.4, round the north of the white water riser and down into the fan pump's suction tee
+    // (pump nozzles, 20 pumpModel at scale k: suction face at X-0.95k, height 0.75k; discharge on top at X-0.7k, 1.6k)
     {const g=pumpModel();g.scale.setScalar(1.2);g.position.set(48.8,0.25,-10.4);blob(49.2,-10.4,1.8);
      {const c=document.createElement("canvas");c.width=256;c.height=48;const x=c.getContext("2d");x.fillStyle="#ffffff";x.fillRect(0,0,256,48);x.fillStyle="#1c2233";x.font="800 20px system-ui,sans-serif";x.textAlign="center";x.fillText("MACHINE CHEST PUMP",128,33);
      const t=new THREE.CanvasTexture(c);t.colorSpace=THREE.SRGBColorSpace;const pl=new THREE.Mesh(new THREE.PlaneGeometry(1.6,0.3),new THREE.MeshBasicMaterial({map:t}));pl.position.set(49.2,0.55,-9.75);scene.add(pl);}
-     spool([[46.6,0.8,-13.0],[46.6,1.15,-13.0],[46.6,1.15,-10.4],[47.66,1.15,-10.4]],0.26,M.stock);
-     spool([[47.96,2.17,-10.4],[47.96,7.6,-10.4],[66.0,7.6,-10.4],[66.0,7.6,4.0]],0.32,M.stock);}
+     spool([[47.0,1.15,-12.2],[47.0,1.15,-10.4],[47.66,1.15,-10.4]],0.26,M.stock);
+     spool([[47.96,2.17,-10.4],[47.96,4.2,-10.4],[57.0,4.2,-10.4],[57.0,4.2,-12.4],[58.6,4.2,-12.4],[58.6,1.75,-12.4],[58.6,1.75,-11]],0.32,M.stock);}
     // fan pump (v6.12.1: on the old refiner pad, the "basement" pump right behind the headbox's drive-side inlet): a big
-    // end-suction pump, twice the size of the others, on its own plinth. Its suction tee takes refined thick stock back over
-    // the wall from the refiners (x 68.7) and base ply white water from the silo (x 46, along z -9)
+    // end-suction pump, twice the size of the others, on its own plinth. Its suction tee takes refined stock from the machine
+    // chest pump (from the north) and base ply white water from the silo (x 46, along z -9)
     slab(57.4,67.4,-14.2,-3.0,M.slab,0.032);
     {const g=pumpModel();g.scale.setScalar(2);g.position.set(62.6,0.25,-11);box(5.6,0.25,2.4,M.steel,63.5,0.125,-11,scene);blob(63.4,-11,3.2);
      {const c=document.createElement("canvas");c.width=256;c.height=48;const x=c.getContext("2d");x.fillStyle="#ffffff";x.fillRect(0,0,256,48);x.fillStyle="#1c2233";x.font="800 26px system-ui,sans-serif";x.textAlign="center";x.fillText("FAN PUMP",128,33);
      const t=new THREE.CanvasTexture(c);t.colorSpace=THREE.SRGBColorSpace;const pl=new THREE.Mesh(new THREE.PlaneGeometry(1.8,0.34),new THREE.MeshBasicMaterial({map:t}));pl.position.set(64.0,0.6,-9.78);scene.add(pl);}
-     spool([[68.7,8.6,4.0],[68.7,8.6,-12.4],[58.6,8.6,-12.4],[58.6,1.75,-12.4],[58.6,1.75,-11]],0.32,M.stock);
      spool([[46.0,0.15,3.0],[46.0,5.6,3.0],[46.0,5.6,-9.0],[58.6,5.6,-9.0],[58.6,1.75,-9.0],[58.6,1.75,-11]],0.28,M.ww);
      spool([[58.6,1.75,-11],[60.7,1.75,-11]],0.34,M.stock);
      // machine screen (visual, v6.12.1): a vertical pressure screen between the fan pump and the hall; thin stock in on the
@@ -557,6 +567,24 @@
     for(let q=(n-1)*6;q<(sheetN-1)*6;q++)sheetIdx[q]=0;   // a shorter path: the old tail becomes degenerate triangles (no normals from it)
     sheetN=n;sheetG.attributes.position.needsUpdate=true;sheetG.attributes.uv.needsUpdate=true;sheetG.index.needsUpdate=true;sheetG.computeVertexNormals();sheetG.attributes.normal.needsUpdate=true;}
   buildSheet(1);let sheetR=1;
+  /* v6.12.1-t5 tail threading: after a break the sheet goes back through the machine one section at a time (presses,
+     first dryer section, second dryer section, reel). In each section a narrow tail on the tending side (+z, the operators'
+     aisle) is fed through first, then it is widened out to the full sheet across that section. tailMesh is the tail (or the
+     widening sheet) over the section being threaded; it shares the sheet's uv, normals and index and has its own positions.
+     THR.at(from,th) maps the rethread's progress th (0..1) to {full: key the full sheet reaches, a, b: points the tail spans,
+     w: its width}. Visual only: the rethread takes as long as before */
+  const THR={secs:[2,5,16,26,27],TW:0.32,FW:CD-0.4};
+  const tailPos=new Float32Array(SHEET_CAP*6),tailG=new THREE.BufferGeometry();tailG.setAttribute("position",new THREE.BufferAttribute(tailPos,3));
+  tailG.setAttribute("uv",sheetG.attributes.uv);tailG.setAttribute("normal",sheetG.attributes.normal);tailG.setIndex(sheetG.index);
+  const tailMesh=new THREE.Mesh(tailG,sheetMat);tailMesh.receiveShadow=true;tailMesh.frustumCulled=false;tailMesh.visible=false;scene.add(tailMesh);
+  THR.at=(from,th)=>{const B=[from,...THR.secs.filter(k=>k>from)];const n=B.length-1;if(n<1||th>=1)return {full:27,a:0,b:0,w:0};if(th<=0)return {full:from,a:0,b:0,w:0};
+    const f=th*n,i=Math.min(n-1,Math.floor(f)),u=f-i,pa=sheetKey[B[i]]||0,pb=sheetKey[Math.min(B[i+1],sheetKey.length-1)]||pa;
+    return u<0.6?{full:B[i],a:pa,b:pa+Math.max(1,Math.round((pb-pa)*u/0.6)),w:THR.TW}:{full:B[i],a:pa,b:pb,w:THR.TW+(THR.FW-THR.TW)*clamp((u-0.6)/0.35,0,1)};};
+  // the tail over points a..b, w wide from the tending-side edge of the sheet
+  THR.set=(a,b,w)=>{const z1=zc+CD/2-0.2,z0=z1-w;b=Math.min(b,sheetN-1);if(b<=a){tailMesh.visible=false;return;}
+    for(let i=a;i<=b;i++){const v=i*6;tailPos[v]=sheetPos[v];tailPos[v+1]=sheetPos[v+1];tailPos[v+2]=z0;tailPos[v+3]=sheetPos[v+3];tailPos[v+4]=sheetPos[v+4];tailPos[v+5]=z1;}
+    tailG.attributes.position.needsUpdate=true;tailG.setDrawRange(a*6,(b-a)*6);tailMesh.visible=true;};
+  THR.mesh=tailMesh;G3.THR=THR;
   // v3.2.0 slice + wet line. G3.SLC.v = vertical slice (-1 closed .. +1 open), .h = horizontal lip (-1 back .. +1 forward).
   // Cosmetic only: the lip moves, the jet tips up or down and lands nearer or further, and the wavy wet line slides along the wire.
   const SLC=G3.SLC={v:0,h:0,dirty:true};

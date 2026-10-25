@@ -534,7 +534,7 @@
       else{const a=pts[0],b=pts[pts.length-1];bolt=new THREE.Mesh(new THREE.PlaneGeometry(13,a.distanceTo(b)*1.08),new THREE.MeshBasicMaterial({map:TX.bolt,transparent:true,alphaTest:0.5,toneMapped:false,side:THREE.DoubleSide}));
         bolt.position.copy(a).add(b).multiplyScalar(0.5);bolt.renderOrder=6;g.add(bolt);bolt.onBeforeRender=()=>{bolt.quaternion.copy(camera.quaternion);bolt.updateMatrixWorld();};}
       const glows=pts.map(p=>{const s=new THREE.Sprite(new THREE.SpriteMaterial({map:TX.dot,color:lin("#9fc3ff"),transparent:true,depthWrite:false,toneMapped:false}));s.position.copy(p);s.scale.setScalar(7);g.add(s);return s;});
-      const beacons=[[-34.4,4.9,-23.5],[-8,4.9,-3],[-49,4.9,14.8],[-23.8,4.9,32.2],[74.6,5.4,2.4],[-2,5.4,2.4]].map(p=>{const s=new THREE.Sprite(new THREE.SpriteMaterial({map:(/[?&]softfx/.test(location.search)?TX.dot:TX.disc),color:lin("#ff3b30"),transparent:true,depthWrite:false,toneMapped:false}));s.position.set(...p);g.add(s);return s;});
+      const beacons=[[-34.4,4.9,-26.7],[-8,4.9,-3],[-49,4.9,14.8],[-23.8,4.9,32.2],[74.6,5.4,2.4],[-2,5.4,2.4]].map(p=>{const s=new THREE.Sprite(new THREE.SpriteMaterial({map:(/[?&]softfx/.test(location.search)?TX.dot:TX.disc),color:lin("#ff3b30"),transparent:true,depthWrite:false,toneMapped:false}));s.position.set(...p);g.add(s);return s;});
       const flash=$("flash3d");
       return (now,rdt,inc)=>{const age=(now-inc.real)/1000,on=age<1.4?((now/80)|0)%2===0:(now%2600)<110;bolt.visible=on;glows.forEach(s=>s.visible=on&&softB);
         flash.style.opacity=age<0.12?0.9:age<0.3?0.0:age<0.42?0.6:on&&age>1.4?0.35:0;beacons.forEach((s,k)=>s.scale.setScalar(1.2+2.2*Math.max(0,Math.sin(now/180+k))));
@@ -671,7 +671,7 @@
     // trucks throw spray, a gator cruises through the yard once, and at the end the water drains back to the canal
     // and leaves dark wet ground that dries out. The pulper overflow (same effect) keeps the plain version.
     flood:g=>{const sh=new THREE.Shape(),Z0=-52,Z1=66,X0=-150,X1=96;sh.moveTo(X0,Z0);sh.lineTo(X1,Z0);sh.lineTo(X1,Z1);sh.lineTo(X0,Z1);sh.closePath();
-      const HOLES=[[-27.2,74.6,-2.9,19.85],[-34.4,-8,-23.5,-3],[-49,-23.8,14.8,32.2],[4,47,-25,-2],[-19.5,-3.5,23,34.5],[70,82,-16,-4],[49,61,24,30]];
+      const HOLES=[[-27.2,74.6,-2.9,19.85],[-34.4,-8,-26.7,-3],[-49,-23.8,14.8,32.2],[4,47,-25,-2],[-19.5,-3.5,23,34.5],[70,82,-16,-4],[49,61,24,30]];
       HOLES.forEach(([x0,x1,z0,z1])=>{const h=new THREE.Path();h.moveTo(x0,z0);h.lineTo(x1,z0);h.lineTo(x1,z1);h.lineTo(x0,z1);h.closePath();sh.holes.push(h);});
       const inHole=(x,z)=>HOLES.some(([x0,x1,z0,z1])=>x>x0-0.8&&x<x1+0.8&&z>z0-0.8&&z<z1+0.8);
       const geo=new THREE.ShapeGeometry(sh);geo.rotateX(Math.PI/2);geo.translate(0,0,-Z0);   // (north edge at z 0, so the sheet spreads south by scaling z)

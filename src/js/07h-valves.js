@@ -23,7 +23,7 @@ const VDEF=[
     what:"Dilution water into the pulper tub holds its consistency. Thick stock trips the rotor; thin stock overflows the tub and starves the chest.",
     pv:{n:"Pulper consistency",u:"%",lo:0,hi:10,dp:2},sp0:5,spLim:[3,7],act:-1,tune:{kc:1.2,ti:20,td:0},
     valve:{ch:"lin",R:50,stroke:10,db:0.4,hys:0.3,stick:0.5},proc:{type:"fo",th:30,tau:1200},noise:0.02,lam:20,tol:0.1,bump:6000},
-  {id:"LV-104",name:"Machine chest level",area:"SPOT",medium:"refined stock",where:"Stock chest pump to the machine chest",
+  {id:"LV-104",name:"Machine chest level",area:"SPOT",medium:"refined stock",where:"Stock chest pump through the refiners",
     what:"Refined stock from the storage chest fills the machine chest. Run it empty and the machine starves; overfill it and stock goes to the sewer.",
     pv:{n:"Machine chest level",u:"%",lo:0,hi:100,dp:0},sp0:69,spLim:[30,90],act:1,tune:{kc:1.0,ti:16,td:0},
     valve:{ch:"lin",R:50,stroke:12,db:0.5,hys:0.3,stick:0.5},proc:{type:"int",th:5},noise:0.25,lam:8,tol:2,bump:360},
@@ -122,7 +122,7 @@ function vlvView(id){const d=VD[id],W=S.vlv,L=W&&W.lp[id];
 function vlvState(){if(!S.vlv)S.vlv={lp:{},any:false,sub:0,w0:S.t,B:null,acc:{mco:0,make:0,over:0},calm:{},harm:{},lg:{},bt:null,btRes:null};return S.vlv;}
 // the boundary for the next window of sub-steps (end of each sim step)
 function vCap(){const W=S.vlv;if(!W)return;const B=W.B||(W.B={}),run=S.pm==="run",g=C.grade,D=S.dry||dryState(),We=weState(),b=DRY.base[g]||120;
-  B.run=run;B.pd=!!(S.M&&S.M.pulperDown);B.ref=1;   /* (v6.12.1: the refiners are downstream of the machine chest; a clash no longer stops its inflow) */B.cd=We.cpd||0;B.qo=run?(S.rates.fiberUse||0)/Math.max(1e-6,weUstd()):0;
+  B.run=run;B.pd=!!(S.M&&S.M.pulperDown);B.ref=S.M&&S.M.refOut?0:1;B.cd=We.cpd||0;B.qo=run?(S.rates.fiberUse||0)/Math.max(1e-6,weUstd()):0;
   const sp=Math.max(S.pmSpeed,P.minSpeed*0.5);B.bsp=bwSp();B.ustd=weUstd();B.u0=weU0(sp);B.mr=mcCons()/WE.mc0;B.cv=1+We.cav*0.06*wobW(0.9,17);B.ff=50*B.u0/B.ustd-50;
   B.net=run?(We.net||0):0;B.dem=D.dem;B.km=D.km||0;B.ceil=dryCeil(D);B.hdr=D.hdr;B.lf=Math.sqrt(Math.max(0.3*b,D.dem)/b);B.st3=D.st3;
   // the basis weight setpoint is the grade's (and the lightweight trim); a grade change rescales what the scanner has seen

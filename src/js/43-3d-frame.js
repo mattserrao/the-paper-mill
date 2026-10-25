@@ -85,6 +85,9 @@
       gauge.position.set(-cr*0.38,0,cr*0.93);gauge.rotation.y=-0.39;}
     const lvl=S.tank/P.tankCap,h=Math.max(0.06,lvl*9.8);liquid.position.y=h;liquid.rotation.z=-V.swirl*0.3;fill.scale.y=h;fill.position.y=0.25+h/2;
     liquid.material=lvl*100<C.lowLevel.v?surfLow:surfMat;fill.material=lvl*100<C.lowLevel.v?M.bad:M.liquid;ringT.position.y=0.2+C.lvlTarget.v/100*9.8;ringL.position.y=0.2+C.lowLevel.v/100*9.8;
+    // v6.12.1-t5: the machine chest's level (07g): steady at its setpoint, drawn down while the refiners are out
+    if(G3.MC3){const ml=clamp(mcLvlNow(),0,100)/100,h=Math.max(0.06,ml*9.8),lo=ml*100<=MCH.trip+5;G3.MC3.liq.position.y=h;G3.MC3.liq.rotation.z=-V.swirl*0.45;G3.MC3.gf.scale.y=h;G3.MC3.gf.position.y=0.25+h/2;
+      G3.MC3.liq.material=lo?surfLow:surfMat;G3.MC3.gf.material=lo?M.bad:M.liquid;}
     pm("stock prep (bales, pulper, chest)");
     // machine
     const pmRun=S.pm==="run";
@@ -95,19 +98,21 @@
     if(Math.abs(nipPhi-sheetR)>0.02){sheetR=nipPhi;buildSheet(rr);}
     {let show=pmRun&&!CLOTH.fabric.ep&&!CLOTH.felt.ep,segs=27;
       if(S.tot.breaks!==brkSeen){brkSeen=S.tot.breaks;brkT0=now;}
+      let thr=null;   // (v6.12.1-t5: tail threading, 25 THR)
       if(S.pm==="break"){show=true;const bp={press:2,dryer:5,reel:25}[S.brkType]||5,prog=working("brk")?1-S.breakLeft/Math.max(0.1,S.breakTotal):0,th=clamp((prog-0.55)/0.4,0,1);
-        segs=Math.round(bp+(27-bp)*th);const b=BRKPT[S.brkType]||BRKPT.dryer,gr=Math.min(1,(now-brkT0)/1800)*(1-clamp((prog-0.4)/0.5,0,1));
+        thr=THR.at(bp,th);segs=thr.full;const b=BRKPT[S.brkType]||BRKPT.dryer,gr=Math.min(1,(now-brkT0)/1800)*(1-clamp((prog-0.4)/0.5,0,1));
         brokePile.visible=gr>0.03;brokePile.position.set(b[0],0,zc);brokePile.scale.set(1.6*b[1]*gr,0.9*b[1]*gr,2.6*gr);}
       else brokePile.visible=false;
-      if(S.inc.some(x=>x.id==="steamjoint")){show=true;segs=2;}
+      if(S.inc.some(x=>x.id==="steamjoint")){show=true;segs=2;thr=null;}
       const wi=S.inc.find(x=>x.id==="wrap");wrapMesh.visible=false;
-      if(wi){const k=wi.can||5,prog=wi.go?1-wi.left/wi.total:0,cut=clamp(prog/0.7,0,1),th=clamp((prog-0.72)/0.26,0,1);show=true;segs=Math.round(6+2*k+(20-2*k)*th);
+      if(wi){const k=wi.can||5,prog=wi.go?1-wi.left/wi.total:0,cut=clamp(prog/0.7,0,1),th=clamp((prog-0.72)/0.26,0,1);show=true;thr=THR.at(Math.min(25,6+2*k),th);segs=thr.full;
         if(cut<1){wrapMesh.visible=true;const r=1.85-0.5*cut;wrapMesh.position.set(canX(k),5.4,zc);wrapMesh.scale.set(r,r,CD-0.3);wrapMesh.rotation.z=Math.sin(now/90)*0.02*(wi.go?1:0);}}
       // dye trouble: the sheet and the growing reel flash through colors
       const dyeOn=S.M.offSpec;if(dyeOn){const k=Math.floor(now/1400)%DYE.length;if(k!==dyeK){dyeK=k;dyeSheet.color.copy(lin0(DYE[k]));dyeReel.color.copy(lin0(DYE[(k+2)%DYE.length]));}}
       sheetMesh.material=dyeOn?dyeSheet:sheetMat;{/* v6.1 t9: the reel's paper was split by material on the first frame (40c), so it takes one material, not the array */
         const one=!reel.geometry.groups.length,rm=dyeOn?dyeReel:(one?ROLLM[0]:ROLLM);if(reel.material!==rm){reel.material=rm;if(one)for(const c of reel.children)if(c.isMesh)c.material=dyeOn?dyeReel:ROLLM[1];}}
-      sheetMesh.visible=show;sheetMesh.geometry.setDrawRange(0,(sheetKey[Math.min(segs,sheetKey.length-1)]||0)*6);if(!G3.EXP.noSheet)G3.sliceFrame(now,show&&segs>=2);}sheetTex.offset.x=-V.sheet/24*1.0;
+      sheetMesh.visible=show;sheetMesh.geometry.setDrawRange(0,(sheetKey[Math.min(segs,sheetKey.length-1)]||0)*6);
+      if(show&&thr&&thr.b>thr.a){THR.mesh.material=sheetMesh.material;THR.set(thr.a,thr.b,thr.w);}else THR.mesh.visible=false;if(!G3.EXP.noSheet)G3.sliceFrame(now,show&&segs>=2);}sheetTex.offset.x=-V.sheet/24*1.0;
     pm("paper machine, reel, crane, winder");
     // roll conveyor
     // each finished roll is kicked off the winder, rolls down the ramp, is upended and rides the conveyor to the warehouse;

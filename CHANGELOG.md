@@ -1,5 +1,27 @@
 # Changelog
 
+## v6.12.1-t5 (2026-10-24): rail bay, stock flow order, tail threading (test build, test/v6.12.1)
+- Receiving: the shed runs north to the rail spur (z -26.7, was -23.5) with an open rail bay in the north wall: a raised
+  dock at car-floor height with bumpers, a dock plate and a ramp, a RAIL DOCK landing with the unloaded bales staged on
+  it (they stood outside, between the shed and the track). The train now brings a boxcar of OCC right behind the loco;
+  it stops with its door at the bay (track 7.8 m longer, stop x -9.5), opens the door on arrival (bales in the doorway)
+  and closes it before it leaves. The two roll boxcars keep their doors shut.
+- Stock flow: stock chest > stock chest pump (LV-104) > refiners (still in the approach bay) > machine chest > machine
+  chest pump > fan pump > machine screen > headbox. New pipe runs: the stock line over the back wall at x 66 to the
+  refiners' inlet header; refined stock back out over the wall at x 68.7 and down into the machine chest's open top; the
+  machine chest pump to the fan pump suction. DCS stock prep pictures, the relations map, LV-104's text and the help
+  follow the order (back to the pre-t2 pictures, which already had it).
+- Refiner clash: no stock goes forward, the machine draws the machine chest down to its 10% low limit and shuts down on
+  low level; once the refiners are re-plated the chest refills and the machine rethreads over 35% (07g mcTick, the
+  v6.9.2 model again).
+- Machine chest: half the stock chest's volume (radius 4.2/sqrt 2, the same 10 m height), and built like it: tiled,
+  open-top, a bridge agitator, a level gauge with its setpoint and trip marks, the level showing the sim's machine chest
+  level (red near the trip). The label shows the level. It fits where it was, so it stays put.
+- Tail threading (visual only, same rethread time): after a break each section (presses, first and second dryer
+  section, reel) is threaded with a narrow tail on the tending side first, then widened out to the full sheet, before the
+  next section starts. Same for rethreading after a dryer wrap. (25 THR, a second sheet mesh sharing the sheet's buffers.)
+- Zen "fan pump to headbox" shot follows the fan pump's real route (it still started at the pre-t2 fan pump).
+
 ## v6.12.1-t4 (2026-10-24): season QA fixes (test build, test/v6.12.1)
 From the 50-season QA (`claude/qa-v6121-seasons.md`) and the decisions on it.
 - Upgrades: the speed and throughput upgrades (drive, deckle, steam box, shoe press, winder, APC) are a further 25% off
