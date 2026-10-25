@@ -47,8 +47,8 @@ def save(pw):
 
     # hidden page: save + pause + welcome back
     # run + hide in one evaluate: a live frame in between could open a card and pause, so the hide would not count as a pause
-    pg.evaluate("()=>{__PM.S.cards.next=1e12;__PM.S.cards.open=null;__PM.setRunning(true);Object.defineProperty(document,'hidden',{configurable:true,get:()=>true});document.dispatchEvent(new Event('visibilitychange'));}")
-    h = pg.evaluate("()=>[__PM.running,JSON.parse(localStorage.getItem('paper-mill-save')).why]")
+    # read the result in the same evaluate: a UI tick in between (paused or not) may write its own "tick" save over it
+    h = pg.evaluate("()=>{__PM.S.cards.next=1e12;__PM.S.cards.open=null;__PM.setRunning(true);Object.defineProperty(document,'hidden',{configurable:true,get:()=>true});document.dispatchEvent(new Event('visibilitychange'));return [__PM.running,JSON.parse(localStorage.getItem('paper-mill-save')).why]}")
     ok("hidden page pauses", h[0] is False)
     ok("hidden page saves (why=hidden)", h[1] == "hidden", h[1])
     w = pg.evaluate("()=>{Object.defineProperty(document,'hidden',{configurable:true,get:()=>false});document.dispatchEvent(new Event('visibilitychange'));return [!document.getElementById('v2menu').hidden,document.getElementById('v2state').textContent]}")

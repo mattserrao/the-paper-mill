@@ -15,7 +15,7 @@
         // the open card or dialog is kept by name (the card object holds functions); 3D-only fields are left out
         const op=S.cards&&S.cards.open;S2.cards=Object.assign({},S.cards,{open:op&&op.c?{cid:op.c.id}:op&&op.outage?{outage:true}:null});
         const data={v:VER,app:APP_VER,env:SITE.env,mill:SITE.seed,at:Date.now(),why,S:S2,C,CH:{on:CH.on,lvl:CH.lvl,en:CH.en},
-          MILL:{name:MILL.name,brand:MILL.brand},day:Math.floor(S.t/1440)+1,cash:S.cash};
+          PS:Object.fromEntries(Object.entries(P).filter(e=>typeof e[1]==="number"||typeof e[1]==="boolean")),QN:{bw:QNOW.bw,m:QNOW.m,shade:QNOW.shade,rct:QNOW.rct,out:QNOW.out,why:QNOW.why,off:QNOW.off,logT:QNOW.logT,endT:QNOW.endT},MILL:{name:MILL.name,brand:MILL.brand},day:Math.floor(S.t/1440)+1,cash:S.cash};
         localStorage.setItem(KEY,JSON.stringify(data));lastSave=performance.now();G3.saveMs=lastSave-t0;return true;}
       catch(e){diag("save failed: "+String(e&&e.message||e).slice(0,80));return false;}}
     // v6.7.1: saves from before the grade set changed carry the old grade ids; they're mapped to the new ones on load
@@ -27,7 +27,7 @@
         const o=x=>!!x&&typeof x==="object";if(!(typeof d.S.t==="number"&&o(d.S.season)&&o(d.S.cards)&&o(d.C)&&o(d.CH))){clear();return null;}
         return d;}catch(e){clear();return null;}}
     function clear(){try{localStorage.removeItem(KEY);localStorage.removeItem(KEY+"-hist");}catch(e){}lastHist="";}
-    function restore(d){S=d.S;weMigrate();try{const hh=JSON.parse(gmig(localStorage.getItem(KEY+"-hist"))||"null");S.hist=hh&&hh.id===d.S.histId?hh:null;}catch(e){S.hist=null;}   // (v6.5: no history, or another run's: the prior days are made again)
+    function restore(d){S=d.S;weMigrate();if(d.QN){Object.assign(QNOW,d.QN);QNOW.S=S;}   /* (v6.13: the last QCS reading, which AUTO-LW and the CD rolls read before this step measures again; a reload restarted it at 60 lbf and the run drifted) */try{const hh=JSON.parse(gmig(localStorage.getItem(KEY+"-hist"))||"null");S.hist=hh&&hh.id===d.S.histId?hh:null;}catch(e){S.hist=null;}   // (v6.5: no history, or another run's: the prior days are made again)
       for(const k in d.C){if(C[k]&&typeof C[k]==="object"&&d.C[k]&&typeof d.C[k]==="object")Object.assign(C[k],d.C[k]);else C[k]=d.C[k];}
       if(C.spdPref){C.simSpeed=C.spdPref;}else if(S.outg&&S.outg.on&&S.outg.spd){C.simSpeed=S.outg.spd;}delete C.spdPref;   // (v5.0.1: older saves: the player's speed)
       CH.on=d.CH.on;CH.lvl=d.CH.lvl;Object.assign(CH.en,d.CH.en||{});
@@ -36,7 +36,7 @@
       const op=S.cards.open;S.cards.open=null;
       if(op&&op.outage&&S.outg)S.outg.noticed=false;
       try{vlvMigrate();}catch(e){diag("valves migrate: "+String(e&&e.message||e).slice(0,80));}   // v6.9: manual steam / BW valve / pulper valve from older saves are the new loops
-      applyUpgrades();S.M=mods();BANNERS.length=0;seasonLocks(true);
+      applyUpgrades();if(d.PS)for(const k in d.PS)if(k in P&&typeof P[k]===typeof d.PS[k])P[k]=d.PS[k];   /* (v6.13: the sim refreshes P hourly with the civics meters as they were then; recomputing it on load moved the price, breaks and repairs a hair and the run drifted) */S.M=mods();BANNERS.length=0;seasonLocks(true);
       try{syncControls();}catch(e){}try{updateShop();}catch(e){}try{if(G3.rebrand)G3.rebrand();}catch(e){}
       try{UI_TICKS.forEach(f=>f(0));}catch(e){}   // v5.0.6: the top bar (speed, wave, cash) is right from the first frame, not one UI tick later
       if(op&&op.cid){const c=CARDS.find(x=>x.id===op.cid);if(c)setTimeout(()=>openCard(c),400);}
