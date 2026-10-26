@@ -14,6 +14,10 @@ SHOTS = """()=>{const MV=__PM.G3.zenMoves(),out=[];for(const m of MV){let ok=fal
     if(ok){try{const mv={m,t:0,st:m.start?m.start():null};for(let t=0;t<60;t+=0.25){mv.t=t;const f=m.at(t,mv,0.25);if(!f)break;n++;if(!(f[3]>0)||f.some(v=>!isFinite(v)))low++;}}catch(e){err=String(e).slice(0,120);}}
     out.push([typeof m.name==="string"?m.name:JSON.stringify(m.name),ok,n*0.25,m.dur,err,low]);}return out;}"""
 
+FORCED = """()=>{const MV=__PM.G3.zenMoves(),out=[];for(const nm of ["dryer hood doors","trim to the DE pulper","bale receiving","warehouse and dock"]){const m=MV.find(x=>x.name===nm);if(!m){out.push([nm,0,"missing",0]);continue;}
+    let n=0,low=0,err=null;try{const mv={m,t:0,st:m.start?m.start():null};for(let t=0;t<60;t+=0.25){mv.t=t;const f=m.at(t,mv,0.25);if(!f)break;n++;if(!(f[3]>0)||f.some(v=>!isFinite(v)))low++;}}catch(e){err=String(e).slice(0,120);}
+    out.push([nm,n,err,low]);}return out;}"""
+
 def zen(pw):
     html = html_arg()
     b = launch(pw)
@@ -34,6 +38,10 @@ def zen(pw):
         ran0 = [s[0] for s in ready if s[2] <= 0]
         ok("every ready shot gives at least one frame", not ran0, ran0[:4])
         for s in shots: C.note(f"{s[0][:32]:<32} {'ok' if s[1] else '--'} {s[2]:5.1f}s / {s[3]}s")
+        # v6.13.2-t2: the new rare shots whose framing doesn't need the live thing (a break, a truck, the trim) run forced too
+        fz = pg.evaluate(FORCED)
+        ok("the forced rare shots (hood doors, trim, receiving, warehouse) run start-to-finish, camera off the ground", fz and all(f[1] > 0 and not f[2] and not f[3] for f in fz), fz)
+        ok("the geometry is built for zen's turning camera (?zen=1: every face, G3.geomFree)", pg.evaluate("()=>!!__PM.G3.geomFree"))
         try: pg.wait_for_function("__PM.G3.zenS&&__PM.G3.zenS.mv&&__PM.G3.zenS.mv.m.sight", timeout=200000, polling=200); sight = True
         except Exception: sight = False
         ok("a rare sight takes the zen camera", sight)

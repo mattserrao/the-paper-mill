@@ -163,7 +163,7 @@
       // the cones: one camera-facing paper trapezoid per lamp (the camera never turns), all in one mesh
       else if(PAPN){camera.updateMatrixWorld();const e=camera.matrixWorld.elements,rx=e[0],rz=e[2],pos=[],uv=[];
         G3.nightL.forEach(l=>{const tw=0.5,bw=l.D*0.42,y0=l.y,y1=l.fy+0.05;
-          for(const [ax,az] of (G3.freeCam?[[Math.SQRT1_2,Math.SQRT1_2],[Math.SQRT1_2,-Math.SQRT1_2]]:[[rx,rz]])){   // (v6.12 free camera: two crossed cones)
+          for(const [ax,az] of (G3.geomFree?[[Math.SQRT1_2,Math.SQRT1_2],[Math.SQRT1_2,-Math.SQRT1_2]]:[[rx,rz]])){   // (v6.12 free camera: two crossed cones)
             const P=[[l.x-ax*tw,y0,l.z-az*tw],[l.x+ax*tw,y0,l.z+az*tw],[l.x+ax*bw,y1,l.z+az*bw],[l.x-ax*bw,y1,l.z-az*bw]];
             [0,1,2,0,2,3].forEach(i=>{pos.push(...P[i]);uv.push([0,1,1,0][i],[1,1,0,0][i]);});}});
         const cg=new THREE.BufferGeometry();cg.setAttribute("position",new THREE.Float32BufferAttribute(pos,3));cg.setAttribute("uv",new THREE.Float32BufferAttribute(uv,2));cg.computeBoundingSphere();

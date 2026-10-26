@@ -190,7 +190,8 @@
     if(G3.zen){const Z=G3.zenS||(G3.zenS={i:0,t:99,tg:new THREE.Vector3(),r:300,th:-0.2,who:null,fo:0});Z.t+=rdt;Z.age=(Z.age||0)+rdt;
       // v17: a rare sight (cowboys, Bigfoot, the tug, the gator) takes over the camera: cut to it and follow it, slowly
       // circling, until it is over
-      {const f=G3.sightFocus&&G3.sightFocus();if(f&&!(Z.mv&&Z.mv.m.sight)){Z.who=null;Z.goto=null;Z.t=0;Z.len=999;document.body.dataset.zs=Math.random()<0.5?"none":"gold";
+      {const f=G3.sightFocus&&G3.sightFocus();if(f&&!(Z.mv&&(Z.mv.m.sight||Z.mv.m.noSight))){   // (v6.13.2-t2: not in the middle of ride the sheet or the full journey)
+Z.who=null;Z.goto=null;Z.t=0;Z.len=999;document.body.dataset.zs=Math.random()<0.5?"none":"gold";
         Z.mv={t:0,st:{th:-0.4+(Math.random()-0.5)*1.2},m:{name:"rare sight",sight:1,at:(t,mv,rdt2)=>{const q=G3.sightFocus&&G3.sightFocus();if(!q)return null;if(q[4]!=null){
           // v6.4: zen holds close on the subject (it was 60 m out: a few pixels on a phone), from the sight's own angle
           if(q[6]!=null){const k=Math.min(1,rdt2*(mv.st.s?1.5:99));mv.st.s=mv.st.s||[q[6],q[7],q[8]];for(let i=0;i<3;i++)mv.st.s[i]+=(q[6+i]-mv.st.s[i])*k;
@@ -230,6 +231,7 @@
       if(Z.who){Z.fo-=rdt;if(Z.fo<=0){Z.who=null;Z.r=Math.min(140,Z.r*2.6);}else{const p=Z.who.position;Z.tg.set(p.x,0,p.z);}}
       if(Z.mv){goal=null;Z.mv.t+=rdt;const f=Z.mv.m.at(Z.mv.t,Z.mv,rdt);if(!f){Z.mv=null;Z.t=99;Z.len=0;}else{target.set(f[0],f[1],f[2]);cam.r=f[3];cam.th=f[4];cam.ph=f[5];Z.tg.copy(target);Z.r=f[3];Z.th=f[4];}}
       else{const k=Math.min(1,rdt*(Z.who?0.6:0.1));goal=null;target.lerp(Z.tg,k);cam.r+=(Z.r-cam.r)*k*0.5;cam.th=lerpAng(cam.th,Z.th+Math.sin(now/26000)*0.3,k*0.5)+rdt*0.015;cam.ph+=((Z.ph||0.8)+0.06*Math.sin(now/31000)-cam.ph)*k;}}
+    G3.zenHood=!!(G3.zen&&G3.zenS&&G3.zenS.mv&&G3.zenS.mv.m.hood);   // (v6.13.2-t2: shots that look in under the dryer hood lift its doors, 25)
     pm("zen / camera shots");
     if(!G3.zenNextMap)G3.zenNextMap=()=>{const order=["rural","urban","desert","swamp"],nx=order[(order.indexOf(SITE.env)+1)%order.length],q=new URLSearchParams(location.search);
       q.set("env",nx);q.delete("mill");q.set("zen","1");diag("zen: on to "+nx);document.body.classList.add("zen-out");setTimeout(()=>{location.href=location.pathname+"?"+q.toString()+location.hash;},900);};G3.padTick(rdt);if(G3.tutTick)G3.tutTick(now);G3.labelIdle(now);upUpdate(now);pm("upgrade visuals");fxUpdate(rdt,now);if(G3.civTick)G3.civTick(rdt,now);pm("upset effects + particles");

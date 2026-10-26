@@ -1,5 +1,23 @@
 # Changelog
 
+## v6.13.2-t2 (2026-10-26): zen shots (test build, test/v6.13.2-benchmarks)
+Plan and review: claude/zen-v6132-plan.md. Every shot rendered at 10/50/90% on all four maps.
+- **The scene is built for zen's camera.** The iso view keeps only the faces it can see (and one-sided tree cards), so
+  zen's turning camera looked at empty land from most sides: most landscape shots, the landmark, the bridge and the
+  "from the place" shots showed bare ground. Going into zen now reloads the page once with ?zen=1 (menu, title and the
+  map rotation), which builds every face and two-sided crossed trees, as the free camera does (G3.geomFree, 20, 36, 40,
+  42b). The season's save is dropped on the way in, as before. With that, the bridges, farm, lake, mast, port, lighthouse,
+  windpump and the rest are in their shots.
+- **12 new shots (42):** ride the sheet (headbox to reel on the v6.13 sheet path, hood doors up), press section close,
+  winder at work, stock prep line, steam and power, electrical chain (feeder, transformer, MCC); rare: bale receiving,
+  warehouse and dock, trim to the DE pulper, follow a round (vibration or ADX), dryer hood doors on a break, and the full
+  journey (bale ride → stock prep → ride the sheet → winder → roll's journey → truck out, ~96 s). A rare sight waits for
+  ride the sheet and the full journey. A small waypoint helper (zPath) drives the path shots.
+- **Fixed framing:** headbox to wire runs lower and closer, under the hanging signs; the landmark shot is higher and wider;
+  the "from the place" shots start at least 11 m up, over the trees.
+- Checks: zen runs the forced rare shots too and checks the zen geometry; smoke and pflow follow the zen reload. All 22
+  default checks pass. New tool: tools/util/zenstills.py (stills of every shot for a framing review).
+
 ## v6.13.2-t1 (2026-10-26): Real Numbers (test build, test/v6.13.2-benchmarks)
 Benchmark fixes from claude/process-benchmarks-v6131.md; plan and decisions: claude/benchmarks-v6132-plan.md.
 - **Pressures in psi.** Dryer section pressures are psig, differentials (syphon ΔP, PDC-304, cleaners, screens) psi,

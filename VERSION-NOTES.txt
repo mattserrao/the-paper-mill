@@ -149,3 +149,4 @@ One line per version, oldest first. Add a line here with every release: build.py
 6.13.1-t1  Your Last Soda (Test): the Vending Machine Easter Egg
 6.13.1     Your Last Soda: the Vending Machine Easter Egg
 6.13.2-t1  Real Numbers (Test): psi Pressures, Real Dryer Steam, Ring Crush, Slice, Cleaners, Water
+6.13.2-t2  Real Numbers (Test): Zen Shot Review, Ride the Sheet and 11 New Process Shots

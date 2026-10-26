@@ -112,7 +112,7 @@
       const I=g.index,n=I?I.count:P.count;
       for(let q=0;q<n;q+=3){let a=vo+(I?I.getX(q):q),bb=vo+(I?I.getX(q+1):q+1),cc=vo+(I?I.getX(q+2):q+2);if(flip){const t=bb;bb=cc;cc=t;}
         const ux=pos[bb*3]-pos[a*3],uy=pos[bb*3+1]-pos[a*3+1],uz=pos[bb*3+2]-pos[a*3+2],wx=pos[cc*3]-pos[a*3],wy=pos[cc*3+1]-pos[a*3+1],wz=pos[cc*3+2]-pos[a*3+2];
-        if(b.mat.side===THREE.FrontSide&&!G3.freeCam&&(uy*wz-uz*wy)*VDIR.x+(uz*wx-ux*wz)*VDIR.y+(ux*wy-uy*wx)*VDIR.z<=1e-7)continue;idx[io++]=a;idx[io++]=bb;idx[io++]=cc;}
+        if(b.mat.side===THREE.FrontSide&&!G3.geomFree&&(uy*wz-uz*wy)*VDIR.x+(uz*wx-ux*wz)*VDIR.y+(ux*wy-uy*wx)*VDIR.z<=1e-7)continue;idx[io++]=a;idx[io++]=bb;idx[io++]=cc;}
       (r.lv||(r.lv=[]))[k]=[vo,P.count];vo+=P.count;}
     const geo=new THREE.BufferGeometry();geo.setAttribute("position",new THREE.BufferAttribute(pos,3));geo.setAttribute("normal",new THREE.BufferAttribute(nor,3));geo.setAttribute("color",new THREE.BufferAttribute(col,3));
     geo.setIndex(new THREE.BufferAttribute(idx.slice(0,io),1));geo.computeBoundingSphere();

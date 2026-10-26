@@ -62,4 +62,4 @@ don't add a new version-named check.
   the real UI, optionally posting to the live boards).
 - `util/`: `titleart.py` (packs the title backgrounds into `src/js/50a-title-art.js`), `topview.py` / `gridview.py`
   (top-down layout renders), `clipcheck.py` (nothing stands inside scenery), `sightshots.py` (rare-sight stills),
-  `musicrec.py` (records the music), `tellprobe.py` (run a JS snippet against a started game).
+  `musicrec.py` (records the music), `zenstills.py` (stills of every zen shot at 10/50/90% for a framing review), `tellprobe.py` (run a JS snippet against a started game).
