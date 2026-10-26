@@ -1,5 +1,12 @@
 # Changelog
 
+## v6.13.2 (2026-10-26): Real Numbers
+Release of v6.13.2-t1 to t4 (below), merged from test/v6.13.2-benchmarks: psi pressures and real-mill process numbers
+(t1), zen built for the turning camera with ride the sheet and 11 new shots (t2), dryer steam from heat transfer with a
+120 psig standard and 165 psig limit (t3), and a steady ride the sheet readout with the office flagpoles removed (t4).
+Regression suite on t3: 21 of 22 default checks passed in the full run; the one failure (save) and a flaky steamsheet were
+fixed and both re-run clean. t4 was checked with targeted scripts only. QA: claude/qa-v6132-t3.md (100 runs).
+
 ## v6.13.2-t4 (2026-10-26): small fixes (test build, test/v6.13.2-benchmarks)
 - **Ride the sheet:** the readout is a fixed grid (section, consistency or solids, speed, draw, sheet temperature, then
   "tap to leave"), so it keeps one size from the headbox to the reel instead of jumping between 2 and 3 lines. Phones get

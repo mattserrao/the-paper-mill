@@ -152,3 +152,4 @@ One line per version, oldest first. Add a line here with every release: build.py
 6.13.2-t2  Real Numbers (Test): Zen Shot Review, Ride the Sheet and 11 New Process Shots
 6.13.2-t3  Real Numbers (Test): Dryer Steam from Heat Transfer, 120 psig Standard, 165 psig Limit
 6.13.2-t4  Real Numbers (Test): Steady Ride the Sheet Readout, Office Flagpoles Removed
+6.13.2     Real Numbers: psi Pressures, Real Dryer Steam from Heat Transfer, Zen Ride the Sheet and New Shots
