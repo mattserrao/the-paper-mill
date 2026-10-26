@@ -115,7 +115,7 @@ function knobPanel(){let p=$("knobP");if(p)return p;
   $("kpReset").addEventListener("click",()=>{const id=KUI.panel;if(!id||!S.knob)return;knobReset(id);kuiRefresh();});
   $("kpDcs").addEventListener("click",()=>{const id=KUI.panel;if(id)openStation(KNOBN[id].area);});
   return p;}
-function openKnob(id){if(S.zen||!KNOBN[id])return;const p=knobPanel();["spider","slice","brian"].forEach(k=>$(k).hidden=true);closeStation(true);
+function openKnob(id){if(S.zen||!KNOBN[id])return;const p=knobPanel();["spider","slice","brian","vend"].forEach(k=>{const e=$(k);if(e)e.hidden=true;});closeStation(true);
   const d=KNOBN[id];KUI.panel=id;$("kp-h").textContent=d.name;$("kpWhere").textContent=d.where.toLowerCase();$("kpTip").textContent=d.tip;
   const c=$("kpCtl");c.replaceChildren(knobCtl(id,"p"));$("kpDcs").textContent=`Open the ${AREA_N[d.area].toLowerCase()} DCS`;p.hidden=false;kuiSync();kuiRefresh();}
 function closeKnob(){const p=$("knobP");if(p)p.hidden=true;KUI.panel=null;kuiSync();}
@@ -141,7 +141,7 @@ function stationOv(){let o=$("dcsOv");if(o)return o;
   return o;}
 function openStation(a,tab){if(tab==="qcs")a="QCS";if(S.zen||!DCS_SCR[a])return;tab=a==="QCS"?"qcs":"dcs";
   if(POP.on){KUI.st=a;if(tab)KUI.tab=tab;popShow("dcs");stationBuild();kuiSync();return;}   // v6.5.1: popped out, it just switches the second screen to this area
-  closeKnob();["spider","slice","brian"].forEach(k=>$(k).hidden=true);const o=stationOv();KUI.st=a;if(tab)KUI.tab=tab;o.hidden=false;stationBuild();kuiSync();
+  closeKnob();["spider","slice","brian","vend"].forEach(k=>{const e=$(k);if(e)e.hidden=true;});const o=stationOv();KUI.st=a;if(tab)KUI.tab=tab;o.hidden=false;stationBuild();kuiSync();
   setTimeout(()=>{try{$("dcsClose").focus({preventScroll:true});}catch(_){}},0);}
 function closeStation(quiet){if(POP.on)return;   // (v6.5.1: a popped-out DCS stays up until docked)
   const o=$("dcsOv"),was=o&&!o.hidden;if(o)o.hidden=true;KUI.st=null;if(!quiet){kuiSync();if(was)try{$("gl").focus({preventScroll:true});}catch(_){}}}

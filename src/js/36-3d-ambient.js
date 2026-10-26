@@ -28,7 +28,9 @@
   // vending machine by the office door
   const VEND={x:50.4,z:23.1,user:-1};
   {box(1.1,2.0,0.8,cloth0("#d8343b"),VEND.x,1.0,VEND.z+0.35);const pn=new THREE.Mesh(new THREE.PlaneGeometry(0.7,1.3),new THREE.MeshBasicMaterial({color:lin0("#cfe8ff"),toneMapped:false}));
-    pn.position.set(VEND.x-0.1,1.15,VEND.z-0.06);pn.rotation.y=Math.PI;scene.add(pn);box(0.25,0.5,0.05,M.ink,VEND.x+0.35,1.2,VEND.z-0.06,scene,false);box(0.7,0.18,0.05,M.ink,VEND.x-0.1,0.3,VEND.z-0.06,scene,false);}
+    pn.position.set(VEND.x-0.1,1.15,VEND.z-0.06);pn.rotation.y=Math.PI;scene.add(pn);box(0.25,0.5,0.05,M.ink,VEND.x+0.35,1.2,VEND.z-0.06,scene,false);box(0.7,0.18,0.05,M.ink,VEND.x-0.1,0.3,VEND.z-0.06,scene,false);
+    // v6.13.1 easter egg (50n): an invisible tap box over the machine (kept out of the static merge, like Uncle Brian's)
+    const hm=new THREE.Mesh(new THREE.BoxGeometry(1.6,2.4,1.4),new THREE.MeshBasicMaterial());hm.position.set(VEND.x,1.1,VEND.z+0.3);hm.visible=false;scene.add(hm);(G3.dynLater||(G3.dynLater=[])).push(hm);G3.vendHit=hm;G3.VEND=VEND;}
   const whiteHat=mat("panel"),cloth=h=>new StdMat({color:lin0(h),roughness:0.8});
   const STUDENT=["#e46b5b","#5b8de4","#59b98a","#e4b85b","#a57be0","#e47fb3","#4fb3c4"].map(cloth),SUIT=cloth("#2a2f3c"),OFFICE=[cloth("#8fb4d8"),cloth("#d9d2c4"),cloth("#b9c99b")];
   function cloth0(h){return new StdMat({color:lin0(h),roughness:0.6});}

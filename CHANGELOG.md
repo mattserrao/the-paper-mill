@@ -1,5 +1,18 @@
 # Changelog
 
+## v6.13.1-t1 (2026-10-25): your last soda (test build, test/v6.13.1-last-soda)
+- **Easter egg: the vending machine by the office door (50n).** Tap it: **Buy a soda** (a feed line; an operator wanders
+  over for one) or **Buy your last soda**. The last soda drops the sim to 1 min/s ("Last soda" on the speed label; the
+  player's own speed is untouched and comes back at the hit) and the camera follows the operator nearest the machine
+  (34): he buys the can, carries it to the aisle by the presses, thinks it over, walks a slow circle, winds up and
+  throws it at the machine. Where it lands (a splash of soda and sparks), the forming fabric runs off, the press felts
+  blow, the fog fan trips, a steam joint blows out and the dryer hood catches fire: the ordinary upsets, with their
+  bills, crews and effects. Their cards wait until he has finished flailing, then come up in turn.
+- With the 3D view off the can lands at once; if the scene stalls, the sim lands it after 60 sim minutes and lets the
+  cards through 60 minutes after that. Not in zen (no upsets there) and not after the season. Nothing is saved: a load
+  or a new run mid-scene cancels it.
+- The follow camera (29) can now follow any object, not only Uncle Brian. New check `soda`.
+
 ## v6.13.0 (2026-10-25): Steam and Sheet
 Release of v6.13.0-t1 to t3 (below), merged from test/v6.13-steam-sheet. Plan: claude/v613-steam-sheet-plan.md; QA round
 and t3 rerun: claude/qa-v613-t2.md (50 seasons + 50 survival, each against main). Regression suite: all 21 default checks

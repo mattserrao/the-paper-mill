@@ -110,7 +110,7 @@ function civTimerRun(t){const V=S.civ;
   if(t.act==="runend"){civAdd({M:-5},"Record run week over: wear");return;}}
 function civQueue(id,kind){const V=S.civ;if(V.q.some(q=>q.id===id))return;V.q.push({id,kind,t:S.t});}
 // the next decision: an upset that has already cleared is skipped (its choices no longer matter)
-function civNext(){const V=S.civ;if(V.pending||V.cur)return;while(V.q.length){const d=V.q.shift();
+function civNext(){const V=S.civ;if(V.pending||V.cur||(G3.soda&&G3.soda.hold))return;   /* (v6.13.1: the last soda's cards wait until the scene has played, 50n) */while(V.q.length){const d=V.q.shift();
   if(d.kind==="up"&&!d.ask&&!active(d.id))continue;
   if(!d.applied&&(d.kind==="new"||d.kind==="meter")){d.applied=1;const nf=CIVNEW[d.id]||CIVMETER[d.id];if(nf&&nf.fx){civFxAdd(d.id,nf.fx);if(d.id==="c_walkout")civTimer({act:"walkdry",left:360});}
     if(d.kind==="new")(S.evc||(S.evc={}))[d.id]=(S.evc[d.id]||0)+1;

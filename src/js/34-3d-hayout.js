@@ -12,6 +12,41 @@
     if(hold){I.t+=rdt;face(w,w.position.x-1,w.position.z,rdt);pose(w,"look",now);if(I.t<hold)return true;I.t=0;}
     if(++I.k>=I.pts.length){u.insp=null;u.inspT=S.t+WINSP.every*(0.85+Math.random()*0.3);if(u.torch)u.torch.visible=false;u.wt=0;}
     return true;}
+  /* ---- v6.13.1 easter egg, "your last soda" (50n starts it): the operator nearest the vending machine buys one, carries it to
+     the aisle by the presses, thinks it over, walks a slow circle and throws it at the machine; the can landing starts the
+     upsets (G3.sodaHit). The camera follows him the whole way. Visual only until the hit. ---- */
+  const SODAP={spot:[31.4,14.3],tgt:[30.2,3.4,zc+CD/2-0.15]};let sodaFly=null;
+  const sodaMat=new StdMat({color:lin0("#d8343b"),roughness:0.35,metalness:0.4});
+  function sodaCan(){const m=new THREE.Mesh(new CylG(0.075,0.075,0.22,10),sodaMat);m.visible=false;return m;}
+  function sodaCrew(w,i,rdt,now){const SD=G3.soda;if(!SD||!SD.on){if(w.userData.can&&w.userData.can.visible)w.userData.can.visible=false;return false;}
+    if(SD.who<0){let b=-1,bd=1e9;crew.forEach((c,k)=>{if(k===6)return;const d=Math.hypot(c.position.x-VEND.x,c.position.z-VEND.z);if(d<bd){bd=d;b=k;}});
+      SD.who=b;SD.ph="vend";SD.pt=0;SD.wk=0;if(G3.followObj)G3.followObj(crew[b],22);}
+    if(i!==SD.who)return false;
+    const u=w.userData,A=u.arms[0];u.vend=false;u.lunch=false;u.brk=null;u.insp=null;
+    if(!u.can){u.can=sodaCan();u.can.position.set(0,-0.88,0);u.can.rotation.z=Math.PI/2;A.add(u.can);}
+    if(!sodaFly){sodaFly=sodaCan();scene.add(sodaFly);}
+    const [sx,sz]=SODAP.spot,[tx,ty,tz]=SODAP.tgt;SD.pt+=rdt;
+    // (a walk that hasn't got there in 25 s is stuck on the path-finding: he's put there)
+    if(SD.ph==="vend"||SD.ph==="carry"){SD.wk=(SD.wk||0)+rdt;if(SD.wk>25){const q=SD.ph==="vend"?[VEND.x+0.1,VEND.z-1.0]:SODAP.spot;w.position.x=q[0];w.position.z=q[1];SD.wk=0;}}
+    if(SD.ph==="vend"){if(moveP(w,VEND.x+0.1,VEND.z-1.0,4.2,rdt)){face(w,VEND.x,VEND.z+1,rdt);pose(w,SD.pt>0&&SD.at?"type":"idle",now);if(!SD.at){SD.at=true;SD.pt=0;}
+        if(SD.pt>1.6&&!u.can.visible){u.can.visible=true;emit("chip",VEND.x-0.1,0.35,VEND.z-0.2,0,0.6,-0.4,0.3,0.12,"#d8343b",1);}
+        if(SD.pt>2.6){SD.ph="carry";SD.pt=0;SD.wk=0;}}else{pose(w,"walk",now);SD.pt=0;}return true;}
+    if(SD.ph==="carry"){if(moveP(w,sx,sz,2.6,rdt)){SD.ph="ponder";SD.pt=0;}else pose(w,"walk",now);return true;}
+    if(SD.ph==="ponder"){face(w,tx,tz-3,rdt);pose(w,SD.pt<1.8?"idle":"inspect",now);if(SD.pt>3.6){SD.ph="circle";SD.pt=0;SD.c=[w.position.x,w.position.z+0.9];}return true;}
+    if(SD.ph==="circle"){const T=4.2,a=Math.PI/2+Math.min(1,SD.pt/T)*Math.PI*2,r=0.9;   // (a slow lap round a point just behind him, starting where he stands)
+      w.position.x=SD.c[0]+Math.cos(a)*r;w.position.z=SD.c[1]-Math.sin(a)*r;w.rotation.y=Math.atan2(Math.cos(a),-Math.sin(a));pose(w,"walk",now);
+      if(SD.pt>=T){SD.ph="wind";SD.pt=0;}return true;}
+    if(SD.ph==="wind"){face(w,tx,tz,rdt*2);pose(w,"idle",now);const k=Math.min(1,SD.pt/0.9),a0=-0.9-2.1*k;A.rotation.z=-a0;u.torso.rotation.z=0.2*k;
+      if(SD.pt>=0.9){SD.ph="throw";SD.pt=0;}return true;}
+    if(SD.ph==="throw"){face(w,tx,tz,rdt*2);pose(w,"idle",now);const k=Math.min(1,SD.pt/0.18),a0=-3.0+1.8*k;A.rotation.z=-a0;u.torso.rotation.z=0.2-0.55*k;
+      if(k>=1){const p=new THREE.Vector3();u.can.getWorldPosition(p);u.can.visible=false;sodaFly.visible=true;sodaFly.position.copy(p);SD.fly={p0:[p.x,p.y,p.z],t:0};SD.ph="fly";SD.pt=0;}return true;}
+    if(SD.ph==="fly"){pose(w,"point",now);const F=SD.fly,D=0.55;F.t+=rdt;const k=Math.min(1,F.t/D),[x0,y0,z0]=F.p0;
+      sodaFly.position.set(x0+(tx-x0)*k,y0+(ty-y0)*k+2.2*k*(1-k)*2,z0+(tz-z0)*k);sodaFly.rotation.x+=rdt*22;sodaFly.rotation.z+=rdt*9;
+      if(k>=1){sodaFly.visible=false;for(let q=0;q<26;q++)emit(q%3?"chip":"spark",tx,ty,tz,R()*4,1+Math.random()*3,1.5+Math.random()*2,0.9,q%3?0.18:0.22,q%3?"#5b2e14":"#ffd23f",1);
+        for(let q=0;q<12;q++)emit("steam",tx+R(),ty,tz,R()*2,1.5+Math.random()*2,1+Math.random(),1.2,0.6,"#e8d6c4",0.6);
+        if(G3.sodaHit)G3.sodaHit();SD.ph="after";SD.pt=0;}return true;}
+    if(SD.ph==="after"){face(w,tx,tz,rdt);pose(w,SD.pt<2.2?"flail":"look",now);if(SD.pt>3.2){SD.on=false;SD.who=-1;u.wt=0;if(G3.folObj===w&&G3.followObj)G3.followObj(null);if(G3.sodaDone)G3.sodaDone();}return true;}
+    return false;}
   /* ---- hayout (v2.8.2, light): a short burst of 30 sheets (one instanced draw call) and a paper heap that shrinks as the crew cleans ---- */
   const HN=30,hayI=new THREE.InstancedMesh(new THREE.BoxGeometry(1.4,0.04,1),paperDS,HN);hayI.frustumCulled=false;hayI.visible=false;scene.add(hayI);
   const hayS=[],hM4=new THREE.Matrix4(),hQ=new THREE.Quaternion(),hE=new THREE.Euler(),hP=new THREE.Vector3(),hSc=new THREE.Vector3(1,1,1);
@@ -59,7 +94,7 @@
     G3.prevPm=S.pm;G3.prevWrap=S.inc.some(x=>x.id==="wrap");
     ropes.forEach(m=>m.visible=false);spears.forEach(m=>m.visible=false);
     const tvOn=CONSOLES.map(()=>false);
-    crew.forEach((w,i)=>{let tx,tz,act,fx=null;if(i===6){const u6=w.userData;if(u6.insp&&now-(u6.inspSeen||0)>1500){u6.insp=null;u6.inspT=S.t+60;}if(u6.torch)u6.torch.visible=!!u6.insp;}   // (called away mid-inspection: it starts over later)
+    crew.forEach((w,i)=>{let tx,tz,act,fx=null;if(sodaCrew(w,i,rdt,now))return;if(i===6){const u6=w.userData;if(u6.insp&&now-(u6.inspSeen||0)>1500){u6.insp=null;u6.inspT=S.t+60;}if(u6.torch)u6.torch.visible=!!u6.insp;}   // (called away mid-inspection: it starts over later)
       if(dryOn){fireCrew(w,i,rdt,now);if(Math.hypot(w.position.x-FIRESPOT[i][0],w.position.z-FIRESPOT[i][1])<0.4)here=true;return;}
       if(hayOn){if(!EP.hay)EP.hay={t0:now-2000,until:now+900,burst:true};const age=now-EP.hay.t0,shuttle=i%2===1,ph=((age/1800)+i*0.37)%2,s=HAY[i];
         if(age<1100){tx=w.position.x;tz=w.position.z;act="look";fx=[-18.7,zc];}
@@ -122,7 +157,7 @@
       // the camera sees him), ducks in under the middle, and walks back out (visual only: nothing in the game depends on it; it comes before the vending machine, lunch and breaks)
       if(i===6&&winderInspect(w,u,rdt,now))return;
       // idle: drift around their own patch of the aisle, stop to watch the machine or point something out
-      if(!u.lunch&&!u.vend&&VEND.user<0&&Math.random()<rdt*0.006){u.vend=true;u.vt=0;VEND.user=i;}
+      if(!u.lunch&&!u.vend&&VEND.user<0&&(G3.vendCall||Math.random()<rdt*0.006)){u.vend=true;u.vt=0;VEND.user=i;G3.vendCall=false;}   // (vendCall: the player bought one, 50n)
       if(u.vend){const a=moveP(w,VEND.x+0.1,VEND.z-1.0,4.2,rdt);if(a){face(w,VEND.x,VEND.z+1,rdt);u.vt+=rdt;pose(w,u.vt<2.2?"type":"idle",now);if(u.vt>4){u.vend=false;VEND.user=-1;u.wt=0;}}else pose(w,"walk",now);return;}
       if(FOOD.open&&u.ate!==FOOD.id&&!u.lunch&&Math.random()<rdt*0.12){u.lunch=true;u.lt=0;}
       if(u.lunch){if(!FOOD.open){u.lunch=false;}else{const q=FOOD.spot(i),a=moveP(w,q[0],q[1],4.2,rdt);

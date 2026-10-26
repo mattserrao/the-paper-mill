@@ -42,9 +42,10 @@
   G3.panBox=()=>{const wk=clamp((cam.r-300)/300,0,1);return [-85-260*wk,70+260*wk,-40-200*wk,48+200*wk];};   // (v6.12: where panBy lets the target go at this zoom, for the whole-site picture, 40d)
   // v3.3.4: follow Uncle Brian on the hall scrubber; drag still orbits, wheel/pinch zoom in close, any pan or camera jump ends it
   const FOL={on:false,r:30,n:0};
-  const folEnd=()=>{if(!FOL.on)return;FOL.on=false;G3.onFollowEnd&&G3.onFollowEnd();};
-  G3.follow=on=>{if(on){goal=null;FOL.on=true;FOL.r=30;FOL.n=0;}else folEnd();};
-  G3.following=()=>FOL.on;
+  const folEnd=()=>{if(!FOL.on)return;FOL.on=false;const o=G3.folObj;G3.folObj=null;if(!o)G3.onFollowEnd&&G3.onFollowEnd();};
+  G3.follow=on=>{if(on){goal=null;G3.folObj=null;FOL.on=true;FOL.r=30;FOL.n=0;}else folEnd();};
+  G3.followObj=(o,r)=>{if(!o){folEnd();return;}goal=null;FOL.on=true;FOL.r=r||30;FOL.n=0;G3.folObj=o;};   // (v6.13.1: the last soda, 34)
+  G3.following=()=>FOL.on;G3.camNow=()=>camera;   // (the live camera, for the checks' screen positions)
   // camera, every frame: ride along with Uncle Brian if following, glide toward a camera goal if one is set,
   // then place the orbit camera around its target (one function; v3 built this by wrapping it twice)
   // swap the live camera; leaving zen goes back to the iso view where the shot left off, on the nearest zoom step
@@ -58,7 +59,7 @@
     // (south-west and above), so it sees what the iso view's cutaways are built to show and none of the faces it never sees
     {const R=G3.sheetRide;if(R&&R.on){const u=(performance.now()-R.t0)/R.len;if(u>=1)G3.rideEnd();
       else{if(camera!==camPersp)camSwap(true);const [px,py]=G3.rideAt(u),zc=9.1;camPersp.position.set(px-11,py+10.5,zc+12.5);camPersp.lookAt(px+0.5,py,zc);G3.camDist=10;G3.camR=60;G3.rideHud(u);G3.lastMove=performance.now();return;}}}
-    if(FOL.on){const R=G3.scrubbers&&G3.scrubbers[0];if(goal||(S&&S.zen)||!R)folEnd();
+    if(FOL.on){const R=G3.folObj?{g:G3.folObj}:G3.scrubbers&&G3.scrubbers[0];if(goal||(S&&S.zen)||!R)folEnd();
       else{const g=R.g.position;target.x+=(g.x-target.x)*0.1;target.z+=(g.z-target.z)*0.1;cam.r+=(FOL.r-cam.r)*0.08;if(FOL.n++<90)cam.ph+=(0.62-cam.ph)*0.06;G3.lastMove=performance.now();}}
     if(goal){G3.lastMove=performance.now();target.lerp(goal.t,0.12);cam.r+=(goal.r-cam.r)*0.12;cam.th=lerpAng(cam.th,goal.th,0.12);cam.ph+=(goal.ph-cam.ph)*0.12;
       goal.n=(goal.n||0)+1;if(goal.n>150||target.distanceTo(goal.t)<0.2&&Math.abs(goal.r-cam.r)<0.5){goal=null;if(!freeOn())cam.r=rStep(cam.r);}}
@@ -92,9 +93,9 @@
   {const rc=new THREE.Raycaster(),nd=new THREE.Vector2();if(rc.layers)rc.layers.enableAll();let downAt=null,hoverT=0;
     const hit=e=>{const r=glc.getBoundingClientRect();nd.set((e.clientX-r.left)/r.width*2-1,-(e.clientY-r.top)/r.height*2+1);rc.setFromCamera(nd,camera);
       if(G3.knobHit){const k=G3.knobHit(rc);if(k)return k;}   // v5.6 fiddly knobs and the DCS consoles (40b)
-      if(G3.spiderHit&&rc.intersectObjects(G3.spiderHit,false).length)return "spider";if(G3.sliceHit&&rc.intersectObjects(G3.sliceHit,false).length)return "slice";if(G3.scrubbers){const H=G3.scrubbers[0].hit;H.updateWorldMatrix(true,false);if(rc.intersectObject(H,false).length)return "brian";}   /* (v6.11.2: the tap box is invisible, and invisible objects skip the matrix update (20), so it stayed where he parked: refresh it first) */return false;};
+      if(G3.spiderHit&&rc.intersectObjects(G3.spiderHit,false).length)return "spider";if(G3.sliceHit&&rc.intersectObjects(G3.sliceHit,false).length)return "slice";if(G3.scrubbers){const H=G3.scrubbers[0].hit;H.updateWorldMatrix(true,false);if(rc.intersectObject(H,false).length)return "brian";}if(G3.vendHit){const H=G3.vendHit;H.updateWorldMatrix(true,false);if(rc.intersectObject(H,false).length)return "vend";}   /* (v6.13.1: the vending machine, 50n) */   /* (v6.11.2: the tap box is invisible, and invisible objects skip the matrix update (20), so it stayed where he parked: refresh it first) */return false;};
     glc.addEventListener("pointerdown",e=>{downAt=[e.clientX,e.clientY,performance.now()];});
-    glc.addEventListener("pointerup",e=>{if(!downAt)return;const m=Math.hypot(e.clientX-downAt[0],e.clientY-downAt[1]),t=performance.now()-downAt[2];downAt=null;if(m<6&&t<500){if(G3.tellTap&&G3.tellTap(e))return;   /* v5.7: a tell on a Round comes first */const li=G3.lblAt(e);if(li){if(G3.lblTap&&G3.lblTap(li))return;G3.flyTo(li);return;}const h=hit(e);if(h&&h.k)G3.knobTap(h);else if(h==="spider")openSpider();else if(h==="slice")openSlice();else if(h==="brian")openBrian();else if(G3.infoTap)G3.infoTap(e);}});   // (v6.10: click for info, 38d)
+    glc.addEventListener("pointerup",e=>{if(!downAt)return;const m=Math.hypot(e.clientX-downAt[0],e.clientY-downAt[1]),t=performance.now()-downAt[2];downAt=null;if(m<6&&t<500){if(G3.tellTap&&G3.tellTap(e))return;   /* v5.7: a tell on a Round comes first */const li=G3.lblAt(e);if(li){if(G3.lblTap&&G3.lblTap(li))return;G3.flyTo(li);return;}const h=hit(e);if(h&&h.k)G3.knobTap(h);else if(h==="spider")openSpider();else if(h==="slice")openSlice();else if(h==="brian")openBrian();else if(h==="vend")vendOpen();else if(G3.infoTap)G3.infoTap(e);}});   // (v6.10: click for info, 38d)
     glc.addEventListener("pointermove",e=>{const n=performance.now();if(n-hoverT<120||ptrs.size)return;hoverT=n;glc.style.cursor=G3.lblAt(e)||hit(e)?"pointer":"";});}
   let wAcc=0;glc.addEventListener("wheel",e=>{e.preventDefault();goal=null;if(e.shiftKey||Math.abs(e.deltaX)>Math.abs(e.deltaY)&&!e.ctrlKey)panBy(-e.deltaX||-e.deltaY,0);else if(FOL.on)FOL.r=clamp(FOL.r*Math.exp(e.deltaY*(e.ctrlKey?0.01:0.001)),10,120);else if(G3.freeCam)cam.r=clamp(cam.r*Math.exp(e.deltaY*(e.ctrlKey?0.01:0.0012)),FREE_RMIN,R_MAX);else{wAcc+=e.deltaY*(e.ctrlKey?10:1);if(Math.abs(wAcc)>=60){cam.r=rNext(cam.r,wAcc>0?-1:1);wAcc=0;}}},{passive:false});   // (v6.1: one zoom step per wheel notch)
   // keyboard: arrows/WASD move, +/- zoom
