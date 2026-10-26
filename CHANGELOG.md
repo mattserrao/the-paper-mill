@@ -1,5 +1,12 @@
 # Changelog
 
+## v6.13.0 (2026-10-25): Steam and Sheet
+Release of v6.13.0-t1 to t3 (below), merged from test/v6.13-steam-sheet. Plan: claude/v613-steam-sheet-plan.md; QA round
+and t3 rerun: claude/qa-v613-t2.md (50 seasons + 50 survival, each against main). Regression suite: all 21 default checks
+pass on t3; steamsheet, process, save, determinism and smoke rerun after the last broke chest change. The in-game
+autotest ran in the test browser; it has not been run on an iPhone for this release, and the ride camera was only
+checked with rendering off in the QA bots.
+
 ## v6.13.0-t3 (2026-10-25): QA fixes (test build, test/v6.13-steam-sheet)
 QA round: claude/qa-v613-t2.md (50 seasons + 50 survival against main). Decisions 2026-10-25.
 - **Broken syphon runs to the outage:** after the crew finds it (2 h of flooding) they valve the can off: it runs cold

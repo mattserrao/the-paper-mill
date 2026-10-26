@@ -145,3 +145,4 @@ One line per version, oldest first. Add a line here with every release: build.py
 6.13.0-t1  Save and Continue Picks Up Exactly Where It Left Off (Test)
 6.13.0-t2  Steam and Sheet (Test): Dryer Cans, Syphons and PDC-304, Hood Air, Energy per Ton, J/W and STFI CD, Stickies, the Broke Chest, Turn-ups, Physics-Based Breaks, the Machine Profile, SPC and Ride the Sheet
 6.13.0-t3  QA Fixes (Test): Broken Syphons Valved Off to the Outage, a Bigger Broke Chest, Every Break in the Log, Breaks Mostly at the Press and Dryers, a Hood Humidity Ceiling, a Faster Sim
+6.13.0     Steam and Sheet: Dryer Cans, Syphons and PDC-304, Hood Air, Energy per Ton, J/W and STFI CD, Stickies, the Broke Chest, Turn-ups, Physics-Based Breaks, the Machine Profile, SPC and Ride the Sheet
