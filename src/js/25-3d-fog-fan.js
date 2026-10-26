@@ -505,7 +505,7 @@
      const sh=a>0.6;FG.traverse(o=>{if(o.isMesh&&o!==CH)o.castShadow=sh;});}
    // (the prewarm draws it half faded, so the transparent shaders are compiled at start-up, 31)
    G3.hoodWarm=on=>hoodShow(on?0.5:HOOD.a);
-   G3.hoodTick=rdt=>{if(!(rdt>0))return;const knob=!S.zen&&knobVal("hood")===1,auto=S.pm!=="run"||outOn();
+   G3.hoodTick=rdt=>{if(!(rdt>0))return;const knob=!S.zen&&knobVal("hood")===1,auto=S.pm!=="run"||outOn()||!!(G3.sheetRide&&G3.sheetRide.on);   // (v6.13: the sheet camera lifts the doors to look in, 50m)
      if(knob&&!HOOD.knob&&HOOD.u<0.5)try{AUDIO.sfx("hiss",400);}catch(_){}   // (the hood's air cylinders letting go)
      if(!knob&&HOOD.knob&&HOOD.u>0.5&&!auto)try{AUDIO.sfx("clunk",400);}catch(_){}
      HOOD.knob=knob;HOOD.want=knob||auto||HOOD.f>0.002;
@@ -513,7 +513,7 @@
      if(HOOD.u>=1&&u0<1)HOOD.upT=0;if(HOOD.u>=1)HOOD.upT+=rdt;
      // steam rolling out from under the doors as they open on a hot hood
      if(HOOD.want&&HOOD.u>0.05&&HOOD.u<0.9&&HOOD.f<0.5&&Math.random()<rdt*14)emitA("steam",HX0+Math.random()*(HX1-HX0),DY0+0.5+Math.random()*1.5,ZD1+0.3,(Math.random()-0.5)*0.4,0.5+Math.random()*0.4,0.35,3,2.4+Math.random()*2,"#eef1f4",0.45);
-     const ft=knob&&HOOD.u>=1&&HOOD.upT>=2?1:0;HOOD.f=Math.abs(ft-HOOD.f)<0.004?ft:HOOD.f+(ft-HOOD.f)*(1-Math.exp(-Math.min(0.25,rdt)*11));
+     const ft=(knob||!!(G3.sheetRide&&G3.sheetRide.on))&&HOOD.u>=1&&HOOD.upT>=2?1:0;   /* (v6.13: and for the sheet camera, so it can look in) */HOOD.f=Math.abs(ft-HOOD.f)<0.004?ft:HOOD.f+(ft-HOOD.f)*(1-Math.exp(-Math.min(0.25,rdt)*11));
      HOOD.a=1-HOOD.f;hoodShow(HOOD.a);
      const lift=ss(HOOD.u)*LIFTD;if(DG.position.y!==lift){DG.position.y=lift;CH.scale.y=Math.max(0.01,HDR-(DY1+0.16+lift));}};
    CH.scale.y=HDR-(DY1+0.16);}

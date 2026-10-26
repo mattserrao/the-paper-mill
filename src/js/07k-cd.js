@@ -44,7 +44,7 @@ function cdTick(dt){if(!cdOn())return;const C2=cdState(),t=S.t,K=S.knob,x=K&&K.a
   // the steam box's steam (a share of the dryers' own bill: CD.sbSteam a ton for each zone at full output)
   if(sbHave()&&S.pm==="run"&&(S.rates.prod||0)>0){const u=C2.sb.reduce((a,v)=>a+v,0)/12,v=u*CD.sbSteam*S.rates.prod*dt/60*Math.max(0,energyCostT()-pfChemT());   /* (v6.11.2: steam's rate) */if(v>0){spend(v,"energy");pfAdd("steam","pm",v);}}}
 // what each roll of the set has wrong: [[DS roll reasons],[TS roll reasons]] (empty = on spec)
-function cdRolls(){const C2=cdState(),W=S.wdW||windW(C.grade),web=webW(),tr=(web-2*W)/2,zw=web/12,mA=QNOW.m,sp=QSPEC[C.grade]||QSPEC["24"],bwT=CD.bwTol*bwSp();
+function cdRolls(){const C2=cdState(),W=S.wdW||windW(C.grade),web=webW(),tr=(web-2*W)/2,zw=web/12,mA=S.dry?S.dry.m:DRY.m0,sp=QSPEC[C.grade]||QSPEC["24"],bwT=CD.bwTol*bwSp();
   const R=[[tr,tr+W],[tr+W,tr+2*W]],off=[[],[]];
   for(let z=0;z<12;z++){const a=z*zw,b=a+zw,m=mA+C2.dv[z],why=m>sp.m[1]?"wet streak":m<sp.m[0]?"dry streak":Math.abs(C2.bw[z])>bwT?"weight streak":"";if(!why)continue;
     for(let r=0;r<2;r++)if(Math.min(b,R[r][1])-Math.max(a,R[r][0])>zw*CD.cover)off[r].push(why+" (zone "+(z+1)+")");}

@@ -29,6 +29,8 @@
     const os=station(35.0,13.15,0);plate("OSCILLATOR",0.8,35.0,2.0,13.31);KX.osc={at:os.at};
     // v6.11.1: the dryer hood doors' raise / lower station, on a post under the tending-side catwalk
     const hs=station(3.0,13.15,0);plate("HOOD DOORS",0.8,3.0,2.0,13.31);KX.hood={at:hs.at};
+    // v6.13: the thermocompressor's motive steam hand valve, on the steam line down to the dryer basement (07m)
+    const tv=wheelValve(14.0,1.2,13.6,Math.PI);plate("TC MOTIVE",0.8,14.0,2.45,13.32);KX.tcv={at:tv.at,w:tv.w};
     // v6.10 t5: the MCC main incomer's breaker handle, on the incoming 480 V section inside the MCC (38c)
     {const x=CAB.main.stand[0],z=CABZ+0.36,g=new THREE.Group();g.position.set(x,0,z);scene.add(g);box(0.5,0.7,0.08,M.ink,0,1.35,0,g,false);
       const h=box(0.12,0.42,0.12,M.bad,0.08,1.42,0.08,g);h.rotation.z=-0.35;box(0.2,0.12,0.14,M.bad,-0.12,1.12,0.07,g,false);

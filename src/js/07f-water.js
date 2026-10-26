@@ -38,8 +38,11 @@ function waterTick(dt){const W=watState(),h=dt/60,T=W.tot,q=WQ;
   if(short>0)W.shortK=ease(W.shortK,1,dt,6);else if(W.shortK>0){W.shortK*=Math.max(0,1-q.u/Math.max(30,S.tank));if(W.shortK<0.01)W.shortK=0;}
   // the sewer: the overflow, the seal water and any spilled stock, through the clarifier
   const fib=Math.max(0,q.u-q.p)+q.spill+q.clip,sewer=over+base+WAT.sw*(q.spill+q.clip),sludge=fib*(1-WAT.sludgeS)/WAT.sludgeS,out=Math.max(0,sewer-sludge);
-  const fresh=shw+base+make;pfW("fw",fresh);   // (v6.7: m³ of fresh water, by the hour)
-  T.paper=(T.paper||0)+q.p;T.fresh+=fresh;T.bale+=baleW;T.rep+=repW;T.short+=short;T.evap+=evap;T.prod+=prodW;T.rej+=rejW;T.sludge+=Math.min(sludge,sewer);T.out+=out;
+  // v6.13: the boiler's makeup (07m): fresh water in for the condensate that doesn't come back, out again as the steam and
+  // condensate lost (vented, to the condenser, leaks); outside the white water but in the mill's intake and its balance
+  const boil=S.stm&&!S.zen?S.stm.mk*h:0;
+  const fresh=shw+base+make+boil;pfW("fw",fresh);   // (v6.7: m³ of fresh water, by the hour)
+  T.paper=(T.paper||0)+q.p;T.fresh+=fresh;T.boil=(T.boil||0)+boil;T.bale+=baleW;T.rep+=repW;T.short+=short;T.evap+=evap;T.prod+=prodW;T.rej+=rejW;T.sludge+=Math.min(sludge,sewer);T.out+=out;
   const R=W.r,k=v=>v/h;R.fresh=ease(R.fresh,k(fresh),dt,6);R.out=ease(R.out,k(out),dt,6);R.evap=ease(R.evap,k(evap),dt,6);R.over=ease(R.over,k(over),dt,6);R.make=ease(R.make,k(make),dt,6);
   R.p=ease(R.p,k(q.p),dt,6);R.eff=ease(R.eff,k(fib),dt,6);
   q.f=q.fi=q.rej=q.u=q.p=q.rep=q.spill=q.clip=q.bw=0;}

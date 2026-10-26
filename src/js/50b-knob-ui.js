@@ -172,7 +172,7 @@ function knobAlarms(a,r){const L=[],al=(on,txt,hi)=>{if(on)L.push([txt,hi]);};co
   {const q=qualStatus();if(r.run&&q.off>0.02)L.unshift([`MAKING BEATER · ${q.why.toUpperCase()}`,true]);}   // (v6.5.4: on every screen, first)
   dcsAlarms(a,r,L);   // v6.5 b3: upsets on the screen of the equipment they hit, motors, purges, the dry end's states (50d)
   return L;}
-function stationBuild(){const o=$("dcsOv");if(!o||!KUI.st)return;const a=KUI.st,M2=MIMIC[a],b=$("dcsMain");if(o._st!==a){o._st=a;o.querySelectorAll(".dcsb").forEach(e=>{e.scrollTop=0;});requestAnimationFrame(()=>o.querySelectorAll(".dcsb").forEach(e=>{e.scrollTop=0;}));}   /* (v6.10 t4: a new screen opens at the top) */KUI.tab=a==="QCS"?"qcs":"dcs";if(a!=="PLAN"&&a!=="QCS"&&a!=="TREND"&&a!=="WATER"&&a!=="DRV"&&a!=="REL")KUI.last=a;
+function stationBuild(){const o=$("dcsOv");if(!o||!KUI.st)return;const a=KUI.st,M2=MIMIC[a],b=$("dcsMain");if(o._st!==a){o._st=a;o.querySelectorAll(".dcsb").forEach(e=>{e.scrollTop=0;});requestAnimationFrame(()=>o.querySelectorAll(".dcsb").forEach(e=>{e.scrollTop=0;}));}   /* (v6.10 t4: a new screen opens at the top) */KUI.tab=a==="QCS"?"qcs":"dcs";if(a!=="PLAN"&&a!=="QCS"&&a!=="TREND"&&a!=="WATER"&&a!=="DRV"&&a!=="REL"&&!XS[a])KUI.last=a;
   $("dcs-h").textContent=`${(typeof NAME==="string"&&NAME)||"PM1"} · `+DCS_SCR[a].title;   // (v6.5.2: the machine's own name, as on the process flow and the 3D label)
   {const sl=$("dcsSlow");if(sl)sl.textContent=POP.on?"Second screen · the mill keeps running at your speed":DCS_SLOW.has(a)?"Game slowed to 1 min/s while this screen is open":"Live: the mill keeps running at your speed";}
   o.querySelectorAll("[data-a]").forEach(x=>x.setAttribute("aria-pressed",String(x.dataset.a===a)));
@@ -202,6 +202,8 @@ function stationBuild(){const o=$("dcsOv");if(!o||!KUI.st)return;const a=KUI.st,
   else if(a==="QCS")qcsBuild(b);
   else if(a==="PLAN")b.appendChild(kEl("div","plan","")).id="planBox";
   else if(a==="DRV")drvBuild(b);else if(a==="REL")rlyBuild(b);   // v6.10 (50l)
+  else if(XS[a])XS[a].b(b);   // v6.13 the machine profile, breaks and energy screens (50m)
+  if(M2&&(a==="WET"||a==="DET"))shStripAdd(b,a);   // v6.13 the side elevation and the break risk (50m)
   trBuild();trLayout();kuiRefresh();}
 function kuiRefresh(){if(!KUI.panel&&!KUI.st)return;const r=knobRead();
   if(KUI.panel){const id=KUI.panel;document.querySelectorAll("#kpCtl .kctl").forEach(knobCtlSync);{const h=knobReadout(id,r),e=$("kpRead");if(e._h!==h){e._h=h;e.innerHTML=h;}}
@@ -221,12 +223,14 @@ function kuiRefresh(){if(!KUI.panel&&!KUI.st)return;const r=knobRead();
       // v6.5.3: each reading against the grade's spec (QSPEC, 07e); red when it's out
       const g=GRADES[C.grade],sp=QSPEC[C.grade]||QSPEC["24"],qv=$("qcsV"),qo=k=>r.run&&QNOW.out.includes(k)?' class="qout"':"",rg=(a,d)=>`spec ${a[0].toFixed(d)}–${a[1].toFixed(d)}`;
       const shn=((document.querySelector('#paperColor button[aria-pressed="true"]')||{}).dataset||{}).c==="white"?"white":"brown";
-      const qh=`<div><small>Grade</small><b>${C.grade}</b><small>target ${g.bw} lb · ${DRY.m0.toFixed(1)} %</small></div><div${qo("bw")}><small>Basis weight</small><b>${r.run?kf(QNOW.bw,2):"–"}</b><small>${rg(qBw(C.grade),2)}${bwSp()<g.bw-0.005?` · set ${bwSp().toFixed(2)}`:""}</small></div><div${qo("rct")}><small>Ring crush</small><b>${r.run?kf(QNOW.rct,1):"–"}</b><small>min ${rctSpec()} lbf${S.zen?"":` · ${wcFmt(areaQcs())}`}</small></div><div${qo("m")}><small>Moisture</small><b>${r.run?kf(r.moist):"–"} %</b><small>${rg(sp.m,1)}</small></div><div${qo("shade")}><small>Color</small><b>${QNOW.shade?"ON SHADE":"OFF SHADE"}</b><small>spec ${shn}</small></div><div><small>Reel speed</small><b>${Math.round(r.speed)}</b><small>fpm</small></div>`;if(qv._h!==qh){qv._h=qh;qv.innerHTML=qh;}
+      const qh=`<div><small>Grade</small><b>${C.grade}</b><small>target ${g.bw} lb · ${DRY.m0.toFixed(1)} %</small></div><div${qo("bw")}><small>Basis weight</small><b>${r.run?kf(QNOW.bw,2):"–"}</b><small>${rg(qBw(C.grade),2)}${bwSp()<g.bw-0.005?` · set ${bwSp().toFixed(2)}`:""}</small></div><div${qo("rct")}><small>Ring crush</small><b>${r.run?kf(QNOW.rct,1):"–"}</b><small>min ${rctSpec()} lbf${S.zen?"":` · ${wcFmt(areaQcs())}`}</small></div>${S.zen?"":`<div${qo("stfi")}><small>STFI CD</small><b>${r.run?kf(QNOW.stfi,2):"–"}</b><small>min ${stfiSpec()} kN/m · MD/CD ${tsrNow().toFixed(2)}</small></div><div><small>Formation</small><b>${r.run?formIdx():"–"}</b><small>index · 100 standard</small></div><div><small>Reel hardness</small><b>${Math.round(reelHard())}</b><small>${reelHard()<55?"soft: rolls telescope":reelHard()>70?"hard: rolls crack":"standard "+SH.hard0}</small></div>`}<div${qo("m")}><small>Moisture</small><b>${r.run?kf(r.moist):"–"} %</b><small>${rg(sp.m,1)}</small></div><div${qo("shade")}><small>Color</small><b>${QNOW.shade?"ON SHADE":"OFF SHADE"}</b><small>spec ${shn}</small></div><div><small>Reel speed</small><b>${Math.round(r.speed)}</b><small>fpm</small></div>`;if(qv._h!==qh){qv._h=qh;qv.innerHTML=qh;}
       if(cdOn()){cdDraw($("qcsCd"),r);cdActSync();const rl=$("qcsRolls");if(rl){const o=(S.cd&&S.cd.off)||[[],[]],h=r.run?[0,1].map(s=>`<span class="${o[s].length?"bad":"ok"}">${CDSIDE[s]} roll: ${o[s].length?o[s].join(", "):"on spec"}</span>`).join(""):"";if(rl._h!==h){rl._h=h;rl.innerHTML=h;}}}else kuiCd($("qcsCd"),r);
       const D=[["Wrinkles",F.wrinkles],["Crush marks",F.crush],["Felt stripes",F.stripes],["CD streaks",F.cd],["Weight swings",F.bw],["Wet sheet",F.wet],["Dry sheet",F.dry]];
       const h=D.map(([n,v])=>{const c=v>0.01?Math.round(4+v*80):0;return `<div class="${c?"hit":""}"><small>${n}</small><b>${c}</b><small>/ reel</small></div>`;}).join("");const dd=$("qcsDef");if(dd._h!==h){dd._h=h;dd.innerHTML=h;}qcsRefresh();}
     else if(a==="PLAN")planRefresh();
     else if(a==="DRV")drvRefresh();else if(a==="REL")rlyRefresh();   // v6.10 (50l)
+    else if(XS[a])XS[a].r();   // v6.13 (50m)
+    if(M2&&(a==="WET"||a==="DET"))shStripDraw();
     trDraw();}}
 // CD moisture profile: a bar per zone up from 3 %, the ±1.5 % spec band round the reel average, the 8 % target
 function kuiCd(cv,r){if(!cv)return;const x=cv.getContext("2d"),W=cv.width,H=cv.height,z=r.zones,lo=3,hi=11,Y=v=>H-18-clamp((v-lo)/(hi-lo),0,1)*(H-30);

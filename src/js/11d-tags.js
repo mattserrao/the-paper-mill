@@ -10,7 +10,7 @@ const MCHEST_GAL=60000;                                // the machine chest
 const fmtGal=g=>{const a=Math.abs(g),s=g<0?"−":"";return s+(a>=1e6?(a/1e6).toFixed(2)+"M gal":a>=1e4?Math.round(a/1e3)+"k gal":Math.round(a).toLocaleString()+" gal");};
 const fmtGpm=g=>(g>=1e4?(g/1e3).toFixed(1)+"k":Math.round(g).toLocaleString())+" gpm";
 const TAG_INT=new Set(["orders","trucks","rolls","t","A","kW","fpm","mL CSF","V"]);
-const TAG_AREA={SPOT:"Stock prep",WET:"Wet end",DET:"Dry end",UTIL:"Utilities",WATER:"Water",QCS:"Quality",PLAN:"Planning & yard",DRV:"Drives (MCC)"};
+const TAG_AREA={SPOT:"Stock prep",WET:"Wet end",DET:"Dry end",STM:"Steam & air",UTIL:"Utilities",WATER:"Water",QCS:"Quality",PLAN:"Planning & yard",DRV:"Drives (MCC)"};
 const _R=()=>S.rates||{};
 const wr=()=>S.wat&&S.wat.r;
 const TAGS=[
@@ -40,7 +40,7 @@ const TAGS=[
   
   ["poldose","Retention polymer dose","WET","kg/t",()=>S.pm==="run"?chemE("pol"):null,""],["polflow","Retention polymer pump","WET","kg/h",()=>chemFlow("pol"),""],
   ["fpr","First pass retention","WET","%",()=>S.pm==="run"?fprNow():null,""],
-  ["hum","Machine room humidity","WET","%",()=>clamp(62+(motStatus("fog")!=="run"||active("fogfan")?24:0)+wob2(0.01,8)*3,0,100),""],
+  ["hum","Machine room humidity","WET","%",()=>clamp((S.stm&&!S.zen?S.stm.hum:62+(motStatus("fog")!=="run"||active("fogfan")?24:0))+wob2(0.01,8)*3,0,100),""],   // (v6.13: the machine room's air, 07m)
   // dry end
   ["speed","Reel speed","DET","fpm",r=>r.speed,"a.speed"],["prod","Paper made","DET","t/h",()=>_R().prod,"a.prod"],["st1","1st section steam","DET","kPa",r=>r.st1,""],
   ["st3","3rd section steam","DET","kPa",r=>r.run?r.st3:null,""],["steam","Dryer steam flow","DET","t/h",r=>r.steam>0.5?r.steam:null,"a.steam"],
@@ -84,6 +84,22 @@ const TAGS=[
   ["dl_pr2","2nd press drive load","DRV","%",r=>rlyLoad("pr2",r),""],["dl_dry","Dryer section drive load","DRV","%",r=>rlyLoad("dry",r),""],["dl_reel","Reel drum drive load","DRV","%",r=>rlyLoad("reel",r),""],
   ["dl_wind","Winder drum drive load","DRV","%",r=>rlyLoad("wind",r),""],["mcckw","MCC drive power","DRV","kW",r=>rlyMccKw(r),""],
   ["mvkv","13.8 kV feeder","DRV","kV",()=>rlyMV(),""],["lv480","MCC 480 V bus (main incomer)","DRV","V",()=>rlyLV(),""],["dc_SP","MCC-1 DC bus","DRV","V",()=>rlyDC("SP"),""],["dc_PM","MCC-2 DC bus","DRV","V",()=>rlyDC("PM"),""],["dc_WD","MCC-3 DC bus","DRV","V",()=>rlyDC("WD"),""]];
+// v6.13 Steam and Sheet (07m, 07n): the cans and the cascade, the hood air, energy, the headbox, the sheet's strength, the
+// deposits, the broke chest, the reel and the break risk
+{const T3=()=>S.stm&&!S.zen?S.stm:null,run=()=>S.pm==="run";TAGS.push(
+  ["dp1","1st section syphon ΔP","STM","kPa",()=>T3()?T3().dp[0]:null,""],["dp2","2nd section syphon ΔP","STM","kPa",()=>T3()?T3().dp[1]:null,""],["dp3","3rd section syphon ΔP","STM","kPa",()=>T3()?T3().dp[2]:null,"a.dp3"],
+  ["dpneed","3rd section ΔP needed","STM","kPa",()=>T3()&&run()?stmNeed(2):null,""],["pdc304op","PDC-304 motive steam valve","STM","% open",()=>T3()?vlvView("PDC-304").pos:null,""],
+  ["bt3","3rd section blow-through","STM","% of steam",()=>T3()&&run()?T3().bt[2]*100:null,""],
+  ["btwaste","Blow-through to the condenser","STM","t/h",()=>T3()?T3().waste:null,""],["hoodH","Hood exhaust humidity","STM","g/kg",()=>T3()&&run()?T3().H:null,"a.hoodH"],
+  ["exh","Hood exhaust fan","STM","%",()=>T3()?T3().exh:null,""],["sup","Hood supply fan","STM","%",()=>T3()?T3().sup:null,""],["airst","Supply air coil steam","STM","t/h",()=>T3()?T3().air:null,""],
+  ["cret","Condensate return","STM","%",()=>T3()?T3().ret*100:null,"a.cret"],["mkup","Boiler makeup water","STM","gpm",()=>T3()?GPM(T3().mk):null,""],
+  ["stpt","Steam per ton","STM","t/t",()=>T3()&&run()?T3().kpi.st:null,"a.stpt"],["kwht","Power per ton","STM","kWh/t",()=>T3()&&run()?T3().kpi.kwh:null,"a.kwht"],["usdt","Energy per ton","STM","$/t",()=>T3()&&run()?T3().kpi.usd:null,""],
+  ["jwsp","J/W setpoint (fan pump)","WET","",()=>S.zen?null:hbJw(),""],["hbpsi","Headbox pressure","WET","psi",()=>S.zen||!run()?null:hbPsi(),""],["slcb","Slice opening","WET","mm",()=>S.zen?null:slcB(),""],
+  ["form","Formation index","QCS","",()=>S.zen||!run()?null:formIdx(),""],["tsr","MD/CD tensile ratio","QCS","",()=>S.zen?null:tsrNow(),""],
+  ["stfi","STFI CD","QCS","kN/m",()=>S.zen||!run()?null:QNOW.stfi,"a.stfi"],["hard","Reel hardness","DET","",()=>S.zen?null:reelHard(),""],["nip","Reel drum nip","DET","kN/m",()=>S.zen?null:reelNip(),""],
+  ["depfab","Stickies on the forming fabric","WET","/100",()=>S.stk&&!S.zen?S.stk.fab:null,""],["depfelt","Stickies on the pick-up felt","WET","/100",()=>S.stk&&!S.zen?S.stk.felt:null,""],["depcan","Stickies on the first cans","DET","/100",()=>S.stk&&!S.zen?S.stk.can:null,"a.depcan"],
+  ["bklvl","Broke chest level","SPOT","%",()=>S.bk&&!S.zen?bkLvl()*100:null,"a.bklvl"],["bkr","Broke ratio (metered)","SPOT","%",()=>S.bk&&!S.zen?S.bk.r*100:null,""],["tbf","Broke in the furnish","SPOT","%",()=>S.zen?null:(S.tbf||0)*100,"a.tbf"],
+  ["brkr","Break risk","DET","× standard",()=>S.zen||!run()?null:brkRisk().R*SH.rcal,"a.brkr"]);}
 const TAGI=Object.fromEntries(TAGS.map((t,i)=>[t[0],i]));
 const tagName=id=>{const t=TAGS[TAGI[id]];return t?t[1]:id;};
 const tagUnit=id=>{const t=TAGS[TAGI[id]];return t?t[3]:"";};

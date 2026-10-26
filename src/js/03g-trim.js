@@ -29,7 +29,8 @@ function windW(g){if(!trimOn())return 100;const O=S.ord;if(O){let best=null;for(
 // a set of width w came off the winder: shown on the order (how much of it has been wound)
 function windCredit(g,w,u){const O=S.ord;if(!O||!trimOn())return;for(const o of O.list)if(o.st==="open"&&o.g===g&&o.w===w&&(o.wd||0)<o.r-1e-6){o.wd=(o.wd||0)+u;return;}}
 // the trim of this step's winding goes to the dry-end pulper and on into the stock chest (overflow waits in the beater bay)
-function trimTo(t){if(!(t>0))return;const room=Math.max(0,P.tankCap*0.98-S.tank),a=Math.min(t,room);S.tank+=a;if(t>a)S.q.bank+=t-a;
+function trimTo(t){if(!(t>0))return;if(shOn()){bkIn(t,"trim");if(typeof WQ!=="undefined")WQ.rep+=t;S.tot.trim=(S.tot.trim||0)+t;pfW("trim",t);return;}   // (v6.13: the trim goes to the broke chest, 07n)
+  const room=Math.max(0,P.tankCap*0.98-S.tank),a=Math.min(t,room);S.tank+=a;if(t>a)S.q.bank+=t-a;
   if(typeof WQ!=="undefined")WQ.rep+=t;S.tot.trim=(S.tot.trim||0)+t;pfW("trim",t);}
 
 /* ---- v6.11.2 the dry-end pulper (read only on the DET DCS) ----

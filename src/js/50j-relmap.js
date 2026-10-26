@@ -3,8 +3,9 @@
    moves, with the mechanism; "Full chain" follows the links all the way up and down. Live readings on each box. Read
    only: the sim and its dice are untouched, and the game keeps running at the player's speed while it is open.
    Keep RM_E in step with the sim when a relationship changes (tools/relmapcheck.py fails on a tag with no entry). ---- */
-const RM_DRV=[["x:weather","Weather",""],["x:bales","Bale grade mix",""],["x:pulpset","Pulper feed setpoint",""],["x:dilv","Pulper dilution valve","knob"],["x:slice","Headbox slice","knob"],["x:guide","Fabric guide roll","knob"],["x:zones","Headbox dilution zones","knob"],["x:spset","Machine speed setpoint",""],["x:grade","Grade on the machine",""],["x:dye","Dye system",""],["x:market","Market & leader effects",""],["x:power","Substation power",""],["x:incomer","MCC main incomer","knob"],["x:hood","Dryer hood doors","knob"],["x:orders","Customer orders",""],["x:upsets","Upsets & DCS motors",""]];
-const RM_COL={"YARD":["inq","unload","yard","balem","stk","occp"],"SPOT":["feed","cp","nv101pv","nv101op","amps","pulpLvl","yield","fiber","rejt","hddp","lcdp","lwdp","fsld","fsdp","kwh","dil","chest","chestg","gap","refkw","csf","agit","refq","mcCons","mcLvl","lv104pv","lv104op","mcg","fan"],"WET":["wsp","jw","rd","gbox","lvac","vac","vpkw","couchSol","pl","pressSol","gtrav","edge","osc","hbc","bwv","fv201pv","fv201op","bwsp","drain","seal","pressw","wwl","lv202pv","lv202op","wwg","wwov","hum","polflow","poldose","fpr"],"DET":["speed","prod","st1","st3","pv302pv","pv302op","pv303pv","pv303op","steam","dryl","moist","qc300pv","qc300op","bw","draw","tension","defin","delvl","decons"],"QCS":["off","rct","prem","cdsp","bank","reel","cut","rollw","trimp","trimt","cdspan","sbout","spout","conv"],"UTIL":["boiler","vent","energyt","shower","evap","wcl","wcg","makeup","fresh","wuse","wwover","outfall","tss"],"SHIP":["fg","load","outq","openo","lateo","price","profit"],"DRV":["mvkv","lv480","dc_SP","dc_PM","dc_WD","dl_pulp","dl_refA","dl_refB","dl_fan","dl_couch","dl_pr1","dl_pr2","dl_dry","dl_reel","dl_wind","mcckw"]};
+const RM_DRV=[["x:weather","Weather",""],["x:bales","Bale grade mix",""],["x:pulpset","Pulper feed setpoint",""],["x:dilv","Pulper dilution valve","knob"],["x:slice","Headbox slice","knob"],["x:guide","Fabric guide roll","knob"],["x:zones","Headbox dilution zones","knob"],["x:spset","Machine speed setpoint",""],["x:grade","Grade on the machine",""],["x:dye","Dye system",""],["x:market","Market & leader effects",""],["x:power","Substation power",""],["x:incomer","MCC main incomer","knob"],["x:hood","Dryer hood doors","knob"],["x:orders","Customer orders",""],["x:upsets","Upsets & DCS motors",""],
+  ["x:jwsp","J/W setpoint (fan pump)",""],["x:tcv","Thermocompressor motive valve","knob"],["x:pdcsp","PDC-304 setpoint",""],["x:hoodfan","Hood exhaust & supply fans",""],["x:heatrec","Heat recovery (upgrade)",""],["x:nip","Reel drum nip",""],["x:bkr","Broke ratio",""]];   // (v6.13)
+const RM_COL={"YARD":["inq","unload","yard","balem","stk","occp"],"SPOT":["feed","cp","nv101pv","nv101op","amps","pulpLvl","yield","fiber","rejt","hddp","lcdp","lwdp","fsld","fsdp","kwh","dil","chest","chestg","gap","refkw","csf","agit","refq","mcCons","mcLvl","lv104pv","lv104op","mcg","fan","bklvl","bkr","tbf"],"WET":["wsp","jw","rd","gbox","lvac","vac","vpkw","couchSol","pl","pressSol","gtrav","edge","osc","hbc","bwv","fv201pv","fv201op","bwsp","drain","seal","pressw","wwl","lv202pv","lv202op","wwg","wwov","hum","polflow","poldose","fpr","jwsp","hbpsi","slcb","depfab","depfelt"],"DET":["speed","prod","st1","st3","pv302pv","pv302op","pv303pv","pv303op","steam","dryl","moist","qc300pv","qc300op","bw","draw","tension","defin","delvl","decons","hard","nip","depcan","brkr"],"STM":["dpneed","dp1","dp2","dp3","pdc304op","bt3","btwaste","hoodH","exh","sup","airst","cret","mkup","stpt","kwht","usdt"],"QCS":["form","tsr","stfi","off","rct","prem","cdsp","bank","reel","cut","rollw","trimp","trimt","cdspan","sbout","spout","conv"],"UTIL":["boiler","vent","energyt","shower","evap","wcl","wcg","makeup","fresh","wuse","wwover","outfall","tss"],"SHIP":["fg","load","outq","openo","lateo","price","profit"],"DRV":["mvkv","lv480","dc_SP","dc_PM","dc_WD","dl_pulp","dl_refA","dl_refB","dl_fan","dl_couch","dl_pr1","dl_pr2","dl_dry","dl_reel","dl_wind","mcckw"]};
 const RM_E=[
  ["x:weather","balem","p","Rain and snow soak the bales in the yard and on inbound loads"],
  ["x:weather","unload","n","Snow and fog slow inbound trucks"],
@@ -156,7 +157,27 @@ const RM_E=[
  ["mcLvl","mcg","s","Same chest, in gallons"],
  ["speed","wsp","p","Wire speed = reel speed ÷ machine draw"],
  ["draw","wsp","n","More draw, slower wire for the same reel speed"],
- ["x:slice","jw","x","Slice opening sets the jet speed: J/W 0.965 to 1.005, 0.985 standard"],
+ ["x:jwsp","jw","p","The fan pump holds the jet at the J/W setpoint: 0.965 to 1.005, 0.985 standard"],
+ ["x:slice","hbc","x","A wider slice passes more flow at the same J/W: the headbox runs thinner (a narrower one, thicker)"],
+ ["x:slice","form","x","A narrow slice runs the headbox thick: worse formation"],["jw","form","x","A hard rush or drag disturbs the forming sheet"],
+ ["jw","tsr","x","Rush or drag lines the fibers up with the machine: the MD/CD ratio climbs away from a square jet, faster with drag"],
+ ["tsr","stfi","n","Fibers lined up with the machine leave the sheet weaker across it"],["form","stfi","p","A blotchy sheet is weaker"],["form","rct","p","A blotchy sheet is weaker"],
+ ["kwh","stfi","p","More refining, more bonding"],["pressSol","stfi","p","Pressed harder, a denser sheet"],["stfi","off","n","Under 95% of the grade's standard the reel goes to the beater"],
+ ["x:bkr","tbf","p","More broke metered into the stock chest"],["bklvl","bkr","p","AUTO meters more broke as the broke chest fills (2 to 15%)"],
+ ["tbf","couchSol","n","Over 20% broke the stock drains slower"],["tbf","rct","n","Over 20% broke the sheet is weaker"],["tbf","stfi","n","Over 20% broke the sheet is weaker"],["tbf","brkr","p","Over 20% broke, more breaks"],
+ ["stk","depfab","p","Stickies in the stock build up on the forming fabric"],["stk","depfelt","p","...and on the pick-up felt"],["stk","depcan","p","...and on the first dryer cans"],["osc","depfelt","p","The felt showers' oscillator cleans the felt; stopped, it fills"],
+ ["depfelt","pressSol","n","A felt filled with stickies takes less water out"],["depcan","off","p","Pick-outs on the first cans: spots to the beater"],["depfab","brkr","p","Holes from stickies: more breaks"],
+ ["pressSol","brkr","n","A wetter sheet out of the presses is weaker in the open draw"],["draw","brkr","x","More draw than standard stretches the sheet; less than the speed needs lets it flutter"],
+ ["speed","dpneed","p","The faster the cans spin, the harder the condensate is to lift"],["x:pdcsp","dp3","p","PDC-304 holds the 3rd section's syphon ΔP (on SCHEDULE it follows speed)"],["pdc304op","dp3","p","More motive steam, more ΔP"],
+ ["x:tcv","dp3","x","Pinched, the thermocompressor can't reach the setpoint"],["dpneed","dl_dry","x","ΔP short of what the speed needs: cans flood and drag the dryer drive"],["dpneed","dryl","x","Flooded cans dry nothing: the rest have to do more"],
+ ["dp3","bt3","p","More ΔP, more steam blows through"],["bt3","btwaste","p","Past 15% of the section's steam it goes to the condenser"],["btwaste","cret","n","Steam to the condenser doesn't come back"],
+ ["cret","mkup","n","What doesn't come back is made up with fresh water"],["mkup","usdt","p","Cold makeup water costs fuel to heat"],["btwaste","usdt","p","Wasted steam is paid for"],
+ ["steam","hoodH","p","The dryers' water goes into the hood's air"],["x:hoodfan","exh","p","AUTO holds 160 g/kg; MANUAL holds the %"],["exh","hoodH","n","More exhaust carries the water out"],
+ ["hoodH","dryl","p","Over 200 g/kg the pockets dry slower"],["hoodH","brkr","p","Past the dew point condensate drips from the hood"],["exh","airst","p","More air to heat"],["x:heatrec","airst","n","Exhaust heat preheats the supply air"],
+ ["airst","usdt","p","The supply air coils' steam is paid for"],["sup","hum","p","Supply over exhaust spills the hood's air into the machine room"],["hum","brkr","p","Over about 75% RH the roof drips"],
+ ["speed","dp1","p","AUTO schedules every section's syphon ΔP with speed"],["speed","dp2","p","AUTO schedules every section's syphon ΔP with speed"],
+ ["x:jwsp","jwsp","s","The fan pump's setpoint"],["jw","hbpsi","p","A faster jet takes more headbox pressure"],["x:slice","slcb","s","The slice opening, in mm"],["x:nip","nip","s","The reel drum's nip setpoint"],
+ ["steam","stpt","p","Steam per ton of paper"],["mcckw","kwht","p","Power per ton of paper"],["x:nip","hard","p","The reel drum's nip winds the reel tighter"],
  ["jw","rd","p","Rush / drag = (J/W − 1) × wire speed"],
  ["wsp","rd","x","Same J/W, bigger rush or drag in fpm at a faster wire"],
  ["vac","couchSol","x","Flatboxes best at 8.9 inHg; losses either side, worse below"],
@@ -290,8 +311,8 @@ const RM_E=[
  ["dl_pr1","speed","x","Over 100% load wears the motor and the drive faster; a failed press drive stops the machine"],
  ["dl_pulp","feed","x","Over 100% load wears the rotor motor faster; a failed pulper drive stops the pulper"]];
 const RM_AREA={IN:["Inputs","#a99ad6"],YARD:["Bale yard","#d0a66a"],SPOT:["Stock prep","#5fc497"],WET:["Wet end","#6db2e6"],DET:["Dry end","#ee9667"],
-  QCS:["Quality & winding","#e07fb0"],UTIL:["Water & utilities","#8fb3c4"],SHIP:["Shipping & money","#b5c46a"],DRV:["Drives (MCC)","#d9c25a"]};
-const RM_ORDER=["IN","YARD","SPOT","WET","DET","DRV","QCS","UTIL","SHIP"];
+  STM:["Steam & air","#c08bff"],QCS:["Quality & winding","#e07fb0"],UTIL:["Water & utilities","#8fb3c4"],SHIP:["Shipping & money","#b5c46a"],DRV:["Drives (MCC)","#d9c25a"]};
+const RM_ORDER=["IN","YARD","SPOT","WET","DET","STM","DRV","QCS","UTIL","SHIP"];
 const RM_SG={p:"+",n:"−",x:"~",s:"="},RM_SC={p:"#4fd18b",n:"#ff7a6e",x:"#ffb02e",s:"#8a9a96"};
 const RMUI={open:false,sel:null,mode:"direct",ext:true,P:null,z:1,W:0,H:0};   // (v6.8.3 z: zoom, 0.3-2; W/H: the map at 100%)
 // the graph: tags from the registry (names and units live), drivers from RM_DRV

@@ -12,7 +12,7 @@ $("slcClose").addEventListener("click",()=>$("slice").hidden=true);
   const g=G3.SLC.geo();if(g.lipX-g.wet>=6.8)slcBreak();drawSlice();}));
 // v3.2.0: run the jet out to the couch and the sheet breaks; the wet-end operator comes over and puts the slice back
 function slcBreak(){if(G3.slcFix)return;G3.slcFix={i:0,ph:"swear",t:0};
-  if(S.pm==="run"){S.pm="break";S.brkType="press";S.breakLeft=2*(26+rand("brkx")*20);S.breakTotal=S.breakLeft;S.tot.breaks++;enqueue("brk");AUDIO.sfx("snap",2500);brkNote();}
+  if(S.pm==="run"){S.pm="break";S.brkType="press";S.breakLeft=2*(26+rand("brkx")*20);S.breakTotal=S.breakLeft;S.tot.breaks++;enqueue("brk");AUDIO.sfx("snap",2500);brkNote();brLog1("press","ev","Upsets and events");}
   log("Sheet break! The slice was opened so far the wet line ran off the former. The wet-end operator is resetting it.","bad");
   ["slcV","slcH","slcReset"].forEach(id=>$(id).disabled=true);}
 G3.onSlcReset=()=>{["slcV","slcH","slcReset"].forEach(id=>$(id).disabled=false);$("slcV").value=0;$("slcH").value=0;log("Slice reset to standard. Wet line is back where it belongs.","ok");drawSlice();};

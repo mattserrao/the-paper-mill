@@ -3,7 +3,7 @@
    faceplate. One panel, six tabs: Operate (mode, setpoint, output, the valve, loop health), Tune (Kc / Ti / Td, live or
    staged, a setpoint step with its scores and a ghost of the last one), Bump test (step the output, fit the process,
    Lambda tuning from it), Valve (its trim, stroke, deadband and friction; editable in free play), Learn (the words) and
-   Challenges (five tuning puzzles on a sandbox copy of a loop; the mill is untouched).
+   Challenges (six tuning puzzles on a sandbox copy of a loop; the mill is untouched).
    While it's open the game runs on the tuning clock (real time, 5x, 20x or 60x: 60x is the knobs' 1 min/s): the loops
    step second by second as the clock reaches them (vlvCatch, 07h), so the trend moves smoothly. Season, survival and
    free play; not zen. */

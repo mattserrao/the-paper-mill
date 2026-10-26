@@ -43,7 +43,10 @@ const csfOf=g=>450+(g-0.5)*446;
 const eDrain=csf=>csf<450?1-(450-csf)/450*0.8:1+(csf-450)/450*0.25;
 function weState(){if(!S.we)S.we={L:WE.silo*WE.over,c:1,m:"auto",v:50,trim:0,q:[],bw:null,hbc:WE.hbc,cav:0,H:0,cpc:0,fs:WE.fs0,f:{}};return S.we;}
 // v6.8: an older save's refiner knob held the plate gap (mm); it's specific energy now
-function weMigrate(){const K=S&&S.knob;if(K&&K.v&&K.v.ref!=null&&K.v.ref<=1.5)K.v.ref=Math.round(eOfGap(K.v.ref));}
+function weMigrate(){const K=S&&S.knob;if(K&&K.v&&K.v.ref!=null&&K.v.ref<=1.5)K.v.ref=Math.round(eOfGap(K.v.ref));
+  // v6.13: before, the slice opening set the jet's speed (J/W 0.985 + 0.02 x opening); now the fan pump holds a J/W setpoint and
+  // the slice sets the headbox consistency: an older save keeps its J/W, with the slice back at its standard opening
+  if(S&&!S.hb&&K&&K.v&&K.v.sv){S.hb={jw:Math.round((HB.jw0+0.02*K.v.sv)*1000)/1000};K.v.sv=0;K.any=true;}}
 const bwStd=()=>(GRADES[C.grade]||GRADES["24"]).bw;
 const bwSp=()=>bwStd()*(1+(S.we?S.we.trim:0));
 // refining energy the stock on the machine has had (lagged through the chest by the knob model)
@@ -84,7 +87,8 @@ function weTick(dt){const W=weState(),run=S.pm==="run";
   // the weight back up, never over the grade's target. Slow (WE.lwTau minutes) to ride out the QCS dead time. Held during a
   // grade change and while the sheet is off. On unless the player takes the setpoint to MANUAL (lw:false).
   if(S.chg&&W.lw!==false&&W.trim!==0)W.trim=0;   /* (t4: a grade change starts AUTO-LW over from the new grade's target) */
-  if(run&&W.lw!==false&&!S.chg&&!S.zen&&QNOW.rct>0){const tg=rctSpec()*WE.lwM,e=(QNOW.rct-tg)/tg;W.trim=clamp(W.trim-dt/WE.lwTau*e,WE.trimMin,0);}
+  // (v6.13: read the QCS fresh here rather than the last step's QNOW: a restored snapshot then replays exactly)
+  if(run&&W.lw!==false&&!S.chg&&!S.zen){const q=qualMeasure(),tg=rctSpec()*WE.lwM,ts=stfiSpec()*WE.lwM,e=Math.min((q.rct-tg)/tg,(q.stfi-ts)/ts);W.trim=clamp(W.trim-dt/WE.lwTau*e,WE.trimMin,0);}   // (v6.13: the tighter of ring crush and STFI CD, 07n)
   // bale water in the pulper: a step in bale moisture thins the tub, and the dilution loop takes it back out
   if(baleOn()&&S.bq){const d=-WE.cpK*Math.max(0,S.bq.m-BALE.std)*100;W.cpd=d;W.cpc=ease(W.cpc||0,d,dt,WE.cpTau);}else{W.cpd=0;W.cpc=0;}
   // fine screen pressure drop: its load and the dirt in the stock
@@ -101,7 +105,7 @@ function dpYield(){if(S.zen)return 1;let x=0;for(const k of ["hd","lc","lw"])x+=
 const rctSpec=()=>Math.round((RCT0[C.grade]||60)*WE.rctSpec*10)/10;
 // (v6.8.3: open draw: each % of draw over the 1.5 % standard stretches the sheet and takes 4 % off ring crush; less draw adds it)
 function rctNow(bw){const ri=1+WE.rctK*(kwhNow()-WE.kwh0)-WE.rctStk*Math.max(0,((S.bq&&!S.zen)?S.bq.ck:0.1)-0.1)-WE.rctDraw*((S.zen?drawStd():knobVal("draw"))-drawStd());   // (v6.11.2: dry strength starch removed; v6.11.1 added its ring crush here)
-  return (RCT0[C.grade]||60)*(bw/bwStd())*ri;}
+  return (RCT0[C.grade]||60)*(bw/bwStd())*ri*shStrF();}   // (v6.13: formation and broke, 07n; 1 untouched)
 // v6.11.2 paper is sold by area (MSF, thousand ft²), the way box plants buy it. The list price ($/t) is for a ton at the
 // grade's target weight; a ton made lighter covers more ft² and sells for list × bwStd/bw, a heavier one for less. The player
 // still sees tons: the ratio rides on every lot from the reel to the truck (06 lotPut) and is paid when the truck leaves.
@@ -115,7 +119,7 @@ const wcFmt=a=>{const p=(a-1)*100;return Math.abs(p)<0.05?"sells at list (by are
 function weFlow(dt,u){const W=weState(),h=dt/60,F=W.f,run=S.pm==="run"&&u>0;
   const K=S.knob,x=K&&K.any&&K.x?K.x:null,cs=x&&x.cs!=null?x.cs:csStd(),ps=x&&x.ps!=null?x.ps:psStd(),vac=x?x.vac:30;
   const L0=W.L;let make=0,over=0,hb=0,dil=0,drain=0,seal=0,press=0,hbc=WE.hbc;
-  if(run){const U=u/h,sp=Math.max(S.pmSpeed,1),mc=mcCons(),Qd=weU0(sp)*100/WE.hbc,Ft=U*100/mc,Dd=Math.max(0,Qd-Ft);
+  if(run){const U=u/h,sp=Math.max(S.pmSpeed,1),mc=mcCons(),Qd=weU0(sp)*100/hbcSet(),Ft=U*100/mc,Dd=Math.max(0,Qd-Ft);
     const s=clamp(WE.seal0+WE.sealK*(vac-30),0.08,0.4),siloIn=Q=>Math.max(0,Q-U*100/cs)*(1-s);
     // the fan pump: full dilution while the silo has water; with it empty, only what drains in and the makeup (t/h)
     const avail=W.L/h+siloIn(Ft+Dd)+(W.L<WE.silo*WE.makeL?WE.make:0),D=Math.min(Dd,avail);
@@ -136,7 +140,7 @@ function weFlow(dt,u){const W=weState(),h=dt/60,F=W.f,run=S.pm==="run"&&u>0;
   return W.L-L0+(vlvT("LV-202")?S.vlv.acc.dL||0:0);}
 // a sheet break from the fan pump cavitating (no dice: a fixed rethread at the wet end)
 function weBreak(){if(S.pm!=="run")return;S.pm="break";S.brkType="press";S.breakLeft=2*36;S.breakTotal=S.breakLeft;S.tot.breaks++;enqueue("brk");AUDIO.sfx("snap",2500);
-  log("Sheet break at the wet end: the white water silo ran low and the fan pump cavitated.","warn");brkNote();}
+  log("Sheet break at the wet end: the white water silo ran low and the fan pump cavitated.","warn");brkNote();brLog1("press","stock");}
 // the BW loop from the DCS (50d)
 function bwSetMode(m){if(S.zen)return;const W=weState();if(m===W.m)return;
   if(m==="auto"){const sp=Math.max(S.pmSpeed,P.minSpeed*0.5),c0=W.c;W.c=1;const base=weValveAuto(sp);W.c=clamp(base>0?W.v/base:c0,0.5,1.6);}   // (bumpless: the trim takes over where the valve is)

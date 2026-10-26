@@ -30,6 +30,7 @@ const EVENTS=[
    start:i=>{const W=2*C.rollW.v,a=Math.min(S.winderAcc,W),b=Math.min(S.winderBuf,W-a),q=a+b;S.winderAcc-=a;S.winderBuf-=b;lotTake(S.lots.acc,a);lotTake(S.lots.buf,b);
      i.q=q;i.note=`${q.toFixed(1)} t of rolls to the beater`;},
    end:i=>{if(!(i.q>0))return;S.tot.beater=(S.tot.beater||0)+2*C.rollW.v;S.tot.beatRolls=(S.tot.beatRolls||0)+2;S.q.bank+=i.q;S.tot.broke+=i.q;pfW("broke",i.q);S.tot.tied=(S.tot.tied||0)+1;i.q=0;}},
+ {id:"syphon",g:"machine",stream:"syph",name:"Broken syphon",head:"A dryer can's syphon broke: the can is filling with condensate and running cold. The sheet comes off wetter and the dryer drive is working harder.",dur:[210,270],mtbf:260,mods:{},fx:"syphon",start:i=>stmSyphonStart(i),end:i=>stmSyphonEnd(i)},   // v6.13 (07m): floods while running for STM.syFind min, then the crew valves the can off until the outage (a second one with a can already out: stop and change both)
  {id:"steamjoint",g:"machine",name:"Steam joint leak",head:"A dryer steam joint blew out on the drive side! Sheet off back to the wet end until maintenance repacks it.",dur:[150,270],mtbf:320,mods:{pmDown:"steam joint leak"},fx:"steamjoint"},
  {id:"boiler",g:"machine",name:"Boiler trip",head:"The boiler tripped! No steam for the dryers. Machine down.",dur:[90,180],mtbf:260,mods:{pmDown:"no steam"},fx:"boiler"},
  {id:"permit",g:"stock",name:"Wastewater permit exceeded",head:"Effluent over the permit limit! The state fines the mill and stock prep throttles back.",dur:[180,300],mtbf:380,mods:{feedMul:0.7},fx:"permit"},
@@ -73,7 +74,7 @@ EVENTS.forEach(e=>CH.en[e.id]=true);
 const WXN={clear:"Clear",rain:"Rain",fog:"Fog",snow:"Snow"};
 function active(id){const a=S.inc;for(let k=0;k<a.length;k++)if(a[k].id===id)return true;return false;}
 // machine and winder upsets go to the crew one at a time, in the order they happen; nothing gets fixed until a crew is there
-const QSET=new Set(EVENTS.map(e=>e.id).filter(id=>(EV[id].g==="machine"&&!EV[id].knob&&id!=="runner"&&id!=="birdhay"&&id!=="boiler"&&id!=="fogfan"&&id!=="steamjoint"&&id!=="brownout")||id==="ragger")),QINC=id=>QSET.has(id);   // (v5.2: a Set, built once)
+const QSET=new Set(EVENTS.map(e=>e.id).filter(id=>(EV[id].g==="machine"&&!EV[id].knob&&id!=="runner"&&id!=="birdhay"&&id!=="boiler"&&id!=="fogfan"&&id!=="steamjoint"&&id!=="brownout"&&id!=="syphon")||id==="ragger")),QINC=id=>QSET.has(id);   // (v5.2: a Set, built once)
 const RESP={ragger:6,wrap:4,hay:4,brk:2,dryerfire:3,shaft:8,fabric:6,felt:6,slime:5,winderdown:6,tiedrolls:4};
 function enqueue(k){if(!S.crewQ)S.crewQ=[];if(S.crewQ.some(q=>q.k===k))return;S.crewQ.push({k,resp:RESP[k]||6,since:0,here:false,go:false});}
 function crewTick(dt){if(!S.crewQ)S.crewQ=[];if(!S.crewQ.length)return;   // (v5.2: nothing queued, nothing to do)
@@ -103,7 +104,7 @@ function working(k){const h=S.crewQ&&S.crewQ[0];return !!(h&&h.k===k&&h.go);}
 function crewState(k){const q=S.crewQ||[],i=q.findIndex(x=>x.k===k);if(i<0)return "";if(i>0)return `waiting for crew (${i} ahead)`;return q[0].go?"crew working":"crew on the way";}
 function baseMods(){return {pmDown:null,pulperDown:false,speedCap:1,breakMul:1,yieldMul:1,recvMul:1,clampMul:1,drvCap:99,ldrCap:99,docksClosed:false,noIn:false,noOut:false,yardEat:0,hayMul:1,crewAtPM:false,winderDown:false,offSpec:false,feedMul:1};}
 function mods(){const m=baseMods();
-  for(const i of S.inc){const e=i.mods||EV[i.id].mods||{};
+  for(const i of S.inc){if(i.id==="syphon")i.mods=stmSyphonMods(i);const e=i.mods||EV[i.id].mods||{};
     if(e.pmDown)m.pmDown=e.pmDown; if(e.refOut)m.refOut=e.refOut; if(e.winderDown)m.winderDown=true; if(e.offSpec)m.offSpec=true; if(e.feedMul!==undefined)m.feedMul*=e.feedMul; if(e.pulperDown)m.pulperDown=true; if(e.docksClosed)m.docksClosed=true; if(e.noIn)m.noIn=true; if(e.noOut)m.noOut=true;
     if(e.hayMul)m.hayMul*=e.hayMul; if(e.speedCap)m.speedCap=Math.min(m.speedCap,e.speedCap); if(e.breakMul)m.breakMul*=e.breakMul; if(e.yieldMul)m.yieldMul*=(i.id==="badocc"&&LV("detrash"))?0.9:e.yieldMul;
     if(e.recvMul!==undefined)m.recvMul*=e.recvMul; if(e.clampMul!==undefined)m.clampMul*=e.clampMul; if(e.yardEat)m.yardEat+=e.yardEat;
@@ -114,9 +115,9 @@ function mods(){const m=baseMods();
   //  shipping carry on through breaks and hayouts. crewAtPM stays in the mods, always false, for older saves and the pills)
   // v6.12.1-t7: the open draw has to rise with speed (DRAWV, 07b): under what this speed needs the sheet flutters into the
   // dryers and breaks come more often, the further under the more (whether or not the knob was ever touched)
-  if(!S.zen){const k=drawBrk();if(k>1)m.breakMul*=k;}
+  // (v6.13: the slack draw's breaks and the bales' stickies are in the break risk now, 07n brkRisk; zen has neither)
   knobMods(m);vlvMods(m);chemMods(m);   // v5.6 / v6.9 fiddly knobs (nothing unless a knob was moved)
-  bqMods(m);   // v6.6 stickies from contaminated bales (05b)
+  shMods(m);   // v6.13 a hard reel cracks at the winder (07n)
   dryMods(m);   // v6.5 b5 the dryer limit: the crew's speed trim for a wet sheet (07d)
   return m;}
 // any stop that takes the sheet off the reel (boiler trip, felt or fabric change, no stock...) must be followed by a full
@@ -146,8 +147,8 @@ function chaosTick(dt){
   maintTick(dt);
   rlyElecTick(dt);   // v6.10: the electrical tech's job (07i)
   for(const i of S.inc){if(QINC(i.id)&&!working(i.id))continue;if(MNEED(i.id)&&!i.mGo)continue;if(ENEED(i.id)&&!i.eGo)continue;const w=QINC(i.id)||MNEED(i.id)||ENEED(i.id);if(w)i.go=true;i.left-=dt*(w?repRate()*leadRep()*civRepair()*(MNEED(i.id)?manRep():1):1);}
-  for(const i of S.inc)if(i.left<=0&&EV[i.id].end)EV[i.id].end(i);
-  for(const i of S.inc)if(i.left<=0)log(`${EV[i.id].name}: cleared, back to normal`,"ok");
+  for(const i of S.inc)if(i.left<=0){if(EV[i.id].end)EV[i.id].end(i);shOnEnd(i.id);}   // (v6.13: new clothing starts clean of stickies, 07n)
+  for(const i of S.inc)if(i.left<=0&&!i.noClr)log(`${EV[i.id].name}: cleared, back to normal`,"ok");
   // (v4.1 pass 7: compacted in place and counted with a loop: this runs every sim step, and the two filters made new arrays each time)
   {let w=0;for(let k=0;k<S.inc.length;k++){const i=S.inc[k];if(i.left>0)S.inc[w++]=i;}S.inc.length=w;}
   // v3.3.3: two upsets already running make a third 75% less likely; back to normal once they clear

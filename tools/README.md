@@ -41,6 +41,7 @@ One line per check, then a summary; exit code 0 only when every check passed. Fu
 | `process` | default | dryer limit, quality specs, dewatering chain, mass balance, winder, orders and bales, process relationships, refiners | dryercheck, qualcheck, dewatercheck, watercheck, windercheck, ordercheck, relcheck, refcheck |
 | `valves` | default | the six control loops, tuning, bump tests | valvecheck |
 | `reliability` | default | motors and drives, rounds, MCC, drive faults | rlycheck |
+| `steamsheet` | default | v6.13: dryer cans and syphons, PDC-304, the hood and fog fan, energy, J/W and STFI, broke chest, turn-ups, break risk, profile, the new screens | |
 | `zen` | default | every scripted zen shot runs | zencheck |
 | `music` | slow | every piece schedules and is audible | musictest |
 | `autotest` | slow | the in-game `?autotest` page headless | autotest |

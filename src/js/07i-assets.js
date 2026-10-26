@@ -88,7 +88,7 @@ function rlyLoad(id,r){if(!S||outOn()||rlyIncOf(id)||rlyRectDown(ASSETN[id].ln))
     case "couch":return run?38+r.vac*1.05+(r.gbox-1)*2.4+(r.lvac-5)*1.6+w:M.pmDown?0:12;   // (v6.12.1-t7: every vacuum zone drags on the fabric, and the couch drives it)
     case "pr1":return run?42+r.pl*0.27+w:M.pmDown?0:12;
     case "pr2":return run?38+r.pl*0.24+w:M.pmDown?0:12;
-    case "dry":return run?46+S.pmSpeed/3000*26+w:M.pmDown?0:14;
+    case "dry":return run?46+S.pmSpeed/3000*26+stmDrvAdd()+w:M.pmDown?0:14;   // (v6.13: flooded cans drag, 07m)
     case "reel":return run?34+r.tension*26+w:M.pmDown?0:8;
     case "wind":{const c=(S.rates&&S.rates.cut)||0;return M.winderDown||c<0.5?(S.wd==="run"?6:0):28+c/Math.max(1,P.winderMax)*62+w;}}
   return 0;}

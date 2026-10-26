@@ -144,7 +144,7 @@ def qual(pw):
 # from the warmed-up snapshot (no upsets or random breaks), set knobs, run, and read the wet end and the dryers
 DRUN = """(a)=>{const P=__PM,[setup,mins]=a,G=P.G3;G.save.restore(JSON.parse(window.__SNAP));P.setRunning(false);P.CH.on=false;P.C.breaks=false;P.C.hays=false;
   const S=P.S;(new Function('P','S','G',setup))(P,S,G);const t0=S.t;while(S.t-t0<mins)P.step(P.SIM_STEP);const r=P.knob.read(),K=S.knob,D=S.dry;
-  return {cs:+r.couchSol.toFixed(2),ps:+r.pressSol.toFixed(2),W:K&&K.any?+K.W.toFixed(3):1,steam:+D.steam.toFixed(2),st3:+D.st3.toFixed(1),m:+D.m.toFixed(2),sf:K&&K.any?+K.sf.toFixed(3):1,crush:K&&K.x?+(K.x.cr||0).toFixed(3):0,pm:S.pm,speed:Math.round(S.pmSpeed)};}"""
+  return {cs:+r.couchSol.toFixed(2),ps:+r.pressSol.toFixed(2),W:K&&K.any?+K.W.toFixed(3):1,steam:+D.steam.toFixed(2),st3:+D.st3.toFixed(1),m:+D.m.toFixed(2),sf:K&&K.any?+K.sf.toFixed(3):1,crush:K&&K.x?+(K.x.cr||0).toFixed(3):0,pm:S.pm,speed:Math.round(S.pmSpeed),hbc:+r.hbc.toFixed(3),form:+G.sheet.form().toFixed(3)};}"""
 
 def dewater(pw):
     C.sec("dewater")
@@ -153,10 +153,15 @@ def dewater(pw):
     R = lambda setup, mins=90: pg.evaluate(DRUN, [setup, mins])
     base = R("", 90)
     ok("untouched: couch 19%, press 44%, water factor 1", abs(base["cs"] - 19) < 0.01 and abs(base["ps"] - 44) < 0.01 and base["W"] == 1, json.dumps(base))
-    # ---- 1. jet: best at the standard slice, less water off the table either way (opening B and lip L) ----
-    jp, jn = R("P.G3.slcSet('v',0.6);"), R("P.G3.slcSet('v',-0.6);")
+    # ---- 1. jet: best at the standard J/W (v6.13: the fan pump's setpoint), less water off the table either way; the slice
+    #         opening B sets the headbox consistency at that J/W; the lip L the jet's angle ----
+    jp, jn = R("P.G3.sheet.setJw(1.0);"), R("P.G3.sheet.setJw(0.97);")
     lp, ln = R("P.G3.slcSet('h',0.6);"), R("P.G3.slcSet('h',-0.6);")
-    ok("jet: slice opened or closed both lower couch solids", jp["cs"] < base["cs"] - 0.5 and jn["cs"] < base["cs"] - 0.5, f'open {jp["cs"]} closed {jn["cs"]} vs {base["cs"]}')
+    ok("jet: rush or drag (J/W off 0.985) both lower couch solids", jp["cs"] < base["cs"] - 0.5 and jn["cs"] < base["cs"] - 0.5, f'rush {jp["cs"]} drag {jn["cs"]} vs {base["cs"]}')
+    so, sc = R("P.G3.slcSet('v',0.6);"), R("P.G3.slcSet('v',-0.6);")
+    ok("slice opened: thinner headbox and a little less couch solids; closed: thicker headbox, worse formation",
+       so["hbc"] < base["hbc"] - 0.05 and so["cs"] < base["cs"] - 0.1 and sc["hbc"] > base["hbc"] + 0.05 and sc["form"] < 0.97 and abs(sc["cs"] - base["cs"]) < 0.05,
+       json.dumps({"open": [so["hbc"], so["cs"]], "closed": [sc["hbc"], sc["cs"], sc["form"]], "base": [base["hbc"], base["cs"]]}))
     ok("jet angle: lip forward or back both lower couch solids", lp["cs"] < base["cs"] - 0.2 and ln["cs"] < base["cs"] - 0.2, f'fwd {lp["cs"]} back {ln["cs"]}')
     ok("slice saved with the game (in the knob state)", pg.evaluate("()=>{const P=__PM;P.G3.save.restore(JSON.parse(window.__SNAP));P.G3.slcSet('v',0.4);const d=JSON.parse(JSON.stringify({v:1,S:P.S,C:P.C,CH:{on:false,lvl:P.CH.lvl,en:P.CH.en},MILL:null,day:2,cash:P.S.cash}));P.G3.save.restore(JSON.parse(window.__SNAP));P.G3.save.restore(d);return P.S.knob.v.sv===0.4}"))
     # ---- 2. vacuum: best at 30 kPa, less water off either way (more so below) ----
@@ -172,18 +177,18 @@ def dewater(pw):
     ok("drier sheet into the dryers: less steam, lower 3rd section, steam cost down", p120["steam"] < base["steam"] and p120["st3"] < base["st3"] and p120["sf"] < 1, f'steam {p120["steam"]} vs {base["steam"]}, st3 {p120["st3"]} vs {base["st3"]}, sf {p120["sf"]}')
     ok("wetter sheet: more steam, higher 3rd section, steam cost up", p80["steam"] > base["steam"] and p80["st3"] > base["st3"] and p80["sf"] > 1, f'steam {p80["steam"]}, st3 {p80["st3"]}, sf {p80["sf"]}')
     ok("moisture held at 8% inside the auto loop's reach", abs(p120["m"] - 8) < 0.2 and abs(p80["m"] - 8) < 0.2, f'{p120["m"]} {p80["m"]}')
-    sb = R("P.G3.slcSet('v',0.8);", 150)
+    sb = R("P.G3.sheet.setJw(0.97);", 150)
     ok("the chain end to end: a bad jet costs steam too", sb["steam"] > base["steam"] and sb["ps"] < base["ps"], json.dumps({k: sb[k] for k in ("cs", "ps", "W", "steam")}))
     b.close()
 
 
 WRUN = """(a)=>{const P=__PM,[setup,mins,chaos]=a,G=P.G3;G.save.restore(JSON.parse(window.__SNAP));P.setRunning(false);P.CH.on=!!chaos;P.C.breaks=!!chaos;P.C.hays=!!chaos;
-  const S=P.S;(new Function('P','S','G',setup))(P,S,G);const w0=JSON.parse(JSON.stringify(S.wat||null)),sw=100/4.2-1,inv0=(S.wat?S.wat.L:0)+sw*S.tank+(S.we?S.we.L:0),t0=S.t,good0=S.tot.prodT;
+  const S=P.S;(new Function('P','S','G',setup))(P,S,G);const w0=JSON.parse(JSON.stringify(S.wat||null)),sw=100/4.2-1,inv0=(S.wat?S.wat.L:0)+sw*(S.tank+(S.bk?S.bk.f:0))+(S.we?S.we.L:0),t0=S.t,bk0=S.bk?S.bk.f:0,L0=S.wat?S.wat.L:0,good0=S.tot.prodT;
   let minL=1e9,maxShort=0,bwOut=0,maxFresh=0;
   while(S.t-t0<mins){P.step(P.SIM_STEP);if(S.cards&&S.cards.open)S.cards.open=null;const W=S.wat;minL=Math.min(minL,W.L);maxShort=Math.max(maxShort,W.shortK);maxFresh=Math.max(maxFresh,W.r.fresh);if(S.pm==="run"&&G.qual().out.includes("bw"))bwOut+=P.SIM_STEP;}
-  const W=S.wat,T=W.tot,T0=w0?w0.tot:{},d=k=>T[k]-(T0[k]||0),inv1=W.L+sw*S.tank+(S.we?S.we.L:0);   // (v6.8: and the white water silo, 07g)
-  return {in:d("fresh")+d("bale")+d("rep")+d("short"),out:d("evap")+d("prod")+d("rej")+d("sludge")+d("out"),dinv:inv1-inv0,parts:Object.fromEntries(Object.keys(T).map(k=>[k,+d(k).toFixed(1)])),
-    good:S.tot.prodT-good0,minL,maxShort,bwOut,maxFresh,L:W.L,r:W.r,bank:S.q.bank,W:S.pf?S.pf.W:null};}"""
+  const W=S.wat,T=W.tot,T0=w0?w0.tot:{},d=k=>T[k]-(T0[k]||0),inv1=W.L+sw*(S.tank+(S.bk?S.bk.f:0))+(S.we?S.we.L:0);   // (v6.13: and the broke chest's stock, 07n)   // (v6.8: and the white water silo, 07g)
+  return {in:d("fresh")+d("bale")+d("rep")+d("short"),out:d("evap")+d("prod")+d("rej")+d("sludge")+d("out")+d("boil"),dinv:inv1-inv0,parts:Object.fromEntries(Object.keys(T).map(k=>[k,+d(k).toFixed(1)])),
+    bkw:sw*((S.bk?S.bk.f:0)-bk0),L0,good:S.tot.prodT-good0,minL,maxShort,bwOut,maxFresh,L:W.L,r:W.r,bank:S.q.bank,W:S.pf?S.pf.W:null};}"""
 
 def water(pw):
     C.sec("water")
@@ -201,7 +206,8 @@ def water(pw):
     # ---- steady running: chest overflows a little to the sewer, no makeup ----
     s = R("", 240)
     # (v6.11: the DE pulper repulps the trim with white water, so the chest runs at or just under its overflow, not over it)
-    ok("steady: the white water chest sits at its overflow, no fresh makeup", s["r"]["make"] < 1 and abs(s["L"] / 2000 - 0.7) < 0.08, json.dumps({**{k: round(v) for k, v in s["r"].items()}, "L": round(s["L"])}))
+    # (v6.13 t3: or still filling back to it: the snapshot's history can leave it low, and a longer window runs into the broke chest filling)
+    ok("steady: no fresh makeup, the white water chest at its overflow or filling back to it", s["r"]["make"] < 1 and (abs(s["L"] / 2000 - 0.7) < 0.08 or (s["L"] > s["L0"] + 20 and s["L"] / 2000 < 0.78)), json.dumps({**{k: round(v) for k, v in s["r"].items()}, "L": round(s["L"]), "L0": round(s["L0"]), "bkw": round(s["bkw"])}))
     # ---- a machine stop: stock prep keeps pulping, the chest draws down, fresh water makes up ----
     d = R("S.tank=60;P.trigger('shaft');", 120)   # (a low storage chest, so stock prep keeps pulping)
     ok("machine down: fresh makeup flows (intake doesn't drop to zero)", d["maxFresh"] > 200 and d["r"]["fresh"] > 60, f'max fresh {d["maxFresh"]:.0f} m3/h, chest low {d["minL"]:.0f} m3')
@@ -418,7 +424,8 @@ def order(pw):
     ok("a dry load is paid in full; a wet one at air-dry weight", abs(r["paidDry"] - 100) < 1e-6 and abs(r["paidWet"] - 100 * (0.82 / 0.88)) < 1e-6, json.dumps(r))
     ok("water over 10% is not fiber; contamination costs yield", r["sf1"] == 1 and abs(r["sf2"] - 0.94) < 1e-9 and r["yk3"] < 1, json.dumps(r))
     # stickies raise the break odds: compare the mods with clean and dirty stock in the chest
-    r = pg.evaluate("""()=>{const S=__PM.S,X=__PM.OX,Q=X.bqState();const k0=Q.ck;Q.ck=0;__run(0.25);const a=S.M.breakMul;Q.ck=0.5;Q.k=0.5;__run(0.25);const b=S.M.breakMul;Q.ck=k0;return {a,b}}""")
+    # (v6.13: the break risk's "stickies and holes" contributor, 07n, rather than the mods' break multiplier)
+    r = pg.evaluate("""()=>{const S=__PM.S,X=__PM.OX,Q=X.bqState(),f=()=>__PM.G3.sheet.brk().parts.find(p=>p[0]==='stk')[2];const k0=Q.ck;Q.ck=0;__run(0.25);const a=f();Q.ck=0.5;Q.k=0.5;__run(0.25);const b=f();Q.ck=k0;return {a,b}}""")
     ok("stickies in the chest raise the break odds", r["b"] > r["a"] * 1.3, json.dumps(r))
     # --- 8. the rest of the season plays out, the panel renders
     r = pg.evaluate("""()=>{const S=__PM.S;__run(Math.max(0,S.season.end-S.t-30));const O=S.ord,K=O.k;

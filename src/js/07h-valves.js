@@ -45,7 +45,12 @@ const VDEF=[
   {id:"PV-303",name:"3rd section steam",area:"DET",medium:"steam",where:"Steam header to the 3rd dryer section",cas:true,master:"QC-300",ratio:1,
     what:"Steam pressure in the 3rd dryer section, the main drying load. On CAS its setpoint comes from the moisture controller.",
     pv:{n:"3rd section pressure",u:"kPa",lo:0,hi:300,dp:0},sp0:120,spLim:[0,250],act:1,tune:{kc:0.6,ti:0.5,td:0},
-    valve:{ch:"eq",R:50,stroke:6,db:0.3,hys:0.2,stick:0.4},proc:{type:"fo",th:2,tau:30},noise:0.5,lam:0.5,tol:3,bump:180}];
+    valve:{ch:"eq",R:50,stroke:6,db:0.3,hys:0.2,stick:0.4},proc:{type:"fo",th:2,tau:30},noise:0.5,lam:0.5,tol:3,bump:180},
+  // v6.13 the 7th loop (07m): the 3rd section's syphon differential pressure, held with the thermocompressor's motive steam
+  {id:"PDC-304",name:"3rd section syphon ΔP",area:"STM",medium:"motive steam",where:"Thermocompressor TC-304, dryer basement",
+    what:"The thermocompressor's motive steam holds the differential pressure across the 3rd section's syphons. Too little and the cans fill with condensate and run cold; too much and steam blows straight through to the condenser. Its setpoint follows machine speed (the faster the cans spin, the harder the condensate is to lift) unless you set one.",
+    pv:{n:"3rd section ΔP",u:"kPa",lo:0,hi:80,dp:1},sp0:()=>stmSp(),spLim:[5,70],act:1,tune:{kc:0.9,ti:0.35,td:0},
+    valve:{ch:"lin",R:50,stroke:8,db:0.3,hys:0.2,stick:0.3},proc:{type:"fo",th:3,tau:20},noise:0.3,lam:0.6,tol:1.5,bump:180}];
 const VD=Object.fromEntries(VDEF.map(d=>[d.id,d]));
 const VGRP=id=>VD[id].master||VD[id].slaves?["QC-300","PV-302","PV-303"]:[id];
 const vF=(x,...a)=>typeof x==="function"?x(...a):x;
@@ -84,7 +89,8 @@ const VP={
   "QC-300":(L,B,W)=>{const a=W.lp["PV-302"],b=W.lp["PV-303"],p3=b?b.y:B.st3,p2=a?a.y/0.8:p3,eff=0.5*p2+0.5*p3;W.st3=eff;
     const mss=B.run?DRY.m0+(B.km||0)+(B.dem-eff)*DRY.perKpa:DRY.m0;L.y=Math.max(0.5,L.y+(mss-L.y)*(1-Math.exp(-1/180)));},
   "PV-302":(L,B)=>{const p=Math.min(B.ceil,VLV.Pmax*0.8*vch(L.v,L.pos/100)*B.hdr/B.lf);L.y+=(p-L.y)*(1-Math.exp(-1/30));},
-  "PV-303":(L,B)=>{const p=Math.min(B.ceil,VLV.Pmax*vch(L.v,L.pos/100)*B.hdr/B.lf);L.y+=(p-L.y)*(1-Math.exp(-1/30));}};
+  "PV-303":(L,B)=>{const p=Math.min(B.ceil,VLV.Pmax*vch(L.v,L.pos/100)*B.hdr/B.lf);L.y+=(p-L.y)*(1-Math.exp(-1/30));},
+  "PDC-304":(L,B)=>{const p=Math.min(B.tcmax??60,70*vch(L.v,L.pos/100))*(B.run?1:0.6);L.y+=(p-L.y)*(1-Math.exp(-1/20));}};   // (v6.13: 50% motive gives the standard 35 kPa; the hand valve caps it)
 // a master's slaves are all on CAS (and present): otherwise the master tracks them (IMAN)
 function vCasOK(W,d){const sl=d.slaves.filter(s=>W.lp[s]);return sl.length>0&&sl.every(s=>W.lp[s].m==="CAS");}
 // one 1 s sub-step of the whole world. ts: time in seconds (noise only)
@@ -116,6 +122,7 @@ function vlvView(id){const d=VD[id],W=S.vlv,L=W&&W.lp[id];
       const lv=69+vwob(S.t,0.02,2)*3,q=run?(S.rates.fiberUse||0)/Math.max(1e-6,weUstd()):0,op=clamp(VLV.mcStd*100*q+vwob(S.t,0.05,21)*1.2,0,100);return {m:"AUTO",sp:69,pv:lv,y:lv,op,pos:op};}
     case "FV-201":{const pv=run&&We?bwMeas():bwSp(),y=We&&We.bw!=null?We.bw:pv,op=We?We.v:50;return {m:We&&We.m==="manual"?"MAN":"AUTO",sp:bwSp(),pv,y,op,pos:op};}
     case "LV-202":{const lv=We?We.L/WE.silo*100:WE.over*100,op=clamp(((We&&We.f.make)||0)/VLV.siloQ*100,0,100);return {m:"AUTO",sp:WE.makeL*100,pv:lv,y:lv,op,pos:op};}
+    case "PDC-304":{const T=S.stm,y=T?T.dp[2]:35,op=clamp(y/70*100,0,100);return {m:"AUTO",sp:stmSp(),pv:S.pm==="run"?y+vwob(S.t,0.17,31)*0.3:y,y,op,pos:op};}   // (v6.13, 07m: AUTO's speed schedule)
     case "QC-300":{const m=D?D.m:DRY.m0,st=D?D.st3:(DRY.base[C.grade]||120),pv=run?m+vwob(S.t,0.13,4)*0.25:m;return {m:"AUTO",sp:DRY.m0,pv,y:m,op:st/d.out.k,pos:st/d.out.k};}
     default:{const st=(D?D.st3:(DRY.base[C.grade]||120))*d.ratio,b=DRY.base[C.grade]||120,dem=D?D.dem:b,lf=Math.sqrt(Math.max(0.3*b,dem)/b),hdr=D?D.hdr:1;
       const op=vchInv(d.valve,st*lf/(VLV.Pmax*d.ratio*hdr))*100;return {m:"CAS",sp:st,pv:st,y:st,op,pos:op};}}}
@@ -124,6 +131,7 @@ function vlvState(){if(!S.vlv)S.vlv={lp:{},any:false,sub:0,w0:S.t,B:null,acc:{mc
 function vCap(){const W=S.vlv;if(!W)return;const B=W.B||(W.B={}),run=S.pm==="run",g=C.grade,D=S.dry||dryState(),We=weState(),b=DRY.base[g]||120;
   B.run=run;B.pd=!!(S.M&&S.M.pulperDown);B.ref=S.M&&S.M.refOut?0:1;B.cd=We.cpd||0;B.qo=run?(S.rates.fiberUse||0)/Math.max(1e-6,weUstd()):0;
   const sp=Math.max(S.pmSpeed,P.minSpeed*0.5);B.bsp=bwSp();B.ustd=weUstd();B.u0=weU0(sp);B.mr=mcCons()/WE.mc0;B.cv=1+We.cav*0.06*wobW(0.9,17);B.ff=50*B.u0/B.ustd-50;
+  B.tcmax=stmTcMax();{const L4=W.lp["PDC-304"];if(L4&&(!S.stm||S.stm.sp4==null))L4.sp=stmSp();}   // (v6.13: on AUTO's schedule the setpoint follows speed)
   B.net=run?(We.net||0):0;B.dem=D.dem;B.km=D.km||0;B.ceil=dryCeil(D);B.hdr=D.hdr;B.lf=Math.sqrt(Math.max(0.3*b,D.dem)/b);B.st3=D.st3;
   // the basis weight setpoint is the grade's (and the lightweight trim); a grade change rescales what the scanner has seen
   const L=W.lp["FV-201"];if(L){if(W.g&&W.g!==g&&GRADES[W.g]){const f=bwStd()/GRADES[W.g].bw;L.y*=f;L.pvm*=f;L.pvf*=f;for(let i=0;i<L.dq.length;i++)L.dq[i]*=f;}L.sp=bwSp();}
@@ -154,14 +162,14 @@ function vConseq(dt){const W=S.vlv,L=W.lp["LV-104"];
     if(W.acc.mco>0){const t=Math.min(S.tank,W.acc.mco*weUstd()/60/VLV.mcK);if(t>0){S.tank-=t;wSpill(t);W.mcOver=(W.mcOver||0)+t;}
       if(!W.lg.mco){W.lg.mco=1;log("The machine chest is overflowing: refined stock is going to the sewer.","bad");}W.acc.mco=0;}else if(y<95)W.lg.mco=0;}
   else W.mcLow=0;}
-function vBreak(why){if(S.pm!=="run")return;S.pm="break";S.brkType="press";S.breakLeft=2*36;S.breakTotal=S.breakLeft;S.tot.breaks++;enqueue("brk");AUDIO.sfx("snap",2500);log(why,"warn");brkNote();}
+function vBreak(why){if(S.pm!=="run")return;S.pm="break";S.brkType="press";S.breakLeft=2*36;S.breakTotal=S.breakLeft;S.tot.breaks++;enqueue("brk");AUDIO.sfx("snap",2500);log(why,"warn");brkNote();brLog1("press","stock");}
 function vlvMods(m){const W=S.vlv;if(!W||!W.any||S.zen)return;if(W.mcLow>0)m.speedCap=Math.min(m.speedCap,1-0.5*W.mcLow);}
 // a loop that keeps hurting the mill: the crew finds it and puts it back on standard tuning (seasons and survival, not free play)
 function vCrew(dt){const W=S.vlv;if(S.free)return;
-  const bad={"LV-104":L=>L.y<15||L.y>97,"FV-201":()=>S.pm==="run"&&QNOW.out.includes("bw"),"LV-202":L=>S.pm==="run"&&L.y<WE.cav*100,"QC-300":()=>S.pm==="run"&&QNOW.out.includes("m")};
+  const bad={"PDC-304":()=>S.pm==="run"&&stmFlooded()>0,"LV-104":L=>L.y<15||L.y>97,"FV-201":()=>S.pm==="run"&&QNOW.out.includes("bw"),"LV-202":L=>S.pm==="run"&&L.y<WE.cav*100,"QC-300":()=>S.pm==="run"&&QNOW.out.includes("m")};
   for(const id in bad){const L=W.lp[id];if(!L){W.harm[id]=0;continue;}const g=VGRP(id);
     if(bad[id](L)&&!g.every(x=>vIsDef(x))){W.harm[id]=(W.harm[id]||0)+dt;if(W.harm[id]>=VLV.harm){W.harm[id]=0;
-      const who={"LV-104":"Stock prep","FV-201":"The wet-end operator","LV-202":"The wet-end operator","QC-300":"The process engineer"}[id];
+      const who={"PDC-304":"The dry-end operator","LV-104":"Stock prep","FV-201":"The wet-end operator","LV-202":"The wet-end operator","QC-300":"The process engineer"}[id];
       const man=g.some(x=>W.lp[x]&&W.lp[x].m==="MAN");g.forEach(x=>vlvRevert(x,true));
       log(`${who} traced the trouble to ${g.join(" / ")} ${man?"left on MAN":"tuned off standard"} and put ${g.length>1?"them":"it"} back on standard tuning.`,"ok");
       BANNERS.push({text:`Traced: ${g.join(", ")} tuning`,t:null,kind:"good",tag:"FIXED"});while(BANNERS.length>3)BANNERS.splice(1,1);}}
@@ -170,6 +178,7 @@ function vCrew(dt){const W=S.vlv;if(S.free)return;
 function vIsDef(id){const d=VD[id],L=S.vlv&&S.vlv.lp[id];if(!L)return true;const T=d.tune;
   if(L.kc!==T.kc||L.ti!==T.ti||L.td!==T.td||(L.pf||0)!==0||L.m!==vDefMode(d))return false;
   if(d.valve)for(const k of ["ch","stroke","db","hys","stick"])if(L.v[k]!==d.valve[k])return false;
+  if(id==="PDC-304")return !(S.stm&&S.stm.sp4!=null);   // (v6.13: back on AUTO's speed schedule)
   if(!d.cas&&id!=="FV-201"&&Math.abs(L.sp-vSp0(d))>1e-9)return false;return true;}
 // standard and settled: the game's own model takes the loop back, from where it is
 function vHand(dt){const W=S.vlv;const done=new Set();
@@ -185,6 +194,7 @@ function vUntouch(g){const W=S.vlv,We=weState();
     if(id==="FV-201"){We.vl=false;We.m="auto";const sp=Math.max(S.pmSpeed,P.minSpeed*0.5);We.c=1;const base=weValveAuto(sp);We.c=clamp(base>0?We.v/base:1,0.5,1.6);}
     if(id==="LV-202")We.L=L.y/100*WE.silo;
     if(id==="QC-300"&&S.dry)S.dry.m=L.y;
+    if(id==="PDC-304"&&S.stm)S.stm.dp[2]=L.y;
     delete W.lp[id];W.calm[id]=0;W.harm[id]=0;}
   W.any=Object.keys(W.lp).length>0;if(!W.any){W.B=null;W.mcLow=0;}}
 // hand a loop (its whole group) to this model, from where the game has it
@@ -198,6 +208,7 @@ function vlvSetMode(id,m){const d=VD[id];if(!d||!vlvOn())return;if(m==="CAS"&&!d
   if(S.vlv.bt&&S.vlv.bt.id===id)vlvBumpStop(true);L.m=m;L.bump=1;log(`${id} ${d.name.toLowerCase()} to ${m}`,"ok");}
 function vlvSetSP(id,v){const d=VD[id];if(!d||!vlvOn())return;const [a,b]=vF(d.spLim);v=clamp(+v,a,b);
   if(id==="FV-201"){bwSetTrim(v);const L=S.vlv&&S.vlv.lp[id];if(L)L.sp=bwSp();return;}
+  if(id==="PDC-304"){const L=vlvTouch(id);stmSetSp(v);if(L&&L.m!=="CAS")L.sp=stmSp();return;}   // (v6.13: a fixed setpoint instead of AUTO's speed schedule)
   const L=vlvTouch(id);if(L.m==="CAS")return;L.sp=v;}
 function vlvSetOP(id,v){const d=VD[id];if(!d||!vlvOn())return;const L=vlvTouch(id);if(L.m!=="MAN"){if(S.vlv.bt&&S.vlv.bt.id===id)vlvBumpStop(true);L.m="MAN";L.bump=1;}L.op=clamp(+v,0,100);}
 function vlvSetTune(id,o){const d=VD[id];if(!d||!vlvOn())return;const L=vlvTouch(id);
@@ -207,6 +218,7 @@ function vlvSetValve(id,o){const d=VD[id];if(!d||!d.valve||!vlvOn()||!S.free)ret
   if(o.ch)L.v.ch=o.ch==="eq"?"eq":"lin";if(o.stroke!=null)L.v.stroke=clamp(+o.stroke,2,60);if(o.db!=null)L.v.db=clamp(+o.db,0,5);if(o.hys!=null)L.v.hys=clamp(+o.hys,0,5);if(o.stick!=null)L.v.stick=clamp(+o.stick,0,10);return true;}
 // back on standard (the whole group): tuning, valve, mode and setpoint
 function vlvRevert(id,quiet){const W=S.vlv;if(!W)return;for(const x of VGRP(id)){const L=W.lp[x],d=VD[x];if(!L)continue;
+    if(x==="PDC-304"&&S.stm)S.stm.sp4=null;
     Object.assign(L,{kc:d.tune.kc,ti:d.tune.ti,td:d.tune.td,pf:0,m:vDefMode(d),bump:1});if(d.valve)L.v=Object.assign({},d.valve);if(!d.cas&&x!=="FV-201")L.sp=vSp0(d);if(x==="FV-201")L.sp=bwSp();}
   if(W.bt&&VGRP(id).includes(W.bt.id))W.bt=null;if(!quiet)log(`${VGRP(id).join(" / ")} back on standard tuning`,"ok");}
 // the crew's hard reset after a knob incident on the pulper (07b knobSettle): the game's model takes the loop straight back
@@ -296,13 +308,15 @@ const VCHAL=[
   {id:"inner",title:"Inner first",loops:["QC-300","PV-303"],min:30,start:{"QC-300":{kc:0.24,ti:3,td:0},"PV-303":{kc:2.6,ti:0.12,td:0}},ev:[[3,"dem",15],[18,"dem",-10]],
     brief:"The moisture loop (outer) sets the 3rd section steam (inner) on CAS. The drying load rises at 3 min and falls at 18 min. Tune the inner loop first."},
   {id:"patience",title:"Patience",loops:["FV-201"],min:40,start:{"FV-201":{kc:0.5,ti:0.25,td:0}},ev:[[2,"mr",1.04]],
-    brief:"The basis weight loop reads 3 minutes late. The machine chest thickens 4% at 2 min. Aggressive tuning goes unstable: find the fastest calm response."}];
+    brief:"The basis weight loop reads 3 minutes late. The machine chest thickens 4% at 2 min. Aggressive tuning goes unstable: find the fastest calm response."},
+  {id:"syphon",title:"Hold the syphons",loops:["PDC-304"],min:20,start:{"PDC-304":{kc:0.12,ti:2.5,td:0}},ev:[[2,"sp","PDC-304",42],[11,"sp","PDC-304",31]],
+    brief:"The 3rd section's syphon ΔP loop is lazy: the machine speeds up at 2 min (setpoint to 42 kPa) and slows at 11 min (31 kPa). Short of the setpoint the cans flood. A quick loop with a small dead time: make it keep up."}];
 const VCH=Object.fromEntries(VCHAL.map(c=>[c.id,c]));
-function vSbB(){return {run:true,pd:false,cd:0,qo:1,bsp:bwStd(),ustd:1,u0:1,mr:1,cv:1,ff:0,net:0,dem:120,km:0,ceil:180,hdr:1,lf:1,st3:120};}
+function vSbB(){return {run:true,pd:false,cd:0,qo:1,bsp:bwStd(),ustd:1,u0:1,mr:1,cv:1,ff:0,net:0,dem:120,km:0,ceil:180,hdr:1,lf:1,st3:120,tcmax:60};}
 // a challenge run: tune = {loopId:{kc,ti,td}}; returns the trace (per second) and the score
 function vlvChallenge(cid,tune){const c=VCH[cid],B=vSbB(),W={lp:{},B,acc:{mco:0,make:0,over:0}};
-  const fsp={"NV-101":5,"LV-104":69,"FV-201":B.bsp,"QC-300":8,"PV-303":120};
-  const fsy={"NV-101":[50,5],"LV-104":[55,69],"FV-201":[50,B.bsp],"QC-300":[40,8],"PV-303":[vchInv(VD["PV-303"].valve,120/VLV.Pmax)*100,120]};
+  const fsp={"NV-101":5,"LV-104":69,"FV-201":B.bsp,"QC-300":8,"PV-303":120,"PDC-304":35};
+  const fsy={"NV-101":[50,5],"LV-104":[55,69],"FV-201":[50,B.bsp],"QC-300":[40,8],"PV-303":[vchInv(VD["PV-303"].valve,120/VLV.Pmax)*100,120],"PDC-304":[50,35]};
   for(const id of c.loops){const d=VD[id],[op,y]=fsy[id];const L=vNew(Object.assign({},d,{tune:Object.assign({},d.tune,c.start[id],tune&&tune[id])}),{m:d.cas?"CAS":"AUTO",sp:fsp[id],op,pos:op,y,pv:y});
     if(c.valve&&c.valve[id])Object.assign(L.v,c.valve[id]);W.lp[id]=L;}
   const main=c.loops[0],[lo,hi]=vSpan(VD[main]);
@@ -319,9 +333,9 @@ function vlvChallenge(cid,tune){const c=VCH[cid],B=vSbB(),W={lp:{},B,acc:{mco:0,
   return {trace:o,iae,trav,rev,score:unstable?Infinity:score,unstable};}
 // the reference: what a careful engineer gets. Lambda (moderate) from the true model, then a coarse search around it,
 // loop by loop, inner loops first (headless; once per challenge, cached)
-const VCHREF={shake:45.41,wake:13.50,stick:34.87,inner:24.90,patience:16.69};   // (v6.9.2: precomputed, the same within 1% on every grade; the search below froze the first Run for ~0.5 s, more on a phone)
+const VCHREF={shake:45.41,wake:13.50,stick:34.87,inner:24.90,patience:16.69,syphon:8.97};   // (v6.13: syphon)   // (v6.9.2: precomputed, the same within 1% on every grade; the search below froze the first Run for ~0.5 s, more on a phone)
 function vlvChRef(cid){if(VCHREF[cid]!=null)return VCHREF[cid];const c=VCH[cid];
-  const fit={"NV-101":{type:"fo",K:-0.8,tau:20,th:0.5},"LV-104":{type:"int",Ki:0.25,th:0.08},"FV-201":{type:"fo",K:1,tau:0.33,th:3},"QC-300":{type:"fo",K:-2.25,tau:3,th:1.3},"PV-303":{type:"fo",K:1.68,tau:0.5,th:0.04}};
+  const fit={"PDC-304":{type:"fo",K:0.875,tau:0.33,th:0.05},"NV-101":{type:"fo",K:-0.8,tau:20,th:0.5},"LV-104":{type:"int",Ki:0.25,th:0.08},"FV-201":{type:"fo",K:1,tau:0.33,th:3},"QC-300":{type:"fo",K:-2.25,tau:3,th:1.3},"PV-303":{type:"fo",K:1.68,tau:0.5,th:0.04}};
   const t={};for(const id of c.loops)t[id]=vLambda(VD[id],fit[id],1,"PI");let best=vlvChallenge(cid,t).score;
   const order=c.loops.slice().reverse();
   for(let pass=0;pass<2;pass++)for(const id of order){const b0=Object.assign({},t[id]);let bt=b0;

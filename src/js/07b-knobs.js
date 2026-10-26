@@ -10,7 +10,7 @@
    Rules: S.knob does not exist until the player changes a knob, and knobTick() returns at once while every knob is at
    its ideal and the process has settled, so an untouched game draws no dice and changes nothing (same checksum).
    Incident durations use their own dice stream ("knob"); the shared upset streams are never touched. Zen: no knobs. */
-const KNOB_IDEAL={pulp:50,ref:60,agit:100,gbox:1,lvac:5,vac:30,press:100,osc:100,couch:1,cbox:-6,draw:1.5,st1:70,gm:1,gt:0,incomer:1,hood:0};
+const KNOB_IDEAL={pulp:50,ref:60,agit:100,gbox:1,lvac:5,vac:30,press:100,osc:100,couch:1,cbox:-6,draw:1.5,st1:70,gm:1,gt:0,incomer:1,hood:0,tcv:100};
 const KNOBS=[
   {id:"pulp",name:"Pulper dilution valve",area:"SPOT",where:"Pulper, stock prep",field:true,unit:"% open",min:0,max:100,step:1,
     tip:"Dilution water into the pulper tub: NV-101, which holds the consistency on AUTO. Moving it here puts NV-101 on MAN at that opening."},
@@ -45,6 +45,10 @@ const KNOBS=[
     tip:"Speed difference between the presses and the first dryers, which keeps the open draw taut. Standard is 1.5%. More draw stretches the sheet and lowers ring crush; less lets it flutter and break more often."},
   {id:"st1",name:"1st section steam",area:"DET",where:"Dry end DCS",dcs:true,unit:"kPa",min:0,max:250,step:5,
     tip:"Steam pressure in the first dryer section. The 3rd section is on automatic moisture control. Standard is 70 kPa."},
+  // v6.13: the thermocompressor's motive steam hand valve, in the dryer basement (07m): pinched, PDC-304 can't hold the
+  // 3rd section's syphon ΔP and the cans flood from the back of the section forward
+  {id:"tcv",name:"Thermocompressor motive valve",area:"STM",where:"Dryer basement, the motive steam line to TC-304",field:true,unit:"% open",min:0,max:100,step:5,
+    tip:"The hand valve on the motive steam line to the thermocompressor. Normally wide open: PDC-304 throttles the motive steam itself. Pinch it and the thermocompressor can't hold the syphons' differential pressure, and the dryer cans start to fill with condensate."},
   {id:"hood",name:"Dryer hood doors",area:"DET",where:"Dryer hood, tending side",field:true,
     tip:"The lifting doors on the front of the dryer hood. They go up on their own on a sheet break or whenever the machine is down, and drop again once the sheet is back on. Raised here, they stay up while the machine runs: you can see the cans, but the hood leaks heat and the dryers burn more steam."},
 ];
@@ -91,9 +95,10 @@ const cboxOff=cb=>Math.min(1,((cb??CBOX.best)-CBOX.best)/CBOX.span)**2,cboxVac=c
 const FZ={gb:1,lv:5,in:3.386,pv:(gb,lv,hv)=>{const hi=hv/3.386;return {kw:120+14*gb+16*lv+22*hi,gv:clamp(12+gb/5*70,0,100),lv:clamp(10+(lv-2)/8*72,0,100),hv:clamp(8+(hi-1.5)/16.2*78,0,100)};}};
 const fzNow=()=>{const x=S.knob&&S.knob.x,gb=x&&x.gb!=null?x.gb:FZ.gb,lv=x&&x.lv!=null?x.lv:FZ.lv,hv=x?x.vac:30;return {gb,lv,hi:hv/FZ.in,kw:FZ.pv(gb,lv,hv).kw};};   // (cheap: the 3D labels)
 const eGb=gb=>{const d=((gb??FZ.gb)-FZ.gb)/4;return 1-(d<0?0.8:0.05)*d*d;},eLv=lv=>{const d=((lv??FZ.lv)-FZ.lv)/5;return 1-(d<0?0.12:0.05)*d*d;};
-function dewater(fr,vac,pl,jv,jh,cb,gb,lv){
+function dewater(fr,vac,pl,jv,jh,cb,gb,lv,sb){
   const eJet=1-0.25*jv*jv-0.15*jh*jh,dv=(vac-30)/30,eVac=1-(dv<0?0.58:0.15)*dv*dv,eRef=eDrain(csfOf(fr)),eBox=1-CBOX.dcs/19*cboxOff(cb),eZ=eGb(gb)*eLv(lv);   // (v6.8: drainage follows freeness, 07g)
-  const cs=clamp(19*eJet*eVac*eRef*eBox*eZ+CD.sbCouch*LV("steambox"),8,27.5),   /* (v6.11: the steam box, 07k) */pb=44+4*LV("shoe");
+  const eSb=1-0.03*Math.max(0,sb||0);   // (v6.13: a wider slice runs a thinner headbox: more water to drain, 07n)
+  const cs=clamp(19*eJet*eVac*eRef*eBox*eZ*eSb+CD.sbCouch*LV("steambox")+shCsAdd(),8,27.5),   /* (v6.11: the steam box, 07k; v6.13: broke over 15%, 07n) */pb=44+4*LV("shoe")+shPsAdd();   // (v6.13: a felt filled with stickies)
   const lt=pl<100?0.2*(pl-100):pl<=130?0.08*(pl-100):2.4-0.3*(pl-130);
   const ps=clamp(pb+(cs-19)+lt,30,56),wpt=p=>(1-DRY.m0/100)/(p/100)-1;
   return {cs,ps,W:wpt(ps)/wpt(pb),eJet,eVac,eRef,eBox,eZ};}
@@ -103,7 +108,7 @@ function knobState(){if(!S.knob){S.knob={v:Object.assign({},KNOB_IDEAL,{draw:dra
     any:false,cs:0,wear:0,gacc:0,gm0:0,H:{},harm:{},off:0,offWhy:"",sf:1,a:1,W:1,feed:1,brk:1,edge:0,gtrav:0,inc:[],warned:{},moved:{}};}
   if(S.knob.pmPrev==null)S.knob.pmPrev=S.pm;if(S.rng&&S.rng.knob==null)S.rng.knob=(S.seed^0x6b9f3c21)|0;return S.knob;}
 function knobVal(id){if(id==="pulp"){const o=vlvPulpOP();if(o!=null)return o;}const K=S.knob,d=id==="draw"?drawStd():KNOB_IDEAL[id];return K?(K.v[id]??d):d;}   // (v6.9: the pulper dilution valve is NV-101's)
-function knobAt(id){const K=S.knob;if(!K)return true;if(id==="pulp"&&vlvT("NV-101"))return false;if(id==="slice")return !K.v.sv&&!K.v.sh;if(id==="zones")return K.z.every(v=>v===0);if(id==="guide")return K.v.gm===1&&K.v.gt===0;if(id==="draw")return Math.abs((K.v.draw??drawStd())-drawStd())<0.001;return (K.v[id]??KNOB_IDEAL[id])===KNOB_IDEAL[id];}
+function knobAt(id){const K=S.knob;if(!K)return true;if(id==="pulp"&&vlvT("NV-101"))return false;if(id==="slice")return !K.v.sv&&!K.v.sh&&Math.abs(hbJw()-HB.jw0)<1e-9;if(id==="zones")return K.z.every(v=>v===0);if(id==="guide")return K.v.gm===1&&K.v.gt===0;if(id==="draw")return Math.abs((K.v.draw??drawStd())-drawStd())<0.001;return (K.v[id]??KNOB_IDEAL[id])===KNOB_IDEAL[id];}
 // the player moves a knob (UI): v is the new value (zones: [i,v]; guide: {gm,gt})
 function knobSet(id,v){if(S.zen)return;const K=knobState();
   if(id==="zones"){const [i,z]=v;K.z[i]=clamp(Math.round(z),-10,10);}
@@ -112,14 +117,14 @@ function knobSet(id,v){if(S.zen)return;const K=knobState();
   else{const d=KNOBN[id];K.v[id]=d&&d.min!=null?clamp(+v,d.min,d.max):+v;}
   if(id==="incomer"&&!K.v.incomer)knobArc();   // (v6.10 t5: opened under load: an arc flash, at once)
   K.any=true;K.moved[id]=S.t;}
-function knobFmt(id){const K=S.knob,d=KNOBN[id];if(id==="slice"){const s=slcGet();return `B ${(12+3*s.v).toFixed(1)} mm · L ${s.h>=0?"+":""}${(4*s.h).toFixed(1)} mm`;}if(id==="zones"){const z=K?K.z:[];const n=z.filter(v=>v!==0).length;return n?`${n} zone${n>1?"s":""} trimmed`:"all zones 0%";}
+function knobFmt(id){const K=S.knob,d=KNOBN[id];if(id==="slice"){const s=slcGet();return `B ${(12+3*s.v).toFixed(1)} mm · L ${s.h>=0?"+":""}${(4*s.h).toFixed(1)} mm · J/W ${hbJw().toFixed(3)}`;}if(id==="zones"){const z=K?K.z:[];const n=z.filter(v=>v!==0).length;return n?`${n} zone${n>1?"s":""} trimmed`:"all zones 0%";}
   if(id==="guide"){const v=K?K.v:KNOB_IDEAL;return (v.gm?"AUTO":"MANUAL")+(v.gt?` · trim ${v.gt>0?"+":""}${v.gt} mm`:"");}
   if(id==="couch")return knobVal("couch")?"running":"stopped";
   if(id==="incomer")return knobVal("incomer")?"closed":"open";
   if(id==="hood")return knobVal("hood")?"raised":"closed";
   const v=knobVal(id)*(d.dk||1);return `${v.toFixed(d.dp||0)} ${d.unit}`;}
 function knobReset(id,quiet){const K=S.knob;if(!K)return;
-  if(id==="slice"){K.v.sv=K.v.sh=0;if(G3.SLC){G3.SLC.v=G3.SLC.h=0;G3.SLC.dirty=true;}}
+  if(id==="slice"){K.v.sv=K.v.sh=0;if(S.hb)S.hb.jw=HB.jw0;if(G3.SLC){G3.SLC.v=G3.SLC.h=0;G3.SLC.dirty=true;}}
   else if(id==="zones")K.z.fill(0);else if(id==="guide"){K.v.gm=1;K.v.gt=0;K.gacc=0;}else K.v[id]=id==="draw"?drawStd():KNOB_IDEAL[id];
   if(id==="pulp")vlvRevert("NV-101",quiet);   // (v6.9)
   if(!quiet)K.any=true;}
@@ -138,7 +143,7 @@ function knobFix(ids,head,who){const K=S.knob;if(!K)return;ids=ids.filter(id=>!k
 // in the chest still have to work their way out)
 function knobSettle(id){const K=S.knob,x=K.x;x.bs=0;x.bk=0;K.H={};
   if(id==="pulp"){x.cp=5;vlvSettle("NV-101");}else if(id==="ref"){x.fr=0.5;x.ch=0;}else if(id==="vac"){x.vac=30;K.wear=0;}else if(id==="press"){x.pl=100;x.cr1=x.cr=0;}
-  else if(id==="draw"){x.dl1=x.dl=x.dt=0;}else if(id==="st1")x.d1=0;else if(id==="agit")x.sw*=0.3;else if(id==="guide"){K.edge=0;K.gacc=0;}else if(id==="couch")K.cs=0;else if(id==="slice")x.jv=x.jh=0;else if(id==="cbox")x.cb=CBOX.best;else if(id==="gbox")x.gb=FZ.gb;else if(id==="lvac")x.lv=FZ.lv;}
+  else if(id==="draw"){x.dl1=x.dl=x.dt=0;}else if(id==="st1")x.d1=0;else if(id==="agit")x.sw*=0.3;else if(id==="guide"){K.edge=0;K.gacc=0;}else if(id==="couch")K.cs=0;else if(id==="slice")x.jv=x.jh=x.sb=0;else if(id==="cbox")x.cb=CBOX.best;else if(id==="gbox")x.gb=FZ.gb;else if(id==="lvac")x.lv=FZ.lv;}
 // a knob-caused breakdown. Like trigger() but with the "knob" dice for its length, no civics card and no leader auto-fix
 // (the knob is the root cause, and the crew resets it when the job is done). Uses the upset's own 3D effect and repair bill.
 function knobTrig(id,cause,why){if(active(id))return false;const K=S.knob,e=EV[id];if(S.rng.knob==null)S.rng.knob=(S.seed^0x6b9f3c21)|0;
@@ -150,10 +155,11 @@ function knobTrig(id,cause,why){if(active(id))return false;const K=S.knob,e=EV[i
   if(e.start&&id!=="refclash")e.start(inc);
   const bill=(REPAIR[id]||0)*P.repairMul*(inc.billMul||1);if(bill>0){spend(bill,"repairs");inc.bill=bill;inc.note=(inc.note?inc.note+" · ":"")+`repair bill ${money(bill)}`;}
   log((why||e.head)+(inc.note?` (${inc.note})`:""),"bad");K.inc.push({id,real:inc.real,cause});S.M=mods();return true;}
+const KBC={draw:"draw",agit:"stock",vac:"cloth",crush:"cloth",wet:"dry",dry:"dry"};   // (v6.13 t3: each knob break's cause in the break log, 07n BRKN)
 // a knob-caused sheet break (no dice from the break stream: those keep their place for the random breaks)
-function knobBreak(type,why){if(S.pm!=="run")return false;S.pm="break";S.brkType=type;const r=rand("knob");
+function knobBreak(type,why,ck){if(S.pm!=="run")return false;S.pm="break";S.brkType=type;const r=rand("knob");
   S.breakLeft=2*(type==="reel"?4+r*6:type==="dryer"?12+r*14:26+r*20);S.breakTotal=S.breakLeft;S.tot.breaks++;enqueue("brk");AUDIO.sfx("snap",2500);
-  log(why,"warn");brkNote();return true;}
+  log(why,"warn");brkNote();brLog1(type,ck||"stock");return true;}
 // a break before the presses dumps the whole sheet into the couch pit: with the agitator off, settled fiber lets it overflow
 function knobCouch(){const K=S.knob;if(!K||S.zen||S.brkType!=="press"||K.cs<0.5||active("couchpit"))return;
   if(knobTrig("couchpit",["couch"],"Couch pit overflow! Broke from the sheet break is pouring over the pit edge onto the machine floor."))S.breakLeft+=60;}
@@ -163,7 +169,7 @@ function knobArc(){if(S.zen||active("arcflash"))return;
   if(knobTrig("arcflash",["incomer"],"Arc flash at the MCC! The main incomer was opened under load: all 480 V to the drive lineups is lost and every drive has stopped. The electrical tech is on the way to reset it.")&&S.rel){
     for(const A of ASSETS){const a=S.rel.a[A.id];a.dh=Math.max(0,a.dh-4-rlyHash(A.id,Math.floor(S.t),"arc")*6);}}}
 // mods() calls this last (04-upsets.js): nothing changes while no knob has been touched
-function knobMods(m){const K=S.knob;if(!K||!K.any||S.zen)return;if(K.feed<1)m.feedMul*=K.feed;if(K.brk>1)m.breakMul*=K.brk;}
+function knobMods(m){const K=S.knob;if(!K||!K.any||S.zen)return;if(K.feed<1)m.feedMul*=K.feed;}   // (v6.13: tight refining's breaks are in the break risk's stock swings, 07n)
 // share of production going to the beater because of a knob (07-sim-step.js)
 function knobOff(){const K=S.knob;return K&&K.any&&!S.zen?K.off:0;}
 // extra dryer steam per ton (more water into the dryers, or 1st section steam turned up), as energy cost (07-sim-step.js)
@@ -198,8 +204,8 @@ function knobTick(dt){const K=S.knob;if(!K||!K.any||S.zen)return;
   // ---- water into the dryers and the steam that dries it ----
   // (only the refiner can make it drier than normal, and then only the moisture moves: no knob ever saves steam)
   // v6.5.5: the dewatering chain (dewater(), above): the slice's jet, the table, the vacuum, the couch and the presses
-  {const s=slcGet();x.jv=L(x.jv||0,s.v,5);x.jh=L(x.jh||0,s.h,5);}
-  const Dw=dewater(x.fr,x.vac,x.pl,x.jv,x.jh,x.cb,x.gb,x.lv),W=Dw.W;x.cs=Dw.cs;x.ps=Dw.ps;
+  {const s=slcGet();x.jv=L(x.jv||0,jwDev(),5);x.jh=L(x.jh||0,s.h,5);x.sb=L(x.sb||0,s.v,5);}   // (v6.13: the jet's speed is the fan pump's J/W, the slice opening B the headbox consistency, 07n)
+  const Dw=dewater(x.fr,x.vac,x.pl,x.jv,x.jh,x.cb,x.gb,x.lv,x.sb),W=Dw.W;x.cs=Dw.cs;x.ps=Dw.ps;
   x.d1=L(x.d1,(v.st1-70)/130*0.35,8);
   // v6.5 b5: moisture, the 3rd section and the boiler header come from the dryer model (07d), which now also sees speed
   const a0=clamp(W-x.d1,0.7,1.3),Dr=dryState();K.W=W;K.d1x=x.d1;K.a=Dr.st3/(DRY.base[C.grade]||DRY.base["24"]);
@@ -224,7 +230,7 @@ function knobTick(dt){const K=S.knob;if(!K||!K.any||S.zen)return;
   K.feed=x.cp<4?clamp(x.cp/4,0.5,1):1;
     K.brk=1+Math.max(0,x.fr-0.6)*4;   // (v6.12.1-t7: the slack-draw breaks are in mods(), 04: drawBrk(), against the draw the speed needs)
   // ---- consequences: breaks (deterministic: a hazard builds and the sheet goes when it is full) ----
-  const haz=(k,rate,type,why,hk)=>{if(rate<=0){H[k]=Math.max(0,(H[k]||0)-dt/120);return;}H[k]=(H[k]||0)+dt/60*rate;if(H[k]>=1&&run){H[k]=0;knobBreak(type,why);const h=hk||k;(K.harm[h]||(K.harm[h]={t:0,n:0})).n++;}};
+  const haz=(k,rate,type,why,hk)=>{if(rate<=0){H[k]=Math.max(0,(H[k]||0)-dt/120);return;}H[k]=(H[k]||0)+dt/60*rate;if(H[k]>=1&&run){H[k]=0;knobBreak(type,why,KBC[k]);const h=hk||k;(K.harm[h]||(K.harm[h]={t:0,n:0})).n++;}};
   haz("draw",x.dt*3,"dryer","Sheet break in the open draw: the sheet snapped going into the dryers.");
   haz("agit",x.sw>0.7?(x.sw-0.7)*4:0,"press","Sheet break at the wet end: a heavy spot in the sheet tore at the couch.");
   haz("vac",x.vac<15?(15-x.vac)/10*1.5:0,"press","Sheet break at the wet end: the sheet left the couch too wet to hold together.");
@@ -249,18 +255,20 @@ function knobTick(dt){const K=S.knob;if(!K||!K.any||S.zen)return;
   tr("vac",(H.vac||0)>0.2,240,()=>["vac"],"Wet-end breaks.","The wet-end operator");
   tr("silo",v.vac>30&&!!S.we&&S.we.L<WE.silo*WE.makeL,120,()=>["vac"],"The white water silo keeps running low: the vacuum boxes are pulling too much to the seal pit.","The wet-end operator");   // (v6.8, 07g)
   tr("steam",K.sf>1.08,720,()=>knobSteamCulprits(),"The steam bill is well up on the week.","The energy engineer");
+  tr("stfi",!knobAt("slice")&&run&&(()=>{const q=qualMeasure();return q.stfi<stfiSpec()||q.rct<rctSpec();})(),120,()=>["slice"],"QCS: the sheet is weak across the machine (STFI CD, ring crush): the jet is rushing or dragging hard and the fibers line up with the machine.","The process engineer");   // (v6.13, 07n)
+  tr("tcv",!knobAt("tcv")&&stmFlooded()>0,120,()=>["tcv"],"Dryer cans flooding: the 3rd section can't hold its syphon ΔP.","The dry-end operator");   // (v6.13, 07m)
   tr("feed",K.feed<0.95,480,()=>["pulp"],"Stock prep can't keep the chest up: the pulper is running thin.","Stock prep");
   tr("moist",F.wet>0||F.dry>0||(K.harm.moist&&K.harm.moist.n>0),180,()=>F.wet>0?knobSteamCulprits():["st1","ref"].filter(i=>!knobAt(i)),F.wet>0?"QCS: the sheet is coming off the reel wet.":"QCS: the sheet is coming off the reel over-dried.","The process engineer");
   // ---- all back at ideal and settled: stop running ----
-  if(!knobsOff().length&&!chemOn()&&!K.inc.length&&K.cs<0.01&&K.wear<0.001&&Math.abs(x.cp-5)<0.02&&Math.abs(x.fr-0.5)<0.002&&x.ch<0.01&&x.sw<0.005&&Math.abs(x.vac-30)<0.05&&Math.abs(x.pl-100)<0.05&&Math.abs((x.cb??CBOX.best)-CBOX.best)<0.05&&Math.abs((x.gb??FZ.gb)-FZ.gb)<0.01&&Math.abs((x.lv??FZ.lv)-FZ.lv)<0.02&&knobAt("slice")&&Math.abs(x.jv||0)<0.005&&Math.abs(x.jh||0)<0.005&&x.st<0.005&&Math.abs(x.d1)<0.001&&Math.abs(x.m-DRY.m0)<0.02&&x.bs<0.01&&x.dl<0.002&&(x.dl1||0)<0.002&&(x.cr||0)<0.002&&(x.cr1||0)<0.002&&x.dt<0.002&&x.z.every(z=>Math.abs(z)<0.02)&&K.off===0){
+  if(!knobsOff().length&&!chemOn()&&!K.inc.length&&K.cs<0.01&&K.wear<0.001&&Math.abs(x.cp-5)<0.02&&Math.abs(x.fr-0.5)<0.002&&x.ch<0.01&&x.sw<0.005&&Math.abs(x.vac-30)<0.05&&Math.abs(x.pl-100)<0.05&&Math.abs((x.cb??CBOX.best)-CBOX.best)<0.05&&Math.abs((x.gb??FZ.gb)-FZ.gb)<0.01&&Math.abs((x.lv??FZ.lv)-FZ.lv)<0.02&&knobAt("slice")&&Math.abs(x.jv||0)<0.005&&Math.abs(x.jh||0)<0.005&&Math.abs(x.sb||0)<0.005&&knobAt("tcv")&&!shOff()&&x.st<0.005&&Math.abs(x.d1)<0.001&&Math.abs(x.m-DRY.m0)<0.02&&x.bs<0.01&&x.dl<0.002&&(x.dl1||0)<0.002&&(x.cr||0)<0.002&&(x.cr1||0)<0.002&&x.dt<0.002&&x.z.every(z=>Math.abs(z)<0.02)&&K.off===0){
     K.any=false;K.off=0;K.sf=1;K.feed=1;K.brk=1;K.edge=0;K.gtrav=0;K.H={};K.harm={};S.M=mods();}
 }
 const KOFFN={wet:"sheet too wet",dry:"sheet over-dried",cd:"CD moisture streaks",bw:"basis weight swings",crush:"crush marks",stripes:"stripes from the pick-up felt",wrinkles:"wrinkles in the reel",floc:"flocs in the sheet (poor formation)"};
 // what is putting the extra water into the dryers (or the extra steam on): the knobs the engineers will trace
 function knobSteamCulprits(){const K=S.knob;if(!K)return [];const v=K.v,c=[];
   // (v6.5.5: each knob's share of the extra water, from the dewatering chain with that knob put back to standard)
-  const sl=slcGet(),cb=v.cbox??CBOX.best,gb=v.gbox??FZ.gb,lv=v.lvac??FZ.lv,W0=dewater(gapOf(refEff(v.ref)),v.vac,v.press,sl.v,sl.h,cb,gb,lv).W,dW=(o)=>W0-dewater(o.fr??gapOf(refEff(v.ref)),o.vac??v.vac,o.pl??v.press,o.jv??sl.v,o.jh??sl.h,o.cb??cb,o.gb??gb,o.lv??lv).W;
-  if(!knobAt("ref"))c.push(["ref",dW({fr:0.5})]);if(!knobAt("vac"))c.push(["vac",dW({vac:30})]);if(!knobAt("press"))c.push(["press",dW({pl:100})]);if(!knobAt("slice"))c.push(["slice",dW({jv:0,jh:0})]);if(!knobAt("cbox"))c.push(["cbox",dW({cb:CBOX.best})]);if(!knobAt("gbox"))c.push(["gbox",dW({gb:FZ.gb})]);if(!knobAt("lvac"))c.push(["lvac",dW({lv:FZ.lv})]);
+  const sl=slcGet(),jd=jwDev(),cb=v.cbox??CBOX.best,gb=v.gbox??FZ.gb,lv=v.lvac??FZ.lv,W0=dewater(gapOf(refEff(v.ref)),v.vac,v.press,jd,sl.h,cb,gb,lv,sl.v).W,dW=(o)=>W0-dewater(o.fr??gapOf(refEff(v.ref)),o.vac??v.vac,o.pl??v.press,o.jv??jd,o.jh??sl.h,o.cb??cb,o.gb??gb,o.lv??lv,o.sb??sl.v).W;
+  if(!knobAt("ref"))c.push(["ref",dW({fr:0.5})]);if(!knobAt("vac"))c.push(["vac",dW({vac:30})]);if(!knobAt("press"))c.push(["press",dW({pl:100})]);if(!knobAt("slice"))c.push(["slice",dW({jv:0,jh:0,sb:0})]);if(!knobAt("cbox"))c.push(["cbox",dW({cb:CBOX.best})]);if(!knobAt("gbox"))c.push(["gbox",dW({gb:FZ.gb})]);if(!knobAt("lvac"))c.push(["lvac",dW({lv:FZ.lv})]);
   if(v.st1!==70)c.push(["st1",Math.abs(v.st1-70)/130*0.35]);if(v.hood)c.push(["hood",HOOD_STEAM]);
   c.sort((a,b)=>b[1]-a[1]);return c.filter(r=>r[1]>0.02).map(r=>r[0]);}
 // readings for the DCS and QCS screens. With S.knob missing everything reads at its standard value.

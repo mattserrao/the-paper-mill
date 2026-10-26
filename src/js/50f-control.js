@@ -143,7 +143,8 @@ function qcsBuild(b){
   b.appendChild(kEl("div","qcsdef",`<div class="dcssub">Web inspection</div><div class="qcsgrid" id="qcsDef"></div>`));
   b.appendChild(kEl("div","dcsctl",`<div class="dcssub">Spec sheet</div><div class="qtab" id="qcsSpec"></div>`));
   b.appendChild(kEl("div","dcsctl",`<div class="dcssub">Off-spec log · newest first</div><div class="qtab" id="qcsLog"></div>`));
-  b.appendChild(kEl("div","dcsctl",`<div class="dcssub">Grade changes</div><div class="qtab" id="qcsGc"></div>`));}
+  b.appendChild(kEl("div","dcsctl",`<div class="dcssub">Grade changes</div><div class="qtab" id="qcsGc"></div>`));
+  spcBuild(b);}   // v6.13 SPC (50m)
 // v6.11 the CD actuator rows: AUTO / MAN and a zone slider each (built once per layout, values synced)
 const CDROWS=[["dil","Headbox dilution","weight streaks",-100,100],["sb","Steam box","wet streaks, wet edges",0,100],["sp","Spray boom","dry streaks",0,100]];
 function cdActSync(force){const A=$("qcsAct");if(!A||!cdOn())return;const C2=cdState(),key=CDROWS.map(r=>r[0]+(C2.man[r[0]]?1:0)).join("")+(sbHave()?"s":"");
@@ -182,10 +183,11 @@ function qcsRefresh(){const Q=S.q||{},put=(id,h)=>{const e=$(id);if(e&&e._h!==h)
   put("qcsBk",`<div><small>On spec · the run</small><b>${made>0.5?((1-off/made)*100).toFixed(1)+" %":"–"}</b><small>${Math.round(made-off).toLocaleString()} t good</small></div>
     <div><small>To the beater today</small><b>${Math.round(today)} t</b><small>${Math.round(S.tot.broke||0).toLocaleString()} t this run</small></div>
     <div><small>Beater bay</small><b>${Math.round(Q.bank||0)} t</b><small>waiting to repulp</small></div><div><small>Repulped</small><b>${Math.round(S.tot.repulped||0).toLocaleString()} t</b><small>back to the stock chest</small></div>`);
-  put("qcsSpec",`<table><thead><tr><th>Grade</th><th>Basis weight</th><th>Ring crush</th><th>Moisture</th><th>Color</th></tr></thead><tbody>${Object.entries(QSPEC).map(([g,s])=>{const b=qBw(g);return `<tr${g===C.grade?' class="cur"':""}><td>${g}${g===C.grade?" · on the machine":""}</td><td>${b[0].toFixed(2)}–${b[1].toFixed(2)} lb</td><td>min ${Math.round((RCT0[g]||60)*WE.rctSpec*10)/10} lbf</td><td>${s.m[0]}–${s.m[1]} %</td><td>${s.shade}</td></tr>`;}).join("")}</tbody></table>`);
+  put("qcsSpec",`<table><thead><tr><th>Grade</th><th>Basis weight</th><th>Ring crush</th>${S.zen?"":"<th>STFI CD</th>"}<th>Moisture</th><th>Color</th></tr></thead><tbody>${Object.entries(QSPEC).map(([g,s])=>{const b=qBw(g);return `<tr${g===C.grade?' class="cur"':""}><td>${g}${g===C.grade?" · on the machine":""}</td><td>${b[0].toFixed(2)}–${b[1].toFixed(2)} lb</td><td>min ${Math.round((RCT0[g]||60)*WE.rctSpec*10)/10} lbf</td>${S.zen?"":`<td>min ${((STFI0[g]||2.6)*SH.stfiSpec).toFixed(2)} kN/m</td>`}<td>${s.m[0]}–${s.m[1]} %</td><td>${s.shade}</td></tr>`;}).join("")}</tbody></table>`);
   const L=(Q.log||[]).slice().reverse(),cur=Q.cur?[{...Q.cur,live:true}]:[];
   put("qcsLog",cur.length||L.length?`<table><thead><tr><th>When</th><th>How long</th><th>Grade</th><th>Why</th><th>To beater</th></tr></thead><tbody>${cur.concat(L).slice(0,15).map(s=>`<tr${s.live?' class="live"':""}><td>${dhm(s.t0)}</td><td>${s.live?"now · ":""}${durTxt(s.t1-s.t0+1)}</td><td>${s.g}</td><td>${s.why}</td><td>${(Math.round(s.tons*10)/10)} t</td></tr>`).join("")}</tbody></table>`:`<p class="dcsfield">No off-spec paper yet this run.</p>`);
   const G=(Q.gc||[]).slice().reverse();
+  spcDraw();   // v6.13 (50m)
   put("qcsGc",G.length?`<table><thead><tr><th>When</th><th>Change</th><th>Transition</th></tr></thead><tbody>${G.slice(0,10).map(c=>`<tr><td>${dhm(c.t)}</td><td>${c.from} → ${c.to}</td><td>${c.tons} t to the beater</td></tr>`).join("")}</tbody></table>`:`<p class="dcsfield">No grade changes yet this run.</p>`);}
 
 /* ---------- PLAN: the planning screen (read only) ---------- */

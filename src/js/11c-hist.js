@@ -31,7 +31,11 @@ const HA=[["yard",()=>S.yard],["yardp",()=>S.yard/P.yardCap*100],["wet",()=>S.we
   ["lateo",()=>S.ord&&!S.zen?S.ord.list.filter(o=>o.st==="open"&&S.t>o.due+ORD.grace).length:null],   // (v6.6; HIST_V 4)
   ["kwh",r=>r.kwh],["hbc",()=>S.pm==="run"&&S.we?S.we.hbc:null],["wwl",()=>S.we?S.we.L/WE.silo*100:null],["rct",()=>S.pm==="run"?QNOW.rct:null],   // (v6.8: appended, older rows read blank)
   ["v101",()=>vlvView("NV-101").pos],["v104",()=>vlvView("LV-104").pos],["v201",()=>vlvView("FV-201").pos],["v202",()=>vlvView("LV-202").pos],["v302",()=>vlvView("PV-302").pos],["v303",()=>vlvView("PV-303").pos],
-  ["rd",()=>S.pm==="run"?dcsRD():null]];   // (v6.9.1: rush / drag, appended)   // (v6.9: valve openings, appended)
+  ["rd",()=>S.pm==="run"?dcsRD():null],
+  // v6.13 Steam and Sheet (07m, 07n), appended
+  ["dp3",()=>S.stm&&!S.zen?S.stm.dp[2]:null],["hoodH",()=>S.stm&&!S.zen&&S.pm==="run"?S.stm.H:null],["cret",()=>S.stm&&!S.zen?S.stm.ret*100:null],
+  ["stpt",()=>S.stm&&!S.zen&&S.pm==="run"?S.stm.kpi.st:null],["kwht",()=>S.stm&&!S.zen&&S.pm==="run"?S.stm.kpi.kwh:null],["stfi",()=>S.pm==="run"&&!S.zen?QNOW.stfi:null],
+  ["depcan",()=>S.stk&&!S.zen?S.stk.can:null],["bklvl",()=>S.bk&&!S.zen?bkLvl()*100:null],["tbf",()=>S.zen?null:(S.tbf||0)*100],["brkr",()=>S.zen||S.pm!=="run"?null:brkRisk().R*SH.rcal]];   // (v6.9.1: rush / drag, appended)   // (v6.9: valve openings, appended)
 const GRADE_IDS=Object.keys(GRADES);
 HA.forEach(([k])=>{HCI["a."+k]=HC.length;HC.push("a."+k);});
 const histR=v=>v==null||v!==v?null:Math.abs(v)>=100?Math.round(v):Math.round(v*100)/100;
