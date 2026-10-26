@@ -124,9 +124,9 @@ def layout(pw):
     ok("DET has the 2nd/3rd section steam valves on CAS under QC-300 (v6.9)", pg.evaluate("()=>!!document.querySelector('#dcsOv [data-vlv=PV-303]')&&__PM.G3.vlv.view('PV-303').m==='CAS'&&__PM.G3.vlv.view('QC-300').m==='AUTO'"))
     ok("DET still has the 1st section steam control", pg.evaluate("()=>!!document.querySelector('#dcsOv .kctl[data-k=st1]')"))
     m0 = pg.evaluate("()=>__PM.S.dry.m")
-    pg.evaluate("()=>{const V=__PM.G3.vlv;for(const id of ['PV-302','PV-303'])V.setMode(id,'AUTO');V.setSP('PV-303',96);V.setSP('PV-302',76.8);for(let i=0;i<240;i++)__PM.step(0.25);}")
+    pg.evaluate("()=>{const V=__PM.G3.vlv;for(const id of ['PV-302','PV-303'])V.setMode(id,'AUTO');V.setSP('PV-303',175);V.setSP('PV-302',150);for(let i=0;i<240;i++)__PM.step(0.25);}")
     st = pg.evaluate("()=>({m:__PM.S.dry.m,st3:__PM.S.dry.st3,dem:__PM.S.dry.dem,q:__PM.G3.qual(),qc:__PM.G3.vlv.view('QC-300').m})")
-    ok("steam valves on AUTO at 96 psig (well over the load) over-dry the sheet (moisture spec out), QC-300 on IMAN", st["m"] < m0 - 3 and "m" in st["q"]["out"] and st["qc"] == "IMAN", json.dumps({k: st[k] for k in ("m", "st3", "dem", "qc")}))
+    ok("steam valves on AUTO, wide open (the 3rd section held at its 165 psig limit) over-dry the sheet (moisture spec out), QC-300 on IMAN", st["m"] < m0 - 2 and st["st3"] > 160 and "m" in st["q"]["out"] and st["qc"] == "IMAN", json.dumps({k: st[k] for k in ("m", "st3", "dem", "qc")}))
     pg.evaluate("()=>{const V=__PM.G3.vlv;V.revert('QC-300');for(let i=0;i<240;i++)__PM.step(0.25);}")
     st = pg.evaluate("()=>({m:__PM.S.dry.m,p3:__PM.G3.vlv.view('PV-303').m})")
     ok("back on standard tuning (CAS): moisture back at 8%", st["p3"] == "CAS" and abs(st["m"] - 8) < 0.3, json.dumps(st))
@@ -165,11 +165,11 @@ def rows(pw):
     d = order("DET")
     ok("DET rows: draw, 1st / 2nd / 3rd section steam, reel and winder", d == ["#Press to dryers", "draw", "#Dryer steam", "st1", "st2sp", "st3sp", "#Reel and winder", "wsp", "nip", "wdr"], d)
     r = pg.evaluate("""()=>{const q=s=>document.querySelector(s),V=()=>({m3:q('[data-ds="st3sp"] [data-dsa]').textContent,m2:q('[data-ds="st2sp"] [data-dsa]').textContent});
-      const a=V();const inp=q('[data-ds="st3sp"] [data-dsv]');inp.value=90;inp.dispatchEvent(new Event('input',{bubbles:true}));
+      const a=V();const inp=q('[data-ds="st3sp"] [data-dsv]');inp.value=150;inp.dispatchEvent(new Event('input',{bubbles:true}));
       for(let i=0;i<4*3;i++)__PM.step(0.25);const v3=__PM.S.vlv.lp['PV-303'];const b={...V(),sp:v3.sp,m:v3.m,pv:Math.round(v3.pvm)};
       q('[data-ds="st3sp"] [data-dsa]').click();const c={...V(),m:__PM.S.vlv.lp['PV-303'].m};return {a,b,c}}""")
     ok("2nd and 3rd section steam start on CAS (the moisture loop)", r["a"] == {"m3": "CAS", "m2": "CAS"}, r["a"])
-    ok("dragging 3rd section steam takes PV-303 off CAS onto AUTO at that pressure", r["b"]["m"] == "AUTO" and r["b"]["sp"] == 90 and r["b"]["m3"] == "AUTO" and r["b"]["pv"] > 78, r["b"])
+    ok("dragging 3rd section steam takes PV-303 off CAS onto AUTO at that pressure", r["b"]["m"] == "AUTO" and r["b"]["sp"] == 150 and r["b"]["m3"] == "AUTO" and r["b"]["pv"] > 130, r["b"])
     ok("the CAS button hands it back to the moisture loop", r["c"]["m"] == "CAS" and r["c"]["m3"] == "CAS", r["c"])
     r = pg.evaluate("""()=>{const P=__PM,S=P.S;__PM.G3.closeStation&&__PM.G3.closeStation();S.pm='break';S.brkType='press';S.breakLeft=60;S.breakTotal=60;S.crewQ=[{k:'brk',resp:0,since:0,here:true,go:true}];let rec=[],clamp=[],at=0;
       for(let i=0;i<4*30;i++){if(S.cards)S.cards.open=null;P.step(0.25);if(S.pm==='break'){rec.push(S.M.recvMul);clamp.push(S.M.clampMul);if(S.M.crewAtPM)at++;}}

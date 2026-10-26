@@ -1,5 +1,30 @@
 # Changelog
 
+## v6.13.2-t3 (2026-10-26): dryer steam from heat transfer (test build, test/v6.13.2-benchmarks)
+Plan and decisions: claude/steam-v6132-t3-plan.md. Typical real-mill numbers only (no PM3 data).
+- **Steam pressure from the heat the sheet needs (07d).** The drying load still comes from speed, grade and the wet
+  end's water (the same load as t1/t2, kept internally in "hp"). The cans need a temperature difference over the sheet in
+  proportion to that load (Q = UA·ΔT, UA set so each grade's standard load needs its standard pressure); the steam
+  temperature is the sheet's (~90 °C in the 3rd section, ~80 °C in the 2nd) plus that, and the pressure is the saturation
+  pressure there (Antoine). Pressure rises faster than the load, as on a real machine.
+- **Real levels.** Grade 24: 3rd section ~120 psig at its standard rate, 2nd ~90, 1st 40 psig standard (knob 0-100,
+  step 2). Grades 28/31/34Super stand at 125/135/132 psig. The limit is 165 psig (was 108), about 15% over the standard
+  load, so a pushed line or a wet press now runs dryer-limited, as on a real machine (the reel comes off wet and goes to
+  the beater). A wide-open steam valve over-dries the sheet by ~2.5% (was ~6%).
+- **Loops (07h).** PV-302/303 span 0-300 psig, setpoints to 175, the 2nd section on 75% of the 3rd on CAS, QC-300's
+  output 3 psig per % and its tuning rescaled (Kc 0.24 → 0.57) so the cascade responds as before. The Inner first
+  challenge's reference re-measured.
+- **Screens and help.** The DET faceplate shows the 3rd section's steam temperature; trends 40-180 psig; the steam sheet's
+  2nd section and the IR can shells use the same saturation curve (a 120 psig can is ~177 °C).
+- **Saves (07o, S.u 3).** A t1/t2 save and a pre-v6.13.2 save both convert on load to the same pressures as a new run and
+  carry on identically (save check).
+- **QA (claude/qa-v6132-t3.md):** 50 seasons and 50 survival runs on t3 and t2: all clean; cash, tons, breaks and
+  survival waves the same within noise; moisture off-spec time up ~35% (the dryer-limited spells).
+- **Checks:** steamsheet starts its season with the frames held (lib pick_leader_held), so its snapshot is the same on
+  every run (it could start a frame-dependent minute in and fail one time in a few). All 22 default checks pass.
+- **Measured against t2** (fixed-seed 4-day seasons on four bottlenecks): inside the limit tons, beater and cash are the
+  same (within 0.01%). Pushed (80% press on an upgraded line): -1.8% tons, +75 t beater; t2 never reached its limit.
+
 ## v6.13.2-t2 (2026-10-26): zen shots (test build, test/v6.13.2-benchmarks)
 Plan and review: claude/zen-v6132-plan.md. Every shot rendered at 10/50/90% on all four maps.
 - **The scene is built for zen's camera.** The iso view keeps only the faces it can see (and one-sided tree cards), so

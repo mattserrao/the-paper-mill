@@ -68,7 +68,7 @@ def valves(pw):
     aw2 = R("P.knob.set('vac',60);V.touch('LV-202');V.setSP('LV-202',80);", 60, "P.knob.set('vac',30);V.setSP('LV-202',10);for(let i=0;i<4*25;i++)P.step(P.SIM_STEP);const L=V.state().lp['LV-202'];return {op:L.op,pv:L.pvm};")
     ok("anti-windup: back under control without a wound-up overshoot", aw2["op"] < 40 and abs(aw2["pv"] - 10) < 6, json.dumps(aw2))
     cs = R("V.touch('QC-300');V.setSP('QC-300',7);", 60, VIEW + "return o;")
-    ok("cascade: moisture setpoint down, QC-300 raises the steam setpoints, PV-302/303 follow", abs(cs["QC-300"]["pv"] - 7) < 0.4 and cs["PV-303"]["sp"] > u["o"]["PV-303"]["sp"] + 1.8 and abs(cs["PV-302"]["sp"] / cs["PV-303"]["sp"] - 0.8) < 0.01, json.dumps(cs))
+    ok("cascade: moisture setpoint down, QC-300 raises the steam setpoints, PV-302/303 follow", abs(cs["QC-300"]["pv"] - 7) < 0.4 and cs["PV-303"]["sp"] > u["o"]["PV-303"]["sp"] + 3 and abs(cs["PV-302"]["sp"] / cs["PV-303"]["sp"] - 0.75) < 0.01, json.dumps(cs))
     im = R("V.touch('QC-300');V.setMode('PV-303','AUTO');V.setMode('PV-302','AUTO');", 20, VIEW + "return o;")
     ok("cascade broken (slaves on AUTO): QC-300 shows IMAN and tracks", im["QC-300"]["m"] == "IMAN", json.dumps(im["QC-300"]))
 

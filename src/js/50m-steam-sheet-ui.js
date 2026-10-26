@@ -18,7 +18,7 @@ MIMIC.STM={title:"STEAM & AIR",h:322,trends:[["dp3","3rd section ΔP psi","#7fb2
   ln:[["M106 32 H632 V118 H620"],["M530 32 V58"],["M500 92 V118"],["M318 32 V118"],["M125 32 V118"],["M610 118 V75 H582",1],["M228 150 H210",1],["M40 145 H24 V206",1],
     ["M200 172 V214",1],["M388 172 V214",1],["M610 172 V214",1],["M110 225 H100 V54",1],["M270 284 H288"],["M388 284 H404"]],
   tags:[MT6(52,68,"stst","STEAM",()=>S.dry&&S.dry.steam>0.5?sf1(S.dry.steam)+" t/h":"–"),MT6(52,82,"stret","RETURN",()=>S.stm?Math.round(S.stm.ret*100)+"%":"–"),MT6(52,96,"stmk","MAKEUP",()=>S.stm?fmtGpm(GPM(S.stm.mk)):"–"),
-    MT6(125,166,"st1s","STEAM",()=>Math.round(knobVal("st1"))+" psig"),MT6(313,166,"st2s","STEAM",()=>S.dry?Math.round(S.dry.st3*0.8)+" psig":"–"),MT6(518,166,"st3s","STEAM",()=>S.dry?Math.round(S.dry.st3)+" psig":"–"),
+    MT6(125,166,"st1s","STEAM",()=>Math.round(knobVal("st1"))+" psig"),MT6(313,166,"st2s","STEAM",()=>S.dry?Math.round(dryP2(S.dry))+" psig":"–"),MT6(518,166,"st3s","STEAM",()=>S.dry?Math.round(S.dry.st3)+" psig":"–"),
     MT6(125,188,"dp1","ΔP",()=>S.stm?sf1(S.stm.dp[0])+" psi":"–",()=>S.stm&&S.pm==="run"&&S.stm.dp[0]<stmNeed(0)?"bad":""),MT6(125,200,"nd1","NEED",()=>S.pm==="run"?sf1(stmNeed(0))+" psi":"–"),
     MT6(313,188,"dp2","ΔP",()=>S.stm?sf1(S.stm.dp[1])+" psi":"–",()=>S.stm&&S.pm==="run"&&S.stm.dp[1]<stmNeed(1)?"bad":""),MT6(313,200,"nd2","NEED",()=>S.pm==="run"?sf1(stmNeed(1))+" psi":"–"),
     MT6(518,188,"dp3","ΔP",()=>S.stm?sf1(S.stm.dp[2])+" psi":"–",()=>S.stm&&S.pm==="run"&&S.stm.dp[2]<stmNeed(2)?"bad":""),MT6(518,200,"dpneed","NEED",()=>S.pm==="run"?sf1(stmNeed(2))+" psi":"–"),
@@ -186,4 +186,5 @@ function rideHud(u){const h=$("rideHud");if(!h)return;const [, ,d]=rideAt(u),P2=
 G3.rideAt=rideAt;G3.rideHud=rideHud;G3.rideEnd=shRideEnd;G3.ride=shRide;
 // tests (tools/checks): the sheet and the steam models
 G3.sheet={setJw:hbSetJw,jw:hbJw,hbc:hbcSet,form:formF,tsr:tsrNow,stfi:()=>QNOW.stfi,stfiSpec,brk:brkRisk,where:brkWhere,prof:profNow,bkSet,bkLvl,reelSetNip,hard:reelHard,stk:()=>S.stk,stkClean,turnup:turnupRoll,log:brLog,top:brTop};
+G3.dryP={satT,satP,ph:dryPh,hp:dryHp,p2:dryP2,ceil:dryCeil,pcap:dryPcap};
 G3.steam={need:stmNeed,sp:stmSp,setSp:stmSetSp,setFan:stmSetFan,lost:stmLost,demF:stmDemF,flooded:stmFlooded,tcMax:stmTcMax,ir:stmIr,dew:stmDew,shell:stmShell};

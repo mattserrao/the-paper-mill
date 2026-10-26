@@ -10,7 +10,10 @@
    Rules: S.knob does not exist until the player changes a knob, and knobTick() returns at once while every knob is at
    its ideal and the process has settled, so an untouched game draws no dice and changes nothing (same checksum).
    Incident durations use their own dice stream ("knob"); the shared upset streams are never touched. Zen: no knobs. */
-const KNOB_IDEAL={pulp:50,ref:60,agit:100,gbox:1,lvac:5,vac:30,press:100,osc:100,couch:1,cbox:-6,draw:1.5,st1:42,gm:1,gt:0,incomer:1,hood:0,tcv:100};
+// v6.13.2-t3: the 1st section knob's share of the drying, 40 psig standard on 0-100: the same reach both ends as t1's 0-150
+// (full open takes 0.485 of the load off the 3rd section, shut adds 0.188)
+const st1D=p=>(p-40)/(p>40?60/0.485:40/0.188);
+const KNOB_IDEAL={pulp:50,ref:60,agit:100,gbox:1,lvac:5,vac:30,press:100,osc:100,couch:1,cbox:-6,draw:1.5,st1:40,gm:1,gt:0,incomer:1,hood:0,tcv:100};
 const KNOBS=[
   {id:"pulp",name:"Pulper dilution valve",area:"SPOT",where:"Pulper, stock prep",field:true,unit:"% open",min:0,max:100,step:1,
     tip:"Dilution water into the pulper tub: NV-101, which holds the consistency on AUTO. Moving it here puts NV-101 on MAN at that opening."},
@@ -43,8 +46,8 @@ const KNOBS=[
     tip:"The main 480 V breaker that feeds all three drive lineups. It stays closed. Opening it under load draws an arc."},
   {id:"draw",name:"Press-to-dryer draw",area:"DET",where:"Dry end DCS",dcs:true,unit:"%",min:0,max:4,step:0.05,dp:2,
     tip:"Speed difference between the presses and the first dryers, which keeps the open draw taut. Standard is 1.5%. More draw stretches the sheet and lowers ring crush; less lets it flutter and break more often."},
-  {id:"st1",name:"1st section steam",area:"DET",where:"Dry end DCS",dcs:true,unit:"psig",min:0,max:150,step:3,
-    tip:"Steam pressure in the first dryer section. The 3rd section is on automatic moisture control. Standard is 42 psig."},
+  {id:"st1",name:"1st section steam",area:"DET",where:"Dry end DCS",dcs:true,unit:"psig",min:0,max:100,step:2,
+    tip:"Steam pressure in the first dryer section. The 3rd section is on automatic moisture control. Standard is 40 psig."},
   // v6.13: the thermocompressor's motive steam hand valve, in the dryer basement (07m): pinched, PDC-304 can't hold the
   // 3rd section's syphon ΔP and the cans flood from the back of the section forward
   {id:"tcv",name:"Thermocompressor motive valve",area:"STM",where:"Dryer basement, the motive steam line to TC-304",field:true,unit:"% open",min:0,max:100,step:5,
@@ -206,9 +209,9 @@ function knobTick(dt){const K=S.knob;if(!K||!K.any||S.zen)return;
   // v6.5.5: the dewatering chain (dewater(), above): the slice's jet, the table, the vacuum, the couch and the presses
   {const s=slcGet();x.jv=L(x.jv||0,jwDev(),5);x.jh=L(x.jh||0,s.h,5);x.sb=L(x.sb||0,s.v,5);}   // (v6.13: the jet's speed is the fan pump's J/W, the slice opening B the headbox consistency, 07n)
   const Dw=dewater(x.fr,x.vac,x.pl,x.jv,x.jh,x.cb,x.gb,x.lv,x.sb),W=Dw.W;x.cs=Dw.cs;x.ps=Dw.ps;
-  x.d1=L(x.d1,(v.st1-42)/78*0.35,8);   // (v6.13.2: psig; was (kPa-70)/130)
+  x.d1=L(x.d1,st1D(v.st1),8);
   // v6.5 b5: moisture, the 3rd section and the boiler header come from the dryer model (07d), which now also sees speed
-  const a0=clamp(W-x.d1,0.7,1.3),Dr=dryState();K.W=W;K.d1x=x.d1;K.a=Dr.st3/(DRY.base[C.grade]||DRY.base["24"]);
+  const a0=clamp(W-x.d1,0.7,1.3),Dr=dryState();K.W=W;K.d1x=x.d1;K.a=(Dr.h3!=null?Dr.h3:dryB())/dryB();
   x.m=Dr.m;                                                             // reel moisture (%)
   K.sf=a0+Math.max(0,x.d1)+(v.hood&&run?HOOD_STEAM:0);                 // steam load per ton (1 = normal): the cost side (v6.5.5: a drier sheet saves steam; v6.11.1: hood doors up)
   // boiler header sagging under the load: the boiler's own limit (07d), or (v6.5.2) the knobs holding the dryers' total
@@ -269,14 +272,14 @@ function knobSteamCulprits(){const K=S.knob;if(!K)return [];const v=K.v,c=[];
   // (v6.5.5: each knob's share of the extra water, from the dewatering chain with that knob put back to standard)
   const sl=slcGet(),jd=jwDev(),cb=v.cbox??CBOX.best,gb=v.gbox??FZ.gb,lv=v.lvac??FZ.lv,W0=dewater(gapOf(refEff(v.ref)),v.vac,v.press,jd,sl.h,cb,gb,lv,sl.v).W,dW=(o)=>W0-dewater(o.fr??gapOf(refEff(v.ref)),o.vac??v.vac,o.pl??v.press,o.jv??jd,o.jh??sl.h,o.cb??cb,o.gb??gb,o.lv??lv,o.sb??sl.v).W;
   if(!knobAt("ref"))c.push(["ref",dW({fr:0.5})]);if(!knobAt("vac"))c.push(["vac",dW({vac:30})]);if(!knobAt("press"))c.push(["press",dW({pl:100})]);if(!knobAt("slice"))c.push(["slice",dW({jv:0,jh:0,sb:0})]);if(!knobAt("cbox"))c.push(["cbox",dW({cb:CBOX.best})]);if(!knobAt("gbox"))c.push(["gbox",dW({gb:FZ.gb})]);if(!knobAt("lvac"))c.push(["lvac",dW({lv:FZ.lv})]);
-  if(v.st1!==42)c.push(["st1",Math.abs(v.st1-42)/78*0.35]);if(v.hood)c.push(["hood",HOOD_STEAM]);
+  if(v.st1!==40)c.push(["st1",Math.abs(st1D(v.st1))]);if(v.hood)c.push(["hood",HOOD_STEAM]);
   c.sort((a,b)=>b[1]-a[1]);return c.filter(r=>r[1]>0.02).map(r=>r[0]);}
 // readings for the DCS and QCS screens. With S.knob missing everything reads at its standard value.
 // Base values follow each grade's standard: reel speed, basis weight and 3rd section steam, and the stock prep level.
 function knobRead(){const K=S.knob,x=K?K.x:null,g=GRADES[C.grade]||GRADES["24"],bw=g.bw,run=S.pm==="run";
   const z=x?x.z:new Array(KZONES).fill(0),t=S.t;
   const wob=(f,k)=>Math.sin(t*f+k)*0.6+Math.sin(t*f*2.7+k*2)*0.4;   // smooth stand-in for process noise (no dice)
-  const Dr=S.dry,st3=Dr?Dr.st3:(DRY.base[C.grade]||DRY.base["24"]);   // (v6.5 b5: the dryer model, 07d)
+  const Dr=S.dry,st3=Dr?Dr.st3:dryPh(dryB());   // (v6.5 b5: the dryer model, 07d)
   const m=Dr?Dr.m:DRY.m0;let cp=x?x.cp:5;
   const cpb=cpBale();cp+=cpb;
   return {run,cp,amps:410*(0.55+cp/5*0.45)*(S.M.pulperDown?0:1),pulpLvl:clamp(62+(5-cp)*9+wob(0.05,1)*1.5,0,110),

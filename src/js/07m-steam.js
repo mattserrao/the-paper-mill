@@ -53,9 +53,9 @@ const stmDrvAdd=()=>stmOn()?STM.drvK*stmFloodSum():0;
 // $ per tonne of steam at today's price (the dryers' per-ton steam bill spread over the steam a ton takes, as 07d's vent)
 const stmPrice=()=>{const wpt=dryWpt()*DRY.stPerW;return wpt>0?Math.max(0,energyCostT()-pfChemT())/wpt:0;};
 // v6.13.2: saturated steam temperature (°C) at p psig (a fit to the steam tables, within ~2 °C from 0 to 150 psig)
-const stmSat=p=>100*Math.pow((Math.max(0,p)+14.696)/14.696,0.262);
+const stmSat=p=>satT(Math.max(0,p));   // (v6.13.2-t3: the Antoine saturation curve, 07d)
 // the shell temperature of can j (°C): its section's steam saturation, less what a flooded can loses
-function stmShell(j){const T=S.stm,s=j<6?0:j<12?1:2,D=S.dry,run=S.pm==="run",p=s===0?knobVal("st1"):s===1?(D?D.st3*0.8:57.6):(D?D.st3:72);
+function stmShell(j){const T=S.stm,s=j<6?0:j<12?1:2,D=S.dry,run=S.pm==="run",p=s===0?knobVal("st1"):s===1?(D?dryP2(D):90):(D?D.st3:120);
   const sat=stmSat(p),f=T?(j===T.cold?1:T.fl[j]):0;return run||S.pm==="break"?sat-55*f:45;}
 
 // a can's shell temperature with nothing wrong (its section's steam), for the survey's "cold can" call

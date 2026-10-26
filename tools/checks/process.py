@@ -72,7 +72,7 @@ def dryer(pw):
     ok("more speed: ~1.74 psig per extra t/h on 24", 1.5 < slope < 2.0, f"{slope:.2f} {d2}")
     pg.evaluate("()=>{__PM.C.pmSp.v=4600;}"); steps(25)
     d3 = D(); off = pg.evaluate("()=>__PM.S.tot.broke")
-    ok("past the ceiling the sheet goes wet", d3["m"] > 9 and d3["dem"] > 108, str(d3))
+    ok("past the ceiling the sheet goes wet", d3["m"] > 9 and d3["dem"] > 82.5, str(d3))
     steps(30); d4 = D()
     ok("wet sheet fails the spec: the crew slows the machine", d4["trim"] > 0.05 and d4["sp"] < d3["sp"], str(d4))
     ok("off-spec paper to the beater while wet", pg.evaluate("()=>__PM.S.tot.broke") > off)
@@ -126,7 +126,7 @@ def qual(pw):
     # ---- moisture: low press loading (wet) and 1st section high + refiner open (dry) ----
     r = pg.evaluate(QRUN, ["P.knob.set('press',55);", 720])
     ok("press loading low: moisture out of spec (wet)", "m" in r["why"] and r["beatRolls"] >= 1, json.dumps({k: r[k] for k in ("why", "outMin", "beatRolls")}))
-    r = pg.evaluate(QRUN, ["P.knob.set('st1',150);P.knob.set('ref',0.95);", 720])
+    r = pg.evaluate(QRUN, ["P.knob.set('st1',100);P.knob.set('ref',0.95);", 720])
     ok("1st section high + refiner open: moisture out of spec (dry)", "m" in r["why"] and r["q"]["m"] is not None, json.dumps({k: r[k] for k in ("why", "outMin", "beatRolls")}))
     # ---- grade change: transition tons are beater rolls ----
     r = pg.evaluate(QRUN, ["S.chg={left:12.5,total:12.5,from:P.C.grade,to:P.C.grade};", 720])
@@ -176,7 +176,9 @@ def dewater(pw):
     # ---- 5. press solids -> dryer steam, both ways ----
     ok("drier sheet into the dryers: less steam, lower 3rd section, steam cost down", p120["steam"] < base["steam"] and p120["st3"] < base["st3"] and p120["sf"] < 1, f'steam {p120["steam"]} vs {base["steam"]}, st3 {p120["st3"]} vs {base["st3"]}, sf {p120["sf"]}')
     ok("wetter sheet: more steam, higher 3rd section, steam cost up", p80["steam"] > base["steam"] and p80["st3"] > base["st3"] and p80["sf"] > 1, f'steam {p80["steam"]}, st3 {p80["st3"]}, sf {p80["sf"]}')
-    ok("moisture held at 8% inside the auto loop's reach", abs(p120["m"] - 8) < 0.2 and abs(p80["m"] - 8) < 0.2, f'{p120["m"]} {p80["m"]}')
+    ok("moisture held at 8% inside the auto loop's reach (drier sheet)", abs(p120["m"] - 8) < 0.2, f'{p120["m"]}')
+    # (v6.13.2-t3: the limit sits ~15% over the standard load, as on a real machine, so a 80% press runs dryer-limited)
+    ok("wetter sheet past the dryers' reach: 3rd section at its 165 psig limit, the reel comes off wet", p80["st3"] >= 164 and p80["m"] > 8.3, f'st3 {p80["st3"]} m {p80["m"]}')
     sb = R("P.G3.sheet.setJw(0.97);", 150)
     ok("the chain end to end: a bad jet costs steam too", sb["steam"] > base["steam"] and sb["ps"] < base["ps"], json.dumps({k: sb[k] for k in ("cs", "ps", "W", "steam")}))
     b.close()

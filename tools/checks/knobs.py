@@ -35,9 +35,9 @@ SC = [
  ("guide manual", {"guide": {"gm": 0, "gt": 10}}, 900, {"inc": "fabric", "after": 60, "fixed": ["guide"]}),
  ("guide trimmed on auto", {"guide": {"gm": 1, "gt": 28}}, 1600, {"inc": "fabric", "after": 60, "fixed": ["guide"]}),
  ("couch agitator off + break", {"couch": 0, "_break": 90}, 400, {"inc": "couchpit", "after": 60, "fixed": ["couch"]}),
- ("steam1 high + refiner open (dry)", {"st1": 150, "ref": 20}, 600, {"off": 0.2, "dry": True, "after": 5, "fixed": ["st1"]}),
+ ("steam1 high + refiner open (dry)", {"st1": 100, "ref": 20}, 600, {"off": 0.2, "dry": True, "after": 5, "fixed": ["st1"]}),
  ("steam1 low + refiner tight (wet)", {"_up": "refiner", "st1": 0, "ref": 111}, 600, {"off": 0.05, "wet": True, "after": 10}),   # (v6.12.1-t7: 111 kWh/t needs the refiner upgrade's power, 07g refEff)
- ("steam1 high alone (no off-spec)", {"st1": 120}, 400, {"maxoff": 0.0, "steam": 1.05}),
+ ("steam1 high alone (no off-spec)", {"st1": 84}, 400, {"maxoff": 0.0, "steam": 1.05}),
  ("refiner tight alone (steam only)", {"_up": "refiner", "ref": 94}, 400, {"maxoff": 0.0, "steam": 1.1}),   # (v6.12.1-t7: with the upgrade's power)
  ("hood doors raised (4% steam only)", {"hood": 1}, 400, {"maxoff": 0.0, "steam": 1.035}),   # (v6.11.1: no trace on its own, the player's view)
 ]

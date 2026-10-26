@@ -207,7 +207,7 @@ const RM_E=[
  ["off","prod","n","Off-spec tons go to the beater, not paper made"],
  ["speed","steam","p","More tons, more water to evaporate"],
  ["pressSol","steam","n","Drier off the presses, less steam (and more when wetter)"],
- ["st1","steam","p","1st section above 42 psig adds steam cost"],
+ ["st1","steam","p","1st section above 40 psig adds steam cost"],
  ["prod","polflow","p","AUTO: the polymer pump is flow-paced to the tons being made"],
  ["polflow","poldose","p","More polymer a ton (in MANUAL a fixed pump doses more as the tons fall)"],
  ["poldose","fpr","p","The retention polymer flocs the fines onto the fibers: higher first pass retention"],

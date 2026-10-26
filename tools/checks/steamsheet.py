@@ -25,7 +25,7 @@ def sim(pw):
     C.sec("sim")
     b = launch(pw); pg = open_game(b, html_arg(), "notitle&nosave&" + LITE, viewport=(900, 600), errs=errs, wait=False)
     pg.wait_for_function("window.__PM&&window.__B&&__B.first!==null&&(!__PM.G3.prewarm||__PM.G3.warm)", timeout=240000, polling=500)
-    pg.evaluate("()=>document.getElementById('v2go').click()"); pick_leader(pg)
+    pg.evaluate("()=>document.getElementById('v2go').click()"); pick_leader_held(pg)   # (t3: frames held, so the snapshot is the same every run)
     pg.evaluate(SNAP)
     R = lambda setup, mins, probe="{}": pg.evaluate(RUN, [setup, mins, probe])
     base = R("", 180, "{dp:S.stm.dp.slice(),need:G.steam.need(2),demF:G.steam.demF(),prof:G.sheet.prof(),cs:P.knob.read().couchSol,ps:P.knob.read().pressSol,m:S.dry.m,hbc:S.we.hbc,R:G.sheet.brk().R,stfi:G.sheet.stfi(),spec:G.sheet.stfiSpec(),hum:S.stm.hum,ret:S.stm.ret,kpi:S.stm.kpi,knob:!!(S.knob&&S.knob.any)}")

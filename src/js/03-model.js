@@ -1,6 +1,6 @@
 // v6.13.2 Real Numbers: pressures are in psi. KP converts the old kPa model's differentials (syphon, cleaner and screen ΔP)
 // to psi; dryer section pressures were rescaled to real-mill psig levels (x0.6 of the old kPa numbers, 07d)
-const KP=0.145038,ST_K=0.6,UNITS_V=2;   // (ST_K and UNITS_V: the save migration, 07o)
+const KP=0.145038,ST_K=0.6,UNITS_V=3;   // (ST_K and UNITS_V: the save migration, 07o)
 const RCT0_OLD={"24":60,"28":67,"31":75,"34Super":84};
 // seeded random streams (plan, cards) so every player in the same season week sees the same market and the same cards
 function rand(k){const r=S.rng;r[k]=(r[k]+0x6D2B79F5)|0;let t=r[k];t=Math.imul(t^(t>>>15),t|1);t^=t+Math.imul(t^(t>>>7),t|61);return ((t^(t>>>14))>>>0)/4294967296;}

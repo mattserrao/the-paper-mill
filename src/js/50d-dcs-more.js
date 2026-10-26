@@ -142,7 +142,7 @@ function dcsSetDefs(a){const D=()=>DCS_DRAW();
     // sets them; dragging one takes it off CAS onto AUTO at that pressure, and the button puts it back on CAS.
     ...[["PV-302","st2","2nd section steam"],["PV-303","st3","3rd section steam"]].map(([id,k,n])=>{const v=vlvView(id),cas=v.m==="CAS",pv=Math.round(v.pv);
       return [k+"sp",n,cas?`CAS · set by QC-300 (reel moisture ${DRY.m0}%) · ${pv} psig`:`${v.m==="MAN"?"MANUAL · valve held at "+Math.round(v.op)+"%":"AUTO · held at the setpoint"} · ${pv} psig · CAS hands it back to the moisture loop`,
-        0,150,3,()=>vlvView(id).sp,x=>{if(vlvView(id).m!=="AUTO")vlvSetMode(id,"AUTO");vlvSetSP(id,x);},"psig",null,0,
+        0,175,5,()=>vlvView(id).sp,x=>{if(vlvView(id).m!=="AUTO")vlvSetMode(id,"AUTO");vlvSetSP(id,x);},"psig",null,0,
         {on:()=>vlvView(id).m==="CAS",flip:()=>vlvSetMode(id,vlvView(id).m==="CAS"?"AUTO":"CAS"),lab:["CAS","AUTO"]}];})];
   if(a==="STM"&&!S.zen){const T=stmState(),need=stmNeed(2),pv=vlvView("PDC-304").pv,sch=T.sp4==null;
     return [["pdcsp","3rd section syphon ΔP · PDC-304",sch?`AUTO schedule: what this speed needs (${need.toFixed(1)} psi) + ${STM.margin.toFixed(1)} · PV ${pv.toFixed(1)} psi`:`FIXED at the setpoint · this speed needs ${need.toFixed(1)} psi · PV ${pv.toFixed(1)} psi${pv<need?" · CANS FLOODING":""}`,
