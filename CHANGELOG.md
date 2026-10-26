@@ -1,5 +1,13 @@
 # Changelog
 
+## v6.13.2-t4 (2026-10-26): small fixes (test build, test/v6.13.2-benchmarks)
+- **Ride the sheet:** the readout is a fixed grid (section, consistency or solids, speed, draw, sheet temperature, then
+  "tap to leave"), so it keeps one size from the headbox to the reel instead of jumping between 2 and 3 lines. Phones get
+  a fixed 3-line layout (section on its own line).
+- **The two flagpoles by the office door are gone** (39b; the ambient wave skips them).
+- Checked with a small script (box size along the whole ride at 1280 and 390 px wide, nothing cut off; no poles left in
+  the scene). The regression suite was not run for this build.
+
 ## v6.13.2-t3 (2026-10-26): dryer steam from heat transfer (test build, test/v6.13.2-benchmarks)
 Plan and decisions: claude/steam-v6132-t3-plan.md. Typical real-mill numbers only (no PM3 data).
 - **Steam pressure from the heat the sheet needs (07d).** The drying load still comes from speed, grade and the wet
