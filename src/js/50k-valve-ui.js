@@ -65,7 +65,7 @@ function vlvDcsRows(a,b){const M=MIMIC[a];if(!M||!M.vlv||S.zen)return;const w=kE
   for(const e of M.vlv){const d=VD[e.id],r=kEl("button","vlvrow",`<b>${e.id}</b><span>${d.name}</span><i data-vr="${e.id}">–</i>`);r.type="button";r.addEventListener("click",()=>openVlv(e.id));w.appendChild(r);}b.appendChild(w);}
 // a valve's look: the body fills with its opening; amber on MAN, red when its loop is in trouble
 function vlvDcsSync(o){o.querySelectorAll("[data-vlv]").forEach(g=>{const id=g.dataset.vlv,d=VD[id],v=vlvView(id);
-    const pos=v.pos,op=d.ctl?(v.op*d.out.k).toFixed(0)+" kPa":pos<0.5?"SHUT":pos>99.5?"OPEN":Math.round(pos)+"%",l2=`${op} ${v.m}`;
+    const pos=v.pos,op=d.ctl?(v.op*d.out.k).toFixed(0)+" "+d.out.u:pos<0.5?"SHUT":pos>99.5?"OPEN":Math.round(pos)+"%",l2=`${op} ${v.m}`;
     const b=g.querySelector("[data-vl2]");if(b.textContent!==l2)b.textContent=l2;
     const tt=`${id} · ${d.name}: PV ${vfx(v.pv,d.pv.dp)} ${d.pv.u}, SP ${vfx(v.sp,d.pv.dp)}. Tap for the faceplate.`,ti=g.querySelector("title");if(ti.textContent!==tt)ti.textContent=tt;
     const st=v.m==="MAN"?"man":vlvAlarm(id)?"bad":v.t?"tch":"ok";if(g.dataset.st!==st){g.dataset.st=st;g.setAttribute("class","vsym"+(d.ctl?" vctl":"")+" st-"+st);}
@@ -134,7 +134,7 @@ function vpOp(p,d){const id=d.id;
   p.querySelector("[data-go]").addEventListener("click",()=>{VUI.tab="tune";vlvBuild();});
   p.querySelectorAll("[data-open]").forEach(b=>b.addEventListener("click",()=>openVlv(b.dataset.open)));
   $("vRev").addEventListener("click",()=>{vlvRevert(id);vlvRefresh(true);});}
-const vspStep=d=>d.pv.u==="kPa"?1:d.pv.u==="%"&&d.pv.hi>50?1:d.pv.dp>=2?0.05:0.1;
+const vspStep=d=>d.pv.u==="psig"?1:d.pv.u==="psi"?0.05:d.pv.u==="%"&&d.pv.hi>50?1:d.pv.dp>=2?0.05:0.1;
 
 /* -- Tune -- */
 const VTN={kc:[0.005,50,"","Kc"],ti:[0.02,200,"min","Ti"],td:[0,10,"min","Td"],pf:[0,60,"s","PV filter"]};
@@ -160,7 +160,7 @@ function vpTune(p,d){const id=d.id,cas=()=>vlvView(id).m==="CAS";
   $("vStd").addEventListener("click",()=>{vlvSetTune(id,{kc:d.tune.kc,ti:d.tune.ti,td:d.tune.td,pf:0});VUI.staged=null;vTuneSync(p,id);vlvRefresh(true);});
   p.querySelectorAll("[data-st]").forEach(b=>b.addEventListener("click",()=>{if(cas()||vlvView(id).m==="MAN")return;vStepGo(id,+b.dataset.st);vlvRefresh(true);}));
   vTuneSync(p,id);}
-const vstepSz=d=>d.id==="FV-201"?0.25:d.pv.u==="kPa"?5:d.id==="QC-300"?0.5:d.pv.u==="%"&&d.pv.hi>50?5:0.2;
+const vstepSz=d=>d.id==="FV-201"?0.25:d.pv.u==="psig"?3:d.pv.u==="psi"?0.5:d.id==="QC-300"?0.5:d.pv.u==="%"&&d.pv.hi>50?5:0.2;
 function vTuneSync(p,id){const t=VUI.staged||vTuneNow(id);
   p.querySelectorAll("[data-ts]").forEach(r=>{if(actEl(r)!==r)r.value=vToS(r.dataset.ts,t[r.dataset.ts]);});
   p.querySelectorAll("[data-tn]").forEach(r=>{if(actEl(r)!==r)r.value=t[r.dataset.tn];});
@@ -265,7 +265,7 @@ function vlvRefresh(force){const o=$("vlvOv");if(!o||o.hidden||!VUI.id)return;co
   if(tab==="op"){o.querySelectorAll("[data-m]").forEach(b=>{b.setAttribute("aria-pressed",String(b.dataset.m===v.m));b.disabled=d.ctl&&b.dataset.m!=="MAN"&&b.dataset.m!=="AUTO";});
     const pv=$("vPV"),sp=$("vSP"),op=$("vOP");pv.textContent=vlvFmtPV(d,v.pv);
     if(actEl(sp)!==sp)sp.value=vfx(v.sp,d.pv.dp);sp.disabled=v.m==="CAS";$("vSPn").textContent=v.m==="CAS"?`from ${d.master} (CAS)`:d.id==="FV-201"?`grade ${C.grade} target ${bwStd().toFixed(2)} lb`:`${vF(d.spLim)[0]}–${vF(d.spLim)[1]} ${d.pv.u}`;
-    if(actEl(op)!==op)op.value=vfx(v.op,1);op.readOnly=v.m!=="MAN";$("vOPn").textContent=d.ctl?`→ ${Math.round(v.op*d.out.k)} kPa 3rd section`:v.m==="MAN"?"you set this":"the controller sets this";
+    if(actEl(op)!==op)op.value=vfx(v.op,1);op.readOnly=v.m!=="MAN";$("vOPn").textContent=d.ctl?`→ ${Math.round(v.op*d.out.k)} psig 3rd section`:v.m==="MAN"?"you set this":"the controller sets this";
     if(!d.ctl){$("vBarC").style.left=clamp(v.op,0,100)+"%";$("vBarA").style.width=clamp(v.pos,0,100)+"%";
       $("vPos").textContent=v.pos<0.5?"SHUT":v.pos>99.5?"WIDE OPEN":`${vfx(v.pos,1)}% open`;}
     const n=$("vNote"),ff=d.ff&&W&&W.B?W.B.ff:null;

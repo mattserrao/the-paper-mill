@@ -3,7 +3,7 @@ process relationships and the v6.9.2 refiners. One section per old script; repla
 dewatercheck.py, watercheck.py, windercheck.py, ordercheck.py, relcheck.py and refcheck.py. Fails on any page error.
 
 - dryer (v6.5 b5, claude/dryer-limit-spec.md): at standard running the 3rd section sits at the grade's base and moisture
-  is 8%; more speed raises demand ~2.9 kPa per t/h (24); past the ceiling the sheet goes wet, fails the spec (paper to
+  is 8%; more speed raises demand ~1.74 psig per t/h (24; v6.13.2: psig, it was ~2.9 kPa); past the ceiling the sheet goes wet, fails the spec (paper to
   the beater), the crew slows the machine until it's back in spec, then speed recovers; the shoe press gives ~16% of the
   water term back; the DET screen shows it (screenshot only with a prefix).
 - qual (v6.5.3): every grade has a weight, moisture and color spec; paper made outside it goes onto the reel as beater,
@@ -65,14 +65,14 @@ def dryer(pw):
     steps = lambda m: pg.evaluate("m=>{__PM.setRunning(false);for(let i=0;i<m*4;i++){if(__PM.S.cards)__PM.S.cards.open=null;__PM.S.inc.length=0;__PM.step(0.25)}}", m)
     D = lambda: pg.evaluate("()=>{const D=__PM.S.dry;return {dem:+D.dem.toFixed(1),m:+D.m.toFixed(2),trim:+D.trim.toFixed(3),wet:D.wet,sp:Math.round(__PM.S.pmSpeed),g:__PM.C.grade,steam:+D.steam.toFixed(1),pm:__PM.S.pm}}")
     pg.evaluate("()=>{__PM.C.grade='24';__PM.CH.on=false;}"); steps(120)
-    d = D(); ok("standard 24: 3rd section at its base (~120 kPa), 8% moisture", abs(d["dem"] - 120) < 4 and abs(d["m"] - 8) < 0.2, str(d))   # (v6.5.3: the setpoint is 8%, was 7%)
+    d = D(); ok("standard 24: 3rd section at its base (~72 psig), 8% moisture", abs(d["dem"] - 72) < 2.4 and abs(d["m"] - 8) < 0.2, str(d))   # (v6.5.3: the setpoint is 8%, was 7%)
     ok("steam ~50 t/h at standard (1.3 t per t of water)", 45 < d["steam"] < 56, str(d))
     pg.evaluate("()=>{__PM.C.pmSp.auto=false;__PM.C.pmSp.v=3300;}"); steps(60)
     d2 = D(); slope = (d2["dem"] - d["dem"]) / ((d2["sp"] - d["sp"]) / 2632 * 34.8)
-    ok("more speed: ~2.9 kPa per extra t/h on 24", 2.5 < slope < 3.3, f"{slope:.2f} {d2}")
+    ok("more speed: ~1.74 psig per extra t/h on 24", 1.5 < slope < 2.0, f"{slope:.2f} {d2}")
     pg.evaluate("()=>{__PM.C.pmSp.v=4600;}"); steps(25)
     d3 = D(); off = pg.evaluate("()=>__PM.S.tot.broke")
-    ok("past the ceiling the sheet goes wet", d3["m"] > 9 and d3["dem"] > 180, str(d3))
+    ok("past the ceiling the sheet goes wet", d3["m"] > 9 and d3["dem"] > 108, str(d3))
     steps(30); d4 = D()
     ok("wet sheet fails the spec: the crew slows the machine", d4["trim"] > 0.05 and d4["sp"] < d3["sp"], str(d4))
     ok("off-spec paper to the beater while wet", pg.evaluate("()=>__PM.S.tot.broke") > off)
@@ -85,7 +85,7 @@ def dryer(pw):
     ok("speed recovers once there's headroom", d6["trim"] < d4["trim"], str(d6))
     pg.evaluate("()=>{__PM.C.pmSp.v=3600;}"); steps(60); a = D()["dem"]
     pg.evaluate("()=>__PM.ups({shoe:1})"); steps(60); bb = D()["dem"]
-    ok("shoe press lowers dryer demand", bb < a - 8, f"{a} -> {bb}")
+    ok("shoe press lowers dryer demand", bb < a - 4.8, f"{a} -> {bb}")
     b.close()
 
 
@@ -126,7 +126,7 @@ def qual(pw):
     # ---- moisture: low press loading (wet) and 1st section high + refiner open (dry) ----
     r = pg.evaluate(QRUN, ["P.knob.set('press',55);", 720])
     ok("press loading low: moisture out of spec (wet)", "m" in r["why"] and r["beatRolls"] >= 1, json.dumps({k: r[k] for k in ("why", "outMin", "beatRolls")}))
-    r = pg.evaluate(QRUN, ["P.knob.set('st1',250);P.knob.set('ref',0.95);", 720])
+    r = pg.evaluate(QRUN, ["P.knob.set('st1',150);P.knob.set('ref',0.95);", 720])
     ok("1st section high + refiner open: moisture out of spec (dry)", "m" in r["why"] and r["q"]["m"] is not None, json.dumps({k: r[k] for k in ("why", "outMin", "beatRolls")}))
     # ---- grade change: transition tons are beater rolls ----
     r = pg.evaluate(QRUN, ["S.chg={left:12.5,total:12.5,from:P.C.grade,to:P.C.grade};", 720])
@@ -200,8 +200,8 @@ def water(pw):
     res = r["in"] - r["out"] - r["dinv"]
     ok("water balance closes over 6 days with upsets (in - out - dInventory ~ 0)", abs(res) < 1e-3 * max(1, r["in"]), f'in {r["in"]:.0f} out {r["out"]:.0f} dinv {r["dinv"]:.0f} residual {res:.3f}; {json.dumps(r["parts"])}')
     per = lambda k: r["parts"][k] / max(1, r["parts"]["paper"])   # (a ton of paper made, beater included)
-    ok("fresh water 3-6 m3 a ton (v6.8.3: showers 1.65 m3/t; was ~9.9 with 8)", 3.0 < per("fresh") < 6.0, f'{per("fresh"):.2f} m3/t')
-    ok("outfall 2-5 m3 a ton (v6.8.3; was ~8.4)", 2.0 < per("out") < 5.0, f'{per("out"):.2f} m3/t')
+    ok("fresh water 5-8 m3 a ton (v6.13.2: showers 2.4 m3/t and 105 m3/h seal water, ~6-7; it was ~4.3)", 5.0 < per("fresh") < 8.0, f'{per("fresh"):.2f} m3/t')
+    ok("outfall 4-7 m3 a ton (v6.13.2: more seal water and showers; v6.8.3: 2-5, was ~8.4)", 4.0 < per("out") < 7.0, f'{per("out"):.2f} m3/t')
     ok("dryer evaporation about 1.1 m3 a ton", 0.95 < per("evap") < 1.25, f'{per("evap"):.2f} m3/t')
     # ---- steady running: chest overflows a little to the sewer, no makeup ----
     s = R("", 240)

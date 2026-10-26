@@ -115,11 +115,11 @@ function hayout(a=rand("upx"),b=rand("upx")){AUDIO.sfx("hayout",600);S.wd="hayou
   BANNERS.push({text:HAYLINES[Math.floor(Math.random()*HAYLINES.length)],t:null,id:"hay"});while(BANNERS.length>3)BANNERS.splice(1,1);
   log(`Winder hayout: ${loss.toFixed(1)} t of paper to the beater`,"bad");}
 function initCtrl(){
-  C={inRate:{v:1.8,auto:true},drivers:{v:3,auto:true},pulper:{v:40,auto:true},lvlTarget:{v:69},lowLevel:{v:30},
+  C={inRate:{v:1.8,auto:true},drivers:{v:3,auto:true},pulper:{v:40,auto:true},lvlTarget:{v:50},lowLevel:{v:30},
      pmSp:{v:2632,auto:true},rollW:{v:100/8},loaders:{v:2,auto:true},outRate:{v:1,auto:true},grade:"24",breaks:true,hays:true,wdr:{v:45,auto:true},simSpeed:10};
 }
 function initState(){
-  S={date0:new Date().setHours(0,0,0,0),wx:"clear",wxLeft:360,wet:0,crewQ:[],brkType:"dryer",breakTotal:1,hayTotal:1,t:0,yard:700,tank:0.69*P.tankCap,fg:40,pmSpeed:C.pmSp.v,pm:"run",breakLeft:0,reel:8,winderBuf:0,winderAcc:0,
+  S={u:UNITS_V,date0:new Date().setHours(0,0,0,0),wx:"clear",wxLeft:360,wet:0,crewQ:[],brkType:"dryer",breakTotal:1,hayTotal:1,t:0,yard:700,tank:0.50*P.tankCap,fg:40,pmSpeed:C.pmSp.v,pm:"run",breakLeft:0,reel:8,winderBuf:0,winderAcc:0,
      inPhase:0.6,inJit:1,outPhase:0.3,outJit:1,inQ:[],inDock:[null,null,null],outQ:[],outDock:[null,null,null],leaving:[],
      rates:{feed:0,unload:0,fiberIn:0,prod:0,fiberUse:0,load:0,rolls:0,cut:0},
      tot:{inTrucks:0,inTons:0,turned:0,prodT:0,rolls:0,shipped:0,outTrucks:0,breaks:0,breakMin:0,turnups:0,pot:0,incidents:0,hayouts:0,hayMin:0,broke:0},wd:"run",hayLeft:0,

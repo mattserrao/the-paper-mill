@@ -148,3 +148,4 @@ One line per version, oldest first. Add a line here with every release: build.py
 6.13.0     Steam and Sheet: Dryer Cans, Syphons and PDC-304, Hood Air, Energy per Ton, J/W and STFI CD, Stickies, the Broke Chest, Turn-ups, Physics-Based Breaks, the Machine Profile, SPC and Ride the Sheet
 6.13.1-t1  Your Last Soda (Test): the Vending Machine Easter Egg
 6.13.1     Your Last Soda: the Vending Machine Easter Egg
+6.13.2-t1  Real Numbers (Test): psi Pressures, Real Dryer Steam, Ring Crush, Slice, Cleaners, Water

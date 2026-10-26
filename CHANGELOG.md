@@ -1,5 +1,30 @@
 # Changelog
 
+## v6.13.2-t1 (2026-10-26): Real Numbers (test build, test/v6.13.2-benchmarks)
+Benchmark fixes from claude/process-benchmarks-v6131.md; plan and decisions: claude/benchmarks-v6132-plan.md.
+- **Pressures in psi.** Dryer section pressures are psig, differentials (syphon ΔP, PDC-304, cleaners, screens) psi,
+  on every DCS picture, faceplate, knob, trend, tag, pop-up and help line. Vacuum stays inHg; the headbox was psi already.
+- **Real dryer steam (07d, 07h, 07m, 07b).** The model now works in psig at real-mill levels: the old kPa numbers x0.6
+  (1st section 42 psig standard, 3rd section 72 psig on grade 24, the dryer limit 108 psig; PV-302/303 span 0-180 psig).
+  Syphon ΔP and PDC-304 are a straight unit change (x0.145: about 5 psi). The physics are unchanged: a fixed-seed season
+  plays out identically (tons, off-spec, moisture, steam, cash). Can shells now read real saturation temperatures
+  (~150-165 °C) on the IR survey.
+- **Cleaners at design ΔP (07c).** HD 15, LC 25, LW 20 psi (were 35/60/45 kPa); plug points and upset readings scale
+  with them, so a cleaner left in manual still plugs after ~400 min. Fine and coarse screen ΔP shown in psi.
+- **Ring crush at recycled-medium levels (07g).** 30/35/40/46 lbf/6 in by grade (was 60/67/75/84). The spec (0.97 x)
+  and AUTO-LW are ratios, so trimming is unchanged.
+- **Slice opening from the flow (07n).** B = headbox flow / (jet speed x width x 0.8), ~23 mm on grade 24 (was a fixed
+  12 mm). The slice knob widens or narrows it by the same share as before, so it does exactly what it did.
+- **Water and the rest.** Fresh water ~6-7 m³/t (machine showers 4.1 m³/t, was 1.65; ~4.3 m³/t in all before); the
+  clarifier catches 99.50% (was 99.71%) so a normal run still sits at ~25 mg/L TSS in the larger outfall and a low polymer
+  dose still breaches the permit. Stock chest level
+  target and start at 50% (were 69%). Vacuum pump reads ~25 kWh/t (display; the balance-of-plant power is unchanged).
+  CD moisture on the QCS is the 2σ of the 12 zones. The white water silo's overflow is labelled on the WET DCS as the
+  design (to the WW chest).
+- **Older saves** are converted once on load (07o: pressures, loops, the 1st section knob, cleaner and screen ΔP, ring
+  crush and its history), and carry on where they were. New `save` section: an un-converted save continues identically.
+- Checks updated for the new units and levels: process, dcs, valves, knobs, steamsheet, chem.
+
 ## v6.13.1 (2026-10-26): Your Last Soda
 Minor update: release of v6.13.1-t1 (below), merged from test/v6.13.1-last-soda. Regression suite: all 22 default checks
 pass on t1 (new check: soda). The scene was played through in the test browser; not yet on an iPhone.

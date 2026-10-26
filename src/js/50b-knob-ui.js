@@ -66,7 +66,7 @@ function knobReadout(id,r){const R=(k,v)=>`<div><small>${k}</small><b>${v}</b></
     case "couch":return R("Agitator",r.couch?"running · 38 A":"stopped")+R("Pit level",Math.round(35+(S.pm==="run"?0:30)+r.cs*6)+" %");
     case "osc":return R("Shower stroke",Math.round(r.osc*0.14)+" /min")+R("Felt",r.stripes>0.15?"uneven":"clean");
     case "draw":return R("Open draw",kf(r.draw)+" % · needs "+kf(drawReq())+" %")+R("Sheet tension",r.run?kf(r.tension,2)+" kN/m":"–");
-    case "st1":return R("1st section",Math.round(r.st1)+" kPa")+R("3rd section (auto)",Math.round(r.st3)+" kPa")+R("Reel moisture",r.run?kf(r.moist)+" %":"–");
+    case "st1":return R("1st section",Math.round(r.st1)+" psig")+R("3rd section (auto)",Math.round(r.st3)+" psig")+R("Reel moisture",r.run?kf(r.moist)+" %":"–");
     case "zones":return R("Reel moisture",r.run?kf(r.moist)+" %":"–")+R("Zones trimmed",(S.knob?S.knob.z.filter(v=>v).length:0)+" of 12");}
   return "";}
 
@@ -102,8 +102,8 @@ function cboxDraw(cv,set){if(!cv)return;const x=cv.getContext("2d"),W=cv.width,H
   // the vacuum gauge
   const gx=W-58,gy=34,gh=150,vmax=70,lev=clamp(vac/vmax,0,1);x.fillStyle="#1b2a40";x.fillRect(gx,gy,22,gh);
   x.fillStyle=vac>55?"#4fd18b":vac>45?"#ffb02e":"#ff7a8a";x.fillRect(gx,gy+gh*(1-lev),22,gh*lev);x.strokeStyle="#5d7392";x.strokeRect(gx,gy,22,gh);
-  x.fillStyle="#9ab3d6";x.textAlign="right";for(let v=0;v<=70;v+=10){const y=gy+gh*(1-v/vmax);x.fillRect(gx-4,y,4,1);if(v%20===0)x.fillText(String(v),gx-6,y+3);}
-  x.textAlign="center";x.fillStyle="#e8eef7";x.font="700 12px system-ui,sans-serif";x.fillText(kf(vac)+" kPa",gx+11,gy+gh+16);x.font="600 10px system-ui,sans-serif";x.fillStyle="#9ab3d6";x.fillText("VACUUM",gx+11,gy-8);}
+  x.fillStyle="#9ab3d6";x.textAlign="right";for(let v=0;v<=70;v+=10){const y=gy+gh*(1-v/vmax);x.fillRect(gx-4,y,4,1);if(v%20===0)x.fillText(String(Math.round(v/3.386)),gx-6,y+3);}   // (v6.13.2: the scale and the reading in inHg, like every other vacuum)
+  x.textAlign="center";x.fillStyle="#e8eef7";x.font="700 12px system-ui,sans-serif";x.fillText(kf(vac/3.386)+" inHg",gx+11,gy+gh+16);x.font="600 10px system-ui,sans-serif";x.fillStyle="#9ab3d6";x.fillText("VACUUM",gx+11,gy-8);}
 
 /* ---- the field knob panel (a small floating card, like the spider valve's) ---- */
 function knobPanel(){let p=$("knobP");if(p)return p;
@@ -156,9 +156,9 @@ const MIMIC={
       [340,172,"couchSol","SOL",r=>kf(r.couchSol)+"%"],[340,194,"cs","PIT",r=>r.couch?"RUN":"STOP"],[440,172,"osc","OSC",r=>Math.round(r.osc)+"%"],[567,172,"pl","LOAD",r=>Math.round(r.pl)+" kN/m"],[567,194,"pressSol","SOL",r=>kf(r.pressSol)+"%"]],
     trends:[["vacIn","Flatbox vacuum inHg","#7fb2ff",0,18],["couchSol","Couch solids %","#4fd18b",12,24],["pl","Press load kN/m","#ffb02e",40,160],["pressSol","Press solids %","#ff7a8a",38,50]]},
   DET:{title:"DRY END",eq:[[14,90,80,50,"OPEN DRAW"],[112,75,130,80,"1ST SECTION"],[260,75,170,80,"2ND / 3RD SECTION"],[448,85,74,60,"REEL"],[546,20,80,40,"BOILER"]],
-    tags:[[54,172,"draw","DRAW",r=>kf(r.draw)+"% / "+kf(drawReq())],[54,194,"tension","TENS",r=>r.run?kf(r.tension,2):"–"],[177,172,"st1","STEAM",r=>Math.round(r.st1)+" kPa"],[345,172,"st3","AUTO",r=>Math.round(r.st3)+" kPa"],[345,194,"steam","FLOW",r=>r.steam>0.5?kf(r.steam)+" t/h":"–"],
+    tags:[[54,172,"draw","DRAW",r=>kf(r.draw)+"% / "+kf(drawReq())],[54,194,"tension","TENS",r=>r.run?kf(r.tension,2):"–"],[177,172,"st1","STEAM",r=>Math.round(r.st1)+" psig"],[345,172,"st3","AUTO",r=>Math.round(r.st3)+" psig"],[345,194,"steam","FLOW",r=>r.steam>0.5?kf(r.steam)+" t/h":"–"],
       [485,172,"moist","MOIST",r=>r.run?kf(r.moist)+"%":"–"],[485,194,"bw","BW",r=>r.run?kf(r.bw,2):"–"],[586,78,"boiler","HEADER",r=>Math.round(r.boiler*100)+"%"],[485,72,"speed","SPEED",r=>Math.round(r.speed)+" fpm"]],
-    trends:[["st3","3rd section steam kPa","#ffb02e",40,200],["steam","Steam flow t/h","#7fb2ff",0,70],["moist","Reel moisture %","#4fd18b",0,14],["tension","Draw tension kN/m","#ff7a8a",0,2.5]]}};
+    trends:[["st3","3rd section steam psig","#ffb02e",24,120],["steam","Steam flow t/h","#7fb2ff",0,70],["moist","Reel moisture %","#4fd18b",0,14],["tension","Draw tension kN/m","#ff7a8a",0,2.5]]}};
 // alarms from the current readings: what a DCS would flash. They point at symptoms, not at the knob behind them.
 function knobAlarms(a,r){const L=[],al=(on,txt,hi)=>{if(on)L.push([txt,hi]);};const K=S.knob;
   if(a==="SPOT"){al(r.cp>6.5,"PULPER CONS HI",r.cp>7.2);al(r.cp<3.5,"PULPER CONS LO",r.cp<2.6);al(r.pulpLvl>92,"PULPER LEVEL HI",r.pulpLvl>100);al(r.amps>520,"ROTOR AMPS HI",r.amps>560);

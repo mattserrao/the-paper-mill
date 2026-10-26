@@ -65,8 +65,35 @@ def save(pw):
         pg.close()
     b.close()
 
+# v6.13.2 Real Numbers: a save from before (kPa steam, kPa cleaner ΔP, old ring crush, no S.u) is converted once on load
+# and carries on exactly as the same run born in the new units. The old save is made by un-converting a new one (07o in
+# reverse), with the steam loops touched and a cleaner on manual so every converted field is in play.
+UNCONV = """(snap)=>{const d=JSON.parse(snap),S=d.S,k=0.6,KP=0.145038,mul=(o,f,ks)=>{if(o)for(const n of ks)if(typeof o[n]==="number")o[n]/=f;};
+  delete S.u;mul(S.dry,k,["st3","dem","dem0","maxDem","man"]);if(S.knob&&S.knob.v&&S.knob.v.st1!=null)S.knob.v.st1/=k;
+  if(S.stm){S.stm.dp=S.stm.dp.map(v=>v/KP);if(S.stm.sp4!=null)S.stm.sp4/=KP;}
+  const W=S.vlv;if(W&&W.lp){for(const [id,f] of [["PV-302",k],["PV-303",k],["PDC-304",KP]]){const L=W.lp[id];if(!L)continue;mul(L,f,["sp","y","pvm","pvf","pvp"]);L.dq=L.dq.map(v=>v/f);}
+    if(W.st3!=null)W.st3/=k;if(W.B){mul(W.B,k,["dem","ceil","st3"]);mul(W.B,KP,["tcmax"]);}}
+  const O={hd:[35,95,15,40],lc:[60,120,25,50],lw:[45,105,20,45]};for(const c in S.dcs.pg){const p=S.dcs.pg[c],o=O[c];p.dp=o[0]+(p.dp-o[2])*(o[1]-o[0])/(o[3]-o[2]);}
+  if(S.we)S.we.fs/=KP;return JSON.stringify(d);}"""
+def units(pw):
+    C.sec("units")
+    b = launch(pw); pg = open_game(b, html_arg(), "notitle&nosave&" + LITE, viewport=(640, 400), errs=errs, wait=False)
+    pg.wait_for_function("window.__PM&&window.__B&&__B.first!==null&&(!__PM.G3.prewarm||__PM.G3.warm)", timeout=240000, polling=500)
+    pg.evaluate("()=>document.getElementById('v2go').click()"); pick_leader(pg)
+    snap = pg.evaluate("""()=>{const P=__PM,S=P.S,V=P.G3.vlv;P.setRunning(false);P.CH.on=false;while(S.t<1440)P.step(0.25);
+      V.touch('PV-303');V.setMode('PV-303','AUTO');V.setSP('PV-303',69);P.knob.set('st1',48);P.G3.dcs.purgeSet('lc','manual');for(let i=0;i<120;i++)P.step(0.25);
+      return JSON.stringify({v:1,S,C:P.C,CH:{on:false,lvl:P.CH.lvl,en:P.CH.en},MILL:null,day:2,cash:S.cash});}""")
+    RUN = """(s)=>{const P=__PM;P.G3.save.restore(JSON.parse(s));P.setRunning(false);P.CH.on=false;const S=P.S,a={u:S.u,st3:S.dry.st3,st1:S.knob.v.st1,sp:S.vlv.lp['PV-303'].sp,dp:S.stm.dp[2],lc:S.dcs.pg.lc.dp};
+      for(let i=0;i<4*240;i++)P.step(0.25);return Object.assign(a,{prod:S.tot.prodT,m:S.dry.m,st3b:S.dry.st3,lcb:S.dcs.pg.lc.dp});}"""
+    new = pg.evaluate(RUN, snap)
+    old = pg.evaluate(RUN, pg.evaluate(UNCONV, snap))
+    near = lambda x, y, t=1e-6: abs(x - y) <= t * max(1, abs(y))
+    ok("an older save is converted once on load (S.u 2), to the same pressures as the new one", old["u"] == 2 and all(near(old[k], new[k]) for k in ("st3", "st1", "sp", "dp", "lc")), json.dumps({k: [old[k], new[k]] for k in ("u", "st3", "st1", "sp", "dp", "lc")}))
+    ok("the converted save carries on as the new one: tons, moisture, steam and the cleaner on manual", near(old["prod"], new["prod"], 1e-4) and abs(old["m"] - new["m"]) < 0.02 and near(old["st3b"], new["st3b"], 1e-3) and near(old["lcb"], new["lcb"], 1e-4), json.dumps({k: [old[k], new[k]] for k in ("prod", "m", "st3b", "lcb")}))
+    b.close()
+
 with sync_playwright() as pw:
-    for f in (save,):
+    for f in (save, units):
         try: f(pw)
         except Exception as e: ok(f"{f.__name__}: ran to the end", False, repr(e)[:300])
 C.done()      # page errors fail the check

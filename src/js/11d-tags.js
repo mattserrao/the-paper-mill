@@ -19,9 +19,9 @@ const TAGS=[
   ["yield","Pulper yield","SPOT","%",()=>P.yieldF*((S.M&&S.M.yieldMul)||1)*dpYield()*100,"a.yield"],["cp","Pulper consistency","SPOT","%",r=>r.cp,""],
   ["amps","Pulper rotor","SPOT","A",r=>r.amps,"a.amps"],["pulpLvl","Pulper level","SPOT","%",r=>r.pulpLvl,""],
   ["rejt","Rejects","SPOT","t/h",()=>(_R().feed||0)*(1-P.yieldF*((S.M&&S.M.yieldMul)||1)*dpYield()),""],
-  ["hddp","HD cleaner ΔP","SPOT","kPa",()=>purgeDp("hd")+(active("hdblow")?40:0),""],["lcdp","LC cleaners ΔP","SPOT","kPa",()=>purgeDp("lc")+(active("lcplug")?50:0),""],
-  ["lwdp","LW cleaners ΔP","SPOT","kPa",()=>purgeDp("lw")+(active("lwplug")?45:0),""],
-  ["fsld","Fine screen load","SPOT","%",()=>(_R().fiberIn||0)/Math.max(1,P.screenMax)*100,""],["fsdp","Fine screen ΔP","SPOT","kPa",()=>S.we?S.we.fs:null,""],
+  ["hddp","HD cleaner ΔP","SPOT","psi",()=>purgeDp("hd")+(active("hdblow")?PURGE.add.hd:0),""],["lcdp","LC cleaners ΔP","SPOT","psi",()=>purgeDp("lc")+(active("lcplug")?PURGE.add.lc:0),""],
+  ["lwdp","LW cleaners ΔP","SPOT","psi",()=>purgeDp("lw")+(active("lwplug")?PURGE.add.lw:0),""],
+  ["fsld","Fine screen load","SPOT","%",()=>(_R().fiberIn||0)/Math.max(1,P.screenMax)*100,""],["fsdp","Fine screen ΔP","SPOT","psi",()=>S.we?S.we.fs:null,""],
   ["chest","Stock chest level","SPOT","%",()=>S.tank/P.tankCap*100,"a.chest"],["chestg","Stock chest volume","SPOT","gal",()=>S.tank/(WAT.cs/100)*264.172,""],
   ["kwh","Refining energy","SPOT","kWh/t",r=>r.kwh,"a.kwh"],["refkw","Refiner load","SPOT","kW",r=>r.run?r.refkw:null,"a.refkw"],["gap","Refiner plate gap","SPOT","mm",r=>r.gap,""],["csf","Freeness","SPOT","mL CSF",r=>r.csf,"a.csf"],
   ["refq","Refined stock flow","SPOT","% of std",r=>r.refq,""],["mcLvl","Machine chest level","SPOT","%",r=>r.mcLvl,""],["mcg","Machine chest volume","SPOT","gal",r=>MCHEST_GAL*r.mcLvl/100,""],
@@ -31,7 +31,7 @@ const TAGS=[
   ["hbc","Headbox consistency","WET","%",()=>S.pm==="run"&&S.we?S.we.hbc:null,"a.hbc"],["bwv","Basis weight valve","WET","%",()=>S.we?S.we.v:null,""],
   ["bwsp","Basis weight setpoint","WET","lb/1000 ft²",()=>bwSp(),""],
   ["drain","Table and couch drainage","WET","gpm",()=>S.we?GPM(S.we.f.drain||0):0,""],["seal","Vacuum box water (seal pit)","WET","gpm",()=>S.we?GPM(S.we.f.seal||0):0,""],
-  ["pressw","Press water (to the save-all)","WET","gpm",()=>S.we?GPM(S.we.f.press||0):0,""],["wwov","White water silo overflow","WET","gpm",()=>S.we?GPM(S.we.f.over||0):0,""],
+  ["pressw","Press water (to the save-all)","WET","gpm",()=>S.we?GPM(S.we.f.press||0):0,""],["wwov","White water silo overflow (to the WW chest, by design)","WET","gpm",()=>S.we?GPM(S.we.f.over||0):0,""],
   ["wsp","Wire speed","WET","fpm",()=>S.pmSpeed/DCS_DRAW(),""],["jw","Jet-to-wire ratio","WET","",()=>dcsJw(),""],["rd","Rush / drag (+ rush, − drag)","WET","fpm",()=>S.pm==="run"?dcsRD():null,"a.rd"],["gbox","Gravity box vacuum","WET","inHg",r=>r.gbox,""],["lvac","Low vacuum boxes","WET","inHg",r=>r.lvac,""],["vac","Flatbox vacuum","WET","inHg",r=>r.vacIn,""],["vpkw","Vacuum pump","WET","kW",r=>r.run?r.vpkw:null,""],["couchSol","Couch solids","WET","%",r=>r.run?r.couchSol:null,""],
   ["pl","Press load","WET","kN/m",r=>r.pl,""],["pressSol","Press solids","WET","%",r=>r.run?r.pressSol:null,""],["edge","Fabric edge","WET","mm",r=>r.edge,""],
   ["gtrav","Guide travel used","WET","%",r=>r.gm?Math.min(1,r.gtrav)*100:null,""],["osc","Felt shower oscillator","WET","%",r=>r.osc,""],
@@ -42,8 +42,8 @@ const TAGS=[
   ["fpr","First pass retention","WET","%",()=>S.pm==="run"?fprNow():null,""],
   ["hum","Machine room humidity","WET","%",()=>clamp((S.stm&&!S.zen?S.stm.hum:62+(motStatus("fog")!=="run"||active("fogfan")?24:0))+wob2(0.01,8)*3,0,100),""],   // (v6.13: the machine room's air, 07m)
   // dry end
-  ["speed","Reel speed","DET","fpm",r=>r.speed,"a.speed"],["prod","Paper made","DET","t/h",()=>_R().prod,"a.prod"],["st1","1st section steam","DET","kPa",r=>r.st1,""],
-  ["st3","3rd section steam","DET","kPa",r=>r.run?r.st3:null,""],["steam","Dryer steam flow","DET","t/h",r=>r.steam>0.5?r.steam:null,"a.steam"],
+  ["speed","Reel speed","DET","fpm",r=>r.speed,"a.speed"],["prod","Paper made","DET","t/h",()=>_R().prod,"a.prod"],["st1","1st section steam","DET","psig",r=>r.st1,""],
+  ["st3","3rd section steam","DET","psig",r=>r.run?r.st3:null,""],["steam","Dryer steam flow","DET","t/h",r=>r.steam>0.5?r.steam:null,"a.steam"],
   ["dryl","Dryer load","DET","% of limit",()=>S.dry&&S.pm==="run"?S.dry.load*100:null,"a.dryl"],["moist","Reel moisture","DET","%",r=>r.run?r.moist:null,"a.moist"],
   ["bw","Basis weight","DET","lb/1000 ft²",r=>r.run?r.bw:null,"a.bw"],["tension","Draw tension","DET","kN/m",r=>r.run?r.tension:null,""],["draw","Open draw","DET","%",r=>r.draw,""],
   ["reel","Paper waiting at the winder","DET","t",()=>S.winderBuf+S.reel,"a.reel"],["cut","Winder","DET","t/h",()=>_R().cut,"a.cut"],["conv","Rolls on the conveyor","DET","rolls",()=>S.conv||0,""],
@@ -60,7 +60,7 @@ const TAGS=[
   ["wcl","White water chest level","WATER","%",()=>S.wat?S.wat.L/WAT.cap*100:null,""],["wcg","White water chest volume","WATER","gal",()=>S.wat?GAL(S.wat.L):null,""],
   ["wuse","Fresh water per ton","WATER","gal/ton",()=>{const W=wr();return W&&W.p>1?GAL(W.fresh/W.p):null;},""],
   // quality
-  ["off","Reel to the beater","QCS","%",r=>r.run?r.off*100:null,""],["rct","Ring crush","QCS","lbf/6 in",()=>S.pm==="run"?QNOW.rct:null,"a.rct"],["prem","Weight credit (sold by area)","QCS","%",()=>S.zen?null:(areaQcs()-1)*100,""],["cdsp","CD moisture spread","QCS","%",r=>r.run?Math.max(...r.zones)-Math.min(...r.zones):null,""],
+  ["off","Reel to the beater","QCS","%",r=>r.run?r.off*100:null,""],["rct","Ring crush","QCS","lbf/6 in",()=>S.pm==="run"?QNOW.rct:null,"a.rct"],["prem","Weight credit (sold by area)","QCS","%",()=>S.zen?null:(areaQcs()-1)*100,""],["cdsp","CD moisture 2σ","QCS","%",r=>r.run?cd2s(r.zones):null,""],
   ["bank","Beater bay waiting","QCS","t",()=>S.q?S.q.bank||0:0,""],
   // planning and the yard
   ["yard","Bale yard","PLAN","t",()=>S.yard,"a.yard"],["unload","Unloading","PLAN","t/h",()=>_R().unload,"a.unload"],["occp","OCC price","PLAN","$/t",()=>P.occPrice,"a.occp"],
@@ -75,9 +75,9 @@ const TAGS=[
   ["lv104pv","LV-104 machine chest level (PV)","SPOT","%",()=>vlvView("LV-104").pv,""],["lv104op","LV-104 machine chest valve","SPOT","% open",()=>vlvView("LV-104").pos,"a.v104"],
   ["fv201pv","FV-201 basis weight (PV)","WET","lb",()=>S.pm==="run"?vlvView("FV-201").pv:null,""],["fv201op","FV-201 basis weight valve","WET","% open",()=>vlvView("FV-201").pos,"a.v201"],
   ["lv202pv","LV-202 white water silo level (PV)","WET","%",()=>vlvView("LV-202").pv,""],["lv202op","LV-202 silo makeup valve","WET","% open",()=>vlvView("LV-202").pos,"a.v202"],
-  ["qc300pv","QC-300 reel moisture (PV)","DET","%",()=>S.pm==="run"?vlvView("QC-300").pv:null,""],["qc300op","QC-300 steam setpoint out","DET","kPa",()=>vlvView("QC-300").op*3,""],
-  ["pv302pv","PV-302 2nd section steam (PV)","DET","kPa",()=>vlvView("PV-302").pv,""],["pv302op","PV-302 steam valve","DET","% open",()=>vlvView("PV-302").pos,"a.v302"],
-  ["pv303pv","PV-303 3rd section steam (PV)","DET","kPa",()=>vlvView("PV-303").pv,""],["pv303op","PV-303 steam valve","DET","% open",()=>vlvView("PV-303").pos,"a.v303"],
+  ["qc300pv","QC-300 reel moisture (PV)","DET","%",()=>S.pm==="run"?vlvView("QC-300").pv:null,""],["qc300op","QC-300 steam setpoint out","DET","psig",()=>vlvView("QC-300").op*VD["QC-300"].out.k,""],
+  ["pv302pv","PV-302 2nd section steam (PV)","DET","psig",()=>vlvView("PV-302").pv,""],["pv302op","PV-302 steam valve","DET","% open",()=>vlvView("PV-302").pos,"a.v302"],
+  ["pv303pv","PV-303 3rd section steam (PV)","DET","psig",()=>vlvView("PV-303").pv,""],["pv303op","PV-303 steam valve","DET","% open",()=>vlvView("PV-303").pos,"a.v303"],
   // v6.10 the drives in the MCC (07i): each one's load, % of its rated power, and the MCC's total
   ["dl_pulp","Pulper rotor drive load","DRV","%",r=>rlyLoad("pulp",r),""],["dl_refA","Refiner A drive load","DRV","%",r=>rlyLoad("refA",r),""],["dl_refB","Refiner B drive load","DRV","%",r=>rlyLoad("refB",r),""],
   ["dl_fan","Fan pump drive load","DRV","%",r=>rlyLoad("fan",r),""],["dl_couch","Couch roll drive load","DRV","%",r=>rlyLoad("couch",r),""],["dl_pr1","1st press drive load","DRV","%",r=>rlyLoad("pr1",r),""],
@@ -87,8 +87,8 @@ const TAGS=[
 // v6.13 Steam and Sheet (07m, 07n): the cans and the cascade, the hood air, energy, the headbox, the sheet's strength, the
 // deposits, the broke chest, the reel and the break risk
 {const T3=()=>S.stm&&!S.zen?S.stm:null,run=()=>S.pm==="run";TAGS.push(
-  ["dp1","1st section syphon ΔP","STM","kPa",()=>T3()?T3().dp[0]:null,""],["dp2","2nd section syphon ΔP","STM","kPa",()=>T3()?T3().dp[1]:null,""],["dp3","3rd section syphon ΔP","STM","kPa",()=>T3()?T3().dp[2]:null,"a.dp3"],
-  ["dpneed","3rd section ΔP needed","STM","kPa",()=>T3()&&run()?stmNeed(2):null,""],["pdc304op","PDC-304 motive steam valve","STM","% open",()=>T3()?vlvView("PDC-304").pos:null,""],
+  ["dp1","1st section syphon ΔP","STM","psi",()=>T3()?T3().dp[0]:null,""],["dp2","2nd section syphon ΔP","STM","psi",()=>T3()?T3().dp[1]:null,""],["dp3","3rd section syphon ΔP","STM","psi",()=>T3()?T3().dp[2]:null,"a.dp3"],
+  ["dpneed","3rd section ΔP needed","STM","psi",()=>T3()&&run()?stmNeed(2):null,""],["pdc304op","PDC-304 motive steam valve","STM","% open",()=>T3()?vlvView("PDC-304").pos:null,""],
   ["bt3","3rd section blow-through","STM","% of steam",()=>T3()&&run()?T3().bt[2]*100:null,""],
   ["btwaste","Blow-through to the condenser","STM","t/h",()=>T3()?T3().waste:null,""],["hoodH","Hood exhaust humidity","STM","g/kg",()=>T3()&&run()?T3().H:null,"a.hoodH"],
   ["exh","Hood exhaust fan","STM","%",()=>T3()?T3().exh:null,""],["sup","Hood supply fan","STM","%",()=>T3()?T3().sup:null,""],["airst","Supply air coil steam","STM","t/h",()=>T3()?T3().air:null,""],

@@ -23,7 +23,7 @@
    wet sheet's strength at its press solids, stickies and holes, wet streaks, broke, stock swings, clothing, the dryers
    and hood). The dice still say when; R (times RCAL, so a hands-off mill breaks as often as v6.12 on average) says how
    likely, and the contributors say where. Seasons, survival and free play; zen keeps the plain model. ---- */
-const HB={jw0:0.985,jwMin:0.965,jwMax:1.005,b0:12,bK:3};
+const HB={jw0:0.985,jwMin:0.965,jwMax:1.005,b0:23,bK:0.25,w:205*0.0254,cc:0.8};   // (v6.13.2: b0 is the fallback opening, mm; bK a share of it)
 const SH={stfiSpec:0.95,tsr0:1.6,tsrD:400,tsrR:300,dep0:40,depG:6,depC:0.15,bkCap:150,bkTrk:0.30,bkHi:0.75,bkLim:0.20,turnP:0.012,nip0:2,hard0:60,hardK:12,
   rcal:1};
 const STFI0={"24":2.6,"28":2.9,"31":3.25,"34Super":3.6};   // kN/m at the grade's target weight and standard refining
@@ -32,9 +32,15 @@ const shOn=()=>!!(S&&!S.zen);
 const hbJw=()=>S&&S.hb&&!S.zen?S.hb.jw:HB.jw0;
 const jwDev=()=>(hbJw()-HB.jw0)/0.02;   // (the old slice scale: the dewatering chain's jet term, 07b)
 function hbSetJw(v){if(S.zen)return;if(!S.hb)S.hb={jw:HB.jw0};S.hb.jw=Math.round(clamp(+v,HB.jwMin,HB.jwMax)*1000)/1000;const K=knobState();K.any=true;K.moved.slice=S.t;}
-// the slice opening (mm) and the headbox consistency it gives at a held J/W
-const slcB=()=>HB.b0+HB.bK*((S.knob&&S.knob.x&&S.knob.x.sb)||0);
-const hbcSet=()=>S.zen?WE.hbc:WE.hbc*HB.b0/slcB();
+// the slice opening (mm) and the headbox consistency it gives at a held J/W.
+// v6.13.2 Real Numbers: the opening is what the headbox flow needs at this jet speed (B = Q / (jet x width x Cc), Cc 0.8 the
+// jet's contraction; ~23 mm on grade 24, it was a fixed 12 mm), and the knob widens or narrows it by a share (25% a step,
+// the same ratio as the old 3 mm on 12, so the knob does exactly what it did)
+const slcFlow=()=>{const q=S&&S.we&&S.we.f?S.we.f.hb||0:0,v=hbJet()*0.3048/60;return q>0&&v>1?q/3600/(v*HB.w*HB.cc)*1000:HB.b0;};
+const slcK=()=>1+HB.bK*((S.knob&&S.knob.x&&S.knob.x.sb)||0);
+const slcB=()=>slcFlow()*slcK();
+const slcMm=v=>slcFlow()*(1+HB.bK*(v||0));   // (the opening a slice setting v (-1..1) asks for, for the slice panels)
+const hbcSet=()=>S.zen?WE.hbc:WE.hbc/slcK();
 // the jet speed (fpm) and the headbox pressure it takes (psi, from the jet's head; Cv 0.97)
 const hbJet=()=>hbJw()*S.pmSpeed/DCS_DRAW();
 const hbPsi=()=>{const v=hbJet()*0.3048/60;return v*v/(2*9.81)/0.94*1.4219;};

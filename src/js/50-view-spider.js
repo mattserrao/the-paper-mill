@@ -18,7 +18,7 @@ function slcBreak(){if(G3.slcFix)return;G3.slcFix={i:0,ph:"swear",t:0};
 G3.onSlcReset=()=>{["slcV","slcH","slcReset"].forEach(id=>$(id).disabled=false);$("slcV").value=0;$("slcH").value=0;log("Slice reset to standard. Wet line is back where it belongs.","ok");drawSlice();};
 $("slcReset").addEventListener("click",()=>{if(S.knob&&!knobAt("slice"))knobReset("slice");$("slcV").value=0;$("slcH").value=0;drawSlice();});
 function drawSlice(){const D=G3.SLC;if(!D||$("slice").hidden)return;const g=D.geo(),wl=g.lipX-g.wet;
-  $("slcVv").textContent="B "+(12+3*D.v).toFixed(1)+" mm";$("slcHv").textContent="L "+(D.h>=0?"+":"")+(4*D.h).toFixed(1)+" mm";
+  $("slcVv").textContent="B "+slcMm(D.v).toFixed(1)+" mm";$("slcHv").textContent="L "+(D.h>=0?"+":"")+(4*D.h).toFixed(1)+" mm";
   $("slcJ").textContent=(54.5-g.land).toFixed(2)+" m past the breast roll";$("slcW").textContent=wl.toFixed(1)+" m";
   const n=$("slcNote"),off=wl<4.1||wl>6.3;n.className="spin"+(off?" bad":"");
   if(G3.slcFix){n.className="spin bad";n.textContent="Sheet break! The wet line ran off the former. An operator is on the way to reset the slice.";G3.drawLB&&G3.drawLB();return;}

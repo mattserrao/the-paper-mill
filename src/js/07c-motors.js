@@ -18,7 +18,10 @@ const MOTORS=[
 const MOTN=Object.fromEntries(MOTORS.map(m=>[m.id,m])),MOTEV=Object.fromEntries(MOTORS.map(m=>[m.ev,m]));
 // where each stopped motor's tag shows in 3D: its upset's spot (31-3d-upset-fx.js); the fog fan also shows the fog
 const MOT_PIN=Object.fromEntries(MOTORS.map(m=>[m.ev,m.pin||m.like])),MOT_FXDEF={m_fog:"fogfan"};
-const PURGE={base:{hd:35,lc:60,lw:45},rise:0.15,trip:{hd:95,lc:120,lw:105},up:{hd:"hdblow",lc:"lcplug",lw:"lwplug"},
+// v6.13.2 Real Numbers: ΔP in psi at the cleaners' design levels (they were 35/60/45 kPa, about a third of real); the climb in
+// manual and the plug points scale with them, so a cleaner left in manual still plugs after the same ~400 min
+const PURGE_OLD={hd:{b:35,t:95},lc:{b:60,t:120},lw:{b:45,t:105}};
+const PURGE={base:{hd:15,lc:25,lw:20},rise:0.0625,trip:{hd:40,lc:50,lw:45},add:{hd:17,lc:21,lw:20},up:{hd:"hdblow",lc:"lcplug",lw:"lwplug"},
   name:{hd:"HD cleaner reject purge",lc:"LC cleaner reject flush",lw:"Lightweight cleaner reject flush"}};
 // the motor upsets join EVENTS (03/04 load order: this file runs after 04-upsets.js, so they are added here). Never rolled
 // at random: their own dice stream ("motor") and an endless MTBF, so every other upset keeps its timing; knob:true keeps

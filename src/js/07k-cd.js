@@ -60,3 +60,5 @@ function cdWhy(){const C2=S.cd;if(!C2)return "";return [0,1].filter(s=>C2.off[s]
 // the player's moves on the QCS CD tab
 function cdSetMan(row,on){const C2=cdState();if(row==="sb"&&!sbHave())return;C2.man[row]=!!on;if(on){const src=row==="sp"?C2.sp:row==="sb"?C2.sb:C2.dil;C2.ms[row]=src.map(v=>Math.round(clamp(v*(row==="dil"?100/1.5:100),-100,100)));}}
 function cdSetZone(row,z,v){const C2=cdState();if(row==="sb"&&!sbHave())return;C2.man[row]=true;C2.ms[row][z]=Math.round(clamp(v,row==="dil"?-100:0,100));}
+// v6.13.2 Real Numbers: the CD moisture profile's 2-sigma (%), the way mills report it (it read max - min before)
+const cd2s=z=>{if(!z||!z.length)return 0;const m=z.reduce((a,v)=>a+v,0)/z.length;return 2*Math.sqrt(z.reduce((a,v)=>a+(v-m)*(v-m),0)/z.length);};
