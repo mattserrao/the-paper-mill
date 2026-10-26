@@ -1,5 +1,9 @@
 # Changelog
 
+## v6.13.1 (2026-10-26): Your Last Soda
+Minor update: release of v6.13.1-t1 (below), merged from test/v6.13.1-last-soda. Regression suite: all 22 default checks
+pass on t1 (new check: soda). The scene was played through in the test browser; not yet on an iPhone.
+
 ## v6.13.1-t1 (2026-10-25): your last soda (test build, test/v6.13.1-last-soda)
 - **Easter egg: the vending machine by the office door (50n).** Tap it: **Buy a soda** (a feed line; an operator wanders
   over for one) or **Buy your last soda**. The last soda drops the sim to 1 min/s ("Last soda" on the speed label; the
