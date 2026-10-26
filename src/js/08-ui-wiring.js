@@ -61,7 +61,7 @@ function setSimSpeed(v){C.simSpeed=Math.max(1,Math.min(TURBO?960:120,Math.round(
 const outCapped=()=>!!(S&&S.outg&&S.outg.on&&S.outg.watch&&S.season&&S.season.on&&!S.zen&&C.simSpeed>OUT.simCap&&!TURBO_FAST(C.simSpeed));
 // v5.6: a knob panel or a DCS / QCS screen open runs the game at 1 min/s (G3.knobUI), and closing it is back at the
 // player's speed (their choice is never touched)
-function simRate(){return S&&S.zen?1:G3.knobUI?(G3.vlvClk||1):outCapped()?OUT.simCap:C.simSpeed;}
+function simRate(){return S&&S.zen?1:G3.soda&&G3.soda.slow?1:G3.knobUI?(G3.vlvClk||1):outCapped()?OUT.simCap:C.simSpeed;}
 
 const cgrid=$("chaosgrid");
 GROUPS.forEach(([g,lab])=>{const d=document.createElement("div");d.className="grp";const h=document.createElement("h3");h.textContent=lab;d.appendChild(h);
