@@ -35,9 +35,9 @@ SC = [
  ("guide manual", {"guide": {"gm": 0, "gt": 10}}, 900, {"inc": "fabric", "after": 60, "fixed": ["guide"]}),
  ("guide trimmed on auto", {"guide": {"gm": 1, "gt": 28}}, 1600, {"inc": "fabric", "after": 60, "fixed": ["guide"]}),
  ("couch agitator off + break", {"couch": 0, "_break": 90}, 400, {"inc": "couchpit", "after": 60, "fixed": ["couch"]}),
- ("steam1 high + refiner open (dry)", {"st1": 250, "ref": 20}, 600, {"off": 0.2, "dry": True, "after": 5, "fixed": ["st1"]}),
+ ("steam1 high + refiner open (dry)", {"st1": 100, "ref": 20}, 600, {"off": 0.2, "dry": True, "after": 5, "fixed": ["st1"]}),
  ("steam1 low + refiner tight (wet)", {"_up": "refiner", "st1": 0, "ref": 111}, 600, {"off": 0.05, "wet": True, "after": 10}),   # (v6.12.1-t7: 111 kWh/t needs the refiner upgrade's power, 07g refEff)
- ("steam1 high alone (no off-spec)", {"st1": 200}, 400, {"maxoff": 0.0, "steam": 1.05}),
+ ("steam1 high alone (no off-spec)", {"st1": 84}, 400, {"maxoff": 0.0, "steam": 1.05}),
  ("refiner tight alone (steam only)", {"_up": "refiner", "ref": 94}, 400, {"maxoff": 0.0, "steam": 1.1}),   # (v6.12.1-t7: with the upgrade's power)
  ("hood doors raised (4% steam only)", {"hood": 1}, 400, {"maxoff": 0.0, "steam": 1.035}),   # (v6.11.1: no trace on its own, the player's view)
 ]
@@ -120,7 +120,7 @@ def ui(pw):
     chk("panel moves the knob", "P.G3.knobTap({k:'knob',id:'agit'});await wait(50);const r=document.querySelector('#kpCtl input[type=range]');r.value=40;r.dispatchEvent(new Event('input'));await wait(50);const v=P.S.knob.v.agit;document.getElementById('kpReset').click();await wait(50);const back=P.S.knob.v.agit;document.getElementById('kpClose').click();return [v,back]", [40, 100])
     chk("DCS screen slows to 1", "P.G3.knobTap({k:'station',a:'WET'});await wait(50);return [!document.getElementById('dcsOv').hidden,P.simRate(),document.getElementById('dcs-h').textContent]", [True, 1, "PM1 · WET END · DCS"])
     chk("DCS screens (v6.7: one row; QCS is its own screen)", "document.querySelector('#dcsOv [data-a=QCS]').click();await wait(50);const q=document.getElementById('dcs-h').textContent;document.querySelector('#dcsOv [data-a=DET]').click();await wait(50);return [q,document.getElementById('dcs-h').textContent]", ["PM1 · QUALITY · QCS", "PM1 · DRY END · DCS"])
-    chk("DCS sets a DCS knob", "await wait(30);const r=document.querySelector('.dcsrow[data-k], .dcsrow .kctl[data-k=st1] input[type=range]');r.value=120;r.dispatchEvent(new Event('input'));await wait(30);const v=P.S.knob.v.st1;P.knob.reset('st1');return v", 120)
+    chk("DCS sets a DCS knob", "await wait(30);const r=document.querySelector('.dcsrow[data-k], .dcsrow .kctl[data-k=st1] input[type=range]');r.value=72;r.dispatchEvent(new Event('input'));await wait(30);const v=P.S.knob.v.st1;P.knob.reset('st1');return v", 72)
     chk("closing the DCS gives the speed back", "document.getElementById('dcsClose').click();await wait(50);return [document.getElementById('dcsOv').hidden,P.simRate()]", [True, 30])
     chk("spider valve panel slows to 1 too", "P.G3.knobTap({k:'spider'});await wait(450);const a=P.simRate();document.getElementById('spiClose').click();await wait(450);return [a,P.simRate()]", [1, 30])
     chk("Settings has the view switch", "const c=document.getElementById('knobView');return !!c&&!!c.closest('#v2viewrow')", True)

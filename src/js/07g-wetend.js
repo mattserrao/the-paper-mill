@@ -32,9 +32,11 @@
 const WE={lwM:1.03,lwTau:45,hbc:0.8,mc0:3.2,dead:3,tauI:8,trimMin:-0.10,trimMax:0.05,valveMax:100,
   silo:60000/264.172,over:0.85,makeL:0.25,make:120,cav:0.15,trip:0.08,tripMin:30,refill:0.6,seal0:0.18,sealK:0.006,
   kwh0:60,kwhMin:20,kwhMax:130,rctK:0.0045,rctStk:0.05,rctDraw:0.04,rctSpec:0.97,kwhCost:0.07,
-  cpK:0.12,cpTau:20,dirt:0.8,dirtRef:0.1,rejOn:1.1,rejW:{hd:0.03,lc:0.04,lw:0.03,fs:0.05},fs0:30};
+  cpK:0.12,cpTau:20,dirt:0.8,dirtRef:0.1,rejOn:1.1,rejW:{hd:0.03,lc:0.04,lw:0.03,fs:0.05},fs0:30*KP};   // (v6.13.2: fine screen ΔP in psi)
 // ring crush (lbf/6 in) of each grade at its target weight and standard refining; the spec is 97 % of it
-const RCT0={"24":60,"28":67,"31":75,"34Super":84};
+// v6.13.2 Real Numbers: ring crush at recycled-medium levels (lbf/6 in; 26-lb recycled medium runs ~30). It was 60/67/75/84,
+// about twice real; the spec (0.97 x) and AUTO-LW are ratios, so the trimming is unchanged
+const RCT0={"24":30,"28":35,"31":40,"34Super":46};
 // refining: specific energy <-> plate gap (mm) <-> freeness (mL CSF)
 const gapOf=e=>clamp(0.5-(e-WE.kwh0)*0.35/60,0.08,1.0);
 const eOfGap=g=>WE.kwh0+(0.5-g)*60/0.35;
@@ -93,7 +95,7 @@ function weTick(dt){const W=weState(),run=S.pm==="run";
   if(baleOn()&&S.bq){const d=-WE.cpK*Math.max(0,S.bq.m-BALE.std)*100;W.cpd=d;W.cpc=ease(W.cpc||0,d,dt,WE.cpTau);}else{W.cpd=0;W.cpc=0;}
   // fine screen pressure drop: its load and the dirt in the stock
   {const ld=(S.rates.fiberIn||0)/Math.max(1,P.screenMax),on=motStatus("fscr")==="run"&&!(S.M&&S.M.pulperDown);
-    W.fs=ease(W.fs,on?WE.fs0*(0.55+0.45*ld)*weDirt()+(active("fscreen")?30:0):0,dt,10);}}
+    W.fs=ease(W.fs,on?WE.fs0*(0.55+0.45*ld)*weDirt()+(active("fscreen")?30*KP:0):0,dt,10);}}
 // the pulper's consistency dip from bale water (% points, negative while the loop catches up)
 const cpBale=()=>S.we&&!S.zen&&!vlvT("NV-101")?(S.we.cpd||0)-(S.we.cpc||0):0;   // (v6.9: once touched, NV-101's model carries the bale water, 07h)
 // how dirty the stock is: the yard mix's contamination (A bales clean, B and C dirty)
@@ -102,10 +104,10 @@ const weDirt=()=>baleOn()&&S.bq?1+WE.dirt*Math.max(0,S.bq.k-WE.dirtRef):1;
 function dpYield(){if(S.zen)return 1;let x=0;for(const k of ["hd","lc","lw"])x+=WE.rejW[k]*Math.max(0,purgeDp(k)/PURGE.base[k]-WE.rejOn);
   const fs=S.we?S.we.fs:WE.fs0;x+=WE.rejW.fs*Math.max(0,fs/WE.fs0-WE.rejOn);return clamp(1-x,0.7,1);}
 // strength: ring crush from refining, the measured weight and stickies; the spec is the grade's
-const rctSpec=()=>Math.round((RCT0[C.grade]||60)*WE.rctSpec*10)/10;
+const rctSpec=()=>Math.round((RCT0[C.grade]||30)*WE.rctSpec*10)/10;
 // (v6.8.3: open draw: each % of draw over the 1.5 % standard stretches the sheet and takes 4 % off ring crush; less draw adds it)
 function rctNow(bw){const ri=1+WE.rctK*(kwhNow()-WE.kwh0)-WE.rctStk*Math.max(0,((S.bq&&!S.zen)?S.bq.ck:0.1)-0.1)-WE.rctDraw*((S.zen?drawStd():knobVal("draw"))-drawStd());   // (v6.11.2: dry strength starch removed; v6.11.1 added its ring crush here)
-  return (RCT0[C.grade]||60)*(bw/bwStd())*ri*shStrF();}   // (v6.13: formation and broke, 07n; 1 untouched)
+  return (RCT0[C.grade]||30)*(bw/bwStd())*ri*shStrF();}   // (v6.13: formation and broke, 07n; 1 untouched)
 // v6.11.2 paper is sold by area (MSF, thousand ft²), the way box plants buy it. The list price ($/t) is for a ton at the
 // grade's target weight; a ton made lighter covers more ft² and sells for list × bwStd/bw, a heavier one for less. The player
 // still sees tons: the ratio rides on every lot from the reel to the truck (06 lotPut) and is paid when the truck leaves.

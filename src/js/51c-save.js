@@ -35,6 +35,7 @@
       // the open dialog: a card comes back up; an outage plan is asked again
       const op=S.cards.open;S.cards.open=null;
       if(op&&op.outage&&S.outg)S.outg.noticed=false;
+      try{unitsMigrate();}catch(e){diag("units migrate: "+String(e&&e.message||e).slice(0,80));}   // v6.13.2: pressures to psi, ring crush to real levels (07o)
       try{vlvMigrate();}catch(e){diag("valves migrate: "+String(e&&e.message||e).slice(0,80));}   // v6.9: manual steam / BW valve / pulper valve from older saves are the new loops
       applyUpgrades();if(d.PS)for(const k in d.PS)if(k in P&&typeof P[k]===typeof d.PS[k])P[k]=d.PS[k];   /* (v6.13: the sim refreshes P hourly with the civics meters as they were then; recomputing it on load moved the price, breaks and repairs a hair and the run drifted) */S.M=mods();BANNERS.length=0;seasonLocks(true);
       try{syncControls();}catch(e){}try{updateShop();}catch(e){}try{if(G3.rebrand)G3.rebrand();}catch(e){}

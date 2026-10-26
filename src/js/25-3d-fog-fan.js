@@ -505,7 +505,7 @@
      const sh=a>0.6;FG.traverse(o=>{if(o.isMesh&&o!==CH)o.castShadow=sh;});}
    // (the prewarm draws it half faded, so the transparent shaders are compiled at start-up, 31)
    G3.hoodWarm=on=>hoodShow(on?0.5:HOOD.a);
-   G3.hoodTick=rdt=>{if(!(rdt>0))return;const knob=!S.zen&&knobVal("hood")===1,auto=S.pm!=="run"||outOn()||!!(G3.sheetRide&&G3.sheetRide.on);   // (v6.13: the sheet camera lifts the doors to look in, 50m)
+   G3.hoodTick=rdt=>{if(!(rdt>0))return;const knob=!S.zen&&knobVal("hood")===1,auto=S.pm!=="run"||outOn()||!!(G3.sheetRide&&G3.sheetRide.on)||!!G3.zenHood;   // (v6.13: the sheet camera lifts the doors to look in, 50m)
      if(knob&&!HOOD.knob&&HOOD.u<0.5)try{AUDIO.sfx("hiss",400);}catch(_){}   // (the hood's air cylinders letting go)
      if(!knob&&HOOD.knob&&HOOD.u>0.5&&!auto)try{AUDIO.sfx("clunk",400);}catch(_){}
      HOOD.knob=knob;HOOD.want=knob||auto||HOOD.f>0.002;

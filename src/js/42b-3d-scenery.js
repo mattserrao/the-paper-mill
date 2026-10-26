@@ -132,7 +132,7 @@
     function card(x,y0,z,pts,hex,shade=0.3,fwd=0,hexLo){const S2=SEC[secOf(x,z)];const yb=y0+hAt(x,z);x-=Math.SQRT1_2*fwd;z+=Math.SQRT1_2*fwd;   /* (fwd: a crown sits a hair in front of its trunk) */_cc.set(G3.palQ(hex)).convertSRGBToLinear();_cc2.set(G3.palQ(hexLo||hex)).convertSRGBToLinear();
       let lo=1e9,hi=-1e9;for(const p of pts){lo=Math.min(lo,p[1]);hi=Math.max(hi,p[1]);}const span=Math.max(1e-6,hi-lo);
       // (v6.12 free camera: two crossed cards, each with both faces, so a tree reads as a tree from any side)
-      for(const B of (G3.freeCam?CRF:[CR]))for(const back of (G3.freeCam?[false,true]:[false])){const P=(u,v)=>[x+B[0]*u,yb+v,z+B[2]*u];
+      for(const B of (G3.geomFree?CRF:[CR]))for(const back of (G3.geomFree?[false,true]:[false])){const P=(u,v)=>[x+B[0]*u,yb+v,z+B[2]*u];
         for(let i=1;i<pts.length-1;i++)for(const p of (back?[pts[0],pts[i+1],pts[i]]:[pts[0],pts[i],pts[i+1]])){const w=P(p[0],p[1]);S2.p.push(w[0],w[1],w[2]);const t=(p[1]-lo)/span,k=1-shade*(1-t);
           S2.c.push((_cc2.r+(_cc.r-_cc2.r)*t)*k,(_cc2.g+(_cc.g-_cc2.g)*t)*k,(_cc2.b+(_cc.b-_cc2.b)*t)*k);}
         S2.n+=pts.length-2;}}
@@ -645,7 +645,7 @@
     let tris=0;const parts=[];
     // v6.1 t7: the fixed camera never sees a triangle facing away from it (the material is single-sided, so they were only
     // ever transformed and thrown away): keep the ones facing the camera
-    if(!G3.freeCam){const th=-Math.PI/4,ph=Math.acos(Math.sqrt(1/3)),vx=Math.sin(ph)*Math.sin(th),vy=Math.cos(ph),vz=Math.sin(ph)*Math.cos(th);let before=0,after=0;   // (v6.12: not with the free camera)
+    if(!G3.geomFree){const th=-Math.PI/4,ph=Math.acos(Math.sqrt(1/3)),vx=Math.sin(ph)*Math.sin(th),vy=Math.cos(ph),vz=Math.sin(ph)*Math.cos(th);let before=0,after=0;   // (v6.12: not with the free camera)
      for(const k in SEC){const S2=SEC[k];if(!S2.n)continue;const P=S2.p,C=S2.c,np=[],nc=[];
        for(let t=0;t<P.length;t+=9){const ux=P[t+3]-P[t],uy=P[t+4]-P[t+1],uz=P[t+5]-P[t+2],wx=P[t+6]-P[t],wy=P[t+7]-P[t+1],wz=P[t+8]-P[t+2];
          if((uy*wz-uz*wy)*vx+(uz*wx-ux*wz)*vy+(ux*wy-uy*wx)*vz<=1e-7)continue;for(let q=0;q<9;q++){np.push(P[t+q]);nc.push(C[t+q]);}}

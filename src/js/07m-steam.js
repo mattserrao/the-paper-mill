@@ -7,8 +7,8 @@
    1 / (1 - lost). Untouched no can floods and the factor is exactly 1.
    The cascade. Steam goes to the 3rd section; what blows through its syphons goes to the thermocompressor (TC-304),
    which recompresses it with motive steam back into the 3rd section's header; the 2nd section's blow-through feeds the
-   1st, and the 1st's goes to the surface condenser. The syphons need a differential pressure (ΔP, kPa) across them to
-   lift the condensate out of a spinning can, and more the faster the machine runs (STM.needK a 300 fpm over 2,632 fpm).
+   1st, and the 1st's goes to the surface condenser. The syphons need a differential pressure (ΔP, psi; v6.13.2: kPa before,
+   x KP) across them to lift the condensate out of a spinning can, and more the faster the machine runs (STM.needK a 300 fpm over 2,632 fpm).
    Short of it the cans flood, from the back of the section forward; over it more steam blows through, and past
    STM.btWaste of a section's steam the extra goes to the condenser and is wasted. AUTO schedules every section's ΔP with
    speed (need + STM.margin), so an untouched machine never floods or wastes. PDC-304 (the 7th control loop, 07h) holds
@@ -27,16 +27,16 @@
    it. Energy: condensate comes back to the power house (85% standard); what doesn't is made up with fresh water that has
    to be heated, so steam costs more per ton. Untouched, every factor here is exactly 1 and nothing extra is charged.
    Seasons, survival and free play; zen keeps the plain dryer model. No dice except the upset's own stream. ---- */
-const STM={cans:20,sec:[[0,6],[6,12],[12,20]],share:[0.25,0.30,0.45],need0:[5,14,23],needK:4,spRef:2632,margin:12,dpMax:80,
-  flSpan:15,flUp:10,flDn:5,drvK:1.5,bt0:0.03,btK:0.004,btWaste:0.15,tcK:60,
+const STM={cans:20,sec:[[0,6],[6,12],[12,20]],share:[0.25,0.30,0.45],need0:[5*KP,14*KP,23*KP],needK:4*KP,spRef:2632,margin:12*KP,dpMax:80*KP,   // (v6.13.2: psi)
+  flSpan:15*KP,flUp:10,flDn:5,drvK:1.5,bt0:0.03,btK:0.004/KP,btWaste:0.15,tcK:60*KP,
   H:160,Hhi:200,Hmax:450,tick:1,Hdrip:215,Hlo:120,exhAuto:75,supK:0.95,air:0.12,hrK:0.55,ret:0.85,fuelK:0.25,hum0:55,humWet:7,fogUp:15,
   irStale:24*60,irUnknown:72*60};
 const stmOn=()=>!!(S&&!S.zen);
 const STMN=["1st","2nd","3rd"];
-function stmState(){if(!S.stm)S.stm={dp:[15,25,35],fl:new Array(STM.cans).fill(0),bt:[0,0,0],waste:0,H:STM.H,exh:STM.exhAuto,sup:STM.exhAuto*STM.supK,exhM:"auto",supM:"auto",
+function stmState(){if(!S.stm)S.stm={dp:[15*KP,25*KP,35*KP],fl:new Array(STM.cans).fill(0),bt:[0,0,0],waste:0,H:STM.H,exh:STM.exhAuto,sup:STM.exhAuto*STM.supK,exhM:"auto",supM:"auto",
     exhSp:STM.exhAuto,supSp:STM.exhAuto*STM.supK,hum:62,ret:STM.ret,mk:0,air:0,drip:0,roof:0,ir:null,syph:-1,cold:-1,sp4:null,kpi:{st:0,kwh:0,usd:0}};return S.stm;}
 // the ΔP each section needs at this speed, and what AUTO schedules (need + margin)
-const stmNeed=(i,sp)=>Math.max(3,STM.need0[i]+STM.needK*((sp??(S.pm==="run"?S.pmSpeed:C.pmSp.v))-STM.spRef)/300);
+const stmNeed=(i,sp)=>Math.max(3*KP,STM.need0[i]+STM.needK*((sp??(S.pm==="run"?S.pmSpeed:C.pmSp.v))-STM.spRef)/300);
 const stmAuto=(i,sp)=>stmNeed(i,sp)+STM.margin;
 // PDC-304's setpoint: AUTO's speed schedule unless the player has set one
 const stmSp=()=>{const T=S.stm;return T&&T.sp4!=null?T.sp4:stmAuto(2);};
@@ -52,9 +52,11 @@ const stmFloodSum=()=>S.stm?S.stm.fl.reduce((a,f)=>a+f,0):0;
 const stmDrvAdd=()=>stmOn()?STM.drvK*stmFloodSum():0;
 // $ per tonne of steam at today's price (the dryers' per-ton steam bill spread over the steam a ton takes, as 07d's vent)
 const stmPrice=()=>{const wpt=dryWpt()*DRY.stPerW;return wpt>0?Math.max(0,energyCostT()-pfChemT())/wpt:0;};
+// v6.13.2: saturated steam temperature (°C) at p psig (a fit to the steam tables, within ~2 °C from 0 to 150 psig)
+const stmSat=p=>satT(Math.max(0,p));   // (v6.13.2-t3: the Antoine saturation curve, 07d)
 // the shell temperature of can j (°C): its section's steam saturation, less what a flooded can loses
-function stmShell(j){const T=S.stm,s=j<6?0:j<12?1:2,D=S.dry,run=S.pm==="run",p=s===0?knobVal("st1"):s===1?(D?D.st3*0.8:96):(D?D.st3:120);
-  const sat=100+0.27*Math.max(0,p)-0.00035*p*p,f=T?(j===T.cold?1:T.fl[j]):0;return run||S.pm==="break"?sat-55*f:45;}
+function stmShell(j){const T=S.stm,s=j<6?0:j<12?1:2,D=S.dry,run=S.pm==="run",p=s===0?knobVal("st1"):s===1?(D?dryP2(D):90):(D?D.st3:120);
+  const sat=stmSat(p),f=T?(j===T.cold?1:T.fl[j]):0;return run||S.pm==="break"?sat-55*f:45;}
 
 // a can's shell temperature with nothing wrong (its section's steam), for the survey's "cold can" call
 function stmShellStd(j){const T=S.stm,f=T?T.fl[j]:0;return stmShell(j)+55*f;}
@@ -111,7 +113,7 @@ function stmKw(){const r=knobRead();let v=0;for(const A of ASSETS)v+=Math.max(0,
 // mods: hood drips and roof drips put spots on the sheet (07-sim-step's beater share comes from stmOff)
 const stmOff=()=>stmOn()&&S.stm&&S.pm==="run"?Math.min(0.08,0.06*S.stm.drip+0.02*S.stm.roof):0;
 // the player's moves (STM DCS screen): PDC-304's setpoint (null = AUTO's speed schedule), the hood fans
-function stmSetSp(v){if(S.zen)return;const T=stmState();T.sp4=v==null?null:clamp(+v,5,STM.dpMax);if(vlvT("PDC-304"))S.vlv.lp["PDC-304"].sp=stmSp();}
+function stmSetSp(v){if(S.zen)return;const T=stmState();T.sp4=v==null?null:clamp(+v,5*KP,STM.dpMax);if(vlvT("PDC-304"))S.vlv.lp["PDC-304"].sp=stmSp();}
 function stmSetFan(k,v){if(S.zen)return;const T=stmState();if(v==="auto"){T[k+"M"]="auto";return;}T[k+"M"]="manual";T[k+"Sp"]=clamp(+v,10,100);}
 // the IR survey on the dry end round: every can shell's temperature, kept until the next one (07i rounds read the age)
 function stmIr(){const T=stmState();T.ir={t:S.t,c:Array.from({length:STM.cans},(_,j)=>Math.round(stmShell(j)*10)/10)};}

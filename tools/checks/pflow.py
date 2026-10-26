@@ -145,6 +145,8 @@ def pflow(pw):
         pg.evaluate("()=>{__PM.G3.showMenu&&__PM.G3.showMenu()}"); pg.wait_for_timeout(600)
         try:
             click("#v2free" if mode == "free" else "#v2zen"); pg.wait_for_timeout(2500)
+            if mode == "zen":   # (v6.13.2-t2: zen reloads once into ?zen=1 to build every face for its camera)
+                pg.wait_for_function("()=>window.__PM&&__PM.S&&__PM.S.zen&&__PM.G3.geomFree", timeout=240000, polling=300); pg.wait_for_timeout(1000)
         except Exception as e:
             ok(f"{mode}: starts", False, repr(e)[:200]); continue
         pg.evaluate("()=>{__PM.setRunning(false);if(__PM.S.cards)__PM.S.cards.open=null}")

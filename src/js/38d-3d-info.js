@@ -40,7 +40,7 @@
       [[62.6,3,-11],"Fan pump","Approach flow",()=>`Headbox flow ${Math.round(S.we?GPM(S.we.f.hb||0):0).toLocaleString()} gpm`,"fan"],
       [[58,4,9.1],"Headbox and forming table","Wet end",()=>`Headbox consistency ${S.we?S.we.hbc.toFixed(2):"–"} % · vacuum ${f1(r.gbox)} / ${f1(r.lvac)} / ${f1(r.vacIn)} inHg · couch solids ${f1(r.couchSol)} %`,"couch"],
       [[37,4,9.1],"Twin press","Wet end",()=>`Load ${Math.round(r.pl)} kN/m · press solids ${f1(r.pressSol)} %`,["pr1","pr2"]],
-      [[12,5,9.1],"Dryers","Dry end",()=>`Steam ${r.steam>0.5?f1(r.steam)+" t/h":"–"} · 3rd section ${Math.round(r.st3)} kPa · reel moisture ${r.run?f1(r.moist)+" %":"–"}`,"dry"],
+      [[12,5,9.1],"Dryers","Dry end",()=>`Steam ${r.steam>0.5?f1(r.steam)+" t/h":"–"} · 3rd section ${Math.round(r.st3)} psig · reel moisture ${r.run?f1(r.moist)+" %":"–"}`,"dry"],
       [[-4,4,9.1],"Reel","Dry end",()=>`${Math.round(S.pmSpeed)} fpm · ${f1(S.reel)} of 100 t on the reel`,"reel"],
       [[-18.7,4,9.1],"Winder","Dry end",()=>S.wd==="hayout"?"Hayout: crew cleaning up":`${f1(R.cut||0)} t/h · ${Math.max(0,reelsAtWinder()-1)}/${P.storeReels} reels stored`,"wind"],
       [[[-31.4,1.2,15.75],[-35,1.2,15.75],[-27.8,1.2,15.75]],"Beater bay","Shipping",()=>{const t=(S.q&&S.q.bank)||0,n=G3.BEAT?G3.BEAT.bay.length:0;return `${Math.round(t).toLocaleString()} t of beater to repulp · ${n} roll${n===1?"":"s"} in the bay${G3.BT&&G3.BT.st!=="away"?" · truck taking them to receiving":""}`;}],   // v6.11.2

@@ -16,7 +16,7 @@ const QWHY={bw:"weight",m:"moisture",shade:"color",chg:"weight (grade change)",r
 // every grade has a ring crush minimum (07g RCT0, 97% of it). More refining raises ring crush, so a lighter setpoint can pass.
 const qBw=g=>{const s=(QSPEC[g]||QSPEC["24"]).bw,f=g===C.grade?bwSp()/bwStd():1;return [s[0]*f,s[1]*f];};
 // the latest check (derived each step, not saved): measured values, what's out, the share of production going to the beater
-const QNOW={bw:0,m:8,shade:true,rct:60,stfi:2.6,out:[],why:"",off:0};
+const QNOW={bw:0,m:8,shade:true,rct:30,stfi:2.6,out:[],why:"",off:0};
 // what the scanner reads now (no dice: the swings are smooth functions of time, like the DCS readings)
 function qualMeasure(){const t=S.t;
   const wob=(f,k)=>Math.sin(t*f+k)*0.6+Math.sin(t*f*2.7+k*2)*0.4;

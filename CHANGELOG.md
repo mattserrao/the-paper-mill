@@ -1,5 +1,88 @@
 # Changelog
 
+## v6.13.2 (2026-10-26): Real Numbers
+Release of v6.13.2-t1 to t4 (below), merged from test/v6.13.2-benchmarks: psi pressures and real-mill process numbers
+(t1), zen built for the turning camera with ride the sheet and 11 new shots (t2), dryer steam from heat transfer with a
+120 psig standard and 165 psig limit (t3), and a steady ride the sheet readout with the office flagpoles removed (t4).
+Regression suite on t3: 21 of 22 default checks passed in the full run; the one failure (save) and a flaky steamsheet were
+fixed and both re-run clean. t4 was checked with targeted scripts only. QA: claude/qa-v6132-t3.md (100 runs).
+
+## v6.13.2-t4 (2026-10-26): small fixes (test build, test/v6.13.2-benchmarks)
+- **Ride the sheet:** the readout is a fixed grid (section, consistency or solids, speed, draw, sheet temperature, then
+  "tap to leave"), so it keeps one size from the headbox to the reel instead of jumping between 2 and 3 lines. Phones get
+  a fixed 3-line layout (section on its own line).
+- **The two flagpoles by the office door are gone** (39b; the ambient wave skips them).
+- Checked with a small script (box size along the whole ride at 1280 and 390 px wide, nothing cut off; no poles left in
+  the scene). The regression suite was not run for this build.
+
+## v6.13.2-t3 (2026-10-26): dryer steam from heat transfer (test build, test/v6.13.2-benchmarks)
+Plan and decisions: claude/steam-v6132-t3-plan.md. Typical real-mill numbers only (no PM3 data).
+- **Steam pressure from the heat the sheet needs (07d).** The drying load still comes from speed, grade and the wet
+  end's water (the same load as t1/t2, kept internally in "hp"). The cans need a temperature difference over the sheet in
+  proportion to that load (Q = UA·ΔT, UA set so each grade's standard load needs its standard pressure); the steam
+  temperature is the sheet's (~90 °C in the 3rd section, ~80 °C in the 2nd) plus that, and the pressure is the saturation
+  pressure there (Antoine). Pressure rises faster than the load, as on a real machine.
+- **Real levels.** Grade 24: 3rd section ~120 psig at its standard rate, 2nd ~90, 1st 40 psig standard (knob 0-100,
+  step 2). Grades 28/31/34Super stand at 125/135/132 psig. The limit is 165 psig (was 108), about 15% over the standard
+  load, so a pushed line or a wet press now runs dryer-limited, as on a real machine (the reel comes off wet and goes to
+  the beater). A wide-open steam valve over-dries the sheet by ~2.5% (was ~6%).
+- **Loops (07h).** PV-302/303 span 0-300 psig, setpoints to 175, the 2nd section on 75% of the 3rd on CAS, QC-300's
+  output 3 psig per % and its tuning rescaled (Kc 0.24 → 0.57) so the cascade responds as before. The Inner first
+  challenge's reference re-measured.
+- **Screens and help.** The DET faceplate shows the 3rd section's steam temperature; trends 40-180 psig; the steam sheet's
+  2nd section and the IR can shells use the same saturation curve (a 120 psig can is ~177 °C).
+- **Saves (07o, S.u 3).** A t1/t2 save and a pre-v6.13.2 save both convert on load to the same pressures as a new run and
+  carry on identically (save check).
+- **QA (claude/qa-v6132-t3.md):** 50 seasons and 50 survival runs on t3 and t2: all clean; cash, tons, breaks and
+  survival waves the same within noise; moisture off-spec time up ~35% (the dryer-limited spells).
+- **Checks:** steamsheet starts its season with the frames held (lib pick_leader_held), so its snapshot is the same on
+  every run (it could start a frame-dependent minute in and fail one time in a few). All 22 default checks pass.
+- **Measured against t2** (fixed-seed 4-day seasons on four bottlenecks): inside the limit tons, beater and cash are the
+  same (within 0.01%). Pushed (80% press on an upgraded line): -1.8% tons, +75 t beater; t2 never reached its limit.
+
+## v6.13.2-t2 (2026-10-26): zen shots (test build, test/v6.13.2-benchmarks)
+Plan and review: claude/zen-v6132-plan.md. Every shot rendered at 10/50/90% on all four maps.
+- **The scene is built for zen's camera.** The iso view keeps only the faces it can see (and one-sided tree cards), so
+  zen's turning camera looked at empty land from most sides: most landscape shots, the landmark, the bridge and the
+  "from the place" shots showed bare ground. Going into zen now reloads the page once with ?zen=1 (menu, title and the
+  map rotation), which builds every face and two-sided crossed trees, as the free camera does (G3.geomFree, 20, 36, 40,
+  42b). The season's save is dropped on the way in, as before. With that, the bridges, farm, lake, mast, port, lighthouse,
+  windpump and the rest are in their shots.
+- **12 new shots (42):** ride the sheet (headbox to reel on the v6.13 sheet path, hood doors up), press section close,
+  winder at work, stock prep line, steam and power, electrical chain (feeder, transformer, MCC); rare: bale receiving,
+  warehouse and dock, trim to the DE pulper, follow a round (vibration or ADX), dryer hood doors on a break, and the full
+  journey (bale ride → stock prep → ride the sheet → winder → roll's journey → truck out, ~96 s). A rare sight waits for
+  ride the sheet and the full journey. A small waypoint helper (zPath) drives the path shots.
+- **Fixed framing:** headbox to wire runs lower and closer, under the hanging signs; the landmark shot is higher and wider;
+  the "from the place" shots start at least 11 m up, over the trees.
+- Checks: zen runs the forced rare shots too and checks the zen geometry; smoke and pflow follow the zen reload. All 22
+  default checks pass. New tool: tools/util/zenstills.py (stills of every shot for a framing review).
+
+## v6.13.2-t1 (2026-10-26): Real Numbers (test build, test/v6.13.2-benchmarks)
+Benchmark fixes from claude/process-benchmarks-v6131.md; plan and decisions: claude/benchmarks-v6132-plan.md.
+- **Pressures in psi.** Dryer section pressures are psig, differentials (syphon ΔP, PDC-304, cleaners, screens) psi,
+  on every DCS picture, faceplate, knob, trend, tag, pop-up and help line. Vacuum stays inHg; the headbox was psi already.
+- **Real dryer steam (07d, 07h, 07m, 07b).** The model now works in psig at real-mill levels: the old kPa numbers x0.6
+  (1st section 42 psig standard, 3rd section 72 psig on grade 24, the dryer limit 108 psig; PV-302/303 span 0-180 psig).
+  Syphon ΔP and PDC-304 are a straight unit change (x0.145: about 5 psi). The physics are unchanged: a fixed-seed season
+  plays out identically (tons, off-spec, moisture, steam, cash). Can shells now read real saturation temperatures
+  (~150-165 °C) on the IR survey.
+- **Cleaners at design ΔP (07c).** HD 15, LC 25, LW 20 psi (were 35/60/45 kPa); plug points and upset readings scale
+  with them, so a cleaner left in manual still plugs after ~400 min. Fine and coarse screen ΔP shown in psi.
+- **Ring crush at recycled-medium levels (07g).** 30/35/40/46 lbf/6 in by grade (was 60/67/75/84). The spec (0.97 x)
+  and AUTO-LW are ratios, so trimming is unchanged.
+- **Slice opening from the flow (07n).** B = headbox flow / (jet speed x width x 0.8), ~23 mm on grade 24 (was a fixed
+  12 mm). The slice knob widens or narrows it by the same share as before, so it does exactly what it did.
+- **Water and the rest.** Fresh water ~6-7 m³/t (machine showers 4.1 m³/t, was 1.65; ~4.3 m³/t in all before); the
+  clarifier catches 99.50% (was 99.71%) so a normal run still sits at ~25 mg/L TSS in the larger outfall and a low polymer
+  dose still breaches the permit. Stock chest level
+  target and start at 50% (were 69%). Vacuum pump reads ~25 kWh/t (display; the balance-of-plant power is unchanged).
+  CD moisture on the QCS is the 2σ of the 12 zones. The white water silo's overflow is labelled on the WET DCS as the
+  design (to the WW chest).
+- **Older saves** are converted once on load (07o: pressures, loops, the 1st section knob, cleaner and screen ΔP, ring
+  crush and its history), and carry on where they were. New `save` section: an un-converted save continues identically.
+- Checks updated for the new units and levels: process, dcs, valves, knobs, steamsheet, chem.
+
 ## v6.13.1 (2026-10-26): Your Last Soda
 Minor update: release of v6.13.1-t1 (below), merged from test/v6.13.1-last-soda. Regression suite: all 22 default checks
 pass on t1 (new check: soda). The scene was played through in the test browser; not yet on an iPhone.

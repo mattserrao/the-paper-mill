@@ -9,7 +9,7 @@
   // itself was rarely in frame and every "from X" shot looked alike.)
   const TH=(x,z)=>G3.terrainH?G3.terrainH(x,z):0;
   const fromPlace=(name,k,look,h=1.3,dur=14)=>({name,look,dur,k,ok:()=>!!U(k),start:()=>{const p=U(k),dx=MILLC[0]-p[0],dz=MILLC[2]-p[1],d=Math.hypot(dx,dz);
-      return {p,ux:dx/d,uz:dz/d,d,back:28+p[2]*1.6,hc:Math.max(7,p[2]*0.85)};},
+      return {p,ux:dx/d,uz:dz/d,d,back:28+p[2]*1.6,hc:Math.max(11,p[2]*0.85)};   /* (v6.13.2-t2: 11 m up at least, over the trees round a low place; was 7) */},
     at:(t,mv)=>{if(t>dur)return null;const u=ease(t/dur),st=mv.st,p=st.p,b=st.back*mix(1,0.72,u),side=mix(-0.06,0.06,u),
       cx=p[0]-st.ux*b-st.uz*b*side,cz=p[1]-st.uz*b+st.ux*b*side,cy=Math.max(TH(cx,cz),0)+st.hc,
       lk=Math.min(st.d*0.45,90),tx=p[0]+st.ux*lk,tz=p[1]+st.uz*lk,ty=Math.max(1.5,p[2]*0.25),
@@ -35,7 +35,7 @@
       fromPlace("past the moored barge","barge",["airy","none"],1.3,16)];}
   // v6.4: the landmark shot's places: ones with some height that no map shot above already features
   let lmCache=null;const landmarks=()=>{if(lmCache)return lmCache;const u=G3.scenery&&G3.scenery.util;if(!u)return [];const used=new Set(siteShots().map(m=>m.k).filter(Boolean));
-    return (lmCache=Object.keys(u).filter(k=>u[k][2]>=6&&k!=="substation"&&!used.has(k)));};
+    return (lmCache=Object.keys(u).filter(k=>u[k][2]>=6&&k!=="substation"&&k!=="feeder"&&!used.has(k)));};   // (v6.13.2-t2: not the feeder's poles either)
   // v6.4: a side to look from with nothing solid between the camera and the subject (close shots clipped into walls):
   // 8 directions, a ray from the subject out to the camera spot, the first clear one (from a random start), else the longest
   const _zrc=new THREE.Raycaster(),_zo=new THREE.Vector3(),_zd=new THREE.Vector3();if(_zrc.layers)_zrc.layers.enableAll();
@@ -43,6 +43,13 @@
     for(let i=0;i<8;i++){const a=a0+i*Math.PI/4;_zd.set(Math.sin(ph)*Math.sin(a),Math.cos(ph),Math.sin(ph)*Math.cos(a)).normalize();_zrc.set(_zo,_zd);_zrc.far=r;_zrc.camera=camera;   // (v6.12 t5: a sprite on the ray logged a console error without a camera set; the smoke check flaked on it)
       let h=null;try{h=_zrc.intersectObjects(scene.children,true).find(q=>q.object.visible&&!q.object.isSprite&&!(q.object.material&&q.object.material.transparent));}catch(e){}
       const dd=h?h.distance:r;if(dd>=r)return a;if(dd>bd){bd=dd;best=a;}}return best;}
+  // v6.13.2-t2: a camera path through waypoints ([x, y, z]), each with its own distance; u 0..1 along the whole path
+  function zPath(P,u,R,th,ph,dth){const L=[0];for(let i=1;i<P.length;i++)L.push(L[i-1]+Math.hypot(P[i][0]-P[i-1][0],P[i][1]-P[i-1][1],P[i][2]-P[i-1][2]));
+    const d=clamp(u,0,1)*L[L.length-1];let i=1;while(i<L.length-1&&L[i]<d)i++;const k=L[i]>L[i-1]?(d-L[i-1])/(L[i]-L[i-1]):0,a=P[i-1],b=P[i];
+    return [mix(a[0],b[0],k),mix(a[1],b[1],k),mix(a[2],b[2],k),mix(R[i-1],R[i],k),th+(dth||0),ph];}
+  // who is on a round now: a maintenance tech on a vibration round, else the electrical tech on an ADX round (null if none)
+  function roundWho(){const T=G3.shopDbg&&G3.shopDbg.techs,v=T&&T.find(x=>x.rnd&&x.w&&x.w.visible);if(v)return v.w;
+    const R=S&&S.rel,e=R&&R.rd&&R.rd.list.find(x=>x.who==="e"&&x.st==="go");return e&&G3.ET&&G3.ET.w&&G3.ET.w.visible?G3.ET.w:null;}
   G3.zenMoves=()=>zenMoves();   // (tests: run every shot)
   function zenMoves(){if(zenMovesCache)return zenMovesCache;const LEND=PLEN[PLEN.length-1],TUB=[16,1.2,-13.5];
     zenMovesCache=[
@@ -95,7 +102,7 @@
         at:(t,mv)=>{if(t>14)return null;const u=ease(t/14);return [TUB[0],TUB[1],TUB[2],mix(150,34,u),mv.st.th+u*2.6,mix(0.75,0.12,u)];}},
       // low along the slice: the headbox jet lands on the wire and the sheet forms as we drift down the table
       {name:"headbox to wire",look:["airy","none"],dur:13,ok:()=>S.pm==="run",
-        at:(t)=>{if(t>13)return null;const u=ease(t/13);return [mix(52,43,u),mix(2.0,1.6,u),zc,mix(28,24,u),mix(0.8,0.65,u),mix(1.3,1.22,u)];}},
+        at:(t)=>{if(t>13)return null;const u=ease(t/13);return [mix(53,44,u),mix(1.6,1.3,u),zc,mix(21,18,u),mix(0.85,0.7,u),mix(1.4,1.34,u)];}},   /* (v6.13.2-t2: lower and closer, under the hanging signs) */
       // sit on the reel and wait for the turn-up: the full reel is kicked down the rails and the new spool takes the sheet
       {name:"reel turn-up",look:["gold","none"],rare:1,dur:26,
         ok:()=>{if(S.pm!=="run"||!(S.rates.prod>1))return false;const w=(P.jumbo-S.reel)/S.rates.prod*60/Math.max(0.1,simRate());return w>1.5&&w<14;},
@@ -152,6 +159,50 @@
       {name:"slice and wet line",look:["airy","none"],dur:9,ok:()=>S.pm==="run",
         at:(t)=>{if(t>9)return null;const u=ease(Math.max(0,(t-2.6)/6.4)),g=G3.SLC?G3.SLC.geo():{wet:50};
           return [mix(57.15,mix(g.wet,54,0.35),u),mix(2.95,2.9,u),mix(12.4,9.1,u),mix(5.5,15,u),mix(0.08,0.55,u),mix(1.5,0.92,u)];}},
+      // v6.13.2-t2 (claude/zen-v6132-plan.md): the process, end to end ---------------------------------------------------
+      // ride the sheet: the v6.13 sheet camera's path (50m), slower and closer: headbox, wire, couch, presses, the open
+      // draw, the dryers (hood doors up) and the reel. A rare sight waits for it to finish (noSight)
+      {name:"ride the sheet",look:["none","hc"],dur:36,noSight:1,hood:1,ok:()=>S.pm==="run"&&!!G3.rideAt,
+        at:(t)=>{if(t>36)return null;const u=Math.min(1,t/34),p=G3.rideAt(u),w=0.5+0.5*Math.sin(t*0.21),k=clamp((30-p[0])/6,0,1)*clamp((p[0]+2)/4,0,1);   // (k: over the dryers, higher and further out, clear of the hood's framework)
+          return [p[0]-0.4,p[1]-0.3,zc,mix(mix(15,13,w),19,k),-0.62+0.08*Math.sin(t*0.13),mix(1.06,0.92,k)];}},
+      // press section close: low on the tending side past the pick-up felt, the press nips and the open draw into the 1st cans
+      {name:"press section close",look:["hc","none"],dur:13,ok:()=>true,
+        at:(t)=>{if(t>13)return null;const u=ease(t/13);return [mix(46,29,u),2.6,zc,mix(17,21,u),mix(0.32,0.62,u),1.13];}},
+      // the winder at work: unwind stand, slitters, the drums and the rider roll, close on the front side
+      {name:"winder at work",look:["gold","none"],dur:14,ok:()=>S.wd!=="hayout",
+        at:(t)=>{if(t>14)return null;const u=ease(t/14);return [mix(-13.6,-20.6,u),mix(2.6,2.0,u),zc,mix(15,12,u),mix(0.42,0.78,u),mix(1.08,1.16,u)];}},
+      // the stock prep line: pulper, HD cleaner, the cleaners and screens row, the disk thickener and the stock chest
+      {name:"stock prep line",look:["airy","hc"],dur:18,ok:()=>!S.M.pulperDown,
+        at:(t)=>{if(t>18)return null;return zPath([[16,3,-13.5],[25.8,2.2,-10.6],[11.2,2.2,-23],[19.2,2.2,-23],[26.6,2.2,-23],[29,6.2,-15.5],[34.5,6,-15]],ease(t/18),[22,24,22,20,22,26,30],-0.5,1.0,t*0.01);}},
+      // steam and power: the boiler house stack, the steam header over the hall roof, down to the thermocompressor's line
+      {name:"steam and power",look:["dusk","none"],dur:17,ok:()=>true,
+        at:(t)=>{if(t>17)return null;return zPath([[76,10,-10],[52,10.6,4.9],[20.6,11,4.9],[14,1.6,13.4]],ease(t/17),[62,44,32,15],-0.45,mix(1.02,1.12,ease(t/17)),0);}},
+      // the electrical chain: the feeder along its poles, the MCC transformer, then in over the MCC (its roof fades close up)
+      {name:"electrical chain",look:["bw","none"],dur:15,ok:()=>true,
+        at:(t)=>{if(t>15)return null;const f=U("feeder"),M2=G3.MCC||{tx:[20.2,27]};return zPath([[f?f[0]:20,7,f?f[1]:62],[M2.tx[0],2.6,M2.tx[1]],[11,2.2,27.5]],ease(t/15),[52,24,17],-0.35,1.05,0);}},
+      // bale receiving: a truck at the dock and the forklifts unloading into the yard (while one is unloading)
+      {name:"bale receiving",look:["gold","none"],rare:1,dur:14,ok:()=>(S.rates.unload||0)>0.5,start:()=>({th:clearSide(-21,1.2,-13,32,1.0)}),
+        at:(t,mv)=>{if(t>14)return null;const u=ease(t/14);return [-21,1.2,-13,mix(34,26,u),mv.st.th+u*0.4,mix(1.0,1.08,u)];}},
+      // the warehouse and the shipping dock: clamp trucks stacking rolls, a trailer loading (while one is)
+      {name:"warehouse and dock",look:["dusk","airy"],rare:1,dur:14,ok:()=>(S.rates.load||0)>0.5||S.outQ.length>0,start:()=>({th:clearSide(-36.4,2,23,34,1.02)}),
+        at:(t,mv)=>{if(t>14)return null;const u=ease(t/14);return [mix(-34,-38.5,u),2,23,mix(36,28,u),mv.st.th+u*0.35,1.04];}},
+      // the trim: off the sheet at the reel and the winder's slitters, down the duct into the dry-end pulper
+      {name:"trim to the DE pulper",look:["hc","none"],rare:1,dur:12,ok:()=>S.pm==="run"&&(S.rates.trim||0)>0.1,
+        at:(t)=>{if(t>12)return null;const W2=G3.WD||{SLX:0.6};return zPath([[-5.6,4,zc],[-18.7+W2.SLX,2.6,zc],[-18.7+W2.SLX-0.45,1.3,zc-5.3]],ease(t/12),[20,15,10],-0.75,1.1,0);}},
+      // follow a round: a maintenance tech on a vibration round, or the electrical tech on an ADX round
+      {name:"follow a round",look:["airy","none"],rare:1,dur:16,ok:()=>!!roundWho(),start:()=>{const w=roundWho();return {w,p:w.position.clone(),th:clearSide(w.position.x,1,w.position.z,16,1.08)};},
+        at:(t,mv)=>{const st=mv.st;if(t>16||!st.w.visible)return null;st.p.lerp(st.w.position,0.08);return [st.p.x,0.9,st.p.z,mix(17,13,ease(t/16)),st.th+t*0.02,1.1];}},
+      // a sheet break: the dryer hood's doors lift and the surplus steam roars out of the roof vent
+      {name:"dryer hood doors",look:["dusk","none"],rare:1,dur:13,ok:()=>S.pm==="break",
+        at:(t)=>{if(t>13)return null;const u=ease(t/13);return [mix(12,18,u),mix(4.5,12,u),mix(zc,5.5,u),mix(30,44,u),mix(0.25,0.45,u),mix(1.18,1.0,u)];}},
+      // the full journey: bale to truck in one sequence, each step sped to fit (steps not ready are skipped)
+      {name:"full journey",look:["none"],rare:1,dur:96,noSight:1,hood:1,ok:()=>S.pm==="run"&&S.rates.feed>0.3&&!S.M.pulperDown,
+        start:()=>{const want=[["bale ride",14],["stock prep line",14],["ride the sheet",24],["winder at work",12],["roll's journey",14],["truck departure",12]],MV2=zenMoves();
+          return {seq:want.map(([n,c])=>({m:MV2.find(m=>m.name===n),c})).filter(s=>s.m),i:-1,t0:0,sub:null};},
+        at:(t,mv,rdt)=>{const st=mv.st;
+          for(let k=0;k<8;k++){if(st.sub){const s=st.seq[st.i],k2=s.m.dur/s.c;st.sub.t=(t-st.t0)*k2;const f=t-st.t0<s.c?s.m.at(st.sub.t,st.sub,(rdt||0)*k2):null;if(f)return f;}
+            st.i++;st.sub=null;if(st.i>=st.seq.length)return null;const s=st.seq[st.i];let ok2=false;try{ok2=s.m.ok();}catch(e){}if(!ok2)continue;st.t0=t;st.sub={m:s.m,t:0,st:s.m.start?s.m.start():null};}
+          return null;}},
       // v4.1: the land around the mill (environment and mill seed) ----------------------------------------------
       // a long approach from a random direction over the land, settling on the mill
       {name:{rural:"over the forest",urban:"over the rooftops",desert:"across the flats",swamp:"over the bayou"}[SITE.env]||"approach",look:["dusk","airy"],dur:18,ok:()=>true,
@@ -161,7 +212,7 @@
       // a slow half-orbit of one of the landmarks the seed placed (water tower, solar farm, lake, village, barge dock...)
       {name:"landmark",look:["gold","none"],dur:15,ok:()=>landmarks().length>0,
         start:()=>{const U=G3.scenery.util,ks=landmarks(),k=ks[Math.floor(Math.random()*ks.length)],[x,z,h]=U[k];return {x,z,h,th:Math.atan2(x-14,z-5)+(Math.random()-0.5)*1.2,k};},
-        at:(t,mv)=>{if(t>15)return null;const s=mv.st,u=ease(t/15);return [s.x,Math.min(18,s.h*0.45),s.z,Math.max(45,s.h*1.6+30),s.th+u*1.1,mix(1.22,1.14,u)];}},   // (v6.4: lower and closer: from above a mast was a red line over trees)
+        at:(t,mv)=>{if(t>15)return null;const s=mv.st,u=ease(t/15);return [s.x,Math.min(18,s.h*0.45),s.z,Math.max(55,s.h*1.8+35),s.th+u*1.1,mix(1.1,1.0,u)];}},   /* (v6.13.2-t2: higher and wider: low and close, a mast filled the frame from inside the trees) */   // (v6.4: lower and closer: from above a mast was a red line over trees)
       // the highway bridge over the river, trucks coming and going
       {name:SITE.env==="urban"?"seafront boulevard":"highway bridge",look:["bw","dusk"],dur:12,ok:()=>true,start:()=>({d:Math.random()<0.5?1:-1}),
         at:(t,mv)=>{if(t>12)return null;const u=ease(t/12),rv=riverAt(-158),rz=RIVERS[SITE.env].kind==="sea"?rv[0]+rv[1]+12:rv[0];if(RIVERS[SITE.env].kind==="sea")return [-158,2,mix(rz-18*mv.st.d,rz+6*mv.st.d,u),mix(80,62,u),Math.PI/2+0.55*mv.st.d-0.5*mv.st.d*u,mix(1.02,0.96,u)];

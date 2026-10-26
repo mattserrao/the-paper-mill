@@ -37,20 +37,20 @@ const VDEF=[
     valve:{ch:"lin",R:50,stroke:15,db:0.5,hys:0.3,stick:0.5},proc:{type:"int",th:3},noise:0.08,lam:10,tol:2,bump:1200,bsz:15,shutOK:true},
   {id:"QC-300",ctl:true,name:"Reel moisture",area:"DET",where:"QCS scanner at the reel",slaves:["PV-302","PV-303"],
     what:"The moisture controller sets the 2nd and 3rd section steam pressures (PV-302 and PV-303 on CAS) to hold the reel at 8%. Tune the steam loops first: the inner loops must be quick for the outer one to work.",
-    pv:{n:"Reel moisture (QCS)",u:"%",lo:0,hi:20,dp:2},sp0:8,spLim:[5,11],act:-1,tune:{kc:0.24,ti:3,td:0},out:{u:"kPa",k:3},proc:{type:"fo",th:60,tau:180},noise:0.05,lam:4,tol:0.3,bump:900},
-  {id:"PV-302",name:"2nd section steam",area:"DET",medium:"steam",where:"Steam header to the 2nd dryer section",cas:true,master:"QC-300",ratio:0.8,
-    what:"Steam pressure in the 2nd dryer section. On CAS its setpoint comes from the moisture controller (80% of the 3rd section's).",
-    pv:{n:"2nd section pressure",u:"kPa",lo:0,hi:300,dp:0},sp0:96,spLim:[0,250],act:1,tune:{kc:0.7,ti:0.5,td:0},
+    pv:{n:"Reel moisture (QCS)",u:"%",lo:0,hi:20,dp:2},sp0:8,spLim:[5,11],act:-1,tune:{kc:0.57,ti:3,td:0},out:{u:"psig",k:3},proc:{type:"fo",th:60,tau:180},noise:0.05,lam:4,tol:0.3,bump:900},
+  {id:"PV-302",name:"2nd section steam",area:"DET",medium:"steam",where:"Steam header to the 2nd dryer section",cas:true,master:"QC-300",ratio:0.75,
+    what:"Steam pressure in the 2nd dryer section. On CAS its setpoint comes from the moisture controller (75% of the 3rd section's: 90 psig to its 120 on the standard).",
+    pv:{n:"2nd section pressure",u:"psig",lo:0,hi:300,dp:0},sp0:90,spLim:[0,175],act:1,tune:{kc:0.7,ti:0.5,td:0},
     valve:{ch:"eq",R:50,stroke:6,db:0.3,hys:0.2,stick:0.4},proc:{type:"fo",th:2,tau:30},noise:0.4,lam:0.5,tol:3,bump:180},
   {id:"PV-303",name:"3rd section steam",area:"DET",medium:"steam",where:"Steam header to the 3rd dryer section",cas:true,master:"QC-300",ratio:1,
     what:"Steam pressure in the 3rd dryer section, the main drying load. On CAS its setpoint comes from the moisture controller.",
-    pv:{n:"3rd section pressure",u:"kPa",lo:0,hi:300,dp:0},sp0:120,spLim:[0,250],act:1,tune:{kc:0.6,ti:0.5,td:0},
+    pv:{n:"3rd section pressure",u:"psig",lo:0,hi:300,dp:0},sp0:120,spLim:[0,175],act:1,tune:{kc:0.6,ti:0.5,td:0},
     valve:{ch:"eq",R:50,stroke:6,db:0.3,hys:0.2,stick:0.4},proc:{type:"fo",th:2,tau:30},noise:0.5,lam:0.5,tol:3,bump:180},
   // v6.13 the 7th loop (07m): the 3rd section's syphon differential pressure, held with the thermocompressor's motive steam
   {id:"PDC-304",name:"3rd section syphon ΔP",area:"STM",medium:"motive steam",where:"Thermocompressor TC-304, dryer basement",
     what:"The thermocompressor's motive steam holds the differential pressure across the 3rd section's syphons. Too little and the cans fill with condensate and run cold; too much and steam blows straight through to the condenser. Its setpoint follows machine speed (the faster the cans spin, the harder the condensate is to lift) unless you set one.",
-    pv:{n:"3rd section ΔP",u:"kPa",lo:0,hi:80,dp:1},sp0:()=>stmSp(),spLim:[5,70],act:1,tune:{kc:0.9,ti:0.35,td:0},
-    valve:{ch:"lin",R:50,stroke:8,db:0.3,hys:0.2,stick:0.3},proc:{type:"fo",th:3,tau:20},noise:0.3,lam:0.6,tol:1.5,bump:180}];
+    pv:{n:"3rd section ΔP",u:"psi",lo:0,hi:80*KP,dp:2},sp0:()=>stmSp(),spLim:[5*KP,70*KP],act:1,tune:{kc:0.9,ti:0.35,td:0},
+    valve:{ch:"lin",R:50,stroke:8,db:0.3,hys:0.2,stick:0.3},proc:{type:"fo",th:3,tau:20},noise:0.3*KP,lam:0.6,tol:1.5*KP,bump:180}];
 const VD=Object.fromEntries(VDEF.map(d=>[d.id,d]));
 const VGRP=id=>VD[id].master||VD[id].slaves?["QC-300","PV-302","PV-303"]:[id];
 const vF=(x,...a)=>typeof x==="function"?x(...a):x;
@@ -86,11 +86,11 @@ const VP={
   "FV-201":(L,B)=>{if(!B.run)return;const yss=B.bsp*B.ustd*vch(L.v,L.pos/100)*2*B.mr*B.cv/B.u0;L.y+=(yss-L.y)*(1-Math.exp(-1/20));},
   "LV-202":(L,B,W)=>{const cap=WE.silo,mk=VLV.siloQ*vch(L.v,L.pos/100)/3600;W.acc.make+=mk;let t=L.y/100*cap+(B.net||0)/3600+mk;const top=cap*WE.over;
     if(t>top){W.acc.over+=t-top;t=top;}L.y=Math.max(0,t)/cap*100;},
-  "QC-300":(L,B,W)=>{const a=W.lp["PV-302"],b=W.lp["PV-303"],p3=b?b.y:B.st3,p2=a?a.y/0.8:p3,eff=0.5*p2+0.5*p3;W.st3=eff;
-    const mss=B.run?DRY.m0+(B.km||0)+(B.dem-eff)*DRY.perKpa:DRY.m0;L.y=Math.max(0.5,L.y+(mss-L.y)*(1-Math.exp(-1/180)));},
-  "PV-302":(L,B)=>{const p=Math.min(B.ceil,VLV.Pmax*0.8*vch(L.v,L.pos/100)*B.hdr/B.lf);L.y+=(p-L.y)*(1-Math.exp(-1/30));},
-  "PV-303":(L,B)=>{const p=Math.min(B.ceil,VLV.Pmax*vch(L.v,L.pos/100)*B.hdr/B.lf);L.y+=(p-L.y)*(1-Math.exp(-1/30));},
-  "PDC-304":(L,B)=>{const p=Math.min(B.tcmax??60,70*vch(L.v,L.pos/100))*(B.run?1:0.6);L.y+=(p-L.y)*(1-Math.exp(-1/20));}};   // (v6.13: 50% motive gives the standard 35 kPa; the hand valve caps it)
+  "QC-300":(L,B,W)=>{const a=W.lp["PV-302"],b=W.lp["PV-303"],p3=b?b.y:B.st3,h3=dryHp(p3,2,B.g),h2=a?dryHp(a.y,1,B.g):h3,eff=0.5*h2+0.5*h3;W.st3=dryPh(eff,2,B.g);   // (v6.13.2-t3: the cans' heat, from each section's steam temperature over the sheet)
+    const mss=B.run?DRY.m0+(B.km||0)+(B.dem-eff)*DRY.perPsi:DRY.m0;L.y=Math.max(0.5,L.y+(mss-L.y)*(1-Math.exp(-1/180)));},
+  "PV-302":(L,B)=>{const p=Math.min(B.pcap2,VLV.Pmax*0.75*vch(L.v,L.pos/100)*B.hdr/B.lf);L.y+=(p-L.y)*(1-Math.exp(-1/30));},
+  "PV-303":(L,B)=>{const p=Math.min(B.pcap,VLV.Pmax*vch(L.v,L.pos/100)*B.hdr/B.lf);L.y+=(p-L.y)*(1-Math.exp(-1/30));},
+  "PDC-304":(L,B)=>{const p=Math.min(B.tcmax??60*KP,70*KP*vch(L.v,L.pos/100))*(B.run?1:0.6);L.y+=(p-L.y)*(1-Math.exp(-1/20));}};   // (v6.13: 50% motive gives the standard 5.1 psi (35 kPa); the hand valve caps it)
 // a master's slaves are all on CAS (and present): otherwise the master tracks them (IMAN)
 function vCasOK(W,d){const sl=d.slaves.filter(s=>W.lp[s]);return sl.length>0&&sl.every(s=>W.lp[s].m==="CAS");}
 // one 1 s sub-step of the whole world. ts: time in seconds (noise only)
@@ -122,17 +122,17 @@ function vlvView(id){const d=VD[id],W=S.vlv,L=W&&W.lp[id];
       const lv=69+vwob(S.t,0.02,2)*3,q=run?(S.rates.fiberUse||0)/Math.max(1e-6,weUstd()):0,op=clamp(VLV.mcStd*100*q+vwob(S.t,0.05,21)*1.2,0,100);return {m:"AUTO",sp:69,pv:lv,y:lv,op,pos:op};}
     case "FV-201":{const pv=run&&We?bwMeas():bwSp(),y=We&&We.bw!=null?We.bw:pv,op=We?We.v:50;return {m:We&&We.m==="manual"?"MAN":"AUTO",sp:bwSp(),pv,y,op,pos:op};}
     case "LV-202":{const lv=We?We.L/WE.silo*100:WE.over*100,op=clamp(((We&&We.f.make)||0)/VLV.siloQ*100,0,100);return {m:"AUTO",sp:WE.makeL*100,pv:lv,y:lv,op,pos:op};}
-    case "PDC-304":{const T=S.stm,y=T?T.dp[2]:35,op=clamp(y/70*100,0,100);return {m:"AUTO",sp:stmSp(),pv:S.pm==="run"?y+vwob(S.t,0.17,31)*0.3:y,y,op,pos:op};}   // (v6.13, 07m: AUTO's speed schedule)
-    case "QC-300":{const m=D?D.m:DRY.m0,st=D?D.st3:(DRY.base[C.grade]||120),pv=run?m+vwob(S.t,0.13,4)*0.25:m;return {m:"AUTO",sp:DRY.m0,pv,y:m,op:st/d.out.k,pos:st/d.out.k};}
-    default:{const st=(D?D.st3:(DRY.base[C.grade]||120))*d.ratio,b=DRY.base[C.grade]||120,dem=D?D.dem:b,lf=Math.sqrt(Math.max(0.3*b,dem)/b),hdr=D?D.hdr:1;
+    case "PDC-304":{const T=S.stm,y=T?T.dp[2]:35*KP,op=clamp(y/(70*KP)*100,0,100);return {m:"AUTO",sp:stmSp(),pv:S.pm==="run"?y+vwob(S.t,0.17,31)*0.3*KP:y,y,op,pos:op};}   // (v6.13, 07m: AUTO's speed schedule)
+    case "QC-300":{const m=D?D.m:DRY.m0,st=D?D.st3:(DRY.pStd[C.grade]||120),pv=run?m+vwob(S.t,0.13,4)*0.25:m;return {m:"AUTO",sp:DRY.m0,pv,y:m,op:st/d.out.k,pos:st/d.out.k};}
+    default:{const p3=D?D.st3:(DRY.pStd[C.grade]||120),st=id==="PV-302"?(D?dryP2(D):p3*0.75):p3,b=DRY.base[C.grade]||72,dem=D?D.dem:b,lf=Math.sqrt(Math.max(0.3*b,dem)/b),hdr=D?D.hdr:1;
       const op=vchInv(d.valve,st*lf/(VLV.Pmax*d.ratio*hdr))*100;return {m:"CAS",sp:st,pv:st,y:st,op,pos:op};}}}
 function vlvState(){if(!S.vlv)S.vlv={lp:{},any:false,sub:0,w0:S.t,B:null,acc:{mco:0,make:0,over:0},calm:{},harm:{},lg:{},bt:null,btRes:null};return S.vlv;}
 // the boundary for the next window of sub-steps (end of each sim step)
-function vCap(){const W=S.vlv;if(!W)return;const B=W.B||(W.B={}),run=S.pm==="run",g=C.grade,D=S.dry||dryState(),We=weState(),b=DRY.base[g]||120;
+function vCap(){const W=S.vlv;if(!W)return;const B=W.B||(W.B={}),run=S.pm==="run",g=C.grade,D=S.dry||dryState(),We=weState(),b=DRY.base[g]||72;
   B.run=run;B.pd=!!(S.M&&S.M.pulperDown);B.ref=S.M&&S.M.refOut?0:1;B.cd=We.cpd||0;B.qo=run?(S.rates.fiberUse||0)/Math.max(1e-6,weUstd()):0;
   const sp=Math.max(S.pmSpeed,P.minSpeed*0.5);B.bsp=bwSp();B.ustd=weUstd();B.u0=weU0(sp);B.mr=mcCons()/WE.mc0;B.cv=1+We.cav*0.06*wobW(0.9,17);B.ff=50*B.u0/B.ustd-50;
   B.tcmax=stmTcMax();{const L4=W.lp["PDC-304"];if(L4&&(!S.stm||S.stm.sp4==null))L4.sp=stmSp();}   // (v6.13: on AUTO's schedule the setpoint follows speed)
-  B.net=run?(We.net||0):0;B.dem=D.dem;B.km=D.km||0;B.ceil=dryCeil(D);B.hdr=D.hdr;B.lf=Math.sqrt(Math.max(0.3*b,D.dem)/b);B.st3=D.st3;
+  B.net=run?(We.net||0):0;B.dem=D.dem;B.km=D.km||0;B.g=g;B.ceil=dryCeil(D);B.pcap=dryPcap(D);B.pcap2=dryPh(B.ceil,1);B.hdr=D.hdr;B.lf=Math.sqrt(Math.max(0.3*b,D.dem)/b);B.st3=D.st3;
   // the basis weight setpoint is the grade's (and the lightweight trim); a grade change rescales what the scanner has seen
   const L=W.lp["FV-201"];if(L){if(W.g&&W.g!==g&&GRADES[W.g]){const f=bwStd()/GRADES[W.g].bw;L.y*=f;L.pvm*=f;L.pvf*=f;for(let i=0;i<L.dq.length;i++)L.dq[i]*=f;}L.sp=bwSp();}
   W.g=g;W.sub=0;W.w0=S.t;W.acc.mco=0;W.acc.make=0;W.acc.over=0;W.acc.dL=0;}
@@ -305,18 +305,18 @@ const VCHAL=[
     brief:"The machine chest level loop barely moves. The machine speeds up at 2 min and slows at 20 min. A level is an integrating process: Ti works differently here."},
   {id:"stick",title:"It's not you, it's the valve",loops:["NV-101"],min:120,start:{"NV-101":{kc:10,ti:1,td:0}},valve:{"NV-101":{stick:2.5}},ev:[[2,"cd",-0.4],[60,"cd",0]],trW:0,rvW:1.5,
     brief:"This dilution valve sticks (2.5% stiction). No tuning makes it steady: every reversal of the valve is a jump. Find the calmest response with the fewest valve reversals."},
-  {id:"inner",title:"Inner first",loops:["QC-300","PV-303"],min:30,start:{"QC-300":{kc:0.24,ti:3,td:0},"PV-303":{kc:2.6,ti:0.12,td:0}},ev:[[3,"dem",15],[18,"dem",-10]],
+  {id:"inner",title:"Inner first",loops:["QC-300","PV-303"],min:30,start:{"QC-300":{kc:0.57,ti:3,td:0},"PV-303":{kc:2.6,ti:0.12,td:0}},ev:[[3,"dem",9],[18,"dem",-6]],
     brief:"The moisture loop (outer) sets the 3rd section steam (inner) on CAS. The drying load rises at 3 min and falls at 18 min. Tune the inner loop first."},
   {id:"patience",title:"Patience",loops:["FV-201"],min:40,start:{"FV-201":{kc:0.5,ti:0.25,td:0}},ev:[[2,"mr",1.04]],
     brief:"The basis weight loop reads 3 minutes late. The machine chest thickens 4% at 2 min. Aggressive tuning goes unstable: find the fastest calm response."},
-  {id:"syphon",title:"Hold the syphons",loops:["PDC-304"],min:20,start:{"PDC-304":{kc:0.12,ti:2.5,td:0}},ev:[[2,"sp","PDC-304",42],[11,"sp","PDC-304",31]],
-    brief:"The 3rd section's syphon ΔP loop is lazy: the machine speeds up at 2 min (setpoint to 42 kPa) and slows at 11 min (31 kPa). Short of the setpoint the cans flood. A quick loop with a small dead time: make it keep up."}];
+  {id:"syphon",title:"Hold the syphons",loops:["PDC-304"],min:20,start:{"PDC-304":{kc:0.12,ti:2.5,td:0}},ev:[[2,"sp","PDC-304",42*KP],[11,"sp","PDC-304",31*KP]],
+    brief:"The 3rd section's syphon ΔP loop is lazy: the machine speeds up at 2 min (setpoint to 6.1 psi) and slows at 11 min (4.5 psi). Short of the setpoint the cans flood. A quick loop with a small dead time: make it keep up."}];
 const VCH=Object.fromEntries(VCHAL.map(c=>[c.id,c]));
-function vSbB(){return {run:true,pd:false,cd:0,qo:1,bsp:bwStd(),ustd:1,u0:1,mr:1,cv:1,ff:0,net:0,dem:120,km:0,ceil:180,hdr:1,lf:1,st3:120,tcmax:60};}
+function vSbB(){return {g:"24",run:true,pd:false,cd:0,qo:1,bsp:bwStd(),ustd:1,u0:1,mr:1,cv:1,ff:0,net:0,dem:72,km:0,ceil:82.5,pcap:165,pcap2:dryPh(82.5,1,"24"),hdr:1,lf:1,st3:120,tcmax:60*KP};}
 // a challenge run: tune = {loopId:{kc,ti,td}}; returns the trace (per second) and the score
 function vlvChallenge(cid,tune){const c=VCH[cid],B=vSbB(),W={lp:{},B,acc:{mco:0,make:0,over:0}};
-  const fsp={"NV-101":5,"LV-104":69,"FV-201":B.bsp,"QC-300":8,"PV-303":120,"PDC-304":35};
-  const fsy={"NV-101":[50,5],"LV-104":[55,69],"FV-201":[50,B.bsp],"QC-300":[40,8],"PV-303":[vchInv(VD["PV-303"].valve,120/VLV.Pmax)*100,120],"PDC-304":[50,35]};
+  const fsp={"NV-101":5,"LV-104":69,"FV-201":B.bsp,"QC-300":8,"PV-303":120,"PDC-304":35*KP};
+  const fsy={"NV-101":[50,5],"LV-104":[55,69],"FV-201":[50,B.bsp],"QC-300":[40,8],"PV-303":[vchInv(VD["PV-303"].valve,120/VLV.Pmax)*100,120],"PDC-304":[50,35*KP]};
   for(const id of c.loops){const d=VD[id],[op,y]=fsy[id];const L=vNew(Object.assign({},d,{tune:Object.assign({},d.tune,c.start[id],tune&&tune[id])}),{m:d.cas?"CAS":"AUTO",sp:fsp[id],op,pos:op,y,pv:y});
     if(c.valve&&c.valve[id])Object.assign(L.v,c.valve[id]);W.lp[id]=L;}
   const main=c.loops[0],[lo,hi]=vSpan(VD[main]);
@@ -333,9 +333,9 @@ function vlvChallenge(cid,tune){const c=VCH[cid],B=vSbB(),W={lp:{},B,acc:{mco:0,
   return {trace:o,iae,trav,rev,score:unstable?Infinity:score,unstable};}
 // the reference: what a careful engineer gets. Lambda (moderate) from the true model, then a coarse search around it,
 // loop by loop, inner loops first (headless; once per challenge, cached)
-const VCHREF={shake:45.41,wake:13.50,stick:34.87,inner:24.90,patience:16.69,syphon:8.97};   // (v6.13: syphon)   // (v6.9.2: precomputed, the same within 1% on every grade; the search below froze the first Run for ~0.5 s, more on a phone)
+const VCHREF={shake:45.41,wake:13.50,stick:34.87,inner:27.55,patience:16.69,syphon:8.97};   // (v6.13: syphon)   // (v6.9.2: precomputed, the same within 1% on every grade; the search below froze the first Run for ~0.5 s, more on a phone)
 function vlvChRef(cid){if(VCHREF[cid]!=null)return VCHREF[cid];const c=VCH[cid];
-  const fit={"PDC-304":{type:"fo",K:0.875,tau:0.33,th:0.05},"NV-101":{type:"fo",K:-0.8,tau:20,th:0.5},"LV-104":{type:"int",Ki:0.25,th:0.08},"FV-201":{type:"fo",K:1,tau:0.33,th:3},"QC-300":{type:"fo",K:-2.25,tau:3,th:1.3},"PV-303":{type:"fo",K:1.68,tau:0.5,th:0.04}};
+  const fit={"PDC-304":{type:"fo",K:0.875,tau:0.33,th:0.05},"NV-101":{type:"fo",K:-0.8,tau:20,th:0.5},"LV-104":{type:"int",Ki:0.25,th:0.08},"FV-201":{type:"fo",K:1,tau:0.33,th:3},"QC-300":{type:"fo",K:-0.94,tau:3,th:1.3},"PV-303":{type:"fo",K:1.68,tau:0.5,th:0.04}};
   const t={};for(const id of c.loops)t[id]=vLambda(VD[id],fit[id],1,"PI");let best=vlvChallenge(cid,t).score;
   const order=c.loops.slice().reverse();
   for(let pass=0;pass<2;pass++)for(const id of order){const b0=Object.assign({},t[id]);let bt=b0;
@@ -347,6 +347,6 @@ function vlvStars(cid,score){if(!isFinite(score))return 0;const r=vlvChRef(cid);
 function vlvChSave(cid,st){const c=S.vlvc||(S.vlvc={});if(st>(c[cid]||0))c[cid]=st;}
 // v6.9: older saves: the 2nd/3rd section steam held on MANUAL (D.man) and the basis weight valve on MANUAL are the new loops
 function vlvMigrate(){if(!S||S.zen)return;const D=S.dry,We=S.we;
-  if(D&&D.man!=null){const p=D.man;D.man=null;vlvTouch("QC-300");const W=S.vlv;W.lp["PV-303"].m="AUTO";W.lp["PV-303"].sp=p;W.lp["PV-302"].m="AUTO";W.lp["PV-302"].sp=p*0.8;W.lp["QC-300"].bump=1;}
+  if(D&&D.man!=null){const p=D.man;D.man=null;vlvTouch("QC-300");const W=S.vlv;W.lp["PV-303"].m="AUTO";W.lp["PV-303"].sp=p;W.lp["PV-302"].m="AUTO";W.lp["PV-302"].sp=p*0.75;W.lp["QC-300"].bump=1;}
   if(We&&We.m==="manual"&&!We.vl){const v=We.v;We.m="auto";const L=vlvTouch("FV-201");L.m="MAN";L.op=v;L.bump=1;}
   const K=S.knob;if(K&&K.v&&K.v.pulp!==KNOB_IDEAL.pulp){const v=K.v.pulp;K.v.pulp=KNOB_IDEAL.pulp;vlvSetOP("NV-101",v);}}

@@ -56,7 +56,7 @@ function rlyIrDraw(){const cv=$("rlyIr");if(!cv)return;const T=S.stm,ir=T&&T.ir,
   const H=120,[x,cw]=trCanvas(cv,H),n=STM.cans,w=(cw-20)/n,stale=age>STM.irStale,unk=age>STM.irUnknown;
   x.font="600 10px system-ui,sans-serif";x.textAlign="center";
   for(let j=0;j<n;j++){const cx=10+w*(j+0.5),v=ir?ir.c[j]:null,s=j<6?0:j<12?1:2;
-    const c=v==null||unk?"#3a4760":v<110?"#3f6fd8":v<125?"#5fa0d8":v<140?"#ffb02e":"#ff7a4e";x.globalAlpha=stale&&!unk?0.45:1;x.fillStyle=c;x.beginPath();x.arc(cx,52,Math.min(14,w*0.42),0,7);x.fill();x.globalAlpha=1;
+    const c=v==null||unk?"#3a4760":v<120?"#3f6fd8":v<135?"#5fa0d8":v<150?"#ffb02e":"#ff7a4e";x.globalAlpha=stale&&!unk?0.45:1;x.fillStyle=c;x.beginPath();x.arc(cx,52,Math.min(14,w*0.42),0,7);x.fill();x.globalAlpha=1;
     x.fillStyle="rgba(190,205,230,.85)";x.fillText(String(j+1),cx,80);if(v!=null&&!unk)x.fillText(Math.round(v)+"°",cx,96);
     if(j===5||j===11){x.strokeStyle="rgba(190,205,230,.35)";x.beginPath();x.moveTo(10+w*(j+1),20);x.lineTo(10+w*(j+1),104);x.stroke();}}
   x.textAlign="left";x.fillText("1st section",12,16);x.fillText("2nd section",14+w*6,16);x.fillText("3rd section",14+w*12,16);

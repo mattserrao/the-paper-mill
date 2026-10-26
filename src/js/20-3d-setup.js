@@ -71,6 +71,9 @@ function no3D(){G3.ok=false;$("no3d").hidden=false;$("no3d-retry").onclick=()=>l
      with it the static shapes keep their back faces, card trees are crossed, lamp cones too, and the cut-outs face the
      camera from any side (36, 40, 40c, 42b, 42f); the whole-site picture (40d) is off. ?freecam / ?freecam=0 override it. */
   G3.freeCam=(()=>{const m=/[?&]freecam(=([01]))?(&|$)/.exec(location.search);if(m)return m[2]!=="0";try{return localStorage.getItem("paper-mill-freecam")==="on";}catch(e){return false;}})();
+  // v6.13.2-t2: zen's camera turns all the way round, so a page loaded for zen (?zen=1: the menu's Zen button reloads into it)
+  // builds the scene the way the free camera does: every face kept, trees as crossed two-sided cards (G3.geomFree)
+  G3.geomFree=G3.freeCam||/[?&]zen=1(&|$)/.test(location.search);
   G3.setFreeCam=on=>{try{localStorage.setItem("paper-mill-freecam",on?"on":"off");}catch(e){}};
   G3.prFor=(w,h)=>G3.prFixed||Math.max(0.75,Math.min(GFX.pr,G3.freeCam&&mobile?1.5:9,window.devicePixelRatio||1,Math.sqrt(GFX.px/Math.max(1,w*h))));   // (v6.12: phones in the free camera at 1.5 at most: it draws about twice the shapes)
   {const gl=renderer.getContext();G3.multiDraw=!!gl.getExtension("WEBGL_multi_draw");

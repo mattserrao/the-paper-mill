@@ -59,6 +59,19 @@ def pick_leader(pg, who="hank", timeout=90000):
     return True
 
 
+# v6.13.2-t3: pick_leader with the animation frames held while the season starts, then paused on a fixed bottleneck
+# before they're released (as determinism.py does): the sim starts from exactly t 0 on every load, so a check that
+# compares scenarios from one snapshot can't drift with how many frames the live loop ran first
+def pick_leader_held(pg, who="hank", bn="pulper", timeout=90000):
+    pg.wait_for_function("()=>{const o=document.getElementById('leadOv');return o&&!o.hidden}", timeout=timeout)
+    pg.evaluate("()=>{window.__held=[];window.__raf=window.requestAnimationFrame;window.requestAnimationFrame=cb=>{window.__held.push(cb);return 0;};}")
+    pg.wait_for_function("()=>window.__held.length>0", timeout=10000, polling=20)
+    pg.evaluate("w=>{document.querySelector('#leadOv .ldcard[data-l=\"'+w+'\"]').click();document.getElementById('ld-go').click()}", who)
+    pg.wait_for_function("__PM.S.season&&__PM.S.season.on", timeout=60000, polling=50)
+    return pg.evaluate("""b=>{__PM.setRunning(false);if(b)__PM.setBn(b);const t=__PM.S.t;
+      window.requestAnimationFrame=window.__raf;const h=window.__held;window.__held=[];h.forEach(cb=>window.requestAnimationFrame(cb));return t;}""", bn)
+
+
 @functools.lru_cache(None)
 def r128():
     """three.js r128 for old builds (v3.3.4 to early v4). Read only when a page asks for it, so it isn't required for

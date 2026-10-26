@@ -62,8 +62,11 @@ def smoke(pw):
     st = pg.evaluate("()=>({over:__PM.S.over||null,cash:Math.round(__PM.S.cash),run:__PM.running,cards:JSON.stringify(Object.keys(__PM.S.cards&&__PM.S.cards.open||{})),ovs:[...document.querySelectorAll('.overlay')].filter(o=>!o.hidden).map(o=>o.id),menu:!document.getElementById('v2menu').hidden})")
     ok("one more turn runs (or an event card or the game-over screen paused it)", st["run"] or "dealOv" in st["ovs"] or (st["over"] and "overlay" in st["ovs"]))   # (v5.6: with every upset fired at once the run can end bankrupt); log.append("  after one-more-turn: " + str(st))
     click("#v2pause"); pg.wait_for_timeout(200)
-    click("#v2zen"); pg.wait_for_timeout(2000)
-    ok("zen on", pg.evaluate("()=>!!__PM.S.zen"))
+    click("#v2zen")   # (v6.13.2-t2: from a page built for the iso camera, zen reloads into ?zen=1 with every face built)
+    try: pg.wait_for_function("()=>window.__PM&&__PM.G3&&__PM.G3.geomFree&&__PM.S&&__PM.S.zen", timeout=240000, polling=300); zr = True
+    except Exception: zr = False
+    pg.wait_for_timeout(1500)
+    ok("zen on (after its reload, with every face built)", zr and pg.evaluate("()=>!!__PM.S.zen"))
     pg.keyboard.press("Escape"); pg.wait_for_timeout(600)
     zs = pg.evaluate("()=>!!__PM.S.zen"); C.note(f"zen after Esc={zs} menu={vis('#v2menu')}")
     if zs: click("#zenExit"); pg.wait_for_timeout(600)

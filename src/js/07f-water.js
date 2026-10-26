@@ -15,7 +15,9 @@
      stock (tools/watercheck.py closes it). Before v6.5.6 the intake and outfall were fixed 9.9 / 8.4 m³ a ton of good
      paper, zero whenever the machine stopped. */
 // (v6.8.3: shower 1.65 m³ a ton of paper, about 250 gpm at 35 t/h; it was 8, over 1,000 gpm)
-const WAT={cap:2000,lo:0.4,hi:0.7,shower:1.65,base:60,cs:4.2,makeMax:1000,baleW:0.10,rejS:0.5,sludgeS:0.3,clar:0.9971};   // (v6.11.1: the clarifier catches 99.71% of the solids, so a normal run is in permit, ~25 mg/L; it was 98.8%, ~120)
+// v6.13.2 Real Numbers: showers 4.1 m³ a ton (seal water 60 m³/h as before), so fresh water is ~6.7 m³ a ton (it was ~4.3, better
+// than the best recycled containerboard mills; real ones run ~6-8 in the EU, ~16 in the US)
+const WAT={cap:2000,lo:0.4,hi:0.7,shower:4.1,base:60,cs:4.2,makeMax:1000,baleW:0.10,rejS:0.5,sludgeS:0.3,clar:0.9950};   // (v6.13.2: 99.50%: the same fines in ~1.7x the outfall, so a normal run stays ~25 mg/L and a low polymer dose still breaches the 50 mg/L permit; v6.11.1: 99.71%)
 WAT.sw=100/WAT.cs-1;   // water a ton of fiber carries at storage consistency
 const WQ={f:0,fi:0,rej:0,u:0,p:0,rep:0,spill:0,clip:0,bw:0};   // (v6.6 bw: bale water over the standard 10%)   // this step's flows (t)
 function watState(){if(!S.wat)S.wat={L:WAT.cap*0.55,short:0,shortK:0,r:{fresh:0,out:0,evap:0,over:0,make:0,p:0,eff:0},

@@ -53,13 +53,7 @@
     [-1.2,1.2].forEach(dx=>{box(0.6,1.1,0.4,M.steel,X+dx,0.55,Z-1.45);box(0.5,0.25,0.05,M.ok,X+dx,0.95,Z-1.22,scene,false);
       const cb=new THREE.Mesh(new CylG(0.03,0.03,1.4,6),M.ink);cb.rotation.x=0.9;cb.position.set(X+dx+0.25,0.5,Z-0.8);scene.add(cb);});
     box(0.12,0.12,3.6,M.warn,X,0.06,Z-1.4,scene,false);}
-  // flagpoles by the office door: the mill's flag and a safety flag
-  {[[56.6,20.4,"brand"],[58.6,20.4,"ok"]].forEach(([x,z,tk],k)=>{const p=new THREE.Mesh(new CylG(0.05,0.07,9,8),M.steel);p.position.set(x,4.5,z);p.castShadow=true;scene.add(p);
-      const ball=new THREE.Mesh(new SphG(0.12,8,6),M.brand);ball.position.set(x,9.05,z);scene.add(ball);
-      const fm=k?M.ok:M.brand;
-      const fg=new THREE.BoxGeometry(1.7,1.05,0.04);fg.translate(0.85,0,0);const fl=new THREE.Mesh(fg,fm);fl.position.set(x+0.06,8.3,z);fl.rotation.y=0.55;fl.castShadow=true;scene.add(fl);
-      if(G3.GFX&&(G3.GFX.tier==="high"||G3.GFX.tier==="ultra"))(YP.flags||(YP.flags=[])).push(fl);
-      box(0.5,0.08,0.5,M.ink,x,0.04,z,scene,false);});}
+  // (v6.13.2-t4: the two flagpoles by the office door are gone)
   // the gate sign outside the fence, read by every truck coming in
   {const gx=-106,gz=-12;[-1.3,1.3].forEach(dz=>box(0.14,2.8,0.14,M.ink,gx,1.4,gz+dz,scene,false));
     // drawn into the atlas below the tank band (512 x 172 at row 128)

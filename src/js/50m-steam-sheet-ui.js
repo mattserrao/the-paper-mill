@@ -12,17 +12,17 @@ AREA_N.STM="Steam & air";
 TR_DEF.STM=["dp3","dpneed","hoodH","cret"];TR_DEF.PROF=["couchSol","pressSol","moist"];TR_DEF.BRK=["brkr","tbf","stk"];TR_DEF.NRG=["stpt","kwht","usdt","cret"];
 const MT6=(x,y,k,t,f,c)=>[x,y,k,t,f,c];
 const sf1=v=>v==null||v!==v?"–":(+v).toFixed(1);
-MIMIC.STM={title:"STEAM & AIR",h:322,trends:[["dp3","3rd section ΔP kPa","#7fb2ff",0,70],["hoodH","Hood humidity g/kg","#ffb02e",0,260]],
+MIMIC.STM={title:"STEAM & AIR",h:322,trends:[["dp3","3rd section ΔP psi","#7fb2ff",0,10],["hoodH","Hood humidity g/kg","#ffb02e",0,260]],
   eq:[[8,10,98,44,"POWER HOUSE"],[478,58,104,34,"TC-304"],[40,118,170,54,"1ST SECTION"],[228,118,170,54,"2ND SECTION"],[416,118,204,54,"3RD SECTION"],
     [8,206,84,34,"CONDENSER","s"],[110,214,510,22,"CONDENSATE RECEIVERS","s"],[40,264,230,40,"DRYER HOOD"],[288,264,100,40,"EXHAUST FAN"],[404,264,104,40,()=>LV("heatrec")?"SUPPLY · HEAT REC":"SUPPLY FAN"],[524,264,100,40,"FOG FAN"]],
   ln:[["M106 32 H632 V118 H620"],["M530 32 V58"],["M500 92 V118"],["M318 32 V118"],["M125 32 V118"],["M610 118 V75 H582",1],["M228 150 H210",1],["M40 145 H24 V206",1],
     ["M200 172 V214",1],["M388 172 V214",1],["M610 172 V214",1],["M110 225 H100 V54",1],["M270 284 H288"],["M388 284 H404"]],
   tags:[MT6(52,68,"stst","STEAM",()=>S.dry&&S.dry.steam>0.5?sf1(S.dry.steam)+" t/h":"–"),MT6(52,82,"stret","RETURN",()=>S.stm?Math.round(S.stm.ret*100)+"%":"–"),MT6(52,96,"stmk","MAKEUP",()=>S.stm?fmtGpm(GPM(S.stm.mk)):"–"),
-    MT6(125,166,"st1s","STEAM",()=>Math.round(knobVal("st1"))+" kPa"),MT6(313,166,"st2s","STEAM",()=>S.dry?Math.round(S.dry.st3*0.8)+" kPa":"–"),MT6(518,166,"st3s","STEAM",()=>S.dry?Math.round(S.dry.st3)+" kPa":"–"),
-    MT6(125,188,"dp1","ΔP",()=>S.stm?sf1(S.stm.dp[0])+" kPa":"–",()=>S.stm&&S.pm==="run"&&S.stm.dp[0]<stmNeed(0)?"bad":""),MT6(125,200,"nd1","NEED",()=>S.pm==="run"?sf1(stmNeed(0))+" kPa":"–"),
-    MT6(313,188,"dp2","ΔP",()=>S.stm?sf1(S.stm.dp[1])+" kPa":"–",()=>S.stm&&S.pm==="run"&&S.stm.dp[1]<stmNeed(1)?"bad":""),MT6(313,200,"nd2","NEED",()=>S.pm==="run"?sf1(stmNeed(1))+" kPa":"–"),
-    MT6(518,188,"dp3","ΔP",()=>S.stm?sf1(S.stm.dp[2])+" kPa":"–",()=>S.stm&&S.pm==="run"&&S.stm.dp[2]<stmNeed(2)?"bad":""),MT6(518,200,"dpneed","NEED",()=>S.pm==="run"?sf1(stmNeed(2))+" kPa":"–"),
-    MT6(430,108,"bt3","BLOW",()=>S.stm&&S.pm==="run"?Math.round(S.stm.bt[2]*100)+"%":"–",()=>S.stm&&S.stm.bt[2]>STM.btWaste?"warn":""),MT6(540,108,"tcmax","REACH",()=>Math.round(stmTcMax())+" kPa",()=>stmTcMax()<stmSp()?"bad":""),
+    MT6(125,166,"st1s","STEAM",()=>Math.round(knobVal("st1"))+" psig"),MT6(313,166,"st2s","STEAM",()=>S.dry?Math.round(dryP2(S.dry))+" psig":"–"),MT6(518,166,"st3s","STEAM",()=>S.dry?Math.round(S.dry.st3)+" psig":"–"),
+    MT6(125,188,"dp1","ΔP",()=>S.stm?sf1(S.stm.dp[0])+" psi":"–",()=>S.stm&&S.pm==="run"&&S.stm.dp[0]<stmNeed(0)?"bad":""),MT6(125,200,"nd1","NEED",()=>S.pm==="run"?sf1(stmNeed(0))+" psi":"–"),
+    MT6(313,188,"dp2","ΔP",()=>S.stm?sf1(S.stm.dp[1])+" psi":"–",()=>S.stm&&S.pm==="run"&&S.stm.dp[1]<stmNeed(1)?"bad":""),MT6(313,200,"nd2","NEED",()=>S.pm==="run"?sf1(stmNeed(1))+" psi":"–"),
+    MT6(518,188,"dp3","ΔP",()=>S.stm?sf1(S.stm.dp[2])+" psi":"–",()=>S.stm&&S.pm==="run"&&S.stm.dp[2]<stmNeed(2)?"bad":""),MT6(518,200,"dpneed","NEED",()=>S.pm==="run"?sf1(stmNeed(2))+" psi":"–"),
+    MT6(430,108,"bt3","BLOW",()=>S.stm&&S.pm==="run"?Math.round(S.stm.bt[2]*100)+"%":"–",()=>S.stm&&S.stm.bt[2]>STM.btWaste?"warn":""),MT6(540,108,"tcmax","REACH",()=>sf1(stmTcMax())+" psi",()=>stmTcMax()<stmSp()?"bad":""),
     MT6(50,254,"btwaste","WASTE",()=>S.stm?sf1(S.stm.waste)+" t/h":"–",()=>S.stm&&S.stm.waste>0.3?"warn":""),MT6(365,250,"cret","RETURN",()=>S.stm?Math.round(S.stm.ret*100)+"%":"–",()=>S.stm&&S.stm.ret<0.8?"warn":""),
     MT6(155,256,"hoodH","HUMIDITY",()=>S.stm&&S.pm==="run"?Math.round(S.stm.H)+" g/kg":"–",()=>S.stm&&S.stm.H>STM.Hhi?"bad":S.stm&&S.stm.H<STM.Hlo&&S.pm==="run"?"warn":""),MT6(155,318,"dew","DEW PT",()=>S.stm&&S.pm==="run"?Math.round(stmDew(S.stm.H))+" °C":"–"),
     MT6(338,318,"exh","EXH",()=>S.stm?Math.round(S.stm.exh)+"% "+(S.stm.exhM==="auto"?"AUTO":"MAN"):"–"),MT6(456,318,"sup","SUP",()=>S.stm?Math.round(S.stm.sup)+"% "+(S.stm.supM==="auto"?"AUTO":"MAN"):"–"),
@@ -186,4 +186,5 @@ function rideHud(u){const h=$("rideHud");if(!h)return;const [, ,d]=rideAt(u),P2=
 G3.rideAt=rideAt;G3.rideHud=rideHud;G3.rideEnd=shRideEnd;G3.ride=shRide;
 // tests (tools/checks): the sheet and the steam models
 G3.sheet={setJw:hbSetJw,jw:hbJw,hbc:hbcSet,form:formF,tsr:tsrNow,stfi:()=>QNOW.stfi,stfiSpec,brk:brkRisk,where:brkWhere,prof:profNow,bkSet,bkLvl,reelSetNip,hard:reelHard,stk:()=>S.stk,stkClean,turnup:turnupRoll,log:brLog,top:brTop};
+G3.dryP={satT,satP,ph:dryPh,hp:dryHp,p2:dryP2,ceil:dryCeil,pcap:dryPcap};
 G3.steam={need:stmNeed,sp:stmSp,setSp:stmSetSp,setFan:stmSetFan,lost:stmLost,demF:stmDemF,flooded:stmFlooded,tcMax:stmTcMax,ir:stmIr,dew:stmDew,shell:stmShell};

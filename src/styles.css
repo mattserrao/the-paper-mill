@@ -1504,6 +1504,11 @@ body.pmpop .popmain[data-v="dcs"] #dcsOv .dcs{max-width:1180px;margin:0 auto}
 .dcsctl canvas#brFish{width:100%;display:block;border-radius:8px;margin-top:6px}
 .qtab tr[data-bri]{cursor:pointer}.qtab tr.sel td{background:#1d3550}
 #spcSel{margin:4px 0}
-.ridehud{position:fixed;left:50%;top:92px;transform:translateX(-50%);z-index:900;display:flex;gap:12px;align-items:baseline;flex-wrap:wrap;justify-content:center;
-  background:rgba(12,22,38,.86);color:#e8f0ff;border:1px solid #2c3e5c;border-radius:12px;padding:8px 14px;font:600 13px system-ui,sans-serif;font-variant-numeric:tabular-nums;max-width:92vw;cursor:pointer}
-.ridehud b{font-size:15px;color:#ffd27a}.ridehud small{color:#8ea4c4;font-size:11px}
+/* v6.13.2-t4: a fixed grid (one row of values, "tap to leave" under it) so the box never grows or shifts as the section
+   names and numbers change along the ride */
+.ridehud{position:fixed;left:50%;top:92px;transform:translateX(-50%);z-index:900;display:grid;grid-template-columns:minmax(0,1.7fr) minmax(0,1.4fr) repeat(3,minmax(0,1fr));
+  column-gap:12px;row-gap:2px;align-items:baseline;width:min(640px,94vw);box-sizing:border-box;
+  background:rgba(12,22,38,.86);color:#e8f0ff;border:1px solid #2c3e5c;border-radius:12px;padding:8px 14px;font:600 13px system-ui,sans-serif;font-variant-numeric:tabular-nums;cursor:pointer}
+.ridehud>*{white-space:nowrap;overflow:hidden;text-overflow:ellipsis;text-align:center}
+.ridehud b{font-size:15px;color:#ffd27a;text-align:left}.ridehud small{grid-column:1/-1;color:#8ea4c4;font-size:11px}
+@media (max-width:560px){.ridehud{grid-template-columns:minmax(0,1.6fr) repeat(3,minmax(0,1fr));column-gap:6px;padding:6px 8px;font-size:11px}.ridehud b{grid-column:1/-1;text-align:center;font-size:14px}}

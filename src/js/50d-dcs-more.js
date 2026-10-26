@@ -13,15 +13,15 @@ const DV={
   rgt:()=>motStatus("ragger")!=="run"?"0 kN":(14+wob2(0.05,13)*1.5+(S.rates.feed||0)/10).toFixed(1)+" kN",jdc:()=>String(Math.floor(((S.pf&&S.pf.W.feed)||0)/40)),
   thl:()=>{const D=G3.SPD;return D?Math.round(clamp(55+(D.lc||0)*20+wob2(0.03,14)*2,0,100))+"%":"–";},
   cvsp:()=>Math.round(C.pulper.v/Math.max(1,P.pulperMax)*100)+"%",cvst:()=>({run:C.pulper.auto?"AUTO":"HAND",off:"STOP",trip:"TRIP"})[motStatus("conv")],
-  hddp:()=>Math.round(purgeDp("hd")+(dcsOn("hdblow")?40:0)+wob2(0.07,1))+" kPa",lcdp:()=>Math.round(purgeDp("lc")+(dcsOn("lcplug")?50:0)+wob2(0.05,2))+" kPa",
-  lwdp:()=>Math.round(purgeDp("lw")+(dcsOn("lwplug")?45:0)+wob2(0.06,3))+" kPa",lcrow:()=>(LV("clean")>0?2:1)+" of "+(LV("clean")>0?2:1),
-  csdp:()=>motStatus("cscr")!=="run"?"0 kPa":Math.round(18+S.rates.feed/Math.max(1,P.pulperMax)*14+wob2(0.08,4))+" kPa",csrj:()=>(2.5+(dcsOn("badocc")?2:0)+wob2(0.03,5)*0.3).toFixed(1)+"%",
-  fsdp:()=>motStatus("fscr")!=="run"?"0 kPa":Math.round((S.we?S.we.fs:WE.fs0)+wob2(0.09,6))+" kPa",fsld:()=>Math.round(S.rates.fiberIn/Math.max(1,P.screenMax)*100)+"%",
+  hddp:()=>Math.round(purgeDp("hd")+(dcsOn("hdblow")?PURGE.add.hd:0)+wob2(0.07,1)*0.4)+" psi",lcdp:()=>Math.round(purgeDp("lc")+(dcsOn("lcplug")?PURGE.add.lc:0)+wob2(0.05,2)*0.4)+" psi",
+  lwdp:()=>Math.round(purgeDp("lw")+(dcsOn("lwplug")?PURGE.add.lw:0)+wob2(0.06,3)*0.4)+" psi",lcrow:()=>(LV("clean")>0?2:1)+" of "+(LV("clean")>0?2:1),
+  csdp:()=>motStatus("cscr")!=="run"?"0 psi":((18+S.rates.feed/Math.max(1,P.pulperMax)*14+wob2(0.08,4))*KP).toFixed(1)+" psi",csrj:()=>(2.5+(dcsOn("badocc")?2:0)+wob2(0.03,5)*0.3).toFixed(1)+"%",
+  fsdp:()=>motStatus("fscr")!=="run"?"0 psi":((S.we?S.we.fs:WE.fs0)+wob2(0.09,6)*KP).toFixed(1)+" psi",fsld:()=>Math.round(S.rates.fiberIn/Math.max(1,P.screenMax)*100)+"%",
   thf:()=>{const D=G3.SPD;return D?(D.tl>150?"DIRTY":"CLEAR")+" "+Math.round(D.tl):"–";},thv:()=>{const D=G3.SPD;return D?Math.round(D.v*100)+"%":"–";},
   lvsp:()=>Math.round(C.lvlTarget.v)+"%",stc:()=>(4.2+((S.knob&&S.knob.any&&S.knob.x?S.knob.x.cp:5)-5)*0.12+wob2(0.04,15)*0.06).toFixed(2)+"%",dyef:()=>{const b=document.querySelector('#paperColor button[aria-pressed="true"]');return motStatus("dye")!=="run"||(b&&b.dataset.c==="white")?"0%":"62%";},
   jw:()=>dcsJw().toFixed(3),
   // v6.9.1: rush / drag, fpm: (jet-to-wire - 1) x wire speed. Jet faster than the wire is rush, slower is drag
-  rd:()=>{if(S.pm!=="run")return "–";const v=dcsRD(),a=Math.round(Math.abs(v));return a<0.5?"0 fpm SQUARE":(v>0?"+":"−")+a+" fpm "+(v>0?"RUSH":"DRAG");},slc:()=>{const D=G3.SLC;return D?(12+3*D.v).toFixed(1)+" mm":"–";},
+  rd:()=>{if(S.pm!=="run")return "–";const v=dcsRD(),a=Math.round(Math.abs(v));return a<0.5?"0 fpm SQUARE":(v>0?"+":"−")+a+" fpm "+(v>0?"RUSH":"DRAG");},slc:()=>{const D=G3.SLC;return D?slcMm(D.v).toFixed(1)+" mm":"–";},
   wsp:()=>Math.round(S.pmSpeed/DCS_DRAW())+" fpm",psp:()=>Math.round(S.pmSpeed/DCS_DRAW()*1.015)+" fpm",dsp:()=>Math.round(S.pmSpeed/1.01)+" fpm",
   wwl:()=>S.we?Math.round(S.we.L/WE.silo*100)+"%":"–",wwg:()=>S.we?fmtGal(GAL(S.we.L)):"–",hbc:()=>S.pm==="run"&&S.we?S.we.hbc.toFixed(2)+"%":"–",
   bwv:()=>S.we?Math.round(S.we.v)+"% "+(S.we.m==="auto"?"AUTO":"MAN"):"–",dil:()=>fmtGpm(GPM(S.we?S.we.f.dil||0:0)),drn:()=>fmtGpm(GPM(S.we?S.we.f.drain||0:0)),pw:()=>fmtGpm(GPM(S.we?S.we.f.press||0:0)),hum:()=>Math.round(clamp(62+(motStatus("fog")!=="run"||dcsOn("fogfan")?24:0)+wob2(0.01,8)*3,0,100))+"%",
@@ -61,13 +61,13 @@ MIMIC.WET={title:"WET END",h:282,trends:MIMIC_KNOB.WET.trends,
     MT(160,142,"gbox","GRAV",r=>kf(r.gbox)+" inHg"),MT(160,155,"lvac","LOW",r=>kf(r.lvac)+" inHg"),MT(160,168,"vac","HIGH",r=>kf(r.vacIn)+" inHg"),
     MT(262,142,"gbv","PV-311",r=>Math.round(r.gbv)+"%"),MT(262,155,"lvv","PV-312",r=>Math.round(r.lvv)+"%"),MT(262,168,"hvv","PV-313",r=>Math.round(r.hvv)+"%"),MT(345,22,"vpkw","PUMP",r=>r.run?Math.round(r.vpkw)+" kW":"–"),MT(240,88,"edge","EDGE",r=>(r.edge>=0?"+":"")+Math.round(r.edge)+" mm"),MT(240,194,"gtrav","GUIDE",r=>r.gm?"AUTO "+Math.round(Math.min(1,r.gtrav)*100)+"%":"MAN"),
     MT(340,172,"couchSol","SOL",r=>kf(r.couchSol)+"%"),MT(340,194,"cs","PIT",r=>r.couch?"RUN":"STOP"),MT(440,172,"osc","OSC",r=>Math.round(r.osc)+"%"),
-    MT(567,172,"pl","LOAD",r=>Math.round(r.pl)+" kN/m"),MT(567,194,"pressSol","SOL",r=>kf(r.pressSol)+"%"),MT(567,66,"psp","SPD",DV.psp),MT(260,232,"wwl","LEVEL",DV.wwl),MT(260,246,"wwg","VOL",DV.wwg),MT(370,232,"drain","DRAIN",DV.drn),MT(560,232,"pressw","PRESS",DV.pw),
+    MT(567,172,"pl","LOAD",r=>Math.round(r.pl)+" kN/m"),MT(567,194,"pressSol","SOL",r=>kf(r.pressSol)+"%"),MT(567,66,"psp","SPD",DV.psp),MT(260,232,"wwl","LEVEL",DV.wwl),MT(260,246,"wwg","VOL",DV.wwg),MT(370,232,"drain","DRAIN",DV.drn),MT(260,262,"wwov","OVFL",()=>S.we?fmtGpm(GPM(S.we.f.over||0))+" to WW chest (by design)":"–"),MT(560,232,"pressw","PRESS",DV.pw),
     MT(60,216,"hbc","HBC",DV.hbc),MT(572,54,"hum","RH",DV.hum)]};   // (v6.9: the basis weight valve is FV-201, drawn by 50k)
 MIMIC.DET={title:"DRY END",h:320,trends:MIMIC_KNOB.DET.trends,
   eq:[[14,96,80,50,"OPEN DRAW"],[112,80,130,80,"1ST SECTION"],[260,80,170,80,"2ND / 3RD SECTION"],[448,90,74,60,"REEL"],[546,90,84,60,"WINDER"],[546,214,84,30,"ROLL CONV","s"],[546,280,84,30,"DE PULPER","s"]],   // (v6.11.2: the dry-end pulper, read only)
   ln:[["M94 121 H112"],["M242 120 H260"],["M430 120 H448"],["M522 120 H546"],["M630 120 H636 V229 H630"],["M630 135 H639 V295 H630"],["M640 66 H177 V80 M345 66 V80",1]],   // (v6.5.4: the steam header comes in from the boiler house, UTIL)
-  tags:[MT(54,172,"draw","DRAW",r=>kf(r.draw)+"%"),MT(54,194,"tension","TENS",r=>r.run?kf(r.tension,2):"–"),MT(177,176,"st1","STEAM",r=>Math.round(r.st1)+" kPa"),MT(177,192,"dr1","DRV",DV.dr1),MT(177,208,"dsp","SPD",DV.dsp),
-    MT(345,176,"st3","STEAM",r=>Math.round(r.st3)+" kPa "+(S.dry&&S.dry.man!=null?"MAN":"AUTO")),MT(345,192,"steam","FLOW",r=>r.steam>0.5?kf(r.steam)+" t/h":"–"),MT(345,208,"dr2","DRV",DV.dr2),MT(345,224,"dryl","LOAD",DV.dryl),MT(560,58,"hdr","STEAM HDR",r=>Math.round(r.boiler*100)+"%"),
+  tags:[MT(54,172,"draw","DRAW",r=>kf(r.draw)+"%"),MT(54,194,"tension","TENS",r=>r.run?kf(r.tension,2):"–"),MT(177,176,"st1","STEAM",r=>Math.round(r.st1)+" psig"),MT(177,192,"dr1","DRV",DV.dr1),MT(177,208,"dsp","SPD",DV.dsp),
+    MT(345,176,"st3","STEAM",r=>Math.round(r.st3)+" psig "+(S.dry&&S.dry.man!=null?"MAN":"AUTO")),MT(345,192,"steam","FLOW",r=>r.steam>0.5?kf(r.steam)+" t/h":"–"),MT(345,208,"dr2","DRV",DV.dr2),MT(345,224,"dryl","LOAD",DV.dryl),MT(560,58,"hdr","STEAM HDR",r=>Math.round(r.boiler*100)+"%"),
     MT(485,166,"moist","MOIST",r=>r.run?kf(r.moist)+"%":"–"),MT(485,180,"bw","BW",r=>r.run?kf(r.bw,2):"–"),MT(485,194,"spool","SPOOL",DV.spool),MT(485,208,"store","STORE",DV.store),MT(485,222,"tu","TURN-UPS",DV.tu),MT(485,84,"speed","SPEED",r=>Math.round(r.speed)+" fpm"),
     MT(588,166,"wdr","SP",DV.wdr),MT(588,180,"wdt","CUT",DV.wdt),MT(588,194,"hay","HAYOUTS",DV.hay),MT(588,262,"rolls","ROLLS",DV.rolls),
     [472,284,"delvl","LEVEL",()=>S.zen?"–":Math.round(depLvl())+"%",()=>depLvl()>=DEP.ovf*100-0.01?"bad":depLvl()>=DEP.hi*100?"warn":""],MT(472,298,"decons","CONS",()=>S.zen?"–":kf(depCons())+"%"),MT(472,312,"defin","IN",()=>S.zen||!S.dep?"–":kf(S.dep.fin)+" t/h"+(S.pm==="break"&&S.brkType!=="press"?" BRK":""))]};
@@ -141,12 +141,12 @@ function dcsSetDefs(a){const D=()=>DCS_DRAW();
     // v6.11.2 the 2nd and 3rd section steam on the setpoint list: PV-302 / PV-303 (07h). On CAS the moisture controller QC-300
     // sets them; dragging one takes it off CAS onto AUTO at that pressure, and the button puts it back on CAS.
     ...[["PV-302","st2","2nd section steam"],["PV-303","st3","3rd section steam"]].map(([id,k,n])=>{const v=vlvView(id),cas=v.m==="CAS",pv=Math.round(v.pv);
-      return [k+"sp",n,cas?`CAS · set by QC-300 (reel moisture ${DRY.m0}%) · ${pv} kPa`:`${v.m==="MAN"?"MANUAL · valve held at "+Math.round(v.op)+"%":"AUTO · held at the setpoint"} · ${pv} kPa · CAS hands it back to the moisture loop`,
-        0,250,5,()=>vlvView(id).sp,x=>{if(vlvView(id).m!=="AUTO")vlvSetMode(id,"AUTO");vlvSetSP(id,x);},"kPa",null,0,
+      return [k+"sp",n,cas?`CAS · set by QC-300 (reel moisture ${DRY.m0}%) · ${pv} psig`:`${v.m==="MAN"?"MANUAL · valve held at "+Math.round(v.op)+"%":"AUTO · held at the setpoint"} · ${pv} psig · CAS hands it back to the moisture loop`,
+        0,175,5,()=>vlvView(id).sp,x=>{if(vlvView(id).m!=="AUTO")vlvSetMode(id,"AUTO");vlvSetSP(id,x);},"psig",null,0,
         {on:()=>vlvView(id).m==="CAS",flip:()=>vlvSetMode(id,vlvView(id).m==="CAS"?"AUTO":"CAS"),lab:["CAS","AUTO"]}];})];
   if(a==="STM"&&!S.zen){const T=stmState(),need=stmNeed(2),pv=vlvView("PDC-304").pv,sch=T.sp4==null;
-    return [["pdcsp","3rd section syphon ΔP · PDC-304",sch?`AUTO schedule: what this speed needs (${need.toFixed(1)} kPa) + ${STM.margin} · PV ${pv.toFixed(1)} kPa`:`FIXED at the setpoint · this speed needs ${need.toFixed(1)} kPa · PV ${pv.toFixed(1)} kPa${pv<need?" · CANS FLOODING":""}`,
-        5,70,0.5,()=>stmSp(),v=>vlvSetSP("PDC-304",v),"kPa",null,0,{on:()=>stmState().sp4==null,flip:()=>{const T2=stmState();if(T2.sp4==null)vlvSetSP("PDC-304",stmSp());else{stmSetSp(null);if(vlvT("PDC-304"))S.vlv.lp["PDC-304"].sp=stmSp();}},lab:["SCHEDULE","FIXED"]}],
+    return [["pdcsp","3rd section syphon ΔP · PDC-304",sch?`AUTO schedule: what this speed needs (${need.toFixed(1)} psi) + ${STM.margin.toFixed(1)} · PV ${pv.toFixed(1)} psi`:`FIXED at the setpoint · this speed needs ${need.toFixed(1)} psi · PV ${pv.toFixed(1)} psi${pv<need?" · CANS FLOODING":""}`,
+        +(5*KP).toFixed(1),+(70*KP).toFixed(1),0.1,()=>stmSp(),v=>vlvSetSP("PDC-304",v),"psi",null,1,{on:()=>stmState().sp4==null,flip:()=>{const T2=stmState();if(T2.sp4==null)vlvSetSP("PDC-304",stmSp());else{stmSetSp(null);if(vlvT("PDC-304"))S.vlv.lp["PDC-304"].sp=stmSp();}},lab:["SCHEDULE","FIXED"]}],
       ...[["exh","Hood exhaust fan"],["sup","Hood supply fan"]].map(([k,n])=>{const au=T[k+"M"]==="auto";
         return [k,n,k==="exh"?`${au?"AUTO · holds "+STM.H+" g/kg":"MANUAL"} · hood ${Math.round(T.H)} g/kg · dew point ${Math.round(stmDew(T.H))} °C${T.drip>0?" · DRIPPING":""}`:`${au?"AUTO · 95% of the exhaust":"MANUAL"}${T.sup>T.exh?" · OVER THE EXHAUST: the hood is spilling into the machine room":""} · machine room ${Math.round(T.hum)}% RH`,
           10,100,1,()=>T[k+"Sp"],v=>stmSetFan(k,v),"%",null,0,{on:()=>stmState()[k+"M"]==="auto",flip:()=>{const T2=stmState();stmSetFan(k,T2[k+"M"]==="auto"?T2[k+"Sp"]:"auto");}}];})];}
@@ -201,7 +201,7 @@ function dcsSync(){const o=$("dcsOv");if(!o||o.hidden||!KUI.st)return;const a=KU
     row.querySelectorAll("[data-mv]").forEach(x=>{x.setAttribute("aria-pressed",String(x.dataset.mv===st));x.disabled=S.zen;});
     const t=ms==="off"?`STOPPED · operators restart in ${i?Math.ceil(i.left):0} min`:ms==="trip"?"TRIPPED · "+EV[MOTN[id].like].name.toLowerCase():st==="on"?"RUNNING · hand":"RUNNING · auto",s=row.querySelector("[data-dms]");if(s.textContent!==t)s.textContent=t;row.classList.toggle("bad",ms!=="run");});
   o.querySelectorAll("[data-dp]").forEach(row=>{const k=row.dataset.dp,m=purgeMode(k),dp=purgeDp(k);row.querySelectorAll("[data-pv]").forEach(x=>{x.setAttribute("aria-pressed",String(x.dataset.pv===m));x.disabled=S.zen;});
-    row.querySelector("[data-pp]").disabled=m!=="manual"||S.zen;const t=`ΔP ${Math.round(dp)} kPa · plugs at ${PURGE.trip[k]}`+(m==="manual"?" · purge before it plugs":""),s=row.querySelector("[data-dps]");if(s.textContent!==t)s.textContent=t;
+    row.querySelector("[data-pp]").disabled=m!=="manual"||S.zen;const t=`ΔP ${Math.round(dp)} psi · plugs at ${PURGE.trip[k]}`+(m==="manual"?" · purge before it plugs":""),s=row.querySelector("[data-dps]");if(s.textContent!==t)s.textContent=t;
     row.classList.toggle("bad",dp>PURGE.base[k]+(PURGE.trip[k]-PURGE.base[k])*0.6);});}
 G3.dcs={motSet,purgeSet,purgeNow,motStatus,dcsArea};
 G3.we={state:weState,bwTrue,bwMeas,bwSp,setMode:bwSetMode,setValve:bwSetValve,setTrim:bwSetTrim,rct:()=>rctNow(bwMeas()),rctSpec,dpYield,kwhNow,cpBale,areaQcs,areaNow,msfPerT,priceEff,gapOf,csfOf};   // (v6.8 tests: tools/relcheck.py)   // (tests: tools/dcscheck.py)

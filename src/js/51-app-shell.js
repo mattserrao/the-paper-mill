@@ -172,7 +172,10 @@
   // v5.2 title screen (51d-title.js) starts the modes through these; the map is picked before them
   G3.goSeason=()=>{if(goWait)return;goSeason(true);};G3.goSurv=goSurv;
   G3.goFree=()=>{const run=()=>{if(!S.free)setFree(true);play();if(G3.labelIntro)G3.labelIntro();};if(G3.warm||!G3.prewarm)run();else G3.prewarm().then(run);};
-  G3.goZen=()=>{menu.hidden=true;first=false;if(G3.titleHide)G3.titleHide();setZen(true);};
+  // v6.13.2-t2: a page built for the iso camera kept only the faces it can see; zen's camera goes all the way round, so going
+  // into zen from the menu or the title reloads into ?zen=1, which builds every face (G3.geomFree, 20) and goes straight in
+  G3.goZen=()=>{if(G3.ok&&!G3.geomFree){if(S.season&&S.season.on&&G3.save&&G3.save.drop)G3.save.drop();G3.saveOff=true;const q=new URLSearchParams(location.search);q.set("zen","1");q.delete("resume");diag("zen: reloading with every face built");location.href=location.pathname+"?"+q.toString()+location.hash;return;}
+    menu.hidden=true;first=false;if(G3.titleHide)G3.titleHide();setZen(true);};
   $("v2home").addEventListener("click",()=>{if(G3.titleShow){menu.hidden=true;G3.titleShow();}});
   $("v2survNew").addEventListener("click",goSurv);
   $("v2free").addEventListener("click",()=>{setFree(!S.free);play();});
