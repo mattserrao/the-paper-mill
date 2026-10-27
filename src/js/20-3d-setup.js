@@ -21,10 +21,10 @@ function no3D(){G3.ok=false;$("no3d").hidden=false;$("no3d-retry").onclick=()=>l
   // "high-performance" woke the discrete GPU on dual-GPU laptops for every player, which drains the battery much faster.
   // Phones have one GPU, so they're unaffected. Picking Ultra already offers a reload, which is when this takes effect.
   G3.gpuPref=(()=>{let g="";try{g=localStorage.getItem("paper-mill-gfx")||"";}catch(e){}const q=new URLSearchParams(location.search).get("gfx");if(q)g=q;return g==="ultra"?"high-performance":"default";})();
-  /* v6.14 anti-aliasing (Settings > Graphics): Auto / Off / FXAA / MSAA 4x. Auto is what v15 did on a desktop (the browser's
+  /* v6.14 anti-aliasing (Settings > Graphics): Auto / Off / FXAA / MSAA 4x; FXAA is the default (v6.14.0). Auto is what v15 did on a desktop (the browser's
      MSAA under 1.5x DPR) and FXAA, a cheap post pass (42g), on phones and high-DPI screens, which had none. MSAA is the
      context's own, so switching to or from it takes a reload; FXAA turns on and off live. ?aa= pins it for tests. */
-  G3.aaPick=(()=>{let a="auto";try{a=localStorage.getItem("paper-mill-aa")||"auto";}catch(e){}const q=new URLSearchParams(location.search).get("aa");if(q)a=q;return ["auto","off","fxaa","msaa"].includes(a)?a:"auto";})();
+  G3.aaPick=(()=>{let a="fxaa";try{a=localStorage.getItem("paper-mill-aa")||"fxaa";}catch(e){}const q=new URLSearchParams(location.search).get("aa");if(q)a=q;return ["auto","off","fxaa","msaa"].includes(a)?a:"fxaa";})();   // (v6.14.0: FXAA is the default on every device)
   G3.aaDesk=!matchMedia("(pointer: coarse)").matches&&(window.devicePixelRatio||1)<1.5;
   G3.aaCtx=G3.aaPick==="msaa"||(G3.aaPick==="auto"&&G3.aaDesk);
   try{renderer=new THREE.WebGLRenderer({canvas:glc,stencil:true,antialias:G3.aaCtx,powerPreference:G3.gpuPref});}   // (v15: no MSAA on high-DPI screens, where the extra pixels already smooth edges; v6.14: the setting)
