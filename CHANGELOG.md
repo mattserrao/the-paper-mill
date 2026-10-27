@@ -1,5 +1,15 @@
 # Changelog
 
+## v6.14.1 (2026-10-27): chest mixing
+Merged from test/v6.14.0-chests. Physics write-up: "Physics of the Simulated Paper Machine", sections 3.6 and 9.7-9.8.
+- **Pulper swings reach the machine (07s).** Pulper consistency deviations (bale water, NV-101) now pass through the
+  storage chest (a first-order mix over its 1-4 h of stock) and the machine chest (its consistency control passes 10%,
+  then a 20 min lag) to the basis weight valve, touched or not. Before, the machine chest only saw them once the NV-101
+  loop was touched. The static gain (0.064) is the old touched-loop calibration, so balance is unchanged. A 72 h free-play
+  run: CV 0.62% at the pulper, 0.10% in the storage chest, 0.009% in the machine chest.
+- New trend tag **Storage chest consistency**; the relationship map links pulper -> storage chest -> machine chest.
+- Checks: control, valves, determinism and process pass (not the full suite).
+
 ## v6.14.0 (2026-10-27): anti-aliasing, flutter, bales, pick-up roll, headbox door, CD map, guided grade change, units
 Release of v6.14.0-t1 (below), merged from test/v6.14.0, with one change: **FXAA is now the default anti-aliasing on every
 device** (it was Auto: MSAA on a desktop, FXAA on phones). Auto, Off and MSAA 4× stay in Settings → Graphics, and a saved

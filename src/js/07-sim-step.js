@@ -16,6 +16,7 @@ function step(dt){
   const M=S.M=mods();
   autoControl(dt);
   vlvTick(dt);   // v6.9 the control valves (07h; nothing until a loop is touched)
+  chTick(dt);   // v6.14.0-t2 the pulper's swings through the storage and machine chests (07s)
   knobTick(dt);   // v5.6 fiddly knobs (returns at once unless a knob was moved)
   dcsTick(dt);   // v6.5 b3 DCS motors and reject purges (07c; nothing until the DCS is used)
   dryTick(dt);   // v6.5 b5 the dryer limit: water, steam, moisture (07d)
