@@ -50,7 +50,7 @@ function weMigrate(){const K=S&&S.knob;if(K&&K.v&&K.v.ref!=null&&K.v.ref<=1.5)K.
   // the slice sets the headbox consistency: an older save keeps its J/W, with the slice back at its standard opening
   if(S&&!S.hb&&K&&K.v&&K.v.sv){S.hb={jw:Math.round((HB.jw0+0.02*K.v.sv)*1000)/1000};K.v.sv=0;K.any=true;}}
 const bwStd=()=>(GRADES[C.grade]||GRADES["24"]).bw;
-const bwSp=()=>bwStd()*(1+(S.we?S.we.trim:0));
+const bwSp=()=>S&&S.gg&&S.gg.bw!=null?S.gg.bw:bwStd()*(1+(S.we?S.we.trim:0));   // (v6.14: a guided grade change sets it step by step, 07r)
 // refining energy the stock on the machine has had (lagged through the chest by the knob model)
 /* v6.12.1-t7 the refiners' power cap: they can put REFCAP.kw into the stock between them (x1.3 with the refiner upgrade), so the
    specific energy they deliver (kWh/t; 1 HPDT = 17.9 kWh/t) is the setpoint or what that power spreads over the tonnage,
@@ -90,9 +90,10 @@ function weTick(dt){const W=weState(),run=S.pm==="run";
   // grade change and while the sheet is off. On unless the player takes the setpoint to MANUAL (lw:false).
   if(S.chg&&W.lw!==false&&W.trim!==0)W.trim=0;   /* (t4: a grade change starts AUTO-LW over from the new grade's target) */
   // (v6.13: read the QCS fresh here rather than the last step's QNOW: a restored snapshot then replays exactly)
-  if(run&&W.lw!==false&&!S.chg&&!S.zen){const q=qualMeasure(),tg=rctSpec()*WE.lwM,ts=stfiSpec()*WE.lwM,e=Math.min((q.rct-tg)/tg,(q.stfi-ts)/ts);W.trim=clamp(W.trim-dt/WE.lwTau*e,WE.trimMin,0);}   // (v6.13: the tighter of ring crush and STFI CD, 07n)
+  if(run&&W.lw!==false&&!S.chg&&!S.gg&&!S.zen){const q=qualMeasure(),tg=rctSpec()*WE.lwM,ts=stfiSpec()*WE.lwM,e=Math.min((q.rct-tg)/tg,(q.stfi-ts)/ts);W.trim=clamp(W.trim-dt/WE.lwTau*e,WE.trimMin,0);}   // (v6.13: the tighter of ring crush and STFI CD, 07n)
   // bale water in the pulper: a step in bale moisture thins the tub, and the dilution loop takes it back out
-  if(baleOn()&&S.bq){const d=-WE.cpK*Math.max(0,S.bq.m-BALE.std)*100;W.cpd=d;W.cpc=ease(W.cpc||0,d,dt,WE.cpTau);}else{W.cpd=0;W.cpc=0;}
+  if(baleOn()&&S.bq){const d=-WE.cpK*(Math.max(0,S.bq.m-BALE.std)+(S.zen?0:S.bq.bm||0))*100;   // (v6.14: and the bales in the pulper now, 05b)
+   W.cpd=d;W.cpc=ease(W.cpc||0,d,dt,WE.cpTau);}else{W.cpd=0;W.cpc=0;}
   // fine screen pressure drop: its load and the dirt in the stock
   {const ld=(S.rates.fiberIn||0)/Math.max(1,P.screenMax),on=motStatus("fscr")==="run"&&!(S.M&&S.M.pulperDown);
     W.fs=ease(W.fs,on?WE.fs0*(0.55+0.45*ld)*weDirt()+(active("fscreen")?30*KP:0):0,dt,10);}}
@@ -106,7 +107,7 @@ function dpYield(){if(S.zen)return 1;let x=0;for(const k of ["hd","lc","lw"])x+=
 // strength: ring crush from refining, the measured weight and stickies; the spec is the grade's
 const rctSpec=()=>Math.round((RCT0[C.grade]||30)*WE.rctSpec*10)/10;
 // (v6.8.3: open draw: each % of draw over the 1.5 % standard stretches the sheet and takes 4 % off ring crush; less draw adds it)
-function rctNow(bw){const ri=1+WE.rctK*(kwhNow()-WE.kwh0)-WE.rctStk*Math.max(0,((S.bq&&!S.zen)?S.bq.ck:0.1)-0.1)-WE.rctDraw*((S.zen?drawStd():knobVal("draw"))-drawStd());   // (v6.11.2: dry strength starch removed; v6.11.1 added its ring crush here)
+function rctNow(bw){const ri=1+0.03*bvFq()+WE.rctK*(kwhNow()-WE.kwh0)-WE.rctStk*Math.max(0,((S.bq&&!S.zen)?S.bq.ck:0.1)-0.1)-WE.rctDraw*((S.zen?drawStd():knobVal("draw"))-drawStd());   // (v6.11.2: dry strength starch removed; v6.11.1 added its ring crush here)
   return (RCT0[C.grade]||30)*(bw/bwStd())*ri*shStrF();}   // (v6.13: formation and broke, 07n; 1 untouched)
 // v6.11.2 paper is sold by area (MSF, thousand ft²), the way box plants buy it. The list price ($/t) is for a ton at the
 // grade's target weight; a ton made lighter covers more ft² and sells for list × bwStd/bw, a heavier one for less. The player

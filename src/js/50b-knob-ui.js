@@ -53,11 +53,14 @@ function knobCtlSync(w){const id=w.dataset.k,K=S.knob;
 function knobReadout(id,r){const R=(k,v)=>`<div><small>${k}</small><b>${v}</b></div>`;
   switch(id){
     case "pulp":return R("Pulper consistency",kf(r.cp)+" %")+R("Rotor",Math.round(r.amps)+" A")+R("Tub level",Math.round(r.pulpLvl)+" %");
-    case "ref":return R("Energy",Math.round(r.kwh)+" kWh/t · "+kf(r.hpdt,2)+" HPDT")+R("Plate gap",kf(r.gap,2)+" mm")+R("Refiner load",Math.round(r.refkw).toLocaleString()+" / "+Math.round(r.refcap).toLocaleString()+" kW"+(r.kwh<r.refset-0.5?" · at max":""))+R("Freeness",Math.round(r.csf)+" mL CSF");
+    case "ref":return R("Energy",Math.round(r.kwh)+" kWh/t · "+kf(r.hpdt,2)+" HPDT")+R("Plate gap",kf(r.gap,2)+" mm")+R("Refiner load",Math.round(HP(r.refkw)).toLocaleString()+" / "+Math.round(HP(r.refcap)).toLocaleString()+" hp"+(r.kwh<r.refset-0.5?" · at max":""))+R("Freeness",Math.round(r.csf)+" mL CSF");
     case "agit":return R("Agitator",r.agit+" %")+R("Machine chest",Math.round(r.mcLvl)+" %")+R("Chest consistency",kf(r.mcCons,2)+" %");
-    case "vac":return R("Flatboxes",kf(r.vacIn)+" inHg · PV-313 "+Math.round(r.hvv)+"%")+R("Vacuum pump",Math.round(r.vpkw)+" kW")+R("Couch solids",kf(r.couchSol)+" %");
-    case "gbox":return R("Gravity boxes",kf(r.gbox)+" inHg · PV-311 "+Math.round(r.gbv)+"%")+R("Vacuum pump",Math.round(r.vpkw)+" kW")+R("Couch solids",kf(r.couchSol)+" %");
-    case "lvac":return R("Low vacuum",kf(r.lvac)+" inHg · PV-312 "+Math.round(r.lvv)+"%")+R("Vacuum pump",Math.round(r.vpkw)+" kW")+R("Couch solids",kf(r.couchSol)+" %");
+    case "vac":return R("Flatboxes",kf(r.vacIn)+" inHg · PV-313 "+Math.round(r.hvv)+"%")+R("Vacuum pump",fmtHp(r.vpkw))+R("Couch solids",kf(r.couchSol)+" %");
+    case "gbox":return R("Gravity boxes",kf(r.gbox)+" inHg · PV-311 "+Math.round(r.gbv)+"%")+R("Vacuum pump",fmtHp(r.vpkw))+R("Couch solids",kf(r.couchSol)+" %");
+    case "lvac":return R("Low vacuum",kf(r.lvac)+" inHg · PV-312 "+Math.round(r.lvv)+"%")+R("Vacuum pump",fmtHp(r.vpkw))+R("Couch solids",kf(r.couchSol)+" %");
+    case "puv":return R("Transfer zone",kf(r.puv)+" inHg")+R("Holding zone",kf(r.puv*0.6)+" inHg")+R("Sheet",r.puv<PUR.lo?"dropping at the transfer":r.puv>PUR.mark?"hole marks":"lifting cleanly");   // (v6.14)
+    case "sqz":return R("Squirts",r.sqz===0?"on the deckle":(r.sqz<0?"in ":"out ")+kf(Math.abs(r.sqz),2)+"\" a side")+R("Sheet width",kf(webW()+2*r.sqz,1)+"\"");
+    case "kos":return R("Knock-off",Math.round(r.kos)+" psi")+R("Trim",r.kos<PUR.kosLo?"riding on with the sheet":"into the couch pit");
     case "cbox":return R("Couch vacuum",kf(r.cvacIn)+" inHg")+R("Box position",(r.cbox>0.05?"+":r.cbox<-0.05?"−":"")+kf(Math.abs(r.cbox))+"°")+R("Couch solids",kf(r.couchSol)+" %");
     case "press":return R("Nip load",Math.round(r.pl)+" kN/m")+R("After the presses",kf(r.pressSol)+" % solids");
     case "guide":return R("Fabric edge",(r.edge>=0?"+":"")+Math.round(r.edge)+" mm")+R("Guide travel used",r.gm?Math.round(Math.min(1,r.gtrav)*100)+" %":"manual");
@@ -66,7 +69,7 @@ function knobReadout(id,r){const R=(k,v)=>`<div><small>${k}</small><b>${v}</b></
     case "couch":return R("Agitator",r.couch?"running · 38 A":"stopped")+R("Pit level",Math.round(35+(S.pm==="run"?0:30)+r.cs*6)+" %");
     case "osc":return R("Shower stroke",Math.round(r.osc*0.14)+" /min")+R("Felt",r.stripes>0.15?"uneven":"clean");
     case "draw":return R("Open draw",kf(r.draw)+" % · needs "+kf(drawReq())+" %")+R("Sheet tension",r.run?kf(r.tension,2)+" kN/m":"–");
-    case "st1":return R("1st section",Math.round(r.st1)+" psig")+R("3rd section (auto)",Math.round(r.st3)+" psig · "+Math.round(satT(r.st3))+" °C")+R("Reel moisture",r.run?kf(r.moist)+" %":"–");
+    case "st1":return R("1st section",Math.round(r.st1)+" psig")+R("3rd section (auto)",Math.round(r.st3)+" psig · "+fmtF(satT(r.st3)))+R("Reel moisture",r.run?kf(r.moist)+" %":"–");
     case "zones":return R("Reel moisture",r.run?kf(r.moist)+" %":"–")+R("Zones trimmed",(S.knob?S.knob.z.filter(v=>v).length:0)+" of 12");}
   return "";}
 
@@ -150,8 +153,8 @@ function closeStation(quiet){if(POP.on)return;   // (v6.5.1: a popped-out DCS st
 const MIMIC={
   SPOT:{title:"STOCK PREP",eq:[[14,80,96,70,"PULPER"],[132,95,74,40,"SCREENS"],[228,80,80,70,"STOCK CHEST"],[330,95,78,40,"REFINERS"],[430,80,92,70,"MACHINE CHEST"],[546,100,80,30,"FAN PUMP"]],
     tags:[[62,172,"cp","CONS",r=>kf(r.cp)+"%"],[62,194,"amps","ROTOR",r=>Math.round(r.amps)+" A"],[62,66,"pulpLvl","LEVEL",r=>Math.round(r.pulpLvl)+"%"],[268,172,"lvl","LEVEL",()=>Math.round(S.tank/P.tankCap*100)+"%"],
-      [369,172,"gap","GAP",r=>kf(r.gap,2)+" mm"],[369,194,"refkw","LOAD",r=>Math.round(r.refkw)+" kW"],[369,80,"csf","CSF",r=>Math.round(r.csf)+" mL"],[476,172,"mcCons","CONS",r=>kf(r.mcCons,2)+"%"],[476,194,"agit","AGIT",r=>r.agit+"%"],[586,150,"flow","FLOW",()=>S.pm==="run"?Math.round(S.pmSpeed*1.9)+" L/s":"0 L/s"]],
-    trends:[["cp","Pulper consistency %","#ffb02e",0,10],["amps","Rotor A","#4fd18b",0,700],["mcCons","Machine chest cons %","#7fb2ff",2.4,4.0],["refkw","Refiner kW","#ff7a8a",0,4000]]},
+      [369,172,"gap","GAP",r=>kf(r.gap,2)+" mm"],[369,194,"refkw","LOAD",r=>fmtHp(r.refkw)],[369,80,"csf","CSF",r=>Math.round(r.csf)+" mL"],[476,172,"mcCons","CONS",r=>kf(r.mcCons,2)+"%"],[476,194,"agit","AGIT",r=>r.agit+"%"],[586,150,"flow","FLOW",()=>S.pm==="run"?Math.round(S.pmSpeed*1.9)+" L/s":"0 L/s"]],
+    trends:[["cp","Pulper consistency %","#ffb02e",0,10],["amps","Rotor A","#4fd18b",0,700],["mcCons","Machine chest cons %","#7fb2ff",2.4,4.0],["refkw","Refiner hp","#ff7a8a",0,5400]]},
   WET:{title:"WET END",eq:[[14,80,74,70,"HEADBOX"],[104,105,190,25,"FORMING TABLE"],[308,90,64,50,"COUCH"],[388,90,104,50,"PICK-UP FELT"],[508,80,118,70,"TWIN PRESS"]],
     tags:[[51,172,"zones","ZONES",r=>(S.knob?S.knob.z.filter(v=>v).length:0)+"/12"],[150,150,"gbox","GRAV",r=>kf(r.gbox)+" inHg"],[205,150,"lvac","LOW",r=>kf(r.lvac)+" inHg"],[260,150,"vac","HIGH",r=>kf(r.vacIn)+" inHg"],[199,88,"edge","EDGE",r=>(r.edge>=0?"+":"")+Math.round(r.edge)+" mm"],[199,194,"gtrav","GUIDE",r=>r.gm?"AUTO "+Math.round(Math.min(1,r.gtrav)*100)+"%":"MAN"],
       [340,172,"couchSol","SOL",r=>kf(r.couchSol)+"%"],[340,194,"cs","PIT",r=>r.couch?"RUN":"STOP"],[440,172,"osc","OSC",r=>Math.round(r.osc)+"%"],[567,172,"pl","LOAD",r=>Math.round(r.pl)+" kN/m"],[567,194,"pressSol","SOL",r=>kf(r.pressSol)+"%"]],
@@ -197,6 +200,8 @@ function stationBuild(){const o=$("dcsOv");if(!o||!KUI.st)return;const a=KUI.st,
     ids.forEach(id=>{const row=kEl("div","dcsrow"+(id==="zones"?" wide":""));row.dataset.ord=id;row.appendChild(kEl("div","dcsn",`<b>${KNOBN[id].name}</b><small>${KNOBN[id].field?"remote from the DCS":"DCS"}</small>`));row.appendChild(knobCtl(id,"d"));
       const rd=kEl("div","spir krd");rd.dataset.rd=id;row.appendChild(rd);row.appendChild(kEl("button","reroll kstd","Standard")).addEventListener("click",()=>{knobReset(id);kuiRefresh();});cs.appendChild(row);
       if(id==="zones"){const bt=kEl("div","dcsbeat","");bt.id="dcsBeat";bt.dataset.ord="beat";bt.hidden=true;bt.setAttribute("role","status");cs.appendChild(bt);}});   // v6.5.4: making-beater alert under the dilution zones
+    if(a==="WET"&&!S.zen)cs.appendChild(puPanel());
+    if(a==="WET"&&ggOn())cs.appendChild(ggBox());   // v6.14 the grade change coach, free play (50q)   // v6.14 the pick-up roll close-up (50p)
     dcsOrder(a,cs);   // (v6.11.2: rows in the order the stock meets them, under section headings, 50d)
     if(fld.length)cs.appendChild(kEl("p","dcsfield",`Set at the machine, not from here: ${fld.map(k=>`<button type="button" class="linkb" data-fk="${k.id}">${k.name.toLowerCase()}</button>`).join(", ")}. Look for the red knobs on the floor.`));
     cs.querySelectorAll("[data-fk]").forEach(x=>x.addEventListener("click",()=>{const id=x.dataset.fk;closeStation();if(G3.knobFly)G3.knobFly(id);openKnob(id);}));

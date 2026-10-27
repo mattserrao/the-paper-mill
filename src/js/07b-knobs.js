@@ -13,7 +13,7 @@
 // v6.13.2-t3: the 1st section knob's share of the drying, 40 psig standard on 0-100: the same reach both ends as t1's 0-150
 // (full open takes 0.485 of the load off the 3rd section, shut adds 0.188)
 const st1D=p=>(p-40)/(p>40?60/0.485:40/0.188);
-const KNOB_IDEAL={pulp:50,ref:60,agit:100,gbox:1,lvac:5,vac:30,press:100,osc:100,couch:1,cbox:-6,draw:1.5,st1:40,gm:1,gt:0,incomer:1,hood:0,tcv:100};
+const KNOB_IDEAL={pulp:50,ref:60,agit:100,gbox:1,lvac:5,vac:30,press:100,osc:100,couch:1,cbox:-6,draw:1.5,st1:40,gm:1,gt:0,incomer:1,hood:0,tcv:100,puv:10,sqz:0,kos:250};   // (v6.14: puv, sqz, kos)
 const KNOBS=[
   {id:"pulp",name:"Pulper dilution valve",area:"SPOT",where:"Pulper, stock prep",field:true,unit:"% open",min:0,max:100,step:1,
     tip:"Dilution water into the pulper tub: NV-101, which holds the consistency on AUTO. Moving it here puts NV-101 on MAN at that opening."},
@@ -40,6 +40,14 @@ const KNOBS=[
     tip:"Keeps the broke in the couch pit moving. Normally running."},
   {id:"cbox",name:"Couch suction box",area:"WET",where:"Couch roll, tending side",field:true,unit:"°",min:-15,max:15,step:1,
     tip:"Turns the vacuum box inside the suction couch roll, which sets where on the roll the suction zone sits under the wire. Rotated to its best position the box seals best and pulls the most vacuum; turned either way it seals worse, the vacuum falls and the sheet leaves the couch wetter. Standard is −6°."},
+  // v6.14 the suction pick-up roll (lifts the sheet off the wire onto the pick-up felt), the couch trim squirts and the
+  // knock-off shower (07b tick: PUR)
+  {id:"puv",name:"Pick-up roll vacuum",area:"WET",where:"Suction pick-up roll, tending side",field:true,unit:"inHg",min:0,max:20,step:0.5,dp:1,
+    tip:"Vacuum in the suction pick-up roll's transfer zone, which lifts the sheet off the forming fabric onto the pick-up felt. Too little and the sheet stays on the wire and breaks at the transfer; too much and the holes mark the sheet through the felt. Standard is 10 inHg."},
+  {id:"sqz",name:"Trim squirts",area:"WET",where:"Wet end DCS · couch trim squirts",dcs:true,unit:"in a side",min:-3,max:3,step:0.25,dp:2,
+    tip:"The two high-pressure water jets at the couch that cut the sheet's edges and set its width. 0 follows the deckle and the trim plan. In (−) cuts more off each edge: that fiber goes back down the couch pit, so fewer tons reach the reel. Out (+) leaves the thin, ragged deckle edge on the sheet: edge defects at the winder and edge breaks."},
+  {id:"kos",name:"Knock-off shower",area:"WET",where:"Wet end DCS · couch",dcs:true,unit:"psi",min:0,max:400,step:10,
+    tip:"A shower just after the trim squirts that knocks the cut edge trim off the wire into the couch pit. Standard is 250 psi. Too weak and the trim rides on with the sheet into the first press nip."},
   {id:"osc",name:"Pick-up felt oscillator",area:"WET",where:"Pick-up felt showers, 1st press top felt",field:true,unit:"% stroke speed",min:0,max:100,step:5,
     tip:"Sweeps the felt-cleaning shower back and forth across the pick-up felt. Normally 100%."},
   {id:"incomer",name:"MCC main incomer",area:"DRV",where:"MCC, the incoming 480 V section",field:true,
@@ -105,6 +113,14 @@ function dewater(fr,vac,pl,jv,jh,cb,gb,lv,sb){
   const lt=pl<100?0.2*(pl-100):pl<=130?0.08*(pl-100):2.4-0.3*(pl-130);
   const ps=clamp(pb+(cs-19)+lt,30,56),wpt=p=>(1-DRY.m0/100)/(p/100)-1;
   return {cs,ps,W:wpt(ps)/wpt(pb),eJet,eVac,eRef,eBox,eZ};}
+/* v6.14 the suction pick-up roll: its transfer zone pulls PUR.v0 inHg (its holding zone about 60% of that) through the
+   felt to lift the sheet off the wire. Under PUR.lo the transfer fails more and more (press breaks); over PUR.mark the
+   drilled holes print through the felt (a share of the reel to the beater). The trim squirts (in per side, 0 = the
+   deckle): in sends 2 x that of the web back down the couch pit (fewer tons at the reel, the fiber kept as broke); out
+   leaves the ragged deckle edge on (edge defects, edge breaks). The knock-off shower (psi) under PUR.kosLo lets the
+   trim ride into the press. Untouched: none of it. */
+const PUR={v0:10,lo:6,mark:13,kos:250,kosLo:120,zones:[["Sealing",0.3],["Transfer",1],["Holding",0.6],["Sealing",0.3]],holes:{d:0.157,pitch:0.5,open:0.22}};
+const sqzLoss=()=>{const K=S.knob;if(!K||!K.any||S.zen)return 0;const q=K.v.sqz??0;return q<0?2*(-q)/webW():0;};
 const KZONES=12;
 function knobState(){if(!S.knob){S.knob={v:Object.assign({},KNOB_IDEAL,{draw:drawStd()}),z:new Array(KZONES).fill(0),
     x:{cp:5,fr:0.5,ch:0,sw:0,vac:30,pl:100,st:0,d1:0,m:8,dl:0,dt:0,bs:0,z:new Array(KZONES).fill(0)},
@@ -158,7 +174,7 @@ function knobTrig(id,cause,why){if(active(id))return false;const K=S.knob,e=EV[i
   if(e.start&&id!=="refclash")e.start(inc);
   const bill=(REPAIR[id]||0)*P.repairMul*(inc.billMul||1);if(bill>0){spend(bill,"repairs");inc.bill=bill;inc.note=(inc.note?inc.note+" · ":"")+`repair bill ${money(bill)}`;}
   log((why||e.head)+(inc.note?` (${inc.note})`:""),"bad");K.inc.push({id,real:inc.real,cause});S.M=mods();return true;}
-const KBC={draw:"draw",agit:"stock",vac:"cloth",crush:"cloth",wet:"dry",dry:"dry"};   // (v6.13 t3: each knob break's cause in the break log, 07n BRKN)
+const KBC={draw:"draw",agit:"stock",vac:"cloth",crush:"cloth",wet:"dry",dry:"dry",pick:"cloth",knock:"cd",edge:"cd"};   // (v6.13 t3: each knob break's cause in the break log, 07n BRKN)
 // a knob-caused sheet break (no dice from the break stream: those keep their place for the random breaks)
 function knobBreak(type,why,ck){if(S.pm!=="run")return false;S.pm="break";S.brkType=type;const r=rand("knob");
   S.breakLeft=2*(type==="reel"?4+r*6:type==="dryer"?12+r*14:26+r*20);S.breakTotal=S.breakLeft;S.tot.breaks++;enqueue("brk");AUDIO.sfx("snap",2500);
@@ -196,7 +212,8 @@ function knobTick(dt){const K=S.knob;if(!K||!K.any||S.zen)return;
   x.vac=L(x.vac,v.vac,15);x.pl=L(x.pl,v.press,15);x.cb=L(x.cb??CBOX.best,v.cbox??CBOX.best,8);x.gb=L(x.gb??FZ.gb,v.gbox??FZ.gb,10);x.lv=L(x.lv??FZ.lv,v.lvac??FZ.lv,12);   // (v6.12.1-t6: the couch box turns in about 8 minutes)
   {const wr=Math.max(0,v.vac-45)/15*0.25+Math.max(0,(v.gbox??FZ.gb)-3)/2*0.15+Math.max(0,(v.lvac??FZ.lv)-8)/2*0.2;   // (v6.12.1-t7: every zone over its limit drags on the fabric)
    K.wear=wr>0?Math.min(1.2,K.wear+dt/60*wr):Math.max(0,K.wear-dt/60*0.05);}   // high vacuum drags on the forming fabric (and a fresh stretch of normal running lets it recover, slowly)
-  x.st=L(x.st,v.osc>=40?0:(40-v.osc)/40,v.osc>=40?60:90);              // pick-up felt filling in stripes
+  x.st=L(x.st,v.osc>=40?0:(40-v.osc)/40,v.osc>=40?60:90);
+  x.pu=L(x.pu??PUR.v0,v.puv??PUR.v0,5);                                 // (v6.14: the pick-up roll's vacuum, a few minutes to settle)              // pick-up felt filling in stripes
   K.cs=clamp(K.cs+dt/60*(v.couch?-2:1),0,3);                            // fiber settled in the couch pit
   if(S.pm==="break"&&K.pmPrev!=null&&K.pmPrev!=="break")knobCouch();K.pmPrev=S.pm;       // any new break before the presses (random ones and rethreads too)
   // guide roll: the fabric walks a little all the time. AUTO soaks it up within its travel; trim uses travel up; MANUAL holds still
@@ -222,7 +239,7 @@ function knobTick(dt){const K=S.knob;if(!K||!K.any||S.zen)return;
   x.cr1=L(x.cr1||0,Math.max(0,x.pl-115)/30,10);x.cr=L(x.cr||0,x.cr1,10);x.dt=L(x.dt,Math.max(0,v.draw-(drawStd()+0.9)),10);
   // ---- consequences: off-spec ----
   const nz=x.z.filter(z=>Math.abs(z)>4).length;
-  const F={wet:x.m>10?(x.m-10)/4:0,dry:x.m<6?(6-x.m)/2:0,cd:nz/3,bw:x.sw>0.3?(x.sw-0.3)/0.6:0,crush:x.cr>0.05?(x.cr-0.05)/0.6:0,stripes:x.st>0.4?(x.st-0.4)/0.4:0,wrinkles:x.dl>0.15?(x.dl-0.15)/0.6:0,floc:chemFloc()};   // (v6.11.1 floc: a polymer overdose, 07l)
+  const F={wet:x.m>10?(x.m-10)/4:0,dry:x.m<6?(6-x.m)/2:0,cd:nz/3,bw:x.sw>0.3?(x.sw-0.3)/0.6:0,crush:x.cr>0.05?(x.cr-0.05)/0.6:0,stripes:x.st>0.4?(x.st-0.4)/0.4:0,wrinkles:x.dl>0.15?(x.dl-0.15)/0.6:0,floc:chemFloc(),mark:x.pu>PUR.mark?(x.pu-PUR.mark)/6:0,edge:(v.sqz??0)>0?(v.sqz??0)/3*0.15:0};   // (v6.11.1 floc: a polymer overdose, 07l)
   // (v6.5.3: weight and moisture are judged against the grade's spec by the QCS check, 07e; F.wet, dry and bw stay for
   // the screens and the crew's tracing, and only the other defects send a share of the reel to the beater from here)
   let keep=1,top="",tv=0;for(const k in F){const f=clamp(F[k],0,1);F[k]=f;if(k==="wet"||k==="dry"||k==="bw")continue;if((k==="cd"||k==="stripes")&&cdOn())continue;   /* (v6.11: they beater the roll under them, 07k) */keep*=1-f;if(f>tv){tv=f;top=k;}}
@@ -240,6 +257,10 @@ function knobTick(dt){const K=S.knob;if(!K||!K.any||S.zen)return;
   haz("crush",x.pl>130?(x.pl-130)/20*1.5:0,"press","Sheet break in the presses: the sheet was crushed in the nip.");
   haz("wet",x.m>13?(x.m-13)*0.8:0,"dryer","Sheet break in the dryers: the sheet was too wet to hold.","moist");
   haz("dry",x.m<3?(3-x.m)*0.8:0,"reel","Sheet break at the reel: the sheet was dried brittle.","moist");
+  // v6.14 the pick-up roll, the trim squirts and the knock-off shower
+  haz("pick",x.pu<PUR.lo?(PUR.lo-x.pu)/PUR.lo*2.5:0,"press","Sheet break at the transfer: the pick-up roll's vacuum couldn't lift the sheet off the wire onto the felt.");
+  haz("knock",(v.kos??PUR.kos)<PUR.kosLo?(PUR.kosLo-(v.kos??PUR.kos))/PUR.kosLo*2:0,"press","Sheet break in the press: the edge trim wasn't knocked off the wire and rode into the first nip.");
+  haz("edge",(v.sqz??0)>1?((v.sqz??0)-1)/2*0.8:0,"dryer","Sheet break: a ragged edge tore and the tear ran across the sheet.");
   // ---- consequences: breakdowns ----
   if(x.cp>7.5&&!active("rotortrip")&&!S.M.pulperDown){if(knobTrig("rotortrip",["pulp"],"The pulper rotor tripped out on high amps! The tub is too thick to turn."))x.cp=5;}
   if(x.cp<2.2&&!active("overflow")){if(knobTrig("overflow",["pulp"],"The pulper is overflowing! Too much water in the tub, and it is pouring over the rim."))x.cp=5;}
@@ -260,13 +281,15 @@ function knobTick(dt){const K=S.knob;if(!K||!K.any||S.zen)return;
   tr("steam",K.sf>1.08,720,()=>knobSteamCulprits(),"The steam bill is well up on the week.","The energy engineer");
   tr("stfi",!knobAt("slice")&&run&&(()=>{const q=qualMeasure();return q.stfi<stfiSpec()||q.rct<rctSpec();})(),120,()=>["slice"],"QCS: the sheet is weak across the machine (STFI CD, ring crush): the jet is rushing or dragging hard and the fibers line up with the machine.","The process engineer");   // (v6.13, 07n)
   tr("tcv",!knobAt("tcv")&&stmFlooded()>0,120,()=>["tcv"],"Dryer cans flooding: the 3rd section can't hold its syphon ΔP.","The dry-end operator");   // (v6.13, 07m)
+  tr("pick",(H.pick||0)>0.2||F.mark>0||(K.harm.pick&&K.harm.pick.n>0),180,()=>["puv"],F.mark>0?"QCS: suction roll hole marks in the sheet.":"Breaks at the pick-up.","The press operator");   // (v6.14)
+  tr("trim",(H.knock||0)>0.2||(H.edge||0)>0.2||F.edge>0||(K.harm.knock&&K.harm.knock.n>0)||(K.harm.edge&&K.harm.edge.n>0),180,()=>["sqz","kos"].filter(i=>!knobAt(i)),"Trouble at the sheet's edges: ragged edges and trim carrying over.","The wet-end operator");
   tr("feed",K.feed<0.95,480,()=>["pulp"],"Stock prep can't keep the chest up: the pulper is running thin.","Stock prep");
   tr("moist",F.wet>0||F.dry>0||(K.harm.moist&&K.harm.moist.n>0),180,()=>F.wet>0?knobSteamCulprits():["st1","ref"].filter(i=>!knobAt(i)),F.wet>0?"QCS: the sheet is coming off the reel wet.":"QCS: the sheet is coming off the reel over-dried.","The process engineer");
   // ---- all back at ideal and settled: stop running ----
-  if(!knobsOff().length&&!chemOn()&&!K.inc.length&&K.cs<0.01&&K.wear<0.001&&Math.abs(x.cp-5)<0.02&&Math.abs(x.fr-0.5)<0.002&&x.ch<0.01&&x.sw<0.005&&Math.abs(x.vac-30)<0.05&&Math.abs(x.pl-100)<0.05&&Math.abs((x.cb??CBOX.best)-CBOX.best)<0.05&&Math.abs((x.gb??FZ.gb)-FZ.gb)<0.01&&Math.abs((x.lv??FZ.lv)-FZ.lv)<0.02&&knobAt("slice")&&Math.abs(x.jv||0)<0.005&&Math.abs(x.jh||0)<0.005&&Math.abs(x.sb||0)<0.005&&knobAt("tcv")&&!shOff()&&x.st<0.005&&Math.abs(x.d1)<0.001&&Math.abs(x.m-DRY.m0)<0.02&&x.bs<0.01&&x.dl<0.002&&(x.dl1||0)<0.002&&(x.cr||0)<0.002&&(x.cr1||0)<0.002&&x.dt<0.002&&x.z.every(z=>Math.abs(z)<0.02)&&K.off===0){
+  if(!knobsOff().length&&!chemOn()&&!K.inc.length&&K.cs<0.01&&K.wear<0.001&&Math.abs(x.cp-5)<0.02&&Math.abs(x.fr-0.5)<0.002&&x.ch<0.01&&x.sw<0.005&&Math.abs(x.vac-30)<0.05&&Math.abs(x.pl-100)<0.05&&Math.abs((x.cb??CBOX.best)-CBOX.best)<0.05&&Math.abs((x.gb??FZ.gb)-FZ.gb)<0.01&&Math.abs((x.lv??FZ.lv)-FZ.lv)<0.02&&knobAt("slice")&&Math.abs(x.jv||0)<0.005&&Math.abs(x.jh||0)<0.005&&Math.abs(x.sb||0)<0.005&&knobAt("tcv")&&!shOff()&&x.st<0.005&&Math.abs((x.pu??PUR.v0)-PUR.v0)<0.05&&Math.abs(x.d1)<0.001&&Math.abs(x.m-DRY.m0)<0.02&&x.bs<0.01&&x.dl<0.002&&(x.dl1||0)<0.002&&(x.cr||0)<0.002&&(x.cr1||0)<0.002&&x.dt<0.002&&x.z.every(z=>Math.abs(z)<0.02)&&K.off===0){
     K.any=false;K.off=0;K.sf=1;K.feed=1;K.brk=1;K.edge=0;K.gtrav=0;K.H={};K.harm={};S.M=mods();}
 }
-const KOFFN={wet:"sheet too wet",dry:"sheet over-dried",cd:"CD moisture streaks",bw:"basis weight swings",crush:"crush marks",stripes:"stripes from the pick-up felt",wrinkles:"wrinkles in the reel",floc:"flocs in the sheet (poor formation)"};
+const KOFFN={mark:"suction roll marks from the pick-up",edge:"ragged edges (trim squirts out)",wet:"sheet too wet",dry:"sheet over-dried",cd:"CD moisture streaks",bw:"basis weight swings",crush:"crush marks",stripes:"stripes from the pick-up felt",wrinkles:"wrinkles in the reel",floc:"flocs in the sheet (poor formation)"};
 // what is putting the extra water into the dryers (or the extra steam on): the knobs the engineers will trace
 function knobSteamCulprits(){const K=S.knob;if(!K)return [];const v=K.v,c=[];
   // (v6.5.5: each knob's share of the extra water, from the dewatering chain with that knob put back to standard)
@@ -283,10 +306,10 @@ function knobRead(){const K=S.knob,x=K?K.x:null,g=GRADES[C.grade]||GRADES["24"],
   const m=Dr?Dr.m:DRY.m0;let cp=x?x.cp:5;
   const cpb=cpBale();cp+=cpb;
   return {run,cp,amps:410*(0.55+cp/5*0.45)*(S.M.pulperDown?0:1),pulpLvl:clamp(62+(5-cp)*9+wob(0.05,1)*1.5,0,110),
-    gap:x?x.fr:gapOf(refEff(knobVal("ref"))),refcap:refCap(),refset:knobVal("ref"),hpdt:kwhNow()/HPDT,refkw:run&&!(S.M&&S.M.refOut)?kwhNow()*Math.max(0,S.rates.fiberUse||0):0,kwh:kwhNow(),csf:csfOf(x?x.fr:gapOf(refEff(knobVal("ref")))),   // (v6.8: refiner power = specific energy x fiber)
+    gap:x?x.fr:gapOf(refEff(knobVal("ref"))),refcap:refCap(),refset:knobVal("ref"),hpdt:kwhNow()/HPDT,refkw:run&&!(S.M&&S.M.refOut)?kwhNow()*Math.max(0,S.rates.fiberUse||0):0,kwh:kwhNow(),csf:csfOf(x?x.fr:gapOf(refEff(knobVal("ref"))))+25*bvFq(),   /* (v6.14: the bales' fiber quality, 05b) */   // (v6.8: refiner power = specific energy x fiber)
     mcLvl:vlvT("LV-104")?S.vlv.lp["LV-104"].pvm:S.mcl!=null?S.mcl:69+wob(0.02,2)*3,refq:!run&&S.refq==null?0:S.refq==null?100*Math.max(0,S.rates.fiberUse||0)/Math.max(1e-6,weUstd()):S.refq*100,mcCons:mcCons(),agit:knobVal("agit"),
     vac:x?x.vac:30,vacIn:(x?x.vac:30)/FZ.in,gbox:x&&x.gb!=null?x.gb:FZ.gb,lvac:x&&x.lv!=null?x.lv:FZ.lv,...(()=>{const p=FZ.pv(x&&x.gb!=null?x.gb:FZ.gb,x&&x.lv!=null?x.lv:FZ.lv,x?x.vac:30);return {vpkw:run?p.kw+wob(0.09,7)*3:0,gbv:p.gv,lvv:p.lv,hvv:p.hv};})(),cbox:x&&x.cb!=null?x.cb:CBOX.best,cvac:cboxVac(x?x.cb:CBOX.best)+(run?wob(0.07,5)*0.4:0),cvacIn:(cboxVac(x?x.cb:CBOX.best)+(run?wob(0.07,5)*0.4:0))/FZ.in,couchSol:x&&x.cs!=null?x.cs:csStd(),pl:x?x.pl:100,pressSol:x&&x.ps!=null?x.ps:psStd(),
-    edge:K?K.edge:0,gtrav:K?K.gtrav:0,gm:knobVal("gm"),stripes:x?x.st:0,cs:K?K.cs:0,couch:knobVal("couch"),osc:knobVal("osc"),wear:K?K.wear:0,
+    puv:x&&x.pu!=null?x.pu:knobVal("puv"),sqz:knobVal("sqz"),kos:knobVal("kos"),edge:K?K.edge:0,gtrav:K?K.gtrav:0,gm:knobVal("gm"),stripes:x?x.st:0,cs:K?K.cs:0,couch:knobVal("couch"),osc:knobVal("osc"),wear:K?K.wear:0,
     st1:knobVal("st1"),st3,steam:run?(Dr?Dr.steam:50.5*P.K*S.pmSpeed*bw/34.8):S.pm==="break"&&Dr?Dr.steam:0,boiler:Dr?Dr.hdr:1,moist:run?m+wob(0.13,4)*0.25:0,
     bw:run?qualMeasure().bw:0,hbc:S.we?S.we.hbc:WE.hbc,draw:knobVal("draw"),tension:run?1.0+(knobVal("draw")-drawStd())*0.42:0,
     zones:cdOn()&&S.cd?S.cd.dv.map(d=>m+d):z.map((v,i)=>m+v*0.35+Math.sin(i*1.7+t*0.01)*0.12),   /* (v6.11: the CD profile, 07k) */off:qualStatus().off,why:qualStatus().why,F:K&&K.F||{},speed:S.pmSpeed};}

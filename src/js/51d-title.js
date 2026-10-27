@@ -133,6 +133,8 @@ function camPullOn(){try{return localStorage.getItem("paper-mill-campull")!=="of
       <div class="tsub">Graphics</div>${tog("tsShadow","Shadows","",!sh||sh.checked)}
       ${G3.GFX?`<div class="trow tcol"><span><b>Graphics quality</b><small>Auto picks for your device (${gfxCap(G3.GFX.auto)})</small></span><div class="tseg tseg5 tseg6" role="group" aria-label="Graphics quality">${["auto","low","medium","high","ultra"].map(g=>`<button type="button" data-g="${g}" aria-pressed="${G3.GFX.pick===g}" title="${GFX_TIP[g]}">${g==="auto"?"Auto":gfxCap(g)}</button>`).join("")}</div>
         <div class="tgfxr" id="tsGfxR"${G3.GFX.tier===G3.GFX.loaded?" hidden":""}><small>Lighting and scenery detail change on the next load.</small><button type="button" id="tsGfxReload">Reload now</button></div></div>`:""}
+      ${G3.setAA?`<div class="trow tcol"><span><b>Anti-aliasing</b><small>Smooths jagged edges. Auto picks for your device</small></span><div class="tseg" role="group" aria-label="Anti-aliasing">${[["auto","Auto","Your device's best: the browser's MSAA on a desktop, FXAA on phones and high-DPI screens"],["off","Off",""],["fxaa","FXAA","A cheap smoothing pass over the finished picture"],["msaa","MSAA 4×","The GPU's own, the sharpest; costs more on phones (applies on reload)"]].map(([k,t,ti])=>`<button type="button" data-aa="${k}" aria-pressed="${G3.aaPick===k}" title="${ti}">${t}</button>`).join("")}</div>
+        <div class="tgfxr" data-aarl="1"${G3.aaReload?"":" hidden"}><small>MSAA changes on the next load.</small><button type="button" class="aarl">Reload now</button></div></div>`:""}
       <div class="trow"><span><b>Appearance</b><small>Auto follows your device</small></span>${themeSegHTML("tseg")}</div>
       <div class="trow"><span><b>Frame rate</b></span><div class="tseg" role="group" aria-label="Frame rate"><button data-f="saver" aria-pressed="${FPS_MODE==="saver"}">Battery saver</button><button data-f="smooth" aria-pressed="${FPS_MODE!=="saver"}">Smooth</button></div></div>
       <div class="tsub">Your mill</div><div class="tgrid"><button id="tsBoard">Leaderboards</button><button id="tsColors">New colors</button><button id="tsName">Rename</button><button id="tsFs">Fullscreen</button></div>
@@ -148,6 +150,7 @@ function camPullOn(){try{return localStorage.getItem("paper-mill-campull")!=="of
       document.querySelectorAll("button[data-g]").forEach(x=>x.setAttribute("aria-pressed",String(x.dataset.g===G3.GFX.pick)));
       const r=$t("tsGfxR");if(r)r.hidden=G3.GFX.tier===G3.GFX.loaded;}));
     {const rb=$t("tsGfxReload");if(rb)rb.addEventListener("click",()=>location.reload());}
+    $t("tSetBody").querySelectorAll(".tseg button[data-aa]").forEach(b=>b.addEventListener("click",()=>G3.setAA(b.dataset.aa)));$t("tSetBody").querySelectorAll(".aarl").forEach(b=>b.addEventListener("click",()=>location.reload()));   // (v6.14, 42g)
     $t("tsBoard").addEventListener("click",()=>openBoard());
     $t("tsColors").addEventListener("click",()=>{rollMill();welcome();$t("tsNote").textContent="New colors: "+MILL.name;});
     $t("tsName").addEventListener("click",()=>{$t("tsNameRow").hidden=false;const i=$t("tsNameIn");i.value=MILL.name;i.focus();i.select();});

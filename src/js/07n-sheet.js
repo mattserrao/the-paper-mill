@@ -56,7 +56,7 @@ const stfiSpec=()=>Math.round((STFI0[C.grade]||2.6)*SH.stfiSpec*100)/100;
 // strength factors the sheet's other troubles take off both ring crush and STFI (1 = none)
 function shStrF(){if(!shOn())return 1;const bf=S.tbf||0;return formF()*(1-0.15*Math.max(0,bf-SH.bkLim));}
 function stfiNow(bw){const g=C.grade,x=S.knob&&S.knob.any&&S.knob.x,ps=x&&x.ps!=null?x.ps:psStd()+shPsAdd();
-  return (STFI0[g]||2.6)*(bw/bwStd())*(1+0.0035*(kwhNow()-WE.kwh0))*(1+0.004*(ps-psStd()))*Math.sqrt(tsrOf(HB.jw0)/tsrNow())*shStrF();}
+  return (STFI0[g]||2.6)*(bw/bwStd())*(1+0.03*bvFq())*(1+0.0035*(kwhNow()-WE.kwh0))*(1+0.004*(ps-psStd()))*Math.sqrt(tsrOf(HB.jw0)/tsrNow())*shStrF();}
 // ---- stickies deposits ----
 function stkState(){if(!S.stk)S.stk={fab:SH.dep0,felt:SH.dep0,can:SH.dep0};return S.stk;}
 // how sticky the furnish is for deposits: the stickies in the stock, by the recipe (A bales 0.6, C 1, Mixed waste 1.8; standard recipe = 1)
@@ -118,8 +118,21 @@ function turnupRoll(){if(!shOn()||S.pm!=="run")return;if(S.rng.turnup==null)S.rn
 
 /* ---- the break risk: R and its contributors. Each: [key, name, factor, where it breaks] ---- */
 let BRR={R:1,parts:[],ev:0};   // (the last risk the break check worked out; the screens work out their own)
-const BRKN={draw:"Open draw tension vs wet strength",stk:"Stickies and holes",cd:"Wet streaks and edges",broke:"Broke in the furnish",stock:"Stock swings",cloth:"Fabric and felt",dry:"Dryers and hood",turnup:"Turn-up failed"};
-const BRKM={draw:"Method",stk:"Material",cd:"Measurement",broke:"Material",stock:"Machine",cloth:"Machine",dry:"Environment",ev:"Crew & events",turnup:"Machine"};
+const BRKN={speed:"Machine speed and sheet flutter",draw:"Open draw tension vs wet strength",stk:"Stickies and holes",cd:"Wet streaks and edges",broke:"Broke in the furnish",stock:"Stock swings",cloth:"Fabric and felt",dry:"Dryers and hood",turnup:"Turn-up failed"};
+const BRKM={speed:"Machine",draw:"Method",stk:"Material",cd:"Measurement",broke:"Material",stock:"Machine",cloth:"Machine",dry:"Environment",ev:"Crew & events",turnup:"Machine"};
+/* v6.14 sheet flutter at speed. The break odds follow the machine's speed against the grade's design speed (GRADES sp):
+   1 at it (so an untouched mill on a standard grade breaks as before), down to FLT.min slower (a slowed machine is
+   steadier), a gentle rise faster, and past the flutter threshold (FLT.over over design, + FLT.stab fpm a level of the
+   pocket ventilation & stabilizers upgrade) the sheet flutters in the open draw and the first dryer pockets and the odds
+   climb steeply. Speed upgrades raise the speed the machine runs at, so a fast machine needs the stabilizers. */
+const FLT={over:0.05,stab:150,below:1.5,lin:1.0,k1:2,k2:8,min:0.6,span:0.15};
+const fltRef=()=>(GRADES[C.grade]||GRADES["24"]).sp;
+const fltThr=()=>fltRef()*(1+FLT.over)+FLT.stab*LV("stab");
+const fltIdx=()=>shOn()&&S.pm==="run"?clamp((S.pmSpeed-fltThr())/(FLT.span*fltRef()),0,1):0;   // (the real speed)
+// (the slower side follows the speed the player asks for, C.pmSp: a machine held back by a bottleneck, the dryer limit or a
+//  ramp after a rethread isn't credited; the faster side is the real speed)
+function spdBrk(){if(!shOn()||S.pm!=="run")return 1;const ref=fltRef(),sp=C.pmSp.v,v=sp<ref?sp:Math.max(ref,S.pmSpeed),thr=fltThr();if(v<ref)return Math.max(FLT.min,1-FLT.below*(1-v/ref));
+  const o=Math.max(0,v-thr)/ref;return 1+FLT.lin*(Math.min(v,thr)-ref)/ref+FLT.k1*o+FLT.k2*o*o;}
 // (v6.13 t3: worked out once a step: the sim checks it, the tags and screens read the same one)
 const BRKC={S:null,t:-1,v:null};
 function brkRisk(){const tm=S.t;if(BRKC.S===S&&BRKC.t===tm)return BRKC.v;BRKC.S=S;BRKC.t=tm;return BRKC.v=brkRisk0();}
@@ -129,6 +142,7 @@ function brkRisk0(){if(!shOn())return {R:1,parts:[],ev:Math.max(0,(S.M&&S.M.brea
   //  the shoe press and the steam box send a stronger sheet into the open draw, a wet one out of the presses a weaker one)
   const T=Math.max(0.7,1+0.42*(knobVal("draw")-drawStd())),ws=Math.exp(0.05*(ps-44)),q=T/ws;
   const parts=[];
+  parts.push(["speed",BRKN.speed,spdBrk(),"dryer"]);   // (v6.14 flutter)
   parts.push(["draw",BRKN.draw,drawBrk()*clamp(q*q,0.5,3),"dryer"]);
   const ck=baleOn()&&S.bq?S.bq.ck:0;parts.push(["stk",BRKN.stk,(1+0.8*ck)/(1+0.8*0.1)*(1+0.5*stkHole()),"press"]);   // (1 on standard bales: their stickies are in the calibration)
   {let n=0,edge=0;const C2=S.cd;if(C2&&cdOn()&&run){const sp=QSPEC[C.grade]||QSPEC["24"];const mA=S.dry?S.dry.m:DRY.m0;for(let z=0;z<12;z++)if(mA+C2.dv[z]>sp.m[1])n++;

@@ -150,7 +150,7 @@ function setGrade(to){const from=C.grade;if(to===from)return;
   const off=4+2*Math.abs(GRADES[to].bw-GRADES[from].bw);S.chg={left:off,total:off,from,to};C.grade=to;applyUpgrades();{const L=S.q.gc||(S.q.gc=[]);L.push({t:Math.round(S.t),from,to,tons:Math.round(off*10)/10});if(L.length>20)L.shift();}   // (v6.7: for the quality screen)
   log(`Grade change ${from} → ${to} (market orders): about ${off.toFixed(0)} t to the beater during the transition`,"warn");}
 function planTick(dt,good){const pl=S.plan;
-  pl.left-=good;
+  pl.left-=good;if(S.gg&&pl.left<1)pl.left=1;   // (v6.14: the planner waits while a guided grade change is under way, 07r)
   if(pl.left<=0){let nx;
     if(pl.q.length){nx=pl.q.shift();pl.cur=nx;}
     else{if(pl.cur&&pl.cur.i!==undefined)pl.i=pl.cur.i;pl.cur=null;pl.i=(pl.i+1)%WHEEL.length;const g=WHEEL[pl.i],c=GCOST[g];nx={g,t:c.mix[0]+rand("plan")*(c.mix[1]-c.mix[0])};}

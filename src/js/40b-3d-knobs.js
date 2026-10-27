@@ -27,6 +27,13 @@
     // v6.12.1-t6: the couch suction box's position control, on a post by the couch roll (the couch pit agitator's station moved east to make room)
     const cbs=station(40.4,13.05,0);plate("COUCH BOX",0.8,40.4,2.0,13.21);KX.cbox={at:cbs.at};
     const os=station(35.0,13.15,0);plate("OSCILLATOR",0.8,35.0,2.0,13.31);KX.osc={at:os.at};
+    // v6.14: the suction pick-up roll's vacuum control, on a post by the transfer (07b PUR)
+    const pus=station(37.8,13.15,0);plate("PICK-UP VAC",0.8,37.8,2.0,13.31);KX.puv={at:pus.at};
+    // v6.14: the trim squirts (two fine jets at the wire's edges by the couch) and the knock-off shower across the wire
+    const TSQ=(()=>{const g=new THREE.Group();scene.add(g);SM.dyn.add(g);const jm=new THREE.MeshBasicMaterial({color:lin0("#bfe6ff"),transparent:true,opacity:0.75,depthWrite:false,toneMapped:false});
+      const jg=new CylG(0.025,0.025,0.7,6),js=[0,1].map(()=>{const m=new THREE.Mesh(jg,jm);m.position.set(42.0,3.3,0);g.add(m);return m;});
+      box(0.12,0.12,CD+0.6,M.steel,41.4,3.35,zc,g,false);const sm=new THREE.MeshBasicMaterial({color:lin0("#e6f5ff"),transparent:true,opacity:0.35,depthWrite:false,side:THREE.DoubleSide,toneMapped:false});
+      const sp=new THREE.Mesh(new THREE.PlaneGeometry(0.5,CD-0.6),sm);sp.rotation.set(0,Math.PI/2,0);sp.rotation.z=0.5;sp.position.set(41.25,3.12,zc);g.add(sp);return {g,js,sp,sm};})();
     // v6.11.1: the dryer hood doors' raise / lower station, on a post under the tending-side catwalk
     const hs=station(3.0,13.15,0);plate("HOOD DOORS",0.8,3.0,2.0,13.31);KX.hood={at:hs.at};
     // v6.13: the thermocompressor's motive steam hand valve, on the steam line down to the dryer basement (07m)
@@ -68,7 +75,7 @@
     const dotG=new THREE.SphereGeometry(0.55,16,10),ringG=new THREE.RingGeometry(0.85,1.15,28),stemG=new THREE.CylinderGeometry(0.06,0.06,1,6);
     const KVG=new THREE.Group();KVG.visible=false;scene.add(KVG);SM.dyn.add(KVG);const KVHITS=[],MARKS=[];
     // every knob in the view: the field knobs, the DCS-only knobs at their console, and the two knobs that were already there
-    const KVL=[["pulp"],["ref"],["agit"],["guide"],["couch"],["osc"],["incomer"],["hood"],["zones","WET",[58,1.6,13.4]],["draw","DET",[-5,1.6,13.4]],["spider",null,[33,PH+1.2,-17.6]],["slice",null,[57.15,2.95,12.7]]];
+    const KVL=[["pulp"],["ref"],["agit"],["guide"],["couch"],["osc"],["puv"],["incomer"],["hood"],["zones","WET",[58,1.6,13.4]],["draw","DET",[-5,1.6,13.4]],["spider",null,[33,PH+1.2,-17.6]],["slice",null,[57.15,2.95,12.7]]];
     KVL.forEach(([id,st,pos])=>{const at=pos||KX[id].at,g=new THREE.Group();g.position.set(at[0],at[1]+2.2,at[2]);KVG.add(g);
       const d=new THREE.Mesh(dotG,mkM);d.renderOrder=9995;g.add(d);const r=new THREE.Mesh(ringG,ringM);r.renderOrder=9994;g.add(r);
       const s=new THREE.Mesh(stemG,mkM);s.scale.y=2.2;s.position.y=-1.1;s.renderOrder=9993;g.add(s);
@@ -142,8 +149,11 @@
       {const st=on?K.x.st:0,q=Math.round(st*20)/20;if(q!==pfLvl){pfLvl=q;paintStripes(q);}}
       // the forming fabric walking toward the tending side (the guide roll out of travel, or on manual)
       if(wire0===null)wire0=wireLoop.position.z;{const e=on?clamp(K.edge,-60,60):0,z=wire0+e*0.012;if(Math.abs(wireLoop.position.z-z)>1e-4){wireLoop.position.z=z;wireLoop.updateMatrixWorld();}}
+      // v6.14 the trim squirts follow their setting (in or out of the deckle), the knock-off spray its pressure
+      {const run=S.pm==="run"&&!S.zen,q=on?(K.v.sqz??0):0,e=q*CD/205,ko=on?(K.v.kos??250):250;TSQ.g.visible=run;
+        if(run){TSQ.js[0].position.z=zc-CD/2+0.35-e;TSQ.js[1].position.z=zc+CD/2-0.35+e;TSQ.sm.opacity=clamp(ko/400,0,1)*0.5;TSQ.sp.visible=ko>20;}}
       // a slack open draw flutters going into the dryers
-      {const k=on&&S.pm==="run"?clamp((K.x.dl-0.08)/0.4,0,1):0;
+      {const k=Math.max(on&&S.pm==="run"?clamp((K.x.dl-0.08)/0.4,0,1):0,!S.zen&&typeof fltIdx==="function"?fltIdx():0);   // (v6.14: and flutter at speed, 07n)
         if(k>0){flut=true;sheetPre[5][1]=3.6+Math.sin(now/70)*0.18*k+Math.sin(now/31)*0.08*k;sheetPre[4][1]=3.4+Math.sin(now/53+1)*0.06*k;buildSheet(sheetR);}
         else if(flut){flut=false;sheetPre[5][1]=3.6;sheetPre[4][1]=3.4;buildSheet(sheetR);}}
       // more steam off the dryer roof (and the power house) when the dryers are working harder
@@ -156,6 +166,7 @@
     // ---- breakdowns only a knob causes: their effects and pins (31-3d-upset-fx.js builds and precompiles them) ----
     FXDEF.rotortrip=g=>spFx(g,16,-13.5,2.6,8);
     FXDEF.couchpit=g=>spFx(g,40.6,11.4,0.6,6);
+    FXDEF.hbdoor=g=>spFx(g,52.5,11.6,2.6,11);   // v6.14: the headbox side door: stock sprays from the tending side and floods the floor along the former (07q)
     FXDEF.oscfail=g=>(now,rdt)=>{if(Math.random()<rdt*8)emit("steam",35.5+Math.random()*3.5,7.4,zc+R()*5,R()*0.4,0.8+Math.random(),R()*0.4,1.6,1.1,"#dfe7ee",0.5);};
     // v6.10 t5: the arc flash at the main incomer. A blinding electric-blue fireball (a saturated blue halo and a white-hot
     // core, flickering; normal blending, since additive light vanishes on the mill's pale ground), thick jagged arcs
@@ -201,5 +212,5 @@
           if(Math.random()<rdt*4)emitA("smoke",MCC.door[0]-0.7+R()*0.4,2.3,MCC.door[1]+R()*0.7,-0.8+R()*0.3,0.9+Math.random()*0.5,R()*0.3,3.4,1.6,"#5d636e",0.6);
           if(Math.random()<rdt*3)emitA("smoke",x+R()*2,MCC.h+0.6,z+1.5+R()*1.5,R()*0.4,1.4,R()*0.4,4,2.4,"#5d636e",0.5);};};}
     PINS.arcflash=[CAB.main.stand[0],7,CABZ+0.5,"bolt"];
-    PINS.rotortrip=[16,9,-13.5,"bolt"];PINS.couchpit=[40.6,7,12.2,"water"];PINS.oscfail=[37,11,zc,"!"];
+    PINS.rotortrip=[16,9,-13.5,"bolt"];PINS.couchpit=[40.6,7,12.2,"water"];PINS.hbdoor=[56,8,12.6,"water"];PINS.oscfail=[37,11,zc,"!"];
   }

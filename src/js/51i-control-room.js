@@ -2,9 +2,12 @@
    and trends). The DCS still opens from the operator consoles in the mill too; the process flow left Settings. ---- */
 {const CR=[["pf","Process flow","Money and tons through the mill"],["dcs","DCS","Stock prep, wet end, dry end, utilities"],["PLAN","Planning","Orders, inventory, trucks, OCC recipe"],
     ["QCS","Quality","Specs, off-spec log, beater"],["WATER","Water","Fresh water and the water balance"],["TREND","Trends","Trend anything, find what moves together"],["REL","Reliability","Rounds, vibration and ADX motor tests"],["PROF","Machine profile","Solids from the headbox to the reel"],["BRK","Breaks","The break risk, its causes and the log"],["NRG","Energy","Steam, power and condensate per ton"],["DRV","Drives","The MCC lineups: each drive's load"],["rm","Relationship map","What drives each reading, and what it moves"],["man","Manning","Who's on shift, vacations and cover"]];
+  // v6.14 report cleanup: the screens in four groups, smaller tiles, the second screen as a link under them
+  const CRG=[["Process",["pf","dcs","PROF","BRK","NRG"]],["Production & quality",["PLAN","QCS","WATER"]],["Equipment & people",["REL","DRV","man"]],["Analysis",["TREND","rm"]]];
   const el=$("ctlRoom");
   if(el){el.innerHTML=`<div class="crh"><b>Control room</b><small id="crNote">The mill's screens. The DCS screens also open from the operator consoles in the mill.</small></div>
-      <div class="crg">${CR.map(([k,l,d])=>`<button type="button" data-cr="${k}"><b>${l}</b><small>${d}</small></button>`).join("")}<button type="button" data-cr="pop" id="crPop" hidden><b>⧉ Second screen</b><small>The whole control room in its own window</small></button></div>`;
+      ${CRG.map(([gn,ks])=>`<div class="crgh">${gn}</div><div class="crg">${ks.map(k=>{const c=CR.find(x=>x[0]===k);return `<button type="button" data-cr="${k}"><b>${c[1]}</b><small>${c[2]}</small></button>`;}).join("")}</div>`).join("")}
+      <button type="button" class="crpop" data-cr="pop" id="crPop" hidden>⧉ Open the control room on a second screen</button>`;
     el.addEventListener("click",e=>{const b=e.target.closest("[data-cr]");if(!b||b.disabled)return;const k=b.dataset.cr;
       if(POP.on&&k!=="pop"){popOpen(k==="dcs"?"dcs":k);return;}   // (v6.8.3: popped out, every screen opens on the second screen)
       const x=document.querySelector('#v2sheet header button[aria-label="Close panel"]');if(x)x.click();

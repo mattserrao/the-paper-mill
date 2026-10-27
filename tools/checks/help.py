@@ -38,7 +38,7 @@ def title(pw):
         shot(pg, f"help-title-{tag}.png")
         pg.click("#htGlos"); pg.fill("#helpQ", "pulp")
         r = pg.evaluate("()=>[...document.querySelectorAll('#helpList dt')].map(d=>d.textContent)")
-        ok(f"{tag} glossary: filter 'pulp'", "Pulper" in r and "Stock" in r and len(r) < 20, r)
+        ok(f"{tag} glossary: filter 'pulp'", "Pulper" in r and "Stock" in r and len(r) < 24, r)   # (v6.14: more entries mention the pulper)
         pg.fill("#helpQ", ""); n = pg.evaluate("()=>document.querySelectorAll('#helpList dt').length")
         ok(f"{tag} glossary: about 50 terms", n >= 45, n)
         shot(pg, f"help-glossary-{tag}.png")

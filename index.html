@@ -1546,6 +1546,32 @@ body.pmpop .popmain[data-v="dcs"] #dcsOv .dcs{max-width:1180px;margin:0 auto}
 .fanstep.hi b{color:#4fd18b}.fanstep.hi{border-top:1px dashed #33476a;padding-top:3px}
 .fanform{font:600 12px ui-monospace,Menlo,monospace;color:#ffd77a;margin:4px 0 2px}
 @media (max-width:760px){.fanov .vlvb{grid-template-columns:1fr}}
+
+/* v6.14 the pick-up roll close-up (50p) */
+.pupan{flex-direction:column;align-items:stretch}.pusvg{width:100%;max-width:560px;background:#0f1b2d;border:1px solid #2c3e5c;border-radius:8px}
+.pusvg .puw{stroke:#7fb2ff;stroke-width:3;fill:none}.pusvg .puf{stroke:#b49c6a;stroke-width:6;fill:none;opacity:.8}.pusvg .pushell{fill:#22324f;stroke:#8ea4c4;stroke-width:2}
+.pusvg .puh{fill:#0f1b2d}.pusvg .puz{fill:#4fd18b;stroke:#0f1b2d;stroke-width:1}.pusvg .pubox{fill:#33476a}
+.pusvg .put,.pusvg .pul{fill:#c3d3ea;font:600 10px system-ui,sans-serif}.pusvg .pul{fill:#4fd18b;font-weight:700}.pusvg .pubad{fill:#ff8b7f}
+.pusvg .pusq{stroke:#9ad8ff;stroke-width:2;stroke-dasharray:3 2}.pusvg .puko{stroke:#9ad8ff;stroke-width:2;fill:none}
+
+/* v6.14 the QCS CD map (50f) */
+.qhmh{display:flex;flex-wrap:wrap;gap:6px;align-items:center;justify-content:space-between}.qhmh .seg button{padding:3px 9px;font-size:11px}
+#qcsHm{width:100%;height:auto;display:block;border-radius:6px;cursor:crosshair;image-rendering:pixelated}
+.qhmk{font-size:11px;color:#8ea4c4;margin-top:4px}.qhmk i{display:inline-block;width:12px;height:10px;margin:0 4px -1px 8px;border-radius:2px}.qhmp{font-size:12px;color:#dbe6f6;margin-top:2px}
+
+/* v6.14 the grade change coach (50q) */
+.ggbox{flex-direction:column;align-items:stretch;gap:6px}.ggrow{display:flex;gap:6px;flex-wrap:wrap;align-items:center}.ggrow select{flex:1;min-width:140px}
+.ggbox .reroll.vpri{background:#4fd18b;color:#0f1b2d;border-color:#4fd18b}
+.ggt{width:100%;border-collapse:collapse;font-size:12px}.ggt th,.ggt td{padding:3px 6px;text-align:right;border-bottom:1px solid #2c3e5c}.ggt th:first-child,.ggt td:first-child{text-align:left}
+.ggt tr.cur td{background:#22324f;color:#fff;font-weight:700}.ggt tr.done td{color:#8ea4c4}
+.ggck{list-style:none;margin:0;padding:0;font-size:12px}.ggck li.ok{color:#4fd18b}.ggck li.wait{color:#ffd77a}.ggres{margin:0;font-size:12px;color:#c3d3ea}
+
+/* v6.14 report cleanup: the control room in groups (51i) */
+.ctlroom .crgh{font-size:11px;letter-spacing:.08em;text-transform:uppercase;font-weight:700;color:var(--muted);margin-top:2px}
+.ctlroom .crg{grid-template-columns:repeat(auto-fill,minmax(132px,1fr));gap:5px}.ctlroom .crg button{padding:7px 9px}.ctlroom .crg button b{font-size:13px}.ctlroom .crg button small{font-size:11px;line-height:1.25}
+.crpop{align-self:flex-start;background:none;border:0;padding:2px 0;color:var(--accent,#2f7d55);font-weight:700;font-size:12px;cursor:pointer}.crpop[hidden]{display:none}
+#k-clock{white-space:normal;font-size:17px;line-height:1.2}   /* (v6.14: the date fits its card) */
+.dcsrow.ggbox,.dcsrow.pupan{display:flex;flex-direction:column;align-items:stretch;gap:6px}   /* (v6.14: full width, heading on top) */
 </style>
 </head>
 <body class="app">
@@ -1720,7 +1746,7 @@ body.pmpop .popmain[data-v="dcs"] #dcsOv .dcs{max-width:1180px;margin:0 auto}
 <div class="btns"><button class="primary" id="no3d-retry">Try again</button></div></div></div>
 
 <script type="module">
-const APP_VER="v6.13.3";   // shown in the menu and sent with leaderboard scores (max 12 characters)
+const APP_VER="v6.14.0-t1";   // shown in the menu and sent with leaderboard scores (max 12 characters)
 // TEST BUILDS ONLY (off in releases): turbo speeds 240/480/960 sim min/s for fast playtests. Above 120, crews and maintenance start jobs
 // without waiting for the 3D walk (as with the 3D view off) and outages keep the speed. Set false for a release.
 const TURBO=false,TURBO_FAST=s=>TURBO&&s>120;
@@ -2306,7 +2332,7 @@ const BASE={...P};
 const ECON={price:{"24":658,"28":679,"31":697,"34Super":760},   /* (v6.11.0-t2 balance: +2.5% on every grade, for the trim) */   /* (v6.5 balance: -$15/t, inactive play is punished most) */   // (v6.5: +$30/t: outbound freight is its own cost now, FR; b2: less what the cheaper OCC and energy save per ton, ~$82-84, and $4 for paper made but not yet sold; measured on 12 hands-off seasons)
   energy:68,   // (b2: was 95; a recycled mill buying its power, 2026 prices)
   chem:25,wage:45,robot:15,overhead:2400,start:2e6,bankrupt:-1.5e6};
-const REPAIR={syphon:30e3,rotortrip:20e3,oscfail:12e3,couchpit:25e3,birdline:200e3,refclash:140e3,steamjoint:90e3,fogfan:35e3,shaft:250e3,dryerfire:400e3,fabric:90e3,felt:45e3,slime:30e3,ragger:15e3,overflow:120e3,chestover:60e3,lwplug:25e3,cscreen:45e3,fscreen:60e3,lcplug:30e3,hdblow:55e3,boiler:60e3,permit:120e3,thkblow:70e3,birdhay:0,wrap:15e3,dye:20e3,flares:0,winderdown:40e3,runner:0,badocc:0,balefire:150e3,fleet:40e3,calloff:10e3,fight:5e3,roof:80e3,highway:0,lightning:200e3,tornado:500e3,beaver:25e3,icedintake:20e3,brownout:10e3,duststorm:25e3,flood:60e3};
+const REPAIR={hbdoor:45e3,syphon:30e3,rotortrip:20e3,oscfail:12e3,couchpit:25e3,birdline:200e3,refclash:140e3,steamjoint:90e3,fogfan:35e3,shaft:250e3,dryerfire:400e3,fabric:90e3,felt:45e3,slime:30e3,ragger:15e3,overflow:120e3,chestover:60e3,lwplug:25e3,cscreen:45e3,fscreen:60e3,lcplug:30e3,hdblow:55e3,boiler:60e3,permit:120e3,thkblow:70e3,birdhay:0,wrap:15e3,dye:20e3,flares:0,winderdown:40e3,runner:0,badocc:0,balefire:150e3,fleet:40e3,calloff:10e3,fight:5e3,roof:80e3,highway:0,lightning:200e3,tornado:500e3,beaver:25e3,icedintake:20e3,brownout:10e3,duststorm:25e3,flood:60e3};
 const UGROUPS=[["machine","Paper machine"],["stock","Stock prep"],["yard","Warehouse & logistics"],["maint","Maintenance"],["mgmt","Management"]];
 const MAINT=["birdline","steamjoint","fogfan","shaft","fabric","felt","winderdown","hdblow","lwplug","cscreen","fscreen","lcplug","boiler","thkblow","ragger","overflow","fleet","roof","lightning","icedintake"];
 // v4.1 v19: prices reset after the payback review (most upgrades now pay back within days, not months)
@@ -2321,6 +2347,7 @@ const UPS=[
  {id:"winder",ck:0.75,g:"machine",name:"Winder rebuild",lv:[285e3,520e3],desc:"+30 t/h winder speed and 40% fewer hayouts per level."},
  {id:"monitor",g:"machine",name:"Fabric & felt monitoring",lv:[220e3,150e3],desc:"Machine failures 40% rarer and fewer sheet breaks, per level."},
  {id:"refiner",g:"machine",name:"Refiner power upgrade",lv:[145e3],desc:"Bigger motors and drives (+30% rating) and new plates on the twin refiners between the stock chest and the machine chest. Stronger bonding: $10/t less energy and chemicals."},
+ {id:"stab",ck:0.75,g:"machine",name:"Pocket ventilation & sheet stabilizers",lv:[95e3,85e3],desc:"Blow boxes in the dryer pockets and stabilizers along the open draw hold the sheet flat at speed: the flutter threshold rises 150 fpm per level, so a fast machine breaks less."},   // (v6.14 flutter, 07n)
  {id:"heatrec",g:"machine",name:"Hood heat recovery",lv:[30e3],desc:"An air-to-air exchanger on the dryer hood's exhaust preheats the supply air: the supply air coils use 55% less steam, about 6.6% off the dryers' steam bill."},   // (v6.13, 07m: priced to pay back in about a third of a season)
  {id:"fire",g:"machine",name:"Fire suppression",lv:[115e3],desc:"Dryer and bale yard fires 60% rarer and half as long."},
  {id:"pulper",g:"stock",name:"Pulper rotor upgrade",lv:[325e3,585e3],desc:"+25 t/h pulper capacity per level."},
@@ -2920,6 +2947,8 @@ const EVENTS=[
  // stream and an endless MTBF, so every other upset keeps its timing; left out of the Upsets panel and the tornado.
  {id:"rotortrip",g:"stock",knob:true,stream:"knob",name:"Pulper rotor trip",head:"The pulper rotor tripped out on high amps.",dur:[60,120],mtbf:1e12,mods:{pulperDown:1},fx:"rotortrip"},
  {id:"oscfail",g:"machine",knob:true,stream:"knob",name:"Felt oscillator stopped",head:"The pick-up felt oscillator stopped. The felt is filling in stripes.",dur:[60,120],mtbf:1e12,mods:{},fx:"oscfail"},
+ // v6.14: the headbox side door blows off on a restart after a stock-off (07q). Never rolled by time: its own stream.
+ {id:"hbdoor",g:"machine",stream:"hbdoor",name:"Headbox side door blew off",head:"The headbox side door blew off on the restart! Stock is spraying across the machine floor round the forming table. The crew is cleaning up and re-sealing the door.",dur:[60,120],mtbf:1e12,mods:{pmDown:"headbox side door off"},fx:"hbdoor"},
  {id:"couchpit",g:"machine",knob:true,stream:"knob",name:"Couch pit overflow",head:"The couch pit overflowed onto the machine floor.",dur:[90,150],mtbf:1e12,mods:{},fx:"couchpit"},
 ];
 const EV=Object.fromEntries(EVENTS.map(e=>[e.id,e]));
@@ -2928,7 +2957,7 @@ const WXN={clear:"Clear",rain:"Rain",fog:"Fog",snow:"Snow"};
 function active(id){const a=S.inc;for(let k=0;k<a.length;k++)if(a[k].id===id)return true;return false;}
 // machine and winder upsets go to the crew one at a time, in the order they happen; nothing gets fixed until a crew is there
 const QSET=new Set(EVENTS.map(e=>e.id).filter(id=>(EV[id].g==="machine"&&!EV[id].knob&&id!=="runner"&&id!=="birdhay"&&id!=="boiler"&&id!=="fogfan"&&id!=="steamjoint"&&id!=="brownout"&&id!=="syphon")||id==="ragger")),QINC=id=>QSET.has(id);   // (v5.2: a Set, built once)
-const RESP={ragger:6,wrap:4,hay:4,brk:2,dryerfire:3,shaft:8,fabric:6,felt:6,slime:5,winderdown:6,tiedrolls:4};
+const RESP={hbdoor:4,ragger:6,wrap:4,hay:4,brk:2,dryerfire:3,shaft:8,fabric:6,felt:6,slime:5,winderdown:6,tiedrolls:4};
 function enqueue(k){if(!S.crewQ)S.crewQ=[];if(S.crewQ.some(q=>q.k===k))return;S.crewQ.push({k,resp:RESP[k]||6,since:0,here:false,go:false});}
 function crewTick(dt){if(!S.crewQ)S.crewQ=[];if(!S.crewQ.length)return;   // (v5.2: nothing queued, nothing to do)
   S.crewQ=S.crewQ.filter(q=>q.k==="hay"?S.wd==="hayout":q.k==="brk"?S.pm==="break":active(q.k));
@@ -3090,15 +3119,15 @@ const tellDay=()=>Math.floor(S.t/1440);
 const tellCan=()=>tellsOn()&&tellState().day!==tellDay();
 function tellRoundStart(a){if(!tellCan()||!TAREAK[a])return false;tellState().day=tellDay();log(`Daily round: an operator is walking ${TAREAK[a].n.toLowerCase()}.`,"");return true;}
 // the walk is over: nothing in the area at all gives a small nudge (a missed tell gives nothing)
-function tellRoundEnd(a,caught){if(a==="dry"&&stmOn())stmIr();if(a==="scr")fpRound();   // (v6.13.3: the screens round reads the machine screen ΔP, 07p)
+function tellRoundEnd(a,caught){if(a==="dry"&&stmOn())stmIr();if(a==="scr")fpRound();const hbc=a==="wet"?hbdRound():0;   // (v6.14: the headbox door seal, 07q)   // (v6.13.3: the screens round reads the machine screen ΔP, 07p)
    // (v6.13: the dry end round takes an IR survey of the cans, 07m)
 const T=tellState(),left=T.q.filter(p=>p.area===a).length;
-  if(caught>0||left>0){if(!caught)log(`Round over: something in ${TAREAK[a].n.toLowerCase()} went unnoticed.`,"warn");return {clean:false,missed:left};}
+  if(caught+hbc>0||left>0){if(!caught&&!hbc)log(`Round over: something in ${TAREAK[a].n.toLowerCase()} went unnoticed.`,"warn");return {clean:false,missed:left};}
   const d=TELL.cleanCiv[TAREAK[a].cv];if(civOn())civAdd(d,"Clean walk");else log("Clean walk.","");return {clean:true,missed:0,d};}
 // the Area Trend Report: the Reliability program (vibration and oil analysis) or Dot's own kit
 const tellRep=()=>LV("reliab")>=1||leadIs("dot");
 // per area: 0 steady, 1 climbing (something pending), 2 climbing fast (due within 24 h)
-function tellTrend(a){const q=(S.tell&&S.tell.q)||[];let v=0;for(const p of q)if(p.area===a)v=Math.max(v,p.due-S.t<1440?2:1);return Math.max(v,rlyTellTrend(a),fpTrend(a));}   // (v6.10: and what the shift rounds found, 07i)
+function tellTrend(a){const q=(S.tell&&S.tell.q)||[];let v=0;for(const p of q)if(p.area===a)v=Math.max(v,p.due-S.t<1440?2:1);return Math.max(v,rlyTellTrend(a),fpTrend(a),hbdTrend(a));}   // (v6.10: and what the shift rounds found, 07i)
 const tellSummary=()=>{const T=S&&S.tell;if(!T||!T.n)return "";return `Upsets caught early: ${T.n} — saved ${money(T.saved)} and ${tellHrs(T.savedMin)} of downtime.`;};
 // the end screens' line: "3 — saved $412k and 9.5 hours of downtime" (null when tells never ran this run)
 const tellEndStat=()=>{const T=S&&S.tell;if(!T||!T.pre)return null;return ["Upsets caught early",T.n?`${T.n} — saved ${money(T.saved)} and ${tellHrs(T.savedMin)} of downtime`:"none","wide"];};
@@ -3760,7 +3789,21 @@ function recTake(t,dt){if(!baleOn())return;const Q=bqState(),Y=recPiles(),sq=rec
   while(left>1e-9&&skip<N&&it++<64){const b=Math.floor(Q.fed+1e-9),q=sq[b%N],room=(b+1-Q.fed)*BALE_T;
     if(Y[q]<=1e-9||room<1e-9){Q.fed=b+1;if(Y[q]<=1e-9)skip++;continue;}   // none of that kind (or this bale is done): on to the next bale
     const u=Math.min(left,room,Y[q]);Y[q]-=u;left-=u;Q.fed=Math.min(b+1,Q.fed+u/BALE_T);ys+=u*(1-BT[q].rej);tot+=u;Q.bt[q]+=u;skip=0;}
-  if(tot>0)Q.fy=ease(Q.fy,ys/tot,dt,20);}
+  if(tot>0)Q.fy=ease(Q.fy,ys/tot,dt,20);
+  if(tot>0){const b=Math.floor(Q.fed+1e-9);bvBale(Q,b,sq[b%N]);}}   // (v6.14 the bale being fed now)
+/* v6.14 process noise, starting with the bales: each bale fed has its own moisture (± around the yard's), contamination
+   (× the yard's) and fiber quality (a strength/freeness deviation), drawn from a hash of the run's seed and the bale's
+   number (no dice used, so every other stream is as before; a season replays the same). Mixed Waste varies most, A bales
+   least; every spread is centred, so the averages are as before. The pulper mixes about BVAR.mix minutes of bales; the
+   fiber quality then rides the stock chest to the machine like the stickies (07g: freeness, ring crush, STFI), the
+   moisture swings the pulper's consistency until its dilution catches it (07g cpd), the contamination the stickies. */
+const BVAR={mix:6,A:{m:0.015,k:0.2,q:0.5},C:{m:0.025,k:0.3,q:0.8},M:{m:0.035,k:0.45,q:1}};
+function bvHash(n,s){let x=(Math.imul(n|0,0x9E3779B1)^Math.imul(((S.seed|0)+s)|0,0x85EBCA6B))>>>0;x^=x>>>16;x=Math.imul(x,0x7feb352d)>>>0;x^=x>>>15;x=Math.imul(x,0x846ca68b)>>>0;x^=x>>>16;return (x>>>0)/4294967296;}
+const bvTri=(n,s)=>bvHash(n,s)+bvHash(n,s+7)-1;   // (centred, -1..1)
+function bvBale(Q,b,q){if(Q.bi===b)return;Q.bi=b;const V=BVAR[q]||BVAR.C;Q.cur={q,dm:V.m*bvTri(b,11),kf:1+V.k*bvTri(b,23),fq:V.q*bvTri(b,37)};}
+// (the bale on the conveyor now, and the pulper's and the machine's mixed view of them)
+const bvNow=()=>baleOn()&&S.bq&&S.bq.cur?S.bq.cur:null;
+const bvFq=()=>baleOn()&&S.bq&&!S.zen?S.bq.fqm||0:0;
 // the pulper's top rate with this recipe (t/h)
 function recRate(){if(!baleOn())return Infinity;const sh=recShare(bqState().rec,"M");return P.pulperMax*(1-MW_RATE.k*Math.max(0,sh-MW_RATE.ref));}
 // an inbound load's grade and moisture (drawn when the truck arrives)
@@ -3787,7 +3830,9 @@ function baleTick(dt,fiberIn){if(!baleOn())return;const Q=bqState();
   else if(S.wx==="snow"&&Q.m<BALE.snowMax)Q.m+=(BALE.snowMax-Q.m)*Math.min(1,dt/BALE.tauSnow);
   else if(Q.m>BALE.m0+0.02)Q.m-=(Q.m-BALE.m0-0.02)*Math.min(1,dt/BALE.tauDry);
   // stickies reach the machine through the stock chest (its residence time)
-  if(fiberIn>0){const tau=Math.max(60,S.tank/Math.max(1,(S.rates.fiberUse||30))*60);Q.ck=ease(Q.ck,Q.k,dt,tau);}}
+  // (v6.14: each bale's own contamination and fiber quality, mixed in the pulper, then through the chest)
+  const cu=Q.cur;if(cu&&fiberIn>0){Q.bm=ease(Q.bm||0,cu.dm,dt,BVAR.mix);Q.kfp=ease(Q.kfp==null?1:Q.kfp,cu.kf,dt,BVAR.mix);Q.fqp=ease(Q.fqp||0,cu.fq,dt,BVAR.mix);}
+  if(fiberIn>0){const tau=Math.max(60,S.tank/Math.max(1,(S.rates.fiberUse||30))*60);Q.ck=ease(Q.ck,Q.k*(Q.kfp==null?1:Q.kfp),dt,tau);Q.fqm=ease(Q.fqm||0,Q.fqp||0,dt,tau);}}
 function bqMods(m){if(!baleOn()||!S.bq)return;m.breakMul*=1+BALE.kb*S.bq.ck;}
 const bqBand=k=>k<0.08?"clean":k<0.2?"fair":k<0.35?"poor":"bad";
 /* ---------- v3.0.0: planned outages (season mode) ----------
@@ -3942,7 +3987,7 @@ function setGrade(to){const from=C.grade;if(to===from)return;
   const off=4+2*Math.abs(GRADES[to].bw-GRADES[from].bw);S.chg={left:off,total:off,from,to};C.grade=to;applyUpgrades();{const L=S.q.gc||(S.q.gc=[]);L.push({t:Math.round(S.t),from,to,tons:Math.round(off*10)/10});if(L.length>20)L.shift();}   // (v6.7: for the quality screen)
   log(`Grade change ${from} → ${to} (market orders): about ${off.toFixed(0)} t to the beater during the transition`,"warn");}
 function planTick(dt,good){const pl=S.plan;
-  pl.left-=good;
+  pl.left-=good;if(S.gg&&pl.left<1)pl.left=1;   // (v6.14: the planner waits while a guided grade change is under way, 07r)
   if(pl.left<=0){let nx;
     if(pl.q.length){nx=pl.q.shift();pl.cur=nx;}
     else{if(pl.cur&&pl.cur.i!==undefined)pl.i=pl.cur.i;pl.cur=null;pl.i=(pl.i+1)%WHEEL.length;const g=WHEEL[pl.i],c=GCOST[g];nx={g,t:c.mix[0]+rand("plan")*(c.mix[1]-c.mix[0])};}
@@ -4080,6 +4125,7 @@ function step(dt){
       const ret=pmRet(),use=prod/ret;   // (v6.11.1: the retention polymer moves the machine's fiber loss, 07l; untouched it is P.pmLoss)
       if(!fromMc&&use>S.tank){prod=S.tank*ret;}
       if(!fromMc)S.tank-=prod/ret;pfW("eff",prod/ret-prod);WQ.u+=prod/ret;WQ.p+=prod;
+      {const sq=sqzLoss();if(sq>0&&prod>0){const t=prod*sq;prod-=t;WQ.p-=t;trimTo(t);}}   // v6.14: trim squirts set in: the extra edge goes down the couch pit (07b)
     }
   }
   if(S.pm!=="run") S.pmSpeed=ease(S.pmSpeed,0,dt,3);
@@ -4106,6 +4152,8 @@ function step(dt){
   S.reel+=prod+beat;lotPut(S.lots.reel,C.grade,prod,100,areaNow());lotPut(S.lots.reel,"beater",beat); S.tot.prodT+=prod; {const pt=P.K*C.pmSp.v*bwSp()*dt/60;S.tot.pot+=pt;pfW("pot",pt);}   // (v6.7: potential tons at the setpoint speed, by the hour, for the process flow)
   planTick(dt,prod);
   sodaTick();   // v6.13.1 the vending machine easter egg (50n)
+  ggTick();   // v6.14 the guided grade change (07r, free play)
+  hbdTick(dt);   // v6.14 the headbox side door's seal and the stock-off restarts (07q)
   shTick(dt);   // v6.13 stickies deposits, the broke chest (the sheet goes to broke on a break), the outage wash-up (07n)
   if(S.reel>=P.jumbo&&reelsAtWinder()<=P.storeReels){const q=P.jumbo;S.winderBuf+=q;lotTake(S.lots.reel,q,S.lots.buf);S.reel=Math.max(0,S.reel-q);if(S.reel<1e-9){S.reel=0;S.lots.reel.length=0;}S.tot.turnups++;turnupRoll();}   // (v6.13: a turn-up can fail, 07n)   // (v6.11.2: a turn-up takes exactly one jumbo; the step's overshoot starts the next reel. Before, the overshoot went
    //  to the winder too, and reelsAtWinder (tons / 100, rounded up) counted one reel too many: storage read full at 3 of 4)
@@ -4198,7 +4246,7 @@ function step(dt){
 // v6.13.2-t3: the 1st section knob's share of the drying, 40 psig standard on 0-100: the same reach both ends as t1's 0-150
 // (full open takes 0.485 of the load off the 3rd section, shut adds 0.188)
 const st1D=p=>(p-40)/(p>40?60/0.485:40/0.188);
-const KNOB_IDEAL={pulp:50,ref:60,agit:100,gbox:1,lvac:5,vac:30,press:100,osc:100,couch:1,cbox:-6,draw:1.5,st1:40,gm:1,gt:0,incomer:1,hood:0,tcv:100};
+const KNOB_IDEAL={pulp:50,ref:60,agit:100,gbox:1,lvac:5,vac:30,press:100,osc:100,couch:1,cbox:-6,draw:1.5,st1:40,gm:1,gt:0,incomer:1,hood:0,tcv:100,puv:10,sqz:0,kos:250};   // (v6.14: puv, sqz, kos)
 const KNOBS=[
   {id:"pulp",name:"Pulper dilution valve",area:"SPOT",where:"Pulper, stock prep",field:true,unit:"% open",min:0,max:100,step:1,
     tip:"Dilution water into the pulper tub: NV-101, which holds the consistency on AUTO. Moving it here puts NV-101 on MAN at that opening."},
@@ -4225,6 +4273,14 @@ const KNOBS=[
     tip:"Keeps the broke in the couch pit moving. Normally running."},
   {id:"cbox",name:"Couch suction box",area:"WET",where:"Couch roll, tending side",field:true,unit:"°",min:-15,max:15,step:1,
     tip:"Turns the vacuum box inside the suction couch roll, which sets where on the roll the suction zone sits under the wire. Rotated to its best position the box seals best and pulls the most vacuum; turned either way it seals worse, the vacuum falls and the sheet leaves the couch wetter. Standard is −6°."},
+  // v6.14 the suction pick-up roll (lifts the sheet off the wire onto the pick-up felt), the couch trim squirts and the
+  // knock-off shower (07b tick: PUR)
+  {id:"puv",name:"Pick-up roll vacuum",area:"WET",where:"Suction pick-up roll, tending side",field:true,unit:"inHg",min:0,max:20,step:0.5,dp:1,
+    tip:"Vacuum in the suction pick-up roll's transfer zone, which lifts the sheet off the forming fabric onto the pick-up felt. Too little and the sheet stays on the wire and breaks at the transfer; too much and the holes mark the sheet through the felt. Standard is 10 inHg."},
+  {id:"sqz",name:"Trim squirts",area:"WET",where:"Wet end DCS · couch trim squirts",dcs:true,unit:"in a side",min:-3,max:3,step:0.25,dp:2,
+    tip:"The two high-pressure water jets at the couch that cut the sheet's edges and set its width. 0 follows the deckle and the trim plan. In (−) cuts more off each edge: that fiber goes back down the couch pit, so fewer tons reach the reel. Out (+) leaves the thin, ragged deckle edge on the sheet: edge defects at the winder and edge breaks."},
+  {id:"kos",name:"Knock-off shower",area:"WET",where:"Wet end DCS · couch",dcs:true,unit:"psi",min:0,max:400,step:10,
+    tip:"A shower just after the trim squirts that knocks the cut edge trim off the wire into the couch pit. Standard is 250 psi. Too weak and the trim rides on with the sheet into the first press nip."},
   {id:"osc",name:"Pick-up felt oscillator",area:"WET",where:"Pick-up felt showers, 1st press top felt",field:true,unit:"% stroke speed",min:0,max:100,step:5,
     tip:"Sweeps the felt-cleaning shower back and forth across the pick-up felt. Normally 100%."},
   {id:"incomer",name:"MCC main incomer",area:"DRV",where:"MCC, the incoming 480 V section",field:true,
@@ -4290,6 +4346,14 @@ function dewater(fr,vac,pl,jv,jh,cb,gb,lv,sb){
   const lt=pl<100?0.2*(pl-100):pl<=130?0.08*(pl-100):2.4-0.3*(pl-130);
   const ps=clamp(pb+(cs-19)+lt,30,56),wpt=p=>(1-DRY.m0/100)/(p/100)-1;
   return {cs,ps,W:wpt(ps)/wpt(pb),eJet,eVac,eRef,eBox,eZ};}
+/* v6.14 the suction pick-up roll: its transfer zone pulls PUR.v0 inHg (its holding zone about 60% of that) through the
+   felt to lift the sheet off the wire. Under PUR.lo the transfer fails more and more (press breaks); over PUR.mark the
+   drilled holes print through the felt (a share of the reel to the beater). The trim squirts (in per side, 0 = the
+   deckle): in sends 2 x that of the web back down the couch pit (fewer tons at the reel, the fiber kept as broke); out
+   leaves the ragged deckle edge on (edge defects, edge breaks). The knock-off shower (psi) under PUR.kosLo lets the
+   trim ride into the press. Untouched: none of it. */
+const PUR={v0:10,lo:6,mark:13,kos:250,kosLo:120,zones:[["Sealing",0.3],["Transfer",1],["Holding",0.6],["Sealing",0.3]],holes:{d:0.157,pitch:0.5,open:0.22}};
+const sqzLoss=()=>{const K=S.knob;if(!K||!K.any||S.zen)return 0;const q=K.v.sqz??0;return q<0?2*(-q)/webW():0;};
 const KZONES=12;
 function knobState(){if(!S.knob){S.knob={v:Object.assign({},KNOB_IDEAL,{draw:drawStd()}),z:new Array(KZONES).fill(0),
     x:{cp:5,fr:0.5,ch:0,sw:0,vac:30,pl:100,st:0,d1:0,m:8,dl:0,dt:0,bs:0,z:new Array(KZONES).fill(0)},
@@ -4343,7 +4407,7 @@ function knobTrig(id,cause,why){if(active(id))return false;const K=S.knob,e=EV[i
   if(e.start&&id!=="refclash")e.start(inc);
   const bill=(REPAIR[id]||0)*P.repairMul*(inc.billMul||1);if(bill>0){spend(bill,"repairs");inc.bill=bill;inc.note=(inc.note?inc.note+" · ":"")+`repair bill ${money(bill)}`;}
   log((why||e.head)+(inc.note?` (${inc.note})`:""),"bad");K.inc.push({id,real:inc.real,cause});S.M=mods();return true;}
-const KBC={draw:"draw",agit:"stock",vac:"cloth",crush:"cloth",wet:"dry",dry:"dry"};   // (v6.13 t3: each knob break's cause in the break log, 07n BRKN)
+const KBC={draw:"draw",agit:"stock",vac:"cloth",crush:"cloth",wet:"dry",dry:"dry",pick:"cloth",knock:"cd",edge:"cd"};   // (v6.13 t3: each knob break's cause in the break log, 07n BRKN)
 // a knob-caused sheet break (no dice from the break stream: those keep their place for the random breaks)
 function knobBreak(type,why,ck){if(S.pm!=="run")return false;S.pm="break";S.brkType=type;const r=rand("knob");
   S.breakLeft=2*(type==="reel"?4+r*6:type==="dryer"?12+r*14:26+r*20);S.breakTotal=S.breakLeft;S.tot.breaks++;enqueue("brk");AUDIO.sfx("snap",2500);
@@ -4381,7 +4445,8 @@ function knobTick(dt){const K=S.knob;if(!K||!K.any||S.zen)return;
   x.vac=L(x.vac,v.vac,15);x.pl=L(x.pl,v.press,15);x.cb=L(x.cb??CBOX.best,v.cbox??CBOX.best,8);x.gb=L(x.gb??FZ.gb,v.gbox??FZ.gb,10);x.lv=L(x.lv??FZ.lv,v.lvac??FZ.lv,12);   // (v6.12.1-t6: the couch box turns in about 8 minutes)
   {const wr=Math.max(0,v.vac-45)/15*0.25+Math.max(0,(v.gbox??FZ.gb)-3)/2*0.15+Math.max(0,(v.lvac??FZ.lv)-8)/2*0.2;   // (v6.12.1-t7: every zone over its limit drags on the fabric)
    K.wear=wr>0?Math.min(1.2,K.wear+dt/60*wr):Math.max(0,K.wear-dt/60*0.05);}   // high vacuum drags on the forming fabric (and a fresh stretch of normal running lets it recover, slowly)
-  x.st=L(x.st,v.osc>=40?0:(40-v.osc)/40,v.osc>=40?60:90);              // pick-up felt filling in stripes
+  x.st=L(x.st,v.osc>=40?0:(40-v.osc)/40,v.osc>=40?60:90);
+  x.pu=L(x.pu??PUR.v0,v.puv??PUR.v0,5);                                 // (v6.14: the pick-up roll's vacuum, a few minutes to settle)              // pick-up felt filling in stripes
   K.cs=clamp(K.cs+dt/60*(v.couch?-2:1),0,3);                            // fiber settled in the couch pit
   if(S.pm==="break"&&K.pmPrev!=null&&K.pmPrev!=="break")knobCouch();K.pmPrev=S.pm;       // any new break before the presses (random ones and rethreads too)
   // guide roll: the fabric walks a little all the time. AUTO soaks it up within its travel; trim uses travel up; MANUAL holds still
@@ -4407,7 +4472,7 @@ function knobTick(dt){const K=S.knob;if(!K||!K.any||S.zen)return;
   x.cr1=L(x.cr1||0,Math.max(0,x.pl-115)/30,10);x.cr=L(x.cr||0,x.cr1,10);x.dt=L(x.dt,Math.max(0,v.draw-(drawStd()+0.9)),10);
   // ---- consequences: off-spec ----
   const nz=x.z.filter(z=>Math.abs(z)>4).length;
-  const F={wet:x.m>10?(x.m-10)/4:0,dry:x.m<6?(6-x.m)/2:0,cd:nz/3,bw:x.sw>0.3?(x.sw-0.3)/0.6:0,crush:x.cr>0.05?(x.cr-0.05)/0.6:0,stripes:x.st>0.4?(x.st-0.4)/0.4:0,wrinkles:x.dl>0.15?(x.dl-0.15)/0.6:0,floc:chemFloc()};   // (v6.11.1 floc: a polymer overdose, 07l)
+  const F={wet:x.m>10?(x.m-10)/4:0,dry:x.m<6?(6-x.m)/2:0,cd:nz/3,bw:x.sw>0.3?(x.sw-0.3)/0.6:0,crush:x.cr>0.05?(x.cr-0.05)/0.6:0,stripes:x.st>0.4?(x.st-0.4)/0.4:0,wrinkles:x.dl>0.15?(x.dl-0.15)/0.6:0,floc:chemFloc(),mark:x.pu>PUR.mark?(x.pu-PUR.mark)/6:0,edge:(v.sqz??0)>0?(v.sqz??0)/3*0.15:0};   // (v6.11.1 floc: a polymer overdose, 07l)
   // (v6.5.3: weight and moisture are judged against the grade's spec by the QCS check, 07e; F.wet, dry and bw stay for
   // the screens and the crew's tracing, and only the other defects send a share of the reel to the beater from here)
   let keep=1,top="",tv=0;for(const k in F){const f=clamp(F[k],0,1);F[k]=f;if(k==="wet"||k==="dry"||k==="bw")continue;if((k==="cd"||k==="stripes")&&cdOn())continue;   /* (v6.11: they beater the roll under them, 07k) */keep*=1-f;if(f>tv){tv=f;top=k;}}
@@ -4425,6 +4490,10 @@ function knobTick(dt){const K=S.knob;if(!K||!K.any||S.zen)return;
   haz("crush",x.pl>130?(x.pl-130)/20*1.5:0,"press","Sheet break in the presses: the sheet was crushed in the nip.");
   haz("wet",x.m>13?(x.m-13)*0.8:0,"dryer","Sheet break in the dryers: the sheet was too wet to hold.","moist");
   haz("dry",x.m<3?(3-x.m)*0.8:0,"reel","Sheet break at the reel: the sheet was dried brittle.","moist");
+  // v6.14 the pick-up roll, the trim squirts and the knock-off shower
+  haz("pick",x.pu<PUR.lo?(PUR.lo-x.pu)/PUR.lo*2.5:0,"press","Sheet break at the transfer: the pick-up roll's vacuum couldn't lift the sheet off the wire onto the felt.");
+  haz("knock",(v.kos??PUR.kos)<PUR.kosLo?(PUR.kosLo-(v.kos??PUR.kos))/PUR.kosLo*2:0,"press","Sheet break in the press: the edge trim wasn't knocked off the wire and rode into the first nip.");
+  haz("edge",(v.sqz??0)>1?((v.sqz??0)-1)/2*0.8:0,"dryer","Sheet break: a ragged edge tore and the tear ran across the sheet.");
   // ---- consequences: breakdowns ----
   if(x.cp>7.5&&!active("rotortrip")&&!S.M.pulperDown){if(knobTrig("rotortrip",["pulp"],"The pulper rotor tripped out on high amps! The tub is too thick to turn."))x.cp=5;}
   if(x.cp<2.2&&!active("overflow")){if(knobTrig("overflow",["pulp"],"The pulper is overflowing! Too much water in the tub, and it is pouring over the rim."))x.cp=5;}
@@ -4445,13 +4514,15 @@ function knobTick(dt){const K=S.knob;if(!K||!K.any||S.zen)return;
   tr("steam",K.sf>1.08,720,()=>knobSteamCulprits(),"The steam bill is well up on the week.","The energy engineer");
   tr("stfi",!knobAt("slice")&&run&&(()=>{const q=qualMeasure();return q.stfi<stfiSpec()||q.rct<rctSpec();})(),120,()=>["slice"],"QCS: the sheet is weak across the machine (STFI CD, ring crush): the jet is rushing or dragging hard and the fibers line up with the machine.","The process engineer");   // (v6.13, 07n)
   tr("tcv",!knobAt("tcv")&&stmFlooded()>0,120,()=>["tcv"],"Dryer cans flooding: the 3rd section can't hold its syphon ΔP.","The dry-end operator");   // (v6.13, 07m)
+  tr("pick",(H.pick||0)>0.2||F.mark>0||(K.harm.pick&&K.harm.pick.n>0),180,()=>["puv"],F.mark>0?"QCS: suction roll hole marks in the sheet.":"Breaks at the pick-up.","The press operator");   // (v6.14)
+  tr("trim",(H.knock||0)>0.2||(H.edge||0)>0.2||F.edge>0||(K.harm.knock&&K.harm.knock.n>0)||(K.harm.edge&&K.harm.edge.n>0),180,()=>["sqz","kos"].filter(i=>!knobAt(i)),"Trouble at the sheet's edges: ragged edges and trim carrying over.","The wet-end operator");
   tr("feed",K.feed<0.95,480,()=>["pulp"],"Stock prep can't keep the chest up: the pulper is running thin.","Stock prep");
   tr("moist",F.wet>0||F.dry>0||(K.harm.moist&&K.harm.moist.n>0),180,()=>F.wet>0?knobSteamCulprits():["st1","ref"].filter(i=>!knobAt(i)),F.wet>0?"QCS: the sheet is coming off the reel wet.":"QCS: the sheet is coming off the reel over-dried.","The process engineer");
   // ---- all back at ideal and settled: stop running ----
-  if(!knobsOff().length&&!chemOn()&&!K.inc.length&&K.cs<0.01&&K.wear<0.001&&Math.abs(x.cp-5)<0.02&&Math.abs(x.fr-0.5)<0.002&&x.ch<0.01&&x.sw<0.005&&Math.abs(x.vac-30)<0.05&&Math.abs(x.pl-100)<0.05&&Math.abs((x.cb??CBOX.best)-CBOX.best)<0.05&&Math.abs((x.gb??FZ.gb)-FZ.gb)<0.01&&Math.abs((x.lv??FZ.lv)-FZ.lv)<0.02&&knobAt("slice")&&Math.abs(x.jv||0)<0.005&&Math.abs(x.jh||0)<0.005&&Math.abs(x.sb||0)<0.005&&knobAt("tcv")&&!shOff()&&x.st<0.005&&Math.abs(x.d1)<0.001&&Math.abs(x.m-DRY.m0)<0.02&&x.bs<0.01&&x.dl<0.002&&(x.dl1||0)<0.002&&(x.cr||0)<0.002&&(x.cr1||0)<0.002&&x.dt<0.002&&x.z.every(z=>Math.abs(z)<0.02)&&K.off===0){
+  if(!knobsOff().length&&!chemOn()&&!K.inc.length&&K.cs<0.01&&K.wear<0.001&&Math.abs(x.cp-5)<0.02&&Math.abs(x.fr-0.5)<0.002&&x.ch<0.01&&x.sw<0.005&&Math.abs(x.vac-30)<0.05&&Math.abs(x.pl-100)<0.05&&Math.abs((x.cb??CBOX.best)-CBOX.best)<0.05&&Math.abs((x.gb??FZ.gb)-FZ.gb)<0.01&&Math.abs((x.lv??FZ.lv)-FZ.lv)<0.02&&knobAt("slice")&&Math.abs(x.jv||0)<0.005&&Math.abs(x.jh||0)<0.005&&Math.abs(x.sb||0)<0.005&&knobAt("tcv")&&!shOff()&&x.st<0.005&&Math.abs((x.pu??PUR.v0)-PUR.v0)<0.05&&Math.abs(x.d1)<0.001&&Math.abs(x.m-DRY.m0)<0.02&&x.bs<0.01&&x.dl<0.002&&(x.dl1||0)<0.002&&(x.cr||0)<0.002&&(x.cr1||0)<0.002&&x.dt<0.002&&x.z.every(z=>Math.abs(z)<0.02)&&K.off===0){
     K.any=false;K.off=0;K.sf=1;K.feed=1;K.brk=1;K.edge=0;K.gtrav=0;K.H={};K.harm={};S.M=mods();}
 }
-const KOFFN={wet:"sheet too wet",dry:"sheet over-dried",cd:"CD moisture streaks",bw:"basis weight swings",crush:"crush marks",stripes:"stripes from the pick-up felt",wrinkles:"wrinkles in the reel",floc:"flocs in the sheet (poor formation)"};
+const KOFFN={mark:"suction roll marks from the pick-up",edge:"ragged edges (trim squirts out)",wet:"sheet too wet",dry:"sheet over-dried",cd:"CD moisture streaks",bw:"basis weight swings",crush:"crush marks",stripes:"stripes from the pick-up felt",wrinkles:"wrinkles in the reel",floc:"flocs in the sheet (poor formation)"};
 // what is putting the extra water into the dryers (or the extra steam on): the knobs the engineers will trace
 function knobSteamCulprits(){const K=S.knob;if(!K)return [];const v=K.v,c=[];
   // (v6.5.5: each knob's share of the extra water, from the dewatering chain with that knob put back to standard)
@@ -4468,10 +4539,10 @@ function knobRead(){const K=S.knob,x=K?K.x:null,g=GRADES[C.grade]||GRADES["24"],
   const m=Dr?Dr.m:DRY.m0;let cp=x?x.cp:5;
   const cpb=cpBale();cp+=cpb;
   return {run,cp,amps:410*(0.55+cp/5*0.45)*(S.M.pulperDown?0:1),pulpLvl:clamp(62+(5-cp)*9+wob(0.05,1)*1.5,0,110),
-    gap:x?x.fr:gapOf(refEff(knobVal("ref"))),refcap:refCap(),refset:knobVal("ref"),hpdt:kwhNow()/HPDT,refkw:run&&!(S.M&&S.M.refOut)?kwhNow()*Math.max(0,S.rates.fiberUse||0):0,kwh:kwhNow(),csf:csfOf(x?x.fr:gapOf(refEff(knobVal("ref")))),   // (v6.8: refiner power = specific energy x fiber)
+    gap:x?x.fr:gapOf(refEff(knobVal("ref"))),refcap:refCap(),refset:knobVal("ref"),hpdt:kwhNow()/HPDT,refkw:run&&!(S.M&&S.M.refOut)?kwhNow()*Math.max(0,S.rates.fiberUse||0):0,kwh:kwhNow(),csf:csfOf(x?x.fr:gapOf(refEff(knobVal("ref"))))+25*bvFq(),   /* (v6.14: the bales' fiber quality, 05b) */   // (v6.8: refiner power = specific energy x fiber)
     mcLvl:vlvT("LV-104")?S.vlv.lp["LV-104"].pvm:S.mcl!=null?S.mcl:69+wob(0.02,2)*3,refq:!run&&S.refq==null?0:S.refq==null?100*Math.max(0,S.rates.fiberUse||0)/Math.max(1e-6,weUstd()):S.refq*100,mcCons:mcCons(),agit:knobVal("agit"),
     vac:x?x.vac:30,vacIn:(x?x.vac:30)/FZ.in,gbox:x&&x.gb!=null?x.gb:FZ.gb,lvac:x&&x.lv!=null?x.lv:FZ.lv,...(()=>{const p=FZ.pv(x&&x.gb!=null?x.gb:FZ.gb,x&&x.lv!=null?x.lv:FZ.lv,x?x.vac:30);return {vpkw:run?p.kw+wob(0.09,7)*3:0,gbv:p.gv,lvv:p.lv,hvv:p.hv};})(),cbox:x&&x.cb!=null?x.cb:CBOX.best,cvac:cboxVac(x?x.cb:CBOX.best)+(run?wob(0.07,5)*0.4:0),cvacIn:(cboxVac(x?x.cb:CBOX.best)+(run?wob(0.07,5)*0.4:0))/FZ.in,couchSol:x&&x.cs!=null?x.cs:csStd(),pl:x?x.pl:100,pressSol:x&&x.ps!=null?x.ps:psStd(),
-    edge:K?K.edge:0,gtrav:K?K.gtrav:0,gm:knobVal("gm"),stripes:x?x.st:0,cs:K?K.cs:0,couch:knobVal("couch"),osc:knobVal("osc"),wear:K?K.wear:0,
+    puv:x&&x.pu!=null?x.pu:knobVal("puv"),sqz:knobVal("sqz"),kos:knobVal("kos"),edge:K?K.edge:0,gtrav:K?K.gtrav:0,gm:knobVal("gm"),stripes:x?x.st:0,cs:K?K.cs:0,couch:knobVal("couch"),osc:knobVal("osc"),wear:K?K.wear:0,
     st1:knobVal("st1"),st3,steam:run?(Dr?Dr.steam:50.5*P.K*S.pmSpeed*bw/34.8):S.pm==="break"&&Dr?Dr.steam:0,boiler:Dr?Dr.hdr:1,moist:run?m+wob(0.13,4)*0.25:0,
     bw:run?qualMeasure().bw:0,hbc:S.we?S.we.hbc:WE.hbc,draw:knobVal("draw"),tension:run?1.0+(knobVal("draw")-drawStd())*0.42:0,
     zones:cdOn()&&S.cd?S.cd.dv.map(d=>m+d):z.map((v,i)=>m+v*0.35+Math.sin(i*1.7+t*0.01)*0.12),   /* (v6.11: the CD profile, 07k) */off:qualStatus().off,why:qualStatus().why,F:K&&K.F||{},speed:S.pmSpeed};}
@@ -4772,7 +4843,7 @@ function weMigrate(){const K=S&&S.knob;if(K&&K.v&&K.v.ref!=null&&K.v.ref<=1.5)K.
   // the slice sets the headbox consistency: an older save keeps its J/W, with the slice back at its standard opening
   if(S&&!S.hb&&K&&K.v&&K.v.sv){S.hb={jw:Math.round((HB.jw0+0.02*K.v.sv)*1000)/1000};K.v.sv=0;K.any=true;}}
 const bwStd=()=>(GRADES[C.grade]||GRADES["24"]).bw;
-const bwSp=()=>bwStd()*(1+(S.we?S.we.trim:0));
+const bwSp=()=>S&&S.gg&&S.gg.bw!=null?S.gg.bw:bwStd()*(1+(S.we?S.we.trim:0));   // (v6.14: a guided grade change sets it step by step, 07r)
 // refining energy the stock on the machine has had (lagged through the chest by the knob model)
 /* v6.12.1-t7 the refiners' power cap: they can put REFCAP.kw into the stock between them (x1.3 with the refiner upgrade), so the
    specific energy they deliver (kWh/t; 1 HPDT = 17.9 kWh/t) is the setpoint or what that power spreads over the tonnage,
@@ -4812,9 +4883,10 @@ function weTick(dt){const W=weState(),run=S.pm==="run";
   // grade change and while the sheet is off. On unless the player takes the setpoint to MANUAL (lw:false).
   if(S.chg&&W.lw!==false&&W.trim!==0)W.trim=0;   /* (t4: a grade change starts AUTO-LW over from the new grade's target) */
   // (v6.13: read the QCS fresh here rather than the last step's QNOW: a restored snapshot then replays exactly)
-  if(run&&W.lw!==false&&!S.chg&&!S.zen){const q=qualMeasure(),tg=rctSpec()*WE.lwM,ts=stfiSpec()*WE.lwM,e=Math.min((q.rct-tg)/tg,(q.stfi-ts)/ts);W.trim=clamp(W.trim-dt/WE.lwTau*e,WE.trimMin,0);}   // (v6.13: the tighter of ring crush and STFI CD, 07n)
+  if(run&&W.lw!==false&&!S.chg&&!S.gg&&!S.zen){const q=qualMeasure(),tg=rctSpec()*WE.lwM,ts=stfiSpec()*WE.lwM,e=Math.min((q.rct-tg)/tg,(q.stfi-ts)/ts);W.trim=clamp(W.trim-dt/WE.lwTau*e,WE.trimMin,0);}   // (v6.13: the tighter of ring crush and STFI CD, 07n)
   // bale water in the pulper: a step in bale moisture thins the tub, and the dilution loop takes it back out
-  if(baleOn()&&S.bq){const d=-WE.cpK*Math.max(0,S.bq.m-BALE.std)*100;W.cpd=d;W.cpc=ease(W.cpc||0,d,dt,WE.cpTau);}else{W.cpd=0;W.cpc=0;}
+  if(baleOn()&&S.bq){const d=-WE.cpK*(Math.max(0,S.bq.m-BALE.std)+(S.zen?0:S.bq.bm||0))*100;   // (v6.14: and the bales in the pulper now, 05b)
+   W.cpd=d;W.cpc=ease(W.cpc||0,d,dt,WE.cpTau);}else{W.cpd=0;W.cpc=0;}
   // fine screen pressure drop: its load and the dirt in the stock
   {const ld=(S.rates.fiberIn||0)/Math.max(1,P.screenMax),on=motStatus("fscr")==="run"&&!(S.M&&S.M.pulperDown);
     W.fs=ease(W.fs,on?WE.fs0*(0.55+0.45*ld)*weDirt()+(active("fscreen")?30*KP:0):0,dt,10);}}
@@ -4828,7 +4900,7 @@ function dpYield(){if(S.zen)return 1;let x=0;for(const k of ["hd","lc","lw"])x+=
 // strength: ring crush from refining, the measured weight and stickies; the spec is the grade's
 const rctSpec=()=>Math.round((RCT0[C.grade]||30)*WE.rctSpec*10)/10;
 // (v6.8.3: open draw: each % of draw over the 1.5 % standard stretches the sheet and takes 4 % off ring crush; less draw adds it)
-function rctNow(bw){const ri=1+WE.rctK*(kwhNow()-WE.kwh0)-WE.rctStk*Math.max(0,((S.bq&&!S.zen)?S.bq.ck:0.1)-0.1)-WE.rctDraw*((S.zen?drawStd():knobVal("draw"))-drawStd());   // (v6.11.2: dry strength starch removed; v6.11.1 added its ring crush here)
+function rctNow(bw){const ri=1+0.03*bvFq()+WE.rctK*(kwhNow()-WE.kwh0)-WE.rctStk*Math.max(0,((S.bq&&!S.zen)?S.bq.ck:0.1)-0.1)-WE.rctDraw*((S.zen?drawStd():knobVal("draw"))-drawStd());   // (v6.11.2: dry strength starch removed; v6.11.1 added its ring crush here)
   return (RCT0[C.grade]||30)*(bw/bwStd())*ri*shStrF();}   // (v6.13: formation and broke, 07n; 1 untouched)
 // v6.11.2 paper is sold by area (MSF, thousand ft²), the way box plants buy it. The list price ($/t) is for a ton at the
 // grade's target weight; a ton made lighter covers more ft² and sells for list × bwStd/bw, a heavier one for less. The player
@@ -5909,7 +5981,7 @@ const stfiSpec=()=>Math.round((STFI0[C.grade]||2.6)*SH.stfiSpec*100)/100;
 // strength factors the sheet's other troubles take off both ring crush and STFI (1 = none)
 function shStrF(){if(!shOn())return 1;const bf=S.tbf||0;return formF()*(1-0.15*Math.max(0,bf-SH.bkLim));}
 function stfiNow(bw){const g=C.grade,x=S.knob&&S.knob.any&&S.knob.x,ps=x&&x.ps!=null?x.ps:psStd()+shPsAdd();
-  return (STFI0[g]||2.6)*(bw/bwStd())*(1+0.0035*(kwhNow()-WE.kwh0))*(1+0.004*(ps-psStd()))*Math.sqrt(tsrOf(HB.jw0)/tsrNow())*shStrF();}
+  return (STFI0[g]||2.6)*(bw/bwStd())*(1+0.03*bvFq())*(1+0.0035*(kwhNow()-WE.kwh0))*(1+0.004*(ps-psStd()))*Math.sqrt(tsrOf(HB.jw0)/tsrNow())*shStrF();}
 // ---- stickies deposits ----
 function stkState(){if(!S.stk)S.stk={fab:SH.dep0,felt:SH.dep0,can:SH.dep0};return S.stk;}
 // how sticky the furnish is for deposits: the stickies in the stock, by the recipe (A bales 0.6, C 1, Mixed waste 1.8; standard recipe = 1)
@@ -5971,8 +6043,21 @@ function turnupRoll(){if(!shOn()||S.pm!=="run")return;if(S.rng.turnup==null)S.rn
 
 /* ---- the break risk: R and its contributors. Each: [key, name, factor, where it breaks] ---- */
 let BRR={R:1,parts:[],ev:0};   // (the last risk the break check worked out; the screens work out their own)
-const BRKN={draw:"Open draw tension vs wet strength",stk:"Stickies and holes",cd:"Wet streaks and edges",broke:"Broke in the furnish",stock:"Stock swings",cloth:"Fabric and felt",dry:"Dryers and hood",turnup:"Turn-up failed"};
-const BRKM={draw:"Method",stk:"Material",cd:"Measurement",broke:"Material",stock:"Machine",cloth:"Machine",dry:"Environment",ev:"Crew & events",turnup:"Machine"};
+const BRKN={speed:"Machine speed and sheet flutter",draw:"Open draw tension vs wet strength",stk:"Stickies and holes",cd:"Wet streaks and edges",broke:"Broke in the furnish",stock:"Stock swings",cloth:"Fabric and felt",dry:"Dryers and hood",turnup:"Turn-up failed"};
+const BRKM={speed:"Machine",draw:"Method",stk:"Material",cd:"Measurement",broke:"Material",stock:"Machine",cloth:"Machine",dry:"Environment",ev:"Crew & events",turnup:"Machine"};
+/* v6.14 sheet flutter at speed. The break odds follow the machine's speed against the grade's design speed (GRADES sp):
+   1 at it (so an untouched mill on a standard grade breaks as before), down to FLT.min slower (a slowed machine is
+   steadier), a gentle rise faster, and past the flutter threshold (FLT.over over design, + FLT.stab fpm a level of the
+   pocket ventilation & stabilizers upgrade) the sheet flutters in the open draw and the first dryer pockets and the odds
+   climb steeply. Speed upgrades raise the speed the machine runs at, so a fast machine needs the stabilizers. */
+const FLT={over:0.05,stab:150,below:1.5,lin:1.0,k1:2,k2:8,min:0.6,span:0.15};
+const fltRef=()=>(GRADES[C.grade]||GRADES["24"]).sp;
+const fltThr=()=>fltRef()*(1+FLT.over)+FLT.stab*LV("stab");
+const fltIdx=()=>shOn()&&S.pm==="run"?clamp((S.pmSpeed-fltThr())/(FLT.span*fltRef()),0,1):0;   // (the real speed)
+// (the slower side follows the speed the player asks for, C.pmSp: a machine held back by a bottleneck, the dryer limit or a
+//  ramp after a rethread isn't credited; the faster side is the real speed)
+function spdBrk(){if(!shOn()||S.pm!=="run")return 1;const ref=fltRef(),sp=C.pmSp.v,v=sp<ref?sp:Math.max(ref,S.pmSpeed),thr=fltThr();if(v<ref)return Math.max(FLT.min,1-FLT.below*(1-v/ref));
+  const o=Math.max(0,v-thr)/ref;return 1+FLT.lin*(Math.min(v,thr)-ref)/ref+FLT.k1*o+FLT.k2*o*o;}
 // (v6.13 t3: worked out once a step: the sim checks it, the tags and screens read the same one)
 const BRKC={S:null,t:-1,v:null};
 function brkRisk(){const tm=S.t;if(BRKC.S===S&&BRKC.t===tm)return BRKC.v;BRKC.S=S;BRKC.t=tm;return BRKC.v=brkRisk0();}
@@ -5982,6 +6067,7 @@ function brkRisk0(){if(!shOn())return {R:1,parts:[],ev:Math.max(0,(S.M&&S.M.brea
   //  the shoe press and the steam box send a stronger sheet into the open draw, a wet one out of the presses a weaker one)
   const T=Math.max(0.7,1+0.42*(knobVal("draw")-drawStd())),ws=Math.exp(0.05*(ps-44)),q=T/ws;
   const parts=[];
+  parts.push(["speed",BRKN.speed,spdBrk(),"dryer"]);   // (v6.14 flutter)
   parts.push(["draw",BRKN.draw,drawBrk()*clamp(q*q,0.5,3),"dryer"]);
   const ck=baleOn()&&S.bq?S.bq.ck:0;parts.push(["stk",BRKN.stk,(1+0.8*ck)/(1+0.8*0.1)*(1+0.5*stkHole()),"press"]);   // (1 on standard bales: their stickies are in the calibration)
   {let n=0,edge=0;const C2=S.cd;if(C2&&cdOn()&&run){const sp=QSPEC[C.grade]||QSPEC["24"];const mA=S.dry?S.dry.m:DRY.m0;for(let z=0;z<12;z++)if(mA+C2.dv[z]>sp.m[1])n++;
@@ -6170,6 +6256,68 @@ function fpSysCurve(qMax,k){const F=S.fp,p=fpOn()&&F?F.plug:0,hb=S.pm==="run"&&F
   // the headbox term scales with the jet (which in the mill follows the flow at a fixed slice): Q² like the friction
   for(let i=0;i<=k;i++){const q=qMax*i/k;out.push([q,FP.stat+fpFric(q,p)+hb*(q/q0)*(q/q0)]);}return out;}
 // (G3.fan, the test hook, is set in 50o with the faceplate: G3 isn't made yet here)
+/* ---- v6.14 the headbox side door (plan: claude/v6140-plan.md, 7) ----
+   The tending-side access door on the headbox is held by its gasket and clamps. When the machine comes back after a
+   stock-off (the stock chest ran out, or the machine chest tripped it), the fan pump brings the headbox up to pressure
+   from empty, and a tired seal can let the door go: stock sprays out and floods the floor round the forming table, the
+   machine is down for a clean-up and re-seal, and there's a repair bill (upset hbdoor, 04). The odds on each such restart:
+   HBD.p0, times 1 + HBD.wK x the seal's wear (0..1, building over about HBD.days of running; a planned outage re-seats it),
+   doubled for a quick restart (back within HBD.hot minutes of going down). Its own dice stream ("hbdoor"), so every other
+   upset keeps its timing. A worn seal weeps first: the wet end Round spots it (04b tellRoundEnd) and the crew re-seats the
+   gasket for a share of the bill, no downtime. Season, survival and free play; not zen. ---- */
+const HBD={p0:0.05,wK:3,hot:30,days:12,lo:0.45};
+const hbdOn=()=>!!(S&&!S.zen&&typeof tellsOn==="function"&&tellsOn());
+function hbdState(){if(!S.hbd)S.hbd={w:0.15,t0:null,pm:S.pm,out:false};return S.hbd;}
+function hbdTick(dt){if(!hbdOn())return;const D=hbdState();
+  if(S.pm==="run")D.w=Math.min(1,D.w+dt/(HBD.days*1440));
+  const stockOff=S.pm==="down"||(S.pm==="incident"&&S.mcTrip);
+  if(stockOff&&D.t0==null)D.t0=S.t;
+  if(D.t0!=null&&D.pm!=="run"&&(S.pm==="break"||S.pm==="run")&&!stockOff){hbdRestart(D);D.t0=null;}   // (back up: the rethread after the stock-off)
+  const on=outOn();if(D.out&&!on){D.w=0;}D.out=on;D.pm=S.pm;}
+function hbdRestart(D){if(active("hbdoor"))return;const quick=S.t-D.t0<HBD.hot,p=HBD.p0*(1+HBD.wK*D.w)*(quick?2:1);
+  if(S.rng.hbdoor==null)S.rng.hbdoor=((S.seed||1)^0x7a3d91c5)|0;
+  if(rand("hbdoor")<p){D.w=0.1;trigger("hbdoor");}}
+// the wet end Round sees a weeping seal: re-seat the gasket now (a share of the bill, no downtime)
+function hbdRound(){if(!hbdOn())return 0;const D=hbdState();if(D.w<HBD.lo)return 0;const T=tellState(),bill=(REPAIR.hbdoor||0)*P.repairMul,cost=bill*TELL.cut;
+  if(cost>0)spend(cost,"repairs");T.n++;T.saved+=bill-cost;T.cn.hbdoor=(T.cn.hbdoor||0)+1;D.w=0.05;
+  if(civOn())civAdd(TELL.catchCiv,"Caught early");
+  log(`Caught early: stock weeping from the headbox side door's gasket. The crew re-seated it: ${money(cost)}, no downtime (a door blow-out on the next stock-off restart avoided).`,"ok");return 1;}
+const hbdTrend=a=>a==="wet"&&hbdOn()&&S.hbd&&S.hbd.w>=HBD.lo?1:0;
+/* ---- v6.14 the guided grade change (free play only; an EDU mode later) ----
+   Instead of the crew's automatic change (setGrade, 06: an instant switch with a fixed transition to the beater), the
+   player walks the machine from one grade to the next in steps, speed and weight together: each step moves the basis
+   weight setpoint a share of the way and the speed with it, so the tons an hour (and the dryers' load) hold steady. The
+   weight loop and the QCS take a few minutes to catch up (its dead time), and the dryers follow the tons, so a step
+   wants time to settle: the coach shows when weight and moisture are back. The old grade stays on the machine (and its
+   spec on the QCS) until the last step, so the in-between paper goes to the beater through the normal spec check (07e):
+   a quick, steady change makes less of it than the crew's automatic one; rushed steps swing the moisture and make more.
+   State: S.gg={from,to,n,k,bw0,bw1,sp0,sp1,bw,t,off0,made0,auto} (saved with the run). ---- */
+const GG={lbStep:1.25,settle:4,bwTol:0.01};
+const ggOn=()=>!!(S&&S.free&&!S.zen);
+const ggStepOf=(G,k)=>{const f=k/G.n,bw=G.bw0+(G.bw1-G.bw0)*f,sp=G.sp0*G.bw0/bw*Math.pow((G.sp1*G.bw1)/(G.sp0*G.bw0),f);return {bw,sp};};
+// start: the plan for a change to grade `to`
+function ggStart(to){if(!ggOn()||S.gg||to===C.grade||!GRADES[to]||S.chg)return false;const from=C.grade,bw0=bwSp(),bw1=GRADES[to].bw,sp0=C.pmSp.v,sp1=GRADES[to].sp+P.spBonus+(S.perk.sp[to]||0);
+  const n=Math.max(2,Math.ceil(Math.abs(bw1-bw0)/GG.lbStep));
+  S.gg={from,to,n,k:0,bw0,bw1,sp0,sp1,bw:bw0,t:S.t,ts:S.t,off0:S.q.off||0,made0:S.q.made||0,auto:Math.round((4+2*Math.abs(bw1-GRADES[from].bw))*10)/10};
+  const W=weState();W.trim=0;C.pmSp.auto=false;
+  log(`Guided grade change ${from} → ${to}: ${n} steps, speed and weight together. The crew's automatic change would send about ${S.gg.auto.toFixed(0)} t to the beater.`,"ok");return true;}
+// the next step (now, settled or not)
+function ggNext(){const G=S.gg;if(!G||G.k>=G.n)return;G.k++;const st=ggStepOf(G,G.k);G.bw=st.bw;C.pmSp.v=Math.round(st.sp);G.ts=S.t;
+  if(G.k===G.n){C.grade=G.to;applyUpgrades();const pl=S.plan;if(pl){const c=GCOST[G.to];pl.cur=null;pl.left=(c.mix[0]+c.mix[1])/2;}
+    log(`Guided grade change: last step. ${G.to} is on the machine now; the QCS judges it on ${G.to}'s spec.`,"ok");}
+  else log(`Guided grade change, step ${G.k} of ${G.n}: weight to ${G.bw.toFixed(2)} lb, speed to ${C.pmSp.v.toLocaleString()} fpm.`,"");}
+// is the machine settled on this step: weight at its setpoint on the QCS, moisture in the grade's spec, a few minutes on
+function ggSettled(){const G=S.gg;if(!G||S.pm!=="run")return {ok:false,bw:false,m:false,t:false};const sp=QSPEC[C.grade]||QSPEC["24"],m=S.dry?S.dry.m:DRY.m0;
+  const bw=Math.abs(bwMeas()-G.bw)<=GG.bwTol*G.bw,mo=m>=sp.m[0]&&m<=sp.m[1],t=S.t-G.ts>=GG.settle;return {ok:bw&&mo&&t,bw,m:mo,t};}
+// every step: the last step settled = done; the planner waits while a change is under way
+function ggTick(){const G=S.gg;if(!G)return;if(!ggOn()){ggEnd("auto");return;}
+  if(G.k===G.n&&ggSettled().ok)ggEnd("done");}
+// finish: done (the coach's change) or handed to the crew (their automatic change from wherever it is)
+function ggEnd(how){const G=S.gg;if(!G)return;const off=Math.max(0,(S.q.off||0)-G.off0),mins=Math.round(S.t-G.t);
+  S.gg=null;C.pmSp.auto=true;const W=weState();W.trim=0;
+  if(how==="done"){G.res={off,mins,auto:G.auto};S.ggLast=G;{const L=S.q.gc||(S.q.gc=[]);L.push({t:Math.round(S.t),from:G.from,to:G.to,tons:Math.round(off*10)/10,guided:true});if(L.length>20)L.shift();}
+    log(`Guided grade change ${G.from} → ${G.to} done in ${mins} min: ${off.toFixed(1)} t to the beater (the crew's automatic change: about ${G.auto.toFixed(0)} t).`,off<=G.auto?"ok":"warn");}
+  else{if(C.grade!==G.to){C.grade=G.from;setGrade(G.to);}log("Guided grade change handed back to the crew.","");}}
 /* ---------- UI wiring ---------- */
 // v6.5.1 second screen: the DCS and the process flow can live in a pop-out window (50e-popout.js). Their elements are then
 // in that window's document, so $() looks there when the main page doesn't have the id; actEl() is the focused element
@@ -7334,10 +7482,14 @@ UI_TICKS.push(()=>{if(bfNeed())bfStart();});
    hourly history (S.hist) for tags that have a column there. Units: water and stock flows in US gallons a minute,
    volumes in gallons (v6.7: they were m³/h, L/s and m³). */
 const GPM=m3h=>m3h*4.40287,GAL=m3=>m3*264.172,LS_GPM=ls=>ls*15.8503;
+// v6.14 units: motors in horsepower (the electricity side stays kW / kWh), temperatures in °F
+const HPK=1.34102,HP=kw=>kw*HPK,fmtHp=kw=>Math.round(HP(kw)).toLocaleString()+" hp";
+const hpRate=kw=>{const h=HP(kw);return (h>=500?Math.round(h/50)*50:Math.round(h/25)*25).toLocaleString()+" hp";};   // (a nameplate-looking rating)
+const degF=c=>c*9/5+32,fmtF=c=>Math.round(degF(c))+" °F";
 const MCHEST_GAL=60000;                                // the machine chest
 const fmtGal=g=>{const a=Math.abs(g),s=g<0?"−":"";return s+(a>=1e6?(a/1e6).toFixed(2)+"M gal":a>=1e4?Math.round(a/1e3)+"k gal":Math.round(a).toLocaleString()+" gal");};
 const fmtGpm=g=>(g>=1e4?(g/1e3).toFixed(1)+"k":Math.round(g).toLocaleString())+" gpm";
-const TAG_INT=new Set(["orders","trucks","rolls","t","A","kW","fpm","mL CSF","V","rpm"]);
+const TAG_INT=new Set(["orders","trucks","rolls","t","A","kW","hp","fpm","mL CSF","V","rpm"]);
 const TAG_AREA={SPOT:"Stock prep",WET:"Wet end",DET:"Dry end",STM:"Steam & air",UTIL:"Utilities",WATER:"Water",QCS:"Quality",PLAN:"Planning & yard",DRV:"Drives (MCC)"};
 const _R=()=>S.rates||{};
 const wr=()=>S.wat&&S.wat.r;
@@ -7351,7 +7503,7 @@ const TAGS=[
   ["lwdp","LW cleaners ΔP","SPOT","psi",()=>purgeDp("lw")+(active("lwplug")?PURGE.add.lw:0),""],
   ["fsld","Fine screen load","SPOT","%",()=>(_R().fiberIn||0)/Math.max(1,P.screenMax)*100,""],["fsdp","Fine screen ΔP","SPOT","psi",()=>S.we?S.we.fs:null,""],
   ["chest","Stock chest level","SPOT","%",()=>S.tank/P.tankCap*100,"a.chest"],["chestg","Stock chest volume","SPOT","gal",()=>S.tank/(WAT.cs/100)*264.172,""],
-  ["kwh","Refining energy","SPOT","kWh/t",r=>r.kwh,"a.kwh"],["refkw","Refiner load","SPOT","kW",r=>r.run?r.refkw:null,"a.refkw"],["gap","Refiner plate gap","SPOT","mm",r=>r.gap,""],["csf","Freeness","SPOT","mL CSF",r=>r.csf,"a.csf"],
+  ["kwh","Refining energy","SPOT","kWh/t",r=>r.kwh,"a.kwh"],["refkw","Refiner load","SPOT","hp",r=>r.run?HP(r.refkw):null,"a.refkw",HPK],["gap","Refiner plate gap","SPOT","mm",r=>r.gap,""],["csf","Freeness","SPOT","mL CSF",r=>r.csf,"a.csf"],
   ["refq","Refined stock flow","SPOT","% of std",r=>r.refq,""],["mcLvl","Machine chest level","SPOT","%",r=>r.mcLvl,""],["mcg","Machine chest volume","SPOT","gal",r=>MCHEST_GAL*r.mcLvl/100,""],
   ["mcCons","Machine chest consistency","SPOT","%",r=>r.mcCons,""],["agit","Machine chest agitator","SPOT","%",r=>r.agit,""],
   ["fan","Fan pump flow (headbox)","SPOT","gpm",()=>S.we?GPM(S.we.f.hb||0):0,""],["dil","Fan pump dilution","SPOT","gpm",()=>S.we?GPM(S.we.f.dil||0):0,""],
@@ -7360,7 +7512,7 @@ const TAGS=[
   ["bwsp","Basis weight setpoint","WET","lb/1000 ft²",()=>bwSp(),""],
   ["drain","Table and couch drainage","WET","gpm",()=>S.we?GPM(S.we.f.drain||0):0,""],["seal","Vacuum box water (seal pit)","WET","gpm",()=>S.we?GPM(S.we.f.seal||0):0,""],
   ["pressw","Press water (to the save-all)","WET","gpm",()=>S.we?GPM(S.we.f.press||0):0,""],["wwov","White water silo overflow (to the WW chest, by design)","WET","gpm",()=>S.we?GPM(S.we.f.over||0):0,""],
-  ["wsp","Wire speed","WET","fpm",()=>S.pmSpeed/DCS_DRAW(),""],["jw","Jet-to-wire ratio","WET","",()=>dcsJw(),""],["rd","Rush / drag (+ rush, − drag)","WET","fpm",()=>S.pm==="run"?dcsRD():null,"a.rd"],["gbox","Gravity box vacuum","WET","inHg",r=>r.gbox,""],["lvac","Low vacuum boxes","WET","inHg",r=>r.lvac,""],["vac","Flatbox vacuum","WET","inHg",r=>r.vacIn,""],["vpkw","Vacuum pump","WET","kW",r=>r.run?r.vpkw:null,""],["couchSol","Couch solids","WET","%",r=>r.run?r.couchSol:null,""],
+  ["wsp","Wire speed","WET","fpm",()=>S.pmSpeed/DCS_DRAW(),""],["jw","Jet-to-wire ratio","WET","",()=>dcsJw(),""],["rd","Rush / drag (+ rush, − drag)","WET","fpm",()=>S.pm==="run"?dcsRD():null,"a.rd"],["gbox","Gravity box vacuum","WET","inHg",r=>r.gbox,""],["lvac","Low vacuum boxes","WET","inHg",r=>r.lvac,""],["vac","Flatbox vacuum","WET","inHg",r=>r.vacIn,""],["vpkw","Vacuum pump","WET","hp",r=>r.run?HP(r.vpkw):null,""],["couchSol","Couch solids","WET","%",r=>r.run?r.couchSol:null,""],
   ["pl","Press load","WET","kN/m",r=>r.pl,""],["pressSol","Press solids","WET","%",r=>r.run?r.pressSol:null,""],["edge","Fabric edge","WET","mm",r=>r.edge,""],
   ["gtrav","Guide travel used","WET","%",r=>r.gm?Math.min(1,r.gtrav)*100:null,""],["osc","Felt shower oscillator","WET","%",r=>r.osc,""],
   ["wwl","White water silo level","WET","%",()=>S.we?S.we.L/WE.silo*100:null,"a.wwl"],["wwg","White water silo volume","WET","gal",()=>S.we?GAL(S.we.L):null,""],
@@ -7425,7 +7577,10 @@ const TAGS=[
   ["jwsp","J/W setpoint (fan pump)","WET","",()=>S.zen?null:hbJwSp(),""],["hbpsi","Headbox pressure","WET","psi",()=>S.zen||!run()?null:hbPsi(),""],["hbth","Headbox total head (TAPPI)","WET","psi",()=>S.zen||!run()?null:hbThPsi(),""],
   // v6.13.3 the fan pump on its curve (07p)
   ["fanrpm","Fan pump speed","SPOT","rpm",()=>S.fp&&S.fp.st!=="off"?S.fp.n*FP.rpm:null,""],["fantdh","Fan pump total dynamic head","SPOT","ft",()=>S.fp&&S.fp.st==="run"?S.fp.h:null,""],
-  ["fankw","Fan pump power","SPOT","kW",()=>S.fp?S.fp.kw:null,""],["faneff","Fan pump efficiency","SPOT","%",()=>S.fp&&S.fp.st==="run"?S.fp.eff*100:null,""],
+  ["fankw","Fan pump power","SPOT","hp",()=>S.fp?HP(S.fp.kw):null,""],["faneff","Fan pump efficiency","SPOT","%",()=>S.fp&&S.fp.st==="run"?S.fp.eff*100:null,""],
+  // v6.14 the bales' own variability (05b), sheet flutter (07n), the pick-up roll (07b) and the headbox door seal (07q)
+  ["bvm","Bale moisture (on the conveyor)","SPOT","%",()=>bvNow()&&S.bq?(S.bq.m+bvNow().dm)*100:null,""],["bvq","Bale fiber quality (at the machine)","SPOT","",()=>baleOn()&&S.bq&&!S.zen?S.bq.fqm||0:null,""],
+  ["flt","Sheet flutter","DET","%",()=>S.zen?null:fltIdx()*100,""],["puv","Pick-up roll vacuum","WET","inHg",r=>S.zen?null:r.puv,""],["hbdw","Headbox door seal wear","WET","%",()=>S.hbd&&!S.zen?S.hbd.w*100:null,""],
   ["scrdp","Machine screen ΔP","SPOT","psi",()=>S.fp&&S.fp.st==="run"?fpScrDp():null,""],["npsh","Fan pump NPSH margin","SPOT","ft",()=>fpNpshM(),""],["slcb","Slice opening","WET","mm",()=>S.zen?null:slcB(),""],
   ["form","Formation index","QCS","",()=>S.zen||!run()?null:formIdx(),""],["tsr","MD/CD tensile ratio","QCS","",()=>S.zen?null:tsrNow(),""],
   ["stfi","STFI CD","QCS","kN/m",()=>S.zen||!run()?null:QNOW.stfi,"a.stfi"],["hard","Reel hardness","DET","",()=>S.zen?null:reelHard(),""],["nip","Reel drum nip","DET","kN/m",()=>S.zen?null:reelNip(),""],
@@ -7437,17 +7592,21 @@ const tagName=id=>{const t=TAGS[TAGI[id]];return t?t[1]:id;};
 const tagUnit=id=>{const t=TAGS[TAGI[id]];return t?t[3]:"";};
 // the ring: 48 h at 2 sim minutes
 const TG={S:null,n:1440,i:0,len:0,k:-1,t:new Float64Array(1440),v:TAGS.map(()=>new Float32Array(1440))};
-function tagTick(){if(S.zen||(typeof BF!=="undefined"&&BF.real))return;if(TG.S!==S){TG.S=S;TG.i=0;TG.len=0;TG.k=-1;}
+function tagTick(){if(S.zen||(typeof BF!=="undefined"&&BF.real))return;if(TG.S!==S){TG.S=S;TG.i=0;TG.len=0;TG.k=-1;HMQ.i=0;HMQ.len=0;}
   const k=Math.floor(S.t/2);if(k===TG.k)return;TG.k=k;const r=knobRead(),i=TG.i;TG.t[i]=S.t;
   for(let j=0;j<TAGS.length;j++){let v;try{v=TAGS[j][4](r);}catch(e){v=null;}TG.v[j][i]=v==null||v!==v?NaN:v;}
-  TG.i=(i+1)%TG.n;TG.len=Math.min(TG.n,TG.len+1);}
+  TG.i=(i+1)%TG.n;TG.len=Math.min(TG.n,TG.len+1);
+  // v6.14 the QCS heatmap: each scan's 12 zones of moisture and basis weight (NaN while there's no sheet)
+  {const H=HMQ,run=S.pm==="run"&&cdOn()&&S.cd,o=H.i*12;H.t[H.i]=S.t;for(let z=0;z<12;z++){H.m[o+z]=run?QNOW.m+S.cd.dv[z]:NaN;H.w[o+z]=run?QNOW.bw+S.cd.bw[z]:NaN;}H.i=(H.i+1)%H.n;H.len=Math.min(H.n,H.len+1);}}
+// v6.14 the QCS heatmap's ring: 24 h of scans at the tags' 2 minutes (outside S, like the tags)
+const HMQ={n:720,i:0,len:0,t:new Float64Array(720),m:new Float32Array(720*12),w:new Float32Array(720*12)};
 // the latest reading (from the ring; live if nothing recorded yet)
 function tagNow(id){const j=TAGI[id];if(j==null)return null;if(TG.len&&TG.S===S){const v=TG.v[j][(TG.i-1+TG.n)%TG.n];return v!==v?null:v;}
   try{const v=TAGS[j][4](knobRead());return v==null||v!==v?null:v;}catch(e){return null;}}
 // a tag's points in [t0, t1] (sim minutes): 2-minute readings where the ring has them, hourly history before that
 function tagSeries(id,t0,t1){const j=TAGI[id],out={t:[],v:[],hourly:false};if(j==null)return out;
   const ringT0=TG.len&&TG.S===S?TG.t[(TG.i-TG.len+TG.n)%TG.n]:Infinity,col=TAGS[j][5];
-  if(t0<ringT0&&col&&S.hist&&HCI[col]!=null){const c=HCI[col];for(const r of S.hist.rows){const tm=r[0]*60+30;if(tm<t0||tm>t1||tm>=ringT0)continue;const v=r[c];if(v!=null&&v===v){out.t.push(tm);out.v.push(v);out.hourly=true;}}}
+  if(t0<ringT0&&col&&S.hist&&HCI[col]!=null){const c=HCI[col];for(const r of S.hist.rows){const tm=r[0]*60+30;if(tm<t0||tm>t1||tm>=ringT0)continue;const v=r[c];if(v!=null&&v===v){out.t.push(tm);out.v.push(v*(TAGS[j][6]||1));out.hourly=true;}}}
   if(TG.S===S)for(let n=0;n<TG.len;n++){const i=(TG.i-TG.len+n+TG.n)%TG.n,tm=TG.t[i];if(tm<t0||tm>t1)continue;const v=TG.v[j][i];if(v===v){out.t.push(tm);out.v.push(v);}}
   return out;}
 const tagHasLong=id=>{const t=TAGS[TAGI[id]];return !!(t&&t[5]);};
@@ -7479,7 +7638,13 @@ function no3D(){G3.ok=false;$("no3d").hidden=false;$("no3d-retry").onclick=()=>l
   // "high-performance" woke the discrete GPU on dual-GPU laptops for every player, which drains the battery much faster.
   // Phones have one GPU, so they're unaffected. Picking Ultra already offers a reload, which is when this takes effect.
   G3.gpuPref=(()=>{let g="";try{g=localStorage.getItem("paper-mill-gfx")||"";}catch(e){}const q=new URLSearchParams(location.search).get("gfx");if(q)g=q;return g==="ultra"?"high-performance":"default";})();
-  try{renderer=new THREE.WebGLRenderer({canvas:glc,stencil:true,antialias:!matchMedia("(pointer: coarse)").matches&&(window.devicePixelRatio||1)<1.5,powerPreference:G3.gpuPref});}   // (v15: no MSAA on high-DPI screens, where the extra pixels already smooth edges)
+  /* v6.14 anti-aliasing (Settings > Graphics): Auto / Off / FXAA / MSAA 4x. Auto is what v15 did on a desktop (the browser's
+     MSAA under 1.5x DPR) and FXAA, a cheap post pass (42g), on phones and high-DPI screens, which had none. MSAA is the
+     context's own, so switching to or from it takes a reload; FXAA turns on and off live. ?aa= pins it for tests. */
+  G3.aaPick=(()=>{let a="auto";try{a=localStorage.getItem("paper-mill-aa")||"auto";}catch(e){}const q=new URLSearchParams(location.search).get("aa");if(q)a=q;return ["auto","off","fxaa","msaa"].includes(a)?a:"auto";})();
+  G3.aaDesk=!matchMedia("(pointer: coarse)").matches&&(window.devicePixelRatio||1)<1.5;
+  G3.aaCtx=G3.aaPick==="msaa"||(G3.aaPick==="auto"&&G3.aaDesk);
+  try{renderer=new THREE.WebGLRenderer({canvas:glc,stencil:true,antialias:G3.aaCtx,powerPreference:G3.gpuPref});}   // (v15: no MSAA on high-DPI screens, where the extra pixels already smooth edges; v6.14: the setting)
   catch(e){no3D();return;}
   if(!renderer.getContext()){no3D();return;}
   // r150+ reads every shader's error log on first draw, which forces the GPU to finish compiling right then:
@@ -8949,8 +9114,9 @@ const HALL={zf:20,xw:-23.15,x1:74.6,doors:[{x:-22.05,w:2.2,h:3.2,open:true},{x:3
     {const acc2=[0];for(let i=1;i<P2.length;i++)acc2.push(acc2[i-1]+Math.hypot(P2[i][0]-P2[i-1][0],P2[i][1]-P2[i-1][1]));m.userData.path={pts:P2,acc:acc2,L:acc2[acc2.length-1],segs:P2.length-1};}
     return m;}
   // forming fabric (wire) loop over the table and around the breast and couch rolls
-  const wireTex=feltTex.clone();wireTex.needsUpdate=true;const wireMat=mat("g-wire",{map:wireTex,side:THREE.DoubleSide,roughness:0.55});
-  const wireLoop=feltLoop([[40.9,2.93],[54.6,2.93],[55.05,2.4],[54.6,1.87],[40.9,1.87],[40.45,2.4]],wireMat);
+  // (v6.14: one trade line round the loop, like the felts' seams, instead of a mark every 2.5 m)
+  const wireTex=seamTex(4);const wireMat=mat("g-wire",{map:wireTex,side:THREE.DoubleSide,roughness:0.55});
+  const wireLoop=feltLoop([[40.9,2.93],[54.6,2.93],[55.05,2.4],[54.6,1.87],[40.9,1.87],[40.45,2.4]],wireMat,true);
   const feltMeshes=[];
   const feltGuides=[];
   function guide(x,y){feltGuides.push(cylZ(0.28,CD+0.2,M.steel,x,y,zc,10));}
@@ -9668,7 +9834,7 @@ const HALL={zf:20,xw:-23.15,x1:74.6,doors:[{x:-22.05,w:2.2,h:3.2,open:true},{x:3
     {p:[47.6,12.4,-15.0],t:()=>["Machine chest",f0(mcLvlNow())+" %"]},
     {p:[63.5,3.6,-11],t:()=>["Fan pump",S.pm==="run"?"to the headbox":"idling"]},
     {p:[48.8,3.9,zc],t:()=>{const f=fzNow();return ["Forming table",`vacuum ${f.gb.toFixed(1)} · ${f.lv.toFixed(1)} · ${f.hi.toFixed(1)} inHg`];}},
-    {p:[50.6,2.1,3.55],t:()=>["Vacuum pump",S.pm==="run"?Math.round(fzNow().kw)+" kW":"idling"]},
+    {p:[50.6,2.1,3.55],t:()=>["Vacuum pump",S.pm==="run"?fmtHp(fzNow().kw):"idling"]},
     {p:[61.2,5.2,-5.6],t:()=>["Machine screen",S.pm==="run"?"last check before the headbox":"idling"]},
     {p:[44,0.6,12.9],t:()=>["Base ply silo","white water under the wire"]},
     {p:[34.5,9.6,zc-1.5],t:()=>["Twin press",LV("shoe")?"shoe in 2nd press":"tandem bottom felt"]},
@@ -11252,7 +11418,7 @@ const HALL={zf:20,xw:-23.15,x1:74.6,doors:[{x:-22.05,w:2.2,h:3.2,open:true},{x:3
   const hiWho=new Set(),wrapWho=new Set();
   const spears=[0,1,2].map(()=>{const m=new THREE.Mesh(new CylG(0.07,0.07,1,6),M.ink);m.visible=false;scene.add(m);return m;});
   const canX=k=>(872-k*32-600)/10;
-  const SITES={shaft:{c:[12,zc],a:"fix",p:[[10,14.4],[12,14.4],[14,14.4],[11,15.4]]},slime:{c:[10,zc],a:"clean",p:[[2,14.2],[8,14.2],[14,14.2],[20,14.2]]},
+  const SITES={hbdoor:{c:[52,zc+2.5],a:"clean",p:[[47,14.2],[51,14.2],[55,14.2],[58,13.8]]},shaft:{c:[12,zc],a:"fix",p:[[10,14.4],[12,14.4],[14,14.4],[11,15.4]]},slime:{c:[10,zc],a:"clean",p:[[2,14.2],[8,14.2],[14,14.2],[20,14.2]]},
     winderdown:{c:[-18.7,9.4],a:"fix",p:[[-16.6,12.4],[-16.4,10.4],[-20.9,12.4],[-21,10.4]]},
     // v6.5.7 tied rolls: two operators on the band saw at the join between the two rolls on the upender (the rest stay put)
     tiedrolls:{c:[-22.9,zc-0.725],a:"saw",p:[[-24.35,zc-1.45],[-24.35,zc]]}};
@@ -12597,7 +12763,7 @@ const HALL={zf:20,xw:-23.15,x1:74.6,doors:[{x:-22.05,w:2.2,h:3.2,open:true},{x:3
       [[16,3,-13.5],"Pulper","Stock prep",()=>`Feed ${f1(R.feed||0)} t/h · consistency ${f1(r.cp)} % · rotor ${Math.round(r.amps)} A`,"pulp"],
       [[17,3,-20.4],"Screens and cleaners","Stock prep",()=>`Fiber ${f1(R.fiberIn||0)} t/h · yield ${Math.round(P.yieldF*((S.M&&S.M.yieldMul)||1)*100)} % · fine screen load ${Math.round((R.fiberIn||0)/Math.max(1,P.screenMax)*100)} %`],
       [[34.5,8,-15],"Stock chest","Stock prep",()=>`Level ${Math.round(S.tank/P.tankCap*100)} % · ${Math.round(S.tank)} t of fiber`],
-      [[68.7,3,9.5],"Twin refiners","Approach flow",()=>`${Math.round(r.kwh)} kWh/t · ${Math.round(r.refkw)} kW · freeness ${Math.round(r.csf)} mL CSF`,["refA","refB"]],
+      [[68.7,3,9.5],"Twin refiners","Approach flow",()=>`${Math.round(r.kwh)} kWh/t · ${fmtHp(r.refkw)} · freeness ${Math.round(r.csf)} mL CSF`,["refA","refB"]],
       [[62.6,3,-11],"Fan pump","Approach flow",()=>`Headbox flow ${Math.round(S.we?GPM(S.we.f.hb||0):0).toLocaleString()} gpm${S.fp&&S.fp.st!=="off"?` · ${Math.round(S.fp.n*FP.rpm)} rpm · TDH ${Math.round(S.fp.h)} ft`:""}`,"fan"],
       [[58,4,9.1],"Headbox and forming table","Wet end",()=>`Headbox consistency ${S.we?S.we.hbc.toFixed(2):"–"} % · vacuum ${f1(r.gbox)} / ${f1(r.lvac)} / ${f1(r.vacIn)} inHg · couch solids ${f1(r.couchSol)} %`,"couch"],
       [[37,4,9.1],"Twin press","Wet end",()=>`Load ${Math.round(r.pl)} kN/m · press solids ${f1(r.pressSol)} %`,["pr1","pr2"]],
@@ -13295,6 +13461,13 @@ const HALL={zf:20,xw:-23.15,x1:74.6,doors:[{x:-22.05,w:2.2,h:3.2,open:true},{x:3
     // v6.12.1-t6: the couch suction box's position control, on a post by the couch roll (the couch pit agitator's station moved east to make room)
     const cbs=station(40.4,13.05,0);plate("COUCH BOX",0.8,40.4,2.0,13.21);KX.cbox={at:cbs.at};
     const os=station(35.0,13.15,0);plate("OSCILLATOR",0.8,35.0,2.0,13.31);KX.osc={at:os.at};
+    // v6.14: the suction pick-up roll's vacuum control, on a post by the transfer (07b PUR)
+    const pus=station(37.8,13.15,0);plate("PICK-UP VAC",0.8,37.8,2.0,13.31);KX.puv={at:pus.at};
+    // v6.14: the trim squirts (two fine jets at the wire's edges by the couch) and the knock-off shower across the wire
+    const TSQ=(()=>{const g=new THREE.Group();scene.add(g);SM.dyn.add(g);const jm=new THREE.MeshBasicMaterial({color:lin0("#bfe6ff"),transparent:true,opacity:0.75,depthWrite:false,toneMapped:false});
+      const jg=new CylG(0.025,0.025,0.7,6),js=[0,1].map(()=>{const m=new THREE.Mesh(jg,jm);m.position.set(42.0,3.3,0);g.add(m);return m;});
+      box(0.12,0.12,CD+0.6,M.steel,41.4,3.35,zc,g,false);const sm=new THREE.MeshBasicMaterial({color:lin0("#e6f5ff"),transparent:true,opacity:0.35,depthWrite:false,side:THREE.DoubleSide,toneMapped:false});
+      const sp=new THREE.Mesh(new THREE.PlaneGeometry(0.5,CD-0.6),sm);sp.rotation.set(0,Math.PI/2,0);sp.rotation.z=0.5;sp.position.set(41.25,3.12,zc);g.add(sp);return {g,js,sp,sm};})();
     // v6.11.1: the dryer hood doors' raise / lower station, on a post under the tending-side catwalk
     const hs=station(3.0,13.15,0);plate("HOOD DOORS",0.8,3.0,2.0,13.31);KX.hood={at:hs.at};
     // v6.13: the thermocompressor's motive steam hand valve, on the steam line down to the dryer basement (07m)
@@ -13336,7 +13509,7 @@ const HALL={zf:20,xw:-23.15,x1:74.6,doors:[{x:-22.05,w:2.2,h:3.2,open:true},{x:3
     const dotG=new THREE.SphereGeometry(0.55,16,10),ringG=new THREE.RingGeometry(0.85,1.15,28),stemG=new THREE.CylinderGeometry(0.06,0.06,1,6);
     const KVG=new THREE.Group();KVG.visible=false;scene.add(KVG);SM.dyn.add(KVG);const KVHITS=[],MARKS=[];
     // every knob in the view: the field knobs, the DCS-only knobs at their console, and the two knobs that were already there
-    const KVL=[["pulp"],["ref"],["agit"],["guide"],["couch"],["osc"],["incomer"],["hood"],["zones","WET",[58,1.6,13.4]],["draw","DET",[-5,1.6,13.4]],["spider",null,[33,PH+1.2,-17.6]],["slice",null,[57.15,2.95,12.7]]];
+    const KVL=[["pulp"],["ref"],["agit"],["guide"],["couch"],["osc"],["puv"],["incomer"],["hood"],["zones","WET",[58,1.6,13.4]],["draw","DET",[-5,1.6,13.4]],["spider",null,[33,PH+1.2,-17.6]],["slice",null,[57.15,2.95,12.7]]];
     KVL.forEach(([id,st,pos])=>{const at=pos||KX[id].at,g=new THREE.Group();g.position.set(at[0],at[1]+2.2,at[2]);KVG.add(g);
       const d=new THREE.Mesh(dotG,mkM);d.renderOrder=9995;g.add(d);const r=new THREE.Mesh(ringG,ringM);r.renderOrder=9994;g.add(r);
       const s=new THREE.Mesh(stemG,mkM);s.scale.y=2.2;s.position.y=-1.1;s.renderOrder=9993;g.add(s);
@@ -13410,8 +13583,11 @@ const HALL={zf:20,xw:-23.15,x1:74.6,doors:[{x:-22.05,w:2.2,h:3.2,open:true},{x:3
       {const st=on?K.x.st:0,q=Math.round(st*20)/20;if(q!==pfLvl){pfLvl=q;paintStripes(q);}}
       // the forming fabric walking toward the tending side (the guide roll out of travel, or on manual)
       if(wire0===null)wire0=wireLoop.position.z;{const e=on?clamp(K.edge,-60,60):0,z=wire0+e*0.012;if(Math.abs(wireLoop.position.z-z)>1e-4){wireLoop.position.z=z;wireLoop.updateMatrixWorld();}}
+      // v6.14 the trim squirts follow their setting (in or out of the deckle), the knock-off spray its pressure
+      {const run=S.pm==="run"&&!S.zen,q=on?(K.v.sqz??0):0,e=q*CD/205,ko=on?(K.v.kos??250):250;TSQ.g.visible=run;
+        if(run){TSQ.js[0].position.z=zc-CD/2+0.35-e;TSQ.js[1].position.z=zc+CD/2-0.35+e;TSQ.sm.opacity=clamp(ko/400,0,1)*0.5;TSQ.sp.visible=ko>20;}}
       // a slack open draw flutters going into the dryers
-      {const k=on&&S.pm==="run"?clamp((K.x.dl-0.08)/0.4,0,1):0;
+      {const k=Math.max(on&&S.pm==="run"?clamp((K.x.dl-0.08)/0.4,0,1):0,!S.zen&&typeof fltIdx==="function"?fltIdx():0);   // (v6.14: and flutter at speed, 07n)
         if(k>0){flut=true;sheetPre[5][1]=3.6+Math.sin(now/70)*0.18*k+Math.sin(now/31)*0.08*k;sheetPre[4][1]=3.4+Math.sin(now/53+1)*0.06*k;buildSheet(sheetR);}
         else if(flut){flut=false;sheetPre[5][1]=3.6;sheetPre[4][1]=3.4;buildSheet(sheetR);}}
       // more steam off the dryer roof (and the power house) when the dryers are working harder
@@ -13424,6 +13600,7 @@ const HALL={zf:20,xw:-23.15,x1:74.6,doors:[{x:-22.05,w:2.2,h:3.2,open:true},{x:3
     // ---- breakdowns only a knob causes: their effects and pins (31-3d-upset-fx.js builds and precompiles them) ----
     FXDEF.rotortrip=g=>spFx(g,16,-13.5,2.6,8);
     FXDEF.couchpit=g=>spFx(g,40.6,11.4,0.6,6);
+    FXDEF.hbdoor=g=>spFx(g,52.5,11.6,2.6,11);   // v6.14: the headbox side door: stock sprays from the tending side and floods the floor along the former (07q)
     FXDEF.oscfail=g=>(now,rdt)=>{if(Math.random()<rdt*8)emit("steam",35.5+Math.random()*3.5,7.4,zc+R()*5,R()*0.4,0.8+Math.random(),R()*0.4,1.6,1.1,"#dfe7ee",0.5);};
     // v6.10 t5: the arc flash at the main incomer. A blinding electric-blue fireball (a saturated blue halo and a white-hot
     // core, flickering; normal blending, since additive light vanishes on the mill's pale ground), thick jagged arcs
@@ -13469,7 +13646,7 @@ const HALL={zf:20,xw:-23.15,x1:74.6,doors:[{x:-22.05,w:2.2,h:3.2,open:true},{x:3
           if(Math.random()<rdt*4)emitA("smoke",MCC.door[0]-0.7+R()*0.4,2.3,MCC.door[1]+R()*0.7,-0.8+R()*0.3,0.9+Math.random()*0.5,R()*0.3,3.4,1.6,"#5d636e",0.6);
           if(Math.random()<rdt*3)emitA("smoke",x+R()*2,MCC.h+0.6,z+1.5+R()*1.5,R()*0.4,1.4,R()*0.4,4,2.4,"#5d636e",0.5);};};}
     PINS.arcflash=[CAB.main.stand[0],7,CABZ+0.5,"bolt"];
-    PINS.rotortrip=[16,9,-13.5,"bolt"];PINS.couchpit=[40.6,7,12.2,"water"];PINS.oscfail=[37,11,zc,"!"];
+    PINS.rotortrip=[16,9,-13.5,"bolt"];PINS.couchpit=[40.6,7,12.2,"water"];PINS.hbdoor=[56,8,12.6,"water"];PINS.oscfail=[37,11,zc,"!"];
   }
   /* ---- v6.1 iso: drop shadows ----
      No shadow maps on this branch. On the first frame (just before the static merge, 40) every shown, opaque, lit mesh
@@ -15499,6 +15676,42 @@ const HALL={zf:20,xw:-23.15,x1:74.6,doors:[{x:-22.05,w:2.2,h:3.2,open:true},{x:3
      shown3D:CUT.actors.filter(a=>shown(a.o)&&(!a.hid||(()=>{let l=0;a.o.traverse(c=>{if((c.isMesh||c.isLine)&&c.visible&&c.layers.mask!==1<<CUT_LAYER)l++;});return l;})())).length});
    // a lost and restored graphics context empties the atlases: take every picture again
    glc.addEventListener("webglcontextrestored",()=>{[0,1].forEach(resetAtlas);for(const a of LIVE)a.cell=null;});}
+  /* ---- v6.14 anti-aliasing: the FXAA post pass (the setting is read in 20-3d-setup) ----
+     With FXAA on, the scene renders into an off-screen target that three.js treats like the canvas (the XR flag: each
+     material's own tone mapping, toneMapped:false kept, and sRGB output, so the picture in it is exactly the screen's), and
+     a full-screen triangle copies it to the canvas through FXAA (the console variant: 4 corner taps for the edge
+     direction, 2-4 taps along it). Nothing else changes: the off-screen passes (shadows, cut-outs, the whole-site picture) run as
+     before. One extra full-screen pass; the target follows the drawing buffer's size. */
+  {const aaOn=()=>G3.aaPick==="fxaa"||(G3.aaPick==="auto"&&!G3.aaDesk);
+   let rt=null;const sz=new THREE.Vector2();
+   const mat=new THREE.ShaderMaterial({uniforms:{tDiffuse:{value:null},res:{value:new THREE.Vector2(1,1)}},depthTest:false,depthWrite:false,toneMapped:false,
+     vertexShader:"varying vec2 vUv;void main(){vUv=position.xy*0.5+0.5;gl_Position=vec4(position.xy,0.0,1.0);}",
+     fragmentShader:`uniform sampler2D tDiffuse;uniform vec2 res;varying vec2 vUv;
+      vec3 tx(vec2 u){return texture2D(tDiffuse,u).rgb;}
+      float lu(vec3 c){return dot(c,vec3(0.299,0.587,0.114));}
+      void main(){vec2 px=1.0/res;vec3 nw=tx(vUv+vec2(-1.0,-1.0)*px),ne=tx(vUv+vec2(1.0,-1.0)*px),sw=tx(vUv+vec2(-1.0,1.0)*px),se=tx(vUv+vec2(1.0,1.0)*px),m=tx(vUv);
+        float lnw=lu(nw),lne=lu(ne),lsw=lu(sw),lse=lu(se),lm=lu(m);
+        float lmin=min(lm,min(min(lnw,lne),min(lsw,lse))),lmax=max(lm,max(max(lnw,lne),max(lsw,lse)));
+        vec2 d=vec2(-((lnw+lne)-(lsw+lse)),(lnw+lsw)-(lne+lse));
+        float red=max((lnw+lne+lsw+lse)*0.03125,0.0078125),rc=1.0/(min(abs(d.x),abs(d.y))+red);
+        d=clamp(d*rc,vec2(-8.0),vec2(8.0))*px;
+        vec3 a=0.5*(tx(vUv+d*(1.0/3.0-0.5))+tx(vUv+d*(2.0/3.0-0.5)));
+        vec3 b=a*0.5+0.25*(tx(vUv-d*0.5)+tx(vUv+d*0.5));
+        float lb=lu(b);gl_FragColor=vec4((lb<lmin||lb>lmax)?a:b,1.0);
+      }`});
+   const g=new THREE.BufferGeometry();g.setAttribute("position",new THREE.Float32BufferAttribute([-1,-1,0,3,-1,0,-1,3,0],3));
+   const quad=new THREE.Mesh(g,mat);quad.frustumCulled=false;const qs=new THREE.Scene();qs.add(quad);const qc=new THREE.OrthographicCamera(-1,1,1,-1,0,1);
+   G3.aaPost=(sc,cam)=>{if(!aaOn())return false;renderer.getDrawingBufferSize(sz);const w=Math.max(1,sz.x|0),h=Math.max(1,sz.y|0);
+     if(!rt){rt=new THREE.WebGLRenderTarget(w,h,{type:THREE.UnsignedByteType,colorSpace:THREE.SRGBColorSpace,depthBuffer:true,stencilBuffer:true,generateMipmaps:false,minFilter:THREE.LinearFilter,magFilter:THREE.LinearFilter});rt.isXRRenderTarget=true;mat.uniforms.tDiffuse.value=rt.texture;}
+     if(rt.width!==w||rt.height!==h)rt.setSize(w,h);mat.uniforms.res.value.set(w,h);
+     const r0=renderer.getRenderTarget(),ar=renderer.info.autoReset;renderer.setRenderTarget(rt);renderer.render(sc,cam);renderer.setRenderTarget(r0);renderer.info.autoReset=false;renderer.render(qs,qc);renderer.info.autoReset=ar;return true;};   // (the frame's counts keep the scene's draws, plus the one for the pass)
+   G3.aaInfo=()=>({pick:G3.aaPick,ctx:renderer.getContext().getContextAttributes().antialias,post:aaOn()});
+   // the setting: FXAA is live; to or from MSAA (the context's own) needs a reload
+   G3.setAA=p=>{if(!["auto","off","fxaa","msaa"].includes(p))return;G3.aaPick=p;try{localStorage.setItem("paper-mill-aa",p);}catch(e){}
+     const want=p==="msaa"||(p==="auto"&&G3.aaDesk);G3.aaReload=want!==G3.aaCtx;if(!aaOn()&&rt){rt.dispose();rt=null;}
+     diag(`anti-aliasing: ${p}${G3.aaReload?" (reload to apply)":""}`);
+     document.querySelectorAll("button[data-aa]").forEach(b=>b.setAttribute("aria-pressed",String(b.dataset.aa===p)));
+     document.querySelectorAll("[data-aarl]").forEach(b=>b.hidden=!G3.aaReload);};}
   // v2.9.11 performance profiler: when G3.PF.on, time each section of the 3D frame (ms accumulated per section)
   const PF=G3.PF={on:false,t:0,acc:{},frames:0};const pm=k=>{if(!PF.on)return;const t=performance.now();PF.acc[k]=(PF.acc[k]||0)+(t-PF.t);PF.t=t;};
   G3.EXP={};let moversCache=null;
@@ -15593,7 +15806,7 @@ const HALL={zf:20,xw:-23.15,x1:74.6,doors:[{x:-22.05,w:2.2,h:3.2,open:true},{x:3
     // machine
     const pmRun=S.pm==="run";
     for(let i=0;i<cansTop.length;i++)cansTop[i].rotation.z=V.cans;for(let i=0;i<cansBot.length;i++)cansBot[i].rotation.z=-V.cans;canInst();if(G3.hoodTick)G3.hoodTick(rdt);
-    press[0].rotation.z=-V.cans*1.3;press[1].rotation.z=V.cans*1.3;press[2].rotation.z=-V.cans*1.15;press[3].rotation.z=V.cans*1.15;feltTex.offset.x=-(V.cans*0.35)%1;for(let i=0;i<feltMeshes.length;i++){const f=feltMeshes[i],t=f.material.map;if(t&&f.userData.dir)t.offset.x=(f.userData.dir*V.cans*0.875/f.userData.path.L)%1;}   /* (v6.12.1-t6: per felt, one seam per turn, 25) */wireTex.offset.x=(V.cans*0.35)%1;feltGuides.forEach(g=>g.rotation.z=-V.cans*4*(g.userData.s||1));wireRolls.forEach(w=>w.rotation.z=V.cans*2.5);
+    press[0].rotation.z=-V.cans*1.3;press[1].rotation.z=V.cans*1.3;press[2].rotation.z=-V.cans*1.15;press[3].rotation.z=V.cans*1.15;feltTex.offset.x=-(V.cans*0.35)%1;for(let i=0;i<feltMeshes.length;i++){const f=feltMeshes[i],t=f.material.map;if(t&&f.userData.dir)t.offset.x=(f.userData.dir*V.cans*0.875/f.userData.path.L)%1;}   /* (v6.12.1-t6: per felt, one seam per turn, 25) */wireTex.offset.x=(V.cans*0.875/wireLoop.userData.path.L)%1;   /* (v6.14: one trade line per turn of the fabric, 25) */feltGuides.forEach(g=>g.rotation.z=-V.cans*4*(g.userData.s||1));wireRolls.forEach(w=>w.rotation.z=V.cans*2.5);
     press.forEach((p,i)=>{p.material=LV("shoe")&&i===3?shoeMat:M.metal;});
     const rr=R0+(RM-R0)*Math.sqrt(clamp(S.reel/P.jumbo,0,1));reelUpdate(rdt,rr);
     if(Math.abs(nipPhi-sheetR)>0.02){sheetR=nipPhi;buildSheet(rr);}
@@ -15765,7 +15978,7 @@ Z.who=null;Z.goto=null;Z.t=0;Z.len=999;document.body.dataset.zs=Math.random()<0.
       let moved=false;const v=[p.x,p.y,p.z,q.x,q.y,q.z,q.w];for(let i=0;i<7;i++)if(C[i]!==v[i]){moved=true;C[i]=v[i];}for(let i=0;i<16;i++)if(C[7+i]!==pm[i]){moved=true;C[7+i]=pm[i];}
       const on=!G3.cullOff&&(moved||(renderer.shadowMap.enabled&&renderer.shadowMap.needsUpdate)||!!G3.cullAlways);   /* (t10: needsUpdate stays set with shadow maps off: every batch was re-culled every frame) */if(on)G3.cullN=(G3.cullN||0)+1;for(const b of G3.SM.bms)b.perObjectFrustumCulled=on||(!G3.cullOff&&b._visibilityChanged);}   // (t10: a batch whose visibility changed rebuilds its list: culled, not everything)   // (G3.cullOff / cullAlways: A/B switches for the tools)
     if(G3.impFrame&&!EXP.noRender){try{G3.impFrame();}catch(e){G3.impErr=(G3.impErr||0)+1;if(G3.impErr<6)console.error("whole-site picture",e);if(G3.impOff)G3.impOff();}}   // v6.12 the whole-site picture (40d)
-    if(!EXP.noRender){scene.matrixWorldAutoUpdate=!G3.DB||!G3.DB.n;renderer.render(scene,camera);scene.matrixWorldAutoUpdate=true;}
+    if(!EXP.noRender){scene.matrixWorldAutoUpdate=!G3.DB||!G3.DB.n;if(!(G3.aaPost&&G3.aaPost(scene,camera)))renderer.render(scene,camera);scene.matrixWorldAutoUpdate=true;}   // (v6.14: FXAA draws through a post pass, 42g)
     if(hidM)hidM.forEach(o=>o.visible=true);
     // (v15: no counting when the render was skipped: renderer.info still holds the last real frame's numbers; and the moving
     // batches' matrix rewrites per frame, the figure the Float32 cache bug inflated)
@@ -15915,11 +16128,14 @@ function knobCtlSync(w){const id=w.dataset.k,K=S.knob;
 function knobReadout(id,r){const R=(k,v)=>`<div><small>${k}</small><b>${v}</b></div>`;
   switch(id){
     case "pulp":return R("Pulper consistency",kf(r.cp)+" %")+R("Rotor",Math.round(r.amps)+" A")+R("Tub level",Math.round(r.pulpLvl)+" %");
-    case "ref":return R("Energy",Math.round(r.kwh)+" kWh/t · "+kf(r.hpdt,2)+" HPDT")+R("Plate gap",kf(r.gap,2)+" mm")+R("Refiner load",Math.round(r.refkw).toLocaleString()+" / "+Math.round(r.refcap).toLocaleString()+" kW"+(r.kwh<r.refset-0.5?" · at max":""))+R("Freeness",Math.round(r.csf)+" mL CSF");
+    case "ref":return R("Energy",Math.round(r.kwh)+" kWh/t · "+kf(r.hpdt,2)+" HPDT")+R("Plate gap",kf(r.gap,2)+" mm")+R("Refiner load",Math.round(HP(r.refkw)).toLocaleString()+" / "+Math.round(HP(r.refcap)).toLocaleString()+" hp"+(r.kwh<r.refset-0.5?" · at max":""))+R("Freeness",Math.round(r.csf)+" mL CSF");
     case "agit":return R("Agitator",r.agit+" %")+R("Machine chest",Math.round(r.mcLvl)+" %")+R("Chest consistency",kf(r.mcCons,2)+" %");
-    case "vac":return R("Flatboxes",kf(r.vacIn)+" inHg · PV-313 "+Math.round(r.hvv)+"%")+R("Vacuum pump",Math.round(r.vpkw)+" kW")+R("Couch solids",kf(r.couchSol)+" %");
-    case "gbox":return R("Gravity boxes",kf(r.gbox)+" inHg · PV-311 "+Math.round(r.gbv)+"%")+R("Vacuum pump",Math.round(r.vpkw)+" kW")+R("Couch solids",kf(r.couchSol)+" %");
-    case "lvac":return R("Low vacuum",kf(r.lvac)+" inHg · PV-312 "+Math.round(r.lvv)+"%")+R("Vacuum pump",Math.round(r.vpkw)+" kW")+R("Couch solids",kf(r.couchSol)+" %");
+    case "vac":return R("Flatboxes",kf(r.vacIn)+" inHg · PV-313 "+Math.round(r.hvv)+"%")+R("Vacuum pump",fmtHp(r.vpkw))+R("Couch solids",kf(r.couchSol)+" %");
+    case "gbox":return R("Gravity boxes",kf(r.gbox)+" inHg · PV-311 "+Math.round(r.gbv)+"%")+R("Vacuum pump",fmtHp(r.vpkw))+R("Couch solids",kf(r.couchSol)+" %");
+    case "lvac":return R("Low vacuum",kf(r.lvac)+" inHg · PV-312 "+Math.round(r.lvv)+"%")+R("Vacuum pump",fmtHp(r.vpkw))+R("Couch solids",kf(r.couchSol)+" %");
+    case "puv":return R("Transfer zone",kf(r.puv)+" inHg")+R("Holding zone",kf(r.puv*0.6)+" inHg")+R("Sheet",r.puv<PUR.lo?"dropping at the transfer":r.puv>PUR.mark?"hole marks":"lifting cleanly");   // (v6.14)
+    case "sqz":return R("Squirts",r.sqz===0?"on the deckle":(r.sqz<0?"in ":"out ")+kf(Math.abs(r.sqz),2)+"\" a side")+R("Sheet width",kf(webW()+2*r.sqz,1)+"\"");
+    case "kos":return R("Knock-off",Math.round(r.kos)+" psi")+R("Trim",r.kos<PUR.kosLo?"riding on with the sheet":"into the couch pit");
     case "cbox":return R("Couch vacuum",kf(r.cvacIn)+" inHg")+R("Box position",(r.cbox>0.05?"+":r.cbox<-0.05?"−":"")+kf(Math.abs(r.cbox))+"°")+R("Couch solids",kf(r.couchSol)+" %");
     case "press":return R("Nip load",Math.round(r.pl)+" kN/m")+R("After the presses",kf(r.pressSol)+" % solids");
     case "guide":return R("Fabric edge",(r.edge>=0?"+":"")+Math.round(r.edge)+" mm")+R("Guide travel used",r.gm?Math.round(Math.min(1,r.gtrav)*100)+" %":"manual");
@@ -15928,7 +16144,7 @@ function knobReadout(id,r){const R=(k,v)=>`<div><small>${k}</small><b>${v}</b></
     case "couch":return R("Agitator",r.couch?"running · 38 A":"stopped")+R("Pit level",Math.round(35+(S.pm==="run"?0:30)+r.cs*6)+" %");
     case "osc":return R("Shower stroke",Math.round(r.osc*0.14)+" /min")+R("Felt",r.stripes>0.15?"uneven":"clean");
     case "draw":return R("Open draw",kf(r.draw)+" % · needs "+kf(drawReq())+" %")+R("Sheet tension",r.run?kf(r.tension,2)+" kN/m":"–");
-    case "st1":return R("1st section",Math.round(r.st1)+" psig")+R("3rd section (auto)",Math.round(r.st3)+" psig · "+Math.round(satT(r.st3))+" °C")+R("Reel moisture",r.run?kf(r.moist)+" %":"–");
+    case "st1":return R("1st section",Math.round(r.st1)+" psig")+R("3rd section (auto)",Math.round(r.st3)+" psig · "+fmtF(satT(r.st3)))+R("Reel moisture",r.run?kf(r.moist)+" %":"–");
     case "zones":return R("Reel moisture",r.run?kf(r.moist)+" %":"–")+R("Zones trimmed",(S.knob?S.knob.z.filter(v=>v).length:0)+" of 12");}
   return "";}
 
@@ -16012,8 +16228,8 @@ function closeStation(quiet){if(POP.on)return;   // (v6.5.1: a popped-out DCS st
 const MIMIC={
   SPOT:{title:"STOCK PREP",eq:[[14,80,96,70,"PULPER"],[132,95,74,40,"SCREENS"],[228,80,80,70,"STOCK CHEST"],[330,95,78,40,"REFINERS"],[430,80,92,70,"MACHINE CHEST"],[546,100,80,30,"FAN PUMP"]],
     tags:[[62,172,"cp","CONS",r=>kf(r.cp)+"%"],[62,194,"amps","ROTOR",r=>Math.round(r.amps)+" A"],[62,66,"pulpLvl","LEVEL",r=>Math.round(r.pulpLvl)+"%"],[268,172,"lvl","LEVEL",()=>Math.round(S.tank/P.tankCap*100)+"%"],
-      [369,172,"gap","GAP",r=>kf(r.gap,2)+" mm"],[369,194,"refkw","LOAD",r=>Math.round(r.refkw)+" kW"],[369,80,"csf","CSF",r=>Math.round(r.csf)+" mL"],[476,172,"mcCons","CONS",r=>kf(r.mcCons,2)+"%"],[476,194,"agit","AGIT",r=>r.agit+"%"],[586,150,"flow","FLOW",()=>S.pm==="run"?Math.round(S.pmSpeed*1.9)+" L/s":"0 L/s"]],
-    trends:[["cp","Pulper consistency %","#ffb02e",0,10],["amps","Rotor A","#4fd18b",0,700],["mcCons","Machine chest cons %","#7fb2ff",2.4,4.0],["refkw","Refiner kW","#ff7a8a",0,4000]]},
+      [369,172,"gap","GAP",r=>kf(r.gap,2)+" mm"],[369,194,"refkw","LOAD",r=>fmtHp(r.refkw)],[369,80,"csf","CSF",r=>Math.round(r.csf)+" mL"],[476,172,"mcCons","CONS",r=>kf(r.mcCons,2)+"%"],[476,194,"agit","AGIT",r=>r.agit+"%"],[586,150,"flow","FLOW",()=>S.pm==="run"?Math.round(S.pmSpeed*1.9)+" L/s":"0 L/s"]],
+    trends:[["cp","Pulper consistency %","#ffb02e",0,10],["amps","Rotor A","#4fd18b",0,700],["mcCons","Machine chest cons %","#7fb2ff",2.4,4.0],["refkw","Refiner hp","#ff7a8a",0,5400]]},
   WET:{title:"WET END",eq:[[14,80,74,70,"HEADBOX"],[104,105,190,25,"FORMING TABLE"],[308,90,64,50,"COUCH"],[388,90,104,50,"PICK-UP FELT"],[508,80,118,70,"TWIN PRESS"]],
     tags:[[51,172,"zones","ZONES",r=>(S.knob?S.knob.z.filter(v=>v).length:0)+"/12"],[150,150,"gbox","GRAV",r=>kf(r.gbox)+" inHg"],[205,150,"lvac","LOW",r=>kf(r.lvac)+" inHg"],[260,150,"vac","HIGH",r=>kf(r.vacIn)+" inHg"],[199,88,"edge","EDGE",r=>(r.edge>=0?"+":"")+Math.round(r.edge)+" mm"],[199,194,"gtrav","GUIDE",r=>r.gm?"AUTO "+Math.round(Math.min(1,r.gtrav)*100)+"%":"MAN"],
       [340,172,"couchSol","SOL",r=>kf(r.couchSol)+"%"],[340,194,"cs","PIT",r=>r.couch?"RUN":"STOP"],[440,172,"osc","OSC",r=>Math.round(r.osc)+"%"],[567,172,"pl","LOAD",r=>Math.round(r.pl)+" kN/m"],[567,194,"pressSol","SOL",r=>kf(r.pressSol)+"%"]],
@@ -16059,6 +16275,8 @@ function stationBuild(){const o=$("dcsOv");if(!o||!KUI.st)return;const a=KUI.st,
     ids.forEach(id=>{const row=kEl("div","dcsrow"+(id==="zones"?" wide":""));row.dataset.ord=id;row.appendChild(kEl("div","dcsn",`<b>${KNOBN[id].name}</b><small>${KNOBN[id].field?"remote from the DCS":"DCS"}</small>`));row.appendChild(knobCtl(id,"d"));
       const rd=kEl("div","spir krd");rd.dataset.rd=id;row.appendChild(rd);row.appendChild(kEl("button","reroll kstd","Standard")).addEventListener("click",()=>{knobReset(id);kuiRefresh();});cs.appendChild(row);
       if(id==="zones"){const bt=kEl("div","dcsbeat","");bt.id="dcsBeat";bt.dataset.ord="beat";bt.hidden=true;bt.setAttribute("role","status");cs.appendChild(bt);}});   // v6.5.4: making-beater alert under the dilution zones
+    if(a==="WET"&&!S.zen)cs.appendChild(puPanel());
+    if(a==="WET"&&ggOn())cs.appendChild(ggBox());   // v6.14 the grade change coach, free play (50q)   // v6.14 the pick-up roll close-up (50p)
     dcsOrder(a,cs);   // (v6.11.2: rows in the order the stock meets them, under section headings, 50d)
     if(fld.length)cs.appendChild(kEl("p","dcsfield",`Set at the machine, not from here: ${fld.map(k=>`<button type="button" class="linkb" data-fk="${k.id}">${k.name.toLowerCase()}</button>`).join(", ")}. Look for the red knobs on the floor.`));
     cs.querySelectorAll("[data-fk]").forEach(x=>x.addEventListener("click",()=>{const id=x.dataset.fk;closeStation();if(G3.knobFly)G3.knobFly(id);openKnob(id);}));
@@ -16539,7 +16757,7 @@ MIMIC.SPOT={title:"STOCK PREP",h:312,trends:MIMIC_KNOB.SPOT.trends,
     MT(267,124,"hddp","ΔP",DV.hddp),MT(363,124,"csdp","ΔP",DV.csdp),MT(363,138,"csrj","REJ",DV.csrj),MT(464,124,"lcdp","ΔP",DV.lcdp),MT(464,138,"lcrow","ROWS",DV.lcrow),MT(567,124,"fsdp","ΔP",DV.fsdp),MT(567,138,"fsld","LOAD",DV.fsld),
     MT(568,262,"lwdp","ΔP",DV.lwdp),MT(464,262,"thf","FILT",DV.thf),MT(464,276,"thv","SPIDER",DV.thv),MT(464,290,"thl","VAT",DV.thl),
     MT(360,186,"stc","CONS",DV.stc),MT(360,272,"lvl","LEVEL",()=>Math.round(S.tank/P.tankCap*100)+"%"),MT(360,286,"lvsp","SP",DV.lvsp),
-    MT(255,196,"csf","CSF",r=>Math.round(r.csf)+" mL"),MT(255,262,"gap","GAP",r=>kf(r.gap,2)+" mm"),MT(255,276,"refkw","LOAD",r=>Math.round(r.refkw)+" kW"),
+    MT(255,196,"csf","CSF",r=>Math.round(r.csf)+" mL"),MT(255,262,"gap","GAP",r=>kf(r.gap,2)+" mm"),MT(255,276,"refkw","LOAD",r=>fmtHp(r.refkw)),
     MT(150,272,"mcCons","CONS",r=>kf(r.mcCons,2)+"%"),MT(150,286,"agit","AGIT",r=>r.agit+"%"),MT(212,176,"dyef","DYE",DV.dyef),MT(504,50,"wcl","LVL",DV.wcl),MT(56,262,"flow","FLOW",()=>fmtGpm(GPM(S.we?S.we.f.hb||0:0))),MT(56,276,"dil","DIL",DV.dil),MT(56,290,"fanrpm","SPEED",DV.fanrpm),MT(56,304,"fantdh","TDH",DV.fantdh),MT(255,290,"kwh","ENERGY",r=>Math.round(r.kwh)+" kWh/t"),
     MT(360,300,"chv","VOL",DV.chv),MT(150,300,"mcv","VOL",DV.mcv),MT(504,62,"wcv","VOL",DV.wcv)]};   // (v6.7: chest volumes in gallons)
 MIMIC.WET={title:"WET END",h:300,trends:MIMIC_KNOB.WET.trends,
@@ -16548,8 +16766,8 @@ MIMIC.WET={title:"WET END",h:300,trends:MIMIC_KNOB.WET.trends,
   ln:[["M88 115 H104"],["M294 117 H308"],["M372 115 H388"],["M492 115 H508"],["M112 130 V214",1],["M262 34 V48 H150 V105 M206 48 V105 M262 48 V105",1]],
   tags:[MT(51,172,"zones","ZONES",()=>(S.knob?S.knob.z.filter(v=>v).length:0)+"/12"),MT(51,194,"slc","SLICE",DV.slc),MT(51,70,"jw","J/W",DV.jw),MT(140,72,"wsp","WIRE",DV.wsp),MT(126,88,"rd","R/D",DV.rd),
     MT(160,142,"gbox","GRAV",r=>kf(r.gbox)+" inHg"),MT(160,155,"lvac","LOW",r=>kf(r.lvac)+" inHg"),MT(160,168,"vac","HIGH",r=>kf(r.vacIn)+" inHg"),
-    MT(262,142,"gbv","PV-311",r=>Math.round(r.gbv)+"%"),MT(262,155,"lvv","PV-312",r=>Math.round(r.lvv)+"%"),MT(262,168,"hvv","PV-313",r=>Math.round(r.hvv)+"%"),MT(345,22,"vpkw","PUMP",r=>r.run?Math.round(r.vpkw)+" kW":"–"),MT(240,88,"edge","EDGE",r=>(r.edge>=0?"+":"")+Math.round(r.edge)+" mm"),MT(240,194,"gtrav","GUIDE",r=>r.gm?"AUTO "+Math.round(Math.min(1,r.gtrav)*100)+"%":"MAN"),
-    MT(340,172,"couchSol","SOL",r=>kf(r.couchSol)+"%"),MT(340,194,"cs","PIT",r=>r.couch?"RUN":"STOP"),MT(440,172,"osc","OSC",r=>Math.round(r.osc)+"%"),
+    MT(262,142,"gbv","PV-311",r=>Math.round(r.gbv)+"%"),MT(262,155,"lvv","PV-312",r=>Math.round(r.lvv)+"%"),MT(262,168,"hvv","PV-313",r=>Math.round(r.hvv)+"%"),MT(345,22,"vpkw","PUMP",r=>r.run?fmtHp(r.vpkw):"–"),MT(240,88,"edge","EDGE",r=>(r.edge>=0?"+":"")+Math.round(r.edge)+" mm"),MT(240,194,"gtrav","GUIDE",r=>r.gm?"AUTO "+Math.round(Math.min(1,r.gtrav)*100)+"%":"MAN"),
+    MT(340,172,"couchSol","SOL",r=>kf(r.couchSol)+"%"),MT(340,194,"cs","PIT",r=>r.couch?"RUN":"STOP"),MT(440,172,"osc","OSC",r=>Math.round(r.osc)+"%"),MT(440,194,"puv","PU ROLL",r=>kf(r.puv)+" inHg"),
     MT(567,172,"pl","LOAD",r=>Math.round(r.pl)+" kN/m"),MT(567,194,"pressSol","SOL",r=>kf(r.pressSol)+"%"),MT(567,66,"psp","SPD",DV.psp),MT(260,232,"wwl","LEVEL",DV.wwl),MT(260,246,"wwg","VOL",DV.wwg),MT(370,232,"drain","DRAIN",DV.drn),MT(260,262,"wwov","OVFL",()=>S.we?fmtGpm(GPM(S.we.f.over||0))+" to WW chest (by design)":"–"),MT(560,232,"pressw","PRESS",DV.pw),
     MT(60,216,"hbc","HBC",DV.hbc),MT(84,292,"hbth","HB TOTAL HEAD",DV.hbth),MT(262,292,"hbpsi","HB PRESS",DV.hbpsi),MT(572,54,"hum","RH",DV.hum)]};   // (v6.9: the basis weight valve is FV-201, drawn by 50k)
 MIMIC.DET={title:"DRY END",h:320,trends:MIMIC_KNOB.DET.trends,
@@ -16571,7 +16789,7 @@ MIMIC.UTIL={title:"UTILITIES",h:270,trends:[["steam","Steam flow t/h","#7fb2ff",
 AREA_N.UTIL="Utilities";
 
 /* ---- alarms by area (an upset shows on the screen of the equipment it hits) ---- */
-const DCS_WET=new Set(["fabric","felt","slime","fogfan","oscfail","couchpit","runner"]),DCS_UTIL=new Set(["permit","icedintake","boiler","brownout"]);
+const DCS_WET=new Set(["fabric","felt","slime","fogfan","oscfail","couchpit","runner","hbdoor"]),DCS_UTIL=new Set(["permit","icedintake","boiler","brownout"]);
 function dcsArea(id){if(MOTEV[id])return MOTEV[id].a;if(DCS_UTIL.has(id))return "UTIL";const g=EV[id]&&EV[id].g;if(g==="stock")return "SPOT";if(g==="machine")return DCS_WET.has(id)?"WET":"DET";return null;}
 function dcsAlarms(a,r,L){const al=(on,txt,hi)=>{if(on)L.push([txt,hi]);};vlvAlarms(a,L);   // (v6.9: the control valves, 50k)
   for(const i of S.inc){if(dcsArea(i.id)!==a)continue;const m=MOTEV[i.id];L.push([m?`${m.name.toUpperCase()} STOPPED · RESTART IN ${Math.ceil(i.left)} MIN`:EV[i.id].name.toUpperCase(),true]);}
@@ -16584,7 +16802,8 @@ function dcsAlarms(a,r,L){const al=(on,txt,hi)=>{if(on)L.push([txt,hi]);};vlvAla
     al(S.pm!=="run"&&CHEM_IDS.some(id=>chemMode(id)==="manual"&&chemFlow(id)>0),"CHEMICAL PUMP ON MANUAL · MACHINE DOWN",false);
     {const W=S.we;if(W&&S.pm==="run"){al(W.L<WE.silo*WE.makeL,W.cav>0?"WW SILO LOW · FAN PUMP CAVITATING":"WHITE WATER SILO LEVEL LO",W.cav>0);al(W.m==="manual","BASIS WEIGHT ON MANUAL",false);}}
     fpAlarms(L,true);}
-  else if(a==="DET"){al(S.pm==="break",`SHEET BREAK · ${({reel:"REEL",dryer:"DRYERS",press:"PRESSES"})[S.brkType]||"MACHINE"}`,true);al(S.pm==="spools","REEL STORE FULL: MACHINE HELD BACK",true);
+  else if(a==="DET"){{const fl=fltIdx();al(fl>0,`SHEET FLUTTER · ${Math.round(S.pmSpeed-fltThr())} FPM OVER THE THRESHOLD`,fl>0.5);}   // (v6.14, 07n)
+    al(S.pm==="break",`SHEET BREAK · ${({reel:"REEL",dryer:"DRYERS",press:"PRESSES"})[S.brkType]||"MACHINE"}`,true);al(S.pm==="spools","REEL STORE FULL: MACHINE HELD BACK",true);
     al(!!S.wdBlocked,"WINDER BLOCKED: CONVEYOR FULL",true);al(S.wd==="hayout","WINDER HAYOUT",true);
     const Dr=S.dry;if(Dr&&S.pm==="run"){al(dryLimited()&&Dr.m>DRY.m0+0.5,"DRYERS AT LIMIT · SHEET WET",true);al(!dryLimited()&&Dr.load>0.95,"DRYER LOAD HI",false);}
     al(!!(Dr&&Dr.trim>0.001),`SPEED TRIMMED ${Dr?Math.round(Dr.trim*100):0}% · DRYING THE SHEET`,!!(Dr&&Dr.wet));al(!!(Dr&&Dr.man!=null),"2ND / 3RD SECTION STEAM ON MANUAL",false);}
@@ -16639,12 +16858,12 @@ function dcsSetDefs(a){const D=()=>DCS_DRAW();
     return [["pdcsp","3rd section syphon ΔP · PDC-304",sch?`AUTO schedule: what this speed needs (${need.toFixed(1)} psi) + ${STM.margin.toFixed(1)} · PV ${pv.toFixed(1)} psi`:`FIXED at the setpoint · this speed needs ${need.toFixed(1)} psi · PV ${pv.toFixed(1)} psi${pv<need?" · CANS FLOODING":""}`,
         +(5*KP).toFixed(1),+(70*KP).toFixed(1),0.1,()=>stmSp(),v=>vlvSetSP("PDC-304",v),"psi",null,1,{on:()=>stmState().sp4==null,flip:()=>{const T2=stmState();if(T2.sp4==null)vlvSetSP("PDC-304",stmSp());else{stmSetSp(null);if(vlvT("PDC-304"))S.vlv.lp["PDC-304"].sp=stmSp();}},lab:["SCHEDULE","FIXED"]}],
       ...[["exh","Hood exhaust fan"],["sup","Hood supply fan"]].map(([k,n])=>{const au=T[k+"M"]==="auto";
-        return [k,n,k==="exh"?`${au?"AUTO · holds "+STM.H+" g/kg":"MANUAL"} · hood ${Math.round(T.H)} g/kg · dew point ${Math.round(stmDew(T.H))} °C${T.drip>0?" · DRIPPING":""}`:`${au?"AUTO · 95% of the exhaust":"MANUAL"}${T.sup>T.exh?" · OVER THE EXHAUST: the hood is spilling into the machine room":""} · machine room ${Math.round(T.hum)}% RH`,
+        return [k,n,k==="exh"?`${au?"AUTO · holds "+STM.H+" g/kg":"MANUAL"} · hood ${Math.round(T.H)} g/kg · dew point ${fmtF(stmDew(T.H))}${T.drip>0?" · DRIPPING":""}`:`${au?"AUTO · 95% of the exhaust":"MANUAL"}${T.sup>T.exh?" · OVER THE EXHAUST: the hood is spilling into the machine room":""} · machine room ${Math.round(T.hum)}% RH`,
           10,100,1,()=>T[k+"Sp"],v=>stmSetFan(k,v),"%",null,0,{on:()=>stmState()[k+"M"]==="auto",flip:()=>{const T2=stmState();stmSetFan(k,T2[k+"M"]==="auto"?T2[k+"Sp"]:"auto");}}];})];}
   return [];}
 // v6.11.2: the setpoint rows in the order the stock meets them, under a heading for each part of the machine
 const DCS_ORDER={
-  WET:[["Thick stock to the headbox","grade","bws","polf"],["Headbox","jwsp","zones","beat","slv","slh"],["Forming table","wsp","gbox","lvac","vac","couch"],["Press section","press"]],
+  WET:[["Thick stock to the headbox","grade","gg","bws","polf"],["Headbox","jwsp","zones","beat","slv","slh"],["Forming table","wsp","gbox","lvac","vac","couch"],["Couch: trim and transfer","sqz","kos","puz"],["Press section","press"]],
   DET:[["Press to dryers","draw"],["Dryer steam","st1","st2sp","st3sp"],["Reel and winder","wsp","nip","wdr"]],
   STM:[["Syphons and condensate","pdcsp"],["Hood air","exh","sup"]]};
 function dcsOrder(a,cs){const O=DCS_ORDER[a];if(!O)return;const kids=[...cs.children],by={};kids.forEach(e=>{if(e.dataset.ord)by[e.dataset.ord]=e;});
@@ -17025,6 +17244,11 @@ function qcsBuild(b){
   const A=$("qcsAct");if(A&&!A._w){A._w=1;
     A.addEventListener("click",e=>{const t=e.target.closest("[data-cdman]");if(!t)return;const row=t.dataset.cdman;cdSetMan(row,!cdState().man[row]);cdActSync(true);});
     A.addEventListener("input",e=>{const t=e.target.closest("[data-cdz]");if(!t)return;const [row,z]=t.dataset.cdz.split(":");cdSetZone(row,+z,+t.value);cdActSync();});}
+  // v6.14 the CD heatmap: zones across, scans down (newest on top), moisture or basis weight against the grade's spec
+  b.appendChild(kEl("div","dcstr qhm",`<div class="qhmh"><div class="dcssub">CD map · zones across, newest scan on top</div><span class="seg" role="group" aria-label="Map"><button type="button" data-hmv="m">Moisture</button><button type="button" data-hmv="w">Basis weight</button></span><span class="seg" role="group" aria-label="Span">${[[2,"2 h"],[8,"8 h"],[24,"24 h"]].map(([h,l])=>`<button type="button" data-hmh="${h}">${l}</button>`).join("")}</span></div>
+    <canvas width="640" height="260" id="qcsHm" aria-label="Moisture or basis weight across the machine over time"></canvas><div class="qhmk" id="qcsHmK"></div><div class="qhmp" id="qcsHmP">Tap a cell for its reading.</div>`));
+  {const hb=b.querySelector(".qhm");hb.addEventListener("click",e=>{const t=e.target.closest("[data-hmv],[data-hmh]");if(!t)return;if(t.dataset.hmv)QHM.v=t.dataset.hmv;else QHM.h=+t.dataset.hmh;QHM.sel=null;hmDraw(true);});
+   $("qcsHm").addEventListener("click",e=>{const cv=e.currentTarget,r=cv.getBoundingClientRect(),x=(e.clientX-r.left)/r.width,y=(e.clientY-r.top)/r.height;QHM.sel=[x,y];hmDraw(true);});}
   b.appendChild(kEl("div","qcsdef",`<div class="dcssub">Web inspection</div><div class="qcsgrid" id="qcsDef"></div>`));
   b.appendChild(kEl("div","dcsctl",`<div class="dcssub">Spec sheet</div><div class="qtab" id="qcsSpec"></div>`));
   b.appendChild(kEl("div","dcsctl",`<div class="dcssub">Off-spec log · newest first</div><div class="qtab" id="qcsLog"></div>`));
@@ -17061,6 +17285,27 @@ function cdDraw(cv,r){if(!cv)return;const x=cv.getContext("2d"),W=cv.width,H=cv.
   for(let z=0;z<12;z++){const v=C2.bw[z],bad=Math.abs(v)>tol;x.fillStyle=bad?"#ff6b5e":"#c4b08c";const y=YB(v),y0=bt+bh/2;x.fillRect(z*zw+5,Math.min(y,y0),zw-10,Math.max(1,Math.abs(y-y0)));
     x.fillStyle="rgba(190,205,230,.75)";x.font="600 12px system-ui,sans-serif";x.textAlign="center";x.fillText(String(z+1),z*zw+zw/2,H-3);}
   x.textAlign="left";x.fillStyle="rgba(190,205,230,.8)";x.font="600 11px system-ui,sans-serif";x.fillText(`weight streak · ±${tol.toFixed(2)} lb`,6,bt+10);}
+/* v6.14 the CD map: the last 2 / 8 / 24 h of scans (11d HMQ), zone 1 (drive side) on the left, newest on top. Moisture:
+   blue wet, red dry against the grade's band (green inside it); basis weight: against the setpoint ± the CD tolerance.
+   Tap a cell: zone, time and the reading. */
+const QHM={v:"m",h:8,sel:null,k:""};
+function hmDraw(force){const cv=$("qcsHm");if(!cv)return;const H=HMQ,key=QHM.v+QHM.h+H.i+H.len+(QHM.sel?QHM.sel.join():"")+C.grade;if(!force&&key===QHM.k)return;QHM.k=key;
+  document.querySelectorAll("[data-hmv]").forEach(b=>b.setAttribute("aria-pressed",String(b.dataset.hmv===QHM.v)));document.querySelectorAll("[data-hmh]").forEach(b=>b.setAttribute("aria-pressed",String(+b.dataset.hmh===QHM.h)));
+  const x=cv.getContext("2d"),W=cv.width,Hh=cv.height;x.fillStyle="#0f1b2d";x.fillRect(0,0,W,Hh);
+  const rows=Math.min(H.len,QHM.h*30),sp=QSPEC[C.grade]||QSPEC["24"],mw=QHM.v==="m",bw=bwSp(),tol=CD.bwTol*bw;
+  const lo=mw?sp.m[0]:bw-tol,hi=mw?sp.m[1]:bw+tol,mid=(lo+hi)/2,half=(hi-lo)/2;
+  // colour: inside the band green (lighter toward its edges), outside it blue (wet / heavy) or red (dry / light) getting stronger
+  const col=v=>{if(v!==v)return "#1a2638";const d=(v-mid)/half;if(Math.abs(d)<=1){const a=Math.abs(d);return `rgb(${Math.round(60+90*a)},${Math.round(170-20*a)},${Math.round(110+40*a)})`;}
+    const k=Math.min(1,(Math.abs(d)-1)/1.5);return d>0?`rgb(${Math.round(70-40*k)},${Math.round(120-60*k)},${Math.round(210+45*k)})`:`rgb(${Math.round(220+35*k)},${Math.round(110-70*k)},${Math.round(90-50*k)})`;};
+  if(!rows){x.fillStyle="rgba(190,205,230,.8)";x.font="600 16px system-ui,sans-serif";x.textAlign="center";x.fillText("No scans yet",W/2,Hh/2);x.textAlign="left";}
+  const zw=W/12,rh=Hh/Math.max(1,QHM.h*30);
+  for(let n=0;n<rows;n++){const i=(H.i-1-n+H.n)%H.n,o=i*12,y=n*rh;for(let z=0;z<12;z++){x.fillStyle=col(mw?H.m[o+z]:H.w[o+z]);x.fillRect(z*zw,y,zw+0.5,rh+0.5);}}
+  x.strokeStyle="rgba(15,27,45,.6)";for(let z=1;z<12;z++){x.beginPath();x.moveTo(z*zw,0);x.lineTo(z*zw,Hh);x.stroke();}
+  let pk="";if(QHM.sel&&rows){const z=Math.min(11,Math.floor(QHM.sel[0]*12)),n=Math.floor(QHM.sel[1]*Hh/rh);if(n<rows){const i=(H.i-1-n+H.n)%H.n,v=mw?H.m[i*12+z]:H.w[i*12+z];
+      x.strokeStyle="#fff";x.lineWidth=2;x.strokeRect(z*zw+1,n*rh,zw-2,Math.max(3,rh));x.lineWidth=1;
+      pk=`Zone ${z+1}${z===0?" (drive side)":z===11?" (tending side)":""} · ${dhm(H.t[i])} · `+(v!==v?"no sheet":mw?`moisture ${v.toFixed(1)}% (spec ${sp.m[0]}–${sp.m[1]})`:`basis weight ${v.toFixed(2)} lb (setpoint ${bw.toFixed(2)} ± ${tol.toFixed(2)})`);}}
+  const P=$("qcsHmP");if(P){const t=pk||"Tap a cell for its reading.";if(P.textContent!==t)P.textContent=t;}
+  const K=$("qcsHmK");if(K){const h=mw?`<i style="background:rgb(240,70,60)"></i>dry <i style="background:rgb(60,170,110)"></i>in spec ${sp.m[0]}–${sp.m[1]}% <i style="background:rgb(40,80,240)"></i>wet`:`<i style="background:rgb(240,70,60)"></i>light <i style="background:rgb(60,170,110)"></i>±${tol.toFixed(2)} lb <i style="background:rgb(40,80,240)"></i>heavy`;if(K._h!==h){K._h=h;K.innerHTML=h+` · ${QHM.h} h, zone 1 drive side at left`;}}}
 const dhm=t=>`D${Math.floor(t/1440)+1} ${clockOf(t)}`;
 const durTxt=m=>m>=90?(m/60).toFixed(1)+" h":Math.max(1,Math.round(m))+" min";
 function qcsRefresh(){const Q=S.q||{},put=(id,h)=>{const e=$(id);if(e&&e._h!==h){e._h=h;e.innerHTML=h;}};
@@ -17073,6 +17318,7 @@ function qcsRefresh(){const Q=S.q||{},put=(id,h)=>{const e=$(id);if(e&&e._h!==h)
   put("qcsLog",cur.length||L.length?`<table><thead><tr><th>When</th><th>How long</th><th>Grade</th><th>Why</th><th>To beater</th></tr></thead><tbody>${cur.concat(L).slice(0,15).map(s=>`<tr${s.live?' class="live"':""}><td>${dhm(s.t0)}</td><td>${s.live?"now · ":""}${durTxt(s.t1-s.t0+1)}</td><td>${s.g}</td><td>${s.why}</td><td>${(Math.round(s.tons*10)/10)} t</td></tr>`).join("")}</tbody></table>`:`<p class="dcsfield">No off-spec paper yet this run.</p>`);
   const G=(Q.gc||[]).slice().reverse();
   spcDraw();   // v6.13 (50m)
+  hmDraw();   // v6.14 the CD map
   put("qcsGc",G.length?`<table><thead><tr><th>When</th><th>Change</th><th>Transition</th></tr></thead><tbody>${G.slice(0,10).map(c=>`<tr><td>${dhm(c.t)}</td><td>${c.from} → ${c.to}</td><td>${c.tons} t to the beater</td></tr>`).join("")}</tbody></table>`:`<p class="dcsfield">No grade changes yet this run.</p>`);}
 
 /* ---------- PLAN: the planning screen (read only) ---------- */
@@ -17266,8 +17512,8 @@ function pfSVGt(D,live){const vert=pfVert(),NU=104,NV=112,GAP=30,PAD=vert?24:10,
    only: the sim and its dice are untouched, and the game keeps running at the player's speed while it is open.
    Keep RM_E in step with the sim when a relationship changes (tools/relmapcheck.py fails on a tag with no entry). ---- */
 const RM_DRV=[["x:weather","Weather",""],["x:bales","Bale grade mix",""],["x:pulpset","Pulper feed setpoint",""],["x:dilv","Pulper dilution valve","knob"],["x:slice","Headbox slice","knob"],["x:guide","Fabric guide roll","knob"],["x:zones","Headbox dilution zones","knob"],["x:spset","Machine speed setpoint",""],["x:grade","Grade on the machine",""],["x:dye","Dye system",""],["x:market","Market & leader effects",""],["x:power","Substation power",""],["x:incomer","MCC main incomer","knob"],["x:hood","Dryer hood doors","knob"],["x:orders","Customer orders",""],["x:upsets","Upsets & DCS motors",""],
-  ["x:jwsp","J/W setpoint (fan pump)",""],["x:tcv","Thermocompressor motive valve","knob"],["x:pdcsp","PDC-304 setpoint",""],["x:hoodfan","Hood exhaust & supply fans",""],["x:heatrec","Heat recovery (upgrade)",""],["x:nip","Reel drum nip",""],["x:bkr","Broke ratio",""]];   // (v6.13)
-const RM_COL={"YARD":["inq","unload","yard","balem","stk","occp"],"SPOT":["feed","cp","nv101pv","nv101op","amps","pulpLvl","yield","fiber","rejt","hddp","lcdp","lwdp","fsld","fsdp","kwh","dil","chest","chestg","gap","refkw","csf","agit","refq","mcCons","mcLvl","lv104pv","lv104op","mcg","fan","fanrpm","fantdh","fankw","faneff","scrdp","npsh","bklvl","bkr","tbf"],"WET":["wsp","jw","rd","gbox","lvac","vac","vpkw","couchSol","pl","pressSol","gtrav","edge","osc","hbc","bwv","fv201pv","fv201op","bwsp","drain","seal","pressw","wwl","lv202pv","lv202op","wwg","wwov","hum","polflow","poldose","fpr","jwsp","hbth","hbpsi","slcb","depfab","depfelt"],"DET":["speed","prod","st1","st3","pv302pv","pv302op","pv303pv","pv303op","steam","dryl","moist","qc300pv","qc300op","bw","draw","tension","defin","delvl","decons","hard","nip","depcan","brkr"],"STM":["dpneed","dp1","dp2","dp3","pdc304op","bt3","btwaste","hoodH","exh","sup","airst","cret","mkup","stpt","kwht","usdt"],"QCS":["form","tsr","stfi","off","rct","prem","cdsp","bank","reel","cut","rollw","trimp","trimt","cdspan","sbout","spout","conv"],"UTIL":["boiler","vent","energyt","shower","evap","wcl","wcg","makeup","fresh","wuse","wwover","outfall","tss"],"SHIP":["fg","load","outq","openo","lateo","price","profit"],"DRV":["mvkv","lv480","dc_SP","dc_PM","dc_WD","dl_pulp","dl_refA","dl_refB","dl_fan","dl_couch","dl_pr1","dl_pr2","dl_dry","dl_reel","dl_wind","mcckw"]};
+  ["x:jwsp","J/W setpoint (fan pump)",""],["x:puvk","Pick-up roll vacuum knob","knob"],["x:sqz","Trim squirts","knob"],["x:kos","Knock-off shower","knob"],["x:stab","Sheet stabilizers (upgrade)",""],["x:tcv","Thermocompressor motive valve","knob"],["x:pdcsp","PDC-304 setpoint",""],["x:hoodfan","Hood exhaust & supply fans",""],["x:heatrec","Heat recovery (upgrade)",""],["x:nip","Reel drum nip",""],["x:bkr","Broke ratio",""]];   // (v6.13)
+const RM_COL={"YARD":["inq","unload","yard","balem","stk","occp"],"SPOT":["feed","cp","nv101pv","nv101op","amps","pulpLvl","yield","fiber","rejt","hddp","lcdp","lwdp","fsld","fsdp","kwh","dil","chest","chestg","gap","refkw","csf","agit","refq","mcCons","mcLvl","lv104pv","lv104op","mcg","fan","fanrpm","fantdh","fankw","faneff","scrdp","npsh","bvm","bvq","bklvl","bkr","tbf"],"WET":["wsp","jw","rd","gbox","lvac","vac","vpkw","couchSol","pl","pressSol","gtrav","edge","osc","hbc","bwv","fv201pv","fv201op","bwsp","drain","seal","pressw","wwl","lv202pv","lv202op","wwg","wwov","hum","polflow","poldose","fpr","jwsp","hbth","hbpsi","puv","hbdw","slcb","depfab","depfelt"],"DET":["speed","prod","st1","st3","pv302pv","pv302op","pv303pv","pv303op","steam","dryl","moist","qc300pv","qc300op","bw","draw","tension","defin","delvl","decons","hard","nip","depcan","flt","brkr"],"STM":["dpneed","dp1","dp2","dp3","pdc304op","bt3","btwaste","hoodH","exh","sup","airst","cret","mkup","stpt","kwht","usdt"],"QCS":["form","tsr","stfi","off","rct","prem","cdsp","bank","reel","cut","rollw","trimp","trimt","cdspan","sbout","spout","conv"],"UTIL":["boiler","vent","energyt","shower","evap","wcl","wcg","makeup","fresh","wuse","wwover","outfall","tss"],"SHIP":["fg","load","outq","openo","lateo","price","profit"],"DRV":["mvkv","lv480","dc_SP","dc_PM","dc_WD","dl_pulp","dl_refA","dl_refB","dl_fan","dl_couch","dl_pr1","dl_pr2","dl_dry","dl_reel","dl_wind","mcckw"]};
 const RM_E=[
  ["x:weather","balem","p","Rain and snow soak the bales in the yard and on inbound loads"],
  ["x:weather","unload","n","Snow and fog slow inbound trucks"],
@@ -17420,6 +17666,13 @@ const RM_E=[
  ["speed","wsp","p","Wire speed = reel speed ÷ machine draw"],
  ["draw","wsp","n","More draw, slower wire for the same reel speed"],
  ["x:jwsp","jw","p","The fan pump holds the jet at the J/W setpoint: 0.965 to 1.005, 0.985 standard"],
+ // v6.14 the bales' variability, flutter, the pick-up roll, the trim squirts and knock-off, the headbox door seal
+ ["x:bales","bvm","p","Each bale fed has its own moisture around the yard's"],["bvm","cp","n","A wet bale thins the pulper until its dilution loop catches it"],
+ ["x:bales","bvq","x","Each bale has its own fiber quality, mixed in the pulper and carried through the stock chest"],["bvq","csf","p","Better fiber drains freer"],["bvq","rct","p","...and makes a stronger sheet"],
+ ["speed","flt","p","Faster than the grade's flutter threshold, the sheet flutters in the open draw and the first pockets"],["x:stab","flt","n","Stabilizers raise the flutter threshold 150 fpm a level"],["flt","brkr","p","A fluttering sheet breaks more; a slower machine breaks less"],["speed","brkr","p","The break odds follow the speed against the grade's design speed"],
+ ["x:puvk","puv","s","The pick-up roll's vacuum setting"],["puv","brkr","n","Too little vacuum and the sheet drops at the transfer"],["puv","off","p","Too much and the roll's holes mark the sheet"],
+ ["x:sqz","prod","n","Squirts in: more edge cut off at the couch, fewer tons at the reel"],["x:sqz","off","p","Squirts out: ragged edges to the beater"],["x:sqz","brkr","p","...and edge breaks"],["x:kos","brkr","n","A weak knock-off lets the trim ride into the press"],
+ ["x:upsets","hbdw","x","The headbox door seal wears with running; a planned outage or a Round re-seats it. Worn, it can let the door go on a restart after a stock-off"],
  // v6.13.3 the fan pump on its curve and the headbox total head (07p)
  ["x:jwsp","fanrpm","p","AUTO trims the fan pump's speed to hold the jet at the J/W setpoint"],["wsp","fanrpm","p","A faster wire needs a faster jet: more headbox head, more pump speed"],
  ["fan","fanrpm","p","More headbox flow takes more speed for the same head"],["fan","fantdh","p","Friction in the piping, the machine screen and the tube bank grows with flow squared"],
@@ -17427,7 +17680,7 @@ const RM_E=[
  ["stk","scrdp","p","Stickies plug the machine screen's baskets over days (a planned outage's wash-up clears them)"],["fan","scrdp","p","Screen ΔP grows with flow squared"],
  ["fantdh","fanrpm","p","More head needs more speed (head ∝ speed²)"],["fanrpm","fankw","p","Power follows speed cubed (the affinity laws)"],["fantdh","fankw","p","Power = flow × head ÷ efficiency"],
  ["fan","fankw","p","Power = flow × head ÷ efficiency"],["faneff","fankw","n","Less efficient, more power for the same work"],["fanrpm","faneff","x","Efficiency peaks at the best efficiency point, which moves with speed"],
- ["fankw","dl_fan","p","The drive's load is the pump's power over its 900 kW rating"],["fanrpm","jw","x","At full speed, or on a manual speed (free play), the jet gets what head is left and the J/W follows"],
+ ["fankw","dl_fan","p","The drive's load is the pump's power over its 1,200 hp rating"],["fanrpm","jw","x","At full speed, or on a manual speed (free play), the jet gets what head is left and the J/W follows"],
  ["wwl","npsh","p","The white water silo's level is the fan pump's suction head"],["fan","npsh","n","More flow needs more NPSH"],
  ["jw","hbth","p","Headbox total head = (jet speed / 100)² ÷ K (TAPPI): K 53.336 for psi"],["wsp","hbth","p","The jet is J/W × wire speed"],["hbth","hbpsi","p","The gauge reads the total head ÷ Cv² (0.97²)"],
  ["x:slice","hbc","x","A wider slice passes more flow at the same J/W: the headbox runs thinner (a narrower one, thicker)"],
@@ -18027,8 +18280,8 @@ function drvRefresh(){const el=$("drvL");if(!el)return;const r=knobRead(),R=S.re
       else if(L>100)al.push([`DRIVE OVERLOAD · ${A.n.toUpperCase()} ${Math.round(L)}%`,L>110]);else if(L>95)al.push([`DRIVE LOAD HI · ${A.n.toUpperCase()}`,false]);
       if(T>72)al.push([`DRIVE TEMP HI · ${A.n.toUpperCase()} ${Math.round(T)} °C`,T>78]);
       const cls=L>100?"bad":L>95?"warn":"",stc={run:"ok",idle:"",off:"",lock:"warn",fault:"bad",trip:"bad",nodc:"bad"}[st],stn={run:"RUN",idle:"IDLE",off:"OFF · OUTAGE",lock:"LOCKED OUT · REPAIR",fault:"FAULT",trip:"TRIPPED",nodc:"NO DC"}[st];
-      return `<tr><td><b>${A.n}</b><small>${rlyKw(A.id).toLocaleString()} kW VFD</small></td><td><span class="dst ${stc}">${stn}</span></td>
-        <td><button type="button" class="dbar trk${pens.includes("dl_"+A.id)?" on":""}" data-trk="dl_${A.id}" aria-pressed="${pens.includes("dl_"+A.id)}" title="${pens.includes("dl_"+A.id)?"Trended: tap to stop":"Tap to trend"} ${A.n} drive load"><i style="width:${clamp(L,0,130)/1.3}%" class="${cls}"></i><em>${Math.round(L)} %</em></button></td><td class="${T>72?"bad":""}">${Math.round(T)} °C</td><td class="${R.a[A.id].dh<40?"bad":R.a[A.id].dh<60?"warn":""}">${Math.round(R.a[A.id].dh)}%${R.a[A.id].patch?" · patched":""}</td></tr>`;}).join("");
+      return `<tr><td><b>${A.n}</b><small>${hpRate(rlyKw(A.id))} VFD</small></td><td><span class="dst ${stc}">${stn}</span></td>
+        <td><button type="button" class="dbar trk${pens.includes("dl_"+A.id)?" on":""}" data-trk="dl_${A.id}" aria-pressed="${pens.includes("dl_"+A.id)}" title="${pens.includes("dl_"+A.id)?"Trended: tap to stop":"Tap to trend"} ${A.n} drive load"><i style="width:${clamp(L,0,130)/1.3}%" class="${cls}"></i><em>${Math.round(L)} %</em></button></td><td class="${T>72?"bad":""}">${fmtF(T)}</td><td class="${R.a[A.id].dh<40?"bad":R.a[A.id].dh<60?"warn":""}">${Math.round(R.a[A.id].dh)}%${R.a[A.id].patch?" · patched":""}</td></tr>`;}).join("");
     if(rlyRectDown(ln)&&!rlyArc())al.push([`${tag} RECTIFIER FAULT · DC BUS DOWN`,true]);
     return `<section class="plsec"><div class="dcssub">${tag} · ${name} · DC bus ${Math.round(rlyDC(ln))} V · rectifier health ${Math.round(R.rf[ln])}%</div><table><thead><tr><th>Drive</th><th>Status</th><th>Load</th><th>Heat sink</th><th>Health</th></tr></thead><tbody>${list}</tbody></table></section>`;}).join("");
   const h=`<section class="plsec drvsub"><div class="dcssub">Power</div><p class="dcsfield">${outOn()?"Planned outage: the lineups are locked out and tested dead.":rlyBlack()?"<span class=\"bad\">Blackout: no power from the substation.</span>":active("brownout")?"The utility has cut the mill back (brownout): the feeder sags 8%.":"115 kV from the utility, 13.8 kV across the site, 480 V into the rectifiers, about 650 V DC to the drives."}</p></section>`+rows;
@@ -18086,7 +18339,7 @@ function rlyRefresh(){rlyIrDraw();const tb=$("rlyTab");if(!tb)return;const R=rly
   const rows=ASSETS.map(A=>{const a=R.a[A.id],L=Math.max(0,rlyLoad(A.id,r)),st=rlyDrvSt(A.id,L),c=R.chg[A.id]||{},bk=(S.outg&&S.outg.plan&&S.outg.plan.rly&&S.outg.plan.rly[A.id])||{},cq=[...Object.keys(bk).map(k=>RLY.plan[k].n+" ✓"),...Object.keys(c).map(k=>RLY.plan[k].n+(Object.keys(bk).length?" (after)":""))].join(", ");
     const dcls={fault:"bad",trip:"bad",nodc:"bad",lock:"warn",run:L>100?"bad":L>95?"warn":"ok",idle:"",off:""}[st];
     return `<tr data-rsel="${A.id}" class="${RUI.sel===A.id?"cur":""}"><td><b>${A.n}</b><small>${LINEN[A.ln][2]}${a.pin?` · next ${a.pin==="vib"?"vibration":"ADX"} round`:""}</small></td><td>${rlyVibCell(a)}</td><td>${rlyAdxCell(a)}</td>
-      <td>${rlyChip(st==="fault"?"Fault":st==="trip"?"Tripped":st==="nodc"?"No DC":st==="lock"?"Locked out":st==="off"?"Off":Math.round(L)+" %",dcls,st==="run"?Math.round(rlyTemp(A.id,L))+" °C":st==="idle"?"idle":"")}</td>${outg?`<td>${cq?`<small class="rbk">${cq}</small>`:"<small>–</small>"}</td>`:""}</tr>`;}).join("");
+      <td>${rlyChip(st==="fault"?"Fault":st==="trip"?"Tripped":st==="nodc"?"No DC":st==="lock"?"Locked out":st==="off"?"Off":Math.round(L)+" %",dcls,st==="run"?fmtF(rlyTemp(A.id,L)):st==="idle"?"idle":"")}</td>${outg?`<td>${cq?`<small class="rbk">${cq}</small>`:"<small>–</small>"}</td>`:""}</tr>`;}).join("");
   const h=`<table><thead><tr><th>Equipment</th><th>Vibration</th><th>ADX motor</th><th>Drive</th>${outg?"<th>Next outage</th>":""}</tr></thead><tbody>${rows}</tbody></table>`;
   if(tb._h!==h){tb._h=h;tb.innerHTML=h;}
   // the selected asset
@@ -18098,7 +18351,7 @@ function rlyRefresh(){rlyIrDraw();const tb=$("rlyTab");if(!tb)return;const R=rly
     `<div class="rchg">${["b","m","d"].map(k=>`<button type="button" data-rchg="${A.id}:${k}" aria-pressed="${!!c[k]}"><b>${RLY.plan[k].n}</b><small>${moneyX(RLY.plan[k].cost)} · +${RLY.plan[k].min} min</small></button>`).join("")}</div>
      <p class="dcsfield">${booked?`Booked for outage ${S.outg.k}: ${Object.keys(booked).map(k=>RLY.plan[k].n.toLowerCase()).join(", ")}. `:""}${booked?"That plan is approved; ticked items go on the plan for the outage after it.":"Ticked items go on the next outage plan (24 h before it) and are paid when you approve it."} New parts come back at full health.</p>`;
   const L=Math.max(0,rlyLoad(A.id,r)),st=rlyDrvSt(A.id,L);
-  const det=`<div class="rdh"><b>${A.n}</b><small>${LINEN[A.ln][1]} (${LINEN[A.ln][2]}) · ${rlyKw(A.id).toLocaleString()} kW VFD · if it fails: ${A.stop.toLowerCase().replace(/\.$/,"")}</small></div>
+  const det=`<div class="rdh"><b>${A.n}</b><small>${LINEN[A.ln][1]} (${LINEN[A.ln][2]}) · ${hpRate(rlyKw(A.id))} VFD · if it fails: ${A.stop.toLowerCase().replace(/\.$/,"")}</small></div>
     <div class="rdg"><section class="plsec"><div class="dcssub">Vibration (maintenance)</div>${rlyVibCell(a)}<p class="dcsfield">${v&&vg.cls!=="unk"?VIBST[v.st][2]+".":"No recent reading: the last rounds didn't get to it, or were skipped."}</p>
       ${hist(a.hv,([t,mm,s])=>s==="fix"?`<div><span>${dhm(t)}</span><em class="ok">Repaired · new bearing</em></div>`:`<div><span>${dhm(t)}</span><em class="${VIBST[s][1]}">${mm} mm/s · ${VIBST[s][0]}</em></div>`)}
       <div class="ract"><button type="button" class="kstd" data-rpin="${A.id}:vib" aria-pressed="${a.pin==="vib"}"${on?"":" disabled"}>${a.pin==="vib"?"Pinned for the next round":"Pin to the next vibration round"}</button>
@@ -18107,7 +18360,7 @@ function rlyRefresh(){rlyIrDraw();const tb=$("rlyTab");if(!tb)return;const R=rly
       ${hist(a.ha,([t,hh,s])=>s==="fix"?`<div><span>${dhm(t)}</span><em class="ok">Repaired · spare motor fitted</em></div>`:`<div><span>${dhm(t)}</span><em class="${ADXST[s][1]}">health ${hh}% · ${ADXST[s][0]}</em></div>`)}
       <div class="ract"><button type="button" class="kstd" data-rpin="${A.id}:adx" aria-pressed="${a.pin==="adx"}"${on?"":" disabled"}>${a.pin==="adx"?"Pinned for the next test":"Pin to the next ADX test"}</button>
       ${ximm?`<button type="button" class="rfix" data-rfix="${A.id}:adx"${busy?" disabled":""}>${x&&x.st==="alarm"?"Swap the motor early":"Plan repair"} · ${moneyX(rlyFixCost(A.id,"adx"))}<small>swap in the spare motor now: ${fm}</small></button>`:""}</div></section>
-    <section class="plsec"><div class="dcssub">Drive</div>${rlyChip(st==="fault"?"Fault":st==="trip"?"Tripped":st==="nodc"?"No DC":st==="lock"?"Locked out":st==="off"?"Off":Math.round(L)+" % load",{fault:"bad",trip:"bad",nodc:"bad",lock:"warn",run:L>100?"bad":L>95?"warn":"ok"}[st]||"",st==="run"||st==="idle"?Math.round(rlyTemp(A.id,L))+" °C heat sink":"")}
+    <section class="plsec"><div class="dcssub">Drive</div>${rlyChip(st==="fault"?"Fault":st==="trip"?"Tripped":st==="nodc"?"No DC":st==="lock"?"Locked out":st==="off"?"Off":Math.round(L)+" % load",{fault:"bad",trip:"bad",nodc:"bad",lock:"warn",run:L>100?"bad":L>95?"warn":"ok"}[st]||"",st==="run"||st==="idle"?fmtF(rlyTemp(A.id,L))+" heat sink":"")}
       <p class="dcsfield">Drive health <b>${Math.round(a.dh)}%</b>${a.patch?" · patched (faults 3× as often until replaced)":""}${rlyRst(A.id)?` · ${rlyRst(A.id)} reset${rlyRst(A.id)>1?"s":""} in the last day`:""}. Drives fail without warning. Keep them under about 95% load; lightning and brownouts shorten their lives. <button type="button" class="linkb" data-trk="dl_${A.id}">Trend its load</button></p></section></div>
     <div class="dcssub">${booked?"Changeout at the outage after":"Changeout at the next planned outage"}</div>${chg}`;
   const key=det;if(dt._h!==key){if(!dt.contains(document.activeElement)||RUI.key===""){dt._h=key;dt.innerHTML=det;}}RUI.key="x";}
@@ -18188,7 +18441,7 @@ MIMIC.STM={title:"STEAM & AIR",h:322,trends:[["dp3","3rd section ΔP psi","#7fb2
     MT6(518,188,"dp3","ΔP",()=>S.stm?sf1(S.stm.dp[2])+" psi":"–",()=>S.stm&&S.pm==="run"&&S.stm.dp[2]<stmNeed(2)?"bad":""),MT6(518,200,"dpneed","NEED",()=>S.pm==="run"?sf1(stmNeed(2))+" psi":"–"),
     MT6(430,108,"bt3","BLOW",()=>S.stm&&S.pm==="run"?Math.round(S.stm.bt[2]*100)+"%":"–",()=>S.stm&&S.stm.bt[2]>STM.btWaste?"warn":""),MT6(540,108,"tcmax","REACH",()=>sf1(stmTcMax())+" psi",()=>stmTcMax()<stmSp()?"bad":""),
     MT6(50,254,"btwaste","WASTE",()=>S.stm?sf1(S.stm.waste)+" t/h":"–",()=>S.stm&&S.stm.waste>0.3?"warn":""),MT6(365,250,"cret","RETURN",()=>S.stm?Math.round(S.stm.ret*100)+"%":"–",()=>S.stm&&S.stm.ret<0.8?"warn":""),
-    MT6(155,256,"hoodH","HUMIDITY",()=>S.stm&&S.pm==="run"?Math.round(S.stm.H)+" g/kg":"–",()=>S.stm&&S.stm.H>STM.Hhi?"bad":S.stm&&S.stm.H<STM.Hlo&&S.pm==="run"?"warn":""),MT6(155,318,"dew","DEW PT",()=>S.stm&&S.pm==="run"?Math.round(stmDew(S.stm.H))+" °C":"–"),
+    MT6(155,256,"hoodH","HUMIDITY",()=>S.stm&&S.pm==="run"?Math.round(S.stm.H)+" g/kg":"–",()=>S.stm&&S.stm.H>STM.Hhi?"bad":S.stm&&S.stm.H<STM.Hlo&&S.pm==="run"?"warn":""),MT6(155,318,"dew","DEW PT",()=>S.stm&&S.pm==="run"?fmtF(stmDew(S.stm.H)):"–"),
     MT6(338,318,"exh","EXH",()=>S.stm?Math.round(S.stm.exh)+"% "+(S.stm.exhM==="auto"?"AUTO":"MAN"):"–"),MT6(456,318,"sup","SUP",()=>S.stm?Math.round(S.stm.sup)+"% "+(S.stm.supM==="auto"?"AUTO":"MAN"):"–"),
     MT6(574,256,"hum","ROOM RH",()=>S.stm?Math.round(S.stm.hum)+"%":"–",()=>S.stm&&S.stm.hum>74?"bad":""),MT6(574,318,"fog","",()=>motStatus("fog")!=="run"||active("fogfan")?"DOWN":"RUNNING",()=>motStatus("fog")!=="run"||active("fogfan")?"bad":""),
     MT6(572,22,"air","AIR COILS",()=>S.stm?sf1(S.stm.air)+" t/h":"–")]};
@@ -18346,7 +18599,7 @@ function rideAt(u){const P2=RIDE.pts,n=P2.length-1,f=clamp(u,0,1)*n,i=Math.min(n
 // the HUD: the section, solids where the camera is, speed, draw and the sheet's temperature
 function rideHud(u){const h=$("rideHud");if(!h)return;const [, ,d]=rideAt(u),P2=profNow();let i=0;while(i<P2.length-2&&P2[i+1][0]<=d)i++;const a=P2[i],b=P2[i+1],k=clamp((d-a[0])/Math.max(0.01,b[0]-a[0]),0,1),c=a[3]+(b[3]-a[3])*k;
   const temp=d<15?44:d<25?48:d<37?60+(d-27)*1.5:d<46.5?76+(d-37)*0.6:d<58.5?84+(d-46.5)*0.6:86;
-  const n=k>0.5?b:a,t=`<b>${n[1]==="Forming"?n[2]:n[1]}</b><span>${c<3?"consistency "+c.toFixed(2):"solids "+c.toFixed(1)}%</span><span>${Math.round(S.pmSpeed)} fpm</span><span>draw ${knobVal("draw").toFixed(2)}%</span><span>sheet ${Math.round(temp)} °C</span><small>tap to leave</small>`;if(h._h!==t){h._h=t;h.innerHTML=t;}}
+  const n=k>0.5?b:a,t=`<b>${n[1]==="Forming"?n[2]:n[1]}</b><span>${c<3?"consistency "+c.toFixed(2):"solids "+c.toFixed(1)}%</span><span>${Math.round(S.pmSpeed)} fpm</span><span>draw ${knobVal("draw").toFixed(2)}%</span><span>sheet ${fmtF(temp)}</span><small>tap to leave</small>`;if(h._h!==t){h._h=t;h.innerHTML=t;}}
 G3.rideAt=rideAt;G3.rideHud=rideHud;G3.rideEnd=shRideEnd;G3.ride=shRide;
 // tests (tools/checks): the sheet and the steam models
 G3.sheet={setJw:hbSetJw,jw:hbJw,jwSp:hbJwSp,hbc:hbcSet,form:formF,tsr:tsrNow,stfi:()=>QNOW.stfi,stfiSpec,brk:brkRisk,where:brkWhere,prof:profNow,bkSet,bkLvl,reelSetNip,hard:reelHard,stk:()=>S.stk,stkClean,turnup:turnupRoll,log:brLog,top:brTop};
@@ -18467,7 +18720,7 @@ function fanRefresh(force){const o=$("fanOv");if(!o||o.hidden||!FUI.open)return;
   $("fanLeg").innerHTML=`<i style="background:#4fd18b"></i>now <i style="background:#5c7398"></i>60–100% <i style="background:#ffb02e"></i>system <i style="background:#8ea4c4"></i>BEP`;
   if(FUI.tab==="pump"){const L=rlyKw("fan"),m=fpNpshM();
     fanSet(o,"rpm",off?"0":Math.round(F.n*FP.rpm)+" rpm",off?"":Math.round(F.n*100)+"% of "+FP.rpm);fanSet(o,"q",fmtGpm(F.q),run?"headbox flow":"recirculation");
-    fanSet(o,"h",Math.round(F.h)+" ft",(F.h*FP.psiFt).toFixed(1)+" psi");fanSet(o,"kw",Math.round(F.kw)+" kW",Math.round(F.kw/L*100)+"% of "+L+" kW");
+    fanSet(o,"h",Math.round(F.h)+" ft",(F.h*FP.psiFt).toFixed(1)+" psi");fanSet(o,"kw",fmtHp(F.kw),Math.round(F.kw/L*100)+"% of "+hpRate(L));
     fanSet(o,"eff",off?"–":Math.round(F.eff*100)+"%",off?"":F.n>0.05?"BEP at "+fmtGpm(FP.qb*F.n):"");fanSet(o,"npsh",m==null?"–":(m>=0?"+":"−")+Math.abs(m).toFixed(1)+" ft",m==null?"":m<0?"CAVITATING":m<4?"low: silo level":"silo "+(S.we?Math.round(S.we.L/WE.silo*100):0)+"%");
     o.querySelectorAll("[data-fm]").forEach(b=>b.setAttribute("aria-pressed",String((b.dataset.fm==="man")===fpMan())));
     {const j=$("fanJw");if(j){const t=run?`J/W ${hbJw().toFixed(3)} · setpoint ${hbJwSp().toFixed(3)}${Math.abs(hbJw()-hbJwSp())>0.0005?" · OFF SETPOINT":""}`:"machine down";if(j.textContent!==t)j.textContent=t;j.classList.toggle("bad",run&&Math.abs(hbJw()-hbJwSp())>0.004);}}
@@ -18516,13 +18769,64 @@ function fanDraw(F){const cv=$("fanCv");if(!cv)return;const box=cv.getBoundingCl
     x.fillStyle=cav?"#ff8b7f":F.sat?"#ff8b7f":"#ffb02e";x.beginPath();x.arc(px,py,6,0,Math.PI*2);x.fill();x.strokeStyle="#0f1b2d";x.lineWidth=2;x.stroke();
     x.fillStyle="#dbe6f6";x.font="600 11px system-ui,sans-serif";const lab=`${fmtGpm(F.q)} · ${Math.round(F.h)} ft · ${Math.round(F.n*100)}%`;x.textAlign=px>cw*0.6?"right":"left";x.fillText(lab,px+(px>cw*0.6?-10:10),py-9);
     if(F.sat||cav){x.fillStyle="#ff8b7f";x.fillText(cav?"CAVITATING":"FULL SPEED: J/W SAGS",px+(px>cw*0.6?-10:10),py+16);}}
-  const hl=$("fanHl");if(hl){const t=run?`On the ${Math.round(F.n*100)}% curve where it crosses the system: ${Math.round(F.kw)} kW at ${Math.round(F.eff*100)}% efficiency.`:F.st==="idle"?"Machine down: idling on recirculation.":"Drive off.";if(hl.textContent!==t)hl.textContent=t;}}
+  const hl=$("fanHl");if(hl){const t=run?`On the ${Math.round(F.n*100)}% curve where it crosses the system: ${fmtHp(F.kw)} at ${Math.round(F.eff*100)}% efficiency.`:F.st==="idle"?"Machine down: idling on recirculation.":"Drive off.";if(hl.textContent!==t)hl.textContent=t;}}
 UI_TICKS.push(()=>{if(FUI.open){const o=$("fanOv");if(!o||o.hidden)return;fanRefresh(false);}
   const r=document.querySelector("[data-fanrow]");if(r&&S&&S.fp){const F=S.fp,t=F.st==="off"?"OFF":`${Math.round(F.n*FP.rpm)} rpm · ${Math.round(F.h)} ft`;if(r.textContent!==t)r.textContent=t;}});
 // Escape closes the faceplate first (before the DCS's own handler)
 window.addEventListener("keydown",e=>{if(e.key==="Escape"&&FUI.open){e.preventDefault();e.stopPropagation();closeFan();}},true);
 G3.fan={state:fpState,solve:fpSolve,setMode:fpSetMode,setRpm:fpSetRpm,head:fpHead,eta:fpEta,kw:fpKw,load:fpLoad,jw:fpJw,npsh:fpNpshM,scrDp:fpScrDp,
   th:{psi:hbThPsi,ft:hbThFt,inch:hbThIn},manOk:fpManOk,round:fpRound,trend:fpTrend,open:openFan,close:closeFan,get ui(){return FUI;},FP};
+/* ---- v6.14 the suction pick-up roll close-up on the WET DCS (the model is 07b: PUR, puv / sqz / kos) ----
+   A side view of the roll where the pick-up felt wraps it and touches the forming fabric: the suction box's zones inside
+   the drilled shell (sealing, transfer, holding, sealing), each shaded by the vacuum it pulls now, the hole pattern, and
+   below it the trim squirts and the knock-off shower with their settings. */
+function puPanel(){const w=kEl("div","dcsrow wide pupan");w.dataset.ord="puz";
+  const cx=120,cy=92,R=58,arc=(a0,a1,r)=>{const p=a=>[cx+r*Math.cos(a),cy+r*Math.sin(a)];const [x0,y0]=p(a0),[x1,y1]=p(a1);return `M${cx} ${cy} L${x0.toFixed(1)} ${y0.toFixed(1)} A${r} ${r} 0 0 1 ${x1.toFixed(1)} ${y1.toFixed(1)}Z`;};
+  // zones round the bottom of the roll, where the wire runs under it (angles in radians, 0 = east, clockwise on screen)
+  const Z=[[0.25,0.75],[0.75,1.45],[1.45,2.35],[2.35,2.7]];
+  const holes=[];for(let i=0;i<48;i++){const a=i/48*Math.PI*2;holes.push(`<circle cx="${(cx+(R-5)*Math.cos(a)).toFixed(1)}" cy="${(cy+(R-5)*Math.sin(a)).toFixed(1)}" r="1.4" class="puh"/>`);}
+  w.innerHTML=`<div class="dcsn"><b>Suction pick-up roll</b><small>The red knob at the roll sets the vacuum · close-up</small></div>
+    <svg viewBox="0 0 420 222" class="pusvg" role="img" aria-label="Pick-up roll vacuum zones">
+      <path d="M0 196 H420" class="puw"/><text x="8" y="214" class="put">forming fabric (wire) →</text>
+      <path d="M40 30 Q120 4 ${cx+R+4} ${cy-6} L${cx+R+4} ${cy+30} Q${cx+40} ${cy+R+6} ${cx-30} ${cy+R+4}" class="puf"/><text x="40" y="22" class="put">pick-up felt</text>
+      <circle cx="${cx}" cy="${cy}" r="${R}" class="pushell"/>${holes.join("")}
+      ${Z.map((z,i)=>`<path d="${arc(z[0],z[1],R-10)}" class="puz" data-puz="${i}"/>`).join("")}
+      <circle cx="${cx}" cy="${cy}" r="14" class="pubox"/>
+      ${Z.map((z,i)=>{const a=(z[0]+z[1])/2,c=Math.cos(a),x=cx+(R+10)*c,y=cy+(R+14)*Math.sin(a)+4;return `<text x="${x.toFixed(0)}" y="${y.toFixed(0)}" class="pul" data-pul="${i}" text-anchor="${c>0.3?"start":c<-0.3?"end":"middle"}">–</text>`;}).join("")}
+      <text x="236" y="34" class="put">shell: ${PUR.holes.d}" holes, ${PUR.holes.pitch}" pitch, ${Math.round(PUR.holes.open*100)}% open</text>
+      <text x="236" y="54" class="put" data-pus>–</text>
+      <g transform="translate(250,96)"><path d="M0 0 V50" class="pusq"/><path d="M40 0 V50" class="pusq"/><text x="-4" y="-6" class="put">squirts</text><text x="20" y="66" class="put" data-psq text-anchor="middle">–</text>
+        <path d="M90 0 H150 M100 0 V40 M120 0 V40 M140 0 V40" class="puko"/><text x="96" y="-6" class="put">knock-off</text><text x="120" y="66" class="put" data-pko text-anchor="middle">–</text></g>
+    </svg>`;
+  return w;}
+function puSync(){const o=$("dcsOv");if(!o||o.hidden||KUI.st!=="WET"||!S)return;const p=o.querySelector(".pupan");if(!p)return;const r=knobRead(),v=r.puv;
+  PUR.zones.forEach(([n,f],i)=>{const z=p.querySelector(`[data-puz="${i}"]`),l=p.querySelector(`[data-pul="${i}"]`),vz=v*f;if(z)z.style.fillOpacity=String(clamp(vz/16,0.08,0.95));if(l){const t=`${n} ${kf(vz)}`;if(l.textContent!==t)l.textContent=t;}});
+  const st=p.querySelector("[data-pus]");if(st){const t=v<PUR.lo?"TRANSFER WEAK: the sheet drops":v>PUR.mark?"VACUUM HIGH: holes mark the sheet":"transfer "+kf(v)+" inHg: lifts cleanly";if(st.textContent!==t)st.textContent=t;st.classList.toggle("pubad",v<PUR.lo||v>PUR.mark);}
+  const sq=p.querySelector("[data-psq]");if(sq){const t=r.sqz===0?"on the deckle":(r.sqz<0?"in ":"out ")+kf(Math.abs(r.sqz),2)+'"';if(sq.textContent!==t)sq.textContent=t;}
+  const ko=p.querySelector("[data-pko]");if(ko){const t=Math.round(r.kos)+" psi";if(ko.textContent!==t)ko.textContent=t;ko.classList.toggle("pubad",r.kos<PUR.kosLo);}}
+UI_TICKS.push(()=>puSync());
+/* ---- v6.14 the grade change coach on the WET DCS (free play; the model is 07r) ---- */
+function ggBox(){const w=kEl("div","dcsrow wide ggbox");w.dataset.ord="gg";w.id="ggBox";
+  w.addEventListener("click",e=>{const t=e.target.closest("[data-gg]");if(!t)return;const a=t.dataset.gg;
+    if(a==="start"){const s=w.querySelector("[data-ggto]");if(s)ggStart(s.value);}else if(a==="next")ggNext();else if(a==="crew")ggEnd("auto");ggSync(true);});
+  return w;}
+function ggSync(force){const w=$("ggBox");if(!w||!S)return;const G=S.gg;
+  if(!G){const L=S.ggLast&&S.ggLast.res,key="idle"+C.grade+(L?L.off:"");if(!force&&w._k===key)return;w._k=key;
+    w.innerHTML=`<div class="dcsn"><b>Guided grade change</b><small>Free play: walk the machine to another grade yourself, speed and weight together in steps</small></div>
+      <div class="ggrow"><select data-ggto aria-label="Grade to change to">${Object.keys(GRADES).filter(g=>g!==C.grade).map(g=>`<option value="${g}">${g} · ${GRADES[g].bw} lb</option>`).join("")}</select>
+      <button type="button" class="reroll vpri" data-gg="start"${S.chg?" disabled":""}>Start</button></div>
+      ${L?`<p class="ggres">Last change ${S.ggLast.from} → ${S.ggLast.to}: ${L.off.toFixed(1)} t to the beater in ${L.mins} min (the crew's automatic change: about ${L.auto.toFixed(0)} t).</p>`:""}`;return;}
+  const st=ggSettled(),sp=QSPEC[C.grade]||QSPEC["24"],m=S.dry?S.dry.m:DRY.m0,off=Math.max(0,(S.q.off||0)-G.off0);
+  const rows=[];for(let k=0;k<=G.n;k++){const s=k?ggStepOf(G,k):{bw:G.bw0,sp:G.sp0};rows.push(`<tr class="${k===G.k?"cur":k<G.k?"done":""}"><td>${k?k===G.n?`${k} · ${G.to}`:k:"start"}</td><td>${s.bw.toFixed(2)} lb</td><td>${Math.round(s.sp).toLocaleString()} fpm</td><td>${Math.round(P.K*s.sp*s.bw)} t/h</td></tr>`);}
+  const ck=(ok,t)=>`<li class="${ok?"ok":"wait"}">${ok?"✓":"…"} ${t}</li>`;
+  const html=`<div class="dcsn"><b>Guided grade change ${G.from} → ${G.to}</b><small>Step ${G.k} of ${G.n}: speed and weight move together so the tons an hour hold and the dryers keep up</small></div>
+    <table class="ggt"><thead><tr><th>Step</th><th>Weight</th><th>Speed</th><th>Tons</th></tr></thead><tbody>${rows.join("")}</tbody></table>
+    <ul class="ggck">${ck(st.bw,`Weight on the QCS ${bwMeas().toFixed(2)} lb vs ${G.bw.toFixed(2)} setpoint (the scanner reads ${WE.dead} min late)`)}${ck(st.m,`Moisture ${m.toFixed(1)}% · ${C.grade} spec ${sp.m[0]}–${sp.m[1]}%`)}${ck(st.t,`Settling: ${Math.min(GG.settle,Math.round(S.t-G.ts))} of ${GG.settle} min on this step`)}</ul>
+    <p class="ggres">${off.toFixed(1)} t to the beater so far · the crew's automatic change: about ${G.auto.toFixed(0)} t. ${G.k<G.n?`The machine is still on ${G.from}: paper between grades fails its spec, so keep the steps moving once each settles.`:"Last step: done when weight and moisture settle on the new grade."}</p>
+    <div class="ggrow">${G.k<G.n?`<button type="button" class="reroll${st.ok?" vpri":""}" data-gg="next">${st.ok?"Next step":"Next step now (not settled)"}</button>`:""}<button type="button" class="reroll" data-gg="crew">Hand back to the crew</button></div>`;
+  if(force||w._h!==html){w._h=html;w._k="";w.innerHTML=html;}}
+UI_TICKS.push(()=>{const o=$("dcsOv");if(o&&!o.hidden&&KUI.st==="WET")ggSync();});
+G3.gg={start:ggStart,next:ggNext,settled:ggSettled,end:ggEnd,step:ggStepOf,bwMeas:()=>bwMeas(),on:ggOn};   // (test hook)
 
 /* =========================== v2 app shell wiring =========================== */
 (function(){
@@ -18546,7 +18850,7 @@ G3.fan={state:fpState,solve:fpSolve,setMode:fpSetMode,setRpm:fpSetRpm,head:fpHea
     let o=`<svg viewBox="0 0 400 168" width="100%" role="img" aria-label="Flow through the mill. Bottleneck now: ${steps[bi].k}${dn?" (down)":""}" style="display:block">`;
     o+=`<path d="M${top.join(" L")} L${bot.join(" L")} Z" fill="#4aa3df"/>`;
     o+=`<path d="M0,${C0} L400,${C0}" stroke="#fff" stroke-opacity=".55" stroke-width="1.4" stroke-dasharray="7 11"><animate attributeName="stroke-dashoffset" from="18" to="0" dur="1.2s" repeatCount="indefinite"/></path>`;
-    o+=`<circle cx="${bx}" cy="${C0}" r="${Math.max(9,W[bi]/2+5)}" fill="none" stroke="${red}" stroke-width="2" stroke-dasharray="3 2.5"/><text x="${bx}" y="16" text-anchor="middle" font-size="9.5" font-weight="800" fill="${red}">${dn?"DOWN · ":""}BOTTLENECK NOW</text>`;
+    o+=`<circle cx="${bx}" cy="${C0}" r="${Math.max(9,W[bi]/2+5)}" fill="none" stroke="${red}" stroke-width="2" stroke-dasharray="3 2.5"/><text x="${Math.max(dn?62:44,Math.min(400-(dn?62:44),bx))}" y="16" text-anchor="middle" font-size="9.5" font-weight="800" fill="${red}">${dn?"DOWN · ":""}BOTTLENECK NOW</text>`;
     steps.forEach((st,i)=>{o+=`<text x="${X[i]}" y="112" text-anchor="middle" font-size="10" font-weight="700" fill="currentColor">${st.k}</text><text x="${X[i]}" y="125" text-anchor="middle" font-size="9.5" fill="${i===bi?red:"currentColor"}" opacity="${i===bi?1:0.75}">${st.down?(st.lab||"down"):f1(st.act)+" t/h"}</text><text x="${X[i]}" y="137" text-anchor="middle" font-size="8.5" fill="currentColor" opacity=".55">max ${f1(st.cap)}</text>`;});
     bufs.forEach(([n,v],i)=>{const x=(X[i]+X[i+1])/2,p=Math.round(clamp(v,0,1)*100),c=p>=95?red:p<=8?"#c77d00":"#1f8a4c";
       o+=`<g transform="translate(${x-17},146)"><rect width="34" height="7" rx="3.5" fill="currentColor" opacity=".15"/><rect width="${(34*p/100).toFixed(1)}" height="7" rx="3.5" fill="${c}"/></g><text x="${x}" y="164" text-anchor="middle" font-size="8.5" fill="currentColor" opacity=".7">${n} ${p}%</text>`;});
@@ -19057,6 +19361,8 @@ function camPullOn(){try{return localStorage.getItem("paper-mill-campull")!=="of
       <div class="tsub">Graphics</div>${tog("tsShadow","Shadows","",!sh||sh.checked)}
       ${G3.GFX?`<div class="trow tcol"><span><b>Graphics quality</b><small>Auto picks for your device (${gfxCap(G3.GFX.auto)})</small></span><div class="tseg tseg5 tseg6" role="group" aria-label="Graphics quality">${["auto","low","medium","high","ultra"].map(g=>`<button type="button" data-g="${g}" aria-pressed="${G3.GFX.pick===g}" title="${GFX_TIP[g]}">${g==="auto"?"Auto":gfxCap(g)}</button>`).join("")}</div>
         <div class="tgfxr" id="tsGfxR"${G3.GFX.tier===G3.GFX.loaded?" hidden":""}><small>Lighting and scenery detail change on the next load.</small><button type="button" id="tsGfxReload">Reload now</button></div></div>`:""}
+      ${G3.setAA?`<div class="trow tcol"><span><b>Anti-aliasing</b><small>Smooths jagged edges. Auto picks for your device</small></span><div class="tseg" role="group" aria-label="Anti-aliasing">${[["auto","Auto","Your device's best: the browser's MSAA on a desktop, FXAA on phones and high-DPI screens"],["off","Off",""],["fxaa","FXAA","A cheap smoothing pass over the finished picture"],["msaa","MSAA 4×","The GPU's own, the sharpest; costs more on phones (applies on reload)"]].map(([k,t,ti])=>`<button type="button" data-aa="${k}" aria-pressed="${G3.aaPick===k}" title="${ti}">${t}</button>`).join("")}</div>
+        <div class="tgfxr" data-aarl="1"${G3.aaReload?"":" hidden"}><small>MSAA changes on the next load.</small><button type="button" class="aarl">Reload now</button></div></div>`:""}
       <div class="trow"><span><b>Appearance</b><small>Auto follows your device</small></span>${themeSegHTML("tseg")}</div>
       <div class="trow"><span><b>Frame rate</b></span><div class="tseg" role="group" aria-label="Frame rate"><button data-f="saver" aria-pressed="${FPS_MODE==="saver"}">Battery saver</button><button data-f="smooth" aria-pressed="${FPS_MODE!=="saver"}">Smooth</button></div></div>
       <div class="tsub">Your mill</div><div class="tgrid"><button id="tsBoard">Leaderboards</button><button id="tsColors">New colors</button><button id="tsName">Rename</button><button id="tsFs">Fullscreen</button></div>
@@ -19072,6 +19378,7 @@ function camPullOn(){try{return localStorage.getItem("paper-mill-campull")!=="of
       document.querySelectorAll("button[data-g]").forEach(x=>x.setAttribute("aria-pressed",String(x.dataset.g===G3.GFX.pick)));
       const r=$t("tsGfxR");if(r)r.hidden=G3.GFX.tier===G3.GFX.loaded;}));
     {const rb=$t("tsGfxReload");if(rb)rb.addEventListener("click",()=>location.reload());}
+    $t("tSetBody").querySelectorAll(".tseg button[data-aa]").forEach(b=>b.addEventListener("click",()=>G3.setAA(b.dataset.aa)));$t("tSetBody").querySelectorAll(".aarl").forEach(b=>b.addEventListener("click",()=>location.reload()));   // (v6.14, 42g)
     $t("tsBoard").addEventListener("click",()=>openBoard());
     $t("tsColors").addEventListener("click",()=>{rollMill();welcome();$t("tsNote").textContent="New colors: "+MILL.name;});
     $t("tsName").addEventListener("click",()=>{$t("tsNameRow").hidden=false;const i=$t("tsNameIn");i.value=MILL.name;i.focus();i.select();});
@@ -19293,7 +19600,7 @@ function camPullOn(){try{return localStorage.getItem("paper-mill-campull")!=="of
     ["MD/CD ratio","How much stronger the sheet is along the machine (MD) than across it (CD). Least near a square jet (J/W 1); rush and especially drag line the fibers up with the machine."],
     ["STFI CD","Short-span compression strength across the machine (kN/m): what box plants buy on with ring crush. Its spec is 95% of the grade's standard."],
     ["Formation","How evenly the fiber is spread in the sheet (an index, 100 standard). A thick headbox and a hard rush or drag make it worse, and a blotchy sheet is weaker."],
-    ["psig and psi","Pressure units. psig is gauge pressure (above the atmosphere), used for the dryer sections: about 40 psig in the 1st section, 90 in the 2nd and 120 in the 3rd on grade 24, a 165 psig limit. The pressure sets the steam's temperature (120 psig condenses at about 177 °C), and it is that temperature over the sheet's that drives the heat into it. psi is used for differences, like a syphon's ΔP (~5 psi) or a cleaner's pressure drop (15 to 25 psi). 1 psi = 6.9 kPa."],
+    ["psig and psi","Pressure units. psig is gauge pressure (above the atmosphere), used for the dryer sections: about 40 psig in the 1st section, 90 in the 2nd and 120 in the 3rd on grade 24, a 165 psig limit. The pressure sets the steam's temperature (120 psig condenses at about 350 °F), and it is that temperature over the sheet's that drives the heat into it. psi is used for differences, like a syphon's ΔP (~5 psi) or a cleaner's pressure drop (15 to 25 psi). 1 psi = 6.9 kPa."],
     ["Slice opening","The gap at the headbox lip the jet comes out of (mm). It's set by the flow: wide enough to pass the fan pump's stock at the jet's speed (~23 mm on grade 24). The slice knob widens or narrows it, which thins or thickens the headbox."],
     ["White water silo","The tank under the forming table that catches the wire's drainage for the fan pump. It runs full on purpose: the overflow goes to the white water chest in stock prep, so the level holds itself."],
     ["CD moisture 2σ","How even the moisture is across the sheet: two standard deviations of the 12 scanner zones (QCS). Mills report it this way; under about 1% is good."],
@@ -19421,6 +19728,18 @@ function camPullOn(){try{return localStorage.getItem("paper-mill-campull")!=="of
     ["NPSH","Net positive suction head: how far the pump's suction stays above boiling. The fan pump's comes from the white water silo's level; below what the pump needs at its flow, it cavitates."],
     ["Approach flow","Everything between the machine chest and the headbox: the machine chest pump, the fan pump with its white water, and the machine screen. It sits right beside the wet end so the stock reaches the headbox fresh and steady."],
     ["Machine screen","A pressure screen between the fan pump and the headbox: the last check that nothing lumpy reaches the slice. Stickies slowly plug its baskets (faster on Mixed Waste): its ΔP climbs and the fan pump works harder until a planned outage's wash-up cleans it."],
+    ["Sheet flutter","At speed the sheet starts to flap in the open draw and the pockets between the first dryer cans, and it breaks more. Each grade has a flutter threshold a little over its design speed; the pocket ventilation & sheet stabilizers upgrade raises it. A machine run slower than the grade's design speed breaks less."],
+    ["Pocket ventilation & sheet stabilizers","An upgrade: blow boxes in the dryer pockets and stabilizers along the open draw that hold the sheet flat at speed. Each level raises the flutter threshold 150 fpm."],
+    ["Suction pick-up roll","The perforated roll inside the pick-up felt where it touches the forming fabric. Vacuum in its transfer zone (standard 10 inHg) lifts the sheet off the wire onto the felt; its holding zone keeps it there. Too little and the sheet drops at the transfer; too much and the holes mark the sheet. A red knob by the roll; a close-up on the WET DCS."],
+    ["Trim squirts","Two high-pressure water jets at the couch that cut the sheet's edges and set its width (on the deckle by default). In cuts more fiber off (back down the couch pit, fewer tons); out leaves the ragged deckle edge on (edge defects, edge breaks). WET DCS."],
+    ["Knock-off shower","A shower just after the trim squirts that knocks the cut edge trim off the wire into the couch pit (standard 250 psi). Too weak and the trim rides into the press. WET DCS."],
+    ["Headbox side door","The tending-side access door on the headbox. On a restart after a stock-off the headbox comes up to pressure from empty, and a worn gasket can let the door blow off: stock floods the floor round the forming table and the machine is down for a clean-up. A weeping seal shows on the wet end Round, and a planned outage re-seats it."],
+    ["Bale variability","Every bale is different: its moisture, its contamination and its fiber. They mix in the pulper and the stock chest, so the pulper's consistency, the freeness, the stickies and the strength wander a little, for a reason. The averages are the same as a plain yard."],
+    ["CD map (QCS)","A heatmap on the QCS screen: the twelve zones across the machine, newest scan on top, coloured by moisture or basis weight against the grade's spec. Streaks show as stripes down it. Tap a cell for its reading."],
+    ["Guided grade change","Free play: change grades yourself on the WET DCS. The coach walks the speed and the basis weight together in steps so the tons an hour (and the dryers) hold steady; each step settles before the next. Done well it sends less paper to the beater than the crew's automatic change."],
+    ["Units","US mill units throughout: short tons, fpm, gpm and gallons, psi (psig for steam), inHg for vacuum, horsepower for motors and drives (kW and kWh for the electricity), °F."],
+    ["Trade line","The single line on the forming fabric that goes round with it, so you can see the wire moving."],
+    ["Anti-aliasing","Settings → Graphics: Auto, Off, FXAA (a cheap smoothing pass over the finished picture) or MSAA 4× (the GPU's own, the sharpest; it changes on reload). Auto uses MSAA on a desktop and FXAA on phones and high-DPI screens."],
     ["White water","The water that drains through the forming fabric, still carrying fine fiber. The mill uses it again to dilute stock."],
     ["White water silo","The tank under the wire (60,000 gallons) that catches the table's drainage and feeds the fan pump. It normally overflows to the white water chest; LV-202 tops it up under 25%, and held under 8% the sheet breaks."],
     ["White water chest","The big chest in stock prep (about 528,000 gallons) that collects the machine's white water and supplies stock prep's dilution. Extra goes to the sewer; when it runs low, fresh water tops it up. Empty, the stock runs thick and the weight goes high."],
@@ -19429,7 +19748,7 @@ function camPullOn(){try{return localStorage.getItem("paper-mill-campull")!=="of
     ["Jet-to-wire ratio (J/W)","Headbox jet speed against wire speed: 0.985 is standard, a little drag. The slice opening sets it (0.965 to 1.005). Off standard, less water comes off on the table."],
     ["Forming vacuum","Vacuum under the forming fabric, in zones down the table: the forming board (blades, no vacuum), the gravity boxes (standard 1.0 inHg), the low vacuum boxes (5.0) and the high vacuum flatboxes (8.9), each set on the WET DCS through its control valve (PV-311, 312, 313) from one vacuum pump. Too little leaves a wetter sheet; too much drags on the fabric, loads the couch drive and wears the fabric out (gravity over 3, low over 8, flatboxes over 13 inHg)."],
     ["Vacuum pump","The liquid ring pump beside the forming table that pulls the vacuum for the gravity, low and high vacuum boxes. Its power rises with the vacuum you ask for."],
-    ["HPDT","Horsepower-days per ton: refining energy the old way (1 HPDT = 17.9 kWh/t; the standard 60 kWh/t is about 3.4). The refiners can only put so much power in (2,400 kW, 3,120 with the refiner upgrade), so as tonnage rises past about 40 t/h they can't hold the setpoint: the delivered HPDT, and the strength it brings, falls until the refiners are upgraded."],
+    ["HPDT","Horsepower-days per ton: refining energy the old way (1 HPDT = 17.9 kWh/t; the standard 60 kWh/t is about 3.4). The refiners can only put so much power in (3,200 hp, 4,200 hp with the refiner upgrade), so as tonnage rises past about 40 t/h they can't hold the setpoint: the delivered HPDT, and the strength it brings, falls until the refiners are upgraded."],
     ["Couch solids","How dry the sheet is leaving the forming section: about 19% at standard. The jet, the vacuum and the refining move it."],
     ["Press solids","How dry the sheet is leaving the presses: about 44% (48% with the shoe press). Every point drier saves steam in the dryers."],
     ["Press loading","The press nip's squeeze, in kN/m (standard 100). More takes out more water, but crush marks start from 115 and past 130 the sheet is crushed."],
@@ -19505,7 +19824,7 @@ function camPullOn(){try{return localStorage.getItem("paper-mill-campull")!=="of
    (within 700 ms per tap) and a list of every version's one-line note pops up, newest first. The list comes from
    VERSION-NOTES.txt at the repo root: build.py swaps it in for the placeholder below, so adding a line there with each
    release keeps the pop-up current (build.py warns when APP_VER has no line). ---------- */
-{const VNOTES=[["4.0.0", "Graphics Overhaul: 60 FPS on iPhone, ~80% Fewer Draw Calls"], ["4.0.1", "Performance Follow-Up, Show FPS Option and Device Autotest"], ["4.0.2", "Economy Rebalance and Smoother Upset Labels"], ["4.1.0", "Four Environments, Seeded Mills, Bottlenecks, Graphics Tiers and Site Music"], ["4.2.0", "New Site Maps, Rare Sights, Zen Map Rotation and Economics Fixes"], ["4.2.0-s", "Save and Continue Season (Test)"], ["4.2.1", "Save/Continue, Settings Panel and Outage Speed Fix"], ["4.2.2-t", "Bayou Gator Sight Reworked (Test)"], ["4.2.2-t2", "Gator Bass Riff (Test)"], ["4.2.2-t3", "Gator Riff Removed, Wide Camera Framing (Test)"], ["4.2.2-t4", "Gator Scene Shortened and Widened (Test)"], ["4.2.2-t5", "One Rare Sight per Map in Zen (Test)"], ["4.2.2", "Rare Sights Reworked, Bird Strike Upset, Mill Report Tab"], ["4.2.3-t", "Cowboys, Bigfoot and Tugboat Sights Reworked (Test)"], ["4.2.3", "Laptop Battery Saving (Default GPU)"], ["4.2.4", "$25M Goal Removed and Quick Fixes"], ["4.2.5", "Random Bottleneck per Season and Accessibility Improvements"], ["4.3.0-t1", "Survival Mode (Test)"], ["4.4.0-t1", "Mill Leaders in Survival (Test)"], ["4.4.0-t2", "Painted Leader Portraits (Test)"], ["4.4.0-t3", "Leader Redesign, 4-Day Waves and Fixes (Test)"], ["5.0.0", "Survival Mode Release with Mill Leaders"], ["5.0.1", "Results Dialog and Game Speed Fixes"], ["5.0.2", "Report Card Label Fixes"], ["5.0.3", "Survival Playtest Fixes (Test)"], ["5.0.4", "Playtest Review: Dot Auto-Fix and Shipping Fix (Test)"], ["5.0.5", "Polish Rounds from Survival Playtests"], ["5.0.6", "Survival QA Fixes, Opt-In Outage Watch, Leaderboard Filters"], ["5.1.0", "Civics Meters and Leaders in Seasons (Test)"], ["5.4.0", "Title Screen, Civics in the World and Dark Mode"], ["5.4.1", "Loading Splash, No Old-Menu Flash"], ["5.4.2", "Graphics Quality on the Title Screen"], ["5.5.0", "Performance Improvements"], ["5.6.0", "Fiddly Knobs, DCS/QCS Screens and Knobs View"], ["5.7.0", "Catching Failures Early: Tells, Daily Rounds, Vibration Report, Outage Prep"], ["5.7.1", "Bottom Menu Reorder, Settings Back on the Right"], ["5.7.2", "Help Page with Game Guide and Glossary"], ["5.7.3", "Bare Graphics Mode for Weak Phones"], ["5.7.4", "Version Notes Pop-Up (Triple-Tap the Version Number)"], ["6.1.0-t1", "Isometric Paper View: Fixed Camera, Cut-Outs, Drop Shadows, Cutaways, Season Palettes (Test)"], ["6.1.0-t2", "Iso Round 2: Cut-Outs Always Paper, GPU Pictures, Stop-Motion World, Fewer Draws (Test)"], ["6.1.0-t3", "Iso Round 3: iPhone Batching, Instanced Cans, Sign Atlas, Lighter Frames (Test)"], ["6.1.0-t4", "Iso Fixes: Operators and Fork-Trucks Back, Less Stutter (Test)"], ["6.1.0-t5", "Cut-Out Edge Artifact Fixed (Test)"], ["6.1.0-t6", "Iso Optimization: Hidden Objects Cost Nothing, Lighter Moving Batches (Test)"], ["6.1.0-t7", "Iso Triangle Cut: Paper-Card Trees, Flat Ground, Hidden Faces Gone, Plain Boxes (Test)"], ["6.1.0-t8", "Paper Palette: 40 Colours, Flat Surfaces, Paper Grain, Fewer Draws (Test)"], ["6.1.0-t9", "Reel Fix: Growing Reel Draws Again (Test)"], ["6.1.0-t10", "Draw Cut 2: Colour in the Matrix, Merged Roofs, Uploads on Change, Culling Fix, Parked Groups (Test)"], ["6.1.0-t11", "QA Fixes: Cut-Outs Never Drawn as Loose 3D Parts, Fallback Shows 3D, Roofs On or Off per Zoom Step (Test)"], ["6.1.0-t12", "Paper Smoke, Blinking Lights, Stronger Seasons, Sharper Phones, Instanced Upsets, Pictures at Start (Test)"], ["6.1.0-t13", "Paper Effects: Flames, Child-Made Tornado, Lamp Cones, Flags, Paper Water, Visible Weather (Test)"], ["6.1.0-t14", "Paper Upsets: Cut-Out Props, Paper Pigeon, Paper Sparks, Steam, Fireworks, Ice and Flood (Test)"], ["6.1.0-t15", "Beaver Reworked as One Smaller Cut-Out (Test)"], ["6.1.0-t16", "Paper Props Dim at Night, Labels Never Overlap, Fewer Cut-Out Pictures (Test)"], ["6.1.0-t17", "Bird on the Power Lines Cut-Scene Plays When Set Off From the Upsets List (Test)"], ["6.1.0-t18", "Zen Close-Ups Fixed, Rare Sights as Paper Cut-Outs, Tilt-Shift Diorama Look (Test)"], ["6.1.0-t19", "Narrower Tilt-Shift Band, Winder Trash Can Out of the Broke Hole (Test)"], ["6.1.0-t20", "Balance: Rounds Pay More, Capacity and Maintenance Upgrades Re-Priced"], ["6.1.0", "Paper Diorama: Isometric Paper Art Style, Cut-Out People and Upsets, Tilt-Shift, Rounds Pay More, Upgrades Re-Priced"], ["6.1.1", "Phone Fixes: Gentler Tilt-Shift on Tall Screens, Cut-Out People No Longer Blank on iPhone"], ["6.1.2", "iPhone: Cut-Out Self-Test Retries, People Keep Their Colours in the 3D Fallback"], ["6.1.3", "Broke Hole by the Winder Looks Like a Floor Opening (Was a Black Square)"], ["6.1.4", "Tilt-Shift Removed"], ["6.2.0", "Zen Free Camera: Perspective Zen Shots, 3D People in Zen, Cleaner River Water"], ["6.3.0-f1", "Process Flow Overview (Test): Inputs, Mill Areas and Outputs for the Mill Day, in Settings"], ["6.3.0-f2", "Process Flow: the Game Keeps Running While It's Open (Test)"], ["6.3.0", "Process Flow Overview: Inputs, Mill Areas and Outputs for the Mill Day (Settings > View)"], ["6.4.0", "Zen Shots Review: Shuffle-Bag Shot Order, Landscape Shots Rebuilt, Close Rare Sights"], ["6.5.0-a1", "Digital Twin A (Test): Hourly History, 14 Prior Days, 7 d / Run Ranges, Area Trends and Uptime"], ["6.5.0-b1", "Digital Twin B (Test): Real Freight Costs with a Diesel Index, Area Controls Moved into Process Flow"], ["6.5.0-b2", "Market Pricing (Test): 2026 OCC and Energy Costs, Diesel in $/gal, Desert Long Haul, Real Steam Rates"], ["6.5.0-b3", "DCS Expansion (Test): Full SPOT, WET and DET Pictures, a UTIL Screen, Motors and Reject Purges"], ["6.5.0-b4", "DCS Pictograms (Test): Equipment Drawn as Classic DCS Symbols, Colour Only When Something's Wrong"], ["6.5.0-b5", "The Dryer Limit (Test): Speed and Grade Load the Dryers, a Wet Sheet Fails Spec and Slows the Machine"], ["6.5.0", "Digital Twin: Process Flow Trends and Controls, Real Freight and Market Costs, Full DCS, Dryer Limit, Rebalance"], ["6.5.1", "Second Screen: Pop the DCS and Process Flow Out to Their Own Window for a Second Monitor (Desktop)"], ["6.5.2", "Knob Fixes: Wet-End and Steam Knobs Bite Again Under the Dryer Limit, DCS Uses the Machine's Name"], ["6.5.3", "Quality Specs: Weight, Moisture and Color Specs per Grade, Off-Spec Paper Wound into Beater Rolls and Repulped"], ["6.5.4", "DCS Fixes: Making-Beater Alerts, SPOT in Process Order, Boiler and Power on Utilities, 2nd/3rd Section Steam Control"], ["6.5.5-t1", "Dewatering Chain (Test): Jet and Vacuum Optimums, Couch to Press Solids, Press Solids Set the Dryer Steam Both Ways"], ["6.5.5", "The Dewatering Chain: Jet and Vacuum Optimums, Couch to Press Solids, Press Solids Set the Dryer Steam Both Ways"], ["6.5.6-t1", "Mass Balance (Test): A Real Water Balance and White Water Chest, Hayout Broke Repulped, Every Fiber Loss Booked"], ["6.5.6", "Mass Balance: A Real Water Balance and White Water Chest, Hayout Broke Repulped, Every Fiber Loss Booked"], ["6.5.7-t1", "Winder Pass (Test): Four Reel Storage Stands, Two-Roll Sets, Rolls Tied Together, Steam Vented on a Sheet Break"], ["6.5.7", "Winder Pass: Four Reel Storage Stands, Two-Roll Sets, Rolls Tied Together, Steam Vented on a Sheet Break"], ["6.6.0-t1", "Orders and Bales (Test): Customer Order Book and Spot Market, Idle Energy While Stopped, Bale Grading at the Gate"], ["6.6.0", "Orders and Bales: Customer Order Book and Spot Market, Idle Energy While Stopped, Bale Grading at the Gate"], ["6.7.0-t1", "Control Room (Test): Planning, Water and Quality Screens, Split-Screen Trends of Anything, What Moves With What, Process Flow Views"], ["6.7.0", "Control Room: Planning, Water and Quality Screens, Split-Screen Trends of Anything, What Moves With What, Process Flow Views"], ["6.7.1-t1", "New Grade Set (Test): Grades 24, 28, 31 and 34Super, Same Tons per Hour"], ["6.7.1", "New Grade Set: Grades 24, 28, 31 and 34Super, Same Tons per Hour"], ["6.8.0-t1", "Process Relationships (Test): Refining Energy and Ring Crush, Basis Weight Loop, Headbox at 0.8%, White Water Silo, Bale Water and Screen Pressure Drop"], ["6.8.0-t2", "Relationship Map in the Control Room (Test): What Drives Each Reading and What It Moves, Live"], ["6.8.0", "Process Relationships: Refining Energy and Ring Crush, Basis Weight Loop, Headbox at 0.8%, White Water Silo, Bale Water, Screen Pressure Drop and the Relationship Map"], ["6.8.1", "Report Tab Tidy: Live Mill First, Last-24-Hours Chart, Quality & Fiber and Orders & Bales Removed"], ["6.8.2", "Manning: DuPont 12 Shifts for Techs and Operators, Team Hard Hats, Shift Change Walk-In, Vacations Covered Across Teams"], ["6.8.3", "OCC Recipe (A Bales, C Bales, Mixed Waste), Relationship Map Zoom and 3D Light Cones at Night"], ["6.9.0-t1", "The Valves Update (Test): Six Control Loops on the DCS with Real Valves, Faceplates, PID Tuning, Bump Tests, a Tuning Clock and Tuning Challenges"], ["6.9.0", "The Valves Update: Six Control Loops on the DCS with Real Valves, Faceplates, PID Tuning, Bump Tests, a Tuning Clock, Tuning Challenges and Their Links on the Relationship Map"], ["6.9.1", "Wet End Controls: Rush / Drag in fpm on the WET DCS"], ["6.9.2", "Release Review: Help and Glossary Brought Up to Date, Nine Bug Fixes, Refiners Feed the Machine Chest (a Clash Trips the Machine on Low Level) and an Economy Rebalance Where the Daily Round Is the Biggest Boost"], ["6.10.0-t1", "The Reliability and Electrical Update (Test): Ten VFD Motors with Health, an MCC Building with Three Drive Lineups Fed from the Substation, an Electrical Tech on Every Shift, Shift Vibration and ADX Rounds That Get Skipped When Techs Are Busy, Reliability and Drives Screens, Bearing, Motor and Drive Failures, Outage Changeouts and the Water Tower Moved to the North-East Corner"], ["6.10.0-t2", "The Reliability and Electrical Update (Test 2): the 115 kV to 650 V DC Power Chain with Rectifier Faults, Reset-or-Investigate Drive Fault Decisions, Arc-Flash PPE at the MCC, AUTO-LW Basis Weight, Click for Info and Lamps Under the Roofs"], ["6.10.0-t3", "The Reliability and Electrical Update (Test 3): QA Fixes and Balance: Unanswered Drive Faults Auto-Decide After an Hour, Drive Cards Show Load at the Trip, Reliability Failures About Half as Often, Lower Motor and Rectifier Bills"], ["6.10.0-t4", "The Reliability and Electrical Update (Test 4): One Machine per Vibration Round, Planned Repairs Take the Machine Down 20-40 Minutes, Repeated Drive Resets Get Worse and Can Fail, a Tutorial Card for Rounds and the MCC, Drive and Rectifier Health on Screen, Clearer Click for Info and 26 Polish Fixes"], ["6.10.0-t5", "The Reliability and Electrical Update (Test 5): the MCC Main Incomer Fiddly Knob (Opening It Causes an Arc Flash), the New Upsets in the Upsets Tab"], ["6.10.0", "The Reliability and Electrical Update: Ten Critical VFD Motors on Three MCC Drive Lineups, an Electrical Tech on Every Shift, Shift Vibration and ADX Rounds, Reliability and Drives Screens, Bearing, Motor, Drive and Rectifier Failures, Drive Fault Decisions, Outage Changeouts, the MCC Main Incomer and Its Arc Flash, AUTO-LW and Click for Info"], ["6.10.1-t1", "Polish (Test): Drives Wear Slower but Fail More When Worn, Three Drives Start Part-Worn, the Refiner Upgrade Brings Bigger Drives, the Main Incomer on the Relationship Map, a Message for a Blank Mill Name"], ["6.10.1", "Reliability Polish: Drives Wear Slower but Fail More When Worn, Three Drives Start Part-Worn, Bigger Refiner Drives with the Refiner Upgrade, the Main Incomer on the Relationship Map, a Message for a Blank Mill Name"], ["6.10.2", "Tests and Tidy: One Test Runner with 21 Merged Checks, Dead Code Removed (Bare Graphics Leftovers, Unused Code and Styles), Lint Clean"], ["6.11.0-t1", "Blender Redesign, the Winder and Trim (Test): Redesigned Machine, Buildings, MCC, Power House, Wastewater, Water Tower, Workers and Vehicles; a Real Two-Drum Winder with a Rider Roll and Web Inspections; Twin Rolls at Order Widths with Trim to a DE Pulper; Quality per Roll across 12 CD Zones; a Spray Boom and a Steam Box Upgrade"], ["6.11.0-t2", "Economy (Test): Paper Prices +2.5% on Every Grade to Make Up for Trim"], ["6.11.0", "The Winder, Trim and CD Update: a Redesigned Mill (Designed in Blender), a Real Two-Drum Winder with a Rider Roll and Web Inspections, Twin Rolls at Order Widths with Trim to a DE Pulper, Quality per Roll across 12 CD Zones, a Spray Boom, a Steam Box Upgrade and Prices +2.5%"], ["6.11.1-t1", "The Dryer Hood (Test): a Closed Dryer Hood with Six Lifting Doors that Rise on Breaks and Downtime, and a Hood Doors Fiddly Knob that Lifts the Front Away (4% More Steam While Running)"], ["6.11.1-t2", "Wet-End Chemicals (Test): Dry Strength Starch and a Retention Polymer on the WET DCS, AUTO Flow-Paced at No Extra Cost with a MANUAL Pump Override"], ["6.11.1-t3", "QA Round (Test): Upgrades 20% Cheaper, a Ratio Setpoint for the Chemical Pumps on AUTO, a Permit-Risk Warning for Low Polymer, No Outage Notice over the Season Summary"], ["6.11.1-t4", "Effluent in Permit (Test): the Clarifier Catches More, so a Normal Run Is ~25 mg/L TSS under the 50 mg/L Permit, and Cutting the Polymer Breaks It"], ["6.11.1", "The Dryer Hood and Wet-End Chemicals: a Closed Dryer Hood with Lifting Doors and a Hood Doors Fiddly Knob, Dry Strength and Retention Polymer on the WET DCS, Upgrades 20% Cheaper, Effluent in Permit"], ["6.11.2-t1", "Sold by Area (Test): Paper Is Sold by the Square Foot, so a Lighter Sheet Earns More a Ton and a Heavier One Less; the Mill Still Counts in Tons; MSF on the Planning Screen"], ["6.11.2-t2", "Control Room Tidy-Up (Test): 2nd and 3rd Section Steam on the DET DCS, WET Setpoints in Process Order, Yard Crews Stay Put on Breaks, MCC Computer Opens Drives, SPOT Console Moved, Seal Chest Labels Turned"], ["6.11.2-t3", "Test Suite Green (Test): Reel Storage Counts Right (a Turn-Up Takes Exactly One Reel), Tornado Damage Marked as Sudden, Steadier Checks"], ["6.11.2-t4", "Metered Power (Test): Drives Re-Rated and Electricity Billed from Their Load, Starch Removed, a Spare Spool Stand on the Crane Line, a Half Wall on the Roll Warehouse, Two Stray Objects at the Origin Fixed"], ["6.11.2-t5", "Vehicles and Polish (Test): New Food Truck, Train, Staff Cars and Carry-Deck Crane, Warehouse Annexes Roofed and Used for Storage, a Door on the Warehouse, Shift Walkers Use Doorways, Uncle Brian Rides Again, MCC Light, Beater Bay Info, Known Defects View, DE Pulper on the DCS"], ["6.11.2-t6", "QA Round (Test): Season Grade Counts the Money, Early Defect Pins Dimmed, DE Pulper High-Level Alarm and Overflow, Repair Bills 12.5% Lower, Hank Gets a Feel for the Sheet"], ["6.11.2", "Sold by Area and Metered Power: Rolls Sold by the Square Foot, Drives Re-Rated with Electricity Billed from Their Load, Starch Removed, New Vehicles, Warehouse Annexes Roofed and Used, Known Defects View, DE Pulper on the DCS, Season Grade Counts the Money, Repairs 12.5% Lower, Hank Buffed"], ["6.12.0-t5", "Smooth on the Phone (Test): the Sign Boards No Longer Re-Upload the Whole Atlas Every 0.8 s"], ["6.12.0-t6", "Cool, Fast and Free (Test): the World Draws at 30 While the View Is Still, the Whole Site as One Picture, a Free 3D Camera in Settings"], ["6.12.0-t7", "Whole-Site Picture Off by Default (Test): Opt-In with ?imp"], ["6.12.0", "Cool, Fast and Free: Smooth on the Phone (Sign Boards No Longer Re-Upload Every 0.8 s), the World Draws at 30 While the View Is Still, a Free 3D Camera in Settings, Record Board Updates Once a Day"], ["6.12.1-t1", "The Shop Moves South (Test): the Maintenance Shop Now Stands West of the MCC on the Lawn in Front of the Hall"], ["6.12.1-t2", "A True Approach System (Test): the Refiners Stand Beside the Headbox in a New Bay, the Fan Pump Behind It, Refiners After the Machine Chest"], ["6.12.1-t3", "Approach Bay QA (Test): a 4 m Service Aisle by the Headbox, the Refiner Plate Change Played Through Clean"], ["6.12.1-t4", "Season QA Fixes (Test): Upgrades That Pay Back, a Fairer Grade, Bottlenecks Mild to Severe, Whole Rolls in the Order Feed"], ["6.12.1-t5", "Rail Bay at Receiving, Refiners Ahead of the Machine Chest, Tail Threading (Test)"], ["6.12.1-t6", "Couch Suction Box Knob, Cleaner Approach Piping, Felts Run True, No Tending-Side Dryer Catwalk (Test)"], ["6.12.1-t7", "Forming Table Vacuum Zones and Pump, Refiners Run Out of Power at High Tonnage, Draw Rises with Speed (Test)"], ["6.12.1-t8", "Speed Upgrades Raise the Open Draw with Them (Test)"], ["6.12.1", "The Approach System: Refiners Beside the Headbox, a Rail Bay at Receiving, Forming Table Vacuum Zones, Couch Suction Box, Tail Threading, Draw That Follows Speed, Refiners That Run Out of Power, Upgrades That Pay Back"], ["6.13.0-t1", "Save and Continue Picks Up Exactly Where It Left Off (Test)"], ["6.13.0-t2", "Steam and Sheet (Test): Dryer Cans, Syphons and PDC-304, Hood Air, Energy per Ton, J/W and STFI CD, Stickies, the Broke Chest, Turn-ups, Physics-Based Breaks, the Machine Profile, SPC and Ride the Sheet"], ["6.13.0-t3", "QA Fixes (Test): Broken Syphons Valved Off to the Outage, a Bigger Broke Chest, Every Break in the Log, Breaks Mostly at the Press and Dryers, a Hood Humidity Ceiling, a Faster Sim"], ["6.13.0", "Steam and Sheet: Dryer Cans, Syphons and PDC-304, Hood Air, Energy per Ton, J/W and STFI CD, Stickies, the Broke Chest, Turn-ups, Physics-Based Breaks, the Machine Profile, SPC and Ride the Sheet"], ["6.13.1-t1", "Your Last Soda (Test): the Vending Machine Easter Egg"], ["6.13.1", "Your Last Soda: the Vending Machine Easter Egg"], ["6.13.2-t1", "Real Numbers (Test): psi Pressures, Real Dryer Steam, Ring Crush, Slice, Cleaners, Water"], ["6.13.2-t2", "Real Numbers (Test): Zen Shot Review, Ride the Sheet and 11 New Process Shots"], ["6.13.2-t3", "Real Numbers (Test): Dryer Steam from Heat Transfer, 120 psig Standard, 165 psig Limit"], ["6.13.2-t4", "Real Numbers (Test): Steady Ride the Sheet Readout, Office Flagpoles Removed"], ["6.13.2", "Real Numbers: psi Pressures, Real Dryer Steam from Heat Transfer, Zen Ride the Sheet and New Shots"], ["6.13.3-t1", "Headbox & Fan Pump (Test): Headbox Total Head on the DCS, Fan Pump Curve, Drive Load from Flow and Head"], ["6.13.3", "Headbox & Fan Pump: Headbox Total Head on the DCS, Fan Pump Curve and Faceplate, Drive Load from Flow and Head"]];
+{const VNOTES=[["4.0.0", "Graphics Overhaul: 60 FPS on iPhone, ~80% Fewer Draw Calls"], ["4.0.1", "Performance Follow-Up, Show FPS Option and Device Autotest"], ["4.0.2", "Economy Rebalance and Smoother Upset Labels"], ["4.1.0", "Four Environments, Seeded Mills, Bottlenecks, Graphics Tiers and Site Music"], ["4.2.0", "New Site Maps, Rare Sights, Zen Map Rotation and Economics Fixes"], ["4.2.0-s", "Save and Continue Season (Test)"], ["4.2.1", "Save/Continue, Settings Panel and Outage Speed Fix"], ["4.2.2-t", "Bayou Gator Sight Reworked (Test)"], ["4.2.2-t2", "Gator Bass Riff (Test)"], ["4.2.2-t3", "Gator Riff Removed, Wide Camera Framing (Test)"], ["4.2.2-t4", "Gator Scene Shortened and Widened (Test)"], ["4.2.2-t5", "One Rare Sight per Map in Zen (Test)"], ["4.2.2", "Rare Sights Reworked, Bird Strike Upset, Mill Report Tab"], ["4.2.3-t", "Cowboys, Bigfoot and Tugboat Sights Reworked (Test)"], ["4.2.3", "Laptop Battery Saving (Default GPU)"], ["4.2.4", "$25M Goal Removed and Quick Fixes"], ["4.2.5", "Random Bottleneck per Season and Accessibility Improvements"], ["4.3.0-t1", "Survival Mode (Test)"], ["4.4.0-t1", "Mill Leaders in Survival (Test)"], ["4.4.0-t2", "Painted Leader Portraits (Test)"], ["4.4.0-t3", "Leader Redesign, 4-Day Waves and Fixes (Test)"], ["5.0.0", "Survival Mode Release with Mill Leaders"], ["5.0.1", "Results Dialog and Game Speed Fixes"], ["5.0.2", "Report Card Label Fixes"], ["5.0.3", "Survival Playtest Fixes (Test)"], ["5.0.4", "Playtest Review: Dot Auto-Fix and Shipping Fix (Test)"], ["5.0.5", "Polish Rounds from Survival Playtests"], ["5.0.6", "Survival QA Fixes, Opt-In Outage Watch, Leaderboard Filters"], ["5.1.0", "Civics Meters and Leaders in Seasons (Test)"], ["5.4.0", "Title Screen, Civics in the World and Dark Mode"], ["5.4.1", "Loading Splash, No Old-Menu Flash"], ["5.4.2", "Graphics Quality on the Title Screen"], ["5.5.0", "Performance Improvements"], ["5.6.0", "Fiddly Knobs, DCS/QCS Screens and Knobs View"], ["5.7.0", "Catching Failures Early: Tells, Daily Rounds, Vibration Report, Outage Prep"], ["5.7.1", "Bottom Menu Reorder, Settings Back on the Right"], ["5.7.2", "Help Page with Game Guide and Glossary"], ["5.7.3", "Bare Graphics Mode for Weak Phones"], ["5.7.4", "Version Notes Pop-Up (Triple-Tap the Version Number)"], ["6.1.0-t1", "Isometric Paper View: Fixed Camera, Cut-Outs, Drop Shadows, Cutaways, Season Palettes (Test)"], ["6.1.0-t2", "Iso Round 2: Cut-Outs Always Paper, GPU Pictures, Stop-Motion World, Fewer Draws (Test)"], ["6.1.0-t3", "Iso Round 3: iPhone Batching, Instanced Cans, Sign Atlas, Lighter Frames (Test)"], ["6.1.0-t4", "Iso Fixes: Operators and Fork-Trucks Back, Less Stutter (Test)"], ["6.1.0-t5", "Cut-Out Edge Artifact Fixed (Test)"], ["6.1.0-t6", "Iso Optimization: Hidden Objects Cost Nothing, Lighter Moving Batches (Test)"], ["6.1.0-t7", "Iso Triangle Cut: Paper-Card Trees, Flat Ground, Hidden Faces Gone, Plain Boxes (Test)"], ["6.1.0-t8", "Paper Palette: 40 Colours, Flat Surfaces, Paper Grain, Fewer Draws (Test)"], ["6.1.0-t9", "Reel Fix: Growing Reel Draws Again (Test)"], ["6.1.0-t10", "Draw Cut 2: Colour in the Matrix, Merged Roofs, Uploads on Change, Culling Fix, Parked Groups (Test)"], ["6.1.0-t11", "QA Fixes: Cut-Outs Never Drawn as Loose 3D Parts, Fallback Shows 3D, Roofs On or Off per Zoom Step (Test)"], ["6.1.0-t12", "Paper Smoke, Blinking Lights, Stronger Seasons, Sharper Phones, Instanced Upsets, Pictures at Start (Test)"], ["6.1.0-t13", "Paper Effects: Flames, Child-Made Tornado, Lamp Cones, Flags, Paper Water, Visible Weather (Test)"], ["6.1.0-t14", "Paper Upsets: Cut-Out Props, Paper Pigeon, Paper Sparks, Steam, Fireworks, Ice and Flood (Test)"], ["6.1.0-t15", "Beaver Reworked as One Smaller Cut-Out (Test)"], ["6.1.0-t16", "Paper Props Dim at Night, Labels Never Overlap, Fewer Cut-Out Pictures (Test)"], ["6.1.0-t17", "Bird on the Power Lines Cut-Scene Plays When Set Off From the Upsets List (Test)"], ["6.1.0-t18", "Zen Close-Ups Fixed, Rare Sights as Paper Cut-Outs, Tilt-Shift Diorama Look (Test)"], ["6.1.0-t19", "Narrower Tilt-Shift Band, Winder Trash Can Out of the Broke Hole (Test)"], ["6.1.0-t20", "Balance: Rounds Pay More, Capacity and Maintenance Upgrades Re-Priced"], ["6.1.0", "Paper Diorama: Isometric Paper Art Style, Cut-Out People and Upsets, Tilt-Shift, Rounds Pay More, Upgrades Re-Priced"], ["6.1.1", "Phone Fixes: Gentler Tilt-Shift on Tall Screens, Cut-Out People No Longer Blank on iPhone"], ["6.1.2", "iPhone: Cut-Out Self-Test Retries, People Keep Their Colours in the 3D Fallback"], ["6.1.3", "Broke Hole by the Winder Looks Like a Floor Opening (Was a Black Square)"], ["6.1.4", "Tilt-Shift Removed"], ["6.2.0", "Zen Free Camera: Perspective Zen Shots, 3D People in Zen, Cleaner River Water"], ["6.3.0-f1", "Process Flow Overview (Test): Inputs, Mill Areas and Outputs for the Mill Day, in Settings"], ["6.3.0-f2", "Process Flow: the Game Keeps Running While It's Open (Test)"], ["6.3.0", "Process Flow Overview: Inputs, Mill Areas and Outputs for the Mill Day (Settings > View)"], ["6.4.0", "Zen Shots Review: Shuffle-Bag Shot Order, Landscape Shots Rebuilt, Close Rare Sights"], ["6.5.0-a1", "Digital Twin A (Test): Hourly History, 14 Prior Days, 7 d / Run Ranges, Area Trends and Uptime"], ["6.5.0-b1", "Digital Twin B (Test): Real Freight Costs with a Diesel Index, Area Controls Moved into Process Flow"], ["6.5.0-b2", "Market Pricing (Test): 2026 OCC and Energy Costs, Diesel in $/gal, Desert Long Haul, Real Steam Rates"], ["6.5.0-b3", "DCS Expansion (Test): Full SPOT, WET and DET Pictures, a UTIL Screen, Motors and Reject Purges"], ["6.5.0-b4", "DCS Pictograms (Test): Equipment Drawn as Classic DCS Symbols, Colour Only When Something's Wrong"], ["6.5.0-b5", "The Dryer Limit (Test): Speed and Grade Load the Dryers, a Wet Sheet Fails Spec and Slows the Machine"], ["6.5.0", "Digital Twin: Process Flow Trends and Controls, Real Freight and Market Costs, Full DCS, Dryer Limit, Rebalance"], ["6.5.1", "Second Screen: Pop the DCS and Process Flow Out to Their Own Window for a Second Monitor (Desktop)"], ["6.5.2", "Knob Fixes: Wet-End and Steam Knobs Bite Again Under the Dryer Limit, DCS Uses the Machine's Name"], ["6.5.3", "Quality Specs: Weight, Moisture and Color Specs per Grade, Off-Spec Paper Wound into Beater Rolls and Repulped"], ["6.5.4", "DCS Fixes: Making-Beater Alerts, SPOT in Process Order, Boiler and Power on Utilities, 2nd/3rd Section Steam Control"], ["6.5.5-t1", "Dewatering Chain (Test): Jet and Vacuum Optimums, Couch to Press Solids, Press Solids Set the Dryer Steam Both Ways"], ["6.5.5", "The Dewatering Chain: Jet and Vacuum Optimums, Couch to Press Solids, Press Solids Set the Dryer Steam Both Ways"], ["6.5.6-t1", "Mass Balance (Test): A Real Water Balance and White Water Chest, Hayout Broke Repulped, Every Fiber Loss Booked"], ["6.5.6", "Mass Balance: A Real Water Balance and White Water Chest, Hayout Broke Repulped, Every Fiber Loss Booked"], ["6.5.7-t1", "Winder Pass (Test): Four Reel Storage Stands, Two-Roll Sets, Rolls Tied Together, Steam Vented on a Sheet Break"], ["6.5.7", "Winder Pass: Four Reel Storage Stands, Two-Roll Sets, Rolls Tied Together, Steam Vented on a Sheet Break"], ["6.6.0-t1", "Orders and Bales (Test): Customer Order Book and Spot Market, Idle Energy While Stopped, Bale Grading at the Gate"], ["6.6.0", "Orders and Bales: Customer Order Book and Spot Market, Idle Energy While Stopped, Bale Grading at the Gate"], ["6.7.0-t1", "Control Room (Test): Planning, Water and Quality Screens, Split-Screen Trends of Anything, What Moves With What, Process Flow Views"], ["6.7.0", "Control Room: Planning, Water and Quality Screens, Split-Screen Trends of Anything, What Moves With What, Process Flow Views"], ["6.7.1-t1", "New Grade Set (Test): Grades 24, 28, 31 and 34Super, Same Tons per Hour"], ["6.7.1", "New Grade Set: Grades 24, 28, 31 and 34Super, Same Tons per Hour"], ["6.8.0-t1", "Process Relationships (Test): Refining Energy and Ring Crush, Basis Weight Loop, Headbox at 0.8%, White Water Silo, Bale Water and Screen Pressure Drop"], ["6.8.0-t2", "Relationship Map in the Control Room (Test): What Drives Each Reading and What It Moves, Live"], ["6.8.0", "Process Relationships: Refining Energy and Ring Crush, Basis Weight Loop, Headbox at 0.8%, White Water Silo, Bale Water, Screen Pressure Drop and the Relationship Map"], ["6.8.1", "Report Tab Tidy: Live Mill First, Last-24-Hours Chart, Quality & Fiber and Orders & Bales Removed"], ["6.8.2", "Manning: DuPont 12 Shifts for Techs and Operators, Team Hard Hats, Shift Change Walk-In, Vacations Covered Across Teams"], ["6.8.3", "OCC Recipe (A Bales, C Bales, Mixed Waste), Relationship Map Zoom and 3D Light Cones at Night"], ["6.9.0-t1", "The Valves Update (Test): Six Control Loops on the DCS with Real Valves, Faceplates, PID Tuning, Bump Tests, a Tuning Clock and Tuning Challenges"], ["6.9.0", "The Valves Update: Six Control Loops on the DCS with Real Valves, Faceplates, PID Tuning, Bump Tests, a Tuning Clock, Tuning Challenges and Their Links on the Relationship Map"], ["6.9.1", "Wet End Controls: Rush / Drag in fpm on the WET DCS"], ["6.9.2", "Release Review: Help and Glossary Brought Up to Date, Nine Bug Fixes, Refiners Feed the Machine Chest (a Clash Trips the Machine on Low Level) and an Economy Rebalance Where the Daily Round Is the Biggest Boost"], ["6.10.0-t1", "The Reliability and Electrical Update (Test): Ten VFD Motors with Health, an MCC Building with Three Drive Lineups Fed from the Substation, an Electrical Tech on Every Shift, Shift Vibration and ADX Rounds That Get Skipped When Techs Are Busy, Reliability and Drives Screens, Bearing, Motor and Drive Failures, Outage Changeouts and the Water Tower Moved to the North-East Corner"], ["6.10.0-t2", "The Reliability and Electrical Update (Test 2): the 115 kV to 650 V DC Power Chain with Rectifier Faults, Reset-or-Investigate Drive Fault Decisions, Arc-Flash PPE at the MCC, AUTO-LW Basis Weight, Click for Info and Lamps Under the Roofs"], ["6.10.0-t3", "The Reliability and Electrical Update (Test 3): QA Fixes and Balance: Unanswered Drive Faults Auto-Decide After an Hour, Drive Cards Show Load at the Trip, Reliability Failures About Half as Often, Lower Motor and Rectifier Bills"], ["6.10.0-t4", "The Reliability and Electrical Update (Test 4): One Machine per Vibration Round, Planned Repairs Take the Machine Down 20-40 Minutes, Repeated Drive Resets Get Worse and Can Fail, a Tutorial Card for Rounds and the MCC, Drive and Rectifier Health on Screen, Clearer Click for Info and 26 Polish Fixes"], ["6.10.0-t5", "The Reliability and Electrical Update (Test 5): the MCC Main Incomer Fiddly Knob (Opening It Causes an Arc Flash), the New Upsets in the Upsets Tab"], ["6.10.0", "The Reliability and Electrical Update: Ten Critical VFD Motors on Three MCC Drive Lineups, an Electrical Tech on Every Shift, Shift Vibration and ADX Rounds, Reliability and Drives Screens, Bearing, Motor, Drive and Rectifier Failures, Drive Fault Decisions, Outage Changeouts, the MCC Main Incomer and Its Arc Flash, AUTO-LW and Click for Info"], ["6.10.1-t1", "Polish (Test): Drives Wear Slower but Fail More When Worn, Three Drives Start Part-Worn, the Refiner Upgrade Brings Bigger Drives, the Main Incomer on the Relationship Map, a Message for a Blank Mill Name"], ["6.10.1", "Reliability Polish: Drives Wear Slower but Fail More When Worn, Three Drives Start Part-Worn, Bigger Refiner Drives with the Refiner Upgrade, the Main Incomer on the Relationship Map, a Message for a Blank Mill Name"], ["6.10.2", "Tests and Tidy: One Test Runner with 21 Merged Checks, Dead Code Removed (Bare Graphics Leftovers, Unused Code and Styles), Lint Clean"], ["6.11.0-t1", "Blender Redesign, the Winder and Trim (Test): Redesigned Machine, Buildings, MCC, Power House, Wastewater, Water Tower, Workers and Vehicles; a Real Two-Drum Winder with a Rider Roll and Web Inspections; Twin Rolls at Order Widths with Trim to a DE Pulper; Quality per Roll across 12 CD Zones; a Spray Boom and a Steam Box Upgrade"], ["6.11.0-t2", "Economy (Test): Paper Prices +2.5% on Every Grade to Make Up for Trim"], ["6.11.0", "The Winder, Trim and CD Update: a Redesigned Mill (Designed in Blender), a Real Two-Drum Winder with a Rider Roll and Web Inspections, Twin Rolls at Order Widths with Trim to a DE Pulper, Quality per Roll across 12 CD Zones, a Spray Boom, a Steam Box Upgrade and Prices +2.5%"], ["6.11.1-t1", "The Dryer Hood (Test): a Closed Dryer Hood with Six Lifting Doors that Rise on Breaks and Downtime, and a Hood Doors Fiddly Knob that Lifts the Front Away (4% More Steam While Running)"], ["6.11.1-t2", "Wet-End Chemicals (Test): Dry Strength Starch and a Retention Polymer on the WET DCS, AUTO Flow-Paced at No Extra Cost with a MANUAL Pump Override"], ["6.11.1-t3", "QA Round (Test): Upgrades 20% Cheaper, a Ratio Setpoint for the Chemical Pumps on AUTO, a Permit-Risk Warning for Low Polymer, No Outage Notice over the Season Summary"], ["6.11.1-t4", "Effluent in Permit (Test): the Clarifier Catches More, so a Normal Run Is ~25 mg/L TSS under the 50 mg/L Permit, and Cutting the Polymer Breaks It"], ["6.11.1", "The Dryer Hood and Wet-End Chemicals: a Closed Dryer Hood with Lifting Doors and a Hood Doors Fiddly Knob, Dry Strength and Retention Polymer on the WET DCS, Upgrades 20% Cheaper, Effluent in Permit"], ["6.11.2-t1", "Sold by Area (Test): Paper Is Sold by the Square Foot, so a Lighter Sheet Earns More a Ton and a Heavier One Less; the Mill Still Counts in Tons; MSF on the Planning Screen"], ["6.11.2-t2", "Control Room Tidy-Up (Test): 2nd and 3rd Section Steam on the DET DCS, WET Setpoints in Process Order, Yard Crews Stay Put on Breaks, MCC Computer Opens Drives, SPOT Console Moved, Seal Chest Labels Turned"], ["6.11.2-t3", "Test Suite Green (Test): Reel Storage Counts Right (a Turn-Up Takes Exactly One Reel), Tornado Damage Marked as Sudden, Steadier Checks"], ["6.11.2-t4", "Metered Power (Test): Drives Re-Rated and Electricity Billed from Their Load, Starch Removed, a Spare Spool Stand on the Crane Line, a Half Wall on the Roll Warehouse, Two Stray Objects at the Origin Fixed"], ["6.11.2-t5", "Vehicles and Polish (Test): New Food Truck, Train, Staff Cars and Carry-Deck Crane, Warehouse Annexes Roofed and Used for Storage, a Door on the Warehouse, Shift Walkers Use Doorways, Uncle Brian Rides Again, MCC Light, Beater Bay Info, Known Defects View, DE Pulper on the DCS"], ["6.11.2-t6", "QA Round (Test): Season Grade Counts the Money, Early Defect Pins Dimmed, DE Pulper High-Level Alarm and Overflow, Repair Bills 12.5% Lower, Hank Gets a Feel for the Sheet"], ["6.11.2", "Sold by Area and Metered Power: Rolls Sold by the Square Foot, Drives Re-Rated with Electricity Billed from Their Load, Starch Removed, New Vehicles, Warehouse Annexes Roofed and Used, Known Defects View, DE Pulper on the DCS, Season Grade Counts the Money, Repairs 12.5% Lower, Hank Buffed"], ["6.12.0-t5", "Smooth on the Phone (Test): the Sign Boards No Longer Re-Upload the Whole Atlas Every 0.8 s"], ["6.12.0-t6", "Cool, Fast and Free (Test): the World Draws at 30 While the View Is Still, the Whole Site as One Picture, a Free 3D Camera in Settings"], ["6.12.0-t7", "Whole-Site Picture Off by Default (Test): Opt-In with ?imp"], ["6.12.0", "Cool, Fast and Free: Smooth on the Phone (Sign Boards No Longer Re-Upload Every 0.8 s), the World Draws at 30 While the View Is Still, a Free 3D Camera in Settings, Record Board Updates Once a Day"], ["6.12.1-t1", "The Shop Moves South (Test): the Maintenance Shop Now Stands West of the MCC on the Lawn in Front of the Hall"], ["6.12.1-t2", "A True Approach System (Test): the Refiners Stand Beside the Headbox in a New Bay, the Fan Pump Behind It, Refiners After the Machine Chest"], ["6.12.1-t3", "Approach Bay QA (Test): a 4 m Service Aisle by the Headbox, the Refiner Plate Change Played Through Clean"], ["6.12.1-t4", "Season QA Fixes (Test): Upgrades That Pay Back, a Fairer Grade, Bottlenecks Mild to Severe, Whole Rolls in the Order Feed"], ["6.12.1-t5", "Rail Bay at Receiving, Refiners Ahead of the Machine Chest, Tail Threading (Test)"], ["6.12.1-t6", "Couch Suction Box Knob, Cleaner Approach Piping, Felts Run True, No Tending-Side Dryer Catwalk (Test)"], ["6.12.1-t7", "Forming Table Vacuum Zones and Pump, Refiners Run Out of Power at High Tonnage, Draw Rises with Speed (Test)"], ["6.12.1-t8", "Speed Upgrades Raise the Open Draw with Them (Test)"], ["6.12.1", "The Approach System: Refiners Beside the Headbox, a Rail Bay at Receiving, Forming Table Vacuum Zones, Couch Suction Box, Tail Threading, Draw That Follows Speed, Refiners That Run Out of Power, Upgrades That Pay Back"], ["6.13.0-t1", "Save and Continue Picks Up Exactly Where It Left Off (Test)"], ["6.13.0-t2", "Steam and Sheet (Test): Dryer Cans, Syphons and PDC-304, Hood Air, Energy per Ton, J/W and STFI CD, Stickies, the Broke Chest, Turn-ups, Physics-Based Breaks, the Machine Profile, SPC and Ride the Sheet"], ["6.13.0-t3", "QA Fixes (Test): Broken Syphons Valved Off to the Outage, a Bigger Broke Chest, Every Break in the Log, Breaks Mostly at the Press and Dryers, a Hood Humidity Ceiling, a Faster Sim"], ["6.13.0", "Steam and Sheet: Dryer Cans, Syphons and PDC-304, Hood Air, Energy per Ton, J/W and STFI CD, Stickies, the Broke Chest, Turn-ups, Physics-Based Breaks, the Machine Profile, SPC and Ride the Sheet"], ["6.13.1-t1", "Your Last Soda (Test): the Vending Machine Easter Egg"], ["6.13.1", "Your Last Soda: the Vending Machine Easter Egg"], ["6.13.2-t1", "Real Numbers (Test): psi Pressures, Real Dryer Steam, Ring Crush, Slice, Cleaners, Water"], ["6.13.2-t2", "Real Numbers (Test): Zen Shot Review, Ride the Sheet and 11 New Process Shots"], ["6.13.2-t3", "Real Numbers (Test): Dryer Steam from Heat Transfer, 120 psig Standard, 165 psig Limit"], ["6.13.2-t4", "Real Numbers (Test): Steady Ride the Sheet Readout, Office Flagpoles Removed"], ["6.13.2", "Real Numbers: psi Pressures, Real Dryer Steam from Heat Transfer, Zen Ride the Sheet and New Shots"], ["6.13.3-t1", "Headbox & Fan Pump (Test): Headbox Total Head on the DCS, Fan Pump Curve, Drive Load from Flow and Head"], ["6.13.3", "Headbox & Fan Pump: Headbox Total Head on the DCS, Fan Pump Curve and Faceplate, Drive Load from Flow and Head"], ["6.14.0-t1", "(Test): Anti-aliasing, Sheet Flutter, Bale Variability, Pick-up Roll & Trim Squirts, Headbox Door Upset, CD Map, Guided Grade Change, US Units"]];
   let ov=null,held=false;
   function render(){
     const cur=APP_VER.replace(/^v/i,""),rows=VNOTES.slice().reverse().map(([v,n])=>
@@ -19530,9 +19849,12 @@ function camPullOn(){try{return localStorage.getItem("paper-mill-campull")!=="of
    and trends). The DCS still opens from the operator consoles in the mill too; the process flow left Settings. ---- */
 {const CR=[["pf","Process flow","Money and tons through the mill"],["dcs","DCS","Stock prep, wet end, dry end, utilities"],["PLAN","Planning","Orders, inventory, trucks, OCC recipe"],
     ["QCS","Quality","Specs, off-spec log, beater"],["WATER","Water","Fresh water and the water balance"],["TREND","Trends","Trend anything, find what moves together"],["REL","Reliability","Rounds, vibration and ADX motor tests"],["PROF","Machine profile","Solids from the headbox to the reel"],["BRK","Breaks","The break risk, its causes and the log"],["NRG","Energy","Steam, power and condensate per ton"],["DRV","Drives","The MCC lineups: each drive's load"],["rm","Relationship map","What drives each reading, and what it moves"],["man","Manning","Who's on shift, vacations and cover"]];
+  // v6.14 report cleanup: the screens in four groups, smaller tiles, the second screen as a link under them
+  const CRG=[["Process",["pf","dcs","PROF","BRK","NRG"]],["Production & quality",["PLAN","QCS","WATER"]],["Equipment & people",["REL","DRV","man"]],["Analysis",["TREND","rm"]]];
   const el=$("ctlRoom");
   if(el){el.innerHTML=`<div class="crh"><b>Control room</b><small id="crNote">The mill's screens. The DCS screens also open from the operator consoles in the mill.</small></div>
-      <div class="crg">${CR.map(([k,l,d])=>`<button type="button" data-cr="${k}"><b>${l}</b><small>${d}</small></button>`).join("")}<button type="button" data-cr="pop" id="crPop" hidden><b>⧉ Second screen</b><small>The whole control room in its own window</small></button></div>`;
+      ${CRG.map(([gn,ks])=>`<div class="crgh">${gn}</div><div class="crg">${ks.map(k=>{const c=CR.find(x=>x[0]===k);return `<button type="button" data-cr="${k}"><b>${c[1]}</b><small>${c[2]}</small></button>`;}).join("")}</div>`).join("")}
+      <button type="button" class="crpop" data-cr="pop" id="crPop" hidden>⧉ Open the control room on a second screen</button>`;
     el.addEventListener("click",e=>{const b=e.target.closest("[data-cr]");if(!b||b.disabled)return;const k=b.dataset.cr;
       if(POP.on&&k!=="pop"){popOpen(k==="dcs"?"dcs":k);return;}   // (v6.8.3: popped out, every screen opens on the second screen)
       const x=document.querySelector('#v2sheet header button[aria-label="Close panel"]');if(x)x.click();
@@ -19953,6 +20275,11 @@ requestAnimationFrame(frame);
     seg.innerHTML=["auto","low","medium","high","ultra"].map(g=>`<button data-g="${g}" aria-pressed="${G3.GFX.pick===g}" title="${g==="auto"?"Picked from your device: "+cap(G3.GFX.auto):{low:"1024 shadows, 10 Hz, lighter scenery",medium:"1024 shadows, 15 Hz",high:"2048 softer shadows, 24 Hz, full scenery",ultra:"4096 softer shadows, every frame, dense scenery with far shadows"}[g]}">${g==="auto"?`Auto <small class="gtier">${cap(G3.GFX.auto)}</small>`:cap(g)}</button>`).join("");
     seg.querySelectorAll("button").forEach(x=>x.addEventListener("click",()=>G3.setGfx(x.dataset.g)));
     {const rb=document.createElement("button");rb.id="gfxReload";rb.hidden=true;rb.textContent="Reload to apply all";rb.title="Lighting model, round-shape detail and scenery density change on reload";rb.addEventListener("click",()=>location.reload());setField("Graphics",seg).appendChild(rb);}}
+  // v6.14 anti-aliasing (42g)
+  if(G3.setAA){const seg=document.createElement("div");seg.className="seg";seg.id="aaSeg";seg.setAttribute("role","group");seg.setAttribute("aria-label","Anti-aliasing");
+    seg.innerHTML=[["auto","Auto","Your device's best: the browser's MSAA on a desktop, FXAA on phones and high-DPI screens"],["off","Off",""],["fxaa","FXAA","A cheap smoothing pass over the finished picture"],["msaa","MSAA 4×","The GPU's own, the sharpest; costs more on phones (applies on reload)"]].map(([k,t,ti])=>`<button data-aa="${k}" aria-pressed="${G3.aaPick===k}" title="${ti}">${t}</button>`).join("");
+    seg.querySelectorAll("button").forEach(x=>x.addEventListener("click",()=>G3.setAA(x.dataset.aa)));
+    const rb=document.createElement("button");rb.dataset.aarl="1";rb.hidden=true;rb.textContent="Reload to apply";rb.addEventListener("click",()=>location.reload());setField("Anti-aliasing",seg).appendChild(rb);}
   // v6.12 the free camera: chosen here, applied on reload (the shapes are built for one camera or the other)
   {const seg=document.createElement("div");seg.className="seg";seg.id="camSeg";seg.setAttribute("role","group");seg.setAttribute("aria-label","Camera");
     const cur=!!G3.freeCam;let pick=cur;

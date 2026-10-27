@@ -98,7 +98,7 @@
     {p:[47.6,12.4,-15.0],t:()=>["Machine chest",f0(mcLvlNow())+" %"]},
     {p:[63.5,3.6,-11],t:()=>["Fan pump",S.pm==="run"?"to the headbox":"idling"]},
     {p:[48.8,3.9,zc],t:()=>{const f=fzNow();return ["Forming table",`vacuum ${f.gb.toFixed(1)} · ${f.lv.toFixed(1)} · ${f.hi.toFixed(1)} inHg`];}},
-    {p:[50.6,2.1,3.55],t:()=>["Vacuum pump",S.pm==="run"?Math.round(fzNow().kw)+" kW":"idling"]},
+    {p:[50.6,2.1,3.55],t:()=>["Vacuum pump",S.pm==="run"?fmtHp(fzNow().kw):"idling"]},
     {p:[61.2,5.2,-5.6],t:()=>["Machine screen",S.pm==="run"?"last check before the headbox":"idling"]},
     {p:[44,0.6,12.9],t:()=>["Base ply silo","white water under the wire"]},
     {p:[34.5,9.6,zc-1.5],t:()=>["Twin press",LV("shoe")?"shoe in 2nd press":"tandem bottom felt"]},

@@ -92,7 +92,7 @@
     // machine
     const pmRun=S.pm==="run";
     for(let i=0;i<cansTop.length;i++)cansTop[i].rotation.z=V.cans;for(let i=0;i<cansBot.length;i++)cansBot[i].rotation.z=-V.cans;canInst();if(G3.hoodTick)G3.hoodTick(rdt);
-    press[0].rotation.z=-V.cans*1.3;press[1].rotation.z=V.cans*1.3;press[2].rotation.z=-V.cans*1.15;press[3].rotation.z=V.cans*1.15;feltTex.offset.x=-(V.cans*0.35)%1;for(let i=0;i<feltMeshes.length;i++){const f=feltMeshes[i],t=f.material.map;if(t&&f.userData.dir)t.offset.x=(f.userData.dir*V.cans*0.875/f.userData.path.L)%1;}   /* (v6.12.1-t6: per felt, one seam per turn, 25) */wireTex.offset.x=(V.cans*0.35)%1;feltGuides.forEach(g=>g.rotation.z=-V.cans*4*(g.userData.s||1));wireRolls.forEach(w=>w.rotation.z=V.cans*2.5);
+    press[0].rotation.z=-V.cans*1.3;press[1].rotation.z=V.cans*1.3;press[2].rotation.z=-V.cans*1.15;press[3].rotation.z=V.cans*1.15;feltTex.offset.x=-(V.cans*0.35)%1;for(let i=0;i<feltMeshes.length;i++){const f=feltMeshes[i],t=f.material.map;if(t&&f.userData.dir)t.offset.x=(f.userData.dir*V.cans*0.875/f.userData.path.L)%1;}   /* (v6.12.1-t6: per felt, one seam per turn, 25) */wireTex.offset.x=(V.cans*0.875/wireLoop.userData.path.L)%1;   /* (v6.14: one trade line per turn of the fabric, 25) */feltGuides.forEach(g=>g.rotation.z=-V.cans*4*(g.userData.s||1));wireRolls.forEach(w=>w.rotation.z=V.cans*2.5);
     press.forEach((p,i)=>{p.material=LV("shoe")&&i===3?shoeMat:M.metal;});
     const rr=R0+(RM-R0)*Math.sqrt(clamp(S.reel/P.jumbo,0,1));reelUpdate(rdt,rr);
     if(Math.abs(nipPhi-sheetR)>0.02){sheetR=nipPhi;buildSheet(rr);}
@@ -264,7 +264,7 @@ Z.who=null;Z.goto=null;Z.t=0;Z.len=999;document.body.dataset.zs=Math.random()<0.
       let moved=false;const v=[p.x,p.y,p.z,q.x,q.y,q.z,q.w];for(let i=0;i<7;i++)if(C[i]!==v[i]){moved=true;C[i]=v[i];}for(let i=0;i<16;i++)if(C[7+i]!==pm[i]){moved=true;C[7+i]=pm[i];}
       const on=!G3.cullOff&&(moved||(renderer.shadowMap.enabled&&renderer.shadowMap.needsUpdate)||!!G3.cullAlways);   /* (t10: needsUpdate stays set with shadow maps off: every batch was re-culled every frame) */if(on)G3.cullN=(G3.cullN||0)+1;for(const b of G3.SM.bms)b.perObjectFrustumCulled=on||(!G3.cullOff&&b._visibilityChanged);}   // (t10: a batch whose visibility changed rebuilds its list: culled, not everything)   // (G3.cullOff / cullAlways: A/B switches for the tools)
     if(G3.impFrame&&!EXP.noRender){try{G3.impFrame();}catch(e){G3.impErr=(G3.impErr||0)+1;if(G3.impErr<6)console.error("whole-site picture",e);if(G3.impOff)G3.impOff();}}   // v6.12 the whole-site picture (40d)
-    if(!EXP.noRender){scene.matrixWorldAutoUpdate=!G3.DB||!G3.DB.n;renderer.render(scene,camera);scene.matrixWorldAutoUpdate=true;}
+    if(!EXP.noRender){scene.matrixWorldAutoUpdate=!G3.DB||!G3.DB.n;if(!(G3.aaPost&&G3.aaPost(scene,camera)))renderer.render(scene,camera);scene.matrixWorldAutoUpdate=true;}   // (v6.14: FXAA draws through a post pass, 42g)
     if(hidM)hidM.forEach(o=>o.visible=true);
     // (v15: no counting when the render was skipped: renderer.info still holds the last real frame's numbers; and the moving
     // batches' matrix rewrites per frame, the figure the Float32 cache bug inflated)

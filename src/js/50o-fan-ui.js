@@ -72,7 +72,7 @@ function fanRefresh(force){const o=$("fanOv");if(!o||o.hidden||!FUI.open)return;
   $("fanLeg").innerHTML=`<i style="background:#4fd18b"></i>now <i style="background:#5c7398"></i>60–100% <i style="background:#ffb02e"></i>system <i style="background:#8ea4c4"></i>BEP`;
   if(FUI.tab==="pump"){const L=rlyKw("fan"),m=fpNpshM();
     fanSet(o,"rpm",off?"0":Math.round(F.n*FP.rpm)+" rpm",off?"":Math.round(F.n*100)+"% of "+FP.rpm);fanSet(o,"q",fmtGpm(F.q),run?"headbox flow":"recirculation");
-    fanSet(o,"h",Math.round(F.h)+" ft",(F.h*FP.psiFt).toFixed(1)+" psi");fanSet(o,"kw",Math.round(F.kw)+" kW",Math.round(F.kw/L*100)+"% of "+L+" kW");
+    fanSet(o,"h",Math.round(F.h)+" ft",(F.h*FP.psiFt).toFixed(1)+" psi");fanSet(o,"kw",fmtHp(F.kw),Math.round(F.kw/L*100)+"% of "+hpRate(L));
     fanSet(o,"eff",off?"–":Math.round(F.eff*100)+"%",off?"":F.n>0.05?"BEP at "+fmtGpm(FP.qb*F.n):"");fanSet(o,"npsh",m==null?"–":(m>=0?"+":"−")+Math.abs(m).toFixed(1)+" ft",m==null?"":m<0?"CAVITATING":m<4?"low: silo level":"silo "+(S.we?Math.round(S.we.L/WE.silo*100):0)+"%");
     o.querySelectorAll("[data-fm]").forEach(b=>b.setAttribute("aria-pressed",String((b.dataset.fm==="man")===fpMan())));
     {const j=$("fanJw");if(j){const t=run?`J/W ${hbJw().toFixed(3)} · setpoint ${hbJwSp().toFixed(3)}${Math.abs(hbJw()-hbJwSp())>0.0005?" · OFF SETPOINT":""}`:"machine down";if(j.textContent!==t)j.textContent=t;j.classList.toggle("bad",run&&Math.abs(hbJw()-hbJwSp())>0.004);}}
@@ -121,7 +121,7 @@ function fanDraw(F){const cv=$("fanCv");if(!cv)return;const box=cv.getBoundingCl
     x.fillStyle=cav?"#ff8b7f":F.sat?"#ff8b7f":"#ffb02e";x.beginPath();x.arc(px,py,6,0,Math.PI*2);x.fill();x.strokeStyle="#0f1b2d";x.lineWidth=2;x.stroke();
     x.fillStyle="#dbe6f6";x.font="600 11px system-ui,sans-serif";const lab=`${fmtGpm(F.q)} · ${Math.round(F.h)} ft · ${Math.round(F.n*100)}%`;x.textAlign=px>cw*0.6?"right":"left";x.fillText(lab,px+(px>cw*0.6?-10:10),py-9);
     if(F.sat||cav){x.fillStyle="#ff8b7f";x.fillText(cav?"CAVITATING":"FULL SPEED: J/W SAGS",px+(px>cw*0.6?-10:10),py+16);}}
-  const hl=$("fanHl");if(hl){const t=run?`On the ${Math.round(F.n*100)}% curve where it crosses the system: ${Math.round(F.kw)} kW at ${Math.round(F.eff*100)}% efficiency.`:F.st==="idle"?"Machine down: idling on recirculation.":"Drive off.";if(hl.textContent!==t)hl.textContent=t;}}
+  const hl=$("fanHl");if(hl){const t=run?`On the ${Math.round(F.n*100)}% curve where it crosses the system: ${fmtHp(F.kw)} at ${Math.round(F.eff*100)}% efficiency.`:F.st==="idle"?"Machine down: idling on recirculation.":"Drive off.";if(hl.textContent!==t)hl.textContent=t;}}
 UI_TICKS.push(()=>{if(FUI.open){const o=$("fanOv");if(!o||o.hidden)return;fanRefresh(false);}
   const r=document.querySelector("[data-fanrow]");if(r&&S&&S.fp){const F=S.fp,t=F.st==="off"?"OFF":`${Math.round(F.n*FP.rpm)} rpm · ${Math.round(F.h)} ft`;if(r.textContent!==t)r.textContent=t;}});
 // Escape closes the faceplate first (before the DCS's own handler)

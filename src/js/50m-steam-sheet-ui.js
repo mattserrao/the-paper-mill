@@ -24,7 +24,7 @@ MIMIC.STM={title:"STEAM & AIR",h:322,trends:[["dp3","3rd section ΔP psi","#7fb2
     MT6(518,188,"dp3","ΔP",()=>S.stm?sf1(S.stm.dp[2])+" psi":"–",()=>S.stm&&S.pm==="run"&&S.stm.dp[2]<stmNeed(2)?"bad":""),MT6(518,200,"dpneed","NEED",()=>S.pm==="run"?sf1(stmNeed(2))+" psi":"–"),
     MT6(430,108,"bt3","BLOW",()=>S.stm&&S.pm==="run"?Math.round(S.stm.bt[2]*100)+"%":"–",()=>S.stm&&S.stm.bt[2]>STM.btWaste?"warn":""),MT6(540,108,"tcmax","REACH",()=>sf1(stmTcMax())+" psi",()=>stmTcMax()<stmSp()?"bad":""),
     MT6(50,254,"btwaste","WASTE",()=>S.stm?sf1(S.stm.waste)+" t/h":"–",()=>S.stm&&S.stm.waste>0.3?"warn":""),MT6(365,250,"cret","RETURN",()=>S.stm?Math.round(S.stm.ret*100)+"%":"–",()=>S.stm&&S.stm.ret<0.8?"warn":""),
-    MT6(155,256,"hoodH","HUMIDITY",()=>S.stm&&S.pm==="run"?Math.round(S.stm.H)+" g/kg":"–",()=>S.stm&&S.stm.H>STM.Hhi?"bad":S.stm&&S.stm.H<STM.Hlo&&S.pm==="run"?"warn":""),MT6(155,318,"dew","DEW PT",()=>S.stm&&S.pm==="run"?Math.round(stmDew(S.stm.H))+" °C":"–"),
+    MT6(155,256,"hoodH","HUMIDITY",()=>S.stm&&S.pm==="run"?Math.round(S.stm.H)+" g/kg":"–",()=>S.stm&&S.stm.H>STM.Hhi?"bad":S.stm&&S.stm.H<STM.Hlo&&S.pm==="run"?"warn":""),MT6(155,318,"dew","DEW PT",()=>S.stm&&S.pm==="run"?fmtF(stmDew(S.stm.H)):"–"),
     MT6(338,318,"exh","EXH",()=>S.stm?Math.round(S.stm.exh)+"% "+(S.stm.exhM==="auto"?"AUTO":"MAN"):"–"),MT6(456,318,"sup","SUP",()=>S.stm?Math.round(S.stm.sup)+"% "+(S.stm.supM==="auto"?"AUTO":"MAN"):"–"),
     MT6(574,256,"hum","ROOM RH",()=>S.stm?Math.round(S.stm.hum)+"%":"–",()=>S.stm&&S.stm.hum>74?"bad":""),MT6(574,318,"fog","",()=>motStatus("fog")!=="run"||active("fogfan")?"DOWN":"RUNNING",()=>motStatus("fog")!=="run"||active("fogfan")?"bad":""),
     MT6(572,22,"air","AIR COILS",()=>S.stm?sf1(S.stm.air)+" t/h":"–")]};
@@ -182,7 +182,7 @@ function rideAt(u){const P2=RIDE.pts,n=P2.length-1,f=clamp(u,0,1)*n,i=Math.min(n
 // the HUD: the section, solids where the camera is, speed, draw and the sheet's temperature
 function rideHud(u){const h=$("rideHud");if(!h)return;const [, ,d]=rideAt(u),P2=profNow();let i=0;while(i<P2.length-2&&P2[i+1][0]<=d)i++;const a=P2[i],b=P2[i+1],k=clamp((d-a[0])/Math.max(0.01,b[0]-a[0]),0,1),c=a[3]+(b[3]-a[3])*k;
   const temp=d<15?44:d<25?48:d<37?60+(d-27)*1.5:d<46.5?76+(d-37)*0.6:d<58.5?84+(d-46.5)*0.6:86;
-  const n=k>0.5?b:a,t=`<b>${n[1]==="Forming"?n[2]:n[1]}</b><span>${c<3?"consistency "+c.toFixed(2):"solids "+c.toFixed(1)}%</span><span>${Math.round(S.pmSpeed)} fpm</span><span>draw ${knobVal("draw").toFixed(2)}%</span><span>sheet ${Math.round(temp)} °C</span><small>tap to leave</small>`;if(h._h!==t){h._h=t;h.innerHTML=t;}}
+  const n=k>0.5?b:a,t=`<b>${n[1]==="Forming"?n[2]:n[1]}</b><span>${c<3?"consistency "+c.toFixed(2):"solids "+c.toFixed(1)}%</span><span>${Math.round(S.pmSpeed)} fpm</span><span>draw ${knobVal("draw").toFixed(2)}%</span><span>sheet ${fmtF(temp)}</span><small>tap to leave</small>`;if(h._h!==t){h._h=t;h.innerHTML=t;}}
 G3.rideAt=rideAt;G3.rideHud=rideHud;G3.rideEnd=shRideEnd;G3.ride=shRide;
 // tests (tools/checks): the sheet and the steam models
 G3.sheet={setJw:hbSetJw,jw:hbJw,jwSp:hbJwSp,hbc:hbcSet,form:formF,tsr:tsrNow,stfi:()=>QNOW.stfi,stfiSpec,brk:brkRisk,where:brkWhere,prof:profNow,bkSet,bkLvl,reelSetNip,hard:reelHard,stk:()=>S.stk,stkClean,turnup:turnupRoll,log:brLog,top:brTop};

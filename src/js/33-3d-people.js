@@ -148,7 +148,7 @@
   const hiWho=new Set(),wrapWho=new Set();
   const spears=[0,1,2].map(()=>{const m=new THREE.Mesh(new CylG(0.07,0.07,1,6),M.ink);m.visible=false;scene.add(m);return m;});
   const canX=k=>(872-k*32-600)/10;
-  const SITES={shaft:{c:[12,zc],a:"fix",p:[[10,14.4],[12,14.4],[14,14.4],[11,15.4]]},slime:{c:[10,zc],a:"clean",p:[[2,14.2],[8,14.2],[14,14.2],[20,14.2]]},
+  const SITES={hbdoor:{c:[52,zc+2.5],a:"clean",p:[[47,14.2],[51,14.2],[55,14.2],[58,13.8]]},shaft:{c:[12,zc],a:"fix",p:[[10,14.4],[12,14.4],[14,14.4],[11,15.4]]},slime:{c:[10,zc],a:"clean",p:[[2,14.2],[8,14.2],[14,14.2],[20,14.2]]},
     winderdown:{c:[-18.7,9.4],a:"fix",p:[[-16.6,12.4],[-16.4,10.4],[-20.9,12.4],[-21,10.4]]},
     // v6.5.7 tied rolls: two operators on the band saw at the join between the two rolls on the upender (the rest stay put)
     tiedrolls:{c:[-22.9,zc-0.725],a:"saw",p:[[-24.35,zc-1.45],[-24.35,zc]]}};

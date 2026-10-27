@@ -171,7 +171,21 @@ function recTake(t,dt){if(!baleOn())return;const Q=bqState(),Y=recPiles(),sq=rec
   while(left>1e-9&&skip<N&&it++<64){const b=Math.floor(Q.fed+1e-9),q=sq[b%N],room=(b+1-Q.fed)*BALE_T;
     if(Y[q]<=1e-9||room<1e-9){Q.fed=b+1;if(Y[q]<=1e-9)skip++;continue;}   // none of that kind (or this bale is done): on to the next bale
     const u=Math.min(left,room,Y[q]);Y[q]-=u;left-=u;Q.fed=Math.min(b+1,Q.fed+u/BALE_T);ys+=u*(1-BT[q].rej);tot+=u;Q.bt[q]+=u;skip=0;}
-  if(tot>0)Q.fy=ease(Q.fy,ys/tot,dt,20);}
+  if(tot>0)Q.fy=ease(Q.fy,ys/tot,dt,20);
+  if(tot>0){const b=Math.floor(Q.fed+1e-9);bvBale(Q,b,sq[b%N]);}}   // (v6.14 the bale being fed now)
+/* v6.14 process noise, starting with the bales: each bale fed has its own moisture (± around the yard's), contamination
+   (× the yard's) and fiber quality (a strength/freeness deviation), drawn from a hash of the run's seed and the bale's
+   number (no dice used, so every other stream is as before; a season replays the same). Mixed Waste varies most, A bales
+   least; every spread is centred, so the averages are as before. The pulper mixes about BVAR.mix minutes of bales; the
+   fiber quality then rides the stock chest to the machine like the stickies (07g: freeness, ring crush, STFI), the
+   moisture swings the pulper's consistency until its dilution catches it (07g cpd), the contamination the stickies. */
+const BVAR={mix:6,A:{m:0.015,k:0.2,q:0.5},C:{m:0.025,k:0.3,q:0.8},M:{m:0.035,k:0.45,q:1}};
+function bvHash(n,s){let x=(Math.imul(n|0,0x9E3779B1)^Math.imul(((S.seed|0)+s)|0,0x85EBCA6B))>>>0;x^=x>>>16;x=Math.imul(x,0x7feb352d)>>>0;x^=x>>>15;x=Math.imul(x,0x846ca68b)>>>0;x^=x>>>16;return (x>>>0)/4294967296;}
+const bvTri=(n,s)=>bvHash(n,s)+bvHash(n,s+7)-1;   // (centred, -1..1)
+function bvBale(Q,b,q){if(Q.bi===b)return;Q.bi=b;const V=BVAR[q]||BVAR.C;Q.cur={q,dm:V.m*bvTri(b,11),kf:1+V.k*bvTri(b,23),fq:V.q*bvTri(b,37)};}
+// (the bale on the conveyor now, and the pulper's and the machine's mixed view of them)
+const bvNow=()=>baleOn()&&S.bq&&S.bq.cur?S.bq.cur:null;
+const bvFq=()=>baleOn()&&S.bq&&!S.zen?S.bq.fqm||0:0;
 // the pulper's top rate with this recipe (t/h)
 function recRate(){if(!baleOn())return Infinity;const sh=recShare(bqState().rec,"M");return P.pulperMax*(1-MW_RATE.k*Math.max(0,sh-MW_RATE.ref));}
 // an inbound load's grade and moisture (drawn when the truck arrives)
@@ -198,6 +212,8 @@ function baleTick(dt,fiberIn){if(!baleOn())return;const Q=bqState();
   else if(S.wx==="snow"&&Q.m<BALE.snowMax)Q.m+=(BALE.snowMax-Q.m)*Math.min(1,dt/BALE.tauSnow);
   else if(Q.m>BALE.m0+0.02)Q.m-=(Q.m-BALE.m0-0.02)*Math.min(1,dt/BALE.tauDry);
   // stickies reach the machine through the stock chest (its residence time)
-  if(fiberIn>0){const tau=Math.max(60,S.tank/Math.max(1,(S.rates.fiberUse||30))*60);Q.ck=ease(Q.ck,Q.k,dt,tau);}}
+  // (v6.14: each bale's own contamination and fiber quality, mixed in the pulper, then through the chest)
+  const cu=Q.cur;if(cu&&fiberIn>0){Q.bm=ease(Q.bm||0,cu.dm,dt,BVAR.mix);Q.kfp=ease(Q.kfp==null?1:Q.kfp,cu.kf,dt,BVAR.mix);Q.fqp=ease(Q.fqp||0,cu.fq,dt,BVAR.mix);}
+  if(fiberIn>0){const tau=Math.max(60,S.tank/Math.max(1,(S.rates.fiberUse||30))*60);Q.ck=ease(Q.ck,Q.k*(Q.kfp==null?1:Q.kfp),dt,tau);Q.fqm=ease(Q.fqm||0,Q.fqp||0,dt,tau);}}
 function bqMods(m){if(!baleOn()||!S.bq)return;m.breakMul*=1+BALE.kb*S.bq.ck;}
 const bqBand=k=>k<0.08?"clean":k<0.2?"fair":k<0.35?"poor":"bad";

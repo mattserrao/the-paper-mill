@@ -1,5 +1,51 @@
 # Changelog
 
+## v6.14.0-t1 (2026-10-27): the v6.14.0 features (test build, test/v6.14.0)
+Plan and decisions: claude/v6140-plan.md. Slowback / cost-out modes and the relationship map examples were dropped.
+- **Anti-aliasing (20, 42g):** Settings → Graphics (in game and on the title): Auto / Off / FXAA / MSAA 4×. Auto keeps the
+  browser's MSAA on a desktop under 1.5× DPR and adds FXAA on phones and high-DPI screens, which had none. FXAA is a post
+  pass: the scene renders to a target three.js treats like the canvas (each material's own tone mapping, sRGB out), then
+  one full-screen triangle with FXAA. FXAA switches live; to or from MSAA reloads. `?aa=` pins it for tests.
+- **Trade line (25, 43):** the forming fabric shows one trade line going round instead of a mark every 2.5 m.
+- **Sheet flutter (07n, 03, 40b, 50d):** a "Machine speed and sheet flutter" contributor in the break odds: 1 at the
+  grade's design speed, down to 0.6 slower (−10% speed: ×0.85), a gentle rise faster, and past the flutter threshold
+  (design + 5%, +150 fpm a level of the new **Pocket ventilation & sheet stabilizers** upgrade, $95k / $85k) a steep climb;
+  the open draw flutters in 3D and the DET DCS alarms. An untouched mill on a standard speed is unchanged; speed upgrades
+  now want the stabilizers. The slower side follows the speed the player asks for (the setpoint), so a machine held back
+  by a bottleneck, the dryer limit or a rethread ramp isn't credited with fewer breaks.
+- **Bale variability (05b, 07g, 07n, 07b):** each bale fed has its own moisture, contamination and fiber quality, from a
+  hash of the seed and the bale's number (no dice: every other stream keeps its timing), centred so the averages hold.
+  Mixed in the pulper (~6 min), then the stock chest: pulper consistency swings until NV-101 catches them; freeness
+  (±25 mL), ring crush and STFI (±3%) and the stickies wander with the fiber.
+- **Suction pick-up roll, trim squirts, knock-off shower (07b, 07-sim, 40b, 50b, 50d, 50p):** three new fiddly knobs.
+  Pick-up roll vacuum (red knob by the roll, 10 inHg standard): under 6 the sheet breaks at the transfer, over 13 the
+  holes mark the sheet (beater). Trim squirts (WET DCS, in a side, 0 = the deckle): in sends 2× that of the web down the
+  couch pit as trim (fewer tons), out leaves ragged edges (beater, edge breaks). Knock-off shower (WET DCS, 250 psi):
+  under 120 the trim rides into the press (breaks). A close-up of the roll's vacuum zones and hole pattern on the WET DCS;
+  the squirts and the knock-off spray drawn at the couch; the knobs view, traces and help.
+- **Headbox side door (07q, 04, 04b, 31/33/40b):** a new upset. On a restart after a stock-off the door can blow off:
+  5% × (1 + 3 × seal wear) a restart, doubled back within 30 min; its own dice stream. Stock sprays and floods the floor
+  along the former, machine down 1-2 h, $45k bill, a crew clean-up. The seal wears over ~12 days of running; a planned
+  outage re-seats it, and a weeping seal is caught on the wet end Round (planned re-seat at 5% of the bill).
+- **QCS CD map (11d, 50f):** a heatmap of the 12 zones over the last 2 / 8 / 24 h, moisture or basis weight against the
+  grade's spec; tap a cell for its reading.
+- **Guided grade change, free play (07r, 50q):** on the WET DCS: steps of ~1.25 lb, speed and weight together so the tons
+  an hour hold; a coach shows each step's targets, whether weight (on the QCS) and moisture have settled, and the beater
+  tons against the crew's automatic change (24 → 28 done steadily: ~2-3 t vs ~9 t). Seasons and survival unchanged.
+- **Reports and units:** the Report tab's control room in four groups (Process, Production & quality, Equipment & people,
+  Analysis) with smaller tiles and the second screen as a link; the date fits its card; the flow picture's bottleneck
+  label stays inside it. Motors and drives in hp (refiner load, vacuum pump, fan pump, drive ratings as nameplate hp; the
+  MCC total, power bill and kWh stay electrical); temperatures in °F (steam, motors, sheet, dew point); a Units glossary
+  entry. The refiner load's hourly history converts too.
+- **Also:** trend tags (bale moisture, fiber quality, flutter, pick-up roll vacuum, door seal wear), the relationship map,
+  glossary entries for all of it. New assertions in checks/process.py (v614).
+- **Checks:** 22/22 default checks pass (popout, pflow and help timed out once under the 2-at-a-time load and passed
+  re-run on their own; the sim's cost per step is unchanged against main). dcs.py expects the new couch rows; help.py's
+  "pulp" filter allows the new entries. QA: handsoff and active seasons, 3 seeds each against main: active profit
+  $1.38M vs $1.38M, breaks 19-25 vs 20-29; hands-off varies by seed as before. FXAA on the phone profile: +1 draw and
+  +1 shader program; the real GPU cost wants your iPhone ?autotest run.
+
+
 ## v6.13.3 (2026-10-27): Headbox & Fan Pump
 Release of v6.13.3-t1 (below), merged from test/v6.13.3-headbox: the headbox total head (TAPPI) on the WET DCS, the fan
 pump on a real VFD curve with its faceplate, drive load from flow and head (power bill cost-neutral), machine screen

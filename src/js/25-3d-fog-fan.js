@@ -263,8 +263,9 @@
     {const acc2=[0];for(let i=1;i<P2.length;i++)acc2.push(acc2[i-1]+Math.hypot(P2[i][0]-P2[i-1][0],P2[i][1]-P2[i-1][1]));m.userData.path={pts:P2,acc:acc2,L:acc2[acc2.length-1],segs:P2.length-1};}
     return m;}
   // forming fabric (wire) loop over the table and around the breast and couch rolls
-  const wireTex=feltTex.clone();wireTex.needsUpdate=true;const wireMat=mat("g-wire",{map:wireTex,side:THREE.DoubleSide,roughness:0.55});
-  const wireLoop=feltLoop([[40.9,2.93],[54.6,2.93],[55.05,2.4],[54.6,1.87],[40.9,1.87],[40.45,2.4]],wireMat);
+  // (v6.14: one trade line round the loop, like the felts' seams, instead of a mark every 2.5 m)
+  const wireTex=seamTex(4);const wireMat=mat("g-wire",{map:wireTex,side:THREE.DoubleSide,roughness:0.55});
+  const wireLoop=feltLoop([[40.9,2.93],[54.6,2.93],[55.05,2.4],[54.6,1.87],[40.9,1.87],[40.45,2.4]],wireMat,true);
   const feltMeshes=[];
   const feltGuides=[];
   function guide(x,y){feltGuides.push(cylZ(0.28,CD+0.2,M.steel,x,y,zc,10));}
