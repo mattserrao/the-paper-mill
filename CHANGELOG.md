@@ -1,5 +1,10 @@
 # Changelog
 
+## v6.13.3 (2026-10-27): Headbox & Fan Pump
+Release of v6.13.3-t1 (below), merged from test/v6.13.3-headbox: the headbox total head (TAPPI) on the WET DCS, the fan
+pump on a real VFD curve with its faceplate, drive load from flow and head (power bill cost-neutral), machine screen
+plugging cleared by the outage wash-up, and manual fan pump rpm in free play. Regression suite on t1: 22/22 default checks.
+
 ## v6.13.3-t1 (2026-10-26): Headbox & Fan Pump (test build, test/v6.13.3-headbox)
 Plan and decisions: claude/headbox-fanpump-v6133-plan.md. Typical real-mill numbers only (no PM3 data).
 - **Headbox total head on the WET DCS (07p, 50d).** The papermaker's calculation (TAPPI TIP 0502-17): H = (V/100)² ÷ K,
