@@ -185,6 +185,6 @@ function rideHud(u){const h=$("rideHud");if(!h)return;const [, ,d]=rideAt(u),P2=
   const n=k>0.5?b:a,t=`<b>${n[1]==="Forming"?n[2]:n[1]}</b><span>${c<3?"consistency "+c.toFixed(2):"solids "+c.toFixed(1)}%</span><span>${Math.round(S.pmSpeed)} fpm</span><span>draw ${knobVal("draw").toFixed(2)}%</span><span>sheet ${Math.round(temp)} °C</span><small>tap to leave</small>`;if(h._h!==t){h._h=t;h.innerHTML=t;}}
 G3.rideAt=rideAt;G3.rideHud=rideHud;G3.rideEnd=shRideEnd;G3.ride=shRide;
 // tests (tools/checks): the sheet and the steam models
-G3.sheet={setJw:hbSetJw,jw:hbJw,hbc:hbcSet,form:formF,tsr:tsrNow,stfi:()=>QNOW.stfi,stfiSpec,brk:brkRisk,where:brkWhere,prof:profNow,bkSet,bkLvl,reelSetNip,hard:reelHard,stk:()=>S.stk,stkClean,turnup:turnupRoll,log:brLog,top:brTop};
+G3.sheet={setJw:hbSetJw,jw:hbJw,jwSp:hbJwSp,hbc:hbcSet,form:formF,tsr:tsrNow,stfi:()=>QNOW.stfi,stfiSpec,brk:brkRisk,where:brkWhere,prof:profNow,bkSet,bkLvl,reelSetNip,hard:reelHard,stk:()=>S.stk,stkClean,turnup:turnupRoll,log:brLog,top:brTop};
 G3.dryP={satT,satP,ph:dryPh,hp:dryHp,p2:dryP2,ceil:dryCeil,pcap:dryPcap};
 G3.steam={need:stmNeed,sp:stmSp,setSp:stmSetSp,setFan:stmSetFan,lost:stmLost,demF:stmDemF,flooded:stmFlooded,tcMax:stmTcMax,ir:stmIr,dew:stmDew,shell:stmShell};

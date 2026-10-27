@@ -38,7 +38,7 @@ One line per check, then a summary; exit code 0 only when every check passed. Fu
 | `control` | default | control room screens, trends, relationship map | controlcheck, relmapcheck |
 | `pflow` | default | process flow overview books and views | pflowcheck |
 | `popout` | default | second-screen pop-outs | popoutcheck |
-| `process` | default | dryer limit, quality specs, dewatering chain, mass balance, winder, orders and bales, process relationships, refiners | dryercheck, qualcheck, dewatercheck, watercheck, windercheck, ordercheck, relcheck, refcheck |
+| `process` | default | dryer limit, quality specs, dewatering chain, mass balance, winder, orders and bales, process relationships, refiners, fan pump and headbox total head | dryercheck, qualcheck, dewatercheck, watercheck, windercheck, ordercheck, relcheck, refcheck |
 | `valves` | default | the six control loops, tuning, bump tests | valvecheck |
 | `reliability` | default | motors and drives, rounds, MCC, drive faults | rlycheck |
 | `steamsheet` | default | v6.13: dryer cans and syphons, PDC-304, the hood and fog fan, energy, J/W and STFI, broke chest, turn-ups, break risk, profile, the new screens | |

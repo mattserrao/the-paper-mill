@@ -153,3 +153,5 @@ One line per version, oldest first. Add a line here with every release: build.py
 6.13.2-t3  Real Numbers (Test): Dryer Steam from Heat Transfer, 120 psig Standard, 165 psig Limit
 6.13.2-t4  Real Numbers (Test): Steady Ride the Sheet Readout, Office Flagpoles Removed
 6.13.2     Real Numbers: psi Pressures, Real Dryer Steam from Heat Transfer, Zen Ride the Sheet and New Shots
+6.13.3-t1  Headbox & Fan Pump (Test): Headbox Total Head on the DCS, Fan Pump Curve, Drive Load from Flow and Head
+6.13.3     Headbox & Fan Pump: Headbox Total Head on the DCS, Fan Pump Curve and Faceplate, Drive Load from Flow and Head

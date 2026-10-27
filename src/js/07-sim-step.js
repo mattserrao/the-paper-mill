@@ -140,6 +140,7 @@ function step(dt){
   while((S.beatAcc||0)>=2*C.rollW.v-1e-6||(S.beatEnd&&(S.beatAcc||0)>0.05)){const q=Math.min(S.beatAcc,2*C.rollW.v);S.beatAcc=Math.max(0,S.beatAcc-q);
     S.tot.beater=(S.tot.beater||0)+2*C.rollW.v;S.tot.beatRolls=(S.tot.beatRolls||0)+2;S.q.bank+=q;}
   beaterTick(dt);waterTick(dt);   // (v6.5.6: the water that went with all of that, 07f)
+  fpTick(dt);   // v6.13.3 the fan pump's operating point, the jet it delivers and the machine screen's plugging (07p)
   // 6 outbound
   if(!M.noOut) S.outPhase+=dt*C.outRate.v/60*S.outJit*wxTruck;
   while(S.outPhase>=1){S.outPhase-=1;S.outJit=0.6+rand("flow")*0.8;

@@ -84,7 +84,7 @@ function rlyLoad(id,r){if(!S||outOn()||rlyIncOf(id)||rlyRectDown(ASSETN[id].ln))
   switch(id){
     case "pulp":return M.pulperDown?0:r.amps/500*100+w;
     case "refA":case "refB":return r.refkw>0?r.refkw/2/rlyKw(id)*100*(id==="refB"?0.97:1.03)+w:0;
-    case "fan":return run?48+30*S.pmSpeed/3000+w:M.pmDown?0:30+w;
+    case "fan":{const L=fpLoad();return L==null?(run?48+30*S.pmSpeed/3000+w:M.pmDown?0:30+w):L+(L>0?w*0.6:0);}   // (v6.13.3: the pump curve, 07p)
     case "couch":return run?38+r.vac*1.05+(r.gbox-1)*2.4+(r.lvac-5)*1.6+w:M.pmDown?0:12;   // (v6.12.1-t7: every vacuum zone drags on the fabric, and the couch drives it)
     case "pr1":return run?42+r.pl*0.27+w:M.pmDown?0:12;
     case "pr2":return run?38+r.pl*0.24+w:M.pmDown?0:12;
@@ -103,7 +103,9 @@ function rlyMccKw(r){r=r||knobRead();let k=0;for(const A of ASSETS)k+=Math.max(0
    did (ECON.energy's power share, 40% of $68/t: about 12.5 MW and 390 kWh/t at 32 t/h), so a slow machine, a stop or heavy
    refining now show in the bill as they would. The APC upgrade (-4%) and survival's cost multiplier apply; the shoe press
    and the leader's dryer tuning are steam savings (03 energyCostT). Booked to the process flow's power by area. */
-const ELEC={price:0.07,bop:6400,k:{brk:0.75,stop:0.35,out:0.15},area:{pulp:"pulper",refA:"stock",refB:"stock",fan:"stock"}};
+// (v6.13.3: the fan pump's load comes from its curve now (07p): ~360 kW less while running than the old flat 48% + speed line (four 10-12 day runs),
+//  so the balance of plant takes 350 kW (×0.75 on a break, ×0.35 stopped) and a standard run's bill is unchanged)
+const ELEC={price:0.07,bop:6750,k:{brk:0.75,stop:0.35,out:0.15},area:{pulp:"pulper",refA:"stock",refB:"stock",fan:"stock"}};
 const pwrBop=()=>ELEC.bop*(outOn()?ELEC.k.out:S.pm==="run"?1:S.pm==="break"?ELEC.k.brk:ELEC.k.stop);
 const pwrMul=()=>(1-0.04*LV("apc"))*(P.costMul||1);
 function pwrKw(r){return rlyMccKw(r)+pwrBop();}

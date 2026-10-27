@@ -131,8 +131,9 @@ function stationOv(){let o=$("dcsOv");if(o)return o;
     <div class="dcsb" id="dcsBody"><div class="dcsmain" id="dcsMain"></div><aside class="dcstrp" id="dcsTrp" aria-label="Trend"></aside></div><div class="dcsf"><span id="dcsClock"></span><span id="dcsSlow"></span></div></div>`;
   document.body.appendChild(o);
   $("dcsClose").addEventListener("click",()=>closeStation());
-  o.addEventListener("click",e=>{if(e.target===o)closeStation();const v=e.target.closest&&e.target.closest("[data-vlv]");if(v)openVlv(v.dataset.vlv);});   // (v6.9: tap a valve for its faceplate, 50k)
-  o.addEventListener("keydown",e=>{const v=(e.key==="Enter"||e.key===" ")&&e.target.closest&&e.target.closest("[data-vlv]");if(v){e.preventDefault();openVlv(v.dataset.vlv);}});
+  o.addEventListener("click",e=>{if(e.target===o)closeStation();const v=e.target.closest&&e.target.closest("[data-vlv]");if(v)openVlv(v.dataset.vlv);const fp=e.target.closest&&e.target.closest("[data-fan]");if(fp)openFan(fp.dataset.fan);});   // (v6.13.3: the fan pump faceplate, 50o)   // (v6.9: tap a valve for its faceplate, 50k)
+  o.addEventListener("keydown",e=>{const v=(e.key==="Enter"||e.key===" ")&&e.target.closest&&e.target.closest("[data-vlv]");if(v){e.preventDefault();openVlv(v.dataset.vlv);}
+    const fp=(e.key==="Enter"||e.key===" ")&&e.target.closest&&e.target.closest("[data-fan]");if(fp){e.preventDefault();openFan(fp.dataset.fan);}});
   o.querySelectorAll("[data-a]").forEach(b=>b.addEventListener("click",()=>{KUI.st=b.dataset.a;KUI.tab=b.dataset.a==="QCS"?"qcs":"dcs";stationBuild();kuiSync();}));
   o.querySelectorAll("[data-trv]").forEach(b=>b.addEventListener("click",()=>{TRUI.view=b.dataset.trv;trLayout();}));
   o.querySelector("[data-trt]").addEventListener("click",()=>{TRUI.show=!TRUI.show;trLayout();});
@@ -187,8 +188,9 @@ function stationBuild(){const o=$("dcsOv");if(!o||!KUI.st)return;const a=KUI.st,
     // (v6.7: a tag that can be trended is a button: tap it to add it to the trend)
     M2.tags.forEach(([x,y,k,t])=>{const tg=trTagOf(k);svg.push(`<text x="${x}" y="${y}" class="mtg${tg?" trk":""}"${tg?` data-trk="${tg}" role="button" tabindex="0"`:""}><title>${tg?"Trend "+tagName(tg):""}</title><tspan class="mtk">${t} </tspan><tspan data-tag="${k}">–</tspan></text>`);});
     svg.push(vlvDcsSvg(a));   // v6.9: the control valves (50k)
+    svg.push(fpDcsSvg(a));   // v6.13.3: tap the fan pump (SPOT) or the headbox (WET) for the fan pump faceplate (50o)
     svg.push("</svg>");b.appendChild(kEl("div","mimicw",svg.join("")));
-    b.appendChild(kEl("div","dcsal",`<b>Alarms</b><ul id="dcsAl"></ul>`));vlvDcsRows(a,b);   // (v6.9: the area's control valves as buttons too, 50k)
+    b.appendChild(kEl("div","dcsal",`<b>Alarms</b><ul id="dcsAl"></ul>`));vlvDcsRows(a,b);fpDcsRow(a,b);   // (v6.9: the area's control valves as buttons too, 50k; v6.13.3 the fan pump, 50o)
     if(a==="WATER")b.appendChild(kEl("div","dcsctl",`<div class="dcssub">Water balance · the run so far</div><div class="wbal" id="wBal"></div>`));
     const ids=KNOBS.filter(k=>k.area===a&&(k.dcs||KREMOTE.has(k.id))&&k.id!=="pulp").map(k=>k.id),fld=KNOBS.filter(k=>k.area===a&&k.field&&!KREMOTE.has(k.id));   // (v6.9: the pulper dilution valve is NV-101, on the picture)
     const cs=kEl("div","dcsctl");cs.appendChild(kEl("div","dcssub","Setpoints"));dcsSetRows(a,cs);
