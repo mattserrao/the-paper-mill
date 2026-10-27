@@ -87,6 +87,7 @@ function step(dt){
       const ret=pmRet(),use=prod/ret;   // (v6.11.1: the retention polymer moves the machine's fiber loss, 07l; untouched it is P.pmLoss)
       if(!fromMc&&use>S.tank){prod=S.tank*ret;}
       if(!fromMc)S.tank-=prod/ret;pfW("eff",prod/ret-prod);WQ.u+=prod/ret;WQ.p+=prod;
+      {const sq=sqzLoss();if(sq>0&&prod>0){const t=prod*sq;prod-=t;WQ.p-=t;trimTo(t);}}   // v6.14: trim squirts set in: the extra edge goes down the couch pit (07b)
     }
   }
   if(S.pm!=="run") S.pmSpeed=ease(S.pmSpeed,0,dt,3);
@@ -113,6 +114,8 @@ function step(dt){
   S.reel+=prod+beat;lotPut(S.lots.reel,C.grade,prod,100,areaNow());lotPut(S.lots.reel,"beater",beat); S.tot.prodT+=prod; {const pt=P.K*C.pmSp.v*bwSp()*dt/60;S.tot.pot+=pt;pfW("pot",pt);}   // (v6.7: potential tons at the setpoint speed, by the hour, for the process flow)
   planTick(dt,prod);
   sodaTick();   // v6.13.1 the vending machine easter egg (50n)
+  ggTick();   // v6.14 the guided grade change (07r, free play)
+  hbdTick(dt);   // v6.14 the headbox side door's seal and the stock-off restarts (07q)
   shTick(dt);   // v6.13 stickies deposits, the broke chest (the sheet goes to broke on a break), the outage wash-up (07n)
   if(S.reel>=P.jumbo&&reelsAtWinder()<=P.storeReels){const q=P.jumbo;S.winderBuf+=q;lotTake(S.lots.reel,q,S.lots.buf);S.reel=Math.max(0,S.reel-q);if(S.reel<1e-9){S.reel=0;S.lots.reel.length=0;}S.tot.turnups++;turnupRoll();}   // (v6.13: a turn-up can fail, 07n)   // (v6.11.2: a turn-up takes exactly one jumbo; the step's overshoot starts the next reel. Before, the overshoot went
    //  to the winder too, and reelsAtWinder (tons / 100, rounded up) counted one reel too many: storage read full at 3 of 4)

@@ -1527,3 +1527,29 @@ body.pmpop .popmain[data-v="dcs"] #dcsOv .dcs{max-width:1180px;margin:0 auto}
 .fanstep.hi b{color:#4fd18b}.fanstep.hi{border-top:1px dashed #33476a;padding-top:3px}
 .fanform{font:600 12px ui-monospace,Menlo,monospace;color:#ffd77a;margin:4px 0 2px}
 @media (max-width:760px){.fanov .vlvb{grid-template-columns:1fr}}
+
+/* v6.14 the pick-up roll close-up (50p) */
+.pupan{flex-direction:column;align-items:stretch}.pusvg{width:100%;max-width:560px;background:#0f1b2d;border:1px solid #2c3e5c;border-radius:8px}
+.pusvg .puw{stroke:#7fb2ff;stroke-width:3;fill:none}.pusvg .puf{stroke:#b49c6a;stroke-width:6;fill:none;opacity:.8}.pusvg .pushell{fill:#22324f;stroke:#8ea4c4;stroke-width:2}
+.pusvg .puh{fill:#0f1b2d}.pusvg .puz{fill:#4fd18b;stroke:#0f1b2d;stroke-width:1}.pusvg .pubox{fill:#33476a}
+.pusvg .put,.pusvg .pul{fill:#c3d3ea;font:600 10px system-ui,sans-serif}.pusvg .pul{fill:#4fd18b;font-weight:700}.pusvg .pubad{fill:#ff8b7f}
+.pusvg .pusq{stroke:#9ad8ff;stroke-width:2;stroke-dasharray:3 2}.pusvg .puko{stroke:#9ad8ff;stroke-width:2;fill:none}
+
+/* v6.14 the QCS CD map (50f) */
+.qhmh{display:flex;flex-wrap:wrap;gap:6px;align-items:center;justify-content:space-between}.qhmh .seg button{padding:3px 9px;font-size:11px}
+#qcsHm{width:100%;height:auto;display:block;border-radius:6px;cursor:crosshair;image-rendering:pixelated}
+.qhmk{font-size:11px;color:#8ea4c4;margin-top:4px}.qhmk i{display:inline-block;width:12px;height:10px;margin:0 4px -1px 8px;border-radius:2px}.qhmp{font-size:12px;color:#dbe6f6;margin-top:2px}
+
+/* v6.14 the grade change coach (50q) */
+.ggbox{flex-direction:column;align-items:stretch;gap:6px}.ggrow{display:flex;gap:6px;flex-wrap:wrap;align-items:center}.ggrow select{flex:1;min-width:140px}
+.ggbox .reroll.vpri{background:#4fd18b;color:#0f1b2d;border-color:#4fd18b}
+.ggt{width:100%;border-collapse:collapse;font-size:12px}.ggt th,.ggt td{padding:3px 6px;text-align:right;border-bottom:1px solid #2c3e5c}.ggt th:first-child,.ggt td:first-child{text-align:left}
+.ggt tr.cur td{background:#22324f;color:#fff;font-weight:700}.ggt tr.done td{color:#8ea4c4}
+.ggck{list-style:none;margin:0;padding:0;font-size:12px}.ggck li.ok{color:#4fd18b}.ggck li.wait{color:#ffd77a}.ggres{margin:0;font-size:12px;color:#c3d3ea}
+
+/* v6.14 report cleanup: the control room in groups (51i) */
+.ctlroom .crgh{font-size:11px;letter-spacing:.08em;text-transform:uppercase;font-weight:700;color:var(--muted);margin-top:2px}
+.ctlroom .crg{grid-template-columns:repeat(auto-fill,minmax(132px,1fr));gap:5px}.ctlroom .crg button{padding:7px 9px}.ctlroom .crg button b{font-size:13px}.ctlroom .crg button small{font-size:11px;line-height:1.25}
+.crpop{align-self:flex-start;background:none;border:0;padding:2px 0;color:var(--accent,#2f7d55);font-weight:700;font-size:12px;cursor:pointer}.crpop[hidden]{display:none}
+#k-clock{white-space:normal;font-size:17px;line-height:1.2}   /* (v6.14: the date fits its card) */
+.dcsrow.ggbox,.dcsrow.pupan{display:flex;flex-direction:column;align-items:stretch;gap:6px}   /* (v6.14: full width, heading on top) */

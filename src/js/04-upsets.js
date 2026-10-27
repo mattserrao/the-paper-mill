@@ -67,6 +67,8 @@ const EVENTS=[
  // stream and an endless MTBF, so every other upset keeps its timing; left out of the Upsets panel and the tornado.
  {id:"rotortrip",g:"stock",knob:true,stream:"knob",name:"Pulper rotor trip",head:"The pulper rotor tripped out on high amps.",dur:[60,120],mtbf:1e12,mods:{pulperDown:1},fx:"rotortrip"},
  {id:"oscfail",g:"machine",knob:true,stream:"knob",name:"Felt oscillator stopped",head:"The pick-up felt oscillator stopped. The felt is filling in stripes.",dur:[60,120],mtbf:1e12,mods:{},fx:"oscfail"},
+ // v6.14: the headbox side door blows off on a restart after a stock-off (07q). Never rolled by time: its own stream.
+ {id:"hbdoor",g:"machine",stream:"hbdoor",name:"Headbox side door blew off",head:"The headbox side door blew off on the restart! Stock is spraying across the machine floor round the forming table. The crew is cleaning up and re-sealing the door.",dur:[60,120],mtbf:1e12,mods:{pmDown:"headbox side door off"},fx:"hbdoor"},
  {id:"couchpit",g:"machine",knob:true,stream:"knob",name:"Couch pit overflow",head:"The couch pit overflowed onto the machine floor.",dur:[90,150],mtbf:1e12,mods:{},fx:"couchpit"},
 ];
 const EV=Object.fromEntries(EVENTS.map(e=>[e.id,e]));
@@ -75,7 +77,7 @@ const WXN={clear:"Clear",rain:"Rain",fog:"Fog",snow:"Snow"};
 function active(id){const a=S.inc;for(let k=0;k<a.length;k++)if(a[k].id===id)return true;return false;}
 // machine and winder upsets go to the crew one at a time, in the order they happen; nothing gets fixed until a crew is there
 const QSET=new Set(EVENTS.map(e=>e.id).filter(id=>(EV[id].g==="machine"&&!EV[id].knob&&id!=="runner"&&id!=="birdhay"&&id!=="boiler"&&id!=="fogfan"&&id!=="steamjoint"&&id!=="brownout"&&id!=="syphon")||id==="ragger")),QINC=id=>QSET.has(id);   // (v5.2: a Set, built once)
-const RESP={ragger:6,wrap:4,hay:4,brk:2,dryerfire:3,shaft:8,fabric:6,felt:6,slime:5,winderdown:6,tiedrolls:4};
+const RESP={hbdoor:4,ragger:6,wrap:4,hay:4,brk:2,dryerfire:3,shaft:8,fabric:6,felt:6,slime:5,winderdown:6,tiedrolls:4};
 function enqueue(k){if(!S.crewQ)S.crewQ=[];if(S.crewQ.some(q=>q.k===k))return;S.crewQ.push({k,resp:RESP[k]||6,since:0,here:false,go:false});}
 function crewTick(dt){if(!S.crewQ)S.crewQ=[];if(!S.crewQ.length)return;   // (v5.2: nothing queued, nothing to do)
   S.crewQ=S.crewQ.filter(q=>q.k==="hay"?S.wd==="hayout":q.k==="brk"?S.pm==="break":active(q.k));

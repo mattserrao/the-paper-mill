@@ -1,4 +1,4 @@
-"""Quick performance test (~2 min). Usage: python3 quick.py <index.html> [label] [--desktop] [--expect=<sim checksum>] [--env=rural] [--mill=1]
+"""Quick performance test (~2 min). Usage: python3 quick.py <index.html> [label] [--desktop] [--expect=<sim checksum>] [--env=rural] [--mill=1] [--aa=off|fxaa|msaa]
 
 One phone-emulated load (390x844 @1x, touch: the game's phone path keys on touch, and 1x keeps the software GPU fast enough; --desktop for 800x450), seeded, low-FPS fallback off, at 30 sim-min/s:
   normal  : 10 s settle, 10 s measured
@@ -27,7 +27,7 @@ args = [a for a in sys.argv[1:] if not a.startswith("--")]
 flags = {a.split("=")[0]: (a.split("=", 1)[1] if "=" in a else True) for a in sys.argv[1:] if a.startswith("--")}
 path = args[0]; label = args[1] if len(args) > 1 else pathlib.Path(path).parent.name or "build"
 expect = flags.get("--expect", ""); desktop = "--desktop" in flags   # (no default checksum: it changes whenever the sim does)
-site = "".join(f"&{k}={flags.get('--'+k)}" for k in ("env", "mill") if "--" + k in flags)   # v4.1: ?env=&mill= (default: rural with its fixed layout, mill #21, as players see it)
+site = "".join(f"&{k}={flags.get('--'+k)}" for k in ("env", "mill", "aa") if "--" + k in flags)   # v4.1: ?env=&mill= (default: rural with its fixed layout, mill #21, as players see it)
 html = pathlib.Path(path).read_text()
 if "window.__PM=" not in html:
     i = html.rindex("})();", 0, html.rindex("</script>")); html = html[:i] + HOOK + html[i:]

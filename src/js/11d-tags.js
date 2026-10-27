@@ -6,10 +6,14 @@
    hourly history (S.hist) for tags that have a column there. Units: water and stock flows in US gallons a minute,
    volumes in gallons (v6.7: they were m³/h, L/s and m³). */
 const GPM=m3h=>m3h*4.40287,GAL=m3=>m3*264.172,LS_GPM=ls=>ls*15.8503;
+// v6.14 units: motors in horsepower (the electricity side stays kW / kWh), temperatures in °F
+const HPK=1.34102,HP=kw=>kw*HPK,fmtHp=kw=>Math.round(HP(kw)).toLocaleString()+" hp";
+const hpRate=kw=>{const h=HP(kw);return (h>=500?Math.round(h/50)*50:Math.round(h/25)*25).toLocaleString()+" hp";};   // (a nameplate-looking rating)
+const degF=c=>c*9/5+32,fmtF=c=>Math.round(degF(c))+" °F";
 const MCHEST_GAL=60000;                                // the machine chest
 const fmtGal=g=>{const a=Math.abs(g),s=g<0?"−":"";return s+(a>=1e6?(a/1e6).toFixed(2)+"M gal":a>=1e4?Math.round(a/1e3)+"k gal":Math.round(a).toLocaleString()+" gal");};
 const fmtGpm=g=>(g>=1e4?(g/1e3).toFixed(1)+"k":Math.round(g).toLocaleString())+" gpm";
-const TAG_INT=new Set(["orders","trucks","rolls","t","A","kW","fpm","mL CSF","V","rpm"]);
+const TAG_INT=new Set(["orders","trucks","rolls","t","A","kW","hp","fpm","mL CSF","V","rpm"]);
 const TAG_AREA={SPOT:"Stock prep",WET:"Wet end",DET:"Dry end",STM:"Steam & air",UTIL:"Utilities",WATER:"Water",QCS:"Quality",PLAN:"Planning & yard",DRV:"Drives (MCC)"};
 const _R=()=>S.rates||{};
 const wr=()=>S.wat&&S.wat.r;
@@ -23,7 +27,7 @@ const TAGS=[
   ["lwdp","LW cleaners ΔP","SPOT","psi",()=>purgeDp("lw")+(active("lwplug")?PURGE.add.lw:0),""],
   ["fsld","Fine screen load","SPOT","%",()=>(_R().fiberIn||0)/Math.max(1,P.screenMax)*100,""],["fsdp","Fine screen ΔP","SPOT","psi",()=>S.we?S.we.fs:null,""],
   ["chest","Stock chest level","SPOT","%",()=>S.tank/P.tankCap*100,"a.chest"],["chestg","Stock chest volume","SPOT","gal",()=>S.tank/(WAT.cs/100)*264.172,""],
-  ["kwh","Refining energy","SPOT","kWh/t",r=>r.kwh,"a.kwh"],["refkw","Refiner load","SPOT","kW",r=>r.run?r.refkw:null,"a.refkw"],["gap","Refiner plate gap","SPOT","mm",r=>r.gap,""],["csf","Freeness","SPOT","mL CSF",r=>r.csf,"a.csf"],
+  ["kwh","Refining energy","SPOT","kWh/t",r=>r.kwh,"a.kwh"],["refkw","Refiner load","SPOT","hp",r=>r.run?HP(r.refkw):null,"a.refkw",HPK],["gap","Refiner plate gap","SPOT","mm",r=>r.gap,""],["csf","Freeness","SPOT","mL CSF",r=>r.csf,"a.csf"],
   ["refq","Refined stock flow","SPOT","% of std",r=>r.refq,""],["mcLvl","Machine chest level","SPOT","%",r=>r.mcLvl,""],["mcg","Machine chest volume","SPOT","gal",r=>MCHEST_GAL*r.mcLvl/100,""],
   ["mcCons","Machine chest consistency","SPOT","%",r=>r.mcCons,""],["agit","Machine chest agitator","SPOT","%",r=>r.agit,""],
   ["fan","Fan pump flow (headbox)","SPOT","gpm",()=>S.we?GPM(S.we.f.hb||0):0,""],["dil","Fan pump dilution","SPOT","gpm",()=>S.we?GPM(S.we.f.dil||0):0,""],
@@ -32,7 +36,7 @@ const TAGS=[
   ["bwsp","Basis weight setpoint","WET","lb/1000 ft²",()=>bwSp(),""],
   ["drain","Table and couch drainage","WET","gpm",()=>S.we?GPM(S.we.f.drain||0):0,""],["seal","Vacuum box water (seal pit)","WET","gpm",()=>S.we?GPM(S.we.f.seal||0):0,""],
   ["pressw","Press water (to the save-all)","WET","gpm",()=>S.we?GPM(S.we.f.press||0):0,""],["wwov","White water silo overflow (to the WW chest, by design)","WET","gpm",()=>S.we?GPM(S.we.f.over||0):0,""],
-  ["wsp","Wire speed","WET","fpm",()=>S.pmSpeed/DCS_DRAW(),""],["jw","Jet-to-wire ratio","WET","",()=>dcsJw(),""],["rd","Rush / drag (+ rush, − drag)","WET","fpm",()=>S.pm==="run"?dcsRD():null,"a.rd"],["gbox","Gravity box vacuum","WET","inHg",r=>r.gbox,""],["lvac","Low vacuum boxes","WET","inHg",r=>r.lvac,""],["vac","Flatbox vacuum","WET","inHg",r=>r.vacIn,""],["vpkw","Vacuum pump","WET","kW",r=>r.run?r.vpkw:null,""],["couchSol","Couch solids","WET","%",r=>r.run?r.couchSol:null,""],
+  ["wsp","Wire speed","WET","fpm",()=>S.pmSpeed/DCS_DRAW(),""],["jw","Jet-to-wire ratio","WET","",()=>dcsJw(),""],["rd","Rush / drag (+ rush, − drag)","WET","fpm",()=>S.pm==="run"?dcsRD():null,"a.rd"],["gbox","Gravity box vacuum","WET","inHg",r=>r.gbox,""],["lvac","Low vacuum boxes","WET","inHg",r=>r.lvac,""],["vac","Flatbox vacuum","WET","inHg",r=>r.vacIn,""],["vpkw","Vacuum pump","WET","hp",r=>r.run?HP(r.vpkw):null,""],["couchSol","Couch solids","WET","%",r=>r.run?r.couchSol:null,""],
   ["pl","Press load","WET","kN/m",r=>r.pl,""],["pressSol","Press solids","WET","%",r=>r.run?r.pressSol:null,""],["edge","Fabric edge","WET","mm",r=>r.edge,""],
   ["gtrav","Guide travel used","WET","%",r=>r.gm?Math.min(1,r.gtrav)*100:null,""],["osc","Felt shower oscillator","WET","%",r=>r.osc,""],
   ["wwl","White water silo level","WET","%",()=>S.we?S.we.L/WE.silo*100:null,"a.wwl"],["wwg","White water silo volume","WET","gal",()=>S.we?GAL(S.we.L):null,""],
@@ -97,7 +101,10 @@ const TAGS=[
   ["jwsp","J/W setpoint (fan pump)","WET","",()=>S.zen?null:hbJwSp(),""],["hbpsi","Headbox pressure","WET","psi",()=>S.zen||!run()?null:hbPsi(),""],["hbth","Headbox total head (TAPPI)","WET","psi",()=>S.zen||!run()?null:hbThPsi(),""],
   // v6.13.3 the fan pump on its curve (07p)
   ["fanrpm","Fan pump speed","SPOT","rpm",()=>S.fp&&S.fp.st!=="off"?S.fp.n*FP.rpm:null,""],["fantdh","Fan pump total dynamic head","SPOT","ft",()=>S.fp&&S.fp.st==="run"?S.fp.h:null,""],
-  ["fankw","Fan pump power","SPOT","kW",()=>S.fp?S.fp.kw:null,""],["faneff","Fan pump efficiency","SPOT","%",()=>S.fp&&S.fp.st==="run"?S.fp.eff*100:null,""],
+  ["fankw","Fan pump power","SPOT","hp",()=>S.fp?HP(S.fp.kw):null,""],["faneff","Fan pump efficiency","SPOT","%",()=>S.fp&&S.fp.st==="run"?S.fp.eff*100:null,""],
+  // v6.14 the bales' own variability (05b), sheet flutter (07n), the pick-up roll (07b) and the headbox door seal (07q)
+  ["bvm","Bale moisture (on the conveyor)","SPOT","%",()=>bvNow()&&S.bq?(S.bq.m+bvNow().dm)*100:null,""],["bvq","Bale fiber quality (at the machine)","SPOT","",()=>baleOn()&&S.bq&&!S.zen?S.bq.fqm||0:null,""],
+  ["flt","Sheet flutter","DET","%",()=>S.zen?null:fltIdx()*100,""],["puv","Pick-up roll vacuum","WET","inHg",r=>S.zen?null:r.puv,""],["hbdw","Headbox door seal wear","WET","%",()=>S.hbd&&!S.zen?S.hbd.w*100:null,""],
   ["scrdp","Machine screen ΔP","SPOT","psi",()=>S.fp&&S.fp.st==="run"?fpScrDp():null,""],["npsh","Fan pump NPSH margin","SPOT","ft",()=>fpNpshM(),""],["slcb","Slice opening","WET","mm",()=>S.zen?null:slcB(),""],
   ["form","Formation index","QCS","",()=>S.zen||!run()?null:formIdx(),""],["tsr","MD/CD tensile ratio","QCS","",()=>S.zen?null:tsrNow(),""],
   ["stfi","STFI CD","QCS","kN/m",()=>S.zen||!run()?null:QNOW.stfi,"a.stfi"],["hard","Reel hardness","DET","",()=>S.zen?null:reelHard(),""],["nip","Reel drum nip","DET","kN/m",()=>S.zen?null:reelNip(),""],
@@ -109,17 +116,21 @@ const tagName=id=>{const t=TAGS[TAGI[id]];return t?t[1]:id;};
 const tagUnit=id=>{const t=TAGS[TAGI[id]];return t?t[3]:"";};
 // the ring: 48 h at 2 sim minutes
 const TG={S:null,n:1440,i:0,len:0,k:-1,t:new Float64Array(1440),v:TAGS.map(()=>new Float32Array(1440))};
-function tagTick(){if(S.zen||(typeof BF!=="undefined"&&BF.real))return;if(TG.S!==S){TG.S=S;TG.i=0;TG.len=0;TG.k=-1;}
+function tagTick(){if(S.zen||(typeof BF!=="undefined"&&BF.real))return;if(TG.S!==S){TG.S=S;TG.i=0;TG.len=0;TG.k=-1;HMQ.i=0;HMQ.len=0;}
   const k=Math.floor(S.t/2);if(k===TG.k)return;TG.k=k;const r=knobRead(),i=TG.i;TG.t[i]=S.t;
   for(let j=0;j<TAGS.length;j++){let v;try{v=TAGS[j][4](r);}catch(e){v=null;}TG.v[j][i]=v==null||v!==v?NaN:v;}
-  TG.i=(i+1)%TG.n;TG.len=Math.min(TG.n,TG.len+1);}
+  TG.i=(i+1)%TG.n;TG.len=Math.min(TG.n,TG.len+1);
+  // v6.14 the QCS heatmap: each scan's 12 zones of moisture and basis weight (NaN while there's no sheet)
+  {const H=HMQ,run=S.pm==="run"&&cdOn()&&S.cd,o=H.i*12;H.t[H.i]=S.t;for(let z=0;z<12;z++){H.m[o+z]=run?QNOW.m+S.cd.dv[z]:NaN;H.w[o+z]=run?QNOW.bw+S.cd.bw[z]:NaN;}H.i=(H.i+1)%H.n;H.len=Math.min(H.n,H.len+1);}}
+// v6.14 the QCS heatmap's ring: 24 h of scans at the tags' 2 minutes (outside S, like the tags)
+const HMQ={n:720,i:0,len:0,t:new Float64Array(720),m:new Float32Array(720*12),w:new Float32Array(720*12)};
 // the latest reading (from the ring; live if nothing recorded yet)
 function tagNow(id){const j=TAGI[id];if(j==null)return null;if(TG.len&&TG.S===S){const v=TG.v[j][(TG.i-1+TG.n)%TG.n];return v!==v?null:v;}
   try{const v=TAGS[j][4](knobRead());return v==null||v!==v?null:v;}catch(e){return null;}}
 // a tag's points in [t0, t1] (sim minutes): 2-minute readings where the ring has them, hourly history before that
 function tagSeries(id,t0,t1){const j=TAGI[id],out={t:[],v:[],hourly:false};if(j==null)return out;
   const ringT0=TG.len&&TG.S===S?TG.t[(TG.i-TG.len+TG.n)%TG.n]:Infinity,col=TAGS[j][5];
-  if(t0<ringT0&&col&&S.hist&&HCI[col]!=null){const c=HCI[col];for(const r of S.hist.rows){const tm=r[0]*60+30;if(tm<t0||tm>t1||tm>=ringT0)continue;const v=r[c];if(v!=null&&v===v){out.t.push(tm);out.v.push(v);out.hourly=true;}}}
+  if(t0<ringT0&&col&&S.hist&&HCI[col]!=null){const c=HCI[col];for(const r of S.hist.rows){const tm=r[0]*60+30;if(tm<t0||tm>t1||tm>=ringT0)continue;const v=r[c];if(v!=null&&v===v){out.t.push(tm);out.v.push(v*(TAGS[j][6]||1));out.hourly=true;}}}
   if(TG.S===S)for(let n=0;n<TG.len;n++){const i=(TG.i-TG.len+n+TG.n)%TG.n,tm=TG.t[i];if(tm<t0||tm>t1)continue;const v=TG.v[j][i];if(v===v){out.t.push(tm);out.v.push(v);}}
   return out;}
 const tagHasLong=id=>{const t=TAGS[TAGI[id]];return !!(t&&t[5]);};

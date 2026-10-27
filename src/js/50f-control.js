@@ -140,6 +140,11 @@ function qcsBuild(b){
   const A=$("qcsAct");if(A&&!A._w){A._w=1;
     A.addEventListener("click",e=>{const t=e.target.closest("[data-cdman]");if(!t)return;const row=t.dataset.cdman;cdSetMan(row,!cdState().man[row]);cdActSync(true);});
     A.addEventListener("input",e=>{const t=e.target.closest("[data-cdz]");if(!t)return;const [row,z]=t.dataset.cdz.split(":");cdSetZone(row,+z,+t.value);cdActSync();});}
+  // v6.14 the CD heatmap: zones across, scans down (newest on top), moisture or basis weight against the grade's spec
+  b.appendChild(kEl("div","dcstr qhm",`<div class="qhmh"><div class="dcssub">CD map · zones across, newest scan on top</div><span class="seg" role="group" aria-label="Map"><button type="button" data-hmv="m">Moisture</button><button type="button" data-hmv="w">Basis weight</button></span><span class="seg" role="group" aria-label="Span">${[[2,"2 h"],[8,"8 h"],[24,"24 h"]].map(([h,l])=>`<button type="button" data-hmh="${h}">${l}</button>`).join("")}</span></div>
+    <canvas width="640" height="260" id="qcsHm" aria-label="Moisture or basis weight across the machine over time"></canvas><div class="qhmk" id="qcsHmK"></div><div class="qhmp" id="qcsHmP">Tap a cell for its reading.</div>`));
+  {const hb=b.querySelector(".qhm");hb.addEventListener("click",e=>{const t=e.target.closest("[data-hmv],[data-hmh]");if(!t)return;if(t.dataset.hmv)QHM.v=t.dataset.hmv;else QHM.h=+t.dataset.hmh;QHM.sel=null;hmDraw(true);});
+   $("qcsHm").addEventListener("click",e=>{const cv=e.currentTarget,r=cv.getBoundingClientRect(),x=(e.clientX-r.left)/r.width,y=(e.clientY-r.top)/r.height;QHM.sel=[x,y];hmDraw(true);});}
   b.appendChild(kEl("div","qcsdef",`<div class="dcssub">Web inspection</div><div class="qcsgrid" id="qcsDef"></div>`));
   b.appendChild(kEl("div","dcsctl",`<div class="dcssub">Spec sheet</div><div class="qtab" id="qcsSpec"></div>`));
   b.appendChild(kEl("div","dcsctl",`<div class="dcssub">Off-spec log · newest first</div><div class="qtab" id="qcsLog"></div>`));
@@ -176,6 +181,27 @@ function cdDraw(cv,r){if(!cv)return;const x=cv.getContext("2d"),W=cv.width,H=cv.
   for(let z=0;z<12;z++){const v=C2.bw[z],bad=Math.abs(v)>tol;x.fillStyle=bad?"#ff6b5e":"#c4b08c";const y=YB(v),y0=bt+bh/2;x.fillRect(z*zw+5,Math.min(y,y0),zw-10,Math.max(1,Math.abs(y-y0)));
     x.fillStyle="rgba(190,205,230,.75)";x.font="600 12px system-ui,sans-serif";x.textAlign="center";x.fillText(String(z+1),z*zw+zw/2,H-3);}
   x.textAlign="left";x.fillStyle="rgba(190,205,230,.8)";x.font="600 11px system-ui,sans-serif";x.fillText(`weight streak · ±${tol.toFixed(2)} lb`,6,bt+10);}
+/* v6.14 the CD map: the last 2 / 8 / 24 h of scans (11d HMQ), zone 1 (drive side) on the left, newest on top. Moisture:
+   blue wet, red dry against the grade's band (green inside it); basis weight: against the setpoint ± the CD tolerance.
+   Tap a cell: zone, time and the reading. */
+const QHM={v:"m",h:8,sel:null,k:""};
+function hmDraw(force){const cv=$("qcsHm");if(!cv)return;const H=HMQ,key=QHM.v+QHM.h+H.i+H.len+(QHM.sel?QHM.sel.join():"")+C.grade;if(!force&&key===QHM.k)return;QHM.k=key;
+  document.querySelectorAll("[data-hmv]").forEach(b=>b.setAttribute("aria-pressed",String(b.dataset.hmv===QHM.v)));document.querySelectorAll("[data-hmh]").forEach(b=>b.setAttribute("aria-pressed",String(+b.dataset.hmh===QHM.h)));
+  const x=cv.getContext("2d"),W=cv.width,Hh=cv.height;x.fillStyle="#0f1b2d";x.fillRect(0,0,W,Hh);
+  const rows=Math.min(H.len,QHM.h*30),sp=QSPEC[C.grade]||QSPEC["24"],mw=QHM.v==="m",bw=bwSp(),tol=CD.bwTol*bw;
+  const lo=mw?sp.m[0]:bw-tol,hi=mw?sp.m[1]:bw+tol,mid=(lo+hi)/2,half=(hi-lo)/2;
+  // colour: inside the band green (lighter toward its edges), outside it blue (wet / heavy) or red (dry / light) getting stronger
+  const col=v=>{if(v!==v)return "#1a2638";const d=(v-mid)/half;if(Math.abs(d)<=1){const a=Math.abs(d);return `rgb(${Math.round(60+90*a)},${Math.round(170-20*a)},${Math.round(110+40*a)})`;}
+    const k=Math.min(1,(Math.abs(d)-1)/1.5);return d>0?`rgb(${Math.round(70-40*k)},${Math.round(120-60*k)},${Math.round(210+45*k)})`:`rgb(${Math.round(220+35*k)},${Math.round(110-70*k)},${Math.round(90-50*k)})`;};
+  if(!rows){x.fillStyle="rgba(190,205,230,.8)";x.font="600 16px system-ui,sans-serif";x.textAlign="center";x.fillText("No scans yet",W/2,Hh/2);x.textAlign="left";}
+  const zw=W/12,rh=Hh/Math.max(1,QHM.h*30);
+  for(let n=0;n<rows;n++){const i=(H.i-1-n+H.n)%H.n,o=i*12,y=n*rh;for(let z=0;z<12;z++){x.fillStyle=col(mw?H.m[o+z]:H.w[o+z]);x.fillRect(z*zw,y,zw+0.5,rh+0.5);}}
+  x.strokeStyle="rgba(15,27,45,.6)";for(let z=1;z<12;z++){x.beginPath();x.moveTo(z*zw,0);x.lineTo(z*zw,Hh);x.stroke();}
+  let pk="";if(QHM.sel&&rows){const z=Math.min(11,Math.floor(QHM.sel[0]*12)),n=Math.floor(QHM.sel[1]*Hh/rh);if(n<rows){const i=(H.i-1-n+H.n)%H.n,v=mw?H.m[i*12+z]:H.w[i*12+z];
+      x.strokeStyle="#fff";x.lineWidth=2;x.strokeRect(z*zw+1,n*rh,zw-2,Math.max(3,rh));x.lineWidth=1;
+      pk=`Zone ${z+1}${z===0?" (drive side)":z===11?" (tending side)":""} · ${dhm(H.t[i])} · `+(v!==v?"no sheet":mw?`moisture ${v.toFixed(1)}% (spec ${sp.m[0]}–${sp.m[1]})`:`basis weight ${v.toFixed(2)} lb (setpoint ${bw.toFixed(2)} ± ${tol.toFixed(2)})`);}}
+  const P=$("qcsHmP");if(P){const t=pk||"Tap a cell for its reading.";if(P.textContent!==t)P.textContent=t;}
+  const K=$("qcsHmK");if(K){const h=mw?`<i style="background:rgb(240,70,60)"></i>dry <i style="background:rgb(60,170,110)"></i>in spec ${sp.m[0]}–${sp.m[1]}% <i style="background:rgb(40,80,240)"></i>wet`:`<i style="background:rgb(240,70,60)"></i>light <i style="background:rgb(60,170,110)"></i>±${tol.toFixed(2)} lb <i style="background:rgb(40,80,240)"></i>heavy`;if(K._h!==h){K._h=h;K.innerHTML=h+` · ${QHM.h} h, zone 1 drive side at left`;}}}
 const dhm=t=>`D${Math.floor(t/1440)+1} ${clockOf(t)}`;
 const durTxt=m=>m>=90?(m/60).toFixed(1)+" h":Math.max(1,Math.round(m))+" min";
 function qcsRefresh(){const Q=S.q||{},put=(id,h)=>{const e=$(id);if(e&&e._h!==h){e._h=h;e.innerHTML=h;}};
@@ -188,6 +214,7 @@ function qcsRefresh(){const Q=S.q||{},put=(id,h)=>{const e=$(id);if(e&&e._h!==h)
   put("qcsLog",cur.length||L.length?`<table><thead><tr><th>When</th><th>How long</th><th>Grade</th><th>Why</th><th>To beater</th></tr></thead><tbody>${cur.concat(L).slice(0,15).map(s=>`<tr${s.live?' class="live"':""}><td>${dhm(s.t0)}</td><td>${s.live?"now · ":""}${durTxt(s.t1-s.t0+1)}</td><td>${s.g}</td><td>${s.why}</td><td>${(Math.round(s.tons*10)/10)} t</td></tr>`).join("")}</tbody></table>`:`<p class="dcsfield">No off-spec paper yet this run.</p>`);
   const G=(Q.gc||[]).slice().reverse();
   spcDraw();   // v6.13 (50m)
+  hmDraw();   // v6.14 the CD map
   put("qcsGc",G.length?`<table><thead><tr><th>When</th><th>Change</th><th>Transition</th></tr></thead><tbody>${G.slice(0,10).map(c=>`<tr><td>${dhm(c.t)}</td><td>${c.from} → ${c.to}</td><td>${c.tons} t to the beater</td></tr>`).join("")}</tbody></table>`:`<p class="dcsfield">No grade changes yet this run.</p>`);}
 
 /* ---------- PLAN: the planning screen (read only) ---------- */

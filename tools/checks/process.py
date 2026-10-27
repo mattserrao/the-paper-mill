@@ -36,6 +36,9 @@ dewatercheck.py, watercheck.py, windercheck.py, ordercheck.py, relcheck.py and r
   pump's kW; a plugging machine screen speeds it up and costs power, saturates it on a fast machine (J/W sags), shows on
   the screens round and the area trend, and an outage wash-up clears it; manual rpm only in free play (moves the J/W);
   the faceplate opens from the SPOT and WET pictures; the relationship map has the new tags.
+- v614 (v6.14.0): sheet flutter (the speed curve on the break odds, the stabilizers), each bale's own variability
+  (deterministic, centred), the pick-up roll vacuum / trim squirts / knock-off shower knobs, the headbox side door upset
+  and its Round tell, the QCS CD map, the free-play guided grade change, the anti-aliasing setting and hp/°F units.
 
 Usage: python3 process.py [index.html] [shot_prefix]"""
 # tier: default
@@ -638,14 +641,63 @@ def fan(pw):
     pg.evaluate("()=>document.getElementById('v2free').click()"); pg.wait_for_function("__PM.S.free", timeout=60000)
     ev = pg.evaluate; ev("()=>{__PM.setRunning(false);__PM.CH.on=false;}")
     ev(f"({STEP})(600)")
-    m = ev(f"""()=>{{const P=__PM,S=P.S,G=P.G3,f=G.fan;const o={{ok:f.manOk(),run:S.pm}};f.setMode("man");o.m=S.fp.m;o.n0=S.fp.n;f.setRpm(S.fp.n*100+3);({STEP})(20);o.up=G.sheet.jw();
-      f.setRpm(o.n0*100-3);({STEP})(20);o.dn=G.sheet.jw();f.setMode("auto");({STEP})(4);o.auto=G.sheet.jw();o.sp=G.sheet.jwSp();return o;}}""")
+    ev("()=>{const P=__PM,S=P.S;let n=0;while(!(S.pm==='run'&&Math.abs(S.pmSpeed-P.C.pmSp.v)<5)&&n<40000){P.step(P.SIM_STEP);n++;}for(let i=0;i<120;i++)P.step(P.SIM_STEP);}")   # (on the machine at speed and settled, not in a break or its ramp)
+    m = ev(f"""()=>{{const P=__PM,S=P.S,G=P.G3,f=G.fan;if(S.plan)S.plan.left=1e9;const o={{ok:f.manOk(),run:S.pm}};f.setMode("man");o.m=S.fp.m;o.n0=S.fp.n;f.setRpm(S.fp.n*100+3);({STEP})(6);o.up=G.sheet.jw();
+      f.setRpm(o.n0*100-3);({STEP})(6);o.dn=G.sheet.jw();f.setMode("auto");({STEP})(4);o.auto=G.sheet.jw();o.sp=G.sheet.jwSp();return o;}}""")
     ok("free play: manual rpm +3% speeds the jet up, -3% slows it (a few % J/W), AUTO puts it back exactly", m["ok"] and m["m"] == "man" and 0.995 < m["up"] < 1.08 and 0.90 < m["dn"] < 0.975 and m["auto"] == m["sp"], json.dumps(m))
     b.close()
 
 
+def v614(pw):
+    C.sec("v614")
+    html = html_arg().replace("window.__PM={", "window.__PM={X614:{spdBrk:()=>spdBrk(),fltIdx:()=>fltIdx(),fltThr:()=>fltThr(),parts:()=>brkRisk0().parts.map(p=>p[0]),bvTri:(n,s)=>bvTri(n,s),bvNow:()=>bvNow(),sqz:()=>sqzLoss(),hbdRestart:()=>hbdRestart(S.hbd),hbd:()=>hbdState(),HMQ:()=>({len:HMQ.len})},", 1)
+    b, pg = boot_season(pw, LITE, html=html); ev = pg.evaluate
+    ev("()=>{__PM.setRunning(false);__PM.CH.on=false;const S=__PM.S;S.cards.next=1e12;while(S.t<600)__PM.step(__PM.SIM_STEP);}")
+    STEP = "n=>{const P=__PM,S=P.S;for(let i=0;i<n;i++){P.step(P.SIM_STEP);if(S.civ&&S.civ.cur){S.civ.cur=null;}S.cards.open=null;}}"
+    X = "__PM.X614"
+    # flutter
+    f = ev(f"""()=>{{const P=__PM,S=P.S,X={X},g=P.C.grade;const sp0=S.pmSpeed,o={{std:X.spdBrk(),parts:X.parts()}};
+      const c0=P.C.pmSp.v;P.C.pmSp.v=c0*0.9;S.pmSpeed=sp0*0.9;o.slow=X.spdBrk();P.C.pmSp.v=c0;o.capped=X.spdBrk();S.pmSpeed=X.fltThr()+0.1*sp0;o.fast=X.spdBrk();o.idx=X.fltIdx();S.up.stab=2;o.thr2=X.fltThr();o.fastStab=X.spdBrk();S.up.stab=0;S.pmSpeed=sp0;return o;}}""")
+    ok("flutter: 1 at the grade's design speed, lower when the player slows it (not when it's held back), higher past the threshold, stabilizers help", abs(f["std"] - 1) < 0.02 and f["slow"] < 0.9 and abs(f["capped"] - 1) < 0.001 and f["fast"] > 1.25 and f["idx"] > 0.5 and f["fastStab"] < f["fast"] and "speed" in f["parts"], json.dumps(f))
+    # bales: centred and deterministic
+    bv = ev(f"""()=>{{const X={X};let s=0,s2=0;for(let n=0;n<4000;n++){{const v=X.bvTri(n,11);s+=v;s2+=v*v;}}return {{mean:s/4000,sd:Math.sqrt(s2/4000),same:X.bvTri(77,11)===X.bvTri(77,11),cur:X.bvNow(),fq:__PM.S.bq.fqm}};}}""")
+    ok("bale variability: centred (mean ~0), deterministic, a bale on the conveyor, fiber quality reaching the machine", abs(bv["mean"]) < 0.03 and bv["sd"] > 0.3 and bv["same"] and bv["cur"] is not None and bv["fq"] is not None and bv["fq"] != 0, json.dumps(bv))
+    # pick-up roll, squirts, knock-off
+    k = ev(f"""()=>{{const P=__PM,S=P.S,X={X};const tr0=S.tot.trim||0;P.knob.set("sqz",-2);const l=X.sqz();({STEP})(40);const tr1=S.tot.trim||0;P.knob.reset("sqz");
+      P.knob.set("puv",17);({STEP})(80);const off=S.knob.off,why=S.knob.offWhy;P.knob.reset("puv");({STEP})(40);
+      const b0=S.tot.breaks;P.knob.set("puv",1);({STEP})(200);const b1=S.tot.breaks,lg=S.feed.map(f=>f.text).join(" | ");P.knob.reset("puv");return {{l,trim:tr1-tr0,off,why,brk:b1-b0,lg:lg.slice(0,600)}};}}""")
+    ok("trim squirts in: a share of the web back down the couch pit as trim", k["l"] > 0.015 and k["trim"] > 0.3, json.dumps(k)[:300])
+    ok("pick-up roll vacuum high: hole marks send a share of the reel to the beater", k["off"] > 0.05 and k["why"] == "mark", json.dumps(k)[:300])
+    ok("pick-up roll vacuum low: the sheet breaks at the transfer", k["brk"] >= 1 and "transfer" in k["lg"], json.dumps(k)[:600])
+    # the headbox side door
+    d = ev(f"""()=>{{const P=__PM,S=P.S,X={X};const D=X.hbd();let n=0,hit=false;while(n<60&&!hit){{D.w=1;D.t0=S.t;X.hbdRestart();hit=S.inc.some(i=>i.id==="hbdoor");n++;}}
+      const o={{hit,n,down:!!(S.M&&S.M.pmDown),bill:(S.inc.find(i=>i.id==="hbdoor")||{{}}).bill||0,crew:(S.crewQ||[]).some(q=>q.k==="hbdoor")}};S.inc=S.inc.filter(i=>i.id!=="hbdoor");S.M=P.mods?P.mods():S.M;
+      D.w=0.6;S.feed.length=0;P.tell.end("wet",0);o.caught=S.feed.map(f=>f.text).join(" ").includes("headbox side door");o.w=D.w;return o;}}""")
+    ok("headbox side door: blows off on a stock-off restart with a worn seal (machine down, repair bill, crew job)", d["hit"] and d["down"] and d["bill"] > 0 and d["crew"], json.dumps(d))
+    ok("...a worn seal is caught on the wet end Round and re-seated", d["caught"] and d["w"] < 0.2, json.dumps(d))
+    # the CD map and the units
+    ev(f"({STEP})(120)"); ev("()=>{__PM.knob.open('QCS')}"); pg.wait_for_timeout(500)
+    h = ev(f"""()=>{{const cv=document.getElementById('qcsHm');const d=cv.getContext('2d').getImageData(0,0,cv.width,cv.height).data;let g=0;for(let i=0;i<d.length;i+=40)if(d[i+1]>120)g++;
+      document.querySelector('[data-hmv=w]').click();return {{len:{X}.HMQ().len,g,pressed:document.querySelector('[data-hmv=w]').getAttribute('aria-pressed')}}}}""")
+    ok("QCS CD map: scans recorded, the map drawn, the weight toggle works", h["len"] > 30 and h["g"] > 50 and h["pressed"] == "true", json.dumps(h))
+    ev("()=>{__PM.knob.close&&__PM.knob.close();__PM.knob.open('SPOT')}"); pg.wait_for_timeout(400)
+    u = ev("()=>({ref:(document.querySelector('#dcsOv [data-tag=refkw]')||{}).textContent,aa:__PM.G3.aaInfo?__PM.G3.aaInfo():null})")
+    ok("units: the refiner load in hp; the anti-aliasing setting is there", "hp" in (u["ref"] or "") and u["aa"] is not None, json.dumps(u))
+    b.close()
+    # free play: the guided grade change
+    b = launch(pw); pg = open_game(b, html_arg(), LITE, viewport=(900, 600), errs=errs, wait=False)
+    pg.wait_for_function("window.__PM&&window.__B&&__B.first!==null", timeout=240000, polling=500)
+    pg.evaluate("()=>document.getElementById('v2free').click()"); pg.wait_for_function("__PM.S.free", timeout=60000)
+    ev = pg.evaluate; ev("()=>{__PM.setRunning(false);__PM.CH.on=false;}"); ev(f"({STEP})(600)")
+    ev("()=>{const P=__PM,S=P.S;let n=0;while(S.pm!=='run'&&n<40000){P.step(P.SIM_STEP);n++;}}")
+    g = ev(f"""()=>{{const P=__PM,S=P.S,H=P.G3.gg,from=P.C.grade,to=from==="24"?"28":"24";const ok=H.start(to);let n=0;
+      while(S.gg&&n<20000){{P.step(P.SIM_STEP);n++;if(S.gg&&S.gg.k<S.gg.n&&H.settled().ok)H.next();}}return {{ok,from,to,grade:P.C.grade,res:S.ggLast&&S.ggLast.res,auto:P.C.pmSp.auto}};}}""")
+    ok("free play guided grade change: steps through to the new grade, back on AUTO, less to the beater than the crew's change", g["ok"] and g["grade"] == g["to"] and g["auto"] and g["res"] and g["res"]["off"] < g["res"]["auto"], json.dumps(g))
+    b.close()
+
+
 with sync_playwright() as pw:
-    for f in (dryer, qual, dewater, water, winder, order, rel, ref, fan):
+    for f in (dryer, qual, dewater, water, winder, order, rel, ref, fan, v614):
         try: f(pw)
         except Exception as e: ok(f"{f.__name__}: ran to the end", False, repr(e)[:300])
 C.done()

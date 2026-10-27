@@ -88,6 +88,11 @@
     seg.innerHTML=["auto","low","medium","high","ultra"].map(g=>`<button data-g="${g}" aria-pressed="${G3.GFX.pick===g}" title="${g==="auto"?"Picked from your device: "+cap(G3.GFX.auto):{low:"1024 shadows, 10 Hz, lighter scenery",medium:"1024 shadows, 15 Hz",high:"2048 softer shadows, 24 Hz, full scenery",ultra:"4096 softer shadows, every frame, dense scenery with far shadows"}[g]}">${g==="auto"?`Auto <small class="gtier">${cap(G3.GFX.auto)}</small>`:cap(g)}</button>`).join("");
     seg.querySelectorAll("button").forEach(x=>x.addEventListener("click",()=>G3.setGfx(x.dataset.g)));
     {const rb=document.createElement("button");rb.id="gfxReload";rb.hidden=true;rb.textContent="Reload to apply all";rb.title="Lighting model, round-shape detail and scenery density change on reload";rb.addEventListener("click",()=>location.reload());setField("Graphics",seg).appendChild(rb);}}
+  // v6.14 anti-aliasing (42g)
+  if(G3.setAA){const seg=document.createElement("div");seg.className="seg";seg.id="aaSeg";seg.setAttribute("role","group");seg.setAttribute("aria-label","Anti-aliasing");
+    seg.innerHTML=[["auto","Auto","Your device's best: the browser's MSAA on a desktop, FXAA on phones and high-DPI screens"],["off","Off",""],["fxaa","FXAA","A cheap smoothing pass over the finished picture"],["msaa","MSAA 4×","The GPU's own, the sharpest; costs more on phones (applies on reload)"]].map(([k,t,ti])=>`<button data-aa="${k}" aria-pressed="${G3.aaPick===k}" title="${ti}">${t}</button>`).join("");
+    seg.querySelectorAll("button").forEach(x=>x.addEventListener("click",()=>G3.setAA(x.dataset.aa)));
+    const rb=document.createElement("button");rb.dataset.aarl="1";rb.hidden=true;rb.textContent="Reload to apply";rb.addEventListener("click",()=>location.reload());setField("Anti-aliasing",seg).appendChild(rb);}
   // v6.12 the free camera: chosen here, applied on reload (the shapes are built for one camera or the other)
   {const seg=document.createElement("div");seg.className="seg";seg.id="camSeg";seg.setAttribute("role","group");seg.setAttribute("aria-label","Camera");
     const cur=!!G3.freeCam;let pick=cur;
