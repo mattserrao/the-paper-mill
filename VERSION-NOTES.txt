@@ -157,3 +157,4 @@ One line per version, oldest first. Add a line here with every release: build.py
 6.13.3     Headbox & Fan Pump: Headbox Total Head on the DCS, Fan Pump Curve and Faceplate, Drive Load from Flow and Head
 6.14.0-t1  (Test): Anti-aliasing, Sheet Flutter, Bale Variability, Pick-up Roll & Trim Squirts, Headbox Door Upset, CD Map, Guided Grade Change, US Units
 6.14.0     Anti-aliasing (FXAA by Default), Sheet Flutter, Bale Variability, Pick-up Roll & Trim Squirts, Headbox Door Upset, CD Map, Guided Grade Change, US Units
+6.14.1     Chest Mixing: Pulper Consistency Swings Damped Through the Storage and Machine Chests
