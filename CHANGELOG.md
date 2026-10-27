@@ -1,5 +1,11 @@
 # Changelog
 
+## v6.14.0 (2026-10-27): anti-aliasing, flutter, bales, pick-up roll, headbox door, CD map, guided grade change, units
+Release of v6.14.0-t1 (below), merged from test/v6.14.0, with one change: **FXAA is now the default anti-aliasing on every
+device** (it was Auto: MSAA on a desktop, FXAA on phones). Auto, Off and MSAA 4× stay in Settings → Graphics, and a saved
+choice is kept. Phone benchmark (iPhone, ?autotest): main, t1 with FXAA off and t1 with FXAA on all display-locked at 60
+fps; the new features and FXAA cost nothing measurable (render 4.0 / 4.1 / 4.0 ms, sim 1.0 ms; FXAA +1 draw, +1 program).
+
 ## v6.14.0-t1 (2026-10-27): the v6.14.0 features (test build, test/v6.14.0)
 Plan and decisions: claude/v6140-plan.md. Slowback / cost-out modes and the relationship map examples were dropped.
 - **Anti-aliasing (20, 42g):** Settings → Graphics (in game and on the title): Auto / Off / FXAA / MSAA 4×. Auto keeps the
