@@ -37,7 +37,7 @@
       [[17,3,-20.4],"Screens and cleaners","Stock prep",()=>`Fiber ${f1(R.fiberIn||0)} t/h · yield ${Math.round(P.yieldF*((S.M&&S.M.yieldMul)||1)*100)} % · fine screen load ${Math.round((R.fiberIn||0)/Math.max(1,P.screenMax)*100)} %`],
       [[34.5,8,-15],"Stock chest","Stock prep",()=>`Level ${Math.round(S.tank/P.tankCap*100)} % · ${Math.round(S.tank)} t of fiber`],
       [[68.7,3,9.5],"Twin refiners","Approach flow",()=>`${Math.round(r.kwh)} kWh/t · ${Math.round(r.refkw)} kW · freeness ${Math.round(r.csf)} mL CSF`,["refA","refB"]],
-      [[62.6,3,-11],"Fan pump","Approach flow",()=>`Headbox flow ${Math.round(S.we?GPM(S.we.f.hb||0):0).toLocaleString()} gpm`,"fan"],
+      [[62.6,3,-11],"Fan pump","Approach flow",()=>`Headbox flow ${Math.round(S.we?GPM(S.we.f.hb||0):0).toLocaleString()} gpm${S.fp&&S.fp.st!=="off"?` · ${Math.round(S.fp.n*FP.rpm)} rpm · TDH ${Math.round(S.fp.h)} ft`:""}`,"fan"],
       [[58,4,9.1],"Headbox and forming table","Wet end",()=>`Headbox consistency ${S.we?S.we.hbc.toFixed(2):"–"} % · vacuum ${f1(r.gbox)} / ${f1(r.lvac)} / ${f1(r.vacIn)} inHg · couch solids ${f1(r.couchSol)} %`,"couch"],
       [[37,4,9.1],"Twin press","Wet end",()=>`Load ${Math.round(r.pl)} kN/m · press solids ${f1(r.pressSol)} %`,["pr1","pr2"]],
       [[12,5,9.1],"Dryers","Dry end",()=>`Steam ${r.steam>0.5?f1(r.steam)+" t/h":"–"} · 3rd section ${Math.round(r.st3)} psig · reel moisture ${r.run?f1(r.moist)+" %":"–"}`,"dry"],

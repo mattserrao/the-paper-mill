@@ -29,7 +29,9 @@ const SH={stfiSpec:0.95,tsr0:1.6,tsrD:400,tsrR:300,dep0:40,depG:6,depC:0.15,bkCa
 const STFI0={"24":2.6,"28":2.9,"31":3.25,"34Super":3.6};   // kN/m at the grade's target weight and standard refining
 const shOn=()=>!!(S&&!S.zen);
 // ---- the headbox ----
-const hbJw=()=>S&&S.hb&&!S.zen?S.hb.jw:HB.jw0;
+const hbJwSp=()=>S&&S.hb&&!S.zen?S.hb.jw:HB.jw0;   // the J/W setpoint (the WET DCS)
+// (v6.13.3: the jet's actual J/W: the setpoint while the fan pump holds it; less if it's out of speed, or what a manual rpm gives, 07p)
+const hbJw=()=>{const a=typeof fpJw==="function"?fpJw():null;return a!=null?a:hbJwSp();};
 const jwDev=()=>(hbJw()-HB.jw0)/0.02;   // (the old slice scale: the dewatering chain's jet term, 07b)
 function hbSetJw(v){if(S.zen)return;if(!S.hb)S.hb={jw:HB.jw0};S.hb.jw=Math.round(clamp(+v,HB.jwMin,HB.jwMax)*1000)/1000;const K=knobState();K.any=true;K.moved.slice=S.t;}
 // the slice opening (mm) and the headbox consistency it gives at a held J/W.
@@ -67,7 +69,7 @@ const stkHole=()=>shOn()&&S.stk?clamp((Math.max(S.stk.fab,S.stk.felt,S.stk.can)-
 const shPsAdd=()=>shOn()&&S.stk?-1.5*clamp((S.stk.felt-55)/45,0,1):0;   // (a felt well over the normal 40 before it shows)
 const shCsAdd=()=>shOn()?-3*Math.max(0,(S.tbf||0)-SH.bkLim):0;
 // is any of this off its standard (then the knob model runs, so press solids and steam follow, 07b)
-const shOff=()=>shOn()&&(Math.abs(shPsAdd())>1e-6||Math.abs(shCsAdd())>1e-6||Math.abs(hbJw()-HB.jw0)>1e-9);
+const shOff=()=>shOn()&&(Math.abs(shPsAdd())>1e-6||Math.abs(shCsAdd())>1e-6||Math.abs(hbJw()-HB.jw0)>1e-9);   // (v6.13.3: the actual J/W: a fan pump out of speed or on a manual rpm counts)
 // pick-outs on the first cans: share of the reel to the beater
 const stkOff=()=>shOn()&&S.stk&&S.pm==="run"?0.04*clamp((S.stk.can-50)/50,0,1):0;
 function stkTick(dt){const D=stkState(),run=S.pm==="run",h=dt/60;if(!run)return;

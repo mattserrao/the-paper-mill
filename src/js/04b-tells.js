@@ -70,14 +70,15 @@ const tellDay=()=>Math.floor(S.t/1440);
 const tellCan=()=>tellsOn()&&tellState().day!==tellDay();
 function tellRoundStart(a){if(!tellCan()||!TAREAK[a])return false;tellState().day=tellDay();log(`Daily round: an operator is walking ${TAREAK[a].n.toLowerCase()}.`,"");return true;}
 // the walk is over: nothing in the area at all gives a small nudge (a missed tell gives nothing)
-function tellRoundEnd(a,caught){if(a==="dry"&&stmOn())stmIr();   // (v6.13: the dry end round takes an IR survey of the cans, 07m)
+function tellRoundEnd(a,caught){if(a==="dry"&&stmOn())stmIr();if(a==="scr")fpRound();   // (v6.13.3: the screens round reads the machine screen ΔP, 07p)
+   // (v6.13: the dry end round takes an IR survey of the cans, 07m)
 const T=tellState(),left=T.q.filter(p=>p.area===a).length;
   if(caught>0||left>0){if(!caught)log(`Round over: something in ${TAREAK[a].n.toLowerCase()} went unnoticed.`,"warn");return {clean:false,missed:left};}
   const d=TELL.cleanCiv[TAREAK[a].cv];if(civOn())civAdd(d,"Clean walk");else log("Clean walk.","");return {clean:true,missed:0,d};}
 // the Area Trend Report: the Reliability program (vibration and oil analysis) or Dot's own kit
 const tellRep=()=>LV("reliab")>=1||leadIs("dot");
 // per area: 0 steady, 1 climbing (something pending), 2 climbing fast (due within 24 h)
-function tellTrend(a){const q=(S.tell&&S.tell.q)||[];let v=0;for(const p of q)if(p.area===a)v=Math.max(v,p.due-S.t<1440?2:1);return Math.max(v,rlyTellTrend(a));}   // (v6.10: and what the shift rounds found, 07i)
+function tellTrend(a){const q=(S.tell&&S.tell.q)||[];let v=0;for(const p of q)if(p.area===a)v=Math.max(v,p.due-S.t<1440?2:1);return Math.max(v,rlyTellTrend(a),fpTrend(a));}   // (v6.10: and what the shift rounds found, 07i)
 const tellSummary=()=>{const T=S&&S.tell;if(!T||!T.n)return "";return `Upsets caught early: ${T.n} — saved ${money(T.saved)} and ${tellHrs(T.savedMin)} of downtime.`;};
 // the end screens' line: "3 — saved $412k and 9.5 hours of downtime" (null when tells never ran this run)
 const tellEndStat=()=>{const T=S&&S.tell;if(!T||!T.pre)return null;return ["Upsets caught early",T.n?`${T.n} — saved ${money(T.saved)} and ${tellHrs(T.savedMin)} of downtime`:"none","wide"];};

@@ -9,7 +9,7 @@ const GPM=m3h=>m3h*4.40287,GAL=m3=>m3*264.172,LS_GPM=ls=>ls*15.8503;
 const MCHEST_GAL=60000;                                // the machine chest
 const fmtGal=g=>{const a=Math.abs(g),s=g<0?"−":"";return s+(a>=1e6?(a/1e6).toFixed(2)+"M gal":a>=1e4?Math.round(a/1e3)+"k gal":Math.round(a).toLocaleString()+" gal");};
 const fmtGpm=g=>(g>=1e4?(g/1e3).toFixed(1)+"k":Math.round(g).toLocaleString())+" gpm";
-const TAG_INT=new Set(["orders","trucks","rolls","t","A","kW","fpm","mL CSF","V"]);
+const TAG_INT=new Set(["orders","trucks","rolls","t","A","kW","fpm","mL CSF","V","rpm"]);
 const TAG_AREA={SPOT:"Stock prep",WET:"Wet end",DET:"Dry end",STM:"Steam & air",UTIL:"Utilities",WATER:"Water",QCS:"Quality",PLAN:"Planning & yard",DRV:"Drives (MCC)"};
 const _R=()=>S.rates||{};
 const wr=()=>S.wat&&S.wat.r;
@@ -94,7 +94,11 @@ const TAGS=[
   ["exh","Hood exhaust fan","STM","%",()=>T3()?T3().exh:null,""],["sup","Hood supply fan","STM","%",()=>T3()?T3().sup:null,""],["airst","Supply air coil steam","STM","t/h",()=>T3()?T3().air:null,""],
   ["cret","Condensate return","STM","%",()=>T3()?T3().ret*100:null,"a.cret"],["mkup","Boiler makeup water","STM","gpm",()=>T3()?GPM(T3().mk):null,""],
   ["stpt","Steam per ton","STM","t/t",()=>T3()&&run()?T3().kpi.st:null,"a.stpt"],["kwht","Power per ton","STM","kWh/t",()=>T3()&&run()?T3().kpi.kwh:null,"a.kwht"],["usdt","Energy per ton","STM","$/t",()=>T3()&&run()?T3().kpi.usd:null,""],
-  ["jwsp","J/W setpoint (fan pump)","WET","",()=>S.zen?null:hbJw(),""],["hbpsi","Headbox pressure","WET","psi",()=>S.zen||!run()?null:hbPsi(),""],["slcb","Slice opening","WET","mm",()=>S.zen?null:slcB(),""],
+  ["jwsp","J/W setpoint (fan pump)","WET","",()=>S.zen?null:hbJwSp(),""],["hbpsi","Headbox pressure","WET","psi",()=>S.zen||!run()?null:hbPsi(),""],["hbth","Headbox total head (TAPPI)","WET","psi",()=>S.zen||!run()?null:hbThPsi(),""],
+  // v6.13.3 the fan pump on its curve (07p)
+  ["fanrpm","Fan pump speed","SPOT","rpm",()=>S.fp&&S.fp.st!=="off"?S.fp.n*FP.rpm:null,""],["fantdh","Fan pump total dynamic head","SPOT","ft",()=>S.fp&&S.fp.st==="run"?S.fp.h:null,""],
+  ["fankw","Fan pump power","SPOT","kW",()=>S.fp?S.fp.kw:null,""],["faneff","Fan pump efficiency","SPOT","%",()=>S.fp&&S.fp.st==="run"?S.fp.eff*100:null,""],
+  ["scrdp","Machine screen ΔP","SPOT","psi",()=>S.fp&&S.fp.st==="run"?fpScrDp():null,""],["npsh","Fan pump NPSH margin","SPOT","ft",()=>fpNpshM(),""],["slcb","Slice opening","WET","mm",()=>S.zen?null:slcB(),""],
   ["form","Formation index","QCS","",()=>S.zen||!run()?null:formIdx(),""],["tsr","MD/CD tensile ratio","QCS","",()=>S.zen?null:tsrNow(),""],
   ["stfi","STFI CD","QCS","kN/m",()=>S.zen||!run()?null:QNOW.stfi,"a.stfi"],["hard","Reel hardness","DET","",()=>S.zen?null:reelHard(),""],["nip","Reel drum nip","DET","kN/m",()=>S.zen?null:reelNip(),""],
   ["depfab","Stickies on the forming fabric","WET","/100",()=>S.stk&&!S.zen?S.stk.fab:null,""],["depfelt","Stickies on the pick-up felt","WET","/100",()=>S.stk&&!S.zen?S.stk.felt:null,""],["depcan","Stickies on the first cans","DET","/100",()=>S.stk&&!S.zen?S.stk.can:null,"a.depcan"],

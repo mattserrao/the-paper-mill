@@ -111,7 +111,7 @@ function knobState(){if(!S.knob){S.knob={v:Object.assign({},KNOB_IDEAL,{draw:dra
     any:false,cs:0,wear:0,gacc:0,gm0:0,H:{},harm:{},off:0,offWhy:"",sf:1,a:1,W:1,feed:1,brk:1,edge:0,gtrav:0,inc:[],warned:{},moved:{}};}
   if(S.knob.pmPrev==null)S.knob.pmPrev=S.pm;if(S.rng&&S.rng.knob==null)S.rng.knob=(S.seed^0x6b9f3c21)|0;return S.knob;}
 function knobVal(id){if(id==="pulp"){const o=vlvPulpOP();if(o!=null)return o;}const K=S.knob,d=id==="draw"?drawStd():KNOB_IDEAL[id];return K?(K.v[id]??d):d;}   // (v6.9: the pulper dilution valve is NV-101's)
-function knobAt(id){const K=S.knob;if(!K)return true;if(id==="pulp"&&vlvT("NV-101"))return false;if(id==="slice")return !K.v.sv&&!K.v.sh&&Math.abs(hbJw()-HB.jw0)<1e-9;if(id==="zones")return K.z.every(v=>v===0);if(id==="guide")return K.v.gm===1&&K.v.gt===0;if(id==="draw")return Math.abs((K.v.draw??drawStd())-drawStd())<0.001;return (K.v[id]??KNOB_IDEAL[id])===KNOB_IDEAL[id];}
+function knobAt(id){const K=S.knob;if(!K)return true;if(id==="pulp"&&vlvT("NV-101"))return false;if(id==="slice")return !K.v.sv&&!K.v.sh&&Math.abs(hbJwSp()-HB.jw0)<1e-9;if(id==="zones")return K.z.every(v=>v===0);if(id==="guide")return K.v.gm===1&&K.v.gt===0;if(id==="draw")return Math.abs((K.v.draw??drawStd())-drawStd())<0.001;return (K.v[id]??KNOB_IDEAL[id])===KNOB_IDEAL[id];}
 // the player moves a knob (UI): v is the new value (zones: [i,v]; guide: {gm,gt})
 function knobSet(id,v){if(S.zen)return;const K=knobState();
   if(id==="zones"){const [i,z]=v;K.z[i]=clamp(Math.round(z),-10,10);}

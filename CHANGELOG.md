@@ -1,5 +1,38 @@
 # Changelog
 
+## v6.13.3-t1 (2026-10-26): Headbox & Fan Pump (test build, test/v6.13.3-headbox)
+Plan and decisions: claude/headbox-fanpump-v6133-plan.md. Typical real-mill numbers only (no PM3 data).
+- **Headbox total head on the WET DCS (07p, 50d).** The papermaker's calculation (TAPPI TIP 0502-17): H = (V/100)² ÷ K,
+  V the jet in fpm (J/W × wire speed), K 53.336 for psi (23.165 ft, 1.9304 in). Shown under the picture with the
+  headbox gauge pressure (H ÷ Cv², Cv 0.97: the existing hbPsi), and worked through step by step on the faceplate.
+- **The fan pump on a real curve (07p).** A VFD pump, 890 rpm full speed, 26,000 gpm at its best efficiency point:
+  H = 185·n² − b·Q² with the affinity laws, efficiency peaking at 84%. Its total dynamic head is the lift to the headbox
+  (15 ft), the headbox pressure, and the header/tube bank, machine screen and piping (all ∝ Q²): ~68 ft at ~19,500 gpm
+  on grade 24, ~67% speed. AUTO finds the speed that holds the jet at the J/W setpoint, so untouched the jet is exactly the
+  setpoint (the sim plays as v6.13.2). It's sized for the fastest machine the upgrades allow; only a badly plugged screen
+  on a fast machine reaches full speed, and then the J/W sags (rush/drag, formation, MD/CD, STFI and breaks follow).
+- **Drive load from flow and head (07i).** kW = Q·H/(3960·η) ÷ 0.96; ~320 kW (35% of the 900 kW drive) on grade 24
+  instead of the old flat ~670. Cost-neutral: ELEC.bop +350 kW (6,400 → 6,750), measured over four 10-12 day runs
+  (run-time difference 341-391 kW). Idle (machine down) the pump recirculates at 40% speed.
+- **Machine screen plugging (07p).** Builds over ~3 days toward an equilibrium set by the stickies in the furnish
+  (stkFurn^1.5: Mixed Waste fastest) and the tons; standard bales settle ~35% over the clean 4 psi ΔP. Only a planned
+  outage's wash-up clears it. As it plugs the pump speeds up and draws more power. The screens & refiners Round reads its
+  ΔP (logged), and the Area Trend Report climbs from 80% plugged (fast near full speed).
+- **NPSH:** available from the white water silo's level, required rising with flow; the existing low-silo cavitation is
+  where they cross (the faceplate's operating point jitters and the margin goes red).
+- **Manual rpm (free play only):** the faceplate's AUTO/MANUAL; on manual the slice is fixed, so the pump runs where its
+  curve meets the system and the J/W follows (±3% speed moves it ~+5/−6%). Seasons and survival stay on AUTO.
+- **Faceplate (50o):** tap the fan pump on SPOT, the headbox on WET, or the new "Fan pump" button under either picture.
+  Head-flow curves at 60-100%, the curve it's on, the BEP line, the system curve and the operating point; speed, flow,
+  TDH, drive kW and %, efficiency, NPSH margin; the TDH broken down; the machine screen; a Headbox tab with the
+  calculation; a Learn tab. SPOT shows SPEED and TDH under the fan pump.
+- **Alarms:** FAN PUMP AT FULL SPEED, SPEED HI, ON MANUAL, NPSH LO / CAVITATING, MACHINE SCREEN ΔP HI (SPOT); J/W
+  DEVIATION (WET).
+- **Also:** trend tags (fan rpm, TDH, kW, efficiency, screen ΔP, NPSH margin, headbox total head), the relationship map,
+  help and glossary (total head, TDH, pump/system curve, affinity laws, BEP, NPSH), the fan pump's 3D info pop-up.
+  hbJw() is now the jet's actual J/W and hbJwSp() the setpoint (07n). New assertions in checks/process.py (fan).
+- Regression suite: 22/22 default checks passed (864 assertions), including 19 new fan pump assertions.
+
 ## v6.13.2 (2026-10-26): Real Numbers
 Release of v6.13.2-t1 to t4 (below), merged from test/v6.13.2-benchmarks: psi pressures and real-mill process numbers
 (t1), zen built for the turning camera with ride the sheet and 11 new shots (t2), dryer steam from heat transfer with a

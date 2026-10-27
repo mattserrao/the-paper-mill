@@ -20,6 +20,9 @@ const DV={
   thf:()=>{const D=G3.SPD;return D?(D.tl>150?"DIRTY":"CLEAR")+" "+Math.round(D.tl):"–";},thv:()=>{const D=G3.SPD;return D?Math.round(D.v*100)+"%":"–";},
   lvsp:()=>Math.round(C.lvlTarget.v)+"%",stc:()=>(4.2+((S.knob&&S.knob.any&&S.knob.x?S.knob.x.cp:5)-5)*0.12+wob2(0.04,15)*0.06).toFixed(2)+"%",dyef:()=>{const b=document.querySelector('#paperColor button[aria-pressed="true"]');return motStatus("dye")!=="run"||(b&&b.dataset.c==="white")?"0%":"62%";},
   jw:()=>dcsJw().toFixed(3),
+  // v6.13.3 the fan pump and the headbox total head (07p)
+  fanrpm:()=>{const F=S.fp;return !F||F.st==="off"?"STOP":Math.round(F.n*FP.rpm)+" rpm"+(fpMan()?" MAN":"");},fantdh:()=>{const F=S.fp;return F&&F.st==="run"?Math.round(F.h)+" ft":"–";},
+  hbth:()=>S.pm==="run"&&!S.zen?hbThPsi().toFixed(1)+" psi":"–",hbpsi:()=>S.pm==="run"&&!S.zen?hbPsi().toFixed(1)+" psi":"–",
   // v6.9.1: rush / drag, fpm: (jet-to-wire - 1) x wire speed. Jet faster than the wire is rush, slower is drag
   rd:()=>{if(S.pm!=="run")return "–";const v=dcsRD(),a=Math.round(Math.abs(v));return a<0.5?"0 fpm SQUARE":(v>0?"+":"−")+a+" fpm "+(v>0?"RUSH":"DRAG");},slc:()=>{const D=G3.SLC;return D?slcMm(D.v).toFixed(1)+" mm":"–";},
   wsp:()=>Math.round(S.pmSpeed/DCS_DRAW())+" fpm",psp:()=>Math.round(S.pmSpeed/DCS_DRAW()*1.015)+" fpm",dsp:()=>Math.round(S.pmSpeed/1.01)+" fpm",
@@ -51,9 +54,9 @@ MIMIC.SPOT={title:"STOCK PREP",h:312,trends:MIMIC_KNOB.SPOT.trends,
     MT(568,262,"lwdp","ΔP",DV.lwdp),MT(464,262,"thf","FILT",DV.thf),MT(464,276,"thv","SPIDER",DV.thv),MT(464,290,"thl","VAT",DV.thl),
     MT(360,186,"stc","CONS",DV.stc),MT(360,272,"lvl","LEVEL",()=>Math.round(S.tank/P.tankCap*100)+"%"),MT(360,286,"lvsp","SP",DV.lvsp),
     MT(255,196,"csf","CSF",r=>Math.round(r.csf)+" mL"),MT(255,262,"gap","GAP",r=>kf(r.gap,2)+" mm"),MT(255,276,"refkw","LOAD",r=>Math.round(r.refkw)+" kW"),
-    MT(150,272,"mcCons","CONS",r=>kf(r.mcCons,2)+"%"),MT(150,286,"agit","AGIT",r=>r.agit+"%"),MT(212,176,"dyef","DYE",DV.dyef),MT(504,50,"wcl","LVL",DV.wcl),MT(56,262,"flow","FLOW",()=>fmtGpm(GPM(S.we?S.we.f.hb||0:0))),MT(56,276,"dil","DIL",DV.dil),MT(255,290,"kwh","ENERGY",r=>Math.round(r.kwh)+" kWh/t"),
+    MT(150,272,"mcCons","CONS",r=>kf(r.mcCons,2)+"%"),MT(150,286,"agit","AGIT",r=>r.agit+"%"),MT(212,176,"dyef","DYE",DV.dyef),MT(504,50,"wcl","LVL",DV.wcl),MT(56,262,"flow","FLOW",()=>fmtGpm(GPM(S.we?S.we.f.hb||0:0))),MT(56,276,"dil","DIL",DV.dil),MT(56,290,"fanrpm","SPEED",DV.fanrpm),MT(56,304,"fantdh","TDH",DV.fantdh),MT(255,290,"kwh","ENERGY",r=>Math.round(r.kwh)+" kWh/t"),
     MT(360,300,"chv","VOL",DV.chv),MT(150,300,"mcv","VOL",DV.mcv),MT(504,62,"wcv","VOL",DV.wcv)]};   // (v6.7: chest volumes in gallons)
-MIMIC.WET={title:"WET END",h:282,trends:MIMIC_KNOB.WET.trends,
+MIMIC.WET={title:"WET END",h:300,trends:MIMIC_KNOB.WET.trends,
   eq:[[520,8,104,30,"FOG FAN"],[14,80,74,70,"HEADBOX"],[104,105,190,25,"FORMING TABLE"],[110,214,100,26,"WW SILO","s"],[308,90,64,50,"COUCH"],[388,90,104,50,"PICK-UP FELT"],[508,80,118,70,()=>LV("shoe")?"SHOE PRESS":"TWIN PRESS"],
     [216,8,92,26,"VACUUM PUMP","s"]],   // (v6.12.1-t7: one pump for the gravity, low and high vacuum boxes, a control valve each)
   ln:[["M88 115 H104"],["M294 117 H308"],["M372 115 H388"],["M492 115 H508"],["M112 130 V214",1],["M262 34 V48 H150 V105 M206 48 V105 M262 48 V105",1]],
@@ -62,7 +65,7 @@ MIMIC.WET={title:"WET END",h:282,trends:MIMIC_KNOB.WET.trends,
     MT(262,142,"gbv","PV-311",r=>Math.round(r.gbv)+"%"),MT(262,155,"lvv","PV-312",r=>Math.round(r.lvv)+"%"),MT(262,168,"hvv","PV-313",r=>Math.round(r.hvv)+"%"),MT(345,22,"vpkw","PUMP",r=>r.run?Math.round(r.vpkw)+" kW":"–"),MT(240,88,"edge","EDGE",r=>(r.edge>=0?"+":"")+Math.round(r.edge)+" mm"),MT(240,194,"gtrav","GUIDE",r=>r.gm?"AUTO "+Math.round(Math.min(1,r.gtrav)*100)+"%":"MAN"),
     MT(340,172,"couchSol","SOL",r=>kf(r.couchSol)+"%"),MT(340,194,"cs","PIT",r=>r.couch?"RUN":"STOP"),MT(440,172,"osc","OSC",r=>Math.round(r.osc)+"%"),
     MT(567,172,"pl","LOAD",r=>Math.round(r.pl)+" kN/m"),MT(567,194,"pressSol","SOL",r=>kf(r.pressSol)+"%"),MT(567,66,"psp","SPD",DV.psp),MT(260,232,"wwl","LEVEL",DV.wwl),MT(260,246,"wwg","VOL",DV.wwg),MT(370,232,"drain","DRAIN",DV.drn),MT(260,262,"wwov","OVFL",()=>S.we?fmtGpm(GPM(S.we.f.over||0))+" to WW chest (by design)":"–"),MT(560,232,"pressw","PRESS",DV.pw),
-    MT(60,216,"hbc","HBC",DV.hbc),MT(572,54,"hum","RH",DV.hum)]};   // (v6.9: the basis weight valve is FV-201, drawn by 50k)
+    MT(60,216,"hbc","HBC",DV.hbc),MT(84,292,"hbth","HB TOTAL HEAD",DV.hbth),MT(262,292,"hbpsi","HB PRESS",DV.hbpsi),MT(572,54,"hum","RH",DV.hum)]};   // (v6.9: the basis weight valve is FV-201, drawn by 50k)
 MIMIC.DET={title:"DRY END",h:320,trends:MIMIC_KNOB.DET.trends,
   eq:[[14,96,80,50,"OPEN DRAW"],[112,80,130,80,"1ST SECTION"],[260,80,170,80,"2ND / 3RD SECTION"],[448,90,74,60,"REEL"],[546,90,84,60,"WINDER"],[546,214,84,30,"ROLL CONV","s"],[546,280,84,30,"DE PULPER","s"]],   // (v6.11.2: the dry-end pulper, read only)
   ln:[["M94 121 H112"],["M242 120 H260"],["M430 120 H448"],["M522 120 H546"],["M630 120 H636 V229 H630"],["M630 135 H639 V295 H630"],["M640 66 H177 V80 M345 66 V80",1]],   // (v6.5.4: the steam header comes in from the boiler house, UTIL)
@@ -88,11 +91,13 @@ function dcsAlarms(a,r,L){const al=(on,txt,hi)=>{if(on)L.push([txt,hi]);};vlvAla
   for(const i of S.inc){if(dcsArea(i.id)!==a)continue;const m=MOTEV[i.id];L.push([m?`${m.name.toUpperCase()} STOPPED · RESTART IN ${Math.ceil(i.left)} MIN`:EV[i.id].name.toUpperCase(),true]);}
   if(a==="SPOT"){al(S.tank/P.tankCap>0.92,"STOCK CHEST LEVEL HI",S.tank/P.tankCap>0.98);al(dcsOn("badocc"),"JUNK LOAD HIGH",true);
     {const Wt=S.wat;al(!!(Wt&&Wt.L<WAT.cap*0.25),Wt&&Wt.short>0?"WHITE WATER CHEST EMPTY · STOCK THICK":"WHITE WATER CHEST LEVEL LO",!!(Wt&&Wt.short>0));}
-    for(const k of ["hd","lc","lw"]){const dp=purgeDp(k);al(dp>PURGE.base[k]+(PURGE.trip[k]-PURGE.base[k])*0.6,{hd:"HD CLEANER ΔP HI",lc:"LC CLEANERS ΔP HI",lw:"LW CLEANERS ΔP HI"}[k],dp>PURGE.base[k]+(PURGE.trip[k]-PURGE.base[k])*0.85);}}
+    for(const k of ["hd","lc","lw"]){const dp=purgeDp(k);al(dp>PURGE.base[k]+(PURGE.trip[k]-PURGE.base[k])*0.6,{hd:"HD CLEANER ΔP HI",lc:"LC CLEANERS ΔP HI",lw:"LW CLEANERS ΔP HI"}[k],dp>PURGE.base[k]+(PURGE.trip[k]-PURGE.base[k])*0.85);}
+    fpAlarms(L);}   // (v6.13.3: the fan pump, 50o)
   else if(a==="WET"){al(motStatus("fog")!=="run","MACHINE ROOM HUMIDITY HI",false);
     al(chemFloc()>0.02,"POLYMER HIGH · FLOCS IN THE SHEET",false);al(chemOn()&&fprNow()<82,"FIRST PASS RETENTION LO",fprNow()<78);al(chemRisk(),"POLYMER LOW · EFFLUENT PERMIT RISK",true);
     al(S.pm!=="run"&&CHEM_IDS.some(id=>chemMode(id)==="manual"&&chemFlow(id)>0),"CHEMICAL PUMP ON MANUAL · MACHINE DOWN",false);
-    {const W=S.we;if(W&&S.pm==="run"){al(W.L<WE.silo*WE.makeL,W.cav>0?"WW SILO LOW · FAN PUMP CAVITATING":"WHITE WATER SILO LEVEL LO",W.cav>0);al(W.m==="manual","BASIS WEIGHT ON MANUAL",false);}}}
+    {const W=S.we;if(W&&S.pm==="run"){al(W.L<WE.silo*WE.makeL,W.cav>0?"WW SILO LOW · FAN PUMP CAVITATING":"WHITE WATER SILO LEVEL LO",W.cav>0);al(W.m==="manual","BASIS WEIGHT ON MANUAL",false);}}
+    fpAlarms(L,true);}
   else if(a==="DET"){al(S.pm==="break",`SHEET BREAK · ${({reel:"REEL",dryer:"DRYERS",press:"PRESSES"})[S.brkType]||"MACHINE"}`,true);al(S.pm==="spools","REEL STORE FULL: MACHINE HELD BACK",true);
     al(!!S.wdBlocked,"WINDER BLOCKED: CONVEYOR FULL",true);al(S.wd==="hayout","WINDER HAYOUT",true);
     const Dr=S.dry;if(Dr&&S.pm==="run"){al(dryLimited()&&Dr.m>DRY.m0+0.5,"DRYERS AT LIMIT · SHEET WET",true);al(!dryLimited()&&Dr.load>0.95,"DRYER LOAD HI",false);}
@@ -121,7 +126,7 @@ function dcsSetDefs(a){const D=()=>DCS_DRAW();
   if(a==="WET")return [
     ["wsp","Machine speed (wire)","sets the reel by the section draws",Math.round(1200/D()),Math.round((3300+P.spBonus)/D()),5,()=>C.pmSp.v/D(),v=>dcsCardSet("pmSp",Math.round(v*D()/10)*10),"fpm","pmSp"],
     // v6.13: the fan pump holds the jet's speed (J/W, 07n); the slice opening B sets the headbox consistency at that J/W
-    ...(S.zen?[]:[["jwsp","J/W ratio (fan pump)",`the fan pump holds the jet at ${Math.round(hbJet())} fpm · headbox ${hbPsi().toFixed(1)} psi · MD/CD ${tsrNow().toFixed(2)} · standard ${HB.jw0}`,HB.jwMin,HB.jwMax,0.001,()=>hbJw(),v=>hbSetJw(v),"",null,0,{on:()=>Math.abs(hbJw()-HB.jw0)<1e-9,flip:()=>hbSetJw(HB.jw0),lab:["STANDARD","SET"]}]]),
+    ...(S.zen?[]:[["jwsp","J/W ratio (fan pump)",`${fpJw()!=null?`fan pump ${fpMan()?"on a MANUAL rpm":"OUT OF SPEED"}: the jet runs at J/W ${hbJw().toFixed(3)}, ${Math.round(hbJet())} fpm`:`the fan pump holds the jet at ${Math.round(hbJet())} fpm`} · headbox ${hbPsi().toFixed(1)} psi · MD/CD ${tsrNow().toFixed(2)} · standard ${HB.jw0}`,HB.jwMin,HB.jwMax,0.001,()=>hbJwSp(),v=>hbSetJw(v),"",null,0,{on:()=>Math.abs(hbJwSp()-HB.jw0)<1e-9,flip:()=>hbSetJw(HB.jw0),lab:["STANDARD","SET"]}]]),
     ["slv","Slice opening",S.zen?"remote from the DCS · B":`remote from the DCS · B ${slcB().toFixed(1)} mm: wider runs the headbox thinner (${hbcSet().toFixed(2)}%)`,-100,100,1,()=>G3.SLC?G3.SLC.v*100:0,v=>dcsSlice("v",v),"",null,1],
     ["slh","Slice lip position","remote from the DCS · L",-100,100,1,()=>G3.SLC?G3.SLC.h*100:0,v=>dcsSlice("h",v),"",null,1],
     // v6.8 the basis weight loop (07g): the setpoint (the grade's target, trimmed lighter if the strength will carry it) and the valve

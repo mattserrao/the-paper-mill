@@ -31,6 +31,12 @@ dewatercheck.py, watercheck.py, windercheck.py, ordercheck.py, relcheck.py and r
   the stock chest isn't drawn while it does, and once the refiners are back the chest refills and the machine comes
   back; "run on one refiner" ends the trip with the machine held at 75%; the relationship map has the new links.
 
+- fan (v6.13.3, 07p/50o): the fan pump on its curve. Untouched it holds the jet at the J/W setpoint exactly, on the
+  pump's curve where it meets the system; the headbox total head is TAPPI's (V/100)^2/53.336; the drive load is the
+  pump's kW; a plugging machine screen speeds it up and costs power, saturates it on a fast machine (J/W sags), shows on
+  the screens round and the area trend, and an outage wash-up clears it; manual rpm only in free play (moves the J/W);
+  the faceplate opens from the SPOT and WET pictures; the relationship map has the new tags.
+
 Usage: python3 process.py [index.html] [shot_prefix]"""
 # tier: default
 import sys, json, pathlib; sys.path.insert(0, str(pathlib.Path(__file__).resolve().parents[1]))
@@ -578,8 +584,68 @@ def ref(pw):
     b.close()
 
 
+def fan(pw):
+    C.sec("fan")
+    html = html_arg().replace("window.__PM={", "window.__PM={get RMX(){return {e:RM_E,col:RM_COL,tags:TAGS.map(t=>t[0])}},get KANY(){return !!(S.knob&&S.knob.any)},dcsAl:a=>{const L=[];dcsAlarms(a,knobRead(),L);return L.map(x=>x[0]);},", 1)
+    b, pg = boot_season(pw, LITE, html=html); ev = pg.evaluate
+    ev("()=>{__PM.setRunning(false);__PM.CH.on=false;const S=__PM.S;S.cards.next=1e12;while(S.t<600)__PM.step(__PM.SIM_STEP);}")
+    STEP = "n=>{const P=__PM,S=P.S;for(let i=0;i<n;i++){P.step(P.SIM_STEP);if(S.civ&&S.civ.cur){S.civ.cur=null;}S.cards.open=null;}}"
+    r = ev("""()=>{const P=__PM,S=P.S,G=P.G3,f=G.fan,F=S.fp,FP=f.FP,w=S.pmSpeed/(1.015*1.01*1.01),v=G.sheet.jw()*S.pmSpeed/(1.015*(1+0)*1.01);
+      return {st:F.st,pm:S.pm,jw:G.sheet.jw(),sp:G.sheet.jwSp(),fpjw:f.jw(),n:F.n,h:F.h,q:F.q,kw:F.kw,load:P.rly.load("fan"),kwr:P.rly.kwOf("fan"),
+        onCurve:Math.abs(f.head(F.q,F.n)-F.h),th:f.th.psi(),thFt:f.th.ft(),man:f.manOk()}}""")
+    ok("untouched: the fan pump holds the jet exactly at the J/W setpoint", r["pm"] == "run" and r["st"] == "run" and r["fpjw"] is None and r["jw"] == r["sp"] == 0.985, json.dumps(r))
+    ok("untouched: the operating point is on the pump's curve (head at that flow and speed)", r["onCurve"] < 0.5, json.dumps(r))
+    ok("untouched: real-looking numbers (55-85% of 890 rpm, 45-95 ft TDH, 14-22k gpm, 20-50% of the 900 kW drive)", 0.55 < r["n"] < 0.85 and 45 < r["h"] < 95 and 14000 < r["q"] < 22000 and 20 < r["load"] < 50 and r["kwr"] == 900, json.dumps(r))
+    ok("the drive load is the pump's power (within the drives' wobble)", abs(r["load"] - r["kw"] / 9) < 1.5, json.dumps(r))
+    ok("headbox total head: psi and ft agree with TAPPI's K (53.336 vs 23.165)", abs(r["th"] * 53.336 / 23.165 - r["thFt"]) < 0.01 and 8 < r["th"] < 16, json.dumps(r))
+    ok("seasons keep the fan pump on AUTO (manual rpm is free play only)", not r["man"])
+    ev("()=>__PM.G3.fan.setMode('man')")
+    ok("...setMode('man') is refused in a season", ev("()=>__PM.S.fp.m") == "auto")
+    # plugging: more speed, more power, the J/W still held at a standard speed
+    a = ev(f"""()=>{{const P=__PM,S=P.S,F=S.fp;const n0=F.n,k0=F.kw;F.plug=1.2;({STEP})(8);return {{n0,k0,n:F.n,kw:F.kw,jw:P.G3.sheet.jw(),sat:F.sat,dp:P.G3.fan.scrDp(),trend:P.tell.trend("scr"),al:P.dcsAl("SPOT")}}}}""")
+    ok("a plugged machine screen: higher ΔP, the pump speeds up and draws more power, the jet is still held", a["n"] > a["n0"] + 0.02 and a["kw"] > a["k0"] + 15 and a["jw"] == 0.985 and not a["sat"] and a["dp"] > 6, json.dumps(a))
+    ok("...shows on the area trend report (screens & refiners) and as a SPOT alarm", a["trend"] >= 1 and any("MACHINE SCREEN" in x for x in a["al"]), json.dumps(a))
+    ev("()=>{const S=__PM.S;S.fp.rd=null;__PM.tell.end('scr',0);}")
+    ok("the screens round reads the machine screen's ΔP", ev("()=>!!(__PM.S.fp.rd&&__PM.S.fp.rd.dp>6)"))
+    # a fast machine with a badly plugged screen runs out of pump: the J/W sags and the knob model turns on
+    s2 = ev(f"""()=>{{const P=__PM,S=P.S,F=S.fp;P.C.pmSp.auto=false;P.C.pmSp.v=3800;S.pmSpeed=3800;F.plug=4;({STEP})(12);
+      return {{sat:F.sat,n:F.n,jw:P.G3.sheet.jw(),sp:P.G3.sheet.jwSp(),any:P.KANY,onCurve:Math.abs(P.G3.fan.head(F.q,F.n)-F.h),al:P.dcsAl("SPOT"),alw:P.dcsAl("WET")}}}}""")
+    ok("at full speed the pump can't hold the setpoint: J/W sags, it's on the 100% curve, the knob model runs", s2["sat"] and s2["n"] == 1 and s2["jw"] < s2["sp"] - 0.003 and s2["any"] and s2["onCurve"] < 0.5, json.dumps(s2))
+    ok("...with FULL SPEED and J/W DEVIATION alarms", any("FULL SPEED" in x for x in s2["al"]) and any("J/W DEVIATION" in x for x in s2["alw"]), json.dumps(s2))
+    w = ev(f"""()=>{{const P=__PM,S=P.S,F=S.fp;F.out=true;({STEP})(1);return {{plug:F.plug,log:S.feed.slice(0,6).map(l=>l.text).join(' | ')}}}}""")
+    ok("an outage's end washes the screen up (plugging back to 0, logged)", w["plug"] < 0.01 and "machine screen" in w["log"], json.dumps(w))
+    # the relationship map
+    rm = ev("()=>__PM.RMX"); keys = {(a2, b2) for a2, b2, *_ in rm["e"]}
+    new = ["fanrpm", "fantdh", "fankw", "faneff", "scrdp", "npsh", "hbth"]
+    ok("relationship map: every new tag is in a column and has a link", all(t in rm["tags"] for t in new) and all(any(t in c for c in rm["col"].values()) for t in new) and all(any(t in k for k in keys) for t in new), [t for t in new if not any(t in k for k in keys)])
+    # the faceplate from the DCS pictures
+    ev("()=>{__PM.C.pmSp.auto=true;__PM.knob.open('SPOT')}"); pg.wait_for_timeout(400)
+    ev("()=>document.querySelector('#dcsOv [data-fan]').dispatchEvent(new MouseEvent('click',{bubbles:true}))"); pg.wait_for_timeout(400)
+    u = ev("""()=>{const o=document.getElementById('fanOv');const cv=document.getElementById('fanCv');const d=cv.getContext('2d').getImageData(0,0,cv.width,cv.height).data;let lit=0;for(let i=0;i<d.length;i+=40)if(d[i]>120||d[i+1]>120)lit++;
+      return {open:!!o&&!o.hidden,lit,rpm:(o.querySelector('[data-fv=rpm]')||{}).textContent,tdh:document.getElementById('fanTdh').textContent.includes('Total dynamic head'),manDis:o.querySelector('[data-fm=man]').disabled}}""")
+    ok("tapping the fan pump on SPOT opens its faceplate: the curves drawn, readouts filled, manual off in a season", u["open"] and u["lit"] > 50 and "rpm" in (u["rpm"] or "") and u["tdh"] and u["manDis"], json.dumps(u))
+    ev("()=>document.querySelector('#fanOv [data-ft=hb]').click()"); pg.wait_for_timeout(300)
+    h = ev("()=>document.getElementById('fanCalc').textContent")
+    ok("...the Headbox tab works the TAPPI total head through", "53.336" in h and "Jet speed" in h and "psi" in h, h[:200])
+    pg.keyboard.press("Escape"); pg.wait_for_timeout(200)
+    ok("...Escape closes the faceplate first, leaving the DCS open", ev("()=>document.getElementById('fanOv').hidden&&!document.getElementById('dcsOv').hidden"))
+    ev("()=>{__PM.knob.close&&__PM.knob.close();__PM.knob.open('WET')}"); pg.wait_for_timeout(400)
+    ok("the WET picture shows the headbox total head and opens the faceplate from the headbox", ev("()=>{const t=document.querySelector('#dcsOv [data-tag=hbth]');const g=document.querySelector('#dcsOv [data-fan=hb]');return !!t&&/psi/.test(t.textContent)&&!!g}"))
+    b.close()
+    # free play: manual rpm moves the jet; AUTO puts it back exactly
+    b = launch(pw); pg = open_game(b, html_arg(), LITE, viewport=(900, 600), errs=errs, wait=False)
+    pg.wait_for_function("window.__PM&&window.__B&&__B.first!==null", timeout=240000, polling=500)
+    pg.evaluate("()=>document.getElementById('v2free').click()"); pg.wait_for_function("__PM.S.free", timeout=60000)
+    ev = pg.evaluate; ev("()=>{__PM.setRunning(false);__PM.CH.on=false;}")
+    ev(f"({STEP})(600)")
+    m = ev(f"""()=>{{const P=__PM,S=P.S,G=P.G3,f=G.fan;const o={{ok:f.manOk(),run:S.pm}};f.setMode("man");o.m=S.fp.m;o.n0=S.fp.n;f.setRpm(S.fp.n*100+3);({STEP})(20);o.up=G.sheet.jw();
+      f.setRpm(o.n0*100-3);({STEP})(20);o.dn=G.sheet.jw();f.setMode("auto");({STEP})(4);o.auto=G.sheet.jw();o.sp=G.sheet.jwSp();return o;}}""")
+    ok("free play: manual rpm +3% speeds the jet up, -3% slows it (a few % J/W), AUTO puts it back exactly", m["ok"] and m["m"] == "man" and 0.995 < m["up"] < 1.08 and 0.90 < m["dn"] < 0.975 and m["auto"] == m["sp"], json.dumps(m))
+    b.close()
+
+
 with sync_playwright() as pw:
-    for f in (dryer, qual, dewater, water, winder, order, rel, ref):
+    for f in (dryer, qual, dewater, water, winder, order, rel, ref, fan):
         try: f(pw)
         except Exception as e: ok(f"{f.__name__}: ran to the end", False, repr(e)[:300])
 C.done()
