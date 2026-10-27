@@ -143,17 +143,15 @@ function vlvRun(n){const W=S.vlv;if(!W||!W.B)return;n=Math.min(VLV.sub,n);
 function vlvCatch(acc){const W=S.vlv;if(!W||!W.any||S.zen||!W.B)return;vlvRun(Math.floor(acc*60+1e-6));}
 // every step (07-sim-step.js), before the knobs and the machine: finish the window, hand the results to the game
 function vlvTick(dt){const W=S.vlv;if(!W||!W.any||S.zen)return;if(!W.B)vCap();vlvRun(VLV.sub);
-  if(W.lp["NV-101"]){const k=knobState();k.any=true;
-    // pulper consistency swings reach the machine chest through the storage chest (an hour of stock)
-    W.cpl=ease(W.cpl==null?5:W.cpl,W.lp["NV-101"].y,dt,VLV.cpTau);}
-  else if(W.cpl!=null){W.cpl=ease(W.cpl,5,dt,VLV.cpTau);if(Math.abs(W.cpl-5)<0.005)W.cpl=null;}
+  if(W.lp["NV-101"]){const k=knobState();k.any=true;}   // (v6.14.0-t2: the swings reach the machine chest through 07s, touched or not)
+  W.cpl=null;
   if(W.lp["FV-201"]){const We=weState();We.v=W.lp["FV-201"].pos;We.vl=true;}
   if(W.lp["LV-202"]){const We=weState(),L1=W.lp["LV-202"].y/100*WE.silo;W.acc.dL=L1-We.L;We.L=L1;}
   vConseq(dt);vCrew(dt);vHand(dt);}
 // end of every step: the boundary for the next window, and the trend points of the loops still on the game's model
 function vlvCapture(){if(S.zen)return;const W=S.vlv;if(W&&W.any)vCap();vTrStep();}
 // machine chest consistency from pulper swings (07g mcCons adds this; 0 untouched)
-const vlvMc=()=>S.vlv&&S.vlv.cpl!=null?VLV.cpK*(S.vlv.cpl-5):0;
+const vlvMc=()=>chMc();   // (v6.14.0-t2: the storage and machine chests, 07s)
 // what a loop being off does to the mill (the others act through the game's own models: the knobs, the QCS spec, the silo)
 function vConseq(dt){const W=S.vlv,L=W.lp["LV-104"];
   if(L){const y=L.y;W.mcLow=y<15?(15-y)/15:0;

@@ -4054,6 +4054,7 @@ function step(dt){
   const M=S.M=mods();
   autoControl(dt);
   vlvTick(dt);   // v6.9 the control valves (07h; nothing until a loop is touched)
+  chTick(dt);   // v6.14.0-t2 the pulper's swings through the storage and machine chests (07s)
   knobTick(dt);   // v5.6 fiddly knobs (returns at once unless a knob was moved)
   dcsTick(dt);   // v6.5 b3 DCS motors and reject purges (07c; nothing until the DCS is used)
   dryTick(dt);   // v6.5 b5 the dryer limit: water, steam, moisture (07d)
@@ -5110,17 +5111,15 @@ function vlvRun(n){const W=S.vlv;if(!W||!W.B)return;n=Math.min(VLV.sub,n);
 function vlvCatch(acc){const W=S.vlv;if(!W||!W.any||S.zen||!W.B)return;vlvRun(Math.floor(acc*60+1e-6));}
 // every step (07-sim-step.js), before the knobs and the machine: finish the window, hand the results to the game
 function vlvTick(dt){const W=S.vlv;if(!W||!W.any||S.zen)return;if(!W.B)vCap();vlvRun(VLV.sub);
-  if(W.lp["NV-101"]){const k=knobState();k.any=true;
-    // pulper consistency swings reach the machine chest through the storage chest (an hour of stock)
-    W.cpl=ease(W.cpl==null?5:W.cpl,W.lp["NV-101"].y,dt,VLV.cpTau);}
-  else if(W.cpl!=null){W.cpl=ease(W.cpl,5,dt,VLV.cpTau);if(Math.abs(W.cpl-5)<0.005)W.cpl=null;}
+  if(W.lp["NV-101"]){const k=knobState();k.any=true;}   // (v6.14.0-t2: the swings reach the machine chest through 07s, touched or not)
+  W.cpl=null;
   if(W.lp["FV-201"]){const We=weState();We.v=W.lp["FV-201"].pos;We.vl=true;}
   if(W.lp["LV-202"]){const We=weState(),L1=W.lp["LV-202"].y/100*WE.silo;W.acc.dL=L1-We.L;We.L=L1;}
   vConseq(dt);vCrew(dt);vHand(dt);}
 // end of every step: the boundary for the next window, and the trend points of the loops still on the game's model
 function vlvCapture(){if(S.zen)return;const W=S.vlv;if(W&&W.any)vCap();vTrStep();}
 // machine chest consistency from pulper swings (07g mcCons adds this; 0 untouched)
-const vlvMc=()=>S.vlv&&S.vlv.cpl!=null?VLV.cpK*(S.vlv.cpl-5):0;
+const vlvMc=()=>chMc();   // (v6.14.0-t2: the storage and machine chests, 07s)
 // what a loop being off does to the mill (the others act through the game's own models: the knobs, the QCS spec, the silo)
 function vConseq(dt){const W=S.vlv,L=W.lp["LV-104"];
   if(L){const y=L.y;W.mcLow=y<15?(15-y)/15:0;
@@ -6318,6 +6317,33 @@ function ggEnd(how){const G=S.gg;if(!G)return;const off=Math.max(0,(S.q.off||0)-
   if(how==="done"){G.res={off,mins,auto:G.auto};S.ggLast=G;{const L=S.q.gc||(S.q.gc=[]);L.push({t:Math.round(S.t),from:G.from,to:G.to,tons:Math.round(off*10)/10,guided:true});if(L.length>20)L.shift();}
     log(`Guided grade change ${G.from} → ${G.to} done in ${mins} min: ${off.toFixed(1)} t to the beater (the crew's automatic change: about ${G.auto.toFixed(0)} t).`,off<=G.auto?"ok":"warn");}
   else{if(C.grade!==G.to){C.grade=G.from;setGrade(G.to);}log("Guided grade change handed back to the crew.","");}}
+/* ---- v6.14.0 chests: the pulper's consistency swings carried, and damped, to the wire ----
+   The stock between the pulper and the headbox passes two mixed chests, and each one damps a swing.
+   Storage (stock) chest: well mixed, residence time V/Q (its stock inventory over the fiber the machine draws, CHS.tMin to
+   CHS.tMax minutes). It holds about CHS.sc0 % stock, so it carries the pulper's deviation scaled by sc0 / 5 (pulper
+   standard 5 %), through a first-order lag of that residence time.
+   Machine chest: fed from the storage chest through a consistency control loop that dilutes it to WE.mc0 (3.2 %). The loop
+   takes out all but CHS.pass of the storage chest's swing (scaled to 3.2 %), and the chest (about CHS.mcTau minutes of
+   stock) lags what is left.
+   Headbox: the machine chest's consistency moves the fiber through the basis weight valve (07g mcCons -> bwTrue), and the
+   basis weight loop's integral trim and the fan pump's dilution take out what's slow; what reaches the headbox is the
+   short, small part.
+   A first-order chest of time constant tau passes a swing of period T at 1/sqrt(1 + (2 pi tau / T)^2): a 30-minute swing
+   through a 2-hour chest keeps 4 % of itself, a day-long drift 79 %. Untouched (pulper on its standard) every term is 0.
+   Before v6.14.0-t2 the machine chest only saw the pulper once the NV-101 loop was touched (07h cpl, cpK 0.06); the static
+   gain here, sc0/5 x pass x 3.2/sc0 = 0.064, keeps that calibration. ---- */
+const CHS={sc0:4.5,tMin:60,tMax:240,pass:0.1,mcTau:20};
+const chOn=()=>!!(S&&!S.zen);
+function chState(){if(!S.chs)S.chs={sc:0,mc:0};return S.chs;}
+// the storage chest's residence time (min): its stock over what the machine draws
+const chTau=()=>clamp((S.tank||0)/Math.max(1,(S.rates&&S.rates.fiberUse)||30)*60,CHS.tMin,CHS.tMax);
+// every step: the pulper's deviation into the storage chest, then through the machine chest's consistency control
+function chTick(dt){if(!chOn())return;const C3=chState(),cp=vlvView("NV-101").y,dp=Number.isFinite(cp)?cp-5:0,run=!(S.M&&S.M.pulperDown);
+  if(run)C3.sc=ease(C3.sc,dp*CHS.sc0/5,dt,chTau());
+  C3.mc=ease(C3.mc,C3.sc*CHS.pass*WE.mc0/CHS.sc0,dt,CHS.mcTau);}
+// the storage chest's consistency (%) and the machine chest's deviation (% points) it causes (07g mcCons)
+const chSc=()=>CHS.sc0+(chOn()&&S.chs?S.chs.sc:0);
+const chMc=()=>chOn()&&S.chs?S.chs.mc:0;
 /* ---------- UI wiring ---------- */
 // v6.5.1 second screen: the DCS and the process flow can live in a pop-out window (50e-popout.js). Their elements are then
 // in that window's document, so $() looks there when the main page doesn't have the id; actEl() is the focused element
@@ -7505,7 +7531,7 @@ const TAGS=[
   ["chest","Stock chest level","SPOT","%",()=>S.tank/P.tankCap*100,"a.chest"],["chestg","Stock chest volume","SPOT","gal",()=>S.tank/(WAT.cs/100)*264.172,""],
   ["kwh","Refining energy","SPOT","kWh/t",r=>r.kwh,"a.kwh"],["refkw","Refiner load","SPOT","hp",r=>r.run?HP(r.refkw):null,"a.refkw",HPK],["gap","Refiner plate gap","SPOT","mm",r=>r.gap,""],["csf","Freeness","SPOT","mL CSF",r=>r.csf,"a.csf"],
   ["refq","Refined stock flow","SPOT","% of std",r=>r.refq,""],["mcLvl","Machine chest level","SPOT","%",r=>r.mcLvl,""],["mcg","Machine chest volume","SPOT","gal",r=>MCHEST_GAL*r.mcLvl/100,""],
-  ["mcCons","Machine chest consistency","SPOT","%",r=>r.mcCons,""],["agit","Machine chest agitator","SPOT","%",r=>r.agit,""],
+  ["stcCons","Storage chest consistency","SPOT","%",()=>chSc(),""],["mcCons","Machine chest consistency","SPOT","%",r=>r.mcCons,""],["agit","Machine chest agitator","SPOT","%",r=>r.agit,""],
   ["fan","Fan pump flow (headbox)","SPOT","gpm",()=>S.we?GPM(S.we.f.hb||0):0,""],["dil","Fan pump dilution","SPOT","gpm",()=>S.we?GPM(S.we.f.dil||0):0,""],
   // wet end
   ["hbc","Headbox consistency","WET","%",()=>S.pm==="run"&&S.we?S.we.hbc:null,"a.hbc"],["bwv","Basis weight valve","WET","%",()=>S.we?S.we.v:null,""],
@@ -17513,7 +17539,7 @@ function pfSVGt(D,live){const vert=pfVert(),NU=104,NV=112,GAP=30,PAD=vert?24:10,
    Keep RM_E in step with the sim when a relationship changes (tools/relmapcheck.py fails on a tag with no entry). ---- */
 const RM_DRV=[["x:weather","Weather",""],["x:bales","Bale grade mix",""],["x:pulpset","Pulper feed setpoint",""],["x:dilv","Pulper dilution valve","knob"],["x:slice","Headbox slice","knob"],["x:guide","Fabric guide roll","knob"],["x:zones","Headbox dilution zones","knob"],["x:spset","Machine speed setpoint",""],["x:grade","Grade on the machine",""],["x:dye","Dye system",""],["x:market","Market & leader effects",""],["x:power","Substation power",""],["x:incomer","MCC main incomer","knob"],["x:hood","Dryer hood doors","knob"],["x:orders","Customer orders",""],["x:upsets","Upsets & DCS motors",""],
   ["x:jwsp","J/W setpoint (fan pump)",""],["x:puvk","Pick-up roll vacuum knob","knob"],["x:sqz","Trim squirts","knob"],["x:kos","Knock-off shower","knob"],["x:stab","Sheet stabilizers (upgrade)",""],["x:tcv","Thermocompressor motive valve","knob"],["x:pdcsp","PDC-304 setpoint",""],["x:hoodfan","Hood exhaust & supply fans",""],["x:heatrec","Heat recovery (upgrade)",""],["x:nip","Reel drum nip",""],["x:bkr","Broke ratio",""]];   // (v6.13)
-const RM_COL={"YARD":["inq","unload","yard","balem","stk","occp"],"SPOT":["feed","cp","nv101pv","nv101op","amps","pulpLvl","yield","fiber","rejt","hddp","lcdp","lwdp","fsld","fsdp","kwh","dil","chest","chestg","gap","refkw","csf","agit","refq","mcCons","mcLvl","lv104pv","lv104op","mcg","fan","fanrpm","fantdh","fankw","faneff","scrdp","npsh","bvm","bvq","bklvl","bkr","tbf"],"WET":["wsp","jw","rd","gbox","lvac","vac","vpkw","couchSol","pl","pressSol","gtrav","edge","osc","hbc","bwv","fv201pv","fv201op","bwsp","drain","seal","pressw","wwl","lv202pv","lv202op","wwg","wwov","hum","polflow","poldose","fpr","jwsp","hbth","hbpsi","puv","hbdw","slcb","depfab","depfelt"],"DET":["speed","prod","st1","st3","pv302pv","pv302op","pv303pv","pv303op","steam","dryl","moist","qc300pv","qc300op","bw","draw","tension","defin","delvl","decons","hard","nip","depcan","flt","brkr"],"STM":["dpneed","dp1","dp2","dp3","pdc304op","bt3","btwaste","hoodH","exh","sup","airst","cret","mkup","stpt","kwht","usdt"],"QCS":["form","tsr","stfi","off","rct","prem","cdsp","bank","reel","cut","rollw","trimp","trimt","cdspan","sbout","spout","conv"],"UTIL":["boiler","vent","energyt","shower","evap","wcl","wcg","makeup","fresh","wuse","wwover","outfall","tss"],"SHIP":["fg","load","outq","openo","lateo","price","profit"],"DRV":["mvkv","lv480","dc_SP","dc_PM","dc_WD","dl_pulp","dl_refA","dl_refB","dl_fan","dl_couch","dl_pr1","dl_pr2","dl_dry","dl_reel","dl_wind","mcckw"]};
+const RM_COL={"YARD":["inq","unload","yard","balem","stk","occp"],"SPOT":["feed","cp","nv101pv","nv101op","amps","pulpLvl","yield","fiber","rejt","hddp","lcdp","lwdp","fsld","fsdp","kwh","dil","chest","chestg","gap","refkw","csf","agit","refq","stcCons","mcCons","mcLvl","lv104pv","lv104op","mcg","fan","fanrpm","fantdh","fankw","faneff","scrdp","npsh","bvm","bvq","bklvl","bkr","tbf"],"WET":["wsp","jw","rd","gbox","lvac","vac","vpkw","couchSol","pl","pressSol","gtrav","edge","osc","hbc","bwv","fv201pv","fv201op","bwsp","drain","seal","pressw","wwl","lv202pv","lv202op","wwg","wwov","hum","polflow","poldose","fpr","jwsp","hbth","hbpsi","puv","hbdw","slcb","depfab","depfelt"],"DET":["speed","prod","st1","st3","pv302pv","pv302op","pv303pv","pv303op","steam","dryl","moist","qc300pv","qc300op","bw","draw","tension","defin","delvl","decons","hard","nip","depcan","flt","brkr"],"STM":["dpneed","dp1","dp2","dp3","pdc304op","bt3","btwaste","hoodH","exh","sup","airst","cret","mkup","stpt","kwht","usdt"],"QCS":["form","tsr","stfi","off","rct","prem","cdsp","bank","reel","cut","rollw","trimp","trimt","cdspan","sbout","spout","conv"],"UTIL":["boiler","vent","energyt","shower","evap","wcl","wcg","makeup","fresh","wuse","wwover","outfall","tss"],"SHIP":["fg","load","outq","openo","lateo","price","profit"],"DRV":["mvkv","lv480","dc_SP","dc_PM","dc_WD","dl_pulp","dl_refA","dl_refB","dl_fan","dl_couch","dl_pr1","dl_pr2","dl_dry","dl_reel","dl_wind","mcckw"]};
 const RM_E=[
  ["x:weather","balem","p","Rain and snow soak the bales in the yard and on inbound loads"],
  ["x:weather","unload","n","Snow and fog slow inbound trucks"],
@@ -17562,7 +17588,8 @@ const RM_E=[
  ["balem","cp","n","Wet bales thin the tub; NV-101 closes to take the water back out"],
  ["cp","nv101pv","s","NV-101 measures the pulper consistency, 30 s late"],
  ["nv101pv","nv101op","x","AUTO: thick tub, open the dilution valve (PID)"],
- ["cp","mcCons","x","Pulper consistency swings reach the machine chest through the storage chest (about an hour)"],
+ ["cp","stcCons","p","Pulper consistency swings mix into the storage chest over its 1-4 h of stock: fast swings are damped"],
+ ["stcCons","mcCons","p","The machine chest's consistency control takes out 90% of the storage chest's swing; the chest lags the rest ~20 min"],
  ["chest","refq","p","The refiners are fed from the stock (storage) chest"],
  ["x:upsets","refq","x","Refiner plates clash: the refiners trip until maintenance re-plates them"],
  ["lv104op","refq","p","LV-104, on the stock chest pump, sets the flow through the refiners"],
